@@ -1,27 +1,35 @@
-import { GABARIT_RECONNAISSANCE_SOLIDES } from "../../packages/automatismes/src/espace-et-geometrie/solides-usuels/reconnaissance.js?v=40";
+import { GABARIT_RECONNAISSANCE_SOLIDES } from "../../packages/automatismes/src/espace-et-geometrie/solides-usuels/reconnaissance.js?v=41";
 import {
   GABARIT_VOLUME_CUBE_PAVE,
   GABARIT_VOLUME_CYLINDRE,
   GABARIT_VOLUME_PRISME,
-} from "../../packages/automatismes/src/grandeurs-et-mesures/volumes/calcul-volumes.js?v=40";
-import { GABARIT_SELECTION_DIVISEURS } from "../../packages/automatismes/src/nombres-et-calculs/criteres-divisibilite/selection-diviseurs.js?v=40";
-import { genererSerieNC01 } from "../../packages/automatismes/src/nombres-et-calculs/criteres-divisibilite/serie.js?v=40";
-import { GABARIT_CALCUL_DIRECT_CARRE } from "../../packages/automatismes/src/nombres-et-calculs/carres-entiers-1-a-12/calcul-direct.js?v=40";
-import { genererSerieNC02 } from "../../packages/automatismes/src/nombres-et-calculs/carres-entiers-1-a-12/serie.js?v=40";
+} from "../../packages/automatismes/src/grandeurs-et-mesures/volumes/calcul-volumes.js?v=41";
+import { GABARIT_SELECTION_DIVISEURS } from "../../packages/automatismes/src/nombres-et-calculs/criteres-divisibilite/selection-diviseurs.js?v=41";
+import { genererSerieNC01 } from "../../packages/automatismes/src/nombres-et-calculs/criteres-divisibilite/serie.js?v=41";
+import { GABARIT_CALCUL_DIRECT_CARRE } from "../../packages/automatismes/src/nombres-et-calculs/carres-entiers-1-a-12/calcul-direct.js?v=41";
+import { genererSerieNC02 } from "../../packages/automatismes/src/nombres-et-calculs/carres-entiers-1-a-12/serie.js?v=41";
 import {
   GABARIT_FRACTION_VERS_DECIMAL,
-} from "../../packages/automatismes/src/nombres-et-calculs/fractions-simples-decimaux/fraction-vers-decimal.js?v=40";
+} from "../../packages/automatismes/src/nombres-et-calculs/fractions-simples-decimaux/fraction-vers-decimal.js?v=41";
 import {
   genererSerieFractionsDecimaux,
-} from "../../packages/automatismes/src/nombres-et-calculs/fractions-simples-decimaux/serie.js?v=40";
+} from "../../packages/automatismes/src/nombres-et-calculs/fractions-simples-decimaux/serie.js?v=41";
+import {
+  GABARIT_ECRITURES_MULTIPLES,
+} from "../../packages/automatismes/src/nombres-et-calculs/ecritures-multiples-nombre/questions.js?v=41";
+import {
+  genererSerieEcrituresMultiples,
+} from "../../packages/automatismes/src/nombres-et-calculs/ecritures-multiples-nombre/serie.js?v=41";
 import {
   MODULES_AUTOMATISMES,
-} from "../../packages/automatismes/src/identifiants.js?v=40";
+} from "../../packages/automatismes/src/identifiants.js?v=41";
 
 export const NOTION_NC01 = MODULES_AUTOMATISMES.CRITERES_DIVISIBILITE;
 export const NOTION_NC02 = MODULES_AUTOMATISMES.CARRES_ENTIERS;
 export const NOTION_FRACTIONS_SIMPLES_DECIMAUX =
   MODULES_AUTOMATISMES.FRACTIONS_SIMPLES_DECIMAUX;
+export const NOTION_ECRITURES_MULTIPLES_NOMBRE =
+  MODULES_AUTOMATISMES.ECRITURES_MULTIPLES_NOMBRE;
 export const NOTION_SOLIDES_USUELS = MODULES_AUTOMATISMES.SOLIDES_USUELS;
 export const NOTION_VOLUME_CUBE_PAVE = MODULES_AUTOMATISMES.VOLUME_CUBE_PAVE;
 export const NOTION_VOLUME_PRISME = MODULES_AUTOMATISMES.VOLUME_PRISME;
@@ -30,6 +38,7 @@ export const NOTION_VOLUME_CYLINDRE = MODULES_AUTOMATISMES.VOLUME_CYLINDRE;
 export const RENDU_DIVISIBILITE = "divisibilite";
 export const RENDU_CARRES = "carres";
 export const RENDU_FRACTIONS_DECIMAUX = "fractions-decimaux";
+export const RENDU_ECRITURES_MULTIPLES = "ecritures-multiples";
 export const RENDU_SOLIDE = "solide";
 export const RENDU_VOLUME = "volume";
 
@@ -37,6 +46,7 @@ const RENDUS = new Set([
   RENDU_DIVISIBILITE,
   RENDU_CARRES,
   RENDU_FRACTIONS_DECIMAUX,
+  RENDU_ECRITURES_MULTIPLES,
   RENDU_SOLIDE,
   RENDU_VOLUME,
 ]);
@@ -127,6 +137,17 @@ const DEFINITIONS = Object.freeze([
     cours: true,
     pagesCours: 6,
     creerSerie: genererSerieFractionsDecimaux,
+    nombreQuestionsMaximum: 20,
+  }),
+  definirNotion({
+    id: NOTION_ECRITURES_MULTIPLES_NOMBRE,
+    nom: "Un nombre, plusieurs écritures",
+    gabarit: GABARIT_ECRITURES_MULTIPLES,
+    rendu: RENDU_ECRITURES_MULTIPLES,
+    graineApercu: "apercu-nc05-complet",
+    cours: true,
+    pagesCours: 6,
+    creerSerie: genererSerieEcrituresMultiples,
     nombreQuestionsMaximum: 20,
   }),
   definirNotion({

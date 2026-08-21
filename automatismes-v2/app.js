@@ -3,7 +3,7 @@ import {
   COULEURS_RANGS_NUMERATION_DECIMALE,
   RAYONS,
   TYPOGRAPHIE,
-} from "../packages/charte/src/charte.js?v=40";
+} from "../packages/charte/src/charte.js?v=41";
 import {
   avancerFractionAide,
   avancerCorrespondanceAide,
@@ -17,6 +17,7 @@ import {
   fermerCours,
   lireConfiguration,
   nombreReussites,
+  NOTION_ECRITURES_MULTIPLES_NOMBRE,
   NOTION_NC01,
   NOTION_NC02,
   notionCourante,
@@ -36,30 +37,32 @@ import {
   saisirChiffre,
   tournerSolide,
   validerReponse,
-} from "./src/etat-lecteur.js?v=40";
+} from "./src/etat-lecteur.js?v=41";
 import {
   TYPE_REPONSE_DEUX_ENTIERS,
   TYPE_REPONSE_ENTIER_NATUREL,
   TYPE_REPONSE_FRACTION_EQUIVALENTE,
   TYPE_REPONSE_NOMBRE_DECIMAL,
   TYPE_REPONSE_CHOIX_UNIQUE,
-} from "../packages/contrats/src/question-v2.js?v=40";
+  TYPE_REPONSE_SELECTION_MULTIPLE,
+} from "../packages/contrats/src/question-v2.js?v=41";
 import {
   connaitNotionLecteur,
   obtenirNotionLecteur,
   RENDU_CARRES,
   RENDU_DIVISIBILITE,
+  RENDU_ECRITURES_MULTIPLES,
   RENDU_FRACTIONS_DECIMAUX,
   RENDU_SOLIDE,
   RENDU_VOLUME,
   NOTION_FRACTIONS_SIMPLES_DECIMAUX,
-} from "./src/registre-lecteur.js?v=40";
+} from "./src/registre-lecteur.js?v=41";
 import {
   DOMAINES_AUTOMATISMES,
   MICRO_NOTIONS_AUTOMATISMES,
   normaliserIdentifiantMicroNotion,
-} from "../packages/automatismes/src/identifiants.js?v=40";
-import { COURS_SOLIDES_USUELS } from "../packages/automatismes/src/espace-et-geometrie/solides-usuels/reconnaissance.js?v=40";
+} from "../packages/automatismes/src/identifiants.js?v=41";
+import { COURS_SOLIDES_USUELS } from "../packages/automatismes/src/espace-et-geometrie/solides-usuels/reconnaissance.js?v=41";
 import {
   creerCone,
   creerCube,
@@ -68,14 +71,14 @@ import {
   creerPrisme,
   creerPyramide,
   dessinerSolide,
-} from "../packages/objets/src/solides.js?v=40";
+} from "../packages/objets/src/solides.js?v=41";
 import {
   ACTION_TOUCHE_EFFACER,
   ACTION_TOUCHE_SAISIR,
   ACTION_TOUCHE_VALIDER,
   obtenirDispositionClavier,
-} from "../packages/objets/src/clavier.js?v=40";
-import { formulationCritereDivisibilite } from "../packages/automatismes/src/nombres-et-calculs/criteres-divisibilite/critere-precis.js?v=40";
+} from "../packages/objets/src/clavier.js?v=41";
+import { formulationCritereDivisibilite } from "../packages/automatismes/src/nombres-et-calculs/criteres-divisibilite/critere-precis.js?v=41";
 import {
   caseVide,
   difference,
@@ -92,32 +95,46 @@ import {
   variable,
   versHtmlEgalitesAlignees,
   versHtmlSemantique,
-} from "../packages/objets/src/expressions.js?v=40";
+} from "../packages/objets/src/expressions.js?v=41";
 import {
   dessinerCarreQuadrille,
-} from "../packages/objets/src/carre-quadrille.js?v=40";
-import { dessinerDoubleDroiteGraduee } from "../packages/objets/src/droite-graduee.js?v=40";
-import { dessinerBandesFractionnairesSurRailDecimal } from "../packages/objets/src/bandes-fractions-rail.js?v=40";
+} from "../packages/objets/src/carre-quadrille.js?v=41";
+import {
+  dessinerDoubleDroiteGraduee,
+  dessinerDroiteGraduee,
+} from "../packages/objets/src/droite-graduee.js?v=41";
+import { dessinerGrilleFraction } from "../packages/objets/src/fractions.js?v=41";
+import { dessinerBandesFractionnairesSurRailDecimal } from "../packages/objets/src/bandes-fractions-rail.js?v=41";
 import {
   dessinerConversionRangsNumerationDecimale,
   dessinerEchangeRangsNumerationDecimale,
   dessinerMaterielNumerationDecimale,
   dessinerTableauNumerationDecimale,
-} from "../packages/objets/src/numeration-decimale.js?v=40";
+} from "../packages/objets/src/numeration-decimale.js?v=41";
 import {
   dessinerDemiAvecDixiemes,
   dessinerReorganisationCentiemes,
-} from "../packages/objets/src/correspondances-decimales.js?v=40";
+} from "../packages/objets/src/correspondances-decimales.js?v=41";
 import {
   construireDonneesTableauDepuisFraction,
   formaterFractionEnDecimal,
   reduireFraction,
-} from "../packages/objets/src/fractions-decimaux.js?v=40";
+} from "../packages/objets/src/fractions-decimaux.js?v=41";
 import {
   diagnostiquerDecimalVersNumerateur,
   diagnostiquerFractionLibre,
   diagnostiquerFractionVersDecimal,
-} from "./src/diagnostic-fractions-decimaux.js?v=40";
+} from "./src/diagnostic-fractions-decimaux.js?v=41";
+import {
+  FAMILLE_CHAINE_EGALITES,
+  FAMILLE_FRACTION_REPERE_POURCENTAGE,
+  FAMILLE_POURCENTAGE_DECIMAL,
+  FAMILLE_POURCENTAGE_FRACTION_CENTIEMES,
+  FAMILLE_RECONNAITRE_EQUIVALENCES,
+  FAMILLE_UNITE_DEPASSEMENT,
+  formaterPourcentageEnDecimal,
+  lirePourcentageQuestion,
+} from "../packages/automatismes/src/nombres-et-calculs/ecritures-multiples-nombre/questions.js?v=41";
 
 const MICRO_NOTION_FRACTION_VERS_DECIMAL =
   MICRO_NOTIONS_AUTOMATISMES.FRACTION_VERS_DECIMAL;
@@ -155,6 +172,7 @@ const DOMAINES_MENU = Object.freeze([
       NOTION_NC01,
       NOTION_NC02,
       NOTION_FRACTIONS_SIMPLES_DECIMAUX,
+      NOTION_ECRITURES_MULTIPLES_NOMBRE,
     ]),
   }),
   Object.freeze({
@@ -201,6 +219,10 @@ const LIBELLES_MODULES_MENU = Object.freeze({
   [NOTION_FRACTIONS_SIMPLES_DECIMAUX]: Object.freeze({
     titre: "Fractions simples et décimaux",
     precision: "Dans les deux sens",
+  }),
+  [NOTION_ECRITURES_MULTIPLES_NOMBRE]: Object.freeze({
+    titre: "Un nombre, plusieurs écritures",
+    precision: "Décimal, fraction et pourcentage",
   }),
 });
 
@@ -4184,10 +4206,457 @@ function rendreCoursFractionsDecimaux() {
   });
 }
 
+function varianteQuestionEcrituresMultiples(question) {
+  return question.classement.complements
+    .find((complement) => complement.startsWith("variante-"))
+    ?.slice("variante-".length) ?? "";
+}
+
+function pourcentageQuestionEcrituresMultiples(question) {
+  const pourcentage = lirePourcentageQuestion(question);
+  if (!Number.isSafeInteger(pourcentage) || pourcentage < 1 || pourcentage > 250) {
+    throw new Error("question NC-05 sans pourcentage entier entre 1 et 250");
+  }
+  return pourcentage;
+}
+
+function rendrePourcentage(valeur, classe = "") {
+  return `<span class="ecriture-pourcentage ${classe}" role="math" aria-label="${echapper(valeur)} pour cent"><strong>${echapper(valeur)}</strong><span aria-hidden="true">%</span></span>`;
+}
+
+function valeurReponseAfficheeEcritures(question) {
+  if (estEntrainement()) return etat.saisie || "…";
+  if (!etat.reponseRevelee && !etat.correctionOuverte) return "?";
+  return question.reponse.type === TYPE_REPONSE_NOMBRE_DECIMAL
+    ? formaterFractionEnDecimal(
+      question.reponse.attendu.numerateur,
+      question.reponse.attendu.denominateur,
+    )
+    : String(question.reponse.attendu);
+}
+
+function rendreCaseEcritures(question, { suffixe = "", ariaLabel = "Case à compléter" } = {}) {
+  const valeur = valeurReponseAfficheeEcritures(question);
+  const valeurAccessible = valeur === "…"
+    ? "vide"
+    : valeur === "?"
+      ? "non révélée"
+      : `${valeur}${suffixe === "%" ? " pour cent" : suffixe ? ` ${suffixe}` : ""}`;
+  return `<span class="cible-ecriture-nc05">
+    <output class="${classesCaseRationnelle()} case-ecriture-nc05" aria-live="polite" aria-atomic="true" aria-label="${echapper(`${ariaLabel} : ${valeurAccessible}`)}">${echapper(valeur)}</output>
+    ${suffixe ? `<span class="suffixe-cible-nc05" aria-hidden="true">${echapper(suffixe)}</span>` : ""}
+  </span>`;
+}
+
+function rendreFractionCibleEcritures(question, denominateur) {
+  return rendreFractionEmpilee("case", denominateur, {
+    classe: "fraction-reponse fraction-reponse-nc05",
+    numerateurHtml: rendreCaseEcritures(question, {
+      ariaLabel: "Numérateur à compléter",
+    }),
+    denominateurHtml: `<span>${echapper(denominateur)}</span>`,
+  });
+}
+
+function rendreLibelleChoixEcritures(choix) {
+  const fraction = /^(\d+)\/(\d+)$/.exec(choix.libelle);
+  if (fraction) {
+    return rendreFractionEmpilee(Number(fraction[1]), Number(fraction[2]));
+  }
+  const mixte = /^(\d+) \+ (\d+)\/(\d+)$/.exec(choix.libelle);
+  if (mixte) {
+    return `<span class="ecriture-mixte"><strong>${echapper(mixte[1])}</strong><span>+</span>${rendreFractionEmpilee(Number(mixte[2]), Number(mixte[3]))}</span>`;
+  }
+  const pourcentage = /^(\d+) %$/.exec(choix.libelle);
+  if (pourcentage) return rendrePourcentage(Number(pourcentage[1]));
+  if (/^\d+(?:,\d+)?$/.test(choix.libelle)) {
+    return `<strong class="ecriture-decimale-nc05">${echapper(choix.libelle)}</strong>`;
+  }
+  return echapper(choix.libelle);
+}
+
+function denominateurQuestionEcritures(question) {
+  return blocQuestion(question, "source-fraction")?.denominateur
+    ?? blocQuestion(question, "denominateur-cible")?.valeur
+    ?? blocQuestion(question, "denominateur-mixte")?.valeur
+    ?? null;
+}
+
+function rendreChaineQuestionEcritures(question) {
+  const variante = varianteQuestionEcrituresMultiples(question);
+  const pourcentage = pourcentageQuestionEcrituresMultiples(question);
+  const decimal = formaterPourcentageEnDecimal(pourcentage);
+  const fractionSource = blocQuestion(question, "source-fraction");
+  const denominateur = denominateurQuestionEcritures(question);
+  const partieEntiere = blocQuestion(question, "partie-entiere")?.valeur;
+  const numerateurMixte = blocQuestion(question, "numerateur-mixte")?.valeur;
+  const egal = '<span class="signe-egal-nc05" role="math" aria-label="égal">=</span>';
+
+  if (variante === "pourcentage-vers-fraction-centiemes") {
+    return `${rendrePourcentage(pourcentage)}${egal}${rendreFractionCibleEcritures(question, 100)}`;
+  }
+  if (variante === "pourcentage-vers-decimal") {
+    return `${rendrePourcentage(pourcentage)}${egal}${rendreCaseEcritures(question, { ariaLabel: "Écriture décimale à compléter" })}`;
+  }
+  if (variante === "decimal-vers-pourcentage") {
+    return `<strong class="ecriture-decimale-nc05">${echapper(decimal)}</strong>${egal}${rendreCaseEcritures(question, { suffixe: "%", ariaLabel: "Pourcentage à compléter" })}`;
+  }
+  if (variante === "fraction-vers-pourcentage") {
+    return `${rendreFractionEmpilee(fractionSource.numerateur, fractionSource.denominateur)}${egal}${rendreCaseEcritures(question, { suffixe: "%", ariaLabel: "Pourcentage à compléter" })}`;
+  }
+  if (variante === "chaine-vers-pourcentage") {
+    return `<strong class="ecriture-decimale-nc05">${echapper(decimal)}</strong>${egal}${rendreFractionEmpilee(fractionSource.numerateur, fractionSource.denominateur)}${egal}${rendreCaseEcritures(question, { suffixe: "%", ariaLabel: "Pourcentage à compléter" })}`;
+  }
+  if (variante === "chaine-vers-decimal") {
+    return `${rendreCaseEcritures(question, { ariaLabel: "Écriture décimale à compléter" })}${egal}${rendreFractionEmpilee(fractionSource.numerateur, fractionSource.denominateur)}${egal}${rendrePourcentage(pourcentage)}`;
+  }
+  if (variante === "chaine-vers-fraction") {
+    return `<strong class="ecriture-decimale-nc05">${echapper(decimal)}</strong>${egal}${rendreFractionCibleEcritures(question, denominateur)}${egal}${rendrePourcentage(pourcentage)}`;
+  }
+  if (variante === "unite-vers-entier") {
+    return `${rendrePourcentage(100)}${egal}${rendreCaseEcritures(question, { ariaLabel: "Nombre à compléter" })}`;
+  }
+  if (variante === "mixte-vers-pourcentage") {
+    return `<span class="ecriture-mixte"><strong>${echapper(partieEntiere)}</strong><span>+</span>${rendreFractionEmpilee(numerateurMixte, denominateur)}</span>${egal}${rendreCaseEcritures(question, { suffixe: "%", ariaLabel: "Pourcentage à compléter" })}`;
+  }
+  if (variante === "pourcentage-vers-mixte") {
+    return `${rendrePourcentage(pourcentage)}${egal}<span class="ecriture-mixte"><strong>${echapper(partieEntiere)}</strong><span>+</span>${rendreFractionCibleEcritures(question, denominateur)}</span>`;
+  }
+  if (variante === "choix-unique") {
+    return rendrePourcentage(pourcentage);
+  }
+  return `<strong class="ecriture-decimale-nc05">${echapper(decimal)}</strong>`;
+}
+
+function rendreQuestionEcrituresMultiples() {
+  const question = questionCourante(etat);
+  const reconnaissance = familleQuestion(question)
+    === FAMILLE_RECONNAITRE_EQUIVALENCES;
+  const selectionMultiple = question.reponse.type
+    === TYPE_REPONSE_SELECTION_MULTIPLE;
+  const carteQuestion = `<main class="carte-question carte-question-ecritures famille-${echapper(familleQuestion(question))}">
+    <p class="etiquette-notion">${echapper(nomNotion())}</p>
+    <h1>${echapper(texteBloc(question, "consigne"))}</h1>
+    ${reconnaissance
+      ? `<p class="cible-reconnaissance-nc05">${rendreChaineQuestionEcritures(question)}</p>
+        <p class="precision">${selectionMultiple ? "Plusieurs réponses sont attendues." : "Choisis une seule réponse."}</p>
+        <div class="grille-choix grille-choix-ecritures ${estEntrainement() ? "" : "grille-projection"}"
+          role="${selectionMultiple || !estEntrainement() ? "group" : "radiogroup"}"
+          aria-label="Écritures proposées">
+          ${rendreChoix(question, rendreLibelleChoixEcritures)}
+        </div>`
+      : `<p class="chaine-question-nc05">${rendreChaineQuestionEcritures(question)}</p>
+        ${estEntrainement() ? '<p class="indication-clavier-physique">Chiffres · virgule si nécessaire · Retour arrière · Entrée pour valider</p>' : ""}`}
+    ${estEntrainement() ? rendreZoneRetour() : '<div class="zone-retour" aria-hidden="true"></div>'}
+  </main>`;
+  return rendreCoqueLecteur(question, carteQuestion);
+}
+
+function rendreDroiteEcritures(
+  pourcentage,
+  { equivalenceVisible = false, etiquetteSource = null } = {},
+) {
+  const valeur = pourcentage / 100;
+  const depasseUn = valeur > 1;
+  const max = depasseUn ? 3 : 1.25;
+  const graduations = depasseUn
+    ? [0, 0.5, 1, 1.5, 2, 2.5, 3]
+    : [0, 0.25, 0.5, 0.75, 1, 1.25];
+  const etiquette = equivalenceVisible
+    ? `${formaterPourcentageEnDecimal(pourcentage)} = ${pourcentage} %`
+    : etiquetteSource ?? `${pourcentage} %`;
+  const construire = (largeur, classe) => rendreFigureFraction(
+    dessinerDroiteGraduee({
+      min: 0,
+      max,
+      graduations,
+      largeur,
+      nom: "Valeur",
+      tailleEtiquette: 17,
+      points: [{
+        valeur,
+        etiquette,
+        couleur: COULEURS.orange,
+        position: "dessous",
+      }],
+      description: equivalenceVisible
+        ? `Le même point est repéré par ${formaterPourcentageEnDecimal(pourcentage)} et ${pourcentage} pour cent.`
+        : "Le point correspondant à l’écriture déjà donnée est placé sur la droite graduée.",
+    }),
+    `figure-droite-nc05 ${classe}`,
+  );
+  return `<div class="droite-nc05-responsive">
+    ${construire(680, "droite-nc05-large")}
+    ${construire(320, "droite-nc05-mobile")}
+  </div>`;
+}
+
+function etiquetteSourceAideEcritures(question) {
+  const pourcentage = blocQuestion(question, "source-pourcentage")?.valeur;
+  if (Number.isSafeInteger(pourcentage)) return `${pourcentage} %`;
+  const decimal = blocQuestion(question, "source-decimale");
+  if (decimal?.type === "rationnel") {
+    return formaterPourcentageEnDecimal(
+      (decimal.numerateur * 100) / decimal.denominateur,
+    );
+  }
+  const fraction = blocQuestion(question, "source-fraction");
+  if (fraction?.type === "rationnel") {
+    return {
+      type: "fraction",
+      numerateur: fraction.numerateur,
+      denominateur: fraction.denominateur,
+    };
+  }
+  const partieEntiere = blocQuestion(question, "partie-entiere")?.valeur;
+  const numerateur = blocQuestion(question, "numerateur-mixte")?.valeur;
+  const denominateur = blocQuestion(question, "denominateur-mixte")?.valeur;
+  if (
+    Number.isSafeInteger(partieEntiere)
+    && Number.isSafeInteger(numerateur)
+    && Number.isSafeInteger(denominateur)
+  ) {
+    return "écriture donnée";
+  }
+  return "Même nombre";
+}
+
+function rendreChaineCompleteEcritures(question) {
+  const pourcentage = pourcentageQuestionEcrituresMultiples(question);
+  const decimal = formaterPourcentageEnDecimal(pourcentage);
+  const fractionSource = blocQuestion(question, "source-fraction");
+  const fractionReduite = question.correction?.find(
+    (bloc) => bloc.id === "correction-fraction-reduite",
+  );
+  const denominateur = denominateurQuestionEcritures(question);
+  const partieEntiere = Math.floor(pourcentage / 100);
+  const reste = pourcentage % 100;
+  const elements = [
+    `<strong class="ecriture-decimale-nc05">${echapper(decimal)}</strong>`,
+    rendreFractionEmpilee(pourcentage, 100),
+  ];
+  const fractionsAjoutees = new Set([`${pourcentage}/100`]);
+  const ajouterFraction = (numerateur, denominateurFraction) => {
+    const cle = `${numerateur}/${denominateurFraction}`;
+    if (
+      !Number.isSafeInteger(numerateur)
+      || !Number.isSafeInteger(denominateurFraction)
+      || fractionsAjoutees.has(cle)
+    ) return;
+    fractionsAjoutees.add(cle);
+    elements.push(rendreFractionEmpilee(numerateur, denominateurFraction));
+  };
+  if (fractionSource) {
+    ajouterFraction(fractionSource.numerateur, fractionSource.denominateur);
+  } else if (fractionReduite?.type === "rationnel") {
+    ajouterFraction(fractionReduite.numerateur, fractionReduite.denominateur);
+  }
+  if (
+    pourcentage > 100
+    && denominateur
+    && reste > 0
+    && (reste * denominateur) % 100 === 0
+  ) {
+    elements.push(`<span class="ecriture-mixte"><strong>${partieEntiere}</strong><span>+</span>${rendreFractionEmpilee((reste * denominateur) / 100, denominateur)}</span>`);
+  }
+  elements.push(rendrePourcentage(pourcentage));
+  return `<p class="chaine-complete-nc05">${elements.join('<span class="signe-egal-nc05" role="math" aria-label="égal">=</span>')}</p>`;
+}
+
+function rendreAideEcrituresMultiples(question) {
+  if (!etat.aideOuverte) return "";
+  const pourcentage = pourcentageQuestionEcrituresMultiples(question);
+  const grille = pourcentage <= 100
+    && [
+      FAMILLE_POURCENTAGE_FRACTION_CENTIEMES,
+      FAMILLE_POURCENTAGE_DECIMAL,
+    ].includes(familleQuestion(question))
+    ? rendreFigureFraction(
+      dessinerGrilleFraction({
+        colonnes: 10,
+        lignes: 10,
+        coloriees: 0,
+        cote: 150,
+        ecriture: false,
+      }),
+      "figure-grille-aide-nc05",
+      "Une unité partagée en 100 cases égales",
+    )
+    : "";
+  const etapes = question.aide.blocs.map((bloc, index) => `<details class="etape-aide-nc05" ${index === 0 ? "open" : ""}>
+    <summary><span>${index + 1}</span>${["Repérer", "Traduire %", "Relier", "Vérifier"][index]}</summary>
+    <p>${echapper(bloc.contenu)}</p>
+  </details>`).join("");
+  const contenu = `<section class="rappel-question rappel-question-nc05">
+      <span>Question en cours</span>
+      <p class="chaine-question-nc05">${rendreChaineQuestionEcritures(question)}</p>
+    </section>
+    <div class="visuels-aide-nc05">${grille}${rendreDroiteEcritures(pourcentage, {
+      etiquetteSource: etiquetteSourceAideEcritures(question),
+    })}</div>
+    <div class="etapes-aide-nc05">${etapes}</div>
+    ${rendreAccesCoursDepuisAide()}`;
+  return rendreCadrePanneau({
+    type: "aide",
+    surtitre: "Un indice à la fois",
+    titre: "Garder le même nombre",
+    contenu,
+    classes: "panneau-ecritures-multiples",
+  });
+}
+
+function diagnosticsChoisisEcritures(question) {
+  if (etat.validation?.juste !== false || etat.selection.length === 0) return "";
+  return etat.selection
+    .filter((id) => !question.reponse.attendus.includes(id))
+    .map((id) => question.correction.find((bloc) => bloc.id === `diagnostic-${id}`))
+    .filter(Boolean)
+    .map((bloc) => `<p class="diagnostic-nc05"><strong>À vérifier</strong>${echapper(bloc.contenu)}</p>`)
+    .join("");
+}
+
+function rendreCorrectionEcrituresMultiples(question) {
+  if (!etat.correctionOuverte) return "";
+  const pourcentage = pourcentageQuestionEcrituresMultiples(question);
+  const contenu = `${rendreReponseEleve(question)}
+    ${diagnosticsChoisisEcritures(question)}
+    <p class="principe-correction-nc05">Le symbole <strong>%</strong> signifie « sur 100 ». On conserve donc exactement la même valeur.</p>
+    ${rendreDroiteEcritures(pourcentage, { equivalenceVisible: true })}
+    <p class="titre-reponse-correcte">Réponse correcte</p>
+    ${rendreChaineCompleteEcritures(question)}
+    <p class="controle-grandeur-nc05">${pourcentage < 100
+      ? "Le résultat est bien entre 0 et 1, car le pourcentage est inférieur à 100 %."
+      : pourcentage === 100
+        ? "Le résultat vaut exactement 1, car 100 % représente une unité entière."
+        : "Le résultat est bien supérieur à 1, car le pourcentage dépasse 100 %."}</p>`;
+  return rendreCadrePanneau({
+    type: "correction",
+    surtitre: "Après la réponse",
+    titre: "Correction expliquée",
+    contenu,
+    classes: "panneau-ecritures-multiples",
+  });
+}
+
+function rendreGrilleCoursPourcentage(pourcentage, classe = "") {
+  return `<article class="carte-grille-pourcentage-nc05 ${classe}">
+    ${rendreFigureFraction(
+      dessinerGrilleFraction({
+        colonnes: 10,
+        lignes: 10,
+        coloriees: pourcentage,
+        cote: 138,
+        ecriture: false,
+      }),
+      "figure-grille-cours-nc05",
+    )}
+    <p>${rendrePourcentage(pourcentage)}<span>=</span>${rendreFractionEmpilee(pourcentage, 100)}<span>=</span><strong>${echapper(formaterPourcentageEnDecimal(pourcentage))}</strong></p>
+  </article>`;
+}
+
+function rendreRepereCoursEcritures(numerateur, denominateur) {
+  const pourcentage = (numerateur * 100) / denominateur;
+  return `<article class="carte-repere-nc05">
+    <p>${rendreFractionEmpilee(numerateur, denominateur)}<span>=</span><strong>${echapper(formaterPourcentageEnDecimal(pourcentage))}</strong><span>=</span>${rendrePourcentage(pourcentage)}</p>
+  </article>`;
+}
+
+function rendreCarteCoursEcritures(index) {
+  if (index === 0) {
+    return `<article class="carte-cours-nc05">
+      <span class="numero-cours">1</span><h3>Une valeur, plusieurs écritures</h3>
+      <p class="introduction-cours">Une fraction, un décimal et un pourcentage peuvent désigner exactement le même point.</p>
+      ${rendreDroiteEcritures(75, { equivalenceVisible: true })}
+      <p class="chaine-exemple-nc05"><strong>0,75</strong><span>=</span>${rendreFractionEmpilee(3, 4)}<span>=</span>${rendrePourcentage(75)}</p>
+      <p class="definition-cours">L’écriture change ; la valeur et la position du nombre ne changent pas.</p>
+    </article>`;
+  }
+  if (index === 1) {
+    return `<article class="carte-cours-nc05">
+      <span class="numero-cours">2</span><h3>« Pour cent » signifie « sur 100 »</h3>
+      <div class="comparaison-grilles-nc05">
+        ${rendreGrilleCoursPourcentage(7, "petit-pourcentage")}
+        ${rendreGrilleCoursPourcentage(70)}
+      </div>
+      <p class="alerte-decimale-nc05"><strong>Attention :</strong> 7 % = 0,07, tandis que 70 % = 0,7.</p>
+    </article>`;
+  }
+  if (index === 2) {
+    return `<article class="carte-cours-nc05">
+      <span class="numero-cours">3</span><h3>Construire avant d’utiliser le raccourci</h3>
+      <div class="deux-tableaux-nc05">
+        <section><h4>Quarante pour cent</h4>${rendreTableauNumeration(40, 100, { afficherChiffres: true, colonneMiseEnEvidence: "dixiemes" })}<p>${rendrePourcentage(40)} = <strong>0,4</strong></p></section>
+        <section><h4>Quatre pour cent</h4>${rendreTableauNumeration(4, 100, { afficherChiffres: true, colonneMiseEnEvidence: "centiemes" })}<p>${rendrePourcentage(4)} = <strong>0,04</strong></p></section>
+      </div>
+      <p class="definition-cours">Le nombre de centièmes fixe la place de la virgule : on ne supprime jamais le zéro utile.</p>
+    </article>`;
+  }
+  if (index === 3) {
+    return `<article class="carte-cours-nc05">
+      <span class="numero-cours">4</span><h3>Quatre repères à automatiser</h3>
+      <div class="reperes-cours-nc05">
+        ${rendreRepereCoursEcritures(1, 2)}
+        ${rendreRepereCoursEcritures(1, 4)}
+        ${rendreRepereCoursEcritures(3, 4)}
+        ${rendreRepereCoursEcritures(1, 5)}
+      </div>
+      <p class="definition-cours">Ces repères permettent ensuite de reconnaître rapidement leurs multiples.</p>
+    </article>`;
+  }
+  if (index === 4) {
+    return `<article class="carte-cours-nc05">
+      <span class="numero-cours">5</span><h3>100 % est l’unité ; 120 % la dépasse</h3>
+      ${rendreDroiteEcritures(120, { equivalenceVisible: true })}
+      <p class="chaine-exemple-nc05 chaine-exemple-longue-nc05"><strong>1,2</strong><span>=</span>${rendreFractionEmpilee(12, 10)}<span>=</span>${rendreFractionEmpilee(6, 5)}<span>=</span><span class="ecriture-mixte"><strong>1</strong><span>+</span>${rendreFractionEmpilee(1, 5)}</span><span>=</span>${rendrePourcentage(120)}<span>=</span>${rendreFractionEmpilee(120, 100)}</p>
+      <p class="definition-cours">Un pourcentage peut dépasser 100 % : il représente alors un nombre supérieur à 1.</p>
+    </article>`;
+  }
+  return `<article class="carte-cours-nc05">
+    <span class="numero-cours">6</span><h3>Le raccourci, puis le contrôle</h3>
+    <div class="raccourcis-nc05">
+      <section><span>Pourcentage → décimal</span><strong>÷ 100</strong><p>35 % = 0,35</p></section>
+      <section><span>Décimal → pourcentage</span><strong>× 100</strong><p>1,4 = 140 %</p></section>
+    </div>
+    <ol class="strategies-nc05">
+      <li><strong>Je lis la cible.</strong><span>Décimal, numérateur ou pourcentage ?</span></li>
+      <li><strong>Je passe par « sur 100 ».</strong><span>Je garde la valeur exacte.</span></li>
+      <li><strong>Je contrôle.</strong><span>Moins de 100 % : entre 0 et 1 ; plus de 100 % : au-dessus de 1.</span></li>
+    </ol>
+  </article>`;
+}
+
+function rendreCoursEcrituresMultiples() {
+  if (!etat.coursOuvert) return "";
+  const total = nombrePagesCours();
+  const titres = [
+    "Même nombre, même point",
+    "Le sens de %",
+    "Des centièmes au décimal",
+    "Les repères utiles",
+    "Atteindre et dépasser 1",
+    "Méthode et contrôle",
+  ];
+  const derniere = pageCoursCourante === total - 1;
+  const pied = `<nav class="navigation-cours" aria-label="Navigation dans le cours">
+    <button class="bouton-secondaire" type="button" data-action="cours-precedent" ${pageCoursCourante === 0 ? "disabled" : ""}>Précédent</button>
+    <div class="points-cours" aria-label="Page ${pageCoursCourante + 1} sur ${total}">${Array.from({ length: total }, (_, page) => `<span class="${page === pageCoursCourante ? "actif" : ""}"></span>`).join("")}</div>
+    <button class="bouton-principal" type="button" data-action="${derniere ? "fermer-cours" : "cours-suivant"}">${derniere ? "J’ai compris" : "Suivant"}</button>
+  </nav>`;
+  return rendreCadrePanneau({
+    type: "cours",
+    surtitre: `Cours · ${pageCoursCourante + 1} / ${total}`,
+    titre: titres[pageCoursCourante],
+    contenu: `<div class="cours-une-carte">${rendreCarteCoursEcritures(pageCoursCourante)}</div>`,
+    pied,
+    classes: "panneau-ecritures-multiples panneau-cours-ecritures",
+  });
+}
+
 const RENDUS_COURS = Object.freeze({
   [RENDU_DIVISIBILITE]: rendreCoursDivisibilite,
   [RENDU_CARRES]: rendreCoursCarres,
   [RENDU_FRACTIONS_DECIMAUX]: rendreCoursFractionsDecimaux,
+  [RENDU_ECRITURES_MULTIPLES]: rendreCoursEcrituresMultiples,
   [RENDU_SOLIDE]: rendreCoursReconnaissance,
   [RENDU_VOLUME]: rendreCoursVolumes,
 });
@@ -4196,6 +4665,7 @@ const RENDUS_AIDE = Object.freeze({
   [RENDU_DIVISIBILITE]: rendreAideDivisibilite,
   [RENDU_CARRES]: rendreAideCarres,
   [RENDU_FRACTIONS_DECIMAUX]: rendreAideFractionsDecimaux,
+  [RENDU_ECRITURES_MULTIPLES]: rendreAideEcrituresMultiples,
   [RENDU_SOLIDE]: rendreAideSolides,
   [RENDU_VOLUME]: rendreAideVolumes,
 });
@@ -4204,6 +4674,7 @@ const RENDUS_CORRECTION = Object.freeze({
   [RENDU_DIVISIBILITE]: rendreCorrectionDivisibilite,
   [RENDU_CARRES]: rendreCorrectionCarres,
   [RENDU_FRACTIONS_DECIMAUX]: rendreCorrectionFractionsDecimaux,
+  [RENDU_ECRITURES_MULTIPLES]: rendreCorrectionEcrituresMultiples,
   [RENDU_SOLIDE]: rendreCorrectionSolides,
   [RENDU_VOLUME]: rendreCorrectionVolumes,
 });
@@ -4212,6 +4683,7 @@ const RENDUS_QUESTION = Object.freeze({
   [RENDU_DIVISIBILITE]: rendreQuestionDivisibilite,
   [RENDU_CARRES]: rendreQuestionCarres,
   [RENDU_FRACTIONS_DECIMAUX]: rendreQuestionFractionsDecimaux,
+  [RENDU_ECRITURES_MULTIPLES]: rendreQuestionEcrituresMultiples,
   [RENDU_SOLIDE]: rendreQuestionSolides,
   [RENDU_VOLUME]: rendreQuestionVolumes,
 });

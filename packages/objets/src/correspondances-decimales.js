@@ -11,8 +11,8 @@ import {
   COULEURS_NUMERATION_DECIMALE,
   COULEURS_RANGS_NUMERATION_DECIMALE,
   TYPOGRAPHIE,
-} from "../../charte/src/charte.js?v=40";
-import { rendreFractionSvg } from "./expressions.js?v=40";
+} from "../../charte/src/charte.js?v=41";
+import { rendreFractionSvg } from "./expressions.js?v=41";
 
 export const VERSION_CORRESPONDANCES_DECIMALES = 6;
 

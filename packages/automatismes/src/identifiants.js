@@ -19,6 +19,7 @@ export const MODULES_AUTOMATISMES = Object.freeze({
   CRITERES_DIVISIBILITE: "criteres-divisibilite",
   CARRES_ENTIERS: "carres-entiers-0-a-12",
   FRACTIONS_SIMPLES_DECIMAUX: "fractions-simples-decimaux",
+  ECRITURES_MULTIPLES_NOMBRE: "ecritures-multiples-nombre",
   SOLIDES_USUELS: "solides-usuels",
   VOLUME_CUBE_PAVE: "volume-cube-pave",
   VOLUME_PRISME: "volume-prisme",
@@ -30,6 +31,7 @@ export const MICRO_NOTIONS_AUTOMATISMES = Object.freeze({
   CARRES_ENTIERS: "carres-entiers-0-a-12",
   FRACTION_VERS_DECIMAL: "fraction-vers-decimal",
   DECIMAL_VERS_FRACTION: "decimal-vers-fraction",
+  ECRITURES_MULTIPLES_NOMBRE: "ecritures-multiples-nombre",
   RECONNAITRE_SOLIDES_USUELS: "reconnaitre-solides-usuels",
   VOLUME_CUBE_PAVE: "volume-cube-pave",
   VOLUME_PRISME_DROIT: "volume-prisme-droit",
@@ -38,6 +40,7 @@ export const MICRO_NOTIONS_AUTOMATISMES = Object.freeze({
 
 export const CIBLES_DNB_AUTOMATISMES = Object.freeze({
   FRACTIONS_SIMPLES_DECIMAUX: "dnb-2026-01",
+  ECRITURES_MULTIPLES_NOMBRE: "dnb-2026-06",
   CARRES_ENTIERS: "dnb-2026-08",
   CRITERES_DIVISIBILITE: "dnb-2026-09",
   SOLIDES_USUELS: "dnb-2026-21",
@@ -120,6 +123,13 @@ export const IDENTITES_AUTOMATISMES = Object.freeze({
     cible: CIBLES_DNB_AUTOMATISMES.FRACTIONS_SIMPLES_DECIMAUX,
     codePilotage: "NC-04",
     aliasesMicroNotion: ["nc-04"],
+  }),
+  ECRITURES_MULTIPLES_NOMBRE: figerIdentite({
+    domaine: DOMAINES_AUTOMATISMES.NC,
+    module: MODULES_AUTOMATISMES.ECRITURES_MULTIPLES_NOMBRE,
+    microNotion: MICRO_NOTIONS_AUTOMATISMES.ECRITURES_MULTIPLES_NOMBRE,
+    cible: CIBLES_DNB_AUTOMATISMES.ECRITURES_MULTIPLES_NOMBRE,
+    codePilotage: "NC-05",
   }),
   RECONNAITRE_SOLIDES_USUELS: figerIdentite({
     domaine: DOMAINES_AUTOMATISMES.GE,

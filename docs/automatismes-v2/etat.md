@@ -15,6 +15,23 @@
   standard. La vérification complète passe **1 647 tests sur 1 647** dans
   **232 suites**. Le graphe de cache est invalidé atomiquement en `v40`.
 
+## Publication d'essai de NC-05 du 21 août
+
+- NC-05 « Un nombre, plusieurs écritures » est intégré au lecteur public avec
+  six familles reliant pourcentage, décimal, fractions repères et écritures
+  supérieures à l'unité. Il ne répète pas les conversions isolées de NC-03 /
+  NC-04.
+- Les séries de 5, 10, 15 ou 20 sont seedées, sans valeur rationnelle répétée.
+  Dès 10 questions, elles couvrent `100 %` et une valeur supérieure à 1. La
+  sélection multiple est réservée à l'unique second item de reconnaissance
+  d'une série de 20.
+- Le cours compte six pages. L'aide reste progressive et ne dévoile pas la
+  réponse ; la correction reprend la valeur exacte et son ordre de grandeur.
+- Gwenaël autorise la publication en production afin de tester le module en
+  ligne. Ce déploiement ne vaut pas validation pédagogique : NC-05 reste au
+  statut `construit`. La recette complète passe **1 657 tests sur 1 657** dans
+  **233 suites**. Le graphe de cache public est invalidé atomiquement en `v41`.
+
 ## Sélection explicite du lanceur du 17 août
 
 - D-062 réserve l'état vide au menu ouvert sans paramètre : aucun automatisme
@@ -689,12 +706,12 @@ l'en-tête, ni le comportement de NC-01.
   critique.
 - Le lecteur neuf expose dans « S'entraîner » et « Au tableau » les modules
   `criteres-divisibilite`, `carres-entiers-0-a-12`,
-  `fractions-simples-decimaux`, `solides-usuels`, `volume-cube-pave`,
-  `volume-prisme` et `volume-cylindre`.
+  `fractions-simples-decimaux`, `ecritures-multiples-nombre`,
+  `solides-usuels`, `volume-cube-pave`, `volume-prisme` et `volume-cylindre`.
 - La carte du DNB est établie : **37 cibles officielles distinctes**,
   **38 cibles normalisées** et **88 micro-notions**.
 - Une séance peut cibler une seule notion ou mélanger un nombre quelconque de
-  notions disponibles. Les sept entrées publiques restent séparées dans le
+  notions disponibles. Les huit entrées publiques restent séparées dans le
   registre ; l'entrée fractions emploie une recette commune à ses deux
   micro-notions internes.
 - Le critère par 10 est un complément maths&go validé. Il reste proposé dans le

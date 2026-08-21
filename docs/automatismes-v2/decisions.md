@@ -1515,3 +1515,26 @@ du format standard dans les aides et l'absence de demande `mobile-compact`
 dans l'application. Le format demeure disponible dans l'objet partagé pour
 ses bancs de contrôle, mais n'est plus choisi par ce module visible. Le graphe
 public est invalidé atomiquement en `v40`.
+
+### D-064 — NC-05 est publié pour essai sans être déclaré validé
+
+Gwenaël autorise la mise en ligne de NC-05 « Un nombre, plusieurs écritures »
+afin de pouvoir l'essayer sur téléphone dans le vrai lecteur. La publication
+rend le module accessible dans Automatismes V2, mais ne transforme pas l'essai
+en validation pédagogique : son statut reste `construit` jusqu'à son retour.
+
+Le module relie toujours un pourcentage à une autre écriture et ne réinterroge
+pas isolément NC-03 / NC-04. Il retient six familles : fraction sur 100,
+pourcentage ↔ décimal, fraction repère ↔ pourcentage, chaîne d'égalités, unité
+et dépassement, puis reconnaissance minoritaire. Les séries existent en 5,
+10, 15 et 20 questions ; elles n'emploient qu'une cible à compléter, des
+valeurs rationnelles distinctes, `100 %` et un cas supérieur à 1 dès 10
+questions. La sélection multiple est absente des séries de 1 à 19 et apparaît
+exactement une fois dans une série de 20.
+
+Le calcul reste rationnel exact. Les dénominateurs repères sont 2, 4, 5 et 10 ;
+les dénominateurs 20, 25 et 50, les négatifs, millièmes, pourcentages décimaux
+et écritures périodiques restent hors de cette version. Le cours, l'aide et la
+correction partagent l'invariant « L'écriture change, pas la valeur. » Le
+graphe public V2 est invalidé d'un seul tenant en `v41`. La recette complète
+passe **1 657 tests sur 1 657**, répartis en **233 suites**.

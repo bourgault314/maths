@@ -2104,7 +2104,7 @@ it("propose le parcours DNB puis lance Au tableau sans saisie ni score", async (
   assert.match(application.innerHTML, /Critères de divisibilité/);
   assert.match(application.innerHTML, /Carrés des entiers/);
   assert.match(application.innerHTML, /Fractions simples et décimaux/);
-  assert.match(application.innerHTML, /0 \/ 3/);
+  assert.match(application.innerHTML, /0 \/ 4/);
   assert.match(application.innerHTML, /Choisis au moins un automatisme/);
   assert.match(application.innerHTML, /data-action="preparer" disabled/);
   assert.equal(
@@ -2118,7 +2118,7 @@ it("propose le parcours DNB puis lance Au tableau sans saisie ni score", async (
   }
 
   cliquer(gestionnaires, "choisir-notion", undefined, "criteres-divisibilite");
-  assert.match(application.innerHTML, /1 \/ 3/);
+  assert.match(application.innerHTML, /1 \/ 4/);
   assert.doesNotMatch(application.innerHTML, /data-action="preparer" disabled/);
   assert.equal(
     [...application.innerHTML.matchAll(/class="modrow is-selected"/g)].length,
@@ -2170,6 +2170,34 @@ it("conserve la notion demandée par un lien direct", async () => {
   );
 });
 
+it("rend NC-05 avec son cours, son aide et sa correction exacte", async () => {
+  const { application, gestionnaires } = installerFauxNavigateur(
+    "?notion=ecritures-multiples-nombre&questions=20&graine=apercu-nc05-complet",
+  );
+  await import(`./app.js?fumee=nc05-${Date.now()}`);
+
+  assert.match(application.innerHTML, /Un nombre, plusieurs écritures/);
+  cliquer(gestionnaires, "demarrer");
+  assert.match(application.innerHTML, /carte-question-ecritures/);
+  assert.match(application.innerHTML, /Question 1 sur 20/);
+
+  cliquer(gestionnaires, "aide");
+  assert.match(application.innerHTML, /Repère l[’']écriture|Repère la fraction/);
+  assert.match(application.innerHTML, /100 % = 1|sur 100/);
+  assert.doesNotMatch(application.innerHTML, /correction-invariant/);
+
+  cliquer(gestionnaires, "cours");
+  assert.match(application.innerHTML, /Une valeur, plusieurs écritures/);
+  assert.match(application.innerHTML, /Cours · 1 \/ 6/);
+  cliquer(gestionnaires, "fermer-cours");
+  cliquer(gestionnaires, "fermer-aide");
+
+  cliquer(gestionnaires, "valider");
+  cliquer(gestionnaires, "correction");
+  assert.match(application.innerHTML, /On conserve donc exactement la même valeur/);
+  assert.match(application.innerHTML, /panneau-ecritures-multiples/);
+});
+
 it("sélectionne, révise et rejoue plusieurs automatismes dans une même série", async () => {
   const { application, gestionnaires } = installerFauxNavigateur("");
   await import(`./app.js?fumee=multi-${Date.now()}`);
@@ -2182,7 +2210,7 @@ it("sélectionne, révise et rejoue plusieurs automatismes dans une même série
   );
   cliquer(gestionnaires, "choisir-notion", undefined, "criteres-divisibilite");
   cliquer(gestionnaires, "choisir-notion", undefined, "carres-entiers-0-a-12");
-  assert.match(application.innerHTML, /2 \/ 3 <span class="theme-count-label">sélectionnés/);
+  assert.match(application.innerHTML, /2 \/ 4 <span class="theme-count-label">sélectionnés/);
   assert.match(application.innerHTML, /2 automatismes sélectionnés/);
   assert.match(
     application.innerHTML,

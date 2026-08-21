@@ -4,7 +4,7 @@ import {
   COMPARAISON_CHOIX_EXACT,
   SCHEMA_QUESTION_INSTANCE_V2,
   TYPE_REPONSE_CHOIX_UNIQUE,
-} from "../../../../contrats/src/question-v2.js?v=40";
+} from "../../../../contrats/src/question-v2.js?v=41";
 import {
   BASES_CARRES_ENTIERS,
   blocPuissance,
@@ -13,7 +13,7 @@ import {
   exigerAleatoireCarres,
   exigerParametresCarres,
   valeurParametreOuTirage,
-} from "./commun.js?v=40";
+} from "./commun.js?v=41";
 
 export const NOM_GENERATEUR_SENS_NOTATION_CARRE =
   "nombres-et-calculs.carres-entiers-1-a-12.sens-notation";
