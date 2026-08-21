@@ -17,7 +17,7 @@ import {
   rendreFractionSvg,
 } from "./expressions.js?v=44";
 
-export const VERSION_NUMERATION_DECIMALE = 7;
+export const VERSION_NUMERATION_DECIMALE = 8;
 
 export const ORIENTATIONS_MATERIEL_NUMERATION_DECIMALE = Object.freeze([
   "horizontale",
@@ -123,6 +123,16 @@ function cheminGrilleUnite(cellule) {
   return commandes.join(" ");
 }
 
+function cheminDixDixiemesDansUnite(cellule) {
+  const taille = 10 * cellule;
+  const commandes = [];
+  for (let index = 1; index < 10; index += 1) {
+    const position = nombreSvg(index * cellule);
+    commandes.push(`M 0 ${position} H ${nombreSvg(taille)}`);
+  }
+  return commandes.join(" ");
+}
+
 function cheminGrilleDixieme(cellule, orientation) {
   const commandes = [];
   for (let index = 1; index < 10; index += 1) {
@@ -143,20 +153,36 @@ function dessinerUnite(
   cellule,
   index,
   couleur = COULEURS_NUMERATION_DECIMALE.unite,
+  subdivision = "aucune",
 ) {
   const taille = nombreSvg(10 * cellule);
   const milieu = nombreSvg(5 * cellule);
+  const grille = subdivision === "centiemes"
+    ? cheminGrilleUnite(cellule)
+    : subdivision === "dixiemes"
+      ? cheminDixDixiemesDansUnite(cellule)
+      : "";
+  const separationCinq = subdivision === "centiemes"
+    ? `M ${milieu} 0 V ${taille} M 0 ${milieu} H ${taille}`
+    : subdivision === "dixiemes"
+      ? `M 0 ${milieu} H ${taille}`
+      : "";
   return (
     `<g class="nd-piece nd-unite" data-piece-index="${index}" ` +
     `data-largeur-cellules="10" data-hauteur-cellules="10" ` +
+    `data-subdivision="${subdivision}" ` +
     `transform="translate(${nombreSvg(x)} ${nombreSvg(y)})">` +
     `<rect class="nd-forme" x="0" y="0" width="${taille}" height="${taille}" ` +
     `fill="${couleur}" ` +
     `stroke="${COULEURS_NUMERATION_DECIMALE.trait}" stroke-width="1.25"/>` +
-    `<path class="nd-grille" d="${cheminGrilleUnite(cellule)}" fill="none" ` +
-    `stroke="${COULEURS_NUMERATION_DECIMALE.trait}" stroke-width="0.55"/>` +
-    `<path class="nd-separation-cinq" d="M ${milieu} 0 V ${taille} M 0 ${milieu} H ${taille}" ` +
-    `fill="none" stroke="${COULEURS_NUMERATION_DECIMALE.trait}" stroke-width="1.35"/>` +
+    (grille
+      ? `<path class="nd-grille" d="${grille}" fill="none" ` +
+        `stroke="${COULEURS_NUMERATION_DECIMALE.trait}" stroke-width="0.55"/>`
+      : "") +
+    (separationCinq
+      ? `<path class="nd-separation-cinq" d="${separationCinq}" fill="none" ` +
+        `stroke="${COULEURS_NUMERATION_DECIMALE.trait}" stroke-width="1.35"/>`
+      : "") +
     `</g>`
   );
 }
@@ -168,6 +194,7 @@ function dessinerDixieme(
   orientation,
   index,
   couleur = COULEURS_NUMERATION_DECIMALE.dixieme,
+  subdiviserEnCentiemes = false,
 ) {
   const largeur = orientation === "horizontale" ? 10 * cellule : cellule;
   const hauteur = orientation === "horizontale" ? cellule : 10 * cellule;
@@ -179,14 +206,17 @@ function dessinerDixieme(
     `<g class="nd-piece nd-dixieme" data-piece-index="${index}" ` +
     `data-largeur-cellules="${orientation === "horizontale" ? 10 : 1}" ` +
     `data-hauteur-cellules="${orientation === "horizontale" ? 1 : 10}" ` +
+    `data-subdivision="${subdiviserEnCentiemes ? "centiemes" : "aucune"}" ` +
     `transform="translate(${nombreSvg(x)} ${nombreSvg(y)})">` +
     `<rect class="nd-forme" x="0" y="0" width="${nombreSvg(largeur)}" ` +
     `height="${nombreSvg(hauteur)}" fill="${couleur}" ` +
     `stroke="${COULEURS_NUMERATION_DECIMALE.trait}" stroke-width="1.25"/>` +
-    `<path class="nd-grille" d="${cheminGrilleDixieme(cellule, orientation)}" fill="none" ` +
-    `stroke="${COULEURS_NUMERATION_DECIMALE.trait}" stroke-width="0.55"/>` +
-    `<path class="nd-separation-cinq" d="${separation}" fill="none" ` +
-    `stroke="${COULEURS_NUMERATION_DECIMALE.trait}" stroke-width="1.35"/>` +
+    (subdiviserEnCentiemes
+      ? `<path class="nd-grille" d="${cheminGrilleDixieme(cellule, orientation)}" fill="none" ` +
+        `stroke="${COULEURS_NUMERATION_DECIMALE.trait}" stroke-width="0.55"/>` +
+        `<path class="nd-separation-cinq" d="${separation}" fill="none" ` +
+        `stroke="${COULEURS_NUMERATION_DECIMALE.trait}" stroke-width="1.35"/>`
+      : "") +
     `</g>`
   );
 }
@@ -736,10 +766,13 @@ function geometrieGroupeConversion(rang, quantite, cellule, largeurVisuelle) {
   if (rang === "dixiemes") {
     return Object.freeze({
       largeur: arrondi2(10 * cellule),
-      hauteur: arrondi2(quantite * cellule),
+      // Le cadre représente l'unité entière : les bandes non coloriées
+      // restent visibles et donnent du sens à « huit dixièmes ».
+      hauteur: arrondi2(10 * cellule),
       colonnes: 1,
       espace: 0,
       largeurVisuelle,
+      cadreUnite: true,
     });
   }
   return Object.freeze({
@@ -759,12 +792,21 @@ function dessinerGroupeConversion({
   cellule,
   geometrie,
   couleur,
+  subdivision,
 }) {
   const morceaux = [
     `<rect class="nd-conversion-empreinte" x="${nombreSvg(x)}" y="${nombreSvg(y)}" ` +
       `width="${nombreSvg(geometrie.largeur)}" height="${nombreSvg(geometrie.hauteur)}" ` +
       `fill="none" stroke="none"/>`,
   ];
+  if (rang === "dixiemes" && geometrie.cadreUnite) {
+    morceaux.push(
+      `<rect class="nd-cadre-unite-dixiemes" x="${nombreSvg(x)}" y="${nombreSvg(y)}" ` +
+      `width="${nombreSvg(10 * cellule)}" height="${nombreSvg(10 * cellule)}" ` +
+      `fill="${COULEURS_RANGS_NUMERATION_DECIMALE.unites.fond}" ` +
+      `stroke="${COULEURS_NUMERATION_DECIMALE.trait}" stroke-width="1.25"/>`,
+    );
+  }
   if (rang === "unites") {
     for (let index = 0; index < quantite; index += 1) {
       const colonne = index % geometrie.colonnes;
@@ -776,6 +818,7 @@ function dessinerGroupeConversion({
           cellule,
           index + 1,
           couleur,
+          subdivision,
         ),
       );
     }
@@ -789,6 +832,7 @@ function dessinerGroupeConversion({
           "horizontale",
           index + 1,
           couleur,
+          subdivision === "centiemes",
         ),
       );
     }
@@ -880,8 +924,10 @@ export function dessinerConversionRangsNumerationDecimale({
       "dessinerConversionRangsNumerationDecimale : rangFinal limité aux dixièmes ou centièmes",
     );
   }
+  const donneesSource = construireDonneesTableauNumeration(ecritureDecimale);
+  const ecritureSource = donneesSource.ecritureDecimale;
   const donnees = prolongerDonneesTableauJusquAuRang(
-    construireDonneesTableauNumeration(ecritureDecimale),
+    donneesSource,
     rangFinalLu,
   );
   if (!["dixiemes", "centiemes"].includes(donnees.dernierRang)) {
@@ -937,7 +983,7 @@ export function dessinerConversionRangsNumerationDecimale({
       ? "Dans les rangs usuels"
       : `${donnees.fractionLue.numerateur} ${nomRangFinalCompte}`
     : etatLu === "decompose"
-      ? `${donnees.ecritureDecimale} dans ses rangs`
+      ? `${ecritureSource} dans ses rangs`
       : `Tout dans le rang des ${nomRangFinal}`;
   const morceaux = [
     `<text class="nd-conversion-titre" x="${nombreSvg(largeurLue / 2)}" y="22" ` +
@@ -955,6 +1001,13 @@ export function dessinerConversionRangsNumerationDecimale({
       : COULEURS_NUMERATION_DECIMALE[
           groupe.rang === "unites" ? "unite" : groupe.rang === "dixiemes" ? "dixieme" : "centieme"
         ];
+    const subdivision = etatLu !== "converti-rang-final"
+      ? "aucune"
+      : rangFinal === "centiemes"
+        ? "centiemes"
+        : groupe.rang === "unites"
+          ? "dixiemes"
+          : "aucune";
     const donneesLegende = specificationsLegendeConversion(
       groupe.source,
       groupe.cible,
@@ -978,6 +1031,7 @@ export function dessinerConversionRangsNumerationDecimale({
         cellule,
         geometrie: groupe.geometrie,
         couleur,
+        subdivision,
       }),
       rendreLegendeConversion({
         source: groupe.source,
@@ -1007,7 +1061,7 @@ export function dessinerConversionRangsNumerationDecimale({
     `${quantite} au rang ${rang}, ${legende}`).join(" ; ");
   const introductionAlternative = profilLu === "aide-nc03"
     ? `Conversion de ${donnees.fractionLue.numerateur} ${nomRangFinalCompte}.`
-    : `Conversion par rang de ${donnees.ecritureDecimale}.`;
+    : `Conversion par rang de ${ecritureSource}.`;
   const couleurNommee = rangFinal === "dixiemes" ? "verts" : "jaunes";
   const alternatif =
     `${introductionAlternative} ` +

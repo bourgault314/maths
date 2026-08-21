@@ -270,14 +270,13 @@ function messageValidation(reglages, largeur) {
   if (
     afficherReperesIntermediairesCours
     && (
-      !["aide-nc03", "solution"].includes(profil)
-      || etape !== "pieces"
+      !["aide-nc03", "aide-nc04-imposee", "aide-nc04-libre", "solution"].includes(profil)
       || ![2, 4].includes(denominateur)
     )
   ) {
     return (
-      "Les repères intermédiaires sont réservés aux bandes non regroupées " +
-      "des demis ou des quarts dans le cours."
+      "Les repères intermédiaires sont réservés aux rails des demis ou des quarts " +
+      "dans le cours ou l’aide."
     );
   }
 
@@ -640,7 +639,8 @@ function rail({
     );
     const repereIntermediaireCours = afficherReperesIntermediairesCours
       && !estEntier
-      && !estCible;
+      && !estCible
+      && (profil === "solution" || index < numerateur);
     const montrer = montrerSolution
       || repereIntermediaireCours
       || (profil !== "solution" && estEntier && !estCible);
@@ -793,11 +793,11 @@ function texteAlternatifPour({
  * faible largeur, mais réduit seulement la hauteur du rail afin de garder les
  * écritures et graduations lisibles sans produire de bandes surdimensionnées.
  * L’option explicite `afficherReperesIntermediairesCours` est limitée aux
- * bandes non regroupées (étape `pieces`) des demis et des quarts. Dans la vue
- * initiale `aide-nc03`, elle nomme les graduations décimales intermédiaires,
- * mais conserve la cible finale sous la forme `?`. En profil `solution`, elle
- * empêche la synthèse du cours de supprimer les quarts impairs sur petit écran.
- * Les profils d’aide ne l’activent jamais par défaut.
+ * rails des demis et des quarts. Dans une
+ * aide, elle nomme seulement les graduations déjà franchies et conserve la
+ * cible finale sous la forme `?`. En profil `solution`, elle affiche toute la
+ * synthèse utile. Elle reste désactivée par défaut : le cours ou le lecteur
+ * doivent la demander explicitement.
  */
 export function dessinerBandesFractionnairesSurRailDecimal(reglages = {}) {
   const largeur = normaliserLargeur(reglages?.largeur);

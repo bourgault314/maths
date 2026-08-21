@@ -13,7 +13,7 @@ import {
   CIBLES_FRACTION_LIBRE,
   CIBLES_FRACTION_LIBRE_DECIMALES,
   CIBLES_FRACTION_LIBRE_DEMIS_QUARTS,
-} from "./decimal-vers-fraction.js?v=44";
+} from "./decimal-vers-fraction.js?v=45";
 import {
   GABARIT_FRACTION_VERS_DECIMAL,
   NUMERATEURS_CENTIEMES,
@@ -26,9 +26,10 @@ import {
   MICRO_NOTION_NC04,
   NUMERATEURS_DEMIS,
   NUMERATEURS_QUARTS,
-} from "./commun.js?v=44";
+} from "./commun.js?v=45";
 
 export const VERSION_PLAN_SERIE_FRACTIONS_DECIMAUX = 4;
+export const VERSION_PLANS_SERIES_NC03_NC04 = 1;
 
 export const QUOTAS_SERIES_FRACTIONS_DECIMAUX = Object.freeze({
   5: Object.freeze({ qcm: 1, productionsLibres: 1, milliemes: 0 }),
@@ -61,6 +62,20 @@ const RECETTE_NC04 = Object.freeze([
   100,
   100,
   4,
+]);
+
+const RECETTE_NC03_ISOLEE = Object.freeze([
+  2, 4, 10, 100, 2,
+  4, 10, 100, 1, 2,
+  4, 10, 100, 2, 4,
+  10, 100, 1, 100, 100,
+]);
+
+const RECETTE_NC04_ISOLEE = Object.freeze([
+  2, 4, 10, 100, 4,
+  2, 10, 100, 4, 2,
+  10, 100, 4, 2, 10,
+  100, 4, 2, 100, 10,
 ]);
 
 const NUMERATEURS_PAR_DENOMINATEUR = Object.freeze({
@@ -434,7 +449,10 @@ function ordonnerElements(elements, aleatoire) {
       }
     }
 
-    for (const propriete of ["microNotion", "denominateur"]) {
+    const proprietes = new Set(elements.map((element) => element.microNotion)).size > 1
+      ? ["microNotion", "denominateur"]
+      : ["denominateur"];
+    for (const propriete of proprietes) {
       const valeurs = new Set(restants.map((index) => elements[index][propriete]));
       for (const valeur of valeurs) {
         const memes = restants.filter(
@@ -459,6 +477,8 @@ function ordonnerElements(elements, aleatoire) {
     if (dernier && estQcm(dernier) && estQcm(candidat)) return false;
     if (dernier && estLibre(dernier) && estLibre(candidat)) return false;
     if (
+      new Set(elements.map((element) => element.microNotion)).size > 1
+      &&
       avantDernier
       && dernier.microNotion === candidat.microNotion
       && avantDernier.microNotion === candidat.microNotion
@@ -630,6 +650,108 @@ export function planifierSerieFractionsDecimaux({
   });
 }
 
+function recetteIsoleePour(microNotion) {
+  return microNotion === MICRO_NOTION_NC03
+    ? RECETTE_NC03_ISOLEE
+    : RECETTE_NC04_ISOLEE;
+}
+
+function reserverProductionsLibresNC04(file, aleatoire, nombreQuestions) {
+  const quota = nombreQuestions >= 15 ? 2 : nombreQuestions >= 10 ? 1 : 0;
+  if (quota === 0) return;
+  const categories = quota === 2
+    ? ["demis-quarts", "decimales"]
+    : [aleatoire.choix(["demis-quarts", "decimales"])];
+  categories.forEach((categorieLibre) => {
+    const comptes = file.reduce((resultat, element) => {
+      resultat.set(element.denominateur, (resultat.get(element.denominateur) ?? 0) + 1);
+      return resultat;
+    }, new Map());
+    const candidats = aleatoire.melange(file
+      .map((element, position) => ({ element, position }))
+      .filter(({ element }) => element.forme !== "fraction-libre"
+        && (comptes.get(element.denominateur) ?? 0) > 1));
+    if (candidats.length === 0) {
+      throw new Error("serie NC04 : aucune famille répétée à remplacer");
+    }
+    file[candidats[0].position] = {
+      microNotion: MICRO_NOTION_NC04,
+      forme: "fraction-libre",
+      categorieLibre,
+    };
+  });
+}
+
+function reserverMilliemeIsole(file, nombreQuestions) {
+  if (nombreQuestions < 15) return;
+  const index = file.findLastIndex((element) =>
+    element.forme !== "fraction-libre" && element.denominateur === 100);
+  if (index < 0) throw new Error("serie fractions-decimaux : place de millième absente");
+  file[index] = { ...file[index], denominateur: 1000 };
+}
+
+function marquerCasStructurelsIsoles(file, aleatoire, nombreQuestions) {
+  if (nombreQuestions < 5) return;
+  marquerPropreEtImpropre(
+    file,
+    aleatoire,
+    "dans la série isolée",
+    nombreQuestions < 15 ? [2, 4, 10, 100] : [2, 4],
+  );
+  if (nombreQuestions >= 10) {
+    marquerClasse(file, aleatoire, "entier", "dans la série isolée");
+  }
+}
+
+function planifierSerieIsolee({ microNotion, graine, nombreQuestions = 10 }) {
+  exigerConfiguration(graine, nombreQuestions);
+  const recette = recetteIsoleePour(microNotion);
+  const file = recette.slice(0, nombreQuestions).map((denominateur) => ({
+    microNotion,
+    denominateur,
+    forme: microNotion === MICRO_NOTION_NC04 ? "denominateur-impose" : undefined,
+  }));
+  const aleatoire = creerGenerateur(
+    `${microNotion}-plan-v${VERSION_PLANS_SERIES_NC03_NC04}:${graine}:${nombreQuestions}`,
+  );
+  if (microNotion === MICRO_NOTION_NC04) {
+    reserverProductionsLibresNC04(file, aleatoire, nombreQuestions);
+  }
+  reserverMilliemeIsole(file, nombreQuestions);
+  marquerCasStructurelsIsoles(file, aleatoire, nombreQuestions);
+  const files = new Map([[microNotion, file]]);
+  parametrerNumerateurs(files, aleatoire);
+  attribuerPresentations(files, aleatoire, nombreQuestions);
+  const ordre = ordonnerElements(file, creerGenerateur(
+    `${microNotion}-ordre-v${VERSION_PLANS_SERIES_NC03_NC04}:${graine}:${nombreQuestions}`,
+  ));
+  return ordre.map((element, position) => ({
+    ...element,
+    position,
+    gabarit: gabaritPour(microNotion),
+    parametres: {
+      numerateur: element.numerateur,
+      denominateur: element.denominateur,
+      presentation: element.presentation,
+      ...(element.forme === undefined ? {} : { forme: element.forme }),
+    },
+  }));
+}
+
+export function planifierSerieFractionVersDecimal(configuration) {
+  return planifierSerieIsolee({
+    ...configuration,
+    microNotion: MICRO_NOTION_NC03,
+  });
+}
+
+export function planifierSerieDecimalVersFraction(configuration) {
+  return planifierSerieIsolee({
+    ...configuration,
+    microNotion: MICRO_NOTION_NC04,
+  });
+}
+
 export function signatureVisibleQuestion(question) {
   return JSON.stringify({
     microNotion: question.classement.microNotion,
@@ -640,6 +762,64 @@ export function signatureVisibleQuestion(question) {
 
 function gabaritAvecParametres(gabarit, parametres) {
   return { ...gabarit, parametres: { ...parametres } };
+}
+
+function genererDepuisPlan({ registre, graine, plan, nom, notionProduite = null }) {
+  if (!registre || typeof registre.instancier !== "function") {
+    throw new TypeError(`${nom} : registre de générateurs requis`);
+  }
+  const signatures = new Set();
+  return plan.map((element, index) => {
+    for (let essai = 0; essai < 40; essai += 1) {
+      const questionInitiale = registre.instancier(
+        gabaritAvecParametres(element.gabarit, element.parametres),
+        `${graine}:${index + 1}:${essai}`,
+      );
+      const question = notionProduite === null
+        ? questionInitiale
+        : {
+            ...questionInitiale,
+            classement: {
+              ...questionInitiale.classement,
+              notion: notionProduite,
+            },
+          };
+      const signature = signatureVisibleQuestion(question);
+      if (!signatures.has(signature)) {
+        signatures.add(signature);
+        return question;
+      }
+    }
+    throw new Error(`${nom} : doublon visible persistant à la position ${index + 1}`);
+  });
+}
+
+export function genererSerieFractionVersDecimal({
+  registre,
+  graine,
+  nombreQuestions = 10,
+}) {
+  return genererDepuisPlan({
+    registre,
+    graine,
+    plan: planifierSerieFractionVersDecimal({ graine, nombreQuestions }),
+    nom: "serie NC03",
+    notionProduite: MICRO_NOTION_NC03,
+  });
+}
+
+export function genererSerieDecimalVersFraction({
+  registre,
+  graine,
+  nombreQuestions = 10,
+}) {
+  return genererDepuisPlan({
+    registre,
+    graine,
+    plan: planifierSerieDecimalVersFraction({ graine, nombreQuestions }),
+    nom: "serie NC04",
+    notionProduite: MICRO_NOTION_NC04,
+  });
 }
 
 export function genererSerieFractionsDecimaux({

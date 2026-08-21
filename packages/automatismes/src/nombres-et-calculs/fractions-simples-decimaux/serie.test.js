@@ -10,12 +10,15 @@ import {
   DENOMINATEURS_AUTORISES,
   MICRO_NOTION_NC03,
   MICRO_NOTION_NC04,
-  NOTION_FRACTIONS_SIMPLES_DECIMAUX,
   estFractionDuDomaine,
 } from "./commun.js";
 import {
   QUOTAS_SERIES_FRACTIONS_DECIMAUX,
+  genererSerieDecimalVersFraction,
+  genererSerieFractionVersDecimal,
   genererSerieFractionsDecimaux,
+  planifierSerieDecimalVersFraction,
+  planifierSerieFractionVersDecimal,
   planifierSerieFractionsDecimaux,
   repartirMicroNotionsFractionsDecimaux,
   signatureVisibleQuestion,
@@ -39,6 +42,7 @@ function compterMicroNotions(elements) {
 }
 
 function verifierContraintesOrdre(plan) {
+  const plusieursSens = new Set(plan.map((element) => element.microNotion)).size > 1;
   for (let index = 1; index < plan.length; index += 1) {
     assert.equal(
       plan[index - 1].presentation === "qcm-diagnostique"
@@ -54,12 +58,14 @@ function verifierContraintesOrdre(plan) {
     );
   }
   for (let index = 2; index < plan.length; index += 1) {
-    assert.equal(
-      plan[index - 2].microNotion === plan[index].microNotion
-        && plan[index - 1].microNotion === plan[index].microNotion,
-      false,
-      `trois questions de même sens à la position ${index + 1}`,
-    );
+    if (plusieursSens) {
+      assert.equal(
+        plan[index - 2].microNotion === plan[index].microNotion
+          && plan[index - 1].microNotion === plan[index].microNotion,
+        false,
+        `trois questions de même sens à la position ${index + 1}`,
+      );
+    }
     assert.equal(
       plan[index - 2].denominateur === plan[index].denominateur
         && plan[index - 1].denominateur === plan[index].denominateur,
@@ -417,7 +423,7 @@ describe("NC-03/NC-04 — plan de série commun", () => {
 });
 
 describe("NC-03/NC-04 — génération de la série", () => {
-  it("produit des questions conformes sous une seule notion visible", () => {
+  it("produit des questions conformes sous leur notion précise", () => {
     const registre = creerRegistreAutomatismes();
     for (const nombreQuestions of LONGUEURS_JALONS) {
       for (let graine = 0; graine < 100; graine += 1) {
@@ -434,7 +440,7 @@ describe("NC-03/NC-04 — génération de la série", () => {
         for (const question of questions) {
           assert.equal(
             question.classement.notion,
-            NOTION_FRACTIONS_SIMPLES_DECIMAUX,
+            question.classement.microNotion,
           );
           assert.ok([
             MICRO_NOTION_NC03,
@@ -488,5 +494,72 @@ describe("NC-03/NC-04 — génération de la série", () => {
     });
     assert.deepEqual(a, encoreA);
     assert.notDeepEqual(a, b);
+  });
+});
+
+describe("NC-03 et NC-04 — séries séparées", () => {
+  const cas = [
+    {
+      microNotion: MICRO_NOTION_NC03,
+      planifier: planifierSerieFractionVersDecimal,
+      generer: genererSerieFractionVersDecimal,
+    },
+    {
+      microNotion: MICRO_NOTION_NC04,
+      planifier: planifierSerieDecimalVersFraction,
+      generer: genererSerieDecimalVersFraction,
+    },
+  ];
+
+  it("couvre chaque sens seul à 5, 10, 15 et 20 questions", () => {
+    for (const { microNotion, planifier } of cas) {
+      for (const nombreQuestions of LONGUEURS_JALONS) {
+        for (let graine = 0; graine < 250; graine += 1) {
+          const plan = planifier({ graine: `isole-${graine}`, nombreQuestions });
+          assert.equal(plan.length, nombreQuestions);
+          assert.ok(plan.every((element) => element.microNotion === microNotion));
+          assert.equal(
+            plan.filter((element) => element.presentation === "qcm-diagnostique").length,
+            Math.round(nombreQuestions * 0.2),
+          );
+          const libres = plan.filter((element) => element.forme === "fraction-libre");
+          assert.equal(
+            libres.length,
+            microNotion === MICRO_NOTION_NC04
+              ? nombreQuestions >= 15 ? 2 : nombreQuestions >= 10 ? 1 : 0
+              : 0,
+          );
+          assert.equal(
+            plan.some((element) => element.denominateur === 1000),
+            nombreQuestions >= 15,
+          );
+          assert.ok(plan.some((element) => element.numerateur < element.denominateur));
+          assert.ok(plan.some((element) =>
+            element.numerateur > element.denominateur
+            && element.numerateur % element.denominateur !== 0));
+          if (nombreQuestions >= 10) {
+            assert.ok(plan.some((element) =>
+              element.numerateur % element.denominateur === 0));
+          }
+          verifierContraintesOrdre(plan);
+        }
+      }
+    }
+  });
+
+  it("rejoue les plans et génère des questions conformes sous la bonne notion", () => {
+    const registre = creerRegistreAutomatismes();
+    for (const { microNotion, planifier, generer } of cas) {
+      const configuration = { graine: `serie-${microNotion}`, nombreQuestions: 20 };
+      assert.deepEqual(planifier(configuration), planifier(configuration));
+      const questions = generer({ registre, ...configuration });
+      assert.equal(questions.length, 20);
+      assert.equal(new Set(questions.map(signatureVisibleQuestion)).size, 20);
+      for (const question of questions) {
+        assert.equal(question.classement.notion, microNotion);
+        assert.equal(question.classement.microNotion, microNotion);
+        assert.deepEqual(validerQuestionInstanceV2(question), { valide: true, erreurs: [] });
+      }
+    }
   });
 });
