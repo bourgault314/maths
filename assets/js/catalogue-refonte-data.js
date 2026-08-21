@@ -1,6 +1,3 @@
-Warning: truncated output (original token count: 50145)
-Total output lines: 6314
-
 window.MATHSGO_CATALOGUE = {
   "schemaVersion": 5,
   "generatedAt": "2026-08-10T00:00:00.000Z",
@@ -2385,7 +2382,31 @@ window.MATHSGO_CATALOGUE = {
       "kind": "tool",
       "status": "published",
       "featured": false,
-      "rece…145 tokens truncated…ed": false,
+      "recent": false
+    },
+    {
+      "id": "outils-box-pasbarre-final-html",
+      "title": "BOX LOGIC — L'INTÉGRALE",
+      "description": "Une ressource maths&go pour travailler schémas en barres et problèmes.",
+      "path": "outils/box_pasbarre_final.html",
+      "domains": [
+        "algebre"
+      ],
+      "notions": [
+        "schemas-barres"
+      ],
+      "uses": [
+        "projeter"
+      ],
+      "types": [],
+      "filters": [],
+      "keywords": [
+        "problèmes",
+        "modélisation"
+      ],
+      "kind": "tool",
+      "status": "hidden",
+      "featured": false,
       "recent": false
     },
     {
