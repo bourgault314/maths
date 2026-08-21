@@ -1,28 +1,28 @@
-import { GABARIT_RECONNAISSANCE_SOLIDES } from "../../packages/automatismes/src/espace-et-geometrie/solides-usuels/reconnaissance.js?v=42";
+import { GABARIT_RECONNAISSANCE_SOLIDES } from "../../packages/automatismes/src/espace-et-geometrie/solides-usuels/reconnaissance.js?v=43";
 import {
   GABARIT_VOLUME_CUBE_PAVE,
   GABARIT_VOLUME_CYLINDRE,
   GABARIT_VOLUME_PRISME,
-} from "../../packages/automatismes/src/grandeurs-et-mesures/volumes/calcul-volumes.js?v=42";
-import { GABARIT_SELECTION_DIVISEURS } from "../../packages/automatismes/src/nombres-et-calculs/criteres-divisibilite/selection-diviseurs.js?v=42";
-import { genererSerieNC01 } from "../../packages/automatismes/src/nombres-et-calculs/criteres-divisibilite/serie.js?v=42";
-import { GABARIT_CALCUL_DIRECT_CARRE } from "../../packages/automatismes/src/nombres-et-calculs/carres-entiers-1-a-12/calcul-direct.js?v=42";
-import { genererSerieNC02 } from "../../packages/automatismes/src/nombres-et-calculs/carres-entiers-1-a-12/serie.js?v=42";
+} from "../../packages/automatismes/src/grandeurs-et-mesures/volumes/calcul-volumes.js?v=43";
+import { GABARIT_SELECTION_DIVISEURS } from "../../packages/automatismes/src/nombres-et-calculs/criteres-divisibilite/selection-diviseurs.js?v=43";
+import { genererSerieNC01 } from "../../packages/automatismes/src/nombres-et-calculs/criteres-divisibilite/serie.js?v=43";
+import { GABARIT_CALCUL_DIRECT_CARRE } from "../../packages/automatismes/src/nombres-et-calculs/carres-entiers-1-a-12/calcul-direct.js?v=43";
+import { genererSerieNC02 } from "../../packages/automatismes/src/nombres-et-calculs/carres-entiers-1-a-12/serie.js?v=43";
 import {
   GABARIT_FRACTION_VERS_DECIMAL,
-} from "../../packages/automatismes/src/nombres-et-calculs/fractions-simples-decimaux/fraction-vers-decimal.js?v=42";
+} from "../../packages/automatismes/src/nombres-et-calculs/fractions-simples-decimaux/fraction-vers-decimal.js?v=43";
 import {
   genererSerieFractionsDecimaux,
-} from "../../packages/automatismes/src/nombres-et-calculs/fractions-simples-decimaux/serie.js?v=42";
+} from "../../packages/automatismes/src/nombres-et-calculs/fractions-simples-decimaux/serie.js?v=43";
 import {
   GABARIT_ECRITURES_MULTIPLES,
-} from "../../packages/automatismes/src/nombres-et-calculs/ecritures-multiples-nombre/questions.js?v=42";
+} from "../../packages/automatismes/src/nombres-et-calculs/ecritures-multiples-nombre/questions.js?v=43";
 import {
   genererSerieEcrituresMultiples,
-} from "../../packages/automatismes/src/nombres-et-calculs/ecritures-multiples-nombre/serie.js?v=42";
+} from "../../packages/automatismes/src/nombres-et-calculs/ecritures-multiples-nombre/serie.js?v=43";
 import {
   MODULES_AUTOMATISMES,
-} from "../../packages/automatismes/src/identifiants.js?v=42";
+} from "../../packages/automatismes/src/identifiants.js?v=43";
 
 export const NOTION_NC01 = MODULES_AUTOMATISMES.CRITERES_DIVISIBILITE;
 export const NOTION_NC02 = MODULES_AUTOMATISMES.CARRES_ENTIERS;

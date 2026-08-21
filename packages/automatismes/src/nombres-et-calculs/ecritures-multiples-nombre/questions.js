@@ -7,7 +7,7 @@
 import {
   SCHEMA_GABARIT_QUESTION,
   estDonneePure,
-} from "../../../../contrats/src/gabarit.js?v=42";
+} from "../../../../contrats/src/gabarit.js?v=43";
 import {
   COMPARAISON_CHOIX_EXACT,
   COMPARAISON_ENSEMBLE_EXACT,
@@ -18,14 +18,14 @@ import {
   TYPE_REPONSE_ENTIER_NATUREL,
   TYPE_REPONSE_NOMBRE_DECIMAL,
   TYPE_REPONSE_SELECTION_MULTIPLE,
-} from "../../../../contrats/src/question-v2.js?v=42";
+} from "../../../../contrats/src/question-v2.js?v=43";
 import {
   reduireFraction,
-} from "../../../../objets/src/fractions-decimaux.js?v=42";
+} from "../../../../objets/src/fractions-decimaux.js?v=43";
 import {
   IDENTITES_AUTOMATISMES,
   creerClassementAutomatisme,
-} from "../../identifiants.js?v=42";
+} from "../../identifiants.js?v=43";
 
 export const NOTION_ECRITURES_MULTIPLES_NOMBRE =
   IDENTITES_AUTOMATISMES.ECRITURES_MULTIPLES_NOMBRE.module;
