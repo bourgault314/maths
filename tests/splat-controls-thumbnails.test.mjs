@@ -54,7 +54,7 @@ test("les quatre miniatures utilisent des vues fideles et adaptees aux outils", 
   assert.match(catalogue, /assets\/img\/thumbnails\/splat\/splat\.png\?v=6/);
   assert.match(catalogue, /assets\/img\/thumbnails\/splat\/splat-equations\.png\?v=6/);
   assert.match(catalogue, /assets\/img\/thumbnails\/splat\/petit-splat\.png\?v=5/);
-  assert.match(cataloguePage, /catalogue-refonte-data\.js\?v=schemas-barres-algebre-20260820-1/);
+  assert.match(cataloguePage, /catalogue-refonte-data\.js\?v=splat-card-titles-20260821-1/);
   for(const thumbnail of [equasplatThumb, classicThumb, equationThumb, petitThumb]){
     assert.deepEqual(pngSize(thumbnail), {width:720, height:320});
   }
@@ -81,6 +81,9 @@ test("la collection et les outils portent tous le nom Splat avec son point d’e
   assert.match(catalogue, /"title": "Splat! — relations et inconnues"/);
   assert.match(catalogue, /"title": "Petit Splat! — fiches et schémas en barres"/);
   assert.match(catalogue, /"title": "Splat! — équations"/);
+  assert.match(catalogue, /"outils\/splat\.html": \{[\s\S]{0,180}?"cardTitle": "Splat!"/);
+  assert.match(catalogue, /"outils\/splat_tache_barre\.html": \{[\s\S]{0,180}?"cardTitle": "Petit Splat!"/);
+  assert.match(catalogue, /"outils\/splat_equations\.html": \{[\s\S]{0,180}?"cardTitle": "Splat! — équations"/);
   assert.match(legacyCatalogue, /"id": "splat",[\s\S]*?"title": "Splat!"/);
   assert.match(classic, /<title>Splat! — relations et inconnues/);
   assert.match(equations, /<title>Splat! — équations/);

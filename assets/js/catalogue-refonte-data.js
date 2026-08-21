@@ -484,6 +484,7 @@ window.MATHSGO_CATALOGUE = {
     "outils/splat.html": {
       "primaryNotion": "calcul-litteral",
       "primaryGroup": "generer",
+      "cardTitle": "Splat!",
       "collections": ["splat"],
       "tags": ["splat", "inconnue", "relation", "jetons", "cartes"],
       "thumbnail": "assets/img/thumbnails/splat/splat.png?v=6",
@@ -492,6 +493,7 @@ window.MATHSGO_CATALOGUE = {
     "outils/splat_tache_barre.html": {
       "primaryNotion": "calcul-litteral",
       "primaryGroup": "generer",
+      "cardTitle": "Petit Splat!",
       "collections": ["splat"],
       "tags": ["splat", "inconnue", "schema-barres", "fiche", "imprimer"],
       "thumbnail": "assets/img/thumbnails/splat/petit-splat.png?v=5",
@@ -500,6 +502,7 @@ window.MATHSGO_CATALOGUE = {
     "outils/splat_equations.html": {
       "primaryNotion": "equations",
       "primaryGroup": "generer",
+      "cardTitle": "Splat! — équations",
       "collections": ["splat"],
       "tags": ["schema-barres", "equation", "inconnue", "splat", "cartes"],
       "thumbnail": "assets/img/thumbnails/splat/splat-equations.png?v=6",
