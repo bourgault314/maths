@@ -5,11 +5,11 @@
 // notions. Même graine + même longueur = même plan et mêmes questions.
 
 import { creerGenerateur } from "../../../../moteur-exercices/src/aleatoire.js";
-import { GABARIT_CHIFFRE_MANQUANT } from "./chiffre-manquant.js?v=41";
-import { GABARIT_CRITERE_PRECIS } from "./critere-precis.js?v=41";
-import { GABARIT_PARTAGE_COURT } from "./partage-court.js?v=41";
-import { GABARIT_SELECTION_DIVISEURS } from "./selection-diviseurs.js?v=41";
-import { GABARIT_SELECTION_NOMBRES } from "./selection-nombres.js?v=41";
+import { GABARIT_CHIFFRE_MANQUANT } from "./chiffre-manquant.js?v=42";
+import { GABARIT_CRITERE_PRECIS } from "./critere-precis.js?v=42";
+import { GABARIT_PARTAGE_COURT } from "./partage-court.js?v=42";
+import { GABARIT_SELECTION_DIVISEURS } from "./selection-diviseurs.js?v=42";
+import { GABARIT_SELECTION_NOMBRES } from "./selection-nombres.js?v=42";
 
 export const VERSION_PLAN_SERIE_NC01 = 6;
 

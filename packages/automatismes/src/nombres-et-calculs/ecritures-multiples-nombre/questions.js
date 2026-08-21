@@ -7,7 +7,7 @@
 import {
   SCHEMA_GABARIT_QUESTION,
   estDonneePure,
-} from "../../../../contrats/src/gabarit.js?v=41";
+} from "../../../../contrats/src/gabarit.js?v=42";
 import {
   COMPARAISON_CHOIX_EXACT,
   COMPARAISON_ENSEMBLE_EXACT,
@@ -18,14 +18,14 @@ import {
   TYPE_REPONSE_ENTIER_NATUREL,
   TYPE_REPONSE_NOMBRE_DECIMAL,
   TYPE_REPONSE_SELECTION_MULTIPLE,
-} from "../../../../contrats/src/question-v2.js?v=41";
+} from "../../../../contrats/src/question-v2.js?v=42";
 import {
   reduireFraction,
-} from "../../../../objets/src/fractions-decimaux.js?v=41";
+} from "../../../../objets/src/fractions-decimaux.js?v=42";
 import {
   IDENTITES_AUTOMATISMES,
   creerClassementAutomatisme,
-} from "../../identifiants.js?v=41";
+} from "../../identifiants.js?v=42";
 
 export const NOTION_ECRITURES_MULTIPLES_NOMBRE =
   IDENTITES_AUTOMATISMES.ECRITURES_MULTIPLES_NOMBRE.module;
@@ -43,6 +43,9 @@ export const FAMILLE_CHAINE_EGALITES = "chaine-egalites";
 export const FAMILLE_UNITE_DEPASSEMENT = "unite-et-depassement";
 export const FAMILLE_RECONNAITRE_EQUIVALENCES =
   "reconnaitre-equivalences";
+
+export const PRESENTATION_ABSTRAITE_ECRITURES = "abstraite";
+export const PRESENTATION_VISUELLE_ECRITURES = "visuelle";
 
 export const FAMILLES_ECRITURES_MULTIPLES = Object.freeze([
   FAMILLE_POURCENTAGE_FRACTION_CENTIEMES,
@@ -72,7 +75,7 @@ export const DENOMINATEURS_REPERES_NC05 = Object.freeze([2, 4, 5, 10]);
 
 export const NOM_GENERATEUR_ECRITURES_MULTIPLES =
   "nombres-et-calculs.ecritures-multiples-nombre.questions";
-export const VERSION_GENERATEUR_ECRITURES_MULTIPLES = 1;
+export const VERSION_GENERATEUR_ECRITURES_MULTIPLES = 2;
 
 export const GABARIT_ECRITURES_MULTIPLES = Object.freeze({
   schema: SCHEMA_GABARIT_QUESTION,
@@ -154,7 +157,13 @@ function exigerParametres(parametres) {
       "ecritures-multiples-nombre : paramètres sous forme d'objet simple requis",
     );
   }
-  const cles = new Set(["famille", "pourcentage", "variante", "denominateur"]);
+  const cles = new Set([
+    "famille",
+    "pourcentage",
+    "variante",
+    "denominateur",
+    "presentation",
+  ]);
   for (const cle of Object.keys(parametres)) {
     if (!cles.has(cle)) {
       throw new TypeError(
@@ -190,6 +199,17 @@ function exigerParametres(parametres) {
   ) {
     throw new RangeError(
       "ecritures-multiples-nombre : dénominateur repère 2, 4, 5 ou 10 requis",
+    );
+  }
+  if (
+    parametres.presentation !== undefined
+    && ![
+      PRESENTATION_ABSTRAITE_ECRITURES,
+      PRESENTATION_VISUELLE_ECRITURES,
+    ].includes(parametres.presentation)
+  ) {
+    throw new RangeError(
+      "ecritures-multiples-nombre : présentation abstraite ou visuelle requise",
     );
   }
 }
@@ -230,13 +250,14 @@ function classeValeur(pourcentage) {
   return "superieur-un";
 }
 
-function classement(famille, variante, pourcentage) {
+function classement(famille, variante, pourcentage, presentation) {
   return creerClassementAutomatisme(
     IDENTITES_AUTOMATISMES.ECRITURES_MULTIPLES_NOMBRE,
     famille,
     [
       `variante-${variante}`,
       `classe-${classeValeur(pourcentage)}`,
+      `presentation-${presentation}`,
     ],
   );
 }
@@ -288,13 +309,24 @@ function ecritureMixte(pourcentage, denominateur) {
   };
 }
 
-function aidePour(famille, pourcentage) {
+function aidePour(famille, pourcentage, variante) {
   const premiere = famille === FAMILLE_FRACTION_REPERE_POURCENTAGE
     ? "Repère la fraction donnée : elle désigne un seul nombre."
     : "Repère l’écriture donnée : elle désigne un seul nombre.";
-  const deuxieme = famille === FAMILLE_UNITE_DEPASSEMENT
-    ? "Utilise 100 % = 1. Au-delà de 100 %, le nombre dépasse une unité."
-    : "Remplace mentalement le symbole % par « sur 100 ».";
+  let deuxieme = "Remplace mentalement le symbole % par « sur 100 ».";
+  if (famille === FAMILLE_FRACTION_REPERE_POURCENTAGE) {
+    deuxieme = "Imagine la même unité partagée en 100 parts : quelle part serait coloriée ?";
+  } else if (famille === FAMILLE_CHAINE_EGALITES) {
+    deuxieme = "Appuie-toi sur les deux écritures déjà données : elles représentent exactement la même valeur.";
+  } else if (famille === FAMILLE_POURCENTAGE_DECIMAL) {
+    deuxieme = variante === "pourcentage-vers-decimal"
+      ? "Un pourcentage donne un nombre de centièmes. Place ces centièmes dans l’écriture décimale."
+      : "Lis le décimal comme un nombre de centièmes, puis écris ce nombre devant le symbole %.";
+  } else if (famille === FAMILLE_UNITE_DEPASSEMENT) {
+    deuxieme = "Utilise 100 % = 1. Au-delà de 100 %, sépare les unités entières de la partie restante.";
+  } else if (famille === FAMILLE_RECONNAITRE_EQUIVALENCES) {
+    deuxieme = "Traduis chaque proposition en centièmes avant de décider ; une écriture seulement proche ne convient pas.";
+  }
   return [
     blocTexte("aide-reperer", premiere),
     blocTexte("aide-sur-cent", deuxieme),
@@ -638,6 +670,8 @@ export function genererQuestionEcrituresMultiples({ aleatoire, parametres }) {
   }
   const pourcentage = parametres.pourcentage
     ?? aleatoire.choix(pourcentagesParDefaut(famille, variante));
+  const presentation = parametres.presentation
+    ?? PRESENTATION_ABSTRAITE_ECRITURES;
   let denominateur = parametres.denominateur;
   const requiertRepere = [
     FAMILLE_FRACTION_REPERE_POURCENTAGE,
@@ -684,10 +718,10 @@ export function genererQuestionEcrituresMultiples({ aleatoire, parametres }) {
   }
 
   return {
-    classement: classement(famille, variante, pourcentage),
+    classement: classement(famille, variante, pourcentage, presentation),
     enonce: contenu.enonce,
     reponse: contenu.reponse,
-    aide: { blocs: aidePour(famille, pourcentage), outils: [] },
+    aide: { blocs: aidePour(famille, pourcentage, variante), outils: [] },
     correction: [
       ...correctionCommune(pourcentage),
       ...(contenu.diagnostics ?? []),

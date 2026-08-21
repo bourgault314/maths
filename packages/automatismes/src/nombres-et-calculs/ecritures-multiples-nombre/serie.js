@@ -6,7 +6,7 @@
 import {
   creerGenerateur,
   validerGraine,
-} from "../../../../moteur-exercices/src/aleatoire.js?v=41";
+} from "../../../../moteur-exercices/src/aleatoire.js?v=42";
 import {
   DENOMINATEURS_REPERES_NC05,
   FAMILLE_CHAINE_EGALITES,
@@ -16,9 +16,11 @@ import {
   FAMILLE_RECONNAITRE_EQUIVALENCES,
   FAMILLE_UNITE_DEPASSEMENT,
   GABARIT_ECRITURES_MULTIPLES,
-} from "./questions.js?v=41";
+  PRESENTATION_ABSTRAITE_ECRITURES,
+  PRESENTATION_VISUELLE_ECRITURES,
+} from "./questions.js?v=42";
 
-export const VERSION_PLAN_SERIE_ECRITURES_MULTIPLES = 1;
+export const VERSION_PLAN_SERIE_ECRITURES_MULTIPLES = 2;
 
 const RECETTE_FAMILLES = Object.freeze([
   FAMILLE_POURCENTAGE_FRACTION_CENTIEMES,
@@ -28,19 +30,19 @@ const RECETTE_FAMILLES = Object.freeze([
   FAMILLE_UNITE_DEPASSEMENT,
   FAMILLE_RECONNAITRE_EQUIVALENCES,
   FAMILLE_POURCENTAGE_FRACTION_CENTIEMES,
+  FAMILLE_UNITE_DEPASSEMENT,
   FAMILLE_POURCENTAGE_DECIMAL,
   FAMILLE_FRACTION_REPERE_POURCENTAGE,
-  FAMILLE_UNITE_DEPASSEMENT,
   FAMILLE_CHAINE_EGALITES,
   FAMILLE_RECONNAITRE_EQUIVALENCES,
   FAMILLE_POURCENTAGE_DECIMAL,
-  FAMILLE_FRACTION_REPERE_POURCENTAGE,
   FAMILLE_UNITE_DEPASSEMENT,
+  FAMILLE_FRACTION_REPERE_POURCENTAGE,
   FAMILLE_POURCENTAGE_FRACTION_CENTIEMES,
   FAMILLE_POURCENTAGE_DECIMAL,
-  FAMILLE_FRACTION_REPERE_POURCENTAGE,
   FAMILLE_CHAINE_EGALITES,
   FAMILLE_UNITE_DEPASSEMENT,
+  FAMILLE_FRACTION_REPERE_POURCENTAGE,
 ]);
 
 export const QUOTAS_JALONS_ECRITURES_MULTIPLES = Object.freeze({
@@ -75,6 +77,7 @@ const POURCENTAGES_RECONNAISSANCE = Object.freeze(
 const POURCENTAGES_MIXTES = Object.freeze([
   120, 125, 140, 150, 160, 175, 180, 225, 240, 250,
 ]);
+const DENOMINATEURS_REPERES_PROGRESSIFS = Object.freeze([5, 4, 10, 2]);
 
 function exigerConfiguration(graine, nombreQuestions) {
   validerGraine(graine);
@@ -131,11 +134,13 @@ function variantePour(element, aleatoire, nombreQuestions, debutsAlternances) {
     if (nombreQuestions >= 10 && element.occurrence === 0) {
       return "unite-vers-entier";
     }
-    const decalage = nombreQuestions >= 10 ? element.occurrence - 1 : element.occurrence;
+    const decalage = nombreQuestions >= 10
+      ? element.occurrence - 1
+      : element.occurrence;
     return [
       "mixte-vers-pourcentage",
       "pourcentage-vers-mixte",
-    ][(decalage + debutsAlternances.mixte) % 2];
+    ][decalage % 2];
   }
   return nombreQuestions === 20 && element.occurrence === 1
     ? "selection-multiple"
@@ -178,8 +183,19 @@ function candidatsPour(element, aleatoire) {
   }
   if (
     element.famille === FAMILLE_FRACTION_REPERE_POURCENTAGE
-    || element.famille === FAMILLE_CHAINE_EGALITES
   ) {
+    const denominateur = DENOMINATEURS_REPERES_PROGRESSIFS[
+      element.occurrence % DENOMINATEURS_REPERES_PROGRESSIFS.length
+    ];
+    return aleatoire.melange(
+      POURCENTAGES_REPERES
+        .filter((pourcentage) =>
+          pourcentage < 100
+          && (pourcentage * denominateur) % 100 === 0)
+        .map((pourcentage) => ({ pourcentage, denominateur })),
+    );
+  }
+  if (element.famille === FAMILLE_CHAINE_EGALITES) {
     return aleatoire.melange(COUPLES_REPERES);
   }
   if (element.famille === FAMILLE_RECONNAITRE_EQUIVALENCES) {
@@ -187,8 +203,12 @@ function candidatsPour(element, aleatoire) {
       POURCENTAGES_RECONNAISSANCE.map((pourcentage) => ({ pourcentage })),
     );
   }
-  const pourcentages = element.famille === FAMILLE_POURCENTAGE_FRACTION_CENTIEMES
-    && element.occurrence === 0
+  const petitPourcentage = element.occurrence === 0
+    && [
+      FAMILLE_POURCENTAGE_FRACTION_CENTIEMES,
+      FAMILLE_POURCENTAGE_DECIMAL,
+    ].includes(element.famille);
+  const pourcentages = petitPourcentage
     ? PETITS_POURCENTAGES
     : POURCENTAGES_GENERAUX;
   return aleatoire.melange(
@@ -228,33 +248,12 @@ function affecterValeursDistinctes(elements, aleatoire) {
   }
 }
 
-function ordonnerSansFamilleConsecutive(elements, aleatoire) {
-  const restants = [...elements];
-  const resultat = [];
-
-  function placer() {
-    if (restants.length === 0) return true;
-    const candidats = aleatoire.melange(
-      restants.filter((element) =>
-        resultat.length === 0 || resultat.at(-1).famille !== element.famille),
-    );
-    for (const candidat of candidats) {
-      const index = restants.indexOf(candidat);
-      restants.splice(index, 1);
-      resultat.push(candidat);
-      if (placer()) return true;
-      resultat.pop();
-      restants.splice(index, 0, candidat);
-    }
-    return false;
-  }
-
-  if (!placer()) {
-    throw new Error(
-      "serie ecritures-multiples-nombre : ordre varié impossible",
-    );
-  }
-  return resultat;
+function positionsVisuelles(nombreQuestions) {
+  return new Set([
+    ...(nombreQuestions >= 3 ? [2] : []),
+    ...(nombreQuestions >= 8 ? [7] : []),
+    ...(nombreQuestions >= 20 ? [10] : []),
+  ]);
 }
 
 export function planifierSerieEcrituresMultiples({
@@ -273,7 +272,6 @@ export function planifierSerieEcrituresMultiples({
   );
   const debutsAlternances = {
     decimal: aleatoire.choix([0, 1]),
-    mixte: aleatoire.choix([0, 1]),
     chaines: aleatoire.melange([
       "chaine-vers-pourcentage",
       "chaine-vers-decimal",
@@ -289,15 +287,22 @@ export function planifierSerieEcrituresMultiples({
     );
   }
   affecterValeursDistinctes(elements, aleatoire);
-  return ordonnerSansFamilleConsecutive(elements, aleatoire).map(
+  const visuelles = positionsVisuelles(nombreQuestions);
+  return elements.map(
     (element, position) => ({
       ...element,
       position,
+      presentation: visuelles.has(position)
+        ? PRESENTATION_VISUELLE_ECRITURES
+        : PRESENTATION_ABSTRAITE_ECRITURES,
       gabarit: GABARIT_ECRITURES_MULTIPLES,
       parametres: {
         famille: element.famille,
         pourcentage: element.pourcentage,
         variante: element.variante,
+        presentation: visuelles.has(position)
+          ? PRESENTATION_VISUELLE_ECRITURES
+          : PRESENTATION_ABSTRAITE_ECRITURES,
         ...(element.denominateur === undefined
           ? {}
           : { denominateur: element.denominateur }),

@@ -4989,7 +4989,7 @@ body {
     font-size: clamp(18px, 1.05vw, 21px);
   }
 }
-+/* NC-05 — Un nombre, plusieurs écritures. */
+/* NC-05 — Un nombre, plusieurs écritures. */
 .carte-question-ecritures {
   min-width: 0;
   gap: clamp(10px, 2.2vh, 22px);
@@ -5095,6 +5095,118 @@ body {
 
 .grille-choix-ecritures .fraction-empilee {
   font-size: 1.25em;
+}
+
+.visuel-question-nc05,
+.modele-source-aires-nc05,
+.equivalence-aires-nc05,
+.unites-aires-nc05,
+.cote-equivalence-aires-nc05 {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.visuel-question-nc05 {
+  width: min(100%, 520px);
+  max-height: 140px;
+  margin: 0 auto;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+}
+
+.modele-source-aires-nc05 {
+  display: grid;
+  place-items: center;
+}
+
+.unites-aires-nc05 {
+  display: flex;
+  gap: clamp(4px, 1.5vw, 9px);
+  align-items: center;
+  justify-content: center;
+}
+
+.figure-unite-aires-nc05 {
+  width: clamp(72px, 18vw, 118px);
+  margin: 0;
+  aspect-ratio: 1;
+  overflow: hidden;
+}
+
+.figure-unite-aires-nc05 svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.equivalence-aires-nc05 {
+  width: min(100%, 700px);
+  margin: 10px auto;
+  padding: 10px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  gap: 8px;
+  align-items: center;
+  border: 2px solid var(--mg-ligne);
+  border-radius: var(--mg-rayon-moyen);
+  background: var(--mg-papier);
+}
+
+.equivalence-aires-simple-nc05 {
+  grid-template-columns: 1fr;
+  place-items: center;
+}
+
+.cote-equivalence-aires-nc05 {
+  display: grid;
+  gap: 5px;
+  place-items: center;
+}
+
+.cote-equivalence-aires-nc05 > p {
+  min-height: 38px;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--mg-bleu);
+  font-family: var(--mg-titres);
+  font-size: clamp(1rem, 4vw, 1.35rem);
+  font-weight: 800;
+}
+
+.cote-equivalence-aires-nc05 .fraction-empilee {
+  font-size: 1.2em;
+}
+
+.egal-aires-nc05 {
+  color: var(--mg-texteAttenue);
+  font-family: var(--mg-titres);
+  font-size: clamp(1.4rem, 5vw, 2rem);
+  font-weight: 800;
+}
+
+.equivalence-aires-nc05 > figcaption {
+  grid-column: 1 / -1;
+  color: var(--mg-texteAttenue);
+  font-size: .92rem;
+  line-height: 1.35;
+  text-align: center;
+}
+
+.equivalence-aires-aide-nc05 {
+  margin-top: 0;
+  background: var(--mg-fondDoux);
+}
+
+.equivalence-aires-correction-nc05 {
+  border-color: var(--mg-turquoise);
+}
+
+.equivalence-aires-cours-nc05 {
+  margin-block: 8px;
+  background: var(--mg-fondDoux);
 }
 
 .droite-nc05-responsive,
@@ -5372,6 +5484,22 @@ body {
     padding-inline: 9px;
   }
 
+  .equivalence-aires-nc05:not(.equivalence-aires-simple-nc05) {
+    grid-template-columns: 1fr;
+  }
+
+  .egal-aires-nc05 {
+    line-height: 1;
+  }
+
+  .equivalence-aires-nc05 > figcaption {
+    grid-column: 1;
+  }
+
+  .equivalence-aires-nc05 .figure-unite-aires-nc05 {
+    width: clamp(62px, 22vw, 96px);
+  }
+
   .reperes-cours-nc05 {
     gap: 7px;
   }
@@ -5427,6 +5555,14 @@ body {
 
   .mode-entrainement.avec-pave .carte-question-ecritures .chaine-question-nc05 {
     margin-block: 0;
+  }
+
+  .mode-entrainement.avec-pave .visuel-question-nc05 {
+    max-height: 104px;
+  }
+
+  .mode-entrainement.avec-pave .visuel-question-nc05 .figure-unite-aires-nc05 {
+    width: clamp(62px, 20vw, 86px);
   }
 
   .mode-entrainement.avec-pave .carte-question-ecritures .zone-retour:empty {

@@ -8,11 +8,11 @@ import {
   COMPARAISON_CHOIX_EXACT,
   SCHEMA_QUESTION_INSTANCE_V2,
   TYPE_REPONSE_CHOIX_UNIQUE,
-} from "../../../../contrats/src/question-v2.js?v=41";
+} from "../../../../contrats/src/question-v2.js?v=42";
 import {
   IDENTITES_AUTOMATISMES,
   creerClassementAutomatisme,
-} from "../../identifiants.js?v=41";
+} from "../../identifiants.js?v=42";
 
 export const NOM_GENERATEUR_RECONNAISSANCE_SOLIDES =
   "espace-et-geometrie.solides-usuels.reconnaissance";

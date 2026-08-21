@@ -8,7 +8,13 @@ import {
 import { creerRegistreAutomatismes } from "../../registre.js";
 import {
   FAMILLES_ECRITURES_MULTIPLES,
+  FAMILLE_CHAINE_EGALITES,
+  FAMILLE_FRACTION_REPERE_POURCENTAGE,
+  FAMILLE_POURCENTAGE_DECIMAL,
+  FAMILLE_POURCENTAGE_FRACTION_CENTIEMES,
   FAMILLE_RECONNAITRE_EQUIVALENCES,
+  FAMILLE_UNITE_DEPASSEMENT,
+  PRESENTATION_VISUELLE_ECRITURES,
   lirePourcentageQuestion,
 } from "./questions.js";
 import {
@@ -19,6 +25,28 @@ import {
 } from "./serie.js";
 
 const LONGUEURS = Object.freeze([5, 10, 15, 20]);
+const ORDRE_PROGRESSIF_20 = Object.freeze([
+  FAMILLE_POURCENTAGE_FRACTION_CENTIEMES,
+  FAMILLE_POURCENTAGE_DECIMAL,
+  FAMILLE_FRACTION_REPERE_POURCENTAGE,
+  FAMILLE_CHAINE_EGALITES,
+  FAMILLE_UNITE_DEPASSEMENT,
+  FAMILLE_RECONNAITRE_EQUIVALENCES,
+  FAMILLE_POURCENTAGE_FRACTION_CENTIEMES,
+  FAMILLE_UNITE_DEPASSEMENT,
+  FAMILLE_POURCENTAGE_DECIMAL,
+  FAMILLE_FRACTION_REPERE_POURCENTAGE,
+  FAMILLE_CHAINE_EGALITES,
+  FAMILLE_RECONNAITRE_EQUIVALENCES,
+  FAMILLE_POURCENTAGE_DECIMAL,
+  FAMILLE_UNITE_DEPASSEMENT,
+  FAMILLE_FRACTION_REPERE_POURCENTAGE,
+  FAMILLE_POURCENTAGE_FRACTION_CENTIEMES,
+  FAMILLE_POURCENTAGE_DECIMAL,
+  FAMILLE_CHAINE_EGALITES,
+  FAMILLE_UNITE_DEPASSEMENT,
+  FAMILLE_FRACTION_REPERE_POURCENTAGE,
+]);
 
 function quotasDansOrdre(repartition) {
   return FAMILLES_ECRITURES_MULTIPLES.map((famille) => repartition[famille]);
@@ -44,6 +72,10 @@ describe("NC-05 — série d'écritures multiples", () => {
           planifierSerieEcrituresMultiples({ graine, nombreQuestions }),
         );
         assert.equal(new Set(plan.map(({ pourcentage }) => pourcentage)).size, plan.length);
+        assert.deepEqual(
+          plan.map(({ famille }) => famille),
+          ORDRE_PROGRESSIF_20.slice(0, nombreQuestions),
+        );
         for (let index = 1; index < plan.length; index += 1) {
           assert.notEqual(plan[index - 1].famille, plan[index].famille);
         }
@@ -57,6 +89,76 @@ describe("NC-05 — série d'écritures multiples", () => {
             && variante === "selection-multiple",
         );
         assert.equal(selectionsMultiples.length, nombreQuestions === 20 ? 1 : 0);
+      }
+    }
+  });
+
+  it("garantit les repères, les petits pourcentages et l'effacement des visuels", () => {
+    const visuelsAttendus = new Map([[5, 1], [10, 2], [15, 2], [20, 3]]);
+    const denominateursAttendus = new Map([
+      [5, [5]],
+      [10, [5, 4]],
+      [15, [5, 4, 10]],
+      [20, [5, 4, 10, 2]],
+    ]);
+    for (const nombreQuestions of LONGUEURS) {
+      for (let indexGraine = 0; indexGraine < 100; indexGraine += 1) {
+        const plan = planifierSerieEcrituresMultiples({
+          graine: `couverture-${nombreQuestions}-${indexGraine}`,
+          nombreQuestions,
+        });
+        assert.equal(
+          plan.filter(({ presentation }) =>
+            presentation === PRESENTATION_VISUELLE_ECRITURES).length,
+          visuelsAttendus.get(nombreQuestions),
+        );
+        assert.deepEqual(
+          plan
+            .filter(({ famille }) =>
+              famille === FAMILLE_FRACTION_REPERE_POURCENTAGE)
+            .map(({ denominateur }) => denominateur),
+          denominateursAttendus.get(nombreQuestions),
+        );
+        const premierDecimal = plan.find(({ famille }) =>
+          famille === FAMILLE_POURCENTAGE_DECIMAL);
+        assert.ok(premierDecimal.pourcentage < 10);
+        assert.equal(
+          plan.at(-1).presentation === PRESENTATION_VISUELLE_ECRITURES,
+          false,
+        );
+        assert.equal(
+          plan.some(({ famille, presentation }) =>
+            famille === FAMILLE_RECONNAITRE_EQUIVALENCES
+            && presentation === PRESENTATION_VISUELLE_ECRITURES),
+          false,
+        );
+        if (nombreQuestions >= 10) {
+          const decimales = plan.filter(({ famille }) =>
+            famille === FAMILLE_POURCENTAGE_DECIMAL);
+          assert.deepEqual(
+            new Set(decimales.map(({ variante }) => variante)),
+            new Set(["pourcentage-vers-decimal", "decimal-vers-pourcentage"]),
+          );
+          const unites = plan.filter(({ famille }) =>
+            famille === FAMILLE_UNITE_DEPASSEMENT);
+          assert.equal(unites[0].pourcentage, 100);
+          assert.ok(unites[1].pourcentage > 100);
+          assert.equal(unites[1].variante, "mixte-vers-pourcentage");
+        }
+        if (nombreQuestions === 20) {
+          assert.deepEqual(
+            new Set(
+              plan
+                .filter(({ famille }) => famille === FAMILLE_CHAINE_EGALITES)
+                .map(({ variante }) => variante),
+            ),
+            new Set([
+              "chaine-vers-pourcentage",
+              "chaine-vers-decimal",
+              "chaine-vers-fraction",
+            ]),
+          );
+        }
       }
     }
   });
