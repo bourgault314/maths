@@ -157,6 +157,7 @@ describe("configuration du lecteur", () => {
     assert.deepEqual(
       lireConfiguration("?mode=projection&aide=ouverte&questions=7&graine=classe-5e"),
       {
+        niveau: "DNB",
         mode: "tableau",
         aide: "ouverte",
         nombreQuestions: 7,
@@ -167,6 +168,11 @@ describe("configuration du lecteur", () => {
     assert.equal(lireConfiguration("?mode=interactif").mode, "entrainement");
     assert.equal(lireConfiguration("?mode=diaporama").mode, "tableau");
     assert.equal(lireConfiguration("?mode=classe").mode, "tableau");
+    assert.equal(lireConfiguration("?niveau=5e").niveau, "5e");
+    assert.throws(
+      () => creerEtatLecteur({ niveau: "6e" }),
+      /niveau inconnu/,
+    );
   });
 
   it("ignore un nombre de questions invalide dans l'URL", () => {
@@ -386,6 +392,13 @@ describe("démarrage et génération", () => {
     assert.equal(etat.notionCoursOuverte, NOTION_NC02);
     ouvrirCours(etat, NOTION_NC01);
     assert.equal(etat.notionCoursOuverte, NOTION_NC01);
+  });
+
+  it("interdit aussi le cours par contrat quand la série est sans aide", () => {
+    const etat = creerEtatLecteur({ aide: "indisponible" });
+    ouvrirCours(etat);
+    assert.equal(etat.coursOuvert, false);
+    assert.equal(etat.notionCoursOuverte, null);
   });
 });
 

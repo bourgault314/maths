@@ -3,7 +3,7 @@ import {
   COULEURS_RANGS_NUMERATION_DECIMALE,
   RAYONS,
   TYPOGRAPHIE,
-} from "../packages/charte/src/charte.js?v=46";
+} from "../packages/charte/src/charte.js?v=49";
 import {
   avancerFractionAide,
   avancerCorrespondanceAide,
@@ -42,7 +42,7 @@ import {
   saisirChiffre,
   tournerSolide,
   validerReponse,
-} from "./src/etat-lecteur.js?v=46";
+} from "./src/etat-lecteur.js?v=49";
 import {
   TYPE_REPONSE_DEUX_ENTIERS,
   TYPE_REPONSE_DEUX_ENTIERS_RELATIFS,
@@ -51,9 +51,15 @@ import {
   TYPE_REPONSE_NOMBRE_DECIMAL,
   TYPE_REPONSE_CHOIX_UNIQUE,
   TYPE_REPONSE_SELECTION_MULTIPLE,
-} from "../packages/contrats/src/question-v2.js?v=46";
+} from "../packages/contrats/src/question-v2.js?v=49";
 import {
   connaitNotionLecteur,
+  DOMAINES_MENU,
+  domainesMenuPourNiveau,
+  graineIconesDomainesDuJour,
+  LIBELLES_MODULES_MENU,
+  NIVEAUX_PARCOURS,
+  notionsVisiblesPourNiveau,
   obtenirNotionLecteur,
   RENDU_CARRES,
   RENDU_DIVISIBILITE,
@@ -63,14 +69,14 @@ import {
   RENDU_FRACTIONS_DECIMAUX,
   RENDU_SOLIDE,
   RENDU_VOLUME,
+  rendreIconeDomaineMenu,
   NOTION_FRACTIONS_SIMPLES_DECIMAUX,
-} from "./src/registre-lecteur.js?v=46";
+} from "./src/registre-lecteur.js?v=49";
 import {
-  DOMAINES_AUTOMATISMES,
   MICRO_NOTIONS_AUTOMATISMES,
   normaliserIdentifiantMicroNotion,
-} from "../packages/automatismes/src/identifiants.js?v=46";
-import { COURS_SOLIDES_USUELS } from "../packages/automatismes/src/espace-et-geometrie/solides-usuels/reconnaissance.js?v=46";
+} from "../packages/automatismes/src/identifiants.js?v=49";
+import { COURS_SOLIDES_USUELS } from "../packages/automatismes/src/espace-et-geometrie/solides-usuels/reconnaissance.js?v=49";
 import {
   creerCone,
   creerCube,
@@ -79,14 +85,14 @@ import {
   creerPrisme,
   creerPyramide,
   dessinerSolide,
-} from "../packages/objets/src/solides.js?v=46";
+} from "../packages/objets/src/solides.js?v=49";
 import {
   ACTION_TOUCHE_EFFACER,
   ACTION_TOUCHE_SAISIR,
   ACTION_TOUCHE_VALIDER,
   obtenirDispositionClavier,
-} from "../packages/objets/src/clavier.js?v=46";
-import { formulationCritereDivisibilite } from "../packages/automatismes/src/nombres-et-calculs/criteres-divisibilite/critere-precis.js?v=46";
+} from "../packages/objets/src/clavier.js?v=49";
+import { formulationCritereDivisibilite } from "../packages/automatismes/src/nombres-et-calculs/criteres-divisibilite/critere-precis.js?v=49";
 import {
   caseVide,
   difference,
@@ -103,41 +109,41 @@ import {
   variable,
   versHtmlEgalitesAlignees,
   versHtmlSemantique,
-} from "../packages/objets/src/expressions.js?v=46";
+} from "../packages/objets/src/expressions.js?v=49";
 import {
   dessinerCarreQuadrille,
-} from "../packages/objets/src/carre-quadrille.js?v=46";
+} from "../packages/objets/src/carre-quadrille.js?v=49";
 import {
   dessinerDoubleDroiteGraduee,
   dessinerDroiteGraduee,
-} from "../packages/objets/src/droite-graduee.js?v=46";
+} from "../packages/objets/src/droite-graduee.js?v=49";
 import {
   dessinerRepereCartesien,
   positionDansRepere,
-} from "../packages/objets/src/repere-cartesien.js?v=46";
-import { dessinerGrilleFraction } from "../packages/objets/src/fractions.js?v=46";
-import { dessinerBandesFractionnairesSurRailDecimal } from "../packages/objets/src/bandes-fractions-rail.js?v=46";
+} from "../packages/objets/src/repere-cartesien.js?v=49";
+import { dessinerGrilleFraction } from "../packages/objets/src/fractions.js?v=49";
+import { dessinerBandesFractionnairesSurRailDecimal } from "../packages/objets/src/bandes-fractions-rail.js?v=49";
 import {
   dessinerConversionRangsNumerationDecimale,
   dessinerEchangeRangsNumerationDecimale,
   dessinerMaterielNumerationDecimale,
   dessinerTableauNumerationDecimale,
-} from "../packages/objets/src/numeration-decimale.js?v=46";
+} from "../packages/objets/src/numeration-decimale.js?v=49";
 import {
   dessinerDemiAvecDixiemes,
   dessinerReorganisationCentiemes,
-} from "../packages/objets/src/correspondances-decimales.js?v=46";
+} from "../packages/objets/src/correspondances-decimales.js?v=49";
 import {
   construireDonneesTableauDepuisFraction,
   formaterFractionEnDecimal,
   formaterFractionEnDecimalSignee,
   reduireFraction,
-} from "../packages/objets/src/fractions-decimaux.js?v=46";
+} from "../packages/objets/src/fractions-decimaux.js?v=49";
 import {
   diagnostiquerDecimalVersNumerateur,
   diagnostiquerFractionLibre,
   diagnostiquerFractionVersDecimal,
-} from "./src/diagnostic-fractions-decimaux.js?v=46";
+} from "./src/diagnostic-fractions-decimaux.js?v=49";
 import {
   FAMILLE_CHAINE_EGALITES,
   FAMILLE_FRACTION_REPERE_POURCENTAGE,
@@ -147,7 +153,7 @@ import {
   FAMILLE_UNITE_DEPASSEMENT,
   formaterPourcentageEnDecimal,
   lirePourcentageQuestion,
-} from "../packages/automatismes/src/nombres-et-calculs/ecritures-multiples-nombre/questions.js?v=46";
+} from "../packages/automatismes/src/nombres-et-calculs/ecritures-multiples-nombre/questions.js?v=49";
 import {
   FAMILLE_DIAGNOSTIC_COORDONNEES,
   FAMILLE_IDENTIFIER_POINT,
@@ -159,13 +165,12 @@ import {
   encoderCoordonnee,
   formaterCouple,
   formaterEntierRepere,
-} from "../packages/automatismes/src/espace-et-geometrie/reperage-plan/questions.js?v=46";
+} from "../packages/automatismes/src/espace-et-geometrie/reperage-plan/questions.js?v=49";
 import {
   diagnostiquerChoixQcmRepere,
   diagnostiquerCoordonneeSeule,
   diagnostiquerCoupleRepere,
-} from "./src/diagnostic-reperage-plan.js?v=46";
-
+} from "./src/diagnostic-reperage-plan.js?v=49";
 const MICRO_NOTION_FRACTION_VERS_DECIMAL =
   MICRO_NOTIONS_AUTOMATISMES.FRACTION_VERS_DECIMAL;
 const MICRO_NOTION_DECIMAL_VERS_FRACTION =
@@ -177,10 +182,13 @@ const arriveeSansParametre = rechercheInitiale.length === 0;
 let etat = creerEtatLecteur(lireConfiguration(rechercheInitiale));
 let menuAccueilOuvert = arriveeSansParametre;
 let menuSessionOuvert = false;
+let domaineMenuOuvert = null;
 let pageCoursCourante = 0;
 let compteurSeries = 0;
+const GRAINE_ICONES_DOMAINES = graineIconesDomainesDuJour();
 const VOLUMES_MENU = Object.freeze([5, 10, 15, 20]);
 let configurationMenu = {
+  niveau: etat.configuration.niveau,
   mode: etat.configuration.mode,
   aide: etat.configuration.aide,
   nombreQuestions: VOLUMES_MENU.includes(etat.configuration.nombreQuestions)
@@ -193,89 +201,6 @@ function creerGraineSerie() {
   compteurSeries += 1;
   return `serie-${Date.now()}-${compteurSeries}`;
 }
-
-const DOMAINES_MENU = Object.freeze([
-  Object.freeze({
-    id: DOMAINES_AUTOMATISMES.NC,
-    nom: "Nombres et calculs",
-    notions: Object.freeze([
-      NOTION_NC01,
-      NOTION_NC02,
-      NOTION_FRACTION_VERS_DECIMAL,
-      NOTION_DECIMAL_VERS_FRACTION,
-      NOTION_ECRITURES_MULTIPLES_NOMBRE,
-    ]),
-  }),
-  Object.freeze({
-    id: DOMAINES_AUTOMATISMES.AL,
-    nom: "Calcul littéral et algèbre",
-    notions: Object.freeze([]),
-  }),
-  Object.freeze({
-    id: DOMAINES_AUTOMATISMES.PF,
-    nom: "Proportionnalité et fonctions",
-    notions: Object.freeze([]),
-  }),
-  Object.freeze({
-    id: DOMAINES_AUTOMATISMES.GM,
-    nom: "Grandeurs et mesures",
-    notions: Object.freeze([]),
-  }),
-  Object.freeze({
-    id: DOMAINES_AUTOMATISMES.GE,
-    nom: "Espace et géométrie",
-    notions: Object.freeze([
-      NOTION_DROITE_GRADUEE,
-      NOTION_LIRE_COORDONNEES_POINT,
-      NOTION_PLACER_POINT_REPERE,
-    ]),
-  }),
-  Object.freeze({
-    id: DOMAINES_AUTOMATISMES.DS,
-    nom: "Données, statistiques et probabilités",
-    notions: Object.freeze([]),
-  }),
-  Object.freeze({
-    id: DOMAINES_AUTOMATISMES.PI,
-    nom: "Pensée informatique",
-    notions: Object.freeze([]),
-  }),
-]);
-
-const LIBELLES_MODULES_MENU = Object.freeze({
-  [NOTION_NC01]: Object.freeze({
-    titre: "Critères de divisibilité",
-    precision: "Par 2, 3, 5, 9 et 10",
-  }),
-  [NOTION_NC02]: Object.freeze({
-    titre: "Carrés des entiers",
-    precision: "De 0 à 12",
-  }),
-  [NOTION_FRACTION_VERS_DECIMAL]: Object.freeze({
-    titre: "Fraction → écriture décimale",
-    precision: "Lire une fraction simple ou décimale",
-  }),
-  [NOTION_DECIMAL_VERS_FRACTION]: Object.freeze({
-    titre: "Écriture décimale → fraction",
-    precision: "Écrire une fraction équivalente",
-  }),
-  [NOTION_ECRITURES_MULTIPLES_NOMBRE]: Object.freeze({
-    titre: "Un nombre, plusieurs écritures",
-    precision: "Décimal, fraction et pourcentage",
-  }),
-  [NOTION_DROITE_GRADUEE]: Object.freeze({
-    titre: "Droite graduée",
-    precision: "Lire une abscisse et placer un point",
-  }),
-  [NOTION_LIRE_COORDONNEES_POINT]: Object.freeze({
-    titre: "Lire les coordonnées d'un point",
-    precision: "Abscisse, ordonnée et couple",
-  }),
-  [NOTION_PLACER_POINT_REPERE]: Object.freeze({
-    titre: "Placer un point dans un repère",
-    precision: "Coordonnées entières",
-  }),
-});
 
 function identifiantNotionContexte() {
   if (etat.coursOuvert && etat.notionCoursOuverte) return etat.notionCoursOuverte;
@@ -295,7 +220,8 @@ function estEntrainement() {
 }
 
 function aCoursNotion() {
-  return definitionNotion().capacites.cours;
+  return etat.configuration.aide !== "indisponible"
+    && definitionNotion().capacites.cours;
 }
 
 function estReponseNumerique(question) {
@@ -398,6 +324,20 @@ function trierNotionsMenu(notions) {
   return ordre.filter((notion) => selection.has(notion));
 }
 
+function notionsSelectionneesVisiblesMenu() {
+  const visibles = new Set(notionsVisiblesPourNiveau(configurationMenu.niveau));
+  return trierNotionsMenu(configurationMenu.notions)
+    .filter((notion) => visibles.has(notion));
+}
+
+function libelleNiveauResume(niveau = configurationMenu.niveau) {
+  return `${niveau} · Sans calculatrice`;
+}
+
+function libelleAide(aide = configurationMenu.aide) {
+  return aide === "indisponible" ? "Sans aide" : "Avec aide";
+}
+
 const nomsCouleurs = {
   bleu: COULEURS.bleu,
   bleuFonce: COULEURS.bleuFonce,
@@ -449,37 +389,8 @@ function rendreMarque() {
   </a>`;
 }
 
-function rendreIconeNombresCalculs() {
-  return `<svg viewBox="0 0 36 36" focusable="false">
-    <rect x="3.5" y="3.5" width="29" height="29" rx="4.5" fill="#fffaf3" stroke="#173a5e" stroke-width="1.3"/>
-    <g fill="none" stroke="#aebfd1" stroke-width="1.2" stroke-linecap="round">
-      <path d="M7.5 11.5h21M7.5 18h21M7.5 24.5h21"/>
-    </g>
-    <g stroke="#fffdf8" stroke-width=".72">
-      <circle cx="10.5" cy="11.5" r="2.55" fill="#08aaa5"/>
-      <circle cx="16" cy="11.5" r="2.55" fill="#08aaa5"/>
-      <circle cx="25.5" cy="11.5" r="2.55" fill="#0b67b2"/>
-      <circle cx="12.5" cy="18" r="2.55" fill="#f58220"/>
-      <circle cx="21" cy="18" r="2.55" fill="#f58220"/>
-      <circle cx="26.5" cy="18" r="2.55" fill="#f58220"/>
-      <circle cx="9.5" cy="24.5" r="2.55" fill="#0b67b2"/>
-      <circle cx="18.5" cy="24.5" r="2.55" fill="#08aaa5"/>
-      <circle cx="24" cy="24.5" r="2.55" fill="#08aaa5"/>
-    </g>
-  </svg>`;
-}
-
-function rendreIconeGeometrie() {
-  return `<svg viewBox="0 0 36 36" focusable="false">
-    <rect x="3.5" y="3.5" width="29" height="29" rx="4.5" fill="#f5fbff" stroke="#173a5e" stroke-width="1.3"/>
-    <path d="M8 27 18 8l10 19Z" fill="none" stroke="#08aaa5" stroke-width="2" stroke-linejoin="round"/>
-    <path d="M12.2 27v-4.2h4.2" fill="none" stroke="#f58220" stroke-width="1.7"/>
-    <circle cx="18" cy="8" r="2" fill="#0b67b2"/>
-  </svg>`;
-}
-
-function rendreIconeCalculatriceBarree() {
-  return `<svg class="dnb-launch-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+function rendreIconeCalculatriceBarree(classe = "dnb-launch-icon") {
+  return `<svg class="${echapper(classe)}" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
     <rect x="6" y="2.8" width="12.4" height="18.4" rx="2.6" fill="none" stroke="currentColor" stroke-width="1.7"/>
     <rect x="8.5" y="5.5" width="7.4" height="3.6" rx="1" fill="currentColor" opacity=".9"/>
     <circle cx="9.4" cy="12.6" r="1.05" fill="currentColor"/>
@@ -494,23 +405,26 @@ function rendreIconeCalculatriceBarree() {
 
 function rendreDomainesMenu() {
   const selection = new Set(configurationMenu.notions);
-  return DOMAINES_MENU
-    .filter((domaine) => domaine.notions.length > 0)
+  return domainesMenuPourNiveau(configurationMenu.niveau)
     .map((domaine) => {
       const nombreSelectionne = domaine.notions.filter((notion) => selection.has(notion)).length;
       const selectionnee = nombreSelectionne > 0;
-      const complete = nombreSelectionne === domaine.notions.length;
-      return `<details class="theme-group ${selectionnee ? "has-selection" : ""} ${complete ? "is-complete" : ""}"
-        data-theme="${echapper(domaine.id)}" open>
+      const vide = domaine.notions.length === 0;
+      const complete = !vide && nombreSelectionne === domaine.notions.length;
+      const ouvert = domaineMenuOuvert === domaine.id;
+      return `<details class="theme-group ${selectionnee ? "has-selection" : ""} ${complete ? "is-complete" : ""} ${vide ? "is-empty" : ""}"
+        data-theme="${echapper(domaine.id)}" ${ouvert ? "open" : ""}>
         <summary class="theme-summary">
-          <span class="theme-icon" aria-hidden="true">${domaine.id === DOMAINES_AUTOMATISMES.GE ? rendreIconeGeometrie() : rendreIconeNombresCalculs()}</span>
+          <span class="theme-icon" aria-hidden="true">${rendreIconeDomaineMenu(domaine.icone, GRAINE_ICONES_DOMAINES)}</span>
           <span class="theme-name">${echapper(domaine.nom)}</span>
-          <span class="theme-count">${nombreSelectionne} / ${domaine.notions.length} <span class="theme-count-label">sélectionné${nombreSelectionne > 1 ? "s" : ""}</span></span>
+          <span class="theme-count">${nombreSelectionne} / ${domaine.notions.length}${vide ? "" : ` <span class="theme-count-label">sélectionné${nombreSelectionne > 1 ? "s" : ""}</span>`}</span>
           <span class="theme-chevron" aria-hidden="true"></span>
         </summary>
         <div class="theme-items">
-          <div class="module-subgroup-items">
-            ${domaine.notions.map((idNotion) => {
+          ${vide
+            ? '<p class="theme-empty-message">Aucun automatisme disponible pour le moment.</p>'
+            : `<div class="module-subgroup-items">
+              ${domaine.notions.map((idNotion) => {
               const libelle = LIBELLES_MODULES_MENU[idNotion];
               const estSelectionnee = selection.has(idNotion);
               return `<label class="modrow ${estSelectionnee ? "is-selected" : ""}">
@@ -519,7 +433,7 @@ function rendreDomainesMenu() {
                 <span><strong>${echapper(libelle.titre)}</strong><small>${echapper(libelle.precision)}</small></span>
               </label>`;
             }).join("")}
-          </div>
+            </div>`}
         </div>
       </details>`;
     })
@@ -528,9 +442,11 @@ function rendreDomainesMenu() {
 
 function rendreMenuAccueil() {
   const entrainement = configurationMenu.mode === "entrainement";
-  const nombreSelectionne = configurationMenu.notions.length;
+  const avecAide = configurationMenu.aide !== "indisponible";
+  const notionsSelectionnees = notionsSelectionneesVisiblesMenu();
+  const nombreSelectionne = notionsSelectionnees.length;
   const selectionValide = nombreSelectionne > 0
-    && configurationMenu.notions.every(connaitNotionLecteur)
+    && notionsSelectionnees.every(connaitNotionLecteur)
     && nombreSelectionne <= configurationMenu.nombreQuestions;
   const repartition = libelleRepartition(
     nombreSelectionne,
@@ -543,7 +459,7 @@ function rendreMenuAccueil() {
           <img class="logo" src="/assets/img/mathsgo-logo.png" alt="maths&go">
         </a>
         <div class="title">
-          <h1>Automatismes<span class="title-cycle">DNB</span></h1>
+          <h1>Automatismes<span class="title-cycle">Cycle 4 – DNB</span></h1>
         </div>
       </header>
 
@@ -553,9 +469,34 @@ function rendreMenuAccueil() {
             <span class="section-step section-step-settings" aria-hidden="true">1</span>
             <h2 id="settingsTitle">Préparer la série</h2>
           </div>
+          <div class="controls-grid">
+          <div class="controls-row">
+            <div class="field field-level">
+              <label id="levelLabel">Niveau</label>
+              <div class="segmented-control segmented-level" role="group" aria-labelledby="levelLabel">
+                ${NIVEAUX_PARCOURS.map((niveau, index) => `${index === NIVEAUX_PARCOURS.length - 1 ? '<span class="level-separator" aria-hidden="true"></span>' : ""}<button type="button"
+                  class="segment-btn ${niveau === "DNB" ? "segment-btn-dnb" : ""} ${configurationMenu.niveau === niveau ? "is-active" : ""}"
+                  data-action="choisir-niveau" data-value="${niveau}"
+                  aria-pressed="${configurationMenu.niveau === niveau}"
+                  ${niveau === "DNB" ? 'aria-label="DNB — révision de l’épreuve, sans calculatrice"' : ""}>
+                  <span class="level-label">${niveau}${niveau === "DNB" ? '<small>épreuve</small>' : ""}</span>
+                  ${niveau === "DNB" ? rendreIconeCalculatriceBarree("dnb-level-icon") : ""}
+                </button>`).join("")}
+              </div>
+            </div>
+            <div class="field field-help">
+              <label id="helpLabel">Aide</label>
+              <div class="segmented-control" role="group" aria-labelledby="helpLabel">
+                <button type="button" class="segment-btn ${avecAide ? "is-active" : ""}"
+                  data-action="choisir-aide" data-value="disponible" aria-pressed="${avecAide}">Avec aide</button>
+                <button type="button" class="segment-btn ${avecAide ? "" : "is-active"}"
+                  data-action="choisir-aide" data-value="indisponible" aria-pressed="${!avecAide}">Sans aide</button>
+              </div>
+            </div>
+          </div>
           <div class="controls-row">
             <div class="field field-mode">
-              <label id="modeLabel">Utilisation</label>
+              <label id="modeLabel">Mode</label>
               <div class="segmented-control" role="group" aria-labelledby="modeLabel">
                 <button type="button" class="segment-btn ${entrainement ? "is-active" : ""}"
                   data-action="choisir-mode" data-value="entrainement" aria-pressed="${entrainement}">S'entraîner</button>
@@ -564,7 +505,7 @@ function rendreMenuAccueil() {
               </div>
             </div>
             <div class="field field-count">
-              <label id="countLabel">Questions</label>
+              <label id="countLabel">Nombre de questions</label>
               <div class="segmented-control" role="group" aria-labelledby="countLabel">
                 ${VOLUMES_MENU.map((volume) => `<button type="button" class="segment-btn ${configurationMenu.nombreQuestions === volume ? "is-active" : ""}"
                   data-action="choisir-volume" data-value="${volume}"
@@ -572,6 +513,7 @@ function rendreMenuAccueil() {
                   ${volume < nombreSelectionne ? "disabled" : ""}>${volume}</button>`).join("")}
               </div>
             </div>
+          </div>
           </div>
         </section>
 
@@ -585,6 +527,15 @@ function rendreMenuAccueil() {
           <div class="modules" aria-label="Domaines d'automatismes">
             ${rendreDomainesMenu()}
           </div>
+          <div class="menu-footer-row">
+            <details class="acknowledgements">
+              <summary>Remerciements</summary>
+              <p>Un grand merci à Claire Lagarde pour son regard pédagogique, ses relectures attentives et toutes ses précieuses idées, qui contribuent à améliorer ce projet.</p>
+            </details>
+            <span class="menu-footer-separator" aria-hidden="true">·</span>
+            <button class="cookie-manage-link" type="button" data-mathsgo-consent-open
+              onclick="window.mathsgoConsentement &amp;&amp; window.mathsgoConsentement.ouvrir()">Gérer mes cookies</button>
+          </div>
         </section>
       </div>
     </div>
@@ -593,11 +544,11 @@ function rendreMenuAccueil() {
       <div class="setup-action-bar">
         <div class="setup-summary" aria-live="polite">
           <strong>${selectionValide ? `${libelleNombreAutomatismes(nombreSelectionne)} sélectionné${nombreSelectionne === 1 ? "" : "s"}` : "Choisis au moins un automatisme"}</strong>
-          <span>${configurationMenu.nombreQuestions} questions${repartition ? ` · ${echapper(repartition)}` : ""} · ${libelleMode(configurationMenu.mode)}</span>
+          <span>${echapper(libelleNiveauResume())} · ${configurationMenu.nombreQuestions} questions${repartition ? ` · ${echapper(repartition)}` : ""} · ${libelleMode(configurationMenu.mode)} · ${libelleAide()}</span>
         </div>
         <div class="launch-cluster">
-          <span class="dnb-launch-context" role="img" aria-label="Épreuve DNB sans calculatrice" title="Épreuve sans calculatrice">
-            ${rendreIconeCalculatriceBarree()}
+          <span class="sans-calculatrice-context" role="img" aria-label="Série sans calculatrice" title="Série sans calculatrice">
+            ${rendreIconeCalculatriceBarree("sans-calculatrice-icon")}
           </span>
           <button class="generate-action" type="button" data-action="preparer" ${selectionValide ? "" : "disabled"}>Lancer la série</button>
         </div>
@@ -616,6 +567,7 @@ function rendreListeNotionsSelectionnees({ compacte = false } = {}) {
 }
 
 function rendreAccesCoursAvantSerie() {
+  if (etat.configuration.aide === "indisponible") return "";
   const cours = definitionsSelectionnees().filter(({ capacites }) => capacites.cours);
   if (cours.length === 0) return "";
   if (cours.length === 1) {
@@ -639,7 +591,7 @@ function rendreEcranPret() {
     <main class="ecran-pret ${etat.coursOuvert ? "cours-pret-ouvert" : ""}">
       <button class="retour-lancement" type="button" data-action="retour-menu">← Modifier</button>
       ${rendreMarque()}
-      <p class="surtitre">Préparation au brevet</p>
+      <p class="surtitre">${etat.configuration.niveau === "DNB" ? "Préparation au brevet" : `Automatismes de ${echapper(etat.configuration.niveau)}`}</p>
       <h1>${entrainement ? "Prêt à t'entraîner ?" : "Prêt pour la classe ?"}</h1>
       <section class="resume-seance" aria-label="Contenu de la séance">
         <strong>${nombreNotions === 1 ? echapper(nomNotion(etat.configuration.notions[0])) : `${libelleNombreAutomatismes(nombreNotions)} sélectionnés`}</strong>
@@ -671,7 +623,7 @@ function rendreEntete() {
         </button>
         <button class="bouton-entete bouton-aide-entete" data-action="aide"
           aria-label="Aide"
-          ${aideDisponible ? "" : "disabled"} aria-expanded="${etat.aideOuverte}"
+          ${aideDisponible ? "" : 'disabled aria-disabled="true" title="Aide désactivée pour cette série"'} aria-expanded="${etat.aideOuverte}"
           aria-controls="panneau-aide"><span aria-hidden="true">?</span><strong>Aide</strong></button>
       </div>
       ${entrainement
@@ -5934,7 +5886,7 @@ function rendre({
         ? rendreBilan()
         : rendreQuestion();
   document.title = menuAccueilOuvert
-    ? "Préparation au brevet — Automatismes maths&go"
+    ? `${configurationMenu.niveau === "DNB" ? "Préparation au brevet" : `Automatismes ${configurationMenu.niveau}`} — maths&go`
     : phase === "en-cours"
     ? `Question ${etat.seance.etat.indexQuestion + 1} — Automatismes maths&go`
     : "Automatismes maths&go";
@@ -5989,26 +5941,55 @@ window.addEventListener("resize", () => {
   installerIndicateurDefilementPanneau(application.querySelector?.(".panneau"));
 });
 
+application.addEventListener("toggle", (evenement) => {
+  const groupe = evenement.target?.closest?.(".theme-group");
+  if (!groupe?.dataset?.theme) return;
+  if (groupe.open) {
+    domaineMenuOuvert = groupe.dataset.theme;
+    application.querySelectorAll?.(".theme-group[open]").forEach((autre) => {
+      if (autre !== groupe) autre.open = false;
+    });
+  } else if (domaineMenuOuvert === groupe.dataset.theme) {
+    domaineMenuOuvert = null;
+  }
+}, true);
+
 application.addEventListener("click", (evenement) => {
   const cible = evenement.target.closest("[data-action]");
   if (!cible) return;
+  const groupeDomaine = cible.closest?.(".theme-group");
+  if (groupeDomaine?.dataset?.theme) domaineMenuOuvert = groupeDomaine.dataset.theme;
   const action = cible.dataset.action;
   if (action === "interieur-menu") return;
   let focusPanneau = false;
   let focusSelector = "";
   let reinitialiserDefilementPanneau = false;
+  if (action === "choisir-niveau" && NIVEAUX_PARCOURS.includes(cible.dataset.value)) {
+    configurationMenu.niveau = cible.dataset.value;
+    const nombreSelectionne = notionsSelectionneesVisiblesMenu().length;
+    if (configurationMenu.nombreQuestions < nombreSelectionne) {
+      configurationMenu.nombreQuestions = VOLUMES_MENU.find(
+        (volume) => volume >= nombreSelectionne,
+      ) ?? VOLUMES_MENU.at(-1);
+    }
+  }
+  if (action === "choisir-aide") {
+    configurationMenu.aide = cible.dataset.value === "indisponible"
+      ? "indisponible"
+      : "disponible";
+  }
   if (action === "choisir-mode") {
     configurationMenu.mode = cible.dataset.value === "tableau" ? "tableau" : "entrainement";
   }
   if (action === "choisir-volume") {
     const volume = Number(cible.dataset.value);
-    if (VOLUMES_MENU.includes(volume) && volume >= configurationMenu.notions.length) {
+    if (VOLUMES_MENU.includes(volume) && volume >= notionsSelectionneesVisiblesMenu().length) {
       configurationMenu.nombreQuestions = volume;
     }
   }
   if (action === "choisir-notion") {
     const notionDemandee = cible.dataset.value;
-    if (DOMAINES_MENU.some((domaine) => domaine.notions.includes(notionDemandee))) {
+    if (notionsVisiblesPourNiveau(configurationMenu.niveau).includes(notionDemandee)) {
       const selection = new Set(configurationMenu.notions);
       if (selection.has(notionDemandee)) {
         selection.delete(notionDemandee);
@@ -6016,22 +5997,27 @@ application.addEventListener("click", (evenement) => {
         selection.add(notionDemandee);
       }
       configurationMenu.notions = trierNotionsMenu([...selection]);
-      if (configurationMenu.nombreQuestions < configurationMenu.notions.length) {
+      const nombreSelectionne = notionsSelectionneesVisiblesMenu().length;
+      if (configurationMenu.nombreQuestions < nombreSelectionne) {
         configurationMenu.nombreQuestions = VOLUMES_MENU.find(
-          (volume) => volume >= configurationMenu.notions.length,
+          (volume) => volume >= nombreSelectionne,
         ) ?? VOLUMES_MENU.at(-1);
       }
     }
   }
   if (action === "preparer") {
+    const notionsSelectionnees = notionsSelectionneesVisiblesMenu();
     if (
-      configurationMenu.notions.length === 0
-      || configurationMenu.notions.some((notion) => !connaitNotionLecteur(notion))
-      || configurationMenu.notions.length > configurationMenu.nombreQuestions
+      notionsSelectionnees.length === 0
+      || notionsSelectionnees.some((notion) => !connaitNotionLecteur(notion))
+      || notionsSelectionnees.length > configurationMenu.nombreQuestions
     ) return;
     etat = creerEtatLecteur({
-      ...configurationMenu,
-      notions: [...configurationMenu.notions],
+      niveau: configurationMenu.niveau,
+      mode: configurationMenu.mode,
+      aide: configurationMenu.aide,
+      nombreQuestions: configurationMenu.nombreQuestions,
+      notions: notionsSelectionnees,
       graine: creerGraineSerie(),
     });
     menuAccueilOuvert = false;
