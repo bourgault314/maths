@@ -214,7 +214,7 @@ Résultats du lot local du 22 août 2026 :
   GE-03 ; exactement 2 000 sur chacun des deux axes en GE-04 ;
 - **100 seeds instanciés par module**, soit 4 000 questions dont le dessin,
   la réponse attendue et la correction ont été recoupés ;
-- **1 744 tests sur 1 744**, répartis en 245 suites, et tous les validateurs
+- **1 745 tests sur 1 745**, répartis en 245 suites, et tous les validateurs
   du dépôt réussis ;
 - contrôle structurel des cinq fenêtres `320 × 568`, `390 × 844`,
   `768 × 1024`, `1 366 × 768` et `1 920 × 1 080` : unités carrées, zone
