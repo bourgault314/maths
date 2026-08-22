@@ -2,6 +2,31 @@
 
 **Dernière mise à jour : 22 août 2026.**
 
+## Candidat « paquets pondérés déterministes »
+
+- La branche `agent/v2-paquets-ponderes-deterministes` remplace les préfixes et
+  recettes propres aux petites longueurs par des paquets seedés de 20 jetons
+  tirés sans remise. La décision D-075 et le contrat
+  `paquets-ponderes-deterministes.md` rendent cette architecture obligatoire
+  dans le registre des futurs modules.
+- La répartition multinotions est canonique et équilibrée à une question près.
+  Si le total est inférieur au nombre d'automatismes cochés, les notions sont
+  distinctes et tirées sans remise ; l'ordre final est remélangé sans blocs.
+- NC-01, NC-02, NC-03, NC-04, NC-05, la droite graduée, GE-03, GE-04, les
+  solides usuels et GM-13 à GM-15 sont migrés. GE-03 et GE-04 restent deux
+  entrées séparées ; cours, aides, corrections, diagnostics et contrats de
+  réponse ne sont pas réécrits.
+- Les audits couvrent les allocations internes `1 / 2 / 5 / 10 / 15 / 20`,
+  les sélections de `1 / 2 / 3 / 5 / 10` automatismes, les totaux
+  `5 / 10 / 15 / 20`, plusieurs milliers de graines, les quotas exacts à 20,
+  les profils rares, l'équité, le déterminisme, l'ordre des tableaux et les
+  doublons visibles.
+- `npm run verifier` passe **1 747 tests sur 1 747** dans **251 suites**. Les
+  garde-fous V2 suivent **157 fichiers**, dont **80 fichiers de production** à
+  provenance déclarée. Le cache candidat est invalidé atomiquement en `v51`.
+- Ce candidat n'est ni fusionné dans `main` ni publié en production. Une revue
+  de la branche et une validation explicite restent nécessaires avant fusion.
+
 ## Révision pédagogique de GE-03 et GE-04
 
 - La recette sur le site publié a trouvé puis corrigé le conflit de nom du

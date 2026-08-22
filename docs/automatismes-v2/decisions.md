@@ -1820,3 +1820,43 @@ test de régression reproduit exactement un premier point `T`, valide un mauvais
 placement puis ouvre la correction avec les deux légendes « Ton point » et
 « Point attendu ». Le graphe reste en `v50` et seule la façade `app.js` passe
 à la révision `54`.
+
+### D-075 — Les séries V2 utilisent des paquets pondérés déterministes
+
+L'audit transversal du 22 août 2026 confirme un biais de préfixe : plusieurs
+modules possèdent des recettes propres à 5, 10, 15 ou 20 questions, ou un plan
+de 20 dont une sous-série multinotions ne reçoit que le début. Une famille rare
+placée tard ne peut alors jamais apparaître lorsque son module ne reçoit qu'une
+ou deux questions.
+
+Chaque automatisme V2 déclare désormais un ou plusieurs paquets de référence,
+chacun composé exactement de 20 jetons. Un jeton porte une catégorie `principale`,
+`secondaire` ou `rare`. Le moteur canonise les identifiants, mélange le paquet
+avec une graine dérivée et tire sans remise. Les petites allocations
+échantillonnent donc tout le paquet ; à 20 questions, les quotas déclarés sont
+exacts. Les dimensions secondaires utilisent des sous-graines nommées et ne
+sont appariées que pour résoudre une incompatibilité réelle ou un doublon
+visible, sans modifier leurs quotas.
+
+Entre `N` automatismes et `Q` questions, D-039 reste valable pour `Q ≥ N` :
+chacun reçoit au moins une question, les quotas diffèrent d'au plus un et le
+reliquat dépend de la graine. Pour `Q < N`, D-075 remplace l'interdiction de
+D-039 et la hausse automatique rappelée par D-072 : `Q` automatismes distincts
+sont tirés sans remise. L'ordre final est seedé et mélangé, sans blocs par
+notion. L'ordre de déclaration des notions n'a aucun effet.
+
+D-075 remplace également les plans de petites longueurs et les garanties de
+position de D-039, D-060, D-064 et D-073. Leurs contenus pédagogiques et leurs
+quotas de référence à 20 restent acquis. En particulier, GE-03 conserve
+`10 / 3 / 3 / 2 / 2`, GE-03 et GE-04 restent séparés, et leur paquet de pas
+reste `15 / 4 / 1`. Un quart peut désormais apparaître dans une petite
+allocation : il n'est plus réservé à la fin d'un plan.
+
+Le contrat est exécutable : le registre refuse une notion visible sans fabrique
+de série, capacité de 20 et paquet déclaré. NC-01 à NC-05, la droite graduée,
+GE-03, GE-04, les solides usuels et les trois modules de volumes sont migrés
+sans réécrire cours, aides, corrections ou diagnostics. La règle complète et
+les audits obligatoires sont décrits dans
+`paquets-ponderes-deterministes.md`. Cette décision n'autorise ni fusion dans
+`main` ni publication en production avant une recette intégralement verte et
+une validation explicite.

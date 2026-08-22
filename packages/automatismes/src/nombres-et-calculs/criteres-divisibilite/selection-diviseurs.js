@@ -10,12 +10,12 @@ import {
   COMPARAISON_ENSEMBLE_EXACT,
   SCHEMA_QUESTION_INSTANCE_V2,
   TYPE_REPONSE_SELECTION_MULTIPLE,
-} from "../../../../contrats/src/question-v2.js?v=50";
+} from "../../../../contrats/src/question-v2.js?v=51";
 import {
   IDENTITES_AUTOMATISMES,
   creerClassementAutomatisme,
-} from "../../identifiants.js?v=50";
-import { formulationCritereDivisibilite } from "./critere-precis.js?v=50";
+} from "../../identifiants.js?v=51";
+import { formulationCritereDivisibilite } from "./critere-precis.js?v=51";
 
 export const NOM_GENERATEUR_SELECTION_DIVISEURS =
   "nombres-et-calculs.criteres-divisibilite.selection-diviseurs";

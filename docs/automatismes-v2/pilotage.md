@@ -1,6 +1,6 @@
 # Pilotage d'Automatismes maths&go V2
 
-**Document opérationnel de référence — mis à jour le 9 août 2026.**
+**Document opérationnel de référence — mis à jour le 22 août 2026.**
 
 Ce document fixe le cadre du chantier. Une instruction explicite plus récente
 de Gwenaël peut le modifier ; la décision doit alors être consignée dans
@@ -210,6 +210,27 @@ d'élèves que la fiche prétend diagnostiquer. Une valeur fausse mais
 syntaxiquement valide est validée, tracée et comptée fausse ; elle ne doit pas
 être tronquée ou refusée silencieusement par le pavé.
 
+## Sélection commune des séries
+
+Toutes les séries V2 suivent le contrat des
+[`paquets pondérés déterministes`](paquets-ponderes-deterministes.md). Chaque
+module déclare au moins un paquet de vingt profils avec identifiants canoniques,
+catégories pédagogiques et quotas. Le tirage est seedé, sans remise et
+indépendant de l'ordre des tableaux. Une allocation complète respecte les
+quotas exactement ; une petite allocation peut atteindre chaque profil déclaré
+sans privilégier un préfixe fixe.
+
+Le registre du lecteur refuse un futur module sans `creerSerie`, sans capacité
+de vingt questions ou sans `paquetsSelection`. Les dimensions indépendantes
+emploient des sous-graines nommées ; les contraintes d'appariement et d'ordre
+ne peuvent ni changer les quotas ni fabriquer une progression artificielle.
+
+Entre modules, le quota total est équilibré à une question près. Si le total
+est inférieur au nombre de modules cochés, les modules servis sont distincts
+et tirés sans remise. Le reliquat et l'ordre final dépendent uniquement de la
+graine et des identifiants canoniques. Le menu n'augmente plus automatiquement
+le nombre de questions pour couvrir toutes les cases cochées.
+
 ## Contraintes techniques
 
 - JavaScript moderne, sans dépendance externe ni compilation ;
@@ -233,8 +254,7 @@ suivante est la définition technique de V2, et elle est vérifiée à chaque
 - `packages/contrats/src` — contrats de question et de gabarit ;
 - `packages/moteur-exercices/src` — générateur pseudo-aléatoire seedé et
   registre de générateurs ;
-- `packages/automatismes/src` — futurs paquets de notions ; le dossier n'existe
-  pas encore, il est déclaré d'avance pour naître déjà surveillé ;
+- `packages/automatismes/src` — générateurs et paquets de profils des notions ;
 - `packages/objets/src` — les objets visuels que les questions dessinent ;
 - `packages/charte/src` — couleurs, typographie, espacements.
 

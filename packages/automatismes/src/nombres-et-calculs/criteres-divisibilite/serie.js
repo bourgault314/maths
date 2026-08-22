@@ -1,17 +1,18 @@
-// Plan de série NC-01 — mélange les cinq familles retenues.
-//
-// La logique reste volontairement locale à NC-01 : les quotas, alternances et
-// critères n'ont pas vocation à devenir un moteur générique pour les futures
-// notions. Même graine + même longueur = même plan et mêmes questions.
+// Plan de série NC-01 — paquet pédagogique commun et paramètres locaux.
 
 import { creerGenerateur } from "../../../../moteur-exercices/src/aleatoire.js";
-import { GABARIT_CHIFFRE_MANQUANT } from "./chiffre-manquant.js?v=50";
-import { GABARIT_CRITERE_PRECIS } from "./critere-precis.js?v=50";
-import { GABARIT_PARTAGE_COURT } from "./partage-court.js?v=50";
-import { GABARIT_SELECTION_DIVISEURS } from "./selection-diviseurs.js?v=50";
-import { GABARIT_SELECTION_NOMBRES } from "./selection-nombres.js?v=50";
+import {
+  definirPaquetPondere,
+  ordonnerEnLimitantRepetitions,
+  tirerProfilsPonderes,
+} from "../../../../moteur-exercices/src/paquets-ponderes.js?v=51";
+import { GABARIT_CHIFFRE_MANQUANT } from "./chiffre-manquant.js?v=51";
+import { GABARIT_CRITERE_PRECIS } from "./critere-precis.js?v=51";
+import { GABARIT_PARTAGE_COURT } from "./partage-court.js?v=51";
+import { GABARIT_SELECTION_DIVISEURS } from "./selection-diviseurs.js?v=51";
+import { GABARIT_SELECTION_NOMBRES } from "./selection-nombres.js?v=51";
 
-export const VERSION_PLAN_SERIE_NC01 = 6;
+export const VERSION_PLAN_SERIE_NC01 = 7;
 
 export const FAMILLES_NC01 = Object.freeze({
   F1: "critere-precis",
@@ -22,25 +23,16 @@ export const FAMILLES_NC01 = Object.freeze({
 });
 
 const DIVISEURS = Object.freeze([2, 3, 5, 9, 10]);
-// Les cinq premières positions donnent la révision courte validée : une F1,
-// deux F2, une F3 et une situation de partage. Chaque bloc de cinq suivant
-// ajoute ensuite une occurrence de chaque famille. Les séries 5, 10, 15 et 20
-// portent donc exactement les quotas décidés, sans cas « Aucun » imposé.
-const RECETTE_INITIALE = Object.freeze([
-  FAMILLES_NC01.F1,
-  FAMILLES_NC01.F2,
-  FAMILLES_NC01.F3,
-  FAMILLES_NC01.F6,
-  FAMILLES_NC01.F2,
-]);
-
-const COMPLEMENT_CINQ = Object.freeze([
-  FAMILLES_NC01.F1,
-  FAMILLES_NC01.F2,
-  FAMILLES_NC01.F3,
-  FAMILLES_NC01.F5,
-  FAMILLES_NC01.F6,
-]);
+export const PAQUET_FAMILLES_NC01 = definirPaquetPondere({
+  id: "nc01-familles",
+  profils: [
+    { id: FAMILLES_NC01.F1, quota: 4, categorie: "principale" },
+    { id: FAMILLES_NC01.F2, quota: 5, categorie: "principale" },
+    { id: FAMILLES_NC01.F3, quota: 4, categorie: "secondaire" },
+    { id: FAMILLES_NC01.F5, quota: 3, categorie: "rare" },
+    { id: FAMILLES_NC01.F6, quota: 4, categorie: "secondaire" },
+  ],
+});
 
 const GABARITS = Object.freeze({
   [FAMILLES_NC01.F1]: GABARIT_CRITERE_PRECIS,
@@ -57,58 +49,6 @@ function exigerConfiguration(graine, nombreQuestions) {
   if (!Number.isInteger(nombreQuestions) || nombreQuestions < 1 || nombreQuestions > 100) {
     throw new RangeError("serie NC-01 : nombre de questions entre 1 et 100 requis");
   }
-}
-
-function recettePour(nombreQuestions) {
-  const initiale = RECETTE_INITIALE.slice(
-    0,
-    Math.min(nombreQuestions, RECETTE_INITIALE.length),
-  );
-  const restant = nombreQuestions - initiale.length;
-  const cyclesComplets = Math.floor(restant / COMPLEMENT_CINQ.length);
-  const reste = restant % COMPLEMENT_CINQ.length;
-  return [
-    ...initiale,
-    ...Array.from({ length: cyclesComplets }, () => COMPLEMENT_CINQ).flat(),
-    ...COMPLEMENT_CINQ.slice(0, reste),
-  ];
-}
-
-function resteArrangeable(compte, precedent) {
-  const total = [...compte.values()].reduce((somme, nombre) => somme + nombre, 0);
-  return [...compte.entries()].every(([famille, nombre]) =>
-    nombre <= (famille === precedent ? Math.floor(total / 2) : Math.ceil(total / 2)),
-  );
-}
-
-function melangerFamilles(aleatoire, familles) {
-  const compte = new Map();
-  for (const famille of familles) compte.set(famille, (compte.get(famille) ?? 0) + 1);
-  const resultat = [];
-
-  while (resultat.length < familles.length) {
-    const precedent = resultat.at(-1);
-    const candidates = aleatoire.melange(
-      [...compte.entries()]
-        .filter(([, nombre]) => nombre > 0)
-        .map(([famille]) => famille),
-    ).filter((famille) =>
-      famille !== precedent &&
-      (resultat.length > 0 || familles.length === 1 || [FAMILLES_NC01.F1, FAMILLES_NC01.F2].includes(famille)),
-    );
-    const choisie = candidates.find((famille) => {
-      compte.set(famille, compte.get(famille) - 1);
-      const possible = resteArrangeable(compte, famille);
-      compte.set(famille, compte.get(famille) + 1);
-      return possible;
-    });
-    if (!choisie) {
-      throw new Error("serie NC-01 : impossible d'ordonner les familles sans répétition voisine");
-    }
-    compte.set(choisie, compte.get(choisie) - 1);
-    resultat.push(choisie);
-  }
-  return resultat;
 }
 
 function valeursCycliques(aleatoire, valeurs, nombre) {
@@ -135,12 +75,10 @@ function attribuerCriteres(aleatoire, descripteurs) {
   for (const descripteur of contraints) {
     const compatibles = descripteur.parametres.sousForme === "unique" ? [9, 10] : [3];
     const index = criteresDisponibles.findIndex((critere) => compatibles.includes(critere));
-    if (index === -1) {
-      throw new Error(
-        `serie NC-01 : aucun critère compatible avec ${descripteur.parametres.sousForme}`,
-      );
-    }
-    attribuer(descripteur, criteresDisponibles.splice(index, 1)[0]);
+    const critere = index === -1
+      ? aleatoire.choix(compatibles)
+      : criteresDisponibles.splice(index, 1)[0];
+    attribuer(descripteur, critere);
   }
 
   cibles
@@ -160,9 +98,11 @@ function parametrerFamilles(aleatoire, familles) {
     .forEach((sousForme, index) => { f5[index].parametres.sousForme = sousForme; });
 
   const f6 = descripteurs.filter(({ famille }) => famille === FAMILLES_NC01.F6);
-  const sousFormesPartage = f6.length === 1
-    ? ["oui-non"]
-    : valeursCycliques(aleatoire, ["oui-non", "retrait-minimal"], f6.length);
+  const sousFormesPartage = valeursCycliques(
+    aleatoire,
+    ["oui-non", "retrait-minimal"],
+    f6.length,
+  );
   sousFormesPartage.forEach((sousForme, index) => {
       f6[index].parametres.sousForme = sousForme;
       f6[index].parametres.diviseur = aleatoire.choix(DIVISEURS);
@@ -178,9 +118,18 @@ function parametrerFamilles(aleatoire, familles) {
 export function planifierSerieNC01({ graine, nombreQuestions = 10 }) {
   exigerConfiguration(graine, nombreQuestions);
   const aleatoire = creerGenerateur(
-    `nc01-plan-v${VERSION_PLAN_SERIE_NC01}:${graine}:${nombreQuestions}`,
+    `nc01-parametres-v${VERSION_PLAN_SERIE_NC01}:${graine}:${nombreQuestions}`,
   );
-  const familles = melangerFamilles(aleatoire, recettePour(nombreQuestions));
+  const tirages = tirerProfilsPonderes({
+    paquet: PAQUET_FAMILLES_NC01,
+    graine: `nc01-familles-v${VERSION_PLAN_SERIE_NC01}:${graine}`,
+    nombreElements: nombreQuestions,
+  });
+  const familles = ordonnerEnLimitantRepetitions({
+    elements: tirages,
+    graine: `nc01-ordre-v${VERSION_PLAN_SERIE_NC01}:${graine}`,
+    cle: ({ id }) => id,
+  }).map(({ id }) => id);
   return parametrerFamilles(aleatoire, familles).map((descripteur, index) => ({
     ...descripteur,
     position: index,

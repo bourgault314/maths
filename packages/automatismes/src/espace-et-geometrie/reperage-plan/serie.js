@@ -1,4 +1,10 @@
-import { creerGenerateur, validerGraine } from "../../../../moteur-exercices/src/aleatoire.js?v=50";
+import { creerGenerateur, validerGraine } from "../../../../moteur-exercices/src/aleatoire.js?v=51";
+import {
+  apparierProfilsCompatibles,
+  definirPaquetPondere,
+  ordonnerEnLimitantRepetitions,
+  tirerProfilsPonderes,
+} from "../../../../moteur-exercices/src/paquets-ponderes.js?v=51";
 import {
   FAMILLE_DIAGNOSTIC_COORDONNEES,
   FAMILLE_IDENTIFIER_POINT,
@@ -8,58 +14,57 @@ import {
   FAMILLE_PLACER_POINT_REPERE,
   GABARIT_LIRE_COORDONNEES,
   GABARIT_PLACER_POINT_REPERE,
-} from "./questions.js?v=50";
+} from "./questions.js?v=51";
 
 export const QUOTAS_LIRE_COORDONNEES = Object.freeze({
-  5: Object.freeze({ complet: 2, abscisse: 1, ordonnee: 1, qcm: 1, identifier: 0 }),
-  10: Object.freeze({ complet: 5, abscisse: 2, ordonnee: 1, qcm: 1, identifier: 1 }),
-  15: Object.freeze({ complet: 8, abscisse: 2, ordonnee: 2, qcm: 2, identifier: 1 }),
   20: Object.freeze({ complet: 10, abscisse: 3, ordonnee: 3, qcm: 2, identifier: 2 }),
 });
 
-const FAMILLES_LECTURE = Object.freeze([
-  FAMILLE_LIRE_COORDONNEES,
-  FAMILLE_LIRE_COORDONNEES,
-  FAMILLE_LIRE_ABSCISSE_REPERE,
-  FAMILLE_DIAGNOSTIC_COORDONNEES,
-  FAMILLE_LIRE_ORDONNEE,
-  FAMILLE_LIRE_COORDONNEES,
-  FAMILLE_LIRE_COORDONNEES,
-  FAMILLE_LIRE_ABSCISSE_REPERE,
-  FAMILLE_LIRE_COORDONNEES,
-  FAMILLE_IDENTIFIER_POINT,
-  FAMILLE_LIRE_COORDONNEES,
-  FAMILLE_LIRE_ORDONNEE,
-  FAMILLE_LIRE_COORDONNEES,
-  FAMILLE_DIAGNOSTIC_COORDONNEES,
-  FAMILLE_LIRE_COORDONNEES,
-  FAMILLE_LIRE_ABSCISSE_REPERE,
-  FAMILLE_LIRE_ORDONNEE,
-  FAMILLE_LIRE_COORDONNEES,
-  FAMILLE_IDENTIFIER_POINT,
-  FAMILLE_LIRE_COORDONNEES,
-]);
+export const PAQUET_FAMILLES_LIRE_COORDONNEES = definirPaquetPondere({
+  id: "ge03-familles",
+  profils: [
+    { id: FAMILLE_LIRE_COORDONNEES, quota: 10, categorie: "principale" },
+    { id: FAMILLE_LIRE_ABSCISSE_REPERE, quota: 3, categorie: "secondaire" },
+    { id: FAMILLE_LIRE_ORDONNEE, quota: 3, categorie: "secondaire" },
+    { id: FAMILLE_DIAGNOSTIC_COORDONNEES, quota: 2, categorie: "rare" },
+    { id: FAMILLE_IDENTIFIER_POINT, quota: 2, categorie: "rare" },
+  ],
+});
 
-const ZONES_LECTURE = Object.freeze([
-  "q1", "q2", "axe-y", "q4", "axe-x",
-  "q3", "q4", "q2", "q1", "q3",
-  "q2", "q4", "axe-x", "q3", "q1",
-  "axe-y", "q4", "q2", "q3", "rare",
-]);
+export const PAQUET_PAS_REPERE = definirPaquetPondere({
+  id: "ge03-ge04-pas",
+  profils: [
+    { id: "pas-1", quota: 15, categorie: "principale", pas: 1 },
+    { id: "pas-0.5", quota: 4, categorie: "secondaire", pas: 0.5 },
+    { id: "pas-0.25", quota: 1, categorie: "rare", pas: 0.25 },
+  ],
+});
 
-const ZONES_PLACEMENT = Object.freeze([
-  "q1", "q2", "q3", "q4", "q1",
-  "q2", "q3", "q4", "axe-x", "axe-y",
-  "q1", "q2", "q3", "q4", "axe-x",
-  "axe-y", "q1", "q2", "q3", "rare",
-]);
+export const PAQUET_ZONES_LECTURE = definirPaquetPondere({
+  id: "ge03-zones",
+  profils: [
+    { id: "q1", quota: 3, categorie: "principale" },
+    { id: "q2", quota: 4, categorie: "principale" },
+    { id: "q3", quota: 4, categorie: "principale" },
+    { id: "q4", quota: 4, categorie: "principale" },
+    { id: "axe-x", quota: 2, categorie: "secondaire" },
+    { id: "axe-y", quota: 2, categorie: "secondaire" },
+    { id: "rare", quota: 1, categorie: "rare" },
+  ],
+});
 
-const PAS_PAR_PROFIL = Object.freeze([
-  1, 1, 1, 0.5, 1,
-  1, 1, 0.5, 1, 1,
-  0.5, 1, 1, 1, 1,
-  1, 0.5, 1, 0.25, 1,
-]);
+export const PAQUET_ZONES_PLACEMENT = definirPaquetPondere({
+  id: "ge04-zones",
+  profils: [
+    { id: "q1", quota: 4, categorie: "principale" },
+    { id: "q2", quota: 4, categorie: "principale" },
+    { id: "q3", quota: 4, categorie: "principale" },
+    { id: "q4", quota: 3, categorie: "principale" },
+    { id: "axe-x", quota: 2, categorie: "secondaire" },
+    { id: "axe-y", quota: 2, categorie: "secondaire" },
+    { id: "rare", quota: 1, categorie: "rare" },
+  ],
+});
 
 export const GABARITS_BORNES_REPERE = Object.freeze([
   Object.freeze({ pas: 1, xMin: -4, xMax: 4, yMin: -3, yMax: 3 }),
@@ -190,10 +195,9 @@ function nomsTournes(decalage, index) {
     NOMS_POINTS[(decalage + index + rang) % NOMS_POINTS.length]);
 }
 
-function choisirBornes(aleatoire, index) {
-  const pas = PAS_PAR_PROFIL[index];
+function choisirBornes(aleatoire, pas) {
   const gabarits = GABARITS_PAR_PAS.get(pas);
-  return gabarits[(index + aleatoire.entier(0, gabarits.length - 1)) % gabarits.length];
+  return aleatoire.choix(gabarits);
 }
 
 function fractionAxePourFamille(famille, pas) {
@@ -203,6 +207,53 @@ function fractionAxePourFamille(famille, pas) {
   return "au-moins-une";
 }
 
+function zoneCompatibleLecture({ famille, pas }, profilZone, inclureOrigine) {
+  if (famille === FAMILLE_DIAGNOSTIC_COORDONNEES) {
+    return ["q1", "q2", "q3", "q4"].includes(profilZone.id);
+  }
+  if (profilZone.id === "rare") return !inclureOrigine || pas === 1;
+  if (pas === 1) return true;
+  if (famille === FAMILLE_LIRE_ABSCISSE_REPERE) return profilZone.id !== "axe-y";
+  if (famille === FAMILLE_LIRE_ORDONNEE) return profilZone.id !== "axe-x";
+  return true;
+}
+
+function resoudreZoneLecture(profilZone, { famille, pas }, inclureOrigine, aleatoire) {
+  if (profilZone.id !== "rare") return profilZone.id;
+  if (inclureOrigine) return "origine";
+  if (pas < 1 && famille === FAMILLE_LIRE_ABSCISSE_REPERE) return "axe-x";
+  if (pas < 1 && famille === FAMILLE_LIRE_ORDONNEE) return "axe-y";
+  return aleatoire.choix(["axe-x", "axe-y"]);
+}
+
+function tirerZonesCompatibles({
+  paquet,
+  elements,
+  graine,
+  inclureOrigine,
+  estCompatible,
+}) {
+  for (let essai = 0; essai < 40; essai += 1) {
+    const profils = tirerProfilsPonderes({
+      paquet,
+      graine: `${graine}:essai-${essai}`,
+      nombreElements: elements.length,
+    });
+    try {
+      return apparierProfilsCompatibles({
+        elements,
+        profils,
+        graine: `${graine}:appariement-${essai}`,
+        estCompatible: (element, profil) =>
+          estCompatible(element, profil, inclureOrigine),
+      });
+    } catch (erreur) {
+      if (!String(erreur.message).startsWith("appariement pondéré")) throw erreur;
+    }
+  }
+  throw new Error("série repérage-plan : profils compatibles introuvables");
+}
+
 /** Produit les paramètres purs des vingt profils GE-03. */
 export function planifierSerieLireCoordonnees({ graine, nombreQuestions = 10 }) {
   const { aleatoire, utilisees, decalageNom, inclureOrigine } = preparerSerie(
@@ -210,13 +261,39 @@ export function planifierSerieLireCoordonnees({ graine, nombreQuestions = 10 }) 
     nombreQuestions,
     "lecture",
   );
-  return Array.from({ length: nombreQuestions }, (_, index) => {
-    const famille = FAMILLES_LECTURE[index];
-    const bornes = choisirBornes(aleatoire, index);
-    const zoneBrute = ZONES_LECTURE[index];
-    const zone = zoneBrute === "rare"
-      ? (inclureOrigine ? "origine" : aleatoire.choix(["axe-x", "axe-y"]))
-      : zoneBrute;
+  const familles = ordonnerEnLimitantRepetitions({
+    elements: tirerProfilsPonderes({
+      paquet: PAQUET_FAMILLES_LIRE_COORDONNEES,
+      graine: `ge03-familles:${graine}`,
+      nombreElements: nombreQuestions,
+    }),
+    graine: `ge03-ordre-familles:${graine}`,
+    cle: ({ id }) => id,
+  });
+  const pas = tirerProfilsPonderes({
+    paquet: PAQUET_PAS_REPERE,
+    graine: `ge03-pas:${graine}`,
+    nombreElements: nombreQuestions,
+  });
+  const elements = familles.map((profil, index) => ({
+    famille: profil.id,
+    pas: pas[index].pas,
+  }));
+  const zones = tirerZonesCompatibles({
+    paquet: PAQUET_ZONES_LECTURE,
+    elements,
+    graine: `ge03-zones:${graine}`,
+    inclureOrigine,
+    estCompatible: zoneCompatibleLecture,
+  });
+  return elements.map(({ famille, pas: pasValeur }, index) => {
+    const bornes = choisirBornes(aleatoire, pasValeur);
+    const zone = resoudreZoneLecture(
+      zones[index],
+      { famille, pas: pasValeur },
+      inclureOrigine,
+      aleatoire,
+    );
     const cible = choisirCible(aleatoire, zone, bornes, utilisees, {
       qcm: famille === FAMILLE_DIAGNOSTIC_COORDONNEES,
       fractionAxe: fractionAxePourFamille(famille, bornes.pas),
@@ -243,10 +320,25 @@ export function planifierSeriePlacerPointRepere({ graine, nombreQuestions = 10 }
     nombreQuestions,
     "placement",
   );
-  return Array.from({ length: nombreQuestions }, (_, index) => {
-    const bornes = choisirBornes(aleatoire, index);
-    const zoneBrute = ZONES_PLACEMENT[index];
-    const zone = zoneBrute === "rare" ? (inclureOrigine ? "origine" : "q4") : zoneBrute;
+  const pas = tirerProfilsPonderes({
+    paquet: PAQUET_PAS_REPERE,
+    graine: `ge04-pas:${graine}`,
+    nombreElements: nombreQuestions,
+  });
+  const elements = pas.map((profil) => ({ pas: profil.pas }));
+  const zones = tirerZonesCompatibles({
+    paquet: PAQUET_ZONES_PLACEMENT,
+    elements,
+    graine: `ge04-zones:${graine}`,
+    inclureOrigine,
+    estCompatible: ({ pas: pasValeur }, profilZone, origine) =>
+      profilZone.id !== "rare" || !origine || pasValeur === 1,
+  });
+  return elements.map(({ pas: pasValeur }, index) => {
+    const bornes = choisirBornes(aleatoire, pasValeur);
+    const zone = zones[index].id === "rare"
+      ? (inclureOrigine ? "origine" : "q4")
+      : zones[index].id;
     const cible = choisirCible(aleatoire, zone, bornes, utilisees, {
       fractionAxe: bornes.pas === 1 ? null : "au-moins-une",
     });

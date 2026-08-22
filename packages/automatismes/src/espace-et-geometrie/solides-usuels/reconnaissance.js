@@ -8,20 +8,20 @@ import {
   COMPARAISON_CHOIX_EXACT,
   SCHEMA_QUESTION_INSTANCE_V2,
   TYPE_REPONSE_CHOIX_UNIQUE,
-} from "../../../../contrats/src/question-v2.js?v=50";
+} from "../../../../contrats/src/question-v2.js?v=51";
 import {
   IDENTITES_AUTOMATISMES,
   creerClassementAutomatisme,
-} from "../../identifiants.js?v=50";
+} from "../../identifiants.js?v=51";
 
 export const NOM_GENERATEUR_RECONNAISSANCE_SOLIDES =
   "espace-et-geometrie.solides-usuels.reconnaissance";
-export const VERSION_GENERATEUR_RECONNAISSANCE_SOLIDES = 1;
+export const VERSION_GENERATEUR_RECONNAISSANCE_SOLIDES = 2;
 
 export const GABARIT_RECONNAISSANCE_SOLIDES = Object.freeze({
   schema: SCHEMA_GABARIT_QUESTION,
   id: NOM_GENERATEUR_RECONNAISSANCE_SOLIDES,
-  version: 1,
+  version: VERSION_GENERATEUR_RECONNAISSANCE_SOLIDES,
   titre: "Reconnaître les six solides usuels",
   generateur: Object.freeze({
     nom: NOM_GENERATEUR_RECONNAISSANCE_SOLIDES,
@@ -102,18 +102,41 @@ function exigerContexte(aleatoire, parametres) {
   }
   if (
     typeof parametres !== "object" || parametres === null
-    || Array.isArray(parametres) || Object.keys(parametres).length !== 0
+    || Array.isArray(parametres)
   ) {
-    throw new TypeError("reconnaissance-solides : aucun paramètre autorisé en version 1");
+    throw new TypeError("reconnaissance-solides : paramètres simples requis");
+  }
+  const cles = new Set(["forme", "variante", "vueIndex"]);
+  for (const cle of Object.keys(parametres)) {
+    if (!cles.has(cle)) {
+      throw new TypeError(`reconnaissance-solides : paramètre inconnu « ${cle} »`);
+    }
+  }
+  if (parametres.forme !== undefined && !Object.hasOwn(SOLIDES, parametres.forme)) {
+    throw new RangeError("reconnaissance-solides : forme inconnue");
+  }
+  if (
+    parametres.vueIndex !== undefined
+    && (!Number.isInteger(parametres.vueIndex) || !VUES[parametres.vueIndex])
+  ) {
+    throw new RangeError("reconnaissance-solides : vue inconnue");
   }
 }
 
 export function genererQuestionReconnaissanceSolides({ aleatoire, parametres }) {
   exigerContexte(aleatoire, parametres);
-  const forme = aleatoire.choix(Object.keys(SOLIDES));
+  const forme = parametres.forme ?? aleatoire.choix(Object.keys(SOLIDES));
   const definition = SOLIDES[forme];
-  const variante = aleatoire.choix(definition.variantes);
-  const vue = aleatoire.choix(VUES);
+  if (
+    parametres.variante !== undefined
+    && !definition.variantes.includes(parametres.variante)
+  ) {
+    throw new RangeError("reconnaissance-solides : variante incompatible");
+  }
+  const variante = parametres.variante ?? aleatoire.choix(definition.variantes);
+  const vue = parametres.vueIndex === undefined
+    ? aleatoire.choix(VUES)
+    : VUES[parametres.vueIndex];
   const choix = aleatoire.melange([forme, ...definition.confusions]).map((id) => ({
     id,
     libelle: SOLIDES[id].libelle,

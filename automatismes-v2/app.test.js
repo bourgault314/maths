@@ -589,17 +589,24 @@ it("rend le cours en cinq pages et les six familles de NC-02", async () => {
 
 it("fige les deux QCM qui ont révélé les chiffres anciens sur iPhone", async () => {
   const { application, gestionnaires } = installerFauxNavigateur(
-    "?notion=carres-entiers-0-a-12&questions=20&graine=repro-police-132",
+    "?notion=carres-entiers-0-a-12&questions=20&graine=fixture-nc02-23",
   );
   await import(`./app.js?fumee=police-iphone-${Date.now()}`);
   cliquer(gestionnaires, "demarrer");
 
-  for (let numero = 1; numero <= 12; numero += 1) {
+  let qcmNotationVu = false;
+  let qcmEncadrementVu = false;
+  for (let numero = 1; numero <= 20; numero += 1) {
     const grille = application.innerHTML.match(
       /<div class="grille-choix grille-carres-qcm[\s\S]*?<\/div>/,
     )?.[0] ?? "";
+    const estQcmNotation = /famille-sens-notation/.test(application.innerHTML)
+      && /aria-label="4 au carré"/.test(application.innerHTML);
+    const estQcmEncadrement = /Quel encadrement est correct/.test(application.innerHTML)
+      && /aria-label="6 au carré"/.test(application.innerHTML);
 
-    if (numero === 9) {
+    if (estQcmNotation) {
+      qcmNotationVu = true;
       assert.match(application.innerHTML, /famille-sens-notation/);
       const operations = [...grille.matchAll(
         /<span class="mathsgo-expression" role="math" aria-label="[^"]+">([^<]+)<\/span>/g,
@@ -618,7 +625,8 @@ it("fige les deux QCM qui ont révélé les chiffres anciens sur iPhone", async 
       cliquer(gestionnaires, "fermer-aide");
     }
 
-    if (numero === 12) {
+    if (estQcmEncadrement) {
+      qcmEncadrementVu = true;
       assert.match(application.innerHTML, /Quel encadrement est correct \?/);
       assert.match(application.innerHTML, /aria-label="6 au carré"/);
       const encadrements = [...grille.matchAll(
@@ -645,9 +653,9 @@ it("fige les deux QCM qui ont révélé les chiffres anciens sur iPhone", async 
     }
     cliquer(gestionnaires, "valider");
 
-    if (numero === 9 || numero === 12) {
+    if (estQcmNotation || estQcmEncadrement) {
       cliquer(gestionnaires, "correction");
-      if (numero === 9) {
+      if (estQcmNotation) {
         const rappel = application.innerHTML.match(
           /<p class="rappel-reponse-eleve[\s\S]*?<\/p>/,
         )?.[0] ?? "";
@@ -670,8 +678,10 @@ it("fige les deux QCM qui ont révélé les chiffres anciens sur iPhone", async 
       cliquer(gestionnaires, "fermer-correction");
     }
 
-    if (numero < 12) cliquer(gestionnaires, "suivant");
+    if (numero < 20) cliquer(gestionnaires, "suivant");
   }
+  assert.equal(qcmNotationVu, true);
+  assert.equal(qcmEncadrementVu, true);
 });
 
 it("accepte 80 comme réponse fournie puis fausse dans les deux formes inverses de NC-02", async () => {
@@ -680,6 +690,12 @@ it("accepte 80 comme réponse fournie puis fausse dans les deux formes inverses 
   );
   await import(`./app.js?fumee=saisie-inverse-tactile-${Date.now()}`);
   cliquer(verbal.gestionnaires, "demarrer");
+  avancerJusquaQuestion(
+    verbal.application,
+    verbal.gestionnaires,
+    (html) => /famille-retrouver-entier/.test(html)
+      && /Quel entier naturel a pour carré/.test(html),
+  );
   assert.match(verbal.application.innerHTML, /famille-retrouver-entier/);
   assert.match(verbal.application.innerHTML, /Quel entier naturel a pour carré/);
   cliquer(verbal.gestionnaires, "chiffre", undefined, "8");
@@ -698,6 +714,12 @@ it("accepte 80 comme réponse fournie puis fausse dans les deux formes inverses 
   );
   await import(`./app.js?fumee=saisie-inverse-clavier-${Date.now()}`);
   cliquer(produit.gestionnaires, "demarrer");
+  avancerJusquaQuestion(
+    produit.application,
+    produit.gestionnaires,
+    (html) => /famille-retrouver-entier/.test(html)
+      && /egalite-deux-champs/.test(html),
+  );
   assert.match(produit.application.innerHTML, /famille-retrouver-entier/);
   assert.match(produit.application.innerHTML, /egalite-deux-champs/);
   assert.equal(appuyer(produit.gestionnaires, "8"), 1);
@@ -744,7 +766,7 @@ it("traite pareil une omission validée au clic ou avec Entrée", async () => {
 
 it("distingue omission, mauvaise saisie et correction pour une fraction libre", async () => {
   const omission = installerFauxNavigateur(
-    "?notion=fractions-simples-decimaux&questions=20&graine=first-2",
+    "?notion=fractions-simples-decimaux&questions=20&graine=fixture-paquets-27",
   );
   await import(`./app.js?fumee=omission-fraction-${Date.now()}`);
   cliquer(omission.gestionnaires, "demarrer");
@@ -762,7 +784,7 @@ it("distingue omission, mauvaise saisie et correction pour une fraction libre", 
   assert.doesNotMatch(omission.application.innerHTML, /Correction expliquée/);
 
   const erreur = installerFauxNavigateur(
-    "?notion=fractions-simples-decimaux&questions=20&graine=first-2",
+    "?notion=fractions-simples-decimaux&questions=20&graine=fixture-paquets-27",
   );
   await import(`./app.js?fumee=erreur-fraction-${Date.now()}`);
   cliquer(erreur.gestionnaires, "demarrer");
@@ -797,7 +819,7 @@ it("distingue omission, mauvaise saisie et correction pour une fraction libre", 
 
 it("distingue omission et mauvaise saisie dans le champ décimal de NC-03", async () => {
   const omission = installerFauxNavigateur(
-    "?notion=fractions-simples-decimaux&questions=20&graine=qa-app-scenario-1",
+    "?notion=fractions-simples-decimaux&questions=20&graine=fixture-paquets-2",
   );
   await import(`./app.js?fumee=omission-decimale-${Date.now()}`);
   cliquer(omission.gestionnaires, "demarrer");
@@ -816,7 +838,7 @@ it("distingue omission et mauvaise saisie dans le champ décimal de NC-03", asyn
   assert.doesNotMatch(omission.application.innerHTML, /Correction expliquée/);
 
   const erreur = installerFauxNavigateur(
-    "?notion=fractions-simples-decimaux&questions=20&graine=qa-app-scenario-1",
+    "?notion=fractions-simples-decimaux&questions=20&graine=fixture-paquets-2",
   );
   await import(`./app.js?fumee=erreur-decimale-${Date.now()}`);
   cliquer(erreur.gestionnaires, "demarrer");
@@ -1175,7 +1197,7 @@ it("sépare les cours NC-03 et NC-04 en cinq pages ciblées", async () => {
 
 it("garde les centièmes et millièmes imposés sans révéler le décimal en aide NC-03", async () => {
   let contexte = installerFauxNavigateur(
-    "?notion=fractions-simples-decimaux&mode=tableau&questions=20&graine=qa-rangs-app-141",
+    "?notion=fractions-simples-decimaux&mode=tableau&questions=20&graine=fixture-paquets-169",
   );
   let { application, gestionnaires } = contexte;
   await import(`./app.js?fumee=rangs-nc03-${Date.now()}`);
@@ -1216,7 +1238,7 @@ it("garde les centièmes et millièmes imposés sans révéler le décimal en ai
   cliquer(gestionnaires, "fermer-aide");
 
   contexte = installerFauxNavigateur(
-    "?notion=fractions-simples-decimaux&mode=tableau&questions=20&graine=qa-rangs-app-8581",
+    "?notion=fractions-simples-decimaux&mode=tableau&questions=20&graine=fixture-paquets-87",
   );
   application = contexte.application;
   gestionnaires = contexte.gestionnaires;
@@ -1271,7 +1293,7 @@ it("garde les centièmes et millièmes imposés sans révéler le décimal en ai
 
 it("garde les centièmes et millièmes imposés sans révéler le numérateur en aide NC-04", async () => {
   let contexte = installerFauxNavigateur(
-    "?notion=fractions-simples-decimaux&mode=tableau&questions=20&graine=qa-rangs-app-4637",
+    "?notion=fractions-simples-decimaux&mode=tableau&questions=20&graine=fixture-paquets-697",
   );
   let { application, gestionnaires } = contexte;
   await import(`./app.js?fumee=rangs-nc04-${Date.now()}`);
@@ -1311,7 +1333,7 @@ it("garde les centièmes et millièmes imposés sans révéler le numérateur en
   cliquer(gestionnaires, "fermer-aide");
 
   contexte = installerFauxNavigateur(
-    "?notion=fractions-simples-decimaux&mode=tableau&questions=20&graine=qa-rangs-app-1265",
+    "?notion=fractions-simples-decimaux&mode=tableau&questions=20&graine=fixture-paquets-526",
   );
   application = contexte.application;
   gestionnaires = contexte.gestionnaires;
@@ -1376,7 +1398,7 @@ it("garde les centièmes et millièmes imposés sans révéler le numérateur en
 
 it("corrige deux quarts avec les bandes et leur fusion, sans tableau ni grille de 100", async () => {
   const { application, gestionnaires } = installerFauxNavigateur(
-    "?notion=fractions-simples-decimaux&mode=tableau&questions=20&graine=qa-app-scenario-1",
+    "?notion=fractions-simples-decimaux&mode=tableau&questions=20&graine=fixture-paquets-0",
   );
   await import(`./app.js?fumee=correction-deux-quarts-${Date.now()}`);
   cliquer(gestionnaires, "demarrer");
@@ -1405,7 +1427,7 @@ it("corrige deux quarts avec les bandes et leur fusion, sans tableau ni grille d
 
 it("corrige aussi 0,5 vers deux quarts avec les bandes seules", async () => {
   const { application, gestionnaires } = installerFauxNavigateur(
-    "?notion=fractions-simples-decimaux&mode=tableau&questions=20&graine=qa-app-scenario-0",
+    "?notion=fractions-simples-decimaux&mode=tableau&questions=20&graine=fixture-paquets-1",
   );
   await import(`./app.js?fumee=correction-deux-quarts-inverse-${Date.now()}`);
   cliquer(gestionnaires, "demarrer");
@@ -1431,8 +1453,8 @@ it("corrige aussi 0,5 vers deux quarts avec les bandes seules", async () => {
 
 it("corrige un quart et trois quarts avec le rail puis les plaques, sans tableau", async () => {
   for (const { numerateur, centiemes, graine } of [
-    { numerateur: 1, centiemes: 25, graine: "qa-quarts-v4-4" },
-    { numerateur: 3, centiemes: 75, graine: "qa-quarts-v4-10" },
+    { numerateur: 1, centiemes: 25, graine: "fixture-paquets-1" },
+    { numerateur: 3, centiemes: 75, graine: "fixture-paquets-4" },
   ]) {
     const { application, gestionnaires } = installerFauxNavigateur(
       `?notion=fractions-simples-decimaux&mode=tableau&questions=20&graine=${graine}`,
@@ -1462,8 +1484,8 @@ it("corrige un quart et trois quarts avec le rail puis les plaques, sans tableau
 
 it("corrige les fractions libres 0,25 et 0,75 avec le rail puis les plaques", async () => {
   for (const { decimal, numerateur, centiemes, graine } of [
-    { decimal: "0,25", numerateur: 1, centiemes: 25, graine: "first-nc04-v4-7" },
-    { decimal: "0,75", numerateur: 3, centiemes: 75, graine: "first-nc04-v4-245" },
+    { decimal: "0,25", numerateur: 1, centiemes: 25, graine: "fixture-paquets-2" },
+    { decimal: "0,75", numerateur: 3, centiemes: 75, graine: "fixture-paquets-1" },
   ]) {
     const { application, gestionnaires } = installerFauxNavigateur(
       `?notion=fractions-simples-decimaux&mode=tableau&questions=20&graine=${graine}`,
@@ -1493,8 +1515,8 @@ it("corrige les fractions libres 0,25 et 0,75 avec le rail puis les plaques", as
 
 it("lit directement huit et douze quarts entiers sans recopier les mêmes membres", async () => {
   for (const { numerateur, entier, graine } of [
-    { numerateur: 8, entier: 2, graine: "qa-quarts-v4-2" },
-    { numerateur: 12, entier: 3, graine: "qa-quarts-v4-10" },
+    { numerateur: 8, entier: 2, graine: "fixture-paquets-6" },
+    { numerateur: 12, entier: 3, graine: "fixture-paquets-7" },
   ]) {
     const { application, gestionnaires } = installerFauxNavigateur(
       `?notion=fractions-simples-decimaux&mode=tableau&questions=20&graine=${graine}`,
@@ -1522,8 +1544,8 @@ it("lit directement huit et douze quarts entiers sans recopier les mêmes membre
 
 it("écrit aussi les entiers deux et trois comme huit et douze quarts sans doublon", async () => {
   for (const { numerateur, entier, graine } of [
-    { numerateur: 8, entier: 2, graine: "qa-inverse-entier-21" },
-    { numerateur: 12, entier: 3, graine: "qa-quarts-v4-14" },
+    { numerateur: 8, entier: 2, graine: "fixture-paquets-47" },
+    { numerateur: 12, entier: 3, graine: "fixture-paquets-9" },
   ]) {
     const { application, gestionnaires } = installerFauxNavigateur(
       `?notion=fractions-simples-decimaux&mode=tableau&questions=20&graine=${graine}`,
@@ -1551,7 +1573,7 @@ it("écrit aussi les entiers deux et trois comme huit et douze quarts sans doubl
 
 it("construit 11 quarts dans les deux sens avec l’ajout d’une unité et sans fuite", async () => {
   const direct = installerFauxNavigateur(
-    "?notion=fractions-simples-decimaux&mode=tableau&questions=20&graine=qa-quarts-v4-7",
+    "?notion=fractions-simples-decimaux&mode=tableau&questions=20&graine=fixture-paquets-5",
   );
   await import(`./app.js?fumee=onze-quarts-direct-${Date.now()}`);
   cliquer(direct.gestionnaires, "demarrer");
@@ -1572,10 +1594,16 @@ it("construit 11 quarts dans les deux sens avec l’ajout d’une unité et sans
   assert.match(direct.application.innerHTML, /aria-label="11 sur 4 égale 8 sur 4 plus 3 sur 4 égale 2 plus 3 sur 4 égale 2,75"/);
 
   const inverse = installerFauxNavigateur(
-    "?notion=fractions-simples-decimaux&mode=tableau&questions=20&graine=first-nc04-v4-102",
+    "?notion=fractions-simples-decimaux&mode=tableau&questions=20&graine=fixture-paquets-3",
   );
   await import(`./app.js?fumee=onze-quarts-inverse-${Date.now()}`);
   cliquer(inverse.gestionnaires, "demarrer");
+  avancerJusquaQuestion(
+    inverse.application,
+    inverse.gestionnaires,
+    (html) => /aria-label="2,75"/.test(html)
+      && /aria-label="case sur 4"/.test(html),
+  );
   assert.match(inverse.application.innerHTML, /aria-label="2,75"/);
   assert.match(inverse.application.innerHTML, /aria-label="case sur 4"/);
   cliquer(inverse.gestionnaires, "aide");
@@ -1625,7 +1653,7 @@ it("construit 11 quarts dans les deux sens avec l’ajout d’une unité et sans
 
 it("corrige la fraction libre 2,75 avec le rail et conserve 275 centièmes", async () => {
   const { application, gestionnaires } = installerFauxNavigateur(
-    "?notion=fractions-simples-decimaux&mode=tableau&questions=20&graine=qa-quarts-v4-0",
+    "?notion=fractions-simples-decimaux&mode=tableau&questions=20&graine=fixture-paquets-7",
   );
   await import(`./app.js?fumee=correction-libre-onze-quarts-${Date.now()}`);
   cliquer(gestionnaires, "demarrer");
@@ -1645,7 +1673,7 @@ it("corrige la fraction libre 2,75 avec le rail et conserve 275 centièmes", asy
 
 it("emploie les deux méthodes pour les dixièmes et le tableau seul pour les millièmes", async () => {
   const dixiemes = installerFauxNavigateur(
-    "?notion=fractions-simples-decimaux&mode=tableau&questions=20&graine=qa-app-scenario-1",
+    "?notion=fractions-simples-decimaux&mode=tableau&questions=20&graine=fixture-paquets-12",
   );
   await import(`./app.js?fumee=methodes-dixiemes-${Date.now()}`);
   cliquer(dixiemes.gestionnaires, "demarrer");
@@ -1669,7 +1697,7 @@ it("emploie les deux méthodes pour les dixièmes et le tableau seul pour les mi
   assert.match(dixiemes.application.innerHTML, /data-ecriture-decimale="0,1"/);
 
   const milliemes = installerFauxNavigateur(
-    "?notion=fractions-simples-decimaux&mode=tableau&questions=20&graine=qa-app-scenario-74",
+    "?notion=fractions-simples-decimaux&mode=tableau&questions=20&graine=fixture-paquets-169",
   );
   await import(`./app.js?fumee=correction-milliemes-tableau-${Date.now()}`);
   cliquer(milliemes.gestionnaires, "demarrer");
@@ -1690,7 +1718,7 @@ it("emploie les deux méthodes pour les dixièmes et le tableau seul pour les mi
 
 it("décompose 2,27 dans ses rangs avant de convertir les pièces en centièmes", async () => {
   const { application, gestionnaires } = installerFauxNavigateur(
-    "?notion=fractions-simples-decimaux&mode=tableau&questions=20&graine=qa-app-scenario-497",
+    "?notion=fractions-simples-decimaux&mode=tableau&questions=20&graine=fixture-paquets-43",
   );
   await import(`./app.js?fumee=correction-227-${Date.now()}`);
   cliquer(gestionnaires, "demarrer");
@@ -1729,7 +1757,7 @@ it("décompose 2,27 dans ses rangs avant de convertir les pièces en centièmes"
 
 it("réemploie la conversion canonique dans l’aide d’une fraction libre générique", async () => {
   const { application, gestionnaires } = installerFauxNavigateur(
-    "?notion=fractions-simples-decimaux&mode=tableau&questions=20&graine=qa-app-scenario-5",
+    "?notion=fractions-simples-decimaux&mode=tableau&questions=20&graine=fixture-paquets-19",
   );
   await import(`./app.js?fumee=libre-generique-${Date.now()}`);
   cliquer(gestionnaires, "demarrer");
@@ -1775,7 +1803,7 @@ it("réemploie la conversion canonique dans l’aide d’une fraction libre gén
 
 it("corrige une fraction libre générique avec les plaques ou le tableau", async () => {
   const { application, gestionnaires } = installerFauxNavigateur(
-    "?notion=fractions-simples-decimaux&mode=tableau&questions=20&graine=qa-app-scenario-5",
+    "?notion=fractions-simples-decimaux&mode=tableau&questions=20&graine=fixture-paquets-19",
   );
   await import(`./app.js?fumee=correction-libre-generique-${Date.now()}`);
   cliquer(gestionnaires, "demarrer");
@@ -1917,7 +1945,7 @@ it("garde l’atelier unique de Me guider masqué avant la construction", async 
 
 it("construit six quarts jusqu’à la fusion des deux quarts restants", async () => {
   const { application, gestionnaires } = installerFauxNavigateur(
-    "?notion=fractions-simples-decimaux&mode=tableau&questions=20&graine=qa-app-scenario-15",
+    "?notion=fractions-simples-decimaux&mode=tableau&questions=20&graine=fixture-paquets-6",
   );
   await import(`./app.js?fumee=six-quarts-${Date.now()}`);
   cliquer(gestionnaires, "demarrer");
@@ -1946,7 +1974,7 @@ it("construit six quarts jusqu’à la fusion des deux quarts restants", async (
 
 it("construit directement sept demis en trois unités et un demi sans livrer 3,5", async () => {
   const { application, gestionnaires } = installerFauxNavigateur(
-    "?notion=fractions-simples-decimaux&mode=tableau&questions=20&graine=qa-app-scenario-1",
+    "?notion=fractions-simples-decimaux&mode=tableau&questions=20&graine=fixture-paquets-2",
   );
   await import(`./app.js?fumee=sept-demis-${Date.now()}`);
   cliquer(gestionnaires, "demarrer");
@@ -1978,7 +2006,7 @@ it("construit directement sept demis en trois unités et un demi sans livrer 3,5
 
 it("ne révèle jamais le numérateur d’une fraction impropre à construire en NC-04", async () => {
   const { application, gestionnaires } = installerFauxNavigateur(
-    "?notion=fractions-simples-decimaux&mode=tableau&questions=20&graine=qa-app-scenario-1",
+    "?notion=fractions-simples-decimaux&mode=tableau&questions=20&graine=fixture-paquets-0",
   );
   await import(`./app.js?fumee=inverse-impropre-${Date.now()}`);
   cliquer(gestionnaires, "demarrer");
@@ -2006,7 +2034,7 @@ it("ne révèle jamais le numérateur d’une fraction impropre à construire en
 
 it("fait construire 0,5 avec les dixièmes puis la bande d’un demi sans livrer la fraction", async () => {
   const { application, gestionnaires } = installerFauxNavigateur(
-    "?notion=fractions-simples-decimaux&mode=tableau&questions=20&graine=qa-app-scenario-2",
+    "?notion=fractions-simples-decimaux&mode=tableau&questions=20&graine=fixture-paquets-4",
   );
   await import(`./app.js?fumee=demi-dixiemes-${Date.now()}`);
   cliquer(gestionnaires, "demarrer");
@@ -2061,7 +2089,7 @@ it("fait construire 0,5 avec les dixièmes puis la bande d’un demi sans livrer
 
 it("fait réorganiser 0,75 des lignes aux quadrants puis à la comparaison sans livrer l’égalité", async () => {
   const { application, gestionnaires } = installerFauxNavigateur(
-    "?notion=fractions-simples-decimaux&mode=tableau&questions=20&graine=first-nc04-v4-245",
+    "?notion=fractions-simples-decimaux&mode=tableau&questions=20&graine=fixture-paquets-1",
   );
   await import(`./app.js?fumee=trois-quarts-centiemes-${Date.now()}`);
   cliquer(gestionnaires, "demarrer");
@@ -2131,7 +2159,7 @@ it("fait réorganiser 0,75 des lignes aux quadrants puis à la comparaison sans 
 
 it("propose le rail puis la plaque pour trois quarts sans afficher les trois outils d’un coup", async () => {
   const { application, gestionnaires } = installerFauxNavigateur(
-    "?notion=fractions-simples-decimaux&mode=tableau&questions=20&graine=audit-ui-1",
+    "?notion=fractions-simples-decimaux&mode=tableau&questions=20&graine=fixture-paquets-4",
   );
   await import(`./app.js?fumee=aide-trois-quarts-${Date.now()}`);
   cliquer(gestionnaires, "demarrer");
@@ -2160,7 +2188,7 @@ it("propose le rail puis la plaque pour trois quarts sans afficher les trois out
 
 it("explicite 118 centièmes groupe par groupe après le choix du rang", async () => {
   const { application, gestionnaires } = installerFauxNavigateur(
-    "?notion=fractions-simples-decimaux&mode=tableau&questions=20&graine=audit-ui-44",
+    "?notion=fractions-simples-decimaux&mode=tableau&questions=20&graine=fixture-paquets-76",
   );
   await import(`./app.js?fumee=aide-118-centiemes-${Date.now()}`);
   cliquer(gestionnaires, "demarrer");
@@ -2194,7 +2222,7 @@ it("explicite 118 centièmes groupe par groupe après le choix du rang", async (
 
 it("montre huit dixièmes pleins avant de les partager en quatre-vingts centièmes", async () => {
   const { application, gestionnaires } = installerFauxNavigateur(
-    "?notion=fractions-simples-decimaux&mode=tableau&questions=20&graine=audit-ui-119",
+    "?notion=fractions-simples-decimaux&mode=tableau&questions=20&graine=fixture-paquets-91",
   );
   await import(`./app.js?fumee=aide-08-centiemes-${Date.now()}`);
   cliquer(gestionnaires, "demarrer");
@@ -2519,7 +2547,7 @@ it("rend NC-05 avec son cours, son aide et sa correction exacte", async () => {
   assert.match(application.innerHTML, /equivalence-aires-correction-nc05/);
 });
 
-it("fait disparaître progressivement les schémas dans une série NC-05 complète", async () => {
+it("répartit trois schémas sans les corréler à une position ou une famille NC-05", async () => {
   const { application, gestionnaires } = installerFauxNavigateur(
     "?notion=ecritures-multiples-nombre&mode=tableau&questions=20&graine=visuels-nc05",
   );
@@ -2531,13 +2559,6 @@ it("fait disparaître progressivement les schémas dans une série NC-05 complè
     if (/visuel-question-nc05/.test(application.innerHTML)) {
       positionsVisuelles.push(index + 1);
       assert.match(application.innerHTML, /figure-unite-aires-nc05/);
-      if (index === 2) {
-        assert.match(application.innerHTML, /famille-fraction-repere-pourcentage/);
-        cliquer(gestionnaires, "aide");
-        assert.match(application.innerHTML, /equivalence-aires-aide-nc05/);
-        assert.match(application.innerHTML, /\? centièmes/);
-        cliquer(gestionnaires, "fermer-aide");
-      }
     }
     cliquer(gestionnaires, "reponse");
     cliquer(gestionnaires, "correction");
@@ -2548,13 +2569,14 @@ it("fait disparaître progressivement les schémas dans une série NC-05 complè
     cliquer(gestionnaires, "fermer-correction");
     cliquer(gestionnaires, "suivant");
   }
-  assert.deepEqual(positionsVisuelles, [3, 8, 11]);
+  assert.equal(positionsVisuelles.length, 3);
+  assert.equal(new Set(positionsVisuelles).size, 3);
   assert.match(application.innerHTML, /Séance terminée/);
 });
 
 it("rend GE-01 et GE-02 avec saisie signée, cours et placement aimanté", async () => {
   const { application, gestionnaires } = installerFauxNavigateur(
-    "?notion=droite-graduee&questions=10&graine=apercu-ge01-ge02-complet",
+    "?notion=droite-graduee&questions=10&graine=fixture-droite-2",
   );
   await import(`./app.js?fumee=droite-${Date.now()}`);
 
@@ -2672,7 +2694,7 @@ it("rend GE-03 et GE-04 avec le repère partagé, les aides et le placement rév
 
 it("corrige un mauvais placement même lorsque le point attendu se nomme T", async () => {
   const placement = installerFauxNavigateur(
-    "?notion=placer-point-repere&questions=5&graine=collision-74",
+    "?notion=placer-point-repere&questions=5&graine=fixture-ge04-3083",
   );
   await import(`./app.js?fumee=ge04-cible-t-${Date.now()}`);
   cliquer(placement.gestionnaires, "demarrer");

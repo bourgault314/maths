@@ -3,10 +3,18 @@
 // Chaque notion conserve sa propre recette et l'ordre de sa sous-série. Ce
 // module répartit seulement le nombre total de questions, puis intercale les
 // files obtenues de façon déterministe et sans juxtaposer deux notions égales.
+// L'ordre de la sélection n'entre jamais dans la graine : les identifiants sont
+// canonisés avant tout tirage.
 
-import { creerGenerateur } from "../../packages/moteur-exercices/src/aleatoire.js";
+import { creerGenerateur } from "../../packages/moteur-exercices/src/aleatoire.js?v=51";
 
-export const VERSION_PLAN_SERIE_MULTINOTIONS = 1;
+export const VERSION_PLAN_SERIE_MULTINOTIONS = 2;
+
+function comparerIdentifiants(a, b) {
+  if (a < b) return -1;
+  if (a > b) return 1;
+  return 0;
+}
 
 function exigerSelection(notions, nombreQuestions, graine) {
   if (!Array.isArray(notions) || notions.length === 0) {
@@ -21,9 +29,6 @@ function exigerSelection(notions, nombreQuestions, graine) {
   if (!Number.isInteger(nombreQuestions) || nombreQuestions < 1 || nombreQuestions > 100) {
     throw new RangeError("serie multi-notions : nombre de questions entre 1 et 100 requis");
   }
-  if (notions.length > nombreQuestions) {
-    throw new RangeError("serie multi-notions : chaque notion doit recevoir au moins une question");
-  }
   if (typeof graine !== "string" && !Number.isInteger(graine)) {
     throw new TypeError("serie multi-notions : graine texte ou entière requise");
   }
@@ -31,13 +36,14 @@ function exigerSelection(notions, nombreQuestions, graine) {
 
 export function repartirQuestionsEntreNotions({ notions, nombreQuestions, graine }) {
   exigerSelection(notions, nombreQuestions, graine);
+  const notionsCanoniques = [...notions].sort(comparerIdentifiants);
   const minimum = Math.floor(nombreQuestions / notions.length);
   const reste = nombreQuestions % notions.length;
   const aleatoire = creerGenerateur(
-    `multi-repartition-v${VERSION_PLAN_SERIE_MULTINOTIONS}:${graine}:${notions.join("|")}:${nombreQuestions}`,
+    `multi-repartition-v${VERSION_PLAN_SERIE_MULTINOTIONS}:${graine}:${notionsCanoniques.join("|")}:${nombreQuestions}`,
   );
-  const bonus = new Set(aleatoire.melange(notions).slice(0, reste));
-  return notions.map((notion) => Object.freeze({
+  const bonus = new Set(aleatoire.melange(notionsCanoniques).slice(0, reste));
+  return notionsCanoniques.map((notion) => Object.freeze({
     notion,
     nombreQuestions: minimum + (bonus.has(notion) ? 1 : 0),
   }));
@@ -51,19 +57,22 @@ function resteArrangeable(compte, precedent) {
 }
 
 export function ordonnerNotionsDansSerie({ repartition, graine }) {
-  const notions = repartition.map(({ notion }) => notion);
+  const repartitionCanonique = [...repartition]
+    .sort((a, b) => comparerIdentifiants(a.notion, b.notion));
+  const notions = repartitionCanonique.map(({ notion }) => notion);
   const nombreQuestions = repartition.reduce(
     (total, element) => total + element.nombreQuestions,
     0,
   );
   exigerSelection(notions, nombreQuestions, graine);
-  if (repartition.some(({ nombreQuestions: nombre }) => !Number.isInteger(nombre) || nombre < 1)) {
-    throw new RangeError("serie multi-notions : répartition positive entière requise");
+  if (repartition.some(({ nombreQuestions: nombre }) => !Number.isInteger(nombre) || nombre < 0)) {
+    throw new RangeError("serie multi-notions : répartition entière positive ou nulle requise");
   }
-  if (repartition.length === 1) {
+  const actives = repartitionCanonique.filter(({ nombreQuestions: nombre }) => nombre > 0);
+  if (actives.length === 1) {
     return Array.from(
-      { length: repartition[0].nombreQuestions },
-      () => repartition[0].notion,
+      { length: actives[0].nombreQuestions },
+      () => actives[0].notion,
     );
   }
 
@@ -71,7 +80,7 @@ export function ordonnerNotionsDansSerie({ repartition, graine }) {
     `multi-ordre-v${VERSION_PLAN_SERIE_MULTINOTIONS}:${graine}:${notions.join("|")}:${nombreQuestions}`,
   );
   const compte = new Map(
-    repartition.map(({ notion, nombreQuestions: nombre }) => [notion, nombre]),
+    actives.map(({ notion, nombreQuestions: nombre }) => [notion, nombre]),
   );
   const resultat = [];
 
@@ -134,13 +143,15 @@ export function genererSerieMultinotions({
   if (!registre || typeof registre.instancier !== "function") {
     throw new TypeError("serie multi-notions : registre de générateurs requis");
   }
-  const notions = definitions.map(({ id }) => id);
+  const definitionsCanoniques = [...definitions]
+    .sort((a, b) => comparerIdentifiants(a.id, b.id));
+  const notions = definitionsCanoniques.map(({ id }) => id);
   exigerSelection(notions, nombreQuestions, graine);
 
   // Une série ciblée garde strictement sa graine historique et son ordre.
-  if (definitions.length === 1) {
+  if (definitionsCanoniques.length === 1) {
     return genererSousSerie({
-      definition: definitions[0],
+      definition: definitionsCanoniques[0],
       registre,
       graine,
       nombreQuestions,
@@ -154,7 +165,8 @@ export function genererSerieMultinotions({
   });
   const files = new Map();
   for (const { notion, nombreQuestions: quota } of repartition) {
-    const definition = definitions.find(({ id }) => id === notion);
+    if (quota === 0) continue;
+    const definition = definitionsCanoniques.find(({ id }) => id === notion);
     const sousGraine = `${graine}:multi-v${VERSION_PLAN_SERIE_MULTINOTIONS}:${notion}:${quota}`;
     files.set(notion, genererSousSerie({
       definition,

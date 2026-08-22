@@ -42,10 +42,10 @@ function saisirTexte(etat, texte) {
   for (const caractere of String(texte)) saisirCaractere(etat, caractere);
 }
 
-test("les versions de provenance reflètent le moteur hybride", () => {
+test("les versions de provenance reflètent le moteur par paquets", () => {
   assert.equal(VERSION_GENERATEUR_FRACTION_VERS_DECIMAL, 4);
   assert.equal(VERSION_GENERATEUR_DECIMAL_VERS_FRACTION, 4);
-  assert.equal(VERSION_PLAN_SERIE_FRACTIONS_DECIMAUX, 4);
+  assert.equal(VERSION_PLAN_SERIE_FRACTIONS_DECIMAUX, 5);
 });
 
 test("une série longue équilibre les deux sens et leurs représentations", () => {
@@ -74,18 +74,18 @@ test("une série longue équilibre les deux sens et leurs représentations", () 
         questions.filter(({ presentation }) => presentation === "double-droite").length,
         0,
       );
-      assert.ok(questions.some((element) =>
-        [2, 4].includes(element.denominateur)
-        && element.numerateur < element.denominateur));
-      assert.ok(questions.some((element) =>
-        [2, 4].includes(element.denominateur)
-        && element.numerateur > element.denominateur
-        && element.numerateur % element.denominateur !== 0));
     }
-    assert.ok(plan.some((element) =>
-      element.microNotion === "decimal-vers-fraction"
-      && element.denominateur !== 1
-      && element.numerateur % element.denominateur === 0));
+    assert.equal(plan.filter(({ classeValeur }) => classeValeur === "inferieur-un").length, 2);
+    assert.equal(plan.filter(({ classeValeur }) =>
+      classeValeur === "superieur-un-non-entier").length, 2);
+    assert.equal(plan.filter(({ classeValeur }) => classeValeur === "entier").length, 1);
+    assert.ok(plan.filter(({ classeValeur }) => classeValeur === "inferieur-un")
+      .every(({ numerateur, denominateur }) => numerateur < denominateur));
+    assert.ok(plan.filter(({ classeValeur }) => classeValeur === "superieur-un-non-entier")
+      .every(({ numerateur, denominateur }) =>
+        numerateur > denominateur && numerateur % denominateur !== 0));
+    assert.ok(plan.filter(({ classeValeur }) => classeValeur === "entier")
+      .every(({ numerateur, denominateur }) => numerateur % denominateur === 0));
     assert.equal(
       plan.some((question, position) => position >= 2
         && question.microNotion === plan[position - 1].microNotion

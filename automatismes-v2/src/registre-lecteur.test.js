@@ -49,6 +49,18 @@ describe("registre du lecteur", () => {
       ],
     );
     assert.equal(new Set(notions.map(({ id }) => id)).size, notions.length);
+    for (const notion of notions) {
+      assert.equal(typeof notion.creerSerie, "function", `${notion.id} doit fournir sa série`);
+      assert.equal(notion.nombreQuestionsMaximum, 20);
+      assert.equal(Object.isFrozen(notion.paquetsSelection), true);
+      assert.ok(notion.paquetsSelection.length >= 1);
+      assert.equal(new Set(notion.paquetsSelection.map(({ id }) => id)).size,
+        notion.paquetsSelection.length);
+      for (const paquet of notion.paquetsSelection) {
+        assert.equal(paquet.tailleReference, 20);
+        assert.equal(paquet.profils.reduce((somme, profil) => somme + profil.quota, 0), 20);
+      }
+    }
     assert.deepEqual(
       notions.map(({ rendu }) => rendu),
       [
@@ -96,6 +108,7 @@ describe("registre du lecteur", () => {
     assert.equal(definition.graineApercu, "apercu-nc01-complet");
     assert.equal(Object.isFrozen(definition), true);
     assert.equal(Object.isFrozen(definition.capacites), true);
+    assert.equal(Object.isFrozen(definition.paquetsSelection), true);
     assert.equal(connaitNotionLecteur("notion-inconnue"), false);
     assert.throws(() => obtenirNotionLecteur("notion-inconnue"), /notion inconnue/);
   });

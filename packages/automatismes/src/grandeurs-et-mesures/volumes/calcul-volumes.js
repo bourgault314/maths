@@ -6,17 +6,18 @@ import {
   COMPARAISON_CHOIX_EXACT,
   SCHEMA_QUESTION_INSTANCE_V2,
   TYPE_REPONSE_CHOIX_UNIQUE,
-} from "../../../../contrats/src/question-v2.js?v=50";
+} from "../../../../contrats/src/question-v2.js?v=51";
 import {
   IDENTITES_AUTOMATISMES,
   creerClassementAutomatisme,
-} from "../../identifiants.js?v=50";
+} from "../../identifiants.js?v=51";
 
-const VERSION = 1;
+const VERSION = 3;
 const VUES = Object.freeze([
   Object.freeze({ lacetDeg: -36, tangageDeg: 18 }),
   Object.freeze({ lacetDeg: -24, tangageDeg: 15 }),
   Object.freeze({ lacetDeg: 28, tangageDeg: 17 }),
+  Object.freeze({ lacetDeg: 40, tangageDeg: 20 }),
 ]);
 
 function gabarit(id, titre) {
@@ -70,13 +71,36 @@ const CYLINDRES = Object.freeze([
   Object.freeze({ rayon: 5, hauteur: 2 }),
 ]);
 
-function exigerContexte(aleatoire, parametres, nom) {
+function exigerContexte(aleatoire, parametres, nom, clesPermises) {
   if (!aleatoire || typeof aleatoire.choix !== "function" || typeof aleatoire.melange !== "function") {
     throw new TypeError(`${nom} : générateur seedé requis`);
   }
-  if (!parametres || Array.isArray(parametres) || Object.keys(parametres).length !== 0) {
-    throw new TypeError(`${nom} : aucun paramètre autorisé en version 1`);
+  if (!parametres || Array.isArray(parametres)) {
+    throw new TypeError(`${nom} : paramètres simples requis`);
   }
+  for (const cle of Object.keys(parametres)) {
+    if (!clesPermises.includes(cle)) {
+      throw new TypeError(`${nom} : paramètre inconnu « ${cle} »`);
+    }
+  }
+  if (
+    parametres.vueIndex !== undefined
+    && (!Number.isInteger(parametres.vueIndex) || !VUES[parametres.vueIndex])
+  ) {
+    throw new RangeError(`${nom} : vue inconnue`);
+  }
+  if (
+    parametres.donneesIndex !== undefined
+    && (!Number.isInteger(parametres.donneesIndex) || parametres.donneesIndex < 0)
+  ) {
+    throw new RangeError(`${nom} : index de données invalide`);
+  }
+}
+
+function choisirVue(aleatoire, parametres) {
+  return { ...(parametres.vueIndex === undefined
+    ? aleatoire.choix(VUES)
+    : VUES[parametres.vueIndex]) };
 }
 
 function choixNumeriques(aleatoire, resultat, distracteurs, format = (n) => `${n} cm³`) {
@@ -110,11 +134,24 @@ function questionCommune({ identite, consigne, solide, choix, resultat, aide, co
 }
 
 export function genererQuestionVolumeCubePave({ aleatoire, parametres }) {
-  exigerContexte(aleatoire, parametres, "volume-cube-pave");
-  const estCube = aleatoire.choix([true, false]);
-  const vue = { ...aleatoire.choix(VUES) };
+  exigerContexte(
+    aleatoire,
+    parametres,
+    "volume-cube-pave",
+    ["forme", "donneesIndex", "vueIndex"],
+  );
+  if (parametres.forme !== undefined && !["cube", "pave"].includes(parametres.forme)) {
+    throw new RangeError("volume-cube-pave : forme cube ou pave requise");
+  }
+  const estCube = parametres.forme === undefined
+    ? aleatoire.choix([true, false])
+    : parametres.forme === "cube";
+  const vue = choisirVue(aleatoire, parametres);
   if (estCube) {
-    const arete = aleatoire.choix(CUBES);
+    const arete = parametres.donneesIndex === undefined
+      ? aleatoire.choix(CUBES)
+      : CUBES[parametres.donneesIndex];
+    if (arete === undefined) throw new RangeError("volume-cube-pave : données inconnues");
     const resultat = arete ** 3;
     const choix = choixNumeriques(aleatoire, resultat, [
       arete ** 2,
@@ -143,7 +180,11 @@ export function genererQuestionVolumeCubePave({ aleatoire, parametres }) {
     });
   }
 
-  const [longueur, largeur, hauteur] = aleatoire.choix(PAVES);
+  const donnees = parametres.donneesIndex === undefined
+    ? aleatoire.choix(PAVES)
+    : PAVES[parametres.donneesIndex];
+  if (!donnees) throw new RangeError("volume-cube-pave : données inconnues");
+  const [longueur, largeur, hauteur] = donnees;
   const resultat = longueur * largeur * hauteur;
   const choix = choixNumeriques(aleatoire, resultat, [
     longueur + largeur + hauteur,
@@ -176,8 +217,16 @@ export function genererQuestionVolumeCubePave({ aleatoire, parametres }) {
 }
 
 export function genererQuestionVolumePrisme({ aleatoire, parametres }) {
-  exigerContexte(aleatoire, parametres, "volume-prisme");
-  const donnees = aleatoire.choix(PRISMES);
+  exigerContexte(
+    aleatoire,
+    parametres,
+    "volume-prisme",
+    ["donneesIndex", "vueIndex"],
+  );
+  const donnees = parametres.donneesIndex === undefined
+    ? aleatoire.choix(PRISMES)
+    : PRISMES[parametres.donneesIndex];
+  if (!donnees) throw new RangeError("volume-prisme : données inconnues");
   const { aireBase, hauteur, variante } = donnees;
   const resultat = aireBase * hauteur;
   const choix = choixNumeriques(aleatoire, resultat, [aireBase + hauteur, aireBase * 2, resultat + aireBase]);
@@ -187,7 +236,7 @@ export function genererQuestionVolumePrisme({ aleatoire, parametres }) {
     solide: {
       forme: "prisme",
       variante,
-      vue: { ...aleatoire.choix(VUES) },
+      vue: choisirVue(aleatoire, parametres),
       mesures: { aireBase, hauteur, unite: "cm" },
     },
     choix,
@@ -207,9 +256,23 @@ export function genererQuestionVolumePrisme({ aleatoire, parametres }) {
 }
 
 export function genererQuestionVolumeCylindre({ aleatoire, parametres }) {
-  exigerContexte(aleatoire, parametres, "volume-cylindre");
-  const { rayon, hauteur } = aleatoire.choix(CYLINDRES);
-  const exact = aleatoire.choix([true, false]);
+  exigerContexte(
+    aleatoire,
+    parametres,
+    "volume-cylindre",
+    ["donneesIndex", "vueIndex", "mode"],
+  );
+  if (parametres.mode !== undefined && !["exact", "approximation"].includes(parametres.mode)) {
+    throw new RangeError("volume-cylindre : mode inconnu");
+  }
+  const donnees = parametres.donneesIndex === undefined
+    ? aleatoire.choix(CYLINDRES)
+    : CYLINDRES[parametres.donneesIndex];
+  if (!donnees) throw new RangeError("volume-cylindre : données inconnues");
+  const { rayon, hauteur } = donnees;
+  const exact = parametres.mode === undefined
+    ? aleatoire.choix([true, false])
+    : parametres.mode === "exact";
   const coefficient = rayon * rayon * hauteur;
   const resultat = exact ? `${coefficient}pi` : coefficient * 3;
   const distracteurs = exact
@@ -228,7 +291,7 @@ export function genererQuestionVolumeCylindre({ aleatoire, parametres }) {
     solide: {
       forme: "cylindre",
       variante: hauteur <= 2 ? "bas" : "standard",
-      vue: { ...aleatoire.choix(VUES) },
+      vue: choisirVue(aleatoire, parametres),
       mesures: { rayon, hauteur, unite: "cm", pi: exact ? "exact" : 3 },
     },
     choix,

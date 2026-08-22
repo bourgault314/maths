@@ -69,6 +69,96 @@ describe("répartition multi-notions", () => {
     assert.deepEqual([...beneficiaires].sort(), [...ids].sort());
   });
 
+  it("sélectionne sans remise quand il y a plus de notions que de questions", () => {
+    for (const total of [1, 2, 5]) {
+      const ids = notions(10);
+      const repartition = repartirQuestionsEntreNotions({
+        notions: ids,
+        nombreQuestions: total,
+        graine: `sous-allocation-${total}`,
+      });
+      assert.equal(
+        repartition.reduce((somme, element) => somme + element.nombreQuestions, 0),
+        total,
+      );
+      assert.equal(repartition.filter(({ nombreQuestions }) => nombreQuestions === 1).length, total);
+      assert.ok(repartition.every(({ nombreQuestions }) => [0, 1].includes(nombreQuestions)));
+    }
+  });
+
+  it("est équitable sous-alloué sur 10 000 seeds", () => {
+    const ids = notions(10);
+    const compte = new Map(ids.map((id) => [id, 0]));
+    for (let seed = 0; seed < 10_000; seed += 1) {
+      const repartition = repartirQuestionsEntreNotions({
+        notions: ids,
+        nombreQuestions: 5,
+        graine: `equite-${seed}`,
+      });
+      repartition
+        .filter(({ nombreQuestions }) => nombreQuestions === 1)
+        .forEach(({ notion }) => compte.set(notion, compte.get(notion) + 1));
+    }
+    for (const [id, nombre] of compte) {
+      assert.ok(Math.abs(nombre - 5_000) < 250, `${id}: ${nombre}`);
+    }
+  });
+
+  it("audite 3 000 seeds pour 1, 2, 3, 5 et 10 automatismes et tous les volumes du menu", () => {
+    for (const nombreNotions of [1, 2, 3, 5, 10]) {
+      const ids = notions(nombreNotions);
+      for (const total of [5, 10, 15, 20]) {
+        const cumuls = new Map(ids.map((id) => [id, 0]));
+        for (let seed = 0; seed < 3_000; seed += 1) {
+          const repartition = repartirQuestionsEntreNotions({
+            notions: ids,
+            nombreQuestions: total,
+            graine: `matrice-${nombreNotions}-${total}-${seed}`,
+          });
+          assert.equal(
+            repartition.reduce((somme, { nombreQuestions }) => somme + nombreQuestions, 0),
+            total,
+          );
+          const actives = repartition.filter(({ nombreQuestions }) => nombreQuestions > 0);
+          assert.equal(new Set(actives.map(({ notion }) => notion)).size, actives.length);
+          if (total >= nombreNotions) {
+            assert.equal(actives.length, nombreNotions);
+            const quotas = actives.map(({ nombreQuestions }) => nombreQuestions);
+            assert.ok(Math.max(...quotas) - Math.min(...quotas) <= 1);
+          } else {
+            assert.equal(actives.length, total);
+            assert.ok(actives.every(({ nombreQuestions }) => nombreQuestions === 1));
+          }
+          repartition.forEach(({ notion, nombreQuestions }) =>
+            cumuls.set(notion, cumuls.get(notion) + nombreQuestions));
+        }
+        const valeurs = [...cumuls.values()];
+        assert.ok(
+          Math.max(...valeurs) - Math.min(...valeurs) < Math.max(100, total * 20),
+          `${nombreNotions} notions, ${total} questions : ${valeurs.join(", ")}`,
+        );
+      }
+    }
+  });
+
+  it("ne dépend pas de l'ordre du tableau des notions", () => {
+    const ids = notions(10);
+    for (const total of [5, 10, 15, 20]) {
+      assert.deepEqual(
+        repartirQuestionsEntreNotions({
+          notions: [...ids].reverse(),
+          nombreQuestions: total,
+          graine: "ordre-tableau",
+        }),
+        repartirQuestionsEntreNotions({
+          notions: ids,
+          nombreQuestions: total,
+          graine: "ordre-tableau",
+        }),
+      );
+    }
+  });
+
   it("ordonne le mélange sans deux notions identiques voisines", () => {
     const repartition = [
       { notion: "a", nombreQuestions: 7 },
@@ -99,11 +189,7 @@ describe("répartition multi-notions", () => {
     );
   });
 
-  it("refuse les sélections impossibles ou ambiguës", () => {
-    assert.throws(
-      () => repartirQuestionsEntreNotions({ notions: ["a", "b"], nombreQuestions: 1, graine: "x" }),
-      /chaque notion/,
-    );
+  it("refuse les sélections ambiguës", () => {
     assert.throws(
       () => repartirQuestionsEntreNotions({ notions: ["a", "a"], nombreQuestions: 2, graine: "x" }),
       /doublons/,
@@ -139,6 +225,45 @@ describe("génération multi-notions", () => {
         Array.from({ length: positionsLocales.length }, (_, index) => index + 1),
       );
     }
+  });
+
+  it("génère une question par notion tirée dans une série sous-allouée", () => {
+    const definitions = notions(10).map((id) => ({
+      id,
+      gabarit: { id },
+      creerSerie: ({ nombreQuestions }) => Array.from(
+        { length: nombreQuestions },
+        (_, index) => ({ id: `${id}-${index + 1}`, classement: { notion: id } }),
+      ),
+    }));
+    const questions = genererSerieMultinotions({
+      definitions,
+      registre: { instancier() { throw new Error("inutilisé"); } },
+      graine: "sous-allocation",
+      nombreQuestions: 5,
+    });
+    assert.equal(questions.length, 5);
+    assert.equal(new Set(questions.map(({ classement }) => classement.notion)).size, 5);
+  });
+
+  it("ne dépend pas de l'ordre du registre fourni", () => {
+    const definitions = notions(10).map((id) => ({
+      id,
+      gabarit: { id },
+      creerSerie: ({ graine, nombreQuestions }) => Array.from(
+        { length: nombreQuestions },
+        (_, index) => ({ id: `${id}-${graine}-${index}`, classement: { notion: id } }),
+      ),
+    }));
+    const configuration = {
+      registre: { instancier() { throw new Error("inutilisé"); } },
+      graine: "ordre-registre",
+      nombreQuestions: 5,
+    };
+    assert.deepEqual(
+      genererSerieMultinotions({ definitions, ...configuration }),
+      genererSerieMultinotions({ definitions: [...definitions].reverse(), ...configuration }),
+    );
   });
 
   it("conserve exactement la graine historique d'une série ciblée", () => {

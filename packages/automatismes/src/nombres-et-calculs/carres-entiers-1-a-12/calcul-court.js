@@ -2,7 +2,7 @@
 
 import {
   SCHEMA_QUESTION_INSTANCE_V2,
-} from "../../../../contrats/src/question-v2.js?v=50";
+} from "../../../../contrats/src/question-v2.js?v=51";
 import {
   VALEURS_CARRES_ENTIERS,
   blocPuissance,
@@ -13,7 +13,7 @@ import {
   exigerParametresCarres,
   reponseEntier,
   valeurParametreOuTirage,
-} from "./commun.js?v=50";
+} from "./commun.js?v=51";
 
 export const NOM_GENERATEUR_CALCUL_COURT_CARRE =
   "nombres-et-calculs.carres-entiers-1-a-12.calcul-court";

@@ -54,10 +54,16 @@ Pour chaque famille :
 - cas ambigus interdits ;
 - aide ;
 - correction ;
-- couverture et équilibre attendus dans 5, 10, 15 et 20 questions.
+- catégorie `principale`, `secondaire` ou `rare` ;
+- quota entier dans le paquet de référence de 20 ;
+- dimensions secondaires indépendantes et leur propre paquet éventuel ;
+- contraintes justifiées de compatibilité, de diversité et de répétition.
 
 Les familles traduisent des tâches différentes. Elles ne sont ni des niveaux
-ni une obligation de reproduire F1 à F6 de NC-01.
+ni une obligation de reproduire F1 à F6 de NC-01. Elles ne possèdent plus de
+plans fixes distincts pour 5, 10, 15 et 20 questions : les petites séries sont
+tirées sans remise dans le paquet seedé de 20, conformément à
+[`paquets-ponderes-deterministes.md`](paquets-ponderes-deterministes.md).
 
 ## 6. Progression pédagogique commune
 
@@ -125,6 +131,8 @@ Avant de passer la notion à `valide`, fournir :
 - toutes les pages de cours et au moins une aide et une correction par famille ;
 - les cas limites et erreurs ciblées ;
 - les garanties de déterminisme et de couverture ;
+- les quotas exacts à 20, les fréquences observées et l'apparition des cas
+  rares à 1 ou 2 questions sur plusieurs milliers de graines ;
 - les contrôles téléphone, ordinateur, TNI et zoom, y compris les marges à
   l'intérieur des schémas et SVG ;
 - l'accord pédagogique explicite de Gwenaël.

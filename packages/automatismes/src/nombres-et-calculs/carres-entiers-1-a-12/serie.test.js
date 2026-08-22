@@ -1,263 +1,129 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
+import { validerQuestionInstanceV2 } from "../../../../contrats/src/question-v2.js";
 import { creerRegistreAutomatismes } from "../../registre.js";
 import {
   FAMILLES_NC02,
+  PAQUET_FAMILLES_NC02,
   QUOTAS_SERIES_NC02,
   genererSerieNC02,
   planifierSerieNC02,
   signatureVisibleQuestion,
 } from "./serie.js";
 
-const LONGUEURS = Object.freeze([5, 10, 15, 20]);
+const LONGUEURS = Object.freeze([1, 2, 5, 10, 15, 20]);
 const FAMILLES = Object.freeze(Object.values(FAMILLES_NC02));
 
 function occurrences(plan) {
-  const resultat = new Map();
-  for (const { famille } of plan) {
-    resultat.set(famille, (resultat.get(famille) ?? 0) + 1);
-  }
-  return resultat;
+  const compte = new Map(FAMILLES.map((famille) => [famille, 0]));
+  for (const { famille } of plan) compte.set(famille, compte.get(famille) + 1);
+  return compte;
 }
 
-function bandeDe(base) {
-  if (base <= 4) return 0;
-  if (base <= 8) return 1;
-  return 2;
-}
-
-function basesRappel(plan) {
-  return plan
-    .filter(({ famille }) => [FAMILLES_NC02.F1, FAMILLES_NC02.F2].includes(famille))
-    .map(({ parametres }) => parametres.base);
-}
-
-describe("NC-02 — plan de série", () => {
-  it("respecte exactement les quatre tables de quotas validées", () => {
-    for (const nombreQuestions of LONGUEURS) {
-      for (let graine = 0; graine < 250; graine += 1) {
-        const compte = occurrences(planifierSerieNC02({
-          graine: `quota-${nombreQuestions}-${graine}`,
-          nombreQuestions,
-        }));
-        assert.deepEqual(
-          FAMILLES.map((famille) => compte.get(famille) ?? 0),
-          QUOTAS_SERIES_NC02[nombreQuestions],
-        );
-      }
+describe("NC-02 — paquet pédagogique déterministe", () => {
+  it("respecte exactement les quotas de familles et de sous-profils à vingt", () => {
+    for (let seed = 0; seed < 500; seed += 1) {
+      const plan = planifierSerieNC02({ graine: `quota-${seed}`, nombreQuestions: 20 });
+      const compte = occurrences(plan);
+      assert.deepEqual(
+        FAMILLES.map((famille) => compte.get(famille)),
+        QUOTAS_SERIES_NC02[20],
+      );
+      const directs = plan.filter(({ famille }) => famille === FAMILLES_NC02.F1)
+        .map(({ parametres }) => parametres.formulation);
+      assert.equal(directs.filter((forme) => forme === "calculer").length, 3);
+      assert.equal(directs.filter((forme) => forme === "carre-de").length, 2);
+      assert.equal(directs.filter((forme) => forme === "completer").length, 1);
+      assert.equal(directs.filter((forme) => forme === "choisir-resultat").length, 1);
+      assert.equal(directs.filter((forme) => forme === "encadrer-resultat").length, 1);
+      assert.deepEqual(
+        plan.filter(({ famille }) => famille === FAMILLES_NC02.F5)
+          .map(({ parametres }) => parametres.forme).sort(),
+        ["trouver-aire", "trouver-cote"],
+      );
+      assert.deepEqual(
+        plan.filter(({ famille }) => famille === FAMILLES_NC02.F6)
+          .map(({ parametres }) => parametres.operation).sort(),
+        ["addition", "soustraction"],
+      );
     }
   });
 
-  it("commence par le rappel et n'enchaîne jamais deux familles identiques", () => {
-    for (const nombreQuestions of LONGUEURS) {
-      for (let graine = 0; graine < 1_000; graine += 1) {
-        const plan = planifierSerieNC02({
-          graine: `ordre-${nombreQuestions}-${graine}`,
-          nombreQuestions,
-        });
-        assert.ok([FAMILLES_NC02.F1, FAMILLES_NC02.F2].includes(plan[0].famille));
-        plan.slice(1).forEach((element, index) => {
-          assert.notEqual(element.famille, plan[index].famille);
-        });
-      }
-    }
-  });
-
-  it("couvre les treize bases sans répétition par F1 et F2 dans toute série de vingt", () => {
-    for (let graine = 0; graine < 1_000; graine += 1) {
-      const plan = planifierSerieNC02({
-        graine: `couverture-${graine}`,
-        nombreQuestions: 20,
+  it("rend les profils rares observables dans les allocations de 1 et 2 questions", () => {
+    const famillesVues = new Set();
+    const formulationsVues = new Set();
+    const formesInversesVues = new Set();
+    const compte = new Map(FAMILLES.map((famille) => [famille, 0]));
+    for (let seed = 0; seed < 8_000; seed += 1) {
+      const une = planifierSerieNC02({ graine: `petite-${seed}`, nombreQuestions: 1 });
+      famillesVues.add(une[0].famille);
+      compte.set(une[0].famille, compte.get(une[0].famille) + 1);
+      if (une[0].parametres.formulation) formulationsVues.add(une[0].parametres.formulation);
+      if (une[0].parametres.forme) formesInversesVues.add(une[0].parametres.forme);
+      const deux = planifierSerieNC02({ graine: `petite-${seed}`, nombreQuestions: 2 });
+      deux.forEach(({ parametres }) => {
+        if (parametres.formulation) formulationsVues.add(parametres.formulation);
+        if (parametres.forme) formesInversesVues.add(parametres.forme);
       });
-      const bases = basesRappel(plan);
-      assert.equal(bases.length, 13);
-      assert.equal(new Set(bases).size, 13);
+    }
+    assert.deepEqual([...famillesVues].sort(), [...FAMILLES].sort());
+    assert.ok(formulationsVues.has("choisir-resultat"));
+    assert.ok(formulationsVues.has("encadrer-resultat"));
+    assert.ok(formesInversesVues.has("produit-facteurs-egaux"));
+    FAMILLES.forEach((famille, index) => {
+      const observee = compte.get(famille) / 8_000;
+      assert.ok(Math.abs(observee - QUOTAS_SERIES_NC02[20][index] / 20) < 0.02);
+    });
+  });
+
+  it("est déterministe et évite les familles consécutives si cela est possible", () => {
+    for (const nombreQuestions of LONGUEURS) {
+      for (let seed = 0; seed < 1_000; seed += 1) {
+        const configuration = { graine: `ordre-${seed}`, nombreQuestions };
+        const plan = planifierSerieNC02(configuration);
+        assert.deepEqual(planifierSerieNC02(configuration), plan);
+        const compte = occurrences(plan);
+        const alternancePossible = Math.max(...compte.values()) <= Math.ceil(nombreQuestions / 2);
+        if (alternancePossible) {
+          assert.ok(plan.every((element, index) =>
+            index === 0 || element.famille !== plan[index - 1].famille));
+        }
+      }
+    }
+  });
+
+  it("couvre les treize bases de rappel sans répétition à vingt", () => {
+    for (let seed = 0; seed < 1_000; seed += 1) {
+      const bases = planifierSerieNC02({ graine: `bases-${seed}`, nombreQuestions: 20 })
+        .filter(({ famille }) => [FAMILLES_NC02.F1, FAMILLES_NC02.F2].includes(famille))
+        .map(({ parametres }) => parametres.base);
       assert.deepEqual([...bases].sort((a, b) => a - b), [
         0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12,
       ]);
     }
   });
 
-  it("équilibre les trois bandes de bases dans toutes les longueurs", () => {
-    for (const nombreQuestions of LONGUEURS) {
-      for (let graine = 0; graine < 500; graine += 1) {
-        const comptes = [0, 0, 0];
-        basesRappel(planifierSerieNC02({
-          graine: `bandes-${nombreQuestions}-${graine}`,
-          nombreQuestions,
-        })).forEach((base) => { comptes[bandeDe(base)] += 1; });
-        assert.ok(Math.max(...comptes) - Math.min(...comptes) <= 1);
-      }
-    }
-  });
-
-  it("garantit le produit à deux facteurs dès dix questions", () => {
-    for (const nombreQuestions of [10, 15, 20]) {
-      for (let graine = 0; graine < 1_000; graine += 1) {
-        const formes = planifierSerieNC02({
-          graine: `produit-${nombreQuestions}-${graine}`,
-          nombreQuestions,
-        })
-          .filter(({ famille }) => famille === FAMILLES_NC02.F2)
-          .map(({ parametres }) => parametres.forme);
-        assert.ok(formes.includes("produit-facteurs-egaux"));
-      }
-    }
-  });
-
-  it("équilibre les deux sens de F5 et les deux opérations de F6 quand elles apparaissent deux fois", () => {
-    for (const nombreQuestions of [15, 20]) {
-      for (let graine = 0; graine < 500; graine += 1) {
-        const plan = planifierSerieNC02({
-          graine: `sous-formes-${nombreQuestions}-${graine}`,
-          nombreQuestions,
-        });
-        const operations = plan
-          .filter(({ famille }) => famille === FAMILLES_NC02.F6)
-          .map(({ parametres }) => parametres.operation)
-          .sort();
-        assert.deepEqual(operations, ["addition", "soustraction"]);
-        if (nombreQuestions === 20) {
-          const formesCarre = plan
-            .filter(({ famille }) => famille === FAMILLES_NC02.F5)
-            .map(({ parametres }) => parametres.forme)
-            .sort();
-          assert.deepEqual(formesCarre, ["trouver-aire", "trouver-cote"]);
-          const basesCarre = plan
-            .filter(({ famille }) => famille === FAMILLES_NC02.F5)
-            .map(({ parametres }) => parametres.base);
-          assert.equal(new Set(basesCarre).size, 2);
-        }
-      }
-    }
-  });
-
-  it("réserve exactement un QCM direct et un encadrement dans la série de vingt", () => {
-    for (let graine = 0; graine < 1_000; graine += 1) {
-      const formulations = planifierSerieNC02({
-        graine: `variantes-directes-${graine}`,
-        nombreQuestions: 20,
-      })
-        .filter(({ famille }) => famille === FAMILLES_NC02.F1)
-        .map(({ parametres }) => parametres.formulation);
-      assert.equal(formulations.filter((forme) => forme === "choisir-resultat").length, 1);
-      assert.equal(formulations.filter((forme) => forme === "encadrer-resultat").length, 1);
-    }
-  });
-
-  it("emploie les deux formulations de reconnaissance dans la série de vingt", () => {
-    for (let graine = 0; graine < 500; graine += 1) {
-      const formulations = planifierSerieNC02({
-        graine: `vocabulaire-carres-${graine}`,
-        nombreQuestions: 20,
-      })
-        .filter(({ famille }) => famille === FAMILLES_NC02.F4)
-        .map(({ parametres }) => parametres.formulation)
-        .sort();
-      assert.deepEqual(formulations, ["carres-parfaits", "nombres-carres"]);
-    }
-  });
-
-  it("rejoue exactement le plan et varie avec une autre graine", () => {
-    assert.deepEqual(
-      planifierSerieNC02({ graine: "meme", nombreQuestions: 20 }),
-      planifierSerieNC02({ graine: "meme", nombreQuestions: 20 }),
-    );
-    assert.notDeepEqual(
-      planifierSerieNC02({ graine: "meme", nombreQuestions: 20 }),
-      planifierSerieNC02({ graine: "autre", nombreQuestions: 20 }),
-    );
-  });
-
-  it("fournit un préfixe pédagogique pour chaque longueur intermédiaire d'un mélange", () => {
-    for (let nombreQuestions = 1; nombreQuestions <= 20; nombreQuestions += 1) {
-      for (let graine = 0; graine < 100; graine += 1) {
-        const plan = planifierSerieNC02({
-          graine: `intermediaire-${nombreQuestions}-${graine}`,
-          nombreQuestions,
-        });
-        assert.equal(plan.length, nombreQuestions);
-        assert.ok([FAMILLES_NC02.F1, FAMILLES_NC02.F2].includes(plan[0].famille));
-        plan.slice(1).forEach((element, index) => {
-          assert.notEqual(element.famille, plan[index].famille);
-        });
-        if (nombreQuestions >= 2) {
-          assert.ok(plan.some(({ famille }) => famille === FAMILLES_NC02.F1));
-          assert.ok(plan.some(({ famille }) => famille === FAMILLES_NC02.F2));
-        }
-      }
-    }
-  });
-
-  it("refuse les longueurs hors de la plage utile au lecteur", () => {
-    for (const nombreQuestions of [0, 21, 100, 1.5]) {
-      assert.throws(
-        () => planifierSerieNC02({ graine: "invalide", nombreQuestions }),
-        /entre 1 et 20/,
-      );
-    }
+  it("déclare bien vingt jetons sans dépendre d'une table de préfixes", () => {
+    assert.equal(PAQUET_FAMILLES_NC02.profils.reduce((somme, profil) =>
+      somme + profil.quota, 0), 20);
   });
 });
 
-describe("NC-02 — génération de séries complètes", () => {
-  it("génère des questions conformes sans aucun doublon visible", () => {
+describe("NC-02 — génération", () => {
+  it("produit des questions V2 sans doublon visible à toutes les allocations", () => {
     const registre = creerRegistreAutomatismes();
     for (const nombreQuestions of LONGUEURS) {
-      for (let graine = 0; graine < 300; graine += 1) {
+      for (let seed = 0; seed < 100; seed += 1) {
         const questions = genererSerieNC02({
           registre,
-          graine: `serie-${nombreQuestions}-${graine}`,
-          nombreQuestions,
-        });
-        assert.equal(questions.length, nombreQuestions);
-        assert.equal(
-          new Set(questions.map(signatureVisibleQuestion)).size,
-          nombreQuestions,
-        );
-      }
-    }
-  });
-
-  it("génère aussi les sous-séries de deux et trois questions requises par le mélange", () => {
-    const registre = creerRegistreAutomatismes();
-    for (const nombreQuestions of [2, 3]) {
-      for (let graine = 0; graine < 200; graine += 1) {
-        const questions = genererSerieNC02({
-          registre,
-          graine: `sous-serie-${nombreQuestions}-${graine}`,
+          graine: `questions-${nombreQuestions}-${seed}`,
           nombreQuestions,
         });
         assert.equal(questions.length, nombreQuestions);
         assert.equal(new Set(questions.map(signatureVisibleQuestion)).size, nombreQuestions);
-        assert.deepEqual(
-          [...new Set(questions.map(({ classement }) => classement.famille))].sort(),
-          nombreQuestions === 2
-            ? [FAMILLES_NC02.F1, FAMILLES_NC02.F2].sort()
-            : [FAMILLES_NC02.F1, FAMILLES_NC02.F2, FAMILLES_NC02.F3].sort(),
-        );
+        assert.ok(questions.every((question) => validerQuestionInstanceV2(question).valide));
       }
     }
-  });
-
-  it("rejoue les mêmes instances et varie avec une autre graine", () => {
-    const registre = creerRegistreAutomatismes();
-    const a = genererSerieNC02({ registre, graine: "serie-a", nombreQuestions: 20 });
-    const encoreA = genererSerieNC02({ registre, graine: "serie-a", nombreQuestions: 20 });
-    const b = genererSerieNC02({ registre, graine: "serie-b", nombreQuestions: 20 });
-    assert.deepEqual(a, encoreA);
-    assert.notDeepEqual(a, b);
-  });
-
-  it("expose bien les six familles dans une série de vingt", () => {
-    const questions = genererSerieNC02({
-      registre: creerRegistreAutomatismes(),
-      graine: "six-familles",
-      nombreQuestions: 20,
-    });
-    assert.deepEqual(
-      [...new Set(questions.map(({ classement }) => classement.famille))].sort(),
-      [...FAMILLES].sort(),
-    );
   });
 });

@@ -191,8 +191,8 @@ export const PROVENANCE_FONDATION_V2 = Object.freeze({
   },
   "automatismes-v2/src/serie-multinotions.js": {
     statut: "original_mathsgo",
-    source: "sélection multiple et répartition équilibrée validées par Gwenaël le 7 août 2026",
-    note: "Le plan conserve la recette interne de chaque notion, répartit le total avec un écart maximal d’une question et intercale les sous-séries de façon seedée.",
+    source: "répartition équitable seedée entre automatismes, révisée le 22 août 2026",
+    note: "Le plan canonise les identifiants, distribue le reliquat sans biais, tire sans remise en sous-allocation et intercale les sous-séries sans blocs.",
   },
 
   "packages/objets/src/programme-automatismes.js": {
@@ -242,6 +242,11 @@ export const PROVENANCE_FONDATION_V2 = Object.freeze({
     statut: "original_mathsgo",
     source: "registre de génération écrit pour Automatismes maths&go V2",
   },
+  "packages/moteur-exercices/src/paquets-ponderes.js": {
+    statut: "original_mathsgo",
+    source: "contrat de paquets pondérés déterministes défini pour Automatismes DNB V2 le 22 août 2026",
+    note: "Le moteur tire sans remise dans vingt jetons canoniques, sépare les sous-graines des dimensions et préserve les quotas lors des appariements contraints.",
+  },
 
   "packages/automatismes/src/registre.js": {
     statut: "original_mathsgo",
@@ -273,7 +278,7 @@ export const PROVENANCE_FONDATION_V2 = Object.freeze({
   },
   "packages/automatismes/src/nombres-et-calculs/criteres-divisibilite/serie.js": {
     statut: "original_mathsgo",
-    source: "recette de série complète NC-01 décidée avec Gwenaël le 3 août 2026",
+    source: "contenus NC-01 validés puis sélection migrée vers un paquet pondéré de vingt le 22 août 2026",
   },
   "packages/automatismes/src/nombres-et-calculs/carres-entiers-1-a-12/commun.js": {
     statut: "original_mathsgo",
@@ -305,7 +310,7 @@ export const PROVENANCE_FONDATION_V2 = Object.freeze({
   },
   "packages/automatismes/src/nombres-et-calculs/carres-entiers-1-a-12/serie.js": {
     statut: "original_mathsgo",
-    source: "quotas et couverture déterministe des treize bases NC-02 approuvés les 6 et 7 août 2026",
+    source: "contenus NC-02 approuvés les 6 et 7 août 2026, sélection par paquet pondéré adoptée le 22 août 2026",
   },
   "packages/automatismes/src/nombres-et-calculs/fractions-simples-decimaux/commun.js": {
     statut: "original_mathsgo",
@@ -321,7 +326,7 @@ export const PROVENANCE_FONDATION_V2 = Object.freeze({
   },
   "packages/automatismes/src/nombres-et-calculs/fractions-simples-decimaux/serie.js": {
     statut: "original_mathsgo",
-    source: "recette déterministe commune NC-03/NC-04, quota 10/10 et item libre validés par Gwenaël le 7 août 2026",
+    source: "contenus séparés NC-03/NC-04 validés le 7 août 2026, dimensions pondérées indépendantes adoptées le 22 août 2026",
   },
   "packages/automatismes/src/nombres-et-calculs/ecritures-multiples-nombre/questions.js": {
     statut: "original_mathsgo",
@@ -329,11 +334,15 @@ export const PROVENANCE_FONDATION_V2 = Object.freeze({
   },
   "packages/automatismes/src/nombres-et-calculs/ecritures-multiples-nombre/serie.js": {
     statut: "original_mathsgo",
-    source: "recette déterministe NC-05, quotas 5/10/15/20 et couverture de 100 % et des valeurs supérieures à 1 décidés avec Gwenaël le 21 août 2026",
+    source: "contenus NC-05 décidés avec Gwenaël le 21 août 2026, profils et présentations migrés vers deux paquets pondérés le 22 août 2026",
   },
   "packages/automatismes/src/espace-et-geometrie/solides-usuels/reconnaissance.js": {
     statut: "original_mathsgo",
     source: "fiche GE-12 validée par Gwenaël le 19 juillet 2026",
+  },
+  "packages/automatismes/src/espace-et-geometrie/solides-usuels/serie.js": {
+    statut: "original_mathsgo",
+    source: "contenus GE-12 validés le 19 juillet 2026, série pondérée formes/variantes/vues ajoutée le 22 août 2026",
   },
   "packages/automatismes/src/espace-et-geometrie/droite-graduee/questions.js": {
     statut: "original_mathsgo",
@@ -341,7 +350,7 @@ export const PROVENANCE_FONDATION_V2 = Object.freeze({
   },
   "packages/automatismes/src/espace-et-geometrie/droite-graduee/serie.js": {
     statut: "original_mathsgo",
-    source: "recette déterministe GE-01/GE-02, quotas 5/10/15/20 et variations d’échelles décidés avec Gwenaël le 21 août 2026",
+    source: "contenus GE-01/GE-02 décidés avec Gwenaël le 21 août 2026, familles et échelles migrées vers des paquets pondérés le 22 août 2026",
   },
   "packages/automatismes/src/espace-et-geometrie/reperage-plan/questions.js": {
     statut: "original_mathsgo",
@@ -349,11 +358,15 @@ export const PROVENANCE_FONDATION_V2 = Object.freeze({
   },
   "packages/automatismes/src/espace-et-geometrie/reperage-plan/serie.js": {
     statut: "original_mathsgo",
-    source: "recettes déterministes séparées GE-03/GE-04, quotas 5/10/15/20 et couverture contrôlée des quadrants et des axes définis le 22 août 2026",
+    source: "contenus GE-03/GE-04 séparés du 22 août 2026, familles, pas et zones sélectionnés par paquets pondérés indépendants",
   },
   "packages/automatismes/src/grandeurs-et-mesures/volumes/calcul-volumes.js": {
     statut: "original_mathsgo",
     source: "fiche GM-13 à GM-15, anciennement PG-22 à PG-24, validée par Gwenaël le 19 juillet 2026",
+  },
+  "packages/automatismes/src/grandeurs-et-mesures/volumes/serie.js": {
+    statut: "original_mathsgo",
+    source: "contenus GM-13 à GM-15 validés le 19 juillet 2026, séries pondérées données/formes/modes/vues ajoutées le 22 août 2026",
   },
 });
 

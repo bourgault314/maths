@@ -62,11 +62,11 @@ describe("validerSeance — garde-fous", () => {
     assert.match(validerSeance(mode).erreurs.join("\n"), /mode/);
   });
 
-  it("refuse davantage de notions que de questions", () => {
+  it("accepte davantage de notions que de questions pour un tirage sans remise", () => {
     const seance = seancePrete();
     seance.nombreQuestions = 1;
     seance.selection = ["notion-a", "notion-b"];
-    assert.match(validerSeance(seance).erreurs.join("\n"), /chaque notion/);
+    assert.deepEqual(validerSeance(seance), { valide: true, erreurs: [] });
   });
 
   it("refuse les incohérences entre phase, questions et index", () => {

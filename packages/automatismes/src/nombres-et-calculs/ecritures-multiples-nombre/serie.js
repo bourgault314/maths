@@ -6,7 +6,12 @@
 import {
   creerGenerateur,
   validerGraine,
-} from "../../../../moteur-exercices/src/aleatoire.js?v=50";
+} from "../../../../moteur-exercices/src/aleatoire.js?v=51";
+import {
+  definirPaquetPondere,
+  ordonnerEnLimitantRepetitions,
+  tirerProfilsPonderes,
+} from "../../../../moteur-exercices/src/paquets-ponderes.js?v=51";
 import {
   DENOMINATEURS_REPERES_NC05,
   FAMILLE_CHAINE_EGALITES,
@@ -18,37 +23,11 @@ import {
   GABARIT_ECRITURES_MULTIPLES,
   PRESENTATION_ABSTRAITE_ECRITURES,
   PRESENTATION_VISUELLE_ECRITURES,
-} from "./questions.js?v=50";
+} from "./questions.js?v=51";
 
-export const VERSION_PLAN_SERIE_ECRITURES_MULTIPLES = 2;
-
-const RECETTE_FAMILLES = Object.freeze([
-  FAMILLE_POURCENTAGE_FRACTION_CENTIEMES,
-  FAMILLE_POURCENTAGE_DECIMAL,
-  FAMILLE_FRACTION_REPERE_POURCENTAGE,
-  FAMILLE_CHAINE_EGALITES,
-  FAMILLE_UNITE_DEPASSEMENT,
-  FAMILLE_RECONNAITRE_EQUIVALENCES,
-  FAMILLE_POURCENTAGE_FRACTION_CENTIEMES,
-  FAMILLE_UNITE_DEPASSEMENT,
-  FAMILLE_POURCENTAGE_DECIMAL,
-  FAMILLE_FRACTION_REPERE_POURCENTAGE,
-  FAMILLE_CHAINE_EGALITES,
-  FAMILLE_RECONNAITRE_EQUIVALENCES,
-  FAMILLE_POURCENTAGE_DECIMAL,
-  FAMILLE_UNITE_DEPASSEMENT,
-  FAMILLE_FRACTION_REPERE_POURCENTAGE,
-  FAMILLE_POURCENTAGE_FRACTION_CENTIEMES,
-  FAMILLE_POURCENTAGE_DECIMAL,
-  FAMILLE_CHAINE_EGALITES,
-  FAMILLE_UNITE_DEPASSEMENT,
-  FAMILLE_FRACTION_REPERE_POURCENTAGE,
-]);
+export const VERSION_PLAN_SERIE_ECRITURES_MULTIPLES = 3;
 
 export const QUOTAS_JALONS_ECRITURES_MULTIPLES = Object.freeze({
-  5: Object.freeze([1, 1, 1, 1, 1, 0]),
-  10: Object.freeze([2, 2, 2, 1, 2, 1]),
-  15: Object.freeze([2, 3, 3, 2, 3, 2]),
   20: Object.freeze([3, 4, 4, 3, 4, 2]),
 });
 
@@ -60,6 +39,95 @@ const ORDRE_FAMILLES = Object.freeze([
   FAMILLE_UNITE_DEPASSEMENT,
   FAMILLE_RECONNAITRE_EQUIVALENCES,
 ]);
+
+export const PAQUET_PROFILS_ECRITURES_MULTIPLES = definirPaquetPondere({
+  id: "nc05-profils",
+  profils: [
+    {
+      id: "pourcentage-fraction-centiemes",
+      quota: 3,
+      categorie: "principale",
+      famille: FAMILLE_POURCENTAGE_FRACTION_CENTIEMES,
+      variante: "pourcentage-vers-fraction-centiemes",
+    },
+    {
+      id: "pourcentage-vers-decimal",
+      quota: 2,
+      categorie: "principale",
+      famille: FAMILLE_POURCENTAGE_DECIMAL,
+      variante: "pourcentage-vers-decimal",
+    },
+    {
+      id: "decimal-vers-pourcentage",
+      quota: 2,
+      categorie: "principale",
+      famille: FAMILLE_POURCENTAGE_DECIMAL,
+      variante: "decimal-vers-pourcentage",
+    },
+    ...[5, 4, 10, 2].map((denominateur) => ({
+      id: `fraction-repere-${denominateur}`,
+      quota: 1,
+      categorie: "principale",
+      famille: FAMILLE_FRACTION_REPERE_POURCENTAGE,
+      variante: "fraction-vers-pourcentage",
+      denominateur,
+    })),
+    ...[
+      "chaine-vers-pourcentage",
+      "chaine-vers-decimal",
+      "chaine-vers-fraction",
+    ].map((variante) => ({
+      id: variante,
+      quota: 1,
+      categorie: "secondaire",
+      famille: FAMILLE_CHAINE_EGALITES,
+      variante,
+    })),
+    {
+      id: "unite-vers-entier",
+      quota: 1,
+      categorie: "secondaire",
+      famille: FAMILLE_UNITE_DEPASSEMENT,
+      variante: "unite-vers-entier",
+    },
+    {
+      id: "mixte-vers-pourcentage",
+      quota: 2,
+      categorie: "secondaire",
+      famille: FAMILLE_UNITE_DEPASSEMENT,
+      variante: "mixte-vers-pourcentage",
+    },
+    {
+      id: "pourcentage-vers-mixte",
+      quota: 1,
+      categorie: "secondaire",
+      famille: FAMILLE_UNITE_DEPASSEMENT,
+      variante: "pourcentage-vers-mixte",
+    },
+    {
+      id: "reconnaissance-choix-unique",
+      quota: 1,
+      categorie: "secondaire",
+      famille: FAMILLE_RECONNAITRE_EQUIVALENCES,
+      variante: "choix-unique",
+    },
+    {
+      id: "reconnaissance-selection-multiple",
+      quota: 1,
+      categorie: "rare",
+      famille: FAMILLE_RECONNAITRE_EQUIVALENCES,
+      variante: "selection-multiple",
+    },
+  ],
+});
+
+export const PAQUET_PRESENTATIONS_ECRITURES_MULTIPLES = definirPaquetPondere({
+  id: "nc05-presentations",
+  profils: [
+    { id: PRESENTATION_ABSTRAITE_ECRITURES, quota: 17, categorie: "principale" },
+    { id: PRESENTATION_VISUELLE_ECRITURES, quota: 3, categorie: "secondaire" },
+  ],
+});
 
 const POURCENTAGES_GENERAUX = Object.freeze([
   7, 12, 18, 24, 30, 35, 40, 45, 55, 60, 65, 70, 75, 80, 85, 90,
@@ -92,7 +160,7 @@ function exigerConfiguration(graine, nombreQuestions) {
   }
 }
 
-export function repartirFamillesEcrituresMultiples(nombreQuestions) {
+export function repartirFamillesEcrituresMultiples(nombreQuestions, graine = "repartition") {
   if (
     !Number.isInteger(nombreQuestions)
     || nombreQuestions < 1
@@ -105,46 +173,14 @@ export function repartirFamillesEcrituresMultiples(nombreQuestions) {
   const compte = Object.fromEntries(
     ORDRE_FAMILLES.map((famille) => [famille, 0]),
   );
-  for (const famille of RECETTE_FAMILLES.slice(0, nombreQuestions)) {
-    compte[famille] += 1;
+  for (const profil of tirerProfilsPonderes({
+    paquet: PAQUET_PROFILS_ECRITURES_MULTIPLES,
+    graine,
+    nombreElements: nombreQuestions,
+  })) {
+    compte[profil.famille] += 1;
   }
   return Object.freeze(compte);
-}
-
-function variantePour(element, aleatoire, nombreQuestions, debutsAlternances) {
-  if (element.famille === FAMILLE_POURCENTAGE_FRACTION_CENTIEMES) {
-    return "pourcentage-vers-fraction-centiemes";
-  }
-  if (element.famille === FAMILLE_POURCENTAGE_DECIMAL) {
-    const variantes = [
-      "pourcentage-vers-decimal",
-      "decimal-vers-pourcentage",
-    ];
-    return variantes[(element.occurrence + debutsAlternances.decimal) % 2];
-  }
-  if (element.famille === FAMILLE_FRACTION_REPERE_POURCENTAGE) {
-    return "fraction-vers-pourcentage";
-  }
-  if (element.famille === FAMILLE_CHAINE_EGALITES) {
-    return debutsAlternances.chaines[
-      element.occurrence % debutsAlternances.chaines.length
-    ];
-  }
-  if (element.famille === FAMILLE_UNITE_DEPASSEMENT) {
-    if (nombreQuestions >= 10 && element.occurrence === 0) {
-      return "unite-vers-entier";
-    }
-    const decalage = nombreQuestions >= 10
-      ? element.occurrence - 1
-      : element.occurrence;
-    return [
-      "mixte-vers-pourcentage",
-      "pourcentage-vers-mixte",
-    ][decalage % 2];
-  }
-  return nombreQuestions === 20 && element.occurrence === 1
-    ? "selection-multiple"
-    : "choix-unique";
 }
 
 function couplesCompatibles(pourcentages, { mixte = false } = {}) {
@@ -184,7 +220,7 @@ function candidatsPour(element, aleatoire) {
   if (
     element.famille === FAMILLE_FRACTION_REPERE_POURCENTAGE
   ) {
-    const denominateur = DENOMINATEURS_REPERES_PROGRESSIFS[
+    const denominateur = element.denominateur ?? DENOMINATEURS_REPERES_PROGRESSIFS[
       element.occurrence % DENOMINATEURS_REPERES_PROGRESSIFS.length
     ];
     return aleatoire.melange(
@@ -248,61 +284,58 @@ function affecterValeursDistinctes(elements, aleatoire) {
   }
 }
 
-function positionsVisuelles(nombreQuestions) {
-  return new Set([
-    ...(nombreQuestions >= 3 ? [2] : []),
-    ...(nombreQuestions >= 8 ? [7] : []),
-    ...(nombreQuestions >= 20 ? [10] : []),
-  ]);
-}
-
 export function planifierSerieEcrituresMultiples({
   graine,
   nombreQuestions = 10,
 }) {
   exigerConfiguration(graine, nombreQuestions);
   const occurrences = new Map(ORDRE_FAMILLES.map((famille) => [famille, 0]));
-  const elements = RECETTE_FAMILLES.slice(0, nombreQuestions).map((famille) => {
+  const profils = tirerProfilsPonderes({
+    paquet: PAQUET_PROFILS_ECRITURES_MULTIPLES,
+    graine: `nc05-profils-v${VERSION_PLAN_SERIE_ECRITURES_MULTIPLES}:${graine}`,
+    nombreElements: nombreQuestions,
+  });
+  const ordonnes = ordonnerEnLimitantRepetitions({
+    elements: profils,
+    graine: `nc05-ordre-v${VERSION_PLAN_SERIE_ECRITURES_MULTIPLES}:${graine}`,
+    cle: ({ famille }) => famille,
+  });
+  const elements = ordonnes.map((profil) => {
+    const { famille } = profil;
     const occurrence = occurrences.get(famille);
     occurrences.set(famille, occurrence + 1);
-    return { famille, occurrence };
+    return {
+      famille,
+      occurrence,
+      variante: profil.variante,
+      ...(profil.denominateur === undefined ? {} : { denominateur: profil.denominateur }),
+    };
   });
   const aleatoire = creerGenerateur(
-    `ecritures-multiples-plan-v${VERSION_PLAN_SERIE_ECRITURES_MULTIPLES}:${graine}:${nombreQuestions}`,
+    `ecritures-multiples-valeurs-v${VERSION_PLAN_SERIE_ECRITURES_MULTIPLES}:${graine}:${nombreQuestions}`,
   );
-  const debutsAlternances = {
-    decimal: aleatoire.choix([0, 1]),
-    chaines: aleatoire.melange([
-      "chaine-vers-pourcentage",
-      "chaine-vers-decimal",
-      "chaine-vers-fraction",
-    ]),
-  };
-  for (const element of elements) {
-    element.variante = variantePour(
-      element,
-      aleatoire,
-      nombreQuestions,
-      debutsAlternances,
-    );
-  }
   affecterValeursDistinctes(elements, aleatoire);
-  const visuelles = positionsVisuelles(nombreQuestions);
+  const presentations = ordonnerEnLimitantRepetitions({
+    elements: tirerProfilsPonderes({
+      paquet: PAQUET_PRESENTATIONS_ECRITURES_MULTIPLES,
+      graine: `nc05-presentations-v${VERSION_PLAN_SERIE_ECRITURES_MULTIPLES}:${graine}`,
+      nombreElements: nombreQuestions,
+    }),
+    graine: `nc05-ordre-presentations-v${VERSION_PLAN_SERIE_ECRITURES_MULTIPLES}:${graine}`,
+    cle: ({ id }) => id,
+    maximumConsecutif: 5,
+  });
   return elements.map(
     (element, position) => ({
       ...element,
       position,
-      presentation: visuelles.has(position)
-        ? PRESENTATION_VISUELLE_ECRITURES
-        : PRESENTATION_ABSTRAITE_ECRITURES,
+      presentation: presentations[position].id,
       gabarit: GABARIT_ECRITURES_MULTIPLES,
       parametres: {
         famille: element.famille,
         pourcentage: element.pourcentage,
         variante: element.variante,
-        presentation: visuelles.has(position)
-          ? PRESENTATION_VISUELLE_ECRITURES
-          : PRESENTATION_ABSTRAITE_ECRITURES,
+        presentation: presentations[position].id,
         ...(element.denominateur === undefined
           ? {}
           : { denominateur: element.denominateur }),
