@@ -2373,7 +2373,16 @@ function buildEquationStepSchemaColumnGeometry(card){
   // taches et choisit les emplacements des jetons ; la même carte se redessine
   // donc toujours pareil, d'une étape à l'autre et à l'impression.
   const rng = makeRng(hashStringToInt(JSON.stringify([eq.x, eq.left.tasks, eq.left.visible, eq.right.tasks, eq.right.visible])));
-  const jitterSplats = (splats) => splats.map(s => ({ ...s, cx: s.cx + rInt(rng, -16, 16), cy: s.cy + rInt(rng, -8, 8) }));
+  // Deux rangées de taches ne sont séparées que de 5 px (141 px d'entraxe pour des
+  // taches de 136 px) : un décalage vertical tiré tache par tache faisait se toucher,
+  // et se confondre, les deux taches d'une même colonne — on ne pouvait plus les
+  // compter. Le décalage vertical est donc tiré une fois par plateau (les rangées
+  // descendent ensemble, l'entraxe ne bouge jamais) ; seul le décalage horizontal
+  // est tiré tache par tache.
+  const jitterSplats = (splats) => {
+    const dy = rInt(rng, -8, 8);
+    return splats.map(s => ({ ...s, cx: s.cx + rInt(rng, -16, 16), cy: s.cy + dy }));
+  };
   const leftSplatsJ = jitterSplats(leftSplats);
   const rightSplatsJ = jitterSplats(rightSplats);
   const shuffledSlots = (slots, used) => {
