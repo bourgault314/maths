@@ -622,6 +622,81 @@
   }
   .helpModalBody li{margin:8px 0}
   .helpModalBody strong{font-weight:900}
+  /* ------------------------------------------------------------------
+     Écran peu haut (portable 1366 x 768, fenêtre de navigateur avec sa
+     barre d'onglets) : le menu doit rester visible d'un bloc, sans
+     défilement, y compris dans les deux modes « entiers relatifs » qui
+     portent une rangée de plus. On resserre alors la trame — libellés et
+     champs restent lisibles, seuls les blancs maigrissent. Sur un écran
+     haut, rien ne change : la mise en page validée reste telle quelle.
+     Ce bloc doit rester EN DERNIER : à spécificité égale, c'est la règle
+     écrite le plus bas qui gagne.
+     ------------------------------------------------------------------ */
+  @media (max-height:900px){
+    .wrap{padding:8px;gap:10px}
+    .panelHeader{margin:0 0 4px;padding:0 0 5px}
+    .panelHeader h1{font-size:20px}
+    .panel label{margin:4px 0 2px}
+    .panel select,
+    .panel input{height:34px;padding:6px 9px}
+    .panel .equationTopSettings{margin-top:2px}
+    /* ces contrôles portent hauteur et remplissage en style en ligne : sans
+       !important la règle ne passe pas, et un select gardant 9 px de remplissage
+       dans une boîte rabaissée se fait couper son texte. */
+    #numColorModeWrap,
+    #signedWritingModeWrap,
+    #signedWritingMode{height:36px !important}
+    #signedWritingMode{padding:5px 6px !important}
+    #eqUnknownMode,
+    #numHiddenCount,
+    #numOpposeMode{padding:5px 6px !important}
+    #displayChoiceRow{margin-top:2px}
+    .viewToggle{height:36px}
+    .viewToggle .btn{height:30px}
+    .seedShareRow{margin-top:5px}
+    .seedShareRow input,
+    .seedShareRow .shareLinkBtn{height:32px !important}
+    .seedShareRow input{padding:4px 8px !important}
+    .genRow{margin-top:7px}
+    .genRow .btn{height:36px}
+    .panel{padding:9px}
+    .printBlock{margin-top:7px;padding:6px 10px 8px}
+    /* le titre du cadre et la glose du recto-verso disent ce que la phrase de
+       résumé, juste dessous, dit déjà en clair : on les rend au menu. */
+    .printBlockTitle{display:none}
+    .printBlock .printDuplexRow small{display:none}
+    .printBlock .printDuplexRow{margin-top:6px;padding:4px 10px}
+    .printBlock .printDuplexRow span{font-size:12px}
+    .printSummary{margin-top:4px}
+    .printBlock .printAction{height:36px !important}
+  }
+  /* Fenêtre franchement basse (portable 1366 x 768 avec barre d'onglets et
+     barre des tâches : il reste souvent moins de 680 px) : un cran de plus.
+     Les libellés restent en gras et lisibles, les champs restent cliquables. */
+  @media (max-height:700px){
+    .wrap{padding:6px;gap:8px}
+    .panelHeader h1{font-size:19px}
+    .panelHeader{padding:0 0 4px}
+    .panel label{margin:3px 0 1px;font-size:12px}
+    .panel select,
+    .panel input{height:31px;padding:5px 8px}
+    #numColorModeWrap,
+    #signedWritingModeWrap,
+    #signedWritingMode{height:32px !important}
+    #signedWritingMode{padding:3px 6px !important}
+    #eqUnknownMode,
+    #numHiddenCount,
+    #numOpposeMode{padding:3px 6px !important}
+    .viewToggle{height:34px}
+    .viewToggle .btn{height:28px}
+    .seedShareRow input,
+    .seedShareRow .shareLinkBtn{height:30px !important}
+    .seedShareRow input{padding:3px 8px !important}
+    .genRow .btn{height:33px}
+    .printBlock{padding:5px 9px 7px}
+    .printBlock .printDuplexRow{margin-top:5px;padding:3px 9px}
+    .printBlock .printAction{height:33px !important}
+  }
 </style>
 <link rel="stylesheet" href="../assets/css/consentement.css">
 <script defer src="../assets/js/consentement.js"></script>
