@@ -8,11 +8,13 @@ import {
   COMPARAISON_VALEURS_EXACTES,
   SCHEMA_QUESTION_INSTANCE_V2,
   TYPE_REPONSE_DEUX_ENTIERS,
+  TYPE_REPONSE_DEUX_ENTIERS_RELATIFS,
   TYPE_REPONSE_ENTIER_NATUREL,
   TYPE_REPONSE_FRACTION_EQUIVALENTE,
   TYPE_REPONSE_NOMBRE_DECIMAL,
   TYPE_REPONSE_SELECTION_MULTIPLE,
   estDeuxEntiersExacts,
+  estDeuxEntiersRelatifsExacts,
   estEntierExact,
   estSelectionExacte,
   estValeurRationnelleExacte,
@@ -139,6 +141,40 @@ describe("validerQuestionInstanceV2 — cas valides", () => {
       maximum: 12,
     };
     assert.equal(validerQuestionInstanceV2(question).valide, true);
+  });
+
+  it("accepte un repère cartésien et un couple ordonné d'entiers relatifs", () => {
+    const question = questionValide();
+    question.classement = {
+      domaine: "espace-et-geometrie",
+      notion: "lire-coordonnees-point",
+      microNotion: "lire-coordonnees-point",
+      famille: "lire-coordonnees",
+      cible: "dnb-2026-16",
+      complements: [],
+    };
+    question.enonce = [
+      { id: "consigne", type: "texte", contenu: "Quelles sont les coordonnées de M ?" },
+      {
+        id: "repere",
+        type: "repere-cartesien",
+        xMin: -5,
+        xMax: 3,
+        yMin: -3,
+        yMax: 4,
+        nomPoint: "M",
+        points: [{ nom: "M", x: -3, y: 2 }],
+      },
+    ];
+    question.reponse = {
+      type: TYPE_REPONSE_DEUX_ENTIERS_RELATIFS,
+      comparaison: COMPARAISON_VALEURS_EXACTES,
+      attendus: [-3, 2],
+      minimum: -20,
+      maximum: 20,
+    };
+    delete question.aide;
+    assert.deepEqual(validerQuestionInstanceV2(question), { valide: true, erreurs: [] });
   });
 
   it("accepte un rationnel affiché en fraction et une saisie décimale exacte", () => {
@@ -417,6 +453,20 @@ describe("estDeuxEntiersExacts", () => {
     assert.equal(estDeuxEntiersExacts([7, 7], [7]), false);
     assert.equal(estDeuxEntiersExacts([-1, -1], [-1, -1]), false);
     assert.equal(estDeuxEntiersExacts(null, [7, 7]), false);
+  });
+});
+
+describe("estDeuxEntiersRelatifsExacts", () => {
+  it("conserve l'ordre et accepte les signes", () => {
+    assert.equal(estDeuxEntiersRelatifsExacts([-3, 2], [-3, 2]), true);
+    assert.equal(estDeuxEntiersRelatifsExacts([-3, 2], [2, -3]), false);
+    assert.equal(estDeuxEntiersRelatifsExacts([-3, 2], [3, 2]), false);
+    assert.equal(estDeuxEntiersRelatifsExacts([0, -2], [0, -2]), true);
+  });
+
+  it("refuse les conversions et les couples incomplets", () => {
+    assert.equal(estDeuxEntiersRelatifsExacts([-3, 2], ["-3", 2]), false);
+    assert.equal(estDeuxEntiersRelatifsExacts([-3, 2], [-3]), false);
   });
 });
 

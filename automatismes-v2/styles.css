@@ -62,6 +62,697 @@ h3,
   border: 0;
 }
 
+/* GE-01 + GE-02 — la même droite dans la question, l’aide et la correction. */
+.carte-question-droite {
+  gap: 18px;
+}
+
+.droite-graduee-interactive {
+  position: relative;
+  width: min(100%, 760px);
+  margin: 16px auto;
+}
+
+.droite-graduee-interactive svg,
+.droite-version-large,
+.droite-version-mobile {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+
+.droite-version-mobile {
+  display: none;
+}
+
+.cible-graduation {
+  position: absolute;
+  width: 44px;
+  height: 52px;
+  min-height: 44px;
+  padding: 0;
+  border: 2px solid transparent;
+  border-radius: 999px;
+  background: transparent;
+  transform: translate(-50%, -50%);
+}
+
+.cible-graduation:hover,
+.cible-graduation:focus-visible {
+  border-color: color-mix(in srgb, var(--mg-turquoise) 55%, transparent);
+  background: color-mix(in srgb, var(--mg-turquoise) 10%, transparent);
+}
+
+.cible-graduation.selectionnee::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 14px;
+  height: 14px;
+  border: 3px solid white;
+  border-radius: 50%;
+  background: var(--mg-bleu);
+  box-shadow: 0 0 0 2px var(--mg-bleu);
+  transform: translate(-50%, -50%);
+}
+
+.grille-qcm-droite {
+  width: min(100%, 620px);
+  margin-inline: auto;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.saisie-numerique:has(.libelle-saisie-droite) {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.libelle-saisie-droite {
+  color: var(--mg-bleu);
+  font-family: var(--mg-maths, serif);
+  font-size: clamp(1.8rem, 5vw, 2.6rem);
+  font-weight: 700;
+}
+
+.etapes-droite {
+  display: grid;
+  gap: 12px;
+  padding: 0;
+  list-style: none;
+}
+
+.etapes-droite li {
+  display: grid;
+  grid-template-columns: 36px 1fr;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid var(--mg-ligne);
+  border-radius: 14px;
+  background: var(--mg-fond-doux);
+}
+
+.etapes-droite li strong,
+.numero-cours {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  color: white;
+  background: var(--mg-bleu);
+}
+
+.methode-droite,
+.carte-cours-droite {
+  display: grid;
+  gap: 14px;
+}
+
+.methode-droite {
+  padding: 16px;
+  border-left: 5px solid var(--mg-turquoise);
+  border-radius: 0 12px 12px 0;
+  background: var(--mg-fond-doux);
+}
+
+.methode-droite p,
+.carte-cours-droite p {
+  margin: 0;
+}
+
+.entete-cours-droite {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+
+.entete-cours-droite .numero-cours {
+  flex: 0 0 32px;
+  margin: 0;
+}
+
+.entete-cours-droite h3 {
+  margin: 0;
+  font-size: clamp(1.25rem, 4vw, 1.75rem);
+}
+
+.carte-cours-droite ol {
+  margin: 0;
+  padding-left: 24px;
+}
+
+.alerte-droite {
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--mg-orange) 12%, white);
+}
+
+.lexique-droite {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin: 0;
+}
+
+.lexique-droite div {
+  padding: 10px 12px;
+  border: 1px solid var(--mg-ligne);
+  border-radius: 12px;
+  background: var(--mg-fond-doux);
+}
+
+.lexique-droite dt {
+  color: var(--mg-bleu);
+  font-weight: 800;
+}
+
+.lexique-droite dd {
+  margin: 2px 0 0;
+}
+
+.methode-cours-droite {
+  display: grid;
+  gap: 8px;
+}
+
+.droite-cours-annotee {
+  margin-block: 2px 0;
+}
+
+.exemple-abscisse,
+.precision-cours-droite {
+  text-align: center;
+}
+
+.exemple-abscisse {
+  padding: 9px 12px;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--mg-turquoise) 10%, white);
+}
+
+.carte-cours-droite-fractions .fraction-empilee,
+.fraction-question-droite {
+  vertical-align: middle;
+}
+
+.fraction-dans-texte {
+  display: inline-flex;
+}
+
+.etape-aide-droite {
+  overflow: hidden;
+  border: 1px solid var(--mg-ligne);
+  border-radius: 14px;
+  background: var(--mg-fond-doux);
+}
+
+.etape-aide-droite summary {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  color: var(--mg-bleu);
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.etape-aide-droite summary span {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 999px;
+  color: white;
+  background: var(--mg-turquoise);
+}
+
+.etape-aide-droite p {
+  margin: 0;
+  padding: 0 14px 14px 52px;
+}
+
+.rail-fraction-aide-droite {
+  padding: 12px;
+  border-left: 5px solid var(--mg-turquoise);
+  border-radius: 0 14px 14px 0;
+  background: var(--mg-fond-doux);
+}
+
+.rail-fraction-aide-droite h3,
+.rail-fraction-aide-droite p {
+  margin: 0;
+}
+
+.echelles-cours-droite {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.echelles-cours-droite span {
+  min-width: 48px;
+  padding: 7px 10px;
+  border: 2px solid color-mix(in srgb, var(--mg-bleu) 25%, white);
+  border-radius: 999px;
+  color: var(--mg-bleu);
+  text-align: center;
+  font-weight: 800;
+}
+
+@media (max-width: 620px) {
+  .droite-graduee-interactive {
+    width: min(100%, 350px);
+    margin-block: 18px;
+  }
+
+  .droite-version-large {
+    display: none;
+  }
+
+  .droite-version-mobile {
+    display: block;
+  }
+
+  .grille-qcm-droite {
+    grid-template-columns: 1fr;
+  }
+
+  .cible-graduation {
+    width: 38px;
+  }
+
+  .lexique-droite {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    font-size: .92rem;
+  }
+
+  .lexique-droite div {
+    padding: 8px;
+  }
+
+  .entete-cours-droite {
+    gap: 9px;
+  }
+
+  .droite-cours-annotee {
+    margin-block: -6px -10px;
+  }
+}
+
+/* GE-03 + GE-04 — un repère unique dans la question, le cours et le Studio. */
+.carte-question-repere {
+  gap: clamp(10px, 2vh, 18px);
+  text-align: center;
+}
+
+.carte-question-repere h1 {
+  max-width: 720px;
+  margin-inline: auto;
+  text-wrap: balance;
+}
+
+.repere-cartesien-v2 {
+  position: relative;
+  width: min(100%, 680px);
+  margin: 2px auto;
+  font-family: var(--mg-maths, serif);
+}
+
+.repere-version-large,
+.repere-version-mobile {
+  position: relative;
+  width: 100%;
+}
+
+.repere-cartesien-v2 svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+
+.repere-version-mobile {
+  display: none;
+}
+
+.surface-placement-repere {
+  position: absolute;
+  z-index: 2;
+  min-width: 0;
+  min-height: 0;
+  padding: 0;
+  border: 2px solid transparent;
+  border-radius: 8px;
+  background: transparent;
+  touch-action: manipulation;
+}
+
+.surface-placement-repere:hover {
+  border-color: color-mix(in srgb, var(--mg-turquoise) 38%, transparent);
+  background: color-mix(in srgb, var(--mg-turquoise) 4%, transparent);
+}
+
+.surface-placement-repere:focus-visible {
+  outline: 4px solid var(--mg-orange);
+  outline-offset: 2px;
+}
+
+.cible-point-repere {
+  position: absolute;
+  z-index: 3;
+  width: 48px;
+  height: 48px;
+  min-height: 44px;
+  padding: 0;
+  border: 3px solid transparent;
+  border-radius: 999px;
+  background: transparent;
+  transform: translate(-50%, -50%);
+}
+
+.cible-point-repere:hover,
+.cible-point-repere:focus-visible {
+  border-color: color-mix(in srgb, var(--mg-turquoise) 65%, transparent);
+  background: color-mix(in srgb, var(--mg-turquoise) 9%, transparent);
+}
+
+.cible-point-repere.selectionnee {
+  border-color: var(--mg-orange);
+  box-shadow: 0 0 0 3px white inset;
+}
+
+.saisie-couple-repere {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  color: var(--mg-bleu);
+  font-family: var(--mg-maths, serif);
+  font-size: clamp(1.65rem, 5vw, 2.5rem);
+  font-variant-numeric: lining-nums tabular-nums;
+  font-weight: 700;
+}
+
+.saisie-couple-repere .indication-clavier-physique {
+  flex-basis: 100%;
+  font-family: var(--mg-texte);
+  font-size: .88rem;
+  font-weight: 400;
+}
+
+.champ-coordonnee {
+  display: inline-grid;
+  place-items: center;
+  min-width: 64px;
+  min-height: 52px;
+  padding: 4px 12px;
+  border: 2px solid var(--mg-ligne);
+  border-radius: 12px;
+  color: var(--mg-texteAttenue);
+  background: var(--mg-papier);
+  font-family: var(--mg-maths, serif);
+  font-size: inherit;
+  font-variant-numeric: lining-nums tabular-nums;
+  font-weight: 700;
+}
+
+button.champ-coordonnee.actif {
+  border-color: var(--mg-orange);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--mg-orange) 14%, transparent);
+}
+
+.champ-coordonnee.rempli {
+  color: var(--mg-bleu);
+  background: color-mix(in srgb, var(--mg-turquoise) 7%, var(--mg-papier));
+}
+
+.separateur-couple {
+  color: var(--mg-texteAttenue);
+}
+
+.saisie-coordonnee-seule {
+  margin-inline: auto;
+}
+
+.grille-qcm-repere {
+  width: min(100%, 620px);
+  margin-inline: auto;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  font-family: var(--mg-maths, serif);
+  font-size: 1.15rem;
+  font-variant-numeric: lining-nums tabular-nums;
+}
+
+.precision-placement-repere {
+  max-width: 620px;
+  margin-inline: auto;
+}
+
+.reponse-tableau-repere {
+  color: var(--mg-bleu);
+  font-size: 1.35rem;
+}
+
+.etapes-repere {
+  display: grid;
+  gap: 10px;
+}
+
+.etape-aide-repere {
+  overflow: hidden;
+  border: 1px solid var(--mg-ligne);
+  border-radius: 14px;
+  background: var(--mg-fond-doux);
+}
+
+.etape-aide-repere summary {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  color: var(--mg-bleu);
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.etape-aide-repere summary span,
+.entete-cours-repere span {
+  display: grid;
+  flex: 0 0 32px;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  color: white;
+  background: var(--mg-turquoise);
+  font-weight: 800;
+}
+
+.etape-aide-repere p {
+  margin: 0;
+  padding: 0 14px 14px 52px;
+}
+
+.panneau-reperage-plan .repere-cartesien-v2 {
+  width: min(100%, 580px);
+}
+
+.repere-aide {
+  padding: 6px 10px;
+  border: 1px solid var(--mg-ligne);
+  border-radius: 14px;
+  background: white;
+}
+
+.methode-repere,
+.diagnostic-repere {
+  padding: 14px 16px;
+  border-radius: 0 12px 12px 0;
+  background: var(--mg-fond-doux);
+}
+
+.methode-repere {
+  display: grid;
+  gap: 8px;
+  border-left: 5px solid var(--mg-turquoise);
+}
+
+.methode-repere p,
+.diagnostic-repere {
+  margin: 0;
+}
+
+.diagnostic-repere {
+  border-left: 5px solid var(--mg-orange);
+}
+
+.legende-correction-repere {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px 18px;
+  font-weight: 800;
+}
+
+.legende-point-choisi {
+  color: var(--mg-erreur);
+}
+
+.legende-point-attendu {
+  color: var(--mg-reussite);
+}
+
+.carte-cours-repere {
+  display: grid;
+  gap: 12px;
+}
+
+.carte-cours-repere p {
+  margin: 0;
+}
+
+.entete-cours-repere {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+
+.entete-cours-repere h3 {
+  margin: 0;
+  font-size: clamp(1.25rem, 4vw, 1.75rem);
+}
+
+.lexique-repere {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.lexique-repere p {
+  display: grid;
+  gap: 3px;
+  padding: 10px;
+  border: 1px solid var(--mg-ligne);
+  border-radius: 12px;
+  background: var(--mg-fond-doux);
+}
+
+.lexique-repere strong {
+  color: var(--mg-bleu);
+}
+
+.methode-cours-repere {
+  display: grid;
+  gap: 7px;
+  margin: 0;
+  padding-left: 24px;
+}
+
+.ordre-coordonnees {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 10px;
+  padding: 10px;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--mg-turquoise) 9%, white);
+  text-align: center;
+}
+
+.ordre-coordonnees b {
+  color: var(--mg-orange);
+}
+
+.mini-cas-axes {
+  display: grid;
+  gap: 8px;
+  padding: 10px;
+  border: 1px solid var(--mg-ligne);
+  border-radius: 14px;
+  background: var(--mg-fond-doux);
+}
+
+.mini-cas-axes h4,
+.mini-cas-axes .repere-cartesien-v2 {
+  margin: 0;
+}
+
+.mini-cas-axes .repere-cartesien-v2 {
+  width: min(100%, 430px);
+}
+
+@media (max-width: 620px) {
+  .repere-cartesien-v2 {
+    width: min(100%, 320px);
+  }
+
+  .repere-version-large {
+    display: none;
+  }
+
+  .repere-version-mobile {
+    display: block;
+  }
+
+  .grille-qcm-repere {
+    grid-template-columns: 1fr;
+  }
+
+  .cible-point-repere {
+    width: 44px;
+    height: 44px;
+  }
+
+  .champ-coordonnee {
+    min-width: 58px;
+    min-height: 48px;
+    padding-inline: 9px;
+  }
+
+  .lexique-repere {
+    grid-template-columns: 1fr;
+    font-size: .92rem;
+  }
+
+  .lexique-repere p {
+    grid-template-columns: 1fr 1fr;
+    padding: 8px 10px;
+  }
+
+  .ordre-coordonnees {
+    gap: 6px;
+    font-size: .9rem;
+  }
+}
+
+@media (max-width: 360px) {
+  .carte-question-repere {
+    gap: 8px;
+  }
+
+  .carte-question-repere h1 {
+    font-size: clamp(1.22rem, 6vw, 1.55rem);
+  }
+
+  .saisie-couple-repere {
+    gap: 5px;
+    font-size: 1.55rem;
+  }
+
+  .panneau-reperage-plan .repere-cartesien-v2 {
+    width: 100%;
+  }
+}
+
 .ecran-pret {
   width: min(100% - 32px, 560px);
   min-height: 100vh;

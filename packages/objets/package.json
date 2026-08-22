@@ -27,6 +27,7 @@
     "./bandes-fractions-rail": "./src/bandes-fractions-rail.js",
     "./numeration-decimale": "./src/numeration-decimale.js",
     "./correspondances-decimales": "./src/correspondances-decimales.js",
-    "./droite-graduee": "./src/droite-graduee.js"
+    "./droite-graduee": "./src/droite-graduee.js",
+    "./repere-cartesien": "./src/repere-cartesien.js"
   }
 }

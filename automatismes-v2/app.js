@@ -3,7 +3,7 @@ import {
   COULEURS_RANGS_NUMERATION_DECIMALE,
   RAYONS,
   TYPOGRAPHIE,
-} from "../packages/charte/src/charte.js?v=44";
+} from "../packages/charte/src/charte.js?v=46";
 import {
   avancerFractionAide,
   avancerCorrespondanceAide,
@@ -18,6 +18,9 @@ import {
   lireConfiguration,
   nombreReussites,
   NOTION_ECRITURES_MULTIPLES_NOMBRE,
+  NOTION_DROITE_GRADUEE,
+  NOTION_LIRE_COORDONNEES_POINT,
+  NOTION_PLACER_POINT_REPERE,
   NOTION_DECIMAL_VERS_FRACTION,
   NOTION_FRACTION_VERS_DECIMAL,
   NOTION_NC01,
@@ -39,32 +42,35 @@ import {
   saisirChiffre,
   tournerSolide,
   validerReponse,
-} from "./src/etat-lecteur.js?v=45";
+} from "./src/etat-lecteur.js?v=46";
 import {
   TYPE_REPONSE_DEUX_ENTIERS,
+  TYPE_REPONSE_DEUX_ENTIERS_RELATIFS,
   TYPE_REPONSE_ENTIER_NATUREL,
   TYPE_REPONSE_FRACTION_EQUIVALENTE,
   TYPE_REPONSE_NOMBRE_DECIMAL,
   TYPE_REPONSE_CHOIX_UNIQUE,
   TYPE_REPONSE_SELECTION_MULTIPLE,
-} from "../packages/contrats/src/question-v2.js?v=44";
+} from "../packages/contrats/src/question-v2.js?v=46";
 import {
   connaitNotionLecteur,
   obtenirNotionLecteur,
   RENDU_CARRES,
   RENDU_DIVISIBILITE,
   RENDU_ECRITURES_MULTIPLES,
+  RENDU_DROITE_GRADUEE,
+  RENDU_REPERAGE_PLAN,
   RENDU_FRACTIONS_DECIMAUX,
   RENDU_SOLIDE,
   RENDU_VOLUME,
   NOTION_FRACTIONS_SIMPLES_DECIMAUX,
-} from "./src/registre-lecteur.js?v=45";
+} from "./src/registre-lecteur.js?v=46";
 import {
   DOMAINES_AUTOMATISMES,
   MICRO_NOTIONS_AUTOMATISMES,
   normaliserIdentifiantMicroNotion,
-} from "../packages/automatismes/src/identifiants.js?v=44";
-import { COURS_SOLIDES_USUELS } from "../packages/automatismes/src/espace-et-geometrie/solides-usuels/reconnaissance.js?v=44";
+} from "../packages/automatismes/src/identifiants.js?v=46";
+import { COURS_SOLIDES_USUELS } from "../packages/automatismes/src/espace-et-geometrie/solides-usuels/reconnaissance.js?v=46";
 import {
   creerCone,
   creerCube,
@@ -73,14 +79,14 @@ import {
   creerPrisme,
   creerPyramide,
   dessinerSolide,
-} from "../packages/objets/src/solides.js?v=44";
+} from "../packages/objets/src/solides.js?v=46";
 import {
   ACTION_TOUCHE_EFFACER,
   ACTION_TOUCHE_SAISIR,
   ACTION_TOUCHE_VALIDER,
   obtenirDispositionClavier,
-} from "../packages/objets/src/clavier.js?v=44";
-import { formulationCritereDivisibilite } from "../packages/automatismes/src/nombres-et-calculs/criteres-divisibilite/critere-precis.js?v=44";
+} from "../packages/objets/src/clavier.js?v=46";
+import { formulationCritereDivisibilite } from "../packages/automatismes/src/nombres-et-calculs/criteres-divisibilite/critere-precis.js?v=46";
 import {
   caseVide,
   difference,
@@ -97,36 +103,41 @@ import {
   variable,
   versHtmlEgalitesAlignees,
   versHtmlSemantique,
-} from "../packages/objets/src/expressions.js?v=44";
+} from "../packages/objets/src/expressions.js?v=46";
 import {
   dessinerCarreQuadrille,
-} from "../packages/objets/src/carre-quadrille.js?v=44";
+} from "../packages/objets/src/carre-quadrille.js?v=46";
 import {
   dessinerDoubleDroiteGraduee,
   dessinerDroiteGraduee,
-} from "../packages/objets/src/droite-graduee.js?v=44";
-import { dessinerGrilleFraction } from "../packages/objets/src/fractions.js?v=44";
-import { dessinerBandesFractionnairesSurRailDecimal } from "../packages/objets/src/bandes-fractions-rail.js?v=45";
+} from "../packages/objets/src/droite-graduee.js?v=46";
+import {
+  dessinerRepereCartesien,
+  positionDansRepere,
+} from "../packages/objets/src/repere-cartesien.js?v=46";
+import { dessinerGrilleFraction } from "../packages/objets/src/fractions.js?v=46";
+import { dessinerBandesFractionnairesSurRailDecimal } from "../packages/objets/src/bandes-fractions-rail.js?v=46";
 import {
   dessinerConversionRangsNumerationDecimale,
   dessinerEchangeRangsNumerationDecimale,
   dessinerMaterielNumerationDecimale,
   dessinerTableauNumerationDecimale,
-} from "../packages/objets/src/numeration-decimale.js?v=45";
+} from "../packages/objets/src/numeration-decimale.js?v=46";
 import {
   dessinerDemiAvecDixiemes,
   dessinerReorganisationCentiemes,
-} from "../packages/objets/src/correspondances-decimales.js?v=45";
+} from "../packages/objets/src/correspondances-decimales.js?v=46";
 import {
   construireDonneesTableauDepuisFraction,
   formaterFractionEnDecimal,
+  formaterFractionEnDecimalSignee,
   reduireFraction,
-} from "../packages/objets/src/fractions-decimaux.js?v=44";
+} from "../packages/objets/src/fractions-decimaux.js?v=46";
 import {
   diagnostiquerDecimalVersNumerateur,
   diagnostiquerFractionLibre,
   diagnostiquerFractionVersDecimal,
-} from "./src/diagnostic-fractions-decimaux.js?v=44";
+} from "./src/diagnostic-fractions-decimaux.js?v=46";
 import {
   FAMILLE_CHAINE_EGALITES,
   FAMILLE_FRACTION_REPERE_POURCENTAGE,
@@ -136,7 +147,24 @@ import {
   FAMILLE_UNITE_DEPASSEMENT,
   formaterPourcentageEnDecimal,
   lirePourcentageQuestion,
-} from "../packages/automatismes/src/nombres-et-calculs/ecritures-multiples-nombre/questions.js?v=44";
+} from "../packages/automatismes/src/nombres-et-calculs/ecritures-multiples-nombre/questions.js?v=46";
+import {
+  FAMILLE_DIAGNOSTIC_COORDONNEES,
+  FAMILLE_IDENTIFIER_POINT,
+  FAMILLE_LIRE_ABSCISSE_REPERE,
+  FAMILLE_LIRE_COORDONNEES,
+  FAMILLE_LIRE_ORDONNEE,
+  FAMILLE_PLACER_POINT_REPERE,
+  decoderCoordonnee,
+  encoderCoordonnee,
+  formaterCouple,
+  formaterEntierRepere,
+} from "../packages/automatismes/src/espace-et-geometrie/reperage-plan/questions.js?v=46";
+import {
+  diagnostiquerChoixQcmRepere,
+  diagnostiquerCoordonneeSeule,
+  diagnostiquerCoupleRepere,
+} from "./src/diagnostic-reperage-plan.js?v=46";
 
 const MICRO_NOTION_FRACTION_VERS_DECIMAL =
   MICRO_NOTIONS_AUTOMATISMES.FRACTION_VERS_DECIMAL;
@@ -196,7 +224,11 @@ const DOMAINES_MENU = Object.freeze([
   Object.freeze({
     id: DOMAINES_AUTOMATISMES.GE,
     nom: "Espace et géométrie",
-    notions: Object.freeze([]),
+    notions: Object.freeze([
+      NOTION_DROITE_GRADUEE,
+      NOTION_LIRE_COORDONNEES_POINT,
+      NOTION_PLACER_POINT_REPERE,
+    ]),
   }),
   Object.freeze({
     id: DOMAINES_AUTOMATISMES.DS,
@@ -231,6 +263,18 @@ const LIBELLES_MODULES_MENU = Object.freeze({
     titre: "Un nombre, plusieurs écritures",
     precision: "Décimal, fraction et pourcentage",
   }),
+  [NOTION_DROITE_GRADUEE]: Object.freeze({
+    titre: "Droite graduée",
+    precision: "Lire une abscisse et placer un point",
+  }),
+  [NOTION_LIRE_COORDONNEES_POINT]: Object.freeze({
+    titre: "Lire les coordonnées d'un point",
+    precision: "Abscisse, ordonnée et couple",
+  }),
+  [NOTION_PLACER_POINT_REPERE]: Object.freeze({
+    titre: "Placer un point dans un repère",
+    precision: "Coordonnées entières",
+  }),
 });
 
 function identifiantNotionContexte() {
@@ -258,6 +302,7 @@ function estReponseNumerique(question) {
   return [
     TYPE_REPONSE_ENTIER_NATUREL,
     TYPE_REPONSE_DEUX_ENTIERS,
+    TYPE_REPONSE_DEUX_ENTIERS_RELATIFS,
     TYPE_REPONSE_NOMBRE_DECIMAL,
     TYPE_REPONSE_FRACTION_EQUIVALENTE,
   ]
@@ -424,6 +469,15 @@ function rendreIconeNombresCalculs() {
   </svg>`;
 }
 
+function rendreIconeGeometrie() {
+  return `<svg viewBox="0 0 36 36" focusable="false">
+    <rect x="3.5" y="3.5" width="29" height="29" rx="4.5" fill="#f5fbff" stroke="#173a5e" stroke-width="1.3"/>
+    <path d="M8 27 18 8l10 19Z" fill="none" stroke="#08aaa5" stroke-width="2" stroke-linejoin="round"/>
+    <path d="M12.2 27v-4.2h4.2" fill="none" stroke="#f58220" stroke-width="1.7"/>
+    <circle cx="18" cy="8" r="2" fill="#0b67b2"/>
+  </svg>`;
+}
+
 function rendreIconeCalculatriceBarree() {
   return `<svg class="dnb-launch-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
     <rect x="6" y="2.8" width="12.4" height="18.4" rx="2.6" fill="none" stroke="currentColor" stroke-width="1.7"/>
@@ -447,9 +501,9 @@ function rendreDomainesMenu() {
       const selectionnee = nombreSelectionne > 0;
       const complete = nombreSelectionne === domaine.notions.length;
       return `<details class="theme-group ${selectionnee ? "has-selection" : ""} ${complete ? "is-complete" : ""}"
-        data-theme="numbers" open>
+        data-theme="${echapper(domaine.id)}" open>
         <summary class="theme-summary">
-          <span class="theme-icon" aria-hidden="true">${rendreIconeNombresCalculs()}</span>
+          <span class="theme-icon" aria-hidden="true">${domaine.id === DOMAINES_AUTOMATISMES.GE ? rendreIconeGeometrie() : rendreIconeNombresCalculs()}</span>
           <span class="theme-name">${echapper(domaine.nom)}</span>
           <span class="theme-count">${nombreSelectionne} / ${domaine.notions.length} <span class="theme-count-label">sélectionné${nombreSelectionne > 1 ? "s" : ""}</span></span>
           <span class="theme-chevron" aria-hidden="true"></span>
@@ -708,6 +762,83 @@ function diagnosticErreurFractions() {
   return null;
 }
 
+function diagnosticErreurDroite() {
+  const question = questionCourante(etat);
+  if (
+    !question
+    || question.classement.notion !== NOTION_DROITE_GRADUEE
+    || etat.validation?.juste !== false
+    || etat.validation.omise
+  ) return null;
+  const bloc = blocDroiteGraduee(question);
+  if (familleQuestion(question) === "placer-point") {
+    const choisi = indiceChoisiDroite();
+    const attendu = Number(question.reponse.attendus[0].slice(2));
+    if (choisi !== null && Math.abs(choisi - attendu) === 1) {
+      return { message: "Tu as choisi la graduation voisine. Vérifie ton point de départ avant de recompter les intervalles." };
+    }
+    return { message: "Retrouve le pas, puis repars de la valeur écrite la plus proche." };
+  }
+  if (question.reponse.type !== TYPE_REPONSE_NOMBRE_DECIMAL || etat.saisie === "") return null;
+  const saisie = Number(etat.saisie.replace("−", "-").replace(",", "."));
+  const attendu = question.reponse.attendu.numerateur / question.reponse.attendu.denominateur;
+  const pas = bloc.pas.numerateur / bloc.pas.denominateur;
+  if (attendu < 0 && Math.abs(saisie + attendu) < 1e-9) {
+    return { message: "La distance est bonne, mais le point est à gauche de 0 : il faut conserver le signe moins." };
+  }
+  if (Math.abs(Math.abs(saisie - attendu) - pas) < 1e-9) {
+    return { message: "Tu es décalé d’une graduation. Compte les intervalles à partir de la valeur connue, sans compter le trait de départ." };
+  }
+  if (familleQuestion(question) === "determiner-pas") {
+    const ecartIndices = bloc.etiquettes[1] - bloc.etiquettes[0];
+    const ecartValeurs = ecartIndices * pas;
+    if (Math.abs(saisie - ecartValeurs) < 1e-9) {
+      return { message: `Tu as trouvé l’écart total. Il faut encore le partager entre les ${ecartIndices} intervalles.` };
+    }
+  }
+  return { message: "Ne suppose pas que le pas vaut 1 : compare les deux valeurs écrites et compte les intervalles qui les séparent." };
+}
+
+function diagnosticErreurReperagePlan() {
+  const question = questionCourante(etat);
+  if (
+    !question
+    || ![NOTION_LIRE_COORDONNEES_POINT, NOTION_PLACER_POINT_REPERE]
+      .includes(question.classement.notion)
+    || etat.validation?.juste !== false
+    || etat.validation.omise
+  ) return null;
+  const bloc = blocRepereCartesien(question);
+  if (!bloc) return null;
+  const cible = question.classement.notion === NOTION_PLACER_POINT_REPERE
+    ? decoderCoordonnee(question.reponse.attendus[0])
+    : bloc.points?.find((point) => point.nom === bloc.nomPoint);
+  if (!cible) return null;
+
+  if (familleQuestion(question) === FAMILLE_DIAGNOSTIC_COORDONNEES) {
+    return diagnostiquerChoixQcmRepere(etat.selection[0], [cible.x, cible.y]);
+  }
+  if (familleQuestion(question) === FAMILLE_LIRE_ABSCISSE_REPERE) {
+    const recu = Number(etat.saisie.replace("−", "-"));
+    return diagnostiquerCoordonneeSeule({ axe: "abscisse", attendu: cible.x, recu });
+  }
+  if (familleQuestion(question) === FAMILLE_LIRE_ORDONNEE) {
+    const recu = Number(etat.saisie.replace("−", "-"));
+    return diagnostiquerCoordonneeSeule({ axe: "ordonnee", attendu: cible.y, recu });
+  }
+  if (question.reponse.type === TYPE_REPONSE_DEUX_ENTIERS_RELATIFS) {
+    const recu = etat.saisies.map((saisie) => Number(saisie.replace("−", "-")));
+    return diagnostiquerCoupleRepere({ attendu: [cible.x, cible.y], recu });
+  }
+  const idChoisi = etat.selection[0];
+  const choisi = familleQuestion(question) === FAMILLE_IDENTIFIER_POINT
+    ? bloc.points?.find((point) => `point-${point.nom.toLowerCase()}` === idChoisi)
+    : decoderCoordonnee(idChoisi);
+  return choisi
+    ? diagnostiquerCoupleRepere({ attendu: [cible.x, cible.y], recu: [choisi.x, choisi.y] })
+    : null;
+}
+
 function rendreRetourValidation() {
   if (etat.erreurValidation) {
     return `<p class="message message-erreur" role="alert"><span class="contenu-message">${echapper(etat.erreurValidation)}</span></p>`;
@@ -719,7 +850,9 @@ function rendreRetourValidation() {
   if (etat.validation.omise) {
     return '<p class="message message-erreur" role="status"><span class="contenu-message"><strong>Pas de réponse.</strong></span></p>';
   }
-  const diagnostic = diagnosticErreurFractions();
+  const diagnostic = diagnosticErreurFractions()
+    ?? diagnosticErreurDroite()
+    ?? diagnosticErreurReperagePlan();
   return `<p class="message message-erreur" role="status"><span class="contenu-message"><strong>À revoir.</strong> ${diagnostic
     ? echapper(diagnostic.message)
     : "Ta réponse reste affichée."}</span></p>`;
@@ -770,7 +903,7 @@ function rendreBlocMathematique(bloc) {
   if (bloc.type === "rationnel") {
     return bloc.ecriture === "fraction"
       ? rendreFractionEmpilee(bloc.numerateur, bloc.denominateur)
-      : `<strong>${echapper(formaterFractionEnDecimal(bloc.numerateur, bloc.denominateur))}</strong>`;
+      : `<strong>${echapper(formaterFractionEnDecimalSignee(bloc.numerateur, bloc.denominateur))}</strong>`;
   }
   return "";
 }
@@ -879,6 +1012,8 @@ function rendreReponseEleve(question) {
   if (etat.validation.omise) return rendreReponseEleveOmise();
   const reponse = question.reponse.type === TYPE_REPONSE_ENTIER_NATUREL
     ? etat.saisie
+    : question.reponse.type === TYPE_REPONSE_DEUX_ENTIERS_RELATIFS
+      ? `(${etat.saisies.join(" ; ")})`
     : [TYPE_REPONSE_DEUX_ENTIERS, TYPE_REPONSE_FRACTION_EQUIVALENTE]
         .includes(question.reponse.type)
       ? etat.saisies.join(
@@ -939,8 +1074,11 @@ function libellesReponseCorrecte(question) {
   if (question.reponse.type === TYPE_REPONSE_DEUX_ENTIERS) {
     return [question.reponse.attendus.join(" × ")];
   }
+  if (question.reponse.type === TYPE_REPONSE_DEUX_ENTIERS_RELATIFS) {
+    return [formaterCouple(...question.reponse.attendus)];
+  }
   if (question.reponse.type === TYPE_REPONSE_NOMBRE_DECIMAL) {
-    return [formaterFractionEnDecimal(
+    return [formaterFractionEnDecimalSignee(
       question.reponse.attendu.numerateur,
       question.reponse.attendu.denominateur,
     )];
@@ -957,6 +1095,7 @@ function rendreReponseCorrecte(question) {
   const reponseNumerique = [
     TYPE_REPONSE_ENTIER_NATUREL,
     TYPE_REPONSE_DEUX_ENTIERS,
+    TYPE_REPONSE_DEUX_ENTIERS_RELATIFS,
     TYPE_REPONSE_NOMBRE_DECIMAL,
   ].includes(question.reponse.type);
   return `<div class="reponses-correction ${reponseNumerique ? "reponses-correction-numerique" : ""}" aria-label="Réponse correcte">
@@ -2198,13 +2337,19 @@ function rendrePaveMathsgo(question) {
     || etat.validation !== null
     || !estReponseNumerique(question)
   ) return "";
-  const profil = question.reponse.type === TYPE_REPONSE_NOMBRE_DECIMAL
-    ? "decimal-positif"
+  const profil = question.reponse.type === TYPE_REPONSE_DEUX_ENTIERS_RELATIFS
+    ? "entier-relatif"
+    : question.reponse.type === TYPE_REPONSE_NOMBRE_DECIMAL
+      ? question.classement.notion === NOTION_DROITE_GRADUEE
+      ? "nombre-decimal"
+      : question.classement.notion === NOTION_LIRE_COORDONNEES_POINT
+        ? "entier-relatif"
+      : "decimal-positif"
     : "entier-naturel";
   const disposition = obtenirDispositionClavier(profil);
   const touches = disposition.touches.map((touche) => {
     const attributAction = touche.action === ACTION_TOUCHE_SAISIR
-      ? `${touche.valeur === "," ? 'data-action="caractere"' : 'data-action="chiffre"'} data-value="${echapper(touche.valeur)}"`
+      ? `${[",", "−"].includes(touche.valeur) ? 'data-action="caractere"' : 'data-action="chiffre"'} data-value="${echapper(touche.valeur)}"`
       : touche.action === ACTION_TOUCHE_EFFACER
         ? 'data-action="effacer-saisie"'
         : touche.action === ACTION_TOUCHE_VALIDER
@@ -4960,11 +5105,664 @@ function rendreCoursEcrituresMultiples() {
   });
 }
 
+function blocDroiteGraduee(question) {
+  return question.enonce.find((bloc) => bloc.type === "droite-graduee");
+}
+
+function blocRepereCartesien(question) {
+  return question?.enonce?.find((bloc) => bloc.type === "repere-cartesien") ?? null;
+}
+
+function valeurDroite(bloc, indice) {
+  return bloc.depart.numerateur / bloc.depart.denominateur
+    + indice * bloc.pas.numerateur / bloc.pas.denominateur;
+}
+
+function texteValeurDroite(bloc, indice) {
+  const denominateur = bloc.depart.denominateur * bloc.pas.denominateur;
+  const numerateur = bloc.depart.numerateur * bloc.pas.denominateur
+    + indice * bloc.pas.numerateur * bloc.depart.denominateur;
+  return formaterFractionEnDecimalSignee(numerateur, denominateur);
+}
+
+function indiceChoisiDroite() {
+  const correspondance = /^g-(\d+)$/.exec(etat.selection[0] ?? "");
+  return correspondance ? Number(correspondance[1]) : null;
+}
+
+function rendreDroiteQuestion(bloc, {
+  interactive = false,
+  montrerAttendu = false,
+  montrerChoix = false,
+  classe = "",
+} = {}) {
+  const graduations = Array.from(
+    { length: bloc.nombreIntervalles + 1 },
+    (_, indice) => valeurDroite(bloc, indice),
+  );
+  const etiquettes = Object.fromEntries(
+    graduations.map((valeur, indice) => [
+      String(valeur),
+      bloc.etiquettes.includes(indice) ? texteValeurDroite(bloc, indice) : "",
+    ]),
+  );
+  const question = questionCourante(etat);
+  const attendu = question?.reponse.attendus?.[0]?.startsWith("g-")
+    ? Number(question.reponse.attendus[0].slice(2))
+    : bloc.point?.indice;
+  const choisi = indiceChoisiDroite();
+  const pointsDonnes = bloc.points ?? (bloc.point ? [bloc.point] : []);
+  const couleursPoints = [COULEURS.bleu, COULEURS.orange, COULEURS.turquoise];
+  const points = pointsDonnes.length > 0
+    ? pointsDonnes.map((point, index) => ({
+      valeur: valeurDroite(bloc, point.indice),
+      etiquette: point.nom,
+      position: point.position ?? (index % 2 === 0 ? "dessus" : "dessous"),
+      couleur: couleursPoints[index % couleursPoints.length],
+    }))
+    : [
+      ...(montrerChoix && choisi !== null && choisi !== attendu
+        ? [{ valeur: valeurDroite(bloc, choisi), etiquette: "Ton point", couleur: COULEURS.erreur, position: "dessus" }]
+        : []),
+      ...(montrerAttendu && attendu !== undefined
+        ? [{ valeur: valeurDroite(bloc, attendu), etiquette: question?.enonce[0].contenu.match(/point ([A-Z])/)?.[1] ?? "Point attendu", couleur: COULEURS.reussite, position: "dessus" }]
+        : montrerChoix && choisi !== null
+          ? [{ valeur: valeurDroite(bloc, choisi), etiquette: "Ton point", position: "dessus" }]
+          : []),
+    ];
+  const rendreVersion = (largeur, version) => {
+    const dessin = dessinerDroiteGraduee({
+      min: graduations[0],
+      max: graduations.at(-1),
+      graduations,
+      etiquettes,
+      points,
+      largeur,
+      tailleNombres: version === "mobile" ? 17 : 18,
+      tailleEtiquette: version === "mobile" ? 19 : 20,
+      stylePoints: "trait",
+      coteNombres: "dessous",
+      description: "Droite graduée avec deux valeurs de référence",
+    });
+    const commandes = interactive
+      ? graduations.map((valeur, indice) => {
+        const selectionne = choisi === indice;
+        const x = 100 * (dessin.geometrie.xGauche
+          + indice * (dessin.geometrie.xDroite - dessin.geometrie.xGauche) / bloc.nombreIntervalles) / dessin.largeur;
+        const y = 100 * dessin.geometrie.yAxe / dessin.hauteur;
+        return `<button class="cible-graduation ${selectionne ? "selectionnee" : ""}" type="button"
+          data-action="choix" data-id="g-${indice}" role="radio" aria-checked="${selectionne}"
+          aria-label="Placer le point sur la graduation ${indice + 1}"
+          style="left:${x}%;top:${y}%"></button>`;
+      }).join("")
+      : "";
+    return `<div class="droite-version-${version}">${dessin.svg}${commandes}</div>`;
+  };
+  return `<div class="droite-graduee-interactive ${classe}" role="${interactive ? "radiogroup" : "img"}"
+    aria-label="${interactive ? "Choisis une graduation" : "Droite graduée"}">
+    ${rendreVersion(760, "large")}${rendreVersion(350, "mobile")}
+  </div>`;
+}
+
+function rendreQuestionDroiteGraduee() {
+  const question = questionCourante(etat);
+  const bloc = blocDroiteGraduee(question);
+  const placement = familleQuestion(question) === "placer-point";
+  const qcm = question.reponse.type === TYPE_REPONSE_CHOIX_UNIQUE && !placement;
+  const afficherAttendu = !estEntrainement() && etat.reponseRevelee && placement;
+  const valeur = estEntrainement()
+    ? etat.saisie
+    : etat.reponseRevelee && question.reponse.attendu
+      ? formaterFractionEnDecimalSignee(question.reponse.attendu.numerateur, question.reponse.attendu.denominateur)
+      : "";
+  const zone = placement
+    ? `${rendreDroiteQuestion(bloc, { interactive: estEntrainement() && etat.validation === null, montrerAttendu: afficherAttendu, montrerChoix: estEntrainement() && indiceChoisiDroite() !== null })}
+      <p class="precision">${estEntrainement() ? "Touche une graduation : le point s’y aimante." : "Indiquez la graduation choisie."}</p>`
+    : qcm
+      ? `${rendreDroiteQuestion(bloc)}<div class="grille-choix grille-qcm-droite" role="radiogroup">${rendreChoix(question)}</div>`
+      : `${rendreDroiteQuestion(bloc)}<section class="saisie-numerique" aria-label="Réponse numérique">
+          <span class="libelle-saisie-droite">${familleQuestion(question) === "determiner-pas" ? "pas" : `x<sub>${echapper(bloc.point?.nom ?? "")}</sub>`} =</span>
+          <output class="afficheur-reponse ${valeur ? "rempli" : ""}">${echapper(valeur || (estEntrainement() ? "…" : "?"))}</output>
+          ${estEntrainement() && etat.validation === null ? '<p class="indication-clavier-physique">Chiffres · virgule · signe moins si nécessaire · Entrée pour valider</p>' : ""}
+        </section>`;
+  const notationFraction = texteBloc(question, "notation") === "fraction";
+  const consigne = texteBloc(question, "consigne");
+  const consigneFraction = notationFraction
+    ? consigne.replace(/(−?\d+)\/(\d+)/, (_, numerateur, denominateur) => rendreFractionEmpilee(numerateur, denominateur, { classe: "fraction-question-droite" }))
+    : echapper(consigne);
+  const carteQuestion = `<main class="carte-question carte-question-droite famille-${echapper(familleQuestion(question))}">
+    <p class="etiquette-notion">${echapper(nomNotion())}</p>
+    <h1>${consigneFraction}</h1>
+    ${zone}
+    ${estEntrainement() ? rendreZoneRetour() : '<div class="zone-retour" aria-hidden="true"></div>'}
+  </main>`;
+  return rendreCoqueLecteur(question, carteQuestion);
+}
+
+function rendreAideDroiteGraduee(question) {
+  if (!etat.aideOuverte) return "";
+  const bloc = blocDroiteGraduee(question);
+  const titres = ["Repérer", "Compter", "Trouver le pas", "Se déplacer"];
+  const etapes = question.aide.blocs.map((element, index) => `<details class="etape-aide-droite" ${index === 0 ? "open" : ""}><summary><span>${index + 1}</span>${titres[index] ?? "Contrôler"}</summary><p>${echapper(element.contenu)}</p></details>`).join("");
+  const debut = bloc.etiquettes[0];
+  const fin = bloc.etiquettes[1];
+  const droiteExpliquee = rendreDroiteCoursAnnotee({
+    depart: [bloc.depart.numerateur, bloc.depart.denominateur],
+    pas: [bloc.pas.numerateur, bloc.pas.denominateur],
+    intervalles: bloc.nombreIntervalles,
+    etiquettes: bloc.etiquettes,
+    point: bloc.point,
+  }, [{ type: "accolade", debut, fin, texte: "deux valeurs connues" }, { type: "intervalles", debut, fin }]);
+  let railFraction = "";
+  if (texteBloc(question, "notation") === "fraction") {
+    const placement = familleQuestion(question) === "placer-point";
+    const indice = placement ? Number(question.reponse.attendus[0]?.slice(2)) : bloc.point?.indice;
+    const denominateur = bloc.pas.denominateur;
+    const numerateur = Math.max(1, Math.round(Math.abs(valeurDroite(bloc, indice)) * denominateur));
+    railFraction = `<section class="rail-fraction-aide-droite"><h3>Construire les quarts</h3>${rendreBandesRailCours(placement ? numerateur : 1, denominateur, "pieces", placement, 600, { largeurMobile: 330, afficherReperesIntermediairesCours: true })}<p>${placement ? "Regroupe d’abord 4 quarts pour former 1 unité, puis place les quarts restants." : "Une unité est partagée en 4 parts égales : chaque intervalle vaut un quart."}</p></section>`;
+  }
+  return rendreCadrePanneau({
+    type: "aide",
+    surtitre: "Un indice à la fois",
+    titre: "Lire l’échelle sans deviner",
+    contenu: `${droiteExpliquee}<div class="etapes-droite">${etapes}</div>${railFraction}${rendreAccesCoursDepuisAide()}`,
+    classes: "panneau-droite-graduee",
+  });
+}
+
+function rendreCorrectionDroiteGraduee(question) {
+  if (!etat.correctionOuverte) return "";
+  const bloc = blocDroiteGraduee(question);
+  const placement = familleQuestion(question) === "placer-point";
+  const explication = question.correction.map((element) => `<p>${echapper(element.contenu)}</p>`).join("");
+  return rendreCadrePanneau({
+    type: "correction",
+    surtitre: "Après la réponse",
+    titre: "Correction expliquée",
+    contenu: `${rendreReponseEleve(question)}${rendreDroiteQuestion(bloc, {
+      montrerAttendu: placement,
+      montrerChoix: placement,
+      classe: "droite-correction",
+    })}<div class="methode-droite">${explication}</div><p class="titre-reponse-correcte">Réponse correcte</p>${rendreReponseCorrecte(question)}`,
+    classes: "panneau-droite-graduee",
+  });
+}
+
+function donneesDroiteCours({ depart, pas, intervalles, etiquettes, point }) {
+  return {
+    depart: { numerateur: depart[0], denominateur: depart[1] },
+    pas: { numerateur: pas[0], denominateur: pas[1] },
+    nombreIntervalles: intervalles,
+    etiquettes,
+    ...(point ? { point } : {}),
+  };
+}
+
+function rendreDroiteCoursAnnotee(configuration, annotations = []) {
+  const bloc = donneesDroiteCours(configuration);
+  const graduations = Array.from({ length: bloc.nombreIntervalles + 1 }, (_, indice) => valeurDroite(bloc, indice));
+  const etiquettes = Object.fromEntries(graduations.map((valeur, indice) => [
+    String(valeur), bloc.etiquettes.includes(indice) ? texteValeurDroite(bloc, indice) : "",
+  ]));
+  const points = bloc.point ? [{
+    valeur: valeurDroite(bloc, bloc.point.indice), etiquette: bloc.point.nom,
+    position: bloc.point.position ?? "dessus", couleur: COULEURS.bleu,
+  }] : [];
+  const rendreVersion = (largeur, version) => {
+    const dessin = dessinerDroiteGraduee({
+      min: graduations[0], max: graduations.at(-1), graduations, etiquettes, points,
+      largeur, tailleNombres: version === "mobile" ? 17 : 18,
+      tailleEtiquette: version === "mobile" ? 19 : 20, stylePoints: "trait",
+      coteNombres: "dessous", description: "Droite graduée expliquée étape par étape",
+    });
+    const margeHaut = 58;
+    const margeBas = annotations.some((annotation) => annotation.type === "valeurs") ? 52 : 30;
+    const hauteur = dessin.hauteur + margeHaut + margeBas;
+    const corps = dessin.svg.slice(dessin.svg.indexOf(">") + 1, dessin.svg.lastIndexOf("</svg>"));
+    const x = (indice) => dessin.geometrie.xGauche + indice * (dessin.geometrie.xDroite - dessin.geometrie.xGauche) / bloc.nombreIntervalles;
+    const y = dessin.geometrie.yAxe + margeHaut;
+    const taille = version === "mobile" ? 13 : 16;
+    const textes = (contenu, xTexte, yTexte, couleur = COULEURS.bleu, poids = 700) => `<text x="${xTexte}" y="${yTexte}" text-anchor="middle" font-family="system-ui,sans-serif" font-size="${taille}" font-weight="${poids}" fill="${couleur}">${echapper(contenu)}</text>`;
+    const superpositions = annotations.map((annotation) => {
+      const x1 = x(annotation.debut ?? annotation.indice ?? 0);
+      const x2 = x(annotation.fin ?? annotation.indice ?? 0);
+      if (annotation.type === "accolade") {
+        const yy = y - 31;
+        return `<path d="M ${x1} ${yy + 8} Q ${x1} ${yy} ${x1 + 8} ${yy} L ${x2 - 8} ${yy} Q ${x2} ${yy} ${x2} ${yy + 8}" fill="none" stroke="${COULEURS.turquoise}" stroke-width="3" stroke-linecap="round"/>${textes(annotation.texte, (x1 + x2) / 2, yy - 8, COULEURS.bleu)}`;
+      }
+      if (annotation.type === "intervalles") {
+        return Array.from({ length: annotation.fin - annotation.debut }, (_, rang) => {
+          const gauche = x(annotation.debut + rang);
+          const droite = x(annotation.debut + rang + 1);
+          return `<path d="M ${gauche + 3} ${y + 32} Q ${(gauche + droite) / 2} ${y + 45} ${droite - 3} ${y + 32}" fill="none" stroke="${COULEURS.orange}" stroke-width="2"/>${textes(String(rang + 1), (gauche + droite) / 2, y + 55, COULEURS.orange)}`;
+        }).join("");
+      }
+      if (annotation.type === "sauts") {
+        return Array.from({ length: Math.abs(annotation.fin - annotation.debut) }, (_, rang) => {
+          const sens = annotation.fin >= annotation.debut ? 1 : -1;
+          const gauche = x(annotation.debut + rang * sens);
+          const droite = x(annotation.debut + (rang + 1) * sens);
+          const milieu = (gauche + droite) / 2;
+          return `<path d="M ${gauche} ${y - 14} Q ${milieu} ${y - 48} ${droite} ${y - 14}" fill="none" stroke="${COULEURS.turquoise}" stroke-width="3" stroke-linecap="round"/><path d="M ${droite - sens * 8} ${y - 21} L ${droite} ${y - 14} L ${droite - sens * 2} ${y - 25}" fill="none" stroke="${COULEURS.turquoise}" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>${textes(annotation.texte, milieu, y - 44, COULEURS.bleu)}`;
+        }).join("");
+      }
+      if (annotation.type === "appel") {
+        const tx = x1 + (annotation.decalage ?? 0);
+        return `${textes(annotation.texte, tx, 16, COULEURS.bleu)}<path d="M ${tx} 22 L ${x1} ${y - 12}" fill="none" stroke="${COULEURS.turquoise}" stroke-width="2.5" stroke-linecap="round"/><path d="M ${x1 - 5} ${y - 20} L ${x1} ${y - 12} L ${x1 + 5} ${y - 20}" fill="none" stroke="${COULEURS.turquoise}" stroke-width="2.5"/>`;
+      }
+      if (annotation.type === "valeurs") {
+        return annotation.elements.map((element) => textes(element.texte, x(element.indice), y + 52, element.couleur ?? COULEURS.bleu)).join("");
+      }
+      return "";
+    }).join("");
+    return `<div class="droite-version-${version}"><svg viewBox="0 0 ${largeur} ${hauteur}" width="${largeur}" height="${hauteur}" role="img" aria-label="Droite graduée annotée"><g transform="translate(0 ${margeHaut})">${corps}</g>${superpositions}</svg></div>`;
+  };
+  return `<div class="droite-graduee-interactive droite-cours droite-cours-annotee">${rendreVersion(760, "large")}${rendreVersion(350, "mobile")}</div>`;
+}
+
+function carteCoursDroite(index) {
+  const entete = (numero, titre) => `<header class="entete-cours-droite"><span class="numero-cours">${numero}</span><h3>${titre}</h3></header>`;
+  if (index === 0) return `<article class="carte-cours-droite">${entete(1, "Comprendre les mots")}
+    ${rendreDroiteCoursAnnotee({ depart: [-3, 1], pas: [1, 1], intervalles: 7, etiquettes: [0, 3, 5], point: { nom: "A", indice: 5, position: "dessus" } }, [
+      { type: "appel", indice: 1, texte: "graduation", decalage: -18 },
+      { type: "appel", indice: 3, texte: "origine", decalage: 18 },
+      { type: "intervalles", debut: 1, fin: 2 },
+    ])}
+    <p class="exemple-abscisse">Le point A est placé sur la graduation 2 : <strong>x<sub>A</sub> = 2</strong>.</p>
+    <dl class="lexique-droite"><div><dt>Graduation</dt><dd>un trait sur la droite</dd></div><div><dt>Intervalle</dt><dd>l’espace entre deux traits</dd></div><div><dt>Origine</dt><dd>la graduation 0</dd></div><div><dt>Abscisse</dt><dd>le nombre qui repère un point</dd></div></dl>
+    <p class="definition-cours"><strong>Sens :</strong> les nombres augmentent vers la droite et diminuent vers la gauche.</p></article>`;
+  if (index === 1) return `<article class="carte-cours-droite">${entete(2, "Trouver le pas")}
+    ${rendreDroiteCoursAnnotee({ depart: [-20, 1], pas: [10, 1], intervalles: 6, etiquettes: [0, 4] }, [{ type: "accolade", debut: 0, fin: 4, texte: "écart : 40" }, { type: "intervalles", debut: 0, fin: 4 }])}
+    <ol class="methode-cours-droite"><li><strong>Écart :</strong> 20 − (−20) = 40.</li><li><strong>Intervalles :</strong> on compte 4 espaces.</li><li><strong>Pas :</strong> 40 ÷ 4 = 10.</li></ol>
+    <p class="alerte-droite"><strong>Piège fréquent :</strong> 5 traits délimitent seulement 4 intervalles.</p></article>`;
+  if (index === 2) return `<article class="carte-cours-droite">${entete(3, "Lire une abscisse")}
+    ${rendreDroiteCoursAnnotee({ depart: [-2, 1], pas: [1, 2], intervalles: 8, etiquettes: [0, 4], point: { nom: "B", indice: 7, position: "dessus" } }, [{ type: "sauts", debut: 4, fin: 7, texte: "+ 0,5" }, { type: "valeurs", elements: [{ indice: 4, texte: "0" }, { indice: 5, texte: "0,5" }, { indice: 6, texte: "1" }, { indice: 7, texte: "1,5" }] }])}
+    <ol class="methode-cours-droite"><li>De −2 à 0 : 2 ÷ 4 = <strong>0,5</strong>. C’est le pas.</li><li>Depuis 0, je fais 3 sauts de 0,5 vers la droite.</li></ol>
+    <p class="definition-cours">Donc l’abscisse du point B est 1,5 : on écrit <strong>x<sub>B</sub> = 1,5</strong>.</p></article>`;
+  if (index === 3) return `<article class="carte-cours-droite">${entete(4, "Placer un point")}
+    ${rendreDroiteCoursAnnotee({ depart: [-1, 1], pas: [1, 4], intervalles: 8, etiquettes: [0, 4], point: { nom: "M", indice: 6, position: "dessus" } }, [{ type: "sauts", debut: 4, fin: 6, texte: "+ 0,25" }, { type: "valeurs", elements: [{ indice: 4, texte: "0" }, { indice: 5, texte: "0,25" }, { indice: 6, texte: "0,5" }] }])}
+    <ol class="methode-cours-droite"><li>Le pas vaut <strong>0,25</strong>.</li><li>0,5 = 0 + 2 × 0,25 : je fais 2 sauts vers la droite.</li><li>Je touche la graduation ; le point s’y aimante.</li></ol></article>`;
+  if (index === 4) return `<article class="carte-cours-droite carte-cours-droite-fractions">${entete(5, "Placer une fraction")}
+    <p>Chaque unité est partagée en <strong>4 quarts</strong>. Je place 7 morceaux de <span class="fraction-dans-texte">${rendreFractionEmpilee(1, 4)}</span>.</p>
+    ${rendreBandesRailCours(7, 4, "pieces", true, 720, { largeurMobile: 340, afficherReperesIntermediairesCours: true })}
+    <p class="definition-cours">Les 4 premiers quarts fusionnent en 1 unité. Il reste 3 quarts : ${rendreFractionEmpilee(7, 4)} = 1 + ${rendreFractionEmpilee(3, 4)}.</p>
+    <p class="precision-cours-droite">Le rail aide à construire le nombre ; la réponse se place ensuite sur la droite graduée.</p></article>`;
+  return `<article class="carte-cours-droite">${entete(6, "Changer d’échelle")}
+    ${rendreDroiteCoursAnnotee({ depart: [70, 1], pas: [1, 1], intervalles: 7, etiquettes: [0, 5], point: { nom: "P", indice: 3, position: "dessus" } }, [{ type: "intervalles", debut: 0, fin: 5 }, { type: "sauts", debut: 0, fin: 3, texte: "+ 1" }, { type: "valeurs", elements: [{ indice: 0, texte: "70" }, { indice: 1, texte: "71" }, { indice: 2, texte: "72" }, { indice: 3, texte: "73" }] }])}
+    <p>De 70 à 75, l’écart vaut <strong>75 − 70 = 5</strong>. Il y a 5 intervalles : le pas vaut <strong>5 ÷ 5 = 1</strong>.</p>
+    <p>Le zéro n’est pas dessiné, mais les deux valeurs connues suffisent. Depuis 70, je fais 3 sauts de 1 : <strong>P a pour abscisse 73</strong>.</p>
+    <p class="definition-cours"><strong>Mon contrôle :</strong> sens → écart → intervalles → pas → position.</p></article>`;
+}
+
+function rendreCoursDroiteGraduee() {
+  if (!etat.coursOuvert) return "";
+  const titres = ["Vocabulaire", "Le pas", "Lire", "Placer", "Fractions", "Changer d’échelle"];
+  const total = nombrePagesCours();
+  const derniere = pageCoursCourante === total - 1;
+  const pied = `<nav class="navigation-cours" aria-label="Navigation dans le cours">
+    <button class="bouton-secondaire" type="button" data-action="cours-precedent" ${pageCoursCourante === 0 ? "disabled" : ""}>Précédent</button>
+    <div class="points-cours" aria-label="Page ${pageCoursCourante + 1} sur ${total}">${Array.from({ length: total }, (_, page) => `<span class="${page === pageCoursCourante ? "actif" : ""}"></span>`).join("")}</div>
+    <button class="bouton-principal" type="button" data-action="${derniere ? "fermer-cours" : "cours-suivant"}">${derniere ? "J’ai compris" : "Suivant"}</button>
+  </nav>`;
+  return rendreCadrePanneau({ type: "cours", surtitre: `Cours · ${pageCoursCourante + 1} / ${total}`, titre: titres[pageCoursCourante], contenu: `<div class="cours-une-carte">${carteCoursDroite(pageCoursCourante)}</div>`, pied, classes: "panneau-droite-graduee" });
+}
+
+function cibleRepereQuestion(question) {
+  const bloc = blocRepereCartesien(question);
+  if (!bloc) return null;
+  if (question.classement.notion === NOTION_PLACER_POINT_REPERE) {
+    const coordonnees = decoderCoordonnee(question.reponse.attendus[0]);
+    return coordonnees ? { nom: bloc.nomPoint, ...coordonnees } : null;
+  }
+  return bloc.points?.find((point) => point.nom === bloc.nomPoint) ?? null;
+}
+
+function pointChoisiRepere(question) {
+  const bloc = blocRepereCartesien(question);
+  const id = etat.selection[0];
+  if (!bloc || !id) return null;
+  if (familleQuestion(question) === FAMILLE_IDENTIFIER_POINT) {
+    return bloc.points?.find((point) => `point-${point.nom.toLowerCase()}` === id) ?? null;
+  }
+  if (familleQuestion(question) === FAMILLE_DIAGNOSTIC_COORDONNEES) {
+    const cible = cibleRepereQuestion(question);
+    if (!cible) return null;
+    const variantes = {
+      correct: { x: cible.x, y: cible.y },
+      inversion: { x: cible.y, y: cible.x },
+      "signe-abscisse": { x: -cible.x, y: cible.y },
+      "signe-ordonnee": { x: cible.x, y: -cible.y },
+    };
+    return variantes[id] ? { nom: cible.nom, ...variantes[id] } : null;
+  }
+  const coordonnees = decoderCoordonnee(id);
+  return coordonnees ? { nom: bloc.nomPoint, ...coordonnees } : null;
+}
+
+function optionsPointsRepere(question, {
+  correction = false,
+  attenduVisible = false,
+} = {}) {
+  const bloc = blocRepereCartesien(question);
+  const cible = cibleRepereQuestion(question);
+  const choisi = pointChoisiRepere(question);
+  if (!bloc) return [];
+  if (question.classement.notion === NOTION_LIRE_COORDONNEES_POINT) {
+    if (familleQuestion(question) !== FAMILLE_IDENTIFIER_POINT || !correction) {
+      return (bloc.points ?? []).map((point) => ({ ...point, role: "donne" }));
+    }
+    return (bloc.points ?? []).map((point) => ({
+      ...point,
+      role: point.nom === cible?.nom
+        ? "attendu"
+        : point.nom === choisi?.nom && point.nom !== cible?.nom
+          ? "choisi"
+          : "donne",
+    }));
+  }
+  const points = [];
+  if (choisi && (!attenduVisible || choisi.x !== cible?.x || choisi.y !== cible?.y)) {
+    points.push({ nom: "T", x: choisi.x, y: choisi.y, role: correction ? "choisi" : "donne", afficherNom: false });
+  }
+  if (cible && attenduVisible) points.push({ ...cible, role: "attendu" });
+  return points;
+}
+
+function rendreRepereV2(bloc, {
+  question = null,
+  interactive = false,
+  identification = false,
+  correction = false,
+  attenduVisible = false,
+  points = null,
+  guides = [],
+  cheminPlacement = null,
+  classe = "",
+  description = "Repère orthogonal gradué de 1 en 1",
+} = {}) {
+  const pointsAffiches = points ?? (question
+    ? optionsPointsRepere(question, { correction, attenduVisible })
+    : []);
+  const rendreVersion = (largeur, version) => {
+    const dessin = dessinerRepereCartesien({
+      xMin: bloc.xMin,
+      xMax: bloc.xMax,
+      yMin: bloc.yMin,
+      yMax: bloc.yMax,
+      largeur,
+      points: pointsAffiches,
+      guides,
+      cheminPlacement,
+      description,
+    });
+    const commandesIdentification = identification && question
+      ? (bloc.points ?? []).map((point) => {
+        const position = positionDansRepere(point.x, point.y, dessin.geometrie);
+        const selectionne = etat.selection.includes(`point-${point.nom.toLowerCase()}`);
+        return `<button class="cible-point-repere ${selectionne ? "selectionnee" : ""}" type="button"
+          data-action="choix" data-id="point-${point.nom.toLowerCase()}" role="radio"
+          aria-checked="${selectionne}" aria-label="Choisir le point ${point.nom}"
+          style="left:${100 * position.x / dessin.largeur}%;top:${100 * position.y / dessin.hauteur}%"></button>`;
+      }).join("")
+      : "";
+    const surfacePlacement = interactive && question
+      ? `<button class="surface-placement-repere" type="button" data-action="placer-repere"
+          data-x-min="${bloc.xMin}" data-x-max="${bloc.xMax}"
+          data-y-min="${bloc.yMin}" data-y-max="${bloc.yMax}"
+          aria-label="Zone de placement. Touchez une intersection ou utilisez les quatre flèches du clavier."
+          style="left:${100 * dessin.geometrie.xGauche / dessin.largeur}%;top:${100 * dessin.geometrie.yHaut / dessin.hauteur}%;width:${100 * (dessin.geometrie.xDroite - dessin.geometrie.xGauche) / dessin.largeur}%;height:${100 * (dessin.geometrie.yBas - dessin.geometrie.yHaut) / dessin.hauteur}%"></button>`
+      : "";
+    return `<div class="repere-version-${version}">${dessin.svg}${commandesIdentification}${surfacePlacement}</div>`;
+  };
+  return `<div class="repere-cartesien-v2 ${classe}" role="${interactive || identification ? "group" : "img"}"
+    aria-label="${interactive ? "Place le point dans le repère" : identification ? "Choisis un point du repère" : "Repère orthogonal"}">
+    ${rendreVersion(680, "large")}${rendreVersion(320, "mobile")}
+  </div>`;
+}
+
+function rendreSaisieCoupleRepere(question, cible) {
+  const valeurs = estEntrainement()
+    ? etat.saisies
+    : etat.reponseRevelee
+      ? question.reponse.attendus.map(String)
+      : ["", ""];
+  const champ = (index, nom) => estEntrainement()
+    ? `<button class="champ-coordonnee ${etat.champSaisieActif === index ? "actif" : ""} ${valeurs[index] ? "rempli" : ""}"
+        type="button" data-action="champ-reponse" data-index="${index}"
+        aria-label="${nom}${valeurs[index] ? ` : ${echapper(valeurs[index])}` : ", case vide"}">${echapper(valeurs[index] || "…")}</button>`
+    : `<output class="champ-coordonnee ${valeurs[index] ? "rempli" : ""}">${echapper(valeurs[index] || "?")}</output>`;
+  return `<section class="saisie-couple-repere" aria-label="Coordonnées du point ${echapper(cible.nom)}">
+    <span class="nom-couple">${echapper(cible.nom)}(</span>${champ(0, "Abscisse")}<span class="separateur-couple">;</span>${champ(1, "Ordonnée")}<span class="nom-couple">)</span>
+    ${estEntrainement() && etat.validation === null ? '<p class="indication-clavier-physique">Choisis une case · chiffres · signe moins · Entrée pour valider</p>' : ""}
+  </section>`;
+}
+
+function rendreSaisieCoordonneeSeule(question, cible, axe) {
+  const attendu = axe === "abscisse" ? cible.x : cible.y;
+  const valeur = estEntrainement()
+    ? etat.saisie
+    : etat.reponseRevelee
+      ? formaterEntierRepere(attendu)
+      : "";
+  const symbole = axe === "abscisse" ? "x" : "y";
+  return `<section class="saisie-numerique saisie-coordonnee-seule" aria-label="${axe}">
+    <span class="libelle-saisie-droite">${symbole}<sub>${echapper(cible.nom)}</sub> =</span>
+    <output class="afficheur-reponse ${valeur ? "rempli" : ""}">${echapper(valeur || (estEntrainement() ? "…" : "?"))}</output>
+    ${estEntrainement() && etat.validation === null ? '<p class="indication-clavier-physique">Chiffres · signe moins si nécessaire · Entrée pour valider</p>' : ""}
+  </section>`;
+}
+
+function rendreQuestionReperagePlan() {
+  const question = questionCourante(etat);
+  const bloc = blocRepereCartesien(question);
+  const cible = cibleRepereQuestion(question);
+  const famille = familleQuestion(question);
+  const placement = famille === FAMILLE_PLACER_POINT_REPERE;
+  const identification = famille === FAMILLE_IDENTIFIER_POINT;
+  const qcm = famille === FAMILLE_DIAGNOSTIC_COORDONNEES;
+  const validationTerminee = estEntrainement() && etat.validation !== null;
+  const attenduVisible = (!estEntrainement() && etat.reponseRevelee)
+    || (validationTerminee && placement);
+  const repere = rendreRepereV2(bloc, {
+    question,
+    interactive: placement && estEntrainement() && etat.validation === null,
+    identification: identification && estEntrainement() && etat.validation === null,
+    correction: validationTerminee,
+    attenduVisible,
+    description: placement
+      ? "Repère orthogonal vide dans lequel placer un point"
+      : `Repère orthogonal avec ${bloc.points?.length ?? 0} point${(bloc.points?.length ?? 0) > 1 ? "s" : ""} nommé${(bloc.points?.length ?? 0) > 1 ? "s" : ""}`,
+  });
+  let zoneReponse = "";
+  if (placement) {
+    zoneReponse = `<p class="precision precision-placement-repere">${estEntrainement()
+      ? etat.selection.length > 0 && etat.validation === null
+        ? `Point provisoire : ${echapper(question.reponse.choix.find((choix) => choix.id === etat.selection[0])?.libelle ?? "")}. Tu peux le déplacer avant de valider.`
+        : "Touche une intersection : le point s'y aimante. Tu peux le déplacer avant de valider."
+      : "Indiquez l'intersection choisie."}</p>`;
+  } else if (identification) {
+    zoneReponse = estEntrainement()
+      ? '<p class="precision">Touche directement le point ou sa lettre.</p>'
+      : etat.reponseRevelee
+        ? `<p class="reponse-tableau-repere">Réponse : <strong>${echapper(cible.nom)}</strong></p>`
+        : '<p class="precision">Quel point choisissez-vous ?</p>';
+  } else if (qcm) {
+    zoneReponse = `<div class="grille-choix grille-qcm-repere" role="radiogroup">${rendreChoix(question)}</div>`;
+  } else if (famille === FAMILLE_LIRE_ABSCISSE_REPERE) {
+    zoneReponse = rendreSaisieCoordonneeSeule(question, cible, "abscisse");
+  } else if (famille === FAMILLE_LIRE_ORDONNEE) {
+    zoneReponse = rendreSaisieCoordonneeSeule(question, cible, "ordonnée");
+  } else {
+    zoneReponse = rendreSaisieCoupleRepere(question, cible);
+  }
+  const carte = `<main class="carte-question carte-question-repere famille-${echapper(famille)}">
+    <p class="etiquette-notion">${echapper(nomNotion())}</p>
+    <h1>${echapper(texteBloc(question, "consigne"))}</h1>
+    ${repere}${zoneReponse}
+    ${estEntrainement() ? rendreZoneRetour() : '<div class="zone-retour" aria-hidden="true"></div>'}
+  </main>`;
+  return rendreCoqueLecteur(question, carte);
+}
+
+function guidesAideRepere(question, cible) {
+  const famille = familleQuestion(question);
+  if (famille === FAMILLE_PLACER_POINT_REPERE || famille === FAMILLE_IDENTIFIER_POINT) return [];
+  if (famille === FAMILLE_LIRE_ORDONNEE) return [{ x: cible.x, y: cible.y, axe: "ordonnees" }];
+  return [{ x: cible.x, y: cible.y, axe: "abscisses" }];
+}
+
+function rendreAideReperagePlan(question) {
+  if (!etat.aideOuverte) return "";
+  const bloc = blocRepereCartesien(question);
+  const cible = cibleRepereQuestion(question);
+  const placement = familleQuestion(question) === FAMILLE_PLACER_POINT_REPERE;
+  const identification = familleQuestion(question) === FAMILLE_IDENTIFIER_POINT;
+  const visualisation = rendreRepereV2(bloc, {
+    points: placement ? [] : (bloc.points ?? []).map((point) => ({ ...point, role: "donne" })),
+    guides: guidesAideRepere(question, cible),
+    cheminPlacement: placement || identification
+      ? { x: cible.x, y: cible.y, etape: "horizontal" }
+      : null,
+    classe: "repere-aide",
+    description: "Guide visuel de la première étape",
+  });
+  const titres = placement || identification
+    ? ["Partir de O", "Trouver l'abscisse", "Chercher l'ordonnée", "Cas d'un axe"]
+    : ["Première coordonnée", "Suivre le guide", "Deuxième coordonnée", "Cas d'un axe"];
+  const etapes = question.aide.blocs.map((blocAide, index) => `<details class="etape-aide-repere" ${index === 0 ? "open" : ""}>
+    <summary><span>${index + 1}</span>${echapper(titres[index] ?? "Contrôler")}</summary>
+    <p>${echapper(blocAide.contenu)}</p>
+  </details>`).join("");
+  return rendreCadrePanneau({
+    type: "aide",
+    surtitre: "Un indice à la fois",
+    titre: placement ? "Horizontal, puis vertical" : "Abscisse d'abord, ordonnée ensuite",
+    contenu: `${visualisation}<div class="etapes-repere">${etapes}</div>${rendreAccesCoursDepuisAide()}`,
+    classes: "panneau-reperage-plan",
+  });
+}
+
+function guidesCorrectionRepere(question, cible) {
+  if (familleQuestion(question) === FAMILLE_LIRE_ABSCISSE_REPERE) {
+    return [{ x: cible.x, y: cible.y, axe: "abscisses" }];
+  }
+  if (familleQuestion(question) === FAMILLE_LIRE_ORDONNEE) {
+    return [{ x: cible.x, y: cible.y, axe: "ordonnees" }];
+  }
+  return [
+    { x: cible.x, y: cible.y, axe: "abscisses" },
+    { x: cible.x, y: cible.y, axe: "ordonnees" },
+  ];
+}
+
+function rendreCorrectionReperagePlan(question) {
+  if (!etat.correctionOuverte) return "";
+  const bloc = blocRepereCartesien(question);
+  const cible = cibleRepereQuestion(question);
+  const placement = familleQuestion(question) === FAMILLE_PLACER_POINT_REPERE;
+  const diagnostic = diagnosticErreurReperagePlan();
+  const schema = rendreRepereV2(bloc, {
+    question,
+    correction: true,
+    attenduVisible: placement,
+    guides: placement ? [] : guidesCorrectionRepere(question, cible),
+    cheminPlacement: placement ? { x: cible.x, y: cible.y, etape: "complet" } : null,
+    classe: "repere-correction",
+    description: placement
+      ? "Correction avec le point choisi et le point attendu"
+      : "Correction de la lecture des coordonnées",
+  });
+  const legende = placement ? `<div class="legende-correction-repere">
+    ${etat.selection.length > 0 && !etat.validation?.juste ? '<span class="legende-point-choisi">× Ton point</span>' : ""}
+    <span class="legende-point-attendu">× Point attendu</span>
+  </div>` : "";
+  const explication = question.correction.map((element) => `<p>${echapper(element.contenu)}</p>`).join("");
+  return rendreCadrePanneau({
+    type: "correction",
+    surtitre: diagnostic ? `Diagnostic ${diagnostic.code}` : "Après la réponse",
+    titre: diagnostic ? "Comprendre l'erreur" : "Correction expliquée",
+    contenu: `${rendreReponseEleve(question)}${schema}${legende}${diagnostic ? `<p class="diagnostic-repere"><strong>${echapper(diagnostic.message)}</strong></p>` : ""}<div class="methode-repere">${explication}</div><p class="titre-reponse-correcte">Réponse correcte</p>${rendreReponseCorrecte(question)}`,
+    classes: "panneau-reperage-plan",
+  });
+}
+
+function blocCoursRepere(bornes = {}) {
+  return {
+    xMin: bornes.xMin ?? -4,
+    xMax: bornes.xMax ?? 4,
+    yMin: bornes.yMin ?? -3,
+    yMax: bornes.yMax ?? 3,
+  };
+}
+
+function carteCoursReperagePlan(index) {
+  const entete = (numero, titre) => `<header class="entete-cours-repere"><span>${numero}</span><h3>${titre}</h3></header>`;
+  if (index === 0) {
+    return `<article class="carte-cours-repere">${entete(1, "Comprendre le repère")}
+      ${rendreRepereV2(blocCoursRepere(), { description: "Repère orthogonal : axe horizontal, axe vertical et origine O" })}
+      <div class="lexique-repere">
+        <p><strong>Axe des abscisses</strong><span>horizontal</span></p>
+        <p><strong>Axe des ordonnées</strong><span>vertical</span></p>
+        <p><strong>Origine O</strong><span>croisement des deux axes</span></p>
+      </div>
+      <p class="definition-cours"><strong>Une graduation vaut 1.</strong> À droite et en haut : positif ; à gauche et en bas : négatif.</p>
+    </article>`;
+  }
+  if (index === 1) {
+    return `<article class="carte-cours-repere">${entete(2, "Lire un point")}
+      ${rendreRepereV2(blocCoursRepere({ xMin: -4, xMax: 3, yMin: -3, yMax: 3 }), {
+        points: [{ nom: "A", x: -3, y: 2, role: "donne" }],
+        guides: [{ x: -3, y: 2, axe: "abscisses" }, { x: -3, y: 2, axe: "ordonnees" }],
+        description: "Lecture du point A de coordonnées moins 3 et 2",
+      })}
+      <ol class="methode-cours-repere"><li><strong>Abscisse :</strong> la position sur l'axe horizontal est −3.</li><li><strong>Ordonnée :</strong> la position sur l'axe vertical est 2.</li><li>J'écris <strong>A(−3 ; 2)</strong>.</li></ol>
+      <div class="ordre-coordonnees"><span>1<sup>re</sup> coordonnée<br><strong>abscisse</strong></span><b>puis</b><span>2<sup>e</sup> coordonnée<br><strong>ordonnée</strong></span></div>
+    </article>`;
+  }
+  return `<article class="carte-cours-repere">${entete(3, "Placer un point")}
+    ${rendreRepereV2(blocCoursRepere(), {
+      points: [{ nom: "B", x: 2, y: -1, role: "donne" }],
+      cheminPlacement: { x: 2, y: -1, etape: "complet" },
+      description: "Placement du point B de coordonnées 2 et moins 1",
+    })}
+    <ol class="methode-cours-repere"><li>Je pars de <strong>O</strong>.</li><li>Je vais horizontalement jusqu'à l'abscisse <strong>2</strong>.</li><li>Je vais verticalement jusqu'à l'ordonnée <strong>−1</strong>, puis je place B.</li></ol>
+    <section class="mini-cas-axes"><h4>Quand une coordonnée vaut 0</h4>
+      ${rendreRepereV2(blocCoursRepere({ xMin: -3, xMax: 4, yMin: -3, yMax: 2 }), {
+        points: [{ nom: "C", x: 3, y: 0, role: "donne" }, { nom: "D", x: 0, y: -2, role: "exemple" }],
+        description: "Points C sur l'axe des abscisses et D sur l'axe des ordonnées",
+      })}
+      <p><strong>C(3 ; 0)</strong> est sur l'axe des abscisses. <strong>D(0 ; −2)</strong> est sur l'axe des ordonnées.</p>
+    </section>
+  </article>`;
+}
+
+function rendreCoursReperagePlan() {
+  if (!etat.coursOuvert) return "";
+  const titres = ["Le repère", "Lire", "Placer"];
+  const total = nombrePagesCours();
+  const derniere = pageCoursCourante === total - 1;
+  const pied = `<nav class="navigation-cours" aria-label="Navigation dans le cours">
+    <button class="bouton-secondaire" type="button" data-action="cours-precedent" ${pageCoursCourante === 0 ? "disabled" : ""}>Précédent</button>
+    <div class="points-cours" aria-label="Page ${pageCoursCourante + 1} sur ${total}">${Array.from({ length: total }, (_, page) => `<span class="${page === pageCoursCourante ? "actif" : ""}"></span>`).join("")}</div>
+    <button class="bouton-principal" type="button" data-action="${derniere ? "fermer-cours" : "cours-suivant"}">${derniere ? "J'ai compris" : "Suivant"}</button>
+  </nav>`;
+  return rendreCadrePanneau({
+    type: "cours",
+    surtitre: `Cours · ${pageCoursCourante + 1} / ${total}`,
+    titre: titres[pageCoursCourante],
+    contenu: `<div class="cours-une-carte">${carteCoursReperagePlan(pageCoursCourante)}</div>`,
+    pied,
+    classes: "panneau-reperage-plan",
+  });
+}
+
 const RENDUS_COURS = Object.freeze({
   [RENDU_DIVISIBILITE]: rendreCoursDivisibilite,
   [RENDU_CARRES]: rendreCoursCarres,
   [RENDU_FRACTIONS_DECIMAUX]: rendreCoursFractionsDecimaux,
   [RENDU_ECRITURES_MULTIPLES]: rendreCoursEcrituresMultiples,
+  [RENDU_DROITE_GRADUEE]: rendreCoursDroiteGraduee,
+  [RENDU_REPERAGE_PLAN]: rendreCoursReperagePlan,
   [RENDU_SOLIDE]: rendreCoursReconnaissance,
   [RENDU_VOLUME]: rendreCoursVolumes,
 });
@@ -4974,6 +5772,8 @@ const RENDUS_AIDE = Object.freeze({
   [RENDU_CARRES]: rendreAideCarres,
   [RENDU_FRACTIONS_DECIMAUX]: rendreAideFractionsDecimaux,
   [RENDU_ECRITURES_MULTIPLES]: rendreAideEcrituresMultiples,
+  [RENDU_DROITE_GRADUEE]: rendreAideDroiteGraduee,
+  [RENDU_REPERAGE_PLAN]: rendreAideReperagePlan,
   [RENDU_SOLIDE]: rendreAideSolides,
   [RENDU_VOLUME]: rendreAideVolumes,
 });
@@ -4983,6 +5783,8 @@ const RENDUS_CORRECTION = Object.freeze({
   [RENDU_CARRES]: rendreCorrectionCarres,
   [RENDU_FRACTIONS_DECIMAUX]: rendreCorrectionFractionsDecimaux,
   [RENDU_ECRITURES_MULTIPLES]: rendreCorrectionEcrituresMultiples,
+  [RENDU_DROITE_GRADUEE]: rendreCorrectionDroiteGraduee,
+  [RENDU_REPERAGE_PLAN]: rendreCorrectionReperagePlan,
   [RENDU_SOLIDE]: rendreCorrectionSolides,
   [RENDU_VOLUME]: rendreCorrectionVolumes,
 });
@@ -4992,6 +5794,8 @@ const RENDUS_QUESTION = Object.freeze({
   [RENDU_CARRES]: rendreQuestionCarres,
   [RENDU_FRACTIONS_DECIMAUX]: rendreQuestionFractionsDecimaux,
   [RENDU_ECRITURES_MULTIPLES]: rendreQuestionEcrituresMultiples,
+  [RENDU_DROITE_GRADUEE]: rendreQuestionDroiteGraduee,
+  [RENDU_REPERAGE_PLAN]: rendreQuestionReperagePlan,
   [RENDU_SOLIDE]: rendreQuestionSolides,
   [RENDU_VOLUME]: rendreQuestionVolumes,
 });
@@ -5144,11 +5948,21 @@ function rendre({
   const doitRestaurerDefilement = memePanneau && positionPanneau > 0;
   if (doitRestaurerDefilement && corpsPanneau) corpsPanneau.scrollTop = positionPanneau;
   if (doitRestaurerQuestion && zoneQuestion) zoneQuestion.scrollTop = positionQuestion;
-  const cibleFocus = focusPanneau
-    ? application.querySelector(".menu-session button, .panneau .fermer")
-    : focusSelector
-      ? application.querySelector(focusSelector)
-      : null;
+  const chercherCiblesFocus = (selecteur) => {
+    if (!selecteur) return [];
+    if (typeof application.querySelectorAll === "function") {
+      return [...application.querySelectorAll(selecteur)];
+    }
+    const unique = application.querySelector?.(selecteur);
+    return unique ? [unique] : [];
+  };
+  const candidatsFocus = focusPanneau
+    ? chercherCiblesFocus(".menu-session button, .panneau .fermer")
+    : chercherCiblesFocus(focusSelector);
+  const cibleFocus = candidatsFocus.find((element) =>
+    element.offsetParent !== null || element.getClientRects?.().length > 0)
+    ?? candidatsFocus[0]
+    ?? null;
   if (cibleFocus) {
     try {
       cibleFocus.focus({ preventScroll: true });
@@ -5245,6 +6059,21 @@ application.addEventListener("click", (evenement) => {
   if (action === "choix") {
     basculerChoix(etat, cible.dataset.id);
     focusSelector = `[data-action="choix"][data-id="${cible.dataset.id}"]`;
+  }
+  if (action === "placer-repere" && evenement.detail !== 0) {
+    const rectangle = cible.getBoundingClientRect();
+    if (rectangle.width > 0 && rectangle.height > 0) {
+      const proportionX = Math.max(0, Math.min(1, (evenement.clientX - rectangle.left) / rectangle.width));
+      const proportionY = Math.max(0, Math.min(1, (evenement.clientY - rectangle.top) / rectangle.height));
+      const xMin = Number(cible.dataset.xMin);
+      const xMax = Number(cible.dataset.xMax);
+      const yMin = Number(cible.dataset.yMin);
+      const yMax = Number(cible.dataset.yMax);
+      const x = Math.round(xMin + proportionX * (xMax - xMin));
+      const y = Math.round(yMax - proportionY * (yMax - yMin));
+      basculerChoix(etat, encoderCoordonnee(x, y));
+      focusSelector = '[data-action="placer-repere"]';
+    }
   }
   if (action === "champ-reponse") {
     selectionnerChampSaisie(etat, Number(cible.dataset.index));
@@ -5455,7 +6284,8 @@ window.addEventListener?.("keydown", (evenement) => {
       if (
         estEntrainement()
         && etat.validation === null
-        && question?.reponse.type === TYPE_REPONSE_FRACTION_EQUIVALENTE
+        && [TYPE_REPONSE_FRACTION_EQUIVALENTE, TYPE_REPONSE_DEUX_ENTIERS_RELATIFS]
+          .includes(question?.reponse.type)
         && champFocus
       ) {
         const indexCourant = Number(champFocus.dataset.index);
@@ -5477,18 +6307,74 @@ window.addEventListener?.("keydown", (evenement) => {
   }
   if (menuSessionOuvert || etat.aideOuverte || etat.correctionOuverte || etat.coursOuvert) return;
   const question = questionCourante(etat);
+  if (
+    question
+    && etat.validation === null
+    && question.classement.notion === NOTION_DROITE_GRADUEE
+    && familleQuestion(question) === "placer-point"
+    && ["ArrowLeft", "ArrowRight"].includes(evenement.key)
+  ) {
+    evenement.preventDefault?.();
+    const ids = question.reponse.choix.map((choix) => choix.id);
+    const selection = ids.indexOf(etat.selection[0]);
+    const courant = selection === -1
+      ? evenement.key === "ArrowLeft" ? ids.length : -1
+      : selection;
+    const suivant = Math.max(0, Math.min(ids.length - 1, courant + (evenement.key === "ArrowLeft" ? -1 : 1)));
+    basculerChoix(etat, ids[suivant]);
+    rendre({ focusSelector: `[data-action="choix"][data-id="${ids[suivant]}"]` });
+    return;
+  }
+  if (
+    question
+    && etat.validation === null
+    && question.classement.notion === NOTION_PLACER_POINT_REPERE
+    && ["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"].includes(evenement.key)
+  ) {
+    evenement.preventDefault?.();
+    const bloc = blocRepereCartesien(question);
+    const courant = decoderCoordonnee(etat.selection[0]) ?? { x: 0, y: 0 };
+    const deltas = {
+      ArrowLeft: [-1, 0],
+      ArrowRight: [1, 0],
+      ArrowUp: [0, 1],
+      ArrowDown: [0, -1],
+    };
+    const [dx, dy] = deltas[evenement.key];
+    const x = Math.max(bloc.xMin, Math.min(bloc.xMax, courant.x + dx));
+    const y = Math.max(bloc.yMin, Math.min(bloc.yMax, courant.y + dy));
+    basculerChoix(etat, encoderCoordonnee(x, y));
+    rendre({ focusSelector: '[data-action="placer-repere"]' });
+    return;
+  }
   if (!question || etat.validation !== null || !estReponseNumerique(question)) return;
   if (/^[0-9]$/.test(evenement.key)) {
     evenement.preventDefault?.();
     saisirCaractere(etat, evenement.key);
     rendre({
       focusSelector: question.reponse.type === TYPE_REPONSE_FRACTION_EQUIVALENTE
+        || question.reponse.type === TYPE_REPONSE_DEUX_ENTIERS_RELATIFS
         ? `[data-action="champ-reponse"][data-index="${etat.champSaisieActif}"]`
         : "",
     });
   } else if (
     question.reponse.type === TYPE_REPONSE_NOMBRE_DECIMAL
+    && question.classement.notion !== NOTION_LIRE_COORDONNEES_POINT
     && [".", ","].includes(evenement.key)
+  ) {
+    evenement.preventDefault?.();
+    saisirCaractere(etat, evenement.key);
+    rendre();
+  } else if (
+    (
+      question.reponse.type === TYPE_REPONSE_DEUX_ENTIERS_RELATIFS
+      || (
+        question.reponse.type === TYPE_REPONSE_NOMBRE_DECIMAL
+        && [NOTION_DROITE_GRADUEE, NOTION_LIRE_COORDONNEES_POINT]
+          .includes(question.classement.notion)
+      )
+    )
+    && ["-", "−"].includes(evenement.key)
   ) {
     evenement.preventDefault?.();
     saisirCaractere(etat, evenement.key);
@@ -5498,6 +6384,7 @@ window.addEventListener?.("keydown", (evenement) => {
     effacerSaisie(etat);
     rendre({
       focusSelector: question.reponse.type === TYPE_REPONSE_FRACTION_EQUIVALENTE
+        || question.reponse.type === TYPE_REPONSE_DEUX_ENTIERS_RELATIFS
         ? `[data-action="champ-reponse"][data-index="${etat.champSaisieActif}"]`
         : "",
     });

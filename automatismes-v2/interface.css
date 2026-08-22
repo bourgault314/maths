@@ -3881,7 +3881,8 @@ body {
   font-size: 13px;
 }
 
-.clavier-mathsgo[data-profil="decimal-positif"] .touche-zero-large {
+.clavier-mathsgo[data-profil="decimal-positif"] .touche-zero-large,
+.clavier-mathsgo[data-profil="entier-relatif"] .touche-zero-large {
   grid-column: 1 / -1;
 }
 

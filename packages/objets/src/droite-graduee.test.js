@@ -22,12 +22,14 @@ import {
   SEUIL_NOMBRES,
   SIGNE_MOINS,
   VERSION_DROITE_GRADUEE,
+  construireEchelleReguliere,
   construireGraduations,
   dessinerDoubleDroiteGraduee,
   dessinerDoubleDroitePourcentage,
   dessinerDroiteGraduee,
   dessinerPrereglageDroiteGraduee,
   formaterNombre,
+  positionRelativeSurDroite,
 } from "./droite-graduee.js";
 
 /* ---- petites loupes sur le SVG produit ---- */
@@ -104,6 +106,30 @@ describe("bornes et graduations", () => {
     assert.deepEqual(construireGraduations(0, 1, 0.4), [0, 0.4, 0.8, 1]);
     assert.deepEqual(construireGraduations(0, 1, 0.1).length, 11);
   });
+
+  it("l'échelle régulière ne fabrique jamais un dernier intervalle plus court", () => {
+    assert.deepEqual(
+      construireEchelleReguliere({ depart: -0.5, pas: 0.25, nombreIntervalles: 6 }),
+      {
+        min: -0.5,
+        max: 1,
+        pas: 0.25,
+        nombreIntervalles: 6,
+        graduations: [-0.5, -0.25, 0, 0.25, 0.5, 0.75, 1],
+      },
+    );
+    assert.deepEqual(
+      construireEchelleReguliere({ depart: -100, pas: 50, nombreIntervalles: 5 }).graduations,
+      [-100, -50, 0, 50, 100, 150],
+    );
+  });
+
+  it("la position relative partage la même échelle avec la future interaction", () => {
+    assert.equal(positionRelativeSurDroite(-20, -20, 20), 0);
+    assert.equal(positionRelativeSurDroite(0, -20, 20), 0.5);
+    assert.equal(positionRelativeSurDroite(20, -20, 20), 1);
+    assert.throws(() => positionRelativeSurDroite(30, -20, 20), /30 sort de \[−20 ; 20\]/);
+  });
 });
 
 describe("points repérés", () => {
@@ -151,6 +177,22 @@ describe("points repérés", () => {
     });
     assert.ok(pointillesDe(svg, COULEURS_DROITE.point).length >= 1, "trait pointillé absent");
     assert.equal(disquesDe(svg, COULEURS_DROITE.point), 1);
+  });
+
+  it("propose un marqueur épais et des nombres agrandis pour le lecteur mobile", () => {
+    const { svg } = dessinerDroiteGraduee({
+      min: -1,
+      max: 1,
+      pas: 0.25,
+      tailleNombres: 17,
+      tailleEtiquette: 19,
+      stylePoints: "trait",
+      points: [{ valeur: -0.5, etiquette: "A" }],
+    });
+    assert.match(svg, /font-size="17" font-weight="700"/);
+    assert.match(svg, /font-size="19" font-weight="700"/);
+    assert.match(svg, /stroke-width="5" stroke-linecap="round"/);
+    assert.equal(disquesDe(svg, COULEURS_DROITE.point), 0);
   });
 });
 
@@ -554,7 +596,18 @@ describe("tenue générale", () => {
     assert.equal(COULEURS_DROITE.encre, COULEURS.encre);
     assert.equal(COULEURS_DROITE.point, COULEURS.bleu);
     assert.equal(COULEURS_DROITE.correspondance, COULEURS.reussite);
-    assert.equal(VERSION_DROITE_GRADUEE, 1);
+    assert.equal(VERSION_DROITE_GRADUEE, 2);
+  });
+
+  it("emploie la typographie mathématique commune et expose sa géométrie", () => {
+    const dessin = dessinerDroiteGraduee({ min: -1, max: 1, pas: 0.25, largeur: 480 });
+    assert.match(dessin.svg, /font-family="'Times New Roman', Times, 'Liberation Serif', serif"/);
+    assert.match(dessin.svg, /font-variant-numeric="lining-nums tabular-nums"/);
+    assert.deepEqual(dessin.geometrie.graduations, [-1, -0.75, -0.5, -0.25, 0, 0.25, 0.5, 0.75, 1]);
+    assert.equal(dessin.geometrie.min, -1);
+    assert.equal(dessin.geometrie.max, 1);
+    assert.ok(dessin.geometrie.xGauche < dessin.geometrie.xDroite);
+    assert.throws(() => dessin.geometrie.graduations.push(2), TypeError);
   });
 
   it("chaque préréglage se dessine sans erreur", () => {

@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 
 import {
   TYPE_REPONSE_DEUX_ENTIERS,
+  TYPE_REPONSE_DEUX_ENTIERS_RELATIFS,
   TYPE_REPONSE_CHOIX_UNIQUE,
   TYPE_REPONSE_ENTIER_NATUREL,
   TYPE_REPONSE_FRACTION_EQUIVALENTE,
@@ -104,6 +105,19 @@ describe("validerTraceReponse", () => {
     assert.equal(validerTraceReponse(trace).valide, true);
   });
 
+  it("accepte la trace ordonnée d'un couple d'entiers relatifs", () => {
+    const trace = traceValide();
+    trace.classement.module = "lire-coordonnees-point";
+    trace.classement.microNotion = "lire-coordonnees-point";
+    trace.classement.famille = "lire-coordonnees";
+    trace.reponse = {
+      type: TYPE_REPONSE_DEUX_ENTIERS_RELATIFS,
+      statut: "fournie",
+      valeurs: [-3, 2],
+    };
+    assert.equal(validerTraceReponse(trace).valide, true);
+  });
+
   it("accepte la saisie décimale brute avec sa valeur rationnelle normalisée", () => {
     const trace = traceValide();
     trace.classement.microNotion = "fraction-vers-decimal";
@@ -148,8 +162,17 @@ describe("validerTraceReponse", () => {
     );
   });
 
-  it("refuse les notations décimales ambiguës ou non décimales", () => {
-    for (const saisie of ["1,2,3", "1e-2", "3/4", "-0,5", "0,5001"]) {
+  it("accepte un décimal négatif et refuse les notations ambiguës", () => {
+    const negative = traceValide();
+    negative.reponse = {
+      type: TYPE_REPONSE_NOMBRE_DECIMAL,
+      statut: "fournie",
+      saisie: "−0,5",
+      valeur: { numerateur: -1, denominateur: 2 },
+    };
+    assert.equal(validerTraceReponse(negative).valide, true);
+
+    for (const saisie of ["1,2,3", "1e-2", "3/4", "0,5001"]) {
       const trace = traceValide();
       trace.reponse = {
         type: TYPE_REPONSE_NOMBRE_DECIMAL,
@@ -159,7 +182,7 @@ describe("validerTraceReponse", () => {
       };
       assert.match(
         validerTraceReponse(trace).erreurs.join("\n"),
-        /nombre décimal positif/,
+        /nombre décimal positif ou négatif/,
       );
     }
   });
@@ -218,6 +241,7 @@ describe("validerTraceReponse", () => {
     const types = [
       TYPE_REPONSE_ENTIER_NATUREL,
       TYPE_REPONSE_DEUX_ENTIERS,
+      TYPE_REPONSE_DEUX_ENTIERS_RELATIFS,
       TYPE_REPONSE_NOMBRE_DECIMAL,
       TYPE_REPONSE_FRACTION_EQUIVALENTE,
       TYPE_REPONSE_CHOIX_UNIQUE,

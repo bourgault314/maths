@@ -10,9 +10,11 @@ import {
   DONNEES_DROITE_UNITES,
   VERSION_FRACTIONS_DECIMAUX,
   analyserEcritureDecimalePositive,
+  analyserEcritureDecimaleSignee,
   construireDonneesTableauDepuisFraction,
   construireDonneesTableauNumeration,
   formaterFractionEnDecimal,
+  formaterFractionEnDecimalSignee,
   fractionsEgales,
   normaliserEcritureDecimalePositive,
   obtenirDonneesDroiteFractionnaire,
@@ -72,6 +74,14 @@ describe("arithmétique rationnelle exacte", () => {
 });
 
 describe("analyse d'une écriture décimale positive", () => {
+  it("analyse et formate exactement les décimaux signés de la droite graduée", () => {
+    assert.deepEqual(
+      analyserEcritureDecimaleSignee("−0,25").fractionReduite,
+      { numerateur: -1, denominateur: 4 },
+    );
+    assert.equal(formaterFractionEnDecimalSignee(-3, 2), "−1,5");
+    assert.equal(formaterFractionEnDecimalSignee(1, 5), "0,2");
+  });
   it("normalise point, virgule, espaces, zéro initial et zéros finaux", () => {
     const equivalentes = [
       "0,5",
@@ -143,7 +153,7 @@ describe("analyse d'une écriture décimale positive", () => {
 describe("formatage exact des fractions finies", () => {
   it("couvre tous les dénominateurs du module sans calcul flottant", () => {
     assert.deepEqual(DENOMINATEURS_DECIMAUX_PRIS_EN_CHARGE, [
-      1, 2, 4, 10, 100, 1000,
+      1, 2, 4, 5, 10, 100, 1000,
     ]);
     assert.equal(formaterFractionEnDecimal(7, 1), "7");
     assert.equal(formaterFractionEnDecimal(7, 2), "3,5");
@@ -282,7 +292,7 @@ describe("tableau de numération jusque dans les millièmes", () => {
 });
 
 it("publie la brique dans le paquet @mathsgo/objets", async () => {
-  assert.equal(VERSION_FRACTIONS_DECIMAUX, 4);
+  assert.equal(VERSION_FRACTIONS_DECIMAUX, 5);
   const paquet = JSON.parse(
     await readFile(new URL("../package.json", import.meta.url), "utf8"),
   );

@@ -72,6 +72,28 @@ function cliquer(gestionnaires, action, id, value, index, notion, niveau, rang, 
   gestionnaires.get("click")[0]({ target: cible });
 }
 
+function cliquerSurfaceRepere(gestionnaires, bornes, proportionX, proportionY) {
+  const cible = {
+    dataset: {
+      action: "placer-repere",
+      xMin: String(bornes.xMin),
+      xMax: String(bornes.xMax),
+      yMin: String(bornes.yMin),
+      yMax: String(bornes.yMax),
+    },
+    closest(selecteur) { return selecteur === "[data-action]" ? this : null; },
+    getBoundingClientRect() {
+      return { left: 10, top: 20, width: 800, height: 600 };
+    },
+  };
+  gestionnaires.get("click")[0]({
+    target: cible,
+    detail: 1,
+    clientX: 10 + proportionX * 800,
+    clientY: 20 + proportionY * 600,
+  });
+}
+
 function appuyer(gestionnaires, key, { shiftKey = false } = {}) {
   let preventions = 0;
   for (const gestionnaire of gestionnaires.get("keydown") ?? []) {
@@ -2357,6 +2379,98 @@ it("fait disparaître progressivement les schémas dans une série NC-05 complè
   }
   assert.deepEqual(positionsVisuelles, [3, 8, 11]);
   assert.match(application.innerHTML, /Séance terminée/);
+});
+
+it("rend GE-01 et GE-02 avec saisie signée, cours et placement aimanté", async () => {
+  const { application, gestionnaires } = installerFauxNavigateur(
+    "?notion=droite-graduee&questions=10&graine=apercu-ge01-ge02-complet",
+  );
+  await import(`./app.js?fumee=droite-${Date.now()}`);
+
+  assert.match(application.innerHTML, /Droite graduée/);
+  cliquer(gestionnaires, "demarrer");
+  assert.match(application.innerHTML, /carte-question-droite/);
+  assert.match(application.innerHTML, /droite-graduee-interactive/);
+  assert.match(application.innerHTML, /droite-version-mobile/);
+  assert.match(application.innerHTML, /font-size="17" font-weight="700"/);
+  assert.match(application.innerHTML, /data-profil="nombre-decimal"/);
+  assert.match(application.innerHTML, /data-value="−"/);
+
+  cliquer(gestionnaires, "aide");
+  assert.match(application.innerHTML, /Compte les intervalles entre elles, pas les traits/);
+  cliquer(gestionnaires, "cours");
+  assert.match(application.innerHTML, /Comprendre les mots/);
+  assert.match(application.innerHTML, /Graduation/);
+  assert.match(application.innerHTML, /Intervalle/);
+  assert.match(application.innerHTML, /Cours · 1 \/ 6/);
+  cliquer(gestionnaires, "fermer-cours");
+  cliquer(gestionnaires, "fermer-aide");
+  cliquer(gestionnaires, "valider");
+  cliquer(gestionnaires, "suivant");
+
+  assert.match(application.innerHTML, /Touche une graduation : le point s’y aimante/);
+  const graduation = application.innerHTML.match(/data-action="choix" data-id="(g-\d+)"/)?.[1];
+  assert.ok(graduation);
+  cliquer(gestionnaires, "choix", graduation);
+  assert.match(application.innerHTML, /cible-graduation selectionnee/);
+  cliquer(gestionnaires, "valider");
+  cliquer(gestionnaires, "correction");
+  assert.match(application.innerHTML, /Correction expliquée/);
+  assert.match(application.innerHTML, /Le point .* se place ici/);
+});
+
+it("rend GE-03 et GE-04 avec le repère partagé, les aides et le placement révisable", async () => {
+  const lecture = installerFauxNavigateur(
+    "?notion=lire-coordonnees-point&questions=10&graine=apercu-ge03-complet",
+  );
+  await import(`./app.js?fumee=ge03-${Date.now()}`);
+  cliquer(lecture.gestionnaires, "demarrer");
+  assert.match(lecture.application.innerHTML, /carte-question-repere/);
+  assert.match(lecture.application.innerHTML, /repere-cartesien-v2/);
+  assert.match(lecture.application.innerHTML, /saisie-couple-repere/);
+  assert.match(lecture.application.innerHTML, /data-profil="entier-relatif"/);
+  assert.match(lecture.application.innerHTML, /data-action="champ-reponse" data-index="0"/);
+  assert.match(lecture.application.innerHTML, /data-action="champ-reponse" data-index="1"/);
+  assert.match(lecture.application.innerHTML, /font-family="'Times New Roman', Times, 'Liberation Serif', serif"/);
+
+  cliquer(lecture.gestionnaires, "aide");
+  assert.match(lecture.application.innerHTML, /Abscisse d(?:&#039;|')abord, ordonnée ensuite/);
+  assert.match(lecture.application.innerHTML, /Guide visuel de la première étape/);
+  cliquer(lecture.gestionnaires, "cours");
+  assert.match(lecture.application.innerHTML, /Comprendre le repère/);
+  assert.match(lecture.application.innerHTML, /Axe des abscisses/);
+  assert.match(lecture.application.innerHTML, /Cours · 1 \/ 3/);
+  cliquer(lecture.gestionnaires, "cours-suivant");
+  assert.match(lecture.application.innerHTML, /A\(−3 ; 2\)/);
+  assert.match(lecture.application.innerHTML, /1<sup>re<\/sup> coordonnée/);
+  cliquer(lecture.gestionnaires, "cours-suivant");
+  assert.match(lecture.application.innerHTML, /C\(3 ; 0\)/);
+  assert.match(lecture.application.innerHTML, /D\(0 ; −2\)/);
+
+  const placement = installerFauxNavigateur(
+    "?notion=placer-point-repere&questions=5&graine=apercu-ge04-complet",
+  );
+  await import(`./app.js?fumee=ge04-${Date.now()}`);
+  cliquer(placement.gestionnaires, "demarrer");
+  assert.match(placement.application.innerHTML, /surface-placement-repere/);
+  const bornes = placement.application.innerHTML.match(
+    /data-x-min="(-?\d+)" data-x-max="(-?\d+)"\s+data-y-min="(-?\d+)" data-y-max="(-?\d+)"/,
+  );
+  assert.ok(bornes);
+  cliquerSurfaceRepere(placement.gestionnaires, {
+    xMin: Number(bornes[1]),
+    xMax: Number(bornes[2]),
+    yMin: Number(bornes[3]),
+    yMax: Number(bornes[4]),
+  }, 0.1, 0.9);
+  assert.match(placement.application.innerHTML, /Point provisoire :/);
+  assert.match(placement.application.innerHTML, /Tu peux le déplacer avant de valider/);
+  assert.equal(appuyer(placement.gestionnaires, "ArrowRight"), 1);
+  assert.equal(appuyer(placement.gestionnaires, "ArrowUp"), 1);
+  cliquer(placement.gestionnaires, "valider");
+  cliquer(placement.gestionnaires, "correction");
+  assert.match(placement.application.innerHTML, /Point attendu/);
+  assert.match(placement.application.innerHTML, /Horizontal, puis vertical|Correction expliquée|Comprendre l(?:&#039;|')erreur/);
 });
 
 it("sélectionne, révise et rejoue plusieurs automatismes dans une même série", async () => {

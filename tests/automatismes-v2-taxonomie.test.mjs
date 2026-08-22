@@ -29,6 +29,9 @@ const IDS_MODULES_EXPOSES = [
   "carres-entiers-0-a-12",
   "fractions-simples-decimaux",
   "ecritures-multiples-nombre",
+  "droite-graduee",
+  "lire-coordonnees-point",
+  "placer-point-repere",
   "solides-usuels",
   "volume-cube-pave",
   "volume-prisme",
@@ -134,7 +137,7 @@ describe("taxonomie machine lisible d'Automatismes V2", () => {
     assert.equal(nc05.id, "ecritures-multiples-nombre");
   });
 
-  it("déclare les huit modules exposés et leurs références valides", () => {
+  it("déclare les onze modules exposés et leurs références valides", () => {
     assert.deepEqual(
       taxonomie.modulesExposes.map(({ id }) => id),
       IDS_MODULES_EXPOSES,
@@ -177,7 +180,7 @@ describe("taxonomie machine lisible d'Automatismes V2", () => {
     );
   });
 
-  it("aligne les neuf micro-notions actives et leurs statuts avec le code", () => {
+  it("aligne les treize micro-notions actives et leurs statuts avec le code", () => {
     const actives = taxonomie.microNotions
       .filter(({ statut }) => statut !== "a_faire")
       .map(({ id }) => id)
@@ -203,5 +206,9 @@ describe("taxonomie machine lisible d'Automatismes V2", () => {
     assert.equal(statutParId.get("fraction-vers-decimal"), "construit");
     assert.equal(statutParId.get("decimal-vers-fraction"), "construit");
     assert.equal(statutParId.get("ecritures-multiples-nombre"), "construit");
+    assert.equal(statutParId.get("lire-abscisse-droite-graduee"), "construit");
+    assert.equal(statutParId.get("placer-point-droite-graduee"), "construit");
+    assert.equal(statutParId.get("lire-coordonnees-point"), "construit");
+    assert.equal(statutParId.get("placer-point-repere"), "construit");
   });
 });

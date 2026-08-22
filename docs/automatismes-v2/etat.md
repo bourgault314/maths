@@ -1,6 +1,66 @@
 # État du chantier Automatismes V2
 
-**Dernière mise à jour : 21 août 2026.**
+**Dernière mise à jour : 22 août 2026.**
+
+## GE-03 et GE-04 publiés pour essai le 22 août
+
+- D-066 maintient deux modules visibles distincts : GE-03 « Lire les
+  coordonnées d'un point » et GE-04 « Placer un point dans un repère ». Ils
+  mutualisent un cours en trois pages, les aides, les diagnostics E1 à E6 et
+  le nouvel objet V2 `repere-cartesien.js`.
+- Le repère est maintenant un objet officiel du Studio et de la fondation :
+  pas entier, unités carrées, bornes asymétriques contrôlées, origine visible,
+  placement d'étiquettes, guides de lecture, chemin de placement et rôles de
+  correction. Aucun code d'un ancien module n'est importé.
+- GE-03 emploie exactement les quotas `10 / 3 / 3 / 2 / 2` sur 20 questions
+  pour lecture complète, abscisse, ordonnée, QCM diagnostique et
+  identification. GE-04 reste composé uniquement de placements aimantés,
+  modifiables avant validation et accessibles avec les quatre flèches.
+- L'audit de 1 000 seeds par module contrôle 40 000 profils. Les quatre
+  quadrants et les deux axes sont garantis dans chaque série de 20 ; l'origine
+  apparaît 254 fois en GE-03 et 286 fois en GE-04. Cent seeds instanciés par
+  module recoupent 4 000 questions avec leur affichage et leur correction.
+- La revue vectorielle mobile et ordinateur a trouvé puis fait corriger deux
+  défauts : proximité de `O` et `−1` à 320 px, et taille trop retenue au TNI.
+  Le contrôle structurel couvre cinq fenêtres de `320 × 568` à
+  `1 920 × 1 080`, les cibles de 44 px, les panneaux, l'aimantation et le
+  clavier.
+- La vérification complète passe **1 709 tests sur 1 709** dans **242 suites** ;
+  les garde-fous V2 suivent 148 fichiers et 77 fichiers de production déclarés.
+  Le cache est invalidé atomiquement en `v46`.
+- Gwenaël valide les planches, demande que les flèches positives remplacent le
+  dernier trait de graduation puis autorise la publication pour essai. Les
+  nombres terminaux restent affichés. Cette mise en ligne ne change pas le
+  statut pédagogique `construit` ; la recette de 36 captures réelles sur cinq
+  fenêtres reste disponible pour la revue du lecteur déployé.
+
+## Module « Droite graduée » construit le 21 août
+
+- D-065 fixe le classement : `GE-01` et `GE-02` restent dans
+  `espace-et-geometrie` et formeront un seul module visible « Droite
+  graduée ». Le module est désormais construit dans le lecteur V2.
+- Le premier lot local, sur `agent/ge-droite-graduee-studio`, fait passer
+  l'objet commun en version 2. Une nouvelle échelle régulière est définie par
+  une première valeur, un pas et un nombre d'intervalles ; elle ne peut donc
+  pas terminer par un intervalle plus court. La géométrie calculée est exposée
+  pour que le futur placement interactif utilise exactement la même source.
+- Les nombres du SVG emploient la typographie mathématique commune avec des
+  chiffres alignés et tabulaires. Les titres et noms de lignes gardent la
+  typographie de texte.
+- La planche du Labo et les séries couvrent les pas `0,1`, `0,25`, `0,5`, `1`, `10` et `50`,
+  une origine à gauche, centrée, décentrée, non écrite ou hors champ, des
+  valeurs toutes négatives, deux références non nulles et une droite muette
+  destinée au placement.
+- GE-01 et GE-02 possèdent leurs générateurs seedés, leurs quotas aux jalons
+  5/10/15/20, un pavé décimal signé, un placement aimanté au clic ou au
+  clavier, un cours en cinq pages, une aide en trois étapes et une correction
+  qui superpose le point choisi et le point attendu.
+- Les erreurs typiques donnent des retours ciblés : signe oublié, graduation
+  voisine, écart total confondu avec le pas, traits comptés à la place des
+  intervalles et pas supposé égal à 1.
+- La vérification complète du dépôt passe **1 664 tests sur 1 664** dans
+  **234 suites**. Le statut reste `construit` jusqu'à la validation visuelle
+  de Gwenaël dans le lecteur.
 
 ## Fractions canoniques dans la synthèse du cours du 21 août
 

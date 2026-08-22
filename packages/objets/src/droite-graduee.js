@@ -47,14 +47,14 @@
 // Le rendu est une chaîne SVG pure et déterministe : mêmes réglages,
 // même dessin, partout (diaporama, fiche, atelier, labo, exports).
 
-import { COULEURS } from "../../charte/src/charte.js?v=44";
+import { COULEURS, TYPOGRAPHIE } from "../../charte/src/charte.js?v=46";
 import {
   mesurerEcritureFractionSvg,
   rendreFractionSvg,
   verbaliserFraction,
-} from "./expressions.js?v=44";
+} from "./expressions.js?v=46";
 
-export const VERSION_DROITE_GRADUEE = 1;
+export const VERSION_DROITE_GRADUEE = 2;
 
 /** Les deux côtés possibles pour un point repéré. */
 export const POSITIONS_POINT = Object.freeze(["dessus", "dessous"]);
@@ -85,7 +85,8 @@ export const COULEURS_DROITE = Object.freeze({
   correspondance: COULEURS.reussite, // le point correspondant de la ligne du bas
 });
 
-const POLICE = "Arial, Helvetica, sans-serif";
+const POLICE_TEXTE = TYPOGRAPHIE.texte.replaceAll('"', "'");
+const POLICE_MATHEMATIQUES = TYPOGRAPHIE.mathematiques.replaceAll('"', "'");
 
 // Géométrie, en pixels du dessin. Tout est relatif à l'axe de la ligne.
 const TAILLE_TITRE = 15;
@@ -93,6 +94,8 @@ const TAILLE_NOM_LIGNE = 13;
 const TAILLE_NOM_MIN = 9; // en dessous, un nom de ligne n'est plus lisible au tableau
 const X_NOM = 12; // les noms de ligne sont calés à gauche, à cette abscisse
 const TAILLE_NOMBRES = 13;
+const TAILLE_NOMBRES_MIN = 9;
+const TAILLE_NOMBRES_MAX = 28;
 const TAILLE_ETIQUETTE_DEFAUT = 13;
 const TAILLE_ETIQUETTE_MIN = 9;
 const TAILLE_ETIQUETTE_MAX = 40;
@@ -100,6 +103,7 @@ const DEMI_GRADUATION = 8; // hauteur d'un trait de graduation, de part et d'aut
 const DECALAGE_NOMBRES_DESSUS = 15; // ligne de base des nombres au-dessus de l'axe
 const DECALAGE_NOMBRES_DESSOUS = 27; // ligne de base des nombres en dessous
 const RAYON_POINT = 4.5;
+const STYLES_POINTS = Object.freeze(["disque", "trait"]);
 const ECART_ENTRE_LIGNES = 10; // respiration entre les deux lignes d'une double droite
 const MARGE_BASSE = 8;
 const MARGE_HAUTE = 8;
@@ -198,10 +202,20 @@ function lireCouleur(couleur, defaut, quoi) {
 // Primitives SVG (toutes les coordonnées passent par arrondi2)
 // ---------------------------------------------------------------------------
 
-function texte(x, y, contenu, taille, graisse, couleur, ancre = "middle") {
+function texte(
+  x,
+  y,
+  contenu,
+  taille,
+  graisse,
+  couleur,
+  ancre = "middle",
+  police = POLICE_MATHEMATIQUES,
+) {
   return (
     `<text x="${arrondi2(x)}" y="${arrondi2(y)}" text-anchor="${ancre}" ` +
-    `font-family="${POLICE}" font-size="${taille}" font-weight="${graisse}" ` +
+    `font-family="${police}" font-size="${taille}" font-weight="${graisse}" ` +
+    `font-variant-numeric="lining-nums tabular-nums" ` +
     `fill="${couleur}">${echapper(contenu)}</text>`
   );
 }
@@ -277,6 +291,69 @@ export function construireGraduations(min, max, pas, quoi = "construireGraduatio
   const derniere = liste[liste.length - 1];
   if (derniere < max - EPSILON) liste.push(arrondi6(max));
   return liste;
+}
+
+/**
+ * Construit une échelle régulière à partir d'un nombre d'intervalles.
+ *
+ * Contrairement à `construireGraduations(min, max, pas)`, cette forme ne
+ * peut pas créer un dernier intervalle plus court pour rejoindre une borne.
+ * C'est le contrat à employer pour une question de lecture ou de placement.
+ *
+ * @param {object} options
+ * @param {number} [options.depart=0] — valeur de la première graduation.
+ * @param {number} [options.pas=1] — valeur d'un intervalle.
+ * @param {number} [options.nombreIntervalles=10] — nombre d'espaces égaux.
+ * @returns {{min:number,max:number,pas:number,nombreIntervalles:number,graduations:number[]}}
+ */
+export function construireEchelleReguliere(options = {}) {
+  const quoi = "construireEchelleReguliere";
+  const depart = nombreFini(options.depart ?? 0, `${quoi} : depart`);
+  const pas = nombreFini(options.pas ?? 1, `${quoi} : pas`);
+  const nombreIntervalles = nombreFini(
+    options.nombreIntervalles ?? 10,
+    `${quoi} : nombreIntervalles`,
+  );
+  if (!(pas > 0)) {
+    throw new RangeError(`${quoi} : le pas doit être strictement positif (reçu ${formaterNombre(pas)}).`);
+  }
+  if (!Number.isSafeInteger(nombreIntervalles) || nombreIntervalles < 1) {
+    throw new RangeError(`${quoi} : nombreIntervalles doit être un entier strictement positif.`);
+  }
+  if (nombreIntervalles > MAX_GRADUATIONS) {
+    throw new RangeError(
+      `${quoi} : ${nombreIntervalles + 1} graduations demandées, c'est trop ` +
+        `(maximum ${MAX_GRADUATIONS + 1}).`,
+    );
+  }
+  const graduations = Array.from(
+    { length: nombreIntervalles + 1 },
+    (_, index) => arrondi6(depart + index * pas),
+  );
+  return Object.freeze({
+    min: graduations[0],
+    max: graduations.at(-1),
+    pas,
+    nombreIntervalles,
+    graduations: Object.freeze(graduations),
+  });
+}
+
+/** Position horizontale normalisée d'une valeur sur une échelle. */
+export function positionRelativeSurDroite(valeur, min, max) {
+  const quoi = "positionRelativeSurDroite";
+  const v = nombreFini(valeur, `${quoi} : valeur`);
+  const borneMin = nombreFini(min, `${quoi} : min`);
+  const borneMax = nombreFini(max, `${quoi} : max`);
+  if (!(borneMax > borneMin)) {
+    throw new RangeError(`${quoi} : max doit être strictement supérieur à min.`);
+  }
+  if (v < borneMin - EPSILON || v > borneMax + EPSILON) {
+    throw new RangeError(
+      `${quoi} : ${formaterNombre(v)} sort de [${formaterNombre(borneMin)} ; ${formaterNombre(borneMax)}].`,
+    );
+  }
+  return (v - borneMin) / (borneMax - borneMin);
 }
 
 function normaliserEtiquettes(etiquettes, quoi) {
@@ -423,6 +500,21 @@ function normaliserLigne(options, coteNombres, quoi) {
       `${quoi} : tailleEtiquette doit être comprise entre ${TAILLE_ETIQUETTE_MIN} et ${TAILLE_ETIQUETTE_MAX}.`,
     );
   }
+  const tailleNombresDemandee = o.tailleNombres == null
+    ? TAILLE_NOMBRES
+    : nombreFini(o.tailleNombres, `${quoi} : tailleNombres`);
+  const tailleNombres = Math.round(tailleNombresDemandee);
+  if (tailleNombres < TAILLE_NOMBRES_MIN || tailleNombres > TAILLE_NOMBRES_MAX) {
+    throw new RangeError(
+      `${quoi} : tailleNombres doit être comprise entre ${TAILLE_NOMBRES_MIN} et ${TAILLE_NOMBRES_MAX}.`,
+    );
+  }
+  const stylePoints = o.stylePoints ?? "disque";
+  if (!STYLES_POINTS.includes(stylePoints)) {
+    throw new RangeError(
+      `${quoi} : stylePoints invalide « ${stylePoints} » — attendu « disque » ou « trait ».`,
+    );
+  }
   // Masquage total demandé, ou garde-fou anti-surcharge.
   const nombresVisibles = o.afficherNombres === false ? false : graduations.length <= seuil;
 
@@ -436,6 +528,8 @@ function normaliserLigne(options, coteNombres, quoi) {
     points: normaliserPoints(o.points, min, max, quoi),
     nom: o.nom == null ? null : String(o.nom),
     tailleEtiquette,
+    tailleNombres,
+    stylePoints,
   };
 }
 
@@ -449,10 +543,10 @@ function decalageEtiquette(position, ligne) {
 }
 
 /** La bande de papier occupée par les nombres, autour de l'axe (y relatif). */
-function bandeDesNombres(coteNombres) {
+function bandeDesNombres(coteNombres, tailleNombres = TAILLE_NOMBRES) {
   return coteNombres === "dessus"
-    ? { haut: -DECALAGE_NOMBRES_DESSUS - 11, bas: -DECALAGE_NOMBRES_DESSUS + 5 }
-    : { haut: DECALAGE_NOMBRES_DESSOUS - 11, bas: DECALAGE_NOMBRES_DESSOUS + 5 };
+    ? { haut: -DECALAGE_NOMBRES_DESSUS - tailleNombres + 2, bas: -DECALAGE_NOMBRES_DESSUS + 5 }
+    : { haut: DECALAGE_NOMBRES_DESSOUS - tailleNombres + 2, bas: DECALAGE_NOMBRES_DESSOUS + 5 };
 }
 
 /**
@@ -470,7 +564,7 @@ function geometrieFraction(point, ligne) {
     { taille: ligne.tailleEtiquette },
   );
   const memeCote = ligne.nombresVisibles && point.position === ligne.coteNombres;
-  const bande = memeCote ? bandeDesNombres(ligne.coteNombres) : null;
+  const bande = memeCote ? bandeDesNombres(ligne.coteNombres, ligne.tailleNombres) : null;
 
   if (point.position === "dessus") {
     const bordBas = bande
@@ -502,7 +596,7 @@ function mesurerLigne(ligne) {
   let haut = DEMI_GRADUATION + 4;
   let bas = DEMI_GRADUATION + 4;
   if (ligne.nombresVisibles) {
-    const bande = bandeDesNombres(ligne.coteNombres);
+    const bande = bandeDesNombres(ligne.coteNombres, ligne.tailleNombres);
     if (ligne.coteNombres === "dessus") haut = Math.max(haut, -bande.haut + 4);
     else bas = Math.max(bas, bande.bas + 4);
   }
@@ -554,7 +648,16 @@ function dessinerNomDeLigne(nom, yAxe, xGauche) {
   // tient sans rien changer : seul un dessin étroit déclenche la réduction.
   const disponible = xGauche - 10 - X_NOM;
   const taille = tailleDuNom(nom, disponible);
-  return texte(X_NOM, yAxe + 4, nom, taille, 700, COULEURS_DROITE.encre, "start");
+  return texte(
+    X_NOM,
+    yAxe + 4,
+    nom,
+    taille,
+    700,
+    COULEURS_DROITE.encre,
+    "start",
+    POLICE_TEXTE,
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -584,12 +687,15 @@ function trouDuTrait(xPoint, nombresPoses, ligne, position) {
   if (!ligne.nombresVisibles || position !== ligne.coteNombres) return null;
   const heurte = nombresPoses.some((n) => Math.abs(n.x - xPoint) < n.demiLargeur + 4);
   if (!heurte) return null;
-  const bande = bandeDesNombres(ligne.coteNombres);
+  const bande = bandeDesNombres(ligne.coteNombres, ligne.tailleNombres);
   return { haut: bande.haut - 3, bas: bande.bas + 3 };
 }
 
 function dessinerLigne(ligne, yAxe, xGauche, xDroite) {
-  const { min, max, graduations, etiquettes, nombresVisibles, coteNombres, points } = ligne;
+  const {
+    min, max, graduations, etiquettes, nombresVisibles, coteNombres, points,
+    tailleNombres, stylePoints,
+  } = ligne;
   const abscisse = (v) => xGauche + ((v - min) / (max - min)) * (xDroite - xGauche);
   let corps = "";
 
@@ -605,8 +711,8 @@ function dessinerLigne(ligne, yAxe, xGauche, xDroite) {
     const contenu = perso == null ? formaterNombre(valeur) : perso;
     if (contenu === "") continue;
     const y = coteNombres === "dessus" ? yAxe - DECALAGE_NOMBRES_DESSUS : yAxe + DECALAGE_NOMBRES_DESSOUS;
-    corps += texte(gx, y, contenu, TAILLE_NOMBRES, 400, COULEURS_DROITE.encre);
-    nombresPoses.push({ x: gx, demiLargeur: largeurTexte(contenu, TAILLE_NOMBRES) / 2 });
+    corps += texte(gx, y, contenu, tailleNombres, 700, COULEURS_DROITE.encre);
+    nombresPoses.push({ x: gx, demiLargeur: largeurTexte(contenu, tailleNombres, true) / 2 });
   }
 
   for (const point of points) {
@@ -631,7 +737,9 @@ function dessinerLigne(ligne, yAxe, xGauche, xDroite) {
           : yAxe + d - 11;
       const trouRelatif = trouDuTrait(px, nombresPoses, ligne, point.position);
       const trou = trouRelatif ? { haut: yAxe + trouRelatif.haut, bas: yAxe + trouRelatif.bas } : null;
-      corps += traitPointille(px, yHaut, yBas, point.couleur, trou);
+      if (stylePoints === "disque") {
+        corps += traitPointille(px, yHaut, yBas, point.couleur, trou);
+      }
       if (fraction) {
         corps += rendreFractionSvg(
           point.etiquette.numerateur,
@@ -652,9 +760,12 @@ function dessinerLigne(ligne, yAxe, xGauche, xDroite) {
         corps += texte(px, yEtiquette, point.etiquette, ligne.tailleEtiquette, 700, point.couleur);
       }
     }
-    // Le disque cerclé de blanc, posé en dernier : il reste lisible
-    // même quand le trait pointillé passe dessous.
-    corps += disque(px, yAxe, RAYON_POINT, point.couleur, COULEURS_DROITE.papier);
+    // Le module choisit entre le disque de repérage historique de l'objet et
+    // un trait épais, plus lisible sur une droite réduite à la largeur d'un
+    // téléphone. Le style par défaut reste inchangé pour les autres usages.
+    corps += stylePoints === "trait"
+      ? `<line x1="${arrondi2(px)}" y1="${arrondi2(yAxe - 12)}" x2="${arrondi2(px)}" y2="${arrondi2(yAxe + 12)}" stroke="${point.couleur}" stroke-width="5" stroke-linecap="round"/>`
+      : disque(px, yAxe, RAYON_POINT, point.couleur, COULEURS_DROITE.papier);
   }
   return corps;
 }
@@ -687,6 +798,10 @@ function lireLargeur(valeur, quoi) {
  *   graduations, les nombres ne sont plus écrits.
  * @param {number} [options.tailleEtiquette=13] — taille des étiquettes de
  *   points, de 9 à 40 pixels dans le dessin SVG.
+ * @param {number} [options.tailleNombres=13] — taille des nombres des
+ *   graduations, de 9 à 28 pixels dans le dessin SVG.
+ * @param {"disque"|"trait"} [options.stylePoints="disque"] — marqueur des
+ *   points ; le trait épais est destiné aux petites largeurs tactiles.
  * @param {Array<{valeur:number, etiquette?:string|{type:"fraction",
  *   numerateur:number,denominateur:number}, couleur?:string,
  *   position?:"dessus"|"dessous"}>} [options.points] — les points repérés.
@@ -722,7 +837,18 @@ export function dessinerDroiteGraduee(options = {}) {
   const hauteur = yAxe + bas + MARGE_BASSE;
 
   let corps = "";
-  if (titre) corps += texte(largeur / 2, 22, titre, TAILLE_TITRE, 700, COULEURS_DROITE.encre);
+  if (titre) {
+    corps += texte(
+      largeur / 2,
+      22,
+      titre,
+      TAILLE_TITRE,
+      700,
+      COULEURS_DROITE.encre,
+      "middle",
+      POLICE_TEXTE,
+    );
+  }
   if (ligne.nom) corps += dessinerNomDeLigne(ligne.nom, yAxe, xGauche);
   corps += dessinerLigne(ligne, yAxe, xGauche, xDroite);
 
@@ -730,6 +856,14 @@ export function dessinerDroiteGraduee(options = {}) {
     svg: svgRacine(largeur, hauteur, corps, o.description ?? "Droite graduée"),
     largeur,
     hauteur,
+    geometrie: Object.freeze({
+      min: ligne.min,
+      max: ligne.max,
+      xGauche,
+      xDroite,
+      yAxe,
+      graduations: Object.freeze([...ligne.graduations]),
+    }),
   };
 }
 
@@ -770,7 +904,18 @@ export function dessinerDoubleDroiteGraduee(options = {}) {
   const hauteur = yBas + mesureBas.bas + MARGE_BASSE;
 
   let corps = "";
-  if (titre) corps += texte(largeur / 2, 22, titre, TAILLE_TITRE, 700, COULEURS_DROITE.encre);
+  if (titre) {
+    corps += texte(
+      largeur / 2,
+      22,
+      titre,
+      TAILLE_TITRE,
+      700,
+      COULEURS_DROITE.encre,
+      "middle",
+      POLICE_TEXTE,
+    );
+  }
   if (ligneHaut.nom) corps += dessinerNomDeLigne(ligneHaut.nom, yHaut, xGauche);
   if (ligneBas.nom) corps += dessinerNomDeLigne(ligneBas.nom, yBas, xGauche);
   corps += dessinerLigne(ligneHaut, yHaut, xGauche, xDroite);

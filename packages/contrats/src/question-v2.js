@@ -1,7 +1,7 @@
 // Contrat « question instanciée » — version 2.
 //
 // Cette version couvre les choix simples ou multiples, les saisies entières,
-// les décimaux positifs et les fractions équivalentes. Les énoncés peuvent
+// les décimaux signés et les fractions équivalentes. Les énoncés peuvent
 // porter des rationnels ou une puissance structurée, sans accepter de HTML
 // produit par les générateurs.
 
@@ -12,6 +12,7 @@ export const TYPE_REPONSE_SELECTION_MULTIPLE = "selection-multiple";
 export const TYPE_REPONSE_CHOIX_UNIQUE = "choix-unique";
 export const TYPE_REPONSE_ENTIER_NATUREL = "entier-naturel";
 export const TYPE_REPONSE_DEUX_ENTIERS = "deux-entiers";
+export const TYPE_REPONSE_DEUX_ENTIERS_RELATIFS = "deux-entiers-relatifs";
 export const TYPE_REPONSE_NOMBRE_DECIMAL = "nombre-decimal";
 export const TYPE_REPONSE_FRACTION_EQUIVALENTE = "fraction-equivalente";
 export const COMPARAISON_ENSEMBLE_EXACT = "ensemble-exact";
@@ -20,13 +21,15 @@ export const COMPARAISON_VALEUR_EXACTE = "valeur-exacte";
 export const COMPARAISON_VALEURS_EXACTES = "valeurs-exactes";
 export const COMPARAISON_VALEUR_RATIONNELLE_EXACTE =
   "valeur-rationnelle-exacte";
-const DENOMINATEURS_DECIMAUX_RENDUS = new Set([1, 2, 4, 10, 100, 1000]);
+const DENOMINATEURS_DECIMAUX_RENDUS = new Set([1, 2, 4, 5, 10, 100, 1000]);
 export const TYPES_BLOC_V2 = Object.freeze([
   "texte",
   "entier",
   "rationnel",
   "puissance",
   "solide",
+  "droite-graduee",
+  "repere-cartesien",
 ]);
 export const TYPES_OUTIL_AIDE_V2 = Object.freeze([
   "observer-unites",
@@ -128,6 +131,10 @@ function validerBlocs(blocs, nom, erreurs, { auMoinsUn = false } = {}) {
         ? ["id", "type", "base", "exposant"]
       : bloc.type === "solide"
         ? ["id", "type", "forme", "variante", "vue", "mesures"]
+      : bloc.type === "droite-graduee"
+        ? ["id", "type", "depart", "pas", "nombreIntervalles", "etiquettes", "point", "points"]
+      : bloc.type === "repere-cartesien"
+        ? ["id", "type", "xMin", "xMax", "yMin", "yMax", "points", "nomPoint"]
         : ["id", "type", "contenu"];
     validerClesConnues(bloc, cles, chemin, erreurs);
     if (!estIdentifiantValide(bloc.id)) {
@@ -152,8 +159,8 @@ function validerBlocs(blocs, nom, erreurs, { auMoinsUn = false } = {}) {
       erreurs.push(`${chemin}.valeur : entier naturel requis`);
     }
     if (bloc.type === "rationnel") {
-      if (!Number.isSafeInteger(bloc.numerateur) || bloc.numerateur < 0) {
-        erreurs.push(`${chemin}.numerateur : entier naturel requis`);
+      if (!Number.isSafeInteger(bloc.numerateur)) {
+        erreurs.push(`${chemin}.numerateur : entier sûr requis`);
       }
       if (!Number.isSafeInteger(bloc.denominateur) || bloc.denominateur <= 0) {
         erreurs.push(
@@ -170,6 +177,121 @@ function validerBlocs(blocs, nom, erreurs, { auMoinsUn = false } = {}) {
         erreurs.push(
           `${chemin}.denominateur : dénominateur décimal rendu requis`,
         );
+      }
+    }
+    if (bloc.type === "droite-graduee") {
+      const validerRationnel = (valeur, nom, { positif = false } = {}) => {
+        if (typeof valeur !== "object" || valeur === null || Array.isArray(valeur)) {
+          erreurs.push(`${nom} : rationnel attendu`);
+          return;
+        }
+        validerClesConnues(valeur, ["numerateur", "denominateur"], nom, erreurs);
+        if (!Number.isSafeInteger(valeur.numerateur) || (positif && valeur.numerateur <= 0)) {
+          erreurs.push(`${nom}.numerateur : entier${positif ? " strictement positif" : " sûr"} requis`);
+        }
+        if (!Number.isSafeInteger(valeur.denominateur) || valeur.denominateur <= 0) {
+          erreurs.push(`${nom}.denominateur : entier strictement positif requis`);
+        }
+      };
+      validerRationnel(bloc.depart, `${chemin}.depart`);
+      validerRationnel(bloc.pas, `${chemin}.pas`, { positif: true });
+      if (!Number.isInteger(bloc.nombreIntervalles) || bloc.nombreIntervalles < 4 || bloc.nombreIntervalles > 12) {
+        erreurs.push(`${chemin}.nombreIntervalles : entier entre 4 et 12 requis`);
+      }
+      if (!Array.isArray(bloc.etiquettes) || bloc.etiquettes.length < 2) {
+        erreurs.push(`${chemin}.etiquettes : au moins deux indices requis`);
+      } else if (bloc.etiquettes.some((indice) => !Number.isInteger(indice) || indice < 0 || indice > bloc.nombreIntervalles)) {
+        erreurs.push(`${chemin}.etiquettes : indices de graduations valides requis`);
+      }
+      const validerPoint = (point, nom) => {
+        if (typeof point !== "object" || point === null || Array.isArray(point)) {
+          erreurs.push(`${nom} : objet attendu`);
+        } else {
+          validerClesConnues(point, ["nom", "indice", "position"], nom, erreurs);
+          if (typeof point.nom !== "string" || !/^[A-Z]$/.test(point.nom)) {
+            erreurs.push(`${nom}.nom : lettre majuscule requise`);
+          }
+          if (!Number.isInteger(point.indice) || point.indice < 0 || point.indice > bloc.nombreIntervalles) {
+            erreurs.push(`${nom}.indice : graduation visible requise`);
+          }
+          if (point.position !== undefined && point.position !== "dessus" && point.position !== "dessous") {
+            erreurs.push(`${nom}.position : « dessus » ou « dessous » attendu`);
+          }
+        }
+      };
+      if (bloc.point !== undefined && bloc.points !== undefined) {
+        erreurs.push(`${chemin} : « point » et « points » sont exclusifs`);
+      }
+      if (bloc.point !== undefined) validerPoint(bloc.point, `${chemin}.point`);
+      if (bloc.points !== undefined) {
+        if (!Array.isArray(bloc.points) || bloc.points.length < 2 || bloc.points.length > 3) {
+          erreurs.push(`${chemin}.points : deux ou trois points requis`);
+        } else {
+          bloc.points.forEach((point, indexPoint) => validerPoint(point, `${chemin}.points[${indexPoint}]`));
+          const noms = bloc.points.map((point) => point?.nom);
+          if (new Set(noms).size !== noms.length) erreurs.push(`${chemin}.points : noms distincts requis`);
+        }
+      }
+    }
+    if (bloc.type === "repere-cartesien") {
+      const bornes = [
+        ["xMin", -20, -1],
+        ["xMax", 1, 20],
+        ["yMin", -20, -1],
+        ["yMax", 1, 20],
+      ];
+      for (const [cle, minimum, maximum] of bornes) {
+        if (!Number.isSafeInteger(bloc[cle]) || bloc[cle] < minimum || bloc[cle] > maximum) {
+          erreurs.push(`${chemin}.${cle} : entier entre ${minimum} et ${maximum} requis`);
+        }
+      }
+      if (
+        Number.isSafeInteger(bloc.xMin)
+        && Number.isSafeInteger(bloc.xMax)
+        && (bloc.xMax - bloc.xMin < 4 || bloc.xMax - bloc.xMin > 12)
+      ) {
+        erreurs.push(`${chemin} : xMax − xMin doit être compris entre 4 et 12`);
+      }
+      if (
+        Number.isSafeInteger(bloc.yMin)
+        && Number.isSafeInteger(bloc.yMax)
+        && (bloc.yMax - bloc.yMin < 4 || bloc.yMax - bloc.yMin > 12)
+      ) {
+        erreurs.push(`${chemin} : yMax − yMin doit être compris entre 4 et 12`);
+      }
+      if (typeof bloc.nomPoint !== "string" || !/^[A-NP-Z]$/.test(bloc.nomPoint)) {
+        erreurs.push(`${chemin}.nomPoint : lettre majuscule différente de O requise`);
+      }
+      if (bloc.points !== undefined) {
+        if (!Array.isArray(bloc.points) || bloc.points.length < 1 || bloc.points.length > 6) {
+          erreurs.push(`${chemin}.points : un à six points requis`);
+        } else {
+          bloc.points.forEach((point, indexPoint) => {
+            const cheminPoint = `${chemin}.points[${indexPoint}]`;
+            if (typeof point !== "object" || point === null || Array.isArray(point)) {
+              erreurs.push(`${cheminPoint} : objet attendu`);
+              return;
+            }
+            validerClesConnues(point, ["nom", "x", "y"], cheminPoint, erreurs);
+            if (typeof point.nom !== "string" || !/^[A-NP-Z]$/.test(point.nom)) {
+              erreurs.push(`${cheminPoint}.nom : lettre majuscule différente de O requise`);
+            }
+            if (!Number.isSafeInteger(point.x) || point.x < bloc.xMin || point.x > bloc.xMax) {
+              erreurs.push(`${cheminPoint}.x : abscisse entière visible requise`);
+            }
+            if (!Number.isSafeInteger(point.y) || point.y < bloc.yMin || point.y > bloc.yMax) {
+              erreurs.push(`${cheminPoint}.y : ordonnée entière visible requise`);
+            }
+          });
+          const noms = bloc.points.map((point) => point?.nom);
+          const positions = bloc.points.map((point) => `${point?.x};${point?.y}`);
+          if (new Set(noms).size !== noms.length) {
+            erreurs.push(`${chemin}.points : noms distincts requis`);
+          }
+          if (new Set(positions).size !== positions.length) {
+            erreurs.push(`${chemin}.points : positions distinctes requises`);
+          }
+        }
       }
     }
     if (bloc.type === "puissance") {
@@ -250,11 +372,12 @@ function validerReponse(reponse, erreurs) {
   const unique = reponse.type === TYPE_REPONSE_CHOIX_UNIQUE;
   const entier = reponse.type === TYPE_REPONSE_ENTIER_NATUREL;
   const deuxEntiers = reponse.type === TYPE_REPONSE_DEUX_ENTIERS;
+  const deuxEntiersRelatifs = reponse.type === TYPE_REPONSE_DEUX_ENTIERS_RELATIFS;
   const decimal = reponse.type === TYPE_REPONSE_NOMBRE_DECIMAL;
   const fraction = reponse.type === TYPE_REPONSE_FRACTION_EQUIVALENTE;
-  if (!multiple && !unique && !entier && !deuxEntiers && !decimal && !fraction) {
+  if (!multiple && !unique && !entier && !deuxEntiers && !deuxEntiersRelatifs && !decimal && !fraction) {
     erreurs.push(
-      "reponse.type : sélection multiple, choix unique, entier naturel, deux entiers, nombre décimal ou fraction équivalente attendus",
+      "reponse.type : sélection multiple, choix unique, entier naturel, deux entiers, deux entiers relatifs, nombre décimal ou fraction équivalente attendus",
     );
     return;
   }
@@ -282,8 +405,8 @@ function validerReponse(reponse, erreurs) {
       "reponse.attendu",
       erreurs,
     );
-    if (!Number.isSafeInteger(attendu.numerateur) || attendu.numerateur < 0) {
-      erreurs.push("reponse.attendu.numerateur : entier naturel requis");
+    if (!Number.isSafeInteger(attendu.numerateur)) {
+      erreurs.push("reponse.attendu.numerateur : entier sûr requis");
     }
     if (!Number.isSafeInteger(attendu.denominateur) || attendu.denominateur <= 0) {
       erreurs.push(
@@ -300,7 +423,7 @@ function validerReponse(reponse, erreurs) {
     return;
   }
 
-  if (entier || deuxEntiers) {
+  if (entier || deuxEntiers || deuxEntiersRelatifs) {
     validerClesConnues(
       reponse,
       entier
@@ -317,8 +440,13 @@ function validerReponse(reponse, erreurs) {
         `reponse.comparaison : « ${comparaisonAttendue} » attendu`,
       );
     }
-    if (!Number.isSafeInteger(reponse.minimum) || reponse.minimum < 0) {
-      erreurs.push("reponse.minimum : entier naturel requis");
+    if (
+      !Number.isSafeInteger(reponse.minimum)
+      || (!deuxEntiersRelatifs && reponse.minimum < 0)
+    ) {
+      erreurs.push(deuxEntiersRelatifs
+        ? "reponse.minimum : entier relatif requis"
+        : "reponse.minimum : entier naturel requis");
     }
     if (
       !Number.isSafeInteger(reponse.maximum) ||
@@ -564,6 +692,24 @@ export function estDeuxEntiersExacts(attendus, recus) {
   if (
     attendus.some((valeur) => !Number.isSafeInteger(valeur) || valeur < 0) ||
     recus.some((valeur) => !Number.isSafeInteger(valeur) || valeur < 0)
+  ) {
+    return false;
+  }
+  return attendus[0] === recus[0] && attendus[1] === recus[1];
+}
+
+/**
+ * Compare un couple ordonné d'entiers relatifs sans conversion implicite.
+ * L'ordre est significatif : `(x ; y)` et `(y ; x)` restent distincts.
+ * @param {unknown} attendus
+ * @param {unknown} recus
+ */
+export function estDeuxEntiersRelatifsExacts(attendus, recus) {
+  if (!Array.isArray(attendus) || !Array.isArray(recus)) return false;
+  if (attendus.length !== 2 || recus.length !== 2) return false;
+  if (
+    attendus.some((valeur) => !Number.isSafeInteger(valeur))
+    || recus.some((valeur) => !Number.isSafeInteger(valeur))
   ) {
     return false;
   }

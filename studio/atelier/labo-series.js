@@ -71,8 +71,12 @@ import {
 } from "../../packages/objets/src/correspondances-decimales.js";
 import {
   PREREGLAGES_DROITE_GRADUEE,
+  construireEchelleReguliere,
+  dessinerDroiteGraduee,
   dessinerPrereglageDroiteGraduee,
+  formaterNombre,
 } from "../../packages/objets/src/droite-graduee.js";
+import { dessinerRepereCartesien } from "../../packages/objets/src/repere-cartesien.js";
 import { VARIATIONS_THALES, creerThales, dessinerThales } from "../../packages/objets/src/thales.js";
 import { creerGenerateur } from "../../packages/moteur-exercices/src/aleatoire.js";
 
@@ -892,10 +896,118 @@ function entreeDroiteParGenre({ titre, genre, defaut }) {
 }
 
 const entreeDroiteGraduee = entreeDroiteParGenre({
-  titre: "Droite graduée",
+  titre: "Droite graduée — validation GE-01 / GE-02",
   genre: "simple",
   defaut: "decimaux",
 });
+
+function etiquettesLimitees(graduations, valeursVisibles) {
+  const visibles = new Set(valeursVisibles.map(String));
+  return Object.fromEntries(
+    graduations.map((valeur) => [
+      String(valeur),
+      visibles.has(String(valeur)) ? formaterNombre(valeur) : "",
+    ]),
+  );
+}
+
+function casEchelleReguliere({
+  legende,
+  depart,
+  pas,
+  nombreIntervalles,
+  valeursVisibles,
+  point = null,
+  largeur = 430,
+}) {
+  const echelle = construireEchelleReguliere({ depart, pas, nombreIntervalles });
+  return {
+    legende,
+    dessiner: () => dessinerDroiteGraduee({
+      ...echelle,
+      etiquettes: etiquettesLimitees(echelle.graduations, valeursVisibles),
+      points: point ? [point] : [],
+      largeur,
+      description: legende,
+    }).svg,
+  };
+}
+
+// Cette planche n'est pas une banque de questions. Elle met l'objet commun
+// sous contrainte avec les configurations demandées pour GE-01 / GE-02.
+entreeDroiteGraduee.planche = () => [
+  casEchelleReguliere({
+    legende: "Pas 0,1 · zéro à gauche · point A à 0,7",
+    depart: 0,
+    pas: 0.1,
+    nombreIntervalles: 10,
+    valeursVisibles: [0, 0.5, 1],
+    point: { valeur: 0.7, etiquette: "A", position: "dessus" },
+  }),
+  casEchelleReguliere({
+    legende: "Pas 0,25 · relatifs · zéro centré",
+    depart: -1,
+    pas: 0.25,
+    nombreIntervalles: 8,
+    valeursVisibles: [-1, 0, 1],
+    point: { valeur: -0.25, etiquette: "B", position: "dessus" },
+  }),
+  casEchelleReguliere({
+    legende: "Pas 0,5 · origine non centrée",
+    depart: -1,
+    pas: 0.5,
+    nombreIntervalles: 8,
+    valeursVisibles: [-1, 0, 3],
+    point: { valeur: 2.5, etiquette: "C", position: "dessous" },
+  }),
+  casEchelleReguliere({
+    legende: "Pas 1 · valeurs toutes négatives · zéro à droite",
+    depart: -8,
+    pas: 1,
+    nombreIntervalles: 8,
+    valeursVisibles: [-8, -4, 0],
+    point: { valeur: -3, etiquette: "D", position: "dessus" },
+  }),
+  casEchelleReguliere({
+    legende: "Pas 10 · origine hors champ · seules deux références sont données",
+    depart: 20,
+    pas: 10,
+    nombreIntervalles: 6,
+    valeursVisibles: [20, 60],
+    point: { valeur: 70, etiquette: "E", position: "dessus" },
+  }),
+  casEchelleReguliere({
+    legende: "Pas 10 · −20 et 20 connus · graduation suivante repérée",
+    depart: -20,
+    pas: 10,
+    nombreIntervalles: 6,
+    valeursVisibles: [-20, 20],
+    point: { valeur: 30, etiquette: "F", position: "dessus" },
+  }),
+  casEchelleReguliere({
+    legende: "Pas 50 · grande échelle jusqu'à 150",
+    depart: -100,
+    pas: 50,
+    nombreIntervalles: 5,
+    valeursVisibles: [-100, 0, 100],
+    point: { valeur: 150, etiquette: "G", position: "dessous" },
+  }),
+  casEchelleReguliere({
+    legende: "Zéro présent mais non écrit · deux références non nulles",
+    depart: -3,
+    pas: 1,
+    nombreIntervalles: 8,
+    valeursVisibles: [-1, 3],
+    point: { valeur: 0, etiquette: "H", position: "dessus" },
+  }),
+  casEchelleReguliere({
+    legende: "Placement · droite muette · aucune réponse préaffichée",
+    depart: -2,
+    pas: 0.5,
+    nombreIntervalles: 8,
+    valeursVisibles: [],
+  }),
+];
 const entreeDoubleDroiteGraduee = entreeDroiteParGenre({
   titre: "Double droite graduée",
   genre: "double",
@@ -906,6 +1018,137 @@ const entreeDoubleDroitePourcentage = entreeDroiteParGenre({
   genre: "pourcentage",
   defaut: "pourcentage-quarts",
 });
+
+// ---------------------------------------------------------------------------
+// Repère cartésien scolaire — objet partagé GE-03 / GE-04
+// ---------------------------------------------------------------------------
+
+const BORNES_REPERE_STUDIO = Object.freeze({
+  symetrique: Object.freeze({ xMin: -4, xMax: 4, yMin: -3, yMax: 3 }),
+  "x-asymetrique": Object.freeze({ xMin: -5, xMax: 3, yMin: -3, yMax: 4 }),
+  "y-asymetrique": Object.freeze({ xMin: -3, xMax: 4, yMin: -5, yMax: 3 }),
+});
+
+function optionsRepereStudio(v) {
+  const bornes = BORNES_REPERE_STUDIO[v.bornes];
+  const mode = v.mode;
+  const point = { nom: "M", x: Number(v.x), y: Number(v.y), role: v.role };
+  return {
+    ...bornes,
+    largeur: Number(v.largeur),
+    points: mode === "vide" ? [] : [point],
+    guides: mode === "lecture"
+      ? [
+        { x: point.x, y: point.y, axe: "abscisses" },
+        { x: point.x, y: point.y, axe: "ordonnees" },
+      ]
+      : [],
+    cheminPlacement: mode === "placement-horizontal"
+      ? { x: point.x, y: point.y, etape: "horizontal" }
+      : mode === "placement-complet"
+        ? { x: point.x, y: point.y, etape: "complet" }
+        : null,
+    description: "Repère cartésien scolaire — essai du Studio",
+  };
+}
+
+const entreeRepereCartesien = {
+  titre: "Repère cartésien — validation GE-03 / GE-04",
+  parametres: [
+    { cle: "x", libelle: "Abscisse de M", min: -3, max: 3, pas: 1, defaut: -3 },
+    { cle: "y", libelle: "Ordonnée de M", min: -3, max: 3, pas: 1, defaut: 2 },
+    { cle: "largeur", libelle: "Largeur", min: 280, max: 900, pas: 20, defaut: 640 },
+  ],
+  groupes: [
+    {
+      cle: "bornes",
+      options: [
+        ["symetrique", "−4 à 4 ; −3 à 3"],
+        ["x-asymetrique", "−5 à 3 ; −3 à 4"],
+        ["y-asymetrique", "−3 à 4 ; −5 à 3"],
+      ],
+      defaut: "symetrique",
+    },
+    {
+      cle: "mode",
+      options: [
+        ["point", "Point seul"],
+        ["lecture", "Guides de lecture"],
+        ["placement-horizontal", "Placement : abscisse"],
+        ["placement-complet", "Placement complet"],
+        ["vide", "Repère vide"],
+      ],
+      defaut: "lecture",
+    },
+    {
+      cle: "role",
+      options: [["donne", "Point donné"], ["choisi", "Point choisi"], ["attendu", "Point attendu"]],
+      defaut: "donne",
+    },
+  ],
+  dessiner: (v) => dessinerRepereCartesien(optionsRepereStudio(v)).svg,
+  planche: () => [
+    {
+      legende: "Lecture M(−3 ; 2) — guides distincts",
+      dessiner: () => dessinerRepereCartesien({
+        xMin: -4, xMax: 4, yMin: -3, yMax: 3, largeur: 430,
+        points: [{ nom: "M", x: -3, y: 2 }],
+        guides: [{ x: -3, y: 2, axe: "abscisses" }, { x: -3, y: 2, axe: "ordonnees" }],
+      }).svg,
+    },
+    {
+      legende: "Bornes asymétriques — point au bord",
+      dessiner: () => dessinerRepereCartesien({
+        xMin: -5, xMax: 3, yMin: -3, yMax: 4, largeur: 430,
+        points: [{ nom: "A", x: 3, y: 4 }],
+      }).svg,
+    },
+    {
+      legende: "Points sur les axes et à l'origine",
+      dessiner: () => dessinerRepereCartesien({
+        xMin: -4, xMax: 4, yMin: -3, yMax: 3, largeur: 430,
+        points: [{ nom: "C", x: 3, y: 0 }, { nom: "D", x: 0, y: -2 }, { nom: "A", x: 0, y: 0 }],
+      }).svg,
+    },
+    {
+      legende: "Identification — quatre points espacés",
+      dessiner: () => dessinerRepereCartesien({
+        xMin: -4, xMax: 4, yMin: -3, yMax: 3, largeur: 430,
+        points: [{ nom: "A", x: -3, y: 2 }, { nom: "B", x: 2, y: 2 }, { nom: "C", x: -2, y: -2 }, { nom: "D", x: 3, y: -1 }],
+      }).svg,
+    },
+    {
+      legende: "Correction — point choisi et point attendu",
+      dessiner: () => dessinerRepereCartesien({
+        xMin: -4, xMax: 4, yMin: -3, yMax: 3, largeur: 430,
+        points: [
+          { nom: "T", x: 2, y: -3, role: "choisi", afficherNom: false },
+          { nom: "M", x: -3, y: 2, role: "attendu" },
+        ],
+      }).svg,
+    },
+    {
+      legende: "Placement — horizontal puis vertical",
+      dessiner: () => dessinerRepereCartesien({
+        xMin: -4, xMax: 4, yMin: -3, yMax: 3, largeur: 430,
+        points: [{ nom: "B", x: 2, y: -1 }],
+        cheminPlacement: { x: 2, y: -1, etape: "complet" },
+      }).svg,
+    },
+    {
+      legende: "Téléphone 320 px — nombres et point proches des axes",
+      dessiner: () => dessinerRepereCartesien({
+        xMin: -5, xMax: 3, yMin: -3, yMax: 4, largeur: 320,
+        points: [{ nom: "P", x: -1, y: 1 }],
+      }).svg,
+    },
+  ],
+  vignette: () => dessinerRepereCartesien({
+    xMin: -4, xMax: 4, yMin: -3, yMax: 3, largeur: 320,
+    points: [{ nom: "M", x: -3, y: 2 }],
+    guides: [{ x: -3, y: 2, axe: "abscisses" }, { x: -3, y: 2, axe: "ordonnees" }],
+  }).svg,
+};
 
 // ---------------------------------------------------------------------------
 // Pourcentages : l'objet barre-pourcentage (préréglages + gabarits)
@@ -1393,6 +1636,7 @@ export const SERIES = [
       doubleDroitePourcentage: entreeDoubleDroitePourcentage,
     },
   },
+  { nom: "Repères cartésiens", objets: { repereCartesien: entreeRepereCartesien } },
   {
     nom: "Pourcentages",
     objets: Object.fromEntries(

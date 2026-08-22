@@ -12,7 +12,7 @@ import {
 } from "./identifiants.js";
 
 describe("identifiants canoniques d'Automatismes V2", () => {
-  it("fixe sept domaines et neuf micro-notions descriptives distinctes", () => {
+  it("fixe sept domaines et treize micro-notions descriptives distinctes", () => {
     assert.deepEqual(Object.values(DOMAINES_AUTOMATISMES), [
       "nombres-et-calculs",
       "calcul-litteral-et-algebre",
@@ -26,8 +26,14 @@ describe("identifiants canoniques d'Automatismes V2", () => {
       new Set(Object.values(MICRO_NOTIONS_AUTOMATISMES)).size,
       Object.values(MICRO_NOTIONS_AUTOMATISMES).length,
     );
-    assert.equal(Object.values(IDENTITES_AUTOMATISMES).length, 9);
+    assert.equal(Object.values(IDENTITES_AUTOMATISMES).length, 13);
     assert.ok(Object.values(IDENTITES_AUTOMATISMES).every(Object.isFrozen));
+    assert.equal(IDENTITES_AUTOMATISMES.LIRE_COORDONNEES_POINT.codePilotage, "GE-03");
+    assert.equal(IDENTITES_AUTOMATISMES.PLACER_POINT_REPERE.codePilotage, "GE-04");
+    assert.notEqual(
+      IDENTITES_AUTOMATISMES.LIRE_COORDONNEES_POINT.module,
+      IDENTITES_AUTOMATISMES.PLACER_POINT_REPERE.module,
+    );
   });
 
   it("conserve seulement l'ancien slug des carres comme alias de module", () => {

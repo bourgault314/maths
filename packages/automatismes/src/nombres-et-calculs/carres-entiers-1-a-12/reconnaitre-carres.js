@@ -4,7 +4,7 @@ import {
   COMPARAISON_ENSEMBLE_EXACT,
   SCHEMA_QUESTION_INSTANCE_V2,
   TYPE_REPONSE_SELECTION_MULTIPLE,
-} from "../../../../contrats/src/question-v2.js?v=44";
+} from "../../../../contrats/src/question-v2.js?v=46";
 import {
   BASES_CARRES_ENTIERS,
   calculerCarre,
@@ -14,7 +14,7 @@ import {
   exigerAleatoireCarres,
   exigerParametresCarres,
   retrouverBaseCarree,
-} from "./commun.js?v=44";
+} from "./commun.js?v=46";
 
 export const NOM_GENERATEUR_RECONNAITRE_CARRES =
   "nombres-et-calculs.carres-entiers-1-a-12.reconnaitre-carres";

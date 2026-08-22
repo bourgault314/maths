@@ -48,6 +48,15 @@ describe("clavier maths&go — profils contextuels", () => {
     assert.equal(disposition.touches.at(-1).classe, "touche-zero-large");
   });
 
+  it("fournit aux coordonnées un pavé entier signé sans virgule", () => {
+    const disposition = obtenirDispositionClavier("entier-relatif");
+    const libelles = disposition.touches.map(({ libelle }) => libelle);
+    assert.equal(disposition.colonnes, 4);
+    assert.ok(libelles.includes("−"));
+    assert.ok(!libelles.includes(","));
+    assert.equal(disposition.touches.at(-1).classe, "touche-zero-large");
+  });
+
   it("conserve l'ancien alias nombres et refuse les profils inconnus", () => {
     assert.equal(
       obtenirDispositionClavier("nombres"),

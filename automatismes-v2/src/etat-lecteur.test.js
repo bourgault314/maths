@@ -8,6 +8,7 @@ import {
   COMPARAISON_VALEUR_RATIONNELLE_EXACTE,
   TYPE_REPONSE_CHOIX_UNIQUE,
   TYPE_REPONSE_DEUX_ENTIERS,
+  TYPE_REPONSE_DEUX_ENTIERS_RELATIFS,
   TYPE_REPONSE_ENTIER_NATUREL,
   TYPE_REPONSE_FRACTION_EQUIVALENTE,
   TYPE_REPONSE_NOMBRE_DECIMAL,
@@ -30,6 +31,8 @@ import {
   NOTION_FRACTIONS_SIMPLES_DECIMAUX,
   NOTION_NC01,
   NOTION_NC02,
+  NOTION_LIRE_COORDONNEES_POINT,
+  NOTION_PLACER_POINT_REPERE,
   NOTION_SOLIDES_USUELS,
   NOTION_VOLUME_CUBE_PAVE,
   NOTION_VOLUME_CYLINDRE,
@@ -924,6 +927,75 @@ describe("réponse avec deux champs entiers", () => {
 
     assert.deepEqual(etat.saisies, ["", ""]);
     assert.equal(etat.champSaisieActif, 0);
+  });
+});
+
+describe("repérage dans le plan", () => {
+  function saisirEntierRelatifDansChamp(etat, index, valeur) {
+    selectionnerChampSaisie(etat, index);
+    if (valeur < 0) saisirCaractere(etat, "−");
+    for (const chiffre of String(Math.abs(valeur))) saisirCaractere(etat, chiffre);
+  }
+
+  it("saisit et trace séparément l'abscisse et l'ordonnée signées de GE-03", () => {
+    const etat = etatDemarre({
+      notion: NOTION_LIRE_COORDONNEES_POINT,
+      nombreQuestions: 5,
+      graine: "fixture-ge03-couple",
+    });
+    const question = questionCourante(etat);
+    assert.equal(question.reponse.type, TYPE_REPONSE_DEUX_ENTIERS_RELATIFS);
+    const [x, y] = question.reponse.attendus;
+    saisirEntierRelatifDansChamp(etat, 0, x);
+    saisirEntierRelatifDansChamp(etat, 1, y);
+    validerSelection(etat);
+    assert.equal(etat.validation.juste, true);
+    assert.deepEqual(etat.traces[0].reponse.valeurs, [x, y]);
+    assert.equal(validerTraceReponse(etat.traces[0]).valide, true);
+  });
+
+  it("garde une saisie partielle réparable et refuse la virgule dans un couple entier", () => {
+    const etat = etatDemarre({
+      notion: NOTION_LIRE_COORDONNEES_POINT,
+      nombreQuestions: 5,
+      graine: "fixture-ge03-partiel",
+    });
+    saisirCaractere(etat, "−");
+    saisirCaractere(etat, ",");
+    assert.equal(etat.saisies[0], "−");
+    validerSelection(etat);
+    assert.match(etat.erreurValidation, /deux cases|entier/);
+    assert.equal(etat.validation, null);
+    saisirCaractere(etat, "3");
+    assert.equal(etat.saisies[0], "−3");
+  });
+
+  it("permet de déplacer le point provisoire de GE-04 avant validation", () => {
+    const etat = etatDemarre({
+      notion: NOTION_PLACER_POINT_REPERE,
+      nombreQuestions: 5,
+      graine: "fixture-ge04-placement",
+    });
+    const question = questionCourante(etat);
+    const attendu = question.reponse.attendus[0];
+    const autre = question.reponse.choix.find((choix) => choix.id !== attendu).id;
+    basculerChoix(etat, autre);
+    assert.deepEqual(etat.selection, [autre]);
+    basculerChoix(etat, attendu);
+    assert.deepEqual(etat.selection, [attendu]);
+    validerSelection(etat);
+    assert.equal(etat.validation.juste, true);
+    assert.deepEqual(etat.traces[0].reponse.choix, [attendu]);
+  });
+
+  it("génère séparément les deux modules et leur cours partagé en trois pages", () => {
+    const lecture = creerEtatLecteur({ notion: NOTION_LIRE_COORDONNEES_POINT, nombreQuestions: 5 });
+    const placement = creerEtatLecteur({ notion: NOTION_PLACER_POINT_REPERE, nombreQuestions: 5 });
+    assert.notEqual(lecture.configuration.notions[0], placement.configuration.notions[0]);
+    ouvrirCours(lecture);
+    ouvrirCours(placement);
+    assert.equal(lecture.notionCoursOuverte, NOTION_LIRE_COORDONNEES_POINT);
+    assert.equal(placement.notionCoursOuverte, NOTION_PLACER_POINT_REPERE);
   });
 });
 

@@ -11,11 +11,12 @@ import { estDonneePure, estIdentifiantValide } from "./gabarit.js";
 import {
   TYPE_REPONSE_CHOIX_UNIQUE,
   TYPE_REPONSE_DEUX_ENTIERS,
+  TYPE_REPONSE_DEUX_ENTIERS_RELATIFS,
   TYPE_REPONSE_ENTIER_NATUREL,
   TYPE_REPONSE_FRACTION_EQUIVALENTE,
   TYPE_REPONSE_NOMBRE_DECIMAL,
   TYPE_REPONSE_SELECTION_MULTIPLE,
-} from "./question-v2.js?v=44";
+} from "./question-v2.js?v=46";
 
 export const SCHEMA_TRACE_REPONSE_V1 = "mathsgo.trace-reponse/1";
 export const SCHEMA_TRACE_REPONSE_V2 = "mathsgo.trace-reponse/2";
@@ -23,21 +24,23 @@ export const SCHEMA_TRACE_REPONSE = "mathsgo.trace-reponse/3";
 export const REFERENTIEL_COMPETENCES = "mathsgo.taxonomie-competences/1";
 
 const FORMAT_ID_INSTANCE = /^[a-z0-9][a-z0-9._:@-]{0,199}$/;
-const FORMAT_DECIMAL_POSITIF = /^(?:\d+(?:[.,]\d*)?|[.,]\d+)$/;
+const FORMAT_DECIMAL_SIGNE = /^[−-]?(?:\d+(?:[.,]\d*)?|[.,]\d+)$/u;
 
 function decomposerSaisieDecimale(saisie) {
   if (typeof saisie !== "string") return null;
   const compacte = saisie.replace(/\s/gu, "").replace(",", ".");
-  if (!FORMAT_DECIMAL_POSITIF.test(compacte)) return null;
-  const [partieEntiere = "0", partieDecimale = ""] = compacte.split(".");
+  if (!FORMAT_DECIMAL_SIGNE.test(compacte)) return null;
+  const negative = /^[−-]/u.test(compacte);
+  const sansSigne = negative ? compacte.slice(1) : compacte;
+  const [partieEntiere = "0", partieDecimale = ""] = sansSigne.split(".");
   if (partieDecimale.replace(/0+$/, "").length > 3) return null;
   const chiffres = `${partieEntiere || "0"}${partieDecimale}`;
-  return { chiffres, nombreDecimales: partieDecimale.length };
+  return { chiffres, nombreDecimales: partieDecimale.length, signe: negative ? -1n : 1n };
 }
 
 function valeurCorrespondSaisieDecimale(decomposition, valeur) {
-  const { chiffres, nombreDecimales } = decomposition;
-  const numerateurSaisi = BigInt(chiffres);
+  const { chiffres, nombreDecimales, signe } = decomposition;
+  const numerateurSaisi = signe * BigInt(chiffres);
   const denominateurSaisi = 10n ** BigInt(nombreDecimales);
   return (
     numerateurSaisi * BigInt(valeur.denominateur)
@@ -244,6 +247,8 @@ export function validerTraceReponse(trace) {
     ].includes(t.reponse.type);
     const typeEntier = t.reponse.type === TYPE_REPONSE_ENTIER_NATUREL;
     const typeDeuxEntiers = t.reponse.type === TYPE_REPONSE_DEUX_ENTIERS;
+    const typeDeuxEntiersRelatifs =
+      t.reponse.type === TYPE_REPONSE_DEUX_ENTIERS_RELATIFS;
     const typeDecimal = t.reponse.type === TYPE_REPONSE_NOMBRE_DECIMAL;
     const typeFraction =
       t.reponse.type === TYPE_REPONSE_FRACTION_EQUIVALENTE;
@@ -258,7 +263,7 @@ export function validerTraceReponse(trace) {
         ? ["type", "statut"]
         : typeEntier
           ? ["type", ...(version3 ? ["statut"] : []), "valeur"]
-          : typeDeuxEntiers || typeFraction
+          : typeDeuxEntiers || typeDeuxEntiersRelatifs || typeFraction
             ? ["type", ...(version3 ? ["statut"] : []), "valeurs"]
             : typeDecimal
               ? ["type", ...(version3 ? ["statut"] : []), "saisie", "valeur"]
@@ -270,11 +275,12 @@ export function validerTraceReponse(trace) {
       !typeChoix &&
       !typeEntier &&
       !typeDeuxEntiers &&
+      !typeDeuxEntiersRelatifs &&
       !typeDecimal &&
       !typeFraction
     ) {
       erreurs.push(
-        `reponse.type : « ${TYPE_REPONSE_SELECTION_MULTIPLE} », « ${TYPE_REPONSE_CHOIX_UNIQUE} », « ${TYPE_REPONSE_ENTIER_NATUREL} », « ${TYPE_REPONSE_DEUX_ENTIERS} », « ${TYPE_REPONSE_NOMBRE_DECIMAL} » ou « ${TYPE_REPONSE_FRACTION_EQUIVALENTE} » attendu`,
+        `reponse.type : « ${TYPE_REPONSE_SELECTION_MULTIPLE} », « ${TYPE_REPONSE_CHOIX_UNIQUE} », « ${TYPE_REPONSE_ENTIER_NATUREL} », « ${TYPE_REPONSE_DEUX_ENTIERS} », « ${TYPE_REPONSE_DEUX_ENTIERS_RELATIFS} », « ${TYPE_REPONSE_NOMBRE_DECIMAL} » ou « ${TYPE_REPONSE_FRACTION_EQUIVALENTE} » attendu`,
       );
     }
     if (statutOmis) {
@@ -285,15 +291,18 @@ export function validerTraceReponse(trace) {
       if (!Number.isSafeInteger(t.reponse.valeur) || t.reponse.valeur < 0) {
         erreurs.push("reponse.valeur : entier naturel requis");
       }
-    } else if (typeDeuxEntiers || typeFraction) {
+    } else if (typeDeuxEntiers || typeDeuxEntiersRelatifs || typeFraction) {
       if (!Array.isArray(t.reponse.valeurs) || t.reponse.valeurs.length !== 2) {
         erreurs.push("reponse.valeurs : exactement deux entiers sont requis");
       } else if (
         t.reponse.valeurs.some(
-          (valeur) => !Number.isSafeInteger(valeur) || valeur < 0,
+          (valeur) => !Number.isSafeInteger(valeur)
+            || (!typeDeuxEntiersRelatifs && valeur < 0),
         )
       ) {
-        erreurs.push("reponse.valeurs : deux entiers naturels requis");
+        erreurs.push(typeDeuxEntiersRelatifs
+          ? "reponse.valeurs : deux entiers relatifs requis"
+          : "reponse.valeurs : deux entiers naturels requis");
       } else if (typeFraction && t.reponse.valeurs[1] === 0) {
         erreurs.push(
           "reponse.valeurs[1] : dénominateur strictement positif requis",
@@ -303,7 +312,7 @@ export function validerTraceReponse(trace) {
       const decomposition = decomposerSaisieDecimale(t.reponse.saisie);
       const saisieValide = decomposition !== null;
       if (!saisieValide) {
-        erreurs.push("reponse.saisie : nombre décimal positif requis");
+        erreurs.push("reponse.saisie : nombre décimal positif ou négatif requis");
       }
       const valeur = t.reponse.valeur;
       let valeurValide = true;
@@ -321,9 +330,9 @@ export function validerTraceReponse(trace) {
           "reponse.valeur",
           erreurs,
         );
-        if (!Number.isSafeInteger(valeur.numerateur) || valeur.numerateur < 0) {
+        if (!Number.isSafeInteger(valeur.numerateur)) {
           valeurValide = false;
-          erreurs.push("reponse.valeur.numerateur : entier naturel requis");
+          erreurs.push("reponse.valeur.numerateur : entier sûr requis");
         }
         if (!Number.isSafeInteger(valeur.denominateur) || valeur.denominateur <= 0) {
           valeurValide = false;
