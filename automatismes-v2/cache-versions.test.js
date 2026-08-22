@@ -227,8 +227,8 @@ it("invalide ensemble le cache de la coque V2", async () => {
   }
 });
 
-it("recharge les deux ressources modifiées par la finition du menu", async () => {
+it("recharge les deux ressources modifiées par la restauration complète du menu", async () => {
   const source = await readFile(new URL("../automatismes-v2/index.html", import.meta.url), "utf8");
-  assert.match(source, /menu\.css\?v=49&amp;rev=50/);
-  assert.match(source, /app\.js\?v=49&amp;rev=50/);
+  assert.match(source, /menu\.css\?v=49&amp;rev=51/);
+  assert.match(source, /app\.js\?v=49&amp;rev=51/);
 });

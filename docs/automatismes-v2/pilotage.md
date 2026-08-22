@@ -188,6 +188,14 @@ Les huit modules publiés au 22 août 2026 sont tous compatibles avec les quatre
 filtres au regard du programme officiel : l'égalité actuelle des listes est
 donc attendue et ne neutralise pas le contrat de filtrage des futurs modules.
 
+Le menu possède deux niveaux de sélection groupée. « Tous » ajoute toutes les
+entrées visibles pour la classe courante ; « Aucun » remet toute la sélection
+à zéro, y compris les entrées masquées par un autre filtre. Dans un domaine
+non vide, la commande locale est vide, partielle ou complète et bascule entre
+tout sélectionner et tout désélectionner. Un domaine vide reste visible mais
+ne propose pas cette commande. La barre de lancement n'apparaît qu'après la
+sélection effective d'au moins un automatisme visible.
+
 ## Forme de réponse
 
 Par défaut, c'est toujours l'élève qui saisit sa réponse. La première exception

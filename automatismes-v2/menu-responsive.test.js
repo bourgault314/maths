@@ -21,6 +21,14 @@ describe("menu Cycle 4 – DNB responsive", () => {
       css,
       /@media \(max-width: 360px\)[\s\S]*?\.menu-v10 \.segment-btn\s*\{[^}]*min-height:\s*44px;/s,
     );
+    assert.match(
+      css,
+      /\.menu-v10 \.bulk-actions button\s*\{[^}]*min-height:\s*44px;/s,
+    );
+    assert.match(
+      css,
+      /\.menu-v10 \.theme-select-all\s*\{[^}]*min-height:\s*44px;/s,
+    );
   });
 
   it("ne rogne pas le contour de focus des boutons segmentés", () => {
@@ -60,6 +68,36 @@ describe("menu Cycle 4 – DNB responsive", () => {
     assert.match(
       css,
       /@media \(max-width: 360px\)[\s\S]*?\.menu-v10 \.level-label small\s*\{[^}]*display:\s*none/s,
+    );
+  });
+
+  it("reprend la palette stable des quatre domaines du menu publié", () => {
+    const palettes = {
+      numbers: ["#049e98", "#e8f8f6"],
+      geometry: ["#ed7a0b", "#fff3e7"],
+      data: ["#3478c8", "#eaf3ff"],
+      algorithm: ["#7355b7", "#f1edfb"],
+    };
+    for (const [domaine, [accent, fond]] of Object.entries(palettes)) {
+      assert.match(
+        css,
+        new RegExp(`\\.theme-group\\[data-theme="${domaine}"\\]\\s*\\{[^}]*--theme-accent:\\s*${accent};[^}]*--theme-soft:\\s*${fond};`, "s"),
+      );
+    }
+    assert.match(
+      css,
+      /\.menu-v10 \.modrow\.is-selected\s*\{[^}]*border-color:\s*var\(--theme-accent\);[^}]*background:\s*var\(--theme-soft\);/s,
+    );
+  });
+
+  it("réserve l'espace du bouton de lancement seulement après une sélection", () => {
+    assert.match(
+      css,
+      /\.menu-v10\.has-launch-action\s*\{[^}]*padding-bottom:\s*max\(118px,/s,
+    );
+    assert.match(
+      css,
+      /@media \(max-width: 650px\)[\s\S]*?\.menu-v10\.has-launch-action\s*\{[^}]*padding-bottom:\s*max\(84px,/s,
     );
   });
 });

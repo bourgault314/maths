@@ -1725,3 +1725,42 @@ nom de famille. Aucun générateur, contenu pédagogique, classement, seed ou
 module — notamment GE-03 et GE-04 — n'est modifié. Les seules ressources de
 façade modifiées, `app.js` et `menu.css`, reçoivent la révision publique `50` ;
 le graphe de modules reste inchangé en `v49`.
+
+### D-072 — Les états de sélection du menu de référence sont un contrat V2
+
+L'audit croisé de `studio/automatismes/` et du menu publié sous `/auto/`
+retrouve des interactions qui n'avaient été que partiellement transposées dans
+la première façade V2. Elles deviennent un contrat explicite du lanceur V2,
+sans créer de dépendance vers ces deux applications historiques.
+
+L'en-tête « Choisir les automatismes » contient les commandes « Tous » et
+« Aucun ». « Tous » ajoute toutes les notions visibles pour le filtre de classe
+courant et se grise lorsqu'elles sont déjà toutes sélectionnées. « Aucun »
+efface toute la sélection, y compris une notion momentanément masquée par un
+autre filtre, afin qu'aucune ancienne coche ne réapparaisse par surprise ; il
+se grise lorsque la sélection est vide.
+
+Chaque domaine non vide commence par « Tout sélectionner dans ce domaine ».
+Son contrôle accessible expose `aria-checked="false"`, `mixed` ou `true` :
+case vide quand aucune notion n'est cochée, petit moins quand une partie l'est,
+coche lorsque tout le domaine l'est. Un clic depuis l'état vide ou partiel
+complète le domaine ; un clic depuis l'état complet le vide. Les domaines sans
+notion restent affichés mais ne présentent pas une action impossible.
+
+Les quatre regroupements retrouvent la palette stable du menu publié :
+turquoise `#049e98` / `#e8f8f6` pour Nombres et calculs, orange `#ed7a0b` /
+`#fff3e7` pour Espace et géométrie, bleu `#3478c8` / `#eaf3ff` pour Données,
+statistiques et probabilités, violet `#7355b7` / `#f1edfb` pour Pensée
+informatique. Cette couleur porte l'ouverture du domaine, son compteur, son
+contrôle groupé et les cartes sélectionnées.
+
+La barre fixe « Lancer la série » n'est pas rendue tant qu'aucun automatisme
+visible n'est sélectionné. Elle apparaît à la première sélection réelle, pas
+au simple dépliage d'un domaine, et disparaît après la dernière
+désélection. Le choix de plusieurs notions conserve la règle D-039 : la
+première longueur suffisante est choisie sans supprimer une sélection.
+
+Cette restauration est exclusivement une modification de façade. Elle ne
+change ni générateur, ni seed, ni classe, ni contenu pédagogique, ni séparation
+de GE-03 et GE-04. `app.js` et `menu.css` reçoivent la révision `51` ; le graphe
+de modules demeure en `v49`.

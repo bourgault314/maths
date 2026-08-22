@@ -2243,14 +2243,14 @@ it("propose le parcours DNB puis lance Au tableau sans saisie ni score", async (
   assert.match(application.innerHTML, /S'entraîner/);
   assert.match(application.innerHTML, /Au tableau/);
   assert.match(application.innerHTML, /Choisir les automatismes/);
+  assert.match(application.innerHTML, /data-action="selectionner-tout"[\s\S]*?>Tous<\/button>/);
+  assert.match(application.innerHTML, /data-action="selectionner-aucun"[\s\S]*?disabled>Aucun<\/button>/);
   assert.match(application.innerHTML, /Nombres et calculs/);
   assert.match(application.innerHTML, /M7\.5 11\.5h21M7\.5 18h21M7\.5 24\.5h21/);
   assert.match(application.innerHTML, /Espace et géométrie/);
   assert.match(application.innerHTML, /mathsgo-truchet-/);
   assert.match(application.innerHTML, /Données, statistiques et probabilités/);
   assert.match(application.innerHTML, /Pensée informatique/);
-  assert.match(application.innerHTML, /aria-label="Série sans calculatrice"/);
-  assert.match(application.innerHTML, /class="sans-calculatrice-icon"/);
   assert.match(application.innerHTML, /M3\.6 21\.4 20\.4 2\.6/);
   assert.match(application.innerHTML, /Critères de divisibilité/);
   assert.match(application.innerHTML, /Carrés des entiers/);
@@ -2260,14 +2260,16 @@ it("propose le parcours DNB puis lance Au tableau sans saisie ni score", async (
   assert.match(application.innerHTML, /0 \/ 3/);
   assert.equal((application.innerHTML.match(/0 \/ 0/g) ?? []).length, 2);
   assert.equal((application.innerHTML.match(/Aucun automatisme disponible pour le moment/g) ?? []).length, 2);
+  assert.equal((application.innerHTML.match(/data-action="selectionner-domaine"/g) ?? []).length, 2);
+  assert.equal((application.innerHTML.match(/role="checkbox" aria-checked="false"/g) ?? []).length, 2);
   assert.match(application.innerHTML, /<summary>Remerciements<\/summary>/);
   assert.match(application.innerHTML, /Un grand merci à Claire pour son regard pédagogique, ses relectures attentives et toutes ses précieuses idées/);
   assert.equal((application.innerHTML.match(/Gérer mes cookies/g) ?? []).length, 1);
   assert.match(application.innerHTML, /data-mathsgo-consent-open/);
   assert.match(application.innerHTML, />Gérer mes cookies<\/button>/);
   assert.doesNotMatch(application.innerHTML, /DocTools|Eric Hakenholz|Crédits et remerciements/);
-  assert.match(application.innerHTML, /Choisis au moins un automatisme/);
-  assert.match(application.innerHTML, /data-action="preparer" disabled/);
+  assert.doesNotMatch(application.innerHTML, /class="setup-action-shell"/);
+  assert.doesNotMatch(application.innerHTML, /data-action="preparer"/);
   assert.equal(
     [...application.innerHTML.matchAll(/class="modrow is-selected"/g)].length,
     0,
@@ -2280,6 +2282,10 @@ it("propose le parcours DNB puis lance Au tableau sans saisie ni score", async (
 
   cliquer(gestionnaires, "choisir-notion", undefined, "criteres-divisibilite");
   assert.match(application.innerHTML, /1 \/ 5/);
+  assert.match(application.innerHTML, /data-value="numbers"[\s\S]*?role="checkbox" aria-checked="mixed"/);
+  assert.match(application.innerHTML, /class="setup-action-shell"/);
+  assert.match(application.innerHTML, /aria-label="Série sans calculatrice"/);
+  assert.match(application.innerHTML, /class="sans-calculatrice-icon"/);
   assert.doesNotMatch(application.innerHTML, /data-action="preparer" disabled/);
   assert.equal(
     [...application.innerHTML.matchAll(/class="modrow is-selected"/g)].length,
@@ -2310,6 +2316,84 @@ it("propose le parcours DNB puis lance Au tableau sans saisie ni score", async (
   cliquer(gestionnaires, "fermer-menu");
   cliquer(gestionnaires, "reponse");
   assert.match(application.innerHTML, /Réponse affichée/);
+});
+
+it("retrouve les sélections globales et les trois états de chaque domaine du Studio", async () => {
+  const { application, gestionnaires } = installerFauxNavigateur("");
+  await import(`./app.js?fumee=menu-selections-groupees-${Date.now()}`);
+
+  assert.doesNotMatch(application.innerHTML, /class="setup-action-shell"/);
+  assert.match(
+    application.innerHTML,
+    /data-action="selectionner-aucun"[\s\S]*?disabled>Aucun<\/button>/,
+  );
+  assert.equal(
+    (application.innerHTML.match(/data-action="selectionner-domaine"/g) ?? []).length,
+    2,
+    "les domaines vides ne proposent pas une sélection impossible",
+  );
+
+  cliquer(gestionnaires, "selectionner-domaine", undefined, "numbers");
+  assert.match(application.innerHTML, /5 \/ 5/);
+  assert.match(
+    application.innerHTML,
+    /data-action="selectionner-domaine" data-value="numbers"[\s\S]*?aria-checked="true"/,
+  );
+  assert.equal(
+    (application.innerHTML.match(/class="modrow is-selected"/g) ?? []).length,
+    5,
+  );
+  assert.match(application.innerHTML, /class="setup-action-shell"/);
+
+  cliquer(gestionnaires, "choisir-notion", undefined, "criteres-divisibilite");
+  assert.match(application.innerHTML, /4 \/ 5/);
+  assert.match(
+    application.innerHTML,
+    /data-action="selectionner-domaine" data-value="numbers"[\s\S]*?aria-checked="mixed"/,
+  );
+
+  cliquer(gestionnaires, "selectionner-domaine", undefined, "numbers");
+  assert.match(application.innerHTML, /5 \/ 5/);
+  assert.match(
+    application.innerHTML,
+    /data-action="selectionner-domaine" data-value="numbers"[\s\S]*?aria-checked="true"/,
+  );
+  cliquer(gestionnaires, "selectionner-domaine", undefined, "numbers");
+  assert.match(application.innerHTML, /0 \/ 5/);
+  assert.match(
+    application.innerHTML,
+    /data-action="selectionner-domaine" data-value="numbers"[\s\S]*?aria-checked="false"/,
+  );
+  assert.doesNotMatch(application.innerHTML, /class="setup-action-shell"/);
+
+  cliquer(gestionnaires, "selectionner-tout");
+  assert.equal(
+    (application.innerHTML.match(/class="modrow is-selected"/g) ?? []).length,
+    8,
+  );
+  assert.match(application.innerHTML, /5 \/ 5/);
+  assert.match(application.innerHTML, /3 \/ 3/);
+  assert.match(
+    application.innerHTML,
+    /data-action="selectionner-tout"[\s\S]*?disabled>Tous<\/button>/,
+  );
+  assert.doesNotMatch(
+    application.innerHTML,
+    /data-action="selectionner-aucun"[\s\S]*?disabled>Aucun<\/button>/,
+  );
+  assert.match(application.innerHTML, /8 automatismes sélectionnés/);
+  assert.match(application.innerHTML, /10 questions/);
+
+  cliquer(gestionnaires, "selectionner-aucun");
+  assert.equal(
+    (application.innerHTML.match(/class="modrow is-selected"/g) ?? []).length,
+    0,
+  );
+  assert.doesNotMatch(application.innerHTML, /class="setup-action-shell"/);
+  assert.match(
+    application.innerHTML,
+    /data-action="selectionner-aucun"[\s\S]*?disabled>Aucun<\/button>/,
+  );
 });
 
 it("applique le niveau choisi et conserve les sélections communes au cycle 4", async () => {
@@ -2562,8 +2646,8 @@ it("sélectionne, révise et rejoue plusieurs automatismes dans une même série
   const { application, gestionnaires } = installerFauxNavigateur("");
   await import(`./app.js?fumee=multi-${Date.now()}`);
 
-  assert.match(application.innerHTML, /Choisis au moins un automatisme/);
-  assert.match(application.innerHTML, /data-action="preparer" disabled/);
+  assert.doesNotMatch(application.innerHTML, /class="setup-action-shell"/);
+  assert.doesNotMatch(application.innerHTML, /data-action="preparer"/);
   assert.equal(
     [...application.innerHTML.matchAll(/class="modrow is-selected"/g)].length,
     0,

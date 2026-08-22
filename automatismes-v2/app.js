@@ -330,6 +330,19 @@ function notionsSelectionneesVisiblesMenu() {
     .filter((notion) => visibles.has(notion));
 }
 
+function ajusterVolumeMenu() {
+  const nombreSelectionne = notionsSelectionneesVisiblesMenu().length;
+  if (configurationMenu.nombreQuestions >= nombreSelectionne) return;
+  configurationMenu.nombreQuestions = VOLUMES_MENU.find(
+    (volume) => volume >= nombreSelectionne,
+  ) ?? VOLUMES_MENU.at(-1);
+}
+
+function definirSelectionMenu(notions) {
+  configurationMenu.notions = trierNotionsMenu([...new Set(notions)]);
+  ajusterVolumeMenu();
+}
+
 function libelleNiveauResume(niveau = configurationMenu.niveau) {
   return `${niveau} · Sans calculatrice`;
 }
@@ -411,23 +424,37 @@ function rendreDomainesMenu() {
       const selectionnee = nombreSelectionne > 0;
       const vide = domaine.notions.length === 0;
       const complete = !vide && nombreSelectionne === domaine.notions.length;
+      const etatSelection = complete ? "true" : selectionnee ? "mixed" : "false";
       const ouvert = domaineMenuOuvert === domaine.id;
-      return `<details class="theme-group ${selectionnee ? "has-selection" : ""} ${complete ? "is-complete" : ""} ${vide ? "is-empty" : ""}"
+      const classes = [
+        "theme-group",
+        selectionnee ? "has-selection" : "",
+        complete ? "is-complete" : "",
+        vide ? "is-empty" : "",
+      ].filter(Boolean).join(" ");
+      return `<details class="${classes}"
         data-theme="${echapper(domaine.id)}" ${ouvert ? "open" : ""}>
         <summary class="theme-summary">
           <span class="theme-icon" aria-hidden="true">${rendreIconeDomaineMenu(domaine.icone, GRAINE_ICONES_DOMAINES)}</span>
           <span class="theme-name">${echapper(domaine.nom)}</span>
-          <span class="theme-count">${nombreSelectionne} / ${domaine.notions.length}${vide ? "" : ` <span class="theme-count-label">sélectionné${nombreSelectionne > 1 ? "s" : ""}</span>`}</span>
+          <span class="theme-count">${nombreSelectionne} / ${domaine.notions.length}${vide ? "" : ` <span class="theme-count-label">sélectionné${nombreSelectionne === 1 ? "" : "s"}</span>`}</span>
           <span class="theme-chevron" aria-hidden="true"></span>
         </summary>
         <div class="theme-items">
           ${vide
             ? '<p class="theme-empty-message">Aucun automatisme disponible pour le moment.</p>'
-            : `<div class="module-subgroup-items">
+            : `<button class="theme-select-all" type="button"
+                data-action="selectionner-domaine" data-value="${echapper(domaine.id)}"
+                role="checkbox" aria-checked="${etatSelection}"
+                aria-label="${complete ? "Désélectionner" : "Sélectionner"} tous les automatismes de ${echapper(domaine.nom)}">
+                <span class="theme-select-mark" aria-hidden="true">${complete ? "✓" : selectionnee ? "−" : ""}</span>
+                <span>Tout sélectionner dans ce domaine</span>
+              </button>
+              <div class="module-subgroup-items">
               ${domaine.notions.map((idNotion) => {
               const libelle = LIBELLES_MODULES_MENU[idNotion];
               const estSelectionnee = selection.has(idNotion);
-              return `<label class="modrow ${estSelectionnee ? "is-selected" : ""}">
+              return `<label class="modrow${estSelectionnee ? " is-selected" : ""}">
                 <input type="checkbox" data-action="choisir-notion" data-value="${echapper(idNotion)}"
                   ${estSelectionnee ? "checked" : ""}>
                 <span><strong>${echapper(libelle.titre)}</strong><small>${echapper(libelle.precision)}</small></span>
@@ -445,6 +472,10 @@ function rendreMenuAccueil() {
   const avecAide = configurationMenu.aide !== "indisponible";
   const notionsSelectionnees = notionsSelectionneesVisiblesMenu();
   const nombreSelectionne = notionsSelectionnees.length;
+  const notionsVisibles = notionsVisiblesPourNiveau(configurationMenu.niveau);
+  const selection = new Set(configurationMenu.notions);
+  const toutesVisiblesSelectionnees = notionsVisibles.length > 0
+    && notionsVisibles.every((notion) => selection.has(notion));
   const selectionValide = nombreSelectionne > 0
     && notionsSelectionnees.every(connaitNotionLecteur)
     && nombreSelectionne <= configurationMenu.nombreQuestions;
@@ -452,7 +483,23 @@ function rendreMenuAccueil() {
     nombreSelectionne,
     configurationMenu.nombreQuestions,
   );
-  return `<main class="menu-v10">
+  const barreLancement = nombreSelectionne > 0
+    ? `<div class="setup-action-shell" aria-label="Résumé et lancement de la série">
+      <div class="setup-action-bar">
+        <div class="setup-summary" aria-live="polite">
+          <strong>${libelleNombreAutomatismes(nombreSelectionne)} sélectionné${nombreSelectionne === 1 ? "" : "s"}</strong>
+          <span>${echapper(libelleNiveauResume())} · ${configurationMenu.nombreQuestions} questions${repartition ? ` · ${echapper(repartition)}` : ""} · ${libelleMode(configurationMenu.mode)} · ${libelleAide()}</span>
+        </div>
+        <div class="launch-cluster">
+          <span class="sans-calculatrice-context" role="img" aria-label="Série sans calculatrice" title="Série sans calculatrice">
+            ${rendreIconeCalculatriceBarree("sans-calculatrice-icon")}
+          </span>
+          <button class="generate-action" type="button" data-action="preparer" ${selectionValide ? "" : "disabled"}>Lancer la série</button>
+        </div>
+      </div>
+    </div>`
+    : "";
+  return `<main class="menu-v10${nombreSelectionne > 0 ? " has-launch-action" : ""}">
     <div class="app">
       <header class="header">
         <a class="logo-link" href="/" aria-label="Retour à l'accueil maths&go" title="Retour à l'accueil maths&go">
@@ -523,6 +570,12 @@ function rendreMenuAccueil() {
               <span class="section-step section-step-modules" aria-hidden="true">2</span>
               <h2 id="modulesTitle">Choisir les automatismes</h2>
             </div>
+            <div class="bulk-actions" role="group" aria-label="Sélection des automatismes">
+              <button type="button" data-action="selectionner-tout"
+                aria-label="Tout sélectionner" ${toutesVisiblesSelectionnees || notionsVisibles.length === 0 ? "disabled" : ""}>Tous</button>
+              <button type="button" data-action="selectionner-aucun"
+                aria-label="Tout désélectionner" ${configurationMenu.notions.length === 0 ? "disabled" : ""}>Aucun</button>
+            </div>
           </div>
           <div class="modules" aria-label="Domaines d'automatismes">
             ${rendreDomainesMenu()}
@@ -540,20 +593,7 @@ function rendreMenuAccueil() {
       </div>
     </div>
 
-    <div class="setup-action-shell ${selectionValide ? "" : "is-empty"}" aria-label="Résumé et lancement de la série">
-      <div class="setup-action-bar">
-        <div class="setup-summary" aria-live="polite">
-          <strong>${selectionValide ? `${libelleNombreAutomatismes(nombreSelectionne)} sélectionné${nombreSelectionne === 1 ? "" : "s"}` : "Choisis au moins un automatisme"}</strong>
-          <span>${echapper(libelleNiveauResume())} · ${configurationMenu.nombreQuestions} questions${repartition ? ` · ${echapper(repartition)}` : ""} · ${libelleMode(configurationMenu.mode)} · ${libelleAide()}</span>
-        </div>
-        <div class="launch-cluster">
-          <span class="sans-calculatrice-context" role="img" aria-label="Série sans calculatrice" title="Série sans calculatrice">
-            ${rendreIconeCalculatriceBarree("sans-calculatrice-icon")}
-          </span>
-          <button class="generate-action" type="button" data-action="preparer" ${selectionValide ? "" : "disabled"}>Lancer la série</button>
-        </div>
-      </div>
-    </div>
+    ${barreLancement}
   </main>`;
 }
 
@@ -5966,12 +6006,7 @@ application.addEventListener("click", (evenement) => {
   let reinitialiserDefilementPanneau = false;
   if (action === "choisir-niveau" && NIVEAUX_PARCOURS.includes(cible.dataset.value)) {
     configurationMenu.niveau = cible.dataset.value;
-    const nombreSelectionne = notionsSelectionneesVisiblesMenu().length;
-    if (configurationMenu.nombreQuestions < nombreSelectionne) {
-      configurationMenu.nombreQuestions = VOLUMES_MENU.find(
-        (volume) => volume >= nombreSelectionne,
-      ) ?? VOLUMES_MENU.at(-1);
-    }
+    ajusterVolumeMenu();
   }
   if (action === "choisir-aide") {
     configurationMenu.aide = cible.dataset.value === "indisponible"
@@ -5987,22 +6022,39 @@ application.addEventListener("click", (evenement) => {
       configurationMenu.nombreQuestions = volume;
     }
   }
+  if (action === "selectionner-tout") {
+    definirSelectionMenu([
+      ...configurationMenu.notions,
+      ...notionsVisiblesPourNiveau(configurationMenu.niveau),
+    ]);
+  }
+  if (action === "selectionner-aucun") {
+    definirSelectionMenu([]);
+  }
+  if (action === "selectionner-domaine") {
+    const domaine = domainesMenuPourNiveau(configurationMenu.niveau)
+      .find(({ id }) => id === cible.dataset.value);
+    if (domaine && domaine.notions.length > 0) {
+      domaineMenuOuvert = domaine.id;
+      const selection = new Set(configurationMenu.notions);
+      const complete = domaine.notions.every((notion) => selection.has(notion));
+      domaine.notions.forEach((notion) => {
+        if (complete) selection.delete(notion);
+        else selection.add(notion);
+      });
+      definirSelectionMenu([...selection]);
+    }
+  }
   if (action === "choisir-notion") {
     const notionDemandee = cible.dataset.value;
     if (notionsVisiblesPourNiveau(configurationMenu.niveau).includes(notionDemandee)) {
       const selection = new Set(configurationMenu.notions);
       if (selection.has(notionDemandee)) {
         selection.delete(notionDemandee);
-      } else if (selection.size < VOLUMES_MENU.at(-1)) {
+      } else {
         selection.add(notionDemandee);
       }
-      configurationMenu.notions = trierNotionsMenu([...selection]);
-      const nombreSelectionne = notionsSelectionneesVisiblesMenu().length;
-      if (configurationMenu.nombreQuestions < nombreSelectionne) {
-        configurationMenu.nombreQuestions = VOLUMES_MENU.find(
-          (volume) => volume >= nombreSelectionne,
-        ) ?? VOLUMES_MENU.at(-1);
-      }
+      definirSelectionMenu([...selection]);
     }
   }
   if (action === "preparer") {

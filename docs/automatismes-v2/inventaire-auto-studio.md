@@ -46,6 +46,11 @@ Sources historiques :
 - barre de résumé et de lancement fixe ;
 - zones sûres des téléphones, adaptations à 650 px et 360 px ;
 - cibles tactiles, focus et états accessibles ;
+- commandes globales « Tous / Aucun » ;
+- commande locale « Tout sélectionner dans ce domaine » avec ses états vide,
+  partiel et complet, absente des domaines vides ;
+- palette stable par domaine : turquoise, orange, bleu et violet ;
+- barre de lancement absente jusqu'à la première sélection effective ;
 - calculatrice barrée dans tous les niveaux, puisque toutes les séries sont sans
   calculatrice ;
 - filtres de classe `5e`, `4e`, `3e` et `DNB` ;
