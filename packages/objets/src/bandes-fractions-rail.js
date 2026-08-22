@@ -14,16 +14,16 @@ import {
   construireGroupementFraction,
   formaterFractionEnDecimal,
   obtenirDonneesDroiteFractionnaire,
-} from "./fractions-decimaux.js?v=50";
+} from "./fractions-decimaux.js?v=51";
 import {
   mesurerEcritureFractionSvg,
   rendreFractionSvg,
-} from "./expressions.js?v=50";
+} from "./expressions.js?v=51";
 import {
   COULEURS_BANDES_FRACTIONS,
   TYPOGRAPHIE,
   couleurBandeFraction,
-} from "../../charte/src/charte.js?v=50";
+} from "../../charte/src/charte.js?v=51";
 
 export const VERSION_BANDES_FRACTIONS_RAIL = 7;
 

@@ -17,12 +17,18 @@ import {
   formaterEntierRepere,
 } from "./questions.js";
 import {
+  PAQUET_FAMILLES_LIRE_COORDONNEES,
+  PAQUET_PAS_REPERE,
+  PAQUET_ZONES_LECTURE,
+  PAQUET_ZONES_PLACEMENT,
   QUOTAS_LIRE_COORDONNEES,
   genererSerieLireCoordonnees,
   genererSeriePlacerPointRepere,
   planifierSerieLireCoordonnees,
   planifierSeriePlacerPointRepere,
 } from "./serie.js";
+
+const LONGUEURS = Object.freeze([1, 2, 5, 10, 15, 20]);
 
 function compterFamilles(plan) {
   return {
@@ -58,10 +64,13 @@ function verifierPlanLong(plan) {
 }
 
 describe("plans seedés GE-03 / GE-04", () => {
-  it("respecte exactement les quotas GE-03 aux quatre longueurs de série", () => {
-    for (const taille of [5, 10, 15, 20]) {
-      const plan = planifierSerieLireCoordonnees({ graine: "quotas", nombreQuestions: taille });
-      assert.deepEqual(compterFamilles(plan), QUOTAS_LIRE_COORDONNEES[taille]);
+  it("respecte exactement les quotas GE-03 à vingt", () => {
+    for (let seed = 0; seed < 500; seed += 1) {
+      const plan = planifierSerieLireCoordonnees({
+        graine: `quotas-${seed}`,
+        nombreQuestions: 20,
+      });
+      assert.deepEqual(compterFamilles(plan), QUOTAS_LIRE_COORDONNEES[20]);
     }
   });
 
@@ -112,18 +121,81 @@ describe("plans seedés GE-03 / GE-04", () => {
     assert.ok(originesPlacement >= 200 && originesPlacement <= 300, originesPlacement);
   });
 
-  it("dose les échelles : pas 1 majoritaire, 0,5 occasionnel et 0,25 rare", () => {
-    for (const taille of [5, 10, 15, 20]) {
+  it("garantit les échelles à vingt et rend tous les rares observables sur 1 ou 2 questions", () => {
+    for (let seed = 0; seed < 500; seed += 1) {
       for (const plan of [
-        planifierSerieLireCoordonnees({ graine: "echelles", nombreQuestions: taille }),
-        planifierSeriePlacerPointRepere({ graine: "echelles", nombreQuestions: taille }),
+        planifierSerieLireCoordonnees({ graine: `echelles-${seed}`, nombreQuestions: 20 }),
+        planifierSeriePlacerPointRepere({ graine: `echelles-${seed}`, nombreQuestions: 20 }),
       ]) {
-        assert.equal(plan.filter(({ pas }) => pas === 0.5).length, Math.floor(taille / 5));
-        assert.equal(plan.filter(({ pas }) => pas === 0.25).length, taille === 20 ? 1 : 0);
-        assert.ok(plan.filter(({ pas }) => pas === 1).length >= taille * 0.75);
+        assert.equal(plan.filter(({ pas }) => pas === 1).length, 15);
+        assert.equal(plan.filter(({ pas }) => pas === 0.5).length, 4);
+        assert.equal(plan.filter(({ pas }) => pas === 0.25).length, 1);
         for (const profil of plan.filter(({ pas }) => pas < 1)) {
           assert.ok(!Number.isInteger(profil.x) || !Number.isInteger(profil.y));
         }
+      }
+    }
+
+    const familles = new Set();
+    let pasQuart = 0;
+    let origineLecture = 0;
+    let originePlacement = 0;
+    let lecturesCompletes = 0;
+    for (let seed = 0; seed < 8_000; seed += 1) {
+      const nombreQuestions = seed % 2 + 1;
+      const lecture = planifierSerieLireCoordonnees({
+        graine: `petite-${seed}`,
+        nombreQuestions,
+      });
+      const placement = planifierSeriePlacerPointRepere({
+        graine: `petite-${seed}`,
+        nombreQuestions,
+      });
+      lecture.forEach(({ famille, pas, x, y }) => {
+        familles.add(famille);
+        pasQuart += Number(pas === 0.25);
+        origineLecture += Number(x === 0 && y === 0);
+        lecturesCompletes += Number(famille === FAMILLE_LIRE_COORDONNEES);
+      });
+      placement.forEach(({ pas, x, y }) => {
+        pasQuart += Number(pas === 0.25);
+        originePlacement += Number(x === 0 && y === 0);
+      });
+    }
+    assert.deepEqual(familles, new Set([
+      FAMILLE_LIRE_COORDONNEES,
+      FAMILLE_LIRE_ABSCISSE_REPERE,
+      FAMILLE_LIRE_ORDONNEE,
+      FAMILLE_DIAGNOSTIC_COORDONNEES,
+      FAMILLE_IDENTIFIER_POINT,
+    ]));
+    assert.ok(pasQuart > 0);
+    assert.ok(origineLecture > 0);
+    assert.ok(originePlacement > 0);
+    assert.ok(lecturesCompletes > 4_000);
+  });
+
+  it("déclare chaque dimension pédagogique sur vingt jetons", () => {
+    for (const paquet of [
+      PAQUET_FAMILLES_LIRE_COORDONNEES,
+      PAQUET_PAS_REPERE,
+      PAQUET_ZONES_LECTURE,
+      PAQUET_ZONES_PLACEMENT,
+    ]) assert.equal(paquet.tailleReference, 20);
+  });
+
+  it("reste déterministe et sans cible répétée à toutes les allocations", () => {
+    for (let seed = 0; seed < 3_000; seed += 1) {
+      const nombreQuestions = LONGUEURS[seed % LONGUEURS.length];
+      for (const planifier of [
+        planifierSerieLireCoordonnees,
+        planifierSeriePlacerPointRepere,
+      ]) {
+        const configuration = { graine: `audit-allocations-${seed}`, nombreQuestions };
+        const plan = planifier(configuration);
+        assert.deepEqual(planifier(configuration), plan);
+        assert.equal(plan.length, nombreQuestions);
+        assert.equal(new Set(plan.map(({ x, y }) => `${x};${y}`)).size, plan.length);
       }
     }
   });
@@ -132,12 +204,22 @@ describe("plans seedés GE-03 / GE-04", () => {
 describe("questions instanciées et cohérence du rendu", () => {
   it("instancie les deux séries au contrat V2", () => {
     const registre = creerRegistreAutomatismes();
-    const lecture = genererSerieLireCoordonnees({ registre, graine: "instance", nombreQuestions: 20 });
-    const placement = genererSeriePlacerPointRepere({ registre, graine: "instance", nombreQuestions: 20 });
-    assert.equal(lecture.length, 20);
-    assert.equal(placement.length, 20);
-    assert.ok(lecture.every((question) => question.schema === "mathsgo.question-instance/2"));
-    assert.ok(placement.every((question) => question.schema === "mathsgo.question-instance/2"));
+    for (const nombreQuestions of LONGUEURS) {
+      const lecture = genererSerieLireCoordonnees({
+        registre,
+        graine: `instance-lecture-${nombreQuestions}`,
+        nombreQuestions,
+      });
+      const placement = genererSeriePlacerPointRepere({
+        registre,
+        graine: `instance-placement-${nombreQuestions}`,
+        nombreQuestions,
+      });
+      assert.equal(lecture.length, nombreQuestions);
+      assert.equal(placement.length, nombreQuestions);
+      assert.ok(lecture.every((question) => question.schema === "mathsgo.question-instance/2"));
+      assert.ok(placement.every((question) => question.schema === "mathsgo.question-instance/2"));
+    }
   });
 
   it("garde l'affichage, la réponse et la correction cohérents sur 100 seeds", () => {

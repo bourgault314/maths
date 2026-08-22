@@ -109,9 +109,6 @@ export function validerSeance(seance) {
     if (new Set(s.selection).size !== s.selection.length) {
       erreurs.push("selection : doublons interdits");
     }
-    if (Number.isInteger(s.nombreQuestions) && s.selection.length > s.nombreQuestions) {
-      erreurs.push("selection : chaque notion doit recevoir au moins une question");
-    }
   }
 
   if (typeof s.etat !== "object" || s.etat === null) {

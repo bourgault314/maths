@@ -4,38 +4,43 @@
 
 import { creerGenerateur } from "../../../../moteur-exercices/src/aleatoire.js";
 import {
+  definirPaquetPondere,
+  ordonnerEnLimitantRepetitions,
+  tirerProfilsPonderes,
+} from "../../../../moteur-exercices/src/paquets-ponderes.js?v=51";
+import {
   GABARIT_CALCUL_COURT_CARRE,
   BASES_CALCUL_COURT,
   OPERATIONS_CALCUL_COURT,
-} from "./calcul-court.js?v=50";
+} from "./calcul-court.js?v=51";
 import {
   BASES_ENCADREMENT_CARRE,
   FORMULATIONS_CALCUL_DIRECT,
   FORMULATIONS_CALCUL_DIRECT_QCM,
   GABARIT_CALCUL_DIRECT_CARRE,
-} from "./calcul-direct.js?v=50";
+} from "./calcul-direct.js?v=51";
 import {
   BASES_CARRE_QUADRILLE,
   FORMES_CARRE_QUADRILLE,
   GABARIT_CARRE_QUADRILLE,
-} from "./carre-quadrille.js?v=50";
+} from "./carre-quadrille.js?v=51";
 import {
   BASES_CARRES_ENTIERS,
-} from "./commun.js?v=50";
+} from "./commun.js?v=51";
 import {
   FORMULATIONS_RECONNAITRE_CARRES,
   GABARIT_RECONNAITRE_CARRES,
-} from "./reconnaitre-carres.js?v=50";
+} from "./reconnaitre-carres.js?v=51";
 import {
   FORMES_RETROUVER_ENTIER,
   GABARIT_RETROUVER_ENTIER_CARRE,
-} from "./retrouver-entier.js?v=50";
+} from "./retrouver-entier.js?v=51";
 import {
   BASES_SENS_NOTATION,
   GABARIT_SENS_NOTATION_CARRE,
-} from "./sens-notation.js?v=50";
+} from "./sens-notation.js?v=51";
 
-export const VERSION_PLAN_SERIE_NC02 = 2;
+export const VERSION_PLAN_SERIE_NC02 = 3;
 
 export const FAMILLES_NC02 = Object.freeze({
   F1: "calcul-direct",
@@ -46,40 +51,31 @@ export const FAMILLES_NC02 = Object.freeze({
   F6: "calcul-court",
 });
 
+const ORDRE_FAMILLES = Object.freeze(Object.values(FAMILLES_NC02));
 export const QUOTAS_SERIES_NC02 = Object.freeze({
-  5: Object.freeze([2, 1, 1, 1, 0, 0]),
-  10: Object.freeze([4, 2, 1, 1, 1, 1]),
-  15: Object.freeze([6, 4, 1, 1, 1, 2]),
   20: Object.freeze([8, 5, 1, 2, 2, 2]),
 });
 
-// Les longueurs intermédiaires servent uniquement lorsqu'une séance mélange
-// plusieurs notions. Les quatre jalons validés ci-dessus conservent exactement
-// leurs quotas et leur génération historiques.
-const RECETTE_PROGRESSIVE_NC02 = Object.freeze([
-  FAMILLES_NC02.F1,
-  FAMILLES_NC02.F2,
-  FAMILLES_NC02.F3,
-  FAMILLES_NC02.F1,
-  FAMILLES_NC02.F4,
-  FAMILLES_NC02.F2,
-  FAMILLES_NC02.F5,
-  FAMILLES_NC02.F6,
-  FAMILLES_NC02.F1,
-  FAMILLES_NC02.F1,
-  FAMILLES_NC02.F2,
-  FAMILLES_NC02.F6,
-  FAMILLES_NC02.F1,
-  FAMILLES_NC02.F2,
-  FAMILLES_NC02.F1,
-  FAMILLES_NC02.F4,
-  FAMILLES_NC02.F1,
-  FAMILLES_NC02.F5,
-  FAMILLES_NC02.F2,
-  FAMILLES_NC02.F1,
-]);
-
-const ORDRE_FAMILLES = Object.freeze(Object.values(FAMILLES_NC02));
+export const PAQUET_FAMILLES_NC02 = definirPaquetPondere({
+  id: "nc02-familles",
+  profils: [
+    { id: "f1-calculer", quota: 3, categorie: "principale", famille: FAMILLES_NC02.F1, formulation: "calculer" },
+    { id: "f1-carre-de", quota: 2, categorie: "principale", famille: FAMILLES_NC02.F1, formulation: "carre-de" },
+    { id: "f1-completer", quota: 1, categorie: "secondaire", famille: FAMILLES_NC02.F1, formulation: "completer" },
+    { id: "f1-choisir-resultat", quota: 1, categorie: "rare", famille: FAMILLES_NC02.F1, formulation: "choisir-resultat" },
+    { id: "f1-encadrer-resultat", quota: 1, categorie: "rare", famille: FAMILLES_NC02.F1, formulation: "encadrer-resultat" },
+    { id: "f2-question-verbale", quota: 2, categorie: "principale", famille: FAMILLES_NC02.F2, forme: "question-verbale" },
+    { id: "f2-produit-facteurs-egaux", quota: 2, categorie: "secondaire", famille: FAMILLES_NC02.F2, forme: "produit-facteurs-egaux" },
+    { id: "f2-egalite-carre", quota: 1, categorie: "secondaire", famille: FAMILLES_NC02.F2, forme: "egalite-carre" },
+    { id: "f3-sens-notation", quota: 1, categorie: "rare", famille: FAMILLES_NC02.F3 },
+    { id: "f4-nombres-carres", quota: 1, categorie: "secondaire", famille: FAMILLES_NC02.F4, formulation: "nombres-carres", nombreCarres: 1 },
+    { id: "f4-carres-parfaits", quota: 1, categorie: "secondaire", famille: FAMILLES_NC02.F4, formulation: "carres-parfaits", nombreCarres: 2 },
+    { id: "f5-trouver-aire", quota: 1, categorie: "secondaire", famille: FAMILLES_NC02.F5, forme: "trouver-aire" },
+    { id: "f5-trouver-cote", quota: 1, categorie: "secondaire", famille: FAMILLES_NC02.F5, forme: "trouver-cote" },
+    { id: "f6-addition", quota: 1, categorie: "secondaire", famille: FAMILLES_NC02.F6, operation: "addition" },
+    { id: "f6-soustraction", quota: 1, categorie: "secondaire", famille: FAMILLES_NC02.F6, operation: "soustraction" },
+  ],
+});
 const GABARITS = Object.freeze({
   [FAMILLES_NC02.F1]: GABARIT_CALCUL_DIRECT_CARRE,
   [FAMILLES_NC02.F2]: GABARIT_RETROUVER_ENTIER_CARRE,
@@ -106,56 +102,6 @@ function exigerConfiguration(graine, nombreQuestions) {
   ) {
     throw new RangeError("serie NC-02 : longueur attendue entre 1 et 20");
   }
-}
-
-function recettePour(nombreQuestions) {
-  if (Object.hasOwn(QUOTAS_SERIES_NC02, nombreQuestions)) {
-    return QUOTAS_SERIES_NC02[nombreQuestions].flatMap((nombre, index) =>
-      Array.from({ length: nombre }, () => ORDRE_FAMILLES[index]));
-  }
-  return RECETTE_PROGRESSIVE_NC02.slice(0, nombreQuestions);
-}
-
-function resteArrangeable(compte, precedent) {
-  const total = [...compte.values()].reduce((somme, nombre) => somme + nombre, 0);
-  return [...compte.entries()].every(([famille, nombre]) =>
-    nombre <= (famille === precedent ? Math.floor(total / 2) : Math.ceil(total / 2)),
-  );
-}
-
-function melangerFamilles(aleatoire, familles) {
-  const compte = new Map();
-  familles.forEach((famille) => {
-    compte.set(famille, (compte.get(famille) ?? 0) + 1);
-  });
-  const resultat = [];
-  while (resultat.length < familles.length) {
-    const precedent = resultat.at(-1);
-    const candidates = aleatoire.melange(
-      [...compte.entries()]
-        .filter(([, nombre]) => nombre > 0)
-        .map(([famille]) => famille),
-    ).filter((famille) =>
-      famille !== precedent &&
-      (
-        resultat.length > 0 ||
-        [FAMILLES_NC02.F1, FAMILLES_NC02.F2].includes(famille)
-      ));
-    const choisie = candidates.find((famille) => {
-      compte.set(famille, compte.get(famille) - 1);
-      const possible = resteArrangeable(compte, famille);
-      compte.set(famille, compte.get(famille) + 1);
-      return possible;
-    });
-    if (!choisie) {
-      throw new Error(
-        "serie NC-02 : impossible d'ordonner les familles sans répétition voisine",
-      );
-    }
-    compte.set(choisie, compte.get(choisie) - 1);
-    resultat.push(choisie);
-  }
-  return resultat;
 }
 
 function valeursCycliques(aleatoire, valeurs, nombre) {
@@ -195,7 +141,14 @@ function attribuerBasesRappel(aleatoire, descripteurs) {
       parametres !== encadrement.parametres
       && BASES_ENCADREMENT_CARRE.includes(parametres.base));
     if (!echange) {
-      throw new Error("serie NC-02 : aucune base compatible avec l'encadrement");
+      const utilisees = new Set(rappels.map(({ parametres }) => parametres.base));
+      const compatible = basesEquilibrees(aleatoire).find((base) =>
+        BASES_ENCADREMENT_CARRE.includes(base) && !utilisees.has(base));
+      if (compatible === undefined) {
+        throw new Error("serie NC-02 : aucune base compatible avec l'encadrement");
+      }
+      encadrement.parametres.base = compatible;
+      return;
     }
     const baseTemporaire = encadrement.parametres.base;
     encadrement.parametres.base = echange.parametres.base;
@@ -240,16 +193,24 @@ function formulationsDirectes(aleatoire, nombre) {
   return aleatoire.melange([...coeur, ...FORMULATIONS_CALCUL_DIRECT_QCM]);
 }
 
-function parametrerFamilles(aleatoire, familles) {
-  const descripteurs = familles.map((famille) => ({ famille, parametres: {} }));
+function parametrerFamilles(aleatoire, profils) {
+  const descripteurs = profils.map((profil) => {
+    const parametres = {};
+    for (const cle of ["formulation", "forme", "nombreCarres", "operation"]) {
+      if (profil[cle] !== undefined) parametres[cle] = profil[cle];
+    }
+    return { famille: profil.famille, parametres };
+  });
 
-  const directs = descripteurs.filter(({ famille }) => famille === FAMILLES_NC02.F1);
+  const directs = descripteurs.filter(({ famille, parametres }) =>
+    famille === FAMILLES_NC02.F1 && parametres.formulation === undefined);
   formulationsDirectes(aleatoire, directs.length)
     .forEach((formulation, index) => {
       directs[index].parametres.formulation = formulation;
     });
 
-  const inverses = descripteurs.filter(({ famille }) => famille === FAMILLES_NC02.F2);
+  const inverses = descripteurs.filter(({ famille, parametres }) =>
+    famille === FAMILLES_NC02.F2 && parametres.forme === undefined);
   formesInverse(aleatoire, inverses.length).forEach((forme, index) => {
     inverses[index].parametres.forme = forme;
   });
@@ -271,8 +232,12 @@ function parametrerFamilles(aleatoire, familles) {
     reconnaissances.length,
   );
   reconnaissances.forEach((descripteur, index) => {
-    descripteur.parametres.nombreCarres = nombresCarres[index];
-    descripteur.parametres.formulation = formulationsReconnaissance[index];
+    if (descripteur.parametres.nombreCarres === undefined) {
+      descripteur.parametres.nombreCarres = nombresCarres[index];
+    }
+    if (descripteur.parametres.formulation === undefined) {
+      descripteur.parametres.formulation = formulationsReconnaissance[index];
+    }
   });
 
   const quadrillages = descripteurs.filter(({ famille }) => famille === FAMILLES_NC02.F5);
@@ -283,14 +248,18 @@ function parametrerFamilles(aleatoire, familles) {
   );
   valeursCycliques(aleatoire, FORMES_CARRE_QUADRILLE, quadrillages.length)
     .forEach((forme, index) => {
-      quadrillages[index].parametres.forme = forme;
+      if (quadrillages[index].parametres.forme === undefined) {
+        quadrillages[index].parametres.forme = forme;
+      }
       quadrillages[index].parametres.base = basesQuadrillage[index];
     });
 
   const calculsCourts = descripteurs.filter(({ famille }) => famille === FAMILLES_NC02.F6);
   valeursCycliques(aleatoire, OPERATIONS_CALCUL_COURT, calculsCourts.length)
     .forEach((operation, index) => {
-      calculsCourts[index].parametres.operation = operation;
+      if (calculsCourts[index].parametres.operation === undefined) {
+        calculsCourts[index].parametres.operation = operation;
+      }
       calculsCourts[index].parametres.base = aleatoire.choix(BASES_CALCUL_COURT);
     });
 
@@ -300,10 +269,19 @@ function parametrerFamilles(aleatoire, familles) {
 export function planifierSerieNC02({ graine, nombreQuestions = 10 }) {
   exigerConfiguration(graine, nombreQuestions);
   const aleatoire = creerGenerateur(
-    `nc02-plan-v${VERSION_PLAN_SERIE_NC02}:${graine}:${nombreQuestions}`,
+    `nc02-parametres-v${VERSION_PLAN_SERIE_NC02}:${graine}:${nombreQuestions}`,
   );
-  const familles = melangerFamilles(aleatoire, recettePour(nombreQuestions));
-  return parametrerFamilles(aleatoire, familles).map((descripteur, index) => ({
+  const tirages = tirerProfilsPonderes({
+    paquet: PAQUET_FAMILLES_NC02,
+    graine: `nc02-familles-v${VERSION_PLAN_SERIE_NC02}:${graine}`,
+    nombreElements: nombreQuestions,
+  });
+  const profils = ordonnerEnLimitantRepetitions({
+    elements: tirages,
+    graine: `nc02-ordre-v${VERSION_PLAN_SERIE_NC02}:${graine}`,
+    cle: ({ famille }) => famille,
+  });
+  return parametrerFamilles(aleatoire, profils).map((descripteur, index) => ({
     ...descripteur,
     position: index,
     gabarit: GABARITS[descripteur.famille],

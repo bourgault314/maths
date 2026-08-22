@@ -226,14 +226,17 @@ describe("configuration du lecteur", () => {
     );
   });
 
-  it("refuse les doublons et une série trop courte pour sa sélection", () => {
+  it("refuse les doublons mais accepte une série plus courte que sa sélection", () => {
     assert.throws(
       () => creerEtatLecteur({ notions: [NOTION_NC01, NOTION_NC01] }),
       /doublons/,
     );
-    assert.throws(
-      () => creerEtatLecteur({ notions: [NOTION_NC01, NOTION_NC02], nombreQuestions: 1 }),
-      /au moins une question par notion/,
+    assert.equal(
+      creerEtatLecteur({
+        notions: [NOTION_NC01, NOTION_NC02],
+        nombreQuestions: 1,
+      }).configuration.nombreQuestions,
+      1,
     );
     assert.throws(
       () => creerEtatLecteur({
@@ -954,9 +957,14 @@ describe("repérage dans le plan", () => {
   it("saisit et trace séparément l'abscisse et l'ordonnée signées de GE-03", () => {
     const etat = etatDemarre({
       notion: NOTION_LIRE_COORDONNEES_POINT,
-      nombreQuestions: 5,
+      nombreQuestions: 20,
       graine: "fixture-ge03-couple",
     });
+    const index = etat.questions.findIndex(
+      ({ reponse }) => reponse.type === TYPE_REPONSE_DEUX_ENTIERS_RELATIFS,
+    );
+    assert.notEqual(index, -1);
+    etat.seance.etat.indexQuestion = index;
     const question = questionCourante(etat);
     assert.equal(question.reponse.type, TYPE_REPONSE_DEUX_ENTIERS_RELATIFS);
     const [x, y] = question.reponse.attendus;
@@ -1124,10 +1132,13 @@ describe("enchaînement de la séance", () => {
   });
 
   it("termine après la dernière réponse et calcule le score depuis les traces", () => {
-    const etat = etatDemarre({ nombreQuestions: 2 });
+    const etat = etatDemarre({
+      notion: NOTION_SOLIDES_USUELS,
+      nombreQuestions: 2,
+    });
     for (let index = 0; index < 2; index += 1) {
       const question = questionCourante(etat);
-      for (const id of question.reponse.attendus) basculerChoix(etat, id);
+      basculerChoix(etat, question.reponse.attendus[0]);
       validerSelection(etat);
       passerQuestionSuivante(etat);
     }

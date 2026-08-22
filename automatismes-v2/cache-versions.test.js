@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import { it } from "node:test";
 
-const VERSION = "50";
+const VERSION = "51";
 
 const RESSOURCES_VERSIONNEES = new Map([
   ["automatismes-v2/index.html", ["styles.css", "interface.css", "menu.css", "app.js"]],
@@ -43,7 +43,9 @@ const RESSOURCES_VERSIONNEES = new Map([
     "selection-diviseurs.js",
     "criteres-divisibilite/serie.js",
     "reconnaissance.js",
+    "solides-usuels/serie.js",
     "calcul-volumes.js",
+    "volumes/serie.js",
     "calcul-direct.js",
     "carres-entiers-1-a-12/serie.js",
     "fractions-simples-decimaux/fraction-vers-decimal.js",
@@ -55,6 +57,7 @@ const RESSOURCES_VERSIONNEES = new Map([
     "reperage-plan/questions.js",
     "reperage-plan/serie.js",
     "identifiants.js",
+    "paquets-ponderes.js",
   ]],
   ["packages/automatismes/src/registre.js", [
     "generation.js",
@@ -78,7 +81,10 @@ const RESSOURCES_VERSIONNEES = new Map([
     "reperage-plan/questions.js",
   ]],
   ["packages/moteur-exercices/src/generation.js", ["question-v2.js"]],
+  ["packages/moteur-exercices/src/paquets-ponderes.js", ["aleatoire.js"]],
+  ["automatismes-v2/src/serie-multinotions.js", ["aleatoire.js"]],
   ["packages/automatismes/src/nombres-et-calculs/criteres-divisibilite/serie.js", [
+    "paquets-ponderes.js",
     "critere-precis.js",
     "selection-diviseurs.js",
     "selection-nombres.js",
@@ -91,6 +97,7 @@ const RESSOURCES_VERSIONNEES = new Map([
   ["packages/automatismes/src/nombres-et-calculs/criteres-divisibilite/chiffre-manquant.js", ["question-v2.js", "critere-precis.js", "identifiants.js"]],
   ["packages/automatismes/src/nombres-et-calculs/criteres-divisibilite/partage-court.js", ["question-v2.js", "critere-precis.js", "identifiants.js"]],
   ["packages/automatismes/src/nombres-et-calculs/carres-entiers-1-a-12/serie.js", [
+    "paquets-ponderes.js",
     "calcul-court.js",
     "calcul-direct.js",
     "carre-quadrille.js",
@@ -124,6 +131,7 @@ const RESSOURCES_VERSIONNEES = new Map([
   ]],
   ["packages/automatismes/src/nombres-et-calculs/fractions-simples-decimaux/serie.js", [
     "aleatoire.js",
+    "paquets-ponderes.js",
     "decimal-vers-fraction.js",
     "fraction-vers-decimal.js",
     "commun.js",
@@ -136,9 +144,15 @@ const RESSOURCES_VERSIONNEES = new Map([
   ]],
   ["packages/automatismes/src/nombres-et-calculs/ecritures-multiples-nombre/serie.js", [
     "aleatoire.js",
+    "paquets-ponderes.js",
     "questions.js",
   ]],
   ["packages/automatismes/src/espace-et-geometrie/solides-usuels/reconnaissance.js", ["question-v2.js", "identifiants.js"]],
+  ["packages/automatismes/src/espace-et-geometrie/solides-usuels/serie.js", [
+    "aleatoire.js",
+    "paquets-ponderes.js",
+    "reconnaissance.js",
+  ]],
   ["packages/automatismes/src/espace-et-geometrie/droite-graduee/questions.js", [
     "gabarit.js",
     "question-v2.js",
@@ -147,6 +161,7 @@ const RESSOURCES_VERSIONNEES = new Map([
   ]],
   ["packages/automatismes/src/espace-et-geometrie/droite-graduee/serie.js", [
     "aleatoire.js",
+    "paquets-ponderes.js",
     "questions.js",
   ]],
   ["packages/automatismes/src/espace-et-geometrie/reperage-plan/questions.js", [
@@ -156,9 +171,15 @@ const RESSOURCES_VERSIONNEES = new Map([
   ]],
   ["packages/automatismes/src/espace-et-geometrie/reperage-plan/serie.js", [
     "aleatoire.js",
+    "paquets-ponderes.js",
     "questions.js",
   ]],
   ["packages/automatismes/src/grandeurs-et-mesures/volumes/calcul-volumes.js", ["question-v2.js", "identifiants.js"]],
+  ["packages/automatismes/src/grandeurs-et-mesures/volumes/serie.js", [
+    "aleatoire.js",
+    "paquets-ponderes.js",
+    "calcul-volumes.js",
+  ]],
   ["packages/contrats/src/trace-reponse.js", ["question-v2.js"]],
   ["packages/objets/src/droite-graduee.js", ["charte.js", "expressions.js"]],
   ["packages/objets/src/repere-cartesien.js", ["charte.js"]],
@@ -229,6 +250,6 @@ it("invalide ensemble le cache de la coque V2", async () => {
 
 it("conserve la façade du menu et recharge le libellé DNB", async () => {
   const source = await readFile(new URL("../automatismes-v2/index.html", import.meta.url), "utf8");
-  assert.match(source, /menu\.css\?v=50&amp;rev=51/);
-  assert.match(source, /app\.js\?v=50&amp;rev=54/);
+  assert.match(source, /menu\.css\?v=51&amp;rev=51/);
+  assert.match(source, /app\.js\?v=51&amp;rev=54/);
 });
