@@ -185,22 +185,6 @@
   padding-left: 6px;
 }
 
-.menu-v10 .field-level {
-  flex-grow: 1.16;
-}
-
-.menu-v10 .field-help {
-  flex-grow: .84;
-}
-
-.menu-v10 .field-mode {
-  flex-grow: 1.1;
-}
-
-.menu-v10 .field-count {
-  flex-grow: .9;
-}
-
 .menu-v10 .field label {
   display: block;
   margin: 0 0 5px;
@@ -210,6 +194,13 @@
   letter-spacing: .07em;
   text-align: center;
   text-transform: uppercase;
+}
+
+/* Le pied du menu possède déjà son accès permanent aux cookies. La commande
+   de secours injectée par le gestionnaire global ne doit pas le doubler. */
+.mg-consent-manage-slot,
+.mg-consent-manage {
+  display: none !important;
 }
 
 .menu-v10 .segmented-control {

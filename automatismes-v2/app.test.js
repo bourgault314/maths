@@ -2261,7 +2261,8 @@ it("propose le parcours DNB puis lance Au tableau sans saisie ni score", async (
   assert.equal((application.innerHTML.match(/0 \/ 0/g) ?? []).length, 2);
   assert.equal((application.innerHTML.match(/Aucun automatisme disponible pour le moment/g) ?? []).length, 2);
   assert.match(application.innerHTML, /<summary>Remerciements<\/summary>/);
-  assert.match(application.innerHTML, /Un grand merci à Claire Lagarde pour son regard pédagogique, ses relectures attentives et toutes ses précieuses idées/);
+  assert.match(application.innerHTML, /Un grand merci à Claire pour son regard pédagogique, ses relectures attentives et toutes ses précieuses idées/);
+  assert.equal((application.innerHTML.match(/Gérer mes cookies/g) ?? []).length, 1);
   assert.match(application.innerHTML, /data-mathsgo-consent-open/);
   assert.match(application.innerHTML, />Gérer mes cookies<\/button>/);
   assert.doesNotMatch(application.innerHTML, /DocTools|Eric Hakenholz|Crédits et remerciements/);

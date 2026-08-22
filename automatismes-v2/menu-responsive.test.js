@@ -44,6 +44,18 @@ describe("menu Cycle 4 – DNB responsive", () => {
     assert.match(html, /src="\.\.\/assets\/js\/consentement\.js"/);
   });
 
+  it("masque le second accès aux cookies injecté par le gestionnaire global", () => {
+    assert.match(
+      css,
+      /\.mg-consent-manage-slot,\s*\.mg-consent-manage\s*\{[^}]*display:\s*none !important;/s,
+    );
+  });
+
+  it("aligne les quatre réglages sur deux colonnes égales", () => {
+    assert.match(css, /\.menu-v10 \.field\s*\{[^}]*flex:\s*1 1 0;/s);
+    assert.doesNotMatch(css, /\.menu-v10 \.field-(?:level|help|mode|count)\s*\{[^}]*flex-grow:/s);
+  });
+
   it("simplifie le bouton DNB seulement sur les très petits écrans", () => {
     assert.match(
       css,

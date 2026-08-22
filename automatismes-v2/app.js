@@ -530,7 +530,7 @@ function rendreMenuAccueil() {
           <div class="menu-footer-row">
             <details class="acknowledgements">
               <summary>Remerciements</summary>
-              <p>Un grand merci à Claire Lagarde pour son regard pédagogique, ses relectures attentives et toutes ses précieuses idées, qui contribuent à améliorer ce projet.</p>
+              <p>Un grand merci à Claire pour son regard pédagogique, ses relectures attentives et toutes ses précieuses idées, qui contribuent à améliorer ce projet.</p>
             </details>
             <span class="menu-footer-separator" aria-hidden="true">·</span>
             <button class="cookie-manage-link" type="button" data-mathsgo-consent-open

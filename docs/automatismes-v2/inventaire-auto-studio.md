@@ -1,6 +1,6 @@
 # Inventaire technique de `auto` et `studio` pour Automatismes V2
 
-**Inventaire vérifié le 21 août 2026.**
+**Inventaire vérifié le 22 août 2026.**
 
 Ce document empêche de refaire inutilement le travail déjà acquis. Il ne change
 pas la règle de provenance : l'ancien contenu pédagogique reste une archive
@@ -28,6 +28,9 @@ tests.
 Sources historiques :
 
 - `studio/automatismes/index.html` ;
+- `studio/automatismes/catalogue.js` ;
+- `studio/automatismes/app.js` ;
+- `auto/scripts/00-setup-icons.js` ;
 - `auto/index.html` ;
 - `auto/styles/setup.css`.
 
@@ -37,16 +40,28 @@ Sources historiques :
 - en-tête et logo ;
 - cartes numérotées ;
 - contrôles segmentés ;
-- domaine repliable ;
-- icône « Nombres et calculs » ;
+- quatre domaines repliables, y compris lorsqu'ils sont encore vides ;
+- quatre familles d'icônes : boulier, motif de Truchet, diagramme et parcours ;
 - largeur compacte de 620 px ;
 - barre de résumé et de lancement fixe ;
 - zones sûres des téléphones, adaptations à 650 px et 360 px ;
 - cibles tactiles, focus et états accessibles ;
-- calculatrice barrée comme repère permanent du contexte DNB.
+- calculatrice barrée dans tous les niveaux, puisque toutes les séries sont sans
+  calculatrice ;
+- filtres de classe `5e`, `4e`, `3e` et `DNB` ;
+- réglages « Avec aide / Sans aide », « S'entraîner / Au tableau » et
+  5/10/15/20 questions, alignés sur deux colonnes égales ;
+- pied de menu « Remerciements · Gérer mes cookies », sans second accès global
+  visible dans cette application.
 
-Les anciens réglages Niveau, Avec/Sans aide, Diaporama/Interactif, le partage,
-MG1 et les crédits ne font pas partie du lanceur V2.
+Le catalogue V2 et ses SVG sont écrits à neuf, sans dépendance au Studio. Les
+quatre regroupements visibles recouvrent les sept domaines canoniques de la
+taxonomie au lieu de les remplacer. Les icônes changent de composition selon
+une graine journalière stable, alors que le générateur historique continue
+d'appartenir au legacy à cause de son hasard non seedé.
+
+Le partage MG1, ses identifiants et les crédits ne font pas partie du lanceur
+V2. Le mot historique « Diaporama » est remplacé par « Au tableau ».
 
 ### Fondations indépendantes
 

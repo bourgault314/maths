@@ -2,6 +2,41 @@
 
 **Dernière mise à jour : 22 août 2026.**
 
+## Dernières finitions du menu Cycle 4 – DNB
+
+- D-071 retire le doublon visuel « Gérer mes cookies » : le lien intégré au
+  pied du menu reste l'unique accès visible et ouvre toujours le gestionnaire
+  de consentement commun.
+- Les quatre réglages reviennent à deux colonnes égales, comme dans le Studio :
+  « Niveau » s'aligne avec « Mode » et « Aide » avec « Nombre de questions ».
+- Le remerciement affiche désormais seulement « Claire ». Aucun automatisme,
+  générateur, seed, classement ni contenu de GE-03 ou GE-04 n'est modifié.
+- `app.js` et `menu.css` reçoivent la révision de façade `50` tandis que le
+  graphe de modules reste identique en `v49`.
+- La recette complète passe **1 726 tests sur 1 726** dans **245 suites** ; les
+  garde-fous V2 suivent 151 fichiers et 77 fichiers de production déclarés.
+
+## Menu Cycle 4 – DNB publié le 22 août
+
+- D-070 maintient la calculatrice barrée pour `5e`, `4e`, `3e` et `DNB` :
+  toutes les séries sont sans calculatrice et le résumé l'écrit quel que soit
+  le filtre.
+- D-069 place « Remerciements » et « Gérer mes cookies » au bas du menu, sans
+  titre « Crédits » ni mention de DocTools. Le texte remercie Claire pour son
+  regard pédagogique, ses relectures et ses idées.
+- D-068 reprend les quatre regroupements exacts du Studio, y compris les
+  domaines encore vides, ainsi que les quatre familles d'icônes journalières
+  déterministes.
+- Le filtre de programme propose `5e`, `4e`, `3e` et `DNB`. Les huit modules
+  publiés appartiennent actuellement aux quatre listes ; chaque futur module
+  devra continuer de déclarer explicitement ses classes.
+- Les réglages sont « Mode » avec « S'entraîner / Au tableau », 5, 10, 15 ou
+  20 questions, puis « Avec aide / Sans aide ». Sans aide retire le cours et
+  laisse le bouton Aide de la séance visible, grisé et inactif.
+- La publication issue de la PR #479 a été contrôlée sur le site : les huit
+  modules sont présents, GE-03 et GE-04 restent séparés, le placement de GE-04
+  est modifiable avant validation et le gestionnaire de cookies s'ouvre.
+
 ## GE-03 et GE-04 publiés pour essai le 22 août
 
 - D-066 maintient deux modules visibles distincts : GE-03 « Lire les
