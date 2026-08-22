@@ -1764,3 +1764,44 @@ Cette restauration est exclusivement une modification de façade. Elle ne
 change ni générateur, ni seed, ni classe, ni contenu pédagogique, ni séparation
 de GE-03 et GE-04. `app.js` et `menu.css` reçoivent la révision `51` ; le graphe
 de modules demeure en `v49`.
+
+### D-073 — Le pas 1 reste très majoritaire dans GE-03 et GE-04
+
+Après l'essai du lecteur publié, Gwenaël confirme que l'échelle entière doit
+rester le cœur de GE-03 et GE-04, mais qu'un élève de troisième doit aussi
+rencontrer quelques demi-unités. Il refuse une alternance un sur deux. Sur une
+série de 20 questions, le plan contient donc exactement 15 repères au pas 1,
+4 au pas 0,5 et un seul au pas 0,25. Les séries de 5, 10 et 15 contiennent
+respectivement 1, 2 et 3 repères au pas 0,5, sans quart. Ces positions sont
+fixées dans le plan seedé et espacées sans motif alterné. Une échelle décimale
+impose toujours au moins une coordonnée non entière.
+
+Le repère V2 accepte les trois pas et reste l'unique objet du Studio, des
+questions, du cours, des aides et des corrections. Les petites graduations
+restent toutes visibles, mais leurs étiquettes sont allégées : entiers au pas
+0,5, demi-unités au pas 0,25, plus les bornes utiles. Les nombres terminaux
+restent affichés tandis que le trait terminal demeure supprimé sous la flèche,
+conformément à D-067. Le clic et les flèches déplacent GE-04 d'une vraie
+graduation, et E5 mesure désormais le décalage avec cette valeur plutôt qu'avec
+1 en dur.
+
+GE-03 et GE-04 restent deux entrées distinctes. En revanche, le « cours
+partagé » de D-066 est précisé : ils partagent la page de vocabulaire, les
+couleurs et l'objet, mais possèdent deux parcours de trois pages ciblés. GE-03
+ne contient plus de leçon de placement ; GE-04 ne contient plus de leçon de
+lecture. Les démonstrations « Lire A(−3 ; 2) » et « Placer B(2 ; −1) » avancent
+en trois boutons et modifient réellement le dessin.
+
+Les aides suivent la même progression. Le premier indice nomme directement
+les axes sur le repère ; les suivants ajoutent successivement la projection
+vers l'axe des abscisses, la projection vers l'axe des ordonnées ou les deux
+segments du déplacement. Un cercle coloré marque l'axe ou l'intersection
+rejoints, même lorsque la coordonnée vaut zéro. Le premier indice ne révèle
+toujours pas la valeur attendue.
+
+Sur téléphone, GE-03 ajoute enfin un indicateur « ↓ Répondre » seulement quand
+la zone de saisie se trouve réellement sous le bord visible. Il fait défiler
+la carte jusqu'aux champs et disparaît dès qu'ils deviennent visibles. Le
+contrat de question ajoute `deux-nombres-decimaux` : chaque coordonnée conserve
+son écriture et sa valeur rationnelle exacte dans la trace. Le graphe public
+V2 est invalidé atomiquement en `v50` ; `app.js` reçoit la révision `53`.

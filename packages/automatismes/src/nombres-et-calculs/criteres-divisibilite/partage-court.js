@@ -14,12 +14,12 @@ import {
   SCHEMA_QUESTION_INSTANCE_V2,
   TYPE_REPONSE_CHOIX_UNIQUE,
   TYPE_REPONSE_ENTIER_NATUREL,
-} from "../../../../contrats/src/question-v2.js?v=49";
+} from "../../../../contrats/src/question-v2.js?v=50";
 import {
   IDENTITES_AUTOMATISMES,
   creerClassementAutomatisme,
-} from "../../identifiants.js?v=49";
-import { formulationCritereDivisibilite } from "./critere-precis.js?v=49";
+} from "../../identifiants.js?v=50";
+import { formulationCritereDivisibilite } from "./critere-precis.js?v=50";
 
 export const NOM_GENERATEUR_PARTAGE_COURT =
   "nombres-et-calculs.criteres-divisibilite.partage-court";

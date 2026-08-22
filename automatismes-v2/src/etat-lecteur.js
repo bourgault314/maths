@@ -1,16 +1,17 @@
 import {
   SCHEMA_SEANCE,
   validerSeance,
-} from "../../packages/contrats/src/seance.js?v=49";
+} from "../../packages/contrats/src/seance.js?v=50";
 import {
   REFERENTIEL_COMPETENCES,
   SCHEMA_TRACE_REPONSE,
   validerTraceReponse,
-} from "../../packages/contrats/src/trace-reponse.js?v=49";
+} from "../../packages/contrats/src/trace-reponse.js?v=50";
 import {
   TYPE_REPONSE_ENTIER_NATUREL,
   TYPE_REPONSE_DEUX_ENTIERS,
   TYPE_REPONSE_DEUX_ENTIERS_RELATIFS,
+  TYPE_REPONSE_DEUX_NOMBRES_DECIMAUX,
   TYPE_REPONSE_CHOIX_UNIQUE,
   TYPE_REPONSE_FRACTION_EQUIVALENTE,
   TYPE_REPONSE_NOMBRE_DECIMAL,
@@ -18,16 +19,16 @@ import {
   estDeuxEntiersRelatifsExacts,
   estEntierExact,
   estSelectionExacte,
-} from "../../packages/contrats/src/question-v2.js?v=49";
+} from "../../packages/contrats/src/question-v2.js?v=50";
 import {
   analyserEcritureDecimaleSignee,
   fractionsEgales,
-} from "../../packages/objets/src/fractions-decimaux.js?v=49";
+} from "../../packages/objets/src/fractions-decimaux.js?v=50";
 import { graineDepuisTexte } from "../../packages/moteur-exercices/src/aleatoire.js";
-import { creerRegistreAutomatismes } from "../../packages/automatismes/src/registre.js?v=49";
+import { creerRegistreAutomatismes } from "../../packages/automatismes/src/registre.js?v=50";
 import {
   normaliserIdentifiantModule,
-} from "../../packages/automatismes/src/identifiants.js?v=49";
+} from "../../packages/automatismes/src/identifiants.js?v=50";
 import {
   connaitNotionLecteur,
   estNiveauParcours,
@@ -47,8 +48,8 @@ import {
   NOTION_VOLUME_CYLINDRE,
   NOTION_VOLUME_PRISME,
   obtenirNotionLecteur,
-} from "./registre-lecteur.js?v=49";
-import { genererSerieMultinotions } from "./serie-multinotions.js?v=49";
+} from "./registre-lecteur.js?v=50";
+import { genererSerieMultinotions } from "./serie-multinotions.js?v=50";
 
 export {
   NOTION_ECRITURES_MULTIPLES_NOMBRE,
@@ -304,6 +305,7 @@ export function basculerChoix(etat, idChoix) {
     question.reponse.type === TYPE_REPONSE_ENTIER_NATUREL
     || question.reponse.type === TYPE_REPONSE_DEUX_ENTIERS
     || question.reponse.type === TYPE_REPONSE_DEUX_ENTIERS_RELATIFS
+    || question.reponse.type === TYPE_REPONSE_DEUX_NOMBRES_DECIMAUX
     || question.reponse.type === TYPE_REPONSE_NOMBRE_DECIMAL
     || question.reponse.type === TYPE_REPONSE_FRACTION_EQUIVALENTE
   ) {
@@ -341,6 +343,7 @@ export function selectionnerChampSaisie(etat, index) {
   const reponseDouble = question && (
     question.reponse.type === TYPE_REPONSE_DEUX_ENTIERS
     || question.reponse.type === TYPE_REPONSE_DEUX_ENTIERS_RELATIFS
+    || question.reponse.type === TYPE_REPONSE_DEUX_NOMBRES_DECIMAUX
     || question.reponse.type === TYPE_REPONSE_FRACTION_EQUIVALENTE
   );
   if (
@@ -400,8 +403,7 @@ function saisirEntierSansBorne(etat, chiffre) {
 
 function saisirDecimal(etat, question, caractere) {
   const estChiffre = /^\d$/.test(caractere);
-  const estSeparateur = question.classement.notion !== NOTION_LIRE_COORDONNEES_POINT
-    && (caractere === "," || caractere === ".");
+  const estSeparateur = caractere === "," || caractere === ".";
   const estSigne = [NOTION_DROITE_GRADUEE, NOTION_LIRE_COORDONNEES_POINT]
     .includes(question.classement.notion)
     && (caractere === "−" || caractere === "-");
@@ -429,6 +431,38 @@ function saisirDecimal(etat, question, caractere) {
     return;
   }
   etat.saisie = proposition;
+  etat.erreurValidation = proposition === "−" || analyserDecimalSansErreur(proposition)
+    ? ""
+    : "Utilise une écriture décimale limitée aux millièmes.";
+}
+
+function saisirDeuxNombresDecimaux(etat, caractere) {
+  const index = etat.champSaisieActif;
+  const courante = etat.saisies[index];
+  const estChiffre = /^\d$/.test(caractere);
+  const estSeparateur = caractere === "," || caractere === ".";
+  const estSigne = caractere === "−" || caractere === "-";
+  if (!estChiffre && !estSeparateur && !estSigne) return;
+  let proposition;
+  if (estSigne) {
+    proposition = /^[−-]/u.test(courante) ? courante.slice(1) : `−${courante}`;
+  } else if (estSeparateur) {
+    if (/[.,]/.test(courante)) return;
+    proposition = `${courante || "0"},`;
+  } else if (courante === "0" || courante === "−0") {
+    proposition = courante.startsWith("−") ? `−${caractere}` : caractere;
+  } else if (courante === "−") {
+    proposition = `−${caractere}`;
+  } else if (courante === "") {
+    proposition = caractere;
+  } else {
+    proposition = `${courante}${caractere}`;
+  }
+  if (proposition.length > 20) {
+    etat.erreurValidation = "Ta saisie est trop longue.";
+    return;
+  }
+  etat.saisies[index] = proposition;
   etat.erreurValidation = proposition === "−" || analyserDecimalSansErreur(proposition)
     ? ""
     : "Utilise une écriture décimale limitée aux millièmes.";
@@ -476,19 +510,22 @@ export function saisirCaractere(etat, caractere) {
   const typeDeuxEntiers = question?.reponse.type === TYPE_REPONSE_DEUX_ENTIERS;
   const typeDeuxEntiersRelatifs =
     question?.reponse.type === TYPE_REPONSE_DEUX_ENTIERS_RELATIFS;
+  const typeDeuxNombresDecimaux =
+    question?.reponse.type === TYPE_REPONSE_DEUX_NOMBRES_DECIMAUX;
   const typeDecimal = question?.reponse.type === TYPE_REPONSE_NOMBRE_DECIMAL;
   const typeFraction = question?.reponse.type === TYPE_REPONSE_FRACTION_EQUIVALENTE;
   const texte = typeof caractere === "number" ? String(caractere) : caractere;
   if (
     etat.configuration.mode !== "entrainement" ||
     !question ||
-    (!typeEntier && !typeDeuxEntiers && !typeDeuxEntiersRelatifs && !typeDecimal && !typeFraction) ||
+    (!typeEntier && !typeDeuxEntiers && !typeDeuxEntiersRelatifs && !typeDeuxNombresDecimaux && !typeDecimal && !typeFraction) ||
     etat.validation !== null ||
     typeof texte !== "string"
   ) {
     return etat;
   }
-  if (typeDecimal) saisirDecimal(etat, question, texte);
+  if (typeDeuxNombresDecimaux) saisirDeuxNombresDecimaux(etat, texte);
+  else if (typeDecimal) saisirDecimal(etat, question, texte);
   else if (typeDeuxEntiersRelatifs) saisirEntierRelatif(etat, question, texte);
   else if (/^\d$/.test(texte)) {
     if (typeFraction) saisirEntierSansBorne(etat, texte);
@@ -508,14 +545,16 @@ export function effacerSaisie(etat) {
   const typeDeuxEntiers = question?.reponse.type === TYPE_REPONSE_DEUX_ENTIERS;
   const typeDeuxEntiersRelatifs =
     question?.reponse.type === TYPE_REPONSE_DEUX_ENTIERS_RELATIFS;
+  const typeDeuxNombresDecimaux =
+    question?.reponse.type === TYPE_REPONSE_DEUX_NOMBRES_DECIMAUX;
   const typeDecimal = question?.reponse.type === TYPE_REPONSE_NOMBRE_DECIMAL;
   const typeFraction = question?.reponse.type === TYPE_REPONSE_FRACTION_EQUIVALENTE;
   if (
     etat.configuration.mode === "entrainement" &&
-    (typeEntier || typeDeuxEntiers || typeDeuxEntiersRelatifs || typeDecimal || typeFraction) &&
+    (typeEntier || typeDeuxEntiers || typeDeuxEntiersRelatifs || typeDeuxNombresDecimaux || typeDecimal || typeFraction) &&
     etat.validation === null
   ) {
-    if (typeDeuxEntiers || typeDeuxEntiersRelatifs || typeFraction) {
+    if (typeDeuxEntiers || typeDeuxEntiersRelatifs || typeDeuxNombresDecimaux || typeFraction) {
       const index = etat.champSaisieActif;
       etat.saisies[index] = etat.saisies[index].slice(0, -1);
     } else {
@@ -539,10 +578,12 @@ export function validerReponse(etat) {
   const reponseDeuxEntiers = question.reponse.type === TYPE_REPONSE_DEUX_ENTIERS;
   const reponseDeuxEntiersRelatifs =
     question.reponse.type === TYPE_REPONSE_DEUX_ENTIERS_RELATIFS;
+  const reponseDeuxNombresDecimaux =
+    question.reponse.type === TYPE_REPONSE_DEUX_NOMBRES_DECIMAUX;
   const reponseDecimale = question.reponse.type === TYPE_REPONSE_NOMBRE_DECIMAL;
   const reponseFraction = question.reponse.type === TYPE_REPONSE_FRACTION_EQUIVALENTE;
   const reponseSimple = reponseEntiere || reponseDecimale;
-  const reponseDouble = reponseDeuxEntiers || reponseDeuxEntiersRelatifs || reponseFraction;
+  const reponseDouble = reponseDeuxEntiers || reponseDeuxEntiersRelatifs || reponseDeuxNombresDecimaux || reponseFraction;
   const reponseOmise = reponseSimple
     ? etat.saisie === ""
     : reponseDouble
@@ -567,13 +608,22 @@ export function validerReponse(etat) {
 
   const valeurSaisie = reponseEntiere ? Number(etat.saisie) : null;
   const valeursSaisies = reponseDouble
-    ? etat.saisies.map((saisie) => Number(saisie.replace("−", "-")))
+    ? reponseDeuxNombresDecimaux
+      ? null
+      : etat.saisies.map((saisie) => Number(saisie.replace("−", "-")))
     : null;
   const analyseDecimale = reponseDecimale
     ? analyserDecimalSansErreur(etat.saisie)
     : null;
+  const analysesDecimales = reponseDeuxNombresDecimaux
+    ? etat.saisies.map(analyserDecimalSansErreur)
+    : null;
   if (!reponseOmise && reponseDecimale && !analyseDecimale) {
     etat.erreurValidation = "Entre une écriture décimale valide.";
+    return etat;
+  }
+  if (!reponseOmise && reponseDeuxNombresDecimaux && analysesDecimales.some((analyse) => !analyse)) {
+    etat.erreurValidation = "Entre un nombre décimal valide dans chaque case.";
     return etat;
   }
   if (!reponseOmise && reponseFraction && valeursSaisies[1] === 0) {
@@ -588,6 +638,13 @@ export function validerReponse(etat) {
         ? estDeuxEntiersExacts(question.reponse.attendus, valeursSaisies)
         : reponseDeuxEntiersRelatifs
           ? estDeuxEntiersRelatifsExacts(question.reponse.attendus, valeursSaisies)
+        : reponseDeuxNombresDecimaux
+          ? analysesDecimales.every((analyse, index) => fractionsEgales(
+            analyse.fractionReduite.numerateur,
+            analyse.fractionReduite.denominateur,
+            question.reponse.attendus[index].numerateur,
+            question.reponse.attendus[index].denominateur,
+          ))
         : reponseDecimale
           ? fractionsEgales(
             analyseDecimale.fractionReduite.numerateur,
@@ -643,6 +700,14 @@ export function validerReponse(etat) {
           ? { valeur: valeurSaisie }
           : reponseDeuxEntiers || reponseDeuxEntiersRelatifs
             ? { valeurs: valeursSaisies }
+            : reponseDeuxNombresDecimaux
+              ? {
+                saisies: [...etat.saisies],
+                valeurs: analysesDecimales.map((analyse) => ({
+                  numerateur: analyse.fractionReduite.numerateur,
+                  denominateur: analyse.fractionReduite.denominateur,
+                })),
+              }
             : reponseDecimale
               ? {
                 saisie: etat.saisie,

@@ -1,4 +1,8 @@
-const SIGNE = (valeur) => valeur < 0 ? `−${Math.abs(valeur)}` : String(valeur);
+const SIGNE = (valeur) => {
+  const absolue = Math.abs(valeur);
+  const texte = String(absolue).replace(".", ",");
+  return valeur < 0 ? `−${texte}` : texte;
+};
 const COUPLE = ([x, y]) => `(${SIGNE(x)} ; ${SIGNE(y)})`;
 
 export const DIAGNOSTICS_REPERAGE_PLAN = Object.freeze({
@@ -14,14 +18,15 @@ function resultat(code, message) {
   return Object.freeze({ code, mecanisme: DIAGNOSTICS_REPERAGE_PLAN[code], message });
 }
 
-/** Diagnostique deux positions entières, pour une saisie ou un placement. */
-export function diagnostiquerCoupleRepere({ attendu, recu }) {
+/** Diagnostique deux positions graduées, pour une saisie ou un placement. */
+export function diagnostiquerCoupleRepere({ attendu, recu, pas = 1 }) {
   if (
     !Array.isArray(attendu)
     || !Array.isArray(recu)
     || attendu.length !== 2
     || recu.length !== 2
-    || [...attendu, ...recu].some((valeur) => !Number.isSafeInteger(valeur))
+    || [...attendu, ...recu, pas].some((valeur) => !Number.isFinite(valeur))
+    || pas <= 0
   ) return null;
   const [x, y] = attendu;
   const [a, b] = recu;
@@ -54,7 +59,7 @@ export function diagnostiquerCoupleRepere({ attendu, recu }) {
       `La position verticale est du bon côté en distance, mais le signe de l'ordonnée change. La réponse est ${COUPLE(attendu)}.`,
     );
   }
-  if ((a === x && Math.abs(b - y) === 1) || (b === y && Math.abs(a - x) === 1)) {
+  if ((a === x && Math.abs(b - y) === pas) || (b === y && Math.abs(a - x) === pas)) {
     return resultat(
       "E5",
       `Tu es décalé d'une graduation. Repars de 0 et compte les intervalles jusqu'à ${COUPLE(attendu)}.`,
@@ -66,9 +71,9 @@ export function diagnostiquerCoupleRepere({ attendu, recu }) {
   );
 }
 
-export function diagnostiquerCoordonneeSeule({ axe, attendu, recu }) {
+export function diagnostiquerCoordonneeSeule({ axe, attendu, recu, pas = 1 }) {
   if (!["abscisse", "ordonnee"].includes(axe)) return null;
-  if (!Number.isSafeInteger(attendu) || !Number.isSafeInteger(recu) || attendu === recu) return null;
+  if (![attendu, recu, pas].every(Number.isFinite) || pas <= 0 || attendu === recu) return null;
   const codeSigne = axe === "abscisse" ? "E2" : "E3";
   if (attendu === 0) {
     const axePorteur = axe === "abscisse" ? "ordonnées" : "abscisses";
@@ -84,10 +89,10 @@ export function diagnostiquerCoordonneeSeule({ axe, attendu, recu }) {
       `La distance à 0 est bonne, mais le côté de l'axe impose le signe ${attendu < 0 ? "moins" : "positif"}. La réponse est ${SIGNE(attendu)}.`,
     );
   }
-  if (Math.abs(recu - attendu) === 1) {
+  if (Math.abs(recu - attendu) === pas) {
     return resultat(
       "E5",
-      `Tu es décalé d'une graduation sur l'axe ${axe === "abscisse" ? "horizontal" : "vertical"}. La réponse est ${SIGNE(attendu)}.`,
+      `Tu es décalé d'une graduation sur l'axe des ${axe === "abscisse" ? "abscisses" : "ordonnées"}. La réponse est ${SIGNE(attendu)}.`,
     );
   }
   return resultat(

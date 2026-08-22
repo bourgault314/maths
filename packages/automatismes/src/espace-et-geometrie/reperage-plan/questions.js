@@ -1,16 +1,18 @@
 // GE-03 / GE-04 — lire et placer un point dans un repère orthogonal.
 
-import { SCHEMA_GABARIT_QUESTION, estDonneePure } from "../../../../contrats/src/gabarit.js?v=49";
+import { SCHEMA_GABARIT_QUESTION, estDonneePure } from "../../../../contrats/src/gabarit.js?v=50";
 import {
   COMPARAISON_CHOIX_EXACT,
   COMPARAISON_VALEUR_RATIONNELLE_EXACTE,
   COMPARAISON_VALEURS_EXACTES,
+  COMPARAISON_VALEURS_RATIONNELLES_EXACTES,
   SCHEMA_QUESTION_INSTANCE_V2,
   TYPE_REPONSE_CHOIX_UNIQUE,
   TYPE_REPONSE_DEUX_ENTIERS_RELATIFS,
+  TYPE_REPONSE_DEUX_NOMBRES_DECIMAUX,
   TYPE_REPONSE_NOMBRE_DECIMAL,
-} from "../../../../contrats/src/question-v2.js?v=49";
-import { IDENTITES_AUTOMATISMES, creerClassementAutomatisme } from "../../identifiants.js?v=49";
+} from "../../../../contrats/src/question-v2.js?v=50";
+import { IDENTITES_AUTOMATISMES, creerClassementAutomatisme } from "../../identifiants.js?v=50";
 
 export const FAMILLE_LIRE_COORDONNEES = "lire-coordonnees";
 export const FAMILLE_LIRE_ABSCISSE_REPERE = "lire-abscisse";
@@ -29,7 +31,7 @@ export const FAMILLES_GE03 = Object.freeze([
 
 export const NOM_GENERATEUR_LIRE_COORDONNEES = "espace-et-geometrie.reperage-plan.lire-coordonnees";
 export const NOM_GENERATEUR_PLACER_POINT_REPERE = "espace-et-geometrie.reperage-plan.placer-point";
-export const VERSION_GENERATEURS_REPERAGE_PLAN = 1;
+export const VERSION_GENERATEURS_REPERAGE_PLAN = 2;
 
 export const GABARIT_LIRE_COORDONNEES = Object.freeze({
   schema: SCHEMA_GABARIT_QUESTION,
@@ -60,7 +62,11 @@ function texte(id, contenu) {
 }
 
 export function formaterEntierRepere(valeur) {
-  return valeur < 0 ? `−${Math.abs(valeur)}` : String(valeur);
+  const absolue = Math.abs(valeur);
+  const texteValeur = Number.isInteger(absolue)
+    ? String(absolue)
+    : String(absolue).replace(".", ",");
+  return valeur < 0 ? `−${texteValeur}` : texteValeur;
 }
 
 export function formaterCouple(x, y) {
@@ -69,19 +75,29 @@ export function formaterCouple(x, y) {
 
 export function encoderCoordonnee(x, y) {
   const encoder = (valeur) => valeur === 0 ? "z0" : `${valeur < 0 ? "m" : "p"}${Math.abs(valeur)}`;
-  return `p-${encoder(x)}-${encoder(y)}`;
+  const xQuarts = Math.round(x * 4);
+  const yQuarts = Math.round(y * 4);
+  if (Math.abs(x * 4 - xQuarts) > 1e-9 || Math.abs(y * 4 - yQuarts) > 1e-9) {
+    throw new RangeError("coordonnée : multiple de 0,25 requis");
+  }
+  return `p4-${encoder(xQuarts)}-${encoder(yQuarts)}`;
 }
 
 export function decoderCoordonnee(identifiant) {
-  const resultat = /^p-([mpz])(\d+)-([mpz])(\d+)$/.exec(String(identifiant));
+  const texteIdentifiant = String(identifiant);
+  const resultat = /^p4-([mpz])(\d+)-([mpz])(\d+)$/.exec(texteIdentifiant)
+    ?? /^p-([mpz])(\d+)-([mpz])(\d+)$/.exec(texteIdentifiant);
   if (!resultat) return null;
   const decoder = (signe, chiffres) => {
     if (signe === "z") return chiffres === "0" ? 0 : null;
     if (chiffres === "0") return null;
     return signe === "m" ? -Number(chiffres) : Number(chiffres);
   };
-  const x = decoder(resultat[1], resultat[2]);
-  const y = decoder(resultat[3], resultat[4]);
+  const diviseur = texteIdentifiant.startsWith("p4-") ? 4 : 1;
+  const xEncode = decoder(resultat[1], resultat[2]);
+  const yEncode = decoder(resultat[3], resultat[4]);
+  const x = xEncode === null ? null : xEncode / diviseur;
+  const y = yEncode === null ? null : yEncode / diviseur;
   if (x === null || y === null) return null;
   return Object.freeze({
     x,
@@ -98,12 +114,39 @@ function blocRepere(p, { vide = false } = {}) {
     xMax: p.xMax,
     yMin: p.yMin,
     yMax: p.yMax,
+    pas: p.pas,
     nomPoint: p.nomPoint,
     ...(vide ? {} : { points: points.map(({ nom, x, y }) => ({ nom, x, y })) }),
   };
 }
 
+function pgcd(a, b) {
+  let x = Math.abs(a);
+  let y = Math.abs(b);
+  while (y !== 0) [x, y] = [y, x % y];
+  return x || 1;
+}
+
+function rationnelDepuisCoordonnee(valeur) {
+  const numerateurQuarts = Math.round(valeur * 4);
+  if (Math.abs(valeur * 4 - numerateurQuarts) > 1e-9) {
+    throw new RangeError("coordonnée : multiple de 0,25 requis");
+  }
+  const diviseur = pgcd(numerateurQuarts, 4);
+  return {
+    numerateur: numerateurQuarts / diviseur,
+    denominateur: 4 / diviseur,
+  };
+}
+
 function reponseCouple(p) {
+  if (p.pas !== 1) {
+    return {
+      type: TYPE_REPONSE_DEUX_NOMBRES_DECIMAUX,
+      comparaison: COMPARAISON_VALEURS_RATIONNELLES_EXACTES,
+      attendus: [rationnelDepuisCoordonnee(p.x), rationnelDepuisCoordonnee(p.y)],
+    };
+  }
   return {
     type: TYPE_REPONSE_DEUX_ENTIERS_RELATIFS,
     comparaison: COMPARAISON_VALEURS_EXACTES,
@@ -117,7 +160,7 @@ function reponseEntierRelatif(attendu) {
   return {
     type: TYPE_REPONSE_NOMBRE_DECIMAL,
     comparaison: COMPARAISON_VALEUR_RATIONNELLE_EXACTE,
-    attendu: { numerateur: attendu, denominateur: 1 },
+    attendu: rationnelDepuisCoordonnee(attendu),
   };
 }
 
@@ -155,8 +198,12 @@ function reponseIdentification(p) {
 
 function reponsePlacement(p) {
   const choix = [];
-  for (let y = p.yMax; y >= p.yMin; y -= 1) {
-    for (let x = p.xMin; x <= p.xMax; x += 1) {
+  const nombreY = Math.round((p.yMax - p.yMin) / p.pas);
+  const nombreX = Math.round((p.xMax - p.xMin) / p.pas);
+  for (let indiceY = nombreY; indiceY >= 0; indiceY -= 1) {
+    const y = p.yMin + indiceY * p.pas;
+    for (let indiceX = 0; indiceX <= nombreX; indiceX += 1) {
+      const x = p.xMin + indiceX * p.pas;
       choix.push({ id: encoderCoordonnee(x, y), libelle: formaterCouple(x, y) });
     }
   }
@@ -174,8 +221,8 @@ function aideLecture(p) {
   if (p.famille === FAMILLE_LIRE_ABSCISSE_REPERE) {
     return {
       blocs: [
-        texte("aide-sens", "L'abscisse donne la position sur l'axe horizontal."),
-        texte("aide-guide", "Imagine un guide vertical depuis le point jusqu'à cet axe."),
+        texte("aide-sens", "L'abscisse se lit sur l'axe des abscisses : c'est l'axe horizontal."),
+        texte("aide-guide", "Suis le guide vertical depuis le point jusqu'à l'axe des abscisses."),
         ...(surAxeOrdonnees
           ? [texte("aide-axe", "Le point est sur l'axe des ordonnées. Quelle abscisse a tout point de cet axe ?")]
           : []),
@@ -186,8 +233,8 @@ function aideLecture(p) {
   if (p.famille === FAMILLE_LIRE_ORDONNEE) {
     return {
       blocs: [
-        texte("aide-sens", "L'ordonnée donne la position sur l'axe vertical."),
-        texte("aide-guide", "Imagine un guide horizontal depuis le point jusqu'à cet axe."),
+        texte("aide-sens", "L'ordonnée se lit sur l'axe des ordonnées : c'est l'axe vertical."),
+        texte("aide-guide", "Suis le guide horizontal depuis le point jusqu'à l'axe des ordonnées."),
         ...(surAxeAbscisses
           ? [texte("aide-axe", "Le point est sur l'axe des abscisses. Quelle ordonnée a tout point de cet axe ?")]
           : []),
@@ -198,17 +245,17 @@ function aideLecture(p) {
   if (p.famille === FAMILLE_IDENTIFIER_POINT) {
     return {
       blocs: [
-        texte("aide-abscisse", "Repère d'abord l'abscisse demandée sur l'axe horizontal."),
-        texte("aide-ordonnee", "Repère ensuite l'ordonnée sur l'axe vertical. Le bon point est à l'intersection des deux guides."),
+        texte("aide-abscisse", "Repère d'abord l'abscisse demandée sur l'axe des abscisses."),
+        texte("aide-ordonnee", "Repère ensuite l'ordonnée sur l'axe des ordonnées. Le bon point est à l'intersection des deux guides."),
       ],
       outils: [],
     };
   }
   return {
     blocs: [
-      texte("aide-abscisse", "Commence par l'abscisse : cherche la position du point sur l'axe horizontal."),
-      texte("aide-guide-abscisse", "Un guide vertical depuis le point permet de rejoindre cet axe sans donner la valeur."),
-      texte("aide-ordonnee", "Lis ensuite l'ordonnée sur l'axe vertical : c'est la deuxième coordonnée."),
+      texte("aide-abscisse", "Commence par l'abscisse : cherche la position du point sur l'axe des abscisses."),
+      texte("aide-guide-abscisse", "Suis le guide vertical depuis le point jusqu'à l'axe des abscisses."),
+      texte("aide-ordonnee", "Lis maintenant l'ordonnée sur l'axe des ordonnées : c'est la deuxième coordonnée."),
       ...(surAxeAbscisses || surAxeOrdonnees
         ? [texte("aide-axe", `Le point est sur l'axe ${surAxeAbscisses ? "des abscisses" : "des ordonnées"}. Demande-toi quelle coordonnée est alors nulle.`)]
         : []),
@@ -220,9 +267,9 @@ function aideLecture(p) {
 function aidePlacement(p) {
   return {
     blocs: [
-      texte("aide-depart", "Pars de l'origine O et repère d'abord l'abscisse sur l'axe horizontal."),
+      texte("aide-depart", "Pars de l'origine O et repère d'abord l'abscisse sur l'axe des abscisses."),
       texte("aide-horizontal", "Déplace-toi horizontalement jusqu'à la bonne graduation, sans placer encore le point final."),
-      texte("aide-vertical", "Depuis cette graduation, va verticalement jusqu'à l'ordonnée, puis touche l'intersection."),
+      texte("aide-vertical", "Depuis cette graduation, va verticalement jusqu'à l'ordonnée lue sur l'axe des ordonnées, puis touche l'intersection."),
       ...(p.x === 0 || p.y === 0
         ? [texte("aide-axe", `Une coordonnée est nulle : le point se trouve donc sur l'axe ${p.y === 0 ? "des abscisses" : "des ordonnées"}.`)]
         : []),
@@ -248,20 +295,27 @@ function classementPlacement() {
 }
 
 function exigerBornes(p, quoi) {
+  if (![0.25, 0.5, 1].includes(p.pas)) {
+    throw new RangeError(`${quoi} : pas invalide`);
+  }
+  const estSurGraduation = (valeur) => Number.isFinite(valeur)
+    && Math.abs(valeur / p.pas - Math.round(valeur / p.pas)) < 1e-9;
   for (const [cle, minimum, maximum] of [
     ["xMin", -20, -1],
     ["xMax", 1, 20],
     ["yMin", -20, -1],
     ["yMax", 1, 20],
   ]) {
-    if (!Number.isSafeInteger(p[cle]) || p[cle] < minimum || p[cle] > maximum) {
+    if (!estSurGraduation(p[cle]) || p[cle] < minimum || p[cle] > maximum) {
       throw new RangeError(`${quoi} : ${cle} invalide`);
     }
   }
-  if (p.xMax - p.xMin < 4 || p.xMax - p.xMin > 12 || p.yMax - p.yMin < 4 || p.yMax - p.yMin > 12) {
+  const nombreX = (p.xMax - p.xMin) / p.pas;
+  const nombreY = (p.yMax - p.yMin) / p.pas;
+  if (nombreX < 4 || nombreX > 12 || nombreY < 4 || nombreY > 12) {
     throw new RangeError(`${quoi} : étendue illisible`);
   }
-  if (!Number.isSafeInteger(p.x) || p.x < p.xMin || p.x > p.xMax || !Number.isSafeInteger(p.y) || p.y < p.yMin || p.y > p.yMax) {
+  if (!estSurGraduation(p.x) || p.x < p.xMin || p.x > p.xMax || !estSurGraduation(p.y) || p.y < p.yMin || p.y > p.yMax) {
     throw new RangeError(`${quoi} : point cible hors du repère`);
   }
 }
@@ -278,7 +332,7 @@ function exigerParametresCommuns(p, quoi, familles) {
   }
   const cles = new Set([
     "famille", "xMin", "xMax", "yMin", "yMax", "x", "y",
-    "nomPoint", "decalageChoix", "points",
+    "pas", "nomPoint", "decalageChoix", "points",
   ]);
   for (const cle of Object.keys(p)) {
     if (!cles.has(cle)) throw new TypeError(`${quoi} : paramètre inconnu « ${cle} »`);
@@ -314,7 +368,9 @@ function exigerParametresLecture(p) {
         throw new TypeError(`${quoi} : propriété de point inconnue`);
       }
       exigerNom(point.nom, quoi);
-      if (!Number.isSafeInteger(point.x) || point.x < p.xMin || point.x > p.xMax || !Number.isSafeInteger(point.y) || point.y < p.yMin || point.y > p.yMax) {
+      const surGraduation = (valeur) => Number.isFinite(valeur)
+        && Math.abs(valeur / p.pas - Math.round(valeur / p.pas)) < 1e-9;
+      if (!surGraduation(point.x) || point.x < p.xMin || point.x > p.xMax || !surGraduation(point.y) || point.y < p.yMin || point.y > p.yMax) {
         throw new RangeError(`${quoi} : point d'identification hors du repère`);
       }
       noms.push(point.nom);
@@ -347,14 +403,14 @@ export function genererQuestionLireCoordonnees({ parametres }) {
     consigne = `Quelle est l'abscisse du point ${p.nomPoint} ?`;
     reponse = reponseEntierRelatif(p.x);
     correction = [
-      texte("methode", "L'abscisse est la position sur l'axe horizontal."),
+      texte("methode", "L'abscisse est la position sur l'axe des abscisses, l'axe horizontal."),
       texte("conclusion", `Le point ${p.nomPoint} a pour abscisse ${formaterEntierRepere(p.x)}.`),
     ];
   } else if (p.famille === FAMILLE_LIRE_ORDONNEE) {
     consigne = `Quelle est l'ordonnée du point ${p.nomPoint} ?`;
     reponse = reponseEntierRelatif(p.y);
     correction = [
-      texte("methode", "L'ordonnée est la position sur l'axe vertical."),
+      texte("methode", "L'ordonnée est la position sur l'axe des ordonnées, l'axe vertical."),
       texte("conclusion", `Le point ${p.nomPoint} a pour ordonnée ${formaterEntierRepere(p.y)}.`),
     ];
   } else if (p.famille === FAMILLE_IDENTIFIER_POINT) {
@@ -368,7 +424,7 @@ export function genererQuestionLireCoordonnees({ parametres }) {
     consigne = `Quelles sont les coordonnées du point ${p.nomPoint} ?`;
     reponse = p.famille === FAMILLE_DIAGNOSTIC_COORDONNEES ? reponseQcm(p) : reponseCouple(p);
     correction = [
-      texte("methode", `On lit d'abord l'abscisse sur l'axe horizontal : ${formaterEntierRepere(p.x)}. Puis on lit l'ordonnée sur l'axe vertical : ${formaterEntierRepere(p.y)}.`),
+      texte("methode", `On lit d'abord l'abscisse sur l'axe des abscisses : ${formaterEntierRepere(p.x)}. Puis on lit l'ordonnée sur l'axe des ordonnées : ${formaterEntierRepere(p.y)}.`),
       texte("conclusion", `${p.nomPoint}${formaterCouple(p.x, p.y)}.`),
     ];
   }
@@ -393,7 +449,7 @@ export function genererQuestionPlacerPointRepere({ parametres }) {
     reponse: reponsePlacement(p),
     aide: aidePlacement(p),
     correction: [
-      texte("methode", `Depuis O, on va horizontalement jusqu'à l'abscisse ${formaterEntierRepere(p.x)}, puis verticalement jusqu'à l'ordonnée ${formaterEntierRepere(p.y)}.`),
+      texte("methode", `Depuis O, on suit l'axe des abscisses jusqu'à ${formaterEntierRepere(p.x)}, puis on va verticalement jusqu'à l'ordonnée ${formaterEntierRepere(p.y)}.`),
       texte("conclusion", `Le point ${p.nomPoint}${formaterCouple(p.x, p.y)} se place à cette intersection.`),
     ],
   };
