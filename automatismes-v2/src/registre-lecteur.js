@@ -1,39 +1,59 @@
-import { GABARIT_RECONNAISSANCE_SOLIDES } from "../../packages/automatismes/src/espace-et-geometrie/solides-usuels/reconnaissance.js?v=42";
-import { GABARIT_DROITE_GRADUEE } from "../../packages/automatismes/src/espace-et-geometrie/droite-graduee/questions.js?v=42";
-import { genererSerieDroiteGraduee } from "../../packages/automatismes/src/espace-et-geometrie/droite-graduee/serie.js?v=42";
+import { GABARIT_RECONNAISSANCE_SOLIDES } from "../../packages/automatismes/src/espace-et-geometrie/solides-usuels/reconnaissance.js?v=46";
+import { GABARIT_DROITE_GRADUEE } from "../../packages/automatismes/src/espace-et-geometrie/droite-graduee/questions.js?v=46";
+import { genererSerieDroiteGraduee } from "../../packages/automatismes/src/espace-et-geometrie/droite-graduee/serie.js?v=46";
+import {
+  GABARIT_LIRE_COORDONNEES,
+  GABARIT_PLACER_POINT_REPERE,
+} from "../../packages/automatismes/src/espace-et-geometrie/reperage-plan/questions.js?v=46";
+import {
+  genererSerieLireCoordonnees,
+  genererSeriePlacerPointRepere,
+} from "../../packages/automatismes/src/espace-et-geometrie/reperage-plan/serie.js?v=46";
 import {
   GABARIT_VOLUME_CUBE_PAVE,
   GABARIT_VOLUME_CYLINDRE,
   GABARIT_VOLUME_PRISME,
-} from "../../packages/automatismes/src/grandeurs-et-mesures/volumes/calcul-volumes.js?v=42";
-import { GABARIT_SELECTION_DIVISEURS } from "../../packages/automatismes/src/nombres-et-calculs/criteres-divisibilite/selection-diviseurs.js?v=42";
-import { genererSerieNC01 } from "../../packages/automatismes/src/nombres-et-calculs/criteres-divisibilite/serie.js?v=42";
-import { GABARIT_CALCUL_DIRECT_CARRE } from "../../packages/automatismes/src/nombres-et-calculs/carres-entiers-1-a-12/calcul-direct.js?v=42";
-import { genererSerieNC02 } from "../../packages/automatismes/src/nombres-et-calculs/carres-entiers-1-a-12/serie.js?v=42";
+} from "../../packages/automatismes/src/grandeurs-et-mesures/volumes/calcul-volumes.js?v=46";
+import { GABARIT_SELECTION_DIVISEURS } from "../../packages/automatismes/src/nombres-et-calculs/criteres-divisibilite/selection-diviseurs.js?v=46";
+import { genererSerieNC01 } from "../../packages/automatismes/src/nombres-et-calculs/criteres-divisibilite/serie.js?v=46";
+import { GABARIT_CALCUL_DIRECT_CARRE } from "../../packages/automatismes/src/nombres-et-calculs/carres-entiers-1-a-12/calcul-direct.js?v=46";
+import { genererSerieNC02 } from "../../packages/automatismes/src/nombres-et-calculs/carres-entiers-1-a-12/serie.js?v=46";
 import {
   GABARIT_FRACTION_VERS_DECIMAL,
-} from "../../packages/automatismes/src/nombres-et-calculs/fractions-simples-decimaux/fraction-vers-decimal.js?v=42";
+} from "../../packages/automatismes/src/nombres-et-calculs/fractions-simples-decimaux/fraction-vers-decimal.js?v=46";
 import {
+  GABARIT_DECIMAL_VERS_FRACTION,
+} from "../../packages/automatismes/src/nombres-et-calculs/fractions-simples-decimaux/decimal-vers-fraction.js?v=46";
+import {
+  genererSerieDecimalVersFraction,
+  genererSerieFractionVersDecimal,
   genererSerieFractionsDecimaux,
-} from "../../packages/automatismes/src/nombres-et-calculs/fractions-simples-decimaux/serie.js?v=42";
+} from "../../packages/automatismes/src/nombres-et-calculs/fractions-simples-decimaux/serie.js?v=46";
 import {
   GABARIT_ECRITURES_MULTIPLES,
-} from "../../packages/automatismes/src/nombres-et-calculs/ecritures-multiples-nombre/questions.js?v=42";
+} from "../../packages/automatismes/src/nombres-et-calculs/ecritures-multiples-nombre/questions.js?v=46";
 import {
   genererSerieEcrituresMultiples,
-} from "../../packages/automatismes/src/nombres-et-calculs/ecritures-multiples-nombre/serie.js?v=42";
+} from "../../packages/automatismes/src/nombres-et-calculs/ecritures-multiples-nombre/serie.js?v=46";
 import {
+  MICRO_NOTIONS_AUTOMATISMES,
   MODULES_AUTOMATISMES,
-} from "../../packages/automatismes/src/identifiants.js?v=42";
+} from "../../packages/automatismes/src/identifiants.js?v=46";
 
 export const NOTION_NC01 = MODULES_AUTOMATISMES.CRITERES_DIVISIBILITE;
 export const NOTION_NC02 = MODULES_AUTOMATISMES.CARRES_ENTIERS;
+export const NOTION_FRACTION_VERS_DECIMAL =
+  MICRO_NOTIONS_AUTOMATISMES.FRACTION_VERS_DECIMAL;
+export const NOTION_DECIMAL_VERS_FRACTION =
+  MICRO_NOTIONS_AUTOMATISMES.DECIMAL_VERS_FRACTION;
 export const NOTION_FRACTIONS_SIMPLES_DECIMAUX =
   MODULES_AUTOMATISMES.FRACTIONS_SIMPLES_DECIMAUX;
 export const NOTION_ECRITURES_MULTIPLES_NOMBRE =
   MODULES_AUTOMATISMES.ECRITURES_MULTIPLES_NOMBRE;
 export const NOTION_SOLIDES_USUELS = MODULES_AUTOMATISMES.SOLIDES_USUELS;
 export const NOTION_DROITE_GRADUEE = MODULES_AUTOMATISMES.DROITE_GRADUEE;
+export const NOTION_LIRE_COORDONNEES_POINT = MODULES_AUTOMATISMES.LIRE_COORDONNEES_POINT;
+export const NOTION_PLACER_POINT_REPERE = MODULES_AUTOMATISMES.PLACER_POINT_REPERE;
 export const NOTION_VOLUME_CUBE_PAVE = MODULES_AUTOMATISMES.VOLUME_CUBE_PAVE;
 export const NOTION_VOLUME_PRISME = MODULES_AUTOMATISMES.VOLUME_PRISME;
 export const NOTION_VOLUME_CYLINDRE = MODULES_AUTOMATISMES.VOLUME_CYLINDRE;
@@ -44,6 +64,7 @@ export const RENDU_FRACTIONS_DECIMAUX = "fractions-decimaux";
 export const RENDU_ECRITURES_MULTIPLES = "ecritures-multiples";
 export const RENDU_SOLIDE = "solide";
 export const RENDU_DROITE_GRADUEE = "droite-graduee";
+export const RENDU_REPERAGE_PLAN = "reperage-plan";
 export const RENDU_VOLUME = "volume";
 
 const RENDUS = new Set([
@@ -53,6 +74,7 @@ const RENDUS = new Set([
   RENDU_ECRITURES_MULTIPLES,
   RENDU_SOLIDE,
   RENDU_DROITE_GRADUEE,
+  RENDU_REPERAGE_PLAN,
   RENDU_VOLUME,
 ]);
 
@@ -68,6 +90,7 @@ function definirNotion({
   rotationSolide = false,
   creerSerie = null,
   nombreQuestionsMaximum = 100,
+  notionsProduites = [id],
 }) {
   if (typeof id !== "string" || !/^[a-z0-9][a-z0-9-]*$/.test(id)) {
     throw new TypeError(`identifiant de notion invalide : ${id}`);
@@ -97,6 +120,13 @@ function definirNotion({
   ) {
     throw new RangeError(`capacité de série invalide : ${id}`);
   }
+  if (
+    !Array.isArray(notionsProduites)
+    || notionsProduites.length < 1
+    || notionsProduites.some((notion) => typeof notion !== "string")
+  ) {
+    throw new TypeError(`notions produites invalides : ${id}`);
+  }
   return Object.freeze({
     id,
     nom,
@@ -107,6 +137,7 @@ function definirNotion({
     pagesCours,
     creerSerie,
     nombreQuestionsMaximum,
+    notionsProduites: Object.freeze([...notionsProduites]),
   });
 }
 
@@ -134,14 +165,25 @@ const DEFINITIONS = Object.freeze([
     nombreQuestionsMaximum: 20,
   }),
   definirNotion({
-    id: NOTION_FRACTIONS_SIMPLES_DECIMAUX,
-    nom: "Fractions simples et décimaux",
+    id: NOTION_FRACTION_VERS_DECIMAL,
+    nom: "Fraction vers écriture décimale",
     gabarit: GABARIT_FRACTION_VERS_DECIMAL,
     rendu: RENDU_FRACTIONS_DECIMAUX,
-    graineApercu: "apercu-nc03-nc04-complet",
+    graineApercu: "apercu-nc03-complet",
     cours: true,
-    pagesCours: 6,
-    creerSerie: genererSerieFractionsDecimaux,
+    pagesCours: 5,
+    creerSerie: genererSerieFractionVersDecimal,
+    nombreQuestionsMaximum: 20,
+  }),
+  definirNotion({
+    id: NOTION_DECIMAL_VERS_FRACTION,
+    nom: "Écriture décimale vers fraction",
+    gabarit: GABARIT_DECIMAL_VERS_FRACTION,
+    rendu: RENDU_FRACTIONS_DECIMAUX,
+    graineApercu: "apercu-nc04-complet",
+    cours: true,
+    pagesCours: 5,
+    creerSerie: genererSerieDecimalVersFraction,
     nombreQuestionsMaximum: 20,
   }),
   definirNotion({
@@ -164,6 +206,28 @@ const DEFINITIONS = Object.freeze([
     cours: true,
     pagesCours: 6,
     creerSerie: genererSerieDroiteGraduee,
+    nombreQuestionsMaximum: 20,
+  }),
+  definirNotion({
+    id: NOTION_LIRE_COORDONNEES_POINT,
+    nom: "Lire les coordonnées d'un point",
+    gabarit: GABARIT_LIRE_COORDONNEES,
+    rendu: RENDU_REPERAGE_PLAN,
+    graineApercu: "apercu-ge03-complet",
+    cours: true,
+    pagesCours: 3,
+    creerSerie: genererSerieLireCoordonnees,
+    nombreQuestionsMaximum: 20,
+  }),
+  definirNotion({
+    id: NOTION_PLACER_POINT_REPERE,
+    nom: "Placer un point dans un repère",
+    gabarit: GABARIT_PLACER_POINT_REPERE,
+    rendu: RENDU_REPERAGE_PLAN,
+    graineApercu: "apercu-ge04-complet",
+    cours: true,
+    pagesCours: 3,
+    creerSerie: genererSeriePlacerPointRepere,
     nombreQuestionsMaximum: 20,
   }),
   definirNotion({
@@ -200,8 +264,25 @@ const DEFINITIONS = Object.freeze([
   }),
 ]);
 
-const PAR_ID = new Map(DEFINITIONS.map((definition) => [definition.id, definition]));
-if (PAR_ID.size !== DEFINITIONS.length) {
+const DEFINITION_FRACTIONS_SIMPLES_DECIMAUX_LEGACY = definirNotion({
+  id: NOTION_FRACTIONS_SIMPLES_DECIMAUX,
+  nom: "Fractions simples et décimaux",
+  gabarit: GABARIT_FRACTION_VERS_DECIMAL,
+  rendu: RENDU_FRACTIONS_DECIMAUX,
+  graineApercu: "apercu-nc03-nc04-complet",
+  cours: true,
+  pagesCours: 6,
+  creerSerie: genererSerieFractionsDecimaux,
+  nombreQuestionsMaximum: 20,
+  notionsProduites: [NOTION_FRACTION_VERS_DECIMAL, NOTION_DECIMAL_VERS_FRACTION],
+});
+
+const PAR_ID = new Map([
+  ...DEFINITIONS.map((definition) => [definition.id, definition]),
+  [DEFINITION_FRACTIONS_SIMPLES_DECIMAUX_LEGACY.id,
+    DEFINITION_FRACTIONS_SIMPLES_DECIMAUX_LEGACY],
+]);
+if (PAR_ID.size !== DEFINITIONS.length + 1) {
   throw new Error("le registre du lecteur contient un identifiant de notion dupliqué");
 }
 

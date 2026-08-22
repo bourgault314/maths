@@ -130,6 +130,12 @@ export const PROVENANCE_OBJETS = {
     note: "Sections « number-line » et « double-number-line » : les réglages pédagogiques sont conservés (bornes libres y compris négatives, pas décimal, points multiples étiquetés au-dessus ou en dessous, étiquettes de graduation remplaçables une par une, masquage total des nombres, graduations imposées, garde-fou anti-surcharge, double droite nommée, pourcentages calculés à partir du seul total). Code réécrit en module ESM français, couleurs prises dans la charte, et six défauts du rendu d'origine corrigés : virgule décimale française, vrai signe moins, trait pointillé interrompu devant les nombres, correspondance marquée aussi sur la ligne du bas, coordonnées arrondies à 2 décimales, hauteur ajustée au contenu.",
   },
 
+  "repere-cartesien.js": {
+    statut: "original_mathsgo",
+    source: "fiche GE-03/GE-04 du 22 août 2026 — composant scolaire commun écrit à neuf pour Automatismes V2",
+    note: "Les repères déjà présents dans le Studio et l'objet V2 de droite graduée ont été relus pour recenser les problèmes de lisibilité, de typographie, de collision et de responsive déjà traités. Aucun code, SVG, coordonnée ni logique d'un ancien module n'est importé : le calcul à unités carrées, le placement d'étiquettes, les guides et les rôles de correction appartiennent à ce composant V2.",
+  },
+
   "pythagore-logique.js": {
     statut: "original_mathsgo",
     source: "outils/pythabarre.html — lu ligne à ligne",
@@ -174,6 +180,10 @@ export const PROVENANCE_FONDATION_V2 = Object.freeze({
   "automatismes-v2/src/diagnostic-fractions-decimaux.js": {
     statut: "original_mathsgo",
     source: "diagnostics NC-03/NC-04 bornés aux mécanismes identifiables, validés par Gwenaël le 7 août 2026",
+  },
+  "automatismes-v2/src/diagnostic-reperage-plan.js": {
+    statut: "original_mathsgo",
+    source: "diagnostics GE-03/GE-04 E1 à E6 définis dans la fiche du 22 août 2026 et écrits à neuf pour Automatismes V2",
   },
   "automatismes-v2/src/registre-lecteur.js": {
     statut: "original_mathsgo",
@@ -332,6 +342,14 @@ export const PROVENANCE_FONDATION_V2 = Object.freeze({
   "packages/automatismes/src/espace-et-geometrie/droite-graduee/serie.js": {
     statut: "original_mathsgo",
     source: "recette déterministe GE-01/GE-02, quotas 5/10/15/20 et variations d’échelles décidés avec Gwenaël le 21 août 2026",
+  },
+  "packages/automatismes/src/espace-et-geometrie/reperage-plan/questions.js": {
+    statut: "original_mathsgo",
+    source: "fiche GE-03/GE-04 du 22 août 2026 ; questions, aides, corrections et distracteurs diagnostiques écrits à neuf pour Automatismes V2",
+  },
+  "packages/automatismes/src/espace-et-geometrie/reperage-plan/serie.js": {
+    statut: "original_mathsgo",
+    source: "recettes déterministes séparées GE-03/GE-04, quotas 5/10/15/20 et couverture contrôlée des quadrants et des axes définis le 22 août 2026",
   },
   "packages/automatismes/src/grandeurs-et-mesures/volumes/calcul-volumes.js": {
     statut: "original_mathsgo",

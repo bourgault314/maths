@@ -5,7 +5,7 @@
 // décimaux ou les calculs ne sont donc jamais affichées sur une question qui
 // attend seulement un entier naturel.
 
-export const VERSION_CLAVIER = 2;
+export const VERSION_CLAVIER = 3;
 
 export const ACTION_TOUCHE_SAISIR = "saisir";
 export const ACTION_TOUCHE_EFFACER = "effacer";
@@ -74,6 +74,25 @@ export const DISPOSITIONS_CLAVIER = Object.freeze({
       toucheSaisie("0", { classe: "touche-zero-large" }),
     ],
   }),
+  "entier-relatif": figerDisposition({
+    id: "entier-relatif",
+    colonnes: 4,
+    touches: [
+      toucheSaisie("1"),
+      toucheSaisie("2"),
+      toucheSaisie("3"),
+      effacer,
+      toucheSaisie("4"),
+      toucheSaisie("5"),
+      toucheSaisie("6"),
+      toucheSaisie("−", { id: "signe-moins-entier", ariaLabel: "Changer le signe" }),
+      toucheSaisie("7"),
+      toucheSaisie("8"),
+      toucheSaisie("9"),
+      valider,
+      toucheSaisie("0", { classe: "touche-zero-large" }),
+    ],
+  }),
   // Préparée pour les futures réponses décimales. Elle n'est pas utilisée par
   // NC-01 et ses touches restent donc invisibles aujourd'hui.
   "nombre-decimal": figerDisposition({
@@ -134,7 +153,7 @@ export const DISPOSITIONS = Object.freeze({
  * Fabrique DOM conservée pour les autres outils maths&go.
  * @param {HTMLElement} conteneur
  * @param {object} options
- * @param {"entier-naturel" | "decimal-positif" | "nombre-decimal" | "nombres" | "calcul"} [options.disposition]
+ * @param {"entier-naturel" | "entier-relatif" | "decimal-positif" | "nombre-decimal" | "nombres" | "calcul"} [options.disposition]
  * @param {(touche: string) => void} options.surTouche
  * @returns {{ detruire: () => void }}
  */

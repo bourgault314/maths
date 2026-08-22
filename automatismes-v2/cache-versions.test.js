@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import { it } from "node:test";
 
-const VERSION = "42";
+const VERSION = "46";
 
 const RESSOURCES_VERSIONNEES = new Map([
   ["automatismes-v2/index.html", ["styles.css", "interface.css", "menu.css", "app.js"]],
@@ -19,12 +19,15 @@ const RESSOURCES_VERSIONNEES = new Map([
     "expressions.js",
     "carre-quadrille.js",
     "droite-graduee.js",
+    "repere-cartesien.js",
     "bandes-fractions-rail.js",
     "numeration-decimale.js",
     "correspondances-decimales.js",
     "fractions.js",
     "fractions-decimaux.js",
     "diagnostic-fractions-decimaux.js",
+    "reperage-plan/questions.js",
+    "diagnostic-reperage-plan.js",
   ]],
   ["automatismes-v2/src/etat-lecteur.js", [
     "seance.js",
@@ -49,6 +52,8 @@ const RESSOURCES_VERSIONNEES = new Map([
     "ecritures-multiples-nombre/serie.js",
     "droite-graduee/questions.js",
     "droite-graduee/serie.js",
+    "reperage-plan/questions.js",
+    "reperage-plan/serie.js",
     "identifiants.js",
   ]],
   ["packages/automatismes/src/registre.js", [
@@ -70,6 +75,7 @@ const RESSOURCES_VERSIONNEES = new Map([
     "fraction-vers-decimal.js",
     "ecritures-multiples-nombre/questions.js",
     "droite-graduee/questions.js",
+    "reperage-plan/questions.js",
   ]],
   ["packages/moteur-exercices/src/generation.js", ["question-v2.js"]],
   ["packages/automatismes/src/nombres-et-calculs/criteres-divisibilite/serie.js", [
@@ -143,9 +149,19 @@ const RESSOURCES_VERSIONNEES = new Map([
     "aleatoire.js",
     "questions.js",
   ]],
+  ["packages/automatismes/src/espace-et-geometrie/reperage-plan/questions.js", [
+    "gabarit.js",
+    "question-v2.js",
+    "identifiants.js",
+  ]],
+  ["packages/automatismes/src/espace-et-geometrie/reperage-plan/serie.js", [
+    "aleatoire.js",
+    "questions.js",
+  ]],
   ["packages/automatismes/src/grandeurs-et-mesures/volumes/calcul-volumes.js", ["question-v2.js", "identifiants.js"]],
   ["packages/contrats/src/trace-reponse.js", ["question-v2.js"]],
   ["packages/objets/src/droite-graduee.js", ["charte.js", "expressions.js"]],
+  ["packages/objets/src/repere-cartesien.js", ["charte.js"]],
   ["packages/objets/src/carre-quadrille.js", ["charte.js"]],
   ["packages/objets/src/correspondances-decimales.js", ["charte.js"]],
   ["packages/objets/src/expressions.js", ["charte.js"]],

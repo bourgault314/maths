@@ -26,7 +26,7 @@ function disposition(rendu, nom) {
 
 describe("réorganisation des centièmes", () => {
   it("expose une API versionnée et trois états déterministes", () => {
-    assert.equal(VERSION_CORRESPONDANCES_DECIMALES, 6);
+    assert.equal(VERSION_CORRESPONDANCES_DECIMALES, 7);
     assert.deepEqual(ETAPES_REORGANISATION_CENTIEMES, [
       "lignes",
       "quadrants",
@@ -232,6 +232,8 @@ describe("cinq dixièmes et un demi", () => {
       new RegExp(`class="cd-reste-dixiemes"[^>]*fill="${COULEURS_RANGS_NUMERATION_DECIMALE.dixiemes.fond}"`),
     );
     assert.match(rendu.svg, /class="cd-ligne-demie-unite cd-bord-cinq-dixiemes"/);
+    assert.equal(compter(rendu.svg, /class="cd-separation-dixiemes"/g), 9);
+    assert.doesNotMatch(rendu.svg, /class="cd-grille-unite"/);
     assert.match(
       rendu.svg,
       new RegExp(`fill="${COULEURS_NUMERATION_DECIMALE.dixieme}"`),

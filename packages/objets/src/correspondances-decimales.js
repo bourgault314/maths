@@ -11,10 +11,10 @@ import {
   COULEURS_NUMERATION_DECIMALE,
   COULEURS_RANGS_NUMERATION_DECIMALE,
   TYPOGRAPHIE,
-} from "../../charte/src/charte.js?v=42";
-import { rendreFractionSvg } from "./expressions.js?v=42";
+} from "../../charte/src/charte.js?v=46";
+import { rendreFractionSvg } from "./expressions.js?v=46";
 
-export const VERSION_CORRESPONDANCES_DECIMALES = 6;
+export const VERSION_CORRESPONDANCES_DECIMALES = 7;
 
 export const ETAPES_REORGANISATION_CENTIEMES = Object.freeze([
   "lignes",
@@ -402,14 +402,13 @@ function dessinerEmpreinteDixiemes(x, y, cote, afficherEcritures) {
       `width="${nombreSvg(cote / 2)}" height="${nombreSvg(cote)}" ` +
       `fill="${COULEURS_RANGS_NUMERATION_DECIMALE.dixiemes.fond}"/>`,
   ];
+  // Ici l'unité est seulement partagée en dixièmes : les petites cases de
+  // centièmes n'apparaîtront que lors d'une conversion vers les centièmes.
   for (let index = 1; index < 10; index += 1) {
     morceaux.push(
-      `<line class="cd-grille-unite" x1="${nombreSvg(index * cellule)}" y1="0" ` +
+      `<line class="cd-separation-dixiemes" x1="${nombreSvg(index * cellule)}" y1="0" ` +
       `x2="${nombreSvg(index * cellule)}" y2="${nombreSvg(cote)}" ` +
-      `stroke="rgba(17,24,39,.38)" stroke-width="0.6"/>`,
-      `<line class="cd-grille-unite" x1="0" y1="${nombreSvg(index * cellule)}" ` +
-      `x2="${nombreSvg(cote)}" y2="${nombreSvg(index * cellule)}" ` +
-      `stroke="rgba(17,24,39,.38)" stroke-width="0.6"/>`,
+      `stroke="rgba(17,24,39,.5)" stroke-width="0.8"/>`,
     );
   }
   for (let index = 0; index < 5; index += 1) {
@@ -418,10 +417,6 @@ function dessinerEmpreinteDixiemes(x, y, cote, afficherEcritures) {
       `<rect x="${nombreSvg(index * cellule)}" y="0" width="${nombreSvg(cellule)}" ` +
       `height="${nombreSvg(cote)}" fill="${COULEURS_NUMERATION_DECIMALE.dixieme}" ` +
       `stroke="${COULEURS_NUMERATION_DECIMALE.trait}" stroke-width="1"/>` +
-      Array.from({ length: 9 }, (_, ligne) =>
-        `<line x1="${nombreSvg(index * cellule)}" y1="${nombreSvg((ligne + 1) * cellule)}" ` +
-        `x2="${nombreSvg((index + 1) * cellule)}" y2="${nombreSvg((ligne + 1) * cellule)}" ` +
-        `stroke="rgba(0,0,0,.48)" stroke-width="0.55"/>`).join("") +
       `</g>`,
     );
   }

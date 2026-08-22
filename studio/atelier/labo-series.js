@@ -76,6 +76,7 @@ import {
   dessinerPrereglageDroiteGraduee,
   formaterNombre,
 } from "../../packages/objets/src/droite-graduee.js";
+import { dessinerRepereCartesien } from "../../packages/objets/src/repere-cartesien.js";
 import { VARIATIONS_THALES, creerThales, dessinerThales } from "../../packages/objets/src/thales.js";
 import { creerGenerateur } from "../../packages/moteur-exercices/src/aleatoire.js";
 
@@ -1019,6 +1020,137 @@ const entreeDoubleDroitePourcentage = entreeDroiteParGenre({
 });
 
 // ---------------------------------------------------------------------------
+// Repère cartésien scolaire — objet partagé GE-03 / GE-04
+// ---------------------------------------------------------------------------
+
+const BORNES_REPERE_STUDIO = Object.freeze({
+  symetrique: Object.freeze({ xMin: -4, xMax: 4, yMin: -3, yMax: 3 }),
+  "x-asymetrique": Object.freeze({ xMin: -5, xMax: 3, yMin: -3, yMax: 4 }),
+  "y-asymetrique": Object.freeze({ xMin: -3, xMax: 4, yMin: -5, yMax: 3 }),
+});
+
+function optionsRepereStudio(v) {
+  const bornes = BORNES_REPERE_STUDIO[v.bornes];
+  const mode = v.mode;
+  const point = { nom: "M", x: Number(v.x), y: Number(v.y), role: v.role };
+  return {
+    ...bornes,
+    largeur: Number(v.largeur),
+    points: mode === "vide" ? [] : [point],
+    guides: mode === "lecture"
+      ? [
+        { x: point.x, y: point.y, axe: "abscisses" },
+        { x: point.x, y: point.y, axe: "ordonnees" },
+      ]
+      : [],
+    cheminPlacement: mode === "placement-horizontal"
+      ? { x: point.x, y: point.y, etape: "horizontal" }
+      : mode === "placement-complet"
+        ? { x: point.x, y: point.y, etape: "complet" }
+        : null,
+    description: "Repère cartésien scolaire — essai du Studio",
+  };
+}
+
+const entreeRepereCartesien = {
+  titre: "Repère cartésien — validation GE-03 / GE-04",
+  parametres: [
+    { cle: "x", libelle: "Abscisse de M", min: -3, max: 3, pas: 1, defaut: -3 },
+    { cle: "y", libelle: "Ordonnée de M", min: -3, max: 3, pas: 1, defaut: 2 },
+    { cle: "largeur", libelle: "Largeur", min: 280, max: 900, pas: 20, defaut: 640 },
+  ],
+  groupes: [
+    {
+      cle: "bornes",
+      options: [
+        ["symetrique", "−4 à 4 ; −3 à 3"],
+        ["x-asymetrique", "−5 à 3 ; −3 à 4"],
+        ["y-asymetrique", "−3 à 4 ; −5 à 3"],
+      ],
+      defaut: "symetrique",
+    },
+    {
+      cle: "mode",
+      options: [
+        ["point", "Point seul"],
+        ["lecture", "Guides de lecture"],
+        ["placement-horizontal", "Placement : abscisse"],
+        ["placement-complet", "Placement complet"],
+        ["vide", "Repère vide"],
+      ],
+      defaut: "lecture",
+    },
+    {
+      cle: "role",
+      options: [["donne", "Point donné"], ["choisi", "Point choisi"], ["attendu", "Point attendu"]],
+      defaut: "donne",
+    },
+  ],
+  dessiner: (v) => dessinerRepereCartesien(optionsRepereStudio(v)).svg,
+  planche: () => [
+    {
+      legende: "Lecture M(−3 ; 2) — guides distincts",
+      dessiner: () => dessinerRepereCartesien({
+        xMin: -4, xMax: 4, yMin: -3, yMax: 3, largeur: 430,
+        points: [{ nom: "M", x: -3, y: 2 }],
+        guides: [{ x: -3, y: 2, axe: "abscisses" }, { x: -3, y: 2, axe: "ordonnees" }],
+      }).svg,
+    },
+    {
+      legende: "Bornes asymétriques — point au bord",
+      dessiner: () => dessinerRepereCartesien({
+        xMin: -5, xMax: 3, yMin: -3, yMax: 4, largeur: 430,
+        points: [{ nom: "A", x: 3, y: 4 }],
+      }).svg,
+    },
+    {
+      legende: "Points sur les axes et à l'origine",
+      dessiner: () => dessinerRepereCartesien({
+        xMin: -4, xMax: 4, yMin: -3, yMax: 3, largeur: 430,
+        points: [{ nom: "C", x: 3, y: 0 }, { nom: "D", x: 0, y: -2 }, { nom: "A", x: 0, y: 0 }],
+      }).svg,
+    },
+    {
+      legende: "Identification — quatre points espacés",
+      dessiner: () => dessinerRepereCartesien({
+        xMin: -4, xMax: 4, yMin: -3, yMax: 3, largeur: 430,
+        points: [{ nom: "A", x: -3, y: 2 }, { nom: "B", x: 2, y: 2 }, { nom: "C", x: -2, y: -2 }, { nom: "D", x: 3, y: -1 }],
+      }).svg,
+    },
+    {
+      legende: "Correction — point choisi et point attendu",
+      dessiner: () => dessinerRepereCartesien({
+        xMin: -4, xMax: 4, yMin: -3, yMax: 3, largeur: 430,
+        points: [
+          { nom: "T", x: 2, y: -3, role: "choisi", afficherNom: false },
+          { nom: "M", x: -3, y: 2, role: "attendu" },
+        ],
+      }).svg,
+    },
+    {
+      legende: "Placement — horizontal puis vertical",
+      dessiner: () => dessinerRepereCartesien({
+        xMin: -4, xMax: 4, yMin: -3, yMax: 3, largeur: 430,
+        points: [{ nom: "B", x: 2, y: -1 }],
+        cheminPlacement: { x: 2, y: -1, etape: "complet" },
+      }).svg,
+    },
+    {
+      legende: "Téléphone 320 px — nombres et point proches des axes",
+      dessiner: () => dessinerRepereCartesien({
+        xMin: -5, xMax: 3, yMin: -3, yMax: 4, largeur: 320,
+        points: [{ nom: "P", x: -1, y: 1 }],
+      }).svg,
+    },
+  ],
+  vignette: () => dessinerRepereCartesien({
+    xMin: -4, xMax: 4, yMin: -3, yMax: 3, largeur: 320,
+    points: [{ nom: "M", x: -3, y: 2 }],
+    guides: [{ x: -3, y: 2, axe: "abscisses" }, { x: -3, y: 2, axe: "ordonnees" }],
+  }).svg,
+};
+
+// ---------------------------------------------------------------------------
 // Pourcentages : l'objet barre-pourcentage (préréglages + gabarits)
 // ---------------------------------------------------------------------------
 
@@ -1504,6 +1636,7 @@ export const SERIES = [
       doubleDroitePourcentage: entreeDoubleDroitePourcentage,
     },
   },
+  { nom: "Repères cartésiens", objets: { repereCartesien: entreeRepereCartesien } },
   {
     nom: "Pourcentages",
     objets: Object.fromEntries(

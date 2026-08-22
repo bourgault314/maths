@@ -5,7 +5,7 @@
 import {
   SCHEMA_GABARIT_QUESTION,
   estDonneePure,
-} from "../../../../contrats/src/gabarit.js?v=42";
+} from "../../../../contrats/src/gabarit.js?v=46";
 import {
   COMPARAISON_CHOIX_EXACT,
   COMPARAISON_VALEUR_EXACTE,
@@ -14,12 +14,18 @@ import {
   TYPE_REPONSE_ENTIER_NATUREL,
   TYPE_REPONSE_FRACTION_EQUIVALENTE,
   TYPE_REPONSE_NOMBRE_DECIMAL,
-} from "../../../../contrats/src/question-v2.js?v=42";
+} from "../../../../contrats/src/question-v2.js?v=46";
 import {
   IDENTITES_AUTOMATISMES,
   creerClassementAutomatisme,
-} from "../../identifiants.js?v=42";
+} from "../../identifiants.js?v=46";
 
+export const NOTION_FRACTION_VERS_DECIMAL =
+  IDENTITES_AUTOMATISMES.FRACTION_VERS_DECIMAL.microNotion;
+export const NOTION_DECIMAL_VERS_FRACTION =
+  IDENTITES_AUTOMATISMES.DECIMAL_VERS_FRACTION.microNotion;
+// Alias historique conservé pour les imports documentaires et les anciens
+// liens. Les séries visibles utilisent la notion précise NC03 ou NC04.
 export const NOTION_FRACTIONS_SIMPLES_DECIMAUX =
   IDENTITES_AUTOMATISMES.FRACTION_VERS_DECIMAL.module;
 export const MICRO_NOTION_NC03 =
@@ -172,7 +178,13 @@ export function classementFractions(microNotion, famille, complements = []) {
       "classementFractions : micro-notion fraction-vers-decimal ou decimal-vers-fraction requise",
     );
   }
-  return creerClassementAutomatisme(identite, famille, complements);
+  const classement = creerClassementAutomatisme(identite, famille, complements);
+  return {
+    ...classement,
+    // La taxonomie conserve un module canonique commun, tandis que le lecteur
+    // distingue les deux sens comme deux notions de séance.
+    notion: microNotion,
+  };
 }
 
 export function reponseNombreDecimal(numerateur, denominateur) {

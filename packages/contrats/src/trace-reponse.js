@@ -11,11 +11,12 @@ import { estDonneePure, estIdentifiantValide } from "./gabarit.js";
 import {
   TYPE_REPONSE_CHOIX_UNIQUE,
   TYPE_REPONSE_DEUX_ENTIERS,
+  TYPE_REPONSE_DEUX_ENTIERS_RELATIFS,
   TYPE_REPONSE_ENTIER_NATUREL,
   TYPE_REPONSE_FRACTION_EQUIVALENTE,
   TYPE_REPONSE_NOMBRE_DECIMAL,
   TYPE_REPONSE_SELECTION_MULTIPLE,
-} from "./question-v2.js?v=42";
+} from "./question-v2.js?v=46";
 
 export const SCHEMA_TRACE_REPONSE_V1 = "mathsgo.trace-reponse/1";
 export const SCHEMA_TRACE_REPONSE_V2 = "mathsgo.trace-reponse/2";
@@ -246,6 +247,8 @@ export function validerTraceReponse(trace) {
     ].includes(t.reponse.type);
     const typeEntier = t.reponse.type === TYPE_REPONSE_ENTIER_NATUREL;
     const typeDeuxEntiers = t.reponse.type === TYPE_REPONSE_DEUX_ENTIERS;
+    const typeDeuxEntiersRelatifs =
+      t.reponse.type === TYPE_REPONSE_DEUX_ENTIERS_RELATIFS;
     const typeDecimal = t.reponse.type === TYPE_REPONSE_NOMBRE_DECIMAL;
     const typeFraction =
       t.reponse.type === TYPE_REPONSE_FRACTION_EQUIVALENTE;
@@ -260,7 +263,7 @@ export function validerTraceReponse(trace) {
         ? ["type", "statut"]
         : typeEntier
           ? ["type", ...(version3 ? ["statut"] : []), "valeur"]
-          : typeDeuxEntiers || typeFraction
+          : typeDeuxEntiers || typeDeuxEntiersRelatifs || typeFraction
             ? ["type", ...(version3 ? ["statut"] : []), "valeurs"]
             : typeDecimal
               ? ["type", ...(version3 ? ["statut"] : []), "saisie", "valeur"]
@@ -272,11 +275,12 @@ export function validerTraceReponse(trace) {
       !typeChoix &&
       !typeEntier &&
       !typeDeuxEntiers &&
+      !typeDeuxEntiersRelatifs &&
       !typeDecimal &&
       !typeFraction
     ) {
       erreurs.push(
-        `reponse.type : « ${TYPE_REPONSE_SELECTION_MULTIPLE} », « ${TYPE_REPONSE_CHOIX_UNIQUE} », « ${TYPE_REPONSE_ENTIER_NATUREL} », « ${TYPE_REPONSE_DEUX_ENTIERS} », « ${TYPE_REPONSE_NOMBRE_DECIMAL} » ou « ${TYPE_REPONSE_FRACTION_EQUIVALENTE} » attendu`,
+        `reponse.type : « ${TYPE_REPONSE_SELECTION_MULTIPLE} », « ${TYPE_REPONSE_CHOIX_UNIQUE} », « ${TYPE_REPONSE_ENTIER_NATUREL} », « ${TYPE_REPONSE_DEUX_ENTIERS} », « ${TYPE_REPONSE_DEUX_ENTIERS_RELATIFS} », « ${TYPE_REPONSE_NOMBRE_DECIMAL} » ou « ${TYPE_REPONSE_FRACTION_EQUIVALENTE} » attendu`,
       );
     }
     if (statutOmis) {
@@ -287,15 +291,18 @@ export function validerTraceReponse(trace) {
       if (!Number.isSafeInteger(t.reponse.valeur) || t.reponse.valeur < 0) {
         erreurs.push("reponse.valeur : entier naturel requis");
       }
-    } else if (typeDeuxEntiers || typeFraction) {
+    } else if (typeDeuxEntiers || typeDeuxEntiersRelatifs || typeFraction) {
       if (!Array.isArray(t.reponse.valeurs) || t.reponse.valeurs.length !== 2) {
         erreurs.push("reponse.valeurs : exactement deux entiers sont requis");
       } else if (
         t.reponse.valeurs.some(
-          (valeur) => !Number.isSafeInteger(valeur) || valeur < 0,
+          (valeur) => !Number.isSafeInteger(valeur)
+            || (!typeDeuxEntiersRelatifs && valeur < 0),
         )
       ) {
-        erreurs.push("reponse.valeurs : deux entiers naturels requis");
+        erreurs.push(typeDeuxEntiersRelatifs
+          ? "reponse.valeurs : deux entiers relatifs requis"
+          : "reponse.valeurs : deux entiers naturels requis");
       } else if (typeFraction && t.reponse.valeurs[1] === 0) {
         erreurs.push(
           "reponse.valeurs[1] : dénominateur strictement positif requis",

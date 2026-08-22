@@ -1,36 +1,42 @@
 import {
   SCHEMA_SEANCE,
   validerSeance,
-} from "../../packages/contrats/src/seance.js?v=42";
+} from "../../packages/contrats/src/seance.js?v=46";
 import {
   REFERENTIEL_COMPETENCES,
   SCHEMA_TRACE_REPONSE,
   validerTraceReponse,
-} from "../../packages/contrats/src/trace-reponse.js?v=42";
+} from "../../packages/contrats/src/trace-reponse.js?v=46";
 import {
   TYPE_REPONSE_ENTIER_NATUREL,
   TYPE_REPONSE_DEUX_ENTIERS,
+  TYPE_REPONSE_DEUX_ENTIERS_RELATIFS,
   TYPE_REPONSE_CHOIX_UNIQUE,
   TYPE_REPONSE_FRACTION_EQUIVALENTE,
   TYPE_REPONSE_NOMBRE_DECIMAL,
   estDeuxEntiersExacts,
+  estDeuxEntiersRelatifsExacts,
   estEntierExact,
   estSelectionExacte,
-} from "../../packages/contrats/src/question-v2.js?v=42";
+} from "../../packages/contrats/src/question-v2.js?v=46";
 import {
   analyserEcritureDecimaleSignee,
   fractionsEgales,
-} from "../../packages/objets/src/fractions-decimaux.js?v=42";
+} from "../../packages/objets/src/fractions-decimaux.js?v=46";
 import { graineDepuisTexte } from "../../packages/moteur-exercices/src/aleatoire.js";
-import { creerRegistreAutomatismes } from "../../packages/automatismes/src/registre.js?v=42";
+import { creerRegistreAutomatismes } from "../../packages/automatismes/src/registre.js?v=46";
 import {
   normaliserIdentifiantModule,
-} from "../../packages/automatismes/src/identifiants.js?v=42";
+} from "../../packages/automatismes/src/identifiants.js?v=46";
 import {
   connaitNotionLecteur,
   listerNotionsLecteur,
   NOTION_ECRITURES_MULTIPLES_NOMBRE,
   NOTION_DROITE_GRADUEE,
+  NOTION_LIRE_COORDONNEES_POINT,
+  NOTION_PLACER_POINT_REPERE,
+  NOTION_DECIMAL_VERS_FRACTION,
+  NOTION_FRACTION_VERS_DECIMAL,
   NOTION_FRACTIONS_SIMPLES_DECIMAUX,
   NOTION_NC01,
   NOTION_NC02,
@@ -39,12 +45,16 @@ import {
   NOTION_VOLUME_CYLINDRE,
   NOTION_VOLUME_PRISME,
   obtenirNotionLecteur,
-} from "./registre-lecteur.js?v=42";
-import { genererSerieMultinotions } from "./serie-multinotions.js?v=42";
+} from "./registre-lecteur.js?v=46";
+import { genererSerieMultinotions } from "./serie-multinotions.js?v=46";
 
 export {
   NOTION_ECRITURES_MULTIPLES_NOMBRE,
   NOTION_DROITE_GRADUEE,
+  NOTION_LIRE_COORDONNEES_POINT,
+  NOTION_PLACER_POINT_REPERE,
+  NOTION_DECIMAL_VERS_FRACTION,
+  NOTION_FRACTION_VERS_DECIMAL,
   NOTION_FRACTIONS_SIMPLES_DECIMAUX,
   NOTION_NC01,
   NOTION_NC02,
@@ -80,17 +90,21 @@ function normaliserNotions(configuration) {
   if (demandeesBrutes.some((notion) => typeof notion !== "string" || notion === "")) {
     throw new TypeError("identifiants de notions requis");
   }
-  const demandees = demandeesBrutes.map(normaliserIdentifiantModule);
-  if (new Set(demandees).size !== demandees.length) {
+  if (new Set(demandeesBrutes).size !== demandeesBrutes.length) {
     throw new RangeError("doublons de notions interdits");
   }
+  const demandees = demandeesBrutes.map(normaliserIdentifiantModule);
   for (const notion of demandees) {
     if (!connaitNotionLecteur(notion)) throw new RangeError(`notion inconnue : ${notion}`);
   }
   const ensemble = new Set(demandees);
-  return listerNotionsLecteur()
+  const ordonnees = listerNotionsLecteur()
     .map(({ id }) => id)
     .filter((id) => ensemble.has(id));
+  if (ensemble.has(NOTION_FRACTIONS_SIMPLES_DECIMAUX)) {
+    ordonnees.push(NOTION_FRACTIONS_SIMPLES_DECIMAUX);
+  }
+  return ordonnees;
 }
 
 function normaliserConfiguration(configuration = {}) {
@@ -284,6 +298,7 @@ export function basculerChoix(etat, idChoix) {
   if (
     question.reponse.type === TYPE_REPONSE_ENTIER_NATUREL
     || question.reponse.type === TYPE_REPONSE_DEUX_ENTIERS
+    || question.reponse.type === TYPE_REPONSE_DEUX_ENTIERS_RELATIFS
     || question.reponse.type === TYPE_REPONSE_NOMBRE_DECIMAL
     || question.reponse.type === TYPE_REPONSE_FRACTION_EQUIVALENTE
   ) {
@@ -320,6 +335,7 @@ export function selectionnerChampSaisie(etat, index) {
   const question = questionCourante(etat);
   const reponseDouble = question && (
     question.reponse.type === TYPE_REPONSE_DEUX_ENTIERS
+    || question.reponse.type === TYPE_REPONSE_DEUX_ENTIERS_RELATIFS
     || question.reponse.type === TYPE_REPONSE_FRACTION_EQUIVALENTE
   );
   if (
@@ -379,8 +395,10 @@ function saisirEntierSansBorne(etat, chiffre) {
 
 function saisirDecimal(etat, question, caractere) {
   const estChiffre = /^\d$/.test(caractere);
-  const estSeparateur = caractere === "," || caractere === ".";
-  const estSigne = question.classement.notion === NOTION_DROITE_GRADUEE
+  const estSeparateur = question.classement.notion !== NOTION_LIRE_COORDONNEES_POINT
+    && (caractere === "," || caractere === ".");
+  const estSigne = [NOTION_DROITE_GRADUEE, NOTION_LIRE_COORDONNEES_POINT]
+    .includes(question.classement.notion)
     && (caractere === "−" || caractere === "-");
   if (!estChiffre && !estSeparateur && !estSigne) return;
 
@@ -411,6 +429,36 @@ function saisirDecimal(etat, question, caractere) {
     : "Utilise une écriture décimale limitée aux millièmes.";
 }
 
+function saisirEntierRelatif(etat, question, caractere) {
+  const index = etat.champSaisieActif;
+  const courante = etat.saisies[index];
+  const estSigne = caractere === "−" || caractere === "-";
+  const estChiffre = /^\d$/.test(caractere);
+  if (!estSigne && !estChiffre) return;
+  let proposition;
+  if (estSigne) {
+    proposition = courante.startsWith("−") ? courante.slice(1) : `−${courante}`;
+  } else if (courante === "0" || courante === "−0") {
+    proposition = courante.startsWith("−") ? `−${caractere}` : caractere;
+  } else if (courante === "−") {
+    proposition = `−${caractere}`;
+  } else {
+    proposition = `${courante}${caractere}`;
+  }
+  const valeur = proposition === "−" ? null : Number(proposition.replace("−", "-"));
+  if (
+    proposition.length <= 3
+    && (proposition === "−" || (
+      Number.isSafeInteger(valeur)
+      && valeur >= question.reponse.minimum
+      && valeur <= question.reponse.maximum
+    ))
+  ) {
+    etat.saisies[index] = proposition;
+    etat.erreurValidation = "";
+  }
+}
+
 /**
  * Ajoute un caractère depuis le clavier tactile ou physique. Les anciennes
  * réponses entières restent limitées à un chiffre à la fois ; un décimal
@@ -421,19 +469,22 @@ export function saisirCaractere(etat, caractere) {
   const question = questionCourante(etat);
   const typeEntier = question?.reponse.type === TYPE_REPONSE_ENTIER_NATUREL;
   const typeDeuxEntiers = question?.reponse.type === TYPE_REPONSE_DEUX_ENTIERS;
+  const typeDeuxEntiersRelatifs =
+    question?.reponse.type === TYPE_REPONSE_DEUX_ENTIERS_RELATIFS;
   const typeDecimal = question?.reponse.type === TYPE_REPONSE_NOMBRE_DECIMAL;
   const typeFraction = question?.reponse.type === TYPE_REPONSE_FRACTION_EQUIVALENTE;
   const texte = typeof caractere === "number" ? String(caractere) : caractere;
   if (
     etat.configuration.mode !== "entrainement" ||
     !question ||
-    (!typeEntier && !typeDeuxEntiers && !typeDecimal && !typeFraction) ||
+    (!typeEntier && !typeDeuxEntiers && !typeDeuxEntiersRelatifs && !typeDecimal && !typeFraction) ||
     etat.validation !== null ||
     typeof texte !== "string"
   ) {
     return etat;
   }
   if (typeDecimal) saisirDecimal(etat, question, texte);
+  else if (typeDeuxEntiersRelatifs) saisirEntierRelatif(etat, question, texte);
   else if (/^\d$/.test(texte)) {
     if (typeFraction) saisirEntierSansBorne(etat, texte);
     else saisirEntierBorne(etat, question, texte, typeDeuxEntiers);
@@ -450,14 +501,16 @@ export function effacerSaisie(etat) {
   const question = questionCourante(etat);
   const typeEntier = question?.reponse.type === TYPE_REPONSE_ENTIER_NATUREL;
   const typeDeuxEntiers = question?.reponse.type === TYPE_REPONSE_DEUX_ENTIERS;
+  const typeDeuxEntiersRelatifs =
+    question?.reponse.type === TYPE_REPONSE_DEUX_ENTIERS_RELATIFS;
   const typeDecimal = question?.reponse.type === TYPE_REPONSE_NOMBRE_DECIMAL;
   const typeFraction = question?.reponse.type === TYPE_REPONSE_FRACTION_EQUIVALENTE;
   if (
     etat.configuration.mode === "entrainement" &&
-    (typeEntier || typeDeuxEntiers || typeDecimal || typeFraction) &&
+    (typeEntier || typeDeuxEntiers || typeDeuxEntiersRelatifs || typeDecimal || typeFraction) &&
     etat.validation === null
   ) {
-    if (typeDeuxEntiers || typeFraction) {
+    if (typeDeuxEntiers || typeDeuxEntiersRelatifs || typeFraction) {
       const index = etat.champSaisieActif;
       etat.saisies[index] = etat.saisies[index].slice(0, -1);
     } else {
@@ -479,10 +532,12 @@ export function validerReponse(etat) {
   }
   const reponseEntiere = question.reponse.type === TYPE_REPONSE_ENTIER_NATUREL;
   const reponseDeuxEntiers = question.reponse.type === TYPE_REPONSE_DEUX_ENTIERS;
+  const reponseDeuxEntiersRelatifs =
+    question.reponse.type === TYPE_REPONSE_DEUX_ENTIERS_RELATIFS;
   const reponseDecimale = question.reponse.type === TYPE_REPONSE_NOMBRE_DECIMAL;
   const reponseFraction = question.reponse.type === TYPE_REPONSE_FRACTION_EQUIVALENTE;
   const reponseSimple = reponseEntiere || reponseDecimale;
-  const reponseDouble = reponseDeuxEntiers || reponseFraction;
+  const reponseDouble = reponseDeuxEntiers || reponseDeuxEntiersRelatifs || reponseFraction;
   const reponseOmise = reponseSimple
     ? etat.saisie === ""
     : reponseDouble
@@ -496,10 +551,18 @@ export function validerReponse(etat) {
     etat.erreurValidation = "Complète les deux cases.";
     return etat;
   }
+  if (
+    reponseDeuxEntiersRelatifs
+    && !reponseOmise
+    && etat.saisies.some((saisie) => !/^[−-]?\d+$/u.test(saisie))
+  ) {
+    etat.erreurValidation = "Entre un entier dans chaque case.";
+    return etat;
+  }
 
   const valeurSaisie = reponseEntiere ? Number(etat.saisie) : null;
   const valeursSaisies = reponseDouble
-    ? etat.saisies.map((saisie) => Number(saisie))
+    ? etat.saisies.map((saisie) => Number(saisie.replace("−", "-")))
     : null;
   const analyseDecimale = reponseDecimale
     ? analyserDecimalSansErreur(etat.saisie)
@@ -518,6 +581,8 @@ export function validerReponse(etat) {
       ? estEntierExact(question.reponse.attendu, valeurSaisie)
       : reponseDeuxEntiers
         ? estDeuxEntiersExacts(question.reponse.attendus, valeursSaisies)
+        : reponseDeuxEntiersRelatifs
+          ? estDeuxEntiersRelatifsExacts(question.reponse.attendus, valeursSaisies)
         : reponseDecimale
           ? fractionsEgales(
             analyseDecimale.fractionReduite.numerateur,
@@ -571,7 +636,7 @@ export function validerReponse(etat) {
         ? {}
         : reponseEntiere
           ? { valeur: valeurSaisie }
-          : reponseDeuxEntiers
+          : reponseDeuxEntiers || reponseDeuxEntiersRelatifs
             ? { valeurs: valeursSaisies }
             : reponseDecimale
               ? {

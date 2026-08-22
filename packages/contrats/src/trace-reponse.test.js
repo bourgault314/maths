@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 
 import {
   TYPE_REPONSE_DEUX_ENTIERS,
+  TYPE_REPONSE_DEUX_ENTIERS_RELATIFS,
   TYPE_REPONSE_CHOIX_UNIQUE,
   TYPE_REPONSE_ENTIER_NATUREL,
   TYPE_REPONSE_FRACTION_EQUIVALENTE,
@@ -100,6 +101,19 @@ describe("validerTraceReponse", () => {
       type: TYPE_REPONSE_DEUX_ENTIERS,
       statut: "fournie",
       valeurs: [7, 7],
+    };
+    assert.equal(validerTraceReponse(trace).valide, true);
+  });
+
+  it("accepte la trace ordonnée d'un couple d'entiers relatifs", () => {
+    const trace = traceValide();
+    trace.classement.module = "lire-coordonnees-point";
+    trace.classement.microNotion = "lire-coordonnees-point";
+    trace.classement.famille = "lire-coordonnees";
+    trace.reponse = {
+      type: TYPE_REPONSE_DEUX_ENTIERS_RELATIFS,
+      statut: "fournie",
+      valeurs: [-3, 2],
     };
     assert.equal(validerTraceReponse(trace).valide, true);
   });
@@ -227,6 +241,7 @@ describe("validerTraceReponse", () => {
     const types = [
       TYPE_REPONSE_ENTIER_NATUREL,
       TYPE_REPONSE_DEUX_ENTIERS,
+      TYPE_REPONSE_DEUX_ENTIERS_RELATIFS,
       TYPE_REPONSE_NOMBRE_DECIMAL,
       TYPE_REPONSE_FRACTION_EQUIVALENTE,
       TYPE_REPONSE_CHOIX_UNIQUE,

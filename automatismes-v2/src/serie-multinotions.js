@@ -114,7 +114,8 @@ function genererSousSerie({ definition, registre, graine, nombreQuestions }) {
     throw new Error(`serie multi-notions : ${definition.id} n'a pas produit ${nombreQuestions} questions`);
   }
   for (const question of questions) {
-    if (question?.classement?.notion !== definition.id) {
+    if (!(definition.notionsProduites ?? [definition.id])
+      .includes(question?.classement?.notion)) {
       throw new Error(`serie multi-notions : question étrangère dans ${definition.id}`);
     }
   }

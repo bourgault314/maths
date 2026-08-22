@@ -12,6 +12,7 @@ export const TYPE_REPONSE_SELECTION_MULTIPLE = "selection-multiple";
 export const TYPE_REPONSE_CHOIX_UNIQUE = "choix-unique";
 export const TYPE_REPONSE_ENTIER_NATUREL = "entier-naturel";
 export const TYPE_REPONSE_DEUX_ENTIERS = "deux-entiers";
+export const TYPE_REPONSE_DEUX_ENTIERS_RELATIFS = "deux-entiers-relatifs";
 export const TYPE_REPONSE_NOMBRE_DECIMAL = "nombre-decimal";
 export const TYPE_REPONSE_FRACTION_EQUIVALENTE = "fraction-equivalente";
 export const COMPARAISON_ENSEMBLE_EXACT = "ensemble-exact";
@@ -28,6 +29,7 @@ export const TYPES_BLOC_V2 = Object.freeze([
   "puissance",
   "solide",
   "droite-graduee",
+  "repere-cartesien",
 ]);
 export const TYPES_OUTIL_AIDE_V2 = Object.freeze([
   "observer-unites",
@@ -131,6 +133,8 @@ function validerBlocs(blocs, nom, erreurs, { auMoinsUn = false } = {}) {
         ? ["id", "type", "forme", "variante", "vue", "mesures"]
       : bloc.type === "droite-graduee"
         ? ["id", "type", "depart", "pas", "nombreIntervalles", "etiquettes", "point", "points"]
+      : bloc.type === "repere-cartesien"
+        ? ["id", "type", "xMin", "xMax", "yMin", "yMax", "points", "nomPoint"]
         : ["id", "type", "contenu"];
     validerClesConnues(bloc, cles, chemin, erreurs);
     if (!estIdentifiantValide(bloc.id)) {
@@ -229,6 +233,67 @@ function validerBlocs(blocs, nom, erreurs, { auMoinsUn = false } = {}) {
         }
       }
     }
+    if (bloc.type === "repere-cartesien") {
+      const bornes = [
+        ["xMin", -20, -1],
+        ["xMax", 1, 20],
+        ["yMin", -20, -1],
+        ["yMax", 1, 20],
+      ];
+      for (const [cle, minimum, maximum] of bornes) {
+        if (!Number.isSafeInteger(bloc[cle]) || bloc[cle] < minimum || bloc[cle] > maximum) {
+          erreurs.push(`${chemin}.${cle} : entier entre ${minimum} et ${maximum} requis`);
+        }
+      }
+      if (
+        Number.isSafeInteger(bloc.xMin)
+        && Number.isSafeInteger(bloc.xMax)
+        && (bloc.xMax - bloc.xMin < 4 || bloc.xMax - bloc.xMin > 12)
+      ) {
+        erreurs.push(`${chemin} : xMax − xMin doit être compris entre 4 et 12`);
+      }
+      if (
+        Number.isSafeInteger(bloc.yMin)
+        && Number.isSafeInteger(bloc.yMax)
+        && (bloc.yMax - bloc.yMin < 4 || bloc.yMax - bloc.yMin > 12)
+      ) {
+        erreurs.push(`${chemin} : yMax − yMin doit être compris entre 4 et 12`);
+      }
+      if (typeof bloc.nomPoint !== "string" || !/^[A-NP-Z]$/.test(bloc.nomPoint)) {
+        erreurs.push(`${chemin}.nomPoint : lettre majuscule différente de O requise`);
+      }
+      if (bloc.points !== undefined) {
+        if (!Array.isArray(bloc.points) || bloc.points.length < 1 || bloc.points.length > 6) {
+          erreurs.push(`${chemin}.points : un à six points requis`);
+        } else {
+          bloc.points.forEach((point, indexPoint) => {
+            const cheminPoint = `${chemin}.points[${indexPoint}]`;
+            if (typeof point !== "object" || point === null || Array.isArray(point)) {
+              erreurs.push(`${cheminPoint} : objet attendu`);
+              return;
+            }
+            validerClesConnues(point, ["nom", "x", "y"], cheminPoint, erreurs);
+            if (typeof point.nom !== "string" || !/^[A-NP-Z]$/.test(point.nom)) {
+              erreurs.push(`${cheminPoint}.nom : lettre majuscule différente de O requise`);
+            }
+            if (!Number.isSafeInteger(point.x) || point.x < bloc.xMin || point.x > bloc.xMax) {
+              erreurs.push(`${cheminPoint}.x : abscisse entière visible requise`);
+            }
+            if (!Number.isSafeInteger(point.y) || point.y < bloc.yMin || point.y > bloc.yMax) {
+              erreurs.push(`${cheminPoint}.y : ordonnée entière visible requise`);
+            }
+          });
+          const noms = bloc.points.map((point) => point?.nom);
+          const positions = bloc.points.map((point) => `${point?.x};${point?.y}`);
+          if (new Set(noms).size !== noms.length) {
+            erreurs.push(`${chemin}.points : noms distincts requis`);
+          }
+          if (new Set(positions).size !== positions.length) {
+            erreurs.push(`${chemin}.points : positions distinctes requises`);
+          }
+        }
+      }
+    }
     if (bloc.type === "puissance") {
       if (!Number.isSafeInteger(bloc.base) || bloc.base < 0) {
         erreurs.push(`${chemin}.base : entier naturel requis`);
@@ -307,11 +372,12 @@ function validerReponse(reponse, erreurs) {
   const unique = reponse.type === TYPE_REPONSE_CHOIX_UNIQUE;
   const entier = reponse.type === TYPE_REPONSE_ENTIER_NATUREL;
   const deuxEntiers = reponse.type === TYPE_REPONSE_DEUX_ENTIERS;
+  const deuxEntiersRelatifs = reponse.type === TYPE_REPONSE_DEUX_ENTIERS_RELATIFS;
   const decimal = reponse.type === TYPE_REPONSE_NOMBRE_DECIMAL;
   const fraction = reponse.type === TYPE_REPONSE_FRACTION_EQUIVALENTE;
-  if (!multiple && !unique && !entier && !deuxEntiers && !decimal && !fraction) {
+  if (!multiple && !unique && !entier && !deuxEntiers && !deuxEntiersRelatifs && !decimal && !fraction) {
     erreurs.push(
-      "reponse.type : sélection multiple, choix unique, entier naturel, deux entiers, nombre décimal ou fraction équivalente attendus",
+      "reponse.type : sélection multiple, choix unique, entier naturel, deux entiers, deux entiers relatifs, nombre décimal ou fraction équivalente attendus",
     );
     return;
   }
@@ -357,7 +423,7 @@ function validerReponse(reponse, erreurs) {
     return;
   }
 
-  if (entier || deuxEntiers) {
+  if (entier || deuxEntiers || deuxEntiersRelatifs) {
     validerClesConnues(
       reponse,
       entier
@@ -374,8 +440,13 @@ function validerReponse(reponse, erreurs) {
         `reponse.comparaison : « ${comparaisonAttendue} » attendu`,
       );
     }
-    if (!Number.isSafeInteger(reponse.minimum) || reponse.minimum < 0) {
-      erreurs.push("reponse.minimum : entier naturel requis");
+    if (
+      !Number.isSafeInteger(reponse.minimum)
+      || (!deuxEntiersRelatifs && reponse.minimum < 0)
+    ) {
+      erreurs.push(deuxEntiersRelatifs
+        ? "reponse.minimum : entier relatif requis"
+        : "reponse.minimum : entier naturel requis");
     }
     if (
       !Number.isSafeInteger(reponse.maximum) ||
@@ -621,6 +692,24 @@ export function estDeuxEntiersExacts(attendus, recus) {
   if (
     attendus.some((valeur) => !Number.isSafeInteger(valeur) || valeur < 0) ||
     recus.some((valeur) => !Number.isSafeInteger(valeur) || valeur < 0)
+  ) {
+    return false;
+  }
+  return attendus[0] === recus[0] && attendus[1] === recus[1];
+}
+
+/**
+ * Compare un couple ordonné d'entiers relatifs sans conversion implicite.
+ * L'ordre est significatif : `(x ; y)` et `(y ; x)` restent distincts.
+ * @param {unknown} attendus
+ * @param {unknown} recus
+ */
+export function estDeuxEntiersRelatifsExacts(attendus, recus) {
+  if (!Array.isArray(attendus) || !Array.isArray(recus)) return false;
+  if (attendus.length !== 2 || recus.length !== 2) return false;
+  if (
+    attendus.some((valeur) => !Number.isSafeInteger(valeur))
+    || recus.some((valeur) => !Number.isSafeInteger(valeur))
   ) {
     return false;
   }

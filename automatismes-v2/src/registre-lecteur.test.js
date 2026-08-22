@@ -7,9 +7,12 @@ import {
   listerNotionsLecteur,
   NOTION_NC01,
   NOTION_NC02,
-  NOTION_FRACTIONS_SIMPLES_DECIMAUX,
+  NOTION_DECIMAL_VERS_FRACTION,
+  NOTION_FRACTION_VERS_DECIMAL,
   NOTION_ECRITURES_MULTIPLES_NOMBRE,
   NOTION_DROITE_GRADUEE,
+  NOTION_LIRE_COORDONNEES_POINT,
+  NOTION_PLACER_POINT_REPERE,
   NOTION_SOLIDES_USUELS,
   NOTION_VOLUME_CUBE_PAVE,
   NOTION_VOLUME_CYLINDRE,
@@ -20,6 +23,7 @@ import {
   RENDU_FRACTIONS_DECIMAUX,
   RENDU_ECRITURES_MULTIPLES,
   RENDU_DROITE_GRADUEE,
+  RENDU_REPERAGE_PLAN,
   RENDU_SOLIDE,
   RENDU_VOLUME,
 } from "./registre-lecteur.js";
@@ -32,9 +36,12 @@ describe("registre du lecteur", () => {
       [
         NOTION_NC01,
         NOTION_NC02,
-        NOTION_FRACTIONS_SIMPLES_DECIMAUX,
+        NOTION_FRACTION_VERS_DECIMAL,
+        NOTION_DECIMAL_VERS_FRACTION,
         NOTION_ECRITURES_MULTIPLES_NOMBRE,
         NOTION_DROITE_GRADUEE,
+        NOTION_LIRE_COORDONNEES_POINT,
+        NOTION_PLACER_POINT_REPERE,
         NOTION_SOLIDES_USUELS,
         NOTION_VOLUME_CUBE_PAVE,
         NOTION_VOLUME_PRISME,
@@ -48,8 +55,11 @@ describe("registre du lecteur", () => {
         RENDU_DIVISIBILITE,
         RENDU_CARRES,
         RENDU_FRACTIONS_DECIMAUX,
+        RENDU_FRACTIONS_DECIMAUX,
         RENDU_ECRITURES_MULTIPLES,
         RENDU_DROITE_GRADUEE,
+        RENDU_REPERAGE_PLAN,
+        RENDU_REPERAGE_PLAN,
         RENDU_SOLIDE,
         RENDU_VOLUME,
         RENDU_VOLUME,
@@ -61,13 +71,15 @@ describe("registre du lecteur", () => {
     assert.equal(obtenirNotionLecteur(NOTION_NC02).pagesCours, 5);
     assert.equal(obtenirNotionLecteur(NOTION_NC02).nombreQuestionsMaximum, 20);
     assert.equal(obtenirNotionLecteur(NOTION_NC02).nom, "Carrés des entiers de 0 à 12");
-    assert.equal(obtenirNotionLecteur(NOTION_FRACTIONS_SIMPLES_DECIMAUX).pagesCours, 6);
-    assert.equal(
-      obtenirNotionLecteur(NOTION_FRACTIONS_SIMPLES_DECIMAUX).nombreQuestionsMaximum,
-      20,
-    );
+    for (const notion of [NOTION_FRACTION_VERS_DECIMAL, NOTION_DECIMAL_VERS_FRACTION]) {
+      assert.equal(obtenirNotionLecteur(notion).pagesCours, 5);
+      assert.equal(obtenirNotionLecteur(notion).nombreQuestionsMaximum, 20);
+    }
     assert.equal(obtenirNotionLecteur(NOTION_ECRITURES_MULTIPLES_NOMBRE).pagesCours, 6);
     assert.equal(obtenirNotionLecteur(NOTION_DROITE_GRADUEE).pagesCours, 6);
+    assert.equal(obtenirNotionLecteur(NOTION_LIRE_COORDONNEES_POINT).pagesCours, 3);
+    assert.equal(obtenirNotionLecteur(NOTION_PLACER_POINT_REPERE).pagesCours, 3);
+    assert.notEqual(NOTION_LIRE_COORDONNEES_POINT, NOTION_PLACER_POINT_REPERE);
     assert.equal(
       obtenirNotionLecteur(NOTION_ECRITURES_MULTIPLES_NOMBRE).nombreQuestionsMaximum,
       20,

@@ -342,5 +342,9 @@ test("le cours et l’aide conservent l’ordre CPA et les nouveaux invariants",
   assert.match(bandes, /separation-interne/);
   assert.match(bandes, /frontiere-unite/);
   assert.match(styles, /\.figure-bandes-rail/);
+  assert.match(
+    styles,
+    /\.carte-question-fractions \.mathsgo-role-unites,[\s\S]*?color: inherit;/,
+  );
   assert.doesNotMatch(application, /part-unitaire part-vide/);
 });

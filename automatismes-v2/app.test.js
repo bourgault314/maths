@@ -72,6 +72,28 @@ function cliquer(gestionnaires, action, id, value, index, notion, niveau, rang, 
   gestionnaires.get("click")[0]({ target: cible });
 }
 
+function cliquerSurfaceRepere(gestionnaires, bornes, proportionX, proportionY) {
+  const cible = {
+    dataset: {
+      action: "placer-repere",
+      xMin: String(bornes.xMin),
+      xMax: String(bornes.xMax),
+      yMin: String(bornes.yMin),
+      yMax: String(bornes.yMax),
+    },
+    closest(selecteur) { return selecteur === "[data-action]" ? this : null; },
+    getBoundingClientRect() {
+      return { left: 10, top: 20, width: 800, height: 600 };
+    },
+  };
+  gestionnaires.get("click")[0]({
+    target: cible,
+    detail: 1,
+    clientX: 10 + proportionX * 800,
+    clientY: 20 + proportionY * 600,
+  });
+}
+
 function appuyer(gestionnaires, key, { shiftKey = false } = {}) {
   let preventions = 0;
   for (const gestionnaire of gestionnaires.get("keydown") ?? []) {
@@ -729,7 +751,7 @@ it("distingue omission, mauvaise saisie et correction pour une fraction libre", 
   avancerJusquaQuestion(
     omission.application,
     omission.gestionnaires,
-    (html) => /3,5/.test(html) && /Toutes les fractions égales sont acceptées/.test(html),
+    (html) => /3,5/.test(html) && /Plusieurs réponses sont possibles/.test(html),
   );
   assert.match(omission.application.innerHTML, /3,5/);
   cliquer(omission.gestionnaires, "valider");
@@ -747,7 +769,7 @@ it("distingue omission, mauvaise saisie et correction pour une fraction libre", 
   avancerJusquaQuestion(
     erreur.application,
     erreur.gestionnaires,
-    (html) => /3,5/.test(html) && /Toutes les fractions égales sont acceptées/.test(html),
+    (html) => /3,5/.test(html) && /Plusieurs réponses sont possibles/.test(html),
   );
   cliquer(erreur.gestionnaires, "champ-reponse", undefined, undefined, "0");
   cliquer(erreur.gestionnaires, "chiffre", undefined, "1");
@@ -848,7 +870,7 @@ it("colore immédiatement la mauvaise proposition et la bonne réponse d’un QC
   assert.doesNotMatch(application.innerHTML, /Correction expliquée/);
 });
 
-it("applique aussi les couleurs de rang aux choix décimaux d’un QCM NC-03", async () => {
+it("conserve les rôles de rang des QCM afin que la correction puisse les recolorer", async () => {
   const { application, gestionnaires } = installerFauxNavigateur(
     "?notion=fractions-simples-decimaux&questions=20&graine=qcm-nc03-1",
   );
@@ -1082,10 +1104,10 @@ it("rend NC-03 et NC-04 dans une seule notion avec des repères cohérents en ai
     assert.match(application.innerHTML, /fraction-empilee/);
     directVu ||= /famille-fraction-vers-decimal/.test(application.innerHTML);
     inverseVu ||= /famille-decimal-vers-fraction/.test(application.innerHTML);
-    libreVue ||= /Toutes les fractions égales sont acceptées/.test(
+    libreVue ||= /Plusieurs réponses sont possibles/.test(
       application.innerHTML,
     );
-    if (/Toutes les fractions égales sont acceptées/.test(application.innerHTML)) {
+    if (/Plusieurs réponses sont possibles/.test(application.innerHTML)) {
       assert.match(
         application.innerHTML,
         /fraction-reponse" role="group" aria-label="Fraction à compléter"/,
@@ -1113,7 +1135,7 @@ it("rend NC-03 et NC-04 dans une seule notion avec des repères cohérents en ai
         /figure-double-droite-fraction|figure-bandes-rail|figure-grille-repere|figure-correspondance-decimale/,
       );
     }
-    if (aideTableau && !/Toutes les fractions égales sont acceptées/.test(application.innerHTML)) {
+    if (aideTableau && !/Plusieurs réponses sont possibles/.test(application.innerHTML)) {
       assert.match(application.innerHTML, /figure-tableau-numeration/);
     }
     cliquer(gestionnaires, "fermer-correction");
@@ -1128,6 +1150,27 @@ it("rend NC-03 et NC-04 dans une seule notion avec des repères cohérents en ai
   assert.equal(droiteVue, true);
   assert.equal(tableauVu, true);
   assert.match(application.innerHTML, /Séance terminée/);
+});
+
+it("sépare les cours NC-03 et NC-04 en cinq pages ciblées", async () => {
+  for (const [notion, titrePropre, titreAbsent] of [
+    ["fraction-vers-decimal", /Lire une fraction décimale/, /Quand le dénominateur est donné/],
+    ["decimal-vers-fraction", /Quand le dénominateur est donné/, /Lire une fraction décimale/],
+  ]) {
+    const { application, gestionnaires } = installerFauxNavigateur(
+      `?notion=${notion}&mode=tableau&questions=5&graine=cours-${notion}`,
+    );
+    await import(`./app.js?fumee=cours-separe-${notion}-${Date.now()}`);
+    cliquer(gestionnaires, "cours");
+    let cibleVue = false;
+    for (let page = 1; page <= 5; page += 1) {
+      assert.match(application.innerHTML, new RegExp(`Cours · ${page} \/ 5`));
+      cibleVue ||= titrePropre.test(application.innerHTML);
+      assert.doesNotMatch(application.innerHTML, titreAbsent);
+      if (page < 5) cliquer(gestionnaires, "cours-suivant");
+    }
+    assert.equal(cibleVue, true);
+  }
 });
 
 it("garde les centièmes et millièmes imposés sans révéler le décimal en aide NC-03", async () => {
@@ -1431,7 +1474,7 @@ it("corrige les fractions libres 0,25 et 0,75 avec le rail puis les plaques", as
       application,
       gestionnaires,
       (html) => new RegExp(`aria-label="${decimal}"`).test(html)
-        && /Toutes les fractions égales sont acceptées/.test(html),
+        && /Plusieurs réponses sont possibles/.test(html),
     );
     cliquer(gestionnaires, "correction");
 
@@ -1590,7 +1633,7 @@ it("corrige la fraction libre 2,75 avec le rail et conserve 275 centièmes", asy
     application,
     gestionnaires,
     (html) => /aria-label="2,75"/.test(html)
-      && /Toutes les fractions égales sont acceptées/.test(html),
+      && /Plusieurs réponses sont possibles/.test(html),
   );
   cliquer(gestionnaires, "correction");
 
@@ -1694,10 +1737,10 @@ it("réemploie la conversion canonique dans l’aide d’une fraction libre gén
     application,
     gestionnaires,
     (html) => /aria-label="1,03"/.test(html)
-      && /Toutes les fractions égales sont acceptées/.test(html),
+      && /Plusieurs réponses sont possibles/.test(html),
   );
 
-  assert.match(application.innerHTML, /Toutes les fractions égales sont acceptées/);
+  assert.match(application.innerHTML, /Plusieurs réponses sont possibles/);
   assert.match(application.innerHTML, /mathsgo-role-unites">1<\/span>,/);
   assert.match(application.innerHTML, /mathsgo-role-centiemes">3<\/span>/);
   cliquer(gestionnaires, "aide");
@@ -1740,7 +1783,7 @@ it("corrige une fraction libre générique avec les plaques ou le tableau", asyn
     application,
     gestionnaires,
     (html) => /aria-label="1,03"/.test(html)
-      && /Toutes les fractions égales sont acceptées/.test(html),
+      && /Plusieurs réponses sont possibles/.test(html),
   );
 
   cliquer(gestionnaires, "correction");
@@ -1846,7 +1889,7 @@ it("garde l’atelier unique de Me guider masqué avant la construction", async 
   let libreVerifiee = false;
   let inverseVerifiee = false;
   for (let index = 0; index < 20; index += 1) {
-    const libre = /Toutes les fractions égales sont acceptées/.test(application.innerHTML);
+    const libre = /Plusieurs réponses sont possibles/.test(application.innerHTML);
     const inverse = /famille-decimal-vers-fraction/.test(application.innerHTML);
     if (libre || (inverse && !inverseVerifiee)) {
       assert.match(application.innerHTML, /class="decimal-question">[\s\S]*?mathsgo-role-unites/);
@@ -1971,10 +2014,10 @@ it("fait construire 0,5 avec les dixièmes puis la bande d’un demi sans livrer
     application,
     gestionnaires,
     (html) => /aria-label="0,5"/.test(html)
-      && /Toutes les fractions égales sont acceptées/.test(html),
+      && /Plusieurs réponses sont possibles/.test(html),
   );
   assert.match(application.innerHTML, /0,5/);
-  assert.match(application.innerHTML, /Toutes les fractions égales sont acceptées/);
+  assert.match(application.innerHTML, /Plusieurs réponses sont possibles/);
   cliquer(gestionnaires, "aide");
   cliquer(
     gestionnaires,
@@ -2026,10 +2069,10 @@ it("fait réorganiser 0,75 des lignes aux quadrants puis à la comparaison sans 
     application,
     gestionnaires,
     (html) => /aria-label="0,75"/.test(html)
-      && /Toutes les fractions égales sont acceptées/.test(html),
+      && /Plusieurs réponses sont possibles/.test(html),
   );
   assert.match(application.innerHTML, /0,75/);
-  assert.match(application.innerHTML, /Toutes les fractions égales sont acceptées/);
+  assert.match(application.innerHTML, /Plusieurs réponses sont possibles/);
   cliquer(gestionnaires, "aide");
   cliquer(
     gestionnaires,
@@ -2086,6 +2129,102 @@ it("fait réorganiser 0,75 des lignes aux quadrants puis à la comparaison sans 
   assert.doesNotMatch(aide, /0,75 égale 75 sur 100|75 sur 100 égale 3 sur 4/);
 });
 
+it("propose le rail puis la plaque pour trois quarts sans afficher les trois outils d’un coup", async () => {
+  const { application, gestionnaires } = installerFauxNavigateur(
+    "?notion=fractions-simples-decimaux&mode=tableau&questions=20&graine=audit-ui-1",
+  );
+  await import(`./app.js?fumee=aide-trois-quarts-${Date.now()}`);
+  cliquer(gestionnaires, "demarrer");
+  avancerJusquaQuestion(
+    application,
+    gestionnaires,
+    (html) => /famille-fraction-vers-decimal-quarts/.test(html)
+      && /aria-label="3 sur 4"/.test(html),
+  );
+  cliquer(gestionnaires, "aide");
+  let aide = extrairePanneauAide(application.innerHTML);
+  assert.match(aide, /figure-bandes-rail/);
+  assert.match(aide, />0,25<\/text>/);
+  assert.match(aide, />0,5<\/text>/);
+  assert.doesNotMatch(aide, /figure-seconde-lecture-aide|figure-tableau-numeration/);
+
+  for (let index = 0; index < 3; index += 1) {
+    cliquer(gestionnaires, "pas-fraction-suivant");
+  }
+  aide = extrairePanneauAide(application.innerHTML);
+  assert.match(aide, /Voir autrement avec la plaque de centièmes/);
+  assert.match(aide, /figure-seconde-lecture-aide/);
+  assert.match(aide, /data-objet="reorganisation-centiemes" data-centiemes="75"/);
+  assert.doesNotMatch(aide, /figure-tableau-numeration/);
+});
+
+it("explicite 118 centièmes groupe par groupe après le choix du rang", async () => {
+  const { application, gestionnaires } = installerFauxNavigateur(
+    "?notion=fractions-simples-decimaux&mode=tableau&questions=20&graine=audit-ui-44",
+  );
+  await import(`./app.js?fumee=aide-118-centiemes-${Date.now()}`);
+  cliquer(gestionnaires, "demarrer");
+  avancerJusquaQuestion(
+    application,
+    gestionnaires,
+    (html) => /famille-fraction-vers-decimal-centiemes/.test(html)
+      && /aria-label="118 sur 100"/.test(html),
+  );
+  cliquer(gestionnaires, "aide");
+  let aide = extrairePanneauAide(application.innerHTML);
+  assert.doesNotMatch(aide, /Lire chaque groupe dans son rang|aria-label="0,08"/);
+  cliquer(
+    gestionnaires,
+    "rang-fraction",
+    undefined,
+    undefined,
+    undefined,
+    undefined,
+    undefined,
+    "centiemes",
+  );
+  aide = extrairePanneauAide(application.innerHTML);
+  assert.match(aide, /Lire chaque groupe dans son rang/);
+  assert.match(aide, /aria-label="100 sur 100"/);
+  assert.match(aide, /aria-label="10 sur 100"/);
+  assert.match(aide, /aria-label="1 sur 10"/);
+  assert.match(aide, /aria-label="8 sur 100"/);
+  assert.match(aide, /aria-label="0,08"/);
+});
+
+it("montre huit dixièmes pleins avant de les partager en quatre-vingts centièmes", async () => {
+  const { application, gestionnaires } = installerFauxNavigateur(
+    "?notion=fractions-simples-decimaux&mode=tableau&questions=20&graine=audit-ui-119",
+  );
+  await import(`./app.js?fumee=aide-08-centiemes-${Date.now()}`);
+  cliquer(gestionnaires, "demarrer");
+  avancerJusquaQuestion(
+    application,
+    gestionnaires,
+    (html) => /famille-decimal-vers-fraction-centiemes/.test(html)
+      && /aria-label="0,8"/.test(html),
+  );
+  cliquer(gestionnaires, "aide");
+  let aide = extrairePanneauAide(application.innerHTML);
+  assert.equal((aide.match(/data-subdivision="aucune"/g) ?? []).length, 16);
+  assert.match(aide, /nd-cadre-unite-dixiemes/);
+  assert.doesNotMatch(aide, /data-subdivision="centiemes"/);
+  cliquer(
+    gestionnaires,
+    "rang-fraction",
+    undefined,
+    undefined,
+    undefined,
+    undefined,
+    undefined,
+    "centiemes",
+  );
+  aide = extrairePanneauAide(application.innerHTML);
+  assert.match(aide, /data-subdivision="centiemes"/);
+  assert.match(aide, /data-legende="8\/10=\?\/100"/);
+  assert.doesNotMatch(aide, /80\/100/);
+});
+
 it("propose le parcours DNB puis lance Au tableau sans saisie ni score", async () => {
   const { application, gestionnaires } = installerFauxNavigateur("");
   await import(`./app.js?fumee=menu-${Date.now()}`);
@@ -2103,8 +2242,9 @@ it("propose le parcours DNB puis lance Au tableau sans saisie ni score", async (
   assert.match(application.innerHTML, /M3\.6 21\.4 20\.4 2\.6/);
   assert.match(application.innerHTML, /Critères de divisibilité/);
   assert.match(application.innerHTML, /Carrés des entiers/);
-  assert.match(application.innerHTML, /Fractions simples et décimaux/);
-  assert.match(application.innerHTML, /0 \/ 4/);
+  assert.match(application.innerHTML, /Fraction → écriture décimale/);
+  assert.match(application.innerHTML, /Écriture décimale → fraction/);
+  assert.match(application.innerHTML, /0 \/ 5/);
   assert.match(application.innerHTML, /Choisis au moins un automatisme/);
   assert.match(application.innerHTML, /data-action="preparer" disabled/);
   assert.equal(
@@ -2118,7 +2258,7 @@ it("propose le parcours DNB puis lance Au tableau sans saisie ni score", async (
   }
 
   cliquer(gestionnaires, "choisir-notion", undefined, "criteres-divisibilite");
-  assert.match(application.innerHTML, /1 \/ 4/);
+  assert.match(application.innerHTML, /1 \/ 5/);
   assert.doesNotMatch(application.innerHTML, /data-action="preparer" disabled/);
   assert.equal(
     [...application.innerHTML.matchAll(/class="modrow is-selected"/g)].length,
@@ -2189,6 +2329,15 @@ it("rend NC-05 avec son cours, son aide et sa correction exacte", async () => {
   cliquer(gestionnaires, "cours");
   assert.match(application.innerHTML, /Une valeur, plusieurs écritures/);
   assert.match(application.innerHTML, /Cours · 1 \/ 6/);
+  for (let index = 0; index < 3; index += 1) {
+    cliquer(gestionnaires, "cours-suivant");
+  }
+  assert.match(application.innerHTML, /D’un cinquième aux centièmes/);
+  assert.match(application.innerHTML, /equivalence-aires-cours-nc05/);
+  assert.match(application.innerHTML, /aria-label="4 sur 5"/);
+  cliquer(gestionnaires, "cours-suivant");
+  assert.match(application.innerHTML, /120 % la dépasse/);
+  assert.match(application.innerHTML, /data-unites="2"/);
   cliquer(gestionnaires, "fermer-cours");
   cliquer(gestionnaires, "fermer-aide");
 
@@ -2196,6 +2345,40 @@ it("rend NC-05 avec son cours, son aide et sa correction exacte", async () => {
   cliquer(gestionnaires, "correction");
   assert.match(application.innerHTML, /On conserve donc exactement la même valeur/);
   assert.match(application.innerHTML, /panneau-ecritures-multiples/);
+  assert.match(application.innerHTML, /equivalence-aires-correction-nc05/);
+});
+
+it("fait disparaître progressivement les schémas dans une série NC-05 complète", async () => {
+  const { application, gestionnaires } = installerFauxNavigateur(
+    "?notion=ecritures-multiples-nombre&mode=tableau&questions=20&graine=visuels-nc05",
+  );
+  await import(`./app.js?fumee=visuels-nc05-${Date.now()}`);
+  cliquer(gestionnaires, "demarrer");
+
+  const positionsVisuelles = [];
+  for (let index = 0; index < 20; index += 1) {
+    if (/visuel-question-nc05/.test(application.innerHTML)) {
+      positionsVisuelles.push(index + 1);
+      assert.match(application.innerHTML, /figure-unite-aires-nc05/);
+      if (index === 2) {
+        assert.match(application.innerHTML, /famille-fraction-repere-pourcentage/);
+        cliquer(gestionnaires, "aide");
+        assert.match(application.innerHTML, /equivalence-aires-aide-nc05/);
+        assert.match(application.innerHTML, /\? centièmes/);
+        cliquer(gestionnaires, "fermer-aide");
+      }
+    }
+    cliquer(gestionnaires, "reponse");
+    cliquer(gestionnaires, "correction");
+    assert.match(
+      application.innerHTML,
+      /equivalence-aires-correction-nc05|figure-droite-nc05/,
+    );
+    cliquer(gestionnaires, "fermer-correction");
+    cliquer(gestionnaires, "suivant");
+  }
+  assert.deepEqual(positionsVisuelles, [3, 8, 11]);
+  assert.match(application.innerHTML, /Séance terminée/);
 });
 
 it("rend GE-01 et GE-02 avec saisie signée, cours et placement aimanté", async () => {
@@ -2236,6 +2419,60 @@ it("rend GE-01 et GE-02 avec saisie signée, cours et placement aimanté", async
   assert.match(application.innerHTML, /Le point .* se place ici/);
 });
 
+it("rend GE-03 et GE-04 avec le repère partagé, les aides et le placement révisable", async () => {
+  const lecture = installerFauxNavigateur(
+    "?notion=lire-coordonnees-point&questions=10&graine=apercu-ge03-complet",
+  );
+  await import(`./app.js?fumee=ge03-${Date.now()}`);
+  cliquer(lecture.gestionnaires, "demarrer");
+  assert.match(lecture.application.innerHTML, /carte-question-repere/);
+  assert.match(lecture.application.innerHTML, /repere-cartesien-v2/);
+  assert.match(lecture.application.innerHTML, /saisie-couple-repere/);
+  assert.match(lecture.application.innerHTML, /data-profil="entier-relatif"/);
+  assert.match(lecture.application.innerHTML, /data-action="champ-reponse" data-index="0"/);
+  assert.match(lecture.application.innerHTML, /data-action="champ-reponse" data-index="1"/);
+  assert.match(lecture.application.innerHTML, /font-family="'Times New Roman', Times, 'Liberation Serif', serif"/);
+
+  cliquer(lecture.gestionnaires, "aide");
+  assert.match(lecture.application.innerHTML, /Abscisse d(?:&#039;|')abord, ordonnée ensuite/);
+  assert.match(lecture.application.innerHTML, /Guide visuel de la première étape/);
+  cliquer(lecture.gestionnaires, "cours");
+  assert.match(lecture.application.innerHTML, /Comprendre le repère/);
+  assert.match(lecture.application.innerHTML, /Axe des abscisses/);
+  assert.match(lecture.application.innerHTML, /Cours · 1 \/ 3/);
+  cliquer(lecture.gestionnaires, "cours-suivant");
+  assert.match(lecture.application.innerHTML, /A\(−3 ; 2\)/);
+  assert.match(lecture.application.innerHTML, /1<sup>re<\/sup> coordonnée/);
+  cliquer(lecture.gestionnaires, "cours-suivant");
+  assert.match(lecture.application.innerHTML, /C\(3 ; 0\)/);
+  assert.match(lecture.application.innerHTML, /D\(0 ; −2\)/);
+
+  const placement = installerFauxNavigateur(
+    "?notion=placer-point-repere&questions=5&graine=apercu-ge04-complet",
+  );
+  await import(`./app.js?fumee=ge04-${Date.now()}`);
+  cliquer(placement.gestionnaires, "demarrer");
+  assert.match(placement.application.innerHTML, /surface-placement-repere/);
+  const bornes = placement.application.innerHTML.match(
+    /data-x-min="(-?\d+)" data-x-max="(-?\d+)"\s+data-y-min="(-?\d+)" data-y-max="(-?\d+)"/,
+  );
+  assert.ok(bornes);
+  cliquerSurfaceRepere(placement.gestionnaires, {
+    xMin: Number(bornes[1]),
+    xMax: Number(bornes[2]),
+    yMin: Number(bornes[3]),
+    yMax: Number(bornes[4]),
+  }, 0.1, 0.9);
+  assert.match(placement.application.innerHTML, /Point provisoire :/);
+  assert.match(placement.application.innerHTML, /Tu peux le déplacer avant de valider/);
+  assert.equal(appuyer(placement.gestionnaires, "ArrowRight"), 1);
+  assert.equal(appuyer(placement.gestionnaires, "ArrowUp"), 1);
+  cliquer(placement.gestionnaires, "valider");
+  cliquer(placement.gestionnaires, "correction");
+  assert.match(placement.application.innerHTML, /Point attendu/);
+  assert.match(placement.application.innerHTML, /Horizontal, puis vertical|Correction expliquée|Comprendre l(?:&#039;|')erreur/);
+});
+
 it("sélectionne, révise et rejoue plusieurs automatismes dans une même série", async () => {
   const { application, gestionnaires } = installerFauxNavigateur("");
   await import(`./app.js?fumee=multi-${Date.now()}`);
@@ -2248,7 +2485,7 @@ it("sélectionne, révise et rejoue plusieurs automatismes dans une même série
   );
   cliquer(gestionnaires, "choisir-notion", undefined, "criteres-divisibilite");
   cliquer(gestionnaires, "choisir-notion", undefined, "carres-entiers-0-a-12");
-  assert.match(application.innerHTML, /2 \/ 4 <span class="theme-count-label">sélectionnés/);
+  assert.match(application.innerHTML, /2 \/ 5 <span class="theme-count-label">sélectionnés/);
   assert.match(application.innerHTML, /2 automatismes sélectionnés/);
   assert.match(
     application.innerHTML,

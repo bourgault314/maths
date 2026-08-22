@@ -18,7 +18,6 @@ import {
   DENOMINATEURS_AUTORISES,
   MICRO_NOTION_NC03,
   MICRO_NOTION_NC04,
-  NOTION_FRACTIONS_SIMPLES_DECIMAUX,
   NUMERATEURS_DEMIS,
   NUMERATEURS_QUARTS,
   estFractionDuDomaine,
@@ -46,7 +45,7 @@ function bloc(question, id) {
 }
 
 function verifierClassement(question, microNotion) {
-  assert.equal(question.classement.notion, NOTION_FRACTIONS_SIMPLES_DECIMAUX);
+  assert.equal(question.classement.notion, microNotion);
   assert.equal(question.classement.microNotion, microNotion);
   assert.equal(question.classement.domaine, "nombres-et-calculs");
   assert.equal(question.classement.cible, "dnb-2026-01");
@@ -75,7 +74,7 @@ describe("NC-03/NC-04 — contrats communs", () => {
     }
   });
 
-  it("conserve une notion visible commune et deux micro-notions stables", () => {
+  it("publie deux notions visibles et deux micro-notions stables", () => {
     const directe = instancier(
       GABARIT_FRACTION_VERS_DECIMAL,
       { numerateur: 3, denominateur: 2 },

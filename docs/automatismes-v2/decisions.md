@@ -1573,3 +1573,61 @@ L'ancienne banque reste une archive d'inventaire. Aucun de ses JSON, énoncés,
 valeurs, distracteurs, outils, interactions ou codes n'entre dans ce module.
 Toutes les données et tous les générateurs sont écrits à neuf après validation
 de la fiche pédagogique.
+
+## 22 août 2026
+
+### D-066 — GE-03 et GE-04 restent séparés autour d'un repère V2 commun
+
+La taxonomie distingue `lire-coordonnees-point` et `placer-point-repere` : le
+lecteur conserve donc deux entrées visibles. Une série GE-04 reste un pur
+entraînement au placement et n'est pas diluée par des questions de lecture.
+Le repère, le cours en trois pages, les aides et les diagnostics sont en
+revanche communs afin que les mêmes mots, couleurs, graduations et gestes
+soient rencontrés partout.
+
+Le noyau DNB emploie seulement le pas 1 et des coordonnées entières. Les bornes
+peuvent être asymétriques, mais l'origine reste visible et les unités sont
+carrées. Les pas `0,5`, `0,25` et décimaux sont réservés à une extension
+ultérieure : ils ne compliquent ni le générateur ni le cours pilote.
+
+GE-03 retient cinq familles. Sur 20 questions, les quotas sont exactement dix
+lectures complètes, trois abscisses, trois ordonnées, deux QCM diagnostiques et
+deux identifications de point. Le QCM n'est produit que si les quatre choix
+correct, inversion, signe de l'abscisse et signe de l'ordonnée sont distincts.
+GE-04 ne contient que des placements. Toute la zone quadrillée est tactile ;
+le point s'aimante à l'intersection entière la plus proche, reste modifiable
+avant validation et se déplace aussi aux quatre flèches.
+
+Le cours explique le sens spatial : l'abscisse est une position sur l'axe
+horizontal, même si le guide qui descend du point vers cet axe est vertical ;
+l'ordonnée est une position sur l'axe vertical, même si son guide est
+horizontal. Pour placer, le trajet part bien de `O`, avance horizontalement
+jusqu'à l'abscisse, puis verticalement jusqu'à l'ordonnée. Les cas `C(3 ; 0)`
+et `D(0 ; −2)` rendent le zéro visible sans en faire un chapitre séparé.
+
+L'objet `repere-cartesien.js` devient l'unique objet officiel du Studio, des
+questions, du cours, des aides et des corrections. Il est écrit à neuf pour la
+fondation V2. Les repères antérieurs ont seulement servi à inventorier les
+problèmes déjà rencontrés ; aucune logique extérieure au V2 n'est importée.
+
+Le lot demeure au statut `construit` et n'est pas publié. Les tests, l'audit de
+1 000 seeds par module, les planches vectorielles et le contrôle responsive
+structurel sont verts. La campagne Chromium réelle de 36 états sur cinq
+fenêtres est prête, mais son exécution attend un runtime doté du navigateur ;
+elle reste obligatoire avant toute demande de publication.
+
+### D-067 — GE-03 et GE-04 sont publiés pour essai avec des flèches terminales nettes
+
+Après lecture des planches mobile et ordinateur, Gwenaël valide le repère et
+autorise sa publication dans Automatismes V2. Il demande une seule finition :
+à l'extrémité positive de chaque axe, la flèche remplace le petit trait de
+graduation. Le nombre terminal reste affiché et la graduation précédente ne
+change pas. Cette règle appartient à l'objet partagé ; elle vaut donc de façon
+identique dans les questions, le cours, les aides, les corrections et le
+Studio.
+
+La publication reste un essai et ne vaut pas validation pédagogique finale :
+GE-03 et GE-04 conservent le statut `construit`. Un test SVG interdit le retour
+des traits superposés aux flèches, les planches représentatives sont relues et
+la recette complète passe **1 709 tests sur 1 709** dans **242 suites**. Le
+graphe public V2 est invalidé atomiquement en `v46`.
