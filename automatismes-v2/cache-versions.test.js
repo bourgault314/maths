@@ -28,9 +28,6 @@ const RESSOURCES_VERSIONNEES = new Map([
     "diagnostic-fractions-decimaux.js",
     "reperage-plan/questions.js",
     "diagnostic-reperage-plan.js",
-    "icones-domaines-menu.js",
-    "catalogue-menu.js",
-    "niveaux-parcours.js",
   ]],
   ["automatismes-v2/src/etat-lecteur.js", [
     "seance.js",
@@ -41,13 +38,6 @@ const RESSOURCES_VERSIONNEES = new Map([
     "registre-lecteur.js",
     "serie-multinotions.js",
     "fractions-decimaux.js",
-    "niveaux-parcours.js",
-  ]],
-  ["automatismes-v2/src/catalogue-menu.js", [
-    "identifiants.js",
-    "registre-lecteur.js",
-    "icones-domaines-menu.js",
-    "niveaux-parcours.js",
   ]],
   ["automatismes-v2/src/registre-lecteur.js", [
     "selection-diviseurs.js",

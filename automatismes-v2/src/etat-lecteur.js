@@ -30,7 +30,9 @@ import {
 } from "../../packages/automatismes/src/identifiants.js?v=49";
 import {
   connaitNotionLecteur,
+  estNiveauParcours,
   listerNotionsLecteur,
+  NIVEAU_PAR_DEFAUT,
   NOTION_ECRITURES_MULTIPLES_NOMBRE,
   NOTION_DROITE_GRADUEE,
   NOTION_LIRE_COORDONNEES_POINT,
@@ -47,10 +49,6 @@ import {
   obtenirNotionLecteur,
 } from "./registre-lecteur.js?v=49";
 import { genererSerieMultinotions } from "./serie-multinotions.js?v=49";
-import {
-  estNiveauParcours,
-  NIVEAU_PAR_DEFAUT,
-} from "./niveaux-parcours.js?v=49";
 
 export {
   NOTION_ECRITURES_MULTIPLES_NOMBRE,

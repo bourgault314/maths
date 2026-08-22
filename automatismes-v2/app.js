@@ -54,6 +54,12 @@ import {
 } from "../packages/contrats/src/question-v2.js?v=49";
 import {
   connaitNotionLecteur,
+  DOMAINES_MENU,
+  domainesMenuPourNiveau,
+  graineIconesDomainesDuJour,
+  LIBELLES_MODULES_MENU,
+  NIVEAUX_PARCOURS,
+  notionsVisiblesPourNiveau,
   obtenirNotionLecteur,
   RENDU_CARRES,
   RENDU_DIVISIBILITE,
@@ -63,6 +69,7 @@ import {
   RENDU_FRACTIONS_DECIMAUX,
   RENDU_SOLIDE,
   RENDU_VOLUME,
+  rendreIconeDomaineMenu,
   NOTION_FRACTIONS_SIMPLES_DECIMAUX,
 } from "./src/registre-lecteur.js?v=49";
 import {
@@ -164,20 +171,6 @@ import {
   diagnostiquerCoordonneeSeule,
   diagnostiquerCoupleRepere,
 } from "./src/diagnostic-reperage-plan.js?v=49";
-import {
-  graineIconesDomainesDuJour,
-  rendreIconeDomaineMenu,
-} from "./src/icones-domaines-menu.js?v=49";
-import {
-  DOMAINES_MENU,
-  LIBELLES_MODULES_MENU,
-  domainesMenuPourNiveau,
-  notionsVisiblesPourNiveau,
-} from "./src/catalogue-menu.js?v=49";
-import {
-  NIVEAUX_PARCOURS,
-} from "./src/niveaux-parcours.js?v=49";
-
 const MICRO_NOTION_FRACTION_VERS_DECIMAL =
   MICRO_NOTIONS_AUTOMATISMES.FRACTION_VERS_DECIMAL;
 const MICRO_NOTION_DECIMAL_VERS_FRACTION =

@@ -1,4 +1,4 @@
-import { creerGenerateur, validerGraine } from "../../../../moteur-exercices/src/aleatoire.js?v=46";
+import { creerGenerateur, validerGraine } from "../../../../moteur-exercices/src/aleatoire.js?v=49";
 import {
   FAMILLE_DETERMINER_PAS,
   FAMILLE_DIAGNOSTIC,
@@ -10,7 +10,7 @@ import {
   VARIANTE_FRACTION_QCM,
   VARIANTE_LECTURE_QCM,
   VARIANTE_PAS_QCM,
-} from "./questions.js?v=46";
+} from "./questions.js?v=49";
 
 export const QUOTAS_DROITE_GRADUEE = Object.freeze({
   5: Object.freeze({ lire: 2, placer: 2, pas: 1, diagnostic: 0 }),

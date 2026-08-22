@@ -5,10 +5,10 @@ import { DOMAINES_AUTOMATISMES } from "../../packages/automatismes/src/identifia
 import {
   DOMAINES_MENU,
   LIBELLES_MODULES_MENU,
+  NIVEAUX_PARCOURS,
   domainesMenuPourNiveau,
   notionsVisiblesPourNiveau,
-} from "./catalogue-menu.js";
-import { NIVEAUX_PARCOURS } from "./niveaux-parcours.js";
+} from "./registre-lecteur.js";
 
 describe("catalogue du menu Cycle 4 – DNB", () => {
   it("conserve les quatre domaines du Studio et couvre la taxonomie V2", () => {

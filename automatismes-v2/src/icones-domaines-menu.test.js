@@ -5,7 +5,7 @@ import {
   graineIconesDomainesDuJour,
   ICONES_DOMAINES_MENU,
   rendreIconeDomaineMenu,
-} from "./icones-domaines-menu.js";
+} from "./registre-lecteur.js";
 
 describe("icônes des quatre domaines du menu Studio", () => {
   it("garde une composition stable pendant une même journée", () => {

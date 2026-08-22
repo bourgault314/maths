@@ -1,4 +1,4 @@
-import { creerGenerateur, validerGraine } from "../../../../moteur-exercices/src/aleatoire.js?v=46";
+import { creerGenerateur, validerGraine } from "../../../../moteur-exercices/src/aleatoire.js?v=49";
 import {
   FAMILLE_DIAGNOSTIC_COORDONNEES,
   FAMILLE_IDENTIFIER_POINT,
@@ -8,7 +8,7 @@ import {
   FAMILLE_PLACER_POINT_REPERE,
   GABARIT_LIRE_COORDONNEES,
   GABARIT_PLACER_POINT_REPERE,
-} from "./questions.js?v=46";
+} from "./questions.js?v=49";
 
 export const QUOTAS_LIRE_COORDONNEES = Object.freeze({
   5: Object.freeze({ complet: 3, abscisse: 1, ordonnee: 1, qcm: 0, identifier: 0 }),
