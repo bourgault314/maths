@@ -17,8 +17,10 @@ const bloc = (debut, fin) => {
   return html.slice(i, j);
 };
 
-const cranOrdinateur = bloc("@media (min-width:1024px){", "@media (min-width:1024px) and (min-height:860px){");
-const cranGrandEcran = bloc("@media (min-width:1024px) and (min-height:860px){", "</style>");
+// Chaque cran est un bloc @media fermé par une accolade à deux espaces ("\n  }\n") ;
+// ce qui suit dans la feuille de style (autres patchs) n'en fait pas partie.
+const cranOrdinateur = bloc("@media (min-width:1024px){", "\n  }\n");
+const cranGrandEcran = bloc("@media (min-width:1024px) and (min-height:860px){", "\n  }\n");
 
 test("le menu compact reste la base (téléphone et petits écrans inchangés)", () => {
   assert.match(html, /main\.startMode\{\s*grid-template-columns:minmax\(320px, 520px\) !important;\s*width:min\(540px, calc\(100vw - 24px\)\) !important;/);

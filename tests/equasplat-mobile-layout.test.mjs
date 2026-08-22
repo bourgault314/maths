@@ -30,7 +30,7 @@ test("le mode réception s’allume à l’import et nulle part ailleurs", () =>
     assert.ok(!html.slice(debut, fin).includes("setAppLayout(\"import\")"), `${nom} n’allume pas le mode réception`);
   }
   // Le tableau reçu appartient à celui qui l'a envoyé : ni Menu, ni dé, ni bascule de vue.
-  assert.match(html, /body\.importMode \.menuQuickBtn,\s*body\.importMode \.viewModeSwitch,\s*body\.importMode #btnStageRandom\{\s*display:none !important;\s*\}/);
+  assert.match(html, /body\.importMode \.menuQuickBtn,\s*body\.importMode #btnStageRandom\{\s*display:none !important;\s*\}/);
 });
 
 test("en réception, le mode téléphone de l’usage libre ne s’active jamais", () => {
@@ -254,7 +254,7 @@ test("sur téléphone seule la zone bleue défile", () => {
 test("le plateau mobile utilise tout son cadre avec des plateaux rectangulaires", () => {
   assert.match(html, /\.board\{\s*order:2;[^}]*width:calc\(100% \+ 12px\);[^}]*height:clamp\(260px,76vw,300px\);[^}]*margin-left:-6px;[^}]*margin-right:-6px;/s);
   assert.match(html, /function mobileSvgViewHeight\(\)\{[^}]*Math\.round\(1600 \* height \/ width\)[^}]*980, 1420/s);
-  assert.match(html, /const viewHeight = isMobileImportLayout\(\) \? mobileSvgViewHeight\(\) : \(isPhoneLayout\(\) \? 1280 : 820\);\s*svg\.setAttribute\("viewBox", `0 0 1600 \$\{viewHeight\}`\)/);
+  assert.match(html, /const viewHeight = isMobileImportLayout\(\) \? mobileSvgViewHeight\(\) : \(isPhoneLayout\(\) \? 1280 : desktopSvgViewHeight\(\)\);\s*svg\.setAttribute\("viewBox", `0 0 1600 \$\{viewHeight\}`\)/);
   assert.match(html, /\? \{x:8, y:36, w:760, h:viewHeight-72\}/);
   assert.match(html, /: \{x:832, y:36, w:760, h:viewHeight-72\}/);
   assert.match(html, /return isMobileImportLayout\(\) \? Math\.round\(radius \* 1\.36\) : radius/);

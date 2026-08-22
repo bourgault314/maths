@@ -27,9 +27,11 @@ test("les plateaux mobiles sont plus hauts et occupent le SVG disponible", () =>
   assert.match(html, /const TOKEN_R_PHONE = 72;/);
   // En réception (équation reçue dans l'adresse), la hauteur suit le cadre réel ;
   // en usage libre, la composition téléphone garde ses 1280 unités.
-  assert.match(html, /const viewHeight = isMobileImportLayout\(\) \? mobileSvgViewHeight\(\) : \(isPhoneLayout\(\) \? 1280 : 820\);\s*svg\.setAttribute\("viewBox", `0 0 1600 \$\{viewHeight\}`\)/);
+  assert.match(html, /const viewHeight = isMobileImportLayout\(\) \? mobileSvgViewHeight\(\) : \(isPhoneLayout\(\) \? 1280 : desktopSvgViewHeight\(\)\);\s*svg\.setAttribute\("viewBox", `0 0 1600 \$\{viewHeight\}`\)/);
   assert.match(html, /function getTrayForSide\(side\)\{\s*if\(isPhoneLayout\(\)\)\{[\s\S]*\{x:24, y:34, w:736, h:1212\}[\s\S]*\{x:840, y:34, w:736, h:1212\}/);
-  assert.match(html, /return side === "left"\s*\? \{x:40, y:74, w:720, h:650\}\s*: \{x:840, y:74, w:720, h:650\}/);
+  // Ordinateur : la hauteur des plateaux suit la forme réelle du cadre (820 − 170 = 650 à l'origine).
+  assert.match(html, /const trayHeight = desktopSvgViewHeight\(\) - 170;[^\n]*\n\s*return side === "left"\s*\? \{x:40, y:74, w:720, h:trayHeight\}\s*: \{x:840, y:74, w:720, h:trayHeight\}/);
+  assert.match(html, /function desktopSvgViewHeight\(\)\{[\s\S]*?return clamp\(Math\.round\(1600 \* height \/ width\), 700, 1100\)/);
 });
 
 test("les taches naissent en haut et les jetons dans le tiers bas au téléphone", () => {

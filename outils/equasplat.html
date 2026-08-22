@@ -2060,7 +2060,7 @@
      Étape volontairement limitée : on installe la mise en page et le mode Rédaction par défaut,
      sans ajouter encore les flèches d'opération. Le moteur et les actions ne sont pas modifiés. */
 
-  main.activeMode.viewRedaction .stage:not(:fullscreen){
+  main:is(.activeMode,.receptionLayout).viewRedaction .stage:not(:fullscreen){
     height:calc(100vh - 32px);
     min-height:640px;
     display:grid !important;
@@ -2076,7 +2076,7 @@
     padding:14px;
   }
 
-  main.activeMode.viewRedaction .stage:not(:fullscreen) .instructionZone{
+  main:is(.activeMode,.receptionLayout).viewRedaction .stage:not(:fullscreen) .instructionZone{
     grid-area:instruction;
     width:100%;
     height:64px;
@@ -2087,7 +2087,7 @@
     justify-content:center;
   }
 
-  main.activeMode.viewRedaction .stage:not(:fullscreen) .board{
+  main:is(.activeMode,.receptionLayout).viewRedaction .stage:not(:fullscreen) .board{
     grid-area:board;
     width:100%;
     height:100%;
@@ -2099,12 +2099,12 @@
     justify-self:stretch;
   }
 
-  main.activeMode.viewRedaction .stage:not(:fullscreen) #splatSvg{
+  main:is(.activeMode,.receptionLayout).viewRedaction .stage:not(:fullscreen) #splatSvg{
     height:100%;
     min-height:0;
   }
 
-  main.activeMode.viewRedaction .stage:not(:fullscreen) .topbar{
+  main:is(.activeMode,.receptionLayout).viewRedaction .stage:not(:fullscreen) .topbar{
     grid-area:history;
     display:block !important;
     width:100%;
@@ -2122,7 +2122,7 @@
     box-sizing:border-box;
   }
 
-  main.activeMode.viewRedaction .stage:not(:fullscreen) .equationHistory{
+  main:is(.activeMode,.receptionLayout).viewRedaction .stage:not(:fullscreen) .equationHistory{
     width:100% !important;
     height:100% !important;
     max-height:100% !important;
@@ -2134,19 +2134,19 @@
     display:block;
   }
 
-  main.activeMode.viewRedaction .stage:not(:fullscreen) .equationList{
+  main:is(.activeMode,.receptionLayout).viewRedaction .stage:not(:fullscreen) .equationList{
     width:100% !important;
     font-size:clamp(23px,2.15vw,34px);
     line-height:1.12;
   }
 
-  main.activeMode.viewRedaction .stage:not(:fullscreen) .toolBar{
+  main:is(.activeMode,.receptionLayout).viewRedaction .stage:not(:fullscreen) .toolBar{
     grid-area:tools;
     width:100%;
     margin:0 auto;
   }
 
-  main.activeMode.viewRedaction .stage:not(:fullscreen) .actionZone{
+  main:is(.activeMode,.receptionLayout).viewRedaction .stage:not(:fullscreen) .actionZone{
     grid-area:actions;
     width:100%;
     min-height:72px;
@@ -2154,17 +2154,17 @@
     align-items:flex-start;
   }
 
-  main.activeMode.viewRedaction .stage:not(:fullscreen) .solution{
+  main:is(.activeMode,.receptionLayout).viewRedaction .stage:not(:fullscreen) .solution{
     display:none !important;
   }
 
-  main.activeMode.viewRedaction .viewModeQuickBtn{
+  main:is(.activeMode,.receptionLayout).viewRedaction .viewModeQuickBtn{
     background:linear-gradient(180deg,#60a5fa,#3b82f6);
     color:#fff;
     border-color:rgba(37,99,235,.30);
   }
 
-  main.activeMode.viewRedaction .stage:fullscreen{
+  main:is(.activeMode,.receptionLayout).viewRedaction .stage:fullscreen{
     display:grid !important;
     grid-template-columns:minmax(760px,1fr) minmax(360px,480px);
     grid-template-rows:70px minmax(0,1fr) auto 76px;
@@ -2178,7 +2178,7 @@
     overflow:hidden;
   }
 
-  main.activeMode.viewRedaction .stage:fullscreen .instructionZone{
+  main:is(.activeMode,.receptionLayout).viewRedaction .stage:fullscreen .instructionZone{
     grid-area:instruction;
     width:100%;
     height:70px;
@@ -2187,7 +2187,7 @@
     margin:0;
   }
 
-  main.activeMode.viewRedaction .stage:fullscreen .board{
+  main:is(.activeMode,.receptionLayout).viewRedaction .stage:fullscreen .board{
     grid-area:board;
     width:100%;
     height:100%;
@@ -2200,12 +2200,12 @@
     justify-self:stretch;
   }
 
-  main.activeMode.viewRedaction .stage:fullscreen #splatSvg{
+  main:is(.activeMode,.receptionLayout).viewRedaction .stage:fullscreen #splatSvg{
     height:100%;
     min-height:0;
   }
 
-  main.activeMode.viewRedaction .stage:fullscreen .topbar{
+  main:is(.activeMode,.receptionLayout).viewRedaction .stage:fullscreen .topbar{
     grid-area:history;
     display:block !important;
     width:100%;
@@ -2224,7 +2224,7 @@
     box-sizing:border-box;
   }
 
-  main.activeMode.viewRedaction .stage:fullscreen .equationHistory{
+  main:is(.activeMode,.receptionLayout).viewRedaction .stage:fullscreen .equationHistory{
     width:100% !important;
     height:100% !important;
     max-height:100% !important;
@@ -2236,20 +2236,20 @@
     display:block;
   }
 
-  main.activeMode.viewRedaction .stage:fullscreen .equationList{
+  main:is(.activeMode,.receptionLayout).viewRedaction .stage:fullscreen .equationList{
     width:100% !important;
     font-size:clamp(26px,2.18vw,38px);
     line-height:1.12;
   }
 
-  main.activeMode.viewRedaction .stage:fullscreen .toolBar{
+  main:is(.activeMode,.receptionLayout).viewRedaction .stage:fullscreen .toolBar{
     grid-area:tools;
     width:100%;
     flex:initial;
     margin:0 auto;
   }
 
-  main.activeMode.viewRedaction .stage:fullscreen .actionZone{
+  main:is(.activeMode,.receptionLayout).viewRedaction .stage:fullscreen .actionZone{
     grid-area:actions;
     width:100%;
     min-height:76px;
@@ -2258,7 +2258,7 @@
     align-items:flex-start;
   }
 
-  main.activeMode.viewRedaction .stage:fullscreen .solution{
+  main:is(.activeMode,.receptionLayout).viewRedaction .stage:fullscreen .solution{
     display:none !important;
   }
 
@@ -2316,7 +2316,7 @@
   }
 
   @media (max-width:1050px){
-    main.activeMode.viewRedaction .stage:not(:fullscreen){
+    main:is(.activeMode,.receptionLayout).viewRedaction .stage:not(:fullscreen){
       height:auto;
       min-height:640px;
       display:flex !important;
@@ -2324,25 +2324,25 @@
       overflow:visible;
     }
 
-    main.activeMode.viewRedaction .stage:not(:fullscreen) .instructionZone{
+    main:is(.activeMode,.receptionLayout).viewRedaction .stage:not(:fullscreen) .instructionZone{
       height:auto;
       min-height:58px;
       width:100%;
     }
 
-    main.activeMode.viewRedaction .stage:not(:fullscreen) .board{
+    main:is(.activeMode,.receptionLayout).viewRedaction .stage:not(:fullscreen) .board{
       height:430px;
       min-height:360px;
     }
 
-    main.activeMode.viewRedaction .stage:not(:fullscreen) .topbar{
+    main:is(.activeMode,.receptionLayout).viewRedaction .stage:not(:fullscreen) .topbar{
       height:auto;
       max-height:360px;
       min-height:240px;
       padding:18px 16px 16px !important;
     }
 
-    main.activeMode.viewRedaction .stage:not(:fullscreen) .equationHistory{
+    main:is(.activeMode,.receptionLayout).viewRedaction .stage:not(:fullscreen) .equationHistory{
       max-height:320px !important;
     }
   }
@@ -2831,9 +2831,8 @@
   }
 
   /* Le tableau reçu appartient à celui qui l'a envoyé : ni « Menu », ni dé,
-     ni bascule de vue (la réception a sa propre composition). */
+     ni dé. La bascule Classique / Rédaction, elle, est proposée (PATCH ESPACE 2026-08-22). */
   body.importMode .menuQuickBtn,
-  body.importMode .viewModeSwitch,
   body.importMode #btnStageRandom{
     display:none !important;
   }
@@ -3908,6 +3907,290 @@
       font-size:17px !important;
     }
   }
+  /* ============================================================
+     PATCH ESPACE 2026-08-22 — ordinateur et tablette (≥ 761 px).
+     Le téléphone (composition ≤ 700 px libre, ≤ 760 px réception) n'est pas touché.
+     1. Vue Classique hors plein écran : le bloc prend la hauteur de la fenêtre et
+        le plateau prend tout ce qui reste (plus de hauteur figée à 318/390 px).
+     2. Plein écran : la zone d'équation s'adapte à son contenu (plus de vide
+        sous une équation courte), boutons plus grands, le plateau garde le reste.
+     3. Vue Rédaction : colonne d'équation un peu plus large, équations longues
+        qui passent à la ligne au lieu de déborder.
+     4. Boutons œil (masquer l'équation) et lettre / « ? » dans la barre du haut.
+     Le dessin du plateau (viewBox) suit la forme réelle de son cadre : voir
+     desktopSvgViewHeight() dans le script.
+     ============================================================ */
+  @media (min-width:761px){
+
+    /* --- Largeur utile du bloc --------------------------------------- */
+    main.activeMode,
+    body.importMode main{
+      width:min(1600px, calc(100vw - 28px)) !important;
+    }
+
+    /* --- Barre du haut : place pour Menu / vue / a-? / œil / plein écran --- */
+    main.activeMode .stage:not(:fullscreen) .topbar,
+    body.importMode .stage:not(:fullscreen) .topbar,
+    .stage:fullscreen .topbar{
+      padding-left:clamp(250px, 26vw, 400px) !important;
+      padding-right:clamp(250px, 26vw, 400px) !important;
+    }
+
+    /* --- 1. Vue Classique, hors plein écran ------------------------------ */
+    main.activeMode.viewClassic .stage:not(:fullscreen),
+    body.importMode main.viewClassic .stage:not(:fullscreen){
+      display:flex !important;
+      flex-direction:column;
+      height:calc(100vh - 28px) !important;
+      min-height:540px !important;
+      max-height:none !important;
+      padding:12px 14px 10px !important;
+      overflow:hidden;
+    }
+
+    main.activeMode.viewClassic .stage:not(:fullscreen) .topbar,
+    body.importMode main.viewClassic .stage:not(:fullscreen) .topbar{
+      flex:0 0 auto !important;
+      height:auto !important;
+      min-height:0 !important;
+      max-height:none !important;
+      padding-top:4px !important;
+      padding-bottom:6px !important;
+      overflow:visible;
+    }
+
+    main.activeMode.viewClassic .stage:not(:fullscreen) .equationHistory,
+    body.importMode main.viewClassic .stage:not(:fullscreen) .equationHistory{
+      width:100% !important;
+      max-width:none !important;
+      height:clamp(80px, 12vh, 160px) !important;
+      min-height:0 !important;
+      max-height:none !important;
+      overflow-y:auto !important;
+      overflow-x:hidden !important;
+      scrollbar-gutter:stable;
+    }
+
+    main.activeMode.viewClassic .stage:not(:fullscreen) .equationList,
+    body.importMode main.viewClassic .stage:not(:fullscreen) .equationList{
+      font-size:clamp(24px, 2.3vw, 36px) !important;
+      line-height:1.08;
+    }
+
+    main.activeMode.viewClassic .stage:not(:fullscreen) .instructionZone,
+    body.importMode main.viewClassic .stage:not(:fullscreen) .instructionZone{
+      flex:0 0 auto !important;
+      height:auto !important;
+      min-height:34px !important;
+      margin:2px auto 8px !important;
+      font-size:17px !important;
+      line-height:1.3;
+    }
+
+    main.activeMode.viewClassic .stage:not(:fullscreen) .board,
+    body.importMode main.viewClassic .stage:not(:fullscreen) .board{
+      flex:1 1 auto !important;
+      width:100% !important;
+      height:auto !important;
+      min-height:0 !important;
+      max-height:none !important;
+      margin:0 !important;
+      padding:8px !important;
+      overflow:hidden;
+    }
+
+    main.activeMode.viewClassic .stage:not(:fullscreen) #splatSvg,
+    body.importMode main.viewClassic .stage:not(:fullscreen) #splatSvg{
+      display:block;
+      width:100% !important;
+      height:100% !important;
+      min-height:0 !important;
+      max-height:none !important;
+    }
+
+    main.activeMode.viewClassic .stage:not(:fullscreen) .toolBar,
+    body.importMode main.viewClassic .stage:not(:fullscreen) .toolBar{
+      flex:0 0 auto !important;
+      margin:10px auto 2px !important;
+      gap:8px !important;
+    }
+
+    main.activeMode.viewClassic .stage:not(:fullscreen) .actionZone,
+    body.importMode main.viewClassic .stage:not(:fullscreen) .actionZone{
+      flex:0 0 auto !important;
+      min-height:44px !important;
+      margin-top:4px !important;
+    }
+
+    /* --- Boutons d'action : ordinateur et tablette, hors plein écran -------- */
+    main.activeMode .stage:not(:fullscreen) .toolBtn,
+    body.importMode .stage:not(:fullscreen) .toolBtn{
+      min-height:48px !important;
+      padding:11px 16px !important;
+      font-size:16px !important;
+      border-radius:15px !important;
+    }
+
+    main.activeMode .stage:not(:fullscreen) .actionZone button,
+    body.importMode .stage:not(:fullscreen) .actionZone button{
+      min-height:46px !important;
+      padding:10px 16px !important;
+      font-size:16px !important;
+    }
+
+    /* --- 2. Plein écran (vue Classique et Rédaction) ------------------------ */
+    .stage:fullscreen .toolBtn{
+      min-height:54px !important;
+      padding:13px 22px !important;
+      font-size:18px !important;
+      border-radius:17px !important;
+    }
+
+    .stage:fullscreen .actionZone button{
+      min-height:50px !important;
+      padding:11px 20px !important;
+      font-size:18px !important;
+    }
+
+    .stage:fullscreen .instructionZone{
+      font-size:19px !important;
+      line-height:1.3;
+    }
+
+    main.viewClassic .stage:fullscreen .topbar{
+      flex:0 0 auto !important;
+      height:auto !important;
+      min-height:0 !important;
+      max-height:none !important;
+      padding-top:6px !important;
+      padding-bottom:8px !important;
+    }
+
+    main.viewClassic .stage:fullscreen .equationHistory{
+      width:100% !important;
+      max-width:none !important;
+      height:clamp(110px, 15vh, 190px) !important;
+      min-height:0 !important;
+      max-height:none !important;
+      overflow-y:auto !important;
+      scrollbar-gutter:stable;
+    }
+
+    main.viewClassic .stage:fullscreen .equationList{
+      font-size:clamp(28px, 2.7vw, 42px) !important;
+      line-height:1.08;
+    }
+
+    main.viewClassic .stage:fullscreen .board{
+      flex:1 1 auto !important;
+      height:auto !important;
+      min-height:0 !important;
+      max-height:none !important;
+      overflow:hidden;
+    }
+
+    main.viewClassic .stage:fullscreen #splatSvg{
+      width:100% !important;
+      height:100% !important;
+      min-height:0 !important;
+    }
+
+    /* --- 3. Vue Rédaction : colonne d'équation et équations longues --------- */
+    main:is(.activeMode,.receptionLayout).viewRedaction .stage:not(:fullscreen){
+      grid-template-columns:minmax(560px,1fr) minmax(340px, clamp(360px, 30vw, 520px)) !important;
+    }
+
+    main:is(.activeMode,.receptionLayout).viewRedaction .stage:fullscreen{
+      grid-template-columns:minmax(700px,1fr) minmax(380px, clamp(400px, 30vw, 560px)) !important;
+    }
+
+    main:is(.activeMode,.receptionLayout).viewRedaction .equationRow{
+      white-space:normal !important;
+      column-gap:12px !important;
+    }
+
+    main:is(.activeMode,.receptionLayout).viewRedaction .equationRow .lhs,
+    main:is(.activeMode,.receptionLayout).viewRedaction .equationRow .rhs{
+      overflow-wrap:anywhere;
+      text-wrap:balance;
+    }
+
+    main:is(.activeMode,.receptionLayout).viewRedaction .stage:not(:fullscreen) .equationList{
+      font-size:clamp(22px, 1.9vw, 32px) !important;
+    }
+
+    main:is(.activeMode,.receptionLayout).viewRedaction .stage:fullscreen .equationList{
+      font-size:clamp(24px, 2vw, 36px) !important;
+    }
+
+    /* En réception, la vue Rédaction réutilise la composition libre : on annule
+       les hauteurs figées héritées de l'ancienne page import. */
+    body.importMode main.viewRedaction .stage:not(:fullscreen) .topbar,
+    body.importMode main.viewRedaction .stage:fullscreen .topbar{
+      height:100% !important;
+      min-height:0 !important;
+      max-height:100% !important;
+      padding:18px 16px 16px !important;
+    }
+
+    body.importMode main.viewRedaction .stage .equationHistory{
+      height:100% !important;
+      min-height:0 !important;
+      max-height:100% !important;
+      width:100% !important;
+      max-width:none !important;
+    }
+
+    body.importMode main.viewRedaction .stage .board{
+      height:100% !important;
+      min-height:0 !important;
+      max-height:none !important;
+    }
+
+    body.importMode main.viewRedaction .stage .instructionZone{
+      height:auto !important;
+      min-height:64px !important;
+    }
+  }
+
+  /* --- 4. Œil et lettre / « ? » (tous écrans ≥ 761 px ; cachés au téléphone) --- */
+  .equationEyeBtn svg{
+    width:24px;
+    height:24px;
+    display:block;
+  }
+
+  .equationEyeBtn.is-hidden{
+    background:#e2e8f0;
+  }
+
+  .unknownToggleBtn{
+    font-family:Georgia, "Times New Roman", serif;
+    font-style:italic;
+    font-weight:700;
+    font-size:22px;
+  }
+
+  .unknownToggleBtn.is-question{
+    font-family:inherit;
+    font-style:normal;
+    background:linear-gradient(180deg,#60a5fa,#3b82f6);
+    color:#fff;
+    border-color:rgba(37,99,235,.30);
+  }
+
+  /* L'équation masquée garde sa place : le plateau ne bouge pas. */
+  .stage.equationHidden .equationHistory{
+    visibility:hidden;
+  }
+
+  @media (max-width:760px){
+    #btnToggleEquation,
+    #btnToggleUnknown{
+      display:none !important;
+    }
+  }
+
 </style>
 <link rel="stylesheet" href="../assets/css/consentement.css">
 <script defer src="../assets/js/consentement.js"></script>
@@ -4035,6 +4318,8 @@
         <button class="viewModeOption" id="btnViewRedaction" type="button" aria-pressed="true">Rédaction</button>
       </div>
       <button class="ghost quickBtn diceBtn" id="btnStageRandom" type="button" title="Nouvelle équation aléatoire" aria-label="Nouvelle équation aléatoire">🎲</button>
+      <button class="ghost quickBtn unknownToggleBtn" id="btnToggleUnknown" type="button" title="Écrire l’inconnue avec un ?" aria-label="Basculer entre la lettre et le point d’interrogation"></button>
+      <button class="ghost quickBtn equationEyeBtn" id="btnToggleEquation" type="button" title="Masquer l’équation" aria-label="Afficher ou masquer l’équation"></button>
       <button class="ghost quickBtn" id="btnFullscreen" type="button" title="Plein écran" aria-label="Plein écran">⛶</button>
     </div>
 
@@ -4515,6 +4800,7 @@
     if(!appMain) return;
     appMain.classList.toggle("startMode", appLayoutMode === "start");
     appMain.classList.toggle("activeMode", appLayoutMode === "active");
+    appMain.classList.toggle("receptionLayout", reception);
   }
 
   function bindReceptionConsentLinks(){
@@ -6429,7 +6715,9 @@
           x:tray.x+(mobileLayout ? 45 : 70),
           y:tray.y+80,
           w:tray.w-(mobileLayout ? 90 : 140),
-          h:mobileLayout ? Math.min(760, tray.h * .58) : 400
+          // Ordinateur : 400 dans la géométrie d'origine (plateau de 650), et
+          // proportionnel quand le cadre est plus plat (PATCH ESPACE 2026-08-22).
+          h:mobileLayout ? Math.min(760, tray.h * .58) : Math.min(400, tray.h * .62)
         };
     const rows = rowsForSplats(xs.length);
     const radius = commonSplatRadius();
@@ -6701,6 +6989,16 @@
     return clamp(Math.round(1600 * height / width), 980, 1420);
   }
 
+  function desktopSvgViewHeight(){
+    // Ordinateur / tablette : le dessin épouse la forme réelle du cadre (PATCH ESPACE 2026-08-22).
+    // Avant, le viewBox 1600×820 était figé : dans un cadre plus plat, le tableau
+    // n'occupait que la moitié de la largeur et laissait du gris vide de chaque côté.
+    const width = svg.clientWidth || 0;
+    const height = svg.clientHeight || 0;
+    if(width < 50 || height < 50) return 820;
+    return clamp(Math.round(1600 * height / width), 700, 1100);
+  }
+
   function getTrayForSide(side){
     if(isPhoneLayout()){
       return side === "left"
@@ -6713,9 +7011,10 @@
         ? {x:8, y:36, w:760, h:viewHeight-72}
         : {x:832, y:36, w:760, h:viewHeight-72};
     }
+    const trayHeight = desktopSvgViewHeight() - 170; // 820 − 170 = 650 : géométrie d'origine
     return side === "left"
-      ? {x:40, y:74, w:720, h:650}
-      : {x:840, y:74, w:720, h:650};
+      ? {x:40, y:74, w:720, h:trayHeight}
+      : {x:840, y:74, w:720, h:trayHeight};
   }
 
   function findFusionCandidate(side, draggedId, cx, cy){
@@ -7226,7 +7525,7 @@
 
   function renderSvg(){
     svg.innerHTML = "";
-    const viewHeight = isMobileImportLayout() ? mobileSvgViewHeight() : (isPhoneLayout() ? 1280 : 820);
+    const viewHeight = isMobileImportLayout() ? mobileSvgViewHeight() : (isPhoneLayout() ? 1280 : desktopSvgViewHeight());
     svg.setAttribute("viewBox", `0 0 1600 ${viewHeight}`);
     drawDefs();
     if(drawPendingShareGroups(viewHeight)) return;
@@ -7702,6 +8001,92 @@
   window.addEventListener("resize", syncMobileBottomControlsSpace);
   document.addEventListener("fullscreenchange", syncMobileBottomControlsSpace);
 
+  // PATCH ESPACE 2026-08-22 — le plateau suit la taille réelle de son cadre.
+  let svgRedrawHandle = 0;
+  function scheduleSvgRedraw(){
+    if(svgRedrawHandle) cancelAnimationFrame(svgRedrawHandle);
+    svgRedrawHandle = requestAnimationFrame(() => {
+      svgRedrawHandle = 0;
+      if(state && !dragState) renderSvg();
+    });
+  }
+  window.addEventListener("resize", scheduleSvgRedraw);
+  document.addEventListener("fullscreenchange", scheduleSvgRedraw);
+  if(typeof ResizeObserver === "function"){
+    new ResizeObserver(scheduleSvgRedraw).observe(svg);
+  }
+
+  // Œil : masquer / afficher l'équation sans faire bouger le plateau (la place reste réservée).
+  const btnToggleEquation = document.getElementById("btnToggleEquation");
+  const btnToggleUnknown = document.getElementById("btnToggleUnknown");
+  function eyeIconSvg(hidden=false){
+    if(hidden){
+      return `<svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M3 3l18 18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
+        <path d="M10.7 5.2A9.4 9.4 0 0 1 12 5c5.2 0 8.7 4.5 9.7 6.1.2.3.2.7 0 1.1a16 16 0 0 1-2.6 3.1" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M6.5 6.7A15.8 15.8 0 0 0 2.3 11c-.2.3-.2.7 0 1.1C3.3 13.7 6.8 18 12 18c1.3 0 2.5-.3 3.6-.8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M9.8 9.8a3.1 3.1 0 0 0 4.4 4.4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+      </svg>`;
+    }
+    return `<svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M2.3 11.1C3.3 9.5 6.8 5 12 5s8.7 4.5 9.7 6.1c.2.3.2.7 0 1.1C20.7 13.8 17.2 18 12 18S3.3 13.8 2.3 12.2c-.2-.3-.2-.7 0-1.1Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+      <circle cx="12" cy="11.7" r="3.2" fill="none" stroke="currentColor" stroke-width="2"/>
+    </svg>`;
+  }
+  function syncEquationToggleButton(){
+    if(!btnToggleEquation || !stageEl) return;
+    const hidden = stageEl.classList.contains("equationHidden");
+    btnToggleEquation.innerHTML = eyeIconSvg(hidden);
+    btnToggleEquation.title = hidden ? "Afficher l’équation" : "Masquer l’équation";
+    btnToggleEquation.classList.toggle("is-hidden", hidden);
+  }
+  if(btnToggleEquation && stageEl){
+    btnToggleEquation.addEventListener("click", () => {
+      stageEl.classList.toggle("equationHidden");
+      syncEquationToggleButton();
+    });
+    syncEquationToggleButton();
+  }
+
+  // Lettre / « ? » : même réglage que le menu, mais accessible pendant l'activité.
+  function syncUnknownToggleButton(){
+    const btnToggleUnknown = document.getElementById("btnToggleUnknown");
+    if(!btnToggleUnknown) return;
+    const question = !!(unknownDisplayModeEl && unknownDisplayModeEl.value === "question");
+    btnToggleUnknown.textContent = question ? "?" : currentVar();
+    btnToggleUnknown.title = question ? "Écrire l’inconnue avec sa lettre" : "Écrire l’inconnue avec un ?";
+    btnToggleUnknown.classList.toggle("is-question", question);
+  }
+  function escapeRegExp(text){ return String(text).replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); }
+  function convertUnknownInText(text, toQuestion){
+    // Réécrit une ligne déjà dans l'historique avec l'autre écriture de l'inconnue,
+    // en suivant exactement formatXTerm : « 3a » ⇄ « 3 × ? », « a » ⇄ « ? ».
+    const v = currentVar();
+    const str = String(text || "");
+    if(toQuestion){
+      return str.replace(new RegExp("(\\d+)" + escapeRegExp(v), "g"), "$1 × ?").split(v).join("?");
+    }
+    return str.replace(/(\d+) × \?/g, `$1${v}`).split("?").join(v);
+  }
+  if(btnToggleUnknown && unknownDisplayModeEl){
+    btnToggleUnknown.addEventListener("click", () => {
+      const toQuestion = unknownDisplayModeEl.value !== "question";
+      unknownDisplayModeEl.value = toQuestion ? "question" : "letter";
+      // Contrairement au menu de départ, on ne repart pas de zéro : les lignes
+      // déjà écrites par l'élève sont conservées et réécrites avec la nouvelle écriture.
+      if(state && Array.isArray(state.steps)){
+        state.steps = state.steps.map(line => convertUnknownInText(line, toQuestion));
+      }
+      if(state && Array.isArray(state.stepOps)){
+        state.stepOps = state.stepOps.map(op => op && op.label ? {...op, label:convertUnknownInText(op.label, toQuestion)} : op);
+      }
+      syncUnknownToggleButton();
+      if(state) render();
+    });
+    unknownDisplayModeEl.addEventListener("change", syncUnknownToggleButton);
+    syncUnknownToggleButton();
+  }
+
   function render(){
     if(!state) return;
     const sharePending = !!state.pendingShareConclusion;
@@ -7710,6 +8095,7 @@
     });
     if(getSolvedValue() !== null) updateCurrentEquationStep();
     renderEquationHistory();
+    syncUnknownToggleButton();
     renderSvg();
     renderActions();
     stabilizeMobileActionZone();
@@ -8066,6 +8452,9 @@
     syncUniverseUI({validate:false});
     syncTeacherControls({validate:false});
     setAppLayout("import");
+    // Réception : on arrive en vue Classique (équation au-dessus du plateau, comme
+    // avant la fusion) ; la vue Rédaction reste à un clic dans la barre du haut.
+    setViewMode("classic");
     document.body.classList.toggle("importUnitMode", unitMode);
     setActionMode(unitMode ? "delete" : "decompose");
     showInitialEqualityInstruction();
