@@ -498,6 +498,13 @@
   .fsHost:fullscreen{background:var(--bg)}
   .fsHost:fullscreen #svgWrap{width:100vw;height:100vh;aspect-ratio:auto;padding:10px}
   .fsHost:fullscreen .cardbox{width:100vw;height:100vh;border-radius:0;padding:10px}
+  /* Commandes de plein écran : le menu latéral est hors de l'écran en plein écran,
+     on pose précédent / suivant / quitter sur la scène, en 64 px (tablette au tableau). */
+  .fsControls{display:none;position:absolute;right:18px;top:18px;gap:12px;z-index:5}
+  .fsHost:fullscreen .fsControls{display:flex}
+  .fsControls button{width:64px;height:64px;border-radius:18px;border:2px solid rgba(15,23,42,0.18);background:#fff;font-size:26px;line-height:1;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,0.12)}
+  .fsControls button.primary{background:#2563eb;color:#fff;border-color:#2563eb}
+  .fsControls button:active{transform:scale(0.96)}
 
 
   /* Aide générale : remplace le texte permanent du menu par une fenêtre centrée. */
@@ -804,6 +811,11 @@
       </div>
       <div id="svgWrap">
         <svg id="mainSvg" tabindex="0" viewBox="0 0 1600 1000" aria-label="Splat card"></svg>
+      </div>
+      <div class="fsControls" id="fsControls" aria-label="Commandes plein écran">
+        <button type="button" id="fsPrev" title="Étape précédente" aria-label="Étape précédente">◀</button>
+        <button type="button" id="fsNext" class="primary" title="Étape suivante" aria-label="Étape suivante">▶</button>
+        <button type="button" id="fsExit" title="Quitter le plein écran" aria-label="Quitter le plein écran">✕</button>
       </div>
     </div>
   </section>
@@ -2159,6 +2171,38 @@ function assignPositionsEquation(card, rng){
    qu'une même inconnue change de valeur. */
 function getEquationStepSchemaMidY(){
   return 500;
+}
+
+/* Vue Équation du pas à pas : l'équation (jusqu'à 5 lignes + flèches d'opération)
+   a besoin de 300 points en haut. Les plateaux, dessinés de 190 à 840 pour la
+   carte imprimée et les autres modes, sont ici redessinés de EQ_VIEW_TRAY_TOP à
+   EQ_VIEW_TRAY_BOTTOM : même largeur, mêmes taches et jetons (rayons inchangés),
+   seules les ordonnées sont comprimées. La carte elle-même n'est pas modifiée. */
+const EQ_VIEW_TRAY_TOP = 360;
+const EQ_VIEW_TRAY_BOTTOM = 884;
+
+function buildEquationStepEquationViewGeometry(card){
+  const trays = card && card._eqTrays;
+  const pos = card && card._eqPos;
+  if(!trays || !pos) return null;
+  const srcTop = trays.left.y;
+  const srcH = trays.left.h;
+  const dstH = EQ_VIEW_TRAY_BOTTOM - EQ_VIEW_TRAY_TOP;
+  const srcBottom = srcTop + srcH;
+  // Taches : calées sur le haut du plateau, à peine resserrées (0.95) pour que deux
+  // rangées ne se touchent jamais ; jetons : calés sur le bas du plateau.
+  const mySplat = (y) => EQ_VIEW_TRAY_TOP + (Number(y) - srcTop) * 0.95;
+  const myBead = (y) => EQ_VIEW_TRAY_BOTTOM - (srcBottom - Number(y)) * 0.80;
+  const mapTray = (t) => Object.assign({}, t, { y: EQ_VIEW_TRAY_TOP, h: dstH });
+  const mapSide = (side) => Object.assign({}, side, {
+    posV: (side.posV || []).map(p => Object.assign({}, p, { cy: myBead(p.cy) })),
+    posH: (side.posH || []).map(p => Object.assign({}, p, { cy: mySplat(p.cy) })),
+    splats: (side.splats || []).map(s => Object.assign({}, s, { cy: mySplat(s.cy) }))
+  });
+  return {
+    trays: Object.assign({}, trays, { left: mapTray(trays.left), right: mapTray(trays.right) }),
+    pos: { left: mapSide(pos.left), right: mapSide(pos.right) }
+  };
 }
 
 function buildEquationStepSchemaColumnGeometry(card){
@@ -4703,6 +4747,24 @@ function getEquationStepStates(eq, varChar = xChar, opts = {}){
   // si elle est à droite, on écrit 4 = C.
   const varIsOnLeft = a2 > 0 || (a > b);
   const finalEq = varIsOnLeft ? (varChar + " = " + xVal) : (xVal + " = " + varChar);
+  // 3 bis) Partage : avant de diviser, on montre n groupes égaux de chaque côté
+  // (les taches d'un côté, le nombre redessiné en n jetons égaux de l'autre).
+  // L'équation ne change pas encore ; la division se lit à l'étape suivante,
+  // où l'on ne garde qu'un groupe par côté.
+  {
+    const groupCount = varIsOnLeft ? Math.max(1, a2) : Math.max(1, b2);
+    if(groupCount > 1){
+      const remainingValue = varIsOnLeft ? Math.max(0, vr2) : Math.max(0, vl2);
+      const hiddenRow = makeEqStepGroupedParts(groupCount, 0, xVal, varChar, {hiddenStartIndex: commonX});
+      const valueRow = makeEqStepGroupedParts(0, remainingValue, xVal, varChar, {visiblePosIndex: remainingValue > 0 ? 1 : 0});
+      push("share",
+        varIsOnLeft ? hiddenRow : valueRow,
+        varIsOnLeft ? valueRow : hiddenRow,
+        formatEqSideFromCoeffVis(a2, vl2, varChar) + " = " + formatEqSideFromCoeffVis(b2, vr2, varChar),
+        {share:true, variableSide: varIsOnLeft ? "left" : "right", groupCount, remainingCoeff: groupCount, remainingValue}
+      );
+    }
+  }
   if(varIsOnLeft){
     const remainingCoeff = Math.max(1, a2);
     const remainingValue = Math.max(0, vr2);
@@ -4868,7 +4930,7 @@ function getEquationStepSchemaParts(eq, state, varChar = xChar){
     };
   }
 
-  if(state.kind === "final" && state.final){
+  if((state.kind === "final" && state.final) || (state.kind === "share" && state.share)){
     const remainingCoeff = Math.max(
       1,
       Number(state.remainingCoeff) ||
@@ -5064,7 +5126,9 @@ function buildEquationStepSchemaLayoutForState(eq, state, varChar, metrics){
   const commonV = Math.min(vl, vr);
 
   let baseLayout = initialLayout;
-  if(state && (state.kind === "afterX" || state.kind === "hatchV" || state.kind === "afterV" || state.kind === "final")){
+  // L'état « share » (groupes) a la même table que l'état final : n cases b face à n cases égales.
+  const isFinalLike = !!(state && ((state.kind === "final" && state.final) || (state.kind === "share" && state.share)));
+  if(state && (state.kind === "afterX" || state.kind === "hatchV" || state.kind === "afterV" || isFinalLike)){
     baseLayout = applyEquationStepCommonXRemoval(initialLayout, commonX);
   }
 
@@ -5075,13 +5139,13 @@ function buildEquationStepSchemaLayoutForState(eq, state, varChar, metrics){
     const sharedVisibleW = getEquationStepSharedVisibleWidth(baseLayout);
     row1Widths = widthsForEquationStepVisibleSplit(baseLayout.row1Parts, baseLayout.row1Widths, currentParts.leftParts, sharedVisibleW, metrics);
     row2Widths = widthsForEquationStepVisibleSplit(baseLayout.row2Parts, baseLayout.row2Widths, currentParts.rightParts, sharedVisibleW, metrics);
-  }else if(state && (state.kind === "afterV" || state.kind === "final") && commonV > 0){
+  }else if(state && (state.kind === "afterV" || isFinalLike) && commonV > 0){
     const sharedVisibleW = getEquationStepSharedVisibleWidth(baseLayout);
     row1Widths = widthsForEquationStepVisibleSplit(baseLayout.row1Parts, baseLayout.row1Widths, currentParts.leftParts, sharedVisibleW, metrics);
     row2Widths = widthsForEquationStepVisibleSplit(baseLayout.row2Parts, baseLayout.row2Widths, currentParts.rightParts, sharedVisibleW, metrics);
   }
 
-  if(state && state.kind === "final" && state.final){
+  if(isFinalLike){
     const leftHasHidden = currentParts.leftParts.some(part => part && part.hidden);
     const hiddenParts = leftHasHidden ? baseLayout.row1Parts : baseLayout.row2Parts;
     const hiddenWidthsSource = leftHasHidden ? baseLayout.row1Widths : baseLayout.row2Widths;
@@ -5196,9 +5260,17 @@ function eqStepActionText(card, revealState, opts = {}){
       return "J’enlève " + Math.abs(Math.round(Number(state.commonV) || 0)) + (useUnitBeads ? " jetons de chaque côté." : " de chaque côté.");
     case "afterV":
       return "Je garde ce qui reste.";
+    case "share":{
+      const n = Math.max(2, Math.round(Number(state.groupCount) || 2));
+      // Forme courte pour les étiquettes des vignettes imprimées en deux colonnes,
+      // où la phrase complète était réduite jusqu'à la taille plancher.
+      return opts.compact
+        ? ("Je range en " + n + " groupes égaux.")
+        : ("Je range en " + n + " groupes égaux de chaque côté.");
+    }
     case "final":{
       const coeff = Math.max(1, Math.round(Number(state.remainingCoeff) || 1));
-      return coeff > 1 ? ("Je divise par " + coeff + ".") : "Je lis la réponse.";
+      return coeff > 1 ? ("Je divise par " + coeff + " : je garde un groupe.") : "Je lis la réponse.";
     }
     case "verify":
       return "Je vérifie mon résultat.";
@@ -5443,20 +5515,12 @@ function drawEquationStepEquation(targetGroup, card, revealState){
   const lines = getEquationStepVisibleLines(eq, revealState, varChar);
   if(!lines.length) return;
 
-  const n = Math.max(1, lines.length);
-  let eqFontSize = (n >= 4) ? 38 : (n >= 3 ? 42 : 46);
-  let eqGap = (n >= 4) ? 36 : (n >= 3 ? 40 : 46);
-
-  const topLimit = 44;
-  const bottomLimit = 164;
-  const available = Math.max(0, bottomLimit - topLimit);
-  const wantedHeight = (n - 1) * eqGap;
-  if(wantedHeight > available && n > 1){
-    eqGap = Math.max(30, Math.floor(available / (n - 1)));
-    eqFontSize = Math.min(eqFontSize, Math.max(34, eqGap + 4));
-  }
-  const blockHeight = (n - 1) * eqGap;
-  const startY = Math.round(topLimit + Math.max(0, (available - blockHeight) / 2));
+  /* Bloc calé en HAUT avec un pas fixe : une ligne qui apparaît ne fait plus
+     bouger les précédentes (avant, le bloc était recentré à chaque étape). Avec
+     5 lignes au plus, le bloc occupe 70 → 326, sous les plateaux à 360. */
+  const eqFontSize = EQ_VIEW_LINE_FONT;
+  const eqGap = EQ_VIEW_LINE_GAP;
+  const startY = EQ_VIEW_LINE_TOP;
 
   drawEquationLines(targetGroup, lines, 800, startY, {
     text:(x,y,t,a)=>text(x,y,t,a),
@@ -5465,10 +5529,228 @@ function drawEquationStepEquation(targetGroup, card, revealState){
     gap: eqGap,
     anchor:"start",
     alignEquals: true,
-    eqGap: 22,
+    eqGap: 30,
     fontFamily:"'Times New Roman', Times, serif",
     fontStyle:"italic"
   });
+
+  drawEquationStepOperationArrows(targetGroup, eq, revealState, varChar, lines, startY, eqGap, eqFontSize);
+}
+
+const EQ_VIEW_LINE_TOP = 70;
+const EQ_VIEW_LINE_GAP = 64;
+const EQ_VIEW_LINE_FONT = 46;
+
+/* Opération qui fait passer d'une ligne à la suivante (− x, − 2, ÷ 3), lue dans les
+   états : hatchX/afterX = retrait des lettres communes, hatchV/afterV = retrait des
+   jetons communs, share/final = division. La décomposition n'est pas une opération. */
+function getEquationStepLineOperations(eq, revealState, varChar = xChar){
+  const states = getEquationStepStates(eq, varChar);
+  const max = clamp(Math.round(Number(revealState) || 0), 1, states.length);
+  const ops = [];
+  let lastLine = null;
+  let lineIndex = -1;
+  let pendingOp = null;
+  for(let i=0;i<max;i++){
+    const st = states[i];
+    if(!st) continue;
+    if(st.kind === "hatchX") pendingOp = "− " + coeffXLabel(st.commonX || 1, varChar);
+    else if(st.kind === "hatchV") pendingOp = "− " + (st.commonV || 0);
+    else if(st.kind === "share") pendingOp = "÷ " + (st.groupCount || 1);
+    else if(st.kind === "final" && (Number(st.remainingCoeff) || 1) > 1) pendingOp = "÷ " + st.remainingCoeff;
+    const line = st.equation;
+    if(line && line !== lastLine){
+      lineIndex += 1;
+      // la ligne de décomposition (hatchV) n'est pas le résultat d'une opération
+      if(lineIndex > 0) ops[lineIndex - 1] = (st.kind === "hatchV") ? null : pendingOp;
+      if(st.kind !== "hatchV") pendingOp = null;
+      lastLine = line;
+    }
+  }
+  return ops;
+}
+
+/* ---- Flèches d'opération (− b, − 2, ÷ 3) : une seule fabrique pour l'écran et
+   l'impression. `api` = {el, text} : les fabriques d'éléments SVG de l'appelant
+   (el/text à l'écran, tEl/tText dans la carte imprimée). Les tailles (renflement,
+   trait, pointe) suivent la police de l'étiquette : 26 / 3,5 / 10 pour 29 à l'écran. */
+const EQ_OP_ARROW_COLOR = "#b45309";
+
+function drawOperationArrow(targetGroup, api, x, y1, y2, dir, label, opts = {}){
+  const mkEl = (api && api.el) || el;
+  const mkText = (api && api.text) || text;
+  const col = opts.color || EQ_OP_ARROW_COLOR;
+  const labelFs = Math.max(10, Math.round(Number(opts.labelFontSize) || 29));
+  const bulge = Math.round(labelFs * 0.9);
+  const sw = String(Math.round(labelFs * 1.2) / 10);
+  const ah = Math.round(labelFs * 0.345);
+  targetGroup.appendChild(mkEl("path", {
+    d: `M ${x} ${y1} Q ${x + dir * bulge} ${(y1 + y2) / 2} ${x} ${y2}`,
+    fill: "none", stroke: col, "stroke-width": sw, "stroke-linecap": "round"
+  }));
+  // Pointe alignée sur la tangente d'arrivée de la courbe (qui vient du côté
+  // du renflement), sinon elle paraît décalée par rapport au bout du trait.
+  const tx = x - (x + dir * bulge);
+  const ty = y2 - (y1 + y2) / 2;
+  const tl = Math.hypot(tx, ty) || 1;
+  const ux = tx / tl, uy = ty / tl;      // direction d'arrivée
+  const px = -uy, py = ux;               // perpendiculaire
+  const bx = x - ux * ah, by = y2 - uy * ah;
+  targetGroup.appendChild(mkEl("path", {
+    d: `M ${bx + px * ah * 0.7} ${by + py * ah * 0.7} L ${x} ${y2} L ${bx - px * ah * 0.7} ${by - py * ah * 0.7}`,
+    fill: "none", stroke: col, "stroke-width": sw, "stroke-linecap": "round", "stroke-linejoin": "round"
+  }));
+  if(label){
+    targetGroup.appendChild(mkText(x + dir * (bulge + 6), (y1 + y2) / 2 + labelFs * 0.36, label, {
+      "text-anchor": dir < 0 ? "end" : "start",
+      "font-size": String(labelFs), "font-weight": "800", "fill": col
+    }));
+  }
+}
+
+/* Flèches dans les marges d'un bloc de lignes alignées sur le signe égal :
+   ops[i] (s'il est renseigné) relie la ligne i à la ligne i + 1, des deux côtés.
+   geom : centerX, startY (ordonnée de la 1re ligne), gap, fontSize, eqGap (écart
+   des membres au signe égal), middleBaseline (lignes centrées verticalement, cas de
+   l'impression ; sinon lignes posées sur leur ligne de base, comme à l'écran). */
+function drawOperationArrowsForLines(targetGroup, api, lines, ops, geom = {}){
+  if(!Array.isArray(ops) || !ops.some(Boolean)) return;
+  const centerX = Number(geom.centerX) || 800;
+  const startY = Number(geom.startY) || 0;
+  const gap = Number(geom.gap) || 64;
+  const fontSize = Number(geom.fontSize) || 46;
+  const eqGap = Number(geom.eqGap) || 30;
+  const margin = Number(geom.margin) || 62;
+  const centerDy = geom.middleBaseline ? 0 : -fontSize * 0.34;
+  const labelFs = Math.round(Number(geom.labelFontSize) || fontSize * 0.62);
+  const estimate = (str) => estimatePrintMathTextWidth(String(str == null ? "" : str), fontSize);
+  let halfW = 0;
+  (lines || []).forEach(line => {
+    const raw = String(line == null ? "" : line);
+    const k = raw.indexOf("=");
+    const lhs = k >= 0 ? raw.slice(0, k).trim() : raw;
+    const rhs = k >= 0 ? raw.slice(k + 1).trim() : "";
+    halfW = Math.max(halfW, estimate(lhs) + eqGap, estimate(rhs) + eqGap);
+  });
+  const xL = centerX - halfW - margin;
+  const xR = centerX + halfW + margin;
+  ops.forEach((op, i)=>{
+    if(!op) return;
+    // du centre optique de la ligne i à celui de la ligne i + 1
+    const y1 = startY + i * gap + centerDy;
+    const y2 = startY + (i + 1) * gap + centerDy;
+    drawOperationArrow(targetGroup, api, xL, y1, y2, -1, op, {labelFontSize: labelFs, color: geom.color});
+    drawOperationArrow(targetGroup, api, xR, y1, y2, 1, op, {labelFontSize: labelFs, color: geom.color});
+  });
+}
+
+function drawEquationStepOperationArrows(targetGroup, eq, revealState, varChar, lines, startY, gap, fontSize){
+  const ops = getEquationStepLineOperations(eq, revealState, varChar);
+  drawOperationArrowsForLines(targetGroup, {el, text}, lines, ops, {centerX: 800, startY, gap, fontSize, eqGap: 30});
+}
+
+/* Correction imprimée du mode Équation : opérations entre les lignes de la colonne
+   (qui n'a pas de ligne de décomposition). On relit les états du pas à pas, qui font
+   exactement les mêmes opérations, et on n'attribue une flèche qu'aux transitions
+   retrouvées mot pour mot entre deux lignes consécutives de la colonne. */
+function getEquationSolveLineOperations(eq, lines, varChar = xChar){
+  const states = getEquationStepStates(eq, varChar);
+  const transitions = [];
+  let lastLine = null;
+  let pendingOp = null;
+  states.forEach(st => {
+    if(!st) return;
+    if(st.kind === "hatchX") pendingOp = "− " + coeffXLabel(st.commonX || 1, varChar);
+    else if(st.kind === "hatchV") pendingOp = "− " + (st.commonV || 0);
+    else if(st.kind === "share") pendingOp = "÷ " + (st.groupCount || 1);
+    else if(st.kind === "final" && (Number(st.remainingCoeff) || 1) > 1) pendingOp = "÷ " + st.remainingCoeff;
+    const line = st.equation;
+    if(!line || st.kind === "hatchV" || line === lastLine) return;
+    if(lastLine !== null && pendingOp) transitions.push({from:lastLine, to:line, op:pendingOp});
+    lastLine = line;
+    pendingOp = null;
+  });
+  const safeLines = Array.isArray(lines) ? lines.map(l => String(l == null ? "" : l)) : [];
+  const ops = [];
+  for(let i=0;i<safeLines.length-1;i++){
+    const t = transitions.find(tr => tr.from === safeLines[i] && tr.to === safeLines[i+1]);
+    ops.push(t ? t.op : null);
+  }
+  return ops;
+}
+
+/* Correction imprimée du pas à pas : quand une vignette fait apparaître une nouvelle
+   ligne par une opération (« Je garde ce qui reste », « Je divise »), on montre la ligne
+   précédente au-dessus de la nouvelle avec la flèche entre les deux. Renvoie
+   {lines:[avant, après], op} ou null (une seule ligne dans la vignette). */
+function getEquationStepPrintArrowLines(eq, revealState, varChar = xChar){
+  const states = getEquationStepStates(eq, varChar);
+  const k = Math.round(Number(revealState) || 0);
+  if(k < 2 || k > states.length) return null;
+  const st = states[k - 1];
+  const prev = states[k - 2];
+  if(!st || !prev) return null;
+  if(!(st.kind === "afterX" || st.kind === "afterV" || st.kind === "final")) return null;
+  if(!st.equation || st.equation === prev.equation) return null;
+  const lines = getEquationStepVisibleLines(eq, k, varChar);
+  const ops = getEquationStepLineOperations(eq, k, varChar);
+  if(lines.length < 2) return null;
+  const op = ops[lines.length - 2];
+  if(!op) return null;
+  return { lines: [lines[lines.length - 2], lines[lines.length - 1]], op };
+}
+
+/* Étape « groupes » : chaque plateau est partagé en n cases égales séparées par des
+   pointillés bleus (une rangée jusqu'à 4 cases, deux rangées au-delà) ; chaque tache,
+   chaque jeton ou paquet de jetons occupe le centre de sa case, et les cases de même
+   rang se font face d'un plateau à l'autre. C'est le geste de la classe : on range,
+   puis on divise le plateau en n parts et on en garde une. */
+function getEqStepGroupCells(tray, n){
+  const count = Math.max(1, Math.round(Number(n) || 1));
+  // Les parts doivent être ÉGALES : jusqu'à 5, une seule rangée de colonnes égales
+  // (les taches rapetissent un peu à 5) ; 6 = deux rangées de 3.
+  const rows = count >= 6 ? 2 : 1;
+  const rowCounts = rows === 1 ? [count] : [Math.ceil(count / 2), Math.floor(count / 2)];
+  const inset = 6;
+  const x0 = (Number(tray && tray.x) || 0) + inset;
+  const y0 = (Number(tray && tray.y) || 0) + inset;
+  const w = Math.max(1, (Number(tray && tray.w) || 0) - 2 * inset);
+  const h = Math.max(1, (Number(tray && tray.h) || 0) - 2 * inset);
+  const cellH = h / rows;
+  const centers = [];
+  rowCounts.forEach((cols, row) => {
+    const cellW = w / Math.max(1, cols);
+    for(let col=0; col<cols; col++){
+      centers.push({cx: x0 + cellW * (col + 0.5), cy: y0 + cellH * (row + 0.5), cellW, cellH});
+    }
+  });
+  return {rows, rowCounts, x0, y0, w, h, cellH, centers};
+}
+
+function drawEqStepGroupZones(targetGroup, api, tray, n){
+  const mkEl = (api && api.el) || el;
+  const g = getEqStepGroupCells(tray, n);
+  if(g.centers.length <= 1) return;
+  const attrs = {fill:"none", stroke:"#2563eb", "stroke-width":"3.5", "stroke-dasharray":"12 8", "stroke-linecap":"round"};
+  g.rowCounts.forEach((cols, row) => {
+    const cellW = g.w / Math.max(1, cols);
+    const y1 = g.y0 + g.cellH * row + 12;
+    const y2 = g.y0 + g.cellH * (row + 1) - 12;
+    for(let c=1; c<cols; c++){
+      const x = g.x0 + cellW * c;
+      targetGroup.appendChild(mkEl("line", Object.assign({x1:x, y1, x2:x, y2}, attrs)));
+    }
+  });
+  for(let r=1; r<g.rows; r++){
+    const y = g.y0 + g.cellH * r;
+    targetGroup.appendChild(mkEl("line", Object.assign({x1:g.x0 + 12, y1:y, x2:g.x0 + g.w - 12, y2:y}, attrs)));
+  }
+}
+
+/* Tache posée au centre de sa case, réduite seulement si la case est plus étroite qu'elle. */
+function fitSplatInGroupCell(s, cell){
+  const rMax = Math.max(30, Math.min(cell.cellW / 2 - 12, cell.cellH / 2 - 12));
+  return {cx: cell.cx, cy: cell.cy, r: Math.min(Number(s && s.r) || 74, rMax)};
 }
 
 function drawEquationStepAid(targetGroup, card, revealState){
@@ -5765,25 +6047,10 @@ function drawEqUnitBeadList(targetGroup, pts, beadR, removed=false){
 
 function getEqUnitPacketCenter(tray, packetIndex, packetCount, beadR){
   if(!tray) return {cx:800, cy:560};
-  const n = Math.max(1, Math.round(Number(packetCount) || 1));
-  const i = clamp(Math.round(Number(packetIndex) || 0), 0, n - 1);
-  let rows = 1;
-  let cols = n;
-  if(n >= 5){ rows = 2; cols = Math.ceil(n / 2); }
-  const row = rows === 1 ? 0 : Math.floor(i / cols);
-  const col = rows === 1 ? i : (i % cols);
-  const countInRow = rows === 1 ? n : Math.min(cols, n - row * cols);
-  const marginX = Math.max(60, beadR * 5.0);
-  const xMin = tray.x + marginX;
-  const xMax = tray.x + tray.w - marginX;
-  const cx = countInRow <= 1 ? (tray.x + tray.w / 2) : xMin + (xMax - xMin) * ((col + 0.5) / countInRow);
-  const yMid = tray.y + tray.h * 0.54;
-  const rowGap = Math.max(86, beadR * 6.0);
-  const cy = rows === 1 ? yMid : yMid - rowGap / 2 + row * rowGap;
-  return {
-    cx: clamp(cx, tray.x + beadR + 16, tray.x + tray.w - beadR - 16),
-    cy: clamp(cy, tray.y + beadR + 16, tray.y + tray.h - beadR - 16)
-  };
+  // Les paquets occupent les cases de l'étape « groupes » : mêmes cases que les taches en face.
+  const cells = getEqStepGroupCells(tray, packetCount);
+  const c = cells.centers[clamp(Math.round(Number(packetIndex) || 0), 0, cells.centers.length - 1)];
+  return {cx: c.cx, cy: c.cy};
 }
 
 function getEqUnitPacketPositions(tray, packetIndex, packetCount, beadCount, beadR){
@@ -5849,7 +6116,10 @@ function renderCardEquation(card, revealState, useTokens){
   // l'équation apparaît au-dessus, mais le support visuel ne disparaît pas à la fin.
   const hasSimpleEquationOnly = false;
   const useEqStepSchemaLayout = ((isEquationStepFamily(card) || isSimpleEquationSchemaView) && getEquationStepView() === "schema");
-  const schemaGeometry = useEqStepSchemaLayout ? buildEquationStepSchemaColumnGeometry(card) : null;
+  const useEqStepEquationViewLayout = (isEquationStepFamily(card) && getEquationStepView() !== "schema");
+  const schemaGeometry = useEqStepSchemaLayout
+    ? buildEquationStepSchemaColumnGeometry(card)
+    : (useEqStepEquationViewLayout ? buildEquationStepEquationViewGeometry(card) : null);
   const activeTrays = schemaGeometry ? schemaGeometry.trays : trays;
   const activePos = schemaGeometry ? schemaGeometry.pos : pos;
   const hasEquationStepAid = (isEquationStepFamily(card) && (revealState > 0 || useEqStepSchemaLayout));
@@ -5910,7 +6180,7 @@ function renderCardEquation(card, revealState, useTokens){
     const isEqSignedStep = (card.family === "EQPMSTEP" && revealState > 0);
     const stepState = isEqStep ? getEquationStepState(eq, revealState, varChar, {includeVerify:true}) : null;
     const signedStepState = isEqSignedStep ? getEquationSignedStepState(eq, revealState, varChar) : null;
-    const stepDisplayParts = (stepState && stepState.kind === "final" && stepState.final)
+    const stepDisplayParts = (stepState && ((stepState.kind === "final" && stepState.final) || (stepState.kind === "share" && stepState.share)))
       ? getEquationStepSchemaParts(eq, stepState, varChar)
       : null;
     const stepParts = stepState
@@ -6180,11 +6450,13 @@ function renderCardEquation(card, revealState, useTokens){
       }
     }
 
-    function drawUnitHiddenForPart(part, splatRef){
+    function drawUnitHiddenForPart(part, splatRef, shift){
       if(!unitLayout || !part) return;
       const rawPosIndex = Number(part && part.posIndex);
       const posIndex = Number.isFinite(rawPosIndex) ? Math.max(0, Math.round(rawPosIndex)) : 0;
-      const pts = unitLayout.hiddenByTaskPositions[posIndex] || [];
+      let pts = unitLayout.hiddenByTaskPositions[posIndex] || [];
+      // Tache déplacée dans sa case (étape « groupes ») : ses jetons la suivent.
+      if(shift) pts = pts.map(p => ({cx: p.cx + shift.dx, cy: p.cy + shift.dy}));
       drawEqUnitBeadList(layer, pts, unitBeadR, false);
     }
 
@@ -6201,7 +6473,7 @@ function renderCardEquation(card, revealState, useTokens){
           const packetIndex = clamp(Math.round(Number(part.alignWithHiddenIndex) || idx), 0, packetCount - 1);
           const n = Math.max(0, Math.round(Number(part.value)||0));
           const pts = getEqUnitPacketPositions(tray, packetIndex, packetCount, n, unitBeadR);
-          drawEqUnitBeadList(layer, pts, unitBeadR, !!part.removed);
+          drawEqUnitBeadList(layer, pts, unitBeadR, !!part.removed || (!!opts.keepOnlyOne && packetIndex > 0));
         });
         const regularParts = allParts.filter(p => !Number.isFinite(Number(p.alignWithHiddenIndex)));
         let regularCursor = 0;
@@ -6254,6 +6526,13 @@ function renderCardEquation(card, revealState, useTokens){
       const hiddenParts = stepParts.filter(p => p && p.hidden);
       const visibleParts = stepParts.filter(p => p && !p.hidden && p.kind !== "empty");
       const currentKind = stepState ? stepState.kind : "";
+      // Étape « groupes » et division : le plateau est partagé en n cases (pointillés),
+      // une tache / un jeton (ou paquet) par case, les cases de même rang face à face.
+      const groupCount = Math.max(1, Math.round(Number(stepState && stepState.remainingCoeff) || 1));
+      const isGroupStep = (currentKind === "share") || (currentKind === "final" && groupCount > 1);
+      const groupTray = sideName === "left" ? activeTrays.left : activeTrays.right;
+      const groupCells = (isGroupStep && groupTray) ? getEqStepGroupCells(groupTray, groupCount) : null;
+      if(groupCells) drawEqStepGroupZones(layer, {el}, groupTray, groupCount);
 
       function drawHiddenRevealedBead(p, val, splatRef = null){
         if(useUnitBeads){
@@ -6319,11 +6598,16 @@ function renderCardEquation(card, revealState, useTokens){
       hiddenParts.forEach((part, idx)=>{
         const rawPosIndex = Number(part && part.posIndex);
         const posIndex = Number.isFinite(rawPosIndex) ? Math.max(0, Math.round(rawPosIndex)) : idx;
-        const s = side.splats?.[posIndex] || side.splats?.[idx] || {cx:820, cy:610, r:74};
-        const pHidden = side.posH?.[posIndex] || side.posH?.[idx] || {cx:s.cx, cy:s.cy};
+        const s0 = side.splats?.[posIndex] || side.splats?.[idx] || {cx:820, cy:610, r:74};
+        // Étape « groupes » et division : la tache va au centre de sa case.
+        const cell = groupCells ? groupCells.centers[idx] : null;
+        const s = cell ? fitSplatInGroupCell(s0, cell) : s0;
+        const pHidden = cell ? {cx:s.cx, cy:s.cy} : (side.posH?.[posIndex] || side.posH?.[idx] || {cx:s.cx, cy:s.cy});
+        const unitShift = cell ? {dx: s.cx - s0.cx, dy: s.cy - s0.cy} : null;
         const d = blobPath(s.cx, s.cy, s.r);
 
-        const isRemoved = !!part.removed;
+        const keepOnlyOne = (currentKind === "final" && groupCount > 1);
+        const isRemoved = !!part.removed || (keepOnlyOne && idx > 0);
         const isFinalReveal = (currentKind === "final" && !isRemoved);
 
         // E bis — pas à pas :
@@ -6331,7 +6615,7 @@ function renderCardEquation(card, revealState, useTokens){
         // - les taches encore inconnues restent noires ;
         // - à la dernière étape, la tache restante devient claire et laisse apparaître sa valeur.
         if(isFinalReveal){
-          if(useUnitBeads) drawUnitHiddenForPart(part, s);
+          if(useUnitBeads) drawUnitHiddenForPart(part, s, unitShift);
           else drawHiddenRevealedBead(pHidden, part.value, s);
         }
 
@@ -6353,12 +6637,21 @@ function renderCardEquation(card, revealState, useTokens){
       });
 
       if(useUnitBeads){
-        const packetView = (currentKind === "final") && visibleParts.filter(p => Number.isFinite(Number(p && p.alignWithHiddenIndex))).length > 1;
-        drawUnitVisibleParts(visibleParts, {packetView});
+        // Jetons unités : dès l'étape « groupes » les jetons se rangent en n paquets, un
+        // par case ; à la division on ne garde que le premier paquet, les autres sont
+        // hachurés — même rythme que les taches.
+        const alignedCount = visibleParts.filter(p => Number.isFinite(Number(p && p.alignWithHiddenIndex))).length;
+        const packetView = (currentKind === "final" || currentKind === "share") && alignedCount > 1;
+        const keepOnlyOne = (currentKind === "final" && groupCount > 1);
+        drawUnitVisibleParts(visibleParts, {packetView, keepOnlyOne});
       }else{
+        const keepOnlyOne = (currentKind === "final" && groupCount > 1) && visibleParts.length > 1;
         visibleParts.forEach((part, idx)=>{
-          const p = resolveStepVisiblePosition(part, idx, visibleParts.length);
-          drawVisibleBead(p, part.value, !!part.removed);
+          // Jetons égaux de l'étape « groupes » : un par case, au centre de la case.
+          const aligned = Number.isFinite(Number(part && part.alignWithHiddenIndex));
+          const cell = (groupCells && aligned) ? groupCells.centers[idx] : null;
+          const p = cell ? {cx: cell.cx, cy: cell.cy} : resolveStepVisiblePosition(part, idx, visibleParts.length);
+          drawVisibleBead(p, part.value, !!part.removed || (keepOnlyOne && idx > 0));
         });
       }
 
@@ -6487,7 +6780,7 @@ function renderCardEquation(card, revealState, useTokens){
         layer,
         eqStepActionText(card, revealState, {useTableLabels:false}),
         activeTrays.midX || 800,
-        activeTrays.left.y + activeTrays.left.h + 74,
+        activeTrays.left.y + activeTrays.left.h + 52,
         {fontSize:36, fill:"rgba(0,0,0,0.78)", weight:"900"}
       );
     }
@@ -6697,7 +6990,7 @@ function renderCardEquationStepPrintScene(targetGroup, card, revealState, opts =
   // 3x = 33, la vignette de division montre 3 parts 11 / 11 / 11 sur le plateau,
   // et pas une seule bille 33. La vérification reste la situation initiale
   // avec les taches révélées.
-  const stepDisplayParts = (stepState && stepState.kind === "final" && stepState.final)
+  const stepDisplayParts = (stepState && ((stepState.kind === "final" && stepState.final) || (stepState.kind === "share" && stepState.share)))
     ? getEquationStepSchemaParts(eq, stepState, varChar)
     : null;
 
@@ -6773,11 +7066,13 @@ function renderCardEquationStepPrintScene(targetGroup, card, revealState, opts =
     const unitLayout = useUnitBeads ? getEqUnitBeadLayout(card, sideName, side, metaSide, sideName === "left" ? trays.left : trays.right) : null;
     const unitBeadR = unitLayout ? unitLayout.beadR : 12;
 
-    function drawUnitHiddenForPart(part){
+    function drawUnitHiddenForPart(part, shift){
       if(!unitLayout || !part) return;
       const rawPosIndex = Number(part && part.posIndex);
       const posIndex = Number.isFinite(rawPosIndex) ? Math.max(0, Math.round(rawPosIndex)) : 0;
-      drawEqUnitBeadListPrint(unitLayout.hiddenByTaskPositions[posIndex] || [], unitBeadR, false);
+      let pts = unitLayout.hiddenByTaskPositions[posIndex] || [];
+      if(shift) pts = pts.map(p => ({cx: p.cx + shift.dx, cy: p.cy + shift.dy}));
+      drawEqUnitBeadListPrint(pts, unitBeadR, false);
     }
 
     function drawUnitVisibleParts(parts, opts = {}){
@@ -6793,7 +7088,7 @@ function renderCardEquationStepPrintScene(targetGroup, card, revealState, opts =
           const packetIndex = clamp(Math.round(Number(part.alignWithHiddenIndex) || idx), 0, packetCount - 1);
           const n = Math.max(0, Math.round(Number(part.value)||0));
           const pts = getEqUnitPacketPositions(tray, packetIndex, packetCount, n, unitBeadR);
-          drawEqUnitBeadListPrint(pts, unitBeadR, !!part.removed);
+          drawEqUnitBeadListPrint(pts, unitBeadR, !!part.removed || (!!opts.keepOnlyOne && packetIndex > 0));
         });
         const regularParts = allParts.filter(p => !Number.isFinite(Number(p.alignWithHiddenIndex)));
         let regularCursor = 0;
@@ -6835,6 +7130,13 @@ function renderCardEquationStepPrintScene(targetGroup, card, revealState, opts =
       const hiddenParts = (stepParts || []).filter(p => p && p.hidden);
       const visibleParts = (stepParts || []).filter(p => p && !p.hidden && p.kind !== "empty");
       const currentKind = stepState.kind || "";
+      // Étape « groupes » et division : plateau partagé en n cases, une tache / un jeton
+      // (ou paquet) par case, les cases de même rang face à face (comme à l'écran).
+      const groupCount = Math.max(1, Math.round(Number(stepState.remainingCoeff) || 1));
+      const isGroupStep = (currentKind === "share") || (currentKind === "final" && groupCount > 1);
+      const groupTray = sideName === "left" ? trays.left : trays.right;
+      const groupCells = (isGroupStep && groupTray) ? getEqStepGroupCells(groupTray, groupCount) : null;
+      if(groupCells) drawEqStepGroupZones(targetGroup, {el}, groupTray, groupCount);
 
       function fallbackPrintVisiblePosition(idx, count){
         const tray = sideName === "left" ? trays.left : trays.right;
@@ -6924,14 +7226,18 @@ function renderCardEquationStepPrintScene(targetGroup, card, revealState, opts =
       hiddenParts.forEach((part, idx)=>{
         const rawPosIndex = Number(part && part.posIndex);
         const posIndex = Number.isFinite(rawPosIndex) ? Math.max(0, Math.round(rawPosIndex)) : idx;
-        const s = side.splats?.[posIndex] || side.splats?.[idx] || {cx:820, cy:610, r:74};
-        const pHidden = side.posH?.[posIndex] || side.posH?.[idx] || {cx:s.cx, cy:s.cy};
+        const s0 = side.splats?.[posIndex] || side.splats?.[idx] || {cx:820, cy:610, r:74};
+        const cell = groupCells ? groupCells.centers[idx] : null;
+        const s = cell ? fitSplatInGroupCell(s0, cell) : s0;
+        const pHidden = cell ? {cx:s.cx, cy:s.cy} : (side.posH?.[posIndex] || side.posH?.[idx] || {cx:s.cx, cy:s.cy});
+        const unitShift = cell ? {dx: s.cx - s0.cx, dy: s.cy - s0.cy} : null;
         const d = blobPath(s.cx, s.cy, s.r);
-        const isRemoved = !!part.removed;
+        const keepOnlyOne = (currentKind === "final" && groupCount > 1);
+        const isRemoved = !!part.removed || (keepOnlyOne && idx > 0);
         const isFinalReveal = (currentKind === "final" && !isRemoved);
 
         if(isFinalReveal){
-          if(useUnitBeads) drawUnitHiddenForPart(part);
+          if(useUnitBeads) drawUnitHiddenForPart(part, unitShift);
           else drawHiddenRevealedBead(pHidden, part.value, beadR);
         }
 
@@ -6945,12 +7251,19 @@ function renderCardEquationStepPrintScene(targetGroup, card, revealState, opts =
       });
 
       if(useUnitBeads){
-        const packetView = (currentKind === "final") && visibleParts.filter(p => Number.isFinite(Number(p && p.alignWithHiddenIndex))).length > 1;
-        drawUnitVisibleParts(visibleParts, {packetView});
+        // Même logique qu'à l'écran : paquets dès l'étape « groupes », un par case ;
+        // un seul paquet gardé à la division.
+        const alignedCount = visibleParts.filter(p => Number.isFinite(Number(p && p.alignWithHiddenIndex))).length;
+        const packetView = (currentKind === "final" || currentKind === "share") && alignedCount > 1;
+        const keepOnlyOne = (currentKind === "final" && groupCount > 1);
+        drawUnitVisibleParts(visibleParts, {packetView, keepOnlyOne});
       }else{
+        const keepOnlyOne = (currentKind === "final" && groupCount > 1) && visibleParts.length > 1;
         visibleParts.forEach((part, idx)=>{
-          const p = resolvePrintStepVisiblePosition(part, idx, visibleParts.length);
-          drawVisibleBead(p, part.value, beadR, !!part.removed);
+          const aligned = Number.isFinite(Number(part && part.alignWithHiddenIndex));
+          const cell = (groupCells && aligned) ? groupCells.centers[idx] : null;
+          const p = cell ? {cx: cell.cx, cy: cell.cy} : resolvePrintStepVisiblePosition(part, idx, visibleParts.length);
+          drawVisibleBead(p, part.value, beadR, !!part.removed || (keepOnlyOne && idx > 0));
         });
       }
       return;
@@ -6988,8 +7301,38 @@ function renderCardEquationStepPrintScene(targetGroup, card, revealState, opts =
       }
     }else{
       const lines = printEquationStepLinesForState(eq, stepState, varChar);
-      if(lines.length){
-        const isVerify = !!(stepState && stepState.verify);
+      const isVerifyState = !!(stepState && stepState.verify);
+      // Vignettes « Je garde ce qui reste » et « Je divise » : la ligne précédente
+      // au-dessus de la nouvelle et la flèche d'opération entre les deux, comme à
+      // l'écran ; les autres vignettes gardent une seule ligne.
+      const arrowInfo = (compactStepPrint && !isVerifyState)
+        ? getEquationStepPrintArrowLines(eq, revealState, varChar)
+        : null;
+      if(arrowInfo){
+        const twoLines = arrowInfo.lines;
+        const fitOpts = {minFontSize: 56, maxWidth: 1100, maxSideWidth: 470, eqGap: 44, eqGapRatio: 0.5};
+        const fitted = fitPrintEquationFont(twoLines, 96, fitOpts);
+        const lineGap = Math.round(fitted.fontSize * 1.18);
+        const centerY = getPrintTopBandCenterY(trays, {compactStepPrint, isVerify:false, lineCount:2, gap:lineGap});
+        drawPrintEquationLinesLikeProjection(targetGroup, twoLines, Object.assign({
+          text:(x,y,t,a)=>text(x,y,t,a),
+          centerX: trays.midX || 800,
+          centerY,
+          fontSize: 96,
+          equalFontSize: fitted.fontSize,
+          gap: lineGap,
+          fill:"#000"
+        }, fitOpts));
+        drawOperationArrowsForLines(targetGroup, {el, text}, twoLines, [arrowInfo.op], {
+          centerX: trays.midX || 800,
+          startY: centerY - lineGap / 2,
+          gap: lineGap,
+          fontSize: fitted.fontSize,
+          eqGap: fitted.eqGap,
+          middleBaseline: true
+        });
+      }else if(lines.length){
+        const isVerify = isVerifyState;
         const compactFont = isVerify ? (compactStepPrint ? 92 : 42) : (compactStepPrint ? 142 : 60);
         const compactGap = isVerify ? (compactStepPrint ? 102 : 48) : 0;
         const compactCenterY = getPrintTopBandCenterY(trays, {
@@ -7655,7 +7998,9 @@ function renderCardEquationStepPrint(targetSvg, card, printMode, tEl, tText, use
     const col = i % cols;
     const x = marginX + col * (colW + gap);
     const y = top + row * (rowH + gap);
-    const action = eqStepActionText(card, i+1, {useTableLabels:isSchema});
+    // En deux colonnes (plus de 4 étapes), la consigne « Je range en n groupes égaux
+    // de chaque côté. » était réduite à la taille plancher : on prend sa forme courte.
+    const action = eqStepActionText(card, i+1, {useTableLabels:isSchema, compact: cols === 2});
     const label = "Étape " + (i+1) + (action ? " : " + action : "");
     drawFramedStep(i+1, x, y, colW, rowH, label);
   }
@@ -8141,6 +8486,15 @@ function renderCardEquationPrint(targetSvg, card, printMode, tEl, tText, useToke
       fontFamily: "'Times New Roman', Times, serif",
       fontStyle: "italic"
     });
+    // Flèches d'opération dans les marges de la colonne (− b, − 2, ÷ 3), comme à
+    // l'écran du pas à pas : la colonne fait 1240 de large, la place existe.
+    drawOperationArrowsForLines(
+      gEq,
+      {el:(name, attrs)=>tEl(name, attrs), text:(x,y,t,a)=>tText(x,y,t,a)},
+      lines,
+      getEquationSolveLineOperations(eq, lines, varChar),
+      {centerX: 800, startY: currentY, gap: eqGap, fontSize: eqFontSize, eqGap: 36}
+    );
   }
 
   targetSvg.appendChild(gEq);
@@ -8542,6 +8896,9 @@ if(btnEqStepViewSchemaEl){
   });
 }
 document.getElementById("btnFullscreen").addEventListener("click", toggleFullscreen);
+document.getElementById("fsPrev").addEventListener("click", goPreviousStepOrCard);
+document.getElementById("fsNext").addEventListener("click", goNextStepOrCard);
+document.getElementById("fsExit").addEventListener("click", toggleFullscreen);
 window.addEventListener("keydown",(e)=>{
   const _ae = document.activeElement;
   const _tag = _ae && _ae.tagName ? String(_ae.tagName).toLowerCase() : "";
