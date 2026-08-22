@@ -25,7 +25,9 @@ test("la scène mobile donne tout l’espace libre à la vraie zone d’équatio
 
 test("les plateaux mobiles sont plus hauts et occupent le SVG disponible", () => {
   assert.match(html, /const TOKEN_R_PHONE = 72;/);
-  assert.match(html, /const viewHeight = isPhoneLayout\(\) \? 1280 : 820;\s*svg\.setAttribute\("viewBox", `0 0 1600 \$\{viewHeight\}`\)/);
+  // En réception (équation reçue dans l'adresse), la hauteur suit le cadre réel ;
+  // en usage libre, la composition téléphone garde ses 1280 unités.
+  assert.match(html, /const viewHeight = isMobileImportLayout\(\) \? mobileSvgViewHeight\(\) : \(isPhoneLayout\(\) \? 1280 : 820\);\s*svg\.setAttribute\("viewBox", `0 0 1600 \$\{viewHeight\}`\)/);
   assert.match(html, /function getTrayForSide\(side\)\{\s*if\(isPhoneLayout\(\)\)\{[\s\S]*\{x:24, y:34, w:736, h:1212\}[\s\S]*\{x:840, y:34, w:736, h:1212\}/);
   assert.match(html, /return side === "left"\s*\? \{x:40, y:74, w:720, h:650\}\s*: \{x:840, y:74, w:720, h:650\}/);
 });
@@ -34,7 +36,7 @@ test("les taches naissent en haut et les jetons dans le tiers bas au téléphone
   assert.match(html, /function tokenPlacementAreaForTray\(tray\)[\s\S]*y:tray\.y\+tray\.h\*\.62[\s\S]*h:tray\.h\*\.32/);
   assert.match(html, /const splatArea = isPhoneLayout\(\)[\s\S]*y:tray\.y\+54[\s\S]*h:tray\.h\*\.55/);
   assert.match(html, /if\(!isPhoneLayout\(\)\) return \[3, n-3\];[\s\S]*return \[3,3,n-6\];/);
-  assert.match(html, /function randomTokenPositionInTray\(tray, sideName, visible, placed\)\{\s*const area = tokenPlacementAreaForTray\(tray\);/);
+  assert.match(html, /function randomTokenPositionInTray\(tray, sideName, visible, placed, token\)\{\s*const area = tokenPlacementAreaForTray\(tray\);/);
   assert.match(html, /function clampTokenPosition\(tray, cx, cy, r=40, avoid=true, side=null\)\{\s*const area = tokenAreaForTray\(tray\);/);
   assert.match(html, /function avoidSplatsOnDrop[\s\S]*function tokenOverlapsSplats[\s\S]*function separateTokenPositions/);
 });

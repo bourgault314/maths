@@ -160,18 +160,30 @@ test("ÉquaBarre et ÉquaSplat restent publics, leurs récepteurs import restent
   }
 
   const questionEngine = fs.readFileSync(path.join(root, "auto/scripts/02-question-engine.js"), "utf8");
-  // ÉquaBarre reçoit désormais directement les équations : l'ancienne page
-  // equabarre_import_splat.html n'est plus qu'une redirection et plus personne
-  // ne doit pointer vers elle.
+  // ÉquaBarre et ÉquaSplat reçoivent désormais directement les équations : les
+  // anciennes pages *_import_splat.html ne sont plus que des redirections et
+  // plus personne ne doit pointer vers elles.
   assert.match(questionEngine, /outils\/equabarre\.html/);
   assert.doesNotMatch(questionEngine, /equabarre_import_splat\.html/);
-  assert.match(questionEngine, /equasplat_import_splat\.html/);
+  assert.match(questionEngine, /const EQUASPLAT_IMPORT_URL='https:\/\/mathsgo\.re\/outils\/equasplat\.html';/);
+  assert.doesNotMatch(questionEngine, /equasplat_import_splat\.html/);
+  // Les Automatismes envoient la charge ÉquaSplat dans ?data= : la page doit
+  // savoir la lire là (et pas seulement dans l'ancre).
+  assert.match(questionEngine, /EQUASPLAT_IMPORT_URL\+'\?data='\+encodeURIComponent\(JSON\.stringify\(payload\)\)/);
+  const equasplat = fs.readFileSync(path.join(root, "outils/equasplat.html"), "utf8");
+  assert.match(equasplat, /if\(search\.has\("data"\)\) return search\.get\("data"\);/);
+  assert.match(equasplat, /if\(hashParams\.has\("data"\)\) return hashParams\.get\("data"\);/);
 
-  // La redirection doit conserver les données transmises dans l'adresse.
-  const redirectPage = fs.readFileSync(path.join(root, "outils/equabarre_import_splat.html"), "utf8");
-  assert.match(redirectPage, /equabarre\.html/);
-  assert.match(redirectPage, /location\.search/);
-  assert.match(redirectPage, /location\.hash/);
+  // Les redirections doivent conserver les données transmises dans l'adresse.
+  for (const [redirectPath, target] of [
+    ["outils/equabarre_import_splat.html", /equabarre\.html/],
+    ["outils/equasplat_import_splat.html", /equasplat\.html/]
+  ]) {
+    const redirectPage = fs.readFileSync(path.join(root, redirectPath), "utf8");
+    assert.match(redirectPage, target, redirectPath);
+    assert.match(redirectPage, /location\.search/, redirectPath);
+    assert.match(redirectPage, /location\.hash/, redirectPath);
+  }
 
   // Les deux autres émetteurs sont des liens jumeaux du précédent : ils doivent
   // viser ÉquaBarre par la même adresse et lui envoyer la charge dans l'ancre.
@@ -192,6 +204,22 @@ test("ÉquaBarre et ÉquaSplat restent publics, leurs récepteurs import restent
       `${relativePath} doit transmettre la charge dans l'ancre #data=`
     );
   }
+
+  // Splat Équations envoie aussi ses équations à ÉquaSplat (mode billes compris) :
+  // même adresse directe, même ancre #data=.
+  const splatEquations = fs.readFileSync(path.join(root, "outils/splat_equations.html"), "utf8");
+  assert.ok(
+    /const EQUASPLAT_IMPORT_URL = "\.\/equasplat\.html";/.test(splatEquations),
+    "splat_equations.html doit viser ./equasplat.html"
+  );
+  assert.ok(
+    !/equasplat_import_splat\.html/.test(splatEquations),
+    "splat_equations.html ne doit plus mentionner equasplat_import_splat.html"
+  );
+  assert.ok(
+    /\$\{EQUASPLAT_IMPORT_URL\}#data=\$\{encodeEquabarPayload\(payload\)\}/.test(splatEquations),
+    "splat_equations.html doit transmettre la charge ÉquaSplat dans l'ancre #data="
+  );
 });
 
 test("le hub Gerbert ne relie que ses ressources publiées", () => {

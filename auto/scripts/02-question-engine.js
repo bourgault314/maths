@@ -927,7 +927,7 @@ function equationExpression(coefficient,constant){
 function equationEquality(leftCoefficient,leftConstant,rightCoefficient,rightConstant){
   return equationExpression(leftCoefficient,leftConstant)+' = '+equationExpression(rightCoefficient,rightConstant);
 }
-const EQUASPLAT_IMPORT_URL='https://mathsgo.re/outils/equasplat_import_splat.html';
+const EQUASPLAT_IMPORT_URL='https://mathsgo.re/outils/equasplat.html';
 const EQUABARRE_IMPORT_URL='https://mathsgo.re/outils/equabarre.html';
 function equabarreImportUrl(payload){
   return EQUABARRE_IMPORT_URL+'#data='+encodeURIComponent(JSON.stringify(payload));
