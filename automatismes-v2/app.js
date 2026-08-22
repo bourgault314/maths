@@ -526,7 +526,7 @@ function rendreMenuAccueil() {
                   data-action="choisir-niveau" data-value="${niveau}"
                   aria-pressed="${configurationMenu.niveau === niveau}"
                   ${niveau === "DNB" ? 'aria-label="DNB — révision de l’épreuve, sans calculatrice"' : ""}>
-                  <span class="level-label">${niveau}${niveau === "DNB" ? '<small>épreuve</small>' : ""}</span>
+                  <span class="level-label">${niveau}</span>
                   ${niveau === "DNB" ? rendreIconeCalculatriceBarree("dnb-level-icon") : ""}
                 </button>`).join("")}
               </div>

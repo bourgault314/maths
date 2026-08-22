@@ -2237,6 +2237,8 @@ it("propose le parcours DNB puis lance Au tableau sans saisie ni score", async (
   assert.match(application.innerHTML, /data-action="choisir-niveau" data-value="4e"/);
   assert.match(application.innerHTML, /data-action="choisir-niveau" data-value="3e"/);
   assert.match(application.innerHTML, /data-action="choisir-niveau" data-value="DNB"[\s\S]*?aria-pressed="true"/);
+  assert.match(application.innerHTML, /<span class="level-label">DNB<\/span>/);
+  assert.doesNotMatch(application.innerHTML, /<small>épreuve<\/small>/);
   assert.match(application.innerHTML, /Avec aide/);
   assert.match(application.innerHTML, /Sans aide/);
   assert.match(application.innerHTML, /id="modeLabel">Mode/);
