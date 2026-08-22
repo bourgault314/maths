@@ -1653,7 +1653,9 @@ function drawEquationStepEquabarSolveButton(targetGroup, card, x, y){
     x:0, y:0, width:122, height:46, rx:16,
     fill:"rgba(22,163,74,0.13)", stroke:"#16a34a", "stroke-width":3
   }));
-  btn.appendChild(text(61, 25, "Résoudre", {
+  // Le texte était posé à y = 25 dans un bouton de 46 de haut (centre 23) :
+  // 2 px trop bas, visible à l'œil face au bouton de la vue Équation.
+  btn.appendChild(text(61, 23, "Résoudre", {
     "text-anchor":"middle", "dominant-baseline":"central", "alignment-baseline":"central",
     "font-size":21, "font-weight":950, fill:"#166534"
   }));
@@ -3322,13 +3324,29 @@ function drawEquationSingaporeTable(targetGroup, opts){
       const targetW = hasMaxW ? maxWOpt : Math.max(w, m1.totalW, m2.totalW);
       let commonHiddenCellW = Math.max(m1.hiddenNeed || 0, m2.hiddenNeed || 0, minHiddenCellW);
       [m1, m2].forEach(m => {
-        if((m.hiddenCount || 0) > 0 && (m.visibleIndex || m.visibleIndex === 0)){
-          const fitHiddenW = (targetW - (m.visibleNeed || minVisibleCellW)) / m.hiddenCount;
-          if(Number.isFinite(fitHiddenW) && fitHiddenW > 0){
-            commonHiddenCellW = Math.min(commonHiddenCellW, fitHiddenW);
-          }
+        if((m.hiddenCount || 0) <= 0) return;
+        // Une ligne sans case visible (ex. « 2b » face à « b | 12 », ou « 4x » face à
+        // « x | 15 ») est entièrement remplie par ses cases inconnues : la largeur
+        // commune est donc exactement targetW / nombre de cases. Auparavant, le test
+        // « m.visibleIndex || m.visibleIndex === 0 » était vrai pour visibleIndex = -1
+        // (findIndex sans résultat) et retranchait une largeur visible minimale qui
+        // n'existait pas : la case inconnue de l'autre ligne devenait plus étroite
+        // que celles de la ligne pleine (564 contre 620 à l'impression, 160 contre
+        // 185 à l'écran).
+        if(m.visibleIndex < 0) return;
+        const fitHiddenW = (targetW - (m.visibleNeed || minVisibleCellW)) / m.hiddenCount;
+        if(Number.isFinite(fitHiddenW) && fitHiddenW > 0){
+          commonHiddenCellW = Math.min(commonHiddenCellW, fitHiddenW);
         }
       });
+      // La ligne pleine de cases inconnues impose la largeur commune : ses cases
+      // remplissent exactement targetW (c'est aussi ce que dessine buildCommonMetrics
+      // pour cette ligne). Sans cela, l'autre ligne gardait une largeur calculée sur
+      // baseW (700) alors que le tableau est étiré à maxW (740) : 175 contre 185.
+      const fullHiddenRow = [m1, m2].find(m => (m.hiddenCount || 0) > 0 && m.visibleIndex < 0);
+      if(fullHiddenRow){
+        commonHiddenCellW = targetW / fullHiddenRow.hiddenCount;
+      }
       commonHiddenCellW = Math.max(minHiddenCellW, commonHiddenCellW);
 
       function buildCommonMetrics(parts){
@@ -4602,7 +4620,9 @@ function makeEqStepGroupedParts(coeff, vis, xVal, varChar = xChar, opts = {}){
 function formatEqStepDecomposedSide(coeff, splitParts, varChar = xChar){
   const terms=[];
   const c=Math.max(0, Number(coeff)||0);
-  if(c>0) terms.push(c===1 ? varChar : String(c)+varChar);
+  // Passe par coeffXLabel : avec l'inconnue affichée « ? », on veut « 3 × ? »
+  // comme sur les autres lignes, et non « 3? ».
+  if(c>0) terms.push(coeffXLabel(c, varChar));
   (splitParts||[]).forEach(p=>{ const v=Math.max(0, Number(p && p.value)||0); if(v>0) terms.push(String(v)); });
   return terms.length ? terms.join(" + ") : "0";
 }
@@ -7641,6 +7661,21 @@ function renderCardEquationStepPrint(targetSvg, card, printMode, tEl, tText, use
   }
 }
 
+/* Impression, mode Équation.
+   Hauteurs de la colonne de tableaux de la correction : jusqu'à 4 tableaux
+   (initial, retrait des inconnues communes, retrait des jetons communs, division)
+   puis jusqu'à 4 lignes d'équation, le tout dans une carte de 2200 de haut sous
+   des plateaux qui finissent à 850. À 112 par ligne et 260 d'un tableau à l'autre,
+   la dernière ligne d'équation arrivait à y = 2122 : plus de place. On repart sous
+   les plateaux (900) avec des tableaux légèrement moins hauts (100 par ligne) et un
+   pas de 232 : 900 + 4 × 232 + 40 + 4 lignes ≈ 2150. Les largeurs ne changent pas. */
+const EQ_PRINT_TABLE_TOP_Y = 900;
+const EQ_PRINT_CORR_ROW_H = 100;
+const EQ_PRINT_CORR_FONT_SIZE = 88;
+const EQ_PRINT_CORR_PAD = 36;
+const EQ_PRINT_CORR_VAR_FONT_SIZE = 64;
+const EQ_PRINT_CORR_STRIDE = 232;
+
 function renderCardEquationPrint(targetSvg, card, printMode, tEl, tText, useTokens){
   if(card && (card.family === "EQSTEP" || card.family === "EQUNITSTEP")){
     renderCardEquationStepPrint(targetSvg, card, printMode, tEl, tText, useTokens);
@@ -7756,7 +7791,11 @@ function renderCardEquationPrint(targetSvg, card, printMode, tEl, tText, useToke
   if(!usePrintTables) return;
 
   const gEq = tEl("g", {id:"eqPrintSteps"});
-  let currentY = 820;
+  /* Les plateaux descendent jusqu'à y = 840 (trait central jusqu'à 850).
+     Le premier tableau partait de 820 : il chevauchait le bord des plateaux.
+     On repart sous le trait, avec une marge, et on compense en hauteur avec des
+     tableaux un peu moins hauts en correction (voir EQ_PRINT_CORR_*). */
+  let currentY = EQ_PRINT_TABLE_TOP_Y;
   const visL = eqVisibleSum(eq.left);
   const visR = eqVisibleSum(eq.right);
   const vl = visL;
@@ -7913,9 +7952,9 @@ function renderCardEquationPrint(targetSvg, card, printMode, tEl, tText, useToke
       baseW: fullW,
       maxW: maxTableW,
       disableLabelInflation: true,
-      rowH: 112,
-      fontSize: 98,
-      pad: 40,
+      rowH: EQ_PRINT_CORR_ROW_H,
+      fontSize: EQ_PRINT_CORR_FONT_SIZE,
+      pad: EQ_PRINT_CORR_PAD,
       stroke: "#000",
       strokeWidth: 5,
       hiddenFill: "rgba(0,0,0,0.10)",
@@ -7926,7 +7965,7 @@ function renderCardEquationPrint(targetSvg, card, printMode, tEl, tText, useToke
       minHiddenCellWValue1: minHiddenPrintWValue1,
       minVisibleCellWValue1: minVisiblePrintWValue1,
       forceCommonHiddenCellW: true,
-      variableFontSize: 70,
+      variableFontSize: EQ_PRINT_CORR_VAR_FONT_SIZE,
       fitLabelToCell: true
     });
     states.push({
@@ -7936,7 +7975,7 @@ function renderCardEquationPrint(targetSvg, card, printMode, tEl, tText, useToke
       row1Widths: initialLayout.rows[0].segments.map(seg => Math.max(1, Number(seg.w) || 1)),
       row2Widths: initialLayout.rows[1].segments.map(seg => Math.max(1, Number(seg.w) || 1))
     });
-    currentY += 260;
+    currentY += EQ_PRINT_CORR_STRIDE;
 
     const a = Math.max(0, Number(eq.left?.tasks) || 0);
     const b = Math.max(0, Number(eq.right?.tasks) || 0);
@@ -7971,18 +8010,18 @@ function renderCardEquationPrint(targetSvg, card, printMode, tEl, tText, useToke
         rect:(a)=>tEl("rect", a),
         line:(a)=>tEl("line", a),
         text:(x,y,t,a)=>tText(x,y,t,a),
-        rowH: 112,
-        fontSize: 98,
-        pad: 40,
+        rowH: EQ_PRINT_CORR_ROW_H,
+        fontSize: EQ_PRINT_CORR_FONT_SIZE,
+        pad: EQ_PRINT_CORR_PAD,
         stroke: "#000",
         strokeWidth: 5,
         hiddenFill: "rgba(0,0,0,0.10)",
         visibleFill: "rgba(255,255,255,0)",
         textColor: "#000",
-        variableFontSize: 70,
+        variableFontSize: EQ_PRINT_CORR_VAR_FONT_SIZE,
         fitLabelToCell: true
       });
-      currentY += 260;
+      currentY += EQ_PRINT_CORR_STRIDE;
     }
 
     if(commonV > 0){
@@ -8021,18 +8060,18 @@ function renderCardEquationPrint(targetSvg, card, printMode, tEl, tText, useToke
         rect:(a)=>tEl("rect", a),
         line:(a)=>tEl("line", a),
         text:(x,y,t,a)=>tText(x,y,t,a),
-        rowH: 112,
-        fontSize: 98,
-        pad: 40,
+        rowH: EQ_PRINT_CORR_ROW_H,
+        fontSize: EQ_PRINT_CORR_FONT_SIZE,
+        pad: EQ_PRINT_CORR_PAD,
         stroke: "#000",
         strokeWidth: 5,
         hiddenFill: "rgba(0,0,0,0.10)",
         visibleFill: "rgba(255,255,255,0)",
         textColor: "#000",
-        variableFontSize: 70,
+        variableFontSize: EQ_PRINT_CORR_VAR_FONT_SIZE,
         fitLabelToCell: true
       });
-      currentY += 260;
+      currentY += EQ_PRINT_CORR_STRIDE;
     }
 
     const alreadySolvedUnit = (a2 === 1 && b2 === 0 && vl2 === 0 && vr2 > 0) ||
@@ -8072,18 +8111,18 @@ function renderCardEquationPrint(targetSvg, card, printMode, tEl, tText, useToke
           rect:(a)=>tEl("rect", a),
           line:(a)=>tEl("line", a),
           text:(x,y,t,a)=>tText(x,y,t,a),
-          rowH: 112,
-          fontSize: 98,
-          pad: 40,
+          rowH: EQ_PRINT_CORR_ROW_H,
+          fontSize: EQ_PRINT_CORR_FONT_SIZE,
+          pad: EQ_PRINT_CORR_PAD,
           stroke: "#000",
           strokeWidth: 5,
           hiddenFill: "rgba(0,0,0,0.10)",
           visibleFill: "rgba(255,255,255,0)",
           textColor: "#000",
-          variableFontSize: 70,
+          variableFontSize: EQ_PRINT_CORR_VAR_FONT_SIZE,
           fitLabelToCell: true
         });
-        currentY += 260;
+        currentY += EQ_PRINT_CORR_STRIDE;
       }
     }
 
