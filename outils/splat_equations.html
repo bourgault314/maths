@@ -334,9 +334,7 @@
     border:1px solid var(--btn-border);background:rgba(16,185,129,0.06);
   }
   .printBlockTitle{font-size:12px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:0 0 6px}
-  .printBlock .printDuplexRow{margin-top:8px;padding:6px 10px;align-items:center}
-  .printBlock .printDuplexRow span{font-size:13px;color:var(--ink);font-weight:700;white-space:normal;line-height:1.2;min-width:0}
-  .printBlock .printDuplexRow small{font-weight:600;color:var(--muted);font-size:12px}
+  .printBlock .printGoRow{margin-top:8px}
   .printSummary{font-size:12px;color:var(--muted);line-height:1.25;margin-top:6px;min-height:1.25em}
   /* Téléphone : la barre de commande reste modeste. Ces deux réglages doivent venir
      APRÈS .navBtn / .counter ci-dessus, sinon la règle de bureau, écrite plus bas
@@ -664,9 +662,6 @@
     /* le titre du cadre et la glose du recto-verso disent ce que la phrase de
        résumé, juste dessous, dit déjà en clair : on les rend au menu. */
     .printBlockTitle{display:none}
-    .printBlock .printDuplexRow small{display:none}
-    .printBlock .printDuplexRow{margin-top:6px;padding:4px 10px}
-    .printBlock .printDuplexRow span{font-size:12px}
     .printSummary{margin-top:4px}
     .printBlock .printAction{height:36px !important}
   }
@@ -694,7 +689,6 @@
     .seedShareRow input{padding:3px 8px !important}
     .genRow .btn{height:33px}
     .printBlock{padding:5px 9px 7px}
-    .printBlock .printDuplexRow{margin-top:5px;padding:3px 9px}
     .printBlock .printAction{height:33px !important}
   }
 </style>
@@ -728,11 +722,11 @@
         <li><strong>Résoudre</strong> (en vert, près de l'équation) : ouvre la même équation dans ÉquaSplat ou ÉquaBarre pour la manipuler.</li>
       </ul>
 
-      <p><strong>Impression.</strong> Choisissez le contenu (énoncé seul, tableau vide, correction) et le nombre de cartes par page. <strong>Recto-verso</strong> imprime l'énoncé seul au recto et le contenu choisi au verso, dans le même ordre : les élèves cherchent d'un côté, vérifient de l'autre. La phrase sous les réglages résume ce qui sera imprimé.</p>
+      <p><strong>Impression.</strong> Une seule liste, « Ce que j'imprime », dit ce qui partira à l'imprimante : <strong>Énoncé seul</strong>, <strong>Énoncé + tableau à remplir</strong>, <strong>Correction</strong>, ou l'un des deux recto-verso — <strong>Énoncé, tableau au dos</strong> et <strong>Énoncé, correction au dos</strong>. Ces deux-là impriment l'énoncé au recto et le reste au verso, dans le même ordre : les élèves cherchent d'un côté, retournent la feuille et vérifient de l'autre. La phrase sous la liste redit en clair ce que vous allez obtenir.</p>
 
       <p><strong>Raccourcis clavier.</strong></p>
       <ul>
-        <li><strong>Espace</strong> ou <strong>→</strong> : avancer (révéler, étape suivante, carte suivante)</li>
+        <li><strong>→</strong> : avancer (révéler, étape suivante, carte suivante)</li>
         <li><strong>←</strong> : revenir en arrière</li>
         <li><strong>F</strong> : plein écran — <strong>Échap</strong> pour en sortir</li>
       </ul>
@@ -905,24 +899,31 @@
     <div class="printBlock">
       <div class="printBlockTitle">Impression</div>
       <input id="printActivityTitle" type="text" maxlength="160" placeholder="Titre imprimé (ex. Atelier de recherche)" aria-label="Titre imprimé" />
-      <div class="row" style="flex-wrap:nowrap; gap:8px; margin-top:8px;">
-        <select id="printMode" title="Choisir le contenu à imprimer" style="flex:1 1 auto; min-width:0;">
-          <option value="statement">Énoncé seul</option>
-          <option value="worksheet">Tableau vide</option>
-          <option value="correction">Correction</option>
-        </select>
-        <select id="printCardsPerPage" title="Nombre de cartes par page" style="flex:0 0 98px; width:98px;">
-          <option value="4">4/page</option>
-          <option value="2" selected>2/page</option>
-          <option value="1">1/page</option>
-        </select>
+      <!-- Un seul réglage, et chaque ligne est le résultat fini. Avant, il fallait
+           composer une liste (QUOI imprimer) et une case à cocher (OÙ le mettre),
+           et l'on ne savait ce qu'on allait obtenir qu'en lisant la phrase de
+           résumé, après coup. Les valeurs duplex-* portent les deux informations. -->
+      <label for="printMode">Ce que j’imprime</label>
+      <select id="printMode" title="Choisir ce qui partira à l’imprimante">
+        <option value="statement">Énoncé seul</option>
+        <option value="worksheet">Énoncé + tableau à remplir</option>
+        <option value="correction">Correction</option>
+        <option disabled>─────── recto-verso ───────</option>
+        <option value="duplex-worksheet">Énoncé, tableau au dos</option>
+        <option value="duplex-correction">Énoncé, correction au dos</option>
+      </select>
+      <div class="row printGoRow" style="flex-wrap:nowrap; gap:8px; align-items:flex-end;">
+        <div style="flex:0 0 104px; min-width:0">
+          <label for="printCardsPerPage">Pages</label>
+          <select id="printCardsPerPage" title="Nombre de cartes par page">
+            <option value="4">4/page</option>
+            <option value="2" selected>2/page</option>
+            <option value="1">1/page</option>
+          </select>
+        </div>
+        <button class="btn printAction" id="btnPrint" style="flex:1 1 auto; height:38px; padding:0;">Imprimer</button>
       </div>
-      <label class="checkInline printDuplexRow" title="Recto : énoncé seul • Verso : contenu choisi">
-        <input id="printDuplex" type="checkbox" />
-        <span>Recto-verso <small>— énoncé au recto, contenu choisi au verso</small></span>
-      </label>
       <div class="printSummary" id="printSummary" aria-live="polite"></div>
-      <button class="btn printAction" id="btnPrint" style="width:100%; margin-top:6px; height:40px; padding:0;">Imprimer</button>
     </div>
   </section>
 
@@ -1354,35 +1355,54 @@ const lastNumberedTotalBounds = { N: null, NPM: null };
 let lastActivityForSigned = activityEl.value;
 const lastSignedModeSettings = { NPM: null, EQPM: null };
 
+/* En entiers relatifs, la fiche « tableau à remplir » est une aide écrite et non un
+   tableau : les deux lignes qui la proposent changent de nom ensemble. */
 function syncPrintModeUI(){
   const sel = printModeSelectEl || document.getElementById("printMode");
   if(!sel) return;
-  const worksheetOpt = sel.querySelector('option[value="worksheet"]');
-  if(!worksheetOpt) return;
-  worksheetOpt.textContent = (activityEl && isSignedEquationModeValue(activityEl.value)) ? "Énoncé + aide" : "Tableau vide";
-  sel.title = "Choisir le contenu à imprimer";
+  const aide = !!(activityEl && isSignedEquationModeValue(activityEl.value));
+  const opt1 = sel.querySelector('option[value="worksheet"]');
+  const opt2 = sel.querySelector('option[value="duplex-worksheet"]');
+  if(opt1) opt1.textContent = aide ? "Énoncé + aide" : "Énoncé + tableau à remplir";
+  if(opt2) opt2.textContent = aide ? "Énoncé, aide au dos" : "Énoncé, tableau au dos";
+  sel.title = "Choisir ce qui partira à l’imprimante";
   syncPrintSummary();
 }
 
-/* Phrase qui dit en clair ce qui partira à l'imprimante : « RV » seul n'était pas
-   compréhensible (que met-on au recto, au verso ?). */
+/* Le choix imprimé porte à la fois le contenu et le recto-verso : « correction »
+   imprime la correction seule, « duplex-correction » met l'énoncé au recto et la
+   correction au verso. Une seule fonction fait la traduction, pour l'impression
+   comme pour la phrase de résumé. */
+function getPrintPlan(){
+  const sel = printModeSelectEl || document.getElementById("printMode");
+  const v = sel ? String(sel.value || "") : "statement";
+  if(v.indexOf("duplex-") === 0){
+    const verso = v.slice(7);
+    return { recto: "statement", verso: (verso === "worksheet" || verso === "correction") ? verso : "correction" };
+  }
+  return { recto: ["statement","worksheet","correction"].includes(v) ? v : "statement", verso: null };
+}
+
+/* Phrase de contrôle sous le réglage : le nom du choix dit déjà le résultat, elle
+   ajoute ce qu'on en fait en classe et le nombre de cartes par page. */
 function syncPrintSummary(){
   const out = document.getElementById("printSummary");
   const sel = printModeSelectEl || document.getElementById("printMode");
-  const duplexEl = document.getElementById("printDuplex");
   const perPageEl = printCardsPerPageEl || document.getElementById("printCardsPerPage");
   if(!out || !sel) return;
-  const opt = sel.options[sel.selectedIndex];
-  const content = opt ? opt.textContent.trim().toLowerCase() : "";
+  const plan = getPrintPlan();
   const perPage = perPageEl ? perPageEl.value : "2";
-  const duplex = !!(duplexEl && duplexEl.checked);
+  const aide = !!(activityEl && isSignedEquationModeValue(activityEl.value));
+  const nom = { statement:"l’énoncé", worksheet: aide ? "l’aide" : "le tableau à remplir", correction:"la correction" };
   let msg;
-  if(duplex && sel.value === "statement"){
-    msg = "Recto : énoncé seul — verso : énoncé seul (même chose des deux côtés).";
-  }else if(duplex){
-    msg = "Recto : énoncé seul — verso : " + content + ".";
+  if(plan.verso){
+    msg = "Une seule feuille : l’élève cherche au recto, retourne et trouve " + nom[plan.verso] + " au verso.";
+  }else if(plan.recto === "statement"){
+    msg = "Les énoncés seuls, rien au dos.";
+  }else if(plan.recto === "worksheet"){
+    msg = "L’énoncé avec " + (aide ? "son aide" : "son tableau à remplir") + ", rien au dos.";
   }else{
-    msg = "Imprime : " + content + " seulement.";
+    msg = "La correction seule, rien au dos.";
   }
   out.textContent = msg + " " + perPage + " carte" + (perPage === "1" ? "" : "s") + " par page.";
 }
@@ -1487,7 +1507,11 @@ function loadSharedConfiguration(){
   getEquationShareControls(activityEl.value).forEach(([name, el]) => applyShareControl(params, name, el));
   setNumberFromShare(params, "cards", countEl);
   setSelectFromShare(params, "print", printModeSelectEl);
-  setCheckboxFromShare(params, "duplex", document.getElementById("printDuplex"));
+  // Les liens d'avant portaient « print=correction&duplex=1 » : on les relit encore.
+  if(printModeSelectEl && params.get("duplex") === "1"){
+    const v = printModeSelectEl.value;
+    if(v === "worksheet" || v === "correction") printModeSelectEl.value = "duplex-" + v;
+  }
   setSelectFromShare(params, "layout", printCardsPerPageEl);
   if(printActivityTitleEl && params.has("title")) printActivityTitleEl.value = params.get("title").slice(0, 160);
 
@@ -1529,7 +1553,6 @@ function buildShareUrl(){
     params.set("view", getEquationStepView());
   }
   addShareControl(params, "print", printModeSelectEl);
-  addShareControl(params, "duplex", document.getElementById("printDuplex"));
   addShareControl(params, "layout", printCardsPerPageEl);
   const printTitle = printActivityTitleEl ? printActivityTitleEl.value.trim() : "";
   if(printTitle) params.set("title", printTitle.slice(0, 160));
@@ -2114,7 +2137,7 @@ if(invTaskCountEl) invTaskCountEl.addEventListener("change", ()=>{ syncSettingsU
     }, 0);
   });
 });
-[printModeSelectEl, printCardsPerPageEl, document.getElementById("printDuplex")].forEach(el=>{
+[printModeSelectEl, printCardsPerPageEl].forEach(el=>{
   if(el) el.addEventListener("change", syncPrintSummary);
 });
 
@@ -8859,10 +8882,7 @@ function mirrorSlotsForDuplex(frontSlots){
 
 function printSheet(){
   if(cards.length===0) return;
-  const printModeEl = document.getElementById("printMode");
-  const printDuplexEl = document.getElementById("printDuplex");
-  const printMode = printModeEl ? printModeEl.value : "statement";
-  const printDuplex = !!(printDuplexEl && printDuplexEl.checked);
+  const plan = getPrintPlan();
   const printArea = document.getElementById("printArea");
   const perSheet = getPrintCardsPerPage();
   const layoutClass = perSheet === 1 ? "print-1up" : (perSheet === 2 ? "print-2up" : "print-4up");
@@ -8912,11 +8932,11 @@ function printSheet(){
       if(k < cards.length) frontSlots[i] = cards[k];
     }
 
-    appendSheet(frontSlots, printDuplex ? "statement" : printMode);
+    appendSheet(frontSlots, plan.recto);
 
-    if(printDuplex){
+    if(plan.verso){
       const backSlots = mirrorSlotsForDuplex(frontSlots);
-      appendSheet(backSlots, printMode);
+      appendSheet(backSlots, plan.verso);
     }
   }
   waitForPrintAssets(printArea).then(()=>{
@@ -9128,12 +9148,9 @@ window.addEventListener("keydown",(e)=>{
     e.preventDefault();
     goNextStepOrCard();
   }
-  // L'aide annonçait « Espace = avancer » mais rien ne l'écoutait. On l'ajoute,
-  // sauf quand le focus est sur un bouton (Espace doit alors activer ce bouton).
-  if(e.key===" " && !(_tag === "button" || _tag === "a")){
-    e.preventDefault();
-    goNextStepOrCard();
-  }
+  // Pas de raccourci Espace : les flèches suffisent et sont plus lisibles pour la
+  // classe (choix de Gwenaël, 22/08). Espace garde son rôle habituel — activer le
+  // bouton qui a le focus.
   if(e.key==="f" || e.key==="F"){ toggleFullscreen(); }
 });
 
