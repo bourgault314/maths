@@ -5707,7 +5707,9 @@ function getEquationStepPrintArrowLines(eq, revealState, varChar = xChar){
    puis on divise le plateau en n parts et on en garde une. */
 function getEqStepGroupCells(tray, n){
   const count = Math.max(1, Math.round(Number(n) || 1));
-  const rows = count >= 5 ? 2 : 1;
+  // Les parts doivent être ÉGALES : jusqu'à 5, une seule rangée de colonnes égales
+  // (les taches rapetissent un peu à 5) ; 6 = deux rangées de 3.
+  const rows = count >= 6 ? 2 : 1;
   const rowCounts = rows === 1 ? [count] : [Math.ceil(count / 2), Math.floor(count / 2)];
   const inset = 6;
   const x0 = (Number(tray && tray.x) || 0) + inset;
