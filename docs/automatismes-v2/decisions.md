@@ -1805,3 +1805,18 @@ la carte jusqu'aux champs et disparaît dès qu'ils deviennent visibles. Le
 contrat de question ajoute `deux-nombres-decimaux` : chaque coordonnée conserve
 son écriture et sa valeur rationnelle exacte dans la trace. Le graphe public
 V2 est invalidé atomiquement en `v50` ; `app.js` reçoit la révision `53`.
+
+### D-074 — La correction GE-04 garde deux identités internes distinctes
+
+La recette sur le lecteur réellement déployé a révélé un cas que la première
+fumée n'exerçait pas : lorsque le point attendu se nommait `T`, un mauvais
+placement créait aussi un marqueur interne `T` pour « ton point ». L'objet
+repère refusait correctement ces deux noms identiques et interrompait alors le
+rendu de la correction.
+
+Le marqueur choisi, dont le nom reste volontairement masqué à l'élève, reçoit
+désormais `P` ou `Q` de façon à être toujours distinct du point attendu. Un
+test de régression reproduit exactement un premier point `T`, valide un mauvais
+placement puis ouvre la correction avec les deux légendes « Ton point » et
+« Point attendu ». Le graphe reste en `v50` et seule la façade `app.js` passe
+à la révision `54`.

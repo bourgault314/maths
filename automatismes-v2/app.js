@@ -5478,7 +5478,11 @@ function optionsPointsRepere(question, {
   }
   const points = [];
   if (choisi && (!attenduVisible || choisi.x !== cible?.x || choisi.y !== cible?.y)) {
-    points.push({ nom: "T", x: choisi.x, y: choisi.y, role: correction ? "choisi" : "donne", afficherNom: false });
+    // Le nom est interne puisque le point choisi n'affiche pas de lettre. Il
+    // doit néanmoins rester distinct de celui de la cible pour respecter le
+    // contrat accessible de l'objet repère, y compris lorsque la cible est P.
+    const nomInterne = cible?.nom === "P" ? "Q" : "P";
+    points.push({ nom: nomInterne, x: choisi.x, y: choisi.y, role: correction ? "choisi" : "donne", afficherNom: false });
   }
   if (cible && attenduVisible) points.push({ ...cible, role: "attendu" });
   return points;

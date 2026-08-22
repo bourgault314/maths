@@ -2670,6 +2670,32 @@ it("rend GE-03 et GE-04 avec le repère partagé, les aides et le placement rév
   assert.match(placement.application.innerHTML, /Horizontal, puis vertical|Correction expliquée|Comprendre l(?:&#039;|')erreur/);
 });
 
+it("corrige un mauvais placement même lorsque le point attendu se nomme T", async () => {
+  const placement = installerFauxNavigateur(
+    "?notion=placer-point-repere&questions=5&graine=collision-74",
+  );
+  await import(`./app.js?fumee=ge04-cible-t-${Date.now()}`);
+  cliquer(placement.gestionnaires, "demarrer");
+  assert.match(placement.application.innerHTML, /Place le point T\(2 ; 3\)/);
+
+  const bornes = placement.application.innerHTML.match(
+    /data-x-min="(-?\d+)" data-x-max="(-?\d+)"\s+data-y-min="(-?\d+)" data-y-max="(-?\d+)"/,
+  );
+  assert.ok(bornes);
+  cliquerSurfaceRepere(placement.gestionnaires, {
+    xMin: Number(bornes[1]),
+    xMax: Number(bornes[2]),
+    yMin: Number(bornes[3]),
+    yMax: Number(bornes[4]),
+  }, 0.5, 0.5);
+
+  assert.doesNotThrow(() => cliquer(placement.gestionnaires, "valider"));
+  cliquer(placement.gestionnaires, "correction");
+  assert.match(placement.application.innerHTML, /legende-point-choisi/);
+  assert.match(placement.application.innerHTML, /legende-point-attendu/);
+  assert.match(placement.application.innerHTML, /Point attendu/);
+});
+
 it("sélectionne, révise et rejoue plusieurs automatismes dans une même série", async () => {
   const { application, gestionnaires } = installerFauxNavigateur("");
   await import(`./app.js?fumee=multi-${Date.now()}`);

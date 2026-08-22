@@ -4,6 +4,10 @@
 
 ## Révision pédagogique de GE-03 et GE-04
 
+- La recette sur le site publié a trouvé puis corrigé le conflit de nom du
+  marqueur « Ton point » lorsque la cible GE-04 se nommait `T` (D-074). La
+  correction affiche désormais toujours les deux marqueurs et un test dédié
+  protège ce cas ; `app.js` passe à la révision `54`.
 - D-073 maintient GE-03 et GE-04 séparés mais leur donne désormais deux cours
   de trois pages ciblés. Seuls l'objet, la page de vocabulaire, les couleurs,
   les aides et les diagnostics restent mutualisés.
