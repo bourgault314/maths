@@ -2230,21 +2230,41 @@ it("propose le parcours DNB puis lance Au tableau sans saisie ni score", async (
   await import(`./app.js?fumee=menu-${Date.now()}`);
 
   assert.match(application.innerHTML, /class="menu-v10"/);
-  assert.match(application.innerHTML, /Automatismes<span class="title-cycle">DNB/);
+  assert.match(application.innerHTML, /Automatismes<span class="title-cycle">Cycle 4 – DNB/);
   assert.match(application.innerHTML, /Préparer la série/);
+  assert.match(application.innerHTML, /id="levelLabel">Niveau/);
+  assert.match(application.innerHTML, /data-action="choisir-niveau" data-value="5e"/);
+  assert.match(application.innerHTML, /data-action="choisir-niveau" data-value="4e"/);
+  assert.match(application.innerHTML, /data-action="choisir-niveau" data-value="3e"/);
+  assert.match(application.innerHTML, /data-action="choisir-niveau" data-value="DNB"[\s\S]*?aria-pressed="true"/);
+  assert.match(application.innerHTML, /Avec aide/);
+  assert.match(application.innerHTML, /Sans aide/);
+  assert.match(application.innerHTML, /id="modeLabel">Mode/);
   assert.match(application.innerHTML, /S'entraîner/);
   assert.match(application.innerHTML, /Au tableau/);
   assert.match(application.innerHTML, /Choisir les automatismes/);
   assert.match(application.innerHTML, /Nombres et calculs/);
   assert.match(application.innerHTML, /M7\.5 11\.5h21M7\.5 18h21M7\.5 24\.5h21/);
-  assert.match(application.innerHTML, /aria-label="Épreuve DNB sans calculatrice"/);
-  assert.match(application.innerHTML, /class="dnb-launch-icon"/);
+  assert.match(application.innerHTML, /Espace et géométrie/);
+  assert.match(application.innerHTML, /mathsgo-truchet-/);
+  assert.match(application.innerHTML, /Données, statistiques et probabilités/);
+  assert.match(application.innerHTML, /Pensée informatique/);
+  assert.match(application.innerHTML, /aria-label="Série sans calculatrice"/);
+  assert.match(application.innerHTML, /class="sans-calculatrice-icon"/);
   assert.match(application.innerHTML, /M3\.6 21\.4 20\.4 2\.6/);
   assert.match(application.innerHTML, /Critères de divisibilité/);
   assert.match(application.innerHTML, /Carrés des entiers/);
   assert.match(application.innerHTML, /Fraction → écriture décimale/);
   assert.match(application.innerHTML, /Écriture décimale → fraction/);
   assert.match(application.innerHTML, /0 \/ 5/);
+  assert.match(application.innerHTML, /0 \/ 3/);
+  assert.equal((application.innerHTML.match(/0 \/ 0/g) ?? []).length, 2);
+  assert.equal((application.innerHTML.match(/Aucun automatisme disponible pour le moment/g) ?? []).length, 2);
+  assert.match(application.innerHTML, /<summary>Remerciements<\/summary>/);
+  assert.match(application.innerHTML, /Un grand merci à Claire Lagarde pour son regard pédagogique, ses relectures attentives et toutes ses précieuses idées/);
+  assert.match(application.innerHTML, /data-mathsgo-consent-open/);
+  assert.match(application.innerHTML, />Gérer mes cookies<\/button>/);
+  assert.doesNotMatch(application.innerHTML, /DocTools|Eric Hakenholz|Crédits et remerciements/);
   assert.match(application.innerHTML, /Choisis au moins un automatisme/);
   assert.match(application.innerHTML, /data-action="preparer" disabled/);
   assert.equal(
@@ -2252,7 +2272,7 @@ it("propose le parcours DNB puis lance Au tableau sans saisie ni score", async (
     0,
   );
   assert.doesNotMatch(application.innerHTML, /Solides usuels|Calculer un volume/);
-  assert.doesNotMatch(application.innerHTML, /Avec aide|Sans aide|Diaporama|Crédits et remerciements|Ouvrir une série/);
+  assert.doesNotMatch(application.innerHTML, /Diaporama|Ouvrir une série/);
   for (const volume of [5, 10, 15, 20]) {
     assert.match(application.innerHTML, new RegExp(`data-value="${volume}"`));
   }
@@ -2289,6 +2309,70 @@ it("propose le parcours DNB puis lance Au tableau sans saisie ni score", async (
   cliquer(gestionnaires, "fermer-menu");
   cliquer(gestionnaires, "reponse");
   assert.match(application.innerHTML, /Réponse affichée/);
+});
+
+it("applique le niveau choisi et conserve les sélections communes au cycle 4", async () => {
+  const { application, gestionnaires } = installerFauxNavigateur("");
+  await import(`./app.js?fumee=menu-niveaux-${Date.now()}`);
+
+  cliquer(gestionnaires, "choisir-notion", undefined, "criteres-divisibilite");
+  assert.match(
+    application.innerHTML,
+    /data-value="criteres-divisibilite"\s+checked/,
+  );
+
+  cliquer(gestionnaires, "choisir-niveau", undefined, "5e");
+  assert.match(application.innerHTML, /data-value="5e"[\s\S]*?aria-pressed="true"/);
+  assert.match(application.innerHTML, /1 \/ 5/);
+  assert.match(application.innerHTML, /Critères de divisibilité/);
+  assert.match(application.innerHTML, /Carrés des entiers/);
+  assert.match(application.innerHTML, /Fraction → écriture décimale/);
+  assert.match(application.innerHTML, /Écriture décimale → fraction/);
+  assert.match(application.innerHTML, /Un nombre, plusieurs écritures/);
+  assert.match(application.innerHTML, /Droite graduée/);
+  assert.match(application.innerHTML, /Lire les coordonnées d&#039;un point/);
+  assert.match(application.innerHTML, /Placer un point dans un repère/);
+  assert.match(application.innerHTML, /aria-label="Série sans calculatrice"/);
+  assert.match(application.innerHTML, /5e · Sans calculatrice/);
+
+  cliquer(gestionnaires, "choisir-notion", undefined, "fraction-vers-decimal");
+  assert.match(application.innerHTML, /2 \/ 5/);
+  cliquer(gestionnaires, "choisir-niveau", undefined, "DNB");
+  assert.match(
+    application.innerHTML,
+    /data-value="criteres-divisibilite"\s+checked/,
+  );
+  assert.match(
+    application.innerHTML,
+    /data-value="fraction-vers-decimal"\s+checked/,
+  );
+  assert.match(application.innerHTML, /2 \/ 5/);
+});
+
+it("grise l'aide et retire tous les accès au cours dans une série sans aide", async () => {
+  const { application, gestionnaires } = installerFauxNavigateur("");
+  await import(`./app.js?fumee=menu-sans-aide-${Date.now()}`);
+
+  cliquer(gestionnaires, "choisir-notion", undefined, "criteres-divisibilite");
+  cliquer(gestionnaires, "choisir-aide", undefined, "indisponible");
+  assert.match(
+    application.innerHTML,
+    /data-action="choisir-aide" data-value="indisponible" aria-pressed="true"/,
+  );
+  cliquer(gestionnaires, "preparer");
+  assert.match(application.innerHTML, /Prêt à t'entraîner/);
+  assert.doesNotMatch(application.innerHTML, /Voir le cours|Voir les cours|data-action="cours-notion"/);
+
+  cliquer(gestionnaires, "cours");
+  assert.doesNotMatch(application.innerHTML, /cours-pret-ouvert|panneau-cours/);
+  cliquer(gestionnaires, "demarrer");
+  assert.match(
+    application.innerHTML,
+    /class="bouton-entete bouton-aide-entete" data-action="aide"[\s\S]*?disabled aria-disabled="true"/,
+  );
+  assert.doesNotMatch(application.innerHTML, /data-action="cours"/);
+  cliquer(gestionnaires, "aide");
+  assert.doesNotMatch(application.innerHTML, /id="panneau-aide"/);
 });
 
 it("conserve la notion demandée par un lien direct", async () => {

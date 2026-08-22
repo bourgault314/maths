@@ -2397,6 +2397,21 @@ body {
   background: color-mix(in srgb, var(--mg-turquoise) 12%, var(--mg-papier));
 }
 
+.bouton-aide-entete:disabled,
+.bouton-aide-entete[aria-disabled="true"] {
+  border-color: var(--mg-ligne);
+  color: var(--mg-texteAttenue);
+  background: color-mix(in srgb, var(--mg-texteAttenue) 8%, var(--mg-papier));
+  box-shadow: none;
+  opacity: .55;
+  cursor: not-allowed;
+}
+
+.bouton-aide-entete:disabled > span,
+.bouton-aide-entete[aria-disabled="true"] > span {
+  background: var(--mg-texteAttenue);
+}
+
 .bouton-menu > span {
   font-size: 17px;
   line-height: 1;

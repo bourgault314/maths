@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import { it } from "node:test";
 
-const VERSION = "46";
+const VERSION = "49";
 
 const RESSOURCES_VERSIONNEES = new Map([
   ["automatismes-v2/index.html", ["styles.css", "interface.css", "menu.css", "app.js"]],
@@ -28,6 +28,9 @@ const RESSOURCES_VERSIONNEES = new Map([
     "diagnostic-fractions-decimaux.js",
     "reperage-plan/questions.js",
     "diagnostic-reperage-plan.js",
+    "icones-domaines-menu.js",
+    "catalogue-menu.js",
+    "niveaux-parcours.js",
   ]],
   ["automatismes-v2/src/etat-lecteur.js", [
     "seance.js",
@@ -38,6 +41,13 @@ const RESSOURCES_VERSIONNEES = new Map([
     "registre-lecteur.js",
     "serie-multinotions.js",
     "fractions-decimaux.js",
+    "niveaux-parcours.js",
+  ]],
+  ["automatismes-v2/src/catalogue-menu.js", [
+    "identifiants.js",
+    "registre-lecteur.js",
+    "icones-domaines-menu.js",
+    "niveaux-parcours.js",
   ]],
   ["automatismes-v2/src/registre-lecteur.js", [
     "selection-diviseurs.js",

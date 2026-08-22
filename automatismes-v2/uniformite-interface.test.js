@@ -73,6 +73,8 @@ it("rend Menu et Aide visibles dans la même coque sans double encadrement", () 
   assert.match(app, /bouton-aide-entete[\s\S]*?<span aria-hidden="true">\?<\/span><strong>Aide<\/strong>/);
   assert.match(interfaceCss, /\.bouton-menu,\s*\.bouton-aide-entete\s*\{[^}]*border:\s*2px solid/s);
   assert.match(interfaceCss, /\.bouton-aide-entete\s*\{[^}]*border-color:[^}]*var\(--mg-turquoise\)/s);
+  assert.match(interfaceCss, /\.bouton-aide-entete:disabled,\s*\.bouton-aide-entete\[aria-disabled="true"\]\s*\{[^}]*border-color:\s*var\(--mg-ligne\)[^}]*color:\s*var\(--mg-texteAttenue\)[^}]*box-shadow:\s*none[^}]*opacity:\s*\.55/s);
+  assert.match(interfaceCss, /\.bouton-aide-entete:disabled > span,\s*\.bouton-aide-entete\[aria-disabled="true"\] > span\s*\{[^}]*background:\s*var\(--mg-texteAttenue\)/s);
   assert.doesNotMatch(interfaceCss, /\.bouton-aide-entete\[aria-expanded="true"\][^}]*box-shadow:\s*inset/s);
   assert.match(interfaceCss, /\.bouton-entete\s*\{[^}]*min-height:\s*44px/s);
 });

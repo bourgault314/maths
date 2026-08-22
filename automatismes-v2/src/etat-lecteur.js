@@ -1,12 +1,12 @@
 import {
   SCHEMA_SEANCE,
   validerSeance,
-} from "../../packages/contrats/src/seance.js?v=46";
+} from "../../packages/contrats/src/seance.js?v=49";
 import {
   REFERENTIEL_COMPETENCES,
   SCHEMA_TRACE_REPONSE,
   validerTraceReponse,
-} from "../../packages/contrats/src/trace-reponse.js?v=46";
+} from "../../packages/contrats/src/trace-reponse.js?v=49";
 import {
   TYPE_REPONSE_ENTIER_NATUREL,
   TYPE_REPONSE_DEUX_ENTIERS,
@@ -18,16 +18,16 @@ import {
   estDeuxEntiersRelatifsExacts,
   estEntierExact,
   estSelectionExacte,
-} from "../../packages/contrats/src/question-v2.js?v=46";
+} from "../../packages/contrats/src/question-v2.js?v=49";
 import {
   analyserEcritureDecimaleSignee,
   fractionsEgales,
-} from "../../packages/objets/src/fractions-decimaux.js?v=46";
+} from "../../packages/objets/src/fractions-decimaux.js?v=49";
 import { graineDepuisTexte } from "../../packages/moteur-exercices/src/aleatoire.js";
-import { creerRegistreAutomatismes } from "../../packages/automatismes/src/registre.js?v=46";
+import { creerRegistreAutomatismes } from "../../packages/automatismes/src/registre.js?v=49";
 import {
   normaliserIdentifiantModule,
-} from "../../packages/automatismes/src/identifiants.js?v=46";
+} from "../../packages/automatismes/src/identifiants.js?v=49";
 import {
   connaitNotionLecteur,
   listerNotionsLecteur,
@@ -45,8 +45,12 @@ import {
   NOTION_VOLUME_CYLINDRE,
   NOTION_VOLUME_PRISME,
   obtenirNotionLecteur,
-} from "./registre-lecteur.js?v=46";
-import { genererSerieMultinotions } from "./serie-multinotions.js?v=46";
+} from "./registre-lecteur.js?v=49";
+import { genererSerieMultinotions } from "./serie-multinotions.js?v=49";
+import {
+  estNiveauParcours,
+  NIVEAU_PAR_DEFAUT,
+} from "./niveaux-parcours.js?v=49";
 
 export {
   NOTION_ECRITURES_MULTIPLES_NOMBRE,
@@ -108,6 +112,7 @@ function normaliserNotions(configuration) {
 }
 
 function normaliserConfiguration(configuration = {}) {
+  const niveau = configuration.niveau ?? NIVEAU_PAR_DEFAUT;
   const modeDemande = configuration.mode ?? "entrainement";
   const mode = ALIAS_MODES.get(modeDemande) ?? modeDemande;
   const aide = configuration.aide ?? "disponible";
@@ -115,6 +120,7 @@ function normaliserConfiguration(configuration = {}) {
     ?? NOMBRE_QUESTIONS_PAR_DEFAUT;
   const notions = normaliserNotions(configuration);
 
+  if (!estNiveauParcours(niveau)) throw new RangeError(`niveau inconnu : ${niveau}`);
   if (!MODES.has(mode)) throw new RangeError(`mode inconnu : ${mode}`);
   if (!AIDES.has(aide)) throw new RangeError(`aide inconnue : ${aide}`);
   if (
@@ -137,7 +143,7 @@ function normaliserConfiguration(configuration = {}) {
     throw new TypeError("graine texte ou entière requise");
   }
 
-  return { mode, aide, nombreQuestions, graine, notions };
+  return { niveau, mode, aide, nombreQuestions, graine, notions };
 }
 
 function creerSeance(configuration) {
@@ -233,6 +239,7 @@ export function lireConfiguration(recherche = "") {
     .filter(Boolean);
   const notions = notionsCompactes.length > 0 ? notionsCompactes : notionsRepetees;
   return normaliserConfiguration({
+    niveau: parametres.get("niveau") || undefined,
     mode: parametres.get("mode") || undefined,
     aide: parametres.get("aide") || undefined,
     notions: notions.length > 0 ? notions : undefined,
@@ -791,6 +798,7 @@ export function choisirRangFractionAide(etat, rang) {
 }
 
 export function ouvrirCours(etat, notionDemandee = undefined) {
+  if (etat.configuration.aide === "indisponible") return etat;
   const notion = notionDemandee ?? notionCourante(etat) ?? etat.configuration.notions[0];
   if (!etat.configuration.notions.includes(notion)) return etat;
   if (!obtenirNotionLecteur(notion).capacites.cours) return etat;
