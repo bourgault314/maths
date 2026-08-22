@@ -2,6 +2,65 @@
 
 **Dernière mise à jour : 22 août 2026.**
 
+## Restauration complète des interactions du menu de référence
+
+- D-072 rétablit les commandes globales « Tous » et « Aucun », ainsi que
+  « Tout sélectionner dans ce domaine » dans chaque domaine non vide.
+- La commande de domaine possède les trois états du menu de référence : case
+  vide, petit moins pour une sélection partielle et coche lorsque tout le
+  domaine est sélectionné. Une sélection partielle est complétée au clic ; un
+  domaine complet est entièrement désélectionné au clic suivant.
+- Les couleurs stables du menu publié sont reprises par domaine : turquoise
+  pour Nombres et calculs, orange pour Espace et géométrie, bleu pour Données,
+  statistiques et probabilités, violet pour Pensée informatique.
+- La barre « Lancer la série » n'existe plus dans la page tant qu'aucun
+  automatisme visible n'est sélectionné. Elle apparaît dès la première vraie
+  sélection ; le simple dépliage d'un domaine ne suffit pas.
+- « Tous » ajoute les automatismes visibles du niveau courant ; « Aucun »
+  efface toute la sélection, y compris une notion momentanément masquée par un
+  changement de filtre. Les domaines vides ne présentent aucune commande
+  impossible.
+- Cette restauration ne modifie aucun générateur, seed, classement, contenu
+  pédagogique ni module, notamment GE-03 et GE-04. `app.js` et `menu.css`
+  reçoivent uniquement la révision de façade `51` ; le graphe reste en `v49`.
+- La recette complète passe **1 729 tests sur 1 729** dans **245 suites** ; les
+  garde-fous V2 suivent toujours 151 fichiers et 77 fichiers de production.
+
+## Dernières finitions du menu Cycle 4 – DNB
+
+- D-071 retire le doublon visuel « Gérer mes cookies » : le lien intégré au
+  pied du menu reste l'unique accès visible et ouvre toujours le gestionnaire
+  de consentement commun.
+- Les quatre réglages reviennent à deux colonnes égales, comme dans le Studio :
+  « Niveau » s'aligne avec « Mode » et « Aide » avec « Nombre de questions ».
+- Le remerciement affiche désormais seulement « Claire ». Aucun automatisme,
+  générateur, seed, classement ni contenu de GE-03 ou GE-04 n'est modifié.
+- `app.js` et `menu.css` reçoivent la révision de façade `50` tandis que le
+  graphe de modules reste identique en `v49`.
+- La recette complète passe **1 726 tests sur 1 726** dans **245 suites** ; les
+  garde-fous V2 suivent 151 fichiers et 77 fichiers de production déclarés.
+
+## Menu Cycle 4 – DNB publié le 22 août
+
+- D-070 maintient la calculatrice barrée pour `5e`, `4e`, `3e` et `DNB` :
+  toutes les séries sont sans calculatrice et le résumé l'écrit quel que soit
+  le filtre.
+- D-069 place « Remerciements » et « Gérer mes cookies » au bas du menu, sans
+  titre « Crédits » ni mention de DocTools. Le texte remercie Claire pour son
+  regard pédagogique, ses relectures et ses idées.
+- D-068 reprend les quatre regroupements exacts du Studio, y compris les
+  domaines encore vides, ainsi que les quatre familles d'icônes journalières
+  déterministes.
+- Le filtre de programme propose `5e`, `4e`, `3e` et `DNB`. Les huit modules
+  publiés appartiennent actuellement aux quatre listes ; chaque futur module
+  devra continuer de déclarer explicitement ses classes.
+- Les réglages sont « Mode » avec « S'entraîner / Au tableau », 5, 10, 15 ou
+  20 questions, puis « Avec aide / Sans aide ». Sans aide retire le cours et
+  laisse le bouton Aide de la séance visible, grisé et inactif.
+- La publication issue de la PR #479 a été contrôlée sur le site : les huit
+  modules sont présents, GE-03 et GE-04 restent séparés, le placement de GE-04
+  est modifiable avant validation et le gestionnaire de cookies s'ouvre.
+
 ## GE-03 et GE-04 publiés pour essai le 22 août
 
 - D-066 maintient deux modules visibles distincts : GE-03 « Lire les

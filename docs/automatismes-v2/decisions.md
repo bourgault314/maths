@@ -103,12 +103,14 @@ La carte DNB versionnée dans le dépôt compte 37 cibles officielles distinctes
 de fabrication. `NC-01`, critères de divisibilité, est la seule micro-notion
 active.
 
-### D-015 — Aucun niveau ni palier dans le parcours DNB actuel
+### D-015 — Aucun niveau de difficulté ni palier dans le parcours DNB actuel
 
 Les micro-notions sont des unités de fabrication et de suivi, pas des niveaux
 proposés aux élèves. La variété vient des familles de questions, des valeurs,
-des erreurs travaillées et de l'état de l'aide. Les niveaux éventuels attendent
-la future phase couvrant l'ensemble du collège.
+des erreurs travaillées et de l'état de l'aide. Cette décision n'interdit pas
+le filtre de classe `5e / 4e / 3e / DNB`, introduit ensuite par D-068 : une
+classe filtre le programme visible, elle ne constitue pas un palier de
+difficulté.
 
 ### D-016 — NC-01 inclut 10 et commence par la sélection de diviseurs
 
@@ -1631,3 +1633,134 @@ GE-03 et GE-04 conservent le statut `construit`. Un test SVG interdit le retour
 des traits superposés aux flèches, les planches représentatives sont relues et
 la recette complète passe **1 709 tests sur 1 709** dans **242 suites**. Le
 graphe public V2 est invalidé atomiquement en `v46`.
+
+### D-068 — Le menu Cycle 4 – DNB du Studio devient la façade stable de V2
+
+Le menu public reprend les quatre regroupements conçus dans le Studio :
+« Nombres et calculs », « Espace et géométrie », « Données, statistiques et
+probabilités » et « Pensée informatique ». Ils restent tous affichés, même
+vides. Cette façade ne remplace pas la taxonomie : elle recouvre exactement les
+sept domaines canoniques `NC`, `AL`, `PF`, `GM`, `GE`, `DS` et `PI`. Les
+nouveaux automatismes continuent d'être classés dans ces domaines internes.
+
+Les quatre familles d'icônes de Gwenaël sont reconstruites dans V2 : boulier,
+motif géométrique de Truchet, diagramme et parcours algorithmique. Leur
+composition varie selon une graine journalière, mais reste identique pendant
+toute une journée. Le générateur historique à `Math.random()` n'est ni importé
+ni appelé.
+
+Le réglage « Niveau » propose `5e`, `4e`, `3e` et `DNB`. Il s'agit d'un filtre
+de programme, pas d'un niveau de difficulté. Chaque module du catalogue déclare
+obligatoirement ses classes ; un test refuse les niveaux improvisés et les
+modules non classés. Le filtre DNB montre les huit entrées construites.
+
+Le classement initial a été contrôlé contre l'annexe 2 du programme de
+mathématiques du cycle 4 publiée au BO n° 10 du 5 mars 2026, applicable en 5e
+à la rentrée 2026-2027. Les huit modules actuels y figurent déjà : critères de
+divisibilité par 2, 3, 5, 9 et 10 ; carrés de 0 à 12 ; écritures fractionnaires,
+décimales et en pourcentage ; droite graduée ; lecture et placement dans un
+repère orthogonal. Ils sont donc tous visibles en `5e`, `4e`, `3e` et `DNB`.
+Les quatre filtres donnent provisoirement la même liste, mais le contrat de
+classe est déjà explicite et deviendra discriminant dès l'arrivée d'un module
+réservé à une partie du cycle.
+
+Une sélection masquée par un changement de classe est conservée en mémoire,
+mais seule sa partie visible peut être lancée. Le DNB reste le réglage par
+défaut et montre donc tout le catalogue déjà construit.
+
+Les autres libellés sont ceux décidés pour V2 : « Mode », « S'entraîner » et
+« Au tableau », puis 5, 10, 15 ou 20 questions. « Avec aide » conserve le cours
+et les aides progressives. « Sans aide » interdit aussi l'ouverture du cours
+dans le moteur d'état, retire ses accès et laisse le bouton Aide visible mais
+grisé et inactif. La validation et la correction immédiates de l'entraînement
+ne sont pas modifiées par cette décision. Les boutons segmentés conservent une
+cible de 44 px sur téléphone et leur contour de focus n'est jamais rogné.
+
+Ce lot reste une version de test locale : il n'est ni publié ni fusionné sans
+une validation explicite du rendu responsive. Le cache candidat passe en
+`v47`.
+
+### D-069 — Le pied du menu distingue remerciement et provenance
+
+Le menu V2 ajoute sous les domaines deux accès compacts : « Remerciements » et
+« Gérer mes cookies ». Le second ouvre le gestionnaire de consentement commun
+du site et conserve une cible tactile de 44 px.
+
+Le premier remercie Claire pour son regard pédagogique, ses relectures
+attentives et ses idées. Il n'est pas intitulé « Crédits » et ne reprend pas la
+mention d'Éric Hakenholz ou de DocTools présente dans l'ancien `/auto/` : V2 a
+été reconstruite indépendamment, conformément à D-001, D-011, D-012 et D-027.
+Cette modification ne touche pas l'application archivée `/auto/`. Le graphe
+candidat est invalidé atomiquement en `v48`.
+
+### D-070 — Toutes les séries du menu sont annoncées sans calculatrice
+
+Gwenaël confirme que les parcours `5e`, `4e`, `3e` et `DNB` sont tous réalisés
+sans calculatrice. La calculatrice barrée ne dépend donc plus du filtre DNB :
+elle reste visible à gauche du bouton « Lancer la série » pour chacun des
+quatre niveaux, dans « S'entraîner » comme dans « Au tableau ». Le résumé écrit
+également « Sans calculatrice » après le niveau choisi.
+
+Le classement des modules n'est pas modifié. Les huit modules actuels restent
+tous visibles en 5e, notamment « Droite graduée », « Lire les coordonnées d'un
+point » et « Placer un point dans un repère », qui travaillent aussi les
+nombres négatifs. D-070 précise ainsi D-028 après l'introduction du filtre de
+classe par D-068. Le graphe candidat est invalidé atomiquement en `v49`.
+
+### D-071 — Les derniers réglages du menu restent strictement visuels
+
+Le pied du menu conserve un seul accès visible « Gérer mes cookies » : celui
+placé à côté de « Remerciements ». La commande de secours que le gestionnaire
+de consentement commun injecte en bas des pages est masquée uniquement dans
+Automatismes V2. Le panneau de choix des statistiques et le bouton intégré
+continuent de fonctionner normalement.
+
+La grille des réglages reprend les deux colonnes égales du Studio. « Niveau »
+est exactement aligné avec « Mode » ; « Aide » avec « Nombre de questions ».
+Cette retouche ne change ni les libellés, ni les valeurs, ni les cibles
+tactiles, ni le comportement responsive.
+
+À la demande de Gwenaël, le remerciement affiche seulement « Claire », sans
+nom de famille. Aucun générateur, contenu pédagogique, classement, seed ou
+module — notamment GE-03 et GE-04 — n'est modifié. Les seules ressources de
+façade modifiées, `app.js` et `menu.css`, reçoivent la révision publique `50` ;
+le graphe de modules reste inchangé en `v49`.
+
+### D-072 — Les états de sélection du menu de référence sont un contrat V2
+
+L'audit croisé de `studio/automatismes/` et du menu publié sous `/auto/`
+retrouve des interactions qui n'avaient été que partiellement transposées dans
+la première façade V2. Elles deviennent un contrat explicite du lanceur V2,
+sans créer de dépendance vers ces deux applications historiques.
+
+L'en-tête « Choisir les automatismes » contient les commandes « Tous » et
+« Aucun ». « Tous » ajoute toutes les notions visibles pour le filtre de classe
+courant et se grise lorsqu'elles sont déjà toutes sélectionnées. « Aucun »
+efface toute la sélection, y compris une notion momentanément masquée par un
+autre filtre, afin qu'aucune ancienne coche ne réapparaisse par surprise ; il
+se grise lorsque la sélection est vide.
+
+Chaque domaine non vide commence par « Tout sélectionner dans ce domaine ».
+Son contrôle accessible expose `aria-checked="false"`, `mixed` ou `true` :
+case vide quand aucune notion n'est cochée, petit moins quand une partie l'est,
+coche lorsque tout le domaine l'est. Un clic depuis l'état vide ou partiel
+complète le domaine ; un clic depuis l'état complet le vide. Les domaines sans
+notion restent affichés mais ne présentent pas une action impossible.
+
+Les quatre regroupements retrouvent la palette stable du menu publié :
+turquoise `#049e98` / `#e8f8f6` pour Nombres et calculs, orange `#ed7a0b` /
+`#fff3e7` pour Espace et géométrie, bleu `#3478c8` / `#eaf3ff` pour Données,
+statistiques et probabilités, violet `#7355b7` / `#f1edfb` pour Pensée
+informatique. Cette couleur porte l'ouverture du domaine, son compteur, son
+contrôle groupé et les cartes sélectionnées.
+
+La barre fixe « Lancer la série » n'est pas rendue tant qu'aucun automatisme
+visible n'est sélectionné. Elle apparaît à la première sélection réelle, pas
+au simple dépliage d'un domaine, et disparaît après la dernière
+désélection. Le choix de plusieurs notions conserve la règle D-039 : la
+première longueur suffisante est choisie sans supprimer une sélection.
+
+Cette restauration est exclusivement une modification de façade. Elle ne
+change ni générateur, ni seed, ni classe, ni contenu pédagogique, ni séparation
+de GE-03 et GE-04. `app.js` et `menu.css` reçoivent la révision `51` ; le graphe
+de modules demeure en `v49`.

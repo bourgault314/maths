@@ -170,15 +170,31 @@ qu'un temps soit très court ou qu'aucune manipulation séparée ne soit utile.
 L'avancement ne prouve pas la provenance, et la provenance ne vaut pas
 validation pédagogique.
 
-## Niveaux et paliers
+## Classes, niveaux et paliers
 
-Le parcours DNB actuel ne possède ni niveaux ni paliers. Les micro-notions
+Le parcours ne possède ni niveau de difficulté ni palier. Les micro-notions
 décrivent des compétences atomiques et organisent le suivi, pas un classement
-des élèves. Le module visible est l'unité de chantier et de sélection dans le
-menu. La variété vient des familles de questions, des valeurs, des erreurs
-travaillées et de l'état de l'aide. D'éventuels niveaux appartiendront à une
-phase ultérieure sur le programme complet du collège et demanderont une
-nouvelle décision.
+des élèves. Le module visible reste l'unité de chantier et de sélection dans
+le menu. La variété vient des familles de questions, des valeurs, des erreurs
+travaillées et de l'état de l'aide.
+
+D-068 ajoute en revanche un **filtre de classe** `5e / 4e / 3e / DNB`. Ce
+filtre indique si la série entière d'un module est adaptée au programme choisi ;
+il ne change ni la difficulté d'une question ni la taxonomie. Chaque nouvelle
+entrée du menu doit déclarer explicitement ses classes visibles. Un module qui
+ne possède qu'un sous-ensemble compatible avec une classe reste masqué jusqu'à
+la construction d'une recette de série réellement adaptée à cette classe.
+Les huit modules publiés au 22 août 2026 sont tous compatibles avec les quatre
+filtres au regard du programme officiel : l'égalité actuelle des listes est
+donc attendue et ne neutralise pas le contrat de filtrage des futurs modules.
+
+Le menu possède deux niveaux de sélection groupée. « Tous » ajoute toutes les
+entrées visibles pour la classe courante ; « Aucun » remet toute la sélection
+à zéro, y compris les entrées masquées par un autre filtre. Dans un domaine
+non vide, la commande locale est vide, partielle ou complète et bascule entre
+tout sélectionner et tout désélectionner. Un domaine vide reste visible mais
+ne propose pas cette commande. La barre de lancement n'apparaît qu'après la
+sélection effective d'au moins un automatisme visible.
 
 ## Forme de réponse
 
