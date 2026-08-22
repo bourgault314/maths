@@ -78,8 +78,8 @@
     align-items:center;
     justify-content:space-between;
     gap:10px;
-    margin:0 0 12px;
-    padding:2px 0 12px;
+    margin:0 0 6px;
+    padding:0 0 8px;
     border-bottom:1px solid rgba(17,24,39,.10);
   }
   .panelHeader h1{
@@ -128,7 +128,7 @@
   .home svg{width:22px;height:22px;display:block}
 
   .wrap{display:flex;flex-direction:row;flex-wrap:nowrap;gap:14px;padding:14px;align-items:flex-start}
-  .wrap > .panel{flex:0 0 340px;max-width:340px}
+  .wrap > .panel{flex:0 0 372px;max-width:372px}
   .wrap > .stage{flex:1 1 auto;min-width:0}
 
   .panel{
@@ -137,10 +137,17 @@
     border-radius:14px;padding:12px;
     box-shadow:0 10px 30px rgba(0,0,0,0.25)
   }
+  .panel .row{gap:8px}
+  .genRow{margin-top:10px;flex-wrap:nowrap}
+  .genRow .btn{flex:1 1 0;height:40px;padding:0 12px}
+  .genRow .btn.danger{flex:0 0 96px}
+  .panel .equationTopSettings{margin-top:4px}
+  .panel .equationTopSettings > div{flex:1 1 100% !important
+  }
 
-  label{font-size:12px;color:var(--muted);display:block;margin:8px 0 4px}
+  label{font-size:13px;font-weight:700;color:var(--muted);display:block;margin:7px 0 3px;line-height:1.15}
   select,input{
-    width:100%;padding:10px 10px;border-radius:10px;
+    width:100%;padding:8px 10px;border-radius:10px;font-size:15px;height:38px;
     border:1px solid var(--field-border);
     background:var(--field-bg);
     color:var(--ink);
@@ -167,7 +174,7 @@
     padding:10px 12px;border-radius:10px;
     border:1px solid var(--btn-border);
     background:var(--btn);
-    color:var(--ink);cursor:pointer;font-weight:650;
+    color:var(--ink);cursor:pointer;font-weight:650;font-size:15px;
     transition: transform .08s ease, background .12s ease, box-shadow .12s ease;
   }
   .btn:hover{background:var(--btn2)}
@@ -180,20 +187,21 @@
   .btn.printAction:hover{background:#059669}
   .btn:disabled{opacity:.45;cursor:not-allowed}
   .shareRow{display:flex;align-items:center;justify-content:flex-start;gap:8px;min-height:28px;margin-top:8px}
-  .shareLinkBtn{padding:5px 8px;font-size:11px;font-weight:750;color:var(--muted);white-space:nowrap}
+  .shareLinkBtn{padding:5px 8px;font-size:12px;font-weight:750;color:var(--muted);white-space:nowrap}
   .shareFeedback{font-size:11px;font-weight:750;color:#16a34a;white-space:nowrap}
   .shareFeedback.error{color:#dc2626}
   .shareFeedback:empty{display:none}
   .seedShareRow{
     display:grid;
-    grid-template-columns:auto minmax(76px,96px) auto minmax(0,1fr);
-    gap:7px;
+    grid-template-columns:auto minmax(100px,1fr) auto;
+    gap:8px;
     align-items:center;
-    margin-top:10px;
+    margin-top:8px;
   }
   .seedShareRow label{margin:0;font-weight:700}
-  .seedShareRow input{height:34px;padding:6px 8px}
-  .seedShareRow .shareLinkBtn{height:34px}
+  .seedShareRow input{height:36px;padding:6px 8px}
+  .seedShareRow .shareLinkBtn{height:36px;font-size:13px;color:var(--ink)}
+  .seedShareRow .shareFeedback{grid-column:1 / -1;margin-top:-4px}
 
   .iconbtn{
     display:inline-grid;place-items:center;
@@ -301,8 +309,42 @@
     border:1px solid rgba(255,255,255,0.08);
     border-radius:14px;padding:10px
   }
-  .nav{display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:space-between}
-  .counter{font-size:12px;color:var(--muted)}
+  /* Barre de commande de la scène (compteur + boutons), lisible de loin. */
+  .nav{display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:space-between;margin-bottom:6px}
+  .navGroup{display:flex;align-items:center;gap:8px;min-width:0}
+  .counter{font-size:17px;font-weight:800;color:var(--ink);white-space:nowrap;letter-spacing:.01em}
+  .navBtn{
+    display:inline-flex;align-items:center;justify-content:center;
+    width:46px;height:46px;flex:0 0 46px;padding:0;
+    font-size:19px;line-height:1;border-radius:12px;
+  }
+  .navBtn.fsToggle svg{width:22px;height:22px;display:block}
+  .nav .varChoice{margin-right:6px}
+  .nav .varChoice{height:46px;border-radius:12px}
+  .nav .varChoiceBtn{width:38px;height:38px;font-size:22px}
+  .viewToggle{display:inline-flex;flex:0 0 auto;height:42px;gap:4px;align-items:center;padding:3px;border:1px solid var(--btn-border);border-radius:12px;background:rgba(255,255,255,0.04)}
+  .viewToggle .btn{height:34px;padding:0 12px;font-size:14px;white-space:nowrap;border-radius:9px}
+  .fsHost:fullscreen .nav .varChoice{height:64px;border-radius:18px;background:#fff;box-shadow:0 4px 14px rgba(0,0,0,0.12);margin-right:10px}
+  .fsHost:fullscreen .nav .varChoiceBtn{width:56px;height:56px;font-size:30px}
+  .navBtn .fsIconExit{display:none;font-size:24px;font-weight:800}
+  .fsHost:fullscreen .navBtn .fsIconEnter{display:none}
+  .fsHost:fullscreen .navBtn .fsIconExit{display:block}
+  .printBlock{
+    margin-top:10px;padding:8px 10px 10px;border-radius:12px;
+    border:1px solid var(--btn-border);background:rgba(16,185,129,0.06);
+  }
+  .printBlockTitle{font-size:12px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:0 0 6px}
+  .printBlock .printDuplexRow{margin-top:8px;padding:6px 10px;align-items:center}
+  .printBlock .printDuplexRow span{font-size:13px;color:var(--ink);font-weight:700;white-space:normal;line-height:1.2;min-width:0}
+  .printBlock .printDuplexRow small{font-weight:600;color:var(--muted);font-size:12px}
+  .printSummary{font-size:12px;color:var(--muted);line-height:1.25;margin-top:6px;min-height:1.25em}
+  /* Téléphone : la barre de commande reste modeste. Ces deux réglages doivent venir
+     APRÈS .navBtn / .counter ci-dessus, sinon la règle de bureau, écrite plus bas
+     dans la feuille, l'emporte à spécificité égale et le média ne sert à rien. */
+  @media (max-width:760px){
+    .navBtn{width:44px;height:44px;flex-basis:44px}
+    .counter{font-size:15px}
+  }
 
   #svgWrap{width:100%;aspect-ratio: 16/10;display:grid;place-items:center}
   #mainSvg{width:100%;height:100%}
@@ -319,7 +361,7 @@
     cursor:pointer;
   }
   .checkInline input{width:auto;margin:0}
-  .checkInline span{font-size:12px;color:var(--muted);white-space:nowrap}
+  .checkInline span{font-size:13px;color:var(--muted);white-space:nowrap}
 
   /* Animations CSS */
   @keyframes fadeOutSplat {
@@ -496,15 +538,18 @@
 
   /* Plein écran */
   .fsHost:fullscreen{background:var(--bg)}
-  .fsHost:fullscreen #svgWrap{width:100vw;height:100vh;aspect-ratio:auto;padding:10px}
-  .fsHost:fullscreen .cardbox{width:100vw;height:100vh;border-radius:0;padding:10px}
-  /* Commandes de plein écran : le menu latéral est hors de l'écran en plein écran,
-     on pose précédent / suivant / quitter sur la scène, en 64 px (tablette au tableau). */
-  .fsControls{display:none;position:absolute;right:18px;top:18px;gap:12px;z-index:5}
-  .fsHost:fullscreen .fsControls{display:flex}
-  .fsControls button{width:64px;height:64px;border-radius:18px;border:2px solid rgba(15,23,42,0.18);background:#fff;font-size:26px;line-height:1;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,0.12)}
-  .fsControls button.primary{background:#2563eb;color:#fff;border-color:#2563eb}
-  .fsControls button:active{transform:scale(0.96)}
+  /* la barre de commande (64 px) est posée par-dessus : la scène commence sous elle */
+  .fsHost:fullscreen #svgWrap{width:100vw;height:100vh;aspect-ratio:auto;padding:92px 10px 10px}
+  .fsHost:fullscreen .cardbox{width:100vw;height:100vh;border-radius:0;padding:10px;position:relative}
+  /* En plein écran, la barre de commande se pose par-dessus la scène, en grand
+     (64 px, tablette au tableau) : compteur à gauche, boutons à droite. */
+  .fsHost:fullscreen .nav{position:absolute;left:18px;right:18px;top:14px;z-index:5;margin:0;pointer-events:none}
+  .fsHost:fullscreen .navGroup{pointer-events:auto}
+  .fsHost:fullscreen .counter{font-size:24px;padding:0 6px}
+  .fsHost:fullscreen .navBtn{width:64px;height:64px;flex-basis:64px;font-size:26px;border-radius:18px;border:2px solid rgba(15,23,42,0.18);background:#fff;box-shadow:0 4px 14px rgba(0,0,0,0.12)}
+  .fsHost:fullscreen .navBtn.primary{background:#2563eb;color:#fff;border-color:#2563eb}
+  .fsHost:fullscreen .navBtn.fsToggle svg{width:28px;height:28px}
+  .fsHost:fullscreen .navBtn:active{transform:scale(0.96)}
 
 
   /* Aide générale : remplace le texte permanent du menu par une fenêtre centrée. */
@@ -545,7 +590,7 @@
     margin-bottom:18px;
   }
   .helpModalTitle{
-    font-size:28px;
+    font-size:26px;
     line-height:1.1;
     font-weight:950;
     letter-spacing:-.02em;
@@ -566,7 +611,7 @@
   }
   .helpClose:hover{background:#e5e7eb}
   .helpModalBody{
-    font-size:19px;
+    font-size:17px;
     line-height:1.55;
     color:#111827;
   }
@@ -577,6 +622,81 @@
   }
   .helpModalBody li{margin:8px 0}
   .helpModalBody strong{font-weight:900}
+  /* ------------------------------------------------------------------
+     Écran peu haut (portable 1366 x 768, fenêtre de navigateur avec sa
+     barre d'onglets) : le menu doit rester visible d'un bloc, sans
+     défilement, y compris dans les deux modes « entiers relatifs » qui
+     portent une rangée de plus. On resserre alors la trame — libellés et
+     champs restent lisibles, seuls les blancs maigrissent. Sur un écran
+     haut, rien ne change : la mise en page validée reste telle quelle.
+     Ce bloc doit rester EN DERNIER : à spécificité égale, c'est la règle
+     écrite le plus bas qui gagne.
+     ------------------------------------------------------------------ */
+  @media (max-height:900px){
+    .wrap{padding:8px;gap:10px}
+    .panelHeader{margin:0 0 4px;padding:0 0 5px}
+    .panelHeader h1{font-size:20px}
+    .panel label{margin:4px 0 2px}
+    .panel select,
+    .panel input{height:34px;padding:6px 9px}
+    .panel .equationTopSettings{margin-top:2px}
+    /* ces contrôles portent hauteur et remplissage en style en ligne : sans
+       !important la règle ne passe pas, et un select gardant 9 px de remplissage
+       dans une boîte rabaissée se fait couper son texte. */
+    #numColorModeWrap,
+    #signedWritingModeWrap,
+    #signedWritingMode{height:36px !important}
+    #signedWritingMode{padding:5px 6px !important}
+    #eqUnknownMode,
+    #numHiddenCount,
+    #numOpposeMode{padding:5px 6px !important}
+    #displayChoiceRow{margin-top:2px}
+    .viewToggle{height:36px}
+    .viewToggle .btn{height:30px}
+    .seedShareRow{margin-top:5px}
+    .seedShareRow input,
+    .seedShareRow .shareLinkBtn{height:32px !important}
+    .seedShareRow input{padding:4px 8px !important}
+    .genRow{margin-top:7px}
+    .genRow .btn{height:36px}
+    .panel{padding:9px}
+    .printBlock{margin-top:7px;padding:6px 10px 8px}
+    /* le titre du cadre et la glose du recto-verso disent ce que la phrase de
+       résumé, juste dessous, dit déjà en clair : on les rend au menu. */
+    .printBlockTitle{display:none}
+    .printBlock .printDuplexRow small{display:none}
+    .printBlock .printDuplexRow{margin-top:6px;padding:4px 10px}
+    .printBlock .printDuplexRow span{font-size:12px}
+    .printSummary{margin-top:4px}
+    .printBlock .printAction{height:36px !important}
+  }
+  /* Fenêtre franchement basse (portable 1366 x 768 avec barre d'onglets et
+     barre des tâches : il reste souvent moins de 680 px) : un cran de plus.
+     Les libellés restent en gras et lisibles, les champs restent cliquables. */
+  @media (max-height:700px){
+    .wrap{padding:6px;gap:8px}
+    .panelHeader h1{font-size:19px}
+    .panelHeader{padding:0 0 4px}
+    .panel label{margin:3px 0 1px;font-size:12px}
+    .panel select,
+    .panel input{height:31px;padding:5px 8px}
+    #numColorModeWrap,
+    #signedWritingModeWrap,
+    #signedWritingMode{height:32px !important}
+    #signedWritingMode{padding:3px 6px !important}
+    #eqUnknownMode,
+    #numHiddenCount,
+    #numOpposeMode{padding:3px 6px !important}
+    .viewToggle{height:34px}
+    .viewToggle .btn{height:28px}
+    .seedShareRow input,
+    .seedShareRow .shareLinkBtn{height:30px !important}
+    .seedShareRow input{padding:3px 8px !important}
+    .genRow .btn{height:33px}
+    .printBlock{padding:5px 9px 7px}
+    .printBlock .printDuplexRow{margin-top:5px;padding:3px 9px}
+    .printBlock .printAction{height:33px !important}
+  }
 </style>
 <link rel="stylesheet" href="../assets/css/consentement.css">
 <script defer src="../assets/js/consentement.js"></script>
@@ -590,14 +710,34 @@
       <button class="helpClose" id="btnHelpClose" type="button" aria-label="Fermer l’aide">×</button>
     </div>
     <div class="helpModalBody">
-      <p><strong>Raccourcis :</strong></p>
+      <p><strong>Le principe.</strong> Chaque plateau porte des taches (la quantité cachée, la même sous chaque tache) et des jetons. Les deux plateaux contiennent la même quantité : c'est une équation.</p>
+
+      <p><strong>Les modes.</strong></p>
       <ul>
-        <li><strong>Espace</strong> = révéler / avancer</li>
-        <li><strong>← / →</strong> = carte précédente / suivante</li>
-        <li><strong>En résolution pas à pas :</strong> ← / → = étape précédente / suivante</li>
-        <li><strong>F</strong> = plein écran</li>
+        <li><strong>Équation</strong> / <strong>Équation primaire</strong> : un clic révèle l'équation, un second la correction.</li>
+        <li><strong>Résolution pas à pas</strong> : une étape par clic. À chaque étape, la phrase sous le plateau dit ce que l'on fait ; ce que l'on enlève est <strong>hachuré</strong>, puis disparaît à l'étape suivante. La ligne d'équation et sa flèche (− 4𝑚, − 7, ÷ 3) s'écrivent au moment où l'on fait l'opération.</li>
+        <li><strong>Équation</strong> / <strong>Schéma</strong> : la résolution pas à pas s'affiche avec l'équation au-dessus des plateaux, ou avec le schéma en barres.</li>
+        <li><strong>𝑥</strong> / <strong>?</strong> : l'inconnue s'écrit avec une lettre ou avec un point d'interrogation.</li>
       </ul>
-      <p><strong>Graine :</strong> vide = série nouvelle à chaque clic ; remplie = série reproductible.</p>
+
+      <p><strong>Les boutons au-dessus du plateau.</strong></p>
+      <ul>
+        <li><strong>◀ ▶</strong> : étape précédente / suivante (ou carte précédente / suivante hors pas à pas).</li>
+        <li><strong>⏮ ⏭</strong> : sauter directement à la carte précédente / suivante.</li>
+        <li><strong>Plein écran</strong> : pour projeter ; les boutons restent affichés en grand sur le plateau.</li>
+        <li><strong>Résoudre</strong> (en vert, près de l'équation) : ouvre la même équation dans ÉquaSplat ou ÉquaBarre pour la manipuler.</li>
+      </ul>
+
+      <p><strong>Impression.</strong> Choisissez le contenu (énoncé seul, tableau vide, correction) et le nombre de cartes par page. <strong>Recto-verso</strong> imprime l'énoncé seul au recto et le contenu choisi au verso, dans le même ordre : les élèves cherchent d'un côté, vérifient de l'autre. La phrase sous les réglages résume ce qui sera imprimé.</p>
+
+      <p><strong>Raccourcis clavier.</strong></p>
+      <ul>
+        <li><strong>Espace</strong> ou <strong>→</strong> : avancer (révéler, étape suivante, carte suivante)</li>
+        <li><strong>←</strong> : revenir en arrière</li>
+        <li><strong>F</strong> : plein écran — <strong>Échap</strong> pour en sortir</li>
+      </ul>
+
+      <p><strong>Graine.</strong> Vide : une série nouvelle à chaque clic sur Générer. Remplie : toujours la même série — « Copier le lien » la partage avec tous les réglages.</p>
     </div>
   </div>
 </div>
@@ -628,7 +768,7 @@
     <div id="equationTopSettings" class="equationTopSettings">
         <div id="eqUnknownModeWrap" style="flex:1 1 172px; min-width:0; display:none">
           <label>Forme d’équation</label>
-          <select id="eqUnknownMode" style="width:100%; padding:8px 4px; font-size:12px;">
+          <select id="eqUnknownMode" style="width:100%; padding:9px 6px; font-size:14px;">
             <option value="X_PLUS_B_EQ_C" selected>Forme x + b = c</option>
             <option value="AX_EQ_C">Forme ax = c</option>
             <option value="ONE_SIDE">Forme ax + b = c</option>
@@ -645,59 +785,57 @@
           </select>
         </div>
 
-        <div id="numBeadAbsMaxWrap" style="flex:1 1 132px; min-width:0; display:none">
-          <label>Jetons max<br>(|v|)</label>
-          <input id="numBeadAbsMax" type="number" min="1" max="99" value="30" style="width:100%; padding:8px 4px; font-size:13px;" />
-        </div>
-
     </div>
 
 
     <div id="numberedSettings" style="display:none">
-      <div class="row">
+      <div class="row" style="align-items:flex-end">
         <div style="flex:1">
           <label><span id="labelNumTasks">Nombre de taches</span></label>
-          <div id="numTasksRange" style="display:flex; gap:10px; align-items:flex-end">
+          <div id="numTasksRange" style="display:flex; gap:8px; align-items:flex-end">
             <div id="numTasksMinWrap" style="display:none; flex-direction:column; gap:2px">
               <div id="numTasksMinLabel" style="font-size:12px;color:var(--muted);text-align:center">Min</div>
               <input id="numTasksMin" type="number" min="1" max="6" value="1" style="width:72px" title="Min" />
             </div>
 
-            <div id="numTasksMaxWrap" style="display:flex; flex-direction:column; gap:2px">
+            <div id="numTasksMaxWrap" style="display:flex; flex-direction:column; gap:2px; flex:1 1 auto; min-width:0">
               <div id="numTasksMaxLabel" style="font-size:12px;color:var(--muted); display:none;text-align:center">Max</div>
-              <input id="numTasks" type="number" min="1" max="6" value="1" style="width:72px" title="Max" />
+              <input id="numTasks" type="number" min="1" max="6" value="1" title="Max" />
             </div>
 
             <span id="numTasksArrow" style="display:none"></span>
           </div>
         </div>
         <div id="numVisibleMinWrap" style="flex:1">
-          <label class="miniCenteredLabel" id="numVisibleMinLabel">Visibles min</label>
+          <label id="numVisibleMinLabel">Visibles min</label>
           <input id="numVisibleMin" type="number" min="0" max="20" value="2" />
         </div>
         <div id="numVisibleMaxWrap" style="flex:1">
-          <label class="miniCenteredLabel" id="numVisibleMaxLabel">Visibles max</label>
+          <label id="numVisibleMaxLabel">Visibles max</label>
           <input id="numVisibleMax" type="number" min="0" max="6" value="3" />
         </div>
         <div id="numUnitVisibleMaxWrap" style="flex:1; display:none">
-          <label class="miniCenteredLabel" id="numUnitVisibleMaxLabel">Visibles max</label>
+          <label id="numUnitVisibleMaxLabel">Visibles max</label>
           <input id="numUnitVisibleMax" type="number" min="1" max="20" value="10" />
         </div>
       </div>
       
-      <div class="row" style="margin-top:10px; flex-wrap:nowrap;">
-        
+      <div class="row" style="margin-top:0; flex-wrap:nowrap;">
+        <div id="numBeadAbsMaxWrap" style="flex:1; min-width:0; display:none">
+          <label>Jetons max (|v|)</label>
+          <input id="numBeadAbsMax" type="number" min="1" max="99" value="30" />
+        </div>
         <div id="numHiddenCountWrap" style="flex:1; min-width:0;">
-          <label>Cachées<br>par tache</label>
-          <select id="numHiddenCount" style="width:100%; padding:8px 4px; font-size:13px;">
+          <label>Cachées / tache</label>
+          <select id="numHiddenCount" style="width:100%; padding:9px 6px; font-size:14px;">
             <option value="1" selected>1</option>
             <option value="2">2</option>
           </select>
         </div>
 
         <div id="numOpposeModeWrap" style="flex:1; min-width:0; display:none">
-          <label>Opposées<br>(±X)</label>
-          <select id="numOpposeMode" style="width:100%; padding:8px 4px; font-size:13px;">
+          <label>Opposées (±𝑥)</label>
+          <select id="numOpposeMode" style="width:100%; padding:9px 6px; font-size:14px;">
           <option value="off" selected>Aucune</option>
           <option value="all">Toutes</option>
           <option value="auto">Parfois</option>
@@ -707,7 +845,7 @@
 
       </div>
 
-      <div class="row" style="margin-top:10px">
+      <div class="row" style="margin-top:0">
         <div id="numTotalMinWrap" style="flex:1">
           <label>Total (min)</label>
           <input id="numTotalMin" type="number" min="1" max="1000" value="20" />
@@ -716,6 +854,10 @@
           <label>Total (max)</label>
           <input id="numTotalMax" type="number" min="1" max="1000" value="50" />
         </div>
+        <div style="flex:1">
+          <label for="count">Cartes</label>
+          <input id="count" type="number" min="1" max="300" value="10" />
+        </div>
       </div>
     </div>
 
@@ -727,25 +869,15 @@
 
     
 
-    <div class="seedShareRow">
-      <label for="seedN">Graine</label>
-      <input id="seedN" type="number" placeholder="ex: 2026" />
-      <button class="btn shareLinkBtn" id="btnShare" type="button">🔗 Copier le lien</button>
-      <span class="shareFeedback" id="shareFeedback" role="status" aria-live="polite"></span>
-    </div>
-
-    <div class="row" id="displayChoiceRow" style="margin-top:10px; align-items:center; flex-wrap:nowrap; gap:8px;">
-      <div class="varChoice" id="eqUnknownChoice" title="Choisir l’affichage de l’inconnue" aria-label="Choisir l’affichage de l’inconnue">
-        <button class="varChoiceBtn" id="btnEqUnknownLetter" type="button" aria-label="Afficher l’inconnue avec une lettre">𝑥</button>
-        <button class="varChoiceBtn" id="btnEqUnknownQuestionMark" type="button" aria-label="Afficher l’inconnue avec un point d’interrogation">?</button>
+    <div class="row" id="displayChoiceRow" style="align-items:center; flex-wrap:nowrap; gap:8px;">
+      <!-- 𝑥 / ? est dans la barre au-dessus du plateau (à côté des flèches). -->
+      <div id="eqStepViewToggle" class="viewToggle" title="Choisir la vue : équation ou schéma" style="display:none">
+        <button type="button" class="btn" id="btnEqStepViewEquation">Équation</button>
+        <button type="button" class="btn" id="btnEqStepViewSchema">Schéma</button>
       </div>
-      <div id="eqStepViewToggle" title="Choisir la vue : équation ou schéma" style="display:none; flex:0 0 auto; height:42px; gap:4px; align-items:center; padding:3px; border:1px solid var(--btn-border); border-radius:12px; background:rgba(255,255,255,0.04);">
-        <button type="button" class="btn" id="btnEqStepViewEquation" style="height:34px; padding:0 9px; font-size:11px; white-space:nowrap; border-radius:9px;">Équation</button>
-        <button type="button" class="btn" id="btnEqStepViewSchema" style="height:34px; padding:0 9px; font-size:11px; white-space:nowrap; border-radius:9px;">Schéma</button>
-      </div>
-      <label class="checkInline" id="numColorModeWrap" title="Positifs en Vert, Négatifs en Rouge" style="display:none; flex:0 1 auto; height:42px; margin-left:auto; padding:0 8px; overflow:hidden;">
+      <label class="checkInline" id="numColorModeWrap" title="Positifs en Vert, Négatifs en Rouge" style="display:none; flex:0 1 auto; height:42px; padding:0 8px; overflow:hidden;">
         <input type="checkbox" id="numColorMode" checked style="flex:0 0 auto; margin:0;"> 
-        <span style="font-weight:600; font-size:11px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">Jetons Vert/Rouge</span>
+        <span style="font-weight:600; font-size:12px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">Jetons Vert/Rouge</span>
       </label>
       <div id="signedWritingModeWrap" title="Choisir l’écriture des nombres négatifs dans l’équation" style="display:none; flex:0 0 126px; height:42px; min-width:0;">
         <select id="signedWritingMode" aria-label="Écriture des nombres négatifs" style="height:42px; padding:7px 6px; font-size:11px; font-weight:750; border-radius:10px;">
@@ -755,67 +887,73 @@
       </div>
     </div>
 
-    <div class="row" style="margin-top:10px; align-items:flex-end">
-      <div style="flex:0 0 auto">
-        <label>Nombre de cartes</label>
-        <input id="count" type="number" min="1" max="300" value="10" style="width:96px" />
-      </div>
+    <div class="seedShareRow">
+      <label for="seedN">Graine</label>
+      <input id="seedN" type="number" placeholder="au hasard" />
+      <button class="btn shareLinkBtn" id="btnShare" type="button" title="Copier un lien qui reproduit cette série et ces réglages">🔗 Copier le lien</button>
+      <span class="shareFeedback" id="shareFeedback" role="status" aria-live="polite"></span>
+    </div>
+
+    <div class="row genRow">
       <button class="btn primary" id="btnGen">Générer</button>
       <button class="btn danger" id="btnClear">Vider</button>
     </div>
 
-    <div class="row" style="margin-top:10px;">
-      <div style="flex:1">
-        <label for="printActivityTitle">Titre imprimé</label>
-        <input id="printActivityTitle" type="text" maxlength="160" placeholder="ex. Atelier de recherche" />
+    <!-- Les boutons précédent / suivant / plein écran vivent désormais sur la scène,
+         au-dessus du plateau (mêmes identifiants, même code). -->
+
+    <div class="printBlock">
+      <div class="printBlockTitle">Impression</div>
+      <input id="printActivityTitle" type="text" maxlength="160" placeholder="Titre imprimé (ex. Atelier de recherche)" aria-label="Titre imprimé" />
+      <div class="row" style="flex-wrap:nowrap; gap:8px; margin-top:8px;">
+        <select id="printMode" title="Choisir le contenu à imprimer" style="flex:1 1 auto; min-width:0;">
+          <option value="statement">Énoncé seul</option>
+          <option value="worksheet">Tableau vide</option>
+          <option value="correction">Correction</option>
+        </select>
+        <select id="printCardsPerPage" title="Nombre de cartes par page" style="flex:0 0 98px; width:98px;">
+          <option value="4">4/page</option>
+          <option value="2" selected>2/page</option>
+          <option value="1">1/page</option>
+        </select>
       </div>
-    </div>
-
-    <div class="row" style="margin-top:10px; flex-wrap:nowrap; gap:6px;">
-      <button class="btn" id="btnPrev" title="Étape précédente / carte précédente" aria-label="Étape précédente / carte précédente" style="flex:0 0 42px; width:42px; height:42px; padding:0; font-size:18px; line-height:1;">◀</button>
-      <button class="btn" id="btnNext" title="Étape suivante / carte suivante" aria-label="Étape suivante / carte suivante" style="flex:0 0 42px; width:42px; height:42px; padding:0; font-size:18px; line-height:1;">▶</button>
-      <button class="iconbtn" id="btnFullscreen" title="Plein écran" style="flex:0 0 auto">
-        <svg viewBox="0 0 24 24" aria-hidden="true">
-          <path fill="currentColor" d="M8 3H3v5h2V5h3V3zm13 0h-5v2h3v3h2V3zM5 16H3v5h5v-2H5v-3zm16 0h-2v3h-3v2h5v-5z"/>
-        </svg>
-      </button>
-    </div>
-
-    <div class="row" style="margin-top:10px; align-items:center; flex-wrap:nowrap; gap:6px;">
-      <button class="btn printAction" id="btnPrint" style="flex:0 0 76px; width:76px; min-width:0; padding:10px 8px;">Imprimer</button>
-      <select id="printMode" title="Choisir le contenu à imprimer" style="flex:1 1 auto; min-width:88px; max-width:none; height:44px; padding:8px 6px; font-size:12px;">
-        <option value="statement">Énoncé seul</option>
-        <option value="worksheet">Tableau vide</option>
-        <option value="correction">Correction</option>
-      </select>
-      <label class="checkInline" title="Recto : énoncé seul • Verso : contenu choisi" style="flex:0 0 48px; width:48px; height:44px; padding:0 6px; gap:5px; white-space:nowrap; margin-left:0; justify-content:center;">
-        <input id="printDuplex" type="checkbox" style="margin:0; flex:0 0 auto;" />
-        <span style="font-size:12px; font-weight:700; color:var(--ink);">RV</span>
+      <label class="checkInline printDuplexRow" title="Recto : énoncé seul • Verso : contenu choisi">
+        <input id="printDuplex" type="checkbox" />
+        <span>Recto-verso <small>— énoncé au recto, contenu choisi au verso</small></span>
       </label>
-      <select id="printCardsPerPage" title="Disposition d’impression" style="flex:0 0 68px; width:68px; min-width:68px; max-width:68px; height:44px; padding:8px 4px; font-size:12px;">
-        <option value="4">4/page</option>
-        <option value="2" selected>2/page</option>
-        <option value="1">1/page</option>
-      </select>
+      <div class="printSummary" id="printSummary" aria-live="polite"></div>
+      <button class="btn printAction" id="btnPrint" style="width:100%; margin-top:6px; height:40px; padding:0;">Imprimer</button>
     </div>
   </section>
 
   <section class="stage fsHost" id="fsHost">
     <div class="cardbox">
-      <div class="nav">
-        <div id="counterNav" style="display:flex; align-items:center; gap:8px; min-height:28px;">
-          <button class="btn" id="btnQuestionPrev" title="Question précédente" aria-label="Question précédente" style="display:none; flex:0 0 30px; width:30px; height:28px; padding:0; font-size:13px; line-height:1; border-radius:9px; align-items:center; justify-content:center; text-align:center;">⏮</button>
-          <button class="btn" id="btnQuestionNext" title="Question suivante" aria-label="Question suivante" style="display:none; flex:0 0 30px; width:30px; height:28px; padding:0; font-size:13px; line-height:1; border-radius:9px; align-items:center; justify-content:center; text-align:center;">⏭</button>
+      <!-- Barre de commande de la scène : à gauche le compteur et le saut de carte,
+           à droite précédent / suivant / plein écran. En plein écran la même barre
+           se pose par-dessus la scène, en grand (tablette au tableau). -->
+      <div class="nav" id="stageNav">
+        <div id="counterNav" class="navGroup">
+          <button class="btn navBtn" id="btnQuestionPrev" title="Carte précédente" aria-label="Carte précédente" style="display:none">⏮</button>
+          <button class="btn navBtn" id="btnQuestionNext" title="Carte suivante" aria-label="Carte suivante" style="display:none">⏭</button>
           <div class="counter" id="counter">0 carte</div>
+        </div>
+        <div class="navGroup">
+          <div class="varChoice" id="eqUnknownChoice" title="Choisir l’affichage de l’inconnue" aria-label="Choisir l’affichage de l’inconnue">
+            <button class="varChoiceBtn" id="btnEqUnknownLetter" type="button" aria-label="Afficher l’inconnue avec une lettre">𝑥</button>
+            <button class="varChoiceBtn" id="btnEqUnknownQuestionMark" type="button" aria-label="Afficher l’inconnue avec un point d’interrogation">?</button>
+          </div>
+          <button class="btn navBtn" id="btnPrev" title="Étape précédente / carte précédente" aria-label="Étape précédente / carte précédente">◀</button>
+          <button class="btn navBtn primary" id="btnNext" title="Étape suivante / carte suivante" aria-label="Étape suivante / carte suivante">▶</button>
+          <button class="btn navBtn fsToggle" id="btnFullscreen" title="Plein écran (F)" aria-label="Plein écran">
+            <svg class="fsIconEnter" viewBox="0 0 24 24" aria-hidden="true">
+              <path fill="currentColor" d="M8 3H3v5h2V5h3V3zm13 0h-5v2h3v3h2V3zM5 16H3v5h5v-2H5v-3zm16 0h-2v3h-3v2h5v-5z"/>
+            </svg>
+            <span class="fsIconExit" aria-hidden="true">✕</span>
+          </button>
         </div>
       </div>
       <div id="svgWrap">
         <svg id="mainSvg" tabindex="0" viewBox="0 0 1600 1000" aria-label="Splat card"></svg>
-      </div>
-      <div class="fsControls" id="fsControls" aria-label="Commandes plein écran">
-        <button type="button" id="fsPrev" title="Étape précédente" aria-label="Étape précédente">◀</button>
-        <button type="button" id="fsNext" class="primary" title="Étape suivante" aria-label="Étape suivante">▶</button>
-        <button type="button" id="fsExit" title="Quitter le plein écran" aria-label="Quitter le plein écran">✕</button>
       </div>
     </div>
   </section>
@@ -1044,7 +1182,8 @@ function syncNumTasksUI(act){
     _numTasksSavedNumberedMax = numTasksEl.value;
     if(numTasksMinEl) _numTasksSavedNumberedMin = numTasksMinEl.value;
     if(_numTasksSavedEquationMax != null) numTasksEl.value = _numTasksSavedEquationMax;
-    labelNumTasksEl.innerHTML = "Nombre de taches<br>≤ par plateau";
+    labelNumTasksEl.textContent = "Taches (max)";
+    labelNumTasksEl.title = "Nombre maximum de taches par plateau";
     setNumTasksRangeVisible(false);
     numTasksEl.min = "1";
     numTasksEl.max = "6";
@@ -1222,6 +1361,30 @@ function syncPrintModeUI(){
   if(!worksheetOpt) return;
   worksheetOpt.textContent = (activityEl && isSignedEquationModeValue(activityEl.value)) ? "Énoncé + aide" : "Tableau vide";
   sel.title = "Choisir le contenu à imprimer";
+  syncPrintSummary();
+}
+
+/* Phrase qui dit en clair ce qui partira à l'imprimante : « RV » seul n'était pas
+   compréhensible (que met-on au recto, au verso ?). */
+function syncPrintSummary(){
+  const out = document.getElementById("printSummary");
+  const sel = printModeSelectEl || document.getElementById("printMode");
+  const duplexEl = document.getElementById("printDuplex");
+  const perPageEl = printCardsPerPageEl || document.getElementById("printCardsPerPage");
+  if(!out || !sel) return;
+  const opt = sel.options[sel.selectedIndex];
+  const content = opt ? opt.textContent.trim().toLowerCase() : "";
+  const perPage = perPageEl ? perPageEl.value : "2";
+  const duplex = !!(duplexEl && duplexEl.checked);
+  let msg;
+  if(duplex && sel.value === "statement"){
+    msg = "Recto : énoncé seul — verso : énoncé seul (même chose des deux côtés).";
+  }else if(duplex){
+    msg = "Recto : énoncé seul — verso : " + content + ".";
+  }else{
+    msg = "Imprime : " + content + " seulement.";
+  }
+  out.textContent = msg + " " + perPage + " carte" + (perPage === "1" ? "" : "s") + " par page.";
 }
 
 function getSignedWritingMode(){
@@ -1547,7 +1710,15 @@ function buildEquationEquaSplatPayload(card, revealState = 0){
       leftRow = eqSideToEquaSplatRow(eq.left, opts);
       rightRow = eqSideToEquaSplatRow(eq.right, opts);
     }else{
-      const state = getEquationStepState(eq, reveal, getCardVarChar(card), {includeVerify:false});
+      // Le bouton Résoudre ne s'affichait qu'aux étapes où le plateau est « propre »
+      // (combined, afterX, afterV) : il apparaissait et disparaissait d'une étape à
+      // l'autre. Aux étapes hachurées on exporte maintenant le plateau tel qu'il sera
+      // une fois les éléments barrés retirés (l'état suivant) ; il ne disparaît plus
+      // qu'à partir du partage en groupes, où l'équation est déjà résolue.
+      const states = getEquationStepStates(eq, getCardVarChar(card), {includeVerify:false});
+      const k = clamp(reveal, 1, states.length) - 1;
+      let state = states[k];
+      if(state && (state.kind === "hatchX" || state.kind === "hatchV")) state = states[k + 1] || state;
       const exportableKinds = new Set(["combined", "afterX", "afterV"]);
       if(!state || !exportableKinds.has(state.kind)) return null;
       leftRow = eqVisiblePartsToEquaSplatRow(state.leftParts, opts);
@@ -1943,6 +2114,9 @@ if(invTaskCountEl) invTaskCountEl.addEventListener("change", ()=>{ syncSettingsU
     }, 0);
   });
 });
+[printModeSelectEl, printCardsPerPageEl, document.getElementById("printDuplex")].forEach(el=>{
+  if(el) el.addEventListener("change", syncPrintSummary);
+});
 
 if(btnEqUnknownLetterEl){
   btnEqUnknownLetterEl.addEventListener("click", ()=> setEquationUnknownDisplay(false));
@@ -2273,6 +2447,36 @@ function buildEquationStepSchemaColumnGeometry(card){
   const leftVisibleSlots = Math.max(6, (eq.left.visible || []).length, eq.left.tasks || 0);
   const rightVisibleSlots = Math.max(6, (eq.right.visible || []).length, eq.right.tasks || 0);
 
+  // Un peu de vie, sans rien de nouveau à chaque rendu : la disposition était la
+  // même pour toutes les cartes (jetons toujours en bas à gauche, taches au même
+  // endroit). Une graine tirée de l'équation elle-même décale légèrement les
+  // taches et choisit les emplacements des jetons ; la même carte se redessine
+  // donc toujours pareil, d'une étape à l'autre et à l'impression.
+  const rng = makeRng(hashStringToInt(JSON.stringify([eq.x, eq.left.tasks, eq.left.visible, eq.right.tasks, eq.right.visible])));
+  // Deux rangées de taches ne sont séparées que de 5 px (141 px d'entraxe pour des
+  // taches de 136 px) : un décalage vertical tiré tache par tache faisait se toucher,
+  // et se confondre, les deux taches d'une même colonne — on ne pouvait plus les
+  // compter. Le décalage vertical est donc tiré une fois par plateau (les rangées
+  // descendent ensemble, l'entraxe ne bouge jamais) ; seul le décalage horizontal
+  // est tiré tache par tache.
+  const jitterSplats = (splats) => {
+    const dy = rInt(rng, -8, 8);
+    return splats.map(s => ({ ...s, cx: s.cx + rInt(rng, -16, 16), cy: s.cy + dy }));
+  };
+  const leftSplatsJ = jitterSplats(leftSplats);
+  const rightSplatsJ = jitterSplats(rightSplats);
+  const shuffledSlots = (slots, used) => {
+    // on garde les emplacements dans l'ordre gauche → droite, mais on choisit
+    // lesquels servent (ex. 2 jetons : emplacements 2 et 5 plutôt que 1 et 2)
+    const idx = slots.map((_, i) => i);
+    shuffleInPlace(idx, rng);
+    const chosen = idx.slice(0, Math.max(0, Math.min(slots.length, used))).sort((a, b) => a - b);
+    const rest = idx.slice(chosen.length).sort((a, b) => a - b);
+    return chosen.concat(rest).map(i => slots[i]);
+  };
+  const leftUsed = (eq.left.visible || []).length;
+  const rightUsed = (eq.right.visible || []).length;
+
   return {
     trays: {
       left: topTray,
@@ -2284,15 +2488,15 @@ function buildEquationStepSchemaColumnGeometry(card){
     pos: {
       left: {
         beadR,
-        posV: layoutVisible(topTray, leftVisibleSlots),
-        posH: leftSplats.map(s=>({cx:s.cx, cy:s.cy})),
-        splats: leftSplats
+        posV: shuffledSlots(layoutVisible(topTray, leftVisibleSlots), leftUsed),
+        posH: leftSplatsJ.map(s=>({cx:s.cx, cy:s.cy})),
+        splats: leftSplatsJ
       },
       right: {
         beadR,
-        posV: layoutVisible(bottomTray, rightVisibleSlots),
-        posH: rightSplats.map(s=>({cx:s.cx, cy:s.cy})),
-        splats: rightSplats
+        posV: shuffledSlots(layoutVisible(bottomTray, rightVisibleSlots), rightUsed),
+        posH: rightSplatsJ.map(s=>({cx:s.cx, cy:s.cy})),
+        splats: rightSplatsJ
       }
     }
   };
@@ -3037,16 +3241,45 @@ function buildEquationSolveLines(eq, varChar = xChar){
 
 
 
+/* Lignes d'équation portées par un état du pas à pas. La plupart n'en portent
+   qu'une (`equation`) ; l'état hatchV en porte deux (`equationLines`) : la
+   décomposition (7 + 4 = m + 7) puis le résultat du retrait (4 = m). */
+function eqStepStateLines(st){
+  if(!st) return [];
+  if(Array.isArray(st.equationLines) && st.equationLines.length) return st.equationLines.filter(Boolean);
+  return st.equation ? [st.equation] : [];
+}
+
+/* Suite des lignes affichées jusqu'à l'état `max` (toutes si omis), chacune avec
+   l'opération qui l'a produite (− 4m, − 7, ÷ 3) ou null (première ligne, ligne de
+   décomposition). La ligne réduite apparaît à l'étape où l'on hachure (hatchX,
+   hatchV) ou divise (final) : c'est là que la consigne annonce l'opération ; l'étape
+   « Je garde ce qui reste » n'ajoute donc plus de ligne. */
+function getEquationStepLineEntries(eq, varChar = xChar, max = null){
+  const states = getEquationStepStates(eq, varChar);
+  const n = (max == null) ? states.length : clamp(Math.round(Number(max) || 0), 0, states.length);
+  const entries = [];
+  for(let i=0;i<n;i++){
+    const st = states[i];
+    const lines = eqStepStateLines(st);
+    lines.forEach((line, j)=>{
+      if(!line || (entries.length && entries[entries.length - 1].line === line)) return;
+      const decomp = st.kind === "hatchV" && j < lines.length - 1;
+      let op = null;
+      if(!decomp && entries.length){
+        if(st.kind === "hatchX") op = "− " + coeffXLabel(st.commonX || 1, varChar);
+        else if(st.kind === "hatchV") op = "− " + (st.commonV || 0);
+        else if(st.kind === "final" && (Number(st.remainingCoeff) || 1) > 1) op = "÷ " + st.remainingCoeff;
+      }
+      entries.push({line, op, decomp, stateIndex: i});
+    });
+  }
+  return entries;
+}
+
 function getEquationStepVisibleLines(eq, revealState, varChar = xChar){
   if(revealState <= 0) return [];
-  const states = getEquationStepStates(eq, varChar);
-  const max = clamp(Math.round(Number(revealState) || 0), 1, states.length);
-  const out = [];
-  for(let i=0;i<max;i++){
-    const line = states[i] && states[i].equation;
-    if(line && (!out.length || out[out.length - 1] !== line)) out.push(line);
-  }
-  return out;
+  return getEquationStepLineEntries(eq, varChar, Math.max(1, Math.round(Number(revealState) || 0))).map(e => e.line);
 }
 
 function buildEquationTableParts(total, coeff, visSum, xVal, mode, varChar = xChar){
@@ -4696,12 +4929,17 @@ function getEquationStepStates(eq, varChar = xChar, opts = {}){
   const commonX = Math.min(a, b);
   const a2 = a - commonX;
   const b2 = b - commonX;
+  // L'équation d'un état = la ligne que l'on ÉCRIT à cette étape. À l'étape où l'on
+  // hachure (« J'enlève 4m de chaque côté »), on écrit déjà la ligne réduite avec sa
+  // flèche d'opération ; l'étape « Je garde ce qui reste » nettoie le plateau sans
+  // rien ajouter à l'équation (retour de Gwenaël, 22/08).
+  const reducedAfterX = formatEqSideFromCoeffVis(a2, vl, varChar) + " = " + formatEqSideFromCoeffVis(b2, vr, varChar);
   if(commonX > 0){
     push(
       "hatchX",
       makeEqStepGroupedParts(a, vl, xVal, varChar, {removeX: commonX}),
       makeEqStepGroupedParts(b, vr, xVal, varChar, {removeX: commonX}),
-      formatEqSideFromCoeffVis(a, vl, varChar) + " = " + formatEqSideFromCoeffVis(b, vr, varChar),
+      reducedAfterX,
       { commonX }
     );
     push(
@@ -4723,12 +4961,16 @@ function getEquationStepStates(eq, varChar = xChar, opts = {}){
     if(vl2 > 0) leftSplit.push({value: vl2, removed: false, posIndex: 1});
     if(commonV > 0) rightSplit.push({value: commonV, removed: true, posIndex: 0});
     if(vr2 > 0) rightSplit.push({value: vr2, removed: false, posIndex: 1});
+    const decomposedLine = formatEqStepDecomposedSide(a2, leftSplit, varChar) + " = " + formatEqStepDecomposedSide(b2, rightSplit, varChar);
+    const reducedAfterV = formatEqSideFromCoeffVis(a2, vl2, varChar) + " = " + formatEqSideFromCoeffVis(b2, vr2, varChar);
+    // Deux lignes à cette étape : la décomposition (ce que montre le plateau) puis
+    // le résultat du retrait, relié par la flèche « − n ».
     push(
       "hatchV",
       makeEqStepGroupedParts(a2, vl, xVal, varChar, {hiddenStartIndex: commonX, visibleSplit: leftSplit}),
       makeEqStepGroupedParts(b2, vr, xVal, varChar, {hiddenStartIndex: commonX, visibleSplit: rightSplit}),
-      formatEqStepDecomposedSide(a2, leftSplit, varChar) + " = " + formatEqStepDecomposedSide(b2, rightSplit, varChar),
-      { commonV }
+      reducedAfterV,
+      { commonV, equationLines: [decomposedLine, reducedAfterV] }
     );
     push(
       "afterV",
@@ -5439,8 +5681,17 @@ function drawEquationStepSingaporeTable(targetGroup, card, revealState){
     }
   }
 
-  const tableLeftParts = stableLayout ? stableLayout.row1Parts : state.leftParts;
-  const tableRightParts = stableLayout ? stableLayout.row2Parts : state.rightParts;
+  let tableLeftParts = stableLayout ? stableLayout.row1Parts : state.leftParts;
+  let tableRightParts = stableLayout ? stableLayout.row2Parts : state.rightParts;
+
+  // Vue Schéma, étape « Je divise par n : je garde un groupe » : le plateau hachure
+  // les groupes que l'on ne garde pas ; le tableau faisait comme si de rien n'était.
+  // On hachure de la même façon toutes les colonnes sauf la première (retour du 22/08).
+  if(schemaMode && state.kind === "final" && state.final && (Number(state.remainingCoeff) || 1) > 1){
+    const keepFirstOnly = parts => (Array.isArray(parts) ? parts : []).map((p, i) => (p && i > 0) ? Object.assign({}, p, {removed:true}) : p);
+    tableLeftParts = keepFirstOnly(tableLeftParts);
+    tableRightParts = keepFirstOnly(tableRightParts);
+  }
 
   const tableTotal = Math.max(
     1,
@@ -5545,28 +5796,9 @@ const EQ_VIEW_LINE_FONT = 46;
    états : hatchX/afterX = retrait des lettres communes, hatchV/afterV = retrait des
    jetons communs, share/final = division. La décomposition n'est pas une opération. */
 function getEquationStepLineOperations(eq, revealState, varChar = xChar){
-  const states = getEquationStepStates(eq, varChar);
-  const max = clamp(Math.round(Number(revealState) || 0), 1, states.length);
+  const entries = getEquationStepLineEntries(eq, varChar, Math.max(1, Math.round(Number(revealState) || 0)));
   const ops = [];
-  let lastLine = null;
-  let lineIndex = -1;
-  let pendingOp = null;
-  for(let i=0;i<max;i++){
-    const st = states[i];
-    if(!st) continue;
-    if(st.kind === "hatchX") pendingOp = "− " + coeffXLabel(st.commonX || 1, varChar);
-    else if(st.kind === "hatchV") pendingOp = "− " + (st.commonV || 0);
-    else if(st.kind === "share") pendingOp = "÷ " + (st.groupCount || 1);
-    else if(st.kind === "final" && (Number(st.remainingCoeff) || 1) > 1) pendingOp = "÷ " + st.remainingCoeff;
-    const line = st.equation;
-    if(line && line !== lastLine){
-      lineIndex += 1;
-      // la ligne de décomposition (hatchV) n'est pas le résultat d'une opération
-      if(lineIndex > 0) ops[lineIndex - 1] = (st.kind === "hatchV") ? null : pendingOp;
-      if(st.kind !== "hatchV") pendingOp = null;
-      lastLine = line;
-    }
-  }
+  for(let i=1;i<entries.length;i++) ops[i - 1] = entries[i].op || null;
   return ops;
 }
 
@@ -5654,21 +5886,12 @@ function drawEquationStepOperationArrows(targetGroup, eq, revealState, varChar, 
    exactement les mêmes opérations, et on n'attribue une flèche qu'aux transitions
    retrouvées mot pour mot entre deux lignes consécutives de la colonne. */
 function getEquationSolveLineOperations(eq, lines, varChar = xChar){
-  const states = getEquationStepStates(eq, varChar);
   const transitions = [];
   let lastLine = null;
-  let pendingOp = null;
-  states.forEach(st => {
-    if(!st) return;
-    if(st.kind === "hatchX") pendingOp = "− " + coeffXLabel(st.commonX || 1, varChar);
-    else if(st.kind === "hatchV") pendingOp = "− " + (st.commonV || 0);
-    else if(st.kind === "share") pendingOp = "÷ " + (st.groupCount || 1);
-    else if(st.kind === "final" && (Number(st.remainingCoeff) || 1) > 1) pendingOp = "÷ " + st.remainingCoeff;
-    const line = st.equation;
-    if(!line || st.kind === "hatchV" || line === lastLine) return;
-    if(lastLine !== null && pendingOp) transitions.push({from:lastLine, to:line, op:pendingOp});
-    lastLine = line;
-    pendingOp = null;
+  getEquationStepLineEntries(eq, varChar).forEach(entry => {
+    if(entry.decomp) return; // la colonne du mode Équation n'a pas de ligne de décomposition
+    if(lastLine !== null && entry.op) transitions.push({from:lastLine, to:entry.line, op:entry.op});
+    lastLine = entry.line;
   });
   const safeLines = Array.isArray(lines) ? lines.map(l => String(l == null ? "" : l)) : [];
   const ops = [];
@@ -5680,24 +5903,18 @@ function getEquationSolveLineOperations(eq, lines, varChar = xChar){
 }
 
 /* Correction imprimée du pas à pas : quand une vignette fait apparaître une nouvelle
-   ligne par une opération (« Je garde ce qui reste », « Je divise »), on montre la ligne
+   ligne par une opération (« J'enlève … », « Je divise »), on montre la ligne
    précédente au-dessus de la nouvelle avec la flèche entre les deux. Renvoie
    {lines:[avant, après], op} ou null (une seule ligne dans la vignette). */
 function getEquationStepPrintArrowLines(eq, revealState, varChar = xChar){
-  const states = getEquationStepStates(eq, varChar);
   const k = Math.round(Number(revealState) || 0);
-  if(k < 2 || k > states.length) return null;
-  const st = states[k - 1];
-  const prev = states[k - 2];
-  if(!st || !prev) return null;
-  if(!(st.kind === "afterX" || st.kind === "afterV" || st.kind === "final")) return null;
-  if(!st.equation || st.equation === prev.equation) return null;
-  const lines = getEquationStepVisibleLines(eq, k, varChar);
-  const ops = getEquationStepLineOperations(eq, k, varChar);
-  if(lines.length < 2) return null;
-  const op = ops[lines.length - 2];
-  if(!op) return null;
-  return { lines: [lines[lines.length - 2], lines[lines.length - 1]], op };
+  if(k < 2) return null;
+  const entries = getEquationStepLineEntries(eq, varChar, k);
+  if(entries.length < 2) return null;
+  const last = entries[entries.length - 1];
+  // la ligne doit être apparue À cette étape, et résulter d'une opération
+  if(last.stateIndex !== k - 1 || !last.op) return null;
+  return { lines: [entries[entries.length - 2].line, last.line], op: last.op };
 }
 
 /* Étape « groupes » : chaque plateau est partagé en n cases égales séparées par des
@@ -6116,7 +6333,9 @@ function renderCardEquation(card, revealState, useTokens){
   // l'équation apparaît au-dessus, mais le support visuel ne disparaît pas à la fin.
   const hasSimpleEquationOnly = false;
   const useEqStepSchemaLayout = ((isEquationStepFamily(card) || isSimpleEquationSchemaView) && getEquationStepView() === "schema");
-  const useEqStepEquationViewLayout = (isEquationStepFamily(card) && getEquationStepView() !== "schema");
+  // Le mode « Équation » tout court partage la géométrie de la vue Équation du pas à
+  // pas : plateaux descendus, bloc d'équation en haut avec ses flèches d'opération.
+  const useEqStepEquationViewLayout = ((isEquationStepFamily(card) || card.family === "EQ") && getEquationStepView() !== "schema");
   const schemaGeometry = useEqStepSchemaLayout
     ? buildEquationStepSchemaColumnGeometry(card)
     : (useEqStepEquationViewLayout ? buildEquationStepEquationViewGeometry(card) : null);
@@ -6741,35 +6960,23 @@ function renderCardEquation(card, revealState, useTokens){
 
 
   if(hasSimpleEquationLine){
+    // Même bloc que la vue Équation du pas à pas (calé en haut, pas fixe, police 46),
+    // avec les flèches d'opération entre les lignes (retour du 22/08 : « c'est dommage
+    // qu'il n'y ait pas les flèches en mode Équation tout court »).
     const lines = getEquationSimpleVisibleLines(card, revealState);
-    const n = Math.max(1, lines.length);
-    let eqFontSize = (n >= 4) ? 38 : (n >= 3 ? 42 : 46);
-    let eqGap = (n >= 4) ? 36 : (n >= 3 ? 40 : 46);
-
-    // Même placement que le mode "Équation — résolution pas à pas" :
-    // le bloc reste dans la bande haute et ne descend pas sur les plateaux.
-    const topLimit = 44;
-    const bottomLimit = 164;
-    const available = Math.max(0, bottomLimit - topLimit);
-    const wantedHeight = (n - 1) * eqGap;
-    if(wantedHeight > available && n > 1){
-      eqGap = Math.max(30, Math.floor(available / (n - 1)));
-      eqFontSize = Math.min(eqFontSize, Math.max(34, eqGap + 4));
-    }
-    const blockHeight = (n - 1) * eqGap;
-    const startY = Math.round(topLimit + Math.max(0, (available - blockHeight) / 2));
-
-    drawEquationLines(layer, lines, 800, startY, {
+    const mapped = getEquationSimpleMappedRevealState(card, revealState);
+    drawEquationLines(layer, lines, 800, EQ_VIEW_LINE_TOP, {
       text:(x,y,t,a)=>text(x,y,t,a),
       fill:"#000",
-      fontSize:eqFontSize,
-      gap:eqGap,
+      fontSize:EQ_VIEW_LINE_FONT,
+      gap:EQ_VIEW_LINE_GAP,
       anchor:"start",
       alignEquals:true,
-      eqGap:22,
+      eqGap:30,
       fontFamily:"'Times New Roman', Times, serif",
       fontStyle:"italic"
     });
+    drawEquationStepOperationArrows(layer, eq, mapped, getCardVarChar(card), lines, EQ_VIEW_LINE_TOP, EQ_VIEW_LINE_GAP, EQ_VIEW_LINE_FONT);
   }
 
 
@@ -6882,7 +7089,10 @@ function renderCardEquation(card, revealState, useTokens){
     // on remonte donc le bouton pour que son centre visuel s'aligne avec la phrase.
     const isIntroBalanceText = !isSimpleEquationSchemaView && !hasSimpleEquationLine && !hasAidTable && !hasEquationStepAid && !hasEquationSignedAid && !hasEquationSignedStepAid;
     const solveBtnY = isIntroBalanceText ? 43 : 58;
-    drawEquationEquaSplatSolveButton(layer, card, 260, solveBtnY, revealState);
+    // Sur la première diapo, la phrase « Même quantité à gauche qu'à droite » est
+    // centrée et large (x ≈ 350 → 1250) : à x = 260 le bouton la chevauchait.
+    const solveBtnX = isIntroBalanceText ? 70 : 260;
+    drawEquationEquaSplatSolveButton(layer, card, solveBtnX, solveBtnY, revealState);
   }
 }
 
@@ -7311,14 +7521,16 @@ function renderCardEquationStepPrintScene(targetGroup, card, revealState, opts =
       if(arrowInfo){
         const twoLines = arrowInfo.lines;
         const fitOpts = {minFontSize: 56, maxWidth: 1100, maxSideWidth: 470, eqGap: 44, eqGapRatio: 0.5};
-        const fitted = fitPrintEquationFont(twoLines, 96, fitOpts);
+        // 96 → 84 : à 96 les deux lignes touchaient à la fois le titre du cadre et le plateau.
+        const fitted = fitPrintEquationFont(twoLines, 84, fitOpts);
         const lineGap = Math.round(fitted.fontSize * 1.18);
-        const centerY = getPrintTopBandCenterY(trays, {compactStepPrint, isVerify:false, lineCount:2, gap:lineGap});
+        // topLimit relevé : la 1re des deux lignes touchait le titre « Étape n : … » du cadre.
+        const centerY = getPrintTopBandCenterY(trays, {compactStepPrint, isVerify:false, lineCount:2, gap:lineGap, topLimit: 70});
         drawPrintEquationLinesLikeProjection(targetGroup, twoLines, Object.assign({
           text:(x,y,t,a)=>text(x,y,t,a),
           centerX: trays.midX || 800,
           centerY,
-          fontSize: 96,
+          fontSize: 84,
           equalFontSize: fitted.fontSize,
           gap: lineGap,
           fill:"#000"
@@ -8755,8 +8967,8 @@ function updateUI(){
     ? (stepMode ? `Carte ${idx+1} / ${cards.length} — Étape ${revealState} / ${maxState}` : `Carte ${idx+1} / ${cards.length}`)
     : "0 carte";
 
-  if(btnQuestionPrevEl) btnQuestionPrevEl.style.display = stepMode ? "inline-flex" : "none"; btnQuestionPrevEl.style.alignItems = "center"; btnQuestionPrevEl.style.justifyContent = "center";
-  if(btnQuestionNextEl) btnQuestionNextEl.style.display = stepMode ? "inline-flex" : "none"; btnQuestionNextEl.style.alignItems = "center"; btnQuestionNextEl.style.justifyContent = "center";
+  if(btnQuestionPrevEl) btnQuestionPrevEl.style.display = stepMode ? "inline-flex" : "none";
+  if(btnQuestionNextEl) btnQuestionNextEl.style.display = stepMode ? "inline-flex" : "none";
 
   if(btnPrevEl){
     btnPrevEl.disabled = cards.length===0 || (stepMode ? (idx===0 && revealState<=0) : (idx===0 && revealState===0));
@@ -8896,9 +9108,13 @@ if(btnEqStepViewSchemaEl){
   });
 }
 document.getElementById("btnFullscreen").addEventListener("click", toggleFullscreen);
-document.getElementById("fsPrev").addEventListener("click", goPreviousStepOrCard);
-document.getElementById("fsNext").addEventListener("click", goNextStepOrCard);
-document.getElementById("fsExit").addEventListener("click", toggleFullscreen);
+document.addEventListener("fullscreenchange", ()=>{
+  const b = document.getElementById("btnFullscreen");
+  if(!b) return;
+  const on = !!document.fullscreenElement;
+  b.title = on ? "Quitter le plein écran (F ou Échap)" : "Plein écran (F)";
+  b.setAttribute("aria-label", b.title);
+});
 window.addEventListener("keydown",(e)=>{
   const _ae = document.activeElement;
   const _tag = _ae && _ae.tagName ? String(_ae.tagName).toLowerCase() : "";
@@ -8909,6 +9125,12 @@ window.addEventListener("keydown",(e)=>{
     goPreviousStepOrCard();
   }
   if(e.key==="ArrowRight"){
+    e.preventDefault();
+    goNextStepOrCard();
+  }
+  // L'aide annonçait « Espace = avancer » mais rien ne l'écoutait. On l'ajoute,
+  // sauf quand le focus est sur un bouton (Espace doit alors activer ce bouton).
+  if(e.key===" " && !(_tag === "button" || _tag === "a")){
     e.preventDefault();
     goNextStepOrCard();
   }
@@ -8952,6 +9174,7 @@ if(!loadSharedConfiguration()){
   syncSettingsUI();
   syncPrintModeUI();
 }
+syncPrintSummary();
 generate();
 
 </script>
