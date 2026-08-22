@@ -5700,23 +5700,55 @@ function getEquationStepPrintArrowLines(eq, revealState, varChar = xChar){
   return { lines: [lines[lines.length - 2], lines[lines.length - 1]], op };
 }
 
-/* Étape « groupes » en jetons unités : chaque paquet de jetons est entouré d'un cadre
-   arrondi pointillé bleu, pendant des cercles pointillés autour des taches. */
-function drawUnitPacketOutline(targetGroup, api, pts, beadR){
-  if(!Array.isArray(pts) || !pts.length) return;
+/* Étape « groupes » : chaque plateau est partagé en n cases égales séparées par des
+   pointillés bleus (une rangée jusqu'à 4 cases, deux rangées au-delà) ; chaque tache,
+   chaque jeton ou paquet de jetons occupe le centre de sa case, et les cases de même
+   rang se font face d'un plateau à l'autre. C'est le geste de la classe : on range,
+   puis on divise le plateau en n parts et on en garde une. */
+function getEqStepGroupCells(tray, n){
+  const count = Math.max(1, Math.round(Number(n) || 1));
+  const rows = count >= 5 ? 2 : 1;
+  const rowCounts = rows === 1 ? [count] : [Math.ceil(count / 2), Math.floor(count / 2)];
+  const inset = 6;
+  const x0 = (Number(tray && tray.x) || 0) + inset;
+  const y0 = (Number(tray && tray.y) || 0) + inset;
+  const w = Math.max(1, (Number(tray && tray.w) || 0) - 2 * inset);
+  const h = Math.max(1, (Number(tray && tray.h) || 0) - 2 * inset);
+  const cellH = h / rows;
+  const centers = [];
+  rowCounts.forEach((cols, row) => {
+    const cellW = w / Math.max(1, cols);
+    for(let col=0; col<cols; col++){
+      centers.push({cx: x0 + cellW * (col + 0.5), cy: y0 + cellH * (row + 0.5), cellW, cellH});
+    }
+  });
+  return {rows, rowCounts, x0, y0, w, h, cellH, centers};
+}
+
+function drawEqStepGroupZones(targetGroup, api, tray, n){
   const mkEl = (api && api.el) || el;
-  const r = Math.max(1, Number(beadR) || 12);
-  const pad = Math.max(10, Math.round(r * 0.9));
-  const xs = pts.map(p => Number(p.cx) || 0);
-  const ys = pts.map(p => Number(p.cy) || 0);
-  const x = Math.min(...xs) - r - pad;
-  const y = Math.min(...ys) - r - pad;
-  const w = Math.max(...xs) - Math.min(...xs) + 2 * (r + pad);
-  const h = Math.max(...ys) - Math.min(...ys) + 2 * (r + pad);
-  targetGroup.appendChild(mkEl("rect", {
-    x, y, width:w, height:h, rx:r + pad, ry:r + pad,
-    fill:"none", stroke:"#2563eb", "stroke-width":"3.5", "stroke-dasharray":"12 8"
-  }));
+  const g = getEqStepGroupCells(tray, n);
+  if(g.centers.length <= 1) return;
+  const attrs = {fill:"none", stroke:"#2563eb", "stroke-width":"3.5", "stroke-dasharray":"12 8", "stroke-linecap":"round"};
+  g.rowCounts.forEach((cols, row) => {
+    const cellW = g.w / Math.max(1, cols);
+    const y1 = g.y0 + g.cellH * row + 12;
+    const y2 = g.y0 + g.cellH * (row + 1) - 12;
+    for(let c=1; c<cols; c++){
+      const x = g.x0 + cellW * c;
+      targetGroup.appendChild(mkEl("line", Object.assign({x1:x, y1, x2:x, y2}, attrs)));
+    }
+  });
+  for(let r=1; r<g.rows; r++){
+    const y = g.y0 + g.cellH * r;
+    targetGroup.appendChild(mkEl("line", Object.assign({x1:g.x0 + 12, y1:y, x2:g.x0 + g.w - 12, y2:y}, attrs)));
+  }
+}
+
+/* Tache posée au centre de sa case, réduite seulement si la case est plus étroite qu'elle. */
+function fitSplatInGroupCell(s, cell){
+  const rMax = Math.max(30, Math.min(cell.cellW / 2 - 12, cell.cellH / 2 - 12));
+  return {cx: cell.cx, cy: cell.cy, r: Math.min(Number(s && s.r) || 74, rMax)};
 }
 
 function drawEquationStepAid(targetGroup, card, revealState){
@@ -6013,25 +6045,10 @@ function drawEqUnitBeadList(targetGroup, pts, beadR, removed=false){
 
 function getEqUnitPacketCenter(tray, packetIndex, packetCount, beadR){
   if(!tray) return {cx:800, cy:560};
-  const n = Math.max(1, Math.round(Number(packetCount) || 1));
-  const i = clamp(Math.round(Number(packetIndex) || 0), 0, n - 1);
-  let rows = 1;
-  let cols = n;
-  if(n >= 5){ rows = 2; cols = Math.ceil(n / 2); }
-  const row = rows === 1 ? 0 : Math.floor(i / cols);
-  const col = rows === 1 ? i : (i % cols);
-  const countInRow = rows === 1 ? n : Math.min(cols, n - row * cols);
-  const marginX = Math.max(60, beadR * 5.0);
-  const xMin = tray.x + marginX;
-  const xMax = tray.x + tray.w - marginX;
-  const cx = countInRow <= 1 ? (tray.x + tray.w / 2) : xMin + (xMax - xMin) * ((col + 0.5) / countInRow);
-  const yMid = tray.y + tray.h * 0.54;
-  const rowGap = Math.max(86, beadR * 6.0);
-  const cy = rows === 1 ? yMid : yMid - rowGap / 2 + row * rowGap;
-  return {
-    cx: clamp(cx, tray.x + beadR + 16, tray.x + tray.w - beadR - 16),
-    cy: clamp(cy, tray.y + beadR + 16, tray.y + tray.h - beadR - 16)
-  };
+  // Les paquets occupent les cases de l'étape « groupes » : mêmes cases que les taches en face.
+  const cells = getEqStepGroupCells(tray, packetCount);
+  const c = cells.centers[clamp(Math.round(Number(packetIndex) || 0), 0, cells.centers.length - 1)];
+  return {cx: c.cx, cy: c.cy};
 }
 
 function getEqUnitPacketPositions(tray, packetIndex, packetCount, beadCount, beadR){
@@ -6431,11 +6448,13 @@ function renderCardEquation(card, revealState, useTokens){
       }
     }
 
-    function drawUnitHiddenForPart(part, splatRef){
+    function drawUnitHiddenForPart(part, splatRef, shift){
       if(!unitLayout || !part) return;
       const rawPosIndex = Number(part && part.posIndex);
       const posIndex = Number.isFinite(rawPosIndex) ? Math.max(0, Math.round(rawPosIndex)) : 0;
-      const pts = unitLayout.hiddenByTaskPositions[posIndex] || [];
+      let pts = unitLayout.hiddenByTaskPositions[posIndex] || [];
+      // Tache déplacée dans sa case (étape « groupes ») : ses jetons la suivent.
+      if(shift) pts = pts.map(p => ({cx: p.cx + shift.dx, cy: p.cy + shift.dy}));
       drawEqUnitBeadList(layer, pts, unitBeadR, false);
     }
 
@@ -6452,7 +6471,6 @@ function renderCardEquation(card, revealState, useTokens){
           const packetIndex = clamp(Math.round(Number(part.alignWithHiddenIndex) || idx), 0, packetCount - 1);
           const n = Math.max(0, Math.round(Number(part.value)||0));
           const pts = getEqUnitPacketPositions(tray, packetIndex, packetCount, n, unitBeadR);
-          if(opts.outlinePackets) drawUnitPacketOutline(layer, {el}, pts, unitBeadR);
           drawEqUnitBeadList(layer, pts, unitBeadR, !!part.removed || (!!opts.keepOnlyOne && packetIndex > 0));
         });
         const regularParts = allParts.filter(p => !Number.isFinite(Number(p.alignWithHiddenIndex)));
@@ -6506,6 +6524,13 @@ function renderCardEquation(card, revealState, useTokens){
       const hiddenParts = stepParts.filter(p => p && p.hidden);
       const visibleParts = stepParts.filter(p => p && !p.hidden && p.kind !== "empty");
       const currentKind = stepState ? stepState.kind : "";
+      // Étape « groupes » et division : le plateau est partagé en n cases (pointillés),
+      // une tache / un jeton (ou paquet) par case, les cases de même rang face à face.
+      const groupCount = Math.max(1, Math.round(Number(stepState && stepState.remainingCoeff) || 1));
+      const isGroupStep = (currentKind === "share") || (currentKind === "final" && groupCount > 1);
+      const groupTray = sideName === "left" ? activeTrays.left : activeTrays.right;
+      const groupCells = (isGroupStep && groupTray) ? getEqStepGroupCells(groupTray, groupCount) : null;
+      if(groupCells) drawEqStepGroupZones(layer, {el}, groupTray, groupCount);
 
       function drawHiddenRevealedBead(p, val, splatRef = null){
         if(useUnitBeads){
@@ -6571,24 +6596,24 @@ function renderCardEquation(card, revealState, useTokens){
       hiddenParts.forEach((part, idx)=>{
         const rawPosIndex = Number(part && part.posIndex);
         const posIndex = Number.isFinite(rawPosIndex) ? Math.max(0, Math.round(rawPosIndex)) : idx;
-        const s = side.splats?.[posIndex] || side.splats?.[idx] || {cx:820, cy:610, r:74};
-        const pHidden = side.posH?.[posIndex] || side.posH?.[idx] || {cx:s.cx, cy:s.cy};
+        const s0 = side.splats?.[posIndex] || side.splats?.[idx] || {cx:820, cy:610, r:74};
+        // Étape « groupes » et division : la tache va au centre de sa case.
+        const cell = groupCells ? groupCells.centers[idx] : null;
+        const s = cell ? fitSplatInGroupCell(s0, cell) : s0;
+        const pHidden = cell ? {cx:s.cx, cy:s.cy} : (side.posH?.[posIndex] || side.posH?.[idx] || {cx:s.cx, cy:s.cy});
+        const unitShift = cell ? {dx: s.cx - s0.cx, dy: s.cy - s0.cy} : null;
         const d = blobPath(s.cx, s.cy, s.r);
 
-        const isShareStep = (currentKind === "share");
-        const keepOnlyOne = (currentKind === "final" && (Number(stepState && stepState.remainingCoeff) || 1) > 1);
+        const keepOnlyOne = (currentKind === "final" && groupCount > 1);
         const isRemoved = !!part.removed || (keepOnlyOne && idx > 0);
         const isFinalReveal = (currentKind === "final" && !isRemoved);
-        if(isShareStep){
-          layer.appendChild(el("circle", {cx:s.cx, cy:s.cy, r:s.r + 8, fill:"none", stroke:"#2563eb", "stroke-width":"3.5", "stroke-dasharray":"12 8"}));
-        }
 
         // E bis — pas à pas :
         // - les taches supprimées deviennent claires et hachurées ;
         // - les taches encore inconnues restent noires ;
         // - à la dernière étape, la tache restante devient claire et laisse apparaître sa valeur.
         if(isFinalReveal){
-          if(useUnitBeads) drawUnitHiddenForPart(part, s);
+          if(useUnitBeads) drawUnitHiddenForPart(part, s, unitShift);
           else drawHiddenRevealedBead(pHidden, part.value, s);
         }
 
@@ -6610,21 +6635,20 @@ function renderCardEquation(card, revealState, useTokens){
       });
 
       if(useUnitBeads){
-        // Jetons unités : à l'étape « groupes » les jetons se rangent déjà en n paquets
-        // (cadres pointillés bleus), et à la division on ne garde que le premier paquet,
-        // les autres sont hachurés — même rythme que les taches.
+        // Jetons unités : dès l'étape « groupes » les jetons se rangent en n paquets, un
+        // par case ; à la division on ne garde que le premier paquet, les autres sont
+        // hachurés — même rythme que les taches.
         const alignedCount = visibleParts.filter(p => Number.isFinite(Number(p && p.alignWithHiddenIndex))).length;
         const packetView = (currentKind === "final" || currentKind === "share") && alignedCount > 1;
-        const keepOnlyOne = (currentKind === "final" && (Number(stepState && stepState.remainingCoeff) || 1) > 1);
-        drawUnitVisibleParts(visibleParts, {packetView, outlinePackets: currentKind === "share", keepOnlyOne});
+        const keepOnlyOne = (currentKind === "final" && groupCount > 1);
+        drawUnitVisibleParts(visibleParts, {packetView, keepOnlyOne});
       }else{
-        const isShareStep = (currentKind === "share");
-        const keepOnlyOne = (currentKind === "final" && (Number(stepState && stepState.remainingCoeff) || 1) > 1) && visibleParts.length > 1;
+        const keepOnlyOne = (currentKind === "final" && groupCount > 1) && visibleParts.length > 1;
         visibleParts.forEach((part, idx)=>{
-          const p = resolveStepVisiblePosition(part, idx, visibleParts.length);
-          if(isShareStep && visibleParts.length > 1){
-            layer.appendChild(el("circle", {cx:p.cx, cy:p.cy, r:beadR + 12, fill:"none", stroke:"#2563eb", "stroke-width":"3.5", "stroke-dasharray":"12 8"}));
-          }
+          // Jetons égaux de l'étape « groupes » : un par case, au centre de la case.
+          const aligned = Number.isFinite(Number(part && part.alignWithHiddenIndex));
+          const cell = (groupCells && aligned) ? groupCells.centers[idx] : null;
+          const p = cell ? {cx: cell.cx, cy: cell.cy} : resolveStepVisiblePosition(part, idx, visibleParts.length);
           drawVisibleBead(p, part.value, !!part.removed || (keepOnlyOne && idx > 0));
         });
       }
@@ -7040,11 +7064,13 @@ function renderCardEquationStepPrintScene(targetGroup, card, revealState, opts =
     const unitLayout = useUnitBeads ? getEqUnitBeadLayout(card, sideName, side, metaSide, sideName === "left" ? trays.left : trays.right) : null;
     const unitBeadR = unitLayout ? unitLayout.beadR : 12;
 
-    function drawUnitHiddenForPart(part){
+    function drawUnitHiddenForPart(part, shift){
       if(!unitLayout || !part) return;
       const rawPosIndex = Number(part && part.posIndex);
       const posIndex = Number.isFinite(rawPosIndex) ? Math.max(0, Math.round(rawPosIndex)) : 0;
-      drawEqUnitBeadListPrint(unitLayout.hiddenByTaskPositions[posIndex] || [], unitBeadR, false);
+      let pts = unitLayout.hiddenByTaskPositions[posIndex] || [];
+      if(shift) pts = pts.map(p => ({cx: p.cx + shift.dx, cy: p.cy + shift.dy}));
+      drawEqUnitBeadListPrint(pts, unitBeadR, false);
     }
 
     function drawUnitVisibleParts(parts, opts = {}){
@@ -7060,7 +7086,6 @@ function renderCardEquationStepPrintScene(targetGroup, card, revealState, opts =
           const packetIndex = clamp(Math.round(Number(part.alignWithHiddenIndex) || idx), 0, packetCount - 1);
           const n = Math.max(0, Math.round(Number(part.value)||0));
           const pts = getEqUnitPacketPositions(tray, packetIndex, packetCount, n, unitBeadR);
-          if(opts.outlinePackets) drawUnitPacketOutline(targetGroup, {el}, pts, unitBeadR);
           drawEqUnitBeadListPrint(pts, unitBeadR, !!part.removed || (!!opts.keepOnlyOne && packetIndex > 0));
         });
         const regularParts = allParts.filter(p => !Number.isFinite(Number(p.alignWithHiddenIndex)));
@@ -7103,6 +7128,13 @@ function renderCardEquationStepPrintScene(targetGroup, card, revealState, opts =
       const hiddenParts = (stepParts || []).filter(p => p && p.hidden);
       const visibleParts = (stepParts || []).filter(p => p && !p.hidden && p.kind !== "empty");
       const currentKind = stepState.kind || "";
+      // Étape « groupes » et division : plateau partagé en n cases, une tache / un jeton
+      // (ou paquet) par case, les cases de même rang face à face (comme à l'écran).
+      const groupCount = Math.max(1, Math.round(Number(stepState.remainingCoeff) || 1));
+      const isGroupStep = (currentKind === "share") || (currentKind === "final" && groupCount > 1);
+      const groupTray = sideName === "left" ? trays.left : trays.right;
+      const groupCells = (isGroupStep && groupTray) ? getEqStepGroupCells(groupTray, groupCount) : null;
+      if(groupCells) drawEqStepGroupZones(targetGroup, {el}, groupTray, groupCount);
 
       function fallbackPrintVisiblePosition(idx, count){
         const tray = sideName === "left" ? trays.left : trays.right;
@@ -7192,18 +7224,18 @@ function renderCardEquationStepPrintScene(targetGroup, card, revealState, opts =
       hiddenParts.forEach((part, idx)=>{
         const rawPosIndex = Number(part && part.posIndex);
         const posIndex = Number.isFinite(rawPosIndex) ? Math.max(0, Math.round(rawPosIndex)) : idx;
-        const s = side.splats?.[posIndex] || side.splats?.[idx] || {cx:820, cy:610, r:74};
-        const pHidden = side.posH?.[posIndex] || side.posH?.[idx] || {cx:s.cx, cy:s.cy};
+        const s0 = side.splats?.[posIndex] || side.splats?.[idx] || {cx:820, cy:610, r:74};
+        const cell = groupCells ? groupCells.centers[idx] : null;
+        const s = cell ? fitSplatInGroupCell(s0, cell) : s0;
+        const pHidden = cell ? {cx:s.cx, cy:s.cy} : (side.posH?.[posIndex] || side.posH?.[idx] || {cx:s.cx, cy:s.cy});
+        const unitShift = cell ? {dx: s.cx - s0.cx, dy: s.cy - s0.cy} : null;
         const d = blobPath(s.cx, s.cy, s.r);
-        const keepOnlyOne = (currentKind === "final" && (Number(stepState.remainingCoeff) || 1) > 1);
+        const keepOnlyOne = (currentKind === "final" && groupCount > 1);
         const isRemoved = !!part.removed || (keepOnlyOne && idx > 0);
         const isFinalReveal = (currentKind === "final" && !isRemoved);
-        if(currentKind === "share"){
-          targetGroup.appendChild(el("circle", {cx:s.cx, cy:s.cy, r:s.r + 8, fill:"none", stroke:"#2563eb", "stroke-width":"3.5", "stroke-dasharray":"12 8"}));
-        }
 
         if(isFinalReveal){
-          if(useUnitBeads) drawUnitHiddenForPart(part);
+          if(useUnitBeads) drawUnitHiddenForPart(part, unitShift);
           else drawHiddenRevealedBead(pHidden, part.value, beadR);
         }
 
@@ -7217,19 +7249,18 @@ function renderCardEquationStepPrintScene(targetGroup, card, revealState, opts =
       });
 
       if(useUnitBeads){
-        // Même logique qu'à l'écran : paquets dès l'étape « groupes » (cadres
-        // pointillés), un seul paquet gardé à la division.
+        // Même logique qu'à l'écran : paquets dès l'étape « groupes », un par case ;
+        // un seul paquet gardé à la division.
         const alignedCount = visibleParts.filter(p => Number.isFinite(Number(p && p.alignWithHiddenIndex))).length;
         const packetView = (currentKind === "final" || currentKind === "share") && alignedCount > 1;
-        const keepOnlyOne = (currentKind === "final" && (Number(stepState.remainingCoeff) || 1) > 1);
-        drawUnitVisibleParts(visibleParts, {packetView, outlinePackets: currentKind === "share", keepOnlyOne});
+        const keepOnlyOne = (currentKind === "final" && groupCount > 1);
+        drawUnitVisibleParts(visibleParts, {packetView, keepOnlyOne});
       }else{
-        const keepOnlyOne = (currentKind === "final" && (Number(stepState.remainingCoeff) || 1) > 1) && visibleParts.length > 1;
+        const keepOnlyOne = (currentKind === "final" && groupCount > 1) && visibleParts.length > 1;
         visibleParts.forEach((part, idx)=>{
-          const p = resolvePrintStepVisiblePosition(part, idx, visibleParts.length);
-          if(currentKind === "share" && visibleParts.length > 1){
-            targetGroup.appendChild(el("circle", {cx:p.cx, cy:p.cy, r:beadR + 12, fill:"none", stroke:"#2563eb", "stroke-width":"3.5", "stroke-dasharray":"12 8"}));
-          }
+          const aligned = Number.isFinite(Number(part && part.alignWithHiddenIndex));
+          const cell = (groupCells && aligned) ? groupCells.centers[idx] : null;
+          const p = cell ? {cx: cell.cx, cy: cell.cy} : resolvePrintStepVisiblePosition(part, idx, visibleParts.length);
           drawVisibleBead(p, part.value, beadR, !!part.removed || (keepOnlyOne && idx > 0));
         });
       }
