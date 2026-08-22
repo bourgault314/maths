@@ -303,8 +303,6 @@
     .helpOverlay{padding:8px}
     .helpDialog{width:100%;padding:24px 18px}
     .shareRow{justify-content:flex-start;flex-wrap:wrap}
-    .navBtn{width:44px;height:44px;flex-basis:44px}
-    .counter{font-size:15px}
   }
   .cardbox{
     background:var(--card);
@@ -340,6 +338,13 @@
   .printBlock .printDuplexRow span{font-size:13px;color:var(--ink);font-weight:700;white-space:normal;line-height:1.2;min-width:0}
   .printBlock .printDuplexRow small{font-weight:600;color:var(--muted);font-size:12px}
   .printSummary{font-size:12px;color:var(--muted);line-height:1.25;margin-top:6px;min-height:1.25em}
+  /* Téléphone : la barre de commande reste modeste. Ces deux réglages doivent venir
+     APRÈS .navBtn / .counter ci-dessus, sinon la règle de bureau, écrite plus bas
+     dans la feuille, l'emporte à spécificité égale et le média ne sert à rien. */
+  @media (max-width:760px){
+    .navBtn{width:44px;height:44px;flex-basis:44px}
+    .counter{font-size:15px}
+  }
 
   #svgWrap{width:100%;aspect-ratio: 16/10;display:grid;place-items:center}
   #mainSvg{width:100%;height:100%}
@@ -795,7 +800,7 @@
         <button type="button" class="btn" id="btnEqStepViewEquation">Équation</button>
         <button type="button" class="btn" id="btnEqStepViewSchema">Schéma</button>
       </div>
-      <label class="checkInline" id="numColorModeWrap" title="Positifs en Vert, Négatifs en Rouge" style="display:none; flex:0 1 auto; height:42px; margin-left:auto; padding:0 8px; overflow:hidden;">
+      <label class="checkInline" id="numColorModeWrap" title="Positifs en Vert, Négatifs en Rouge" style="display:none; flex:0 1 auto; height:42px; padding:0 8px; overflow:hidden;">
         <input type="checkbox" id="numColorMode" checked style="flex:0 0 auto; margin:0;"> 
         <span style="font-weight:600; font-size:12px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">Jetons Vert/Rouge</span>
       </label>
