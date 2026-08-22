@@ -1,16 +1,16 @@
 // GE-01 + GE-02 — lire une abscisse et placer un point sur une droite graduée.
 // Les situations sont originales et décrites par des rationnels exacts.
 
-import { SCHEMA_GABARIT_QUESTION, estDonneePure } from "../../../../contrats/src/gabarit.js?v=49";
+import { SCHEMA_GABARIT_QUESTION, estDonneePure } from "../../../../contrats/src/gabarit.js?v=50";
 import {
   COMPARAISON_CHOIX_EXACT,
   COMPARAISON_VALEUR_RATIONNELLE_EXACTE,
   SCHEMA_QUESTION_INSTANCE_V2,
   TYPE_REPONSE_CHOIX_UNIQUE,
   TYPE_REPONSE_NOMBRE_DECIMAL,
-} from "../../../../contrats/src/question-v2.js?v=49";
-import { formaterFractionEnDecimalSignee, reduireFraction } from "../../../../objets/src/fractions-decimaux.js?v=49";
-import { IDENTITES_AUTOMATISMES, creerClassementAutomatisme } from "../../identifiants.js?v=49";
+} from "../../../../contrats/src/question-v2.js?v=50";
+import { formaterFractionEnDecimalSignee, reduireFraction } from "../../../../objets/src/fractions-decimaux.js?v=50";
+import { IDENTITES_AUTOMATISMES, creerClassementAutomatisme } from "../../identifiants.js?v=50";
 
 export const FAMILLE_LIRE_ABSCISSE = "lire-abscisse";
 export const FAMILLE_PLACER_POINT = "placer-point";

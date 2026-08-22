@@ -6,9 +6,11 @@ import {
   COMPARAISON_VALEUR_EXACTE,
   COMPARAISON_VALEUR_RATIONNELLE_EXACTE,
   COMPARAISON_VALEURS_EXACTES,
+  COMPARAISON_VALEURS_RATIONNELLES_EXACTES,
   SCHEMA_QUESTION_INSTANCE_V2,
   TYPE_REPONSE_DEUX_ENTIERS,
   TYPE_REPONSE_DEUX_ENTIERS_RELATIFS,
+  TYPE_REPONSE_DEUX_NOMBRES_DECIMAUX,
   TYPE_REPONSE_ENTIER_NATUREL,
   TYPE_REPONSE_FRACTION_EQUIVALENTE,
   TYPE_REPONSE_NOMBRE_DECIMAL,
@@ -172,6 +174,42 @@ describe("validerQuestionInstanceV2 — cas valides", () => {
       attendus: [-3, 2],
       minimum: -20,
       maximum: 20,
+    };
+    delete question.aide;
+    assert.deepEqual(validerQuestionInstanceV2(question), { valide: true, erreurs: [] });
+  });
+
+  it("accepte un repère au pas 0,5 et deux coordonnées décimales exactes", () => {
+    const question = questionValide();
+    question.classement = {
+      domaine: "espace-et-geometrie",
+      notion: "lire-coordonnees-point",
+      microNotion: "lire-coordonnees-point",
+      famille: "lire-coordonnees",
+      cible: "dnb-2026-16",
+      complements: [],
+    };
+    question.enonce = [
+      { id: "consigne", type: "texte", contenu: "Quelles sont les coordonnées de M ?" },
+      {
+        id: "repere",
+        type: "repere-cartesien",
+        xMin: -3,
+        xMax: 2.5,
+        yMin: -2,
+        yMax: 2,
+        pas: 0.5,
+        nomPoint: "M",
+        points: [{ nom: "M", x: -1.5, y: 0.5 }],
+      },
+    ];
+    question.reponse = {
+      type: TYPE_REPONSE_DEUX_NOMBRES_DECIMAUX,
+      comparaison: COMPARAISON_VALEURS_RATIONNELLES_EXACTES,
+      attendus: [
+        { numerateur: -3, denominateur: 2 },
+        { numerateur: 1, denominateur: 2 },
+      ],
     };
     delete question.aide;
     assert.deepEqual(validerQuestionInstanceV2(question), { valide: true, erreurs: [] });

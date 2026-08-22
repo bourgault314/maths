@@ -9,6 +9,7 @@ import {
   TYPE_REPONSE_CHOIX_UNIQUE,
   TYPE_REPONSE_DEUX_ENTIERS,
   TYPE_REPONSE_DEUX_ENTIERS_RELATIFS,
+  TYPE_REPONSE_DEUX_NOMBRES_DECIMAUX,
   TYPE_REPONSE_ENTIER_NATUREL,
   TYPE_REPONSE_FRACTION_EQUIVALENTE,
   TYPE_REPONSE_NOMBRE_DECIMAL,
@@ -983,6 +984,29 @@ describe("repérage dans le plan", () => {
     assert.equal(etat.saisies[0], "−3");
   });
 
+  it("saisit et trace exactement les deux coordonnées au pas 0,5", () => {
+    const etat = etatDemarre({
+      notion: NOTION_LIRE_COORDONNEES_POINT,
+      nombreQuestions: 20,
+      graine: "fixture-ge03-couple-decimal",
+    });
+    etat.seance.etat.indexQuestion = etat.questions.findIndex(
+      (question) => question.reponse.type === TYPE_REPONSE_DEUX_NOMBRES_DECIMAUX,
+    );
+    const question = questionCourante(etat);
+    assert.equal(question.reponse.type, TYPE_REPONSE_DEUX_NOMBRES_DECIMAUX);
+    const ecritures = question.reponse.attendus.map(({ numerateur, denominateur }) =>
+      String(numerateur / denominateur).replace("-", "−").replace(".", ","));
+    ecritures.forEach((ecriture, index) => {
+      selectionnerChampSaisie(etat, index);
+      for (const caractere of ecriture) saisirCaractere(etat, caractere);
+    });
+    validerSelection(etat);
+    assert.deepEqual(etat.validation, { juste: true });
+    assert.deepEqual(etat.traces[0].reponse.saisies, ecritures);
+    assert.equal(validerTraceReponse(etat.traces[0]).valide, true);
+  });
+
   it("permet de déplacer le point provisoire de GE-04 avant validation", () => {
     const etat = etatDemarre({
       notion: NOTION_PLACER_POINT_REPERE,
@@ -1001,7 +1025,7 @@ describe("repérage dans le plan", () => {
     assert.deepEqual(etat.traces[0].reponse.choix, [attendu]);
   });
 
-  it("génère séparément les deux modules et leur cours partagé en trois pages", () => {
+  it("génère séparément les deux modules et leurs cours cohérents en trois pages", () => {
     const lecture = creerEtatLecteur({ notion: NOTION_LIRE_COORDONNEES_POINT, nombreQuestions: 5 });
     const placement = creerEtatLecteur({ notion: NOTION_PLACER_POINT_REPERE, nombreQuestions: 5 });
     assert.notEqual(lecture.configuration.notions[0], placement.configuration.notions[0]);

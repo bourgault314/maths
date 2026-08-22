@@ -1,4 +1,4 @@
-import { creerGenerateur, validerGraine } from "../../../../moteur-exercices/src/aleatoire.js?v=49";
+import { creerGenerateur, validerGraine } from "../../../../moteur-exercices/src/aleatoire.js?v=50";
 import {
   FAMILLE_DIAGNOSTIC_COORDONNEES,
   FAMILLE_IDENTIFIER_POINT,
@@ -8,10 +8,10 @@ import {
   FAMILLE_PLACER_POINT_REPERE,
   GABARIT_LIRE_COORDONNEES,
   GABARIT_PLACER_POINT_REPERE,
-} from "./questions.js?v=49";
+} from "./questions.js?v=50";
 
 export const QUOTAS_LIRE_COORDONNEES = Object.freeze({
-  5: Object.freeze({ complet: 3, abscisse: 1, ordonnee: 1, qcm: 0, identifier: 0 }),
+  5: Object.freeze({ complet: 2, abscisse: 1, ordonnee: 1, qcm: 1, identifier: 0 }),
   10: Object.freeze({ complet: 5, abscisse: 2, ordonnee: 1, qcm: 1, identifier: 1 }),
   15: Object.freeze({ complet: 8, abscisse: 2, ordonnee: 2, qcm: 2, identifier: 1 }),
   20: Object.freeze({ complet: 10, abscisse: 3, ordonnee: 3, qcm: 2, identifier: 2 }),
@@ -21,15 +21,15 @@ const FAMILLES_LECTURE = Object.freeze([
   FAMILLE_LIRE_COORDONNEES,
   FAMILLE_LIRE_COORDONNEES,
   FAMILLE_LIRE_ABSCISSE_REPERE,
-  FAMILLE_LIRE_COORDONNEES,
+  FAMILLE_DIAGNOSTIC_COORDONNEES,
   FAMILLE_LIRE_ORDONNEE,
   FAMILLE_LIRE_COORDONNEES,
-  FAMILLE_DIAGNOSTIC_COORDONNEES,
+  FAMILLE_LIRE_COORDONNEES,
   FAMILLE_LIRE_ABSCISSE_REPERE,
   FAMILLE_LIRE_COORDONNEES,
   FAMILLE_IDENTIFIER_POINT,
-  FAMILLE_LIRE_ORDONNEE,
   FAMILLE_LIRE_COORDONNEES,
+  FAMILLE_LIRE_ORDONNEE,
   FAMILLE_LIRE_COORDONNEES,
   FAMILLE_DIAGNOSTIC_COORDONNEES,
   FAMILLE_LIRE_COORDONNEES,
@@ -41,8 +41,8 @@ const FAMILLES_LECTURE = Object.freeze([
 ]);
 
 const ZONES_LECTURE = Object.freeze([
-  "q1", "q2", "q3", "q4", "axe-x",
-  "axe-y", "q2", "q4", "q3", "q1",
+  "q1", "q2", "axe-y", "q4", "axe-x",
+  "q3", "q4", "q2", "q1", "q3",
   "q2", "q4", "axe-x", "q3", "q1",
   "axe-y", "q4", "q2", "q3", "rare",
 ]);
@@ -54,13 +54,30 @@ const ZONES_PLACEMENT = Object.freeze([
   "axe-y", "q1", "q2", "q3", "rare",
 ]);
 
-export const GABARITS_BORNES_REPERE = Object.freeze([
-  Object.freeze({ xMin: -4, xMax: 4, yMin: -3, yMax: 3 }),
-  Object.freeze({ xMin: -5, xMax: 3, yMin: -3, yMax: 4 }),
-  Object.freeze({ xMin: -3, xMax: 5, yMin: -4, yMax: 3 }),
-  Object.freeze({ xMin: -4, xMax: 3, yMin: -3, yMax: 5 }),
-  Object.freeze({ xMin: -3, xMax: 4, yMin: -5, yMax: 3 }),
+const PAS_PAR_PROFIL = Object.freeze([
+  1, 1, 1, 0.5, 1,
+  1, 1, 0.5, 1, 1,
+  0.5, 1, 1, 1, 1,
+  1, 0.5, 1, 0.25, 1,
 ]);
+
+export const GABARITS_BORNES_REPERE = Object.freeze([
+  Object.freeze({ pas: 1, xMin: -4, xMax: 4, yMin: -3, yMax: 3 }),
+  Object.freeze({ pas: 1, xMin: -5, xMax: 3, yMin: -3, yMax: 4 }),
+  Object.freeze({ pas: 1, xMin: -3, xMax: 5, yMin: -4, yMax: 3 }),
+  Object.freeze({ pas: 1, xMin: -4, xMax: 3, yMin: -3, yMax: 5 }),
+  Object.freeze({ pas: 1, xMin: -3, xMax: 4, yMin: -5, yMax: 3 }),
+  Object.freeze({ pas: 0.5, xMin: -3, xMax: 2.5, yMin: -2, yMax: 2.5 }),
+  Object.freeze({ pas: 0.5, xMin: -2.5, xMax: 3, yMin: -2, yMax: 2.5 }),
+  Object.freeze({ pas: 0.5, xMin: -2, xMax: 2.5, yMin: -2.5, yMax: 2 }),
+  Object.freeze({ pas: 0.25, xMin: -1.5, xMax: 1.25, yMin: -1, yMax: 1.25 }),
+  Object.freeze({ pas: 0.25, xMin: -1.25, xMax: 1.5, yMin: -1.25, yMax: 1 }),
+]);
+
+const GABARITS_PAR_PAS = new Map([0.25, 0.5, 1].map((pas) => [
+  pas,
+  GABARITS_BORNES_REPERE.filter((gabarit) => gabarit.pas === pas),
+]));
 
 const NOMS_POINTS = Object.freeze([
   "A", "B", "C", "D", "E", "F", "G", "H", "I", "J",
@@ -73,15 +90,21 @@ function exigerNombreQuestions(nombreQuestions, quoi) {
   }
 }
 
-function valeurs(minimum, maximum) {
-  return Array.from({ length: maximum - minimum + 1 }, (_, index) => minimum + index);
+function valeurs(minimum, maximum, pas) {
+  const nombreIntervalles = Math.round((maximum - minimum) / pas);
+  return Array.from(
+    { length: nombreIntervalles + 1 },
+    (_, index) => minimum + index * pas,
+  );
 }
 
-function candidatsZone(zone, bornes, { qcm = false } = {}) {
-  const negatifsX = valeurs(bornes.xMin, -1);
-  const positifsX = valeurs(1, bornes.xMax);
-  const negatifsY = valeurs(bornes.yMin, -1);
-  const positifsY = valeurs(1, bornes.yMax);
+function candidatsZone(zone, bornes, { qcm = false, fractionAxe = null } = {}) {
+  const toutesX = valeurs(bornes.xMin, bornes.xMax, bornes.pas);
+  const toutesY = valeurs(bornes.yMin, bornes.yMax, bornes.pas);
+  const negatifsX = toutesX.filter((x) => x < 0);
+  const positifsX = toutesX.filter((x) => x > 0);
+  const negatifsY = toutesY.filter((y) => y < 0);
+  const positifsY = toutesY.filter((y) => y > 0);
   const produit = (xs, ys) => xs.flatMap((x) => ys.map((y) => ({ x, y })));
   let candidats;
   if (zone === "q1") candidats = produit(positifsX, positifsY);
@@ -92,9 +115,15 @@ function candidatsZone(zone, bornes, { qcm = false } = {}) {
   else if (zone === "axe-y") candidats = [...negatifsY, ...positifsY].map((y) => ({ x: 0, y }));
   else if (zone === "origine") candidats = [{ x: 0, y: 0 }];
   else throw new RangeError(`zone de repère inconnue : ${zone}`);
-  return qcm
+  const sansAmbiguite = qcm
     ? candidats.filter(({ x, y }) => x !== 0 && y !== 0 && Math.abs(x) !== Math.abs(y))
     : candidats;
+  if (fractionAxe === "x") return sansAmbiguite.filter(({ x }) => !Number.isInteger(x));
+  if (fractionAxe === "y") return sansAmbiguite.filter(({ y }) => !Number.isInteger(y));
+  if (fractionAxe === "au-moins-une") {
+    return sansAmbiguite.filter(({ x, y }) => !Number.isInteger(x) || !Number.isInteger(y));
+  }
+  return sansAmbiguite;
 }
 
 function choisirCible(aleatoire, zone, bornes, utilisees, options = {}) {
@@ -113,14 +142,16 @@ function distanceChebyshev(a, b) {
 function pointsIdentification(aleatoire, cible, nomCible, bornes, nomsDisponibles) {
   const positions = [{ ...cible }];
   const tous = [];
-  for (let y = bornes.yMin; y <= bornes.yMax; y += 1) {
-    for (let x = bornes.xMin; x <= bornes.xMax; x += 1) {
+  for (const y of valeurs(bornes.yMin, bornes.yMax, bornes.pas)) {
+    for (const x of valeurs(bornes.xMin, bornes.xMax, bornes.pas)) {
       if (x === cible.x && y === cible.y) continue;
       tous.push({ x, y });
     }
   }
+  const distanceMinimale = bornes.pas < 1 ? 3 : 2;
   for (const candidat of aleatoire.melange(tous)) {
-    if (positions.every((point) => distanceChebyshev(point, candidat) >= 2)) {
+    if (positions.every((point) =>
+      distanceChebyshev(point, candidat) / bornes.pas >= distanceMinimale)) {
       positions.push(candidat);
       if (positions.length === 4) break;
     }
@@ -159,6 +190,19 @@ function nomsTournes(decalage, index) {
     NOMS_POINTS[(decalage + index + rang) % NOMS_POINTS.length]);
 }
 
+function choisirBornes(aleatoire, index) {
+  const pas = PAS_PAR_PROFIL[index];
+  const gabarits = GABARITS_PAR_PAS.get(pas);
+  return gabarits[(index + aleatoire.entier(0, gabarits.length - 1)) % gabarits.length];
+}
+
+function fractionAxePourFamille(famille, pas) {
+  if (pas === 1) return null;
+  if (famille === FAMILLE_LIRE_ABSCISSE_REPERE) return "x";
+  if (famille === FAMILLE_LIRE_ORDONNEE) return "y";
+  return "au-moins-une";
+}
+
 /** Produit les paramètres purs des vingt profils GE-03. */
 export function planifierSerieLireCoordonnees({ graine, nombreQuestions = 10 }) {
   const { aleatoire, utilisees, decalageNom, inclureOrigine } = preparerSerie(
@@ -168,13 +212,14 @@ export function planifierSerieLireCoordonnees({ graine, nombreQuestions = 10 }) 
   );
   return Array.from({ length: nombreQuestions }, (_, index) => {
     const famille = FAMILLES_LECTURE[index];
-    const bornes = GABARITS_BORNES_REPERE[(index + aleatoire.entier(0, GABARITS_BORNES_REPERE.length - 1)) % GABARITS_BORNES_REPERE.length];
+    const bornes = choisirBornes(aleatoire, index);
     const zoneBrute = ZONES_LECTURE[index];
     const zone = zoneBrute === "rare"
       ? (inclureOrigine ? "origine" : aleatoire.choix(["axe-x", "axe-y"]))
       : zoneBrute;
     const cible = choisirCible(aleatoire, zone, bornes, utilisees, {
       qcm: famille === FAMILLE_DIAGNOSTIC_COORDONNEES,
+      fractionAxe: fractionAxePourFamille(famille, bornes.pas),
     });
     const noms = nomsTournes(decalageNom, index);
     const nomPoint = noms[0];
@@ -199,10 +244,12 @@ export function planifierSeriePlacerPointRepere({ graine, nombreQuestions = 10 }
     "placement",
   );
   return Array.from({ length: nombreQuestions }, (_, index) => {
-    const bornes = GABARITS_BORNES_REPERE[(index + aleatoire.entier(0, GABARITS_BORNES_REPERE.length - 1)) % GABARITS_BORNES_REPERE.length];
+    const bornes = choisirBornes(aleatoire, index);
     const zoneBrute = ZONES_PLACEMENT[index];
     const zone = zoneBrute === "rare" ? (inclureOrigine ? "origine" : "q4") : zoneBrute;
-    const cible = choisirCible(aleatoire, zone, bornes, utilisees);
+    const cible = choisirCible(aleatoire, zone, bornes, utilisees, {
+      fractionAxe: bornes.pas === 1 ? null : "au-moins-une",
+    });
     return {
       famille: FAMILLE_PLACER_POINT_REPERE,
       ...bornes,
@@ -234,4 +281,3 @@ export function genererSeriePlacerPointRepere({ registre, graine, nombreQuestion
       `${graine}:${index + 1}`,
     ));
 }
-

@@ -30,6 +30,22 @@ describe("diagnostics du repérage dans le plan", () => {
     assert.equal(diagnostiquerCoordonneeSeule({ axe: "abscisse", attendu: 3, recu: 2 }).code, "E5");
   });
 
+  it("mesure le décalage avec la valeur réelle d'une graduation", () => {
+    const couple = diagnostiquerCoupleRepere({
+      attendu: [-1.5, 0.5],
+      recu: [-1, 0.5],
+      pas: 0.5,
+    });
+    assert.equal(couple.code, "E5");
+    assert.match(couple.message, /\(−1,5 ; 0,5\)/);
+    assert.equal(diagnostiquerCoordonneeSeule({
+      axe: "ordonnee",
+      attendu: -0.5,
+      recu: -0.25,
+      pas: 0.25,
+    }).code, "E5");
+  });
+
   it("conserve le mécanisme explicite des distracteurs QCM", () => {
     assert.equal(diagnostiquerChoixQcmRepere("inversion", [-3, 2]).code, "E1");
     assert.equal(diagnostiquerChoixQcmRepere("signe-abscisse", [-3, 2]).code, "E2");

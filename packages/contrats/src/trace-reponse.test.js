@@ -4,6 +4,7 @@ import assert from "node:assert/strict";
 import {
   TYPE_REPONSE_DEUX_ENTIERS,
   TYPE_REPONSE_DEUX_ENTIERS_RELATIFS,
+  TYPE_REPONSE_DEUX_NOMBRES_DECIMAUX,
   TYPE_REPONSE_CHOIX_UNIQUE,
   TYPE_REPONSE_ENTIER_NATUREL,
   TYPE_REPONSE_FRACTION_EQUIVALENTE,
@@ -116,6 +117,25 @@ describe("validerTraceReponse", () => {
       valeurs: [-3, 2],
     };
     assert.equal(validerTraceReponse(trace).valide, true);
+  });
+
+  it("accepte deux coordonnées décimales et vérifie chaque écriture", () => {
+    const trace = traceValide();
+    trace.classement.module = "lire-coordonnees-point";
+    trace.classement.microNotion = "lire-coordonnees-point";
+    trace.classement.famille = "lire-coordonnees";
+    trace.reponse = {
+      type: TYPE_REPONSE_DEUX_NOMBRES_DECIMAUX,
+      statut: "fournie",
+      saisies: ["−1,50", "0,5"],
+      valeurs: [
+        { numerateur: -3, denominateur: 2 },
+        { numerateur: 1, denominateur: 2 },
+      ],
+    };
+    assert.equal(validerTraceReponse(trace).valide, true);
+    trace.reponse.valeurs[1] = { numerateur: 3, denominateur: 4 };
+    assert.match(validerTraceReponse(trace).erreurs.join("\n"), /incohérente/);
   });
 
   it("accepte la saisie décimale brute avec sa valeur rationnelle normalisée", () => {

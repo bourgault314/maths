@@ -23,7 +23,7 @@ describe("repère cartésien V2", () => {
     const premier = dessinerRepereCartesien(options);
     const second = dessinerRepereCartesien(options);
     assert.equal(premier.svg, second.svg);
-    assert.equal(VERSION_REPERE_CARTESIEN, 1);
+    assert.equal(VERSION_REPERE_CARTESIEN, 2);
     assert.match(premier.svg, /^<svg/);
     assert.match(premier.svg, /width="320" height="[\d.]+"/);
     assert.match(premier.svg, /aria-label="Repère avec le point M"/);
@@ -44,6 +44,24 @@ describe("repère cartésien V2", () => {
     assert.equal(geometrie.cellule, 64, "le repère doit rester lisible au tableau");
     assert.equal(geometrie.xAxe, origine.x);
     assert.equal(geometrie.yAxe, origine.y);
+  });
+
+  it("rend exactement les graduations de 0,5 et 0,25 sans surcharger les étiquettes", () => {
+    for (const configuration of [
+      { pas: 0.5, xMin: -3, xMax: 2.5, yMin: -2, yMax: 2 },
+      { pas: 0.25, xMin: -1.5, xMax: 1.25, yMin: -1, yMax: 1.25 },
+    ]) {
+      const { svg, geometrie } = dessinerRepereCartesien({
+        ...configuration,
+        largeur: 320,
+        points: [{ nom: "M", x: configuration.pas === 0.5 ? -1.5 : -0.75, y: configuration.pas }],
+      });
+      const origine = positionDansRepere(0, 0, geometrie);
+      const graduation = positionDansRepere(configuration.pas, 0, geometrie);
+      assert.ok(Math.abs((graduation.x - origine.x) - geometrie.cellule) < 0.01);
+      assert.match(svg, configuration.pas === 0.5 ? /−1,5|2,5/ : /−0,5|1,25/);
+      assert.ok(geometrie.cellule >= 20, "une petite graduation doit rester lisible sur 320 px");
+    }
   });
 
   it("écrit le vrai signe moins, O une seule fois et la police mathématique canonique", () => {
@@ -83,6 +101,7 @@ describe("repère cartésien V2", () => {
     assert.ok(svg.includes(COULEURS_REPERE.attendu));
     assert.ok(svg.includes(COULEURS_REPERE.guideAbscisse));
     assert.ok(svg.includes(COULEURS_REPERE.guideOrdonnee));
+    assert.ok((svg.match(/<circle /g) ?? []).length >= 2, "chaque projection doit marquer l'axe rejoint");
     assert.ok(svg.includes(">M</text>"));
     assert.ok(svg.includes(">N</text>"));
   });
@@ -98,6 +117,7 @@ describe("repère cartésien V2", () => {
     assert.ok(compter(horizontal, COULEURS_REPERE.guideAbscisse) >= 1);
     assert.equal(compter(horizontal, COULEURS_REPERE.guideOrdonnee), 0);
     assert.ok(compter(complet, COULEURS_REPERE.guideOrdonnee) >= 1);
+    assert.match(complet, /<circle [^>]*r="7"/);
   });
 
   it("refuse les configurations illisibles ou hors contrat", () => {
@@ -115,7 +135,7 @@ describe("repère cartésien V2", () => {
     );
     assert.throws(
       () => positionDansRepere(12, 0, dessinerRepereCartesien().geometrie),
-      /point entier visible/,
+      /point visible sur une graduation/,
     );
   });
 });

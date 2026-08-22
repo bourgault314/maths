@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { creerRegistreAutomatismes } from "../../registre.js";
 import {
   TYPE_REPONSE_DEUX_ENTIERS_RELATIFS,
+  TYPE_REPONSE_DEUX_NOMBRES_DECIMAUX,
   TYPE_REPONSE_NOMBRE_DECIMAL,
 } from "../../../../contrats/src/question-v2.js";
 import {
@@ -13,6 +14,7 @@ import {
   FAMILLE_LIRE_ORDONNEE,
   decoderCoordonnee,
   formaterCouple,
+  formaterEntierRepere,
 } from "./questions.js";
 import {
   QUOTAS_LIRE_COORDONNEES,
@@ -98,7 +100,7 @@ describe("plans seedés GE-03 / GE-04", () => {
         for (let i = 0; i < p.points.length; i += 1) {
           for (let j = i + 1; j < p.points.length; j += 1) {
             assert.ok(
-              Math.max(Math.abs(p.points[i].x - p.points[j].x), Math.abs(p.points[i].y - p.points[j].y)) >= 2,
+              Math.max(Math.abs(p.points[i].x - p.points[j].x), Math.abs(p.points[i].y - p.points[j].y)) / p.pas >= (p.pas < 1 ? 3 : 2),
               "deux cibles d'identification sont trop proches",
             );
           }
@@ -108,6 +110,22 @@ describe("plans seedés GE-03 / GE-04", () => {
     // Une origine seulement sur le dernier profil, dans environ un seed sur quatre.
     assert.ok(originesLecture >= 200 && originesLecture <= 300, originesLecture);
     assert.ok(originesPlacement >= 200 && originesPlacement <= 300, originesPlacement);
+  });
+
+  it("dose les échelles : pas 1 majoritaire, 0,5 occasionnel et 0,25 rare", () => {
+    for (const taille of [5, 10, 15, 20]) {
+      for (const plan of [
+        planifierSerieLireCoordonnees({ graine: "echelles", nombreQuestions: taille }),
+        planifierSeriePlacerPointRepere({ graine: "echelles", nombreQuestions: taille }),
+      ]) {
+        assert.equal(plan.filter(({ pas }) => pas === 0.5).length, Math.floor(taille / 5));
+        assert.equal(plan.filter(({ pas }) => pas === 0.25).length, taille === 20 ? 1 : 0);
+        assert.ok(plan.filter(({ pas }) => pas === 1).length >= taille * 0.75);
+        for (const profil of plan.filter(({ pas }) => pas < 1)) {
+          assert.ok(!Number.isInteger(profil.x) || !Number.isInteger(profil.y));
+        }
+      }
+    }
   });
 });
 
@@ -134,9 +152,9 @@ describe("questions instanciées et cohérence du rendu", () => {
         const couple = formaterCouple(cible.x, cible.y);
         const texteCorrection = question.correction.map((bloc) => bloc.contenu).join(" ");
         if (question.classement.famille === FAMILLE_LIRE_ABSCISSE_REPERE) {
-          assert.ok(texteCorrection.includes(String(Math.abs(cible.x))));
+          assert.ok(texteCorrection.includes(formaterEntierRepere(cible.x)));
         } else if (question.classement.famille === FAMILLE_LIRE_ORDONNEE) {
-          assert.ok(texteCorrection.includes(String(Math.abs(cible.y))));
+          assert.ok(texteCorrection.includes(formaterEntierRepere(cible.y)));
         } else if (question.classement.famille === FAMILLE_IDENTIFIER_POINT) {
           assert.ok(texteCorrection.includes(cible.nom));
         } else {
@@ -144,9 +162,18 @@ describe("questions instanciées et cohérence du rendu", () => {
         }
         if (question.reponse.type === TYPE_REPONSE_DEUX_ENTIERS_RELATIFS) {
           assert.deepEqual(question.reponse.attendus, [cible.x, cible.y]);
+        } else if (question.reponse.type === TYPE_REPONSE_DEUX_NOMBRES_DECIMAUX) {
+          assert.equal(
+            question.reponse.attendus[0].numerateur / question.reponse.attendus[0].denominateur,
+            cible.x,
+          );
+          assert.equal(
+            question.reponse.attendus[1].numerateur / question.reponse.attendus[1].denominateur,
+            cible.y,
+          );
         } else if (question.reponse.type === TYPE_REPONSE_NOMBRE_DECIMAL) {
           const attendu = question.classement.famille === FAMILLE_LIRE_ABSCISSE_REPERE ? cible.x : cible.y;
-          assert.deepEqual(question.reponse.attendu, { numerateur: attendu, denominateur: 1 });
+          assert.equal(question.reponse.attendu.numerateur / question.reponse.attendu.denominateur, attendu);
         } else if (question.classement.famille === FAMILLE_DIAGNOSTIC_COORDONNEES) {
           const libelles = question.reponse.choix.map((choix) => choix.libelle);
           assert.equal(new Set(libelles).size, 4);
@@ -166,7 +193,8 @@ describe("questions instanciées et cohérence du rendu", () => {
         assert.ok(question.correction.some((bloc) => bloc.contenu.includes(couple)));
         assert.equal(
           question.reponse.choix.length,
-          (repere.xMax - repere.xMin + 1) * (repere.yMax - repere.yMin + 1),
+          ((repere.xMax - repere.xMin) / repere.pas + 1)
+            * ((repere.yMax - repere.yMin) / repere.pas + 1),
         );
       }
     }

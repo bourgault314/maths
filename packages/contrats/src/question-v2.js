@@ -13,6 +13,7 @@ export const TYPE_REPONSE_CHOIX_UNIQUE = "choix-unique";
 export const TYPE_REPONSE_ENTIER_NATUREL = "entier-naturel";
 export const TYPE_REPONSE_DEUX_ENTIERS = "deux-entiers";
 export const TYPE_REPONSE_DEUX_ENTIERS_RELATIFS = "deux-entiers-relatifs";
+export const TYPE_REPONSE_DEUX_NOMBRES_DECIMAUX = "deux-nombres-decimaux";
 export const TYPE_REPONSE_NOMBRE_DECIMAL = "nombre-decimal";
 export const TYPE_REPONSE_FRACTION_EQUIVALENTE = "fraction-equivalente";
 export const COMPARAISON_ENSEMBLE_EXACT = "ensemble-exact";
@@ -21,6 +22,8 @@ export const COMPARAISON_VALEUR_EXACTE = "valeur-exacte";
 export const COMPARAISON_VALEURS_EXACTES = "valeurs-exactes";
 export const COMPARAISON_VALEUR_RATIONNELLE_EXACTE =
   "valeur-rationnelle-exacte";
+export const COMPARAISON_VALEURS_RATIONNELLES_EXACTES =
+  "valeurs-rationnelles-exactes";
 const DENOMINATEURS_DECIMAUX_RENDUS = new Set([1, 2, 4, 5, 10, 100, 1000]);
 export const TYPES_BLOC_V2 = Object.freeze([
   "texte",
@@ -134,7 +137,7 @@ function validerBlocs(blocs, nom, erreurs, { auMoinsUn = false } = {}) {
       : bloc.type === "droite-graduee"
         ? ["id", "type", "depart", "pas", "nombreIntervalles", "etiquettes", "point", "points"]
       : bloc.type === "repere-cartesien"
-        ? ["id", "type", "xMin", "xMax", "yMin", "yMax", "points", "nomPoint"]
+        ? ["id", "type", "xMin", "xMax", "yMin", "yMax", "pas", "points", "nomPoint"]
         : ["id", "type", "contenu"];
     validerClesConnues(bloc, cles, chemin, erreurs);
     if (!estIdentifiantValide(bloc.id)) {
@@ -234,6 +237,14 @@ function validerBlocs(blocs, nom, erreurs, { auMoinsUn = false } = {}) {
       }
     }
     if (bloc.type === "repere-cartesien") {
+      const pas = bloc.pas ?? 1;
+      if (![0.25, 0.5, 1].includes(pas)) {
+        erreurs.push(`${chemin}.pas : 0,25, 0,5 ou 1 requis`);
+      }
+      const estSurGraduation = (valeur) =>
+        Number.isFinite(valeur)
+        && Number.isFinite(pas)
+        && Math.abs(valeur / pas - Math.round(valeur / pas)) < 1e-9;
       const bornes = [
         ["xMin", -20, -1],
         ["xMax", 1, 20],
@@ -241,23 +252,29 @@ function validerBlocs(blocs, nom, erreurs, { auMoinsUn = false } = {}) {
         ["yMax", 1, 20],
       ];
       for (const [cle, minimum, maximum] of bornes) {
-        if (!Number.isSafeInteger(bloc[cle]) || bloc[cle] < minimum || bloc[cle] > maximum) {
-          erreurs.push(`${chemin}.${cle} : entier entre ${minimum} et ${maximum} requis`);
+        if (!estSurGraduation(bloc[cle]) || bloc[cle] < minimum || bloc[cle] > maximum) {
+          erreurs.push(`${chemin}.${cle} : graduation entre ${minimum} et ${maximum} requise`);
         }
       }
       if (
-        Number.isSafeInteger(bloc.xMin)
-        && Number.isSafeInteger(bloc.xMax)
-        && (bloc.xMax - bloc.xMin < 4 || bloc.xMax - bloc.xMin > 12)
+        estSurGraduation(bloc.xMin)
+        && estSurGraduation(bloc.xMax)
+        && (
+          (bloc.xMax - bloc.xMin) / pas < 4
+          || (bloc.xMax - bloc.xMin) / pas > 12
+        )
       ) {
-        erreurs.push(`${chemin} : xMax − xMin doit être compris entre 4 et 12`);
+        erreurs.push(`${chemin} : le nombre d'intervalles horizontaux doit être compris entre 4 et 12`);
       }
       if (
-        Number.isSafeInteger(bloc.yMin)
-        && Number.isSafeInteger(bloc.yMax)
-        && (bloc.yMax - bloc.yMin < 4 || bloc.yMax - bloc.yMin > 12)
+        estSurGraduation(bloc.yMin)
+        && estSurGraduation(bloc.yMax)
+        && (
+          (bloc.yMax - bloc.yMin) / pas < 4
+          || (bloc.yMax - bloc.yMin) / pas > 12
+        )
       ) {
-        erreurs.push(`${chemin} : yMax − yMin doit être compris entre 4 et 12`);
+        erreurs.push(`${chemin} : le nombre d'intervalles verticaux doit être compris entre 4 et 12`);
       }
       if (typeof bloc.nomPoint !== "string" || !/^[A-NP-Z]$/.test(bloc.nomPoint)) {
         erreurs.push(`${chemin}.nomPoint : lettre majuscule différente de O requise`);
@@ -276,11 +293,11 @@ function validerBlocs(blocs, nom, erreurs, { auMoinsUn = false } = {}) {
             if (typeof point.nom !== "string" || !/^[A-NP-Z]$/.test(point.nom)) {
               erreurs.push(`${cheminPoint}.nom : lettre majuscule différente de O requise`);
             }
-            if (!Number.isSafeInteger(point.x) || point.x < bloc.xMin || point.x > bloc.xMax) {
-              erreurs.push(`${cheminPoint}.x : abscisse entière visible requise`);
+            if (!estSurGraduation(point.x) || point.x < bloc.xMin || point.x > bloc.xMax) {
+              erreurs.push(`${cheminPoint}.x : abscisse visible sur une graduation requise`);
             }
-            if (!Number.isSafeInteger(point.y) || point.y < bloc.yMin || point.y > bloc.yMax) {
-              erreurs.push(`${cheminPoint}.y : ordonnée entière visible requise`);
+            if (!estSurGraduation(point.y) || point.y < bloc.yMin || point.y > bloc.yMax) {
+              erreurs.push(`${cheminPoint}.y : ordonnée visible sur une graduation requise`);
             }
           });
           const noms = bloc.points.map((point) => point?.nom);
@@ -373,12 +390,48 @@ function validerReponse(reponse, erreurs) {
   const entier = reponse.type === TYPE_REPONSE_ENTIER_NATUREL;
   const deuxEntiers = reponse.type === TYPE_REPONSE_DEUX_ENTIERS;
   const deuxEntiersRelatifs = reponse.type === TYPE_REPONSE_DEUX_ENTIERS_RELATIFS;
+  const deuxNombresDecimaux = reponse.type === TYPE_REPONSE_DEUX_NOMBRES_DECIMAUX;
   const decimal = reponse.type === TYPE_REPONSE_NOMBRE_DECIMAL;
   const fraction = reponse.type === TYPE_REPONSE_FRACTION_EQUIVALENTE;
-  if (!multiple && !unique && !entier && !deuxEntiers && !deuxEntiersRelatifs && !decimal && !fraction) {
+  if (!multiple && !unique && !entier && !deuxEntiers && !deuxEntiersRelatifs && !deuxNombresDecimaux && !decimal && !fraction) {
     erreurs.push(
-      "reponse.type : sélection multiple, choix unique, entier naturel, deux entiers, deux entiers relatifs, nombre décimal ou fraction équivalente attendus",
+      "reponse.type : sélection multiple, choix unique, entier naturel, deux entiers, deux entiers relatifs, deux nombres décimaux, nombre décimal ou fraction équivalente attendus",
     );
+    return;
+  }
+
+  if (deuxNombresDecimaux) {
+    validerClesConnues(
+      reponse,
+      ["type", "comparaison", "attendus"],
+      "reponse",
+      erreurs,
+    );
+    if (reponse.comparaison !== COMPARAISON_VALEURS_RATIONNELLES_EXACTES) {
+      erreurs.push(
+        `reponse.comparaison : « ${COMPARAISON_VALEURS_RATIONNELLES_EXACTES} » attendu`,
+      );
+    }
+    if (!Array.isArray(reponse.attendus) || reponse.attendus.length !== 2) {
+      erreurs.push("reponse.attendus : exactement deux rationnels sont requis");
+      return;
+    }
+    reponse.attendus.forEach((attendu, index) => {
+      const nom = `reponse.attendus[${index}]`;
+      if (typeof attendu !== "object" || attendu === null || Array.isArray(attendu)) {
+        erreurs.push(`${nom} : rationnel attendu`);
+        return;
+      }
+      validerClesConnues(attendu, ["numerateur", "denominateur"], nom, erreurs);
+      if (!Number.isSafeInteger(attendu.numerateur)) {
+        erreurs.push(`${nom}.numerateur : entier sûr requis`);
+      }
+      if (!Number.isSafeInteger(attendu.denominateur) || attendu.denominateur <= 0) {
+        erreurs.push(`${nom}.denominateur : entier naturel strictement positif requis`);
+      } else if (!DENOMINATEURS_DECIMAUX_RENDUS.has(attendu.denominateur)) {
+        erreurs.push(`${nom}.denominateur : dénominateur décimal rendu requis`);
+      }
+    });
     return;
   }
 

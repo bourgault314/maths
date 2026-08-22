@@ -12,11 +12,12 @@ import {
   TYPE_REPONSE_CHOIX_UNIQUE,
   TYPE_REPONSE_DEUX_ENTIERS,
   TYPE_REPONSE_DEUX_ENTIERS_RELATIFS,
+  TYPE_REPONSE_DEUX_NOMBRES_DECIMAUX,
   TYPE_REPONSE_ENTIER_NATUREL,
   TYPE_REPONSE_FRACTION_EQUIVALENTE,
   TYPE_REPONSE_NOMBRE_DECIMAL,
   TYPE_REPONSE_SELECTION_MULTIPLE,
-} from "./question-v2.js?v=49";
+} from "./question-v2.js?v=50";
 
 export const SCHEMA_TRACE_REPONSE_V1 = "mathsgo.trace-reponse/1";
 export const SCHEMA_TRACE_REPONSE_V2 = "mathsgo.trace-reponse/2";
@@ -249,6 +250,8 @@ export function validerTraceReponse(trace) {
     const typeDeuxEntiers = t.reponse.type === TYPE_REPONSE_DEUX_ENTIERS;
     const typeDeuxEntiersRelatifs =
       t.reponse.type === TYPE_REPONSE_DEUX_ENTIERS_RELATIFS;
+    const typeDeuxNombresDecimaux =
+      t.reponse.type === TYPE_REPONSE_DEUX_NOMBRES_DECIMAUX;
     const typeDecimal = t.reponse.type === TYPE_REPONSE_NOMBRE_DECIMAL;
     const typeFraction =
       t.reponse.type === TYPE_REPONSE_FRACTION_EQUIVALENTE;
@@ -265,6 +268,8 @@ export function validerTraceReponse(trace) {
           ? ["type", ...(version3 ? ["statut"] : []), "valeur"]
           : typeDeuxEntiers || typeDeuxEntiersRelatifs || typeFraction
             ? ["type", ...(version3 ? ["statut"] : []), "valeurs"]
+            : typeDeuxNombresDecimaux
+              ? ["type", ...(version3 ? ["statut"] : []), "saisies", "valeurs"]
             : typeDecimal
               ? ["type", ...(version3 ? ["statut"] : []), "saisie", "valeur"]
             : ["type", ...(version3 ? ["statut"] : []), "choix"],
@@ -276,11 +281,12 @@ export function validerTraceReponse(trace) {
       !typeEntier &&
       !typeDeuxEntiers &&
       !typeDeuxEntiersRelatifs &&
+      !typeDeuxNombresDecimaux &&
       !typeDecimal &&
       !typeFraction
     ) {
       erreurs.push(
-        `reponse.type : « ${TYPE_REPONSE_SELECTION_MULTIPLE} », « ${TYPE_REPONSE_CHOIX_UNIQUE} », « ${TYPE_REPONSE_ENTIER_NATUREL} », « ${TYPE_REPONSE_DEUX_ENTIERS} », « ${TYPE_REPONSE_DEUX_ENTIERS_RELATIFS} », « ${TYPE_REPONSE_NOMBRE_DECIMAL} » ou « ${TYPE_REPONSE_FRACTION_EQUIVALENTE} » attendu`,
+        `reponse.type : « ${TYPE_REPONSE_SELECTION_MULTIPLE} », « ${TYPE_REPONSE_CHOIX_UNIQUE} », « ${TYPE_REPONSE_ENTIER_NATUREL} », « ${TYPE_REPONSE_DEUX_ENTIERS} », « ${TYPE_REPONSE_DEUX_ENTIERS_RELATIFS} », « ${TYPE_REPONSE_DEUX_NOMBRES_DECIMAUX} », « ${TYPE_REPONSE_NOMBRE_DECIMAL} » ou « ${TYPE_REPONSE_FRACTION_EQUIVALENTE} » attendu`,
       );
     }
     if (statutOmis) {
@@ -307,6 +313,47 @@ export function validerTraceReponse(trace) {
         erreurs.push(
           "reponse.valeurs[1] : dénominateur strictement positif requis",
         );
+      }
+    } else if (typeDeuxNombresDecimaux) {
+      const saisies = t.reponse.saisies;
+      const valeurs = t.reponse.valeurs;
+      if (!Array.isArray(saisies) || saisies.length !== 2) {
+        erreurs.push("reponse.saisies : exactement deux écritures décimales sont requises");
+      }
+      if (!Array.isArray(valeurs) || valeurs.length !== 2) {
+        erreurs.push("reponse.valeurs : exactement deux rationnels sont requis");
+      }
+      if (Array.isArray(saisies) && saisies.length === 2 && Array.isArray(valeurs) && valeurs.length === 2) {
+        saisies.forEach((saisie, index) => {
+          const decomposition = decomposerSaisieDecimale(saisie);
+          if (!decomposition) {
+            erreurs.push(`reponse.saisies[${index}] : nombre décimal positif ou négatif requis`);
+            return;
+          }
+          const valeur = valeurs[index];
+          if (typeof valeur !== "object" || valeur === null || Array.isArray(valeur)) {
+            erreurs.push(`reponse.valeurs[${index}] : rationnel normalisé attendu`);
+            return;
+          }
+          validerClesConnues(
+            valeur,
+            ["numerateur", "denominateur"],
+            `reponse.valeurs[${index}]`,
+            erreurs,
+          );
+          const rationnelValide = Number.isSafeInteger(valeur.numerateur)
+            && Number.isSafeInteger(valeur.denominateur)
+            && valeur.denominateur > 0;
+          if (!Number.isSafeInteger(valeur.numerateur)) {
+            erreurs.push(`reponse.valeurs[${index}].numerateur : entier sûr requis`);
+          }
+          if (!Number.isSafeInteger(valeur.denominateur) || valeur.denominateur <= 0) {
+            erreurs.push(`reponse.valeurs[${index}].denominateur : entier strictement positif requis`);
+          }
+          if (rationnelValide && !valeurCorrespondSaisieDecimale(decomposition, valeur)) {
+            erreurs.push(`reponse.valeurs[${index}] : valeur rationnelle incohérente avec la saisie`);
+          }
+        });
       }
     } else if (typeDecimal) {
       const decomposition = decomposerSaisieDecimale(t.reponse.saisie);

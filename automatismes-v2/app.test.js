@@ -2602,21 +2602,32 @@ it("rend GE-03 et GE-04 avec le repère partagé, les aides et le placement rév
   assert.match(lecture.application.innerHTML, /data-profil="entier-relatif"/);
   assert.match(lecture.application.innerHTML, /data-action="champ-reponse" data-index="0"/);
   assert.match(lecture.application.innerHTML, /data-action="champ-reponse" data-index="1"/);
+  assert.match(lecture.application.innerHTML, /class="indicateur-reponse-repere"/);
   assert.match(lecture.application.innerHTML, /font-family="'Times New Roman', Times, 'Liberation Serif', serif"/);
 
   cliquer(lecture.gestionnaires, "aide");
   assert.match(lecture.application.innerHTML, /Abscisse d(?:&#039;|')abord, ordonnée ensuite/);
-  assert.match(lecture.application.innerHTML, /Guide visuel de la première étape/);
+  assert.match(lecture.application.innerHTML, /Guide visuel, étape 1 sur 3/);
+  assert.match(lecture.application.innerHTML, /axe des abscisses/);
+  assert.match(lecture.application.innerHTML, /axe des ordonnées/);
+  cliquer(lecture.gestionnaires, "repere-aide", undefined, "1");
+  assert.match(lecture.application.innerHTML, /Guide visuel, étape 2 sur 3/);
+  assert.match(lecture.application.innerHTML, /Suis le guide vertical/);
+  cliquer(lecture.gestionnaires, "repere-aide", undefined, "2");
+  assert.match(lecture.application.innerHTML, /Guide visuel, étape 3 sur 3/);
+  assert.match(lecture.application.innerHTML, /Lis maintenant l(?:&#039;|')ordonnée/);
   cliquer(lecture.gestionnaires, "cours");
-  assert.match(lecture.application.innerHTML, /Comprendre le repère/);
-  assert.match(lecture.application.innerHTML, /Axe des abscisses/);
+  assert.match(lecture.application.innerHTML, /Les axes du repère/);
+  assert.match(lecture.application.innerHTML, /axe des abscisses/);
+  assert.match(lecture.application.innerHTML, /axe des ordonnées/);
   assert.match(lecture.application.innerHTML, /Cours · 1 \/ 3/);
   cliquer(lecture.gestionnaires, "cours-suivant");
-  assert.match(lecture.application.innerHTML, /A\(−3 ; 2\)/);
+  cliquer(lecture.gestionnaires, "cours-repere-etape", undefined, "2");
+  assert.match(lecture.application.innerHTML, /A\(<span class="coord-abscisse">−3<\/span> ; <span class="coord-ordonnee">2<\/span>\)/);
   assert.match(lecture.application.innerHTML, /1<sup>re<\/sup> coordonnée/);
   cliquer(lecture.gestionnaires, "cours-suivant");
-  assert.match(lecture.application.innerHTML, /C\(3 ; 0\)/);
-  assert.match(lecture.application.innerHTML, /D\(0 ; −2\)/);
+  assert.match(lecture.application.innerHTML, /C\(<span class="coord-abscisse">3<\/span> ; <span class="coord-ordonnee">0<\/span>\)/);
+  assert.match(lecture.application.innerHTML, /D\(<span class="coord-abscisse">0<\/span> ; <span class="coord-ordonnee">−2<\/span>\)/);
 
   const placement = installerFauxNavigateur(
     "?notion=placer-point-repere&questions=5&graine=apercu-ge04-complet",
@@ -2624,6 +2635,21 @@ it("rend GE-03 et GE-04 avec le repère partagé, les aides et le placement rév
   await import(`./app.js?fumee=ge04-${Date.now()}`);
   cliquer(placement.gestionnaires, "demarrer");
   assert.match(placement.application.innerHTML, /surface-placement-repere/);
+  cliquer(placement.gestionnaires, "aide");
+  assert.match(placement.application.innerHTML, /Horizontal, puis vertical/);
+  cliquer(placement.gestionnaires, "repere-aide", undefined, "1");
+  assert.match(placement.application.innerHTML, /Avancer horizontalement/);
+  cliquer(placement.gestionnaires, "repere-aide", undefined, "2");
+  assert.match(placement.application.innerHTML, /Monter ou descendre/);
+  cliquer(placement.gestionnaires, "cours");
+  assert.match(placement.application.innerHTML, /Les axes du repère/);
+  cliquer(placement.gestionnaires, "cours-suivant");
+  assert.match(placement.application.innerHTML, /Placer le point B/);
+  assert.doesNotMatch(placement.application.innerHTML, /Lire le point A/);
+  cliquer(placement.gestionnaires, "cours-repere-etape", undefined, "2");
+  assert.match(placement.application.innerHTML, /B\(<span class="coord-abscisse">2<\/span> ; <span class="coord-ordonnee">−1<\/span>\)/);
+  cliquer(placement.gestionnaires, "fermer-cours");
+  cliquer(placement.gestionnaires, "fermer-aide");
   const bornes = placement.application.innerHTML.match(
     /data-x-min="(-?\d+)" data-x-max="(-?\d+)"\s+data-y-min="(-?\d+)" data-y-max="(-?\d+)"/,
   );

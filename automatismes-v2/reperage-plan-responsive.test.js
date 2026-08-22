@@ -30,7 +30,7 @@ describe("responsive du repérage dans le plan", () => {
         assert.ok(Math.abs(
           (uniteX.x - origine.x) - (origine.y - uniteY.y),
         ) < 0.01, `${largeur}px : les unités ne sont pas carrées`);
-        assert.ok(geometrie.cellule >= 31, `${largeur}px : graduation trop serrée`);
+        assert.ok(geometrie.cellule >= 20, `${largeur}px : graduation trop serrée`);
         assert.ok(geometrie.xDroite - geometrie.xGauche >= 248);
         assert.ok(geometrie.yBas - geometrie.yHaut >= 186);
         assert.ok(hauteur <= 590, `${largeur}px : repère trop haut`);
@@ -48,9 +48,12 @@ describe("responsive du repérage dans le plan", () => {
     assert.match(styles, /\.surface-placement-repere\s*\{[\s\S]*?touch-action:\s*manipulation;/);
     assert.match(styles, /@media \(max-width: 620px\)[\s\S]*?\.repere-version-large\s*\{\s*display:\s*none;/);
     assert.match(styles, /@media \(max-width: 620px\)[\s\S]*?\.repere-version-mobile\s*\{\s*display:\s*block;/);
+    assert.match(styles, /\.indicateur-reponse-repere\s*\{[\s\S]*?position:\s*absolute;[\s\S]*?min-height:\s*44px;/);
     assert.match(application, /rendreVersion\(680, "large"\).*rendreVersion\(320, "mobile"\)/s);
-    assert.match(application, /Math\.round\(xMin \+ proportionX \* \(xMax - xMin\)\)/);
-    assert.match(application, /Math\.round\(yMax - proportionY \* \(yMax - yMin\)\)/);
+    assert.match(application, /Math\.round\(proportionX \* nombreX\) \* pas/);
+    assert.match(application, /Math\.round\(proportionY \* nombreY\) \* pas/);
     assert.match(application, /\["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"\]/);
+    assert.match(application, /data-action="voir-reponse-repere"/);
+    assert.match(application, /zone\.scrollTo\?\.\(\{[\s\S]*?top: destination/);
   });
 });

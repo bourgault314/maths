@@ -2,6 +2,23 @@
 
 **Dernière mise à jour : 22 août 2026.**
 
+## Révision pédagogique de GE-03 et GE-04
+
+- D-073 maintient GE-03 et GE-04 séparés mais leur donne désormais deux cours
+  de trois pages ciblés. Seuls l'objet, la page de vocabulaire, les couleurs,
+  les aides et les diagnostics restent mutualisés.
+- Le pas 1 reste très majoritaire : sur 20 questions, 15 repères au pas 1,
+  4 au pas 0,5 et 1 au pas 0,25. Les séries de 5, 10 et 15 n'emploient que
+  1, 2 et 3 demi-unités, sans quart.
+- Les aides changent réellement de dessin à chaque indice : axes directement
+  nommés, projection vers l'axe rejoint, puis deuxième projection ou trajet
+  vertical. Les coordonnées nulles gardent un marqueur visible.
+- GE-03 conserve ses cinq familles et GE-04 reste un placement pur. Les
+  coordonnées décimales sont comparées et tracées rationnellement, sans calcul
+  flottant de vérité.
+- Sur téléphone, « ↓ Répondre » apparaît uniquement lorsque les champs sont
+  sous le bord visible et les rejoint au toucher.
+
 ## Restauration complète des interactions du menu de référence
 
 - D-072 rétablit les commandes globales « Tous » et « Aucun », ainsi que

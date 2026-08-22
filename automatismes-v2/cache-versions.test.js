@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import { it } from "node:test";
 
-const VERSION = "49";
+const VERSION = "50";
 
 const RESSOURCES_VERSIONNEES = new Map([
   ["automatismes-v2/index.html", ["styles.css", "interface.css", "menu.css", "app.js"]],
@@ -229,6 +229,6 @@ it("invalide ensemble le cache de la coque V2", async () => {
 
 it("conserve la façade du menu et recharge le libellé DNB", async () => {
   const source = await readFile(new URL("../automatismes-v2/index.html", import.meta.url), "utf8");
-  assert.match(source, /menu\.css\?v=49&amp;rev=51/);
-  assert.match(source, /app\.js\?v=49&amp;rev=52/);
+  assert.match(source, /menu\.css\?v=50&amp;rev=51/);
+  assert.match(source, /app\.js\?v=50&amp;rev=53/);
 });
