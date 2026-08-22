@@ -3948,6 +3948,18 @@
       overflow:hidden;
     }
 
+    /* Réception : sous le bloc vivent le lien « Gérer mes cookies » (32 px,
+       marges −8/18) et les marges 6/8 du bloc lui-même, soit 56 px ; avec
+       100vh − 28px la page défilait de 28 px. On redonne cette place pour que
+       le bloc et le lien tiennent ensemble dans la fenêtre, comme avant. */
+    body.importMode main.viewClassic .stage:not(:fullscreen){
+      height:calc(100vh - 56px) !important;
+    }
+
+    body.importMode main.viewRedaction .stage:not(:fullscreen){
+      height:calc(100vh - 56px) !important;
+    }
+
     main.activeMode.viewClassic .stage:not(:fullscreen) .topbar,
     body.importMode main.viewClassic .stage:not(:fullscreen) .topbar{
       flex:0 0 auto !important;
