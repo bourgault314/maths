@@ -24,7 +24,7 @@ function pngSize(buffer){
 test("le mode A place le partage a cote de la graine et masque la ligne redondante", () => {
   assert.match(classic, /id="seedU"[\s\S]*id="btnShareUnit"/);
   assert.match(classic, /shareRowEl\.hidden = act === "U" \|\| act === "UPM" \|\| act === "N" \|\| act === "NPM"/);
-  assert.match(classic, /#unitSettings \.u-seed input\{width:96px/);
+  assert.match(classic, /class="seedShareRow" id="unitSeedShareRow"[\s\S]*id="seedU"[\s\S]*id="btnShareUnit"/);
   assert.match(classic, /id="seedN"[\s\S]*id="btnShareNumbered"/);
   assert.match(equations, /class="seedShareRow"[\s\S]*id="seedN"[\s\S]*id="btnShare"/);
   for(const html of [classic, equations]) assert.match(html, /\.shareFeedback:empty\{display:none\}/);

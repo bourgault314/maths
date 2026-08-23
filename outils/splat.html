@@ -99,143 +99,109 @@
   .home svg{width:22px;height:22px;display:block}
 
   .helpBtn{
-    display:inline-flex;
-    align-items:center;
-    justify-content:center;
-    width:52px;
-    height:52px;
-    border-radius:999px;
-    border:1px solid rgba(17,24,39,.12);
-    background:rgba(255,255,255,.75);
-    box-shadow:0 10px 24px rgba(17,24,39,.08);
-    color:var(--ink);
-    line-height:1;
-    user-select:none;
-    cursor:pointer;
+    font-size:24px;
     font-weight:950;
-    font-size:22px;
-    transition:transform .08s ease, border-color .2s ease, box-shadow .2s ease;
+    border:none;
+    cursor:pointer;
   }
-  .helpBtn:hover{
-    transform:translateY(-1px);
-    border-color:rgba(27,102,255,.30);
-    box-shadow:0 14px 30px rgba(17,24,39,.10);
-  }
-  .helpBtn:active{transform:translateY(0)}
 
   .helpOverlay{
     position:fixed;
     inset:0;
+    z-index:9999;
     display:none;
     align-items:center;
     justify-content:center;
     padding:24px;
-    background:rgba(15,23,42,.42);
-    backdrop-filter: blur(4px);
-    z-index:9999;
+    background:rgba(15,23,42,.46);
+    backdrop-filter:blur(4px);
   }
   .helpOverlay.is-open{display:flex}
-  .helpDialog{
-    position:relative;
-    width:min(620px, 92vw);
-    max-height:82vh;
+  .helpModal{
+    width:min(680px, 94vw);
+    max-height:min(78vh, 720px);
     overflow:auto;
-    border-radius:26px;
-    border:1px solid rgba(255,255,255,.65);
-    background:rgba(255,255,255,.97);
+    border-radius:24px;
+    background:rgba(255,255,255,.98);
     color:#0b1220;
-    box-shadow:0 30px 90px rgba(15,23,42,.35);
-    padding:34px 38px 32px;
+    border:1px solid rgba(17,24,39,.14);
+    box-shadow:0 28px 80px rgba(0,0,0,.26);
+    padding:28px 30px 30px;
   }
-  .helpDialogHeader{
+  .helpModalHeader{
     display:flex;
-    align-items:flex-start;
+    align-items:center;
     justify-content:space-between;
-    gap:18px;
-    margin-bottom:20px;
-    padding-right:42px;
+    gap:16px;
+    margin-bottom:18px;
   }
-  .helpDialogTitle{
-    font-size:30px;
+  .helpModalTitle{
+    font-size:26px;
     line-height:1.1;
     font-weight:950;
     letter-spacing:-.02em;
-    margin:0;
   }
   .helpClose{
-    position:absolute;
-    top:16px;
-    right:18px;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    width:42px;
-    height:42px;
+    display:inline-grid;
+    place-items:center;
+    width:44px;
+    height:44px;
     border-radius:999px;
-    border:1px solid rgba(15,23,42,.12);
-    background:rgba(15,23,42,.04);
+    border:1px solid rgba(17,24,39,.16);
+    background:#f3f4f6;
     color:#111827;
     cursor:pointer;
-    font-size:30px;
+    font-size:26px;
+    font-weight:850;
     line-height:1;
-    font-weight:700;
   }
-  .helpClose:hover{background:rgba(15,23,42,.08)}
-  .helpDialogContent{
-    font-size:18px;
-    color:#111827;
+  .helpClose:hover{background:#e5e7eb}
+  .helpModalBody{
+    font-size:17px;
     line-height:1.55;
+    color:#111827;
   }
-  .helpDialogContent strong{color:#0b1220}
-  .helpDialogContent p{margin:0 0 14px}
-  .helpDialogContent ul{
-    margin:0 0 22px;
-    padding-left:24px;
+  .helpModalBody p{margin:0 0 14px}
+  .helpModalBody ul{
+    margin:8px 0 22px;
+    padding-left:1.25em;
   }
-  .helpDialogContent li{margin:8px 0}
-  .helpDialogContent .helpBlock{margin:0 0 22px}
-  .helpSeed{
-    margin-top:20px !important;
-    padding:16px 18px;
-    border-radius:18px;
-    background:rgba(106,167,255,.14);
-    border:1px solid rgba(106,167,255,.28);
-  }
+  .helpModalBody li{margin:8px 0}
+  .helpModalBody strong{font-weight:900}
 
   .wrap{display:flex;flex-direction:row;flex-wrap:nowrap;gap:14px;padding:14px;align-items:flex-start}
-  .wrap > .panel{flex:0 0 340px;max-width:340px}
+  .wrap > .panel{flex:0 0 372px;max-width:372px}
   .wrap > .stage{flex:1 1 auto;min-width:0}
 
-  .panelTop{
+  .panelHeader{
     display:flex;
     align-items:center;
     justify-content:space-between;
     gap:10px;
-    margin-bottom:8px;
-    padding-bottom:8px;
+    margin:0 0 6px;
+    padding:0 0 8px;
     border-bottom:1px solid rgba(17,24,39,.10);
   }
-  .panelTopTitle{
+  .panelHeader h1{
     font-size:20px;
-    font-weight:950;
-    letter-spacing:.2px;
+    line-height:1.12;
     margin:0;
-    line-height:1;
+    font-weight:950;
+    letter-spacing:-.01em;
   }
-  .panelTopActions{
+  .panelHeaderActions{
     display:flex;
     align-items:center;
     gap:8px;
     flex:0 0 auto;
   }
-  .panelTop .home,
-  .panelTop .helpBtn{
+  .panelHeader .home{
     width:42px;
     height:42px;
     box-shadow:0 6px 16px rgba(17,24,39,.08);
   }
-  .panelTop .home svg{width:20px;height:20px}
-  .panelTop .helpBtn{font-size:20px}
+  .panelHeader .home svg{width:19px;height:19px}
+  .panelHeader .helpBtn{font-size:22px}
 
   .panel{
     background:var(--panel);
@@ -244,9 +210,9 @@
     box-shadow:0 10px 30px rgba(0,0,0,0.25)
   }
 
-  label{font-size:12px;color:var(--muted);display:block;margin:8px 0 4px}
+  label{font-size:13px;font-weight:700;color:var(--muted);display:block;margin:7px 0 3px;line-height:1.15}
   select,input{
-    width:100%;padding:10px 10px;border-radius:10px;
+    width:100%;padding:8px 10px;border-radius:10px;font-size:15px;height:38px;
     border:1px solid var(--field-border);
     background:var(--field-bg);
     color:var(--ink);
@@ -254,151 +220,55 @@
   }
   .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
 
-  /* PATCH UI — Menu A (U) */
-  #unitSettings .u-section-title{
-    font-size:10px;
-    color:var(--muted);
-    font-weight:800;
-    letter-spacing:.08em;
-    text-transform:uppercase;
-    margin:6px 0 3px;
-  }
-  #unitSettings .u-grid{
-    display:grid;
-    grid-template-columns: 78px 1fr;
-    gap:4px 8px;
-    align-items: center;
-  }
-  #unitSettings .u-grid .u-label{
-    margin:0;
-    font-size:12px;
-    color:var(--muted);
-    font-weight:700;
-    line-height:1.2;
-    /* Menu A : les libellés de gauche s’alignent visuellement
-       sur le centre des champs, pas sur les petits repères min/max/≤. */
-    transform:translateY(6px);
-  }
-  #unitSettings .u-controls{
-    display:flex;
-    gap:8px;
-    flex-wrap:wrap;
-    align-items:flex-end;
-    min-width:0;
-  }
-  /* Mode A : formulaire compact et aligné ligne par ligne.
-     Les champs simples (≤) restent proches de leur libellé, avec le signe en ligne. */
-  #unitSettings #unitVisibleControls,
-  #unitSettings #unitHiddenControls{
-    justify-content:flex-start;
-    align-items:center;
-  }
-  #unitSettings .u-single{
-    flex-direction:row;
-    align-items:center;
-    gap:8px;
-  }
-  #unitSettings .u-single .u-mini-label{
-    width:18px;
-    margin:0;
-    text-align:center;
-    font-size:14px;
-    line-height:1;
-  }
-  #unitSettings .u-seed-inline{
-    flex-direction:row;
-    align-items:center;
-    gap:7px;
-    min-width:0;
-    position:relative;
-  }
-  #unitSettings .u-seed-inline .u-mini-label{
-    display:none;
-  }
-  #unitSettings .u-mini{display:flex;flex-direction:column;gap:2px;min-width:0}
-  #unitSettings .u-mini-label{
-    font-size:11px;
-    color:var(--muted);
-    line-height:1.05;
-    margin:0;
-    text-align:center;
-  }
-  #unitSettings input{height:34px;padding:6px 8px;}
-  #unitSettings .u-mini input{ width:70px; }
-  #unitSettings .u-seed{min-width:0;flex-wrap:nowrap;}
-  #unitSettings .u-seed input{width:96px;max-width:96px;}
-  #unitSettings .unitShareButton{height:34px;padding:5px 8px;font-size:10.5px;flex:0 0 auto;}
-  #unitSettings .unitShareFeedback{position:absolute;right:0;top:37px;z-index:3;padding:2px 5px;border-radius:5px;background:var(--panel);}
-  #unitSettings .unitShareFeedback:empty{display:none}
-  #unitSettings .u-wide input{ width:100%; }
-
+  /* Menu : même trame que Splat Équations — libellés 13 px gras sur une ligne,
+     champs de 38 px, rangées de trois champs alignés par le bas, puis la rangée
+     « Graine | Copier le lien », puis « Générer | Vider », puis le cadre Impression. */
+  .panel .row{gap:8px}
+  .panel .row > div{min-width:0}
+  .genRow{margin-top:10px;flex-wrap:nowrap}
+  .genRow .btn{flex:1 1 0;height:40px;padding:0 12px}
+  .genRow .btn.danger{flex:0 0 96px}
+  /* deux champs sous un même libellé (taches min / max) */
+  .rangePair{display:flex;gap:6px;align-items:flex-end;min-width:0}
+  .rangePair .rangeCell{flex:1 1 0;min-width:0;display:flex;flex-direction:column;gap:2px}
+  .rangePair .miniLabel{font-size:12px;color:var(--muted);text-align:center;line-height:1.1}
+  /* un champ précédé de son signe (≤) */
+  .lePair{display:flex;align-items:center;gap:6px;min-width:0}
+  .lePair .leSign{flex:0 0 auto;font-size:15px;font-weight:800;color:var(--muted)}
+  .lePair input{flex:1 1 0;min-width:0}
+  /* Enquête : les quatre opérations autorisées, en pilules de la hauteur d'un champ */
+  .c-ops{display:grid;grid-template-columns:repeat(4, minmax(0, 1fr));gap:6px;margin-top:2px}
+  .c-ops .checkInline{justify-content:center;height:38px;padding:0 6px;border-radius:10px;gap:6px;min-width:0;white-space:nowrap;margin:0}
+  .c-ops .checkInline span{font-size:13px;font-weight:700}
   .seedShareRow{
     display:grid;
-    grid-template-columns:auto minmax(76px,96px) auto minmax(0,1fr);
-    gap:7px;
+    grid-template-columns:auto minmax(100px,1fr) auto;
+    gap:8px;
     align-items:center;
-    margin-top:10px;
-  }
-  .seedShareRow label{margin:0;font-weight:700}
-  .seedShareRow input{height:34px;padding:6px 8px}
-  .seedShareRow .shareLinkBtn{height:34px}
-  .shareFeedback:empty{display:none}
-
-  /* PATCH UI — Menu C (Enquête) */
-  #investigateSettings{margin-top:6px}
-  #investigateSettings label{margin:6px 0 4px}
-  #investigateSettings select,#investigateSettings input{padding:8px 10px}
-  #investigateSettings .c-grid{
-    display:grid;
-    grid-template-columns:1fr 1fr;
-    gap:8px 10px;
-    align-items:end;
-  }
-  #investigateSettings .c-field{min-width:0}
-  #investigateSettings #invStructureRow{grid-column:1 / 2}
-  #investigateSettings .c-ops{
-    display:grid;
-    grid-template-columns:repeat(4, minmax(0, 1fr));
-    gap: 6px;
-    margin-top:2px;
-  }
-  #investigateSettings .c-ops .checkInline{
-    justify-content:center;
-    padding:6px 6px;
-    border-radius:10px;
-    gap:6px;
-    min-width:0;
-    white-space:nowrap;
-  }
-  #investigateSettings .c-ops .checkInline span{font-size:12px}
-  #investigateSettings .c-small input{max-width:160px}
-  #investigateSettings .c-pairs{
-    display:grid;
-    grid-template-columns:1fr 1fr;
-    gap:8px 10px;
     margin-top:8px;
   }
-  #investigateSettings .c-pair{
-    display:flex;
-    gap:8px;
-    align-items:flex-end;
+  .seedShareRow[hidden]{display:none}
+  .seedShareRow label{margin:0;font-weight:700}
+  .seedShareRow input{height:36px;padding:6px 8px}
+  .seedShareRow .seedSlot{min-width:0;display:block}
+  .seedShareRow .shareLinkBtn{height:36px;font-size:13px;color:var(--ink)}
+  .seedShareRow .shareFeedback{grid-column:1 / -1;margin-top:-4px}
+  .shareFeedback:empty{display:none}
+  .printBlock{
+    margin-top:10px;padding:8px 10px 10px;border-radius:12px;
+    border:1px solid var(--btn-border);background:rgba(16,185,129,0.06);
   }
-  #investigateSettings .c-mini{flex:1;min-width:0}
-  #investigateSettings .c-mini-label{
-    font-size:11px;
-    color:var(--muted);
-    line-height:1.05;
-    margin:0 0 4px;
-    text-align:center;
-  }
-  #investigateSettings .c-mini input{width:100%}
+  .printBlockTitle{font-size:12px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:0 0 6px}
+  .printBlock .printGoRow{margin-top:8px}
+  .printSummary{font-size:12px;color:var(--muted);line-height:1.25;margin-top:6px;min-height:1.25em}
+
   input[type="number"]{appearance:textfield}
 
   .btn{
     padding:10px 12px;border-radius:10px;
     border:1px solid var(--btn-border);
     background:var(--btn);
-    color:var(--ink);cursor:pointer;font-weight:650;
+    color:var(--ink);cursor:pointer;font-weight:650;font-size:15px;
     transition: transform .08s ease, background .12s ease, box-shadow .12s ease;
   }
   .btn:hover{background:var(--btn2)}
@@ -412,12 +282,9 @@
   .btn:disabled{opacity:.45;cursor:not-allowed}
   .shareRow{display:flex;align-items:center;justify-content:flex-start;gap:8px;min-height:28px;margin-top:8px}
   .shareRow[hidden]{display:none}
-  .shareLinkBtn{padding:5px 8px;font-size:11px;font-weight:750;color:var(--muted);white-space:nowrap}
+  .shareLinkBtn{padding:5px 8px;font-size:12px;font-weight:750;color:var(--muted);white-space:nowrap}
   .shareFeedback{font-size:11px;font-weight:750;color:#16a34a;white-space:nowrap}
   .shareFeedback.error{color:#dc2626}
-  .compactActionRow{margin-top:8px !important}
-  .compactTitleRow{margin-top:8px !important}
-  .compactPrintRow{margin-top:8px !important}
 
   .iconbtn{
     display:inline-grid;place-items:center;
@@ -512,44 +379,32 @@
     border:1px solid rgba(255,255,255,0.08);
     border-radius:14px;padding:10px
   }
-  .nav{display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:space-between}
-  .counter{font-size:12px;color:var(--muted)}
+  /* Barre de commande de la scène (compteur + boutons), lisible de loin — la même
+     que sur Splat Équations. */
+  .nav{display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:space-between;margin-bottom:6px}
+  .navGroup{display:flex;align-items:center;gap:8px;min-width:0}
+  .counter{font-size:17px;font-weight:800;color:var(--ink);white-space:nowrap;letter-spacing:.01em}
+  .navBtn{
+    display:inline-flex;align-items:center;justify-content:center;
+    width:46px;height:46px;flex:0 0 46px;padding:0;
+    font-size:19px;line-height:1;border-radius:12px;
+  }
+  .navBtn.fsToggle svg{width:22px;height:22px;display:block}
+  .navBtn .fsIconExit{display:none;font-size:24px;font-weight:800}
+  .fsHost:fullscreen .navBtn .fsIconEnter{display:none}
+  .fsHost:fullscreen .navBtn .fsIconExit{display:block}
+  /* Téléphone : la barre de commande reste modeste. Ces deux réglages doivent venir
+     APRÈS .navBtn / .counter ci-dessus, sinon la règle de bureau, écrite plus bas
+     dans la feuille, l'emporte à spécificité égale et le média ne sert à rien. */
+  @media (max-width:760px){
+    .navBtn{width:44px;height:44px;flex-basis:44px}
+    .counter{font-size:15px}
+  }
 
   #svgWrap{width:100%;aspect-ratio: 16/10;display:grid;place-items:center}
   #mainSvg{width:100%;height:100%}
   #mainSvg:focus{outline:none}
 
-  /* Navigation directe sur le plateau : utile en projection et en tactile. */
-  .stageNavOverlay{
-    position:absolute;
-    top:12px;
-    right:12px;
-    z-index:20;
-    display:flex;
-    gap:8px;
-    align-items:center;
-  }
-  .stageNavBtn{
-    display:inline-grid;
-    place-items:center;
-    width:42px;
-    height:42px;
-    padding:0;
-    border-radius:14px;
-    border:1px solid var(--btn-border);
-    background:rgba(255,255,255,.88);
-    color:var(--ink);
-    box-shadow:0 8px 22px rgba(17,24,39,.10);
-    cursor:pointer;
-    font-weight:900;
-    font-size:18px;
-    line-height:1;
-    backdrop-filter:blur(6px);
-  }
-  .stageNavBtn:hover{background:var(--btn2)}
-  .stageNavBtn:active{transform:translateY(1px)}
-  .stageNavBtn:disabled{opacity:.38;cursor:not-allowed;transform:none}
-  .stageNavBtn svg{width:20px;height:20px;display:block}
 
   /* Sur téléphone, le panneau de réglages passe au-dessus du plateau. */
   @media (max-width:760px){
@@ -557,25 +412,13 @@
     .wrap > .panel,
     .wrap > .stage{flex:1 1 auto;max-width:none;width:100%;min-width:0}
     .panel{padding:10px}
-    .panelTop{gap:8px}
-    .panelTop .home,
-    .panelTop .helpBtn{width:44px;height:44px;min-width:44px}
+    .panelHeader{gap:8px}
+    .panelHeader .home,
+    .panelHeader .helpBtn{width:44px;height:44px;min-width:44px}
     .stage{gap:8px}
-    .stageNavBtn{width:44px;height:44px}
     .helpOverlay{padding:8px}
-    .helpDialog{width:100%;padding:24px 18px}
+    .helpModal{width:100%;padding:24px 18px}
     .shareRow{justify-content:flex-start;flex-wrap:wrap}
-  }
-  .fsHost:fullscreen .stageNavOverlay{
-    top:18px;
-    right:18px;
-  }
-  .fsHost:fullscreen .stageNavBtn{
-    width:54px;
-    height:54px;
-    border-radius:18px;
-    font-size:22px;
-    box-shadow:0 10px 28px rgba(17,24,39,.18);
   }
 
   .printArea{display:none}
@@ -658,46 +501,66 @@
 
   /* Impression */
   @media print{
-    @page{ size: A4; margin: 8mm; }
+    @page{ size: A4 portrait; margin: 8mm; }
     body{background:#fff;color:#000}
     header,.wrap,.helpOverlay{display:none !important}
     .printArea{display:block}
     .sheet{
-      page-break-after:auto;
-      break-after:auto;
+      page-break-after:always;
       height:calc(297mm - 16mm);
-      padding:4mm 6mm 2mm;
+      padding:4mm 5mm 2mm;
       box-sizing:border-box;
       display:flex;
       flex-direction:column;
       overflow:hidden;
     }
-    .sheet:not(:last-child){
-      page-break-after:always;
-      break-after:page;
-    }
-    /* 2 colonnes (4 cartes / page : 2 x 2) */
-    .grid{
-      flex:1 1 auto;
-      min-height:0;
-      display:grid;
-      grid-template-columns:repeat(2, minmax(0, 1fr));
-      grid-template-rows:repeat(2, minmax(0, 1fr));
-      gap:5mm;
-    }
-    .pCard{
-      border:1px solid #ddd;
-      border-radius:6mm;
-      padding:2mm;
-      box-sizing:border-box;
-      min-height:0;
-      display:flex;
-      align-items:stretch;
-      justify-content:center;
-      overflow:hidden;
-    }
-    .pCard svg{width:100%;height:100%;display:block}
+    .sheet:last-child{page-break-after:auto;break-after:auto;}
+    .grid{flex:1 1 auto;min-height:0;display:grid;grid-template-columns:repeat(2, 1fr);gap:5mm}
+    .pCard{border:1px solid #ddd;border-radius:6mm;padding:2mm;box-sizing:border-box;min-height:0;overflow:hidden}
+    .pCard svg{width:100%;height:100%;display:block;margin:0 auto}
     .pCard.empty{border:none;background:transparent;padding:0;min-height:0}
+
+    /* 4/page : format habituel en portrait, 2 x 2. */
+    .printArea.print-4up .grid{grid-template-columns:repeat(2, 1fr);grid-template-rows:repeat(2,minmax(0,1fr));gap:5mm}
+
+    /* 1/page : format portrait, une grande carte par page. */
+    .printArea.print-1up .grid{grid-template-columns:1fr;grid-template-rows:minmax(0,1fr);gap:0;align-items:stretch}
+    .printArea.print-1up .pCard{
+      padding:1.6mm;
+      border-radius:4mm;
+      display:flex;
+      justify-content:center;
+      align-items:stretch;
+    }
+    .printArea.print-1up .pCard svg{
+      width:100% !important;
+      max-width:100%;
+      height:100% !important;
+      max-height:100%;
+    }
+
+    /* 2/page : format paysage, deux grandes cartes côte à côte. */
+    .printArea.print-2up .sheet{height:calc(210mm - 16mm);padding:3mm 4mm 2mm}
+    .printArea.print-2up .grid{
+      grid-template-columns:repeat(2, minmax(0, 1fr));
+      grid-template-rows:minmax(0,1fr);
+      gap:5mm;
+      align-items:stretch;
+    }
+    .printArea.print-2up .pCard{
+      padding:1.6mm;
+      border-radius:4mm;
+      display:flex;
+      justify-content:center;
+      align-items:stretch;
+    }
+    .printArea.print-2up .pCard svg{
+      width:100% !important;
+      max-width:100%;
+      height:100% !important;
+      max-height:100%;
+    }
+    .printArea.print-2up .pCard.empty{display:block}
     .print-page-header{
       flex:0 0 16mm;
       display:flex;
@@ -739,12 +602,92 @@
     .print-page-instruction strong{font-weight:900}
     .print-page-instruction-note{margin-left:2mm;color:#475467;font-size:8.7pt;font-weight:700}
     .print-page-footer{flex:0 0 3.5mm;margin-top:1.2mm;text-align:center;color:#98a2b3;font-size:6pt;font-weight:650;line-height:1}
+    .printArea.print-2up .print-page-header{flex-basis:14mm;margin-bottom:1.5mm;padding:1.5mm 3mm}
+    .printArea.print-2up .print-page-title{font-size:15pt}
+    .printArea.print-2up .print-page-subtitle{font-size:9.5pt}
+    .printArea.print-2up .print-page-logo-irem{height:10.5mm}
+    .printArea.print-2up .print-page-logo-maths{height:9mm}
+    .printArea.print-2up .print-page-instruction{margin-bottom:1.5mm;padding:1.3mm 2.5mm;font-size:8.5pt}
+    .printArea.print-2up .print-page-instruction-note{font-size:7.8pt}
   }
 
   /* Plein écran */
   .fsHost:fullscreen{background:var(--bg)}
-  .fsHost:fullscreen #svgWrap{width:100vw;height:100vh;aspect-ratio:auto;padding:10px}
-  .fsHost:fullscreen .cardbox{width:100vw;height:100vh;border-radius:0;padding:10px}
+  /* la barre de commande (64 px) est posée par-dessus : la scène commence sous elle */
+  .fsHost:fullscreen #svgWrap{width:100vw;height:100vh;aspect-ratio:auto;padding:92px 10px 10px}
+  .fsHost:fullscreen .cardbox{width:100vw;height:100vh;border-radius:0;padding:10px;position:relative}
+  /* En plein écran, la barre de commande se pose par-dessus la scène, en grand
+     (64 px, tablette au tableau) : compteur à gauche, boutons à droite. */
+  .fsHost:fullscreen .nav{position:absolute;left:18px;right:18px;top:14px;z-index:5;margin:0;pointer-events:none}
+  .fsHost:fullscreen .navGroup{pointer-events:auto}
+  .fsHost:fullscreen .counter{font-size:24px;padding:0 6px}
+  .fsHost:fullscreen .navBtn{width:64px;height:64px;flex-basis:64px;font-size:26px;border-radius:18px;border:2px solid rgba(15,23,42,0.18);background:#fff;box-shadow:0 4px 14px rgba(0,0,0,0.12)}
+  .fsHost:fullscreen .navBtn.primary{background:#2563eb;color:#fff;border-color:#2563eb}
+  .fsHost:fullscreen .navBtn.fsToggle svg{width:28px;height:28px}
+  .fsHost:fullscreen .navBtn:active{transform:scale(0.96)}
+
+  /* ------------------------------------------------------------------
+     Écran peu haut (portable 1366 x 768, fenêtre de navigateur avec sa
+     barre d'onglets) : le menu doit rester visible d'un bloc, sans
+     défilement, dans les neuf modes. On resserre alors la trame — libellés
+     et champs restent lisibles, seuls les blancs maigrissent. Sur un écran
+     haut, rien ne change. Ce bloc doit rester EN DERNIER : à spécificité
+     égale, c'est la règle écrite le plus bas qui gagne.
+     ------------------------------------------------------------------ */
+  @media (max-height:900px){
+    .wrap{padding:8px;gap:10px}
+    .panelHeader{margin:0 0 4px;padding:0 0 5px}
+    .panel label{margin:4px 0 2px}
+    .panel select,
+    .panel input{height:34px;padding:6px 9px}
+    .rangePair .miniLabel{font-size:11px}
+    /* ces contrôles portent hauteur et remplissage en style en ligne : sans
+       !important la règle ne passe pas, et un select gardant 9 px de remplissage
+       dans une boîte rabaissée se fait couper son texte. */
+    .varChoice{height:36px}
+    .varChoiceBtn{width:30px;height:30px;font-size:19px}
+    #numColorModeWrap{height:36px !important}
+    #numHiddenCount,
+    #numOpposeMode{padding:5px 6px !important}
+    .c-ops .checkInline{height:34px}
+    #displayChoiceRow{margin-top:2px}
+    .seedShareRow{margin-top:5px}
+    .seedShareRow input,
+    .seedShareRow .shareLinkBtn{height:32px !important}
+    .seedShareRow input{padding:4px 8px !important}
+    .genRow{margin-top:7px}
+    .genRow .btn{height:36px}
+    .panel{padding:9px}
+    .printBlock{margin-top:7px;padding:6px 10px 8px}
+    /* le titre du cadre dit ce que la phrase de résumé, juste dessous, dit déjà
+       en clair : on le rend au menu. */
+    .printBlockTitle{display:none}
+    .printSummary{margin-top:4px}
+    .printBlock .printAction{height:36px !important}
+  }
+  /* Fenêtre franchement basse (portable 1366 x 768 avec barre d'onglets et
+     barre des tâches : il reste souvent moins de 680 px) : un cran de plus.
+     Les libellés restent en gras et lisibles, les champs restent cliquables. */
+  @media (max-height:700px){
+    .wrap{padding:6px;gap:8px}
+    .panelHeader h1{font-size:19px}
+    .panelHeader{padding:0 0 4px}
+    .panel label{margin:3px 0 1px;font-size:12px}
+    .panel select,
+    .panel input{height:31px;padding:5px 8px}
+    .varChoice{height:32px}
+    .varChoiceBtn{width:27px;height:27px;font-size:17px}
+    #numColorModeWrap{height:32px !important}
+    #numHiddenCount,
+    #numOpposeMode{padding:3px 6px !important}
+    .c-ops .checkInline{height:31px}
+    .seedShareRow input,
+    .seedShareRow .shareLinkBtn{height:30px !important}
+    .seedShareRow input{padding:3px 8px !important}
+    .genRow .btn{height:33px}
+    .printBlock{padding:5px 9px 7px}
+    .printBlock .printAction{height:33px !important}
+  }
 </style>
 <link rel="stylesheet" href="../assets/css/consentement.css">
 <script defer src="../assets/js/consentement.js"></script>
@@ -754,40 +697,60 @@
 
 
 <div class="helpOverlay" id="helpOverlay" aria-hidden="true">
-  <div class="helpDialog" role="dialog" aria-modal="true" aria-labelledby="helpTitle">
-    <div class="helpDialogHeader">
-      <h2 class="helpDialogTitle" id="helpTitle">Aide & raccourcis</h2>
+  <div class="helpModal" role="dialog" aria-modal="true" aria-labelledby="helpTitle">
+    <div class="helpModalHeader">
+      <div class="helpModalTitle" id="helpTitle">Aide & raccourcis</div>
       <button class="helpClose" id="btnHelpClose" type="button" aria-label="Fermer l’aide">×</button>
     </div>
-    <div class="helpDialogContent">
-      <p><strong>Raccourcis clavier</strong></p>
+    <div class="helpModalBody">
+      <p><strong>Le principe.</strong> Le plateau porte des jetons et une ou plusieurs taches ; le total est écrit au-dessus. Il faut trouver ce qui se cache sous les taches. Lorsque plusieurs taches apparaissent, elles cachent le même nombre de jetons.</p>
 
-      <ul class="helpBlock">
-        <li><strong>Espace</strong> : révéler / cacher</li>
-        <li><strong>← / →</strong> : carte précédente / suivante</li>
-        <li><strong>F</strong> : plein écran</li>
+      <p><strong>Les modes.</strong> Un clic sur ▶ fait avancer la carte d'une étape.</p>
+      <ul>
+        <li><strong>A — Jetons</strong> : des jetons de 1. Un clic montre le tableau en barres vide, le suivant le remplit (avec le bouton Résoudre), le dernier écrit les calculs.</li>
+        <li><strong>A± — Jetons relatifs</strong> : des jetons +1 et −1 ; l'équation s'écrit, puis se résout ligne par ligne.</li>
+        <li><strong>B — Paquets de jetons</strong> : des jetons qui valent plusieurs unités ; tableau vide, tableau rempli avec l'équation, puis la résolution ligne par ligne.</li>
+        <li><strong>B± — Paquets relatifs</strong> : la même chose avec des valeurs positives et négatives.</li>
+        <li><strong>C — Enquête</strong> : deux ou trois taches de couleurs reliées par des indices ; le schéma se construit étape par étape (vide, rempli, regroupé, ordonné) jusqu'à la résolution.</li>
+        <li><strong>C direct — Substitution</strong> : la même enquête, en remplaçant d'abord chaque tache par ce qu'elle vaut.</li>
+        <li><strong>D — Système</strong> : trois taches de couleurs, et des sommes de deux taches données en indices.</li>
+        <li><strong>F / G — Opérations en 9 et en 8</strong> : un des jetons visibles vaut 9, 19, 29… (ou 8, 18, 28…) ; on cherche ce qui manque par une différence, ou le total par une somme.</li>
+        <li><strong>𝑥</strong> / <strong>?</strong> : dans les modes A, A±, B et C, l'inconnue s'écrit avec une lettre ou avec un point d'interrogation.</li>
       </ul>
 
-      <p class="helpSeed">
-        <strong>Graine :</strong><br>
-        vide = série nouvelle à chaque clic ;<br>
-        remplie = série reproductible.
-      </p>
+      <p><strong>Les boutons au-dessus du plateau.</strong></p>
+      <ul>
+        <li><strong>◀ ▶</strong> : étape précédente / suivante, puis carte précédente / suivante.</li>
+        <li><strong>⏮ ⏭</strong> : sauter directement à la carte précédente / suivante.</li>
+        <li><strong>Plein écran</strong> : pour projeter ; les boutons restent affichés en grand sur le plateau.</li>
+        <li><strong>Résoudre</strong> (en vert, près du tableau) : ouvre la même situation dans ÉquaBarre pour la manipuler.</li>
+      </ul>
+
+      <p><strong>Impression.</strong> Une seule liste, « Ce que j'imprime », dit ce qui partira à l'imprimante : <strong>Énoncé seul</strong>, <strong>Énoncé + tableau à remplir</strong>, <strong>Correction</strong>, ou l'un des deux recto-verso — <strong>Énoncé, tableau au dos</strong> et <strong>Énoncé, correction au dos</strong>. Ces deux-là impriment l'énoncé au recto et le reste au verso, dans le même ordre : les élèves cherchent d'un côté, retournent la feuille et vérifient de l'autre. La phrase sous la liste redit en clair ce que vous allez obtenir.</p>
+
+      <p><strong>Raccourcis clavier.</strong></p>
+      <ul>
+        <li><strong>→</strong> : avancer (étape suivante, carte suivante)</li>
+        <li><strong>←</strong> : revenir en arrière</li>
+        <li><strong>F</strong> : plein écran — <strong>Échap</strong> pour en sortir</li>
+      </ul>
+
+      <p><strong>Graine.</strong> Vide : une série nouvelle à chaque clic sur Générer. Remplie : toujours la même série — « Copier le lien » la partage avec tous les réglages.</p>
     </div>
   </div>
 </div>
 
 <div class="wrap">
   <section class="panel">
-    <div class="panelTop">
-      <h1 class="panelTopTitle">Splat!</h1>
-      <div class="panelTopActions">
+    <div class="panelHeader">
+      <h1>Splat!</h1>
+      <div class="panelHeaderActions">
         <a class="home" href="/outils/index.html?domain=algebre&amp;collection=splat" title="Retour aux outils Splat" aria-label="Retour aux outils Splat">
           <svg aria-hidden="true" viewBox="0 0 24 24">
             <path d="M19 12H5M11 18l-6-6 6-6" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"></path>
           </svg>
         </a>
-        <button class="helpBtn" id="btnHelp" type="button" title="Aide" aria-label="Afficher l’aide">?</button>
+        <button class="home helpBtn" id="btnHelp" type="button" title="Aide et raccourcis" aria-label="Aide et raccourcis">?</button>
       </div>
     </div>
 
@@ -804,19 +767,25 @@
       <option value="C8">G — Opérations en 8 (8 → 98)</option>
     </select>
 
-    <div id="classicSettings">
-      <div class="row">
+    <!-- Réglages d'une ancienne activité « classique » (niveau 1→3) qu'aucune
+         entrée de la liste ne sélectionne plus : le bloc reste caché, le code
+         de génération correspondant n'est plus atteint. -->
+    <div id="classicSettings" style="display:none">
+      <div class="row" style="align-items:flex-end">
         <div style="flex:1">
           <label>Niveau (pré-réglage 1→3)</label>
           <input id="difficulty" type="number" min="1" max="3" value="2" />
         </div>
         <div style="flex:1">
           <label>Graine (optionnelle)</label>
-          <input id="seed" type="number" placeholder="ex: 2026" />
+          <input id="seed" type="number" placeholder="au hasard" />
         </div>
       </div>
     </div>
 
+    <!-- A / A± : chaque rangée porte trois champs alignés par le bas, comme sur
+         Splat Équations. Les identifiants des libellés et des groupes sont ceux
+         que le code masque ou renomme selon le type d'équation. -->
     <div id="unitSettings" style="display:none">
       <label>Type d’équation</label>
       <select id="unitEquationType">
@@ -825,62 +794,52 @@
         <option value="AX_PLUS_C_EQ_B">ax + c = b</option>
         <option value="ADVANCED">Réglages avancés</option>
       </select>
-      <div class="u-section-title">Contraintes</div>
 
-      <div class="u-grid">
-        <label class="u-label" id="unitTasksLabel">Taches</label>
-        <div class="u-controls" id="unitTasksControls">
-          <div class="u-mini">
-            <div class="u-mini-label">min</div>
-            <input id="unitTasksMin" type="number" min="1" max="5" value="1" />
-          </div>
-          <div class="u-mini">
-            <div class="u-mini-label">max</div>
-            <input id="unitTasks" type="number" min="1" max="5" value="1" />
+      <div class="row" style="align-items:flex-end">
+        <div id="unitTasksControls" style="flex:1.15 1 0">
+          <label id="unitTasksLabel">Taches</label>
+          <div class="rangePair">
+            <div class="rangeCell">
+              <div class="miniLabel">min</div>
+              <input id="unitTasksMin" type="number" min="1" max="5" value="1" title="Min" />
+            </div>
+            <div class="rangeCell">
+              <div class="miniLabel">max</div>
+              <input id="unitTasks" type="number" min="1" max="5" value="1" title="Max" />
+            </div>
           </div>
         </div>
-
-        <label class="u-label">Total</label>
-        <div class="u-controls">
-          <div class="u-mini">
-            <div class="u-mini-label">min</div>
-            <input id="unitTotalMin" type="number" min="1" max="50" value="1" />
-          </div>
-          <div class="u-mini">
-            <div class="u-mini-label">max</div>
-            <input id="unitTotalMax" type="number" min="1" max="50" value="50" />
-          </div>
+        <div id="unitVisibleControls" style="flex:1 1 0">
+          <label id="unitVisibleLabel">Visibles</label>
+          <div class="lePair"><span class="leSign" aria-hidden="true">≤</span><input id="unitVisibleMax" type="number" min="0" max="20" value="15" title="Jetons visibles, au plus" /></div>
         </div>
-
-        <label class="u-label" id="unitVisibleLabel">Visibles</label>
-        <div class="u-controls" id="unitVisibleControls">
-          <div class="u-mini u-single">
-            <div class="u-mini-label">≤</div>
-            <input id="unitVisibleMax" type="number" min="0" max="20" value="15" />
-          </div>
+        <div id="unitHiddenControls" style="flex:1 1 0">
+          <label id="unitHiddenLabel">Cachées</label>
+          <div class="lePair"><span class="leSign" aria-hidden="true">≤</span><input id="unitHiddenMax" type="number" min="0" max="20" value="10" title="Jetons cachés, au plus" /></div>
         </div>
+      </div>
 
-        <label class="u-label" id="unitHiddenLabel">Cachées</label>
-        <div class="u-controls" id="unitHiddenControls">
-          <div class="u-mini u-single">
-            <div class="u-mini-label">≤</div>
-            <input id="unitHiddenMax" type="number" min="0" max="20" value="10" />
-          </div>
+      <div class="row" style="align-items:flex-end">
+        <div style="flex:1">
+          <label>Total (min)</label>
+          <input id="unitTotalMin" type="number" min="1" max="50" value="1" />
         </div>
-
-        <label class="u-label">Graine</label>
-        <div class="u-controls">
-          <div class="u-mini u-seed u-seed-inline">
-            <div class="u-mini-label">optionnelle</div>
-            <input id="seedU" type="number" placeholder="ex: 2026" />
-            <button class="btn shareLinkBtn unitShareButton" id="btnShareUnit" type="button">🔗 Copier le lien</button>
-            <span class="shareFeedback unitShareFeedback" id="shareFeedbackUnit" role="status" aria-live="polite"></span>
+        <div style="flex:1">
+          <label>Total (max)</label>
+          <input id="unitTotalMax" type="number" min="1" max="50" value="50" />
+        </div>
+        <div class="countSlot" style="flex:1">
+          <!-- « Cartes » est un seul champ pour les neuf modes : le code le pose ici,
+               dans la dernière rangée du bloc affiché (placeCardCountField). -->
+          <div id="countWrap">
+            <label for="count">Cartes</label>
+            <input id="count" type="number" min="1" max="300" value="10" />
           </div>
         </div>
       </div>
     </div>
 
-
+    <!-- B / B± -->
     <div id="numberedSettings" style="display:none">
       <div id="numberedEquationSettings" style="display:none">
         <label>Type d’équation</label>
@@ -892,61 +851,57 @@
         </select>
       </div>
 
-      <div class="row">
-        <div id="numTasksFieldWrap" style="flex:1">
+      <div class="row" style="align-items:flex-end">
+        <div id="numTasksFieldWrap" style="flex:1.15 1 0">
           <label><span id="labelNumTasks">Nombre de taches</span></label>
-          <div id="numTasksRange" style="display:flex; gap:10px; align-items:flex-end">
-            <div id="numTasksMinWrap" style="display:none; flex-direction:column; gap:2px">
-              <div id="numTasksMinLabel" style="font-size:12px;color:var(--muted)">Min</div>
-              <input id="numTasksMin" type="number" min="1" max="6" value="1" style="width:72px" title="Min" />
+          <div id="numTasksRange" style="display:flex; gap:6px; align-items:flex-end">
+            <div id="numTasksMinWrap" style="display:none; flex-direction:column; gap:2px; flex:1 1 0; min-width:0">
+              <div id="numTasksMinLabel" style="font-size:12px;color:var(--muted);text-align:center">Min</div>
+              <input id="numTasksMin" type="number" min="1" max="6" value="1" title="Min" />
             </div>
 
-            <div id="numTasksMaxWrap" style="display:flex; flex-direction:column; gap:2px">
-              <div id="numTasksMaxLabel" style="font-size:12px;color:var(--muted); display:none">Max</div>
-              <input id="numTasks" type="number" min="1" max="6" value="1" style="width:72px" title="Max" />
+            <div id="numTasksMaxWrap" style="display:flex; flex-direction:column; gap:2px; flex:1 1 0; min-width:0">
+              <div id="numTasksMaxLabel" style="font-size:12px;color:var(--muted); display:none;text-align:center">Max</div>
+              <input id="numTasks" type="number" min="1" max="6" value="1" title="Max" />
             </div>
 
             <span id="numTasksArrow" style="display:none"></span>
           </div>
         </div>
-        <div id="numVisibleMinWrap" style="flex:1">
+        <div id="numVisibleMinWrap" style="flex:1 1 0">
           <label>Visibles min</label>
           <input id="numVisibleMin" type="number" min="0" max="5" value="2" />
         </div>
-        <div id="numVisibleMaxWrap" style="flex:1">
+        <div id="numVisibleMaxWrap" style="flex:1 1 0">
           <label>Visibles max</label>
           <input id="numVisibleMax" type="number" min="0" max="5" value="3" />
         </div>
       </div>
-      
-      <div class="row" style="margin-top:10px; flex-wrap:nowrap;">
-        
-        <div id="numHiddenCountWrap" style="flex:1; min-width:0;">
-          <label>Cachées<br>par tache</label>
-          <select id="numHiddenCount" style="width:100%; padding:8px 4px; font-size:13px;">
+
+      <div class="row" style="flex-wrap:nowrap; align-items:flex-end">
+        <div id="numBeadAbsMaxWrap" style="flex:1; display:none">
+          <label>Jetons max (|v|)</label>
+          <input id="numBeadAbsMax" type="number" min="1" max="99" value="30" />
+        </div>
+        <div id="numHiddenCountWrap" style="flex:1">
+          <label>Cachées / tache</label>
+          <select id="numHiddenCount" style="width:100%; padding:9px 6px; font-size:14px;">
             <option value="1" selected>1</option>
             <option value="2">2</option>
           </select>
         </div>
-
-        <div id="numBeadAbsMaxWrap" style="flex:1; min-width:0; display:none">
-          <label>Valeur max<br>jeton (|v|)</label>
-          <input id="numBeadAbsMax" type="number" min="1" max="99" value="30" style="width:100%; padding:8px 4px; font-size:13px;" />
+        <div id="numOpposeModeWrap" style="flex:1; display:none">
+          <label>Opposées (±𝑥)</label>
+          <select id="numOpposeMode" style="width:100%; padding:9px 6px; font-size:14px;">
+            <option value="off" selected>Aucune</option>
+            <option value="all">Toutes</option>
+            <option value="auto">Parfois</option>
+            <option value="mix">Mélange</option>
+          </select>
         </div>
-
-        <div id="numOpposeModeWrap" style="flex:1; min-width:0; display:none">
-          <label>Opposées<br>(±X)</label>
-          <select id="numOpposeMode" style="width:100%; padding:8px 4px; font-size:13px;">
-          <option value="off" selected>Aucune</option>
-          <option value="all">Toutes</option>
-          <option value="auto">Parfois</option>
-          <option value="mix">Mélange</option>
-        </select>
-        </div>
-
       </div>
 
-      <div class="row" style="margin-top:10px">
+      <div class="row" style="align-items:flex-end">
         <div style="flex:1">
           <label>Total (min)</label>
           <input id="numTotalMin" type="number" min="1" max="1000" value="20" />
@@ -955,18 +910,14 @@
           <label>Total (max)</label>
           <input id="numTotalMax" type="number" min="1" max="1000" value="50" />
         </div>
-      </div>
-      <div class="seedShareRow" id="numberedSeedShareRow">
-        <label for="seedN">Graine</label>
-        <input id="seedN" type="number" placeholder="ex: 2026" />
-        <button class="btn shareLinkBtn" id="btnShareNumbered" type="button">🔗 Copier le lien</button>
-        <span class="shareFeedback" id="shareFeedbackNumbered" role="status" aria-live="polite"></span>
+        <div class="countSlot" style="flex:1"></div>
       </div>
     </div>
 
+    <!-- F — Opérations en 9 -->
     <div id="nineSettings" style="display:none">
-      <div class="row">
-        <div style="flex:1">
+      <div class="row" style="align-items:flex-end">
+        <div style="flex:1.15 1 0">
           <label>Opération (…9)</label>
           <select id="nineOp">
             <option value="SUB" selected>Différence (TOTAL − …)</option>
@@ -974,16 +925,16 @@
             <option value="MIX">Melange</option>
           </select>
         </div>
-        <div style="flex:1">
-          <label>Nombre de taches</label>
+        <div style="flex:1 1 0">
+          <label>Taches</label>
           <input id="nineTasks" type="number" min="1" max="6" value="1" />
         </div>
-        <div style="flex:1">
-          <label>Jetons visibles ≤</label>
+        <div style="flex:1 1 0">
+          <label>Visibles ≤</label>
           <input id="nineVisibleMax" type="number" min="1" max="5" value="3" />
         </div>
       </div>
-      <div class="row" style="margin-top:10px">
+      <div class="row" style="align-items:flex-end">
         <div style="flex:1">
           <label>Total (min)</label>
           <input id="nineTotalMin" type="number" min="1" max="1000" value="30" />
@@ -992,16 +943,14 @@
           <label>Total (max)</label>
           <input id="nineTotalMax" type="number" min="1" max="1000" value="120" />
         </div>
-        <div style="flex:1">
-          <label>Graine (mode C)</label>
-          <input id="seedC" type="number" placeholder="ex: 2026" />
-        </div>
+        <div class="countSlot" style="flex:1"></div>
       </div>
     </div>
 
+    <!-- G — Opérations en 8 -->
     <div id="eightSettings" style="display:none">
-      <div class="row">
-        <div style="flex:1">
+      <div class="row" style="align-items:flex-end">
+        <div style="flex:1.15 1 0">
           <label>Opération (…8)</label>
           <select id="eightOp">
             <option value="SUB" selected>Différence (TOTAL − …)</option>
@@ -1009,16 +958,16 @@
             <option value="MIX">Melange</option>
           </select>
         </div>
-        <div style="flex:1">
-          <label>Nombre de taches</label>
+        <div style="flex:1 1 0">
+          <label>Taches</label>
           <input id="eightTasks" type="number" min="1" max="6" value="1" />
         </div>
-        <div style="flex:1">
-          <label>Jetons visibles ≤</label>
+        <div style="flex:1 1 0">
+          <label>Visibles ≤</label>
           <input id="eightVisibleMax" type="number" min="1" max="5" value="3" />
         </div>
       </div>
-      <div class="row" style="margin-top:10px">
+      <div class="row" style="align-items:flex-end">
         <div style="flex:1">
           <label>Total (min)</label>
           <input id="eightTotalMin" type="number" min="1" max="1000" value="30" />
@@ -1027,31 +976,28 @@
           <label>Total (max)</label>
           <input id="eightTotalMax" type="number" min="1" max="1000" value="120" />
         </div>
-        <div style="flex:1">
-          <label>Graine (mode D)</label>
-          <input id="seedD" type="number" placeholder="ex: 2026" />
-        </div>
+        <div class="countSlot" style="flex:1"></div>
       </div>
     </div>
 
+    <!-- C — Enquête et C direct -->
     <div id="investigateSettings" style="display:none">
-      <div class="c-grid">
-        <div class="c-field">
-          <label>Nombre de taches</label>
+      <div class="row" style="align-items:flex-end">
+        <div style="flex:1 1 0">
+          <label>Taches</label>
           <select id="invTaskCount">
             <option value="2" selected>2 Taches</option>
             <option value="3">3 Taches</option>
           </select>
         </div>
-        <div class="c-field">
+        <div style="flex:1 1 0">
           <label>Format Indices</label>
           <select id="invClueType">
             <option value="SENTENCE" selected>Phrases</option>
             <option value="SYMBOL">Symboles (=)</option>
           </select>
         </div>
-
-        <div class="c-field" id="invStructureRow" style="margin-top:6px;">
+        <div id="invStructureRow" style="flex:1.25 1 0; flex-direction:column">
           <label>Structure (3 taches)</label>
           <select id="invStructure3">
             <option value="CHAIN">Chaîne (A→B→C)</option>
@@ -1063,72 +1009,60 @@
 
       <label>Opérations autorisées</label>
       <div class="c-ops">
-
         <label class="checkInline" title="Multiplication (Ex: 3 fois plus)"><input type="checkbox" id="invOpMul" checked> <span>×k</span></label>
-
         <label class="checkInline" title="Division (Ex: 3 fois moins)"><input type="checkbox" id="invOpDiv" checked> <span>÷k</span></label>
-
         <label class="checkInline" title="Addition (Ex: 5 de plus)"><input type="checkbox" id="invOpAdd" checked> <span>+k</span></label>
-
         <label class="checkInline" title="Soustraction (Ex: 5 de moins)"><input type="checkbox" id="invOpSub" checked> <span>−k</span></label>
       </div>
 
-      <div class="c-grid" style="margin-top:8px">
-        <div class="c-field c-small">
-          <label>Valeur ajout/retrait max</label>
+      <div class="row" style="align-items:flex-end">
+        <div style="flex:1.25 1 0">
+          <label>Ajout / retrait max</label>
           <input id="invMaxAdd" type="number" min="1" max="100" value="20" />
         </div>
-        <div class="c-field c-small">
-          <label>Graine (mode C)</label>
-          <input id="seedE" type="number" placeholder="ex: 2026" />
+        <div style="flex:1 1 0">
+          <label>Visibles min</label>
+          <input id="invVisibleMin" type="number" min="0" max="10" value="0" />
+        </div>
+        <div style="flex:1 1 0">
+          <label>Visibles max</label>
+          <input id="invVisibleMax" type="number" min="0" max="10" value="3" />
         </div>
       </div>
 
-      <div class="c-pairs">
-        <div class="c-pair">
-          <div class="c-mini">
-            <div class="c-mini-label">Jetons visibles (min)</div>
-            <input id="invVisibleMin" type="number" min="0" max="10" value="0" />
-          </div>
-          <div class="c-mini">
-            <div class="c-mini-label">Jetons visibles (max)</div>
-            <input id="invVisibleMax" type="number" min="0" max="10" value="3" />
-          </div>
+      <div class="row" style="align-items:flex-end">
+        <div style="flex:1">
+          <label>Total (min)</label>
+          <input id="invTotalMin" type="number" min="1" max="1000" value="20" />
         </div>
-        <div class="c-pair">
-          <div class="c-mini">
-            <div class="c-mini-label">Total (min)</div>
-            <input id="invTotalMin" type="number" min="1" max="1000" value="20" />
-          </div>
-          <div class="c-mini">
-            <div class="c-mini-label">Total (max)</div>
-            <input id="invTotalMax" type="number" min="1" max="1000" value="100" />
-          </div>
+        <div style="flex:1">
+          <label>Total (max)</label>
+          <input id="invTotalMax" type="number" min="1" max="1000" value="100" />
         </div>
+        <div class="countSlot" style="flex:1"></div>
       </div>
     </div>
 
+    <!-- D — Système -->
     <div id="systemSettings" style="display:none">
-      <div class="row">
-        <div style="flex:1">
+      <div class="row" style="align-items:flex-end">
+        <div style="flex:1.15 1 0">
           <label>Format Indices</label>
           <select id="sysClueType">
             <option value="SENTENCE" selected>Phrases</option>
             <option value="SYMBOL">Symboles (+)</option>
           </select>
         </div>
-      </div>
-      <div class="row" style="margin-top:10px">
-        <div style="flex:1">
-          <label>Jetons visibles (min)</label>
+        <div style="flex:1 1 0">
+          <label>Visibles min</label>
           <input id="sysVisibleMin" type="number" min="0" max="10" value="0" />
         </div>
-        <div style="flex:1">
-          <label>Jetons visibles (max)</label>
+        <div style="flex:1 1 0">
+          <label>Visibles max</label>
           <input id="sysVisibleMax" type="number" min="0" max="10" value="3" />
         </div>
       </div>
-      <div class="row" style="margin-top:10px">
+      <div class="row" style="align-items:flex-end">
         <div style="flex:1">
           <label>Total (min)</label>
           <input id="sysTotalMin" type="number" min="1" max="1000" value="30" />
@@ -1137,80 +1071,109 @@
           <label>Total (max)</label>
           <input id="sysTotalMax" type="number" min="1" max="1000" value="150" />
         </div>
-        <div style="flex:1">
-          <label>Graine (mode D)</label>
-          <input id="seedSys" type="number" placeholder="ex: 2026" />
-        </div>
+        <div class="countSlot" style="flex:1"></div>
       </div>
     </div>
 
-    <div class="shareRow" id="shareRow">
-      <button class="btn shareLinkBtn" id="btnShare" type="button">🔗 Copier le lien</button>
-      <span class="shareFeedback" id="shareFeedback" role="status" aria-live="polite"></span>
-    </div>
-
-    <div class="row compactActionRow" style="margin-top:10px; align-items:flex-end">
-      <div style="flex:0 0 auto">
-        <label>Nombre de cartes</label>
-        <input id="count" type="number" min="1" max="300" value="10" style="width:96px" />
-      </div>
-      <button class="btn primary" id="btnGen">Générer</button>
-      <button class="btn danger" id="btnClear">Vider</button>
-    </div>
-
-    <div class="row compactActionRow" style="margin-top:10px; flex-wrap:nowrap;">
-      <button class="btn" id="btnPrev" style="flex:0 0 auto">◀</button>
-      <button class="btn" id="btnNext" style="flex:0 0 auto">▶</button>
-      <button class="iconbtn" id="btnFullscreen" title="Plein écran" style="flex:0 0 auto">
-        <svg viewBox="0 0 24 24" aria-hidden="true">
-          <path fill="currentColor" d="M8 3H3v5h2V5h3V3zm13 0h-5v2h3v3h2V3zM5 16H3v5h5v-2H5v-3zm16 0h-2v3h-3v2h5v-5z"/>
-        </svg>
-      </button>
+    <!-- Réglages d'affichage (𝑥 / ? dans les modes A, A±, B, C ; Jetons Vert/Rouge en B±) -->
+    <div class="row" id="displayChoiceRow" style="align-items:center; flex-wrap:nowrap; gap:8px;">
       <div class="varChoice" id="numberedUnknownChoice" title="Modes A/A±/B/C : choisir l’affichage de l’inconnue" aria-label="Modes A/A±/B/C : choisir l’affichage de l’inconnue">
         <button class="varChoiceBtn" id="btnNumberedLetter" type="button" aria-label="Modes A/A±/B/C : afficher l’inconnue avec une lettre">𝑥</button>
         <button class="varChoiceBtn" id="btnNumberedQuestionMark" type="button" aria-label="Modes A/A±/B/C : afficher l’inconnue avec un point d’interrogation">?</button>
       </div>
-      
-      <label class="checkInline" id="numColorModeWrap" title="Positifs en Vert, Négatifs en Rouge" style="display:none; flex:0 1 auto; height:42px; margin-left:auto; padding:0 8px; overflow:hidden;">
-        <input type="checkbox" id="numColorMode" checked style="flex:0 0 auto; margin:0;"> 
-        <span style="font-weight:600; font-size:11px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">Jetons Vert/Rouge</span>
+      <label class="checkInline" id="numColorModeWrap" title="Positifs en Vert, Négatifs en Rouge" style="display:none; flex:0 1 auto; height:42px; padding:0 8px; overflow:hidden;">
+        <input type="checkbox" id="numColorMode" checked style="flex:0 0 auto; margin:0;">
+        <span style="font-weight:600; font-size:12px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">Jetons Vert/Rouge</span>
       </label>
     </div>
 
-    <div class="row compactTitleRow" style="margin-top:10px;">
-      <div style="flex:1">
-        <label for="printActivityTitle">Titre imprimé</label>
-        <input id="printActivityTitle" type="text" maxlength="160" placeholder="ex. Atelier de recherche" />
-      </div>
+    <!-- Une seule rangée « Graine | Copier le lien » à la fois, à la même place dans
+         tous les modes : celle de A / A±, celle de B / B±, ou la rangée commune des
+         autres modes, dans laquelle le champ de graine propre à chaque mode s'affiche
+         à tour de rôle (le code de génération lit toujours les mêmes champs). -->
+    <div class="seedShareRow" id="unitSeedShareRow" hidden>
+      <label for="seedU">Graine</label>
+      <input id="seedU" type="number" placeholder="au hasard" />
+      <button class="btn shareLinkBtn" id="btnShareUnit" type="button" title="Copier un lien qui reproduit cette série et ces réglages">🔗 Copier le lien</button>
+      <span class="shareFeedback" id="shareFeedbackUnit" role="status" aria-live="polite"></span>
+    </div>
+    <div class="seedShareRow" id="numberedSeedShareRow" hidden>
+      <label for="seedN">Graine</label>
+      <input id="seedN" type="number" placeholder="au hasard" />
+      <button class="btn shareLinkBtn" id="btnShareNumbered" type="button" title="Copier un lien qui reproduit cette série et ces réglages">🔗 Copier le lien</button>
+      <span class="shareFeedback" id="shareFeedbackNumbered" role="status" aria-live="polite"></span>
+    </div>
+    <div class="seedShareRow" id="shareRow" hidden>
+      <label id="sharedSeedLabel" for="seedE">Graine</label>
+      <span class="seedSlot">
+        <input id="seedC" type="number" placeholder="au hasard" style="display:none" />
+        <input id="seedD" type="number" placeholder="au hasard" style="display:none" />
+        <input id="seedE" type="number" placeholder="au hasard" />
+        <input id="seedSys" type="number" placeholder="au hasard" style="display:none" />
+      </span>
+      <button class="btn shareLinkBtn" id="btnShare" type="button" title="Copier un lien qui reproduit cette série et ces réglages">🔗 Copier le lien</button>
+      <span class="shareFeedback" id="shareFeedback" role="status" aria-live="polite"></span>
     </div>
 
-    <div class="row compactPrintRow" style="margin-top:10px; align-items:center; flex-wrap:nowrap; gap:10px;">
-      <button class="btn printAction" id="btnPrint" style="flex:0 0 auto; min-width:112px; padding:10px 14px;">Imprimer</button>
-      <select id="printMode" title="Choisir le contenu à imprimer" style="flex:1 1 auto; min-width:0; max-width:none; height:44px;">
+    <div class="row genRow">
+      <button class="btn primary" id="btnGen">Générer</button>
+      <button class="btn danger" id="btnClear">Vider</button>
+    </div>
+
+    <!-- Les boutons précédent / suivant / plein écran vivent sur la scène,
+         au-dessus du plateau (mêmes identifiants, même code). -->
+
+    <div class="printBlock">
+      <div class="printBlockTitle">Impression</div>
+      <input id="printActivityTitle" type="text" maxlength="160" placeholder="Titre imprimé (ex. Atelier de recherche)" aria-label="Titre imprimé" />
+      <!-- Un seul réglage, et chaque ligne est le résultat fini (comme sur Splat
+           Équations) : les valeurs duplex-* portent les deux informations, quoi
+           imprimer et où le mettre. -->
+      <label for="printMode">Ce que j’imprime</label>
+      <select id="printMode" title="Choisir ce qui partira à l’imprimante">
         <option value="statement">Énoncé seul</option>
-        <option value="worksheet">Tableau vide</option>
+        <option value="worksheet">Énoncé + tableau à remplir</option>
         <option value="correction">Correction</option>
+        <option disabled>─────── recto-verso ───────</option>
+        <option value="duplex-worksheet">Énoncé, tableau au dos</option>
+        <option value="duplex-correction">Énoncé, correction au dos</option>
       </select>
-      <label class="checkInline" title="Recto : énoncé seul • Verso : contenu choisi" style="flex:0 0 auto; height:44px; padding:0 10px; gap:8px; white-space:nowrap; margin-left:0;">
-        <input id="printDuplex" type="checkbox" style="margin:0; flex:0 0 auto;" />
-        <span style="font-size:12px; font-weight:700; color:var(--ink);">RV</span>
-      </label>
+      <div class="row printGoRow" style="flex-wrap:nowrap; gap:8px; align-items:flex-end;">
+        <div style="flex:0 0 104px; min-width:0">
+          <label for="printCardsPerPage">Pages</label>
+          <select id="printCardsPerPage" title="Nombre de cartes par page">
+            <option value="4" selected>4/page</option>
+            <option value="2">2/page</option>
+            <option value="1">1/page</option>
+          </select>
+        </div>
+        <button class="btn printAction" id="btnPrint" style="flex:1 1 auto; height:38px; padding:0;">Imprimer</button>
+      </div>
+      <div class="printSummary" id="printSummary" aria-live="polite"></div>
     </div>
   </section>
 
   <section class="stage fsHost" id="fsHost">
     <div class="cardbox">
-      <div class="nav">
-        <div class="counter" id="counter">0 carte</div>
-      </div>
-      <div class="stageNavOverlay" aria-label="Navigation du plateau">
-        <button class="stageNavBtn" id="btnStagePrev" type="button" title="Carte ou étape précédente" aria-label="Carte ou étape précédente">◀</button>
-        <button class="stageNavBtn" id="btnStageNext" type="button" title="Carte ou étape suivante" aria-label="Carte ou étape suivante">▶</button>
-        <button class="stageNavBtn" id="btnStageFullscreen" type="button" title="Plein écran" aria-label="Plein écran">
-          <svg viewBox="0 0 24 24" aria-hidden="true">
-            <path fill="currentColor" d="M8 3H3v5h2V5h3V3zm13 0h-5v2h3v3h2V3zM5 16H3v5h5v-2H5v-3zm16 0h-2v3h-3v2h5v-5z"/>
-          </svg>
-        </button>
+      <!-- Barre de commande de la scène : à gauche le saut de carte et le compteur,
+           à droite précédent / suivant / plein écran. En plein écran la même barre
+           se pose par-dessus la scène, en grand (tablette au tableau). -->
+      <div class="nav" id="stageNav">
+        <div id="counterNav" class="navGroup">
+          <button class="btn navBtn" id="btnQuestionPrev" title="Carte précédente" aria-label="Carte précédente">⏮</button>
+          <button class="btn navBtn" id="btnQuestionNext" title="Carte suivante" aria-label="Carte suivante">⏭</button>
+          <div class="counter" id="counter">0 carte</div>
+        </div>
+        <div class="navGroup">
+          <button class="btn navBtn" id="btnPrev" title="Étape précédente / carte précédente" aria-label="Étape précédente / carte précédente">◀</button>
+          <button class="btn navBtn primary" id="btnNext" title="Étape suivante / carte suivante" aria-label="Étape suivante / carte suivante">▶</button>
+          <button class="btn navBtn fsToggle" id="btnFullscreen" title="Plein écran (F)" aria-label="Plein écran">
+            <svg class="fsIconEnter" viewBox="0 0 24 24" aria-hidden="true">
+              <path fill="currentColor" d="M8 3H3v5h2V5h3V3zm13 0h-5v2h3v3h2V3zM5 16H3v5h5v-2H5v-3zm16 0h-2v3h-3v2h5v-5z"/>
+            </svg>
+            <span class="fsIconExit" aria-hidden="true">✕</span>
+          </button>
+        </div>
       </div>
       <div id="svgWrap">
         <svg id="mainSvg" tabindex="0" viewBox="0 0 1600 1000" aria-label="Splat card"></svg>
@@ -1469,6 +1432,12 @@ const numColorModeWrapEl = document.getElementById("numColorModeWrap");
 const numColorModeEl = document.getElementById("numColorMode");
 const printModeSelectEl = document.getElementById("printMode");
 const printActivityTitleEl = document.getElementById("printActivityTitle");
+const printCardsPerPageEl = document.getElementById("printCardsPerPage");
+const countWrapEl = document.getElementById("countWrap");
+const unitSeedShareRowEl = document.getElementById("unitSeedShareRow");
+const numberedSeedShareRowEl = document.getElementById("numberedSeedShareRow");
+const btnQuestionPrevEl = document.getElementById("btnQuestionPrev");
+const btnQuestionNextEl = document.getElementById("btnQuestionNext");
 const numberedUnknownChoiceEl = document.getElementById("numberedUnknownChoice");
 const btnNumberedLetterEl = document.getElementById("btnNumberedLetter");
 const btnNumberedQuestionMarkEl = document.getElementById("btnNumberedQuestionMark");
@@ -1628,16 +1597,73 @@ const lastNumberedTotalBounds = { N: null, NPM: null };
 let lastActivityForSigned = activityEl.value;
 const lastSignedModeSettings = { NPM: null };
 
+/* Ce que « Énoncé + tableau à remplir » veut dire selon le mode : un tableau en
+   barres vide sous l'énoncé (A, B), une aide — la première ligne de l'équation —
+   (B±), ou rien du tout : les autres modes n'impriment que l'énoncé, la ligne
+   est alors grisée. À compléter le jour où l'Enquête et le Système auront leur
+   fiche à remplir. */
+function classicWorksheetKind(act){
+  if(act === "U" || act === "N") return "table";
+  if(act === "NPM") return "aid";
+  return null;
+}
+
 function syncPrintModeUI(){
   const sel = printModeSelectEl || document.getElementById("printMode");
   if(!sel) return;
+  const act = activityEl ? activityEl.value : "";
+  const kind = classicWorksheetKind(act);
   const worksheetOpt = sel.querySelector('option[value="worksheet"]');
-  if(!worksheetOpt) return;
-  const isSignedNumbered = activityEl && activityEl.value === "NPM";
-  worksheetOpt.textContent = isSignedNumbered ? "Énoncé + aide" : "Tableau vide";
-  sel.title = isSignedNumbered
-    ? "Choisir le contenu à imprimer : énoncé, aide ou correction"
-    : "Choisir le contenu à imprimer";
+  const duplexWorksheetOpt = sel.querySelector('option[value="duplex-worksheet"]');
+  if(worksheetOpt){
+    worksheetOpt.textContent = kind === "aid" ? "Énoncé + aide" : "Énoncé + tableau à remplir";
+    worksheetOpt.disabled = !kind;
+  }
+  if(duplexWorksheetOpt){
+    duplexWorksheetOpt.textContent = kind === "aid" ? "Énoncé, aide au dos" : "Énoncé, tableau au dos";
+    duplexWorksheetOpt.disabled = !kind;
+  }
+  // un choix devenu sans objet retombe sur le choix voisin
+  if(!kind && sel.value === "worksheet") sel.value = "statement";
+  if(!kind && sel.value === "duplex-worksheet") sel.value = "duplex-correction";
+  sel.title = kind === "aid"
+    ? "Choisir ce qui partira à l’imprimante : énoncé, aide ou correction"
+    : "Choisir ce qui partira à l’imprimante";
+  syncPrintSummary();
+}
+
+function getPrintPlan(){
+  const sel = printModeSelectEl || document.getElementById("printMode");
+  const v = sel ? String(sel.value || "") : "statement";
+  if(v.indexOf("duplex-") === 0){
+    const verso = v.slice(7);
+    return { recto: "statement", verso: (verso === "worksheet" || verso === "correction") ? verso : "correction" };
+  }
+  return { recto: ["statement","worksheet","correction"].includes(v) ? v : "statement", verso: null };
+}
+
+/* Phrase de contrôle sous le réglage : le nom du choix dit déjà le résultat, elle
+   ajoute ce qu'on en fait en classe et le nombre de cartes par page. */
+function syncPrintSummary(){
+  const out = document.getElementById("printSummary");
+  const sel = printModeSelectEl || document.getElementById("printMode");
+  const perPageEl = printCardsPerPageEl || document.getElementById("printCardsPerPage");
+  if(!out || !sel) return;
+  const plan = getPrintPlan();
+  const perPage = perPageEl ? perPageEl.value : "4";
+  const kind = classicWorksheetKind(activityEl ? activityEl.value : "");
+  const nom = { statement:"l’énoncé", worksheet: kind === "aid" ? "l’aide" : "le tableau à remplir", correction:"la correction" };
+  let msg;
+  if(plan.verso){
+    msg = "Une seule feuille : l’élève cherche au recto, retourne et trouve " + nom[plan.verso] + " au verso.";
+  }else if(plan.recto === "statement"){
+    msg = "Les énoncés seuls, rien au dos.";
+  }else if(plan.recto === "worksheet"){
+    msg = "L’énoncé avec " + (kind === "aid" ? "son aide" : "son tableau à remplir") + ", rien au dos.";
+  }else{
+    msg = "La correction seule, rien au dos.";
+  }
+  out.textContent = msg + " " + perPage + " carte" + (perPage === "1" ? "" : "s") + " par page.";
 }
 
 function getSeedForCurrentMode(){
@@ -1759,7 +1785,7 @@ function applyShareControl(params, name, el){
 
 function loadSharedConfiguration(){
   const params = new URLSearchParams(window.location.search);
-  const sharedNames = ["mode", "seed", "cards", "equation", "tasksMin", "tasksMax", "visibleMin", "visibleMax", "hidden", "hiddenMax", "totalMin", "totalMax", "splats", "clues", "structure", "mul", "div", "add", "sub", "deltaMax", "operation", "beadMax", "opposites", "colors", "unknown", "print", "duplex", "title"];
+  const sharedNames = ["mode", "seed", "cards", "equation", "tasksMin", "tasksMax", "visibleMin", "visibleMax", "hidden", "hiddenMax", "totalMin", "totalMax", "splats", "clues", "structure", "mul", "div", "add", "sub", "deltaMax", "operation", "beadMax", "opposites", "colors", "unknown", "print", "duplex", "layout", "title"];
   if(!sharedNames.some(name => params.has(name))) return false;
 
   setSelectFromShare(params, "mode", activityEl);
@@ -1774,7 +1800,12 @@ function loadSharedConfiguration(){
   getClassicShareControls(act).forEach(([name, el]) => applyShareControl(params, name, el));
   setNumberFromShare(params, "cards", countEl);
   setSelectFromShare(params, "print", printModeSelectEl);
-  setCheckboxFromShare(params, "duplex", document.getElementById("printDuplex"));
+  // Les liens d'avant portaient « print=correction&duplex=1 » : on les relit encore.
+  if(printModeSelectEl && params.get("duplex") === "1"){
+    const v = printModeSelectEl.value;
+    if(v === "worksheet" || v === "correction") printModeSelectEl.value = "duplex-" + v;
+  }
+  setSelectFromShare(params, "layout", printCardsPerPageEl);
   if(printActivityTitleEl && params.has("title")) printActivityTitleEl.value = params.get("title").slice(0, 160);
 
   const seedRaw = params.get("seed");
@@ -1815,7 +1846,7 @@ function buildShareUrl(){
     params.set("unknown", numberedQuestionMarkMode ? "question" : "letter");
   }
   addShareControl(params, "print", printModeSelectEl);
-  addShareControl(params, "duplex", document.getElementById("printDuplex"));
+  addShareControl(params, "layout", printCardsPerPageEl);
   const printTitle = printActivityTitleEl ? printActivityTitleEl.value.trim() : "";
   if(printTitle) params.set("title", printTitle.slice(0, 160));
 
@@ -1905,8 +1936,8 @@ function syncUnitEquationUI(){
     showUnitRow(unitVisibleLabelEl, unitVisibleControlsEl, true);
     showUnitRow(unitHiddenLabelEl, unitHiddenControlsEl, true);
     if(unitTasksLabelEl) unitTasksLabelEl.textContent = "Taches";
-    if(unitVisibleLabelEl) unitVisibleLabelEl.textContent = "Jetons visibles";
-    if(unitHiddenLabelEl) unitHiddenLabelEl.textContent = "Jetons cachés par tache";
+    if(unitVisibleLabelEl) unitVisibleLabelEl.textContent = "Visibles";
+    if(unitHiddenLabelEl) unitHiddenLabelEl.textContent = "Cachés / tache";
     if(unitVisibleMaxEl){ unitVisibleMaxEl.max = "10"; if(Number(unitVisibleMaxEl.value) > 10) unitVisibleMaxEl.value = "10"; }
     if(unitHiddenMaxEl){ unitHiddenMaxEl.max = "10"; if(Number(unitHiddenMaxEl.value) > 10) unitHiddenMaxEl.value = "10"; if(Number(unitHiddenMaxEl.value) < 1) unitHiddenMaxEl.value = "1"; }
     return;
@@ -2032,6 +2063,39 @@ function syncNumberedEquationUI(){
   }
 }
 
+/* « Cartes » est un seul champ pour les neuf modes : on le pose dans la dernière
+   rangée du bloc de réglages affiché, à côté de Total (min) / Total (max), comme
+   sur Splat Équations. */
+function placeCardCountField(act){
+  if(!countWrapEl) return;
+  const blockId = (act === "U" || act === "UPM") ? "unitSettings"
+    : (act === "N" || act === "NPM") ? "numberedSettings"
+    : act === "C9" ? "nineSettings"
+    : act === "C8" ? "eightSettings"
+    : (act === "C" || act === "CD") ? "investigateSettings"
+    : act === "D" ? "systemSettings" : "";
+  const block = blockId ? document.getElementById(blockId) : null;
+  const slot = block ? block.querySelector(".countSlot") : null;
+  if(slot && countWrapEl.parentNode !== slot) slot.appendChild(countWrapEl);
+}
+
+/* Une seule rangée « Graine | Copier le lien » visible à la fois, la même place
+   dans tous les modes : celle de A / A±, celle de B / B±, ou la rangée commune
+   des autres modes, où le champ de graine propre à chaque mode s'affiche à tour
+   de rôle — le code de génération lit toujours les mêmes champs. */
+function syncSeedShareRows(act){
+  if(unitSeedShareRowEl) unitSeedShareRowEl.hidden = !(act === "U" || act === "UPM");
+  if(numberedSeedShareRowEl) numberedSeedShareRowEl.hidden = !(act === "N" || act === "NPM");
+  const sharedSeedIds = { C9:"seedC", C8:"seedD", C:"seedE", CD:"seedE", D:"seedSys" };
+  const wanted = sharedSeedIds[act] || "seedE";
+  ["seedC", "seedD", "seedE", "seedSys"].forEach(id => {
+    const input = document.getElementById(id);
+    if(input) input.style.display = id === wanted ? "" : "none";
+  });
+  const sharedLabel = document.getElementById("sharedSeedLabel");
+  if(sharedLabel) sharedLabel.setAttribute("for", wanted);
+}
+
 function syncSettingsUI(){
   const act = activityEl.value;
   const shareRowEl = document.getElementById("shareRow");
@@ -2140,6 +2204,8 @@ function syncSettingsUI(){
   eightSettingsEl.style.display = isEight ? "block" : "none";
   investigateSettingsEl.style.display = isInvestigate ? "block" : "none";
   systemSettingsEl.style.display = isSystem ? "block" : "none";
+  placeCardCountField(act);
+  syncSeedShareRows(act);
 
   if(numBeadAbsMaxWrapEl) numBeadAbsMaxWrapEl.style.display = (act === "NPM") ? "block" : "none";
   if(numOpposeModeWrapEl) numOpposeModeWrapEl.style.display = (act === "NPM") ? "block" : "none";
@@ -2721,6 +2787,31 @@ function genInvestigate(rng){
     };
   }
 
+  /* Le schéma doit pouvoir dire exactement les relations avec des cases positives,
+     en prenant pour 𝑥 la plus petite tache : « 2 fois plus » = deux cases 𝑥,
+     « 5 de plus » = 𝑥 et une case 5. On refuse les tirages qui ne s'y prêtent pas
+     (deux « fois moins » incompatibles depuis la même tache, « fois plus » suivi de
+     « de moins »…) : ils donnaient une équation fausse ou une substitution trompeuse.
+     Pur (aucun tirage consommé) : les séries des anciens liens ne bougent que là où
+     une carte était fautive. */
+  function relationValuesFitPositiveSchema(taskCount, hiddenVals, relations){
+    const refIndex = relations.length ? relations[0].source : 0;
+    const affine = buildAffineItems(taskCount, relations, refIndex);
+    if(!affine) return false;
+    const minVal = Math.min(...hiddenVals);
+    if(!(minVal > 0)) return false;
+    const minIndex = hiddenVals.indexOf(minVal);
+    const cm = Number(affine[minIndex].coef);
+    const dm = Number(affine[minIndex].diff);
+    if(!(cm > 0)) return false;
+    return affine.every((it, i) => {
+      const coef = Number(it.coef) / cm;
+      const diff = Number(it.diff) - Number(it.coef) * dm / cm;
+      const c = Math.round(coef);
+      return Math.abs(coef - c) < 1e-9 && c >= 1 && c <= 8 && diff > -1e-9 && Math.abs(c * minVal + diff - hiddenVals[i]) < 1e-6;
+    });
+  }
+
   function pickRelation(){
     const op = ops[rInt(rng, 0, ops.length-1)];
     let k = 1;
@@ -2795,6 +2886,8 @@ function genInvestigate(rng){
       relations.push(rel1.asRecord(p[1], p[0]));
       relations.push(rel2.asRecord(p[2], source2));
     }
+
+    if(!relationValuesFitPositiveSchema(taskCount, hiddenVals, relations)) continue;
 
     const hiddenSum = hiddenVals.reduce((a,b)=>a+b, 0);
     const visCount = rInt(rng, visMin, visMax);
@@ -2931,8 +3024,9 @@ function genNumbered(rng){
   let tMax = clamp(numberOr(numTasksEl.value, 1), 1, 6);
   if(tMax < tMin) [tMin, tMax] = [tMax, tMin];
   if(tMin <= 1 && shouldGenerateEmptyTaskCase(rng)){
-    const emptyCard = genNumberedEmptyTaskCase(rng);
-    if(emptyCard) return emptyCard;
+    // Le cas « tache vide » (𝑏 = 0) n'existe plus en mode B : une case de 0 ne peut
+    // pas se dessiner dans le tableau. Le tirage est gardé pour que les séries des
+    // anciens liens ne bougent pas quand il tombe sur « non ».
   }
   const tasks = rInt(rng, tMin, tMax);
   
@@ -3062,8 +3156,7 @@ function genNumberedEquationPreset(rng){
   for(let tries=0; tries<4000; tries++){
     if(mode === "X_PLUS_A_EQ_B"){
       if(shouldGenerateEmptyTaskCase(rng)){
-        const emptyCard = genNumberedEmptyTaskCase(rng);
-        if(emptyCard) return emptyCard;
+        // cas « tache vide » retiré du mode B (voir genNumbered) ; tirage conservé
       }
       const tasks = 1;
       const visibleCount = rInt(rng, vMin, vMax);
@@ -4037,6 +4130,17 @@ function relationModelKind(card){
   if(ops.length && ops.every(op => op === "MUL" || op === "DIV")) return "ratio";
   return "diff";
 }
+/* La valeur de 𝑥 dans les schémas de l'Enquête : la plus petite valeur cachée — c'est
+   la tache ramenée à 𝑥 par positiveBarItemsForRelation. (Le modèle affine du
+   générateur, lui, prend pour repère la source de la première relation : sa
+   « unitValue » n'est pas toujours 𝑥 — d'où l'ancien « 5𝑥 = 60 → 𝑥 = 48 ».) */
+function relationUnitValue(card){
+  const rel = card && card._rel;
+  const source = (rel && Array.isArray(rel.hiddenValues) && rel.hiddenValues.length) ? rel.hiddenValues : ((card && card.hidden) || []);
+  const values = source.map(v => Number(v)).filter(v => Number.isFinite(v) && v > 0);
+  return values.length ? Math.min(...values) : 1;
+}
+
 function positiveBarItemsForRelation(card){
   const rel = card && card._rel;
   const values = rel && Array.isArray(rel.hiddenValues) ? rel.hiddenValues.slice(0, rel.taskCount) : [];
@@ -4044,6 +4148,43 @@ function positiveBarItemsForRelation(card){
   while(values.length < taskCount) values.push(1);
   const positiveValues = values.map(v => Math.max(1, Number(v) || 1));
   const minVal = Math.min(...positiveValues);
+  const minIndex = positiveValues.indexOf(minVal);
+  const varChar = getNumberedDisplayVarChar(card);
+
+  // 1. Lecture exacte à partir du modèle affine des relations, ramené à la plus petite
+  //    tache (c'est elle qui vaut 𝑥) : « 2 fois plus » donne deux cases 𝑥, « 4 de plus »
+  //    donne 𝑥 et une case 4 — même quand les relations sont mélangées (avant, une
+  //    relation ×k au milieu de + / − devenait « 𝑥 + écart », l'écart étant… la valeur
+  //    de 𝑥 elle-même).
+  const affine = (rel && Array.isArray(rel.affineItems) && rel.affineItems.length === taskCount
+    && rel.affineItems.every(it => it && Number.isFinite(Number(it.coef)) && Number.isFinite(Number(it.diff)))) ? rel.affineItems : null;
+  if(affine){
+    const cm = Number(affine[minIndex].coef);
+    const dm = Number(affine[minIndex].diff);
+    if(cm > 0){
+      const rebased = affine.map((it, i) => {
+        const coef = Number(it.coef) / cm;
+        const diff = Number(it.diff) - Number(it.coef) * dm / cm;
+        return { coef, diff, value: positiveValues[i] };
+      });
+      const clean = rebased.every(it =>
+        Math.abs(it.coef - Math.round(it.coef)) < 1e-9 && Math.round(it.coef) >= 1 && Math.round(it.coef) <= 8
+        && it.diff > -1e-9
+        && Math.abs(Math.round(it.coef) * minVal + it.diff - it.value) < 1e-6);
+      if(clean){
+        return rebased.map(it => {
+          const coef = Math.round(it.coef);
+          const diff = Math.abs(it.diff) < 1e-9 ? 0 : Math.round(it.diff * 1000) / 1000;
+          const parts = Array.from({length: coef}, () => ({kind:"x", label:varChar, weight:1}));
+          if(diff > 0) parts.push({kind:"diff", label:formatRelationNumber(diff), weight:Math.max(0.35, diff / minVal)});
+          return { coef, diff, parts };
+        });
+      }
+    }
+  }
+
+  // 2. Repli (relation non représentable en cases positives) : l'ancienne lecture par
+  //    les valeurs — rapport exact si tout est multiplicatif, sinon « 𝑥 + écart ».
   const kind = relationModelKind(card);
 
   if(kind === "ratio"){
@@ -4097,13 +4238,15 @@ function drawRightTotalBrace(g, x, y, h, label, opts={}){
   }));
 }
 function getRelationSchemaLayout(){
-  const boxX = 120;
-  const boxW = 1360;
+  // Cadre élargi (60 → 1540) et colonne d'équation plus large (620) : les lignes
+  // de la résolution reçoivent leurs flèches d'opération à gauche et à droite.
+  const boxX = 60;
+  const boxW = 1480;
   const labelW = 150;
-  const equationW = 365;
+  const equationW = 660;
   const barX = boxX + labelW;
   const barW = boxW - labelW - equationW - 34;
-  return { boxX, boxW, labelW, equationW, barX, barW };
+  return { boxX, boxW, labelW, equationW, barX, barW, equationCenterX: barX + barW + 34 + equationW / 2 };
 }
 function getRelationGroupedParts(card){
   const totals = relationTotalsForBarModel(card);
@@ -4111,7 +4254,7 @@ function getRelationGroupedParts(card){
   const xParts = Math.max(1, Math.round(totals.sumCoef));
   for(let i=0;i<xParts;i++) parts.push({kind:"x", label:getNumberedDisplayVarChar(card), weight:1});
 
-  const unitValue = Math.max(1, Number(card && card._rel && card._rel.equation && card._rel.equation.unitValue) || Math.min(...(card._rel?.hiddenValues || [1]).map(v=>Math.max(1, Number(v)||1))) || 1);
+  const unitValue = relationUnitValue(card);
 
   if(totals.sumDiff > 0){
     parts.push({kind:"diff", label:formatRelationNumber(totals.sumDiff), weight:Math.max(0.35, totals.sumDiff / unitValue)});
@@ -4169,7 +4312,7 @@ function drawRelationSituationSchema(targetGroup, card, opts = {}){
   const grouped = getRelationGroupedParts(card);
   const groupedWeight = Math.max(1, grouped.parts.reduce((s,p)=>s + Math.max(0.35, Number(p.weight)||1),0));
   const unitW = barW / groupedWeight;
-  const unitValue = Math.max(1, Number(card && card._rel && card._rel.equation && card._rel.equation.unitValue) || Math.min(...(card._rel?.hiddenValues || [1]).map(v=>Math.max(1, Number(v)||1))) || 1);
+  const unitValue = relationUnitValue(card);
 
   const visibleRow = hasVisibleRow
     ? { coef:0, diff:visibleSum, parts:[{kind:"visible", label:formatRelationNumber(visibleSum), weight:Math.max(0.35, visibleSum / unitValue)}] }
@@ -4241,7 +4384,7 @@ function drawRelationOwnerBrace(g, x1, x2, y, label){
 
 function getRelationGroupedDisplayGroups(card){
   const totals = relationTotalsForBarModel(card);
-  const unitValue = Math.max(1, Number(card && card._rel && card._rel.equation && card._rel.equation.unitValue) || Math.min(...(card._rel?.hiddenValues || [1]).map(v=>Math.max(1, Number(v)||1))) || 1);
+  const unitValue = relationUnitValue(card);
   const groups = [];
 
   for(let i=0;i<totals.items.length;i++){
@@ -4302,7 +4445,7 @@ function buildRelationEquabarPayload(card){
   const coefficient = Math.max(1, Math.round(Number(totals.sumCoef) || grouped.xParts || 1));
   const constantParts = getRelationOrderedConstantParts(card, grouped);
   const trueTotal = Number(totals.trueTotal);
-  const unitValue = Number(card && card._rel && card._rel.equation && card._rel.equation.unitValue);
+  const unitValue = relationUnitValue(card);
 
   const bottom = [];
   for(let i=0;i<coefficient;i++) bottom.push({type:"x"});
@@ -4512,6 +4655,69 @@ function drawRelationSubstitutionStep(targetGroup, card, opts = {}){
   targetGroup.appendChild(g);
 }
 
+/* Enquête / C direct — les lignes de la résolution, leurs opérations, et la place
+   qu'il leur faut. Le plan est le même aux trois étapes (schéma regroupé, ordonné,
+   résolution) : même police, même position du signe égal, rien ne saute d'un clic
+   à l'autre. */
+function relationResolutionPlan(card, totals, coefficient, constantParts, constantTotal, relVarChar){
+  const variableTerm = formatCoeffUnknownTerm(coefficient, relVarChar);
+  const equationLeft = relationEquationLeftFromPieces(card, coefficient, constantParts);
+  const equationRight = formatRelationNumber(totals.trueTotal);
+  const reducedRight = Number(totals.trueTotal) - constantTotal;
+  // La solution se lit sur l'équation affichée (coefficient × 𝑥 + constantes = total),
+  // jamais sur le repère interne du générateur.
+  const solution = reducedRight / coefficient;
+  const lines = [{ left: equationLeft, right: equationRight }];
+  // Étape ajoutée : on réduit d'abord l'équation en regroupant les constantes,
+  // sans sauter directement à la soustraction.
+  if(constantTotal > 0 && constantParts.length > 1) lines.push({ left: `${variableTerm} + ${formatRelationNumber(constantTotal)}`, right: equationRight });
+  if(constantTotal > 0) lines.push({ left: variableTerm, right: formatRelationNumber(reducedRight) });
+  // Cas x + b = c : la ligne de soustraction donne déjà directement x = … ; on ne la duplique pas.
+  if(coefficient !== 1 || constantTotal === 0) lines.push({ left: relVarChar, right: formatRelationNumber(solution) });
+  const texts = lines.map(line => `${line.left} = ${line.right}`);
+  // Rien pour le regroupement des constantes, « − c » pour la soustraction, « ÷ n »
+  // pour la division.
+  const transitions = [];
+  const groupedText = `${variableTerm} + ${formatRelationNumber(constantTotal)} = ${equationRight}`;
+  const reducedText = `${variableTerm} = ${formatRelationNumber(reducedRight)}`;
+  const solutionText = `${relVarChar} = ${formatRelationNumber(solution)}`;
+  if(constantTotal > 0) transitions.push({ from: (constantParts.length > 1) ? groupedText : texts[0], to: reducedText, op: `− ${formatRelationNumber(constantTotal)}` });
+  if(coefficient !== 1) transitions.push({ from: constantTotal > 0 ? reducedText : texts[0], to: solutionText, op: `÷ ${coefficient}` });
+  return { lines, texts, transitions, ops: opsBetweenLines(texts, transitions) };
+}
+
+/* La colonne d'équation, à droite du tableau, doit contenir les lignes ET leurs
+   flèches. On mesure, on réserve la place des flèches, et si ça ne tient pas on
+   réduit la police (34 → 22 au plus) ; le signe égal se place au milieu de la colonne
+   quand c'est possible, sinon le bloc est poussé contre le tableau. */
+function relationEquationFit(lines, ops, layout){
+  const colLeft = layout.barX + layout.barW + 34;
+  const colRight = layout.boxX + layout.boxW - 8;
+  const colW = Math.max(120, colRight - colLeft);
+  const eqGap = 22;
+  const margin = 30;
+  const hasArrows = Array.isArray(ops) && ops.some(Boolean);
+  const roomFor = (fs) => {
+    let lhsW = 0, rhsW = 0;
+    (lines || []).forEach(line => {
+      lhsW = Math.max(lhsW, measureEquationTextWidth(line.left, fs));
+      rhsW = Math.max(rhsW, measureEquationTextWidth(line.right, fs));
+    });
+    const labelFs = Math.round(fs * 0.62);
+    const labelW = hasArrows ? Math.max(0, ...ops.filter(Boolean).map(op => measureArrowLabelWidth(op, labelFs))) : 0;
+    const arrowRoom = hasArrows ? (margin + Math.round(labelFs * 0.9) + 6 + labelW + 4) : 12;
+    return { needL: lhsW + eqGap + arrowRoom, needR: rhsW + eqGap + arrowRoom };
+  };
+  for(let fs = 34; fs >= 22; fs--){
+    const need = roomFor(fs);
+    if(Math.max(need.needL, need.needR) <= colW / 2) return { fontSize: fs, margin, eqCenter: colLeft + colW / 2 };
+    if(need.needL + need.needR <= colW) return { fontSize: fs, margin, eqCenter: colLeft + need.needL };
+  }
+  // même à 22 rien ne tient : bloc contre le tableau, la droite déborde un peu
+  const need = roomFor(22);
+  return { fontSize: 22, margin, eqCenter: colLeft + need.needL };
+}
+
 function drawRelationOrderedSchema(targetGroup, card, opts = {}){
   const solved = !!opts.solved;
   const grouped = getRelationGroupedDisplayGroups(card);
@@ -4551,45 +4757,45 @@ function drawRelationOrderedSchema(targetGroup, card, opts = {}){
     ...Array.from({length:coefficient}, () => ({kind:"x", label:getNumberedDisplayVarChar(card), weight:1})),
     ...constantParts
   ];
+  // Largeurs de cases réparties pour que le tableau tienne toujours dans sa place
+  // (56 au moins quand c'est possible, jamais de dernière case négative).
+  const cellWidths = fitCellWidths(orderedParts.map(part => Math.max(0.35, Number(part.weight) || 1)), barW, 56);
   for(let i=0;i<orderedParts.length;i++){
     const part = orderedParts[i];
     const isLast = i === orderedParts.length - 1;
-    const rawW = unitW * Math.max(0.35, Number(part.weight) || 1);
-    const w = isLast ? (barX + barW - x) : Math.max(56, rawW);
+    const w = isLast ? (barX + barW - x) : cellWidths[i];
     drawBarCell(g, x, yTop+topH, w, botH, part, true, {fontSize:30});
     x += w;
   }
 
-  const eqCenter = barX + barW + (isFullscreenProjection ? 225 : 305);
-  let eqY = solved ? yTop + 20 : yTop + 79;
-  function eqLine(left, right, size=34){
-    drawProjectionEquationLine(g, eqCenter, eqY, left, right, {
-      text:(x,y,t,a)=>text(x,y,t,a), fill:"var(--ink)", fontSize:size, equalFontSize:size, eqGap:22
-    });
-    eqY += 48;
-  }
+  // Lignes de la résolution, leurs opérations, police et position du signe égal :
+  // le même plan qu'au schéma regroupé (relationResolutionPlan / relationEquationFit).
   const relVarChar = getNumberedDisplayVarChar(card);
-  const variableTerm = formatCoeffUnknownTerm(coefficient, relVarChar);
-  const equationLeft = relationEquationLeftFromPieces(card, coefficient, constantParts);
-  const equationRight = formatRelationNumber(totals.trueTotal);
-  eqLine(equationLeft, equationRight, 34);
+  const plan = relationResolutionPlan(card, totals, coefficient, constantParts, constantTotal, relVarChar);
+  const fit = relationEquationFit(plan.lines, plan.ops, layout);
+  const eqCenter = fit.eqCenter;
+  const eqStartY = solved ? yTop + 20 : yTop + 79;
+  const eqFontSize = fit.fontSize;
+  const eqLineGap = 48;
+  const eqLinesDrawn = [];
+  let eqY = eqStartY;
+  function eqLine(left, right){
+    drawProjectionEquationLine(g, eqCenter, eqY, left, right, {
+      text:(x,y,t,a)=>text(x,y,t,a), fill:"var(--ink)", fontSize:eqFontSize, equalFontSize:eqFontSize, eqGap:22
+    });
+    eqLinesDrawn.push(`${left} = ${right}`);
+    eqY += eqLineGap;
+  }
+  const shownLines = solved ? plan.lines : plan.lines.slice(0, 1);
+  shownLines.forEach(line => eqLine(line.left, line.right));
 
   if(solved){
-    const reducedRight = Number(totals.trueTotal) - constantTotal;
-    const unitValue = Number(card && card._rel && card._rel.equation && card._rel.equation.unitValue);
-    const solution = Number.isFinite(unitValue) ? unitValue : (reducedRight / coefficient);
-
-    // Étape ajoutée : on réduit d'abord l'équation en regroupant les constantes,
-    // sans sauter directement à la soustraction.
-    if(constantTotal > 0 && constantParts.length > 1){
-      eqLine(`${variableTerm} + ${formatRelationNumber(constantTotal)}`, equationRight, 34);
-    }
-    if(constantTotal > 0){
-      eqLine(variableTerm, formatRelationNumber(reducedRight), 34);
-    }
-    if(coefficient !== 1 || constantTotal === 0){
-      eqLine(relVarChar, formatRelationNumber(solution), 34);
-    }
+    // Flèches d'opération entre les lignes, à gauche et à droite de la colonne ;
+    // les bornes sont le tableau et le bord du cadre.
+    drawOperationArrowsForLines(g, {el, text}, eqLinesDrawn, opsBetweenLines(eqLinesDrawn, plan.transitions), {
+      centerX: eqCenter, startY: eqStartY, gap: eqLineGap, fontSize: eqFontSize, eqGap: 22, middleBaseline: true,
+      margin: fit.margin, hug: true, minX: barX + barW + 6, maxX: boxX + boxW - 8
+    });
   }
 
   targetGroup.appendChild(g);
@@ -4631,13 +4837,17 @@ function drawRelationGroupedSchema(targetGroup, card, opts = {}){
 
   let x = barX;
   const groupSpans = [];
+  const flatWeights = [];
+  groups.forEach(group => group.parts.forEach(part => flatWeights.push(Math.max(0.35, Number(part.weight)||1))));
+  const cellWidths = fitCellWidths(flatWeights, barW, 56);
+  let cellIndex = 0;
   for(const group of groups){
     const groupStart = x;
     for(let j=0;j<group.parts.length;j++){
       const part = group.parts[j];
       const isLastOverall = (x >= barX + barW - 1) || (group === groups[groups.length-1] && j === group.parts.length-1);
-      const rawW = unitW * Math.max(0.35, Number(part.weight)||1);
-      const w = isLastOverall ? (barX+barW-x) : Math.max(56, rawW);
+      const w0 = cellWidths[cellIndex++];
+      const w = isLastOverall ? (barX+barW-x) : w0;
       drawBarCell(g, x, yTop+topH, w, botH, part, true, {fontSize:30});
       x += w;
     }
@@ -4651,46 +4861,25 @@ function drawRelationGroupedSchema(targetGroup, card, opts = {}){
     if(span.x2 - span.x1 > 10) drawRelationOwnerBrace(g, span.x1, span.x2, braceY, span.label);
   }
 
-  // L'équation doit rester clairement séparée du tableau.
-  const eqCenter = barX + barW + (isFullscreenProjection ? 225 : 305);
-  let eqY = solved ? yTop + 20 : yTop + 79;
-  function eqLine(left, right, size=34){
-    drawProjectionEquationLine(g, eqCenter, eqY, left, right, {
-      text:(x,y,t,a)=>text(x,y,t,a), fill:"var(--ink)", fontSize:size, equalFontSize:size, eqGap:22
-    });
-    eqY += 48;
-  }
+  // L'équation doit rester clairement séparée du tableau : même police et même
+  // position du signe égal qu'aux étapes suivantes (relationEquationFit).
   const relVarChar = getNumberedDisplayVarChar(card);
   const coefficient = Math.max(1, Math.round(Number(totals.sumCoef) || xParts || 1));
   const constantParts = getRelationOrderedConstantParts(card, grouped);
   const constantTotal = constantParts.reduce((sum, part) => sum + Number(part.value || 0), 0);
-  const variableTerm = formatCoeffUnknownTerm(coefficient, relVarChar);
-  const equationLeft = relationEquationLeftFromPieces(card, coefficient, constantParts);
-  const equationRight = formatRelationNumber(totals.trueTotal);
-
-  // L'équation décrit exactement les cases visibles du schéma : les constantes ne sont pas encore regroupées.
-  eqLine(equationLeft, equationRight, 34);
-
-  if(solved){
-    const reducedRight = Number(totals.trueTotal) - constantTotal;
-    const unitValue = Number(card && card._rel && card._rel.equation && card._rel.equation.unitValue);
-    const solution = Number.isFinite(unitValue) ? unitValue : (reducedRight / coefficient);
-
-    // Étape ajoutée : on réduit d'abord l'équation en regroupant les constantes,
-    // sans sauter directement à la soustraction.
-    if(constantTotal > 0 && constantParts.length > 1){
-      eqLine(`${variableTerm} + ${formatRelationNumber(constantTotal)}`, equationRight, 34);
-    }
-    if(constantTotal > 0){
-      eqLine(variableTerm, formatRelationNumber(reducedRight), 34);
-    }
-    if(coefficient !== 1 || constantTotal === 0){
-      eqLine(relVarChar, formatRelationNumber(solution), 34);
-    } else if(constantTotal > 0){
-      // Cas x + b = c : la ligne de soustraction donne déjà directement x = ...
-      // On ne duplique pas la même ligne.
-    }
+  const plan = relationResolutionPlan(card, totals, coefficient, constantParts, constantTotal, relVarChar);
+  const fit = relationEquationFit(plan.lines, plan.ops, layout);
+  const eqCenter = fit.eqCenter;
+  let eqY = solved ? yTop + 20 : yTop + 79;
+  function eqLine(left, right){
+    drawProjectionEquationLine(g, eqCenter, eqY, left, right, {
+      text:(x,y,t,a)=>text(x,y,t,a), fill:"var(--ink)", fontSize:fit.fontSize, equalFontSize:fit.fontSize, eqGap:22
+    });
+    eqY += 48;
   }
+  // L'équation décrit exactement les cases visibles du schéma : les constantes ne sont pas encore regroupées.
+  const shownLines = solved ? plan.lines : plan.lines.slice(0, 1);
+  shownLines.forEach(line => eqLine(line.left, line.right));
 
   targetGroup.appendChild(g);
 }
@@ -5280,6 +5469,8 @@ function renderCard(card, revealState){
         const eqGap = 22;
         const unknownTerm = formatCoeffUnknownTerm(tasks, varChar);
         const eqLeft1 = visSum > 0 ? `${visSum} + ${unknownTerm}` : unknownTerm;
+        const eqStartY = calcY;
+        const eqLinesDrawn = [];
         const addEq = (l, r) => {
           drawProjectionEquationLine(emptyGroup, centerX, calcY, l, r, {
             text:(x,y,t,a)=>text(x,y,t,a),
@@ -5288,12 +5479,22 @@ function renderCard(card, revealState){
             equalFontSize:42,
             eqGap
           });
+          eqLinesDrawn.push(`${l} = ${r}`);
           calcY += calcGap;
         };
         addEq(eqLeft1, String(card.total));
         if (revealState >= 3) {
           if (visSum > 0 && tasks > 1) addEq(formatCoeffUnknownTerm(tasks, varChar), String(totalHid));
           if (tasks > 1 || (tasks === 1 && visSum > 0)) addEq(`${varChar}`, String(hiddenSums[0]));
+        }
+        // Flèches d'opération (− v, ÷ n) entre les lignes, des deux côtés, comme sur
+        // Splat Équations ; à gauche elles s'arrêtent au bord du plateau, à droite au
+        // bord de la carte.
+        if (revealState >= 3 && eqLinesDrawn.length > 1) {
+          drawOperationArrowsForLines(emptyGroup, {el, text}, eqLinesDrawn, numberedResolutionOps(visSum, tasks), {
+            centerX, startY: eqStartY, gap: calcGap, fontSize: 46, eqGap, middleBaseline: true, margin: 40, hug: true,
+            minX: isABTwoColumnLayout ? 968 : 0, maxX: 1592
+          });
         }
       }
     }
@@ -5651,6 +5852,245 @@ function drawProjectionEquationLine(targetGroup, centerX, cy, lhs, rhs, opts = {
   }));
 }
 
+/* ---- Flèches d'opération (− 3, ÷ 2…) entre les lignes d'une résolution : la même
+   fabrique que sur Splat Équations, pour l'écran et l'impression. `api` = {el, text}
+   : les fabriques d'éléments SVG de l'appelant (el/text à l'écran, tEl/tText dans
+   la carte imprimée). Les tailles (renflement, trait, pointe) suivent la police de
+   l'étiquette : 26 / 3,5 / 10 pour 29 à l'écran. */
+const EQ_OP_ARROW_COLOR = "#b45309";
+
+function printMathCharWeight(ch){
+  if(ch === " ") return 0.24;
+  if(ch === "𝑥" || ch === "𝑎" || ch === "𝑏" || ch === "𝑐" || ch === "𝑚" || ch === "𝑛" || ch === "𝑡") return 0.54;
+  if(/[0-9]/.test(ch)) return 0.50;
+  if(ch === "+" || ch === "−" || ch === "-" || ch === "=") return 0.56;
+  if(ch === "×") return 0.52;
+  if(ch === "(" || ch === ")") return 0.30;
+  if(ch === ":") return 0.24;
+  if(/[A-Za-zÀ-ÿ]/.test(ch)) return 0.48;
+  return 0.52;
+}
+function estimatePrintMathTextWidth(str, fontSize){
+  const s = String(str == null ? "" : str);
+  let units = 0;
+  for(const ch of s) units += printMathCharWeight(ch);
+  return units * (Number(fontSize) || 0);
+}
+/* Étiquette de flèche (« − 17 », « ÷ (−2) ») : police de l'interface en gras, plus
+   large que la police des équations — estimation volontairement généreuse. */
+function estimateArrowLabelWidth(label, fontSize){
+  const s = String(label == null ? "" : label);
+  let units = 0;
+  for(const ch of s){
+    if(ch === " ") units += 0.30;
+    else if(/[0-9]/.test(ch)) units += 0.64;
+    else if(ch === "(" || ch === ")") units += 0.38;
+    else units += 0.66;
+  }
+  return units * (Number(fontSize) || 0) + 4;
+}
+/* Mesure réelle d'un texte (toile 2D hors écran) : plus juste que l'estimation par
+   lettre, et disponible aussi pour la carte imprimée, qui n'est pas affichée. */
+let _textMeasureContext = null;
+function measureTextWidth(str, font){
+  try{
+    if(!_textMeasureContext){
+      const canvas = document.createElement("canvas");
+      _textMeasureContext = canvas.getContext("2d");
+    }
+    if(!_textMeasureContext) return NaN;
+    _textMeasureContext.font = font;
+    return _textMeasureContext.measureText(String(str == null ? "" : str)).width;
+  }catch(_e){ return NaN; }
+}
+const EQUATION_MATH_FONT = "'Times New Roman', Times, serif";
+function measureEquationTextWidth(str, fontSize){
+  const w = measureTextWidth(str, `italic ${fontSize}px ${EQUATION_MATH_FONT}`);
+  return (Number.isFinite(w) && w > 0) ? w : estimatePrintMathTextWidth(str, fontSize);
+}
+function measureArrowLabelWidth(str, fontSize){
+  const w = measureTextWidth(str, `800 ${fontSize}px system-ui, -apple-system, "Segoe UI", Roboto, Arial`);
+  return (Number.isFinite(w) && w > 0) ? w + 2 : estimateArrowLabelWidth(str, fontSize);
+}
+/* Largeurs de cases d'un tableau en barres : proportionnelles aux poids, jamais sous
+   minW tant que la place le permet, et dont la somme vaut exactement totalW (plus de
+   dernière case à largeur négative quand les cases sont nombreuses). */
+function fitCellWidths(weights, totalW, minW){
+  const n = Array.isArray(weights) ? weights.length : 0;
+  if(!n) return [];
+  const total = Math.max(0, Number(totalW) || 0);
+  const floor = Math.max(0, Number(minW) || 0);
+  const fixed = new Array(n).fill(false);
+  let widths = new Array(n).fill(0);
+  for(let iter = 0; iter <= n; iter++){
+    const free = [];
+    let fixedW = 0;
+    for(let i=0;i<n;i++){ if(fixed[i]) fixedW += widths[i]; else free.push(i); }
+    if(!free.length) break;
+    const freeW = Math.max(0, total - fixedW);
+    const sumW = free.reduce((acc, i) => acc + (Number(weights[i]) || 0), 0) || 1;
+    let changed = false;
+    free.forEach(i => { widths[i] = freeW * (Number(weights[i]) || 0) / sumW; });
+    free.forEach(i => { if(widths[i] < floor){ widths[i] = floor; fixed[i] = true; changed = true; } });
+    if(!changed) break;
+  }
+  const sum = widths.reduce((acc, w) => acc + w, 0);
+  if(sum > total + 0.01 && sum > 0) widths = widths.map(w => w * total / sum);
+  return widths;
+}
+
+function drawOperationArrow(targetGroup, api, x, y1, y2, dir, label, opts = {}){
+  const mkEl = (api && api.el) || el;
+  const mkText = (api && api.text) || text;
+  const col = opts.color || EQ_OP_ARROW_COLOR;
+  const labelFs = Math.max(10, Math.round(Number(opts.labelFontSize) || 29));
+  const bulge = Math.round(labelFs * 0.9);
+  const sw = String(Math.round(labelFs * 1.2) / 10);
+  const ah = Math.round(labelFs * 0.345);
+  targetGroup.appendChild(mkEl("path", {
+    d: `M ${x} ${y1} Q ${x + dir * bulge} ${(y1 + y2) / 2} ${x} ${y2}`,
+    fill: "none", stroke: col, "stroke-width": sw, "stroke-linecap": "round"
+  }));
+  // Pointe alignée sur la tangente d'arrivée de la courbe (qui vient du côté
+  // du renflement), sinon elle paraît décalée par rapport au bout du trait.
+  const tx = x - (x + dir * bulge);
+  const ty = y2 - (y1 + y2) / 2;
+  const tl = Math.hypot(tx, ty) || 1;
+  const ux = tx / tl, uy = ty / tl;      // direction d'arrivée
+  const px = -uy, py = ux;               // perpendiculaire
+  const bx = x - ux * ah, by = y2 - uy * ah;
+  targetGroup.appendChild(mkEl("path", {
+    d: `M ${bx + px * ah * 0.7} ${by + py * ah * 0.7} L ${x} ${y2} L ${bx - px * ah * 0.7} ${by - py * ah * 0.7}`,
+    fill: "none", stroke: col, "stroke-width": sw, "stroke-linecap": "round", "stroke-linejoin": "round"
+  }));
+  if(label){
+    targetGroup.appendChild(mkText(x + dir * (bulge + 6), (y1 + y2) / 2 + labelFs * 0.36, label, {
+      "text-anchor": dir < 0 ? "end" : "start",
+      "font-size": String(labelFs), "font-weight": "800", "fill": col
+    }));
+  }
+}
+
+/* Flèches dans les marges d'un bloc de lignes alignées sur le signe égal :
+   ops[i] (s'il est renseigné) relie la ligne i à la ligne i + 1, des deux côtés.
+   geom : centerX, startY (ordonnée de la 1re ligne), gap, fontSize, eqGap (écart
+   des membres au signe égal), middleBaseline (lignes centrées verticalement ;
+   sinon lignes posées sur leur ligne de base), margin (jour entre le texte et le
+   trait), minX / maxX : bornes à ne pas franchir (plateau à gauche, bord de la
+   carte ou du cadre à droite) — quand la place manque, la flèche et son étiquette
+   se rapprochent du texte au lieu de sortir du cadre. */
+function drawOperationArrowsForLines(targetGroup, api, lines, ops, geom = {}){
+  if(!Array.isArray(ops) || !ops.some(Boolean)) return;
+  const centerX = Number(geom.centerX) || 800;
+  const startY = Number(geom.startY) || 0;
+  const gap = Number(geom.gap) || 64;
+  const fontSize = Number(geom.fontSize) || 46;
+  const eqGap = Number(geom.eqGap) || 30;
+  const margin = Number(geom.margin) || 62;
+  const centerDy = geom.middleBaseline ? 0 : -fontSize * 0.34;
+  const labelFs = Math.round(Number(geom.labelFontSize) || fontSize * 0.62);
+  const bulge = Math.round(labelFs * 0.9);
+  const estimate = (str) => measureEquationTextWidth(String(str == null ? "" : str), fontSize);
+  let lhsMax = 0, rhsMax = 0;
+  (lines || []).forEach(line => {
+    const raw = String(line == null ? "" : line);
+    const k = raw.indexOf("=");
+    const lhs = k >= 0 ? raw.slice(0, k).trim() : raw;
+    const rhs = k >= 0 ? raw.slice(k + 1).trim() : "";
+    lhsMax = Math.max(lhsMax, estimate(lhs));
+    rhsMax = Math.max(rhsMax, estimate(rhs));
+  });
+  // symétrique (même écart des deux côtés du signe égal, comme sur Splat Équations)
+  // ou « serré » (geom.hug : chaque flèche au ras de son membre, quand la colonne
+  // est étroite : à côté du plateau, dans le cadre de l'Enquête).
+  const halfW = Math.max(lhsMax, rhsMax) + eqGap;
+  const halfL = geom.hug ? lhsMax + eqGap : halfW;
+  const halfR = geom.hug ? rhsMax + eqGap : halfW;
+  let xL = centerX - halfL - margin;
+  let xR = centerX + halfR + margin;
+  const labelW = Math.max(0, ...ops.filter(Boolean).map(op => measureArrowLabelWidth(op, labelFs)));
+  const outer = bulge + 6 + labelW + 4;
+  if(geom.minX != null && Number.isFinite(Number(geom.minX))) xL = Math.max(xL, Number(geom.minX) + outer);
+  if(geom.maxX != null && Number.isFinite(Number(geom.maxX))) xR = Math.min(xR, Number(geom.maxX) - outer);
+  // et jamais sur le texte lui-même : un jour de 10 px au moins
+  xL = Math.min(xL, centerX - halfL - 10);
+  xR = Math.max(xR, centerX + halfR + 10);
+  ops.forEach((op, i)=>{
+    if(!op) return;
+    // du centre optique de la ligne i à celui de la ligne i + 1
+    const y1 = startY + i * gap + centerDy;
+    const y2 = startY + (i + 1) * gap + centerDy;
+    drawOperationArrow(targetGroup, api, xL, y1, y2, -1, op, {labelFontSize: labelFs, color: geom.color});
+    drawOperationArrow(targetGroup, api, xR, y1, y2, 1, op, {labelFontSize: labelFs, color: geom.color});
+  });
+}
+
+/* Opérations entre les lignes d'une résolution. On décrit les transitions « de
+   telle ligne à telle ligne, par telle opération », puis on relit les lignes
+   réellement dessinées deux à deux : une ligne de regroupement, ou une ligne
+   dédoublonnée, ne reçoit simplement pas de flèche. */
+function opsBetweenLines(lines, transitions){
+  const safe = Array.isArray(lines) ? lines.map(l => String(l == null ? "" : l)) : [];
+  const ops = [];
+  for(let i=0;i<safe.length-1;i++){
+    const t = (transitions || []).find(tr => tr.from === safe[i] && tr.to === safe[i+1]);
+    ops.push(t ? t.op : null);
+  }
+  return ops;
+}
+
+/* B / B± / A± : « c𝑥 + v = t » → « c𝑥 = t − v » (− v, ou + |v| si v < 0) → « 𝑥 = … »
+   (÷ c ; pour un coefficient négatif on écrit ÷ (−c), et × (−1) pour −1). Mêmes
+   écritures que les constructeurs de lignes. */
+function signedEquationTransitions(coeff, visibleSum, total, xVal, varChar = xChar){
+  const isolated = total - visibleSum;
+  const L1 = `${formatSignedLinearExpression(coeff, visibleSum, varChar)} = ${formatSignedIntegerLabel(total)}`;
+  const L2 = `${formatSignedCoeffLabel(coeff, varChar)} = ${formatSignedIntegerLabel(isolated)}`;
+  const L3 = `${varChar} = ${formatSignedIntegerLabel(xVal)}`;
+  const transitions = [];
+  let last = L1;
+  if(visibleSum !== 0){
+    transitions.push({ from:last, to:L2, op: visibleSum > 0 ? `− ${formatSignedAbsIntegerLabel(visibleSum)}` : `+ ${formatSignedAbsIntegerLabel(visibleSum)}` });
+    last = L2;
+  }
+  if(coeff !== 1){
+    const divide = coeff < 0 ? (coeff === -1 ? "× (−1)" : `÷ (−${formatSignedAbsIntegerLabel(coeff)})`) : `÷ ${formatSignedAbsIntegerLabel(coeff)}`;
+    transitions.push({ from:last, to:L3, op: divide });
+  }
+  return transitions;
+}
+function buildNumberedSignedEquationTransitions(card, varChar = xChar){
+  const num = card && card._num ? card._num : {};
+  const tasks = Math.max(1, Number(num.tasks) || (Array.isArray(card && card._splats) ? card._splats.length : 1));
+  const opposedTasks = Array.isArray(num.opposedTasks) ? num.opposedTasks : [];
+  let coeff = 0;
+  for(let i=0;i<tasks;i++) coeff += opposedTasks[i] ? -1 : 1;
+  if(coeff === 0) return [];
+  const visibleSum = sumArray(card && card.visible);
+  const total = Number(card && card.total) || 0;
+  let xVal = Number(num.H);
+  if(!Number.isFinite(xVal)) xVal = (total - visibleSum) / coeff;
+  return signedEquationTransitions(coeff, visibleSum, total, xVal, varChar);
+}
+function buildUnitSignedEquationTransitions(card, varChar = xChar){
+  const unit = card && card._unit ? card._unit : {};
+  const tasks = Math.max(1, Number(unit.tasks) || (Array.isArray(card && card._splats) ? card._splats.length : 1));
+  const visibleSum = sumArray(card && card.visible);
+  const total = Number(card && card.total) || 0;
+  let xVal = Number(unit.hiddenPerTask);
+  if(!Number.isFinite(xVal)) xVal = (total - visibleSum) / tasks;
+  return signedEquationTransitions(tasks, visibleSum, total, xVal, varChar);
+}
+/* B : « v + n𝑏 = t » → « n𝑏 = t − v » (− v) → « 𝑏 = … » (÷ n) ; avec une seule tache,
+   « v + 𝑏 = t » → « 𝑏 = t − v » (− v). Même ordre que les lignes dessinées. */
+function numberedResolutionOps(visSum, tasks){
+  const ops = [];
+  if(visSum > 0 && tasks > 1) ops.push(`− ${visSum}`);
+  if(tasks > 1) ops.push(`÷ ${tasks}`);
+  else if(visSum > 0) ops.push(`− ${visSum}`);
+  return ops;
+}
+
 function formatSignedIntegerLabel(value){
   let v = Number(value);
   if(!Number.isFinite(v)) v = 0;
@@ -5902,6 +6342,13 @@ function drawNumberedSignedEquationAid(targetGroup, card, revealState, opts = {}
     cy += gap;
   });
 
+  // Flèches d'opération entre les lignes affichées (− v / + v, puis ÷ c).
+  if(shownLines.length > 1){
+    drawOperationArrowsForLines(eqGroup, {el, text}, shownLines, opsBetweenLines(shownLines, buildNumberedSignedEquationTransitions(card, varChar)), {
+      centerX, startY, gap, fontSize, eqGap, middleBaseline: true, margin: 40, hug: true, minX: 968, maxX: 1592
+    });
+  }
+
   targetGroup.appendChild(eqGroup);
 }
 
@@ -5976,6 +6423,13 @@ function drawUnitSignedEquationAid(targetGroup, card, revealState, opts = {}){
     }
     cy += gap;
   });
+
+  // Flèches d'opération entre les lignes affichées (− v / + v, puis ÷ n).
+  if(shownLines.length > 1){
+    drawOperationArrowsForLines(eqGroup, {el, text}, shownLines, opsBetweenLines(shownLines, buildUnitSignedEquationTransitions(card, varChar)), {
+      centerX, startY, gap, fontSize, eqGap, middleBaseline: true, margin: 40, hug: true, minX: 968, maxX: 1592
+    });
+  }
 
   targetGroup.appendChild(eqGroup);
 }
@@ -6068,8 +6522,14 @@ function renderCardIntoSvg(targetSvg, card, printMode){
     fill:boxFill, stroke:boxStroke, "stroke-width":"4"
   }), g);
 
+  // L'Enquête imprimée : l'énoncé montre les indices, la correction montre la
+  // résolution (dernière étape) — quelle que soit l'étape affichée à l'écran.
+  const printRevealState = (card.family === "C") ? (revealAnswers ? (card._directSubstitution ? 3 : 5) : 0) : revealState;
+  // Le cadre du schéma se dessine sous le plateau imprimé, pas par-dessus.
+  const relationPrintLayer = tEl("g", { id:"relationPrintLayer", transform:`translate(0 ${Math.max(0, Math.round(trayY + trayH + 70 - 620))})` });
+
   /* Indices impression Mode C/D */
-  if(isModeC_or_D && card._inv && card._inv.indices && !(card.family === "C" && revealState > 0)){
+  if(isModeC_or_D && card._inv && card._inv.indices && !(card.family === "C" && printRevealState > 0)){
     const indices = card._inv.indices;
     const lineH = 84;
     const startY = trayY + trayH + 80;
@@ -6088,32 +6548,33 @@ function renderCardIntoSvg(targetSvg, card, printMode){
 
   // Contrat didactique impression PDF
 
-  if(card.family === "C" && card._rel && revealState > 0 && revealState <= 5){
+  if(card.family === "C" && card._rel && printRevealState > 0 && printRevealState <= 5){
     drawRelationGraphicClues(targetSvg, card, { mkEl:tEl, mkText:tText, isPrint:true });
   }
 
+  if(card.family === "C" && card._rel && printRevealState > 0) targetSvg.appendChild(relationPrintLayer);
   if(card.family === "C" && card._rel && card._directSubstitution){
-    if(revealState === 1){
-      drawRelationSubstitutionStep(targetSvg, card);
+    if(printRevealState === 1){
+      drawRelationSubstitutionStep(relationPrintLayer, card);
     }
-    if(revealState === 2){
-      drawRelationOrderedSchema(targetSvg, card, { direct:true });
+    if(printRevealState === 2){
+      drawRelationOrderedSchema(relationPrintLayer, card, { direct:true });
     }
-    if(revealState === 3){
-      drawRelationOrderedSchema(targetSvg, card, { solved:true, direct:true });
+    if(printRevealState === 3){
+      drawRelationOrderedSchema(relationPrintLayer, card, { solved:true, direct:true });
     }
   }else{
-    if(card.family === "C" && card._rel && (revealState === 1 || revealState === 2)){
-      drawRelationSituationSchema(targetSvg, card, { filled: revealState === 2 });
+    if(card.family === "C" && card._rel && (printRevealState === 1 || printRevealState === 2)){
+      drawRelationSituationSchema(relationPrintLayer, card, { filled: printRevealState === 2 });
     }
-    if(card.family === "C" && card._rel && revealState === 3){
-      drawRelationGroupedSchema(targetSvg, card);
+    if(card.family === "C" && card._rel && printRevealState === 3){
+      drawRelationGroupedSchema(relationPrintLayer, card);
     }
-    if(card.family === "C" && card._rel && revealState === 4){
-      drawRelationOrderedSchema(targetSvg, card);
+    if(card.family === "C" && card._rel && printRevealState === 4){
+      drawRelationOrderedSchema(relationPrintLayer, card);
     }
-    if(card.family === "C" && card._rel && revealState === 5){
-      drawRelationOrderedSchema(targetSvg, card, { solved:true });
+    if(card.family === "C" && card._rel && printRevealState === 5){
+      drawRelationOrderedSchema(relationPrintLayer, card, { solved:true });
     }
   }
   const cover = "rgb(0,0,0)";
@@ -6355,9 +6816,10 @@ function renderCardIntoSvg(targetSvg, card, printMode){
 
         // Mise en page spéciale B± : la zone sous la carte est large.
         // On descend et agrandit le bloc d’équation pour une lecture confortable sur fiche imprimée.
+        // Correction : équations plus grandes qu'avant (× 1,2), la carte a la place.
         const fontSize = isHelpOnly
           ? (longest > 42 ? 70 : (longest > 34 ? 76 : 84))
-          : (longest > 45 ? 58 : (longest > 38 ? 62 : (longest > 31 ? 68 : 74)));
+          : (longest > 45 ? 70 : (longest > 38 ? 74 : (longest > 31 ? 82 : 89)));
         const gap = isHelpOnly ? 0 : (fontSize + 22);
         const centerY = (isHelpOnly ? 1240 : 1285) + printOffsetY;
 
@@ -6371,6 +6833,14 @@ function renderCardIntoSvg(targetSvg, card, printMode){
           eqGap:44,
           fill:"#000"
         });
+        // Flèches d'opération sur la correction (pas sur l'aide, qui n'a qu'une ligne) :
+        // la première ligne détaillée se regroupe sans flèche, puis − v / + v, puis ÷ c.
+        if(!isHelpOnly && lines.length > 1){
+          const startY = centerY - ((lines.length - 1) * gap / 2);
+          drawOperationArrowsForLines(gEqNpm, {el:tEl, text:tText}, lines, opsBetweenLines(lines, buildNumberedSignedEquationTransitions(card, varChar)), {
+            centerX: 800, startY, gap, fontSize, eqGap: 44, middleBaseline: true, margin: 62
+          });
+        }
         targetSvg.appendChild(gEqNpm);
       }
     }
@@ -6451,12 +6921,18 @@ function renderCardIntoSvg(targetSvg, card, printMode){
 
         // ESPACE POUR LES ÉQUATIONS (Marges agrandies)
         currentY += 80;
+        const printEqStartY = currentY;
+        const printEqLines = [];
+        // Équations de la correction : plus grandes qu'avant (64 → 80), la carte a la place.
+        const printEqFont = 80;
+        const printEqGap = 112;
         const addEq = (l, r) => {
             const mathFont = "'Times New Roman', Times, serif";
-            gBM.appendChild(tText(800 - 40, currentY, l, {"text-anchor":"end", "font-size":"64", "fill":"#000", "font-weight":"normal", "font-family":mathFont, "font-style":"italic"}));
-            gBM.appendChild(tText(800, currentY, "=", {"text-anchor":"middle", "font-size":"64", "fill":"#000", "font-weight":"700"}));
-            gBM.appendChild(tText(800 + 40, currentY, r, {"text-anchor":"start", "font-size":"64", "fill":"#000", "font-weight":"normal", "font-family":mathFont, "font-style":"italic"}));
-            currentY += 90;
+            gBM.appendChild(tText(800 - 50, currentY, l, {"text-anchor":"end", "font-size":String(printEqFont), "fill":"#000", "font-weight":"normal", "font-family":mathFont, "font-style":"italic"}));
+            gBM.appendChild(tText(800, currentY, "=", {"text-anchor":"middle", "font-size":String(printEqFont), "fill":"#000", "font-weight":"700"}));
+            gBM.appendChild(tText(800 + 50, currentY, r, {"text-anchor":"start", "font-size":String(printEqFont), "fill":"#000", "font-weight":"normal", "font-family":mathFont, "font-style":"italic"}));
+            printEqLines.push(`${l} = ${r}`);
+            currentY += printEqGap;
         };
 
         addEq(eqLeft1, String(card.total));
@@ -6465,6 +6941,12 @@ function renderCardIntoSvg(targetSvg, card, printMode){
         }
         if (tasks > 1 || (tasks === 1 && visSum > 0)) {
             addEq(`${varChar}`, String(hiddenSums[0]));
+        }
+        // Flèches d'opération (− v, ÷ n) entre les lignes de la correction imprimée.
+        if (printEqLines.length > 1) {
+            drawOperationArrowsForLines(gBM, {el:tEl, text:tText}, printEqLines, numberedResolutionOps(visSum, tasks), {
+              centerX: 800, startY: printEqStartY, gap: printEqGap, fontSize: printEqFont, eqGap: 50, middleBaseline: false, margin: 62
+            });
         }
       }
 
@@ -6593,20 +7075,55 @@ function createClassicPrintFooter(){
   return footer;
 }
 
+function getPrintCardsPerPage(){
+  const el = printCardsPerPageEl || document.getElementById("printCardsPerPage");
+  const v = el ? String(el.value || "4") : "4";
+  if(v === "1") return 1;
+  if(v === "2") return 2;
+  return 4;
+}
+
+function syncDynamicPrintPageStyle(perSheet){
+  let styleEl = document.getElementById("dynamicPrintPageStyle");
+  if(!styleEl){
+    styleEl = document.createElement("style");
+    styleEl.id = "dynamicPrintPageStyle";
+    document.head.appendChild(styleEl);
+  }
+  const orientation = perSheet === 2 ? "landscape" : "portrait";
+  styleEl.textContent = `@media print{ @page{ size: A4 ${orientation}; margin: 8mm; } }`;
+}
+
+/* Au verso, chaque carte doit tomber derrière son énoncé : les colonnes s'échangent. */
+function mirrorSlotsForDuplex(frontSlots){
+  if(frontSlots.length === 1){
+    return frontSlots.slice();
+  }
+  const backSlots = Array(frontSlots.length).fill(null);
+  for(let i=0;i<frontSlots.length;i+=2){
+    backSlots[i] = frontSlots[i + 1] || null;
+    if(i + 1 < backSlots.length) backSlots[i + 1] = frontSlots[i] || null;
+  }
+  return backSlots;
+}
+
 function printSheet(){
   if(cards.length===0) return;
-  const printModeEl = document.getElementById("printMode");
-  const printDuplexEl = document.getElementById("printDuplex");
-  const printMode = printModeEl ? printModeEl.value : "statement";
-  const printDuplex = !!(printDuplexEl && printDuplexEl.checked);
+  const plan = getPrintPlan();
   const printArea = document.getElementById("printArea");
+  const perSheet = getPrintCardsPerPage();
+  const layoutClass = perSheet === 1 ? "print-1up" : (perSheet === 2 ? "print-2up" : "print-4up");
+
+  syncDynamicPrintPageStyle(perSheet);
+  printArea.classList.remove("print-1up", "print-2up", "print-4up");
+  printArea.classList.add(layoutClass);
   printArea.innerHTML = "";
-  const perSheet = 4;
+
   const sheets = Math.ceil(cards.length / perSheet);
 
   function appendSheet(slotCards, mode){
     const sheet = document.createElement("div");
-    sheet.className = "sheet";
+    sheet.className = `sheet sheet-${perSheet}up`;
     sheet.appendChild(createClassicPrintHeader(mode));
     if(mode !== "correction") sheet.appendChild(createClassicPrintInstruction(slotCards));
     const grid = document.createElement("div");
@@ -6642,11 +7159,11 @@ function printSheet(){
       if(k < cards.length) frontSlots[i] = cards[k];
     }
 
-    appendSheet(frontSlots, printDuplex ? "statement" : printMode);
+    appendSheet(frontSlots, plan.recto);
 
-    if(printDuplex){
-      const backSlots = [frontSlots[1], frontSlots[0], frontSlots[3], frontSlots[2]];
-      appendSheet(backSlots, printMode);
+    if(plan.verso){
+      const backSlots = mirrorSlotsForDuplex(frontSlots);
+      appendSheet(backSlots, plan.verso);
     }
   }
 
@@ -6704,13 +7221,11 @@ function updateUI(){
   counterEl.textContent = cards.length ? `Carte ${idx+1} / ${cards.length}` : "0 carte";
   const prevDisabled = (cards.length===0 || (idx===0 && revealState===0));
   document.getElementById("btnPrev").disabled = prevDisabled;
-  const stagePrevBtn = document.getElementById("btnStagePrev");
-  if(stagePrevBtn) stagePrevBtn.disabled = prevDisabled;
   const maxReveal = cards.length ? getMaxRevealState(cards[idx]) : 0;
   const nextDisabled = (cards.length===0 || (idx===cards.length-1 && revealState===maxReveal));
   document.getElementById("btnNext").disabled = nextDisabled;
-  const stageNextBtn = document.getElementById("btnStageNext");
-  if(stageNextBtn) stageNextBtn.disabled = nextDisabled;
+  if(btnQuestionPrevEl) btnQuestionPrevEl.disabled = cards.length===0 || idx<=0;
+  if(btnQuestionNextEl) btnQuestionNextEl.disabled = cards.length===0 || idx>=cards.length-1;
   if(cards.length===0){ renderEmpty(); }
   else { renderCard(cards[idx], revealState); }
 }
@@ -6837,6 +7352,16 @@ function goNextCardOrStep(){
   if(idx<cards.length-1){ idx++; revealState=0; updateUI(); }
 }
 
+/* ⏮ ⏭ : sauter de carte sans passer par les étapes. */
+function goPreviousQuestion(){
+  if(cards.length===0) return;
+  if(idx>0){ idx--; revealState=0; updateUI(); }
+}
+function goNextQuestion(){
+  if(cards.length===0) return;
+  if(idx<cards.length-1){ idx++; revealState=0; updateUI(); }
+}
+
 document.getElementById("btnGen").addEventListener("click", generate);
 document.getElementById("btnShare").addEventListener("click", copyShareLink);
 const btnShareUnitEl = document.getElementById("btnShareUnit");
@@ -6846,14 +7371,12 @@ if(btnShareNumberedEl) btnShareNumberedEl.addEventListener("click", copyShareLin
 document.getElementById("btnClear").addEventListener("click", ()=>{ cards=[]; idx=0; revealState=0; updateUI(); });
 document.getElementById("btnPrev").addEventListener("click", goPreviousCardOrStep);
 document.getElementById("btnNext").addEventListener("click", goNextCardOrStep);
-const btnStagePrevEl = document.getElementById("btnStagePrev");
-const btnStageNextEl = document.getElementById("btnStageNext");
-const btnStageFullscreenEl = document.getElementById("btnStageFullscreen");
-if(btnStagePrevEl) btnStagePrevEl.addEventListener("click", goPreviousCardOrStep);
-if(btnStageNextEl) btnStageNextEl.addEventListener("click", goNextCardOrStep);
+if(btnQuestionPrevEl) btnQuestionPrevEl.addEventListener("click", goPreviousQuestion);
+if(btnQuestionNextEl) btnQuestionNextEl.addEventListener("click", goNextQuestion);
 document.getElementById("btnPrint").addEventListener("click", printSheet);
 document.getElementById("btnFullscreen").addEventListener("click", toggleFullscreen);
-if(btnStageFullscreenEl) btnStageFullscreenEl.addEventListener("click", toggleFullscreen);
+if(printModeSelectEl) printModeSelectEl.addEventListener("change", syncPrintSummary);
+if(printCardsPerPageEl) printCardsPerPageEl.addEventListener("change", syncPrintSummary);
 function setNumberedUnknownDisplay(useQuestionMark){
   if(numberedQuestionMarkMode === !!useQuestionMark){
     syncNumberedQuestionMarkButton();
