@@ -3,8 +3,10 @@ import {
   COULEURS_RANGS_NUMERATION_DECIMALE,
   RAYONS,
   TYPOGRAPHIE,
-} from "../packages/charte/src/charte.js?v=51";
+} from "../packages/charte/src/charte.js?v=53";
 import {
+  actualiserInteractionRepereAide,
+  avancerEchelleRepereAide,
   avancerFractionAide,
   avancerCorrespondanceAide,
   basculerChiffreAide,
@@ -34,7 +36,6 @@ import {
   recommencer,
   revelerReponse,
   selectionnerChampSaisie,
-  selectionnerRepereAide,
   choisirRangFractionAide,
   grouperUniteFractionAide,
   positionnerFractionAide,
@@ -42,7 +43,7 @@ import {
   saisirChiffre,
   tournerSolide,
   validerReponse,
-} from "./src/etat-lecteur.js?v=51";
+} from "./src/etat-lecteur.js?v=53";
 import {
   TYPE_REPONSE_DEUX_ENTIERS,
   TYPE_REPONSE_DEUX_ENTIERS_RELATIFS,
@@ -52,7 +53,7 @@ import {
   TYPE_REPONSE_NOMBRE_DECIMAL,
   TYPE_REPONSE_CHOIX_UNIQUE,
   TYPE_REPONSE_SELECTION_MULTIPLE,
-} from "../packages/contrats/src/question-v2.js?v=51";
+} from "../packages/contrats/src/question-v2.js?v=53";
 import {
   connaitNotionLecteur,
   DOMAINES_MENU,
@@ -72,12 +73,12 @@ import {
   RENDU_VOLUME,
   rendreIconeDomaineMenu,
   NOTION_FRACTIONS_SIMPLES_DECIMAUX,
-} from "./src/registre-lecteur.js?v=51";
+} from "./src/registre-lecteur.js?v=53";
 import {
   MICRO_NOTIONS_AUTOMATISMES,
   normaliserIdentifiantMicroNotion,
-} from "../packages/automatismes/src/identifiants.js?v=51";
-import { COURS_SOLIDES_USUELS } from "../packages/automatismes/src/espace-et-geometrie/solides-usuels/reconnaissance.js?v=51";
+} from "../packages/automatismes/src/identifiants.js?v=53";
+import { COURS_SOLIDES_USUELS } from "../packages/automatismes/src/espace-et-geometrie/solides-usuels/reconnaissance.js?v=53";
 import {
   creerCone,
   creerCube,
@@ -86,14 +87,14 @@ import {
   creerPrisme,
   creerPyramide,
   dessinerSolide,
-} from "../packages/objets/src/solides.js?v=51";
+} from "../packages/objets/src/solides.js?v=53";
 import {
   ACTION_TOUCHE_EFFACER,
   ACTION_TOUCHE_SAISIR,
   ACTION_TOUCHE_VALIDER,
   obtenirDispositionClavier,
-} from "../packages/objets/src/clavier.js?v=51";
-import { formulationCritereDivisibilite } from "../packages/automatismes/src/nombres-et-calculs/criteres-divisibilite/critere-precis.js?v=51";
+} from "../packages/objets/src/clavier.js?v=53";
+import { formulationCritereDivisibilite } from "../packages/automatismes/src/nombres-et-calculs/criteres-divisibilite/critere-precis.js?v=53";
 import {
   caseVide,
   difference,
@@ -110,41 +111,41 @@ import {
   variable,
   versHtmlEgalitesAlignees,
   versHtmlSemantique,
-} from "../packages/objets/src/expressions.js?v=51";
+} from "../packages/objets/src/expressions.js?v=53";
 import {
   dessinerCarreQuadrille,
-} from "../packages/objets/src/carre-quadrille.js?v=51";
+} from "../packages/objets/src/carre-quadrille.js?v=53";
 import {
   dessinerDoubleDroiteGraduee,
   dessinerDroiteGraduee,
-} from "../packages/objets/src/droite-graduee.js?v=51";
+} from "../packages/objets/src/droite-graduee.js?v=53";
 import {
   dessinerRepereCartesien,
   positionDansRepere,
-} from "../packages/objets/src/repere-cartesien.js?v=51";
-import { dessinerGrilleFraction } from "../packages/objets/src/fractions.js?v=51";
-import { dessinerBandesFractionnairesSurRailDecimal } from "../packages/objets/src/bandes-fractions-rail.js?v=51";
+} from "../packages/objets/src/repere-cartesien.js?v=53";
+import { dessinerGrilleFraction } from "../packages/objets/src/fractions.js?v=53";
+import { dessinerBandesFractionnairesSurRailDecimal } from "../packages/objets/src/bandes-fractions-rail.js?v=53";
 import {
   dessinerConversionRangsNumerationDecimale,
   dessinerEchangeRangsNumerationDecimale,
   dessinerMaterielNumerationDecimale,
   dessinerTableauNumerationDecimale,
-} from "../packages/objets/src/numeration-decimale.js?v=51";
+} from "../packages/objets/src/numeration-decimale.js?v=53";
 import {
   dessinerDemiAvecDixiemes,
   dessinerReorganisationCentiemes,
-} from "../packages/objets/src/correspondances-decimales.js?v=51";
+} from "../packages/objets/src/correspondances-decimales.js?v=53";
 import {
   construireDonneesTableauDepuisFraction,
   formaterFractionEnDecimal,
   formaterFractionEnDecimalSignee,
   reduireFraction,
-} from "../packages/objets/src/fractions-decimaux.js?v=51";
+} from "../packages/objets/src/fractions-decimaux.js?v=53";
 import {
   diagnostiquerDecimalVersNumerateur,
   diagnostiquerFractionLibre,
   diagnostiquerFractionVersDecimal,
-} from "./src/diagnostic-fractions-decimaux.js?v=51";
+} from "./src/diagnostic-fractions-decimaux.js?v=53";
 import {
   FAMILLE_CHAINE_EGALITES,
   FAMILLE_FRACTION_REPERE_POURCENTAGE,
@@ -154,7 +155,7 @@ import {
   FAMILLE_UNITE_DEPASSEMENT,
   formaterPourcentageEnDecimal,
   lirePourcentageQuestion,
-} from "../packages/automatismes/src/nombres-et-calculs/ecritures-multiples-nombre/questions.js?v=51";
+} from "../packages/automatismes/src/nombres-et-calculs/ecritures-multiples-nombre/questions.js?v=53";
 import {
   FAMILLE_DIAGNOSTIC_COORDONNEES,
   FAMILLE_IDENTIFIER_POINT,
@@ -162,16 +163,17 @@ import {
   FAMILLE_LIRE_COORDONNEES,
   FAMILLE_LIRE_ORDONNEE,
   FAMILLE_PLACER_POINT_REPERE,
+  FORMULATION_COORDONNEE_SYMBOLIQUE,
   decoderCoordonnee,
   encoderCoordonnee,
   formaterCouple,
   formaterEntierRepere,
-} from "../packages/automatismes/src/espace-et-geometrie/reperage-plan/questions.js?v=51";
+} from "../packages/automatismes/src/espace-et-geometrie/reperage-plan/questions.js?v=53";
 import {
   diagnostiquerChoixQcmRepere,
   diagnostiquerCoordonneeSeule,
   diagnostiquerCoupleRepere,
-} from "./src/diagnostic-reperage-plan.js?v=51";
+} from "./src/diagnostic-reperage-plan.js?v=53";
 const MICRO_NOTION_FRACTION_VERS_DECIMAL =
   MICRO_NOTIONS_AUTOMATISMES.FRACTION_VERS_DECIMAL;
 const MICRO_NOTION_DECIMAL_VERS_FRACTION =
@@ -839,7 +841,11 @@ function rendreRetourValidation() {
     return '<p class="message message-reussite" role="status"><span class="contenu-message"><strong>Bien joué !</strong> Ta réponse est correcte.</span></p>';
   }
   if (etat.validation.omise) {
-    return '<p class="message message-erreur" role="status"><span class="contenu-message"><strong>Pas de réponse.</strong></span></p>';
+    const question = questionCourante(etat);
+    const precisionQcm = question?.reponse.type === TYPE_REPONSE_CHOIX_UNIQUE
+      ? " La réponse attendue est indiquée en vert."
+      : "";
+    return `<p class="message message-erreur" role="status"><span class="contenu-message"><strong>Pas de réponse.</strong>${precisionQcm}</span></p>`;
   }
   const diagnostic = diagnosticErreurFractions()
     ?? diagnosticErreurDroite()
@@ -5480,6 +5486,60 @@ function optionsPointsRepere(question, {
   return points;
 }
 
+function donneesGeometrieRepereAide(bloc, dessin, mode) {
+  const geometrie = dessin.geometrie;
+  return `data-mode="${mode}" data-x-min="${bloc.xMin}" data-x-max="${bloc.xMax}" `
+    + `data-y-min="${bloc.yMin}" data-y-max="${bloc.yMax}" data-pas="${bloc.pas ?? 1}" `
+    + `style="left:${100 * geometrie.xGauche / dessin.largeur}%;top:${100 * geometrie.yHaut / dessin.hauteur}%;`
+    + `width:${100 * (geometrie.xDroite - geometrie.xGauche) / dessin.largeur}%;`
+    + `height:${100 * (geometrie.yBas - geometrie.yHaut) / dessin.hauteur}%"`;
+}
+
+function rendreInteractionAideRepere(bloc, dessin, interactionAide) {
+  if (!interactionAide) return "";
+  const geometrie = dessin.geometrie;
+  const surface = (mode, libelle) => `<button class="surface-interaction-repere-aide" type="button"
+    data-action="repere-aide-surface" ${donneesGeometrieRepereAide(bloc, dessin, mode)}
+    aria-label="${echapper(libelle)}"></button>`;
+
+  if (interactionAide.type === "axes") {
+    const boutonAxe = (axe) => {
+      const abscisses = axe === "abscisses";
+      const prioritaire = interactionAide.axeAttendu === axe ? " prioritaire" : "";
+      const style = abscisses
+        ? `left:${100 * geometrie.xGauche / dessin.largeur}%;top:${100 * geometrie.yAxe / dessin.hauteur}%;width:${100 * (geometrie.xDroite - geometrie.xGauche) / dessin.largeur}%;height:44px;transform:translateY(-50%)`
+        : `left:${100 * geometrie.xAxe / dessin.largeur}%;top:${100 * geometrie.yHaut / dessin.hauteur}%;width:44px;height:${100 * (geometrie.yBas - geometrie.yHaut) / dessin.hauteur}%;transform:translateX(-50%)`;
+      return `<button class="cible-axe-repere-aide${prioritaire}" type="button"
+        data-action="repere-aide-axe" data-axe="${axe}"
+        aria-label="Axe ${abscisses ? "horizontal" : "vertical"}" style="${style}"></button>`;
+    };
+    return surface("axes", "Repère interactif : choisis l'axe demandé")
+      + boutonAxe("abscisses") + boutonAxe("ordonnees");
+  }
+
+  if (interactionAide.type === "graduations") {
+    return surface(
+      "graduations",
+      "Repère interactif : touche la graduation demandée ou utilise les flèches puis Entrée",
+    );
+  }
+
+  if (interactionAide.type === "intersection") {
+    return surface("intersection", "Repère interactif : place le point à l'intersection des deux directions");
+  }
+
+  if (interactionAide.type === "points") {
+    return (bloc.points ?? []).map((point) => {
+      const position = positionDansRepere(point.x, point.y, geometrie);
+      return `<button class="cible-point-repere cible-point-aide" type="button"
+        data-action="repere-aide-point" data-id="${echapper(point.nom)}"
+        aria-label="Choisir le point ${echapper(point.nom)}"
+        style="left:${100 * position.x / dessin.largeur}%;top:${100 * position.y / dessin.hauteur}%"></button>`;
+    }).join("");
+  }
+  return "";
+}
+
 function rendreRepereV2(bloc, {
   question = null,
   interactive = false,
@@ -5491,7 +5551,11 @@ function rendreRepereV2(bloc, {
   cheminPlacement = null,
   classe = "",
   description = "Repère orthogonal gradué de 1 en 1",
+  afficherNomsAxes = true,
   afficherLegendesAxes = false,
+  axesMisesEnEvidence = [],
+  mettreOrigineEnEvidence = false,
+  interactionAide = null,
 } = {}) {
   const pointsAffiches = points ?? (question
     ? optionsPointsRepere(question, { correction, attenduVisible })
@@ -5507,7 +5571,10 @@ function rendreRepereV2(bloc, {
       points: pointsAffiches,
       guides,
       cheminPlacement,
+      afficherNomsAxes,
       afficherLegendesAxes,
+      axesMisesEnEvidence,
+      mettreOrigineEnEvidence,
       description,
     });
     const commandesIdentification = identification && question
@@ -5528,10 +5595,11 @@ function rendreRepereV2(bloc, {
           aria-label="Zone de placement. Touchez une intersection ou utilisez les quatre flèches du clavier."
           style="left:${100 * dessin.geometrie.xGauche / dessin.largeur}%;top:${100 * dessin.geometrie.yHaut / dessin.hauteur}%;width:${100 * (dessin.geometrie.xDroite - dessin.geometrie.xGauche) / dessin.largeur}%;height:${100 * (dessin.geometrie.yBas - dessin.geometrie.yHaut) / dessin.hauteur}%"></button>`
       : "";
-    return `<div class="repere-version-${version}">${dessin.svg}${commandesIdentification}${surfacePlacement}</div>`;
+    const commandesAide = rendreInteractionAideRepere(bloc, dessin, interactionAide);
+    return `<div class="repere-version-${version}">${dessin.svg}${commandesIdentification}${surfacePlacement}${commandesAide}</div>`;
   };
-  return `<div class="repere-cartesien-v2 ${classe}" role="${interactive || identification ? "group" : "img"}"
-    aria-label="${interactive ? "Place le point dans le repère" : identification ? "Choisis un point du repère" : "Repère orthogonal"}">
+  return `<div class="repere-cartesien-v2 ${classe}" role="${interactive || identification || interactionAide ? "group" : "img"}"
+    aria-label="${interactionAide ? "Aide interactive dans le repère" : interactive ? "Place le point dans le repère" : identification ? "Choisis un point du repère" : "Repère orthogonal"}">
     ${rendreVersion(680, "large")}${rendreVersion(320, "mobile")}
   </div>`;
 }
@@ -5561,8 +5629,13 @@ function rendreSaisieCoordonneeSeule(question, cible, axe) {
       ? formaterEntierRepere(attendu)
       : "";
   const symbole = axe === "abscisse" ? "x" : "y";
+  const formulationSymbolique = texteBloc(question, "formulation")
+    === FORMULATION_COORDONNEE_SYMBOLIQUE;
+  const libelle = formulationSymbolique
+    ? `<span class="libelle-saisie-droite"><i class="variable-mathematique">${symbole}</i><sub>${echapper(cible.nom)}</sub> =</span>`
+    : '<span class="libelle-reponse-coordonnee">Réponse :</span>';
   return `<section class="saisie-numerique saisie-coordonnee-seule" aria-label="${axe}">
-    <span class="libelle-saisie-droite">${symbole}<sub>${echapper(cible.nom)}</sub> =</span>
+    ${libelle}
     <output class="afficheur-reponse ${valeur ? "rempli" : ""}">${echapper(valeur || (estEntrainement() ? "…" : "?"))}</output>
     ${estEntrainement() && etat.validation === null ? '<p class="indication-clavier-physique">Chiffres · signe moins si nécessaire · Entrée pour valider</p>' : ""}
   </section>`;
@@ -5593,7 +5666,7 @@ function rendreQuestionReperagePlan() {
   if (placement) {
     zoneReponse = `<p class="precision precision-placement-repere">${estEntrainement()
       ? etat.selection.length > 0 && etat.validation === null
-        ? `Point provisoire : ${echapper(question.reponse.choix.find((choix) => choix.id === etat.selection[0])?.libelle ?? "")}. Tu peux le déplacer avant de valider.`
+        ? "Point placé — tu peux le déplacer avant de valider."
         : "Touche une intersection : le point s'y aimante. Tu peux le déplacer avant de valider."
       : "Indiquez l'intersection choisie."}</p>`;
   } else if (identification) {
@@ -5614,7 +5687,6 @@ function rendreQuestionReperagePlan() {
   const carte = `<main class="carte-question carte-question-repere famille-${echapper(famille)}">
     <p class="etiquette-notion">${echapper(nomNotion())}</p>
     <h1>${echapper(texteBloc(question, "consigne"))}</h1>
-    ${(bloc.pas ?? 1) === 1 ? "" : `<p class="pas-question-repere">Une petite graduation vaut <strong>${echapper(formaterEntierRepere(bloc.pas))}</strong>.</p>`}
     ${repere}${zoneReponse}
     ${estEntrainement() ? rendreZoneRetour() : '<div class="zone-retour" aria-hidden="true"></div>'}
   </main>`;
@@ -5623,14 +5695,14 @@ function rendreQuestionReperagePlan() {
 
 function titresAideRepere(famille, nombreEtapes) {
   const titres = famille === FAMILLE_PLACER_POINT_REPERE
-    ? ["Partir de O", "Avancer horizontalement", "Monter ou descendre", "Cas d'un axe"]
+    ? ["Repérer l'abscisse", "Repérer l'ordonnée", "Placer le point"]
     : famille === FAMILLE_IDENTIFIER_POINT
-      ? ["Chercher l'abscisse", "Chercher l'ordonnée"]
+      ? ["Repérer l'abscisse", "Repérer l'ordonnée", "Identifier le point"]
       : famille === FAMILLE_LIRE_ABSCISSE_REPERE
-        ? ["Repérer le bon axe", "Projeter le point", "Comprendre le zéro"]
+        ? ["Identifier l'axe", "Projeter et lire"]
         : famille === FAMILLE_LIRE_ORDONNEE
-          ? ["Repérer le bon axe", "Projeter le point", "Comprendre le zéro"]
-          : ["Abscisse d'abord", "Projeter sur les abscisses", "Ordonnée ensuite", "Comprendre le zéro"];
+          ? ["Identifier l'axe", "Projeter et lire"]
+          : ["Lire l'abscisse", "Lire l'ordonnée", "Écrire les coordonnées"];
   return titres.slice(0, nombreEtapes);
 }
 
@@ -5640,16 +5712,31 @@ function visuelAideRepere(question, cible, etape) {
   const identification = famille === FAMILLE_IDENTIFIER_POINT;
   let guides = [];
   let cheminPlacement = null;
+  let mettreOrigineEnEvidence = false;
+  let points = placement ? [] : (blocRepereCartesien(question).points ?? [])
+    .map((point) => ({ ...point, role: "donne" }));
   if (placement) {
-    if (etape === 1) cheminPlacement = { x: cible.x, y: cible.y, etape: "horizontal" };
-    if (etape >= 2) cheminPlacement = { x: cible.x, y: cible.y, etape: "complet" };
-  } else if (identification) {
+    mettreOrigineEnEvidence = etape === 0;
+    if (etape < 2 && etat.pointRepereAide) {
+      points = [{ nom: "P", ...etat.pointRepereAide, role: "choisi", afficherNom: false }];
+    }
     if (etape >= 1) {
-      guides = [
-        { x: cible.x, y: cible.y, axe: "abscisses" },
-        { x: cible.x, y: cible.y, axe: "ordonnees" },
+      cheminPlacement = { x: cible.x, y: cible.y, etape: "horizontal" };
+    }
+    if (etape >= 2) {
+      cheminPlacement = { x: cible.x, y: cible.y, etape: "complet" };
+      const choisi = pointChoisiRepere(question) ?? etat.pointRepereAide;
+      if (choisi) points = [{ nom: "P", ...choisi, role: "choisi", afficherNom: false }];
+    }
+  } else if (identification) {
+    if (etape < 2 && etat.pointRepereAide) {
+      points = [
+        ...(blocRepereCartesien(question).points ?? []).map((point) => ({ ...point, role: "donne" })),
+        { nom: "Z", ...etat.pointRepereAide, role: "choisi", afficherNom: false },
       ];
     }
+    if (etape >= 1) cheminPlacement = { x: cible.x, y: cible.y, etape: "horizontal" };
+    if (etape >= 2) cheminPlacement = { x: cible.x, y: cible.y, etape: "complet" };
   } else if (famille === FAMILLE_LIRE_ABSCISSE_REPERE) {
     if (etape >= 1) guides = [{ x: cible.x, y: cible.y, axe: "abscisses" }];
   } else if (famille === FAMILLE_LIRE_ORDONNEE) {
@@ -5659,11 +5746,61 @@ function visuelAideRepere(question, cible, etape) {
     if (etape >= 2) guides.push({ x: cible.x, y: cible.y, axe: "ordonnees" });
   }
   return {
-    points: placement ? [] : (blocRepereCartesien(question).points ?? [])
-      .map((point) => ({ ...point, role: "donne" })),
+    points,
     guides,
     cheminPlacement,
+    mettreOrigineEnEvidence,
   };
+}
+
+function interactionPourAideRepere(famille, etape) {
+  if (etat.repereAideTerminee) return null;
+  if (famille === FAMILLE_PLACER_POINT_REPERE) {
+    if (etape === 0) return { type: "graduations", axeAttendu: "abscisses" };
+    if (etape === 1) return { type: "graduations", axeAttendu: "ordonnees" };
+    return { type: "intersection" };
+  }
+  if (famille === FAMILLE_IDENTIFIER_POINT) {
+    if (etape === 0) return { type: "graduations", axeAttendu: "abscisses" };
+    if (etape === 1) return { type: "graduations", axeAttendu: "ordonnees" };
+    return { type: "points" };
+  }
+  if (famille === FAMILLE_LIRE_ABSCISSE_REPERE && etape === 0) {
+    return { type: "axes", axeAttendu: "abscisses" };
+  }
+  if (famille === FAMILLE_LIRE_ORDONNEE && etape === 0) {
+    return { type: "axes", axeAttendu: "ordonnees" };
+  }
+  if ([FAMILLE_LIRE_COORDONNEES, FAMILLE_DIAGNOSTIC_COORDONNEES].includes(famille)) {
+    if (etape === 0) return { type: "axes", axeAttendu: "abscisses" };
+    if (etape === 1) return { type: "axes", axeAttendu: "ordonnees" };
+  }
+  return null;
+}
+
+function rendreIndiceEchelleRepere(pas) {
+  if (pas === 1) return "";
+  const niveau = etat.niveauEchelleRepereAide;
+  if (niveau === 0) {
+    return '<button class="bouton-secondaire bouton-echelle-repere" type="button" data-action="repere-aide-echelle">M’aider à lire les graduations</button>';
+  }
+  const contenu = niveau === 1
+    ? "Compare deux graduations chiffrées : quel écart lis-tu entre elles ?"
+    : niveau === 2
+      ? "Compte les petits intervalles entre ces deux valeurs, puis partage l'écart."
+      : `Dernier indice : une petite graduation vaut ${formaterEntierRepere(pas)}.`;
+  const suite = niveau < 3
+    ? '<button class="bouton-secondaire bouton-echelle-repere" type="button" data-action="repere-aide-echelle">Encore un indice sur l’échelle</button>'
+    : "";
+  return `<div class="aide-echelle-repere" data-niveau-echelle="${niveau}"><p><strong>Échelle :</strong> ${echapper(contenu)}</p>${suite}</div>`;
+}
+
+function rendreRegleCoordonneesAide(famille, cible, etape) {
+  if (
+    etape !== 2
+    || ![FAMILLE_LIRE_COORDONNEES, FAMILLE_DIAGNOSTIC_COORDONNEES].includes(famille)
+  ) return "";
+  return `<p class="regle-coordonnees-aide"><strong>${echapper(cible.nom)}(</strong><span class="coord-abscisse">abscisse</span> ; <span class="coord-ordonnee">ordonnée</span><strong>)</strong><span>1<sup>re</sup> coordonnée : abscisse ; 2<sup>e</sup> coordonnée : ordonnée.</span></p>`;
 }
 
 function rendreAideReperagePlan(question) {
@@ -5676,40 +5813,235 @@ function rendreAideReperagePlan(question) {
   const etape = Math.max(0, Math.min(etapeMaximum, Number(etat.repereAide ?? 0)));
   const titres = titresAideRepere(famille, question.aide.blocs.length);
   const configurationVisuelle = visuelAideRepere(question, cible, etape);
+  const interactionAide = interactionPourAideRepere(famille, etape);
   const visualisation = rendreRepereV2(bloc, {
     ...configurationVisuelle,
-    afficherLegendesAxes: etape === 0,
+    interactionAide,
     classe: "repere-aide",
     description: `Guide visuel, étape ${etape + 1} sur ${etapeMaximum + 1}`,
   });
   const blocAide = question.aide.blocs[etape];
   const pas = bloc.pas ?? 1;
-  const rappelPas = pas === 1 ? "" : `<p class="rappel-pas-repere"><strong>Échelle :</strong> une petite graduation vaut ${echapper(formaterEntierRepere(pas))}.</p>`;
-  const progression = `<nav class="progression-aide-repere" aria-label="Étapes de l'aide">
-    ${titres.map((titre, index) => `<button type="button" data-action="repere-aide" data-value="${index}"
-      class="${index === etape ? "actif" : ""}" aria-current="${index === etape ? "step" : "false"}">
-      <span>${index + 1}</span><span>${echapper(titre)}</span></button>`).join("")}
-  </nav>`;
-  const navigation = `<nav class="navigation-aide-repere" aria-label="Navigation dans les indices">
-    <button class="bouton-secondaire" type="button" data-action="repere-aide" data-value="${Math.max(0, etape - 1)}" ${etape === 0 ? "disabled" : ""}>Précédent</button>
-    <button class="bouton-principal" type="button" data-action="repere-aide" data-value="${Math.min(etapeMaximum, etape + 1)}" ${etape === etapeMaximum ? "disabled" : ""}>Indice suivant</button>
-  </nav>`;
+  const rappelPas = rendreIndiceEchelleRepere(pas);
+  const progression = `<ol class="progression-aide-repere aide-repere-${titres.length}" aria-label="Étapes de l'aide">
+    ${titres.map((titre, index) => {
+      const terminee = etat.repereAideTerminee || index < etape;
+      const active = !etat.repereAideTerminee && index === etape;
+      return `<li class="etape-progression-aide ${terminee ? "terminee" : ""} ${active ? "actif" : ""}"${active ? ' aria-current="step"' : ""}>
+        <span>${terminee ? "✓" : index + 1}</span><span>${echapper(titre)}</span></li>`;
+    }).join("")}
+  </ol>`;
+  const retour = etat.retourRepereAide
+    ? `<p class="retour-interaction-repere retour-${etat.retourRepereAide.type}" role="status">${echapper(etat.retourRepereAide.message)}</p>`
+    : "";
   const titrePanneau = placement
-    ? "Horizontal, puis vertical"
+    ? "Construire la position du point"
     : famille === FAMILLE_LIRE_ABSCISSE_REPERE
-      ? "Lire l'abscisse sur son axe"
+      ? "Lire l'abscisse d'un point"
       : famille === FAMILLE_LIRE_ORDONNEE
-        ? "Lire l'ordonnée sur son axe"
+        ? "Lire l'ordonnée d'un point"
         : famille === FAMILLE_IDENTIFIER_POINT
-          ? "Faire se croiser les deux coordonnées"
-          : "Abscisse d'abord, ordonnée ensuite";
+          ? "Identifier un point par ses coordonnées"
+          : "Lire les coordonnées d'un point";
   return rendreCadrePanneau({
     type: "aide",
-    surtitre: "Un indice à la fois",
+    surtitre: `Méthode en ${titres.length} étapes`,
     titre: titrePanneau,
-    contenu: `${progression}${visualisation}${rappelPas}<article class="etape-aide-repere-active"><header><span>${etape + 1}</span><h3>${echapper(titres[etape] ?? "Contrôler")}</h3></header><p>${echapper(blocAide.contenu)}</p></article>${navigation}${rendreAccesCoursDepuisAide()}`,
+    contenu: `${progression}${visualisation}<article class="contenu-etape-aide-repere" aria-live="polite"><p>${echapper(blocAide.contenu)}</p>${retour}${rappelPas}${rendreRegleCoordonneesAide(famille, cible, etape)}</article>${rendreAccesCoursDepuisAide()}`,
     classes: "panneau-reperage-plan",
   });
+}
+
+function coordonneesSurfaceRepereAide(cible, evenement) {
+  const rectangle = cible.getBoundingClientRect();
+  if (!(rectangle.width > 0) || !(rectangle.height > 0)) return null;
+  const xMin = Number(cible.dataset.xMin);
+  const xMax = Number(cible.dataset.xMax);
+  const yMin = Number(cible.dataset.yMin);
+  const yMax = Number(cible.dataset.yMax);
+  const pas = Number(cible.dataset.pas) || 1;
+  const proportionX = Math.max(0, Math.min(1, (evenement.clientX - rectangle.left) / rectangle.width));
+  const proportionY = Math.max(0, Math.min(1, (evenement.clientY - rectangle.top) / rectangle.height));
+  const nombreX = Math.round((xMax - xMin) / pas);
+  const nombreY = Math.round((yMax - yMin) / pas);
+  const nettoyer = (valeur) => Number(valeur.toFixed(10));
+  return {
+    x: nettoyer(xMin + Math.round(proportionX * nombreX) * pas),
+    y: nettoyer(yMax - Math.round(proportionY * nombreY) * pas),
+    proportionX,
+    proportionY,
+    rectangle,
+    xMin,
+    xMax,
+    yMin,
+    yMax,
+    pas,
+  };
+}
+
+function valeursEgalesRepere(a, b) {
+  return Math.abs(Number(a) - Number(b)) < 1e-9;
+}
+
+function definirRetourRepereAide(type, message, changement = {}) {
+  actualiserInteractionRepereAide(etat, {
+    ...changement,
+    retour: { type, message },
+  });
+}
+
+function axeAttenduAideRepere(question, etape = Number(etat.repereAide ?? 0)) {
+  const famille = familleQuestion(question);
+  if (famille === FAMILLE_LIRE_ABSCISSE_REPERE) return "abscisses";
+  if (famille === FAMILLE_LIRE_ORDONNEE) return "ordonnees";
+  if (
+    [
+      FAMILLE_LIRE_COORDONNEES,
+      FAMILLE_DIAGNOSTIC_COORDONNEES,
+      FAMILLE_IDENTIFIER_POINT,
+      FAMILLE_PLACER_POINT_REPERE,
+    ].includes(famille)
+  ) return etape === 0 ? "abscisses" : "ordonnees";
+  return null;
+}
+
+function retourMauvaisAxeRepere(axeAttendu) {
+  return axeAttendu === "abscisses"
+    ? "Tu as choisi l'axe des ordonnées. L'abscisse se lit sur l'axe horizontal."
+    : "Tu as choisi l'axe des abscisses. L'ordonnée se lit sur l'axe vertical.";
+}
+
+function traiterAxeRepereAide(axe) {
+  const question = questionCourante(etat);
+  const etape = Number(etat.repereAide ?? 0);
+  const attendu = axeAttenduAideRepere(question, etape);
+  if (!question || !attendu || axe !== attendu) {
+    definirRetourRepereAide("erreur", retourMauvaisAxeRepere(attendu));
+    return false;
+  }
+  const abscisses = attendu === "abscisses";
+  definirRetourRepereAide(
+    "reussite",
+    abscisses
+      ? "Oui : c'est l'axe des abscisses. La projection verticale apparaît."
+      : "Oui : c'est l'axe des ordonnées. La projection horizontale apparaît.",
+    { etape: etape + 1 },
+  );
+  return true;
+}
+
+function traiterGraduationRepereAide(axe, valeur) {
+  const question = questionCourante(etat);
+  const cible = question ? cibleRepereQuestion(question) : null;
+  const etape = Number(etat.repereAide ?? 0);
+  const attendu = axeAttenduAideRepere(question, etape);
+  if (!question || !cible || !attendu) return false;
+  if (axe !== attendu) {
+    definirRetourRepereAide("erreur", retourMauvaisAxeRepere(attendu));
+    return false;
+  }
+  const abscisses = attendu === "abscisses";
+  const valeurAttendue = abscisses ? cible.x : cible.y;
+  const pointEssai = abscisses ? { x: valeur, y: 0 } : { x: 0, y: valeur };
+  if (!valeursEgalesRepere(valeur, valeurAttendue)) {
+    if ((blocRepereCartesien(question)?.pas ?? 1) < 1) avancerEchelleRepereAide(etat);
+    definirRetourRepereAide(
+      "erreur",
+      `Ce n'est pas encore ${abscisses ? "l'abscisse" : "l'ordonnée"} demandée.`,
+      { point: pointEssai },
+    );
+    return false;
+  }
+  const famille = familleQuestion(question);
+  const etapeSuivante = Math.min(question.aide.blocs.length - 1, etape + 1);
+  const messageNul = valeursEgalesRepere(valeurAttendue, 0)
+    ? abscisses
+      ? " L'abscisse est à O : le déplacement horizontal est nul."
+      : " L'ordonnée est à O : le déplacement vertical est nul."
+    : "";
+  definirRetourRepereAide(
+    "reussite",
+    `${abscisses ? "Bonne abscisse" : "Bonne ordonnée"}.${messageNul}`,
+    {
+      etape: etapeSuivante,
+      point: famille === FAMILLE_PLACER_POINT_REPERE || famille === FAMILLE_IDENTIFIER_POINT
+        ? null
+        : pointEssai,
+    },
+  );
+  return true;
+}
+
+function traiterIntersectionRepereAide(x, y) {
+  const question = questionCourante(etat);
+  const cible = question ? cibleRepereQuestion(question) : null;
+  if (!question || !cible || familleQuestion(question) !== FAMILLE_PLACER_POINT_REPERE) return false;
+  const point = { x, y };
+  basculerChoix(etat, encoderCoordonnee(x, y));
+  if (!valeursEgalesRepere(x, cible.x) || !valeursEgalesRepere(y, cible.y)) {
+    definirRetourRepereAide(
+      "erreur",
+      "Ce point n'est pas encore à l'intersection des deux directions.",
+      { point },
+    );
+    return false;
+  }
+  definirRetourRepereAide(
+    "reussite",
+    "Oui : le point est à l'intersection des deux directions. Retourne à la question pour valider ton placement.",
+    { point, terminee: true },
+  );
+  return true;
+}
+
+function traiterPointRepereAide(nom) {
+  const question = questionCourante(etat);
+  const cible = question ? cibleRepereQuestion(question) : null;
+  if (!question || !cible || familleQuestion(question) !== FAMILLE_IDENTIFIER_POINT) return false;
+  const identifiant = `point-${String(nom).toLowerCase()}`;
+  basculerChoix(etat, identifiant);
+  if (nom !== cible.nom) {
+    definirRetourRepereAide("erreur", "Ce point n'est pas à l'intersection des deux guides.");
+    return false;
+  }
+  definirRetourRepereAide(
+    "reussite",
+    "Oui : les deux guides se rencontrent sur ce point. Retourne à la question pour valider ton choix.",
+    { terminee: true },
+  );
+  return true;
+}
+
+function traiterSurfaceRepereAide(cible, evenement) {
+  const donnees = coordonneesSurfaceRepereAide(cible, evenement);
+  if (!donnees) return false;
+  if (cible.dataset.mode === "axes") {
+    definirRetourRepereAide("information", "Clique directement sur l'un des deux axes.");
+    return false;
+  }
+  if (cible.dataset.mode === "intersection") {
+    return traiterIntersectionRepereAide(donnees.x, donnees.y);
+  }
+  if (cible.dataset.mode !== "graduations") return false;
+  const question = questionCourante(etat);
+  const axeAttendu = axeAttenduAideRepere(question);
+  const xAxe = (0 - donnees.xMin) / (donnees.xMax - donnees.xMin);
+  const yAxe = (donnees.yMax - 0) / (donnees.yMax - donnees.yMin);
+  const distanceAxeOrd = Math.abs(donnees.proportionX - xAxe) * donnees.rectangle.width;
+  const distanceAxeAbs = Math.abs(donnees.proportionY - yAxe) * donnees.rectangle.height;
+  const seuil = 28;
+  let axe = null;
+  if (distanceAxeAbs <= seuil && distanceAxeOrd <= seuil) axe = axeAttendu;
+  else if (distanceAxeAbs <= seuil) axe = "abscisses";
+  else if (distanceAxeOrd <= seuil) axe = "ordonnees";
+  if (!axe) {
+    definirRetourRepereAide("information", "Clique directement sur une graduation de l'un des deux axes.");
+    return false;
+  }
+  return traiterGraduationRepereAide(
+    axe,
+    axe === "abscisses" ? donnees.x : donnees.y,
+  );
 }
 
 function guidesCorrectionRepere(question, cible) {
@@ -5743,8 +6075,8 @@ function rendreCorrectionReperagePlan(question) {
       : "Correction de la lecture des coordonnées",
   });
   const legende = placement ? `<div class="legende-correction-repere">
-    ${etat.selection.length > 0 && !etat.validation?.juste ? '<span class="legende-point-choisi">× Ton point</span>' : ""}
-    <span class="legende-point-attendu">× Point attendu</span>
+    ${etat.selection.length > 0 && !etat.validation?.juste ? '<span class="legende-point-choisi"><i class="echantillon-point-correction echantillon-point-choisi" aria-hidden="true">×</i>Ton point (cercle pointillé)</span>' : ""}
+    <span class="legende-point-attendu"><i class="echantillon-point-correction echantillon-point-attendu" aria-hidden="true">×</i>Point attendu</span>
   </div>` : "";
   const explication = question.correction.map((element) => `<p>${echapper(element.contenu)}</p>`).join("");
   return rendreCadrePanneau({
@@ -5771,7 +6103,7 @@ function coupleColoreRepere(nom, x, y) {
 }
 
 function commandesEtapesCoursRepere(etapes) {
-  return `<nav class="commandes-etapes-cours-repere" aria-label="Étapes de la démonstration">
+  return `<nav class="commandes-etapes-cours-repere etapes-cours-repere-${etapes.length}" aria-label="Étapes de la démonstration">
     ${etapes.map((titre, index) => `<button type="button" data-action="cours-repere-etape" data-value="${index}"
       class="${index === etapeCoursRepere ? "actif" : ""}" aria-pressed="${index === etapeCoursRepere}">
       <span>${index + 1}</span>${echapper(titre)}</button>`).join("")}
@@ -5779,35 +6111,40 @@ function commandesEtapesCoursRepere(etapes) {
 }
 
 function carteCoursAxesRepere() {
-  return `<article class="carte-cours-repere">${`<header class="entete-cours-repere"><span>1</span><h3>Les axes du repère</h3></header>`}
+  return `<article class="carte-cours-repere"><header class="entete-cours-repere"><span class="numero-page-cours-repere">Page 1</span><h3>Vocabulaire du repère</h3></header>
     ${rendreRepereV2(blocCoursRepere(), {
       afficherLegendesAxes: true,
+      axesMisesEnEvidence: ["abscisses", "ordonnees"],
       classe: "repere-cours-axes",
-      description: "Les axes des abscisses et des ordonnées sont indiqués directement sur le repère",
+      description: "Vocabulaire du repère : axe des abscisses orange, axe des ordonnées turquoise, origine O et graduations",
     })}
     <div class="lexique-repere lexique-repere-colore">
-      <p class="coord-abscisse"><strong>Axe des abscisses</strong><span>le premier nombre se lit sur cet axe</span></p>
-      <p class="coord-ordonnee"><strong>Axe des ordonnées</strong><span>le deuxième nombre se lit sur cet axe</span></p>
+      <p class="coord-abscisse"><strong>Axe des abscisses</strong><span>l'axe horizontal</span></p>
+      <p class="coord-ordonnee"><strong>Axe des ordonnées</strong><span>l'axe vertical</span></p>
       <p><strong>Origine O</strong><span>le croisement des deux axes</span></p>
+      <p><strong>Graduations</strong><span>les petits traits régulièrement espacés</span></p>
     </div>
-    <p class="definition-cours"><strong>Avant de lire :</strong> regarde les nombres écrits pour connaître la valeur d'une petite graduation. Elle peut valoir 1, 0,5 ou, plus rarement, 0,25.</p>
   </article>`;
 }
 
 function carteCoursLireRepere() {
   const etape = Math.max(0, Math.min(2, etapeCoursRepere));
-  const guides = [
-    { x: -3, y: 2, axe: "abscisses" },
-    ...(etape >= 1 ? [{ x: -3, y: 2, axe: "ordonnees" }] : []),
-  ];
+  const guides = etape === 0
+    ? [{ x: -3, y: 2, axe: "abscisses" }]
+    : etape === 1
+      ? [{ x: -3, y: 2, axe: "ordonnees" }]
+      : [
+        { x: -3, y: 2, axe: "abscisses" },
+        { x: -3, y: 2, axe: "ordonnees" },
+      ];
   const explications = [
-    `<strong class="coord-abscisse">Abscisse −3.</strong> Depuis A, le guide descend vers l'axe des abscisses. Je lis le premier nombre sur cet axe.`,
-    `<strong class="coord-ordonnee">Ordonnée 2.</strong> Le second guide rejoint l'axe des ordonnées. Je lis le deuxième nombre sur cet axe.`,
-    `Je réunis les deux lectures, dans cet ordre : ${coupleColoreRepere("A", -3, 2)}.`,
+    `<strong class="coord-abscisse">1 — Lire l'abscisse.</strong> Je projette A verticalement sur l'axe des abscisses et je lis −3.`,
+    `<strong class="coord-ordonnee">2 — Lire l'ordonnée.</strong> Je projette A horizontalement sur l'axe des ordonnées et je lis 2.`,
+    `<strong>3 — Écrire les coordonnées.</strong> J'écris ${coupleColoreRepere("A", -3, 2)}.`,
   ];
-  return `<article class="carte-cours-repere"><header class="entete-cours-repere"><span>2</span><h3>Lire le point A</h3></header>
+  return `<article class="carte-cours-repere"><header class="entete-cours-repere"><span class="numero-page-cours-repere">Page 2</span><h3>Lire les coordonnées du point A</h3></header>
     <p class="objectif-cours-repere">Je cherche les coordonnées de <strong>A</strong>.</p>
-    ${commandesEtapesCoursRepere(["Abscisse", "Ordonnée", "J'écris"])}
+    ${commandesEtapesCoursRepere(["Lire l'abscisse", "Lire l'ordonnée", "Écrire"])}
     ${rendreRepereV2(blocCoursRepere({ xMin: -4, xMax: 3, yMin: -3, yMax: 3 }), {
       points: [{ nom: "A", x: -3, y: 2, role: "donne" }],
       guides,
@@ -5815,14 +6152,14 @@ function carteCoursLireRepere() {
       description: `Lecture du point A, étape ${etape + 1} sur 3`,
     })}
     <p class="explication-etape-cours-repere" aria-live="polite">${explications[etape]}</p>
-    <div class="ordre-coordonnees"><span class="coord-abscisse">1<sup>re</sup> coordonnée<br><strong>abscisse</strong></span><b>puis</b><span class="coord-ordonnee">2<sup>e</sup> coordonnée<br><strong>ordonnée</strong></span></div>
+    ${etape === 2 ? '<div class="ordre-coordonnees"><span class="coord-abscisse">1<sup>re</sup> coordonnée : <strong>abscisse</strong></span><b>;</b><span class="coord-ordonnee">2<sup>e</sup> coordonnée : <strong>ordonnée</strong></span></div>' : ""}
   </article>`;
 }
 
 function carteCoursLireAxesRepere() {
-  return `<article class="carte-cours-repere"><header class="entete-cours-repere"><span>3</span><h3>Lire un point sur un axe</h3></header>
+  return `<article class="carte-cours-repere"><header class="entete-cours-repere"><span class="numero-page-cours-repere">Page 3</span><h3>Lire les coordonnées d'un point sur un axe</h3></header>
     ${rendreRepereV2(blocCoursRepere({ xMin: -3, xMax: 4, yMin: -3, yMax: 2 }), {
-      points: [{ nom: "C", x: 3, y: 0, role: "donne" }, { nom: "D", x: 0, y: -2, role: "exemple" }],
+      points: [{ nom: "C", x: 3, y: 0, role: "donne" }, { nom: "D", x: 0, y: -2, role: "donne" }],
       description: "Lecture des points C et D situés sur les axes",
     })}
     <div class="cas-axes-explicites">
@@ -5833,33 +6170,35 @@ function carteCoursLireAxesRepere() {
 }
 
 function carteCoursPlacerRepere() {
-  const etape = Math.max(0, Math.min(2, etapeCoursRepere));
+  const etape = Math.max(0, Math.min(3, etapeCoursRepere));
   const cheminPlacement = etape === 0
     ? null
     : { x: 2, y: -1, etape: etape === 1 ? "horizontal" : "complet" };
-  const points = etape === 2 ? [{ nom: "B", x: 2, y: -1, role: "donne" }] : [];
+  const points = etape === 3 ? [{ nom: "B", x: 2, y: -1, role: "donne" }] : [];
   const explications = [
-    `Je veux placer ${coupleColoreRepere("B", 2, -1)}. Je commence toujours au point <strong>O</strong>.`,
-    `Je suis d'abord la <strong class="coord-abscisse">direction horizontale</strong> jusqu'à l'abscisse <strong class="coord-abscisse">2</strong>.`,
-    `Depuis 2, je descends jusqu'à l'ordonnée <strong class="coord-ordonnee">−1</strong>, puis je place B à l'intersection.`,
+    `<strong>1 — Partir de l'origine.</strong> Je repère O avant tout déplacement.`,
+    `<strong class="coord-abscisse">2 — Déplacement horizontal.</strong> Depuis O, je vais jusqu'à l'abscisse 2.`,
+    `<strong class="coord-ordonnee">3 — Déplacement vertical.</strong> Depuis 2, je descends jusqu'à l'ordonnée −1.`,
+    `<strong>4 — Placer le point.</strong> Je marque ${coupleColoreRepere("B", 2, -1)} à l'intersection.`,
   ];
-  return `<article class="carte-cours-repere"><header class="entete-cours-repere"><span>2</span><h3>Placer le point B</h3></header>
+  return `<article class="carte-cours-repere"><header class="entete-cours-repere"><span class="numero-page-cours-repere">Page 2</span><h3>Placer le point B</h3></header>
     <p class="objectif-cours-repere">Je dois placer ${coupleColoreRepere("B", 2, -1)}.</p>
-    ${commandesEtapesCoursRepere(["Partir de O", "Abscisse 2", "Ordonnée −1"])}
+    ${commandesEtapesCoursRepere(["Partir de O", "Horizontal", "Vertical", "Placer"])}
     ${rendreRepereV2(blocCoursRepere(), {
       points,
       cheminPlacement,
+      mettreOrigineEnEvidence: etape === 0,
       classe: "repere-cours-etape",
-      description: `Placement du point B, étape ${etape + 1} sur 3`,
+      description: `Placement du point B, étape ${etape + 1} sur 4`,
     })}
     <p class="explication-etape-cours-repere" aria-live="polite">${explications[etape]}</p>
   </article>`;
 }
 
 function carteCoursPlacerAxesRepere() {
-  return `<article class="carte-cours-repere"><header class="entete-cours-repere"><span>3</span><h3>Placer un point sur un axe</h3></header>
+  return `<article class="carte-cours-repere"><header class="entete-cours-repere"><span class="numero-page-cours-repere">Page 3</span><h3>Placer un point sur un axe</h3></header>
     ${rendreRepereV2(blocCoursRepere({ xMin: -3, xMax: 4, yMin: -3, yMax: 2 }), {
-      points: [{ nom: "C", x: 3, y: 0, role: "donne" }, { nom: "D", x: 0, y: -2, role: "exemple" }],
+      points: [{ nom: "C", x: 3, y: 0, role: "donne" }, { nom: "D", x: 0, y: -2, role: "donne" }],
       description: "Points C et D placés sur les axes quand une coordonnée vaut zéro",
     })}
     <div class="cas-axes-explicites">
@@ -5880,8 +6219,8 @@ function rendreCoursReperagePlan() {
   if (!etat.coursOuvert) return "";
   const lecture = identifiantNotionContexte() === NOTION_LIRE_COORDONNEES_POINT;
   const titres = lecture
-    ? ["Les axes", "Lire un point", "Lire sur les axes"]
-    : ["Les axes", "Placer un point", "Placer sur les axes"];
+    ? ["Vocabulaire", "Lire les coordonnées", "Coordonnées nulles"]
+    : ["Vocabulaire", "Placer un point", "Coordonnées nulles"];
   const total = nombrePagesCours();
   const derniere = pageCoursCourante === total - 1;
   const pied = `<nav class="navigation-cours" aria-label="Navigation dans le cours">
@@ -6307,7 +6646,6 @@ application.addEventListener("click", (evenement) => {
       const x = xMin + Math.round(proportionX * nombreX) * pas;
       const y = yMax - Math.round(proportionY * nombreY) * pas;
       basculerChoix(etat, encoderCoordonnee(x, y));
-      focusSelector = '[data-action="placer-repere"]';
     }
   }
   if (action === "champ-reponse") {
@@ -6348,12 +6686,55 @@ application.addEventListener("click", (evenement) => {
     basculerChiffreAide(etat, Number(cible.dataset.index));
     focusSelector = `[data-action="chiffre-aide"][data-index="${cible.dataset.index}"]`;
   }
-  if (action === "repere-aide") {
-    const valeur = /^\d+$/.test(cible.dataset.value ?? "")
-      ? Number(cible.dataset.value)
-      : cible.dataset.value;
-    selectionnerRepereAide(etat, valeur);
-    focusSelector = `[data-action="repere-aide"][data-value="${cible.dataset.value}"]`;
+  if (action === "repere-aide-axe") {
+    const correcte = traiterAxeRepereAide(cible.dataset.axe);
+    if (evenement.detail === 0) {
+      const question = questionCourante(etat);
+      const prochaineInteraction = interactionPourAideRepere(
+        familleQuestion(question),
+        Number(etat.repereAide ?? 0),
+      );
+      focusSelector = correcte && prochaineInteraction?.type === "axes"
+        ? `[data-action="repere-aide-axe"][data-axe="${prochaineInteraction.axeAttendu}"]`
+        : correcte && prochaineInteraction
+          ? '[data-action="repere-aide-surface"]'
+          : correcte
+            ? '[data-action="fermer-aide"]'
+          : `[data-action="repere-aide-axe"][data-axe="${cible.dataset.axe}"]`;
+    }
+  }
+  if (action === "repere-aide-graduation") {
+    const correcte = traiterGraduationRepereAide(
+      cible.dataset.axe,
+      Number(cible.dataset.valeur),
+    );
+    if (evenement.detail === 0) {
+      const question = questionCourante(etat);
+      const prochaineInteraction = interactionPourAideRepere(
+        familleQuestion(question),
+        Number(etat.repereAide ?? 0),
+      );
+      focusSelector = correcte && prochaineInteraction
+        ? '[data-action="repere-aide-surface"]'
+        : correcte
+          ? '[data-action="fermer-aide"]'
+          : `[data-action="repere-aide-graduation"][data-axe="${cible.dataset.axe}"][data-valeur="${cible.dataset.valeur}"]`;
+    }
+  }
+  if (action === "repere-aide-surface" && evenement.detail !== 0) {
+    traiterSurfaceRepereAide(cible, evenement);
+  }
+  if (action === "repere-aide-point") {
+    const correcte = traiterPointRepereAide(cible.dataset.id);
+    if (evenement.detail === 0) {
+      focusSelector = correcte
+        ? '[data-action="fermer-aide"]'
+        : `[data-action="repere-aide-point"][data-id="${cible.dataset.id}"]`;
+    }
+  }
+  if (action === "repere-aide-echelle") {
+    avancerEchelleRepereAide(etat);
+    if (evenement.detail === 0) focusSelector = '[data-action="repere-aide-echelle"]';
   }
   if (action === "pas-fraction-precedent") {
     avancerFractionAide(etat, -1);
@@ -6434,7 +6815,7 @@ application.addEventListener("click", (evenement) => {
   }
   if (action === "cours-repere-etape") {
     const etape = Number(cible.dataset.value);
-    if (Number.isInteger(etape) && etape >= 0 && etape <= 2) {
+    if (Number.isInteger(etape) && etape >= 0 && etape <= 3) {
       etapeCoursRepere = etape;
       focusSelector = `[data-action="cours-repere-etape"][data-value="${etape}"]`;
     }
@@ -6557,6 +6938,99 @@ window.addEventListener?.("keydown", (evenement) => {
       }
     }
     return;
+  }
+  const surfaceAideActive = document.activeElement?.closest?.(
+    '[data-action="repere-aide-surface"]',
+  );
+  if (etat.aideOuverte && surfaceAideActive) {
+    const mode = surfaceAideActive.dataset.mode;
+    const question = questionCourante(etat);
+    const bloc = question ? blocRepereCartesien(question) : null;
+    const touchesDirection = ["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"];
+    if (bloc && (touchesDirection.includes(evenement.key) || evenement.key === "Enter")) {
+      evenement.preventDefault?.();
+      const axeAttendu = axeAttenduAideRepere(question);
+      if (mode === "graduations") {
+        if (evenement.key === "Enter") {
+          const courant = etat.pointRepereAide ?? { x: 0, y: 0 };
+          traiterGraduationRepereAide(
+            axeAttendu,
+            axeAttendu === "abscisses" ? courant.x : courant.y,
+          );
+        } else {
+          const toucheDansLeBonSens = axeAttendu === "abscisses"
+            ? ["ArrowLeft", "ArrowRight"].includes(evenement.key)
+            : ["ArrowUp", "ArrowDown"].includes(evenement.key);
+          if (!toucheDansLeBonSens) {
+            definirRetourRepereAide("erreur", retourMauvaisAxeRepere(axeAttendu));
+          } else {
+            const courant = etat.pointRepereAide ?? { x: 0, y: 0 };
+            const pas = bloc.pas ?? 1;
+            const delta = ["ArrowRight", "ArrowUp"].includes(evenement.key) ? pas : -pas;
+            const nettoyer = (valeur) => Number(valeur.toFixed(10));
+            const point = axeAttendu === "abscisses"
+              ? {
+                x: nettoyer(Math.max(bloc.xMin, Math.min(bloc.xMax, courant.x + delta))),
+                y: 0,
+              }
+              : {
+                x: 0,
+                y: nettoyer(Math.max(bloc.yMin, Math.min(bloc.yMax, courant.y + delta))),
+              };
+            const valeur = axeAttendu === "abscisses" ? point.x : point.y;
+            definirRetourRepereAide(
+              "information",
+              `Graduation choisie au clavier : ${formaterEntierRepere(valeur)}. Appuie sur Entrée pour confirmer.`,
+              { point },
+            );
+          }
+        }
+        const prochaineInteraction = interactionPourAideRepere(
+          familleQuestion(question),
+          Number(etat.repereAide ?? 0),
+        );
+        rendre({
+          focusSelector: prochaineInteraction
+            ? '[data-action="repere-aide-surface"]'
+            : '[data-action="fermer-aide"]',
+        });
+        return;
+      }
+      if (mode === "intersection") {
+        if (evenement.key === "Enter") {
+          const point = etat.pointRepereAide ?? pointChoisiRepere(question) ?? { x: 0, y: 0 };
+          const correcte = traiterIntersectionRepereAide(point.x, point.y);
+          rendre({
+            focusSelector: correcte
+              ? '[data-action="fermer-aide"]'
+              : '[data-action="repere-aide-surface"]',
+          });
+          return;
+        }
+        const courant = etat.pointRepereAide ?? pointChoisiRepere(question) ?? { x: 0, y: 0 };
+        const deltas = {
+          ArrowLeft: [-1, 0],
+          ArrowRight: [1, 0],
+          ArrowUp: [0, 1],
+          ArrowDown: [0, -1],
+        };
+        const [dx, dy] = deltas[evenement.key];
+        const pas = bloc.pas ?? 1;
+        const nettoyer = (valeur) => Number(valeur.toFixed(10));
+        const point = {
+          x: nettoyer(Math.max(bloc.xMin, Math.min(bloc.xMax, courant.x + dx * pas))),
+          y: nettoyer(Math.max(bloc.yMin, Math.min(bloc.yMax, courant.y + dy * pas))),
+        };
+        basculerChoix(etat, encoderCoordonnee(point.x, point.y));
+        definirRetourRepereAide(
+          "information",
+          "Déplace le point avec les flèches, puis appuie sur Entrée à l'intersection.",
+          { point },
+        );
+        rendre({ focusSelector: '[data-action="repere-aide-surface"]' });
+        return;
+      }
+    }
   }
   if (menuSessionOuvert || etat.aideOuverte || etat.correctionOuverte || etat.coursOuvert) return;
   const question = questionCourante(etat);

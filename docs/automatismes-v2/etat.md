@@ -1,52 +1,76 @@
 # État du chantier Automatismes V2
 
-**Dernière mise à jour : 22 août 2026.**
+**Dernière mise à jour : 23 août 2026.**
 
-## Candidat « paquets pondérés déterministes »
+## Reprise pédagogique, graphique et responsive de GE-03 et GE-04
 
-- La branche `agent/v2-paquets-ponderes-deterministes` remplace les préfixes et
-  recettes propres aux petites longueurs par des paquets seedés de 20 jetons
-  tirés sans remise. La décision D-075 et le contrat
-  `paquets-ponderes-deterministes.md` rendent cette architecture obligatoire
-  dans le registre des futurs modules.
+- La reprise complète conserve l'architecture commune de D-075 : paquets
+  pondérés déterministes, tirage sans remise et aucune
+  recette spéciale pour 5, 10, 15 ou 20 questions. Les poids de référence des
+  pas restent `15 / 4 / 1` ; le pas rare `0,25` est effectivement observable
+  dès une allocation d'une question.
+- La page de vocabulaire enseigne seulement les deux axes, l'origine et les
+  graduations. Elle seule colore les axes entiers : orange `#f58220` pour les
+  abscisses, turquoise `#08b9b2` pour les ordonnées. Les exercices, méthodes
+  et aides gardent le repère neutre et colorent seulement la projection ou le
+  déplacement actif.
+- GE-03 possède une méthode unique en trois étapes — lire l'abscisse, lire
+  l'ordonnée, écrire les coordonnées — où l'élève clique réellement les axes.
+  Les nombres 1/2/3 indiquent la progression et ne permettent plus de sauter
+  l'action. Les lectures isolées ont deux étapes symétriques ; `x_M` et `y_M`
+  apparaissent comme variantes pondérées de la même famille.
+- GE-04 conserve son modèle spatial : partir de `O`, construire le déplacement
+  horizontal puis vertical et placer le point. Son aide le fait agir en trois
+  temps : graduation d'abscisse, graduation d'ordonnée, intersection. Elle
+  gère les mauvais axes, mauvaises graduations, coordonnées nulles, tactile et
+  clavier sans placer le point à la place de l'élève.
+- La valeur d'une petite graduation n'est plus donnée dans l'énoncé. L'aide
+  demande d'abord de comparer deux graduations chiffrées, puis de compter les
+  intervalles ; elle ne livre le pas qu'au dernier niveau.
+- Le QCM conserve exactement les mécanismes réponse, inversion, signe de
+  l'abscisse et signe de l'ordonnée. Les quatre couples doivent aussi être
+  visibles dans le repère. Sur téléphone, leurs cartes forment une grille
+  stable `2 × 2`. Le `✓`, confirmé comme convention commune V2, est positionné
+  sans modifier la carte ; une omission annonce explicitement que la réponse
+  attendue est affichée en vert.
+- L'objet `repere-cartesien` place intelligemment les lettres aux quatre bords
+  et dans les coins, colore sémantiquement un axe complet pour le seul écran de
+  vocabulaire et ne superpose plus une petite flèche de légende à un axe
+  existant. La croix des points est allégée ; en correction, le point choisi
+  possède en plus un cercle pointillé.
+- Le point provisoire GE-04 n'affiche plus les coordonnées du clic. Le focus
+  clavier reste visible, mais le clic ou le toucher ne laisse plus un halo
+  persistant.
+- Une simulation reproductible sur 10 000 graines par longueur confirme les
+  poids de référence, les quatre quadrants, les axes, l'origine rare et les
+  cinq familles GE-03. Sur une question, le pas `0,25` apparaît dans 4,89 %
+  des séries GE-03 et 5,09 % des séries GE-04 ; la recette multi-notions courte
+  observe également tous les profils rares.
+- La recette navigateur couvre cinq fenêtres de `320 × 568` à
+  `1 920 × 1 080`, toutes les actions des aides, `x_M/y_M`, le QCM, les cas
+  nuls, les trois pas, les bords, les corrections juste/fausse et le mode Au
+  tableau. Les résultats de la passe finale et de la publication sont consignés
+  dans la fiche GE-03 / GE-04.
+- `npm run verifier` passe **1 759 tests sur 1 759** dans **251 suites**. Les
+  garde-fous V2 suivent **157 fichiers**, dont **80 fichiers de production** à
+  provenance déclarée. Le graphe est invalidé atomiquement en `v53` et
+  `app.js` passe à la révision `56`.
+
+## Architecture commune des paquets pondérés déterministes
+
+- D-075 et `paquets-ponderes-deterministes.md` sont le contrat courant du
+  moteur V2. Les anciens plans propres aux petites longueurs et les préfixes
+  d'un plan de 20 ne doivent plus être réintroduits.
 - La répartition multinotions est canonique et équilibrée à une question près.
   Si le total est inférieur au nombre d'automatismes cochés, les notions sont
   distinctes et tirées sans remise ; l'ordre final est remélangé sans blocs.
-- NC-01, NC-02, NC-03, NC-04, NC-05, la droite graduée, GE-03, GE-04, les
-  solides usuels et GM-13 à GM-15 sont migrés. GE-03 et GE-04 restent deux
-  entrées séparées ; cours, aides, corrections, diagnostics et contrats de
-  réponse ne sont pas réécrits.
+- NC-01 à NC-05, la droite graduée, GE-03, GE-04, les solides usuels et
+  GM-13 à GM-15 utilisent cette architecture. Les profils rares restent
+  accessibles dans une petite allocation et les paquets retrouvent leurs poids
+  exacts lorsqu'ils sont entièrement parcourus.
 - Les audits couvrent les allocations internes `1 / 2 / 5 / 10 / 15 / 20`,
-  les sélections de `1 / 2 / 3 / 5 / 10` automatismes, les totaux
-  `5 / 10 / 15 / 20`, plusieurs milliers de graines, les quotas exacts à 20,
-  les profils rares, l'équité, le déterminisme, l'ordre des tableaux et les
-  doublons visibles.
-- `npm run verifier` passe **1 747 tests sur 1 747** dans **251 suites**. Les
-  garde-fous V2 suivent **157 fichiers**, dont **80 fichiers de production** à
-  provenance déclarée. Le cache candidat est invalidé atomiquement en `v51`.
-- Ce candidat n'est ni fusionné dans `main` ni publié en production. Une revue
-  de la branche et une validation explicite restent nécessaires avant fusion.
-
-## Révision pédagogique de GE-03 et GE-04
-
-- La recette sur le site publié a trouvé puis corrigé le conflit de nom du
-  marqueur « Ton point » lorsque la cible GE-04 se nommait `T` (D-074). La
-  correction affiche désormais toujours les deux marqueurs et un test dédié
-  protège ce cas ; `app.js` passe à la révision `54`.
-- D-073 maintient GE-03 et GE-04 séparés mais leur donne désormais deux cours
-  de trois pages ciblés. Seuls l'objet, la page de vocabulaire, les couleurs,
-  les aides et les diagnostics restent mutualisés.
-- Le pas 1 reste très majoritaire : sur 20 questions, 15 repères au pas 1,
-  4 au pas 0,5 et 1 au pas 0,25. Les séries de 5, 10 et 15 n'emploient que
-  1, 2 et 3 demi-unités, sans quart.
-- Les aides changent réellement de dessin à chaque indice : axes directement
-  nommés, projection vers l'axe rejoint, puis deuxième projection ou trajet
-  vertical. Les coordonnées nulles gardent un marqueur visible.
-- GE-03 conserve ses cinq familles et GE-04 reste un placement pur. Les
-  coordonnées décimales sont comparées et tracées rationnellement, sans calcul
-  flottant de vérité.
-- Sur téléphone, « ↓ Répondre » apparaît uniquement lorsque les champs sont
-  sous le bord visible et les rejoint au toucher.
+  les séries multi-notions, plusieurs milliers de graines, les profils rares,
+  l'équité, le déterminisme, l'ordre des tableaux et les doublons visibles.
 
 ## Restauration complète des interactions du menu de référence
 
@@ -108,6 +132,10 @@
   est modifiable avant validation et le gestionnaire de cookies s'ouvre.
 
 ## GE-03 et GE-04 publiés pour essai le 22 août
+
+> Historique de la première publication. Les règles de génération décrites
+> ci-dessous ont été remplacées par D-075 et l'interface par D-076/D-077 ; le
+> statut courant est celui de la première section de ce document.
 
 - D-066 maintient deux modules visibles distincts : GE-03 « Lire les
   coordonnées d'un point » et GE-04 « Placer un point dans un repère ». Ils

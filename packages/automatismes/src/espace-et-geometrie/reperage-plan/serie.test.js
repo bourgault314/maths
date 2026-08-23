@@ -12,12 +12,18 @@ import {
   FAMILLE_LIRE_ABSCISSE_REPERE,
   FAMILLE_LIRE_COORDONNEES,
   FAMILLE_LIRE_ORDONNEE,
+  FAMILLE_PLACER_POINT_REPERE,
+  FORMULATION_COORDONNEE_PHRASE,
+  FORMULATION_COORDONNEE_SYMBOLIQUE,
   decoderCoordonnee,
   formaterCouple,
   formaterEntierRepere,
+  genererQuestionLireCoordonnees,
+  genererQuestionPlacerPointRepere,
 } from "./questions.js";
 import {
   PAQUET_FAMILLES_LIRE_COORDONNEES,
+  PAQUET_FORMULATIONS_COORDONNEE_ISOLEE,
   PAQUET_PAS_REPERE,
   PAQUET_ZONES_LECTURE,
   PAQUET_ZONES_PLACEMENT,
@@ -89,6 +95,8 @@ describe("plans seedés GE-03 / GE-04", () => {
   it("audite 1 000 seeds : quadrants, axes, signes, zéros et absence d'ambiguïté", () => {
     let originesLecture = 0;
     let originesPlacement = 0;
+    const bordsLecture = new Set();
+    const bordsPlacement = new Set();
     for (let seed = 0; seed < 1000; seed += 1) {
       const lecture = planifierSerieLireCoordonnees({ graine: `audit-${seed}`, nombreQuestions: 20 });
       const placement = planifierSeriePlacerPointRepere({ graine: `audit-${seed}`, nombreQuestions: 20 });
@@ -97,10 +105,32 @@ describe("plans seedés GE-03 / GE-04", () => {
       originesLecture += lecture.filter(({ x, y }) => x === 0 && y === 0).length;
       originesPlacement += placement.filter(({ x, y }) => x === 0 && y === 0).length;
 
+      for (const [plan, bords] of [[lecture, bordsLecture], [placement, bordsPlacement]]) {
+        for (const p of plan) {
+          if (p.x === p.xMin) bords.add("xMin");
+          if (p.x === p.xMax) bords.add("xMax");
+          if (p.y === p.yMin) bords.add("yMin");
+          if (p.y === p.yMax) bords.add("yMax");
+          if (
+            (p.x === p.xMin || p.x === p.xMax)
+            && (p.y === p.yMin || p.y === p.yMax)
+          ) bords.add("coin");
+        }
+      }
+
       for (const p of lecture.filter(({ famille }) => famille === FAMILLE_DIAGNOSTIC_COORDONNEES)) {
         assert.notEqual(p.x, 0);
         assert.notEqual(p.y, 0);
         assert.notEqual(Math.abs(p.x), Math.abs(p.y));
+        for (const [x, y] of [
+          [p.x, p.y],
+          [p.y, p.x],
+          [-p.x, p.y],
+          [p.x, -p.y],
+        ]) {
+          assert.ok(x >= p.xMin && x <= p.xMax, "abscisse de distracteur hors repère");
+          assert.ok(y >= p.yMin && y <= p.yMax, "ordonnée de distracteur hors repère");
+        }
       }
       for (const p of lecture.filter(({ famille }) => famille === FAMILLE_IDENTIFIER_POINT)) {
         assert.equal(new Set(p.points.map((point) => point.nom)).size, p.points.length);
@@ -119,6 +149,24 @@ describe("plans seedés GE-03 / GE-04", () => {
     // Une origine seulement sur le dernier profil, dans environ un seed sur quatre.
     assert.ok(originesLecture >= 200 && originesLecture <= 300, originesLecture);
     assert.ok(originesPlacement >= 200 && originesPlacement <= 300, originesPlacement);
+    assert.deepEqual(bordsLecture, new Set(["xMin", "xMax", "yMin", "yMax", "coin"]));
+    assert.deepEqual(bordsPlacement, new Set(["xMin", "xMax", "yMin", "yMax", "coin"]));
+  });
+
+  it("ne construit pas une petite série en prenant le préfixe d'un plan de vingt", () => {
+    for (const planifier of [
+      planifierSerieLireCoordonnees,
+      planifierSeriePlacerPointRepere,
+    ]) {
+      let prefixesIdentiques = 0;
+      for (let seed = 0; seed < 200; seed += 1) {
+        const graine = `absence-prefixe-20-${seed}`;
+        const courte = planifier({ graine, nombreQuestions: 5 });
+        const prefixe = planifier({ graine, nombreQuestions: 20 }).slice(0, 5);
+        prefixesIdentiques += Number(JSON.stringify(courte) === JSON.stringify(prefixe));
+      }
+      assert.equal(prefixesIdentiques, 0);
+    }
   });
 
   it("garantit les échelles à vingt et rend tous les rares observables sur 1 ou 2 questions", () => {
@@ -178,10 +226,52 @@ describe("plans seedés GE-03 / GE-04", () => {
   it("déclare chaque dimension pédagogique sur vingt jetons", () => {
     for (const paquet of [
       PAQUET_FAMILLES_LIRE_COORDONNEES,
+      PAQUET_FORMULATIONS_COORDONNEE_ISOLEE,
       PAQUET_PAS_REPERE,
       PAQUET_ZONES_LECTURE,
       PAQUET_ZONES_PLACEMENT,
     ]) assert.equal(paquet.tailleReference, 20);
+    assert.deepEqual(
+      Object.fromEntries(PAQUET_FORMULATIONS_COORDONNEE_ISOLEE.profils.map(
+        ({ id, quota }) => [id, quota],
+      )),
+      { phrase: 14, notation: 6 },
+    );
+  });
+
+  it("pondère aussi les formulations x_M et y_M sans les lier à la longueur", () => {
+    const vues = new Set();
+    let notationDansUneQuestion = false;
+    for (let seed = 0; seed < 8_000; seed += 1) {
+      const plan = planifierSerieLireCoordonnees({
+        graine: `notations-courtes-${seed}`,
+        nombreQuestions: seed % 2 + 1,
+      });
+      assert.deepEqual(
+        planifierSerieLireCoordonnees({
+          graine: `notations-courtes-${seed}`,
+          nombreQuestions: seed % 2 + 1,
+        }),
+        plan,
+      );
+      for (const profil of plan) {
+        const isolee = [FAMILLE_LIRE_ABSCISSE_REPERE, FAMILLE_LIRE_ORDONNEE]
+          .includes(profil.famille);
+        if (!isolee) {
+          assert.equal(profil.formulation, undefined);
+          continue;
+        }
+        vues.add(profil.formulation);
+        if (plan.length === 1 && profil.formulation === FORMULATION_COORDONNEE_SYMBOLIQUE) {
+          notationDansUneQuestion = true;
+        }
+      }
+    }
+    assert.deepEqual(vues, new Set([
+      FORMULATION_COORDONNEE_PHRASE,
+      FORMULATION_COORDONNEE_SYMBOLIQUE,
+    ]));
+    assert.equal(notationDansUneQuestion, true);
   });
 
   it("reste déterministe et sans cible répétée à toutes les allocations", () => {
@@ -202,6 +292,105 @@ describe("plans seedés GE-03 / GE-04", () => {
 });
 
 describe("questions instanciées et cohérence du rendu", () => {
+  it("conserve exactement les quatre mécanismes du QCM diagnostique", () => {
+    const question = genererQuestionLireCoordonnees({
+      parametres: {
+        famille: FAMILLE_DIAGNOSTIC_COORDONNEES,
+        xMin: -4,
+        xMax: 4,
+        yMin: -3,
+        yMax: 3,
+        x: -3,
+        y: 2,
+        pas: 1,
+        nomPoint: "F",
+        decalageChoix: 2,
+      },
+    });
+    const choixParId = Object.fromEntries(
+      question.reponse.choix.map(({ id, libelle }) => [id, libelle]),
+    );
+    assert.deepEqual(choixParId, {
+      correct: "(−3 ; 2)",
+      inversion: "(2 ; −3)",
+      "signe-abscisse": "(3 ; 2)",
+      "signe-ordonnee": "(−3 ; −2)",
+    });
+    assert.equal(new Set(Object.values(choixParId)).size, 4);
+    assert.equal(question.aide.blocs.length, 3);
+    assert.match(question.aide.blocs[2].contenu, /écris d'abord l'abscisse, puis l'ordonnée/);
+    assert.doesNotMatch(question.aide.blocs[2].contenu, /F\(−3 ; 2\)/);
+  });
+
+  it("traite les coordonnées nulles sans créer une étape générique ni livrer la réponse", () => {
+    const commune = {
+      xMin: -4,
+      xMax: 4,
+      yMin: -3,
+      yMax: 3,
+      pas: 1,
+      nomPoint: "A",
+      decalageChoix: 0,
+    };
+    const surAxeY = genererQuestionLireCoordonnees({
+      parametres: { ...commune, famille: FAMILLE_LIRE_COORDONNEES, x: 0, y: 2 },
+    });
+    const surAxeX = genererQuestionLireCoordonnees({
+      parametres: { ...commune, famille: FAMILLE_LIRE_COORDONNEES, x: -2, y: 0 },
+    });
+    const origine = genererQuestionLireCoordonnees({
+      parametres: { ...commune, famille: FAMILLE_LIRE_COORDONNEES, x: 0, y: 0 },
+    });
+    for (const question of [surAxeY, surAxeX, origine]) {
+      assert.equal(question.aide.blocs.length, 3);
+      assert.doesNotMatch(question.aide.blocs.map(({ contenu }) => contenu).join(" "), /Comprendre le zéro|vaut 0/);
+    }
+    assert.match(surAxeY.aide.blocs[0].contenu, /rejoint O/);
+    assert.match(surAxeX.aide.blocs[1].contenu, /rejoint O/);
+    assert.match(origine.aide.blocs[0].contenu, /rejoint O/);
+    assert.match(origine.aide.blocs[1].contenu, /rejoint O/);
+
+    const placement = genererQuestionPlacerPointRepere({
+      parametres: {
+        ...commune,
+        famille: FAMILLE_PLACER_POINT_REPERE,
+        x: 0,
+        y: 0,
+      },
+    });
+    assert.equal(placement.aide.blocs.length, 3);
+    assert.doesNotMatch(placement.aide.blocs.map(({ contenu }) => contenu).join(" "), /se trouve donc|vaut 0/);
+  });
+
+  it("instancie les formulations symboliques avec un vrai x ou y indicé", () => {
+    for (const [famille, symbole] of [
+      [FAMILLE_LIRE_ABSCISSE_REPERE, "x"],
+      [FAMILLE_LIRE_ORDONNEE, "y"],
+    ]) {
+      const question = genererQuestionLireCoordonnees({
+        parametres: {
+          famille,
+          formulation: FORMULATION_COORDONNEE_SYMBOLIQUE,
+          xMin: -4,
+          xMax: 4,
+          yMin: -3,
+          yMax: 3,
+          x: -3,
+          y: 2,
+          pas: 1,
+          nomPoint: "M",
+          decalageChoix: 0,
+        },
+      });
+      assert.equal(question.enonce.find(({ id }) => id === "consigne").contenu, "Complète l'égalité.");
+      assert.equal(question.enonce.find(({ id }) => id === "formulation").contenu, FORMULATION_COORDONNEE_SYMBOLIQUE);
+      assert.deepEqual(
+        question.reponse.attendu,
+        { numerateur: symbole === "x" ? -3 : 2, denominateur: 1 },
+      );
+    }
+  });
+
   it("instancie les deux séries au contrat V2", () => {
     const registre = creerRegistreAutomatismes();
     for (const nombreQuestions of LONGUEURS) {
@@ -288,5 +477,19 @@ describe("questions instanciées et cohérence du rendu", () => {
     assert.throws(() => planifierSerieLireCoordonnees({ graine: {}, nombreQuestions: 10 }), /graine/);
     assert.throws(() => planifierSerieLireCoordonnees({ graine: "x", nombreQuestions: 21 }), /1 et 20/);
     assert.throws(() => planifierSeriePlacerPointRepere({ graine: "x", nombreQuestions: 0 }), /1 et 20/);
+    assert.throws(() => genererQuestionLireCoordonnees({
+      parametres: {
+        famille: FAMILLE_DIAGNOSTIC_COORDONNEES,
+        xMin: -3,
+        xMax: 5,
+        yMin: -4,
+        yMax: 3,
+        x: 4,
+        y: -1,
+        pas: 1,
+        nomPoint: "F",
+        decalageChoix: 0,
+      },
+    }), /distincts et visibles/);
   });
 });

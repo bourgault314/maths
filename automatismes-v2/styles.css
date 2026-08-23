@@ -378,17 +378,6 @@ h3,
   text-wrap: balance;
 }
 
-.pas-question-repere {
-  width: max-content;
-  max-width: 100%;
-  margin: 0 auto;
-  padding: 5px 10px;
-  border-radius: 999px;
-  color: var(--mg-bleu);
-  background: color-mix(in srgb, var(--mg-orange) 10%, var(--mg-papier));
-  font-size: .9rem;
-}
-
 .indicateur-reponse-repere {
   position: absolute;
   z-index: 8;
@@ -459,6 +448,58 @@ h3,
 
 .surface-placement-repere:focus-visible {
   outline: 4px solid var(--mg-orange);
+  outline-offset: 2px;
+}
+
+.surface-interaction-repere-aide,
+.cible-axe-repere-aide {
+  position: absolute;
+  min-width: 0;
+  min-height: 0;
+  padding: 0;
+  border: 2px solid transparent;
+  background: transparent;
+  touch-action: manipulation;
+}
+
+.surface-interaction-repere-aide {
+  z-index: 2;
+  border-radius: 8px;
+  cursor: crosshair;
+}
+
+.surface-interaction-repere-aide:hover {
+  background: color-mix(in srgb, var(--mg-bleu) 3%, transparent);
+}
+
+.surface-interaction-repere-aide:focus-visible {
+  outline: 4px solid var(--mg-bleu);
+  outline-offset: 2px;
+}
+
+.cible-axe-repere-aide {
+  z-index: 3;
+  border-radius: 999px;
+}
+
+.cible-axe-repere-aide.prioritaire {
+  z-index: 4;
+}
+
+.cible-axe-repere-aide[data-axe="abscisses"]:hover,
+.cible-axe-repere-aide[data-axe="abscisses"]:focus-visible {
+  border-color: color-mix(in srgb, var(--mg-orange) 72%, transparent);
+  background: color-mix(in srgb, var(--mg-orange) 12%, transparent);
+}
+
+.cible-axe-repere-aide[data-axe="ordonnees"]:hover,
+.cible-axe-repere-aide[data-axe="ordonnees"]:focus-visible {
+  border-color: color-mix(in srgb, var(--mg-turquoise) 72%, transparent);
+  background: color-mix(in srgb, var(--mg-turquoise) 12%, transparent);
+}
+
+.cible-axe-repere-aide:focus-visible {
+  outline: 3px solid var(--mg-bleuFonce);
   outline-offset: 2px;
 }
 
@@ -537,16 +578,49 @@ button.champ-coordonnee.actif {
 }
 
 .saisie-coordonnee-seule {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 12px;
   margin-inline: auto;
+}
+
+.saisie-coordonnee-seule .indication-clavier-physique {
+  flex-basis: 100%;
+}
+
+.libelle-reponse-coordonnee {
+  color: var(--mg-bleu);
+  font-weight: 750;
+}
+
+.variable-mathematique {
+  font-style: italic;
 }
 
 .grille-qcm-repere {
   width: min(100%, 620px);
   margin-inline: auto;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  font-family: var(--mg-maths, serif);
-  font-size: 1.15rem;
+  grid-auto-rows: 1fr;
   font-variant-numeric: lining-nums tabular-nums;
+}
+
+.grille-qcm-repere .choix {
+  height: 100%;
+  min-height: 64px;
+  padding: 10px 20px;
+  font-family: var(--mg-maths, serif);
+  font-size: clamp(.96rem, 4.7vw, 1.2rem);
+  line-height: 1.15;
+  white-space: nowrap;
+}
+
+.grille-qcm-repere .icone-verdict {
+  top: 6px;
+  right: 7px;
+  font-size: 16px;
 }
 
 .precision-placement-repere {
@@ -566,11 +640,24 @@ button.champ-coordonnee.actif {
 
 .progression-aide-repere {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(112px, 1fr));
   gap: 7px;
+  padding: 0;
+  list-style: none;
 }
 
-.progression-aide-repere button {
+.progression-aide-repere.aide-repere-2 {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.progression-aide-repere.aide-repere-3 {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.progression-aide-repere.aide-repere-4 {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.etape-progression-aide {
   min-height: 48px;
   padding: 6px 8px;
   display: flex;
@@ -584,8 +671,7 @@ button.champ-coordonnee.actif {
   text-align: left;
 }
 
-.progression-aide-repere button > span:first-child,
-.etape-aide-repere-active header > span {
+.etape-progression-aide > span:first-child {
   display: grid;
   flex: 0 0 30px;
   place-items: center;
@@ -597,45 +683,108 @@ button.champ-coordonnee.actif {
   font-weight: 850;
 }
 
-.progression-aide-repere button.actif {
+.etape-progression-aide.actif {
   border-color: var(--mg-turquoise);
   color: var(--mg-bleu);
   background: color-mix(in srgb, var(--mg-turquoise) 10%, var(--mg-papier));
 }
 
-.progression-aide-repere button.actif > span:first-child,
-.etape-aide-repere-active header > span {
+.etape-progression-aide.actif > span:first-child {
   background: var(--mg-turquoise);
 }
 
-.etape-aide-repere-active {
+.etape-progression-aide.terminee {
+  border-color: color-mix(in srgb, var(--mg-reussite) 52%, var(--mg-ligne));
+  color: var(--mg-bleu);
+}
+
+.etape-progression-aide.terminee > span:first-child {
+  background: var(--mg-reussite);
+}
+
+.contenu-etape-aide-repere {
   padding: 13px 15px;
-  border: 2px solid color-mix(in srgb, var(--mg-turquoise) 62%, var(--mg-ligne));
-  border-radius: 14px;
+  border-left: 5px solid var(--mg-turquoise);
+  border-radius: 0 14px 14px 0;
   background: color-mix(in srgb, var(--mg-turquoise) 7%, var(--mg-papier));
 }
 
-.etape-aide-repere-active header {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.etape-aide-repere-active h3,
-.etape-aide-repere-active p,
+.contenu-etape-aide-repere p,
 .rappel-pas-repere {
   margin: 0;
 }
 
-.etape-aide-repere-active p {
-  margin-top: 9px;
-  padding-left: 40px;
+.contenu-etape-aide-repere {
+  display: grid;
+  gap: 10px;
 }
 
-.navigation-aide-repere {
+.retour-interaction-repere,
+.aide-echelle-repere {
+  padding: 9px 11px;
+  border: 1px solid var(--mg-ligne);
+  border-left-width: 5px;
+  border-radius: 0 10px 10px 0;
+  background: var(--mg-papier);
+}
+
+.retour-interaction-repere::before {
+  margin-right: 6px;
+  font-weight: 850;
+}
+
+.retour-interaction-repere.retour-erreur {
+  border-left-color: var(--mg-erreur);
+}
+
+.retour-interaction-repere.retour-erreur::before {
+  content: "À revoir —";
+  color: var(--mg-erreur);
+}
+
+.retour-interaction-repere.retour-reussite {
+  border-left-color: var(--mg-reussite);
+}
+
+.retour-interaction-repere.retour-reussite::before {
+  content: "Bien vu —";
+  color: var(--mg-reussite);
+}
+
+.retour-interaction-repere.retour-information {
+  border-left-color: var(--mg-bleu);
+}
+
+.retour-interaction-repere.retour-information::before {
+  content: "Indice —";
+  color: var(--mg-bleu);
+}
+
+.aide-echelle-repere {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 9px;
+  gap: 8px;
+  border-left-color: var(--mg-orange);
+}
+
+.bouton-echelle-repere {
+  justify-self: start;
+}
+
+.repere-aide .guide-repere,
+.repere-aide .deplacement-repere {
+  animation: tracer-guide-repere .55s ease-out both;
+}
+
+@keyframes tracer-guide-repere {
+  from {
+    opacity: .15;
+    stroke-dashoffset: 28;
+  }
+
+  to {
+    opacity: 1;
+    stroke-dashoffset: 0;
+  }
 }
 
 .rappel-pas-repere {
@@ -644,6 +793,26 @@ button.champ-coordonnee.actif {
   color: var(--mg-bleu);
   background: color-mix(in srgb, var(--mg-orange) 10%, var(--mg-papier));
   text-align: center;
+}
+
+.regle-coordonnees-aide {
+  display: grid;
+  gap: 5px;
+  justify-items: center;
+  padding: 10px;
+  border: 1px solid var(--mg-ligne);
+  border-radius: 10px;
+  background: var(--mg-papier);
+  font-family: var(--mg-maths, serif);
+  font-size: 1.08rem;
+  text-align: center;
+}
+
+.regle-coordonnees-aide > span:last-child {
+  color: var(--mg-encre);
+  font-family: var(--mg-texte);
+  font-size: .92rem;
+  font-weight: 750;
 }
 
 .etape-aide-repere {
@@ -663,8 +832,7 @@ button.champ-coordonnee.actif {
   cursor: pointer;
 }
 
-.etape-aide-repere summary span,
-.entete-cours-repere span {
+.etape-aide-repere summary span {
   display: grid;
   flex: 0 0 32px;
   place-items: center;
@@ -730,6 +898,30 @@ button.champ-coordonnee.actif {
   color: var(--mg-reussite);
 }
 
+.legende-correction-repere > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.echantillon-point-correction {
+  position: relative;
+  display: inline-grid;
+  flex: 0 0 26px;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  font-family: var(--mg-texte);
+  font-size: 1.35rem;
+  font-style: normal;
+  line-height: 1;
+}
+
+.echantillon-point-choisi {
+  border: 2px dashed currentColor;
+}
+
 .carte-cours-repere {
   display: grid;
   gap: 12px;
@@ -751,9 +943,22 @@ button.champ-coordonnee.actif {
   font-size: clamp(1.25rem, 4vw, 1.75rem);
 }
 
+.numero-page-cours-repere {
+  flex: 0 0 auto;
+  padding: 4px 9px;
+  border: 1px solid var(--mg-ligne);
+  border-radius: 999px;
+  color: var(--mg-texteAttenue);
+  background: var(--mg-fondDoux);
+  font-size: .75rem;
+  font-weight: 800;
+  letter-spacing: .02em;
+  text-transform: uppercase;
+}
+
 .lexique-repere {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 8px;
 }
 
@@ -772,12 +977,24 @@ button.champ-coordonnee.actif {
 
 .coord-abscisse,
 .lexique-repere-colore .coord-abscisse strong {
-  color: color-mix(in srgb, var(--mg-orange) 82%, var(--mg-bleuFonce));
+  color: var(--mg-orange);
+  font-weight: 850;
 }
 
 .coord-ordonnee,
 .lexique-repere-colore .coord-ordonnee strong {
-  color: color-mix(in srgb, var(--mg-turquoise) 72%, var(--mg-bleuFonce));
+  color: var(--mg-turquoise);
+  font-weight: 850;
+}
+
+.lexique-repere-colore .coord-abscisse {
+  border-color: var(--mg-orange);
+  box-shadow: inset 4px 0 0 var(--mg-orange);
+}
+
+.lexique-repere-colore .coord-ordonnee {
+  border-color: var(--mg-turquoise);
+  box-shadow: inset 4px 0 0 var(--mg-turquoise);
 }
 
 .couple-colore-repere {
@@ -795,6 +1012,10 @@ button.champ-coordonnee.actif {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 8px;
+}
+
+.commandes-etapes-cours-repere.etapes-cours-repere-4 {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
 .commandes-etapes-cours-repere button {
@@ -927,7 +1148,12 @@ button.champ-coordonnee.actif {
   }
 
   .grille-qcm-repere {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .grille-qcm-repere .choix {
+    min-height: 60px;
+    padding-inline: 15px;
   }
 
   .cible-point-repere {
@@ -942,12 +1168,11 @@ button.champ-coordonnee.actif {
   }
 
   .lexique-repere {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     font-size: .92rem;
   }
 
   .lexique-repere p {
-    grid-template-columns: 1fr 1fr;
     padding: 8px 10px;
   }
 
@@ -958,6 +1183,11 @@ button.champ-coordonnee.actif {
 
   .commandes-etapes-cours-repere {
     gap: 5px;
+  }
+
+  .commandes-etapes-cours-repere.etapes-cours-repere-4,
+  .progression-aide-repere.aide-repere-4 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .commandes-etapes-cours-repere button {
@@ -976,11 +1206,8 @@ button.champ-coordonnee.actif {
     grid-template-columns: 1fr;
   }
 
-  .progression-aide-repere {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .progression-aide-repere button {
+  .etape-progression-aide {
+    min-width: 0;
     font-size: .82rem;
   }
 }
@@ -1001,6 +1228,25 @@ button.champ-coordonnee.actif {
 
   .panneau-reperage-plan .repere-cartesien-v2 {
     width: 100%;
+  }
+
+  .etape-progression-aide {
+    padding-inline: 4px;
+    gap: 4px;
+    font-size: .76rem;
+  }
+
+  .etape-progression-aide > span:first-child {
+    flex-basis: 26px;
+    width: 26px;
+    height: 26px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .repere-aide .guide-repere,
+  .repere-aide .deplacement-repere {
+    animation: none;
   }
 }
 

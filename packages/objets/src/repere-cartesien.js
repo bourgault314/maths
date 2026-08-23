@@ -4,9 +4,9 @@
 // corrections et au Studio. Le calcul reste pur et déterministe : mêmes
 // bornes et mêmes points produisent exactement le même SVG.
 
-import { COULEURS, TYPOGRAPHIE } from "../../charte/src/charte.js?v=51";
+import { COULEURS, TYPOGRAPHIE } from "../../charte/src/charte.js?v=53";
 
-export const VERSION_REPERE_CARTESIEN = 2;
+export const VERSION_REPERE_CARTESIEN = 4;
 export const SIGNE_MOINS_REPERE = "−";
 
 export const ROLES_POINT_REPERE = Object.freeze([
@@ -40,11 +40,11 @@ const CELLULE_MAX = 64;
 const HAUTEUR_TRACE_MAX = 512;
 const MARGE_GAUCHE = 42;
 const MARGE_DROITE = 30;
-const MARGE_HAUTE = 26;
-const MARGE_BASSE = 40;
+const MARGE_HAUTE = 32;
+const MARGE_BASSE = 44;
 const TAILLE_NOMBRE = 15;
 const TAILLE_POINT = 17;
-const DEMI_CROIX = 7;
+const DEMI_CROIX = 5;
 
 function echapper(texte) {
   return String(texte).replace(/[&<>"']/g, (caractere) => ({
@@ -178,6 +178,18 @@ function normaliserChemin(chemin, bornes, quoi) {
     y: graduationBornee(chemin.y, `${quoi}.cheminPlacement.y`, bornes.yMin, bornes.yMax, bornes.pas),
     etape,
   });
+}
+
+function normaliserAxesMisesEnEvidence(axes, quoi) {
+  if (axes === undefined) return Object.freeze([]);
+  if (!Array.isArray(axes)) {
+    throw new TypeError(`${quoi}.axesMisesEnEvidence : liste attendue.`);
+  }
+  const axesUniques = [...new Set(axes)];
+  if (axesUniques.some((axe) => axe !== "abscisses" && axe !== "ordonnees")) {
+    throw new RangeError(`${quoi}.axesMisesEnEvidence : « abscisses » ou « ordonnees » requis.`);
+  }
+  return Object.freeze(axesUniques);
 }
 
 function geometrieRepere(bornes, largeur) {
@@ -320,11 +332,15 @@ function choisirEtiquettes(points, geometrie) {
       const y = p.y + candidat.dy;
       const rectangle = rectangleTexte(x, y, point.nom, candidat.ancre);
       let score = rang;
+      // Les étiquettes peuvent utiliser les marges extérieures du tracé,
+      // notamment pour les points situés sur un bord. Leur rectangle doit en
+      // revanche rester entièrement dans le viewBox : une lettre de coin ne
+      // sera donc jamais rognée, quelle que soit la largeur du rendu.
       if (
-        rectangle.gauche < geometrie.xGauche - 20
-        || rectangle.droite > geometrie.xDroite + 20
-        || rectangle.haut < geometrie.yHaut - 18
-        || rectangle.bas > geometrie.yBas + 24
+        rectangle.gauche < 4
+        || rectangle.droite > geometrie.largeur - 4
+        || rectangle.haut < 4
+        || rectangle.bas > geometrie.hauteur - 4
       ) score += 1000;
       score += obstacles.filter((obstacle) => rectanglesSeChevauchent(rectangle, obstacle)).length * 100;
       if (!meilleur || score < meilleur.score) meilleur = { x, y, ancre: candidat.ancre, rectangle, score };
@@ -348,7 +364,10 @@ function dessinerCroix(point, geometrie) {
   const croix = (epaisseur, teinte) =>
     ligneSvg(p.x - DEMI_CROIX, p.y - DEMI_CROIX, p.x + DEMI_CROIX, p.y + DEMI_CROIX, teinte, epaisseur, 'stroke-linecap="round"')
     + ligneSvg(p.x - DEMI_CROIX, p.y + DEMI_CROIX, p.x + DEMI_CROIX, p.y - DEMI_CROIX, teinte, epaisseur, 'stroke-linecap="round"');
-  return croix(7, COULEURS_REPERE.papier) + croix(3.4, couleur);
+  const distinctionChoix = point.role === "choisi"
+    ? `<circle cx="${p.x}" cy="${p.y}" r="10" fill="none" stroke="${couleur}" stroke-width="2.2" stroke-dasharray="3 3" data-marqueur="point-choisi"/>`
+    : "";
+  return distinctionChoix + croix(5.4, COULEURS_REPERE.papier) + croix(2.6, couleur);
 }
 
 function dessinerGuides(guides, geometrie) {
@@ -360,7 +379,8 @@ function dessinerGuides(guides, geometrie) {
     const couleur = guide.axe === "abscisses"
       ? COULEURS_REPERE.guideAbscisse
       : COULEURS_REPERE.guideOrdonnee;
-    return ligneSvg(point.x, point.y, fin.x, fin.y, couleur, 2.8, 'stroke-dasharray="7 6" stroke-linecap="round"')
+    const classe = guide.axe === "abscisses" ? "guide-abscisses" : "guide-ordonnees";
+    return ligneSvg(point.x, point.y, fin.x, fin.y, couleur, 2.8, `class="guide-repere ${classe}" stroke-dasharray="7 6" stroke-linecap="round"`)
       + `<circle cx="${fin.x}" cy="${fin.y}" r="5" fill="${COULEURS_REPERE.papier}" stroke="${couleur}" stroke-width="2.4"/>`;
   }).join("");
 }
@@ -391,17 +411,18 @@ function dessinerChemin(chemin, geometrie) {
   const arrivee = positionDansRepere(chemin.x, chemin.y, geometrie);
   let svg = "";
   if (chemin.x !== 0) {
-    svg += ligneSvg(origine.x, origine.y, milieu.x, milieu.y, COULEURS_REPERE.guideAbscisse, 4, 'stroke-linecap="round"');
+    svg += ligneSvg(origine.x, origine.y, milieu.x, milieu.y, COULEURS_REPERE.guideAbscisse, 4, 'class="deplacement-repere deplacement-abscisse" stroke-linecap="round"');
     svg += pointeChemin(origine, milieu, COULEURS_REPERE.guideAbscisse);
   } else {
     svg += `<circle cx="${origine.x}" cy="${origine.y}" r="7" fill="none" stroke="${COULEURS_REPERE.guideAbscisse}" stroke-width="3"/>`;
   }
   if (chemin.etape === "complet" && chemin.y !== 0) {
-    svg += ligneSvg(milieu.x, milieu.y, arrivee.x, arrivee.y, COULEURS_REPERE.guideOrdonnee, 4, 'stroke-linecap="round"');
+    svg += ligneSvg(milieu.x, milieu.y, arrivee.x, arrivee.y, COULEURS_REPERE.guideOrdonnee, 4, 'class="deplacement-repere deplacement-ordonnee" stroke-linecap="round"');
     svg += pointeChemin(milieu, arrivee, COULEURS_REPERE.guideOrdonnee);
   }
   if (chemin.etape === "complet") {
-    svg += `<circle cx="${arrivee.x}" cy="${arrivee.y}" r="7" fill="${COULEURS_REPERE.papier}" stroke="${COULEURS_REPERE.guideOrdonnee}" stroke-width="3"/>`;
+    const rayon = chemin.x === 0 && chemin.y === 0 ? 5 : 7;
+    svg += `<circle cx="${arrivee.x}" cy="${arrivee.y}" r="${rayon}" fill="${COULEURS_REPERE.papier}" stroke="${COULEURS_REPERE.guideOrdonnee}" stroke-width="3" data-arrivee-placement="true"/>`;
   }
   return svg;
 }
@@ -423,12 +444,21 @@ function dessinerGrille(geometrie) {
   return svg;
 }
 
-function dessinerAxes(geometrie) {
+function couleurAxe(axe, axesMisesEnEvidence) {
+  if (!axesMisesEnEvidence.includes(axe)) return COULEURS_REPERE.axe;
+  return axe === "abscisses"
+    ? COULEURS_REPERE.guideAbscisse
+    : COULEURS_REPERE.guideOrdonnee;
+}
+
+function dessinerAxes(geometrie, axesMisesEnEvidence) {
+  const couleurAbscisses = couleurAxe("abscisses", axesMisesEnEvidence);
+  const couleurOrdonnees = couleurAxe("ordonnees", axesMisesEnEvidence);
   let svg = "";
-  svg += ligneSvg(geometrie.xGauche, geometrie.yAxe, geometrie.xDroite, geometrie.yAxe, COULEURS_REPERE.axe, 2.4, 'stroke-linecap="round"');
-  svg += ligneSvg(geometrie.xAxe, geometrie.yBas, geometrie.xAxe, geometrie.yHaut, COULEURS_REPERE.axe, 2.4, 'stroke-linecap="round"');
-  svg += pointeChemin({ x: geometrie.xDroite - 13, y: geometrie.yAxe }, { x: geometrie.xDroite + 1, y: geometrie.yAxe }, COULEURS_REPERE.axe);
-  svg += pointeChemin({ x: geometrie.xAxe, y: geometrie.yHaut + 13 }, { x: geometrie.xAxe, y: geometrie.yHaut - 1 }, COULEURS_REPERE.axe);
+  svg += ligneSvg(geometrie.xGauche, geometrie.yAxe, geometrie.xDroite, geometrie.yAxe, couleurAbscisses, 2.8, 'stroke-linecap="round" data-axe="abscisses"');
+  svg += ligneSvg(geometrie.xAxe, geometrie.yBas, geometrie.xAxe, geometrie.yHaut, couleurOrdonnees, 2.8, 'stroke-linecap="round" data-axe="ordonnees"');
+  svg += pointeChemin({ x: geometrie.xDroite - 13, y: geometrie.yAxe }, { x: geometrie.xDroite + 1, y: geometrie.yAxe }, couleurAbscisses);
+  svg += pointeChemin({ x: geometrie.xAxe, y: geometrie.yHaut + 13 }, { x: geometrie.xAxe, y: geometrie.yHaut - 1 }, couleurOrdonnees);
   return svg;
 }
 
@@ -448,7 +478,6 @@ function dessinerLegendesAxes(geometrie) {
     police: POLICE_TEXTE,
     halo: true,
   })
-    + ligneSvg(xAbscisses - 3, yAbscisses + 4, xAbscisses + 7, geometrie.yAxe, COULEURS_REPERE.guideAbscisse, 2.2, 'stroke-linecap="round"')
     + texteSvg({
       x: xOrdonnees,
       y: yOrdonnees,
@@ -459,11 +488,12 @@ function dessinerLegendesAxes(geometrie) {
       ancre: "start",
       police: POLICE_TEXTE,
       halo: true,
-    })
-    + ligneSvg(xOrdonnees + 2, yOrdonnees + 4, geometrie.xAxe, geometrie.yHaut - 1, COULEURS_REPERE.guideOrdonnee, 2.2, 'stroke-linecap="round"');
+    });
 }
 
-function dessinerGraduations(geometrie, afficherNomsAxes) {
+function dessinerGraduations(geometrie, afficherNomsAxes, axesMisesEnEvidence) {
+  const couleurAbscisses = couleurAxe("abscisses", axesMisesEnEvidence);
+  const couleurOrdonnees = couleurAxe("ordonnees", axesMisesEnEvidence);
   let svg = "";
   for (let indice = 0; indice <= geometrie.nombreX; indice += 1) {
     const x = arrondi2(geometrie.xMin + indice * geometrie.pas);
@@ -472,7 +502,7 @@ function dessinerGraduations(geometrie, afficherNomsAxes) {
     // Le nombre reste affiché : la borne demeure donc lisible sans superposer
     // deux signes graphiques au même endroit.
     if (x !== geometrie.xMax) {
-      svg += ligneSvg(p.x, geometrie.yAxe - 4, p.x, geometrie.yAxe + 4, COULEURS_REPERE.axe, 1.6);
+      svg += ligneSvg(p.x, geometrie.yAxe - 4, p.x, geometrie.yAxe + 4, couleurAbscisses, 1.6);
     }
     if (doitEtiqueterGraduation(x, geometrie, "x")) {
       svg += texteSvg({ x: p.x, y: geometrie.yAxe + 21, contenu: formaterNombre(x), taille: TAILLE_NOMBRE, couleur: COULEURS_REPERE.encre, graisse: 600, halo: true });
@@ -482,7 +512,7 @@ function dessinerGraduations(geometrie, afficherNomsAxes) {
     const y = arrondi2(geometrie.yMin + indice * geometrie.pas);
     const p = positionDansRepere(0, y, geometrie);
     if (y !== geometrie.yMax) {
-      svg += ligneSvg(geometrie.xAxe - 4, p.y, geometrie.xAxe + 4, p.y, COULEURS_REPERE.axe, 1.6);
+      svg += ligneSvg(geometrie.xAxe - 4, p.y, geometrie.xAxe + 4, p.y, couleurOrdonnees, 1.6);
     }
     if (doitEtiqueterGraduation(y, geometrie, "y")) {
       svg += texteSvg({ x: geometrie.xAxe - 10, y: p.y + 5, contenu: formaterNombre(y), taille: TAILLE_NOMBRE, couleur: COULEURS_REPERE.encre, graisse: 600, ancre: "end", halo: true });
@@ -492,10 +522,15 @@ function dessinerGraduations(geometrie, afficherNomsAxes) {
   // place l'écarte nettement de la graduation −1 écrite sous l'axe.
   svg += texteSvg({ x: geometrie.xAxe - 9, y: geometrie.yAxe - 8, contenu: "O", taille: 16, couleur: COULEURS_REPERE.axe, graisse: 700, ancre: "end", italique: true, halo: true });
   if (afficherNomsAxes) {
-    svg += texteSvg({ x: geometrie.xDroite + 14, y: geometrie.yAxe + 5, contenu: "x", taille: 17, couleur: COULEURS_REPERE.axe, graisse: 700, italique: true });
-    svg += texteSvg({ x: geometrie.xAxe + 12, y: geometrie.yHaut - 8, contenu: "y", taille: 17, couleur: COULEURS_REPERE.axe, graisse: 700, italique: true });
+    svg += texteSvg({ x: geometrie.xDroite + 14, y: geometrie.yAxe + 5, contenu: "x", taille: 17, couleur: couleurAbscisses, graisse: 700, italique: true });
+    svg += texteSvg({ x: geometrie.xAxe + 12, y: geometrie.yHaut - 8, contenu: "y", taille: 17, couleur: couleurOrdonnees, graisse: 700, italique: true });
   }
   return svg;
+}
+
+function dessinerOrigineMiseEnEvidence(geometrie) {
+  return `<circle cx="${geometrie.xAxe}" cy="${geometrie.yAxe}" r="10" fill="none" `
+    + `stroke="${COULEURS_REPERE.axe}" stroke-width="2.6" stroke-dasharray="3 3"/>`;
 }
 
 /**
@@ -513,6 +548,8 @@ function dessinerGraduations(geometrie, afficherNomsAxes) {
  * @param {{x:number,y:number,etape?:"horizontal"|"complet"}} [options.cheminPlacement]
  * @param {boolean} [options.afficherNomsAxes=true]
  * @param {boolean} [options.afficherLegendesAxes=false]
+ * @param {Array<"abscisses"|"ordonnees">} [options.axesMisesEnEvidence]
+ * @param {boolean} [options.mettreOrigineEnEvidence=false]
  * @param {string} [options.description]
  * @returns {{svg:string,largeur:number,hauteur:number,geometrie:object}}
  */
@@ -527,6 +564,7 @@ export function dessinerRepereCartesien(options = {}) {
   const points = normaliserPoints(options.points, bornes, quoi);
   const guides = normaliserGuides(options.guides, bornes, quoi);
   const chemin = normaliserChemin(options.cheminPlacement, bornes, quoi);
+  const axesMisesEnEvidence = normaliserAxesMisesEnEvidence(options.axesMisesEnEvidence, quoi);
   const afficherNomsAxes = options.afficherNomsAxes ?? true;
   if (typeof afficherNomsAxes !== "boolean") {
     throw new TypeError(`${quoi}.afficherNomsAxes : booléen requis.`);
@@ -534,6 +572,10 @@ export function dessinerRepereCartesien(options = {}) {
   const afficherLegendesAxes = options.afficherLegendesAxes ?? false;
   if (typeof afficherLegendesAxes !== "boolean") {
     throw new TypeError(`${quoi}.afficherLegendesAxes : booléen requis.`);
+  }
+  const mettreOrigineEnEvidence = options.mettreOrigineEnEvidence ?? false;
+  if (typeof mettreOrigineEnEvidence !== "boolean") {
+    throw new TypeError(`${quoi}.mettreOrigineEnEvidence : booléen requis.`);
   }
   const description = options.description
     ?? `Repère orthogonal gradué de ${formaterNombre(bornes.pas)} en ${formaterNombre(bornes.pas)}`;
@@ -543,9 +585,10 @@ export function dessinerRepereCartesien(options = {}) {
 
   let corps = `<rect x="${geometrie.xGauche}" y="${geometrie.yHaut}" width="${arrondi2(geometrie.xDroite - geometrie.xGauche)}" height="${arrondi2(geometrie.yBas - geometrie.yHaut)}" rx="3" fill="${COULEURS_REPERE.papier}" stroke="${COULEURS_REPERE.grille}" stroke-width="1"/>`;
   corps += dessinerGrille(geometrie);
-  corps += dessinerAxes(geometrie);
-  corps += dessinerGraduations(geometrie, afficherNomsAxes);
+  corps += dessinerAxes(geometrie, axesMisesEnEvidence);
+  corps += dessinerGraduations(geometrie, afficherNomsAxes, axesMisesEnEvidence);
   if (afficherLegendesAxes) corps += dessinerLegendesAxes(geometrie);
+  if (mettreOrigineEnEvidence) corps += dessinerOrigineMiseEnEvidence(geometrie);
   corps += dessinerGuides(guides, geometrie);
   corps += dessinerChemin(chemin, geometrie);
   corps += points.map((point) => dessinerCroix(point, geometrie)).join("");

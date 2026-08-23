@@ -151,7 +151,7 @@ lot, à l'exception de `NC-03` et `NC-04` désormais réunies dans un même modu
 | DNB26-13 | O-12 | Développer et factoriser | `calcul-litteral-et-algebre` | AL-07 à AL-08 | 3-14 | `a_faire` |
 | DNB26-14 | O-13 | Résoudre trois formes d'équations | `calcul-litteral-et-algebre` | AL-09 à AL-11 | 4-17, 3-10 | `a_faire` |
 | DNB26-15 | O-14 | Lire et placer sur une droite graduée | `espace-et-geometrie` | GE-01 à GE-02 | 5-12, 5-25, 5-26, 4-23, 4-24, 3-17, 3-18 | `a_faire` |
-| DNB26-16 | G-01 | Lire et placer dans un repère | `espace-et-geometrie` | GE-03 à GE-04 | 4-25, 4-26, 3-19, 3-20 | `a_faire` |
+| DNB26-16 | G-01 | Lire et placer dans un repère | `espace-et-geometrie` | GE-03 à GE-04 | 4-25, 4-26, 3-19, 3-20 | `construit` |
 | DNB26-17 | G-02 | Identifier des figures par codage | `espace-et-geometrie` | GE-05 à GE-07 | 6-26, 6-27, 6-29, 5-37, 5-39 à 5-41, 4-33 à 4-35 | `a_faire` |
 | DNB26-18 | G-03 | Reconnaître, nommer et mesurer des angles | `espace-et-geometrie` | GE-08 à GE-10 | 5-33 à 5-36 | `a_faire` |
 | DNB26-19 | G-04 | Utiliser la somme des angles d'un triangle | `espace-et-geometrie` | GE-11 | 5-38 | `a_faire` |
@@ -294,9 +294,9 @@ données historiques selon la correspondance définie par D-043.
 84. `GE-23` - écrire le rapport du cosinus ;
 85. `GE-24` - contrôler conditions et résultat du cosinus.
 
-Les micro-notions de placement (`GE-02`, `GE-04`) devront recevoir une décision
-explicite sur la forme de réponse avant leur fiche : saisie par l'élève ou
-exception interactive dédiée.
+Les micro-notions de placement `GE-02` et `GE-04` ont reçu une exception
+interactive dédiée : point aimanté aux graduations, révisable avant validation
+et pilotable au tactile comme au clavier.
 
 ### Lot 6 - Pensée informatique (rangs 86 à 88)
 

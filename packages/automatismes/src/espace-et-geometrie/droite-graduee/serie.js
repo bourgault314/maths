@@ -1,10 +1,10 @@
-import { creerGenerateur, validerGraine } from "../../../../moteur-exercices/src/aleatoire.js?v=51";
+import { creerGenerateur, validerGraine } from "../../../../moteur-exercices/src/aleatoire.js?v=53";
 import {
   apparierProfilsCompatibles,
   definirPaquetPondere,
   ordonnerEnLimitantRepetitions,
   tirerProfilsPonderes,
-} from "../../../../moteur-exercices/src/paquets-ponderes.js?v=51";
+} from "../../../../moteur-exercices/src/paquets-ponderes.js?v=53";
 import {
   FAMILLE_DETERMINER_PAS,
   FAMILLE_DIAGNOSTIC,
@@ -16,7 +16,7 @@ import {
   VARIANTE_FRACTION_QCM,
   VARIANTE_LECTURE_QCM,
   VARIANTE_PAS_QCM,
-} from "./questions.js?v=51";
+} from "./questions.js?v=53";
 
 export const QUOTAS_DROITE_GRADUEE = Object.freeze({
   20: Object.freeze({ lire: 8, placer: 8, pas: 2, diagnostic: 2 }),

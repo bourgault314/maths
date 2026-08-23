@@ -15,6 +15,8 @@ import {
   TYPE_REPONSE_NOMBRE_DECIMAL,
 } from "../../packages/contrats/src/question-v2.js";
 import {
+  actualiserInteractionRepereAide,
+  avancerEchelleRepereAide,
   avancerCorrespondanceAide,
   basculerChiffreAide,
   basculerChoix,
@@ -530,7 +532,35 @@ describe("réponse interactive", () => {
     saisirChiffre(etat, 4);
     validerSelection(etat);
     passerQuestionSuivante(etat);
-    assert.equal(etat.repereAide, null);
+    assert.equal(etat.repereAide, 0);
+    assert.equal(etat.retourRepereAide, null);
+    assert.equal(etat.pointRepereAide, null);
+    assert.equal(etat.repereAideTerminee, false);
+    assert.equal(etat.niveauEchelleRepereAide, 0);
+  });
+
+  it("mémorise une interaction accessible dans l'aide du repère", () => {
+    const etat = etatSurQuestionDeuxEntiers();
+    ouvrirAide(etat);
+    actualiserInteractionRepereAide(etat, {
+      etape: 2,
+      retour: { type: "erreur", message: "Mauvais axe." },
+      point: { x: -1.5, y: 2 },
+      terminee: false,
+    });
+    assert.equal(etat.repereAide, 2);
+    assert.deepEqual(etat.retourRepereAide, { type: "erreur", message: "Mauvais axe." });
+    assert.deepEqual(etat.pointRepereAide, { x: -1.5, y: 2 });
+    avancerEchelleRepereAide(etat);
+    avancerEchelleRepereAide(etat);
+    avancerEchelleRepereAide(etat);
+    avancerEchelleRepereAide(etat);
+    assert.equal(etat.niveauEchelleRepereAide, 3);
+    assert.throws(
+      () => actualiserInteractionRepereAide(etat, { retour: { type: "non", message: "x" } }),
+      /retour accessible invalide/,
+    );
+    assert.throws(() => avancerEchelleRepereAide(etat, 4), /maximum entre 1 et 3/);
   });
 
   it("ajoute une phase pour fusionner deux quarts restants en un demi", () => {

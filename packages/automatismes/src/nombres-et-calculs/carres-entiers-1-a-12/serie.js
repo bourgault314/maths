@@ -7,38 +7,38 @@ import {
   definirPaquetPondere,
   ordonnerEnLimitantRepetitions,
   tirerProfilsPonderes,
-} from "../../../../moteur-exercices/src/paquets-ponderes.js?v=51";
+} from "../../../../moteur-exercices/src/paquets-ponderes.js?v=53";
 import {
   GABARIT_CALCUL_COURT_CARRE,
   BASES_CALCUL_COURT,
   OPERATIONS_CALCUL_COURT,
-} from "./calcul-court.js?v=51";
+} from "./calcul-court.js?v=53";
 import {
   BASES_ENCADREMENT_CARRE,
   FORMULATIONS_CALCUL_DIRECT,
   FORMULATIONS_CALCUL_DIRECT_QCM,
   GABARIT_CALCUL_DIRECT_CARRE,
-} from "./calcul-direct.js?v=51";
+} from "./calcul-direct.js?v=53";
 import {
   BASES_CARRE_QUADRILLE,
   FORMES_CARRE_QUADRILLE,
   GABARIT_CARRE_QUADRILLE,
-} from "./carre-quadrille.js?v=51";
+} from "./carre-quadrille.js?v=53";
 import {
   BASES_CARRES_ENTIERS,
-} from "./commun.js?v=51";
+} from "./commun.js?v=53";
 import {
   FORMULATIONS_RECONNAITRE_CARRES,
   GABARIT_RECONNAITRE_CARRES,
-} from "./reconnaitre-carres.js?v=51";
+} from "./reconnaitre-carres.js?v=53";
 import {
   FORMES_RETROUVER_ENTIER,
   GABARIT_RETROUVER_ENTIER_CARRE,
-} from "./retrouver-entier.js?v=51";
+} from "./retrouver-entier.js?v=53";
 import {
   BASES_SENS_NOTATION,
   GABARIT_SENS_NOTATION_CARRE,
-} from "./sens-notation.js?v=51";
+} from "./sens-notation.js?v=53";
 
 export const VERSION_PLAN_SERIE_NC02 = 3;
 
