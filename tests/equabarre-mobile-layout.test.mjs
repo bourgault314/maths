@@ -46,3 +46,16 @@ test("les saisies d'opération ont un pavé tactile sans clavier natif", () => {
   assert.match(html, /key === "clear"/);
   assert.match(html, /key === "plus"/);
 });
+
+// Mesuré le 23/08/2026 à 390 x 770 : les deux vues donnaient des boîtes
+// identiques au pixel (topbar, historique, tableau, barre d'outils). Le
+// sélecteur allumait un bouton et ne changeait rien ; il n'a plus lieu d'être.
+test("au téléphone, ÉquaBarre n'offre qu'une seule vue", () => {
+  assert.match(html, /function isDetailedEquationView\(\)\{\s*return !isPhoneLayout\(\) && equationViewMode === "detailed";/);
+  assert.match(html, /const phoneLayoutMedia = window\.matchMedia\("\(max-width: 700px\), \(max-height: 500px\) and \(pointer: coarse\)"\);/);
+  assert.match(
+    html,
+    /@media \(max-width: 700px\), \(max-height: 500px\) and \(pointer: coarse\)\{\s*\.viewModeSwitch\{\s*display:none !important;/
+  );
+});
+

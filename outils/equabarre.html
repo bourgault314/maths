@@ -3294,17 +3294,6 @@
       font-size:12px;
     }
 
-    .viewModeSwitch{
-      height:36px;
-      min-width:150px;
-    }
-
-    .viewModeOption{
-      height:28px;
-      padding:0 8px;
-      font-size:12px;
-    }
-
     #btnFullscreen{display:none}
 
     .stage:not(:fullscreen):not(.emptyState) .topbar,
@@ -3630,6 +3619,20 @@
     }
   }
 
+
+  /* LE SÉLECTEUR DE VUE DISPARAÎT AU TÉLÉPHONE (23/08/2026).
+     Là où la scène s'empile — petit écran, ou écran couché et bas avec un
+     pointeur grossier — les deux vues donnent des boîtes identiques au pixel
+     (mesuré à 390 x 770 : topbar, historique, tableau, barre d'outils, tout
+     au même endroit). Le sélecteur n'avait donc rien à choisir : il allumait
+     un bouton et ne changeait rien. Même définition du téléphone que dans le
+     script (phoneLayoutMedia), et même parti pris que dans ÉquaSplat. */
+  @media (max-width: 700px), (max-height: 500px) and (pointer: coarse){
+    .viewModeSwitch{
+      display:none !important;
+    }
+  }
+
 </style>
 <link rel="stylesheet" href="../assets/css/consentement.css">
 <script defer src="../assets/js/consentement.js"></script>
@@ -3872,6 +3875,9 @@
   const divideBlock = document.getElementById("divideBlock");
   const divideButtons = document.getElementById("divideButtons");
   const mobileDialogQuery = window.matchMedia("(max-width:700px)");
+  // Même définition du « téléphone » que dans ÉquaSplat : petit écran, ou écran
+  // couché et bas avec un pointeur grossier.
+  const phoneLayoutMedia = window.matchMedia("(max-width: 700px), (max-height: 500px) and (pointer: coarse)");
 
   function mobileDialogInputEnabled(){
     return mobileDialogQuery.matches;
@@ -3916,6 +3922,11 @@
   syncMobileDialogInputs();
   if(typeof mobileDialogQuery.addEventListener === "function"){
     mobileDialogQuery.addEventListener("change", syncMobileDialogInputs);
+    // Un téléphone que l'on couche, une fenêtre que l'on agrandit : la vue
+    // choisie sur ordinateur revient d'elle-même, sans re-cliquer.
+    if(typeof phoneLayoutMedia.addEventListener === "function"){
+      phoneLayoutMedia.addEventListener("change", () => { if(state) render(); });
+    }
   }
 
   const variableChars = ["𝑥", "𝑎", "𝑏", "𝑐", "𝑚", "𝑛", "𝑡"];
@@ -4050,8 +4061,17 @@
     render();
   }
 
+  function isPhoneLayout(){
+    return phoneLayoutMedia.matches;
+  }
+
+  // Au téléphone, la disposition « à côté » n'existe pas : la scène s'empile
+  // toujours de la même façon, et mesurer les deux vues à 390 × 770 donne des
+  // boîtes identiques au pixel. Le sélecteur y était donc un bouton qui ne
+  // faisait rien. On force « Au-dessus » et on le cache, comme dans ÉquaSplat ;
+  // le choix de l'utilisateur reste en mémoire pour son retour sur ordinateur.
   function isDetailedEquationView(){
-    return equationViewMode === "detailed";
+    return !isPhoneLayout() && equationViewMode === "detailed";
   }
 
   function syncDetailedViewMode(){
