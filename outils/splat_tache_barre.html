@@ -408,6 +408,15 @@
     .eleve-fin .fin-etoiles { font-size: 34px; letter-spacing: 4px; }
     .eleve-fin h2 { margin: 10px 0 4px; color: #1e40af; }
     .eleve-fin p { color: #475569; font-weight: 700; margin: 4px 0 14px; }
+    .eleve-scene svg.eleve-dessin { cursor: crosshair; touch-action: manipulation; }
+    .eleve-compteur { text-align: center; font-weight: 900; color: #1e40af; font-size: 14px; margin: 2px 0 4px; }
+    .eleve-compteur.rate { color: #b91c1c; animation: eleveShake .3s; }
+    .total-badge.eleve-case { padding: 0; width: 48px; height: 44px; }
+    .total-badge.eleve-case .eleve-input { font-size: 18px; padding: 0; }
+    .total-badge.eleve-ok { background: #dcfce7 !important; }
+    .total-badge.eleve-ok .eleve-input { background: transparent; color: #15803d; }
+    .total-badge.eleve-ko { animation: eleveShake .3s; }
+    .total-badge.eleve-ko .eleve-input { background: #fee2e2; color: #b91c1c; }
   </style>
 <link rel="stylesheet" href="../assets/css/consentement.css">
 <script defer src="../assets/js/consentement.js"></script>
@@ -593,6 +602,7 @@ let isTBI = false;
 let isEleve = false;
 let parcoursId = '';
 let eleveIdx = 0, eleveEtoiles = 0, eleveErreurs = 0, eleveSerie = [], eleveCarteFautee = false;
+let eleveJetonsPoses = [], eleveItemCourant = null;
 let seedMode = 'auto';
 let activeSeed = '';
 let currentRand = Math.random;
@@ -2042,6 +2052,72 @@ function eleveCaseInput(attendu, flexGrow, minW, fSize, fond, isTop) {
            `<input class="eleve-input" type="text" inputmode="numeric" maxlength="3" autocomplete="off"></div>`;
 }
 
+function eleveDansUneTache(item, x, y) {
+    try {
+        const canvas = document.createElement('canvas');
+        canvas.width = 300; canvas.height = 200;
+        const ctx = canvas.getContext('2d');
+        for (const s of item.splats) {
+            const shapeIndex = s.pathIndex !== undefined ? s.pathIndex : item.splatShape;
+            const path = new Path2D(SPLAT_SHAPES[shapeIndex % SPLAT_SHAPES.length]);
+            const rad = -s.rot * Math.PI / 180;
+            const dx = (x - s.cx) / s.scale, dy = (y - s.cy) / s.scale;
+            const lx = dx * Math.cos(rad) - dy * Math.sin(rad) + 150;
+            const ly = dx * Math.sin(rad) + dy * Math.cos(rad) + 100;
+            if (ctx.isPointInPath(path, lx, ly)) return true;
+        }
+    } catch (e) { /* sans canvas, on ne bloque pas le jeu */ }
+    return false;
+}
+
+function eleveRayonJeton(item) {
+    return (item.dots && item.dots.r) ? item.dots.r : ((item.maxTargetContext > 50) ? 5 : 8);
+}
+
+function eleveRedessinerJetons(svg, r) {
+    svg.querySelectorAll('.eleve-jeton').forEach(c => c.remove());
+    for (const j of eleveJetonsPoses) {
+        const c = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        c.setAttribute('cx', j.x); c.setAttribute('cy', j.y); c.setAttribute('r', r);
+        c.setAttribute('fill', '#2563eb'); c.setAttribute('stroke', '#1e40af'); c.setAttribute('stroke-width', '0.5');
+        c.classList.add('eleve-jeton');
+        svg.appendChild(c);
+    }
+    const cpt = document.getElementById('eleveCompteJetons');
+    if (cpt) {
+        const n = eleveJetonsPoses.length;
+        cpt.textContent = n + ' jeton' + (n > 1 ? 's' : '') + ' pos\u00e9' + (n > 1 ? 's' : '');
+    }
+}
+
+function eleveBrancherDessin(scene, item) {
+    const svg = scene.querySelector('.part-splat svg.splat-svg');
+    if (!svg) return;
+    svg.classList.add('eleve-dessin');
+    const r = eleveRayonJeton(item);
+    svg.addEventListener('pointerdown', ev => {
+        const bouton = document.getElementById('eleveValider');
+        if (!bouton || bouton.disabled) return;
+        ev.preventDefault();
+        const pt = svg.createSVGPoint();
+        pt.x = ev.clientX; pt.y = ev.clientY;
+        const p = pt.matrixTransform(svg.getScreenCTM().inverse());
+        if (p.x < 4 || p.x > 296 || p.y < 4 || p.y > 196) return;
+        const deja = eleveJetonsPoses.findIndex(j => Math.hypot(j.x - p.x, j.y - p.y) <= r * 1.8);
+        const msg = document.getElementById('eleveMsg');
+        if (deja >= 0) {
+            eleveJetonsPoses.splice(deja, 1);
+        } else if (eleveDansUneTache(item, p.x, p.y)) {
+            if (msg) { msg.textContent = 'Sous une tache, on ne voit pas les jetons !'; msg.className = 'eleve-msg rate'; }
+            return;
+        } else {
+            eleveJetonsPoses.push({ x: p.x, y: p.y });
+            if (msg && msg.textContent) { msg.textContent = ''; msg.className = 'eleve-msg'; }
+        }
+        eleveRedessinerJetons(svg, r);
+    });
+}
+
 function renderEleve(main) {
     main.innerHTML = '';
     if (getProblemType() !== 'classic') {
@@ -2061,15 +2137,21 @@ function renderEleve(main) {
                `<span class="eleve-score">${etoilesFaites}</span></div>`;
 
     const estConstruct = item.mode === 'construct';
+    eleveItemCourant = item;
+    eleveJetonsPoses = [];
     const consigne = estConstruct
-        ? 'Les jetons restent cachés\u2026 Complète les cases vides du schéma, puis Valider.'
+        ? 'Pose les jetons sur la carte (touche pour poser, retouche pour enlever), complète le schéma, puis Valider.'
         : 'Observe la carte et complète le schéma en barres, puis Valider.';
     html += `<div class="eleve-consigne">${consigne}</div>`;
 
+    const badge = estConstruct
+        ? `<div class="total-badge eleve-case" data-attendu="${item.total}">` +
+          `<input class="eleve-input" type="text" inputmode="numeric" maxlength="3" autocomplete="off"></div>`
+        : `<div class="total-badge">${item.total}</div>`;
     const splatPart = `<div class="part-splat">` +
-        getSplatSvg(item, !estConstruct) +
-        `<div class="total-badge">${estConstruct ? '' : item.total}</div></div>`;
+        getSplatSvg(item, !estConstruct) + badge + `</div>`;
     html += splatPart;
+    if (estConstruct) html += `<div class="eleve-compteur" id="eleveCompteur"><span id="eleveCompteJetons">0 jeton posé</span></div>`;
 
     const flexVis = Math.max(item.visible, item.total * 0.05, 1);
     const flexHid = Math.max(item.hiddenPerSplat, item.total * 0.05, 1);
@@ -2105,6 +2187,7 @@ function renderEleve(main) {
     scene.innerHTML = html;
     main.appendChild(scene);
 
+    if (estConstruct) eleveBrancherDessin(scene, item);
     const premierChamp = scene.querySelector('.eleve-input');
     if (premierChamp) premierChamp.focus();
     scene.querySelectorAll('.eleve-input').forEach(inp => {
@@ -2132,6 +2215,16 @@ function eleveValider(main) {
         c.classList.toggle('eleve-ok', juste);
         if (!juste) toutJuste = false;
     });
+    let jetonsFaux = false;
+    const compteur = document.getElementById('eleveCompteur');
+    if (eleveItemCourant && eleveItemCourant.mode === 'construct') {
+        jetonsFaux = eleveJetonsPoses.length !== eleveItemCourant.visible;
+        if (compteur) {
+            compteur.classList.remove('rate');
+            if (jetonsFaux) { void compteur.offsetWidth; compteur.classList.add('rate'); }
+        }
+        if (jetonsFaux) toutJuste = false;
+    }
     if (toutJuste) {
         if (!eleveCarteFautee) eleveEtoiles++;
         bouton.disabled = true;
@@ -2141,7 +2234,9 @@ function eleveValider(main) {
         setTimeout(() => { eleveIdx++; renderEleve(main); }, 1100);
     } else {
         eleveCarteFautee = true;
-        msg.textContent = 'Pas encore\u2026 corrige les cases rouges et revalide !';
+        msg.textContent = jetonsFaux && cases.every(c => c.classList.contains('eleve-ok'))
+            ? 'Les cases sont justes\u2026 mais compte tes jetons !'
+            : 'Pas encore\u2026 corrige ce qui est en rouge et revalide !';
         msg.className = 'eleve-msg rate';
     }
 }
