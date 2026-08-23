@@ -4383,6 +4383,15 @@
   #eleveBarre{display:flex;align-items:center;gap:12px;flex-wrap:wrap;background:#10294a;color:#fff;
     padding:8px 14px;font-weight:800;font-size:15px}
   #eleveBarre .eleveBarreEtoiles{letter-spacing:2px}
+  #eleveBarre #eleveSuivante{font:inherit;font-weight:900;border:none;border-radius:999px;
+    padding:8px 18px;cursor:pointer;background:#22c55e;color:#08301b;margin-left:auto;
+    min-height:36px}
+  #eleveBarre #eleveSuivante:focus-visible{outline:3px solid #93c5fd;outline-offset:2px}
+  #eleveBarre .eleveBarreNote{font-weight:800}
+  .elevePastilles{display:inline-flex;gap:5px;align-items:center;flex-wrap:wrap}
+  .elevePastilles .p{width:11px;height:11px;border-radius:50%;border:2px solid #cbd5e1;background:transparent;display:inline-block}
+  .elevePastilles .p.ok{background:#16a34a;border-color:#15803d}
+  .elevePastilles .p.cur{border-color:#93c5fd}
   #eleveBarre .eleveBarreNote{color:#f9bf3b}
   .eleveVoile{position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;
     background:rgba(16,41,74,.45)}
@@ -8899,7 +8908,7 @@
      La progression est mémorisée dans le navigateur : on peut s'arrêter
      au milieu et reprendre plus tard là où on en était. ══════════════ */
   const ELEVE_STORE_KEY = "mathsgo-splat-parcours";
-  let eleveMode = false, eleveParcours = "", eleveEqs = [], eleveIdx = 0, eleveResolues = 0, eleveCompteeCourante = false;
+  let eleveMode = false, eleveParcours = "", eleveEqs = [], eleveIdx = 0, eleveResolues = 0, eleveCompteeCourante = false, eleveAttenteSuivante = false;
 
   function eleveLireEntree(){
     try{ return (JSON.parse(localStorage.getItem(ELEVE_STORE_KEY) || "{}"))[eleveParcours] || null; }catch(e){ return null; }
@@ -8914,11 +8923,23 @@
     }catch(e){ /* stockage indisponible : le jeu reste jouable */ }
   }
 
+  /* Une pastille par équation : verte = résolue, contour bleu = en cours.
+     L'étoile récompense l'étape entière sur la carte des mondes. */
+  function elevePastillesHtml(){
+    let out = "";
+    for(let i = 0; i < eleveEqs.length; i++){
+      let cls = "p";
+      if(i < eleveResolues) cls += " ok";
+      else if(i === eleveIdx) cls += " cur";
+      out += `<i class="${cls}"></i>`;
+    }
+    return `<span class="elevePastilles" role="img" aria-label="${eleveResolues} \u00e9quation${eleveResolues > 1 ? "s" : ""} r\u00e9solue${eleveResolues > 1 ? "s" : ""} sur ${eleveEqs.length}">${out}</span>`;
+  }
   function eleveBarreHtml(message){
-    const etoiles = "\u2B50".repeat(Math.min(eleveResolues, 12));
     return `<span class="eleveBarreTexte">\u00c9quation ${Math.min(eleveIdx + 1, eleveEqs.length)} / ${eleveEqs.length}</span>` +
-           `<span class="eleveBarreEtoiles">${etoiles}</span>` +
-           (message ? `<span class="eleveBarreNote">${message}</span>` : "");
+           elevePastillesHtml() +
+           (message ? `<span class="eleveBarreNote">${message}</span>` : "") +
+           (eleveAttenteSuivante ? `<button type="button" id="eleveSuivante">\u00c9quation suivante \u25b6</button>` : "");
   }
   function eleveMajBarre(message){
     let barre = document.getElementById("eleveBarre");
@@ -8926,8 +8947,19 @@
       barre = document.createElement("div");
       barre.id = "eleveBarre";
       document.body.prepend(barre);
+      /* le bouton est reconstruit avec la barre : un seul écouteur, délégué */
+      barre.addEventListener("click", ev => {
+        if(!ev.target || ev.target.id !== "eleveSuivante") return;
+        eleveAttenteSuivante = false;
+        eleveIdx++;
+        eleveChargerEquation();
+      });
     }
     barre.innerHTML = eleveBarreHtml(message || "");
+    if(eleveAttenteSuivante){
+      const bouton = barre.querySelector("#eleveSuivante");
+      if(bouton) bouton.focus(); /* Entr\u00e9e suffit pour encha\u00eener */
+    }
   }
 
   function eleveChargerEquation(){
@@ -8966,30 +8998,38 @@
     eleveCelebrer(suivante >= eleveEqs.length);
   }
 
+  /* Quand l'\u00e9quation est r\u00e9solue, RIEN ne recouvre le plateau : l'\u00e9l\u00e8ve
+     garde sa solution (« 2 = \ud835\udc4e ») sous les yeux aussi longtemps qu'il veut,
+     la pastille passe au vert, la barre affiche « \u2705 R\u00e9solue ! » et c'est LUI
+     qui clique sur \u00ab \u00c9quation suivante \u00bb (le bouton a le focus : Entr\u00e9e suffit).
+     Seule la fin de s\u00e9rie pose un carton, apr\u00e8s une pause pour voir la derni\u00e8re
+     solution. */
+  const ELEVE_PAUSE_SOLUTION = 1400;
+
   function eleveCelebrer(finale){
-    const voile = document.createElement("div");
-    voile.className = "eleveVoile";
     if(finale){
       eleveEcrireEntree({ fait:true, etoiles:eleveResolues, cartes:eleveEqs.length, date:new Date().toISOString().slice(0,10) });
-      voile.innerHTML = `<div class="eleveCarton"><div class="eleveCartonEtoiles">${"\u2B50".repeat(Math.min(eleveEqs.length, 8))}</div>` +
-        `<h2>S\u00e9rie termin\u00e9e, bravo !</h2><p>${eleveEqs.length} \u00e9quations r\u00e9solues sur le plateau.</p>` +
+      const voile = document.createElement("div");
+      voile.className = "eleveVoile";
+      voile.innerHTML = `<div class="eleveCarton"><div class="eleveCartonEtoiles">\u2B50</div>` +
+        `<h2>S\u00e9rie termin\u00e9e, bravo !</h2><p>${eleveEqs.length} \u00e9quations r\u00e9solues sur le plateau.` +
+        (eleveParcours ? ` Ton \u00e9toile est allum\u00e9e sur la carte des mondes !` : ``) + `</p>` +
         `<button type="button" id="eleveRejouer">Rejouer la s\u00e9rie</button></div>`;
-      document.body.appendChild(voile);
       voile.querySelector("#eleveRejouer").addEventListener("click", () => {
         voile.remove();
         eleveIdx = 0; eleveResolues = 0;
         eleveEcrireEntree({});
         eleveChargerEquation();
       });
+      window.setTimeout(() => {
+        document.body.appendChild(voile);
+        const bouton = voile.querySelector("button");
+        if(bouton) bouton.focus();
+      }, ELEVE_PAUSE_SOLUTION);
       eleveMajBarre();
     }else{
-      voile.innerHTML = `<div class="eleveCarton"><div class="eleveCartonEtoiles">\u2B50</div><h2>R\u00e9solue !</h2><p>\u00c9quation suivante\u2026</p></div>`;
-      document.body.appendChild(voile);
-      window.setTimeout(() => {
-        voile.remove();
-        eleveIdx++;
-        eleveChargerEquation();
-      }, 1400);
+      eleveAttenteSuivante = true;
+      eleveMajBarre("\u2705 R\u00e9solue !");
     }
   }
 

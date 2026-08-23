@@ -696,6 +696,15 @@
   body.eleve-mode #svgWrap{aspect-ratio:auto;height:44vh;min-height:280px}
   body.eleve-mode #mainSvg{height:100%}
   #elevePanel{max-width:760px;margin:0 auto;padding:4px 8px 14px}
+  /* Barre « Carte k / N » au-dessus du plateau (même repère que Petit Splat). */
+  #eleveTeteHaut{max-width:760px;margin:6px auto 2px;padding:0 8px}
+  .elevePastilles{display:inline-flex;gap:5px;align-items:center;flex-wrap:wrap}
+  .elevePastilles .p{width:11px;height:11px;border-radius:50%;border:2px solid #cbd5e1;background:transparent}
+  .elevePastilles .p.ok{background:#16a34a;border-color:#15803d}
+  .elevePastilles .p.retry{background:#f59e0b;border-color:#d97706}
+  .elevePastilles .p.fait{background:#94a3b8;border-color:#64748b}
+  .elevePastilles .p.cur{border-color:#2563eb}
+  .finPastilles{display:flex;justify-content:center;margin:2px 0 8px}
   .eleveTete{display:flex;justify-content:space-between;align-items:center;font-weight:900;color:var(--ink);margin:2px 0 6px}
   .eleveTete .eleveScore{color:#b45309;font-size:15px}
   .eleveConsigne{text-align:center;font-weight:800;color:var(--muted);margin:0 0 10px;font-size:15px}
@@ -7302,7 +7311,7 @@ let idx = 0;
 let revealState = 0; // États selon le mode (A/B: 0→3, B±: 0→2, autres: 0/2)
 /* Parcours élève : aucun réglage visible, activé uniquement par ?eleve=1 dans l'adresse. */
 let eleveActif = false, parcoursId = "", impressionAuto = false;
-let eleveIdx = 0, eleveEtoiles = 0, eleveSerie = [], eleveCarteFautee = false, eleveRepriseFaite = false;
+let eleveIdx = 0, eleveEtoiles = 0, eleveSerie = [], eleveResultats = [], eleveCarteFautee = false, eleveRepriseFaite = false;
 const ELEVE_STORE_KEY = "mathsgo-splat-parcours";
 const counterEl = document.getElementById("counter");
 const fsHost = document.getElementById("fsHost");
@@ -7561,6 +7570,22 @@ function eleveCaseHtml(classe, attendu, largeur, avecTache){
     `<input class="eleveChamp" type="text" inputmode="numeric" maxlength="3" autocomplete="off" placeholder="?"></div>`;
 }
 
+/* Une pastille par carte de la série : verte = réussie du premier coup,
+   orange = réussie après correction, grise = faite (reprise, détail inconnu),
+   contour bleu = carte en cours. L'étoile, elle, récompense l'étape entière
+   sur la carte des mondes : on ne cumule plus d'étoiles pendant le jeu. */
+function elevePastillesHtml(){
+  let out = "";
+  for(let i = 0; i < eleveSerie.length; i++){
+    let cls = "p";
+    if(i < eleveResultats.length) cls += eleveResultats[i] === true ? " ok" : (eleveResultats[i] === false ? " retry" : " fait");
+    else if(i === eleveIdx) cls += " cur";
+    out += `<i class="${cls}"></i>`;
+  }
+  const faites = Math.min(eleveResultats.length, eleveSerie.length);
+  return `<span class="elevePastilles" role="img" aria-label="${faites} carte${faites > 1 ? "s" : ""} faite${faites > 1 ? "s" : ""} sur ${eleveSerie.length}">${out}</span>`;
+}
+
 function renderEleveSplat(){
   const cardbox = document.querySelector(".cardbox");
   if(!cardbox) return;
@@ -7570,7 +7595,18 @@ function renderEleveSplat(){
     panneau.id = "elevePanel";
     cardbox.appendChild(panneau);
   }
-  if(!cards.length){ panneau.innerHTML = ""; renderEmpty(); return; }
+  /* Le compteur « Carte k / N » se lit au-dessus du plateau, comme dans
+     Petit Splat et Splat Équations : une barre dédiée avant la scène. */
+  let tete = document.getElementById("eleveTeteHaut");
+  if(!tete){
+    tete = document.createElement("div");
+    tete.id = "eleveTeteHaut";
+    tete.className = "eleveTete";
+    const svgWrap = document.getElementById("svgWrap");
+    if(svgWrap && svgWrap.parentNode) svgWrap.parentNode.insertBefore(tete, svgWrap);
+    else cardbox.insertBefore(tete, cardbox.firstChild);
+  }
+  if(!cards.length){ tete.style.display = "none"; panneau.innerHTML = ""; renderEmpty(); return; }
   if(eleveSerie.length === 0){
     /* La « tache vide » (elle cache 0) est un bon cas sur fiche, mais dans le
        tableau du jeu une case de largeur nulle casse les proportions : on
@@ -7579,7 +7615,7 @@ function renderEleveSplat(){
     /* La série suit la fiche : toutes les cartes de la mise en page, dans le
        même ordre. Seules les cartes « tache vide » ci-dessus sont écartées. */
     eleveSerie = (jouables.length ? jouables : cards).slice();
-    eleveIdx = 0; eleveEtoiles = 0;
+    eleveIdx = 0; eleveEtoiles = 0; eleveResultats = [];
     /* série interrompue la dernière fois ? on reprend où on en était */
     if(!eleveRepriseFaite && parcoursId){
       eleveRepriseFaite = true;
@@ -7589,6 +7625,8 @@ function renderEleveSplat(){
            entree.enCours.idx > 0 && entree.enCours.idx < eleveSerie.length){
           eleveIdx = entree.enCours.idx;
           eleveEtoiles = Number(entree.enCours.etoiles) || 0;
+          /* reprise : on sait combien de cartes sont faites, pas le détail */
+          eleveResultats = new Array(eleveIdx).fill(null);
         }
       }catch(_e){ /* stockage indisponible */ }
     }
@@ -7600,9 +7638,13 @@ function renderEleveSplat(){
   renderCard(card, 0);
   eleveCadrerScene();
   if(!infos){
+    tete.style.display = "none";
     panneau.innerHTML = `<p class="eleveConsigne">Le parcours élève n'existe pas encore pour ce mode.</p>`;
     return;
   }
+  tete.style.display = "";
+  tete.innerHTML = `<span>Carte ${eleveIdx + 1} / ${eleveSerie.length}</span>` +
+    elevePastillesHtml();
   eleveCarteFautee = false;
 
   const flexVis = Math.max(infos.visibleSum, card.total * 0.05, 1);
@@ -7612,8 +7654,6 @@ function renderEleveSplat(){
   for(let i = 0; i < infos.tasks; i++) bas += eleveCaseHtml("grise", infos.H, flexHid, true);
 
   panneau.innerHTML =
-    `<div class="eleveTete"><span>Carte ${eleveIdx + 1} / ${eleveSerie.length}</span>` +
-    `<span class="eleveScore">${"\u2B50".repeat(eleveEtoiles)}</span></div>` +
     `<p class="eleveConsigne">Complète le schéma en barres : le total, les jetons visibles, et ce que cache chaque tache. Puis Valider.</p>` +
     `<div class="eleveDiag"><div class="ligneHaut">${eleveCaseHtml("haut blanche", card.total, 1, false)}</div>` +
     `<div class="ligneBas">${bas}</div></div>` +
@@ -7649,8 +7689,9 @@ function eleveValiderSplat(){
   });
   if(toutJuste){
     if(!eleveCarteFautee) eleveEtoiles++;
+    eleveResultats.push(!eleveCarteFautee);
     bouton.disabled = true;
-    msg.textContent = eleveCarteFautee ? "Juste ! Carte suivante\u2026" : "Bravo, du premier coup ! \u2B50";
+    msg.textContent = eleveCarteFautee ? "Juste ! Carte suivante\u2026" : "Bravo, du premier coup !";
     msg.className = "eleveMsg bravo";
     casesE.forEach(c => { const i = c.querySelector(".eleveChamp"); if(i) i.readOnly = true; });
     if(parcoursId && eleveIdx + 1 < eleveSerie.length){
@@ -7669,15 +7710,19 @@ function eleveValiderSplat(){
 }
 
 function renderEleveFinSplat(panneau){
+  const tete = document.getElementById("eleveTeteHaut");
+  if(tete) tete.style.display = "none";
   const total = eleveSerie.length;
   eleveEnregistrerReussite(eleveEtoiles, total);
   renderCard(eleveSerie[total - 1], 0);
   panneau.innerHTML = `<div class="eleveFin">` +
-    `<div class="finEtoiles">${"\u2B50".repeat(Math.max(eleveEtoiles, 1))}</div>` +
+    `<div class="finEtoiles">\u2B50</div>` +
     `<h2>S\u00e9rie termin\u00e9e, bravo !</h2>` +
-    `<p>${eleveEtoiles} carte${eleveEtoiles > 1 ? "s" : ""} sur ${total} du premier coup.</p>` +
+    `<div class="finPastilles">${elevePastillesHtml()}</div>` +
+    `<p>${eleveEtoiles} carte${eleveEtoiles > 1 ? "s" : ""} sur ${total} du premier coup.` +
+    (parcoursId ? ` Ton \u00e9toile est allum\u00e9e sur la carte des mondes !` : ``) + `</p>` +
     `<div class="eleveActions"><button id="eleveRejouer" type="button">Rejouer la s\u00e9rie</button></div></div>`;
-  document.getElementById("eleveRejouer").onclick = () => { eleveIdx = 0; eleveEtoiles = 0; eleveSerie = []; renderEleveSplat(); };
+  document.getElementById("eleveRejouer").onclick = () => { eleveIdx = 0; eleveEtoiles = 0; eleveSerie = []; eleveResultats = []; renderEleveSplat(); };
 }
 
 if(!loadSharedConfiguration()){
