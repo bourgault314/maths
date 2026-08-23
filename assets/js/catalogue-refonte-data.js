@@ -489,6 +489,15 @@ window.MATHSGO_CATALOGUE = {
       "thumbnail": "assets/img/thumbnails/splat/progression-cycle-3.svg?v=1",
       "cardDescription": "Une progression expliquée pas à pas pour développer la pensée algébrique avec SPLAT! au cycle 3."
     },
+    "outils/splat_univers.html": {
+      "primaryNotion": "calcul-litteral",
+      "primaryGroup": "jeux",
+      "cardTitle": "L\u2019univers SPLAT!",
+      "collections": ["splat"],
+      "tags": ["splat", "cycle-3", "parcours", "jeu", "schema-barres"],
+      "thumbnail": "assets/img/thumbnails/splat/univers-splat.svg?v=1",
+      "cardDescription": "Le parcours des \u00e9l\u00e8ves : trois mondes, quinze \u00e9tapes \u00e0 jouer en ligne, une \u00e9toile par s\u00e9rie r\u00e9ussie \u2014 d\u2019apr\u00e8s la progression cycle 3."
+    },
     "outils/splat.html": {
       "primaryNotion": "calcul-litteral",
       "primaryGroup": "generer",
@@ -5641,6 +5650,40 @@ window.MATHSGO_CATALOGUE = {
       "status": "published",
       "featured": false,
       "recent": false
+    },
+    {
+      "id": "outils-splat-univers-html",
+      "title": "L\u2019univers SPLAT! \u2014 le parcours des \u00e9l\u00e8ves",
+      "description": "Trois mondes et quinze \u00e9tapes pour jouer la progression SPLAT! du cycle 3, avec validation en ligne et \u00e9toiles au m\u00e9rite.",
+      "path": "outils/splat_univers.html",
+      "domains": [
+        "algebre"
+      ],
+      "notions": [
+        "calcul-litteral",
+        "equations",
+        "schemas-barres"
+      ],
+      "uses": [
+        "manipuler",
+        "entrainer"
+      ],
+      "types": [
+        "jeu",
+        "exerciseur"
+      ],
+      "filters": [],
+      "keywords": [
+        "splat",
+        "cycle 3",
+        "parcours",
+        "pens\u00e9e alg\u00e9brique",
+        "sch\u00e9ma en barres"
+      ],
+      "kind": "tool",
+      "status": "published",
+      "featured": false,
+      "recent": true
     },
     {
       "id": "outils-splat-html",
