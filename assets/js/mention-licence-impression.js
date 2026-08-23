@@ -4,6 +4,10 @@
  * Ajoute, uniquement à l'impression, une petite ligne
  * « mathsgo.re · CC BY-NC-SA 4.0 » en bas de chaque feuille.
  *
+ * Une feuille qui porte déjà une mention « mathsgo.re » est laissée telle quelle :
+ * un outil qui imprime son propre pied de page ne se retrouve jamais avec deux
+ * lignes empilées.
+ *
  * Rien n'est visible à l'écran, rien n'est ajouté au DOM tant que l'impression
  * n'est pas demandée, et tout est retiré une fois l'impression terminée : la
  * mise en page des outils n'est jamais modifiée en usage normal.
@@ -24,6 +28,9 @@
   var CLASSE = "mathsgo-credit-impression";
   var CONTENEURS = ".sheet, .page, .feuille, .printPage, .print-page";
 
+  // « visibility:visible » n'est pas decoratif : plusieurs outils impriment avec
+  // « body * { visibility: hidden } » puis revelent leur seule zone imprimable.
+  // Sans cette declaration, la mention est posee mais invisible sur le papier.
   function injecterStyle() {
     if (document.getElementById("mathsgoCreditImpressionStyle")) return;
     var style = document.createElement("style");
@@ -31,7 +38,8 @@
     style.textContent =
       "." + CLASSE + "{display:none}" +
       "@media print{." + CLASSE + "{" +
-      "display:block;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;" +
+      "display:block;visibility:visible;" +
+      "font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;" +
       "font-size:6.5pt;line-height:1.2;letter-spacing:.01em;color:#9aa0a6;" +
       "text-align:center;text-decoration:none;background:none;border:none;" +
       "margin:1mm 0 0;padding:0;flex:0 0 auto}" +
@@ -62,6 +70,14 @@
     return el.childElementCount > 0 || (el.textContent || "").trim().length > 0;
   }
 
+  // Certains outils impriment déjà leur propre pied de page (Petit Splat, Splat,
+  // Splat Équations…). On ne doit JAMAIS en ajouter un deuxième : c'est la règle
+  // qui évite les deux lignes empilées et mal alignées.
+  function porteDejaUneMention(element) {
+    if (!element) return false;
+    return (element.textContent || "").indexOf("mathsgo.re") !== -1;
+  }
+
   function poser() {
     if (document.body && document.body.getAttribute("data-mention-licence") === "non") return;
     injecterStyle();
@@ -77,18 +93,47 @@
       // Elle est posée en « fixed » et non dans le flux, car certains outils
       // bornent body à une feuille exacte avec overflow:hidden à l'impression :
       // une mention en fin de flux y serait rognée et n'apparaîtrait pas au PDF.
-      if (document.body) document.body.appendChild(creerMention("page"));
+      if (document.body && !porteDejaUneMention(document.body)) {
+        document.body.appendChild(creerMention("page"));
+      }
       return;
     }
 
+    // Certains outils emboîtent une feuille dans une autre (.page qui contient
+    // .sheet). On ne garde que la plus intérieure, sinon la mention serait posée
+    // deux fois sur la même feuille.
+    conteneurs = conteneurs.filter(function (conteneur) {
+      return !conteneurs.some(function (autre) {
+        return autre !== conteneur && conteneur.contains(autre);
+      });
+    });
+
+    var poses = [];
     conteneurs.forEach(function (conteneur) {
       if (conteneur.querySelector("[data-mathsgo-credit]")) return;
+      if (porteDejaUneMention(conteneur)) return;
       // Si la feuille est déjà un repère de positionnement, on ancre la mention
-      // en bas à droite sans toucher au flux ; sinon on l'ajoute en fin de flux.
+      // en bas sans toucher au flux ; sinon on l'ajoute en fin de flux.
       var position = window.getComputedStyle(conteneur).position;
       var ancree = position !== "static";
-      conteneur.appendChild(creerMention(ancree ? "ancre" : ""));
+      var mention = creerMention(ancree ? "ancre" : "");
+      conteneur.appendChild(mention);
+      poses.push({ conteneur: conteneur, mention: mention, ancree: ancree });
     });
+
+    // Garde-fou : une feuille à hauteur fixe (générateurs de bandes, de disques,
+    // de matériel…) déborderait d'une ligne, ce qui décalerait l'impression d'une
+    // page entière. Dans ce cas on retire tout et on repasse sur une mention unique
+    // en « fixed », que le navigateur répète sur chaque page imprimée.
+    var deborde = poses.some(function (pose) {
+      return !pose.ancree && pose.conteneur.scrollHeight > pose.conteneur.clientHeight + 1;
+    });
+    if (deborde) {
+      retirer();
+      if (document.body && !porteDejaUneMention(document.body)) {
+        document.body.appendChild(creerMention("page"));
+      }
+    }
   }
 
   function retirer() {
