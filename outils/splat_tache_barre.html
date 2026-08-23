@@ -422,11 +422,18 @@
     .total-badge.eleve-ok .eleve-input { background: transparent; color: #15803d; }
     .total-badge.eleve-ko { animation: eleveShake .3s; }
     .total-badge.eleve-ko .eleve-input { background: #fee2e2; color: #b91c1c; }
+    .menuConsent { margin: 14px 2px 4px; text-align: center; }
+  .menuConsent button {
+    appearance: none; background: none; border: 0; padding: 4px 6px;
+    font: inherit; font-size: 12px; color: #7a8798; cursor: pointer;
+    text-decoration: underline; text-underline-offset: 2px;
+  }
+  .menuConsent button:hover, .menuConsent button:focus-visible { color: #063f86; }
+  @media print { .menuConsent { display: none !important; } }
   </style>
 <link rel="stylesheet" href="../assets/css/consentement.css">
 <script defer src="../assets/js/consentement.js"></script>
 <script defer src="../assets/js/tool-parent-navigation.js?v=1"></script>
-<script defer src="../assets/js/mention-licence-impression.js"></script>
 </head>
 <body>
 
@@ -561,6 +568,13 @@
     </div>
   </div>
 
+  <!-- Le lien de gestion des cookies est déclaré ici : la présence de
+       [data-mathsgo-consent-open] suffit à retirer le bouton flottant que le
+       script de consentement pose sinon en bas à droite de l'écran. -->
+  <div class="menuConsent">
+    <button type="button" data-mathsgo-consent-open
+            onclick="window.mathsgoConsentement &amp;&amp; window.mathsgoConsentement.ouvrir()">Gérer mes cookies</button>
+  </div>
 
 </aside>
 
@@ -1967,7 +1981,7 @@ function createPageElement(chunk, isCorrectionPage, mirror) {
     if (!isTBI) {
         const footer = document.createElement('div');
         footer.className = 'activity-footer';
-        footer.innerText = isCorrectionPage ? (mirror ? "correction · miroir verso" : "correction") : "mathsgo.re/splat/petit";
+        footer.innerText = isCorrectionPage ? (mirror ? "correction · miroir verso" : "correction") : "mathsgo.re/splat/petit · CC BY-NC-SA 4.0";
         inner.appendChild(footer);
     }
     
