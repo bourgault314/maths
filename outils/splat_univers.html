@@ -115,6 +115,12 @@ main{max-width:980px;margin:0 auto;padding:10px 14px 60px}
 .badge .n{color:var(--ink);transform:translate(-0.5px,1.5px)}
 .etape.done .badge .n{color:#fff}
 
+.monde.enprepa .head{filter:saturate(.35);opacity:.85}
+.monde.enprepa .etapes,.monde.enprepa .desc{opacity:.5}
+.monde.enprepa .badge{cursor:default}
+.actions .bientot{font-size:13px;font-weight:750;color:var(--muted);font-style:italic}
+.noteProf{margin:2px 0 8px;font-size:13.5px;line-height:1.45;color:#365a83;background:#eef4fb;border-left:3px solid var(--blue);border-radius:0 8px 8px 0;padding:7px 10px}
+.desc.descProf{color:#365a83;background:#eef4fb;border-left:3px solid var(--blue);border-radius:0 8px 8px 0;padding:8px 12px;margin:10px 18px 0}
 footer{max-width:980px;margin:0 auto;padding:0 16px 40px;text-align:center;color:var(--muted);font-size:13px}
 footer a{color:var(--blue)}
 
@@ -154,7 +160,7 @@ footer a{color:var(--blue)}
   et deviens un champion des équations !</p>
 </div>
 
-<div class="totalBar">
+<div class="totalBar" id="totalBar">
   <div class="lbl"><span>Ta progression</span><span id="totalTxt">0 / 15 étoiles</span></div>
   <div class="rail"><div class="fill" id="totalFill"></div></div>
 </div>
@@ -163,14 +169,15 @@ footer a{color:var(--blue)}
 
 <footer>
   Outils : <a href="/outils/?domain=algebre&collection=splat">la famille Splat! de maths&amp;go</a> ·
-  progression cycle 3 en trois séquences.
+  progression cycle 3 en trois séquences.<br>
+  <span>Professeurs : <a href="?prof=1">vue professeur</a> — fiches à imprimer et outils à projeter, pour chaque étape.</span>
 </footer>
 
 <script>
 /* ============ données des mondes (progression cycle 3) ============ */
 const PS="/outils/splat_tache_barre.html", SC="/splat/classique/", SE="/splat/equations/";
 const MONDES=[
- {cls:"m1",nom:"Petit SPLAT!",desc:"Le tout, les parties… et les premières taches ! Complète les schémas en barres : ici, c'est toi qui réponds et la page vérifie.",
+ {cls:"m1",actif:true,nom:"Petit SPLAT!",desc:"Le tout, les parties… et les premières taches ! Complète les schémas en barres : ici, c'est toi qui réponds et la page vérifie.",
   etapes:[
    {t:"Complète le schéma",o:"Un tout, deux parties : écris les nombres qui manquent.",p:"m1e1",
     j:PS+"?support=eleve&problem=classic&target=20&splats=1&exercise=find_hidden&seed=441132&parcours=m1e1",
@@ -190,7 +197,7 @@ const MONDES=[
    {t:"Dessine en expert",o:"Toujours 2 à 6 taches, mais cette fois c'est toi qui dessines.",p:"m1e6",
     j:PS+"?support=eleve&problem=classic&target=20&splats=mix&exercise=construct&seed=514457&parcours=m1e6",
     f:PS+"?support=print&problem=classic&target=20&splats=mix&exercise=construct&seed=514457"}]},
- {cls:"m2",nom:"SPLAT! classique",desc:"Le schéma en barres devient une équation. Trouve le nombre caché sous la tache.",
+ {cls:"m2",actif:false,nom:"SPLAT! classique",desc:"Le schéma en barres devient une équation. Trouve le nombre caché sous la tache.",
   etapes:[
    {t:"Une tache et des jetons",fo:"x + a = b",o:"Trace le schéma, puis trouve ce que cache la tache.",
     j:SC+"?mode=U&equation=X_PLUS_A_EQ_B&cards=10&seed=453&unknown=question",
@@ -207,7 +214,7 @@ const MONDES=[
    {t:"Paquets : le défi",fo:"a × x + c = b",o:"Paquets, taches et jetons : le grand mélange du monde 2.",
     j:SC+"?mode=N&equation=AX_PLUS_C_EQ_B&tasksMax=5&cards=10&seed=18&unknown=question",
     f:SC+"?mode=N&equation=AX_PLUS_C_EQ_B&tasksMax=5&cards=10&seed=18&unknown=question&print=worksheet"}]},
- {cls:"m3",nom:"SPLAT! Équations",desc:"Deux plateaux, même quantité en haut et en bas : résous l'équation pas à pas.",
+ {cls:"m3",actif:false,nom:"SPLAT! Équations",desc:"Deux plateaux, même quantité en haut et en bas : résous l'équation pas à pas.",
   etapes:[
    {t:"Les deux plateaux",fo:"a × x + b = c",o:"Retrouve dans le tableau ce que contient chaque plateau.",
     j:SE+"?mode=EQUNITSTEP&form=ONE_SIDE&view=schema&cards=10&seed=56",
@@ -224,6 +231,8 @@ const MONDES=[
 ];
 
 /* ============ mémorisation locale (best-effort) ============ */
+const PROF = new URLSearchParams(window.location.search).get("prof") === "1";
+if (PROF) document.body.classList.add("prof");
 const KEY="mathsgo-splat-univers";
 const KEY_PARCOURS="mathsgo-splat-parcours"; /* écrite par les outils en mode « Parcours élève » */
 function lireFaits(){try{return JSON.parse(localStorage.getItem(KEY))||{}}catch(_e){return{}}}
@@ -232,35 +241,66 @@ function lireParcours(){try{return JSON.parse(localStorage.getItem(KEY_PARCOURS)
 let faits=lireFaits();
 
 /* ============ rendu ============ */
+/* Vue professeur : ce que la progression de Claire prévoit pour chaque activité
+   (reformulé d'après son document « SPLAT! cycle 3 »). */
+const NOTES_MONDE = [
+ "Découverte de la situation SPLAT : modéliser un problème simple par un schéma en barres (un tout, des parties). Chaque fiche a sa graine : « Générer » en note une nouvelle pour créer d'autres fiches, et la difficulté s'ajuste par les paramètres (cible max, jetons visibles).",
+ "Le schéma en barres devient équation. À savoir : le mode lecture montre les étapes de résolution, le bouton « Résoudre » ouvre la situation dans ÉquaBarre pour la manipuler, et les « paquets de jetons » permettent de grandes quantités.",
+ "Deux plateaux, même quantité en haut et en bas. Présentation verticale : chaque plateau correspond à une barre du schéma ; horizontale : chaque plateau correspond à un membre de l'équation. Le « ? » est recommandé au cycle 3 — la lettre arrive en 5e."
+];
+const NOTES_PROF = [
+ ["Lire et compléter un schéma en barres tout/parties déjà tracé : on consolide la lecture de cette représentation fondamentale.",
+  "Chemin inverse : le schéma est donné, l'élève dessine les jetons correspondants pour relier la représentation aux quantités.",
+  "Alternance des deux gestes — compléter, puis dessiner — pour travailler la flexibilité.",
+  "Deux taches cachant le même nombre : premier raisonnement déductif (partager également ce qui n'est pas visible).",
+  "Jusqu'à six taches : analyse systématique des relations entre total, jetons visibles et parts cachées.",
+  "Plusieurs taches et c'est l'élève qui dessine : le sens du travail cognitif s'inverse à nouveau."],
+ ["L'élève trace lui-même son schéma en barres face à la situation, puis résout x + a = b : le passage de la situation au formalisme.",
+  "Équations multiplicatives a × x = b (2 ≤ a ≤ 5) : reconnaître plusieurs groupes identiques.",
+  "a × x + c = b : multiplication ET addition — l'analyse du schéma se fait en plusieurs étapes.",
+  "Retour à x + a = b, mais en paquets de jetons : des nombres plus grands sans surcharge visuelle.",
+  "a × x + c = b avec les paquets : la représentation compacte permet de complexifier sans brouiller."],
+ ["Découverte des deux plateaux en présentation verticale (a × x + b = c) : relier chaque plateau au contenu d'une barre du schéma.",
+  "Toujours en vertical, avec les paquets de jetons pour gérer les grandes quantités.",
+  "Passage à l'horizontale : les plateaux côte à côte explicitent le lien avec les deux membres de l'équation.",
+  "L'inconnue des deux côtés (a × x + b = c × x + d) : on retranche l'inconnue d'un côté pour réduire pas à pas vers la solution."]
+];
 const main=document.getElementById("univers");
 let compteur=0;
 MONDES.forEach((m,mi)=>{
   const sec=document.createElement("section");
-  sec.className="monde "+m.cls;
+  sec.className="monde "+m.cls+((m.actif||PROF)?"":" enprepa");
   const ids=m.etapes.map((_,ei)=>"e"+mi+"-"+ei);
   sec.innerHTML=
    '<div class="head">'+
      '<svg class="blob" viewBox="0 0 110 110"><use href="#tacheEtoile" width="110" height="110" fill="rgba(255,255,255,.92)"/></svg>'+
      '<div class="t"><div class="num">Monde '+(mi+1)+'</div><h2>'+m.nom+'</h2></div>'+
-     '<div class="stars" id="stars'+mi+'"></div>'+
+     (PROF?'<div class="stars">'+(m.actif?'jouable en classe':'\ud83d\udea7 jeu \u00e9l\u00e8ve \u00e0 venir')+'</div>':(m.actif?'<div class="stars" id="stars'+mi+'"></div>':'<div class="stars">\ud83d\udea7 en pr\u00e9paration</div>'))+
    '</div>'+
-   '<p class="desc">'+m.desc+'</p>'+
+   '<p class="desc">'+m.desc+'</p>'+(PROF?'<p class="desc descProf">\ud83d\udcdd '+NOTES_MONDE[mi]+'</p>':'')+
    '<ol class="etapes">'+m.etapes.map((e,ei)=>{
      compteur++;
+     const badgeAttrs = (m.actif && !e.p) ? ' title="Marquer comme réussie" data-id="'+ids[ei]+'"' : ' disabled';
      return '<li class="etape" id="'+ids[ei]+'">'+
-       '<button class="badge" type="button" title="Marquer comme réussie" data-id="'+ids[ei]+'">'+
+       '<button class="badge" type="button"'+badgeAttrs+'>'+
          '<svg class="tache" viewBox="0 0 110 110"><use class="fond" href="#tacheEtoile" width="110" height="110"/></svg>'+
          '<span class="n">'+compteur+'</span>'+
          '<svg class="star" viewBox="0 0 24 24"><use href="#etoile" fill="#f9bf3b" stroke="#b8860b" stroke-width="1"/></svg>'+
        '</button>'+
        '<div class="corps">'+
          '<h3>'+e.t+'</h3>'+(e.fo?'<div class="forme">'+e.fo+'</div>':'')+
-         '<p class="obj">'+e.o+'</p>'+
-         '<div class="actions">'+
-           '<a class="jouer" href="'+e.j+'">🎮 Je joue</a>'+
-           '<a class="fiche" href="'+e.f+'" title="Ouvre l\'outil prêt à imprimer la fiche">📄 Fiche</a>'+
-           '<button class="faitBtn" type="button" data-id="'+ids[ei]+'">⭐ J\'ai réussi !</button>'+
-         '</div>'+
+         '<p class="obj">'+e.o+'</p>'+(PROF?'<p class="noteProf">\ud83d\udcdd '+NOTES_PROF[mi][ei]+'</p>':'')+
+         (PROF
+           ? '<div class="actions">'+
+             '<a class="jouer" href="'+e.j+'">'+(m.actif?'\ud83c\udfae Le jeu de l\u2019\u00e9l\u00e8ve':'\ud83d\udcbb Projeter l\u2019outil')+'</a>'+
+             '<a class="fiche" href="'+e.f+'" title="Ouvre l\u2019outil pr\u00eat \u00e0 imprimer la fiche">\ud83d\udcc4 Fiche</a>'+
+             '</div>'
+           : m.actif
+           ? '<div class="actions">'+
+             '<a class="jouer" href="'+e.j+'">🎮 Je joue</a>'+
+             (e.p ? '' : '<button class="faitBtn" type="button" data-id="'+ids[ei]+'">⭐ J\'ai réussi !</button>')+
+             '</div>'
+           : '<div class="actions"><span class="bientot">\ud83d\udea7 Le vrai jeu de ce monde est en construction — bient\u00f4t !</span></div>')+
        '</div>'+
      '</li>';
    }).join("")+'</ol>';
@@ -271,6 +311,7 @@ function majAffichage(){
   let total=0,fait=0;
   const parcours=lireParcours();
   MONDES.forEach((m,mi)=>{
+    if(!m.actif) return;
     let f=0;
     m.etapes.forEach((e,ei)=>{
       total++;
@@ -281,7 +322,8 @@ function majAffichage(){
       li.classList.toggle("done",ok);
       if(ok){f++;fait++;}
     });
-    document.getElementById("stars"+mi).textContent="⭐ "+f+" / "+m.etapes.length;
+    const st=document.getElementById("stars"+mi);
+    if(st) st.textContent="⭐ "+f+" / "+m.etapes.length;
   });
   document.getElementById("totalTxt").textContent=fait+" / "+total+" étoiles";
   document.getElementById("totalFill").style.width=(total?100*fait/total:0)+"%";
@@ -295,6 +337,12 @@ document.addEventListener("click",ev=>{
   ecrireFaits(faits);
   majAffichage();
 });
+if (PROF) {
+  const tb=document.getElementById('totalBar'); if(tb) tb.style.display='none';
+  const fp=document.querySelector('footer span'); if(fp) fp.innerHTML='Vue professeur — d\u2019apr\u00e8s la progression \u00ab SPLAT! cycle 3 \u00bb de Claire : '+
+    '<a href="https://digipad.app/p/1754235/397f3f517445b" target="_blank" rel="noopener">sa progression d\u2019origine (Digipad)</a> \u00b7 '+
+    '<a href="'+window.location.pathname+'">revenir \u00e0 la vue \u00e9l\u00e8ve</a>.';
+}
 majAffichage();
 /* au retour d'une partie (autre onglet ou bouton retour), on rallume les étoiles gagnées */
 window.addEventListener("pageshow",majAffichage);
