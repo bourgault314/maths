@@ -4330,6 +4330,14 @@
      376 × 373 avec deux rangées — même largeur, 28 px de moins. On rend donc
      à la première rangée de la grille sa hauteur d'origine (64 / 70 px). */
   @media (min-width:761px){
+    /* La flèche « ↓ » reste en Rédaction : les marges des flèches courbes
+       prenaient 74 px sur 364, et une équation un peu longue passait sur deux
+       lignes à chaque étape. Le calque SVG n'y est plus dessiné non plus
+       (operationArrowsEnabled). */
+    main:is(.activeMode,.receptionLayout).viewRedaction .equationOpRow{
+      display:grid !important;
+    }
+
     main:is(.activeMode,.receptionLayout).viewRedaction .stage .stageQuickActions{
       display:flex !important;
       align-items:center;
@@ -6328,7 +6336,10 @@
   let opArrowMeasureCanvas = null;
 
   function operationArrowsEnabled(){
-    return !!(OP_ARROW_MEDIA && OP_ARROW_MEDIA.matches);
+    // Jamais en vue Rédaction : la colonne d'équation y est étroite et de largeur
+    // fixe, les marges des flèches lui coûtaient une ligne de plus à chaque étape.
+    // La flèche « ↓ » y reste (choix de Gwenaël, 23/08).
+    return !!(OP_ARROW_MEDIA && OP_ARROW_MEDIA.matches) && viewMode !== "redaction";
   }
 
   function measureOpLabelWidth(label, fontPx){
@@ -6868,65 +6879,46 @@
     });
   }
 
+  // AIDE DE LA DÉCOMPOSITION (revue le 23/08/2026 avec Gwenaël).
+  // Deux règles :
+  // 1. Décomposer, c'est écrire une SOMME : on ne propose que des décompositions
+  //    en DEUX termes. Partager en parts égales (« 5 + 5 + 5 + 5 + 5 + 5 ») est le
+  //    travail de « Partager équitablement », qui écrit la division ; le proposer
+  //    ici court-circuitait cet outil.
+  // 2. La proposition utile — celle qui fait apparaître la quantité d'en face pour
+  //    pouvoir l'enlever des deux côtés — n'est plus mise EN TÊTE. Tout est rangé
+  //    par premier terme croissant : la place d'une proposition ne dit plus rien,
+  //    et l'élève doit lire les nombres au lieu de cliquer la première case.
   function getSmartDecompositionSuggestions(side, piece){
     const value = Number(piece.value);
+    if(!Number.isInteger(value) || value < 2) return [];
     const otherSide = side === "left" ? "right" : "left";
-    const suggestions = [];
 
-    // 1) Aide prioritaire : si l'autre membre contient déjà une quantité numérique,
-    // on propose de faire apparaître cette quantité pour pouvoir la supprimer ensuite.
-    // Exemple : 14 d'un côté et 30 de l'autre -> 30 = 14 + 16.
+    const vus = new Set();      // clé = plus petit des deux termes, pour ne pas
+    const premiers = [];        // proposer 14 + 16 ET 16 + 14
+    const ajouter = (v) => {
+      if(!Number.isInteger(v) || v <= 0 || v >= value) return;
+      const cle = Math.min(v, value - v);
+      if(vus.has(cle)) return;
+      vus.add(cle);
+      premiers.push(v);
+    };
+
+    // Les quantités présentes dans l'autre membre : les faire apparaître permet
+    // de les enlever ensuite de chaque côté. Exemple : 14 en face de 30 → 14 + 16.
     const otherTokens = activePieces(otherSide).filter(p => p.type === "token");
-    const targets = [];
-    for(const t of otherTokens){
-      const v = Number(t.value);
-      if(Number.isFinite(v) && v > 0) targets.push(v);
-    }
-    const otherSum = otherTokens.reduce((sum,p)=>sum + Number(p.value || 0), 0);
-    if(otherSum > 0) targets.push(otherSum);
+    for(const t of otherTokens) ajouter(Number(t.value));
+    ajouter(otherTokens.reduce((sum,p)=>sum + Number(p.value || 0), 0));
 
-    for(const target of targets){
-      if(target > 0 && target < value){
-        suggestions.push([target, value - target]);
-      }
+    // De quoi garnir la liste, pour que la proposition utile ne s'y détache pas :
+    // la moitié, puis quelques appuis simples.
+    if(value % 2 === 0) ajouter(value / 2);
+    for(const v of [1, 2, 5, 10, 20]){
+      if(premiers.length >= 7) break;
+      ajouter(v);
     }
 
-    // 2) Aide de partage : si on doit partager en autant de parts qu'il reste de taches.
-    const left = activePieces("left");
-    const right = activePieces("right");
-    const leftX = left.filter(p => p.type === "x").length;
-    const rightX = right.filter(p => p.type === "x").length;
-    const leftTokens = left.filter(p => p.type === "token").length;
-    const rightTokens = right.filter(p => p.type === "token").length;
-    const usefulShareCount =
-      (side === "right" && rightX === 0 && leftTokens === 0 && leftX >= 2) ? leftX :
-      (side === "left" && leftX === 0 && rightTokens === 0 && rightX >= 2) ? rightX :
-      0;
-    if(usefulShareCount >= 2 && value % usefulShareCount === 0){
-      suggestions.push(Array.from({length:usefulShareCount}, () => value / usefulShareCount));
-    }
-
-    // 3) Propositions générales, utiles mais secondaires.
-    for(let n=2;n<=6;n++){
-      if(value % n === 0){
-        const part = value / n;
-        suggestions.push(Array.from({length:n},()=>part));
-      }
-    }
-    if(value > 3){ suggestions.push([1, value-1]); }
-    if(value > 5){ suggestions.push([2, value-2]); }
-
-    const unique = [];
-    const seen = new Set();
-    for(const s of suggestions){
-      if(!Array.isArray(s) || s.length < 2) continue;
-      if(s.some(v => !Number.isFinite(Number(v)) || Number(v) <= 0)) continue;
-      const sum = s.reduce((a,b)=>a+Number(b), 0);
-      if(sum !== value) continue;
-      const key = s.join("+");
-      if(!seen.has(key)){ seen.add(key); unique.push(s); }
-    }
-    return unique.slice(0, 8);
+    return premiers.sort((a,b) => a - b).map(v => [v, value - v]);
   }
 
   function showDecomposeSuggestions(){

@@ -190,6 +190,24 @@ test("la consigne du partage ne dit jamais en combien de parts", () => {
   assert.doesNotMatch(html, /Partage&nbsp;<strong>\$\{formatSignedNumber/);
 });
 
+test("les flèches courbes ne s'affichent pas en vue Rédaction", () => {
+  // La colonne d'équation y est étroite et de largeur fixe : les marges des
+  // flèches lui coûtaient une ligne de plus à chaque étape. La flèche « ↓ » reste.
+  assert.match(html, /return !!\(OP_ARROW_MEDIA && OP_ARROW_MEDIA\.matches\) && viewMode !== "redaction";/);
+  assert.match(
+    html,
+    /main:is\(\.activeMode,\.receptionLayout\)\.viewRedaction \.equationOpRow\{\s*display:grid !important;/
+  );
+});
+
+test("l'aide de la décomposition ne propose que des sommes de deux termes, sans ordre parlant", () => {
+  // Partager en parts égales est le travail de « Partager équitablement », qui
+  // écrit la division ; et la proposition utile ne doit plus arriver en tête.
+  assert.match(html, /return premiers\.sort\(\(a,b\) => a - b\)\.map\(v => \[v, value - v\]\);/);
+  assert.doesNotMatch(html, /Array\.from\(\{length:usefulShareCount\}/);
+  assert.doesNotMatch(html, /suggestions\.push\(Array\.from\(\{length:n\},\(\)=>part\)\)/);
+});
+
 test("en vue Rédaction la barre du haut reste sur une seule rangée", () => {
   // La colonne d'équation est de largeur fixe : rétrécir le bandeau ne lui rend
   // rien, la seconde rangée lui coûtait 28 px de hauteur.
