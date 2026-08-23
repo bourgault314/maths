@@ -7568,7 +7568,14 @@ function renderEleveSplat(){
     cardbox.appendChild(panneau);
   }
   if(!cards.length){ panneau.innerHTML = ""; renderEmpty(); return; }
-  if(eleveSerie.length === 0){ eleveSerie = cards.slice(0, ELEVE_SERIE_MAX); eleveIdx = 0; eleveEtoiles = 0; }
+  if(eleveSerie.length === 0){
+    /* La « tache vide » (elle cache 0) est un bon cas sur fiche, mais dans le
+       tableau du jeu une case de largeur nulle casse les proportions : on
+       écarte ces cartes de la série jouée. La fiche imprimée ne change pas. */
+    const jouables = cards.filter(c => { const i = eleveInfosCarte(c); return !i || i.H > 0; });
+    eleveSerie = (jouables.length ? jouables : cards).slice(0, ELEVE_SERIE_MAX);
+    eleveIdx = 0; eleveEtoiles = 0;
+  }
   if(eleveIdx >= eleveSerie.length){ renderEleveFinSplat(panneau); return; }
 
   const card = eleveSerie[eleveIdx];
