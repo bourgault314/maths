@@ -2679,18 +2679,36 @@
 
   /* PATCH VUE RÉDACTION — tableau à gauche, rédaction avec opérations à droite.
      La vue rédaction est affichée par défaut ; la vue classique reste accessible. */
-  .viewModeBtn{
-    width:auto;
-    min-width:74px;
-    padding:0 12px;
-    font-size:14px;
-    font-weight:950;
+  .viewModeSwitch{
+    height:40px;
+    min-width:174px;
+    padding:3px;
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:3px;
+    border:1px solid rgba(15,23,42,.14);
+    border-radius:13px;
+    background:rgba(241,245,249,.96);
+    box-shadow:0 8px 20px rgba(15,23,42,.10);
   }
 
-  .viewModeBtn.is-detailed{
+  .viewModeOption{
+    min-width:0;
+    height:32px;
+    padding:0 10px;
+    border:0;
+    border-radius:9px;
+    background:transparent;
+    color:#475569;
+    font-size:13px;
+    font-weight:950;
+    box-shadow:none;
+  }
+
+  .viewModeOption.active{
     background:linear-gradient(180deg,#60a5fa,#3b82f6);
     color:#fff;
-    border-color:rgba(37,99,235,.30);
+    box-shadow:0 4px 10px rgba(37,99,235,.22);
   }
 
   .stage.detailedView:not(:fullscreen):not(.emptyState){
@@ -3276,10 +3294,14 @@
       font-size:12px;
     }
 
-    .viewModeBtn{
-      width:auto;
-      min-width:72px;
-      padding:0 9px;
+    .viewModeSwitch{
+      height:36px;
+      min-width:150px;
+    }
+
+    .viewModeOption{
+      height:28px;
+      padding:0 8px;
       font-size:12px;
     }
 
@@ -3683,7 +3705,10 @@
   <section class="stage" id="stage">
     <div class="stageQuickActions" aria-label="Actions rapides">
       <button class="ghost quickBtn menuQuickBtn" id="btnBackToMenu" type="button" title="Revenir au menu de départ" aria-label="Revenir au menu de départ">Menu</button>
-      <button class="ghost quickBtn viewModeBtn" id="btnToggleDetailedView" type="button" title="Passer en vue classique" aria-label="Basculer entre vue rédaction et vue classique">Classique</button>
+      <div class="viewModeSwitch" id="viewModeSwitch" role="group" aria-label="Choisir où s’affiche l’équation">
+        <button class="viewModeOption" id="btnViewClassic" type="button" aria-pressed="false" title="L’équation au-dessus du plateau">Au-dessus</button>
+        <button class="viewModeOption" id="btnViewRedaction" type="button" aria-pressed="true" title="L’équation à côté du plateau">À côté</button>
+      </div>
       <button class="ghost quickBtn randomQuickBtn" id="btnStageRandomEquation" type="button" title="Nouvelle équation au hasard" aria-label="Générer une nouvelle équation au hasard">🎲</button>
       <button class="ghost quickBtn equationEyeBtn" id="btnToggleEquation" type="button" title="Masquer l’équation" aria-label="Afficher ou masquer l’équation"></button>
       <button class="ghost quickBtn" id="btnFullscreen" type="button" title="Plein écran" aria-label="Plein écran">⛶</button>
@@ -3807,7 +3832,8 @@
   const btnFullscreen = document.getElementById("btnFullscreen");
   const btnToggleEquation = document.getElementById("btnToggleEquation");
   const btnBackToMenu = document.getElementById("btnBackToMenu");
-  const btnToggleDetailedView = document.getElementById("btnToggleDetailedView");
+  const btnViewClassic = document.getElementById("btnViewClassic");
+  const btnViewRedaction = document.getElementById("btnViewRedaction");
   const toolDecompose = document.getElementById("toolDecompose");
   const toolAdd = document.getElementById("toolAdd");
   const toolShare = document.getElementById("toolShare");
@@ -4032,17 +4058,22 @@
     if(stageEl){
       stageEl.classList.toggle("detailedView", isDetailedEquationView());
     }
-    if(btnToggleDetailedView){
-      const detailed = isDetailedEquationView();
-      btnToggleDetailedView.classList.toggle("is-detailed", detailed);
-      btnToggleDetailedView.textContent = detailed ? "Classique" : "Rédaction";
-      btnToggleDetailedView.title = detailed ? "Passer en vue classique" : "Passer en vue rédaction";
-      btnToggleDetailedView.setAttribute("aria-label", detailed ? "Passer en vue classique" : "Passer en vue rédaction");
+    // Deux boutons qui montrent l'état, comme dans ÉquaSplat : on lit où est
+    // l'équation sans avoir à deviner ce que ferait un clic.
+    if(btnViewClassic){
+      const actif = !isDetailedEquationView();
+      btnViewClassic.classList.toggle("active", actif);
+      btnViewClassic.setAttribute("aria-pressed", actif ? "true" : "false");
+    }
+    if(btnViewRedaction){
+      const actif = isDetailedEquationView();
+      btnViewRedaction.classList.toggle("active", actif);
+      btnViewRedaction.setAttribute("aria-pressed", actif ? "true" : "false");
     }
   }
 
-  function toggleDetailedEquationView(){
-    equationViewMode = isDetailedEquationView() ? "classic" : "detailed";
+  function chooseView(mode){
+    equationViewMode = mode === "detailed" ? "detailed" : "classic";
     render();
   }
 
@@ -6085,7 +6116,8 @@
     });
   }
   if(btnToggleEquation) btnToggleEquation.addEventListener("click", toggleEquationDisplay);
-  if(btnToggleDetailedView) btnToggleDetailedView.addEventListener("click", toggleDetailedEquationView);
+  if(btnViewClassic) btnViewClassic.addEventListener("click", () => chooseView("classic"));
+  if(btnViewRedaction) btnViewRedaction.addEventListener("click", () => chooseView("detailed"));
   if(btnShowSuggestions){
     btnShowSuggestions.addEventListener("click", () => {
       presetChips.classList.toggle("open");
