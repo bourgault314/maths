@@ -2,7 +2,7 @@
  * Mention de licence sur les documents imprimés — composant partagé maths&go.
  *
  * Ajoute, uniquement à l'impression, une petite ligne
- * « maths&go · mathsgo.re · CC BY-NC-SA 4.0 » en bas de chaque feuille.
+ * « mathsgo.re · CC BY-NC-SA 4.0 » en bas de chaque feuille.
  *
  * Rien n'est visible à l'écran, rien n'est ajouté au DOM tant que l'impression
  * n'est pas demandée, et tout est retiré une fois l'impression terminée : la
@@ -20,7 +20,7 @@
   if (window.__mathsgoMentionLicenceImpression) return;
   window.__mathsgoMentionLicenceImpression = true;
 
-  var TEXTE = "maths&go · mathsgo.re · CC BY-NC-SA 4.0";
+  var TEXTE = "mathsgo.re · CC BY-NC-SA 4.0";
   var CLASSE = "mathsgo-credit-impression";
   var CONTENEURS = ".sheet, .page, .feuille, .printPage, .print-page";
 
