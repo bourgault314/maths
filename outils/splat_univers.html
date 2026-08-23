@@ -36,9 +36,10 @@ header .back svg{width:22px;height:22px;stroke:var(--ink);stroke-width:2.5;fill:
 header .brand{display:flex;align-items:center;text-decoration:none}
 header .brand img{height:40px;width:auto;display:block}
 header .modeBar{margin-left:auto;display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end}
-header .modeActu{font-size:13px;font-weight:800;color:var(--ink);background:#eef4fb;border:1px solid var(--line);border-radius:999px;padding:7px 12px;white-space:nowrap}
-header .modeBtn{font-size:13px;font-weight:800;color:#fff;background:var(--blue);border-radius:999px;padding:8px 14px;text-decoration:none;white-space:nowrap}
-header .modeBtn:hover{filter:brightness(1.08)}
+header .modeBar{background:#eef4fb;border:1px solid var(--line);border-radius:999px;padding:3px;gap:3px}
+header .modeOpt{font-size:13px;font-weight:800;color:var(--muted);border-radius:999px;padding:6px 13px;text-decoration:none;white-space:nowrap}
+header .modeOpt.actif{color:#fff;background:var(--blue)}
+header .modeOpt:not(.actif):hover{color:var(--ink)}
 
 /* ---------- bandeau titre ---------- */
 .hero{max-width:980px;margin:0 auto;padding:26px 16px 8px;text-align:center;position:relative}
@@ -50,7 +51,6 @@ header .modeBtn:hover{filter:brightness(1.08)}
 .heroBlob.b2{right:5%;top:44px;width:38px;height:38px;transform:rotate(21deg)}
 .heroBlob.b3{left:11%;top:96px;width:30px;height:30px;transform:rotate(48deg)}
 .heroBlob.b4{right:12%;top:118px;width:26px;height:26px;transform:rotate(-17deg)}
-.heroBlob.b5{left:3%;top:170px;width:42px;height:42px;transform:rotate(8deg)}
 .heroBlob.b6{right:3%;top:8px;width:24px;height:24px;transform:rotate(-33deg)}
 
 /* ---------- progression totale ---------- */
@@ -160,10 +160,10 @@ footer a{color:var(--blue)}
     <svg viewBox="0 0 24 24"><path d="M19 12H5M11 18l-6-6 6-6"/></svg>
   </a>
   <a class="brand" href="/" aria-label="Accueil maths&amp;go"><img src="/assets/img/mathsgo-logo-390.png" alt="maths&amp;go"></a>
-  <div class="modeBar">
-    <span class="modeActu" id="modeActu">🎮 Mode élève</span>
-    <a class="modeBtn" id="modeBtn" href="?prof=1">Vue professeur</a>
-  </div>
+  <nav class="modeBar" aria-label="Choix du mode">
+    <a class="modeOpt actif" id="optEleve">🎮 Élève</a>
+    <a class="modeOpt" id="optProf" href="?prof=1">👩‍🏫 Professeur</a>
+  </nav>
 </header>
 
 
@@ -172,7 +172,6 @@ footer a{color:var(--blue)}
   <svg class="heroBlob b2" viewBox="0 0 110 110"><use href="#tacheEtoile" fill="#f58220" opacity=".20" width="110" height="110"/></svg>
   <svg class="heroBlob b3" viewBox="0 0 110 110"><use href="#tacheEtoile" fill="#08aaa5" opacity=".16" width="110" height="110"/></svg>
   <svg class="heroBlob b4" viewBox="0 0 110 110"><use href="#tacheEtoile" fill="#f9bf3b" opacity=".22" width="110" height="110"/></svg>
-  <svg class="heroBlob b5" viewBox="0 0 110 110"><use href="#tacheEtoile" fill="#0b67b2" opacity=".12" width="110" height="110"/></svg>
   <svg class="heroBlob b6" viewBox="0 0 110 110"><use href="#tacheEtoile" fill="#08aaa5" opacity=".13" width="110" height="110"/></svg>
   <h1>L'univers <span class="splat">SPLAT!</span></h1>
   <p class="sub">Des jetons se cachent sous les taches… Traverse les trois mondes, étape par étape,
@@ -367,8 +366,8 @@ document.addEventListener("click",ev=>{
   majAffichage();
 });
 if (PROF) {
-  const ma=document.getElementById('modeActu'); if(ma) ma.textContent='👩\u200d🏫 Mode professeur';
-  const mb=document.getElementById('modeBtn'); if(mb){ mb.href=window.location.pathname; mb.textContent='Vue élève'; }
+  const oe=document.getElementById('optEleve'); if(oe){ oe.classList.remove('actif'); oe.href=window.location.pathname; }
+  const op=document.getElementById('optProf'); if(op){ op.classList.add('actif'); op.removeAttribute('href'); }
   const tb=document.getElementById('totalBar'); if(tb) tb.style.display='none';
   const fp=document.querySelector('footer span'); if(fp) fp.innerHTML='Vue professeur — d\u2019apr\u00e8s la progression \u00ab SPLAT! cycle 3 \u00bb de Claire : '+
     '<a href="https://digipad.app/p/1754235/397f3f517445b" target="_blank" rel="noopener">sa progression d\u2019origine (Digipad)</a> \u00b7 '+
