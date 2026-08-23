@@ -1826,7 +1826,11 @@ function loadSharedConfiguration(){
   eleveActif = params.get("eleve") === "1";
   parcoursId = (params.get("parcours") || "").slice(0, 64);
   if(eleveActif) document.body.classList.add("eleve-mode");
-  const sharedNames = ["mode", "seed", "cards", "equation", "tasksMin", "tasksMax", "visibleMin", "visibleMax", "hidden", "hiddenMax", "totalMin", "totalMax", "splats", "clues", "structure", "mul", "div", "add", "sub", "deltaMax", "operation", "beadMax", "opposites", "colors", "unknown", "print", "duplex", "layout", "title", "eleve", "parcours"];
+  /* « imprimer=1 » : le lien « Fiche » de la carte des mondes arrive ici —
+     on lance l'impression dès que les cartes sont générées, au lieu de
+     laisser le professeur chercher le bouton Imprimer. */
+  impressionAuto = params.get("imprimer") === "1";
+  const sharedNames = ["mode", "seed", "cards", "equation", "tasksMin", "tasksMax", "visibleMin", "visibleMax", "hidden", "hiddenMax", "totalMin", "totalMax", "splats", "clues", "structure", "mul", "div", "add", "sub", "deltaMax", "operation", "beadMax", "opposites", "colors", "unknown", "print", "duplex", "layout", "title", "eleve", "parcours", "imprimer"];
   if(!sharedNames.some(name => params.has(name))) return false;
 
   setSelectFromShare(params, "mode", activityEl);
@@ -7297,9 +7301,8 @@ let cards = [];
 let idx = 0;
 let revealState = 0; // États selon le mode (A/B: 0→3, B±: 0→2, autres: 0/2)
 /* Parcours élève : aucun réglage visible, activé uniquement par ?eleve=1 dans l'adresse. */
-let eleveActif = false, parcoursId = "";
+let eleveActif = false, parcoursId = "", impressionAuto = false;
 let eleveIdx = 0, eleveEtoiles = 0, eleveSerie = [], eleveCarteFautee = false, eleveRepriseFaite = false;
-const ELEVE_SERIE_MAX = 8;
 const ELEVE_STORE_KEY = "mathsgo-splat-parcours";
 const counterEl = document.getElementById("counter");
 const fsHost = document.getElementById("fsHost");
@@ -7573,7 +7576,9 @@ function renderEleveSplat(){
        tableau du jeu une case de largeur nulle casse les proportions : on
        écarte ces cartes de la série jouée. La fiche imprimée ne change pas. */
     const jouables = cards.filter(c => { const i = eleveInfosCarte(c); return !i || i.H > 0; });
-    eleveSerie = (jouables.length ? jouables : cards).slice(0, ELEVE_SERIE_MAX);
+    /* La série suit la fiche : toutes les cartes de la mise en page, dans le
+       même ordre. Seules les cartes « tache vide » ci-dessus sont écartées. */
+    eleveSerie = (jouables.length ? jouables : cards).slice();
     eleveIdx = 0; eleveEtoiles = 0;
     /* série interrompue la dernière fois ? on reprend où on en était */
     if(!eleveRepriseFaite && parcoursId){
@@ -7680,6 +7685,7 @@ if(!loadSharedConfiguration()){
   syncPrintModeUI();
 }
 generate();
+if(impressionAuto) printSheet();
 
 </script>
 </body>

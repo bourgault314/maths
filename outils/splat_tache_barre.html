@@ -974,6 +974,9 @@ function startGen() {
   
   state = [];
   eleveIdx = 0;
+  /* Sans quoi le parcours élève rejouerait les cartes d'avant : la série
+     doit être reconstruite à partir des cartes qui viennent d'être générées. */
+  eleveSerie = [];
   const totalItems = cols * rows;
 
   for(let i=0; i<totalItems; i++) {
@@ -2052,7 +2055,6 @@ function getSplatSvg(item, drawDots, hideVisibleDotsUntilReveal = false, forceHi
    Réservé au « Petit Splat classique » pour l'instant. La réussite d'une série
    est mémorisée dans le navigateur (clé partagée avec la carte des mondes)
    quand l'adresse porte ?parcours=identifiant. */
-const ELEVE_SERIE_MAX = 8;
 const ELEVE_STORE_KEY = 'mathsgo-splat-parcours';
 
 function eleveEnregistrerReussite(sansFaute, total) {
@@ -2144,7 +2146,9 @@ function renderEleve(main) {
         return;
     }
     if (eleveIdx === 0 && eleveSerie.length === 0) {
-        eleveSerie = state.slice(0, ELEVE_SERIE_MAX);
+        /* La série suit la fiche : toutes les cartes de la mise en page
+           (12 en 3×4, 9 en 3×3…), dans le même ordre. */
+        eleveSerie = state.slice();
         eleveEtoiles = 0;
         /* série interrompue la dernière fois ? on reprend où on en était */
         if (eleveSerie.length && !eleveRepriseFaite && parcoursId) {

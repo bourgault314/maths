@@ -1421,6 +1421,7 @@ function getSeedForCurrentMode(){
 }
 
 let activeGenerationSeed = "";
+let impressionAuto = false;
 let shareFeedbackTimer = null;
 
 function prepareSeedForGeneration(){
@@ -1498,7 +1499,11 @@ function applyShareControl(params, name, el){
 
 function loadSharedConfiguration(){
   const params = new URLSearchParams(window.location.search);
-  const sharedNames = ["mode", "seed", "cards", "form", "tasksMax", "visibleMin", "visibleMax", "totalMin", "totalMax", "beadMax", "opposites", "colors", "writing", "unknown", "view", "print", "duplex", "layout", "title"];
+  /* « imprimer=1 » : le lien « Fiche » de la carte des mondes arrive ici —
+     on lance l'impression dès que les cartes sont générées, au lieu de
+     laisser le professeur chercher le bouton Imprimer. */
+  impressionAuto = params.get("imprimer") === "1";
+  const sharedNames = ["mode", "seed", "cards", "form", "tasksMax", "visibleMin", "visibleMax", "totalMin", "totalMax", "beadMax", "opposites", "colors", "writing", "unknown", "view", "print", "duplex", "layout", "title", "imprimer"];
   if(!sharedNames.some(name => params.has(name))) return false;
 
   setSelectFromShare(params, "mode", activityEl);
@@ -9199,6 +9204,7 @@ if(!loadSharedConfiguration()){
 }
 syncPrintSummary();
 generate();
+if(impressionAuto) printSheet();
 
 </script>
 </body>
