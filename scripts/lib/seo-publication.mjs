@@ -16,6 +16,11 @@ export const CURATED_PAGES = [
     description: "Mentions légales du site pédagogique maths&go."
   },
   {
+    path: "licence.html",
+    title: "Licence et réutilisation | maths&go",
+    description: "Conditions de réutilisation des ressources de maths&go : licence Creative Commons CC BY-NC-SA 4.0."
+  },
+  {
     path: "confidentialite.html",
     title: "Confidentialité et cookies | maths&go",
     description: "Politique de confidentialité et gestion des cookies sur le site pédagogique maths&go."
@@ -485,6 +490,7 @@ ${domainSections}
     <a href="/outils/">Catalogue</a><span aria-hidden="true">·</span>
     <a href="/mentions-legales.html">Mentions légales</a><span aria-hidden="true">·</span>
     <a href="/confidentialite.html">Confidentialité</a><span aria-hidden="true">·</span>
+    <a href="/licence.html">Licence</a><span aria-hidden="true">·</span>
     <button type="button" data-mathsgo-consent-open onclick="window.mathsgoConsentement &amp;&amp; window.mathsgoConsentement.ouvrir()">Gérer mes cookies</button>
   </footer>
 </body>
