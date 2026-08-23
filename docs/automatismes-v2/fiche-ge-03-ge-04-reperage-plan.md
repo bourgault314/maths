@@ -263,9 +263,10 @@ ne sont plus données. Le halo de focus reste disponible au clavier via
 souris. Les aides interactives sont elles aussi utilisables au clavier avec
 les flèches et Entrée.
 
-Sur téléphone, les quatre réponses du QCM forment toujours une grille `2 × 2`
-avec largeurs et hauteurs homogènes. Les couples sont centrés et ne passent pas
-sous le `✓` commun.
+Les quatre réponses du QCM forment toujours une grille `2 × 2`, du téléphone
+au TNI, avec largeurs et hauteurs homogènes. Les couples sont centrés et ne
+passent pas sous le `✓` commun. Le sélecteur spécifique du module conserve
+cette disposition face à la règle générique des grilles de choix.
 
 ## 8. Diagnostics
 
@@ -365,7 +366,7 @@ Les non-régressions couvrent :
 - absence des coordonnées du point provisoire et maintien du clavier ;
 - série courte ciblée et série courte multi-notions ;
 - rationnels exacts, diagnostics, tactile et clavier ;
-- QCM mobile `2 × 2` et `✓` sans déformation.
+- QCM `2 × 2` à toutes les largeurs et `✓` sans déformation.
 
 `tests/automatismes-v2-reperage-regression.cjs` décrit la recette réelle pour
 `320 × 568`, `390 × 844`, `768 × 1024`, `1 366 × 768` et `1 920 × 1 080`.
@@ -384,5 +385,5 @@ repère neutre, les quatre temps du modelage de placement, les pas décimaux, le
 coordonnées nulles et les huit positions de bord.
 
 La vérification complète passe **1 759 tests sur 1 759** dans **251 suites**.
-Le graphe V2 est invalidé atomiquement en `v53` et la façade `app.js` reçoit la
-révision `56`.
+Le graphe V2 est invalidé atomiquement en `v54` et la façade `app.js` reçoit la
+révision `57`.

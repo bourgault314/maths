@@ -2,7 +2,7 @@ import {
   analyserEcritureDecimalePositive,
   formaterFractionEnDecimal,
   fractionsEgales,
-} from "../../packages/objets/src/fractions-decimaux.js?v=53";
+} from "../../packages/objets/src/fractions-decimaux.js?v=54";
 
 export const DIAGNOSTICS_FRACTIONS_DECIMAUX = Object.freeze({
   E1: "Tu as recopié le numérateur et le dénominateur autour de la virgule. Cherche d’abord la valeur de la fraction.",

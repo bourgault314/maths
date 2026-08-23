@@ -1,15 +1,15 @@
-import { validerGraine } from "../../../../moteur-exercices/src/aleatoire.js?v=53";
+import { validerGraine } from "../../../../moteur-exercices/src/aleatoire.js?v=54";
 import {
   apparierProfilsSansDoublon,
   definirPaquetPondere,
   ordonnerEnLimitantRepetitions,
   tirerProfilsPonderes,
-} from "../../../../moteur-exercices/src/paquets-ponderes.js?v=53";
+} from "../../../../moteur-exercices/src/paquets-ponderes.js?v=54";
 import {
   GABARIT_VOLUME_CUBE_PAVE,
   GABARIT_VOLUME_CYLINDRE,
   GABARIT_VOLUME_PRISME,
-} from "./calcul-volumes.js?v=53";
+} from "./calcul-volumes.js?v=54";
 
 export const VERSION_PLANS_SERIES_VOLUMES = 1;
 

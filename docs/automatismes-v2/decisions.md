@@ -1965,5 +1965,13 @@ reste intégralement applicable : aucun plan 5/10/15/20 ni préfixe d'un plan de
 20 n'est réintroduit.
 
 La vérification complète passe 1 759 tests sur 1 759 dans 251 suites. Le
-graphe public V2 est invalidé atomiquement en `v53` et `app.js` reçoit la
-révision `56`.
+graphe public V2 est invalidé atomiquement en `v54` et `app.js` reçoit la
+révision `57`.
+
+La première lecture du QCM sur le site publié a révélé que la règle générique
+`.grille-choix`, déclarée plus bas dans la feuille, reprenait la priorité et
+formait encore trois colonnes puis une carte isolée sur grand écran. La règle
+du repérage porte désormais le sélecteur plus spécifique
+`.grille-choix.grille-qcm-repere` : les quatre propositions restent en `2 × 2`
+à toutes les largeurs, et le test responsive verrouille cette priorité de
+cascade.

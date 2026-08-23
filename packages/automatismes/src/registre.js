@@ -1,29 +1,29 @@
-import { creerRegistre } from "../../moteur-exercices/src/generation.js?v=53";
-import { GENERATEUR_RECONNAISSANCE_SOLIDES } from "./espace-et-geometrie/solides-usuels/reconnaissance.js?v=53";
-import { GENERATEUR_DROITE_GRADUEE } from "./espace-et-geometrie/droite-graduee/questions.js?v=53";
+import { creerRegistre } from "../../moteur-exercices/src/generation.js?v=54";
+import { GENERATEUR_RECONNAISSANCE_SOLIDES } from "./espace-et-geometrie/solides-usuels/reconnaissance.js?v=54";
+import { GENERATEUR_DROITE_GRADUEE } from "./espace-et-geometrie/droite-graduee/questions.js?v=54";
 import {
   GENERATEUR_LIRE_COORDONNEES,
   GENERATEUR_PLACER_POINT_REPERE,
-} from "./espace-et-geometrie/reperage-plan/questions.js?v=53";
+} from "./espace-et-geometrie/reperage-plan/questions.js?v=54";
 import {
   GENERATEUR_VOLUME_CUBE_PAVE,
   GENERATEUR_VOLUME_CYLINDRE,
   GENERATEUR_VOLUME_PRISME,
-} from "./grandeurs-et-mesures/volumes/calcul-volumes.js?v=53";
-import { GENERATEUR_CHIFFRE_MANQUANT } from "./nombres-et-calculs/criteres-divisibilite/chiffre-manquant.js?v=53";
-import { GENERATEUR_CRITERE_PRECIS } from "./nombres-et-calculs/criteres-divisibilite/critere-precis.js?v=53";
-import { GENERATEUR_PARTAGE_COURT } from "./nombres-et-calculs/criteres-divisibilite/partage-court.js?v=53";
-import { GENERATEUR_SELECTION_DIVISEURS } from "./nombres-et-calculs/criteres-divisibilite/selection-diviseurs.js?v=53";
-import { GENERATEUR_SELECTION_NOMBRES } from "./nombres-et-calculs/criteres-divisibilite/selection-nombres.js?v=53";
-import { GENERATEUR_CALCUL_COURT_CARRE } from "./nombres-et-calculs/carres-entiers-1-a-12/calcul-court.js?v=53";
-import { GENERATEUR_CALCUL_DIRECT_CARRE } from "./nombres-et-calculs/carres-entiers-1-a-12/calcul-direct.js?v=53";
-import { GENERATEUR_CARRE_QUADRILLE } from "./nombres-et-calculs/carres-entiers-1-a-12/carre-quadrille.js?v=53";
-import { GENERATEUR_RECONNAITRE_CARRES } from "./nombres-et-calculs/carres-entiers-1-a-12/reconnaitre-carres.js?v=53";
-import { GENERATEUR_RETROUVER_ENTIER_CARRE } from "./nombres-et-calculs/carres-entiers-1-a-12/retrouver-entier.js?v=53";
-import { GENERATEUR_SENS_NOTATION_CARRE } from "./nombres-et-calculs/carres-entiers-1-a-12/sens-notation.js?v=53";
-import { GENERATEUR_DECIMAL_VERS_FRACTION } from "./nombres-et-calculs/fractions-simples-decimaux/decimal-vers-fraction.js?v=53";
-import { GENERATEUR_FRACTION_VERS_DECIMAL } from "./nombres-et-calculs/fractions-simples-decimaux/fraction-vers-decimal.js?v=53";
-import { GENERATEUR_ECRITURES_MULTIPLES } from "./nombres-et-calculs/ecritures-multiples-nombre/questions.js?v=53";
+} from "./grandeurs-et-mesures/volumes/calcul-volumes.js?v=54";
+import { GENERATEUR_CHIFFRE_MANQUANT } from "./nombres-et-calculs/criteres-divisibilite/chiffre-manquant.js?v=54";
+import { GENERATEUR_CRITERE_PRECIS } from "./nombres-et-calculs/criteres-divisibilite/critere-precis.js?v=54";
+import { GENERATEUR_PARTAGE_COURT } from "./nombres-et-calculs/criteres-divisibilite/partage-court.js?v=54";
+import { GENERATEUR_SELECTION_DIVISEURS } from "./nombres-et-calculs/criteres-divisibilite/selection-diviseurs.js?v=54";
+import { GENERATEUR_SELECTION_NOMBRES } from "./nombres-et-calculs/criteres-divisibilite/selection-nombres.js?v=54";
+import { GENERATEUR_CALCUL_COURT_CARRE } from "./nombres-et-calculs/carres-entiers-1-a-12/calcul-court.js?v=54";
+import { GENERATEUR_CALCUL_DIRECT_CARRE } from "./nombres-et-calculs/carres-entiers-1-a-12/calcul-direct.js?v=54";
+import { GENERATEUR_CARRE_QUADRILLE } from "./nombres-et-calculs/carres-entiers-1-a-12/carre-quadrille.js?v=54";
+import { GENERATEUR_RECONNAITRE_CARRES } from "./nombres-et-calculs/carres-entiers-1-a-12/reconnaitre-carres.js?v=54";
+import { GENERATEUR_RETROUVER_ENTIER_CARRE } from "./nombres-et-calculs/carres-entiers-1-a-12/retrouver-entier.js?v=54";
+import { GENERATEUR_SENS_NOTATION_CARRE } from "./nombres-et-calculs/carres-entiers-1-a-12/sens-notation.js?v=54";
+import { GENERATEUR_DECIMAL_VERS_FRACTION } from "./nombres-et-calculs/fractions-simples-decimaux/decimal-vers-fraction.js?v=54";
+import { GENERATEUR_FRACTION_VERS_DECIMAL } from "./nombres-et-calculs/fractions-simples-decimaux/fraction-vers-decimal.js?v=54";
+import { GENERATEUR_ECRITURES_MULTIPLES } from "./nombres-et-calculs/ecritures-multiples-nombre/questions.js?v=54";
 
 /**
  * Crée le registre des seuls générateurs pédagogiques V2 déjà construits.

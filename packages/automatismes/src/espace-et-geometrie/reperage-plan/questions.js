@@ -1,6 +1,6 @@
 // GE-03 / GE-04 — lire et placer un point dans un repère orthogonal.
 
-import { SCHEMA_GABARIT_QUESTION, estDonneePure } from "../../../../contrats/src/gabarit.js?v=53";
+import { SCHEMA_GABARIT_QUESTION, estDonneePure } from "../../../../contrats/src/gabarit.js?v=54";
 import {
   COMPARAISON_CHOIX_EXACT,
   COMPARAISON_VALEUR_RATIONNELLE_EXACTE,
@@ -11,8 +11,8 @@ import {
   TYPE_REPONSE_DEUX_ENTIERS_RELATIFS,
   TYPE_REPONSE_DEUX_NOMBRES_DECIMAUX,
   TYPE_REPONSE_NOMBRE_DECIMAL,
-} from "../../../../contrats/src/question-v2.js?v=53";
-import { IDENTITES_AUTOMATISMES, creerClassementAutomatisme } from "../../identifiants.js?v=53";
+} from "../../../../contrats/src/question-v2.js?v=54";
+import { IDENTITES_AUTOMATISMES, creerClassementAutomatisme } from "../../identifiants.js?v=54";
 
 export const FAMILLE_LIRE_COORDONNEES = "lire-coordonnees";
 export const FAMILLE_LIRE_ABSCISSE_REPERE = "lire-abscisse";

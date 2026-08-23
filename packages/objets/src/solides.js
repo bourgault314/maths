@@ -16,8 +16,8 @@
 // Les deux sorties (fiche statique, vue tournée au doigt) partagent CE
 // modèle unique (§13.3).
 
-import { COULEURS_BARRES } from "../../charte/src/charte.js?v=53";
-import { briquesSvg, echapper, formaterLongueur } from "./figure.js?v=53";
+import { COULEURS_BARRES } from "../../charte/src/charte.js?v=54";
+import { briquesSvg, echapper, formaterLongueur } from "./figure.js?v=54";
 
 export const VERSION_SOLIDES = 1;
 
