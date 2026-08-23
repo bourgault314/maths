@@ -5530,11 +5530,10 @@ function eqStepActionText(card, revealState, opts = {}){
       return "Je garde ce qui reste.";
     case "share":{
       const n = Math.max(2, Math.round(Number(state.groupCount) || 2));
-      // Forme courte pour les étiquettes des vignettes imprimées en deux colonnes,
-      // où la phrase complète était réduite jusqu'à la taille plancher.
-      return opts.compact
-        ? ("Je range en " + n + " groupes égaux.")
-        : ("Je range en " + n + " groupes égaux de chaque côté.");
+      // « Partager » et non « ranger » : c'est le verbe de la division, celui que les
+      // élèves entendent depuis le primaire (« partager en parts égales »), et il
+      // annonce l'étape suivante « Je divise par n » au lieu de décrire un rangement.
+      return "Je partage en " + n + " groupes égaux de chaque côté.";
     }
     case "final":{
       const coeff = Math.max(1, Math.round(Number(state.remainingCoeff) || 1));
@@ -8236,9 +8235,13 @@ function renderCardEquationStepPrint(targetSvg, card, printMode, tEl, tText, use
     const col = i % cols;
     const x = marginX + col * (colW + gap);
     const y = top + row * (rowH + gap);
-    // En deux colonnes (plus de 4 étapes), la consigne « Je range en n groupes égaux
-    // de chaque côté. » était réduite à la taille plancher : on prend sa forme courte.
-    const action = eqStepActionText(card, i+1, {useTableLabels:isSchema, compact: cols === 2});
+    // La correction dit mot pour mot ce que dit la projection. Une forme courte
+    // « Je range en n groupes égaux. » avait été introduite pour les vignettes en
+    // deux colonnes, en croyant la phrase complète illisible ; mesure faite, elle
+    // tient (690 unités de large sur les 709 disponibles à 26, et le fitter la pose
+    // à 22 avec une grosse marge). L'élève lisait sur sa fiche autre chose que ce
+    // qui était projeté au tableau : c'est ça qu'il fallait corriger.
+    const action = eqStepActionText(card, i+1, {useTableLabels:isSchema});
     const label = "Étape " + (i+1) + (action ? " : " + action : "");
     drawFramedStep(i+1, x, y, colW, rowH, label);
   }
