@@ -1,6 +1,18 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
+import { creerRegistreAutomatismes } from "../../packages/automatismes/src/registre.js";
+import {
+  FAMILLE_DIAGNOSTIC_COORDONNEES,
+  FAMILLE_IDENTIFIER_POINT,
+  decoderCoordonnee,
+} from "../../packages/automatismes/src/espace-et-geometrie/reperage-plan/questions.js";
+import {
+  NOTION_LIRE_COORDONNEES_POINT,
+  NOTION_NC01,
+  NOTION_PLACER_POINT_REPERE,
+  obtenirNotionLecteur,
+} from "./registre-lecteur.js";
 import {
   genererSerieMultinotions,
   ordonnerNotionsDansSerie,
@@ -198,6 +210,69 @@ describe("répartition multi-notions", () => {
 });
 
 describe("génération multi-notions", () => {
+  it("laisse les profils GE rares apparaître dans une petite série multi-notions", () => {
+    const definitions = [
+      NOTION_NC01,
+      NOTION_LIRE_COORDONNEES_POINT,
+      NOTION_PLACER_POINT_REPERE,
+    ].map(obtenirNotionLecteur);
+    const registre = creerRegistreAutomatismes();
+    const observes = {
+      pasQuartLecture: false,
+      pasQuartPlacement: false,
+      qcm: false,
+      identifier: false,
+      origineLecture: false,
+      originePlacement: false,
+    };
+    for (let seed = 0; seed < 3_000; seed += 1) {
+      const configuration = {
+        definitions,
+        registre,
+        graine: `multi-ge-court-${seed}`,
+        nombreQuestions: 5,
+      };
+      const questions = genererSerieMultinotions(configuration);
+      if (seed < 20) assert.deepEqual(genererSerieMultinotions(configuration), questions);
+      assert.equal(questions.length, 5);
+      const ge = questions.filter(({ classement }) => [
+        NOTION_LIRE_COORDONNEES_POINT,
+        NOTION_PLACER_POINT_REPERE,
+      ].includes(classement.notion));
+      assert.ok(ge.length >= 2 && ge.length <= 4);
+      for (const question of ge) {
+        const repere = question.enonce.find(({ type }) => type === "repere-cartesien");
+        assert.ok(repere);
+        const lecture = question.classement.notion === NOTION_LIRE_COORDONNEES_POINT;
+        observes.pasQuartLecture ||= lecture && repere.pas === 0.25;
+        observes.pasQuartPlacement ||= !lecture && repere.pas === 0.25;
+        observes.qcm ||= question.classement.famille === FAMILLE_DIAGNOSTIC_COORDONNEES;
+        observes.identifier ||= question.classement.famille === FAMILLE_IDENTIFIER_POINT;
+        const cible = lecture
+          ? repere.points.find(({ nom }) => nom === repere.nomPoint)
+          : decoderCoordonnee(question.reponse.attendus[0]);
+        assert.ok(cible);
+        if (lecture) {
+          observes.origineLecture ||= cible.x === 0 && cible.y === 0;
+        } else {
+          observes.originePlacement ||= cible.x === 0 && cible.y === 0;
+        }
+        if (repere.pas < 1) {
+          assert.ok(!Number.isInteger(cible.x) || !Number.isInteger(cible.y));
+        }
+      }
+      if (Object.values(observes).every(Boolean) && seed >= 20) break;
+    }
+    assert.deepEqual(observes, {
+      pasQuartLecture: true,
+      pasQuartPlacement: true,
+      qcm: true,
+      identifier: true,
+      origineLecture: true,
+      originePlacement: true,
+    });
+  });
+
   it("préserve l'ordre de chaque sous-série et intercale les files", () => {
     const definitions = ["a", "b", "c"].map((id) => ({
       id,

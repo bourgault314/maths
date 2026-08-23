@@ -1580,6 +1580,9 @@ de la fiche pédagogique.
 
 ### D-066 — GE-03 et GE-04 restent séparés autour d'un repère V2 commun
 
+> Décision historique : D-073 a ensuite ajouté les pas décimaux, puis D-075 a
+> remplacé tous les plans propres aux longueurs par des paquets pondérés.
+
 La taxonomie distingue `lire-coordonnees-point` et `placer-point-repere` : le
 lecteur conserve donc deux entrées visibles. Une série GE-04 reste un pur
 entraînement au placement et n'est pas diluée par des questions de lecture.
@@ -1767,6 +1770,10 @@ de modules demeure en `v49`.
 
 ### D-073 — Le pas 1 reste très majoritaire dans GE-03 et GE-04
 
+> Décision historique pour la pondération `15 / 4 / 1` : D-075 conserve ces
+> poids de référence, mais supprime les recettes spécifiques 5/10/15/20 et
+> rend le pas `0,25` possible dans toute petite allocation.
+
 Après l'essai du lecteur publié, Gwenaël confirme que l'échelle entière doit
 rester le cœur de GE-03 et GE-04, mais qu'un élève de troisième doit aussi
 rencontrer quelques demi-unités. Il refuse une alternance un sur deux. Sur une
@@ -1860,3 +1867,103 @@ les audits obligatoires sont décrits dans
 `paquets-ponderes-deterministes.md`. Cette décision n'autorise ni fusion dans
 `main` ni publication en production avant une recette intégralement verte et
 une validation explicite.
+
+### D-076 — Lire et placer dans un repère emploient deux modèles spatiaux explicites
+
+La reprise de GE-03 et GE-04 du 23 août 2026 conserve intégralement le contrat
+de D-075. Les familles, zones et pas sont toujours tirés avec
+`definirPaquetPondere` et `tirerProfilsPonderes` ; les poids de référence
+restent `15 / 4 / 1` pour les pas et `10 / 3 / 3 / 2 / 2` pour les familles
+GE-03. Aucun plan spécial 5, 10, 15 ou 20 et aucun préfixe d'un plan de 20 ne
+sont réintroduits. Une simulation de 10 000 graines par longueur observe bien
+le pas `0,25`, l'origine et les familles rares dans de petites allocations et
+dans une série multi-notions.
+
+GE-03 enseigne désormais un modèle de lecture en trois étapes : projection
+verticale vers l'axe des abscisses, projection horizontale vers l'axe des
+ordonnées, puis écriture du couple dans cet ordre. Les lectures d'une seule
+coordonnée n'utilisent que deux étapes symétriques. « Comprendre le zéro »
+n'est plus une troisième étape générique : un point sur un axe ou à l'origine
+déclenche une question ciblée qui ne livre pas immédiatement la coordonnée
+nulle. GE-04 conserve son autre modèle spatial : départ de l'origine,
+déplacement horizontal, déplacement vertical, placement à l'intersection.
+
+Les boutons numérotés du haut deviennent l'unique navigation du cours et de
+l'aide ; le second numéro, « Précédent » et « Indice suivant » disparaissent.
+La petite graduation n'est plus donnée dans l'énoncé : les indices font
+d'abord comparer les valeurs chiffrées et compter les intervalles, avant de
+révéler le pas au dernier niveau. La page de vocabulaire ne parle plus des
+pondérations du générateur et distingue seulement axes, origine et
+graduations.
+
+Deux rôles chromatiques uniques sont fixés pour le module : orange `#f58220`
+pour abscisse, axe horizontal et projection verticale ; turquoise `#08b9b2`
+pour ordonnée, axe vertical et projection horizontale. Ils sont consommés par
+le texte, les encadrés, le SVG, les graduations et les flèches. La couleur
+n'est jamais le seul canal. L'objet `repere-cartesien` sait mettre un axe
+entier en évidence et maintient dorénavant la croix et la lettre d'un point
+entièrement visibles aux quatre bords et dans les coins.
+
+Le QCM garde ses quatre mécanismes exacts — réponse, inversion, erreur de signe
+sur l'abscisse et erreur de signe sur l'ordonnée — et exige en plus que chaque
+couple reste compatible avec les bornes affichées. Les quatre cartes forment
+une grille mobile `2 × 2`. L'audit des V2 confirme que le `✓` vert est une
+convention commune : il est conservé mais positionné sans déformer la carte.
+Après une omission, le lecteur précise que la réponse attendue est indiquée en
+vert.
+
+La recette de non-régression couvre déterminisme, paquets, trois pas,
+coordonnées nulles, origine, quatre quadrants, huit positions de bord, QCM,
+petites allocations et multi-notions. `npm run verifier` passe 1 753 tests sur
+1 753 dans 251 suites. Les planches issues de l'objet de production ont été
+relues en vue ordinateur et 320 px. Le scénario Playwright est prêt pour cinq
+fenêtres, mais son exécution reste à refaire dans un environnement muni de
+Chromium, absent et non téléchargeable dans ce runtime. Le graphe V2 passe en
+`v52` et la façade en révision `55`. Cette décision n'autorise ni fusion ni
+publication sans validation explicite.
+
+### D-077 — L'aide du repérage fait agir l'élève dans un repère neutre
+
+D-077 précise et remplace la navigation d'aide décrite par D-076. Les nombres
+1/2/3 en tête du panneau sont des indicateurs de progression non cliquables :
+une étape ne s'ouvre qu'après l'action attendue dans le dessin. GE-03 demande
+d'abord de cliquer l'axe des abscisses, puis celui des ordonnées ; les
+projections apparaissent après le bon choix sans écrire les valeurs. GE-04
+demande au contraire de cliquer la graduation d'abscisse, la graduation
+d'ordonnée, puis l'intersection. Cette différence conserve les deux modèles
+spatiaux : point vers axes pour lire, coordonnées vers point pour placer.
+
+Les erreurs font partie de l'aide : mauvais axe, mauvaise graduation, point
+hors intersection et mauvais point d'identification reçoivent un retour
+contextualisé. Les coordonnées nulles produisent un déplacement explicitement
+nul, jamais une étape vide. Les pas décimaux déclenchent une aide d'échelle
+progressive — comparaison, comptage des intervalles, valeur explicite en
+dernier recours. La souris, le tactile et le clavier suivent le même parcours ;
+les flèches et Entrée restent disponibles dans GE-04.
+
+Le code couleur est limité à sa fonction pédagogique. Seule la première page
+de vocabulaire colore les axes entiers. Les questions, les autres pages du
+cours et les aides gardent des axes neutres ; orange `#f58220` colore la
+projection ou le déplacement d'abscisse actif, turquoise `#08b9b2` celui de
+l'ordonnée. Les points conservent une couleur distincte. Leur croix diagonale
+est réduite plutôt que remplacée par un `+`, qui se confondrait avec les axes
+et la grille ; le point choisi en correction ajoute un cercle pointillé pour
+rester identifiable sans la couleur.
+
+Les lectures isolées tirent une formulation indépendante, par le même moteur
+pondéré : français `14` ou notation `x_M/y_M` `6`. Ce sont deux présentations
+de la même famille et la notation peut apparaître dans une petite série. Le
+point provisoire GE-04 n'affiche plus les coordonnées de l'endroit cliqué. Le
+focus reste visible au clavier avec `:focus-visible`, sans halo persistant
+après un clic ou un toucher.
+
+La recette de navigateur capture dorénavant les actions réelles et leurs
+retours, au lieu de forcer artificiellement un numéro d'étape. Elle couvre les
+cinq fenêtres de 320 × 568 à 1 920 × 1 080, `x_M/y_M`, les trois pas, axes,
+origine, bords, QCM, aides, corrections juste/fausse et mode Au tableau. D-075
+reste intégralement applicable : aucun plan 5/10/15/20 ni préfixe d'un plan de
+20 n'est réintroduit.
+
+La vérification complète passe 1 759 tests sur 1 759 dans 251 suites. Le
+graphe public V2 est invalidé atomiquement en `v53` et `app.js` reçoit la
+révision `56`.

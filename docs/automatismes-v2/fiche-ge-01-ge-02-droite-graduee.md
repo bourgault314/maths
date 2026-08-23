@@ -167,7 +167,8 @@ Chaque page porte une seule idée principale et réemploie l'objet commun valid�
 
 ### Nous faisons
 
-Deux exemples guidés se répondent : lire un point, puis placer un point sur la
+Deux exemples guidés se répondent : lire l'abscisse d'un point, puis placer un
+point sur la
 même échelle. Le lecteur demande d'abord de sélectionner les deux références,
 puis de compter les intervalles et enfin de choisir le sens. La conclusion est
 montrée dans le cours, pas pendant une question notée.

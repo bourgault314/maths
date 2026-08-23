@@ -1,19 +1,19 @@
-import { GABARIT_RECONNAISSANCE_SOLIDES } from "../../packages/automatismes/src/espace-et-geometrie/solides-usuels/reconnaissance.js?v=51";
+import { GABARIT_RECONNAISSANCE_SOLIDES } from "../../packages/automatismes/src/espace-et-geometrie/solides-usuels/reconnaissance.js?v=53";
 import {
   genererSerieSolidesUsuels,
   PAQUET_PROFILS_SOLIDES_USUELS,
   PAQUET_VUES_SOLIDES_USUELS,
-} from "../../packages/automatismes/src/espace-et-geometrie/solides-usuels/serie.js?v=51";
-import { GABARIT_DROITE_GRADUEE } from "../../packages/automatismes/src/espace-et-geometrie/droite-graduee/questions.js?v=51";
+} from "../../packages/automatismes/src/espace-et-geometrie/solides-usuels/serie.js?v=53";
+import { GABARIT_DROITE_GRADUEE } from "../../packages/automatismes/src/espace-et-geometrie/droite-graduee/questions.js?v=53";
 import {
   genererSerieDroiteGraduee,
   PAQUET_FAMILLES_DROITE_GRADUEE,
   PAQUET_PROFILS_DROITE_GRADUEE,
-} from "../../packages/automatismes/src/espace-et-geometrie/droite-graduee/serie.js?v=51";
+} from "../../packages/automatismes/src/espace-et-geometrie/droite-graduee/serie.js?v=53";
 import {
   GABARIT_LIRE_COORDONNEES,
   GABARIT_PLACER_POINT_REPERE,
-} from "../../packages/automatismes/src/espace-et-geometrie/reperage-plan/questions.js?v=51";
+} from "../../packages/automatismes/src/espace-et-geometrie/reperage-plan/questions.js?v=53";
 import {
   genererSerieLireCoordonnees,
   genererSeriePlacerPointRepere,
@@ -21,12 +21,12 @@ import {
   PAQUET_PAS_REPERE,
   PAQUET_ZONES_LECTURE,
   PAQUET_ZONES_PLACEMENT,
-} from "../../packages/automatismes/src/espace-et-geometrie/reperage-plan/serie.js?v=51";
+} from "../../packages/automatismes/src/espace-et-geometrie/reperage-plan/serie.js?v=53";
 import {
   GABARIT_VOLUME_CUBE_PAVE,
   GABARIT_VOLUME_CYLINDRE,
   GABARIT_VOLUME_PRISME,
-} from "../../packages/automatismes/src/grandeurs-et-mesures/volumes/calcul-volumes.js?v=51";
+} from "../../packages/automatismes/src/grandeurs-et-mesures/volumes/calcul-volumes.js?v=53";
 import {
   genererSerieVolumeCubePave,
   genererSerieVolumeCylindre,
@@ -35,23 +35,23 @@ import {
   PAQUET_FORMES_VOLUME_CUBE_PAVE,
   PAQUET_MODES_VOLUME_CYLINDRE,
   PAQUET_VUES_VOLUMES,
-} from "../../packages/automatismes/src/grandeurs-et-mesures/volumes/serie.js?v=51";
-import { GABARIT_SELECTION_DIVISEURS } from "../../packages/automatismes/src/nombres-et-calculs/criteres-divisibilite/selection-diviseurs.js?v=51";
+} from "../../packages/automatismes/src/grandeurs-et-mesures/volumes/serie.js?v=53";
+import { GABARIT_SELECTION_DIVISEURS } from "../../packages/automatismes/src/nombres-et-calculs/criteres-divisibilite/selection-diviseurs.js?v=53";
 import {
   genererSerieNC01,
   PAQUET_FAMILLES_NC01,
-} from "../../packages/automatismes/src/nombres-et-calculs/criteres-divisibilite/serie.js?v=51";
-import { GABARIT_CALCUL_DIRECT_CARRE } from "../../packages/automatismes/src/nombres-et-calculs/carres-entiers-1-a-12/calcul-direct.js?v=51";
+} from "../../packages/automatismes/src/nombres-et-calculs/criteres-divisibilite/serie.js?v=53";
+import { GABARIT_CALCUL_DIRECT_CARRE } from "../../packages/automatismes/src/nombres-et-calculs/carres-entiers-1-a-12/calcul-direct.js?v=53";
 import {
   genererSerieNC02,
   PAQUET_FAMILLES_NC02,
-} from "../../packages/automatismes/src/nombres-et-calculs/carres-entiers-1-a-12/serie.js?v=51";
+} from "../../packages/automatismes/src/nombres-et-calculs/carres-entiers-1-a-12/serie.js?v=53";
 import {
   GABARIT_FRACTION_VERS_DECIMAL,
-} from "../../packages/automatismes/src/nombres-et-calculs/fractions-simples-decimaux/fraction-vers-decimal.js?v=51";
+} from "../../packages/automatismes/src/nombres-et-calculs/fractions-simples-decimaux/fraction-vers-decimal.js?v=53";
 import {
   GABARIT_DECIMAL_VERS_FRACTION,
-} from "../../packages/automatismes/src/nombres-et-calculs/fractions-simples-decimaux/decimal-vers-fraction.js?v=51";
+} from "../../packages/automatismes/src/nombres-et-calculs/fractions-simples-decimaux/decimal-vers-fraction.js?v=53";
 import {
   genererSerieDecimalVersFraction,
   genererSerieFractionVersDecimal,
@@ -63,23 +63,23 @@ import {
   PAQUET_CONTENUS_NC04,
   PAQUET_MICRO_NOTIONS_FRACTIONS_DECIMAUX,
   PAQUET_PRESENTATIONS_FRACTIONS_DECIMAUX,
-} from "../../packages/automatismes/src/nombres-et-calculs/fractions-simples-decimaux/serie.js?v=51";
+} from "../../packages/automatismes/src/nombres-et-calculs/fractions-simples-decimaux/serie.js?v=53";
 import {
   GABARIT_ECRITURES_MULTIPLES,
-} from "../../packages/automatismes/src/nombres-et-calculs/ecritures-multiples-nombre/questions.js?v=51";
+} from "../../packages/automatismes/src/nombres-et-calculs/ecritures-multiples-nombre/questions.js?v=53";
 import {
   genererSerieEcrituresMultiples,
   PAQUET_PRESENTATIONS_ECRITURES_MULTIPLES,
   PAQUET_PROFILS_ECRITURES_MULTIPLES,
-} from "../../packages/automatismes/src/nombres-et-calculs/ecritures-multiples-nombre/serie.js?v=51";
+} from "../../packages/automatismes/src/nombres-et-calculs/ecritures-multiples-nombre/serie.js?v=53";
 import {
   DOMAINES_AUTOMATISMES,
   MICRO_NOTIONS_AUTOMATISMES,
   MODULES_AUTOMATISMES,
-} from "../../packages/automatismes/src/identifiants.js?v=51";
+} from "../../packages/automatismes/src/identifiants.js?v=53";
 import {
   TAILLE_PAQUET_REFERENCE,
-} from "../../packages/moteur-exercices/src/paquets-ponderes.js?v=51";
+} from "../../packages/moteur-exercices/src/paquets-ponderes.js?v=53";
 
 export const NOTION_NC01 = MODULES_AUTOMATISMES.CRITERES_DIVISIBILITE;
 export const NOTION_NC02 = MODULES_AUTOMATISMES.CARRES_ENTIERS;

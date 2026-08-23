@@ -6,7 +6,7 @@
 // L'ordre de la sélection n'entre jamais dans la graine : les identifiants sont
 // canonisés avant tout tirage.
 
-import { creerGenerateur } from "../../packages/moteur-exercices/src/aleatoire.js?v=51";
+import { creerGenerateur } from "../../packages/moteur-exercices/src/aleatoire.js?v=53";
 
 export const VERSION_PLAN_SERIE_MULTINOTIONS = 2;
 

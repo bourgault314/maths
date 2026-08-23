@@ -5,12 +5,12 @@ import {
   definirPaquetPondere,
   ordonnerEnLimitantRepetitions,
   tirerProfilsPonderes,
-} from "../../../../moteur-exercices/src/paquets-ponderes.js?v=51";
-import { GABARIT_CHIFFRE_MANQUANT } from "./chiffre-manquant.js?v=51";
-import { GABARIT_CRITERE_PRECIS } from "./critere-precis.js?v=51";
-import { GABARIT_PARTAGE_COURT } from "./partage-court.js?v=51";
-import { GABARIT_SELECTION_DIVISEURS } from "./selection-diviseurs.js?v=51";
-import { GABARIT_SELECTION_NOMBRES } from "./selection-nombres.js?v=51";
+} from "../../../../moteur-exercices/src/paquets-ponderes.js?v=53";
+import { GABARIT_CHIFFRE_MANQUANT } from "./chiffre-manquant.js?v=53";
+import { GABARIT_CRITERE_PRECIS } from "./critere-precis.js?v=53";
+import { GABARIT_PARTAGE_COURT } from "./partage-court.js?v=53";
+import { GABARIT_SELECTION_DIVISEURS } from "./selection-diviseurs.js?v=53";
+import { GABARIT_SELECTION_NOMBRES } from "./selection-nombres.js?v=53";
 
 export const VERSION_PLAN_SERIE_NC01 = 7;
 

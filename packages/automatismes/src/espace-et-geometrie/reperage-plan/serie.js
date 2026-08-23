@@ -1,10 +1,10 @@
-import { creerGenerateur, validerGraine } from "../../../../moteur-exercices/src/aleatoire.js?v=51";
+import { creerGenerateur, validerGraine } from "../../../../moteur-exercices/src/aleatoire.js?v=53";
 import {
   apparierProfilsCompatibles,
   definirPaquetPondere,
   ordonnerEnLimitantRepetitions,
   tirerProfilsPonderes,
-} from "../../../../moteur-exercices/src/paquets-ponderes.js?v=51";
+} from "../../../../moteur-exercices/src/paquets-ponderes.js?v=53";
 import {
   FAMILLE_DIAGNOSTIC_COORDONNEES,
   FAMILLE_IDENTIFIER_POINT,
@@ -12,9 +12,11 @@ import {
   FAMILLE_LIRE_COORDONNEES,
   FAMILLE_LIRE_ORDONNEE,
   FAMILLE_PLACER_POINT_REPERE,
+  FORMULATION_COORDONNEE_PHRASE,
+  FORMULATION_COORDONNEE_SYMBOLIQUE,
   GABARIT_LIRE_COORDONNEES,
   GABARIT_PLACER_POINT_REPERE,
-} from "./questions.js?v=51";
+} from "./questions.js?v=53";
 
 export const QUOTAS_LIRE_COORDONNEES = Object.freeze({
   20: Object.freeze({ complet: 10, abscisse: 3, ordonnee: 3, qcm: 2, identifier: 2 }),
@@ -37,6 +39,14 @@ export const PAQUET_PAS_REPERE = definirPaquetPondere({
     { id: "pas-1", quota: 15, categorie: "principale", pas: 1 },
     { id: "pas-0.5", quota: 4, categorie: "secondaire", pas: 0.5 },
     { id: "pas-0.25", quota: 1, categorie: "rare", pas: 0.25 },
+  ],
+});
+
+export const PAQUET_FORMULATIONS_COORDONNEE_ISOLEE = definirPaquetPondere({
+  id: "ge03-formulations-coordonnee-isolee",
+  profils: [
+    { id: FORMULATION_COORDONNEE_PHRASE, quota: 14, categorie: "principale" },
+    { id: FORMULATION_COORDONNEE_SYMBOLIQUE, quota: 6, categorie: "secondaire" },
   ],
 });
 
@@ -120,8 +130,21 @@ function candidatsZone(zone, bornes, { qcm = false, fractionAxe = null } = {}) {
   else if (zone === "axe-y") candidats = [...negatifsY, ...positifsY].map((y) => ({ x: 0, y }));
   else if (zone === "origine") candidats = [{ x: 0, y: 0 }];
   else throw new RangeError(`zone de repère inconnue : ${zone}`);
+  const dansBornes = ({ x, y }) => x >= bornes.xMin && x <= bornes.xMax
+    && y >= bornes.yMin && y <= bornes.yMax;
   const sansAmbiguite = qcm
-    ? candidats.filter(({ x, y }) => x !== 0 && y !== 0 && Math.abs(x) !== Math.abs(y))
+    ? candidats.filter(({ x, y }) => x !== 0
+      && y !== 0
+      && Math.abs(x) !== Math.abs(y)
+      // Les quatre propositions ont un sens dans le repère affiché. Aucun
+      // distracteur ne peut être éliminé uniquement parce qu'une coordonnée
+      // sortirait des bornes visibles.
+      && [
+        { x, y },
+        { x: y, y: x },
+        { x: -x, y },
+        { x, y: -y },
+      ].every(dansBornes))
     : candidats;
   if (fractionAxe === "x") return sansAmbiguite.filter(({ x }) => !Number.isInteger(x));
   if (fractionAxe === "y") return sansAmbiguite.filter(({ y }) => !Number.isInteger(y));
@@ -279,6 +302,18 @@ export function planifierSerieLireCoordonnees({ graine, nombreQuestions = 10 }) 
     famille: profil.id,
     pas: pas[index].pas,
   }));
+  const nombreCoordonneesIsolees = elements.filter(({ famille }) => [
+    FAMILLE_LIRE_ABSCISSE_REPERE,
+    FAMILLE_LIRE_ORDONNEE,
+  ].includes(famille)).length;
+  const formulationsIsolees = nombreCoordonneesIsolees === 0
+    ? []
+    : tirerProfilsPonderes({
+      paquet: PAQUET_FORMULATIONS_COORDONNEE_ISOLEE,
+      graine: `ge03-formulations-isolees:${graine}`,
+      nombreElements: nombreCoordonneesIsolees,
+    });
+  let indexFormulationIsolee = 0;
   const zones = tirerZonesCompatibles({
     paquet: PAQUET_ZONES_LECTURE,
     elements,
@@ -300,12 +335,19 @@ export function planifierSerieLireCoordonnees({ graine, nombreQuestions = 10 }) 
     });
     const noms = nomsTournes(decalageNom, index);
     const nomPoint = noms[0];
+    const familleIsolee = [
+      FAMILLE_LIRE_ABSCISSE_REPERE,
+      FAMILLE_LIRE_ORDONNEE,
+    ].includes(famille);
     return {
       famille,
       ...bornes,
       ...cible,
       nomPoint,
       decalageChoix: aleatoire.entier(0, 3),
+      ...(familleIsolee
+        ? { formulation: formulationsIsolees[indexFormulationIsolee++].id }
+        : {}),
       ...(famille === FAMILLE_IDENTIFIER_POINT
         ? { points: pointsIdentification(aleatoire, cible, nomPoint, bornes, noms) }
         : {}),

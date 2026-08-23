@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { it } from "node:test";
 
 import { COULEURS_RANGS_NUMERATION_DECIMALE } from "../packages/charte/src/charte.js";
+import { planifierSerieLireCoordonnees } from "../packages/automatismes/src/espace-et-geometrie/reperage-plan/serie.js";
 
 function installerFauxNavigateur(recherche) {
   const gestionnaires = new Map();
@@ -92,6 +93,46 @@ function cliquerSurfaceRepere(gestionnaires, bornes, proportionX, proportionY) {
     clientX: 10 + proportionX * 800,
     clientY: 20 + proportionY * 600,
   });
+}
+
+function cliquerAxeAideRepere(gestionnaires, axe) {
+  const cible = {
+    dataset: { action: "repere-aide-axe", axe },
+    closest(selecteur) { return selecteur === "[data-action]" ? this : null; },
+  };
+  gestionnaires.get("click")[0]({ target: cible, detail: 1 });
+}
+
+function cliquerSurfaceAideRepere(gestionnaires, bornes, mode, x, y) {
+  const largeur = 800;
+  const hauteur = 600;
+  const proportionX = (x - bornes.xMin) / (bornes.xMax - bornes.xMin);
+  const proportionY = (bornes.yMax - y) / (bornes.yMax - bornes.yMin);
+  const cible = {
+    dataset: {
+      action: "repere-aide-surface",
+      mode,
+      xMin: String(bornes.xMin),
+      xMax: String(bornes.xMax),
+      yMin: String(bornes.yMin),
+      yMax: String(bornes.yMax),
+      pas: String(bornes.pas ?? 1),
+    },
+    closest(selecteur) { return selecteur === "[data-action]" ? this : null; },
+    getBoundingClientRect() {
+      return { left: 10, top: 20, width: largeur, height: hauteur };
+    },
+  };
+  gestionnaires.get("click")[0]({
+    target: cible,
+    detail: 1,
+    clientX: 10 + proportionX * largeur,
+    clientY: 20 + proportionY * hauteur,
+  });
+}
+
+function lireNombreRepere(texte) {
+  return Number(String(texte).replace("−", "-").replace(",", "."));
 }
 
 function appuyer(gestionnaires, key, { shiftKey = false } = {}) {
@@ -2626,30 +2667,60 @@ it("rend GE-03 et GE-04 avec le repère partagé, les aides et le placement rév
   assert.match(lecture.application.innerHTML, /data-action="champ-reponse" data-index="1"/);
   assert.match(lecture.application.innerHTML, /class="indicateur-reponse-repere"/);
   assert.match(lecture.application.innerHTML, /font-family="'Times New Roman', Times, 'Liberation Serif', serif"/);
+  assert.doesNotMatch(lecture.application.innerHTML, /Une petite graduation vaut/);
 
   cliquer(lecture.gestionnaires, "aide");
-  assert.match(lecture.application.innerHTML, /Abscisse d(?:&#039;|')abord, ordonnée ensuite/);
+  assert.match(lecture.application.innerHTML, /Lire les coordonnées d(?:&#039;|')un point/);
+  assert.match(lecture.application.innerHTML, /Méthode en 3 étapes/);
+  assert.match(lecture.application.innerHTML, /aide-repere-3/);
   assert.match(lecture.application.innerHTML, /Guide visuel, étape 1 sur 3/);
-  assert.match(lecture.application.innerHTML, /axe des abscisses/);
-  assert.match(lecture.application.innerHTML, /axe des ordonnées/);
-  cliquer(lecture.gestionnaires, "repere-aide", undefined, "1");
+  assert.match(lecture.application.innerHTML, /Clique sur l(?:&#039;|')axe des abscisses/);
+  assert.match(lecture.application.innerHTML, /data-action="repere-aide-axe" data-axe="abscisses"/);
+  assert.doesNotMatch(extrairePanneauAide(lecture.application.innerHTML), /class="guide-repere/);
+  assert.doesNotMatch(lecture.application.innerHTML, /navigation-aide-repere|Indice suivant/);
+  assert.doesNotMatch(lecture.application.innerHTML, /data-action="repere-aide"/);
+  cliquerAxeAideRepere(lecture.gestionnaires, "ordonnees");
+  assert.match(lecture.application.innerHTML, /Tu as choisi l(?:&#039;|')axe des ordonnées/);
+  assert.match(lecture.application.innerHTML, /Guide visuel, étape 1 sur 3/);
+  cliquerAxeAideRepere(lecture.gestionnaires, "abscisses");
   assert.match(lecture.application.innerHTML, /Guide visuel, étape 2 sur 3/);
-  assert.match(lecture.application.innerHTML, /Suis le guide vertical/);
-  cliquer(lecture.gestionnaires, "repere-aide", undefined, "2");
+  assert.match(lecture.application.innerHTML, /projection verticale apparaît/);
+  assert.match(lecture.application.innerHTML, /class="guide-repere guide-abscisses"/);
+  cliquerAxeAideRepere(lecture.gestionnaires, "ordonnees");
   assert.match(lecture.application.innerHTML, /Guide visuel, étape 3 sur 3/);
-  assert.match(lecture.application.innerHTML, /Lis maintenant l(?:&#039;|')ordonnée/);
+  assert.match(lecture.application.innerHTML, /écris d(?:&#039;|')abord l(?:&#039;|')abscisse, puis l(?:&#039;|')ordonnée/);
+  assert.match(lecture.application.innerHTML, /class="guide-repere guide-ordonnees"/);
+  assert.match(lecture.application.innerHTML, /1<sup>re<\/sup> coordonnée : abscisse ; 2<sup>e<\/sup> coordonnée : ordonnée/);
   cliquer(lecture.gestionnaires, "cours");
-  assert.match(lecture.application.innerHTML, /Les axes du repère/);
+  assert.match(lecture.application.innerHTML, /Vocabulaire du repère/);
   assert.match(lecture.application.innerHTML, /axe des abscisses/);
   assert.match(lecture.application.innerHTML, /axe des ordonnées/);
+  assert.match(lecture.application.innerHTML, /Graduations/);
+  assert.match(lecture.application.innerHTML, /Page 1/);
+  assert.doesNotMatch(lecture.application.innerHTML, /plus rarement|0,25/);
   assert.match(lecture.application.innerHTML, /Cours · 1 \/ 3/);
   cliquer(lecture.gestionnaires, "cours-suivant");
+  assert.match(lecture.application.innerHTML, /Lire les coordonnées du point A/);
   cliquer(lecture.gestionnaires, "cours-repere-etape", undefined, "2");
   assert.match(lecture.application.innerHTML, /A\(<span class="coord-abscisse">−3<\/span> ; <span class="coord-ordonnee">2<\/span>\)/);
-  assert.match(lecture.application.innerHTML, /1<sup>re<\/sup> coordonnée/);
+  assert.match(lecture.application.innerHTML, /1<sup>re<\/sup> coordonnée : <strong>abscisse<\/strong>/);
   cliquer(lecture.gestionnaires, "cours-suivant");
+  assert.match(lecture.application.innerHTML, /Lire les coordonnées d(?:&#039;|')un point sur un axe/);
   assert.match(lecture.application.innerHTML, /C\(<span class="coord-abscisse">3<\/span> ; <span class="coord-ordonnee">0<\/span>\)/);
   assert.match(lecture.application.innerHTML, /D\(<span class="coord-abscisse">0<\/span> ; <span class="coord-ordonnee">−2<\/span>\)/);
+  cliquer(lecture.gestionnaires, "fermer-cours");
+  cliquer(lecture.gestionnaires, "fermer-aide");
+  avancerJusquaQuestion(
+    lecture.application,
+    lecture.gestionnaires,
+    (html) => /grille-qcm-repere/.test(html),
+  );
+  assert.equal((lecture.application.innerHTML.match(/class="choix/g) ?? []).length, 4);
+  cliquer(lecture.gestionnaires, "valider");
+  assert.match(lecture.application.innerHTML, /Pas de réponse/);
+  assert.match(lecture.application.innerHTML, /La réponse attendue est indiquée en vert/);
+  assert.equal((lecture.application.innerHTML.match(/class="choix correct"/g) ?? []).length, 1);
+  assert.equal((lecture.application.innerHTML.match(/class="icone-verdict"/g) ?? []).length, 1);
 
   const placement = installerFauxNavigateur(
     "?notion=placer-point-repere&questions=5&graine=apercu-ge04-complet",
@@ -2657,18 +2728,68 @@ it("rend GE-03 et GE-04 avec le repère partagé, les aides et le placement rév
   await import(`./app.js?fumee=ge04-${Date.now()}`);
   cliquer(placement.gestionnaires, "demarrer");
   assert.match(placement.application.innerHTML, /surface-placement-repere/);
+  const ciblePlacement = placement.application.innerHTML.match(
+    /Place le point ([A-Z])\((−?[\d,]+) ; (−?[\d,]+)\)/,
+  );
+  assert.ok(ciblePlacement);
+  const cibleX = lireNombreRepere(ciblePlacement[2]);
+  const cibleY = lireNombreRepere(ciblePlacement[3]);
+  const bornesAide = placement.application.innerHTML.match(
+    /data-x-min="(-?[\d.]+)" data-x-max="(-?[\d.]+)"\s+data-y-min="(-?[\d.]+)" data-y-max="(-?[\d.]+)"\s+data-pas="([\d.]+)"/,
+  );
+  assert.ok(bornesAide);
+  const geometrieAide = {
+    xMin: Number(bornesAide[1]),
+    xMax: Number(bornesAide[2]),
+    yMin: Number(bornesAide[3]),
+    yMax: Number(bornesAide[4]),
+    pas: Number(bornesAide[5]),
+  };
   cliquer(placement.gestionnaires, "aide");
-  assert.match(placement.application.innerHTML, /Horizontal, puis vertical/);
-  cliquer(placement.gestionnaires, "repere-aide", undefined, "1");
-  assert.match(placement.application.innerHTML, /Avancer horizontalement/);
-  cliquer(placement.gestionnaires, "repere-aide", undefined, "2");
-  assert.match(placement.application.innerHTML, /Monter ou descendre/);
+  assert.match(placement.application.innerHTML, /Construire la position du point/);
+  assert.match(placement.application.innerHTML, /Méthode en 3 étapes/);
+  assert.match(placement.application.innerHTML, /aide-repere-3/);
+  assert.match(placement.application.innerHTML, /stroke-dasharray="3 3"/);
+  const yMauvaisAxe = cibleY === geometrieAide.yMin
+    ? geometrieAide.yMax
+    : geometrieAide.yMin;
+  cliquerSurfaceAideRepere(placement.gestionnaires, geometrieAide, "graduations", 0, yMauvaisAxe);
+  assert.match(placement.application.innerHTML, /Tu as choisi l(?:&#039;|')axe des ordonnées/);
+  const mauvaiseAbscisse = cibleX + geometrieAide.pas <= geometrieAide.xMax
+    ? cibleX + geometrieAide.pas
+    : cibleX - geometrieAide.pas;
+  cliquerSurfaceAideRepere(placement.gestionnaires, geometrieAide, "graduations", mauvaiseAbscisse, 0);
+  assert.match(placement.application.innerHTML, /Ce n(?:&#039;|')est pas encore l(?:&#039;|')abscisse demandée/);
+  cliquerSurfaceAideRepere(placement.gestionnaires, geometrieAide, "graduations", cibleX, 0);
+  assert.match(placement.application.innerHTML, /Guide visuel, étape 2 sur 3/);
+  assert.match(
+    placement.application.innerHTML,
+    /class="deplacement-repere deplacement-abscisse"|r="7" fill="none" stroke="#f58220"/,
+  );
+  const mauvaiseOrdonnee = cibleY + geometrieAide.pas <= geometrieAide.yMax
+    ? cibleY + geometrieAide.pas
+    : cibleY - geometrieAide.pas;
+  cliquerSurfaceAideRepere(placement.gestionnaires, geometrieAide, "graduations", 0, mauvaiseOrdonnee);
+  assert.match(placement.application.innerHTML, /Ce n(?:&#039;|')est pas encore l(?:&#039;|')ordonnée demandée/);
+  cliquerSurfaceAideRepere(placement.gestionnaires, geometrieAide, "graduations", 0, cibleY);
+  assert.match(placement.application.innerHTML, /Guide visuel, étape 3 sur 3/);
+  assert.match(placement.application.innerHTML, /class="deplacement-repere deplacement-ordonnee"/);
+  const mauvaiseIntersection = cibleX + geometrieAide.pas <= geometrieAide.xMax
+    ? cibleX + geometrieAide.pas
+    : cibleX - geometrieAide.pas;
+  cliquerSurfaceAideRepere(placement.gestionnaires, geometrieAide, "intersection", mauvaiseIntersection, cibleY);
+  assert.match(placement.application.innerHTML, /pas encore à l(?:&#039;|')intersection/);
+  cliquerSurfaceAideRepere(placement.gestionnaires, geometrieAide, "intersection", cibleX, cibleY);
+  assert.match(placement.application.innerHTML, /Retourne à la question pour valider ton placement/);
+  assert.doesNotMatch(extrairePanneauAide(placement.application.innerHTML), /data-action="repere-aide-surface"/);
+  assert.doesNotMatch(placement.application.innerHTML, /navigation-aide-repere|Indice suivant/);
   cliquer(placement.gestionnaires, "cours");
-  assert.match(placement.application.innerHTML, /Les axes du repère/);
+  assert.match(placement.application.innerHTML, /Vocabulaire du repère/);
   cliquer(placement.gestionnaires, "cours-suivant");
   assert.match(placement.application.innerHTML, /Placer le point B/);
   assert.doesNotMatch(placement.application.innerHTML, /Lire le point A/);
-  cliquer(placement.gestionnaires, "cours-repere-etape", undefined, "2");
+  assert.match(placement.application.innerHTML, /etapes-cours-repere-4/);
+  cliquer(placement.gestionnaires, "cours-repere-etape", undefined, "3");
   assert.match(placement.application.innerHTML, /B\(<span class="coord-abscisse">2<\/span> ; <span class="coord-ordonnee">−1<\/span>\)/);
   cliquer(placement.gestionnaires, "fermer-cours");
   cliquer(placement.gestionnaires, "fermer-aide");
@@ -2682,14 +2803,15 @@ it("rend GE-03 et GE-04 avec le repère partagé, les aides et le placement rév
     yMin: Number(bornes[3]),
     yMax: Number(bornes[4]),
   }, 0.1, 0.9);
-  assert.match(placement.application.innerHTML, /Point provisoire :/);
-  assert.match(placement.application.innerHTML, /Tu peux le déplacer avant de valider/);
+  assert.doesNotMatch(placement.application.innerHTML, /Point provisoire/);
+  assert.match(placement.application.innerHTML, /Point placé — tu peux le déplacer avant de valider/);
+  assert.match(placement.application.innerHTML, /tu peux le déplacer avant de valider/);
   assert.equal(appuyer(placement.gestionnaires, "ArrowRight"), 1);
   assert.equal(appuyer(placement.gestionnaires, "ArrowUp"), 1);
   cliquer(placement.gestionnaires, "valider");
   cliquer(placement.gestionnaires, "correction");
   assert.match(placement.application.innerHTML, /Point attendu/);
-  assert.match(placement.application.innerHTML, /Horizontal, puis vertical|Correction expliquée|Comprendre l(?:&#039;|')erreur/);
+  assert.match(placement.application.innerHTML, /Correction expliquée|Comprendre l(?:&#039;|')erreur/);
 });
 
 it("corrige un mauvais placement même lorsque le point attendu se nomme T", async () => {
@@ -2716,6 +2838,113 @@ it("corrige un mauvais placement même lorsque le point attendu se nomme T", asy
   assert.match(placement.application.innerHTML, /legende-point-choisi/);
   assert.match(placement.application.innerHTML, /legende-point-attendu/);
   assert.match(placement.application.innerHTML, /Point attendu/);
+});
+
+it("rend parfois x_M ou y_M et garde une aide courte et symétrique", async () => {
+  const { application, gestionnaires } = installerFauxNavigateur(
+    "?notion=lire-coordonnees-point&questions=1&graine=app-notation-3",
+  );
+  await import(`./app.js?fumee=ge03-notation-${Date.now()}`);
+  cliquer(gestionnaires, "demarrer");
+  assert.match(application.innerHTML, /Complète l(?:&#039;|')égalité/);
+  assert.match(
+    application.innerHTML,
+    /class="libelle-saisie-droite"><i class="variable-mathematique">y<\/i><sub>F<\/sub> =/,
+  );
+  assert.doesNotMatch(application.innerHTML, /×<sub>F<\/sub>/);
+  cliquer(gestionnaires, "aide");
+  assert.match(application.innerHTML, /Méthode en 2 étapes/);
+  assert.match(application.innerHTML, /Clique sur l(?:&#039;|')axe des ordonnées/);
+  cliquerAxeAideRepere(gestionnaires, "abscisses");
+  assert.match(application.innerHTML, /Tu as choisi l(?:&#039;|')axe des abscisses/);
+  cliquerAxeAideRepere(gestionnaires, "ordonnees");
+  assert.match(application.innerHTML, /Guide visuel, étape 2 sur 2/);
+  assert.match(application.innerHTML, /class="guide-repere guide-ordonnees"/);
+});
+
+it("guide l'identification jusqu'au point sans révéler sa lettre", async () => {
+  const graine = "recette-ge03-11";
+  const plan = planifierSerieLireCoordonnees({ graine, nombreQuestions: 20 });
+  const numero = plan.findIndex(({ famille }) => famille === "identifier-point") + 1;
+  const attendu = plan[numero - 1];
+  assert.ok(numero > 0);
+  const { application, gestionnaires } = installerFauxNavigateur(
+    `?notion=lire-coordonnees-point&questions=20&graine=${graine}`,
+  );
+  await import(`./app.js?fumee=ge03-identifier-${Date.now()}`);
+  cliquer(gestionnaires, "demarrer");
+  avancerJusquaQuestion(
+    application,
+    gestionnaires,
+    (html) => /famille-identifier-point/.test(html),
+  );
+  cliquer(gestionnaires, "aide");
+  const bornes = {
+    xMin: attendu.xMin,
+    xMax: attendu.xMax,
+    yMin: attendu.yMin,
+    yMax: attendu.yMax,
+    pas: attendu.pas,
+  };
+  cliquerSurfaceAideRepere(gestionnaires, bornes, "graduations", attendu.x, 0);
+  assert.match(application.innerHTML, /Guide visuel, étape 2 sur 3/);
+  cliquerSurfaceAideRepere(gestionnaires, bornes, "graduations", 0, attendu.y);
+  assert.match(application.innerHTML, /Clique sur le point situé à l(?:&#039;|')intersection/);
+  const noms = [...application.innerHTML.matchAll(
+    /data-action="repere-aide-point" data-id="([A-Z])"/g,
+  )].map((correspondance) => correspondance[1]);
+  const mauvais = noms.find((nom) => nom !== attendu.nomPoint);
+  assert.ok(mauvais);
+  cliquer(gestionnaires, "repere-aide-point", mauvais);
+  assert.match(application.innerHTML, /Ce point n(?:&#039;|')est pas à l(?:&#039;|')intersection/);
+  cliquer(gestionnaires, "repere-aide-point", attendu.nomPoint);
+  assert.match(application.innerHTML, /les deux guides se rencontrent sur ce point/);
+  assert.doesNotMatch(extrairePanneauAide(application.innerHTML), /data-action="repere-aide-point"/);
+});
+
+it("conserve le parcours complet de GE-04 au clavier", async () => {
+  const { application, gestionnaires } = installerFauxNavigateur(
+    "?notion=placer-point-repere&questions=5&graine=apercu-ge04-complet",
+  );
+  await import(`./app.js?fumee=ge04-clavier-${Date.now()}`);
+  cliquer(gestionnaires, "demarrer");
+  const cible = application.innerHTML.match(/Place le point [A-Z]\((−?[\d,]+) ; (−?[\d,]+)\)/);
+  const bornes = application.innerHTML.match(
+    /data-x-min="(-?[\d.]+)" data-x-max="(-?[\d.]+)"\s+data-y-min="(-?[\d.]+)" data-y-max="(-?[\d.]+)"\s+data-pas="([\d.]+)"/,
+  );
+  assert.ok(cible && bornes);
+  const attendu = { x: lireNombreRepere(cible[1]), y: lireNombreRepere(cible[2]) };
+  const pas = Number(bornes[5]);
+  cliquer(gestionnaires, "aide");
+  const surface = {
+    dataset: { mode: "graduations" },
+    closest(selecteur) {
+      return selecteur === '[data-action="repere-aide-surface"]' ? this : null;
+    },
+  };
+  globalThis.document.activeElement = surface;
+  assert.equal(appuyer(gestionnaires, "ArrowUp"), 1);
+  assert.match(application.innerHTML, /L(?:&#039;|')abscisse se lit sur l(?:&#039;|')axe horizontal/);
+  for (let index = 0; index < Math.round(Math.abs(attendu.x / pas)); index += 1) {
+    assert.equal(appuyer(gestionnaires, attendu.x < 0 ? "ArrowLeft" : "ArrowRight"), 1);
+  }
+  assert.equal(appuyer(gestionnaires, "Enter"), 1);
+  assert.match(application.innerHTML, /Guide visuel, étape 2 sur 3/);
+  for (let index = 0; index < Math.round(Math.abs(attendu.y / pas)); index += 1) {
+    assert.equal(appuyer(gestionnaires, attendu.y < 0 ? "ArrowDown" : "ArrowUp"), 1);
+  }
+  assert.equal(appuyer(gestionnaires, "Enter"), 1);
+  assert.match(application.innerHTML, /Guide visuel, étape 3 sur 3/);
+  surface.dataset.mode = "intersection";
+  for (let index = 0; index < Math.round(Math.abs(attendu.x / pas)); index += 1) {
+    appuyer(gestionnaires, attendu.x < 0 ? "ArrowLeft" : "ArrowRight");
+  }
+  for (let index = 0; index < Math.round(Math.abs(attendu.y / pas)); index += 1) {
+    appuyer(gestionnaires, attendu.y < 0 ? "ArrowDown" : "ArrowUp");
+  }
+  assert.equal(appuyer(gestionnaires, "Enter"), 1);
+  assert.match(application.innerHTML, /Retourne à la question pour valider ton placement/);
+  assert.equal((application.innerHTML.match(/etape-progression-aide terminee/g) ?? []).length, 3);
 });
 
 it("sélectionne, révise et rejoue plusieurs automatismes dans une même série", async () => {

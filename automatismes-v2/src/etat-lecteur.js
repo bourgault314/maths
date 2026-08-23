@@ -1,12 +1,12 @@
 import {
   SCHEMA_SEANCE,
   validerSeance,
-} from "../../packages/contrats/src/seance.js?v=51";
+} from "../../packages/contrats/src/seance.js?v=53";
 import {
   REFERENTIEL_COMPETENCES,
   SCHEMA_TRACE_REPONSE,
   validerTraceReponse,
-} from "../../packages/contrats/src/trace-reponse.js?v=51";
+} from "../../packages/contrats/src/trace-reponse.js?v=53";
 import {
   TYPE_REPONSE_ENTIER_NATUREL,
   TYPE_REPONSE_DEUX_ENTIERS,
@@ -19,16 +19,16 @@ import {
   estDeuxEntiersRelatifsExacts,
   estEntierExact,
   estSelectionExacte,
-} from "../../packages/contrats/src/question-v2.js?v=51";
+} from "../../packages/contrats/src/question-v2.js?v=53";
 import {
   analyserEcritureDecimaleSignee,
   fractionsEgales,
-} from "../../packages/objets/src/fractions-decimaux.js?v=51";
+} from "../../packages/objets/src/fractions-decimaux.js?v=53";
 import { graineDepuisTexte } from "../../packages/moteur-exercices/src/aleatoire.js";
-import { creerRegistreAutomatismes } from "../../packages/automatismes/src/registre.js?v=51";
+import { creerRegistreAutomatismes } from "../../packages/automatismes/src/registre.js?v=53";
 import {
   normaliserIdentifiantModule,
-} from "../../packages/automatismes/src/identifiants.js?v=51";
+} from "../../packages/automatismes/src/identifiants.js?v=53";
 import {
   connaitNotionLecteur,
   estNiveauParcours,
@@ -48,8 +48,8 @@ import {
   NOTION_VOLUME_CYLINDRE,
   NOTION_VOLUME_PRISME,
   obtenirNotionLecteur,
-} from "./registre-lecteur.js?v=51";
-import { genererSerieMultinotions } from "./serie-multinotions.js?v=51";
+} from "./registre-lecteur.js?v=53";
+import { genererSerieMultinotions } from "./serie-multinotions.js?v=53";
 
 export {
   NOTION_ECRITURES_MULTIPLES_NOMBRE,
@@ -174,7 +174,11 @@ function creerEtatQuestion(etat) {
   etat.erreurValidation = "";
   etat.aideOuverte = etat.configuration.aide === "ouverte";
   etat.aideConsultee = etat.aideOuverte;
-  etat.repereAide = null;
+  etat.repereAide = 0;
+  etat.retourRepereAide = null;
+  etat.pointRepereAide = null;
+  etat.repereAideTerminee = false;
+  etat.niveauEchelleRepereAide = 0;
   etat.pasFractionAide = 0;
   etat.groupesFractionAide = 0;
   etat.rangFractionAide = null;
@@ -203,7 +207,11 @@ export function creerEtatLecteur(configuration = {}) {
     erreurValidation: "",
     aideOuverte: false,
     aideConsultee: false,
-    repereAide: null,
+    repereAide: 0,
+    retourRepereAide: null,
+    pointRepereAide: null,
+    repereAideTerminee: false,
+    niveauEchelleRepereAide: 0,
     pasFractionAide: 0,
     groupesFractionAide: 0,
     rangFractionAide: null,
@@ -756,6 +764,76 @@ export function selectionnerRepereAide(etat, valeur) {
   }
   if (!etat.aideOuverte || !questionCourante(etat)) return etat;
   etat.repereAide = valeur;
+  etat.retourRepereAide = null;
+  etat.repereAideTerminee = false;
+  return etat;
+}
+
+/**
+ * Mémorise une action effectuée dans l'aide interactive d'un repère.
+ * La décision pédagogique (bonne cible, mauvais axe...) reste calculée par le
+ * lecteur ; cet état commun ne stocke que la progression et le retour rendu.
+ */
+export function actualiserInteractionRepereAide(etat, changement = {}) {
+  if (!changement || typeof changement !== "object" || Array.isArray(changement)) {
+    throw new TypeError("interaction de repère : objet attendu");
+  }
+  if (!etat.aideOuverte || !questionCourante(etat)) return etat;
+  if (Object.hasOwn(changement, "etape")) {
+    if (!Number.isSafeInteger(changement.etape) || changement.etape < 0 || changement.etape > 4) {
+      throw new RangeError("interaction de repère : étape entre 0 et 4 requise");
+    }
+    etat.repereAide = changement.etape;
+  }
+  if (Object.hasOwn(changement, "retour")) {
+    const retour = changement.retour;
+    if (
+      retour !== null
+      && (
+        typeof retour !== "object"
+        || Array.isArray(retour)
+        || !["erreur", "reussite", "information"].includes(retour.type)
+        || typeof retour.message !== "string"
+        || retour.message.trim() === ""
+      )
+    ) {
+      throw new TypeError("interaction de repère : retour accessible invalide");
+    }
+    etat.retourRepereAide = retour === null ? null : { ...retour };
+  }
+  if (Object.hasOwn(changement, "point")) {
+    const point = changement.point;
+    if (
+      point !== null
+      && (
+        typeof point !== "object"
+        || Array.isArray(point)
+        || !Number.isFinite(point.x)
+        || !Number.isFinite(point.y)
+      )
+    ) {
+      throw new TypeError("interaction de repère : point fini attendu");
+    }
+    etat.pointRepereAide = point === null ? null : { x: point.x, y: point.y };
+  }
+  if (Object.hasOwn(changement, "terminee")) {
+    if (typeof changement.terminee !== "boolean") {
+      throw new TypeError("interaction de repère : booléen de fin attendu");
+    }
+    etat.repereAideTerminee = changement.terminee;
+  }
+  return etat;
+}
+
+export function avancerEchelleRepereAide(etat, maximum = 3) {
+  if (!Number.isSafeInteger(maximum) || maximum < 1 || maximum > 3) {
+    throw new RangeError("aide d'échelle : maximum entre 1 et 3 requis");
+  }
+  if (!etat.aideOuverte || !questionCourante(etat)) return etat;
+  etat.niveauEchelleRepereAide = Math.min(
+    maximum,
+    etat.niveauEchelleRepereAide + 1,
+  );
   return etat;
 }
 

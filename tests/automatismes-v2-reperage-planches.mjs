@@ -37,31 +37,37 @@ function plancheDesktop() {
   const largeurCarte = 680;
   const dessins = [
     {
-      titre: "GE-03 · lecture complète",
-      sousTitre: "M(−3 ; 2), repère asymétrique et pas entier",
-      dessin: dessinerRepereCartesien({
-        xMin: -5, xMax: 3, yMin: -3, yMax: 4, largeur: largeurCarte,
-        points: [{ nom: "M", x: -3, y: 2 }],
-      }),
-    },
-    {
-      titre: "GE-03 · identifier un point",
-      sousTitre: "Quatre cibles espacées, dont deux proches des axes",
-      dessin: dessinerRepereCartesien({
-        xMin: -3, xMax: 5, yMin: -4, yMax: 3, largeur: largeurCarte,
-        points: [
-          { nom: "A", x: -2, y: 2 },
-          { nom: "F", x: 3, y: 0 },
-          { nom: "R", x: 0, y: -3 },
-          { nom: "V", x: 4, y: -2 },
-        ],
-      }),
-    },
-    {
-      titre: "Aide · lire horizontal puis vertical",
-      sousTitre: "Les guides rejoignent les axes sans écrire la réponse",
+      titre: "Cours · vocabulaire du repère",
+      sousTitre: "Axes, graduations et flèches portent les couleurs communes",
       dessin: dessinerRepereCartesien({
         xMin: -4, xMax: 4, yMin: -3, yMax: 3, largeur: largeurCarte,
+        afficherLegendesAxes: true,
+        axesMisesEnEvidence: ["abscisses", "ordonnees"],
+      }),
+    },
+    {
+      titre: "GE-03 · 1 — Lire l'abscisse",
+      sousTitre: "Projection verticale orange sur un repère neutre",
+      dessin: dessinerRepereCartesien({
+        xMin: -4, xMax: 3, yMin: -3, yMax: 3, largeur: largeurCarte,
+        points: [{ nom: "A", x: -3, y: 2 }],
+        guides: [{ x: -3, y: 2, axe: "abscisses" }],
+      }),
+    },
+    {
+      titre: "GE-03 · 2 — Lire l'ordonnée",
+      sousTitre: "Projection horizontale turquoise sur un repère neutre",
+      dessin: dessinerRepereCartesien({
+        xMin: -4, xMax: 3, yMin: -3, yMax: 3, largeur: largeurCarte,
+        points: [{ nom: "A", x: -3, y: 2 }],
+        guides: [{ x: -3, y: 2, axe: "ordonnees" }],
+      }),
+    },
+    {
+      titre: "GE-03 · 3 — Écrire les coordonnées",
+      sousTitre: "Les deux projections sont réunies seulement à la fin",
+      dessin: dessinerRepereCartesien({
+        xMin: -4, xMax: 3, yMin: -3, yMax: 3, largeur: largeurCarte,
         points: [{ nom: "A", x: -3, y: 2 }],
         guides: [
           { x: -3, y: 2, axe: "abscisses" },
@@ -70,12 +76,62 @@ function plancheDesktop() {
       }),
     },
     {
-      titre: "Cours · placer B(2 ; −1)",
-      sousTitre: "Déplacement orange horizontal, puis turquoise vertical",
+      titre: "GE-04 · 1 — Partir de O",
+      sousTitre: "L'origine est repérée sans dévoiler la position finale",
+      dessin: dessinerRepereCartesien({
+        xMin: -4, xMax: 4, yMin: -3, yMax: 3, largeur: largeurCarte,
+        mettreOrigineEnEvidence: true,
+      }),
+    },
+    {
+      titre: "GE-04 · 2 — Déplacement horizontal",
+      sousTitre: "Depuis O jusqu'à l'abscisse, en orange",
+      dessin: dessinerRepereCartesien({
+        xMin: -4, xMax: 4, yMin: -3, yMax: 3, largeur: largeurCarte,
+        cheminPlacement: { x: 2, y: -1, etape: "horizontal" },
+      }),
+    },
+    {
+      titre: "GE-04 · 3 — Déplacement vertical",
+      sousTitre: "Depuis l'abscisse jusqu'à l'ordonnée, en turquoise",
+      dessin: dessinerRepereCartesien({
+        xMin: -4, xMax: 4, yMin: -3, yMax: 3, largeur: largeurCarte,
+        cheminPlacement: { x: 2, y: -1, etape: "complet" },
+      }),
+    },
+    {
+      titre: "GE-04 · 4 — Placer le point",
+      sousTitre: "Le point n'apparaît qu'à l'intersection finale",
       dessin: dessinerRepereCartesien({
         xMin: -4, xMax: 4, yMin: -3, yMax: 3, largeur: largeurCarte,
         points: [{ nom: "B", x: 2, y: -1 }],
         cheminPlacement: { x: 2, y: -1, etape: "complet" },
+      }),
+    },
+    {
+      titre: "Bords et coins",
+      sousTitre: "Huit positions extrêmes, lettres entièrement visibles",
+      dessin: dessinerRepereCartesien({
+        xMin: -4, xMax: 4, yMin: -3, yMax: 3, largeur: largeurCarte,
+        points: [
+          { nom: "A", x: -4, y: 3 },
+          { nom: "B", x: 4, y: 3 },
+          { nom: "C", x: -4, y: -3 },
+          { nom: "D", x: 4, y: -3 },
+          { nom: "E", x: -4, y: 0 },
+          { nom: "F", x: 4, y: 0 },
+          { nom: "G", x: 0, y: 3 },
+          { nom: "H", x: 0, y: -3 },
+        ],
+      }),
+    },
+    {
+      titre: "Pas 0,25 réellement utilisé",
+      sousTitre: "T(−1,25 ; −0,25), valeurs décimales lisibles",
+      dessin: dessinerRepereCartesien({
+        xMin: -1.25, xMax: 1.5, yMin: -1.25, yMax: 1, pas: 0.25,
+        largeur: largeurCarte,
+        points: [{ nom: "T", x: -1.25, y: -0.25 }],
       }),
     },
     {
@@ -91,13 +147,13 @@ function plancheDesktop() {
       }),
     },
     {
-      titre: "Cas des axes",
+      titre: "Coordonnées nulles",
       sousTitre: "C(3 ; 0), D(0 ; −2) et origine O préservée",
       dessin: dessinerRepereCartesien({
         xMin: -3, xMax: 4, yMin: -5, yMax: 3, largeur: largeurCarte,
         points: [
           { nom: "C", x: 3, y: 0 },
-          { nom: "D", x: 0, y: -2, role: "exemple" },
+          { nom: "D", x: 0, y: -2 },
         ],
       }),
     },
@@ -106,7 +162,7 @@ function plancheDesktop() {
   const ecart = 24;
   const colonnes = 2;
   const hauteurs = dessins.map(({ dessin }) => dessin.hauteur + 92);
-  const hauteursLignes = Array.from({ length: dessins.length / colonnes }, (_, ligne) =>
+  const hauteursLignes = Array.from({ length: Math.ceil(dessins.length / colonnes) }, (_, ligne) =>
     Math.max(...hauteurs.slice(ligne * colonnes, ligne * colonnes + colonnes)));
   const decalagesY = hauteursLignes.reduce((acc, hauteur, index) => {
     acc.push((acc[index] ?? marge) + hauteur + ecart);
@@ -130,28 +186,35 @@ function plancheMobile() {
   const largeurCarte = 320;
   const configurations = [
     {
-      titre: "Question GE-03",
-      sousTitre: "Lecture de M(−3 ; 2)",
+      titre: "Vocabulaire",
+      sousTitre: "Axes colorés sans flèche ajoutée",
       options: {
-        xMin: -5, xMax: 3, yMin: -3, yMax: 4,
-        points: [{ nom: "M", x: -3, y: 2 }],
+        xMin: -4, xMax: 4, yMin: -3, yMax: 3,
+        afficherLegendesAxes: true,
+        axesMisesEnEvidence: ["abscisses", "ordonnees"],
       },
     },
     {
-      titre: "Aide visuelle",
-      sousTitre: "Guides vers les deux axes",
+      titre: "Lire l'abscisse",
+      sousTitre: "Projection verticale orange",
       options: {
         xMin: -4, xMax: 4, yMin: -3, yMax: 3,
         points: [{ nom: "A", x: -3, y: 2 }],
-        guides: [
-          { x: -3, y: 2, axe: "abscisses" },
-          { x: -3, y: 2, axe: "ordonnees" },
-        ],
+        guides: [{ x: -3, y: 2, axe: "abscisses" }],
       },
     },
     {
-      titre: "Placement GE-04",
-      sousTitre: "Trajet vers B(2 ; −1)",
+      titre: "Lire l'ordonnée",
+      sousTitre: "Projection horizontale turquoise",
+      options: {
+        xMin: -4, xMax: 4, yMin: -3, yMax: 3,
+        points: [{ nom: "A", x: -3, y: 2 }],
+        guides: [{ x: -3, y: 2, axe: "ordonnees" }],
+      },
+    },
+    {
+      titre: "Placer B(2 ; −1)",
+      sousTitre: "Horizontal puis vertical",
       options: {
         xMin: -4, xMax: 4, yMin: -3, yMax: 3,
         points: [{ nom: "B", x: 2, y: -1 }],
@@ -159,13 +222,21 @@ function plancheMobile() {
       },
     },
     {
-      titre: "Points sur les axes",
+      titre: "Pas 0,25",
+      sousTitre: "T au bord gauche, lettre visible",
+      options: {
+        xMin: -1.25, xMax: 1.5, yMin: -1.25, yMax: 1, pas: 0.25,
+        points: [{ nom: "T", x: -1.25, y: -0.25 }],
+      },
+    },
+    {
+      titre: "Coordonnées nulles",
       sousTitre: "C(3 ; 0) et D(0 ; −2)",
       options: {
         xMin: -3, xMax: 4, yMin: -5, yMax: 3,
         points: [
           { nom: "C", x: 3, y: 0 },
-          { nom: "D", x: 0, y: -2, role: "exemple" },
+          { nom: "D", x: 0, y: -2 },
         ],
       },
     },

@@ -1,6 +1,6 @@
 // GE-03 / GE-04 — lire et placer un point dans un repère orthogonal.
 
-import { SCHEMA_GABARIT_QUESTION, estDonneePure } from "../../../../contrats/src/gabarit.js?v=51";
+import { SCHEMA_GABARIT_QUESTION, estDonneePure } from "../../../../contrats/src/gabarit.js?v=53";
 import {
   COMPARAISON_CHOIX_EXACT,
   COMPARAISON_VALEUR_RATIONNELLE_EXACTE,
@@ -11,8 +11,8 @@ import {
   TYPE_REPONSE_DEUX_ENTIERS_RELATIFS,
   TYPE_REPONSE_DEUX_NOMBRES_DECIMAUX,
   TYPE_REPONSE_NOMBRE_DECIMAL,
-} from "../../../../contrats/src/question-v2.js?v=51";
-import { IDENTITES_AUTOMATISMES, creerClassementAutomatisme } from "../../identifiants.js?v=51";
+} from "../../../../contrats/src/question-v2.js?v=53";
+import { IDENTITES_AUTOMATISMES, creerClassementAutomatisme } from "../../identifiants.js?v=53";
 
 export const FAMILLE_LIRE_COORDONNEES = "lire-coordonnees";
 export const FAMILLE_LIRE_ABSCISSE_REPERE = "lire-abscisse";
@@ -20,6 +20,8 @@ export const FAMILLE_LIRE_ORDONNEE = "lire-ordonnee";
 export const FAMILLE_DIAGNOSTIC_COORDONNEES = "diagnostic-coordonnees";
 export const FAMILLE_IDENTIFIER_POINT = "identifier-point";
 export const FAMILLE_PLACER_POINT_REPERE = "placer-point";
+export const FORMULATION_COORDONNEE_PHRASE = "phrase";
+export const FORMULATION_COORDONNEE_SYMBOLIQUE = "notation";
 
 export const FAMILLES_GE03 = Object.freeze([
   FAMILLE_LIRE_COORDONNEES,
@@ -31,7 +33,7 @@ export const FAMILLES_GE03 = Object.freeze([
 
 export const NOM_GENERATEUR_LIRE_COORDONNEES = "espace-et-geometrie.reperage-plan.lire-coordonnees";
 export const NOM_GENERATEUR_PLACER_POINT_REPERE = "espace-et-geometrie.reperage-plan.placer-point";
-export const VERSION_GENERATEURS_REPERAGE_PLAN = 2;
+export const VERSION_GENERATEURS_REPERAGE_PLAN = 4;
 
 export const GABARIT_LIRE_COORDONNEES = Object.freeze({
   schema: SCHEMA_GABARIT_QUESTION,
@@ -221,11 +223,11 @@ function aideLecture(p) {
   if (p.famille === FAMILLE_LIRE_ABSCISSE_REPERE) {
     return {
       blocs: [
-        texte("aide-sens", "L'abscisse se lit sur l'axe des abscisses : c'est l'axe horizontal."),
-        texte("aide-guide", "Suis le guide vertical depuis le point jusqu'à l'axe des abscisses."),
-        ...(surAxeOrdonnees
-          ? [texte("aide-axe", "Le point est sur l'axe des ordonnées. Quelle abscisse a tout point de cet axe ?")]
-          : []),
+        texte("aide-sens", "Clique sur l'axe des abscisses."),
+        texte(
+          "aide-guide",
+          `La projection verticale rejoint l'axe des abscisses. Lis la graduation atteinte.${surAxeOrdonnees ? " Le guide rejoint l'origine O : quelle valeur y lis-tu ?" : ""}`,
+        ),
       ],
       outils: [],
     };
@@ -233,11 +235,11 @@ function aideLecture(p) {
   if (p.famille === FAMILLE_LIRE_ORDONNEE) {
     return {
       blocs: [
-        texte("aide-sens", "L'ordonnée se lit sur l'axe des ordonnées : c'est l'axe vertical."),
-        texte("aide-guide", "Suis le guide horizontal depuis le point jusqu'à l'axe des ordonnées."),
-        ...(surAxeAbscisses
-          ? [texte("aide-axe", "Le point est sur l'axe des abscisses. Quelle ordonnée a tout point de cet axe ?")]
-          : []),
+        texte("aide-sens", "Clique sur l'axe des ordonnées."),
+        texte(
+          "aide-guide",
+          `La projection horizontale rejoint l'axe des ordonnées. Lis la graduation atteinte.${surAxeAbscisses ? " Le guide rejoint l'origine O : quelle valeur y lis-tu ?" : ""}`,
+        ),
       ],
       outils: [],
     };
@@ -245,20 +247,24 @@ function aideLecture(p) {
   if (p.famille === FAMILLE_IDENTIFIER_POINT) {
     return {
       blocs: [
-        texte("aide-abscisse", "Repère d'abord l'abscisse demandée sur l'axe des abscisses."),
-        texte("aide-ordonnee", "Repère ensuite l'ordonnée sur l'axe des ordonnées. Le bon point est à l'intersection des deux guides."),
+        texte("aide-abscisse", `Clique sur la graduation correspondant à l'abscisse ${formaterEntierRepere(p.x)}.`),
+        texte("aide-ordonnee", `Clique sur la graduation correspondant à l'ordonnée ${formaterEntierRepere(p.y)}.`),
+        texte("aide-intersection", "Clique sur le point situé à l'intersection des deux guides."),
       ],
       outils: [],
     };
   }
   return {
     blocs: [
-      texte("aide-abscisse", "Commence par l'abscisse : cherche la position du point sur l'axe des abscisses."),
-      texte("aide-guide-abscisse", "Suis le guide vertical depuis le point jusqu'à l'axe des abscisses."),
-      texte("aide-ordonnee", "Lis maintenant l'ordonnée sur l'axe des ordonnées : c'est la deuxième coordonnée."),
-      ...(surAxeAbscisses || surAxeOrdonnees
-        ? [texte("aide-axe", `Le point est sur l'axe ${surAxeAbscisses ? "des abscisses" : "des ordonnées"}. Demande-toi quelle coordonnée est alors nulle.`)]
-        : []),
+      texte(
+        "aide-abscisse",
+        `Clique sur l'axe des abscisses.${surAxeOrdonnees ? " Le point est sur l'axe vertical : observe où la projection rejoint O." : ""}`,
+      ),
+      texte(
+        "aide-ordonnee",
+        `Clique sur l'axe des ordonnées.${surAxeAbscisses ? " Le point est sur l'axe horizontal : observe où la projection rejoint O." : ""}`,
+      ),
+      texte("aide-ecriture", "Retourne à la question et écris d'abord l'abscisse, puis l'ordonnée. Les valeurs restent à lire sur le repère."),
     ],
     outils: [],
   };
@@ -267,12 +273,15 @@ function aideLecture(p) {
 function aidePlacement(p) {
   return {
     blocs: [
-      texte("aide-depart", "Pars de l'origine O et repère d'abord l'abscisse sur l'axe des abscisses."),
-      texte("aide-horizontal", "Déplace-toi horizontalement jusqu'à la bonne graduation, sans placer encore le point final."),
-      texte("aide-vertical", "Depuis cette graduation, va verticalement jusqu'à l'ordonnée lue sur l'axe des ordonnées, puis touche l'intersection."),
-      ...(p.x === 0 || p.y === 0
-        ? [texte("aide-axe", `Une coordonnée est nulle : le point se trouve donc sur l'axe ${p.y === 0 ? "des abscisses" : "des ordonnées"}.`)]
-        : []),
+      texte(
+        "aide-abscisse",
+        `Clique sur la graduation correspondant à l'abscisse ${formaterEntierRepere(p.x)}.${p.x === 0 ? " Elle se trouve à l'origine O : aucun déplacement horizontal n'est nécessaire." : ""}`,
+      ),
+      texte(
+        "aide-ordonnee",
+        `Clique sur la graduation correspondant à l'ordonnée ${formaterEntierRepere(p.y)}.${p.y === 0 ? " Elle se trouve à l'origine O : aucun déplacement vertical n'est nécessaire." : ""}`,
+      ),
+      texte("aide-intersection", "Place maintenant le point à l'intersection des deux directions. C'est toi qui dois choisir l'emplacement final."),
     ],
     outils: [],
   };
@@ -332,7 +341,7 @@ function exigerParametresCommuns(p, quoi, familles) {
   }
   const cles = new Set([
     "famille", "xMin", "xMax", "yMin", "yMax", "x", "y",
-    "pas", "nomPoint", "decalageChoix", "points",
+    "pas", "nomPoint", "decalageChoix", "points", "formulation",
   ]);
   for (const cle of Object.keys(p)) {
     if (!cles.has(cle)) throw new TypeError(`${quoi} : paramètre inconnu « ${cle} »`);
@@ -348,10 +357,29 @@ function exigerParametresCommuns(p, quoi, familles) {
 function exigerParametresLecture(p) {
   const quoi = "lire-coordonnees-point";
   exigerParametresCommuns(p, quoi, FAMILLES_GE03);
-  if (p.famille === FAMILLE_DIAGNOSTIC_COORDONNEES && (
-    p.x === 0 || p.y === 0 || Math.abs(p.x) === Math.abs(p.y)
-  )) {
-    throw new RangeError(`${quoi} : QCM à quatre distracteurs distincts requis`);
+  const familleIsolee = [FAMILLE_LIRE_ABSCISSE_REPERE, FAMILLE_LIRE_ORDONNEE]
+    .includes(p.famille);
+  if (
+    p.formulation !== undefined
+    && (!familleIsolee || ![
+      FORMULATION_COORDONNEE_PHRASE,
+      FORMULATION_COORDONNEE_SYMBOLIQUE,
+    ].includes(p.formulation))
+  ) {
+    throw new RangeError(`${quoi} : formulation de coordonnée isolée invalide`);
+  }
+  if (p.famille === FAMILLE_DIAGNOSTIC_COORDONNEES) {
+    const variantes = [
+      { x: p.x, y: p.y },
+      { x: p.y, y: p.x },
+      { x: -p.x, y: p.y },
+      { x: p.x, y: -p.y },
+    ];
+    const toutesVisibles = variantes.every(({ x, y }) =>
+      x >= p.xMin && x <= p.xMax && y >= p.yMin && y <= p.yMax);
+    if (p.x === 0 || p.y === 0 || Math.abs(p.x) === Math.abs(p.y) || !toutesVisibles) {
+      throw new RangeError(`${quoi} : QCM à quatre distracteurs distincts et visibles requis`);
+    }
   }
   if (p.famille === FAMILLE_IDENTIFIER_POINT) {
     if (!Array.isArray(p.points) || p.points.length < 3 || p.points.length > 6) {
@@ -391,6 +419,7 @@ function exigerParametresPlacement(p) {
   const quoi = "placer-point-repere";
   exigerParametresCommuns(p, quoi, [FAMILLE_PLACER_POINT_REPERE]);
   if (p.points !== undefined) throw new TypeError(`${quoi} : aucun point préalable attendu`);
+  if (p.formulation !== undefined) throw new TypeError(`${quoi} : aucune formulation isolée attendue`);
 }
 
 export function genererQuestionLireCoordonnees({ parametres }) {
@@ -400,14 +429,18 @@ export function genererQuestionLireCoordonnees({ parametres }) {
   let reponse;
   let correction;
   if (p.famille === FAMILLE_LIRE_ABSCISSE_REPERE) {
-    consigne = `Quelle est l'abscisse du point ${p.nomPoint} ?`;
+    consigne = p.formulation === FORMULATION_COORDONNEE_SYMBOLIQUE
+      ? "Complète l'égalité."
+      : `Quelle est l'abscisse du point ${p.nomPoint} ?`;
     reponse = reponseEntierRelatif(p.x);
     correction = [
       texte("methode", "L'abscisse est la position sur l'axe des abscisses, l'axe horizontal."),
       texte("conclusion", `Le point ${p.nomPoint} a pour abscisse ${formaterEntierRepere(p.x)}.`),
     ];
   } else if (p.famille === FAMILLE_LIRE_ORDONNEE) {
-    consigne = `Quelle est l'ordonnée du point ${p.nomPoint} ?`;
+    consigne = p.formulation === FORMULATION_COORDONNEE_SYMBOLIQUE
+      ? "Complète l'égalité."
+      : `Quelle est l'ordonnée du point ${p.nomPoint} ?`;
     reponse = reponseEntierRelatif(p.y);
     correction = [
       texte("methode", "L'ordonnée est la position sur l'axe des ordonnées, l'axe vertical."),
@@ -430,7 +463,13 @@ export function genererQuestionLireCoordonnees({ parametres }) {
   }
   return {
     classement: classementLecture(p.famille),
-    enonce: [texte("consigne", consigne), blocRepere(p)],
+    enonce: [
+      texte("consigne", consigne),
+      ...(p.famille === FAMILLE_LIRE_ABSCISSE_REPERE || p.famille === FAMILLE_LIRE_ORDONNEE
+        ? [texte("formulation", p.formulation ?? FORMULATION_COORDONNEE_PHRASE)]
+        : []),
+      blocRepere(p),
+    ],
     reponse,
     aide: aideLecture(p),
     correction,

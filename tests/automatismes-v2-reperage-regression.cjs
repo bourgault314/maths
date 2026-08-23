@@ -17,11 +17,12 @@ const VIEWPORTS = [
   { nom: "tni-1920x1080", width: 1920, height: 1080 },
 ];
 
-function urlNotion(notion, graine, questions = 10) {
+function urlNotion(notion, graine, questions = 10, mode = "entrainement") {
   const url = new URL(BASE);
   url.searchParams.set("notion", notion);
   url.searchParams.set("questions", String(questions));
   url.searchParams.set("graine", graine);
+  url.searchParams.set("mode", mode);
   return url.href;
 }
 
@@ -56,7 +57,7 @@ async function auditerDisposition(page, nomEtat, erreursNavigateur) {
         droite: Math.round(rectangle.right * 10) / 10,
       }));
     const cibles = [...document.querySelectorAll(
-      ".cible-point-repere, .surface-placement-repere, .champ-coordonnee",
+      ".cible-point-repere, .surface-placement-repere, .surface-interaction-repere-aide, .cible-axe-repere-aide, .champ-coordonnee",
     )].filter(visible).map((element) => {
       const rectangle = element.getBoundingClientRect();
       return {
@@ -84,6 +85,37 @@ async function auditerDisposition(page, nomEtat, erreursNavigateur) {
           aria: repere.getAttribute("aria-label") ?? "",
         };
       });
+    const cartesQcm = [...document.querySelectorAll(".grille-qcm-repere .choix")]
+      .filter(visible)
+      .map((carte) => {
+        const rectangle = carte.getBoundingClientRect();
+        return {
+          gauche: rectangle.left,
+          haut: rectangle.top,
+          largeur: rectangle.width,
+          hauteur: rectangle.height,
+          debordement: Math.max(0, carte.scrollWidth - carte.clientWidth),
+        };
+      });
+    const valeursDistinctes = (valeurs) => valeurs.reduce((groupes, valeur) => {
+      if (!groupes.some((existante) => Math.abs(existante - valeur) <= 2)) groupes.push(valeur);
+      return groupes;
+    }, []);
+    const lettresRognees = [...document.querySelectorAll(".repere-cartesien-v2 svg text")]
+      .filter((texte) => /^[A-NP-Z]$/.test(texte.textContent ?? ""))
+      .filter(visible)
+      .map((texte) => ({ texte, rectangle: texte.getBoundingClientRect(), svg: texte.ownerSVGElement.getBoundingClientRect() }))
+      .filter(({ rectangle, svg }) => rectangle.left < svg.left - 1
+        || rectangle.right > svg.right + 1
+        || rectangle.top < svg.top - 1
+        || rectangle.bottom > svg.bottom + 1)
+      .map(({ texte }) => texte.textContent);
+    const aide = {
+      etapes: [...document.querySelectorAll(".etape-progression-aide")].filter(visible).length,
+      actifs: [...document.querySelectorAll(".etape-progression-aide.actif")].filter(visible).length,
+      terminees: [...document.querySelectorAll(".etape-progression-aide.terminee")].filter(visible).length,
+      anciennesNavigations: [...document.querySelectorAll(".navigation-aide-repere")].filter(visible).length,
+    };
     return {
       largeurFenetre: innerWidth,
       debordementDocument: Math.max(
@@ -94,6 +126,16 @@ async function auditerDisposition(page, nomEtat, erreursNavigateur) {
       cibles,
       panneaux,
       reperes,
+      qcm: {
+        cartes: cartesQcm.length,
+        lignes: valeursDistinctes(cartesQcm.map(({ haut }) => haut)).length,
+        colonnes: valeursDistinctes(cartesQcm.map(({ gauche }) => gauche)).length,
+        largeurs: cartesQcm.map(({ largeur }) => largeur),
+        hauteurs: cartesQcm.map(({ hauteur }) => hauteur),
+        debordements: cartesQcm.map(({ debordement }) => debordement),
+      },
+      lettresRognees,
+      aide,
     };
   });
 
@@ -109,7 +151,7 @@ async function auditerDisposition(page, nomEtat, erreursNavigateur) {
     assert.ok(repere.aria.length > 0, `${nomEtat} : repère sans nom accessible`);
   }
   for (const cible of mesures.cibles) {
-    if (cible.classe.includes("surface-placement-repere")) {
+    if (cible.classe.includes("surface-placement-repere") || cible.classe.includes("surface-interaction-repere-aide")) {
       assert.ok(cible.largeur >= 180 && cible.hauteur >= 180, `${nomEtat} : surface de placement trop petite`);
     } else {
       assert.ok(cible.largeur >= 44 && cible.hauteur >= 44, `${nomEtat} : cible tactile inférieure à 44px`);
@@ -118,6 +160,18 @@ async function auditerDisposition(page, nomEtat, erreursNavigateur) {
   for (const panneau of mesures.panneaux) {
     assert.ok(panneau.debordement <= 1, `${nomEtat} : panneau débordant horizontalement`);
     assert.ok(panneau.largeur <= mesures.largeurFenetre + 1, `${nomEtat} : panneau plus large que la fenêtre`);
+  }
+  if (mesures.qcm.cartes === 4) {
+    assert.equal(mesures.qcm.lignes, 2, `${nomEtat} : le QCM doit avoir deux lignes`);
+    assert.equal(mesures.qcm.colonnes, 2, `${nomEtat} : le QCM doit avoir deux colonnes`);
+    assert.ok(Math.max(...mesures.qcm.largeurs) - Math.min(...mesures.qcm.largeurs) <= 2, `${nomEtat} : largeurs QCM inégales`);
+    assert.ok(Math.max(...mesures.qcm.hauteurs) - Math.min(...mesures.qcm.hauteurs) <= 2, `${nomEtat} : hauteurs QCM inégales`);
+    assert.ok(mesures.qcm.debordements.every((valeur) => valeur <= 1), `${nomEtat} : couple QCM débordant`);
+  }
+  assert.deepEqual(mesures.lettresRognees, [], `${nomEtat} : lettre de point rognée`);
+  assert.equal(mesures.aide.anciennesNavigations, 0, `${nomEtat} : ancienne navigation d'aide encore visible`);
+  if (mesures.aide.etapes > 0 && mesures.aide.terminees < mesures.aide.etapes) {
+    assert.equal(mesures.aide.actifs, 1, `${nomEtat} : une seule étape d'aide doit être active`);
   }
   assert.deepEqual(erreursNavigateur, [], `${nomEtat} : erreur dans le navigateur`);
   return mesures;
@@ -140,14 +194,21 @@ async function demarrer(page, url) {
 async function fermerPanneauOuvert(page) {
   const fermeture = page.locator(
     '[data-action="fermer-aide"], [data-action="fermer-correction"], [data-action="fermer-cours"]',
-  ).filter({ visible: true });
-  if (await fermeture.count()) await fermeture.first().click();
+  );
+  for (let index = 0; index < await fermeture.count(); index += 1) {
+    if (await fermeture.nth(index).isVisible()) {
+      await fermeture.nth(index).click();
+      return;
+    }
+  }
 }
 
 async function avancerUneQuestion(page) {
   await fermerPanneauOuvert(page);
   const valider = page.locator('[data-action="valider"]');
-  if (await valider.count()) await valider.click();
+  const reponse = page.locator('[data-action="reponse"]');
+  if (await valider.count() && await valider.first().isVisible()) await valider.first().click();
+  else if (await reponse.count() && await reponse.first().isVisible()) await reponse.first().click();
   await fermerPanneauOuvert(page);
   await page.locator('[data-action="suivant"]').click();
   await page.locator(".carte-question-repere").waitFor();
@@ -160,21 +221,54 @@ async function allerQuestion(page, numero) {
   await attendreRendu(page);
 }
 
-async function placerPointCertainementFaux(page) {
-  const surface = page.locator(".surface-placement-repere:visible");
+async function lireCibleEtBornesRepere(page, selecteurSurface) {
+  const surface = page.locator(`${selecteurSurface}:visible`);
   const bornes = await surface.evaluate((element) => ({
     xMin: Number(element.dataset.xMin),
     xMax: Number(element.dataset.xMax),
     yMin: Number(element.dataset.yMin),
     yMax: Number(element.dataset.yMax),
+    pas: Number(element.dataset.pas) || 1,
   }));
   const texte = await page.locator(".carte-question-repere h1").innerText();
-  const correspondance = texte.match(/\(([−-]?\d+)\s*;\s*([−-]?\d+)\)/);
+  const correspondance = texte.match(/\(([−-]?\d+(?:[,.]\d+)?)\s*;\s*([−-]?\d+(?:[,.]\d+)?)\)/);
   assert.ok(correspondance, `coordonnées absentes de la consigne « ${texte} »`);
-  const attendu = {
-    x: Number(correspondance[1].replace("−", "-")),
-    y: Number(correspondance[2].replace("−", "-")),
+  return {
+    surface,
+    bornes,
+    attendu: {
+      x: Number(correspondance[1].replace("−", "-").replace(",", ".")),
+      y: Number(correspondance[2].replace("−", "-").replace(",", ".")),
+    },
   };
+}
+
+async function cliquerCoordonneeAide(page, x, y) {
+  const { surface, bornes } = await lireCibleEtBornesRepere(
+    page,
+    ".panneau .surface-interaction-repere-aide",
+  );
+  await surface.scrollIntoViewIfNeeded();
+  const rectangle = await surface.boundingBox();
+  assert.ok(rectangle, "surface d'aide invisible");
+  const proportionX = (x - bornes.xMin) / (bornes.xMax - bornes.xMin);
+  const proportionY = 1 - (y - bornes.yMin) / (bornes.yMax - bornes.yMin);
+  await page.mouse.click(
+    rectangle.x + proportionX * rectangle.width,
+    rectangle.y + proportionY * rectangle.height,
+  );
+  await attendreRendu(page);
+}
+
+function autreGraduation(valeur, minimum, maximum, pas) {
+  return valeur + pas <= maximum ? valeur + pas : Math.max(minimum, valeur - pas);
+}
+
+async function placerPointCertainementFaux(page) {
+  const { surface, bornes, attendu } = await lireCibleEtBornesRepere(
+    page,
+    ".surface-placement-repere",
+  );
   let choisi = { x: bornes.xMin, y: bornes.yMin };
   if (choisi.x === attendu.x && choisi.y === attendu.y) {
     choisi = { x: bornes.xMax, y: bornes.yMax };
@@ -187,12 +281,32 @@ async function placerPointCertainementFaux(page) {
     rectangle.x + proportionX * rectangle.width,
     rectangle.y + proportionY * rectangle.height,
   );
-  await page.getByText("Point provisoire", { exact: false }).waitFor();
+  await page.getByText("Point placé — tu peux le déplacer avant de valider.", { exact: true }).waitFor();
+  assert.equal(
+    await page.locator(".surface-placement-repere:visible").evaluate(
+      (element) => element.matches(":focus-visible"),
+    ),
+    false,
+    "un clic souris ne doit pas laisser le halo réservé au clavier",
+  );
   return { attendu, choisi };
 }
 
+async function enregistrerEtat(page, rapport, nom, erreursNavigateur, supplement = {}) {
+  const libelle = nom.replaceAll("-", " · ");
+  const etat = {
+    nom,
+    mesures: await auditerDisposition(page, libelle, erreursNavigateur),
+    capture: await capturer(page, nom),
+    ...supplement,
+  };
+  rapport.etats.push(etat);
+  return etat;
+}
+
 async function auditerViewport(browser, viewport, rapport) {
-  const page = await browser.newPage({ viewport });
+  const contexte = await browser.newContext({ viewport });
+  const page = await contexte.newPage();
   const erreursNavigateur = [];
   page.on("pageerror", (erreur) => erreursNavigateur.push(erreur.message));
   page.on("console", (message) => {
@@ -201,89 +315,149 @@ async function auditerViewport(browser, viewport, rapport) {
 
   await demarrer(
     page,
-    urlNotion("lire-coordonnees-point", "audit-visuel-ge03", 10),
+    urlNotion("lire-coordonnees-point", "recette-ge03-11", 20),
   );
-  rapport.etats.push({
-    nom: `${viewport.nom}-ge03-question`,
-    mesures: await auditerDisposition(page, `${viewport.nom} · GE-03 question`, erreursNavigateur),
-    capture: await capturer(page, `${viewport.nom}-ge03-question`),
-  });
+  await enregistrerEtat(page, rapport, `${viewport.nom}-ge03-couple-origine`, erreursNavigateur);
 
   await page.locator('[data-action="aide"]').click();
-  rapport.etats.push({
-    nom: `${viewport.nom}-ge03-aide`,
-    mesures: await auditerDisposition(page, `${viewport.nom} · GE-03 aide`, erreursNavigateur),
-    capture: await capturer(page, `${viewport.nom}-ge03-aide`),
-  });
+  await enregistrerEtat(page, rapport, `${viewport.nom}-ge03-aide-1-choisir-abscisses`, erreursNavigateur);
+  await page.locator('.panneau [data-action="repere-aide-axe"][data-axe="ordonnees"]:visible').click();
+  await enregistrerEtat(page, rapport, `${viewport.nom}-ge03-aide-1-mauvais-axe`, erreursNavigateur);
+  await page.locator('.panneau [data-action="repere-aide-axe"][data-axe="abscisses"]:visible').click();
+  await enregistrerEtat(page, rapport, `${viewport.nom}-ge03-aide-2-projection-abscisse`, erreursNavigateur);
+  await page.locator('.panneau [data-action="repere-aide-axe"][data-axe="ordonnees"]:visible').click();
+  await enregistrerEtat(page, rapport, `${viewport.nom}-ge03-aide-3-ecriture`, erreursNavigateur);
 
   await page.locator('.panneau [data-action="cours"]').click();
-  rapport.etats.push({
-    nom: `${viewport.nom}-cours-1`,
-    mesures: await auditerDisposition(page, `${viewport.nom} · cours 1`, erreursNavigateur),
-    capture: await capturer(page, `${viewport.nom}-cours-1`),
-  });
-  if (viewport.width === 320 || viewport.width === 768) {
+  await enregistrerEtat(page, rapport, `${viewport.nom}-ge-cours-vocabulaire`, erreursNavigateur);
+  if ([320, 768, 1366].includes(viewport.width)) {
     await page.locator('[data-action="cours-suivant"]').click();
-    rapport.etats.push({
-      nom: `${viewport.nom}-cours-2`,
-      mesures: await auditerDisposition(page, `${viewport.nom} · cours 2`, erreursNavigateur),
-      capture: await capturer(page, `${viewport.nom}-cours-2`),
-    });
+    await page.locator('[data-action="cours-repere-etape"][data-value="2"]').click();
+    await enregistrerEtat(page, rapport, `${viewport.nom}-ge03-cours-methode`, erreursNavigateur);
     await page.locator('[data-action="cours-suivant"]').click();
-    rapport.etats.push({
-      nom: `${viewport.nom}-cours-3`,
-      mesures: await auditerDisposition(page, `${viewport.nom} · cours 3`, erreursNavigateur),
-      capture: await capturer(page, `${viewport.nom}-cours-3`),
-    });
+    await enregistrerEtat(page, rapport, `${viewport.nom}-ge03-cours-coordonnees-nulles`, erreursNavigateur);
   }
+  await fermerPanneauOuvert(page);
+  await fermerPanneauOuvert(page);
 
-  await page.goto(urlNotion("placer-point-repere", "audit-visuel-ge04", 10), {
-    waitUntil: "networkidle",
-  });
-  await page.locator('[data-action="demarrer"]').click();
-  await page.locator(".surface-placement-repere:visible").waitFor();
-  rapport.etats.push({
-    nom: `${viewport.nom}-ge04-question`,
-    mesures: await auditerDisposition(page, `${viewport.nom} · GE-04 question`, erreursNavigateur),
-    capture: await capturer(page, `${viewport.nom}-ge04-question`),
-  });
-  const placement = await placerPointCertainementFaux(page);
-  rapport.etats.push({
-    nom: `${viewport.nom}-ge04-provisoire`,
-    mesures: await auditerDisposition(page, `${viewport.nom} · GE-04 point provisoire`, erreursNavigateur),
-    capture: await capturer(page, `${viewport.nom}-ge04-provisoire`),
-  });
+  await demarrer(page, urlNotion("lire-coordonnees-point", "recette-ge03-11", 20));
+  await allerQuestion(page, 18);
+  assert.equal(await page.locator(".grille-qcm-repere .choix").count(), 4, "la question 18 doit être le QCM au pas 0,25");
+  await enregistrerEtat(page, rapport, `${viewport.nom}-ge03-qcm-decimal`, erreursNavigateur);
+  await page.locator('[data-action="valider"]').click();
+  await enregistrerEtat(page, rapport, `${viewport.nom}-ge03-qcm-omission`, erreursNavigateur);
+  await page.locator('[data-action="correction"]').click();
+  await enregistrerEtat(page, rapport, `${viewport.nom}-ge03-qcm-correction`, erreursNavigateur);
+
+  await demarrer(page, urlNotion("placer-point-repere", "recette-ge04-8", 20));
+  await enregistrerEtat(page, rapport, `${viewport.nom}-ge04-decimal`, erreursNavigateur);
+  await page.locator('[data-action="aide"]').click();
+  const aidePlacement = await lireCibleEtBornesRepere(
+    page,
+    ".panneau .surface-interaction-repere-aide",
+  );
+  const { attendu, bornes } = aidePlacement;
+  await enregistrerEtat(page, rapport, `${viewport.nom}-ge04-aide-1-abscisse`, erreursNavigateur);
+  const ordonneeMauvaisAxe = bornes.yMax === 0 ? bornes.yMin : bornes.yMax;
+  await cliquerCoordonneeAide(page, 0, ordonneeMauvaisAxe);
+  await enregistrerEtat(page, rapport, `${viewport.nom}-ge04-aide-1-mauvais-axe`, erreursNavigateur);
+  await cliquerCoordonneeAide(
+    page,
+    autreGraduation(attendu.x, bornes.xMin, bornes.xMax, bornes.pas),
+    0,
+  );
+  await enregistrerEtat(page, rapport, `${viewport.nom}-ge04-aide-1-mauvaise-graduation`, erreursNavigateur);
+  await cliquerCoordonneeAide(page, attendu.x, 0);
+  await enregistrerEtat(page, rapport, `${viewport.nom}-ge04-aide-2-ordonnee`, erreursNavigateur);
+  await cliquerCoordonneeAide(
+    page,
+    bornes.xMin === 0 ? bornes.xMax : bornes.xMin,
+    0,
+  );
+  await enregistrerEtat(page, rapport, `${viewport.nom}-ge04-aide-2-mauvais-axe`, erreursNavigateur);
+  await cliquerCoordonneeAide(
+    page,
+    0,
+    autreGraduation(attendu.y, bornes.yMin, bornes.yMax, bornes.pas),
+  );
+  await enregistrerEtat(page, rapport, `${viewport.nom}-ge04-aide-2-mauvaise-graduation`, erreursNavigateur);
+  await cliquerCoordonneeAide(page, 0, attendu.y);
+  await enregistrerEtat(page, rapport, `${viewport.nom}-ge04-aide-3-guides`, erreursNavigateur);
+  await cliquerCoordonneeAide(
+    page,
+    autreGraduation(attendu.x, bornes.xMin, bornes.xMax, bornes.pas),
+    attendu.y,
+  );
+  await enregistrerEtat(page, rapport, `${viewport.nom}-ge04-aide-3-mauvaise-intersection`, erreursNavigateur);
+  await cliquerCoordonneeAide(page, attendu.x, attendu.y);
+  await enregistrerEtat(page, rapport, `${viewport.nom}-ge04-aide-terminee`, erreursNavigateur);
+  if ([320, 1366].includes(viewport.width)) {
+    await page.locator('.panneau [data-action="cours"]').click();
+    await page.locator('[data-action="cours-suivant"]').click();
+    await page.locator('[data-action="cours-repere-etape"][data-value="3"]').click();
+    await enregistrerEtat(page, rapport, `${viewport.nom}-ge04-cours-methode`, erreursNavigateur);
+  }
+  await fermerPanneauOuvert(page);
+  await fermerPanneauOuvert(page);
   await page.locator('[data-action="valider"]').click();
   await page.locator('[data-action="correction"]').click();
-  rapport.etats.push({
-    nom: `${viewport.nom}-ge04-correction`,
-    mesures: await auditerDisposition(page, `${viewport.nom} · GE-04 correction`, erreursNavigateur),
-    capture: await capturer(page, `${viewport.nom}-ge04-correction`),
-    placement,
-  });
+  await enregistrerEtat(page, rapport, `${viewport.nom}-ge04-correction-juste`, erreursNavigateur);
+
+  await demarrer(page, urlNotion("placer-point-repere", "recette-ge04-8", 20));
+  await allerQuestion(page, 17);
+  await enregistrerEtat(page, rapport, `${viewport.nom}-ge04-coin-extreme`, erreursNavigateur);
+  const placement = await placerPointCertainementFaux(page);
+  await enregistrerEtat(page, rapport, `${viewport.nom}-ge04-coin-provisoire`, erreursNavigateur, { placement });
+  await page.locator('[data-action="valider"]').click();
+  await page.locator('[data-action="correction"]').click();
+  await enregistrerEtat(page, rapport, `${viewport.nom}-ge04-coin-correction`, erreursNavigateur, { placement });
 
   if (viewport.width === 1366) {
-    await demarrer(
-      page,
-      urlNotion("lire-coordonnees-point", "audit-visuel-ge03", 10),
-    );
-    await allerQuestion(page, 7);
-    assert.ok(await page.locator(".grille-qcm-repere").count(), "la question 7 doit être le QCM diagnostique");
-    rapport.etats.push({
-      nom: `${viewport.nom}-ge03-qcm`,
-      mesures: await auditerDisposition(page, `${viewport.nom} · GE-03 QCM`, erreursNavigateur),
-      capture: await capturer(page, `${viewport.nom}-ge03-qcm`),
-    });
-    await allerQuestion(page, 10);
-    assert.equal(await page.locator(".cible-point-repere:visible").count(), 4, "la question 10 doit proposer quatre points");
-    rapport.etats.push({
-      nom: `${viewport.nom}-ge03-identifier`,
-      mesures: await auditerDisposition(page, `${viewport.nom} · GE-03 identification`, erreursNavigateur),
-      capture: await capturer(page, `${viewport.nom}-ge03-identifier`),
-    });
+    const casLecture = [
+      [2, "x-indexe-pas-05"],
+      [3, "coin"],
+      [4, "ordonnee-seule"],
+      [6, "identifier"],
+      [7, "axe-x"],
+      [11, "axe-y"],
+    ];
+    for (const [numero, nom] of casLecture) {
+      await demarrer(page, urlNotion("lire-coordonnees-point", "recette-ge03-11", 20));
+      await allerQuestion(page, numero);
+      await enregistrerEtat(page, rapport, `${viewport.nom}-ge03-${nom}`, erreursNavigateur);
+    }
+    await demarrer(page, urlNotion("lire-coordonnees-point", "app-notation-3", 1));
+    assert.match(await page.locator(".libelle-saisie-droite").innerText(), /^yF\s*=$/);
+    await enregistrerEtat(page, rapport, `${viewport.nom}-ge03-y-indexe`, erreursNavigateur);
+    const casPlacement = [
+      [3, "negatif"],
+      [5, "axe-x-extreme"],
+      [6, "origine"],
+      [8, "axe-y"],
+      [12, "coin-haut"],
+      [18, "pas-025"],
+      [19, "coin-bas"],
+    ];
+    for (const [numero, nom] of casPlacement) {
+      await demarrer(page, urlNotion("placer-point-repere", "recette-ge04-8", 20));
+      await allerQuestion(page, numero);
+      await enregistrerEtat(page, rapport, `${viewport.nom}-ge04-${nom}`, erreursNavigateur);
+    }
+
+    await demarrer(page, urlNotion("lire-coordonnees-point", "recette-ge03-11", 20, "tableau"));
+    await allerQuestion(page, 18);
+    await enregistrerEtat(page, rapport, `${viewport.nom}-ge03-tableau-qcm`, erreursNavigateur);
+    await page.locator('[data-action="reponse"]').click();
+    await enregistrerEtat(page, rapport, `${viewport.nom}-ge03-tableau-reponse`, erreursNavigateur);
+
+    await demarrer(page, urlNotion("placer-point-repere", "recette-ge04-8", 20, "tableau"));
+    await allerQuestion(page, 18);
+    await enregistrerEtat(page, rapport, `${viewport.nom}-ge04-tableau-decimal`, erreursNavigateur);
+    await page.locator('[data-action="reponse"]').click();
+    await enregistrerEtat(page, rapport, `${viewport.nom}-ge04-tableau-reponse`, erreursNavigateur);
   }
 
-  await page.close();
+  await contexte.close();
 }
 
 async function principal() {
