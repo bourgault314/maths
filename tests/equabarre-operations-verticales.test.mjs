@@ -56,3 +56,29 @@ test("ÉquaBarre et ÉquaSplat écrivent la même ligne d'opération", () => {
   ).trim();
   assert.equal(extraire(equabarre), extraire(equasplat));
 });
+
+// LA RÈGLE DES FLÈCHES (23/08/2026) : flèche arrondie là où il y a de la largeur
+// — ordinateur ou tablette, vue classique — et flèche « ↓ » là où il n'y en a pas
+// — vue rédaction, où l'équation vit dans une colonne étroite, et téléphone.
+// Les deux outils l'appliquent, avec le même dessin.
+test("les deux outils dessinent la même flèche arrondie", () => {
+  const extraire = (source) => source.slice(
+    source.indexOf("  function measureOpLabelWidth"),
+    source.indexOf("  let opArrowRedrawHandle")
+  ).trim();
+  const moteur = extraire(equasplat);
+  assert.ok(moteur.length > 2000, "le calque de flèches d'ÉquaSplat est bien là");
+  assert.equal(extraire(equabarre), moteur);
+});
+
+test("la flèche arrondie ne remplace la ligne « ↓ » qu'en vue classique et en largeur", () => {
+  // ÉquaSplat teste viewMode, ÉquaBarre teste equationViewMode : même règle,
+  // écrite avec le vocabulaire de chaque fichier.
+  assert.match(equasplat, /OP_ARROW_MEDIA\.matches\) && viewMode !== "redaction";/);
+  assert.match(equabarre, /OP_ARROW_MEDIA\.matches\) && !isDetailedEquationView\(\);/);
+  assert.match(equabarre, /@media \(min-width:761px\)\{\s*\.stage:not\(\.detailedView\) \.equationOpRow\{\s*display:none !important;/);
+  assert.match(
+    equabarre,
+    /equationHistory\.innerHTML = `<div class="equationList"[^`]*`;\s*drawOperationArrowsOverlay\(\);/
+  );
+});

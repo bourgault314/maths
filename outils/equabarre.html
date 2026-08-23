@@ -3571,6 +3571,43 @@
     }
   }
 
+
+  /* FLÈCHES D'OPÉRATION ARRONDIES — la règle d'ÉquaSplat, appliquée ici aussi
+     (23/08/2026) : flèche arrondie là où il y a de la largeur (ordinateur ou
+     tablette, vue classique), flèche « ↓ » là où il n'y en a pas (vue rédaction,
+     où l'équation vit dans une colonne étroite, et téléphone). */
+  @media (min-width:761px){
+    .stage:not(.detailedView) .equationOpRow{
+      display:none !important;
+    }
+
+    .equationList{
+      position:relative;
+      box-sizing:border-box;
+    }
+
+    .opArrowLayer{
+      position:absolute;
+      left:0;
+      top:0;
+      overflow:visible;
+      pointer-events:none;
+      color:#2563eb;
+    }
+
+    .stage:not(.detailedView) .equationList.hasOpArrows{
+      line-height:1.22 !important;
+    }
+
+    .opArrowLabel{
+      font-family:Arial, Helvetica, sans-serif;
+      font-weight:950;
+      fill:currentColor;
+      font-variant-numeric:tabular-nums;
+      letter-spacing:-.02em;
+    }
+  }
+
 </style>
 <link rel="stylesheet" href="../assets/css/consentement.css">
 <script defer src="../assets/js/consentement.js"></script>
@@ -4789,6 +4826,7 @@
     });
 
     equationHistory.innerHTML = `<div class="equationList" aria-label="Étapes de résolution">${rows.join("")}</div>`;
+    drawOperationArrowsOverlay();
     equationHistory.scrollTop = equationHistory.scrollHeight;
     syncEquationToggleButton();
   }
@@ -4798,6 +4836,166 @@
     // Version import : le plein écran est toujours compact.
     stageEl.classList.add("fullscreenCompact");
   }
+
+  /* FLÈCHES D'OPÉRATION ARRONDIES (ordinateur / tablette, 2026-08-23).
+     Comme dans Splat Équations : au lieu d'une ligne « −10 ↓ » intercalée entre
+     deux équations (qui coûtait une ligne d'historique à chaque opération), une
+     flèche courbe part du centre de la ligne du haut et arrive au centre de la
+     ligne du dessous, dans la marge de chaque membre, son étiquette à l'extérieur.
+     Au téléphone (≤ 760 px) et en vue Rédaction, rien ne change : les lignes
+     « −10 ↓ » restent.
+     Le dessin est un calque SVG posé sur la liste ; il est refait à chaque
+     rendu, redimensionnement, changement de vue ou de plein écran. */
+  const OP_ARROW_MEDIA = window.matchMedia ? window.matchMedia("(min-width:761px)") : null;
+  let opArrowMeasureCanvas = null;
+
+  function operationArrowsEnabled(){
+    // Jamais en vue Rédaction : la colonne d'équation y est étroite et de largeur
+    // fixe, les marges des flèches lui coûteraient une ligne de plus à chaque
+    // étape. La flèche « ↓ » y reste (même règle qu'ÉquaSplat).
+    return !!(OP_ARROW_MEDIA && OP_ARROW_MEDIA.matches) && !isDetailedEquationView();
+  }
+
+  function measureOpLabelWidth(label, fontPx){
+    if(!opArrowMeasureCanvas) opArrowMeasureCanvas = document.createElement("canvas");
+    const ctx = opArrowMeasureCanvas.getContext("2d");
+    if(!ctx) return String(label).length * fontPx * 0.62;
+    ctx.font = `950 ${fontPx}px Arial, Helvetica, sans-serif`;
+    return ctx.measureText(String(label)).width;
+  }
+
+  function textRectOf(span){
+    // Le texte est calé à droite (membre gauche) ou à gauche (membre droit)
+    // dans une cellule de grille : on mesure le texte lui-même, pas la cellule.
+    if(!span || !span.firstChild) return null;
+    const range = document.createRange();
+    range.selectNodeContents(span);
+    const rects = range.getClientRects();
+    if(!rects.length) return null;
+    let left = Infinity, right = -Infinity;
+    for(const r of rects){
+      if(r.width === 0) continue;
+      left = Math.min(left, r.left);
+      right = Math.max(right, r.right);
+    }
+    return Number.isFinite(left) ? {left, right} : null;
+  }
+
+  function drawOperationArrowsOverlay(){
+    const list = equationHistory.querySelector(".equationList");
+    if(!list) return;
+    const old = list.querySelector(".opArrowLayer");
+    if(old) old.remove();
+    list.style.paddingLeft = "";
+    list.style.paddingRight = "";
+    list.classList.remove("hasOpArrows");
+    const ops = (state && state.stepOps) || [];
+    const rowEls = Array.from(list.querySelectorAll(".equationRow"));
+    const visibleOps = ops.map((op, i) => (op && op.type === "bothSides" && op.label && rowEls[i] && rowEls[i + 1]) ? op : null);
+    if(!operationArrowsEnabled() || !visibleOps.some(Boolean)) return;
+
+    // La classe change éventuellement la taille d'écriture (vue Rédaction) :
+    // on la pose avant de mesurer.
+    list.classList.add("hasOpArrows");
+    const fontPx = parseFloat(getComputedStyle(list).fontSize) || 32;
+    const labelFs = Math.max(12, Math.round(fontPx * 0.58));
+    const bulge = Math.round(labelFs * 0.9);
+    const strokeW = Math.max(2, labelFs * 0.12);
+    const head = Math.round(labelFs * 0.345);
+    const labelGap = Math.round(labelFs * 0.25);
+    let labelMax = 0;
+    visibleOps.forEach(op => { if(op) labelMax = Math.max(labelMax, measureOpLabelWidth(op.label, labelFs)); });
+    // Place réservée dans la marge : renflement + étiquette + respiration.
+    const gutter = Math.ceil(bulge + labelGap + labelMax + labelFs * 0.35);
+    list.style.paddingLeft = `${gutter}px`;
+    list.style.paddingRight = `${gutter}px`;
+
+    // Après le remplissage des marges, les lignes ont éventuellement été recoupées :
+    // on mesure maintenant.
+    const listRect = list.getBoundingClientRect();
+    let textLeft = Infinity, textRight = -Infinity;
+    rowEls.forEach(row => {
+      const l = textRectOf(row.querySelector(".lhs"));
+      const r = textRectOf(row.querySelector(".rhs"));
+      if(l) textLeft = Math.min(textLeft, l.left);
+      if(r) textRight = Math.max(textRight, r.right);
+    });
+    if(!Number.isFinite(textLeft)) textLeft = listRect.left + gutter;
+    if(!Number.isFinite(textRight)) textRight = listRect.right - gutter;
+    const margin = Math.round(labelFs * 0.55);
+    // Abscisses communes à toutes les flèches (alignées comme dans Splat Équations),
+    // bornées pour que l'étiquette reste dans la liste.
+    const xL = Math.max(textLeft - listRect.left - margin, gutter - labelFs * 0.2);
+    const xR = Math.min(textRight - listRect.left + margin, listRect.width - gutter + labelFs * 0.2);
+
+    const ns = "http://www.w3.org/2000/svg";
+    const layer = document.createElementNS(ns, "svg");
+    layer.setAttribute("class", "opArrowLayer");
+    layer.setAttribute("aria-hidden", "true");
+    layer.setAttribute("width", String(Math.round(listRect.width)));
+    layer.setAttribute("height", String(Math.round(list.scrollHeight)));
+    layer.setAttribute("viewBox", `0 0 ${Math.round(listRect.width)} ${Math.round(list.scrollHeight)}`);
+
+    const addArrow = (x, y1, y2, dir, label) => {
+      const path = document.createElementNS(ns, "path");
+      const cx = x + dir * bulge, cy = (y1 + y2) / 2;
+      path.setAttribute("d", `M ${x} ${y1} Q ${cx} ${cy} ${x} ${y2}`);
+      path.setAttribute("fill", "none");
+      path.setAttribute("stroke", "currentColor");
+      path.setAttribute("stroke-width", String(strokeW));
+      path.setAttribute("stroke-linecap", "round");
+      layer.appendChild(path);
+      // Pointe alignée sur la tangente d'arrivée de la courbe (elle vient du côté du renflement).
+      const tx = x - cx, ty = y2 - cy;
+      const tl = Math.hypot(tx, ty) || 1;
+      const ux = tx / tl, uy = ty / tl;
+      const px = -uy, py = ux;
+      const bx = x - ux * head, by = y2 - uy * head;
+      const tip = document.createElementNS(ns, "path");
+      tip.setAttribute("d", `M ${bx + px * head * 0.7} ${by + py * head * 0.7} L ${x} ${y2} L ${bx - px * head * 0.7} ${by - py * head * 0.7}`);
+      tip.setAttribute("fill", "none");
+      tip.setAttribute("stroke", "currentColor");
+      tip.setAttribute("stroke-width", String(strokeW));
+      tip.setAttribute("stroke-linecap", "round");
+      tip.setAttribute("stroke-linejoin", "round");
+      layer.appendChild(tip);
+      const text = document.createElementNS(ns, "text");
+      text.setAttribute("x", String(x + dir * (bulge + labelGap)));
+      text.setAttribute("y", String(cy + labelFs * 0.36));
+      text.setAttribute("text-anchor", dir < 0 ? "end" : "start");
+      text.setAttribute("font-size", String(labelFs));
+      text.setAttribute("class", "opArrowLabel");
+      text.textContent = label;
+      layer.appendChild(text);
+    };
+
+    visibleOps.forEach((op, i) => {
+      if(!op) return;
+      const a = rowEls[i].getBoundingClientRect();
+      const b = rowEls[i + 1].getBoundingClientRect();
+      const y1 = a.top + a.height / 2 - listRect.top;
+      const y2 = b.top + b.height / 2 - listRect.top;
+      addArrow(xL, y1, y2, -1, op.label);
+      addArrow(xR, y1, y2, 1, op.label);
+    });
+    list.appendChild(layer);
+  }
+
+  let opArrowRedrawHandle = 0;
+  function scheduleOperationArrowsRedraw(){
+    if(opArrowRedrawHandle) cancelAnimationFrame(opArrowRedrawHandle);
+    opArrowRedrawHandle = requestAnimationFrame(() => {
+      opArrowRedrawHandle = 0;
+      if(state) drawOperationArrowsOverlay();
+    });
+  }
+  window.addEventListener("resize", scheduleOperationArrowsRedraw);
+  document.addEventListener("fullscreenchange", scheduleOperationArrowsRedraw);
+  if(OP_ARROW_MEDIA && OP_ARROW_MEDIA.addEventListener) OP_ARROW_MEDIA.addEventListener("change", scheduleOperationArrowsRedraw);
+  if(typeof ResizeObserver === "function"){
+    new ResizeObserver(scheduleOperationArrowsRedraw).observe(equationHistory);
+  }
+  if(document.fonts && document.fonts.ready) document.fonts.ready.then(scheduleOperationArrowsRedraw);
 
   function render(){
     syncFullscreenSizeMode();
