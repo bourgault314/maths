@@ -29,9 +29,11 @@ test("les plateaux mobiles sont plus hauts et occupent le SVG disponible", () =>
   // en usage libre, la composition téléphone garde ses 1280 unités.
   assert.match(html, /const viewHeight = isMobileImportLayout\(\) \? mobileSvgViewHeight\(\) : \(isPhoneLayout\(\) \? 1280 : desktopSvgViewHeight\(\)\);\s*svg\.setAttribute\("viewBox", `0 0 1600 \$\{viewHeight\}`\)/);
   assert.match(html, /function getTrayForSide\(side\)\{\s*if\(isPhoneLayout\(\)\)\{[\s\S]*\{x:24, y:34, w:736, h:1212\}[\s\S]*\{x:840, y:34, w:736, h:1212\}/);
-  // Ordinateur : la hauteur des plateaux suit la forme réelle du cadre (820 − 170 = 650 à l'origine).
-  assert.match(html, /const trayHeight = desktopSvgViewHeight\(\) - 170;[^\n]*\n\s*return side === "left"\s*\? \{x:40, y:74, w:720, h:trayHeight\}\s*: \{x:840, y:74, w:720, h:trayHeight\}/);
-  assert.match(html, /function desktopSvgViewHeight\(\)\{[\s\S]*?return clamp\(Math\.round\(1600 \* height \/ width\), 700, 1100\)/);
+  // Ordinateur : la hauteur des plateaux suit la forme réelle du cadre ; depuis le
+  // 23/08 le plateau remplit son dessin (marges 24 au lieu de 74 / 96) et le dessin
+  // peut être plus plat (borne basse 560) pour épouser la largeur d'un cadre plat.
+  assert.match(html, /const trayHeight = desktopSvgViewHeight\(\) - 48;[^\n]*\n\s*return side === "left"\s*\? \{x:40, y:24, w:720, h:trayHeight\}\s*: \{x:840, y:24, w:720, h:trayHeight\}/);
+  assert.match(html, /function desktopSvgViewHeight\(\)\{[\s\S]*?return clamp\(Math\.round\(1600 \* height \/ width\), 560, 1100\)/);
 });
 
 test("les taches naissent en haut et les jetons dans le tiers bas au téléphone", () => {
@@ -153,4 +155,21 @@ test("la scène utilise les grands écrans sans conserver le doublon Annuler", (
   assert.match(html, /main\.activeMode\{[\s\S]*width:min\(1600px, calc\(100vw - 24px\)\);/);
   assert.doesNotMatch(html, /id="btnStageUndo"/);
   assert.match(html, /if\(btnStageUndo\) btnStageUndo\.addEventListener\("click", undo\)/);
+});
+
+test("flèches d'opération arrondies et barre du haut sur deux rangées (ordinateur)", () => {
+  // Les lignes « −10 ↓ » restent dans le HTML (téléphone) mais sont masquées dès 761 px,
+  // remplacées par un calque SVG dessiné dans les marges de l'équation.
+  assert.match(html, /@media \(min-width:761px\)\{\s*\.equationOpRow\{\s*display:none !important;/);
+  assert.match(html, /function drawOperationArrowsOverlay\(\)\{/);
+  assert.match(html, /equationHistory\.innerHTML = `<div class="equationList"[^`]*`;\s*drawOperationArrowsOverlay\(\);/);
+  assert.match(html, /const OP_ARROW_MEDIA = window\.matchMedia \? window\.matchMedia\("\(min-width:761px\)"\) : null;/);
+  // pointe alignée sur la tangente d'arrivée, comme dans Splat Équations
+  assert.match(html, /const tx = x - cx, ty = y2 - cy;/);
+  // Barre du haut : deux rangées, bouton hachures entre l'œil et le plein écran
+  assert.match(html, /<div class="quickActionsRow">\s*<button class="ghost quickBtn menuQuickBtn" id="btnBackToMenu"/);
+  assert.match(html, /id="btnToggleEquation"[^>]*><\/button>\s*<button class="ghost quickBtn removedToggleBtn" id="btnToggleRemoved"[^>]*><\/button>\s*<button class="ghost quickBtn" id="btnFullscreen"/);
+  assert.match(html, /\.quickActionsRow\{display:contents\}/);
+  assert.match(html, /removedDisplayModeEl\.value = shouldKeepRemovedPieces\(\) \? "hide" : "keep";/);
+  assert.match(html, /#btnToggleEquation,\s*#btnToggleUnknown,\s*#btnToggleRemoved\{\s*display:none !important;/);
 });

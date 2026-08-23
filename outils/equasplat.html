@@ -240,6 +240,10 @@
 
   .quickBtn:hover{background:#eef2f7}
 
+  /* Les deux rangées de la barre du haut n'existent que sur ordinateur / tablette ;
+     au téléphone les enveloppes sont transparentes (composition inchangée). */
+  .quickActionsRow{display:contents}
+
   .diceBtn{
     font-family:"Segoe UI Emoji","Apple Color Emoji","Noto Color Emoji",system-ui,sans-serif;
     font-style:normal;
@@ -4198,8 +4202,124 @@
 
   @media (max-width:760px){
     #btnToggleEquation,
-    #btnToggleUnknown{
+    #btnToggleUnknown,
+    #btnToggleRemoved{
       display:none !important;
+    }
+  }
+
+  /* ============================================================
+     PATCH FLÈCHES & BARRE DU HAUT — 2026-08-23 (ordinateur / tablette)
+     1. Flèches d'opération arrondies dans les marges de l'équation (calque
+        SVG .opArrowLayer dessiné par drawOperationArrowsOverlay) ; les lignes
+        « −10 ↓ » ne servent plus qu'au téléphone.
+     2. Barre du haut sur deux rangées (vue en haut, réglages rapides dessous) :
+        le bloc est plus étroit, l'équation retrouve de la largeur.
+     3. Bouton hachures : garder hachuré / masquer ce que l'on enlève, le même
+        réglage que le menu, accessible pendant l'activité et en réception.
+     ============================================================ */
+  @media (min-width:761px){
+    .equationOpRow{
+      display:none !important;
+    }
+
+    .equationList{
+      position:relative;
+      box-sizing:border-box;
+    }
+
+    .opArrowLayer{
+      position:absolute;
+      left:0;
+      top:0;
+      overflow:visible;
+      pointer-events:none;
+      color:#2563eb;
+    }
+
+    .equationList.hasOpArrows{
+      line-height:1.22 !important;
+    }
+
+    /* Vue Rédaction : la colonne est étroite, les marges des flèches y coûtent
+       de la largeur → écriture un peu plus petite dès qu'il y a des flèches,
+       et colonne un peu plus large en plein écran. */
+    main:is(.activeMode,.receptionLayout).viewRedaction .stage:not(:fullscreen) .equationList.hasOpArrows{
+      font-size:clamp(20px, 1.65vw, 28px) !important;
+    }
+
+    main:is(.activeMode,.receptionLayout).viewRedaction .stage:fullscreen .equationList.hasOpArrows{
+      font-size:clamp(22px, 1.85vw, 33px) !important;
+    }
+
+    main:is(.activeMode,.receptionLayout).viewRedaction .stage:fullscreen{
+      grid-template-columns:minmax(640px,1fr) minmax(400px, clamp(420px, 33vw, 600px)) !important;
+      /* la barre du haut fait deux rangées (≈ 110 px) : la colonne commence dessous */
+      grid-template-rows:96px minmax(0,1fr) auto 76px !important;
+    }
+
+    main:is(.activeMode,.receptionLayout).viewRedaction .stage:not(:fullscreen){
+      grid-template-rows:92px minmax(0,1fr) auto 72px !important;
+    }
+
+    /* Les lignes « −10 ↓ » ayant disparu, la zone d'équation affiche plus
+       d'étapes pour la même hauteur ; on lui laisse un peu plus de place
+       (4 lignes en plein écran sur un écran de 1000 px et plus). */
+    main.activeMode.viewClassic .stage:not(:fullscreen) .equationHistory,
+    body.importMode main.viewClassic .stage:not(:fullscreen) .equationHistory{
+      height:clamp(90px, 14vh, 190px) !important;
+    }
+
+    main.viewClassic .stage:fullscreen .equationHistory{
+      height:clamp(140px, 19vh, 240px) !important;
+    }
+
+    .opArrowLabel{
+      font-family:Arial, Helvetica, sans-serif;
+      font-weight:950;
+      fill:currentColor;
+      font-variant-numeric:tabular-nums;
+      letter-spacing:-.02em;
+    }
+
+    /* --- Barre du haut sur deux rangées ---------------------------------- */
+    main.activeMode .stage .stageQuickActions,
+    body.importMode .stage .stageQuickActions{
+      display:grid !important;
+      grid-template-columns:auto;
+      justify-items:end;
+      row-gap:8px;
+      width:max-content;
+    }
+
+    .quickActionsRow{
+      display:flex;
+      align-items:center;
+      gap:8px;
+    }
+
+    /* Le bloc fait ~280 px au lieu de ~450 : on redonne cette largeur à l'équation. */
+    main.activeMode .stage:not(:fullscreen) .topbar,
+    body.importMode .stage:not(:fullscreen) .topbar,
+    .stage:fullscreen .topbar{
+      padding-left:clamp(200px, 19vw, 310px) !important;
+      padding-right:clamp(200px, 19vw, 310px) !important;
+    }
+
+    /* --- Lettre / « ? » : l'italique décale le 𝑥 vers la droite, on le recentre. */
+    .unknownToggleBtn:not(.is-question){
+      padding-right:2px;
+    }
+
+    /* --- Hachures : garder hachuré (actif) / masquer ------------------------ */
+    .removedToggleBtn svg{
+      width:26px;
+      height:26px;
+      display:block;
+    }
+
+    .removedToggleBtn.is-hiding{
+      background:#e2e8f0;
     }
   }
 
@@ -4324,15 +4444,20 @@
 
   <section class="stage" id="stage">
     <div class="stageQuickActions" aria-label="Actions rapides">
-      <button class="ghost quickBtn menuQuickBtn" id="btnBackToMenu" type="button" title="Revenir au menu de départ" aria-label="Revenir au menu de départ">Menu</button>
-      <div class="viewModeSwitch" id="viewModeSwitch" role="group" aria-label="Choisir la vue">
-        <button class="viewModeOption" id="btnViewClassic" type="button" aria-pressed="false">Classique</button>
-        <button class="viewModeOption" id="btnViewRedaction" type="button" aria-pressed="true">Rédaction</button>
+      <div class="quickActionsRow">
+        <button class="ghost quickBtn menuQuickBtn" id="btnBackToMenu" type="button" title="Revenir au menu de départ" aria-label="Revenir au menu de départ">Menu</button>
+        <div class="viewModeSwitch" id="viewModeSwitch" role="group" aria-label="Choisir la vue">
+          <button class="viewModeOption" id="btnViewClassic" type="button" aria-pressed="false">Classique</button>
+          <button class="viewModeOption" id="btnViewRedaction" type="button" aria-pressed="true">Rédaction</button>
+        </div>
       </div>
-      <button class="ghost quickBtn diceBtn" id="btnStageRandom" type="button" title="Nouvelle équation aléatoire" aria-label="Nouvelle équation aléatoire">🎲</button>
-      <button class="ghost quickBtn unknownToggleBtn" id="btnToggleUnknown" type="button" title="Écrire l’inconnue avec un ?" aria-label="Basculer entre la lettre et le point d’interrogation"></button>
-      <button class="ghost quickBtn equationEyeBtn" id="btnToggleEquation" type="button" title="Masquer l’équation" aria-label="Afficher ou masquer l’équation"></button>
-      <button class="ghost quickBtn" id="btnFullscreen" type="button" title="Plein écran" aria-label="Plein écran">⛶</button>
+      <div class="quickActionsRow">
+        <button class="ghost quickBtn diceBtn" id="btnStageRandom" type="button" title="Nouvelle équation aléatoire" aria-label="Nouvelle équation aléatoire">🎲</button>
+        <button class="ghost quickBtn unknownToggleBtn" id="btnToggleUnknown" type="button" title="Écrire l’inconnue avec un ?" aria-label="Basculer entre la lettre et le point d’interrogation"></button>
+        <button class="ghost quickBtn equationEyeBtn" id="btnToggleEquation" type="button" title="Masquer l’équation" aria-label="Afficher ou masquer l’équation"></button>
+        <button class="ghost quickBtn removedToggleBtn" id="btnToggleRemoved" type="button" title="Masquer ce que l’on enlève" aria-label="Garder hachuré ou masquer ce que l’on enlève"></button>
+        <button class="ghost quickBtn" id="btnFullscreen" type="button" title="Plein écran" aria-label="Plein écran">⛶</button>
+      </div>
     </div>
 
     <div class="topbar">
@@ -6136,8 +6261,165 @@
       rows.push(`<div class="equationRow ${cls}"><span class="lhs">${escapeHtml(lhs)}</span><span class="eq">=</span><span class="rhs">${escapeHtml(rhs)}</span></div>`);
     });
     equationHistory.innerHTML = `<div class="equationList" aria-label="Étapes de résolution">${rows.join("")}</div>`;
+    drawOperationArrowsOverlay();
     equationHistory.scrollTop = equationHistory.scrollHeight;
   }
+
+  /* FLÈCHES D'OPÉRATION ARRONDIES (ordinateur / tablette, 2026-08-23).
+     Comme dans Splat Équations : au lieu d'une ligne « −10 ↓ » intercalée entre
+     deux équations (qui coûtait une ligne d'historique à chaque opération), une
+     flèche courbe part du centre de la ligne du haut et arrive au centre de la
+     ligne du dessous, dans la marge de chaque membre, son étiquette à l'extérieur.
+     Au téléphone (≤ 760 px) rien ne change : les lignes « −10 ↓ » restent.
+     Le dessin est un calque SVG posé sur la liste ; il est refait à chaque
+     rendu, redimensionnement, changement de vue ou de plein écran. */
+  const OP_ARROW_MEDIA = window.matchMedia ? window.matchMedia("(min-width:761px)") : null;
+  let opArrowMeasureCanvas = null;
+
+  function operationArrowsEnabled(){
+    return !!(OP_ARROW_MEDIA && OP_ARROW_MEDIA.matches);
+  }
+
+  function measureOpLabelWidth(label, fontPx){
+    if(!opArrowMeasureCanvas) opArrowMeasureCanvas = document.createElement("canvas");
+    const ctx = opArrowMeasureCanvas.getContext("2d");
+    if(!ctx) return String(label).length * fontPx * 0.62;
+    ctx.font = `950 ${fontPx}px Arial, Helvetica, sans-serif`;
+    return ctx.measureText(String(label)).width;
+  }
+
+  function textRectOf(span){
+    // Le texte est calé à droite (membre gauche) ou à gauche (membre droit)
+    // dans une cellule de grille : on mesure le texte lui-même, pas la cellule.
+    if(!span || !span.firstChild) return null;
+    const range = document.createRange();
+    range.selectNodeContents(span);
+    const rects = range.getClientRects();
+    if(!rects.length) return null;
+    let left = Infinity, right = -Infinity;
+    for(const r of rects){
+      if(r.width === 0) continue;
+      left = Math.min(left, r.left);
+      right = Math.max(right, r.right);
+    }
+    return Number.isFinite(left) ? {left, right} : null;
+  }
+
+  function drawOperationArrowsOverlay(){
+    const list = equationHistory.querySelector(".equationList");
+    if(!list) return;
+    const old = list.querySelector(".opArrowLayer");
+    if(old) old.remove();
+    list.style.paddingLeft = "";
+    list.style.paddingRight = "";
+    list.classList.remove("hasOpArrows");
+    const ops = (state && state.stepOps) || [];
+    const rowEls = Array.from(list.querySelectorAll(".equationRow"));
+    const visibleOps = ops.map((op, i) => (op && op.type === "bothSides" && op.label && rowEls[i] && rowEls[i + 1]) ? op : null);
+    if(!operationArrowsEnabled() || !visibleOps.some(Boolean)) return;
+
+    // La classe change éventuellement la taille d'écriture (vue Rédaction) :
+    // on la pose avant de mesurer.
+    list.classList.add("hasOpArrows");
+    const fontPx = parseFloat(getComputedStyle(list).fontSize) || 32;
+    const labelFs = Math.max(12, Math.round(fontPx * 0.58));
+    const bulge = Math.round(labelFs * 0.9);
+    const strokeW = Math.max(2, labelFs * 0.12);
+    const head = Math.round(labelFs * 0.345);
+    const labelGap = Math.round(labelFs * 0.25);
+    let labelMax = 0;
+    visibleOps.forEach(op => { if(op) labelMax = Math.max(labelMax, measureOpLabelWidth(op.label, labelFs)); });
+    // Place réservée dans la marge : renflement + étiquette + respiration.
+    const gutter = Math.ceil(bulge + labelGap + labelMax + labelFs * 0.35);
+    list.style.paddingLeft = `${gutter}px`;
+    list.style.paddingRight = `${gutter}px`;
+
+    // Après le remplissage des marges, les lignes ont éventuellement été recoupées :
+    // on mesure maintenant.
+    const listRect = list.getBoundingClientRect();
+    let textLeft = Infinity, textRight = -Infinity;
+    rowEls.forEach(row => {
+      const l = textRectOf(row.querySelector(".lhs"));
+      const r = textRectOf(row.querySelector(".rhs"));
+      if(l) textLeft = Math.min(textLeft, l.left);
+      if(r) textRight = Math.max(textRight, r.right);
+    });
+    if(!Number.isFinite(textLeft)) textLeft = listRect.left + gutter;
+    if(!Number.isFinite(textRight)) textRight = listRect.right - gutter;
+    const margin = Math.round(labelFs * 0.55);
+    // Abscisses communes à toutes les flèches (alignées comme dans Splat Équations),
+    // bornées pour que l'étiquette reste dans la liste.
+    const xL = Math.max(textLeft - listRect.left - margin, gutter - labelFs * 0.2);
+    const xR = Math.min(textRight - listRect.left + margin, listRect.width - gutter + labelFs * 0.2);
+
+    const ns = "http://www.w3.org/2000/svg";
+    const layer = document.createElementNS(ns, "svg");
+    layer.setAttribute("class", "opArrowLayer");
+    layer.setAttribute("aria-hidden", "true");
+    layer.setAttribute("width", String(Math.round(listRect.width)));
+    layer.setAttribute("height", String(Math.round(list.scrollHeight)));
+    layer.setAttribute("viewBox", `0 0 ${Math.round(listRect.width)} ${Math.round(list.scrollHeight)}`);
+
+    const addArrow = (x, y1, y2, dir, label) => {
+      const path = document.createElementNS(ns, "path");
+      const cx = x + dir * bulge, cy = (y1 + y2) / 2;
+      path.setAttribute("d", `M ${x} ${y1} Q ${cx} ${cy} ${x} ${y2}`);
+      path.setAttribute("fill", "none");
+      path.setAttribute("stroke", "currentColor");
+      path.setAttribute("stroke-width", String(strokeW));
+      path.setAttribute("stroke-linecap", "round");
+      layer.appendChild(path);
+      // Pointe alignée sur la tangente d'arrivée de la courbe (elle vient du côté du renflement).
+      const tx = x - cx, ty = y2 - cy;
+      const tl = Math.hypot(tx, ty) || 1;
+      const ux = tx / tl, uy = ty / tl;
+      const px = -uy, py = ux;
+      const bx = x - ux * head, by = y2 - uy * head;
+      const tip = document.createElementNS(ns, "path");
+      tip.setAttribute("d", `M ${bx + px * head * 0.7} ${by + py * head * 0.7} L ${x} ${y2} L ${bx - px * head * 0.7} ${by - py * head * 0.7}`);
+      tip.setAttribute("fill", "none");
+      tip.setAttribute("stroke", "currentColor");
+      tip.setAttribute("stroke-width", String(strokeW));
+      tip.setAttribute("stroke-linecap", "round");
+      tip.setAttribute("stroke-linejoin", "round");
+      layer.appendChild(tip);
+      const text = document.createElementNS(ns, "text");
+      text.setAttribute("x", String(x + dir * (bulge + labelGap)));
+      text.setAttribute("y", String(cy + labelFs * 0.36));
+      text.setAttribute("text-anchor", dir < 0 ? "end" : "start");
+      text.setAttribute("font-size", String(labelFs));
+      text.setAttribute("class", "opArrowLabel");
+      text.textContent = label;
+      layer.appendChild(text);
+    };
+
+    visibleOps.forEach((op, i) => {
+      if(!op) return;
+      const a = rowEls[i].getBoundingClientRect();
+      const b = rowEls[i + 1].getBoundingClientRect();
+      const y1 = a.top + a.height / 2 - listRect.top;
+      const y2 = b.top + b.height / 2 - listRect.top;
+      addArrow(xL, y1, y2, -1, op.label);
+      addArrow(xR, y1, y2, 1, op.label);
+    });
+    list.appendChild(layer);
+  }
+
+  let opArrowRedrawHandle = 0;
+  function scheduleOperationArrowsRedraw(){
+    if(opArrowRedrawHandle) cancelAnimationFrame(opArrowRedrawHandle);
+    opArrowRedrawHandle = requestAnimationFrame(() => {
+      opArrowRedrawHandle = 0;
+      if(state) drawOperationArrowsOverlay();
+    });
+  }
+  window.addEventListener("resize", scheduleOperationArrowsRedraw);
+  document.addEventListener("fullscreenchange", scheduleOperationArrowsRedraw);
+  if(OP_ARROW_MEDIA && OP_ARROW_MEDIA.addEventListener) OP_ARROW_MEDIA.addEventListener("change", scheduleOperationArrowsRedraw);
+  if(typeof ResizeObserver === "function"){
+    new ResizeObserver(scheduleOperationArrowsRedraw).observe(equationHistory);
+  }
+  if(document.fonts && document.fonts.ready) document.fonts.ready.then(scheduleOperationArrowsRedraw);
 
   // MODE RÉCEPTION — au départ, l'équation reçue s'annonce par l'égalité des
   // deux quantités ; la consigne s'efface au premier geste de l'élève.
@@ -7008,7 +7290,10 @@
     const width = svg.clientWidth || 0;
     const height = svg.clientHeight || 0;
     if(width < 50 || height < 50) return 820;
-    return clamp(Math.round(1600 * height / width), 700, 1100);
+    // Borne basse 560 (au lieu de 700) : dans un cadre très plat (plein écran avec
+    // l'équation au-dessus), le dessin épouse la largeur au lieu de laisser du gris
+    // de chaque côté ; les plateaux sont alors plus larges, pas plus petits.
+    return clamp(Math.round(1600 * height / width), 560, 1100);
   }
 
   function getTrayForSide(side){
@@ -7023,10 +7308,13 @@
         ? {x:8, y:36, w:760, h:viewHeight-72}
         : {x:832, y:36, w:760, h:viewHeight-72};
     }
-    const trayHeight = desktopSvgViewHeight() - 170; // 820 − 170 = 650 : géométrie d'origine
+    // 2026-08-23 : le plateau remplit son dessin. Les marges 74 / 96 de la géométrie
+    // d'origine (820 de haut) ne portaient rien et faisaient perdre un quart de la
+    // hauteur du cadre gris ; il reste 24 en haut et en bas pour l'ombre du cadre.
+    const trayHeight = desktopSvgViewHeight() - 48;
     return side === "left"
-      ? {x:40, y:74, w:720, h:trayHeight}
-      : {x:840, y:74, w:720, h:trayHeight};
+      ? {x:40, y:24, w:720, h:trayHeight}
+      : {x:840, y:24, w:720, h:trayHeight};
   }
 
   function findFusionCandidate(side, draggedId, cx, cy){
@@ -7485,14 +7773,18 @@
       const rightX = x + cardW*.71;
       const splatX = pending.xSide === "left" ? leftX : rightX;
       const tokenX = pending.tokenSide === "left" ? leftX : rightX;
-      const splatR = Math.min(94, cardH*.28, cardW*.13);
-      const tokenR = Math.min(66, cardH*.22, cardW*.10);
+      // Mini-plateaux du partage : taches et jetons un peu plus grands qu'avant
+      // (cartes plates), et la lettre suit la taille de la tache au lieu de garder
+      // la police du plateau normal — elle paraissait trop grosse et décentrée.
+      const splatR = Math.min(94, cardH*.36, cardW*.13);
+      const tokenR = Math.min(66, cardH*.27, cardW*.10);
 
       const splat = document.createElementNS("http://www.w3.org/2000/svg", "path");
       splat.setAttribute("d", blobPath(splatX, centerY, splatR));
       splat.setAttribute("class", "splatShape");
       g.appendChild(splat);
-      drawText(splatX, centerY + 5, displayedUnknown(), "splatText", g);
+      const splatLabel = drawText(splatX - splatR*.03, centerY + splatR*.06, displayedUnknown(), "splatText", g);
+      splatLabel.style.fontSize = `${Math.round(splatR*.6)}px`;
 
       const divider = document.createElementNS("http://www.w3.org/2000/svg", "line");
       divider.setAttribute("x1", dividerX);
@@ -7513,7 +7805,8 @@
         token.style.stroke = color.stroke;
       }
       g.appendChild(token);
-      drawText(tokenX, centerY + 2, formatSignedNumber(pending.each), "tokenText", g);
+      const tokenLabel = drawText(tokenX, centerY + 2, formatSignedNumber(pending.each), "tokenText", g);
+      tokenLabel.style.fontSize = `${Math.round(tokenR*.9)}px`;
 
       const choose = () => {
         const fresh = state && state.pendingShareConclusion;
@@ -8097,6 +8390,38 @@
     });
     unknownDisplayModeEl.addEventListener("change", syncUnknownToggleButton);
     syncUnknownToggleButton();
+  }
+
+  // Hachures : garder hachuré / masquer ce que l'on enlève — même réglage que le
+  // menu de départ (« Après suppression »), mais accessible pendant l'activité
+  // et en réception, où le menu n'existe pas.
+  const btnToggleRemoved = document.getElementById("btnToggleRemoved");
+  function removedIconSvg(hiding=false){
+    const hatch = hiding ? "" : `
+      <g clip-path="url(#removedIconClip)" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+        <path d="M1 13 L13 1"/><path d="M3 19 L19 3"/><path d="M8 22 L22 8"/><path d="M14 24 L24 14"/>
+      </g>`;
+    return `<svg viewBox="0 0 24 24" aria-hidden="true">
+      <defs><clipPath id="removedIconClip"><circle cx="12" cy="12" r="8.6"/></clipPath></defs>
+      <circle cx="12" cy="12" r="8.6" fill="none" stroke="currentColor" stroke-width="2"${hiding ? ' stroke-dasharray="2.6 2.6"' : ""}/>
+      ${hatch}
+    </svg>`;
+  }
+  function syncRemovedToggleButton(){
+    if(!btnToggleRemoved) return;
+    const hiding = !shouldKeepRemovedPieces();
+    btnToggleRemoved.innerHTML = removedIconSvg(hiding);
+    btnToggleRemoved.title = hiding ? "Garder hachuré ce que l’on enlève" : "Masquer ce que l’on enlève";
+    btnToggleRemoved.classList.toggle("is-hiding", hiding);
+  }
+  if(btnToggleRemoved && removedDisplayModeEl){
+    btnToggleRemoved.addEventListener("click", () => {
+      removedDisplayModeEl.value = shouldKeepRemovedPieces() ? "hide" : "keep";
+      syncRemovedToggleButton();
+      if(state) render();
+    });
+    removedDisplayModeEl.addEventListener("change", syncRemovedToggleButton);
+    syncRemovedToggleButton();
   }
 
   function render(){
