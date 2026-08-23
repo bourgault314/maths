@@ -688,6 +688,44 @@
     .printBlock{padding:5px 9px 7px}
     .printBlock .printAction{height:33px !important}
   }
+
+  /* ===== Parcours élève (?eleve=1) : la page ne montre que le jeu ===== */
+  body.eleve-mode .panel{display:none}
+  body.eleve-mode #stageNav{display:none}
+  body.eleve-mode .wrap{grid-template-columns:1fr}
+  body.eleve-mode #svgWrap{aspect-ratio:auto;height:44vh;min-height:280px}
+  body.eleve-mode #mainSvg{height:100%}
+  #elevePanel{max-width:760px;margin:0 auto;padding:4px 8px 14px}
+  .eleveTete{display:flex;justify-content:space-between;align-items:center;font-weight:900;color:var(--ink);margin:2px 0 6px}
+  .eleveTete .eleveScore{color:#b45309;font-size:15px}
+  .eleveConsigne{text-align:center;font-weight:800;color:var(--muted);margin:0 0 10px;font-size:15px}
+  .eleveDiag{border:3px solid #000;background:#fff;border-radius:2px}
+  .eleveDiag .ligneHaut{display:flex;border-bottom:3px solid #000}
+  .eleveDiag .ligneBas{display:flex}
+  .eleveCase{position:relative;display:flex;align-items:center;justify-content:center;min-height:52px;font-size:22px;font-weight:900;color:#111;border-right:3px solid #000;overflow:hidden}
+  .eleveCase:last-child{border-right:none}
+  .eleveCase.grise{background:#d4deea}
+  .eleveCase.blanche{background:#fff;color:#2563eb}
+  .eleveCase.haut{width:100%;border-right:none}
+  input.eleveChamp{width:100%;height:100%;padding:0;border:none;border-radius:0;outline:none;text-align:center;font:inherit;color:#1d4ed8;background:transparent;min-width:0}
+  input.eleveChamp::placeholder{color:#94a3b8;font-weight:700}
+  .eleveCase:focus-within{outline:3px solid #60a5fa;outline-offset:-3px}
+  .eleveCase.ok{background:#dcfce7 !important}
+  .eleveCase.ok input.eleveChamp{color:#15803d}
+  .eleveCase.ko{animation:eleveShake .3s}
+  .eleveCase.ko input.eleveChamp{background:#fee2e2;color:#b91c1c}
+  @keyframes eleveShake{0%,100%{transform:translateX(0)}25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
+  .eleveMiniTache{position:absolute;left:6px;top:5px;width:22px;height:16px;opacity:.8;pointer-events:none}
+  .eleveActions{display:flex;justify-content:center;gap:10px;margin-top:14px}
+  .eleveActions button{font:inherit;font-weight:900;border:none;border-radius:12px;padding:12px 24px;min-height:48px;cursor:pointer;background:#2563eb;color:#fff}
+  .eleveActions button:disabled{opacity:.45;cursor:default}
+  .eleveMsg{text-align:center;min-height:24px;font-weight:900;margin-top:9px}
+  .eleveMsg.bravo{color:#15803d}
+  .eleveMsg.rate{color:#b91c1c}
+  .eleveFin{text-align:center;padding:24px 10px}
+  .eleveFin .finEtoiles{font-size:34px;letter-spacing:4px}
+  .eleveFin h2{margin:10px 0 4px;color:var(--ink)}
+  .eleveFin p{color:var(--muted);font-weight:700;margin:4px 0 14px}
 </style>
 <link rel="stylesheet" href="../assets/css/consentement.css">
 <script defer src="../assets/js/consentement.js"></script>
@@ -1785,7 +1823,10 @@ function applyShareControl(params, name, el){
 
 function loadSharedConfiguration(){
   const params = new URLSearchParams(window.location.search);
-  const sharedNames = ["mode", "seed", "cards", "equation", "tasksMin", "tasksMax", "visibleMin", "visibleMax", "hidden", "hiddenMax", "totalMin", "totalMax", "splats", "clues", "structure", "mul", "div", "add", "sub", "deltaMax", "operation", "beadMax", "opposites", "colors", "unknown", "print", "duplex", "layout", "title"];
+  eleveActif = params.get("eleve") === "1";
+  parcoursId = (params.get("parcours") || "").slice(0, 64);
+  if(eleveActif) document.body.classList.add("eleve-mode");
+  const sharedNames = ["mode", "seed", "cards", "equation", "tasksMin", "tasksMax", "visibleMin", "visibleMax", "hidden", "hiddenMax", "totalMin", "totalMax", "splats", "clues", "structure", "mul", "div", "add", "sub", "deltaMax", "operation", "beadMax", "opposites", "colors", "unknown", "print", "duplex", "layout", "title", "eleve", "parcours"];
   if(!sharedNames.some(name => params.has(name))) return false;
 
   setSelectFromShare(params, "mode", activityEl);
@@ -7255,6 +7296,11 @@ function waitForPrintAssets(root){
 let cards = [];
 let idx = 0;
 let revealState = 0; // États selon le mode (A/B: 0→3, B±: 0→2, autres: 0/2)
+/* Parcours élève : aucun réglage visible, activé uniquement par ?eleve=1 dans l'adresse. */
+let eleveActif = false, parcoursId = "";
+let eleveIdx = 0, eleveEtoiles = 0, eleveSerie = [], eleveCarteFautee = false;
+const ELEVE_SERIE_MAX = 8;
+const ELEVE_STORE_KEY = "mathsgo-splat-parcours";
 const counterEl = document.getElementById("counter");
 const fsHost = document.getElementById("fsHost");
 
@@ -7271,6 +7317,7 @@ function getMaxRevealState(card){
 }
 
 function updateUI(){
+  if(eleveActif){ renderEleveSplat(); return; }
   counterEl.textContent = cards.length ? `Carte ${idx+1} / ${cards.length}` : "0 carte";
   const prevDisabled = (cards.length===0 || (idx===0 && revealState===0));
   document.getElementById("btnPrev").disabled = prevDisabled;
@@ -7455,6 +7502,7 @@ window.addEventListener("keydown",(e)=>{
   const _tag = _ae && _ae.tagName ? String(_ae.tagName).toLowerCase() : "";
   const _isTyping = _tag === "input" || _tag === "textarea" || _tag === "select" || (_ae && _ae.isContentEditable);
   if(_isTyping) return;
+  if(eleveActif) return;
   if(e.key==="ArrowLeft"){
     e.preventDefault();
     goPreviousCardOrStep();
@@ -7465,6 +7513,142 @@ window.addEventListener("keydown",(e)=>{
   }
   if(e.key==="f" || e.key==="F"){ toggleFullscreen(); }
 });
+
+/* ===== Parcours élève de Splat! classique : l'élève remplit le schéma et la
+   valeur de la tache, la page valide. Modes A (jetons) et B (paquets) seulement.
+   La réussite d'une série s'enregistre dans le navigateur quand l'adresse porte
+   ?parcours=identifiant (clé partagée avec la carte des mondes). ===== */
+const ELEVE_TACHE_MINI = '<svg class="eleveMiniTache" viewBox="2 5 106 105" aria-hidden="true"><path fill="#111827" d="M 96.4 55 C 98.7 57.2 102 60.1 102.8 62.6 C 103.7 65.1 102.7 67.9 101.4 70.1 C 100 72.2 97 73.8 94.9 75.3 C 92.7 76.9 90.7 78.2 88.5 79.3 C 86.3 80.4 84.1 81.4 81.9 81.9 C 79.6 82.4 76.9 81.9 75 82.5 C 73.1 83.2 71.8 83.6 70.6 85.6 C 69.4 87.6 69.1 91.5 67.8 94.4 C 66.5 97.2 64.7 101.3 62.6 102.8 C 60.4 104.4 57.4 104.4 55 103.8 C 52.6 103.2 50.1 100.8 48 99.2 C 45.9 97.6 43.9 96.1 42.2 94.4 C 40.5 92.7 38.9 90.9 37.7 88.9 C 36.5 86.9 36.2 84.1 35 82.5 C 33.8 80.9 33 79.8 30.7 79.3 C 28.5 78.8 24.7 79.7 21.5 79.3 C 18.4 79 14 78.5 11.8 77 C 9.7 75.4 8.8 72.6 8.6 70.1 C 8.5 67.6 10 64.5 10.8 62 C 11.6 59.5 12.5 57.2 13.6 55 C 14.7 52.8 15.9 50.8 17.4 49 C 18.9 47.3 21.5 46.1 22.6 44.5 C 23.8 42.9 24.6 41.7 24.4 39.4 C 24.2 37.1 22.1 33.8 21.5 30.7 C 20.9 27.6 19.9 23.3 20.7 20.7 C 21.6 18.2 24 16.5 26.3 15.6 C 28.7 14.6 32 15.1 34.7 15.1 C 37.3 15.1 39.8 15.2 42.2 15.6 C 44.6 16 46.9 16.5 49 17.4 C 51.2 18.3 53.1 20.4 55 21 C 56.9 21.6 58.2 22 60.4 21.1 C 62.5 20.2 65 17.2 67.8 15.6 C 70.6 14.1 74.3 11.8 77 11.8 C 79.6 11.8 82.1 13.6 83.7 15.6 C 85.3 17.5 85.8 20.8 86.7 23.3 C 87.5 25.9 88.1 28.3 88.5 30.7 C 88.9 33.1 89.1 35.4 88.9 37.7 C 88.7 40 87.4 42.5 87.4 44.5 C 87.4 46.5 87.4 47.9 88.9 49.6 C 90.4 51.4 94.1 52.8 96.4 55 Z"/></svg>';
+
+/* En mode élève la scène n'a pas de tableau à droite : on cadre le SVG sur
+   son contenu réel pour que le plateau soit centré et grand. */
+function eleveCadrerScene(){
+  try{
+    const bb = svg.getBBox();
+    if(bb && bb.width > 0){
+      svg.setAttribute("viewBox", `${bb.x - 24} ${bb.y - 24} ${bb.width + 48} ${bb.height + 48}`);
+    }
+  }catch(_e){ /* si getBBox échoue, on garde le cadrage d'origine */ }
+}
+
+function eleveInfosCarte(card){
+  if(!card) return null;
+  if(card.family === "U" && card._unit){
+    return { tasks: card._unit.tasks, H: card._unit.hiddenPerTask, visibleSum: card._unit.visibleCount };
+  }
+  if(card.family === "N" && card._num){
+    const visibleSum = (card.visible || []).reduce((s, v) => s + v, 0);
+    return { tasks: card._num.tasks, H: card._num.H, visibleSum };
+  }
+  return null;
+}
+
+function eleveEnregistrerReussite(sansFaute, total){
+  if(!parcoursId) return;
+  try{
+    const tout = JSON.parse(localStorage.getItem(ELEVE_STORE_KEY) || "{}");
+    tout[parcoursId] = { fait: true, etoiles: sansFaute, cartes: total, date: new Date().toISOString().slice(0, 10) };
+    localStorage.setItem(ELEVE_STORE_KEY, JSON.stringify(tout));
+  }catch(_e){ /* stockage indisponible : le jeu reste jouable */ }
+}
+
+function eleveCaseHtml(classe, attendu, largeur, avecTache){
+  return `<div class="eleveCase ${classe}" style="flex:${largeur} 1 0" data-attendu="${attendu}">` +
+    (avecTache ? ELEVE_TACHE_MINI : "") +
+    `<input class="eleveChamp" type="text" inputmode="numeric" maxlength="3" autocomplete="off" placeholder="?"></div>`;
+}
+
+function renderEleveSplat(){
+  const cardbox = document.querySelector(".cardbox");
+  if(!cardbox) return;
+  let panneau = document.getElementById("elevePanel");
+  if(!panneau){
+    panneau = document.createElement("div");
+    panneau.id = "elevePanel";
+    cardbox.appendChild(panneau);
+  }
+  if(!cards.length){ panneau.innerHTML = ""; renderEmpty(); return; }
+  if(eleveSerie.length === 0){ eleveSerie = cards.slice(0, ELEVE_SERIE_MAX); eleveIdx = 0; eleveEtoiles = 0; }
+  if(eleveIdx >= eleveSerie.length){ renderEleveFinSplat(panneau); return; }
+
+  const card = eleveSerie[eleveIdx];
+  const infos = eleveInfosCarte(card);
+  renderCard(card, 0);
+  eleveCadrerScene();
+  if(!infos){
+    panneau.innerHTML = `<p class="eleveConsigne">Le parcours élève n'existe pas encore pour ce mode.</p>`;
+    return;
+  }
+  eleveCarteFautee = false;
+
+  const flexVis = Math.max(infos.visibleSum, card.total * 0.05, 1);
+  const flexHid = Math.max(infos.H, card.total * 0.05, 1);
+  let bas = "";
+  if(infos.visibleSum > 0) bas += eleveCaseHtml("blanche", infos.visibleSum, flexVis, false);
+  for(let i = 0; i < infos.tasks; i++) bas += eleveCaseHtml("grise", infos.H, flexHid, true);
+
+  panneau.innerHTML =
+    `<div class="eleveTete"><span>Carte ${eleveIdx + 1} / ${eleveSerie.length}</span>` +
+    `<span class="eleveScore">${"\u2B50".repeat(eleveEtoiles)}</span></div>` +
+    `<p class="eleveConsigne">Complète le schéma en barres : le total, les jetons visibles, et ce que cache chaque tache. Puis Valider.</p>` +
+    `<div class="eleveDiag"><div class="ligneHaut">${eleveCaseHtml("haut blanche", card.total, 1, false)}</div>` +
+    `<div class="ligneBas">${bas}</div></div>` +
+    `<div class="eleveMsg" id="eleveMsg"></div>` +
+    `<div class="eleveActions"><button id="eleveValider" type="button">Valider</button></div>`;
+
+  const premier = panneau.querySelector(".eleveChamp");
+  if(premier) premier.focus();
+  panneau.querySelectorAll(".eleveChamp").forEach(inp => {
+    inp.addEventListener("keydown", ev => { if(ev.key === "Enter") eleveValiderSplat(); });
+    inp.addEventListener("input", () => {
+      const c = inp.closest(".eleveCase");
+      if(c) c.classList.remove("ko");
+    });
+  });
+  document.getElementById("eleveValider").onclick = eleveValiderSplat;
+}
+
+function eleveValiderSplat(){
+  const bouton = document.getElementById("eleveValider");
+  if(!bouton || bouton.disabled) return;
+  const casesE = Array.from(document.querySelectorAll("#elevePanel .eleveCase"));
+  const msg = document.getElementById("eleveMsg");
+  let toutJuste = true;
+  casesE.forEach(c => {
+    const attendu = parseInt(c.getAttribute("data-attendu"), 10);
+    const inp = c.querySelector(".eleveChamp");
+    const repondu = parseInt(String(inp.value).trim(), 10);
+    const juste = Number.isFinite(repondu) && repondu === attendu;
+    c.classList.toggle("ko", !juste);
+    c.classList.toggle("ok", juste);
+    if(!juste) toutJuste = false;
+  });
+  if(toutJuste){
+    if(!eleveCarteFautee) eleveEtoiles++;
+    bouton.disabled = true;
+    msg.textContent = eleveCarteFautee ? "Juste ! Carte suivante\u2026" : "Bravo, du premier coup ! \u2B50";
+    msg.className = "eleveMsg bravo";
+    casesE.forEach(c => { const i = c.querySelector(".eleveChamp"); if(i) i.readOnly = true; });
+    setTimeout(() => { eleveIdx++; renderEleveSplat(); }, 1100);
+  }else{
+    eleveCarteFautee = true;
+    msg.textContent = "Pas encore\u2026 corrige ce qui est en rouge et revalide !";
+    msg.className = "eleveMsg rate";
+  }
+}
+
+function renderEleveFinSplat(panneau){
+  const total = eleveSerie.length;
+  eleveEnregistrerReussite(eleveEtoiles, total);
+  renderCard(eleveSerie[total - 1], 0);
+  panneau.innerHTML = `<div class="eleveFin">` +
+    `<div class="finEtoiles">${"\u2B50".repeat(Math.max(eleveEtoiles, 1))}</div>` +
+    `<h2>S\u00e9rie termin\u00e9e, bravo !</h2>` +
+    `<p>${eleveEtoiles} carte${eleveEtoiles > 1 ? "s" : ""} sur ${total} du premier coup.</p>` +
+    `<div class="eleveActions"><button id="eleveRejouer" type="button">Rejouer la s\u00e9rie</button></div></div>`;
+  document.getElementById("eleveRejouer").onclick = () => { eleveIdx = 0; eleveEtoiles = 0; renderEleveSplat(); };
+}
+
 if(!loadSharedConfiguration()){
   syncSettingsUI();
   syncPrintModeUI();
