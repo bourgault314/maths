@@ -4378,6 +4378,21 @@
     }
   }
 
+
+  /* ===== Parcours élève (série d'équations) ===== */
+  #eleveBarre{display:flex;align-items:center;gap:12px;flex-wrap:wrap;background:#10294a;color:#fff;
+    padding:8px 14px;font-weight:800;font-size:15px}
+  #eleveBarre .eleveBarreEtoiles{letter-spacing:2px}
+  #eleveBarre .eleveBarreNote{color:#f9bf3b}
+  .eleveVoile{position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;
+    background:rgba(16,41,74,.45)}
+  .eleveCarton{background:#fff;border-radius:20px;padding:28px 36px;text-align:center;
+    box-shadow:0 18px 50px rgba(16,41,74,.35);max-width:88vw}
+  .eleveCarton h2{margin:8px 0 4px;color:#10294a}
+  .eleveCarton p{margin:0 0 12px;color:#5c6c82;font-weight:700}
+  .eleveCartonEtoiles{font-size:34px;letter-spacing:4px}
+  .eleveCarton button{font:inherit;font-weight:900;border:none;border-radius:12px;padding:12px 24px;
+    cursor:pointer;background:#2563eb;color:#fff}
 </style>
 <link rel="stylesheet" href="../assets/css/consentement.css">
 <script defer src="../assets/js/consentement.js"></script>
@@ -8877,9 +8892,115 @@
     return true;
   }
 
+
+  /* ══════════════════════════════════════════════════════════════════
+     PARCOURS ÉLÈVE (?eleve=1&parcours=id + payload {serie:[...]})
+     Une série d'équations à résoudre sur le plateau, l'une après l'autre.
+     La progression est mémorisée dans le navigateur : on peut s'arrêter
+     au milieu et reprendre plus tard là où on en était. ══════════════ */
+  const ELEVE_STORE_KEY = "mathsgo-splat-parcours";
+  let eleveMode = false, eleveParcours = "", eleveEqs = [], eleveIdx = 0, eleveResolues = 0, eleveCompteeCourante = false;
+
+  function eleveLireEntree(){
+    try{ return (JSON.parse(localStorage.getItem(ELEVE_STORE_KEY) || "{}"))[eleveParcours] || null; }catch(e){ return null; }
+  }
+  function eleveEcrireEntree(entree){
+    if(!eleveParcours) return;
+    try{
+      const tout = JSON.parse(localStorage.getItem(ELEVE_STORE_KEY) || "{}");
+      tout[eleveParcours] = Object.assign({}, tout[eleveParcours] || {}, entree);
+      if(!entree.enCours && tout[eleveParcours].enCours) delete tout[eleveParcours].enCours;
+      localStorage.setItem(ELEVE_STORE_KEY, JSON.stringify(tout));
+    }catch(e){ /* stockage indisponible : le jeu reste jouable */ }
+  }
+
+  function eleveBarreHtml(message){
+    const etoiles = "\u2B50".repeat(Math.min(eleveResolues, 12));
+    return `<span class="eleveBarreTexte">\u00c9quation ${Math.min(eleveIdx + 1, eleveEqs.length)} / ${eleveEqs.length}</span>` +
+           `<span class="eleveBarreEtoiles">${etoiles}</span>` +
+           (message ? `<span class="eleveBarreNote">${message}</span>` : "");
+  }
+  function eleveMajBarre(message){
+    let barre = document.getElementById("eleveBarre");
+    if(!barre){
+      barre = document.createElement("div");
+      barre.id = "eleveBarre";
+      document.body.prepend(barre);
+    }
+    barre.innerHTML = eleveBarreHtml(message || "");
+  }
+
+  function eleveChargerEquation(){
+    eleveCompteeCourante = false;
+    const ok = createImportedEquationState(eleveEqs[eleveIdx]);
+    if(ok) eleveMajBarre();
+    return ok;
+  }
+
+  function eleveDemarrerSerie(payload){
+    eleveMode = true;
+    eleveEqs = payload.serie;
+    document.body.classList.add("eleveMode");
+    const entree = eleveLireEntree();
+    let reprise = "";
+    if(entree && entree.enCours && Number.isInteger(entree.enCours.idx) && entree.enCours.idx > 0 && entree.enCours.idx < eleveEqs.length){
+      eleveIdx = entree.enCours.idx;
+      eleveResolues = Number(entree.enCours.resolues) || eleveIdx;
+      reprise = `Tu reprends l\u00e0 o\u00f9 tu t'\u00e9tais arr\u00eat\u00e9 !`;
+    }
+    const ok = eleveChargerEquation();
+    if(ok && reprise) eleveMajBarre(reprise);
+    window.setInterval(eleveSurveillerResolution, 400);
+    return ok;
+  }
+
+  function eleveSurveillerResolution(){
+    if(!eleveMode || eleveCompteeCourante || !state) return;
+    if(!isSolvedEquationString(currentEquationString())) return;
+    eleveCompteeCourante = true;
+    eleveResolues++;
+    const suivante = eleveIdx + 1;
+    if(suivante < eleveEqs.length){
+      eleveEcrireEntree({ enCours:{ idx:suivante, resolues:eleveResolues } });
+    }
+    eleveCelebrer(suivante >= eleveEqs.length);
+  }
+
+  function eleveCelebrer(finale){
+    const voile = document.createElement("div");
+    voile.className = "eleveVoile";
+    if(finale){
+      eleveEcrireEntree({ fait:true, etoiles:eleveResolues, cartes:eleveEqs.length, date:new Date().toISOString().slice(0,10) });
+      voile.innerHTML = `<div class="eleveCarton"><div class="eleveCartonEtoiles">${"\u2B50".repeat(Math.min(eleveEqs.length, 8))}</div>` +
+        `<h2>S\u00e9rie termin\u00e9e, bravo !</h2><p>${eleveEqs.length} \u00e9quations r\u00e9solues sur le plateau.</p>` +
+        `<button type="button" id="eleveRejouer">Rejouer la s\u00e9rie</button></div>`;
+      document.body.appendChild(voile);
+      voile.querySelector("#eleveRejouer").addEventListener("click", () => {
+        voile.remove();
+        eleveIdx = 0; eleveResolues = 0;
+        eleveEcrireEntree({});
+        eleveChargerEquation();
+      });
+      eleveMajBarre();
+    }else{
+      voile.innerHTML = `<div class="eleveCarton"><div class="eleveCartonEtoiles">\u2B50</div><h2>R\u00e9solue !</h2><p>\u00c9quation suivante\u2026</p></div>`;
+      document.body.appendChild(voile);
+      window.setTimeout(() => {
+        voile.remove();
+        eleveIdx++;
+        eleveChargerEquation();
+      }, 1400);
+    }
+  }
+
   function tryImportFromUrl(){
     const payload = parseImportedPayload();
     if(!payload) return false;
+    const searchEleve = new URLSearchParams(window.location.search || "");
+    if(Array.isArray(payload.serie) && payload.serie.length){
+      eleveParcours = String(payload.parcours || searchEleve.get("parcours") || "").slice(0, 64);
+      return eleveDemarrerSerie(payload);
+    }
     const ok = createImportedEquationState(payload);
     if(!ok){
       setAppLayout("import");

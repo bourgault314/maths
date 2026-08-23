@@ -422,18 +422,11 @@
     .total-badge.eleve-ok .eleve-input { background: transparent; color: #15803d; }
     .total-badge.eleve-ko { animation: eleveShake .3s; }
     .total-badge.eleve-ko .eleve-input { background: #fee2e2; color: #b91c1c; }
-    .menuConsent { margin: 14px 2px 4px; text-align: center; }
-  .menuConsent button {
-    appearance: none; background: none; border: 0; padding: 4px 6px;
-    font: inherit; font-size: 12px; color: #7a8798; cursor: pointer;
-    text-decoration: underline; text-underline-offset: 2px;
-  }
-  .menuConsent button:hover, .menuConsent button:focus-visible { color: #063f86; }
-  @media print { .menuConsent { display: none !important; } }
-</style>
+  </style>
 <link rel="stylesheet" href="../assets/css/consentement.css">
 <script defer src="../assets/js/consentement.js"></script>
 <script defer src="../assets/js/tool-parent-navigation.js?v=1"></script>
+<script defer src="../assets/js/mention-licence-impression.js"></script>
 </head>
 <body>
 
@@ -568,13 +561,6 @@
     </div>
   </div>
 
-  <!-- Le lien de gestion des cookies est déclaré ici : la présence de
-       [data-mathsgo-consent-open] suffit à retirer le bouton flottant que le
-       script de consentement pose sinon en bas à droite de l'écran. -->
-  <div class="menuConsent">
-    <button type="button" data-mathsgo-consent-open
-            onclick="window.mathsgoConsentement &amp;&amp; window.mathsgoConsentement.ouvrir()">Gérer mes cookies</button>
-  </div>
 
 </aside>
 
@@ -622,7 +608,7 @@ let isTBI = false;
 let isEleve = false;
 let parcoursId = '';
 let eleveIdx = 0, eleveEtoiles = 0, eleveErreurs = 0, eleveSerie = [], eleveCarteFautee = false;
-let eleveJetonsPoses = [], eleveItemCourant = null;
+let eleveJetonsPoses = [], eleveItemCourant = null, eleveRepriseFaite = false;
 let seedMode = 'auto';
 let activeSeed = '';
 let currentRand = Math.random;
@@ -1981,7 +1967,7 @@ function createPageElement(chunk, isCorrectionPage, mirror) {
     if (!isTBI) {
         const footer = document.createElement('div');
         footer.className = 'activity-footer';
-        footer.innerText = isCorrectionPage ? (mirror ? "correction · miroir verso" : "correction") : "mathsgo.re/splat/petit · CC BY-NC-SA 4.0";
+        footer.innerText = isCorrectionPage ? (mirror ? "correction · miroir verso" : "correction") : "mathsgo.re/splat/petit";
         inner.appendChild(footer);
     }
     
@@ -2056,7 +2042,7 @@ const ELEVE_SERIE_MAX = 8;
 const ELEVE_STORE_KEY = 'mathsgo-splat-parcours';
 
 function eleveEnregistrerReussite(sansFaute, total) {
-    if (!parcoursId) return;
+    if (!parcoursId || !total) return;
     try {
         const tout = JSON.parse(localStorage.getItem(ELEVE_STORE_KEY) || '{}');
         tout[parcoursId] = { fait: true, etoiles: sansFaute, cartes: total, date: new Date().toISOString().slice(0, 10) };
@@ -2143,7 +2129,29 @@ function renderEleve(main) {
         main.innerHTML = '<div class="eleve-scene"><p class="eleve-consigne">Le parcours élève n\u2019existe pas encore pour les enquêtes et relations.<br>Choisis « Petit Splat classique » pour y jouer dès maintenant.</p></div>';
         return;
     }
-    if (eleveIdx === 0) { eleveSerie = state.slice(0, ELEVE_SERIE_MAX); eleveEtoiles = 0; }
+    if (eleveIdx === 0 && eleveSerie.length === 0) {
+        eleveSerie = state.slice(0, ELEVE_SERIE_MAX);
+        eleveEtoiles = 0;
+        /* série interrompue la dernière fois ? on reprend où on en était */
+        if (eleveSerie.length && !eleveRepriseFaite && parcoursId) {
+            eleveRepriseFaite = true;
+            try {
+                /* répare les entrées écrites par l'ancien bug : « réussi » sans aucune carte */
+                const tout = JSON.parse(localStorage.getItem(ELEVE_STORE_KEY) || '{}');
+                if (tout[parcoursId] && tout[parcoursId].fait && !tout[parcoursId].cartes) {
+                    delete tout[parcoursId];
+                    localStorage.setItem(ELEVE_STORE_KEY, JSON.stringify(tout));
+                }
+                const entree = (JSON.parse(localStorage.getItem(ELEVE_STORE_KEY) || '{}'))[parcoursId];
+                if (entree && entree.enCours && Number.isInteger(entree.enCours.idx) &&
+                    entree.enCours.idx > 0 && entree.enCours.idx < eleveSerie.length) {
+                    eleveIdx = entree.enCours.idx;
+                    eleveEtoiles = Number(entree.enCours.etoiles) || 0;
+                }
+            } catch (e) { /* stockage indisponible */ }
+        }
+    }
+    if (!eleveSerie.length) { return; } /* pas encore de cartes générées */
     if (eleveIdx >= eleveSerie.length) { renderEleveFin(main); return; }
 
     const item = eleveSerie[eleveIdx];
@@ -2244,6 +2252,13 @@ function eleveValider(main) {
         msg.textContent = eleveCarteFautee ? 'Juste ! Carte suivante\u2026' : 'Bravo, du premier coup ! \u2B50';
         msg.className = 'eleve-msg bravo';
         cases.forEach(c => { const i = c.querySelector('.eleve-input'); if (i) i.readOnly = true; });
+        if (parcoursId && eleveIdx + 1 < eleveSerie.length) {
+            try {
+                const tout = JSON.parse(localStorage.getItem(ELEVE_STORE_KEY) || '{}');
+                tout[parcoursId] = Object.assign({}, tout[parcoursId] || {}, { enCours: { idx: eleveIdx + 1, etoiles: eleveEtoiles } });
+                localStorage.setItem(ELEVE_STORE_KEY, JSON.stringify(tout));
+            } catch (e) { /* stockage indisponible */ }
+        }
         setTimeout(() => { eleveIdx++; renderEleve(main); }, 1100);
     } else {
         eleveCarteFautee = true;
@@ -2275,7 +2290,7 @@ function renderEleveFin(main) {
         `<div class="eleve-actions"><button class="eleve-valider" id="eleveRejouer" type="button">Rejouer la s\u00e9rie</button></div>` +
         `</div>`;
     main.appendChild(scene);
-    document.getElementById('eleveRejouer').onclick = () => { eleveIdx = 0; renderEleve(main); };
+    document.getElementById('eleveRejouer').onclick = () => { eleveIdx = 0; eleveEtoiles = 0; eleveSerie = []; renderEleve(main); };
 }
 
 window.onload = () => {
