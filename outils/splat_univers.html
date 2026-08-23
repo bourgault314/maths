@@ -33,8 +33,12 @@ header .back{display:flex;align-items:center;justify-content:center;width:44px;h
   border:1px solid var(--line);border-radius:50%;background:var(--paper);flex:0 0 auto;text-decoration:none}
 header .back svg{width:22px;height:22px;stroke:var(--ink);stroke-width:2.5;fill:none;
   stroke-linecap:round;stroke-linejoin:round}
-header .brand{font-weight:800;font-size:15px;color:var(--muted);text-decoration:none;white-space:nowrap}
-header .brand b{color:var(--ink)}
+header .brand{display:flex;align-items:center;text-decoration:none}
+header .brand img{height:40px;width:auto;display:block}
+header .modeBar{margin-left:auto;display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+header .modeActu{font-size:13px;font-weight:800;color:var(--ink);background:#eef4fb;border:1px solid var(--line);border-radius:999px;padding:7px 12px;white-space:nowrap}
+header .modeBtn{font-size:13px;font-weight:800;color:#fff;background:var(--blue);border-radius:999px;padding:8px 14px;text-decoration:none;white-space:nowrap}
+header .modeBtn:hover{filter:brightness(1.08)}
 
 /* ---------- bandeau titre ---------- */
 .hero{max-width:980px;margin:0 auto;padding:26px 16px 8px;text-align:center;position:relative}
@@ -44,6 +48,10 @@ header .brand b{color:var(--ink)}
 .heroBlob{position:absolute;width:54px;height:54px;opacity:.9}
 .heroBlob.b1{left:4%;top:18px;transform:rotate(-14deg)}
 .heroBlob.b2{right:5%;top:44px;width:38px;height:38px;transform:rotate(21deg)}
+.heroBlob.b3{left:11%;top:96px;width:30px;height:30px;transform:rotate(48deg)}
+.heroBlob.b4{right:12%;top:118px;width:26px;height:26px;transform:rotate(-17deg)}
+.heroBlob.b5{left:3%;top:170px;width:42px;height:42px;transform:rotate(8deg)}
+.heroBlob.b6{right:3%;top:8px;width:24px;height:24px;transform:rotate(-33deg)}
 
 /* ---------- progression totale ---------- */
 .totalBar{max-width:560px;margin:18px auto 0;padding:0 16px}
@@ -135,13 +143,6 @@ footer a{color:var(--blue)}
 </head>
 <body>
 
-<header>
-  <a class="back" href="/outils/?domain=algebre&collection=splat" title="Retour aux outils Splat!">
-    <svg viewBox="0 0 24 24"><path d="M19 12H5M11 18l-6-6 6-6"/></svg>
-  </a>
-  <a class="brand" href="/">maths<b>&amp;go</b></a>
-</header>
-
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
   <defs>
     <!-- Les VRAIES taches des outils Splat! —
@@ -154,9 +155,25 @@ footer a{color:var(--blue)}
   </defs>
 </svg>
 
+<header>
+  <a class="back" href="/outils/?domain=algebre&collection=splat" title="Retour aux outils Splat!">
+    <svg viewBox="0 0 24 24"><path d="M19 12H5M11 18l-6-6 6-6"/></svg>
+  </a>
+  <a class="brand" href="/" aria-label="Accueil maths&amp;go"><img src="/assets/img/mathsgo-logo-390.png" alt="maths&amp;go"></a>
+  <div class="modeBar">
+    <span class="modeActu" id="modeActu">🎮 Mode élève</span>
+    <a class="modeBtn" id="modeBtn" href="?prof=1">Vue professeur</a>
+  </div>
+</header>
+
+
 <div class="hero">
   <svg class="heroBlob b1" viewBox="0 0 110 110"><use href="#tacheEtoile" fill="#0b67b2" opacity=".18" width="110" height="110"/></svg>
   <svg class="heroBlob b2" viewBox="0 0 110 110"><use href="#tacheEtoile" fill="#f58220" opacity=".20" width="110" height="110"/></svg>
+  <svg class="heroBlob b3" viewBox="0 0 110 110"><use href="#tacheEtoile" fill="#08aaa5" opacity=".16" width="110" height="110"/></svg>
+  <svg class="heroBlob b4" viewBox="0 0 110 110"><use href="#tacheEtoile" fill="#f9bf3b" opacity=".22" width="110" height="110"/></svg>
+  <svg class="heroBlob b5" viewBox="0 0 110 110"><use href="#tacheEtoile" fill="#0b67b2" opacity=".12" width="110" height="110"/></svg>
+  <svg class="heroBlob b6" viewBox="0 0 110 110"><use href="#tacheEtoile" fill="#08aaa5" opacity=".13" width="110" height="110"/></svg>
   <h1>L'univers <span class="splat">SPLAT!</span></h1>
   <p class="sub">Des jetons se cachent sous les taches… Traverse les trois mondes, étape par étape,
   et deviens un champion des équations !</p>
@@ -199,22 +216,32 @@ const MONDES=[
    {t:"Dessine en expert",o:"Toujours 2 à 6 taches, mais cette fois c'est toi qui dessines.",p:"m1e6",
     j:PS+"?support=eleve&problem=classic&target=20&splats=mix&exercise=construct&seed=514457&parcours=m1e6",
     f:PS+"?support=print&problem=classic&target=20&splats=mix&exercise=construct&seed=514457"}]},
- {cls:"m2",actif:false,nom:"SPLAT! classique",desc:"Le schéma en barres devient une équation. Trouve le nombre caché sous la tache.",
+ {cls:"m2",actif:true,nom:"SPLAT! classique",desc:"Le schéma en barres devient une équation : complète-le et trouve ce que cache la tache — la page vérifie.",
   etapes:[
    {t:"Une tache et des jetons",fo:"x + a = b",o:"Trace le schéma, puis trouve ce que cache la tache.",
-    j:SC+"?mode=U&equation=X_PLUS_A_EQ_B&cards=10&seed=453&unknown=question",
+    p:"m2e1",
+    j:SC+"?mode=U&equation=X_PLUS_A_EQ_B&cards=10&seed=453&unknown=question&eleve=1&parcours=m2e1",
+    jp:SC+"?mode=U&equation=X_PLUS_A_EQ_B&cards=10&seed=453&unknown=question",
     f:SC+"?mode=U&equation=X_PLUS_A_EQ_B&cards=10&seed=453&unknown=question&print=worksheet"},
    {t:"Des taches jumelles",fo:"a × x = b",o:"Plusieurs taches identiques se partagent tous les jetons.",
-    j:SC+"?mode=U&equation=AX_EQ_B&tasksMax=5&cards=10&seed=477&unknown=question",
+    p:"m2e2",
+    j:SC+"?mode=U&equation=AX_EQ_B&tasksMax=5&cards=10&seed=477&unknown=question&eleve=1&parcours=m2e2",
+    jp:SC+"?mode=U&equation=AX_EQ_B&tasksMax=5&cards=10&seed=477&unknown=question",
     f:SC+"?mode=U&equation=AX_EQ_B&tasksMax=5&cards=10&seed=477&unknown=question&print=worksheet"},
    {t:"Taches et jetons ensemble",fo:"a × x + c = b",o:"Des taches ET des jetons visibles : à toi de démêler tout ça.",
-    j:SC+"?mode=U&equation=AX_PLUS_C_EQ_B&cards=10&seed=477&unknown=question",
+    p:"m2e3",
+    j:SC+"?mode=U&equation=AX_PLUS_C_EQ_B&cards=10&seed=477&unknown=question&eleve=1&parcours=m2e3",
+    jp:SC+"?mode=U&equation=AX_PLUS_C_EQ_B&cards=10&seed=477&unknown=question",
     f:SC+"?mode=U&equation=AX_PLUS_C_EQ_B&cards=10&seed=477&unknown=question&print=worksheet"},
    {t:"Les paquets de jetons",fo:"x + a = b",o:"Les jetons arrivent en paquets : on compte plus vite.",
-    j:SC+"?mode=N&equation=X_PLUS_A_EQ_B&cards=10&seed=347&unknown=question",
+    p:"m2e4",
+    j:SC+"?mode=N&equation=X_PLUS_A_EQ_B&cards=10&seed=347&unknown=question&eleve=1&parcours=m2e4",
+    jp:SC+"?mode=N&equation=X_PLUS_A_EQ_B&cards=10&seed=347&unknown=question",
     f:SC+"?mode=N&equation=X_PLUS_A_EQ_B&cards=10&seed=347&unknown=question&print=worksheet"},
    {t:"Paquets : le défi",fo:"a × x + c = b",o:"Paquets, taches et jetons : le grand mélange du monde 2.",
-    j:SC+"?mode=N&equation=AX_PLUS_C_EQ_B&tasksMax=5&cards=10&seed=18&unknown=question",
+    p:"m2e5",
+    j:SC+"?mode=N&equation=AX_PLUS_C_EQ_B&tasksMax=5&cards=10&seed=18&unknown=question&eleve=1&parcours=m2e5",
+    jp:SC+"?mode=N&equation=AX_PLUS_C_EQ_B&tasksMax=5&cards=10&seed=18&unknown=question",
     f:SC+"?mode=N&equation=AX_PLUS_C_EQ_B&tasksMax=5&cards=10&seed=18&unknown=question&print=worksheet"}]},
  {cls:"m3",actif:false,nom:"SPLAT! Équations",desc:"Deux plateaux, même quantité en haut et en bas : résous l'équation pas à pas.",
   etapes:[
@@ -294,7 +321,7 @@ MONDES.forEach((m,mi)=>{
          '<p class="obj">'+e.o+'</p>'+(PROF?'<p class="noteProf">\ud83d\udcdd '+NOTES_PROF[mi][ei]+'</p>':'')+
          (PROF
            ? '<div class="actions">'+
-             '<a class="jouer" href="'+e.j+'">'+(m.actif?'\ud83c\udfae Le jeu de l\u2019\u00e9l\u00e8ve':'\ud83d\udcbb Projeter l\u2019outil')+'</a>'+
+             (e.jp||!m.actif?'<a class="jouer" href="'+(e.jp||e.j)+'">\ud83d\udcbb Projeter l\u2019outil</a>':'')+(m.actif?'<a class="jouer" href="'+e.j+'">\ud83c\udfae Le jeu de l\u2019\u00e9l\u00e8ve</a>':'')+
              '<a class="fiche" href="'+e.f+'" title="Ouvre l\u2019outil pr\u00eat \u00e0 imprimer la fiche">\ud83d\udcc4 Fiche</a>'+
              '</div>'
            : m.actif
@@ -340,6 +367,8 @@ document.addEventListener("click",ev=>{
   majAffichage();
 });
 if (PROF) {
+  const ma=document.getElementById('modeActu'); if(ma) ma.textContent='👩\u200d🏫 Mode professeur';
+  const mb=document.getElementById('modeBtn'); if(mb){ mb.href=window.location.pathname; mb.textContent='Vue élève'; }
   const tb=document.getElementById('totalBar'); if(tb) tb.style.display='none';
   const fp=document.querySelector('footer span'); if(fp) fp.innerHTML='Vue professeur — d\u2019apr\u00e8s la progression \u00ab SPLAT! cycle 3 \u00bb de Claire : '+
     '<a href="https://digipad.app/p/1754235/397f3f517445b" target="_blank" rel="noopener">sa progression d\u2019origine (Digipad)</a> \u00b7 '+
