@@ -182,6 +182,23 @@ test("le bouton hachures dit la vérité même quand le mode est posé par progr
   assert.match(html, /function syncRemovedDisplayControls\(value\)\{[\s\S]{0,400}?syncRemovedToggleButton\(\);\s*\}/);
 });
 
+test("la consigne du partage ne dit jamais en combien de parts", () => {
+  // Elle annonçait « Partage 14 en 2 parts égales » : c'était la réponse. C'est à
+  // l'élève de choisir entre 2 parts de 7 et 7 parts de 2 ; la fenêtre de partage
+  // propose tous les diviseurs, sans en mettre un en avant.
+  assert.match(html, /if\(actionMode === "share"\)\{[\s\S]{0,600}?setInstruction\("Partage un jeton en parts égales\."\);/);
+  assert.doesNotMatch(html, /Partage&nbsp;<strong>\$\{formatSignedNumber/);
+});
+
+test("en vue Rédaction la barre du haut reste sur une seule rangée", () => {
+  // La colonne d'équation est de largeur fixe : rétrécir le bandeau ne lui rend
+  // rien, la seconde rangée lui coûtait 28 px de hauteur.
+  assert.match(
+    html,
+    /main:is\(\.activeMode,\.receptionLayout\)\.viewRedaction \.stage \.stageQuickActions\{[\s\S]{0,200}?display:flex !important;/
+  );
+});
+
 test("le téléphone en paysage garde sa barre du haut sur une seule rangée", () => {
   // Couché, un téléphone dépasse 761 px de large et prend les règles d'ordinateur,
   // mais sa mise en page range la barre dans la grille de la scène : deux rangées

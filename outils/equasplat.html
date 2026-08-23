@@ -4323,6 +4323,33 @@
     }
   }
 
+  /* VUE RÉDACTION — la barre du haut y reste sur UNE rangée (choix de Gwenaël).
+     En Rédaction, l'équation vit dans une colonne de largeur fixe, à droite :
+     rétrécir le bandeau ne lui rend aucune largeur, alors que la seconde rangée
+     lui coûte de la hauteur. Mesuré à 1366 × 768 : 376 × 401 avant le patch,
+     376 × 373 avec deux rangées — même largeur, 28 px de moins. On rend donc
+     à la première rangée de la grille sa hauteur d'origine (64 / 70 px). */
+  @media (min-width:761px){
+    main:is(.activeMode,.receptionLayout).viewRedaction .stage .stageQuickActions{
+      display:flex !important;
+      align-items:center;
+      gap:8px;
+      width:max-content;
+    }
+
+    main:is(.activeMode,.receptionLayout).viewRedaction .quickActionsRow{
+      display:contents;
+    }
+
+    main:is(.activeMode,.receptionLayout).viewRedaction .stage:fullscreen{
+      grid-template-rows:70px minmax(0,1fr) auto 76px !important;
+    }
+
+    main:is(.activeMode,.receptionLayout).viewRedaction .stage:not(:fullscreen){
+      grid-template-rows:64px minmax(0,1fr) auto 72px !important;
+    }
+  }
+
   /* TÉLÉPHONE EN PAYSAGE — la barre du haut y reste sur UNE rangée.
      Un téléphone couché fait plus de 761 px de large (844, 915, 932…) : il prend
      donc les règles ci-dessus, mais sa mise en page range la barre DANS la grille
@@ -8209,12 +8236,12 @@
     }
 
     if(actionMode === "share"){
-      const suggested = getShareOpportunity();
-      if(suggested){
-        setInstruction(`Partage&nbsp;<strong>${formatSignedNumber(suggested.token.value)}</strong>&nbsp;en <strong>${suggested.count}</strong> parts égales.`);
-      }else{
-        setInstruction("Partage un jeton en parts égales.");
-      }
+      // La consigne ne dit JAMAIS en combien de parts : c'est précisément ce que
+      // l'élève doit décider (14 en 2 parts de 7, ou en 7 parts de 2 ?). Elle
+      // annonçait « Partage 14 en 2 parts égales », c'est-à-dire la réponse.
+      // La fenêtre de partage, elle, propose tous les partages entiers dans
+      // l'ordre des diviseurs, sans en mettre un en avant.
+      setInstruction("Partage un jeton en parts égales.");
       return;
     }
 
