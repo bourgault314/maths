@@ -4366,6 +4366,7 @@ function drawRelationSituationSchema(targetGroup, card, opts = {}){
     {fontSize: filled ? 28 : 25, labelGap: 28}
   );
   targetGroup.appendChild(g);
+  return boxH;
 }
 
 function drawRelationOwnerBrace(g, x1, x2, y, label){
@@ -4653,6 +4654,7 @@ function drawRelationSubstitutionStep(targetGroup, card, opts = {}){
   }
 
   targetGroup.appendChild(g);
+  return boxH;
 }
 
 /* Enquête / C direct — les lignes de la résolution, leurs opérations, et la place
@@ -4799,6 +4801,7 @@ function drawRelationOrderedSchema(targetGroup, card, opts = {}){
   }
 
   targetGroup.appendChild(g);
+  return boxH;
 }
 
 function drawRelationGroupedSchema(targetGroup, card, opts = {}){
@@ -4882,6 +4885,7 @@ function drawRelationGroupedSchema(targetGroup, card, opts = {}){
   shownLines.forEach(line => eqLine(line.left, line.right));
 
   targetGroup.appendChild(g);
+  return boxH;
 }
 
 function drawBarModelPartsInGroup(g, cx, topY, total, parts, api){
@@ -6553,8 +6557,6 @@ function renderCardIntoSvg(targetSvg, card, printMode){
   // L'Enquête imprimée : l'énoncé montre les indices, la correction montre la
   // résolution (dernière étape) — quelle que soit l'étape affichée à l'écran.
   const printRevealState = (card.family === "C") ? (revealAnswers ? (card._directSubstitution ? 3 : 5) : 0) : revealState;
-  // Le cadre du schéma se dessine sous le plateau imprimé, pas par-dessus.
-  const relationPrintLayer = tEl("g", { id:"relationPrintLayer", transform:`translate(0 ${Math.max(0, Math.round(trayY + trayH + 70 - 620))})` });
 
   /* Indices impression Mode C/D */
   if(isModeC_or_D && card._inv && card._inv.indices && !(card.family === "C" && printRevealState > 0)){
@@ -6580,29 +6582,27 @@ function renderCardIntoSvg(targetSvg, card, printMode){
     drawRelationGraphicClues(targetSvg, card, { mkEl:tEl, mkText:tText, isPrint:true });
   }
 
-  if(card.family === "C" && card._rel && printRevealState > 0) targetSvg.appendChild(relationPrintLayer);
-  if(card.family === "C" && card._rel && card._directSubstitution){
-    if(printRevealState === 1){
-      drawRelationSubstitutionStep(relationPrintLayer, card);
-    }
-    if(printRevealState === 2){
-      drawRelationOrderedSchema(relationPrintLayer, card, { direct:true });
-    }
-    if(printRevealState === 3){
-      drawRelationOrderedSchema(relationPrintLayer, card, { solved:true, direct:true });
-    }
-  }else{
-    if(card.family === "C" && card._rel && (printRevealState === 1 || printRevealState === 2)){
-      drawRelationSituationSchema(relationPrintLayer, card, { filled: printRevealState === 2 });
-    }
-    if(card.family === "C" && card._rel && printRevealState === 3){
-      drawRelationGroupedSchema(relationPrintLayer, card);
-    }
-    if(card.family === "C" && card._rel && printRevealState === 4){
-      drawRelationOrderedSchema(relationPrintLayer, card);
-    }
-    if(card.family === "C" && card._rel && printRevealState === 5){
-      drawRelationOrderedSchema(relationPrintLayer, card, { solved:true });
+  // Correction imprimée de l'Enquête : les étapes empilées sous le plateau, pour que
+  // l'on voie d'où vient le tableau — schéma rempli de la situation, schéma regroupé,
+  // résolution ; C direct : substitution, puis résolution. (L'énoncé n'imprime que les
+  // indices.) Chaque schéma se dessine à sa hauteur d'écran (cadre à 620) puis est
+  // translaté ; il renvoie la hauteur de son cadre.
+  if(card.family === "C" && card._rel && printRevealState > 0){
+    const stepGap = 40;
+    let stepTop = trayY + trayH + 70;
+    const placeStep = (draw) => {
+      const layer = tEl("g", { transform:`translate(0 ${Math.round(stepTop - 620)})` });
+      targetSvg.appendChild(layer);
+      const h = Number(draw(layer)) || 274;
+      stepTop += h + stepGap;
+    };
+    if(card._directSubstitution){
+      placeStep(layer => drawRelationSubstitutionStep(layer, card));
+      placeStep(layer => drawRelationOrderedSchema(layer, card, { solved:true, direct:true }));
+    }else{
+      placeStep(layer => drawRelationSituationSchema(layer, card, { filled:true }));
+      placeStep(layer => drawRelationGroupedSchema(layer, card));
+      placeStep(layer => drawRelationOrderedSchema(layer, card, { solved:true }));
     }
   }
   const cover = "rgb(0,0,0)";
