@@ -5530,7 +5530,10 @@ function eqStepActionText(card, revealState, opts = {}){
       return "Je garde ce qui reste.";
     case "share":{
       const n = Math.max(2, Math.round(Number(state.groupCount) || 2));
-      return "Je range en " + n + " groupes égaux de chaque côté.";
+      // « Partager » et non « ranger » : c'est le verbe de la division, celui que les
+      // élèves entendent depuis le primaire (« partager en parts égales »), et il
+      // annonce l'étape suivante « Je divise par n » au lieu de décrire un rangement.
+      return "Je partage en " + n + " groupes égaux de chaque côté.";
     }
     case "final":{
       const coeff = Math.max(1, Math.round(Number(state.remainingCoeff) || 1));
