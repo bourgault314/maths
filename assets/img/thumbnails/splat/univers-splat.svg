@@ -11,11 +11,11 @@
   </defs>
 
   <rect width="720" height="320" rx="24" fill="url(#fond)"/>
-  <rect x="55" y="53" width="116" height="38" rx="19" fill="#f59e0b"/>
-  <text x="113" y="78" text-anchor="middle" font-family="system-ui, sans-serif" font-size="17" font-weight="900" letter-spacing=".8" fill="#082d59">CYCLE 3</text>
+  <rect x="55" y="53" width="152" height="38" rx="19" fill="#f59e0b"/>
+  <text x="131" y="78" text-anchor="middle" font-family="system-ui, sans-serif" font-size="17" font-weight="900" letter-spacing=".8" fill="#082d59">CYCLES 3 &amp; 4</text>
 
   <text x="55" y="169" font-family="system-ui, sans-serif" font-size="54" font-weight="950" fill="#fff">L&#8217;univers SPLAT!</text>
-  <text x="55" y="220" font-family="system-ui, sans-serif" font-size="29" font-weight="750" fill="#dbeafe">Trois mondes, quinze étapes à jouer</text>
+  <text x="55" y="220" font-family="system-ui, sans-serif" font-size="29" font-weight="750" fill="#dbeafe">Quatre mondes, du cycle 3 au cycle 4</text>
 
   <!-- les trois mondes : une tache par monde, en cascade vers le coin haut droit -->
   <g transform="translate(463.7 16.3) rotate(-9) scale(0.8)"><use href="#tache" fill="#08aaa5"/></g>
@@ -26,6 +26,9 @@
 
   <g transform="translate(659.2 119.2) rotate(4) scale(0.5)"><use href="#tache" fill="#f58220"/></g>
   <text x="685" y="159" text-anchor="middle" font-family="system-ui, sans-serif" font-size="25" font-weight="900" fill="#fff">3</text>
+
+  <g transform="translate(580.5 155.4) rotate(-14) scale(0.42)"><use href="#tache" fill="#7b42b4"/></g>
+  <text x="609" y="181" text-anchor="middle" font-family="system-ui, sans-serif" font-size="22" font-weight="900" fill="#fff">4</text>
 
   <use href="#etoile" transform="translate(690 88) scale(1.1)" fill="#f9bf3b"/>
 
