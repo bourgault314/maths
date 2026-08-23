@@ -384,6 +384,37 @@ couvrent les axes colorés de la seule page de vocabulaire, les projections sur
 repère neutre, les quatre temps du modelage de placement, les pas décimaux, les
 coordonnées nulles et les huit positions de bord.
 
+### Recette du lecteur publié — 23 août 2026
+
+Les PR `#493` puis `#495` ont été fusionnées et le lecteur public a été relu
+après propagation de `app.js?v=54&rev=57`. La première passe réelle a détecté
+un défaut que le test statique ne voyait pas : la règle générique
+`.grille-choix`, déclarée après la spécialisation GE-03, reformait trois
+colonnes puis une carte isolée. Après correction, le navigateur calcule deux
+colonnes de `302 px`, deux lignes de `64 px` et aucun débordement dans la grille
+de `612 px`.
+
+La passe de production a manipulé et inspecté :
+
+- la page de vocabulaire et la page de modelage GE-04 ;
+- GE-03 à l'origine, les trois actions de l'aide, le mauvais axe, `y_F`, le
+  QCM au pas `0,25`, son omission et sa correction ;
+- GE-04 au pas `0,5` et `0,25`, le point provisoire sans coordonnées, le focus
+  souris, le mauvais axe, la mauvaise graduation, les deux guides,
+  l'intersection fausse puis correcte, `x = 0`, `y = 0`, l'origine et le coin
+  supérieur droit ;
+- les corrections GE-04 juste et fausse, avec cercle pointillé pour le point
+  choisi et croix distincte pour le point attendu.
+
+Les captures du navigateur sécurisé ont été faites dans sa fenêtre native de
+`1 366 × 936`. Ce navigateur interdit la création d'un cadre local permettant
+d'émuler les cinq tailles exactes ; la présente recette ne prétend donc pas
+avoir rejoué en production `320 × 568`, `390 × 844`, `768 × 1024`,
+`1 366 × 768` et `1 920 × 1 080`. Ces tailles restent couvertes par le scénario
+Playwright versionné, les assertions de débordement/cibles et les planches de
+production desktop/mobile, mais leur rejeu pixel réel demande un environnement
+Playwright muni de Chromium.
+
 La vérification complète passe **1 759 tests sur 1 759** dans **251 suites**.
 Le graphe V2 est invalidé atomiquement en `v54` et la façade `app.js` reçoit la
 révision `57`.

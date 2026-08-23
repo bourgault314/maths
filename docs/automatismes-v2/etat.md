@@ -49,8 +49,9 @@
 - La recette navigateur couvre cinq fenêtres de `320 × 568` à
   `1 920 × 1 080`, toutes les actions des aides, `x_M/y_M`, le QCM, les cas
   nuls, les trois pas, les bords, les corrections juste/fausse et le mode Au
-  tableau. Les résultats de la passe finale et de la publication sont consignés
-  dans la fiche GE-03 / GE-04.
+  tableau. La passe du lecteur publié, le correctif QCM trouvé pendant cette
+  passe et la limite explicite de la fenêtre du navigateur sécurisé sont
+  consignés dans la fiche GE-03 / GE-04.
 - `npm run verifier` passe **1 759 tests sur 1 759** dans **251 suites**. Les
   garde-fous V2 suivent **157 fichiers**, dont **80 fichiers de production** à
   provenance déclarée. Le graphe est invalidé atomiquement en `v54` et
