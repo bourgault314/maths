@@ -30,9 +30,10 @@ https://creativecommons.org/licenses/by-nc-sa/4.0/deed.fr
 - **Partage dans les mêmes conditions (SA)** — toute version modifiée doit être
   rediffusée sous cette même licence.
 
-## Utilisation commerciale
+## Demander une autorisation
 
-Elle reste possible, sur autorisation écrite préalable : gwenael@mathsgo.re.
+Une utilisation qui sort de ces conditions reste possible, sur autorisation
+écrite préalable : gwenael@mathsgo.re.
 
 ## Ce que cette licence ne couvre pas
 
