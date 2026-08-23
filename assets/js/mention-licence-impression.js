@@ -86,11 +86,60 @@
   // Certains outils impriment déjà leur propre pied de page (Petit Splat, Splat,
   // Splat Équations…). On ne doit JAMAIS en ajouter un deuxième : c'est la règle
   // qui évite les deux lignes empilées et mal alignées.
+  // Un logo ou une adresse en HAUT de la feuille (en-tête) ne gêne pas une mention
+  // posée en bas : on ne renonce que si la marque existante occupe la zone basse,
+  // là où la mention viendrait se poser.
+  // ATTENTION : à l'impression, les feuilles vivent souvent dans une zone masquée,
+  // donc RIEN n'est mesurable et toutes les boîtes valent 0. Dans ce cas on ne
+  // peut pas raisonner sur la position : on retombe sur la règle large (toute
+  // marque bloque), qui est le comportement d'origine. L'affinage « seule une
+  // marque en bas de feuille bloque » ne vaut que quand la feuille est mesurable,
+  // c'est-à-dire à l'écran.
+  function mesurable(element) {
+    return element.getBoundingClientRect().height > 0;
+  }
+
+  function marqueEnBas(element, noeud) {
+    if (!mesurable(element)) return true;   // non mesurable : règle large
+    var r = noeud.getBoundingClientRect();
+    if (!r.height && !r.width) return true;
+    var rf = element.getBoundingClientRect();
+    return (r.top - rf.top) / rf.height > 0.82;
+  }
+
+  // Une adresse écrite déjà présente, où qu'elle soit dans la feuille.
+  function adresseEcriteDans(element) {
+    var noeuds = element.querySelectorAll("*");
+    for (var i = 0; i < noeuds.length; i++) {
+      var n = noeuds[i];
+      if (n.children.length) continue;          // seulement les feuilles du DOM
+      if (n.hasAttribute("data-mathsgo-credit")) continue;
+      var t = n.textContent || "";
+      if (t.indexOf("mathsgo.re") !== -1 || t.indexOf("maths&go") !== -1) return n;
+    }
+    return null;
+  }
+
+  // GARDE-FOU D'IMPRESSION — texte seul, sans regarder la position.
+  //
+  // Un logo n'entre PAS dans ce garde-fou : il dit d'où vient la feuille, il ne
+  // dit pas ce qu'on a le droit d'en faire. L'y faire entrer prive de licence les
+  // feuilles qui portent le logo — et même les pages dont seule l'INTERFACE le
+  // montre, puisqu'à l'impression une feuille masquée n'est pas mesurable et fait
+  // retomber tout raisonnement de position sur « toute marque bloque ».
+  //
+  // On regarde aussi les feuilles ENGLOBANTES : certains outils emboîtent une
+  // feuille dans une autre et n'écrivent leur pied de page que dans l'extérieure
+  // (generateur_exercices_calcul_litteral). Sans cela, la mention se poserait dans
+  // la feuille intérieure et le document sortirait avec deux signatures.
   function porteDejaUneMention(element) {
     if (!element) return false;
-    var texte = element.textContent || "";
-    if (texte.indexOf("mathsgo.re") !== -1) return true;
-    if (texte.indexOf("maths&go") !== -1) return true;
+    var courant = element;
+    while (courant && courant.nodeType === 1) {
+      if (adresseEcriteDans(courant)) return true;
+      if (courant === document.body) break;
+      courant = courant.parentElement && courant.parentElement.closest(CONTENEURS);
+    }
     return false;
   }
 
@@ -121,9 +170,18 @@
     return (rc.bottom - rl.bottom) < rc.height * 0.2 ? logo : null;
   }
 
+  // GARDE-FOU D'ÉCRAN — texte OU logo, mais seulement s'il occupe la ZONE BASSE de
+  // la feuille, là où la mention viendrait se poser. Un logo d'en-tête ne bloque
+  // plus rien : c'est ce qui rend leur signature aux deux générateurs de tuiles.
+  // À l'écran la feuille est réellement mesurable, donc ce raisonnement tient.
   function porteDejaUneMentionOuUnLogo(element) {
+    if (!element) return false;
     if (porteDejaUneMention(element)) return true;
-    return !!logoDe(element);
+    var marques = element.querySelectorAll(SELECTEUR_LOGO);
+    for (var i = 0; i < marques.length; i++) {
+      if (marqueEnBas(element, marques[i])) return true;
+    }
+    return false;
   }
 
   function poser() {
