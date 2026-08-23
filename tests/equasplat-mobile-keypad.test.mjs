@@ -173,3 +173,21 @@ test("flèches d'opération arrondies et barre du haut sur deux rangées (ordina
   assert.match(html, /removedDisplayModeEl\.value = shouldKeepRemovedPieces\(\) \? "hide" : "keep";/);
   assert.match(html, /#btnToggleEquation,\s*#btnToggleUnknown,\s*#btnToggleRemoved\{\s*display:none !important;/);
 });
+
+test("le bouton hachures dit la vérité même quand le mode est posé par programme", () => {
+  // En réception, le mode passe à « Masquer » APRÈS l'initialisation du bouton, et
+  // écrire .value par programme ne déclenche pas « change » : sans ce rappel, le
+  // bouton affichait « hachures gardées » alors que tout était déjà masqué, et le
+  // premier clic changeait le plateau sans rien changer au bouton.
+  assert.match(html, /function syncRemovedDisplayControls\(value\)\{[\s\S]{0,400}?syncRemovedToggleButton\(\);\s*\}/);
+});
+
+test("le téléphone en paysage garde sa barre du haut sur une seule rangée", () => {
+  // Couché, un téléphone dépasse 761 px de large et prend les règles d'ordinateur,
+  // mais sa mise en page range la barre dans la grille de la scène : deux rangées
+  // débordaient de leur case et se posaient sur l'équation (mesuré à 932 × 430).
+  assert.match(
+    html,
+    /@media \(min-width:761px\) and \(max-height:500px\) and \(pointer:coarse\)\{[\s\S]{0,400}?\.quickActionsRow\{\s*display:contents;/
+  );
+});

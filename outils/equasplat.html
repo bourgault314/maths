@@ -4323,6 +4323,26 @@
     }
   }
 
+  /* TÉLÉPHONE EN PAYSAGE — la barre du haut y reste sur UNE rangée.
+     Un téléphone couché fait plus de 761 px de large (844, 915, 932…) : il prend
+     donc les règles ci-dessus, mais sa mise en page range la barre DANS la grille
+     de la scène (grid-area:quick), dans une case comptée au pixel. Deux rangées
+     n'y tiennent pas : mesuré à 932 × 430, la seconde débordait de sa case et se
+     posait sur l'équation (boutons y 69..111, équation y 70..172). On revient donc
+     à la rangée unique centrée d'avant le patch. Les flèches, elles, restent. */
+  @media (min-width:761px) and (max-height:500px) and (pointer:coarse){
+    main.activeMode .stage .stageQuickActions,
+    body.importMode .stage .stageQuickActions{
+      display:flex !important;
+      justify-content:center;
+      width:100%;
+    }
+
+    .quickActionsRow{
+      display:contents;
+    }
+  }
+
 </style>
 <link rel="stylesheet" href="../assets/css/consentement.css">
 <script defer src="../assets/js/consentement.js"></script>
@@ -5052,6 +5072,10 @@
   function shouldKeepRemovedPieces(){ return !removedDisplayModeEl || removedDisplayModeEl.value !== "hide"; }
   function syncRemovedDisplayControls(value){
     if(removedDisplayModeEl) removedDisplayModeEl.value = value === "hide" ? "hide" : "keep";
+    // Le bouton hachures de la barre doit dire la vérité tout de suite : poser la
+    // valeur par programme ne déclenche pas « change », et en réception le mode
+    // passe à « Masquer » APRÈS l'initialisation du bouton.
+    syncRemovedToggleButton();
   }
   function oppositeXEnabled(){
     return isRelativeUniverse() && oppositeXModeEl && oppositeXModeEl.value === "on";
