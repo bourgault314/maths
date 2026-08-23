@@ -82,3 +82,23 @@ test("la flèche arrondie ne remplace la ligne « ↓ » qu'en vue classique et 
     /equationHistory\.innerHTML = `<div class="equationList"[^`]*`;\s*drawOperationArrowsOverlay\(\);/
   );
 });
+
+// Un membre trop long était coupé net par sa case : au téléphone,
+// « 2𝑥 + 10 + 2 + 3 » s'affichait « 2𝑥 + 10 + 2 + » — un « + » orphelin et une
+// équation fausse à l'écran (170 px demandés pour 149 px disponibles).
+test("les deux outils règlent l'écriture de l'équation pour qu'elle tienne", () => {
+  const FIN = "  /* FLÈCHES D'OPÉRATION ARRONDIES (ordinateur";
+  const extraire = (source) => {
+    const debut = source.indexOf("  function fitEquationText(list){");
+    return source.slice(debut, source.indexOf(FIN, debut)).trim();
+  };
+  const ajusteur = extraire(equasplat);
+  assert.ok(ajusteur.includes("plancher"), "l'ajusteur d'ÉquaSplat est bien là");
+  assert.equal(extraire(equabarre), ajusteur);
+  for (const source of [equasplat, equabarre]) {
+    assert.match(
+      source,
+      /if\(fitEquationText\(equationHistory\.querySelector\("\.equationList"\)\)\) drawOperationArrowsOverlay\(\);/
+    );
+  }
+});

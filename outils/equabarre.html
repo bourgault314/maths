@@ -4878,6 +4878,9 @@
 
     equationHistory.innerHTML = `<div class="equationList" aria-label="Étapes de résolution">${rows.join("")}</div>`;
     drawOperationArrowsOverlay();
+    // Les flèches réservent d'abord leurs marges ; on règle l'écriture ensuite,
+    // et on redessine si elle a bougé pour que les flèches suivent.
+    if(fitEquationText(equationHistory.querySelector(".equationList"))) drawOperationArrowsOverlay();
     equationHistory.scrollTop = equationHistory.scrollHeight;
     syncEquationToggleButton();
   }
@@ -4886,6 +4889,39 @@
     if(!stageEl) return;
     // Version import : le plein écran est toujours compact.
     stageEl.classList.add("fullscreenCompact");
+  }
+
+  /* L'ÉCRITURE DE L'ÉQUATION SE RÈGLE POUR TENIR (2026-08-23).
+     Un membre trop long était coupé net par sa case : au téléphone,
+     « 2𝑥 + 10 + 2 + 3 » s'affichait « 2𝑥 + 10 + 2 + » — un « + » orphelin et
+     une équation fausse à l'écran (mesuré : 170 px demandés pour 149 px).
+     Plutôt que couper, on rétrécit l'écriture juste ce qu'il faut, et jamais
+     en dessous des deux tiers, sinon on ne lit plus rien de loin.
+     Renvoie vrai si la taille a changé, pour que l'appelant redessine ce qui
+     dépend de la police. */
+  function fitEquationText(list){
+    if(!list) return false;
+    list.style.removeProperty("font-size");
+    const membres = Array.from(list.querySelectorAll(".lhs, .rhs"));
+    if(!membres.length) return false;
+    const base = parseFloat(getComputedStyle(list).fontSize) || 0;
+    if(!base) return false;
+    const plancher = base * 0.66;
+    let taille = base;
+    for(let passe = 0; passe < 4; passe++){
+      let ratio = 1;
+      for(const el of membres){
+        const large = el.clientWidth;
+        if(large > 0 && el.scrollWidth > large + 1){
+          ratio = Math.min(ratio, large / el.scrollWidth);
+        }
+      }
+      if(ratio >= 1) break;
+      taille = Math.max(plancher, taille * ratio);
+      list.style.setProperty("font-size", `${taille}px`, "important");
+      if(taille <= plancher) break;
+    }
+    return taille !== base;
   }
 
   /* FLÈCHES D'OPÉRATION ARRONDIES (ordinateur / tablette, 2026-08-23).
