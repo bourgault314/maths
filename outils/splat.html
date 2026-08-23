@@ -7298,7 +7298,7 @@ let idx = 0;
 let revealState = 0; // États selon le mode (A/B: 0→3, B±: 0→2, autres: 0/2)
 /* Parcours élève : aucun réglage visible, activé uniquement par ?eleve=1 dans l'adresse. */
 let eleveActif = false, parcoursId = "";
-let eleveIdx = 0, eleveEtoiles = 0, eleveSerie = [], eleveCarteFautee = false;
+let eleveIdx = 0, eleveEtoiles = 0, eleveSerie = [], eleveCarteFautee = false, eleveRepriseFaite = false;
 const ELEVE_SERIE_MAX = 8;
 const ELEVE_STORE_KEY = "mathsgo-splat-parcours";
 const counterEl = document.getElementById("counter");
@@ -7547,7 +7547,7 @@ function eleveEnregistrerReussite(sansFaute, total){
   if(!parcoursId) return;
   try{
     const tout = JSON.parse(localStorage.getItem(ELEVE_STORE_KEY) || "{}");
-    tout[parcoursId] = { fait: true, etoiles: sansFaute, cartes: total, date: new Date().toISOString().slice(0, 10) };
+    tout[parcoursId] = { fait: true, etoiles: sansFaute, cartes: total, date: new Date().toISOString().slice(0, 10) }; /* remplace l\u2019entr\u00e9e : le suivi \u00ab en cours \u00bb dispara\u00eet */
     localStorage.setItem(ELEVE_STORE_KEY, JSON.stringify(tout));
   }catch(_e){ /* stockage indisponible : le jeu reste jouable */ }
 }
@@ -7575,6 +7575,18 @@ function renderEleveSplat(){
     const jouables = cards.filter(c => { const i = eleveInfosCarte(c); return !i || i.H > 0; });
     eleveSerie = (jouables.length ? jouables : cards).slice(0, ELEVE_SERIE_MAX);
     eleveIdx = 0; eleveEtoiles = 0;
+    /* série interrompue la dernière fois ? on reprend où on en était */
+    if(!eleveRepriseFaite && parcoursId){
+      eleveRepriseFaite = true;
+      try{
+        const entree = (JSON.parse(localStorage.getItem(ELEVE_STORE_KEY) || "{}"))[parcoursId];
+        if(entree && entree.enCours && Number.isInteger(entree.enCours.idx) &&
+           entree.enCours.idx > 0 && entree.enCours.idx < eleveSerie.length){
+          eleveIdx = entree.enCours.idx;
+          eleveEtoiles = Number(entree.enCours.etoiles) || 0;
+        }
+      }catch(_e){ /* stockage indisponible */ }
+    }
   }
   if(eleveIdx >= eleveSerie.length){ renderEleveFinSplat(panneau); return; }
 
@@ -7636,6 +7648,13 @@ function eleveValiderSplat(){
     msg.textContent = eleveCarteFautee ? "Juste ! Carte suivante\u2026" : "Bravo, du premier coup ! \u2B50";
     msg.className = "eleveMsg bravo";
     casesE.forEach(c => { const i = c.querySelector(".eleveChamp"); if(i) i.readOnly = true; });
+    if(parcoursId && eleveIdx + 1 < eleveSerie.length){
+      try{
+        const tout = JSON.parse(localStorage.getItem(ELEVE_STORE_KEY) || "{}");
+        tout[parcoursId] = Object.assign({}, tout[parcoursId] || {}, { enCours: { idx: eleveIdx + 1, etoiles: eleveEtoiles } });
+        localStorage.setItem(ELEVE_STORE_KEY, JSON.stringify(tout));
+      }catch(_e){ /* stockage indisponible */ }
+    }
     setTimeout(() => { eleveIdx++; renderEleveSplat(); }, 1100);
   }else{
     eleveCarteFautee = true;
@@ -7653,7 +7672,7 @@ function renderEleveFinSplat(panneau){
     `<h2>S\u00e9rie termin\u00e9e, bravo !</h2>` +
     `<p>${eleveEtoiles} carte${eleveEtoiles > 1 ? "s" : ""} sur ${total} du premier coup.</p>` +
     `<div class="eleveActions"><button id="eleveRejouer" type="button">Rejouer la s\u00e9rie</button></div></div>`;
-  document.getElementById("eleveRejouer").onclick = () => { eleveIdx = 0; eleveEtoiles = 0; renderEleveSplat(); };
+  document.getElementById("eleveRejouer").onclick = () => { eleveIdx = 0; eleveEtoiles = 0; eleveSerie = []; renderEleveSplat(); };
 }
 
 if(!loadSharedConfiguration()){
