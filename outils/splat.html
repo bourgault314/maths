@@ -5938,6 +5938,34 @@ function fitCellWidths(weights, totalW, minW){
   if(sum > total + 0.01 && sum > 0) widths = widths.map(w => w * total / sum);
   return widths;
 }
+/* Carte imprimée (1600 de large, signe égal à 800) : la police des équations de la
+   correction descend de deux en deux tant que, de chaque côté du signe égal, le membre
+   + sa flèche (étiquette comprise) ne tiennent pas dans la demi-carte. Sans cela, une
+   ligne longue (« −2𝑥 − 20 − 29 = −25 ») poussait les flèches hors de la feuille. */
+function fitPrintEquationFontForArrows(lines, ops, baseFont, opts = {}){
+  const minFont = Number(opts.minFont) || 44;
+  const eqGap = Number(opts.eqGap) || 44;
+  const margin = Number(opts.margin) || 62;
+  const centerX = Number(opts.centerX) || 800;
+  const inset = Number(opts.inset) || 24;
+  const width = Number(opts.width) || 1600;
+  const hasArrows = Array.isArray(ops) && ops.some(Boolean);
+  const base = Math.round(Number(baseFont) || 64);
+  for(let fs = base; fs >= minFont; fs -= 2){
+    let lhsW = 0, rhsW = 0;
+    (lines || []).forEach(line => {
+      const raw = String(line == null ? "" : line);
+      const k = raw.indexOf("=");
+      lhsW = Math.max(lhsW, measureEquationTextWidth(k >= 0 ? raw.slice(0, k).trim() : raw, fs));
+      rhsW = Math.max(rhsW, measureEquationTextWidth(k >= 0 ? raw.slice(k + 1).trim() : "", fs));
+    });
+    const labelFs = Math.round(fs * 0.62);
+    const labelW = hasArrows ? Math.max(0, ...ops.filter(Boolean).map(op => measureArrowLabelWidth(op, labelFs))) : 0;
+    const arrowRoom = hasArrows ? (margin + Math.round(labelFs * 0.9) + 6 + labelW + 4) : 0;
+    if(lhsW + eqGap + arrowRoom <= centerX - inset && rhsW + eqGap + arrowRoom <= width - centerX - inset) return fs;
+  }
+  return minFont;
+}
 
 function drawOperationArrow(targetGroup, api, x, y1, y2, dir, label, opts = {}){
   const mkEl = (api && api.el) || el;
@@ -6816,10 +6844,13 @@ function renderCardIntoSvg(targetSvg, card, printMode){
 
         // Mise en page spéciale B± : la zone sous la carte est large.
         // On descend et agrandit le bloc d’équation pour une lecture confortable sur fiche imprimée.
-        // Correction : équations plus grandes qu'avant (× 1,2), la carte a la place.
-        const fontSize = isHelpOnly
+        // Correction : équations plus grandes qu'avant (× 1,2), la carte a la place —
+        // mais la police redescend si lignes + flèches ne tiennent pas dans la largeur.
+        const baseFontSize = isHelpOnly
           ? (longest > 42 ? 70 : (longest > 34 ? 76 : 84))
           : (longest > 45 ? 70 : (longest > 38 ? 74 : (longest > 31 ? 82 : 89)));
+        const printOps = (!isHelpOnly && lines.length > 1) ? opsBetweenLines(lines, buildNumberedSignedEquationTransitions(card, varChar)) : [];
+        const fontSize = isHelpOnly ? baseFontSize : fitPrintEquationFontForArrows(lines, printOps, baseFontSize, { eqGap: 44, margin: 62 });
         const gap = isHelpOnly ? 0 : (fontSize + 22);
         const centerY = (isHelpOnly ? 1240 : 1285) + printOffsetY;
 
@@ -6837,8 +6868,8 @@ function renderCardIntoSvg(targetSvg, card, printMode){
         // la première ligne détaillée se regroupe sans flèche, puis − v / + v, puis ÷ c.
         if(!isHelpOnly && lines.length > 1){
           const startY = centerY - ((lines.length - 1) * gap / 2);
-          drawOperationArrowsForLines(gEqNpm, {el:tEl, text:tText}, lines, opsBetweenLines(lines, buildNumberedSignedEquationTransitions(card, varChar)), {
-            centerX: 800, startY, gap, fontSize, eqGap: 44, middleBaseline: true, margin: 62
+          drawOperationArrowsForLines(gEqNpm, {el:tEl, text:tText}, lines, printOps, {
+            centerX: 800, startY, gap, fontSize, eqGap: 44, middleBaseline: true, margin: 62, hug: true, minX: 24, maxX: 1576
           });
         }
         targetSvg.appendChild(gEqNpm);
@@ -6923,9 +6954,14 @@ function renderCardIntoSvg(targetSvg, card, printMode){
         currentY += 80;
         const printEqStartY = currentY;
         const printEqLines = [];
-        // Équations de la correction : plus grandes qu'avant (64 → 80), la carte a la place.
-        const printEqFont = 80;
-        const printEqGap = 112;
+        // Équations de la correction : plus grandes qu'avant (64 → 80), la carte a la place —
+        // la police redescend si lignes + flèches ne tiennent pas dans la largeur.
+        const plannedLines = [`${eqLeft1} = ${card.total}`];
+        if (visSum > 0 && tasks > 1) plannedLines.push(`${formatCoeffUnknownTerm(tasks, varChar)} = ${totalHid}`);
+        if (tasks > 1 || (tasks === 1 && visSum > 0)) plannedLines.push(`${varChar} = ${hiddenSums[0]}`);
+        const printEqOps = plannedLines.length > 1 ? numberedResolutionOps(visSum, tasks) : [];
+        const printEqFont = fitPrintEquationFontForArrows(plannedLines, printEqOps, 80, { eqGap: 50, margin: 62 });
+        const printEqGap = Math.round(printEqFont * 1.4);
         const addEq = (l, r) => {
             const mathFont = "'Times New Roman', Times, serif";
             gBM.appendChild(tText(800 - 50, currentY, l, {"text-anchor":"end", "font-size":String(printEqFont), "fill":"#000", "font-weight":"normal", "font-family":mathFont, "font-style":"italic"}));
@@ -6944,8 +6980,8 @@ function renderCardIntoSvg(targetSvg, card, printMode){
         }
         // Flèches d'opération (− v, ÷ n) entre les lignes de la correction imprimée.
         if (printEqLines.length > 1) {
-            drawOperationArrowsForLines(gBM, {el:tEl, text:tText}, printEqLines, numberedResolutionOps(visSum, tasks), {
-              centerX: 800, startY: printEqStartY, gap: printEqGap, fontSize: printEqFont, eqGap: 50, middleBaseline: false, margin: 62
+            drawOperationArrowsForLines(gBM, {el:tEl, text:tText}, printEqLines, printEqOps, {
+              centerX: 800, startY: printEqStartY, gap: printEqGap, fontSize: printEqFont, eqGap: 50, middleBaseline: false, margin: 62, hug: true, minX: 24, maxX: 1576
             });
         }
       }
