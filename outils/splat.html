@@ -2808,7 +2808,9 @@ function genInvestigate(rng){
       const coef = Number(it.coef) / cm;
       const diff = Number(it.diff) - Number(it.coef) * dm / cm;
       const c = Math.round(coef);
-      return Math.abs(coef - c) < 1e-9 && c >= 1 && c <= 8 && diff > -1e-9 && Math.abs(c * minVal + diff - hiddenVals[i]) < 1e-6;
+      // jusqu'à 16 fois la plus petite tache : au-delà de 8 cases dans la barre, les 𝑥
+      // d'une tache se regroupent en une case « k𝑥 » (positiveBarItemsForRelation)
+      return Math.abs(coef - c) < 1e-9 && c >= 1 && c <= 16 && diff > -1e-9 && Math.abs(c * minVal + diff - hiddenVals[i]) < 1e-6;
     });
   }
 
@@ -4134,6 +4136,10 @@ function relationModelKind(card){
    la tache ramenée à 𝑥 par positiveBarItemsForRelation. (Le modèle affine du
    générateur, lui, prend pour repère la source de la première relation : sa
    « unitValue » n'est pas toujours 𝑥 — d'où l'ancien « 5𝑥 = 60 → 𝑥 = 48 ».) */
+/* Au-delà de ce nombre de cases 𝑥 dans la barre, les 𝑥 d'une même tache se regroupent
+   en une case « k𝑥 ». */
+const RELATION_MAX_UNIT_CELLS = 8;
+
 function relationUnitValue(card){
   const rel = card && card._rel;
   const source = (rel && Array.isArray(rel.hiddenValues) && rel.hiddenValues.length) ? rel.hiddenValues : ((card && card.hidden) || []);
@@ -4168,14 +4174,21 @@ function positiveBarItemsForRelation(card){
         return { coef, diff, value: positiveValues[i] };
       });
       const clean = rebased.every(it =>
-        Math.abs(it.coef - Math.round(it.coef)) < 1e-9 && Math.round(it.coef) >= 1 && Math.round(it.coef) <= 8
+        Math.abs(it.coef - Math.round(it.coef)) < 1e-9 && Math.round(it.coef) >= 1
         && it.diff > -1e-9
         && Math.abs(Math.round(it.coef) * minVal + it.diff - it.value) < 1e-6);
       if(clean){
+        // Jusqu'à 8 cases 𝑥 dans la barre, une case par 𝑥 : on compte les parts, on partage.
+        // Au-delà, une seule case par tache, étiquetée « k𝑥 », de longueur proportionnelle
+        // à k — on se rapproche de l'équation (choix de Gwenaël, 23/08/2026).
+        const totalCells = rebased.reduce((acc, it) => acc + Math.round(it.coef), 0);
+        const groupedCells = totalCells > RELATION_MAX_UNIT_CELLS;
         return rebased.map(it => {
           const coef = Math.round(it.coef);
           const diff = Math.abs(it.diff) < 1e-9 ? 0 : Math.round(it.diff * 1000) / 1000;
-          const parts = Array.from({length: coef}, () => ({kind:"x", label:varChar, weight:1}));
+          const parts = groupedCells
+            ? [{kind:"x", label:formatCoeffUnknownTerm(coef, varChar), weight:coef, coef}]
+            : Array.from({length: coef}, () => ({kind:"x", label:varChar, weight:1, coef:1}));
           if(diff > 0) parts.push({kind:"diff", label:formatRelationNumber(diff), weight:Math.max(0.35, diff / minVal)});
           return { coef, diff, parts };
         });
@@ -4755,10 +4768,14 @@ function drawRelationOrderedSchema(targetGroup, card, opts = {}){
   g.appendChild(text(barX+barW/2, yTop+topH/2+1, formatRelationNumber(totals.trueTotal), {"text-anchor":"middle", "dominant-baseline":"middle", "font-size":34, "font-weight":950, fill:"var(--ink)"}));
 
   let x = barX;
-  const orderedParts = [
-    ...Array.from({length:coefficient}, () => ({kind:"x", label:getNumberedDisplayVarChar(card), weight:1})),
-    ...constantParts
-  ];
+  // Les cases 𝑥 sont celles des taches (une par 𝑥, ou une case « k𝑥 » par tache quand
+  // la barre serait trop longue), les plus grandes d'abord, puis les constantes.
+  const xPartsFromItems = (totals.items || []).flatMap(item => (item.parts || []).filter(part => part && part.kind === "x").map(part => ({...part})));
+  const xCellsCount = xPartsFromItems.reduce((acc, part) => acc + Math.max(1, Math.round(Number(part.coef) || 1)), 0);
+  const orderedXParts = (xPartsFromItems.length && xCellsCount === coefficient)
+    ? xPartsFromItems.sort((a, b) => (Number(b.weight) || 1) - (Number(a.weight) || 1))
+    : Array.from({length:coefficient}, () => ({kind:"x", label:getNumberedDisplayVarChar(card), weight:1}));
+  const orderedParts = [...orderedXParts, ...constantParts];
   // Largeurs de cases réparties pour que le tableau tienne toujours dans sa place
   // (56 au moins quand c'est possible, jamais de dernière case négative).
   const cellWidths = fitCellWidths(orderedParts.map(part => Math.max(0.35, Number(part.weight) || 1)), barW, 56);
