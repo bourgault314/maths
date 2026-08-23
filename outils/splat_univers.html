@@ -1,0 +1,304 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<!-- MAQUETTE : la ligne <base> fait pointer les boutons vers le site en ligne.
+     À SUPPRIMER quand la page entrera dans le dépôt (liens relatifs). -->
+
+<title>L'univers SPLAT! | maths&amp;go</title>
+<link rel="icon" href="/favicon.ico" sizes="48x48">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link rel="icon" type="image/png" sizes="32x32" href="/assets/img/favicon-32.png">
+<link rel="icon" type="image/png" sizes="192x192" href="/assets/img/favicon-192.png">
+<link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png">
+<style>
+:root{
+  --page:#f6f8fb; --paper:#ffffff; --ink:#10294a; --muted:#5c6c82; --line:#d9e2ec;
+  --teal:#08aaa5; --blue:#0b67b2; --orange:#f58220; --gold:#f9bf3b;
+  --shadow:0 10px 26px rgba(22,47,82,.10);
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--page);color:var(--ink);
+  font-family:"Segoe UI",system-ui,-apple-system,BlinkMacSystemFont,sans-serif;}
+a{color:inherit}
+
+/* ---------- entête ---------- */
+header{background:var(--paper);border-bottom:1px solid var(--line);padding:10px 14px;
+  display:flex;align-items:center;gap:10px}
+header .back{display:flex;align-items:center;justify-content:center;width:44px;height:44px;
+  border:1px solid var(--line);border-radius:50%;background:var(--paper);flex:0 0 auto;text-decoration:none}
+header .back svg{width:22px;height:22px;stroke:var(--ink);stroke-width:2.5;fill:none;
+  stroke-linecap:round;stroke-linejoin:round}
+header .brand{font-weight:800;font-size:15px;color:var(--muted);text-decoration:none;white-space:nowrap}
+header .brand b{color:var(--ink)}
+
+/* ---------- bandeau titre ---------- */
+.hero{max-width:980px;margin:0 auto;padding:26px 16px 8px;text-align:center;position:relative}
+.hero h1{margin:0;font-size:clamp(28px,6vw,44px);letter-spacing:.5px}
+.hero h1 .splat{color:var(--teal)}
+.hero p.sub{margin:8px auto 0;max-width:560px;color:var(--muted);font-size:15px;line-height:1.45}
+.heroBlob{position:absolute;width:54px;height:54px;opacity:.9}
+.heroBlob.b1{left:4%;top:18px;transform:rotate(-14deg)}
+.heroBlob.b2{right:5%;top:44px;width:38px;height:38px;transform:rotate(21deg)}
+
+/* ---------- progression totale ---------- */
+.totalBar{max-width:560px;margin:18px auto 0;padding:0 16px}
+.totalBar .lbl{display:flex;justify-content:space-between;font-size:13px;font-weight:700;color:var(--muted);margin-bottom:5px}
+.totalBar .rail{height:14px;border-radius:9px;background:#e6ecf4;border:1px solid var(--line);overflow:hidden}
+.totalBar .fill{height:100%;width:0;border-radius:9px;
+  background:linear-gradient(90deg,var(--teal),var(--blue) 55%,var(--orange));transition:width .5s}
+
+/* ---------- mondes ---------- */
+main{max-width:980px;margin:0 auto;padding:10px 14px 60px}
+.monde{background:var(--paper);border:1px solid var(--line);border-radius:22px;
+  box-shadow:var(--shadow);margin-top:26px;overflow:hidden}
+.monde>.head{display:flex;align-items:center;gap:14px;padding:16px 18px;color:#fff}
+.monde.m1>.head{background:var(--teal)}
+.monde.m2>.head{background:var(--blue)}
+.monde.m3>.head{background:var(--orange)}
+.monde .head svg.blob{width:46px;height:46px;flex:0 0 auto}
+.monde .head .t{flex:1;min-width:0}
+.monde .head .num{font-size:12px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;opacity:.85}
+.monde .head h2{margin:1px 0 0;font-size:clamp(19px,4vw,25px);line-height:1.15}
+.monde .head .stars{font-size:15px;font-weight:800;white-space:nowrap;background:rgba(255,255,255,.18);
+  border-radius:12px;padding:6px 10px}
+.monde .desc{padding:12px 18px 0;color:var(--muted);font-size:14px}
+
+/* ---------- étapes ---------- */
+.etapes{list-style:none;margin:0;padding:10px 14px 20px;position:relative}
+.etape{position:relative;display:flex;gap:12px;align-items:flex-start;padding:12px 4px 12px 2px}
+.etape+.etape{border-top:1px dashed var(--line)}
+.badge{position:relative;width:58px;height:58px;flex:0 0 auto;cursor:pointer;border:none;background:none;padding:0}
+.badge svg{width:100%;height:100%;display:block}
+.badge .n{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  font-size:23px;font-weight:900;color:#fff}
+.badge .star{position:absolute;right:-7px;bottom:-5px;width:26px;height:26px;display:none;
+  filter:drop-shadow(0 2px 3px rgba(22,47,82,.35))}
+.etape.done .badge .star{display:block}
+.etape .corps{flex:1;min-width:0}
+.etape h3{margin:2px 0 1px;font-size:17px}
+.etape .forme{font-size:13px;color:var(--muted);font-style:italic}
+.etape .obj{margin:3px 0 8px;font-size:14px;color:var(--muted);line-height:1.35}
+.actions{display:flex;flex-wrap:wrap;gap:8px}
+.actions a{display:inline-flex;align-items:center;gap:7px;text-decoration:none;font-weight:750;
+  font-size:14px;border-radius:12px;padding:9px 14px;min-height:44px;border:1px solid var(--line)}
+.actions a.jouer{color:#fff;border:none}
+.m1 .actions a.jouer{background:var(--teal)}
+.m2 .actions a.jouer{background:var(--blue)}
+.m3 .actions a.jouer{background:var(--orange)}
+.actions a.fiche{background:var(--paper);color:var(--ink)}
+.actions a:hover{filter:brightness(1.06)}
+.faitBtn{display:inline-flex;align-items:center;gap:6px;font:inherit;font-size:13px;font-weight:750;
+  color:var(--muted);background:none;border:1px dashed var(--line);border-radius:12px;
+  padding:9px 12px;min-height:44px;cursor:pointer}
+.etape.done .faitBtn{color:#b8860b;border-color:var(--gold);background:#fff8e1}
+
+/* badge : la vraie tache Splat, aux couleurs du monde —
+   teinte claire tant que l'étape n'est pas réussie, pleine couleur + étoile une fois gagnée */
+.badge svg.tache{filter:drop-shadow(2px 2.5px 2px rgba(16,41,74,.22))}
+.badge use.fond{stroke:rgba(0,0,0,.14);stroke-width:2;transition:fill .25s}
+.m1 .badge use.fond{fill:#9cdddb}
+.m2 .badge use.fond{fill:#9dc2e0}
+.m3 .badge use.fond{fill:#fbcda6}
+.m1 .etape.done .badge use.fond{fill:var(--teal)}
+.m2 .etape.done .badge use.fond{fill:var(--blue)}
+.m3 .etape.done .badge use.fond{fill:var(--orange)}
+.badge .star use{fill:var(--gold);stroke:#b8860b;stroke-width:1}
+/* légère rotation alternée pour que les taches vivent un peu */
+.etape:nth-child(3n+1) .badge svg.tache{transform:rotate(-9deg)}
+.etape:nth-child(3n+2) .badge svg.tache{transform:rotate(14deg)}
+.etape:nth-child(3n) .badge svg.tache{transform:rotate(4deg)}
+/* chiffre : blanc sur pleine couleur, encre sur teinte claire ;
+   décalé d'un poil pour tomber au centre visuel de la tache */
+.badge .n{color:var(--ink);transform:translate(-0.5px,1.5px)}
+.etape.done .badge .n{color:#fff}
+
+footer{max-width:980px;margin:0 auto;padding:0 16px 40px;text-align:center;color:var(--muted);font-size:13px}
+footer a{color:var(--blue)}
+
+@media(min-width:760px){
+  .etapes{padding:14px 22px 24px}
+  .etape{padding:14px 6px}
+  .etape h3{font-size:18px}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <a class="back" href="/outils/?domain=algebre&collection=splat" title="Retour aux outils Splat!">
+    <svg viewBox="0 0 24 24"><path d="M19 12H5M11 18l-6-6 6-6"/></svg>
+  </a>
+  <a class="brand" href="/">maths<b>&amp;go</b></a>
+</header>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <!-- Les VRAIES taches des outils Splat! —
+         tacheEtoile : blobPath() de splat.html / splat_equations.html (5 lobes)
+         tacheRonde / tacheRonde2 : SPLAT_SHAPES de splat_tache_barre.html (Petit Splat) -->
+    <symbol id="tacheEtoile" viewBox="2 5 106 105">
+      <path d="M 96.4 55 C 98.7 57.2 102 60.1 102.8 62.6 C 103.7 65.1 102.7 67.9 101.4 70.1 C 100 72.2 97 73.8 94.9 75.3 C 92.7 76.9 90.7 78.2 88.5 79.3 C 86.3 80.4 84.1 81.4 81.9 81.9 C 79.6 82.4 76.9 81.9 75 82.5 C 73.1 83.2 71.8 83.6 70.6 85.6 C 69.4 87.6 69.1 91.5 67.8 94.4 C 66.5 97.2 64.7 101.3 62.6 102.8 C 60.4 104.4 57.4 104.4 55 103.8 C 52.6 103.2 50.1 100.8 48 99.2 C 45.9 97.6 43.9 96.1 42.2 94.4 C 40.5 92.7 38.9 90.9 37.7 88.9 C 36.5 86.9 36.2 84.1 35 82.5 C 33.8 80.9 33 79.8 30.7 79.3 C 28.5 78.8 24.7 79.7 21.5 79.3 C 18.4 79 14 78.5 11.8 77 C 9.7 75.4 8.8 72.6 8.6 70.1 C 8.5 67.6 10 64.5 10.8 62 C 11.6 59.5 12.5 57.2 13.6 55 C 14.7 52.8 15.9 50.8 17.4 49 C 18.9 47.3 21.5 46.1 22.6 44.5 C 23.8 42.9 24.6 41.7 24.4 39.4 C 24.2 37.1 22.1 33.8 21.5 30.7 C 20.9 27.6 19.9 23.3 20.7 20.7 C 21.6 18.2 24 16.5 26.3 15.6 C 28.7 14.6 32 15.1 34.7 15.1 C 37.3 15.1 39.8 15.2 42.2 15.6 C 44.6 16 46.9 16.5 49 17.4 C 51.2 18.3 53.1 20.4 55 21 C 56.9 21.6 58.2 22 60.4 21.1 C 62.5 20.2 65 17.2 67.8 15.6 C 70.6 14.1 74.3 11.8 77 11.8 C 79.6 11.8 82.1 13.6 83.7 15.6 C 85.3 17.5 85.8 20.8 86.7 23.3 C 87.5 25.9 88.1 28.3 88.5 30.7 C 88.9 33.1 89.1 35.4 88.9 37.7 C 88.7 40 87.4 42.5 87.4 44.5 C 87.4 46.5 87.4 47.9 88.9 49.6 C 90.4 51.4 94.1 52.8 96.4 55 Z"/>
+    </symbol>
+    <path id="etoile" d="M12 1.8l3 6.2 6.8 1-4.9 4.8 1.2 6.8L12 17.4l-6.1 3.2 1.2-6.8L2.2 9l6.8-1z"/>
+  </defs>
+</svg>
+
+<div class="hero">
+  <svg class="heroBlob b1" viewBox="0 0 110 110"><use href="#tacheEtoile" fill="#0b67b2" opacity=".18" width="110" height="110"/></svg>
+  <svg class="heroBlob b2" viewBox="0 0 110 110"><use href="#tacheEtoile" fill="#f58220" opacity=".20" width="110" height="110"/></svg>
+  <h1>L'univers <span class="splat">SPLAT!</span></h1>
+  <p class="sub">Des jetons se cachent sous les taches… Traverse les trois mondes, étape par étape,
+  et deviens un champion des équations !</p>
+</div>
+
+<div class="totalBar">
+  <div class="lbl"><span>Ta progression</span><span id="totalTxt">0 / 15 étoiles</span></div>
+  <div class="rail"><div class="fill" id="totalFill"></div></div>
+</div>
+
+<main id="univers"></main>
+
+<footer>
+  Outils : <a href="/outils/?domain=algebre&collection=splat">la famille Splat! de maths&amp;go</a> ·
+  progression cycle 3 en trois séquences.
+</footer>
+
+<script>
+/* ============ données des mondes (progression cycle 3) ============ */
+const PS="/outils/splat_tache_barre.html", SC="/splat/classique/", SE="/splat/equations/";
+const MONDES=[
+ {cls:"m1",nom:"Petit SPLAT!",desc:"Le tout, les parties… et les premières taches ! Complète les schémas en barres : ici, c'est toi qui réponds et la page vérifie.",
+  etapes:[
+   {t:"Complète le schéma",o:"Un tout, deux parties : écris les nombres qui manquent.",p:"m1e1",
+    j:PS+"?support=eleve&problem=classic&target=20&splats=1&exercise=find_hidden&seed=441132&parcours=m1e1",
+    f:PS+"?support=print&problem=classic&target=20&splats=1&exercise=find_hidden&seed=441132"},
+   {t:"Dessine les jetons",o:"Le schéma est donné : à toi de dessiner la carte qui va avec.",p:"m1e2",
+    j:PS+"?support=eleve&problem=classic&target=20&splats=1&exercise=construct&seed=929356&parcours=m1e2",
+    f:PS+"?support=print&problem=classic&target=20&splats=1&exercise=construct&seed=929356"},
+   {t:"Mélange !",o:"Tantôt compléter, tantôt dessiner : reste bien réveillé.",p:"m1e3",
+    j:PS+"?support=eleve&problem=classic&target=20&splats=1&exercise=mix&seed=302672&parcours=m1e3",
+    f:PS+"?support=print&problem=classic&target=20&splats=1&exercise=mix&seed=302672"},
+   {t:"Deux taches",o:"Deux taches cachent le même nombre de jetons chacune.",p:"m1e4",
+    j:PS+"?support=eleve&problem=classic&target=20&splats=2&exercise=find_hidden&seed=514457&parcours=m1e4",
+    f:PS+"?support=print&problem=classic&target=20&splats=2&exercise=find_hidden&seed=514457"},
+   {t:"Plein de taches !",o:"De 2 à 6 taches : le mélange des experts.",p:"m1e5",
+    j:PS+"?support=eleve&problem=classic&target=20&splats=mix&exercise=find_hidden&seed=727304&parcours=m1e5",
+    f:PS+"?support=print&problem=classic&target=20&splats=mix&exercise=find_hidden&seed=727304"},
+   {t:"Dessine en expert",o:"Toujours 2 à 6 taches, mais cette fois c'est toi qui dessines.",p:"m1e6",
+    j:PS+"?support=eleve&problem=classic&target=20&splats=mix&exercise=construct&seed=514457&parcours=m1e6",
+    f:PS+"?support=print&problem=classic&target=20&splats=mix&exercise=construct&seed=514457"}]},
+ {cls:"m2",nom:"SPLAT! classique",desc:"Le schéma en barres devient une équation. Trouve le nombre caché sous la tache.",
+  etapes:[
+   {t:"Une tache et des jetons",fo:"x + a = b",o:"Trace le schéma, puis trouve ce que cache la tache.",
+    j:SC+"?mode=U&equation=X_PLUS_A_EQ_B&cards=10&seed=453&unknown=question",
+    f:SC+"?mode=U&equation=X_PLUS_A_EQ_B&cards=10&seed=453&unknown=question&print=worksheet"},
+   {t:"Des taches jumelles",fo:"a × x = b",o:"Plusieurs taches identiques se partagent tous les jetons.",
+    j:SC+"?mode=U&equation=AX_EQ_B&tasksMax=5&cards=10&seed=477&unknown=question",
+    f:SC+"?mode=U&equation=AX_EQ_B&tasksMax=5&cards=10&seed=477&unknown=question&print=worksheet"},
+   {t:"Taches et jetons ensemble",fo:"a × x + c = b",o:"Des taches ET des jetons visibles : à toi de démêler tout ça.",
+    j:SC+"?mode=U&equation=AX_PLUS_C_EQ_B&cards=10&seed=477&unknown=question",
+    f:SC+"?mode=U&equation=AX_PLUS_C_EQ_B&cards=10&seed=477&unknown=question&print=worksheet"},
+   {t:"Les paquets de jetons",fo:"x + a = b",o:"Les jetons arrivent en paquets : on compte plus vite.",
+    j:SC+"?mode=N&equation=X_PLUS_A_EQ_B&cards=10&seed=347&unknown=question",
+    f:SC+"?mode=N&equation=X_PLUS_A_EQ_B&cards=10&seed=347&unknown=question&print=worksheet"},
+   {t:"Paquets : le défi",fo:"a × x + c = b",o:"Paquets, taches et jetons : le grand mélange du monde 2.",
+    j:SC+"?mode=N&equation=AX_PLUS_C_EQ_B&tasksMax=5&cards=10&seed=18&unknown=question",
+    f:SC+"?mode=N&equation=AX_PLUS_C_EQ_B&tasksMax=5&cards=10&seed=18&unknown=question&print=worksheet"}]},
+ {cls:"m3",nom:"SPLAT! Équations",desc:"Deux plateaux, même quantité en haut et en bas : résous l'équation pas à pas.",
+  etapes:[
+   {t:"Les deux plateaux",fo:"a × x + b = c",o:"Retrouve dans le tableau ce que contient chaque plateau.",
+    j:SE+"?mode=EQUNITSTEP&form=ONE_SIDE&view=schema&cards=10&seed=56",
+    f:SE+"?mode=EQUNITSTEP&form=ONE_SIDE&view=schema&cards=10&seed=56&print=worksheet"},
+   {t:"Résous pas à pas",fo:"a × x + b = c",o:"Enlève, partage, garde un groupe : une étape à la fois.",
+    j:SE+"?mode=EQSTEP&form=ONE_SIDE&view=schema&cards=10&seed=89",
+    f:SE+"?mode=EQSTEP&form=ONE_SIDE&view=schema&cards=10&seed=89&print=worksheet"},
+   {t:"Écris l'équation",fo:"a × x + b = c",o:"Le plateau se transforme en lignes de calcul, comme les grands.",
+    j:SE+"?mode=EQSTEP&form=ONE_SIDE&view=equation&cards=10&seed=14",
+    f:SE+"?mode=EQSTEP&form=ONE_SIDE&view=equation&cards=10&seed=14&print=worksheet"},
+   {t:"Des taches des deux côtés",fo:"a × x + b = c × x + d",o:"L'inconnue est partout ! Le défi final de l'univers SPLAT!",
+    j:SE+"?mode=EQSTEP&form=BOTH&view=equation&cards=10&seed=25",
+    f:SE+"?mode=EQSTEP&form=BOTH&view=equation&cards=10&seed=25&print=worksheet"}]}
+];
+
+/* ============ mémorisation locale (best-effort) ============ */
+const KEY="mathsgo-splat-univers";
+const KEY_PARCOURS="mathsgo-splat-parcours"; /* écrite par les outils en mode « Parcours élève » */
+function lireFaits(){try{return JSON.parse(localStorage.getItem(KEY))||{}}catch(_e){return{}}}
+function ecrireFaits(f){try{localStorage.setItem(KEY,JSON.stringify(f))}catch(_e){}}
+function lireParcours(){try{return JSON.parse(localStorage.getItem(KEY_PARCOURS))||{}}catch(_e){return{}}}
+let faits=lireFaits();
+
+/* ============ rendu ============ */
+const main=document.getElementById("univers");
+let compteur=0;
+MONDES.forEach((m,mi)=>{
+  const sec=document.createElement("section");
+  sec.className="monde "+m.cls;
+  const ids=m.etapes.map((_,ei)=>"e"+mi+"-"+ei);
+  sec.innerHTML=
+   '<div class="head">'+
+     '<svg class="blob" viewBox="0 0 110 110"><use href="#tacheEtoile" width="110" height="110" fill="rgba(255,255,255,.92)"/></svg>'+
+     '<div class="t"><div class="num">Monde '+(mi+1)+'</div><h2>'+m.nom+'</h2></div>'+
+     '<div class="stars" id="stars'+mi+'"></div>'+
+   '</div>'+
+   '<p class="desc">'+m.desc+'</p>'+
+   '<ol class="etapes">'+m.etapes.map((e,ei)=>{
+     compteur++;
+     return '<li class="etape" id="'+ids[ei]+'">'+
+       '<button class="badge" type="button" title="Marquer comme réussie" data-id="'+ids[ei]+'">'+
+         '<svg class="tache" viewBox="0 0 110 110"><use class="fond" href="#tacheEtoile" width="110" height="110"/></svg>'+
+         '<span class="n">'+compteur+'</span>'+
+         '<svg class="star" viewBox="0 0 24 24"><use href="#etoile" fill="#f9bf3b" stroke="#b8860b" stroke-width="1"/></svg>'+
+       '</button>'+
+       '<div class="corps">'+
+         '<h3>'+e.t+'</h3>'+(e.fo?'<div class="forme">'+e.fo+'</div>':'')+
+         '<p class="obj">'+e.o+'</p>'+
+         '<div class="actions">'+
+           '<a class="jouer" href="'+e.j+'">🎮 Je joue</a>'+
+           '<a class="fiche" href="'+e.f+'" title="Ouvre l\'outil prêt à imprimer la fiche">📄 Fiche</a>'+
+           '<button class="faitBtn" type="button" data-id="'+ids[ei]+'">⭐ J\'ai réussi !</button>'+
+         '</div>'+
+       '</div>'+
+     '</li>';
+   }).join("")+'</ol>';
+  main.appendChild(sec);
+});
+
+function majAffichage(){
+  let total=0,fait=0;
+  const parcours=lireParcours();
+  MONDES.forEach((m,mi)=>{
+    let f=0;
+    m.etapes.forEach((e,ei)=>{
+      total++;
+      const id="e"+mi+"-"+ei, li=document.getElementById(id);
+      /* l'étoile s'allume si l'élève a réussi la série dans l'outil (validation en ligne),
+         ou si elle a été cochée à la main (travail sur fiche) */
+      const ok=!!faits[id]||!!(e.p&&parcours[e.p]&&parcours[e.p].fait);
+      li.classList.toggle("done",ok);
+      if(ok){f++;fait++;}
+    });
+    document.getElementById("stars"+mi).textContent="⭐ "+f+" / "+m.etapes.length;
+  });
+  document.getElementById("totalTxt").textContent=fait+" / "+total+" étoiles";
+  document.getElementById("totalFill").style.width=(total?100*fait/total:0)+"%";
+}
+document.addEventListener("click",ev=>{
+  const b=ev.target.closest("[data-id]");
+  if(!b)return;
+  const id=b.getAttribute("data-id");
+  faits[id]=!faits[id];
+  if(!faits[id])delete faits[id];
+  ecrireFaits(faits);
+  majAffichage();
+});
+majAffichage();
+/* au retour d'une partie (autre onglet ou bouton retour), on rallume les étoiles gagnées */
+window.addEventListener("pageshow",majAffichage);
+window.addEventListener("focus",majAffichage);
+</script>
+</body>
+</html>
