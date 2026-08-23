@@ -3,9 +3,9 @@ import {
   definirPaquetPondere,
   ordonnerEnLimitantRepetitions,
   tirerProfilsPonderes,
-} from "../../../../moteur-exercices/src/paquets-ponderes.js?v=53";
-import { validerGraine } from "../../../../moteur-exercices/src/aleatoire.js?v=53";
-import { GABARIT_RECONNAISSANCE_SOLIDES } from "./reconnaissance.js?v=53";
+} from "../../../../moteur-exercices/src/paquets-ponderes.js?v=54";
+import { validerGraine } from "../../../../moteur-exercices/src/aleatoire.js?v=54";
+import { GABARIT_RECONNAISSANCE_SOLIDES } from "./reconnaissance.js?v=54";
 
 export const VERSION_PLAN_SERIE_SOLIDES_USUELS = 1;
 

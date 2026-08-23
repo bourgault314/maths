@@ -53,8 +53,8 @@ describe("responsive du repérage dans le plan", () => {
     assert.match(styles, /@media \(max-width: 620px\)[\s\S]*?\.repere-version-large\s*\{\s*display:\s*none;/);
     assert.match(styles, /@media \(max-width: 620px\)[\s\S]*?\.repere-version-mobile\s*\{\s*display:\s*block;/);
     assert.match(styles, /\.indicateur-reponse-repere\s*\{[\s\S]*?position:\s*absolute;[\s\S]*?min-height:\s*44px;/);
-    assert.match(styles, /\.grille-qcm-repere\s*\{[\s\S]*?grid-template-columns:\s*repeat\(2, minmax\(0, 1fr\)\);[\s\S]*?grid-auto-rows:\s*1fr;/);
-    assert.match(styles, /@media \(max-width: 620px\)[\s\S]*?\.grille-qcm-repere\s*\{\s*grid-template-columns:\s*repeat\(2, minmax\(0, 1fr\)\);/);
+    assert.match(styles, /\.grille-choix\.grille-qcm-repere\s*\{[\s\S]*?grid-template-columns:\s*repeat\(2, minmax\(0, 1fr\)\);[\s\S]*?grid-auto-rows:\s*1fr;/);
+    assert.match(styles, /@media \(max-width: 620px\)[\s\S]*?\.grille-choix\.grille-qcm-repere\s*\{\s*grid-template-columns:\s*repeat\(2, minmax\(0, 1fr\)\);/);
     assert.match(styles, /\.grille-qcm-repere \.choix\s*\{[\s\S]*?white-space:\s*nowrap;/);
     assert.match(styles, /\.coord-abscisse,[\s\S]*?color:\s*var\(--mg-orange\);/);
     assert.match(styles, /\.coord-ordonnee,[\s\S]*?color:\s*var\(--mg-turquoise\);/);

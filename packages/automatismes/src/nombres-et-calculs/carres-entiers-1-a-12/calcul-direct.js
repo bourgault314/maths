@@ -4,7 +4,7 @@ import {
   COMPARAISON_CHOIX_EXACT,
   SCHEMA_QUESTION_INSTANCE_V2,
   TYPE_REPONSE_CHOIX_UNIQUE,
-} from "../../../../contrats/src/question-v2.js?v=53";
+} from "../../../../contrats/src/question-v2.js?v=54";
 import {
   BASES_CARRES_ENTIERS,
   blocPuissance,
@@ -15,7 +15,7 @@ import {
   exigerParametresCarres,
   reponseEntier,
   valeurParametreOuTirage,
-} from "./commun.js?v=53";
+} from "./commun.js?v=54";
 
 export const NOM_GENERATEUR_CALCUL_DIRECT_CARRE =
   "nombres-et-calculs.carres-entiers-1-a-12.calcul-direct";

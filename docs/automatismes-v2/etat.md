@@ -29,8 +29,8 @@
   intervalles ; elle ne livre le pas qu'au dernier niveau.
 - Le QCM conserve exactement les mécanismes réponse, inversion, signe de
   l'abscisse et signe de l'ordonnée. Les quatre couples doivent aussi être
-  visibles dans le repère. Sur téléphone, leurs cartes forment une grille
-  stable `2 × 2`. Le `✓`, confirmé comme convention commune V2, est positionné
+  visibles dans le repère. À toutes les largeurs, leurs cartes forment une
+  grille stable `2 × 2`. Le `✓`, confirmé comme convention commune V2, est positionné
   sans modifier la carte ; une omission annonce explicitement que la réponse
   attendue est affichée en vert.
 - L'objet `repere-cartesien` place intelligemment les lettres aux quatre bords
@@ -53,8 +53,8 @@
   dans la fiche GE-03 / GE-04.
 - `npm run verifier` passe **1 759 tests sur 1 759** dans **251 suites**. Les
   garde-fous V2 suivent **157 fichiers**, dont **80 fichiers de production** à
-  provenance déclarée. Le graphe est invalidé atomiquement en `v53` et
-  `app.js` passe à la révision `56`.
+  provenance déclarée. Le graphe est invalidé atomiquement en `v54` et
+  `app.js` passe à la révision `57`.
 
 ## Architecture commune des paquets pondérés déterministes
 

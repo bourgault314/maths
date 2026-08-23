@@ -12,11 +12,11 @@ import {
   COMPARAISON_CHOIX_EXACT,
   SCHEMA_QUESTION_INSTANCE_V2,
   TYPE_REPONSE_CHOIX_UNIQUE,
-} from "../../../../contrats/src/question-v2.js?v=53";
+} from "../../../../contrats/src/question-v2.js?v=54";
 import {
   IDENTITES_AUTOMATISMES,
   creerClassementAutomatisme,
-} from "../../identifiants.js?v=53";
+} from "../../identifiants.js?v=54";
 
 export const NOM_GENERATEUR_CRITERE_PRECIS =
   "nombres-et-calculs.criteres-divisibilite.critere-precis";

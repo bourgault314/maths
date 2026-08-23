@@ -5,7 +5,7 @@
 // est donc un échantillon du paquet entier, jamais le préfixe d'une recette
 // fixe. Les dimensions indépendantes utilisent des sous-graines distinctes.
 
-import { creerGenerateur, validerGraine } from "./aleatoire.js?v=53";
+import { creerGenerateur, validerGraine } from "./aleatoire.js?v=54";
 
 export const VERSION_PAQUETS_PONDERES = 1;
 export const TAILLE_PAQUET_REFERENCE = 20;

@@ -27,7 +27,7 @@ import {
 import {
   SCHEMA_QUESTION_INSTANCE_V2,
   validerQuestionInstanceV2,
-} from "../../contrats/src/question-v2.js?v=53";
+} from "../../contrats/src/question-v2.js?v=54";
 import {
   VERSION_ALEATOIRE,
   creerGenerateur,

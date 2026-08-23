@@ -1,10 +1,10 @@
-import { creerGenerateur, validerGraine } from "../../../../moteur-exercices/src/aleatoire.js?v=53";
+import { creerGenerateur, validerGraine } from "../../../../moteur-exercices/src/aleatoire.js?v=54";
 import {
   apparierProfilsCompatibles,
   definirPaquetPondere,
   ordonnerEnLimitantRepetitions,
   tirerProfilsPonderes,
-} from "../../../../moteur-exercices/src/paquets-ponderes.js?v=53";
+} from "../../../../moteur-exercices/src/paquets-ponderes.js?v=54";
 import {
   FAMILLE_DIAGNOSTIC_COORDONNEES,
   FAMILLE_IDENTIFIER_POINT,
@@ -16,7 +16,7 @@ import {
   FORMULATION_COORDONNEE_SYMBOLIQUE,
   GABARIT_LIRE_COORDONNEES,
   GABARIT_PLACER_POINT_REPERE,
-} from "./questions.js?v=53";
+} from "./questions.js?v=54";
 
 export const QUOTAS_LIRE_COORDONNEES = Object.freeze({
   20: Object.freeze({ complet: 10, abscisse: 3, ordonnee: 3, qcm: 2, identifier: 2 }),

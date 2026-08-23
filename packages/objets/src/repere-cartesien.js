@@ -4,7 +4,7 @@
 // corrections et au Studio. Le calcul reste pur et déterministe : mêmes
 // bornes et mêmes points produisent exactement le même SVG.
 
-import { COULEURS, TYPOGRAPHIE } from "../../charte/src/charte.js?v=53";
+import { COULEURS, TYPOGRAPHIE } from "../../charte/src/charte.js?v=54";
 
 export const VERSION_REPERE_CARTESIEN = 4;
 export const SIGNE_MOINS_REPERE = "−";
