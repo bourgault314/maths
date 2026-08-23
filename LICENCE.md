@@ -48,7 +48,8 @@ Elle reste possible, sur autorisation écrite préalable : gwenael@mathsgo.re.
 ## Auteur et contributions
 
 **Conception, pédagogie et réalisation : Gwenaël Bourgault**, professeur de
-mathématiques, académie de La Réunion.
+mathématiques. Le site est édité à titre personnel et n'engage aucun
+établissement ni aucune institution.
 
 Le site est construit avec un usage important d'outils d'intelligence
 artificielle pour la programmation et la mise en page ; les objectifs, les choix
