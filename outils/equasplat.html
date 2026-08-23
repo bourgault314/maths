@@ -4393,6 +4393,8 @@
   .eleveCartonEtoiles{font-size:34px;letter-spacing:4px}
   .eleveCarton button{font:inherit;font-weight:900;border:none;border-radius:12px;padding:12px 24px;
     cursor:pointer;background:#2563eb;color:#fff}
+  /* carte intermediaire : le bouton suit le titre, sans ligne de texte entre les deux */
+  .eleveCarton h2 + button{margin-top:12px}
 </style>
 <link rel="stylesheet" href="../assets/css/consentement.css">
 <script defer src="../assets/js/consentement.js"></script>
@@ -8966,6 +8968,20 @@
     eleveCelebrer(suivante >= eleveEqs.length);
   }
 
+  /* Le voile couvrait le plateau moins d'une demi-seconde après la résolution :
+     l'élève n'avait pas le temps de voir sa propre solution avant que la carte
+     suivante n'arrive toute seule. On laisse donc le plateau découvert un
+     instant, puis c'est lui qui décide de passer à la suite. */
+  const ELEVE_PAUSE_SOLUTION = 1200;
+
+  function eleveAfficherVoile(voile){
+    window.setTimeout(() => {
+      document.body.appendChild(voile);
+      const bouton = voile.querySelector("button");
+      if(bouton) bouton.focus();
+    }, ELEVE_PAUSE_SOLUTION);
+  }
+
   function eleveCelebrer(finale){
     const voile = document.createElement("div");
     voile.className = "eleveVoile";
@@ -8974,22 +8990,23 @@
       voile.innerHTML = `<div class="eleveCarton"><div class="eleveCartonEtoiles">${"\u2B50".repeat(Math.min(eleveEqs.length, 8))}</div>` +
         `<h2>S\u00e9rie termin\u00e9e, bravo !</h2><p>${eleveEqs.length} \u00e9quations r\u00e9solues sur le plateau.</p>` +
         `<button type="button" id="eleveRejouer">Rejouer la s\u00e9rie</button></div>`;
-      document.body.appendChild(voile);
       voile.querySelector("#eleveRejouer").addEventListener("click", () => {
         voile.remove();
         eleveIdx = 0; eleveResolues = 0;
         eleveEcrireEntree({});
         eleveChargerEquation();
       });
+      eleveAfficherVoile(voile);
       eleveMajBarre();
     }else{
-      voile.innerHTML = `<div class="eleveCarton"><div class="eleveCartonEtoiles">\u2B50</div><h2>R\u00e9solue !</h2><p>\u00c9quation suivante\u2026</p></div>`;
-      document.body.appendChild(voile);
-      window.setTimeout(() => {
+      voile.innerHTML = `<div class="eleveCarton"><div class="eleveCartonEtoiles">\u2B50</div><h2>R\u00e9solue !</h2>` +
+        `<button type="button" id="eleveSuivante">\u00c9quation suivante</button></div>`;
+      voile.querySelector("#eleveSuivante").addEventListener("click", () => {
         voile.remove();
         eleveIdx++;
         eleveChargerEquation();
-      }, 1400);
+      });
+      eleveAfficherVoile(voile);
     }
   }
 
