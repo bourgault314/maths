@@ -379,6 +379,35 @@
       .grid { border: 2px solid #000; } 
       .diagram-inner, .part-box, .total-badge, .activity-header, .activity-instruction, .relation-clue, .relation-part-box, .relation-part-label, .relation-part-value { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
     }
+
+    /* ===== Parcours élève (mode « je réponds ») ===== */
+    body.eleve-mode #mainArea { display: flex; justify-content: center; align-items: flex-start; padding: 12px; }
+    .eleve-scene { width: 100%; max-width: 600px; background: white; border-radius: 18px; border: 1px solid #e2e8f0; box-shadow: 0 10px 26px rgba(15,23,42,.08); padding: 14px 16px 18px; display: flex; flex-direction: column; }
+    .eleve-tete { display: flex; align-items: center; justify-content: space-between; gap: 10px; font-weight: 900; color: #1e40af; margin-bottom: 4px; }
+    .eleve-tete .eleve-score { font-size: 15px; color: #b45309; white-space: nowrap; }
+    .eleve-scene .part-splat { min-height: 200px; border-bottom: none; flex: 0 0 200px; }
+    .eleve-scene .diagram-container { flex: 0 0 auto; width: 96%; }
+    .eleve-scene .row-top, .eleve-scene .part-box { min-height: 46px; font-size: 20px; }
+    .eleve-consigne { text-align: center; font-weight: 800; color: #334155; margin: 4px 0 10px; font-size: 15px; }
+    .eleve-input { width: 100%; height: 100%; border: none; outline: none; text-align: center; font: inherit; font-weight: 900; color: #1d4ed8; background: #fefce8; min-width: 0; }
+    .eleve-input:focus { background: #fef9c3; }
+    .row-top.eleve-ok, .part-box.eleve-ok { background: #dcfce7 !important; }
+    .row-top.eleve-ok .eleve-input, .part-box.eleve-ok .eleve-input { background: transparent; color: #15803d; }
+    .row-top.eleve-ko, .part-box.eleve-ko { animation: eleveShake .3s; }
+    .row-top.eleve-ko .eleve-input, .part-box.eleve-ko .eleve-input { background: #fee2e2; color: #b91c1c; }
+    @keyframes eleveShake { 0%,100% { transform: translateX(0); } 25% { transform: translateX(-4px); } 75% { transform: translateX(4px); } }
+    .eleve-actions { display: flex; justify-content: center; gap: 10px; margin-top: 12px; }
+    .eleve-actions button { font: inherit; font-weight: 900; border: none; border-radius: 12px; padding: 12px 22px; min-height: 48px; cursor: pointer; }
+    .eleve-valider { background: #2563eb; color: white; }
+    .eleve-valider:disabled { opacity: .45; cursor: default; }
+    .eleve-msg { text-align: center; min-height: 24px; font-weight: 900; margin-top: 8px; }
+    .eleve-msg.bravo { color: #15803d; }
+    .eleve-msg.rate { color: #b91c1c; }
+    .eleve-etoiles-serie { text-align: center; font-size: 18px; letter-spacing: 3px; margin-top: 2px; min-height: 22px; }
+    .eleve-fin { text-align: center; padding: 26px 10px; }
+    .eleve-fin .fin-etoiles { font-size: 34px; letter-spacing: 4px; }
+    .eleve-fin h2 { margin: 10px 0 4px; color: #1e40af; }
+    .eleve-fin p { color: #475569; font-weight: 700; margin: 4px 0 14px; }
   </style>
 <link rel="stylesheet" href="../assets/css/consentement.css">
 <script defer src="../assets/js/consentement.js"></script>
@@ -400,6 +429,7 @@
         <select id="supportMode" onchange="toggleMode()" style="background: white; border-color: #93c5fd; font-weight: 800; color: #1e40af;">
             <option value="print" selected>📄 Fiche (Impression PDF)</option>
             <option value="tbi">💻 Interactif : clic pour révéler</option>
+            <option value="eleve">🎮 Parcours élève : je réponds</option>
         </select>
     </div>
 
@@ -560,6 +590,9 @@ let currentLang = 'fr';
 let state = [];
 let isRVMode = false; 
 let isTBI = false;
+let isEleve = false;
+let parcoursId = '';
+let eleveIdx = 0, eleveEtoiles = 0, eleveErreurs = 0, eleveSerie = [], eleveCarteFautee = false;
 let seedMode = 'auto';
 let activeSeed = '';
 let currentRand = Math.random;
@@ -659,7 +692,7 @@ function readBooleanParam(params, name, fallback) {
 
 function loadSharedConfiguration() {
     const params = new URLSearchParams(window.location.search);
-    const sharedNames = ['seed', 'support', 'grid', 'problem', 'target', 'splats', 'exercise', 'level', 'given', 'correction', 'rv', 'diagram', 'scale', 'title'];
+    const sharedNames = ['seed', 'support', 'grid', 'problem', 'target', 'splats', 'exercise', 'level', 'given', 'correction', 'rv', 'diagram', 'scale', 'title', 'parcours'];
     if (!sharedNames.some(name => params.has(name))) return false;
 
     const seed = params.get('seed');
@@ -671,6 +704,7 @@ function loadSharedConfiguration() {
     }
 
     setSelectValue('supportMode', params.get('support'));
+    parcoursId = (params.get('parcours') || '').slice(0, 64);
     setSelectValue('problemType', params.get('problem'));
     updateProblemTypeUI();
     setSelectValue('gridSize', params.get('grid'));
@@ -859,11 +893,14 @@ function updateProblemTypeUI() {
 }
 
 function toggleMode() {
-    isTBI = document.getElementById('supportMode').value === 'tbi';
+    const supportChoice = document.getElementById('supportMode').value;
+    isTBI = supportChoice === 'tbi';
+    isEleve = supportChoice === 'eleve';
+    document.body.classList.toggle('eleve-mode', isEleve);
     const printSection = document.getElementById('printOptionsSection');
     const printBtn = document.getElementById('printBtn');
     
-    if (isTBI) {
+    if (isTBI || isEleve) {
         printSection.style.display = 'none';
         printBtn.style.display = 'none';
     } else {
@@ -905,6 +942,7 @@ function startGen() {
   const problemType = getProblemType();
   
   state = [];
+  eleveIdx = 0;
   const totalItems = cols * rows;
 
   for(let i=0; i<totalItems; i++) {
@@ -1922,6 +1960,7 @@ function createPageElement(chunk, isCorrectionPage, mirror) {
 
 function renderPages() {
   const main = document.getElementById('mainArea');
+  if (isEleve) { renderEleve(main); return; }
   const isCorr = document.getElementById('showCorr').checked;
   main.innerHTML = ''; 
   const [cols, rows] = document.getElementById('gridSize').value.split('x').map(Number);
@@ -1975,6 +2014,151 @@ function getSplatSvg(item, drawDots, hideVisibleDotsUntilReveal = false, forceHi
 
     svg += `</svg>`;
     return svg;
+}
+
+
+/* ===== Parcours élève : l'élève remplit le schéma, la page valide =====
+   Réservé au « Petit Splat classique » pour l'instant. La réussite d'une série
+   est mémorisée dans le navigateur (clé partagée avec la carte des mondes)
+   quand l'adresse porte ?parcours=identifiant. */
+const ELEVE_SERIE_MAX = 8;
+const ELEVE_STORE_KEY = 'mathsgo-splat-parcours';
+
+function eleveEnregistrerReussite(sansFaute, total) {
+    if (!parcoursId) return;
+    try {
+        const tout = JSON.parse(localStorage.getItem(ELEVE_STORE_KEY) || '{}');
+        tout[parcoursId] = { fait: true, etoiles: sansFaute, cartes: total, date: new Date().toISOString().slice(0, 10) };
+        localStorage.setItem(ELEVE_STORE_KEY, JSON.stringify(tout));
+    } catch (e) { /* stockage indisponible : le jeu reste jouable */ }
+}
+
+function eleveCaseInput(attendu, flexGrow, minW, fSize, fond, isTop) {
+    const cls = isTop ? 'row-top' : 'part-box';
+    const style = isTop
+        ? `font-size: ${fSize};`
+        : `flex-grow: ${flexGrow}; flex-basis: 0; background: ${fond}; min-width: ${minW}; font-size: ${fSize};`;
+    return `<div class="${cls} eleve-case" style="${style}" data-attendu="${attendu}">` +
+           `<input class="eleve-input" type="text" inputmode="numeric" maxlength="3" autocomplete="off"></div>`;
+}
+
+function renderEleve(main) {
+    main.innerHTML = '';
+    if (getProblemType() !== 'classic') {
+        main.innerHTML = '<div class="eleve-scene"><p class="eleve-consigne">Le parcours élève n\u2019existe pas encore pour les enquêtes et relations.<br>Choisis « Petit Splat classique » pour y jouer dès maintenant.</p></div>';
+        return;
+    }
+    if (eleveIdx === 0) { eleveSerie = state.slice(0, ELEVE_SERIE_MAX); eleveEtoiles = 0; }
+    if (eleveIdx >= eleveSerie.length) { renderEleveFin(main); return; }
+
+    const item = eleveSerie[eleveIdx];
+    eleveCarteFautee = false;
+    const scene = document.createElement('div');
+    scene.className = 'eleve-scene';
+
+    const etoilesFaites = '\u2B50'.repeat(eleveEtoiles);
+    let html = `<div class="eleve-tete"><span>Carte ${eleveIdx + 1} / ${eleveSerie.length}</span>` +
+               `<span class="eleve-score">${etoilesFaites}</span></div>`;
+
+    const estConstruct = item.mode === 'construct';
+    const consigne = estConstruct
+        ? 'Les jetons restent cachés\u2026 Complète les cases vides du schéma, puis Valider.'
+        : 'Observe la carte et complète le schéma en barres, puis Valider.';
+    html += `<div class="eleve-consigne">${consigne}</div>`;
+
+    const splatPart = `<div class="part-splat">` +
+        getSplatSvg(item, !estConstruct) +
+        `<div class="total-badge">${estConstruct ? '' : item.total}</div></div>`;
+    html += splatPart;
+
+    const flexVis = Math.max(item.visible, item.total * 0.05, 1);
+    const flexHid = Math.max(item.hiddenPerSplat, item.total * 0.05, 1);
+    const minW = item.numSplats >= 4 ? '25px' : '40px';
+    const fSize = item.numSplats >= 4 ? '16px' : '20px';
+
+    let haut, basVis = '', basTaches = '';
+    if (estConstruct) {
+        haut = `<div class="row-top" style="font-size: ${fSize};">${item.total}</div>`;
+        const indiceVisible = item.clueGiven === 'visible';
+        if (item.visible > 0) {
+            basVis = indiceVisible
+                ? `<div class="part-box" style="flex-grow: ${flexVis}; flex-basis: 0; background: white; color: #2563eb; min-width: ${minW}; font-size: ${fSize};">${item.visible}</div>`
+                : eleveCaseInput(item.visible, flexVis, minW, fSize, 'white', false);
+        }
+        for (let i = 0; i < item.numSplats; i++) {
+            basTaches += indiceVisible
+                ? eleveCaseInput(item.hiddenPerSplat, flexHid, minW, fSize, '#e2e8f0', false)
+                : `<div class="part-box" style="flex-grow: ${flexHid}; flex-basis: 0; background: #e2e8f0; color: #111827; min-width: ${minW}; font-size: ${fSize};">${item.hiddenPerSplat}</div>`;
+        }
+    } else {
+        haut = eleveCaseInput(item.total, 1, minW, fSize, 'white', true);
+        if (item.visible > 0) basVis = eleveCaseInput(item.visible, flexVis, minW, fSize, 'white', false);
+        for (let i = 0; i < item.numSplats; i++) basTaches += eleveCaseInput(item.hiddenPerSplat, flexHid, minW, fSize, '#e2e8f0', false);
+    }
+
+    html += `<div class="diagram-container"><div class="diagram-inner">${haut}` +
+            `<div class="row-bottom">${basVis}${basTaches}</div></div></div>`;
+
+    html += `<div class="eleve-msg" id="eleveMsg"></div>` +
+            `<div class="eleve-actions"><button class="eleve-valider" id="eleveValider" type="button">Valider</button></div>`;
+
+    scene.innerHTML = html;
+    main.appendChild(scene);
+
+    const premierChamp = scene.querySelector('.eleve-input');
+    if (premierChamp) premierChamp.focus();
+    scene.querySelectorAll('.eleve-input').forEach(inp => {
+        inp.addEventListener('keydown', ev => { if (ev.key === 'Enter') eleveValider(main); });
+        inp.addEventListener('input', () => {
+            const c = inp.closest('.eleve-case');
+            if (c) c.classList.remove('eleve-ko');
+        });
+    });
+    document.getElementById('eleveValider').onclick = () => eleveValider(main);
+}
+
+function eleveValider(main) {
+    const bouton = document.getElementById('eleveValider');
+    if (!bouton || bouton.disabled) return;
+    const cases = Array.from(document.querySelectorAll('.eleve-case'));
+    const msg = document.getElementById('eleveMsg');
+    let toutJuste = true;
+    cases.forEach(c => {
+        const attendu = parseInt(c.getAttribute('data-attendu'), 10);
+        const inp = c.querySelector('.eleve-input');
+        const repondu = parseInt(String(inp.value).trim(), 10);
+        const juste = Number.isFinite(repondu) && repondu === attendu;
+        c.classList.toggle('eleve-ko', !juste);
+        c.classList.toggle('eleve-ok', juste);
+        if (!juste) toutJuste = false;
+    });
+    if (toutJuste) {
+        if (!eleveCarteFautee) eleveEtoiles++;
+        bouton.disabled = true;
+        msg.textContent = eleveCarteFautee ? 'Juste ! Carte suivante\u2026' : 'Bravo, du premier coup ! \u2B50';
+        msg.className = 'eleve-msg bravo';
+        cases.forEach(c => { const i = c.querySelector('.eleve-input'); if (i) i.readOnly = true; });
+        setTimeout(() => { eleveIdx++; renderEleve(main); }, 1100);
+    } else {
+        eleveCarteFautee = true;
+        msg.textContent = 'Pas encore\u2026 corrige les cases rouges et revalide !';
+        msg.className = 'eleve-msg rate';
+    }
+}
+
+function renderEleveFin(main) {
+    const total = eleveSerie.length;
+    eleveEnregistrerReussite(eleveEtoiles, total);
+    const scene = document.createElement('div');
+    scene.className = 'eleve-scene';
+    scene.innerHTML = `<div class="eleve-fin">` +
+        `<div class="fin-etoiles">${'\u2B50'.repeat(Math.max(eleveEtoiles, 1))}</div>` +
+        `<h2>S\u00e9rie termin\u00e9e, bravo !</h2>` +
+        `<p>${eleveEtoiles} carte${eleveEtoiles > 1 ? 's' : ''} sur ${total} du premier coup.</p>` +
+        `<div class="eleve-actions"><button class="eleve-valider" id="eleveRejouer" type="button">Rejouer la s\u00e9rie</button></div>` +
+        `</div>`;
+    main.appendChild(scene);
+    document.getElementById('eleveRejouer').onclick = () => { eleveIdx = 0; renderEleve(main); };
 }
 
 window.onload = () => {
