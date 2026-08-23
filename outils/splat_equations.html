@@ -319,13 +319,8 @@
     font-size:19px;line-height:1;border-radius:12px;
   }
   .navBtn.fsToggle svg{width:22px;height:22px;display:block}
-  .nav .varChoice{margin-right:6px}
-  .nav .varChoice{height:46px;border-radius:12px}
-  .nav .varChoiceBtn{width:38px;height:38px;font-size:22px}
   .viewToggle{display:inline-flex;flex:0 0 auto;height:42px;gap:4px;align-items:center;padding:3px;border:1px solid var(--btn-border);border-radius:12px;background:rgba(255,255,255,0.04)}
   .viewToggle .btn{height:34px;padding:0 12px;font-size:14px;white-space:nowrap;border-radius:9px}
-  .fsHost:fullscreen .nav .varChoice{height:64px;border-radius:18px;background:#fff;box-shadow:0 4px 14px rgba(0,0,0,0.12);margin-right:10px}
-  .fsHost:fullscreen .nav .varChoiceBtn{width:56px;height:56px;font-size:30px}
   .navBtn .fsIconExit{display:none;font-size:24px;font-weight:800}
   .fsHost:fullscreen .navBtn .fsIconEnter{display:none}
   .fsHost:fullscreen .navBtn .fsIconExit{display:block}
@@ -641,6 +636,8 @@
     /* ces contrôles portent hauteur et remplissage en style en ligne : sans
        !important la règle ne passe pas, et un select gardant 9 px de remplissage
        dans une boîte rabaissée se fait couper son texte. */
+    .varChoice{height:36px}
+    .varChoiceBtn{width:30px;height:30px;font-size:19px}
     #numColorModeWrap,
     #signedWritingModeWrap,
     #signedWritingMode{height:36px !important}
@@ -675,6 +672,8 @@
     .panel label{margin:3px 0 1px;font-size:12px}
     .panel select,
     .panel input{height:31px;padding:5px 8px}
+    .varChoice{height:32px}
+    .varChoiceBtn{width:27px;height:27px;font-size:17px}
     #numColorModeWrap,
     #signedWritingModeWrap,
     #signedWritingMode{height:32px !important}
@@ -864,7 +863,15 @@
     
 
     <div class="row" id="displayChoiceRow" style="align-items:center; flex-wrap:nowrap; gap:8px;">
-      <!-- 𝑥 / ? est dans la barre au-dessus du plateau (à côté des flèches). -->
+      <!-- 𝑥 / ? et Équation / Schéma vont ensemble : deux réglages d'affichage que l'on
+           pose une fois pour toutes. Ils sont revenus dans le menu (choix de Gwenaël,
+           23/08) — sur la scène, 𝑥 / ? chargeait le plateau pour rien, puisqu'il reste
+           toujours sur 𝑥. Ils ne s'affichent jamais en même temps que Jetons Vert/Rouge
+           et Écriture, qui sont réservés aux entiers relatifs : la rangée tient. -->
+      <div class="varChoice" id="eqUnknownChoice" title="Choisir l’affichage de l’inconnue" aria-label="Choisir l’affichage de l’inconnue">
+        <button class="varChoiceBtn" id="btnEqUnknownLetter" type="button" aria-label="Afficher l’inconnue avec une lettre">𝑥</button>
+        <button class="varChoiceBtn" id="btnEqUnknownQuestionMark" type="button" aria-label="Afficher l’inconnue avec un point d’interrogation">?</button>
+      </div>
       <div id="eqStepViewToggle" class="viewToggle" title="Choisir la vue : équation ou schéma" style="display:none">
         <button type="button" class="btn" id="btnEqStepViewEquation">Équation</button>
         <button type="button" class="btn" id="btnEqStepViewSchema">Schéma</button>
@@ -939,10 +946,6 @@
           <div class="counter" id="counter">0 carte</div>
         </div>
         <div class="navGroup">
-          <div class="varChoice" id="eqUnknownChoice" title="Choisir l’affichage de l’inconnue" aria-label="Choisir l’affichage de l’inconnue">
-            <button class="varChoiceBtn" id="btnEqUnknownLetter" type="button" aria-label="Afficher l’inconnue avec une lettre">𝑥</button>
-            <button class="varChoiceBtn" id="btnEqUnknownQuestionMark" type="button" aria-label="Afficher l’inconnue avec un point d’interrogation">?</button>
-          </div>
           <button class="btn navBtn" id="btnPrev" title="Étape précédente / carte précédente" aria-label="Étape précédente / carte précédente">◀</button>
           <button class="btn navBtn primary" id="btnNext" title="Étape suivante / carte suivante" aria-label="Étape suivante / carte suivante">▶</button>
           <button class="btn navBtn fsToggle" id="btnFullscreen" title="Plein écran (F)" aria-label="Plein écran">
