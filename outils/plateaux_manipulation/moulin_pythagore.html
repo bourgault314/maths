@@ -1828,7 +1828,9 @@
 
   function legacySnappedRotation(piece,proposedRot,threshold=SNAP.rot){
     const candidates=[0,90,180,270];
-    if(isBhaskaraPuzzle() && piece && isNearTargetMoulin(piece,260)){
+    // Près du carré c² (incliné), la poignée de rotation aimante aussi vers les
+    // directions de ses côtés, pour tous les puzzles et pas seulement Bhaskara.
+    if(piece && isNearTargetMoulin(piece,260)){
       for(const localA of edgeAnglesLocal(piece)){
         for(const targetA of bhaskaraTargetAngles()) candidates.push(normAngleDeg(targetA-localA));
       }
@@ -2102,17 +2104,14 @@
     return !!result;
   }
 
+  // Le moteur géométrique (rotation + translation calculées ensemble, pièce
+  // gardée dans c², sans chevauchement) sert sur TOUS les écrans. L'ancienne
+  // chaîne ordinateur (tryExactSolutionSnap → tryLegacyEdgeSnap →
+  // tryLegacyPointSnap) ne savait pas redresser une pièce : elle exigeait des
+  // arêtes déjà parallèles à ±12° et de même longueur, ce qui n'arrive jamais
+  // contre le carré c² incliné tant que la pièce n'a pas été tournée à la main.
   function snapPieceAfterDrop(piece){
     if(!piece || !piece.hasMoved || !state.snapEnabled) return;
-
-    if(!isCompactViewport()){
-      applyBhaskaraAngleSnap(piece,18);
-      let snapped=tryExactSolutionSnap(piece);
-      if(!snapped && isBhaskaraPuzzle()) snapped=tryBhaskaraEdgeSnap(piece) || tryBhaskaraSquareSnap(piece);
-      if(!snapped) snapped=tryLegacyEdgeSnap(piece);
-      if(!snapped) tryLegacyPointSnap(piece);
-      return;
-    }
     snapMobilePiece(piece);
   }
 
