@@ -4410,6 +4410,13 @@
     body.importMode.eleveMode{display:flex;flex-direction:column}
     body.importMode.eleveMode #eleveBarre{flex:0 0 auto;padding:5px 10px;font-size:14px;gap:8px}
     body.importMode.eleveMode #eleveBarre a.eleveMondes .txt{display:none}
+    /* la barre doit tenir sur UNE seule ligne : une deuxième rangée repousse le
+       jeu et coupe le bouton Valider dès que « Passer » ou « Équation suivante »
+       apparaît (mesuré à 390×600 : la zone d'action tombait de 594 à 634 px). */
+    body.importMode.eleveMode #eleveBarre .eleveBarreTexte .mot{display:none}
+    body.importMode.eleveMode #eleveBarre .elevePastilles{gap:3px}
+    body.importMode.eleveMode #eleveBarre .elevePastilles .p{width:9px;height:9px}
+    body.importMode.eleveMode #eleveBarre #eleveSuivante, body.importMode.eleveMode #eleveBarre #elevePasser{padding:6px 12px;font-size:13px;min-height:28px}
     body.importMode.eleveMode main{flex:1 1 auto;min-height:0;height:auto;max-height:none}
   }
   .eleveVoile{position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;
@@ -8967,7 +8974,7 @@
   }
   function eleveBarreHtml(message){
     return eleveLienMondesHtml("eleveMondes") +
-           `<span class="eleveBarreTexte">\u00c9quation ${Math.min(eleveIdx + 1, eleveEqs.length)} / ${eleveEqs.length}</span>` +
+           `<span class="eleveBarreTexte"><span class="mot">\u00c9quation </span>${Math.min(eleveIdx + 1, eleveEqs.length)} / ${eleveEqs.length}</span>` +
            elevePastillesHtml() +
            (message ? `<span class="eleveBarreNote">${message}</span>` : "") +
            (eleveAttenteSuivante ? `<button type="button" id="eleveSuivante">\u00c9quation suivante \u25b6</button>` : "") +

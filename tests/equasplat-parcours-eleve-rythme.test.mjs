@@ -63,3 +63,17 @@ test("avec les billes unitaires, la conclusion des paquets compte comme résolue
   const surveille = bloc("function eleveSurveillerResolution(){", "\n  }");
   assert.match(surveille, /eleveEquationResolue\(\)/);
 });
+
+// Téléphone : la barre du parcours doit tenir sur UNE seule ligne. Dès qu'un
+// bouton s'y ajoute (« Passer ▶ », « Équation suivante ▶ »), elle passait sur
+// deux rangées, poussait le jeu vers le bas et coupait le bouton Valider :
+// mesuré à 390×600, la zone d'action tombait de 594 à 634 px, hors écran et
+// sans défilement possible.
+test("sur téléphone, la barre du parcours tient sur une seule ligne", () => {
+  const media = bloc("body.importMode.eleveMode{display:flex", "\n  }");
+  assert.match(media, /\.eleveBarreTexte \.mot\{display:none\}/);
+  assert.match(media, /\.elevePastilles \.p\{width:9px/);
+  assert.match(media, /#elevePasser\{padding/);
+  // le libellé doit fournir ce .mot, sinon la règle ne masque rien
+  assert.match(html, /<span class="eleveBarreTexte"><span class="mot">/);
+});
