@@ -46,7 +46,7 @@
             font-size: 1.6rem;
             color: white;
             box-shadow: 0 4px 6px rgba(0,0,0,0.25);
-            cursor: grab;
+            cursor: var(--curseur-main);
             transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
             z-index: 10;
             touch-action: none;
@@ -54,7 +54,7 @@
         }
 
         .token:active {
-            cursor: grabbing;
+            cursor: var(--curseur-main-fermee);
             transform: scale(1.1);
             z-index: 100 !important;
             box-shadow: 0 10px 15px rgba(0,0,0,0.3);
@@ -63,7 +63,7 @@
         
         .token.dragging {
             transition: none !important;
-            cursor: grabbing !important;
+            cursor: var(--curseur-main-fermee) !important;
         }
 
 .token.green {
@@ -211,6 +211,36 @@ body.projection-mode .token.crossed::before {
 
 
         /* CURSEUR VIRTUEL */
+
+        /* --- Curseur « main » : on utilise la main de Windows (celle des liens, `pointer`).
+           Les curseurs grab/grabbing ne sont pas des curseurs Windows : Edge/Chrome les dessinent
+           avec leur propre petite image, quasi invisible sur certains postes (thème de curseur
+           agrandi ou inversé). `pointer`, lui, existe sur tous les postes et suit leur réglage. */
+        :root {
+            --curseur-main: pointer;
+            --curseur-main-fermee: pointer;
+        }
+        #board { cursor: var(--curseur-main); }          /* outil main : main partout sur le plateau */
+        button[data-palette] { cursor: var(--curseur-main); touch-action: none; }
+        body.palette-dragging, body.palette-dragging * { cursor: var(--curseur-main-fermee) !important; }
+
+
+        /* --- Glisser-déposer depuis la réserve : jeton fantôme qui suit le doigt / la souris --- */
+        .palette-ghost {
+            position: fixed;
+            z-index: 9999;
+            pointer-events: none;
+            opacity: 0.65;
+            transform: translate(-50%, -50%);
+        }
+        .palette-ghost .token {
+            position: absolute !important;
+            left: 0 !important;
+            top: 0 !important;
+            transition: none !important;
+            cursor: default !important;
+        }
+
         #custom-cursor {
             position: fixed;
             pointer-events: none;
@@ -674,10 +704,10 @@ body.projection-mode .token.crossed::before {
         <aside class="w-20 sm:w-24 bg-slate-100 border-r border-slate-300 flex flex-col items-center py-4 gap-4 z-20 shadow-lg shrink-0 overflow-y-auto relative">
             <span id="action-label" class="text-[10px] font-bold text-slate-400 uppercase text-center transition-colors">Ajouter</span>
             
-            <button onclick="handleSideButton('green')" class="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-green-500 border-2 border-green-700 text-white font-bold text-xl shadow hover:scale-105 active:scale-95 transition flex items-center justify-center" title="Raccourci: +">
+            <button data-palette="green" class="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-green-500 border-2 border-green-700 text-white font-bold text-xl shadow hover:scale-105 active:scale-95 transition flex items-center justify-center" title="Raccourci: +">
                 +1
             </button>
-            <button onclick="handleSideButton('red')" class="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-red-500 border-2 border-red-700 text-white font-bold text-xl shadow hover:scale-105 active:scale-95 transition flex items-center justify-center" title="Raccourci: -">
+            <button data-palette="red" class="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-red-500 border-2 border-red-700 text-white font-bold text-xl shadow hover:scale-105 active:scale-95 transition flex items-center justify-center" title="Raccourci: -">
                 -1
             </button>
 
@@ -1082,8 +1112,8 @@ board.addEventListener('wheel', (e) => {
                 canvas.style.pointerEvents = 'none';
 
                 // Curseur main ouverte par défaut
-                board.style.cursor = 'grab';
-                canvas.style.cursor = 'grab';
+                board.style.cursor = 'var(--curseur-main)';
+                canvas.style.cursor = 'var(--curseur-main)';
 
                 // On désactive le curseur personnalisé (on garde le vrai curseur)
                 cursorDiv.style.display = 'none';
@@ -1169,7 +1199,7 @@ board.addEventListener('wheel', (e) => {
 
         // --- LOGIQUE PRINCIPALE ---
 
-        function handleSideButton(type) {
+        function handleSideButton(type, x = null, y = null) {
             playSound('pop');
             state.isReduced = false; 
             
@@ -1189,7 +1219,7 @@ board.addEventListener('wheel', (e) => {
                 }
             }
             
-            addToken(type);
+            addToken(type, x, y);
         }
 
         function addToken(type, x = null, y = null) {
@@ -1205,8 +1235,8 @@ board.addEventListener('wheel', (e) => {
                 elRes.innerText = resultType === 'green' ? '+1' : '-1';
                 elRes.id = `token-${idRes}`;
                 
-                // Positionnement intelligent
-                const posRes = findFreePosition(); 
+                // Positionnement intelligent (ou point de dépôt si on a glissé le jeton)
+                const posRes = (x === null || y === null) ? findFreePosition() : {x, y};
                 elRes.style.left = posRes.x + 'px';
                 elRes.style.top = posRes.y + 'px';
                 
@@ -1702,8 +1732,8 @@ const id = parseInt(el.id.split('-')[1]);
             el.style.zIndex = 1000;
             el.style.transform = "scale(1.15)";
             el.classList.add('dragging');
-            board.style.cursor = 'grabbing';
-            canvas.style.cursor = 'grabbing';
+            board.style.cursor = 'var(--curseur-main-fermee)';
+            canvas.style.cursor = 'var(--curseur-main-fermee)';
             const clientX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
             const clientY = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
             const rect = el.getBoundingClientRect();
@@ -1754,8 +1784,8 @@ const id = parseInt(el.id.split('-')[1]);
             draggedToken.element.style.transform = "";
             draggedToken.element.classList.remove('dragging');
             // Retour à la main ouverte
-            board.style.cursor = 'grab';
-            canvas.style.cursor = 'grab';
+            board.style.cursor = 'var(--curseur-main)';
+            canvas.style.cursor = 'var(--curseur-main)';
             draggedToken = null;
             document.removeEventListener('mousemove', handleDragMove);
             document.removeEventListener('touchmove', handleDragMove);
@@ -2021,6 +2051,104 @@ const id = parseInt(el.id.split('-')[1]);
         document.body.classList.remove('projection-mode');
 updateUndoButton();
 setTool('hand');
+
+        // --- Réserve : clic = ajout comme avant ; prendre et glisser = dépôt à l'endroit voulu ---
+        (function initReserveGlisserDeposer() {
+            const boutons = Array.from(document.querySelectorAll('button[data-palette]'));
+            if (!boutons.length) return;
+
+            const SEUIL = 8; // px avant de considérer que l'on glisse (sinon : clic)
+            const glisser = { actif: false, bouge: false, type: null, x0: 0, y0: 0, pointerId: null, fantome: null };
+
+            // Zoom interne du plateau (version B) : sinon repère identité.
+            function vue() { return (typeof view !== 'undefined' && view) ? view : { x: 0, y: 0, scale: 1 }; }
+
+            function dansPlateau(cx, cy) {
+                const r = board.getBoundingClientRect();
+                return cx >= r.left && cx <= r.right && cy >= r.top && cy <= r.bottom;
+            }
+
+            // Point de dépôt -> coin haut-gauche du jeton (centré sous le pointeur), borné au plateau.
+            function versPlateau(cx, cy) {
+                const r = board.getBoundingClientRect();
+                const v = vue();
+                const x = (cx - r.left - v.x) / v.scale - TOKEN_SIZE / 2;
+                const y = (cy - r.top - v.y) / v.scale - TOKEN_SIZE / 2;
+                const maxX = Math.max(0, board.clientWidth / v.scale - TOKEN_SIZE);
+                const maxY = Math.max(0, board.clientHeight / v.scale - TOKEN_SIZE);
+                return { x: Math.max(0, Math.min(maxX, x)), y: Math.max(0, Math.min(maxY, y)) };
+            }
+
+            function creerFantome(type) {
+                const g = document.createElement('div');
+                g.className = 'palette-ghost';
+                const t = document.createElement('div');
+                t.className = 'token ' + type;
+                t.innerText = type === 'green' ? '+1' : '-1';
+                g.appendChild(t);
+                document.body.appendChild(g);
+                return g;
+            }
+
+            function debut(e) {
+                if (e.button !== undefined && e.button !== 0) return;
+                glisser.actif = true;
+                glisser.bouge = false;
+                glisser.type = e.currentTarget.dataset.palette;
+                glisser.x0 = e.clientX;
+                glisser.y0 = e.clientY;
+                glisser.pointerId = e.pointerId;
+                glisser.fantome = null;
+                try { e.currentTarget.setPointerCapture(e.pointerId); } catch (_) {}
+                e.preventDefault();
+            }
+
+            function mouvement(e) {
+                if (!glisser.actif || e.pointerId !== glisser.pointerId) return;
+                if (!glisser.bouge) {
+                    if (Math.hypot(e.clientX - glisser.x0, e.clientY - glisser.y0) < SEUIL) return;
+                    glisser.bouge = true;
+                    glisser.fantome = creerFantome(glisser.type);
+                    document.body.classList.add('palette-dragging');
+                }
+                glisser.fantome.style.left = e.clientX + 'px';
+                glisser.fantome.style.top = e.clientY + 'px';
+                e.preventDefault();
+            }
+
+            function fin(e) {
+                if (!glisser.actif || e.pointerId !== glisser.pointerId) return;
+                const type = glisser.type, bouge = glisser.bouge, fantome = glisser.fantome;
+                glisser.actif = false; glisser.bouge = false; glisser.type = null; glisser.pointerId = null; glisser.fantome = null;
+                document.body.classList.remove('palette-dragging');
+                if (fantome) fantome.remove();
+
+                if (!bouge) { handleSideButton(type); return; }           // simple clic : comme avant
+                if (dansPlateau(e.clientX, e.clientY)) {                   // dépôt sur le plateau
+                    const p = versPlateau(e.clientX, e.clientY);
+                    handleSideButton(type, p.x, p.y);
+                }                                                          // lâché ailleurs : rien
+            }
+
+            function annule(e) {
+                if (!glisser.actif || e.pointerId !== glisser.pointerId) return;
+                glisser.actif = false; glisser.bouge = false; glisser.pointerId = null;
+                document.body.classList.remove('palette-dragging');
+                if (glisser.fantome) glisser.fantome.remove();
+                glisser.fantome = null;
+            }
+
+            boutons.forEach(b => {
+                b.addEventListener('pointerdown', debut, { passive: false });
+                b.addEventListener('pointermove', mouvement, { passive: false });
+                b.addEventListener('pointerup', fin, { passive: false });
+                b.addEventListener('pointercancel', annule, { passive: false });
+            });
+            // Filet de sécurité si la capture du pointeur saute.
+            window.addEventListener('pointermove', mouvement, { passive: false });
+            window.addEventListener('pointerup', fin, { passive: false });
+            window.addEventListener('pointercancel', annule, { passive: false });
+        })();
 </script>
 </body>
 </html>
