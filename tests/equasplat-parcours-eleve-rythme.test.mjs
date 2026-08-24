@@ -35,7 +35,7 @@ test("c'est l'élève qui passe à l'équation suivante, depuis la barre", () =>
   assert.match(html, /id="eleveSuivante"/);
   const barre = bloc("function eleveMajBarre(message){", "\n  function ");
   assert.match(barre, /eleveSuivante/);
-  assert.match(barre, /eleveIdx\+\+/);
+  assert.match(barre, /eleveEquationSuivante\(\)/);
   assert.match(barre, /bouton\.focus\(\)/);
 });
 
@@ -43,7 +43,23 @@ test("la carte de fin attend un instant, puis garde son bouton Rejouer", () => {
   const pause = html.match(/const ELEVE_PAUSE_SOLUTION = (\d+);/);
   assert.ok(pause, "constante ELEVE_PAUSE_SOLUTION absente");
   assert.ok(Number(pause[1]) >= 800, `pause trop courte pour voir la solution : ${pause[1]} ms`);
-  assert.match(celebrer, /window\.setTimeout\(\(\) => \{\s*document\.body\.appendChild\(voile\);/);
-  assert.match(celebrer, /id="eleveRejouer"/);
-  assert.match(celebrer, /eleveIdx = 0; eleveResolues = 0;/);
+  // la fin de série est différée (pause), puis le carton est posé par eleveFinDeSerie
+  assert.match(celebrer, /window\.setTimeout\(eleveFinDeSerie, ELEVE_PAUSE_SOLUTION\)/);
+  const fin = bloc("function eleveFinDeSerie(){", "\n  function ");
+  assert.match(fin, /document\.body\.appendChild\(voile\)/);
+  assert.match(fin, /id="eleveRejouer"/);
+  assert.match(fin, /eleveIdx = 0; eleveResolues = 0;/);
+  // des équations passées (rouges) : pas d'étoile, on propose de les rejouer
+  assert.match(fin, /id="eleveRejouerRouges"/);
+});
+
+// Monde 3, étape 12 (billes unitaires) : « Faire des paquets » écrit la
+// conclusion (« 2 = 𝑏 ») sans simplifier le plateau — la série doit lire cette
+// dernière ligne, sinon l'équation n'est jamais comptée comme résolue.
+test("avec les billes unitaires, la conclusion des paquets compte comme résolue", () => {
+  const resolue = bloc("function eleveEquationResolue(){", "\n  function ");
+  assert.match(resolue, /_unitPacketConclusion/);
+  assert.match(resolue, /state\.steps\[state\.steps\.length - 1\]/);
+  const surveille = bloc("function eleveSurveillerResolution(){", "\n  }");
+  assert.match(surveille, /eleveEquationResolue\(\)/);
 });

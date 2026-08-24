@@ -704,6 +704,15 @@
   .elevePastilles .p.retry{background:#f59e0b;border-color:#d97706}
   .elevePastilles .p.fait{background:#94a3b8;border-color:#64748b}
   .elevePastilles .p.cur{border-color:#2563eb}
+  .elevePastilles .p.ko{background:#dc2626;border-color:#b91c1c}
+  .eleveTete > span{white-space:nowrap}
+  .eleveTete a.eleveMondes{font-size:13px;font-weight:800;color:#1e40af;text-decoration:none;white-space:nowrap;padding:4px 8px;border-radius:999px;background:#e0e7ff;margin-right:auto}
+  .eleveTete a.eleveMondes:hover{background:#c7d2fe}
+  @media (max-width:520px){.eleveTete a.eleveMondes .txt{display:none}.eleveTete a.eleveMondes{padding:3px 7px}.eleveTete{font-size:15px;gap:8px}.elevePastilles{gap:3px}.elevePastilles .p{width:9px;height:9px}}
+  .eleveCase.montre input.eleveChamp{color:#b91c1c}
+  .eleveActions button.secondaire{background:#fde68a;color:#78350f}
+  .eleveActions button.suivant{background:#16a34a}
+  .eleveActions a.eleveLien{font:inherit;font-weight:900;border-radius:12px;padding:12px 22px;min-height:48px;display:inline-flex;align-items:center;background:#e0e7ff;color:#1e40af;text-decoration:none}
   .finPastilles{display:flex;justify-content:center;margin:2px 0 8px}
   .eleveTete{display:flex;justify-content:space-between;align-items:center;font-weight:900;color:var(--ink);margin:2px 0 6px}
   .eleveTete .eleveScore{color:#b45309;font-size:15px}
@@ -7312,6 +7321,9 @@ let revealState = 0; // États selon le mode (A/B: 0→3, B±: 0→2, autres: 0/
 /* Parcours élève : aucun réglage visible, activé uniquement par ?eleve=1 dans l'adresse. */
 let eleveActif = false, parcoursId = "", impressionAuto = false;
 let eleveIdx = 0, eleveEtoiles = 0, eleveSerie = [], eleveResultats = [], eleveCarteFautee = false, eleveRepriseFaite = false;
+/* échecs sur la carte en cours (au 3e, on propose la réponse) et file des cartes rouges à rejouer */
+let eleveEchecs = 0, eleveRejeu = null;
+const ELEVE_ECHECS_MAX = 3, ELEVE_URL_MONDES = "/outils/splat_univers.html";
 const ELEVE_STORE_KEY = "mathsgo-splat-parcours";
 const counterEl = document.getElementById("counter");
 const fsHost = document.getElementById("fsHost");
@@ -7571,15 +7583,18 @@ function eleveCaseHtml(classe, attendu, largeur, avecTache){
 }
 
 /* Une pastille par carte de la série : verte = réussie du premier coup,
-   orange = réussie après correction, grise = faite (reprise, détail inconnu),
-   contour bleu = carte en cours. L'étoile, elle, récompense l'étape entière
-   sur la carte des mondes : on ne cumule plus d'étoiles pendant le jeu. */
+   orange = réussie après correction, rouge = réponse montrée (à rejouer),
+   grise = faite (ancienne reprise sans détail), contour bleu = carte en cours.
+   L'étoile, elle, récompense l'étape entière sur la carte des mondes, et ne
+   s'allume que sans carte rouge. */
+function elevePastilleClasse(r){ return r === true ? " ok" : (r === false ? " retry" : (r === "ko" ? " ko" : " fait")); }
 function elevePastillesHtml(){
   let out = "";
   for(let i = 0; i < eleveSerie.length; i++){
     let cls = "p";
-    if(i < eleveResultats.length) cls += eleveResultats[i] === true ? " ok" : (eleveResultats[i] === false ? " retry" : " fait");
-    else if(i === eleveIdx) cls += " cur";
+    if(i < eleveResultats.length && eleveResultats[i] != null) cls += elevePastilleClasse(eleveResultats[i]);
+    else if(i < eleveResultats.length) cls += " fait";
+    if(i === eleveIdx && eleveIdx < eleveSerie.length) cls += " cur";
     out += `<i class="${cls}"></i>`;
   }
   const faites = Math.min(eleveResultats.length, eleveSerie.length);
@@ -7625,8 +7640,9 @@ function renderEleveSplat(){
            entree.enCours.idx > 0 && entree.enCours.idx < eleveSerie.length){
           eleveIdx = entree.enCours.idx;
           eleveEtoiles = Number(entree.enCours.etoiles) || 0;
-          /* reprise : on sait combien de cartes sont faites, pas le détail */
-          eleveResultats = new Array(eleveIdx).fill(null);
+          /* reprise : le détail par carte est mémorisé, sinon pastilles grises */
+          const res = Array.isArray(entree.enCours.res) ? entree.enCours.res : [];
+          eleveResultats = Array.from({ length: eleveIdx }, (_, i) => (res[i] === true || res[i] === false || res[i] === "ko") ? res[i] : null);
         }
       }catch(_e){ /* stockage indisponible */ }
     }
@@ -7643,9 +7659,10 @@ function renderEleveSplat(){
     return;
   }
   tete.style.display = "";
-  tete.innerHTML = `<span>Carte ${eleveIdx + 1} / ${eleveSerie.length}</span>` +
+  tete.innerHTML = eleveLienMondesHtml("eleveMondes") + `<span>Carte ${eleveIdx + 1} / ${eleveSerie.length}</span>` +
     elevePastillesHtml();
   eleveCarteFautee = false;
+  eleveEchecs = 0;
 
   const flexVis = Math.max(infos.visibleSum, card.total * 0.05, 1);
   const flexHid = Math.max(infos.H, card.total * 0.05, 1);
@@ -7688,41 +7705,123 @@ function eleveValiderSplat(){
     if(!juste) toutJuste = false;
   });
   if(toutJuste){
-    if(!eleveCarteFautee) eleveEtoiles++;
-    eleveResultats.push(!eleveCarteFautee);
+    /* une carte rejouée après « Voir la réponse » devient orange, jamais verte */
+    const etaitRouge = eleveResultats[eleveIdx] === "ko";
+    if(!eleveCarteFautee && !etaitRouge) eleveEtoiles++;
+    eleveResultats[eleveIdx] = !eleveCarteFautee && !etaitRouge;
     bouton.disabled = true;
     msg.textContent = eleveCarteFautee ? "Juste ! Carte suivante\u2026" : "Bravo, du premier coup !";
     msg.className = "eleveMsg bravo";
     casesE.forEach(c => { const i = c.querySelector(".eleveChamp"); if(i) i.readOnly = true; });
-    if(parcoursId && eleveIdx + 1 < eleveSerie.length){
-      try{
-        const tout = JSON.parse(localStorage.getItem(ELEVE_STORE_KEY) || "{}");
-        tout[parcoursId] = Object.assign({}, tout[parcoursId] || {}, { enCours: { idx: eleveIdx + 1, etoiles: eleveEtoiles } });
-        localStorage.setItem(ELEVE_STORE_KEY, JSON.stringify(tout));
-      }catch(_e){ /* stockage indisponible */ }
-    }
-    setTimeout(() => { eleveIdx++; renderEleveSplat(); }, 1100);
+    eleveSauverEnCours();
+    setTimeout(() => { eleveCarteSuivante(); }, 1100);
   }else{
     eleveCarteFautee = true;
+    eleveEchecs++;
     msg.textContent = "Pas encore\u2026 corrige ce qui est en rouge et revalide !";
     msg.className = "eleveMsg rate";
+    /* au 3e échec, on propose de voir la réponse (la carte restera rouge) */
+    if(eleveEchecs >= ELEVE_ECHECS_MAX && !document.getElementById("eleveVoir")){
+      const voir = document.createElement("button");
+      voir.type = "button"; voir.id = "eleveVoir"; voir.className = "secondaire";
+      voir.textContent = "Voir la r\u00e9ponse";
+      voir.onclick = eleveMontrerReponse;
+      bouton.parentNode.appendChild(voir);
+    }
   }
+}
+
+/* Lien vers la carte des mondes (seulement quand on vient du parcours). */
+function eleveLienMondesHtml(classe){
+  if(!parcoursId) return "";
+  return `<a class="${classe}" href="${ELEVE_URL_MONDES}" title="Retour \u00e0 la carte des mondes">\u25c0 <span class="txt">Carte des mondes</span></a>`;
+}
+
+/* Sauvegarde « en cours » : l'indice de la prochaine carte + le détail des pastilles. */
+function eleveSauverEnCours(){
+  if(!parcoursId || eleveRejeu) return;
+  if(eleveIdx + 1 >= eleveSerie.length) return; /* la fin de série gère l'enregistrement */
+  try{
+    const tout = JSON.parse(localStorage.getItem(ELEVE_STORE_KEY) || "{}");
+    tout[parcoursId] = Object.assign({}, tout[parcoursId] || {}, { enCours: { idx: eleveIdx + 1, etoiles: eleveEtoiles, res: eleveResultats.slice(0, eleveIdx + 1) } });
+    localStorage.setItem(ELEVE_STORE_KEY, JSON.stringify(tout));
+  }catch(_e){ /* stockage indisponible */ }
+}
+
+/* Carte suivante : dans l'ordre, ou la prochaine carte rouge quand on les rejoue. */
+function eleveCarteSuivante(){
+  if(eleveRejeu){
+    if(eleveRejeu.length){ eleveIdx = eleveRejeu.shift(); }
+    else { eleveRejeu = null; eleveIdx = eleveSerie.length; }
+  }else{
+    eleveIdx++;
+  }
+  renderEleveSplat();
+}
+
+/* L'élève bloqué voit la réponse : les cases se remplissent en rouge, la
+   pastille devient rouge, et il passe à la carte suivante quand il veut. */
+function eleveMontrerReponse(){
+  const bouton = document.getElementById("eleveValider");
+  const voir = document.getElementById("eleveVoir");
+  const msg = document.getElementById("eleveMsg");
+  if(!bouton) return;
+  document.querySelectorAll("#elevePanel .eleveCase").forEach(c => {
+    const inp = c.querySelector(".eleveChamp");
+    if(inp){ inp.value = c.getAttribute("data-attendu"); inp.readOnly = true; }
+    c.classList.remove("ko", "ok");
+    c.classList.add("montre");
+  });
+  msg.textContent = "Voil\u00e0 la r\u00e9ponse. Regarde bien, tu pourras rejouer cette carte \u00e0 la fin.";
+  msg.className = "eleveMsg rate";
+  eleveResultats[eleveIdx] = "ko";
+  eleveSauverEnCours();
+  bouton.disabled = true;
+  if(voir) voir.remove();
+  const suivant = document.createElement("button");
+  suivant.type = "button"; suivant.className = "suivant";
+  suivant.textContent = "Carte suivante \u25b6";
+  suivant.onclick = eleveCarteSuivante;
+  bouton.parentNode.appendChild(suivant);
+  suivant.focus();
+  const pastilles = document.querySelector("#eleveTeteHaut .elevePastilles");
+  if(pastilles) pastilles.outerHTML = elevePastillesHtml();
 }
 
 function renderEleveFinSplat(panneau){
   const tete = document.getElementById("eleveTeteHaut");
   if(tete) tete.style.display = "none";
   const total = eleveSerie.length;
-  eleveEnregistrerReussite(eleveEtoiles, total);
+  const rouges = [];
+  for(let i = 0; i < total; i++) if(eleveResultats[i] === "ko") rouges.push(i);
+  eleveEtoiles = eleveResultats.filter(r => r === true).length;
   renderCard(eleveSerie[total - 1], 0);
-  panneau.innerHTML = `<div class="eleveFin">` +
-    `<div class="finEtoiles">\u2B50</div>` +
-    `<h2>S\u00e9rie termin\u00e9e, bravo !</h2>` +
-    `<div class="finPastilles">${elevePastillesHtml()}</div>` +
-    `<p>${eleveEtoiles} carte${eleveEtoiles > 1 ? "s" : ""} sur ${total} du premier coup.` +
-    (parcoursId ? ` Ton \u00e9toile est allum\u00e9e sur la carte des mondes !` : ``) + `</p>` +
-    `<div class="eleveActions"><button id="eleveRejouer" type="button">Rejouer la s\u00e9rie</button></div></div>`;
-  document.getElementById("eleveRejouer").onclick = () => { eleveIdx = 0; eleveEtoiles = 0; eleveSerie = []; eleveResultats = []; renderEleveSplat(); };
+  if(rouges.length){
+    /* des cartes rouges : pas d'étoile, on propose de les rejouer */
+    try{
+      const tout = JSON.parse(localStorage.getItem(ELEVE_STORE_KEY) || "{}");
+      if(parcoursId && tout[parcoursId] && tout[parcoursId].enCours){ delete tout[parcoursId].enCours; localStorage.setItem(ELEVE_STORE_KEY, JSON.stringify(tout)); }
+    }catch(_e){ /* stockage indisponible */ }
+    panneau.innerHTML = `<div class="eleveFin">` +
+      `<div class="finEtoiles">\ud83d\udcaa</div>` +
+      `<h2>S\u00e9rie termin\u00e9e !</h2>` +
+      `<div class="finPastilles">${elevePastillesHtml()}</div>` +
+      `<p>${rouges.length} carte${rouges.length > 1 ? "s" : ""} rouge${rouges.length > 1 ? "s" : ""} : rejoue-l${rouges.length > 1 ? "es" : "a"} pour ` +
+      (parcoursId ? `allumer ton \u00e9toile sur la carte des mondes.` : `finir la s\u00e9rie.`) + `</p>` +
+      `<div class="eleveActions"><button id="eleveRejouerRouges" type="button">Rejouer les cartes rouges</button>` +
+      `<button id="eleveRejouer" class="secondaire" type="button">Toute la s\u00e9rie</button>${eleveLienMondesHtml("eleveLien")}</div></div>`;
+    document.getElementById("eleveRejouerRouges").onclick = () => { eleveRejeu = rouges.slice(); eleveCarteSuivante(); };
+  }else{
+    eleveEnregistrerReussite(eleveEtoiles, total);
+    panneau.innerHTML = `<div class="eleveFin">` +
+      `<div class="finEtoiles">\u2B50</div>` +
+      `<h2>S\u00e9rie termin\u00e9e, bravo !</h2>` +
+      `<div class="finPastilles">${elevePastillesHtml()}</div>` +
+      `<p>${eleveEtoiles} carte${eleveEtoiles > 1 ? "s" : ""} sur ${total} du premier coup.` +
+      (parcoursId ? ` Ton \u00e9toile est allum\u00e9e sur la carte des mondes !` : ``) + `</p>` +
+      `<div class="eleveActions"><button id="eleveRejouer" type="button">Rejouer la s\u00e9rie</button>${eleveLienMondesHtml("eleveLien")}</div></div>`;
+  }
+  document.getElementById("eleveRejouer").onclick = () => { eleveIdx = 0; eleveEtoiles = 0; eleveSerie = []; eleveResultats = []; eleveRejeu = null; renderEleveSplat(); };
 }
 
 if(!loadSharedConfiguration()){

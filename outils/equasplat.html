@@ -4392,7 +4392,26 @@
   .elevePastilles .p{width:11px;height:11px;border-radius:50%;border:2px solid #cbd5e1;background:transparent;display:inline-block}
   .elevePastilles .p.ok{background:#16a34a;border-color:#15803d}
   .elevePastilles .p.cur{border-color:#93c5fd}
+  .elevePastilles .p.ko{background:#dc2626;border-color:#b91c1c}
   #eleveBarre .eleveBarreNote{color:#f9bf3b}
+  #eleveBarre a.eleveMondes{color:#dbeafe;text-decoration:none;font-size:13px;font-weight:800;background:rgba(255,255,255,.14);
+    border-radius:999px;padding:4px 9px;white-space:nowrap}
+  #eleveBarre a.eleveMondes:hover{background:rgba(255,255,255,.26)}
+  #eleveBarre #elevePasser{font:inherit;font-weight:900;border:none;border-radius:999px;padding:6px 14px;cursor:pointer;
+    background:#fde68a;color:#78350f;margin-left:auto;min-height:32px;font-size:13px}
+  #eleveBarre #elevePasser:focus-visible{outline:3px solid #93c5fd;outline-offset:2px}
+  .eleveCarton .eleveCartonBoutons{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:6px}
+  .eleveCarton button.secondaire{background:#fde68a;color:#78350f}
+  .eleveCarton a.eleveMondesLien{display:inline-flex;align-items:center;font-weight:900;border-radius:999px;padding:10px 18px;
+    background:#e0e7ff;color:#1e40af;text-decoration:none}
+  /* Téléphone : la barre du parcours prend sa place AU-DESSUS du jeu, qui se
+     réduit d'autant (sinon le bouton Valider passait sous le bord de l'écran). */
+  @media (max-width:760px){
+    body.importMode.eleveMode{display:flex;flex-direction:column}
+    body.importMode.eleveMode #eleveBarre{flex:0 0 auto;padding:5px 10px;font-size:14px;gap:8px}
+    body.importMode.eleveMode #eleveBarre a.eleveMondes .txt{display:none}
+    body.importMode.eleveMode main{flex:1 1 auto;min-height:0;height:auto;max-height:none}
+  }
   .eleveVoile{position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;
     background:rgba(16,41,74,.45)}
   .eleveCarton{background:#fff;border-radius:20px;padding:28px 36px;text-align:center;
@@ -8909,6 +8928,10 @@
      au milieu et reprendre plus tard là où on en était. ══════════════ */
   const ELEVE_STORE_KEY = "mathsgo-splat-parcours";
   let eleveMode = false, eleveParcours = "", eleveEqs = [], eleveIdx = 0, eleveResolues = 0, eleveCompteeCourante = false, eleveAttenteSuivante = false;
+  /* eleveRes[i] : true = résolue, "ko" = passée (rouge, à rejouer) ; eleveRejeu : file des rouges à rejouer ;
+     elevePasserVisible : le bouton « Passer » n'apparaît qu'après un moment sur la même équation. */
+  let eleveRes = [], eleveRejeu = null, elevePasserVisible = false, elevePasserTimer = null;
+  const ELEVE_PASSER_DELAI = 90000, ELEVE_URL_MONDES = "/outils/splat_univers.html";
 
   function eleveLireEntree(){
     try{ return (JSON.parse(localStorage.getItem(ELEVE_STORE_KEY) || "{}"))[eleveParcours] || null; }catch(e){ return null; }
@@ -8923,23 +8946,32 @@
     }catch(e){ /* stockage indisponible : le jeu reste jouable */ }
   }
 
-  /* Une pastille par équation : verte = résolue, contour bleu = en cours.
-     L'étoile récompense l'étape entière sur la carte des mondes. */
+  /* Une pastille par équation : verte = résolue, rouge = passée (à rejouer),
+     contour bleu = en cours. L'étoile récompense l'étape entière sur la carte
+     des mondes, et ne s'allume que sans pastille rouge. */
   function elevePastillesHtml(){
     let out = "";
     for(let i = 0; i < eleveEqs.length; i++){
       let cls = "p";
-      if(i < eleveResolues) cls += " ok";
-      else if(i === eleveIdx) cls += " cur";
+      if(eleveRes[i] === true) cls += " ok";
+      else if(eleveRes[i] === "ko") cls += " ko";
+      if(i === eleveIdx && eleveIdx < eleveEqs.length) cls += " cur";
       out += `<i class="${cls}"></i>`;
     }
-    return `<span class="elevePastilles" role="img" aria-label="${eleveResolues} \u00e9quation${eleveResolues > 1 ? "s" : ""} r\u00e9solue${eleveResolues > 1 ? "s" : ""} sur ${eleveEqs.length}">${out}</span>`;
+    const n = eleveRes.filter(r => r === true).length;
+    return `<span class="elevePastilles" role="img" aria-label="${n} \u00e9quation${n > 1 ? "s" : ""} r\u00e9solue${n > 1 ? "s" : ""} sur ${eleveEqs.length}">${out}</span>`;
+  }
+  function eleveLienMondesHtml(classe){
+    if(!eleveParcours) return "";
+    return `<a class="${classe}" href="${ELEVE_URL_MONDES}" title="Retour \u00e0 la carte des mondes">\u25c0 <span class="txt">Carte des mondes</span></a>`;
   }
   function eleveBarreHtml(message){
-    return `<span class="eleveBarreTexte">\u00c9quation ${Math.min(eleveIdx + 1, eleveEqs.length)} / ${eleveEqs.length}</span>` +
+    return eleveLienMondesHtml("eleveMondes") +
+           `<span class="eleveBarreTexte">\u00c9quation ${Math.min(eleveIdx + 1, eleveEqs.length)} / ${eleveEqs.length}</span>` +
            elevePastillesHtml() +
            (message ? `<span class="eleveBarreNote">${message}</span>` : "") +
-           (eleveAttenteSuivante ? `<button type="button" id="eleveSuivante">\u00c9quation suivante \u25b6</button>` : "");
+           (eleveAttenteSuivante ? `<button type="button" id="eleveSuivante">\u00c9quation suivante \u25b6</button>` : "") +
+           (!eleveAttenteSuivante && elevePasserVisible ? `<button type="button" id="elevePasser" title="Je bloque : passer \u00e0 la suivante, je la rejouerai \u00e0 la fin">Passer \u25b6</button>` : "");
   }
   function eleveMajBarre(message){
     let barre = document.getElementById("eleveBarre");
@@ -8949,10 +8981,13 @@
       document.body.prepend(barre);
       /* le bouton est reconstruit avec la barre : un seul écouteur, délégué */
       barre.addEventListener("click", ev => {
-        if(!ev.target || ev.target.id !== "eleveSuivante") return;
-        eleveAttenteSuivante = false;
-        eleveIdx++;
-        eleveChargerEquation();
+        if(!ev.target) return;
+        if(ev.target.id === "eleveSuivante"){
+          eleveAttenteSuivante = false;
+          eleveEquationSuivante();
+        }else if(ev.target.id === "elevePasser"){
+          elevePasser();
+        }
       });
     }
     barre.innerHTML = eleveBarreHtml(message || "");
@@ -8964,9 +8999,49 @@
 
   function eleveChargerEquation(){
     eleveCompteeCourante = false;
+    elevePasserVisible = false;
+    if(elevePasserTimer) window.clearTimeout(elevePasserTimer);
     const ok = createImportedEquationState(eleveEqs[eleveIdx]);
-    if(ok) eleveMajBarre();
+    if(ok){
+      eleveMajBarre();
+      /* après un moment sur la même équation, on propose de passer */
+      elevePasserTimer = window.setTimeout(() => {
+        if(eleveCompteeCourante || eleveAttenteSuivante) return;
+        elevePasserVisible = true;
+        eleveMajBarre();
+      }, ELEVE_PASSER_DELAI);
+    }
     return ok;
+  }
+
+  /* Équation suivante : dans l'ordre, ou la prochaine rouge quand on les rejoue. */
+  function eleveEquationSuivante(){
+    if(eleveRejeu){
+      if(eleveRejeu.length){ eleveIdx = eleveRejeu.shift(); }
+      else { eleveRejeu = null; eleveIdx = eleveEqs.length; }
+    }else{
+      eleveIdx++;
+    }
+    if(eleveIdx >= eleveEqs.length){ eleveFinDeSerie(); return; }
+    eleveChargerEquation();
+  }
+
+  function eleveSauverEnCours(){
+    if(eleveRejeu) return;
+    const suivante = eleveIdx + 1;
+    if(suivante < eleveEqs.length){
+      eleveEcrireEntree({ enCours:{ idx:suivante, resolues:eleveResolues, res:eleveRes.slice(0, suivante) } });
+    }
+  }
+
+  /* L'élève bloqué passe : pastille rouge, il rejouera cette équation à la fin. */
+  function elevePasser(){
+    if(eleveCompteeCourante) return;
+    eleveCompteeCourante = true;
+    if(elevePasserTimer) window.clearTimeout(elevePasserTimer);
+    eleveRes[eleveIdx] = "ko";
+    eleveSauverEnCours();
+    eleveEquationSuivante();
   }
 
   function eleveDemarrerSerie(payload){
@@ -8978,6 +9053,9 @@
     if(entree && entree.enCours && Number.isInteger(entree.enCours.idx) && entree.enCours.idx > 0 && entree.enCours.idx < eleveEqs.length){
       eleveIdx = entree.enCours.idx;
       eleveResolues = Number(entree.enCours.resolues) || eleveIdx;
+      const res = Array.isArray(entree.enCours.res) ? entree.enCours.res : null;
+      /* détail mémorisé (vert/rouge) ; sinon, ancienne sauvegarde : tout en vert */
+      eleveRes = Array.from({ length: eleveIdx }, (_, i) => res ? (res[i] === "ko" ? "ko" : (res[i] === true ? true : undefined)) : true);
       reprise = `Tu reprends l\u00e0 o\u00f9 tu t'\u00e9tais arr\u00eat\u00e9 !`;
     }
     const ok = eleveChargerEquation();
@@ -8986,16 +9064,34 @@
     return ok;
   }
 
+  /* « Résolue ? » — l'équation courante, ou, avec les billes unitaires
+     (monde 3, étape 12), la conclusion posée par « Faire des paquets » :
+     le plateau garde alors ses paquets et ses taches, seule la dernière
+     ligne écrite (« 2 = 𝑏 ») dit que c'est fini. Une seule tache face à
+     des billes unitaires est aussi une équation résolue (𝑏 = 1 + 1 + 1). */
+  function eleveEquationResolue(){
+    if(!state) return false;
+    if(state._unitPacketConclusion && Array.isArray(state.steps) && state.steps.length){
+      return isSolvedEquationString(state.steps[state.steps.length - 1]);
+    }
+    if(isImportedUnitMode()){
+      const left = activePieces("left"), right = activePieces("right");
+      if((sideOnlyPositiveX(left) && left.length === 1 && sideOnlyUnitTokens(right)) ||
+         (sideOnlyPositiveX(right) && right.length === 1 && sideOnlyUnitTokens(left))) return true;
+    }
+    return isSolvedEquationString(currentEquationString());
+  }
+
   function eleveSurveillerResolution(){
     if(!eleveMode || eleveCompteeCourante || !state) return;
-    if(!isSolvedEquationString(currentEquationString())) return;
+    if(!eleveEquationResolue()) return;
     eleveCompteeCourante = true;
+    if(elevePasserTimer) window.clearTimeout(elevePasserTimer);
     eleveResolues++;
-    const suivante = eleveIdx + 1;
-    if(suivante < eleveEqs.length){
-      eleveEcrireEntree({ enCours:{ idx:suivante, resolues:eleveResolues } });
-    }
-    eleveCelebrer(suivante >= eleveEqs.length);
+    eleveRes[eleveIdx] = true;
+    eleveSauverEnCours();
+    const derniere = eleveRejeu ? eleveRejeu.length === 0 : eleveIdx + 1 >= eleveEqs.length;
+    eleveCelebrer(derniere);
   }
 
   /* Quand l'\u00e9quation est r\u00e9solue, RIEN ne recouvre le plateau : l'\u00e9l\u00e8ve
@@ -9008,29 +9104,53 @@
 
   function eleveCelebrer(finale){
     if(finale){
-      eleveEcrireEntree({ fait:true, etoiles:eleveResolues, cartes:eleveEqs.length, date:new Date().toISOString().slice(0,10) });
-      const voile = document.createElement("div");
-      voile.className = "eleveVoile";
-      voile.innerHTML = `<div class="eleveCarton"><div class="eleveCartonEtoiles">\u2B50</div>` +
-        `<h2>S\u00e9rie termin\u00e9e, bravo !</h2><p>${eleveEqs.length} \u00e9quations r\u00e9solues sur le plateau.` +
-        (eleveParcours ? ` Ton \u00e9toile est allum\u00e9e sur la carte des mondes !` : ``) + `</p>` +
-        `<button type="button" id="eleveRejouer">Rejouer la s\u00e9rie</button></div>`;
-      voile.querySelector("#eleveRejouer").addEventListener("click", () => {
-        voile.remove();
-        eleveIdx = 0; eleveResolues = 0;
-        eleveEcrireEntree({});
-        eleveChargerEquation();
-      });
-      window.setTimeout(() => {
-        document.body.appendChild(voile);
-        const bouton = voile.querySelector("button");
-        if(bouton) bouton.focus();
-      }, ELEVE_PAUSE_SOLUTION);
-      eleveMajBarre();
+      eleveMajBarre("\u2705 R\u00e9solue !");
+      window.setTimeout(eleveFinDeSerie, ELEVE_PAUSE_SOLUTION);
     }else{
       eleveAttenteSuivante = true;
       eleveMajBarre("\u2705 R\u00e9solue !");
     }
+  }
+
+  /* Fin de série : l'étoile si tout est vert ; sinon on propose de rejouer les rouges. */
+  function eleveFinDeSerie(){
+    eleveRejeu = null;
+    eleveIdx = eleveEqs.length;
+    eleveAttenteSuivante = false;
+    const rouges = [];
+    for(let i = 0; i < eleveEqs.length; i++) if(eleveRes[i] !== true) rouges.push(i);
+    const vertes = eleveEqs.length - rouges.length;
+    const voile = document.createElement("div");
+    voile.className = "eleveVoile";
+    if(rouges.length){
+      eleveEcrireEntree({}); /* le suivi « en cours » s'efface, l'étoile attend */
+      voile.innerHTML = `<div class="eleveCarton"><div class="eleveCartonEtoiles">\ud83d\udcaa</div>` +
+        `<h2>S\u00e9rie termin\u00e9e !</h2><p>${vertes} \u00e9quation${vertes > 1 ? "s" : ""} r\u00e9solue${vertes > 1 ? "s" : ""}, ${rouges.length} pass\u00e9e${rouges.length > 1 ? "s" : ""} : rejoue-l${rouges.length > 1 ? "es" : "a"} pour ` +
+        (eleveParcours ? `allumer ton \u00e9toile sur la carte des mondes.` : `finir la s\u00e9rie.`) + `</p>` +
+        `<div class="eleveCartonBoutons"><button type="button" id="eleveRejouerRouges">Rejouer les \u00e9quations rouges</button>` +
+        `<button type="button" class="secondaire" id="eleveRejouer">Toute la s\u00e9rie</button>${eleveLienMondesHtml("eleveMondesLien")}</div></div>`;
+      voile.querySelector("#eleveRejouerRouges").addEventListener("click", () => {
+        voile.remove();
+        eleveRejeu = rouges.slice();
+        eleveEquationSuivante();
+      });
+    }else{
+      eleveEcrireEntree({ fait:true, etoiles:vertes, cartes:eleveEqs.length, date:new Date().toISOString().slice(0,10) });
+      voile.innerHTML = `<div class="eleveCarton"><div class="eleveCartonEtoiles">\u2B50</div>` +
+        `<h2>S\u00e9rie termin\u00e9e, bravo !</h2><p>${eleveEqs.length} \u00e9quations r\u00e9solues sur le plateau.` +
+        (eleveParcours ? ` Ton \u00e9toile est allum\u00e9e sur la carte des mondes !` : ``) + `</p>` +
+        `<div class="eleveCartonBoutons"><button type="button" id="eleveRejouer">Rejouer la s\u00e9rie</button>${eleveLienMondesHtml("eleveMondesLien")}</div></div>`;
+    }
+    voile.querySelector("#eleveRejouer").addEventListener("click", () => {
+      voile.remove();
+      eleveIdx = 0; eleveResolues = 0; eleveRes = []; eleveRejeu = null;
+      eleveEcrireEntree({});
+      eleveChargerEquation();
+    });
+    document.body.appendChild(voile);
+    const bouton = voile.querySelector("button");
+    if(bouton) bouton.focus();
+    eleveMajBarre();
   }
 
   function tryImportFromUrl(){
