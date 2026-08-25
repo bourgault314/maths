@@ -243,6 +243,10 @@ test("les billes unitaires s’écrivent comme un seul nombre et se partagent en
   assert.match(html, /\.packetBox\.matchXCount\{/);
   assert.match(html, /\.unitPacketChoice\{/);
   assert.match(html, /btn\.textContent = `\$\{choice\.packetCount\} paquet\$\{choice\.packetCount > 1 \? "s" : ""\} de \$\{choice\.each\}`;/);
+  // « Il reste n taches et m jetons : on peut faire des paquets. » ne doit pas être
+  // recouverte par la consigne générique du mode « Enlever » : c'est la seule aide
+  // qui reste depuis que le raccourci « 4𝑛 = 4 × 1 » a disparu.
+  assert.match(html, /const selection = selectedDeletePiecesBySide\(\);\s*if\(actionMode === "delete" && !selection\.left\.length && !selection\.right\.length\) return;/);
 });
 
 test("sur téléphone seule la zone bleue défile", () => {

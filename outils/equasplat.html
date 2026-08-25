@@ -8264,9 +8264,19 @@
       if(state && state.conclusionDone){ setInstruction(""); return; }
       const situation = getUnitShareSituation();
       if(situation){
-        setInstruction(`Il reste <strong>${situation.xCount}</strong> taches et <strong>${situation.tokenCount}</strong> jetons : on peut faire des paquets.`);
+        // Les espaces autour des nombres sont insécables : la zone de consigne est
+        // une boîte flex, et l'espace ordinaire entre deux éléments y disparaît
+        // (« Il reste4taches et4jetons »).
+        setInstruction(`Il reste&nbsp;<strong>${situation.xCount}</strong>&nbsp;taches et&nbsp;<strong>${situation.tokenCount}</strong>&nbsp;jetons : on peut faire des paquets.`);
+        // Cette consigne doit rester : sans elle, le message générique du mode
+        // « Enlever » (« Sélectionne la même quantité dans les deux membres »)
+        // reprend la main alors qu'il ne reste que des taches d'un côté et des
+        // billes de l'autre — il n'y a plus rien à enlever. Tant qu'aucune
+        // pièce n'est sélectionnée, on s'arrête ici.
+        const selection = selectedDeletePiecesBySide();
+        if(actionMode === "delete" && !selection.left.length && !selection.right.length) return;
       }else if(actionMode !== "delete"){
-        setInstruction("Avec les petites billes, utilise surtout <strong>Enlever dans chaque membre</strong>, puis <strong>Faire des paquets</strong> quand il ne reste que des taches d’un côté.");
+        setInstruction("Avec les petites billes, utilise surtout&nbsp;<strong>Enlever dans chaque membre</strong>, puis&nbsp;<strong>Faire des paquets</strong>&nbsp;quand il ne reste que des taches d’un côté.");
       }
     }
 
@@ -8291,7 +8301,7 @@
         setInstruction("On peut faire des paquets quand il ne reste que plusieurs taches d’un côté et des jetons unitaires de l’autre.");
         return;
       }
-      setInstruction(`Choisis comment ranger les <strong>${situation.tokenCount}</strong> jetons en paquets.`);
+      setInstruction(`Choisis comment ranger les&nbsp;<strong>${situation.tokenCount}</strong>&nbsp;jetons en paquets.`);
       const row = document.createElement("div");
       row.className = "btnrow";
       for(const choice of situation.choices){
