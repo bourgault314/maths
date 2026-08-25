@@ -40,7 +40,7 @@
             font-size: 1.85rem;
             color: white;
             box-shadow: 0 4px 6px rgba(0,0,0,0.25);
-            cursor: grab;
+            cursor: var(--curseur-main);
             transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), background-color 0.3s;
             z-index: 10;
             touch-action: none;
@@ -48,7 +48,7 @@
         }
 
         .token:active {
-            cursor: grabbing;
+            cursor: var(--curseur-main-fermee);
             transform: scale(1.1);
             z-index: 100 !important;
             box-shadow: 0 10px 15px rgba(0,0,0,0.3);
@@ -206,6 +206,19 @@
         }
 
         /* CURSEUR VIRTUEL (Le stylo magique) */
+
+        /* --- Curseur « main » : on utilise la main de Windows (celle des liens, `pointer`).
+           Les curseurs grab/grabbing ne sont pas des curseurs Windows : Edge/Chrome les dessinent
+           avec leur propre petite image, quasi invisible sur certains postes (thème de curseur
+           agrandi ou inversé). `pointer`, lui, existe sur tous les postes et suit leur réglage. */
+        :root {
+            --curseur-main: pointer;
+            --curseur-main-fermee: pointer;
+        }
+        #board { cursor: var(--curseur-main); }          /* outil main : main partout sur le plateau */
+        button[data-palette] { cursor: var(--curseur-main); touch-action: none; }
+        body.palette-dragging, body.palette-dragging * { cursor: var(--curseur-main-fermee) !important; }
+
         #custom-cursor {
             position: fixed;
             pointer-events: none;
@@ -241,10 +254,6 @@
         /* --- Aperçu du zéro dans la palette : identique au zéro du plateau (version mini) --- */
         
 
-        /* --- Curseurs palette (drag) --- */
-        button[data-palette] { cursor: grab; }
-        button[data-palette]:active { cursor: grabbing; }
-        body.palette-dragging, body.palette-dragging * { cursor: grabbing; }
 
 .palette-zero-btn{
             background: rgba(156,163,175,0.6) !important; /* #9ca3af avec la même transparence que .is-zero */
@@ -973,6 +982,7 @@ header{
                 state.currentTool = 'hand';
                 canvas.style.pointerEvents = 'none';
                 board.classList.remove('hide-cursor');
+                board.style.cursor = 'var(--curseur-main)';
                 cursorDiv.style.display = 'none';
                 document.getElementById('tool-hand').className = "p-2 rounded bg-white shadow text-gray-700 border border-gray-200";
                 document.getElementById('tool-pen').className = "p-2 rounded text-gray-500 hover:bg-gray-200";
@@ -980,6 +990,7 @@ header{
                 state.currentTool = 'pen';
                 canvas.style.pointerEvents = 'auto';
                 board.classList.add('hide-cursor');
+                board.style.cursor = '';
                 cursorDiv.style.display = 'none';
                 canvas.style.cursor = 'default';
                 ctx.globalCompositeOperation = 'source-over';
