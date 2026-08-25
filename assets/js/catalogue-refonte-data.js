@@ -195,6 +195,15 @@ window.MATHSGO_CATALOGUE = {
       "cardTitle": "Bingos de rentrée",
       "cardDescription": "Trois bingos prêts à imprimer pour faire connaissance, créer du lien et amorcer les échanges en 5e, 4e et 3e."
     },
+    "cps/portrait-chinois.html": {
+      "primaryNotion": "rentree-cohesion",
+      "primaryGroup": "activites",
+      "collections": [],
+      "tags": ["cps", "cohesion", "connaissance-de-soi", "emotions", "besoins", "forces-de-caractere", "imprimer", "college"],
+      "thumbnail": "cps/assets/portrait-chinois/carte-catalogue.webp",
+      "cardTitle": "Défi du Portrait chinois",
+      "cardDescription": "Douze « Si j’étais… » pour apprendre à se connaître, puis un retour réflexif avec une échelle de ressenti."
+    },
     "cps/quiz-decouverte.html": {
       "primaryNotion": "competences-psychosociales",
       "primaryGroup": "activites",
@@ -6324,6 +6333,42 @@ window.MATHSGO_CATALOGUE = {
         "cinquième",
         "quatrième",
         "troisième"
+      ],
+      "kind": "document",
+      "status": "published",
+      "featured": false,
+      "recent": true
+    },
+    {
+      "id": "cps-portrait-chinois-html",
+      "title": "Défi du Portrait chinois",
+      "description": "Une fiche recto-verso prête à imprimer pour apprendre à se connaître et à mieux connaître les autres, avec son retour réflexif et son échelle de ressenti.",
+      "path": "cps/portrait-chinois.html",
+      "domains": [
+        "cps"
+      ],
+      "notions": [
+        "rentree-cohesion"
+      ],
+      "uses": [
+        "imprimer"
+      ],
+      "types": [
+        "imprimable"
+      ],
+      "filters": [
+        "materiel-imprimer"
+      ],
+      "keywords": [
+        "portrait chinois",
+        "cohésion",
+        "connaissance de soi",
+        "CPS",
+        "émotions",
+        "besoins",
+        "forces de caractère",
+        "vie de classe",
+        "collège"
       ],
       "kind": "document",
       "status": "published",
