@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "updatedAt": "2026-08-19",
+  "updatedAt": "2026-08-25",
   "description": "Catalogue central des points d’entrée publics. Les fichiers restent à leur emplacement actuel ; les placements pilotent leur affichage virtuel futur.",
   "uiConnected": false,
   "vocabularies": {
@@ -107,6 +107,17 @@
       "title": "Bingos de rentrée pour le collège",
       "description": "Trois bingos de rentrée prêts à imprimer pour les niveaux 5e, 4e et 3e afin de faire connaissance et de créer du lien.",
       "path": "cps/bingos-rentree.html",
+      "kind": "document",
+      "status": "published",
+      "themes": ["cps"],
+      "uses": ["imprimer"],
+      "audiences": ["enseignant", "classe"]
+    },
+    {
+      "id": "cps-portrait-chinois",
+      "title": "Défi du Portrait chinois",
+      "description": "Une fiche recto-verso prête à imprimer pour apprendre à se connaître et à mieux connaître les autres, avec son retour réflexif et son échelle de ressenti.",
+      "path": "cps/portrait-chinois.html",
       "kind": "document",
       "status": "published",
       "themes": ["cps"],
