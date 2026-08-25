@@ -99,9 +99,12 @@ test("les opérations faites aux deux membres apparaissent entre les équations"
   assert.match(html, /state\.stepOps\.push\(makeBothSidesOperation\(`÷ \$\{pending\.count\}`\)\)/);
   assert.match(html, /finishAddBothAction\(makeBothSidesOperation\(formatSignedOperationNumber\(value\)\)\)/);
   assert.match(html, /finishAddBothAction\(makeBothSidesOperation\(formatSignedOperationX\(sign \* count\)\)\)/);
-  // Les paquets de billes concluent avec la même écriture (÷ nombre de taches).
-  assert.match(html, /addUnitPacketConclusion\(each, `÷ \$\{situation\.xCount\}`, situation\.varSide\)/);
-  assert.match(html, /if\(state\.steps\.length > 0\) state\.stepOps\.push\(makeBothSidesOperation\(operationLabel\)\);/);
+  // Les paquets de billes passent par les mini-plateaux des jetons numérotés :
+  // même geste (touche-en un), même écriture (÷ nombre de taches).
+  assert.match(html, /beginPendingShareConclusion\(\{count:situation\.xCount, xSide:situation\.varSide, tokenSide:situation\.tokenSide\}, each\)/);
+  assert.match(html, /state\.pendingShareConclusion\.unit = true;/);
+  // Plus de raccourci « 4𝑛 = 4 × 1 » ni de bouton Conclure avec les billes.
+  assert.match(html, /if\(isImportedUnitMode\(\) && !\(state && state\.conclusionDone\)\) return null;/);
   // Au téléphone, la ligne d'opération garde la grille trois colonnes.
   assert.match(html, /body\.importMode \.stage:not\(:fullscreen\) \.equationOpRow\{\s*grid-template-columns:minmax\(0,1fr\) auto minmax\(0,1fr\);/);
 });
@@ -232,7 +235,7 @@ test("les billes unitaires s’écrivent comme un seul nombre et se partagent en
   assert.match(html, /<button class="toolBtn unitShareToolBtn" id="toolShareUnits" type="button">Faire des paquets<\/button>/);
   assert.match(html, /#toolShareUnits\{\s*display:none;\s*\}/);
   assert.match(html, /body\.importUnitMode #toolDecompose,\s*body\.importUnitMode #toolGroup,\s*body\.importUnitMode #toolShare\{\s*display:none;\s*\}/);
-  assert.match(html, /body\.importUnitMode #toolShareUnits\{\s*display:inline-flex;\s*\}/);
+  assert.match(html, /body\.importUnitMode #toolShareUnits\{\s*display:inline-flex;[^}]*align-items:center;[^}]*justify-content:center;/s);
   for (const nom of ["isImportedUnitMode", "getUnitShareSituation", "getUnitShareOpportunity", "applyUnitPacketChoice", "applyUnitShareTokens", "clearUnitPacketConclusion", "addUnitPacketConclusion", "drawUnitPacketBoxes", "applyUnitPacketPositions", "packetGridForTray", "positionsInPacketBox"]) {
     assert.match(html, new RegExp(`function ${nom}\\(`), `${nom} est portée`);
   }
@@ -240,6 +243,10 @@ test("les billes unitaires s’écrivent comme un seul nombre et se partagent en
   assert.match(html, /\.packetBox\.matchXCount\{/);
   assert.match(html, /\.unitPacketChoice\{/);
   assert.match(html, /btn\.textContent = `\$\{choice\.packetCount\} paquet\$\{choice\.packetCount > 1 \? "s" : ""\} de \$\{choice\.each\}`;/);
+  // « Il reste n taches et m jetons : on peut faire des paquets. » ne doit pas être
+  // recouverte par la consigne générique du mode « Enlever » : c'est la seule aide
+  // qui reste depuis que le raccourci « 4𝑛 = 4 × 1 » a disparu.
+  assert.match(html, /const selection = selectedDeletePiecesBySide\(\);\s*if\(actionMode === "delete" && !selection\.left\.length && !selection\.right\.length\) return;/);
 });
 
 test("sur téléphone seule la zone bleue défile", () => {

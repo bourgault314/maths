@@ -2892,6 +2892,11 @@
 
   body.importUnitMode #toolShareUnits{
     display:inline-flex;
+    /* le libellé doit être centré comme les autres boutons (sur téléphone la
+       grille le rendait en flex sans alignement : texte collé en haut à gauche) */
+    align-items:center;
+    justify-content:center;
+    text-align:center;
   }
 
   body.importMode:not(:fullscreen) .board{
@@ -4418,6 +4423,8 @@
     body.importMode.eleveMode #eleveBarre .elevePastilles .p{width:9px;height:9px}
     body.importMode.eleveMode #eleveBarre #eleveSuivante, body.importMode.eleveMode #eleveBarre #elevePasser{padding:6px 12px;font-size:13px;min-height:28px}
     body.importMode.eleveMode main{flex:1 1 auto;min-height:0;height:auto;max-height:none}
+    /* équation résolue : le bouton vert prend la place des pastilles (une seule ligne) */
+    body.importMode.eleveMode #eleveBarre.avecSuivante .elevePastilles{display:none}
   }
   .eleveVoile{position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;
     background:rgba(16,41,74,.45)}
@@ -6167,6 +6174,11 @@
   }
 
   function getConclusionInfo(){
+    // Billes unitaires (réception, monde 3 étape 12) : pas de raccourci
+    // « 4𝑛 = 4 × 1 » ni de bouton Conclure. L'élève fait ses paquets, touche
+    // un mini-plateau, et c'est ce geste qui écrit « ÷ 4 » — comme avec les
+    // jetons numérotés. La conclusion n'existe qu'une fois ce geste fait.
+    if(isImportedUnitMode() && !(state && state.conclusionDone)) return null;
     const left = activePieces("left").filter(p => !(p.type === "token" && Number(p.value) === 0));
     const right = activePieces("right").filter(p => !(p.type === "token" && Number(p.value) === 0));
     if(left.length === 0 || right.length === 0) return null;
@@ -6223,13 +6235,18 @@
     // On garde le côté où se trouvait l’inconnue pour ne pas inverser
     // visuellement la situation que les élèves viennent de construire.
     const finalX = makeX(1);
-    const finalToken = makeToken(info.value);
+    // Billes unitaires : la tache vaut « each » billes, on les garde telles quelles
+    // (pas de jeton numéroté qui n'existe pas encore à cette étape).
+    const unitCount = Math.round(Number(info.value));
+    const finalTokens = (isImportedUnitMode() && unitCount > 0 && unitCount <= 80)
+      ? Array.from({length:unitCount}, () => makeToken(1, {unit:true}))
+      : [makeToken(info.value)];
 
     if(info.xSide === "left"){
       state.left = [finalX];
-      state.right = [finalToken];
+      state.right = finalTokens;
     }else{
-      state.left = [finalToken];
+      state.left = finalTokens;
       state.right = [finalX];
     }
   }
@@ -7923,6 +7940,28 @@
       divider.setAttribute("class", "pendingShareDivider");
       g.appendChild(divider);
 
+      if(pending.unit){
+        // Billes unitaires : on montre « each » petites billes, pas un jeton numéroté.
+        const n = Math.max(1, Math.round(Number(pending.each)));
+        const bCols = n <= 3 ? n : Math.ceil(Math.sqrt(n));
+        const bRows = Math.ceil(n / bCols);
+        const r = Math.min(tokenR*.55, (cardW*.34) / (bCols*2.3), (cardH*.8) / (bRows*2.3));
+        const step = r*2.3;
+        for(let k=0; k<n; k++){
+          const bc = k % bCols, br = Math.floor(k / bCols);
+          const rowCount = Math.min(bCols, n - br*bCols);
+          const bx = tokenX + (bc - (rowCount-1)/2) * step;
+          const by = centerY + (br - (bRows-1)/2) * step;
+          const bille = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+          bille.setAttribute("cx", bx);
+          bille.setAttribute("cy", by);
+          bille.setAttribute("r", r);
+          bille.setAttribute("class", "tokenCircle positive");
+          bille.style.fill = "rgba(27,102,255,0.18)";
+          bille.style.stroke = "rgba(27,102,255,0.58)";
+          g.appendChild(bille);
+        }
+      }else{
       const token = document.createElementNS("http://www.w3.org/2000/svg", "circle");
       token.setAttribute("cx", tokenX);
       token.setAttribute("cy", centerY);
@@ -7936,6 +7975,7 @@
       g.appendChild(token);
       const tokenLabel = drawText(tokenX, centerY + 2, formatSignedNumber(pending.each), "tokenText", g);
       tokenLabel.style.fontSize = `${Math.round(tokenR*.9)}px`;
+      }
 
       const choose = () => {
         const fresh = state && state.pendingShareConclusion;
@@ -8183,7 +8223,10 @@
     };
 
     if(isCorrectShare){
-      addUnitPacketConclusion(each, `÷ ${situation.xCount}`, situation.varSide);
+      // Même rituel qu'avec les jetons numérotés : les mini-plateaux apparaissent,
+      // l'élève en touche un, et « ÷ k » puis « 𝑛 = … » s'écrivent à ce moment-là.
+      beginPendingShareConclusion({count:situation.xCount, xSide:situation.varSide, tokenSide:situation.tokenSide}, each);
+      state.pendingShareConclusion.unit = true;
     }
 
     deleteSelection = [];
@@ -8192,7 +8235,7 @@
     pendingFusion = null;
     actionMode = "delete";
     render();
-    setInstruction("");
+    if(!(state && state.pendingShareConclusion)) setInstruction("");
   }
 
   function applyUnitShareTokens(){
@@ -8217,11 +8260,23 @@
     }
 
     if(isImportedUnitMode()){
+      // Conclusion faite (mini-plateau touché) : plus rien à faire ici.
+      if(state && state.conclusionDone){ setInstruction(""); return; }
       const situation = getUnitShareSituation();
       if(situation){
-        setInstruction(`Il reste <strong>${situation.xCount}</strong> taches et <strong>${situation.tokenCount}</strong> jetons : on peut faire des paquets.`);
+        // Les espaces autour des nombres sont insécables : la zone de consigne est
+        // une boîte flex, et l'espace ordinaire entre deux éléments y disparaît
+        // (« Il reste4taches et4jetons »).
+        setInstruction(`Il reste&nbsp;<strong>${situation.xCount}</strong>&nbsp;taches et&nbsp;<strong>${situation.tokenCount}</strong>&nbsp;jetons : on peut faire des paquets.`);
+        // Cette consigne doit rester : sans elle, le message générique du mode
+        // « Enlever » (« Sélectionne la même quantité dans les deux membres »)
+        // reprend la main alors qu'il ne reste que des taches d'un côté et des
+        // billes de l'autre — il n'y a plus rien à enlever. Tant qu'aucune
+        // pièce n'est sélectionnée, on s'arrête ici.
+        const selection = selectedDeletePiecesBySide();
+        if(actionMode === "delete" && !selection.left.length && !selection.right.length) return;
       }else if(actionMode !== "delete"){
-        setInstruction("Avec les petites billes, utilise surtout <strong>Enlever dans chaque membre</strong>, puis <strong>Faire des paquets</strong> quand il ne reste que des taches d’un côté.");
+        setInstruction("Avec les petites billes, utilise surtout&nbsp;<strong>Enlever dans chaque membre</strong>, puis&nbsp;<strong>Faire des paquets</strong>&nbsp;quand il ne reste que des taches d’un côté.");
       }
     }
 
@@ -8246,7 +8301,7 @@
         setInstruction("On peut faire des paquets quand il ne reste que plusieurs taches d’un côté et des jetons unitaires de l’autre.");
         return;
       }
-      setInstruction(`Choisis comment ranger les <strong>${situation.tokenCount}</strong> jetons en paquets.`);
+      setInstruction(`Choisis comment ranger les&nbsp;<strong>${situation.tokenCount}</strong>&nbsp;jetons en paquets.`);
       const row = document.createElement("div");
       row.className = "btnrow";
       for(const choice of situation.choices){
@@ -8968,6 +9023,9 @@
     const n = eleveRes.filter(r => r === true).length;
     return `<span class="elevePastilles" role="img" aria-label="${n} \u00e9quation${n > 1 ? "s" : ""} r\u00e9solue${n > 1 ? "s" : ""} sur ${eleveEqs.length}">${out}</span>`;
   }
+  /* Sur téléphone, la barre doit tenir sur UNE ligne : sinon elle pousse le
+     cadre de l'équation et cache la dernière ligne, c'est-à-dire la solution. */
+  function eleveEcranEtroit(){ return window.innerWidth <= 760; }
   function eleveLienMondesHtml(classe){
     if(!eleveParcours) return "";
     return `<a class="${classe}" href="${ELEVE_URL_MONDES}" title="Retour \u00e0 la carte des mondes">\u25c0 <span class="txt">Carte des mondes</span></a>`;
@@ -8976,8 +9034,8 @@
     return eleveLienMondesHtml("eleveMondes") +
            `<span class="eleveBarreTexte"><span class="mot">\u00c9quation </span>${Math.min(eleveIdx + 1, eleveEqs.length)} / ${eleveEqs.length}</span>` +
            elevePastillesHtml() +
-           (message ? `<span class="eleveBarreNote">${message}</span>` : "") +
-           (eleveAttenteSuivante ? `<button type="button" id="eleveSuivante">\u00c9quation suivante \u25b6</button>` : "") +
+           (message && !(eleveAttenteSuivante && eleveEcranEtroit()) ? `<span class="eleveBarreNote">${message}</span>` : "") +
+           (eleveAttenteSuivante ? `<button type="button" id="eleveSuivante">${eleveEcranEtroit() ? "\u2705 " : ""}\u00c9quation suivante \u25b6</button>` : "") +
            (!eleveAttenteSuivante && elevePasserVisible ? `<button type="button" id="elevePasser" title="Je bloque : passer \u00e0 la suivante, je la rejouerai \u00e0 la fin">Passer \u25b6</button>` : "");
   }
   function eleveMajBarre(message){
@@ -8998,6 +9056,7 @@
       });
     }
     barre.innerHTML = eleveBarreHtml(message || "");
+    barre.classList.toggle("avecSuivante", !!eleveAttenteSuivante);
     if(eleveAttenteSuivante){
       const bouton = barre.querySelector("#eleveSuivante");
       if(bouton) bouton.focus(); /* Entr\u00e9e suffit pour encha\u00eener */
