@@ -408,7 +408,9 @@
     .eleve-scene .diagram-container { flex: 0 0 auto; width: 96%; }
     .eleve-scene .row-top, .eleve-scene .part-box { min-height: 46px; font-size: 20px; }
     .eleve-consigne { text-align: center; font-weight: 800; color: #334155; margin: 4px 0 10px; font-size: 15px; }
-    input.eleve-input, input[type="text"].eleve-input { width: 100%; height: 100%; padding: 0; border: none; border-radius: 0; outline: none; text-align: center; font: inherit; font-weight: 900; color: #1d4ed8; background: transparent; min-width: 0; }
+    input.eleve-input, input[type="text"].eleve-input { width: 100%; height: 100%; padding: 0; border: none; border-radius: 0; outline: none; text-align: center; font: inherit; font-weight: 900; color: #111827; background: transparent; min-width: 0; }
+    /* Convention des fiches : le total et ce qui est caché en noir, les jetons visibles en bleu */
+    .eleve-case.eleve-vis .eleve-input { color: #1d4ed8; }
     .eleve-input::placeholder { color: #94a3b8; font-weight: 700; }
     .eleve-case { cursor: text; }
     .eleve-case:focus-within { outline: 3px solid #60a5fa; outline-offset: -3px; }
@@ -2118,7 +2120,7 @@ function eleveCaseInput(attendu, flexGrow, minW, fSize, fond, isTop, avecTache) 
     const style = isTop
         ? `font-size: ${fSize};`
         : `flex-grow: ${flexGrow}; flex-basis: 0; background: ${fond}; min-width: ${minW}; font-size: ${fSize};`;
-    return `<div class="${cls} eleve-case${avecTache ? ' avec-tache' : ''}" style="${style}" data-attendu="${attendu}">` +
+    return `<div class="${cls} eleve-case${avecTache ? ' avec-tache' : ''}${(!isTop && !avecTache) ? ' eleve-vis' : ''}" style="${style}" data-attendu="${attendu}">` +
            (avecTache ? ELEVE_MINI_TACHE : '') +
            `<input class="eleve-input" type="text" inputmode="numeric" maxlength="3" autocomplete="off" placeholder="?"></div>`;
 }
