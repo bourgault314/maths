@@ -1,6 +1,6 @@
 # Sources et signature des PDF imprimables
 
-Ce document est l'inventaire technique des 31 PDF publics de maths&go.
+Ce document est l'inventaire technique des 36 PDF publics de maths&go.
 
 ## Référence graphique
 
@@ -45,6 +45,24 @@ Cette commande régénère également `gabarits_partage_equitable_2_3_4_5.pdf`.
 Ce document n'a pas de source éditable : son PDF d'origine est conservé dans
 `_source_gabarits_partage_equitable.pdf`, puis la signature publique est créée
 par `scripts/uniformiser-signature-pdf.py`.
+
+## PDF possédant une source HTML
+
+Ce document est écrit en HTML + CSS dans un seul fichier, puis imprimé en PDF par
+Chromium :
+
+| PDF public | Source |
+|---|---|
+| `cours_criteres_divisibilite.pdf` | `../_sources/cours-criteres-divisibilite/cours_criteres_divisibilite.html` |
+
+Le texte se modifie directement dans le HTML. Pour régénérer le PDF :
+
+```bash
+python3 _sources/cours-criteres-divisibilite/render.py
+```
+
+La signature `mathsgo.re · CC BY-NC-SA 4.0` est écrite dans le HTML lui-même : elle
+survit à une régénération, sans repasser par `scripts/ajouter-licence-pdf.py`.
 
 ## PDF sans source exacte
 
