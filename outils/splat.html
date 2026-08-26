@@ -737,6 +737,17 @@
   .eleveActions{display:flex;justify-content:center;gap:10px;margin-top:14px}
   .eleveActions button{font:inherit;font-weight:900;border:none;border-radius:12px;padding:12px 24px;min-height:48px;cursor:pointer;background:#2563eb;color:#fff}
   .eleveActions button:disabled{opacity:.45;cursor:default}
+  /* Correction : la tache s'éclaircit et laisse voir les jetons qu'elle cachait (même geste que Petit Splat) */
+  body.eleve-mode #mainSvg path.eleveDevoile{fill:var(--splat-reveal) !important;transition:fill .7s ease}
+  /* Écran d'ordinateur : tableau aux proportions du téléphone (lignes hautes, gros chiffres), textes plus lisibles. Téléphone inchangé. */
+  @media (min-width:1000px) and (min-height:700px){
+    body.eleve-mode #svgWrap{height:min(46vh,520px)}
+    body.eleve-mode .eleveCase{min-height:66px;font-size:32px}
+    body.eleve-mode .eleveConsigne{font-size:17px;margin:2px 0 10px}
+    body.eleve-mode .eleveTete{font-size:21px;gap:10px} /* les pastilles ne touchent plus le compteur */
+    body.eleve-mode .eleveTete a.eleveMondes{font-size:15px;padding:5px 11px}
+    body.eleve-mode .eleveActions button{font-size:19px;padding:14px 30px}
+  }
   .eleveMsg{text-align:center;min-height:24px;font-weight:900;margin-top:9px}
   .eleveMsg.bravo{color:#15803d}
   .eleveMsg.rate{color:#b91c1c}
@@ -7653,6 +7664,7 @@ function renderEleveSplat(){
   const infos = eleveInfosCarte(card);
   renderCard(card, 0);
   eleveCadrerScene();
+  eleveCalerLargeur(panneau);
   if(!infos){
     tete.style.display = "none";
     panneau.innerHTML = `<p class="eleveConsigne">Le parcours élève n'existe pas encore pour ce mode.</p>`;
@@ -7710,11 +7722,18 @@ function eleveValiderSplat(){
     if(!eleveCarteFautee && !etaitRouge) eleveEtoiles++;
     eleveResultats[eleveIdx] = !eleveCarteFautee && !etaitRouge;
     bouton.disabled = true;
-    msg.textContent = eleveCarteFautee ? "Juste ! Carte suivante\u2026" : "Bravo, du premier coup !";
+    msg.textContent = eleveCarteFautee ? "Juste ! Regarde sous la tache\u2026" : "Bravo, du premier coup ! Regarde sous la tache\u2026";
     msg.className = "eleveMsg bravo";
     casesE.forEach(c => { const i = c.querySelector(".eleveChamp"); if(i) i.readOnly = true; });
     eleveSauverEnCours();
-    setTimeout(() => { eleveCarteSuivante(); }, 1100);
+    eleveDevoilerTache();
+    /* comme aux mondes 3-4 : l'élève regarde sous la tache et enchaîne quand il veut (Entrée suffit) */
+    const suivant = document.createElement("button");
+    suivant.type = "button"; suivant.className = "suivant";
+    suivant.textContent = "Carte suivante \u25b6";
+    suivant.onclick = eleveCarteSuivante;
+    bouton.parentNode.appendChild(suivant);
+    suivant.focus();
   }else{
     eleveCarteFautee = true;
     eleveEchecs++;
@@ -7729,6 +7748,31 @@ function eleveValiderSplat(){
       bouton.parentNode.appendChild(voir);
     }
   }
+}
+
+/* Ordinateur : le tableau prend la largeur du plateau dessiné (comme sur téléphone,
+   où les deux ont naturellement la même largeur). Inerte sous 1000×700. */
+function eleveCalerLargeur(panneau){
+  if(!panneau) return;
+  const caler = () => {
+    if(!window.matchMedia("(min-width:1000px) and (min-height:700px)").matches){ panneau.style.maxWidth = ""; return; }
+    try{
+      const vb = svg.viewBox.baseVal, r = svg.getBoundingClientRect();
+      const k = Math.min(r.width / vb.width, r.height / vb.height);
+      const w = Math.round(vb.width * k);
+      panneau.style.maxWidth = Math.max(560, w + 16) + "px";
+    }catch(_e){ panneau.style.maxWidth = ""; }
+  };
+  caler();
+  if(!eleveCalerLargeur._lie){ eleveCalerLargeur._lie = true; window.addEventListener("resize", () => { const pn = document.getElementById("elevePanel"); if(pn) eleveCalerLargeur(pn); }); }
+}
+
+/* Vérification : les taches du plateau deviennent transparentes et laissent voir
+   les jetons dessinés dessous (le plateau n'est pas redessiné : le cadrage reste). */
+function eleveDevoilerTache(){
+  document.querySelectorAll("#mainSvg path").forEach(p => {
+    if((p.getAttribute("fill") || "") === "var(--splat-cover)") p.classList.add("eleveDevoile");
+  });
 }
 
 /* Lien vers la carte des mondes (seulement quand on vient du parcours). */
@@ -7776,6 +7820,7 @@ function eleveMontrerReponse(){
   msg.className = "eleveMsg rate";
   eleveResultats[eleveIdx] = "ko";
   eleveSauverEnCours();
+  eleveDevoilerTache();
   bouton.disabled = true;
   if(voir) voir.remove();
   const suivant = document.createElement("button");

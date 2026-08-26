@@ -402,6 +402,9 @@
     .eleve-actions a.eleve-lien { font: inherit; font-weight: 900; border-radius: 12px; padding: 12px 22px; min-height: 48px; display: inline-flex; align-items: center; background: #e0e7ff; color: #1e40af; text-decoration: none; }
     .fin-pastilles { display: flex; justify-content: center; margin: 2px 0 8px; }
     .eleve-scene .part-splat { min-height: 200px; border-bottom: none; flex: 0 0 min(46vh, 340px); }
+    /* Correction : la tache s'éclaircit et laisse voir les jetons qu'elle cachait (comme en usage libre) */
+    .eleve-scene .part-splat .splat-path { transition: opacity .7s ease; }
+    .eleve-scene .part-splat.devoile .splat-path { opacity: .15; }
     .eleve-scene .diagram-container { flex: 0 0 auto; width: 96%; }
     .eleve-scene .row-top, .eleve-scene .part-box { min-height: 46px; font-size: 20px; }
     .eleve-consigne { text-align: center; font-weight: 800; color: #334155; margin: 4px 0 10px; font-size: 15px; }
@@ -433,6 +436,28 @@
     body.eleve-lien aside { display: none; }
     body.eleve-lien #mainArea { padding-top: 18px; }
     .total-badge.eleve-case { padding: 0; width: 48px; height: 44px; }
+    /* Grand écran : la carte prend plus de place et le tableau garde les proportions
+       du téléphone (à peu près la largeur du plateau, des lignes hautes, gros chiffres). */
+    @media (min-width: 1000px) and (min-height: 700px) {
+        .eleve-scene { max-width: 1200px; padding: 16px 24px 22px; }
+        .eleve-scene .part-splat { flex: 0 0 min(44vh, 480px); }
+        .eleve-scene .diagram-container { width: 100%; max-width: 780px; }
+        .eleve-scene .row-top, .eleve-scene .part-box { min-height: 70px; }
+        .eleve-scene .row-top .eleve-input, .eleve-scene .part-box .eleve-input, .eleve-scene .row-top, .eleve-scene .part-box { font-size: 36px !important; }
+        .eleve-consigne { font-size: 21px; margin: 6px 0 12px; }
+        .eleve-tete { font-size: 21px; }
+        .eleve-tete .eleve-mondes { font-size: 15px; padding: 5px 11px; }
+        .eleve-scene .total-badge, .total-badge.eleve-case { width: 72px; height: 72px; font-size: 36px; }
+        /* le chiffre TAPÉ dans le badge suit la boîte agrandie (la règle de base le fige à 18 px) */
+        .eleve-scene .total-badge.eleve-case .eleve-input { font-size: 36px; }
+        .eleve-case .miniTache, .part-box.avec-tache .miniTache { width: 34px; height: 22px; left: 8px; top: 6px; }
+        .eleve-actions button { font-size: 19px; padding: 14px 30px; }
+    }
+    @media (min-width: 1000px) and (min-height: 900px) {
+        .eleve-scene .part-splat { flex: 0 0 min(50vh, 520px); }
+        .eleve-scene .row-top, .eleve-scene .part-box { min-height: 84px; }
+        .eleve-scene .row-top .eleve-input, .eleve-scene .part-box .eleve-input, .eleve-scene .row-top, .eleve-scene .part-box { font-size: 40px !important; }
+    }
     .total-badge.eleve-case .eleve-input { font-size: 18px; padding: 0; }
     .total-badge.eleve-ok { background: #dcfce7 !important; }
     .total-badge.eleve-ok .eleve-input { background: transparent; color: #15803d; }
@@ -2236,7 +2261,7 @@ function renderEleve(main) {
           `<input class="eleve-input" type="text" inputmode="numeric" maxlength="3" autocomplete="off" placeholder="?"></div>`
         : `<div class="total-badge">${item.total}</div>`;
     const splatPart = `<div class="part-splat">` +
-        getSplatSvg(item, !estConstruct) + badge + `</div>`;
+        getSplatSvg(item, !estConstruct, false, true) + badge + `</div>`; /* jetons cachés dessinés sous la tache, dévoilés à la correction */
     html += splatPart;
 
     const flexVis = Math.max(item.visible, item.total * 0.05, 1);
@@ -2284,6 +2309,30 @@ function renderEleve(main) {
         });
     });
     document.getElementById('eleveValider').onclick = () => eleveValider(main);
+    eleveCalerBadge(scene);
+}
+
+/* Grand écran seulement : le badge « total » se cale sur le coin haut-droit de la zone
+   dessinée (tache + jetons) au lieu du coin du cadre, où il flottait loin du plateau. */
+function eleveCalerBadge(scene) {
+    const part = scene.querySelector('.part-splat');
+    const svg = part && part.querySelector('svg.splat-svg');
+    const badge = part && part.querySelector('.total-badge');
+    if (!part || !svg || !badge) return;
+    const caler = () => {
+        /* téléphone et petits écrans : rien ne bouge, le badge garde sa place d'origine */
+        if (!window.matchMedia('(min-width: 1000px) and (min-height: 700px)').matches) { badge.style.top = ''; badge.style.right = ''; return; }
+        const rp = part.getBoundingClientRect(), rs = svg.getBoundingClientRect();
+        /* zone réellement dessinée : viewBox 300×200 ajustée « meet » dans le svg */
+        const k = Math.min(rs.width / 300, rs.height / 200);
+        const w = 300 * k, h = 200 * k;
+        const top = (rs.top - rp.top) + (rs.height - h) / 2;
+        const right = (rp.right - rs.right) + (rs.width - w) / 2;
+        badge.style.top = Math.max(0, Math.round(top)) + 'px';
+        badge.style.right = Math.max(0, Math.round(right)) + 'px';
+    };
+    caler();
+    if (!eleveCalerBadge._lie) { eleveCalerBadge._lie = true; window.addEventListener('resize', () => { const sc = document.querySelector('.eleve-scene'); if (sc) eleveCalerBadge(sc); }); }
 }
 
 function eleveValider(main) {
@@ -2312,11 +2361,19 @@ function eleveValider(main) {
         if (!eleveCarteFautee && !etaitRouge) eleveEtoiles++;
         eleveResultats[eleveIdx] = !eleveCarteFautee && !etaitRouge;
         bouton.disabled = true;
-        msg.textContent = eleveCarteFautee ? 'Juste ! Carte suivante\u2026' : 'Bravo, du premier coup !';
+        msg.textContent = eleveCarteFautee ? 'Juste ! Regarde sous la tache\u2026' : 'Bravo, du premier coup ! Regarde sous la tache\u2026';
         msg.className = 'eleve-msg bravo';
         cases.forEach(c => { const i = c.querySelector('.eleve-input'); if (i) i.readOnly = true; });
         eleveSauverEnCours();
-        setTimeout(() => { eleveCarteSuivante(main); }, 1100);
+        eleveDevoilerTache();
+        /* comme aux mondes 3-4 : l'élève regarde ce qu'il a fait et enchaîne quand il veut
+           (le bouton a le focus : Entrée suffit) */
+        const suivant = document.createElement('button');
+        suivant.type = 'button'; suivant.className = 'eleve-suivant';
+        suivant.textContent = 'Carte suivante \u25b6';
+        suivant.onclick = () => eleveCarteSuivante(main);
+        bouton.parentNode.appendChild(suivant);
+        suivant.focus();
     } else {
         eleveCarteFautee = true;
         eleveEchecs++;
@@ -2343,6 +2400,13 @@ function eleveValider(main) {
             actions.appendChild(voir);
         }
     }
+}
+
+/* Vérification : la tache devient transparente et laisse voir les jetons
+   qu'elle cachait, comme quand on clique sur une carte en usage libre. */
+function eleveDevoilerTache() {
+    const part = document.querySelector('.eleve-scene .part-splat');
+    if (part) part.classList.add('devoile');
 }
 
 /* Lien vers la carte des mondes (seulement quand on vient du parcours). */
@@ -2393,6 +2457,7 @@ function eleveMontrerReponse(main) {
     msg.className = 'eleve-msg rate';
     eleveResultats[eleveIdx] = 'ko';
     eleveSauverEnCours();
+    eleveDevoilerTache();
     bouton.disabled = true;
     if (voir) voir.remove();
     const suivant = document.createElement('button');
