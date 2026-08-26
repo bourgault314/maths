@@ -222,7 +222,7 @@ Le triangle n'est pas rectangle.
 \node[anchor=north west,text width=4.30cm,align=left] at (0.95,-14.03) {\bfseries\color{brandNavy}\fontsize{11.1}{11.9}\selectfont Je conclus.\par\vspace{0.06cm}
 {\scriptsize\bfseries\color{brandNavy} Si le triangle est rectangle, l'angle droit est opposé au plus grand côté. Sinon, j'écris qu'il n'est pas rectangle.}};
 
-\node[rounded corners=7pt,draw=brandOrange!50,fill=softOrange!55,text width=4.45cm,inner sep=5pt,align=center] at (2.77,-16.45) {\scriptsize\bfseries\color{brandNavy} Le dessin ne prouve rien : ce sont les calculs qui permettent de conclure.};
+\node[rounded corners=7pt,draw=brandOrange!50,fill=softOrange!55,text width=4.45cm,inner sep=5pt,align=center] at (2.77,-16.82) {\scriptsize\bfseries\color{brandNavy} Le dessin ne prouve rien : ce sont les calculs qui permettent de conclure.};
 \end{tikzpicture}
 \end{minipage}\hfill
 \begin{minipage}[t]{13.05cm}
@@ -231,18 +231,23 @@ Le triangle n'est pas rectangle.
 \begin{center}
 \begin{tikzpicture}
 \node[rounded corners=8pt,draw=brandTeal!65,fill=brandTeal!3,line width=0.75pt,text width=12.25cm,inner sep=7pt,align=center] {
-\begin{tikzpicture}[x=1cm,y=1cm,line cap=butt,line join=miter]
-  \coordinate (A) at (0,0); \coordinate (B) at (0.95,1.72); \coordinate (C) at (4.55,0.22);
+% sharp corners : le « rounded corners=8pt » du cadre englobant est hérité par
+% cette figure et arrondissait les sommets du triangle.
+% Proportions 3-4-5 (AB = 2, AC = 2,75, BC = 3,4) : BC est nettement le plus
+% grand côté ; l'angle en A vaut environ 88°, il n'est pas codé.
+\begin{tikzpicture}[x=1.2cm,y=1.2cm,line cap=butt,line join=miter,sharp corners]
+  \coordinate (A) at (0,0); \coordinate (B) at (0.22,2.00); \coordinate (C) at (2.75,-0.18);
   \fill[white] (A) -- (B) -- (C) -- cycle;
-  \draw[brandNavy,line width=1.25pt] (A) -- (B) -- (C) -- (A);
   \draw[brandTeal,line width=4.5pt,opacity=.24] (B) -- (C);
-  \draw[brandNavy,line width=1.25pt] (B) -- (C);
-  \node[brandNavy!70,font=\bfseries\small] at (-0.32,-0.23) {\LowDotted{0.65}};
-  \node[brandNavy!70,font=\bfseries\small] at (0.86,1.96) {\LowDotted{0.65}};
-  \node[brandNavy!70,font=\bfseries\small] at (4.82,0.08) {\LowDotted{0.65}};
-  \node[brandNavy!70,font=\bfseries\small] at (0.22,0.92) {\LowDotted{0.85}};
-  \node[brandNavy!70,font=\bfseries\small] at (2.20,-0.18) {\LowDotted{0.85}};
-  \node[brandTeal,font=\bfseries\small] at (2.82,1.27) {\LowDotted{0.85}};
+  \draw[brandNavy,line width=1.25pt] (A) -- (B) -- (C) -- cycle;
+  % Noms des sommets (A en bas à gauche, B en haut, C à droite).
+  \node[brandNavy!70,font=\bfseries\small] at (-0.30,-0.28) {\LowDotted{0.65}};
+  \node[brandNavy!70,font=\bfseries\small] at (0.22,2.28) {\LowDotted{0.65}};
+  \node[brandNavy!70,font=\bfseries\small] at (3.12,-0.42) {\LowDotted{0.65}};
+  % Longueurs : AB à gauche, AC en dessous, BC au-dessus du surlignage.
+  \node[brandNavy!70,font=\bfseries\small] at (-0.42,1.00) {\LowDotted{0.85}};
+  \node[brandNavy!70,font=\bfseries\small] at (1.38,-0.50) {\LowDotted{0.85}};
+  \node[brandTeal,font=\bfseries\small] at (1.88,1.30) {\LowDotted{0.85}};
 \end{tikzpicture}
 };
 \end{tikzpicture}
