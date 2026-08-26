@@ -677,6 +677,14 @@ window.MATHSGO_CATALOGUE = {
       "thumbnail": "assets/img/thumbnails/divisibilite/partages-pgcd.png?v=1",
       "cardDescription": "Chercher le plus grand nombre de paquets identiques en manipulant deux quantités."
     },
+    "outils/cours_criteres_divisibilite.pdf": {
+      "primaryNotion": "divisibilite",
+      "primaryGroup": "imprimer",
+      "collections": [],
+      "tags": ["divisibilite", "criteres", "cours", "imprimer"],
+      "thumbnail": "assets/img/thumbnails/divisibilite/cours-criteres-divisibilite.png?v=1",
+      "cardDescription": "Le cours en une page : ce que veut dire « divisible », puis les critères pour 2, 5, 10 (chiffre des unités) et 3, 9 (somme des chiffres)."
+    },
     "outils/gabarit_criteres_divisibilite.pdf": {
       "primaryNotion": "divisibilite",
       "primaryGroup": "imprimer",
@@ -4636,6 +4644,39 @@ window.MATHSGO_CATALOGUE = {
       "status": "published",
       "featured": false,
       "recent": false
+    },
+    {
+      "id": "outils-cours-criteres-divisibilite-pdf",
+      "title": "Cours critères de divisibilité",
+      "description": "Une page de cours explicite à coller dans le cahier : ce que veut dire « divisible » (reste égal à 0), critères pour 2, 5 et 10 avec le chiffre des unités, critères pour 3 et 9 avec la somme des chiffres, pièges à éviter.",
+      "path": "outils/cours_criteres_divisibilite.pdf",
+      "domains": [
+        "nombres-calculs"
+      ],
+      "notions": [
+        "divisibilite"
+      ],
+      "uses": [
+        "imprimer",
+        "entrainer"
+      ],
+      "types": [
+        "imprimable"
+      ],
+      "filters": [
+        "materiel-imprimer"
+      ],
+      "keywords": [
+        "critères de divisibilité",
+        "divisible",
+        "chiffre des unités",
+        "somme des chiffres",
+        "cours"
+      ],
+      "kind": "document",
+      "status": "published",
+      "featured": false,
+      "recent": true
     },
     {
       "id": "outils-gabarit-criteres-divisibilite-pdf",
