@@ -4432,9 +4432,18 @@
     box-shadow:0 18px 50px rgba(16,41,74,.35);max-width:88vw}
   .eleveCarton h2{margin:8px 0 4px;color:#10294a}
   .eleveCarton p{margin:0 0 12px;color:#5c6c82;font-weight:700}
-  .eleveCartonEtoiles{font-size:34px;letter-spacing:4px}
   .eleveCarton button{font:inherit;font-weight:900;border:none;border-radius:12px;padding:12px 24px;
     cursor:pointer;background:#2563eb;color:#fff}
+  /* Fin de série : l'étoile en jeu est montrée, éteinte tant qu'il reste des équations
+     rouges. Une seule action en avant, les deux sorties passent en liens discrets —
+     partir reste possible, mais ce n'est plus le geste le plus facile. */
+  .eleveCarton .finEtoile{font-size:64px;line-height:1;filter:grayscale(1) opacity(.38)}
+  .eleveCarton .finEtoile.on{filter:none}
+  .eleveCarton p.finSous{margin:2px 0 14px;color:#5c6c82;font-weight:700;font-size:15px}
+  .eleveCarton .finAction{display:flex;justify-content:center;margin:0 0 12px}
+  .eleveCarton .finAction button{font-size:19px;border-radius:14px;padding:15px 30px;min-height:54px;background:#16a34a;color:#fff;box-shadow:0 4px 0 #15803d}
+  .eleveCarton .finSorties{display:flex;justify-content:center;gap:22px;flex-wrap:wrap}
+  .eleveCarton .finSorties button, .eleveCarton .finSorties a{font:inherit;font-weight:700;font-size:14px;color:#5c6c82;background:none;border:none;border-radius:0;padding:6px 4px;cursor:pointer;text-decoration:underline;text-underline-offset:3px}
 </style>
 <link rel="stylesheet" href="../assets/css/consentement.css">
 <script defer src="../assets/js/consentement.js"></script>
@@ -9026,9 +9035,10 @@
   /* Sur téléphone, la barre doit tenir sur UNE ligne : sinon elle pousse le
      cadre de l'équation et cache la dernière ligne, c'est-à-dire la solution. */
   function eleveEcranEtroit(){ return window.innerWidth <= 760; }
-  function eleveLienMondesHtml(classe){
+  function eleveLienMondesHtml(classe, libelle){
     if(!eleveParcours) return "";
-    return `<a class="${classe}" href="${ELEVE_URL_MONDES}" title="Retour \u00e0 la carte des mondes">\u25c0 <span class="txt">Carte des mondes</span></a>`;
+    return `<a class="${classe}" href="${ELEVE_URL_MONDES}" title="Retour \u00e0 la carte des mondes">` +
+      (libelle || '\u25c0 <span class="txt">Carte des mondes</span>') + `</a>`;
   }
   function eleveBarreHtml(message){
     return eleveLienMondesHtml("eleveMondes") +
@@ -9190,11 +9200,15 @@
     voile.className = "eleveVoile";
     if(rouges.length){
       eleveEcrireEntree({}); /* le suivi « en cours » s'efface, l'étoile attend */
-      voile.innerHTML = `<div class="eleveCarton"><div class="eleveCartonEtoiles">\ud83d\udcaa</div>` +
-        `<h2>S\u00e9rie termin\u00e9e !</h2><p>${vertes} \u00e9quation${vertes > 1 ? "s" : ""} r\u00e9solue${vertes > 1 ? "s" : ""}, ${rouges.length} pass\u00e9e${rouges.length > 1 ? "s" : ""} : rejoue-l${rouges.length > 1 ? "es" : "a"} pour ` +
-        (eleveParcours ? `allumer ton \u00e9toile sur la carte des mondes.` : `finir la s\u00e9rie.`) + `</p>` +
-        `<div class="eleveCartonBoutons"><button type="button" id="eleveRejouerRouges">Rejouer les \u00e9quations rouges</button>` +
-        `<button type="button" class="secondaire" id="eleveRejouer">Toute la s\u00e9rie</button>${eleveLienMondesHtml("eleveMondesLien")}</div></div>`;
+      const nbR = rouges.length, plR = nbR > 1 ? "s" : "";
+      voile.innerHTML = `<div class="eleveCarton">` +
+        (eleveParcours ? `<div class="finEtoile">\u2b50</div>` : ``) +
+        `<h2>Encore ${nbR} \u00e9quation${plR} !</h2>` +
+        `<p class="finSous">${vertes} r\u00e9solue${vertes > 1 ? "s" : ""} sur ${eleveEqs.length}. Rejoue-l${nbR > 1 ? "es" : "a"} ` +
+        (eleveParcours ? `et ton \u00e9toile s'allume sur la carte des mondes.` : `pour finir la s\u00e9rie.`) + `</p>` +
+        `<div class="finAction"><button type="button" id="eleveRejouerRouges">Je rejoue mes ${nbR} \u00e9quation${plR} rouge${plR} \u25b6</button></div>` +
+        `<div class="finSorties"><button type="button" id="eleveRejouer">Rejouer toute la s\u00e9rie</button>` +
+        `${eleveLienMondesHtml("finLien", "Retour \u00e0 la carte des mondes")}</div></div>`;
       voile.querySelector("#eleveRejouerRouges").addEventListener("click", () => {
         voile.remove();
         eleveRejeu = rouges.slice();
@@ -9202,7 +9216,7 @@
       });
     }else{
       eleveEcrireEntree({ fait:true, etoiles:vertes, cartes:eleveEqs.length, date:new Date().toISOString().slice(0,10) });
-      voile.innerHTML = `<div class="eleveCarton"><div class="eleveCartonEtoiles">\u2B50</div>` +
+      voile.innerHTML = `<div class="eleveCarton"><div class="finEtoile on">\u2B50</div>` +
         `<h2>S\u00e9rie termin\u00e9e, bravo !</h2><p>${eleveEqs.length} \u00e9quations r\u00e9solues sur le plateau.` +
         (eleveParcours ? ` Ton \u00e9toile est allum\u00e9e sur la carte des mondes !` : ``) + `</p>` +
         `<div class="eleveCartonBoutons"><button type="button" id="eleveRejouer">Rejouer la s\u00e9rie</button>${eleveLienMondesHtml("eleveMondesLien")}</div></div>`;
