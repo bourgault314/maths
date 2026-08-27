@@ -431,6 +431,16 @@
     .eleve-fin .fin-etoiles { font-size: 34px; letter-spacing: 4px; }
     .eleve-fin h2 { margin: 10px 0 4px; color: #1e40af; }
     .eleve-fin p { color: #475569; font-weight: 700; margin: 4px 0 14px; }
+    /* Fin de série : l'étoile en jeu est montrée, éteinte tant qu'il reste des cartes
+       rouges. Une seule action en avant, les deux sorties passent en liens discrets —
+       partir reste possible, mais ce n'est plus le geste le plus facile. */
+    .eleve-fin .fin-etoile { font-size: 64px; line-height: 1; filter: grayscale(1) opacity(.38); }
+    .eleve-fin .fin-etoile.on { filter: none; }
+    .eleve-fin p.fin-sous { color: #475569; font-weight: 700; margin: 2px 0 14px; font-size: 15px; }
+    .eleve-fin .fin-action { display: flex; justify-content: center; margin: 0 0 12px; }
+    .eleve-fin .fin-action button { font: inherit; font-weight: 900; font-size: 19px; border: none; border-radius: 14px; padding: 15px 30px; min-height: 54px; cursor: pointer; background: #16a34a; color: #fff; box-shadow: 0 4px 0 #15803d; }
+    .eleve-fin .fin-sorties { display: flex; justify-content: center; gap: 22px; flex-wrap: wrap; }
+    .eleve-fin .fin-sorties button, .eleve-fin .fin-sorties a { font: inherit; font-weight: 700; font-size: 14px; color: #64748b; background: none; border: none; padding: 6px 4px; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
     .eleve-scene svg.eleve-dessin { cursor: crosshair; touch-action: manipulation; }
     .part-box.eleve-case, .row-top.eleve-case, .part-box.avec-tache { position: relative; }
     .eleve-case .miniTache, .part-box.avec-tache .miniTache { position: absolute; left: 5px; top: 4px; width: 22px; height: 15px; opacity: .8; pointer-events: none; }
@@ -2412,9 +2422,10 @@ function eleveDevoilerTache() {
 }
 
 /* Lien vers la carte des mondes (seulement quand on vient du parcours). */
-function eleveLienMondesHtml(classe) {
+function eleveLienMondesHtml(classe, libelle) {
     if (!parcoursId) return '';
-    return `<a class="${classe || 'eleve-mondes'}" href="${ELEVE_URL_MONDES}" title="Retour \u00e0 la carte des mondes">\u25c0 <span class="txt">Carte des mondes</span></a>`;
+    return `<a class="${classe || 'eleve-mondes'}" href="${ELEVE_URL_MONDES}" title="Retour \u00e0 la carte des mondes">` +
+        (libelle || '\u25c0 <span class="txt">Carte des mondes</span>') + `</a>`;
 }
 
 /* Sauvegarde « en cours » : l'indice de la prochaine carte + le détail des pastilles. */
@@ -2486,21 +2497,23 @@ function renderEleveFin(main) {
             const tout = JSON.parse(localStorage.getItem(ELEVE_STORE_KEY) || '{}');
             if (parcoursId && tout[parcoursId] && tout[parcoursId].enCours) { delete tout[parcoursId].enCours; localStorage.setItem(ELEVE_STORE_KEY, JSON.stringify(tout)); }
         } catch (e) { /* stockage indisponible */ }
+        const nbR = rouges.length, plR = nbR > 1 ? 's' : '';
         scene.innerHTML = `<div class="eleve-fin">` +
-            `<div class="fin-etoiles">\ud83d\udcaa</div>` +
-            `<h2>S\u00e9rie termin\u00e9e !</h2>` +
+            (parcoursId ? `<div class="fin-etoile">\u2b50</div>` : ``) +
+            `<h2>Encore ${nbR} carte${plR} !</h2>` +
             `<div class="fin-pastilles">${elevePastillesHtml()}</div>` +
-            `<p>${rouges.length} carte${rouges.length > 1 ? 's' : ''} rouge${rouges.length > 1 ? 's' : ''} : rejoue-l${rouges.length > 1 ? 'es' : 'a'} pour ` +
-            (parcoursId ? `allumer ton \u00e9toile sur la carte des mondes.` : `finir la s\u00e9rie.`) + `</p>` +
-            `<div class="eleve-actions"><button class="eleve-valider" id="eleveRejouerRouges" type="button">Rejouer les cartes rouges</button>` +
-            `<button class="eleve-secondaire" id="eleveRejouer" type="button">Toute la s\u00e9rie</button>${eleveLienMondesHtml('eleve-lien')}</div>` +
+            `<p class="fin-sous">Rejoue-l${nbR > 1 ? 'es' : 'a'} ` +
+            (parcoursId ? `et ton \u00e9toile s'allume sur la carte des mondes.` : `pour finir la s\u00e9rie.`) + `</p>` +
+            `<div class="fin-action"><button id="eleveRejouerRouges" type="button">Je rejoue mes ${nbR} carte${plR} rouge${plR} \u25b6</button></div>` +
+            `<div class="fin-sorties"><button id="eleveRejouer" type="button">Rejouer toute la s\u00e9rie</button>` +
+            `${eleveLienMondesHtml('fin-lien', 'Retour \u00e0 la carte des mondes')}</div>` +
             `</div>`;
         main.appendChild(scene);
         document.getElementById('eleveRejouerRouges').onclick = () => { eleveRejeu = rouges.slice(); eleveCarteSuivante(main); };
     } else {
         eleveEnregistrerReussite(eleveEtoiles, total);
         scene.innerHTML = `<div class="eleve-fin">` +
-            `<div class="fin-etoiles">\u2B50</div>` +
+            `<div class="fin-etoile on">\u2B50</div>` +
             `<h2>S\u00e9rie termin\u00e9e, bravo !</h2>` +
             `<div class="fin-pastilles">${elevePastillesHtml()}</div>` +
             `<p>${eleveEtoiles} carte${eleveEtoiles > 1 ? 's' : ''} sur ${total} du premier coup.` +

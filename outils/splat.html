@@ -758,6 +758,16 @@
   .eleveFin .finEtoiles{font-size:34px;letter-spacing:4px}
   .eleveFin h2{margin:10px 0 4px;color:var(--ink)}
   .eleveFin p{color:var(--muted);font-weight:700;margin:4px 0 14px}
+  /* Fin de série : l'étoile en jeu est montrée, éteinte tant qu'il reste des cartes
+     rouges. Une seule action en avant, les deux sorties passent en liens discrets —
+     partir reste possible, mais ce n'est plus le geste le plus facile. */
+  .eleveFin .finEtoile{font-size:64px;line-height:1;filter:grayscale(1) opacity(.38)}
+  .eleveFin .finEtoile.on{filter:none}
+  .eleveFin p.finSous{color:var(--muted);font-weight:700;margin:2px 0 14px;font-size:15px}
+  .eleveFin .finAction{display:flex;justify-content:center;margin:0 0 12px}
+  .eleveFin .finAction button{font:inherit;font-weight:900;font-size:19px;border:none;border-radius:14px;padding:15px 30px;min-height:54px;cursor:pointer;background:#16a34a;color:#fff;box-shadow:0 4px 0 #15803d}
+  .eleveFin .finSorties{display:flex;justify-content:center;gap:22px;flex-wrap:wrap}
+  .eleveFin .finSorties button, .eleveFin .finSorties a{font:inherit;font-weight:700;font-size:14px;color:#64748b;background:none;border:none;padding:6px 4px;cursor:pointer;text-decoration:underline;text-underline-offset:3px}
 </style>
 <link rel="stylesheet" href="../assets/css/consentement.css">
 <script defer src="../assets/js/consentement.js"></script>
@@ -7779,9 +7789,10 @@ function eleveDevoilerTache(){
 }
 
 /* Lien vers la carte des mondes (seulement quand on vient du parcours). */
-function eleveLienMondesHtml(classe){
+function eleveLienMondesHtml(classe, libelle){
   if(!parcoursId) return "";
-  return `<a class="${classe}" href="${ELEVE_URL_MONDES}" title="Retour \u00e0 la carte des mondes">\u25c0 <span class="txt">Carte des mondes</span></a>`;
+  return `<a class="${classe}" href="${ELEVE_URL_MONDES}" title="Retour \u00e0 la carte des mondes">` +
+    (libelle || '\u25c0 <span class="txt">Carte des mondes</span>') + `</a>`;
 }
 
 /* Sauvegarde « en cours » : l'indice de la prochaine carte + le détail des pastilles. */
@@ -7850,19 +7861,21 @@ function renderEleveFinSplat(panneau){
       const tout = JSON.parse(localStorage.getItem(ELEVE_STORE_KEY) || "{}");
       if(parcoursId && tout[parcoursId] && tout[parcoursId].enCours){ delete tout[parcoursId].enCours; localStorage.setItem(ELEVE_STORE_KEY, JSON.stringify(tout)); }
     }catch(_e){ /* stockage indisponible */ }
+    const nbR = rouges.length, plR = nbR > 1 ? "s" : "";
     panneau.innerHTML = `<div class="eleveFin">` +
-      `<div class="finEtoiles">\ud83d\udcaa</div>` +
-      `<h2>S\u00e9rie termin\u00e9e !</h2>` +
+      (parcoursId ? `<div class="finEtoile">\u2b50</div>` : ``) +
+      `<h2>Encore ${nbR} carte${plR} !</h2>` +
       `<div class="finPastilles">${elevePastillesHtml()}</div>` +
-      `<p>${rouges.length} carte${rouges.length > 1 ? "s" : ""} rouge${rouges.length > 1 ? "s" : ""} : rejoue-l${rouges.length > 1 ? "es" : "a"} pour ` +
-      (parcoursId ? `allumer ton \u00e9toile sur la carte des mondes.` : `finir la s\u00e9rie.`) + `</p>` +
-      `<div class="eleveActions"><button id="eleveRejouerRouges" type="button">Rejouer les cartes rouges</button>` +
-      `<button id="eleveRejouer" class="secondaire" type="button">Toute la s\u00e9rie</button>${eleveLienMondesHtml("eleveLien")}</div></div>`;
+      `<p class="finSous">Rejoue-l${nbR > 1 ? "es" : "a"} ` +
+      (parcoursId ? `et ton \u00e9toile s'allume sur la carte des mondes.` : `pour finir la s\u00e9rie.`) + `</p>` +
+      `<div class="finAction"><button id="eleveRejouerRouges" type="button">Je rejoue mes ${nbR} carte${plR} rouge${plR} \u25b6</button></div>` +
+      `<div class="finSorties"><button id="eleveRejouer" type="button">Rejouer toute la s\u00e9rie</button>` +
+      `${eleveLienMondesHtml("finLien", "Retour \u00e0 la carte des mondes")}</div></div>`;
     document.getElementById("eleveRejouerRouges").onclick = () => { eleveRejeu = rouges.slice(); eleveCarteSuivante(); };
   }else{
     eleveEnregistrerReussite(eleveEtoiles, total);
     panneau.innerHTML = `<div class="eleveFin">` +
-      `<div class="finEtoiles">\u2B50</div>` +
+      `<div class="finEtoile on">\u2B50</div>` +
       `<h2>S\u00e9rie termin\u00e9e, bravo !</h2>` +
       `<div class="finPastilles">${elevePastillesHtml()}</div>` +
       `<p>${eleveEtoiles} carte${eleveEtoiles > 1 ? "s" : ""} sur ${total} du premier coup.` +
