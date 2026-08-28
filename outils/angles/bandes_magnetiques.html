@@ -251,6 +251,7 @@
             #btn-create-segment { padding-left: 9px; padding-right: 9px; }
             #btn-create-angle > span,
             #btn-create-segment > span { display: none; }
+            .geometry-action-label { display: none; }
             aside { width: 4.6rem !important; padding-top: .75rem !important; gap: 1rem !important; }
         }
     </style>
@@ -281,6 +282,8 @@
                 <span>Relâcher pour jeter</span>
              </div>
         </div>
+
+        <div id="selection-hint" class="hidden absolute top-full left-1/2 -translate-x-1/2 z-50 bg-slate-900 text-white px-3 py-2 rounded-lg shadow-lg text-sm font-bold pointer-events-none"></div>
 
         <div class="header-tools flex items-center justify-between p-2 gap-2 sm:gap-4 w-full border-b border-slate-100 min-h-[60px] transition-opacity">
             
@@ -402,14 +405,28 @@
                         </div>
 
                         <div id="segment-error" class="hidden mt-2 text-xs font-bold text-red-600" role="alert">Entrez une longueur comprise entre 1 et 20 cm.</div>
-                        <label class="mt-2 flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 cursor-pointer">
-                            <input id="segment-trace-checkbox" type="checkbox" class="w-4 h-4" onchange="setEndpointTraceMode(this.checked)" />
-                            <span class="text-xs leading-snug text-slate-600"><b>Tracer l’extrémité déplacée</b><br>Le segment pivote autour de l’autre extrémité.</span>
-                        </label>
                         <div id="segment-hint" class="mt-2 text-[11px] leading-snug text-slate-500">
                             Écrivez les décimaux avec une virgule. Les longueurs sont proportionnelles : 3, 4 et 5 cm gardent exactement le rapport 3:4:5.
                         </div>
                     </div>
+                </div>
+
+                <!-- Outils de construction : choisir un point à tracer ou un segment à immobiliser -->
+                <div class="relative flex items-center gap-1 bg-slate-50 p-1 rounded-xl border border-slate-200">
+                    <button id="btn-trace-point" onclick="toggleTraceSelectionMode()" class="tool-btn text-teal-700 hover:bg-teal-50 px-2 py-2 rounded-lg font-bold text-sm flex items-center gap-1" title="Choisir un point dont on trace le déplacement" aria-pressed="false">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M4 17c4-8 9-10 16-10"/>
+                            <circle cx="4" cy="17" r="2" fill="currentColor" stroke="none"/>
+                        </svg>
+                        <span class="geometry-action-label">Trace</span>
+                    </button>
+                    <button id="btn-fix-strip" onclick="toggleFixSelectionMode()" class="tool-btn text-slate-600 hover:bg-slate-100 px-2 py-2 rounded-lg font-bold text-sm flex items-center gap-1" title="Fixer ou libérer un segment" aria-pressed="false">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M9 3h6l-1 5 3 3v2H7v-2l3-3-1-5Z"/>
+                            <path d="M12 13v8"/>
+                        </svg>
+                        <span class="geometry-action-label">Fixer</span>
+                    </button>
                 </div>
                 <!-- Verrou global : rend les constructions rigides -->
                 <div class="relative flex items-center bg-slate-50 p-1 rounded-xl border border-slate-200">
@@ -608,8 +625,10 @@
             penRightOverride: false,
             strokes: [],
             _currentStroke: null, 
-            endpointTraceMode: false,
-            draggingTracedEndpoint: null,
+            traceSelectionMode: false,
+            tracedPointId: null,
+            activePointTraceStroke: null,
+            fixSelectionMode: false,
             stripMode: 'normal', 
             draggingPoint: null,
             draggingStrip: null, 
@@ -1139,6 +1158,21 @@
                 : CONFIG.colors[strip.type].length;
         }
 
+        function isPointPinned(point) {
+            return Boolean(point && (point.pinned || point.fixed));
+        }
+
+        function updateFixedPointFlags() {
+            state.points.forEach(point => { point.fixed = false; });
+            state.strips.forEach(strip => {
+                if (!strip.fixed) return;
+                const p1 = state.points.find(point => point.id === strip.p1);
+                const p2 = state.points.find(point => point.id === strip.p2);
+                if (p1) p1.fixed = true;
+                if (p2) p2.fixed = true;
+            });
+        }
+
         function formatLengthCm(value) {
             return Number(value).toLocaleString('fr-FR', { maximumFractionDigits: 2 });
         }
@@ -1147,8 +1181,118 @@
             return Number(String(rawValue).trim().replace(',', '.'));
         }
 
-        function setEndpointTraceMode(enabled) {
-            state.endpointTraceMode = Boolean(enabled);
+        function showSelectionHint(message = '') {
+            const hint = document.getElementById('selection-hint');
+            if (!hint) return;
+            hint.textContent = message;
+            hint.classList.toggle('hidden', !message);
+        }
+
+        function updateConstructionToolsUI() {
+            const traceButton = document.getElementById('btn-trace-point');
+            const fixButton = document.getElementById('btn-fix-strip');
+            const traceEnabled = state.traceSelectionMode || state.tracedPointId !== null;
+
+            if (traceButton) {
+                traceButton.classList.toggle('active-teal', traceEnabled);
+                traceButton.setAttribute('aria-pressed', String(traceEnabled));
+            }
+            if (fixButton) {
+                fixButton.classList.toggle('active-orange', state.fixSelectionMode);
+                fixButton.setAttribute('aria-pressed', String(state.fixSelectionMode));
+            }
+        }
+
+        function toggleTraceSelectionMode() {
+            closeAnglePanel();
+            closeSegmentPanel();
+            state.fixSelectionMode = false;
+
+            if (state.traceSelectionMode) {
+                state.traceSelectionMode = false;
+                showSelectionHint();
+            } else if (state.tracedPointId !== null) {
+                state.tracedPointId = null;
+                state.activePointTraceStroke = null;
+                showSelectionHint();
+                playSound('click');
+            } else {
+                state.traceSelectionMode = true;
+                showSelectionHint('Trace : cliquez sur le point à suivre');
+                playSound('click');
+            }
+            updateConstructionToolsUI();
+            render();
+        }
+
+        function toggleFixSelectionMode() {
+            closeAnglePanel();
+            closeSegmentPanel();
+            state.traceSelectionMode = false;
+            state.fixSelectionMode = !state.fixSelectionMode;
+            showSelectionHint(state.fixSelectionMode ? 'Fixer : cliquez au milieu d’un segment' : '');
+            updateConstructionToolsUI();
+            playSound('click');
+        }
+
+        function selectTracedPoint(point) {
+            state.tracedPointId = point.id;
+            state.traceSelectionMode = false;
+            showSelectionHint('Trace active : déplacez le point sélectionné');
+            setTimeout(() => {
+                if (!state.traceSelectionMode) showSelectionHint();
+            }, 1300);
+            updateConstructionToolsUI();
+            playSound('pop');
+            render();
+        }
+
+        function toggleStripFixed(strip) {
+            strip.fixed = !strip.fixed;
+            updateFixedPointFlags();
+            state.fixSelectionMode = false;
+            showSelectionHint(strip.fixed ? 'Segment fixé' : 'Segment libéré');
+            setTimeout(() => {
+                if (!state.fixSelectionMode) showSelectionHint();
+            }, 900);
+            updateConstructionToolsUI();
+            playSound(strip.fixed ? 'snap' : 'detach');
+            render();
+        }
+
+        function beginPointTraceCapture() {
+            if (state.tracedPointId === null) return;
+            const point = state.points.find(candidate => candidate.id === state.tracedPointId);
+            if (!point) {
+                state.tracedPointId = null;
+                updateConstructionToolsUI();
+                return;
+            }
+            state.activePointTraceStroke = {
+                color: '#0f766e',
+                width: 2.5,
+                points: [{ x: point.x, y: point.y }],
+                committed: false,
+                automaticTrace: true
+            };
+        }
+
+        function recordTracedPoint() {
+            const stroke = state.activePointTraceStroke;
+            if (!stroke || state.tracedPointId === null) return;
+            const point = state.points.find(candidate => candidate.id === state.tracedPointId);
+            if (!point) return;
+            const last = stroke.points[stroke.points.length - 1];
+            if (Math.hypot(point.x - last.x, point.y - last.y) < 1.5) return;
+            if (!stroke.committed) {
+                state.strokes.push(stroke);
+                stroke.committed = true;
+            }
+            appendEndpointTracePoint(stroke, point.x, point.y);
+        }
+
+        function endPointTraceCapture() {
+            state.activePointTraceStroke = null;
         }
 
         function openSegmentPanel() {
@@ -1159,8 +1303,6 @@
             segmentPanelOpen = true;
             panel.classList.remove('hidden');
             document.getElementById('segment-error')?.classList.add('hidden');
-            const traceCheckbox = document.getElementById('segment-trace-checkbox');
-            if (traceCheckbox) traceCheckbox.checked = state.endpointTraceMode;
             setTimeout(() => { input.focus(); input.select(); }, 0);
         }
 
@@ -1846,6 +1988,7 @@ const positionGhost = (clientX, clientY) => {
                 const it = pendingSolveIters || 0;
                 pendingSolveIters = 0;
                 if (it > 0) solveConstraints(it);
+                recordTracedPoint();
                 render();
             });
         }
@@ -1860,8 +2003,8 @@ const positionGhost = (clientX, clientY) => {
                     const p2 = pointById.get(strip.p2);
                     if (!p1 || !p2) return;
 
-                    const pinned1 = p1.pinned || protractorAnchorShouldPin(p1.id);
-                    const pinned2 = p2.pinned || protractorAnchorShouldPin(p2.id);
+                    const pinned1 = isPointPinned(p1) || protractorAnchorShouldPin(p1.id);
+                    const pinned2 = isPointPinned(p2) || protractorAnchorShouldPin(p2.id);
 
                     const dx = p2.x - p1.x;
                     const dy = p2.y - p1.y;
@@ -1886,8 +2029,8 @@ const positionGhost = (clientX, clientY) => {
                     const B = pointById.get(g.bId);
                     if (!A || !B) return;
 
-                    const pinnedA = A.pinned || protractorAnchorShouldPin(A.id);
-                    const pinnedB = B.pinned || protractorAnchorShouldPin(B.id);
+                    const pinnedA = isPointPinned(A) || protractorAnchorShouldPin(A.id);
+                    const pinnedB = isPointPinned(B) || protractorAnchorShouldPin(B.id);
 
                     const angleRad = g.degrees * (Math.PI / 180);
                     const r1 = g.leg1Len;
@@ -1941,10 +2084,10 @@ const positionGhost = (clientX, clientY) => {
 
         function removeStrip(strip) {
             state.strips = state.strips.filter(s => s.id !== strip.id);
-            cleanupAngleGroups();
             const usedPointIds = new Set();
             state.strips.forEach(s => { usedPointIds.add(s.p1); usedPointIds.add(s.p2); });
             state.points = state.points.filter(p => usedPointIds.has(p.id));
+            cleanupAngleGroups();
             playSound('trash');
             render();
         }
@@ -1983,12 +2126,11 @@ const positionGhost = (clientX, clientY) => {
             // Supprimer toutes les bandes qui touchent cet ensemble de points
             state.strips = state.strips.filter(s => !(visited.has(s.p1) || visited.has(s.p2)));
 
-            cleanupAngleGroups();
-
             // Recalculer les points encore utilisés
             const usedPointIds = new Set();
             state.strips.forEach(s => { usedPointIds.add(s.p1); usedPointIds.add(s.p2); });
             state.points = state.points.filter(p => usedPointIds.has(p.id));
+            cleanupAngleGroups();
 
             playSound('trash');
             render();
@@ -2033,10 +2175,16 @@ const positionGhost = (clientX, clientY) => {
             state.isSidebarDragging = false;
             state.globalLock = false;
             state.globalLockHold = false;
+            state.traceSelectionMode = false;
+            state.tracedPointId = null;
+            state.activePointTraceStroke = null;
+            state.fixSelectionMode = false;
             state.activeGeoTool = null;
             state.stripMode = 'normal';
             CONFIG.currentStripWidth = CONFIG.normalStripWidth;
             state.nextAngleGroupId = 1;
+            state.nextCustomStripColor = 0;
+            state.customStripCount = 0;
             state.zoom = 1;
             state.pan = {x: 0, y: 0};
             state.isPanning = false;
@@ -2057,10 +2205,13 @@ const positionGhost = (clientX, clientY) => {
             bgLayer.style.backgroundImage = '';
             bgUploader.value = '';
             closeAnglePanel();
+            closeSegmentPanel();
+            showSelectionHint();
             clearDrawings();
             setTool('hand');
             updateLockUI();
             updateStripModeUI();
+            updateConstructionToolsUI();
             render();
         }
 
@@ -2138,6 +2289,7 @@ const positionGhost = (clientX, clientY) => {
                 if (g.aId === oldId) g.aId = newId;
                 if (g.bId === oldId) g.bId = newId;
             });
+            if (state.tracedPointId === oldId) state.tracedPointId = newId;
         }
 
         function cleanupAngleGroups() {
@@ -2147,6 +2299,12 @@ const positionGhost = (clientX, clientY) => {
                 pointIds.has(g.vertexId) && pointIds.has(g.aId) && pointIds.has(g.bId) &&
                 stripIds.has(g.strip1Id) && stripIds.has(g.strip2Id)
             );
+            if (state.tracedPointId !== null && !pointIds.has(state.tracedPointId)) {
+                state.tracedPointId = null;
+                state.activePointTraceStroke = null;
+                updateConstructionToolsUI();
+            }
+            updateFixedPointFlags();
         }
 
 
@@ -2173,7 +2331,35 @@ const positionGhost = (clientX, clientY) => {
             const attachedId = proTool && proTool.attachedPointId;
 
             const point = getPointAt(pos.x, pos.y);
+
+            if (state.traceSelectionMode) {
+                if (point) selectTracedPoint(point);
+                else showSelectionHint('Trace : cliquez précisément sur un aimant');
+                return;
+            }
+
+            if (state.fixSelectionMode) {
+                let stripToToggle = getStripAt(pos.x, pos.y);
+                if (!stripToToggle && point) {
+                    const connected = state.strips.filter(strip => strip.p1 === point.id || strip.p2 === point.id);
+                    if (connected.length === 1) stripToToggle = connected[0];
+                }
+                if (stripToToggle) toggleStripFixed(stripToToggle);
+                else showSelectionHint('Fixer : cliquez au milieu d’un segment');
+                return;
+            }
+
+            beginPointTraceCapture();
+
             if (point) {
+                if (point.fixed) {
+                    showSelectionHint('Ce point appartient à un segment fixé');
+                    setTimeout(() => {
+                        if (!state.traceSelectionMode && !state.fixSelectionMode) showSelectionHint();
+                    }, 900);
+                    return;
+                }
+
                 // Angles fixes (créés via +) :
                 // - si on attrape une branche => rotation rigide
                 // - si on attrape le sommet => déplacement normal (comme avant)
@@ -2211,36 +2397,18 @@ const positionGhost = (clientX, clientY) => {
 
                 if (attachedId && point.id === attachedId) proTool.attachedPointId = null;
 
-                // Mode trace : une extrémité libre se comporte comme la pointe d'un compas.
-                // L'autre extrémité reste fixe et le chemin du point déplacé est conservé.
-                if (state.endpointTraceMode) {
-                    const connectedStrips = state.strips.filter(s => s.p1 === point.id || s.p2 === point.id);
-                    if (connectedStrips.length === 1) {
-                        const strip = connectedStrips[0];
-                        const pivotId = strip.p1 === point.id ? strip.p2 : strip.p1;
-                        const pivot = state.points.find(p => p.id === pivotId);
-                        if (pivot) {
-                            if (attachedId && (attachedId === point.id || attachedId === pivot.id)) proTool.attachedPointId = null;
-                            point.pinned = true;
-                            pivot.pinned = true;
-
-                            const stroke = {
-                                color: '#0f766e',
-                                width: 2.5,
-                                points: [{ x: point.x, y: point.y }],
-                                automaticTrace: true
-                            };
-                            state.strokes.push(stroke);
-                            state.draggingTracedEndpoint = {
-                                point,
-                                pivot,
-                                radius: getStripLength(strip),
-                                stroke
-                            };
-                            container.style.cursor = 'crosshair';
-                            return;
-                        }
-                    }
+                // Si l'autre extrémité appartient à un segment fixé, cette extrémité
+                // tourne naturellement autour d'elle, même sans verrou global.
+                const fixedNeighborLink = state.strips.find(strip => {
+                    if (strip.p1 !== point.id && strip.p2 !== point.id) return false;
+                    const otherId = strip.p1 === point.id ? strip.p2 : strip.p1;
+                    return state.points.find(candidate => candidate.id === otherId)?.fixed;
+                });
+                if (fixedNeighborLink) {
+                    state.draggingPoint = point;
+                    point.pinned = true;
+                    container.style.cursor = 'grabbing';
+                    return;
                 }
 
                 // Verrou global : au lieu de déformer en tirant un aimant, on manipule la construction comme un objet rigide
@@ -2303,6 +2471,22 @@ state.draggingPoint = point; point.pinned = true; container.style.cursor = 'grab
 
             const strip = getStripAt(pos.x, pos.y);
             if (strip) {
+                if (strip.fixed) {
+                    showSelectionHint('Ce segment est fixé');
+                    setTimeout(() => {
+                        if (!state.traceSelectionMode && !state.fixSelectionMode) showSelectionHint();
+                    }, 900);
+                    return;
+                }
+                const p1 = state.points.find(point => point.id === strip.p1);
+                const p2 = state.points.find(point => point.id === strip.p2);
+                if (p1 && p2 && p1.fixed !== p2.fixed) {
+                    const movableEndpoint = p1.fixed ? p2 : p1;
+                    state.draggingPoint = movableEndpoint;
+                    movableEndpoint.pinned = true;
+                    container.style.cursor = 'grabbing';
+                    return;
+                }
                 state.draggingStrip = getAllConnectedPoints(strip);
                 state.draggingStripRef = strip; state.dragOffset = pos;
                 // Si ce groupe contenait le point sur lequel le rapporteur était aimanté, on autorise le déplacement libre
@@ -2348,7 +2532,7 @@ state.draggingPoint = point; point.pinned = true; container.style.cursor = 'grab
             // Plateau fixe : pas de pan.
 
             // Curseurs (sans écraser le "grabbing" pendant un drag)
-            const isDraggingSomething = !!(state.draggingAngleMove || state.draggingAngle || state.draggingPoint || state.draggingStrip || state.draggingRigidRotate || state.draggingTracedEndpoint || state.isSidebarDragging);
+            const isDraggingSomething = !!(state.draggingAngleMove || state.draggingAngle || state.draggingPoint || state.draggingStrip || state.draggingRigidRotate || state.isSidebarDragging);
             if (!e.target.closest('.geo-tool')) {
                 if (isDraggingSomething) {
                     container.style.cursor = 'grabbing';
@@ -2359,6 +2543,9 @@ state.draggingPoint = point; point.pinned = true; container.style.cursor = 'grab
                     // Plateau fixe : on montre "grab" uniquement quand on est sur un objet manipulable.
                     let cur = (hoverPoint || hoverStrip) ? 'grab' : 'default';
 
+                    if (state.traceSelectionMode) cur = hoverPoint ? 'crosshair' : 'default';
+                    if (state.fixSelectionMode) cur = (hoverStrip || hoverPoint) ? 'pointer' : 'default';
+
                     if (hoverPoint) {
                         const ag = state.angleGroups.find(g => g.aId === hoverPoint.id || g.bId === hoverPoint.id || g.vertexId === hoverPoint.id);
                         if (ag && (ag.aId === hoverPoint.id || ag.bId === hoverPoint.id)) cur = 'crosshair';
@@ -2366,18 +2553,6 @@ state.draggingPoint = point; point.pinned = true; container.style.cursor = 'grab
 
                     container.style.cursor = cur;
                 }
-            }
-
-            // Pointe traceuse : rotation à rayon constant autour de l'autre extrémité.
-            if (state.draggingTracedEndpoint) {
-                e.preventDefault();
-                const trace = state.draggingTracedEndpoint;
-                const angle = Math.atan2(pos.y - trace.pivot.y, pos.x - trace.pivot.x);
-                trace.point.x = trace.pivot.x + trace.radius * Math.cos(angle);
-                trace.point.y = trace.pivot.y + trace.radius * Math.sin(angle);
-                appendEndpointTracePoint(trace.stroke, trace.point.x, trace.point.y);
-                queueRenderOnly();
-                return;
             }
 
             // Déplacement rigide d'un angle fixe quand on attrape le sommet
@@ -2409,6 +2584,7 @@ state.draggingPoint = point; point.pinned = true; container.style.cursor = 'grab
                         B.x += dx; B.y += dy;
                     }
                 }
+                recordTracedPoint();
                 queueRenderOnly();
                 return;
             }
@@ -2434,6 +2610,7 @@ state.draggingPoint = point; point.pinned = true; container.style.cursor = 'grab
                         g.baseAngle = base;
                     }
                 }
+                recordTracedPoint();
                 queueSolveRender(2);
                 return;
             }
@@ -2454,13 +2631,14 @@ state.draggingPoint = point; point.pinned = true; container.style.cursor = 'grab
                         if (pid === rr.pivotId) return;
                         const sp = rr.startPos.get(pid);
                         const p = rr.pointRef ? rr.pointRef.get(pid) : state.points.find(pp => pp.id === pid);
-                        if (!sp || !p) return;
+                        if (!sp || !p || p.fixed) return;
                         const dx = sp.x - pivot.x;
                         const dy = sp.y - pivot.y;
                         p.x = pivot.x + dx * c - dy * s;
                         p.y = pivot.y + dx * s + dy * c;
                     });
                 }
+                recordTracedPoint();
                 queueRenderOnly();
                 return;
             }
@@ -2475,7 +2653,23 @@ state.draggingPoint = point; point.pinned = true; container.style.cursor = 'grab
                 // on force une rotation autour du sommet (longueur conservée), ce qui évite que le sommet glisse.
                 const proT = state.tools.protractor;
                 let rotLocked = false;
-                if (proT.visible && proT.attachedPointId && proT.attachedPointId !== self.id && protractorAnchorShouldPin(proT.attachedPointId)) {
+                const fixedLink = state.strips.find(strip => {
+                    if (strip.p1 !== self.id && strip.p2 !== self.id) return false;
+                    const otherId = strip.p1 === self.id ? strip.p2 : strip.p1;
+                    return state.points.find(point => point.id === otherId)?.fixed;
+                });
+                if (fixedLink) {
+                    const pivotId = fixedLink.p1 === self.id ? fixedLink.p2 : fixedLink.p1;
+                    const pivot = state.points.find(point => point.id === pivotId);
+                    if (pivot) {
+                        rotLocked = true;
+                        const radius = getStripLength(fixedLink);
+                        const angle = Math.atan2(pos.y - pivot.y, pos.x - pivot.x);
+                        targetX = pivot.x + radius * Math.cos(angle);
+                        targetY = pivot.y + radius * Math.sin(angle);
+                    }
+                }
+                if (!rotLocked && proT.visible && proT.attachedPointId && proT.attachedPointId !== self.id && protractorAnchorShouldPin(proT.attachedPointId)) {
                     const pivotP = state.points.find(p => p.id === proT.attachedPointId);
                     if (pivotP) {
                         const link = state.strips.find(s => (s.p1 === self.id && s.p2 === pivotP.id) || (s.p2 === self.id && s.p1 === pivotP.id));
@@ -2516,6 +2710,7 @@ state.draggingPoint = point; point.pinned = true; container.style.cursor = 'grab
                 }
 
                 state.draggingPoint.x = targetX; state.draggingPoint.y = targetY;
+                recordTracedPoint();
                 queueSolveRender(3);
 
             } else if (state.draggingStrip) {
@@ -2531,8 +2726,13 @@ state.draggingPoint = point; point.pinned = true; container.style.cursor = 'grab
                 }
 
                 const dx = pos.x - state.dragOffset.x; const dy = pos.y - state.dragOffset.y;
-                state.draggingStrip.forEach(p => { p.x += dx; p.y += dy; });
+                state.draggingStrip.forEach(p => {
+                    if (p.fixed) return;
+                    p.x += dx;
+                    p.y += dy;
+                });
                 state.dragOffset = pos;
+                recordTracedPoint();
                 queueRenderOnly();
             }
         }
@@ -2556,18 +2756,7 @@ state.draggingPoint = point; point.pinned = true; container.style.cursor = 'grab
             if (!e.touches && state.penRightOverride) {
                 exitPenRightOverride();
             }
-
-            if (state.draggingTracedEndpoint) {
-                const trace = state.draggingTracedEndpoint;
-                trace.point.pinned = false;
-                trace.pivot.pinned = false;
-                if (trace.stroke.points.length < 2) {
-                    state.strokes = state.strokes.filter(stroke => stroke !== trace.stroke);
-                }
-                state.draggingTracedEndpoint = null;
-                render();
-                return;
-            }
+            endPointTraceCapture();
 
             // Déplacement rigide d'un angle fixe quand on attrape le sommet (fin du drag)
             if (state.draggingAngleMove) {
@@ -2872,6 +3061,20 @@ if (state.draggingPoint) {
                 const style = CONFIG.colors[strip.type];
                 ctxStrips.lineCap = 'round';
 
+                if (strip.fixed) {
+                    ctxStrips.save();
+                    ctxStrips.shadowColor = 'rgba(0,0,0,0)';
+                    ctxStrips.setLineDash(state.stripMode === 'thin' ? [6, 5] : [9, 7]);
+                    ctxStrips.lineCap = 'round';
+                    ctxStrips.lineWidth = state.stripMode === 'thin' ? 6 : CONFIG.currentStripWidth + 8;
+                    ctxStrips.strokeStyle = 'rgba(245,158,11,0.9)';
+                    ctxStrips.beginPath();
+                    ctxStrips.moveTo(p1.x, p1.y);
+                    ctxStrips.lineTo(p2.x, p2.y);
+                    ctxStrips.stroke();
+                    ctxStrips.restore();
+                }
+
                 if (state.stripMode === 'thin') {
                     // Option B : "double-trait" pour des segments plus lisibles (projection / outils par-dessus)
                     // 1) sous-trait : léger contour sombre un peu plus épais
@@ -2985,11 +3188,29 @@ if (state.draggingPoint) {
                 const strokeSize = state.stripMode === 'thin' ? 1.0 : 2;
 
                 ctxStrips.arc(p.x, p.y, rivetSize, 0, Math.PI * 2);
-                ctxStrips.fillStyle = connectionCount > 1 ? '#475569' : '#f1f5f9';
+                ctxStrips.fillStyle = p.fixed ? '#f59e0b' : (connectionCount > 1 ? '#475569' : '#f1f5f9');
                 ctxStrips.fill();
                 ctxStrips.strokeStyle = '#334155';
                 ctxStrips.lineWidth = strokeSize;
                 ctxStrips.stroke();
+
+                if (p.fixed) {
+                    ctxStrips.beginPath();
+                    const fixedRing = rivetSize + (state.stripMode === 'thin' ? 3 : 5);
+                    ctxStrips.arc(p.x, p.y, fixedRing, 0, Math.PI * 2);
+                    ctxStrips.strokeStyle = 'rgba(180,83,9,0.95)';
+                    ctxStrips.lineWidth = state.stripMode === 'thin' ? 1.5 : 2.5;
+                    ctxStrips.stroke();
+                }
+
+                if (state.tracedPointId === p.id) {
+                    ctxStrips.beginPath();
+                    const traceRing = rivetSize + (state.stripMode === 'thin' ? 5 : 9);
+                    ctxStrips.arc(p.x, p.y, traceRing, 0, Math.PI * 2);
+                    ctxStrips.strokeStyle = 'rgba(13,148,136,0.95)';
+                    ctxStrips.lineWidth = state.stripMode === 'thin' ? 2 : 3;
+                    ctxStrips.stroke();
+                }
 
                 // Surbrillance du magnet si fait partie du groupe "poubelle"
                 if (state.trashPreviewPointIds && state.trashPreviewPointIds.has(p.id)) {
@@ -3102,6 +3323,7 @@ if (state.draggingPoint) {
         function clearDrawings() {
             state.strokes = [];
             state._currentStroke = null;
+            state.activePointTraceStroke = null;
             ctxDraw.clearRect(0, 0, canvasDraw.width, canvasDraw.height);
         }
 
@@ -3132,6 +3354,7 @@ canvasDraw.addEventListener('mousedown', startDraw);
         initGeometryTools();
         updateStripModeUI();
         updateLockUI();
+        updateConstructionToolsUI();
         document.querySelectorAll('button[title]').forEach((button) => {
             if (!button.hasAttribute('aria-label')) button.setAttribute('aria-label', button.title);
         });
@@ -3158,6 +3381,13 @@ canvasDraw.addEventListener('mousedown', startDraw);
 
         // Option : Entrée valide
         document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && (state.traceSelectionMode || state.fixSelectionMode)) {
+                state.traceSelectionMode = false;
+                state.fixSelectionMode = false;
+                showSelectionHint();
+                updateConstructionToolsUI();
+                return;
+            }
             if (segmentPanelOpen) {
                 if (e.key === 'Enter') { e.preventDefault(); confirmSegmentPanel(); }
                 if (e.key === 'Escape') { closeSegmentPanel(); }
@@ -3187,8 +3417,17 @@ canvasDraw.addEventListener('mousedown', startDraw);
                         <ul class="list-disc ml-5 mt-1 space-y-1">
                             <li><b>Créer un segment</b> : saisir une longueur de 1 à 20 cm (par exemple <b>3,5</b>).</li>
                             <li>Les longueurs affichées sont <b>proportionnelles</b>, même après un zoom.</li>
-                            <li><b>Tracer l’extrémité</b> : l’extrémité libre dessine un arc en pivotant autour de l’autre.</li>
                         </ul>
+                    </div>
+
+                    <div>
+                        <div class="font-extrabold text-slate-700">Construire et laisser un arc</div>
+                        <ol class="list-disc ml-5 mt-1 space-y-1">
+                            <li><b>Fixer</b> → cliquer au milieu du segment qui ne doit plus bouger (contour orange).</li>
+                            <li><b>Trace</b> → cliquer sur le point dont on veut conserver le déplacement (halo turquoise).</li>
+                            <li>Faire pivoter le segment relié : la base reste fixe et le point dessine son arc.</li>
+                        </ol>
+                        <div class="mt-1 text-xs text-slate-500">Recliquer sur <b>Trace</b> arrête la trace. « Effacer les annotations » efface aussi les arcs. Pour libérer une base : <b>Fixer</b>, puis recliquer sur son segment.</div>
                     </div>
 
                     <div>
