@@ -1871,9 +1871,25 @@ function loadSharedConfiguration(){
      on lance l'impression dès que les cartes sont générées, au lieu de
      laisser le professeur chercher le bouton Imprimer. */
   impressionAuto = params.get("imprimer") === "1";
-  const sharedNames = ["mode", "seed", "cards", "equation", "tasksMin", "tasksMax", "visibleMin", "visibleMax", "hidden", "hiddenMax", "totalMin", "totalMax", "splats", "clues", "structure", "mul", "div", "add", "sub", "deltaMax", "operation", "beadMax", "opposites", "colors", "unknown", "print", "duplex", "layout", "title", "eleve", "parcours", "imprimer"];
+  /* Étape composée : « suite » porte les réglages des activités SUIVANTES, mis
+     bout à bout dans UNE seule série élève (le monde 2 rejoue les trois fiches
+     de Claire d'affilée). Chaque partie est une adresse encodée, séparée par « ; ».
+     Sans ce paramètre, la page se comporte exactement comme avant. */
+  eleveSuite = [];
+  if(eleveActif && params.has("suite")){
+    eleveSuite = String(params.get("suite") || "")
+      .split(";").map(part => part.trim()).filter(Boolean).slice(0, 5);
+  }
+  const sharedNames = ["mode", "seed", "cards", "equation", "tasksMin", "tasksMax", "visibleMin", "visibleMax", "hidden", "hiddenMax", "totalMin", "totalMax", "splats", "clues", "structure", "mul", "div", "add", "sub", "deltaMax", "operation", "beadMax", "opposites", "colors", "unknown", "print", "duplex", "layout", "title", "eleve", "parcours", "imprimer", "suite"];
   if(!sharedNames.some(name => params.has(name))) return false;
+  appliquerConfiguration(params);
+  return true;
+}
 
+/* Applique un jeu de réglages (adresse partagée) aux contrôles de la page.
+   Séparé de loadSharedConfiguration pour pouvoir être rappelé sur chaque partie
+   d'une étape composée. */
+function appliquerConfiguration(params){
   setSelectFromShare(params, "mode", activityEl);
   applyDefaultUnknownDisplayForActivity();
   syncSettingsUI();
@@ -1907,7 +1923,6 @@ function loadSharedConfiguration(){
 
   syncSettingsUI();
   syncNumberedQuestionMarkButton();
-  return true;
 }
 
 function addShareControl(params, name, el){
@@ -7344,6 +7359,8 @@ let revealState = 0; // États selon le mode (A/B: 0→3, B±: 0→2, autres: 0/
 /* Parcours élève : aucun réglage visible, activé uniquement par ?eleve=1 dans l'adresse. */
 let eleveActif = false, parcoursId = "", impressionAuto = false;
 let eleveIdx = 0, eleveEtoiles = 0, eleveSerie = [], eleveResultats = [], eleveCarteFautee = false, eleveRepriseFaite = false;
+/* parties supplémentaires d'une étape composée (voir « suite » dans l'adresse) */
+let eleveSuite = [];
 /* échecs sur la carte en cours (au 3e, on propose la réponse) et file des cartes rouges à rejouer */
 let eleveEchecs = 0, eleveRejeu = null;
 const ELEVE_ECHECS_MAX = 3, ELEVE_URL_MONDES = "/outils/splat_univers.html";
@@ -7431,6 +7448,28 @@ function generate(){
   cards = out;
   idx = 0;
   revealState = 0;
+  updateUI();
+}
+
+/* Génère la série de l'adresse, puis celles de « suite », et les met bout à bout.
+   Une partie illisible est ignorée : on ne casse jamais la série déjà générée. */
+function genererSerieComposee(){
+  generate();
+  const toutes = cards.slice();
+  for(const partie of eleveSuite){
+    try{
+      appliquerConfiguration(new URLSearchParams(partie));
+      generate();
+      for(const c of cards) toutes.push(c);
+    }catch(e){ /* partie ignorée */ }
+  }
+  cards = toutes;
+  idx = 0;
+  revealState = 0;
+  /* la première génération avait déjà construit une série partielle : on la
+     reconstruit sur l'ensemble des cartes (reprise comprise). */
+  eleveSerie = []; eleveIdx = 0; eleveEtoiles = 0; eleveResultats = [];
+  eleveRejeu = null; eleveRepriseFaite = false;
   updateUI();
 }
 
@@ -7888,7 +7927,8 @@ if(!loadSharedConfiguration()){
   syncSettingsUI();
   syncPrintModeUI();
 }
-generate();
+if(eleveActif && eleveSuite.length) genererSerieComposee();
+else generate();
 if(impressionAuto) printSheet();
 
 </script>
