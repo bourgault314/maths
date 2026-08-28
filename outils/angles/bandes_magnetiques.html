@@ -234,7 +234,8 @@
                 scrollbar-width: none;
             }
             .header-right::-webkit-scrollbar { display: none; }
-            #angle-panel {
+            #angle-panel,
+            #segment-panel {
                 position: fixed !important;
                 top: 108px !important;
                 right: 6px !important;
@@ -246,8 +247,10 @@
         @media (max-width: 560px) {
             .brand-logo { width: 70px; }
             .zoom-controls button:nth-child(-n+2) { display: none; }
-            #btn-create-angle { padding-left: 9px; padding-right: 9px; }
-            #btn-create-angle > span { display: none; }
+            #btn-create-angle,
+            #btn-create-segment { padding-left: 9px; padding-right: 9px; }
+            #btn-create-angle > span,
+            #btn-create-segment > span { display: none; }
             aside { width: 4.6rem !important; padding-top: .75rem !important; gap: 1rem !important; }
         }
     </style>
@@ -372,6 +375,35 @@
 
                         <div class="mt-2 text-[11px] leading-snug text-slate-400">
                             Astuce : 0 à 360. Le pavé fonctionne sans clavier (tablette).
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Création d'une bande de longueur donnée -->
+                <div class="relative flex items-center bg-sky-50 p-1 rounded-xl border border-teal-200">
+                    <button id="btn-create-segment" onclick="toggleSegmentPanel()" class="tool-btn text-teal-700 hover:bg-teal-50 px-3 py-2 rounded-lg font-bold text-sm flex items-center gap-2" title="Créer un segment de longueur donnée">
+                        <span>Créer un segment</span>
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M4 16L20 8"/>
+                            <circle cx="4" cy="16" r="2" fill="currentColor" stroke="none"/>
+                            <circle cx="20" cy="8" r="2" fill="currentColor" stroke="none"/>
+                        </svg>
+                    </button>
+
+                    <div id="segment-panel" class="hidden absolute right-0 top-full mt-2 z-50 w-72 bg-white rounded-xl border border-teal-200 shadow-lg p-2">
+                        <div class="flex items-center justify-between gap-2 mb-2">
+                            <label for="segment-length" class="text-xs font-extrabold text-slate-500">Longueur du segment (cm)</label>
+                            <button onclick="closeSegmentPanel()" class="tool-btn px-2 py-1 text-slate-500 hover:bg-slate-100 rounded-lg text-xs font-bold">Fermer</button>
+                        </div>
+
+                        <div class="flex items-center gap-2">
+                            <input id="segment-length" type="text" inputmode="decimal" value="5" autocomplete="off" aria-describedby="segment-hint segment-error" class="flex-1 w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-lg font-extrabold text-slate-700 text-center" />
+                            <button onclick="confirmSegmentPanel()" class="tool-btn px-3 py-2 bg-slate-100 hover:bg-slate-200 rounded-lg font-extrabold text-teal-700">Créer</button>
+                        </div>
+
+                        <div id="segment-error" class="hidden mt-2 text-xs font-bold text-red-600" role="alert">Entrez une longueur comprise entre 1 et 20 cm.</div>
+                        <div id="segment-hint" class="mt-2 text-[11px] leading-snug text-slate-500">
+                            Les longueurs sont proportionnelles à l’écran : 3, 4 et 5 cm gardent exactement le rapport 3:4:5.
                         </div>
                     </div>
                 </div>
@@ -541,6 +573,7 @@
             normalStripWidth: 26,
             thinStripWidth: 0.7, // Encore plus fin (était 1.0)
             currentStripWidth: 26, 
+            pixelsPerCm: 50,
             colors: {
                 yellow: { fill: '#f59e0b', stroke: '#b45309', length: 320 }, 
                 red:    { fill: '#ef4444', stroke: '#b91c1c', length: 250 }, 
@@ -609,7 +642,9 @@
             nextAngleGroupId: 1,
             _stripsVersion: 0,
             _sortedStripsCacheVersion: -1,
-            _sortedStripsCache: null
+            _sortedStripsCache: null,
+            nextCustomStripColor: 0,
+            customStripCount: 0
         };
 
         const canvasStrips = document.getElementById('strips-canvas');
@@ -971,6 +1006,7 @@
         function openAnglePanel() {
             const panel = document.getElementById('angle-panel');
             if (!panel) return;
+            closeSegmentPanel();
             angleBuffer = '';
             anglePanelOpen = true;
             panel.classList.remove('hidden');
@@ -1085,6 +1121,74 @@
                 strip1Id: strip1.id,
                 strip2Id: strip2.id
             });
+        }
+
+        /* --- CRÉATION D'UN SEGMENT DE LONGUEUR DONNÉE --- */
+        let segmentPanelOpen = false;
+        const customStripTypes = ['red', 'blue', 'green', 'purple', 'yellow'];
+
+        function getStripLength(strip) {
+            return Number.isFinite(strip?.lengthPx) && strip.lengthPx > 0
+                ? strip.lengthPx
+                : CONFIG.colors[strip.type].length;
+        }
+
+        function formatLengthCm(value) {
+            return Number(value).toLocaleString('fr-FR', { maximumFractionDigits: 1 });
+        }
+
+        function openSegmentPanel() {
+            const panel = document.getElementById('segment-panel');
+            const input = document.getElementById('segment-length');
+            if (!panel || !input) return;
+            closeAnglePanel();
+            segmentPanelOpen = true;
+            panel.classList.remove('hidden');
+            document.getElementById('segment-error')?.classList.add('hidden');
+            setTimeout(() => { input.focus(); input.select(); }, 0);
+        }
+
+        function closeSegmentPanel() {
+            const panel = document.getElementById('segment-panel');
+            if (!panel) return;
+            segmentPanelOpen = false;
+            panel.classList.add('hidden');
+        }
+
+        function toggleSegmentPanel() {
+            const panel = document.getElementById('segment-panel');
+            if (!panel) return;
+            if (panel.classList.contains('hidden')) openSegmentPanel();
+            else closeSegmentPanel();
+        }
+
+        function confirmSegmentPanel() {
+            const input = document.getElementById('segment-length');
+            const error = document.getElementById('segment-error');
+            if (!input) return;
+
+            const lengthCm = Number(input.value.trim().replace(',', '.'));
+            if (!Number.isFinite(lengthCm) || lengthCm < 1 || lengthCm > 20) {
+                error?.classList.remove('hidden');
+                input.classList.add('ring-2', 'ring-red-300');
+                setTimeout(() => input.classList.remove('ring-2', 'ring-red-300'), 300);
+                playSound('click');
+                return;
+            }
+
+            error?.classList.add('hidden');
+            const type = customStripTypes[state.nextCustomStripColor % customStripTypes.length];
+            state.nextCustomStripColor++;
+
+            const rect = container.getBoundingClientRect();
+            const cx = (rect.width / 2 - state.pan.x) / state.zoom;
+            const row = state.customStripCount % 5;
+            const cy = (rect.height / 2 - state.pan.y) / state.zoom + (row - 2) * 62;
+            state.customStripCount++;
+
+            addStrip(type, cx, cy, 'horizontal', lengthCm * CONFIG.pixelsPerCm, lengthCm);
+            input.value = formatLengthCm(lengthCm);
+            closeSegmentPanel();
         }
 
         /* --- TOGGLES --- */
@@ -1746,7 +1850,7 @@ const positionGhost = (clientX, clientY) => {
                     const dx = p2.x - p1.x;
                     const dy = p2.y - p1.y;
                     const dist = Math.hypot(dx, dy);
-                    const targetLen = CONFIG.colors[strip.type].length;
+                    const targetLen = getStripLength(strip);
 
                     if (dist === 0) return;
                     const diff = (dist - targetLen) / dist;
@@ -1791,13 +1895,15 @@ const positionGhost = (clientX, clientY) => {
             }
         }
 
-        /* --- ACTIONS --- */        function addStrip(type, x = null, y = null, orientation = 'horizontal') {
+        /* --- ACTIONS --- */        function addStrip(type, x = null, y = null, orientation = 'horizontal', customLengthPx = null, lengthCm = null) {
             playSound('pop');
             const rect = container.getBoundingClientRect();
             // Correction coordonnées si non fournies (centre écran en coordonnées "monde")
             const cx = x !== null ? x : ((rect.width / 2 - state.pan.x) / state.zoom);
             const cy = y !== null ? y : ((rect.height / 2 - state.pan.y) / state.zoom);
-            const len = CONFIG.colors[type].length;
+            const len = Number.isFinite(customLengthPx) && customLengthPx > 0
+                ? customLengthPx
+                : CONFIG.colors[type].length;
 
             let p1, p2;
             if (orientation === 'vertical') {
@@ -1809,7 +1915,10 @@ const positionGhost = (clientX, clientY) => {
             }
 
             state.points.push(p1, p2);
-            state.strips.push({ id: state.nextId++, p1: p1.id, p2: p2.id, type: type });
+            const strip = { id: state.nextId++, p1: p1.id, p2: p2.id, type: type };
+            if (Number.isFinite(customLengthPx) && customLengthPx > 0) strip.lengthPx = customLengthPx;
+            if (Number.isFinite(lengthCm) && lengthCm > 0) strip.lengthCm = lengthCm;
+            state.strips.push(strip);
             state._stripsVersion++;
             render();
         }
@@ -2296,7 +2405,7 @@ state.draggingPoint = point; point.pinned = true; container.style.cursor = 'grab
                         const link = state.strips.find(s => (s.p1 === self.id && s.p2 === pivotP.id) || (s.p2 === self.id && s.p1 === pivotP.id));
                         if (link) {
                             rotLocked = true;
-                            const r = CONFIG.colors[link.type].length;
+                            const r = getStripLength(link);
                             const th = Math.atan2(pos.y - pivotP.y, pos.x - pivotP.x);
                             targetX = pivotP.x + r * Math.cos(th);
                             targetY = pivotP.y + r * Math.sin(th);
@@ -2636,8 +2745,8 @@ if (state.draggingPoint) {
             let sortedStrips = state._sortedStripsCache;
             if (!sortedStrips || state._sortedStripsCacheVersion !== state._stripsVersion || sortedStrips.length !== state.strips.length) {
                 sortedStrips = [...state.strips].sort((a, b) => {
-                    const lenA = CONFIG.colors[a.type].length;
-                    const lenB = CONFIG.colors[b.type].length;
+                    const lenA = getStripLength(a);
+                    const lenB = getStripLength(b);
                     return lenB - lenA;
                 });
                 state._sortedStripsCache = sortedStrips;
@@ -2700,6 +2809,45 @@ if (state.draggingPoint) {
                     ctxStrips.lineTo(p2.x, p2.y);
                     ctxStrips.stroke();
                 }
+            }
+
+            // Étiquette des segments créés avec une longueur en centimètres.
+            for (const strip of sortedStrips) {
+                if (!Number.isFinite(strip.lengthCm)) continue;
+                const p1 = pointById.get(strip.p1);
+                const p2 = pointById.get(strip.p2);
+                if (!p1 || !p2) continue;
+
+                const midX = (p1.x + p2.x) / 2;
+                const midY = (p1.y + p2.y) / 2;
+                let angle = Math.atan2(p2.y - p1.y, p2.x - p1.x);
+                if (angle > Math.PI / 2 || angle < -Math.PI / 2) angle += Math.PI;
+
+                const label = `${formatLengthCm(strip.lengthCm)} cm`;
+                ctxStrips.save();
+                ctxStrips.translate(midX, midY);
+                ctxStrips.rotate(angle);
+                ctxStrips.font = '800 13px ui-sans-serif, system-ui, sans-serif';
+                ctxStrips.textAlign = 'center';
+                ctxStrips.textBaseline = 'middle';
+                ctxStrips.shadowColor = 'rgba(0,0,0,0)';
+                ctxStrips.shadowBlur = 0;
+                ctxStrips.shadowOffsetY = 0;
+
+                if (state.stripMode === 'thin') {
+                    const labelWidth = ctxStrips.measureText(label).width + 10;
+                    ctxStrips.fillStyle = 'rgba(255,255,255,0.92)';
+                    ctxStrips.fillRect(-labelWidth / 2, -20, labelWidth, 17);
+                    ctxStrips.fillStyle = '#0f172a';
+                    ctxStrips.fillText(label, 0, -11.5);
+                } else {
+                    ctxStrips.lineWidth = 3;
+                    ctxStrips.strokeStyle = 'rgba(15,23,42,0.45)';
+                    ctxStrips.fillStyle = '#ffffff';
+                    ctxStrips.strokeText(label, 0, 0);
+                    ctxStrips.fillText(label, 0, 0);
+                }
+                ctxStrips.restore();
             }
 
             // Prévisualisation suppression (poubelle) : surbrillance du groupe
@@ -2903,21 +3051,30 @@ canvasDraw.addEventListener('mousedown', startDraw);
 
     
 
-        // Fermer le pavé numérique si on clique/touche ailleurs
-        function handleAnglePanelOutside(e) {
-            if (!anglePanelOpen) return;
-            const panel = document.getElementById('angle-panel');
-            const btn = document.getElementById('btn-create-angle');
-            if (!panel || !btn) return;
+        // Fermer les panneaux de création si on clique/touche ailleurs.
+        function handleCreatorPanelsOutside(e) {
             const t = e.target;
-            if (panel.contains(t) || btn.contains(t)) return;
-            closeAnglePanel();
+            if (anglePanelOpen) {
+                const panel = document.getElementById('angle-panel');
+                const btn = document.getElementById('btn-create-angle');
+                if (panel && btn && !panel.contains(t) && !btn.contains(t)) closeAnglePanel();
+            }
+            if (segmentPanelOpen) {
+                const panel = document.getElementById('segment-panel');
+                const btn = document.getElementById('btn-create-segment');
+                if (panel && btn && !panel.contains(t) && !btn.contains(t)) closeSegmentPanel();
+            }
         }
-        document.addEventListener('mousedown', handleAnglePanelOutside);
-        document.addEventListener('touchstart', handleAnglePanelOutside, {passive: true});
+        document.addEventListener('mousedown', handleCreatorPanelsOutside);
+        document.addEventListener('touchstart', handleCreatorPanelsOutside, {passive: true});
 
         // Option : Entrée valide
         document.addEventListener('keydown', (e) => {
+            if (segmentPanelOpen) {
+                if (e.key === 'Enter') { e.preventDefault(); confirmSegmentPanel(); }
+                if (e.key === 'Escape') { closeSegmentPanel(); }
+                return;
+            }
             if (!anglePanelOpen) return;
             if (e.key === 'Enter') { confirmAnglePanel(); }
             if (e.key === 'Escape') { closeAnglePanel(); }
@@ -2937,6 +3094,14 @@ canvasDraw.addEventListener('mousedown', startDraw);
                 </div>
 
                 <div class="text-sm text-slate-600 leading-relaxed space-y-3">
+                    <div>
+                        <div class="font-extrabold text-slate-700">Création précise</div>
+                        <ul class="list-disc ml-5 mt-1 space-y-1">
+                            <li><b>Créer un segment</b> : saisir une longueur de 1 à 20 cm.</li>
+                            <li>Les longueurs affichées sont <b>proportionnelles</b>, même après un zoom.</li>
+                        </ul>
+                    </div>
+
                     <div>
                         <div class="font-extrabold text-slate-700">Manipulation</div>
                         <ul class="list-disc ml-5 mt-1 space-y-1">
