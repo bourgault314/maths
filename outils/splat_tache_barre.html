@@ -2251,7 +2251,16 @@ function eleveBrancherDessin(scene, item) {
         } else if (eleveSousLeBadge(scene, svg, ev.clientX, ev.clientY, r)) {
             return;
         } else if (eleveDansUneTache(item, p.x, p.y, r)) {
-            if (msg) { msg.textContent = 'Sous une tache, on ne voit pas les jetons !'; msg.className = 'eleve-msg rate'; }
+            /* deux refus différents : le clic est SUR la tache, ou seulement assez près
+               pour que le disque du jeton la morde. Sans la distinction, l'élève qui
+               clique à côté s'entend dire qu'il a cliqué sur une tache. */
+            const surLaTache = eleveDansUneTache(item, p.x, p.y);
+            if (msg) {
+                msg.textContent = surLaTache
+                    ? 'Sous une tache, on ne voit pas les jetons !'
+                    : 'Trop près : le jeton toucherait la tache !';
+                msg.className = 'eleve-msg rate';
+            }
             return;
         } else {
             eleveJetonsPoses.push({ x: p.x, y: p.y });
