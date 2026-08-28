@@ -154,6 +154,31 @@ footer a{color:var(--blue)}
   .etape{padding:14px 6px}
   .etape h3{font-size:18px}
 }
+/* Grand écran : la page était pensée pour le téléphone et ne grossissait jamais.
+   Sur ordinateur, une colonne de 980 px avec du texte de 13-14 px se lit mal à
+   côté d'un titre de 44 px. On remonte tout d'un cran, le téléphone ne bouge pas. */
+@media(min-width:1000px){
+  .hero,main,footer{max-width:1080px}
+  .hero h1{font-size:52px}
+  .hero p.sub{font-size:17.5px;max-width:640px}
+  .totalBar{max-width:640px}
+  .totalBar .lbl{font-size:15px}
+  header .modeOpt{font-size:15px;padding:8px 16px}
+  header .brand img{height:46px}
+  .monde .head .num{font-size:13px}
+  .monde .head h2{font-size:29px}
+  .monde .head .stars{font-size:17px}
+  .monde .desc{font-size:16.5px}
+  .etape h3{font-size:20.5px}
+  .etape .forme{font-size:14.5px}
+  .etape .obj{font-size:16px}
+  .actions a{font-size:15.5px}
+  .actions .bientot{font-size:14.5px}
+  .faitBtn{font-size:14.5px}
+  .noteProf,.eqListeProf{font-size:15.5px}
+  .eqListeProf small{font-size:13.5px}
+  footer{font-size:14px}
+}
 </style>
 </head>
 <body>
