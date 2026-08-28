@@ -397,13 +397,17 @@
                         </div>
 
                         <div class="flex items-center gap-2">
-                            <input id="segment-length" type="text" inputmode="decimal" value="5" autocomplete="off" aria-describedby="segment-hint segment-error" class="flex-1 w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-lg font-extrabold text-slate-700 text-center" />
+                            <input id="segment-length" type="text" inputmode="decimal" value="5" autocomplete="off" aria-describedby="segment-hint segment-error" class="flex-1 w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-lg font-extrabold text-slate-700 text-center" placeholder="ex. 3,5" />
                             <button onclick="confirmSegmentPanel()" class="tool-btn px-3 py-2 bg-slate-100 hover:bg-slate-200 rounded-lg font-extrabold text-teal-700">Créer</button>
                         </div>
 
                         <div id="segment-error" class="hidden mt-2 text-xs font-bold text-red-600" role="alert">Entrez une longueur comprise entre 1 et 20 cm.</div>
+                        <label class="mt-2 flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 cursor-pointer">
+                            <input id="segment-trace-checkbox" type="checkbox" class="w-4 h-4" onchange="setEndpointTraceMode(this.checked)" />
+                            <span class="text-xs leading-snug text-slate-600"><b>Tracer l’extrémité déplacée</b><br>Le segment pivote autour de l’autre extrémité.</span>
+                        </label>
                         <div id="segment-hint" class="mt-2 text-[11px] leading-snug text-slate-500">
-                            Les longueurs sont proportionnelles à l’écran : 3, 4 et 5 cm gardent exactement le rapport 3:4:5.
+                            Écrivez les décimaux avec une virgule. Les longueurs sont proportionnelles : 3, 4 et 5 cm gardent exactement le rapport 3:4:5.
                         </div>
                     </div>
                 </div>
@@ -604,6 +608,8 @@
             penRightOverride: false,
             strokes: [],
             _currentStroke: null, 
+            endpointTraceMode: false,
+            draggingTracedEndpoint: null,
             stripMode: 'normal', 
             draggingPoint: null,
             draggingStrip: null, 
@@ -1134,7 +1140,15 @@
         }
 
         function formatLengthCm(value) {
-            return Number(value).toLocaleString('fr-FR', { maximumFractionDigits: 1 });
+            return Number(value).toLocaleString('fr-FR', { maximumFractionDigits: 2 });
+        }
+
+        function parseLengthCm(rawValue) {
+            return Number(String(rawValue).trim().replace(',', '.'));
+        }
+
+        function setEndpointTraceMode(enabled) {
+            state.endpointTraceMode = Boolean(enabled);
         }
 
         function openSegmentPanel() {
@@ -1145,6 +1159,8 @@
             segmentPanelOpen = true;
             panel.classList.remove('hidden');
             document.getElementById('segment-error')?.classList.add('hidden');
+            const traceCheckbox = document.getElementById('segment-trace-checkbox');
+            if (traceCheckbox) traceCheckbox.checked = state.endpointTraceMode;
             setTimeout(() => { input.focus(); input.select(); }, 0);
         }
 
@@ -1167,7 +1183,7 @@
             const error = document.getElementById('segment-error');
             if (!input) return;
 
-            const lengthCm = Number(input.value.trim().replace(',', '.'));
+            const lengthCm = parseLengthCm(input.value);
             if (!Number.isFinite(lengthCm) || lengthCm < 1 || lengthCm > 20) {
                 error?.classList.remove('hidden');
                 input.classList.add('ring-2', 'ring-red-300');
@@ -2195,7 +2211,37 @@ const positionGhost = (clientX, clientY) => {
 
                 if (attachedId && point.id === attachedId) proTool.attachedPointId = null;
 
-                
+                // Mode trace : une extrémité libre se comporte comme la pointe d'un compas.
+                // L'autre extrémité reste fixe et le chemin du point déplacé est conservé.
+                if (state.endpointTraceMode) {
+                    const connectedStrips = state.strips.filter(s => s.p1 === point.id || s.p2 === point.id);
+                    if (connectedStrips.length === 1) {
+                        const strip = connectedStrips[0];
+                        const pivotId = strip.p1 === point.id ? strip.p2 : strip.p1;
+                        const pivot = state.points.find(p => p.id === pivotId);
+                        if (pivot) {
+                            if (attachedId && (attachedId === point.id || attachedId === pivot.id)) proTool.attachedPointId = null;
+                            point.pinned = true;
+                            pivot.pinned = true;
+
+                            const stroke = {
+                                color: '#0f766e',
+                                width: 2.5,
+                                points: [{ x: point.x, y: point.y }],
+                                automaticTrace: true
+                            };
+                            state.strokes.push(stroke);
+                            state.draggingTracedEndpoint = {
+                                point,
+                                pivot,
+                                radius: getStripLength(strip),
+                                stroke
+                            };
+                            container.style.cursor = 'crosshair';
+                            return;
+                        }
+                    }
+                }
 
                 // Verrou global : au lieu de déformer en tirant un aimant, on manipule la construction comme un objet rigide
                 // (comportement similaire aux angles fixes : translation en prenant un aimant "interne", rotation en prenant une extrémité).
@@ -2273,6 +2319,24 @@ state.draggingPoint = point; point.pinned = true; container.style.cursor = 'grab
         window.addEventListener('mousemove', handleMove);
         window.addEventListener('touchmove', handleMove, {passive: false});
 
+        function appendEndpointTracePoint(stroke, x, y) {
+            if (!stroke?.points?.length) return;
+            const last = stroke.points[stroke.points.length - 1];
+            if (Math.hypot(x - last.x, y - last.y) < 1.5) return;
+
+            ctxDraw.save();
+            ctxDraw.strokeStyle = stroke.color;
+            ctxDraw.lineWidth = stroke.width;
+            ctxDraw.lineCap = 'round';
+            ctxDraw.lineJoin = 'round';
+            ctxDraw.beginPath();
+            ctxDraw.moveTo(last.x, last.y);
+            ctxDraw.lineTo(x, y);
+            ctxDraw.stroke();
+            ctxDraw.restore();
+            stroke.points.push({ x, y });
+        }
+
         function handleMove(e) {
             if (geoDragState.active) return;
             const pos = getPos(e);
@@ -2284,7 +2348,7 @@ state.draggingPoint = point; point.pinned = true; container.style.cursor = 'grab
             // Plateau fixe : pas de pan.
 
             // Curseurs (sans écraser le "grabbing" pendant un drag)
-            const isDraggingSomething = !!(state.draggingAngleMove || state.draggingAngle || state.draggingPoint || state.draggingStrip || state.draggingRigidRotate || state.isSidebarDragging);
+            const isDraggingSomething = !!(state.draggingAngleMove || state.draggingAngle || state.draggingPoint || state.draggingStrip || state.draggingRigidRotate || state.draggingTracedEndpoint || state.isSidebarDragging);
             if (!e.target.closest('.geo-tool')) {
                 if (isDraggingSomething) {
                     container.style.cursor = 'grabbing';
@@ -2302,6 +2366,18 @@ state.draggingPoint = point; point.pinned = true; container.style.cursor = 'grab
 
                     container.style.cursor = cur;
                 }
+            }
+
+            // Pointe traceuse : rotation à rayon constant autour de l'autre extrémité.
+            if (state.draggingTracedEndpoint) {
+                e.preventDefault();
+                const trace = state.draggingTracedEndpoint;
+                const angle = Math.atan2(pos.y - trace.pivot.y, pos.x - trace.pivot.x);
+                trace.point.x = trace.pivot.x + trace.radius * Math.cos(angle);
+                trace.point.y = trace.pivot.y + trace.radius * Math.sin(angle);
+                appendEndpointTracePoint(trace.stroke, trace.point.x, trace.point.y);
+                queueRenderOnly();
+                return;
             }
 
             // Déplacement rigide d'un angle fixe quand on attrape le sommet
@@ -2479,6 +2555,18 @@ state.draggingPoint = point; point.pinned = true; container.style.cursor = 'grab
             // Fin du mode "main" au bouton droit en mode stylo
             if (!e.touches && state.penRightOverride) {
                 exitPenRightOverride();
+            }
+
+            if (state.draggingTracedEndpoint) {
+                const trace = state.draggingTracedEndpoint;
+                trace.point.pinned = false;
+                trace.pivot.pinned = false;
+                if (trace.stroke.points.length < 2) {
+                    state.strokes = state.strokes.filter(stroke => stroke !== trace.stroke);
+                }
+                state.draggingTracedEndpoint = null;
+                render();
+                return;
             }
 
             // Déplacement rigide d'un angle fixe quand on attrape le sommet (fin du drag)
@@ -3097,8 +3185,9 @@ canvasDraw.addEventListener('mousedown', startDraw);
                     <div>
                         <div class="font-extrabold text-slate-700">Création précise</div>
                         <ul class="list-disc ml-5 mt-1 space-y-1">
-                            <li><b>Créer un segment</b> : saisir une longueur de 1 à 20 cm.</li>
+                            <li><b>Créer un segment</b> : saisir une longueur de 1 à 20 cm (par exemple <b>3,5</b>).</li>
                             <li>Les longueurs affichées sont <b>proportionnelles</b>, même après un zoom.</li>
+                            <li><b>Tracer l’extrémité</b> : l’extrémité libre dessine un arc en pivotant autour de l’autre.</li>
                         </ul>
                     </div>
 
