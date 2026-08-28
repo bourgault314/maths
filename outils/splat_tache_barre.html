@@ -2459,7 +2459,7 @@ function eleveValider(main) {
         if (!eleveCarteFautee && !etaitRouge) eleveEtoiles++;
         eleveResultats[eleveIdx] = !eleveCarteFautee && !etaitRouge;
         bouton.disabled = true;
-        msg.textContent = eleveCarteFautee ? 'Juste ! Regarde sous la tache\u2026' : 'Bravo, du premier coup ! Regarde sous la tache\u2026';
+        msg.textContent = eleveCarteFautee ? 'Juste ! Regarde sous la tache\u2026' : 'Du premier coup ! Regarde sous la tache\u2026';
         msg.className = 'eleve-msg bravo';
         cases.forEach(c => { const i = c.querySelector('.eleve-input'); if (i) i.readOnly = true; });
         eleveSauverEnCours();
@@ -2481,11 +2481,11 @@ function eleveValider(main) {
             return !String(i && i.value || '').trim();
         });
         if (badgeVide) {
-            msg.textContent = 'La petite case en haut \u00e0 droite est \u00e0 remplir !';
+            msg.textContent = 'Remplis la petite case en haut \u00e0 droite !';
         } else if (jetonsFaux && cases.every(c => c.classList.contains('eleve-ok'))) {
-            msg.textContent = 'Les cases sont justes\u2026 mais compte bien tes jetons !';
+            msg.textContent = 'Cases justes : recompte bien tes jetons !';
         } else {
-            msg.textContent = 'Pas encore\u2026 corrige ce qui est en rouge et revalide !';
+            msg.textContent = 'Pas encore : corrige ce qui est en rouge !';
         }
         msg.className = 'eleve-msg rate';
         /* au 3e échec, on propose de voir la réponse (la carte restera rouge) */
@@ -2550,8 +2550,8 @@ function eleveMontrerReponse(main) {
         c.classList.add('eleve-montre');
     });
     const item = eleveItemCourant;
-    let texte = 'Voil\u00e0 la r\u00e9ponse. Regarde bien, tu pourras rejouer cette carte \u00e0 la fin.';
-    if (item && item.mode === 'construct') texte = `Il fallait poser ${item.visible} jeton${item.visible > 1 ? 's' : ''}. ` + texte;
+    let texte = 'Voil\u00e0 la r\u00e9ponse \u2014 \u00e0 rejouer \u00e0 la fin !';
+    if (item && item.mode === 'construct') texte = `Il fallait ${item.visible} jeton${item.visible > 1 ? 's' : ''} \u2014 \u00e0 rejouer \u00e0 la fin !`;
     msg.textContent = texte;
     msg.className = 'eleve-msg rate';
     eleveResultats[eleveIdx] = 'ko';
