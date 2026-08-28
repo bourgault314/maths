@@ -403,7 +403,7 @@
     .fin-pastilles { display: flex; justify-content: center; margin: 2px 0 8px; }
     .eleve-scene .part-splat { min-height: 200px; border-bottom: none; flex: 0 0 min(46vh, 340px); }
     /* Correction : la tache s'éclaircit et laisse voir les jetons qu'elle cachait (comme en usage libre) */
-    .eleve-scene .part-splat .splat-path { transition: opacity .7s ease; }
+    .eleve-scene .part-splat .splat-path { transition: opacity .7s ease; filter: none; }
     .eleve-scene .part-splat.devoile .splat-path { opacity: .15; }
     .eleve-scene .diagram-container { flex: 0 0 auto; width: 96%; }
     .eleve-scene .row-top, .eleve-scene .part-box { min-height: 46px; font-size: 20px; }
@@ -2134,11 +2134,12 @@ function eleveCaseInput(attendu, flexGrow, minW, fSize, fond, isTop, avecTache) 
            `<input class="eleve-input" type="text" inputmode="numeric" maxlength="3" autocomplete="off" placeholder="?"></div>`;
 }
 
-function eleveDansUneTache(item, x, y) {
+function eleveDansUneTache(item, x, y, r) {
     try {
         const canvas = document.createElement('canvas');
         canvas.width = 300; canvas.height = 200;
         const ctx = canvas.getContext('2d');
+        const marge = Number(r) > 0 ? Number(r) : 0;
         for (const s of item.splats) {
             const shapeIndex = s.pathIndex !== undefined ? s.pathIndex : item.splatShape;
             const path = new Path2D(SPLAT_SHAPES[shapeIndex % SPLAT_SHAPES.length]);
@@ -2147,6 +2148,11 @@ function eleveDansUneTache(item, x, y) {
             const lx = dx * Math.cos(rad) - dy * Math.sin(rad) + 150;
             const ly = dx * Math.sin(rad) + dy * Math.cos(rad) + 100;
             if (ctx.isPointInPath(path, lx, ly)) return true;
+            /* le jeton ne doit pas MORDRE sur la tache : le contour compte aussi */
+            if (marge > 0) {
+                ctx.lineWidth = 2 * marge / s.scale;
+                if (ctx.isPointInStroke(path, lx, ly)) return true;
+            }
         }
     } catch (e) { /* sans canvas, on ne bloque pas le jeu */ }
     return false;
@@ -2167,6 +2173,48 @@ function eleveRedessinerJetons(svg, r) {
     }
 }
 
+/* Zone de pose. Le dessin garde ses 300x200 : on ELARGIT seulement la vue
+   (viewBox a origine negative) pour que l'eleve puisse poser sur toute la
+   largeur du tableau. Les jetons gardent leur taille, le contenu reste centre,
+   et la regle devient la meme au telephone et a l'ordinateur. */
+function eleveElargirScene(scene) {
+    const part = scene.querySelector('.part-splat');
+    const svg = part && part.querySelector('svg.eleve-dessin');
+    if (!part || !svg) return;
+    const elargir = () => {
+        const rs = svg.getBoundingClientRect();
+        const diag = scene.querySelector('.diagram-container');
+        const largeurTableau = diag ? diag.getBoundingClientRect().width : 0;
+        let vbW = 300, vbX = 0;
+        if (rs.height > 0) {
+            const large = largeurTableau > 0 ? Math.min(rs.width, largeurTableau) : rs.width;
+            vbW = Math.max(300, Math.round(large * 200 / rs.height));
+            vbX = -Math.round((vbW - 300) / 2);
+        }
+        svg.setAttribute('viewBox', vbX + ' 0 ' + vbW + ' 200');
+        svg.dataset.vbx = String(vbX); svg.dataset.vbw = String(vbW);
+    };
+    elargir();
+    requestAnimationFrame(elargir);
+    if (!eleveElargirScene._lie) {
+        eleveElargirScene._lie = true;
+        window.addEventListener('resize', () => { const sc = document.querySelector('.eleve-scene'); if (sc) eleveElargirScene(sc); });
+    }
+}
+
+/* Le jeton ne doit pas non plus mordre sur la petite case TOTAL, posee par-dessus
+   le plateau : on compare en pixels, rayon du jeton compris. */
+function eleveSousLeBadge(scene, svg, clientX, clientY, r) {
+    const badge = scene.querySelector('.part-splat .total-badge');
+    if (!badge) return false;
+    const rs = svg.getBoundingClientRect();
+    if (!rs.height) return false;
+    const b = badge.getBoundingClientRect();
+    const k = rs.height / 200; /* pixels par unite de dessin */
+    const m = r * k;
+    return clientX >= b.left - m && clientX <= b.right + m && clientY >= b.top - m && clientY <= b.bottom + m;
+}
+
 function eleveBrancherDessin(scene, item) {
     const svg = scene.querySelector('.part-splat svg.splat-svg');
     if (!svg) return;
@@ -2179,12 +2227,16 @@ function eleveBrancherDessin(scene, item) {
         const pt = svg.createSVGPoint();
         pt.x = ev.clientX; pt.y = ev.clientY;
         const p = pt.matrixTransform(svg.getScreenCTM().inverse());
-        if (p.x < 12 || p.x > 288 || p.y < 12 || p.y > 188) return;
+        const vbX = Number(svg.dataset.vbx || 0), vbW = Number(svg.dataset.vbw || 300);
+        const marge = r + 4;
+        if (p.x < vbX + marge || p.x > vbX + vbW - marge || p.y < marge || p.y > 200 - marge) return;
         const deja = eleveJetonsPoses.findIndex(j => Math.hypot(j.x - p.x, j.y - p.y) <= r * 1.8);
         const msg = document.getElementById('eleveMsg');
         if (deja >= 0) {
             eleveJetonsPoses.splice(deja, 1);
-        } else if (eleveDansUneTache(item, p.x, p.y)) {
+        } else if (eleveSousLeBadge(scene, svg, ev.clientX, ev.clientY, r)) {
+            return;
+        } else if (eleveDansUneTache(item, p.x, p.y, r)) {
             if (msg) { msg.textContent = 'Sous une tache, on ne voit pas les jetons !'; msg.className = 'eleve-msg rate'; }
             return;
         } else {
@@ -2320,6 +2372,7 @@ function renderEleve(main) {
         });
     });
     document.getElementById('eleveValider').onclick = () => eleveValider(main);
+    if (estConstruct) eleveElargirScene(scene);
     eleveCalerBadge(scene);
 }
 
@@ -2335,8 +2388,9 @@ function eleveCalerBadge(scene) {
         if (!window.matchMedia('(min-width: 1000px) and (min-height: 700px)').matches) { badge.style.top = ''; badge.style.right = ''; return; }
         const rp = part.getBoundingClientRect(), rs = svg.getBoundingClientRect();
         /* zone réellement dessinée : viewBox 300×200 ajustée « meet » dans le svg */
-        const k = Math.min(rs.width / 300, rs.height / 200);
-        const w = 300 * k, h = 200 * k;
+        const vbW = Number(svg.dataset.vbw || 300);
+        const k = Math.min(rs.width / vbW, rs.height / 200);
+        const w = vbW * k, h = 200 * k;
         const top = (rs.top - rp.top) + (rs.height - h) / 2;
         const right = (rp.right - rs.right) + (rs.width - w) / 2;
         badge.style.top = Math.max(0, Math.round(top)) + 'px';
