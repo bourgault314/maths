@@ -135,6 +135,9 @@ main{max-width:980px;margin:0 auto;padding:10px 14px 60px}
 .monde.enprepa .head{filter:saturate(.35);opacity:.85}
 .monde.enprepa .etapes,.monde.enprepa .desc{opacity:.5}
 .monde.enprepa .badge{cursor:default}
+.actions .partie{display:inline-flex;align-items:center;gap:6px;flex-wrap:wrap;font-size:13px;font-weight:750;color:var(--muted);
+  background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:4px 10px 4px 12px}
+.actions .partie a{min-height:36px;padding:6px 11px}
 .actions .bientot{font-size:13px;font-weight:750;color:var(--muted);font-style:italic}
 .noteProf{margin:2px 0 8px;font-size:13.5px;line-height:1.45;color:#365a83;background:#eef4fb;border-left:3px solid var(--blue);border-radius:0 8px 8px 0;padding:7px 10px}
 .desc.descProf{color:#365a83;background:#eef4fb;border-left:3px solid var(--blue);border-radius:0 8px 8px 0;padding:8px 12px;margin:10px 18px 0}
@@ -206,6 +209,12 @@ footer a{color:var(--blue)}
 <script>
 /* ============ données des mondes (progression cycle 3) ============ */
 const PS="/outils/splat_tache_barre.html", SC="/splat/classique/", SE="/splat/equations/";
+/* Séquence 2 de Claire : trois fiches de 4 cartes, ses réglages et ses graines exacts.
+   Vérifiés carte par carte contre ses PDF (totaux 13/5/11/15 · 20/15/24/10 · 20/25/20/14). */
+const M2A1="mode=U&equation=X_PLUS_A_EQ_B&tasksMin=1&tasksMax=1&visibleMax=15&hiddenMax=10&totalMin=1&totalMax=25&cards=4&seed=974&unknown=question";
+const M2A2="mode=U&equation=AX_EQ_B&tasksMin=2&tasksMax=5&hiddenMax=10&totalMin=5&totalMax=25&cards=4&seed=477&unknown=question";
+const M2A3="mode=U&equation=AX_PLUS_C_EQ_B&tasksMin=2&tasksMax=5&visibleMax=15&hiddenMax=10&totalMin=5&totalMax=25&cards=4&seed=478&unknown=question";
+const FICHE="&print=statement&layout=4&imprimer=1&title=";
 const MONDES=[
  {cls:"m1",actif:true,nom:"Petit SPLAT!",desc:"Le tout, les parties… et les premières taches ! Complète les schémas en barres : ici, c'est toi qui réponds et la page vérifie.",
   etapes:[
@@ -213,7 +222,7 @@ const MONDES=[
     eqs:["𝑥 + 10 = 14", "𝑥 + 4 = 19", "𝑥 + 3 = 15", "𝑥 + 4 = 13", "𝑥 + 1 = 18", "𝑥 + 1 = 11", "𝑥 + 8 = 17", "𝑥 + 12 = 17", "𝑥 + 5 = 18", "𝑥 + 5 = 14", "𝑥 + 8 = 9", "𝑥 + 4 = 12"],
     j:PS+"?support=eleve&problem=classic&target=20&splats=1&exercise=find_hidden&seed=441132&parcours=m1e1",
     f:PS+"?support=print&problem=classic&target=20&splats=1&exercise=find_hidden&seed=441132"},
-   {t:"Dessine les jetons",o:"Le schéma est donné : à toi de dessiner la carte qui va avec.",p:"m1e2",
+   {t:"Dessine les jetons",o:"Le schéma est donné : à toi de dessiner la carte qui va avec.",p:"m1e2",dessin:true,
     eqs:["𝑥 + 13 = 15", "𝑥 + 2 = 20", "𝑥 = 19", "𝑥 + 9 = 12", "𝑥 + 1 = 5", "𝑥 + 4 = 18", "𝑥 + 9 = 10", "𝑥 + 6 = 17", "𝑥 + 10 = 19", "𝑥 + 2 = 19", "𝑥 = 9", "𝑥 + 7 = 18"],
     j:PS+"?support=eleve&problem=classic&target=20&splats=1&exercise=construct&seed=929356&parcours=m1e2",
     f:PS+"?support=print&problem=classic&target=20&splats=1&exercise=construct&seed=929356"},
@@ -229,30 +238,28 @@ const MONDES=[
     eqs:["3𝑥 + 10 = 16", "3𝑥 + 2 = 20", "2𝑥 + 1 = 13", "4𝑥 + 2 = 14", "6𝑥 + 3 = 15", "3𝑥 = 15", "6𝑥 = 6", "3𝑥 + 1 = 19", "2𝑥 + 7 = 17", "3𝑥 + 6 = 9", "6𝑥 + 3 = 15", "5𝑥 + 10 = 20"],
     j:PS+"?support=eleve&problem=classic&target=20&splats=mix&exercise=find_hidden&seed=727304&parcours=m1e5",
     f:PS+"?support=print&problem=classic&target=20&splats=mix&exercise=find_hidden&seed=727304"},
-   {t:"Dessine en expert",o:"Toujours 2 à 6 taches, mais cette fois c'est toi qui dessines.",p:"m1e6",
+   {t:"Dessine en expert",o:"Toujours 2 à 6 taches, mais cette fois c'est toi qui dessines.",p:"m1e6",dessin:true,
     eqs:["3𝑥 + 14 = 20", "6𝑥 + 10 = 16", "3𝑥 + 3 = 18", "6𝑥 + 2 = 14", "2𝑥 + 14 = 16", "6𝑥 = 12", "3𝑥 + 1 = 16", "3𝑥 = 6", "5𝑥 + 5 = 10", "2𝑥 = 20", "4𝑥 + 1 = 17", "2𝑥 = 12"],
     j:PS+"?support=eleve&problem=classic&target=20&splats=mix&exercise=construct&seed=514457&parcours=m1e6",
     f:PS+"?support=print&problem=classic&target=20&splats=mix&exercise=construct&seed=514457"}]},
  {cls:"m2",actif:true,nom:"SPLAT! classique",desc:"Le schéma en barres devient une équation : complète-le et trouve ce que cache la tache — la page vérifie.",
   etapes:[
-   {t:"Une tache et des jetons",fo:"x + a = b",o:"Trace le schéma, puis trouve ce que cache la tache.",
+   /* Étape regroupée : les TROIS fiches de 4 cartes de Claire (séquence 2) jouées
+      d'affilée, soit 12 cartes. C'est un rappel du Petit Splat dans la nouvelle
+      représentation : une seule étape suffit. Le paramètre « suite » enchaîne les
+      trois générations (voir splat.html). */
+   {t:"Le même jeu, un nouveau plateau",fo:"x + a = b · a × x = b · a × x + c = b",
+    o:"Tu connais déjà : une tache, puis plusieurs, puis des taches ET des jetons.",
     p:"m2e1",
-    eqs:["𝑥 + 8 = 11", "𝑥 + 6 = 16", "𝑥 + 9 = 14", "𝑥 + 13 = 16", "𝑥 + 15 = 19", "𝑥 + 12 = 14", "𝑥 + 9 = 19", "𝑥 + 3 = 5"],
-    j:SC+"?mode=U&equation=X_PLUS_A_EQ_B&cards=10&seed=453&unknown=question&eleve=1&parcours=m2e1",
-    jp:SC+"?mode=U&equation=X_PLUS_A_EQ_B&cards=10&seed=453&unknown=question",
-    f:SC+"?mode=U&equation=X_PLUS_A_EQ_B&cards=10&seed=453&unknown=question&print=worksheet&imprimer=1"},
-   {t:"Des taches jumelles",fo:"a × x = b",o:"Plusieurs taches identiques se partagent tous les jetons.",
-    p:"m2e2",
-    eqs:["4𝑥 = 20", "5𝑥 = 15", "4𝑥 = 24", "2𝑥 = 10", "3𝑥 = 21", "3𝑥 = 9", "5𝑥 = 15", "2𝑥 = 8", "2𝑥 = 14", "4𝑥 = 24"],
-    j:SC+"?mode=U&equation=AX_EQ_B&tasksMax=5&cards=10&seed=477&unknown=question&eleve=1&parcours=m2e2",
-    jp:SC+"?mode=U&equation=AX_EQ_B&tasksMax=5&cards=10&seed=477&unknown=question",
-    f:SC+"?mode=U&equation=AX_EQ_B&tasksMax=5&cards=10&seed=477&unknown=question&print=worksheet&imprimer=1"},
-   {t:"Taches et jetons ensemble",fo:"a × x + c = b",o:"Des taches ET des jetons visibles : à toi de démêler tout ça.",
-    p:"m2e3",
-    eqs:["2𝑥 + 12 = 24", "2𝑥 + 12 = 22", "2𝑥 + 4 = 16", "2𝑥 + 15 = 19", "2𝑥 + 13 = 19", "2𝑥 + 4 = 6", "2𝑥 + 12 = 16", "2𝑥 + 12 = 14", "2𝑥 + 3 = 15", "2𝑥 + 4 = 20"],
-    j:SC+"?mode=U&equation=AX_PLUS_C_EQ_B&cards=10&seed=477&unknown=question&eleve=1&parcours=m2e3",
-    jp:SC+"?mode=U&equation=AX_PLUS_C_EQ_B&cards=10&seed=477&unknown=question",
-    f:SC+"?mode=U&equation=AX_PLUS_C_EQ_B&cards=10&seed=477&unknown=question&print=worksheet&imprimer=1"},
+    eqs:["𝑥 + 7 = 13", "𝑥 + 4 = 5", "𝑥 + 8 = 11", "𝑥 + 12 = 15",
+         "4𝑥 = 20", "5𝑥 = 15", "4𝑥 = 24", "2𝑥 = 10",
+         "2𝑥 + 4 = 20", "3𝑥 + 7 = 25", "5𝑥 + 15 = 20", "2𝑥 + 8 = 14"],
+    j:SC+"?"+M2A1+"&eleve=1&parcours=m2e1&suite="+encodeURIComponent(M2A2)+";"+encodeURIComponent(M2A3),
+    parties:[
+      {nom:"Activité 1",jp:SC+"?"+M2A1,f:SC+"?"+M2A1+FICHE+encodeURIComponent("Activité 1")},
+      {nom:"Activité 2",jp:SC+"?"+M2A2,f:SC+"?"+M2A2+FICHE+encodeURIComponent("Activité 2")},
+      {nom:"Activité 3",jp:SC+"?"+M2A3,f:SC+"?"+M2A3+FICHE+encodeURIComponent("Activité 3")}
+    ]},
    {t:"Les paquets de jetons",fo:"x + a = b",o:"Les jetons arrivent en paquets : on compte plus vite.",
     p:"m2e4",
     eqs:["𝑥 + 15 = 33", "𝑥 + 6 = 49", "𝑥 + 9 = 44", "𝑥 + 24 = 48", "𝑥 + 13 = 33", "𝑥 + 11 = 37", "𝑥 + 38 = 40", "𝑥 + 30 = 43", "𝑥 + 13 = 40", "𝑥 + 10 = 33"],
@@ -339,9 +346,7 @@ const NOTES_PROF = [
   "Deux taches cachant le même nombre : premier raisonnement déductif (partager également ce qui n'est pas visible).",
   "Jusqu'à six taches : analyse systématique des relations entre total, jetons visibles et parts cachées.",
   "Plusieurs taches et c'est l'élève qui dessine : le sens du travail cognitif s'inverse à nouveau."],
- ["L'élève trace lui-même son schéma en barres face à la situation, puis résout x + a = b : le passage de la situation au formalisme.",
-  "Équations multiplicatives a × x = b (2 ≤ a ≤ 5) : reconnaître plusieurs groupes identiques.",
-  "a × x + c = b : multiplication ET addition — l'analyse du schéma se fait en plusieurs étapes.",
+ ["Séquence 2 de Claire, ses trois fiches de 4 cartes enchaînées (12 cartes) : x + a = b, puis a × x = b (2 ≤ a ≤ 5), puis a × x + c = b. C'est le Petit Splat retrouvé sur le grand plateau — l'élève trace lui-même son schéma en barres. Les trois fiches restent imprimables séparément ci-dessous.",
   "Retour à x + a = b, mais en paquets de jetons : des nombres plus grands sans surcharge visuelle.",
   "a × x + c = b avec les paquets : la représentation compacte permet de complexifier sans brouiller."],
  ["Découverte des deux plateaux en présentation verticale (a × x + b = c) : relier chaque plateau au contenu d'une barre du schéma.",
@@ -383,11 +388,16 @@ MONDES.forEach((m,mi)=>{
        '</button>'+
        '<div class="corps">'+
          '<h3>'+e.t+'</h3>'+(e.fo?'<div class="forme">'+e.fo+'</div>':'')+
-         '<p class="obj">'+e.o+'</p>'+(PROF?'<p class="noteProf">\ud83d\udcdd '+NOTES_PROF[mi][ei]+'</p>':'')+(PROF&&e.eqs?'<p class="eqListeProf">\ud83d\udccb Les '+e.eqs.length+(mi===0?' cartes':' \u00e9quations')+' de la s\u00e9rie : '+e.eqs.join('\u2003\u00b7\u2003')+(e.eqs.some(q=>q.includes('\u270f'))?'<br><small>\u270f\ufe0f = carte \u00e0 dessiner</small>':'')+'</p>':'')+
+         '<p class="obj">'+e.o+'</p>'+(PROF?'<p class="noteProf">\ud83d\udcdd '+NOTES_PROF[mi][ei]+'</p>':'')+(PROF&&e.eqs?'<p class="eqListeProf">\ud83d\udccb Les '+e.eqs.length+(mi===0?' cartes':' \u00e9quations')+' de la s\u00e9rie'+(e.dessin?' \u2014 <strong>\u270f\ufe0f toutes \u00e0 dessiner</strong>':'')+' : '+e.eqs.join('\u2003\u00b7\u2003')+(e.eqs.some(q=>q.includes('\u270f'))?'<br><small>\u270f\ufe0f = carte \u00e0 dessiner</small>':'')+'</p>':'')+
          (PROF
            ? '<div class="actions">'+
-             (e.jp||!m.actif?'<a class="jouer" href="'+(e.jp||e.j)+'">\ud83d\udcbb Projeter l\u2019outil</a>':'')+(m.actif?'<a class="jouer" href="'+e.j+'">\ud83c\udfae Le jeu de l\u2019\u00e9l\u00e8ve</a>':'')+
-             (e.f?'<a class="fiche" href="'+e.f+'" title="Ouvre l\u2019outil pr\u00eat \u00e0 imprimer la fiche">\ud83d\udcc4 Fiche</a>':'')+
+             (e.parties
+               ? (m.actif?'<a class="jouer" href="'+e.j+'">\ud83c\udfae Le jeu de l\u2019\u00e9l\u00e8ve (les '+e.eqs.length+' cartes)</a>':'')+
+                 e.parties.map(pa=>'<span class="partie">'+pa.nom+'\u00a0: '+
+                   '<a class="jouer" href="'+pa.jp+'">\ud83d\udcbb Projeter</a>'+
+                   '<a class="fiche" href="'+pa.f+'" title="Ouvre l\u2019outil pr\u00eat \u00e0 imprimer la fiche">\ud83d\udcc4 Fiche</a></span>').join("")
+               : (e.jp||!m.actif?'<a class="jouer" href="'+(e.jp||e.j)+'">\ud83d\udcbb Projeter l\u2019outil</a>':'')+(m.actif?'<a class="jouer" href="'+e.j+'">\ud83c\udfae Le jeu de l\u2019\u00e9l\u00e8ve</a>':'')+
+                 (e.f?'<a class="fiche" href="'+e.f+'" title="Ouvre l\u2019outil pr\u00eat \u00e0 imprimer la fiche">\ud83d\udcc4 Fiche</a>':''))+
              '</div>'
            : m.actif
            ? '<div class="actions">'+
