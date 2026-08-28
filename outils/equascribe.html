@@ -808,7 +808,7 @@
     body.m5EnScene .wrap{min-height:100dvh;box-sizing:border-box;padding-top:6px}
     body.m5EnScene #fsHost{flex:1 1 auto;min-height:0}
     body.m5EnScene #fsHost .cardbox{display:flex;flex-direction:column;flex:1 1 auto;min-height:0}
-    body.m5EnScene #svgWrap{flex:1 1 auto;min-height:0;align-content:center}
+    body.m5EnScene #svgWrap{flex:1 1 auto;min-height:0;align-content:start}
     body.m5EnScene #mainSvg{max-height:100%}
     body.m5EnScene .m5ToolBar,body.m5EnScene .m5Msg{flex:0 0 auto}
     .m5ChipRow{margin-top:8px}
@@ -819,7 +819,25 @@
     .m5EqChoix button .m5EqNum{font-size:9px}
     .m5Msg{font-size:15px;min-height:20px;margin-top:6px}
   }
+  @media (min-width:761px) and (max-height:820px){
+    /* Ordinateur portable court : le dessin garde son rapport largeur/hauteur
+       (posé en ligne par applyViewBox) mais sa hauteur est plafonnée, donc sa
+       largeur suit. Rien n'est rogné, tout tient dans l'écran. */
+    body.m5EnScene #svgWrap{
+      max-height:calc(100dvh - 250px);
+      width:auto;max-width:100%;margin-inline:auto;
+    }
+    body.m5EnScene #mainSvg{width:100%;height:auto}
+  }
   dialog.m5DlgPlateau{width:min(1100px, calc(100vw - 24px))}
+  @media (max-width:760px){
+    /* Le plateau est un dessin large : sur téléphone on lui rend ses marges.
+       Sélecteur à deux classes : la règle générique dialog.m5Dlg vient plus bas. */
+    dialog.m5Dlg.m5DlgPlateau{width:calc(100vw - 8px);max-width:none}
+    dialog.m5Dlg.m5DlgPlateau .m5DialogInner{padding:14px 6px 12px}
+    dialog.m5Dlg.m5DlgPlateau .m5DialogTitle{font-size:22px;margin-bottom:6px}
+    dialog.m5Dlg.m5DlgPlateau .m5DialogText{font-size:15px;margin-bottom:8px}
+  }
   #m5PlateauSvg{width:100%;height:auto;aspect-ratio:1600/700;display:block;background:#fff;border-radius:12px}
 
   /* Choix de l'équation (chips au-dessus de la scène). */
@@ -9905,7 +9923,12 @@ drawEquationStepEquation = function(targetGroup){ m5DrawEquation(targetGroup); }
 
 /* ---------- 6. Scène et fenêtre plateau ---------- */
 function applyViewBox(){
-  let half = computeHalfW() + 62 + 175;
+  /* 62 pour la flèche, puis la place du libellé (« − 12 », « ÷ 3 »). Sur
+     téléphone cette marge fixe mangeait la moitié de la largeur : on ne
+     réserve la place du libellé que lorsqu'une opération en écrit un. */
+  const avecOperation = (M.ops || []).some(o=>!!o) || !!M.pendingOp;
+  const margeLibelle = (SUR_ORDI || avecOperation) ? 175 : 60;
+  let half = computeHalfW() + 62 + margeLibelle;
   let lignes = M.lines.length + (M.pendingOp ? 1 : 0);
   if(SUR_ORDI){
     half = Math.max(half, 600);
