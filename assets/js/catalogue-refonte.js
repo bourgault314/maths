@@ -735,6 +735,8 @@
     if (path === "outils/splat_tache_barre.html") return 0;
     if (path === "outils/splat.html") return 1;
     if (path === "outils/splat_equations.html") return 2;
+    if (path === "outils/equasplat.html") return 3;
+    if (path === "outils/equascript.html") return 4;
     return Infinity;
   }
 
