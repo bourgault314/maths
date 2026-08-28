@@ -222,7 +222,7 @@ const MONDES=[
     eqs:["𝑥 + 10 = 14", "𝑥 + 4 = 19", "𝑥 + 3 = 15", "𝑥 + 4 = 13", "𝑥 + 1 = 18", "𝑥 + 1 = 11", "𝑥 + 8 = 17", "𝑥 + 12 = 17", "𝑥 + 5 = 18", "𝑥 + 5 = 14", "𝑥 + 8 = 9", "𝑥 + 4 = 12"],
     j:PS+"?support=eleve&problem=classic&target=20&splats=1&exercise=find_hidden&seed=441132&parcours=m1e1",
     f:PS+"?support=print&problem=classic&target=20&splats=1&exercise=find_hidden&seed=441132"},
-   {t:"Dessine les jetons",o:"Le schéma est donné : à toi de dessiner la carte qui va avec.",p:"m1e2",
+   {t:"Dessine les jetons",o:"Le schéma est donné : à toi de dessiner la carte qui va avec.",p:"m1e2",dessin:true,
     eqs:["𝑥 + 13 = 15", "𝑥 + 2 = 20", "𝑥 = 19", "𝑥 + 9 = 12", "𝑥 + 1 = 5", "𝑥 + 4 = 18", "𝑥 + 9 = 10", "𝑥 + 6 = 17", "𝑥 + 10 = 19", "𝑥 + 2 = 19", "𝑥 = 9", "𝑥 + 7 = 18"],
     j:PS+"?support=eleve&problem=classic&target=20&splats=1&exercise=construct&seed=929356&parcours=m1e2",
     f:PS+"?support=print&problem=classic&target=20&splats=1&exercise=construct&seed=929356"},
@@ -238,7 +238,7 @@ const MONDES=[
     eqs:["3𝑥 + 10 = 16", "3𝑥 + 2 = 20", "2𝑥 + 1 = 13", "4𝑥 + 2 = 14", "6𝑥 + 3 = 15", "3𝑥 = 15", "6𝑥 = 6", "3𝑥 + 1 = 19", "2𝑥 + 7 = 17", "3𝑥 + 6 = 9", "6𝑥 + 3 = 15", "5𝑥 + 10 = 20"],
     j:PS+"?support=eleve&problem=classic&target=20&splats=mix&exercise=find_hidden&seed=727304&parcours=m1e5",
     f:PS+"?support=print&problem=classic&target=20&splats=mix&exercise=find_hidden&seed=727304"},
-   {t:"Dessine en expert",o:"Toujours 2 à 6 taches, mais cette fois c'est toi qui dessines.",p:"m1e6",
+   {t:"Dessine en expert",o:"Toujours 2 à 6 taches, mais cette fois c'est toi qui dessines.",p:"m1e6",dessin:true,
     eqs:["3𝑥 + 14 = 20", "6𝑥 + 10 = 16", "3𝑥 + 3 = 18", "6𝑥 + 2 = 14", "2𝑥 + 14 = 16", "6𝑥 = 12", "3𝑥 + 1 = 16", "3𝑥 = 6", "5𝑥 + 5 = 10", "2𝑥 = 20", "4𝑥 + 1 = 17", "2𝑥 = 12"],
     j:PS+"?support=eleve&problem=classic&target=20&splats=mix&exercise=construct&seed=514457&parcours=m1e6",
     f:PS+"?support=print&problem=classic&target=20&splats=mix&exercise=construct&seed=514457"}]},
@@ -388,7 +388,7 @@ MONDES.forEach((m,mi)=>{
        '</button>'+
        '<div class="corps">'+
          '<h3>'+e.t+'</h3>'+(e.fo?'<div class="forme">'+e.fo+'</div>':'')+
-         '<p class="obj">'+e.o+'</p>'+(PROF?'<p class="noteProf">\ud83d\udcdd '+NOTES_PROF[mi][ei]+'</p>':'')+(PROF&&e.eqs?'<p class="eqListeProf">\ud83d\udccb Les '+e.eqs.length+(mi===0?' cartes':' \u00e9quations')+' de la s\u00e9rie : '+e.eqs.join('\u2003\u00b7\u2003')+(e.eqs.some(q=>q.includes('\u270f'))?'<br><small>\u270f\ufe0f = carte \u00e0 dessiner</small>':'')+'</p>':'')+
+         '<p class="obj">'+e.o+'</p>'+(PROF?'<p class="noteProf">\ud83d\udcdd '+NOTES_PROF[mi][ei]+'</p>':'')+(PROF&&e.eqs?'<p class="eqListeProf">\ud83d\udccb Les '+e.eqs.length+(mi===0?' cartes':' \u00e9quations')+' de la s\u00e9rie'+(e.dessin?' \u2014 <strong>\u270f\ufe0f toutes \u00e0 dessiner</strong>':'')+' : '+e.eqs.join('\u2003\u00b7\u2003')+(e.eqs.some(q=>q.includes('\u270f'))?'<br><small>\u270f\ufe0f = carte \u00e0 dessiner</small>':'')+'</p>':'')+
          (PROF
            ? '<div class="actions">'+
              (e.parties
