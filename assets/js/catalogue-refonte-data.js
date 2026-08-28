@@ -251,12 +251,12 @@ window.MATHSGO_CATALOGUE = {
       "thumbnail": "assets/img/thumbnails/splat/equabarre.png?v=4",
       "cardDescription": "Représenter une équation par deux schémas en barres et transformer les deux membres pas à pas."
     },
-    "outils/equascript.html": {
+    "outils/equascribe.html": {
       "primaryNotion": "equations",
       "primaryGroup": "manipuler",
       "collections": ["splat"],
       "tags": ["equation", "inconnue", "resolution", "splat", "redaction"],
-      "thumbnail": "assets/img/thumbnails/splat/equascript.png?v=1",
+      "thumbnail": "assets/img/thumbnails/splat/equascribe.png?v=1",
       "cardDescription": "Résoudre l’équation elle-même avec les gestes de Splat, en écrivant soi-même tous les nombres — le plateau en aide."
     },
     "outils/equasplat.html": {
@@ -2753,10 +2753,10 @@ window.MATHSGO_CATALOGUE = {
       "recent": false
     },
     {
-      "id": "outils-equascript-html",
-      "title": "ÉquaScript",
+      "id": "outils-equascribe-html",
+      "title": "ÉquaScribe",
       "description": "Résolvez l’équation elle-même avec les gestes de Splat, en écrivant vous-même tous les nombres — le plateau reste en aide.",
-      "path": "outils/equascript.html",
+      "path": "outils/equascribe.html",
       "domains": [
         "algebre"
       ],
