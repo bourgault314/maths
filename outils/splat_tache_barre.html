@@ -447,6 +447,16 @@
     body.eleve-lien aside { display: none; }
     body.eleve-lien #mainArea { padding-top: 18px; }
     .total-badge.eleve-case { padding: 0; width: 48px; height: 44px; }
+    /* Écran court — petit téléphone, ou téléphone dont le navigateur affiche ses barres :
+       le plateau et les marges rendent quelques pixels pour que le bouton Valider reste
+       sous les yeux sans avoir à faire défiler. Le dessin, limité par la largeur sur ces
+       écrans-là, n'y perd presque rien. */
+    @media (max-height: 640px) {
+        .eleve-scene { padding: 10px 12px 12px; }
+        .eleve-scene .part-splat { flex: 0 0 min(41vh, 340px); }
+        .eleve-consigne { margin: 2px 0 6px; }
+        body.eleve-lien #mainArea { padding-top: 10px; }
+    }
     /* Grand écran : la carte prend plus de place et le tableau garde les proportions
        du téléphone (à peu près la largeur du plateau, des lignes hautes, gros chiffres). */
     @media (min-width: 1000px) and (min-height: 700px) {
