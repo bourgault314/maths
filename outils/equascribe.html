@@ -718,6 +718,24 @@
   }
   .m5Retour:hover{background:#f1f5f9}
   .m5Retour svg{width:24px;height:24px;display:block}
+
+  /* Plein écran : la surcouche masque le bandeau qui portait le bouton
+     d'origine. On le remet en haut à droite de la scène, même allure que
+     la flèche de retour. La touche F continue de fonctionner. */
+  body.m5EnScene #fsHost .cardbox{position:relative}
+  .m5Plein{
+    position:absolute;top:14px;right:14px;width:42px;height:42px;
+    display:none;place-items:center;border-radius:14px;color:#0f172a;
+    background:rgba(255,255,255,.88);border:1px solid rgba(15,23,42,.12);
+    box-shadow:0 8px 20px rgba(15,23,42,.10);cursor:pointer;padding:0;z-index:4;
+  }
+  body.m5EnScene .m5Plein{display:grid}
+  .m5Plein:hover{background:#f1f5f9}
+  .m5Plein svg{width:22px;height:22px;display:block}
+  @media (max-width:760px){
+    .m5Plein{top:10px;right:10px;width:38px;height:38px}
+    .m5Plein svg{width:20px;height:20px}
+  }
   .m5MenuTitre{font-size:34px;font-weight:950;letter-spacing:-.04em;text-align:center;margin-bottom:8px}
   .m5MenuTitre span{color:#2563eb}
   .m5MenuDesc{font-size:15px;line-height:1.5;color:#475569;text-align:center;margin:0 0 16px}
@@ -1234,6 +1252,11 @@
 
 <section class="stage fsHost" id="fsHost">
     <div class="cardbox">
+      <button class="m5Plein" id="m5Plein" type="button" title="Plein écran (F)" aria-label="Plein écran">
+        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+          <path id="m5PleinIcone" d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"></path>
+        </svg>
+      </button>
       <!-- Barre de commande de la scène : à gauche le compteur et le saut de carte,
            à droite précédent / suivant / plein écran. En plein écran la même barre
            se pose par-dessus la scène, en grand (tablette au tableau). -->
@@ -10416,6 +10439,17 @@ function construire(){
   }
   montrerScene();
 }
+const ICONE_ENTRER = "M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5";
+const ICONE_SORTIR = "M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5";
+$id("m5Plein").addEventListener("click", ()=>{ toggleFullscreen(); });
+document.addEventListener("fullscreenchange", ()=>{
+  const b = $id("m5Plein"), ic = $id("m5PleinIcone");
+  if(!b || !ic) return;
+  const on = !!document.fullscreenElement;
+  ic.setAttribute("d", on ? ICONE_SORTIR : ICONE_ENTRER);
+  b.title = on ? "Quitter le plein écran (F ou Échap)" : "Plein écran (F)";
+  b.setAttribute("aria-label", b.title);
+});
 $id("m5AideBtn").addEventListener("click", ()=>{
   const ouvert = document.body.classList.toggle("m5AideOuverte");
   $id("m5AideBtn").setAttribute("aria-expanded", ouvert ? "true" : "false");
