@@ -2193,6 +2193,20 @@ function eleveElargirScene(scene) {
         }
         svg.setAttribute('viewBox', vbX + ' 0 ' + vbW + ' 200');
         svg.dataset.vbx = String(vbX); svg.dataset.vbw = String(vbW);
+        /* la vue peut aussi RÉTRÉCIR (fenêtre réduite, tablette tournée) : un jeton
+           déjà posé dans la marge revient dedans, au lieu de sortir du dessin tout
+           en restant compté — l'élève verrait moins de jetons qu'il n'en a posés */
+        const r = eleveItemCourant ? eleveRayonJeton(eleveItemCourant) : 8;
+        const marge = r + 4;
+        let bouge = false;
+        for (const j of eleveJetonsPoses) {
+            const x = Math.min(Math.max(j.x, vbX + marge), vbX + vbW - marge);
+            if (x !== j.x) { j.x = x; bouge = true; }
+        }
+        if (bouge) eleveRedessinerJetons(svg, r);
+        /* le badge TOTAL se cale sur la zone dessinée : le reposer après CHAQUE
+           élargissement, sinon il reste calé sur la largeur précédente */
+        eleveCalerBadge(scene);
     };
     elargir();
     requestAnimationFrame(elargir);
