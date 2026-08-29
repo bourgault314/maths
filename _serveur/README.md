@@ -108,7 +108,10 @@ Lance un vrai serveur PHP sur une copie de `public/` avec une base SQLite
 jetable et interroge l'API comme le fera l'appli : installation, connexion,
 classes, codes, lecture/écriture, cloisonnement entre élèves et entre
 applis, CORS, injection SQL, taille maximale, régénération de code,
-suppressions, limitation de débit. **36 tests, 0 échec au 29/08/2026.**
+suppressions, limitation de débit, et l'API de la page d'accueil élève.
+**39 tests, 0 échec au 29/08/2026**, exécutés dans l'environnement de
+développement de Claude. PHP n'étant pas installé sur le poste de Gwenaël,
+ces tests ne peuvent pas être rejoués depuis Claude Code.
 
 Après toute modification du schéma : `php outils/generer-sql.php`
 (et `--verifier` pour contrôler que le `.sql` est à jour).
