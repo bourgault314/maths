@@ -13,7 +13,7 @@
   const MODES = Object.freeze(["learn", "train", "test", "evaluation", "custom"]);
   const PRESETS = Object.freeze({
     learn: Object.freeze({total: 11, duration: null, questionTypes: Object.freeze(["direct"]), selection: "single", order: "ordered"}),
-    train: Object.freeze({total: 20, duration: null, questionTypes: Object.freeze(["direct"]), selection: "multiple", order: "random"}),
+    train: Object.freeze({total: 10, duration: null, questionTypes: Object.freeze(["direct"]), selection: "multiple", order: "random"}),
     test: Object.freeze({total: 25, duration: 120, questionTypes: Object.freeze(["direct"]), selection: "multiple", order: "random", testLevel: 1}),
     evaluation: Object.freeze({total: 25, duration: 60, questionTypes: Object.freeze(["evaluation"]), selection: "automatic", order: "random"}),
     custom: Object.freeze({total: 20, duration: null, questionTypes: Object.freeze(["direct"]), selection: "multiple", order: "random"})
@@ -75,7 +75,8 @@
           : [];
     const questionTypes = [...new Set(requestedQuestionTypes)]
       .filter(type => ["direct", "missing", "division"].includes(type));
-    const total = [10, 20, 25].includes(Number(input.total)) ? Number(input.total) : preset.total;
+    const allowedTotals = mode === "train" ? [10, 20] : [10, 20, 25];
+    const total = allowedTotals.includes(Number(input.total)) ? Number(input.total) : preset.total;
     const duration = [null, 60, 120, 180].includes(input.duration) ? input.duration : preset.duration;
     const testDuration = [60, 120, 180].includes(Number(input.duration)) ? Number(input.duration) : preset.duration;
     const testLevel = [1, 2, 3].includes(Number(input.testLevel)) ? Number(input.testLevel) : (preset.testLevel || 1);
@@ -89,7 +90,7 @@
       tables,
       order: mode === "learn" ? order : preset.order,
       questionTypes: mode === "test" ? testQuestionTypes : mode === "custom" && questionTypes.length ? questionTypes : [...preset.questionTypes],
-      total: mode === "custom" ? total : preset.total,
+      total: mode === "train" || mode === "custom" ? total : preset.total,
       duration: mode === "test" ? testDuration : mode === "custom" ? duration : preset.duration,
       testLevel
     };
