@@ -371,6 +371,101 @@
     .result-parcours p { margin: 0; line-height: 1.45; }
     .result-parcours p + p { margin-top: 8px; }
     .result-parcours .primary { min-height: 44px; margin-top: 10px; padding: 8px 14px; }
+    .result-parcours-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+    .result-parcours-actions .secondary { min-height: 44px; margin-top: 10px; padding: 8px 14px; }
+
+    /* ---- Mes calculs ---- */
+    .parcours-head-etat { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 4px 6px; }
+    .parcours-revoir {
+      min-height: 44px;
+      padding: 4px 12px;
+      border: 1px solid #f2c59a;
+      border-radius: 999px;
+      color: #9a4207;
+      background: #fff1e4;
+      font-size: .78rem;
+      font-weight: 950;
+      cursor: pointer;
+    }
+    .parcours-calculs {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 10px;
+      width: 100%;
+      margin: 10px 0 0;
+      padding: 12px 14px;
+      border: 2px solid #cfe2ed;
+      border-radius: 14px;
+      color: #31566c;
+      background: #fff;
+      font-weight: 850;
+      text-align: left;
+      cursor: pointer;
+    }
+    .parcours-calculs-icon { font-size: 1.35rem; line-height: 1; }
+    .parcours-calculs strong { display: block; color: var(--blue); font-size: .95rem; }
+    .parcours-calculs small { display: block; margin-top: 2px; color: var(--muted); font-size: .8rem; }
+    .parcours-calculs .back-icon svg { transform: rotate(180deg); }
+    .calculs-screen { max-width: 560px; margin: 0 auto; }
+    .calculs-resume { margin: 12px 0 0; color: var(--ink); font-weight: 900; text-align: center; }
+    .calculs-detail {
+      min-height: 48px;
+      display: grid;
+      place-items: center;
+      margin: 10px 0 0;
+      padding: 8px 12px;
+      border: 2px solid #d4e3ed;
+      border-radius: 12px;
+      color: var(--muted);
+      background: #f8fcff;
+      font-size: .9rem;
+      font-weight: 850;
+      text-align: center;
+    }
+    .calculs-detail.is-su { border-color: #9ed4b4; color: var(--green); background: var(--green-soft); }
+    .calculs-detail.is-en-cours { border-color: #a9c8e8; color: var(--blue); background: #eef6ff; }
+    .calculs-detail.is-a-travailler { border-color: #f2c59a; color: #9a4207; background: #fff1e4; }
+    .calculs-grille {
+      display: grid;
+      grid-template-columns: auto repeat(8, minmax(0, 1fr));
+      gap: 3px;
+      margin: 12px 0 0;
+    }
+    .calculs-entete {
+      display: grid;
+      place-items: center;
+      min-height: 22px;
+      color: var(--muted);
+      font-size: .82rem;
+      font-weight: 950;
+    }
+    .mc-cell {
+      min-height: 44px;
+      display: grid;
+      place-items: center;
+      padding: 2px;
+      border: 2px solid #d4e3ed;
+      border-radius: 9px;
+      color: #8ba3b5;
+      background: #eef3f7;
+      cursor: pointer;
+    }
+    .mc-cell.is-a-travailler { border-color: #f2c59a; color: #b45309; background: #fff1e4; }
+    .mc-cell.is-en-cours { border-color: #a9c8e8; color: var(--blue); background: #eef6ff; }
+    .mc-cell.is-su { border-color: #9ed4b4; color: var(--green); background: var(--green-soft); }
+    .mc-cell.is-miroir { opacity: .35; }
+    .mc-cell.is-choisie { outline: 3px solid var(--blue); outline-offset: 1px; }
+    .mc-cell:focus-visible { outline: 3px solid var(--blue); outline-offset: 1px; }
+    .mc-cases { display: flex; gap: 2px; }
+    .mc-case { width: 7px; height: 7px; border: 1.5px solid currentColor; border-radius: 2px; background: transparent; }
+    .mc-case.is-pleine { background: currentColor; }
+    .calculs-legende { display: flex; flex-wrap: wrap; justify-content: center; gap: 5px 12px; margin: 10px 0 0; color: var(--muted); font-size: .8rem; font-weight: 850; }
+    .calculs-legende .mc-cell { min-height: 22px; min-width: 26px; pointer-events: none; }
+    .calculs-note { margin: 10px 0 0; color: var(--muted); font-size: .82rem; text-align: center; }
+    .calculs-action { margin: 14px 0 0; text-align: center; }
+    .calculs-action .primary { width: min(100%, 340px); }
+    .calculs-hint { margin: 8px 0 0; color: var(--muted); font-size: .85rem; text-align: center; }
 
     .revision-sheet-action { display: flex; flex-wrap: wrap; justify-content: center; gap: 0 10px; margin-top: 3px; }
     .parcours-print-action { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 6px 12px; margin-top: 10px; }
@@ -926,6 +1021,15 @@
       .fiche-rules strong { display: block; margin-bottom: 1mm; color: #143451; font-size: 9pt; }
       .fiche-rules p { margin: 0 0 1mm; }
       .fiche-foot { margin-top: 8mm; color: #506b7d; font-size: 8pt; text-align: center; }
+      .fiche-page2 { break-before: page; page-break-before: always; padding-top: 2mm; }
+      .fiche-page2-title { margin: 0; color: #0b57b7; font-size: 21pt; line-height: 1.05; text-align: center; text-transform: uppercase; }
+      .fiche-page2-subtitle { margin: 2mm 0 0; color: #506b7d; font-size: 9pt; text-align: center; }
+      .fiche-calculs-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2mm 6mm; margin-top: 5mm; }
+      .fiche-calc { display: flex; align-items: center; justify-content: space-between; padding: 1.6mm 3mm; border: .3mm solid #cfe2ed; border-radius: 2mm; background: #f8fcff; color: #143451; font-size: 11pt; font-weight: 700; break-inside: avoid; }
+      .fiche-calc-cases { display: flex; gap: 1.2mm; }
+      .fiche-case { width: 4.2mm; height: 4.2mm; border: .35mm solid #7ea1b8; border-radius: 1mm; background: #fff; }
+      .fiche-case.is-pleine { border-color: #087f75; background: #087f75; }
+      .fiche-page2 .fiche-rules { margin-top: 5mm; }
     }
 
     @media (prefers-reduced-motion: reduce) {
@@ -1104,6 +1208,11 @@
           </div>
         </div>
         <div id="parcours-next" class="parcours-next"></div>
+        <button id="parcours-calculs" class="parcours-calculs" type="button" aria-controls="calculs">
+          <span class="parcours-calculs-icon" aria-hidden="true">🔢</span>
+          <span><strong>Mes calculs</strong><small id="parcours-calculs-compteur">Ta grille des 36 calculs</small></span>
+          <span class="back-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="20" height="20"><path d="M19 12H5M11 6l-6 6 6 6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+        </button>
         <div class="parcours-legend" aria-hidden="true">
           <span><span class="cell"><span class="dot"></span></span> pas fait</span>
           <span><span class="cell is-started"><span class="dot"></span></span> commencé</span>
@@ -1112,10 +1221,31 @@
         <ol id="parcours-list" class="parcours-list"></ol>
         <div id="parcours-melange" class="parcours-row parcours-extra" hidden></div>
         <div id="parcours-expert" class="parcours-row parcours-extra"></div>
-        <p class="parcours-note">Seules les séries lancées sur une table à la fois comptent (Réglages et Évaluation CM1 ne comptent pas). Touche un rond, un ✓ ou une étoile pour lancer la bonne série.</p>
+        <p class="parcours-note">Seules les séries lancées sur une table à la fois remplissent cette carte (Réglages et Évaluation CM1 ne comptent pas ici, mais toutes les réponses remplissent Mes calculs). Touche un rond, un ✓ ou une étoile pour lancer la bonne série.</p>
         <div class="parcours-print-action">
           <button id="parcours-print" class="secondary" type="button">🖨 Imprimer ma fiche</button>
           <a class="revision-sheet-link" href="./fiche_parcours_tables.pdf" download>↓ Fiche vide à photocopier</a>
+        </div>
+      </div>
+
+      <div id="calculs" class="calculs-screen" hidden>
+        <div class="settings-toolbar">
+          <button id="calculs-back" class="settings-back" type="button" aria-label="Retour à mon parcours"><span class="back-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="20" height="20"><path d="M19 12H5M11 6l-6 6 6 6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="settings-back-label">Parcours</span></button>
+          <h1 id="calculs-title" class="settings-heading" tabindex="-1">Mes calculs</h1>
+        </div>
+        <p id="calculs-resume" class="calculs-resume"></p>
+        <p id="calculs-detail" class="calculs-detail" role="status" aria-live="polite"></p>
+        <div id="calculs-grille" class="calculs-grille" role="grid" aria-label="Grille des 36 calculs, de 2 fois 2 à 9 fois 9"></div>
+        <div class="calculs-legende" aria-hidden="true">
+          <span><span class="mc-cell"><span class="mc-cases"><span class="mc-case"></span><span class="mc-case"></span><span class="mc-case"></span></span></span> pas encore vu</span>
+          <span><span class="mc-cell is-a-travailler"><span class="mc-cases"><span class="mc-case"></span><span class="mc-case"></span><span class="mc-case"></span></span></span> à travailler</span>
+          <span><span class="mc-cell is-en-cours"><span class="mc-cases"><span class="mc-case is-pleine"></span><span class="mc-case"></span><span class="mc-case"></span></span></span> en cours</span>
+          <span><span class="mc-cell is-su"><span class="mc-cases"><span class="mc-case is-pleine"></span><span class="mc-case is-pleine"></span><span class="mc-case is-pleine"></span></span></span> su</span>
+        </div>
+        <p class="calculs-note">Une case gagnée par bonne réponse, une case perdue par erreur. 7 × 8 et 8 × 7 comptent ensemble : la moitié grisée du tableau est le miroir de l’autre.</p>
+        <div class="calculs-action">
+          <button id="calculs-reviser" class="primary" type="button">Réviser mes calculs</button>
+          <p class="calculs-hint">10 questions sans chrono, sur ce que tu sais le moins.</p>
         </div>
       </div>
 
@@ -1196,6 +1326,17 @@
       <p>Expert (tables 2 à 10 mélangées, 25 questions en 2 min, 2 erreurs max) : ★ produits · ★★ + trous · ★★★ + divisions.</p>
     </div>
     <footer class="fiche-foot">mathsgo.re · CC BY-NC-SA 4.0</footer>
+    <section class="fiche-page2">
+      <h1 class="fiche-page2-title">Mes calculs</h1>
+      <p class="fiche-page2-subtitle" id="fiche-calculs-subtitle">Trois cases par calcul : coche une case à chaque bonne réponse, efface-en une à chaque erreur. Trois cases = calcul su.</p>
+      <div id="fiche-calculs" class="fiche-calculs-grid"></div>
+      <div class="fiche-rules">
+        <strong>Comment lire la grille</strong>
+        <p>7 × 8 et 8 × 7 comptent ensemble : c’est le même calcul à mémoriser. Les tables de 1 et de 10 ne sont pas dans la grille.</p>
+        <p>Dans l’application, la grille se remplit toute seule à chaque réponse, et « Réviser mes calculs » repropose d’abord ce qui est le moins su.</p>
+      </div>
+      <footer class="fiche-foot">mathsgo.re · CC BY-NC-SA 4.0</footer>
+    </section>
   </section>
   <footer class="site-footer">
     <span>Gwenaël Bourgault</span><span aria-hidden="true">·</span>
@@ -1206,8 +1347,8 @@
     <button type="button" data-mathsgo-consent-open onclick="window.mathsgoConsentement &amp;&amp; window.mathsgoConsentement.ouvrir()">Gérer mes cookies</button>
   </footer>
 
-  <script src="./defi_tables_core.js?v=20260830-3"></script>
-  <script src="./defi_tables_mon_parcours.js?v=20260830-3"></script>
+  <script src="./defi_tables_core.js?v=20260830-4"></script>
+  <script src="./defi_tables_mon_parcours.js?v=20260830-4"></script>
   <script>
     (() => {
       "use strict";
@@ -1261,7 +1402,10 @@
         learnStickHelpUsed: false,
         answer: "",
         launchReady: false,
-        origin: "menu"
+        origin: "menu",
+        revisionPremierScore: 0,
+        revisionPremierTotal: 0,
+        revisionAvantSus: new Set()
       };
       const TRAIN_TYPES = {desordre: ["direct"], trous: ["missing"], mixte: ["direct", "missing"]};
 
@@ -1358,8 +1502,9 @@
       }
 
       function show(name) {
-        ["intro", "launch", "play", "result", "parcours"].forEach(id => { $(id).hidden = id !== name; });
+        ["intro", "launch", "play", "result", "parcours", "calculs"].forEach(id => { $(id).hidden = id !== name; });
         if (name === "parcours") renderParcours();
+        if (name === "calculs") renderCalculs();
         document.body.classList.toggle("challenge-playing", name === "play" || name === "launch");
         if (name === "intro") syncControls();
         document.body.classList.toggle("settings-open", name === "intro" && Boolean(configuration.mode));
@@ -1368,6 +1513,7 @@
         if (name === "launch") $("launch-summary").focus?.({preventScroll: true});
         if (name === "result") $("result-title").focus?.({preventScroll: true});
         if (name === "parcours") $("parcours-title").focus?.({preventScroll: true});
+        if (name === "calculs") $("calculs-title").focus?.({preventScroll: true});
       }
 
       const MODE_COPY = Object.freeze({
@@ -1660,6 +1806,10 @@
         const question = state.questions[state.index];
         if (state.configuration.mode === "learn") {
           renderLearnProgress();
+        } else if (state.configuration.mode === "revision") {
+          const faits = Math.min(state.revisionPremierTotal + 1, TOTAL);
+          $("question-count").textContent = `${faits} / ${TOTAL}${question.retry ? " · il revient" : ""}`;
+          $("progress").style.width = `${state.revisionPremierTotal / TOTAL * 100}%`;
         } else {
           $("question-count").textContent = `${state.index + 1} / ${TOTAL}`;
           $("progress").style.width = `${state.index / TOTAL * 100}%`;
@@ -1860,6 +2010,11 @@
         if (!state.running) return;
         state.running = false;
         stopTimer();
+        if (state.configuration.mode === "revision") {
+          finishRevision();
+          return;
+        }
+        $("retry").hidden = false;
         const elapsed = Date.now() - state.startAt;
         const scoreKey = configurationKey(state.configuration);
         const previousScore = sessionScores.get(scoreKey);
@@ -2007,6 +2162,7 @@
       }
 
       function homeScreen() {
+        if (state.origin === "calculs") return "calculs";
         return state.origin === "parcours" ? "parcours" : "intro";
       }
 
@@ -2057,6 +2213,31 @@
           state.responses[state.index] = {value: null, correct: false, skipped: true};
         }
 
+        // Une réponse aidée par le bâton n'est pas une réponse de mémoire :
+        // elle n'alimente pas la grille Mes calculs (ni en plus, ni en moins).
+        const assiste = state.configuration.mode === "learn"
+          && !["construct", "gaps"].includes(state.configuration.learnActivity)
+          && state.learnStickHelpUsed;
+        if (!assiste) alimenterMesCalculs(question, correct && !skip);
+
+        if (state.configuration.mode === "revision") {
+          if (!question.retry) {
+            state.revisionPremierTotal += 1;
+            if (correct) state.revisionPremierScore += 1;
+          }
+          const willRetry = !correct;
+          if (willRetry) {
+            const dejaEnAttente = state.questions.slice(state.index + 1).some(candidate => candidate.factKey === question.factKey);
+            if (!dejaEnAttente) state.questions.push({...question, retry: true});
+          }
+          showAnswerFeedback(question, correct, skip ? null : value, willRetry);
+          if (correct) {
+            $("validate").style.visibility = "hidden";
+            scheduleAutoAdvance();
+          }
+          return;
+        }
+
         if (state.configuration.mode === "learn") {
           const stickActivity = ["construct", "gaps"].includes(state.configuration.learnActivity);
           const assisted = !stickActivity && state.learnStickHelpUsed;
@@ -2095,6 +2276,193 @@
         clearAnswerError();
       }
 
+      /* ---------- Mes calculs ---------- */
+      let calculsSelection = null;
+
+      function alimenterMesCalculs(question, correcte) {
+        if (!question || !question.factKey) return;
+        if (!PARCOURS.serieAlimenteGrille(state.configuration)) return;
+        const resultat = PARCOURS.appliquerReponse(parcours, question.factKey, {correcte});
+        if (!resultat.fait) return;
+        parcours = resultat.parcours;
+        sauverParcours();
+      }
+
+      function formaterJour(iso) {
+        if (!iso) return "";
+        const jour = new Date(`${iso}T12:00:00`);
+        if (Number.isNaN(jour.getTime())) return iso;
+        const aujourdhui = new Date();
+        aujourdhui.setHours(12, 0, 0, 0);
+        const ecart = Math.round((aujourdhui - jour) / 86400000);
+        if (ecart <= 0) return "aujourd’hui";
+        if (ecart === 1) return "hier";
+        if (ecart < 7) return `il y a ${ecart} jours`;
+        return `le ${jour.toLocaleDateString("fr-FR")}`;
+      }
+
+      function pluriel(nombre, mot) {
+        return `${nombre} ${mot}${nombre > 1 ? "s" : ""}`;
+      }
+
+      function resumeCalculsTexte(resume) {
+        const morceaux = [`${pluriel(resume.sus, "calcul")} su${resume.sus > 1 ? "s" : ""}`, `${resume.enCours} en cours`, `${resume.aTravailler} à travailler`];
+        if (resume.jamaisVus) morceaux.push(`${resume.jamaisVus} pas encore vu${resume.jamaisVus > 1 ? "s" : ""}`);
+        return morceaux.join(" · ");
+      }
+
+      const LIBELLES_ETATS_CALCULS = Object.freeze({
+        "jamais-vu": "pas encore vu",
+        "a-travailler": "à travailler",
+        "en-cours": "en cours",
+        "su": "su"
+      });
+
+      function renderCalculsDetail() {
+        const zone = $("calculs-detail");
+        if (!calculsSelection) {
+          zone.className = "calculs-detail";
+          zone.textContent = "Touche une case pour voir le détail d’un calcul.";
+          return;
+        }
+        const {ligne, colonne, cle} = calculsSelection;
+        const fait = parcours.calculs[cle] || null;
+        const etat = PARCOURS.etatFait(fait);
+        const cases = fait ? fait.cases : 0;
+        const morceaux = [`${ligne} × ${colonne} = ${ligne * colonne}`, `${pluriel(cases, "case")} sur 3`, LIBELLES_ETATS_CALCULS[etat]];
+        if (fait && fait.erreur) morceaux.push(`dernière erreur : ${formaterJour(fait.erreur)}`);
+        else if (fait) morceaux.push(`vu ${formaterJour(fait.vu)}`);
+        zone.className = `calculs-detail is-${etat}`;
+        zone.textContent = morceaux.join(" · ");
+      }
+
+      function renderCalculs() {
+        const grille = PARCOURS.grilleCalculs(parcours);
+        $("calculs-resume").textContent = resumeCalculsTexte(grille.resume);
+        const zone = $("calculs-grille");
+        zone.replaceChildren();
+        const coin = document.createElement("span");
+        coin.className = "calculs-entete";
+        coin.textContent = "×";
+        coin.setAttribute("role", "columnheader");
+        zone.append(coin);
+        grille.lignes[0].cellules.forEach(cellule => {
+          const entete = document.createElement("span");
+          entete.className = "calculs-entete";
+          entete.textContent = String(cellule.colonne);
+          entete.setAttribute("role", "columnheader");
+          zone.append(entete);
+        });
+        grille.lignes.forEach(ligne => {
+          const etiquette = document.createElement("span");
+          etiquette.className = "calculs-entete";
+          etiquette.textContent = String(ligne.ligne);
+          etiquette.setAttribute("role", "rowheader");
+          zone.append(etiquette);
+          ligne.cellules.forEach(cellule => {
+            const bouton = document.createElement("button");
+            bouton.type = "button";
+            const choisie = calculsSelection && calculsSelection.ligne === cellule.ligne && calculsSelection.colonne === cellule.colonne;
+            bouton.className = `mc-cell is-${cellule.etat}${cellule.active ? "" : " is-miroir"}${choisie ? " is-choisie" : ""}`;
+            const casesZone = document.createElement("span");
+            casesZone.className = "mc-cases";
+            for (let index = 0; index < 3; index += 1) {
+              const caseFait = document.createElement("span");
+              caseFait.className = `mc-case${index < cellule.cases ? " is-pleine" : ""}`;
+              casesZone.append(caseFait);
+            }
+            bouton.append(casesZone);
+            const miroir = cellule.active ? "" : ` (même calcul que ${PARCOURS.libelleFait(cellule.cle)})`;
+            bouton.setAttribute("aria-label", `${cellule.ligne} × ${cellule.colonne} : ${LIBELLES_ETATS_CALCULS[cellule.etat]}, ${cellule.cases} sur 3${miroir}. Voir le détail.`);
+            bouton.addEventListener("click", () => {
+              calculsSelection = {ligne: cellule.ligne, colonne: cellule.colonne, cle: cellule.cle};
+              renderCalculs();
+            });
+            zone.append(bouton);
+          });
+        });
+        renderCalculsDetail();
+      }
+
+      function openCalculs() {
+        configuration.mode = null;
+        configuration.tables = new Set();
+        state.running = false;
+        stopTimer();
+        show("calculs");
+      }
+
+      function startRevision(table = null, origin = "calculs") {
+        stopTimer();
+        const plan = PARCOURS.planRevision(parcours, {table});
+        if (!plan.length) return;
+        TOTAL = plan.length;
+        DURATION = null;
+        state.questions = plan.map(item => CORE.tableQuestion(item.type, item.first, item.second));
+        state.responses = [];
+        state.signature = "";
+        state.configuration = {mode: "revision", revisionTable: table, tables: [], learnActivity: null, questionTypes: [], total: TOTAL, duration: null};
+        state.index = 0;
+        state.correct = 0;
+        state.answered = 0;
+        state.running = false;
+        state.tenSecondAlert = false;
+        state.waitingForContinue = false;
+        state.mastered = new Set();
+        state.revealedLearnResults = new Set();
+        state.lastRevealedLearnMultiplier = null;
+        state.learnStickHelpVisible = false;
+        state.learnStickHelpUsed = false;
+        state.answer = "";
+        state.revisionPremierScore = 0;
+        state.revisionPremierTotal = 0;
+        state.revisionAvantSus = new Set(PARCOURS.FAITS.filter(cle => PARCOURS.etatFait(parcours.calculs[cle]) !== "su"));
+        state.origin = origin;
+        state.launchReady = true;
+        beginRound();
+      }
+
+      function finishRevision() {
+        const elapsed = Date.now() - state.startAt;
+        const table = state.configuration.revisionTable;
+        const total = state.revisionPremierTotal;
+        const score = state.revisionPremierScore;
+        $("result-title").textContent = `${score} / ${total} au premier essai`;
+        $("result-config").textContent = `Réviser mes calculs${table ? ` · table de ${table}` : ""} · ${total} questions · sans chronomètre`;
+        $("result-icon").hidden = score < Math.ceil(total * .8);
+        $("result-detail").textContent = `Chaque calcul raté est revenu jusqu’à sa bonne réponse. Série terminée en ${formatElapsed(elapsed)}.`;
+        $("result-message").hidden = true;
+        $("result-previous").hidden = true;
+        $("retry").hidden = true;
+        const resume = PARCOURS.resumeCalculs(parcours);
+        const verts = [...state.revisionAvantSus].filter(cle => PARCOURS.etatFait(parcours.calculs[cle]) === "su").length;
+        const zone = $("result-parcours");
+        zone.replaceChildren();
+        zone.hidden = false;
+        const bilan = document.createElement("p");
+        bilan.textContent = [
+          verts ? `${pluriel(verts, "calcul")} passé${verts > 1 ? "s" : ""} au vert` : "Aucun calcul passé au vert cette fois",
+          resume.aTravailler ? `${resume.aTravailler} calcul${resume.aTravailler > 1 ? "s restent" : " reste"} à travailler` : "plus aucun calcul à travailler"
+        ].join(" · ") + ".";
+        zone.append(bilan);
+        const actions = document.createElement("div");
+        actions.className = "result-parcours-actions";
+        const encore = document.createElement("button");
+        encore.type = "button";
+        encore.className = "primary";
+        encore.textContent = "Encore 10 questions";
+        encore.addEventListener("click", () => startRevision(table, state.origin));
+        const voir = document.createElement("button");
+        voir.type = "button";
+        voir.className = "secondary";
+        voir.textContent = "Voir mes calculs";
+        voir.addEventListener("click", openCalculs);
+        actions.append(encore, voir);
+        zone.append(actions);
+        renderCorrections();
+        show("result");
+      }
+
       /* ---------- Mon parcours ---------- */
       function parcoursTitle() {
         return parcours.prenom ? `Le parcours de ${parcours.prenom}` : "Mon parcours";
@@ -2102,6 +2470,10 @@
 
       function launchFromParcours(config) {
         if (!config) return;
+        if (config.mode === "revision") {
+          startRevision(config.table ?? null, "parcours");
+          return;
+        }
         configuration.mode = config.mode;
         configuration.tables = new Set(config.tables);
         configuration.learnActivity = config.learnActivity || "construct";
@@ -2167,6 +2539,13 @@
           next.append(go);
         }
 
+        const resumeCalculs = etat.calculs;
+        $("parcours-calculs-compteur").textContent = resumeCalculs.aTravailler
+          ? `${pluriel(resumeCalculs.aTravailler, "calcul")} à travailler`
+          : resumeCalculs.sus || resumeCalculs.enCours
+            ? resumeCalculsTexte(resumeCalculs)
+            : "Ta grille des 36 calculs";
+
         const list = $("parcours-list");
         list.replaceChildren();
         etat.lignes.forEach(ligne => {
@@ -2179,7 +2558,20 @@
           const badge = document.createElement("span");
           badge.className = `parcours-badge${ligne.acquise ? "" : " is-pending"}`;
           badge.textContent = ligne.acquise ? "Acquise ✓" : ligne.dernierEntrainement ? `dernier essai : ${ligne.dernierEntrainement.score} / ${ligne.dernierEntrainement.total}` : "";
-          head.append(name, badge);
+          const etatGroupe = document.createElement("span");
+          etatGroupe.className = "parcours-head-etat";
+          if (ligne.aRevoir) {
+            const revoir = document.createElement("button");
+            revoir.type = "button";
+            revoir.className = "parcours-revoir";
+            revoir.textContent = "à revoir";
+            revoir.setAttribute("aria-label", `Table de ${ligne.table} : des calculs sont retombés à zéro. Lancer une révision de 10 questions sur cette table.`);
+            revoir.title = `Des calculs de la table de ${ligne.table} sont à retravailler`;
+            revoir.addEventListener("click", () => startRevision(ligne.table, "parcours"));
+            etatGroupe.append(revoir);
+          }
+          etatGroupe.append(badge);
+          head.append(name, etatGroupe);
           const cells = document.createElement("div");
           cells.className = "parcours-cells";
           cells.append(groupLabel("J’apprends", ""), groupLabel("Je m’entraîne", "is-entraine"), groupLabel("Acquise", "is-acquise"));
@@ -2364,6 +2756,27 @@
           star.textContent = "★";
           stars.append(star);
         });
+        $("fiche-calculs-subtitle").textContent = Object.keys(parcours.calculs).length
+          ? "Ma grille dans l’application à ce jour. Trois cases cochées = calcul su ; une erreur efface une case."
+          : "Trois cases par calcul : coche une case à chaque bonne réponse, efface-en une à chaque erreur. Trois cases = calcul su.";
+        const grilleFiche = $("fiche-calculs");
+        grilleFiche.replaceChildren();
+        PARCOURS.FAITS.forEach(cle => {
+          const fait = parcours.calculs[cle] || null;
+          const item = document.createElement("div");
+          item.className = "fiche-calc";
+          const libelle = document.createElement("span");
+          libelle.textContent = PARCOURS.libelleFait(cle);
+          const cases = document.createElement("span");
+          cases.className = "fiche-calc-cases";
+          for (let index = 0; index < 3; index += 1) {
+            const caseFait = document.createElement("span");
+            caseFait.className = `fiche-case${fait && index < fait.cases ? " is-pleine" : ""}`;
+            cases.append(caseFait);
+          }
+          item.append(libelle, cases);
+          grilleFiche.append(item);
+        });
       }
 
       function printFiche() {
@@ -2387,6 +2800,9 @@
       $("open-parcours").addEventListener("click", openParcours);
       $("result-open-parcours").addEventListener("click", openParcours);
       $("parcours-back").addEventListener("click", backToModes);
+      $("parcours-calculs").addEventListener("click", openCalculs);
+      $("calculs-back").addEventListener("click", openParcours);
+      $("calculs-reviser").addEventListener("click", () => startRevision(null, "calculs"));
       $("parcours-print").addEventListener("click", printFiche);
       $("parcours-print-option").addEventListener("click", () => {
         state.parcoursOptionsOpen = false;
@@ -2541,6 +2957,7 @@
       }
       syncControls();
       if (window.location.hash === "#parcours") openParcours();
+      else if (window.location.hash === "#calculs") openCalculs();
     })();
   </script>
 </body>

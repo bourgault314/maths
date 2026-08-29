@@ -298,6 +298,7 @@
     ALL_TABLES,
     LEARN_MULTIPLIERS,
     PRESETS,
+    tableQuestion,
     normalizeConfiguration,
     generateEvaluationQuestions,
     generateLearnQuestions,

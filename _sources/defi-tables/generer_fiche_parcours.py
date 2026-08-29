@@ -1,7 +1,8 @@
-"""Génère la fiche A4 vide « Mon parcours des tables » et le QR code partagé.
+"""Génère la fiche A4 vide « Mon parcours des tables » (2 pages) et le QR partagé.
 
 Sorties :
-  - outils/calcul_mental/fiche_parcours_tables.pdf   (fiche vide à photocopier)
+  - outils/calcul_mental/fiche_parcours_tables.pdf   (fiche vide à photocopier :
+    page 1 = parcours par table, page 2 = grille « Mes calculs », 36 faits × 3 cases)
   - assets/img/qr-defi-tables-parcours.svg           (QR utilisé aussi par la
     fiche imprimée depuis l'appli, qui reproduit la même mise en page en HTML)
 
@@ -37,6 +38,16 @@ RULES = [
     "J’apprends : un rond par activité terminée.   Je m’entraîne : 10 questions sans chrono, 1 erreur max.",
     "Acquise : 20 questions (produits et trous) en 1 min 30, 2 erreurs max.   Mélange : 25 produits en 2 min, 2 erreurs max.",
     "Expert (tables 2 à 10 mélangées, 25 questions en 2 min, 2 erreurs max) : ★ produits · ★★ + trous · ★★★ + divisions.",
+]
+
+# Page 2 : grille « Mes calculs » — les 36 faits de 2×2 à 9×9, sens confondus.
+CALC_TITLE = "MES CALCULS"
+CALC_SUBTITLE = "Trois cases par calcul : coche une case à chaque bonne réponse, efface-en une à chaque erreur. Trois cases = calcul su."
+FACTS = [(a, b) for a in range(2, 10) for b in range(a, 10)]
+CALC_RULES = [
+    "7 × 8 et 8 × 7 comptent ensemble : c’est le même calcul à mémoriser. Les tables de 1 et de 10 ne sont pas dans la grille.",
+    "Dans l’application, la grille se remplit toute seule à chaque réponse, et « Réviser mes calculs »",
+    "repropose d’abord ce qui est le moins su.",
 ]
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -213,6 +224,62 @@ def draw_sheet(pdf: canvas.Canvas) -> None:
     pdf.drawCentredString(width / 2, 9 * mm, FOOTER_TEXT)
 
 
+def draw_calc_sheet(pdf: canvas.Canvas) -> None:
+    width, height = A4
+    margin = 14 * mm
+    top = height - margin
+
+    # Titre et consigne
+    pdf.setFillColor(BLUE)
+    pdf.setFont("SheetSans-Bold", 22)
+    pdf.drawCentredString(width / 2, top - 8 * mm, CALC_TITLE)
+    pdf.setFillColor(MUTED)
+    pdf.setFont("SheetSans", 9)
+    pdf.drawCentredString(width / 2, top - 15 * mm, CALC_SUBTITLE)
+
+    # Grille des 36 faits : 3 colonnes × 12 lignes
+    grid_top = top - 22 * mm
+    columns = 3
+    gutter = 6 * mm
+    cell_w = (width - 2 * margin - (columns - 1) * gutter) / columns
+    cell_h = 12.4 * mm
+    gap_v = 2.6 * mm
+    box = 4.6 * mm
+    for index, (first, second) in enumerate(FACTS):
+        column = index // 12
+        row = index % 12
+        x = margin + column * (cell_w + gutter)
+        y = grid_top - row * (cell_h + gap_v) - cell_h
+        rounded_box(pdf, x, y, cell_w, cell_h, CARD, LINE, radius=2 * mm, width=0.9)
+        cy = y + cell_h / 2
+        pdf.setFillColor(INK)
+        pdf.setFont("SheetSans-Bold", 12)
+        pdf.drawString(x + 3.5 * mm, cy - 1.6 * mm, f"{first} × {second}")
+        pdf.setStrokeColor(HexColor("#7EA1B8"))
+        pdf.setLineWidth(1.0)
+        pdf.setFillColor(WHITE)
+        for case in range(3):
+            bx = x + cell_w - 3.5 * mm - (3 - case) * (box + 1.4 * mm) + 1.4 * mm
+            pdf.roundRect(bx, cy - box / 2, box, box, 1 * mm, stroke=1, fill=1)
+
+    # Règles de lecture
+    y = grid_top - 12 * (cell_h + gap_v) - 6 * mm
+    pdf.setFillColor(INK)
+    pdf.setFont("SheetSans-Bold", 9)
+    pdf.drawString(margin, y, "Comment lire la grille")
+    y -= 5 * mm
+    pdf.setFillColor(MUTED)
+    pdf.setFont("SheetSans", 8.3)
+    for line in CALC_RULES:
+        pdf.drawString(margin, y, line)
+        y -= 5 * mm
+
+    # Pied de page
+    pdf.setFillColor(MUTED)
+    pdf.setFont("SheetSans", 8)
+    pdf.drawCentredString(width / 2, 9 * mm, FOOTER_TEXT)
+
+
 def main() -> None:
     pdfmetrics.registerFont(TTFont("SheetSans", FONT_REGULAR))
     pdfmetrics.registerFont(TTFont("SheetSans-Bold", FONT_BOLD))
@@ -224,8 +291,10 @@ def main() -> None:
     pdf.setSubject("Fiche de suivi du parcours Défi tables (CC BY-NC-SA 4.0)")
     draw_sheet(pdf)
     pdf.showPage()
+    draw_calc_sheet(pdf)
+    pdf.showPage()
     pdf.save()
-    print(f"OK : {OUTPUT_PDF.relative_to(ROOT)} et {OUTPUT_QR.relative_to(ROOT)}")
+    print(f"OK : {OUTPUT_PDF.relative_to(ROOT)} (2 pages) et {OUTPUT_QR.relative_to(ROOT)}")
 
 
 if __name__ == "__main__":
