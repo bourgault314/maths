@@ -10,11 +10,12 @@
   const CORE_TABLES = Object.freeze(Array.from({length: 8}, (_, index) => index + 2));
   const MISSING_FORMS = Object.freeze(["right", "left", "reverse-right", "reverse-left"]);
   const DIVISION_FORMS = Object.freeze(["division-quotient", "division-dividend", "division-divisor"]);
-  const MODES = Object.freeze(["learn", "train", "test", "evaluation", "custom"]);
+  const MODES = Object.freeze(["learn", "train", "test", "validation", "evaluation", "custom"]);
   const PRESETS = Object.freeze({
     learn: Object.freeze({total: 11, duration: null, questionTypes: Object.freeze(["direct"]), selection: "single", order: "ordered", learnActivity: "construct"}),
     train: Object.freeze({total: 10, duration: null, questionTypes: Object.freeze(["direct"]), selection: "multiple", order: "random"}),
     test: Object.freeze({total: 25, duration: 120, questionTypes: Object.freeze(["direct"]), selection: "multiple", order: "random", testLevel: 1}),
+    validation: Object.freeze({total: 20, duration: 90, questionTypes: Object.freeze(["direct", "missing"]), questionMix: Object.freeze({direct: 14, missing: 6}), selection: "single", order: "random"}),
     evaluation: Object.freeze({total: 25, duration: 60, questionTypes: Object.freeze(["evaluation"]), selection: "automatic", order: "random"}),
     custom: Object.freeze({total: 20, duration: null, questionTypes: Object.freeze(["direct"]), selection: "multiple", order: "random"})
   });
@@ -82,6 +83,7 @@
     const total = allowedTotals.includes(Number(input.total)) ? Number(input.total) : preset.total;
     const duration = [null, 60, 120, 180].includes(input.duration) ? input.duration : preset.duration;
     const testDuration = [60, 120, 180].includes(Number(input.duration)) ? Number(input.duration) : preset.duration;
+    const validationDuration = [90, 120, 180].includes(Number(input.duration)) ? Number(input.duration) : preset.duration;
     const testLevel = [1, 2, 3].includes(Number(input.testLevel)) ? Number(input.testLevel) : (preset.testLevel || 1);
     const testQuestionTypes = testLevel === 1
       ? ["direct"]
@@ -93,9 +95,9 @@
       tables,
       order: mode === "learn" ? order : preset.order,
       learnActivity: mode === "learn" ? requestedLearnActivity : "ordered",
-      questionTypes: mode === "test" ? testQuestionTypes : mode === "custom" && questionTypes.length ? questionTypes : [...preset.questionTypes],
+      questionTypes: mode === "test" ? testQuestionTypes : (mode === "custom" || mode === "train") && questionTypes.length ? questionTypes : [...preset.questionTypes],
       total: mode === "learn" && requestedLearnActivity === "gaps" ? 8 : mode === "train" || mode === "custom" ? total : preset.total,
-      duration: mode === "test" ? testDuration : mode === "custom" ? duration : preset.duration,
+      duration: mode === "test" ? testDuration : mode === "validation" ? validationDuration : mode === "custom" ? duration : preset.duration,
       testLevel
     };
   }
@@ -165,8 +167,20 @@
     }));
   }
 
-  function questionTypePlan(questionTypes, total, random = Math.random) {
-    const categories = shuffle(balancedSequence(questionTypes, total, random), random);
+  function mixedSequence(mix, total) {
+    const entries = Object.entries(mix);
+    const weightSum = entries.reduce((sum, [, weight]) => sum + weight, 0);
+    const sequence = [];
+    entries.forEach(([type, weight]) => {
+      sequence.push(...Array.from({length: Math.round(total * weight / weightSum)}, () => type));
+    });
+    while (sequence.length > total) sequence.pop();
+    while (sequence.length < total) sequence.push(entries[0][0]);
+    return sequence;
+  }
+
+  function questionTypePlan(questionTypes, total, random = Math.random, mix = null) {
+    const categories = shuffle(mix ? mixedSequence(mix, total) : balancedSequence(questionTypes, total, random), random);
     const missingCount = categories.filter(type => type === "missing").length;
     const divisionCount = categories.filter(type => type === "division").length;
     const missingForms = balancedSequence(MISSING_FORMS, missingCount, random);
@@ -187,7 +201,7 @@
     const tablePlan = balancedSequence(tables, total, random);
     const multiplierPlan = balancedSequence(ALL_TABLES, total, random);
     const directSides = balancedSequence(["focus-first", "focus-second"], total, random);
-    const typePlan = questionTypePlan(normalized.questionTypes, total, random);
+    const typePlan = questionTypePlan(normalized.questionTypes, total, random, normalized.mode === "validation" ? PRESETS.validation.questionMix : null);
 
     return tablePlan.map((focusTable, index) => {
       const multiplier = multiplierPlan[index];
@@ -223,6 +237,7 @@
   function durationLabel(duration) {
     if (duration === null) return "sans chronomètre";
     if (duration === 60) return "1 minute";
+    if (duration === 90) return "1 min 30";
     return `${duration / 60} minutes`;
   }
 
@@ -234,6 +249,7 @@
       learn: "J’apprends",
       train: "Je m’entraîne",
       test: "Je deviens expert",
+      validation: "Je valide ma table",
       custom: "Réglages"
     };
     const details = [modeLabels[normalized.mode], tablesLabel(normalized.tables)];
