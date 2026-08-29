@@ -448,7 +448,25 @@
       margin: 5px 0 0;
     }
     .learn-instruction { margin: 0 0 7px; color: var(--teal); font-size: 1rem; font-weight: 950; text-align: center; }
-    .question.stick-trace .learn-sequence { margin: 0 0 8px; }
+    .question.stick-trace .learn-sequence {
+      display: grid;
+      justify-items: center;
+      gap: 6px;
+      margin: 0 0 8px;
+    }
+    .stick-help-button {
+      min-height: 36px;
+      justify-self: center;
+      padding: 6px 13px;
+      border: 1px solid #9fc2d6;
+      border-radius: 999px;
+      color: var(--blue);
+      background: #fff;
+      font-size: .82rem;
+      font-weight: 900;
+      cursor: pointer;
+    }
+    .stick-help-button[aria-expanded="true"] { color: #075b55; background: #e7f8f5; }
     .question.stick-trace .number-stick {
       width: min(100%, 720px);
       padding: 2px;
@@ -884,6 +902,7 @@
       let TOTAL = 20;
       let DURATION = null;
       const ALL_TABLES = [...CORE.ALL_TABLES];
+      const ALL_MULTIPLIERS = new Set(Array.from({length: 11}, (_, multiplier) => multiplier));
       const $ = id => document.getElementById(id);
       const configuration = {
         mode: null,
@@ -905,6 +924,7 @@
         running: false,
         timer: null,
         autoAdvanceTimer: null,
+        learnStickHelpTimer: null,
         startAt: 0,
         endAt: 0,
         signature: "",
@@ -914,6 +934,8 @@
         mastered: new Set(),
         revealedLearnResults: new Set(),
         lastRevealedLearnMultiplier: null,
+        learnStickHelpVisible: false,
+        learnStickHelpUsed: false,
         answer: "",
         launchReady: false
       };
@@ -1221,14 +1243,21 @@
         const question = state.questions[state.index];
         if (stickOnly) $("answer-feedback").before(zone);
         else $("expression").before(zone);
-        const stick = createNumberStick(table, state.revealedLearnResults, {
-          activeMultiplier: stickOnly ? question?.multiplier : null,
+        const stick = createNumberStick(table, stickOnly ? state.revealedLearnResults : ALL_MULTIPLIERS, {
+          activeMultiplier: question?.multiplier,
           newMultiplier: state.lastRevealedLearnMultiplier,
           draftMultiplier: stickOnly ? question?.multiplier : null,
           draftValue: stickOnly ? state.answer : ""
         });
         if (!stickOnly) {
-          zone.replaceChildren(stick);
+          const helpButton = document.createElement("button");
+          helpButton.type = "button";
+          helpButton.className = "stick-help-button";
+          helpButton.dataset.stickHelpToggle = "";
+          helpButton.textContent = state.learnStickHelpVisible ? "Masquer" : "Voir le bâton";
+          helpButton.setAttribute("aria-expanded", String(state.learnStickHelpVisible));
+          helpButton.addEventListener("click", toggleLearnStickHelp);
+          zone.replaceChildren(...(state.learnStickHelpVisible ? [helpButton, stick] : [helpButton]));
           return;
         }
         const instruction = document.createElement("p");
@@ -1239,17 +1268,58 @@
         zone.replaceChildren(instruction, stick);
       }
 
+      function clearLearnStickHelpTimer() {
+        if (state.learnStickHelpTimer !== null) window.clearTimeout(state.learnStickHelpTimer);
+        state.learnStickHelpTimer = null;
+      }
+
+      function hideLearnStickHelp({restoreFocus = false} = {}) {
+        clearLearnStickHelpTimer();
+        state.learnStickHelpVisible = false;
+        renderLearnSequence();
+        if (restoreFocus) document.querySelector("[data-stick-help-toggle]")?.focus({preventScroll: true});
+      }
+
+      function showLearnStickHelp() {
+        clearLearnStickHelpTimer();
+        state.learnStickHelpVisible = true;
+        state.learnStickHelpUsed = true;
+        renderLearnSequence();
+        document.querySelector("[data-stick-help-toggle]")?.focus({preventScroll: true});
+        state.learnStickHelpTimer = window.setTimeout(() => {
+          state.learnStickHelpTimer = null;
+          state.learnStickHelpVisible = false;
+          if (state.running) renderLearnSequence();
+        }, 6000);
+      }
+
+      function toggleLearnStickHelp() {
+        if (state.learnStickHelpVisible) hideLearnStickHelp({restoreFocus: true});
+        else showLearnStickHelp();
+      }
+
+      function renderLearnProgress() {
+        const stickActivity = ["construct", "gaps"].includes(state.configuration.learnActivity);
+        const completed = stickActivity ? state.revealedLearnResults.size : state.mastered.size;
+        const total = stickActivity ? 11 : TOTAL;
+        const label = stickActivity ? "cases complétées" : "calculs maîtrisés";
+        $("question-count").textContent = `${completed} / ${total} ${label}`;
+        $("progress").style.width = `${completed / total * 100}%`;
+      }
+
       function renderQuestion() {
         const question = state.questions[state.index];
         if (state.configuration.mode === "learn") {
-          $("question-count").textContent = `${state.mastered.size} / ${TOTAL} maîtrisés`;
-          $("progress").style.width = `${state.mastered.size / TOTAL * 100}%`;
+          renderLearnProgress();
         } else {
           $("question-count").textContent = `${state.index + 1} / ${TOTAL}`;
           $("progress").style.width = `${state.index / TOTAL * 100}%`;
         }
         state.answer = "";
         state.lastRevealedLearnMultiplier = null;
+        clearLearnStickHelpTimer();
+        state.learnStickHelpVisible = false;
+        state.learnStickHelpUsed = false;
         renderExpression(question);
         renderLearnSequence();
         clearAnswerFeedback();
@@ -1273,13 +1343,13 @@
         renderInlineAnswer();
       }
 
-      function showAnswerFeedback(question, correct, given, willRetry = false) {
+      function showAnswerFeedback(question, correct, given, willRetry = false, assisted = false) {
         state.waitingForContinue = true;
         const feedback = $("answer-feedback");
         feedback.className = `answer-feedback ${correct ? "is-correct" : "is-wrong"}`;
         if (correct) {
           renderInlineAnswer("is-correct");
-          feedback.textContent = "Bravo !";
+          feedback.textContent = assisted ? "Bravo ! On le reverra sans le bâton." : "Bravo !";
         } else {
           state.answer = String(question.answer);
           renderInlineAnswer("is-corrected");
@@ -1311,6 +1381,7 @@
         if (state.timer !== null) window.clearInterval(state.timer);
         state.timer = null;
         clearAutoAdvance();
+        clearLearnStickHelpTimer();
       }
 
       function clearAutoAdvance() {
@@ -1538,6 +1609,8 @@
           ? config.learnActivity === "gaps" ? [0, 5, 10] : []
           : []);
         state.lastRevealedLearnMultiplier = null;
+        state.learnStickHelpVisible = false;
+        state.learnStickHelpUsed = false;
         state.answer = "";
         state.launchReady = true;
         $("launch-summary").textContent = launchLabel(config);
@@ -1566,7 +1639,9 @@
       function advanceAfterResponse() {
         clearAutoAdvance();
         state.index += 1;
-        if (state.configuration.mode === "learn" && state.mastered.size >= TOTAL) finish();
+        const memoryActivity = state.configuration.mode === "learn"
+          && ["ordered", "random"].includes(state.configuration.learnActivity);
+        if (memoryActivity && state.mastered.size >= TOTAL) finish();
         else if (state.index >= state.questions.length) finish();
         else renderQuestion();
       }
@@ -1594,15 +1669,19 @@
         }
 
         if (state.configuration.mode === "learn") {
-          if (correct) state.mastered.add(question.factKey);
-          else {
+          const stickActivity = ["construct", "gaps"].includes(state.configuration.learnActivity);
+          const assisted = !stickActivity && state.learnStickHelpUsed;
+          const shouldRetry = !stickActivity && (!correct || assisted);
+          if (correct && !assisted) state.mastered.add(question.factKey);
+          if (shouldRetry) {
             const alreadyWaiting = state.questions.slice(state.index + 1).some(candidate => candidate.factKey === question.factKey);
             if (!alreadyWaiting) state.questions.push({...question, retry: true});
           }
           state.revealedLearnResults.add(question.multiplier);
           state.lastRevealedLearnMultiplier = question.multiplier;
+          renderLearnProgress();
           renderLearnSequence();
-          showAnswerFeedback(question, correct, skip ? null : value, !correct);
+          showAnswerFeedback(question, correct, skip ? null : value, shouldRetry, assisted);
           if (correct) {
             $("validate").style.visibility = "hidden";
             scheduleAutoAdvance();

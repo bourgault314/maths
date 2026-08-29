@@ -192,7 +192,7 @@ test("J’apprends démarre directement et les autres parcours gardent leur conf
   assert.match(html, /niveau \$\{config\.testLevel\} · 25 questions/);
 });
 
-test("J’apprends remplit un bâton dans les deux ordres et Je m’entraîne corrige immédiatement", () => {
+test("J’apprends garde le bâton pour construire et le propose en aide temporaire pour mémoriser", () => {
   assert.match(html, /class="keypad"[\s\S]*class="actions"[\s\S]*id="learn-sequence"/);
   assert.match(html, /question-card"\)\.classList\.toggle\("show-learn-sequence", visible\)/);
   assert.match(html, /\.question\.show-learn-sequence \.actions \{ margin-bottom: 0; \}/);
@@ -202,17 +202,29 @@ test("J’apprends remplit un bâton dans les deux ordres et Je m’entraîne co
   assert.match(html, /multiplierLabel\.setAttribute\("aria-hidden", "true"\)/);
   assert.match(html, /cell\.append\(multiplierLabel, value\)/);
   assert.match(html, /const visible = state\.configuration\?\.mode === "learn"/);
+  assert.match(html, /const ALL_MULTIPLIERS = new Set\(Array\.from\(\{length: 11\}/);
   assert.match(html, /state\.revealedLearnResults\.add\(question\.multiplier\)/);
   assert.match(html, /config\.learnActivity === "gaps" \? \[0, 5, 10\] : \[\]/);
+  assert.match(html, /stickOnly \? state\.revealedLearnResults : ALL_MULTIPLIERS/);
   assert.match(html, /draftMultiplier: stickOnly \? question\?\.multiplier : null/);
-  assert.match(html, /activeMultiplier: stickOnly \? question\?\.multiplier : null/);
+  assert.match(html, /activeMultiplier: question\?\.multiplier/);
   assert.match(html, /if \(stickOnly\) \$\("answer-feedback"\)\.before\(zone\)/);
   assert.match(html, /else \$\("expression"\)\.before\(zone\)/);
+  assert.match(html, /helpButton\.textContent = state\.learnStickHelpVisible \? "Masquer" : "Voir le bâton"/);
+  assert.match(html, /helpButton\.addEventListener\("click", toggleLearnStickHelp\)/);
+  assert.match(html, /\}, 6000\);/);
+  assert.match(html, /state\.learnStickHelpVisible = false;[\s\S]*state\.learnStickHelpUsed = false;[\s\S]*renderExpression\(question\)/);
+  assert.match(html, /const assisted = !stickActivity && state\.learnStickHelpUsed/);
+  assert.match(html, /const shouldRetry = !stickActivity && \(!correct \|\| assisted\)/);
+  assert.match(html, /if \(correct && !assisted\) state\.mastered\.add\(question\.factKey\)/);
+  assert.match(html, /showAnswerFeedback\(question, correct, skip \? null : value, shouldRetry, assisted\)/);
+  assert.match(html, /assisted \? "Bravo ! On le reverra sans le bâton\." : "Bravo !"/);
+  assert.match(html, /const label = stickActivity \? "cases complétées" : "calculs maîtrisés"/);
   assert.match(html, /question\?\.multiplier === 0 \? "Commence à 0\." : `Ajoute \$\{table\}\.\`/);
   assert.match(html, /if \(correct\) \{[\s\S]*\$\("validate"\)\.style\.visibility = "hidden";[\s\S]*scheduleAutoAdvance\(\);/);
   assert.match(html, /\$\("validate"\)\.style\.visibility = "";[\s\S]*setAnswerControlsEnabled\(true\)/);
   assert.match(html, /\}, 800\);/);
-  assert.match(html, /\.question\.stick-trace \.learn-sequence \{ margin: 0 0 8px; \}/);
+  assert.match(html, /\.question\.stick-trace \.learn-sequence \{[\s\S]*display: grid;[\s\S]*justify-items: center;[\s\S]*margin: 0 0 8px;/);
   assert.match(html, /\.question\.stick-trace \.number-stick-cell \{[\s\S]*min-height: 42px;[\s\S]*grid-template-rows: 14px minmax\(28px, 1fr\);/);
   assert.match(html, /\.question\.stick-trace \.number-stick-value \{[\s\S]*min-height: 28px;[\s\S]*font-size: clamp\(\.66rem, 2\.2vw, \.9rem\);/);
   assert.match(html, /\.challenge-playing \.number-stick-cell \{ min-height: 54px; grid-template-rows: 16px minmax\(38px, 1fr\); \}/);
