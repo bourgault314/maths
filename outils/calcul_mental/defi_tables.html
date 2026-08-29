@@ -1206,8 +1206,8 @@
     <button type="button" data-mathsgo-consent-open onclick="window.mathsgoConsentement &amp;&amp; window.mathsgoConsentement.ouvrir()">Gérer mes cookies</button>
   </footer>
 
-  <script src="./defi_tables_core.js?v=20260830-2"></script>
-  <script src="./defi_tables_mon_parcours.js?v=20260830-2"></script>
+  <script src="./defi_tables_core.js?v=20260830-3"></script>
+  <script src="./defi_tables_mon_parcours.js?v=20260830-3"></script>
   <script>
     (() => {
       "use strict";
@@ -1225,7 +1225,6 @@
       let TOTAL = 20;
       let DURATION = null;
       const ALL_TABLES = [...CORE.ALL_TABLES];
-      const ALL_MULTIPLIERS = new Set(Array.from({length: 11}, (_, multiplier) => multiplier));
       const $ = id => document.getElementById(id);
       const configuration = {
         mode: null,
@@ -1590,7 +1589,9 @@
         const question = state.questions[state.index];
         if (stickOnly) $("answer-feedback").before(zone);
         else $("expression").before(zone);
-        const stick = createNumberStick(table, stickOnly ? state.revealedLearnResults : ALL_MULTIPLIERS, {
+        // Dans l’ordre et dans le désordre, le bâton d’aide ne montre que les cases déjà répondues :
+        // il sert à raisonner (« j’ajoute 7 »), pas à lire la réponse.
+        const stick = createNumberStick(table, state.revealedLearnResults, {
           activeMultiplier: question?.multiplier,
           newMultiplier: state.lastRevealedLearnMultiplier,
           draftMultiplier: stickOnly ? question?.multiplier : null,
@@ -1601,7 +1602,8 @@
           helpButton.type = "button";
           helpButton.className = "stick-help-button";
           helpButton.dataset.stickHelpToggle = "";
-          helpButton.textContent = state.learnStickHelpVisible ? "Masquer" : "Voir le bâton";
+          const revealedCount = state.revealedLearnResults.size;
+          helpButton.textContent = state.learnStickHelpVisible ? "Masquer" : revealedCount ? `Voir le bâton (${revealedCount} / 11)` : "Voir le bâton (vide)";
           helpButton.setAttribute("aria-expanded", String(state.learnStickHelpVisible));
           helpButton.addEventListener("click", toggleLearnStickHelp);
           zone.replaceChildren(...(state.learnStickHelpVisible ? [helpButton, stick] : [helpButton]));

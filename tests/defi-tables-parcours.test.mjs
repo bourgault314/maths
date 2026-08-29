@@ -202,15 +202,15 @@ test("J’apprends garde le bâton pour construire et le propose en aide tempora
   assert.match(html, /multiplierLabel\.setAttribute\("aria-hidden", "true"\)/);
   assert.match(html, /cell\.append\(multiplierLabel, value\)/);
   assert.match(html, /const visible = state\.configuration\?\.mode === "learn"/);
-  assert.match(html, /const ALL_MULTIPLIERS = new Set\(Array\.from\(\{length: 11\}/);
   assert.match(html, /state\.revealedLearnResults\.add\(question\.multiplier\)/);
   assert.match(html, /config\.learnActivity === "gaps" \? \[0, 5, 10\] : \[\]/);
-  assert.match(html, /stickOnly \? state\.revealedLearnResults : ALL_MULTIPLIERS/);
+  assert.match(html, /const stick = createNumberStick\(table, state\.revealedLearnResults, \{/, "le bâton d’aide ne montre que les cases déjà répondues");
+  assert.doesNotMatch(html, /ALL_MULTIPLIERS/);
   assert.match(html, /draftMultiplier: stickOnly \? question\?\.multiplier : null/);
   assert.match(html, /activeMultiplier: question\?\.multiplier/);
   assert.match(html, /if \(stickOnly\) \$\("answer-feedback"\)\.before\(zone\)/);
   assert.match(html, /else \$\("expression"\)\.before\(zone\)/);
-  assert.match(html, /helpButton\.textContent = state\.learnStickHelpVisible \? "Masquer" : "Voir le bâton"/);
+  assert.match(html, /helpButton\.textContent = state\.learnStickHelpVisible \? "Masquer" : revealedCount \? `Voir le bâton \(\$\{revealedCount\} \/ 11\)` : "Voir le bâton \(vide\)"/);
   assert.match(html, /helpButton\.addEventListener\("click", toggleLearnStickHelp\)/);
   assert.match(html, /\}, 6000\);/);
   assert.match(html, /state\.learnStickHelpVisible = false;[\s\S]*state\.learnStickHelpUsed = false;[\s\S]*renderExpression\(question\)/);
@@ -235,7 +235,7 @@ test("J’apprends garde le bâton pour construire et le propose en aide tempora
   assert.match(html, /textContent = enabled \? "Valider" : "Suivant"/);
   assert.match(html, /completeReview = state\.configuration\.mode === "test"/);
   assert.match(html, /Bilan de tes réponses/);
-  assert.match(html, /defi_tables_core\.js\?v=20260830-2/);
+  assert.match(html, /defi_tables_core\.js\?v=20260830-3/);
 });
 
 test("le numéro de question est séparé du calcul dans le bilan", () => {
