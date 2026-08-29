@@ -42,9 +42,12 @@ d'élève, pas de mot de passe d'élève.
 ```
 _serveur/
   public/            ← contenu à déposer dans le dossier « suivi » chez OVH
-    api/parcours.php   API élève : lire/écrire par code
-    api/prof.php       API prof : connexion, classes, codes, tableau
-    lib/               bd, réponses/CORS, codes, limitation, sessions
+    index.php          page d'accueil des élèves : un code, les applis de sa classe
+    prof/index.php     page « Ma classe » : classes, codes, tableau, impression
+    api/parcours.php   API élève : lire/écrire la progression par code
+    api/eleve.php      API élève : prénom, classe et applis à partir du code
+    api/prof.php       API prof : connexion, classes, élèves, tableau
+    lib/               bd, réponses/CORS, codes, limitation, sessions, catalogue d'applis
     config.exemple.php à recopier en config.php sur le serveur (JAMAIS commité)
     installer.php      création des tables + premier compte, à SUPPRIMER après
     verifier.php       page de diagnostic en français
@@ -53,6 +56,27 @@ _serveur/
   outils/generer-sql.php
   tests/lancer.php
 ```
+
+## Les deux pages
+
+- `https://suivi.mathsgo.re/` — page des élèves. Un champ de six caractères, puis
+  la liste des applis proposées à sa classe. Chaque appli ouvre l'appli unique de
+  mathsgo.re en lui passant le code (`…/defi_tables.html#code=XXXXXX`) : aucune
+  copie d'appli n'est faite ici.
+- `https://suivi.mathsgo.re/prof/` — page « Ma classe », protégée par mot de passe :
+  créer une classe, générer N codes, saisir prénom + initiale, voir le tableau
+  (tables acquises, mélange, Expert, dernière activité), trier, régénérer un code,
+  supprimer, imprimer la liste code ↔ élève.
+
+Le résumé de progression du tableau est calculé **dans le navigateur** en chargeant
+`defi_tables_mon_parcours.js` depuis mathsgo.re : le serveur n'ouvre jamais les
+paquets qu'il range, et il n'existe qu'une seule définition du parcours.
+
+### Limite connue
+
+Il n'y a pas encore de propriétaire sur une classe : **tout compte prof voit et
+peut modifier toutes les classes**. À corriger (colonne `prof_id` + table de
+partage) avant d'ouvrir un second compte.
 
 ## Points d'entrée
 

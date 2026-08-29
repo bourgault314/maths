@@ -308,6 +308,31 @@ verifier("les applis sont bien séparées", function () use (&$codes, $parcours)
     egal($parcours, $r['json']['parcours'], "Défi tables ne doit pas avoir bougé");
 });
 
+// ------------------------------------------------------------- page d'accueil élève
+
+verifier("la page élève reconnaît le code et donne les applis de la classe", function () use (&$codes) {
+    $r = appel('/api/eleve.php?code=' . $codes[0]['code']);
+    egal(200, $r['code'], 'code HTTP');
+    egal('Léa', $r['json']['prenom']);
+    egal('405', $r['json']['classe']);
+    egal(1, count($r['json']['applis']), 'nombre d\'applis');
+    egal('defi-tables', $r['json']['applis'][0]['cle']);
+    egal(true, $r['json']['applis'][0]['disponible']);
+    vrai(str_contains($r['json']['applis'][0]['url'], 'defi_tables.html'), "l'appli doit pointer vers mathsgo.re");
+});
+
+verifier("la page élève refuse un code inconnu ou mal formé", function () {
+    egal(404, appel('/api/eleve.php?code=ZZZZZZ')['code'], 'code HTTP');
+    egal(400, appel('/api/eleve.php?code=AB')['code'], 'code HTTP');
+    egal(400, appel('/api/eleve.php?code=' . urlencode("' OR 1=1"))['code'], 'code HTTP');
+});
+
+verifier("la page élève ne donne aucun code en retour", function () use (&$codes) {
+    $r = appel('/api/eleve.php?code=' . $codes[0]['code']);
+    vrai(!str_contains($r['texte'], $codes[1]['code']), "aucun code d'un autre élève ne doit sortir");
+    vrai(!array_key_exists('code', $r['json']), "le code ne doit pas être renvoyé");
+});
+
 // -------------------------------------------------------------------------- CORS
 
 verifier("origine autorisée acceptée", function () use (&$codes) {
