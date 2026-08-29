@@ -1,7 +1,11 @@
 import assert from "node:assert/strict";
+import { createRequire } from "node:module";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 import vm from "node:vm";
+
+const require = createRequire(import.meta.url);
+const tablesCore = require("../outils/calcul_mental/defi_tables_core.js");
 
 const pageDefinitions = [
   {
@@ -72,7 +76,19 @@ test("les règles et durées approuvées restent explicites", () => {
   assert.match(solo, /const GOAL = 10;/);
   assert.match(solo, /\["sum", "sum", "sum", "difference", "difference", "product", "product", "product", "quotient", "quotient"\]/);
 
-  assert.match(pages["outils/calcul_mental/defi_tables.html"], /const TOTAL = 25;[\s\S]*const DURATION = 60;/);
+  assert.deepEqual(tablesCore.PRESETS.learn, {
+    total: 10,
+    duration: null,
+    questionTypes: ["direct"],
+    selection: "single",
+    order: "ordered"
+  });
+  assert.equal(tablesCore.PRESETS.train.total, 20);
+  assert.equal(tablesCore.PRESETS.train.duration, null);
+  assert.equal(tablesCore.PRESETS.test.total, 25);
+  assert.equal(tablesCore.PRESETS.test.duration, 60);
+  assert.equal(tablesCore.PRESETS.evaluation.total, 25);
+  assert.equal(tablesCore.PRESETS.evaluation.duration, 60);
   assert.match(pages["outils/calcul_mental/defi_calcul.html"], /const TOTAL = 30;[\s\S]*const DURATION = 180;/);
 });
 

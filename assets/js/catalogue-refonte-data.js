@@ -442,9 +442,9 @@ window.MATHSGO_CATALOGUE = {
       "primaryNotion": "calcul-mental",
       "primaryGroup": "entrainer",
       "collections": [],
-      "tags": ["calcul-mental", "tables", "multiplication", "facteur-manquant", "chronometre"],
+      "tags": ["calcul-mental", "tables", "multiplication", "division", "facteur-manquant", "entrainement", "chronometre"],
       "thumbnail": "assets/img/thumbnails/calcul-mental/defi-tables.svg?v=1",
-      "cardDescription": "Résoudre 25 égalités en une minute, avec des produits directs et des facteurs manquants."
+      "cardDescription": "Apprendre une table, s’entraîner sans pression ou se tester, avec des réglages simples et personnalisables."
     },
     "outils/calcul_mental/defi_calcul.html": {
       "primaryNotion": "calcul-mental",
@@ -6296,7 +6296,7 @@ window.MATHSGO_CATALOGUE = {
     {
       "id": "outils-calcul-mental-defi-tables-html",
       "title": "Défi tables",
-      "description": "Un défi chronométré de 25 égalités sur les tables de multiplication, en calcul direct ou à facteur manquant.",
+      "description": "Des parcours guidés pour apprendre une table, s’entraîner sans chronomètre ou se tester, plus un réglage libre avec produits, nombres manquants et divisions.",
       "path": "outils/calcul_mental/defi_tables.html",
       "domains": [
         "nombres-calculs"
@@ -6315,6 +6315,8 @@ window.MATHSGO_CATALOGUE = {
       "keywords": [
         "tables de multiplication",
         "facteur manquant",
+        "divisions liées",
+        "entraînement sans chronomètre",
         "25 questions en une minute"
       ],
       "kind": "tool",

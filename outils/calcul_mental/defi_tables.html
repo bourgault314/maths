@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Défi tables | maths&amp;go</title>
-  <meta name="description" content="Un défi chronométré de 25 égalités sur les tables de multiplication, en calcul direct ou à facteur manquant.">
+  <meta name="description" content="Des parcours guidés pour apprendre une table, s’entraîner sans chronomètre ou se tester, plus un réglage libre avec produits, nombres manquants et divisions.">
   <link rel="canonical" href="https://mathsgo.re/outils/calcul_mental/defi_tables.html">
   <meta name="robots" content="index, follow, max-image-preview:large">
   <link rel="icon" href="/favicon.ico" sizes="48x48">
@@ -148,7 +148,7 @@
 
     .mode-choice {
       display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
+      grid-template-columns: repeat(3, minmax(0, 1fr));
       gap: 12px;
       margin: 20px 0 14px;
       text-align: left;
@@ -156,7 +156,7 @@
 
     .mode-card {
       position: relative;
-      min-height: 116px;
+      min-height: 132px;
       display: grid;
       grid-template-columns: auto minmax(0, 1fr);
       align-items: center;
@@ -195,7 +195,34 @@
       font-weight: 950;
     }
 
-    .custom-settings {
+    .secondary-mode-choice {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 8px;
+      margin: 0 0 14px;
+    }
+
+    .secondary-mode-button {
+      min-height: 42px;
+      padding: 8px 13px;
+      border: 1px solid #bfd3df;
+      border-radius: 999px;
+      color: #31566c;
+      background: #fff;
+      font-size: .82rem;
+      font-weight: 900;
+      cursor: pointer;
+    }
+
+    .secondary-mode-button.is-selected {
+      border-color: var(--blue);
+      color: var(--blue);
+      background: #eef6ff;
+      box-shadow: inset 0 0 0 1px var(--blue);
+    }
+
+    .settings-panel {
       margin: 14px 0;
       padding: 16px;
       border: 2px solid #cfe2ed;
@@ -204,6 +231,8 @@
       text-align: left;
     }
 
+    .settings-heading { margin: 0; color: var(--ink); font-size: 1.12rem; }
+    .settings-intro { margin: 4px 0 14px; color: var(--muted); font-size: .86rem; }
     .setting-group { margin: 0; padding: 0; border: 0; }
     .setting-group + .setting-group { margin-top: 17px; padding-top: 16px; border-top: 1px solid #d8e7f0; }
     .setting-title { padding: 0; color: var(--ink); font-size: 1rem; font-weight: 950; }
@@ -231,7 +260,12 @@
     }
 
     .selection-button.is-selected::before { content: "✓ "; }
-    .type-options { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+    .type-options,
+    .order-options,
+    .count-options,
+    .time-options { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+    .order-options { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .time-options { grid-template-columns: repeat(4, minmax(0, 1fr)); }
     .type-button {
       min-height: 70px;
       padding: 10px;
@@ -252,6 +286,7 @@
     }
 
     .type-button.is-selected strong::before { content: "✓ "; color: var(--teal); }
+    .type-button.is-selected::before { color: var(--teal); }
     .config-summary,
     .result-config {
       margin: 13px 0;
@@ -262,6 +297,8 @@
       font-size: .9rem;
       font-weight: 900;
     }
+
+    .selection-error { margin: 8px 0; color: var(--red) !important; font-size: .88rem; font-weight: 900; }
 
     .primary,
     .secondary {
@@ -277,6 +314,7 @@
     }
 
     .primary { color: #fff; border: 0; background: var(--blue); box-shadow: 0 5px 0 #043f8c; }
+    .primary:disabled { color: #718493; background: #dbe5eb; box-shadow: 0 3px 0 #bdcbd4; cursor: not-allowed; }
     .secondary { color: var(--blue); border: 1px solid #c5d9e6; background: #fff; }
     #play,
     body.challenge-playing,
@@ -308,6 +346,7 @@
     }
 
     .status strong.urgent { color: var(--red); background: var(--red-soft); }
+    .status strong.no-timer { color: var(--teal); background: #e7f8f5; font-size: .92rem; }
     .progress-track { height: 10px; margin: 12px 0 18px; overflow: hidden; border-radius: 99px; background: #dfebf3; }
     .progress-track b { display: block; width: 0; height: 100%; background: linear-gradient(90deg, var(--teal), var(--blue)); transition: width .2s; }
     .question {
@@ -348,6 +387,14 @@
     .answer.invalid { border-color: var(--red); background: var(--red-soft); }
     .answer-error { min-height: 1.35em; margin: 6px 0 0; color: var(--red); font-size: .88rem; font-weight: 900; visibility: hidden; }
     .answer-error.is-visible { visibility: visible; }
+    .answer-feedback {
+      margin: 8px auto 0;
+      padding: 10px 12px;
+      border-radius: 12px;
+      font-weight: 900;
+    }
+    .answer-feedback.is-correct { color: var(--green); background: var(--green-soft); }
+    .answer-feedback.is-wrong { color: var(--red); background: var(--red-soft); }
     .keypad { max-width: 390px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 12px auto; }
     .keypad button {
       min-height: 49px;
@@ -359,6 +406,7 @@
       font-weight: 950;
       cursor: pointer;
     }
+    .keypad button:disabled { opacity: .45; cursor: default; }
 
     .actions { display: flex; justify-content: center; gap: 9px; margin-top: 13px; }
     .result-message { padding: 12px 15px; border-radius: 14px; color: #31566c !important; background: #eef8ff; font-weight: 850; }
@@ -441,10 +489,11 @@
       .mode-choice { grid-template-columns: 1fr; gap: 8px; margin-top: 15px; }
       .mode-card { min-height: 82px; padding: 12px 40px 12px 13px; }
       .mode-card-icon { font-size: 1.7rem; }
-      .custom-settings { margin: 10px 0; padding: 13px 10px; }
+      .settings-panel { margin: 10px 0; padding: 13px 10px; }
       .table-options { gap: 5px; }
       .selection-button { min-height: 44px; padding: 7px 4px; }
       .type-options { grid-template-columns: 1fr; gap: 6px; }
+      .time-options { grid-template-columns: repeat(2, minmax(0, 1fr)); }
       .type-button { min-height: 56px; display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 9px; }
       .type-button small { margin: 0; text-align: right; }
       .question { min-height: 560px; padding: 19px 10px; }
@@ -519,24 +568,34 @@
       <div id="intro" class="intro">
         <span class="hero-icon" aria-hidden="true">✖️</span>
         <p class="eyebrow">Calcul mental · tables de multiplication</p>
-        <h1 id="intro-title" tabindex="-1">Choisis ton défi</h1>
-        <p>Dans tous les cas : 25 égalités en 1 minute et une nouvelle série à chaque essai.</p>
-        <div class="mode-choice" role="group" aria-label="Choisis ton entraînement">
-          <button class="mode-card is-selected" type="button" data-mode="evaluation" aria-pressed="true">
-            <span class="mode-card-icon" aria-hidden="true">🎯</span>
-            <span><strong>Comme l’évaluation CM1</strong><small>Un mélange automatique fidèle au format national.</small></span>
+        <h1 id="intro-title" tabindex="-1">Comment veux-tu travailler&nbsp;?</h1>
+        <p>Choisis ton objectif. L’application prépare le reste pour toi.</p>
+        <div class="mode-choice" role="group" aria-label="Choisis ton parcours">
+          <button class="mode-card" type="button" data-mode="learn" aria-pressed="false" aria-controls="settings-panel">
+            <span class="mode-card-icon" aria-hidden="true">🌱</span>
+            <span><strong>J’apprends une table</strong><small>Une seule table, dans l’ordre ou le désordre, sans chronomètre.</small></span>
           </button>
-          <button class="mode-card" type="button" data-mode="custom" aria-pressed="false" aria-controls="custom-settings">
-            <span class="mode-card-icon" aria-hidden="true">✏️</span>
-            <span><strong>Je choisis mon entraînement</strong><small>Une ou plusieurs tables et le type de questions.</small></span>
+          <button class="mode-card" type="button" data-mode="train" aria-pressed="false" aria-controls="settings-panel">
+            <span class="mode-card-icon" aria-hidden="true">🎯</span>
+            <span><strong>Je m’entraîne</strong><small>20 produits à ton rythme. Ton temps apparaît seulement à la fin.</small></span>
+          </button>
+          <button class="mode-card" type="button" data-mode="test" aria-pressed="false" aria-controls="settings-panel">
+            <span class="mode-card-icon" aria-hidden="true">⏱️</span>
+            <span><strong>Je me teste</strong><small>Les tables de ton choix, 25 produits en 1 minute.</small></span>
           </button>
         </div>
-        <section id="custom-settings" class="custom-settings" aria-label="Réglages de l’entraînement" hidden>
-          <fieldset class="setting-group">
+        <div class="secondary-mode-choice" aria-label="Autres parcours">
+          <button class="secondary-mode-button" type="button" data-mode="evaluation" aria-pressed="false">Comme l’évaluation CM1</button>
+          <button class="secondary-mode-button" type="button" data-mode="custom" aria-pressed="false" aria-controls="settings-panel">Je règle moi-même</button>
+        </div>
+        <section id="settings-panel" class="settings-panel" aria-labelledby="settings-title" hidden>
+          <h2 id="settings-title" class="settings-heading">Choisis tes tables</h2>
+          <p id="settings-intro" class="settings-intro"></p>
+          <fieldset id="table-settings" class="setting-group">
             <legend class="setting-title">Quelles tables&nbsp;?</legend>
-            <p class="setting-help">Choisis une table ou touches-en plusieurs pour les mélanger.</p>
+            <p id="table-help" class="setting-help">Choisis une ou plusieurs tables.</p>
             <div class="table-options">
-              <button class="selection-button all-tables is-selected" type="button" data-all-tables aria-pressed="true">Toutes les tables</button>
+              <button id="all-tables" class="selection-button all-tables" type="button" data-all-tables aria-pressed="false">Toutes les tables</button>
               <button class="selection-button" type="button" data-table="1" aria-pressed="false">× 1</button>
               <button class="selection-button" type="button" data-table="2" aria-pressed="false">× 2</button>
               <button class="selection-button" type="button" data-table="3" aria-pressed="false">× 3</button>
@@ -549,18 +608,44 @@
               <button class="selection-button" type="button" data-table="10" aria-pressed="false">× 10</button>
             </div>
           </fieldset>
-          <fieldset class="setting-group">
-            <legend class="setting-title">Quels types de questions&nbsp;?</legend>
-            <p class="setting-help">Le ? change de place : avant ou après le signe =, de façon équilibrée.</p>
+          <fieldset id="order-settings" class="setting-group" hidden>
+            <legend class="setting-title">Dans quel ordre&nbsp;?</legend>
+            <p class="setting-help">Commence dans l’ordre, puis passe au désordre pour mieux mémoriser.</p>
+            <div class="order-options">
+              <button class="type-button is-selected" type="button" data-order="ordered" aria-pressed="true"><strong>Dans l’ordre</strong><small>1, 2, 3…</small></button>
+              <button class="type-button" type="button" data-order="random" aria-pressed="false"><strong>Dans le désordre</strong><small>Ordre mélangé</small></button>
+            </div>
+          </fieldset>
+          <fieldset id="question-settings" class="setting-group" hidden>
+            <legend class="setting-title">Quelles formes de questions&nbsp;?</legend>
+            <p class="setting-help">Tu peux en choisir une ou plusieurs. Elles seront mélangées automatiquement.</p>
             <div class="type-options">
-              <button class="type-button is-selected" type="button" data-question-type="mixed" aria-pressed="true"><strong>Tout mélanger</strong><small>Les deux types</small></button>
-              <button class="type-button" type="button" data-question-type="direct" aria-pressed="false"><strong>Trouver le résultat</strong><small>7 × 8 = ?</small></button>
+              <button class="type-button is-selected" type="button" data-question-type="direct" aria-pressed="true"><strong>Produits directs</strong><small>7 × 8 = ?</small></button>
               <button class="type-button" type="button" data-question-type="missing" aria-pressed="false"><strong>Trouver le nombre manquant</strong><small>? × 8 = 56</small></button>
+              <button class="type-button" type="button" data-question-type="division" aria-pressed="false"><strong>Divisions liées</strong><small>24 ÷ 4 = ?</small></button>
+            </div>
+          </fieldset>
+          <fieldset id="count-settings" class="setting-group" hidden>
+            <legend class="setting-title">Combien de questions&nbsp;?</legend>
+            <div class="count-options">
+              <button class="type-button" type="button" data-total="10" aria-pressed="false"><strong>10</strong><small>Session courte</small></button>
+              <button class="type-button is-selected" type="button" data-total="20" aria-pressed="true"><strong>20</strong><small>Entraînement</small></button>
+              <button class="type-button" type="button" data-total="25" aria-pressed="false"><strong>25</strong><small>Session complète</small></button>
+            </div>
+          </fieldset>
+          <fieldset id="time-settings" class="setting-group" hidden>
+            <legend class="setting-title">Quel temps&nbsp;?</legend>
+            <div class="time-options">
+              <button class="type-button is-selected" type="button" data-duration="none" aria-pressed="true"><strong>Sans chrono</strong><small>À ton rythme</small></button>
+              <button class="type-button" type="button" data-duration="180" aria-pressed="false"><strong>3 min</strong><small>Tranquille</small></button>
+              <button class="type-button" type="button" data-duration="120" aria-pressed="false"><strong>2 min</strong><small>Rapide</small></button>
+              <button class="type-button" type="button" data-duration="60" aria-pressed="false"><strong>1 min</strong><small>Défi</small></button>
             </div>
           </fieldset>
         </section>
-        <p id="config-summary" class="config-summary" aria-live="polite">Comme l’évaluation CM1 · 25 égalités · 1 minute</p>
-        <button id="start" class="primary" type="button">Commencer</button>
+        <p id="config-summary" class="config-summary" aria-live="polite" hidden></p>
+        <p id="selection-error" class="selection-error" aria-live="polite" hidden>Choisis au moins une table pour commencer.</p>
+        <button id="start" class="primary" type="button" disabled>Choisis un parcours</button>
       </div>
 
       <div id="play" hidden>
@@ -577,8 +662,9 @@
           <p id="question-kind" class="eyebrow">Produit</p>
           <div id="expression" class="expression" tabindex="-1" role="status" aria-live="polite" aria-atomic="true"></div>
           <label for="answer">Ta réponse</label>
-          <input id="answer" class="answer" type="text" inputmode="none" readonly aria-readonly="true" aria-describedby="answer-error" aria-invalid="false">
+          <input id="answer" class="answer" type="text" inputmode="none" readonly aria-readonly="true" aria-describedby="answer-error answer-feedback" aria-invalid="false">
           <p id="answer-error" class="answer-error" role="alert" aria-hidden="true">Saisis une réponse ou choisis « Passer ».</p>
+          <p id="answer-feedback" class="answer-feedback" role="status" aria-live="polite" hidden></p>
           <div class="keypad" role="group" aria-label="Clavier numérique">
             <button type="button" data-key="1">1</button><button type="button" data-key="2">2</button><button type="button" data-key="3">3</button>
             <button type="button" data-key="4">4</button><button type="button" data-key="5">5</button><button type="button" data-key="6">6</button>
@@ -594,7 +680,7 @@
 
       <div id="result" class="result" hidden>
         <span class="hero-icon" aria-hidden="true">✓</span>
-        <p class="eyebrow">Défi terminé</p>
+        <p class="eyebrow">Parcours terminé</p>
         <h1 id="result-title" tabindex="-1">Résultat</h1>
         <p id="result-config" class="result-config"></p>
         <p id="result-detail"></p>
@@ -618,19 +704,42 @@
     <button type="button" data-mathsgo-consent-open onclick="window.mathsgoConsentement &amp;&amp; window.mathsgoConsentement.ouvrir()">Gérer mes cookies</button>
   </footer>
 
+  <script src="./defi_tables_core.js"></script>
   <script>
     (() => {
       "use strict";
 
-      const TOTAL = 25;
-      const DURATION = 60;
-      const ALL_TABLES = Array.from({length: 10}, (_, index) => index + 1);
-      const CORE_TABLES = Array.from({length: 8}, (_, index) => index + 2);
-      const MISSING_FORMS = ["right", "left", "reverse-right", "reverse-left"];
+      const CORE = window.MATHSGO_DEFI_TABLES_CORE;
+      if (!CORE) throw new Error("Le moteur de Défi tables est indisponible.");
+      let TOTAL = 20;
+      let DURATION = null;
+      const ALL_TABLES = [...CORE.ALL_TABLES];
       const $ = id => document.getElementById(id);
-      const configuration = {mode: "evaluation", tables: new Set(ALL_TABLES), questionType: "mixed"};
+      const configuration = {
+        mode: null,
+        tables: new Set(),
+        order: "ordered",
+        questionTypes: new Set(["direct"]),
+        total: 20,
+        duration: null
+      };
       const sessionScores = new Map();
-      const state = {questions: [], responses: [], index: 0, correct: 0, answered: 0, running: false, timer: null, endAt: 0, signature: "", configuration: null, tenSecondAlert: false};
+      const state = {
+        questions: [],
+        responses: [],
+        index: 0,
+        correct: 0,
+        answered: 0,
+        running: false,
+        timer: null,
+        startAt: 0,
+        endAt: 0,
+        signature: "",
+        configuration: null,
+        tenSecondAlert: false,
+        waitingForContinue: false,
+        mastered: new Set()
+      };
 
       function setupFullscreen() {
         const button = document.querySelector("[data-fullscreen-toggle]");
@@ -687,152 +796,39 @@
         syncFullscreenControl();
       }
 
-      function shuffle(items, random = Math.random) {
-        const copy = items.slice();
-        for (let index = copy.length - 1; index > 0; index -= 1) {
-          const swap = Math.floor(random() * (index + 1));
-          [copy[index], copy[swap]] = [copy[swap], copy[index]];
-        }
-        return copy;
-      }
-
-      function integer(random, minimum, maximum) {
-        return minimum + Math.floor(random() * (maximum - minimum + 1));
-      }
-
-      function balancedSequence(values, length, random = Math.random) {
-        const sequence = [];
-        while (sequence.length < length) sequence.push(...shuffle(values, random));
-        return sequence.slice(0, length);
-      }
-
-      function tableQuestion(type, first, second) {
-        const product = first * second;
-        if (type === "direct") return {type, kind: "Trouver le résultat", prompt: `${first} × ${second} = ?`, answer: product};
-        if (type === "right") return {type, kind: "Trouver le nombre manquant", prompt: `${first} × ? = ${product}`, answer: second};
-        if (type === "left") return {type, kind: "Trouver le nombre manquant", prompt: `? × ${second} = ${product}`, answer: first};
-        if (type === "reverse-right") return {type, kind: "Trouver le nombre manquant", prompt: `${product} = ${first} × ?`, answer: second};
-        return {type, kind: "Trouver le nombre manquant", prompt: `${product} = ? × ${second}`, answer: first};
-      }
-
-      function buildEvaluationPairs(random = Math.random) {
-        const selected = [];
-        const seen = new Set();
-        const add = (first, second, forcedDirect = false) => {
-          const key = `${first}-${second}`;
-          if (seen.has(key) || selected.length >= TOTAL) return false;
-          seen.add(key);
-          selected.push({first, second, forcedDirect});
-          return true;
-        };
-
-        add(1, integer(random, 2, 9), true);
-        shuffle(CORE_TABLES, random).slice(0, 2).forEach(table => {
-          if (random() < .5) add(table, 10, true);
-          else add(10, table, true);
-        });
-        shuffle(CORE_TABLES.filter(table => table >= 3), random).slice(0, 3).forEach(table => add(table, table));
-        shuffle(CORE_TABLES.filter(table => table !== 5), random).slice(0, 3).forEach(table => {
-          if (random() < .5) add(5, table);
-          else add(table, 5);
-        });
-        shuffle([[6, 7], [7, 6], [6, 8], [8, 6], [7, 8], [8, 7], [7, 9], [9, 7], [8, 9], [9, 8]], random)
-          .slice(0, 5)
-          .forEach(pair => add(pair[0], pair[1]));
-
-        shuffle(CORE_TABLES, random).forEach(table => {
-          if (selected.some(pair => pair.first === table || pair.second === table)) return;
-          const multipliers = shuffle(CORE_TABLES.filter(value => value !== table), random);
-          for (const multiplier of multipliers) {
-            if (add(table, multiplier)) break;
-          }
-        });
-
-        const deck = [];
-        for (const first of CORE_TABLES) {
-          for (const second of ALL_TABLES) deck.push([first, second]);
-        }
-        shuffle(deck, random).forEach(pair => add(pair[0], pair[1]));
-        return selected.slice(0, TOTAL);
-      }
-
-      function generateEvaluationQuestions(random = Math.random) {
-        const pairs = buildEvaluationPairs(random);
-        const eligible = pairs.map((pair, index) => pair.forcedDirect ? -1 : index).filter(index => index >= 0);
-        const missing = shuffle(eligible, random).slice(0, 6);
-        const types = new Map(missing.map((pairIndex, index) => [pairIndex, index < 4 ? "right" : "left"]));
-        return shuffle(pairs.map((pair, index) => tableQuestion(types.get(index) || "direct", pair.first, pair.second)), random);
-      }
-
-      function generateCustomQuestions(config, random = Math.random) {
-        const tables = config.tables.length ? config.tables : ALL_TABLES;
-        const tablePlan = balancedSequence(tables, TOTAL, random);
-        const multiplierPlan = balancedSequence(ALL_TABLES, TOTAL, random);
-        const directSides = balancedSequence(["focus-first", "focus-second"], TOTAL, random);
-        let typePlan;
-        if (config.questionType === "direct") typePlan = Array(TOTAL).fill("direct");
-        else if (config.questionType === "missing") typePlan = balancedSequence(MISSING_FORMS, TOTAL, random);
-        else {
-          typePlan = shuffle([
-            ...Array(13).fill("direct"),
-            ...Array(3).fill("right"),
-            ...Array(3).fill("left"),
-            ...Array(3).fill("reverse-right"),
-            ...Array(3).fill("reverse-left")
-          ], random);
-        }
-
-        return tablePlan.map((focusTable, index) => {
-          const multiplier = multiplierPlan[index];
-          const type = typePlan[index];
-          let first = focusTable;
-          let second = multiplier;
-          if (type === "direct" && directSides[index] === "focus-second") [first, second] = [multiplier, focusTable];
-          if (type === "left" || type === "reverse-left") [first, second] = [multiplier, focusTable];
-          return {...tableQuestion(type, first, second), focusTable};
-        });
-      }
-
       function captureConfiguration() {
-        return {
+        return CORE.normalizeConfiguration({
           mode: configuration.mode,
           tables: [...configuration.tables].sort((first, second) => first - second),
-          questionType: configuration.questionType
-        };
+          order: configuration.order,
+          questionTypes: [...configuration.questionTypes],
+          total: configuration.total,
+          duration: configuration.duration
+        });
       }
 
       function generateQuestions(config, random = Math.random) {
-        return config.mode === "evaluation" ? generateEvaluationQuestions(random) : generateCustomQuestions(config, random);
-      }
-
-      function joinFrench(values) {
-        if (values.length < 2) return String(values[0] ?? "");
-        if (values.length === 2) return `${values[0]} et ${values[1]}`;
-        return `${values.slice(0, -1).join(", ")} et ${values.at(-1)}`;
+        return CORE.generateQuestions(config, random);
       }
 
       function configurationLabel(config) {
-        if (config.mode === "evaluation") return "Comme l’évaluation CM1";
-        const tables = config.tables.length === ALL_TABLES.length
-          ? "Tables de 1 à 10"
-          : config.tables.length === 1
-            ? `Table de ${config.tables[0]}`
-            : `Tables de ${joinFrench(config.tables)}`;
-        const questions = config.questionType === "direct"
-          ? "résultats"
-          : config.questionType === "missing"
-            ? "nombres manquants"
-            : "tous les types";
-        return `${tables} · ${questions}`;
+        return CORE.configurationLabel(config);
       }
 
       function configurationKey(config) {
-        if (config.mode === "evaluation") return "evaluation";
-        return `custom-${config.tables.join("-")}-${config.questionType}`;
+        return CORE.configurationKey(config);
       }
 
       function formatTime(seconds) {
         return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}`;
+      }
+
+      function formatElapsed(milliseconds) {
+        const seconds = Math.max(1, Math.round(milliseconds / 1000));
+        if (seconds < 60) return `${seconds} s`;
+        const minutes = Math.floor(seconds / 60);
+        const rest = seconds % 60;
+        return rest ? `${minutes} min ${rest} s` : `${minutes} min`;
       }
 
       function show(name) {
@@ -844,13 +840,68 @@
         if (name === "result") $("result-title").focus?.({preventScroll: true});
       }
 
+      const MODE_COPY = Object.freeze({
+        learn: {
+          title: "Choisis une table",
+          intro: "Tu verras ses dix produits. Une erreur sera corrigée tout de suite et le calcul reviendra.",
+          start: "Commencer à apprendre"
+        },
+        train: {
+          title: "Choisis tes tables",
+          intro: "L’application préparera 20 produits sans limite de temps. Ton temps apparaîtra seulement à la fin.",
+          start: "Commencer à m’entraîner"
+        },
+        test: {
+          title: "Choisis les tables à tester",
+          intro: "L’application préparera 25 produits à résoudre en une minute.",
+          start: "Commencer le test"
+        },
+        custom: {
+          title: "Règle ton entraînement",
+          intro: "Choisis les tables, les formes de questions, la longueur et le temps.",
+          start: "Commencer"
+        },
+        evaluation: {
+          start: "Commencer l’évaluation CM1"
+        }
+      });
+
+      function applyMode(mode) {
+        if (!CORE.PRESETS[mode] || configuration.mode === mode) return;
+        const preset = CORE.PRESETS[mode];
+        configuration.mode = mode;
+        configuration.tables = mode === "evaluation" ? new Set(ALL_TABLES) : new Set();
+        configuration.order = preset.order;
+        configuration.questionTypes = new Set(preset.questionTypes.filter(type => type !== "evaluation"));
+        configuration.total = preset.total;
+        configuration.duration = preset.duration;
+        syncControls();
+      }
+
       function syncControls() {
         document.querySelectorAll("[data-mode]").forEach(button => {
           const selected = button.dataset.mode === configuration.mode;
           button.classList.toggle("is-selected", selected);
           button.setAttribute("aria-pressed", String(selected));
         });
-        $("custom-settings").hidden = configuration.mode !== "custom";
+
+        const hasMode = Boolean(configuration.mode);
+        const needsTables = hasMode && configuration.mode !== "evaluation";
+        const valid = hasMode
+          && (!needsTables || configuration.tables.size > 0)
+          && (configuration.mode === "evaluation" || configuration.questionTypes.size > 0);
+        const copy = MODE_COPY[configuration.mode];
+        $("settings-panel").hidden = !needsTables;
+        $("order-settings").hidden = configuration.mode !== "learn";
+        $("question-settings").hidden = configuration.mode !== "custom";
+        $("count-settings").hidden = configuration.mode !== "custom";
+        $("time-settings").hidden = configuration.mode !== "custom";
+        $("all-tables").hidden = configuration.mode === "learn";
+        if (copy?.title) $("settings-title").textContent = copy.title;
+        if (copy?.intro) $("settings-intro").textContent = copy.intro;
+        $("table-help").textContent = configuration.mode === "learn"
+          ? "Choisis une seule table."
+          : "Choisis une table ou touches-en plusieurs pour les mélanger.";
 
         const allSelected = configuration.tables.size === ALL_TABLES.length;
         const allButton = document.querySelector("[data-all-tables]");
@@ -862,25 +913,77 @@
           button.setAttribute("aria-pressed", String(selected));
         });
 
+        document.querySelectorAll("[data-order]").forEach(button => {
+          const selected = button.dataset.order === configuration.order;
+          button.classList.toggle("is-selected", selected);
+          button.setAttribute("aria-pressed", String(selected));
+        });
         document.querySelectorAll("[data-question-type]").forEach(button => {
-          const selected = button.dataset.questionType === configuration.questionType;
+          const selected = configuration.questionTypes.has(button.dataset.questionType);
+          button.classList.toggle("is-selected", selected);
+          button.setAttribute("aria-pressed", String(selected));
+        });
+        document.querySelectorAll("[data-total]").forEach(button => {
+          const selected = Number(button.dataset.total) === configuration.total;
+          button.classList.toggle("is-selected", selected);
+          button.setAttribute("aria-pressed", String(selected));
+        });
+        document.querySelectorAll("[data-duration]").forEach(button => {
+          const value = button.dataset.duration === "none" ? null : Number(button.dataset.duration);
+          const selected = value === configuration.duration;
           button.classList.toggle("is-selected", selected);
           button.setAttribute("aria-pressed", String(selected));
         });
 
-        $("config-summary").textContent = `${configurationLabel(captureConfiguration())} · ${TOTAL} égalités · 1 minute`;
+        $("config-summary").hidden = !valid;
+        if (valid) $("config-summary").textContent = configurationLabel(captureConfiguration());
+        $("selection-error").hidden = !needsTables || configuration.tables.size > 0;
+        $("start").disabled = !valid;
+        $("start").textContent = copy?.start || "Choisis un parcours";
       }
 
       function renderQuestion() {
         const question = state.questions[state.index];
-        $("question-count").textContent = `${state.index + 1} / ${TOTAL}`;
-        $("progress").style.width = `${state.index / TOTAL * 100}%`;
+        if (state.configuration.mode === "learn") {
+          $("question-count").textContent = `${state.mastered.size} / ${TOTAL} maîtrisés`;
+          $("progress").style.width = `${state.mastered.size / TOTAL * 100}%`;
+        } else {
+          $("question-count").textContent = `${state.index + 1} / ${TOTAL}`;
+          $("progress").style.width = `${state.index / TOTAL * 100}%`;
+        }
         $("question-kind").textContent = question.kind;
         $("expression").textContent = question.prompt;
         $("answer").value = "";
+        clearAnswerFeedback();
         clearAnswerError();
         $("question-card").scrollTop = 0;
         $("expression").focus?.({preventScroll: true});
+      }
+
+      function setAnswerControlsEnabled(enabled) {
+        document.querySelectorAll("[data-key]").forEach(button => { button.disabled = !enabled; });
+        $("skip").hidden = !enabled;
+        $("validate").textContent = enabled ? "Valider" : "Continuer";
+      }
+
+      function clearAnswerFeedback() {
+        state.waitingForContinue = false;
+        $("answer-feedback").hidden = true;
+        $("answer-feedback").textContent = "";
+        $("answer-feedback").className = "answer-feedback";
+        setAnswerControlsEnabled(true);
+      }
+
+      function showAnswerFeedback(question, correct) {
+        state.waitingForContinue = true;
+        const feedback = $("answer-feedback");
+        feedback.hidden = false;
+        feedback.className = `answer-feedback ${correct ? "is-correct" : "is-wrong"}`;
+        feedback.textContent = correct
+          ? `Oui : ${CORE.solvedPrompt(question)}.`
+          : `À retenir : ${CORE.solvedPrompt(question)}. Ce calcul reviendra.`;
+        setAnswerControlsEnabled(false);
+        $("validate").focus?.({preventScroll: true});
       }
 
       function clearAnswerError() {
@@ -951,13 +1054,19 @@
       }
 
       function scoreMessage(score, config) {
+        if (config.mode === "learn") {
+          return config.order === "ordered"
+            ? "Rejoue maintenant dans le désordre pour mieux mémoriser cette table."
+            : "Tu as retrouvé les dix produits. Tu peux maintenant passer à l’entraînement.";
+        }
         if (config.mode === "evaluation") {
           if (score >= 12) return "Les faits de tables sont déjà bien disponibles. Continue pour gagner encore en rapidité.";
           if (score >= 8) return "Tu connais plusieurs tables. Quelques essais réguliers vont rendre les réponses plus rapides.";
           return "Prends le temps de revoir une ou deux tables, puis retente une nouvelle série sans te juger.";
         }
-        if (score >= 20) return "Très belle série ! Rejoue avec le même réglage pour rendre tes réponses encore plus rapides.";
-        if (score >= 12) return "Bonne série. Quelques essais réguliers vont rendre ces réponses plus rapides.";
+        const ratio = score / config.total;
+        if (ratio >= .8) return "Très belle série ! Rejoue avec le même réglage pour rendre tes réponses encore plus rapides.";
+        if (ratio >= .6) return "Bonne série. Quelques essais réguliers vont rendre ces réponses plus rapides.";
         return "Continue avec le même réglage : les résultats vont devenir de plus en plus faciles à retrouver.";
       }
 
@@ -965,24 +1074,33 @@
         if (!state.running) return;
         state.running = false;
         stopTimer();
+        const elapsed = Date.now() - state.startAt;
         const scoreKey = configurationKey(state.configuration);
         const previousScore = sessionScores.get(scoreKey);
-        sessionScores.set(scoreKey, state.correct);
-        $("result-title").textContent = `${state.correct} bonne${state.correct > 1 ? "s" : ""} réponse${state.correct > 1 ? "s" : ""} sur ${TOTAL}`;
+        if (state.configuration.mode !== "learn") sessionScores.set(scoreKey, state.correct);
+        $("result-title").textContent = state.configuration.mode === "learn"
+          ? `Table de ${state.configuration.tables[0]} terminée !`
+          : `${state.correct} ${state.correct === 1 ? "bonne réponse" : "bonnes réponses"} sur ${TOTAL}`;
         $("result-config").textContent = configurationLabel(state.configuration);
         const remaining = TOTAL - state.index;
-        $("result-detail").textContent = remaining
-          ? `Le temps est écoulé. ${state.answered} réponse${state.answered > 1 ? "s" : ""} saisie${state.answered > 1 ? "s" : ""}, et ${remaining} calcul${remaining > 1 ? "s" : ""} non parcouru${remaining > 1 ? "s" : ""}.`
-          : "Toute la série a été parcourue avant la fin du temps.";
+        if (state.configuration.mode === "learn") {
+          $("result-detail").textContent = `Les 10 produits ont été retrouvés en ${state.responses.length} essai${state.responses.length > 1 ? "s" : ""} et ${formatElapsed(elapsed)}.`;
+        } else if (state.configuration.duration === null) {
+          $("result-detail").textContent = `Tu as terminé les ${TOTAL} questions en ${formatElapsed(elapsed)}.`;
+        } else {
+          $("result-detail").textContent = remaining
+            ? `Le temps est écoulé. ${state.answered} réponse${state.answered === 1 ? "" : "s"} saisie${state.answered === 1 ? "" : "s"}, et ${remaining} calcul${remaining === 1 ? "" : "s"} non parcouru${remaining === 1 ? "" : "s"}.`
+            : `Toute la série a été parcourue en ${formatElapsed(elapsed)}, avant la fin du temps.`;
+        }
         $("result-message").textContent = scoreMessage(state.correct, state.configuration);
-        $("result-previous").hidden = previousScore === undefined;
+        $("result-previous").hidden = state.configuration.mode === "learn" || previousScore === undefined;
         $("result-previous").textContent = previousScore === undefined ? "" : `Série précédente : ${previousScore} / ${TOTAL}.`;
         renderCorrections();
         show("result");
       }
 
       function updateTimer() {
-        if (!state.running) return;
+        if (!state.running || state.configuration?.duration === null) return;
         const remaining = Math.max(0, Math.ceil((state.endAt - Date.now()) / 1000));
         $("time").textContent = formatTime(remaining);
         $("time").classList.toggle("urgent", remaining <= 10);
@@ -996,6 +1114,12 @@
       function start() {
         stopTimer();
         const config = captureConfiguration();
+        if (!config.mode || (config.mode !== "evaluation" && !config.tables.length)) {
+          syncControls();
+          return;
+        }
+        TOTAL = config.total;
+        DURATION = config.duration;
         let questions = generateQuestions(config);
         let signature = `${configurationKey(config)}|${questions.map(question => question.prompt).join("|")}`;
         for (let attempt = 0; signature === state.signature && attempt < 5; attempt += 1) {
@@ -1011,13 +1135,18 @@
         state.answered = 0;
         state.running = true;
         state.tenSecondAlert = false;
-        state.endAt = Date.now() + DURATION * 1000;
-        $("time").textContent = formatTime(DURATION);
+        state.waitingForContinue = false;
+        state.mastered = new Set();
+        state.startAt = Date.now();
+        state.endAt = DURATION === null ? 0 : state.startAt + DURATION * 1000;
+        $("time").textContent = DURATION === null ? "À ton rythme" : formatTime(DURATION);
+        $("time").classList.toggle("no-timer", DURATION === null);
         $("time").classList.remove("urgent");
+        $("time").setAttribute("aria-label", DURATION === null ? "Sans chronomètre" : "Temps restant");
         $("timer-alert").textContent = "";
         show("play");
         renderQuestion();
-        state.timer = window.setInterval(updateTimer, 200);
+        if (DURATION !== null) state.timer = window.setInterval(updateTimer, 200);
       }
 
       function returnToMenu() {
@@ -1027,50 +1156,87 @@
         show("intro");
       }
 
+      function advanceAfterResponse() {
+        state.index += 1;
+        if (state.configuration.mode === "learn" && state.mastered.size >= TOTAL) finish();
+        else if (state.index >= state.questions.length) finish();
+        else renderQuestion();
+      }
+
       function next(skip) {
         if (!state.running) return;
+        if (state.waitingForContinue) {
+          advanceAfterResponse();
+          return;
+        }
         const value = $("answer").value;
         if (!skip && !/^\d+$/.test(value)) {
           showAnswerError();
           return;
         }
+        const question = state.questions[state.index];
+        let correct = false;
         if (!skip) {
           state.answered += 1;
-          const correct = Number(value) === state.questions[state.index].answer;
+          correct = Number(value) === question.answer;
           state.responses[state.index] = {value: Number(value), correct, skipped: false};
           if (correct) state.correct += 1;
         } else {
           state.responses[state.index] = {value: null, correct: false, skipped: true};
         }
-        state.index += 1;
-        if (state.index >= TOTAL) finish();
-        else renderQuestion();
+
+        if (state.configuration.mode === "learn") {
+          if (correct) state.mastered.add(question.factKey);
+          else {
+            const alreadyWaiting = state.questions.slice(state.index + 1).some(candidate => candidate.factKey === question.factKey);
+            if (!alreadyWaiting) state.questions.push({...question, retry: true});
+          }
+          showAnswerFeedback(question, correct);
+          return;
+        }
+        advanceAfterResponse();
       }
 
       function enterDigit(digit) {
-        if (!state.running || $("answer").value.length >= 6) return;
+        if (!state.running || state.waitingForContinue || $("answer").value.length >= 6) return;
         $("answer").value += digit;
         clearAnswerError();
       }
 
       document.querySelectorAll("[data-mode]").forEach(button => button.addEventListener("click", () => {
-        configuration.mode = button.dataset.mode;
-        syncControls();
+        applyMode(button.dataset.mode);
       }));
       document.querySelector("[data-all-tables]").addEventListener("click", () => {
+        if (configuration.mode === "learn") return;
         configuration.tables = new Set(ALL_TABLES);
         syncControls();
       });
       document.querySelectorAll("[data-table]").forEach(button => button.addEventListener("click", () => {
         const table = Number(button.dataset.table);
-        if (configuration.tables.size === ALL_TABLES.length) configuration.tables = new Set([table]);
+        if (configuration.mode === "learn") configuration.tables = new Set([table]);
+        else if (configuration.tables.size === ALL_TABLES.length) configuration.tables = new Set([table]);
         else if (configuration.tables.has(table) && configuration.tables.size > 1) configuration.tables.delete(table);
+        else if (configuration.tables.has(table)) configuration.tables.delete(table);
         else configuration.tables.add(table);
         if (configuration.tables.size === ALL_TABLES.length) configuration.tables = new Set(ALL_TABLES);
         syncControls();
       }));
+      document.querySelectorAll("[data-order]").forEach(button => button.addEventListener("click", () => {
+        configuration.order = button.dataset.order;
+        syncControls();
+      }));
       document.querySelectorAll("[data-question-type]").forEach(button => button.addEventListener("click", () => {
-        configuration.questionType = button.dataset.questionType;
+        const type = button.dataset.questionType;
+        if (configuration.questionTypes.has(type) && configuration.questionTypes.size > 1) configuration.questionTypes.delete(type);
+        else configuration.questionTypes.add(type);
+        syncControls();
+      }));
+      document.querySelectorAll("[data-total]").forEach(button => button.addEventListener("click", () => {
+        configuration.total = Number(button.dataset.total);
+        syncControls();
+      }));
+      document.querySelectorAll("[data-duration]").forEach(button => button.addEventListener("click", () => {
+        configuration.duration = button.dataset.duration === "none" ? null : Number(button.dataset.duration);
         syncControls();
       }));
 
@@ -1107,12 +1273,12 @@
       window.addEventListener("pageshow", () => {
         if (!state.running) return;
         updateTimer();
-        if (state.running && state.timer === null) state.timer = window.setInterval(updateTimer, 200);
+        if (state.running && state.configuration?.duration !== null && state.timer === null) state.timer = window.setInterval(updateTimer, 200);
       });
       if (new URLSearchParams(window.location.search).has("test")) {
         Object.defineProperty(window, "__MATHSGO_DEFI_TABLES_TEST__", {
           configurable: true,
-          value: Object.freeze({generateEvaluationQuestions, generateCustomQuestions, configurationLabel})
+          value: CORE
         });
       }
       syncControls();
