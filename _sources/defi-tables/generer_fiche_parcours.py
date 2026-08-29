@@ -42,12 +42,12 @@ RULES = [
 
 # Page 2 : grille « Mes calculs » — les 36 faits de 2×2 à 9×9, sens confondus.
 CALC_TITLE = "MES CALCULS"
-CALC_SUBTITLE = "Trois cases par calcul : coche une case à chaque bonne réponse, efface-en une à chaque erreur. Trois cases = calcul su."
+CALC_SUBTITLE = "Trois cases par calcul : une bonne réponse en coche une (au plus une par jour), une erreur en efface une. Trois cases = calcul su."
 FACTS = [(a, b) for a in range(2, 10) for b in range(a, 10)]
 CALC_RULES = [
     "7 × 8 et 8 × 7 comptent ensemble : c’est le même calcul à mémoriser. Les tables de 1 et de 10 ne sont pas dans la grille.",
-    "Dans l’application, la grille se remplit toute seule à chaque réponse, et « Réviser mes calculs »",
-    "repropose d’abord ce qui est le moins su.",
+    "Dans l’application, la grille se remplit dans les séries du parcours et les révisions (jamais dans",
+    "J’apprends, Réglages ou l’évaluation CM1), et « Réviser mes calculs » repropose d’abord ce qui est le moins su.",
 ]
 
 ROOT = Path(__file__).resolve().parents[2]

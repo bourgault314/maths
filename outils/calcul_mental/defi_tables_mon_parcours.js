@@ -17,10 +17,12 @@
   //  - grille des 36 faits 2×2 à 9×9, sens confondus (7×8 et 8×7 = un seul fait) ;
   //  - 3 cases par fait : +1 par bonne réponse, −1 par erreur ou question passée,
   //    su à 3 ; états : jamais vu / à travailler (0 après erreur) / en cours / su ;
-  //  - toutes les réponses de mémoire alimentent la grille, sauf les deux
-  //    activités bâton (l'élève y calcule de proche en proche, pas de mémoire) ;
-  //  - révision personnalisée : 10 questions sans chrono, priorité aux faits
-  //    à 0 case ratés récemment, puis 1, puis 2, puis jamais vus, puis entretien.
+  //  - la grille appartient au parcours : alimentée par Je m'entraîne, les
+  //    validations, les mélanges, Expert et les révisions — jamais par
+  //    J'apprends, Réglages ou l'évaluation CM1 ;
+  //  - révision personnalisée : 10 questions sans chrono, priorité aux faits à
+  //    0 case ratés récemment, puis 1, puis 2, puis les jamais vus des tables
+  //    acquises, puis l'entretien, puis les jamais vus restants.
 
   const VERSION = 1;
   const CLE_STOCKAGE = "mathsgo-defi-tables-parcours";
@@ -148,7 +150,8 @@
         parcours.calculs[cle] = {
           cases: entier(source.cases, 0, SEUILS.revision.casesMax),
           vu,
-          erreur: texteOuNull(source.erreur)
+          erreur: texteOuNull(source.erreur),
+          gagne: texteOuNull(source.gagne)
         };
       });
     }
@@ -421,24 +424,38 @@
     return "en-cours";
   }
 
-  // Une série alimente la grille sauf les deux activités bâton (l'élève y
-  // calcule de proche en proche, il ne répond pas de mémoire).
+  // La grille Mes calculs appartient à Mon parcours : elle se remplit dans les
+  // séries du parcours (Je m'entraîne, validations, mélanges, Expert) et dans
+  // les révisions — jamais pendant J'apprends (on y construit la table de
+  // proche en proche, on ne répond pas de mémoire), et jamais dans Réglages ni
+  // l'évaluation CM1, qui restent complètement à part du parcours.
   function serieAlimenteGrille(config) {
     if (!config || !config.mode) return false;
-    if (config.mode === "learn") return ["ordered", "random"].includes(config.learnActivity);
-    return true;
+    return ["train", "validation", "test", "revision"].includes(config.mode);
   }
 
   // Applique UNE réponse à la grille. reponse = {correcte, date}.
+  // Au plus UNE case gagnée par calcul et par jour (idée de Claire) : savoir,
+  // c'est retrouver le calcul un autre jour, pas le répéter dans l'heure. Être
+  // « su » demande donc trois jours différents. Les erreurs, elles, comptent
+  // toujours, sans limite : une réussite juste après la correction prouve peu,
+  // une erreur prouve beaucoup.
   function appliquerReponse(parcours, cleBrute, reponse = {}) {
     const cle = cleFait(cleBrute);
     if (!cle) return {parcours, fait: null};
     const copie = cloner(parcours);
     const date = dateDuJour(reponse.date);
-    const avant = copie.calculs[cle] || {cases: 0, vu: null, erreur: null};
+    const avant = copie.calculs[cle] || {cases: 0, vu: null, erreur: null, gagne: null};
     const fait = {...avant, vu: date};
-    if (reponse.correcte) fait.cases = Math.min(SEUILS.revision.casesMax, avant.cases + 1);
-    else {
+    if (reponse.correcte) {
+      // Pas de gain le jour d'une erreur sur ce calcul : le raté « revient dans
+      // un nouveau défi » (Claire), c'est-à-dire un autre jour — pas dans l'heure
+      // qui suit la correction.
+      if (avant.gagne !== date && avant.erreur !== date && avant.cases < SEUILS.revision.casesMax) {
+        fait.cases = avant.cases + 1;
+        fait.gagne = date;
+      }
+    } else {
       fait.cases = Math.max(0, avant.cases - 1);
       fait.erreur = date;
     }
@@ -504,20 +521,27 @@
   }
 
   // Le plan des 10 questions de révision : priorité 0 case (ratés récemment
-  // d'abord), puis 1 case, puis 2, puis les faits jamais vus, puis l'entretien
-  // des faits sus les plus anciens. Jamais deux fois le même fait, sauf quand la
-  // grille d'une table (8 faits) ne suffit pas à remplir la série.
+  // d'abord), puis 1 case, puis 2, puis les faits jamais vus des tables DÉJÀ
+  // ACQUISES (on ne confronte pas l'élève à une table qu'il n'a pas apprise),
+  // puis l'entretien des faits sus les plus anciens, et en tout dernier recours
+  // les faits jamais vus des autres tables (grille encore vide). Jamais deux
+  // fois le même fait, sauf quand la grille d'une table (8 faits) ne suffit pas
+  // à remplir la série.
   function planRevision(parcours, {table = null, random = Math.random} = {}) {
     const dansLaTable = cle => table === null || facteursFait(cle).includes(Number(table));
     const enregistres = Object.entries(parcours.calculs).filter(([cle]) => dansLaTable(cle));
     const groupe = cases => enregistres.filter(([, fait]) => fait.cases === cases);
+    const acquises = tablesAcquises(parcours);
+    const jamaisVus = melanger(FAITS.filter(cle => dansLaTable(cle) && !parcours.calculs[cle]), random);
+    const jamaisVusAcquis = jamaisVus.filter(cle => facteursFait(cle).some(facteur => acquises.includes(facteur)));
     const ordre = [
       ...trierParErreurRecente(groupe(0)),
       ...trierParVuAncien(groupe(1)),
       ...trierParVuAncien(groupe(2))
     ].map(([cle]) => cle);
-    ordre.push(...melanger(FAITS.filter(cle => dansLaTable(cle) && !parcours.calculs[cle]), random));
+    ordre.push(...jamaisVusAcquis);
     ordre.push(...trierParVuAncien(groupe(SEUILS.revision.casesMax)).map(([cle]) => cle));
+    ordre.push(...jamaisVus.filter(cle => !jamaisVusAcquis.includes(cle)));
     const selection = ordre.slice(0, SEUILS.revision.total);
     for (let index = 0; selection.length < SEUILS.revision.total && ordre.length; index += 1) {
       selection.push(ordre[index % ordre.length]);

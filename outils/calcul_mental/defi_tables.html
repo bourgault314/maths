@@ -1235,7 +1235,7 @@
         <ol id="parcours-list" class="parcours-list"></ol>
         <div id="parcours-melange" class="parcours-row parcours-extra" hidden></div>
         <div id="parcours-expert" class="parcours-row parcours-extra"></div>
-        <p class="parcours-note">Seules les séries lancées sur une table à la fois remplissent cette carte (Réglages et Évaluation CM1 ne comptent pas ici, mais toutes les réponses remplissent Mes calculs). Touche un rond, un ✓ ou une étoile pour lancer la bonne série.</p>
+        <p class="parcours-note">Réglages et Évaluation CM1 sont à part : ils ne comptent ni dans cette carte, ni dans Mes calculs. Touche un rond, un ✓ ou une étoile pour lancer la bonne série.</p>
         <div class="parcours-print-action">
           <button id="parcours-print" class="secondary" type="button">🖨 Imprimer ma fiche</button>
           <a class="revision-sheet-link" href="./fiche_parcours_tables.pdf" download>↓ Fiche vide à photocopier</a>
@@ -1256,7 +1256,7 @@
           <span><span class="mc-cell is-en-cours"><span class="mc-cases"><span class="mc-case is-pleine"></span><span class="mc-case"></span><span class="mc-case"></span></span></span> en cours</span>
           <span><span class="mc-cell is-su"><span class="mc-cases"><span class="mc-case is-pleine"></span><span class="mc-case is-pleine"></span><span class="mc-case is-pleine"></span></span></span> su</span>
         </div>
-        <p class="calculs-note">Une case gagnée par bonne réponse, une case perdue par erreur. 7 × 8 et 8 × 7 comptent ensemble : la moitié grisée du tableau est le miroir de l’autre.</p>
+        <p class="calculs-note">Une case gagnée par bonne réponse — au plus une par jour et par calcul, su = trois jours différents — et une case perdue à chaque erreur. La grille se remplit dans les séries du parcours et les révisions, jamais dans J’apprends, Réglages ou l’évaluation CM1. 7 × 8 et 8 × 7 comptent ensemble : la moitié grisée du tableau est le miroir de l’autre.</p>
         <div class="calculs-action">
           <button id="calculs-reviser" class="primary" type="button">Réviser mes calculs</button>
           <p id="calculs-hint" class="calculs-hint">10 questions sans chrono, sur ce que tu sais le moins.</p>
@@ -1343,12 +1343,12 @@
     <footer class="fiche-foot">mathsgo.re · CC BY-NC-SA 4.0</footer>
     <section class="fiche-page2">
       <h1 class="fiche-page2-title">Mes calculs</h1>
-      <p class="fiche-page2-subtitle" id="fiche-calculs-subtitle">Trois cases par calcul : coche une case à chaque bonne réponse, efface-en une à chaque erreur. Trois cases = calcul su.</p>
+      <p class="fiche-page2-subtitle" id="fiche-calculs-subtitle">Trois cases par calcul : une bonne réponse en coche une (au plus une par jour), une erreur en efface une. Trois cases = calcul su.</p>
       <div id="fiche-calculs" class="fiche-calculs-grid"></div>
       <div class="fiche-rules">
         <strong>Comment lire la grille</strong>
         <p>7 × 8 et 8 × 7 comptent ensemble : c’est le même calcul à mémoriser. Les tables de 1 et de 10 ne sont pas dans la grille.</p>
-        <p>Dans l’application, la grille se remplit toute seule à chaque réponse, et « Réviser mes calculs » repropose d’abord ce qui est le moins su.</p>
+        <p>Dans l’application, la grille se remplit dans les séries du parcours et les révisions (jamais dans J’apprends, Réglages ou l’évaluation CM1), et « Réviser mes calculs » repropose d’abord ce qui est le moins su.</p>
       </div>
       <footer class="fiche-foot">mathsgo.re · CC BY-NC-SA 4.0</footer>
     </section>
@@ -1362,8 +1362,8 @@
     <button type="button" data-mathsgo-consent-open onclick="window.mathsgoConsentement &amp;&amp; window.mathsgoConsentement.ouvrir()">Gérer mes cookies</button>
   </footer>
 
-  <script src="./defi_tables_core.js?v=20260830-5"></script>
-  <script src="./defi_tables_mon_parcours.js?v=20260830-5"></script>
+  <script src="./defi_tables_core.js?v=20260830-8"></script>
+  <script src="./defi_tables_mon_parcours.js?v=20260830-8"></script>
   <script>
     (() => {
       "use strict";
@@ -2230,21 +2230,20 @@
           state.responses[state.index] = {value: null, correct: false, skipped: true};
         }
 
-        // Une réponse aidée par le bâton n'est pas une réponse de mémoire, et un
-        // calcul qui revient après une erreur vient d'être corrigé sous les yeux
-        // de l'élève : ni l'une ni l'autre n'alimentent la grille Mes calculs
-        // (ni en plus, ni en moins). Seule la première réponse compte.
-        const assiste = state.configuration.mode === "learn"
-          && !["construct", "gaps"].includes(state.configuration.learnActivity)
-          && state.learnStickHelpUsed;
-        if (!assiste && !question.retry) alimenterMesCalculs(question, correct && !skip);
+        // La grille Mes calculs ne compte que la première réponse à un calcul :
+        // un calcul qui revient après une erreur vient d'être corrigé sous les
+        // yeux de l'élève. J'apprends n'alimente jamais la grille (le filtre est
+        // dans serieAlimenteGrille).
+        if (!question.retry) alimenterMesCalculs(question, correct && !skip);
 
         if (state.configuration.mode === "revision") {
           if (!question.retry) {
             state.revisionPremierTotal += 1;
             if (correct) state.revisionPremierScore += 1;
           }
-          const willRetry = !correct;
+          // Un calcul raté revient UNE fois dans la série ; s'il est encore raté,
+          // il reste « à travailler » et la prochaine révision le reprendra.
+          const willRetry = !correct && !question.retry;
           if (willRetry) {
             const dejaEnAttente = state.questions.slice(state.index + 1).some(candidate => candidate.factKey === question.factKey);
             if (!dejaEnAttente) state.questions.push({...question, retry: true});
@@ -2348,6 +2347,9 @@
         const fait = parcours.calculs[cle] || null;
         const etat = PARCOURS.etatFait(fait);
         const cases = fait ? fait.cases : 0;
+        // La réponse est affichée exprès (choix de Gwenaël) : la grille sert
+        // aussi à réviser en pointant ses rouges. Le garde-fou est ailleurs :
+        // une case gagnée au maximum par calcul et par jour.
         const morceaux = [`${ligne} × ${colonne} = ${ligne * colonne}`, `${pluriel(cases, "case")} sur 3`, LIBELLES_ETATS_CALCULS[etat]];
         if (fait && fait.erreur) morceaux.push(`dernière erreur : ${formaterJour(fait.erreur)}`);
         else if (fait) morceaux.push(`vu ${formaterJour(fait.vu)}`);
@@ -2360,9 +2362,9 @@
         $("calculs-resume").textContent = resumeCalculsTexte(grille.resume);
         $("calculs-hint").textContent = grille.resume.aTravailler || grille.resume.enCours
           ? "10 questions sans chrono, sur ce que tu sais le moins."
-          : grille.resume.jamaisVus
-            ? "Rien à retravailler pour l’instant : on découvre 10 nouveaux calculs."
-            : "Tout est su ! 10 questions pour entretenir tes calculs les plus anciens.";
+          : grille.resume.sus
+            ? "Rien à retravailler pour l’instant : on complète et on entretient ta grille."
+            : "Ta grille est vide : on découvre les 10 premiers calculs.";
         const zone = $("calculs-grille");
         zone.replaceChildren();
         const coin = document.createElement("span");
@@ -2455,7 +2457,7 @@
         $("result-title").textContent = `${score} / ${total} au premier essai`;
         $("result-config").textContent = `Réviser mes calculs${table ? ` · table de ${table}` : ""} · ${total} questions · sans chronomètre`;
         $("result-icon").hidden = score < Math.ceil(total * .8);
-        $("result-detail").textContent = `Chaque calcul raté est revenu jusqu’à sa bonne réponse. Série terminée en ${formatElapsed(elapsed)}.`;
+        $("result-detail").textContent = `Un calcul raté revient une fois dans la série ; ce qui reste faux repartira dans la prochaine révision. Une case par calcul et par jour : reviens un autre jour pour continuer à remplir ta grille. Série terminée en ${formatElapsed(elapsed)}.`;
         $("result-message").hidden = true;
         $("result-previous").hidden = true;
         $("retry").hidden = true;
@@ -2825,7 +2827,7 @@
         });
         $("fiche-calculs-subtitle").textContent = Object.keys(parcours.calculs).length
           ? "Ma grille dans l’application à ce jour. Trois cases cochées = calcul su ; une erreur efface une case."
-          : "Trois cases par calcul : coche une case à chaque bonne réponse, efface-en une à chaque erreur. Trois cases = calcul su.";
+          : "Trois cases par calcul : une bonne réponse en coche une (au plus une par jour), une erreur en efface une. Trois cases = calcul su.";
         const grilleFiche = $("fiche-calculs");
         grilleFiche.replaceChildren();
         PARCOURS.FAITS.forEach(cle => {
