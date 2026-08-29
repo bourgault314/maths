@@ -23,7 +23,8 @@ test("les cinq parcours gardent les réglages pédagogiques décidés", () => {
     duration: null,
     questionTypes: ["direct"],
     selection: "single",
-    order: "ordered"
+    order: "ordered",
+    learnActivity: "ordered"
   });
   assert.deepEqual(core.PRESETS.train, {
     total: 10,
@@ -49,15 +50,23 @@ test("les cinq parcours gardent les réglages pédagogiques décidés", () => {
   });
 });
 
-test("J’apprends travaille une seule table dans l’ordre ou le désordre", () => {
-  const ordered = core.generateQuestions({mode: "learn", tables: [9], order: "ordered"}, seededRandom());
-  const random = core.generateQuestions({mode: "learn", tables: [9], order: "random"}, seededRandom());
+test("J’apprends laisse choisir le bâton, l’ordre ou le désordre", () => {
+  const construct = core.generateQuestions({mode: "learn", tables: [9], learnActivity: "construct"}, seededRandom());
+  const gaps = core.generateQuestions({mode: "learn", tables: [9], learnActivity: "gaps"}, seededRandom());
+  const ordered = core.generateQuestions({mode: "learn", tables: [9], learnActivity: "ordered"}, seededRandom());
+  const random = core.generateQuestions({mode: "learn", tables: [9], learnActivity: "random"}, seededRandom());
 
+  assert.deepEqual(construct.map(question => question.multiplier), [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
+  assert.ok(construct.every(question => question.learnActivity === "construct"));
+  assert.equal(gaps.length, 8);
+  assert.deepEqual(gaps.map(question => question.multiplier).toSorted((a, b) => a - b), [1, 2, 3, 4, 6, 7, 8, 9]);
+  assert.equal(core.normalizeConfiguration({mode: "learn", tables: [9], learnActivity: "gaps"}).total, 8);
   assert.equal(ordered.length, 11);
   assert.deepEqual(ordered.map(question => question.multiplier), [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
   assert.ok(ordered.every(question => question.type === "direct" && question.focusTable === 9));
   assert.deepEqual(random.map(question => question.multiplier).toSorted((a, b) => a - b), [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
   assert.notDeepEqual(random.map(question => question.multiplier), ordered.map(question => question.multiplier));
+  assert.ok(random.every(question => question.learnActivity === "random"));
   assert.throws(() => core.generateQuestions({mode: "learn", tables: [7, 9]}), /exactement une table/);
 });
 
@@ -155,6 +164,10 @@ test("l’accueil compact distingue quatre choix principaux et l’évaluation C
   assert.match(html, /data-duration="60"[\s\S]*1 min/);
   assert.match(html, /data-mode="train"[\s\S]*10 ou 20 questions/);
   assert.match(html, /count-settings[\s\S]*data-total="10"[\s\S]*data-total="20"/);
+  assert.match(html, /data-learn-activity="construct"[\s\S]*Je construis le bâton/);
+  assert.match(html, /data-learn-activity="gaps"[\s\S]*Je complète un bâton à trous/);
+  assert.match(html, /data-learn-activity="ordered"[\s\S]*Je réponds dans l’ordre/);
+  assert.match(html, /data-learn-activity="random"[\s\S]*Je réponds dans le désordre/);
   assert.doesNotMatch(html, /Choisis ton objectif\. L’application prépare le reste pour toi/);
   assert.doesNotMatch(html, /Tu verras ses dix produits/);
 });
@@ -184,13 +197,14 @@ test("J’apprends remplit un bâton dans les deux ordres et Je m’entraîne co
   assert.match(html, /grid-template-columns: repeat\(11/);
   assert.match(html, /const visible = state\.configuration\?\.mode === "learn"/);
   assert.match(html, /state\.revealedLearnResults\.add\(question\.multiplier\)/);
-  assert.match(html, /config\.order === "random" \? \[0, 5, 10\] : \[0\]/);
+  assert.match(html, /config\.learnActivity === "gaps" \? \[0, 5, 10\] : \[\]/);
+  assert.match(html, /draftMultiplier: stickOnly \? question\?\.multiplier : null/);
   assert.doesNotMatch(html, /results\.join\(" → "\)/);
   assert.match(html, /state\.configuration\.mode === "train"\) \{[\s\S]*showAnswerFeedback/);
   assert.match(html, /textContent = enabled \? "Valider" : "Suivant"/);
   assert.match(html, /completeReview = state\.configuration\.mode === "test"/);
   assert.match(html, /Bilan de tes réponses/);
-  assert.match(html, /defi_tables_core\.js\?v=20260829-3/);
+  assert.match(html, /defi_tables_core\.js\?v=20260829-4/);
 });
 
 test("le numéro de question est séparé du calcul dans le bilan", () => {
