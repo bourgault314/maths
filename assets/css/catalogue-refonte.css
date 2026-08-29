@@ -1482,10 +1482,13 @@ select { cursor: pointer; }
   body.catalogue-is-deep .breadcrumb-parent::before {
     content: "←";
     position: absolute;
+    top: 50%;
     left: 9px;
     color: #0b5fc0;
     font-size: 1.15rem;
     font-weight: 850;
+    line-height: 1;
+    transform: translateY(-50%);
   }
   body.catalogue-is-deep .breadcrumb-parent:hover,
   body.catalogue-is-deep .breadcrumb-parent:focus-visible {
