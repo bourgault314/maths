@@ -76,9 +76,11 @@
 
     .brand img { display: block; width: 105px; height: auto; }
     .catalogue-link {
-      min-height: 39px;
+      min-height: 44px;
+      min-width: 44px;
       display: inline-flex;
       align-items: center;
+      justify-content: center;
       padding: 0 13px;
       border: 1px solid #d5e1ec;
       border-radius: 999px;
@@ -97,7 +99,7 @@
     }
 
     .fullscreen-toggle {
-      min-height: 39px;
+      min-height: 44px;
       display: inline-flex;
       align-items: center;
       justify-content: center;
@@ -252,8 +254,13 @@
     .settings-back {
       position: absolute;
       left: 0;
-      min-height: 40px;
-      padding: 7px 11px;
+      min-height: 44px;
+      min-width: 44px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      padding: 7px 12px;
       border: 1px solid #bfd3df;
       border-radius: 999px;
       color: #31566c;
@@ -572,6 +579,10 @@
     .correction-expression { color: var(--ink); font-size: 1.12rem; font-weight: 950; }
     .correction-list li > div { display: flex; flex-wrap: wrap; gap: 7px; }
     .correction-list span { padding: 6px 9px; border-radius: 9px; font-weight: 850; }
+    .corrections.is-clean { border-color: #b8dfc8; background: #f7fcf9; }
+    .correction-subtitle { margin: 14px 0 0; color: #31566c; font-size: .95rem; }
+    .correction-chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0 0; padding: 0; list-style: none; }
+    .correction-chips li { padding: 6px 9px; border-radius: 9px; color: var(--green); background: var(--green-soft); font-size: .92rem; font-weight: 850; }
     .given-answer { color: var(--red); background: var(--red-soft); }
     .expected-answer { color: var(--green); background: var(--green-soft); }
     .result-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-top: 16px; }
@@ -635,7 +646,7 @@
       .topbar { min-height: 58px; padding: 5px 10px; }
       .brand img { width: 82px; }
       .topbar-actions { gap: 4px; }
-      .catalogue-link { min-height: 36px; padding: 0 10px; font-size: .73rem; }
+      .catalogue-link { padding: 0 10px; font-size: .73rem; }
       .fullscreen-toggle { display: none; }
       .panel { min-height: calc(100vh - 96px); padding: 18px 12px 27px; border-right: 0; border-left: 0; border-radius: 20px; }
       .intro,
@@ -645,7 +656,7 @@
       .mode-card { min-height: 66px; padding: 9px 38px 9px 12px; }
       .mode-card-icon { font-size: 1.45rem; }
       .settings-toolbar { padding: 0 70px; }
-      .settings-back { min-height: 38px; padding: 6px 9px; font-size: .74rem; }
+      .settings-back { padding: 6px 10px; font-size: .74rem; }
       .settings-panel { margin: 8px 0 0; padding: 11px 9px; }
       .table-options { gap: 5px; }
       .selection-button { min-height: 44px; padding: 7px 4px; }
@@ -704,11 +715,18 @@
       .challenge-playing .actions .secondary { min-height: 44px; padding: 7px 15px; }
     }
 
+    @media (max-width: 480px) {
+      .settings-toolbar { padding: 0 50px; }
+      .settings-back { width: 44px; padding: 0; }
+      .settings-back-label { display: none; }
+    }
+
     @media (max-width: 400px) {
       .catalogue-link-label { display: none; }
     }
 
     body.challenge-playing .question.show-learn-sequence .actions { margin-bottom: 0; }
+    .question.no-skip #skip { display: none; }
 
     @media (prefers-reduced-motion: reduce) {
       *,
@@ -761,7 +779,7 @@
 
         <section id="settings-screen" hidden>
           <div class="settings-toolbar">
-            <button id="back-to-modes" class="settings-back" type="button">← Changer</button>
+            <button id="back-to-modes" class="settings-back" type="button" aria-label="Changer de parcours"><span aria-hidden="true">←</span><span class="settings-back-label">Changer</span></button>
             <h1 id="settings-title" class="settings-heading" tabindex="-1">Choisis tes tables</h1>
           </div>
           <div id="settings-panel" class="settings-panel">
@@ -867,8 +885,8 @@
       </div>
 
       <div id="result" class="result" hidden>
-        <span class="hero-icon" aria-hidden="true">✓</span>
-        <p class="eyebrow">Parcours terminé</p>
+        <span id="result-icon" class="hero-icon" aria-hidden="true">✓</span>
+        <p class="eyebrow">Série terminée</p>
         <h1 id="result-title" tabindex="-1">Résultat</h1>
         <p id="result-config" class="result-config"></p>
         <p id="result-detail"></p>
@@ -1234,6 +1252,7 @@
         const zone = $("learn-sequence");
         const visible = state.configuration?.mode === "learn";
         const stickOnly = visible && ["construct", "gaps"].includes(state.configuration.learnActivity);
+        $("question-card").classList.toggle("no-skip", visible);
         $("question-card").classList.toggle("stick-main", stickOnly);
         $("question-card").classList.toggle("stick-trace", visible && !stickOnly);
         zone.hidden = !visible;
@@ -1427,7 +1446,10 @@
         const zone = $("corrections");
         const completeReview = state.configuration.mode === "test";
         const entries = completeReview ? answeredQuestions() : corrections();
+        const wrongEntries = entries.filter(entry => !entry.correct);
+        const rightEntries = entries.filter(entry => entry.correct);
         zone.replaceChildren();
+        zone.classList.toggle("is-clean", !wrongEntries.length);
         const title = document.createElement("h2");
         title.textContent = completeReview ? "Bilan de tes réponses" : entries.length ? "Tes corrections" : "Aucune erreur à corriger";
         zone.append(title);
@@ -1439,40 +1461,51 @@
           zone.append(message);
           return;
         }
-        const list = document.createElement("ol");
-        list.className = "correction-list";
-        entries.forEach(entry => {
-          const item = document.createElement("li");
-          item.classList.toggle("is-correct", entry.correct);
-          const questionLine = document.createElement("div");
-          questionLine.className = "correction-question";
-          const number = document.createElement("span");
-          number.className = "correction-number";
-          number.textContent = `Question ${entry.number}`;
-          const expression = document.createElement("span");
-          expression.className = "correction-expression";
-          expression.textContent = entry.prompt;
-          questionLine.append(number, expression);
-          const answers = document.createElement("div");
-          const given = document.createElement("span");
-          given.className = entry.correct ? "expected-answer" : "given-answer";
-          given.textContent = entry.correct ? `✓ ${entry.given}` : `Ta réponse : ${entry.given}`;
-          answers.append(given);
-          if (!entry.correct) {
+        if (wrongEntries.length) {
+          const intro = document.createElement("p");
+          intro.textContent = completeReview
+            ? `${wrongEntries.length} calcul${wrongEntries.length > 1 ? "s" : ""} à reprendre.`
+            : "Regarde les calculs à reprendre avant de lancer une nouvelle série.";
+          zone.append(intro);
+          const list = document.createElement("ol");
+          list.className = "correction-list";
+          wrongEntries.forEach(entry => {
+            const item = document.createElement("li");
+            const questionLine = document.createElement("div");
+            questionLine.className = "correction-question";
+            const number = document.createElement("span");
+            number.className = "correction-number";
+            number.textContent = `Question ${entry.number}`;
+            const expression = document.createElement("span");
+            expression.className = "correction-expression";
+            expression.textContent = entry.prompt;
+            questionLine.append(number, expression);
+            const answers = document.createElement("div");
+            const given = document.createElement("span");
+            given.className = "given-answer";
+            given.textContent = `Ta réponse : ${entry.given}`;
             const expected = document.createElement("span");
             expected.className = "expected-answer";
             expected.textContent = `Bonne réponse : ${entry.expected}`;
-            answers.append(expected);
-          }
-          item.append(questionLine, answers);
-          list.append(item);
-        });
-        if (!completeReview) {
-          const intro = document.createElement("p");
-          intro.textContent = "Regarde les calculs à reprendre avant de lancer une nouvelle série.";
-          zone.append(intro);
+            answers.append(given, expected);
+            item.append(questionLine, answers);
+            list.append(item);
+          });
+          zone.append(list);
         }
-        zone.append(list);
+        if (completeReview && rightEntries.length) {
+          const subtitle = document.createElement("p");
+          subtitle.className = "correction-subtitle";
+          subtitle.textContent = `${rightEntries.length} réponse${rightEntries.length > 1 ? "s" : ""} juste${rightEntries.length > 1 ? "s" : ""}`;
+          const chips = document.createElement("ul");
+          chips.className = "correction-chips";
+          rightEntries.forEach(entry => {
+            const chip = document.createElement("li");
+            chip.textContent = `${entry.prompt.replace("?", entry.expected)} ✓`;
+            chips.append(chip);
+          });
+          zone.append(subtitle, chips);
+        }
       }
 
       function scoreMessage(score, config) {
@@ -1505,6 +1538,7 @@
           ? `Table de ${state.configuration.tables[0]} terminée !`
           : `${state.correct} ${state.correct === 1 ? "bonne réponse" : "bonnes réponses"} sur ${TOTAL}`;
         $("result-config").textContent = configurationLabel(state.configuration);
+        $("result-icon").hidden = state.configuration.mode !== "learn" && state.correct < Math.ceil(TOTAL * .8);
         const remaining = TOTAL - state.index;
         if (state.configuration.mode === "learn") {
           const what = state.configuration.learnActivity === "gaps"
