@@ -75,12 +75,15 @@
     }
 
     .brand img { display: block; width: 105px; height: auto; }
+    .back-icon { display: grid; place-items: center; flex: 0 0 auto; }
+    .back-icon svg { display: block; width: 20px; height: 20px; }
     .catalogue-link {
       min-height: 44px;
       min-width: 44px;
       display: inline-flex;
       align-items: center;
       justify-content: center;
+      gap: 4px;
       padding: 0 13px;
       border: 1px solid #d5e1ec;
       border-radius: 999px;
@@ -369,7 +372,9 @@
     .result-parcours p + p { margin-top: 8px; }
     .result-parcours .primary { min-height: 44px; margin-top: 10px; padding: 8px 14px; }
 
-    .revision-sheet-action { display: flex; justify-content: center; margin-top: 3px; }
+    .revision-sheet-action { display: flex; flex-wrap: wrap; justify-content: center; gap: 0 10px; margin-top: 3px; }
+    .parcours-print-action { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 6px 12px; margin-top: 10px; }
+    .parcours-print-action .secondary { min-height: 44px; }
     .revision-sheet-link {
       min-height: 40px;
       display: inline-flex;
@@ -878,6 +883,51 @@
     body.challenge-playing .question.show-learn-sequence .actions { margin-bottom: 0; }
     .question.no-skip #skip { display: none; }
 
+    .fiche-print { display: none; }
+    @media print {
+      @page { size: A4 portrait; margin: 12mm; }
+      body { margin: 0; background: #fff !important; color: #143451; }
+      body > *:not(#fiche-print) { display: none !important; }
+      #fiche-print { display: block !important; }
+      .fiche-print { font-family: Arial, Helvetica, sans-serif; font-size: 10pt; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      .fiche-head { display: grid; grid-template-columns: 34mm 1fr 26mm; align-items: start; gap: 6mm; }
+      .fiche-logo { width: 34mm; height: auto; }
+      .fiche-head h1 { margin: 0; color: #0b57b7; font-size: 21pt; line-height: 1.05; text-align: center; text-transform: uppercase; }
+      .fiche-qr { display: grid; justify-items: center; gap: 1mm; color: #506b7d; font-size: 6.5pt; }
+      .fiche-qr img { width: 24mm; height: 24mm; }
+      .fiche-identity { display: flex; justify-content: space-between; gap: 6mm; margin: 6mm 0 1mm; font-size: 11pt; font-weight: 700; }
+      .fiche-identity span { flex: 1; }
+      .fiche-identity b { display: inline-block; min-width: 40mm; border-bottom: .3mm solid #cfe2ed; font-weight: 700; color: #0b57b7; }
+      .fiche-subtitle { margin: 0 0 3mm; color: #506b7d; font-size: 9pt; }
+      .fiche-table { width: 100%; border-collapse: separate; border-spacing: 0 2mm; }
+      .fiche-table th { padding: 0 0 .5mm; color: #506b7d; font-size: 8pt; text-align: center; text-transform: uppercase; }
+      .fiche-table th small { display: block; font-size: 6.3pt; font-weight: 400; text-transform: none; }
+      .fiche-table th:first-child { width: 36mm; }
+      .fiche-table tbody tr { break-inside: avoid; }
+      .fiche-table td { height: 12.5mm; padding: 0; border-top: .3mm solid #cfe2ed; border-bottom: .3mm solid #cfe2ed; background: #f8fcff; text-align: center; vertical-align: middle; }
+      .fiche-table td:first-child { padding-left: 4mm; border-left: .3mm solid #cfe2ed; border-radius: 3mm 0 0 3mm; color: #143451; font-size: 12.5pt; font-weight: 700; text-align: left; }
+      .fiche-table td:last-child { border-right: .3mm solid #cfe2ed; border-radius: 0 3mm 3mm 0; }
+      .fiche-table td.fiche-gap { width: 6mm; background: transparent; border: 0; }
+      .fiche-table tr.is-acquise td { background: #f2fbf5; }
+      .fiche-dot { display: inline-block; width: 7.6mm; height: 7.6mm; border: .35mm solid #7ea1b8; border-radius: 50%; background: #fff; vertical-align: middle; }
+      .fiche-dot.is-started { border-color: #087f75; background: linear-gradient(90deg, #087f75 50%, #fff 50%); }
+      .fiche-dot.is-done { border-color: #087f75; background: #087f75; }
+      .fiche-check { display: inline-grid; place-items: center; width: 8.4mm; height: 8.4mm; border: .35mm solid #7ea1b8; border-radius: 2mm; background: #fff; color: #c9d6df; font-size: 11pt; font-weight: 700; }
+      .fiche-check.is-done { border-color: #147447; background: #147447; color: #fff; }
+      .fiche-block { position: relative; margin: 3mm 0 0; padding: 3mm 4mm; border: .3mm solid #a9e4dc; border-radius: 3mm; background: #e7f7f4; break-inside: avoid; }
+      .fiche-expert { border-color: #e7c86a; background: #fff8e1; }
+      .fiche-block strong { display: block; font-size: 11pt; }
+      .fiche-block p { margin: 1.5mm 0 0; color: #506b7d; font-size: 8pt; }
+      .fiche-state { position: absolute; top: 3mm; right: 4mm; padding: .8mm 2.5mm; border-radius: 3mm; background: #fff; color: #147447; font-size: 8pt; font-weight: 700; }
+      .fiche-state:empty { display: none; }
+      .fiche-stars { position: absolute; top: 2mm; right: 4mm; color: #c9d6df; font-size: 16pt; letter-spacing: 3mm; }
+      .fiche-stars b { color: #b7791f; font-weight: 400; }
+      .fiche-rules { margin-top: 5mm; color: #506b7d; font-size: 8.3pt; }
+      .fiche-rules strong { display: block; margin-bottom: 1mm; color: #143451; font-size: 9pt; }
+      .fiche-rules p { margin: 0 0 1mm; }
+      .fiche-foot { margin-top: 8mm; color: #506b7d; font-size: 8pt; text-align: center; }
+    }
+
     @media (prefers-reduced-motion: reduce) {
       *,
       *::before,
@@ -892,7 +942,7 @@
         <img src="/assets/img/mathsgo-logo.png" alt="maths&amp;go" width="1338" height="622">
       </a>
       <div class="topbar-actions">
-        <a class="catalogue-link" href="../index.html?domain=nombres-calculs&amp;notion=calcul-mental" aria-label="Retour au calcul mental">← <span class="catalogue-link-label">Calcul mental</span></a>
+        <a class="catalogue-link" href="../index.html?domain=nombres-calculs&amp;notion=calcul-mental" aria-label="Retour au calcul mental"><span class="back-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="20" height="20"><path d="M19 12H5M11 6l-6 6 6 6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="catalogue-link-label">Calcul mental</span></a>
         <button class="fullscreen-toggle" type="button" data-fullscreen-toggle aria-pressed="false" aria-label="Passer en plein écran"><span class="fullscreen-toggle-icon" data-fullscreen-icon aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><path class="fullscreen-expand" d="M8 3H3v5M16 3h5v5M8 21H3v-5M16 21h5v-5"/><path class="fullscreen-collapse" d="M3 8h5V3M21 8h-5V3M3 16h5v5M21 16h-5v5"/></svg></span><span data-fullscreen-label>Plein écran</span></button>
       </div>
     </header>
@@ -928,12 +978,13 @@
           </div>
           <div class="revision-sheet-action">
             <a class="revision-sheet-link" href="./fiche_tables_multiplication.pdf" download>↓ Télécharger la fiche de révision</a>
+            <a class="revision-sheet-link" href="./fiche_parcours_tables.pdf" download>↓ Télécharger la fiche parcours</a>
           </div>
         </section>
 
         <section id="settings-screen" hidden>
           <div class="settings-toolbar">
-            <button id="back-to-modes" class="settings-back" type="button" aria-label="Changer de parcours"><span aria-hidden="true">←</span><span class="settings-back-label">Changer</span></button>
+            <button id="back-to-modes" class="settings-back" type="button" aria-label="Changer de parcours"><span class="back-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="20" height="20"><path d="M19 12H5M11 6l-6 6 6 6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="settings-back-label">Changer</span></button>
             <h1 id="settings-title" class="settings-heading" tabindex="-1">Choisis tes tables</h1>
           </div>
           <div id="settings-panel" class="settings-panel">
@@ -1027,12 +1078,13 @@
 
       <div id="parcours" class="parcours-screen" hidden>
         <div class="parcours-toolbar">
-          <button id="parcours-back" class="settings-back" type="button" aria-label="Retour au menu"><span aria-hidden="true">←</span><span class="settings-back-label">Menu</span></button>
+          <button id="parcours-back" class="settings-back" type="button" aria-label="Retour au menu"><span class="back-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="20" height="20"><path d="M19 12H5M11 6l-6 6 6 6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="settings-back-label">Menu</span></button>
           <h1 id="parcours-title" class="settings-heading" tabindex="-1">Mon parcours</h1>
           <button id="parcours-more" class="parcours-more" type="button" aria-label="Options du parcours" aria-expanded="false" aria-controls="parcours-options">⋯</button>
         </div>
         <div id="parcours-options" class="parcours-options" hidden>
           <button id="parcours-rename" class="secondary" type="button">Modifier mon prénom</button>
+          <button id="parcours-print-option" class="secondary" type="button">Imprimer ma fiche</button>
           <button id="parcours-reset" class="secondary" type="button">Recommencer à zéro</button>
         </div>
         <form id="parcours-name" class="parcours-name" hidden>
@@ -1061,12 +1113,16 @@
         <div id="parcours-melange" class="parcours-row parcours-extra" hidden></div>
         <div id="parcours-expert" class="parcours-row parcours-extra"></div>
         <p class="parcours-note">Seules les séries lancées sur une table à la fois comptent (Réglages et Évaluation CM1 ne comptent pas). Touche un rond, un ✓ ou une étoile pour lancer la bonne série.</p>
+        <div class="parcours-print-action">
+          <button id="parcours-print" class="secondary" type="button">🖨 Imprimer ma fiche</button>
+          <a class="revision-sheet-link" href="./fiche_parcours_tables.pdf" download>↓ Fiche vide à photocopier</a>
+        </div>
       </div>
 
       <div id="play" hidden>
         <div class="status">
           <div class="status-left">
-            <button id="game-menu" class="game-menu" type="button" aria-label="Arrêter le défi et revenir au choix de l’entraînement">← Menu</button>
+            <button id="game-menu" class="game-menu" type="button" aria-label="Arrêter le défi et revenir au choix de l’entraînement"><span class="back-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="20" height="20"><path d="M19 12H5M11 6l-6 6 6 6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span>Menu</span></button>
             <span id="question-count">1 / 25</span>
           </div>
           <strong id="time" role="timer" aria-label="Temps restant">1:00</strong>
@@ -1109,6 +1165,38 @@
       </div>
     </section>
   </main>
+  <section id="fiche-print" class="fiche-print" aria-hidden="true">
+    <header class="fiche-head">
+      <img class="fiche-logo" src="../../assets/img/mathsgo-logo-print.png" alt="" width="420" height="195">
+      <h1>Mon parcours<br>des tables</h1>
+      <div class="fiche-qr"><img src="../../assets/img/qr-defi-tables-parcours.svg" alt="" width="120" height="120"><span>Ouvrir Mon parcours</span></div>
+    </header>
+    <p class="fiche-identity"><span>Prénom : <b id="fiche-prenom"></b></span><span>Classe : <b></b></span><span>Date : <b id="fiche-date"></b></span></p>
+    <p class="fiche-subtitle" id="fiche-subtitle">Colorie les ronds au fur et à mesure, comme dans l’application.</p>
+    <table class="fiche-table">
+      <thead>
+        <tr><th></th><th colspan="4">J’apprends<small>bâton · à trous · ordre · désordre</small></th><th colspan="3">Je m’entraîne<small>produits · trous · les deux</small></th><th>Acquise</th></tr>
+      </thead>
+      <tbody id="fiche-rows"></tbody>
+    </table>
+    <div class="fiche-block fiche-melange">
+      <strong>Mélange de mes tables acquises</strong>
+      <span id="fiche-melange-state" class="fiche-state"></span>
+      <p>Dès 2 tables acquises. À refaire à chaque nouvelle table : note la date de chaque mélange réussi. <span class="fiche-dates">dates : ______ ______ ______ ______</span></p>
+    </div>
+    <div class="fiche-block fiche-expert">
+      <strong>Expert : toutes les tables de 2 à 10 mélangées</strong>
+      <span id="fiche-stars" class="fiche-stars"></span>
+      <p>★ produits · ★★ + trous · ★★★ + divisions. Trois étoiles = Champion des tables !</p>
+    </div>
+    <div class="fiche-rules">
+      <strong>Les règles</strong>
+      <p>J’apprends : un rond par activité terminée. Je m’entraîne : 10 questions sans chrono, 1 erreur max.</p>
+      <p>Acquise : 20 questions (produits et trous) en 1 min 30, 2 erreurs max. Mélange : 25 produits en 2 min, 2 erreurs max.</p>
+      <p>Expert (tables 2 à 10 mélangées, 25 questions en 2 min, 2 erreurs max) : ★ produits · ★★ + trous · ★★★ + divisions.</p>
+    </div>
+    <footer class="fiche-foot">mathsgo.re · CC BY-NC-SA 4.0</footer>
+  </section>
   <footer class="site-footer">
     <span>Gwenaël Bourgault</span><span aria-hidden="true">·</span>
     <a href="mailto:gwenael@mathsgo.re?subject=Contact%20depuis%20mathsgo.re">Me contacter</a><span aria-hidden="true">·</span>
@@ -1118,8 +1206,8 @@
     <button type="button" data-mathsgo-consent-open onclick="window.mathsgoConsentement &amp;&amp; window.mathsgoConsentement.ouvrir()">Gérer mes cookies</button>
   </footer>
 
-  <script src="./defi_tables_core.js?v=20260830-1"></script>
-  <script src="./defi_tables_mon_parcours.js?v=20260830-1"></script>
+  <script src="./defi_tables_core.js?v=20260830-2"></script>
+  <script src="./defi_tables_mon_parcours.js?v=20260830-2"></script>
   <script>
     (() => {
       "use strict";
@@ -2227,6 +2315,61 @@
         }
       }
 
+      function renderFiche() {
+        const etat = PARCOURS.etatAffichage(parcours);
+        $("fiche-prenom").textContent = parcours.prenom;
+        $("fiche-date").textContent = PARCOURS.estVide(parcours) ? "" : new Date().toLocaleDateString("fr-FR");
+        $("fiche-subtitle").textContent = PARCOURS.estVide(parcours)
+          ? "Colorie les ronds au fur et à mesure, comme dans l’application."
+          : "Ma progression dans l’application à ce jour. Continue à colorier au fur et à mesure.";
+        const rows = $("fiche-rows");
+        rows.replaceChildren();
+        etat.lignes.forEach(ligne => {
+          const tr = document.createElement("tr");
+          tr.className = ligne.acquise ? "is-acquise" : "";
+          const name = document.createElement("td");
+          name.textContent = `Table de ${ligne.table}`;
+          tr.append(name);
+          ligne.apprends.forEach(activite => {
+            const td = document.createElement("td");
+            const dot = document.createElement("span");
+            dot.className = `fiche-dot${activite.etat === 2 ? " is-done" : activite.etat === 1 ? " is-started" : ""}`;
+            td.append(dot);
+            tr.append(td);
+          });
+          ligne.entraine.forEach(entrainement => {
+            const td = document.createElement("td");
+            const dot = document.createElement("span");
+            dot.className = `fiche-dot${entrainement.etat === 2 ? " is-done" : entrainement.etat === 1 ? " is-started" : ""}`;
+            td.append(dot);
+            tr.append(td);
+          });
+          const acquise = document.createElement("td");
+          const check = document.createElement("span");
+          check.className = `fiche-check${ligne.acquise ? " is-done" : ""}`;
+          check.textContent = "✓";
+          acquise.append(check);
+          tr.append(acquise);
+          rows.append(tr);
+        });
+        $("fiche-melange-state").textContent = etat.melange.visible
+          ? (etat.melange.aJour ? `À jour ✓ (${etat.melange.tables.join(", ")})` : `À refaire (${etat.melange.tables.join(", ")})`)
+          : "";
+        const stars = $("fiche-stars");
+        stars.replaceChildren();
+        [1, 2, 3].forEach(niveau => {
+          const star = document.createElement(niveau <= etat.expert.niveau ? "b" : "span");
+          star.textContent = "★";
+          stars.append(star);
+        });
+      }
+
+      function printFiche() {
+        renderFiche();
+        window.setTimeout(() => window.print(), 50);
+      }
+      window.addEventListener("beforeprint", renderFiche);
+
       function openParcours() {
         state.origin = "parcours";
         state.parcoursOptionsOpen = false;
@@ -2242,6 +2385,12 @@
       $("open-parcours").addEventListener("click", openParcours);
       $("result-open-parcours").addEventListener("click", openParcours);
       $("parcours-back").addEventListener("click", backToModes);
+      $("parcours-print").addEventListener("click", printFiche);
+      $("parcours-print-option").addEventListener("click", () => {
+        state.parcoursOptionsOpen = false;
+        renderParcours();
+        printFiche();
+      });
       $("parcours-more").addEventListener("click", () => {
         state.parcoursOptionsOpen = !state.parcoursOptionsOpen;
         state.confirmingReset = false;
