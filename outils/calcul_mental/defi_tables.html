@@ -478,7 +478,10 @@
     .number-stick-cell.is-filled { color: #075b55; background: #e7f8f5; }
     .number-stick-cell.is-current { z-index: 1; box-shadow: inset 0 0 0 3px var(--blue); }
     .number-stick-cell.is-new { z-index: 2; animation: stick-pop .35s ease-out; color: #fff; background: var(--teal); box-shadow: inset 0 0 0 2px #075b55; }
+    .number-stick-cell.has-draft { color: var(--blue); background: #eef6ff; }
     .number-stick-cell.is-empty::after { content: ""; width: 42%; height: 2px; border-radius: 99px; background: #c7d7e0; }
+    .number-stick-cell.has-draft::after { display: none; }
+    .expression.is-stick-activity { font-size: clamp(1.8rem, 6vw, 2.8rem); }
     @keyframes stick-pop { 0% { transform: scale(.72); } 70% { transform: scale(1.12); } 100% { transform: scale(1); } }
     .keypad { max-width: 390px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 12px auto; }
     .keypad button {
@@ -674,7 +677,7 @@
           <div class="mode-choice" role="group" aria-label="Choisis ton parcours">
             <button class="mode-card" type="button" data-mode="learn" aria-controls="settings-screen">
               <span class="mode-card-icon" aria-hidden="true">🌱</span>
-              <span><strong>J’apprends</strong><small>1 table · correction immédiate</small></span>
+              <span><strong>J’apprends</strong><small>1 table · activités au choix</small></span>
             </button>
             <button class="mode-card" type="button" data-mode="train" aria-controls="settings-screen">
               <span class="mode-card-icon" aria-hidden="true">🎯</span>
@@ -719,11 +722,13 @@
               <button class="selection-button" type="button" data-table="10" aria-pressed="false">× 10</button>
             </div>
           </fieldset>
-          <fieldset id="order-settings" class="setting-group" hidden>
-            <legend class="setting-title">Dans quel ordre&nbsp;?</legend>
-            <div class="order-options">
-              <button class="type-button is-selected" type="button" data-order="ordered" aria-pressed="true"><strong>Dans l’ordre</strong></button>
-              <button class="type-button" type="button" data-order="random" aria-pressed="false"><strong>Dans le désordre</strong></button>
+          <fieldset id="learn-activity-settings" class="setting-group" hidden>
+            <legend class="setting-title">Choisis une activité</legend>
+            <div class="type-options learn-activity-options">
+              <button class="type-button" type="button" data-learn-activity="construct" aria-pressed="false"><strong>Je construis le bâton</strong></button>
+              <button class="type-button" type="button" data-learn-activity="gaps" aria-pressed="false"><strong>Je complète un bâton à trous</strong></button>
+              <button class="type-button is-selected" type="button" data-learn-activity="ordered" aria-pressed="true"><strong>Je réponds dans l’ordre</strong></button>
+              <button class="type-button" type="button" data-learn-activity="random" aria-pressed="false"><strong>Je réponds dans le désordre</strong></button>
             </div>
           </fieldset>
           <fieldset id="question-settings" class="setting-group" hidden>
@@ -828,7 +833,7 @@
     <button type="button" data-mathsgo-consent-open onclick="window.mathsgoConsentement &amp;&amp; window.mathsgoConsentement.ouvrir()">Gérer mes cookies</button>
   </footer>
 
-  <script src="./defi_tables_core.js?v=20260829-3"></script>
+  <script src="./defi_tables_core.js?v=20260829-4"></script>
   <script>
     (() => {
       "use strict";
@@ -843,6 +848,7 @@
         mode: null,
         tables: new Set(),
         order: "ordered",
+        learnActivity: "ordered",
         questionTypes: new Set(["direct"]),
         total: 20,
         duration: null,
@@ -930,6 +936,7 @@
           mode: configuration.mode,
           tables: [...configuration.tables].sort((first, second) => first - second),
           order: configuration.order,
+          learnActivity: configuration.learnActivity,
           questionTypes: [...configuration.questionTypes],
           total: configuration.total,
           duration: configuration.duration,
@@ -975,7 +982,7 @@
       const MODE_COPY = Object.freeze({
         learn: {
           title: "Choisis une table",
-          start: "Commencer à apprendre"
+          start: "Commencer"
         },
         train: {
           title: "Choisis tes tables",
@@ -1001,6 +1008,7 @@
         configuration.mode = mode;
         configuration.tables = mode === "evaluation" ? new Set(ALL_TABLES) : new Set();
         configuration.order = preset.order;
+        configuration.learnActivity = preset.learnActivity || "ordered";
         configuration.questionTypes = new Set(preset.questionTypes.filter(type => type !== "evaluation"));
         configuration.total = preset.total;
         configuration.duration = preset.duration;
@@ -1037,7 +1045,7 @@
         $("settings-screen").hidden = !hasMode;
         document.body.classList.toggle("settings-open", hasMode && !$("intro").hidden);
         $("settings-panel").hidden = !needsTables;
-        $("order-settings").hidden = configuration.mode !== "learn";
+        $("learn-activity-settings").hidden = configuration.mode !== "learn";
         $("question-settings").hidden = configuration.mode !== "custom";
         $("test-level-settings").hidden = configuration.mode !== "test";
         $("count-settings").hidden = configuration.mode !== "custom" && configuration.mode !== "train";
@@ -1061,8 +1069,8 @@
           button.setAttribute("aria-pressed", String(selected));
         });
 
-        document.querySelectorAll("[data-order]").forEach(button => {
-          const selected = button.dataset.order === configuration.order;
+        document.querySelectorAll("[data-learn-activity]").forEach(button => {
+          const selected = button.dataset.learnActivity === configuration.learnActivity;
           button.classList.toggle("is-selected", selected);
           button.setAttribute("aria-pressed", String(selected));
         });
@@ -1094,13 +1102,22 @@
 
       function renderInlineAnswer(status = "") {
         const slot = $("inline-answer");
-        if (!slot) return;
+        if (!slot) {
+          if (state.configuration?.mode === "learn" && ["construct", "gaps"].includes(state.configuration.learnActivity)) renderLearnSequence();
+          return;
+        }
         slot.textContent = state.answer || "\u00a0";
         slot.className = `inline-answer${status ? ` ${status}` : ""}`;
         slot.setAttribute("aria-label", state.answer ? `Réponse ${state.answer}` : "Réponse à saisir");
       }
 
       function renderExpression(question) {
+        const stickOnly = state.configuration?.mode === "learn" && ["construct", "gaps"].includes(state.configuration.learnActivity);
+        $("expression").classList.toggle("is-stick-activity", stickOnly);
+        if (stickOnly) {
+          $("expression").textContent = `Table de ${question.focusTable}`;
+          return;
+        }
         const [before, ...afterParts] = question.prompt.split("?");
         const slot = document.createElement("span");
         slot.id = "inline-answer";
@@ -1112,7 +1129,7 @@
         renderInlineAnswer();
       }
 
-      function createNumberStick(table, revealedMultipliers, {activeMultiplier = null, newMultiplier = null} = {}) {
+      function createNumberStick(table, revealedMultipliers, {activeMultiplier = null, newMultiplier = null, draftMultiplier = null, draftValue = ""} = {}) {
         const stick = document.createElement("div");
         stick.className = "number-stick";
         stick.setAttribute("role", "list");
@@ -1120,14 +1137,19 @@
           const cell = document.createElement("span");
           const filled = revealedMultipliers.has(multiplier);
           cell.className = `number-stick-cell ${filled ? "is-filled" : "is-empty"}`;
+          const hasDraft = !filled && multiplier === draftMultiplier && Boolean(draftValue);
           cell.classList.toggle("is-current", multiplier === activeMultiplier);
           cell.classList.toggle("is-new", filled && multiplier === newMultiplier);
+          cell.classList.toggle("has-draft", hasDraft);
           cell.setAttribute("role", "listitem");
           cell.dataset.multiplier = String(multiplier);
           if (filled) {
             const value = table * multiplier;
             cell.textContent = String(value);
             cell.setAttribute("aria-label", `${table} fois ${multiplier}, ${value}`);
+          } else if (hasDraft) {
+            cell.textContent = draftValue;
+            cell.setAttribute("aria-label", `${table} fois ${multiplier}, réponse saisie ${draftValue}`);
           } else {
             cell.setAttribute("aria-label", `${table} fois ${multiplier}, pas encore rempli`);
           }
@@ -1145,9 +1167,12 @@
         if (!visible) return;
         const table = state.configuration.tables[0];
         const question = state.questions[state.index];
+        const stickOnly = ["construct", "gaps"].includes(state.configuration.learnActivity);
         zone.replaceChildren(createNumberStick(table, state.revealedLearnResults, {
           activeMultiplier: question?.multiplier,
-          newMultiplier: state.lastRevealedLearnMultiplier
+          newMultiplier: state.lastRevealedLearnMultiplier,
+          draftMultiplier: stickOnly ? question?.multiplier : null,
+          draftValue: stickOnly ? state.answer : ""
         }));
       }
 
@@ -1303,8 +1328,9 @@
 
       function scoreMessage(score, config) {
         if (config.mode === "learn") {
-          return config.order === "ordered"
-            ? "Rejoue maintenant dans le désordre pour mieux mémoriser cette table."
+          if (["construct", "gaps"].includes(config.learnActivity)) return "Le bâton est complet. Choisis une autre activité quand tu es prêt.";
+          return config.learnActivity === "ordered"
+            ? "Tu peux maintenant essayer les calculs dans le désordre."
             : "Tu as retrouvé les onze produits. Tu peux maintenant passer à l’entraînement.";
         }
         if (config.mode === "evaluation") {
@@ -1332,7 +1358,12 @@
         $("result-config").textContent = configurationLabel(state.configuration);
         const remaining = TOTAL - state.index;
         if (state.configuration.mode === "learn") {
-          $("result-detail").textContent = `Les 11 produits ont été retrouvés en ${state.responses.length} essai${state.responses.length > 1 ? "s" : ""} et ${formatElapsed(elapsed)}.`;
+          const what = state.configuration.learnActivity === "gaps"
+            ? `Les ${TOTAL} cases manquantes ont été complétées`
+            : state.configuration.learnActivity === "construct"
+              ? "Les 11 cases du bâton ont été complétées"
+              : "Les 11 produits ont été retrouvés";
+          $("result-detail").textContent = `${what} en ${state.responses.length} essai${state.responses.length > 1 ? "s" : ""} et ${formatElapsed(elapsed)}.`;
         } else if (state.configuration.duration === null) {
           $("result-detail").textContent = `Tu as terminé les ${TOTAL} questions en ${formatElapsed(elapsed)}.`;
         } else {
@@ -1368,7 +1399,15 @@
       function launchLabel(config) {
         if (config.mode === "evaluation") return "Évaluation CM1 · 25 questions · 1 minute";
         const tables = shortTablesLabel(config);
-        if (config.mode === "learn") return `${tables} · ${config.order === "ordered" ? "dans l’ordre" : "dans le désordre"} · de ×0 à ×10`;
+        if (config.mode === "learn") {
+          const activityLabels = {
+            construct: "je construis le bâton",
+            gaps: "je complète un bâton à trous",
+            ordered: "je réponds dans l’ordre",
+            random: "je réponds dans le désordre"
+          };
+          return `${tables} · ${activityLabels[config.learnActivity]} · de ×0 à ×10`;
+        }
         if (config.mode === "train") return `${tables} · ${config.total} questions · sans chronomètre`;
         if (config.mode === "test") return `${tables} · niveau ${config.testLevel} · 25 questions · ${CORE.durationLabel(config.duration)}`;
         const questionLabels = {direct: "produits", missing: "trous", division: "divisions"};
@@ -1418,7 +1457,7 @@
         state.waitingForContinue = false;
         state.mastered = new Set();
         state.revealedLearnResults = new Set(config.mode === "learn"
-          ? config.order === "random" ? [0, 5, 10] : [0]
+          ? config.learnActivity === "gaps" ? [0, 5, 10] : []
           : []);
         state.lastRevealedLearnMultiplier = null;
         state.answer = "";
@@ -1515,8 +1554,9 @@
         if (configuration.tables.size === ALL_TABLES.length) configuration.tables = new Set(ALL_TABLES);
         syncControls();
       }));
-      document.querySelectorAll("[data-order]").forEach(button => button.addEventListener("click", () => {
-        configuration.order = button.dataset.order;
+      document.querySelectorAll("[data-learn-activity]").forEach(button => button.addEventListener("click", () => {
+        configuration.learnActivity = button.dataset.learnActivity;
+        configuration.order = configuration.learnActivity === "random" ? "random" : "ordered";
         syncControls();
       }));
       document.querySelectorAll("[data-question-type]").forEach(button => button.addEventListener("click", () => {
