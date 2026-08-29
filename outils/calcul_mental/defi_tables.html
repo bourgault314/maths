@@ -130,6 +130,7 @@
     .intro,
     .result { max-width: 650px; margin: 40px auto; text-align: center; }
     .intro { max-width: 720px; }
+    .mode-screen h1 { font-size: clamp(2rem, 5vw, 3rem); }
     .hero-icon { display: block; font-size: 4.2rem; }
     .eyebrow {
       margin: 8px 0;
@@ -148,20 +149,20 @@
 
     .mode-choice {
       display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 12px;
-      margin: 20px 0 14px;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+      margin: 22px 0 12px;
       text-align: left;
     }
 
     .mode-card {
       position: relative;
-      min-height: 132px;
+      min-height: 82px;
       display: grid;
       grid-template-columns: auto minmax(0, 1fr);
       align-items: center;
-      gap: 12px;
-      padding: 16px 42px 16px 16px;
+      gap: 11px;
+      padding: 12px 38px 12px 14px;
       border: 2px solid #c9dce8;
       border-radius: 18px;
       color: var(--ink);
@@ -171,9 +172,9 @@
       cursor: pointer;
     }
 
-    .mode-card-icon { font-size: 2rem; line-height: 1; }
-    .mode-card strong { display: block; color: var(--blue); font-size: 1.03rem; line-height: 1.2; }
-    .mode-card small { display: block; margin-top: 5px; color: var(--muted); font-size: .82rem; line-height: 1.35; }
+    .mode-card-icon { font-size: 1.65rem; line-height: 1; }
+    .mode-card strong { display: block; color: var(--blue); font-size: 1rem; line-height: 1.2; }
+    .mode-card small { display: block; margin-top: 3px; color: var(--muted); font-size: .78rem; line-height: 1.25; }
     .mode-card.is-selected {
       border-color: var(--blue);
       background: #eef6ff;
@@ -222,21 +223,47 @@
       box-shadow: inset 0 0 0 1px var(--blue);
     }
 
+    .revision-sheet-action { display: flex; justify-content: center; margin-top: 3px; }
+    .revision-sheet-link {
+      min-height: 40px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 7px 13px;
+      border-radius: 999px;
+      color: var(--teal);
+      font-size: .8rem;
+      font-weight: 900;
+      text-underline-offset: 3px;
+    }
+
     .settings-panel {
-      margin: 14px 0;
-      padding: 16px;
+      margin: 12px 0 0;
+      padding: 15px;
       border: 2px solid #cfe2ed;
       border-radius: 18px;
       background: #f8fcff;
       text-align: left;
     }
 
-    .settings-heading { margin: 0; color: var(--ink); font-size: 1.12rem; }
-    .settings-intro { margin: 4px 0 14px; color: var(--muted); font-size: .86rem; }
+    .settings-toolbar { position: relative; display: grid; place-items: center; min-height: 44px; padding: 0 86px; }
+    .settings-back {
+      position: absolute;
+      left: 0;
+      min-height: 40px;
+      padding: 7px 11px;
+      border: 1px solid #bfd3df;
+      border-radius: 999px;
+      color: #31566c;
+      background: #fff;
+      font-size: .8rem;
+      font-weight: 900;
+      cursor: pointer;
+    }
+    .settings-heading { margin: 0; color: var(--ink); font-size: clamp(1.55rem, 5vw, 2.15rem); text-align: center; }
     .setting-group { margin: 0; padding: 0; border: 0; }
-    .setting-group + .setting-group { margin-top: 17px; padding-top: 16px; border-top: 1px solid #d8e7f0; }
-    .setting-title { padding: 0; color: var(--ink); font-size: 1rem; font-weight: 950; }
-    .setting-help { margin: 4px 0 10px; color: var(--muted); font-size: .82rem; line-height: 1.35; }
+    .setting-group + .setting-group { margin-top: 14px; padding-top: 13px; border-top: 1px solid #d8e7f0; }
+    .setting-title { width: 100%; padding: 0 0 9px; color: var(--ink); font-size: 1rem; font-weight: 950; text-align: center; }
     .table-options { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 7px; }
     .all-tables { grid-column: 1 / -1; }
 
@@ -267,7 +294,7 @@
     .order-options { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .time-options { grid-template-columns: repeat(4, minmax(0, 1fr)); }
     .type-button {
-      min-height: 70px;
+      min-height: 58px;
       padding: 10px;
       border: 2px solid #bed3e0;
       border-radius: 12px;
@@ -287,7 +314,9 @@
 
     .type-button.is-selected strong::before { content: "✓ "; color: var(--teal); }
     .type-button.is-selected::before { color: var(--teal); }
-    .config-summary,
+    .order-options .type-button,
+    .count-options .type-button,
+    .time-options .type-button { display: grid; place-items: center; text-align: center; }
     .result-config {
       margin: 13px 0;
       padding: 9px 12px;
@@ -298,7 +327,16 @@
       font-weight: 900;
     }
 
-    .selection-error { margin: 8px 0; color: var(--red) !important; font-size: .88rem; font-weight: 900; }
+    .start-dock {
+      position: sticky;
+      z-index: 10;
+      bottom: max(8px, env(safe-area-inset-bottom));
+      margin-top: 10px;
+      padding: 8px 0;
+      background: linear-gradient(transparent, rgba(255, 255, 255, .98) 28%);
+      text-align: center;
+    }
+    .start-dock .primary { width: min(100%, 430px); }
 
     .primary,
     .secondary {
@@ -361,8 +399,10 @@
 
     .expression {
       min-height: 155px;
-      display: grid;
-      place-items: center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-wrap: wrap;
       margin: 10px 0 16px;
       padding: 15px;
       border-radius: 18px;
@@ -371,25 +411,29 @@
       font-weight: 950;
     }
 
-    .answer {
-      width: 100%;
-      min-height: 62px;
-      padding: 10px 14px;
-      border: 3px solid #aac9dc;
-      border-radius: 14px;
+    .inline-answer {
+      min-width: 1.45em;
+      min-height: 1.18em;
+      display: inline-grid;
+      place-items: center;
+      margin: 0 .1em;
+      padding: 0 .12em;
+      border: .08em solid #8fb5cb;
+      border-radius: .18em;
       color: var(--ink);
       background: #fff;
-      font-size: 1.7rem;
-      font-weight: 950;
-      text-align: center;
+      line-height: 1;
+      vertical-align: -.08em;
     }
-
-    .answer.invalid { border-color: var(--red); background: var(--red-soft); }
-    .answer-error { min-height: 1.35em; margin: 6px 0 0; color: var(--red); font-size: .88rem; font-weight: 900; visibility: hidden; }
-    .answer-error.is-visible { visibility: visible; }
+    .inline-answer.is-invalid { border-color: var(--red); background: var(--red-soft); }
+    .inline-answer.is-correct { border-color: var(--green); color: var(--green); background: var(--green-soft); }
+    .inline-answer.is-corrected { border-color: var(--green); color: var(--green); background: #fff7dc; }
     .answer-feedback {
-      margin: 8px auto 0;
-      padding: 10px 12px;
+      min-height: 42px;
+      display: grid;
+      place-items: center;
+      margin: 6px auto 0;
+      padding: 7px 12px;
       border-radius: 12px;
       font-weight: 900;
     }
@@ -408,7 +452,12 @@
     }
     .keypad button:disabled { opacity: .45; cursor: default; }
 
+    .launch-screen { min-height: 520px; display: grid; place-content: center; gap: 10px; text-align: center; }
+    .launch-screen strong { color: var(--blue); font-size: clamp(2.4rem, 8vw, 4.5rem); }
+    .launch-summary { margin: 0; color: var(--muted); font-size: clamp(1.05rem, 3vw, 1.35rem); font-weight: 900; }
+
     .actions { display: flex; justify-content: center; gap: 9px; margin-top: 13px; }
+    .actions button { min-width: 140px; }
     .result-message { padding: 12px 15px; border-radius: 14px; color: #31566c !important; background: #eef8ff; font-weight: 850; }
     .corrections { margin: 20px 0; padding: 16px; border: 2px solid #efc9c9; border-radius: 18px; background: #fffafa; text-align: left; }
     .corrections h2 { margin: 0; font-size: 1.3rem; }
@@ -461,6 +510,7 @@
       overscroll-behavior: none;
     }
 
+    body.settings-open .site-footer,
     body.challenge-playing .site-footer,
     body.fullscreen-active .site-footer { display: none; }
     body.fullscreen-active .fullscreen-toggle {
@@ -481,20 +531,25 @@
       .brand img { width: 82px; }
       .topbar-actions { gap: 4px; }
       .catalogue-link { min-height: 36px; padding: 0 10px; font-size: .73rem; }
-      .fullscreen-toggle { min-height: 36px; padding: 6px 8px; font-size: .72rem; }
+      .fullscreen-toggle { display: none; }
       .panel { min-height: calc(100vh - 96px); padding: 18px 12px 27px; border-right: 0; border-left: 0; border-radius: 20px; }
       .intro,
-      .result { margin: 25px auto; }
-      .intro .hero-icon { font-size: 3.4rem; }
-      .mode-choice { grid-template-columns: 1fr; gap: 8px; margin-top: 15px; }
-      .mode-card { min-height: 82px; padding: 12px 40px 12px 13px; }
-      .mode-card-icon { font-size: 1.7rem; }
-      .settings-panel { margin: 10px 0; padding: 13px 10px; }
+      .result { margin: 20px auto; }
+      .mode-screen h1 { font-size: 2.1rem; }
+      .mode-choice { grid-template-columns: 1fr; gap: 7px; margin-top: 14px; }
+      .mode-card { min-height: 66px; padding: 9px 38px 9px 12px; }
+      .mode-card-icon { font-size: 1.45rem; }
+      .settings-toolbar { padding: 0 70px; }
+      .settings-back { min-height: 38px; padding: 6px 9px; font-size: .74rem; }
+      .settings-panel { margin: 8px 0 0; padding: 11px 9px; }
       .table-options { gap: 5px; }
       .selection-button { min-height: 44px; padding: 7px 4px; }
       .type-options { grid-template-columns: 1fr; gap: 6px; }
+      #test-level-settings .type-options { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+      #test-level-settings .type-button { min-height: 68px; display: block; padding: 8px 5px; text-align: center; }
+      #test-level-settings .type-button small { margin-top: 4px; text-align: center; }
       .time-options { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-      .type-button { min-height: 56px; display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 9px; }
+      .type-button { min-height: 52px; display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 9px; }
       .type-button small { margin: 0; text-align: right; }
       .question { min-height: 560px; padding: 19px 10px; }
       .expression { min-height: 135px; }
@@ -511,10 +566,8 @@
       .challenge-playing .status strong { min-width: 78px; padding: 4px 10px; font-size: 1.05rem; }
       .challenge-playing .progress-track { height: 6px; margin: 4px 0 6px; }
       .challenge-playing .question { flex: 1; min-height: 0; display: flex; flex-direction: column; justify-content: flex-start; padding: 6px 10px 8px; overflow-y: auto; overscroll-behavior: contain; }
-      .challenge-playing .question > .eyebrow { margin: auto 0 3px; }
       .challenge-playing .expression { min-height: clamp(68px, 12dvh, 92px); margin: 3px 0 6px; padding: 7px; font-size: clamp(2rem, 9vw, 3.2rem); }
-      .challenge-playing .question label { font-size: .94rem; line-height: 1.2; }
-      .challenge-playing .answer { min-height: 48px; height: 48px; padding: 5px 10px; font-size: 1.5rem; }
+      .challenge-playing .answer-feedback { min-height: 38px; margin-top: 3px; padding: 5px 8px; font-size: .86rem; }
       .challenge-playing .keypad { width: min(100%, 330px); gap: 5px; margin: 6px auto; }
       .challenge-playing .keypad button { min-height: 44px; height: 44px; }
       .challenge-playing .actions { margin: 5px 0 auto; }
@@ -533,7 +586,6 @@
       .challenge-playing .question { flex: 1; min-height: 0; display: flex; flex-direction: column; justify-content: flex-start; padding: 10px 28px 12px; overflow-y: auto; overscroll-behavior: contain; }
       .challenge-playing .question > .eyebrow { margin: auto 0 3px; }
       .challenge-playing .expression { min-height: 100px; margin: 4px 0 8px; padding: 10px; font-size: clamp(2.2rem, 7vw, 3.5rem); }
-      .challenge-playing .answer { min-height: 52px; height: 52px; padding: 6px 12px; }
       .challenge-playing .keypad { gap: 6px; margin: 8px auto; }
       .challenge-playing .keypad button { min-height: 44px; height: 44px; }
       .challenge-playing .actions { margin: 6px 0 auto; }
@@ -566,34 +618,42 @@
 
     <section class="panel">
       <div id="intro" class="intro">
-        <span class="hero-icon" aria-hidden="true">✖️</span>
-        <p class="eyebrow">Calcul mental · tables de multiplication</p>
-        <h1 id="intro-title" tabindex="-1">Comment veux-tu travailler&nbsp;?</h1>
-        <p>Choisis ton objectif. L’application prépare le reste pour toi.</p>
-        <div class="mode-choice" role="group" aria-label="Choisis ton parcours">
-          <button class="mode-card" type="button" data-mode="learn" aria-pressed="false" aria-controls="settings-panel">
-            <span class="mode-card-icon" aria-hidden="true">🌱</span>
-            <span><strong>J’apprends une table</strong><small>Une seule table, dans l’ordre ou le désordre, sans chronomètre.</small></span>
-          </button>
-          <button class="mode-card" type="button" data-mode="train" aria-pressed="false" aria-controls="settings-panel">
-            <span class="mode-card-icon" aria-hidden="true">🎯</span>
-            <span><strong>Je m’entraîne</strong><small>20 produits à ton rythme. Ton temps apparaît seulement à la fin.</small></span>
-          </button>
-          <button class="mode-card" type="button" data-mode="test" aria-pressed="false" aria-controls="settings-panel">
-            <span class="mode-card-icon" aria-hidden="true">⏱️</span>
-            <span><strong>Je me teste</strong><small>Les tables de ton choix, 25 produits en 1 minute.</small></span>
-          </button>
-        </div>
-        <div class="secondary-mode-choice" aria-label="Autres parcours">
-          <button class="secondary-mode-button" type="button" data-mode="evaluation" aria-pressed="false">Comme l’évaluation CM1</button>
-          <button class="secondary-mode-button" type="button" data-mode="custom" aria-pressed="false" aria-controls="settings-panel">Je règle moi-même</button>
-        </div>
-        <section id="settings-panel" class="settings-panel" aria-labelledby="settings-title" hidden>
-          <h2 id="settings-title" class="settings-heading">Choisis tes tables</h2>
-          <p id="settings-intro" class="settings-intro"></p>
+        <section id="mode-screen" class="mode-screen">
+          <h1 id="intro-title" tabindex="-1">Comment veux-tu travailler&nbsp;?</h1>
+          <div class="mode-choice" role="group" aria-label="Choisis ton parcours">
+            <button class="mode-card" type="button" data-mode="learn" aria-controls="settings-screen">
+              <span class="mode-card-icon" aria-hidden="true">🌱</span>
+              <span><strong>J’apprends</strong><small>1 table · correction immédiate</small></span>
+            </button>
+            <button class="mode-card" type="button" data-mode="train" aria-controls="settings-screen">
+              <span class="mode-card-icon" aria-hidden="true">🎯</span>
+              <span><strong>Je m’entraîne</strong><small>20 questions · à mon rythme</small></span>
+            </button>
+            <button class="mode-card" type="button" data-mode="test" aria-controls="settings-screen">
+              <span class="mode-card-icon" aria-hidden="true">⏱️</span>
+              <span><strong>Je deviens expert</strong><small>3 niveaux · 1 à 3 minutes</small></span>
+            </button>
+            <button class="mode-card" type="button" data-mode="custom" aria-controls="settings-screen">
+              <span class="mode-card-icon" aria-hidden="true">⚙️</span>
+              <span><strong>Réglages</strong><small>Je choisis tout</small></span>
+            </button>
+          </div>
+          <div class="secondary-mode-choice">
+            <button class="secondary-mode-button" type="button" data-mode="evaluation" aria-controls="settings-screen">Comme l’évaluation CM1</button>
+          </div>
+          <div class="revision-sheet-action">
+            <a class="revision-sheet-link" href="./fiche_tables_multiplication.pdf" download>↓ Télécharger la fiche de révision</a>
+          </div>
+        </section>
+
+        <section id="settings-screen" hidden>
+          <div class="settings-toolbar">
+            <button id="back-to-modes" class="settings-back" type="button">← Changer</button>
+            <h1 id="settings-title" class="settings-heading" tabindex="-1">Choisis tes tables</h1>
+          </div>
+          <div id="settings-panel" class="settings-panel">
           <fieldset id="table-settings" class="setting-group">
-            <legend class="setting-title">Quelles tables&nbsp;?</legend>
-            <p id="table-help" class="setting-help">Choisis une ou plusieurs tables.</p>
+            <legend class="sr-only">Tables à travailler</legend>
             <div class="table-options">
               <button id="all-tables" class="selection-button all-tables" type="button" data-all-tables aria-pressed="false">Toutes les tables</button>
               <button class="selection-button" type="button" data-table="1" aria-pressed="false">× 1</button>
@@ -610,42 +670,54 @@
           </fieldset>
           <fieldset id="order-settings" class="setting-group" hidden>
             <legend class="setting-title">Dans quel ordre&nbsp;?</legend>
-            <p class="setting-help">Commence dans l’ordre, puis passe au désordre pour mieux mémoriser.</p>
             <div class="order-options">
-              <button class="type-button is-selected" type="button" data-order="ordered" aria-pressed="true"><strong>Dans l’ordre</strong><small>1, 2, 3…</small></button>
-              <button class="type-button" type="button" data-order="random" aria-pressed="false"><strong>Dans le désordre</strong><small>Ordre mélangé</small></button>
+              <button class="type-button is-selected" type="button" data-order="ordered" aria-pressed="true"><strong>Dans l’ordre</strong></button>
+              <button class="type-button" type="button" data-order="random" aria-pressed="false"><strong>Dans le désordre</strong></button>
             </div>
           </fieldset>
           <fieldset id="question-settings" class="setting-group" hidden>
-            <legend class="setting-title">Quelles formes de questions&nbsp;?</legend>
-            <p class="setting-help">Tu peux en choisir une ou plusieurs. Elles seront mélangées automatiquement.</p>
+            <legend class="setting-title">Quelles questions&nbsp;?</legend>
             <div class="type-options">
               <button class="type-button is-selected" type="button" data-question-type="direct" aria-pressed="true"><strong>Produits directs</strong><small>7 × 8 = ?</small></button>
               <button class="type-button" type="button" data-question-type="missing" aria-pressed="false"><strong>Trouver le nombre manquant</strong><small>? × 8 = 56</small></button>
               <button class="type-button" type="button" data-question-type="division" aria-pressed="false"><strong>Divisions liées</strong><small>24 ÷ 4 = ?</small></button>
             </div>
           </fieldset>
+          <fieldset id="test-level-settings" class="setting-group" hidden>
+            <legend class="setting-title">Quel niveau&nbsp;?</legend>
+            <div class="type-options">
+              <button class="type-button is-selected" type="button" data-test-level="1" aria-pressed="true"><strong>Niveau 1</strong><small>Produits</small></button>
+              <button class="type-button" type="button" data-test-level="2" aria-pressed="false"><strong>Niveau 2</strong><small>Produits + trous</small></button>
+              <button class="type-button" type="button" data-test-level="3" aria-pressed="false"><strong>Niveau 3</strong><small>Produits, trous, divisions</small></button>
+            </div>
+          </fieldset>
           <fieldset id="count-settings" class="setting-group" hidden>
             <legend class="setting-title">Combien de questions&nbsp;?</legend>
             <div class="count-options">
-              <button class="type-button" type="button" data-total="10" aria-pressed="false"><strong>10</strong><small>Session courte</small></button>
-              <button class="type-button is-selected" type="button" data-total="20" aria-pressed="true"><strong>20</strong><small>Entraînement</small></button>
-              <button class="type-button" type="button" data-total="25" aria-pressed="false"><strong>25</strong><small>Session complète</small></button>
+              <button class="type-button" type="button" data-total="10" aria-pressed="false"><strong>10</strong></button>
+              <button class="type-button is-selected" type="button" data-total="20" aria-pressed="true"><strong>20</strong></button>
+              <button class="type-button" type="button" data-total="25" aria-pressed="false"><strong>25</strong></button>
             </div>
           </fieldset>
           <fieldset id="time-settings" class="setting-group" hidden>
-            <legend class="setting-title">Quel temps&nbsp;?</legend>
+            <legend class="setting-title">Avec ou sans chrono&nbsp;?</legend>
             <div class="time-options">
-              <button class="type-button is-selected" type="button" data-duration="none" aria-pressed="true"><strong>Sans chrono</strong><small>À ton rythme</small></button>
-              <button class="type-button" type="button" data-duration="180" aria-pressed="false"><strong>3 min</strong><small>Tranquille</small></button>
-              <button class="type-button" type="button" data-duration="120" aria-pressed="false"><strong>2 min</strong><small>Rapide</small></button>
-              <button class="type-button" type="button" data-duration="60" aria-pressed="false"><strong>1 min</strong><small>Défi</small></button>
+              <button id="no-timer-option" class="type-button is-selected" type="button" data-duration="none" aria-pressed="true"><strong>Sans chrono</strong></button>
+              <button class="type-button" type="button" data-duration="60" aria-pressed="false"><strong>1 min</strong></button>
+              <button class="type-button" type="button" data-duration="120" aria-pressed="false"><strong>2 min</strong></button>
+              <button class="type-button" type="button" data-duration="180" aria-pressed="false"><strong>3 min</strong></button>
             </div>
           </fieldset>
+          </div>
+          <div class="start-dock">
+            <button id="start" class="primary" type="button" disabled>Commencer</button>
+          </div>
         </section>
-        <p id="config-summary" class="config-summary" aria-live="polite" hidden></p>
-        <p id="selection-error" class="selection-error" aria-live="polite" hidden>Choisis au moins une table pour commencer.</p>
-        <button id="start" class="primary" type="button" disabled>Choisis un parcours</button>
+      </div>
+
+      <div id="launch" class="launch-screen" hidden aria-live="polite">
+        <p id="launch-summary" class="launch-summary"></p>
+        <strong>C’est parti&nbsp;!</strong>
       </div>
 
       <div id="play" hidden>
@@ -659,12 +731,8 @@
         </div>
         <div class="progress-track" aria-hidden="true"><b id="progress"></b></div>
         <article id="question-card" class="question">
-          <p id="question-kind" class="eyebrow">Produit</p>
           <div id="expression" class="expression" tabindex="-1" role="status" aria-live="polite" aria-atomic="true"></div>
-          <label for="answer">Ta réponse</label>
-          <input id="answer" class="answer" type="text" inputmode="none" readonly aria-readonly="true" aria-describedby="answer-error answer-feedback" aria-invalid="false">
-          <p id="answer-error" class="answer-error" role="alert" aria-hidden="true">Saisis une réponse ou choisis « Passer ».</p>
-          <p id="answer-feedback" class="answer-feedback" role="status" aria-live="polite" hidden></p>
+          <p id="answer-feedback" class="answer-feedback" role="status" aria-live="polite"></p>
           <div class="keypad" role="group" aria-label="Clavier numérique">
             <button type="button" data-key="1">1</button><button type="button" data-key="2">2</button><button type="button" data-key="3">3</button>
             <button type="button" data-key="4">4</button><button type="button" data-key="5">5</button><button type="button" data-key="6">6</button>
@@ -721,7 +789,8 @@
         order: "ordered",
         questionTypes: new Set(["direct"]),
         total: 20,
-        duration: null
+        duration: null,
+        testLevel: 1
       };
       const sessionScores = new Map();
       const state = {
@@ -738,7 +807,9 @@
         configuration: null,
         tenSecondAlert: false,
         waitingForContinue: false,
-        mastered: new Set()
+        mastered: new Set(),
+        answer: "",
+        launchTimeout: null
       };
 
       function setupFullscreen() {
@@ -803,7 +874,8 @@
           order: configuration.order,
           questionTypes: [...configuration.questionTypes],
           total: configuration.total,
-          duration: configuration.duration
+          duration: configuration.duration,
+          testLevel: configuration.testLevel
         });
       }
 
@@ -832,36 +904,34 @@
       }
 
       function show(name) {
-        ["intro", "play", "result"].forEach(id => { $(id).hidden = id !== name; });
-        document.body.classList.toggle("challenge-playing", name === "play");
+        ["intro", "launch", "play", "result"].forEach(id => { $(id).hidden = id !== name; });
+        document.body.classList.toggle("challenge-playing", name === "play" || name === "launch");
         if (name === "intro") syncControls();
+        document.body.classList.toggle("settings-open", name === "intro" && Boolean(configuration.mode));
         window.scrollTo({top: 0, behavior: "auto"});
-        if (name === "intro") $("intro-title").focus?.({preventScroll: true});
+        if (name === "intro") (configuration.mode ? $("settings-title") : $("intro-title")).focus?.({preventScroll: true});
         if (name === "result") $("result-title").focus?.({preventScroll: true});
       }
 
       const MODE_COPY = Object.freeze({
         learn: {
           title: "Choisis une table",
-          intro: "Tu verras ses dix produits. Une erreur sera corrigée tout de suite et le calcul reviendra.",
           start: "Commencer à apprendre"
         },
         train: {
           title: "Choisis tes tables",
-          intro: "L’application préparera 20 produits sans limite de temps. Ton temps apparaîtra seulement à la fin.",
           start: "Commencer à m’entraîner"
         },
         test: {
-          title: "Choisis les tables à tester",
-          intro: "L’application préparera 25 produits à résoudre en une minute.",
-          start: "Commencer le test"
+          title: "Choisis tes tables",
+          start: "Commencer"
         },
         custom: {
-          title: "Règle ton entraînement",
-          intro: "Choisis les tables, les formes de questions, la longueur et le temps.",
+          title: "Je choisis tout",
           start: "Commencer"
         },
         evaluation: {
+          title: "Évaluation CM1",
           start: "Commencer l’évaluation CM1"
         }
       });
@@ -875,7 +945,20 @@
         configuration.questionTypes = new Set(preset.questionTypes.filter(type => type !== "evaluation"));
         configuration.total = preset.total;
         configuration.duration = preset.duration;
+        configuration.testLevel = preset.testLevel || 1;
         syncControls();
+        window.scrollTo({top: 0, behavior: "auto"});
+        $("settings-title").focus?.({preventScroll: true});
+      }
+
+      function backToModes() {
+        configuration.mode = null;
+        configuration.tables = new Set();
+        state.running = false;
+        stopTimer();
+        show("intro");
+        window.scrollTo({top: 0, behavior: "auto"});
+        $("intro-title").focus?.({preventScroll: true});
       }
 
       function syncControls() {
@@ -891,17 +974,18 @@
           && (!needsTables || configuration.tables.size > 0)
           && (configuration.mode === "evaluation" || configuration.questionTypes.size > 0);
         const copy = MODE_COPY[configuration.mode];
+        $("mode-screen").hidden = hasMode;
+        $("settings-screen").hidden = !hasMode;
+        document.body.classList.toggle("settings-open", hasMode && !$("intro").hidden);
         $("settings-panel").hidden = !needsTables;
         $("order-settings").hidden = configuration.mode !== "learn";
         $("question-settings").hidden = configuration.mode !== "custom";
+        $("test-level-settings").hidden = configuration.mode !== "test";
         $("count-settings").hidden = configuration.mode !== "custom";
-        $("time-settings").hidden = configuration.mode !== "custom";
+        $("time-settings").hidden = configuration.mode !== "custom" && configuration.mode !== "test";
+        $("no-timer-option").hidden = configuration.mode === "test";
         $("all-tables").hidden = configuration.mode === "learn";
         if (copy?.title) $("settings-title").textContent = copy.title;
-        if (copy?.intro) $("settings-intro").textContent = copy.intro;
-        $("table-help").textContent = configuration.mode === "learn"
-          ? "Choisis une seule table."
-          : "Choisis une table ou touches-en plusieurs pour les mélanger.";
 
         const allSelected = configuration.tables.size === ALL_TABLES.length;
         const allButton = document.querySelector("[data-all-tables]");
@@ -923,6 +1007,11 @@
           button.classList.toggle("is-selected", selected);
           button.setAttribute("aria-pressed", String(selected));
         });
+        document.querySelectorAll("[data-test-level]").forEach(button => {
+          const selected = Number(button.dataset.testLevel) === configuration.testLevel;
+          button.classList.toggle("is-selected", selected);
+          button.setAttribute("aria-pressed", String(selected));
+        });
         document.querySelectorAll("[data-total]").forEach(button => {
           const selected = Number(button.dataset.total) === configuration.total;
           button.classList.toggle("is-selected", selected);
@@ -935,11 +1024,28 @@
           button.setAttribute("aria-pressed", String(selected));
         });
 
-        $("config-summary").hidden = !valid;
-        if (valid) $("config-summary").textContent = configurationLabel(captureConfiguration());
-        $("selection-error").hidden = !needsTables || configuration.tables.size > 0;
         $("start").disabled = !valid;
-        $("start").textContent = copy?.start || "Choisis un parcours";
+        $("start").textContent = copy?.start || "Commencer";
+      }
+
+      function renderInlineAnswer(status = "") {
+        const slot = $("inline-answer");
+        if (!slot) return;
+        slot.textContent = state.answer || "\u00a0";
+        slot.className = `inline-answer${status ? ` ${status}` : ""}`;
+        slot.setAttribute("aria-label", state.answer ? `Réponse ${state.answer}` : "Réponse à saisir");
+      }
+
+      function renderExpression(question) {
+        const [before, ...afterParts] = question.prompt.split("?");
+        const slot = document.createElement("span");
+        slot.id = "inline-answer";
+        slot.className = "inline-answer";
+        slot.setAttribute("role", "textbox");
+        slot.setAttribute("aria-readonly", "true");
+        const after = afterParts.join("?");
+        $("expression").replaceChildren(document.createTextNode(before), slot, document.createTextNode(after));
+        renderInlineAnswer();
       }
 
       function renderQuestion() {
@@ -951,59 +1057,67 @@
           $("question-count").textContent = `${state.index + 1} / ${TOTAL}`;
           $("progress").style.width = `${state.index / TOTAL * 100}%`;
         }
-        $("question-kind").textContent = question.kind;
-        $("expression").textContent = question.prompt;
-        $("answer").value = "";
+        state.answer = "";
+        renderExpression(question);
         clearAnswerFeedback();
-        clearAnswerError();
         $("question-card").scrollTop = 0;
         $("expression").focus?.({preventScroll: true});
       }
 
       function setAnswerControlsEnabled(enabled) {
         document.querySelectorAll("[data-key]").forEach(button => { button.disabled = !enabled; });
-        $("skip").hidden = !enabled;
+        $("skip").disabled = !enabled;
+        $("skip").style.visibility = enabled ? "" : "hidden";
         $("validate").textContent = enabled ? "Valider" : "Continuer";
       }
 
       function clearAnswerFeedback() {
         state.waitingForContinue = false;
-        $("answer-feedback").hidden = true;
         $("answer-feedback").textContent = "";
         $("answer-feedback").className = "answer-feedback";
         setAnswerControlsEnabled(true);
+        renderInlineAnswer();
       }
 
-      function showAnswerFeedback(question, correct) {
+      function showAnswerFeedback(question, correct, given) {
         state.waitingForContinue = true;
         const feedback = $("answer-feedback");
-        feedback.hidden = false;
         feedback.className = `answer-feedback ${correct ? "is-correct" : "is-wrong"}`;
-        feedback.textContent = correct
-          ? `Oui : ${CORE.solvedPrompt(question)}.`
-          : `À retenir : ${CORE.solvedPrompt(question)}. Ce calcul reviendra.`;
+        if (correct) {
+          renderInlineAnswer("is-correct");
+          feedback.textContent = "Bravo !";
+        } else {
+          state.answer = String(question.answer);
+          renderInlineAnswer("is-corrected");
+          feedback.textContent = given === null
+            ? "Pas de réponse. Le calcul reviendra."
+            : `Ta réponse : ${given}. Le calcul reviendra.`;
+        }
         setAnswerControlsEnabled(false);
         $("validate").focus?.({preventScroll: true});
       }
 
       function clearAnswerError() {
-        $("answer").classList.remove("invalid");
-        $("answer").setAttribute("aria-invalid", "false");
-        $("answer-error").classList.remove("is-visible");
-        $("answer-error").setAttribute("aria-hidden", "true");
+        const slot = $("inline-answer");
+        slot?.classList.remove("is-invalid");
+        if (!state.waitingForContinue) {
+          $("answer-feedback").textContent = "";
+          $("answer-feedback").className = "answer-feedback";
+        }
       }
 
       function showAnswerError() {
-        $("answer").classList.add("invalid");
-        $("answer").setAttribute("aria-invalid", "true");
-        $("answer-error").classList.add("is-visible");
-        $("answer-error").setAttribute("aria-hidden", "false");
-        $("answer").focus?.({preventScroll: true});
+        $("inline-answer")?.classList.add("is-invalid");
+        $("answer-feedback").className = "answer-feedback is-wrong";
+        $("answer-feedback").textContent = "Écris une réponse ou choisis « Passer ».";
+        $("expression").focus?.({preventScroll: true});
       }
 
       function stopTimer() {
         if (state.timer !== null) window.clearInterval(state.timer);
         state.timer = null;
+        if (state.launchTimeout !== null) window.clearTimeout(state.launchTimeout);
+        state.launchTimeout = null;
       }
 
       function corrections() {
@@ -1111,6 +1225,36 @@
         if (!remaining) finish();
       }
 
+      function shortTablesLabel(config) {
+        if (config.tables.length === ALL_TABLES.length) return "Toutes les tables";
+        if (config.tables.length === 1) return `Table de ${config.tables[0]}`;
+        return `Tables ${config.tables.join(", ")}`;
+      }
+
+      function launchLabel(config) {
+        if (config.mode === "evaluation") return "Évaluation CM1 · 25 questions · 1 minute";
+        const tables = shortTablesLabel(config);
+        if (config.mode === "learn") return `${tables} · ${config.order === "ordered" ? "dans l’ordre" : "dans le désordre"}`;
+        if (config.mode === "train") return `${tables} · 20 questions`;
+        if (config.mode === "test") return `${tables} · niveau ${config.testLevel} · ${CORE.durationLabel(config.duration)}`;
+        return `${tables} · ${config.total} questions · ${CORE.durationLabel(config.duration)}`;
+      }
+
+      function beginRound() {
+        state.launchTimeout = null;
+        state.running = true;
+        state.startAt = Date.now();
+        state.endAt = DURATION === null ? 0 : state.startAt + DURATION * 1000;
+        $("time").textContent = DURATION === null ? "À ton rythme" : formatTime(DURATION);
+        $("time").classList.toggle("no-timer", DURATION === null);
+        $("time").classList.remove("urgent");
+        $("time").setAttribute("aria-label", DURATION === null ? "Sans chronomètre" : "Temps restant");
+        $("timer-alert").textContent = "";
+        show("play");
+        renderQuestion();
+        if (DURATION !== null) state.timer = window.setInterval(updateTimer, 200);
+      }
+
       function start() {
         stopTimer();
         const config = captureConfiguration();
@@ -1133,20 +1277,14 @@
         state.index = 0;
         state.correct = 0;
         state.answered = 0;
-        state.running = true;
+        state.running = false;
         state.tenSecondAlert = false;
         state.waitingForContinue = false;
         state.mastered = new Set();
-        state.startAt = Date.now();
-        state.endAt = DURATION === null ? 0 : state.startAt + DURATION * 1000;
-        $("time").textContent = DURATION === null ? "À ton rythme" : formatTime(DURATION);
-        $("time").classList.toggle("no-timer", DURATION === null);
-        $("time").classList.remove("urgent");
-        $("time").setAttribute("aria-label", DURATION === null ? "Sans chronomètre" : "Temps restant");
-        $("timer-alert").textContent = "";
-        show("play");
-        renderQuestion();
-        if (DURATION !== null) state.timer = window.setInterval(updateTimer, 200);
+        state.answer = "";
+        $("launch-summary").textContent = launchLabel(config);
+        show("launch");
+        state.launchTimeout = window.setTimeout(beginRound, 700);
       }
 
       function returnToMenu() {
@@ -1169,7 +1307,7 @@
           advanceAfterResponse();
           return;
         }
-        const value = $("answer").value;
+        const value = state.answer;
         if (!skip && !/^\d+$/.test(value)) {
           showAnswerError();
           return;
@@ -1191,15 +1329,16 @@
             const alreadyWaiting = state.questions.slice(state.index + 1).some(candidate => candidate.factKey === question.factKey);
             if (!alreadyWaiting) state.questions.push({...question, retry: true});
           }
-          showAnswerFeedback(question, correct);
+          showAnswerFeedback(question, correct, skip ? null : value);
           return;
         }
         advanceAfterResponse();
       }
 
       function enterDigit(digit) {
-        if (!state.running || state.waitingForContinue || $("answer").value.length >= 6) return;
-        $("answer").value += digit;
+        if (!state.running || state.waitingForContinue || state.answer.length >= 6) return;
+        state.answer += digit;
+        renderInlineAnswer();
         clearAnswerError();
       }
 
@@ -1231,6 +1370,10 @@
         else configuration.questionTypes.add(type);
         syncControls();
       }));
+      document.querySelectorAll("[data-test-level]").forEach(button => button.addEventListener("click", () => {
+        configuration.testLevel = Number(button.dataset.testLevel);
+        syncControls();
+      }));
       document.querySelectorAll("[data-total]").forEach(button => button.addEventListener("click", () => {
         configuration.total = Number(button.dataset.total);
         syncControls();
@@ -1242,9 +1385,10 @@
 
       document.querySelectorAll("[data-key]").forEach(button => button.addEventListener("click", () => {
         const key = button.dataset.key;
-        if (key === "clear") $("answer").value = "";
-        else if (key === "backspace") $("answer").value = $("answer").value.slice(0, -1);
+        if (key === "clear") state.answer = "";
+        else if (key === "backspace") state.answer = state.answer.slice(0, -1);
         else enterDigit(key);
+        renderInlineAnswer();
         clearAnswerError();
       }));
       $("validate").addEventListener("click", () => next(false));
@@ -1252,16 +1396,19 @@
       $("start").addEventListener("click", start);
       $("retry").addEventListener("click", start);
       $("game-menu").addEventListener("click", returnToMenu);
-      $("change-settings").addEventListener("click", () => show("intro"));
+      $("back-to-modes").addEventListener("click", backToModes);
+      $("change-settings").addEventListener("click", backToModes);
       setupFullscreen();
       document.addEventListener("keydown", event => {
         if (!state.running) return;
         if (/^\d$/.test(event.key)) enterDigit(event.key);
         else if (event.key === "Backspace") {
-          $("answer").value = $("answer").value.slice(0, -1);
+          state.answer = state.answer.slice(0, -1);
+          renderInlineAnswer();
           clearAnswerError();
         } else if (event.key === "Delete" || event.key === "Escape") {
-          $("answer").value = "";
+          state.answer = "";
+          renderInlineAnswer();
           clearAnswerError();
         }
         else if (event.key === "Enter") next(false);

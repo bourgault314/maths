@@ -183,7 +183,7 @@ test("le pied public disparaît pendant chaque défi chronométré", () => {
     "outils/calcul_mental/defi_calcul.html"
   ]) {
     const html = pages[path];
-    assert.match(html, /document\.body\.classList\.toggle\("challenge-playing", name === "play"\)/, path);
+    assert.match(html, /document\.body\.classList\.toggle\("challenge-playing", name === "play"(?: \|\| name === "launch")?\)/, path);
     assert.match(html, /body\.challenge-playing \.site-footer[\s\S]*display:\s*none/, path);
   }
 });

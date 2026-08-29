@@ -8,11 +8,12 @@
   const ALL_TABLES = Object.freeze(Array.from({length: 10}, (_, index) => index + 1));
   const CORE_TABLES = Object.freeze(Array.from({length: 8}, (_, index) => index + 2));
   const MISSING_FORMS = Object.freeze(["right", "left", "reverse-right", "reverse-left"]);
+  const DIVISION_FORMS = Object.freeze(["division-quotient", "division-dividend", "division-divisor"]);
   const MODES = Object.freeze(["learn", "train", "test", "evaluation", "custom"]);
   const PRESETS = Object.freeze({
     learn: Object.freeze({total: 10, duration: null, questionTypes: Object.freeze(["direct"]), selection: "single", order: "ordered"}),
     train: Object.freeze({total: 20, duration: null, questionTypes: Object.freeze(["direct"]), selection: "multiple", order: "random"}),
-    test: Object.freeze({total: 25, duration: 60, questionTypes: Object.freeze(["direct"]), selection: "multiple", order: "random"}),
+    test: Object.freeze({total: 25, duration: 120, questionTypes: Object.freeze(["direct"]), selection: "multiple", order: "random", testLevel: 1}),
     evaluation: Object.freeze({total: 25, duration: 60, questionTypes: Object.freeze(["evaluation"]), selection: "automatic", order: "random"}),
     custom: Object.freeze({total: 20, duration: null, questionTypes: Object.freeze(["direct"]), selection: "multiple", order: "random"})
   });
@@ -39,13 +40,16 @@
 
   function tableQuestion(type, first, second) {
     const product = first * second;
-    const base = {type, first, second, product, factKey: `${Math.min(first, second)}-${Math.max(first, second)}`};
-    if (type === "direct") return {...base, kind: "Trouver le résultat", prompt: `${first} × ${second} = ?`, answer: product};
-    if (type === "division") return {...base, kind: "Trouver le quotient", prompt: `${product} ÷ ${first} = ?`, answer: second};
-    if (type === "right") return {...base, kind: "Trouver le nombre manquant", prompt: `${first} × ? = ${product}`, answer: second};
-    if (type === "left") return {...base, kind: "Trouver le nombre manquant", prompt: `? × ${second} = ${product}`, answer: first};
-    if (type === "reverse-right") return {...base, kind: "Trouver le nombre manquant", prompt: `${product} = ${first} × ?`, answer: second};
-    return {...base, kind: "Trouver le nombre manquant", prompt: `${product} = ? × ${second}`, answer: first};
+    const category = type === "direct" ? "direct" : DIVISION_FORMS.includes(type) ? "division" : "missing";
+    const base = {type, category, first, second, product, factKey: `${Math.min(first, second)}-${Math.max(first, second)}`};
+    if (type === "direct") return {...base, prompt: `${first} × ${second} = ?`, answer: product};
+    if (type === "division-quotient") return {...base, prompt: `${product} ÷ ${first} = ?`, answer: second};
+    if (type === "division-dividend") return {...base, prompt: `? ÷ ${first} = ${second}`, answer: product};
+    if (type === "division-divisor") return {...base, prompt: `${product} ÷ ? = ${second}`, answer: first};
+    if (type === "right") return {...base, prompt: `${first} × ? = ${product}`, answer: second};
+    if (type === "left") return {...base, prompt: `? × ${second} = ${product}`, answer: first};
+    if (type === "reverse-right") return {...base, prompt: `${product} = ${first} × ?`, answer: second};
+    return {...base, prompt: `${product} = ? × ${second}`, answer: first};
   }
 
   function normalizedTables(tables) {
@@ -57,7 +61,7 @@
 
   function normalizeConfiguration(input = {}) {
     const mode = MODES.includes(input.mode) ? input.mode : null;
-    if (!mode) return {mode: null, tables: [], order: "ordered", questionTypes: ["direct"], total: 20, duration: null};
+    if (!mode) return {mode: null, tables: [], order: "ordered", questionTypes: ["direct"], total: 20, duration: null, testLevel: 1};
     const preset = PRESETS[mode];
     const tables = mode === "evaluation" ? [...ALL_TABLES] : normalizedTables(input.tables);
     const order = input.order === "random" ? "random" : preset.order;
@@ -72,13 +76,21 @@
       .filter(type => ["direct", "missing", "division"].includes(type));
     const total = [10, 20, 25].includes(Number(input.total)) ? Number(input.total) : preset.total;
     const duration = [null, 60, 120, 180].includes(input.duration) ? input.duration : preset.duration;
+    const testDuration = [60, 120, 180].includes(Number(input.duration)) ? Number(input.duration) : preset.duration;
+    const testLevel = [1, 2, 3].includes(Number(input.testLevel)) ? Number(input.testLevel) : (preset.testLevel || 1);
+    const testQuestionTypes = testLevel === 1
+      ? ["direct"]
+      : testLevel === 2
+        ? ["direct", "missing"]
+        : ["direct", "missing", "division"];
     return {
       mode,
       tables,
       order: mode === "learn" ? order : preset.order,
-      questionTypes: mode === "custom" && questionTypes.length ? questionTypes : [...preset.questionTypes],
+      questionTypes: mode === "test" ? testQuestionTypes : mode === "custom" && questionTypes.length ? questionTypes : [...preset.questionTypes],
       total: mode === "custom" ? total : preset.total,
-      duration: mode === "custom" ? duration : preset.duration
+      duration: mode === "test" ? testDuration : mode === "custom" ? duration : preset.duration,
+      testLevel
     };
   }
 
@@ -143,9 +155,16 @@
   function questionTypePlan(questionTypes, total, random = Math.random) {
     const categories = shuffle(balancedSequence(questionTypes, total, random), random);
     const missingCount = categories.filter(type => type === "missing").length;
+    const divisionCount = categories.filter(type => type === "division").length;
     const missingForms = balancedSequence(MISSING_FORMS, missingCount, random);
+    const divisionForms = balancedSequence(DIVISION_FORMS, divisionCount, random);
     let missingIndex = 0;
-    return categories.map(type => type === "missing" ? missingForms[missingIndex++] : type);
+    let divisionIndex = 0;
+    return categories.map(type => {
+      if (type === "missing") return missingForms[missingIndex++];
+      if (type === "division") return divisionForms[divisionIndex++];
+      return type;
+    });
   }
 
   function generatePracticeQuestions(config, random = Math.random) {
@@ -162,7 +181,7 @@
       const type = typePlan[index];
       let first = focusTable;
       let second = multiplier;
-      if (type === "division") return {...tableQuestion(type, focusTable, multiplier), focusTable, multiplier};
+      if (DIVISION_FORMS.includes(type)) return {...tableQuestion(type, focusTable, multiplier), focusTable, multiplier};
       if (type === "direct" && directSides[index] === "focus-second") [first, second] = [multiplier, focusTable];
       if (type === "left" || type === "reverse-left") [first, second] = [multiplier, focusTable];
       return {...tableQuestion(type, first, second), focusTable, multiplier};
@@ -201,11 +220,12 @@
     const modeLabels = {
       learn: "J’apprends",
       train: "Je m’entraîne",
-      test: "Je me teste",
-      custom: "Réglage libre"
+      test: "Je deviens expert",
+      custom: "Réglages"
     };
     const details = [modeLabels[normalized.mode], tablesLabel(normalized.tables)];
     if (normalized.mode === "learn") details.push(normalized.order === "ordered" ? "dans l’ordre" : "dans le désordre");
+    if (normalized.mode === "test") details.push(`niveau ${normalized.testLevel}`);
     if (normalized.mode === "custom") {
       const labels = {direct: "produits", missing: "nombres manquants", division: "divisions"};
       details.push(normalized.questionTypes.map(type => labels[type]).join(" + "));
@@ -222,7 +242,8 @@
       normalized.order,
       normalized.questionTypes.join("-"),
       normalized.total,
-      normalized.duration ?? "none"
+      normalized.duration ?? "none",
+      normalized.testLevel
     ].join("|");
   }
 
