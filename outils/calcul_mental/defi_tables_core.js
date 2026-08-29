@@ -6,12 +6,13 @@
   "use strict";
 
   const ALL_TABLES = Object.freeze(Array.from({length: 10}, (_, index) => index + 1));
+  const LEARN_MULTIPLIERS = Object.freeze(Array.from({length: 11}, (_, index) => index));
   const CORE_TABLES = Object.freeze(Array.from({length: 8}, (_, index) => index + 2));
   const MISSING_FORMS = Object.freeze(["right", "left", "reverse-right", "reverse-left"]);
   const DIVISION_FORMS = Object.freeze(["division-quotient", "division-dividend", "division-divisor"]);
   const MODES = Object.freeze(["learn", "train", "test", "evaluation", "custom"]);
   const PRESETS = Object.freeze({
-    learn: Object.freeze({total: 10, duration: null, questionTypes: Object.freeze(["direct"]), selection: "single", order: "ordered"}),
+    learn: Object.freeze({total: 11, duration: null, questionTypes: Object.freeze(["direct"]), selection: "single", order: "ordered"}),
     train: Object.freeze({total: 20, duration: null, questionTypes: Object.freeze(["direct"]), selection: "multiple", order: "random"}),
     test: Object.freeze({total: 25, duration: 120, questionTypes: Object.freeze(["direct"]), selection: "multiple", order: "random", testLevel: 1}),
     evaluation: Object.freeze({total: 25, duration: 60, questionTypes: Object.freeze(["evaluation"]), selection: "automatic", order: "random"}),
@@ -148,7 +149,7 @@
     const normalized = normalizeConfiguration({...config, mode: "learn"});
     if (normalized.tables.length !== 1) throw new Error("Le parcours J’apprends nécessite exactement une table.");
     const table = normalized.tables[0];
-    const multipliers = normalized.order === "ordered" ? [...ALL_TABLES] : shuffle(ALL_TABLES, random);
+    const multipliers = normalized.order === "ordered" ? [...LEARN_MULTIPLIERS] : shuffle(LEARN_MULTIPLIERS, random);
     return multipliers.map(multiplier => ({...tableQuestion("direct", table, multiplier), focusTable: table, multiplier}));
   }
 
@@ -253,6 +254,7 @@
 
   return Object.freeze({
     ALL_TABLES,
+    LEARN_MULTIPLIERS,
     PRESETS,
     normalizeConfiguration,
     generateEvaluationQuestions,

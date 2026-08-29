@@ -63,6 +63,8 @@
       outline-offset: 3px;
     }
 
+    h1[tabindex="-1"]:focus { outline: none; }
+
     .shell { width: min(850px, calc(100% - 28px)); margin: auto; padding-bottom: 30px; }
     .topbar {
       min-height: 70px;
@@ -293,6 +295,7 @@
     .time-options { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
     .order-options { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .time-options { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    .time-options.is-timed-only { grid-template-columns: repeat(3, minmax(0, 1fr)); }
     .type-button {
       min-height: 58px;
       padding: 10px;
@@ -439,6 +442,20 @@
     }
     .answer-feedback.is-correct { color: var(--green); background: var(--green-soft); }
     .answer-feedback.is-wrong { color: var(--red); background: var(--red-soft); }
+    .learn-sequence {
+      min-height: 50px;
+      display: grid;
+      place-items: center;
+      margin: 0 auto 6px;
+      padding: 8px 12px;
+      border: 2px solid #cfe2ed;
+      border-radius: 13px;
+      color: #075b55;
+      background: #f2fbf9;
+      font-size: clamp(1rem, 4vw, 1.25rem);
+      font-weight: 950;
+      line-height: 1.4;
+    }
     .keypad { max-width: 390px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 12px auto; }
     .keypad button {
       min-height: 49px;
@@ -452,9 +469,10 @@
     }
     .keypad button:disabled { opacity: .45; cursor: default; }
 
-    .launch-screen { min-height: 520px; display: grid; place-content: center; gap: 10px; text-align: center; }
-    .launch-screen strong { color: var(--blue); font-size: clamp(2.4rem, 8vw, 4.5rem); }
-    .launch-summary { margin: 0; color: var(--muted); font-size: clamp(1.05rem, 3vw, 1.35rem); font-weight: 900; }
+    .launch-screen { min-height: 520px; display: grid; place-content: center; justify-items: center; gap: 14px; text-align: center; }
+    .launch-heading { max-width: 620px; margin: 0; color: var(--blue); font-size: clamp(1.8rem, 6vw, 3.2rem); }
+    .launch-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-top: 8px; }
+    .launch-actions button { min-width: 150px; }
 
     .actions { display: flex; justify-content: center; gap: 9px; margin-top: 13px; }
     .actions button { min-width: 140px; }
@@ -464,6 +482,7 @@
     .corrections > p { margin: 6px 0 0; color: var(--muted); }
     .correction-list { display: grid; gap: 9px; margin: 14px 0 0; padding: 0; list-style: none; }
     .correction-list li { padding: 12px; border: 1px solid #efd5d5; border-radius: 13px; background: #fff; }
+    .correction-list li.is-correct { border-color: #b8dfc8; background: #f7fcf9; }
     .correction-list li > strong { display: block; margin-bottom: 8px; font-size: 1.12rem; }
     .correction-list li > div { display: flex; flex-wrap: wrap; gap: 7px; }
     .correction-list span { padding: 6px 9px; border-radius: 9px; font-weight: 850; }
@@ -549,6 +568,7 @@
       #test-level-settings .type-button { min-height: 68px; display: block; padding: 8px 5px; text-align: center; }
       #test-level-settings .type-button small { margin-top: 4px; text-align: center; }
       .time-options { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .time-options.is-timed-only { grid-template-columns: repeat(3, minmax(0, 1fr)); }
       .type-button { min-height: 52px; display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 9px; }
       .type-button small { margin: 0; text-align: right; }
       .question { min-height: 560px; padding: 19px 10px; }
@@ -567,6 +587,7 @@
       .challenge-playing .progress-track { height: 6px; margin: 4px 0 6px; }
       .challenge-playing .question { flex: 1; min-height: 0; display: flex; flex-direction: column; justify-content: flex-start; padding: 6px 10px 8px; overflow-y: auto; overscroll-behavior: contain; }
       .challenge-playing .expression { min-height: clamp(68px, 12dvh, 92px); margin: 3px 0 6px; padding: 7px; font-size: clamp(2rem, 9vw, 3.2rem); }
+      .challenge-playing .learn-sequence { min-height: 58px; margin-bottom: 3px; padding: 4px 8px; font-size: .95rem; }
       .challenge-playing .answer-feedback { min-height: 38px; margin-top: 3px; padding: 5px 8px; font-size: .86rem; }
       .challenge-playing .keypad { width: min(100%, 330px); gap: 5px; margin: 6px auto; }
       .challenge-playing .keypad button { min-height: 44px; height: 44px; }
@@ -701,7 +722,7 @@
           </fieldset>
           <fieldset id="time-settings" class="setting-group" hidden>
             <legend class="setting-title">Avec ou sans chrono&nbsp;?</legend>
-            <div class="time-options">
+            <div id="time-options" class="time-options">
               <button id="no-timer-option" class="type-button is-selected" type="button" data-duration="none" aria-pressed="true"><strong>Sans chrono</strong></button>
               <button class="type-button" type="button" data-duration="60" aria-pressed="false"><strong>1 min</strong></button>
               <button class="type-button" type="button" data-duration="120" aria-pressed="false"><strong>2 min</strong></button>
@@ -715,9 +736,13 @@
         </section>
       </div>
 
-      <div id="launch" class="launch-screen" hidden aria-live="polite">
-        <p id="launch-summary" class="launch-summary"></p>
-        <strong>C’est parti&nbsp;!</strong>
+      <div id="launch" class="launch-screen" hidden>
+        <p class="eyebrow">Tu as choisi</p>
+        <h1 id="launch-summary" class="launch-heading" tabindex="-1"></h1>
+        <div class="launch-actions">
+          <button id="launch-start" class="primary" type="button">C’est parti&nbsp;!</button>
+          <button id="launch-back" class="secondary" type="button">Modifier</button>
+        </div>
       </div>
 
       <div id="play" hidden>
@@ -732,6 +757,7 @@
         <div class="progress-track" aria-hidden="true"><b id="progress"></b></div>
         <article id="question-card" class="question">
           <div id="expression" class="expression" tabindex="-1" role="status" aria-live="polite" aria-atomic="true"></div>
+          <div id="learn-sequence" class="learn-sequence" hidden aria-live="polite"><span id="learn-sequence-values">…</span></div>
           <p id="answer-feedback" class="answer-feedback" role="status" aria-live="polite"></p>
           <div class="keypad" role="group" aria-label="Clavier numérique">
             <button type="button" data-key="1">1</button><button type="button" data-key="2">2</button><button type="button" data-key="3">3</button>
@@ -808,8 +834,9 @@
         tenSecondAlert: false,
         waitingForContinue: false,
         mastered: new Set(),
+        revealedLearnResults: new Set(),
         answer: "",
-        launchTimeout: null
+        launchReady: false
       };
 
       function setupFullscreen() {
@@ -910,6 +937,7 @@
         document.body.classList.toggle("settings-open", name === "intro" && Boolean(configuration.mode));
         window.scrollTo({top: 0, behavior: "auto"});
         if (name === "intro") (configuration.mode ? $("settings-title") : $("intro-title")).focus?.({preventScroll: true});
+        if (name === "launch") $("launch-summary").focus?.({preventScroll: true});
         if (name === "result") $("result-title").focus?.({preventScroll: true});
       }
 
@@ -984,6 +1012,7 @@
         $("count-settings").hidden = configuration.mode !== "custom";
         $("time-settings").hidden = configuration.mode !== "custom" && configuration.mode !== "test";
         $("no-timer-option").hidden = configuration.mode === "test";
+        $("time-options").classList.toggle("is-timed-only", configuration.mode === "test");
         $("all-tables").hidden = configuration.mode === "learn";
         if (copy?.title) $("settings-title").textContent = copy.title;
 
@@ -1048,6 +1077,22 @@
         renderInlineAnswer();
       }
 
+      function renderLearnSequence() {
+        const zone = $("learn-sequence");
+        const values = $("learn-sequence-values");
+        const visible = state.configuration?.mode === "learn" && state.configuration.order === "ordered";
+        zone.hidden = !visible;
+        if (!visible) return;
+        const table = state.configuration.tables[0];
+        const results = [...state.revealedLearnResults]
+          .sort((first, second) => first - second)
+          .map(multiplier => table * multiplier);
+        values.textContent = results.length ? results.join(" · ") : "…";
+        zone.setAttribute("aria-label", results.length
+          ? `Résultats déjà rencontrés : ${results.join(", ")}`
+          : "Les résultats apparaîtront ici");
+      }
+
       function renderQuestion() {
         const question = state.questions[state.index];
         if (state.configuration.mode === "learn") {
@@ -1059,6 +1104,7 @@
         }
         state.answer = "";
         renderExpression(question);
+        renderLearnSequence();
         clearAnswerFeedback();
         $("question-card").scrollTop = 0;
         $("expression").focus?.({preventScroll: true});
@@ -1068,7 +1114,7 @@
         document.querySelectorAll("[data-key]").forEach(button => { button.disabled = !enabled; });
         $("skip").disabled = !enabled;
         $("skip").style.visibility = enabled ? "" : "hidden";
-        $("validate").textContent = enabled ? "Valider" : "Continuer";
+        $("validate").textContent = enabled ? "Valider" : "Suivant";
       }
 
       function clearAnswerFeedback() {
@@ -1079,7 +1125,7 @@
         renderInlineAnswer();
       }
 
-      function showAnswerFeedback(question, correct, given) {
+      function showAnswerFeedback(question, correct, given, willRetry = false) {
         state.waitingForContinue = true;
         const feedback = $("answer-feedback");
         feedback.className = `answer-feedback ${correct ? "is-correct" : "is-wrong"}`;
@@ -1090,8 +1136,8 @@
           state.answer = String(question.answer);
           renderInlineAnswer("is-corrected");
           feedback.textContent = given === null
-            ? "Pas de réponse. Le calcul reviendra."
-            : `Ta réponse : ${given}. Le calcul reviendra.`;
+            ? `Pas de réponse. Bonne réponse : ${question.answer}.${willRetry ? " Le calcul reviendra." : ""}`
+            : `Ta réponse : ${given}. Bonne réponse : ${question.answer}.${willRetry ? " Le calcul reviendra." : ""}`;
         }
         setAnswerControlsEnabled(false);
         $("validate").focus?.({preventScroll: true});
@@ -1116,8 +1162,6 @@
       function stopTimer() {
         if (state.timer !== null) window.clearInterval(state.timer);
         state.timer = null;
-        if (state.launchTimeout !== null) window.clearTimeout(state.launchTimeout);
-        state.launchTimeout = null;
       }
 
       function corrections() {
@@ -1127,51 +1171,75 @@
             number: index + 1,
             prompt: state.questions[index].prompt,
             given: response.skipped ? "Pas de réponse" : String(response.value),
-            expected: String(state.questions[index].answer)
+            expected: String(state.questions[index].answer),
+            correct: false
+          }];
+        });
+      }
+
+      function answeredQuestions() {
+        return state.responses.flatMap((response, index) => {
+          if (!response) return [];
+          return [{
+            number: index + 1,
+            prompt: state.questions[index].prompt,
+            given: response.skipped ? "Pas de réponse" : String(response.value),
+            expected: String(state.questions[index].answer),
+            correct: response.correct
           }];
         });
       }
 
       function renderCorrections() {
         const zone = $("corrections");
-        const mistakes = corrections();
+        const completeReview = state.configuration.mode === "test";
+        const entries = completeReview ? answeredQuestions() : corrections();
         zone.replaceChildren();
         const title = document.createElement("h2");
-        title.textContent = mistakes.length ? "Tes corrections" : "Aucune erreur à corriger";
+        title.textContent = completeReview ? "Bilan de tes réponses" : entries.length ? "Tes corrections" : "Aucune erreur à corriger";
         zone.append(title);
-        if (!mistakes.length) {
+        if (!entries.length) {
           const message = document.createElement("p");
-          message.textContent = "Toutes les réponses que tu as données sont justes.";
+          message.textContent = completeReview
+            ? "Aucune réponse n’a été validée avant la fin du temps."
+            : "Toutes les réponses que tu as données sont justes.";
           zone.append(message);
           return;
         }
-        const intro = document.createElement("p");
-        intro.textContent = "Regarde les calculs à reprendre avant de lancer une nouvelle série.";
         const list = document.createElement("ol");
         list.className = "correction-list";
-        mistakes.forEach(mistake => {
+        entries.forEach(entry => {
           const item = document.createElement("li");
+          item.classList.toggle("is-correct", entry.correct);
           const expression = document.createElement("strong");
-          expression.textContent = `${mistake.number}. ${mistake.prompt}`;
+          expression.textContent = `${entry.number}. ${entry.prompt}`;
           const answers = document.createElement("div");
           const given = document.createElement("span");
-          given.className = "given-answer";
-          given.textContent = `Ta réponse : ${mistake.given}`;
-          const expected = document.createElement("span");
-          expected.className = "expected-answer";
-          expected.textContent = `Réponse attendue : ${mistake.expected}`;
-          answers.append(given, expected);
+          given.className = entry.correct ? "expected-answer" : "given-answer";
+          given.textContent = entry.correct ? `✓ ${entry.given}` : `Ta réponse : ${entry.given}`;
+          answers.append(given);
+          if (!entry.correct) {
+            const expected = document.createElement("span");
+            expected.className = "expected-answer";
+            expected.textContent = `Bonne réponse : ${entry.expected}`;
+            answers.append(expected);
+          }
           item.append(expression, answers);
           list.append(item);
         });
-        zone.append(intro, list);
+        if (!completeReview) {
+          const intro = document.createElement("p");
+          intro.textContent = "Regarde les calculs à reprendre avant de lancer une nouvelle série.";
+          zone.append(intro);
+        }
+        zone.append(list);
       }
 
       function scoreMessage(score, config) {
         if (config.mode === "learn") {
           return config.order === "ordered"
             ? "Rejoue maintenant dans le désordre pour mieux mémoriser cette table."
-            : "Tu as retrouvé les dix produits. Tu peux maintenant passer à l’entraînement.";
+            : "Tu as retrouvé les onze produits. Tu peux maintenant passer à l’entraînement.";
         }
         if (config.mode === "evaluation") {
           if (score >= 12) return "Les faits de tables sont déjà bien disponibles. Continue pour gagner encore en rapidité.";
@@ -1198,7 +1266,7 @@
         $("result-config").textContent = configurationLabel(state.configuration);
         const remaining = TOTAL - state.index;
         if (state.configuration.mode === "learn") {
-          $("result-detail").textContent = `Les 10 produits ont été retrouvés en ${state.responses.length} essai${state.responses.length > 1 ? "s" : ""} et ${formatElapsed(elapsed)}.`;
+          $("result-detail").textContent = `Les 11 produits ont été retrouvés en ${state.responses.length} essai${state.responses.length > 1 ? "s" : ""} et ${formatElapsed(elapsed)}.`;
         } else if (state.configuration.duration === null) {
           $("result-detail").textContent = `Tu as terminé les ${TOTAL} questions en ${formatElapsed(elapsed)}.`;
         } else {
@@ -1234,14 +1302,16 @@
       function launchLabel(config) {
         if (config.mode === "evaluation") return "Évaluation CM1 · 25 questions · 1 minute";
         const tables = shortTablesLabel(config);
-        if (config.mode === "learn") return `${tables} · ${config.order === "ordered" ? "dans l’ordre" : "dans le désordre"}`;
-        if (config.mode === "train") return `${tables} · 20 questions`;
-        if (config.mode === "test") return `${tables} · niveau ${config.testLevel} · ${CORE.durationLabel(config.duration)}`;
-        return `${tables} · ${config.total} questions · ${CORE.durationLabel(config.duration)}`;
+        if (config.mode === "learn") return `${tables} · ${config.order === "ordered" ? "dans l’ordre" : "dans le désordre"} · de ×0 à ×10`;
+        if (config.mode === "train") return `${tables} · 20 questions · sans chronomètre`;
+        if (config.mode === "test") return `${tables} · niveau ${config.testLevel} · 25 questions · ${CORE.durationLabel(config.duration)}`;
+        const questionLabels = {direct: "produits", missing: "trous", division: "divisions"};
+        return `${tables} · ${config.questionTypes.map(type => questionLabels[type]).join(" + ")} · ${config.total} questions · ${CORE.durationLabel(config.duration)}`;
       }
 
       function beginRound() {
-        state.launchTimeout = null;
+        if (!state.configuration || state.running || !state.launchReady) return;
+        state.launchReady = false;
         state.running = true;
         state.startAt = Date.now();
         state.endAt = DURATION === null ? 0 : state.startAt + DURATION * 1000;
@@ -1281,14 +1351,23 @@
         state.tenSecondAlert = false;
         state.waitingForContinue = false;
         state.mastered = new Set();
+        state.revealedLearnResults = new Set();
         state.answer = "";
+        state.launchReady = true;
         $("launch-summary").textContent = launchLabel(config);
         show("launch");
-        state.launchTimeout = window.setTimeout(beginRound, 700);
+      }
+
+      function cancelLaunch() {
+        state.launchReady = false;
+        state.running = false;
+        stopTimer();
+        show("intro");
       }
 
       function returnToMenu() {
-        if (!state.running) return;
+        if (!state.running && !state.launchReady) return;
+        state.launchReady = false;
         state.running = false;
         stopTimer();
         show("intro");
@@ -1329,6 +1408,14 @@
             const alreadyWaiting = state.questions.slice(state.index + 1).some(candidate => candidate.factKey === question.factKey);
             if (!alreadyWaiting) state.questions.push({...question, retry: true});
           }
+          if (state.configuration.order === "ordered") {
+            state.revealedLearnResults.add(question.multiplier);
+            renderLearnSequence();
+          }
+          showAnswerFeedback(question, correct, skip ? null : value, !correct);
+          return;
+        }
+        if (state.configuration.mode === "train") {
           showAnswerFeedback(question, correct, skip ? null : value);
           return;
         }
@@ -1394,6 +1481,8 @@
       $("validate").addEventListener("click", () => next(false));
       $("skip").addEventListener("click", () => next(true));
       $("start").addEventListener("click", start);
+      $("launch-start").addEventListener("click", beginRound);
+      $("launch-back").addEventListener("click", cancelLaunch);
       $("retry").addEventListener("click", start);
       $("game-menu").addEventListener("click", returnToMenu);
       $("back-to-modes").addEventListener("click", backToModes);

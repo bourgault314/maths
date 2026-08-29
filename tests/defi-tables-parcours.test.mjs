@@ -19,7 +19,7 @@ function seededRandom(seed = 123456789) {
 
 test("les cinq parcours gardent les réglages pédagogiques décidés", () => {
   assert.deepEqual(core.PRESETS.learn, {
-    total: 10,
+    total: 11,
     duration: null,
     questionTypes: ["direct"],
     selection: "single",
@@ -53,10 +53,10 @@ test("J’apprends travaille une seule table dans l’ordre ou le désordre", ()
   const ordered = core.generateQuestions({mode: "learn", tables: [9], order: "ordered"}, seededRandom());
   const random = core.generateQuestions({mode: "learn", tables: [9], order: "random"}, seededRandom());
 
-  assert.equal(ordered.length, 10);
-  assert.deepEqual(ordered.map(question => question.multiplier), [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
+  assert.equal(ordered.length, 11);
+  assert.deepEqual(ordered.map(question => question.multiplier), [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
   assert.ok(ordered.every(question => question.type === "direct" && question.focusTable === 9));
-  assert.deepEqual(random.map(question => question.multiplier).toSorted((a, b) => a - b), [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
+  assert.deepEqual(random.map(question => question.multiplier).toSorted((a, b) => a - b), [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
   assert.notDeepEqual(random.map(question => question.multiplier), ordered.map(question => question.multiplier));
   assert.throws(() => core.generateQuestions({mode: "learn", tables: [7, 9]}), /exactement une table/);
 });
@@ -71,6 +71,7 @@ test("Je m’entraîne propose 20 produits directs sans limite de temps", () => 
   assert.deepEqual(new Set(questions.map(question => question.focusTable)), new Set([6, 7]));
   assert.equal(questions.filter(question => question.focusTable === 6).length, 10);
   assert.equal(questions.filter(question => question.focusTable === 7).length, 10);
+  assert.ok(questions.every(question => question.multiplier >= 1));
 });
 
 test("Je deviens expert propose trois niveaux et une à trois minutes", () => {
@@ -131,6 +132,7 @@ test("le parcours CM1 conserve son mélange spécifique", () => {
   assert.equal(questions.length, 25);
   assert.equal(questions.filter(question => question.type !== "direct").length, 6);
   assert.ok(questions.every(question => question.type === "direct" || ["right", "left"].includes(question.type)));
+  assert.ok(questions.every(question => question.first >= 1 && question.second >= 1));
 });
 
 test("l’accueil compact distingue quatre choix principaux et l’évaluation CM1", () => {
@@ -158,6 +160,31 @@ test("la réponse s’affiche dans le calcul sans déplacer le clavier", () => {
   assert.doesNotMatch(html, /id="answer"/);
   assert.match(html, /\.answer-feedback \{[\s\S]*min-height:/);
   assert.match(html, /@media \(max-width: 620px\)[\s\S]*\.fullscreen-toggle \{ display: none; \}/);
+});
+
+test("le lancement attend un clic sur C’est parti et résume les réglages", () => {
+  assert.match(html, /id="launch-summary"/);
+  assert.match(html, /id="launch-start"[\s\S]*C’est parti/);
+  assert.match(html, /\$\("launch-start"\)\.addEventListener\("click", beginRound\)/);
+  assert.doesNotMatch(html, /setTimeout\(beginRound/);
+  assert.match(html, /de ×0 à ×10/);
+  assert.match(html, /niveau \$\{config\.testLevel\} · 25 questions/);
+});
+
+test("J’apprends affiche progressivement la suite et Je m’entraîne corrige immédiatement", () => {
+  assert.match(html, /id="learn-sequence"/);
+  assert.match(html, /state\.revealedLearnResults\.add\(question\.multiplier\)/);
+  assert.match(html, /state\.configuration\.order === "ordered"/);
+  assert.match(html, /state\.configuration\.mode === "train"\) \{[\s\S]*showAnswerFeedback/);
+  assert.match(html, /textContent = enabled \? "Valider" : "Suivant"/);
+  assert.match(html, /completeReview = state\.configuration\.mode === "test"/);
+  assert.match(html, /Bilan de tes réponses/);
+});
+
+test("les détails mobiles restent alignés et les titres programmatiquement ciblés n’affichent pas de cadre", () => {
+  assert.match(html, /h1\[tabindex="-1"\]:focus \{ outline: none; \}/);
+  assert.match(html, /\.time-options\.is-timed-only \{ grid-template-columns: repeat\(3/);
+  assert.match(html, /classList\.toggle\("is-timed-only", configuration\.mode === "test"\)/);
 });
 
 test("la fiche PDF est publique mais sa source modifiable n’est pas proposée aux élèves", () => {
