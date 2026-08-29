@@ -448,8 +448,9 @@
       margin: 5px 0 0;
     }
     .learn-instruction { margin: 0 0 7px; color: var(--teal); font-size: 1rem; font-weight: 950; text-align: center; }
+    .question.stick-trace .learn-sequence { margin-top: 20px; }
     .number-stick {
-      width: min(100%, 560px);
+      width: min(100%, 680px);
       display: grid;
       grid-template-columns: repeat(11, minmax(0, 1fr));
       margin: 0 auto;
@@ -463,14 +464,14 @@
     .number-stick-cell {
       position: relative;
       min-width: 0;
-      min-height: 36px;
+      min-height: 42px;
       display: grid;
       place-items: center;
       border: 1px solid #b9cfda;
       border-left: 0;
       color: #708596;
       background: #f8fbfd;
-      font-size: clamp(.62rem, 2.7vw, .94rem);
+      font-size: clamp(.7rem, 2.7vw, 1.05rem);
       font-weight: 950;
       line-height: 1;
     }
@@ -619,7 +620,7 @@
       .challenge-playing .expression { min-height: clamp(68px, 12dvh, 92px); margin: 3px 0 6px; padding: 7px; font-size: clamp(2rem, 9vw, 3.2rem); }
       .challenge-playing .learn-sequence { margin-top: 10px; }
       .challenge-playing .number-stick { padding: 2px; border-width: 2px; border-radius: 8px; }
-      .challenge-playing .number-stick-cell { min-height: 31px; font-size: clamp(.58rem, 2.75vw, .76rem); }
+      .challenge-playing .number-stick-cell { min-height: 40px; font-size: clamp(.68rem, 3vw, .9rem); }
       .challenge-playing .answer-feedback { min-height: 38px; margin-top: 3px; padding: 5px 8px; font-size: .86rem; }
       .challenge-playing .keypad { width: min(100%, 330px); gap: 5px; margin: 6px auto; }
       .challenge-playing .keypad button { min-height: 44px; height: 44px; }
@@ -834,7 +835,7 @@
     <button type="button" data-mathsgo-consent-open onclick="window.mathsgoConsentement &amp;&amp; window.mathsgoConsentement.ouvrir()">Gérer mes cookies</button>
   </footer>
 
-  <script src="./defi_tables_core.js?v=20260829-5"></script>
+  <script src="./defi_tables_core.js?v=20260829-6"></script>
   <script>
     (() => {
       "use strict";
@@ -1164,16 +1165,18 @@
       function renderLearnSequence() {
         const zone = $("learn-sequence");
         const visible = state.configuration?.mode === "learn";
+        const stickOnly = visible && ["construct", "gaps"].includes(state.configuration.learnActivity);
+        $("question-card").classList.toggle("stick-main", stickOnly);
+        $("question-card").classList.toggle("stick-trace", visible && !stickOnly);
         zone.hidden = !visible;
         $("question-card").classList.toggle("show-learn-sequence", visible);
         if (!visible) return;
         const table = state.configuration.tables[0];
         const question = state.questions[state.index];
-        const stickOnly = ["construct", "gaps"].includes(state.configuration.learnActivity);
         if (stickOnly) $("answer-feedback").before(zone);
         else $("question-card").append(zone);
         const stick = createNumberStick(table, state.revealedLearnResults, {
-          activeMultiplier: question?.multiplier,
+          activeMultiplier: stickOnly ? question?.multiplier : null,
           newMultiplier: state.lastRevealedLearnMultiplier,
           draftMultiplier: stickOnly ? question?.multiplier : null,
           draftValue: stickOnly ? state.answer : ""
@@ -1491,6 +1494,10 @@
         state.answer = "";
         state.launchReady = true;
         $("launch-summary").textContent = launchLabel(config);
+        if (config.mode === "learn") {
+          beginRound();
+          return;
+        }
         show("launch");
       }
 
