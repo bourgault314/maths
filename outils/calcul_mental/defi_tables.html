@@ -227,6 +227,148 @@
       box-shadow: inset 0 0 0 1px var(--blue);
     }
 
+    .mode-card-parcours {
+      grid-column: 1 / -1;
+      border-color: #9fd3cb;
+      background: linear-gradient(90deg, #e9f8f5, #fff 60%);
+    }
+    .mode-card-parcours strong { color: var(--teal); }
+
+    /* ---- Mon parcours ---- */
+    .parcours-screen { max-width: 720px; margin: 0 auto; }
+    .parcours-toolbar { position: relative; display: grid; place-items: center; min-height: 44px; padding: 0 86px; }
+    .parcours-more {
+      position: absolute;
+      right: 0;
+      top: 0;
+      width: 44px;
+      height: 44px;
+      border: 1px solid #bfd3df;
+      border-radius: 999px;
+      color: #31566c;
+      background: #fff;
+      font-size: 1.3rem;
+      font-weight: 900;
+      line-height: 1;
+      cursor: pointer;
+    }
+    .parcours-options { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; margin: 10px 0 0; }
+    .parcours-options button,
+    .parcours-name button,
+    .parcours-confirm button { min-height: 44px; }
+    .parcours-name,
+    .parcours-confirm {
+      margin: 14px 0 0;
+      padding: 14px;
+      border: 2px solid #cfe2ed;
+      border-radius: 16px;
+      background: #f8fcff;
+      text-align: center;
+    }
+    .parcours-name label { display: block; margin-bottom: 8px; color: var(--ink); font-weight: 950; }
+    .parcours-name-row { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
+    .parcours-name input {
+      min-height: 44px;
+      width: min(100%, 240px);
+      padding: 8px 12px;
+      border: 2px solid #bed3e0;
+      border-radius: 11px;
+      color: var(--ink);
+      font: inherit;
+      font-weight: 850;
+      text-align: center;
+    }
+    .parcours-name small { display: block; margin-top: 8px; color: var(--muted); }
+    .parcours-confirm p { margin: 0 0 10px; color: var(--ink); font-weight: 900; }
+    .parcours-confirm .danger { color: #fff; border: 0; background: var(--red); box-shadow: 0 4px 0 #7a1f1f; }
+    .parcours-next {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 10px;
+      margin: 14px 0 0;
+      padding: 12px 14px;
+      border-radius: 14px;
+      color: #31566c;
+      background: #eef8ff;
+      font-weight: 850;
+      text-align: left;
+    }
+    .parcours-next strong { display: block; color: var(--teal); font-size: .78rem; letter-spacing: .08em; text-transform: uppercase; }
+    .parcours-next .primary { min-height: 44px; padding: 8px 14px; }
+    .parcours-legend { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px 14px; margin: 12px 0 4px; color: var(--muted); font-size: .8rem; font-weight: 850; }
+    .parcours-legend .cell { width: 22px; height: 22px; min-height: 0; font-size: .8rem; pointer-events: none; }
+    .parcours-list { display: grid; gap: 8px; margin: 10px 0 0; padding: 0; list-style: none; }
+    .parcours-row {
+      padding: 10px 12px 11px;
+      border: 2px solid #d4e3ed;
+      border-radius: 16px;
+      background: #fff;
+      text-align: left;
+    }
+    .parcours-row.is-acquise { border-color: #b8dfc8; background: #f7fcf9; }
+    .parcours-row-head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; margin-bottom: 7px; }
+    .parcours-row-head strong { color: var(--ink); font-size: 1.05rem; }
+    .parcours-badge { padding: 3px 9px; border-radius: 999px; color: var(--green); background: var(--green-soft); font-size: .78rem; font-weight: 950; }
+    .parcours-badge.is-pending { color: var(--muted); background: #eef3f7; }
+    .parcours-badge:empty { display: none; }
+    .parcours-badge { white-space: nowrap; }
+    .parcours-cells {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr)) 8px repeat(3, minmax(0, 1fr)) 8px minmax(56px, 1.35fr);
+      gap: 4px;
+      align-items: center;
+    }
+    .parcours-group-label { grid-column: span 4; overflow: hidden; color: var(--muted); font-size: .68rem; font-weight: 900; letter-spacing: .04em; text-align: center; text-transform: uppercase; white-space: nowrap; }
+    .parcours-group-label.is-entraine { grid-column: 6 / span 3; }
+    .parcours-group-label.is-acquise { grid-column: 10; }
+    .cell {
+      min-height: 44px;
+      display: grid;
+      place-items: center;
+      padding: 0;
+      border: 2px solid #bed3e0;
+      border-radius: 11px;
+      color: #274962;
+      background: #fff;
+      font-size: 1.05rem;
+      font-weight: 900;
+      line-height: 1;
+      cursor: pointer;
+    }
+    .cell .dot { width: 16px; height: 16px; border: 2px solid #7ea1b8; border-radius: 50%; background: #fff; }
+    .cell.is-started .dot { background: linear-gradient(90deg, var(--teal) 50%, #fff 50%); border-color: var(--teal); }
+    .cell.is-done { border-color: var(--teal); background: #e7f8f5; }
+    .cell.is-done .dot { background: var(--teal); border-color: var(--teal); }
+    .cell.is-check { color: #9db4c4; font-size: 1.25rem; }
+    .cell.is-check.is-done { color: #fff; border-color: var(--green); background: var(--green); }
+    .cell.is-star { color: #c9d6df; font-size: 1.4rem; }
+    .cell.is-star.is-done { color: #b7791f; border-color: #e7c86a; background: #fff8e1; }
+    .cell:focus-visible { outline: 3px solid var(--blue); outline-offset: 2px; }
+    .parcours-extra { margin-top: 12px; }
+    .parcours-extra .parcours-row-head { margin-bottom: 8px; }
+    .parcours-extra-cells { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+    .parcours-extra-cells .cell { min-width: 52px; }
+    .parcours-extra-cells .secondary { min-height: 44px; padding: 8px 14px; }
+    .parcours-extra p { margin: 6px 0 0; color: var(--muted); font-size: .88rem; }
+    .parcours-note { margin: 14px 0 0; color: var(--muted); font-size: .82rem; text-align: center; }
+    .launch-durations { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
+    .launch-durations .type-button { min-height: 48px; min-width: 96px; display: grid; place-items: center; text-align: center; }
+    .launch-hint { margin: 0; color: var(--muted); font-size: .9rem; }
+    .result-parcours {
+      margin: 12px 0 0;
+      padding: 12px 15px;
+      border: 2px solid #9fd3cb;
+      border-radius: 14px;
+      background: #e9f8f5;
+      color: var(--ink);
+      font-weight: 850;
+      text-align: left;
+    }
+    .result-parcours p { margin: 0; line-height: 1.45; }
+    .result-parcours p + p { margin-top: 8px; }
+    .result-parcours .primary { min-height: 44px; margin-top: 10px; padding: 8px 14px; }
+
     .revision-sheet-action { display: flex; justify-content: center; margin-top: 3px; }
     .revision-sheet-link {
       min-height: 40px;
@@ -716,6 +858,14 @@
     }
 
     @media (max-width: 480px) {
+      .parcours-toolbar { padding: 0 50px; }
+      .parcours-next { grid-template-columns: 1fr; }
+      .parcours-next .primary { width: 100%; }
+      .parcours-row { padding: 9px 8px 10px; }
+      .parcours-cells { gap: 3px; grid-template-columns: repeat(4, minmax(0, 1fr)) 5px repeat(3, minmax(0, 1fr)) 5px minmax(48px, 1.4fr); }
+      .parcours-group-label { font-size: .58rem; letter-spacing: .01em; }
+      .parcours-row-head { flex-wrap: wrap; gap: 4px 8px; }
+      .cell { border-radius: 9px; }
       .settings-toolbar { padding: 0 50px; }
       .settings-back { width: 44px; padding: 0; }
       .settings-back-label { display: none; }
@@ -752,6 +902,10 @@
         <section id="mode-screen" class="mode-screen">
           <h1 id="intro-title" tabindex="-1">Comment veux-tu travailler&nbsp;?</h1>
           <div class="mode-choice" role="group" aria-label="Choisis ton parcours">
+            <button id="open-parcours" class="mode-card mode-card-parcours" type="button" aria-controls="parcours">
+              <span class="mode-card-icon" aria-hidden="true">🗺️</span>
+              <span><strong>Mon parcours</strong><small>Mes tables, mes progrès, ma prochaine étape</small></span>
+            </button>
             <button class="mode-card" type="button" data-mode="learn" aria-controls="settings-screen">
               <span class="mode-card-icon" aria-hidden="true">🌱</span>
               <span><strong>J’apprends</strong><small>1 table · activités au choix</small></span>
@@ -797,6 +951,14 @@
               <button class="selection-button" type="button" data-table="8" aria-pressed="false">× 8</button>
               <button class="selection-button" type="button" data-table="9" aria-pressed="false">× 9</button>
               <button class="selection-button" type="button" data-table="10" aria-pressed="false">× 10</button>
+            </div>
+          </fieldset>
+          <fieldset id="train-type-settings" class="setting-group" hidden>
+            <legend class="setting-title">Quelles questions&nbsp;?</legend>
+            <div class="type-options">
+              <button class="type-button is-selected" type="button" data-train-type="desordre" aria-pressed="true"><strong>Produits</strong><small>7 × 8 = ?</small></button>
+              <button class="type-button" type="button" data-train-type="trous" aria-pressed="false"><strong>Trous</strong><small>7 × ? = 56</small></button>
+              <button class="type-button" type="button" data-train-type="mixte" aria-pressed="false"><strong>Les deux</strong><small>produits et trous</small></button>
             </div>
           </fieldset>
           <fieldset id="learn-activity-settings" class="setting-group" hidden>
@@ -851,10 +1013,54 @@
       <div id="launch" class="launch-screen" hidden>
         <p class="eyebrow">Tu as choisi</p>
         <h1 id="launch-summary" class="launch-heading" tabindex="-1"></h1>
+        <div id="launch-durations" class="launch-durations" role="group" aria-label="Durée de la validation" hidden>
+          <button class="type-button is-selected" type="button" data-launch-duration="90" aria-pressed="true"><strong>1 min 30</strong></button>
+          <button class="type-button" type="button" data-launch-duration="120" aria-pressed="false"><strong>2 min</strong></button>
+          <button class="type-button" type="button" data-launch-duration="180" aria-pressed="false"><strong>3 min</strong></button>
+        </div>
+        <p id="launch-hint" class="launch-hint" hidden>Ta table est validée en 1 min 30. En 2 ou 3 min, c’est de l’entraînement.</p>
         <div class="launch-actions">
           <button id="launch-start" class="primary" type="button">C’est parti&nbsp;!</button>
           <button id="launch-back" class="secondary" type="button">Modifier</button>
         </div>
+      </div>
+
+      <div id="parcours" class="parcours-screen" hidden>
+        <div class="parcours-toolbar">
+          <button id="parcours-back" class="settings-back" type="button" aria-label="Retour au menu"><span aria-hidden="true">←</span><span class="settings-back-label">Menu</span></button>
+          <h1 id="parcours-title" class="settings-heading" tabindex="-1">Mon parcours</h1>
+          <button id="parcours-more" class="parcours-more" type="button" aria-label="Options du parcours" aria-expanded="false" aria-controls="parcours-options">⋯</button>
+        </div>
+        <div id="parcours-options" class="parcours-options" hidden>
+          <button id="parcours-rename" class="secondary" type="button">Modifier mon prénom</button>
+          <button id="parcours-reset" class="secondary" type="button">Recommencer à zéro</button>
+        </div>
+        <form id="parcours-name" class="parcours-name" hidden>
+          <label for="parcours-name-input">Comment t’appelles-tu&nbsp;? <span class="sr-only">(facultatif)</span></label>
+          <div class="parcours-name-row">
+            <input id="parcours-name-input" type="text" maxlength="20" autocomplete="off" autocapitalize="words" enterkeyhint="done">
+            <button class="primary" type="submit">OK</button>
+            <button id="parcours-name-skip" class="secondary" type="button">Plus tard</button>
+          </div>
+          <small>Ton prénom reste sur cet appareil, rien n’est envoyé.</small>
+        </form>
+        <div id="parcours-confirm" class="parcours-confirm" hidden>
+          <p id="parcours-confirm-text">Effacer tout ton parcours&nbsp;? Cette action ne peut pas être annulée.</p>
+          <div class="parcours-name-row">
+            <button id="parcours-confirm-yes" class="danger primary" type="button">Effacer</button>
+            <button id="parcours-confirm-no" class="secondary" type="button">Garder</button>
+          </div>
+        </div>
+        <div id="parcours-next" class="parcours-next"></div>
+        <div class="parcours-legend" aria-hidden="true">
+          <span><span class="cell"><span class="dot"></span></span> pas fait</span>
+          <span><span class="cell is-started"><span class="dot"></span></span> commencé</span>
+          <span><span class="cell is-done"><span class="dot"></span></span> réussi</span>
+        </div>
+        <ol id="parcours-list" class="parcours-list"></ol>
+        <div id="parcours-melange" class="parcours-row parcours-extra" hidden></div>
+        <div id="parcours-expert" class="parcours-row parcours-extra"></div>
+        <p class="parcours-note">Seules les séries lancées sur une table à la fois comptent (Réglages et Évaluation CM1 ne comptent pas). Touche un rond, un ✓ ou une étoile pour lancer la bonne série.</p>
       </div>
 
       <div id="play" hidden>
@@ -891,11 +1097,13 @@
         <p id="result-config" class="result-config"></p>
         <p id="result-detail"></p>
         <p id="result-message" class="result-message"></p>
+        <div id="result-parcours" class="result-parcours" hidden></div>
         <p id="result-previous" class="previous-score" hidden></p>
         <section id="corrections" class="corrections" aria-live="polite"></section>
         <div class="result-actions">
           <button id="retry" class="primary" type="button">Rejouer pareil</button>
           <button id="change-settings" class="secondary" type="button">Changer d’entraînement</button>
+          <button id="result-open-parcours" class="secondary" type="button">Voir mon parcours</button>
           <a class="secondary" href="../index.html?domain=nombres-calculs&amp;notion=calcul-mental">Retour au calcul mental</a>
         </div>
       </div>
@@ -910,13 +1118,22 @@
     <button type="button" data-mathsgo-consent-open onclick="window.mathsgoConsentement &amp;&amp; window.mathsgoConsentement.ouvrir()">Gérer mes cookies</button>
   </footer>
 
-  <script src="./defi_tables_core.js?v=20260829-6"></script>
+  <script src="./defi_tables_core.js?v=20260830-1"></script>
+  <script src="./defi_tables_mon_parcours.js?v=20260830-1"></script>
   <script>
     (() => {
       "use strict";
 
       const CORE = window.MATHSGO_DEFI_TABLES_CORE;
       if (!CORE) throw new Error("Le moteur de Défi tables est indisponible.");
+      const PARCOURS = window.MATHSGO_DEFI_TABLES_MON_PARCOURS;
+      if (!PARCOURS) throw new Error("Le moteur de Mon parcours est indisponible.");
+      const PARCOURS_TABLES = [...PARCOURS.TABLES];
+      function storage() {
+        try { return window.localStorage; } catch (_) { return null; }
+      }
+      let parcours = PARCOURS.charger(storage());
+      function sauverParcours() { PARCOURS.sauver(storage(), parcours); }
       let TOTAL = 20;
       let DURATION = null;
       const ALL_TABLES = [...CORE.ALL_TABLES];
@@ -927,6 +1144,7 @@
         tables: new Set(),
         order: "ordered",
         learnActivity: "construct",
+        trainType: "desordre",
         questionTypes: new Set(["direct"]),
         total: 20,
         duration: null,
@@ -955,8 +1173,10 @@
         learnStickHelpVisible: false,
         learnStickHelpUsed: false,
         answer: "",
-        launchReady: false
+        launchReady: false,
+        origin: "menu"
       };
+      const TRAIN_TYPES = {desordre: ["direct"], trous: ["missing"], mixte: ["direct", "missing"]};
 
       function setupFullscreen() {
         const button = document.querySelector("[data-fullscreen-toggle]");
@@ -1019,7 +1239,7 @@
           tables: [...configuration.tables].sort((first, second) => first - second),
           order: configuration.order,
           learnActivity: configuration.learnActivity,
-          questionTypes: [...configuration.questionTypes],
+          questionTypes: configuration.mode === "train" ? [...TRAIN_TYPES[configuration.trainType]] : [...configuration.questionTypes],
           total: configuration.total,
           duration: configuration.duration,
           testLevel: configuration.testLevel
@@ -1051,7 +1271,8 @@
       }
 
       function show(name) {
-        ["intro", "launch", "play", "result"].forEach(id => { $(id).hidden = id !== name; });
+        ["intro", "launch", "play", "result", "parcours"].forEach(id => { $(id).hidden = id !== name; });
+        if (name === "parcours") renderParcours();
         document.body.classList.toggle("challenge-playing", name === "play" || name === "launch");
         if (name === "intro") syncControls();
         document.body.classList.toggle("settings-open", name === "intro" && Boolean(configuration.mode));
@@ -1059,6 +1280,7 @@
         if (name === "intro") (configuration.mode ? $("settings-title") : $("intro-title")).focus?.({preventScroll: true});
         if (name === "launch") $("launch-summary").focus?.({preventScroll: true});
         if (name === "result") $("result-title").focus?.({preventScroll: true});
+        if (name === "parcours") $("parcours-title").focus?.({preventScroll: true});
       }
 
       const MODE_COPY = Object.freeze({
@@ -1078,6 +1300,10 @@
           title: "Je choisis tout",
           start: "Commencer"
         },
+        validation: {
+          title: "Je valide ma table",
+          start: "Commencer"
+        },
         evaluation: {
           title: "Évaluation CM1",
           start: "Commencer l’évaluation CM1"
@@ -1091,6 +1317,7 @@
         configuration.tables = mode === "evaluation" ? new Set(ALL_TABLES) : new Set();
         configuration.order = preset.order;
         configuration.learnActivity = preset.learnActivity || "construct";
+        configuration.trainType = "desordre";
         configuration.questionTypes = new Set(preset.questionTypes.filter(type => type !== "evaluation"));
         configuration.total = preset.total;
         configuration.duration = preset.duration;
@@ -1103,11 +1330,16 @@
       function backToModes() {
         configuration.mode = null;
         configuration.tables = new Set();
+        state.origin = "menu";
         state.running = false;
         stopTimer();
         show("intro");
         window.scrollTo({top: 0, behavior: "auto"});
         $("intro-title").focus?.({preventScroll: true});
+      }
+
+      function allTablesFor(mode) {
+        return mode === "test" ? PARCOURS_TABLES : ALL_TABLES;
       }
 
       function syncControls() {
@@ -1128,6 +1360,7 @@
         document.body.classList.toggle("settings-open", hasMode && !$("intro").hidden);
         $("settings-panel").hidden = !needsTables;
         $("learn-activity-settings").hidden = configuration.mode !== "learn";
+        $("train-type-settings").hidden = configuration.mode !== "train";
         $("question-settings").hidden = configuration.mode !== "custom";
         $("test-level-settings").hidden = configuration.mode !== "test";
         $("count-settings").hidden = configuration.mode !== "custom" && configuration.mode !== "train";
@@ -1141,8 +1374,10 @@
         $("all-tables").hidden = configuration.mode === "learn";
         if (copy?.title) $("settings-title").textContent = copy.title;
 
-        const allSelected = configuration.tables.size === ALL_TABLES.length;
+        const allTables = allTablesFor(configuration.mode);
+        const allSelected = configuration.tables.size === allTables.length && allTables.every(table => configuration.tables.has(table));
         const allButton = document.querySelector("[data-all-tables]");
+        allButton.textContent = configuration.mode === "test" ? "Toutes les tables (2 à 10)" : "Toutes les tables";
         allButton.classList.toggle("is-selected", allSelected);
         allButton.setAttribute("aria-pressed", String(allSelected));
         document.querySelectorAll("[data-table]").forEach(button => {
@@ -1153,6 +1388,11 @@
 
         document.querySelectorAll("[data-learn-activity]").forEach(button => {
           const selected = button.dataset.learnActivity === configuration.learnActivity;
+          button.classList.toggle("is-selected", selected);
+          button.setAttribute("aria-pressed", String(selected));
+        });
+        document.querySelectorAll("[data-train-type]").forEach(button => {
+          const selected = button.dataset.trainType === configuration.trainType;
           button.classList.toggle("is-selected", selected);
           button.setAttribute("aria-pressed", String(selected));
         });
@@ -1444,7 +1684,7 @@
 
       function renderCorrections() {
         const zone = $("corrections");
-        const completeReview = state.configuration.mode === "test";
+        const completeReview = state.configuration.mode === "test" || state.configuration.mode === "validation";
         const entries = completeReview ? answeredQuestions() : corrections();
         const wrongEntries = entries.filter(entry => !entry.correct);
         const rightEntries = entries.filter(entry => entry.correct);
@@ -1555,6 +1795,13 @@
             : `Toute la série a été parcourue en ${formatElapsed(elapsed)}, avant la fin du temps.`;
         }
         $("result-message").textContent = scoreMessage(state.correct, state.configuration);
+        const suivi = PARCOURS.appliquerSerie(parcours, state.configuration, {correct: state.correct, total: TOTAL});
+        parcours = suivi.parcours;
+        sauverParcours();
+        renderResultParcours(suivi);
+        const principal = suivi.evenements.find(evenement => typeof evenement.reussi === "boolean");
+        if (principal) $("result-icon").hidden = !principal.reussi;
+        $("result-message").hidden = Boolean(suivi.classement);
         $("result-previous").hidden = state.configuration.mode === "learn" || previousScore === undefined;
         $("result-previous").textContent = previousScore === undefined ? "" : `Série précédente : ${previousScore} / ${TOTAL}.`;
         renderCorrections();
@@ -1575,6 +1822,7 @@
 
       function shortTablesLabel(config) {
         if (config.tables.length === ALL_TABLES.length) return "Toutes les tables";
+        if (config.tables.length === PARCOURS_TABLES.length && PARCOURS_TABLES.every(table => config.tables.includes(table))) return "Toutes les tables (2 à 10)";
         if (config.tables.length === 1) return `Table de ${config.tables[0]}`;
         return `Tables ${config.tables.join(", ")}`;
       }
@@ -1591,7 +1839,11 @@
           };
           return `${tables} · ${activityLabels[config.learnActivity]} · de ×0 à ×10`;
         }
-        if (config.mode === "train") return `${tables} · ${config.total} questions · sans chronomètre`;
+        if (config.mode === "train") {
+          const typeLabels = {direct: "produits", missing: "trous"};
+          return `${tables} · ${config.questionTypes.map(type => typeLabels[type]).join(" et ")} · ${config.total} questions · sans chronomètre`;
+        }
+        if (config.mode === "validation") return `${tables} · 20 questions · ${CORE.durationLabel(config.duration)}`;
         if (config.mode === "test") return `${tables} · niveau ${config.testLevel} · 25 questions · ${CORE.durationLabel(config.duration)}`;
         const questionLabels = {direct: "produits", missing: "trous", division: "divisions"};
         return `${tables} · ${config.questionTypes.map(type => questionLabels[type]).join(" + ")} · ${config.total} questions · ${CORE.durationLabel(config.duration)}`;
@@ -1648,18 +1900,31 @@
         state.answer = "";
         state.launchReady = true;
         $("launch-summary").textContent = launchLabel(config);
+        parcours = PARCOURS.demarrerSerie(parcours, config);
+        sauverParcours();
         if (config.mode === "learn" || config.mode === "train") {
           beginRound();
           return;
         }
+        $("launch-durations").hidden = config.mode !== "validation";
+        $("launch-hint").hidden = config.mode !== "validation";
+        document.querySelectorAll("[data-launch-duration]").forEach(button => {
+          const selected = Number(button.dataset.launchDuration) === config.duration;
+          button.classList.toggle("is-selected", selected);
+          button.setAttribute("aria-pressed", String(selected));
+        });
         show("launch");
+      }
+
+      function homeScreen() {
+        return state.origin === "parcours" ? "parcours" : "intro";
       }
 
       function cancelLaunch() {
         state.launchReady = false;
         state.running = false;
         stopTimer();
-        show("intro");
+        show(homeScreen());
       }
 
       function returnToMenu() {
@@ -1667,7 +1932,7 @@
         state.launchReady = false;
         state.running = false;
         stopTimer();
-        show("intro");
+        show(homeScreen());
       }
 
       function advanceAfterResponse() {
@@ -1740,28 +2005,322 @@
         clearAnswerError();
       }
 
+      /* ---------- Mon parcours ---------- */
+      function parcoursTitle() {
+        return parcours.prenom ? `Le parcours de ${parcours.prenom}` : "Mon parcours";
+      }
+
+      function launchFromParcours(config) {
+        if (!config) return;
+        configuration.mode = config.mode;
+        configuration.tables = new Set(config.tables);
+        configuration.learnActivity = config.learnActivity || "construct";
+        configuration.order = configuration.learnActivity === "random" ? "random" : "ordered";
+        configuration.trainType = config.mode === "train"
+          ? Object.keys(TRAIN_TYPES).find(key => TRAIN_TYPES[key].join("+") === [...(config.questionTypes || ["direct"])].join("+")) || "desordre"
+          : "desordre";
+        configuration.questionTypes = new Set(config.questionTypes || ["direct"]);
+        configuration.total = config.total || CORE.PRESETS[config.mode].total;
+        configuration.duration = config.duration === undefined ? CORE.PRESETS[config.mode].duration : config.duration;
+        configuration.testLevel = config.testLevel || 1;
+        state.origin = "parcours";
+        start();
+      }
+
+      function makeCell({kind, etat, label, config, extraClass = ""}) {
+        const cell = document.createElement("button");
+        cell.type = "button";
+        cell.className = `cell ${kind === "dot" ? "" : kind === "check" ? "is-check" : "is-star"} ${etat === 1 ? "is-started" : etat === 2 ? "is-done" : ""} ${extraClass}`.replace(/\s+/g, " ").trim();
+        if (kind === "dot") {
+          const dot = document.createElement("span");
+          dot.className = "dot";
+          cell.append(dot);
+        } else {
+          cell.textContent = kind === "check" ? "✓" : "★";
+        }
+        const stateLabel = etat === 2 ? "réussi" : etat === 1 ? "commencé" : "pas encore fait";
+        cell.setAttribute("aria-label", `${label} : ${stateLabel}. Lancer.`);
+        cell.title = label;
+        cell.addEventListener("click", () => launchFromParcours(config));
+        return cell;
+      }
+
+      function groupLabel(text, extraClass) {
+        const label = document.createElement("span");
+        label.className = `parcours-group-label ${extraClass}`.trim();
+        label.textContent = text;
+        label.setAttribute("aria-hidden", "true");
+        return label;
+      }
+
+      function renderParcours() {
+        const etat = PARCOURS.etatAffichage(parcours);
+        $("parcours-title").textContent = parcoursTitle();
+        $("parcours-name").hidden = !((!parcours.prenom && PARCOURS.estVide(parcours) && !state.nameSkipped) || state.renaming);
+        $("parcours-confirm").hidden = !state.confirmingReset;
+        $("parcours-options").hidden = !state.parcoursOptionsOpen;
+        $("parcours-more").setAttribute("aria-expanded", String(Boolean(state.parcoursOptionsOpen)));
+
+        const next = $("parcours-next");
+        next.replaceChildren();
+        const nextText = document.createElement("span");
+        const nextTitle = document.createElement("strong");
+        nextTitle.textContent = "Prochaine étape";
+        nextText.append(nextTitle, document.createTextNode(etat.prochaine.libelle));
+        next.append(nextText);
+        if (etat.prochaine.config) {
+          const go = document.createElement("button");
+          go.type = "button";
+          go.className = "primary";
+          go.textContent = "C’est parti";
+          go.addEventListener("click", () => launchFromParcours(etat.prochaine.config));
+          next.append(go);
+        }
+
+        const list = $("parcours-list");
+        list.replaceChildren();
+        etat.lignes.forEach(ligne => {
+          const item = document.createElement("li");
+          item.className = `parcours-row${ligne.acquise ? " is-acquise" : ""}`;
+          const head = document.createElement("div");
+          head.className = "parcours-row-head";
+          const name = document.createElement("strong");
+          name.textContent = `Table de ${ligne.table}`;
+          const badge = document.createElement("span");
+          badge.className = `parcours-badge${ligne.acquise ? "" : " is-pending"}`;
+          badge.textContent = ligne.acquise ? "Acquise ✓" : ligne.dernierEntrainement ? `dernier essai : ${ligne.dernierEntrainement.score} / ${ligne.dernierEntrainement.total}` : "";
+          head.append(name, badge);
+          const cells = document.createElement("div");
+          cells.className = "parcours-cells";
+          cells.append(groupLabel("J’apprends", ""), groupLabel("Je m’entraîne", "is-entraine"), groupLabel("Acquise", "is-acquise"));
+          ligne.apprends.forEach(activite => cells.append(makeCell({
+            kind: "dot",
+            etat: activite.etat,
+            label: `Table de ${ligne.table}, j’apprends, ${activite.libelle}`,
+            config: PARCOURS.configApprends(ligne.table, activite.activite)
+          })));
+          cells.append(document.createElement("span"));
+          ligne.entraine.forEach(entrainement => cells.append(makeCell({
+            kind: "dot",
+            etat: entrainement.etat,
+            label: `Table de ${ligne.table}, entraînement ${entrainement.libelle}`,
+            config: PARCOURS.configEntraine(ligne.table, entrainement.entrainement)
+          })));
+          cells.append(document.createElement("span"));
+          cells.append(makeCell({
+            kind: "check",
+            etat: ligne.acquise ? 2 : 0,
+            label: `Table de ${ligne.table}, valider ma table (20 questions en 1 min 30)`,
+            config: PARCOURS.configValidation(ligne.table)
+          }));
+          item.append(head, cells);
+          list.append(item);
+        });
+
+        const melange = $("parcours-melange");
+        melange.hidden = !etat.melange.visible;
+        melange.replaceChildren();
+        if (etat.melange.visible) {
+          const head = document.createElement("div");
+          head.className = "parcours-row-head";
+          const title = document.createElement("strong");
+          title.textContent = `Mélange de mes tables acquises (${etat.melange.tables.join(", ")})`;
+          const badge = document.createElement("span");
+          badge.className = `parcours-badge${etat.melange.aJour ? "" : " is-pending"}`;
+          badge.textContent = etat.melange.aJour ? "À jour ✓" : etat.melange.aRefaireAvec ? `À refaire avec la table de ${etat.melange.aRefaireAvec}` : "À faire";
+          head.append(title, badge);
+          const row = document.createElement("div");
+          row.className = "parcours-extra-cells";
+          row.append(makeCell({
+            kind: "check",
+            etat: etat.melange.aJour ? 2 : 0,
+            label: "Mélange de mes tables acquises (25 questions en 2 min)",
+            config: PARCOURS.configMelange(parcours)
+          }));
+          const hint = document.createElement("p");
+          hint.textContent = "25 produits, 2 minutes, 2 erreurs max. À refaire à chaque nouvelle table acquise.";
+          melange.append(head, row, hint);
+        }
+
+        const expert = $("parcours-expert");
+        expert.replaceChildren();
+        const expertHead = document.createElement("div");
+        expertHead.className = "parcours-row-head";
+        const expertTitle = document.createElement("strong");
+        expertTitle.textContent = "Expert : toutes les tables de 2 à 10 mélangées";
+        const expertBadge = document.createElement("span");
+        expertBadge.className = `parcours-badge${etat.expert.champion ? "" : " is-pending"}`;
+        expertBadge.textContent = etat.expert.champion ? "Champion des tables 🏆" : etat.expert.niveau ? `${"★".repeat(etat.expert.niveau)}` : "";
+        expertHead.append(expertTitle, expertBadge);
+        const stars = document.createElement("div");
+        stars.className = "parcours-extra-cells";
+        const starLabels = {1: "produits", 2: "produits et trous", 3: "produits, trous et divisions"};
+        [1, 2, 3].forEach(niveau => stars.append(makeCell({
+          kind: "star",
+          etat: niveau <= etat.expert.niveau ? 2 : 0,
+          label: `Expert niveau ${niveau}, ${starLabels[niveau]} (25 questions en 2 min)`,
+          config: PARCOURS.configExpert(niveau)
+        })));
+        const expertHint = document.createElement("p");
+        expertHint.textContent = "★ produits · ★★ + trous · ★★★ + divisions. 25 questions, 2 minutes, 2 erreurs max. Réussir ★ valide toutes tes tables d’un coup.";
+        expert.append(expertHead, stars, expertHint);
+      }
+
+      function evenementMessage(evenement) {
+        const table = evenement.table;
+        switch (evenement.type) {
+          case "apprends":
+            return `Table de ${table} : activité « ${PARCOURS.LIBELLES_APPRENDS[evenement.activite]} » terminée (${evenement.termines} / 4).`;
+          case "entraine":
+            if (!evenement.reussi) return `Table de ${table} : ${evenement.score} / ${evenement.total}. Il faut au moins ${evenement.total - PARCOURS.SEUILS.entrainement.erreursMax} / ${evenement.total} pour remplir le rond. Réessaie !`;
+            if (evenement.pret) return `Table de ${table} : les trois entraînements sont réussis. Tu es prêt à valider ta table !`;
+            return `Table de ${table} : entraînement « ${PARCOURS.LIBELLES_ENTRAINEMENTS[evenement.entrainement]} » réussi (${evenement.reussites} / 3).`;
+          case "validation":
+            if (!evenement.reussi) return `Table de ${table} : ${evenement.score} / ${evenement.total}. Pour valider, il faut au moins ${evenement.total - PARCOURS.SEUILS.validation.erreursMax} / ${evenement.total} en 1 min 30.`;
+            if (evenement.nouvelle) return `Table de ${table} acquise ✓ (${evenement.score} / ${evenement.total} en 1 min 30). Bravo !`;
+            return `Table de ${table} : toujours acquise ✓ (${evenement.score} / ${evenement.total}).`;
+          case "preparation":
+            return evenement.reussi
+              ? `Bravo, ${evenement.score} / ${evenement.total} en ${CORE.durationLabel(evenement.duree)} ! Maintenant, essaie en 1 min 30 pour valider ta table.`
+              : `${evenement.score} / ${evenement.total} en ${CORE.durationLabel(evenement.duree)}. Continue à t’entraîner, puis vise 18 / 20 en 1 min 30.`;
+          case "melange-debloque":
+            return "Deux tables acquises : le mélange de tes tables est débloqué.";
+          case "melange-a-refaire":
+            return `Nouvelle table : refais le mélange de tes tables acquises avec la table de ${table}.`;
+          case "toutes-acquises":
+            return "Toutes tes tables sont acquises ! Place à Expert.";
+          case "melange":
+            return evenement.reussi
+              ? `Mélange de tes tables (${evenement.tables.join(", ")}) à jour ✓ (${evenement.score} / ${evenement.total}).`
+              : `Mélange : ${evenement.score} / ${evenement.total}. Il faut au moins ${evenement.total - PARCOURS.SEUILS.melange.erreursMax} / ${evenement.total} pour le mettre à jour.`;
+          case "expert":
+            if (!evenement.reussi) return `Expert niveau ${evenement.niveau} : ${evenement.score} / ${evenement.total}. Il faut au moins ${evenement.total - PARCOURS.SEUILS.expert.erreursMax} / ${evenement.total}.`;
+            if (evenement.champion) return `★★★ Champion des tables ! (${evenement.score} / ${evenement.total})`;
+            if (evenement.nouveau) return `Expert ${"★".repeat(evenement.niveau)} obtenu (${evenement.score} / ${evenement.total}) !`;
+            return `Expert niveau ${evenement.niveau} réussi (${evenement.score} / ${evenement.total}), déjà obtenu.`;
+          default:
+            return "";
+        }
+      }
+
+      function renderResultParcours(suivi) {
+        const zone = $("result-parcours");
+        zone.replaceChildren();
+        zone.hidden = !suivi.classement;
+        if (!suivi.classement) return;
+        suivi.evenements.map(evenementMessage).filter(Boolean).forEach(text => {
+          const line = document.createElement("p");
+          line.textContent = text;
+          zone.append(line);
+        });
+        const prochaine = PARCOURS.prochaineEtape(parcours);
+        const nextLine = document.createElement("p");
+        nextLine.textContent = `Prochaine étape : ${prochaine.libelle}`;
+        zone.append(nextLine);
+        if (prochaine.config) {
+          const go = document.createElement("button");
+          go.type = "button";
+          go.className = "primary";
+          go.textContent = "Lancer la prochaine étape";
+          go.addEventListener("click", () => launchFromParcours(prochaine.config));
+          zone.append(go);
+        }
+      }
+
+      function openParcours() {
+        state.origin = "parcours";
+        state.parcoursOptionsOpen = false;
+        state.confirmingReset = false;
+        state.renaming = false;
+        configuration.mode = null;
+        configuration.tables = new Set();
+        state.running = false;
+        stopTimer();
+        show("parcours");
+      }
+
+      $("open-parcours").addEventListener("click", openParcours);
+      $("result-open-parcours").addEventListener("click", openParcours);
+      $("parcours-back").addEventListener("click", backToModes);
+      $("parcours-more").addEventListener("click", () => {
+        state.parcoursOptionsOpen = !state.parcoursOptionsOpen;
+        state.confirmingReset = false;
+        renderParcours();
+      });
+      $("parcours-rename").addEventListener("click", () => {
+        state.renaming = true;
+        state.parcoursOptionsOpen = false;
+        renderParcours();
+        $("parcours-name-input").value = parcours.prenom;
+        $("parcours-name-input").focus?.({preventScroll: true});
+      });
+      $("parcours-name").addEventListener("submit", event => {
+        event.preventDefault();
+        parcours = PARCOURS.definirPrenom(parcours, $("parcours-name-input").value);
+        sauverParcours();
+        state.renaming = false;
+        state.nameSkipped = true;
+        renderParcours();
+        $("parcours-title").focus?.({preventScroll: true});
+      });
+      $("parcours-name-skip").addEventListener("click", () => {
+        state.renaming = false;
+        state.nameSkipped = true;
+        $("parcours-name").hidden = true;
+      });
+      $("parcours-reset").addEventListener("click", () => {
+        state.confirmingReset = true;
+        state.parcoursOptionsOpen = false;
+        $("parcours-confirm-text").textContent = parcours.prenom
+          ? `Effacer le parcours de ${parcours.prenom} ? Cette action ne peut pas être annulée.`
+          : "Effacer tout ton parcours ? Cette action ne peut pas être annulée.";
+        renderParcours();
+        $("parcours-confirm-no").focus?.({preventScroll: true});
+      });
+      $("parcours-confirm-yes").addEventListener("click", () => {
+        parcours = PARCOURS.remettreAZero(parcours);
+        sauverParcours();
+        state.confirmingReset = false;
+        state.nameSkipped = true;
+        renderParcours();
+        $("parcours-title").focus?.({preventScroll: true});
+      });
+      $("parcours-confirm-no").addEventListener("click", () => {
+        state.confirmingReset = false;
+        renderParcours();
+      });
+
       document.querySelectorAll("[data-mode]").forEach(button => button.addEventListener("click", () => {
         applyMode(button.dataset.mode);
       }));
       document.querySelector("[data-all-tables]").addEventListener("click", () => {
         if (configuration.mode === "learn") return;
-        configuration.tables = new Set(ALL_TABLES);
+        configuration.tables = new Set(allTablesFor(configuration.mode));
         syncControls();
       });
       document.querySelectorAll("[data-table]").forEach(button => button.addEventListener("click", () => {
         const table = Number(button.dataset.table);
+        const allTables = allTablesFor(configuration.mode);
+        const allSelected = configuration.tables.size === allTables.length && allTables.every(value => configuration.tables.has(value));
         if (configuration.mode === "learn") configuration.tables = new Set([table]);
-        else if (configuration.tables.size === ALL_TABLES.length) configuration.tables = new Set([table]);
-        else if (configuration.tables.has(table) && configuration.tables.size > 1) configuration.tables.delete(table);
+        else if (allSelected) configuration.tables = new Set([table]);
         else if (configuration.tables.has(table)) configuration.tables.delete(table);
         else configuration.tables.add(table);
-        if (configuration.tables.size === ALL_TABLES.length) configuration.tables = new Set(ALL_TABLES);
         syncControls();
       }));
       document.querySelectorAll("[data-learn-activity]").forEach(button => button.addEventListener("click", () => {
         configuration.learnActivity = button.dataset.learnActivity;
         configuration.order = configuration.learnActivity === "random" ? "random" : "ordered";
         syncControls();
+      }));
+      document.querySelectorAll("[data-train-type]").forEach(button => button.addEventListener("click", () => {
+        configuration.trainType = button.dataset.trainType;
+        syncControls();
+      }));
+      document.querySelectorAll("[data-launch-duration]").forEach(button => button.addEventListener("click", () => {
+        if (!state.configuration || state.configuration.mode !== "validation") return;
+        configuration.duration = Number(button.dataset.launchDuration);
+        start();
       }));
       document.querySelectorAll("[data-question-type]").forEach(button => button.addEventListener("click", () => {
         const type = button.dataset.questionType;
@@ -1830,6 +2389,7 @@
         });
       }
       syncControls();
+      if (window.location.hash === "#parcours") openParcours();
     })();
   </script>
 </body>
