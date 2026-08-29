@@ -35,29 +35,39 @@ test("la grille compte 36 faits, de 2×2 à 9×9, sens confondus", () => {
   assert.equal(parcours.creerParcours().calculs && Object.keys(parcours.creerParcours().calculs).length, 0);
 });
 
-test("trois cases par fait : +1 par réussite, −1 par erreur, bornées à 0 et 3", () => {
+test("trois cases par fait : +1 par réussite (une par jour), −1 par erreur, bornées à 0 et 3", () => {
   let etat = parcours.creerParcours();
   assert.equal(parcours.etatFait(etat.calculs["6-7"]), "jamais-vu");
 
   etat = repondre(etat, "6-7", true);
-  assert.deepEqual(etat.calculs["6-7"], {cases: 1, vu: DATE, erreur: null});
+  assert.deepEqual(etat.calculs["6-7"], {cases: 1, vu: DATE, erreur: null, gagne: DATE});
   assert.equal(parcours.etatFait(etat.calculs["6-7"]), "en-cours");
 
+  etat = repondre(etat, "6-7", true);
+  etat = repondre(etat, "7-6", true);
+  assert.equal(etat.calculs["6-7"].cases, 1, "une seule case par calcul et par jour, même dans l’autre sens");
+
   etat = repondre(etat, "7-6", true, "2026-09-02");
-  assert.equal(etat.calculs["6-7"].cases, 2, "les deux sens alimentent les mêmes cases");
-  etat = repondre(etat, "6-7", true);
-  etat = repondre(etat, "6-7", true);
-  assert.equal(etat.calculs["6-7"].cases, 3, "jamais plus de 3 cases");
+  assert.equal(etat.calculs["6-7"].cases, 2, "les deux sens alimentent les mêmes cases, un autre jour");
+  etat = repondre(etat, "6-7", true, "2026-09-03");
+  etat = repondre(etat, "6-7", true, "2026-09-04");
+  assert.equal(etat.calculs["6-7"].cases, 3, "su = trois jours différents, jamais plus de 3 cases");
   assert.equal(parcours.etatFait(etat.calculs["6-7"]), "su");
 
-  etat = repondre(etat, "6-7", false, "2026-09-03");
-  assert.deepEqual(etat.calculs["6-7"], {cases: 2, vu: "2026-09-03", erreur: "2026-09-03"}, "un fait su qui reçoit une erreur repasse en cours");
-
-  etat = repondre(etat, "6-7", false, "2026-09-04");
   etat = repondre(etat, "6-7", false, "2026-09-05");
-  etat = repondre(etat, "6-7", false, "2026-09-06");
-  assert.equal(etat.calculs["6-7"].cases, 0, "jamais moins de 0");
+  assert.deepEqual(etat.calculs["6-7"], {cases: 2, vu: "2026-09-05", erreur: "2026-09-05", gagne: "2026-09-03"}, "un fait su qui reçoit une erreur repasse en cours (gagne date du 3e jour : à 3 cases, on ne gagne plus)");
+
+  etat = repondre(etat, "6-7", false, "2026-09-05");
+  etat = repondre(etat, "6-7", false, "2026-09-05");
+  etat = repondre(etat, "6-7", false, "2026-09-05");
+  assert.equal(etat.calculs["6-7"].cases, 0, "les erreurs comptent toujours, sans limite par jour, jamais moins de 0");
   assert.equal(parcours.etatFait(etat.calculs["6-7"]), "a-travailler");
+
+  etat = repondre(etat, "6-7", true, "2026-09-05");
+  assert.equal(etat.calculs["6-7"].cases, 0, "pas de gain le jour d’une erreur sur ce calcul : il « revient dans un nouveau défi », c’est-à-dire un autre jour");
+  etat = repondre(etat, "6-7", true, "2026-09-06");
+  assert.equal(etat.calculs["6-7"].cases, 1, "le lendemain, la première réussite regagne une case");
+  assert.equal(repondre(etat, "6-7", true, "2026-09-06").calculs["6-7"].cases, 1, "mais une seule par jour");
 
   const premiereErreur = repondre(parcours.creerParcours(), "3-9", false);
   assert.equal(parcours.etatFait(premiereErreur.calculs["3-9"]), "a-travailler", "une erreur au premier essai suffit");
@@ -67,16 +77,16 @@ test("trois cases par fait : +1 par réussite, −1 par erreur, bornées à 0 et
   assert.deepEqual(horsGrille.parcours.calculs, {}, "un calcul hors grille ne laisse aucune trace");
 });
 
-test("quelles séries alimentent la grille : tout sauf les deux activités bâton", () => {
+test("la grille appartient au parcours : entraînements, validations, mélanges, Expert et révisions seulement", () => {
   assert.equal(parcours.serieAlimenteGrille(normaliser(parcours.configApprends(7, "construct"))), false);
   assert.equal(parcours.serieAlimenteGrille(normaliser(parcours.configApprends(7, "gaps"))), false);
-  assert.equal(parcours.serieAlimenteGrille(normaliser(parcours.configApprends(7, "ordered"))), true);
-  assert.equal(parcours.serieAlimenteGrille(normaliser(parcours.configApprends(7, "random"))), true);
+  assert.equal(parcours.serieAlimenteGrille(normaliser(parcours.configApprends(7, "ordered"))), false, "dans l’ordre = on ajoute, on ne se souvient pas");
+  assert.equal(parcours.serieAlimenteGrille(normaliser(parcours.configApprends(7, "random"))), false, "J’apprends n’alimente jamais la grille");
   assert.equal(parcours.serieAlimenteGrille(normaliser(parcours.configEntraine(7, "trous"))), true);
   assert.equal(parcours.serieAlimenteGrille(normaliser(parcours.configValidation(7))), true);
   assert.equal(parcours.serieAlimenteGrille(normaliser(parcours.configExpert(3))), true);
-  assert.equal(parcours.serieAlimenteGrille(normaliser({mode: "custom", tables: [7]})), true, "Réglages alimente la grille");
-  assert.equal(parcours.serieAlimenteGrille(normaliser({mode: "evaluation"})), true, "l’évaluation CM1 alimente la grille");
+  assert.equal(parcours.serieAlimenteGrille(normaliser({mode: "custom", tables: [7]})), false, "Réglages est à part du parcours");
+  assert.equal(parcours.serieAlimenteGrille(normaliser({mode: "evaluation"})), false, "l’évaluation CM1 est à part du parcours");
   assert.equal(parcours.serieAlimenteGrille(parcours.configRevision()), true);
   assert.equal(parcours.serieAlimenteGrille(normaliser({})), false);
 });
@@ -85,9 +95,9 @@ test("le résumé et la grille 8×8 : moitié active, miroir grisé du même fai
   let etat = parcours.creerParcours();
   etat = repondre(etat, "6-7", false);
   etat = repondre(etat, "2-2", true);
-  etat = repondre(etat, "2-3", true);
-  etat = repondre(etat, "2-3", true);
-  etat = repondre(etat, "2-3", true);
+  etat = repondre(etat, "2-3", true, "2026-09-01");
+  etat = repondre(etat, "2-3", true, "2026-09-02");
+  etat = repondre(etat, "2-3", true, "2026-09-03");
 
   const resume = parcours.resumeCalculs(etat);
   assert.deepEqual(resume, {sus: 1, enCours: 1, aTravailler: 1, jamaisVus: 33, total: 36});
@@ -113,7 +123,7 @@ test("la révision priorise : 0 case ratés récemment, puis 1, puis 2, puis jam
   etat = repondre(etat, "3-9", false, "2026-09-02");
   etat = repondre(etat, "2-5", true, "2026-09-01");
   etat = repondre(etat, "4-4", true, "2026-09-02");
-  etat = repondre(etat, "4-4", true, "2026-09-02");
+  etat = repondre(etat, "4-4", true, "2026-09-04");
 
   assert.deepEqual(parcours.calculsATravailler(etat), ["7-8", "3-9", "6-7"], "raté le plus récemment d’abord");
   assert.deepEqual(parcours.calculsATravailler(etat, 7), ["7-8", "6-7"]);
@@ -135,15 +145,28 @@ test("la révision priorise : 0 case ratés récemment, puis 1, puis 2, puis jam
   assert.ok(questions.some(question => question.category === "missing"));
 });
 
+test("les jamais vus des tables acquises passent avant l’entretien, ceux des autres tables en dernier", () => {
+  let etat = acquerir(parcours.creerParcours(), 2);
+  // table 2 acquise ; 6-7 su (3 jours) ; tout le reste jamais vu
+  etat = repondre(etat, "6-7", true, "2026-09-01");
+  etat = repondre(etat, "6-7", true, "2026-09-02");
+  etat = repondre(etat, "6-7", true, "2026-09-03");
+  const plan = parcours.planRevision(etat, {random: () => 0});
+  const clesTable2 = new Set(parcours.faitsDeLaTable(2));
+  assert.ok(plan.slice(0, 8).every(item => clesTable2.has(item.cle)), "les 8 faits jamais vus de la table 2 (acquise) d’abord");
+  assert.equal(plan[8].cle, "6-7", "puis l’entretien du su");
+  assert.ok(!clesTable2.has(plan[9].cle) && !etat.calculs[plan[9].cle], "et en dernier recours un jamais vu d’une table non acquise");
+});
+
 test("l’entretien des faits sus arrive en dernier, du plus ancien au plus récent", () => {
   let etat = parcours.creerParcours();
   parcours.FAITS.forEach(cle => {
-    etat = repondre(etat, cle, true, "2026-09-05");
-    etat = repondre(etat, cle, true, "2026-09-05");
+    etat = repondre(etat, cle, true, "2026-09-03");
+    etat = repondre(etat, cle, true, "2026-09-04");
     etat = repondre(etat, cle, true, "2026-09-05");
   });
-  etat.calculs["6-7"] = {cases: 3, vu: "2026-08-01", erreur: null};
-  etat.calculs["2-9"] = {cases: 3, vu: "2026-08-15", erreur: null};
+  etat.calculs["6-7"] = {cases: 3, vu: "2026-08-01", erreur: null, gagne: "2026-08-01"};
+  etat.calculs["2-9"] = {cases: 3, vu: "2026-08-15", erreur: null, gagne: "2026-08-15"};
   const plan = parcours.planRevision(etat, {random: () => 0});
   assert.deepEqual(plan.slice(0, 2).map(item => item.cle), ["6-7", "2-9"], "les sus les plus anciens d’abord quand tout est su");
 });
@@ -188,9 +211,9 @@ test("les étoiles valident par échantillon : le parcours ne dit « fini » que
   assert.deepEqual(etape.config, {mode: "revision", table: null});
 
   parcours.FAITS.forEach(cle => {
-    etat = repondre(etat, cle, true);
-    etat = repondre(etat, cle, true);
-    etat = repondre(etat, cle, true);
+    etat = repondre(etat, cle, true, "2026-09-02");
+    etat = repondre(etat, cle, true, "2026-09-03");
+    etat = repondre(etat, cle, true, "2026-09-04");
   });
   etape = parcours.prochaineEtape(etat);
   assert.equal(etape.type, "champion");
@@ -261,9 +284,10 @@ test("la page a l’écran Mes calculs : entrée depuis Mon parcours, grille, d�
   assert.match(html, /window\.location\.hash === "#calculs"/);
 });
 
-test("le bâton n’alimente pas la grille, l’aide non plus, les calculs qui reviennent non plus", () => {
-  assert.match(html, /const assiste = [\s\S]*learnStickHelpUsed/);
-  assert.match(html, /if \(!assiste && !question\.retry\) alimenterMesCalculs\(question, correct && !skip\);/, "seule la première réponse à un calcul compte pour la grille");
+test("seule la première réponse compte pour la grille, et un raté ne revient qu’une fois", () => {
+  assert.match(html, /if \(!question\.retry\) alimenterMesCalculs\(question, correct && !skip\);/, "les calculs qui reviennent n’alimentent pas la grille");
+  assert.match(html, /const willRetry = !correct && !question\.retry;/, "un calcul raté revient une seule fois par série de révision");
+  assert.match(html, /repartira dans la prochaine révision/);
 });
 
 test("la révision : 10 questions sans chrono, retour des ratés, Encore 10", () => {
@@ -273,8 +297,8 @@ test("la révision : 10 questions sans chrono, retour des ratés, Encore 10", ()
   assert.match(html, /au vert/);
   assert.match(html, /au premier essai/);
   assert.match(html, /entry\.retour \? "Il est revenu" : `Question \$\{entry\.number\}`/, "un calcul qui revient n’est plus numéroté Question 11, 12…");
-  assert.match(html, /Rien à retravailler pour l’instant : on découvre 10 nouveaux calculs\./);
-  assert.match(html, /Tout est su ! 10 questions pour entretenir tes calculs les plus anciens\./);
+  assert.match(html, /Rien à retravailler pour l’instant : on complète et on entretient ta grille\./);
+  assert.match(html, /Ta grille est vide : on découvre les 10 premiers calculs\./);
   assert.match(html, /L’étoile valide toutes tes tables d’un coup : les 9 passent en Acquise ✓\./, "le résultat Expert explique pourquoi tout se coche");
   assert.match(html, /id="result-fete"/);
   assert.match(html, /renderResultFete\(suivi\.evenements\)/);
