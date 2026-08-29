@@ -447,6 +447,7 @@
       width: 100%;
       margin: 5px 0 0;
     }
+    .learn-instruction { margin: 0 0 7px; color: var(--teal); font-size: 1rem; font-weight: 950; text-align: center; }
     .number-stick {
       width: min(100%, 560px);
       display: grid;
@@ -725,9 +726,9 @@
           <fieldset id="learn-activity-settings" class="setting-group" hidden>
             <legend class="setting-title">Choisis une activité</legend>
             <div class="type-options learn-activity-options">
-              <button class="type-button" type="button" data-learn-activity="construct" aria-pressed="false"><strong>Je construis le bâton</strong></button>
+              <button class="type-button is-selected" type="button" data-learn-activity="construct" aria-pressed="true"><strong>Je construis le bâton</strong></button>
               <button class="type-button" type="button" data-learn-activity="gaps" aria-pressed="false"><strong>Je complète un bâton à trous</strong></button>
-              <button class="type-button is-selected" type="button" data-learn-activity="ordered" aria-pressed="true"><strong>Je réponds dans l’ordre</strong></button>
+              <button class="type-button" type="button" data-learn-activity="ordered" aria-pressed="false"><strong>Je réponds dans l’ordre</strong></button>
               <button class="type-button" type="button" data-learn-activity="random" aria-pressed="false"><strong>Je réponds dans le désordre</strong></button>
             </div>
           </fieldset>
@@ -833,7 +834,7 @@
     <button type="button" data-mathsgo-consent-open onclick="window.mathsgoConsentement &amp;&amp; window.mathsgoConsentement.ouvrir()">Gérer mes cookies</button>
   </footer>
 
-  <script src="./defi_tables_core.js?v=20260829-4"></script>
+  <script src="./defi_tables_core.js?v=20260829-5"></script>
   <script>
     (() => {
       "use strict";
@@ -848,7 +849,7 @@
         mode: null,
         tables: new Set(),
         order: "ordered",
-        learnActivity: "ordered",
+        learnActivity: "construct",
         questionTypes: new Set(["direct"]),
         total: 20,
         duration: null,
@@ -863,6 +864,7 @@
         answered: 0,
         running: false,
         timer: null,
+        autoAdvanceTimer: null,
         startAt: 0,
         endAt: 0,
         signature: "",
@@ -1008,7 +1010,7 @@
         configuration.mode = mode;
         configuration.tables = mode === "evaluation" ? new Set(ALL_TABLES) : new Set();
         configuration.order = preset.order;
-        configuration.learnActivity = preset.learnActivity || "ordered";
+        configuration.learnActivity = preset.learnActivity || "construct";
         configuration.questionTypes = new Set(preset.questionTypes.filter(type => type !== "evaluation"));
         configuration.total = preset.total;
         configuration.duration = preset.duration;
@@ -1168,12 +1170,24 @@
         const table = state.configuration.tables[0];
         const question = state.questions[state.index];
         const stickOnly = ["construct", "gaps"].includes(state.configuration.learnActivity);
-        zone.replaceChildren(createNumberStick(table, state.revealedLearnResults, {
+        if (stickOnly) $("answer-feedback").before(zone);
+        else $("question-card").append(zone);
+        const stick = createNumberStick(table, state.revealedLearnResults, {
           activeMultiplier: question?.multiplier,
           newMultiplier: state.lastRevealedLearnMultiplier,
           draftMultiplier: stickOnly ? question?.multiplier : null,
           draftValue: stickOnly ? state.answer : ""
-        }));
+        });
+        if (!stickOnly) {
+          zone.replaceChildren(stick);
+          return;
+        }
+        const instruction = document.createElement("p");
+        instruction.className = "learn-instruction";
+        instruction.textContent = state.configuration.learnActivity === "gaps"
+          ? "Complète la case bleue."
+          : question?.multiplier === 0 ? "Commence à 0." : `Ajoute ${table}.`;
+        zone.replaceChildren(instruction, stick);
       }
 
       function renderQuestion() {
@@ -1246,6 +1260,20 @@
       function stopTimer() {
         if (state.timer !== null) window.clearInterval(state.timer);
         state.timer = null;
+        clearAutoAdvance();
+      }
+
+      function clearAutoAdvance() {
+        if (state.autoAdvanceTimer !== null) window.clearTimeout(state.autoAdvanceTimer);
+        state.autoAdvanceTimer = null;
+      }
+
+      function scheduleAutoAdvance() {
+        clearAutoAdvance();
+        state.autoAdvanceTimer = window.setTimeout(() => {
+          state.autoAdvanceTimer = null;
+          if (state.running && state.waitingForContinue) advanceAfterResponse();
+        }, 800);
       }
 
       function corrections() {
@@ -1482,6 +1510,7 @@
       }
 
       function advanceAfterResponse() {
+        clearAutoAdvance();
         state.index += 1;
         if (state.configuration.mode === "learn" && state.mastered.size >= TOTAL) finish();
         else if (state.index >= state.questions.length) finish();
@@ -1520,6 +1549,7 @@
           state.lastRevealedLearnMultiplier = question.multiplier;
           renderLearnSequence();
           showAnswerFeedback(question, correct, skip ? null : value, !correct);
+          if (correct && ["construct", "gaps"].includes(state.configuration.learnActivity)) scheduleAutoAdvance();
           return;
         }
         if (state.configuration.mode === "train") {

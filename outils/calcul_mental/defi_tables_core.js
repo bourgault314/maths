@@ -12,7 +12,7 @@
   const DIVISION_FORMS = Object.freeze(["division-quotient", "division-dividend", "division-divisor"]);
   const MODES = Object.freeze(["learn", "train", "test", "evaluation", "custom"]);
   const PRESETS = Object.freeze({
-    learn: Object.freeze({total: 11, duration: null, questionTypes: Object.freeze(["direct"]), selection: "single", order: "ordered", learnActivity: "ordered"}),
+    learn: Object.freeze({total: 11, duration: null, questionTypes: Object.freeze(["direct"]), selection: "single", order: "ordered", learnActivity: "construct"}),
     train: Object.freeze({total: 10, duration: null, questionTypes: Object.freeze(["direct"]), selection: "multiple", order: "random"}),
     test: Object.freeze({total: 25, duration: 120, questionTypes: Object.freeze(["direct"]), selection: "multiple", order: "random", testLevel: 1}),
     evaluation: Object.freeze({total: 25, duration: 60, questionTypes: Object.freeze(["evaluation"]), selection: "automatic", order: "random"}),
@@ -62,12 +62,12 @@
 
   function normalizeConfiguration(input = {}) {
     const mode = MODES.includes(input.mode) ? input.mode : null;
-    if (!mode) return {mode: null, tables: [], order: "ordered", learnActivity: "ordered", questionTypes: ["direct"], total: 20, duration: null, testLevel: 1};
+    if (!mode) return {mode: null, tables: [], order: "ordered", learnActivity: "construct", questionTypes: ["direct"], total: 20, duration: null, testLevel: 1};
     const preset = PRESETS[mode];
     const tables = mode === "evaluation" ? [...ALL_TABLES] : normalizedTables(input.tables);
     const requestedLearnActivity = ["construct", "gaps", "ordered", "random"].includes(input.learnActivity)
       ? input.learnActivity
-      : input.order === "random" ? "random" : "ordered";
+      : input.order === "random" ? "random" : preset.learnActivity || "ordered";
     const order = requestedLearnActivity === "random" ? "random" : preset.order;
     const requestedQuestionTypes = Array.isArray(input.questionTypes)
       ? input.questionTypes

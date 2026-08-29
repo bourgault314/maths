@@ -82,7 +82,7 @@ test("les règles et durées approuvées restent explicites", () => {
     questionTypes: ["direct"],
     selection: "single",
     order: "ordered",
-    learnActivity: "ordered"
+    learnActivity: "construct"
   });
   assert.equal(tablesCore.PRESETS.train.total, 10);
   assert.equal(tablesCore.PRESETS.train.duration, null);
