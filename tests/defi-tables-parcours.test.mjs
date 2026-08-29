@@ -182,12 +182,12 @@ test("la réponse s’affiche dans le calcul sans déplacer le clavier", () => {
   assert.match(html, /@media \(max-width: 620px\)[\s\S]*\.fullscreen-toggle \{ display: none; \}/);
 });
 
-test("J’apprends démarre directement et les autres parcours gardent leur confirmation", () => {
+test("J’apprends et Je m’entraîne démarrent directement, les autres parcours gardent leur confirmation", () => {
   assert.match(html, /id="launch-summary"/);
   assert.match(html, /id="launch-start"[\s\S]*C’est parti/);
   assert.match(html, /\$\("launch-start"\)\.addEventListener\("click", beginRound\)/);
   assert.doesNotMatch(html, /setTimeout\(beginRound/);
-  assert.match(html, /if \(config\.mode === "learn"\) \{[\s\S]*beginRound\(\);[\s\S]*return;/);
+  assert.match(html, /if \(config\.mode === "learn" \|\| config\.mode === "train"\) \{[\s\S]*beginRound\(\);[\s\S]*return;/);
   assert.match(html, /de ×0 à ×10/);
   assert.match(html, /niveau \$\{config\.testLevel\} · 25 questions/);
 });
@@ -231,6 +231,7 @@ test("J’apprends garde le bâton pour construire et le propose en aide tempora
   assert.match(html, /\.challenge-playing \.number-stick-value \{ min-height: 38px; font-size: clamp\(\.68rem, 3vw, \.9rem\); \}/);
   assert.doesNotMatch(html, /results\.join\(" → "\)/);
   assert.match(html, /state\.configuration\.mode === "train"\) \{[\s\S]*showAnswerFeedback/);
+  assert.match(html, /state\.configuration\.mode === "train"\) \{[\s\S]*showAnswerFeedback\(question, correct, skip \? null : value\);[\s\S]*if \(correct\) \{[\s\S]*\$\("validate"\)\.style\.visibility = "hidden";[\s\S]*scheduleAutoAdvance\(\);/);
   assert.match(html, /textContent = enabled \? "Valider" : "Suivant"/);
   assert.match(html, /completeReview = state\.configuration\.mode === "test"/);
   assert.match(html, /Bilan de tes réponses/);
