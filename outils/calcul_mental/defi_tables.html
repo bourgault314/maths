@@ -464,25 +464,46 @@
     .number-stick-cell {
       position: relative;
       min-width: 0;
+      min-height: 60px;
+      display: grid;
+      grid-template-rows: 18px minmax(42px, 1fr);
+      border: 1px solid #b9cfda;
+      border-left: 0;
+      background: #f8fbfd;
+      line-height: 1;
+    }
+    .number-stick-cell:first-child { border-left: 1px solid #b9cfda; border-radius: 6px 0 0 6px; }
+    .number-stick-cell:last-child { border-radius: 0 6px 6px 0; }
+    .number-stick-multiplier {
+      min-width: 0;
+      display: grid;
+      place-items: center;
+      border-bottom: 1px solid #d8e5eb;
+      color: #526c80;
+      background: #fff;
+      font-size: clamp(.52rem, 1.8vw, .72rem);
+      font-weight: 900;
+      line-height: 1;
+    }
+    .number-stick-value {
+      min-width: 0;
       min-height: 42px;
       display: grid;
       place-items: center;
-      border: 1px solid #b9cfda;
-      border-left: 0;
       color: #708596;
       background: #f8fbfd;
       font-size: clamp(.7rem, 2.7vw, 1.05rem);
       font-weight: 950;
       line-height: 1;
     }
-    .number-stick-cell:first-child { border-left: 1px solid #b9cfda; border-radius: 6px 0 0 6px; }
-    .number-stick-cell:last-child { border-radius: 0 6px 6px 0; }
-    .number-stick-cell.is-filled { color: #075b55; background: #e7f8f5; }
-    .number-stick-cell.is-current { z-index: 1; box-shadow: inset 0 0 0 3px var(--blue); }
-    .number-stick-cell.is-new { z-index: 2; animation: stick-pop .35s ease-out; color: #fff; background: var(--teal); box-shadow: inset 0 0 0 2px #075b55; }
-    .number-stick-cell.has-draft { color: var(--blue); background: #eef6ff; }
-    .number-stick-cell.is-empty::after { content: ""; width: 42%; height: 2px; border-radius: 99px; background: #c7d7e0; }
-    .number-stick-cell.has-draft::after { display: none; }
+    .number-stick-cell.is-filled .number-stick-value { color: #075b55; background: #e7f8f5; }
+    .number-stick-cell.is-current { z-index: 1; }
+    .number-stick-cell.is-current .number-stick-value { box-shadow: inset 0 0 0 3px var(--blue); }
+    .number-stick-cell.is-new { z-index: 2; }
+    .number-stick-cell.is-new .number-stick-value { animation: stick-pop .35s ease-out; color: #fff; background: var(--teal); box-shadow: inset 0 0 0 2px #075b55; }
+    .number-stick-cell.has-draft .number-stick-value { color: var(--blue); background: #eef6ff; }
+    .number-stick-cell.is-empty .number-stick-value::after { content: ""; width: 42%; height: 2px; border-radius: 99px; background: #c7d7e0; }
+    .number-stick-cell.has-draft .number-stick-value::after { display: none; }
     .expression.is-stick-activity { font-size: clamp(1.8rem, 6vw, 2.8rem); }
     @keyframes stick-pop { 0% { transform: scale(.72); } 70% { transform: scale(1.12); } 100% { transform: scale(1); } }
     .keypad { max-width: 390px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 12px auto; }
@@ -620,7 +641,9 @@
       .challenge-playing .expression { min-height: clamp(68px, 12dvh, 92px); margin: 3px 0 6px; padding: 7px; font-size: clamp(2rem, 9vw, 3.2rem); }
       .challenge-playing .learn-sequence { margin-top: 10px; }
       .challenge-playing .number-stick { padding: 2px; border-width: 2px; border-radius: 8px; }
-      .challenge-playing .number-stick-cell { min-height: 40px; font-size: clamp(.68rem, 3vw, .9rem); }
+      .challenge-playing .number-stick-cell { min-height: 54px; grid-template-rows: 16px minmax(38px, 1fr); }
+      .challenge-playing .number-stick-multiplier { font-size: clamp(.5rem, 2.4vw, .64rem); }
+      .challenge-playing .number-stick-value { min-height: 38px; font-size: clamp(.68rem, 3vw, .9rem); }
       .challenge-playing .answer-feedback { min-height: 38px; margin-top: 3px; padding: 5px 8px; font-size: .86rem; }
       .challenge-playing .keypad { width: min(100%, 330px); gap: 5px; margin: 6px auto; }
       .challenge-playing .keypad button { min-height: 44px; height: 44px; }
@@ -1138,8 +1161,14 @@
         stick.setAttribute("role", "list");
         for (let multiplier = 0; multiplier <= 10; multiplier += 1) {
           const cell = document.createElement("span");
+          const multiplierLabel = document.createElement("span");
+          const value = document.createElement("span");
           const filled = revealedMultipliers.has(multiplier);
           cell.className = `number-stick-cell ${filled ? "is-filled" : "is-empty"}`;
+          multiplierLabel.className = "number-stick-multiplier";
+          multiplierLabel.textContent = `×${multiplier}`;
+          multiplierLabel.setAttribute("aria-hidden", "true");
+          value.className = "number-stick-value";
           const hasDraft = !filled && multiplier === draftMultiplier && Boolean(draftValue);
           cell.classList.toggle("is-current", multiplier === activeMultiplier);
           cell.classList.toggle("is-new", filled && multiplier === newMultiplier);
@@ -1147,15 +1176,16 @@
           cell.setAttribute("role", "listitem");
           cell.dataset.multiplier = String(multiplier);
           if (filled) {
-            const value = table * multiplier;
-            cell.textContent = String(value);
-            cell.setAttribute("aria-label", `${table} fois ${multiplier}, ${value}`);
+            const result = table * multiplier;
+            value.textContent = String(result);
+            cell.setAttribute("aria-label", `${table} fois ${multiplier}, ${result}`);
           } else if (hasDraft) {
-            cell.textContent = draftValue;
+            value.textContent = draftValue;
             cell.setAttribute("aria-label", `${table} fois ${multiplier}, réponse saisie ${draftValue}`);
           } else {
             cell.setAttribute("aria-label", `${table} fois ${multiplier}, pas encore rempli`);
           }
+          cell.append(multiplierLabel, value);
           stick.append(cell);
         }
         stick.setAttribute("aria-label", `Bâton de la table de ${table}`);
