@@ -196,6 +196,7 @@ test("Expert : trois étoiles sur le grand mélange 2 à 10, ★ valide toutes l
   assert.equal(etat.expert.niveau, 1);
   assert.equal(resultat.evenements[0].nouveau, true);
   assert.deepEqual(resultat.evenements[0].tablesValidees, [2, 3, 4, 5, 6, 7, 8, 9, 10]);
+  assert.equal(resultat.evenements.length, 1, "l’étoile ne raconte pas les étapes intermédiaires (mélange débloqué, toutes acquises)");
   assert.ok(parcours.toutesAcquises(etat));
   assert.equal(parcours.configMelange(etat), null, "toutes acquises : le mélange intermédiaire disparaît");
   assert.equal(parcours.prochaineEtape(etat).type, "expert");
@@ -206,7 +207,9 @@ test("Expert : trois étoiles sur le grand mélange 2 à 10, ★ valide toutes l
   assert.equal(etat.expert.niveau, 3, "réussir le niveau 3 directement donne les trois étoiles");
   assert.equal(etat.expert.champion, DATE);
   assert.equal(resultat.evenements[0].champion, true);
-  assert.equal(parcours.prochaineEtape(etat).type, "champion");
+  const apresChampion = parcours.prochaineEtape(etat);
+  assert.equal(apresChampion.type, "revision", "champion mais grille incomplète : le parcours envoie vers Mes calculs");
+  assert.match(apresChampion.libelle, /Champion des tables/);
 
   const rejoue = jouer(etat, parcours.configExpert(2), 25, 25);
   assert.equal(rejoue.evenements[0].nouveau, false);
