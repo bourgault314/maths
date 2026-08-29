@@ -335,8 +335,12 @@
           copie.expert.niveau = classement.niveau;
           evenement.nouveau = true;
         }
+        // Les acquisitions déclenchées par l'étoile ne racontent pas leurs étapes
+        // intermédiaires (mélange débloqué, à refaire, toutes acquises) : c'est
+        // l'événement expert lui-même qui dit que les tables sont validées.
+        const evenementsAcquisition = [];
         TABLES.forEach(table => {
-          if (acquerir(copie, table, date, evenements)) evenement.tablesValidees.push(table);
+          if (acquerir(copie, table, date, evenementsAcquisition)) evenement.tablesValidees.push(table);
         });
         if (copie.expert.niveau === 3 && !copie.expert.champion) {
           copie.expert.champion = date;
@@ -587,7 +591,19 @@
       const libelles = {1: "Expert ★ : toutes les tables, produits", 2: "Expert ★★ : toutes les tables, produits et trous", 3: "Expert ★★★ : toutes les tables, avec les divisions"};
       return {type: "expert", niveau, libelle: libelles[niveau], config: configExpert(niveau)};
     }
-    return {type: "champion", libelle: "Champion des tables : tout est validé !", config: null};
+    // Champion, mais les étoiles valident par échantillon (25 questions) : le
+    // parcours ne dit « fini » que quand chacun des 36 calculs de la grille est
+    // vert — c'est elle, la preuve complète.
+    const resume = resumeCalculs(parcours);
+    const restants = resume.total - resume.sus;
+    if (restants) {
+      return {
+        type: "revision",
+        libelle: `Champion des tables ! Pour une grille parfaite, il reste ${restants} calcul${restants > 1 ? "s" : ""} à passer au vert dans Mes calculs`,
+        config: configRevision()
+      };
+    }
+    return {type: "champion", libelle: "Champion des tables, et les 36 calculs sont verts : tout est là !", config: null};
   }
 
   // Résumé prêt à afficher (sans DOM) : symboles par ligne.

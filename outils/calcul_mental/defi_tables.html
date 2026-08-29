@@ -371,6 +371,20 @@
     .result-parcours p { margin: 0; line-height: 1.45; }
     .result-parcours p + p { margin-top: 8px; }
     .result-parcours .primary { min-height: 44px; margin-top: 10px; padding: 8px 14px; }
+    .result-fete {
+      max-width: 520px;
+      margin: 0 auto 14px;
+      padding: 16px 18px;
+      border: 2px solid #9fd3cb;
+      border-radius: 18px;
+      background: linear-gradient(135deg, #e9f8f5, #eef6ff);
+      animation: fete-pop .5s ease-out;
+    }
+    .result-fete-icon { display: block; font-size: 3rem; line-height: 1; }
+    .result-fete strong { display: block; margin-top: 6px; color: var(--teal); font-size: 1.35rem; }
+    .result-fete.is-champion { border-color: #e7c86a; background: linear-gradient(135deg, #fff8e1, #fff); }
+    .result-fete.is-champion strong { color: #b7791f; }
+    @keyframes fete-pop { 0% { transform: scale(.85); opacity: 0; } 60% { transform: scale(1.04); } 100% { transform: scale(1); opacity: 1; } }
     .result-parcours-actions { display: flex; flex-wrap: wrap; gap: 8px; }
     .result-parcours-actions .secondary { min-height: 44px; margin-top: 10px; padding: 8px 14px; }
 
@@ -1035,7 +1049,7 @@
     @media (prefers-reduced-motion: reduce) {
       *,
       *::before,
-      *::after { transition: none !important; }
+      *::after { transition: none !important; animation: none !important; }
     }
   </style>
 </head>
@@ -1245,7 +1259,7 @@
         <p class="calculs-note">Une case gagnée par bonne réponse, une case perdue par erreur. 7 × 8 et 8 × 7 comptent ensemble : la moitié grisée du tableau est le miroir de l’autre.</p>
         <div class="calculs-action">
           <button id="calculs-reviser" class="primary" type="button">Réviser mes calculs</button>
-          <p class="calculs-hint">10 questions sans chrono, sur ce que tu sais le moins.</p>
+          <p id="calculs-hint" class="calculs-hint">10 questions sans chrono, sur ce que tu sais le moins.</p>
         </div>
       </div>
 
@@ -1277,6 +1291,7 @@
       </div>
 
       <div id="result" class="result" hidden>
+        <div id="result-fete" class="result-fete" hidden></div>
         <span id="result-icon" class="hero-icon" aria-hidden="true">✓</span>
         <p class="eyebrow">Série terminée</p>
         <h1 id="result-title" tabindex="-1">Résultat</h1>
@@ -1347,8 +1362,8 @@
     <button type="button" data-mathsgo-consent-open onclick="window.mathsgoConsentement &amp;&amp; window.mathsgoConsentement.ouvrir()">Gérer mes cookies</button>
   </footer>
 
-  <script src="./defi_tables_core.js?v=20260830-4"></script>
-  <script src="./defi_tables_mon_parcours.js?v=20260830-4"></script>
+  <script src="./defi_tables_core.js?v=20260830-5"></script>
+  <script src="./defi_tables_mon_parcours.js?v=20260830-5"></script>
   <script>
     (() => {
       "use strict";
@@ -1901,6 +1916,7 @@
           if (!response || response.correct) return [];
           return [{
             number: index + 1,
+            retour: Boolean(state.questions[index].retry),
             prompt: state.questions[index].prompt,
             given: response.skipped ? "Pas de réponse" : String(response.value),
             expected: String(state.questions[index].answer),
@@ -1955,7 +1971,7 @@
             questionLine.className = "correction-question";
             const number = document.createElement("span");
             number.className = "correction-number";
-            number.textContent = `Question ${entry.number}`;
+            number.textContent = entry.retour ? "Il est revenu" : `Question ${entry.number}`;
             const expression = document.createElement("span");
             expression.className = "correction-expression";
             expression.textContent = entry.prompt;
@@ -2046,6 +2062,7 @@
         renderResultParcours(suivi);
         const principal = suivi.evenements.find(evenement => typeof evenement.reussi === "boolean");
         if (principal) $("result-icon").hidden = !principal.reussi;
+        renderResultFete(suivi.evenements);
         $("result-message").hidden = Boolean(suivi.classement);
         $("result-previous").hidden = state.configuration.mode === "learn" || previousScore === undefined;
         $("result-previous").textContent = previousScore === undefined ? "" : `Série précédente : ${previousScore} / ${TOTAL}.`;
@@ -2213,12 +2230,14 @@
           state.responses[state.index] = {value: null, correct: false, skipped: true};
         }
 
-        // Une réponse aidée par le bâton n'est pas une réponse de mémoire :
-        // elle n'alimente pas la grille Mes calculs (ni en plus, ni en moins).
+        // Une réponse aidée par le bâton n'est pas une réponse de mémoire, et un
+        // calcul qui revient après une erreur vient d'être corrigé sous les yeux
+        // de l'élève : ni l'une ni l'autre n'alimentent la grille Mes calculs
+        // (ni en plus, ni en moins). Seule la première réponse compte.
         const assiste = state.configuration.mode === "learn"
           && !["construct", "gaps"].includes(state.configuration.learnActivity)
           && state.learnStickHelpUsed;
-        if (!assiste) alimenterMesCalculs(question, correct && !skip);
+        if (!assiste && !question.retry) alimenterMesCalculs(question, correct && !skip);
 
         if (state.configuration.mode === "revision") {
           if (!question.retry) {
@@ -2339,6 +2358,11 @@
       function renderCalculs() {
         const grille = PARCOURS.grilleCalculs(parcours);
         $("calculs-resume").textContent = resumeCalculsTexte(grille.resume);
+        $("calculs-hint").textContent = grille.resume.aTravailler || grille.resume.enCours
+          ? "10 questions sans chrono, sur ce que tu sais le moins."
+          : grille.resume.jamaisVus
+            ? "Rien à retravailler pour l’instant : on découvre 10 nouveaux calculs."
+            : "Tout est su ! 10 questions pour entretenir tes calculs les plus anciens.";
         const zone = $("calculs-grille");
         zone.replaceChildren();
         const coin = document.createElement("span");
@@ -2423,6 +2447,7 @@
       }
 
       function finishRevision() {
+        renderResultFete([]);
         const elapsed = Date.now() - state.startAt;
         const table = state.configuration.revisionTable;
         const total = state.revisionPremierTotal;
@@ -2675,14 +2700,56 @@
             return evenement.reussi
               ? `Mélange de tes tables (${evenement.tables.join(", ")}) à jour ✓ (${evenement.score} / ${evenement.total}).`
               : `Mélange : ${evenement.score} / ${evenement.total}. Il faut au moins ${evenement.total - PARCOURS.SEUILS.melange.erreursMax} / ${evenement.total} pour le mettre à jour.`;
-          case "expert":
+          case "expert": {
             if (!evenement.reussi) return `Expert niveau ${evenement.niveau} : ${evenement.score} / ${evenement.total}. Il faut au moins ${evenement.total - PARCOURS.SEUILS.expert.erreursMax} / ${evenement.total}.`;
-            if (evenement.champion) return `★★★ Champion des tables ! (${evenement.score} / ${evenement.total})`;
-            if (evenement.nouveau) return `Expert ${"★".repeat(evenement.niveau)} obtenu (${evenement.score} / ${evenement.total}) !`;
-            return `Expert niveau ${evenement.niveau} réussi (${evenement.score} / ${evenement.total}), déjà obtenu.`;
+            const validees = evenement.tablesValidees || [];
+            const bonus = !validees.length
+              ? ""
+              : validees.length === PARCOURS.TABLES.length
+                ? " L’étoile valide toutes tes tables d’un coup : les 9 passent en Acquise ✓."
+                : validees.length === 1
+                  ? ` L’étoile valide aussi la table de ${validees[0]} : Acquise ✓.`
+                  : ` L’étoile valide aussi les tables de ${validees.join(", ")} : Acquises ✓.`;
+            if (evenement.champion) return `★★★ Champion des tables ! (${evenement.score} / ${evenement.total})${bonus}`;
+            if (evenement.nouveau) return `Expert ${"★".repeat(evenement.niveau)} obtenu (${evenement.score} / ${evenement.total}) !${bonus}`;
+            return `Expert niveau ${evenement.niveau} réussi (${evenement.score} / ${evenement.total}), déjà obtenu.${bonus}`;
+          }
           default:
             return "";
         }
+      }
+
+      // Écran de fête sur les grands moments : table acquise, étoile Expert, Champion.
+      function renderResultFete(evenements) {
+        const zone = $("result-fete");
+        zone.replaceChildren();
+        zone.hidden = true;
+        zone.classList.remove("is-champion");
+        const expert = (evenements || []).find(evenement => evenement.type === "expert" && evenement.reussi);
+        const validation = (evenements || []).find(evenement => evenement.type === "validation" && evenement.nouvelle);
+        let icone = null;
+        let texte = null;
+        if (expert && expert.champion) {
+          icone = "🏆";
+          texte = "Champion des tables !";
+          zone.classList.add("is-champion");
+        } else if (expert && expert.nouveau) {
+          icone = "🌟";
+          texte = `Expert ${"★".repeat(expert.niveau)} !`;
+        } else if (validation) {
+          icone = "🎉";
+          texte = `Table de ${validation.table} acquise !`;
+        }
+        if (!texte) return;
+        const iconeZone = document.createElement("span");
+        iconeZone.className = "result-fete-icon";
+        iconeZone.setAttribute("aria-hidden", "true");
+        iconeZone.textContent = icone;
+        const titre = document.createElement("strong");
+        titre.textContent = texte;
+        zone.append(iconeZone, titre);
+        zone.hidden = false;
+        $("result-icon").hidden = true;
       }
 
       function renderResultParcours(suivi) {

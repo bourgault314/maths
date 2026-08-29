@@ -179,6 +179,24 @@ test("la prochaine étape conseille une révision dès 5 calculs à travailler",
   assert.equal(parcours.etatAffichage(etat).prochaine.type, "revision");
 });
 
+test("les étoiles valident par échantillon : le parcours ne dit « fini » que grille verte", () => {
+  let etat = parcours.appliquerSerie(parcours.creerParcours(), normaliser(parcours.configExpert(3)), {correct: 25, total: 25, date: DATE}).parcours;
+  assert.equal(etat.expert.champion, DATE);
+  let etape = parcours.prochaineEtape(etat);
+  assert.equal(etape.type, "revision", "champion avec des calculs jamais vus : révision conseillée");
+  assert.match(etape.libelle, /36 calculs à passer au vert/);
+  assert.deepEqual(etape.config, {mode: "revision", table: null});
+
+  parcours.FAITS.forEach(cle => {
+    etat = repondre(etat, cle, true);
+    etat = repondre(etat, cle, true);
+    etat = repondre(etat, cle, true);
+  });
+  etape = parcours.prochaineEtape(etat);
+  assert.equal(etape.type, "champion");
+  assert.match(etape.libelle, /36 calculs sont verts/);
+});
+
 test("passerelle : une table acquise avec 2 calculs à 0 est « à revoir », le ✓ reste", () => {
   let etat = acquerir(parcours.creerParcours(), 7);
   etat = repondre(etat, "7-8", false);
@@ -243,9 +261,9 @@ test("la page a l’écran Mes calculs : entrée depuis Mon parcours, grille, d�
   assert.match(html, /window\.location\.hash === "#calculs"/);
 });
 
-test("le bâton n’alimente pas la grille, l’aide non plus", () => {
+test("le bâton n’alimente pas la grille, l’aide non plus, les calculs qui reviennent non plus", () => {
   assert.match(html, /const assiste = [\s\S]*learnStickHelpUsed/);
-  assert.match(html, /if \(!assiste\) alimenterMesCalculs\(question, correct && !skip\);/);
+  assert.match(html, /if \(!assiste && !question\.retry\) alimenterMesCalculs\(question, correct && !skip\);/, "seule la première réponse à un calcul compte pour la grille");
 });
 
 test("la révision : 10 questions sans chrono, retour des ratés, Encore 10", () => {
@@ -254,6 +272,15 @@ test("la révision : 10 questions sans chrono, retour des ratés, Encore 10", ()
   assert.match(html, /Encore 10 questions/);
   assert.match(html, /au vert/);
   assert.match(html, /au premier essai/);
+  assert.match(html, /entry\.retour \? "Il est revenu" : `Question \$\{entry\.number\}`/, "un calcul qui revient n’est plus numéroté Question 11, 12…");
+  assert.match(html, /Rien à retravailler pour l’instant : on découvre 10 nouveaux calculs\./);
+  assert.match(html, /Tout est su ! 10 questions pour entretenir tes calculs les plus anciens\./);
+  assert.match(html, /L’étoile valide toutes tes tables d’un coup : les 9 passent en Acquise ✓\./, "le résultat Expert explique pourquoi tout se coche");
+  assert.match(html, /id="result-fete"/);
+  assert.match(html, /renderResultFete\(suivi\.evenements\)/);
+  assert.match(html, /Champion des tables !/, "écran de fête 🏆");
+  assert.match(html, /Table de \$\{validation\.table\} acquise !/, "écran de fête 🎉 à chaque table validée");
+  assert.match(html, /animation: none !important/, "la fête respecte prefers-reduced-motion");
 });
 
 test("la fiche imprimable a une page 2 « Mes calculs » et le PDF vide aussi", async () => {

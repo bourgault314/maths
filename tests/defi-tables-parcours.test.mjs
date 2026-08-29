@@ -235,11 +235,11 @@ test("J’apprends garde le bâton pour construire et le propose en aide tempora
   assert.match(html, /textContent = enabled \? "Valider" : "Suivant"/);
   assert.match(html, /completeReview = state\.configuration\.mode === "test"/);
   assert.match(html, /Bilan de tes réponses/);
-  assert.match(html, /defi_tables_core\.js\?v=20260830-4/);
+  assert.match(html, /defi_tables_core\.js\?v=20260830-5/);
 });
 
 test("le numéro de question est séparé du calcul dans le bilan", () => {
-  assert.match(html, /number\.textContent = `Question \$\{entry\.number\}`/);
+  assert.match(html, /number\.textContent = entry\.retour \? \"Il est revenu\" : `Question \$\{entry\.number\}`/);
   assert.match(html, /expression\.textContent = entry\.prompt/);
   assert.match(html, /item\.append\(questionLine, answers\)/);
   assert.doesNotMatch(html, /expression\.textContent = `\$\{entry\.number\}\. /);
