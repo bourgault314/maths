@@ -346,3 +346,30 @@ test("la page Confidentialité décrit la sauvegarde locale de Mon parcours", ()
   assert.match(confidentialite, /un prénom saisi librement et la progression par table/);
   assert.match(confidentialite, /Recommencer à zéro/);
 });
+
+test("la fiche « Mon parcours des tables » s’imprime depuis l’appli et existe en PDF vide avec sa source", async () => {
+  const fs = await import("node:fs/promises");
+  assert.match(html, /id="fiche-print" class="fiche-print" aria-hidden="true"/);
+  assert.match(html, /body > \*:not\(#fiche-print\) \{ display: none !important; \}/);
+  assert.match(html, /@page \{ size: A4 portrait; margin: 12mm; \}/);
+  assert.match(html, /id="parcours-print"[\s\S]*Imprimer ma fiche/);
+  assert.match(html, /window\.addEventListener\("beforeprint", renderFiche\)/);
+  assert.match(html, /href="\.\/fiche_parcours_tables\.pdf"[^>]*download>↓ Télécharger la fiche parcours/);
+  assert.match(html, /src="\.\.\/\.\.\/assets\/img\/qr-defi-tables-parcours\.svg"/);
+  assert.match(html, /mathsgo\.re · CC BY-NC-SA 4\.0/);
+  const pdf = await fs.readFile(new URL("../outils/calcul_mental/fiche_parcours_tables.pdf", import.meta.url));
+  assert.equal(pdf.subarray(0, 5).toString(), "%PDF-");
+  assert.ok(pdf.length > 5000);
+  const qr = await fs.readFile(new URL("../assets/img/qr-defi-tables-parcours.svg", import.meta.url), "utf8");
+  assert.match(qr, /<svg/);
+  const source = await fs.readFile(new URL("../_sources/defi-tables/generer_fiche_parcours.py", import.meta.url), "utf8");
+  assert.match(source, /defi_tables\.html#parcours/);
+  assert.match(source, /fiche_parcours_tables\.pdf/);
+});
+
+test("les retours utilisent la flèche SVG du site, pas le caractère ←", () => {
+  const arrow = /<path d="M19 12H5M11 6l-6 6 6 6"/g;
+  assert.ok((html.match(arrow) || []).length >= 4, "catalogue, réglages, parcours, jeu");
+  assert.doesNotMatch(html, /<button[^>]*>←/);
+  assert.doesNotMatch(html, /aria-hidden="true">←</);
+});
