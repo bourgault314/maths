@@ -1,6 +1,3 @@
-Warning: truncated output (original token count: 51926)
-Total output lines: 6528
-
 window.MATHSGO_CATALOGUE = {
   "schemaVersion": 5,
   "generatedAt": "2026-08-10T00:00:00.000Z",
@@ -2328,7 +2325,298 @@ window.MATHSGO_CATALOGUE = {
       ],
       "uses": [
         "manipuler",
-        …1926 tokens truncated…roupes égaux, les comparaisons et les partages.",
+        "projeter"
+      ],
+      "types": [
+        "plateau"
+      ],
+      "filters": [],
+      "keywords": [
+        "boulier",
+        "rekenrek",
+        "soroban",
+        "abaque",
+        "numération",
+        "calcul mental"
+      ],
+      "kind": "tool",
+      "status": "published",
+      "featured": false,
+      "recent": false
+    },
+    {
+      "id": "outils-bouliers-boulier-montessori-transition-rekenrek-montessori-html",
+      "title": "Du Rekenrek au boulier Montessori",
+      "description": "Faire le lien entre le Rekenrek et le boulier Montessori en faisant varier les couleurs et l’organisation du boulier jusqu’à 100 billes.",
+      "path": "outils/bouliers/boulier_montessori/transition_rekenrek-montessori.html",
+      "domains": [
+        "nombres-calculs"
+      ],
+      "notions": [
+        "numeration"
+      ],
+      "uses": [
+        "manipuler",
+        "projeter"
+      ],
+      "types": [
+        "plateau"
+      ],
+      "filters": [],
+      "keywords": [
+        "boulier",
+        "rekenrek",
+        "soroban",
+        "abaque",
+        "numération",
+        "calcul mental"
+      ],
+      "kind": "tool",
+      "status": "published",
+      "featured": false,
+      "recent": false
+    },
+    {
+      "id": "outils-bouliers-rekenrek-rekenrek-html",
+      "title": "Rekenrek interactif",
+      "description": "Manipuler librement les billes du rekenrek, masquer une partie et annoter la situation projetée.",
+      "path": "outils/bouliers/rekenrek/rekenrek.html",
+      "domains": [
+        "nombres-calculs"
+      ],
+      "notions": [
+        "numeration"
+      ],
+      "uses": [
+        "manipuler",
+        "projeter"
+      ],
+      "types": [
+        "plateau"
+      ],
+      "filters": [],
+      "keywords": [
+        "boulier",
+        "rekenrek",
+        "soroban",
+        "abaque",
+        "numération",
+        "calcul mental"
+      ],
+      "kind": "tool",
+      "status": "published",
+      "featured": false,
+      "recent": false
+    },
+    {
+      "id": "outils-box-barre-final-html",
+      "title": "BOX LOGIC — L'INTÉGRALE",
+      "description": "Générer et imprimer des séries de « boîtes » : combien de billes sont cachées ? Un entraînement au raisonnement en parties et tout.",
+      "path": "outils/box_barre_final.html",
+      "domains": ["algebre", "nombres-calculs"],
+      "notions": [
+        "schemas-barres"
+      ],
+      "uses": ["projeter", "imprimer"],
+      "types": [],
+      "filters": [],
+      "keywords": [
+        "problèmes",
+        "modélisation"
+      ],
+      "kind": "tool",
+      "status": "published",
+      "featured": false,
+      "recent": false
+    },
+    {
+      "id": "outils-box-pasbarre-final-html",
+      "title": "BOX LOGIC — L'INTÉGRALE",
+      "description": "Une ressource maths&go pour travailler schémas en barres et problèmes.",
+      "path": "outils/box_pasbarre_final.html",
+      "domains": [
+        "algebre"
+      ],
+      "notions": [
+        "schemas-barres"
+      ],
+      "uses": [
+        "projeter"
+      ],
+      "types": [],
+      "filters": [],
+      "keywords": [
+        "problèmes",
+        "modélisation"
+      ],
+      "kind": "tool",
+      "status": "hidden",
+      "featured": false,
+      "recent": false
+    },
+    {
+      "id": "outils-tuiles-algebriques-tuiles-algebriques-html",
+      "title": "Tuiles algébriques — expressions",
+      "description": "Composez, ordonnez et simplifiez des expressions avec les tuiles x², x et 1.",
+      "path": "outils/tuiles_algebriques/tuiles_algebriques.html",
+      "domains": [
+        "algebre"
+      ],
+      "notions": [
+        "calcul-litteral"
+      ],
+      "uses": [
+        "manipuler",
+        "projeter"
+      ],
+      "types": [
+        "plateau"
+      ],
+      "filters": [],
+      "keywords": [
+        "tuiles algébriques"
+      ],
+      "kind": "tool",
+      "status": "published",
+      "featured": false,
+      "recent": false
+    },
+    {
+      "id": "outils-tuiles-algebriques-tuiles-algebriques-mode-equation-html",
+      "title": "Tuiles algébriques — équations",
+      "description": "Posez puis résolvez une équation du premier degré en manipulant les deux membres.",
+      "path": "outils/tuiles_algebriques/tuiles_algebriques_mode_equation.html",
+      "domains": [
+        "algebre"
+      ],
+      "notions": [
+        "calcul-litteral",
+        "equations"
+      ],
+      "uses": [
+        "manipuler",
+        "projeter"
+      ],
+      "types": [
+        "plateau"
+      ],
+      "filters": [],
+      "keywords": [
+        "tuiles algébriques"
+      ],
+      "kind": "tool",
+      "status": "published",
+      "featured": false,
+      "recent": false
+    },
+    {
+      "id": "outils-club-maths-jeu-du-chaos-html",
+      "title": "Jeu du chaos",
+      "description": "Une exploration aléatoire qui fait apparaître le triangle de Sierpiński et propose un prolongement avec Scratch.",
+      "path": "outils/club_maths/jeu_du_chaos.html",
+      "domains": [
+        "jeux-recherches"
+      ],
+      "notions": [
+        "strategie",
+        "explorations"
+      ],
+      "uses": [
+        "projeter",
+        "imprimer"
+      ],
+      "types": [
+        "plateau",
+        "imprimable"
+      ],
+      "filters": [],
+      "keywords": [],
+      "kind": "tool",
+      "status": "published",
+      "featured": false,
+      "recent": false
+    },
+    {
+      "id": "outils-club-maths-tables-modulaires-html",
+      "title": "Tables modulaires",
+      "description": "Une exploration visuelle des courbes créées par les tables de multiplication sur un cercle.",
+      "path": "outils/club_maths/tables_modulaires.html",
+      "domains": [
+        "jeux-recherches"
+      ],
+      "notions": [
+        "strategie",
+        "explorations"
+      ],
+      "uses": [
+        "manipuler",
+        "projeter",
+        "imprimer"
+      ],
+      "types": [
+        "plateau"
+      ],
+      "filters": [],
+      "keywords": [],
+      "kind": "tool",
+      "status": "published",
+      "featured": false,
+      "recent": false
+    },
+    {
+      "id": "outils-detective-des-grandeurs-additive-1-pdf",
+      "title": "Détective des grandeurs — situations additives 1",
+      "description": "Une première série d’enquêtes additives pour identifier les grandeurs et leurs relations.",
+      "path": "outils/detective_des_grandeurs_additive__1.pdf",
+      "domains": ["algebre", "nombres-calculs"],
+      "notions": [
+        "schemas-barres"
+      ],
+      "uses": [
+        "imprimer"
+      ],
+      "types": [
+        "imprimable"
+      ],
+      "filters": [],
+      "keywords": [
+        "problèmes",
+        "modélisation"
+      ],
+      "kind": "document",
+      "status": "published",
+      "featured": false,
+      "recent": false
+    },
+    {
+      "id": "outils-detective-des-grandeurs-additive-2-pdf",
+      "title": "Détective des grandeurs — situations additives 2",
+      "description": "Neuf pages d’enquêtes additives progressives, de la combinaison à la comparaison.",
+      "path": "outils/detective_des_grandeurs_additive__2.pdf",
+      "domains": ["algebre", "nombres-calculs"],
+      "notions": [
+        "schemas-barres"
+      ],
+      "uses": [
+        "imprimer"
+      ],
+      "types": [
+        "imprimable"
+      ],
+      "filters": [],
+      "keywords": [
+        "problèmes",
+        "modélisation"
+      ],
+      "kind": "document",
+      "status": "published",
+      "featured": false,
+      "recent": false
+    },
+    {
+      "id": "outils-detective-des-grandeurs-multiplicative-1-pdf",
+      "title": "Détective des grandeurs — situations multiplicatives",
+      "description": "Trois pages d’enquêtes multiplicatives sur les groupes égaux, les comparaisons et les partages.",
       "path": "outils/detective_des_grandeurs_multiplicative__1.pdf",
       "domains": ["algebre", "nombres-calculs"],
       "notions": [
