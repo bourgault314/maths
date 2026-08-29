@@ -77,7 +77,7 @@ test("les règles et durées approuvées restent explicites", () => {
   assert.match(solo, /\["sum", "sum", "sum", "difference", "difference", "product", "product", "product", "quotient", "quotient"\]/);
 
   assert.deepEqual(tablesCore.PRESETS.learn, {
-    total: 10,
+    total: 11,
     duration: null,
     questionTypes: ["direct"],
     selection: "single",
