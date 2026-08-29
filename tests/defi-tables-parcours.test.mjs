@@ -207,10 +207,14 @@ test("J’apprends remplit un bâton dans les deux ordres et Je m’entraîne co
   assert.match(html, /draftMultiplier: stickOnly \? question\?\.multiplier : null/);
   assert.match(html, /activeMultiplier: stickOnly \? question\?\.multiplier : null/);
   assert.match(html, /if \(stickOnly\) \$\("answer-feedback"\)\.before\(zone\)/);
+  assert.match(html, /else \$\("expression"\)\.before\(zone\)/);
   assert.match(html, /question\?\.multiplier === 0 \? "Commence à 0\." : `Ajoute \$\{table\}\.\`/);
-  assert.match(html, /scheduleAutoAdvance\(\)/);
+  assert.match(html, /if \(correct\) \{[\s\S]*\$\("validate"\)\.style\.visibility = "hidden";[\s\S]*scheduleAutoAdvance\(\);/);
+  assert.match(html, /\$\("validate"\)\.style\.visibility = "";[\s\S]*setAnswerControlsEnabled\(true\)/);
   assert.match(html, /\}, 800\);/);
-  assert.match(html, /\.question\.stick-trace \.learn-sequence \{ margin-top: 20px; \}/);
+  assert.match(html, /\.question\.stick-trace \.learn-sequence \{ margin: 0 0 8px; \}/);
+  assert.match(html, /\.question\.stick-trace \.number-stick-cell \{[\s\S]*min-height: 42px;[\s\S]*grid-template-rows: 14px minmax\(28px, 1fr\);/);
+  assert.match(html, /\.question\.stick-trace \.number-stick-value \{[\s\S]*min-height: 28px;[\s\S]*font-size: clamp\(\.66rem, 2\.2vw, \.9rem\);/);
   assert.match(html, /\.challenge-playing \.number-stick-cell \{ min-height: 54px; grid-template-rows: 16px minmax\(38px, 1fr\); \}/);
   assert.match(html, /\.challenge-playing \.number-stick-value \{ min-height: 38px; font-size: clamp\(\.68rem, 3vw, \.9rem\); \}/);
   assert.doesNotMatch(html, /results\.join\(" → "\)/);

@@ -448,7 +448,23 @@
       margin: 5px 0 0;
     }
     .learn-instruction { margin: 0 0 7px; color: var(--teal); font-size: 1rem; font-weight: 950; text-align: center; }
-    .question.stick-trace .learn-sequence { margin-top: 20px; }
+    .question.stick-trace .learn-sequence { margin: 0 0 8px; }
+    .question.stick-trace .number-stick {
+      width: min(100%, 720px);
+      padding: 2px;
+      border-width: 2px;
+      border-radius: 8px;
+      box-shadow: 0 2px 5px rgba(43, 67, 84, .1);
+    }
+    .question.stick-trace .number-stick-cell {
+      min-height: 42px;
+      grid-template-rows: 14px minmax(28px, 1fr);
+    }
+    .question.stick-trace .number-stick-multiplier { font-size: clamp(.48rem, 1.5vw, .64rem); }
+    .question.stick-trace .number-stick-value {
+      min-height: 28px;
+      font-size: clamp(.66rem, 2.2vw, .9rem);
+    }
     .number-stick {
       width: min(100%, 680px);
       display: grid;
@@ -1204,7 +1220,7 @@
         const table = state.configuration.tables[0];
         const question = state.questions[state.index];
         if (stickOnly) $("answer-feedback").before(zone);
-        else $("question-card").append(zone);
+        else $("expression").before(zone);
         const stick = createNumberStick(table, state.revealedLearnResults, {
           activeMultiplier: stickOnly ? question?.multiplier : null,
           newMultiplier: state.lastRevealedLearnMultiplier,
@@ -1252,6 +1268,7 @@
         state.waitingForContinue = false;
         $("answer-feedback").textContent = "";
         $("answer-feedback").className = "answer-feedback";
+        $("validate").style.visibility = "";
         setAnswerControlsEnabled(true);
         renderInlineAnswer();
       }
@@ -1586,7 +1603,10 @@
           state.lastRevealedLearnMultiplier = question.multiplier;
           renderLearnSequence();
           showAnswerFeedback(question, correct, skip ? null : value, !correct);
-          if (correct && ["construct", "gaps"].includes(state.configuration.learnActivity)) scheduleAutoAdvance();
+          if (correct) {
+            $("validate").style.visibility = "hidden";
+            scheduleAutoAdvance();
+          }
           return;
         }
         if (state.configuration.mode === "train") {
