@@ -309,7 +309,7 @@ test("la page charge le moteur du parcours et propose la carte Mon parcours", ()
   assert.match(html, /id="parcours-melange"/);
   assert.match(html, /id="parcours-expert"/);
   assert.match(html, /id="parcours-next"/);
-  assert.match(html, /\["intro", "launch", "play", "result", "parcours"\]/);
+  assert.match(html, /\["intro", "launch", "play", "result", "parcours", "calculs"\]/);
 });
 
 test("prénom local, remise à zéro confirmée dans la page, résultat relié au parcours", () => {

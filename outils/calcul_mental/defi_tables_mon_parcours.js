@@ -13,6 +13,14 @@
   //    « à refaire » à chaque nouvelle table acquise ;
   //  - Expert : grand mélange des tables 2 à 10, ★ produits, ★★ + trous,
   //    ★★★ + divisions ; ★ valide toutes les tables d'un coup.
+  // Lot 4 « Mes calculs » (29/08/2026, idée de Claire) :
+  //  - grille des 36 faits 2×2 à 9×9, sens confondus (7×8 et 8×7 = un seul fait) ;
+  //  - 3 cases par fait : +1 par bonne réponse, −1 par erreur ou question passée,
+  //    su à 3 ; états : jamais vu / à travailler (0 après erreur) / en cours / su ;
+  //  - toutes les réponses de mémoire alimentent la grille, sauf les deux
+  //    activités bâton (l'élève y calcule de proche en proche, pas de mémoire) ;
+  //  - révision personnalisée : 10 questions sans chrono, priorité aux faits
+  //    à 0 case ratés récemment, puis 1, puis 2, puis jamais vus, puis entretien.
 
   const VERSION = 1;
   const CLE_STOCKAGE = "mathsgo-defi-tables-parcours";
@@ -26,8 +34,22 @@
     entrainement: Object.freeze({total: 10, erreursMax: 1}),
     validation: Object.freeze({total: 20, dureeMax: 90, erreursMax: 2}),
     melange: Object.freeze({total: 25, dureeMax: 120, erreursMax: 2}),
-    expert: Object.freeze({total: 25, dureeMax: 120, erreursMax: 2})
+    expert: Object.freeze({total: 25, dureeMax: 120, erreursMax: 2}),
+    revision: Object.freeze({total: 10, casesMax: 3, conseil: 5, aRevoirMin: 2})
   });
+
+  // Les 36 faits de la grille « Mes calculs » : 2×2 à 9×9, sens confondus.
+  const FAIT_MIN = 2;
+  const FAIT_MAX = 9;
+  const FAITS = Object.freeze((() => {
+    const cles = [];
+    for (let premier = FAIT_MIN; premier <= FAIT_MAX; premier += 1) {
+      for (let second = premier; second <= FAIT_MAX; second += 1) cles.push(`${premier}-${second}`);
+    }
+    return cles;
+  })());
+  const FORMES_TROU = Object.freeze(["right", "left", "reverse-right", "reverse-left"]);
+  const FORMES_DIVISION = Object.freeze(["division-quotient", "division-dividend", "division-divisor"]);
 
   const CONFIG_ENTRAINEMENTS = Object.freeze({
     desordre: Object.freeze({questionTypes: Object.freeze(["direct"])}),
@@ -68,7 +90,8 @@
       prenom: "",
       tables,
       melange: {tables: [], aJour: false, aRefaireAvec: null, dernier: null},
-      expert: {niveau: 0, dernier: null, champion: null}
+      expert: {niveau: 0, dernier: null, champion: null},
+      calculs: {}
     };
   }
 
@@ -115,6 +138,19 @@
       parcours.expert.niveau = entier(brut.expert.niveau, 0, 3);
       parcours.expert.dernier = texteOuNull(brut.expert.dernier);
       parcours.expert.champion = texteOuNull(brut.expert.champion);
+    }
+    if (brut.calculs && typeof brut.calculs === "object") {
+      FAITS.forEach(cle => {
+        const source = brut.calculs[cle];
+        if (!source || typeof source !== "object") return;
+        const vu = texteOuNull(source.vu);
+        if (!vu) return;
+        parcours.calculs[cle] = {
+          cases: entier(source.cases, 0, SEUILS.revision.casesMax),
+          vu,
+          erreur: texteOuNull(source.erreur)
+        };
+      });
     }
     parcours.melange.tables = tablesAcquises(parcours);
     if (parcours.melange.tables.length < 2) {
@@ -334,6 +370,175 @@
     return {mode: "test", tables: [...TABLES], testLevel: entier(niveau, 1, 3, 1), total: SEUILS.expert.total, duration: SEUILS.expert.dureeMax};
   }
 
+  /* ---------- Mes calculs (grille des 36 faits) ---------- */
+
+  function dateDuJour(valeur) {
+    return typeof valeur === "string" && valeur ? valeur : new Date().toISOString().slice(0, 10);
+  }
+
+  function melanger(valeurs, random = Math.random) {
+    const copie = valeurs.slice();
+    for (let index = copie.length - 1; index > 0; index -= 1) {
+      const echange = Math.floor(random() * (index + 1));
+      [copie[index], copie[echange]] = [copie[echange], copie[index]];
+    }
+    return copie;
+  }
+
+  // Normalise une clé de fait (« 7-8 », « 8-7 »…) vers « min-max », ou null si
+  // le calcul est hors grille (facteur 0, 1 ou 10).
+  function cleFait(valeur) {
+    const partie = String(valeur ?? "").split("-").map(Number);
+    if (partie.length !== 2 || partie.some(nombre => !Number.isInteger(nombre))) return null;
+    const premier = Math.min(partie[0], partie[1]);
+    const second = Math.max(partie[0], partie[1]);
+    if (premier < FAIT_MIN || second > FAIT_MAX) return null;
+    return `${premier}-${second}`;
+  }
+
+  function facteursFait(cle) {
+    const [premier, second] = cle.split("-").map(Number);
+    return [premier, second];
+  }
+
+  function libelleFait(cle) {
+    const [premier, second] = facteursFait(cle);
+    return `${premier} × ${second}`;
+  }
+
+  function faitsDeLaTable(table) {
+    return FAITS.filter(cle => facteursFait(cle).includes(Number(table)));
+  }
+
+  function etatFait(fait) {
+    if (!fait) return "jamais-vu";
+    if (fait.cases >= SEUILS.revision.casesMax) return "su";
+    if (fait.cases === 0) return "a-travailler";
+    return "en-cours";
+  }
+
+  // Une série alimente la grille sauf les deux activités bâton (l'élève y
+  // calcule de proche en proche, il ne répond pas de mémoire).
+  function serieAlimenteGrille(config) {
+    if (!config || !config.mode) return false;
+    if (config.mode === "learn") return ["ordered", "random"].includes(config.learnActivity);
+    return true;
+  }
+
+  // Applique UNE réponse à la grille. reponse = {correcte, date}.
+  function appliquerReponse(parcours, cleBrute, reponse = {}) {
+    const cle = cleFait(cleBrute);
+    if (!cle) return {parcours, fait: null};
+    const copie = cloner(parcours);
+    const date = dateDuJour(reponse.date);
+    const avant = copie.calculs[cle] || {cases: 0, vu: null, erreur: null};
+    const fait = {...avant, vu: date};
+    if (reponse.correcte) fait.cases = Math.min(SEUILS.revision.casesMax, avant.cases + 1);
+    else {
+      fait.cases = Math.max(0, avant.cases - 1);
+      fait.erreur = date;
+    }
+    copie.calculs[cle] = fait;
+    return {parcours: copie, fait: {cle, cases: fait.cases, etat: etatFait(fait)}};
+  }
+
+  function resumeCalculs(parcours) {
+    const resume = {sus: 0, enCours: 0, aTravailler: 0, jamaisVus: 0, total: FAITS.length};
+    FAITS.forEach(cle => {
+      const etat = etatFait(parcours.calculs[cle]);
+      if (etat === "su") resume.sus += 1;
+      else if (etat === "en-cours") resume.enCours += 1;
+      else if (etat === "a-travailler") resume.aTravailler += 1;
+      else resume.jamaisVus += 1;
+    });
+    return resume;
+  }
+
+  // La grille 8×8 prête à afficher : lignes 2 à 9, colonnes 2 à 9. La moitié
+  // haute (ligne ≤ colonne) est active, l'autre est le miroir grisé du même fait.
+  function grilleCalculs(parcours) {
+    const facteurs = Array.from({length: FAIT_MAX - FAIT_MIN + 1}, (_, index) => index + FAIT_MIN);
+    const lignes = facteurs.map(ligne => ({
+      ligne,
+      cellules: facteurs.map(colonne => {
+        const cle = cleFait(`${ligne}-${colonne}`);
+        const fait = parcours.calculs[cle] || null;
+        return {
+          ligne,
+          colonne,
+          cle,
+          active: ligne <= colonne,
+          cases: fait ? fait.cases : 0,
+          etat: etatFait(fait),
+          vu: fait ? fait.vu : null,
+          erreur: fait ? fait.erreur : null
+        };
+      })
+    }));
+    return {lignes, resume: resumeCalculs(parcours)};
+  }
+
+  function trierParErreurRecente(entrees) {
+    return entrees.slice().sort((premier, second) => String(second[1].erreur || "").localeCompare(String(premier[1].erreur || "")));
+  }
+
+  function trierParVuAncien(entrees) {
+    return entrees.slice().sort((premier, second) => String(premier[1].vu || "").localeCompare(String(second[1].vu || "")));
+  }
+
+  function calculsATravailler(parcours, table = null) {
+    const dansLaTable = cle => table === null || facteursFait(cle).includes(Number(table));
+    const entrees = Object.entries(parcours.calculs)
+      .filter(([cle, fait]) => dansLaTable(cle) && etatFait(fait) === "a-travailler");
+    return trierParErreurRecente(entrees).map(([cle]) => cle);
+  }
+
+  // Tables acquises dont au moins 2 calculs sont « à travailler » : le ✓ reste,
+  // la carte gagne un repère « à revoir ».
+  function tablesARevoir(parcours) {
+    return tablesAcquises(parcours).filter(table => calculsATravailler(parcours, table).length >= SEUILS.revision.aRevoirMin);
+  }
+
+  // Le plan des 10 questions de révision : priorité 0 case (ratés récemment
+  // d'abord), puis 1 case, puis 2, puis les faits jamais vus, puis l'entretien
+  // des faits sus les plus anciens. Jamais deux fois le même fait, sauf quand la
+  // grille d'une table (8 faits) ne suffit pas à remplir la série.
+  function planRevision(parcours, {table = null, random = Math.random} = {}) {
+    const dansLaTable = cle => table === null || facteursFait(cle).includes(Number(table));
+    const enregistres = Object.entries(parcours.calculs).filter(([cle]) => dansLaTable(cle));
+    const groupe = cases => enregistres.filter(([, fait]) => fait.cases === cases);
+    const ordre = [
+      ...trierParErreurRecente(groupe(0)),
+      ...trierParVuAncien(groupe(1)),
+      ...trierParVuAncien(groupe(2))
+    ].map(([cle]) => cle);
+    ordre.push(...melanger(FAITS.filter(cle => dansLaTable(cle) && !parcours.calculs[cle]), random));
+    ordre.push(...trierParVuAncien(groupe(SEUILS.revision.casesMax)).map(([cle]) => cle));
+    const selection = ordre.slice(0, SEUILS.revision.total);
+    for (let index = 0; selection.length < SEUILS.revision.total && ordre.length; index += 1) {
+      selection.push(ordre[index % ordre.length]);
+    }
+    const divisionsPermises = parcours.expert.niveau >= 3;
+    const categories = melanger(selection.map((_, index) => {
+      if (divisionsPermises && index % 3 === 2) return "division";
+      return index % 2 ? "missing" : "direct";
+    }), random);
+    return selection.map((cle, index) => {
+      const [premier, second] = melanger(facteursFait(cle), random);
+      const categorie = categories[index];
+      const type = categorie === "direct"
+        ? "direct"
+        : categorie === "division"
+          ? FORMES_DIVISION[Math.floor(random() * FORMES_DIVISION.length)]
+          : FORMES_TROU[Math.floor(random() * FORMES_TROU.length)];
+      return {cle, type, first: premier, second};
+    });
+  }
+
+  function configRevision(table = null) {
+    return {mode: "revision", table: TABLES.includes(Number(table)) ? Number(table) : null};
+  }
+
   function etapeTable(parcours, table) {
     const ligne = parcours.tables[table];
     if (ligne.acquise) return null;
@@ -356,6 +561,14 @@
   }
 
   function prochaineEtape(parcours) {
+    const aTravailler = calculsATravailler(parcours);
+    if (aTravailler.length >= SEUILS.revision.conseil) {
+      return {
+        type: "revision",
+        libelle: `Révise tes calculs : ${aTravailler.length} calculs à travailler (10 questions, sans chrono)`,
+        config: configRevision()
+      };
+    }
     const acquises = tablesAcquises(parcours);
     if (acquises.length >= 2 && !toutesAcquises(parcours) && !parcours.melange.aJour) {
       const avec = parcours.melange.aRefaireAvec;
@@ -380,6 +593,7 @@
   // Résumé prêt à afficher (sans DOM) : symboles par ligne.
   function etatAffichage(parcours) {
     const acquises = tablesAcquises(parcours);
+    const aRevoir = tablesARevoir(parcours);
     const lignes = TABLES.map(table => {
       const ligne = parcours.tables[table];
       return {
@@ -387,7 +601,8 @@
         apprends: ACTIVITES_APPRENDS.map(activite => ({activite, etat: ligne.apprends[activite], libelle: LIBELLES_APPRENDS[activite]})),
         entraine: ENTRAINEMENTS.map(entrainement => ({entrainement, etat: ligne.entraine[entrainement], libelle: LIBELLES_ENTRAINEMENTS[entrainement]})),
         dernierEntrainement: ligne.entraine.dernier,
-        acquise: ligne.acquise
+        acquise: ligne.acquise,
+        aRevoir: aRevoir.includes(table)
       };
     });
     const melange = acquises.length >= 2 && !toutesAcquises(parcours)
@@ -399,6 +614,7 @@
       acquises,
       melange,
       expert: {niveau: parcours.expert.niveau, etoiles: [1, 2, 3].map(niveau => niveau <= parcours.expert.niveau), champion: parcours.expert.champion},
+      calculs: resumeCalculs(parcours),
       prochaine: prochaineEtape(parcours)
     };
   }
@@ -433,7 +649,7 @@
   }
 
   function estVide(parcours) {
-    return !parcours.prenom && !parcours.expert.niveau && TABLES.every(table => {
+    return !parcours.prenom && !parcours.expert.niveau && !Object.keys(parcours.calculs).length && TABLES.every(table => {
       const ligne = parcours.tables[table];
       return !ligne.acquise
         && ACTIVITES_APPRENDS.every(activite => ligne.apprends[activite] === 0)
@@ -467,6 +683,20 @@
     configValidation,
     configMelange,
     configExpert,
+    FAITS,
+    cleFait,
+    facteursFait,
+    libelleFait,
+    faitsDeLaTable,
+    etatFait,
+    serieAlimenteGrille,
+    appliquerReponse,
+    resumeCalculs,
+    grilleCalculs,
+    calculsATravailler,
+    tablesARevoir,
+    planRevision,
+    configRevision,
     prochaineEtape,
     etatAffichage,
     charger,
