@@ -223,6 +223,20 @@
       box-shadow: inset 0 0 0 1px var(--blue);
     }
 
+    .revision-sheet-action { display: flex; justify-content: center; margin-top: 3px; }
+    .revision-sheet-link {
+      min-height: 40px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 7px 13px;
+      border-radius: 999px;
+      color: var(--teal);
+      font-size: .8rem;
+      font-weight: 900;
+      text-underline-offset: 3px;
+    }
+
     .settings-panel {
       margin: 12px 0 0;
       padding: 15px;
@@ -626,6 +640,9 @@
           </div>
           <div class="secondary-mode-choice">
             <button class="secondary-mode-button" type="button" data-mode="evaluation" aria-controls="settings-screen">Comme l’évaluation CM1</button>
+          </div>
+          <div class="revision-sheet-action">
+            <a class="revision-sheet-link" href="./fiche_tables_multiplication.pdf" download>↓ Télécharger la fiche de révision</a>
           </div>
         </section>
 

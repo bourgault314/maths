@@ -6,6 +6,8 @@ import test from "node:test";
 const require = createRequire(import.meta.url);
 const core = require("../outils/calcul_mental/defi_tables_core.js");
 const html = await readFile(new URL("../outils/calcul_mental/defi_tables.html", import.meta.url), "utf8");
+const revisionPdf = await readFile(new URL("../outils/calcul_mental/fiche_tables_multiplication.pdf", import.meta.url));
+const editableSource = await readFile(new URL("../_sources/defi-tables/fiche_tables_multiplication.docx", import.meta.url));
 
 function seededRandom(seed = 123456789) {
   let value = seed >>> 0;
@@ -138,6 +140,7 @@ test("l’accueil compact distingue quatre choix principaux et l’évaluation C
   assert.match(html, /data-mode="test"[\s\S]*Je deviens expert/);
   assert.match(html, /data-mode="evaluation"[\s\S]*Comme l’évaluation CM1/);
   assert.match(html, /data-mode="custom"[\s\S]*Réglages[\s\S]*Je choisis tout/);
+  assert.match(html, /href="\.\/fiche_tables_multiplication\.pdf"[^>]*download>↓ Télécharger la fiche de révision/);
   assert.match(html, /data-question-type="division"[\s\S]*Division/);
   assert.match(html, /data-test-level="1"[\s\S]*Niveau 1/);
   assert.match(html, /data-test-level="2"[\s\S]*Niveau 2/);
@@ -155,4 +158,11 @@ test("la réponse s’affiche dans le calcul sans déplacer le clavier", () => {
   assert.doesNotMatch(html, /id="answer"/);
   assert.match(html, /\.answer-feedback \{[\s\S]*min-height:/);
   assert.match(html, /@media \(max-width: 620px\)[\s\S]*\.fullscreen-toggle \{ display: none; \}/);
+});
+
+test("la fiche PDF est publique mais sa source modifiable n’est pas proposée aux élèves", () => {
+  assert.equal(revisionPdf.subarray(0, 4).toString(), "%PDF");
+  assert.equal(editableSource.subarray(0, 2).toString(), "PK");
+  assert.match(html, /href="\.\/fiche_tables_multiplication\.pdf"[^>]*download/);
+  assert.doesNotMatch(html, /fiche_tables_multiplication\.docx/);
 });
