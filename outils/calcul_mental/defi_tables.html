@@ -293,6 +293,7 @@
     .order-options,
     .count-options,
     .time-options { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+    .count-options.is-training { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .order-options { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .time-options { grid-template-columns: repeat(4, minmax(0, 1fr)); }
     .time-options.is-timed-only { grid-template-columns: repeat(3, minmax(0, 1fr)); }
@@ -444,20 +445,41 @@
     .answer-feedback.is-wrong { color: var(--red); background: var(--red-soft); }
     .learn-sequence {
       width: 100%;
-      min-height: 28px;
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      justify-content: center;
-      gap: 4px;
-      margin: 2px 0 0;
-      padding: 2px 0;
-      color: #075b55;
-      font-size: clamp(.82rem, 3.2vw, 1rem);
-      font-weight: 950;
-      line-height: 1.3;
+      margin: 5px 0 0;
     }
-    .learn-sequence-label { color: var(--muted); }
+    .number-stick {
+      width: min(100%, 560px);
+      display: grid;
+      grid-template-columns: repeat(11, minmax(0, 1fr));
+      margin: 0 auto;
+      padding: 3px;
+      overflow: hidden;
+      border: 3px solid #9a7143;
+      border-radius: 10px;
+      background: #c99a62;
+      box-shadow: 0 3px 8px rgba(43, 67, 84, .12);
+    }
+    .number-stick-cell {
+      position: relative;
+      min-width: 0;
+      min-height: 36px;
+      display: grid;
+      place-items: center;
+      border: 1px solid #b9cfda;
+      border-left: 0;
+      color: #708596;
+      background: #f8fbfd;
+      font-size: clamp(.62rem, 2.7vw, .94rem);
+      font-weight: 950;
+      line-height: 1;
+    }
+    .number-stick-cell:first-child { border-left: 1px solid #b9cfda; border-radius: 6px 0 0 6px; }
+    .number-stick-cell:last-child { border-radius: 0 6px 6px 0; }
+    .number-stick-cell.is-filled { color: #075b55; background: #e7f8f5; }
+    .number-stick-cell.is-current { z-index: 1; box-shadow: inset 0 0 0 3px var(--blue); }
+    .number-stick-cell.is-new { z-index: 2; animation: stick-pop .35s ease-out; color: #fff; background: var(--teal); box-shadow: inset 0 0 0 2px #075b55; }
+    .number-stick-cell.is-empty::after { content: ""; width: 42%; height: 2px; border-radius: 99px; background: #c7d7e0; }
+    @keyframes stick-pop { 0% { transform: scale(.72); } 70% { transform: scale(1.12); } 100% { transform: scale(1); } }
     .keypad { max-width: 390px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 12px auto; }
     .keypad button {
       min-height: 49px;
@@ -485,7 +507,9 @@
     .correction-list { display: grid; gap: 9px; margin: 14px 0 0; padding: 0; list-style: none; }
     .correction-list li { padding: 12px; border: 1px solid #efd5d5; border-radius: 13px; background: #fff; }
     .correction-list li.is-correct { border-color: #b8dfc8; background: #f7fcf9; }
-    .correction-list li > strong { display: block; margin-bottom: 8px; font-size: 1.12rem; }
+    .correction-question { display: flex; align-items: center; gap: 9px; margin-bottom: 8px; }
+    .correction-number { flex: 0 0 auto; padding: 4px 8px; border-radius: 999px; color: #31566c; background: #eaf3f8; font-size: .74rem; font-weight: 950; }
+    .correction-expression { color: var(--ink); font-size: 1.12rem; font-weight: 950; }
     .correction-list li > div { display: flex; flex-wrap: wrap; gap: 7px; }
     .correction-list span { padding: 6px 9px; border-radius: 9px; font-weight: 850; }
     .given-answer { color: var(--red); background: var(--red-soft); }
@@ -589,7 +613,9 @@
       .challenge-playing .progress-track { height: 6px; margin: 4px 0 6px; }
       .challenge-playing .question { flex: 1; min-height: 0; display: flex; flex-direction: column; justify-content: flex-start; padding: 6px 10px 8px; overflow-y: auto; overscroll-behavior: contain; }
       .challenge-playing .expression { min-height: clamp(68px, 12dvh, 92px); margin: 3px 0 6px; padding: 7px; font-size: clamp(2rem, 9vw, 3.2rem); }
-      .challenge-playing .learn-sequence { min-height: 28px; margin-top: 1px; padding: 1px 0; font-size: .82rem; }
+      .challenge-playing .learn-sequence { margin-top: 2px; }
+      .challenge-playing .number-stick { padding: 2px; border-width: 2px; border-radius: 8px; }
+      .challenge-playing .number-stick-cell { min-height: 31px; font-size: clamp(.58rem, 2.75vw, .76rem); }
       .challenge-playing .answer-feedback { min-height: 38px; margin-top: 3px; padding: 5px 8px; font-size: .86rem; }
       .challenge-playing .keypad { width: min(100%, 330px); gap: 5px; margin: 6px auto; }
       .challenge-playing .keypad button { min-height: 44px; height: 44px; }
@@ -652,7 +678,7 @@
             </button>
             <button class="mode-card" type="button" data-mode="train" aria-controls="settings-screen">
               <span class="mode-card-icon" aria-hidden="true">🎯</span>
-              <span><strong>Je m’entraîne</strong><small>20 questions · à mon rythme</small></span>
+              <span><strong>Je m’entraîne</strong><small>10 ou 20 questions · à mon rythme</small></span>
             </button>
             <button class="mode-card" type="button" data-mode="test" aria-controls="settings-screen">
               <span class="mode-card-icon" aria-hidden="true">⏱️</span>
@@ -721,7 +747,7 @@
             <div class="count-options">
               <button class="type-button" type="button" data-total="10" aria-pressed="false"><strong>10</strong></button>
               <button class="type-button is-selected" type="button" data-total="20" aria-pressed="true"><strong>20</strong></button>
-              <button class="type-button" type="button" data-total="25" aria-pressed="false"><strong>25</strong></button>
+              <button class="type-button" type="button" data-total="25" data-custom-only aria-pressed="false"><strong>25</strong></button>
             </div>
           </fieldset>
           <fieldset id="time-settings" class="setting-group" hidden>
@@ -772,7 +798,7 @@
             <button id="validate" class="primary" type="button">Valider</button>
             <button id="skip" class="secondary" type="button">Passer</button>
           </div>
-          <div id="learn-sequence" class="learn-sequence" hidden aria-live="polite"><span id="learn-sequence-label" class="learn-sequence-label"></span><span id="learn-sequence-values"></span></div>
+          <div id="learn-sequence" class="learn-sequence" hidden aria-live="polite"></div>
         </article>
       </div>
 
@@ -802,7 +828,7 @@
     <button type="button" data-mathsgo-consent-open onclick="window.mathsgoConsentement &amp;&amp; window.mathsgoConsentement.ouvrir()">Gérer mes cookies</button>
   </footer>
 
-  <script src="./defi_tables_core.js?v=20260829-2"></script>
+  <script src="./defi_tables_core.js?v=20260829-3"></script>
   <script>
     (() => {
       "use strict";
@@ -839,6 +865,7 @@
         waitingForContinue: false,
         mastered: new Set(),
         revealedLearnResults: new Set(),
+        lastRevealedLearnMultiplier: null,
         answer: "",
         launchReady: false
       };
@@ -1013,7 +1040,11 @@
         $("order-settings").hidden = configuration.mode !== "learn";
         $("question-settings").hidden = configuration.mode !== "custom";
         $("test-level-settings").hidden = configuration.mode !== "test";
-        $("count-settings").hidden = configuration.mode !== "custom";
+        $("count-settings").hidden = configuration.mode !== "custom" && configuration.mode !== "train";
+        $("count-settings").querySelector(".count-options").classList.toggle("is-training", configuration.mode === "train");
+        document.querySelectorAll("[data-custom-only]").forEach(button => {
+          button.hidden = configuration.mode === "train";
+        });
         $("time-settings").hidden = configuration.mode !== "custom" && configuration.mode !== "test";
         $("no-timer-option").hidden = configuration.mode === "test";
         $("time-options").classList.toggle("is-timed-only", configuration.mode === "test");
@@ -1081,23 +1112,43 @@
         renderInlineAnswer();
       }
 
+      function createNumberStick(table, revealedMultipliers, {activeMultiplier = null, newMultiplier = null} = {}) {
+        const stick = document.createElement("div");
+        stick.className = "number-stick";
+        stick.setAttribute("role", "list");
+        for (let multiplier = 0; multiplier <= 10; multiplier += 1) {
+          const cell = document.createElement("span");
+          const filled = revealedMultipliers.has(multiplier);
+          cell.className = `number-stick-cell ${filled ? "is-filled" : "is-empty"}`;
+          cell.classList.toggle("is-current", multiplier === activeMultiplier);
+          cell.classList.toggle("is-new", filled && multiplier === newMultiplier);
+          cell.setAttribute("role", "listitem");
+          cell.dataset.multiplier = String(multiplier);
+          if (filled) {
+            const value = table * multiplier;
+            cell.textContent = String(value);
+            cell.setAttribute("aria-label", `${table} fois ${multiplier}, ${value}`);
+          } else {
+            cell.setAttribute("aria-label", `${table} fois ${multiplier}, pas encore rempli`);
+          }
+          stick.append(cell);
+        }
+        stick.setAttribute("aria-label", `Bâton de la table de ${table}`);
+        return stick;
+      }
+
       function renderLearnSequence() {
         const zone = $("learn-sequence");
-        const label = $("learn-sequence-label");
-        const values = $("learn-sequence-values");
-        const visible = state.configuration?.mode === "learn" && state.configuration.order === "ordered";
+        const visible = state.configuration?.mode === "learn";
         zone.hidden = !visible;
         $("question-card").classList.toggle("show-learn-sequence", visible);
         if (!visible) return;
         const table = state.configuration.tables[0];
-        const results = [...state.revealedLearnResults]
-          .sort((first, second) => first - second)
-          .map(multiplier => table * multiplier);
-        label.textContent = `Table de ${table} :`;
-        values.textContent = results.join(" → ");
-        zone.setAttribute("aria-label", results.length
-          ? `Résultats déjà rencontrés : ${results.join(", ")}`
-          : "Les résultats apparaîtront ici");
+        const question = state.questions[state.index];
+        zone.replaceChildren(createNumberStick(table, state.revealedLearnResults, {
+          activeMultiplier: question?.multiplier,
+          newMultiplier: state.lastRevealedLearnMultiplier
+        }));
       }
 
       function renderQuestion() {
@@ -1110,6 +1161,7 @@
           $("progress").style.width = `${state.index / TOTAL * 100}%`;
         }
         state.answer = "";
+        state.lastRevealedLearnMultiplier = null;
         renderExpression(question);
         renderLearnSequence();
         clearAnswerFeedback();
@@ -1218,8 +1270,15 @@
         entries.forEach(entry => {
           const item = document.createElement("li");
           item.classList.toggle("is-correct", entry.correct);
-          const expression = document.createElement("strong");
-          expression.textContent = `${entry.number}. ${entry.prompt}`;
+          const questionLine = document.createElement("div");
+          questionLine.className = "correction-question";
+          const number = document.createElement("span");
+          number.className = "correction-number";
+          number.textContent = `Question ${entry.number}`;
+          const expression = document.createElement("span");
+          expression.className = "correction-expression";
+          expression.textContent = entry.prompt;
+          questionLine.append(number, expression);
           const answers = document.createElement("div");
           const given = document.createElement("span");
           given.className = entry.correct ? "expected-answer" : "given-answer";
@@ -1231,7 +1290,7 @@
             expected.textContent = `Bonne réponse : ${entry.expected}`;
             answers.append(expected);
           }
-          item.append(expression, answers);
+          item.append(questionLine, answers);
           list.append(item);
         });
         if (!completeReview) {
@@ -1310,7 +1369,7 @@
         if (config.mode === "evaluation") return "Évaluation CM1 · 25 questions · 1 minute";
         const tables = shortTablesLabel(config);
         if (config.mode === "learn") return `${tables} · ${config.order === "ordered" ? "dans l’ordre" : "dans le désordre"} · de ×0 à ×10`;
-        if (config.mode === "train") return `${tables} · 20 questions · sans chronomètre`;
+        if (config.mode === "train") return `${tables} · ${config.total} questions · sans chronomètre`;
         if (config.mode === "test") return `${tables} · niveau ${config.testLevel} · 25 questions · ${CORE.durationLabel(config.duration)}`;
         const questionLabels = {direct: "produits", missing: "trous", division: "divisions"};
         return `${tables} · ${config.questionTypes.map(type => questionLabels[type]).join(" + ")} · ${config.total} questions · ${CORE.durationLabel(config.duration)}`;
@@ -1358,7 +1417,10 @@
         state.tenSecondAlert = false;
         state.waitingForContinue = false;
         state.mastered = new Set();
-        state.revealedLearnResults = new Set();
+        state.revealedLearnResults = new Set(config.mode === "learn"
+          ? config.order === "random" ? [0, 5, 10] : [0]
+          : []);
+        state.lastRevealedLearnMultiplier = null;
         state.answer = "";
         state.launchReady = true;
         $("launch-summary").textContent = launchLabel(config);
@@ -1415,10 +1477,9 @@
             const alreadyWaiting = state.questions.slice(state.index + 1).some(candidate => candidate.factKey === question.factKey);
             if (!alreadyWaiting) state.questions.push({...question, retry: true});
           }
-          if (state.configuration.order === "ordered") {
-            state.revealedLearnResults.add(question.multiplier);
-            renderLearnSequence();
-          }
+          state.revealedLearnResults.add(question.multiplier);
+          state.lastRevealedLearnMultiplier = question.multiplier;
+          renderLearnSequence();
           showAnswerFeedback(question, correct, skip ? null : value, !correct);
           return;
         }
