@@ -182,11 +182,12 @@ test("la réponse s’affiche dans le calcul sans déplacer le clavier", () => {
   assert.match(html, /@media \(max-width: 620px\)[\s\S]*\.fullscreen-toggle \{ display: none; \}/);
 });
 
-test("le lancement attend un clic sur C’est parti et résume les réglages", () => {
+test("J’apprends démarre directement et les autres parcours gardent leur confirmation", () => {
   assert.match(html, /id="launch-summary"/);
   assert.match(html, /id="launch-start"[\s\S]*C’est parti/);
   assert.match(html, /\$\("launch-start"\)\.addEventListener\("click", beginRound\)/);
   assert.doesNotMatch(html, /setTimeout\(beginRound/);
+  assert.match(html, /if \(config\.mode === "learn"\) \{[\s\S]*beginRound\(\);[\s\S]*return;/);
   assert.match(html, /de ×0 à ×10/);
   assert.match(html, /niveau \$\{config\.testLevel\} · 25 questions/);
 });
@@ -201,16 +202,19 @@ test("J’apprends remplit un bâton dans les deux ordres et Je m’entraîne co
   assert.match(html, /state\.revealedLearnResults\.add\(question\.multiplier\)/);
   assert.match(html, /config\.learnActivity === "gaps" \? \[0, 5, 10\] : \[\]/);
   assert.match(html, /draftMultiplier: stickOnly \? question\?\.multiplier : null/);
+  assert.match(html, /activeMultiplier: stickOnly \? question\?\.multiplier : null/);
   assert.match(html, /if \(stickOnly\) \$\("answer-feedback"\)\.before\(zone\)/);
   assert.match(html, /question\?\.multiplier === 0 \? "Commence à 0\." : `Ajoute \$\{table\}\.\`/);
   assert.match(html, /scheduleAutoAdvance\(\)/);
   assert.match(html, /\}, 800\);/);
+  assert.match(html, /\.question\.stick-trace \.learn-sequence \{ margin-top: 20px; \}/);
+  assert.match(html, /\.challenge-playing \.number-stick-cell \{ min-height: 40px; font-size: clamp\(\.68rem, 3vw, \.9rem\); \}/);
   assert.doesNotMatch(html, /results\.join\(" → "\)/);
   assert.match(html, /state\.configuration\.mode === "train"\) \{[\s\S]*showAnswerFeedback/);
   assert.match(html, /textContent = enabled \? "Valider" : "Suivant"/);
   assert.match(html, /completeReview = state\.configuration\.mode === "test"/);
   assert.match(html, /Bilan de tes réponses/);
-  assert.match(html, /defi_tables_core\.js\?v=20260829-5/);
+  assert.match(html, /defi_tables_core\.js\?v=20260829-6/);
 });
 
 test("le numéro de question est séparé du calcul dans le bilan", () => {
