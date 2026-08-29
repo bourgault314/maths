@@ -620,6 +620,8 @@
       .catalogue-link-label { display: none; }
     }
 
+    body.challenge-playing .question.show-learn-sequence .actions { margin-bottom: 0; }
+
     @media (prefers-reduced-motion: reduce) {
       *,
       *::before,
@@ -766,11 +768,11 @@
             <button type="button" data-key="7">7</button><button type="button" data-key="8">8</button><button type="button" data-key="9">9</button>
             <button type="button" data-key="clear">Effacer</button><button type="button" data-key="0">0</button><button type="button" data-key="backspace" aria-label="Effacer un chiffre">⌫</button>
           </div>
-          <div id="learn-sequence" class="learn-sequence" hidden aria-live="polite"><span id="learn-sequence-label" class="learn-sequence-label"></span><span id="learn-sequence-values"></span></div>
           <div class="actions">
             <button id="validate" class="primary" type="button">Valider</button>
             <button id="skip" class="secondary" type="button">Passer</button>
           </div>
+          <div id="learn-sequence" class="learn-sequence" hidden aria-live="polite"><span id="learn-sequence-label" class="learn-sequence-label"></span><span id="learn-sequence-values"></span></div>
         </article>
       </div>
 
@@ -1085,6 +1087,7 @@
         const values = $("learn-sequence-values");
         const visible = state.configuration?.mode === "learn" && state.configuration.order === "ordered";
         zone.hidden = !visible;
+        $("question-card").classList.toggle("show-learn-sequence", visible);
         if (!visible) return;
         const table = state.configuration.tables[0];
         const results = [...state.revealedLearnResults]

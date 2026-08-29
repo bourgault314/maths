@@ -172,7 +172,9 @@ test("le lancement attend un clic sur C’est parti et résume les réglages", (
 });
 
 test("J’apprends affiche progressivement la suite et Je m’entraîne corrige immédiatement", () => {
-  assert.match(html, /class="keypad"[\s\S]*id="learn-sequence"[\s\S]*class="actions"/);
+  assert.match(html, /class="keypad"[\s\S]*class="actions"[\s\S]*id="learn-sequence"/);
+  assert.match(html, /question-card"\)\.classList\.toggle\("show-learn-sequence", visible\)/);
+  assert.match(html, /\.question\.show-learn-sequence \.actions \{ margin-bottom: 0; \}/);
   assert.match(html, /Table de \$\{table\} :/);
   assert.match(html, /results\.join\(" → "\)/);
   assert.match(html, /state\.revealedLearnResults\.add\(question\.multiplier\)/);
