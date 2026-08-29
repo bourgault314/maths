@@ -86,7 +86,8 @@ test("les règles et durées approuvées restent explicites", () => {
   assert.equal(tablesCore.PRESETS.train.total, 20);
   assert.equal(tablesCore.PRESETS.train.duration, null);
   assert.equal(tablesCore.PRESETS.test.total, 25);
-  assert.equal(tablesCore.PRESETS.test.duration, 60);
+  assert.equal(tablesCore.PRESETS.test.duration, 120);
+  assert.equal(tablesCore.PRESETS.test.testLevel, 1);
   assert.equal(tablesCore.PRESETS.evaluation.total, 25);
   assert.equal(tablesCore.PRESETS.evaluation.duration, 60);
   assert.match(pages["outils/calcul_mental/defi_calcul.html"], /const TOTAL = 30;[\s\S]*const DURATION = 180;/);

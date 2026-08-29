@@ -6317,7 +6317,7 @@ window.MATHSGO_CATALOGUE = {
         "facteur manquant",
         "divisions liées",
         "entraînement sans chronomètre",
-        "25 questions en une minute"
+        "25 questions chronométrées"
       ],
       "kind": "tool",
       "status": "published",
