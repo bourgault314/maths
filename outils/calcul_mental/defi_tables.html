@@ -1614,7 +1614,7 @@
         state.answer = "";
         state.launchReady = true;
         $("launch-summary").textContent = launchLabel(config);
-        if (config.mode === "learn") {
+        if (config.mode === "learn" || config.mode === "train") {
           beginRound();
           return;
         }
@@ -1690,6 +1690,10 @@
         }
         if (state.configuration.mode === "train") {
           showAnswerFeedback(question, correct, skip ? null : value);
+          if (correct) {
+            $("validate").style.visibility = "hidden";
+            scheduleAutoAdvance();
+          }
           return;
         }
         advanceAfterResponse();
