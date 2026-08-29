@@ -296,3 +296,53 @@ test("appliquerSerie ne modifie jamais l’objet reçu", () => {
   parcours.demarrerSerie(etat, normaliser(parcours.configApprends(7, "gaps")));
   assert.equal(JSON.stringify(etat), copie);
 });
+
+const html = await (await import("node:fs/promises")).readFile(new URL("../outils/calcul_mental/defi_tables.html", import.meta.url), "utf8");
+const confidentialite = await (await import("node:fs/promises")).readFile(new URL("../confidentialite.html", import.meta.url), "utf8");
+
+test("la page charge le moteur du parcours et propose la carte Mon parcours", () => {
+  assert.match(html, /<script src="\.\/defi_tables_mon_parcours\.js\?v=[^"]+"><\/script>/);
+  assert.match(html, /window\.MATHSGO_DEFI_TABLES_MON_PARCOURS/);
+  assert.match(html, /id="open-parcours"[^>]*class="mode-card mode-card-parcours"[\s\S]*Mon parcours/);
+  assert.match(html, /id="parcours"[^>]*class="parcours-screen"/);
+  assert.match(html, /id="parcours-list"/);
+  assert.match(html, /id="parcours-melange"/);
+  assert.match(html, /id="parcours-expert"/);
+  assert.match(html, /id="parcours-next"/);
+  assert.match(html, /\["intro", "launch", "play", "result", "parcours"\]/);
+});
+
+test("prénom local, remise à zéro confirmée dans la page, résultat relié au parcours", () => {
+  assert.match(html, /id="parcours-name-input"[^>]*maxlength="20"/);
+  assert.match(html, /Ton prénom reste sur cet appareil, rien n’est envoyé\./);
+  assert.match(html, /id="parcours-reset"[\s\S]*Recommencer à zéro/);
+  assert.match(html, /id="parcours-confirm-yes"[\s\S]*Effacer/);
+  assert.doesNotMatch(html, /window\.confirm\(/);
+  assert.match(html, /PARCOURS\.appliquerSerie\(parcours, state\.configuration, \{correct: state\.correct, total: TOTAL\}\)/);
+  assert.match(html, /PARCOURS\.demarrerSerie\(parcours, config\)/);
+  assert.match(html, /id="result-parcours"/);
+  assert.match(html, /id="result-open-parcours"[\s\S]*Voir mon parcours/);
+  assert.match(html, /if \(window\.location\.hash === "#parcours"\) openParcours\(\);/);
+});
+
+test("Je m’entraîne propose produits, trous ou les deux ; la validation se lance en 1 min 30, 2 ou 3 min", () => {
+  assert.match(html, /id="train-type-settings"[\s\S]*data-train-type="desordre"[\s\S]*data-train-type="trous"[\s\S]*data-train-type="mixte"/);
+  assert.match(html, /const TRAIN_TYPES = \{desordre: \["direct"\], trous: \["missing"\], mixte: \["direct", "missing"\]\}/);
+  assert.match(html, /data-launch-duration="90"[\s\S]*data-launch-duration="120"[\s\S]*data-launch-duration="180"/);
+  assert.match(html, /Ta table est validée en 1 min 30\./);
+  assert.match(html, /const completeReview = state\.configuration\.mode === "test" \|\| state\.configuration\.mode === "validation";/);
+});
+
+test("dans Je deviens expert, « Toutes les tables » coche 2 à 10", () => {
+  assert.match(html, /return mode === "test" \? PARCOURS_TABLES : ALL_TABLES;/);
+  assert.match(html, /"Toutes les tables \(2 à 10\)"/);
+  assert.equal(core.configurationLabel(normaliser({mode: "test", tables: [2, 3, 4, 5, 6, 7, 8, 9, 10]})), "Je deviens expert · Tables de 2 à 10 · niveau 1 · 25 questions · 2 minutes");
+  assert.equal(core.configurationLabel(normaliser(parcours.configEntraine(7, "trous"))), "Je m’entraîne · Table de 7 · nombres manquants · 10 questions · sans chronomètre");
+  assert.equal(core.configurationLabel(normaliser({mode: "train", tables: [6, 7]})), "Je m’entraîne · Tables de 6 et 7 · 10 questions · sans chronomètre");
+});
+
+test("la page Confidentialité décrit la sauvegarde locale de Mon parcours", () => {
+  assert.match(confidentialite, /<code>mathsgo-defi-tables-parcours<\/code>/);
+  assert.match(confidentialite, /un prénom saisi librement et la progression par table/);
+  assert.match(confidentialite, /Recommencer à zéro/);
+});

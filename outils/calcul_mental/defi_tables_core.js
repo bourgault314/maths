@@ -230,6 +230,7 @@
 
   function tablesLabel(tables) {
     if (tables.length === ALL_TABLES.length) return "Tables de 1 à 10";
+    if (tables.length === 9 && tables.every((table, index) => table === index + 2)) return "Tables de 2 à 10";
     if (tables.length === 1) return `Table de ${tables[0]}`;
     return `Tables de ${joinFrench(tables)}`;
   }
@@ -263,6 +264,10 @@
       details.push(activityLabels[normalized.learnActivity]);
     }
     if (normalized.mode === "test") details.push(`niveau ${normalized.testLevel}`);
+    if (normalized.mode === "train" && normalized.questionTypes.join() !== "direct") {
+      const labels = {direct: "produits", missing: "nombres manquants", division: "divisions"};
+      details.push(normalized.questionTypes.map(type => labels[type]).join(" + "));
+    }
     if (normalized.mode === "custom") {
       const labels = {direct: "produits", missing: "nombres manquants", division: "divisions"};
       details.push(normalized.questionTypes.map(type => labels[type]).join(" + "));
