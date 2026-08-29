@@ -198,6 +198,9 @@ test("J’apprends remplit un bâton dans les deux ordres et Je m’entraîne co
   assert.match(html, /\.question\.show-learn-sequence \.actions \{ margin-bottom: 0; \}/);
   assert.match(html, /function createNumberStick/);
   assert.match(html, /grid-template-columns: repeat\(11/);
+  assert.match(html, /multiplierLabel\.textContent = `×\$\{multiplier\}`/);
+  assert.match(html, /multiplierLabel\.setAttribute\("aria-hidden", "true"\)/);
+  assert.match(html, /cell\.append\(multiplierLabel, value\)/);
   assert.match(html, /const visible = state\.configuration\?\.mode === "learn"/);
   assert.match(html, /state\.revealedLearnResults\.add\(question\.multiplier\)/);
   assert.match(html, /config\.learnActivity === "gaps" \? \[0, 5, 10\] : \[\]/);
@@ -208,7 +211,8 @@ test("J’apprends remplit un bâton dans les deux ordres et Je m’entraîne co
   assert.match(html, /scheduleAutoAdvance\(\)/);
   assert.match(html, /\}, 800\);/);
   assert.match(html, /\.question\.stick-trace \.learn-sequence \{ margin-top: 20px; \}/);
-  assert.match(html, /\.challenge-playing \.number-stick-cell \{ min-height: 40px; font-size: clamp\(\.68rem, 3vw, \.9rem\); \}/);
+  assert.match(html, /\.challenge-playing \.number-stick-cell \{ min-height: 54px; grid-template-rows: 16px minmax\(38px, 1fr\); \}/);
+  assert.match(html, /\.challenge-playing \.number-stick-value \{ min-height: 38px; font-size: clamp\(\.68rem, 3vw, \.9rem\); \}/);
   assert.doesNotMatch(html, /results\.join\(" → "\)/);
   assert.match(html, /state\.configuration\.mode === "train"\) \{[\s\S]*showAnswerFeedback/);
   assert.match(html, /textContent = enabled \? "Valider" : "Suivant"/);

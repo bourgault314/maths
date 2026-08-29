@@ -257,9 +257,11 @@ def build_document():
     title_paragraph.alignment = WD_ALIGN_PARAGRAPH.LEFT
     title_paragraph.paragraph_format.line_spacing = 0.95
     line_1 = title_paragraph.add_run(TITLE_LINE_1 + "\n")
-    set_run_font(line_1, 21.5, INK, True)
+    # Ces tailles laissent une marge de sécurité lors de l'ouverture ou de
+    # l'export du DOCX dans Word comme dans LibreOffice.
+    set_run_font(line_1, 19.5, INK, True)
     line_2 = title_paragraph.add_run(TITLE_LINE_2)
-    set_run_font(line_2, 18, INK, True)
+    set_run_font(line_2, 15.5, INK, True)
 
     qr_cell = header.cell(0, 2)
     qr_paragraph = clear_paragraph(qr_cell.paragraphs[0])

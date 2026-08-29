@@ -46,6 +46,16 @@ jobs:
         with:
           node-version: 22
 
+      - name: Installer Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Générer la fiche des tables depuis sa source
+        run: |
+          python -m pip install --disable-pip-version-check PyMuPDF pypdf reportlab
+          python _sources/defi-tables/generer_pdf.py
+
       - name: Vérifications bloquantes
         run: |
           node --test
