@@ -12,7 +12,7 @@
   const DIVISION_FORMS = Object.freeze(["division-quotient", "division-dividend", "division-divisor"]);
   const MODES = Object.freeze(["learn", "train", "test", "evaluation", "custom"]);
   const PRESETS = Object.freeze({
-    learn: Object.freeze({total: 11, duration: null, questionTypes: Object.freeze(["direct"]), selection: "single", order: "ordered"}),
+    learn: Object.freeze({total: 11, duration: null, questionTypes: Object.freeze(["direct"]), selection: "single", order: "ordered", learnActivity: "ordered"}),
     train: Object.freeze({total: 10, duration: null, questionTypes: Object.freeze(["direct"]), selection: "multiple", order: "random"}),
     test: Object.freeze({total: 25, duration: 120, questionTypes: Object.freeze(["direct"]), selection: "multiple", order: "random", testLevel: 1}),
     evaluation: Object.freeze({total: 25, duration: 60, questionTypes: Object.freeze(["evaluation"]), selection: "automatic", order: "random"}),
@@ -62,10 +62,13 @@
 
   function normalizeConfiguration(input = {}) {
     const mode = MODES.includes(input.mode) ? input.mode : null;
-    if (!mode) return {mode: null, tables: [], order: "ordered", questionTypes: ["direct"], total: 20, duration: null, testLevel: 1};
+    if (!mode) return {mode: null, tables: [], order: "ordered", learnActivity: "ordered", questionTypes: ["direct"], total: 20, duration: null, testLevel: 1};
     const preset = PRESETS[mode];
     const tables = mode === "evaluation" ? [...ALL_TABLES] : normalizedTables(input.tables);
-    const order = input.order === "random" ? "random" : preset.order;
+    const requestedLearnActivity = ["construct", "gaps", "ordered", "random"].includes(input.learnActivity)
+      ? input.learnActivity
+      : input.order === "random" ? "random" : "ordered";
+    const order = requestedLearnActivity === "random" ? "random" : preset.order;
     const requestedQuestionTypes = Array.isArray(input.questionTypes)
       ? input.questionTypes
       : input.questionType && input.questionType !== "mixed"
@@ -89,8 +92,9 @@
       mode,
       tables,
       order: mode === "learn" ? order : preset.order,
+      learnActivity: mode === "learn" ? requestedLearnActivity : "ordered",
       questionTypes: mode === "test" ? testQuestionTypes : mode === "custom" && questionTypes.length ? questionTypes : [...preset.questionTypes],
-      total: mode === "train" || mode === "custom" ? total : preset.total,
+      total: mode === "learn" && requestedLearnActivity === "gaps" ? 8 : mode === "train" || mode === "custom" ? total : preset.total,
       duration: mode === "test" ? testDuration : mode === "custom" ? duration : preset.duration,
       testLevel
     };
@@ -150,8 +154,15 @@
     const normalized = normalizeConfiguration({...config, mode: "learn"});
     if (normalized.tables.length !== 1) throw new Error("Le parcours J’apprends nécessite exactement une table.");
     const table = normalized.tables[0];
-    const multipliers = normalized.order === "ordered" ? [...LEARN_MULTIPLIERS] : shuffle(LEARN_MULTIPLIERS, random);
-    return multipliers.map(multiplier => ({...tableQuestion("direct", table, multiplier), focusTable: table, multiplier}));
+    const multipliers = normalized.learnActivity === "gaps"
+      ? shuffle(LEARN_MULTIPLIERS.filter(multiplier => ![0, 5, 10].includes(multiplier)), random)
+      : normalized.learnActivity === "random" ? shuffle(LEARN_MULTIPLIERS, random) : [...LEARN_MULTIPLIERS];
+    return multipliers.map(multiplier => ({
+      ...tableQuestion("direct", table, multiplier),
+      focusTable: table,
+      multiplier,
+      learnActivity: normalized.learnActivity
+    }));
   }
 
   function questionTypePlan(questionTypes, total, random = Math.random) {
@@ -226,7 +237,15 @@
       custom: "Réglages"
     };
     const details = [modeLabels[normalized.mode], tablesLabel(normalized.tables)];
-    if (normalized.mode === "learn") details.push(normalized.order === "ordered" ? "dans l’ordre" : "dans le désordre");
+    if (normalized.mode === "learn") {
+      const activityLabels = {
+        construct: "je construis le bâton",
+        gaps: "je complète un bâton à trous",
+        ordered: "dans l’ordre",
+        random: "dans le désordre"
+      };
+      details.push(activityLabels[normalized.learnActivity]);
+    }
     if (normalized.mode === "test") details.push(`niveau ${normalized.testLevel}`);
     if (normalized.mode === "custom") {
       const labels = {direct: "produits", missing: "nombres manquants", division: "divisions"};
@@ -242,6 +261,7 @@
       normalized.mode,
       normalized.tables.join("-"),
       normalized.order,
+      normalized.learnActivity,
       normalized.questionTypes.join("-"),
       normalized.total,
       normalized.duration ?? "none",
