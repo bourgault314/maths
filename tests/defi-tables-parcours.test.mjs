@@ -26,7 +26,7 @@ test("les cinq parcours gardent les réglages pédagogiques décidés", () => {
     order: "ordered"
   });
   assert.deepEqual(core.PRESETS.train, {
-    total: 20,
+    total: 10,
     duration: null,
     questionTypes: ["direct"],
     selection: "multiple",
@@ -61,17 +61,20 @@ test("J’apprends travaille une seule table dans l’ordre ou le désordre", ()
   assert.throws(() => core.generateQuestions({mode: "learn", tables: [7, 9]}), /exactement une table/);
 });
 
-test("Je m’entraîne propose 20 produits directs sans limite de temps", () => {
-  const configuration = core.normalizeConfiguration({mode: "train", tables: [6, 7]});
-  const questions = core.generateQuestions(configuration, seededRandom());
+test("Je m’entraîne propose 10 ou 20 produits directs sans limite de temps", () => {
+  const shortConfiguration = core.normalizeConfiguration({mode: "train", tables: [6, 7]});
+  const longConfiguration = core.normalizeConfiguration({mode: "train", tables: [6, 7], total: 20});
+  const shortQuestions = core.generateQuestions(shortConfiguration, seededRandom());
+  const longQuestions = core.generateQuestions(longConfiguration, seededRandom());
 
-  assert.equal(configuration.duration, null);
-  assert.equal(questions.length, 20);
-  assert.ok(questions.every(question => question.type === "direct"));
-  assert.deepEqual(new Set(questions.map(question => question.focusTable)), new Set([6, 7]));
-  assert.equal(questions.filter(question => question.focusTable === 6).length, 10);
-  assert.equal(questions.filter(question => question.focusTable === 7).length, 10);
-  assert.ok(questions.every(question => question.multiplier >= 1));
+  assert.equal(shortConfiguration.duration, null);
+  assert.equal(shortQuestions.length, 10);
+  assert.equal(longQuestions.length, 20);
+  assert.ok(longQuestions.every(question => question.type === "direct"));
+  assert.deepEqual(new Set(longQuestions.map(question => question.focusTable)), new Set([6, 7]));
+  assert.equal(longQuestions.filter(question => question.focusTable === 6).length, 10);
+  assert.equal(longQuestions.filter(question => question.focusTable === 7).length, 10);
+  assert.ok(longQuestions.every(question => question.multiplier >= 1));
 });
 
 test("Je deviens expert propose trois niveaux et une à trois minutes", () => {
@@ -150,6 +153,8 @@ test("l’accueil compact distingue quatre choix principaux et l’évaluation C
   assert.match(html, /data-duration="180"[\s\S]*3 min/);
   assert.match(html, /data-duration="120"[\s\S]*2 min/);
   assert.match(html, /data-duration="60"[\s\S]*1 min/);
+  assert.match(html, /data-mode="train"[\s\S]*10 ou 20 questions/);
+  assert.match(html, /count-settings[\s\S]*data-total="10"[\s\S]*data-total="20"/);
   assert.doesNotMatch(html, /Choisis ton objectif\. L’application prépare le reste pour toi/);
   assert.doesNotMatch(html, /Tu verras ses dix produits/);
 });
@@ -171,19 +176,28 @@ test("le lancement attend un clic sur C’est parti et résume les réglages", (
   assert.match(html, /niveau \$\{config\.testLevel\} · 25 questions/);
 });
 
-test("J’apprends affiche progressivement la suite et Je m’entraîne corrige immédiatement", () => {
+test("J’apprends remplit un bâton dans les deux ordres et Je m’entraîne corrige immédiatement", () => {
   assert.match(html, /class="keypad"[\s\S]*class="actions"[\s\S]*id="learn-sequence"/);
   assert.match(html, /question-card"\)\.classList\.toggle\("show-learn-sequence", visible\)/);
   assert.match(html, /\.question\.show-learn-sequence \.actions \{ margin-bottom: 0; \}/);
-  assert.match(html, /Table de \$\{table\} :/);
-  assert.match(html, /results\.join\(" → "\)/);
+  assert.match(html, /function createNumberStick/);
+  assert.match(html, /grid-template-columns: repeat\(11/);
+  assert.match(html, /const visible = state\.configuration\?\.mode === "learn"/);
   assert.match(html, /state\.revealedLearnResults\.add\(question\.multiplier\)/);
-  assert.match(html, /state\.configuration\.order === "ordered"/);
+  assert.match(html, /config\.order === "random" \? \[0, 5, 10\] : \[0\]/);
+  assert.doesNotMatch(html, /results\.join\(" → "\)/);
   assert.match(html, /state\.configuration\.mode === "train"\) \{[\s\S]*showAnswerFeedback/);
   assert.match(html, /textContent = enabled \? "Valider" : "Suivant"/);
   assert.match(html, /completeReview = state\.configuration\.mode === "test"/);
   assert.match(html, /Bilan de tes réponses/);
-  assert.match(html, /defi_tables_core\.js\?v=20260829-2/);
+  assert.match(html, /defi_tables_core\.js\?v=20260829-3/);
+});
+
+test("le numéro de question est séparé du calcul dans le bilan", () => {
+  assert.match(html, /number\.textContent = `Question \$\{entry\.number\}`/);
+  assert.match(html, /expression\.textContent = entry\.prompt/);
+  assert.match(html, /item\.append\(questionLine, answers\)/);
+  assert.doesNotMatch(html, /expression\.textContent = `\$\{entry\.number\}\. /);
 });
 
 test("les détails mobiles restent alignés et les titres programmatiquement ciblés n’affichent pas de cadre", () => {

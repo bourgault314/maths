@@ -83,8 +83,9 @@ test("les règles et durées approuvées restent explicites", () => {
     selection: "single",
     order: "ordered"
   });
-  assert.equal(tablesCore.PRESETS.train.total, 20);
+  assert.equal(tablesCore.PRESETS.train.total, 10);
   assert.equal(tablesCore.PRESETS.train.duration, null);
+  assert.equal(tablesCore.normalizeConfiguration({mode: "train", tables: [3], total: 20}).total, 20);
   assert.equal(tablesCore.PRESETS.test.total, 25);
   assert.equal(tablesCore.PRESETS.test.duration, 120);
   assert.equal(tablesCore.PRESETS.test.testLevel, 1);
