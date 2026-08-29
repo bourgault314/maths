@@ -172,13 +172,16 @@ test("le lancement attend un clic sur C’est parti et résume les réglages", (
 });
 
 test("J’apprends affiche progressivement la suite et Je m’entraîne corrige immédiatement", () => {
-  assert.match(html, /id="learn-sequence"/);
+  assert.match(html, /class="keypad"[\s\S]*id="learn-sequence"[\s\S]*class="actions"/);
+  assert.match(html, /Table de \$\{table\} :/);
+  assert.match(html, /results\.join\(" → "\)/);
   assert.match(html, /state\.revealedLearnResults\.add\(question\.multiplier\)/);
   assert.match(html, /state\.configuration\.order === "ordered"/);
   assert.match(html, /state\.configuration\.mode === "train"\) \{[\s\S]*showAnswerFeedback/);
   assert.match(html, /textContent = enabled \? "Valider" : "Suivant"/);
   assert.match(html, /completeReview = state\.configuration\.mode === "test"/);
   assert.match(html, /Bilan de tes réponses/);
+  assert.match(html, /defi_tables_core\.js\?v=20260829-2/);
 });
 
 test("les détails mobiles restent alignés et les titres programmatiquement ciblés n’affichent pas de cadre", () => {
