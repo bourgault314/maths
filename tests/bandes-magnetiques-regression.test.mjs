@@ -92,8 +92,9 @@ test('les panneaux de création restent près de leur bouton et détachés du pl
   assert.match(html, /function positionCreatorPanel\(panel, button\)/);
   assert.match(html, /buttonRect\.left \+ \(buttonRect\.width - panelRect\.width\) \/ 2/);
   assert.match(html, /panel\.style\.top = `\$\{headerRect\.bottom \+ 10\}px`/);
-  assert.match(html, /id="angle-panel" class="creator-panel hidden fixed z-50 w-72/);
-  assert.match(html, /id="segment-panel" class="creator-panel hidden fixed z-50 w-80/);
+  assert.match(html, /#angle-panel \{ width: min\(18rem, calc\(100vw - 16px\)\); \}/);
+  assert.match(html, /#segment-panel \{ width: min\(20rem, calc\(100vw - 16px\)\); \}/);
+  assert.match(html, /\.creator-panel \{[\s\S]*padding: \.75rem/);
   assert.doesNotMatch(html, /#angle-panel,[\s\S]{0,100}right: 6px !important/);
 });
 
