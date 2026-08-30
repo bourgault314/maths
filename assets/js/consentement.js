@@ -23,16 +23,20 @@
   // d'audience n'est chargée sur son appareil, et on ne lui montre pas la
   // bannière — un enfant de onze ans n'a pas à arbitrer une question de cookies.
   // Deux signaux, parce que le code peut arriver de deux façons :
-  //  - il est déjà rangé dans le navigateur (visites suivantes) ;
-  //  - il vient d'arriver par le lien de l'espace élève, et l'appli l'a signalé
-  //    avant que ce script ne démarre (window.MATHSGO_SUIVI_ELEVE).
+  //  - il vient d'arriver par le lien de l'espace élève, et la page l'a signalé
+  //    avant que ce script ne démarre (window.MATHSGO_SUIVI_ELEVE) ;
+  //  - il est rangé dans l'onglet (sessionStorage, depuis le lot A1 : l'identité
+  //    ne vit que le temps de l'onglet) — ou, pour un appareil qui n'a pas
+  //    encore rouvert l'appli depuis, dans l'ancien rangement durable.
   function suiviEleveActif() {
-    try {
-      if (window.MATHSGO_SUIVI_ELEVE === true) return true;
-      return Boolean(window.localStorage.getItem(CLE_SUIVI));
-    } catch (_error) {
-      return window.MATHSGO_SUIVI_ELEVE === true;
+    if (window.MATHSGO_SUIVI_ELEVE === true) return true;
+    var stockages = ["sessionStorage", "localStorage"];
+    for (var i = 0; i < stockages.length; i++) {
+      try {
+        if (window[stockages[i]] && window[stockages[i]].getItem(CLE_SUIVI)) return true;
+      } catch (_error) {}
     }
+    return false;
   }
 
   let choice = readChoice();

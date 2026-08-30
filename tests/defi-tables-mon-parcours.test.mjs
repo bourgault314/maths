@@ -291,6 +291,60 @@ test("sauvegarde locale : aller-retour, données abîmées et stockage absent", 
   assert.equal(parcours.sauver(cassé, etat), false);
 });
 
+test("une case par code sur l’appareil, plus la case « sans code »", () => {
+  const stockage = stockageMemoire();
+  const lea = acquerirTables(parcours.definirPrenom(parcours.creerParcours(), "Léa"), [2, 5]);
+  const tom = acquerirTables(parcours.definirPrenom(parcours.creerParcours(), "Tom"), [3]);
+  const invite = parcours.definirPrenom(parcours.creerParcours(), "Invité");
+  assert.equal(parcours.cleStockage("AXKQ7T"), parcours.CLE_STOCKAGE + ":AXKQ7T");
+  assert.equal(parcours.cleStockage("axkq7t"), parcours.CLE_STOCKAGE + ":AXKQ7T", "le code est normalisé");
+  assert.equal(parcours.cleStockage(""), parcours.CLE_STOCKAGE, "sans code : la clé historique");
+  assert.equal(parcours.cleStockage(undefined), parcours.CLE_STOCKAGE);
+
+  assert.ok(parcours.sauver(stockage, lea, "AXKQ7T"));
+  assert.ok(parcours.sauver(stockage, tom, "BZ4MHP"));
+  assert.ok(parcours.sauver(stockage, invite));
+  assert.deepEqual(parcours.charger(stockage, "AXKQ7T"), lea);
+  assert.deepEqual(parcours.charger(stockage, "BZ4MHP"), tom);
+  assert.deepEqual(parcours.charger(stockage), invite, "la case sans code n’a pas été touchée");
+  assert.deepEqual(parcours.charger(stockage, "CCCCCC"), parcours.creerParcours(), "un code jamais vu : case vide");
+
+  assert.ok(parcours.effacer(stockage, "AXKQ7T"));
+  assert.deepEqual(parcours.charger(stockage, "AXKQ7T"), parcours.creerParcours());
+  assert.deepEqual(parcours.charger(stockage, "BZ4MHP"), tom, "effacer une case ne touche pas les autres");
+  assert.deepEqual(parcours.charger(stockage), invite);
+});
+
+test("un appareil suivi par l’ancienne appli est repris : son parcours va dans la case du code, le code durable est oublié", () => {
+  const lea = acquerirTables(parcours.definirPrenom(parcours.creerParcours(), "Léa"), [2, 5]);
+  const ancien = stockageMemoire({
+    [parcours.CLE_CODE]: "AXKQ7T",
+    [parcours.CLE_STOCKAGE]: JSON.stringify(lea)
+  });
+  assert.equal(parcours.migrerStockage(ancien), true);
+  assert.equal(ancien.getItem(parcours.CLE_CODE), null, "l’identité ne vit plus dans le stockage durable");
+  assert.deepEqual(parcours.charger(ancien, "AXKQ7T"), lea, "le parcours est dans la case du code");
+  assert.deepEqual(parcours.charger(ancien), parcours.creerParcours(), "la case sans code est vide");
+  assert.equal(parcours.migrerStockage(ancien), false, "une seconde fois, il n’y a plus rien à faire");
+
+  // Sans code rangé, la case unique est déjà la case « sans code » : rien à faire.
+  const invite = stockageMemoire({[parcours.CLE_STOCKAGE]: JSON.stringify(lea)});
+  assert.equal(parcours.migrerStockage(invite), false);
+  assert.deepEqual(parcours.charger(invite), lea);
+
+  // Si la case du code existe déjà, on ne l’écrase pas.
+  const tom = acquerirTables(parcours.creerParcours(), [3]);
+  const deuxFois = stockageMemoire({
+    [parcours.CLE_CODE]: "AXKQ7T",
+    [parcours.CLE_STOCKAGE]: JSON.stringify(lea),
+    [parcours.CLE_STOCKAGE + ":AXKQ7T"]: JSON.stringify(tom)
+  });
+  parcours.migrerStockage(deuxFois);
+  assert.deepEqual(parcours.charger(deuxFois, "AXKQ7T"), tom);
+  assert.deepEqual(parcours.charger(deuxFois), lea, "l’ancienne case reste, en case sans code");
+  assert.equal(parcours.migrerStockage(null), false);
+});
+
 test("appliquerSerie ne modifie jamais l’objet reçu", () => {
   const etat = parcours.creerParcours();
   const copie = JSON.stringify(etat);
@@ -467,7 +521,7 @@ test("prénom local, remise à zéro confirmée dans la page, résultat relié a
   assert.match(html, /PARCOURS\.demarrerSerie\(parcours, config\)/);
   assert.match(html, /id="result-parcours"/);
   assert.match(html, /id="result-open-parcours"[\s\S]*Voir mon parcours/);
-  assert.match(html, /ouvrir === "parcours" \|\| codeDemande\) openParcours\(\);/);
+  assert.match(html, /ENTREE\.ouvrir === "parcours" \|\| ENTREE\.code\) openParcours\(\);/);
 });
 
 test("Je m’entraîne propose produits, trous ou les deux ; la validation se lance en 1 min 30, 2 ou 3 min", () => {
@@ -521,10 +575,10 @@ test("la fiche « Mon parcours des tables » s’imprime depuis l’appli et exi
 });
 
 test("l’appli est branchée au suivi de classe sans jamais bloquer", () => {
-  // Le code arrive par le lien de l'espace élève, ou se tape dans le menu ⋯.
-  // L'adresse se lit comme une liste de paramètres : l'espace élève ajoute
-  // « &ouvrir=parcours » derrière le code, et le code doit rester reconnu.
-  assert.match(html, /new URLSearchParams\(adresse\.replace\(\/\^#\/, ""\)\)/);
+  // Le code arrive par le lien de l'espace élève. L'adresse est lue par le
+  // script du <head> (tests/defi-tables-suivi-appareil.test.mjs l'exécute) ;
+  // l'appli a un repli qui la lit de la même façon si ce script n'a pas tourné.
+  assert.match(html, /window\.MATHSGO_ENTREE = entree;/);
   assert.match(html, /parametres\.get\("code"\)/);
   assert.match(html, /parametres\.get\("fiche"\)/);
   assert.match(html, /parametres\.get\("ouvrir"\)/);
@@ -543,31 +597,36 @@ test("l’appli est branchée au suivi de classe sans jamais bloquer", () => {
   assert.doesNotMatch(html, /Si ton professeur te donne un code/);
   assert.match(html, /Ta progression, elle, est enregistrée pour ton professeur\./,
     "la phrase vraie pour un élève suivi doit rester");
-  assert.match(html, /id="parcours-suivi"/, "le repère de suivi est permanent");
-  assert.match(html, /id="parcours-fusion"/, "la question posée sur un appareil partagé");
+  assert.match(html, /id="suivi-repere"/, "le repère de suivi est permanent, dans la barre du haut");
+  assert.match(html, /id="parcours-fusion"/, "la question posée quand du travail sans code existe");
 
-  // Chaque enregistrement local part aussi au serveur, sans être attendu.
-  assert.match(html, /function sauverParcours\(\) \{\s*PARCOURS\.sauver\(storage\(\), parcours\);\s*envoyerParcours\(\);/);
+  // Chaque enregistrement local part aussi au serveur, sans être attendu — et
+  // dans la case du code actif.
+  assert.match(html, /function sauverParcours\(\) \{\s*PARCOURS\.sauver\(storage\(\), parcours, codeSuivi\);\s*envoyerParcours\(\);/);
   assert.doesNotMatch(html, /await envoyerParcours\(\)/, "l'envoi ne doit jamais être attendu");
   assert.match(html, /navigator\.sendBeacon/, "le dernier envoi part même si la page se ferme");
   assert.match(html, /https:\/\/suivi\.mathsgo\.re/);
 });
 
-test("effacer le parcours d’un camarade demande une confirmation", () => {
-  // Sur un appareil partagé, « ce n'est pas le mien » efface le travail de
-  // quelqu'un qui n'a peut-être pas de code : on prévient avant.
-  assert.match(html, /questionFusion\.confirme/);
-  assert.match(html, /son travail sera perdu/);
-  assert.match(html, /Oui, efface-le/);
-  assert.match(html, /Annuler/);
+test("« Non, ce n’est pas le mien » n’efface plus rien : chaque code a sa case", () => {
+  // Depuis le lot A1, un code différent bascule sur SA case ; la seule
+  // question restante porte sur le travail fait SANS code, et « Non » le
+  // laisse là où il est. Plus rien à confirmer, plus rien à perdre.
+  // (Comportement exécuté dans tests/defi-tables-suivi-appareil.test.mjs.)
+  assert.match(html, /Non, ce n’est pas le mien/);
+  assert.doesNotMatch(html, /questionFusion\.confirme/);
+  assert.doesNotMatch(html, /son travail sera perdu/);
+  assert.doesNotMatch(html, /Oui, efface-le/);
 });
 
 test("sans connexion, l’élève n’est pas laissé à croire qu’il est suivi", () => {
   assert.match(html, /let suiviHorsLigne = false;/);
-  assert.match(html, /pas de connexion, ton travail partira plus tard/);
-  // Un code venu du lien du professeur est gardé même si le serveur est muet.
-  assert.match(html, /if \(silencieux\) \{\s*\n\s*codeSuivi = code;/);
-  assert.match(html, /\.parcours-suivi\.hors-ligne/);
+  assert.match(html, /travail gardé ici, pas encore envoyé/);
+  // On ne promet plus un envoi qu'on ne maîtrise pas (un code régénéré ne
+  // partira jamais) : le comportement exact est exécuté dans
+  // tests/defi-tables-suivi-appareil.test.mjs.
+  assert.doesNotMatch(html, /partira plus tard/);
+  assert.match(html, /\.suivi-repere\.hors-ligne/);
 });
 
 test("la fiche montre les calculs en carré de Pythagore", () => {
@@ -617,91 +676,9 @@ test("la feuille de style de Défi tables est équilibrée, et @media print surv
   assert.match(html, /@media print \{\s*\n\s*@page \{ size: A4 portrait; margin: 12mm; \}/);
 });
 
-// Le lot 8 a corrigé un bug qu'aucun assert.match ne pouvait voir : l'aiguillage
-// cherchait /^#code=(…)$/, et le lien réel de l'espace élève porte
-// « &ouvrir=parcours » derrière le code. Le code passait inaperçu, plus rien ne
-// remontait au professeur, et rien ne le signalait. Une assertion sur le TEXTE du
-// fichier n'aurait rien changé : elle aurait décrit la mauvaise règle avec
-// autant d'aplomb. Ce test EXÉCUTE l'aiguillage tel qu'il est écrit dans la page,
-// sur le lien que le serveur fabrique vraiment.
-test("l’aiguillage de l’adresse reconnaît le lien réel de l’espace élève", () => {
-  const bloc = /const adresse = window\.location\.hash \|\| "";([\s\S]*?)\n      \}\n    \}\)\(\);/.exec(html);
-  assert.ok(bloc, "le bloc de lecture de l’adresse doit être trouvable dans la page");
-
-  const aiguiller = new Function("hash", `
-    const appels = [];
-    const window = {location: {hash}};
-    const openParcours = () => appels.push("parcours");
-    const openCalculs = () => appels.push("calculs");
-    const ouvrirFicheEleve = code => appels.push("fiche:" + code);
-    const demarrerSuivi = code => appels.push("suivi:" + code);
-    const adresse = window.location.hash || "";${bloc[1]}
-    }
-    return appels;
-  `);
-
-  // Le lien que _serveur/public/index.php construit réellement pour Défi tables
-  // (applis.php déclare ancre = "parcours").
-  assert.deepEqual(aiguiller("#code=2F4FUL&ouvrir=parcours"), ["parcours", "suivi:2F4FUL"],
-    "le code doit être reconnu même quand un autre paramètre le suit");
-  assert.deepEqual(aiguiller("#code=2F4FUL"), ["parcours", "suivi:2F4FUL"]);
-  assert.deepEqual(aiguiller("#parcours"), ["parcours", "suivi:null"]);
-  assert.deepEqual(aiguiller("#calculs"), ["calculs", "suivi:null"]);
-  assert.deepEqual(aiguiller("#ouvrir=calculs&code=2F4FUL"), ["calculs", "suivi:2F4FUL"]);
-  assert.deepEqual(aiguiller("#fiche=CDEF23"), ["fiche:CDEF23"], "la fiche du professeur ne démarre aucun suivi");
-  assert.deepEqual(aiguiller(""), ["suivi:null"], "sans adresse, l’appli s’ouvre normalement");
-});
-
-// Le code de l'élève arrive dans l'adresse (#code=……). S'il y reste, il part
-// dans la mesure d'audience — page_location, c'est location.href, fragment
-// compris — il s'inscrit dans l'historique du navigateur, et il s'affiche au
-// tableau quand la page est projetée. Ce test EXÉCUTE le bloc de lecture de la
-// page avec une fausse barre d'adresse et vérifie ce qui y reste après coup.
-test("le code de l’élève est effacé de la barre d’adresse dès qu’il est lu", () => {
-  const bloc = /const adresse = window\.location\.hash \|\| "";([\s\S]*?)\n      \}\n    \}\)\(\);/.exec(html);
-  assert.ok(bloc, "le bloc de lecture de l’adresse doit être trouvable dans la page");
-
-  const jouer = new Function("hash", `
-    const appels = [];
-    let remplacee = null;
-    const window = {
-      location: {hash, pathname: "/outils/calcul_mental/defi_tables.html", search: ""},
-      history: {replaceState: (a, b, url) => { remplacee = url; }}
-    };
-    const openParcours = () => appels.push("parcours");
-    const openCalculs = () => appels.push("calculs");
-    const ouvrirFicheEleve = code => appels.push("fiche:" + code);
-    const demarrerSuivi = code => appels.push("suivi:" + code);
-    const adresse = window.location.hash || "";${bloc[1]}
-    }
-    return {appels, remplacee, suiviEleve: window.MATHSGO_SUIVI_ELEVE === true};
-  `);
-
-  const lien = jouer("#code=2F4FUL&ouvrir=parcours");
-  assert.deepEqual(lien.appels, ["parcours", "suivi:2F4FUL"],
-    "le suivi doit démarrer normalement : on nettoie l’adresse, on ne casse rien");
-  assert.ok(lien.remplacee !== null, "l’adresse doit être remplacée");
-  assert.ok(!lien.remplacee.includes("2F4FUL"), `le code ne doit plus être dans l’adresse (${lien.remplacee})`);
-  assert.ok(lien.remplacee.includes("ouvrir=parcours"), "le reste de l’adresse doit survivre");
-
-  assert.equal(lien.suiviEleve, true,
-    "l’appli doit signaler qu’un élève est identifié, pour que consentement.js ne charge aucune mesure d’audience");
-
-  const seul = jouer("#code=2F4FUL");
-  assert.deepEqual(seul.appels, ["parcours", "suivi:2F4FUL"]);
-  assert.equal(seul.remplacee, "/outils/calcul_mental/defi_tables.html",
-    "sans autre paramètre, il ne doit plus rester de fragment du tout");
-
-  const fiche = jouer("#fiche=CDEF23");
-  assert.deepEqual(fiche.appels, ["fiche:CDEF23"]);
-  assert.ok(!fiche.remplacee.includes("CDEF23"),
-    "le code de la fiche du professeur est un code élève : il doit disparaître aussi");
-
-  const sansCode = jouer("#parcours");
-  assert.equal(sansCode.remplacee, null, "sans code, on ne touche pas à l’adresse");
-  assert.equal(sansCode.suiviEleve, false,
-    "sans code, rien ne change pour un visiteur ordinaire du site");
-});
+// L'aiguillage de l'adresse et le nettoyage de la barre d'adresse sont
+// désormais exécutés dans tests/defi-tables-suivi-appareil.test.mjs (script du
+// <head> + bloc d'aiguillage), sur le lien que le serveur fabrique vraiment.
 
 // Le lien est fabriqué d'un côté et lu de l'autre : c'est l'écart entre les deux
 // qui a coûté le lot 8. On vérifie que le serveur ne met dans l'adresse que des
@@ -714,8 +691,10 @@ test("le lien fabriqué par l’espace élève ne porte que des paramètres que 
   const parametres = [...`${gabarit[1]}${gabarit[2]}`.matchAll(/[#&]([a-z]+)=/g)].map(trouve => trouve[1]);
   assert.deepEqual(parametres, ["code", "ouvrir"]);
   parametres.forEach(nom => {
+    assert.ok(html.includes(`cle === "${nom}"`),
+      `le script du <head> doit lire le paramètre « ${nom} » que le serveur met dans l’adresse`);
     assert.ok(html.includes(`parametres.get("${nom}")`),
-      `l’appli doit lire le paramètre « ${nom} » que le serveur met dans l’adresse`);
+      `et le repli de l’appli aussi`);
   });
 });
 
@@ -866,54 +845,16 @@ test("le prénom tapé par l’élève ne part pas au serveur", () => {
     "l’objet local ne doit pas être modifié par l’envoi");
 });
 
-// Un appareil garde le code du dernier élève. Sans porte de sortie visible, il
-// reste « son » appareil : le repère, les liens de retour et le logo ramènent
-// tous à son espace, et l'adulte ou le camarade suivant est enfermé dedans. La
-// sortie est donc posée sur le repère lui-même. Ce test EXÉCUTE « quitterSuivi »
-// telle qu'elle est écrite dans la page.
-test("« Ce n’est pas moi » détache l’appareil sans effacer le travail", () => {
-  const debut = html.indexOf("function quitterSuivi()");
-  assert.ok(debut > 0, "la sortie doit exister dans la page");
-  const marque = "\n      }";
-  const source = html.slice(debut, html.indexOf(marque, debut) + marque.length);
-
-  const resultat = new Function(`
-    let codeSuivi = "2F4FUL";
-    let suiviIdentite = {prenom: "Léa", classe: "405"};
-    let suiviHorsLigne = true;
-    let questionFusion = {code: "ABCDEF"};
-    let parcours = {tables: {5: {acquise: "2026-08-30"}}};
-    let codeEfface = false;
-    let rendu = false;
-    const state = {parcoursOptionsOpen: true};
-    const PARCOURS = {effacerCode() { codeEfface = true; }};
-    const storage = () => null;
-    const renderParcours = () => { rendu = true; };
-    ${source}
-    quitterSuivi();
-    return {codeSuivi, suiviIdentite, suiviHorsLigne, questionFusion, parcours,
-            codeEfface, rendu, menuFerme: state.parcoursOptionsOpen === false};
-  `)();
-
-  assert.equal(resultat.codeSuivi, "", "le code ne doit plus être actif");
-  assert.equal(resultat.suiviIdentite, null, "le prénom affiché doit disparaître");
-  assert.equal(resultat.suiviHorsLigne, false);
-  assert.equal(resultat.questionFusion, null, "aucune question ne doit rester en suspens");
-  assert.equal(resultat.codeEfface, true, "le code doit être retiré du navigateur");
-  assert.equal(resultat.rendu, true, "l’écran doit être redessiné aussitôt");
-  assert.equal(resultat.menuFerme, true);
-
-  // Le point qui compte pour un élève : on le détache, on ne l’efface pas.
-  assert.deepEqual(resultat.parcours, {tables: {5: {acquise: "2026-08-30"}}},
-    "le travail déjà fait doit rester sur l’appareil");
-});
-
-test("la sortie est posée sur le repère de suivi, pas dans un menu", () => {
+// « Ce n'est pas moi » et le repère de suivi sont exécutés dans
+// tests/defi-tables-suivi-appareil.test.mjs (faux stockage, faux réseau, faux
+// document) : ce qui est chargé, ce qui est envoyé, et sous quel code.
+test("la sortie est posée sur le repère de suivi, dans la barre du haut", () => {
   assert.match(html, /sortie\.textContent = "Ce n’est pas moi";/);
   assert.match(html, /sortie\.addEventListener\("click", quitterSuivi\);/);
   assert.match(html, /bloc\.append\(document\.createTextNode\("· "\), sortie\);/,
     "le séparateur doit revenir à la ligne avec le bouton, pas rester seul en fin de ligne");
-  assert.match(html, /suivi\.append\(bloc\);/, "la sortie doit être ajoutée au bandeau lui-même");
+  assert.match(html, /repere\.append\(bloc\);/, "la sortie doit être ajoutée au repère lui-même");
+  assert.doesNotMatch(html, /id="parcours-code-remove"/, "et pas dans un menu");
 });
 
 // Le dépôt a déjà payé une accolade orpheline dans un <style> : le texte était

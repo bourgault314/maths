@@ -666,9 +666,20 @@
     };
   }
 
-  function charger(stockage) {
+  // Un rangement PAR CODE sur l'appareil (lot A1, 30/08/2026) : la case
+  // « sans code » garde la clé historique, chaque code élève a la sienne.
+  // Changer de code, c'est changer de case avant d'afficher quoi que ce soit —
+  // Bob qui arrive sur la tablette d'Alice ne voit ni n'écrase rien d'elle, et
+  // rien de lui ne part sous son code. Aucun verrou, aucune course contre le
+  // réseau : les cases sont séparées par construction.
+  function cleStockage(code) {
+    const propre = normaliserCode(code || "");
+    return codeValide(propre) ? CLE_STOCKAGE + ":" + propre : CLE_STOCKAGE;
+  }
+
+  function charger(stockage, code) {
     try {
-      const brut = stockage && stockage.getItem(CLE_STOCKAGE);
+      const brut = stockage && stockage.getItem(cleStockage(code));
       if (!brut) return creerParcours();
       return normaliserParcours(JSON.parse(brut));
     } catch (_) {
@@ -676,19 +687,43 @@
     }
   }
 
-  function sauver(stockage, parcours) {
+  function sauver(stockage, parcours, code) {
     try {
       if (!stockage) return false;
-      stockage.setItem(CLE_STOCKAGE, JSON.stringify(normaliserParcours(parcours)));
+      stockage.setItem(cleStockage(code), JSON.stringify(normaliserParcours(parcours)));
       return true;
     } catch (_) {
       return false;
     }
   }
 
-  function effacer(stockage) {
+  function effacer(stockage, code) {
     try {
-      if (stockage) stockage.removeItem(CLE_STOCKAGE);
+      if (stockage) stockage.removeItem(cleStockage(code));
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  // Un appareil suivi par l'ancienne appli rangeait le code actif ET le parcours
+  // dans le stockage durable, sous une seule case. On déplace ce parcours dans
+  // la case du code, et on oublie le code : l'identité ne vit plus que le temps
+  // d'un onglet (l'élève revient par son espace, dont le lien porte le code).
+  // Sans code rangé, la case unique devient la case « sans code » : rien à faire.
+  function migrerStockage(stockage) {
+    try {
+      if (!stockage) return false;
+      const ancien = stockage.getItem(CLE_CODE);
+      if (!ancien) return false;
+      stockage.removeItem(CLE_CODE);
+      const code = normaliserCode(ancien);
+      if (!codeValide(code)) return false;
+      const brut = stockage.getItem(CLE_STOCKAGE);
+      if (brut && !stockage.getItem(cleStockage(code))) {
+        stockage.setItem(cleStockage(code), brut);
+        stockage.removeItem(CLE_STOCKAGE);
+      }
       return true;
     } catch (_) {
       return false;
@@ -904,9 +939,11 @@
     configRevision,
     prochaineEtape,
     etatAffichage,
+    cleStockage,
     charger,
     sauver,
     effacer,
+    migrerStockage,
     estVide,
     CLE_CODE,
     LONGUEUR_CODE,

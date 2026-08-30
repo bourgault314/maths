@@ -13,6 +13,47 @@
   <link rel="icon" type="image/png" sizes="192x192" href="/assets/img/favicon-192.png">
   <link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png">
   <link rel="stylesheet" href="../../assets/css/consentement.css">
+  <script>
+    // Lu en tout premier, avant consentement.js et avant l'appli, en JavaScript
+    // ancien (pas de const, pas de ?., pas d'URLSearchParams) : quoi qu'il
+    // arrive au reste — moteur absent, navigateur vieux, erreur plus loin —
+    // le code de l'élève est sorti de la barre d'adresse et la mesure
+    // d'audience est coupée. Le code ne doit apparaître dans AUCUNE adresse :
+    // une adresse part dans la mesure d'audience (fragment compris), reste
+    // dans l'historique, et s'affiche quand la page est projetée au tableau.
+    (function (window) {
+      var entree = {code: "", fiche: "", ouvrir: ""};
+      var reste = [];
+      try {
+        var brut = String(window.location.hash || "").replace(/^#/, "");
+        if (brut === "parcours" || brut === "calculs") {
+          entree.ouvrir = brut;
+        } else if (brut) {
+          var morceaux = brut.split("&");
+          for (var i = 0; i < morceaux.length; i++) {
+            var egal = morceaux[i].indexOf("=");
+            var cle = egal < 0 ? morceaux[i] : morceaux[i].slice(0, egal);
+            var valeur = egal < 0 ? "" : morceaux[i].slice(egal + 1);
+            try { cle = decodeURIComponent(cle); valeur = decodeURIComponent(valeur); } catch (e) {}
+            if (cle === "code") entree.code = valeur;
+            else if (cle === "fiche") entree.fiche = valeur;
+            else if (cle === "ouvrir") { entree.ouvrir = valeur; reste.push(morceaux[i]); }
+            else if (morceaux[i]) reste.push(morceaux[i]);
+          }
+        }
+      } catch (e) {}
+      window.MATHSGO_ENTREE = entree;
+      if (entree.code || entree.fiche) {
+        // Signalé AVANT consentement.js (chargé en « defer ») : dès qu'un élève
+        // est identifié par un code, aucune mesure d'audience ne se charge.
+        window.MATHSGO_SUIVI_ELEVE = true;
+        try {
+          window.history.replaceState(null, "", window.location.pathname
+            + window.location.search + (reste.length ? "#" + reste.join("&") : ""));
+        } catch (e) {}
+      }
+    })(window);
+  </script>
   <script defer src="../../assets/js/consentement.js"
           data-analytics-page-location="https://mathsgo.re/outils/calcul_mental/defi_tables.html"></script>
   <style>
@@ -70,10 +111,28 @@
     .topbar {
       min-height: 70px;
       display: flex;
+      flex-wrap: wrap;
       align-items: center;
       justify-content: space-between;
       gap: 12px;
     }
+    /* Suivi de classe : un repère discret, mais toujours visible, sur tous les
+       écrans — l'élève doit savoir en permanence que son travail part chez son
+       professeur. Il occupe une ligne entière sous le logo et les boutons. */
+    .suivi-repere { flex: 1 0 100%; display: flex; align-items: center; justify-content: center; gap: 8px;
+                    flex-wrap: wrap; margin: -4px 0 8px; padding: 6px 12px; border-radius: 12px;
+                    background: #eef6f6; color: #0b5f5c; font-weight: 800; font-size: .9rem; }
+    .suivi-repere .puce { width: 9px; height: 9px; border-radius: 50%; background: #08aaa5; flex: 0 0 auto; }
+    .suivi-repere.hors-ligne { background: #fdf0e3; color: #8a4c0a; }
+    .suivi-repere.hors-ligne .puce { background: #d9822b; }
+    /* La sortie vit sur le repère lui-même : ce qui dit « tu es Léa » doit
+       permettre de dire « ce n'est pas moi ». Un menu que personne n'ouvre ne
+       remplace pas une porte. */
+    .suivi-repere .sortie { border: 0; background: none; padding: 0; margin: 0;
+                            font: inherit; color: inherit; text-decoration: underline;
+                            cursor: pointer; opacity: .85; min-height: 28px; }
+    .suivi-repere .sortie:hover, .suivi-repere .sortie:focus-visible { opacity: 1; }
+    body.mode-fiche .suivi-repere { display: none; }
 
     .brand img { display: block; width: 105px; height: auto; }
     .back-icon { display: grid; place-items: center; flex: 0 0 auto; }
@@ -283,21 +342,6 @@
       text-align: center;
     }
     .parcours-name small { display: block; margin-top: 8px; color: var(--muted); }
-    /* Suivi de classe : un repère discret, mais toujours visible — l'élève doit
-       savoir en permanence que son travail part chez son professeur. */
-    .parcours-suivi { display: flex; align-items: center; justify-content: center; gap: 8px;
-                      flex-wrap: wrap; margin: 10px 0 0; padding: 8px 12px; border-radius: 12px;
-                      background: #eef6f6; color: #0b5f5c; font-weight: 800; font-size: .92rem; }
-    .parcours-suivi .puce { width: 9px; height: 9px; border-radius: 50%; background: #08aaa5; }
-    .parcours-suivi.hors-ligne { background: #fdf0e3; color: #8a4c0a; }
-    .parcours-suivi.hors-ligne .puce { background: #d9822b; }
-    /* La sortie vit sur le repère lui-même : ce qui dit « tu es Léa » doit
-       permettre de dire « ce n'est pas moi ». Un menu que personne n'ouvre ne
-       remplace pas une porte. */
-    .parcours-suivi .sortie { border: 0; background: none; padding: 0; margin: 0;
-                              font: inherit; color: inherit; text-decoration: underline;
-                              cursor: pointer; opacity: .85; }
-    .parcours-suivi .sortie:hover, .parcours-suivi .sortie:focus-visible { opacity: 1; }
     .fiche-ecran { max-width: 900px; margin: 0 auto; padding: 12px 4px 24px; }
     .fiche-ecran-barre { display: flex; align-items: center; justify-content: space-between;
                          gap: 12px; flex-wrap: wrap; margin-bottom: 14px; }
@@ -971,6 +1015,7 @@
       .challenge-playing { height: 100dvh; overflow: hidden; }
       .challenge-playing .shell { height: 100dvh; display: grid; grid-template-rows: auto minmax(0, 1fr); padding: 0; }
       .challenge-playing .topbar { min-height: 48px; padding: max(3px, env(safe-area-inset-top)) 10px 3px; }
+      .challenge-playing .suivi-repere { margin: 0 0 2px; padding: 2px 8px; font-size: .74rem; border-radius: 8px; }
       .challenge-playing .brand img { width: 74px; }
       .challenge-playing .panel { min-height: 0; height: auto; padding: 6px 10px max(7px, env(safe-area-inset-bottom)); overflow: hidden; border-radius: 16px 16px 0 0; }
       .challenge-playing #play { height: 100%; display: flex; flex-direction: column; }
@@ -1144,6 +1189,11 @@
         <a id="lien-retour" class="catalogue-link" href="../index.html?domain=nombres-calculs&amp;notion=calcul-mental" aria-label="Retour au calcul mental"><span class="back-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="20" height="20"><path d="M19 12H5M11 6l-6 6 6 6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="catalogue-link-label">Calcul mental</span></a>
         <button class="fullscreen-toggle" type="button" data-fullscreen-toggle aria-pressed="false" aria-label="Passer en plein écran"><span class="fullscreen-toggle-icon" data-fullscreen-icon aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><path class="fullscreen-expand" d="M8 3H3v5M16 3h5v5M8 21H3v-5M16 21h5v-5"/><path class="fullscreen-collapse" d="M3 8h5V3M21 8h-5V3M3 16h5v5M21 16h-5v5"/></svg></span><span data-fullscreen-label>Plein écran</span></button>
       </div>
+      <!-- Suivi de classe : le repère vit dans la barre du haut, donc sur TOUS
+           les écrans — accueil, réglages, série, résultat, parcours. L'élève
+           doit toujours savoir que son travail part chez son professeur, pas
+           seulement sur l'écran Mon parcours. -->
+      <p id="suivi-repere" class="suivi-repere" hidden></p>
     </header>
 
     <section class="panel">
@@ -1282,12 +1332,11 @@
           <button id="parcours-print-option" class="secondary" type="button">Imprimer ma fiche</button>
           <button id="parcours-reset" class="secondary" type="button">Recommencer à zéro</button>
         </div>
-        <p id="parcours-suivi" class="parcours-suivi" hidden></p>
         <div id="parcours-fusion" class="parcours-confirm" hidden>
           <p id="parcours-fusion-text"></p>
           <div class="parcours-name-row">
             <button id="parcours-fusion-oui" class="primary" type="button">Oui, c’est le mien</button>
-            <button id="parcours-fusion-non" class="secondary" type="button">Non, c’est celui de quelqu’un d’autre</button>
+            <button id="parcours-fusion-non" class="secondary" type="button">Non, ce n’est pas le mien</button>
           </div>
         </div>
         <form id="parcours-name" class="parcours-name" hidden>
@@ -1464,7 +1513,7 @@
   </footer>
 
   <script src="./defi_tables_core.js?v=20260830-9"></script>
-  <script src="./defi_tables_mon_parcours.js?v=20260830-9"></script>
+  <script src="./defi_tables_mon_parcours.js?v=20260830-10"></script>
   <script>
     (() => {
       "use strict";
@@ -1474,10 +1523,17 @@
       const PARCOURS = window.MATHSGO_DEFI_TABLES_MON_PARCOURS;
       if (!PARCOURS) throw new Error("Le moteur de Mon parcours est indisponible.");
       const PARCOURS_TABLES = [...PARCOURS.TABLES];
+      // Deux stockages, deux durées de vie. Les parcours (une case par code,
+      // plus la case « sans code ») restent sur l'appareil : hors-ligne et
+      // fusion en dépendent. L'identité — QUEL code est actif — ne vit que le
+      // temps de l'onglet : fermer l'onglet, c'est ne plus être personne, et
+      // l'élève revient toujours par son espace, dont le lien porte le code.
       function storage() {
         try { return window.localStorage; } catch (_) { return null; }
       }
-      let parcours = PARCOURS.charger(storage());
+      function stockageSession() {
+        try { return window.sessionStorage; } catch (_) { return null; }
+      }
 
       // ------------------------------------------------- suivi de classe (lot C)
       //
@@ -1491,11 +1547,41 @@
       //     pas, l'appli se comporte exactement comme sans suivi ;
       //  2. on garde toujours LE PLUS AVANCÉ des deux, jamais d'écrasement
       //     (la fusion vit dans defi_tables_mon_parcours.js, avec ses tests) ;
-      //  3. sur un appareil partagé, on ne mélange jamais deux élèves sans
-      //     demander : un code différent de celui déjà enregistré pose la
-      //     question une fois.
+      //  3. sur un appareil partagé, chaque code a SA case : un code différent
+      //     bascule sur sa case avant tout affichage — rien du précédent élève
+      //     n'est montré ni envoyé. La seule question posée : du travail fait
+      //     sans code existe sur l'appareil, est-ce le tien ?
+      // [suivi:debut]
       const SUIVI_URL = "https://suivi.mathsgo.re";
-      let codeSuivi = PARCOURS.chargerCode(storage());
+
+      // Ce que porte l'adresse d'entrée, lu par le petit script du <head> avant
+      // tout le reste (voir en haut de la page). Repli si ce script n'a pas
+      // tourné : on lit l'adresse ici, de la même façon.
+      function lireEntree() {
+        const e = window.MATHSGO_ENTREE;
+        if (e && typeof e === "object") {
+          return {code: String(e.code || ""), fiche: String(e.fiche || ""), ouvrir: String(e.ouvrir || "")};
+        }
+        const adresse = window.location.hash || "";
+        if (adresse === "#parcours" || adresse === "#calculs") return {code: "", fiche: "", ouvrir: adresse.slice(1)};
+        const parametres = new URLSearchParams(adresse.replace(/^#/, ""));
+        return {code: parametres.get("code") || "", fiche: parametres.get("fiche") || "", ouvrir: parametres.get("ouvrir") || ""};
+      }
+      const ENTREE = lireEntree();
+
+      // Le code actif : celui de l'adresse s'il y en a un (et qu'on n'ouvre pas
+      // la fiche d'un élève), sinon celui de l'onglet. Décidé AVANT de charger
+      // le parcours : c'est ce qui fait qu'on ne montre jamais la case d'un autre.
+      function codeInitial(entree) {
+        if (!entree.fiche) {
+          const code = PARCOURS.normaliserCode(entree.code);
+          if (PARCOURS.codeValide(code)) return code;
+        }
+        return PARCOURS.chargerCode(stockageSession());
+      }
+      PARCOURS.migrerStockage(storage());
+      let codeSuivi = codeInitial(ENTREE);
+      let parcours = PARCOURS.charger(storage(), codeSuivi);
       let suiviIdentite = null;
       let suiviHorsLigne = false;
       let questionFusion = null;
@@ -1605,7 +1691,7 @@
             const passe = reponse.statut === 200;
             if (passe === suiviHorsLigne) {
               suiviHorsLigne = !passe;
-              renderParcours();
+              renderRepere();
             }
           });
         }, 700);
@@ -1631,111 +1717,121 @@
       }
 
       function sauverParcours() {
-        PARCOURS.sauver(storage(), parcours);
+        PARCOURS.sauver(storage(), parcours, codeSuivi);
         envoyerParcours();
-      }
-
-      function messageCode(texte) {
-        const bloc = document.getElementById("parcours-code-message");
-        if (bloc) bloc.textContent = texte;
       }
 
       async function chargerIdentite(code) {
         const reponse = await lireIdentiteDuServeur(code);
+        if (code !== codeSuivi) return;
         suiviIdentite = reponse.statut === 200 && reponse.donnees && reponse.donnees.ok
           ? {prenom: reponse.donnees.prenom || "", classe: reponse.donnees.classe || ""}
           : null;
-        renderParcours();
+        renderRepere();
       }
 
-      // Détacher cet appareil : plus de repère, plus d'envoi, et les liens de
-      // retour redeviennent ceux du site. Le parcours déjà fait reste ici — on
-      // n'efface le travail de personne.
+      // Le repère de suivi, dans la barre du haut : vert quand le serveur a
+      // répondu, orange quand rien n'est encore parti. Jamais un secret, et la
+      // porte de sortie est dessus.
+      function renderRepere() {
+        const repere = document.getElementById("suivi-repere");
+        if (!repere) return;
+        repere.hidden = !suiviActif();
+        if (!suiviActif()) { repere.replaceChildren(); return; }
+        const qui = suiviIdentite && suiviIdentite.prenom ? ` · ${suiviIdentite.prenom}` : "";
+        const ou = suiviIdentite && suiviIdentite.classe ? ` · ${suiviIdentite.classe}` : "";
+        repere.replaceChildren();
+        const puce = document.createElement("span");
+        puce.className = "puce";
+        puce.setAttribute("aria-hidden", "true");
+        // Sans connexion, on ne laisse pas croire que le travail est déjà parti.
+        repere.classList.toggle("hors-ligne", suiviHorsLigne);
+        repere.append(puce, document.createTextNode(suiviHorsLigne
+          ? "Suivi par ton professeur · travail gardé ici, pas encore envoyé"
+          : `Suivi par ton professeur${qui}${ou}`));
+        // La porte de sortie est ICI, sur le repère, et pas dans un menu :
+        // sans elle, un appareil partagé reste celui du dernier élève, et
+        // même les liens de retour ramènent à son espace.
+        const sortie = document.createElement("button");
+        sortie.type = "button";
+        sortie.className = "sortie";
+        sortie.textContent = "Ce n’est pas moi";
+        sortie.addEventListener("click", quitterSuivi);
+        // Le séparateur voyage AVEC le bouton : sur téléphone, le bandeau passe
+        // à la ligne, et un « · » resté seul en fin de ligne se lit « 405· ».
+        const bloc = document.createElement("span");
+        bloc.append(document.createTextNode("· "), sortie);
+        repere.append(bloc);
+      }
+
+      // « Ce n'est pas moi » : on envoie ce qui restait à envoyer, on oublie le
+      // code, on revient à la case « sans code » — la case de l'élève reste sur
+      // l'appareil, on n'efface le travail de personne — puis on renvoie à
+      // l'espace élève avec ?oublier=1, pour que l'espace oublie lui aussi ce
+      // code dans cet onglet : un seul geste vide les deux domaines et laisse
+      // l'appareil prêt pour le camarade suivant.
       function quitterSuivi() {
+        envoyerAvantDeFermer();
         codeSuivi = "";
         suiviIdentite = null;
         suiviHorsLigne = false;
         questionFusion = null;
-        PARCOURS.effacerCode(storage());
+        PARCOURS.effacerCode(stockageSession());
+        parcours = PARCOURS.charger(storage(), "");
         state.parcoursOptionsOpen = false;
+        majLienRetour();
+        renderRepere();
         renderParcours();
+        try { window.location.assign(SUIVI_URL + "/?oublier=1"); } catch (_) {}
       }
 
-      function appliquerSuivi(code, distant, remplacer) {
-        codeSuivi = code;
-        suiviHorsLigne = false;
-        PARCOURS.sauverCode(storage(), code);
-        if (distant) {
-          parcours = remplacer ? distant : PARCOURS.fusionner(parcours, distant);
-        } else if (remplacer) {
-          parcours = PARCOURS.creerParcours();
-        }
-        PARCOURS.sauver(storage(), parcours);
-        envoyerParcours();
+      // Du travail fait sans code sur cet appareil, et rien encore sous ce code :
+      // on demande une fois si c'est le sien, en le nommant quand on le peut.
+      // Rien ne bloque pendant ce temps — l'élève joue déjà sous SON code.
+      function proposerLeTravailSansCode() {
+        if (!suiviActif() || !PARCOURS.estVide(parcours)) return;
+        const invite = PARCOURS.charger(storage(), "");
+        if (PARCOURS.estVide(invite)) return;
+        questionFusion = {prenom: invite.prenom || ""};
+      }
+
+      function reprendreLeTravailSansCode(oui) {
         questionFusion = null;
-        state.nameSkipped = true;
+        if (oui) {
+          parcours = PARCOURS.fusionner(parcours, PARCOURS.charger(storage(), ""));
+          PARCOURS.effacer(storage(), "");
+          state.nameSkipped = true;
+          sauverParcours();
+        }
         renderParcours();
-        chargerIdentite(code);
       }
 
-      async function activerCode(codeBrut, silencieux) {
-        const code = PARCOURS.normaliserCode(codeBrut);
-        if (!PARCOURS.codeValide(code)) {
-          if (!silencieux) messageCode("Ce code doit avoir six caractères. Regarde bien ta feuille.");
-          return false;
-        }
-        const reponse = await lireParcoursDuServeur(code);
-        if (reponse.statut === 404) {
-          if (!silencieux) messageCode("Ce code n’existe pas. Vérifie-le avec ton professeur.");
-          return false;
-        }
-        if (reponse.statut !== 200 || !reponse.donnees || !reponse.donnees.ok) {
-          // Le code vient du lien de son espace : il est bon, c'est le réseau qui
-          // manque. On le garde et on le dira, plutôt que de laisser l'élève
-          // travailler en croyant à tort qu'il est suivi.
-          if (silencieux) {
-            codeSuivi = code;
-            PARCOURS.sauverCode(storage(), code);
-            suiviHorsLigne = true;
-            renderParcours();
-            return true;
-          }
-          messageCode("Le serveur ne répond pas. Ton parcours reste sur cet appareil : réessaie plus tard.");
-          return false;
-        }
-        const distant = reponse.donnees.existe
-          ? PARCOURS.normaliserParcours(reponse.donnees.parcours)
-          : null;
-
-        // Appareil partagé : un code différent de celui d'ici, sur un parcours
-        // déjà commencé, ce sont peut-être deux élèves. On demande.
-        if (codeSuivi !== code && !PARCOURS.estVide(parcours)) {
-          questionFusion = {code, distant, confirme: false};
-          renderParcours();
-          return true;
-        }
-        appliquerSuivi(code, distant, false);
-        return true;
-      }
-
-      function demarrerSuivi(codeDeLAdresse) {
-        if (codeDeLAdresse) {
-          activerCode(codeDeLAdresse, true);
-          return;
-        }
+      function demarrerSuivi() {
         if (!suiviActif()) return;
+        PARCOURS.sauverCode(stockageSession(), codeSuivi);
+        proposerLeTravailSansCode();
+        renderRepere();
         chargerIdentite(codeSuivi);
-        lireParcoursDuServeur(codeSuivi).then(reponse => {
-          if (state.running) return;
-          suiviHorsLigne = reponse.statut === 0 || reponse.statut >= 500;
-          if (reponse.statut === 200 && reponse.donnees && reponse.donnees.ok && reponse.donnees.existe) {
+        const code = codeSuivi;
+        lireParcoursDuServeur(code).then(reponse => {
+          if (code !== codeSuivi) return;
+          suiviHorsLigne = reponse.statut !== 200 || !reponse.donnees || !reponse.donnees.ok;
+          if (!suiviHorsLigne && reponse.donnees.existe) {
             parcours = PARCOURS.fusionner(parcours, PARCOURS.normaliserParcours(reponse.donnees.parcours));
-            PARCOURS.sauver(storage(), parcours);
+            PARCOURS.sauver(storage(), parcours, codeSuivi);
+            envoyerParcours();
+          } else if (!suiviHorsLigne && !PARCOURS.estVide(parcours)) {
+            // Rien encore sur le serveur mais du travail ici (fait hors ligne,
+            // par exemple) : il part maintenant, sans attendre un geste de plus.
             envoyerParcours();
           }
-          renderParcours();
+          // Une série en cours n'est pas interrompue : on fusionne quand même,
+          // on redessinera l'écran quand elle sera finie.
+          renderRepere();
+          if (!state.running) renderParcours();
         });
       }
+      // [suivi:fin]
 
       // Vue « fiche d'un élève », ouverte par le professeur depuis « Ma classe ».
       // Elle ne touche jamais au parcours de cet appareil.
@@ -2998,46 +3094,18 @@
         $("parcours-options").hidden = !state.parcoursOptionsOpen;
         $("parcours-more").setAttribute("aria-expanded", String(Boolean(state.parcoursOptionsOpen)));
 
-        // Suivi de classe : un repère permanent, jamais un secret.
-        const suivi = $("parcours-suivi");
-        suivi.hidden = !suiviActif();
-        if (suiviActif()) {
-          const qui = suiviIdentite && suiviIdentite.prenom ? ` · ${suiviIdentite.prenom}` : "";
-          const ou = suiviIdentite && suiviIdentite.classe ? ` · ${suiviIdentite.classe}` : "";
-          suivi.replaceChildren();
-          const puce = document.createElement("span");
-          puce.className = "puce";
-          puce.setAttribute("aria-hidden", "true");
-          // Sans connexion, on ne laisse pas croire que le travail est déjà parti.
-          suivi.classList.toggle("hors-ligne", suiviHorsLigne);
-          suivi.append(puce, document.createTextNode(suiviHorsLigne
-            ? "Suivi par ton professeur · pas de connexion, ton travail partira plus tard"
-            : `Suivi par ton professeur${qui}${ou}`));
-          // La porte de sortie est ICI, sur le repère, et pas dans un menu :
-          // sans elle, un appareil partagé reste celui du dernier élève, et
-          // même les liens de retour ramènent à son espace.
-          const sortie = document.createElement("button");
-          sortie.type = "button";
-          sortie.className = "sortie";
-          sortie.textContent = "Ce n’est pas moi";
-          sortie.addEventListener("click", quitterSuivi);
-          // Le séparateur voyage AVEC le bouton : sur téléphone, le bandeau passe
-          // à la ligne, et un « · » resté seul en fin de ligne se lit « 405· ».
-          const bloc = document.createElement("span");
-          bloc.append(document.createTextNode("· "), sortie);
-          suivi.append(bloc);
-        }
+        // Suivi de classe : le repère vit dans la barre du haut (renderRepere),
+        // sur tous les écrans. Ici, seulement la question posée une fois quand
+        // du travail fait sans code existe sur l'appareil. « Non » ne touche à
+        // rien : ce travail reste dans sa case, pour celui à qui il appartient.
         $("parcours-fusion").hidden = !questionFusion;
         if (questionFusion) {
-          // Deuxième temps : remplacer efface le travail de quelqu'un d'autre,
-          // qui n'est peut-être enregistré nulle part. On le dit avant.
-          $("parcours-fusion-text").textContent = questionFusion.confirme
-            ? "Le parcours déjà présent sur cet appareil va être effacé. S’il appartient à un camarade qui n’a pas de code, son travail sera perdu. On continue ?"
-            : "Il y a déjà un parcours commencé sur cet appareil. Est-ce que c’est le tien ?";
-          $("parcours-fusion-oui").textContent = questionFusion.confirme
-            ? "Oui, efface-le" : "Oui, c’est le mien";
-          $("parcours-fusion-non").textContent = questionFusion.confirme
-            ? "Annuler" : "Non, c’est celui de quelqu’un d’autre";
+          const qui = questionFusion.prenom;
+          $("parcours-fusion-text").textContent = qui
+            ? `Il y a déjà le travail de ${qui}, fait sans code, sur cet appareil. C’est toi, ${qui} ?`
+            : "Il y a déjà du travail fait sans code sur cet appareil. Est-ce que c’est le tien ?";
+          $("parcours-fusion-oui").textContent = "Oui, c’est le mien";
+          $("parcours-fusion-non").textContent = "Non, ce n’est pas le mien";
         }
         // Sans code, il n'y a rien d'autre à dire — et rien à annoncer d'un suivi
         // qui n'existe pas pour ce visiteur. Avec un code, la phrase doit dire
@@ -3435,23 +3503,12 @@
       });
       $("parcours-fusion-oui").addEventListener("click", () => {
         if (!questionFusion) return;
-        if (questionFusion.confirme) {
-          appliquerSuivi(questionFusion.code, questionFusion.distant, true);
-          return;
-        }
-        appliquerSuivi(questionFusion.code, questionFusion.distant, false);
+        reprendreLeTravailSansCode(true);
+        $("parcours-title").focus?.({preventScroll: true});
       });
       $("parcours-fusion-non").addEventListener("click", () => {
         if (!questionFusion) return;
-        if (questionFusion.confirme) {
-          // « Annuler » : on revient à la question, rien n'est effacé.
-          questionFusion = {code: questionFusion.code, distant: questionFusion.distant, confirme: false};
-          renderParcours();
-          return;
-        }
-        questionFusion = {code: questionFusion.code, distant: questionFusion.distant, confirme: true};
-        renderParcours();
-        $("parcours-fusion-non").focus?.({preventScroll: true});
+        reprendreLeTravailSansCode(false);
       });
       $("fiche-ecran-print").addEventListener("click", () => window.setTimeout(() => window.print(), 30));
 
@@ -3584,41 +3641,19 @@
       }
       syncControls();
       majLienRetour();
-      // L'adresse peut porter plusieurs informations à la fois : l'espace élève
-      // construit « #code=XXXXXX&ouvrir=parcours ». On la lit donc comme une
-      // liste de paramètres, et non comme un mot exact — sinon le code passe
-      // inaperçu dès qu'autre chose le suit, et plus rien n'est enregistré.
-      const adresse = window.location.hash || "";
-      const parametres = new URLSearchParams(adresse.replace(/^#/, ""));
-      const ficheDemandee = parametres.get("fiche");
-      const codeDemande = parametres.get("code");
-      const ouvrir = parametres.get("ouvrir") || (adresse === "#parcours" ? "parcours" : "")
-        || (adresse === "#calculs" ? "calculs" : "");
-      // Le code est lu, il ne doit plus rester dans la barre d'adresse : sinon il
-      // part dans la mesure d'audience, il s'inscrit dans l'historique du
-      // navigateur, et il reste affiché quand la page est projetée au tableau.
-      // Ce script s'exécute avant consentement.js (chargé en « defer »), donc
-      // l'adresse est déjà nettoyée quand la mesure d'audience démarre.
-      if (codeDemande || ficheDemandee) {
-        // Signalé AVANT consentement.js (chargé en « defer », donc exécuté après
-        // ce script) : dès qu'un élève est identifié par un code, aucune mesure
-        // d'audience ne doit se charger sur son appareil.
-        window.MATHSGO_SUIVI_ELEVE = true;
-        try {
-          parametres.delete("code");
-          parametres.delete("fiche");
-          const reste = parametres.toString();
-          window.history.replaceState(null, "",
-            window.location.pathname + window.location.search + (reste ? "#" + reste : ""));
-        } catch (_) {}
-      }
-      if (ficheDemandee) {
-        ouvrirFicheEleve(ficheDemandee);
+      renderRepere();
+      // L'adresse a été lue et nettoyée par le script du <head>, avant tout le
+      // reste (ENTREE). L'espace élève construit « #code=XXXXXX&ouvrir=parcours » :
+      // le code a déjà décidé de la case chargée, il ne reste qu'à aiguiller.
+      // [aiguillage:debut]
+      if (ENTREE.fiche) {
+        ouvrirFicheEleve(ENTREE.fiche);
       } else {
-        if (ouvrir === "calculs") openCalculs();
-        else if (ouvrir === "parcours" || codeDemande) openParcours();
-        demarrerSuivi(codeDemande || null);
+        if (ENTREE.ouvrir === "calculs") openCalculs();
+        else if (ENTREE.ouvrir === "parcours" || ENTREE.code) openParcours();
+        demarrerSuivi();
       }
+      // [aiguillage:fin]
     })();
   </script>
 </body>

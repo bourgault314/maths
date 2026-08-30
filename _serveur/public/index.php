@@ -146,6 +146,20 @@ header('Content-Type: text/html; charset=utf-8');
     $("erreur").hidden = !message;
   }
 
+  // « Ce n'est pas moi » dans l'appli renvoie ici avec ?oublier=1 : l'espace
+  // oublie à son tour le code de cet onglet — les deux domaines ont chacun
+  // leur mémoire, un seul geste doit vider les deux — et l'adresse est
+  // nettoyée pour qu'un rechargement ne recommence pas.
+  function oublierSiDemande() {
+    let demande = false;
+    try { demande = new URLSearchParams(window.location.search).get("oublier") === "1"; } catch (_) {}
+    if (!demande) return false;
+    ecrireCode("");
+    try { window.localStorage.removeItem(CLE); } catch (_) {}
+    try { window.history.replaceState(null, "", window.location.pathname); } catch (_) {}
+    return true;
+  }
+
   const FLECHE = '<svg class="fleche" width="22" height="22" viewBox="0 0 24 24" fill="none" '
     + 'stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" '
     + 'aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>';
@@ -246,8 +260,12 @@ header('Content-Type: text/html; charset=utf-8');
     $("code").focus();
   });
 
-  const memorise = nettoyer(lireCode());
-  if (memorise.length === 6) ouvrir(memorise, true);
+  if (oublierSiDemande()) {
+    $("code").focus();
+  } else {
+    const memorise = nettoyer(lireCode());
+    if (memorise.length === 6) ouvrir(memorise, true);
+  }
 })();
 </script>
 </body>
