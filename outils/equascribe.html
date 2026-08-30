@@ -9933,7 +9933,7 @@ function m5DrawEquation(g){
       g.appendChild(el("rect", { x:d.x-4, y:boxY, width:d.w+8, height:boxH, rx:8, fill:"url(#m5hach)" }));
     }else if(d.kind === "sel"){
       g.appendChild(el("rect", { x:d.x-9, y:boxY-5, width:d.w+18, height:boxH+10, rx:12,
-        fill:"rgba(37,99,235,0.08)", stroke:"#2563eb", "stroke-width":"4" }));
+        fill:"rgba(249,115,22,0.08)", stroke:"#f97316", "stroke-width":"4" }));
     }else if(d.kind === "hit"){
       g.appendChild(el("rect", { x:d.hx, y:d.baseY-Math.round(L.fs*1.1), width:d.hw, height:Math.round(L.fs*1.55), rx:12,
         fill:"#000", "fill-opacity":"0", "pointer-events":"all", cursor:"pointer",
@@ -10301,17 +10301,18 @@ function onTermTap(tid){
       const a = sums(sL), b = sums(sR);
       if(a.n === b.n && a.x === b.x && (a.n > 0 || a.x > 0)){
         pushUndo();
-        sL.concat(sR).forEach(t=>{ t.sel = false; t.hach = true; });
+        const idsAEnlever = new Set(sL.concat(sR).map(t=>t.id));
+        sL.concat(sR).forEach(t=>{ t.sel = false; });
         const label = a.x > 0 ? ("− " + coeffXLabel(a.x, VC) + (a.n>0 ? " − " + a.n : "")) : ("− " + a.n);
         const nl = { lhs:[], rhs:[] };
         ["lhs","rhs"].forEach(sn=>{
-          l[sn].forEach(t=>{ if(!t.hach) nl[sn].push(T(t.kind, t.kind==="x" ? t.a : t.v)); });
+          l[sn].forEach(t=>{ if(!idsAEnlever.has(t.id)) nl[sn].push(T(t.kind, t.kind==="x" ? t.a : t.v)); });
           if(!nl[sn].length) nl[sn].push(T("n", 0));
         });
         M.ops.push(label);
         M.lines.push(nl);
         M.cur = { aL:M.cur.aL - a.x, vL:M.cur.vL - a.n, aR:M.cur.aR - b.x, vR:M.cur.vR - b.n };
-        say("Je recopie ce qui n'est pas barré.");
+        say("J'enlève la même quantité dans les deux membres et je recopie le reste.");
         render();
         return;
       }
