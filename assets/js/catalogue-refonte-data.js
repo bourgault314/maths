@@ -350,7 +350,6 @@ window.MATHSGO_CATALOGUE = {
       "cardDescription": "Parier sur la somme de deux ou trois dés puis comparer les fréquences observées."
     },
     "outils/plateaux_manipulation/aire_perimetre_plateau.html": {
-      "primaryNotion": "aires-perimetres",
       "primaryGroup": "manipuler",
       "collections": [],
       "tags": ["aire", "perimetre", "quadrillage", "figures"],
@@ -831,7 +830,7 @@ window.MATHSGO_CATALOGUE = {
       "cardDescription": "Explorer en 3D la relation entre millimètre cube, centimètre cube et unités supérieures."
     },
     "outils/angles/anglebarre.html": {
-      "primaryNotion": "angles",
+      "primaryNotion": "triangles-proprietes",
       "primaryGroup": "manipuler",
       "collections": [],
       "tags": ["angles", "triangle", "somme-des-angles", "raisonnement"],
@@ -839,7 +838,7 @@ window.MATHSGO_CATALOGUE = {
       "cardDescription": "Résoudre pas à pas des problèmes sur la somme des angles d’un triangle à l’aide d’un schéma en barres."
     },
     "outils/angles/bandes_magnetiques.html": {
-      "primaryNotion": "angles",
+      "primaryNotion": "construction-geometrique",
       "primaryGroup": "manipuler",
       "collections": [],
       "tags": ["angles", "bandes-magnetiques", "construction", "rapporteur", "manipulation"],
@@ -955,7 +954,7 @@ window.MATHSGO_CATALOGUE = {
       "tags": ["proportionnalite", "tableau", "sans-coefficient", "gabarit", "imprimable"],
       "thumbnail": "assets/img/thumbnails/proportionnalite/tableau-sans-coefficient.png?v=1"
     },
-    "outils/angles/fiche_angles_triangles.pdf": { "primaryNotion": "angles", "primaryGroup": "imprimer", "collections": [], "tags": ["angles", "triangles", "imprimable"], "thumbnail": "assets/img/thumbnails/angles/fiche-angles-triangles.png?v=1" },
+    "outils/angles/fiche_angles_triangles.pdf": { "primaryNotion": "triangles-proprietes", "primaryGroup": "imprimer", "collections": [], "tags": ["angles", "triangles", "imprimable"], "thumbnail": "assets/img/thumbnails/angles/fiche-angles-triangles.png?v=1" },
     "outils/bouliers/abaque_de_gerbert/abaque_gerbert_addition.html": {
       "primaryNotion": "numeration",
       "primaryGroup": "entrainer",
@@ -1622,13 +1621,8 @@ window.MATHSGO_CATALOGUE = {
       "domain": "algebre"
     },
     {
-      "id": "reperage",
-      "title": "Repérage",
-      "domain": "geometrie"
-    },
-    {
-      "id": "transformations",
-      "title": "Transformations",
+      "id": "construction-geometrique",
+      "title": "Construire et manipuler",
       "domain": "geometrie"
     },
     {
@@ -1642,23 +1636,46 @@ window.MATHSGO_CATALOGUE = {
       "domain": "geometrie"
     },
     {
-      "id": "parallelogrammes",
-      "title": "Parallélogrammes",
-      "domain": "geometrie"
+      "id": "triangles-proprietes",
+      "title": "Propriétés des triangles",
+      "domain": "geometrie",
+      "parent": "triangles"
     },
     {
       "id": "pythagore",
       "title": "Pythagore",
-      "domain": "geometrie"
+      "domain": "geometrie",
+      "parent": "triangles"
     },
     {
       "id": "thales",
       "title": "Thalès",
+      "domain": "geometrie",
+      "parent": "triangles"
+    },
+    {
+      "id": "reperage",
+      "title": "Repérage",
+      "domain": "geometrie"
+    },
+    {
+      "id": "mesures-geometriques",
+      "title": "Aires et périmètres",
       "domain": "geometrie"
     },
     {
       "id": "espace-constructions",
       "title": "Espace, solides et patrons",
+      "domain": "geometrie"
+    },
+    {
+      "id": "transformations",
+      "title": "Transformations",
+      "domain": "geometrie"
+    },
+    {
+      "id": "parallelogrammes",
+      "title": "Parallélogrammes",
       "domain": "geometrie"
     },
     {
@@ -1963,7 +1980,8 @@ window.MATHSGO_CATALOGUE = {
         "geometrie"
       ],
       "notions": [
-        "aires-perimetres"
+        "aires-perimetres",
+        "mesures-geometriques"
       ],
       "uses": [
         "manipuler",
@@ -2021,7 +2039,7 @@ window.MATHSGO_CATALOGUE = {
         "geometrie"
       ],
       "notions": [
-        "angles"
+        "triangles-proprietes"
       ],
       "uses": [
         "projeter",
@@ -2154,7 +2172,7 @@ window.MATHSGO_CATALOGUE = {
         "geometrie"
       ],
       "notions": [
-        "angles"
+        "construction-geometrique"
       ],
       "uses": [
         "projeter",
@@ -3076,7 +3094,8 @@ window.MATHSGO_CATALOGUE = {
       ],
       "notions": [
         "angles",
-        "triangles"
+        "triangles",
+        "triangles-proprietes"
       ],
       "uses": [
         "imprimer",
