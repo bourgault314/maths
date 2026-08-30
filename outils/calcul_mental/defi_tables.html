@@ -291,7 +291,13 @@
     .parcours-suivi .puce { width: 9px; height: 9px; border-radius: 50%; background: #08aaa5; }
     .parcours-suivi.hors-ligne { background: #fdf0e3; color: #8a4c0a; }
     .parcours-suivi.hors-ligne .puce { background: #d9822b; }
-    .parcours-code-input { text-transform: uppercase; letter-spacing: .18em; font-weight: 900; }
+    /* La sortie vit sur le repère lui-même : ce qui dit « tu es Léa » doit
+       permettre de dire « ce n'est pas moi ». Un menu que personne n'ouvre ne
+       remplace pas une porte. */
+    .parcours-suivi .sortie { border: 0; background: none; padding: 0; margin: 0;
+                              font: inherit; color: inherit; text-decoration: underline;
+                              cursor: pointer; opacity: .85; }
+    .parcours-suivi .sortie:hover, .parcours-suivi .sortie:focus-visible { opacity: 1; }
     .fiche-ecran { max-width: 900px; margin: 0 auto; padding: 12px 4px 24px; }
     .fiche-ecran-barre { display: flex; align-items: center; justify-content: space-between;
                          gap: 12px; flex-wrap: wrap; margin-bottom: 14px; }
@@ -1273,22 +1279,10 @@
         </div>
         <div id="parcours-options" class="parcours-options" hidden>
           <button id="parcours-rename" class="secondary" type="button">Modifier mon prénom</button>
-          <button id="parcours-code-open" class="secondary" type="button">Utiliser mon code de classe</button>
-          <button id="parcours-code-remove" class="secondary" type="button" hidden>Ne plus utiliser ce code</button>
           <button id="parcours-print-option" class="secondary" type="button">Imprimer ma fiche</button>
           <button id="parcours-reset" class="secondary" type="button">Recommencer à zéro</button>
         </div>
         <p id="parcours-suivi" class="parcours-suivi" hidden></p>
-        <form id="parcours-code" class="parcours-name" hidden>
-          <label for="parcours-code-input">Ton code de classe</label>
-          <div class="parcours-name-row">
-            <input id="parcours-code-input" class="parcours-code-input" type="text" maxlength="7"
-                   autocomplete="off" autocapitalize="characters" spellcheck="false" enterkeyhint="done">
-            <button class="primary" type="submit">OK</button>
-            <button id="parcours-code-cancel" class="secondary" type="button">Annuler</button>
-          </div>
-          <small id="parcours-code-message">Six caractères, donnés par ton professeur sur papier. Ton parcours sera enregistré pour qu’il puisse le voir.</small>
-        </form>
         <div id="parcours-fusion" class="parcours-confirm" hidden>
           <p id="parcours-fusion-text"></p>
           <div class="parcours-name-row">
@@ -1303,7 +1297,7 @@
             <button class="primary" type="submit">OK</button>
             <button id="parcours-name-skip" class="secondary" type="button">Plus tard</button>
           </div>
-          <small id="parcours-name-note">Ton prénom reste sur cet appareil. Si ton professeur te donne un code, ta progression sera aussi enregistrée pour lui.</small>
+          <small id="parcours-name-note">Ton prénom reste sur cet appareil.</small>
         </form>
         <div id="parcours-confirm" class="parcours-confirm" hidden>
           <p id="parcours-confirm-text">Effacer tout ton parcours&nbsp;? Cette action ne peut pas être annulée.</p>
@@ -1503,7 +1497,6 @@
       const SUIVI_URL = "https://suivi.mathsgo.re";
       let codeSuivi = PARCOURS.chargerCode(storage());
       let suiviIdentite = null;
-      let saisieCodeOuverte = false;
       let suiviHorsLigne = false;
       let questionFusion = null;
       let envoiEnAttente = null;
@@ -1655,6 +1648,19 @@
         renderParcours();
       }
 
+      // Détacher cet appareil : plus de repère, plus d'envoi, et les liens de
+      // retour redeviennent ceux du site. Le parcours déjà fait reste ici — on
+      // n'efface le travail de personne.
+      function quitterSuivi() {
+        codeSuivi = "";
+        suiviIdentite = null;
+        suiviHorsLigne = false;
+        questionFusion = null;
+        PARCOURS.effacerCode(storage());
+        state.parcoursOptionsOpen = false;
+        renderParcours();
+      }
+
       function appliquerSuivi(code, distant, remplacer) {
         codeSuivi = code;
         suiviHorsLigne = false;
@@ -1666,7 +1672,6 @@
         }
         PARCOURS.sauver(storage(), parcours);
         envoyerParcours();
-        saisieCodeOuverte = false;
         questionFusion = null;
         state.nameSkipped = true;
         renderParcours();
@@ -1706,7 +1711,6 @@
         // déjà commencé, ce sont peut-être deux élèves. On demande.
         if (codeSuivi !== code && !PARCOURS.estVide(parcours)) {
           questionFusion = {code, distant, confirme: false};
-          saisieCodeOuverte = false;
           renderParcours();
           return true;
         }
@@ -3009,12 +3013,20 @@
           suivi.append(puce, document.createTextNode(suiviHorsLigne
             ? "Suivi par ton professeur · pas de connexion, ton travail partira plus tard"
             : `Suivi par ton professeur${qui}${ou}`));
+          // La porte de sortie est ICI, sur le repère, et pas dans un menu :
+          // sans elle, un appareil partagé reste celui du dernier élève, et
+          // même les liens de retour ramènent à son espace.
+          const sortie = document.createElement("button");
+          sortie.type = "button";
+          sortie.className = "sortie";
+          sortie.textContent = "Ce n’est pas moi";
+          sortie.addEventListener("click", quitterSuivi);
+          // Le séparateur voyage AVEC le bouton : sur téléphone, le bandeau passe
+          // à la ligne, et un « · » resté seul en fin de ligne se lit « 405· ».
+          const bloc = document.createElement("span");
+          bloc.append(document.createTextNode("· "), sortie);
+          suivi.append(bloc);
         }
-        $("parcours-code-open").textContent = suiviActif()
-          ? "Changer mon code de classe"
-          : "Utiliser mon code de classe";
-        $("parcours-code-remove").hidden = !suiviActif();
-        $("parcours-code").hidden = !saisieCodeOuverte;
         $("parcours-fusion").hidden = !questionFusion;
         if (questionFusion) {
           // Deuxième temps : remplacer efface le travail de quelqu'un d'autre,
@@ -3027,9 +3039,12 @@
           $("parcours-fusion-non").textContent = questionFusion.confirme
             ? "Annuler" : "Non, c’est celui de quelqu’un d’autre";
         }
+        // Sans code, il n'y a rien d'autre à dire — et rien à annoncer d'un suivi
+        // qui n'existe pas pour ce visiteur. Avec un code, la phrase doit dire
+        // exactement ce qui se passe.
         $("parcours-name-note").textContent = suiviActif()
           ? "Ton prénom reste sur cet appareil. Ta progression, elle, est enregistrée pour ton professeur."
-          : "Ton prénom reste sur cet appareil. Si ton professeur te donne un code, ta progression sera aussi enregistrée pour lui.";
+          : "Ton prénom reste sur cet appareil.";
 
         const next = $("parcours-next");
         next.replaceChildren();
@@ -3373,7 +3388,6 @@
         state.parcoursOptionsOpen = false;
         state.confirmingReset = false;
         state.renaming = false;
-        saisieCodeOuverte = false;
         configuration.mode = null;
         configuration.tables = new Set();
         state.running = false;
@@ -3418,34 +3432,6 @@
         state.renaming = false;
         state.nameSkipped = true;
         $("parcours-name").hidden = true;
-      });
-      $("parcours-code-open").addEventListener("click", () => {
-        state.parcoursOptionsOpen = false;
-        state.confirmingReset = false;
-        questionFusion = null;
-        saisieCodeOuverte = true;
-        messageCode("Six caractères, donnés par ton professeur sur papier. Ton parcours sera enregistré pour qu’il puisse le voir.");
-        renderParcours();
-        $("parcours-code-input").value = "";
-        $("parcours-code-input").focus?.({preventScroll: true});
-      });
-      $("parcours-code-cancel").addEventListener("click", () => {
-        saisieCodeOuverte = false;
-        renderParcours();
-        $("parcours-title").focus?.({preventScroll: true});
-      });
-      $("parcours-code").addEventListener("submit", event => {
-        event.preventDefault();
-        messageCode("Un instant…");
-        activerCode($("parcours-code-input").value, false);
-      });
-      $("parcours-code-remove").addEventListener("click", () => {
-        codeSuivi = "";
-        suiviIdentite = null;
-        PARCOURS.effacerCode(storage());
-        state.parcoursOptionsOpen = false;
-        saisieCodeOuverte = false;
-        renderParcours();
       });
       $("parcours-fusion-oui").addEventListener("click", () => {
         if (!questionFusion) return;

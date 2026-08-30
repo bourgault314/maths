@@ -459,7 +459,7 @@ test("la page charge le moteur du parcours et propose la carte Mon parcours", ()
 
 test("prénom local, remise à zéro confirmée dans la page, résultat relié au parcours", () => {
   assert.match(html, /id="parcours-name-input"[^>]*maxlength="20"/);
-  assert.match(html, /Ton prénom reste sur cet appareil\. Si ton professeur te donne un code/);
+  assert.match(html, /Ton prénom reste sur cet appareil\./);
   assert.match(html, /id="parcours-reset"[\s\S]*Recommencer à zéro/);
   assert.match(html, /id="parcours-confirm-yes"[\s\S]*Effacer/);
   assert.doesNotMatch(html, /window\.confirm\(/);
@@ -528,8 +528,21 @@ test("l’appli est branchée au suivi de classe sans jamais bloquer", () => {
   assert.match(html, /parametres\.get\("code"\)/);
   assert.match(html, /parametres\.get\("fiche"\)/);
   assert.match(html, /parametres\.get\("ouvrir"\)/);
-  assert.match(html, /id="parcours-code-open"/);
-  assert.match(html, /id="parcours-code-remove"/);
+  // Le site public ne parle plus du tout du suivi : on n'y tape pas de code, et
+  // on n'y renvoie même pas vers l'espace élève. Un élève entre par
+  // suivi.mathsgo.re, un point c'est tout — un visiteur ordinaire du site n'a
+  // aucune raison de voir passer cette histoire de codes.
+  assert.doesNotMatch(html, /id="parcours-code-open"/);
+  assert.doesNotMatch(html, /id="parcours-code-input"/);
+  assert.doesNotMatch(html, /id="parcours-code-remove"/);
+  assert.doesNotMatch(html, /id="parcours-code-aide"/);
+  assert.doesNotMatch(html, /Utiliser mon code de classe/);
+  assert.doesNotMatch(html, /Changer mon code de classe/);
+  // Même en creux : sans code, l'appli n'annonce pas un suivi qui n'existe pas
+  // pour ce visiteur. La phrase complète revient dès qu'un code est actif.
+  assert.doesNotMatch(html, /Si ton professeur te donne un code/);
+  assert.match(html, /Ta progression, elle, est enregistrée pour ton professeur\./,
+    "la phrase vraie pour un élève suivi doit rester");
   assert.match(html, /id="parcours-suivi"/, "le repère de suivi est permanent");
   assert.match(html, /id="parcours-fusion"/, "la question posée sur un appareil partagé");
 
@@ -851,4 +864,70 @@ test("le prénom tapé par l’élève ne part pas au serveur", () => {
   // lui effacer en passant.
   assert.equal(parcours.prenom, "Léa Dupont",
     "l’objet local ne doit pas être modifié par l’envoi");
+});
+
+// Un appareil garde le code du dernier élève. Sans porte de sortie visible, il
+// reste « son » appareil : le repère, les liens de retour et le logo ramènent
+// tous à son espace, et l'adulte ou le camarade suivant est enfermé dedans. La
+// sortie est donc posée sur le repère lui-même. Ce test EXÉCUTE « quitterSuivi »
+// telle qu'elle est écrite dans la page.
+test("« Ce n’est pas moi » détache l’appareil sans effacer le travail", () => {
+  const debut = html.indexOf("function quitterSuivi()");
+  assert.ok(debut > 0, "la sortie doit exister dans la page");
+  const marque = "\n      }";
+  const source = html.slice(debut, html.indexOf(marque, debut) + marque.length);
+
+  const resultat = new Function(`
+    let codeSuivi = "2F4FUL";
+    let suiviIdentite = {prenom: "Léa", classe: "405"};
+    let suiviHorsLigne = true;
+    let questionFusion = {code: "ABCDEF"};
+    let parcours = {tables: {5: {acquise: "2026-08-30"}}};
+    let codeEfface = false;
+    let rendu = false;
+    const state = {parcoursOptionsOpen: true};
+    const PARCOURS = {effacerCode() { codeEfface = true; }};
+    const storage = () => null;
+    const renderParcours = () => { rendu = true; };
+    ${source}
+    quitterSuivi();
+    return {codeSuivi, suiviIdentite, suiviHorsLigne, questionFusion, parcours,
+            codeEfface, rendu, menuFerme: state.parcoursOptionsOpen === false};
+  `)();
+
+  assert.equal(resultat.codeSuivi, "", "le code ne doit plus être actif");
+  assert.equal(resultat.suiviIdentite, null, "le prénom affiché doit disparaître");
+  assert.equal(resultat.suiviHorsLigne, false);
+  assert.equal(resultat.questionFusion, null, "aucune question ne doit rester en suspens");
+  assert.equal(resultat.codeEfface, true, "le code doit être retiré du navigateur");
+  assert.equal(resultat.rendu, true, "l’écran doit être redessiné aussitôt");
+  assert.equal(resultat.menuFerme, true);
+
+  // Le point qui compte pour un élève : on le détache, on ne l’efface pas.
+  assert.deepEqual(resultat.parcours, {tables: {5: {acquise: "2026-08-30"}}},
+    "le travail déjà fait doit rester sur l’appareil");
+});
+
+test("la sortie est posée sur le repère de suivi, pas dans un menu", () => {
+  assert.match(html, /sortie\.textContent = "Ce n’est pas moi";/);
+  assert.match(html, /sortie\.addEventListener\("click", quitterSuivi\);/);
+  assert.match(html, /bloc\.append\(document\.createTextNode\("· "\), sortie\);/,
+    "le séparateur doit revenir à la ligne avec le bouton, pas rester seul en fin de ligne");
+  assert.match(html, /suivi\.append\(bloc\);/, "la sortie doit être ajoutée au bandeau lui-même");
+});
+
+// Le dépôt a déjà payé une accolade orpheline dans un <style> : le texte était
+// bien dans le fichier, et le navigateur ignorait tout le bloc. Un test compte
+// désormais les accolades du CSS. Voici l'équivalent pour le JavaScript, qui
+// pèse 100 000 caractères dans un seul bloc en ligne : une erreur de syntaxe y
+// casserait TOUTE l'appli, et aucun assert.match ne la verrait — le texte
+// fautif serait bien présent dans le fichier. On demande donc au moteur
+// JavaScript de l'analyser pour de bon.
+test("le script en ligne de la page s’analyse sans erreur de syntaxe", () => {
+  const blocs = [...html.matchAll(/<script(?![^>]*\bsrc=)[^>]*>([\s\S]*?)<\/script>/g)];
+  assert.ok(blocs.length >= 1, "la page doit contenir au moins un script en ligne");
+  blocs.forEach((bloc, index) => {
+    assert.doesNotThrow(() => new Function(bloc[1]),
+      `le bloc <script> n°${index + 1} de la page ne s’analyse pas`);
+  });
 });
