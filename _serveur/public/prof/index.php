@@ -753,8 +753,11 @@ header('Content-Type: text/html; charset=utf-8');
         role.className = "role";
         const morceaux = [];
         if (prof.admin) morceaux.push("administrateur");
-        morceaux.push(`${prof.classes} classe${prof.classes > 1 ? "s" : ""} à lui`);
-        if (prof.partagees) morceaux.push(`${prof.partagees} partagée${prof.partagees > 1 ? "s" : ""} par toi`);
+        // Formulation sans genre : l'application n'a pas à savoir qui est qui.
+        morceaux.push(`${prof.classes} classe${prof.classes > 1 ? "s" : ""} créée${prof.classes > 1 ? "s" : ""}`);
+        // « partagée » sans dire par qui : la table des partages n'enregistre pas
+        // l'auteur du partage, et ce compte pourra un jour en recevoir d'ailleurs.
+        if (prof.partagees) morceaux.push(`${prof.partagees} reçue${prof.partagees > 1 ? "s" : ""} en partage`);
         role.textContent = morceaux.join(" · ");
         li.append(nom, role);
         liste.appendChild(li);

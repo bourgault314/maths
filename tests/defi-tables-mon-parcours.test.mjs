@@ -467,7 +467,7 @@ test("prénom local, remise à zéro confirmée dans la page, résultat relié a
   assert.match(html, /PARCOURS\.demarrerSerie\(parcours, config\)/);
   assert.match(html, /id="result-parcours"/);
   assert.match(html, /id="result-open-parcours"[\s\S]*Voir mon parcours/);
-  assert.match(html, /adresse === "#parcours" \|\| codeDemande\) openParcours\(\);/);
+  assert.match(html, /ouvrir === "parcours" \|\| codeDemande\) openParcours\(\);/);
 });
 
 test("Je m’entraîne propose produits, trous ou les deux ; la validation se lance en 1 min 30, 2 ou 3 min", () => {
@@ -522,8 +522,12 @@ test("la fiche « Mon parcours des tables » s’imprime depuis l’appli et exi
 
 test("l’appli est branchée au suivi de classe sans jamais bloquer", () => {
   // Le code arrive par le lien de l'espace élève, ou se tape dans le menu ⋯.
-  assert.match(html, /#fiche=\(\[A-Za-z0-9-\]\{1,12\}\)/);
-  assert.match(html, /#code=\(\[A-Za-z0-9-\]\{1,12\}\)/);
+  // L'adresse se lit comme une liste de paramètres : l'espace élève ajoute
+  // « &ouvrir=parcours » derrière le code, et le code doit rester reconnu.
+  assert.match(html, /new URLSearchParams\(adresse\.replace\(\/\^#\/, ""\)\)/);
+  assert.match(html, /parametres\.get\("code"\)/);
+  assert.match(html, /parametres\.get\("fiche"\)/);
+  assert.match(html, /parametres\.get\("ouvrir"\)/);
   assert.match(html, /id="parcours-code-open"/);
   assert.match(html, /id="parcours-code-remove"/);
   assert.match(html, /id="parcours-suivi"/, "le repère de suivi est permanent");
@@ -598,4 +602,55 @@ test("la feuille de style de Défi tables est équilibrée, et @media print surv
   });
   // La règle qu'une accolade orpheline ferait disparaître en premier.
   assert.match(html, /@media print \{\s*\n\s*@page \{ size: A4 portrait; margin: 12mm; \}/);
+});
+
+// Le lot 8 a corrigé un bug qu'aucun assert.match ne pouvait voir : l'aiguillage
+// cherchait /^#code=(…)$/, et le lien réel de l'espace élève porte
+// « &ouvrir=parcours » derrière le code. Le code passait inaperçu, plus rien ne
+// remontait au professeur, et rien ne le signalait. Une assertion sur le TEXTE du
+// fichier n'aurait rien changé : elle aurait décrit la mauvaise règle avec
+// autant d'aplomb. Ce test EXÉCUTE l'aiguillage tel qu'il est écrit dans la page,
+// sur le lien que le serveur fabrique vraiment.
+test("l’aiguillage de l’adresse reconnaît le lien réel de l’espace élève", () => {
+  const bloc = /const adresse = window\.location\.hash \|\| "";([\s\S]*?)\n      \}\n    \}\)\(\);/.exec(html);
+  assert.ok(bloc, "le bloc de lecture de l’adresse doit être trouvable dans la page");
+
+  const aiguiller = new Function("hash", `
+    const appels = [];
+    const window = {location: {hash}};
+    const openParcours = () => appels.push("parcours");
+    const openCalculs = () => appels.push("calculs");
+    const ouvrirFicheEleve = code => appels.push("fiche:" + code);
+    const demarrerSuivi = code => appels.push("suivi:" + code);
+    const adresse = window.location.hash || "";${bloc[1]}
+    }
+    return appels;
+  `);
+
+  // Le lien que _serveur/public/index.php construit réellement pour Défi tables
+  // (applis.php déclare ancre = "parcours").
+  assert.deepEqual(aiguiller("#code=2F4FUL&ouvrir=parcours"), ["parcours", "suivi:2F4FUL"],
+    "le code doit être reconnu même quand un autre paramètre le suit");
+  assert.deepEqual(aiguiller("#code=2F4FUL"), ["parcours", "suivi:2F4FUL"]);
+  assert.deepEqual(aiguiller("#parcours"), ["parcours", "suivi:null"]);
+  assert.deepEqual(aiguiller("#calculs"), ["calculs", "suivi:null"]);
+  assert.deepEqual(aiguiller("#ouvrir=calculs&code=2F4FUL"), ["calculs", "suivi:2F4FUL"]);
+  assert.deepEqual(aiguiller("#fiche=CDEF23"), ["fiche:CDEF23"], "la fiche du professeur ne démarre aucun suivi");
+  assert.deepEqual(aiguiller(""), ["suivi:null"], "sans adresse, l’appli s’ouvre normalement");
+});
+
+// Le lien est fabriqué d'un côté et lu de l'autre : c'est l'écart entre les deux
+// qui a coûté le lot 8. On vérifie que le serveur ne met dans l'adresse que des
+// paramètres que la page sait lire.
+test("le lien fabriqué par l’espace élève ne porte que des paramètres que l’appli lit", async () => {
+  const fs = await import("node:fs/promises");
+  const espaceEleve = await fs.readFile(new URL("../_serveur/public/index.php", import.meta.url), "utf8");
+  const gabarit = /lien\.href = `\$\{appli\.url\}([^`]*)`\s*\+\s*\(appli\.ancre \? `([^`]*)`/.exec(espaceEleve);
+  assert.ok(gabarit, "le gabarit du lien doit rester trouvable dans l’espace élève");
+  const parametres = [...`${gabarit[1]}${gabarit[2]}`.matchAll(/[#&]([a-z]+)=/g)].map(trouve => trouve[1]);
+  assert.deepEqual(parametres, ["code", "ouvrir"]);
+  parametres.forEach(nom => {
+    assert.ok(html.includes(`parametres.get("${nom}")`),
+      `l’appli doit lire le paramètre « ${nom} » que le serveur met dans l’adresse`);
+  });
 });

@@ -282,7 +282,7 @@ test("la page a l’écran Mes calculs : entrée depuis Mon parcours, grille, d�
   assert.match(html, /PARCOURS\.appliquerReponse/);
   assert.match(html, /PARCOURS\.planRevision/);
   assert.match(html, /CORE\.tableQuestion/);
-  assert.match(html, /adresse === "#calculs"\) openCalculs\(\)/);
+  assert.match(html, /ouvrir === "calculs"\) openCalculs\(\)/);
 });
 
 test("le détail d’une case écrit le calcul dans les deux sens et empile ses informations", () => {
