@@ -654,3 +654,46 @@ test("le lien fabriqué par l’espace élève ne porte que des paramètres que 
       `l’appli doit lire le paramètre « ${nom} » que le serveur met dans l’adresse`);
   });
 });
+
+// Le lien du haut de page ramenait toujours au catalogue de mathsgo.re, y compris
+// pour un élève arrivé de son espace : il en sortait sans aucun chemin de retour.
+// Ce test EXÉCUTE « majLienRetour » telle qu'elle est écrite dans la page, sur un
+// faux lien — une assertion sur le texte du fichier décrirait l'adresse au lieu de
+// la vérifier.
+test("le lien du haut ramène l’élève suivi à son espace, les autres au catalogue", () => {
+  assert.match(html, /<a id="lien-retour" class="catalogue-link"/);
+  assert.match(html, /function renderParcours\(\) \{\s*\n\s*majLienRetour\(\);/);
+  assert.match(html, /syncControls\(\);\s*\n\s*majLienRetour\(\);/, "appelé aussi au démarrage");
+
+  const debut = html.indexOf("const RETOUR_CATALOGUE");
+  const fin = "if (etiquette) etiquette.textContent = vers.texte;\n      }";
+  assert.ok(debut > 0, "le bloc du lien de retour doit exister");
+  const source = html.slice(debut, html.indexOf(fin) + fin.length);
+
+  function executer(suivi) {
+    const lien = {
+      href: "",
+      attributs: {},
+      etiquette: {textContent: ""},
+      setAttribute(nom, valeur) { this.attributs[nom] = valeur; },
+      querySelector(selecteur) {
+        return selecteur === ".catalogue-link-label" ? this.etiquette : null;
+      }
+    };
+    const faux = {getElementById: id => (id === "lien-retour" ? lien : null)};
+    new Function("SUIVI_URL", "document", "suiviActif", `${source}\nreturn majLienRetour;`)(
+      "https://suivi.mathsgo.re", faux, () => suivi
+    )();
+    return lien;
+  }
+
+  const sansCode = executer(false);
+  assert.equal(sansCode.href, "../index.html?domain=nombres-calculs&notion=calcul-mental");
+  assert.equal(sansCode.etiquette.textContent, "Calcul mental");
+  assert.equal(sansCode.attributs["aria-label"], "Retour au calcul mental");
+
+  const avecCode = executer(true);
+  assert.equal(avecCode.href, "https://suivi.mathsgo.re/");
+  assert.equal(avecCode.etiquette.textContent, "Mon espace");
+  assert.equal(avecCode.attributs["aria-label"], "Retour à mon espace");
+});
