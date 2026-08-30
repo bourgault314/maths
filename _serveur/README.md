@@ -32,8 +32,8 @@ la logique de « Mon parcours » reste dans
 
 `classes` (propriétaire, libellé, applis proposées) · `eleves` (code de
 6 caractères, prénom, initiale) · `progressions` (JSON, date) · `profs`
-(identifiant, mot de passe haché, administrateur) · `partages` (classe,
-professeur, droit, compte actif, mot de passe temporaire) · `sessions_prof` ·
+(identifiant, mot de passe haché, administrateur, compte actif, mot de passe
+temporaire) · `partages` (classe, professeur, droit) · `sessions_prof` ·
 `compteurs` (limitation de débit).
 
 Pas de nom de famille, pas de date de naissance, pas d'adresse mail
