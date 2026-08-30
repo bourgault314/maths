@@ -1,6 +1,15 @@
 <?php
 // Page « Ma classe » — réservée au professeur, protégée par mot de passe.
+require_once __DIR__ . '/../lib/entetes.php';
 header('Content-Type: text/html; charset=utf-8');
+// Politique de contenu (voir lib/entetes.php) : seuls le moteur servi d'ici et
+// le script portant ce nonce s'exécutent dans la page.
+$nonce = entetes_page();
+// Le moteur est une copie de outils/calcul_mental/defi_tables_mon_parcours.js
+// (identité vérifiée par un test du dépôt). Sa version dans l'adresse suit son
+// contenu : un nouveau fichier déposé n'est jamais masqué par le cache.
+$moteur = __DIR__ . '/defi_tables_mon_parcours.js';
+$versionMoteur = is_file($moteur) ? substr(md5_file($moteur), 0, 10) : '0';
 ?>
 <!doctype html>
 <html lang="fr">
@@ -102,6 +111,7 @@ header('Content-Type: text/html; charset=utf-8');
   .profs .role { color: var(--muted); font-size: .86rem; }
   .retour-icone { display: inline-flex; align-items: center; gap: 6px; }
   .retour-icone svg { display: block; }
+  .note-tableau { margin: 10px 0 0; font-size: .88rem; }
   .fragiles { margin-top: 14px; border-left: 5px solid var(--orange); }
   .fragiles strong { display: block; color: var(--blue-dark); font-family: Georgia, serif; font-size: 1.05rem; }
   .fragiles p { margin: 4px 0 10px; color: var(--muted); font-size: .88rem; }
@@ -158,6 +168,7 @@ header('Content-Type: text/html; charset=utf-8');
   <span class="titre">Ma classe</span>
   <span class="droite">
     <span id="qui" hidden></span>
+    <button type="button" class="secondaire petit" id="mon-compte" hidden>Mon compte</button>
     <button type="button" class="secondaire petit" id="deconnexion" hidden>Se déconnecter</button>
   </span>
 </header>
@@ -256,6 +267,9 @@ header('Content-Type: text/html; charset=utf-8');
       </table>
     </div>
     <p class="message" id="message-classe" hidden></p>
+    <p class="sous note-tableau">Ce tableau est un <strong>indicateur pédagogique, pas une preuve
+    d’évaluation</strong> : la progression vient de l’appareil de l’élève, et quiconque connaît son code
+    peut la modifier.</p>
 
     <!-- Partage : visible seulement pour le propriétaire de la classe. -->
     <div id="bloc-partage" hidden>
@@ -287,6 +301,30 @@ header('Content-Type: text/html; charset=utf-8');
       </div>
     </div>
   </section>
+
+  <!-- Mon compte : changer son mot de passe. Avec un mot de passe temporaire
+       (donné par l'administrateur), c'est le seul écran possible tant qu'un
+       nouveau n'a pas été choisi — le serveur refuse tout le reste. -->
+  <section id="ecran-compte" hidden>
+    <button type="button" class="secondaire petit retour-icone" id="retour-compte"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M19 12H5M11 6l-6 6 6 6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Toutes mes classes</button>
+    <h1>Mon compte</h1>
+    <p class="sous" id="compte-qui"></p>
+    <p class="message info" id="bandeau-temporaire" hidden>Ton mot de passe est temporaire : choisis-en un nouveau
+    pour continuer. Il doit faire au moins 12 caractères.</p>
+    <div class="carte" style="max-width:420px">
+      <form id="form-motdepasse" autocomplete="on">
+        <label for="mdp-ancien">Mot de passe actuel</label>
+        <input id="mdp-ancien" name="password" type="password" autocomplete="current-password" required>
+        <label for="mdp-nouveau">Nouveau mot de passe (12 caractères minimum)</label>
+        <input id="mdp-nouveau" name="new-password" type="password" autocomplete="new-password" minlength="12" required>
+        <label for="mdp-confirme">Nouveau mot de passe, une deuxième fois</label>
+        <input id="mdp-confirme" name="confirm-password" type="password" autocomplete="new-password" minlength="12" required>
+        <div class="actions"><button type="submit">Changer mon mot de passe</button></div>
+      </form>
+      <p class="message" id="message-compte" hidden></p>
+    </div>
+    <p class="sous" style="margin-top:14px">Après le changement, tes autres appareils seront déconnectés ; celui-ci reste connecté.</p>
+  </section>
 </main>
 
 <footer>
@@ -304,9 +342,12 @@ header('Content-Type: text/html; charset=utf-8');
   </form>
 </dialog>
 
-<!-- Le moteur de « Mon parcours » du site : une seule source de vérité pour lire la progression. -->
-<script src="https://mathsgo.re/outils/calcul_mental/defi_tables_mon_parcours.js"></script>
-<script>
+<!-- Le moteur de « Mon parcours » du site, servi d'ICI (copie octet pour octet de
+     outils/calcul_mental/defi_tables_mon_parcours.js, gardée identique par un test du
+     dépôt) : un script chargé d'un autre domaine s'exécuterait avec les droits de la
+     session du professeur, la politique de contenu ne l'autorise plus. -->
+<script src="defi_tables_mon_parcours.js?v=<?= htmlspecialchars($versionMoteur, ENT_QUOTES) ?>"></script>
+<script nonce="<?= htmlspecialchars($nonce, ENT_QUOTES) ?>">
 (() => {
   "use strict";
   const $ = id => document.getElementById(id);
@@ -319,6 +360,8 @@ header('Content-Type: text/html; charset=utf-8');
   let tri = {colonne: "prenom", sens: 1};
   let venaitDeSeConnecter = false;
   let estAdmin = false;
+  let mdpTemporaire = false;
+  let identifiant = "";
   let droitClasse = "proprietaire";
   let annuaire = [];
 
@@ -355,16 +398,22 @@ header('Content-Type: text/html; charset=utf-8');
   }
 
   function montrer(ecran) {
-    ["ecran-connexion", "ecran-classes", "ecran-classe"].forEach(id => { $(id).hidden = id !== ecran; });
+    ["ecran-connexion", "ecran-classes", "ecran-classe", "ecran-compte"].forEach(id => { $(id).hidden = id !== ecran; });
     const connecte = ecran !== "ecran-connexion";
     $("deconnexion").hidden = !connecte;
     $("qui").hidden = !connecte;
+    // Avec un mot de passe temporaire, « Mon compte » est le seul écran : pas de
+    // bouton pour y aller ni pour en sortir.
+    $("mon-compte").hidden = !connecte || mdpTemporaire || ecran === "ecran-compte";
+    $("retour-compte").hidden = mdpTemporaire;
   }
 
   async function deconnecter(silencieux) {
     try { if (jeton) await api("deconnexion"); } catch (_) {}
     jeton = "";
     estAdmin = false;
+    mdpTemporaire = false;
+    identifiant = "";
     droitClasse = "proprietaire";
     annuaire = [];
     try { sessionStorage.removeItem(CLE_JETON); } catch (_) {}
@@ -553,7 +602,7 @@ header('Content-Type: text/html; charset=utf-8');
       : "Aucun élève. Commence par en ajouter.";
     if (!PARCOURS) {
       messager("message-classe",
-        "La progression ne peut pas être détaillée : le moteur de Défi tables n’a pas pu être chargé depuis mathsgo.re.",
+        "La progression ne peut pas être détaillée : le moteur de Défi tables (prof/defi_tables_mon_parcours.js) n’a pas pu être chargé — vérifie qu’il est bien déposé sur le serveur.",
         "erreur");
     }
     dessinerFiche();
@@ -774,7 +823,10 @@ header('Content-Type: text/html; charset=utf-8');
         const role = document.createElement("span");
         role.className = "role";
         const morceaux = [];
+        if (prof.identifiant === identifiant) morceaux.push("toi");
         if (prof.admin) morceaux.push("administrateur");
+        if (prof.actif === false) morceaux.push("désactivé");
+        if (prof.mdp_temporaire) morceaux.push("mot de passe temporaire, pas encore changé");
         // Formulation sans genre : l'application n'a pas à savoir qui est qui.
         morceaux.push(`${prof.classes} classe${prof.classes > 1 ? "s" : ""} créée${prof.classes > 1 ? "s" : ""}`);
         // « partagée » sans dire par qui : la table des partages n'enregistre pas
@@ -782,8 +834,61 @@ header('Content-Type: text/html; charset=utf-8');
         if (prof.partagees) morceaux.push(`${prof.partagees} reçue${prof.partagees > 1 ? "s" : ""} en partage`);
         role.textContent = morceaux.join(" · ");
         li.append(nom, role);
+        if (prof.identifiant !== identifiant) {
+          // Sur les autres comptes seulement : on ne se réinitialise pas, on ne
+          // se désactive pas soi-même (le serveur le refuse aussi).
+          const fin = document.createElement("span");
+          fin.className = "fin";
+          const reinit = document.createElement("button");
+          reinit.type = "button";
+          reinit.className = "secondaire petit";
+          reinit.textContent = "Nouveau mot de passe";
+          reinit.title = "Lui donner un mot de passe temporaire, qu'il devra changer";
+          reinit.addEventListener("click", () => reinitialiserProf(prof));
+          const etat = document.createElement("button");
+          etat.type = "button";
+          etat.className = prof.actif === false ? "secondaire petit" : "danger petit";
+          etat.textContent = prof.actif === false ? "Réactiver" : "Désactiver";
+          etat.addEventListener("click", () => (prof.actif === false ? reactiverProf(prof) : desactiverProf(prof)));
+          fin.append(reinit, etat);
+          li.append(fin);
+        }
+        if (prof.actif === false) li.style.opacity = ".7";
         liste.appendChild(li);
       });
+    } catch (erreur) { surErreur(erreur, "message-profs"); }
+  }
+
+  async function reinitialiserProf(prof) {
+    const reponse = await demander(
+      `Donner un nouveau mot de passe à ${prof.identifiant} ? Ses sessions ouvertes seront fermées. Tu lui transmets le mot de passe temporaire de vive voix ; il devra en choisir un nouveau à sa prochaine connexion.`);
+    if (!reponse) return;
+    try {
+      const donnees = await api("profs.reinitialiser", {prof_id: prof.id});
+      await chargerProfs();
+      // Affiché une seule fois : le serveur ne le garde que haché.
+      messager("message-profs",
+        `Mot de passe temporaire de ${prof.identifiant} : ${donnees.motdepasse} — note-le maintenant, il ne sera plus affiché.`,
+        "ok");
+    } catch (erreur) { surErreur(erreur, "message-profs"); }
+  }
+
+  async function desactiverProf(prof) {
+    const reponse = await demander(
+      `Désactiver le compte de ${prof.identifiant} ? Il ne pourra plus se connecter. Ses classes, ses élèves et leurs progressions sont conservés ; tu pourras le réactiver.`);
+    if (!reponse) return;
+    try {
+      await api("profs.desactiver", {prof_id: prof.id});
+      await chargerProfs();
+      messager("message-profs", `Compte de ${prof.identifiant} désactivé.`, "ok");
+    } catch (erreur) { surErreur(erreur, "message-profs"); }
+  }
+
+  async function reactiverProf(prof) {
+    try {
+      await api("profs.reactiver", {prof_id: prof.id});
+      await chargerProfs();
+      messager("message-profs", `Compte de ${prof.identifiant} réactivé : il peut se reconnecter avec son mot de passe.`, "ok");
     } catch (erreur) { surErreur(erreur, "message-profs"); }
   }
 
@@ -1047,12 +1152,44 @@ header('Content-Type: text/html; charset=utf-8');
 
   $("deconnexion").addEventListener("click", () => deconnecter(false));
 
+  // ------------------------------------------------------------------ mon compte
+
+  function ouvrirCompte() {
+    $("compte-qui").textContent = identifiant ? `Connecté en tant que ${identifiant}.` : "";
+    $("bandeau-temporaire").hidden = !mdpTemporaire;
+    messager("message-compte", "", "");
+    ["mdp-ancien", "mdp-nouveau", "mdp-confirme"].forEach(id => { $(id).value = ""; });
+    montrer("ecran-compte");
+    $("mdp-ancien").focus();
+  }
+
+  $("mon-compte").addEventListener("click", ouvrirCompte);
+  $("retour-compte").addEventListener("click", () => { chargerClasses(); });
+
+  $("form-motdepasse").addEventListener("submit", async event => {
+    event.preventDefault();
+    const ancien = $("mdp-ancien").value;
+    const nouveau = $("mdp-nouveau").value;
+    if (nouveau.length < 12) { messager("message-compte", "Le nouveau mot de passe doit faire au moins 12 caractères.", "erreur"); return; }
+    if (nouveau !== $("mdp-confirme").value) { messager("message-compte", "Les deux saisies du nouveau mot de passe ne sont pas identiques.", "erreur"); return; }
+    try {
+      await api("profs.motdepasse", {ancien, nouveau});
+      mdpTemporaire = false;
+      ["mdp-ancien", "mdp-nouveau", "mdp-confirme"].forEach(id => { $(id).value = ""; });
+      await chargerClasses();
+      messager("message-classes", "Mot de passe changé. Tes autres appareils sont déconnectés.", "ok");
+    } catch (erreur) { surErreur(erreur, "message-compte"); }
+  });
+
   // Une seule porte d'entrée : on demande qui on est (et si on est administrateur),
   // puis on affiche les classes.
   function demarrer() {
     return api("moi").then(donnees => {
+      identifiant = donnees.identifiant;
       $("qui").textContent = donnees.identifiant;
       estAdmin = Boolean(donnees.admin);
+      mdpTemporaire = Boolean(donnees.mdp_temporaire);
+      if (mdpTemporaire) { ouvrirCompte(); return undefined; }
       return chargerClasses();
     }).catch(erreur => {
       deconnecter(true);

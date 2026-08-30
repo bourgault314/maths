@@ -1,6 +1,10 @@
 <?php
 // Page d'accueil des élèves : un code, et les applis de sa classe. Rien d'autre.
+require_once __DIR__ . '/lib/entetes.php';
 header('Content-Type: text/html; charset=utf-8');
+// Politique de contenu (voir lib/entetes.php) : seul le script portant ce
+// nonce s'exécute dans la page.
+$nonce = entetes_page();
 ?>
 <!doctype html>
 <html lang="fr">
@@ -118,7 +122,7 @@ header('Content-Type: text/html; charset=utf-8');
   CC BY-NC-SA 4.0
 </footer>
 
-<script>
+<script nonce="<?= htmlspecialchars($nonce, ENT_QUOTES) ?>">
 (() => {
   "use strict";
   const CLE = "mathsgo-suivi-code";

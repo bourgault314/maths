@@ -27,13 +27,33 @@ function creer_prof(PDO $pdo, string $identifiant, string $motdepasse, bool $adm
         throw new InvalidArgumentException("Cet identifiant est déjà pris.");
     }
     $pdo->prepare('INSERT INTO profs (identifiant, mdp_hash, admin, cree_le) VALUES (?, ?, ?, ?)')
-        ->execute([$identifiant, password_hash($motdepasse, PASSWORD_BCRYPT, ['cost' => COUT_BCRYPT]), $admin ? 1 : 0, maintenant()]);
+        ->execute([$identifiant, hacher_motdepasse($motdepasse), $admin ? 1 : 0, maintenant()]);
     return (int)$pdo->lastInsertId();
+}
+
+function hacher_motdepasse(string $motdepasse): string
+{
+    return password_hash($motdepasse, PASSWORD_BCRYPT, ['cost' => COUT_BCRYPT]);
+}
+
+// Un mot de passe temporaire lisible à voix haute : douze caractères en trois
+// groupes, sans les lettres qu'on confond avec des chiffres (l, o, i, 0, 1).
+// Trente et un signes possibles à chaque place : plus de 2^59 combinaisons.
+function motdepasse_temporaire(): string
+{
+    $alphabet = 'abcdefghjkmnpqrstuvwxyz23456789';
+    $groupes = [];
+    for ($g = 0; $g < 3; $g++) {
+        $groupe = '';
+        for ($i = 0; $i < 4; $i++) $groupe .= $alphabet[random_int(0, strlen($alphabet) - 1)];
+        $groupes[] = $groupe;
+    }
+    return implode('-', $groupes);
 }
 
 function ouvrir_session(PDO $pdo, string $identifiant, string $motdepasse): ?array
 {
-    $requete = $pdo->prepare('SELECT id, mdp_hash FROM profs WHERE identifiant = ?');
+    $requete = $pdo->prepare('SELECT id, mdp_hash, actif, mdp_temporaire FROM profs WHERE identifiant = ?');
     $requete->execute([trim($identifiant)]);
     $prof = $requete->fetch();
     // Vérification à temps constant même si l'identifiant n'existe pas : le
@@ -42,7 +62,10 @@ function ouvrir_session(PDO $pdo, string $identifiant, string $motdepasse): ?arr
     // L'ancien faux hachage était mal formé : refusé sans calcul, il révélait
     // en 60 ms qu'un identifiant n'existait pas, contre 227 ms sinon.
     $hash = $prof['mdp_hash'] ?? HASH_DE_REMPLACEMENT;
-    if (!password_verify($motdepasse, $hash) || $prof === false) {
+    $bon = password_verify($motdepasse, $hash);
+    // Un compte désactivé est refusé APRÈS le hachage, avec le même « non »
+    // qu'un mauvais mot de passe : rien ne dit de dehors qu'il existe encore.
+    if (!$bon || $prof === false || (int)$prof['actif'] !== 1) {
         return null;
     }
     $jeton = bin2hex(random_bytes(32));
@@ -50,7 +73,50 @@ function ouvrir_session(PDO $pdo, string $identifiant, string $motdepasse): ?arr
     $pdo->prepare('INSERT INTO sessions_prof (jeton_hash, prof_id, expire_le) VALUES (?, ?, ?)')
         ->execute([hash('sha256', $jeton), (int)$prof['id'], $expire]);
     $pdo->prepare('DELETE FROM sessions_prof WHERE expire_le < ?')->execute([maintenant()]);
-    return ['jeton' => $jeton, 'expire_le' => $expire];
+    return ['jeton' => $jeton, 'expire_le' => $expire, 'mdp_temporaire' => (int)$prof['mdp_temporaire'] === 1];
+}
+
+// Le professeur change son propre mot de passe : l'ancien doit être le bon, le
+// nouveau fait au moins 12 caractères et n'est pas l'ancien. Les AUTRES
+// sessions du compte sont fermées (un jeton volé ne survit pas au changement) ;
+// celle qui fait le changement reste ouverte. Un mot de passe temporaire cesse
+// de l'être.
+function changer_motdepasse(PDO $pdo, int $profId, string $jetonCourant, string $ancien, string $nouveau): void
+{
+    $requete = $pdo->prepare('SELECT mdp_hash FROM profs WHERE id = ?');
+    $requete->execute([$profId]);
+    $hash = $requete->fetchColumn();
+    if ($hash === false || !password_verify($ancien, (string)$hash)) {
+        throw new InvalidArgumentException("L'ancien mot de passe est incorrect.");
+    }
+    if (strlen($nouveau) < 12) {
+        throw new InvalidArgumentException("Le nouveau mot de passe doit faire au moins 12 caractères.");
+    }
+    if ($nouveau === $ancien) {
+        throw new InvalidArgumentException("Le nouveau mot de passe doit être différent de l'ancien.");
+    }
+    $pdo->prepare('UPDATE profs SET mdp_hash = ?, mdp_temporaire = 0 WHERE id = ?')
+        ->execute([hacher_motdepasse($nouveau), $profId]);
+    $pdo->prepare('DELETE FROM sessions_prof WHERE prof_id = ? AND jeton_hash <> ?')
+        ->execute([$profId, hash('sha256', $jetonCourant)]);
+}
+
+// L'administrateur donne un mot de passe temporaire à un collègue qui a perdu
+// le sien : toutes ses sessions sont fermées, et il devra en choisir un
+// nouveau avant de faire quoi que ce soit d'autre (mdp_temporaire = 1, tenu
+// par api/prof.php). Renvoie le mot de passe en clair, une seule fois.
+function reinitialiser_motdepasse(PDO $pdo, int $profId): string
+{
+    $temporaire = motdepasse_temporaire();
+    $pdo->prepare('UPDATE profs SET mdp_hash = ?, mdp_temporaire = 1 WHERE id = ?')
+        ->execute([hacher_motdepasse($temporaire), $profId]);
+    fermer_sessions_du_prof($pdo, $profId);
+    return $temporaire;
+}
+
+function fermer_sessions_du_prof(PDO $pdo, int $profId): void
+{
+    $pdo->prepare('DELETE FROM sessions_prof WHERE prof_id = ?')->execute([$profId]);
 }
 
 function prof_de_session(PDO $pdo, string $jeton): ?int

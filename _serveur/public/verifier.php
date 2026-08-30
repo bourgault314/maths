@@ -9,8 +9,12 @@
 
 declare(strict_types=1);
 
+require_once __DIR__ . '/lib/entetes.php';
+
 header('Content-Type: text/html; charset=utf-8');
 header('X-Robots-Tag: noindex, nofollow');
+// Pas de script dans cette page : le nonce renvoyé ne sert pas.
+entetes_page();
 
 $configOk = is_file(__DIR__ . '/config.php');
 $autorise = false;
@@ -133,10 +137,25 @@ if ($autorise) {
         $lignesCompteurs = (int)$pdo->query('SELECT COUNT(*) FROM compteurs')->fetchColumn();
         return "en place ($lignesCompteurs compteur(s) en cours, purgés à chaque appel)";
     });
-    verif($lignes, "Compte prof", function () {
+    verif($lignes, "Comptes prof", function () {
         $nombre = (int)bd()->query('SELECT COUNT(*) FROM profs')->fetchColumn();
         if ($nombre === 0) throw new RuntimeException("aucun compte : ouvre installer.php.");
-        return "$nombre compte(s)";
+        $desactives = (int)bd()->query('SELECT COUNT(*) FROM profs WHERE actif = 0')->fetchColumn();
+        $temporaires = (int)bd()->query('SELECT COUNT(*) FROM profs WHERE mdp_temporaire = 1')->fetchColumn();
+        return "$nombre compte(s), $desactives désactivé(s), $temporaires avec un mot de passe temporaire à changer";
+    });
+    // Lot S2 (30/08/2026) : le moteur de Défi tables est servi d'ici, plus
+    // depuis mathsgo.re — la politique de contenu de « Ma classe » n'accepte
+    // plus de script d'un autre domaine. S'il manque, le tableau reste vide.
+    verif($lignes, "Moteur de Défi tables servi localement", function () {
+        $chemin = __DIR__ . '/prof/defi_tables_mon_parcours.js';
+        if (!is_file($chemin) || filesize($chemin) === 0) {
+            throw new RuntimeException("prof/defi_tables_mon_parcours.js absent : à déposer (copie de outils/calcul_mental/defi_tables_mon_parcours.js du dépôt).");
+        }
+        if (!str_contains((string)file_get_contents($chemin), 'MATHSGO_DEFI_TABLES_MON_PARCOURS')) {
+            throw new RuntimeException("prof/defi_tables_mon_parcours.js n'est pas le moteur attendu.");
+        }
+        return "en place (" . number_format((float)filesize($chemin), 0, ',', ' ') . " octets, empreinte " . substr(md5_file($chemin), 0, 10) . ")";
     });
     verif($lignes, "Fichiers d'installation supprimés", function () {
         $restants = [];
