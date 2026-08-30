@@ -47,7 +47,7 @@ function fauxElement(tagName) {
   });
 }
 
-function jouer({ codeSuivi = null, drapeau = undefined, choix = "granted" } = {}) {
+function jouer({ codeSuivi = null, codeOnglet = null, drapeau = undefined, choix = "granted" } = {}) {
   const rangement = new Map();
   if (choix) {
     rangement.set("mathsgo:consentement:v1", JSON.stringify({
@@ -95,6 +95,12 @@ function jouer({ codeSuivi = null, drapeau = undefined, choix = "granted" } = {}
       setItem: (k, v) => rangement.set(k, String(v)),
       removeItem: (k) => rangement.delete(k)
     },
+    // L'identité de l'élève vit dans l'onglet (lot A1) : ce stockage-là compte aussi.
+    sessionStorage: {
+      getItem: (k) => (k === "mathsgo-suivi-code" ? codeOnglet : null),
+      setItem() {},
+      removeItem() {}
+    },
     addEventListener() {},
     removeEventListener() {},
     setTimeout: () => 0,
@@ -124,6 +130,14 @@ test("un élève dont le code est déjà rangé n’est jamais mesuré", () => {
   const r = jouer({ codeSuivi: "2F4FUL", choix: "granted" });
   assert.equal(r.baliseAnalytics, null,
     "aucune balise Analytics ne doit être posée quand un code de suivi est présent");
+});
+
+test("un élève dont le code vit dans l’onglet (sessionStorage) n’est pas mesuré non plus", () => {
+  // Depuis le lot A1, l'identité ne vit que le temps de l'onglet : c'est là
+  // que consentement.js doit regarder d'abord.
+  const r = jouer({ codeSuivi: null, codeOnglet: "2F4FUL", choix: "granted" });
+  assert.equal(r.baliseAnalytics, null,
+    "aucune balise Analytics ne doit être posée quand un code est rangé dans l’onglet");
 });
 
 test("un élève qui arrive par le lien de l’espace élève n’est pas mesuré non plus", () => {

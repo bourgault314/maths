@@ -60,7 +60,14 @@ test("les cinq adaptations sont publiques, autonomes et reliées à leur vrai pa
     assert.match(html, new RegExp(`<link rel="canonical" href="${definition.canonical.replaceAll("/", "\\/")}">`), definition.path);
     assert.match(html, /<meta name="robots" content="index, follow, max-image-preview:large">/, definition.path);
     assert.match(html, new RegExp(`href="${definition.parent.replace(/[?]/g, "\\?")}"`), definition.path);
-    assert.doesNotMatch(html, /Axelle|Bureau|sessionStorage|game-pass/i, definition.path);
+    assert.doesNotMatch(html, /Axelle|Bureau|game-pass/i, definition.path);
+    // Le stockage de session servait au laissez-passer du club : banni des
+    // adaptations publiques. Défi tables l'emploie depuis le lot A1 pour une
+    // autre raison — l'identité de l'élève suivi y vit le temps d'un onglet —
+    // et seulement là.
+    if (definition.path !== "outils/calcul_mental/defi_tables.html") {
+      assert.doesNotMatch(html, /sessionStorage/i, definition.path);
+    }
     for (const source of inlineScripts(html)) assert.doesNotThrow(() => new vm.Script(source), definition.path);
   }
 });
