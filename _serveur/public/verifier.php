@@ -41,6 +41,24 @@ if ($configOk) {
         }
         return "toutes présentes";
     });
+    // Ce que la mise à niveau du 30/08/2026 devait ajouter. Une table présente
+    // ne suffit pas : il faut aussi les colonnes, sinon l'API tombe en panne.
+    verif($lignes, "Cloisonnement des classes", function () {
+        $pdo = bd();
+        $manquants = [];
+        if (!table_existe($pdo, 'partages')) $manquants[] = "la table « partages »";
+        if (!colonne_existe($pdo, 'classes', 'prof_id')) $manquants[] = "la colonne « classes.prof_id »";
+        if (!colonne_existe($pdo, 'profs', 'admin')) $manquants[] = "la colonne « profs.admin »";
+        if ($manquants !== []) {
+            throw new RuntimeException(
+                "manque " . implode(', ', $manquants) . " — relance migrer.php avec ton mot de passe d'installation.");
+        }
+        $administrateurs = (int)$pdo->query('SELECT COUNT(*) FROM profs WHERE admin = 1')->fetchColumn();
+        if ($administrateurs === 0) {
+            throw new RuntimeException("aucun compte administrateur — relance migrer.php.");
+        }
+        return "propriétaire, partages et administrateur en place";
+    });
     verif($lignes, "Compte prof", function () {
         $nombre = (int)bd()->query('SELECT COUNT(*) FROM profs')->fetchColumn();
         if ($nombre === 0) throw new RuntimeException("aucun compte : ouvre installer.php.");

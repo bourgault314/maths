@@ -32,6 +32,12 @@
   const ENTRAINEMENTS = Object.freeze(["desordre", "trous", "mixte"]);
   const PRENOM_MAX = 20;
 
+  // Suivi de classe (lot C) : le code que le professeur remet sur papier.
+  // Alphabet sans O, 0, I, 1 ni L — les caractères qu'on lit de travers.
+  const CLE_CODE = "mathsgo-suivi-code";
+  const ALPHABET_CODE = "23456789ABCDEFGHJKLMNPQRSTUVWXYZ";
+  const LONGUEUR_CODE = 6;
+
   const SEUILS = Object.freeze({
     entrainement: Object.freeze({total: 10, erreursMax: 1}),
     validation: Object.freeze({total: 20, dureeMax: 90, erreursMax: 2}),
@@ -688,6 +694,164 @@
     }
   }
 
+  // --------------------------------------------------------------- le code élève
+
+  function normaliserCode(brut) {
+    if (typeof brut !== "string") return "";
+    return brut.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, LONGUEUR_CODE);
+  }
+
+  function codeValide(brut) {
+    const code = normaliserCode(brut);
+    if (code.length !== LONGUEUR_CODE) return false;
+    return [...code].every(caractere => ALPHABET_CODE.includes(caractere));
+  }
+
+  function chargerCode(stockage) {
+    try {
+      const code = stockage && stockage.getItem(CLE_CODE);
+      return codeValide(code) ? normaliserCode(code) : "";
+    } catch (_) {
+      return "";
+    }
+  }
+
+  function sauverCode(stockage, brut) {
+    try {
+      if (!stockage || !codeValide(brut)) return false;
+      stockage.setItem(CLE_CODE, normaliserCode(brut));
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  function effacerCode(stockage) {
+    try {
+      if (stockage) stockage.removeItem(CLE_CODE);
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  // ------------------------------------------------------------------ la fusion
+
+  function dateLaPlusRecente(premiere, seconde) {
+    if (!premiere) return seconde || null;
+    if (!seconde) return premiere;
+    return premiere >= seconde ? premiere : seconde;
+  }
+
+  function dateLaPlusAncienne(premiere, seconde) {
+    if (!premiere) return seconde || null;
+    if (!seconde) return premiere;
+    return premiere <= seconde ? premiere : seconde;
+  }
+
+  function meilleurEntrainement(premier, second) {
+    if (!premier) return second || null;
+    if (!second) return premier;
+    const note = dernier => (dernier.total ? dernier.score / dernier.total : 0);
+    return note(second) > note(premier) ? second : premier;
+  }
+
+  // « On garde le plus avancé des deux, jamais d'écrasement. »
+  //
+  // Rien ne se perd : chaque compteur prend son maximum, chaque acquisition
+  // gardée à sa PREMIÈRE date, chaque case de la grille son maximum. Les deux
+  // parcours sont interchangeables, sauf pour le prénom : celui du premier
+  // gagne s'il est renseigné (c'est l'appareil devant l'élève qui a raison).
+  function fusionner(premier, second) {
+    const a = normaliserParcours(premier);
+    const b = normaliserParcours(second);
+    const fusion = creerParcours();
+
+    fusion.prenom = a.prenom || b.prenom;
+
+    TABLES.forEach(table => {
+      const ligneA = a.tables[table];
+      const ligneB = b.tables[table];
+      const cible = fusion.tables[table];
+      ACTIVITES_APPRENDS.forEach(activite => {
+        cible.apprends[activite] = Math.max(ligneA.apprends[activite], ligneB.apprends[activite]);
+      });
+      ENTRAINEMENTS.forEach(entrainement => {
+        cible.entraine[entrainement] = Math.max(ligneA.entraine[entrainement], ligneB.entraine[entrainement]);
+      });
+      cible.entraine.dernier = meilleurEntrainement(ligneA.entraine.dernier, ligneB.entraine.dernier);
+      // Une table acquise le reste, à la date de la première validation.
+      cible.acquise = dateLaPlusAncienne(ligneA.acquise, ligneB.acquise);
+    });
+
+    // Le mélange n'est « à jour » que s'il a été réussi avec TOUTES les tables
+    // du parcours fusionné : celui qui l'avait fait avec 5 tables alors que
+    // l'autre appareil en a 7 doit le refaire.
+    const acquisesFusion = tablesAcquises(fusion);
+    const aJourA = a.melange.aJour && tablesAcquises(a).length === acquisesFusion.length;
+    const aJourB = b.melange.aJour && tablesAcquises(b).length === acquisesFusion.length;
+    fusion.melange.tables = acquisesFusion;
+    fusion.melange.dernier = dateLaPlusRecente(a.melange.dernier, b.melange.dernier);
+    if (aJourA || aJourB) {
+      fusion.melange.aJour = true;
+      fusion.melange.aRefaireAvec = null;
+    } else {
+      fusion.melange.aJour = false;
+      fusion.melange.aRefaireAvec = acquisesFusion.length >= 3 ? derniereTableAcquise(fusion) : null;
+    }
+
+    fusion.expert.niveau = Math.max(a.expert.niveau, b.expert.niveau);
+    fusion.expert.dernier = dateLaPlusRecente(a.expert.dernier, b.expert.dernier);
+    fusion.expert.champion = dateLaPlusAncienne(a.expert.champion, b.expert.champion);
+
+    FAITS.forEach(cle => {
+      const faitA = a.calculs[cle];
+      const faitB = b.calculs[cle];
+      if (!faitA && !faitB) return;
+      if (!faitA || !faitB) {
+        fusion.calculs[cle] = cloner(faitA || faitB);
+        return;
+      }
+      fusion.calculs[cle] = {
+        cases: Math.max(faitA.cases, faitB.cases),
+        vu: dateLaPlusRecente(faitA.vu, faitB.vu),
+        // Erreur et gain les plus récents : la fusion ne rouvre jamais le droit
+        // de gagner une case le jour même.
+        erreur: dateLaPlusRecente(faitA.erreur, faitB.erreur),
+        gagne: dateLaPlusRecente(faitA.gagne, faitB.gagne)
+      };
+    });
+
+    return normaliserParcours(fusion);
+  }
+
+  function derniereTableAcquise(parcours) {
+    const acquises = tablesAcquises(parcours);
+    if (!acquises.length) return null;
+    return acquises.reduce((meilleure, table) =>
+      String(parcours.tables[table].acquise) >= String(parcours.tables[meilleure].acquise) ? table : meilleure,
+      acquises[0]);
+  }
+
+  // ------------------------------------------------------- la vue d'une classe
+
+  // Les calculs qui coincent chez le plus d'élèves de la classe, pour savoir
+  // quoi réviser au tableau lundi matin. N'utilise que ce qui est déjà stocké.
+  function fragilesDeLaClasse(parcoursDesEleves, {max = 5} = {}) {
+    const compte = new Map();
+    (Array.isArray(parcoursDesEleves) ? parcoursDesEleves : []).forEach(brut => {
+      if (!brut) return;
+      const parcours = normaliserParcours(brut);
+      calculsATravailler(parcours).forEach(cle => {
+        compte.set(cle, (compte.get(cle) || 0) + 1);
+      });
+    });
+    return [...compte.entries()]
+      .map(([cle, eleves]) => ({cle, libelle: libelleFait(cle), eleves}))
+      .sort((premier, second) => second.eleves - premier.eleves || premier.cle.localeCompare(second.cle))
+      .slice(0, Math.max(0, max));
+  }
+
   function estVide(parcours) {
     return !parcours.prenom && !parcours.expert.niveau && !Object.keys(parcours.calculs).length && TABLES.every(table => {
       const ligne = parcours.tables[table];
@@ -742,6 +906,15 @@
     charger,
     sauver,
     effacer,
-    estVide
+    estVide,
+    CLE_CODE,
+    LONGUEUR_CODE,
+    normaliserCode,
+    codeValide,
+    chargerCode,
+    sauverCode,
+    effacerCode,
+    fusionner,
+    fragilesDeLaClasse
   });
 });

@@ -52,7 +52,12 @@ header('Content-Type: text/html; charset=utf-8');
   button.secondaire:hover { border-color: var(--blue); background: #f3f8fc; }
   button.danger { color: var(--rouge); background: #fff; border: 2px solid #f3d3d0; }
   button.danger:hover { background: #fdecec; }
-  button.petit { min-height: 44px; padding: 0 10px; font-size: .84rem; font-weight: 600; }
+  button.petit, .bouton-lien { min-height: 44px; padding: 0 9px; font-size: .8rem; font-weight: 600; }
+  /* Un lien qui doit se voir comme un bouton : la fiche s'ouvre dans le site. */
+  .bouton-lien { display: inline-flex; align-items: center; justify-content: center;
+                 color: var(--blue); background: #fff; border: 2px solid var(--line);
+                 border-radius: 10px; text-decoration: none; }
+  .bouton-lien:hover { border-color: var(--blue); background: #f3f8fc; }
   .actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 14px; }
   .message { margin: 14px 0 0; padding: 10px 12px; border-radius: 10px; font-weight: 600; }
   .message.erreur { background: #fdecec; color: var(--rouge); }
@@ -67,8 +72,9 @@ header('Content-Type: text/html; charset=utf-8');
   .classes span { color: var(--muted); font-size: .88rem; }
   .tableau-enveloppe { overflow-x: auto; margin-top: 12px; }
   table { width: 100%; border-collapse: collapse; background: var(--paper); font-size: .92rem; }
-  th, td { padding: 8px 8px; text-align: left; border-bottom: 1px solid var(--line);
+  th, td { padding: 8px 6px; text-align: left; border-bottom: 1px solid var(--line);
            white-space: nowrap; }
+  #tableau td.actions-eleve { display: flex; gap: 6px; }
   th { background: #eef3f9; color: var(--blue-dark); font-size: .82rem;
        text-transform: uppercase; letter-spacing: .04em; }
   th button { min-height: 44px; padding: 0; color: var(--blue-dark); background: none;
@@ -94,6 +100,13 @@ header('Content-Type: text/html; charset=utf-8');
   .profs .role { color: var(--muted); font-size: .86rem; }
   .retour-icone { display: inline-flex; align-items: center; gap: 6px; }
   .retour-icone svg { display: block; }
+  .fragiles { margin-top: 14px; border-left: 5px solid var(--orange); }
+  .fragiles strong { display: block; color: var(--blue-dark); font-family: Georgia, serif; font-size: 1.05rem; }
+  .fragiles p { margin: 4px 0 10px; color: var(--muted); font-size: .88rem; }
+  .fragiles ul { list-style: none; display: flex; flex-wrap: wrap; gap: 8px; margin: 0; padding: 0; }
+  .fragiles li { display: flex; align-items: baseline; gap: 6px; padding: 6px 12px; border-radius: 999px;
+                 background: #fdf0e3; color: #8a4c0a; font-weight: 800; }
+  .fragiles li span { font-size: .82rem; font-weight: 600; color: #a15c11; }
   .barre-outils { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-top: 14px; }
   .barre-outils .espace { margin-left: auto; }
   .fiche { display: none; }
@@ -203,14 +216,24 @@ header('Content-Type: text/html; charset=utf-8');
 
     <div class="barre-outils">
       <button type="button" class="secondaire" id="ajouter">Ajouter des élèves</button>
+      <button type="button" class="secondaire" id="coller-prenoms">Coller la liste des prénoms</button>
       <button type="button" class="secondaire" id="imprimer">Imprimer la liste des codes</button>
       <label for="tri" style="margin:0;font-size:.88rem;color:var(--muted);font-weight:600">Trier&nbsp;par</label>
       <select id="tri" style="width:auto;min-width:170px">
         <option value="prenom">Prénom</option>
         <option value="acquises">Tables acquises</option>
+        <option value="travailler">Calculs à travailler</option>
         <option value="date">Dernière activité</option>
       </select>
       <button type="button" class="danger espace" id="supprimer-classe">Supprimer la classe</button>
+    </div>
+
+    <!-- Vue d'ensemble : ce qu'il faut revoir au tableau, pas élève par élève.
+         Calculé dans le navigateur à partir des progressions déjà chargées. -->
+    <div class="carte fragiles" id="fragiles" hidden>
+      <strong>Les calculs qui coincent dans cette classe</strong>
+      <p id="fragiles-sous"></p>
+      <ul id="fragiles-liste"></ul>
     </div>
 
     <div class="tableau-enveloppe">
@@ -220,6 +243,7 @@ header('Content-Type: text/html; charset=utf-8');
             <th><button type="button" data-tri="prenom">Élève</button></th>
             <th>Code</th>
             <th><button type="button" data-tri="acquises">Tables acquises</button></th>
+            <th><button type="button" data-tri="travailler">À travailler</button></th>
             <th>Mélange</th>
             <th>Expert</th>
             <th><button type="button" data-tri="date">Dernière activité</button></th>
@@ -289,6 +313,7 @@ header('Content-Type: text/html; charset=utf-8');
   let classe = null;
   let eleves = [];
   let tri = {colonne: "prenom", sens: 1};
+  let venaitDeSeConnecter = false;
   let estAdmin = false;
   let droitClasse = "proprietaire";
   let annuaire = [];
@@ -296,11 +321,17 @@ header('Content-Type: text/html; charset=utf-8');
   try { jeton = sessionStorage.getItem(CLE_JETON) || ""; } catch (_) {}
 
   async function api(action, corps = {}) {
+    // Le jeton voyage DANS LE CORPS, et pas seulement dans l'en-tête
+    // Authorization : beaucoup d'hébergements Apache (dont OVH) ne transmettent
+    // pas cet en-tête à PHP, et le serveur répondrait « session expirée » à
+    // chaque action. L'en-tête reste envoyé pour les serveurs qui le passent.
+    const charge = Object.assign({action}, corps);
+    if (jeton) charge.jeton = jeton;
     const reponse = await fetch("../api/prof.php", {
       method: "POST",
       headers: jeton ? {"Content-Type": "application/json", "Authorization": "Bearer " + jeton}
                      : {"Content-Type": "application/json"},
-      body: JSON.stringify(Object.assign({action}, corps)),
+      body: JSON.stringify(charge),
       cache: "no-store"
     });
     const donnees = await reponse.json().catch(() => null);
@@ -337,15 +368,24 @@ header('Content-Type: text/html; charset=utf-8');
     if (!silencieux) messager("erreur-connexion", "", "");
   }
 
+  // Une erreur écrite dans un écran masqué est une erreur perdue : l'utilisateur
+  // se retrouve devant un formulaire muet et croit que c'est son mot de passe.
+  // Si la zone prévue n'est pas à l'écran, le message va là où il regarde.
+  function zoneVisible(id) {
+    const bloc = $(id);
+    const ecran = bloc && bloc.closest("section");
+    return Boolean(bloc) && (!ecran || !ecran.hidden);
+  }
+
   function surErreur(erreur, zone) {
     if (erreur.statut === 401) { deconnecter(true); messager("erreur-connexion", "Session terminée, reconnecte-toi.", "erreur"); return; }
-    messager(zone, erreur.message, "erreur");
+    messager(zoneVisible(zone) ? zone : "erreur-connexion", erreur.message, "erreur");
   }
 
   // ---------------------------------------------------------------- lecture d'une progression
 
   function lireProgression(brut) {
-    const vide = {acquises: [], melange: "—", etoiles: 0, lisible: Boolean(PARCOURS)};
+    const vide = {acquises: [], melange: "—", etoiles: 0, travailler: null, parcours: null, lisible: Boolean(PARCOURS)};
     if (!PARCOURS || !brut) return vide;
     try {
       const parcours = PARCOURS.normaliserParcours(brut);
@@ -353,7 +393,14 @@ header('Content-Type: text/html; charset=utf-8');
       let melange = "—";
       if (etat.melange.visible) melange = etat.melange.aJour ? "à jour" : "à refaire";
       else if (etat.acquises.length === PARCOURS.TABLES.length) melange = "toutes acquises";
-      return {acquises: etat.acquises, melange, etoiles: etat.expert.niveau, lisible: true};
+      return {
+        acquises: etat.acquises,
+        melange,
+        etoiles: etat.expert.niveau,
+        travailler: PARCOURS.calculsATravailler ? PARCOURS.calculsATravailler(parcours) : null,
+        parcours,
+        lisible: true
+      };
     } catch (_) { return vide; }
   }
 
@@ -374,6 +421,7 @@ header('Content-Type: text/html; charset=utf-8');
   function trierEleves() {
     const clef = eleve => {
       if (tri.colonne === "acquises") return eleve.lu.acquises.length;
+      if (tri.colonne === "travailler") return eleve.lu.travailler ? eleve.lu.travailler.length : -1;
       if (tri.colonne === "date") return eleve.maj_le || "";
       return (eleve.prenom || "￿").toLocaleLowerCase("fr");
     };
@@ -414,6 +462,15 @@ header('Content-Type: text/html; charset=utf-8');
       cAcquises.innerHTML = `<span class="pastille ${nombre ? "p-vert" : "p-gris"}">${nombre} / 9</span>`;
       if (nombre) cAcquises.title = "Tables " + eleve.lu.acquises.join(", ");
 
+      const cTravailler = document.createElement("td");
+      const combien = eleve.lu.travailler ? eleve.lu.travailler.length : null;
+      if (combien === null) {
+        cTravailler.innerHTML = '<span class="pastille p-gris">—</span>';
+      } else {
+        cTravailler.innerHTML = `<span class="pastille ${combien ? "p-orange" : "p-vert"}">${combien}</span>`;
+        if (combien) cTravailler.title = eleve.lu.travailler.map(cle => PARCOURS.libelleFait(cle)).join(" · ");
+      }
+
       const cMelange = document.createElement("td");
       const m = eleve.lu.melange;
       cMelange.innerHTML = m === "—"
@@ -431,6 +488,14 @@ header('Content-Type: text/html; charset=utf-8');
       if (!quand) cDate.className = "sans";
 
       const cActions = document.createElement("td");
+      // La fiche vit dans l'appli du site : un seul gabarit, une seule vérité.
+      const fiche = document.createElement("a");
+      fiche.className = "secondaire petit bouton-lien";
+      fiche.href = `https://mathsgo.re/outils/calcul_mental/defi_tables.html#fiche=${encodeURIComponent(eleve.code)}`;
+      fiche.target = "_blank";
+      fiche.rel = "noopener";
+      fiche.textContent = "Voir sa fiche";
+      cActions.append(fiche);
       if (ecriture) {
         const regen = document.createElement("button");
         regen.type = "button";
@@ -440,7 +505,6 @@ header('Content-Type: text/html; charset=utf-8');
         const sup = document.createElement("button");
         sup.type = "button";
         sup.className = "danger petit";
-        sup.style.marginLeft = "6px";
         sup.textContent = "Supprimer";
         sup.addEventListener("click", () => supprimerEleve(eleve));
         cActions.append(regen, sup);
@@ -449,15 +513,18 @@ header('Content-Type: text/html; charset=utf-8');
       cNom.dataset.libelle = "";
       cCode.dataset.libelle = "Code";
       cAcquises.dataset.libelle = "Acquises";
+      cTravailler.dataset.libelle = "À travailler";
       cMelange.dataset.libelle = "Mélange";
       cExpert.dataset.libelle = "Expert";
       cDate.dataset.libelle = "Activité";
       cActions.dataset.libelle = "";
       cActions.className = "actions-eleve";
 
-      ligne.append(cNom, cCode, cAcquises, cMelange, cExpert, cDate, cActions);
+      ligne.append(cNom, cCode, cAcquises, cTravailler, cMelange, cExpert, cDate, cActions);
       corps.appendChild(ligne);
     });
+
+    dessinerFragiles();
 
     const sans = eleves.filter(e => !e.maj_le).length;
     $("resume-classe").textContent = eleves.length
@@ -469,6 +536,30 @@ header('Content-Type: text/html; charset=utf-8');
         "erreur");
     }
     dessinerFiche();
+  }
+
+  // Ce qu'il faut revoir au tableau lundi matin. Aucune donnée de plus n'est
+  // enregistrée : c'est un comptage sur les progressions déjà chargées.
+  function dessinerFragiles() {
+    const bloc = $("fragiles");
+    const liste = $("fragiles-liste");
+    liste.textContent = "";
+    if (!PARCOURS || !PARCOURS.fragilesDeLaClasse) { bloc.hidden = true; return; }
+    const parcoursDeLaClasse = eleves.map(eleve => eleve.lu.parcours).filter(Boolean);
+    const fragiles = PARCOURS.fragilesDeLaClasse(parcoursDeLaClasse, {max: 6});
+    if (!fragiles.length) { bloc.hidden = true; return; }
+    $("fragiles-sous").textContent =
+      `Sur ${parcoursDeLaClasse.length} élève${parcoursDeLaClasse.length > 1 ? "s" : ""} qui ont commencé.`;
+    fragiles.forEach(fragile => {
+      const li = document.createElement("li");
+      const nom = document.createElement("b");
+      nom.textContent = fragile.libelle;
+      const combien = document.createElement("span");
+      combien.textContent = `${fragile.eleves} élève${fragile.eleves > 1 ? "s" : ""}`;
+      li.append(nom, combien);
+      liste.appendChild(li);
+    });
+    bloc.hidden = false;
   }
 
   function dessinerFiche() {
@@ -551,6 +642,7 @@ header('Content-Type: text/html; charset=utf-8');
     const proprietaire = droitClasse === "proprietaire";
     const ecriture = droitClasse !== "lecture";
     $("ajouter").hidden = !ecriture;
+    $("coller-prenoms").hidden = !ecriture;
     $("supprimer-classe").hidden = !proprietaire;
     $("bloc-partage").hidden = !proprietaire;
     messager("message-partage", "", "");
@@ -709,7 +801,17 @@ header('Content-Type: text/html; charset=utf-8');
         etiquette.textContent = champ.libelle;
         etiquette.htmlFor = "boite-" + champ.nom;
         let entree;
-        if (champ.options) {
+        if (champ.multiligne) {
+          entree = document.createElement("textarea");
+          entree.rows = 8;
+          entree.style.width = "100%";
+          entree.style.minHeight = "160px";
+          entree.style.padding = "8px 12px";
+          entree.style.font = "inherit";
+          entree.style.border = "2px solid var(--line)";
+          entree.style.borderRadius = "10px";
+          entree.value = champ.valeur ?? "";
+        } else if (champ.options) {
           entree = document.createElement("select");
           champ.options.forEach(option => {
             const choix = document.createElement("option");
@@ -760,6 +862,54 @@ header('Content-Type: text/html; charset=utf-8');
       await api("eleves.ajouter", {classe_id: classe.id, nombre});
       await ouvrirClasse(classe.id);
       messager("message-classe", `${nombre} code${nombre > 1 ? "s" : ""} créé${nombre > 1 ? "s" : ""}. Écris les prénoms en face, puis imprime la liste.`, "ok");
+    } catch (erreur) { surErreur(erreur, "message-classe"); }
+  });
+
+  // Coller une liste de prénoms : quatre classes de vingt-huit, c'est cent dix
+  // saisies à la main. Les prénoms sont attribués DANS L'ORDRE aux élèves qui
+  // n'ont pas encore de nom, dans l'ordre où leurs codes ont été créés —
+  // c'est-à-dire l'ordre de la liste imprimée.
+  function decouperPrenoms(texte) {
+    return String(texte || "")
+      .split(/[\r\n;,\t]+/)
+      .map(morceau => morceau.replace(/\s+/g, " ").trim())
+      .filter(Boolean);
+  }
+
+  $("coller-prenoms").addEventListener("click", async () => {
+    const sansNom = eleves.filter(eleve => !eleve.prenom).sort((a, b) => a.id - b.id);
+    if (!sansNom.length) {
+      messager("message-classe", "Tous les élèves de cette classe ont déjà un prénom. Pour en changer un, écris directement dans le tableau.", "erreur");
+      return;
+    }
+    const reponse = await demander(
+      `Colle les prénoms, un par ligne. Ils seront attribués dans l’ordre aux ${sansNom.length} élève(s) qui n’ont pas encore de nom, dans l’ordre de la liste imprimée.`,
+      [{nom: "liste", libelle: "Un prénom par ligne (tu peux ajouter l’initiale : « Léa B »)", multiligne: true}]);
+    if (!reponse) return;
+    const prenoms = decouperPrenoms(reponse.liste);
+    if (!prenoms.length) {
+      messager("message-classe", "Aucun prénom trouvé dans ce que tu as collé.", "erreur");
+      return;
+    }
+    if (prenoms.length > sansNom.length) {
+      messager("message-classe",
+        `Tu as collé ${prenoms.length} prénoms pour ${sansNom.length} élève(s) sans nom. Ajoute d’abord des élèves, ou enlève les prénoms en trop.`,
+        "erreur");
+      return;
+    }
+    messager("message-classe", "Saisie en cours…", "");
+    try {
+      for (let index = 0; index < prenoms.length; index += 1) {
+        const eleve = sansNom[index];
+        const morceaux = prenoms[index].split(" ");
+        const prenom = morceaux[0] || "";
+        const initiale = (morceaux[1] || "").replace(/\./g, "").slice(0, 1);
+        await api("eleves.nommer", {eleve_id: eleve.id, prenom, initiale});
+      }
+      await ouvrirClasse(classe.id);
+      messager("message-classe",
+        `${prenoms.length} prénom(s) enregistré(s). Vérifie l’ordre dans le tableau, puis imprime la liste des codes.`,
+        "ok");
     } catch (erreur) { surErreur(erreur, "message-classe"); }
   });
 
@@ -849,7 +999,8 @@ header('Content-Type: text/html; charset=utf-8');
       jeton = donnees.jeton;
       try { sessionStorage.setItem(CLE_JETON, jeton); } catch (_) {}
       $("motdepasse").value = "";
-      demarrer();
+      venaitDeSeConnecter = true;
+      demarrer().finally(() => { venaitDeSeConnecter = false; });
     } catch (_) {
       messager("erreur-connexion", "Le serveur ne répond pas.", "erreur");
     }
@@ -864,7 +1015,21 @@ header('Content-Type: text/html; charset=utf-8');
       $("qui").textContent = donnees.identifiant;
       estAdmin = Boolean(donnees.admin);
       return chargerClasses();
-    }).catch(() => deconnecter(true));
+    }).catch(erreur => {
+      deconnecter(true);
+      if (!erreur) return;
+      // Un refus juste après avoir tapé son mot de passe n'est PAS une session
+      // expirée : c'est que le serveur n'a pas reçu le jeton qu'il vient de
+      // donner. On le dit, au lieu de renvoyer l'utilisateur à un écran muet.
+      if (erreur.statut === 401) {
+        if (!venaitDeSeConnecter) return;
+        messager("erreur-connexion",
+          "Le serveur n'a pas gardé ta connexion. Préviens Gwenaël : le jeton de session ne lui parvient pas.",
+          "erreur");
+        return;
+      }
+      messager("erreur-connexion", erreur.message || "Le serveur ne répond pas.", "erreur");
+    });
   }
 
   if (jeton) demarrer();

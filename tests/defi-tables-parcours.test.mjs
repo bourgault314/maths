@@ -235,7 +235,7 @@ test("J’apprends garde le bâton pour construire et le propose en aide tempora
   assert.match(html, /textContent = enabled \? "Valider" : "Suivant"/);
   assert.match(html, /completeReview = state\.configuration\.mode === "test"/);
   assert.match(html, /Bilan de tes réponses/);
-  assert.match(html, /defi_tables_core\.js\?v=20260830-8/);
+  assert.match(html, /defi_tables_core\.js\?v=20260830-9/);
 });
 
 test("le numéro de question est séparé du calcul dans le bilan", () => {

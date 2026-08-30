@@ -300,6 +300,148 @@ test("appliquerSerie ne modifie jamais l’objet reçu", () => {
   assert.equal(JSON.stringify(etat), copie);
 });
 
+// ---------------------------------------------------------- suivi de classe
+
+test("le code élève se nettoie, se valide et se range à part du parcours", () => {
+  assert.equal(parcours.CLE_CODE, "mathsgo-suivi-code");
+  assert.equal(parcours.LONGUEUR_CODE, 6);
+  assert.equal(parcours.normaliserCode(" c4f-xrj "), "C4FXRJ");
+  assert.ok(parcours.codeValide("c4fxrj"));
+  assert.ok(!parcours.codeValide("C4FXR"), "cinq caractères");
+  assert.ok(!parcours.codeValide("C4FXRO"), "la lettre O n'existe pas dans l'alphabet des codes");
+  assert.ok(!parcours.codeValide("C4FXR1"), "le chiffre 1 non plus");
+
+  const stockage = stockageMemoire();
+  assert.ok(parcours.sauverCode(stockage, "c4f xrj"));
+  assert.equal(stockage.donnees["mathsgo-suivi-code"], "C4FXRJ");
+  assert.equal(parcours.chargerCode(stockage), "C4FXRJ");
+  assert.ok(!parcours.sauverCode(stockage, "BOF"), "un code invalide n'écrase pas celui qui est là");
+  assert.equal(parcours.chargerCode(stockage), "C4FXRJ");
+  parcours.effacerCode(stockage);
+  assert.equal(parcours.chargerCode(stockage), "");
+  assert.equal(stockage.donnees["mathsgo-defi-tables-parcours"], undefined,
+    "le code ne touche pas au parcours");
+});
+
+test("un code absent ou illisible ne fait jamais planter la lecture", () => {
+  assert.equal(parcours.chargerCode(null), "");
+  assert.equal(parcours.chargerCode(stockageMemoire()), "");
+  assert.equal(parcours.chargerCode(stockageMemoire({"mathsgo-suivi-code": "n'importe quoi"})), "");
+  assert.equal(parcours.sauverCode(null, "C4FXRJ"), false);
+});
+
+test("fusion : rien ne se perd, on garde le plus avancé des deux", () => {
+  // Appareil A : la table 3 est allée plus loin. Appareil B : la table 4.
+  let a = parcours.creerParcours();
+  a = jouer(a, parcours.configApprends(3, "construct"), 1, 1).parcours;
+  a = jouer(a, parcours.configEntraine(3, "desordre"), 10, 10).parcours;
+  a = jouer(a, parcours.configValidation(3), 20, 20).parcours;
+
+  let b = parcours.creerParcours();
+  b = jouer(b, parcours.configEntraine(4, "trous"), 10, 10).parcours;
+
+  const fusion = parcours.fusionner(a, b);
+  assert.equal(fusion.tables[3].apprends.construct, 2, "l'activité faite sur A est gardée");
+  assert.equal(fusion.tables[3].entraine.desordre, 2);
+  assert.ok(fusion.tables[3].acquise, "la table acquise sur A reste acquise");
+  assert.equal(fusion.tables[4].entraine.trous, 2, "l'entraînement fait sur B est gardé");
+  // La fusion ne dépend pas de l'ordre des deux appareils.
+  const inverse = parcours.fusionner(b, a);
+  assert.deepEqual(inverse.tables, fusion.tables);
+});
+
+test("fusion : une table acquise garde la date de la PREMIÈRE validation", () => {
+  const tot = parcours.normaliserParcours({tables: {5: {acquise: "2026-09-01"}}});
+  const tard = parcours.normaliserParcours({tables: {5: {acquise: "2026-11-20"}}});
+  assert.equal(parcours.fusionner(tard, tot).tables[5].acquise, "2026-09-01");
+  assert.equal(parcours.fusionner(tot, tard).tables[5].acquise, "2026-09-01");
+});
+
+test("fusion : la grille garde le maximum de cases, et ne rouvre pas le gain du jour", () => {
+  const a = parcours.normaliserParcours({calculs: {
+    "3-8": {cases: 3, vu: "2026-09-10", erreur: null, gagne: "2026-09-10"},
+    "6-7": {cases: 1, vu: "2026-09-02", erreur: "2026-09-02", gagne: null}
+  }});
+  const b = parcours.normaliserParcours({calculs: {
+    "3-8": {cases: 1, vu: "2026-09-12", erreur: "2026-09-12", gagne: null},
+    "9-9": {cases: 0, vu: "2026-09-11", erreur: "2026-09-11", gagne: null}
+  }});
+  const fusion = parcours.fusionner(a, b);
+  assert.equal(fusion.calculs["3-8"].cases, 3, "le plus avancé gagne");
+  assert.equal(fusion.calculs["3-8"].vu, "2026-09-12", "la vue la plus récente");
+  assert.equal(fusion.calculs["3-8"].erreur, "2026-09-12", "l'erreur la plus récente est conservée");
+  assert.equal(fusion.calculs["6-7"].cases, 1, "un calcul connu d'un seul côté est repris tel quel");
+  assert.equal(fusion.calculs["9-9"].cases, 0);
+  assert.equal(Object.keys(fusion.calculs).length, 3);
+});
+
+test("fusion : le mélange redevient à refaire si l’autre appareil a plus de tables", () => {
+  const cinq = acquerirTables(parcours.creerParcours(), [2, 3, 4, 5, 6]);
+  const cinqAJour = jouer(cinq, parcours.configMelange(cinq), 25, 25).parcours;
+  assert.equal(cinqAJour.melange.aJour, true);
+
+  const sept = acquerirTables(parcours.creerParcours(), [2, 3, 4, 5, 6, 7, 8]);
+  const fusion = parcours.fusionner(cinqAJour, sept);
+  assert.equal(parcours.tablesAcquises(fusion).length, 7);
+  assert.equal(fusion.melange.aJour, false, "le mélange n'avait pas été fait avec les 7 tables");
+
+  // Même nombre de tables des deux côtés : le mélange reste acquis.
+  const memeCinq = acquerirTables(parcours.creerParcours(), [2, 3, 4, 5, 6]);
+  assert.equal(parcours.fusionner(cinqAJour, memeCinq).melange.aJour, true);
+});
+
+test("fusion : les étoiles Expert prennent le meilleur niveau, le titre sa première date", () => {
+  const a = parcours.normaliserParcours({expert: {niveau: 1, dernier: "2026-09-01", champion: null}});
+  const b = parcours.normaliserParcours({expert: {niveau: 3, dernier: "2026-10-01", champion: "2026-10-01"}});
+  const fusion = parcours.fusionner(a, b);
+  assert.equal(fusion.expert.niveau, 3);
+  assert.equal(fusion.expert.dernier, "2026-10-01");
+  assert.equal(fusion.expert.champion, "2026-10-01");
+});
+
+test("fusion : le prénom de l’appareil devant l’élève l’emporte", () => {
+  const local = parcours.definirPrenom(parcours.creerParcours(), "Léa");
+  const distant = parcours.definirPrenom(parcours.creerParcours(), "Léa B");
+  assert.equal(parcours.fusionner(local, distant).prenom, "Léa");
+  assert.equal(parcours.fusionner(parcours.creerParcours(), distant).prenom, "Léa B",
+    "si l'appareil n'a pas de prénom, on prend celui du serveur");
+});
+
+test("fusion : un parcours vide ou illisible ne casse rien et ne perd rien", () => {
+  const plein = acquerirTables(parcours.creerParcours(), [2, 3]);
+  assert.deepEqual(parcours.fusionner(plein, null).tables, plein.tables);
+  assert.deepEqual(parcours.fusionner(null, plein).tables, plein.tables);
+  assert.deepEqual(parcours.fusionner("n'importe quoi", plein).tables, plein.tables);
+  assert.ok(parcours.estVide(parcours.fusionner(null, undefined)));
+});
+
+test("fusion : fusionner un parcours avec lui-même ne le change pas", () => {
+  let etat = acquerirTables(parcours.creerParcours(), [2, 3, 4]);
+  etat = jouer(etat, parcours.configEntraine(5, "mixte"), 10, 10).parcours;
+  assert.deepEqual(parcours.fusionner(etat, etat), parcours.normaliserParcours(etat));
+});
+
+test("vue classe : les calculs qui coincent chez le plus d’élèves", () => {
+  const eleve = calculs => parcours.normaliserParcours({calculs});
+  const rate = date => ({cases: 0, vu: date, erreur: date, gagne: null});
+  const su = date => ({cases: 3, vu: date, erreur: null, gagne: date});
+  const classe = [
+    eleve({"7-8": rate("2026-09-10"), "6-7": rate("2026-09-10")}),
+    eleve({"7-8": rate("2026-09-11"), "9-9": rate("2026-09-11")}),
+    eleve({"7-8": rate("2026-09-12")}),
+    eleve({"6-7": rate("2026-09-12"), "3-4": su("2026-09-12")}),
+    null
+  ];
+  const fragiles = parcours.fragilesDeLaClasse(classe, {max: 3});
+  assert.equal(fragiles.length, 3);
+  assert.deepEqual(fragiles[0], {cle: "7-8", libelle: parcours.libelleFait("7-8"), eleves: 3});
+  assert.equal(fragiles[1].cle, "6-7");
+  assert.equal(fragiles[1].eleves, 2);
+  assert.ok(!fragiles.some(fragile => fragile.cle === "3-4"), "un calcul su n'est pas fragile");
+  assert.deepEqual(parcours.fragilesDeLaClasse([]), []);
+  assert.deepEqual(parcours.fragilesDeLaClasse(null), []);
+});
+
 const html = await (await import("node:fs/promises")).readFile(new URL("../outils/calcul_mental/defi_tables.html", import.meta.url), "utf8");
 const confidentialite = await (await import("node:fs/promises")).readFile(new URL("../confidentialite.html", import.meta.url), "utf8");
 
@@ -317,7 +459,7 @@ test("la page charge le moteur du parcours et propose la carte Mon parcours", ()
 
 test("prénom local, remise à zéro confirmée dans la page, résultat relié au parcours", () => {
   assert.match(html, /id="parcours-name-input"[^>]*maxlength="20"/);
-  assert.match(html, /Ton prénom reste sur cet appareil, rien n’est envoyé\./);
+  assert.match(html, /Ton prénom reste sur cet appareil\. Si ton professeur te donne un code/);
   assert.match(html, /id="parcours-reset"[\s\S]*Recommencer à zéro/);
   assert.match(html, /id="parcours-confirm-yes"[\s\S]*Effacer/);
   assert.doesNotMatch(html, /window\.confirm\(/);
@@ -325,7 +467,7 @@ test("prénom local, remise à zéro confirmée dans la page, résultat relié a
   assert.match(html, /PARCOURS\.demarrerSerie\(parcours, config\)/);
   assert.match(html, /id="result-parcours"/);
   assert.match(html, /id="result-open-parcours"[\s\S]*Voir mon parcours/);
-  assert.match(html, /if \(window\.location\.hash === "#parcours"\) openParcours\(\);/);
+  assert.match(html, /adresse === "#parcours" \|\| codeDemande\) openParcours\(\);/);
 });
 
 test("Je m’entraîne propose produits, trous ou les deux ; la validation se lance en 1 min 30, 2 ou 3 min", () => {
@@ -370,9 +512,65 @@ test("la fiche « Mon parcours des tables » s’imprime depuis l’appli et exi
   assert.match(source, /fiche_parcours_tables\.pdf/);
 });
 
+test("l’appli est branchée au suivi de classe sans jamais bloquer", () => {
+  // Le code arrive par le lien de l'espace élève, ou se tape dans le menu ⋯.
+  assert.match(html, /#fiche=\(\[A-Za-z0-9-\]\{1,12\}\)/);
+  assert.match(html, /#code=\(\[A-Za-z0-9-\]\{1,12\}\)/);
+  assert.match(html, /id="parcours-code-open"/);
+  assert.match(html, /id="parcours-code-remove"/);
+  assert.match(html, /id="parcours-suivi"/, "le repère de suivi est permanent");
+  assert.match(html, /id="parcours-fusion"/, "la question posée sur un appareil partagé");
+
+  // Chaque enregistrement local part aussi au serveur, sans être attendu.
+  assert.match(html, /function sauverParcours\(\) \{\s*PARCOURS\.sauver\(storage\(\), parcours\);\s*envoyerParcours\(\);/);
+  assert.doesNotMatch(html, /await envoyerParcours\(\)/, "l'envoi ne doit jamais être attendu");
+  assert.match(html, /navigator\.sendBeacon/, "le dernier envoi part même si la page se ferme");
+  assert.match(html, /https:\/\/suivi\.mathsgo\.re/);
+});
+
+test("la fiche montre les calculs en carré de Pythagore", () => {
+  // Choix du 30/08/2026 : le carré parle mieux qu'une liste — on voit d'un
+  // coup quelle ligne et quelle colonne sont encore vides.
+  assert.match(html, /class="fiche-carre"/);
+  assert.match(html, /const facteurs = \[2, 3, 4, 5, 6, 7, 8, 9\];/);
+  // La moitié miroir affiche le même calcul : 7×8 et 8×7 partagent leurs cases.
+  assert.match(html, /Math\.min\(ligne, colonne\)\}-\$\{Math\.max\(ligne, colonne\)/);
+  assert.doesNotMatch(html, /id="fiche-calculs" class="fiche-calculs-grid"/);
+});
+
+test("la fiche imprimable peut afficher le parcours d’un autre élève", () => {
+  // Le professeur ouvre …#fiche=CODE : même gabarit, rempli depuis le serveur.
+  assert.match(html, /function renderFiche\(source\)/);
+  assert.match(html, /const fiche = source \|\| parcours;/);
+  assert.match(html, /id="fiche-ecran"/);
+  assert.match(html, /mode-fiche/);
+});
+
 test("les retours utilisent la flèche SVG du site, pas le caractère ←", () => {
   const arrow = /<path d="M19 12H5M11 6l-6 6 6 6"/g;
   assert.ok((html.match(arrow) || []).length >= 4, "catalogue, réglages, parcours, jeu");
   assert.doesNotMatch(html, /<button[^>]*>←/);
   assert.doesNotMatch(html, /aria-hidden="true">←</);
+});
+
+// Une accolade en trop dans la feuille de style ne se voit dans aucun
+// assert.match : le texte cherché est toujours là, mais le navigateur jette la
+// règle qui SUIT l'accolade orpheline. C'est ainsi que « @media print » avait
+// disparu de la page tout en restant dans le fichier — l'élève imprimait alors
+// toute l'application au lieu de sa seule fiche.
+test("la feuille de style de Défi tables est équilibrée, et @media print survit", () => {
+  const styles = [...html.matchAll(/<style>([\s\S]*?)<\/style>/g)].map(trouve => trouve[1]);
+  assert.ok(styles.length >= 1, "la page doit porter au moins une feuille de style");
+  styles.forEach((css, index) => {
+    const sansCommentaires = css.replace(/\/\*[\s\S]*?\*\//g, "");
+    let profondeur = 0;
+    for (const caractere of sansCommentaires) {
+      if (caractere === "{") profondeur += 1;
+      else if (caractere === "}") profondeur -= 1;
+      assert.ok(profondeur >= 0, `accolade fermante en trop dans le bloc <style> n°${index + 1}`);
+    }
+    assert.equal(profondeur, 0, `accolades non refermées dans le bloc <style> n°${index + 1}`);
+  });
+  // La règle qu'une accolade orpheline ferait disparaître en premier.
+  assert.match(html, /@media print \{\s*\n\s*@page \{ size: A4 portrait; margin: 12mm; \}/);
 });

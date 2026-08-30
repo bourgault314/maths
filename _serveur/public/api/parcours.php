@@ -72,7 +72,7 @@ try {
         erreur("Progression trop volumineuse.", 413);
     }
 
-    $maj = maintenant();
+    $maj = aujourdhui();
     $requete = $pdo->prepare('SELECT id FROM progressions WHERE eleve_id = ? AND appli = ?');
     $requete->execute([$eleveId, $appli]);
     $existante = $requete->fetch();
