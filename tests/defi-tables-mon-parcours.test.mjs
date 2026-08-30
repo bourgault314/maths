@@ -697,3 +697,52 @@ test("le lien du haut ramène l’élève suivi à son espace, les autres au cat
   assert.equal(avecCode.etiquette.textContent, "Mon espace");
   assert.equal(avecCode.attributs["aria-label"], "Retour à mon espace");
 });
+
+
+// La fiche est dessinée en millimètres pour du A4 : à 390 px elle demandait
+// 518 px et débordait par la droite — sur l'écran même où le professeur consulte
+// un élève depuis son téléphone. Ce test EXÉCUTE la fonction d'ajustement sur une
+// fausse page, et vérifie que la réduction reste enfermée dans @media screen :
+// le papier ne doit jamais être réduit.
+test("la fiche d’un élève se met à l’échelle de l’écran, jamais du papier", () => {
+  const ecran = /@media screen \{\s*\n\s*body\.mode-fiche #fiche-print \{ zoom: var\(--fiche-zoom, 1\); \}\s*\n\s*\}/;
+  assert.match(html, ecran, "la réduction doit être enfermée dans @media screen");
+  assert.match(html, /renderFiche\(distant\);\s*\n\s*ajusterFiche\(\);/);
+  assert.match(html, /window\.addEventListener\("resize", ajusterFiche\);/, "recalculée si l’écran tourne");
+
+  const debut = html.indexOf("      function ajusterFiche() {");
+  const fin = "bloc.style.setProperty(\"--fiche-zoom\", String(Math.round(facteur * 1000) / 1000));\n      }";
+  assert.ok(debut > 0, "la fonction d’ajustement doit exister");
+  const source = html.slice(debut, html.indexOf(fin) + fin.length);
+
+  function executer({page, besoin, modeFiche = true}) {
+    const bloc = {
+      style: {
+        valeurs: {}, width: "",
+        setProperty(nom, valeur) { this.valeurs[nom] = valeur; },
+        removeProperty(nom) { delete this.valeurs[nom]; }
+      },
+      getBoundingClientRect() {
+        // « min-content » révèle la largeur dont la fiche a besoin ; sinon elle
+        // s'étire jusqu'aux bords, ce qui ne dit rien.
+        return {width: this.style.width === "min-content" ? besoin : page};
+      }
+    };
+    const faux = {
+      body: {classList: {contains: nom => nom === "mode-fiche" && modeFiche}},
+      documentElement: {clientWidth: page},
+      getElementById: id => (id === "fiche-print" ? bloc : null)
+    };
+    new Function("document", `${source}\nreturn ajusterFiche;`)(faux)();
+    return bloc.style.valeurs["--fiche-zoom"];
+  }
+
+  // 390 px de page pour 518 px de fiche : 382 / 518 = 0,737.
+  assert.equal(executer({page: 390, besoin: 518}), "0.737");
+  // Écran large : la fiche tient, on n’y touche pas du tout.
+  assert.equal(executer({page: 1366, besoin: 518}), undefined);
+  // Écran minuscule : on ne descend jamais sous 0,45, illisible en dessous.
+  assert.equal(executer({page: 200, besoin: 518}), "0.45");
+  // Hors de la vue « fiche d’un élève », la fonction ne fait rien.
+  assert.equal(executer({page: 390, besoin: 518, modeFiche: false}), undefined);
+});

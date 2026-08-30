@@ -299,6 +299,15 @@
     body.mode-fiche > *:not(#fiche-print):not(#fiche-ecran) { display: none !important; }
     body.mode-fiche #fiche-print { display: block; background: #fff; padding: 18px; margin: 0 auto 24px;
                                    max-width: 900px; border: 1px solid var(--line); border-radius: 14px; }
+    /* La fiche est dessinée en millimètres, pour une feuille A4 : sur un
+       téléphone elle dépassait par la droite (518 px de contenu pour 390 px de
+       page). À l'écran seulement, on la réduit pour qu'elle tienne dans la
+       largeur ; « zoom » agit sur la mise en page, contrairement à « scale »,
+       donc rien ne se retrouve sous la fiche. Le papier n'est pas concerné :
+       la règle est enfermée dans @media screen. */
+    @media screen {
+      body.mode-fiche #fiche-print { zoom: var(--fiche-zoom, 1); }
+    }
     .parcours-confirm p { margin: 0 0 10px; color: var(--ink); font-weight: 900; }
     .parcours-confirm .danger { color: #fff; border: 0; background: var(--red); box-shadow: 0 4px 0 #7a1f1f; }
     .parcours-next {
@@ -1721,7 +1730,29 @@
             : "aucune activité enregistrée"
         ].filter(Boolean).join(" · ");
         renderFiche(distant);
+        ajusterFiche();
       }
+
+      // La fiche fait 186 mm de large parce qu'elle est faite pour du A4. Sur un
+      // téléphone, on la réduit juste ce qu'il faut pour qu'elle tienne — on la
+      // voit entière d'un coup d'œil, et l'impression sort inchangée.
+      function ajusterFiche() {
+        const bloc = document.getElementById("fiche-print");
+        if (!bloc || !document.body.classList.contains("mode-fiche")) return;
+        bloc.style.removeProperty("--fiche-zoom");
+        // On mesure ce dont la fiche a réellement besoin, pas la largeur qu'elle
+        // occupe : sur un écran large elle s'étire, et « scrollWidth » seul
+        // aurait alors répondu la largeur de l'écran.
+        const largeurRendue = bloc.style.width;
+        bloc.style.width = "min-content";
+        const largeurFiche = bloc.getBoundingClientRect().width;
+        bloc.style.width = largeurRendue;
+        const placeDisponible = document.documentElement.clientWidth - 8;
+        if (largeurFiche <= placeDisponible || largeurFiche <= 0) return;
+        const facteur = Math.max(0.45, placeDisponible / largeurFiche);
+        bloc.style.setProperty("--fiche-zoom", String(Math.round(facteur * 1000) / 1000));
+      }
+      window.addEventListener("resize", ajusterFiche);
       let TOTAL = 20;
       let DURATION = null;
       const ALL_TABLES = [...CORE.ALL_TABLES];
