@@ -133,9 +133,13 @@ try {
 
         case 'profs.liste':
             exiger_admin($prof);
+            // Deux compteurs distincts : ce qu'un professeur possède, et ce qui
+            // lui est prêté. Un seul chiffre laisserait croire qu'un collègue à
+            // qui on vient de partager une classe n'a rien reçu.
             $lignes = $pdo->query(
                 'SELECT p.id, p.identifiant, p.admin, p.cree_le,
-                        (SELECT COUNT(*) FROM classes c WHERE c.prof_id = p.id) AS classes
+                        (SELECT COUNT(*) FROM classes c WHERE c.prof_id = p.id) AS classes,
+                        (SELECT COUNT(*) FROM partages g WHERE g.prof_id = p.id) AS partagees
                  FROM profs p ORDER BY p.identifiant'
             )->fetchAll();
             $profs = [];
@@ -145,6 +149,7 @@ try {
                     'identifiant' => (string)$ligne['identifiant'],
                     'admin' => (int)$ligne['admin'] === 1,
                     'classes' => (int)$ligne['classes'],
+                    'partagees' => (int)$ligne['partagees'],
                     'cree_le' => $ligne['cree_le'],
                 ];
             }

@@ -751,8 +751,11 @@ header('Content-Type: text/html; charset=utf-8');
         nom.textContent = prof.identifiant;
         const role = document.createElement("span");
         role.className = "role";
-        role.textContent = (prof.admin ? "administrateur · " : "")
-          + `${prof.classes} classe${prof.classes > 1 ? "s" : ""}`;
+        const morceaux = [];
+        if (prof.admin) morceaux.push("administrateur");
+        morceaux.push(`${prof.classes} classe${prof.classes > 1 ? "s" : ""} à lui`);
+        if (prof.partagees) morceaux.push(`${prof.partagees} partagée${prof.partagees > 1 ? "s" : ""} par toi`);
+        role.textContent = morceaux.join(" · ");
         li.append(nom, role);
         liste.appendChild(li);
       });

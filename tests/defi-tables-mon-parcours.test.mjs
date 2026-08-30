@@ -492,6 +492,14 @@ test("la page Confidentialité décrit la sauvegarde locale de Mon parcours", ()
   assert.match(confidentialite, /Recommencer à zéro/);
 });
 
+test("sur écran large, Mon parcours passe en deux colonnes compactes", () => {
+  assert.match(html, /@media \(min-width: 1040px\) \{[\s\S]*?\.parcours-screen \{ max-width: 1120px; \}/);
+  assert.match(html, /@media \(min-width: 1040px\) \{[\s\S]*?\.parcours-list \{ grid-template-columns: repeat\(2, minmax\(0, 1fr\)\)/);
+  assert.match(html, /@media \(min-width: 1040px\) \{[\s\S]*?\.parcours-cells \.cell \{ min-height: 34px/);
+  assert.match(html, /\.parcours-screen \{ max-width: 720px/, "en dessous de 1040 px, rien ne change");
+  assert.match(html, /\.calculs-screen \{ max-width: 560px/, "Mes calculs garde sa largeur");
+});
+
 test("la fiche « Mon parcours des tables » s’imprime depuis l’appli et existe en PDF vide avec sa source", async () => {
   const fs = await import("node:fs/promises");
   assert.match(html, /id="fiche-print" class="fiche-print" aria-hidden="true"/);
@@ -526,6 +534,23 @@ test("l’appli est branchée au suivi de classe sans jamais bloquer", () => {
   assert.doesNotMatch(html, /await envoyerParcours\(\)/, "l'envoi ne doit jamais être attendu");
   assert.match(html, /navigator\.sendBeacon/, "le dernier envoi part même si la page se ferme");
   assert.match(html, /https:\/\/suivi\.mathsgo\.re/);
+});
+
+test("effacer le parcours d’un camarade demande une confirmation", () => {
+  // Sur un appareil partagé, « ce n'est pas le mien » efface le travail de
+  // quelqu'un qui n'a peut-être pas de code : on prévient avant.
+  assert.match(html, /questionFusion\.confirme/);
+  assert.match(html, /son travail sera perdu/);
+  assert.match(html, /Oui, efface-le/);
+  assert.match(html, /Annuler/);
+});
+
+test("sans connexion, l’élève n’est pas laissé à croire qu’il est suivi", () => {
+  assert.match(html, /let suiviHorsLigne = false;/);
+  assert.match(html, /pas de connexion, ton travail partira plus tard/);
+  // Un code venu du lien du professeur est gardé même si le serveur est muet.
+  assert.match(html, /if \(silencieux\) \{\s*\n\s*codeSuivi = code;/);
+  assert.match(html, /\.parcours-suivi\.hors-ligne/);
 });
 
 test("la fiche montre les calculs en carré de Pythagore", () => {

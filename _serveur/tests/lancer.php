@@ -444,6 +444,15 @@ verifier("le premier compte est administrateur, pas le second", function () use 
     egal(false, appel('/api/prof.php', ['action' => 'moi'], ['jeton' => $jetonClaire])['json']['admin']);
 });
 
+verifier("l'annuaire des professeurs distingue possédé et partagé", function () use (&$jeton) {
+    $profs = appel('/api/prof.php', ['action' => 'profs.liste'], ['jeton' => $jeton])['json']['profs'];
+    $claire = null;
+    foreach ($profs as $prof) if ($prof['identifiant'] === 'claire') $claire = $prof;
+    vrai($claire !== null, "Claire devrait être dans la liste");
+    egal(0, $claire['classes'], "elle ne possède aucune classe");
+    egal(0, $claire['partagees'], "et rien ne lui est encore partagé");
+});
+
 verifier("un professeur ordinaire ne peut pas créer de compte", function () use (&$jetonClaire) {
     $r = appel('/api/prof.php', ['action' => 'profs.ajouter', 'identifiant' => 'intrus',
         'motdepasse' => 'motdepasse-intrus-2026'], ['jeton' => $jetonClaire]);

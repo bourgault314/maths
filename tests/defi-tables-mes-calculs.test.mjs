@@ -276,12 +276,27 @@ test("la page a l’écran Mes calculs : entrée depuis Mon parcours, grille, d�
   assert.match(html, /id="calculs-grille"/);
   assert.match(html, /id="calculs-detail"/);
   assert.match(html, /id="calculs-reviser"[\s\S]*Réviser mes calculs/);
+  assert.ok(html.indexOf('id="calculs-reviser"') < html.indexOf('class="calculs-note"'), "le bouton passe avant le paragraphe d’explication, sinon il tombe sous la ligne de flottaison sur un portable");
   assert.match(html, /id="calculs-back"/);
   assert.match(html, /PARCOURS\.serieAlimenteGrille/);
   assert.match(html, /PARCOURS\.appliquerReponse/);
   assert.match(html, /PARCOURS\.planRevision/);
   assert.match(html, /CORE\.tableQuestion/);
   assert.match(html, /adresse === "#calculs"\) openCalculs\(\)/);
+});
+
+test("le détail d’une case écrit le calcul dans les deux sens et empile ses informations", () => {
+  assert.match(html, /ligne === colonne/, "la diagonale est traitée à part");
+  assert.match(html, /\? `\$\{ligne\} × \$\{colonne\} = \$\{produit\}`/, "sur la diagonale le calcul n’est pas répété");
+  assert.match(html, /: `\$\{ligne\} × \$\{colonne\} = \$\{colonne\} × \$\{ligne\} = \$\{produit\}`/, "ailleurs les deux sens sont écrits");
+  assert.doesNotMatch(html, /zone\.textContent = morceaux\.join/, "le détail n’aligne plus ses informations derrière des points");
+  assert.match(html, /ligneDetail\("mc-detail-calcul", calcul\)/);
+  assert.match(html, /ligneDetail\("mc-detail-etat", /);
+  assert.match(html, /majuscule\(LIBELLES_ETATS_CALCULS\[etat\]\)/);
+  assert.match(html, /Une case par jour : reviens demain\./, "la date n’est écrite que lorsqu’elle veut dire quelque chose");
+  assert.match(html, /function jourDuJour\(\)[\s\S]*?toISOString\(\)\.slice\(0, 10\)/, "même convention de date que le moteur");
+  assert.match(html, /\.mc-detail-calcul \{ font-size: 1\.05rem/);
+  assert.match(html, /\.calculs-detail \{[\s\S]*?min-height: 78px/, "la hauteur réservée couvre trois lignes : la grille ne saute pas");
 });
 
 test("seule la première réponse compte pour la grille, et un raté ne revient qu’une fois", () => {
