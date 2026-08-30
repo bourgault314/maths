@@ -93,9 +93,16 @@ test('les panneaux de création restent près de leur bouton et détachés du pl
   assert.match(html, /buttonRect\.left \+ \(buttonRect\.width - panelRect\.width\) \/ 2/);
   assert.match(html, /panel\.style\.top = `\$\{headerRect\.bottom \+ 10\}px`/);
   assert.match(html, /#angle-panel \{ width: min\(18rem, calc\(100vw - 16px\)\); \}/);
-  assert.match(html, /#segment-panel \{ width: min\(20rem, calc\(100vw - 16px\)\); \}/);
+  assert.match(html, /#segment-panel \{ width: min\(18rem, calc\(100vw - 16px\)\); \}/);
   assert.match(html, /\.creator-panel \{[\s\S]*padding: \.75rem/);
+  assert.match(html, /#segment-length \{[\s\S]*min-height: 3rem;[\s\S]*font-size: 1\.3rem/);
+  assert.match(html, /#segment-panel \.segment-submit \{[\s\S]*min-height: 3rem/);
   assert.doesNotMatch(html, /#angle-panel,[\s\S]{0,100}right: 6px !important/);
+});
+
+test('les longueurs sont affichées sans unité physique trompeuse', () => {
+  assert.match(html, />Longueur du segment</);
+  assert.doesNotMatch(html, /Longueur du segment \(cm\)|1 à 20 cm|\$\{formatLengthCm\(strip\.lengthCm\)\} cm/);
 });
 
 test('l’outil est silencieux et n’affiche aucune aide automatique après une création', () => {
