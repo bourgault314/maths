@@ -4,6 +4,13 @@
 declare(strict_types=1);
 
 const DUREE_SESSION_HEURES = 12;
+// Les comptes sont hachés en bcrypt à coût fixe : le coût par défaut de PHP
+// change d'une version à l'autre (10 en 8.2, 12 en 8.4) et le hachage de
+// remplacement ci-dessous doit coûter exactement le même temps qu'un compte.
+const COUT_BCRYPT = 10;
+// password_hash() d'une valeur aléatoire jetée, coût 10 : aucun mot de passe
+// ne lui correspond, mais password_verify() met le même temps à le dire.
+const HASH_DE_REMPLACEMENT = '$2y$10$W34TaICveBz/iuy8Y4cjmui7TjnGnYY.R5iJ2W4MVC58NYV..KEEO';
 
 function creer_prof(PDO $pdo, string $identifiant, string $motdepasse, bool $admin = false): int
 {
@@ -20,7 +27,7 @@ function creer_prof(PDO $pdo, string $identifiant, string $motdepasse, bool $adm
         throw new InvalidArgumentException("Cet identifiant est déjà pris.");
     }
     $pdo->prepare('INSERT INTO profs (identifiant, mdp_hash, admin, cree_le) VALUES (?, ?, ?, ?)')
-        ->execute([$identifiant, password_hash($motdepasse, PASSWORD_DEFAULT), $admin ? 1 : 0, maintenant()]);
+        ->execute([$identifiant, password_hash($motdepasse, PASSWORD_BCRYPT, ['cost' => COUT_BCRYPT]), $admin ? 1 : 0, maintenant()]);
     return (int)$pdo->lastInsertId();
 }
 
@@ -29,8 +36,12 @@ function ouvrir_session(PDO $pdo, string $identifiant, string $motdepasse): ?arr
     $requete = $pdo->prepare('SELECT id, mdp_hash FROM profs WHERE identifiant = ?');
     $requete->execute([trim($identifiant)]);
     $prof = $requete->fetch();
-    // Vérification à temps constant même si l'identifiant n'existe pas.
-    $hash = $prof['mdp_hash'] ?? '$2y$10$invalidinvalidinvalidinvalidinvalidinvalidinvalidinvalidin';
+    // Vérification à temps constant même si l'identifiant n'existe pas : le
+    // hachage de remplacement est un VRAI bcrypt (même algorithme, même coût
+    // que les comptes), pour que password_verify() prenne le même temps.
+    // L'ancien faux hachage était mal formé : refusé sans calcul, il révélait
+    // en 60 ms qu'un identifiant n'existait pas, contre 227 ms sinon.
+    $hash = $prof['mdp_hash'] ?? HASH_DE_REMPLACEMENT;
     if (!password_verify($motdepasse, $hash) || $prof === false) {
         return null;
     }
@@ -61,9 +72,11 @@ function fermer_session(PDO $pdo, string $jeton): void
     $pdo->prepare('DELETE FROM sessions_prof WHERE jeton_hash = ?')->execute([hash('sha256', $jeton)]);
 }
 
+// Le jeton voyage dans l'en-tête Authorization ou dans le corps, jamais dans
+// l'adresse : une adresse s'inscrit dans les journaux de l'hébergeur.
 function jeton_recu(array $corps): string
 {
     $entete = $_SERVER['HTTP_AUTHORIZATION'] ?? '';
     if (str_starts_with($entete, 'Bearer ')) return substr($entete, 7);
-    return (string)($corps['jeton'] ?? $_GET['jeton'] ?? '');
+    return (string)($corps['jeton'] ?? '');
 }

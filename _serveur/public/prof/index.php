@@ -80,6 +80,8 @@ header('Content-Type: text/html; charset=utf-8');
   th button { min-height: 44px; padding: 0; color: var(--blue-dark); background: none;
               font: inherit; font-weight: 700; text-transform: inherit; letter-spacing: inherit; }
   th button:hover { background: none; text-decoration: underline; }
+  /* En lecture seule, la colonne des codes n'existe pas. */
+  #tableau.sans-codes th:nth-child(2), #tableau.sans-codes td.code { display: none; }
   td.code { font-family: ui-monospace, Consolas, monospace; font-weight: 700;
             letter-spacing: .08em; color: var(--blue-dark); }
   td.sans { color: var(--muted); font-style: italic; }
@@ -259,9 +261,11 @@ header('Content-Type: text/html; charset=utf-8');
     <div id="bloc-partage" hidden>
       <h2>Partager cette classe</h2>
       <div class="carte" style="max-width:560px">
-        <p class="sous" style="margin-bottom:12px">Un collègue en <strong>lecture</strong> voit le tableau
-        et les codes, sans rien pouvoir changer. En <strong>écriture</strong>, il peut aussi ajouter des
-        élèves, saisir les prénoms et donner un nouveau code. Toi seul peux supprimer la classe.</p>
+        <p class="sous" style="margin-bottom:12px">Un collègue en <strong>lecture</strong> voit le tableau,
+        sans les codes des élèves et sans rien pouvoir changer. En <strong>écriture</strong>, il voit les
+        codes — avec un code, on ouvre l'appli comme l'élève et on peut modifier sa progression —,
+        il peut ajouter des élèves, saisir les prénoms et donner un nouveau code. Toi seul peux
+        supprimer la classe.</p>
         <ul class="profs" id="liste-partages"></ul>
         <div class="actions">
           <button type="button" class="secondaire" id="ajouter-partage">Partager avec un collègue</button>
@@ -436,6 +440,7 @@ header('Content-Type: text/html; charset=utf-8');
   function dessinerTableau() {
     trierEleves();
     const ecriture = droitClasse !== "lecture";
+    $("tableau").classList.toggle("sans-codes", !ecriture);
     const corps = $("corps");
     corps.textContent = "";
 
@@ -455,7 +460,7 @@ header('Content-Type: text/html; charset=utf-8');
 
       const cCode = document.createElement("td");
       cCode.className = "code";
-      cCode.textContent = eleve.code;
+      cCode.textContent = eleve.code || "";
 
       const cAcquises = document.createElement("td");
       const nombre = eleve.lu.acquises.length;
@@ -489,13 +494,17 @@ header('Content-Type: text/html; charset=utf-8');
 
       const cActions = document.createElement("td");
       // La fiche vit dans l'appli du site : un seul gabarit, une seule vérité.
-      const fiche = document.createElement("a");
-      fiche.className = "secondaire petit bouton-lien";
-      fiche.href = `https://mathsgo.re/outils/calcul_mental/defi_tables.html#fiche=${encodeURIComponent(eleve.code)}`;
-      fiche.target = "_blank";
-      fiche.rel = "noopener";
-      fiche.textContent = "Voir sa fiche";
-      cActions.append(fiche);
+      // Elle s'ouvre par le code de l'élève, donc pas en lecture seule (le
+      // serveur ne donne pas les codes à un collègue en lecture).
+      if (eleve.code) {
+        const fiche = document.createElement("a");
+        fiche.className = "secondaire petit bouton-lien";
+        fiche.href = `https://mathsgo.re/outils/calcul_mental/defi_tables.html#fiche=${encodeURIComponent(eleve.code)}`;
+        fiche.target = "_blank";
+        fiche.rel = "noopener";
+        fiche.textContent = "Voir sa fiche";
+        cActions.append(fiche);
+      }
       if (ecriture) {
         const regen = document.createElement("button");
         regen.type = "button";
@@ -643,6 +652,7 @@ header('Content-Type: text/html; charset=utf-8');
     const ecriture = droitClasse !== "lecture";
     $("ajouter").hidden = !ecriture;
     $("coller-prenoms").hidden = !ecriture;
+    $("imprimer").hidden = !ecriture;
     $("supprimer-classe").hidden = !proprietaire;
     $("bloc-partage").hidden = !proprietaire;
     messager("message-partage", "", "");
@@ -652,7 +662,7 @@ header('Content-Type: text/html; charset=utf-8');
     } else {
       messager("bandeau-droit", ecriture
         ? "Classe partagée avec toi : tu peux voir et modifier, mais pas supprimer la classe."
-        : "Classe partagée avec toi en lecture seule : tu vois tout, tu ne modifies rien.", "info");
+        : "Classe partagée avec toi en lecture seule : tu vois la progression, sans les codes des élèves, et tu ne modifies rien.", "info");
     }
   }
 

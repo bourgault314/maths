@@ -33,7 +33,8 @@
   const PRENOM_MAX = 20;
 
   // Suivi de classe (lot C) : le code que le professeur remet sur papier.
-  // Alphabet sans O, 0, I, 1 ni L — les caractères qu'on lit de travers.
+  // Alphabet sans O, 0, I ni 1 — les seuls qu'on lit de travers en
+  // majuscules (le L y est : même alphabet que le serveur, _serveur/public/lib/codes.php).
   const CLE_CODE = "mathsgo-suivi-code";
   const ALPHABET_CODE = "23456789ABCDEFGHJKLMNPQRSTUVWXYZ";
   const LONGUEUR_CODE = 6;

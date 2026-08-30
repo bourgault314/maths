@@ -124,8 +124,13 @@ header('Content-Type: text/html; charset=utf-8');
   const CLE = "mathsgo-suivi-code";
   const $ = id => document.getElementById(id);
 
+  // Le code n'est retenu que le temps de l'onglet (sessionStorage), pas d'une
+  // visite à l'autre : sur un poste partagé au collège, l'espace ne doit pas
+  // rouvrir « Bonjour Léa » au camarade suivant. Retaper six caractères est
+  // le geste qui dit « c'est moi ». (L'appli, elle, garde le code sur
+  // l'appareil : c'est là que vit « Ce n'est pas moi ».)
   function stockage() {
-    try { return window.localStorage; } catch (_) { return null; }
+    try { return window.sessionStorage; } catch (_) { return null; }
   }
   function lireCode() {
     try { return stockage()?.getItem(CLE) || ""; } catch (_) { return ""; }
@@ -192,10 +197,21 @@ header('Content-Type: text/html; charset=utf-8');
   async function ouvrir(code, silencieux) {
     afficherErreur("");
     try {
-      const reponse = await fetch(`api/eleve.php?code=${encodeURIComponent(code)}`, {cache: "no-store"});
+      // Le code part dans le CORPS de la requête, jamais dans l'adresse : une
+      // adresse s'inscrit en clair dans les journaux de l'hébergeur.
+      const reponse = await fetch("api/eleve.php", {
+        method: "POST",
+        headers: {"Content-Type": "text/plain;charset=UTF-8"},
+        body: JSON.stringify({code}),
+        cache: "no-store"
+      });
       const donnees = await reponse.json().catch(() => null);
       if (!reponse.ok || !donnees || !donnees.ok) {
-        if (silencieux) { ecrireCode(""); return; }
+        // Seul un 404 prouve que le code ne vaut plus rien. Un serveur en
+        // panne ou trop sollicité ne doit pas faire oublier un bon code.
+        if (reponse.status === 404) ecrireCode("");
+        if (silencieux && reponse.status === 404) return;
+        if (silencieux) $("code").value = code;
         afficherErreur(reponse.status === 404
           ? "Ce code n’existe pas. Vérifie-le, ou demande à ton professeur."
           : (donnees && donnees.erreur) || "Le serveur ne répond pas. Réessaie dans un instant.");
@@ -204,7 +220,8 @@ header('Content-Type: text/html; charset=utf-8');
       ecrireCode(code);
       afficherEspace(donnees, code);
     } catch (_) {
-      if (!silencieux) afficherErreur("Pas de connexion. Réessaie dans un instant.");
+      if (silencieux) $("code").value = code;
+      afficherErreur("Pas de connexion. Réessaie dans un instant.");
     }
   }
 

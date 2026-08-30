@@ -54,7 +54,7 @@ function acces_classe(PDO $pdo, int $profId, mixed $classeIdBrut, string $besoin
     $requete = $pdo->prepare('SELECT * FROM classes WHERE id = ?');
     $requete->execute([$classeId]);
     $classe = $requete->fetch();
-    if ($classe === false) erreur("Classe introuvable.", 404);
+    if ($classe === false) erreur("Introuvable.", 404);
 
     if ((int)$classe['prof_id'] === $profId) {
         $classe['droit'] = 'proprietaire';
@@ -62,7 +62,7 @@ function acces_classe(PDO $pdo, int $profId, mixed $classeIdBrut, string $besoin
         $requete = $pdo->prepare('SELECT droit FROM partages WHERE classe_id = ? AND prof_id = ?');
         $requete->execute([$classeId, $profId]);
         $droit = $requete->fetchColumn();
-        if ($droit === false) erreur("Classe introuvable.", 404);
+        if ($droit === false) erreur("Introuvable.", 404);
         $classe['droit'] = in_array($droit, DROITS_PARTAGE, true) ? $droit : 'lecture';
     }
 
@@ -82,7 +82,9 @@ function eleve_modifiable(PDO $pdo, int $profId, mixed $eleveIdBrut): array
     $requete = $pdo->prepare('SELECT id, classe_id, code FROM eleves WHERE id = ?');
     $requete->execute([$eleveId]);
     $eleve = $requete->fetch();
-    if ($eleve === false) erreur("Élève introuvable.", 404);
+    // Même message qu'une classe interdite : un professeur connecté ne doit
+    // pas pouvoir distinguer « n'existe pas » de « appartient à un collègue ».
+    if ($eleve === false) erreur("Introuvable.", 404);
     acces_classe($pdo, $profId, (int)$eleve['classe_id'], 'ecriture');
     return $eleve;
 }
@@ -220,14 +222,24 @@ try {
         case 'classes.supprimer':
             // Supprimer une classe efface des progressions : réservé au propriétaire.
             $classe = acces_classe($pdo, $profId, $corps['classe_id'] ?? 0, 'proprietaire');
-            $requete = $pdo->prepare('SELECT id FROM eleves WHERE classe_id = ?');
-            $requete->execute([(int)$classe['id']]);
-            foreach ($requete->fetchAll() as $eleve) {
-                $pdo->prepare('DELETE FROM progressions WHERE eleve_id = ?')->execute([(int)$eleve['id']]);
+            // Tout ou rien : une panne au milieu ne laisse ni élève sans classe
+            // ni progression orpheline.
+            $pdo->beginTransaction();
+            try {
+                $requete = $pdo->prepare('SELECT id, code FROM eleves WHERE classe_id = ?');
+                $requete->execute([(int)$classe['id']]);
+                foreach ($requete->fetchAll() as $eleve) {
+                    $pdo->prepare('DELETE FROM progressions WHERE eleve_id = ?')->execute([(int)$eleve['id']]);
+                    oublier_compteurs_du_code($pdo, (string)$eleve['code']);
+                }
+                $pdo->prepare('DELETE FROM eleves WHERE classe_id = ?')->execute([(int)$classe['id']]);
+                $pdo->prepare('DELETE FROM partages WHERE classe_id = ?')->execute([(int)$classe['id']]);
+                $pdo->prepare('DELETE FROM classes WHERE id = ?')->execute([(int)$classe['id']]);
+                $pdo->commit();
+            } catch (Throwable $e) {
+                $pdo->rollBack();
+                throw $e;
             }
-            $pdo->prepare('DELETE FROM eleves WHERE classe_id = ?')->execute([(int)$classe['id']]);
-            $pdo->prepare('DELETE FROM partages WHERE classe_id = ?')->execute([(int)$classe['id']]);
-            $pdo->prepare('DELETE FROM classes WHERE id = ?')->execute([(int)$classe['id']]);
             repondre(['ok' => true]);
 
         // ----------------------------------------------------------------- partages
@@ -307,12 +319,21 @@ try {
             $eleve = eleve_modifiable($pdo, $profId, $corps['eleve_id'] ?? 0);
             $code = code_libre($pdo);
             $pdo->prepare('UPDATE eleves SET code = ? WHERE id = ?')->execute([$code, (int)$eleve['id']]);
+            oublier_compteurs_du_code($pdo, (string)$eleve['code']);
             repondre(['ok' => true, 'code' => $code]);
 
         case 'eleves.supprimer':
             $eleve = eleve_modifiable($pdo, $profId, $corps['eleve_id'] ?? 0);
-            $pdo->prepare('DELETE FROM progressions WHERE eleve_id = ?')->execute([(int)$eleve['id']]);
-            $pdo->prepare('DELETE FROM eleves WHERE id = ?')->execute([(int)$eleve['id']]);
+            $pdo->beginTransaction();
+            try {
+                $pdo->prepare('DELETE FROM progressions WHERE eleve_id = ?')->execute([(int)$eleve['id']]);
+                $pdo->prepare('DELETE FROM eleves WHERE id = ?')->execute([(int)$eleve['id']]);
+                oublier_compteurs_du_code($pdo, (string)$eleve['code']);
+                $pdo->commit();
+            } catch (Throwable $e) {
+                $pdo->rollBack();
+                throw $e;
+            }
             repondre(['ok' => true]);
 
         // ------------------------------------------------------------------ tableau
@@ -329,11 +350,14 @@ try {
                  ORDER BY e.prenom = \'\', e.prenom, e.code'
             );
             $requete->execute([$appli, (int)$classe['id']]);
+            // Un code ouvre l'appli comme l'élève et permet de modifier sa
+            // progression : un collègue en lecture seule ne le reçoit pas.
+            $avecCodes = $classe['droit'] !== 'lecture';
             $lignes = [];
             foreach ($requete->fetchAll() as $ligne) {
                 $lignes[] = [
                     'id' => (int)$ligne['id'],
-                    'code' => $ligne['code'],
+                    'code' => $avecCodes ? $ligne['code'] : null,
                     'prenom' => $ligne['prenom'],
                     'initiale' => $ligne['initiale'],
                     'parcours' => $ligne['donnees'] === null ? null : json_decode($ligne['donnees'], true),

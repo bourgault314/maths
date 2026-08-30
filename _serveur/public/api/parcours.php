@@ -18,19 +18,28 @@ const APPLIS_CONNUES = ['defi-tables', 'automatismes'];
 cors();
 
 try {
-    $methode = $_SERVER['REQUEST_METHOD'] ?? 'GET';
-    $corps = $methode === 'POST' ? corps_json(TAILLE_MAX_PROGRESSION + 4000) : [];
+    // Le code n'arrive QUE dans le corps d'un POST : une adresse s'inscrit en
+    // clair dans les journaux de l'hébergeur, un corps non. L'ancien
+    // « GET ?code=… » de dépannage a disparu pour cette raison.
+    if (($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'POST') {
+        erreur("Méthode non autorisée.", 405);
+    }
+    $corps = corps_json(TAILLE_MAX_PROGRESSION + 4000);
 
-    $code = normaliser_code((string)($corps['code'] ?? $_GET['code'] ?? ''));
+    $code = normaliser_code((string)($corps['code'] ?? ''));
     if (!code_valide($code)) {
         erreur("Code élève invalide.", 400);
     }
-    $appli = (string)($corps['appli'] ?? $_GET['appli'] ?? 'defi-tables');
+    $appli = (string)($corps['appli'] ?? 'defi-tables');
     if (!in_array($appli, APPLIS_CONNUES, true)) {
         erreur("Application inconnue.", 400);
     }
 
-    limiter('code:' . $code, 120, 300);
+    // Par adresse, seuls les échecs comptent (voir eleve.php) ; par code, la
+    // limite est large parce que l'appli envoie après chaque réponse.
+    $adresse = adresse_appelante();
+    limiter_deja_atteint('echec-ip:' . $adresse, 60, 300);
+    limiter('code:' . $code, 300, 300);
 
     $pdo = bd();
     $requete = $pdo->prepare('SELECT id FROM eleves WHERE code = ?');
@@ -38,15 +47,13 @@ try {
     $eleve = $requete->fetch();
     if ($eleve === false) {
         // On ne dit pas si le code a existé : réponse identique dans tous les cas.
+        limiter('echec-ip:' . $adresse, 60, 300);
         erreur("Code inconnu.", 404);
     }
     $eleveId = (int)$eleve['id'];
 
-    // Lecture. Deux façons de la demander :
-    //  - GET ?code=… : historique, gardée pour le dépannage à la main ;
-    //  - POST {"code":…,"lire":true} : celle qu'utilise l'appli, pour que le
-    //    code de l'élève ne s'inscrive pas dans les journaux de l'hébergeur.
-    if ($methode === 'GET' || ($methode === 'POST' && !empty($corps['lire']))) {
+    // Lecture : POST {"code":…,"lire":true}.
+    if (!empty($corps['lire'])) {
         $requete = $pdo->prepare('SELECT donnees, maj_le FROM progressions WHERE eleve_id = ? AND appli = ?');
         $requete->execute([$eleveId, $appli]);
         $ligne = $requete->fetch();
@@ -59,10 +66,6 @@ try {
             'parcours' => json_decode($ligne['donnees'], true),
             'maj_le' => $ligne['maj_le'],
         ]);
-    }
-
-    if ($methode !== 'POST') {
-        erreur("Méthode non autorisée.", 405);
     }
 
     if (!array_key_exists('parcours', $corps) || !is_array($corps['parcours'])) {
