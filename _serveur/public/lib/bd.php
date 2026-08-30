@@ -4,6 +4,12 @@
 
 declare(strict_types=1);
 
+// Jamais de message technique dans une réponse, quelle que soit la
+// configuration de l'hébergeur : tout part dans le journal d'erreurs. Ce
+// fichier étant chargé par tous les points d'entrée, la règle vaut partout.
+ini_set('display_errors', '0');
+ini_set('log_errors', '1');
+
 function config(): array
 {
     static $config = null;

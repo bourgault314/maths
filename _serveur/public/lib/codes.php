@@ -1,5 +1,7 @@
 <?php
-// Codes élèves : 6 caractères lisibles, sans O/0/I/1 ni caractères ambigus.
+// Codes élèves : 6 caractères en majuscules, sans O, 0, I ni 1 (les seuls
+// qu'on lit de travers en capitales). Le L est dans l'alphabet : en
+// majuscule il ne ressemble à rien d'autre. 32 caractères, 2^30 codes.
 
 declare(strict_types=1);
 
@@ -17,7 +19,7 @@ function code_valide(string $code): bool
 
 function normaliser_code(string $brut): string
 {
-    // L'alphabet exclut O, 0, I, 1 et L : ils ne peuvent pas apparaître dans un
+    // L'alphabet exclut O, 0, I et 1 : ils ne peuvent pas apparaître dans un
     // vrai code. On se contente donc de nettoyer la frappe (espaces, tirets).
     $code = strtoupper($brut);
     $code = preg_replace('/[^A-Z0-9]/', '', $code) ?? '';

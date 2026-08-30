@@ -20,7 +20,13 @@ return [
         'https://suivi.mathsgo.re',
     ],
 
-    // Mot de passe à usage unique de la page d'installation.
-    // Invente n'importe quelle suite de caractères, elle ne sert qu'une fois.
+    // Mot de passe des pages d'installation, de mise à niveau et de
+    // vérification (installer.php, migrer.php, verifier.php).
+    // Invente n'importe quelle suite de caractères.
     'jeton_installation' => 'à-remplacer',
+
+    // Facultatif : secret servant à hacher les compteurs de limitation
+    // (adresses IP et codes n'y sont jamais en clair). S'il manque,
+    // jeton_installation joue ce rôle.
+    // 'secret' => 'une-longue-suite-de-caractères-au-hasard',
 ];

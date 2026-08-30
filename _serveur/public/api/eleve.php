@@ -13,18 +13,24 @@ require __DIR__ . '/../lib/applis.php';
 cors();
 
 try {
-    // Le code arrive dans le corps (POST) pour ne pas s'inscrire dans les
-    // journaux de l'hébergeur ; ?code=… reste accepté pour le dépannage.
-    $methode = $_SERVER['REQUEST_METHOD'] ?? 'GET';
-    $corps = $methode === 'POST' ? corps_json(4000) : [];
-    $code = normaliser_code((string)($corps['code'] ?? $_GET['code'] ?? ''));
+    // Le code n'arrive QUE dans le corps d'un POST : une adresse s'inscrit en
+    // clair dans les journaux de l'hébergeur, un corps non.
+    if (($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'POST') {
+        erreur("Méthode non autorisée.", 405);
+    }
+    $corps = corps_json(4000);
+    $code = normaliser_code((string)($corps['code'] ?? ''));
     if (!code_valide($code)) {
         erreur("Code élève invalide.", 400);
     }
 
-    // Deux garde-fous : par code (usage normal) et par adresse (essais en série).
+    // Par adresse, on ne compte que les ÉCHECS : un collège entier sort par
+    // une seule adresse IP, et trente élèves qui entrent en même temps ne
+    // doivent pas être pris pour une attaque. Un curieux qui essaie des codes
+    // en série, lui, produit un échec par essai.
+    $adresse = adresse_appelante();
+    limiter_deja_atteint('echec-ip:' . $adresse, 60, 300);
     limiter('eleve:' . $code, 60, 300);
-    limiter('eleve-ip:' . adresse_appelante(), 60, 300);
 
     $requete = bd()->prepare(
         'SELECT e.prenom, c.libelle, c.applis
@@ -34,6 +40,7 @@ try {
     $requete->execute([$code]);
     $eleve = $requete->fetch();
     if ($eleve === false) {
+        limiter('echec-ip:' . $adresse, 60, 300);
         erreur("Code inconnu.", 404);
     }
 

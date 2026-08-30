@@ -111,8 +111,9 @@ sans risque.
 
 | Méthode | URL | Effet |
 |---|---|---|
-| GET | `/api/parcours.php?code=XXXXXX&appli=defi-tables` | lit la progression |
+| POST | `/api/parcours.php` `{code, appli, lire: true}` | lit la progression |
 | POST | `/api/parcours.php` `{code, appli, parcours}` | l'enregistre |
+| POST | `/api/eleve.php` `{code}` | prénom, classe et applis de l'élève (page d'accueil) |
 | POST | `/api/prof.php` `{action, …}` | `connexion`, `deconnexion`, `moi`, `profs.annuaire`, `profs.liste/ajouter` (administrateur), `classes.liste/creer/modifier/supprimer`, `partages.liste/ajouter/supprimer`, `eleves.ajouter/nommer/regenerer/supprimer`, `tableau` |
 
 ## Sécurité
@@ -121,8 +122,25 @@ sans risque.
 - Mot de passe prof haché (`password_hash`), jeton de session stocké haché,
   expiration 12 h, comparaison à temps constant à la connexion.
 - CORS limité à `https://mathsgo.re` et `https://suivi.mathsgo.re`.
-- Progression plafonnée à 40 ko ; 120 requêtes / 5 min par code ;
-  12 tentatives de connexion / 10 min par adresse IP.
+- **Le code élève et le jeton prof ne voyagent jamais dans une adresse** :
+  les API élève n'acceptent que POST (405 sinon), le jeton passe par
+  l'en-tête `Authorization` ou le corps. Une adresse s'inscrit en clair dans
+  les journaux de l'hébergeur, un corps non.
+- Progression plafonnée à 40 ko ; 300 requêtes / 5 min par code ;
+  12 tentatives de connexion / 10 min par adresse IP ; par adresse IP, seuls
+  les **échecs** (codes inconnus) sont comptés — 60 / 5 min — pour qu'un
+  collège entier derrière une seule adresse ne soit jamais freiné, et qu'une
+  énumération de codes le soit dès le 61ᵉ essai (y compris sur les bons codes,
+  sinon la réponse trahirait lesquels existent).
+- La table `compteurs` ne contient ni adresse IP ni code en clair (clés
+  hachées avec un secret : `secret` de `config.php`, sinon
+  `jeton_installation`), l'incrément tient en une instruction (UPSERT), et
+  les fenêtres fermées sont effacées à chaque appel : aucune adresse n'y
+  survit plus de cinq minutes.
+- `verifier.php` ne montre rien sans le `jeton_installation` ; aucune page
+  n'affiche d'erreur PHP (`display_errors` forcé à 0 dans `lib/bd.php`).
+- Le refus de connexion prend le même temps qu'un identifiant existe ou non
+  (hachage de remplacement bcrypt réel, coût 10, comme les comptes).
 - `installer.php` exige un jeton présent dans `config.php` et se
   verrouille dès qu'un compte prof existe.
 - Aucun message d'erreur technique n'est renvoyé au navigateur.
@@ -142,9 +160,22 @@ suppression de la classe, retrait du partage, création de compte réservée à
 l'administrateur), reprise d'une base de l'ancienne version, CORS, injection
 SQL, taille maximale, régénération de code, suppressions, limitation de débit,
 et l'API de la page d'accueil élève.
-**59 tests, 0 échec au 30/08/2026**, exécutés dans l'environnement de
-développement de Claude. PHP n'étant pas installé sur le poste de Gwenaël,
-ces tests ne peuvent pas être rejoués depuis Claude Code.
+Depuis l'audit du 30/08/2026 : GET refusé, jeton refusé dans l'adresse,
+70 appels valides d'une même adresse, énumération freinée au 61ᵉ code inconnu,
+20 requêtes simultanées sans erreur et compteur exact, purge des compteurs et
+clés hachées, temps de refus de connexion, messages identiques pour un élève
+inexistant ou d'un collègue, `verifier.php` muet sans mot de passe.
+
+**83 tests, 0 échec au 30/08/2026**, rejoués sur SQLite **et** sur MariaDB
+(le limiteur emploie une instruction différente sur chaque moteur) :
+
+```
+SUIVI_TEST_DSN='mysql:host=127.0.0.1;port=3306;dbname=suivi_test;charset=utf8mb4' \
+SUIVI_TEST_UTILISATEUR=… SUIVI_TEST_MOTDEPASSE=… php tests/lancer.php
+```
+
+(la base indiquée est vidée au démarrage). Il faut PHP sur le poste pour les
+rejouer ; sinon ils restent exécutés côté Claude.
 
 Après toute modification du schéma : `php outils/generer-sql.php`
 (et `--verifier` pour contrôler que le `.sql` est à jour).
