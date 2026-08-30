@@ -1297,7 +1297,7 @@
             <button class="primary" type="submit">OK</button>
             <button id="parcours-name-skip" class="secondary" type="button">Plus tard</button>
           </div>
-          <small id="parcours-name-note">Ton prénom reste sur cet appareil. Si ton professeur te donne un code, ta progression sera aussi enregistrée pour lui.</small>
+          <small id="parcours-name-note">Ton prénom reste sur cet appareil.</small>
         </form>
         <div id="parcours-confirm" class="parcours-confirm" hidden>
           <p id="parcours-confirm-text">Effacer tout ton parcours&nbsp;? Cette action ne peut pas être annulée.</p>
@@ -3021,7 +3021,11 @@
           sortie.className = "sortie";
           sortie.textContent = "Ce n’est pas moi";
           sortie.addEventListener("click", quitterSuivi);
-          suivi.append(document.createTextNode("·"), sortie);
+          // Le séparateur voyage AVEC le bouton : sur téléphone, le bandeau passe
+          // à la ligne, et un « · » resté seul en fin de ligne se lit « 405· ».
+          const bloc = document.createElement("span");
+          bloc.append(document.createTextNode("· "), sortie);
+          suivi.append(bloc);
         }
         $("parcours-fusion").hidden = !questionFusion;
         if (questionFusion) {
@@ -3035,9 +3039,12 @@
           $("parcours-fusion-non").textContent = questionFusion.confirme
             ? "Annuler" : "Non, c’est celui de quelqu’un d’autre";
         }
+        // Sans code, il n'y a rien d'autre à dire — et rien à annoncer d'un suivi
+        // qui n'existe pas pour ce visiteur. Avec un code, la phrase doit dire
+        // exactement ce qui se passe.
         $("parcours-name-note").textContent = suiviActif()
           ? "Ton prénom reste sur cet appareil. Ta progression, elle, est enregistrée pour ton professeur."
-          : "Ton prénom reste sur cet appareil. Si ton professeur te donne un code, ta progression sera aussi enregistrée pour lui.";
+          : "Ton prénom reste sur cet appareil.";
 
         const next = $("parcours-next");
         next.replaceChildren();

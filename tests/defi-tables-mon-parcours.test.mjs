@@ -459,7 +459,7 @@ test("la page charge le moteur du parcours et propose la carte Mon parcours", ()
 
 test("prénom local, remise à zéro confirmée dans la page, résultat relié au parcours", () => {
   assert.match(html, /id="parcours-name-input"[^>]*maxlength="20"/);
-  assert.match(html, /Ton prénom reste sur cet appareil\. Si ton professeur te donne un code/);
+  assert.match(html, /Ton prénom reste sur cet appareil\./);
   assert.match(html, /id="parcours-reset"[\s\S]*Recommencer à zéro/);
   assert.match(html, /id="parcours-confirm-yes"[\s\S]*Effacer/);
   assert.doesNotMatch(html, /window\.confirm\(/);
@@ -538,6 +538,11 @@ test("l’appli est branchée au suivi de classe sans jamais bloquer", () => {
   assert.doesNotMatch(html, /id="parcours-code-aide"/);
   assert.doesNotMatch(html, /Utiliser mon code de classe/);
   assert.doesNotMatch(html, /Changer mon code de classe/);
+  // Même en creux : sans code, l'appli n'annonce pas un suivi qui n'existe pas
+  // pour ce visiteur. La phrase complète revient dès qu'un code est actif.
+  assert.doesNotMatch(html, /Si ton professeur te donne un code/);
+  assert.match(html, /Ta progression, elle, est enregistrée pour ton professeur\./,
+    "la phrase vraie pour un élève suivi doit rester");
   assert.match(html, /id="parcours-suivi"/, "le repère de suivi est permanent");
   assert.match(html, /id="parcours-fusion"/, "la question posée sur un appareil partagé");
 
@@ -906,6 +911,23 @@ test("« Ce n’est pas moi » détache l’appareil sans effacer le travail", (
 test("la sortie est posée sur le repère de suivi, pas dans un menu", () => {
   assert.match(html, /sortie\.textContent = "Ce n’est pas moi";/);
   assert.match(html, /sortie\.addEventListener\("click", quitterSuivi\);/);
-  assert.match(html, /suivi\.append\(document\.createTextNode\("·"\), sortie\);/,
-    "la sortie doit être ajoutée au bandeau lui-même");
+  assert.match(html, /bloc\.append\(document\.createTextNode\("· "\), sortie\);/,
+    "le séparateur doit revenir à la ligne avec le bouton, pas rester seul en fin de ligne");
+  assert.match(html, /suivi\.append\(bloc\);/, "la sortie doit être ajoutée au bandeau lui-même");
+});
+
+// Le dépôt a déjà payé une accolade orpheline dans un <style> : le texte était
+// bien dans le fichier, et le navigateur ignorait tout le bloc. Un test compte
+// désormais les accolades du CSS. Voici l'équivalent pour le JavaScript, qui
+// pèse 100 000 caractères dans un seul bloc en ligne : une erreur de syntaxe y
+// casserait TOUTE l'appli, et aucun assert.match ne la verrait — le texte
+// fautif serait bien présent dans le fichier. On demande donc au moteur
+// JavaScript de l'analyser pour de bon.
+test("le script en ligne de la page s’analyse sans erreur de syntaxe", () => {
+  const blocs = [...html.matchAll(/<script(?![^>]*\bsrc=)[^>]*>([\s\S]*?)<\/script>/g)];
+  assert.ok(blocs.length >= 1, "la page doit contenir au moins un script en ligne");
+  blocs.forEach((bloc, index) => {
+    assert.doesNotThrow(() => new Function(bloc[1]),
+      `le bloc <script> n°${index + 1} de la page ne s’analyse pas`);
+  });
 });
