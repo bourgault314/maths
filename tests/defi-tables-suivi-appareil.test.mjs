@@ -9,135 +9,9 @@
 
 import test from "node:test";
 import assert from "node:assert/strict";
-import {readFile} from "node:fs/promises";
-import {createRequire} from "node:module";
+import {PARCOURS, html, SOURCE_AIGUILLAGE, SOURCE_BOOTSTRAP, fauxStockage, fauxReseau, demarrerAppli,
+  parcoursAvecTravail, tic, CLE} from "./defi-tables-faux-monde.mjs";
 
-const require = createRequire(import.meta.url);
-const PARCOURS = require("../outils/calcul_mental/defi_tables_mon_parcours.js");
-const html = await readFile(new URL("../outils/calcul_mental/defi_tables.html", import.meta.url), "utf8");
-
-// ------------------------------------------------------------ les morceaux de page
-
-function entre(debut, fin) {
-  const a = html.indexOf(debut);
-  const b = html.indexOf(fin, a);
-  assert.ok(a > 0 && b > a, `les repères « ${debut} » et « ${fin} » doivent exister dans la page`);
-  return html.slice(a + debut.length, b);
-}
-
-const SOURCE_SUIVI = entre("// [suivi:debut]", "// [suivi:fin]");
-const SOURCE_AIGUILLAGE = entre("// [aiguillage:debut]", "// [aiguillage:fin]");
-const blocsEnLigne = [...html.matchAll(/<script(?![^>]*\bsrc=)[^>]*>([\s\S]*?)<\/script>/g)].map(b => b[1]);
-const SOURCE_BOOTSTRAP = blocsEnLigne[0];
-assert.ok(SOURCE_BOOTSTRAP.includes("MATHSGO_ENTREE"), "le premier script en ligne doit être le bootstrap du <head>");
-
-// ---------------------------------------------------------------- faux monde
-
-function fauxStockage(initial = {}) {
-  const m = new Map(Object.entries(initial));
-  return {
-    getItem: k => (m.has(k) ? m.get(k) : null),
-    setItem: (k, v) => { m.set(k, String(v)); },
-    removeItem: k => { m.delete(k); },
-    cles: () => [...m.keys()],
-    brut: k => m.get(k)
-  };
-}
-
-function fauxElement(id) {
-  const el = {
-    id, hidden: false, textContent: "", href: "", enfants: [], classes: new Set(), attributs: {}, ecouteurs: {},
-    append(...noeuds) { noeuds.forEach(n => el.enfants.push(n)); },
-    replaceChildren(...noeuds) { el.enfants = [...noeuds]; },
-    setAttribute(n, v) { el.attributs[n] = v; },
-    addEventListener(t, f) { el.ecouteurs[t] = f; },
-    querySelector() { return fauxElement("sous"); },
-    classList: {
-      toggle(c, on) { on ? el.classes.add(c) : el.classes.delete(c); },
-      add(c) { el.classes.add(c); },
-      contains(c) { return el.classes.has(c); }
-    },
-    get texte() {
-      const lire = n => typeof n === "string" ? n : (n.enfants && n.enfants.length ? n.texte : (n.textContent || ""));
-      return el.enfants.map(lire).join("");
-    }
-  };
-  return el;
-}
-
-function fauxDocument() {
-  const elements = new Map();
-  const doc = {
-    getElementById: id => { if (!elements.has(id)) elements.set(id, fauxElement(id)); return elements.get(id); },
-    querySelector: sel => doc.getElementById(sel),
-    createElement: tag => fauxElement(tag),
-    createTextNode: t => t
-  };
-  return doc;
-}
-
-// Un faux serveur : répond selon le chemin, enregistre chaque appel avec le
-// code qu'il portait. `mode` : "ok", "muet" (ne répond jamais), "coupe"
-// (le réseau échoue), "lent" (répond après `delai` ms).
-function fauxReseau({mode = "ok", delai = 0, progression = null, existe = false, identite = {prenom: "Léa", classe: "405"}} = {}) {
-  const appels = [];
-  const reponse = (statut, donnees) => ({status: statut, json: async () => donnees});
-  const fetch = (url, options) => {
-    const corps = options && options.body ? JSON.parse(String(options.body)) : {};
-    appels.push({url, code: corps.code, lire: Boolean(corps.lire), parcours: corps.parcours || null});
-    if (mode === "muet") return new Promise(() => {});
-    if (mode === "coupe") return Promise.reject(new TypeError("Failed to fetch"));
-    let r;
-    if (url.endsWith("/api/eleve.php")) r = reponse(200, {ok: true, ...identite});
-    else if (corps.lire) r = reponse(200, {ok: true, existe, parcours: existe ? progression : null, maj_le: null});
-    else r = reponse(200, {ok: true, maj_le: "2026-08-30"});
-    return mode === "lent" ? new Promise(res => setTimeout(() => res(r), delai)) : Promise.resolve(r);
-  };
-  return {fetch, appels, sousLeCode: code => appels.filter(a => a.code === code)};
-}
-
-const tic = (ms = 5) => new Promise(r => setTimeout(r, ms));
-
-// Exécute le bloc « suivi de classe » de la page dans ce faux monde.
-function demarrerAppli({entree = {}, local, session, reseau, running = false} = {}) {
-  local = local || fauxStockage();
-  session = session || fauxStockage();
-  reseau = reseau || fauxReseau();
-  const rendus = [];
-  const document = fauxDocument();
-  const balises = [];
-  const window = {
-    MATHSGO_ENTREE: {code: "", fiche: "", ouvrir: "", ...entree},
-    location: {hash: "", pathname: "/outils/calcul_mental/defi_tables.html", search: "", assign(url) { window.allees.push(url); }},
-    allees: [],
-    setTimeout: (fn) => { fn(); return 1; },
-    clearTimeout: () => {}
-  };
-  const navigator = {sendBeacon(url, blob) { balises.push({url, blob}); return true; }};
-  const state = {parcoursOptionsOpen: false, nameSkipped: false, running};
-  const api = new Function("window", "document", "navigator", "fetch", "PARCOURS", "storage", "stockageSession",
-    "state", "renderParcours", `${SOURCE_SUIVI}
-    return {
-      get codeSuivi() { return codeSuivi; }, get parcours() { return parcours; },
-      get suiviHorsLigne() { return suiviHorsLigne; }, get questionFusion() { return questionFusion; },
-      get suiviIdentite() { return suiviIdentite; },
-      ENTREE, suiviActif, demarrerSuivi, quitterSuivi, sauverParcours, envoyerAvantDeFermer,
-      reprendreLeTravailSansCode, renderRepere, majLienRetour
-    };`)(window, document, navigator, reseau.fetch, PARCOURS, () => local, () => session, state,
-    () => rendus.push("parcours"));
-  return {api, local, session, reseau, window, document, state, rendus, balises,
-    repere: () => document.getElementById("suivi-repere")};
-}
-
-function parcoursAvecTravail(prenom, table) {
-  let p = PARCOURS.creerParcours();
-  p = PARCOURS.definirPrenom(p, prenom);
-  p.tables[table].apprends.construct = 2;
-  p.tables[table].acquise = "2026-08-29";
-  return PARCOURS.normaliserParcours(p);
-}
-
-const CLE = PARCOURS.CLE_STOCKAGE;
 const A = "AXKQ7T", B = "BZ4MHP";
 
 // ----------------------------------------------------------- les cases par code
@@ -241,7 +115,7 @@ test("du travail fait sans code sur l’appareil : la question est posée, avec 
   const appli = demarrerAppli({entree: {code: B}, local});
   appli.api.demarrerSuivi();
   await tic();
-  assert.deepEqual(appli.api.questionFusion, {prenom: "Léa"});
+  assert.deepEqual(appli.api.questionFusion, {prenom: "Léa", source: ""});
   assert.equal(PARCOURS.estVide(appli.api.parcours), true, "en attendant la réponse, Bob est sur sa case, vide");
 });
 

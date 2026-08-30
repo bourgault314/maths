@@ -65,6 +65,14 @@ register_shutdown_function(function () use ($serveur, $travail) {
         if ($etat['running']) exec('kill -9 ' . $etat['pid'] . ' 2>/dev/null');
         proc_close($serveur);
     }
+    // En cas d'échec, le journal du serveur de test est gardé : c'est lui qui
+    // dit pourquoi une requête a répondu 500.
+    global $echecs;
+    if (!empty($echecs)) {
+        $journal = sys_get_temp_dir() . '/suivi-test-serveur.log';
+        @copy($travail . '/serveur.log', $journal);
+        echo "Journal du serveur de test : $journal\n";
+    }
     exec('rm -rf ' . escapeshellarg($travail));
 });
 
@@ -352,7 +360,9 @@ verifier("saisie du prénom et de l'initiale", function () use (&$codes, &$jeton
 
 // ---------------------------------------------------------------- côté élève
 
-$parcours = ['version' => 1, 'prenom' => 'Léa', 'tables' => ['7' => ['acquise' => '2026-08-29']]];
+// Le paquet tel que l'appli l'envoie : sans prénom (il reste sur l'appareil),
+// et le serveur le retirerait de toute façon (voir plus bas, lot A2).
+$parcours = ['version' => 1, 'tables' => ['7' => ['acquise' => '2026-08-29']]];
 
 verifier("code inconnu refusé", function () {
     $r = lire('ZZZZZZ');
@@ -1018,6 +1028,165 @@ verifier("aucune erreur PHP n'est affichée : un corps de requête absurde répo
     egal(400, $r['code'], 'code HTTP');
     vrai(is_array($r['json']) && $r['json']['ok'] === false, 'réponse JSON');
     vrai(!str_contains($r['texte'], 'Warning') && !str_contains($r['texte'], 'Fatal'), 'aucun avertissement PHP dans la réponse');
+});
+
+// ------------------------------------------- audit du 30/08/2026 — lot A2
+//
+// Révisions et conflits (409), version précédente restaurable, contenu accepté
+// (aucun texte libre à aucune profondeur), parcours de référence de l'appli.
+
+function ecrire(string $code, array $parcours, ?int $base = null, ?string $appli = null): array
+{
+    $corps = ['code' => $code, 'parcours' => $parcours];
+    if ($base !== null) $corps['base_revision'] = $base;
+    if ($appli !== null) $corps['appli'] = $appli;
+    return appel('/api/parcours.php', $corps);
+}
+
+function ecrire_brut(string $code, string $parcoursJson, ?int $base = null): array
+{
+    $corps = '{"code":' . json_encode($code) . ($base !== null ? ',"base_revision":' . $base : '') . ',"parcours":' . $parcoursJson . '}';
+    return appel('/api/parcours.php', $corps);
+}
+
+$codesA2 = [];
+verifier("préparation : une classe et trois élèves pour les révisions", function () use (&$jetonS1, &$codesA2) {
+    vider_compteurs();
+    $classe = appel('/api/prof.php', ['action' => 'classes.creer', 'libelle' => 'test-revisions'], ['jeton' => $jetonS1])['json']['id'];
+    $eleves = appel('/api/prof.php', ['action' => 'eleves.ajouter', 'classe_id' => $classe, 'nombre' => 3], ['jeton' => $jetonS1])['json']['eleves'];
+    foreach ($eleves as $e) $codesA2[] = ['id' => $e['id'], 'code' => $e['code'], 'classe' => $classe];
+    egal(3, count($codesA2));
+});
+
+verifier("la lecture renvoie la révision : 0 sans progression, 1 après la première écriture", function () use (&$codesA2) {
+    $r = lire($codesA2[0]['code']);
+    egal(false, $r['json']['existe']);
+    egal(0, $r['json']['revision'], 'sans progression');
+    $r = ecrire($codesA2[0]['code'], ['version' => 1, 'epoque' => 0, 'tables' => ['2' => ['acquise' => '2026-09-01']]], 0);
+    egal(200, $r['code'], 'première écriture');
+    egal(1, $r['json']['revision'], 'révision 1');
+    $r = lire($codesA2[0]['code']);
+    egal(1, $r['json']['revision'], 'relue');
+    egal('2026-09-01', $r['json']['parcours']['tables']['2']['acquise']);
+});
+
+verifier("écrire avec la bonne révision passe, avec une révision périmée répond 409 et l’état actuel", function () use (&$codesA2) {
+    $code = $codesA2[0]['code'];
+    $r = ecrire($code, ['version' => 1, 'tables' => ['2' => ['acquise' => '2026-09-01'], '5' => ['acquise' => '2026-09-02']]], 1);
+    egal(200, $r['code']);
+    egal(2, $r['json']['revision']);
+    // Un autre appareil, parti de la révision 1, envoie sa copie.
+    $r = ecrire($code, ['version' => 1, 'tables' => ['2' => ['acquise' => '2026-09-01'], '7' => ['acquise' => '2026-09-03']]], 1);
+    egal(409, $r['code'], 'conflit');
+    egal(true, $r['json']['conflit']);
+    egal(2, $r['json']['revision'], 'la révision en base');
+    egal('2026-09-02', $r['json']['parcours']['tables']['5']['acquise'], "l'état actuel, pour fusionner");
+    $r = lire($code);
+    vrai(!isset($r['json']['parcours']['tables']['7']), "rien n'a été écrasé");
+    // Il fusionne et renvoie avec la bonne révision.
+    $r = ecrire($code, ['version' => 1, 'tables' => ['2' => ['acquise' => '2026-09-01'], '5' => ['acquise' => '2026-09-02'], '7' => ['acquise' => '2026-09-03']]], 2);
+    egal(200, $r['code']);
+    egal(3, $r['json']['revision']);
+});
+
+verifier("sans base_revision (client d’avant), l’écriture est acceptée et la révision monte quand même", function () use (&$codesA2) {
+    $r = ecrire($codesA2[0]['code'], ['version' => 1, 'tables' => ['2' => ['acquise' => '2026-09-01']]]);
+    egal(200, $r['code']);
+    egal(4, $r['json']['revision']);
+    egal(400, ecrire($codesA2[0]['code'], ['version' => 1], -3)['code'], 'une révision négative est refusée');
+});
+
+verifier("vingt premières créations simultanées : une seule passe, les autres reçoivent 409, aucune 500", function () use (&$codesA2) {
+    vider_compteurs();
+    $statuts = appels_paralleles('/api/parcours.php', ['code' => $codesA2[1]['code'], 'base_revision' => 0,
+        'parcours' => ['version' => 1, 'tables' => ['3' => ['acquise' => '2026-09-01']]]], 20);
+    $comptes = array_count_values($statuts);
+    egal(1, $comptes[200] ?? 0, 'une seule création');
+    egal(19, $comptes[409] ?? 0, 'les autres en conflit (statuts : ' . json_encode($comptes) . ')');
+    egal(0, $comptes[500] ?? 0, 'aucune erreur serveur');
+    egal(1, lire($codesA2[1]['code'])['json']['revision'], 'révision 1, pas 20');
+});
+
+verifier("le serveur ne garde ni prénom, ni texte libre, ni clé inconnue, à aucune profondeur", function () use (&$codesA2) {
+    $code = $codesA2[2]['code'];
+    $r = ecrire_brut($code, '{"version":1,"prenom":"Léa Dupont","commentaire":"n\'importe quoi","tables":{"7":{"prenom":"Alice","acquise":"2026-09-01","commentaire":"x","apprends":{"construct":2,"information":"médicale"}},"11":{"acquise":"2026-09-01"}},"expert":{"niveau":2,"dernier":"' . str_repeat('x', 300) . '"},"calculs":{"3-7":{"cases":2,"vu":"' . str_repeat('y', 300) . '","gagne":"2026-09-01"}},"melange":{"tables":[2,"abc",5],"aJour":true}}', 0);
+    egal(200, $r['code']);
+    $lu = lire($code)['json']['parcours'];
+    egal(['version', 'tables', 'expert', 'calculs', 'melange'], array_keys($lu), 'clés de premier niveau');
+    vrai(!isset($lu['tables']['7']['prenom']) && !isset($lu['tables']['7']['commentaire']), 'rien de libre dans une table');
+    vrai(!isset($lu['tables']['7']['apprends']['information']), 'ni plus profond');
+    vrai(!isset($lu['tables']['11']), "une clé de table hors 2–10 n'est pas gardée");
+    egal(['niveau' => 2], $lu['expert'], "un texte à la place d'une date saute");
+    egal(['cases' => 2, 'gagne' => '2026-09-01'], $lu['calculs']['3-7']);
+    egal([2, 5], $lu['melange']['tables'], "une liste ne garde que ses nombres");
+    $texte = lire($code)['texte'];
+    vrai(!str_contains($texte, 'Dupont') && !str_contains($texte, 'médicale') && !str_contains($texte, 'xxxx'), 'aucun texte libre ne ressort');
+    // Un objet vide reste un objet vide : l'appli relit ce qu'elle a envoyé.
+    ecrire_brut($code, '{"version":1,"calculs":{},"melange":{"tables":[]}}', 1);
+    vrai(str_contains(lire($code)['texte'], '"calculs":{}'), '{} reste {}');
+    vrai(str_contains(lire($code)['texte'], '"tables":[]'), '[] reste []');
+});
+
+verifier("le parcours de référence généré par l’appli ressort identique du filtre du serveur", function () {
+    require_once dirname(__DIR__) . '/public/lib/applis.php';
+    require_once dirname(__DIR__) . '/public/lib/progression.php';
+    $chemin = __DIR__ . '/parcours-reference.json';
+    vrai(is_file($chemin), "tests/parcours-reference.json manque : node scripts/generer-parcours-reference.mjs");
+    $reference = json_decode((string)file_get_contents($chemin), false);
+    vrai(is_object($reference), 'référence lisible');
+    // Le prénom reste sur l'appareil : le paquet l'envoie vide, le serveur le retire.
+    unset($reference->prenom);
+    $attendu = json_encode($reference, JSON_UNESCAPED_UNICODE);
+    $obtenu = json_encode(filtrer_progression('defi-tables', json_decode((string)file_get_contents($chemin), false)), JSON_UNESCAPED_UNICODE);
+    egal($attendu, $obtenu, "le filtre du serveur jette un champ que l'appli produit : compléter 'cles'/'mots' dans lib/applis.php");
+    vrai(strlen($attendu) > 3000, 'la référence est bien un parcours complet');
+    egal('{}', json_encode(filtrer_progression('automatismes', $reference)), "une appli sans schéma déclaré n'enregistre rien");
+});
+
+verifier("restaurer la version précédente depuis Ma classe", function () use (&$jetonS1, &$jetonClaire, &$codesA2) {
+    $eleve = $codesA2[0];
+    $classe = $eleve['classe'];
+    $lu = appel('/api/prof.php', ['action' => 'tableau', 'classe_id' => $classe], ['jeton' => $jetonS1])['json']['eleves'];
+    $ligne = null;
+    foreach ($lu as $l) if ($l['id'] === $eleve['id']) $ligne = $l;
+    egal(true, $ligne['restaurable'], "après plusieurs écritures, une version précédente existe");
+    $avant = lire($eleve['code'])['json'];
+    $r = appel('/api/prof.php', ['action' => 'eleves.restaurer', 'eleve_id' => $eleve['id']], ['jeton' => $jetonS1]);
+    egal(200, $r['code'], 'restauration');
+    egal($avant['revision'] + 1, $r['json']['revision'], 'la révision monte : l’appli fusionnera');
+    $apres = lire($eleve['code'])['json'];
+    egal('2026-09-03', $apres['parcours']['tables']['7']['acquise'] ?? null, 'la version précédente (celle avec la table de 7) est revenue');
+    // Refaire l'inverse est possible : la version actuelle est devenue la précédente.
+    $r = appel('/api/prof.php', ['action' => 'eleves.restaurer', 'eleve_id' => $eleve['id']], ['jeton' => $jetonS1]);
+    egal(200, $r['code']);
+    vrai(!isset(lire($eleve['code'])['json']['parcours']['tables']['7']), 'retour à la version d’avant');
+    // Un élève sans version précédente : refus propre.
+    $r = appel('/api/prof.php', ['action' => 'eleves.restaurer', 'eleve_id' => $codesA2[1]['id']], ['jeton' => $jetonS1]);
+    egal(409, $r['code'], 'rien à restaurer');
+    // Un collègue sans partage : introuvable ; en lecture seule : refusé.
+    egal(404, appel('/api/prof.php', ['action' => 'eleves.restaurer', 'eleve_id' => $eleve['id']], ['jeton' => $jetonClaire])['code'], 'collègue sans partage');
+    $claire = null;
+    foreach (appel('/api/prof.php', ['action' => 'profs.annuaire'], ['jeton' => $jetonS1])['json']['profs'] as $p) if ($p['identifiant'] === 'claire') $claire = $p['id'];
+    appel('/api/prof.php', ['action' => 'partages.ajouter', 'classe_id' => $classe, 'prof_id' => $claire, 'droit' => 'lecture'], ['jeton' => $jetonS1]);
+    egal(403, appel('/api/prof.php', ['action' => 'eleves.restaurer', 'eleve_id' => $eleve['id']], ['jeton' => $jetonClaire])['code'], 'partage en lecture');
+});
+
+verifier("la mise à niveau ajoute révision, version précédente et les colonnes réservées au lot S2", function () use ($travail) {
+    require_once dirname(__DIR__) . '/public/lib/bd.php';
+    $ancienne = $travail . '/ancienne-a2.sqlite';
+    $vieux = new PDO('sqlite:' . $ancienne, null, null, [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
+    // Une base d'après le cloisonnement mais d'avant le lot A2.
+    $vieux->exec('CREATE TABLE progressions (id INTEGER PRIMARY KEY AUTOINCREMENT, eleve_id INTEGER NOT NULL, appli TEXT NOT NULL, donnees TEXT NOT NULL, maj_le TEXT NOT NULL)');
+    $vieux->exec('CREATE TABLE profs (id INTEGER PRIMARY KEY AUTOINCREMENT, identifiant TEXT NOT NULL, mdp_hash TEXT NOT NULL, admin INTEGER NOT NULL DEFAULT 0, cree_le TEXT NOT NULL)');
+    $vieux->exec("INSERT INTO progressions (eleve_id, appli, donnees, maj_le) VALUES (1, 'defi-tables', '{\"version\":1}', '2026-08-30')");
+    $faits = migrer_schema($vieux);
+    vrai(count($faits) >= 4, 'la migration annonce les colonnes ajoutées');
+    foreach ([['progressions', 'revision'], ['progressions', 'donnees_avant'], ['profs', 'actif'], ['profs', 'mdp_temporaire']] as [$table, $colonne]) {
+        egal(true, colonne_existe($vieux, $table, $colonne), "$table.$colonne");
+    }
+    egal(0, (int)$vieux->query('SELECT revision FROM progressions')->fetchColumn(), 'les lignes existantes partent en révision 0');
+    egal('{"version":1}', (string)$vieux->query('SELECT donnees FROM progressions')->fetchColumn(), 'sans toucher aux données');
+    egal([], migrer_schema($vieux), 'relancer ne fait plus rien');
 });
 
 // ---------------------------------------------------------------------- résultat

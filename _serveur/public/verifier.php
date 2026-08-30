@@ -102,6 +102,19 @@ if ($autorise) {
         }
         return "propriétaire, partages et administrateur en place";
     });
+    // Mise à niveau du lot A2 (30/08/2026) : révision et version précédente des
+    // progressions, et les colonnes réservées au lot S2.
+    verif($lignes, "Synchronisation (révisions)", function () {
+        $pdo = bd();
+        $manquants = [];
+        foreach ([['progressions', 'revision'], ['progressions', 'donnees_avant'], ['profs', 'actif'], ['profs', 'mdp_temporaire']] as [$table, $colonne]) {
+            if (!colonne_existe($pdo, $table, $colonne)) $manquants[] = "$table.$colonne";
+        }
+        if ($manquants !== []) {
+            throw new RuntimeException("manque " . implode(', ', $manquants) . " — relance migrer.php avec ton mot de passe d'installation.");
+        }
+        return "révision et version précédente en place";
+    });
     // Le limiteur d'essais s'écrit avec une instruction propre à chaque moteur
     // (MySQL chez OVH, SQLite dans les tests) : on la joue ici, sur la vraie
     // base, pour voir qu'elle passe. Deux passages doivent compter 2.

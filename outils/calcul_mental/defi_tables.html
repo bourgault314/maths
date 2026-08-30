@@ -125,6 +125,8 @@
     .suivi-repere .puce { width: 9px; height: 9px; border-radius: 50%; background: #08aaa5; flex: 0 0 auto; }
     .suivi-repere.hors-ligne { background: #fdf0e3; color: #8a4c0a; }
     .suivi-repere.hors-ligne .puce { background: #d9822b; }
+    .suivi-repere.detache { background: #eceff3; color: #3d4a5a; }
+    .suivi-repere.detache .puce { display: none; }
     /* La sortie vit sur le repère lui-même : ce qui dit « tu es Léa » doit
        permettre de dire « ce n'est pas moi ». Un menu que personne n'ouvre ne
        remplace pas une porte. */
@@ -1513,7 +1515,7 @@
   </footer>
 
   <script src="./defi_tables_core.js?v=20260830-9"></script>
-  <script src="./defi_tables_mon_parcours.js?v=20260830-10"></script>
+  <script src="./defi_tables_mon_parcours.js?v=20260830-11"></script>
   <script>
     (() => {
       "use strict";
@@ -1582,10 +1584,24 @@
       PARCOURS.migrerStockage(storage());
       let codeSuivi = codeInitial(ENTREE);
       let parcours = PARCOURS.charger(storage(), codeSuivi);
+      // L'état de synchronisation de la case active : dernière révision connue
+      // du serveur, travail en attente d'envoi (dirty), code refusé (détaché).
+      // Il survit à la fermeture de la page : ce qui n'est pas parti partira.
+      let sync = PARCOURS.chargerSync(storage(), codeSuivi);
       let suiviIdentite = null;
       let suiviHorsLigne = false;
       let questionFusion = null;
       let envoiEnAttente = null;
+      let envoiEnVol = false;
+      let renvoiDemande = false;
+      let relance = null;
+      let echecsSuccessifs = 0;
+      let fusionsSuccessives = 0;
+      let erreurDefinitive = false;
+
+      function sauverSync() {
+        PARCOURS.sauverSync(storage(), codeSuivi, sync);
+      }
 
       function suiviActif() { return Boolean(codeSuivi); }
 
@@ -1635,7 +1651,14 @@
             const reponse = await fetch(SUIVI_URL + chemin, Object.assign(
               {cache: "no-store"}, controle ? {signal: controle.signal} : {}, options || {}));
             const donnees = await reponse.json().catch(() => null);
-            return {statut: reponse.status, donnees};
+            // « Retry-After » : quand le serveur dit dans combien de temps
+            // réessayer (429), on le respecte.
+            let reessai = null;
+            try {
+              const valeur = reponse.headers && reponse.headers.get ? reponse.headers.get("Retry-After") : null;
+              if (valeur && /^\d+$/.test(valeur)) reessai = parseInt(valeur, 10);
+            } catch (_) {}
+            return {statut: reponse.status, donnees, reessai};
           } finally {
             if (minuteur !== null) window.clearTimeout(minuteur);
           }
@@ -1672,38 +1695,129 @@
       // classe ». On le retire donc du paquet envoyé. Sans cela, un élève qui
       // écrit son nom complet, ou n'importe quoi d'autre, le verrait enregistré
       // sur le serveur, hors de tout ce qui a été déclaré.
-      function paquetParcours(code, source) {
+      // base_revision : la révision que cet appareil a lue en dernier. Le serveur
+      // refuse (409) d'écrire par-dessus un état qu'on n'a pas vu, et renvoie
+      // cet état : on fusionne, on renvoie. Plus jamais « le dernier paquet
+      // arrivé écrase l'autre ».
+      function paquetParcours(code, source, baseRevision) {
         const sansPrenom = Object.assign({}, source, {prenom: ""});
-        return JSON.stringify({code, appli: "defi-tables", parcours: sansPrenom});
+        const paquet = {code, appli: "defi-tables", parcours: sansPrenom};
+        if (Number.isInteger(baseRevision)) paquet.base_revision = baseRevision;
+        return JSON.stringify(paquet);
       }
 
+      function envoiPossible() {
+        return suiviActif() && !sync.detache && !erreurDefinitive;
+      }
+
+      // Envoi groupé : les réponses d'une série arrivent toutes les secondes, on
+      // n'envoie qu'une fois par 700 ms, et jamais deux envois en même temps.
       function envoyerParcours() {
-        if (!suiviActif()) return;
+        if (!envoiPossible()) return;
         if (envoiEnAttente !== null) window.clearTimeout(envoiEnAttente);
-        const paquet = paquetParcours(codeSuivi, parcours);
         envoiEnAttente = window.setTimeout(() => {
           envoiEnAttente = null;
-          appelSuivi("/api/parcours.php", {
-            method: "POST",
-            headers: {"Content-Type": "text/plain;charset=UTF-8"},
-            body: paquet
-          }).then(reponse => {
-            const passe = reponse.statut === 200;
-            if (passe === suiviHorsLigne) {
-              suiviHorsLigne = !passe;
-              renderRepere();
-            }
-          });
+          envoyerMaintenant();
         }, 700);
       }
 
+      function envoyerMaintenant() {
+        if (!envoiPossible()) return;
+        if (envoiEnVol) { renvoiDemande = true; return; }
+        envoiEnVol = true;
+        renvoiDemande = false;
+        const code = codeSuivi;
+        const base = sync.revision;
+        appelSuivi("/api/parcours.php", {
+          method: "POST",
+          headers: {"Content-Type": "text/plain;charset=UTF-8"},
+          body: paquetParcours(code, parcours, base)
+        }).then(reponse => {
+          envoiEnVol = false;
+          if (code !== codeSuivi) return;
+          traiterReponseEnvoi(reponse, base);
+        });
+      }
+
+      function planifierRelance(delai) {
+        if (relance !== null) window.clearTimeout(relance);
+        relance = window.setTimeout(() => {
+          relance = null;
+          if (sync.dirty) envoyerMaintenant();
+        }, delai);
+      }
+
+      // Chaque réponse du serveur a un sens précis, et un seul :
+      //  200  parti — on note la révision ; s'il y a eu du nouveau pendant le
+      //       vol, ça repart aussitôt ;
+      //  409  l'état a bougé ailleurs — on fusionne avec ce que le serveur
+      //       renvoie, on reprend sa révision, on renvoie ;
+      //  404  le code ne vaut plus rien (régénéré, élève supprimé) — on se
+      //       détache, on le dit, on garde tout ici ;
+      //  400/413  refusé pour de bon — pas de relance, le même contenu resterait
+      //       refusé (l'appli officielle ne peut pas le produire) ;
+      //  429  trop de demandes — on attend ce que le serveur demande ;
+      //  5xx/0  panne ou coupure — on garde tout ici, relances à 2 s, 10 s,
+      //       60 s, puis au retour du réseau et au prochain démarrage.
+      function traiterReponseEnvoi(reponse, base) {
+        const donnees = reponse.donnees;
+        if (reponse.statut === 200 && donnees && donnees.ok) {
+          sync.revision = Number.isInteger(donnees.revision) ? donnees.revision : base + 1;
+          sync.dirty = renvoiDemande;
+          echecsSuccessifs = 0;
+          fusionsSuccessives = 0;
+          suiviHorsLigne = false;
+          sauverSync();
+          renderRepere();
+          // Le prénom et la classe n'avaient pas pu être lus (réseau absent au
+          // démarrage) : maintenant que le serveur répond, on les demande.
+          if (suiviIdentite === null) chargerIdentite(codeSuivi);
+          if (renvoiDemande) envoyerMaintenant();
+          return;
+        }
+        if (reponse.statut === 409 && donnees && donnees.parcours !== undefined) {
+          parcours = PARCOURS.fusionner(parcours, PARCOURS.normaliserParcours(donnees.parcours));
+          sync.revision = Number.isInteger(donnees.revision) ? donnees.revision : base;
+          sync.dirty = true;
+          PARCOURS.sauver(storage(), parcours, codeSuivi);
+          sauverSync();
+          if (!state.running) renderParcours();
+          fusionsSuccessives++;
+          if (fusionsSuccessives <= 2) envoyerMaintenant();
+          else planifierRelance(10000);
+          return;
+        }
+        if (reponse.statut === 404) {
+          detacher();
+          return;
+        }
+        if (reponse.statut === 400 || reponse.statut === 413) {
+          erreurDefinitive = true;
+          suiviHorsLigne = true;
+          renderRepere();
+          try { console.warn("Défi tables : envoi refusé par le serveur (" + reponse.statut + ")", donnees); } catch (_) {}
+          return;
+        }
+        suiviHorsLigne = true;
+        renderRepere();
+        if (reponse.statut === 429) {
+          planifierRelance((reponse.reessai || 60) * 1000);
+          return;
+        }
+        const paliers = [2000, 10000, 60000];
+        if (echecsSuccessifs < paliers.length) planifierRelance(paliers[echecsSuccessifs]);
+        echecsSuccessifs++;
+      }
+
       // Au moment où la page se ferme, on n'a plus le temps d'attendre : le
-      // navigateur se charge de l'envoi tout seul.
+      // navigateur se charge de l'envoi tout seul. Sa réponse ne se lit pas :
+      // « dirty » reste levé, et le prochain démarrage confirmera (au pire par
+      // un 409 sans conséquence).
       function envoyerAvantDeFermer() {
-        if (!suiviActif() || envoiEnAttente === null) return;
-        window.clearTimeout(envoiEnAttente);
+        if (!envoiPossible() || !sync.dirty) return;
+        if (envoiEnAttente !== null) window.clearTimeout(envoiEnAttente);
         envoiEnAttente = null;
-        const paquet = paquetParcours(codeSuivi, parcours);
+        const paquet = paquetParcours(codeSuivi, parcours, sync.revision);
         try {
           if (navigator.sendBeacon) {
             navigator.sendBeacon(SUIVI_URL + "/api/parcours.php",
@@ -1718,8 +1832,38 @@
 
       function sauverParcours() {
         PARCOURS.sauver(storage(), parcours, codeSuivi);
+        if (suiviActif()) {
+          sync.dirty = true;
+          sync.maj = Date.now();
+          sauverSync();
+        }
         envoyerParcours();
       }
+
+      // Le code a été refusé pour de bon (régénéré, ou élève supprimé) : plus
+      // d'envoi, mais l'élève reste dans SA case — son travail continue de s'y
+      // ranger, sans jamais se mélanger à la case sans code. Quand son nouveau
+      // code arrivera, l'appli lui proposera ce travail-là.
+      function detacher() {
+        sync.detache = true;
+        sauverSync();
+        suiviIdentite = null;
+        suiviHorsLigne = false;
+        if (relance !== null) { window.clearTimeout(relance); relance = null; }
+        renderRepere();
+      }
+
+      // Au retour du réseau, ou quand la page revient du cache arrière-avant
+      // (pageshow avec « persisted ») : ce qui attendait part. Pas au premier
+      // affichage : à ce moment-là c'est demarrerSuivi qui décide, après avoir
+      // lu le serveur.
+      function reprendreLesEnvois() {
+        if (envoiPossible() && sync.dirty) envoyerMaintenant();
+      }
+      try {
+        window.addEventListener("online", reprendreLesEnvois);
+        window.addEventListener("pageshow", evenement => { if (evenement && evenement.persisted) reprendreLesEnvois(); });
+      } catch (_) {}
 
       async function chargerIdentite(code) {
         const reponse = await lireIdentiteDuServeur(code);
@@ -1744,11 +1888,17 @@
         const puce = document.createElement("span");
         puce.className = "puce";
         puce.setAttribute("aria-hidden", "true");
-        // Sans connexion, on ne laisse pas croire que le travail est déjà parti.
-        repere.classList.toggle("hors-ligne", suiviHorsLigne);
-        repere.append(puce, document.createTextNode(suiviHorsLigne
-          ? "Suivi par ton professeur · travail gardé ici, pas encore envoyé"
-          : `Suivi par ton professeur${qui}${ou}`));
+        // Trois états, une seule vérité : vert = le serveur a répondu, orange =
+        // rien n'est encore parti (on ne promet pas « plus tard »), gris = le
+        // code ne vaut plus rien et l'élève doit en demander un nouveau.
+        repere.classList.toggle("detache", sync.detache);
+        repere.classList.toggle("hors-ligne", !sync.detache && suiviHorsLigne);
+        let texte;
+        if (sync.detache) texte = "Ton code ne marche plus · demande le nouveau à ton professeur";
+        else if (erreurDefinitive) texte = "Suivi par ton professeur · impossible d’envoyer ce travail";
+        else if (suiviHorsLigne) texte = "Suivi par ton professeur · travail gardé ici, pas encore envoyé";
+        else texte = `Suivi par ton professeur${qui}${ou}`;
+        repere.append(puce, document.createTextNode(texte));
         // La porte de sortie est ICI, sur le repère, et pas dans un menu :
         // sans elle, un appareil partagé reste celui du dernier élève, et
         // même les liens de retour ramènent à son espace.
@@ -1772,12 +1922,17 @@
       // l'appareil prêt pour le camarade suivant.
       function quitterSuivi() {
         envoyerAvantDeFermer();
+        if (relance !== null) { window.clearTimeout(relance); relance = null; }
         codeSuivi = "";
         suiviIdentite = null;
         suiviHorsLigne = false;
+        erreurDefinitive = false;
+        echecsSuccessifs = 0;
+        fusionsSuccessives = 0;
         questionFusion = null;
         PARCOURS.effacerCode(stockageSession());
         parcours = PARCOURS.charger(storage(), "");
+        sync = PARCOURS.chargerSync(storage(), "");
         state.parcoursOptionsOpen = false;
         majLienRetour();
         renderRepere();
@@ -1789,17 +1944,27 @@
       // on demande une fois si c'est le sien, en le nommant quand on le peut.
       // Rien ne bloque pendant ce temps — l'élève joue déjà sous SON code.
       function proposerLeTravailSansCode() {
-        if (!suiviActif() || !PARCOURS.estVide(parcours)) return;
+        if (!suiviActif() || sync.detache || !PARCOURS.estVide(parcours)) return;
         const invite = PARCOURS.charger(storage(), "");
-        if (PARCOURS.estVide(invite)) return;
-        questionFusion = {prenom: invite.prenom || ""};
+        if (!PARCOURS.estVide(invite)) {
+          questionFusion = {prenom: invite.prenom || "", source: ""};
+          return;
+        }
+        // Ou le travail resté sous un ancien code refusé par le serveur (code
+        // régénéré) : c'est très probablement celui du même élève.
+        const detachee = PARCOURS.casesDetachees(storage())[0];
+        if (detachee && detachee.code !== codeSuivi) {
+          questionFusion = {prenom: detachee.prenom || "", source: detachee.code};
+        }
       }
 
       function reprendreLeTravailSansCode(oui) {
+        const source = questionFusion ? questionFusion.source : "";
         questionFusion = null;
         if (oui) {
-          parcours = PARCOURS.fusionner(parcours, PARCOURS.charger(storage(), ""));
-          PARCOURS.effacer(storage(), "");
+          parcours = PARCOURS.fusionner(parcours, PARCOURS.charger(storage(), source));
+          PARCOURS.effacer(storage(), source);
+          if (source) PARCOURS.effacerSync(storage(), source);
           state.nameSkipped = true;
           sauverParcours();
         }
@@ -1810,20 +1975,44 @@
         if (!suiviActif()) return;
         PARCOURS.sauverCode(stockageSession(), codeSuivi);
         proposerLeTravailSansCode();
+        // Du travail dans la case et aucune révision confirmée : par définition,
+        // il est à envoyer (case remplie hors ligne, ou par une appli d'avant).
+        if (!sync.detache && sync.revision === 0 && !sync.dirty && !PARCOURS.estVide(parcours)) {
+          sync.dirty = true;
+          sauverSync();
+        }
         renderRepere();
+        if (sync.detache) return;
         chargerIdentite(codeSuivi);
         const code = codeSuivi;
         lireParcoursDuServeur(code).then(reponse => {
           if (code !== codeSuivi) return;
+          if (reponse.statut === 404) {
+            detacher();
+            if (!state.running) renderParcours();
+            return;
+          }
           suiviHorsLigne = reponse.statut !== 200 || !reponse.donnees || !reponse.donnees.ok;
           if (!suiviHorsLigne && reponse.donnees.existe) {
-            parcours = PARCOURS.fusionner(parcours, PARCOURS.normaliserParcours(reponse.donnees.parcours));
+            const distant = PARCOURS.normaliserParcours(reponse.donnees.parcours);
+            const fusion = PARCOURS.fusionner(parcours, distant);
+            sync.revision = Number.isInteger(reponse.donnees.revision) ? reponse.donnees.revision : 0;
+            // On ne renvoie que si cet appareil apporte quelque chose : sinon
+            // chaque ouverture ferait monter la révision pour rien.
+            const apporte = sync.dirty || JSON.stringify(paquetParcours("", fusion)) !== JSON.stringify(paquetParcours("", distant));
+            parcours = fusion;
             PARCOURS.sauver(storage(), parcours, codeSuivi);
-            envoyerParcours();
-          } else if (!suiviHorsLigne && !PARCOURS.estVide(parcours)) {
+            sync.dirty = apporte;
+            sauverSync();
+            if (apporte) envoyerParcours();
+          } else if (!suiviHorsLigne) {
+            sync.revision = 0;
+            sauverSync();
             // Rien encore sur le serveur mais du travail ici (fait hors ligne,
             // par exemple) : il part maintenant, sans attendre un geste de plus.
-            envoyerParcours();
+            if (!PARCOURS.estVide(parcours)) { sync.dirty = true; sauverSync(); envoyerParcours(); }
+          } else if (sync.dirty) {
+            planifierRelance(2000);
           }
           // Une série en cours n'est pas interrompue : on fusionne quand même,
           // on redessinera l'écran quand elle sera finie.
@@ -3101,9 +3290,16 @@
         $("parcours-fusion").hidden = !questionFusion;
         if (questionFusion) {
           const qui = questionFusion.prenom;
-          $("parcours-fusion-text").textContent = qui
-            ? `Il y a déjà le travail de ${qui}, fait sans code, sur cet appareil. C’est toi, ${qui} ?`
-            : "Il y a déjà du travail fait sans code sur cet appareil. Est-ce que c’est le tien ?";
+          const ancienCode = Boolean(questionFusion.source);
+          if (ancienCode) {
+            $("parcours-fusion-text").textContent = qui
+              ? `Il y a le travail de ${qui}, fait avec un ancien code, sur cet appareil. C’est toi, ${qui} ?`
+              : "Il y a du travail fait avec un ancien code sur cet appareil. Est-ce que c’est le tien ?";
+          } else {
+            $("parcours-fusion-text").textContent = qui
+              ? `Il y a déjà le travail de ${qui}, fait sans code, sur cet appareil. C’est toi, ${qui} ?`
+              : "Il y a déjà du travail fait sans code sur cet appareil. Est-ce que c’est le tien ?";
+          }
           $("parcours-fusion-oui").textContent = "Oui, c’est le mien";
           $("parcours-fusion-non").textContent = "Non, ce n’est pas le mien";
         }

@@ -96,6 +96,10 @@
     TABLES.forEach(table => { tables[table] = tableVide(); });
     return {
       version: VERSION,
+      // L'époque monte d'un cran à chaque « Recommencer à zéro » : à la fusion,
+      // l'époque la plus haute gagne entièrement, sinon l'ancien parcours d'un
+      // autre appareil ressusciterait ce que l'élève vient d'effacer.
+      epoque: 0,
       prenom: "",
       tables,
       melange: {tables: [], aJour: false, aRefaireAvec: null, dernier: null},
@@ -110,13 +114,16 @@
     return nombre;
   }
 
-  function texteOuNull(valeur) {
-    return typeof valeur === "string" && valeur ? valeur : null;
+  // Une date est un jour, « AAAA-MM-JJ », rien d'autre : un JSON forgé ne peut
+  // pas y glisser un texte qui serait réaffiché dans la fiche.
+  function dateOuNull(valeur) {
+    return typeof valeur === "string" && /^\d{4}-\d{2}-\d{2}$/.test(valeur) ? valeur : null;
   }
 
   function normaliserParcours(brut) {
     const parcours = creerParcours();
     if (!brut || typeof brut !== "object") return parcours;
+    parcours.epoque = entier(brut.epoque, 0, 1000000);
     parcours.prenom = nettoyerPrenom(brut.prenom);
     TABLES.forEach(table => {
       const source = brut.tables && brut.tables[table];
@@ -136,29 +143,29 @@
           total: entier(dernier.total, 1, 20, 10)
         };
       }
-      cible.acquise = texteOuNull(source.acquise);
+      cible.acquise = dateOuNull(source.acquise);
     });
     if (brut.melange && typeof brut.melange === "object") {
       parcours.melange.aJour = Boolean(brut.melange.aJour);
       parcours.melange.aRefaireAvec = entier(brut.melange.aRefaireAvec, 2, 10, null);
-      parcours.melange.dernier = texteOuNull(brut.melange.dernier);
+      parcours.melange.dernier = dateOuNull(brut.melange.dernier);
     }
     if (brut.expert && typeof brut.expert === "object") {
       parcours.expert.niveau = entier(brut.expert.niveau, 0, 3);
-      parcours.expert.dernier = texteOuNull(brut.expert.dernier);
-      parcours.expert.champion = texteOuNull(brut.expert.champion);
+      parcours.expert.dernier = dateOuNull(brut.expert.dernier);
+      parcours.expert.champion = dateOuNull(brut.expert.champion);
     }
     if (brut.calculs && typeof brut.calculs === "object") {
       FAITS.forEach(cle => {
         const source = brut.calculs[cle];
         if (!source || typeof source !== "object") return;
-        const vu = texteOuNull(source.vu);
+        const vu = dateOuNull(source.vu);
         if (!vu) return;
         parcours.calculs[cle] = {
           cases: entier(source.cases, 0, SEUILS.revision.casesMax),
           vu,
-          erreur: texteOuNull(source.erreur),
-          gagne: texteOuNull(source.gagne)
+          erreur: dateOuNull(source.erreur),
+          gagne: dateOuNull(source.gagne)
         };
       });
     }
@@ -184,6 +191,7 @@
   function remettreAZero(parcours) {
     const neuf = creerParcours();
     neuf.prenom = parcours && typeof parcours.prenom === "string" ? nettoyerPrenom(parcours.prenom) : "";
+    neuf.epoque = entier(parcours && parcours.epoque, 0, 1000000) + 1;
     return neuf;
   }
 
@@ -706,6 +714,79 @@
     }
   }
 
+  // L'état de synchronisation d'une case : la dernière révision connue du
+  // serveur, si du travail attend d'être envoyé (« dirty »), si le code a été
+  // refusé (détaché), et quand la case a bougé pour la dernière fois. Rangé À
+  // CÔTÉ de la case, pas dedans : normaliserParcours ignorerait ces champs.
+  const CLE_SYNC = "mathsgo-defi-tables-sync";
+
+  function cleSync(code) {
+    const propre = normaliserCode(code || "");
+    return codeValide(propre) ? CLE_SYNC + ":" + propre : CLE_SYNC;
+  }
+
+  function syncNeutre() {
+    return {revision: 0, dirty: false, detache: false, maj: 0};
+  }
+
+  function chargerSync(stockage, code) {
+    try {
+      const brut = stockage && stockage.getItem(cleSync(code));
+      const sync = syncNeutre();
+      if (!brut) return sync;
+      const lu = JSON.parse(brut);
+      if (!lu || typeof lu !== "object") return sync;
+      sync.revision = entier(lu.revision, 0, 1000000000);
+      sync.dirty = Boolean(lu.dirty);
+      sync.detache = Boolean(lu.detache);
+      sync.maj = entier(lu.maj, 0, Number.MAX_SAFE_INTEGER);
+      return sync;
+    } catch (_) {
+      return syncNeutre();
+    }
+  }
+
+  function sauverSync(stockage, code, sync) {
+    try {
+      if (!stockage) return false;
+      const propre = Object.assign(syncNeutre(), sync || {});
+      stockage.setItem(cleSync(code), JSON.stringify(propre));
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  function effacerSync(stockage, code) {
+    try {
+      if (stockage) stockage.removeItem(cleSync(code));
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  // Les cases dont le code a été refusé par le serveur (régénéré, supprimé),
+  // la plus récente d'abord : quand un nouveau code arrive sur l'appareil, on
+  // propose ce travail-là, pour qu'il ne reste pas orphelin.
+  function casesDetachees(stockage) {
+    const cases = [];
+    try {
+      if (!stockage || typeof stockage.length !== "number") return cases;
+      for (let i = 0; i < stockage.length; i++) {
+        const cle = stockage.key(i);
+        if (typeof cle !== "string" || !cle.startsWith(CLE_SYNC + ":")) continue;
+        const code = cle.slice(CLE_SYNC.length + 1);
+        const sync = chargerSync(stockage, code);
+        if (!sync.detache) continue;
+        const parcours = charger(stockage, code);
+        if (estVide(parcours)) continue;
+        cases.push({code, prenom: parcours.prenom, maj: sync.maj});
+      }
+    } catch (_) {}
+    return cases.sort((x, y) => y.maj - x.maj);
+  }
+
   // Un appareil suivi par l'ancienne appli rangeait le code actif ET le parcours
   // dans le stockage durable, sous une seule case. On déplace ce parcours dans
   // la case du code, et on oublie le code : l'identité ne vit plus que le temps
@@ -801,8 +882,19 @@
   function fusionner(premier, second) {
     const a = normaliserParcours(premier);
     const b = normaliserParcours(second);
-    const fusion = creerParcours();
 
+    // Une remise à zéro a eu lieu d'un côté (époque plus haute) : elle gagne
+    // entièrement. Sans cela, le maximum de chaque compteur ferait revenir
+    // tout ce que l'élève vient d'effacer, dès qu'un autre appareil se
+    // synchronise. Le prénom, lui, reste celui de l'appareil devant l'élève.
+    if (a.epoque !== b.epoque) {
+      const gagnant = cloner(a.epoque > b.epoque ? a : b);
+      gagnant.prenom = a.prenom || b.prenom;
+      return normaliserParcours(gagnant);
+    }
+
+    const fusion = creerParcours();
+    fusion.epoque = a.epoque;
     fusion.prenom = a.prenom || b.prenom;
 
     TABLES.forEach(table => {
@@ -848,9 +940,20 @@
         fusion.calculs[cle] = cloner(faitA || faitB);
         return;
       }
+      // Par calcul, le jour le plus récent gagne en bloc : une erreur faite
+      // aujourd'hui ne doit pas être effacée par l'état d'hier à trois cases.
+      // LIMITE CONNUE, acceptée : deux appareils utilisés le MÊME JOUR sur le
+      // même calcul ne peuvent pas être ordonnés — « gain puis erreur » et
+      // « erreur puis gain » laissent exactement les mêmes dates, seule l'heure
+      // les séparerait, et on a choisi de ne pas l'enregistrer. Dans ce cas
+      // rare, le plus avancé gagne.
+      if (faitA.vu !== faitB.vu) {
+        fusion.calculs[cle] = cloner(faitA.vu > faitB.vu ? faitA : faitB);
+        return;
+      }
       fusion.calculs[cle] = {
         cases: Math.max(faitA.cases, faitB.cases),
-        vu: dateLaPlusRecente(faitA.vu, faitB.vu),
+        vu: faitA.vu,
         // Erreur et gain les plus récents : la fusion ne rouvre jamais le droit
         // de gagner une case le jour même.
         erreur: dateLaPlusRecente(faitA.erreur, faitB.erreur),
@@ -944,6 +1047,12 @@
     sauver,
     effacer,
     migrerStockage,
+    CLE_SYNC,
+    cleSync,
+    chargerSync,
+    sauverSync,
+    effacerSync,
+    casesDetachees,
     estVide,
     CLE_CODE,
     LONGUEUR_CODE,

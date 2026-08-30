@@ -236,6 +236,14 @@ test("J’apprends garde le bâton pour construire et le propose en aide tempora
   assert.match(html, /completeReview = state\.configuration\.mode === "test"/);
   assert.match(html, /Bilan de tes réponses/);
   assert.match(html, /defi_tables_core\.js\?v=20260830-9/);
+  // Le moteur était le seul des deux scripts sans épingle, et le lot A2 est
+  // passé au travers : il ajoutait chargerSync / sauverSync / casesDetachees au
+  // moteur sans monter son numéro. Un navigateur qui avait déjà l'ancien moteur
+  // en cache recevait la nouvelle page avec l'ancien moteur —
+  // « PARCOURS.chargerSync is not a function », plus de repère de suivi, plus
+  // rien envoyé au professeur, et une page d'accueil d'apparence normale.
+  // Changer ce numéro à chaque modification du moteur ; ce test le rappelle.
+  assert.match(html, /defi_tables_mon_parcours\.js\?v=20260830-11/);
 });
 
 test("le numéro de question est séparé du calcul dans le bilan", () => {

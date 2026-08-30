@@ -28,6 +28,8 @@ CREATE TABLE IF NOT EXISTS progressions (
   appli VARCHAR(30) NOT NULL,
   donnees MEDIUMTEXT NOT NULL,
   maj_le VARCHAR(25) NOT NULL,
+  revision INTEGER NOT NULL DEFAULT 0,
+  donnees_avant MEDIUMTEXT NULL,
   UNIQUE KEY progressions_eleve_appli (eleve_id, appli)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -36,6 +38,8 @@ CREATE TABLE IF NOT EXISTS profs (
   identifiant VARCHAR(40) NOT NULL,
   mdp_hash VARCHAR(255) NOT NULL,
   admin INTEGER NOT NULL DEFAULT 0,
+  actif INTEGER NOT NULL DEFAULT 1,
+  mdp_temporaire INTEGER NOT NULL DEFAULT 0,
   cree_le VARCHAR(25) NOT NULL,
   UNIQUE KEY profs_identifiant (identifiant)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

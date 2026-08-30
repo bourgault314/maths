@@ -101,20 +101,20 @@ compte ne voit rien tant qu'aucune classe ne lui a été partagée.
 
 Déposer `migrer.php` à côté de `index.php`, ouvrir
 `https://suivi.mathsgo.re/migrer.php`, donner le `jeton_installation` de
-`config.php`, **puis supprimer le fichier**. La page ajoute la colonne
-propriétaire, la colonne administrateur et la table `partages`, attribue les
-classes sans propriétaire au premier compte et le passe administrateur. Elle ne
-touche ni aux élèves, ni aux codes, ni aux progressions, et peut être relancée
-sans risque.
+`config.php`, **puis supprimer le fichier**. La page ajoute ce qui manque :
+colonne propriétaire, colonne administrateur et table `partages` (30/08),
+révision et version précédente des progressions, colonnes `actif` et
+`mdp_temporaire` des comptes (lot A2). Elle ne touche ni aux élèves, ni aux
+codes, ni aux progressions, et peut être relancée sans risque.
 
 ## Points d'entrée
 
 | Méthode | URL | Effet |
 |---|---|---|
-| POST | `/api/parcours.php` `{code, appli, lire: true}` | lit la progression |
-| POST | `/api/parcours.php` `{code, appli, parcours}` | l'enregistre |
+| POST | `/api/parcours.php` `{code, appli, lire: true}` | lit la progression, avec sa `revision` |
+| POST | `/api/parcours.php` `{code, appli, parcours, base_revision}` | l'enregistre si `base_revision` est la révision en base ; sinon **409** avec l'état actuel, que l'appli fusionne avant de renvoyer. Le serveur ne garde que ce que `lib/applis.php` déclare (`lib/progression.php`) : jamais un prénom ni un texte libre. La version précédente est conservée (`donnees_avant`) |
 | POST | `/api/eleve.php` `{code}` | prénom, classe et applis de l'élève (page d'accueil) |
-| POST | `/api/prof.php` `{action, …}` | `connexion`, `deconnexion`, `moi`, `profs.annuaire`, `profs.liste/ajouter` (administrateur), `classes.liste/creer/modifier/supprimer`, `partages.liste/ajouter/supprimer`, `eleves.ajouter/nommer/regenerer/supprimer`, `tableau` |
+| POST | `/api/prof.php` `{action, …}` | `connexion`, `deconnexion`, `moi`, `profs.annuaire`, `profs.liste/ajouter` (administrateur), `classes.liste/creer/modifier/supprimer`, `partages.liste/ajouter/supprimer`, `eleves.ajouter/nommer/regenerer/restaurer/supprimer`, `tableau` |
 
 ## Sécurité
 
@@ -166,7 +166,12 @@ Depuis l'audit du 30/08/2026 : GET refusé, jeton refusé dans l'adresse,
 clés hachées, temps de refus de connexion, messages identiques pour un élève
 inexistant ou d'un collègue, `verifier.php` muet sans mot de passe.
 
-**83 tests, 0 échec au 30/08/2026**, rejoués sur SQLite **et** sur MariaDB
+Lot A2 : révisions et 409, vingt créations simultanées (une seule passe),
+contenu filtré à toute profondeur, parcours de référence de l'appli
+(`tests/parcours-reference.json`, régénéré par `node scripts/generer-parcours-reference.mjs`
+à la racine du dépôt), restauration de la version précédente, mise à niveau.
+
+**93 tests, 0 échec au 30/08/2026**, rejoués sur SQLite **et** sur MariaDB
 (le limiteur emploie une instruction différente sur chaque moteur) :
 
 ```

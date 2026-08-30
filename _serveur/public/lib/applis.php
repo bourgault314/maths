@@ -12,6 +12,18 @@ const CATALOGUE_APPLIS = [
         'url' => 'https://mathsgo.re/outils/calcul_mental/defi_tables.html',
         'ancre' => 'parcours',
         'disponible' => true,
+        // Ce que le serveur accepte d'enregistrer (lib/progression.php) : les
+        // clés connues de defi_tables_mon_parcours.js, à toute profondeur, les
+        // mots d'une liste fermée, et les clés de table « 7 » et de calcul
+        // « 3-7 ». Tout le reste — un prénom, un texte — est retiré. Si l'appli
+        // gagne un champ, il faut l'ajouter ici : tests/parcours-reference.json
+        // (généré par l'appli) casse un test tant que ce n'est pas fait.
+        'cles' => ['version', 'epoque', 'tables', 'apprends', 'construct', 'gaps', 'ordered', 'random',
+            'entraine', 'desordre', 'trous', 'mixte', 'dernier', 'entrainement', 'score', 'total',
+            'acquise', 'melange', 'aJour', 'aRefaireAvec', 'expert', 'niveau', 'champion',
+            'calculs', 'cases', 'vu', 'erreur', 'gagne'],
+        'mots' => ['desordre', 'trous', 'mixte'],
+        'motifs' => ['/^(?:[2-9]|10)$/', '/^\d{1,2}-\d{1,2}$/'],
     ],
     'automatismes' => [
         'nom' => 'Automatismes',
@@ -19,6 +31,10 @@ const CATALOGUE_APPLIS = [
         'url' => null,
         'ancre' => null,
         'disponible' => false,
+        // Pas encore d'appli : rien n'est accepté. À déclarer avec l'appli.
+        'cles' => [],
+        'mots' => [],
+        'motifs' => [],
     ],
 ];
 
