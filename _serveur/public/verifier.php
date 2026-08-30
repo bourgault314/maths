@@ -32,12 +32,12 @@ if ($configOk) {
     verif($lignes, "Tables du suivi", function () {
         $pdo = bd();
         $manquantes = [];
-        foreach (['classes', 'eleves', 'progressions', 'profs', 'sessions_prof', 'compteurs'] as $table) {
+        foreach (['classes', 'eleves', 'progressions', 'profs', 'partages', 'sessions_prof', 'compteurs'] as $table) {
             try { $pdo->query("SELECT 1 FROM $table LIMIT 1"); }
             catch (Throwable $e) { $manquantes[] = $table; }
         }
         if ($manquantes !== []) {
-            throw new RuntimeException("manquantes : " . implode(', ', $manquantes) . " — ouvre installer.php.");
+            throw new RuntimeException("manquantes : " . implode(', ', $manquantes) . " — ouvre installer.php (première installation) ou migrer.php (mise à niveau).");
         }
         return "toutes présentes";
     });

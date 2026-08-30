@@ -1,6 +1,12 @@
 <?php
-// API prof : connexion, classes, codes élèves, tableau de la classe.
+// API prof : connexion, comptes, classes, partages, codes élèves, tableau.
 // Tout passe par POST + un jeton de session obtenu par « connexion ».
+//
+// Cloisonnement : une classe appartient à un professeur (classes.prof_id).
+// Un collègue n'y accède que si le propriétaire la lui a partagée
+// (table partages, droit « lecture » ou « ecriture »). Aucune action ne fait
+// confiance au classe_id reçu : l'accès est vérifié à chaque fois, et pour les
+// actions sur un élève c'est la classe de l'élève qui décide.
 
 declare(strict_types=1);
 
@@ -12,6 +18,7 @@ require __DIR__ . '/../lib/auth.php';
 
 const MAX_ELEVES_PAR_LOT = 60;
 const APPLIS_PROPOSABLES = ['defi-tables', 'automatismes'];
+const DROITS_PARTAGE = ['lecture', 'ecriture'];
 
 cors();
 
@@ -22,13 +29,62 @@ function texte(mixed $valeur, int $max): string
     return mb_substr(trim($texte), 0, $max);
 }
 
-function classe_du_prof(PDO $pdo, mixed $id): array
+// Le compte connecté : identifiant et droit d'administration.
+function prof_courant(PDO $pdo, int $profId): array
 {
+    $requete = $pdo->prepare('SELECT id, identifiant, admin FROM profs WHERE id = ?');
+    $requete->execute([$profId]);
+    $prof = $requete->fetch();
+    if ($prof === false) erreur("Session expirée, reconnecte-toi.", 401);
+    return ['id' => (int)$prof['id'], 'identifiant' => (string)$prof['identifiant'], 'admin' => (int)$prof['admin'] === 1];
+}
+
+function exiger_admin(array $prof): void
+{
+    if (!$prof['admin']) erreur("Seul le compte administrateur peut gérer les professeurs.", 403);
+}
+
+// Renvoie la classe si ce professeur y a droit, et refuse sinon.
+// $besoin vaut 'lecture', 'ecriture' ou 'proprietaire'.
+// Une classe à laquelle il n'a aucun droit est déclarée introuvable : on ne
+// révèle pas l'existence des classes des collègues.
+function acces_classe(PDO $pdo, int $profId, mixed $classeIdBrut, string $besoin): array
+{
+    $classeId = (int)$classeIdBrut;
     $requete = $pdo->prepare('SELECT * FROM classes WHERE id = ?');
-    $requete->execute([(int)$id]);
+    $requete->execute([$classeId]);
     $classe = $requete->fetch();
     if ($classe === false) erreur("Classe introuvable.", 404);
+
+    if ((int)$classe['prof_id'] === $profId) {
+        $classe['droit'] = 'proprietaire';
+    } else {
+        $requete = $pdo->prepare('SELECT droit FROM partages WHERE classe_id = ? AND prof_id = ?');
+        $requete->execute([$classeId, $profId]);
+        $droit = $requete->fetchColumn();
+        if ($droit === false) erreur("Classe introuvable.", 404);
+        $classe['droit'] = in_array($droit, DROITS_PARTAGE, true) ? $droit : 'lecture';
+    }
+
+    if ($besoin === 'proprietaire' && $classe['droit'] !== 'proprietaire') {
+        erreur("Cette classe ne t'appartient pas.", 403);
+    }
+    if ($besoin === 'ecriture' && $classe['droit'] === 'lecture') {
+        erreur("Cette classe t'est partagée en lecture seule.", 403);
+    }
     return $classe;
+}
+
+// Pour toute action sur un élève : on remonte à sa classe et on vérifie là.
+function eleve_modifiable(PDO $pdo, int $profId, mixed $eleveIdBrut): array
+{
+    $eleveId = (int)$eleveIdBrut;
+    $requete = $pdo->prepare('SELECT id, classe_id, code FROM eleves WHERE id = ?');
+    $requete->execute([$eleveId]);
+    $eleve = $requete->fetch();
+    if ($eleve === false) erreur("Élève introuvable.", 404);
+    acces_classe($pdo, $profId, (int)$eleve['classe_id'], 'ecriture');
+    return $eleve;
 }
 
 try {
@@ -53,6 +109,7 @@ try {
     if ($profId === null) {
         erreur("Session expirée, reconnecte-toi.", 401);
     }
+    $prof = prof_courant($pdo, $profId);
 
     switch ($action) {
         case 'deconnexion':
@@ -60,16 +117,80 @@ try {
             repondre(['ok' => true]);
 
         case 'moi':
-            $requete = $pdo->prepare('SELECT identifiant FROM profs WHERE id = ?');
+            repondre(['ok' => true, 'identifiant' => $prof['identifiant'], 'admin' => $prof['admin']]);
+
+        // ------------------------------------------------------------ comptes profs
+
+        case 'profs.annuaire':
+            // Sert à choisir un collègue dans la liste « Partager cette classe ».
+            $requete = $pdo->prepare('SELECT id, identifiant FROM profs WHERE id <> ? ORDER BY identifiant');
             $requete->execute([$profId]);
-            repondre(['ok' => true, 'identifiant' => (string)$requete->fetchColumn()]);
+            $annuaire = [];
+            foreach ($requete->fetchAll() as $ligne) {
+                $annuaire[] = ['id' => (int)$ligne['id'], 'identifiant' => (string)$ligne['identifiant']];
+            }
+            repondre(['ok' => true, 'profs' => $annuaire]);
+
+        case 'profs.liste':
+            exiger_admin($prof);
+            $lignes = $pdo->query(
+                'SELECT p.id, p.identifiant, p.admin, p.cree_le,
+                        (SELECT COUNT(*) FROM classes c WHERE c.prof_id = p.id) AS classes
+                 FROM profs p ORDER BY p.identifiant'
+            )->fetchAll();
+            $profs = [];
+            foreach ($lignes as $ligne) {
+                $profs[] = [
+                    'id' => (int)$ligne['id'],
+                    'identifiant' => (string)$ligne['identifiant'],
+                    'admin' => (int)$ligne['admin'] === 1,
+                    'classes' => (int)$ligne['classes'],
+                    'cree_le' => $ligne['cree_le'],
+                ];
+            }
+            repondre(['ok' => true, 'profs' => $profs]);
+
+        case 'profs.ajouter':
+            exiger_admin($prof);
+            try {
+                $nouveau = creer_prof(
+                    $pdo,
+                    (string)($corps['identifiant'] ?? ''),
+                    (string)($corps['motdepasse'] ?? ''),
+                    false
+                );
+            } catch (InvalidArgumentException $e) {
+                erreur($e->getMessage(), 400);
+            }
+            repondre(['ok' => true, 'id' => $nouveau]);
+
+        // ------------------------------------------------------------------ classes
 
         case 'classes.liste':
-            $classes = $pdo->query(
-                'SELECT c.id, c.libelle, c.applis, c.cree_le,
-                        (SELECT COUNT(*) FROM eleves e WHERE e.classe_id = c.id) AS eleves
-                 FROM classes c ORDER BY c.libelle'
-            )->fetchAll();
+            $requete = $pdo->prepare(
+                'SELECT c.id, c.libelle, c.applis, c.cree_le, c.prof_id,
+                        (SELECT COUNT(*) FROM eleves e WHERE e.classe_id = c.id) AS eleves,
+                        (SELECT p.identifiant FROM profs p WHERE p.id = c.prof_id) AS proprietaire,
+                        (SELECT g.droit FROM partages g WHERE g.classe_id = c.id AND g.prof_id = ?) AS partage
+                 FROM classes c
+                 WHERE c.prof_id = ?
+                    OR c.id IN (SELECT g2.classe_id FROM partages g2 WHERE g2.prof_id = ?)
+                 ORDER BY c.libelle'
+            );
+            $requete->execute([$profId, $profId, $profId]);
+            $classes = [];
+            foreach ($requete->fetchAll() as $ligne) {
+                $mien = (int)$ligne['prof_id'] === $profId;
+                $classes[] = [
+                    'id' => (int)$ligne['id'],
+                    'libelle' => $ligne['libelle'],
+                    'applis' => explode(',', (string)$ligne['applis']),
+                    'cree_le' => $ligne['cree_le'],
+                    'eleves' => (int)$ligne['eleves'],
+                    'droit' => $mien ? 'proprietaire' : (in_array($ligne['partage'], DROITS_PARTAGE, true) ? $ligne['partage'] : 'lecture'),
+                    'proprietaire' => $mien ? null : (string)$ligne['proprietaire'],
+                ];
+            }
             repondre(['ok' => true, 'classes' => $classes]);
 
         case 'classes.creer':
@@ -77,12 +198,12 @@ try {
             if ($libelle === '') erreur("Donne un nom à la classe.", 400);
             $applis = array_values(array_intersect(APPLIS_PROPOSABLES, (array)($corps['applis'] ?? ['defi-tables'])));
             if ($applis === []) $applis = ['defi-tables'];
-            $pdo->prepare('INSERT INTO classes (libelle, applis, cree_le) VALUES (?, ?, ?)')
-                ->execute([$libelle, implode(',', $applis), maintenant()]);
+            $pdo->prepare('INSERT INTO classes (prof_id, libelle, applis, cree_le) VALUES (?, ?, ?, ?)')
+                ->execute([$profId, $libelle, implode(',', $applis), maintenant()]);
             repondre(['ok' => true, 'id' => (int)$pdo->lastInsertId()]);
 
         case 'classes.modifier':
-            $classe = classe_du_prof($pdo, $corps['classe_id'] ?? 0);
+            $classe = acces_classe($pdo, $profId, $corps['classe_id'] ?? 0, 'ecriture');
             $libelle = texte($corps['libelle'] ?? $classe['libelle'], 40);
             if ($libelle === '') erreur("Donne un nom à la classe.", 400);
             $applis = array_values(array_intersect(APPLIS_PROPOSABLES, (array)($corps['applis'] ?? explode(',', $classe['applis']))));
@@ -92,18 +213,69 @@ try {
             repondre(['ok' => true]);
 
         case 'classes.supprimer':
-            $classe = classe_du_prof($pdo, $corps['classe_id'] ?? 0);
+            // Supprimer une classe efface des progressions : réservé au propriétaire.
+            $classe = acces_classe($pdo, $profId, $corps['classe_id'] ?? 0, 'proprietaire');
             $requete = $pdo->prepare('SELECT id FROM eleves WHERE classe_id = ?');
             $requete->execute([(int)$classe['id']]);
             foreach ($requete->fetchAll() as $eleve) {
                 $pdo->prepare('DELETE FROM progressions WHERE eleve_id = ?')->execute([(int)$eleve['id']]);
             }
             $pdo->prepare('DELETE FROM eleves WHERE classe_id = ?')->execute([(int)$classe['id']]);
+            $pdo->prepare('DELETE FROM partages WHERE classe_id = ?')->execute([(int)$classe['id']]);
             $pdo->prepare('DELETE FROM classes WHERE id = ?')->execute([(int)$classe['id']]);
             repondre(['ok' => true]);
 
+        // ----------------------------------------------------------------- partages
+
+        case 'partages.liste':
+            $classe = acces_classe($pdo, $profId, $corps['classe_id'] ?? 0, 'lecture');
+            $requete = $pdo->prepare(
+                'SELECT g.prof_id, g.droit, p.identifiant
+                 FROM partages g JOIN profs p ON p.id = g.prof_id
+                 WHERE g.classe_id = ? ORDER BY p.identifiant'
+            );
+            $requete->execute([(int)$classe['id']]);
+            $partages = [];
+            foreach ($requete->fetchAll() as $ligne) {
+                $partages[] = [
+                    'prof_id' => (int)$ligne['prof_id'],
+                    'identifiant' => (string)$ligne['identifiant'],
+                    'droit' => in_array($ligne['droit'], DROITS_PARTAGE, true) ? $ligne['droit'] : 'lecture',
+                ];
+            }
+            repondre(['ok' => true, 'partages' => $partages, 'droit' => $classe['droit']]);
+
+        case 'partages.ajouter':
+            $classe = acces_classe($pdo, $profId, $corps['classe_id'] ?? 0, 'proprietaire');
+            $autreId = (int)($corps['prof_id'] ?? 0);
+            if ($autreId === $profId) erreur("Cette classe est déjà la tienne.", 400);
+            $requete = $pdo->prepare('SELECT id FROM profs WHERE id = ?');
+            $requete->execute([$autreId]);
+            if ($requete->fetchColumn() === false) erreur("Professeur introuvable.", 404);
+            $droit = (string)($corps['droit'] ?? 'lecture');
+            if (!in_array($droit, DROITS_PARTAGE, true)) erreur("Droit inconnu.", 400);
+
+            $requete = $pdo->prepare('SELECT id FROM partages WHERE classe_id = ? AND prof_id = ?');
+            $requete->execute([(int)$classe['id'], $autreId]);
+            $existant = $requete->fetchColumn();
+            if ($existant === false) {
+                $pdo->prepare('INSERT INTO partages (classe_id, prof_id, droit, cree_le) VALUES (?, ?, ?, ?)')
+                    ->execute([(int)$classe['id'], $autreId, $droit, maintenant()]);
+            } else {
+                $pdo->prepare('UPDATE partages SET droit = ? WHERE id = ?')->execute([$droit, (int)$existant]);
+            }
+            repondre(['ok' => true]);
+
+        case 'partages.supprimer':
+            $classe = acces_classe($pdo, $profId, $corps['classe_id'] ?? 0, 'proprietaire');
+            $pdo->prepare('DELETE FROM partages WHERE classe_id = ? AND prof_id = ?')
+                ->execute([(int)$classe['id'], (int)($corps['prof_id'] ?? 0)]);
+            repondre(['ok' => true]);
+
+        // ------------------------------------------------------------------- élèves
+
         case 'eleves.ajouter':
-            $classe = classe_du_prof($pdo, $corps['classe_id'] ?? 0);
+            $classe = acces_classe($pdo, $profId, $corps['classe_id'] ?? 0, 'ecriture');
             $nombre = (int)($corps['nombre'] ?? 1);
             if ($nombre < 1 || $nombre > MAX_ELEVES_PAR_LOT) {
                 erreur("Nombre d'élèves à créer entre 1 et " . MAX_ELEVES_PAR_LOT . ".", 400);
@@ -118,35 +290,30 @@ try {
             repondre(['ok' => true, 'eleves' => $crees]);
 
         case 'eleves.nommer':
-            $requete = $pdo->prepare('SELECT id FROM eleves WHERE id = ?');
-            $requete->execute([(int)($corps['eleve_id'] ?? 0)]);
-            if ($requete->fetchColumn() === false) erreur("Élève introuvable.", 404);
+            $eleve = eleve_modifiable($pdo, $profId, $corps['eleve_id'] ?? 0);
             $pdo->prepare('UPDATE eleves SET prenom = ?, initiale = ? WHERE id = ?')->execute([
                 texte($corps['prenom'] ?? '', 40),
                 mb_strtoupper(mb_substr(texte($corps['initiale'] ?? '', 4), 0, 1)),
-                (int)$corps['eleve_id'],
+                (int)$eleve['id'],
             ]);
             repondre(['ok' => true]);
 
         case 'eleves.regenerer':
-            $requete = $pdo->prepare('SELECT id FROM eleves WHERE id = ?');
-            $requete->execute([(int)($corps['eleve_id'] ?? 0)]);
-            if ($requete->fetchColumn() === false) erreur("Élève introuvable.", 404);
+            $eleve = eleve_modifiable($pdo, $profId, $corps['eleve_id'] ?? 0);
             $code = code_libre($pdo);
-            $pdo->prepare('UPDATE eleves SET code = ? WHERE id = ?')->execute([$code, (int)$corps['eleve_id']]);
+            $pdo->prepare('UPDATE eleves SET code = ? WHERE id = ?')->execute([$code, (int)$eleve['id']]);
             repondre(['ok' => true, 'code' => $code]);
 
         case 'eleves.supprimer':
-            $id = (int)($corps['eleve_id'] ?? 0);
-            $requete = $pdo->prepare('SELECT id FROM eleves WHERE id = ?');
-            $requete->execute([$id]);
-            if ($requete->fetchColumn() === false) erreur("Élève introuvable.", 404);
-            $pdo->prepare('DELETE FROM progressions WHERE eleve_id = ?')->execute([$id]);
-            $pdo->prepare('DELETE FROM eleves WHERE id = ?')->execute([$id]);
+            $eleve = eleve_modifiable($pdo, $profId, $corps['eleve_id'] ?? 0);
+            $pdo->prepare('DELETE FROM progressions WHERE eleve_id = ?')->execute([(int)$eleve['id']]);
+            $pdo->prepare('DELETE FROM eleves WHERE id = ?')->execute([(int)$eleve['id']]);
             repondre(['ok' => true]);
 
+        // ------------------------------------------------------------------ tableau
+
         case 'tableau':
-            $classe = classe_du_prof($pdo, $corps['classe_id'] ?? 0);
+            $classe = acces_classe($pdo, $profId, $corps['classe_id'] ?? 0, 'lecture');
             $appli = (string)($corps['appli'] ?? 'defi-tables');
             if (!in_array($appli, APPLIS_PROPOSABLES, true)) erreur("Application inconnue.", 400);
             $requete = $pdo->prepare(
@@ -170,7 +337,12 @@ try {
             }
             repondre([
                 'ok' => true,
-                'classe' => ['id' => (int)$classe['id'], 'libelle' => $classe['libelle'], 'applis' => explode(',', $classe['applis'])],
+                'classe' => [
+                    'id' => (int)$classe['id'],
+                    'libelle' => $classe['libelle'],
+                    'applis' => explode(',', (string)$classe['applis']),
+                    'droit' => $classe['droit'],
+                ],
                 'eleves' => $lignes,
             ]);
 

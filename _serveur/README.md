@@ -30,9 +30,10 @@ la logique de « Mon parcours » reste dans
 
 ## Données stockées
 
-`classes` (libellé, applis proposées) · `eleves` (code de 6 caractères,
-prénom, initiale) · `progressions` (JSON, date) · `profs` (identifiant,
-mot de passe haché) · `sessions_prof` · `compteurs` (limitation de débit).
+`classes` (propriétaire, libellé, applis proposées) · `eleves` (code de
+6 caractères, prénom, initiale) · `progressions` (JSON, date) · `profs`
+(identifiant, mot de passe haché, administrateur) · `partages` (classe,
+professeur, droit) · `sessions_prof` · `compteurs` (limitation de débit).
 
 Pas de nom de famille, pas de date de naissance, pas d'adresse mail
 d'élève, pas de mot de passe d'élève.
@@ -50,6 +51,7 @@ _serveur/
     lib/               bd, réponses/CORS, codes, limitation, sessions, catalogue d'applis
     config.exemple.php à recopier en config.php sur le serveur (JAMAIS commité)
     installer.php      création des tables + premier compte, à SUPPRIMER après
+    migrer.php         mise à niveau d'une base déjà installée, à SUPPRIMER après
     verifier.php       page de diagnostic en français
     .htaccess
   sql/schema-mysql.sql (généré)
@@ -72,11 +74,35 @@ Le résumé de progression du tableau est calculé **dans le navigateur** en cha
 `defi_tables_mon_parcours.js` depuis mathsgo.re : le serveur n'ouvre jamais les
 paquets qu'il range, et il n'existe qu'une seule définition du parcours.
 
-### Limite connue
+### Chacun ses classes
 
-Il n'y a pas encore de propriétaire sur une classe : **tout compte prof voit et
-peut modifier toutes les classes**. À corriger (colonne `prof_id` + table de
-partage) avant d'ouvrir un second compte.
+Une classe appartient au professeur qui l'a créée (`classes.prof_id`). Personne
+d'autre ne la voit — une classe hors de portée est déclarée « introuvable »,
+son nom même ne sort pas du serveur.
+
+Le propriétaire peut la **partager** avec un collègue (table `partages`) :
+
+- **lecture** — il voit le tableau et les codes, il ne change rien ;
+- **écriture** — il peut en plus ajouter des élèves, saisir les prénoms et
+  donner un nouveau code.
+
+Supprimer une classe reste réservé au propriétaire. Pour les actions sur un
+élève, c'est la classe **de l'élève** qui décide, jamais le `classe_id` envoyé
+par le navigateur.
+
+Le premier compte créé par `installer.php` est **administrateur** : lui seul
+voit l'écran « Professeurs » et peut ouvrir un compte à un collègue. Un nouveau
+compte ne voit rien tant qu'aucune classe ne lui a été partagée.
+
+### Mettre à niveau une base déjà installée
+
+Déposer `migrer.php` à côté de `index.php`, ouvrir
+`https://suivi.mathsgo.re/migrer.php`, donner le `jeton_installation` de
+`config.php`, **puis supprimer le fichier**. La page ajoute la colonne
+propriétaire, la colonne administrateur et la table `partages`, attribue les
+classes sans propriétaire au premier compte et le passe administrateur. Elle ne
+touche ni aux élèves, ni aux codes, ni aux progressions, et peut être relancée
+sans risque.
 
 ## Points d'entrée
 
@@ -84,7 +110,7 @@ partage) avant d'ouvrir un second compte.
 |---|---|---|
 | GET | `/api/parcours.php?code=XXXXXX&appli=defi-tables` | lit la progression |
 | POST | `/api/parcours.php` `{code, appli, parcours}` | l'enregistre |
-| POST | `/api/prof.php` `{action, …}` | `connexion`, `deconnexion`, `moi`, `classes.liste/creer/modifier/supprimer`, `eleves.ajouter/nommer/regenerer/supprimer`, `tableau` |
+| POST | `/api/prof.php` `{action, …}` | `connexion`, `deconnexion`, `moi`, `profs.annuaire`, `profs.liste/ajouter` (administrateur), `classes.liste/creer/modifier/supprimer`, `partages.liste/ajouter/supprimer`, `eleves.ajouter/nommer/regenerer/supprimer`, `tableau` |
 
 ## Sécurité
 
@@ -106,10 +132,14 @@ php tests/lancer.php
 
 Lance un vrai serveur PHP sur une copie de `public/` avec une base SQLite
 jetable et interroge l'API comme le fera l'appli : installation, connexion,
-classes, codes, lecture/écriture, cloisonnement entre élèves et entre
-applis, CORS, injection SQL, taille maximale, régénération de code,
-suppressions, limitation de débit, et l'API de la page d'accueil élève.
-**39 tests, 0 échec au 29/08/2026**, exécutés dans l'environnement de
+classes, codes, lecture/écriture, cloisonnement entre élèves, entre applis
+et **entre professeurs** (classe d'un collègue invisible, partage en lecture
+qui n'ouvre aucune écriture, partage en écriture qui n'autorise pas la
+suppression de la classe, retrait du partage, création de compte réservée à
+l'administrateur), reprise d'une base de l'ancienne version, CORS, injection
+SQL, taille maximale, régénération de code, suppressions, limitation de débit,
+et l'API de la page d'accueil élève.
+**59 tests, 0 échec au 30/08/2026**, exécutés dans l'environnement de
 développement de Claude. PHP n'étant pas installé sur le poste de Gwenaël,
 ces tests ne peuvent pas être rejoués depuis Claude Code.
 
