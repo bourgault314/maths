@@ -288,6 +288,8 @@
                       flex-wrap: wrap; margin: 10px 0 0; padding: 8px 12px; border-radius: 12px;
                       background: #eef6f6; color: #0b5f5c; font-weight: 800; font-size: .92rem; }
     .parcours-suivi .puce { width: 9px; height: 9px; border-radius: 50%; background: #08aaa5; }
+    .parcours-suivi.hors-ligne { background: #fdf0e3; color: #8a4c0a; }
+    .parcours-suivi.hors-ligne .puce { background: #d9822b; }
     .parcours-code-input { text-transform: uppercase; letter-spacing: .18em; font-weight: 900; }
     .fiche-ecran { max-width: 900px; margin: 0 auto; padding: 12px 4px 24px; }
     .fiche-ecran-barre { display: flex; align-items: center; justify-content: space-between;
@@ -439,9 +441,10 @@
     .calculs-screen { max-width: 560px; margin: 0 auto; }
     .calculs-resume { margin: 12px 0 0; color: var(--ink); font-weight: 900; text-align: center; }
     .calculs-detail {
-      min-height: 48px;
+      min-height: 78px;
       display: grid;
       place-items: center;
+      gap: 2px;
       margin: 10px 0 0;
       padding: 8px 12px;
       border: 2px solid #d4e3ed;
@@ -450,8 +453,14 @@
       background: #f8fcff;
       font-size: .9rem;
       font-weight: 850;
+      line-height: 1.25;
       text-align: center;
     }
+    /* La hauteur minimale couvre les trois lignes : la grille ne saute pas
+       quand l’élève passe d’une case à l’autre. */
+    .mc-detail-calcul { font-size: 1.05rem; font-weight: 900; }
+    .mc-detail-etat { font-size: .85rem; font-weight: 850; }
+    .mc-detail-note { font-size: .78rem; font-weight: 700; opacity: .85; }
     .calculs-detail.is-su { border-color: #9ed4b4; color: var(--green); background: var(--green-soft); }
     .calculs-detail.is-en-cours { border-color: #a9c8e8; color: var(--blue); background: #eef6ff; }
     .calculs-detail.is-a-travailler { border-color: #f2c59a; color: #9a4207; background: #fff1e4; }
@@ -985,6 +994,21 @@
       .challenge-playing .actions .secondary { min-height: 44px; padding: 7px 15px; }
     }
 
+    /* Sur un écran large, Mon parcours passe en deux colonnes plus serrées :
+       on voit 10 blocs sur 11 sans descendre au lieu de 5. Rien ne change en
+       dessous de 1040 px — téléphone et tablette gardent l'écran d'origine. */
+    @media (min-width: 1040px) {
+      .parcours-screen { max-width: 1120px; }
+      .parcours-list { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
+      .parcours-row { padding: 7px 10px 8px; border-radius: 13px; }
+      .parcours-row-head { margin-bottom: 4px; }
+      .parcours-row-head strong { font-size: .98rem; }
+      .parcours-group-label { font-size: .64rem; }
+      .parcours-cells .cell { min-height: 34px; border-radius: 9px; font-size: .95rem; }
+      .parcours-cells .cell .dot { width: 13px; height: 13px; }
+      .parcours-extra { margin-top: 8px; }
+    }
+
     @media (max-width: 480px) {
       .parcours-toolbar { padding: 0 50px; }
       .parcours-next { grid-template-columns: 1fr; }
@@ -1029,6 +1053,10 @@
     .fiche-table td:first-child { padding-left: 4mm; border-left: .3mm solid #cfe2ed; border-radius: 3mm 0 0 3mm; color: #143451; font-size: 12.5pt; font-weight: 700; text-align: left; }
     .fiche-table td:last-child { border-right: .3mm solid #cfe2ed; border-radius: 0 3mm 3mm 0; }
     .fiche-table td.fiche-gap { width: 6mm; background: transparent; border: 0; }
+    /* Trois groupes, trois blocs : un trait sépare J'apprends, Je m'entraîne et
+       Acquise, sinon les huit ronds se lisent comme une seule file. */
+    .fiche-table th:nth-child(3), .fiche-table th:nth-child(4),
+    .fiche-table td:nth-child(6), .fiche-table td:nth-child(9) { border-left: .5mm solid #b9d4e6; }
     .fiche-table tr.is-acquise td { background: #f2fbf5; }
     .fiche-dot { display: inline-block; width: 7.6mm; height: 7.6mm; border: .35mm solid #7ea1b8; border-radius: 50%; background: #fff; vertical-align: middle; }
     .fiche-dot.is-started { border-color: #087f75; background: linear-gradient(90deg, #087f75 50%, #fff 50%); }
@@ -1254,8 +1282,8 @@
         <div id="parcours-fusion" class="parcours-confirm" hidden>
           <p id="parcours-fusion-text"></p>
           <div class="parcours-name-row">
-            <button id="parcours-fusion-oui" class="primary" type="button">Oui, c’est moi</button>
-            <button id="parcours-fusion-non" class="secondary" type="button">Non, ce n’est pas moi</button>
+            <button id="parcours-fusion-oui" class="primary" type="button">Oui, c’est le mien</button>
+            <button id="parcours-fusion-non" class="secondary" type="button">Non, c’est celui de quelqu’un d’autre</button>
           </div>
         </div>
         <form id="parcours-name" class="parcours-name" hidden>
@@ -1310,11 +1338,11 @@
           <span><span class="mc-cell is-en-cours"><span class="mc-cases"><span class="mc-case is-pleine"></span><span class="mc-case"></span><span class="mc-case"></span></span></span> en cours</span>
           <span><span class="mc-cell is-su"><span class="mc-cases"><span class="mc-case is-pleine"></span><span class="mc-case is-pleine"></span><span class="mc-case is-pleine"></span></span></span> su</span>
         </div>
-        <p class="calculs-note">Une case gagnée par bonne réponse — au plus une par jour et par calcul, su = trois jours différents — et une case perdue à chaque erreur. La grille se remplit dans les séries du parcours et les révisions, jamais dans J’apprends, Réglages ou l’évaluation CM1. 7 × 8 et 8 × 7 comptent ensemble : la moitié grisée du tableau est le miroir de l’autre.</p>
         <div class="calculs-action">
           <button id="calculs-reviser" class="primary" type="button">Réviser mes calculs</button>
           <p id="calculs-hint" class="calculs-hint">10 questions sans chrono, sur ce que tu sais le moins.</p>
         </div>
+        <p class="calculs-note">Une case gagnée par bonne réponse — au plus une par jour et par calcul, su = trois jours différents — et une case perdue à chaque erreur. La grille se remplit dans les séries du parcours et les révisions, jamais dans J’apprends, Réglages ou l’évaluation CM1. 7 × 8 et 8 × 7 comptent ensemble : la moitié grisée du tableau est le miroir de l’autre.</p>
       </div>
 
       <div id="play" hidden>
@@ -1401,9 +1429,10 @@
     </div>
     <div class="fiche-rules">
       <strong>Les règles</strong>
-      <p>J’apprends : un rond par activité terminée. Je m’entraîne : 10 questions sans chrono, 1 erreur max.</p>
-      <p>Acquise : 20 questions (produits et trous) en 1 min 30, 2 erreurs max. Mélange : 25 produits en 2 min, 2 erreurs max.</p>
-      <p>Expert (tables 2 à 10 mélangées, 25 questions en 2 min, 2 erreurs max) : ★ produits · ★★ + trous · ★★★ + divisions.</p>
+      <p><b>J’apprends</b> : un rond par activité terminée. On découvre la table, il n’y a rien à réussir.</p>
+      <p><b>Je m’entraîne</b> : 10 questions sans chronomètre, 1 erreur au maximum. Trois entraînements différents.</p>
+      <p><b>Acquise ✓</b> : 20 questions (produits et nombres manquants) en 1 min 30, 2 erreurs au maximum.</p>
+      <p><b>Mélange</b> : 25 produits des tables acquises en 2 min. <b>Expert</b> : les tables 2 à 10 mélangées — ★ produits · ★★ + trous · ★★★ + divisions.</p>
     </div>
     <footer class="fiche-foot">mathsgo.re · CC BY-NC-SA 4.0</footer>
     <section class="fiche-page2">
@@ -1413,8 +1442,10 @@
       <p class="fiche-carre-note">Gris clair : pas encore vu · orange : à travailler · bleu : en cours · vert : su. La moitié grisée est le miroir de l’autre — 7 × 8 et 8 × 7 sont le même calcul.</p>
       <div class="fiche-rules">
         <strong>Comment lire la grille</strong>
-        <p>7 × 8 et 8 × 7 comptent ensemble : c’est le même calcul à mémoriser. Les tables de 1 et de 10 ne sont pas dans la grille.</p>
-        <p>Dans l’application, la grille se remplit dans les séries du parcours et les révisions (jamais dans J’apprends, Réglages ou l’évaluation CM1), et « Réviser mes calculs » repropose d’abord ce qui est le moins su.</p>
+        <p><b>7 × 8 = 8 × 7</b> : c’est le même calcul à mémoriser, il n’occupe qu’une case du tableau. C’est pourquoi une moitié est grisée.</p>
+        <p><b>Une case par jour au maximum.</b> Un calcul est su quand il a été retrouvé <b>trois jours différents</b> — pas trois fois dans la même minute. Une erreur efface une case, sans limite.</p>
+        <p><b>Les tables de 1 et de 10 n’y sont pas</b> : elles se retrouvent sans les apprendre par cœur.</p>
+        <p>La grille se remplit dans les entraînements, les validations et les révisions — jamais dans J’apprends, ni dans Réglages, ni dans l’évaluation CM1.</p>
       </div>
       <footer class="fiche-foot">mathsgo.re · CC BY-NC-SA 4.0</footer>
     </section>
@@ -1463,6 +1494,7 @@
       let codeSuivi = PARCOURS.chargerCode(storage());
       let suiviIdentite = null;
       let saisieCodeOuverte = false;
+      let suiviHorsLigne = false;
       let questionFusion = null;
       let envoiEnAttente = null;
 
@@ -1507,6 +1539,12 @@
             method: "POST",
             headers: {"Content-Type": "text/plain;charset=UTF-8"},
             body: paquet
+          }).then(reponse => {
+            const passe = reponse.statut === 200;
+            if (passe === suiviHorsLigne) {
+              suiviHorsLigne = !passe;
+              renderParcours();
+            }
           });
         }, 700);
       }
@@ -1550,6 +1588,7 @@
 
       function appliquerSuivi(code, distant, remplacer) {
         codeSuivi = code;
+        suiviHorsLigne = false;
         PARCOURS.sauverCode(storage(), code);
         if (distant) {
           parcours = remplacer ? distant : PARCOURS.fusionner(parcours, distant);
@@ -1577,7 +1616,17 @@
           return false;
         }
         if (reponse.statut !== 200 || !reponse.donnees || !reponse.donnees.ok) {
-          if (!silencieux) messageCode("Le serveur ne répond pas. Ton parcours reste sur cet appareil : réessaie plus tard.");
+          // Le code vient du lien de son espace : il est bon, c'est le réseau qui
+          // manque. On le garde et on le dira, plutôt que de laisser l'élève
+          // travailler en croyant à tort qu'il est suivi.
+          if (silencieux) {
+            codeSuivi = code;
+            PARCOURS.sauverCode(storage(), code);
+            suiviHorsLigne = true;
+            renderParcours();
+            return true;
+          }
+          messageCode("Le serveur ne répond pas. Ton parcours reste sur cet appareil : réessaie plus tard.");
           return false;
         }
         const distant = reponse.donnees.existe
@@ -1587,7 +1636,7 @@
         // Appareil partagé : un code différent de celui d'ici, sur un parcours
         // déjà commencé, ce sont peut-être deux élèves. On demande.
         if (codeSuivi !== code && !PARCOURS.estVide(parcours)) {
-          questionFusion = {code, distant};
+          questionFusion = {code, distant, confirme: false};
           saisieCodeOuverte = false;
           renderParcours();
           return true;
@@ -1605,6 +1654,7 @@
         chargerIdentite(codeSuivi);
         lireParcoursDuServeur(codeSuivi).then(reponse => {
           if (state.running) return;
+          suiviHorsLigne = reponse.statut === 0 || reponse.statut >= 500;
           if (reponse.statut === 200 && reponse.donnees && reponse.donnees.ok && reponse.donnees.existe) {
             parcours = PARCOURS.fusionner(parcours, PARCOURS.normaliserParcours(reponse.donnees.parcours));
             PARCOURS.sauver(storage(), parcours);
@@ -2594,6 +2644,24 @@
         return `${nombre} ${mot}${nombre > 1 ? "s" : ""}`;
       }
 
+      // Même convention de date que le moteur (defi_tables_mon_parcours.js),
+      // sinon l’affichage et la règle « une case par jour » ne parleraient pas
+      // du même jour.
+      function jourDuJour() {
+        return new Date().toISOString().slice(0, 10);
+      }
+
+      function majuscule(texte) {
+        return texte ? texte.charAt(0).toUpperCase() + texte.slice(1) : texte;
+      }
+
+      function ligneDetail(classe, texte) {
+        const span = document.createElement("span");
+        span.className = classe;
+        span.textContent = texte;
+        return span;
+      }
+
       function resumeCalculsTexte(resume) {
         const morceaux = [`${pluriel(resume.sus, "calcul")} su${resume.sus > 1 ? "s" : ""}`, `${resume.enCours} en cours`, `${resume.aTravailler} à travailler`];
         if (resume.jamaisVus) morceaux.push(`${resume.jamaisVus} pas encore vu${resume.jamaisVus > 1 ? "s" : ""}`);
@@ -2621,11 +2689,24 @@
         // La réponse est affichée exprès (choix de Gwenaël) : la grille sert
         // aussi à réviser en pointant ses rouges. Le garde-fou est ailleurs :
         // une case gagnée au maximum par calcul et par jour.
-        const morceaux = [`${ligne} × ${colonne} = ${ligne * colonne}`, `${pluriel(cases, "case")} sur 3`, LIBELLES_ETATS_CALCULS[etat]];
-        if (fait && fait.erreur) morceaux.push(`dernière erreur : ${formaterJour(fait.erreur)}`);
-        else if (fait) morceaux.push(`vu ${formaterJour(fait.vu)}`);
+        // Le calcul est écrit dans les deux sens (demande de Claire) : c’est ici
+        // que l’élève regarde quand il se demande pourquoi la moitié grisée du
+        // tableau reste éteinte. Les informations sont empilées au lieu d’être
+        // alignées derrière des points : le calcul, l’état, puis la date
+        // seulement quand elle veut dire quelque chose.
+        const produit = ligne * colonne;
+        const calcul = ligne === colonne
+          ? `${ligne} × ${colonne} = ${produit}`
+          : `${ligne} × ${colonne} = ${colonne} × ${ligne} = ${produit}`;
+        let note = "";
+        if (fait && fait.erreur) note = `Dernière erreur : ${formaterJour(fait.erreur)}.`;
+        else if (fait && fait.gagne === jourDuJour()) note = "Une case par jour : reviens demain.";
+        else if (fait && fait.vu) note = `Vu ${formaterJour(fait.vu)}.`;
         zone.className = `calculs-detail is-${etat}`;
-        zone.textContent = morceaux.join(" · ");
+        zone.replaceChildren();
+        zone.appendChild(ligneDetail("mc-detail-calcul", calcul));
+        zone.appendChild(ligneDetail("mc-detail-etat", `${majuscule(LIBELLES_ETATS_CALCULS[etat])} — ${pluriel(cases, "case")} sur 3`));
+        if (note) zone.appendChild(ligneDetail("mc-detail-note", note));
       }
 
       function renderCalculs() {
@@ -2831,7 +2912,11 @@
           const puce = document.createElement("span");
           puce.className = "puce";
           puce.setAttribute("aria-hidden", "true");
-          suivi.append(puce, document.createTextNode(`Suivi par ton professeur${qui}${ou}`));
+          // Sans connexion, on ne laisse pas croire que le travail est déjà parti.
+          suivi.classList.toggle("hors-ligne", suiviHorsLigne);
+          suivi.append(puce, document.createTextNode(suiviHorsLigne
+            ? "Suivi par ton professeur · pas de connexion, ton travail partira plus tard"
+            : `Suivi par ton professeur${qui}${ou}`));
         }
         $("parcours-code-open").textContent = suiviActif()
           ? "Changer mon code de classe"
@@ -2840,8 +2925,15 @@
         $("parcours-code").hidden = !saisieCodeOuverte;
         $("parcours-fusion").hidden = !questionFusion;
         if (questionFusion) {
-          $("parcours-fusion-text").textContent =
-            "Il y a déjà un parcours commencé sur cet appareil. Est-ce que c’est le tien ?";
+          // Deuxième temps : remplacer efface le travail de quelqu'un d'autre,
+          // qui n'est peut-être enregistré nulle part. On le dit avant.
+          $("parcours-fusion-text").textContent = questionFusion.confirme
+            ? "Le parcours déjà présent sur cet appareil va être effacé. S’il appartient à un camarade qui n’a pas de code, son travail sera perdu. On continue ?"
+            : "Il y a déjà un parcours commencé sur cet appareil. Est-ce que c’est le tien ?";
+          $("parcours-fusion-oui").textContent = questionFusion.confirme
+            ? "Oui, efface-le" : "Oui, c’est le mien";
+          $("parcours-fusion-non").textContent = questionFusion.confirme
+            ? "Annuler" : "Non, c’est celui de quelqu’un d’autre";
         }
         $("parcours-name-note").textContent = suiviActif()
           ? "Ton prénom reste sur cet appareil. Ta progression, elle, est enregistrée pour ton professeur."
@@ -3082,9 +3174,11 @@
         const etat = PARCOURS.etatAffichage(fiche);
         $("fiche-prenom").textContent = fiche.prenom;
         $("fiche-date").textContent = PARCOURS.estVide(fiche) ? "" : new Date().toLocaleDateString("fr-FR");
+        // Depuis le suivi, c'est l'application qui tient le carnet : une fiche
+        // remplie est une photo de l'instant, pas une feuille à continuer.
         $("fiche-subtitle").textContent = PARCOURS.estVide(fiche)
-          ? "Colorie les ronds au fur et à mesure, comme dans l’application."
-          : "Ma progression dans l’application à ce jour. Continue à colorier au fur et à mesure.";
+          ? "Rien d’enregistré pour l’instant : à colorier à la main, ou à remplir en jouant dans l’application."
+          : "Ma progression dans l’application à ce jour. Elle se met à jour toute seule — cette feuille en est la photo.";
         const rows = $("fiche-rows");
         rows.replaceChildren();
         etat.lignes.forEach(ligne => {
@@ -3263,11 +3357,23 @@
       });
       $("parcours-fusion-oui").addEventListener("click", () => {
         if (!questionFusion) return;
+        if (questionFusion.confirme) {
+          appliquerSuivi(questionFusion.code, questionFusion.distant, true);
+          return;
+        }
         appliquerSuivi(questionFusion.code, questionFusion.distant, false);
       });
       $("parcours-fusion-non").addEventListener("click", () => {
         if (!questionFusion) return;
-        appliquerSuivi(questionFusion.code, questionFusion.distant, true);
+        if (questionFusion.confirme) {
+          // « Annuler » : on revient à la question, rien n'est effacé.
+          questionFusion = {code: questionFusion.code, distant: questionFusion.distant, confirme: false};
+          renderParcours();
+          return;
+        }
+        questionFusion = {code: questionFusion.code, distant: questionFusion.distant, confirme: true};
+        renderParcours();
+        $("parcours-fusion-non").focus?.({preventScroll: true});
       });
       $("fiche-ecran-print").addEventListener("click", () => window.setTimeout(() => window.print(), 30));
 

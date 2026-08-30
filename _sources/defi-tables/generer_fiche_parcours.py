@@ -2,7 +2,7 @@
 
 Sorties :
   - outils/calcul_mental/fiche_parcours_tables.pdf   (fiche vide à photocopier :
-    page 1 = parcours par table, page 2 = grille « Mes calculs », 36 faits × 3 cases)
+    page 1 = parcours par table, page 2 = carré de Pythagore 2→9, 3 cases par calcul)
   - assets/img/qr-defi-tables-parcours.svg           (QR utilisé aussi par la
     fiche imprimée depuis l'appli, qui reproduit la même mise en page en HTML)
 
@@ -28,26 +28,30 @@ from reportlab.pdfgen import canvas
 
 TITLE_LINE_1 = "MON PARCOURS"
 TITLE_LINE_2 = "DES TABLES"
-SUBTITLE = "Colorie les ronds au fur et à mesure, comme dans l’application."
+SUBTITLE = "Feuille à colorier à la main. Dans l’application, elle se remplit toute seule."
 APP_URL = "https://mathsgo.re/outils/calcul_mental/defi_tables.html#parcours"
 FOOTER_TEXT = "mathsgo.re  ·  CC BY-NC-SA 4.0"
 TABLES = range(2, 11)
 APPRENDS = ["bâton", "à trous", "ordre", "désordre"]
 ENTRAINE = ["produits", "trous", "les deux"]
 RULES = [
-    "J’apprends : un rond par activité terminée.   Je m’entraîne : 10 questions sans chrono, 1 erreur max.",
-    "Acquise : 20 questions (produits et trous) en 1 min 30, 2 erreurs max.   Mélange : 25 produits en 2 min, 2 erreurs max.",
-    "Expert (tables 2 à 10 mélangées, 25 questions en 2 min, 2 erreurs max) : ★ produits · ★★ + trous · ★★★ + divisions.",
+    "J’apprends : un rond par activité terminée. On découvre la table, il n’y a rien à réussir.",
+    "Je m’entraîne : 10 questions sans chronomètre, 1 erreur au maximum. Trois entraînements différents.",
+    "Acquise ✓ : 20 questions (produits et nombres manquants) en 1 min 30, 2 erreurs au maximum.",
+    "Mélange : 25 produits des tables acquises en 2 min.   Expert : tables 2 à 10 mélangées, ★ produits · ★★ + trous · ★★★ + divisions.",
 ]
 
-# Page 2 : grille « Mes calculs » — les 36 faits de 2×2 à 9×9, sens confondus.
+# Page 2 : « Mes calculs » — carré de Pythagore 2→9, sens confondus (moitié miroir grisée).
 CALC_TITLE = "MES CALCULS"
-CALC_SUBTITLE = "Trois cases par calcul : une bonne réponse en coche une (au plus une par jour), une erreur en efface une. Trois cases = calcul su."
+CALC_SUBTITLE = "Trois cases par calcul : une bonne réponse en coche une (au plus une par jour),"
+CALC_SUBTITLE_2 = "une erreur en efface une. Trois cases cochées = calcul su."
 FACTS = [(a, b) for a in range(2, 10) for b in range(a, 10)]
 CALC_RULES = [
-    "7 × 8 et 8 × 7 comptent ensemble : c’est le même calcul à mémoriser. Les tables de 1 et de 10 ne sont pas dans la grille.",
-    "Dans l’application, la grille se remplit dans les séries du parcours et les révisions (jamais dans",
-    "J’apprends, Réglages ou l’évaluation CM1), et « Réviser mes calculs » repropose d’abord ce qui est le moins su.",
+    "7 × 8 = 8 × 7 : c’est le même calcul à mémoriser, il n’occupe qu’une case du tableau. C’est pourquoi une moitié est grisée.",
+    "Une case par jour au maximum. Un calcul est su quand il a été retrouvé trois jours différents — pas trois fois",
+    "dans la même minute. Une erreur efface une case, sans limite.",
+    "Les tables de 1 et de 10 n’y sont pas : elles se retrouvent sans les apprendre par cœur.",
+    "La grille se remplit dans les entraînements, les validations et les révisions — jamais dans J’apprends.",
 ]
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -236,34 +240,58 @@ def draw_calc_sheet(pdf: canvas.Canvas) -> None:
     pdf.setFillColor(MUTED)
     pdf.setFont("SheetSans", 9)
     pdf.drawCentredString(width / 2, top - 15 * mm, CALC_SUBTITLE)
+    pdf.drawCentredString(width / 2, top - 19.5 * mm, CALC_SUBTITLE_2)
 
-    # Grille des 36 faits : 3 colonnes × 12 lignes
-    grid_top = top - 22 * mm
-    columns = 3
-    gutter = 6 * mm
-    cell_w = (width - 2 * margin - (columns - 1) * gutter) / columns
-    cell_h = 12.4 * mm
-    gap_v = 2.6 * mm
-    box = 4.6 * mm
-    for index, (first, second) in enumerate(FACTS):
-        column = index // 12
-        row = index % 12
-        x = margin + column * (cell_w + gutter)
-        y = grid_top - row * (cell_h + gap_v) - cell_h
-        rounded_box(pdf, x, y, cell_w, cell_h, CARD, LINE, radius=2 * mm, width=0.9)
-        cy = y + cell_h / 2
-        pdf.setFillColor(INK)
-        pdf.setFont("SheetSans-Bold", 12)
-        pdf.drawString(x + 3.5 * mm, cy - 1.6 * mm, f"{first} × {second}")
-        pdf.setStrokeColor(HexColor("#7EA1B8"))
-        pdf.setLineWidth(1.0)
-        pdf.setFillColor(WHITE)
-        for case in range(3):
-            bx = x + cell_w - 3.5 * mm - (3 - case) * (box + 1.4 * mm) + 1.4 * mm
-            pdf.roundRect(bx, cy - box / 2, box, box, 1 * mm, stroke=1, fill=1)
+    # Carré de Pythagore, 2 à 9 (décidé le 30/08/2026) : la moitié haute porte
+    # les trois cases à cocher, la moitié miroir est grisée — 7 × 8 et 8 × 7
+    # sont le même calcul, on ne le remplit qu'une fois. Même disposition que
+    # l'écran « Mes calculs » de l'appli et que la fiche remplie.
+    facteurs = list(range(2, 10))
+    grid_top = top - 27 * mm
+    entete_w = 14 * mm
+    cell_w = (width - 2 * margin - entete_w) / len(facteurs)
+    cell_h = 15 * mm
+    box = 4.2 * mm
+
+    # En-tête de colonnes
+    pdf.setFont("SheetSans-Bold", 11)
+    pdf.setFillColor(BLUE)
+    pdf.drawCentredString(margin + entete_w / 2, grid_top + 3 * mm, "×")
+    for index, colonne in enumerate(facteurs):
+        cx = margin + entete_w + index * cell_w + cell_w / 2
+        pdf.drawCentredString(cx, grid_top + 3 * mm, str(colonne))
+
+    for rang, ligne in enumerate(facteurs):
+        y = grid_top - (rang + 1) * cell_h
+        pdf.setFont("SheetSans-Bold", 11)
+        pdf.setFillColor(BLUE)
+        pdf.drawCentredString(margin + entete_w / 2, y + cell_h / 2 - 1.6 * mm, str(ligne))
+        for index, colonne in enumerate(facteurs):
+            x = margin + entete_w + index * cell_w
+            miroir = colonne < ligne
+            pdf.setStrokeColor(LINE)
+            pdf.setLineWidth(0.7)
+            pdf.setFillColor(HexColor("#EEF1F5") if miroir else CARD)
+            pdf.rect(x, y, cell_w, cell_h, stroke=1, fill=1)
+            if miroir:
+                continue
+            cy = y + cell_h / 2
+            largeur_cases = 3 * box + 2 * (1.2 * mm)
+            depart = x + (cell_w - largeur_cases) / 2
+            pdf.setStrokeColor(HexColor("#7EA1B8"))
+            pdf.setLineWidth(1.0)
+            pdf.setFillColor(WHITE)
+            for case in range(3):
+                bx = depart + case * (box + 1.2 * mm)
+                pdf.roundRect(bx, cy - box / 2, box, box, 1 * mm, stroke=1, fill=1)
+
+    pdf.setFillColor(MUTED)
+    pdf.setFont("SheetSans", 8)
+    pdf.drawCentredString(width / 2, grid_top - len(facteurs) * cell_h - 5 * mm,
+                          "La moitié grisée est le miroir de l’autre : 7 × 8 et 8 × 7 sont le même calcul, on ne le remplit qu’une fois.")
 
     # Règles de lecture
-    y = grid_top - 12 * (cell_h + gap_v) - 6 * mm
+    y = grid_top - len(facteurs) * cell_h - 14 * mm
     pdf.setFillColor(INK)
     pdf.setFont("SheetSans-Bold", 9)
     pdf.drawString(margin, y, "Comment lire la grille")
