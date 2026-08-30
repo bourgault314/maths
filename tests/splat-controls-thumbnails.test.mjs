@@ -52,11 +52,11 @@ test("les raccourcis ne capturent plus la saisie et espace ne pilote plus la rev
 
 test("les cinq miniatures utilisent des vues fideles et adaptees aux outils", () => {
   assert.match(catalogue, /assets\/img\/thumbnails\/splat\/equasplat\.png\?v=5/);
-  assert.match(catalogue, /assets\/img\/thumbnails\/splat\/equascribe\.png\?v=2/);
+  assert.match(catalogue, /assets\/img\/thumbnails\/splat\/equascribe\.png\?v=3/);
   assert.match(catalogue, /assets\/img\/thumbnails\/splat\/splat\.png\?v=6/);
   assert.match(catalogue, /assets\/img\/thumbnails\/splat\/splat-equations\.png\?v=6/);
   assert.match(catalogue, /assets\/img\/thumbnails\/splat\/petit-splat\.png\?v=5/);
-  assert.match(cataloguePage, /catalogue-refonte-data\.js\?v=equascribe-chantier-20260830-1/);
+  assert.match(cataloguePage, /catalogue-refonte-data\.js\?v=equascribe-chantier-20260830-2/);
   for(const thumbnail of [equasplatThumb, equascribeThumb, classicThumb, equationThumb, petitThumb]){
     assert.deepEqual(pngSize(thumbnail), {width:720, height:320});
   }
