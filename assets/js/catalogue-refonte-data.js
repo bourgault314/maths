@@ -257,6 +257,7 @@ window.MATHSGO_CATALOGUE = {
       "collections": ["splat"],
       "tags": ["equation", "inconnue", "resolution", "splat", "redaction"],
       "thumbnail": "assets/img/thumbnails/splat/equascribe.png?v=1",
+      "cardTitle": "ÉquaScribe — en chantier",
       "cardDescription": "Résoudre l’équation elle-même avec les gestes de Splat, en écrivant soi-même tous les nombres — le plateau en aide."
     },
     "outils/equasplat.html": {
