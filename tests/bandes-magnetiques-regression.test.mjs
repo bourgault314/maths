@@ -61,6 +61,29 @@ test('plusieurs points peuvent laisser une trace simultanément', () => {
   assert.match(html, /Trace : cliquez sur un point pour l’activer ou le désactiver/);
 });
 
+test('un point tracé devient vert sans grand halo', () => {
+  assert.match(html, /const pointIsTraced = state\.tracedPointIds\.has\(p\.id\)/);
+  assert.match(html, /fillStyle = pointIsTraced \? '#0d9488'/);
+  assert.match(html, /strokeStyle = pointIsTraced \? '#0f766e'/);
+  assert.doesNotMatch(html, /const traceRing =|arc\(p\.x, p\.y, traceRing/);
+});
+
+test('deux segments de même longueur gardent la même couleur', () => {
+  assert.match(html, /customStripTypeByLength:\s*new Map\(\)/);
+  assert.match(html, /function getCustomStripTypeForLength\(length\)/);
+  assert.match(html, /state\.customStripTypeByLength\.get\(lengthKey\)/);
+  assert.match(html, /state\.customStripTypeByLength\.set\(lengthKey, type\)/);
+  assert.match(html, /const type = getCustomStripTypeForLength\(lengthCm\)/);
+  assert.match(html, /state\.customStripTypeByLength\.clear\(\)/);
+  assert.doesNotMatch(html, /nextCustomStripColor/);
+});
+
+test('le stylo d’annotation est légèrement affiné sans toucher à la trace automatique', () => {
+  assert.match(html, /const stroke = \{ color: strokeStyle, width: 2\.5/);
+  assert.equal((html.match(/ctxDraw\.lineWidth = 2\.5/g) || []).length, 2);
+  assert.match(html, /automaticTrace: true[\s\S]*width: 2\.5|width: 2\.5[\s\S]*automaticTrace: true/);
+});
+
 test('la suppression fonctionne par bouton ou par glisser vers le haut', () => {
   assert.match(html, /id="btn-delete-object"[^>]+onclick="toggleDeleteSelectionMode\(\)"/);
   assert.match(html, /if \(state\.deleteSelectionMode\) \{[\s\S]*removeConnectedGroup\(stripToDelete\)/);
