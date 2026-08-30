@@ -13,7 +13,11 @@ require __DIR__ . '/../lib/applis.php';
 cors();
 
 try {
-    $code = normaliser_code((string)($_GET['code'] ?? ''));
+    // Le code arrive dans le corps (POST) pour ne pas s'inscrire dans les
+    // journaux de l'hébergeur ; ?code=… reste accepté pour le dépannage.
+    $methode = $_SERVER['REQUEST_METHOD'] ?? 'GET';
+    $corps = $methode === 'POST' ? corps_json(4000) : [];
+    $code = normaliser_code((string)($corps['code'] ?? $_GET['code'] ?? ''));
     if (!code_valide($code)) {
         erreur("Code élève invalide.", 400);
     }

@@ -639,6 +639,57 @@ test("l’aiguillage de l’adresse reconnaît le lien réel de l’espace élè
   assert.deepEqual(aiguiller(""), ["suivi:null"], "sans adresse, l’appli s’ouvre normalement");
 });
 
+// Le code de l'élève arrive dans l'adresse (#code=……). S'il y reste, il part
+// dans la mesure d'audience — page_location, c'est location.href, fragment
+// compris — il s'inscrit dans l'historique du navigateur, et il s'affiche au
+// tableau quand la page est projetée. Ce test EXÉCUTE le bloc de lecture de la
+// page avec une fausse barre d'adresse et vérifie ce qui y reste après coup.
+test("le code de l’élève est effacé de la barre d’adresse dès qu’il est lu", () => {
+  const bloc = /const adresse = window\.location\.hash \|\| "";([\s\S]*?)\n      \}\n    \}\)\(\);/.exec(html);
+  assert.ok(bloc, "le bloc de lecture de l’adresse doit être trouvable dans la page");
+
+  const jouer = new Function("hash", `
+    const appels = [];
+    let remplacee = null;
+    const window = {
+      location: {hash, pathname: "/outils/calcul_mental/defi_tables.html", search: ""},
+      history: {replaceState: (a, b, url) => { remplacee = url; }}
+    };
+    const openParcours = () => appels.push("parcours");
+    const openCalculs = () => appels.push("calculs");
+    const ouvrirFicheEleve = code => appels.push("fiche:" + code);
+    const demarrerSuivi = code => appels.push("suivi:" + code);
+    const adresse = window.location.hash || "";${bloc[1]}
+    }
+    return {appels, remplacee, suiviEleve: window.MATHSGO_SUIVI_ELEVE === true};
+  `);
+
+  const lien = jouer("#code=2F4FUL&ouvrir=parcours");
+  assert.deepEqual(lien.appels, ["parcours", "suivi:2F4FUL"],
+    "le suivi doit démarrer normalement : on nettoie l’adresse, on ne casse rien");
+  assert.ok(lien.remplacee !== null, "l’adresse doit être remplacée");
+  assert.ok(!lien.remplacee.includes("2F4FUL"), `le code ne doit plus être dans l’adresse (${lien.remplacee})`);
+  assert.ok(lien.remplacee.includes("ouvrir=parcours"), "le reste de l’adresse doit survivre");
+
+  assert.equal(lien.suiviEleve, true,
+    "l’appli doit signaler qu’un élève est identifié, pour que consentement.js ne charge aucune mesure d’audience");
+
+  const seul = jouer("#code=2F4FUL");
+  assert.deepEqual(seul.appels, ["parcours", "suivi:2F4FUL"]);
+  assert.equal(seul.remplacee, "/outils/calcul_mental/defi_tables.html",
+    "sans autre paramètre, il ne doit plus rester de fragment du tout");
+
+  const fiche = jouer("#fiche=CDEF23");
+  assert.deepEqual(fiche.appels, ["fiche:CDEF23"]);
+  assert.ok(!fiche.remplacee.includes("CDEF23"),
+    "le code de la fiche du professeur est un code élève : il doit disparaître aussi");
+
+  const sansCode = jouer("#parcours");
+  assert.equal(sansCode.remplacee, null, "sans code, on ne touche pas à l’adresse");
+  assert.equal(sansCode.suiviEleve, false,
+    "sans code, rien ne change pour un visiteur ordinaire du site");
+});
+
 // Le lien est fabriqué d'un côté et lu de l'autre : c'est l'écart entre les deux
 // qui a coûté le lot 8. On vérifie que le serveur ne met dans l'adresse que des
 // paramètres que la page sait lire.
@@ -680,22 +731,39 @@ test("le lien du haut ramène l’élève suivi à son espace, les autres au cat
         return selecteur === ".catalogue-link-label" ? this.etiquette : null;
       }
     };
-    const faux = {getElementById: id => (id === "lien-retour" ? lien : null)};
+    const logo = {
+      href: "",
+      attributs: {},
+      setAttribute(nom, valeur) { this.attributs[nom] = valeur; }
+    };
+    const faux = {
+      getElementById: id => (id === "lien-retour" ? lien : null),
+      querySelector: selecteur => (selecteur === "a.brand" ? logo : null)
+    };
     new Function("SUIVI_URL", "document", "suiviActif", `${source}\nreturn majLienRetour;`)(
       "https://suivi.mathsgo.re", faux, () => suivi
     )();
-    return lien;
+    return {lien, logo};
   }
 
-  const sansCode = executer(false);
+  const sansCode = executer(false).lien;
   assert.equal(sansCode.href, "../index.html?domain=nombres-calculs&notion=calcul-mental");
   assert.equal(sansCode.etiquette.textContent, "Calcul mental");
   assert.equal(sansCode.attributs["aria-label"], "Retour au calcul mental");
 
-  const avecCode = executer(true);
+  const avecCode = executer(true).lien;
   assert.equal(avecCode.href, "https://suivi.mathsgo.re/");
   assert.equal(avecCode.etiquette.textContent, "Mon espace");
   assert.equal(avecCode.attributs["aria-label"], "Retour à mon espace");
+
+  // Le logo était la dernière porte de sortie : il ramenait toujours à
+  // l'accueil du site, y compris pour un élève arrivé de son espace.
+  assert.equal(executer(false).logo.href, "/",
+    "pour un visiteur ordinaire, le logo ramène à l'accueil du site");
+  assert.equal(executer(false).logo.attributs["aria-label"], "Accueil maths&go");
+  assert.equal(executer(true).logo.href, "https://suivi.mathsgo.re/",
+    "pour un élève suivi, le logo ramène à son espace");
+  assert.equal(executer(true).logo.attributs["aria-label"], "Retour à mon espace");
 });
 
 
@@ -745,4 +813,42 @@ test("la fiche d’un élève se met à l’échelle de l’écran, jamais du pa
   assert.equal(executer({page: 200, besoin: 518}), "0.45");
   // Hors de la vue « fiche d’un élève », la fonction ne fait rien.
   assert.equal(executer({page: 390, besoin: 518, modeFiche: false}), undefined);
+});
+
+// La phrase sous le champ prénom dit « Ton prénom reste sur cet appareil ». Elle
+// doit être VRAIE, y compris pour un élève suivi : c'est exactement le genre de
+// phrase qu'une famille cite de travers si elle ne l'est pas. Or le prénom est
+// une clé du parcours, et le parcours entier partait au serveur. Ce test EXÉCUTE
+// la fabrication du paquet telle qu'elle est écrite dans la page.
+test("le prénom tapé par l’élève ne part pas au serveur", () => {
+  const debut = html.indexOf("function paquetParcours(");
+  assert.ok(debut > 0, "la fabrication du paquet doit être trouvable dans la page");
+  const fin = html.indexOf("\n      }", debut) + "\n      }".length;
+  const source = html.slice(debut, fin);
+
+  const paquetParcours = new Function(`${source}\nreturn paquetParcours;`)();
+
+  const parcours = {
+    version: 1,
+    prenom: "Léa Dupont",
+    tables: {5: {acquise: "2026-08-30"}},
+    melange: {tables: [5, 7], aJour: false},
+    expert: {niveau: 0},
+    calculs: {"5-7": {cases: 1, gagne: "2026-08-30"}}
+  };
+  const envoye = JSON.parse(paquetParcours("2F4FUL", parcours));
+
+  assert.equal(envoye.parcours.prenom, "",
+    "le prénom tapé sur l’appareil ne doit jamais monter au serveur");
+  assert.equal(envoye.code, "2F4FUL");
+  assert.equal(envoye.appli, "defi-tables");
+  assert.deepEqual(envoye.parcours.tables, parcours.tables, "la progression, elle, doit partir entière");
+  assert.deepEqual(envoye.parcours.calculs, parcours.calculs);
+  assert.deepEqual(envoye.parcours.melange, parcours.melange);
+  assert.equal(envoye.parcours.expert.niveau, 0);
+
+  // Et l’appareil de l’élève, lui, garde son prénom : on n’a pas le droit de le
+  // lui effacer en passant.
+  assert.equal(parcours.prenom, "Léa Dupont",
+    "l’objet local ne doit pas être modifié par l’envoi");
 });

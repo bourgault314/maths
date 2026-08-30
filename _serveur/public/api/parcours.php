@@ -42,7 +42,11 @@ try {
     }
     $eleveId = (int)$eleve['id'];
 
-    if ($methode === 'GET') {
+    // Lecture. Deux façons de la demander :
+    //  - GET ?code=… : historique, gardée pour le dépannage à la main ;
+    //  - POST {"code":…,"lire":true} : celle qu'utilise l'appli, pour que le
+    //    code de l'élève ne s'inscrive pas dans les journaux de l'hébergeur.
+    if ($methode === 'GET' || ($methode === 'POST' && !empty($corps['lire']))) {
         $requete = $pdo->prepare('SELECT donnees, maj_le FROM progressions WHERE eleve_id = ? AND appli = ?');
         $requete->execute([$eleveId, $appli]);
         $ligne = $requete->fetch();
