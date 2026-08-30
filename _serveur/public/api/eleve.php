@@ -19,7 +19,7 @@ try {
         erreur("Méthode non autorisée.", 405);
     }
     $corps = corps_json(4000);
-    $code = normaliser_code((string)($corps['code'] ?? ''));
+    $code = normaliser_code(is_string($corps['code'] ?? null) ? $corps['code'] : '');
     if (!code_valide($code)) {
         erreur("Code élève invalide.", 400);
     }

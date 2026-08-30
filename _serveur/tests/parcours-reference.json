@@ -1,0 +1,417 @@
+{
+  "version": 1,
+  "epoque": 3,
+  "prenom": "",
+  "tables": {
+    "2": {
+      "apprends": {
+        "construct": 2,
+        "gaps": 2,
+        "ordered": 2,
+        "random": 2
+      },
+      "entraine": {
+        "desordre": 2,
+        "trous": 2,
+        "mixte": 2,
+        "dernier": {
+          "entrainement": "desordre",
+          "score": 9,
+          "total": 10
+        }
+      },
+      "acquise": "2026-09-01"
+    },
+    "3": {
+      "apprends": {
+        "construct": 2,
+        "gaps": 2,
+        "ordered": 2,
+        "random": 2
+      },
+      "entraine": {
+        "desordre": 2,
+        "trous": 2,
+        "mixte": 2,
+        "dernier": {
+          "entrainement": "trous",
+          "score": 9,
+          "total": 10
+        }
+      },
+      "acquise": "2026-09-02"
+    },
+    "4": {
+      "apprends": {
+        "construct": 2,
+        "gaps": 2,
+        "ordered": 2,
+        "random": 2
+      },
+      "entraine": {
+        "desordre": 2,
+        "trous": 2,
+        "mixte": 2,
+        "dernier": {
+          "entrainement": "mixte",
+          "score": 9,
+          "total": 10
+        }
+      },
+      "acquise": "2026-09-03"
+    },
+    "5": {
+      "apprends": {
+        "construct": 2,
+        "gaps": 2,
+        "ordered": 2,
+        "random": 2
+      },
+      "entraine": {
+        "desordre": 2,
+        "trous": 2,
+        "mixte": 2,
+        "dernier": {
+          "entrainement": "desordre",
+          "score": 9,
+          "total": 10
+        }
+      },
+      "acquise": "2026-09-04"
+    },
+    "6": {
+      "apprends": {
+        "construct": 2,
+        "gaps": 2,
+        "ordered": 2,
+        "random": 2
+      },
+      "entraine": {
+        "desordre": 2,
+        "trous": 2,
+        "mixte": 2,
+        "dernier": {
+          "entrainement": "trous",
+          "score": 9,
+          "total": 10
+        }
+      },
+      "acquise": "2026-09-05"
+    },
+    "7": {
+      "apprends": {
+        "construct": 2,
+        "gaps": 2,
+        "ordered": 2,
+        "random": 2
+      },
+      "entraine": {
+        "desordre": 2,
+        "trous": 2,
+        "mixte": 2,
+        "dernier": {
+          "entrainement": "mixte",
+          "score": 9,
+          "total": 10
+        }
+      },
+      "acquise": "2026-09-06"
+    },
+    "8": {
+      "apprends": {
+        "construct": 2,
+        "gaps": 2,
+        "ordered": 2,
+        "random": 2
+      },
+      "entraine": {
+        "desordre": 2,
+        "trous": 2,
+        "mixte": 2,
+        "dernier": {
+          "entrainement": "desordre",
+          "score": 9,
+          "total": 10
+        }
+      },
+      "acquise": "2026-09-07"
+    },
+    "9": {
+      "apprends": {
+        "construct": 2,
+        "gaps": 2,
+        "ordered": 2,
+        "random": 2
+      },
+      "entraine": {
+        "desordre": 2,
+        "trous": 2,
+        "mixte": 2,
+        "dernier": {
+          "entrainement": "trous",
+          "score": 9,
+          "total": 10
+        }
+      },
+      "acquise": "2026-09-08"
+    },
+    "10": {
+      "apprends": {
+        "construct": 2,
+        "gaps": 2,
+        "ordered": 2,
+        "random": 2
+      },
+      "entraine": {
+        "desordre": 2,
+        "trous": 2,
+        "mixte": 2,
+        "dernier": {
+          "entrainement": "mixte",
+          "score": 9,
+          "total": 10
+        }
+      },
+      "acquise": "2026-09-09"
+    }
+  },
+  "melange": {
+    "tables": [
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10
+    ],
+    "aJour": true,
+    "aRefaireAvec": null,
+    "dernier": "2026-09-20"
+  },
+  "expert": {
+    "niveau": 3,
+    "dernier": "2026-09-21",
+    "champion": "2026-09-22"
+  },
+  "calculs": {
+    "2-2": {
+      "cases": 0,
+      "vu": "2026-09-23",
+      "erreur": null,
+      "gagne": null
+    },
+    "2-3": {
+      "cases": 1,
+      "vu": "2026-09-23",
+      "erreur": "2026-09-22",
+      "gagne": "2026-09-23"
+    },
+    "2-4": {
+      "cases": 2,
+      "vu": "2026-09-23",
+      "erreur": null,
+      "gagne": "2026-09-23"
+    },
+    "2-5": {
+      "cases": 3,
+      "vu": "2026-09-23",
+      "erreur": "2026-09-22",
+      "gagne": null
+    },
+    "2-6": {
+      "cases": 0,
+      "vu": "2026-09-23",
+      "erreur": null,
+      "gagne": "2026-09-23"
+    },
+    "2-7": {
+      "cases": 1,
+      "vu": "2026-09-23",
+      "erreur": "2026-09-22",
+      "gagne": "2026-09-23"
+    },
+    "2-8": {
+      "cases": 2,
+      "vu": "2026-09-23",
+      "erreur": null,
+      "gagne": null
+    },
+    "2-9": {
+      "cases": 3,
+      "vu": "2026-09-23",
+      "erreur": "2026-09-22",
+      "gagne": "2026-09-23"
+    },
+    "3-3": {
+      "cases": 0,
+      "vu": "2026-09-23",
+      "erreur": null,
+      "gagne": "2026-09-23"
+    },
+    "3-4": {
+      "cases": 1,
+      "vu": "2026-09-23",
+      "erreur": "2026-09-22",
+      "gagne": null
+    },
+    "3-5": {
+      "cases": 2,
+      "vu": "2026-09-23",
+      "erreur": null,
+      "gagne": "2026-09-23"
+    },
+    "3-6": {
+      "cases": 3,
+      "vu": "2026-09-23",
+      "erreur": "2026-09-22",
+      "gagne": "2026-09-23"
+    },
+    "3-7": {
+      "cases": 0,
+      "vu": "2026-09-23",
+      "erreur": null,
+      "gagne": null
+    },
+    "3-8": {
+      "cases": 1,
+      "vu": "2026-09-23",
+      "erreur": "2026-09-22",
+      "gagne": "2026-09-23"
+    },
+    "3-9": {
+      "cases": 2,
+      "vu": "2026-09-23",
+      "erreur": null,
+      "gagne": "2026-09-23"
+    },
+    "4-4": {
+      "cases": 3,
+      "vu": "2026-09-23",
+      "erreur": "2026-09-22",
+      "gagne": null
+    },
+    "4-5": {
+      "cases": 0,
+      "vu": "2026-09-23",
+      "erreur": null,
+      "gagne": "2026-09-23"
+    },
+    "4-6": {
+      "cases": 1,
+      "vu": "2026-09-23",
+      "erreur": "2026-09-22",
+      "gagne": "2026-09-23"
+    },
+    "4-7": {
+      "cases": 2,
+      "vu": "2026-09-23",
+      "erreur": null,
+      "gagne": null
+    },
+    "4-8": {
+      "cases": 3,
+      "vu": "2026-09-23",
+      "erreur": "2026-09-22",
+      "gagne": "2026-09-23"
+    },
+    "4-9": {
+      "cases": 0,
+      "vu": "2026-09-23",
+      "erreur": null,
+      "gagne": "2026-09-23"
+    },
+    "5-5": {
+      "cases": 1,
+      "vu": "2026-09-23",
+      "erreur": "2026-09-22",
+      "gagne": null
+    },
+    "5-6": {
+      "cases": 2,
+      "vu": "2026-09-23",
+      "erreur": null,
+      "gagne": "2026-09-23"
+    },
+    "5-7": {
+      "cases": 3,
+      "vu": "2026-09-23",
+      "erreur": "2026-09-22",
+      "gagne": "2026-09-23"
+    },
+    "5-8": {
+      "cases": 0,
+      "vu": "2026-09-23",
+      "erreur": null,
+      "gagne": null
+    },
+    "5-9": {
+      "cases": 1,
+      "vu": "2026-09-23",
+      "erreur": "2026-09-22",
+      "gagne": "2026-09-23"
+    },
+    "6-6": {
+      "cases": 2,
+      "vu": "2026-09-23",
+      "erreur": null,
+      "gagne": "2026-09-23"
+    },
+    "6-7": {
+      "cases": 3,
+      "vu": "2026-09-23",
+      "erreur": "2026-09-22",
+      "gagne": null
+    },
+    "6-8": {
+      "cases": 0,
+      "vu": "2026-09-23",
+      "erreur": null,
+      "gagne": "2026-09-23"
+    },
+    "6-9": {
+      "cases": 1,
+      "vu": "2026-09-23",
+      "erreur": "2026-09-22",
+      "gagne": "2026-09-23"
+    },
+    "7-7": {
+      "cases": 2,
+      "vu": "2026-09-23",
+      "erreur": null,
+      "gagne": null
+    },
+    "7-8": {
+      "cases": 3,
+      "vu": "2026-09-23",
+      "erreur": "2026-09-22",
+      "gagne": "2026-09-23"
+    },
+    "7-9": {
+      "cases": 0,
+      "vu": "2026-09-23",
+      "erreur": null,
+      "gagne": "2026-09-23"
+    },
+    "8-8": {
+      "cases": 1,
+      "vu": "2026-09-23",
+      "erreur": "2026-09-22",
+      "gagne": null
+    },
+    "8-9": {
+      "cases": 2,
+      "vu": "2026-09-23",
+      "erreur": null,
+      "gagne": "2026-09-23"
+    },
+    "9-9": {
+      "cases": 3,
+      "vu": "2026-09-23",
+      "erreur": "2026-09-22",
+      "gagne": "2026-09-23"
+    }
+  }
+}

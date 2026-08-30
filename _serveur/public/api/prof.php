@@ -322,6 +322,32 @@ try {
             oublier_compteurs_du_code($pdo, (string)$eleve['code']);
             repondre(['ok' => true, 'code' => $code]);
 
+        case 'eleves.restaurer':
+            // Revenir à la version précédente d'une progression : couvre
+            // l'écrasement par quelqu'un qui connaissait le code, et le petit
+            // frère qui a cliqué « Recommencer à zéro ». Une seule version en
+            // arrière ; la révision monte, l'appli de l'élève fusionnera.
+            $eleve = eleve_modifiable($pdo, $profId, $corps['eleve_id'] ?? 0);
+            $appli = (string)($corps['appli'] ?? 'defi-tables');
+            if (!in_array($appli, APPLIS_PROPOSABLES, true)) erreur("Application inconnue.", 400);
+            $pdo->beginTransaction();
+            try {
+                $requete = $pdo->prepare('SELECT id, donnees, donnees_avant, revision FROM progressions WHERE eleve_id = ? AND appli = ?');
+                $requete->execute([(int)$eleve['id'], $appli]);
+                $ligne = $requete->fetch();
+                if ($ligne === false || $ligne['donnees_avant'] === null) {
+                    $pdo->rollBack();
+                    erreur("Aucune version précédente à restaurer.", 409);
+                }
+                $pdo->prepare('UPDATE progressions SET donnees = ?, donnees_avant = ?, revision = ?, maj_le = ? WHERE id = ?')
+                    ->execute([$ligne['donnees_avant'], $ligne['donnees'], (int)$ligne['revision'] + 1, aujourdhui(), (int)$ligne['id']]);
+                $pdo->commit();
+            } catch (Throwable $e) {
+                if ($pdo->inTransaction()) $pdo->rollBack();
+                throw $e;
+            }
+            repondre(['ok' => true, 'parcours' => json_decode($ligne['donnees_avant'], false), 'revision' => (int)$ligne['revision'] + 1]);
+
         case 'eleves.supprimer':
             $eleve = eleve_modifiable($pdo, $profId, $corps['eleve_id'] ?? 0);
             $pdo->beginTransaction();
@@ -343,7 +369,8 @@ try {
             $appli = (string)($corps['appli'] ?? 'defi-tables');
             if (!in_array($appli, APPLIS_PROPOSABLES, true)) erreur("Application inconnue.", 400);
             $requete = $pdo->prepare(
-                'SELECT e.id, e.code, e.prenom, e.initiale, p.donnees, p.maj_le
+                'SELECT e.id, e.code, e.prenom, e.initiale, p.donnees, p.maj_le,
+                        (p.donnees_avant IS NOT NULL) AS restaurable
                  FROM eleves e
                  LEFT JOIN progressions p ON p.eleve_id = e.id AND p.appli = ?
                  WHERE e.classe_id = ?
@@ -360,8 +387,10 @@ try {
                     'code' => $avecCodes ? $ligne['code'] : null,
                     'prenom' => $ligne['prenom'],
                     'initiale' => $ligne['initiale'],
-                    'parcours' => $ligne['donnees'] === null ? null : json_decode($ligne['donnees'], true),
+                    'parcours' => $ligne['donnees'] === null ? null : json_decode($ligne['donnees'], false),
                     'maj_le' => $ligne['maj_le'],
+                    // Une version précédente existe : « Restaurer » a un sens.
+                    'restaurable' => (int)$ligne['restaurable'] === 1,
                 ];
             }
             repondre([

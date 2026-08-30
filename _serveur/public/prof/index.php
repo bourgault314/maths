@@ -505,6 +505,18 @@ header('Content-Type: text/html; charset=utf-8');
         fiche.textContent = "Voir sa fiche";
         cActions.append(fiche);
       }
+      if (ecriture && eleve.restaurable) {
+        // Le serveur garde la version précédente de chaque progression : un
+        // écrasement (par quelqu'un qui avait le code, ou un « Recommencer à
+        // zéro » malheureux) se répare d'un clic.
+        const restaurer = document.createElement("button");
+        restaurer.type = "button";
+        restaurer.className = "secondaire petit";
+        restaurer.textContent = "Version précédente";
+        restaurer.title = "Restaurer la version précédente de sa progression";
+        restaurer.addEventListener("click", () => restaurerProgression(eleve));
+        cActions.append(restaurer);
+      }
       if (ecriture) {
         const regen = document.createElement("button");
         regen.type = "button";
@@ -938,6 +950,17 @@ header('Content-Type: text/html; charset=utf-8');
       eleve.code = donnees.code;
       dessinerTableau();
       messager("message-classe", `Nouveau code : ${donnees.code}`, "ok");
+    } catch (erreur) { surErreur(erreur, "message-classe"); }
+  }
+
+  async function restaurerProgression(eleve) {
+    const reponse = await demander(
+      `Revenir à la version précédente de la progression de ${nomAffiche(eleve) || "cet élève"} ? La version actuelle devient la « précédente » : tu pourras refaire l’inverse.`);
+    if (!reponse) return;
+    try {
+      await api("eleves.restaurer", {eleve_id: eleve.id, appli: "defi-tables"});
+      await ouvrirClasse(classe.id);
+      messager("message-classe", "Version précédente restaurée. L’appli de l’élève la récupérera à sa prochaine ouverture.", "ok");
     } catch (erreur) { surErreur(erreur, "message-classe"); }
   }
 

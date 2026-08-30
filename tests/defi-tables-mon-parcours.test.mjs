@@ -345,6 +345,23 @@ test("un appareil suivi par l’ancienne appli est repris : son parcours va dans
   assert.equal(parcours.migrerStockage(null), false);
 });
 
+// Le serveur ne garde que ce qu'il connaît (_serveur/public/lib/progression.php).
+// Pour que l'appli et le serveur ne divergent jamais en silence, un parcours
+// COMPLET produit par l'appli est figé dans _serveur/tests/parcours-reference.json
+// et doit ressortir identique du filtre PHP. Ce test-ci vérifie l'autre moitié :
+// que le fichier figé est bien ce que l'appli produit aujourd'hui.
+test("le parcours de référence figé pour le serveur est à jour avec l’appli", async () => {
+  const {parcoursComplet, CHEMIN} = await import("../scripts/generer-parcours-reference.mjs");
+  const fs = await import("node:fs/promises");
+  const fige = JSON.parse(await fs.readFile(CHEMIN, "utf8"));
+  assert.deepEqual(fige, JSON.parse(JSON.stringify(parcoursComplet())),
+    "l'appli a changé la forme du parcours : relance « node scripts/generer-parcours-reference.mjs », puis complète 'cles'/'mots' dans _serveur/public/lib/applis.php (le test PHP le vérifie)");
+  // Et il est bien complet : toutes les tables, tous les calculs, toutes les dates.
+  assert.equal(Object.keys(fige.calculs).length, parcours.FAITS.length);
+  assert.ok(parcours.TABLES.every(table => fige.tables[table].acquise));
+  assert.equal(fige.epoque, 3);
+});
+
 test("appliquerSerie ne modifie jamais l’objet reçu", () => {
   const etat = parcours.creerParcours();
   const copie = JSON.stringify(etat);
@@ -411,7 +428,7 @@ test("fusion : une table acquise garde la date de la PREMIÈRE validation", () =
   assert.equal(parcours.fusionner(tot, tard).tables[5].acquise, "2026-09-01");
 });
 
-test("fusion : la grille garde le maximum de cases, et ne rouvre pas le gain du jour", () => {
+test("fusion : par calcul, le jour le plus récent gagne en bloc — une erreur d’aujourd’hui n’est pas effacée par l’état d’hier", () => {
   const a = parcours.normaliserParcours({calculs: {
     "3-8": {cases: 3, vu: "2026-09-10", erreur: null, gagne: "2026-09-10"},
     "6-7": {cases: 1, vu: "2026-09-02", erreur: "2026-09-02", gagne: null}
@@ -421,12 +438,60 @@ test("fusion : la grille garde le maximum de cases, et ne rouvre pas le gain du 
     "9-9": {cases: 0, vu: "2026-09-11", erreur: "2026-09-11", gagne: null}
   }});
   const fusion = parcours.fusionner(a, b);
-  assert.equal(fusion.calculs["3-8"].cases, 3, "le plus avancé gagne");
-  assert.equal(fusion.calculs["3-8"].vu, "2026-09-12", "la vue la plus récente");
-  assert.equal(fusion.calculs["3-8"].erreur, "2026-09-12", "l'erreur la plus récente est conservée");
+  assert.equal(fusion.calculs["3-8"].cases, 1, "l'erreur du 12 (1 case) l'emporte sur les 3 cases du 10 : le jour le plus récent gagne");
+  assert.equal(fusion.calculs["3-8"].vu, "2026-09-12");
+  assert.equal(fusion.calculs["3-8"].erreur, "2026-09-12");
+  assert.equal(fusion.calculs["3-8"].gagne, null, "et rien du 10 ne revient");
+  assert.deepEqual(parcours.fusionner(b, a).calculs["3-8"], fusion.calculs["3-8"], "dans les deux sens");
   assert.equal(fusion.calculs["6-7"].cases, 1, "un calcul connu d'un seul côté est repris tel quel");
   assert.equal(fusion.calculs["9-9"].cases, 0);
   assert.equal(Object.keys(fusion.calculs).length, 3);
+
+  // Même jour des deux côtés : impossible d'ordonner (on n'enregistre pas
+  // l'heure) — limite connue et acceptée : le plus avancé gagne, l'erreur et
+  // le gain les plus récents sont conservés, le gain du jour n'est pas rouvert.
+  const matin = parcours.normaliserParcours({calculs: {"3-8": {cases: 3, vu: "2026-09-12", erreur: null, gagne: "2026-09-12"}}});
+  const apresMidi = parcours.normaliserParcours({calculs: {"3-8": {cases: 2, vu: "2026-09-12", erreur: "2026-09-12", gagne: null}}});
+  const memeJour = parcours.fusionner(matin, apresMidi).calculs["3-8"];
+  assert.deepEqual(memeJour, {cases: 3, vu: "2026-09-12", erreur: "2026-09-12", gagne: "2026-09-12"});
+});
+
+test("fusion : une remise à zéro (époque plus haute) gagne entièrement, elle ne ressuscite pas", () => {
+  const avance = acquerirTables(parcours.definirPrenom(parcours.creerParcours(), "Léa"), [2, 5, 7]);
+  assert.equal(avance.epoque, 0);
+  const remis = parcours.remettreAZero(avance);
+  assert.equal(remis.epoque, 1, "la remise à zéro monte l'époque");
+  assert.equal(remis.prenom, "Léa", "et garde le prénom");
+  // L'autre appareil renvoie l'ancien état (époque 0) : il ne doit rien faire revenir.
+  const fusion = parcours.fusionner(remis, avance);
+  assert.deepEqual(parcours.tablesAcquises(fusion), [], "rien ne revient");
+  assert.equal(fusion.epoque, 1);
+  assert.equal(fusion.prenom, "Léa");
+  const inverse = parcours.fusionner(avance, remis);
+  assert.deepEqual(parcours.tablesAcquises(inverse), [], "dans l'autre sens aussi");
+  assert.equal(inverse.epoque, 1);
+  // Même époque : fusion ordinaire.
+  const autre = acquerirTables(parcours.creerParcours(), [3]);
+  assert.deepEqual(parcours.tablesAcquises(parcours.fusionner(avance, autre)), [2, 3, 5, 7]);
+  // L'époque survit à la sauvegarde et à la normalisation, et reste bornée.
+  assert.equal(parcours.normaliserParcours(JSON.parse(JSON.stringify(remis))).epoque, 1);
+  assert.equal(parcours.normaliserParcours({epoque: -4}).epoque, 0);
+  assert.equal(parcours.normaliserParcours({epoque: "12"}).epoque, 12);
+});
+
+test("les dates ne sont gardées que sous la forme AAAA-MM-JJ", () => {
+  const abime = parcours.normaliserParcours({
+    tables: {7: {acquise: "hier"}},
+    melange: {dernier: "2026-09-01T10:00:00Z"},
+    expert: {niveau: 1, dernier: "2026-09-02", champion: "x".repeat(300)},
+    calculs: {"3-8": {cases: 1, vu: "pas une date"}, "6-7": {cases: 1, vu: "2026-09-03", erreur: "<script>", gagne: "2026-09-03"}}
+  });
+  assert.equal(abime.tables[7].acquise, null);
+  assert.equal(abime.melange.dernier, null);
+  assert.equal(abime.expert.dernier, "2026-09-02");
+  assert.equal(abime.expert.champion, null);
+  assert.equal(abime.calculs["3-8"], undefined, "un calcul sans jour valide n'existe pas");
+  assert.deepEqual(abime.calculs["6-7"], {cases: 1, vu: "2026-09-03", erreur: null, gagne: "2026-09-03"});
 });
 
 test("fusion : le mélange redevient à refaire si l’autre appareil a plus de tables", () => {
@@ -602,7 +667,8 @@ test("l’appli est branchée au suivi de classe sans jamais bloquer", () => {
 
   // Chaque enregistrement local part aussi au serveur, sans être attendu — et
   // dans la case du code actif.
-  assert.match(html, /function sauverParcours\(\) \{\s*PARCOURS\.sauver\(storage\(\), parcours, codeSuivi\);\s*envoyerParcours\(\);/);
+  assert.match(html, /function sauverParcours\(\) \{\s*PARCOURS\.sauver\(storage\(\), parcours, codeSuivi\);/);
+  assert.match(html, /sync\.dirty = true;[\s\S]{0,120}sauverSync\(\);\s*\}\s*envoyerParcours\(\);/, "chaque sauvegarde marque du travail à envoyer, puis envoie");
   assert.doesNotMatch(html, /await envoyerParcours\(\)/, "l'envoi ne doit jamais être attendu");
   assert.match(html, /navigator\.sendBeacon/, "le dernier envoi part même si la page se ferme");
   assert.match(html, /https:\/\/suivi\.mathsgo\.re/);

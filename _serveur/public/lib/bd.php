@@ -89,7 +89,9 @@ function schema(string $pilote): array
   eleve_id INTEGER NOT NULL,
   appli VARCHAR(30) NOT NULL,
   donnees $texte NOT NULL,
-  maj_le VARCHAR(25) NOT NULL"
+  maj_le VARCHAR(25) NOT NULL,
+  revision INTEGER NOT NULL DEFAULT 0,
+  donnees_avant $texte NULL"
         . ($mysql ? ",\n  UNIQUE KEY progressions_eleve_appli (eleve_id, appli)" : "")
         . "\n)$fin",
 
@@ -98,6 +100,8 @@ function schema(string $pilote): array
   identifiant VARCHAR(40) NOT NULL,
   mdp_hash VARCHAR(255) NOT NULL,
   admin INTEGER NOT NULL DEFAULT 0,
+  actif INTEGER NOT NULL DEFAULT 1,
+  mdp_temporaire INTEGER NOT NULL DEFAULT 0,
   cree_le VARCHAR(25) NOT NULL"
         . ($mysql ? ",\n  UNIQUE KEY profs_identifiant (identifiant)" : "")
         . "\n)$fin",
@@ -185,6 +189,27 @@ function migrer_schema(?PDO $pdo = null): array
     if (table_existe($pdo, 'profs') && !colonne_existe($pdo, 'profs', 'admin')) {
         $pdo->exec('ALTER TABLE profs ADD COLUMN admin INTEGER NOT NULL DEFAULT 0');
         $faits[] = "Colonne « administrateur » ajoutée aux comptes professeurs.";
+    }
+
+    // Lot A2 (30/08/2026) : numéro de révision et version précédente de chaque
+    // progression ; et, d'avance, les colonnes du lot S2 (compte désactivé, mot
+    // de passe temporaire) pour ne faire qu'une seule mise à niveau.
+    $texte = pilote($pdo) === 'mysql' ? 'MEDIUMTEXT' : 'TEXT';
+    if (table_existe($pdo, 'progressions') && !colonne_existe($pdo, 'progressions', 'revision')) {
+        $pdo->exec('ALTER TABLE progressions ADD COLUMN revision INTEGER NOT NULL DEFAULT 0');
+        $faits[] = "Colonne « révision » ajoutée aux progressions.";
+    }
+    if (table_existe($pdo, 'progressions') && !colonne_existe($pdo, 'progressions', 'donnees_avant')) {
+        $pdo->exec("ALTER TABLE progressions ADD COLUMN donnees_avant $texte NULL");
+        $faits[] = "Colonne « version précédente » ajoutée aux progressions.";
+    }
+    if (table_existe($pdo, 'profs') && !colonne_existe($pdo, 'profs', 'actif')) {
+        $pdo->exec('ALTER TABLE profs ADD COLUMN actif INTEGER NOT NULL DEFAULT 1');
+        $faits[] = "Colonne « actif » ajoutée aux comptes professeurs.";
+    }
+    if (table_existe($pdo, 'profs') && !colonne_existe($pdo, 'profs', 'mdp_temporaire')) {
+        $pdo->exec('ALTER TABLE profs ADD COLUMN mdp_temporaire INTEGER NOT NULL DEFAULT 0');
+        $faits[] = "Colonne « mot de passe temporaire » ajoutée aux comptes professeurs.";
     }
 
     // Puis les tables et index absents (dont « partages »), sans toucher au reste.
