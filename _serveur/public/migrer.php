@@ -8,8 +8,10 @@
 declare(strict_types=1);
 
 require __DIR__ . '/lib/bd.php';
+require_once __DIR__ . '/lib/entetes.php';
 
 header('Content-Type: text/html; charset=utf-8');
+entetes_page();
 header('X-Robots-Tag: noindex, nofollow');
 
 $message = '';

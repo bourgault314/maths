@@ -40,13 +40,13 @@ function lire_progression(PDO $pdo, int $eleveId, string $appli): ?array
 //     verrou sur une ligne absente ferait s'interbloquer InnoDB : constaté avec
 //     vingt créations simultanées.)
 //  2. Mise à jour dans une transaction qui verrouille LA ligne (SELECT … FOR
-//     UPDATE sur MySQL, BEGIN IMMEDIATE sur SQLite) : $base fournie et
-//     différente de la révision en base → conflit, avec l'état actuel pour que
-//     l'appli fusionne ; sinon la version précédente est gardée dans
+//     UPDATE sur MySQL, BEGIN IMMEDIATE sur SQLite) : $base différente de la
+//     révision en base → conflit, avec l'état actuel pour que l'appli
+//     fusionne ; sinon la version précédente est gardée dans
 //     donnees_avant (« Restaurer la version précédente » dans Ma classe), et la
 //     révision monte d'un cran.
 //  3. Un interblocage ou un verrou refusé se réessaie deux fois.
-function ecrire_progression(PDO $pdo, int $eleveId, string $appli, string $donnees, ?int $base): array
+function ecrire_progression(PDO $pdo, int $eleveId, string $appli, string $donnees, int $base): array
 {
     for ($tentative = 1; ; $tentative++) {
         try {
@@ -70,7 +70,7 @@ function verrou_refuse(PDOException $e): bool
     return (string)$e->getCode() === '40001' || str_contains($message, '1213') || str_contains($message, 'database is locked');
 }
 
-function ecrire_progression_une_fois(PDO $pdo, int $eleveId, string $appli, string $donnees, ?int $base): array
+function ecrire_progression_une_fois(PDO $pdo, int $eleveId, string $appli, string $donnees, int $base): array
 {
     $maj = aujourdhui();
     $mysql = pilote($pdo) === 'mysql';
@@ -96,7 +96,7 @@ function ecrire_progression_une_fois(PDO $pdo, int $eleveId, string $appli, stri
         throw new PDOException('database is locked (ligne disparue)', 0);
     }
     $revision = (int)$ligne['revision'];
-    if ($base !== null && $base !== $revision) {
+    if ($base !== $revision) {
         $pdo->rollBack();
         return ['conflit' => true, 'actuel' => [
             'parcours' => json_decode($ligne['donnees'], false),
@@ -183,16 +183,16 @@ try {
     if (strlen($donnees) > TAILLE_MAX_PROGRESSION) {
         erreur("Progression trop volumineuse.", 413);
     }
-    // base_revision : la révision que l'appli avait lue. Absente = client
-    // d'avant le lot A2, accepté pendant la transition (le lot S2 la rendra
-    // obligatoire) ; il écrit alors par-dessus, comme avant.
-    $base = null;
-    if (array_key_exists('base_revision', $corps) && $corps['base_revision'] !== null) {
-        if (!is_int($corps['base_revision']) || $corps['base_revision'] < 0) {
-            erreur("Révision invalide.", 400);
-        }
-        $base = $corps['base_revision'];
+    // base_revision : la révision que l'appli avait lue, OBLIGATOIRE depuis le
+    // lot S2 (l'appli du lot A2 l'envoie toujours). Sans elle, un client
+    // écrirait par-dessus sans savoir ce qu'il écrase : refusé.
+    if (!array_key_exists('base_revision', $corps) || $corps['base_revision'] === null) {
+        erreur("Révision manquante.", 400);
     }
+    if (!is_int($corps['base_revision']) || $corps['base_revision'] < 0) {
+        erreur("Révision invalide.", 400);
+    }
+    $base = $corps['base_revision'];
 
     $resultat = ecrire_progression($pdo, $eleveId, $appli, $donnees, $base);
     if (isset($resultat['conflit'])) {

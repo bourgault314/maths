@@ -391,7 +391,7 @@ verifier("élève sans progression enregistrée", function () use (&$codes) {
 });
 
 verifier("enregistrement puis relecture de la progression", function () use (&$codes, $parcours) {
-    $r = appel('/api/parcours.php', ['code' => $codes[0]['code'], 'parcours' => $parcours]);
+    $r = appel('/api/parcours.php', ['code' => $codes[0]['code'], 'parcours' => $parcours, 'base_revision' => 0]);
     egal(200, $r['code'], 'code HTTP');
     vrai(!empty($r['json']['maj_le']), "une date de mise à jour devrait revenir");
 
@@ -413,14 +413,14 @@ verifier("un élève n'écrit que sur son propre code", function () use (&$codes
 
 verifier("progression trop volumineuse refusée", function () use (&$codes) {
     $gros = ['version' => 1, 'bloc' => str_repeat('x', 45000)];
-    $r = appel('/api/parcours.php', ['code' => $codes[1]['code'], 'parcours' => $gros]);
+    $r = appel('/api/parcours.php', ['code' => $codes[1]['code'], 'parcours' => $gros, 'base_revision' => 0]);
     vrai(in_array($r['code'], [413], true), "attendu 413, obtenu " . $r['code']);
     $r = lire($codes[1]['code']);
     egal(false, $r['json']['existe'], "rien ne doit avoir été enregistré");
 });
 
 verifier("progression absente ou illisible refusée", function () use (&$codes) {
-    $r = appel('/api/parcours.php', ['code' => $codes[1]['code']]);
+    $r = appel('/api/parcours.php', ['code' => $codes[1]['code'], 'base_revision' => 0]);
     egal(400, $r['code'], 'code HTTP');
     $r = appel('/api/parcours.php', 'ceci-n-est-pas-du-json');
     egal(400, $r['code'], 'code HTTP');
@@ -434,7 +434,7 @@ verifier("application inconnue refusée", function () use (&$codes) {
 verifier("les applis sont bien séparées", function () use (&$codes, $parcours) {
     $r = lire($codes[0]['code'], 'automatismes');
     egal(false, $r['json']['existe'], "Automatismes ne doit pas voir Défi tables");
-    appel('/api/parcours.php', ['code' => $codes[0]['code'], 'appli' => 'automatismes', 'parcours' => ['a' => 1]]);
+    appel('/api/parcours.php', ['code' => $codes[0]['code'], 'appli' => 'automatismes', 'parcours' => ['a' => 1], 'base_revision' => 0]);
     $r = lire($codes[0]['code']);
     egal($parcours, $r['json']['parcours'], "Défi tables ne doit pas avoir bougé");
 });
@@ -565,7 +565,7 @@ verifier("régénérer un code invalide l'ancien et garde la progression", funct
 
 verifier("supprimer un élève efface aussi sa progression", function () use (&$codes, &$jeton) {
     $code = $codes[11]['code'];
-    appel('/api/parcours.php', ['code' => $code, 'parcours' => ['version' => 1]]);
+    appel('/api/parcours.php', ['code' => $code, 'parcours' => ['version' => 1], 'base_revision' => 0]);
     $r = appel('/api/prof.php', ['action' => 'eleves.supprimer', 'eleve_id' => $codes[11]['id']], ['jeton' => $jeton]);
     egal(200, $r['code'], 'code HTTP');
     egal(404, lire($code)['code'], "le code ne doit plus exister");
@@ -1089,11 +1089,20 @@ verifier("écrire avec la bonne révision passe, avec une révision périmée r�
     egal(3, $r['json']['revision']);
 });
 
-verifier("sans base_revision (client d’avant), l’écriture est acceptée et la révision monte quand même", function () use (&$codesA2) {
+// Lot S2 : base_revision est devenue obligatoire (l'appli du lot A2 l'envoie
+// toujours). Un client qui ne dit pas ce qu'il a lu n'écrit pas.
+verifier("sans base_revision, l’écriture est refusée (400) et rien ne bouge", function () use (&$codesA2) {
     $r = ecrire($codesA2[0]['code'], ['version' => 1, 'tables' => ['2' => ['acquise' => '2026-09-01']]]);
-    egal(200, $r['code']);
-    egal(4, $r['json']['revision']);
+    egal(400, $r['code']);
+    vrai(str_contains((string)$r['json']['erreur'], 'Révision'), "le message dit ce qui manque");
+    egal(3, lire($codesA2[0]['code'])['json']['revision'], 'la révision n’a pas bougé');
     egal(400, ecrire($codesA2[0]['code'], ['version' => 1], -3)['code'], 'une révision négative est refusée');
+    egal(400, ecrire_brut($codesA2[0]['code'], '{"version":1}', null)['code'], 'même en JSON brut');
+    $r = appel('/api/parcours.php', '{"code":' . json_encode($codesA2[0]['code']) . ',"base_revision":"3","parcours":{"version":1}}');
+    egal(400, $r['code'], 'une révision en texte est refusée');
+    $r = ecrire($codesA2[0]['code'], ['version' => 1, 'tables' => ['2' => ['acquise' => '2026-09-01']]], 3);
+    egal(200, $r['code'], 'avec la bonne révision, ça passe');
+    egal(4, $r['json']['revision']);
 });
 
 verifier("vingt premières créations simultanées : une seule passe, les autres reçoivent 409, aucune 500", function () use (&$codesA2) {
@@ -1187,6 +1196,254 @@ verifier("la mise à niveau ajoute révision, version précédente et les colonn
     egal(0, (int)$vieux->query('SELECT revision FROM progressions')->fetchColumn(), 'les lignes existantes partent en révision 0');
     egal('{"version":1}', (string)$vieux->query('SELECT donnees FROM progressions')->fetchColumn(), 'sans toucher aux données');
     egal([], migrer_schema($vieux), 'relancer ne fait plus rien');
+});
+
+// ------------------------------------------- audit du 30/08/2026 — lot S2
+//
+// Comptes professeurs (changer, réinitialiser, désactiver), en-têtes de
+// sécurité et politique de contenu à nonce, moteur de Défi tables servi d'ici.
+
+function entete(array $reponse, string $nom): ?string
+{
+    if (preg_match('/^' . preg_quote($nom, '/') . ':\s*(.*?)\r?$/mi', $reponse['entetes'], $m)) return trim($m[1]);
+    return null;
+}
+
+function page(string $chemin): array
+{
+    return appel($chemin, null);
+}
+
+function connexion(string $identifiant, string $motdepasse): array
+{
+    return appel('/api/prof.php', ['action' => 'connexion', 'identifiant' => $identifiant, 'motdepasse' => $motdepasse]);
+}
+
+verifier("les en-têtes de sécurité sortent sur chaque réponse de l'API, réussie ou non", function () use (&$codesA2) {
+    vider_compteurs();
+    foreach ([
+        'lecture 200' => lire($codesA2[0]['code']),
+        'GET refusé 405' => appel('/api/parcours.php', null),
+        'prof sans jeton 401' => appel('/api/prof.php', ['action' => 'moi']),
+        'code inconnu 404' => identite(code_inconnu(0)),
+    ] as $quoi => $r) {
+        egal('nosniff', entete($r, 'X-Content-Type-Options'), "$quoi : nosniff");
+        egal('strict-origin-when-cross-origin', entete($r, 'Referrer-Policy'), "$quoi : Referrer-Policy");
+        egal('DENY', entete($r, 'X-Frame-Options'), "$quoi : X-Frame-Options");
+        egal('max-age=31536000', entete($r, 'Strict-Transport-Security'), "$quoi : HSTS");
+        vrai(substr_count($r['entetes'], 'X-Frame-Options') === 1, "$quoi : un seul X-Frame-Options, pas deux");
+    }
+});
+
+verifier("l'espace élève et Ma classe envoient une politique de contenu à nonce, posé sur leur script", function () {
+    foreach (['/' => 1, '/prof/' => 1] as $chemin => $scriptsEnLigne) {
+        $r = page($chemin);
+        egal(200, $r['code'], "$chemin");
+        $csp = entete($r, 'Content-Security-Policy');
+        vrai($csp !== null, "$chemin : Content-Security-Policy présente");
+        vrai((bool)preg_match("/script-src 'self' 'nonce-([A-Za-z0-9+\/=]+)'/", $csp, $m), "$chemin : script-src 'self' + nonce ($csp)");
+        $nonce = $m[1];
+        vrai(!str_contains($csp, 'mathsgo.re\'') && !str_contains(explode('img-src', $csp)[0], 'mathsgo.re'), "$chemin : aucun script d'un autre domaine autorisé");
+        vrai(str_contains($csp, "img-src 'self' https://mathsgo.re data:"), "$chemin : le logo et les icônes de mathsgo.re restent permis");
+        vrai(str_contains($csp, "connect-src 'self'") && str_contains($csp, "frame-ancestors 'none'") && str_contains($csp, "object-src 'none'"), "$chemin : connect-src, frame-ancestors, object-src");
+        preg_match_all('/<script(?![^>]*\bsrc=)[^>]*>/', $r['texte'], $balises);
+        egal($scriptsEnLigne, count($balises[0]), "$chemin : scripts en ligne");
+        foreach ($balises[0] as $balise) {
+            vrai(str_contains($balise, 'nonce="' . $nonce . '"'), "$chemin : $balise porte le nonce de l'en-tête");
+        }
+        vrai(!preg_match('/\son[a-z]+="/i', $r['texte']), "$chemin : aucun attribut on…=");
+        egal('DENY', entete($r, 'X-Frame-Options'), "$chemin : X-Frame-Options");
+        egal('max-age=31536000', entete($r, 'Strict-Transport-Security'), "$chemin : HSTS");
+        // Deux requêtes, deux nonces : un nonce deviné ne sert pas deux fois.
+        $csp2 = entete(page($chemin), 'Content-Security-Policy');
+        vrai($csp2 !== $csp, "$chemin : le nonce change à chaque requête");
+    }
+});
+
+verifier("Ma classe charge le moteur de Défi tables d'ici, identique à celui du dépôt, avec une version qui suit son contenu", function () use ($racine) {
+    $r = page('/prof/');
+    vrai(!preg_match('/<script[^>]*src="https?:/', $r['texte']), "plus aucun script chargé depuis un autre domaine");
+    vrai((bool)preg_match('/<script src="defi_tables_mon_parcours\.js\?v=([0-9a-f]{10})"><\/script>/', $r['texte'], $m), 'le moteur est relatif, avec une version');
+    $moteur = page('/prof/defi_tables_mon_parcours.js');
+    egal(200, $moteur['code'], 'le moteur est servi');
+    vrai(str_contains($moteur['texte'], 'MATHSGO_DEFI_TABLES_MON_PARCOURS'), "c'est bien le moteur");
+    egal(substr(md5($moteur['texte']), 0, 10), $m[1], 'la version dans l’adresse est l’empreinte du fichier servi');
+    $original = dirname($racine) . '/outils/calcul_mental/defi_tables_mon_parcours.js';
+    if (is_file($original)) {
+        egal(md5_file($original), md5($moteur['texte']), 'octet pour octet le fichier de l’appli (sinon : cp outils/calcul_mental/defi_tables_mon_parcours.js _serveur/public/prof/)');
+    }
+    vrai(str_contains($r['texte'], 'indicateur pédagogique, pas une preuve'), 'la ligne sous le tableau est là');
+});
+
+verifier("verifier.php contrôle le moteur local et compte les comptes désactivés", function () {
+    $r = formulaire('/verifier.php', ['jeton' => 'JETON-DE-TEST']);
+    vrai(str_contains($r['texte'], 'Moteur de Défi tables servi localement'), 'la ligne existe');
+    vrai(str_contains($r['texte'], 'en place ('), 'et elle est verte');
+    vrai(str_contains($r['texte'], '0 désactivé(s)'), 'les comptes désactivés sont comptés');
+});
+
+// ---------------------------------------------------------- changer son mot de passe
+
+$jetonClaire2 = null;
+
+verifier("changer son mot de passe : l'ancien doit être le bon, le nouveau long et différent", function () use (&$jetonClaire) {
+    vider_compteurs();
+    $mauvais = appel('/api/prof.php', ['action' => 'profs.motdepasse', 'ancien' => 'pas-le-bon-du-tout', 'nouveau' => 'un-nouveau-mot-de-passe-2026'], ['jeton' => $jetonClaire]);
+    egal(400, $mauvais['code'], 'ancien incorrect');
+    vrai(str_contains($mauvais['json']['erreur'], 'ancien'), 'le message le dit');
+    egal(400, appel('/api/prof.php', ['action' => 'profs.motdepasse', 'ancien' => 'motdepasse-de-claire-2026', 'nouveau' => 'court'], ['jeton' => $jetonClaire])['code'], 'trop court');
+    egal(400, appel('/api/prof.php', ['action' => 'profs.motdepasse', 'ancien' => 'motdepasse-de-claire-2026', 'nouveau' => 'motdepasse-de-claire-2026'], ['jeton' => $jetonClaire])['code'], 'identique à l’ancien');
+    egal(200, connexion('claire', 'motdepasse-de-claire-2026')['code'], 'rien n’a changé : l’ancien mot de passe marche encore');
+});
+
+verifier("changer son mot de passe ferme les AUTRES sessions, garde celle-ci, et l'ancien mot de passe ne marche plus", function () use (&$jetonClaire, &$jetonClaire2) {
+    vider_compteurs();
+    $jetonClaire2 = connexion('claire', 'motdepasse-de-claire-2026')['json']['jeton'];
+    egal(200, appel('/api/prof.php', ['action' => 'moi'], ['jeton' => $jetonClaire2])['code'], 'deuxième appareil connecté');
+    $r = appel('/api/prof.php', ['action' => 'profs.motdepasse', 'ancien' => 'motdepasse-de-claire-2026', 'nouveau' => 'nouveau-mot-de-claire-2026'], ['jeton' => $jetonClaire]);
+    egal(200, $r['code'], 'changement');
+    egal(401, appel('/api/prof.php', ['action' => 'moi'], ['jeton' => $jetonClaire2])['code'], 'l’autre appareil est déconnecté');
+    egal(200, appel('/api/prof.php', ['action' => 'moi'], ['jeton' => $jetonClaire])['code'], 'celui qui a changé reste connecté');
+    egal(401, connexion('claire', 'motdepasse-de-claire-2026')['code'], 'l’ancien mot de passe est refusé');
+    $r = connexion('claire', 'nouveau-mot-de-claire-2026');
+    egal(200, $r['code'], 'le nouveau passe');
+    egal(false, $r['json']['mdp_temporaire'], 'et il n’est pas temporaire');
+    // Le hachage en base est un bcrypt au coût des comptes, pas un mot de passe en clair.
+    $hash = bd_test()->query("SELECT mdp_hash FROM profs WHERE identifiant = 'claire'")->fetchColumn();
+    vrai(str_starts_with((string)$hash, '$2y$10$'), 'bcrypt coût 10 en base');
+});
+
+verifier("douze essais d'ancien mot de passe par compte, puis 429 : une session volée ne devine pas l'ancien", function () use (&$jetonClaire) {
+    vider_compteurs();
+    $statuts = [];
+    for ($i = 0; $i < 13; $i++) {
+        $statuts[] = appel('/api/prof.php', ['action' => 'profs.motdepasse', 'ancien' => "essai-$i", 'nouveau' => 'un-nouveau-mot-de-passe-2026'], ['jeton' => $jetonClaire])['code'];
+    }
+    egal(12, count(array_keys($statuts, 400, true)), 'douze refus ordinaires');
+    egal(429, $statuts[12], 'le treizième est freiné');
+    vider_compteurs();
+    egal(200, connexion('claire', 'nouveau-mot-de-claire-2026')['code'], 'le mot de passe n’a pas bougé');
+});
+
+// --------------------------------------------- réinitialisation par l'administrateur
+
+$claireId = null;
+$temporaire = null;
+
+verifier("réinitialiser : administrateur seulement, jamais sur soi-même, compte existant", function () use (&$jetonS1, &$jetonClaire, &$claireId) {
+    foreach (appel('/api/prof.php', ['action' => 'profs.liste'], ['jeton' => $jetonS1])['json']['profs'] as $p) {
+        if ($p['identifiant'] === 'claire') $claireId = $p['id'];
+        if ($p['identifiant'] === 'gwenael') $moi = $p['id'];
+    }
+    vrai($claireId !== null, 'Claire est dans la liste');
+    egal(403, appel('/api/prof.php', ['action' => 'profs.reinitialiser', 'prof_id' => $moi], ['jeton' => $jetonClaire])['code'], 'Claire n’est pas administratrice');
+    egal(400, appel('/api/prof.php', ['action' => 'profs.reinitialiser', 'prof_id' => $moi], ['jeton' => $jetonS1])['code'], 'pas sur son propre compte');
+    egal(404, appel('/api/prof.php', ['action' => 'profs.reinitialiser', 'prof_id' => 999999], ['jeton' => $jetonS1])['code'], 'compte inconnu');
+    egal(200, appel('/api/prof.php', ['action' => 'moi'], ['jeton' => $jetonClaire])['code'], 'rien n’a été fait : Claire est toujours connectée');
+});
+
+verifier("réinitialiser donne un mot de passe temporaire lisible, ferme ses sessions, et la liste le dit", function () use (&$jetonS1, &$jetonClaire, &$claireId, &$temporaire) {
+    $r = appel('/api/prof.php', ['action' => 'profs.reinitialiser', 'prof_id' => $claireId], ['jeton' => $jetonS1]);
+    egal(200, $r['code'], 'réinitialisation');
+    $temporaire = $r['json']['motdepasse'] ?? '';
+    vrai((bool)preg_match('/^[a-z2-9]{4}-[a-z2-9]{4}-[a-z2-9]{4}$/', $temporaire), "trois groupes de quatre ($temporaire)");
+    vrai(!preg_match('/[lo01i]/', $temporaire), 'sans l, o, i, 0, 1 (confondus à l’oral)');
+    egal(401, appel('/api/prof.php', ['action' => 'moi'], ['jeton' => $jetonClaire])['code'], 'sa session est fermée');
+    egal(0, (int)bd_test()->query("SELECT COUNT(*) FROM sessions_prof WHERE prof_id = $claireId")->fetchColumn(), 'toutes ses sessions sont supprimées');
+    $claire = null;
+    foreach (appel('/api/prof.php', ['action' => 'profs.liste'], ['jeton' => $jetonS1])['json']['profs'] as $p) if ($p['id'] === $claireId) $claire = $p;
+    egal(true, $claire['mdp_temporaire'], 'la liste montre « mot de passe temporaire »');
+    egal(true, $claire['actif'], 'le compte reste actif');
+    $hash = bd_test()->query("SELECT mdp_hash FROM profs WHERE identifiant = 'claire'")->fetchColumn();
+    vrai(!str_contains((string)$hash, $temporaire), 'le temporaire n’est pas en clair en base');
+});
+
+verifier("avec un mot de passe temporaire : connexion possible, mais rien d'autre que le changer", function () use (&$jetonClaire, &$temporaire, &$classeDeClaire) {
+    vider_compteurs();
+    egal(401, connexion('claire', 'nouveau-mot-de-claire-2026')['code'], 'l’ancien mot de passe ne marche plus');
+    $r = connexion('claire', $temporaire);
+    egal(200, $r['code'], 'le temporaire ouvre une session');
+    egal(true, $r['json']['mdp_temporaire'], 'et la réponse dit qu’il est temporaire');
+    $jetonClaire = $r['json']['jeton'];
+    egal(true, appel('/api/prof.php', ['action' => 'moi'], ['jeton' => $jetonClaire])['json']['mdp_temporaire'], '« moi » le dit aussi');
+    $refus = appel('/api/prof.php', ['action' => 'classes.liste'], ['jeton' => $jetonClaire]);
+    egal(403, $refus['code'], 'ses classes ne sont pas accessibles');
+    vrai(str_contains($refus['json']['erreur'], 'mot de passe'), 'le message dit pourquoi');
+    egal(403, appel('/api/prof.php', ['action' => 'tableau', 'classe_id' => $classeDeClaire], ['jeton' => $jetonClaire])['code'], 'ni le tableau');
+    egal(403, appel('/api/prof.php', ['action' => 'classes.creer', 'libelle' => 'x'], ['jeton' => $jetonClaire])['code'], 'ni créer');
+    // Le changement passe, et lève la contrainte.
+    egal(200, appel('/api/prof.php', ['action' => 'profs.motdepasse', 'ancien' => $temporaire, 'nouveau' => 'mot-de-claire-definitif-2026'], ['jeton' => $jetonClaire])['code'], 'changement');
+    egal(false, appel('/api/prof.php', ['action' => 'moi'], ['jeton' => $jetonClaire])['json']['mdp_temporaire'], 'plus temporaire');
+    egal(200, appel('/api/prof.php', ['action' => 'classes.liste'], ['jeton' => $jetonClaire])['code'], 'ses classes reviennent');
+    egal(401, connexion('claire', $temporaire)['code'], 'le temporaire ne marche plus');
+    egal(200, connexion('claire', 'mot-de-claire-definitif-2026')['code'], 'le définitif oui');
+});
+
+// ------------------------------------------------------------- désactiver un compte
+
+verifier("désactiver : administrateur seulement, jamais soi-même", function () use (&$jetonS1, &$jetonClaire, &$claireId) {
+    $moi = null;
+    foreach (appel('/api/prof.php', ['action' => 'profs.liste'], ['jeton' => $jetonS1])['json']['profs'] as $p) if ($p['identifiant'] === 'gwenael') $moi = $p['id'];
+    egal(403, appel('/api/prof.php', ['action' => 'profs.desactiver', 'prof_id' => $moi], ['jeton' => $jetonClaire])['code'], 'Claire ne peut pas');
+    egal(400, appel('/api/prof.php', ['action' => 'profs.desactiver', 'prof_id' => $moi], ['jeton' => $jetonS1])['code'], 'pas soi-même : l’administrateur unique resterait dehors');
+    egal(404, appel('/api/prof.php', ['action' => 'profs.desactiver', 'prof_id' => 999999], ['jeton' => $jetonS1])['code'], 'compte inconnu');
+});
+
+verifier("désactiver ferme ses sessions et refuse la connexion avec le MÊME message qu'un mauvais mot de passe", function () use (&$jetonS1, &$jetonClaire, &$claireId, &$classeDeClaire) {
+    vider_compteurs();
+    $classesAvant = (int)bd_test()->query('SELECT COUNT(*) FROM classes')->fetchColumn();
+    $mienneAvant = count(appel('/api/prof.php', ['action' => 'classes.liste'], ['jeton' => $jetonS1])['json']['classes']);
+    egal(200, appel('/api/prof.php', ['action' => 'profs.desactiver', 'prof_id' => $claireId], ['jeton' => $jetonS1])['code'], 'désactivation');
+    egal(401, appel('/api/prof.php', ['action' => 'moi'], ['jeton' => $jetonClaire])['code'], 'sa session est fermée');
+    egal(0, (int)bd_test()->query("SELECT COUNT(*) FROM sessions_prof WHERE prof_id = $claireId")->fetchColumn(), 'et supprimée de la base, pas seulement refusée');
+    $refusDesactive = connexion('claire', 'mot-de-claire-definitif-2026');
+    $refusMauvais = connexion('claire', 'un-mauvais-mot-de-passe');
+    $refusInconnu = connexion('personne', 'un-mauvais-mot-de-passe');
+    egal(401, $refusDesactive['code'], 'connexion refusée');
+    egal($refusMauvais['json'], $refusDesactive['json'], 'réponse identique à un mauvais mot de passe');
+    egal($refusInconnu['json'], $refusDesactive['json'], 'et à un identifiant inconnu');
+    // Ses classes restent en base, invisibles pour les autres : rien ne change pour eux.
+    egal($classesAvant, (int)bd_test()->query('SELECT COUNT(*) FROM classes')->fetchColumn(), 'aucune classe supprimée');
+    egal($mienneAvant, count(appel('/api/prof.php', ['action' => 'classes.liste'], ['jeton' => $jetonS1])['json']['classes']), 'Gwenaël ne voit pas plus de classes qu’avant');
+    egal(404, appel('/api/prof.php', ['action' => 'tableau', 'classe_id' => $classeDeClaire], ['jeton' => $jetonS1])['code'], 'la classe de Claire lui reste introuvable');
+    // La liste le dit, l'annuaire de partage ne la propose plus, et partager avec elle est refusé.
+    $claire = null;
+    foreach (appel('/api/prof.php', ['action' => 'profs.liste'], ['jeton' => $jetonS1])['json']['profs'] as $p) if ($p['id'] === $claireId) $claire = $p;
+    egal(false, $claire['actif'], 'la liste montre « désactivé »');
+    $annuaire = array_column(appel('/api/prof.php', ['action' => 'profs.annuaire'], ['jeton' => $jetonS1])['json']['profs'], 'id');
+    vrai(!in_array($claireId, $annuaire, true), 'absente de l’annuaire');
+    $mienne = appel('/api/prof.php', ['action' => 'classes.liste'], ['jeton' => $jetonS1])['json']['classes'][0]['id'];
+    egal(404, appel('/api/prof.php', ['action' => 'partages.ajouter', 'classe_id' => $mienne, 'prof_id' => $claireId, 'droit' => 'lecture'], ['jeton' => $jetonS1])['code'], 'on ne partage pas avec un compte désactivé');
+    // Un temps de refus comparable : le hachage est calculé avant de regarder « actif ».
+    $debut = hrtime(true); connexion('claire', 'mot-de-claire-definitif-2026'); $tDesactive = (hrtime(true) - $debut) / 1e6;
+    $debut = hrtime(true); connexion('gwenael', 'un-mauvais-mot-de-passe'); $tMauvais = (hrtime(true) - $debut) / 1e6;
+    vrai(abs($tDesactive - $tMauvais) < max(60, 0.5 * max($tDesactive, $tMauvais)), sprintf('temps de refus comparables (%.0f ms contre %.0f ms)', $tDesactive, $tMauvais));
+    $r = formulaire('/verifier.php', ['jeton' => 'JETON-DE-TEST']);
+    vrai(str_contains($r['texte'], '1 désactivé(s)'), 'verifier.php compte le compte désactivé');
+});
+
+verifier("réactiver : la connexion et ses classes reviennent, ses partages aussi", function () use (&$jetonS1, &$jetonClaire, &$claireId, &$classeDeClaire) {
+    vider_compteurs();
+    egal(401, appel('/api/prof.php', ['action' => 'profs.reactiver', 'prof_id' => $claireId], ['jeton' => str_repeat('a', 64)])['code'], 'sans session : refusé');
+    egal(200, appel('/api/prof.php', ['action' => 'profs.reactiver', 'prof_id' => $claireId], ['jeton' => $jetonS1])['code'], 'réactivation');
+    $r = connexion('claire', 'mot-de-claire-definitif-2026');
+    egal(200, $r['code'], 'elle se reconnecte avec son mot de passe');
+    $jetonClaire = $r['json']['jeton'];
+    $siennes = appel('/api/prof.php', ['action' => 'classes.liste'], ['jeton' => $jetonClaire])['json']['classes'];
+    vrai(in_array($classeDeClaire, array_column($siennes, 'id'), true), 'sa classe est toujours là');
+    vrai(count(array_filter($siennes, fn($c) => $c['droit'] !== 'proprietaire')) >= 1, 'et la classe partagée en lecture (lot A2) aussi');
+    $annuaire = array_column(appel('/api/prof.php', ['action' => 'profs.annuaire'], ['jeton' => $jetonS1])['json']['profs'], 'id');
+    vrai(in_array($claireId, $annuaire, true), 'de retour dans l’annuaire');
+});
+
+verifier("un compte désactivé pendant qu'une session est ouverte est refusé au premier appel suivant", function () use (&$jetonS1, &$jetonClaire, &$claireId) {
+    // Deuxième ceinture : même si une session survivait à la désactivation
+    // (elle ne le fait pas), prof_courant() la refuse.
+    bd_test()->exec("UPDATE profs SET actif = 0 WHERE id = $claireId");
+    egal(401, appel('/api/prof.php', ['action' => 'moi'], ['jeton' => $jetonClaire])['code'], 'session refusée');
+    bd_test()->exec("UPDATE profs SET actif = 1 WHERE id = $claireId");
+    $jetonClaire = connexion('claire', 'mot-de-claire-definitif-2026')['json']['jeton'];
+    egal(200, appel('/api/prof.php', ['action' => 'moi'], ['jeton' => $jetonClaire])['code'], 'reconnectée');
 });
 
 // ---------------------------------------------------------------------- résultat

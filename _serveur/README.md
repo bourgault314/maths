@@ -32,8 +32,9 @@ la logique de « Mon parcours » reste dans
 
 `classes` (propriétaire, libellé, applis proposées) · `eleves` (code de
 6 caractères, prénom, initiale) · `progressions` (JSON, date) · `profs`
-(identifiant, mot de passe haché, administrateur) · `partages` (classe,
-professeur, droit) · `sessions_prof` · `compteurs` (limitation de débit).
+(identifiant, mot de passe haché, administrateur, compte actif, mot de passe
+temporaire) · `partages` (classe, professeur, droit) · `sessions_prof` ·
+`compteurs` (limitation de débit).
 
 Pas de nom de famille, pas de date de naissance, pas d'adresse mail
 d'élève, pas de mot de passe d'élève.
@@ -44,11 +45,13 @@ d'élève, pas de mot de passe d'élève.
 _serveur/
   public/            ← contenu à déposer dans le dossier « suivi » chez OVH
     index.php          page d'accueil des élèves : un code, les applis de sa classe
-    prof/index.php     page « Ma classe » : classes, codes, tableau, impression
+    prof/index.php     page « Ma classe » : classes, codes, tableau, impression, Mon compte
+    prof/defi_tables_mon_parcours.js  COPIE du moteur de l'appli (voir « Le moteur »)
     api/parcours.php   API élève : lire/écrire la progression par code
     api/eleve.php      API élève : prénom, classe et applis à partir du code
     api/prof.php       API prof : connexion, classes, élèves, tableau
-    lib/               bd, réponses/CORS, codes, limitation, sessions, catalogue d'applis
+    lib/               bd, réponses/CORS, en-têtes de sécurité, codes, limitation,
+                       sessions, catalogue d'applis, filtre des progressions
     config.exemple.php à recopier en config.php sur le serveur (JAMAIS commité)
     installer.php      création des tables + premier compte, à SUPPRIMER après
     migrer.php         mise à niveau d'une base déjà installée, à SUPPRIMER après
@@ -73,9 +76,26 @@ _serveur/
   (tables acquises, mélange, Expert, dernière activité), trier, régénérer un code,
   supprimer, imprimer la liste code ↔ élève.
 
-Le résumé de progression du tableau est calculé **dans le navigateur** en chargeant
-`defi_tables_mon_parcours.js` depuis mathsgo.re : le serveur n'ouvre jamais les
-paquets qu'il range, et il n'existe qu'une seule définition du parcours.
+### Le moteur
+
+Le résumé de progression du tableau est calculé **dans le navigateur** avec
+`defi_tables_mon_parcours.js` : le serveur n'ouvre jamais les paquets qu'il
+range, et il n'existe qu'une seule définition du parcours.
+
+Depuis le lot S2 (30/08/2026), la page ne charge plus ce fichier depuis
+mathsgo.re : sa politique de contenu n'accepte aucun script d'un autre domaine
+(un script venu d'ailleurs s'exécuterait avec les droits de la session du
+professeur). Une **copie octet pour octet** vit dans
+`_serveur/public/prof/defi_tables_mon_parcours.js`, servie par
+suivi.mathsgo.re. La source reste l'appli ; le test
+`tests/suivi-moteur-copie.test.mjs` du dépôt échoue dès que les deux fichiers
+diffèrent. **Règle : tout lot qui touche
+`outils/calcul_mental/defi_tables_mon_parcours.js` recopie le fichier dans
+`_serveur/public/prof/` (`cp outils/calcul_mental/defi_tables_mon_parcours.js
+_serveur/public/prof/`) et le met dans son dossier à déposer par FTP.** Pas de
+`?v=` à penser pour cette copie : la page calcule la version dans l'adresse à
+partir de l'empreinte du fichier, un nouveau dépôt n'est jamais masqué par le
+cache.
 
 ### Chacun ses classes
 
@@ -97,6 +117,25 @@ Le premier compte créé par `installer.php` est **administrateur** : lui seul
 voit l'écran « Professeurs » et peut ouvrir un compte à un collègue. Un nouveau
 compte ne voit rien tant qu'aucune classe ne lui a été partagée.
 
+### Les comptes (lot S2)
+
+- **Mon compte** : chaque professeur change son mot de passe (ancien + nouveau
+  de 12 caractères au moins, différent de l'ancien). Les **autres** sessions du
+  compte sont fermées, celle qui fait le changement reste ouverte.
+- **Nouveau mot de passe** (administrateur, sur un autre compte) : le serveur
+  tire un mot de passe temporaire lisible à l'oral (`xxxx-xxxx-xxxx`, sans l, o,
+  i, 0, 1), l'affiche **une seule fois**, ferme les sessions du compte et pose
+  `mdp_temporaire = 1`. À sa connexion, ce professeur ne peut rien faire d'autre
+  que choisir un nouveau mot de passe : la page l'impose, et l'API refuse (403)
+  toute autre action.
+- **Désactiver / Réactiver** (administrateur, sur un autre compte) : un compte
+  désactivé ne se connecte plus, avec **le même refus** qu'un mauvais mot de
+  passe (rien ne dit de dehors qu'il existe) ; ses sessions sont fermées ; ses
+  classes, ses élèves et leurs progressions restent en base ; il sort de
+  l'annuaire de partage. Réactiver rend tout.
+- On ne se réinitialise ni ne se désactive soi-même : l'administrateur unique se
+  retrouverait dehors sans personne pour le faire rentrer.
+
 ### Mettre à niveau une base déjà installée
 
 Déposer `migrer.php` à côté de `index.php`, ouvrir
@@ -114,7 +153,7 @@ codes, ni aux progressions, et peut être relancée sans risque.
 | POST | `/api/parcours.php` `{code, appli, lire: true}` | lit la progression, avec sa `revision` |
 | POST | `/api/parcours.php` `{code, appli, parcours, base_revision}` | l'enregistre si `base_revision` est la révision en base ; sinon **409** avec l'état actuel, que l'appli fusionne avant de renvoyer. Le serveur ne garde que ce que `lib/applis.php` déclare (`lib/progression.php`) : jamais un prénom ni un texte libre. La version précédente est conservée (`donnees_avant`) |
 | POST | `/api/eleve.php` `{code}` | prénom, classe et applis de l'élève (page d'accueil) |
-| POST | `/api/prof.php` `{action, …}` | `connexion`, `deconnexion`, `moi`, `profs.annuaire`, `profs.liste/ajouter` (administrateur), `classes.liste/creer/modifier/supprimer`, `partages.liste/ajouter/supprimer`, `eleves.ajouter/nommer/regenerer/restaurer/supprimer`, `tableau` |
+| POST | `/api/prof.php` `{action, …}` | `connexion` (répond aussi `mdp_temporaire`), `deconnexion`, `moi`, `profs.motdepasse` `{ancien, nouveau}`, `profs.annuaire`, `profs.liste/ajouter/reinitialiser/desactiver/reactiver` (administrateur), `classes.liste/creer/modifier/supprimer`, `partages.liste/ajouter/supprimer`, `eleves.ajouter/nommer/regenerer/restaurer/supprimer`, `tableau` |
 
 ## Sécurité
 
@@ -144,6 +183,21 @@ codes, ni aux progressions, et peut être relancée sans risque.
 - `installer.php` exige un jeton présent dans `config.php` et se
   verrouille dès qu'un compte prof existe.
 - Aucun message d'erreur technique n'est renvoyé au navigateur.
+- **En-têtes de sécurité** (`lib/entetes.php`, envoyés par PHP sur chaque
+  réponse, pages et API — le `.htaccess` pose les mêmes sur le moteur JS) :
+  `X-Content-Type-Options: nosniff`, `Referrer-Policy:
+  strict-origin-when-cross-origin`, `X-Frame-Options: DENY`,
+  `Strict-Transport-Security: max-age=31536000`. Les pages HTML ajoutent une
+  **Content-Security-Policy avec un nonce par requête** : `default-src 'self';
+  script-src 'self' 'nonce-…'; style-src 'self' 'unsafe-inline'; img-src 'self'
+  https://mathsgo.re data:; connect-src 'self'; font-src 'self'; object-src
+  'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'`. Chaque
+  `<script>` en ligne porte le nonce ; aucun attribut `on…=` ; aucun script
+  d'un autre domaine. Un contenu injecté dans la page ne s'exécute pas.
+- `base_revision` est **obligatoire** à l'écriture (400 sans elle) : un client
+  qui ne dit pas ce qu'il a lu n'écrase rien.
+- Changer son mot de passe : 12 essais d'ancien mot de passe par compte et par
+  10 min (une session volée ne devine pas l'ancien).
 
 ## Tests
 
@@ -171,7 +225,19 @@ contenu filtré à toute profondeur, parcours de référence de l'appli
 (`tests/parcours-reference.json`, régénéré par `node scripts/generer-parcours-reference.mjs`
 à la racine du dépôt), restauration de la version précédente, mise à niveau.
 
-**93 tests, 0 échec au 30/08/2026**, rejoués sur SQLite **et** sur MariaDB
+Lot S2 : en-têtes de sécurité sur chaque réponse (réussie ou non, un seul
+exemplaire), politique de contenu à nonce posé sur chaque script (nonce
+différent à chaque requête), moteur servi localement et identique à celui de
+l'appli, version dans l'adresse = empreinte du fichier, `base_revision`
+obligatoire, changement de mot de passe (ancien vérifié, longueur, autres
+sessions fermées, celle-ci gardée, 13ᵉ essai freiné, bcrypt coût 10 en base),
+réinitialisation (format du temporaire, sessions fermées, rien d'autre que le
+changer, liste qui le dit), désactivation (même réponse qu'un mauvais mot de
+passe, temps de refus comparable, classes conservées et invisibles, hors
+annuaire, partage refusé, session refusée même si elle survivait),
+réactivation, `verifier.php`.
+
+**107 tests, 0 échec au 30/08/2026**, rejoués sur SQLite **et** sur MariaDB
 (le limiteur emploie une instruction différente sur chaque moteur) :
 
 ```

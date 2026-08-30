@@ -3,6 +3,8 @@
 
 declare(strict_types=1);
 
+require_once __DIR__ . '/entetes.php';
+
 function origines_autorisees(): array
 {
     $c = config();
@@ -11,6 +13,7 @@ function origines_autorisees(): array
 
 function cors(): void
 {
+    entetes_securite();
     $origine = $_SERVER['HTTP_ORIGIN'] ?? '';
     if ($origine !== '' && in_array($origine, origines_autorisees(), true)) {
         header('Access-Control-Allow-Origin: ' . $origine);

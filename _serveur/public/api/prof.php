@@ -29,19 +29,41 @@ function texte(mixed $valeur, int $max): string
     return mb_substr(trim($texte), 0, $max);
 }
 
-// Le compte connecté : identifiant et droit d'administration.
+// Le compte connecté : identifiant, droit d'administration, mot de passe
+// temporaire. Un compte désactivé entre-temps est traité comme une session
+// expirée (ses sessions sont fermées à la désactivation ; ceci est la
+// deuxième ceinture).
 function prof_courant(PDO $pdo, int $profId): array
 {
-    $requete = $pdo->prepare('SELECT id, identifiant, admin FROM profs WHERE id = ?');
+    $requete = $pdo->prepare('SELECT id, identifiant, admin, actif, mdp_temporaire FROM profs WHERE id = ?');
     $requete->execute([$profId]);
     $prof = $requete->fetch();
-    if ($prof === false) erreur("Session expirée, reconnecte-toi.", 401);
-    return ['id' => (int)$prof['id'], 'identifiant' => (string)$prof['identifiant'], 'admin' => (int)$prof['admin'] === 1];
+    if ($prof === false || (int)$prof['actif'] !== 1) erreur("Session expirée, reconnecte-toi.", 401);
+    return [
+        'id' => (int)$prof['id'],
+        'identifiant' => (string)$prof['identifiant'],
+        'admin' => (int)$prof['admin'] === 1,
+        'mdp_temporaire' => (int)$prof['mdp_temporaire'] === 1,
+    ];
 }
 
 function exiger_admin(array $prof): void
 {
     if (!$prof['admin']) erreur("Seul le compte administrateur peut gérer les professeurs.", 403);
+}
+
+// Un autre compte que le sien, pour les actions d'administration : on ne se
+// réinitialise pas, on ne se désactive pas soi-même (l'administrateur unique
+// se retrouverait dehors, sans personne pour le faire rentrer).
+function autre_prof(PDO $pdo, array $prof, mixed $profIdBrut): array
+{
+    $autreId = (int)$profIdBrut;
+    if ($autreId === $prof['id']) erreur("Pas sur ton propre compte : passe par « Mon compte ».", 400);
+    $requete = $pdo->prepare('SELECT id, identifiant, actif FROM profs WHERE id = ?');
+    $requete->execute([$autreId]);
+    $autre = $requete->fetch();
+    if ($autre === false) erreur("Professeur introuvable.", 404);
+    return ['id' => (int)$autre['id'], 'identifiant' => (string)$autre['identifiant'], 'actif' => (int)$autre['actif'] === 1];
 }
 
 // Renvoie la classe si ce professeur y a droit, et refuse sinon.
@@ -113,19 +135,63 @@ try {
     }
     $prof = prof_courant($pdo, $profId);
 
+    // Avec un mot de passe temporaire (donné par l'administrateur), on ne fait
+    // rien d'autre que le changer : la page le demande, et le serveur le tient.
+    if ($prof['mdp_temporaire'] && !in_array($action, ['moi', 'deconnexion', 'profs.motdepasse'], true)) {
+        erreur("Choisis d'abord un nouveau mot de passe.", 403);
+    }
+
     switch ($action) {
         case 'deconnexion':
             fermer_session($pdo, $jeton);
             repondre(['ok' => true]);
 
         case 'moi':
-            repondre(['ok' => true, 'identifiant' => $prof['identifiant'], 'admin' => $prof['admin']]);
+            repondre(['ok' => true, 'identifiant' => $prof['identifiant'], 'admin' => $prof['admin'],
+                'mdp_temporaire' => $prof['mdp_temporaire']]);
 
         // ------------------------------------------------------------ comptes profs
 
+        case 'profs.motdepasse':
+            // Douze essais par compte et par dix minutes : une session volée ne
+            // sert pas à deviner l'ancien mot de passe.
+            limiter('motdepasse:' . $profId, 12, 600);
+            try {
+                changer_motdepasse($pdo, $profId, $jeton, (string)($corps['ancien'] ?? ''), (string)($corps['nouveau'] ?? ''));
+            } catch (InvalidArgumentException $e) {
+                erreur($e->getMessage(), 400);
+            }
+            repondre(['ok' => true]);
+
+        case 'profs.reinitialiser':
+            exiger_admin($prof);
+            $autre = autre_prof($pdo, $prof, $corps['prof_id'] ?? 0);
+            $temporaire = reinitialiser_motdepasse($pdo, $autre['id']);
+            // Le mot de passe temporaire part une fois, dans cette réponse, à
+            // l'administrateur qui le transmet de vive voix. Il n'est stocké
+            // que haché.
+            repondre(['ok' => true, 'motdepasse' => $temporaire]);
+
+        case 'profs.desactiver':
+            exiger_admin($prof);
+            $autre = autre_prof($pdo, $prof, $corps['prof_id'] ?? 0);
+            // Ses classes, ses élèves et leurs progressions restent en base :
+            // désactiver n'est pas supprimer. Ses sessions sont fermées, et la
+            // connexion lui répondra exactement comme à un mauvais mot de passe.
+            $pdo->prepare('UPDATE profs SET actif = 0 WHERE id = ?')->execute([$autre['id']]);
+            fermer_sessions_du_prof($pdo, $autre['id']);
+            repondre(['ok' => true]);
+
+        case 'profs.reactiver':
+            exiger_admin($prof);
+            $autre = autre_prof($pdo, $prof, $corps['prof_id'] ?? 0);
+            $pdo->prepare('UPDATE profs SET actif = 1 WHERE id = ?')->execute([$autre['id']]);
+            repondre(['ok' => true]);
+
         case 'profs.annuaire':
             // Sert à choisir un collègue dans la liste « Partager cette classe ».
-            $requete = $pdo->prepare('SELECT id, identifiant FROM profs WHERE id <> ? ORDER BY identifiant');
+            // Un compte désactivé n'y figure pas : on ne partage pas avec lui.
+            $requete = $pdo->prepare('SELECT id, identifiant FROM profs WHERE id <> ? AND actif = 1 ORDER BY identifiant');
             $requete->execute([$profId]);
             $annuaire = [];
             foreach ($requete->fetchAll() as $ligne) {
@@ -139,7 +205,7 @@ try {
             // lui est prêté. Un seul chiffre laisserait croire qu'un collègue à
             // qui on vient de partager une classe n'a rien reçu.
             $lignes = $pdo->query(
-                'SELECT p.id, p.identifiant, p.admin, p.cree_le,
+                'SELECT p.id, p.identifiant, p.admin, p.actif, p.mdp_temporaire, p.cree_le,
                         (SELECT COUNT(*) FROM classes c WHERE c.prof_id = p.id) AS classes,
                         (SELECT COUNT(*) FROM partages g WHERE g.prof_id = p.id) AS partagees
                  FROM profs p ORDER BY p.identifiant'
@@ -150,6 +216,8 @@ try {
                     'id' => (int)$ligne['id'],
                     'identifiant' => (string)$ligne['identifiant'],
                     'admin' => (int)$ligne['admin'] === 1,
+                    'actif' => (int)$ligne['actif'] === 1,
+                    'mdp_temporaire' => (int)$ligne['mdp_temporaire'] === 1,
                     'classes' => (int)$ligne['classes'],
                     'partagees' => (int)$ligne['partagees'],
                     'cree_le' => $ligne['cree_le'],
@@ -266,7 +334,7 @@ try {
             $classe = acces_classe($pdo, $profId, $corps['classe_id'] ?? 0, 'proprietaire');
             $autreId = (int)($corps['prof_id'] ?? 0);
             if ($autreId === $profId) erreur("Cette classe est déjà la tienne.", 400);
-            $requete = $pdo->prepare('SELECT id FROM profs WHERE id = ?');
+            $requete = $pdo->prepare('SELECT id FROM profs WHERE id = ? AND actif = 1');
             $requete->execute([$autreId]);
             if ($requete->fetchColumn() === false) erreur("Professeur introuvable.", 404);
             $droit = (string)($corps['droit'] ?? 'lecture');
