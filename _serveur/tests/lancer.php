@@ -184,6 +184,22 @@ verifier("action prof refusée avec un faux jeton", function () {
     egal(401, $r['code'], 'code HTTP');
 });
 
+// Chez OVH (Apache en CGI/FastCGI), l'en-tête Authorization n'arrive pas
+// jusqu'à PHP : la page prof envoie donc aussi le jeton dans le corps. Sans
+// cette voie de secours, toute action répond « session expirée » et l'écran
+// de connexion se rouvre en silence.
+verifier("le jeton est accepté dans le corps, sans en-tête Authorization", function () use (&$jeton) {
+    $r = appel('/api/prof.php', ['action' => 'moi', 'jeton' => $jeton]);
+    egal(200, $r['code'], 'code HTTP');
+    egal('gwenael', $r['json']['identifiant']);
+    egal(true, $r['json']['admin'], 'le compte doit être administrateur');
+});
+
+verifier("un faux jeton dans le corps reste refusé", function () {
+    $r = appel('/api/prof.php', ['action' => 'moi', 'jeton' => str_repeat('a', 64)]);
+    egal(401, $r['code'], 'code HTTP');
+});
+
 // ---------------------------------------------------------------------- classes
 
 $classeId = null;

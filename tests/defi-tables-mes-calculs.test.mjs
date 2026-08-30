@@ -281,7 +281,7 @@ test("la page a l’écran Mes calculs : entrée depuis Mon parcours, grille, d�
   assert.match(html, /PARCOURS\.appliquerReponse/);
   assert.match(html, /PARCOURS\.planRevision/);
   assert.match(html, /CORE\.tableQuestion/);
-  assert.match(html, /window\.location\.hash === "#calculs"/);
+  assert.match(html, /adresse === "#calculs"\) openCalculs\(\)/);
 });
 
 test("seule la première réponse compte pour la grille, et un raté ne revient qu’une fois", () => {

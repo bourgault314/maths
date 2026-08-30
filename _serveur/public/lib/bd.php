@@ -211,3 +211,11 @@ function maintenant(): string
 {
     return gmdate('Y-m-d\TH:i:s\Z');
 }
+
+// La date de dernière activité d'un élève : le JOUR seulement.
+// Décidé le 30/08/2026 — savoir qu'un élève a travaillé le 12 septembre suffit
+// à un professeur ; savoir qu'il a travaillé à 23 h 40 ne le regarde pas.
+function aujourdhui(): string
+{
+    return gmdate('Y-m-d');
+}
