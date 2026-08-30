@@ -63,8 +63,11 @@ _serveur/
 
 - `https://suivi.mathsgo.re/` — page des élèves. Un champ de six caractères, puis
   la liste des applis proposées à sa classe. Chaque appli ouvre l'appli unique de
-  mathsgo.re en lui passant le code (`…/defi_tables.html#code=XXXXXX`) : aucune
-  copie d'appli n'est faite ici.
+  mathsgo.re en lui passant le code, suivi de l'écran à ouvrir quand l'appli en
+  déclare un (`…/defi_tables.html#code=XXXXXX&ouvrir=parcours`) : aucune copie
+  d'appli n'est faite ici. C'est bien cette adresse complète qu'il faut essayer
+  quand on vérifie le suivi — la forme abrégée `#code=XXXXXX` a longtemps caché
+  que l'appli ne savait pas lire la vraie.
 - `https://suivi.mathsgo.re/prof/` — page « Ma classe », protégée par mot de passe :
   créer une classe, générer N codes, saisir prénom + initiale, voir le tableau
   (tables acquises, mélange, Expert, dernière activité), trier, régénérer un code,

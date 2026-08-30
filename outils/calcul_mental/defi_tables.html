@@ -3505,15 +3505,22 @@
         });
       }
       syncControls();
+      // L'adresse peut porter plusieurs informations à la fois : l'espace élève
+      // construit « #code=XXXXXX&ouvrir=parcours ». On la lit donc comme une
+      // liste de paramètres, et non comme un mot exact — sinon le code passe
+      // inaperçu dès qu'autre chose le suit, et plus rien n'est enregistré.
       const adresse = window.location.hash || "";
-      const ficheDemandee = /^#fiche=([A-Za-z0-9-]{1,12})$/.exec(adresse);
-      const codeDemande = /^#code=([A-Za-z0-9-]{1,12})$/.exec(adresse);
+      const parametres = new URLSearchParams(adresse.replace(/^#/, ""));
+      const ficheDemandee = parametres.get("fiche");
+      const codeDemande = parametres.get("code");
+      const ouvrir = parametres.get("ouvrir") || (adresse === "#parcours" ? "parcours" : "")
+        || (adresse === "#calculs" ? "calculs" : "");
       if (ficheDemandee) {
-        ouvrirFicheEleve(ficheDemandee[1]);
+        ouvrirFicheEleve(ficheDemandee);
       } else {
-        if (adresse === "#parcours" || codeDemande) openParcours();
-        else if (adresse === "#calculs") openCalculs();
-        demarrerSuivi(codeDemande ? codeDemande[1] : null);
+        if (ouvrir === "calculs") openCalculs();
+        else if (ouvrir === "parcours" || codeDemande) openParcours();
+        demarrerSuivi(codeDemande || null);
       }
     })();
   </script>
