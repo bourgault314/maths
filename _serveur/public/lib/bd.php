@@ -61,10 +61,12 @@ function schema(string $pilote): array
     $tables = [
         "CREATE TABLE IF NOT EXISTS classes (
   id $id,
+  prof_id INTEGER NOT NULL DEFAULT 0,
   libelle VARCHAR(40) NOT NULL,
   applis VARCHAR(255) NOT NULL DEFAULT 'defi-tables',
-  cree_le VARCHAR(25) NOT NULL
-)$fin",
+  cree_le VARCHAR(25) NOT NULL"
+        . ($mysql ? ",\n  KEY classes_prof (prof_id)" : "")
+        . "\n)$fin",
 
         "CREATE TABLE IF NOT EXISTS eleves (
   id $id,
@@ -89,8 +91,18 @@ function schema(string $pilote): array
   id $id,
   identifiant VARCHAR(40) NOT NULL,
   mdp_hash VARCHAR(255) NOT NULL,
+  admin INTEGER NOT NULL DEFAULT 0,
   cree_le VARCHAR(25) NOT NULL"
         . ($mysql ? ",\n  UNIQUE KEY profs_identifiant (identifiant)" : "")
+        . "\n)$fin",
+
+        "CREATE TABLE IF NOT EXISTS partages (
+  id $id,
+  classe_id INTEGER NOT NULL,
+  prof_id INTEGER NOT NULL,
+  droit VARCHAR(10) NOT NULL DEFAULT 'lecture',
+  cree_le VARCHAR(25) NOT NULL"
+        . ($mysql ? ",\n  UNIQUE KEY partages_classe_prof (classe_id, prof_id),\n  KEY partages_prof (prof_id)" : "")
         . "\n)$fin",
 
         "CREATE TABLE IF NOT EXISTS sessions_prof (
@@ -113,6 +125,9 @@ function schema(string $pilote): array
         'CREATE INDEX IF NOT EXISTS eleves_classe ON eleves (classe_id)',
         'CREATE UNIQUE INDEX IF NOT EXISTS progressions_eleve_appli ON progressions (eleve_id, appli)',
         'CREATE UNIQUE INDEX IF NOT EXISTS profs_identifiant ON profs (identifiant)',
+        'CREATE INDEX IF NOT EXISTS classes_prof ON classes (prof_id)',
+        'CREATE UNIQUE INDEX IF NOT EXISTS partages_classe_prof ON partages (classe_id, prof_id)',
+        'CREATE INDEX IF NOT EXISTS partages_prof ON partages (prof_id)',
     ]);
 }
 
@@ -122,6 +137,74 @@ function installer_tables(?PDO $pdo = null): void
     foreach (schema(pilote($pdo)) as $sql) {
         $pdo->exec($sql);
     }
+}
+
+// Vrai si la table existe déjà : on l'interroge, ce qui marche à l'identique
+// sur MySQL et sur SQLite.
+function table_existe(PDO $pdo, string $table): bool
+{
+    try {
+        $pdo->query("SELECT 1 FROM $table LIMIT 1")->closeCursor();
+        return true;
+    } catch (Throwable $e) {
+        return false;
+    }
+}
+
+// Vrai si la colonne existe déjà, même principe.
+function colonne_existe(PDO $pdo, string $table, string $colonne): bool
+{
+    try {
+        $pdo->query("SELECT $colonne FROM $table LIMIT 1")->closeCursor();
+        return true;
+    } catch (Throwable $e) {
+        return false;
+    }
+}
+
+// Mise à niveau d'une base déjà installée : ajoute ce qui manque, sans jamais
+// toucher aux données existantes. Peut être relancée sans risque.
+// Renvoie la liste de ce qui a été fait, en français.
+function migrer_schema(?PDO $pdo = null): array
+{
+    $pdo = $pdo ?? bd();
+    $faits = [];
+
+    // Les colonnes manquantes D'ABORD : le schéma déclare un index sur
+    // classes.prof_id, et un index ne peut pas se créer avant sa colonne.
+    if (table_existe($pdo, 'classes') && !colonne_existe($pdo, 'classes', 'prof_id')) {
+        $pdo->exec('ALTER TABLE classes ADD COLUMN prof_id INTEGER NOT NULL DEFAULT 0');
+        $faits[] = "Colonne « propriétaire » ajoutée aux classes.";
+    }
+    if (table_existe($pdo, 'profs') && !colonne_existe($pdo, 'profs', 'admin')) {
+        $pdo->exec('ALTER TABLE profs ADD COLUMN admin INTEGER NOT NULL DEFAULT 0');
+        $faits[] = "Colonne « administrateur » ajoutée aux comptes professeurs.";
+    }
+
+    // Puis les tables et index absents (dont « partages »), sans toucher au reste.
+    installer_tables($pdo);
+
+    // Le premier compte créé devient administrateur et récupère les classes
+    // qui n'ont pas encore de propriétaire : impossible de perdre la main.
+    $premier = $pdo->query('SELECT MIN(id) FROM profs')->fetchColumn();
+    if ($premier !== null && $premier !== false) {
+        $premier = (int)$premier;
+        $administrateurs = (int)$pdo->query('SELECT COUNT(*) FROM profs WHERE admin = 1')->fetchColumn();
+        if ($administrateurs === 0) {
+            $pdo->prepare('UPDATE profs SET admin = 1 WHERE id = ?')->execute([$premier]);
+            $faits[] = "Le premier compte professeur est devenu administrateur.";
+        }
+        $requete = $pdo->prepare(
+            'UPDATE classes SET prof_id = ? WHERE prof_id = 0 OR prof_id NOT IN (SELECT id FROM profs)'
+        );
+        $requete->execute([$premier]);
+        $reprises = $requete->rowCount();
+        if ($reprises > 0) {
+            $faits[] = "$reprises classe(s) sans propriétaire attribuée(s) à ce compte.";
+        }
+    }
+
+    return $faits;
 }
 
 function maintenant(): string

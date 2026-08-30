@@ -5,7 +5,7 @@ declare(strict_types=1);
 
 const DUREE_SESSION_HEURES = 12;
 
-function creer_prof(PDO $pdo, string $identifiant, string $motdepasse): int
+function creer_prof(PDO $pdo, string $identifiant, string $motdepasse, bool $admin = false): int
 {
     $identifiant = trim($identifiant);
     if ($identifiant === '' || mb_strlen($identifiant) > 40) {
@@ -14,8 +14,13 @@ function creer_prof(PDO $pdo, string $identifiant, string $motdepasse): int
     if (strlen($motdepasse) < 12) {
         throw new InvalidArgumentException("Le mot de passe doit faire au moins 12 caractères.");
     }
-    $pdo->prepare('INSERT INTO profs (identifiant, mdp_hash, cree_le) VALUES (?, ?, ?)')
-        ->execute([$identifiant, password_hash($motdepasse, PASSWORD_DEFAULT), maintenant()]);
+    $existe = $pdo->prepare('SELECT id FROM profs WHERE identifiant = ?');
+    $existe->execute([$identifiant]);
+    if ($existe->fetchColumn() !== false) {
+        throw new InvalidArgumentException("Cet identifiant est déjà pris.");
+    }
+    $pdo->prepare('INSERT INTO profs (identifiant, mdp_hash, admin, cree_le) VALUES (?, ?, ?, ?)')
+        ->execute([$identifiant, password_hash($motdepasse, PASSWORD_DEFAULT), $admin ? 1 : 0, maintenant()]);
     return (int)$pdo->lastInsertId();
 }
 

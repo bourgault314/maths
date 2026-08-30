@@ -82,6 +82,18 @@ header('Content-Type: text/html; charset=utf-8');
   .p-vert { background: #e6f6ea; color: var(--vert); }
   .p-orange { background: #fdf0e3; color: #a15c11; }
   .p-gris { background: #eef1f5; color: var(--muted); }
+  .message.info { background: #eef3f9; color: var(--blue-dark); }
+  .classes .badge { display: block; margin-top: 4px; color: var(--muted); font-size: .82rem; }
+  .classes button.partagee { border-left-color: var(--orange); }
+  .profs { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+  .profs li { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 8px 12px;
+              background: #fbfcfe; border: 1px solid var(--line); border-radius: 10px; }
+  .profs li strong { color: var(--blue-dark); }
+  .profs li .fin { margin-left: auto; display: flex; gap: 8px; flex-wrap: wrap; }
+  .profs li.vide { color: var(--muted); font-style: italic; border-style: dashed; }
+  .profs .role { color: var(--muted); font-size: .86rem; }
+  .retour-icone { display: inline-flex; align-items: center; gap: 6px; }
+  .retour-icone svg { display: block; }
   .barre-outils { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-top: 14px; }
   .barre-outils .espace { margin-left: auto; }
   .fiche { display: none; }
@@ -109,7 +121,7 @@ header('Content-Type: text/html; charset=utf-8');
                           font-size: .74rem; font-weight: 800; text-transform: uppercase;
                           letter-spacing: .04em; }
     #tableau td[data-libelle=""]::before { display: none; }
-    #tableau td input { width: 100%; }
+    #tableau td input { width: 100%; min-height: 44px; }
     #tableau td.actions-eleve { flex-wrap: wrap; gap: 8px; }
     #tableau td.actions-eleve button { flex: 1 1 auto; margin-left: 0 !important; }
   }
@@ -166,13 +178,28 @@ header('Content-Type: text/html; charset=utf-8');
       </form>
     </div>
     <p class="message" id="message-classes" hidden></p>
+
+    <!-- Visible seulement pour le compte administrateur. -->
+    <div id="bloc-profs" hidden>
+      <h2>Professeurs</h2>
+      <div class="carte" style="max-width:520px">
+        <p class="sous" style="margin-bottom:12px">Chaque professeur ne voit que ses propres classes.
+        Pour qu’un collègue voie une de tes classes, ouvre-la et partage-la.</p>
+        <ul class="profs" id="liste-profs"></ul>
+        <div class="actions">
+          <button type="button" class="secondaire" id="ajouter-prof">Ajouter un professeur</button>
+        </div>
+        <p class="message" id="message-profs" hidden></p>
+      </div>
+    </div>
   </section>
 
   <!-- Une classe -->
   <section id="ecran-classe" hidden>
-    <button type="button" class="secondaire petit" id="retour">← Toutes mes classes</button>
+    <button type="button" class="secondaire petit retour-icone" id="retour"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M19 12H5M11 6l-6 6 6 6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Toutes mes classes</button>
     <h1 id="titre-classe"></h1>
     <p class="sous" id="resume-classe"></p>
+    <p class="message" id="bandeau-droit" hidden></p>
 
     <div class="barre-outils">
       <button type="button" class="secondaire" id="ajouter">Ajouter des élèves</button>
@@ -203,6 +230,21 @@ header('Content-Type: text/html; charset=utf-8');
       </table>
     </div>
     <p class="message" id="message-classe" hidden></p>
+
+    <!-- Partage : visible seulement pour le propriétaire de la classe. -->
+    <div id="bloc-partage" hidden>
+      <h2>Partager cette classe</h2>
+      <div class="carte" style="max-width:560px">
+        <p class="sous" style="margin-bottom:12px">Un collègue en <strong>lecture</strong> voit le tableau
+        et les codes, sans rien pouvoir changer. En <strong>écriture</strong>, il peut aussi ajouter des
+        élèves, saisir les prénoms et donner un nouveau code. Toi seul peux supprimer la classe.</p>
+        <ul class="profs" id="liste-partages"></ul>
+        <div class="actions">
+          <button type="button" class="secondaire" id="ajouter-partage">Partager avec un collègue</button>
+        </div>
+        <p class="message" id="message-partage" hidden></p>
+      </div>
+    </div>
 
     <!-- Fiche à imprimer : code ↔ élève -->
     <div class="fiche" id="fiche">
@@ -247,6 +289,9 @@ header('Content-Type: text/html; charset=utf-8');
   let classe = null;
   let eleves = [];
   let tri = {colonne: "prenom", sens: 1};
+  let estAdmin = false;
+  let droitClasse = "proprietaire";
+  let annuaire = [];
 
   try { jeton = sessionStorage.getItem(CLE_JETON) || ""; } catch (_) {}
 
@@ -284,6 +329,9 @@ header('Content-Type: text/html; charset=utf-8');
   async function deconnecter(silencieux) {
     try { if (jeton) await api("deconnexion"); } catch (_) {}
     jeton = "";
+    estAdmin = false;
+    droitClasse = "proprietaire";
+    annuaire = [];
     try { sessionStorage.removeItem(CLE_JETON); } catch (_) {}
     montrer("ecran-connexion");
     if (!silencieux) messager("erreur-connexion", "", "");
@@ -339,6 +387,7 @@ header('Content-Type: text/html; charset=utf-8');
 
   function dessinerTableau() {
     trierEleves();
+    const ecriture = droitClasse !== "lecture";
     const corps = $("corps");
     corps.textContent = "";
 
@@ -349,11 +398,11 @@ header('Content-Type: text/html; charset=utf-8');
       const champ = document.createElement("input");
       champ.type = "text";
       champ.value = nomAffiche(eleve);
-      champ.placeholder = "Prénom et initiale";
+      champ.placeholder = ecriture ? "Prénom et initiale" : "—";
       champ.maxLength = 44;
       champ.style.minWidth = "132px";
-      champ.style.minHeight = "36px";
-      champ.addEventListener("change", () => nommer(eleve, champ));
+      if (ecriture) champ.addEventListener("change", () => nommer(eleve, champ));
+      else { champ.readOnly = true; champ.tabIndex = -1; }
       cNom.appendChild(champ);
 
       const cCode = document.createElement("td");
@@ -382,18 +431,20 @@ header('Content-Type: text/html; charset=utf-8');
       if (!quand) cDate.className = "sans";
 
       const cActions = document.createElement("td");
-      const regen = document.createElement("button");
-      regen.type = "button";
-      regen.className = "secondaire petit";
-      regen.textContent = "Nouveau code";
-      regen.addEventListener("click", () => regenerer(eleve));
-      const sup = document.createElement("button");
-      sup.type = "button";
-      sup.className = "danger petit";
-      sup.style.marginLeft = "6px";
-      sup.textContent = "Supprimer";
-      sup.addEventListener("click", () => supprimerEleve(eleve));
-      cActions.append(regen, sup);
+      if (ecriture) {
+        const regen = document.createElement("button");
+        regen.type = "button";
+        regen.className = "secondaire petit";
+        regen.textContent = "Nouveau code";
+        regen.addEventListener("click", () => regenerer(eleve));
+        const sup = document.createElement("button");
+        sup.type = "button";
+        sup.className = "danger petit";
+        sup.style.marginLeft = "6px";
+        sup.textContent = "Supprimer";
+        sup.addEventListener("click", () => supprimerEleve(eleve));
+        cActions.append(regen, sup);
+      }
 
       cNom.dataset.libelle = "";
       cCode.dataset.libelle = "Code";
@@ -456,6 +507,14 @@ header('Content-Type: text/html; charset=utf-8');
         bouton.querySelector("strong").textContent = uneClasse.libelle;
         bouton.querySelector("span").textContent =
           `${uneClasse.eleves} élève${uneClasse.eleves > 1 ? "s" : ""}`;
+        if (uneClasse.droit !== "proprietaire") {
+          bouton.classList.add("partagee");
+          const badge = document.createElement("span");
+          badge.className = "badge";
+          badge.textContent = `partagée par ${uneClasse.proprietaire || "un collègue"} · `
+            + (uneClasse.droit === "ecriture" ? "modifiable" : "lecture seule");
+          bouton.appendChild(badge);
+        }
         bouton.addEventListener("click", () => ouvrirClasse(uneClasse.id));
         li.appendChild(bouton);
         liste.appendChild(li);
@@ -467,6 +526,8 @@ header('Content-Type: text/html; charset=utf-8');
         liste.appendChild(li);
       }
       montrer("ecran-classes");
+      $("bloc-profs").hidden = !estAdmin;
+      if (estAdmin) chargerProfs();
     } catch (erreur) { surErreur(erreur, "message-classes"); }
   }
 
@@ -474,13 +535,154 @@ header('Content-Type: text/html; charset=utf-8');
     try {
       const donnees = await api("tableau", {classe_id: id, appli: "defi-tables"});
       classe = donnees.classe;
+      droitClasse = classe.droit || "proprietaire";
       eleves = (donnees.eleves || []).map(eleve => Object.assign({}, eleve, {lu: lireProgression(eleve.parcours)}));
       $("titre-classe").textContent = classe.libelle;
       messager("message-classe", "", "");
       montrer("ecran-classe");
+      appliquerDroits();
       dessinerTableau();
     } catch (erreur) { surErreur(erreur, "message-classes"); }
   }
+
+  // ------------------------------------------------- droits sur la classe ouverte
+
+  function appliquerDroits() {
+    const proprietaire = droitClasse === "proprietaire";
+    const ecriture = droitClasse !== "lecture";
+    $("ajouter").hidden = !ecriture;
+    $("supprimer-classe").hidden = !proprietaire;
+    $("bloc-partage").hidden = !proprietaire;
+    messager("message-partage", "", "");
+    if (proprietaire) {
+      messager("bandeau-droit", "", "");
+      chargerPartages();
+    } else {
+      messager("bandeau-droit", ecriture
+        ? "Classe partagée avec toi : tu peux voir et modifier, mais pas supprimer la classe."
+        : "Classe partagée avec toi en lecture seule : tu vois tout, tu ne modifies rien.", "info");
+    }
+  }
+
+  // ------------------------------------------------------------ partage d'une classe
+
+  async function chargerPartages() {
+    const liste = $("liste-partages");
+    liste.textContent = "";
+    try {
+      const donnees = await api("partages.liste", {classe_id: classe.id});
+      const partages = donnees.partages || [];
+      if (!partages.length) {
+        const li = document.createElement("li");
+        li.className = "vide";
+        li.textContent = "Classe non partagée : tu es le seul à la voir.";
+        liste.appendChild(li);
+        return;
+      }
+      partages.forEach(partage => {
+        const li = document.createElement("li");
+        const nom = document.createElement("strong");
+        nom.textContent = partage.identifiant;
+        const role = document.createElement("span");
+        role.className = "role";
+        role.textContent = partage.droit === "ecriture" ? "voit et modifie" : "voit seulement";
+        const fin = document.createElement("span");
+        fin.className = "fin";
+        const changer = document.createElement("button");
+        changer.type = "button";
+        changer.className = "secondaire petit";
+        changer.textContent = partage.droit === "ecriture" ? "Passer en lecture" : "Autoriser à modifier";
+        changer.addEventListener("click", () => partager(partage.prof_id,
+          partage.droit === "ecriture" ? "lecture" : "ecriture"));
+        const retirer = document.createElement("button");
+        retirer.type = "button";
+        retirer.className = "danger petit";
+        retirer.textContent = "Retirer";
+        retirer.addEventListener("click", () => retirerPartage(partage));
+        fin.append(changer, retirer);
+        li.append(nom, role, fin);
+        liste.appendChild(li);
+      });
+    } catch (erreur) { surErreur(erreur, "message-partage"); }
+  }
+
+  async function partager(profId, droit) {
+    try {
+      await api("partages.ajouter", {classe_id: classe.id, prof_id: profId, droit});
+      await chargerPartages();
+      messager("message-partage", "Partage mis à jour.", "ok");
+    } catch (erreur) { surErreur(erreur, "message-partage"); }
+  }
+
+  async function retirerPartage(partage) {
+    const reponse = await demander(`Retirer ${partage.identifiant} de cette classe ? Il ne la verra plus.`);
+    if (!reponse) return;
+    try {
+      await api("partages.supprimer", {classe_id: classe.id, prof_id: partage.prof_id});
+      await chargerPartages();
+      messager("message-partage", "Partage retiré.", "ok");
+    } catch (erreur) { surErreur(erreur, "message-partage"); }
+  }
+
+  $("ajouter-partage").addEventListener("click", async () => {
+    try {
+      annuaire = (await api("profs.annuaire")).profs || [];
+    } catch (erreur) { surErreur(erreur, "message-partage"); return; }
+    if (!annuaire.length) {
+      messager("message-partage",
+        estAdmin ? "Aucun autre professeur pour l’instant : crée d’abord un compte depuis « Mes classes »."
+                 : "Aucun autre professeur pour l’instant.", "erreur");
+      return;
+    }
+    const reponse = await demander("Avec quel collègue partager cette classe ?", [
+      {nom: "prof", libelle: "Professeur",
+       options: annuaire.map(prof => ({valeur: String(prof.id), libelle: prof.identifiant}))},
+      {nom: "droit", libelle: "Ce qu’il peut faire", valeur: "lecture", options: [
+        {valeur: "lecture", libelle: "Voir seulement"},
+        {valeur: "ecriture", libelle: "Voir et modifier"}
+      ]}
+    ]);
+    if (!reponse) return;
+    partager(parseInt(reponse.prof, 10), reponse.droit === "ecriture" ? "ecriture" : "lecture");
+  });
+
+  // ------------------------------------------------------------- comptes professeurs
+
+  async function chargerProfs() {
+    const liste = $("liste-profs");
+    liste.textContent = "";
+    try {
+      const donnees = await api("profs.liste");
+      (donnees.profs || []).forEach(prof => {
+        const li = document.createElement("li");
+        const nom = document.createElement("strong");
+        nom.textContent = prof.identifiant;
+        const role = document.createElement("span");
+        role.className = "role";
+        role.textContent = (prof.admin ? "administrateur · " : "")
+          + `${prof.classes} classe${prof.classes > 1 ? "s" : ""}`;
+        li.append(nom, role);
+        liste.appendChild(li);
+      });
+    } catch (erreur) { surErreur(erreur, "message-profs"); }
+  }
+
+  $("ajouter-prof").addEventListener("click", async () => {
+    const reponse = await demander(
+      "Nouveau professeur. Choisis-lui un identifiant et un mot de passe, et transmets-les-lui de vive voix.",
+      [
+        {nom: "identifiant", libelle: "Identifiant", maxlength: 40},
+        {nom: "motdepasse", libelle: "Mot de passe (12 caractères minimum)", type: "password"}
+      ]);
+    if (!reponse) return;
+    try {
+      await api("profs.ajouter", {identifiant: reponse.identifiant, motdepasse: reponse.motdepasse});
+      await chargerProfs();
+      messager("message-profs",
+        `Compte créé pour ${reponse.identifiant}. Il ne verra aucune classe tant que tu ne lui en auras pas partagé une.`,
+        "ok");
+    } catch (erreur) { surErreur(erreur, "message-profs"); }
+  });
 
   async function nommer(eleve, champ) {
     const texte = champ.value.trim().replace(/\s+/g, " ");
@@ -506,12 +708,26 @@ header('Content-Type: text/html; charset=utf-8');
         const etiquette = document.createElement("label");
         etiquette.textContent = champ.libelle;
         etiquette.htmlFor = "boite-" + champ.nom;
-        const entree = document.createElement("input");
+        let entree;
+        if (champ.options) {
+          entree = document.createElement("select");
+          champ.options.forEach(option => {
+            const choix = document.createElement("option");
+            choix.value = option.valeur;
+            choix.textContent = option.libelle;
+            entree.appendChild(choix);
+          });
+          entree.value = champ.valeur ?? (champ.options[0] && champ.options[0].valeur) ?? "";
+        } else {
+          entree = document.createElement("input");
+          entree.type = champ.type || "text";
+          entree.value = champ.valeur ?? "";
+          entree.autocomplete = champ.type === "password" ? "new-password" : "off";
+          if (champ.min !== undefined) entree.min = champ.min;
+          if (champ.max !== undefined) entree.max = champ.max;
+          if (champ.maxlength !== undefined) entree.maxLength = champ.maxlength;
+        }
         entree.id = "boite-" + champ.nom;
-        entree.type = champ.type || "text";
-        entree.value = champ.valeur ?? "";
-        if (champ.min !== undefined) entree.min = champ.min;
-        if (champ.max !== undefined) entree.max = champ.max;
         zone.append(etiquette, entree);
       });
       const boite = $("boite");
@@ -633,8 +849,7 @@ header('Content-Type: text/html; charset=utf-8');
       jeton = donnees.jeton;
       try { sessionStorage.setItem(CLE_JETON, jeton); } catch (_) {}
       $("motdepasse").value = "";
-      $("qui").textContent = $("identifiant").value;
-      chargerClasses();
+      demarrer();
     } catch (_) {
       messager("erreur-connexion", "Le serveur ne répond pas.", "erreur");
     }
@@ -642,12 +857,17 @@ header('Content-Type: text/html; charset=utf-8');
 
   $("deconnexion").addEventListener("click", () => deconnecter(false));
 
-  if (jeton) {
-    api("moi").then(donnees => {
+  // Une seule porte d'entrée : on demande qui on est (et si on est administrateur),
+  // puis on affiche les classes.
+  function demarrer() {
+    return api("moi").then(donnees => {
       $("qui").textContent = donnees.identifiant;
-      chargerClasses();
+      estAdmin = Boolean(donnees.admin);
+      return chargerClasses();
     }).catch(() => deconnecter(true));
   }
+
+  if (jeton) demarrer();
 })();
 </script>
 </body>

@@ -404,6 +404,225 @@ verifier("supprimer une classe efface ses élèves", function () use (&$classeId
     egal(0, count($r['json']['classes']), 'plus aucune classe');
 });
 
+// ------------------------------------------- cloisonnement entre professeurs
+// Règle : une classe appartient à un prof. Un collègue ne la voit que si elle
+// lui a été partagée, et le partage en lecture n'ouvre aucune écriture.
+
+$jetonClaire = null;
+$classeDeGwenael = null;
+$eleveDeGwenael = null;
+$classeDeClaire = null;
+
+verifier("le compte administrateur crée un deuxième professeur", function () use (&$jeton, &$jetonClaire) {
+    $r = appel('/api/prof.php', ['action' => 'profs.ajouter', 'identifiant' => 'claire',
+        'motdepasse' => 'motdepasse-de-claire-2026'], ['jeton' => $jeton]);
+    egal(200, $r['code'], 'code HTTP');
+    $r = appel('/api/prof.php', ['action' => 'connexion', 'identifiant' => 'claire',
+        'motdepasse' => 'motdepasse-de-claire-2026']);
+    egal(200, $r['code'], 'la nouvelle prof doit pouvoir se connecter');
+    $jetonClaire = $r['json']['jeton'];
+});
+
+verifier("le premier compte est administrateur, pas le second", function () use (&$jeton, &$jetonClaire) {
+    egal(true, appel('/api/prof.php', ['action' => 'moi'], ['jeton' => $jeton])['json']['admin']);
+    egal(false, appel('/api/prof.php', ['action' => 'moi'], ['jeton' => $jetonClaire])['json']['admin']);
+});
+
+verifier("un professeur ordinaire ne peut pas créer de compte", function () use (&$jetonClaire) {
+    $r = appel('/api/prof.php', ['action' => 'profs.ajouter', 'identifiant' => 'intrus',
+        'motdepasse' => 'motdepasse-intrus-2026'], ['jeton' => $jetonClaire]);
+    egal(403, $r['code'], 'code HTTP');
+    egal(403, appel('/api/prof.php', ['action' => 'profs.liste'], ['jeton' => $jetonClaire])['code'], 'code HTTP');
+});
+
+verifier("un identifiant déjà pris est refusé", function () use (&$jeton) {
+    $r = appel('/api/prof.php', ['action' => 'profs.ajouter', 'identifiant' => 'claire',
+        'motdepasse' => 'un-autre-mot-de-passe'], ['jeton' => $jeton]);
+    egal(400, $r['code'], 'code HTTP');
+});
+
+verifier("un mot de passe trop court est refusé", function () use (&$jeton) {
+    $r = appel('/api/prof.php', ['action' => 'profs.ajouter', 'identifiant' => 'court',
+        'motdepasse' => 'court'], ['jeton' => $jeton]);
+    egal(400, $r['code'], 'code HTTP');
+});
+
+verifier("chacun ne voit que ses propres classes", function () use (&$jeton, &$jetonClaire, &$classeDeGwenael, &$classeDeClaire, &$eleveDeGwenael) {
+    $classeDeGwenael = appel('/api/prof.php', ['action' => 'classes.creer', 'libelle' => '405'],
+        ['jeton' => $jeton])['json']['id'];
+    $eleveDeGwenael = appel('/api/prof.php', ['action' => 'eleves.ajouter',
+        'classe_id' => $classeDeGwenael, 'nombre' => 2], ['jeton' => $jeton])['json']['eleves'][0];
+    $classeDeClaire = appel('/api/prof.php', ['action' => 'classes.creer', 'libelle' => '6e2'],
+        ['jeton' => $jetonClaire])['json']['id'];
+
+    $siennes = appel('/api/prof.php', ['action' => 'classes.liste'], ['jeton' => $jetonClaire])['json']['classes'];
+    egal(1, count($siennes), 'Claire ne doit voir que sa classe');
+    egal('6e2', $siennes[0]['libelle']);
+    egal('proprietaire', $siennes[0]['droit']);
+
+    $mes = appel('/api/prof.php', ['action' => 'classes.liste'], ['jeton' => $jeton])['json']['classes'];
+    egal(1, count($mes), 'Gwenaël ne doit voir que la sienne');
+    egal('405', $mes[0]['libelle']);
+});
+
+verifier("lire la classe d'un autre est impossible", function () use (&$jetonClaire, &$classeDeGwenael) {
+    $r = appel('/api/prof.php', ['action' => 'tableau', 'classe_id' => $classeDeGwenael], ['jeton' => $jetonClaire]);
+    egal(404, $r['code'], 'code HTTP');
+    vrai(!str_contains($r['texte'], '405'), "le nom de la classe ne doit pas fuiter");
+});
+
+verifier("modifier ou supprimer la classe d'un autre est impossible", function () use (&$jetonClaire, &$classeDeGwenael) {
+    egal(404, appel('/api/prof.php', ['action' => 'classes.modifier', 'classe_id' => $classeDeGwenael,
+        'libelle' => 'volée'], ['jeton' => $jetonClaire])['code'], 'code HTTP');
+    egal(404, appel('/api/prof.php', ['action' => 'classes.supprimer',
+        'classe_id' => $classeDeGwenael], ['jeton' => $jetonClaire])['code'], 'code HTTP');
+    egal(404, appel('/api/prof.php', ['action' => 'eleves.ajouter', 'classe_id' => $classeDeGwenael,
+        'nombre' => 1], ['jeton' => $jetonClaire])['code'], 'code HTTP');
+});
+
+verifier("agir sur l'élève d'un autre est impossible", function () use (&$jetonClaire, &$eleveDeGwenael) {
+    $id = $eleveDeGwenael['id'];
+    egal(404, appel('/api/prof.php', ['action' => 'eleves.nommer', 'eleve_id' => $id,
+        'prenom' => 'Pirate'], ['jeton' => $jetonClaire])['code'], 'nommer');
+    egal(404, appel('/api/prof.php', ['action' => 'eleves.regenerer',
+        'eleve_id' => $id], ['jeton' => $jetonClaire])['code'], 'régénérer');
+    egal(404, appel('/api/prof.php', ['action' => 'eleves.supprimer',
+        'eleve_id' => $id], ['jeton' => $jetonClaire])['code'], 'supprimer');
+});
+
+verifier("le code de l'élève d'un autre n'a pas changé", function () use (&$jeton, &$eleveDeGwenael, &$classeDeGwenael) {
+    $r = appel('/api/prof.php', ['action' => 'tableau', 'classe_id' => $classeDeGwenael], ['jeton' => $jeton]);
+    $codes = array_column($r['json']['eleves'], 'code');
+    vrai(in_array($eleveDeGwenael['code'], $codes, true), "le code d'origine devrait toujours être là");
+    egal(2, count($r['json']['eleves']), "aucun élève ne doit avoir été ajouté ni supprimé");
+});
+
+verifier("partage en lecture : la classe devient visible", function () use (&$jeton, &$jetonClaire, &$classeDeGwenael) {
+    $claire = null;
+    foreach (appel('/api/prof.php', ['action' => 'profs.annuaire'], ['jeton' => $jeton])['json']['profs'] as $p) {
+        if ($p['identifiant'] === 'claire') $claire = $p['id'];
+    }
+    vrai($claire !== null, "l'annuaire devrait contenir Claire");
+    $r = appel('/api/prof.php', ['action' => 'partages.ajouter', 'classe_id' => $classeDeGwenael,
+        'prof_id' => $claire, 'droit' => 'lecture'], ['jeton' => $jeton]);
+    egal(200, $r['code'], 'code HTTP');
+
+    $classes = appel('/api/prof.php', ['action' => 'classes.liste'], ['jeton' => $jetonClaire])['json']['classes'];
+    egal(2, count($classes), 'Claire doit maintenant voir deux classes');
+    $partagee = null;
+    foreach ($classes as $c) if ($c['libelle'] === '405') $partagee = $c;
+    vrai($partagee !== null, "la classe partagée devrait apparaître");
+    egal('lecture', $partagee['droit']);
+    egal('gwenael', $partagee['proprietaire']);
+
+    $r = appel('/api/prof.php', ['action' => 'tableau', 'classe_id' => $classeDeGwenael], ['jeton' => $jetonClaire]);
+    egal(200, $r['code'], 'le tableau devrait être lisible');
+    egal('lecture', $r['json']['classe']['droit']);
+});
+
+verifier("partage en lecture : aucune écriture possible", function () use (&$jetonClaire, &$classeDeGwenael, &$eleveDeGwenael) {
+    egal(403, appel('/api/prof.php', ['action' => 'eleves.nommer', 'eleve_id' => $eleveDeGwenael['id'],
+        'prenom' => 'Pirate'], ['jeton' => $jetonClaire])['code'], 'nommer');
+    egal(403, appel('/api/prof.php', ['action' => 'eleves.ajouter', 'classe_id' => $classeDeGwenael,
+        'nombre' => 1], ['jeton' => $jetonClaire])['code'], 'ajouter des élèves');
+    egal(403, appel('/api/prof.php', ['action' => 'classes.modifier', 'classe_id' => $classeDeGwenael,
+        'libelle' => 'renommée'], ['jeton' => $jetonClaire])['code'], 'renommer');
+    egal(403, appel('/api/prof.php', ['action' => 'classes.supprimer',
+        'classe_id' => $classeDeGwenael], ['jeton' => $jetonClaire])['code'], 'supprimer la classe');
+});
+
+verifier("partage en écriture : saisie autorisée, suppression de la classe refusée", function () use (&$jeton, &$jetonClaire, &$classeDeGwenael, &$eleveDeGwenael) {
+    $claire = appel('/api/prof.php', ['action' => 'partages.liste',
+        'classe_id' => $classeDeGwenael], ['jeton' => $jeton])['json']['partages'][0];
+    egal('claire', $claire['identifiant']);
+    appel('/api/prof.php', ['action' => 'partages.ajouter', 'classe_id' => $classeDeGwenael,
+        'prof_id' => $claire['prof_id'], 'droit' => 'ecriture'], ['jeton' => $jeton]);
+
+    egal(200, appel('/api/prof.php', ['action' => 'eleves.nommer', 'eleve_id' => $eleveDeGwenael['id'],
+        'prenom' => 'Noé', 'initiale' => 'k'], ['jeton' => $jetonClaire])['code'], 'nommer');
+    egal(200, appel('/api/prof.php', ['action' => 'eleves.ajouter', 'classe_id' => $classeDeGwenael,
+        'nombre' => 1], ['jeton' => $jetonClaire])['code'], 'ajouter un élève');
+    egal(403, appel('/api/prof.php', ['action' => 'classes.supprimer',
+        'classe_id' => $classeDeGwenael], ['jeton' => $jetonClaire])['code'], 'supprimer la classe');
+});
+
+verifier("un collègue partagé ne peut pas re-partager la classe", function () use (&$jetonClaire, &$classeDeGwenael) {
+    $r = appel('/api/prof.php', ['action' => 'partages.ajouter', 'classe_id' => $classeDeGwenael,
+        'prof_id' => 1, 'droit' => 'ecriture'], ['jeton' => $jetonClaire]);
+    egal(403, $r['code'], 'code HTTP');
+    egal(403, appel('/api/prof.php', ['action' => 'partages.supprimer', 'classe_id' => $classeDeGwenael,
+        'prof_id' => 1], ['jeton' => $jetonClaire])['code'], 'retrait du partage');
+});
+
+verifier("un droit inventé est refusé", function () use (&$jeton, &$jetonClaire, &$classeDeGwenael) {
+    $claire = appel('/api/prof.php', ['action' => 'partages.liste',
+        'classe_id' => $classeDeGwenael], ['jeton' => $jeton])['json']['partages'][0];
+    egal(400, appel('/api/prof.php', ['action' => 'partages.ajouter', 'classe_id' => $classeDeGwenael,
+        'prof_id' => $claire['prof_id'], 'droit' => 'administrateur'], ['jeton' => $jeton])['code'], 'code HTTP');
+});
+
+verifier("retrait du partage : la classe redevient invisible", function () use (&$jeton, &$jetonClaire, &$classeDeGwenael, &$eleveDeGwenael) {
+    $claire = appel('/api/prof.php', ['action' => 'partages.liste',
+        'classe_id' => $classeDeGwenael], ['jeton' => $jeton])['json']['partages'][0];
+    egal(200, appel('/api/prof.php', ['action' => 'partages.supprimer', 'classe_id' => $classeDeGwenael,
+        'prof_id' => $claire['prof_id']], ['jeton' => $jeton])['code'], 'code HTTP');
+
+    $classes = appel('/api/prof.php', ['action' => 'classes.liste'], ['jeton' => $jetonClaire])['json']['classes'];
+    egal(1, count($classes), 'Claire ne doit plus voir que sa classe');
+    egal(404, appel('/api/prof.php', ['action' => 'tableau',
+        'classe_id' => $classeDeGwenael], ['jeton' => $jetonClaire])['code'], 'tableau');
+    egal(404, appel('/api/prof.php', ['action' => 'eleves.nommer', 'eleve_id' => $eleveDeGwenael['id'],
+        'prenom' => 'Pirate'], ['jeton' => $jetonClaire])['code'], 'nommer');
+});
+
+verifier("le prénom saisi pendant le partage est resté", function () use (&$jeton, &$classeDeGwenael) {
+    $eleves = appel('/api/prof.php', ['action' => 'tableau',
+        'classe_id' => $classeDeGwenael], ['jeton' => $jeton])['json']['eleves'];
+    egal('Noé', $eleves[0]['prenom']);
+    egal('K', $eleves[0]['initiale']);
+    egal(3, count($eleves), "l'élève ajouté par Claire doit être là");
+});
+
+// ------------------------------------------------------- mise à niveau de la base
+
+verifier("migrer.php refuse un mauvais mot de passe", function () {
+    $r = formulaire('/migrer.php', ['jeton' => 'mauvais']);
+    vrai(str_contains($r['texte'], 'incorrect'), "la page devrait refuser");
+});
+
+verifier("migrer.php ne change rien sur une base déjà à jour", function () use (&$jeton) {
+    $r = formulaire('/migrer.php', ['jeton' => 'JETON-DE-TEST']);
+    vrai(str_contains($r['texte'], 'rien à changer'), "la base est déjà à jour");
+    egal(200, appel('/api/prof.php', ['action' => 'classes.liste'], ['jeton' => $jeton])['code'],
+        "le serveur doit continuer à répondre");
+});
+
+verifier("une base de l'ancienne version est reprise sans perdre de données", function () use ($travail) {
+    require_once dirname(__DIR__) . '/public/lib/bd.php';
+    $ancienne = $travail . '/ancienne.sqlite';
+    $vieux = new PDO('sqlite:' . $ancienne, null, null, [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
+    // Le schéma tel qu'il était avant le cloisonnement : ni prof_id, ni admin, ni partages.
+    $vieux->exec('CREATE TABLE classes (id INTEGER PRIMARY KEY AUTOINCREMENT, libelle TEXT NOT NULL,
+                  applis TEXT NOT NULL DEFAULT \'defi-tables\', cree_le TEXT NOT NULL)');
+    $vieux->exec('CREATE TABLE profs (id INTEGER PRIMARY KEY AUTOINCREMENT, identifiant TEXT NOT NULL,
+                  mdp_hash TEXT NOT NULL, cree_le TEXT NOT NULL)');
+    $vieux->exec("INSERT INTO profs (identifiant, mdp_hash, cree_le) VALUES ('gwenael', 'x', '2026-08-29T10:00:00Z')");
+    $vieux->exec("INSERT INTO classes (libelle, applis, cree_le) VALUES ('405', 'defi-tables', '2026-08-29T10:00:00Z')");
+
+    $faits = migrer_schema($vieux);
+    vrai(count($faits) >= 3, "la migration devrait annoncer ce qu'elle a fait");
+    egal(true, colonne_existe($vieux, 'classes', 'prof_id'), 'colonne prof_id');
+    egal(true, colonne_existe($vieux, 'profs', 'admin'), 'colonne admin');
+    egal(0, (int)$vieux->query('SELECT COUNT(*) FROM partages')->fetchColumn(), 'table partages créée et vide');
+    egal(1, (int)$vieux->query('SELECT prof_id FROM classes WHERE libelle = \'405\'')->fetchColumn(),
+        'la classe existante doit revenir au premier prof');
+    egal(1, (int)$vieux->query('SELECT admin FROM profs WHERE identifiant = \'gwenael\'')->fetchColumn(),
+        'le premier prof doit devenir administrateur');
+    egal('405', (string)$vieux->query('SELECT libelle FROM classes')->fetchColumn(), 'la classe est intacte');
+
+    egal([], migrer_schema($vieux), "relancer la migration ne doit plus rien faire");
+});
+
 // ------------------------------------------------------------------- déconnexion
 
 verifier("déconnexion : le jeton ne marche plus", function () use (&$jeton) {
