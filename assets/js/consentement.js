@@ -17,6 +17,23 @@
     window.location.protocol === "https:" &&
     (window.location.hostname === "mathsgo.re" || window.location.hostname.endsWith(".mathsgo.re"));
   const IS_PREVIEW = new URLSearchParams(window.location.search).has("apercu-cookies");
+  const CLE_SUIVI = "mathsgo-suivi-code";
+
+  // Un élève identifié par un code de suivi n'est JAMAIS mesuré : aucune mesure
+  // d'audience n'est chargée sur son appareil, et on ne lui montre pas la
+  // bannière — un enfant de onze ans n'a pas à arbitrer une question de cookies.
+  // Deux signaux, parce que le code peut arriver de deux façons :
+  //  - il est déjà rangé dans le navigateur (visites suivantes) ;
+  //  - il vient d'arriver par le lien de l'espace élève, et l'appli l'a signalé
+  //    avant que ce script ne démarre (window.MATHSGO_SUIVI_ELEVE).
+  function suiviEleveActif() {
+    try {
+      if (window.MATHSGO_SUIVI_ELEVE === true) return true;
+      return Boolean(window.localStorage.getItem(CLE_SUIVI));
+    } catch (_error) {
+      return window.MATHSGO_SUIVI_ELEVE === true;
+    }
+  }
 
   let choice = readChoice();
   let analyticsLoaded = false;
@@ -79,6 +96,7 @@
 
   function loadAnalytics() {
     if (!IS_TRACKABLE_ORIGIN || analyticsLoaded || choice !== "granted") return;
+    if (suiviEleveActif()) return;
 
     analyticsLoaded = true;
     window.gtag("consent", "update", {
@@ -247,6 +265,19 @@
 
   function start() {
     initialiseConsentMode();
+
+    // Élève identifié : rien à mesurer, rien à demander. On efface au passage
+    // les cookies de mesure qu'une visite précédente aurait pu laisser.
+    if (suiviEleveActif() && !IS_PREVIEW) {
+      deleteAnalyticsCookies();
+      window.mathsgoConsentement = Object.freeze({
+        ouvrir: function () {},
+        accepter: function () {},
+        refuser: function () {},
+        etat: function () { return "denied"; }
+      });
+      return;
+    }
 
     if (!IS_TRACKABLE_ORIGIN && !IS_PREVIEW) {
       window.mathsgoConsentement = Object.freeze({

@@ -343,6 +343,52 @@ verifier("la page élève refuse un code inconnu ou mal formé", function () {
     egal(400, appel('/api/eleve.php?code=' . urlencode("' OR 1=1"))['code'], 'code HTTP');
 });
 
+// ------------------------------- le code ne doit plus voyager dans l'adresse
+//
+// Une adresse est écrite en clair dans les journaux d'accès de l'hébergeur.
+// L'appli demande donc lecture et identité en POST, code dans le corps. Ces
+// tests EXÉCUTENT les deux chemins : celui que l'appli utilise vraiment, et
+// l'ancien, gardé pour le dépannage à la main.
+
+verifier("la progression se relit en POST, code dans le corps", function () use (&$codes, $parcours) {
+    $r = appel('/api/parcours.php', ['code' => $codes[0]['code'], 'appli' => 'defi-tables', 'lire' => true]);
+    egal(200, $r['code'], 'code HTTP');
+    egal(true, $r['json']['existe'], 'la progression doit être trouvée');
+    egal($parcours, $r['json']['parcours'], 'progression relue');
+});
+
+verifier("la relecture en POST ne détruit pas la progression enregistrée", function () use (&$codes, $parcours) {
+    appel('/api/parcours.php', ['code' => $codes[0]['code'], 'appli' => 'defi-tables', 'lire' => true]);
+    $r = appel('/api/parcours.php?code=' . $codes[0]['code']);
+    egal($parcours, $r['json']['parcours'], 'la progression doit être intacte après une lecture');
+});
+
+verifier("un POST sans progression et sans « lire » reste une erreur", function () use (&$codes) {
+    $r = appel('/api/parcours.php', ['code' => $codes[0]['code']]);
+    egal(400, $r['code'], 'code HTTP');
+});
+
+verifier("l'identité de l'élève se lit en POST, code dans le corps", function () use (&$codes) {
+    $r = appel('/api/eleve.php', ['code' => $codes[0]['code']]);
+    egal(200, $r['code'], 'code HTTP');
+    egal('Léa', $r['json']['prenom']);
+    egal('405', $r['json']['classe']);
+});
+
+verifier("l'identité en POST refuse un code inconnu ou mal formé", function () {
+    egal(404, appel('/api/eleve.php', ['code' => 'ZZZZZZ'])['code'], 'code HTTP');
+    egal(400, appel('/api/eleve.php', ['code' => 'AB'])['code'], 'code HTTP');
+});
+
+verifier("la page d'entrée n'envoie pas le code en GET si le JavaScript ne part pas", function () {
+    global $url;
+    $html = (string)file_get_contents($url . '/');
+    vrai((bool)preg_match('/<form[^>]*id="form-code"[^>]*method="post"/i', $html)
+        || (bool)preg_match('/<form[^>]*method="post"[^>]*id="form-code"/i', $html),
+        "le formulaire d'entrée doit être en method=\"post\" : en repli sans JavaScript, "
+        . "un envoi en GET écrirait le code de l'élève dans la barre d'adresse");
+});
+
 verifier("la page élève ne donne aucun code en retour", function () use (&$codes) {
     $r = appel('/api/eleve.php?code=' . $codes[0]['code']);
     vrai(!str_contains($r['texte'], $codes[1]['code']), "aucun code d'un autre élève ne doit sortir");

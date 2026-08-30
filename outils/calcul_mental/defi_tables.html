@@ -13,7 +13,8 @@
   <link rel="icon" type="image/png" sizes="192x192" href="/assets/img/favicon-192.png">
   <link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png">
   <link rel="stylesheet" href="../../assets/css/consentement.css">
-  <script defer src="../../assets/js/consentement.js"></script>
+  <script defer src="../../assets/js/consentement.js"
+          data-analytics-page-location="https://mathsgo.re/outils/calcul_mental/defi_tables.html"></script>
   <style>
     :root {
       --ink: #143451;
@@ -1515,17 +1516,30 @@
       const RETOUR_CATALOGUE = {
         href: "../index.html?domain=nombres-calculs&notion=calcul-mental",
         texte: "Calcul mental",
-        aria: "Retour au calcul mental"
+        aria: "Retour au calcul mental",
+        logoHref: "/",
+        logoAria: "Accueil maths&go"
       };
       const RETOUR_ESPACE = {
         href: SUIVI_URL + "/",
         texte: "Mon espace",
-        aria: "Retour à mon espace"
+        aria: "Retour à mon espace",
+        logoHref: SUIVI_URL + "/",
+        logoAria: "Retour à mon espace"
       };
       function majLienRetour() {
+        const vers = suiviActif() ? RETOUR_ESPACE : RETOUR_CATALOGUE;
+        // Le logo suit la même règle que le lien du haut. C'était la dernière
+        // porte qui faisait sortir un élève suivi de son espace : pour lui, le
+        // logo ramène à son espace, pas à l'accueil du site. Pour tous les
+        // autres visiteurs, rien ne change.
+        const logo = document.querySelector("a.brand");
+        if (logo) {
+          logo.href = vers.logoHref;
+          logo.setAttribute("aria-label", vers.logoAria);
+        }
         const lien = document.getElementById("lien-retour");
         if (!lien) return;
-        const vers = suiviActif() ? RETOUR_ESPACE : RETOUR_CATALOGUE;
         lien.href = vers.href;
         lien.setAttribute("aria-label", vers.aria);
         const etiquette = lien.querySelector(".catalogue-link-label");
@@ -1551,14 +1565,37 @@
         }
       }
 
+      // Le code ne voyage JAMAIS dans l'adresse d'une requête : une adresse est
+      // écrite en clair dans les journaux d'accès de l'hébergeur, que nous ne
+      // maîtrisons pas. Il part donc dans le corps, comme l'enregistrement.
       function lireParcoursDuServeur(code) {
-        return appelSuivi(`/api/parcours.php?code=${encodeURIComponent(code)}&appli=defi-tables`);
+        return appelSuivi("/api/parcours.php", {
+          method: "POST",
+          headers: {"Content-Type": "text/plain;charset=UTF-8"},
+          body: JSON.stringify({code, appli: "defi-tables", lire: true})
+        });
+      }
+
+      // Même règle pour « à qui appartient ce code ».
+      function lireIdentiteDuServeur(code) {
+        return appelSuivi("/api/eleve.php", {
+          method: "POST",
+          headers: {"Content-Type": "text/plain;charset=UTF-8"},
+          body: JSON.stringify({code})
+        });
       }
 
       // text/plain : le serveur lit le corps tel quel, et cela évite au
       // navigateur une requête préparatoire avant CHAQUE enregistrement.
+      // Le prénom que l'élève tape lui-même ne sort PAS de son appareil : la
+      // phrase sous le champ le lui promet, et le professeur n'a rien demandé de
+      // tel — celui qu'il voit est le prénom qu'il a saisi lui-même dans « Ma
+      // classe ». On le retire donc du paquet envoyé. Sans cela, un élève qui
+      // écrit son nom complet, ou n'importe quoi d'autre, le verrait enregistré
+      // sur le serveur, hors de tout ce qui a été déclaré.
       function paquetParcours(code, source) {
-        return JSON.stringify({code, appli: "defi-tables", parcours: source});
+        const sansPrenom = Object.assign({}, source, {prenom: ""});
+        return JSON.stringify({code, appli: "defi-tables", parcours: sansPrenom});
       }
 
       function envoyerParcours() {
@@ -1611,7 +1648,7 @@
       }
 
       async function chargerIdentite(code) {
-        const reponse = await appelSuivi(`/api/eleve.php?code=${encodeURIComponent(code)}`);
+        const reponse = await lireIdentiteDuServeur(code);
         suiviIdentite = reponse.statut === 200 && reponse.donnees && reponse.donnees.ok
           ? {prenom: reponse.donnees.prenom || "", classe: reponse.donnees.classe || ""}
           : null;
@@ -1708,7 +1745,7 @@
         }
         const [progression, identite] = await Promise.all([
           lireParcoursDuServeur(code),
-          appelSuivi(`/api/eleve.php?code=${encodeURIComponent(code)}`)
+          lireIdentiteDuServeur(code)
         ]);
         if (progression.statut !== 200 || !progression.donnees || !progression.donnees.ok) {
           $("fiche-ecran-info").textContent = progression.statut === 404
@@ -3571,6 +3608,24 @@
       const codeDemande = parametres.get("code");
       const ouvrir = parametres.get("ouvrir") || (adresse === "#parcours" ? "parcours" : "")
         || (adresse === "#calculs" ? "calculs" : "");
+      // Le code est lu, il ne doit plus rester dans la barre d'adresse : sinon il
+      // part dans la mesure d'audience, il s'inscrit dans l'historique du
+      // navigateur, et il reste affiché quand la page est projetée au tableau.
+      // Ce script s'exécute avant consentement.js (chargé en « defer »), donc
+      // l'adresse est déjà nettoyée quand la mesure d'audience démarre.
+      if (codeDemande || ficheDemandee) {
+        // Signalé AVANT consentement.js (chargé en « defer », donc exécuté après
+        // ce script) : dès qu'un élève est identifié par un code, aucune mesure
+        // d'audience ne doit se charger sur son appareil.
+        window.MATHSGO_SUIVI_ELEVE = true;
+        try {
+          parametres.delete("code");
+          parametres.delete("fiche");
+          const reste = parametres.toString();
+          window.history.replaceState(null, "",
+            window.location.pathname + window.location.search + (reste ? "#" + reste : ""));
+        } catch (_) {}
+      }
       if (ficheDemandee) {
         ouvrirFicheEleve(ficheDemandee);
       } else {

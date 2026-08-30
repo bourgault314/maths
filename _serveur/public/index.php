@@ -83,7 +83,10 @@ header('Content-Type: text/html; charset=utf-8');
     <h1>Mon espace</h1>
     <p class="sous-titre">Entre le code que ton professeur t’a donné.</p>
     <div class="carte">
-      <form id="form-code" autocomplete="off">
+      <!-- method="post" : en usage normal le JavaScript intercepte l'envoi, mais
+           s'il ne s'exécute pas, le navigateur enverrait le formulaire lui-même —
+           et en GET le code de l'élève se retrouverait dans la barre d'adresse. -->
+      <form id="form-code" method="post" autocomplete="off">
         <label for="code">Ton code</label>
         <input id="code" name="code" type="text" inputmode="latin" maxlength="6"
                spellcheck="false" autocapitalize="characters" placeholder="••••••" required>
