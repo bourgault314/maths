@@ -71,7 +71,7 @@ test("l’annuaire généré expose le socle légal et le gestionnaire de consen
   assert.match(html, /data-mathsgo-consent-open[^>]*>Gérer mes cookies<\/button>/);
 });
 
-test("l’annuaire range les bouliers en Numération et réserve Calcul mental aux quatre ressources validées", () => {
+test("l’annuaire range les bouliers en Numération et réserve Calcul mental aux six ressources validées", () => {
   const html = buildDirectoryHtml(catalogue);
   const section = (notionId) => {
     const start = html.indexOf(`<section class="notion" aria-labelledby="notion-${notionId}">`);
@@ -85,7 +85,9 @@ test("l’annuaire range les bouliers en Numération et réserve Calcul mental a
     "outils/automatismes/CM_Livret_A5.html",
     "outils/calcul_mental/coffres_magiques_solo.html",
     "outils/calcul_mental/defi_calcul.html",
-    "outils/calcul_mental/defi_tables.html"
+    "outils/calcul_mental/defi_tables.html",
+    "outils/calcul_mental/fiche_tables_multiplication.pdf",
+    "outils/calcul_mental/fiche_parcours_tables.pdf"
   ];
 
   assert.equal((calculMental.match(/<li>/g) || []).length, expected.length);

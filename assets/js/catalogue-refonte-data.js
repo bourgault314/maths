@@ -444,7 +444,23 @@ window.MATHSGO_CATALOGUE = {
       "collections": [],
       "tags": ["calcul-mental", "tables", "multiplication", "division", "facteur-manquant", "entrainement", "chronometre"],
       "thumbnail": "assets/img/thumbnails/calcul-mental/defi-tables.svg?v=1",
-      "cardDescription": "Apprendre une table, s’entraîner sans pression ou se tester, avec des réglages simples et personnalisables."
+      "cardDescription": "Apprendre une table, s’entraîner, la valider, et suivre sur une grille les calculs déjà sus."
+    },
+    "outils/calcul_mental/fiche_tables_multiplication.pdf": {
+      "primaryNotion": "calcul-mental",
+      "primaryGroup": "imprimer",
+      "collections": [],
+      "tags": ["calcul-mental", "tables", "multiplication", "revision", "imprimable"],
+      "thumbnail": "assets/img/thumbnails/calcul-mental/fiche-tables-multiplication.png?v=1",
+      "cardDescription": "Toutes les tables écrites en entier sur une page A4, à relire ou à coller dans le cahier."
+    },
+    "outils/calcul_mental/fiche_parcours_tables.pdf": {
+      "primaryNotion": "calcul-mental",
+      "primaryGroup": "imprimer",
+      "collections": [],
+      "tags": ["calcul-mental", "tables", "multiplication", "suivi", "imprimable"],
+      "thumbnail": "assets/img/thumbnails/calcul-mental/fiche-parcours-tables.png?v=1",
+      "cardDescription": "La fiche de suivi vide : carte des tables et grille des 36 calculs, à photocopier et à remplir à la main."
     },
     "outils/calcul_mental/defi_calcul.html": {
       "primaryNotion": "calcul-mental",
@@ -6296,7 +6312,7 @@ window.MATHSGO_CATALOGUE = {
     {
       "id": "outils-calcul-mental-defi-tables-html",
       "title": "Défi tables",
-      "description": "Des parcours guidés pour apprendre une table, s’entraîner sans chronomètre ou se tester, plus un réglage libre avec produits, nombres manquants et divisions.",
+      "description": "Un parcours table par table pour apprendre, s’entraîner et valider, une grille des 36 calculs qui garde la trace de ce qui est su, et un réglage libre avec produits, nombres manquants et divisions.",
       "path": "outils/calcul_mental/defi_tables.html",
       "domains": [
         "nombres-calculs"
@@ -6317,9 +6333,75 @@ window.MATHSGO_CATALOGUE = {
         "facteur manquant",
         "divisions liées",
         "entraînement sans chronomètre",
-        "25 questions chronométrées"
+        "25 questions chronométrées",
+        "suivi des tables acquises",
+        "révision des calculs mal sus"
       ],
       "kind": "tool",
+      "status": "published",
+      "featured": false,
+      "recent": true
+    },
+    {
+      "id": "outils-calcul-mental-fiche-tables-multiplication-pdf",
+      "title": "Mes tables de multiplication — fiche de révision",
+      "description": "Toutes les tables écrites en entier sur une page A4, à relire, à coller dans le cahier ou à emporter à la maison.",
+      "path": "outils/calcul_mental/fiche_tables_multiplication.pdf",
+      "domains": [
+        "nombres-calculs"
+      ],
+      "notions": [
+        "calcul-mental"
+      ],
+      "uses": [
+        "imprimer",
+        "entrainer"
+      ],
+      "types": [
+        "imprimable"
+      ],
+      "filters": [
+        "materiel-imprimer"
+      ],
+      "keywords": [
+        "tables de multiplication",
+        "fiche de révision",
+        "table de 2 à 10",
+        "à coller dans le cahier"
+      ],
+      "kind": "document",
+      "status": "published",
+      "featured": false,
+      "recent": true
+    },
+    {
+      "id": "outils-calcul-mental-fiche-parcours-tables-pdf",
+      "title": "Mon parcours des tables — fiche à remplir",
+      "description": "La fiche de suivi vide de Défi tables : la carte des tables et la grille des 36 calculs, à photocopier et à remplir à la main.",
+      "path": "outils/calcul_mental/fiche_parcours_tables.pdf",
+      "domains": [
+        "nombres-calculs"
+      ],
+      "notions": [
+        "calcul-mental"
+      ],
+      "uses": [
+        "imprimer",
+        "entrainer"
+      ],
+      "types": [
+        "imprimable"
+      ],
+      "filters": [
+        "materiel-imprimer"
+      ],
+      "keywords": [
+        "suivi des tables",
+        "fiche à remplir",
+        "grille des calculs",
+        "tables acquises"
+      ],
+      "kind": "document",
       "status": "published",
       "featured": false,
       "recent": true
