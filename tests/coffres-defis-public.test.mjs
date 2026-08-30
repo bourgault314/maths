@@ -149,7 +149,7 @@ test("le catalogue publie les cinq cartes dans les groupes validés", () => {
   }
 });
 
-test("Calcul mental expose exactement les quatre ressources autonomes validées", () => {
+test("Calcul mental expose exactement les six ressources autonomes validées", () => {
   const design = catalogueUi.match(/"calcul-mental":\s*\{([\s\S]*?)\n\s*\},\n\s*proportionnalite:/)?.[1] || "";
   const notion = catalogue.notions.find(item => item.id === "calcul-mental");
   const bouliers = catalogue.collections.find(collection => collection.id === "bouliers");
@@ -160,7 +160,9 @@ test("Calcul mental expose exactement les quatre ressources autonomes validées"
     "outils/automatismes/CM_Livret_A5.html",
     "outils/calcul_mental/coffres_magiques_solo.html",
     "outils/calcul_mental/defi_calcul.html",
-    "outils/calcul_mental/defi_tables.html"
+    "outils/calcul_mental/defi_tables.html",
+    "outils/calcul_mental/fiche_tables_multiplication.pdf",
+    "outils/calcul_mental/fiche_parcours_tables.pdf"
   ].sort();
 
   const visiblePaths = catalogue.resources.filter(resource => {

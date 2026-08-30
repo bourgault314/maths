@@ -54,7 +54,7 @@ test("les quatre miniatures utilisent des vues fideles et adaptees aux outils", 
   assert.match(catalogue, /assets\/img\/thumbnails\/splat\/splat\.png\?v=6/);
   assert.match(catalogue, /assets\/img\/thumbnails\/splat\/splat-equations\.png\?v=6/);
   assert.match(catalogue, /assets\/img\/thumbnails\/splat\/petit-splat\.png\?v=5/);
-  assert.match(cataloguePage, /catalogue-refonte-data\.js\?v=equascribe-20260828-1/);
+  assert.match(cataloguePage, /catalogue-refonte-data\.js\?v=fiches-tables-20260830-1/);
   for(const thumbnail of [equasplatThumb, classicThumb, equationThumb, petitThumb]){
     assert.deepEqual(pngSize(thumbnail), {width:720, height:320});
   }

@@ -155,7 +155,7 @@ test("l’accueil compact distingue quatre choix principaux et l’évaluation C
   assert.match(html, /data-mode="test"[\s\S]*Je deviens expert/);
   assert.match(html, /data-mode="evaluation"[\s\S]*Comme l’évaluation CM1/);
   assert.match(html, /data-mode="custom"[\s\S]*Réglages[\s\S]*Je choisis tout/);
-  assert.match(html, /href="\.\/fiche_tables_multiplication\.pdf"[^>]*download>↓ Télécharger la fiche de révision/);
+  assert.doesNotMatch(html, /revision-sheet-action/);
   assert.match(html, /data-question-type="division"[\s\S]*Division/);
   assert.match(html, /data-test-level="1"[\s\S]*Niveau 1/);
   assert.match(html, /data-test-level="2"[\s\S]*Niveau 2/);
@@ -254,6 +254,7 @@ test("les détails mobiles restent alignés et les titres programmatiquement cib
 test("la fiche PDF est publique mais sa source modifiable n’est pas proposée aux élèves", () => {
   assert.equal(revisionPdf.subarray(0, 4).toString(), "%PDF");
   assert.equal(editableSource.subarray(0, 2).toString(), "PK");
-  assert.match(html, /href="\.\/fiche_tables_multiplication\.pdf"[^>]*download/);
+  assert.match(html, /href="\.\/fiche_tables_multiplication\.pdf" target="_blank" rel="noopener">Fiche de révision/);
+  assert.doesNotMatch(html, /\.pdf"[^>]*\sdownload/);
   assert.doesNotMatch(html, /fiche_tables_multiplication\.docx/);
 });

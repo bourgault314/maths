@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Défi tables | maths&amp;go</title>
-  <meta name="description" content="Des parcours guidés pour apprendre une table, s’entraîner sans chronomètre ou se tester, plus un réglage libre avec produits, nombres manquants et divisions.">
+  <meta name="description" content="Un parcours table par table pour apprendre, s’entraîner et valider, une grille des 36 calculs qui garde la trace de ce qui est su, et un réglage libre avec produits, nombres manquants et divisions.">
   <link rel="canonical" href="https://mathsgo.re/outils/calcul_mental/defi_tables.html">
   <meta name="robots" content="index, follow, max-image-preview:large">
   <link rel="icon" href="/favicon.ico" sizes="48x48">
@@ -481,7 +481,6 @@
     .calculs-action .primary { width: min(100%, 340px); }
     .calculs-hint { margin: 8px 0 0; color: var(--muted); font-size: .85rem; text-align: center; }
 
-    .revision-sheet-action { display: flex; flex-wrap: wrap; justify-content: center; gap: 0 10px; margin-top: 3px; }
     .parcours-print-action { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 6px 12px; margin-top: 10px; }
     .parcours-print-action .secondary { min-height: 44px; }
     .revision-sheet-link {
@@ -1094,10 +1093,6 @@
           <div class="secondary-mode-choice">
             <button class="secondary-mode-button" type="button" data-mode="evaluation" aria-controls="settings-screen">Comme l’évaluation CM1</button>
           </div>
-          <div class="revision-sheet-action">
-            <a class="revision-sheet-link" href="./fiche_tables_multiplication.pdf" download>↓ Télécharger la fiche de révision</a>
-            <a class="revision-sheet-link" href="./fiche_parcours_tables.pdf" download>↓ Télécharger la fiche parcours</a>
-          </div>
         </section>
 
         <section id="settings-screen" hidden>
@@ -1238,7 +1233,8 @@
         <p class="parcours-note">Réglages et Évaluation CM1 sont à part : ils ne comptent ni dans cette carte, ni dans Mes calculs. Touche un rond, un ✓ ou une étoile pour lancer la bonne série.</p>
         <div class="parcours-print-action">
           <button id="parcours-print" class="secondary" type="button">🖨 Imprimer ma fiche</button>
-          <a class="revision-sheet-link" href="./fiche_parcours_tables.pdf" download>↓ Fiche vide à photocopier</a>
+          <a class="revision-sheet-link" href="./fiche_parcours_tables.pdf" target="_blank" rel="noopener">Fiche vierge à remplir</a>
+          <a class="revision-sheet-link" href="./fiche_tables_multiplication.pdf" target="_blank" rel="noopener">Fiche de révision</a>
         </div>
       </div>
 
