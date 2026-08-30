@@ -685,7 +685,7 @@
             _stripsVersion: 0,
             _sortedStripsCacheVersion: -1,
             _sortedStripsCache: null,
-            nextCustomStripColor: 0,
+            customStripTypeByLength: new Map(),
             customStripCount: 0
         };
 
@@ -1190,6 +1190,19 @@
         let segmentPanelOpen = false;
         const customStripTypes = ['red', 'blue', 'green', 'purple', 'yellow'];
 
+        function getCustomStripTypeForLength(length) {
+            const lengthKey = Math.round(length * 1000);
+            const existingType = state.customStripTypeByLength.get(lengthKey);
+            if (existingType) return existingType;
+
+            const exactType = customStripTypes.find(type =>
+                Math.abs(CONFIG.colors[type].length - length * CONFIG.pixelsPerCm) < 0.01
+            );
+            const type = exactType || customStripTypes[state.customStripTypeByLength.size % customStripTypes.length];
+            state.customStripTypeByLength.set(lengthKey, type);
+            return type;
+        }
+
         function getStripLength(strip) {
             return Number.isFinite(strip?.lengthPx) && strip.lengthPx > 0
                 ? strip.lengthPx
@@ -1406,8 +1419,7 @@
             }
 
             error?.classList.add('hidden');
-            const type = customStripTypes[state.nextCustomStripColor % customStripTypes.length];
-            state.nextCustomStripColor++;
+            const type = getCustomStripTypeForLength(lengthCm);
 
             const rect = container.getBoundingClientRect();
             const cx = (rect.width / 2 - state.pan.x) / state.zoom;
@@ -2296,7 +2308,7 @@ const positionGhost = (clientX, clientY) => {
             state.stripMode = 'normal';
             CONFIG.currentStripWidth = CONFIG.normalStripWidth;
             state.nextAngleGroupId = 1;
-            state.nextCustomStripColor = 0;
+            state.customStripTypeByLength.clear();
             state.customStripCount = 0;
             state.zoom = 1;
             state.pan = {x: 0, y: 0};
@@ -3332,15 +3344,16 @@ if (state.draggingPoint) {
                 : state.strips.find(strip => strip.id === state.fixedFlashStripId);
             for (const p of state.points) {
                 const connectionCount = degree.get(p.id) || 0;
+                const pointIsTraced = state.tracedPointIds.has(p.id);
 
                 ctxStrips.beginPath();
                 const rivetSize = state.stripMode === 'thin' ? 2.0 : 6;
                 const strokeSize = state.stripMode === 'thin' ? 1.0 : 2;
 
                 ctxStrips.arc(p.x, p.y, rivetSize, 0, Math.PI * 2);
-                ctxStrips.fillStyle = connectionCount > 1 ? '#475569' : '#f1f5f9';
+                ctxStrips.fillStyle = pointIsTraced ? '#0d9488' : (connectionCount > 1 ? '#475569' : '#f1f5f9');
                 ctxStrips.fill();
-                ctxStrips.strokeStyle = '#334155';
+                ctxStrips.strokeStyle = pointIsTraced ? '#0f766e' : '#334155';
                 ctxStrips.lineWidth = strokeSize;
                 ctxStrips.stroke();
 
@@ -3351,15 +3364,6 @@ if (state.draggingPoint) {
                     ctxStrips.arc(p.x, p.y, fixedRing, 0, Math.PI * 2);
                     ctxStrips.strokeStyle = 'rgba(180,83,9,0.95)';
                     ctxStrips.lineWidth = state.stripMode === 'thin' ? 1.5 : 2.5;
-                    ctxStrips.stroke();
-                }
-
-                if (state.tracedPointIds.has(p.id)) {
-                    ctxStrips.beginPath();
-                    const traceRing = rivetSize + (state.stripMode === 'thin' ? 5 : 9);
-                    ctxStrips.arc(p.x, p.y, traceRing, 0, Math.PI * 2);
-                    ctxStrips.strokeStyle = 'rgba(13,148,136,0.95)';
-                    ctxStrips.lineWidth = state.stripMode === 'thin' ? 2 : 3;
                     ctxStrips.stroke();
                 }
 
@@ -3423,7 +3427,7 @@ if (state.draggingPoint) {
                 
                 ctxDraw.lineCap = 'round';
                 ctxDraw.lineJoin = 'round';
-                ctxDraw.lineWidth = 3;
+                ctxDraw.lineWidth = 2.5;
             }
         }
 
@@ -3447,14 +3451,14 @@ if (state.draggingPoint) {
             lastX = pos.x; lastY = pos.y;
 
             const strokeStyle = (state.penColor === 'blue') ? '#2563eb' : '#dc2626';
-            const stroke = { color: strokeStyle, width: 3, points: [{x: lastX, y: lastY}] };
+            const stroke = { color: strokeStyle, width: 2.5, points: [{x: lastX, y: lastY}] };
             state.strokes.push(stroke);
             state._currentStroke = stroke;
 
             ctxDraw.strokeStyle = strokeStyle;
             ctxDraw.lineCap = 'round';
             ctxDraw.lineJoin = 'round';
-            ctxDraw.lineWidth = 3;
+            ctxDraw.lineWidth = 2.5;
 
             ctxDraw.beginPath();
             ctxDraw.moveTo(lastX, lastY);
