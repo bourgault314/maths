@@ -217,49 +217,41 @@
         .sidebar-logo:hover { background: #f8fafc; }
         .sidebar-logo img { display: block; width: 100%; height: auto; }
 
+        #main-header .header-tools {
+            flex-wrap: nowrap;
+        }
+        .header-left,
+        .header-end {
+            flex: 0 0 auto;
+        }
         .header-main {
             min-width: 0;
             flex: 1 1 auto;
+            justify-content: flex-start;
+            overflow-x: auto;
+            overflow-y: hidden;
+            padding: 1px 0;
+            scrollbar-width: none;
+            overscroll-behavior-x: contain;
         }
+        .header-main::-webkit-scrollbar { display: none; }
+        .header-main > * { flex: 0 0 auto; }
         .header-end {
-            margin-left: auto;
-            flex: 0 0 auto;
+            margin-left: 0;
+        }
+        .creator-panel {
+            max-width: calc(100vw - 16px);
+            max-height: calc(100vh - 92px);
+            overflow-y: auto;
+            box-shadow: 0 18px 45px rgba(15, 23, 42, .18), 0 4px 12px rgba(15, 23, 42, .1);
         }
 
-        @media (max-width: 1480px) {
+        @media (max-width: 900px) {
             #main-header .header-tools {
-                display: grid;
-                grid-template-columns: minmax(0, 1fr) auto;
                 gap: 6px;
-                min-height: 0;
                 padding: 6px;
             }
             .header-left { min-width: 0; gap: 5px; }
-            .header-main {
-                grid-column: 1 / -1;
-                justify-content: flex-start;
-                gap: 5px;
-                overflow-x: auto;
-                padding: 1px 0 5px;
-                scrollbar-width: thin;
-                scrollbar-color: #cbd5e1 transparent;
-            }
-            .header-main::-webkit-scrollbar { height: 4px; }
-            .header-main::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 9999px; }
-            .header-end {
-                position: absolute;
-                top: 6px;
-                right: 6px;
-                margin-left: 0;
-            }
-            #angle-panel,
-            #segment-panel {
-                position: fixed !important;
-                top: 108px !important;
-                right: 6px !important;
-                left: auto !important;
-                width: min(16rem, calc(100vw - 12px)) !important;
-            }
         }
 
         @media (max-width: 560px) {
@@ -369,7 +361,7 @@
                     </button>
 
                     <!-- Pavé numérique (tablette-friendly) -->
-                    <div id="angle-panel" class="hidden absolute right-0 top-full mt-2 z-50 w-64 bg-white rounded-xl border border-orange-200 shadow-lg p-2">
+                    <div id="angle-panel" class="creator-panel hidden fixed z-50 w-72 bg-white rounded-2xl border border-orange-200 p-3">
                         <div class="flex items-center justify-between gap-2 mb-2">
                             <div class="text-xs font-extrabold text-slate-500">Valeur de l’angle (°)</div>
                             <button onclick="closeAnglePanel()" class="tool-btn px-2 py-1 text-slate-500 hover:bg-slate-100 rounded-lg text-xs font-bold">Fermer</button>
@@ -415,7 +407,7 @@
                         </svg>
                     </button>
 
-                    <div id="segment-panel" class="hidden absolute right-0 top-full mt-2 z-50 w-72 bg-white rounded-xl border border-teal-200 shadow-lg p-2">
+                    <div id="segment-panel" class="creator-panel hidden fixed z-50 w-80 bg-white rounded-2xl border border-teal-200 p-3">
                         <div class="flex items-center justify-between gap-2 mb-2">
                             <label for="segment-length" class="text-xs font-extrabold text-slate-500">Longueur du segment (cm)</label>
                             <button onclick="closeSegmentPanel()" class="tool-btn px-2 py-1 text-slate-500 hover:bg-slate-100 rounded-lg text-xs font-bold">Fermer</button>
@@ -487,10 +479,9 @@
                         <circle cx="12" cy="20" r="1.5" fill="currentColor"/>
                     </svg>
                 </button>
+            </div>
 
-                
-
-                <div class="header-end flex items-center gap-2">
+            <div class="header-end flex items-center gap-2">
                 <!-- Aide -->
                 <button onclick="toggleHelp()" id="btn-help" class="tool-btn bg-slate-50 text-slate-600 hover:bg-slate-100 p-2 rounded-xl border border-slate-200" title="Aide / Raccourcis">
                     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
@@ -509,7 +500,6 @@
                         <path d="M16 21h3a2 2 0 0 0 2-2v-3"/>
                     </svg>
                 </button>
-                </div>
             </div>
         </div>
     </header>
@@ -645,7 +635,6 @@
             fixSelectionMode: false,
             deleteSelectionMode: false,
             fixedFlashStripId: null,
-            deletionHintShown: false,
             stripMode: 'normal', 
             draggingPoint: null,
             draggingStrip: null, 
@@ -1045,6 +1034,21 @@
             d.textContent = angleBuffer === '' ? '—' : angleBuffer;
         }
 
+        function positionCreatorPanel(panel, button) {
+            if (!panel || !button) return;
+            const panelRect = panel.getBoundingClientRect();
+            const buttonRect = button.getBoundingClientRect();
+            const headerRect = header.getBoundingClientRect();
+            const viewportMargin = 8;
+            const preferredLeft = buttonRect.left + (buttonRect.width - panelRect.width) / 2;
+            const maxLeft = Math.max(viewportMargin, window.innerWidth - panelRect.width - viewportMargin);
+            const left = Math.max(viewportMargin, Math.min(preferredLeft, maxLeft));
+
+            panel.style.left = `${left}px`;
+            panel.style.right = 'auto';
+            panel.style.top = `${headerRect.bottom + 10}px`;
+        }
+
         function openAnglePanel() {
             const panel = document.getElementById('angle-panel');
             if (!panel) return;
@@ -1058,6 +1062,7 @@
             anglePanelOpen = true;
             panel.classList.remove('hidden');
             updateAngleDisplay();
+            positionCreatorPanel(panel, document.getElementById('btn-create-angle'));
         }
 
         function closeAnglePanel() {
@@ -1356,6 +1361,7 @@
             closeAnglePanel();
             segmentPanelOpen = true;
             panel.classList.remove('hidden');
+            positionCreatorPanel(panel, document.getElementById('btn-create-segment'));
             document.getElementById('segment-error')?.classList.add('hidden');
             setTimeout(() => { input.focus(); input.select(); }, 0);
         }
@@ -1861,37 +1867,8 @@ window.addEventListener('blur', () => {
 
         /* --- COMMON EVENTS & LOGIC --- */
 
-        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        function playSound(type) {
-            if (audioCtx.state === 'suspended') audioCtx.resume();
-            const osc = audioCtx.createOscillator();
-            const gain = audioCtx.createGain();
-            osc.connect(gain);
-            gain.connect(audioCtx.destination);
-            const now = audioCtx.currentTime;
-
-            if (type === 'snap') {
-                osc.type = 'square'; osc.frequency.setValueAtTime(800, now); osc.frequency.exponentialRampToValueAtTime(100, now + 0.1);
-                gain.gain.setValueAtTime(0.05, now); gain.gain.linearRampToValueAtTime(0, now + 0.1);
-                osc.start(now); osc.stop(now + 0.1);
-            } else if (type === 'pop') {
-                osc.type = 'sine'; osc.frequency.setValueAtTime(400, now); osc.frequency.exponentialRampToValueAtTime(600, now + 0.1);
-                gain.gain.setValueAtTime(0.05, now); gain.gain.linearRampToValueAtTime(0, now + 0.1);
-                osc.start(now); osc.stop(now + 0.1);
-            } else if (type === 'detach') {
-                osc.type = 'sawtooth'; osc.frequency.setValueAtTime(200, now);
-                gain.gain.setValueAtTime(0.05, now); gain.gain.linearRampToValueAtTime(0, now + 0.15);
-                osc.start(now); osc.stop(now + 0.15);
-            } else if (type === 'trash') {
-                osc.type = 'triangle'; osc.frequency.setValueAtTime(150, now); osc.frequency.exponentialRampToValueAtTime(50, now + 0.2);
-                gain.gain.setValueAtTime(0.1, now); gain.gain.linearRampToValueAtTime(0, now + 0.2);
-                osc.start(now); osc.stop(now + 0.2);
-            } else if (type === 'click') {
-                osc.type = 'square'; osc.frequency.setValueAtTime(600, now);
-                gain.gain.setValueAtTime(0.02, now); gain.gain.linearRampToValueAtTime(0, now + 0.05);
-                osc.start(now); osc.stop(now + 0.05);
-            }
-        }
+        // L'outil reste volontairement silencieux pour un usage en classe.
+        function playSound() {}
 
         /* --- GESTION DES TAILLES --- */
         function resize() {
@@ -2203,13 +2180,6 @@ const positionGhost = (clientX, clientY) => {
             state.strips.push(strip);
             state._stripsVersion++;
             render();
-            if (!state.deletionHintShown) {
-                state.deletionHintShown = true;
-                showSelectionHint('Pour supprimer : bouton Supprimer, puis l’objet — ou glissez-le vers le haut');
-                setTimeout(() => {
-                    if (!state.traceSelectionMode && !state.fixSelectionMode && !state.deleteSelectionMode) showSelectionHint();
-                }, 2600);
-            }
         }
 
         function removeStrip(strip) {
@@ -3555,6 +3525,20 @@ canvasDraw.addEventListener('mousedown', startDraw);
         }
         document.addEventListener('mousedown', handleCreatorPanelsOutside);
         document.addEventListener('touchstart', handleCreatorPanelsOutside, {passive: true});
+        window.addEventListener('resize', () => {
+            if (anglePanelOpen) {
+                positionCreatorPanel(
+                    document.getElementById('angle-panel'),
+                    document.getElementById('btn-create-angle')
+                );
+            }
+            if (segmentPanelOpen) {
+                positionCreatorPanel(
+                    document.getElementById('segment-panel'),
+                    document.getElementById('btn-create-segment')
+                );
+            }
+        });
 
         // Option : Entrée valide
         document.addEventListener('keydown', (e) => {
