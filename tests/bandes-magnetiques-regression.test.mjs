@@ -78,12 +78,30 @@ test('les instruments et les créations utilisent la zone visible après zoom', 
   assert.match(html, /tool\.scale = key === 'protractor' \? 1\.5 : 1/);
 });
 
-test('le zoom supplémentaire et la petite interface restent bornés', () => {
+test('le zoom supplémentaire et la barre unique restent bornés', () => {
   assert.match(html, /VIEW_MARGIN_PX = \{ x: 1500, y: 1100 \}/);
   assert.match(html, /Math\.max\(0\.5, Math\.min\(3\.5, z\)\)/);
-  assert.match(html, /@media \(max-width: 1480px\)/);
   assert.match(html, /\.header-main \{[\s\S]*overflow-x: auto/);
+  assert.match(html, /#main-header \.header-tools \{\s*flex-wrap: nowrap/);
+  assert.doesNotMatch(html, /\.header-main \{[^}]*grid-column/);
+  assert.doesNotMatch(html, /#main-header \.header-tools \{[^}]*display: grid/);
   assert.match(html, /@media \(max-width: 560px\)[\s\S]*aside \{ width: 3\.9rem/);
+});
+
+test('les panneaux de création restent près de leur bouton et détachés du plateau', () => {
+  assert.match(html, /function positionCreatorPanel\(panel, button\)/);
+  assert.match(html, /buttonRect\.left \+ \(buttonRect\.width - panelRect\.width\) \/ 2/);
+  assert.match(html, /panel\.style\.top = `\$\{headerRect\.bottom \+ 10\}px`/);
+  assert.match(html, /id="angle-panel" class="creator-panel hidden fixed z-50 w-72/);
+  assert.match(html, /id="segment-panel" class="creator-panel hidden fixed z-50 w-80/);
+  assert.doesNotMatch(html, /#angle-panel,[\s\S]{0,100}right: 6px !important/);
+});
+
+test('l’outil est silencieux et n’affiche aucune aide automatique après une création', () => {
+  assert.doesNotMatch(html, /AudioContext|webkitAudioContext/);
+  assert.match(html, /function playSound\(\) \{\}/);
+  assert.doesNotMatch(html, /deletionHintShown/);
+  assert.doesNotMatch(html, /Pour supprimer : bouton Supprimer/);
 });
 
 test('les identifiants HTML restent uniques', () => {
