@@ -193,7 +193,8 @@ test("Calcul mental expose exactement les six ressources autonomes validées", (
   assert.deepEqual(Array.from(boulierResources.filter(resource => catalogue.resourceClassifications[resource.path]?.primaryNotion !== "numeration"), resource => resource.path), []);
   assert.deepEqual(Array.from(visiblePaths), expectedPaths);
   assert.match(catalogueUi, /hiddenFromNotions \|\| \[\]/);
-  assert.match(catalogueUi, /resourceDisplayCount\(resources\) \+ matchingNotionCollections\(notionId\)\.length/);
+  assert.match(catalogueUi, /const branchIds = notionBranchIds\(notionId\)/);
+  assert.match(catalogueUi, /resourceDisplayCount\(resources\) \+ collectionIds\.size/);
 
   const automatismes = catalogue.resources.find(resource => resource.path === "auto/index.html");
   assert.equal(automatismes?.status, "published");

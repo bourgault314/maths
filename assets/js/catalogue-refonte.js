@@ -225,6 +225,11 @@
       icon: "angles",
       hub: "angles/index.html"
     },
+    "construction-geometrique": {
+      description: "Manipuler librement des segments et construire des figures.",
+      keywords: "manipulation construction rapporteur équerre bandes segments",
+      icon: "construction-geometrique"
+    },
     reperage: {
       description: "Se situer, décrire des positions et placer des points sur une droite ou dans un repère.",
       keywords: "espace position devant derrière gauche droite abscisse ordonnée coordonnées droite graduée plan repère",
@@ -240,6 +245,11 @@
       keywords: "triangle médiane hauteur médiatrice bissectrice cercle circonscrit",
       icon: "triangles"
     },
+    "triangles-proprietes": {
+      description: "Étudier les propriétés des triangles et la somme de leurs angles.",
+      keywords: "triangle propriétés angles somme construction",
+      icon: "triangles"
+    },
     parallelogrammes: {
       description: "Construire et caractériser les parallélogrammes.",
       keywords: "parallélogramme rectangle losange carré diagonales quadrilatère",
@@ -249,6 +259,11 @@
       description: "Représenter les solides, leurs patrons et leurs sections.",
       keywords: "cube solide patron prisme pyramide 3d",
       icon: "cube"
+    },
+    "mesures-geometriques": {
+      description: "Construire des figures et comparer leur aire et leur périmètre.",
+      keywords: "aire périmètre quadrillage figure mesure",
+      icon: "area"
     },
     pythagore: {
       description: "Voir et comprendre le théorème de Pythagore.",
@@ -527,7 +542,7 @@
 
   function focusBreadcrumbDestination(level, cardId = "") {
     if (!level || level !== viewLevel()) return;
-    const returnedCard = level === "domain" && cardId
+    const returnedCard = (level === "domain" || level === "notion") && cardId
       ? [...notionGrid.querySelectorAll("[data-notion-card], [data-collection-card]")]
         .find((card) => card.dataset.notionCard === cardId || card.dataset.collectionCard === cardId)
       : null;
@@ -563,6 +578,11 @@
 
     if (selectedDomain && level !== "domain") {
       parts.push(`<button type="button" class="breadcrumb-parent" data-breadcrumb-target="domain" title="Revenir à ${escapeHtml(selectedDomain.title)}">${escapeHtml(selectedDomain.title)}</button>`);
+    }
+
+    const parentNotion = selectedNotion?.parent ? notionMap.get(selectedNotion.parent) : null;
+    if (parentNotion) {
+      parts.push(`<button type="button" class="breadcrumb-parent" data-breadcrumb-target="notion-parent" data-notion-parent="${escapeHtml(parentNotion.id)}" title="Revenir à ${escapeHtml(parentNotion.title)}">${escapeHtml(parentNotion.title)}</button>`);
     }
 
     breadcrumb.innerHTML = parts.join("");
@@ -757,13 +777,25 @@
     return displayItems(resources).length;
   }
 
+  function childNotions(parentId) {
+    return catalogue.notions.filter((notion) => notion.parent === parentId);
+  }
+
+  function notionBranchIds(notionId) {
+    const ids = [notionId];
+    childNotions(notionId).forEach((child) => ids.push(...notionBranchIds(child.id)));
+    return ids;
+  }
+
   function notionResourceCount(notionId, domainId = "") {
+    const branchIds = notionBranchIds(notionId);
     const resources = published.filter((resource) => (
       (!domainId || resource.domains.includes(domainId)) &&
-      resourceBelongsToNotion(resource, notionId) &&
+      branchIds.some((id) => resourceBelongsToNotion(resource, id)) &&
       !resourceBelongsToCollapsedCollection(resource)
     ));
-    return resourceDisplayCount(resources) + matchingNotionCollections(notionId).length;
+    const collectionIds = new Set(branchIds.flatMap((id) => matchingNotionCollections(id).map((collection) => collection.id)));
+    return resourceDisplayCount(resources) + collectionIds.size;
   }
 
   function collectionResourceCount(collectionId) {
@@ -838,6 +870,7 @@
   function matchingNotions() {
     return catalogue.notions.filter((notion) => {
       if (state.domain && notion.domain !== state.domain) return false;
+      if (notion.parent) return false;
       if (notionDesign[notion.id]?.hiddenFromBrowse) return false;
       if (!notionResourceCount(notion.id, notion.domain) && !notionDesign[notion.id]?.showWhenEmpty) return false;
       if (state.query && !allWordsMatch(notionHaystack(notion), state.query)) return false;
@@ -1241,6 +1274,16 @@
     }
 
     if (showResources) {
+      const notionChildren = selectedNotion ? childNotions(selectedNotion.id) : [];
+      if (notionChildren.length) {
+        renderNotions(notionChildren, []);
+        pageTitle.textContent = selectedNotion.title;
+        heroLead.textContent = notionDesign[selectedNotion.id]?.description || "Choisissez une notion.";
+        title.textContent = "Choisissez une notion";
+        summary.textContent = `${notionChildren.length} notion${notionChildren.length > 1 ? "s" : ""}`;
+        return;
+      }
+
       const children = selectedCollection ? childCollections(selectedCollection.id) : [];
       if (children.length) {
         renderNotions([], children);
@@ -1362,6 +1405,24 @@
     const control = event.target.closest("[data-breadcrumb-target]");
     if (!control) return;
     const target = control.dataset.breadcrumbTarget;
+
+    if (target === "notion-parent") {
+      const parentId = control.dataset.notionParent || notionMap.get(state.notion)?.parent || "";
+      if (!parentId || !notionMap.has(parentId)) return;
+      if (history.state?.fromLevel === "notion") {
+        pendingBreadcrumbFocusLevel = "notion";
+        pendingBreadcrumbFocusCard = state.notion;
+        history.back();
+        return;
+      }
+      state.domain = notionMap.get(parentId).domain;
+      state.notion = parentId;
+      state.collection = "";
+      writeHistory("replace");
+      render();
+      moveToTopAndFocus();
+      return;
+    }
 
     if (target === "domain") {
       if ((state.notion || state.collection) && history.state?.fromLevel === "domain") {
