@@ -33,21 +33,21 @@ const allowedGroups = new Set([
 ]);
 
 const expectedGroupCounts = {
-  manipuler: 37,
+  manipuler: 38,
   entrainer: 28,
   generer: 33,
   imprimer: 17,
-  activites: 15,
+  activites: 14,
   cours: 15,
   jeux: 9
 };
 
 const expectedVisibleCardCounts = {
-  manipuler: 33,
+  manipuler: 34,
   entrainer: 26,
   generer: 33,
   imprimer: 14,
-  activites: 13,
+  activites: 12,
   cours: 9,
   jeux: 9
 };
@@ -172,10 +172,13 @@ test("les arbitrages pédagogiques clés restent explicites", () => {
     "outils/detective_des_grandeurs_additive__2.pdf",
     "outils/detective_des_grandeurs_multiplicative__1.pdf",
     "outils/fractions_multiples_problemes.pdf",
-    "outils/plateaux_manipulation/moulin_pythagore.html",
     "outils/plateaux_manipulation/puzzle_brousseau.html",
     "cps/bilan-s1.html"
   ]);
+
+  // Le Moulin de Pythagore est d'abord un plateau que l'on manipule : on y
+  // déplace des pièces librement, sans déroulé de séance imposé.
+  assertPathsInGroup("manipuler", ["outils/plateaux_manipulation/moulin_pythagore.html"]);
 
   assertPathsInGroup("generer", ["outils/labo-des-regularites.html"]);
   assertPathsInGroup("entrainer", [
