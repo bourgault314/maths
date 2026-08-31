@@ -123,6 +123,12 @@ if(!html.includes('<option value="sixEquilibre">') || !html.includes('<option va
 if(!html.includes('ratio: 3/5,') || !html.includes('Le petit carré bleu a pour côté la différence <em>b − a</em>.')) fail('La construction 3:5 de Liu Hui et son repère pédagogique doivent rester explicites.');
 if(!html.includes('href="../index.html?domain=geometrie&amp;notion=pythagore"') || !html.includes('Retour au menu Pythagore')) fail('La flèche du Moulin doit revenir au menu Pythagore.');
 if(!html.includes('<button id="enonce">Fiche</button>') || !html.includes('class="screenActions"><button type="button" onclick="window.print()">Imprimer</button>')) fail('La fiche doit être consultable avant impression.');
+// Signature maths&go de la fiche imprimée : logo, licence, et QR vers le puzzle.
+if(!html.includes('assetURL("img/mathsgo-logo-print.png")') || !html.includes('class="sheetLogo"')) fail('Chaque page de la fiche doit porter le logo maths&go.');
+if(!html.includes('mathsgo.re · CC BY-NC-SA 4.0')) fail('Chaque page de la fiche doit porter la signature « mathsgo.re · CC BY-NC-SA 4.0 ».');
+if(!html.includes('const SITE_ORIGIN = "https://mathsgo.re";') || !html.includes('function sheetPuzzleURL()') || !html.includes('puzzle: state.puzzle, mode: "eleves"')) fail('Le QR de la fiche doit renvoyer vers le puzzle exact qui est imprimé.');
+if(!fs.existsSync(new URL('../auto/scripts/vendor/qrcode-generator.js',import.meta.url))) fail('Le générateur de QR partagé du dépôt est introuvable : la fiche du Moulin s’appuie dessus.');
+if(!html.includes('tag.onerror = () => resolve(false);')) fail('La fiche doit sortir même si le générateur de QR ne se charge pas.');
 if(html.includes('<body onload="window.print()">')) fail('La fiche ne doit pas déclencher l’impression avant son aperçu.');
 if(!html.includes('2.8+Math.random()*1.1') || !html.includes('setTimeout(()=>clearCelebration(false),4400)')) fail('Les confettis doivent tomber plus lentement.');
 if(!html.includes('const r=PUZZLES[state.puzzle]?.ratio ?? BASE.ratio;')) fail('Chaque puzzle doit pouvoir choisir son propre triangle rectangle.');

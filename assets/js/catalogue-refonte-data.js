@@ -879,7 +879,7 @@ window.MATHSGO_CATALOGUE = {
     },
     "outils/plateaux_manipulation/moulin_pythagore.html": {
       "primaryNotion": "pythagore",
-      "primaryGroup": "activites",
+      "primaryGroup": "manipuler",
       "collections": [],
       "tags": ["puzzle", "aires", "pythagore"],
       "thumbnail": "assets/img/thumbnails/moulin-pythagore-capture.svg?v=7",
