@@ -2234,8 +2234,49 @@
   // ---------- Énoncé (impression) ----------
   btnEnonce.onclick = openEnonce;
 
+  // Adresse publique imprimée sur la fiche : toujours celle du site, jamais
+  // celle du serveur local qui sert la page pendant les tests.
+  const SITE_ORIGIN = "https://mathsgo.re";
+  const assetURL = (chemin) => new URL(`../../assets/${chemin}`, location.href).href;
+  const QR_LIB_URL = new URL("../../auto/scripts/vendor/qrcode-generator.js", location.href).href;
+
+  // Le générateur de QR (déjà présent dans le dépôt pour l'exerciseur) n'est
+  // chargé qu'au premier clic sur « Fiche » : le plateau lui-même reste léger.
+  let qrLibPromise = null;
+  function loadQrLib(){
+    if(typeof window.qrcode === "function") return Promise.resolve(true);
+    if(!qrLibPromise){
+      qrLibPromise = new Promise((resolve) => {
+        const tag = document.createElement("script");
+        tag.src = QR_LIB_URL;
+        tag.onload = () => resolve(typeof window.qrcode === "function");
+        tag.onerror = () => resolve(false);
+        document.head.appendChild(tag);
+      });
+    }
+    return qrLibPromise;
+  }
+
+  // Adresse encodée dans le QR : le puzzle exact de la fiche, en mode élève.
+  function sheetPuzzleURL(){
+    const params = new URLSearchParams({ puzzle: state.puzzle, mode: "eleves" });
+    return `${SITE_ORIGIN}/outils/plateaux_manipulation/moulin_pythagore.html?${params.toString()}`;
+  }
+
+  function buildQrSVG(){
+    if(typeof window.qrcode !== "function") return "";
+    try{
+      const qr = window.qrcode(0, "M");
+      qr.addData(sheetPuzzleURL(), "Byte");
+      qr.make();
+      return qr.createSvgTag({ cellSize: 1, margin: 4, scalable: true });
+    }catch(error){
+      return "";
+    }
+  }
+
   function openEnonce(){
-    const html = buildEnonceHTML();
+    // La fenêtre doit s'ouvrir dans le clic lui-même, sinon le navigateur la bloque.
     const w = window.open("", "_blank");
     if(!w){
       modalTitle.textContent = "Énoncé";
@@ -2243,10 +2284,15 @@
       modal.style.display = "flex";
       return;
     }
-    w.document.open();
-    w.document.write(html);
-    w.document.close();
-    w.focus();
+    // Si le générateur de QR ne se charge pas, la fiche sort quand même : le QR
+    // est simplement remplacé par l'adresse écrite en toutes lettres.
+    loadQrLib().then(() => {
+      const html = buildEnonceHTML();
+      w.document.open();
+      w.document.write(html);
+      w.document.close();
+      w.focus();
+    });
   }
 
   // Énoncé (impression) — reprise fidèle de l’énoncé d’origine, mais adaptable au puzzle sélectionné
@@ -2263,6 +2309,18 @@
   const svgApplication = buildApplicationMoulinSVG(5, 12);
   const miniSheet = buildMiniSkeletonSheetHTML(8);
 
+  // Signature maths&go, identique sur les cinq pages.
+  const logo = `<img class="sheetLogo" src="${assetURL("img/mathsgo-logo-print.png")}" alt="" width="420" height="195">`;
+  const qrSVG = buildQrSVG();
+  const qrBlock = qrSVG
+    ? `<div class="sheetQr">${qrSVG}<span>Ce puzzle en ligne</span></div>`
+    : `<div class="sheetQr"><span>${escapeHTML(sheetPuzzleURL().replace(/^https:\/\//, ""))}</span></div>`;
+  const head = (titre, avecQr = false) =>
+    `<header class="sheetHead"><div class="sheetTitle">${titre}</div><div class="sheetBrand">${avecQr ? qrBlock : ""}${logo}</div></header>`;
+  // Chaque page est imprimable seule : elle porte donc sa propre signature,
+  // sans numéro de page (le professeur n'imprime pas forcément les cinq).
+  const foot = `<footer class="sheetFoot">mathsgo.re · CC BY-NC-SA 4.0</footer>`;
+
   return `
 <!doctype html>
 <html lang="fr">
@@ -2277,8 +2335,21 @@
     .screenActions { position: sticky; top: 0; z-index: 2; display: flex; justify-content: flex-end; gap: 8px; padding: 10px max(12px, env(safe-area-inset-right)) 10px max(12px, env(safe-area-inset-left)); background: rgba(248,250,252,.96); border-bottom: 1px solid #cbd5e1; }
     .screenActions button { min-height: 42px; padding: 8px 16px; border: 1px solid #2563eb; border-radius: 10px; background: #2563eb; color: #fff; font: 750 15px/1 system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; cursor: pointer; }
     .screenHint { margin: 0; padding: 10px 14px 0; color: #475569; font-size: 13px; }
-    .page { break-after: page; padding: 0; }
+    .page { display: flex; flex-direction: column; height: 194mm; break-after: page; padding: 0; }
     .page:last-child { break-after: auto; }
+    .pageMain { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; }
+    .pageMain > .figureWrap { flex: 1 1 auto; min-height: 0; }
+    .pageMain > .figureWrap > svg { width: 100%; height: 100%; }
+
+    /* Signature maths&go : logo en haut à droite, signature centrée en pied. */
+    .sheetHead { display: flex; align-items: flex-start; gap: 6mm; }
+    .sheetTitle { flex: 1 1 auto; min-width: 0; }
+    .sheetTitle > :first-child { margin-top: 0; }
+    .sheetBrand { flex: 0 0 auto; display: flex; align-items: flex-start; gap: 5mm; }
+    .sheetLogo { width: 26mm; height: auto; display: block; }
+    .sheetQr { display: grid; justify-items: center; gap: 1mm; width: 22mm; color: #475569; font-size: 7pt; line-height: 1.15; text-align: center; }
+    .sheetQr svg { width: 22mm; height: 22mm; display: block; }
+    .sheetFoot { margin-top: 2.5mm; padding-top: 1.5mm; border-top: 0.3mm solid #cbd5e1; color: #64748b; font-size: 8pt; text-align: center; }
 
     h1 { margin: 0 0 8px; font-size: 22px; }
     h2 { margin: 0 0 6px; font-size: 18px; }
@@ -2289,6 +2360,7 @@
     .col { flex: 1; min-width: 0; }
     .figureWrap { border: 0; border-radius: 0; padding: 0; margin-top: 8px; }
     .bilanBox { border: 2.4px solid #0f172a; border-radius: 12px; height: 160mm; margin-top: 10px; }
+    .pageMain > .bilanBox { flex: 1 1 auto; height: auto; }
     .bigLine { font-size: 18px; margin-top: 10px; }
 
     svg { width: 100%; height: auto; display: block; }
@@ -2309,17 +2381,21 @@
     .subtitle { font-size: 20px; font-weight: 650; fill:#0f172a; }
 
     /* Application : on force une taille qui tient sur la page */
-    .appFigure{ display:flex; justify-content:center; }
+    .appFigure{ display:flex; justify-content:center; align-items:center; }
     .appFigure svg{ width: 175mm; height: auto; }
+    .pageMain > .figureWrap.appFigure > svg { width: auto; height: 100%; max-width: 175mm; }
 
     /* Mini moulins : exactement le même dessin, juste réduit */
     .miniGrid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; break-inside: avoid; }
     .miniCell { border: 0; padding: 0; break-inside: avoid; }
     .miniCell svg { width: 100%; height: auto; display: block; }
     @media screen and (max-width: 700px) {
-      .page { padding: 12px; }
+      .page { height: auto; padding: 12px; }
       .row { display: block; }
       .bilanBox { height: 105mm; }
+      .pageMain > .bilanBox { flex: 0 0 auto; height: 105mm; }
+      .sheetHead { flex-wrap: wrap; }
+      .sheetBrand { order: -1; width: 100%; justify-content: flex-end; }
       h1 { font-size: 20px; }
       h2 { font-size: 17px; }
       p { font-size: 14px; }
@@ -2333,38 +2409,47 @@
 
   <!-- PAGE 1 -->
   <section class="page">
-    <h1>Moulin de Pythagore – ${escapeHTML(puzzleLabel)}</h1>
-    <p><b>Consigne :</b> Découpe les pièces du moulin <b>1</b>. Sans découper le moulin <b>2</b>, reconstitue le grand carré blanc du moulin 2 à l'aide des pièces découpées.</p>
-    ${puzzleHint}
-    <div class="figureWrap">${svgPage1}</div>
+    ${head(`<h1>Moulin de Pythagore – ${escapeHTML(puzzleLabel)}</h1>
+      <p><b>Consigne :</b> Découpe les pièces du moulin <b>1</b>. Sans découper le moulin <b>2</b>, reconstitue le grand carré blanc du moulin 2 à l'aide des pièces découpées.</p>
+      ${puzzleHint}`, true)}
+    <div class="pageMain"><div class="figureWrap">${svgPage1}</div></div>
+    ${foot}
   </section>
 
   <!-- PAGE 2 -->
   <section class="page">
-    <h2>Bilan</h2>
-    <p><b>Question :</b> ${bilanQuestion}</p>
-    <div class="bilanBox"></div>
+    ${head(`<h2>Bilan – ${escapeHTML(puzzleLabel)}</h2>
+      <p><b>Question :</b> ${bilanQuestion}</p>`)}
+    <div class="pageMain"><div class="bilanBox"></div></div>
+    ${foot}
   </section>
 
   <!-- PAGE 3 -->
   <section class="page">
-    <h2>Application – Calculer BC</h2>
-    <p>On considère un triangle rectangle en A avec <b>AB = 5 cm</b> et <b>AC = 12 cm</b>.</p>
-    <p>En utilisant le moulin ci-dessous (on écrit directement dans les carrés), calcule <b>BC</b>.</p>
-    <div class="figureWrap appFigure">${svgApplication}</div>
-    <div class="bigLine"><b>BC =</b> ____________________ cm</div>
+    ${head(`<h2>Application – Calculer BC</h2>
+      <p>On considère un triangle rectangle en A avec <b>AB = 5 cm</b> et <b>AC = 12 cm</b>.</p>
+      <p>En utilisant le moulin ci-dessous (on écrit directement dans les carrés), calcule <b>BC</b>.</p>`)}
+    <div class="pageMain">
+      <div class="figureWrap appFigure">${svgApplication}</div>
+      <div class="bigLine"><b>BC =</b> ____________________ cm</div>
+    </div>
+    ${foot}
   </section>
 
   <!-- PAGE 4 -->
   <section class="page">
-    <h2>Moulins vides</h2>
-    <p>Tu peux t'entraîner : remplis les carrés (aires) puis déduis la longueur manquante.</p>
-    <div class="figureWrap">${svgEmptyDouble}</div>
+    ${head(`<h2>Moulins vides</h2>
+      <p>Tu peux t'entraîner : remplis les carrés (aires) puis déduis la longueur manquante.</p>`)}
+    <div class="pageMain"><div class="figureWrap">${svgEmptyDouble}</div></div>
+    ${foot}
   </section>
 
   <!-- PAGE 5 -->
   <section class="page">
-    ${miniSheet}
+    ${head(`<h2>Mini-moulins</h2>
+      <p>Le même moulin en petit, pour chercher plusieurs fois ou coller dans le cahier.</p>`)}
+    <div class="pageMain">${miniSheet}</div>
+    ${foot}
   </section>
 
 </body>
