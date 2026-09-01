@@ -336,8 +336,8 @@
   const COLORS = {
     green: "#52b788", magenta: "#d66b9c", yellow: "#f3c969", blue: "#5aa7e8",
     gray: "#8b95a1", red: "#df766f", purple: "#9b83d4", orange: "#e99a5d",
-    teal: "#57b5aa", lightblue: "#9dc9ee", lightBlue: "#9dc9ee", darkblue: "#4f7fb9", brown: "#8b6b58",
-    lightRed: "#f2aaa5", softGray: "#c3cad2",
+    teal: "#57b5aa", lightblue: "#9dc9ee", lightBlue: "#9dc9ee", darkblue: "#4f7fb9", steelblue: "#708fc9", brown: "#8b6b58",
+    lightRed: "#f2aaa5", darkCoral: "#c85f5a", softGray: "#c3cad2",
     black: "#111827"
   };
 
@@ -1085,13 +1085,13 @@
         const big=(x,y)=>({x:Ax+x*k,y:Ay-b+y*k});
         const small=(x,y)=>({x:Ax-b*ratio+x*k,y:Ay+y*k});
         return [
-          {key:"redTop",fill:COLORS.red, points:[[0,0],[4,0],[0,3]].map(([x,y])=>big(x,y))},
-          {key:"redLeft",fill:COLORS.red,points:[[4,0],[4,3],[0,3]].map(([x,y])=>big(x,y))},
-          {key:"redTrap",fill:COLORS.red,points:[[0,3],[3,3],[2.25,4],[0,4]].map(([x,y])=>big(x,y))},
-          {key:"redSquare",fill:COLORS.red,points:[[3,3],[4,3],[4,4],[3,4]].map(([x,y])=>big(x,y))},
-          {key:"redSmall",fill:COLORS.red,points:[[2.25,4],[3,3],[3,4]].map(([x,y])=>big(x,y))},
+          {key:"redTop",fill:COLORS.red,points:[[0,0],[4,0],[0,3]].map(([x,y])=>big(x,y))},
+          {key:"redLeft",fill:COLORS.lightRed,points:[[4,0],[4,3],[0,3]].map(([x,y])=>big(x,y))},
+          {key:"redTrap",fill:COLORS.orange,points:[[0,3],[3,3],[2.25,4],[0,4]].map(([x,y])=>big(x,y))},
+          {key:"redSquare",fill:COLORS.magenta,points:[[3,3],[4,3],[4,4],[3,4]].map(([x,y])=>big(x,y))},
+          {key:"redSmall",fill:COLORS.darkCoral,points:[[2.25,4],[3,3],[3,4]].map(([x,y])=>big(x,y))},
           {key:"blueTrap",fill:COLORS.blue,points:[[0,0],[3,0],[0.75,3],[0,3]].map(([x,y])=>small(x,y))},
-          {key:"blueTri",fill:COLORS.blue,points:[[3,0],[3,3],[0.75,3]].map(([x,y])=>small(x,y))}
+          {key:"blueTri",fill:COLORS.darkblue,points:[[3,0],[3,3],[0.75,3]].map(([x,y])=>small(x,y))}
         ];
       }
     },
@@ -1108,13 +1108,13 @@
         const top=(x,y)=>({x:Ax+x,y:Ay-b+y});
         const left=(x,y)=>({x:Ax-a+x,y:Ay+y});
         return [
-          {key:"bLargeTop",fill:COLORS.blue,points:[[0,0],[b,0],[0,a]].map(([x,y])=>top(x,y))},
+          {key:"bLargeTop",fill:COLORS.darkblue,points:[[0,0],[b,0],[0,a]].map(([x,y])=>top(x,y))},
           {key:"bLargeRight",fill:COLORS.blue,points:[[b,0],[b,b],[d,b]].map(([x,y])=>top(x,y))},
-          {key:"bWedgeTop",fill:COLORS.blue,points:[[b,0],[0,a],[d,a]].map(([x,y])=>top(x,y))},
-          {key:"bWedgeRight",fill:COLORS.blue,points:[[b,0],[d,a],[d,b]].map(([x,y])=>top(x,y))},
-          {key:"bSquare",fill:COLORS.blue,points:[[0,a],[d,a],[d,b],[0,b]].map(([x,y])=>top(x,y))},
+          {key:"bWedgeTop",fill:COLORS.lightblue,points:[[b,0],[0,a],[d,a]].map(([x,y])=>top(x,y))},
+          {key:"bWedgeRight",fill:COLORS.teal,points:[[b,0],[d,a],[d,b]].map(([x,y])=>top(x,y))},
+          {key:"bSquare",fill:COLORS.steelblue,points:[[0,a],[d,a],[d,b],[0,b]].map(([x,y])=>top(x,y))},
           {key:"aTriangleTop",fill:COLORS.red,points:[[0,0],[a,0],[a,a]].map(([x,y])=>left(x,y))},
-          {key:"aTriangleBottom",fill:COLORS.red,points:[[0,0],[a,a],[0,a]].map(([x,y])=>left(x,y))}
+          {key:"aTriangleBottom",fill:COLORS.lightRed,points:[[0,0],[a,a],[0,a]].map(([x,y])=>left(x,y))}
         ];
       }
     },
