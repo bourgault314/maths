@@ -1,6 +1,6 @@
 # Sources et signature des PDF imprimables
 
-Ce document est l'inventaire technique des 47 PDF publics de maths&go.
+Ce document est l'inventaire technique des 50 PDF publics de maths&go.
 
 ## Référence graphique
 
@@ -98,7 +98,7 @@ validés sans exécuter cette chaîne.
 
 ## Fiches imprimées directement depuis un outil
 
-Les onze fiches `plateaux_manipulation/fiches_moulin/moulin-pythagore-<clé>.pdf`
+Les quatorze fiches `plateaux_manipulation/fiches_moulin/moulin-pythagore-<clé>.pdf`
 n'ont pas de mise en page propre : elles sont **imprimées depuis le plateau**
 `plateaux_manipulation/moulin_pythagore.html`, dont le bouton « Fiche »
 fabrique déjà les cinq pages (les deux moulins à découper, le bilan,
@@ -119,7 +119,14 @@ des découpages est lue dans le menu du plateau, pas recopiée. Ces fiches porte
 la signature `mathsgo.re · CC BY-NC-SA 4.0` et le logo en haut à droite parce que
 le plateau les dessine ainsi.
 
-Les onze PDF ne sont pas déclarés un par un dans le catalogue : ils sont réunis
+**Police.** La fiche déclare elle-même sa police (`assets/fonts/Poppins-*.woff2`)
+au lieu d'emprunter celle du poste. Sans cela, chaque machine imprimerait dans
+la sienne — un poste Windows en Segoe UI, un serveur Linux en DejaVu Sans — et
+les fiches changeraient toutes d'allure au moindre passage du générateur, sans
+qu'une ligne de contenu ait bougé. Le script s'arrête si la police ne se charge
+pas, plutôt que de produire des PDF dans une autre police.
+
+Ces PDF ne sont pas déclarés un par un dans le catalogue : ils sont réunis
 par la page `plateaux_manipulation/moulin_pythagore_fiches.html`, seule entrée
 publique, comme le fait déjà `chat/index.html` pour ses cartes.
 
