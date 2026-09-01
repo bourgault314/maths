@@ -24,7 +24,11 @@
     --accent:#2563eb;
     --danger:#dc2626;
   }
-  html,body{height:100%; margin:0; background:var(--bg); font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;}
+  html,body{height:100%; margin:0; background:var(--bg); font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial; overscroll-behavior:none;}
+  /* Sur Safari iOS, 100% vaut la hauteur « barre d'adresse repliée » : le
+     document dépasse alors la zone visible et la page peut défiler. La hauteur
+     dynamique (dvh) colle à ce qui est réellement affiché. */
+  html,body{height:100dvh;}
   #app{height:100%; display:flex; flex-direction:column;}
 
   #toolbar{
@@ -198,11 +202,18 @@
   }
 
   @media (max-width:700px){
-    html,body{overflow-x:hidden;}
+    html,body{overflow:hidden;}
     /* Sur téléphone, les pièces occupent a² et b² et doivent rejoindre c²
        sur l'unique figure, comme sur ordinateur. */
-    #stageWrap{touch-action:pan-y; overflow-x:hidden;}
-    svg#stage{touch-action:pan-y;}
+    /* Le geste n'est jamais rendu à la page : un doigt posé à côté d'une pièce
+       faisait défiler le document sur Safari iOS, la barre d'adresse se
+       repliait, la hauteur visible changeait et toute la figure sautait.
+       Le plateau ne redevient défilant que lorsqu'il y a vraiment de quoi
+       défiler — classe .scrollable posée par fitWorldToViewport. */
+    #stageWrap{touch-action:none; overflow-x:hidden; overscroll-behavior:contain;}
+    svg#stage{touch-action:none;}
+    #stageWrap.scrollable{touch-action:pan-y;}
+    #stageWrap.scrollable svg#stage{touch-action:pan-y;}
     svg#stage.isDragging{touch-action:none;}
     svg#stage.compactLayout .label{display:none!important;}
     svg#stage .piecePoly,
@@ -919,7 +930,9 @@
       const sceneH = Math.max(H, contentH * s);
       stage.style.height = `${sceneH}px`;
       stage.style.minHeight = `${sceneH}px`;
-      stageWrap.style.overflowY = sceneH > H + 1 ? "auto" : "hidden";
+      const scrollable = sceneH > H + 1;
+      stageWrap.style.overflowY = scrollable ? "auto" : "hidden";
+      stageWrap.classList.toggle("scrollable", scrollable);
       state.worldTransform.s  = s;
       state.worldTransform.tx = (W - contentW * s) / 2 - bb.x * s + pad * s;
       state.worldTransform.ty = pad * s - bb.y * s + 12;
@@ -927,6 +940,7 @@
       stage.style.height = "";
       stage.style.minHeight = "";
       stageWrap.style.overflowY = "hidden";
+      stageWrap.classList.remove("scrollable");
       const s = Math.min(W / contentW, H / contentH, 1.35);
       state.worldTransform.s  = s;
       state.worldTransform.tx = (W - contentW * s) / 2 - bb.x * s + pad * s;
