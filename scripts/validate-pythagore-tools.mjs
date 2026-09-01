@@ -181,6 +181,13 @@ if(!html.includes('const proposed=drag.startRot+deg(angle-drag.startGestureAngle
 if(!html.includes('screenPixelsToWorld(25)')) fail('La poignée mobile doit conserver une zone tactile physique suffisante.');
 if(!html.includes('grid-template-columns:repeat(2,minmax(0,1fr))')) fail('Les commandes mobiles doivent rester contenues dans la largeur du téléphone.');
 if(!html.includes('<option value="pavageOblique">') || !html.includes('<option value="quadrillageQuatre">') || !html.includes('<option value="quadrillageCinq">')) fail('Les trois découpages ajoutés doivent être proposés dans le menu.');
+// Le message de « Vérifier » doit flotter au-dessus du plateau. S'il revient
+// dans le flux, il repousse et rétrécit la figure sous les doigts de l'élève,
+// et rien ne le fait plus disparaître sans réinitialiser son travail.
+const zonePlateau = html.slice(html.indexOf('<div id="stageWrap">'), html.indexOf('</div>\n</div>\n\n<script'));
+if(!zonePlateau.includes('id="puzzleStatus"')) fail('Le message d’état doit être placé dans le plateau, pas au-dessus de lui.');
+if(!/#puzzleStatus\{[^}]*position:absolute/.test(html)) fail('Le message d’état doit flotter : dans le flux, il déplace et rétrécit la figure.');
+if(!html.includes('setTimeout(dismissPuzzleStatus,STATUS_DELAY)') || !html.includes('dismissPuzzleStatus();\n    // Pendant un glissement tactile')) fail('Le message d’état doit s’effacer seul et au premier contact avec le plateau.');
 if(!html.includes('function queueCompletionCheck()') || !html.includes('className="confettiPiece"') || !html.includes('className="celebrationSubtitle"')) fail('La réussite automatique et la célébration soignée doivent rester actives.');
 
 const pythaFile='outils/pythabarre.html';
