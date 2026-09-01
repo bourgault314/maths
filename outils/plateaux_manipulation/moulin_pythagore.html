@@ -101,10 +101,24 @@
 
   #stageWrap{flex:1; position:relative; overflow:hidden; background:#fff; touch-action:none;}
   #mobilePuzzleHint{display:none; padding:7px 12px; background:#f8fafc; border-bottom:1px solid var(--border); color:var(--muted); font-size:13px; text-align:center;}
-  #puzzleStatus{min-height:0; padding:0 12px; color:var(--muted); font-size:13px; text-align:center;}
-  #puzzleStatus:not(:empty){padding-top:6px; padding-bottom:6px;}
-  #puzzleStatus.success{color:#166534; font-weight:700;}
-  #puzzleStatus.error{color:#b91c1c; font-weight:700;}
+  /* Le message flotte au-dessus du plateau : il ne doit jamais en occuper la
+     place, sinon la figure se déplace et rétrécit sous les doigts de l'élève. */
+  #puzzleStatus{
+    position:absolute; top:10px; left:50%; transform:translate(-50%,-6px);
+    z-index:7; max-width:min(92%,520px); box-sizing:border-box;
+    padding:8px 14px; border-radius:999px;
+    background:#f1f5f9; border:1px solid var(--border);
+    box-shadow:0 4px 14px rgba(15,23,42,.10);
+    color:var(--muted); font-size:13px; font-weight:600; text-align:center;
+    pointer-events:none; opacity:0; visibility:hidden;
+    transition:opacity .18s ease, transform .18s ease;
+  }
+  #puzzleStatus.on{opacity:1; visibility:visible; transform:translate(-50%,0);}
+  #puzzleStatus.success{background:#dcfce7; border-color:#86efac; color:#166534; font-weight:700;}
+  #puzzleStatus.error{background:#fee2e2; border-color:#fca5a5; color:#b91c1c; font-weight:700;}
+  @media (prefers-reduced-motion:reduce){
+    #puzzleStatus{transition:none; transform:translate(-50%,0);}
+  }
   #celebration{
     position:absolute; inset:0; z-index:8; overflow:hidden;
     display:none; pointer-events:none;
@@ -252,7 +266,7 @@
     #toolbar .group:last-child{width:100%;}
     #toolbar #enonce{width:100%; min-height:44px;}
     #mobilePuzzleHint{display:none;}
-    #puzzleStatus{font-size:12px; padding-left:8px; padding-right:8px;}
+    #puzzleStatus{font-size:12px; padding-left:12px; padding-right:12px; top:8px;}
     #stageWrap{min-height:0;}
   }
 
@@ -317,8 +331,6 @@
   <div id="mobilePuzzleHint" role="status">
     Déplace les pièces de a² et b² vers le carré c² de cette même figure.
   </div>
-  <div id="puzzleStatus" role="status" aria-live="polite"></div>
-
   <div id="stageWrap">
     <svg id="stage" xmlns="http://www.w3.org/2000/svg">
       <g id="world"></g>
@@ -334,6 +346,7 @@
         <div id="enonceBody"></div>
       </div>
     </div>
+    <div id="puzzleStatus" role="status" aria-live="polite"></div>
     <div id="celebration" aria-hidden="true"></div>
   </div>
 </div>
@@ -436,7 +449,9 @@
     lastPointerWorld: null,
     celebrated: false,
     completionTimer: null,
-    celebrationTimer: null
+    celebrationTimer: null,
+    statusTimer: null,
+    statusClearTimer: null
   };
 
   function applyWorldTransform(){
@@ -759,10 +774,37 @@
     });
   }
 
+  // Un message parle de la disposition du moment : il devient faux dès que
+  // l'élève y touche. Il s'efface donc tout seul au bout de quelques secondes,
+  // au clic, et à la première pièce saisie — jamais besoin de réinitialiser.
+  const STATUS_DELAY = 6000;
+
+  function dismissPuzzleStatus(){
+    if(state.statusTimer){
+      clearTimeout(state.statusTimer);
+      state.statusTimer=null;
+    }
+    if(!puzzleStatus.classList.contains("on")) return;
+    puzzleStatus.classList.remove("on");
+    state.statusClearTimer=setTimeout(()=>{
+      puzzleStatus.textContent="";
+      puzzleStatus.className="";
+    },300);
+  }
+
   function setPuzzleStatus(text,type=""){
+    dismissPuzzleStatus();
+    if(state.statusClearTimer){
+      clearTimeout(state.statusClearTimer);
+      state.statusClearTimer=null;
+    }
     puzzleStatus.textContent=text;
     puzzleStatus.className=type;
+    if(!text) return;
+    puzzleStatus.classList.add("on");
+    state.statusTimer=setTimeout(dismissPuzzleStatus,STATUS_DELAY);
   }
+
 
   function clearCelebration(rearm=false){
     if(state.completionTimer){
@@ -2050,6 +2092,7 @@
   function onPiecePointerDown(evt){
     evt.preventDefault();
     evt.stopPropagation();
+    dismissPuzzleStatus();
     const id=evt.currentTarget.closest("g").getAttribute("data-id");
 
     if(state.dragging){
@@ -2071,6 +2114,7 @@
   }
 
   function onHandlePointerDown(evt){
+    dismissPuzzleStatus();
     evt.preventDefault();
     evt.stopPropagation();
     if(state.dragging) return;
@@ -2254,6 +2298,7 @@
 
   // Sélection via clic sur le fond
   stage.addEventListener("pointerdown", (evt)=>{
+    dismissPuzzleStatus();
     // Pendant un glissement tactile, le second doigt peut se poser n'importe
     // où sur le plateau : il pilote alors librement la rotation de la pièce.
     if(state.dragging && evt.pointerType==="touch"){
@@ -2316,6 +2361,7 @@
 
   btnFlip.onclick = () => {
     if(state.mode === "vide") return;
+    dismissPuzzleStatus();
     if(state.selectedId) flipPiece(state.selectedId);
   };
 
