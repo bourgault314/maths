@@ -1338,7 +1338,6 @@
     quadrillageQuatre: {
       name: "Quadrillage — 4 pièces",
       ratio: 0.75,
-      snapExtra: (a, b, c) => [c/5, 2*c/5, 3*c/5, 4*c/5],
       generate: (Ax, Ay, b) => {
         // Un seul module : le carreau k = b/4. Le carré b² en fait 4 de côté,
         // le carré a² en fait 3, celui de l'hypoténuse 5 — c'est le triangle 3-4-5.
@@ -1359,7 +1358,6 @@
     quadrillageCinq: {
       name: "Quadrillage — 5 pièces",
       ratio: 0.75,
-      snapExtra: (a, b, c) => [c/5, 2*c/5, 3*c/5, 4*c/5],
       generate: (Ax, Ay, b) => {
         // Un seul module : le carreau k = b/4. Le carré b² en fait 4 de côté,
         // le carré a² en fait 3, celui de l'hypoténuse 5 — c'est le triangle 3-4-5.
@@ -1496,10 +1494,7 @@
     // Points d'aimantation dans le carré incliné.
     // On ajoute les repères liés à a ET à b : certains puzzles (notamment Bhaskara)
     // ont besoin de sommets situés à une distance b du bord, pas seulement a.
-    // Un découpage peut demander ses propres repères d'aimantation : les
-    // puzzles sur quadrillage tombent sur les cinquièmes de c, pas sur a ni b.
-    const repereSupp = PUZZLES[state.puzzle]?.snapExtra?.(a, b, c) ?? [];
-    const snapValues = Array.from(new Set([0, a, b, c, c / 2, ...repereSupp]))
+    const snapValues = Array.from(new Set([0, a, b, c, c / 2]))
       .filter(v => v >= -1e-9 && v <= c + 1e-9)
       .sort((x, y) => x - y);
 

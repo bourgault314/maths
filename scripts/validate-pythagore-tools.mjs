@@ -181,7 +181,6 @@ if(!html.includes('const proposed=drag.startRot+deg(angle-drag.startGestureAngle
 if(!html.includes('screenPixelsToWorld(25)')) fail('La poignée mobile doit conserver une zone tactile physique suffisante.');
 if(!html.includes('grid-template-columns:repeat(2,minmax(0,1fr))')) fail('Les commandes mobiles doivent rester contenues dans la largeur du téléphone.');
 if(!html.includes('<option value="pavageOblique">') || !html.includes('<option value="quadrillageQuatre">') || !html.includes('<option value="quadrillageCinq">')) fail('Les trois découpages ajoutés doivent être proposés dans le menu.');
-if(!html.includes('PUZZLES[state.puzzle]?.snapExtra?.(a, b, c)')) fail('Les découpages sur quadrillage doivent pouvoir ajouter leurs propres repères d’aimantation.');
 if(!html.includes('function queueCompletionCheck()') || !html.includes('className="confettiPiece"') || !html.includes('className="celebrationSubtitle"')) fail('La réussite automatique et la célébration soignée doivent rester actives.');
 
 const pythaFile='outils/pythabarre.html';
