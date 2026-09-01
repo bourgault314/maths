@@ -179,7 +179,23 @@ if(!snapEngine.includes('polygonsOverlapInterior(vertices,item.vertices,toleranc
 if(!html.includes('if(other.placed) placedPolygons.push')) fail('Seules les pièces déjà validées dans c² doivent servir de cibles.');
 if(!html.includes('const proposed=drag.startRot+deg(angle-drag.startGestureAngle);') || !html.includes(': proposed;')) fail('La rotation tactile doit rester libre pendant le geste.');
 if(!html.includes('screenPixelsToWorld(25)')) fail('La poignée mobile doit conserver une zone tactile physique suffisante.');
-if(!html.includes('grid-template-columns:repeat(2,minmax(0,1fr))')) fail('Les commandes mobiles doivent rester contenues dans la largeur du téléphone.');
+if(!html.includes('grid-template-columns:repeat(3,minmax(0,1fr))')) fail('Les commandes mobiles doivent rester contenues dans la largeur du téléphone.');
+if(/#toolbar #checkSolution,/.test(html)) fail('« Vérifier » doit rester accessible sur téléphone.');
+// La progression est une commodité, jamais une dépendance : tout accès au
+// stockage est protégé, et la coche est posée à l'exécution — le générateur de
+// fiches lit ces libellés pour titrer les quatorze PDF.
+if(!html.includes('const CLE_REUSSITES = "mp_reussites"')) fail('La progression doit être conservée sous une clé stable.');
+if(!/catch\(_err\)\{\s*return new Set\(\);/.test(html)) fail('Une lecture de progression refusée par le navigateur ne doit pas casser le plateau.');
+// La jauge doit faire exactement la hauteur des boutons : plus haute, elle
+// grandit la barre d'outils, ce qui décale le cadrage des 14 miniatures.
+if(!/#scoreReussites\{[^}]*box-sizing:border-box/.test(html)) fail('La jauge doit tenir dans la hauteur des boutons, sinon la barre grandit et les miniatures dérivent.');
+if(!html.includes('#puzzleSelect.dejaReussi')) fail('Un découpage déjà réussi doit se voir sur le menu fermé : une coche dans un <option> ne peut être ni colorée ni grossie.');
+if(!html.includes('`✔ ${opt.dataset.libelle}`')) fail('La coche doit précéder le libellé : en fin de nom, le menu fermé la coupe sur téléphone.');
+[...html.matchAll(/<option\b[^>]*>([^<]*)<\/option>/g)].forEach(([,libelle])=>{
+  if(libelle.includes('✓') || libelle.includes('✔')) fail('Aucune coche ne doit être écrite dans le HTML : les libellés titrent les fiches PDF.');
+});
+if(!html.includes('if(state.mode==="eleves") marquerReussite(state.puzzle);')) fail('Une réussite ne se compte qu’en mode Élèves, où les pièces sont visibles.');
+if(!html.includes('puzzleSelect.value = state.puzzle;')) fail('Choisir l’effacement ne doit pas quitter le découpage en cours.');
 if(!html.includes('<option value="pavageOblique">') || !html.includes('<option value="quadrillageQuatre">') || !html.includes('<option value="quadrillageCinq">')) fail('Les trois découpages ajoutés doivent être proposés dans le menu.');
 // Le message de « Vérifier » doit flotter au-dessus du plateau. S'il revient
 // dans le flux, il repousse et rétrécit la figure sous les doigts de l'élève,

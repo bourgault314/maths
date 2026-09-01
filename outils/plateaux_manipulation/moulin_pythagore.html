@@ -208,6 +208,7 @@
   #enonceBody{color:var(--ink); line-height:1.35; font-size:14px;}
   #enonceBody .muted{color:var(--muted);}
   #enonceBody ul{margin:8px 0 0 18px;}
+  #enonceBody .modalActions{display:flex; gap:10px; justify-content:flex-end; margin-top:14px;}
 
   @media (pointer: coarse), (max-width: 900px){
     #toolbar{gap:6px; padding:8px 10px;}
@@ -246,6 +247,35 @@
   #toolbar button,
   #toolbar select{min-height:40px; border-radius:12px; font-weight:750;}
   #puzzleSelect{min-width:250px;}
+  #puzzleSelect.dejaReussi{border-color:#86efac; background:#f0fdf4; color:#14532d;}
+  /* Compteur de réussites : il se lit, il ne se clique pas. L'effacement est
+     rangé dans le menu, hors de portée d'un doigt qui passe. */
+  /* Jauge de progression. Volontairement d'une autre famille que les boutons :
+     entièrement arrondie là où ils ont des coins doux, et remplie de gauche à
+     droite. Elle se lit d'un coup d'œil, et rien n'invite à la toucher. */
+  /* Jauge de progression. Elle n'est pas un bouton et ne doit pas en avoir
+     l'air : entièrement arrondie, sans relief, et surmontée d'une petite barre
+     de remplissage qui se lit avant même le chiffre. */
+  #scoreReussites{
+    --part:0%;
+    position:relative; display:inline-flex; flex-direction:column;
+    align-items:center; justify-content:center; gap:4px;
+    box-sizing:border-box; min-width:76px; min-height:40px; padding:4px 12px 6px;
+    border:1px solid var(--border); border-radius:999px;
+    background:#fff; color:var(--muted);
+    font-weight:800; font-size:14px; line-height:1;
+    font-variant-numeric:tabular-nums; user-select:none; white-space:nowrap;
+    transition:color .35s ease, border-color .35s ease;
+  }
+  #scoreReussites::after{
+    content:""; width:calc(100% - 6px); height:4px; border-radius:999px;
+    background:linear-gradient(to right,#22c55e 0 var(--part),#e2e8f0 var(--part) 100%);
+    transition:background .45s ease;
+  }
+  #scoreReussites.aDesReussites{color:#15803d; border-color:#bbf7d0;}
+  @media (prefers-reduced-motion:reduce){
+    #scoreReussites, #scoreReussites::after{transition:none;}
+  }
   #stageWrap{background:transparent;}
   #mobilePuzzleHint{background:#f8fafc; border-bottom:1px solid #e2e8f0;}
 
@@ -258,13 +288,15 @@
     #puzzleSelect{width:auto; flex:1; max-width:none; min-width:0; min-height:44px;}
     #toolbar .group:nth-child(2),
     #toolbar .group:nth-child(3),
-    #toolbar #checkSolution,
     #toolbar #fullscreen{display:none;}
-    #toolbar .group:nth-child(4){display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); width:100%; gap:6px;}
+    /* « Vérifier » manquait sur téléphone : trois commandes tiennent sur la
+       ligne, les libellés sont courts. */
+    #toolbar .group:nth-child(4){display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); width:100%; gap:6px;}
     #toolbar .group:nth-child(4) button{width:100%; min-width:0; padding:9px 5px; font-size:13px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
     #toolbar .spacer{display:none;}
-    #toolbar .group:last-child{width:100%;}
+    #toolbar .group:last-child{display:grid; grid-template-columns:minmax(0,1fr) 96px; width:100%; gap:6px;}
     #toolbar #enonce{width:100%; min-height:44px;}
+    #scoreReussites{min-width:0; width:100%; min-height:44px;}
     #mobilePuzzleHint{display:none;}
     #puzzleStatus{font-size:12px; padding-left:12px; padding-right:12px; top:8px;}
     #stageWrap{min-height:0;}
@@ -325,6 +357,7 @@
     <div class="group">
       <button id="enonce">Fiche</button>
       <button id="fullscreen">⛶</button>
+      <span id="scoreReussites" aria-label="Aucun découpage réussi pour l’instant">0/14</span>
     </div>
   </div>
 
@@ -416,6 +449,7 @@
   const btnModeEleves = document.getElementById("modeEleves");
   const btnModeVide = document.getElementById("modeVide");
   const puzzleSelect = document.getElementById("puzzleSelect");
+  const scoreReussites = document.getElementById("scoreReussites");
   const toggleLetters = document.getElementById("toggleLetters");
   const btnReset = document.getElementById("reset");
   const btnFlip = document.getElementById("flip");
@@ -451,7 +485,8 @@
     completionTimer: null,
     celebrationTimer: null,
     statusTimer: null,
-    statusClearTimer: null
+    statusClearTimer: null,
+    reussites: new Set()
   };
 
   function applyWorldTransform(){
@@ -792,6 +827,93 @@
     },300);
   }
 
+  // ---------- Progression de l'élève ----------
+  // Gardée dans le navigateur, jamais envoyée nulle part. Sur un poste partagé
+  // elle appartient au navigateur, pas à l'élève : d'où l'effacement, rangé
+  // dans le menu pour qu'on ne tombe pas dessus par mégarde.
+  const CLE_REUSSITES = "mp_reussites";
+  const VALEUR_EFFACER = "__effacer-progression";
+
+  function lireReussites(){
+    try{
+      const brut = JSON.parse(localStorage.getItem(CLE_REUSSITES));
+      return new Set(Array.isArray(brut) ? brut : []);
+    }catch(_err){
+      return new Set();   // navigation privée, stockage refusé : on continue sans.
+    }
+  }
+
+  function ecrireReussites(){
+    try{ localStorage.setItem(CLE_REUSSITES, JSON.stringify([...state.reussites])); }
+    catch(_err){}
+  }
+
+  function decoupages(){
+    return [...puzzleSelect.options].filter(opt => opt.value !== VALEUR_EFFACER);
+  }
+
+  function rafraichirProgression(){
+    const options = decoupages();
+    const total = options.length;
+    const faits = options.filter(opt => state.reussites.has(opt.value)).length;
+    for(const opt of options){
+      if(!opt.dataset.libelle) opt.dataset.libelle = opt.textContent;
+      // La coche est posée ici, jamais dans le HTML : le générateur de fiches
+      // lit ces libellés pour titrer les quatorze PDF.
+      opt.textContent = state.reussites.has(opt.value)
+        ? `✔ ${opt.dataset.libelle}` : opt.dataset.libelle;
+    }
+    puzzleSelect.classList.toggle("dejaReussi", state.reussites.has(state.puzzle));
+    scoreReussites.textContent = `${faits}/${total}`;
+    scoreReussites.style.setProperty("--part", `${Math.round((faits / total) * 100)}%`);
+    scoreReussites.classList.toggle("aDesReussites", faits > 0);
+    scoreReussites.setAttribute("aria-label", faits === 0
+      ? "Aucun découpage réussi pour l’instant"
+      : `${faits} découpage${faits > 1 ? "s" : ""} réussi${faits > 1 ? "s" : ""} sur ${total}`);
+    // La ligne d'effacement n'existe que s'il y a quelque chose à effacer :
+    // sur une page neuve, le menu ne contient que les découpages.
+    let ligne = puzzleSelect.querySelector(`option[value="${VALEUR_EFFACER}"]`);
+    if(faits > 0 && !ligne){
+      ligne = document.createElement("option");
+      ligne.value = VALEUR_EFFACER;
+      ligne.dataset.action = "effacer";
+      ligne.textContent = "— Effacer ma progression";
+      puzzleSelect.appendChild(ligne);
+    }else if(faits === 0 && ligne){
+      ligne.remove();
+    }
+    puzzleSelect.value = state.puzzle;
+  }
+
+  function marquerReussite(cle){
+    if(state.reussites.has(cle)) return;
+    state.reussites.add(cle);
+    ecrireReussites();
+    rafraichirProgression();
+  }
+
+  function demanderEffacement(){
+    const faits = decoupages().filter(opt => state.reussites.has(opt.value)).length;
+    modalTitle.textContent = "Effacer ta progression ?";
+    modalBody.innerHTML =
+      `<p>Les <strong>${faits} découpage${faits > 1 ? "s" : ""} réussi${faits > 1 ? "s" : ""}</strong> `
+      + `seront décoché${faits > 1 ? "s" : ""} et le compteur reviendra à zéro.</p>`
+      + `<p class="muted">Les pièces posées sur le plateau ne bougent pas.</p>`
+      + `<div class="modalActions">`
+      + `<button id="annulerEffacement" class="primary">Annuler</button>`
+      + `<button id="confirmerEffacement" class="danger">Effacer</button>`
+      + `</div>`;
+    modal.style.display = "flex";
+    modalBody.querySelector("#annulerEffacement").onclick = closeEnonce;
+    modalBody.querySelector("#confirmerEffacement").onclick = () => {
+      state.reussites.clear();
+      ecrireReussites();
+      rafraichirProgression();
+      closeEnonce();
+      setPuzzleStatus("Progression effacée.");
+    };
+  }
+
   function setPuzzleStatus(text,type=""){
     dismissPuzzleStatus();
     if(state.statusClearTimer){
@@ -832,7 +954,9 @@
     title.textContent="Bravo !";
     const subtitle=document.createElement("span");
     subtitle.className="celebrationSubtitle";
-    subtitle.textContent="Puzzle réussi";
+    const options=decoupages();
+    const faits=options.filter(opt=>state.reussites.has(opt.value)).length;
+    subtitle.textContent=`Puzzle réussi — ${faits} sur ${options.length}`;
     message.append(icon,title,subtitle);
     celebration.appendChild(message);
 
@@ -921,6 +1045,7 @@
     setPuzzleStatus("Bravo : les pièces remplissent exactement le carré de l’hypoténuse.","success");
     if(celebrate && !state.celebrated){
       state.celebrated=true;
+      if(state.mode==="eleves") marquerReussite(state.puzzle);
       launchCelebration();
     }
     return true;
@@ -2368,7 +2493,13 @@
   btnCheckSolution.onclick = () => checkPuzzleSolution({celebrate:true});
 
   puzzleSelect.onchange = (e) => {
+    if(e.target.value === VALEUR_EFFACER){
+      puzzleSelect.value = state.puzzle;   // on ne quitte pas le découpage en cours
+      demanderEffacement();
+      return;
+    }
     state.puzzle = e.target.value;
+    rafraichirProgression();
     buildScene();
     // garder le mode actuel et ses règles de visibilité
     setMode(state.mode);
@@ -2985,6 +3116,8 @@ function buildApplicationMoulinSVG(AB_cm = 5, AC_cm = 12) {
 
   // ---------- init ----------
   applyPuzzleLaunchConfig();
+  state.reussites = lireReussites();
+  rafraichirProgression();
   buildScene();
   fitWorldToViewport();
   setMode(state.mode);

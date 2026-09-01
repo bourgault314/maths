@@ -135,10 +135,15 @@ const base = `http://localhost:${PORT}`;
 const sommaire = await navigateur.newPage();
 await sommaire.goto(`${base}${PLATEAU}`);
 const decoupages = await sommaire.evaluate(() =>
-  [...document.querySelectorAll("#puzzleSelect option")].map((option) => ({
-    cle: option.value,
-    libelle: option.textContent.trim()
-  }))
+  [...document.querySelectorAll("#puzzleSelect option")]
+    // Le menu peut porter une ligne d'action (effacer la progression) : ce n'est
+    // pas un découpage, elle n'a pas de fiche. Sur une page neuve elle est
+    // absente, mais on ne compte pas là-dessus.
+    .filter((option) => !option.dataset.action)
+    .map((option) => ({
+      cle: option.value,
+      libelle: option.textContent.trim()
+    }))
 );
 await sommaire.close();
 console.log(`${decoupages.length} découpages trouvés dans le plateau.`);
