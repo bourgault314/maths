@@ -5,6 +5,7 @@ import vm from 'node:vm';
 
 const engineSource=fs.readFileSync('auto/scripts/02-question-engine.js','utf8');
 const slideshowSource=fs.readFileSync('auto/scripts/03-slideshow.js','utf8');
+const appSource=fs.readFileSync('auto/scripts/04-app.js','utf8');
 const pointerDragSource=fs.readFileSync('auto/scripts/shared/interactions/pointer-drag.js','utf8');
 const solidSource=fs.readFileSync('auto/scripts/shared/visuals/geometry/solid.js','utf8');
 const engineCore=engineSource.slice(0,engineSource.indexOf('function subVars'));
@@ -92,4 +93,40 @@ test('la fin interactive garde dix séries et tous les retours au menu',()=>{
     slideshowSource.indexOf('function startNextSeries()')
   );
   assert.doesNotMatch(restartBlock,/seriesIndex/);
+});
+
+test('le retour au menu conserve les réglages sans recycler le tirage initial',()=>{
+  const definition={
+    schemaVersion:1,
+    generatorVersion:'1.17.0',
+    level:'3e',
+    questionCount:5,
+    moduleIds:['criteres-divisibilite'],
+    seed:160027,
+    visualMode:'with',
+    experienceMode:'interactive',
+    seriesCount:10
+  };
+  const storage=new Map([['mathsgo:auto:return-definition',JSON.stringify(definition)]]);
+  const seedInput={value:''};
+  let restored=null;
+  const restoreSource=appSource.slice(
+    appSource.indexOf('function restoreSeriesDefinitionAfterReturn()'),
+    appSource.indexOf('\n\nupdateGenerateButtonLabel()',appSource.indexOf('function restoreSeriesDefinitionAfterReturn()'))
+  );
+  const context=vm.createContext({
+    sessionStorage:{
+      getItem:key=>storage.get(key)||null,
+      removeItem:key=>storage.delete(key)
+    },
+    applySeriesDefinitionToUi:value=>{restored=value;seedInput.value=String(value.seed);},
+    document:{getElementById:id=>id==='seed'?seedInput:null}
+  });
+
+  vm.runInContext(`${restoreSource}\nglobalThis.__restoreSeriesDefinitionAfterReturn=restoreSeriesDefinitionAfterReturn;`,context);
+
+  assert.equal(context.__restoreSeriesDefinitionAfterReturn(),true);
+  assert.equal(JSON.stringify(restored),JSON.stringify(definition));
+  assert.equal(seedInput.value,'');
+  assert.equal(storage.has('mathsgo:auto:return-definition'),false);
 });
