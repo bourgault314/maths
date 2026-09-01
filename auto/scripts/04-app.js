@@ -564,7 +564,13 @@ function restoreSeriesDefinitionAfterReturn(){
     sessionStorage.removeItem('mathsgo:auto:return-definition');
   }catch(error){return false;}
   if(!saved) return false;
-  try{applySeriesDefinitionToUi(JSON.parse(saved));return true;}catch(error){return false;}
+  try{
+    applySeriesDefinitionToUi(JSON.parse(saved));
+    // Conserver les réglages, mais tirer une nouvelle banque au prochain lancement.
+    const seedInput=document.getElementById('seed');
+    if(seedInput) seedInput.value='';
+    return true;
+  }catch(error){return false;}
 }
 
 updateGenerateButtonLabel();
