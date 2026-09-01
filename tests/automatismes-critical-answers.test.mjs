@@ -6,6 +6,7 @@ import vm from 'node:vm';
 const engineSource=fs.readFileSync('auto/scripts/02-question-engine.js','utf8');
 const slideshowSource=fs.readFileSync('auto/scripts/03-slideshow.js','utf8');
 const appSource=fs.readFileSync('auto/scripts/04-app.js','utf8');
+const setupSource=fs.readFileSync('auto/index.html','utf8');
 const pointerDragSource=fs.readFileSync('auto/scripts/shared/interactions/pointer-drag.js','utf8');
 const solidSource=fs.readFileSync('auto/scripts/shared/visuals/geometry/solid.js','utf8');
 const engineCore=engineSource.slice(0,engineSource.indexOf('function subVars'));
@@ -129,4 +130,10 @@ test('le retour au menu conserve les réglages sans recycler le tirage initial',
   assert.equal(JSON.stringify(restored),JSON.stringify(definition));
   assert.equal(seedInput.value,'');
   assert.equal(storage.has('mathsgo:auto:return-definition'),false);
+});
+
+test('la préparation propose sans aide par défaut',()=>{
+  assert.match(setupSource,/<input type="hidden" id="visualMode" value="without">/);
+  assert.match(setupSource,/data-value="without" aria-pressed="true">Sans aide<\/button>/);
+  assert.match(setupSource,/id="settingsSummary">3e · 5 questions · Interactif · Sans aide<\/span>/);
 });

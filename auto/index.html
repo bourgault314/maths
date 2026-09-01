@@ -65,10 +65,10 @@
       </div>
       <div class="field field-visual">
         <label id="visualModeLabel">Aide</label>
-        <input type="hidden" id="visualMode" value="with">
+        <input type="hidden" id="visualMode" value="without">
         <div class="segmented-control" data-control="visualMode" role="group" aria-labelledby="visualModeLabel">
-          <button type="button" class="segment-btn is-active" data-value="with" aria-pressed="true">Avec aide</button>
-          <button type="button" class="segment-btn" data-value="without" aria-pressed="false">Sans aide</button>
+          <button type="button" class="segment-btn" data-value="with" aria-pressed="false">Avec aide</button>
+          <button type="button" class="segment-btn is-active" data-value="without" aria-pressed="true">Sans aide</button>
         </div>
       </div>
       <div class="field field-experience">
@@ -164,7 +164,7 @@
   <div class="setup-action-bar">
     <div class="setup-summary" aria-live="polite">
       <strong id="selectionSummary">Choisis au moins un automatisme</strong>
-      <span id="settingsSummary">3e · 5 questions · Interactif · Avec aide</span>
+      <span id="settingsSummary">3e · 5 questions · Interactif · Sans aide</span>
     </div>
     <button class="share-action" id="shareButton" type="button" aria-expanded="false" aria-controls="shareOverlay" onclick="prepareSeriesShare()" disabled>Partager</button>
     <div class="launch-cluster">
