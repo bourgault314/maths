@@ -98,7 +98,7 @@ const mobileThresholds={maxTranslationPx:48,maxRotationDeg:20,exactTranslationPx
   if(!result || result.kind!=='exact') fail('La correction exacte de finition au centre du pavage est absente.');
 }
 
-// Toutes les pièces des onze pavages sont testées autour de leur pose finale :
+// Toutes les pièces des quatorze pavages sont testées autour de leur pose finale :
 // décalage tactile + erreur angulaire, avec toutes les voisines déjà en place.
 const html=fs.readFileSync(new URL('../outils/plateaux_manipulation/moulin_pythagore.html',import.meta.url),'utf8');
 const match=html.match(/const EXACT_SOLUTION_UV = (\{[\s\S]*?\n  \});/);
@@ -110,7 +110,10 @@ const sideByPuzzle={
   tangram:Math.sqrt(2),
   moulinIsocele:Math.sqrt(2),
   mosaiqueSept:5/3,
-  liuHuiSept:Math.sqrt(34)/3
+  liuHuiSept:Math.sqrt(34)/3,
+  pavageOblique:5/3,
+  quadrillageQuatre:5/3,
+  quadrillageCinq:5/3
 };
 const bhaskaraCorners=[[side,0],[0,0],[0,side],[side,side]];
 const bhaskaraThird=bhaskaraCorners.map((point,index)=>{

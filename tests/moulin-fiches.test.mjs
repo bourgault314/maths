@@ -14,7 +14,7 @@ const page = lire("outils/plateaux_manipulation/moulin_pythagore_fiches.html");
 const decoupages = [...plateau.matchAll(/<option value="([^"]+)"/g)].map((trouve) => trouve[1]);
 
 test("chaque découpage du plateau a sa fiche PDF publiée", () => {
-  assert.equal(decoupages.length, 11, "le plateau doit toujours proposer onze découpages");
+  assert.equal(decoupages.length, 14, "le plateau doit toujours proposer quatorze découpages");
   for (const cle of decoupages) {
     const fiche = `outils/plateaux_manipulation/fiches_moulin/moulin-pythagore-${cle}.pdf`;
     assert.ok(existe(fiche), `fiche manquante : ${fiche}`);

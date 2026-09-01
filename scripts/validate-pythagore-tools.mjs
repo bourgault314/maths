@@ -60,9 +60,9 @@ const sources={
     a1:[[0,0],[1,0],[1,1]],a2:[[0,0],[1,1],[0,1]]
   },
   mosaiqueSept:{
-    redTop:[[0,-4/3],[4/3,-4/3],[0,-1/3]],redLeft:[[4/3,-4/3],[4/3,-1/3],[0,-1/3]],
-    redTrap:[[0,-1/3],[1,-1/3],[3/4,0],[0,0]],redSquare:[[1,-1/3],[4/3,-1/3],[4/3,0],[1,0]],
-    redSmall:[[3/4,0],[1,-1/3],[1,0]],blueTrap:[[-1,0],[0,0],[-3/4,1],[-1,1]],blueTri:[[0,0],[0,1],[-3/4,1]]
+    bTop:[[0,-4/3],[4/3,-4/3],[0,-1/3]],bLeft:[[4/3,-4/3],[4/3,-1/3],[0,-1/3]],
+    bTrap:[[0,-1/3],[1,-1/3],[3/4,0],[0,0]],bSquare:[[1,-1/3],[4/3,-1/3],[4/3,0],[1,0]],
+    bSmall:[[3/4,0],[1,-1/3],[1,0]],aTrap:[[-1,0],[0,0],[-3/4,1],[-1,1]],aTri:[[0,0],[0,1],[-3/4,1]]
   },
   liuHuiSept:{
     bLargeTop:[[0,0],[5/3,0],[0,1]],bLargeRight:[[5/3,0],[5/3,5/3],[2/3,5/3]],
@@ -76,6 +76,27 @@ const sources={
   },
   quatreIdentiques:{
     q1:[[0,-2],[0.5,-2],[1,-1],[0,-0.5]],q2:[[2,-2],[2,-1.5],[1,-1],[0.5,-2]],q3:[[2,0],[1.5,0],[1,-1],[2,-1.5]],q4:[[0,0],[0,-0.5],[1,-1],[1.5,0]],aSq:[[-1,0],[0,0],[0,1],[-1,1]]
+  },
+  pavageOblique:{
+    b1:[[0.2500000000,-0.3611111110],[0.0000000000,-0.6944444443],[0.0000000000,-1.3333333333],[1.3333333333,-1.3333333333],[1.3333333333,-1.1736111110]],
+    b2:[[0.2500000000,-0.3611111110],[1.3333333333,-1.1736111110],[1.3333333333,-0.0000000000],[0.5208333333,-0.0000000000]],
+    b3:[[0.2500000000,-0.3611111110],[0.0000000000,-0.1736111110],[0.0000000000,-0.6944444443]],
+    b4:[[0.2500000000,-0.3611111110],[0.5208333333,-0.0000000000],[0.0000000000,-0.0000000000],[0.0000000000,-0.1736111110]],
+    a1:[[-0.4791666667,0.0000000000],[0.0000000000,0.0000000000],[0.0000000000,0.6388888890]],
+    a2:[[0.0000000000,0.6388888890],[0.0000000000,1.0000000000],[-1.0000000000,1.0000000000],[-1.0000000000,0.0000000000],[-0.4791666667,0.0000000000]]
+  },
+  quadrillageQuatre:{
+    a1:[[-1.0000000000,1.0000000000],[0.0000000000,1.0000000000],[0.0000000000,0.0000000000],[-1.0000000000,0.0000000000]],
+    b1:[[1.0000000000,-1.0000000000],[1.0000000000,-0.3333333333],[0.0000000000,-0.3333333333],[0.0000000000,0.0000000000],[1.3333333333,0.0000000000],[1.3333333333,-1.0000000000]],
+    b2:[[0.0000000000,-0.6666666667],[0.3333333333,-0.6666666667],[0.3333333333,-1.0000000000],[1.3333333333,-1.0000000000],[1.3333333333,-1.3333333333],[0.0000000000,-1.3333333333]],
+    b3:[[0.3333333333,-0.6666666667],[0.0000000000,-0.6666666667],[0.0000000000,-0.3333333333],[1.0000000000,-0.3333333333],[1.0000000000,-1.0000000000],[0.3333333333,-1.0000000000]]
+  },
+  quadrillageCinq:{
+    a1:[[-1.0000000000,0.0000000000],[-1.0000000000,0.3333333333],[0.0000000000,0.3333333333],[0.0000000000,0.0000000000]],
+    a2:[[-1.0000000000,1.0000000000],[0.0000000000,1.0000000000],[0.0000000000,0.3333333333],[-1.0000000000,0.3333333333]],
+    b1:[[0.0000000000,-0.6666666667],[0.3333333333,-0.6666666667],[0.3333333333,-1.0000000000],[1.0000000000,-1.0000000000],[1.0000000000,-1.3333333333],[0.0000000000,-1.3333333333]],
+    b2:[[1.0000000000,-1.0000000000],[0.3333333333,-1.0000000000],[0.3333333333,-0.6666666667],[0.6666666667,-0.6666666667],[0.6666666667,-0.3333333333],[1.0000000000,-0.3333333333],[1.0000000000,-0.6666666667],[1.3333333333,-0.6666666667],[1.3333333333,-1.3333333333],[1.0000000000,-1.3333333333]],
+    b3:[[0.0000000000,0.0000000000],[1.3333333333,0.0000000000],[1.3333333333,-0.6666666667],[1.0000000000,-0.6666666667],[1.0000000000,-0.3333333333],[0.6666666667,-0.3333333333],[0.6666666667,-0.6666666667],[0.0000000000,-0.6666666667]]
   }
 };
 
@@ -86,15 +107,21 @@ const expectedKeys={
   tangram:['large1','large2','medium','parallel','small1','small2','square'],
   mosaiqueOblique:['a1','a2','b1','b2','b3','b4'],
   moulinIsocele:['a1','a2','b1','b2'],
-  mosaiqueSept:['blueTrap','blueTri','redLeft','redSmall','redSquare','redTop','redTrap'],
+  mosaiqueSept:['aTrap','aTri','bLeft','bSmall','bSquare','bTop','bTrap'],
   liuHuiSept:['aTriangleBottom','aTriangleTop','bLargeRight','bLargeTop','bSquare','bWedgeRight','bWedgeTop'],
+  pavageOblique:['a1','a2','b1','b2','b3','b4'],
+  quadrillageQuatre:['a1','b1','b2','b3'],
+  quadrillageCinq:['a1','a2','b1','b2','b3'],
   leitzmann:['aBottom','aLeft','aRight','aTop','bBottom','bLeft','bRight','bTop'],
   quatreIdentiques:['aSq','q1','q2','q3','q4']
 };
 const geometry={
   perigal:{side:sqrt5,area:5},lapeyronnie:{side:sqrt5,area:5},mosaiqueOblique:{side:sqrt5,area:5},leitzmann:{side:sqrt5,area:5},quatreIdentiques:{side:sqrt5,area:5},
   sixEquilibre:{side:sqrt2,area:2},tangram:{side:sqrt2,area:2},moulinIsocele:{side:sqrt2,area:2},mosaiqueSept:{side:5/3,area:25/9},
-  liuHuiSept:{side:Math.sqrt(34)/3,area:34/9}
+  liuHuiSept:{side:Math.sqrt(34)/3,area:34/9},
+  pavageOblique:{side:5/3,area:25/9},
+  quadrillageQuatre:{side:5/3,area:25/9},
+  quadrillageCinq:{side:5/3,area:25/9}
 };
 
 for(const [puzzle,keys] of Object.entries(expectedKeys)){
@@ -153,6 +180,7 @@ if(!html.includes('if(other.placed) placedPolygons.push')) fail('Seules les piè
 if(!html.includes('const proposed=drag.startRot+deg(angle-drag.startGestureAngle);') || !html.includes(': proposed;')) fail('La rotation tactile doit rester libre pendant le geste.');
 if(!html.includes('screenPixelsToWorld(25)')) fail('La poignée mobile doit conserver une zone tactile physique suffisante.');
 if(!html.includes('grid-template-columns:repeat(2,minmax(0,1fr))')) fail('Les commandes mobiles doivent rester contenues dans la largeur du téléphone.');
+if(!html.includes('<option value="pavageOblique">') || !html.includes('<option value="quadrillageQuatre">') || !html.includes('<option value="quadrillageCinq">')) fail('Les trois découpages ajoutés doivent être proposés dans le menu.');
 if(!html.includes('function queueCompletionCheck()') || !html.includes('className="confettiPiece"') || !html.includes('className="celebrationSubtitle"')) fail('La réussite automatique et la célébration soignée doivent rester actives.');
 
 const pythaFile='outils/pythabarre.html';
@@ -168,4 +196,4 @@ if(!pytha.includes('.stage:not(.notStarted):not(:fullscreen) .instructionZone:em
 if(!pytha.includes('class="menuPageHome" href="index.html"') || !pytha.includes('Retour au catalogue des outils')) fail('Le menu PythaBarre doit proposer un retour explicite au catalogue Outils.');
 if(!pytha.includes('class="toolBtn commandToolBtn undoToolBtn"') || !pytha.includes('class="toolBtn commandToolBtn restartToolBtn"')) fail('Annuler et Recommencer doivent utiliser les commandes modernes communes.');
 
-if(!process.exitCode) console.log('OK — 11 puzzles, 10 pavages tabulés, snaps exacts, célébration et règles mobiles contrôlés.');
+if(!process.exitCode) console.log('OK — 14 puzzles, 13 pavages tabulés, snaps exacts, célébration et règles mobiles contrôlés.');

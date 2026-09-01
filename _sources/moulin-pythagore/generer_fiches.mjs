@@ -18,6 +18,10 @@
  * déroulant du plateau, donc un douzième découpage ajouté à l'outil sera
  * fabriqué tout seul au prochain passage.
  *
+ * La police est embarquée dans la fiche elle-même (assets/fonts/Poppins-*.woff2) :
+ * les PDF sortent donc identiques quelle que soit la machine qui les fabrique.
+ * Le script s'arrête si cette police ne se charge pas.
+ *
  * Prérequis : npm install playwright && npx playwright install chromium
  * Usage     : node _sources/moulin-pythagore/generer_fiches.mjs
  *
@@ -45,14 +49,27 @@ const TYPES = {
   ".webp": "image/webp",
   ".svg": "image/svg+xml",
   ".json": "application/json",
+  ".woff2": "font/woff2",
   ".pdf": "application/pdf"
 };
+
+// La fiche est servie par ce serveur, à une vraie adresse : écrite avec
+// setContent elle n'aurait pas d'origine, et le navigateur refuserait alors de
+// charger sa police (une police est soumise au contrôle d'origine).
+let fichePubliee = "";
+const ADRESSE_FICHE = "/outils/plateaux_manipulation/__fiche-en-cours.html";
 
 // Un serveur local minimal : le plateau doit être servi en http pour que la
 // fenêtre d'impression résolve ses images comme sur le site.
 function servirLeDepot() {
   const serveur = http.createServer(async (requete, reponse) => {
-    const chemin = path.join(RACINE, decodeURIComponent(requete.url.split("?")[0]));
+    const url = decodeURIComponent(requete.url.split("?")[0]);
+    if (url === ADRESSE_FICHE) {
+      reponse.writeHead(200, { "content-type": TYPES[".html"] });
+      reponse.end(fichePubliee);
+      return;
+    }
+    const chemin = path.join(RACINE, url);
     if (!chemin.startsWith(RACINE)) {
       reponse.writeHead(403);
       reponse.end();
@@ -164,10 +181,17 @@ for (const { cle, libelle } of decoupages) {
   await plateau.close();
 
   const fiche = await navigateur.newPage();
-  await fiche.setContent(
-    html.replace("<head>", `<head><base href="${base}/outils/plateaux_manipulation/">`),
-    { waitUntil: "networkidle" }
-  );
+  fichePubliee = html;
+  await fiche.goto(`${base}${ADRESSE_FICHE}`, { waitUntil: "networkidle" });
+  // La fiche embarque sa police : on attend qu'elle soit vraiment chargée,
+  // sinon le PDF sortirait dans la police de secours de la machine.
+  const policeOk = await fiche.evaluate(async () => {
+    await document.fonts.load('400 16px FichePoppins');
+    await document.fonts.load('700 16px FichePoppins');
+    await document.fonts.ready;
+    return document.fonts.check('400 16px FichePoppins') && document.fonts.check('700 16px FichePoppins');
+  });
+  if (!policeOk) throw new Error("La police de la fiche ne s'est pas chargée : le PDF sortirait dans une autre police selon la machine.");
   const cheminPdf = path.join(DOSSIER_PDF, `moulin-pythagore-${cle}.pdf`);
   await fiche.pdf({
     path: cheminPdf,

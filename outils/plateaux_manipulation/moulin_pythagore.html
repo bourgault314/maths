@@ -283,6 +283,9 @@
       <option value="moulinIsocele">9. Moulin isocèle (4 pièces)</option>
       <option value="mosaiqueSept">10. Puzzle de Brest (7 pièces)</option>
       <option value="liuHuiSept">11. Liu Hui — 2 + 5 (7 pièces)</option>
+      <option value="pavageOblique">12. Pavage oblique (6 pièces)</option>
+      <option value="quadrillageQuatre">13. Quadrillage 3-4-5 (4 pièces)</option>
+      <option value="quadrillageCinq">14. Quadrillage 3-4-5 (5 pièces)</option>
     </select>
     </div>
 
@@ -653,13 +656,13 @@
     // triangles 3-4-5 et un petit carré central. Deux triangles sont coupés
     // parallèlement à leur petit côté, ce qui donne sept pièces au total.
     mosaiqueSept: {
-      redTop:[[0,0],[1.6666666667,0],[1.0666666667,0.8]],
-      redLeft:[[0,1.6666666667],[0,0],[0.8,0.6]],
-      blueTrap:[[0.8666666667,1.0666666667],[1.6666666667,1.6666666667],[1.6666666667,0.4166666667],[1.4666666667,0.2666666667]],
-      redSmall:[[1.6666666667,0],[1.4666666667,0.2666666667],[1.6666666667,0.4166666667]],
-      blueTri:[[1.6666666667,1.6666666667],[0.8666666667,1.0666666667],[0.4166666667,1.6666666667]],
-      redTrap:[[0.6,0.8666666667],[0,1.6666666667],[0.4166666667,1.6666666667],[0.8666666667,1.0666666667]],
-      redSquare:[[1.0666666667,0.8],[0.8666666667,1.0666666667],[0.6,0.8666666667],[0.8,0.6]]
+      bTop:[[0,0],[1.6666666667,0],[1.0666666667,0.8]],
+      bLeft:[[0,1.6666666667],[0,0],[0.8,0.6]],
+      aTrap:[[0.8666666667,1.0666666667],[1.6666666667,1.6666666667],[1.6666666667,0.4166666667],[1.4666666667,0.2666666667]],
+      bSmall:[[1.6666666667,0],[1.4666666667,0.2666666667],[1.6666666667,0.4166666667]],
+      aTri:[[1.6666666667,1.6666666667],[0.8666666667,1.0666666667],[0.4166666667,1.6666666667]],
+      bTrap:[[0.6,0.8666666667],[0,1.6666666667],[0.4166666667,1.6666666667],[0.8666666667,1.0666666667]],
+      bSquare:[[1.0666666667,0.8],[0.8666666667,1.0666666667],[0.6,0.8666666667],[0.8,0.6]]
     },
     // Reconstruction possible du diagramme perdu de Liu Hui. Pour a:b=3:5,
     // les cinq pièces bleues de b² et les deux triangles rouges de a²
@@ -689,6 +692,27 @@
       q3:[[1.3416407865,1.788854382],[1.11803398875,2.2360679775],[0,2.2360679775],[0,1.11803398875]],
       q4:[[0.4472135955,1.3416407865],[0,1.11803398875],[0,0],[1.11803398875,0]],
       aSq:[[0.4472135955,1.3416407865],[0.894427191,0.4472135955],[1.788854382,0.894427191],[1.3416407865,1.788854382]]
+    },
+    pavageOblique: {
+      b1:[[0.0000000000,0.0000000000],[0.4166666667,-0.0000000000],[0.9277777779,0.3833333334],[0.1277777779,1.4500000001],[0.0000000000,1.3541666667]],
+      b2:[[1.6666666671,-0.0000000001],[1.6666666671,1.3541666666],[0.7277777783,0.6500000000],[1.2152777783,0.0000000000]],
+      b3:[[0.0000000000,1.6666666667],[0.0000000000,1.3541666667],[0.4166666667,1.6666666667]],
+      b4:[[1.6666666671,1.6666666666],[1.2152777783,1.6666666667],[1.5277777783,1.2500000000],[1.6666666671,1.3541666666]],
+      a1:[[1.2152777779,-0.0000000004],[0.9277777781,0.3833333331],[0.4166666667,0.0000000000]],
+      a2:[[0.4166666671,1.6666666666],[0.1277777783,1.4500000000],[0.7277777783,0.6500000000],[1.5277777783,1.2500000000],[1.2152777783,1.6666666667]]
+    },
+    quadrillageQuatre: {
+      a1:[[0.0000000000,0.0000000000],[0.0000000000,1.0000000000],[1.0000000000,1.0000000000],[1.0000000000,0.0000000000]],
+      b1:[[0.6666666667,1.3333333333],[1.3333333333,1.3333333333],[1.3333333333,0.3333333333],[1.6666666667,0.3333333333],[1.6666666667,1.6666666667],[0.6666666667,1.6666666667]],
+      b2:[[1.6666666667,0.0000000000],[1.6666666667,0.3333333333],[1.3333333333,0.3333333333],[1.3333333333,1.3333333333],[1.0000000000,1.3333333333],[1.0000000000,0.0000000000]],
+      b3:[[0.6666666667,1.3333333333],[1.0000000000,1.3333333333],[1.0000000000,1.0000000000],[0.0000000000,1.0000000000],[-0.0000000000,1.6666666667],[0.6666666667,1.6666666667]]
+    },
+    quadrillageCinq: {
+      a1:[[0.0000000000,0.0000000000],[0.0000000000,0.3333333333],[1.0000000000,0.3333333333],[1.0000000000,0.0000000000]],
+      a2:[[1.0000000000,0.0000000000],[1.0000000000,1.0000000000],[1.6666666667,1.0000000000],[1.6666666667,0.0000000000]],
+      b1:[[1.6666666667,1.0000000000],[1.3333333333,1.0000000000],[1.3333333333,1.3333333333],[0.6666666667,1.3333333333],[0.6666666667,1.6666666667],[1.6666666667,1.6666666667]],
+      b2:[[1.0000000000,1.0000000000],[1.0000000000,0.3333333333],[0.6666666667,0.3333333333],[0.6666666667,0.6666666667],[0.3333333333,0.6666666667],[0.3333333333,1.0000000000],[0.6666666667,1.0000000000],[0.6666666667,1.3333333333],[1.3333333333,1.3333333333],[1.3333333333,1.0000000000]],
+      b3:[[0.0000000000,1.6666666667],[0.0000000000,0.3333333333],[0.6666666667,0.3333333333],[0.6666666667,0.6666666667],[0.3333333333,0.6666666667],[0.3333333333,1.0000000000],[0.6666666667,1.0000000000],[0.6666666667,1.6666666667]]
     }
   };
 
@@ -1090,7 +1114,8 @@
     },
 
     // Puzzle de Brest : un 3-4-5, deux triangles entiers, deux triangles
-    // découpés et le petit carré (5 pièces rouges, 2 bleues).
+    // découpés et le petit carré. Même code de couleur que Liu Hui :
+    // rouge pour les pièces de a², bleu pour celles de b².
     mosaiqueSept: {
       name: "Puzzle de Brest",
       ratio: 0.75,
@@ -1099,13 +1124,13 @@
         const big=(x,y)=>({x:Ax+x*k,y:Ay-b+y*k});
         const small=(x,y)=>({x:Ax-b*ratio+x*k,y:Ay+y*k});
         return [
-          {key:"redTop",fill:COLORS.red, points:[[0,0],[4,0],[0,3]].map(([x,y])=>big(x,y))},
-          {key:"redLeft",fill:COLORS.red,points:[[4,0],[4,3],[0,3]].map(([x,y])=>big(x,y))},
-          {key:"redTrap",fill:COLORS.red,points:[[0,3],[3,3],[2.25,4],[0,4]].map(([x,y])=>big(x,y))},
-          {key:"redSquare",fill:COLORS.red,points:[[3,3],[4,3],[4,4],[3,4]].map(([x,y])=>big(x,y))},
-          {key:"redSmall",fill:COLORS.red,points:[[2.25,4],[3,3],[3,4]].map(([x,y])=>big(x,y))},
-          {key:"blueTrap",fill:COLORS.blue,points:[[0,0],[3,0],[0.75,3],[0,3]].map(([x,y])=>small(x,y))},
-          {key:"blueTri",fill:COLORS.blue,points:[[3,0],[3,3],[0.75,3]].map(([x,y])=>small(x,y))}
+          {key:"bTop",fill:COLORS.blue,   points:[[0,0],[4,0],[0,3]].map(([x,y])=>big(x,y))},
+          {key:"bLeft",fill:COLORS.blue,  points:[[4,0],[4,3],[0,3]].map(([x,y])=>big(x,y))},
+          {key:"bTrap",fill:COLORS.blue,  points:[[0,3],[3,3],[2.25,4],[0,4]].map(([x,y])=>big(x,y))},
+          {key:"bSquare",fill:COLORS.blue,points:[[3,3],[4,3],[4,4],[3,4]].map(([x,y])=>big(x,y))},
+          {key:"bSmall",fill:COLORS.blue, points:[[2.25,4],[3,3],[3,4]].map(([x,y])=>big(x,y))},
+          {key:"aTrap",fill:COLORS.red,   points:[[0,0],[3,0],[0.75,3],[0,3]].map(([x,y])=>small(x,y))},
+          {key:"aTri",fill:COLORS.red,    points:[[3,0],[3,3],[0.75,3]].map(([x,y])=>small(x,y))}
         ];
       }
     },
@@ -1286,6 +1311,69 @@
           return [...four, small];
         }
       }
+    },
+
+    pavageOblique: {
+      name: "Pavage oblique",
+      ratio: 0.75,
+      generate: (Ax, Ay, b) => {
+        // Un seul module : le carreau k = b/4. Le carré b² en fait 4 de côté,
+        // le carré a² en fait 3, celui de l'hypoténuse 5 — c'est le triangle 3-4-5.
+        const k = b / 4;
+        const P = (key, fill, pts) => ({
+          key, fill,
+          points: pts.map(([x, y]) => ({ x: Ax + x * k, y: Ay + y * k }))
+        });
+        return [
+          P("b1", COLORS.blue, [[0.75,-1.083333], [0,-2.083333], [0,-4], [4,-4], [4,-3.520833]]),
+          P("b2", COLORS.magenta, [[0.75,-1.083333], [4,-3.520833], [4,0], [1.5625,0]]),
+          P("b3", COLORS.yellow, [[0.75,-1.083333], [0,-0.520833], [0,-2.083333]]),
+          P("b4", COLORS.green, [[0.75,-1.083333], [1.5625,0], [0,0], [0,-0.520833]]),
+          P("a1", COLORS.purple, [[-1.4375,0], [0,0], [0,1.916667]]),
+          P("a2", COLORS.red, [[0,1.916667], [0,3], [-3,3], [-3,0], [-1.4375,0]]),
+        ];
+      }
+    },
+
+    quadrillageQuatre: {
+      name: "Quadrillage — 4 pièces",
+      ratio: 0.75,
+      generate: (Ax, Ay, b) => {
+        // Un seul module : le carreau k = b/4. Le carré b² en fait 4 de côté,
+        // le carré a² en fait 3, celui de l'hypoténuse 5 — c'est le triangle 3-4-5.
+        const k = b / 4;
+        const P = (key, fill, pts) => ({
+          key, fill,
+          points: pts.map(([x, y]) => ({ x: Ax + x * k, y: Ay + y * k }))
+        });
+        return [
+          P("a1", COLORS.green, [[-3,3], [0,3], [0,0], [-3,0]]),
+          P("b1", COLORS.blue, [[3,-3], [3,-1], [0,-1], [0,0], [4,0], [4,-3]]),
+          P("b2", COLORS.magenta, [[0,-2], [1,-2], [1,-3], [4,-3], [4,-4], [0,-4]]),
+          P("b3", COLORS.yellow, [[1,-2], [0,-2], [0,-1], [3,-1], [3,-3], [1,-3]]),
+        ];
+      }
+    },
+
+    quadrillageCinq: {
+      name: "Quadrillage — 5 pièces",
+      ratio: 0.75,
+      generate: (Ax, Ay, b) => {
+        // Un seul module : le carreau k = b/4. Le carré b² en fait 4 de côté,
+        // le carré a² en fait 3, celui de l'hypoténuse 5 — c'est le triangle 3-4-5.
+        const k = b / 4;
+        const P = (key, fill, pts) => ({
+          key, fill,
+          points: pts.map(([x, y]) => ({ x: Ax + x * k, y: Ay + y * k }))
+        });
+        return [
+          P("a1", COLORS.green, [[-3,0], [-3,1], [0,1], [0,0]]),
+          P("a2", COLORS.blue, [[-3,3], [0,3], [0,1], [-3,1]]),
+          P("b1", COLORS.magenta, [[0,-2], [1,-2], [1,-3], [3,-3], [3,-4], [0,-4]]),
+          P("b2", COLORS.yellow, [[3,-3], [1,-3], [1,-2], [2,-2], [2,-1], [3,-1], [3,-2], [4,-2], [4,-4], [3,-4]]),
+          P("b3", COLORS.red, [[0,0], [4,0], [4,-2], [3,-2], [3,-1], [2,-1], [2,-2], [0,-2]]),
+        ];
+      }
     }
   };
 
@@ -1348,7 +1436,7 @@
       title: "Puzzle 10 — Puzzle de Brest",
       html: `
         <p><strong>Objectif :</strong> recomposer <em>c²</em> avec <strong>7 pièces</strong> pour le triangle rectangle <strong>3-4-5</strong>.</p>
-        <p class="muted">Les 2 pièces bleues remplissent <em>a²</em> et les 5 rouges <em>b²</em>. Dans <em>c²</em>, reconstitue quatre triangles rectangles autour du petit carré central.</p>
+        <p class="muted">Les 2 pièces rouges remplissent <em>a²</em> et les 5 bleues <em>b²</em>. Dans <em>c²</em>, reconstitue quatre triangles rectangles autour du petit carré central.</p>
       `
     },
     liuHuiSept: {
@@ -2345,7 +2433,14 @@
   <style>
     @page { size: A4 landscape; margin: 7mm; }
     * { box-sizing: border-box; }
-    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin: 0; color: #0f172a; }
+    /* La fiche porte sa propre police : sans cela elle emprunterait celle de
+       la machine qui l'imprime, et les PDF publiés changeraient d'allure selon
+       le poste qui les fabrique. */
+    @font-face { font-family: "FichePoppins"; font-style: normal; font-weight: 400;
+      font-display: swap; src: url("${assetURL("fonts/Poppins-Regular.woff2")}") format("woff2"); }
+    @font-face { font-family: "FichePoppins"; font-style: normal; font-weight: 700;
+      font-display: swap; src: url("${assetURL("fonts/Poppins-Bold.woff2")}") format("woff2"); }
+    body { font-family: "FichePoppins", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin: 0; color: #0f172a; }
     .screenActions { position: sticky; top: 0; z-index: 2; display: flex; justify-content: flex-end; gap: 8px; padding: 10px max(12px, env(safe-area-inset-right)) 10px max(12px, env(safe-area-inset-left)); background: rgba(248,250,252,.96); border-bottom: 1px solid #cbd5e1; }
     .screenActions button { min-height: 42px; padding: 8px 16px; border: 1px solid #2563eb; border-radius: 10px; background: #2563eb; color: #fff; font: 750 15px/1 system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; cursor: pointer; }
     .screenHint { margin: 0; padding: 10px 14px 0; color: #475569; font-size: 13px; }
