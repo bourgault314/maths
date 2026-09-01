@@ -1,6 +1,6 @@
 # Sources et signature des PDF imprimables
 
-Ce document est l'inventaire technique des 36 PDF publics de maths&go.
+Ce document est l'inventaire technique des 47 PDF publics de maths&go.
 
 ## Référence graphique
 
@@ -95,6 +95,33 @@ sur une feuille A4 paysage. Leurs sources sont conservées dans
 vérification exhaustive. La procédure de régénération est décrite dans le
 `README.md` de ce dossier. Une publication ordinaire réutilise les PDF déjà
 validés sans exécuter cette chaîne.
+
+## Fiches imprimées directement depuis un outil
+
+Les onze fiches `plateaux_manipulation/fiches_moulin/moulin-pythagore-<clé>.pdf`
+n'ont pas de mise en page propre : elles sont **imprimées depuis le plateau**
+`plateaux_manipulation/moulin_pythagore.html`, dont le bouton « Fiche »
+fabrique déjà les cinq pages (les deux moulins à découper, le bilan,
+l'application chiffrée, les moulins vides, les mini-moulins). La source de la
+fiche est donc le plateau lui-même, et il n'existe pas de seconde version à
+tenir à jour.
+
+Le script de génération et sa procédure sont dans
+`../_sources/moulin-pythagore/` :
+
+```bash
+node _sources/moulin-pythagore/generer_fiches.mjs
+```
+
+Il écrit aussi les miniatures `assets/img/thumbnails/pythagore/moulin-fiche-*.png`
+(+ `.webp`) et la miniature du catalogue `moulin-fiches-catalogue.png`. La liste
+des découpages est lue dans le menu du plateau, pas recopiée. Ces fiches portent
+la signature `mathsgo.re · CC BY-NC-SA 4.0` et le logo en haut à droite parce que
+le plateau les dessine ainsi.
+
+Les onze PDF ne sont pas déclarés un par un dans le catalogue : ils sont réunis
+par la page `plateaux_manipulation/moulin_pythagore_fiches.html`, seule entrée
+publique, comme le fait déjà `chat/index.html` pour ses cartes.
 
 ## Ressource projetée possédant des sources Python et JSON
 

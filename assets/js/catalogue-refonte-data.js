@@ -885,6 +885,14 @@ window.MATHSGO_CATALOGUE = {
       "thumbnail": "assets/img/thumbnails/moulin-pythagore-capture.svg?v=7",
       "cardDescription": "Déplacer les pièces de puzzles pour visualiser l’égalité des aires du théorème de Pythagore."
     },
+    "outils/plateaux_manipulation/moulin_pythagore_fiches.html": {
+      "primaryNotion": "pythagore",
+      "primaryGroup": "imprimer",
+      "collections": [],
+      "tags": ["pythagore", "puzzle", "aires", "decouper", "imprimable"],
+      "thumbnail": "assets/img/thumbnails/pythagore/moulin-fiches-catalogue.png?v=1",
+      "cardDescription": "Les onze découpages du moulin en fiches A4 à photocopier : moulins à découper, bilan, application et moulins vides."
+    },
     "outils/pythabarre.html": {
       "primaryNotion": "pythagore",
       "primaryGroup": "manipuler",
@@ -4393,6 +4401,41 @@ window.MATHSGO_CATALOGUE = {
       "status": "published",
       "featured": false,
       "recent": false
+    },
+    {
+      "id": "outils-plateaux-manipulation-moulin-pythagore-fiches-html",
+      "title": "Moulin de Pythagore — les fiches à imprimer",
+      "description": "Les onze découpages du Moulin de Pythagore en fiches A4 prêtes à photocopier : les deux moulins à découper, le bilan, une application chiffrée, des moulins vides et des mini-moulins.",
+      "path": "outils/plateaux_manipulation/moulin_pythagore_fiches.html",
+      "domains": [
+        "geometrie"
+      ],
+      "notions": [
+        "pythagore"
+      ],
+      "uses": [
+        "imprimer"
+      ],
+      "types": [
+        "imprimable"
+      ],
+      "filters": [
+        "materiel-imprimer"
+      ],
+      "keywords": [
+        "puzzle de Pythagore",
+        "Périgal",
+        "Bhaskara",
+        "Liu Hui",
+        "tangram",
+        "découpage",
+        "fiche à photocopier",
+        "carré de l’hypoténuse"
+      ],
+      "kind": "tool",
+      "status": "published",
+      "featured": false,
+      "recent": true
     },
     {
       "id": "outils-multiples-et-fractions-d-une-quantite-pdf",
