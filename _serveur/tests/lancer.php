@@ -56,7 +56,7 @@ $port = 8000 + random_int(0, 900);
 $ouvriers = PHP_OS_FAMILY === 'Windows' ? '' : 'PHP_CLI_SERVER_WORKERS=8 ';
 $serveur = proc_open(
     sprintf('%sphp -S 127.0.0.1:%d -t %s', $ouvriers, $port, escapeshellarg($travail)),
-    [1 => ['file', '/dev/null', 'w'], 2 => ['file', $travail . '/serveur.log', 'w']],
+    [1 => ['file', PHP_OS_FAMILY === 'Windows' ? 'NUL' : '/dev/null', 'w'], 2 => ['file', $travail . '/serveur.log', 'w']],
     $tuyaux
 );
 register_shutdown_function(function () use ($serveur, $travail) {
