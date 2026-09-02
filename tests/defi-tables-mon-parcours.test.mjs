@@ -663,7 +663,7 @@ test("l’appli est branchée au suivi de classe sans jamais bloquer", () => {
   assert.match(html, /Ta progression, elle, est enregistrée pour ton professeur\./,
     "la phrase vraie pour un élève suivi doit rester");
   assert.match(html, /id="suivi-repere"/, "le repère de suivi est permanent, dans la barre du haut");
-  assert.match(html, /id="parcours-fusion"/, "la question posée quand du travail sans code existe");
+  assert.doesNotMatch(html, /id="parcours-fusion"/, "plus de question « c'est le tien ? » : ce qui est fait sans code reste sans code (lot 2b)");
 
   // Chaque enregistrement local part aussi au serveur, sans être attendu — et
   // dans la case du code actif.
@@ -674,13 +674,13 @@ test("l’appli est branchée au suivi de classe sans jamais bloquer", () => {
   assert.match(html, /https:\/\/suivi\.mathsgo\.re/);
 });
 
-test("« Non, ce n’est pas le mien » n’efface plus rien : chaque code a sa case", () => {
-  // Depuis le lot A1, un code différent bascule sur SA case ; la seule
-  // question restante porte sur le travail fait SANS code, et « Non » le
-  // laisse là où il est. Plus rien à confirmer, plus rien à perdre.
+test("plus aucune question ni confirmation autour du travail d’un autre : chaque code a sa case", () => {
+  // Depuis le lot A1, un code différent bascule sur SA case ; depuis le lot
+  // 2b, le travail fait sans code (ou sous un ancien code) n'est plus proposé
+  // du tout. Plus rien à confirmer, plus rien à perdre.
   // (Comportement exécuté dans tests/defi-tables-suivi-appareil.test.mjs.)
-  assert.match(html, /Non, ce n’est pas le mien/);
-  assert.doesNotMatch(html, /questionFusion\.confirme/);
+  assert.doesNotMatch(html, /Non, ce n’est pas le mien|Oui, c’est le mien|Est-ce que c’est le tien/);
+  assert.doesNotMatch(html, /questionFusion/);
   assert.doesNotMatch(html, /son travail sera perdu/);
   assert.doesNotMatch(html, /Oui, efface-le/);
 });
