@@ -52,7 +52,7 @@ function ecrire_progression(PDO $pdo, int $eleveId, string $appli, string $donne
         try {
             return ecrire_progression_une_fois($pdo, $eleveId, $appli, $donnees, $base);
         } catch (PDOException $e) {
-            if ($pdo->inTransaction()) $pdo->rollBack();
+            transaction_annuler($pdo);
             if ($tentative >= 3 || !verrou_refuse($e)) throw $e;
             usleep(random_int(20000, 80000));
         }
@@ -70,6 +70,36 @@ function verrou_refuse(PDOException $e): bool
     return (string)$e->getCode() === '40001' || str_contains($message, '1213') || str_contains($message, 'database is locked');
 }
 
+// La transaction, selon le moteur. Sur MySQL, celle de PDO. Sur SQLite,
+// BEGIN IMMEDIATE prend le verrou d'écriture tout de suite (une transaction
+// ordinaire qui passe de lecture à écriture se fait refuser net au lieu
+// d'attendre son tour). Mais PDO ne voit pas ce BEGIN écrit en SQL avant
+// PHP 8.4 : ses commit() et rollBack() répondent « There is no active
+// transaction » — trouvé par la CI, sur PHP 8.2, dès son premier passage.
+// On termine donc la transaction SQLite comme on l'a ouverte : en SQL.
+function transaction_ouvrir(PDO $pdo): void
+{
+    if (pilote($pdo) === 'mysql') $pdo->beginTransaction(); else $pdo->exec('BEGIN IMMEDIATE');
+}
+
+function transaction_valider(PDO $pdo): void
+{
+    if (pilote($pdo) === 'mysql') $pdo->commit(); else $pdo->exec('COMMIT');
+}
+
+function transaction_annuler(PDO $pdo): void
+{
+    if (pilote($pdo) === 'mysql') {
+        if ($pdo->inTransaction()) $pdo->rollBack();
+        return;
+    }
+    try {
+        $pdo->exec('ROLLBACK');
+    } catch (PDOException) {
+        // Aucune transaction ouverte : rien à annuler.
+    }
+}
+
 function ecrire_progression_une_fois(PDO $pdo, int $eleveId, string $appli, string $donnees, int $base): array
 {
     $maj = aujourdhui();
@@ -84,7 +114,7 @@ function ecrire_progression_une_fois(PDO $pdo, int $eleveId, string $appli, stri
         // La ligne existe (peut-être depuis une milliseconde) : mise à jour.
     }
 
-    if ($mysql) $pdo->beginTransaction(); else $pdo->exec('BEGIN IMMEDIATE');
+    transaction_ouvrir($pdo);
     $requete = $pdo->prepare('SELECT id, revision, donnees, maj_le FROM progressions WHERE eleve_id = ? AND appli = ?'
         . ($mysql ? ' FOR UPDATE' : ''));
     $requete->execute([$eleveId, $appli]);
@@ -92,12 +122,12 @@ function ecrire_progression_une_fois(PDO $pdo, int $eleveId, string $appli, stri
     $requete->closeCursor();
     if ($ligne === false) {
         // Supprimée entre-temps : on laisse la boucle réessayer la création.
-        $pdo->rollBack();
+        transaction_annuler($pdo);
         throw new PDOException('database is locked (ligne disparue)', 0);
     }
     $revision = (int)$ligne['revision'];
     if ($base !== $revision) {
-        $pdo->rollBack();
+        transaction_annuler($pdo);
         return ['conflit' => true, 'actuel' => [
             'parcours' => json_decode($ligne['donnees'], false),
             'maj_le' => $ligne['maj_le'],
@@ -107,11 +137,11 @@ function ecrire_progression_une_fois(PDO $pdo, int $eleveId, string $appli, stri
     $requete = $pdo->prepare('UPDATE progressions SET donnees_avant = ?, donnees = ?, revision = ?, maj_le = ? WHERE id = ? AND revision = ?');
     $requete->execute([$ligne['donnees'], $donnees, $revision + 1, $maj, (int)$ligne['id'], $revision]);
     if ($requete->rowCount() !== 1) {
-        $pdo->rollBack();
+        transaction_annuler($pdo);
         $actuel = lire_progression($pdo, $eleveId, $appli);
         return ['conflit' => true, 'actuel' => $actuel ?? ['parcours' => null, 'maj_le' => null, 'revision' => 0]];
     }
-    $pdo->commit();
+    transaction_valider($pdo);
     return ['revision' => $revision + 1, 'maj_le' => $maj];
 }
 

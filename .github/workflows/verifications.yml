@@ -5,6 +5,15 @@
 # scripts/ (lecture seule uniquement — les scripts qui écrivent des fichiers
 # en sont volontairement exclus). Si une étape bloquante échoue, la pull
 # request affiche une croix rouge : ne pas fusionner sans comprendre pourquoi.
+#
+# Trois contrôles, trois coches sur la pull request :
+#   - « verifications »     : le site (tests Node, catalogue, référencement…) ;
+#   - « serveur (SQLite) »  : les tests de bout en bout du serveur de suivi
+#                             (_serveur/tests/lancer.php) sur une base SQLite jetable ;
+#   - « serveur (MySQL) »   : les mêmes tests sur un vrai MySQL 8, comme en
+#                             production (le limiteur et les verrous y prennent
+#                             un autre chemin que sur SQLite).
+# Les tests serveur tournent sur PHP 8.2, la version de la production.
 
 name: Vérifications
 
@@ -55,3 +64,118 @@ jobs:
       - name: Audit mobile (informatif, ne bloque pas)
         run: node scripts/audit-mobile.mjs
         continue-on-error: true
+
+  # Le serveur de suivi : les 110 tests de bout en bout (un vrai serveur PHP est
+  # lancé sur une copie de _serveur/public/, puis interrogé comme le ferait
+  # l'appli). D'abord sur SQLite, la base par défaut de lancer.php.
+  serveur-sqlite:
+    name: serveur (SQLite)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Récupérer le dépôt
+        uses: actions/checkout@v4
+
+      - name: Installer PHP 8.2 (version de la production)
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.2"
+          extensions: curl, mbstring, ctype, pdo_sqlite, pdo_mysql
+          coverage: none
+          tools: none
+
+      - name: Tests du serveur sur SQLite
+        run: php _serveur/tests/lancer.php
+
+      # En cas d'échec, lancer.php garde le journal du serveur de test : c'est lui
+      # qui dit pourquoi une requête a répondu 500. On affiche ses lignes d'erreur
+      # et on le joint en entier à l'exécution (onglet « Artifacts »).
+      - name: Journal du serveur de test (seulement en cas d'échec)
+        if: failure()
+        run: |
+          if [ -f /tmp/suivi-test-serveur.log ]; then
+            lignes=$(grep -iE "PHP (Fatal|Warning|Parse|Notice|Deprecated)|\[500\]|exception" /tmp/suivi-test-serveur.log | head -200 || true)
+            if [ -n "$lignes" ]; then
+              echo "Lignes d'erreur du serveur de test (500, PHP Fatal/Warning...) :"
+              echo "$lignes"
+            else
+              echo "(aucune erreur serveur : les échecs sont des réponses différentes de celles attendues)"
+            fi
+          else
+            echo "(pas de journal : lancer.php n'a pas démarré, ou a échoué avant de lancer le serveur)"
+          fi
+      - name: Joindre le journal complet (seulement en cas d'échec)
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: journal-serveur-de-test-sqlite
+          path: /tmp/suivi-test-serveur.log
+          if-no-files-found: ignore
+
+  # Les mêmes tests sur MySQL 8, comme en production. GitHub démarre un MySQL
+  # jetable à côté de la machine de test ; ses identifiants ne servent qu'ici
+  # et la base est vidée au début de chaque passage par lancer.php.
+  serveur-mysql:
+    name: serveur (MySQL)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    services:
+      mysql:
+        image: mysql:8.4
+        env:
+          MYSQL_DATABASE: suivi_test
+          MYSQL_USER: suivi
+          MYSQL_PASSWORD: suivi-test-ci
+          MYSQL_ROOT_PASSWORD: root-test-ci
+        ports:
+          - 3306:3306
+        # Attendre que MySQL réponde sur le réseau (pendant son initialisation,
+        # il n'écoute que sur un socket local : le ping TCP échoue, c'est voulu).
+        options: >-
+          --health-cmd "mysqladmin ping -h 127.0.0.1 --silent"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+    steps:
+      - name: Récupérer le dépôt
+        uses: actions/checkout@v4
+
+      - name: Installer PHP 8.2 (version de la production)
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.2"
+          extensions: curl, mbstring, ctype, pdo_sqlite, pdo_mysql
+          coverage: none
+          tools: none
+
+      - name: Tests du serveur sur MySQL
+        env:
+          SUIVI_TEST_DSN: "mysql:host=127.0.0.1;port=3306;dbname=suivi_test;charset=utf8mb4"
+          SUIVI_TEST_UTILISATEUR: suivi
+          SUIVI_TEST_MOTDEPASSE: suivi-test-ci
+        run: php _serveur/tests/lancer.php
+
+      # En cas d'échec, lancer.php garde le journal du serveur de test : c'est lui
+      # qui dit pourquoi une requête a répondu 500. On affiche ses lignes d'erreur
+      # et on le joint en entier à l'exécution (onglet « Artifacts »).
+      - name: Journal du serveur de test (seulement en cas d'échec)
+        if: failure()
+        run: |
+          if [ -f /tmp/suivi-test-serveur.log ]; then
+            lignes=$(grep -iE "PHP (Fatal|Warning|Parse|Notice|Deprecated)|\[500\]|exception" /tmp/suivi-test-serveur.log | head -200 || true)
+            if [ -n "$lignes" ]; then
+              echo "Lignes d'erreur du serveur de test (500, PHP Fatal/Warning...) :"
+              echo "$lignes"
+            else
+              echo "(aucune erreur serveur : les échecs sont des réponses différentes de celles attendues)"
+            fi
+          else
+            echo "(pas de journal : lancer.php n'a pas démarré, ou a échoué avant de lancer le serveur)"
+          fi
+      - name: Joindre le journal complet (seulement en cas d'échec)
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: journal-serveur-de-test-mysql
+          path: /tmp/suivi-test-serveur.log
+          if-no-files-found: ignore
