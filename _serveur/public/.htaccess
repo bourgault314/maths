@@ -1,3 +1,21 @@
+# Lot 4 (02/09/2026) : tout passe en HTTPS, et config.php n'est jamais servi.
+#
+# Deux conditions CUMULEES pour la redirection : chez OVH, TLS peut etre
+# termine sur l'equilibreur (X-Forwarded-Proto) ou sur Apache (%{HTTPS}).
+# Avec une seule des deux, on risque une boucle de redirection infinie.
+# On ne redirige que si NI l'une NI l'autre ne dit « deja en HTTPS ».
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteCond %{HTTPS} !=on
+  RewriteCond %{HTTP:X-Forwarded-Proto} !=https
+  RewriteRule ^ https://suivi.mathsgo.re%{REQUEST_URI} [R=301,L]
+</IfModule>
+
+# Le mot de passe MySQL n'a jamais a sortir par HTTP, meme si PHP tombait.
+<Files "config.php">
+  Require all denied
+</Files>
+
 # Le serveur de suivi n'expose que ses points d'entrée.
 <FilesMatch "\.(md|sql|log|exemple\.php)$">
   Require all denied
