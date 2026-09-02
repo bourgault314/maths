@@ -207,6 +207,7 @@ try {
             $lignes = $pdo->query(
                 'SELECT p.id, p.identifiant, p.admin, p.actif, p.mdp_temporaire, p.cree_le,
                         (SELECT COUNT(*) FROM classes c WHERE c.prof_id = p.id) AS classes,
+                        (SELECT COUNT(*) FROM eleves e WHERE e.classe_id IN (SELECT c2.id FROM classes c2 WHERE c2.prof_id = p.id)) AS eleves,
                         (SELECT COUNT(*) FROM partages g WHERE g.prof_id = p.id) AS partagees
                  FROM profs p ORDER BY p.identifiant'
             )->fetchAll();
@@ -219,6 +220,7 @@ try {
                     'actif' => (int)$ligne['actif'] === 1,
                     'mdp_temporaire' => (int)$ligne['mdp_temporaire'] === 1,
                     'classes' => (int)$ligne['classes'],
+                    'eleves' => (int)$ligne['eleves'],
                     'partagees' => (int)$ligne['partagees'],
                     'cree_le' => $ligne['cree_le'],
                 ];
@@ -227,17 +229,28 @@ try {
 
         case 'profs.ajouter':
             exiger_admin($prof);
+            // L'administrateur ne choisit pas le mot de passe du collègue : le
+            // serveur en tire un temporaire, rendu ici une seule fois, que le
+            // collègue remplacera à sa première connexion.
             try {
-                $nouveau = creer_prof(
-                    $pdo,
-                    (string)($corps['identifiant'] ?? ''),
-                    (string)($corps['motdepasse'] ?? ''),
-                    false
-                );
+                $nouveau = creer_prof_temporaire($pdo, (string)($corps['identifiant'] ?? ''));
             } catch (InvalidArgumentException $e) {
                 erreur($e->getMessage(), 400);
             }
-            repondre(['ok' => true, 'id' => $nouveau]);
+            repondre(['ok' => true] + $nouveau);
+
+        case 'profs.supprimer':
+            exiger_admin($prof);
+            $autre = autre_prof($pdo, $prof, $corps['prof_id'] ?? 0);
+            $possessions = possessions_du_prof($pdo, $autre['id']);
+            // Un compte qui possède des classes n'est supprimé qu'avec un
+            // « oui » explicite pour elles : tout part, classes, codes,
+            // progressions. La page le demande en montrant les nombres.
+            if ($possessions['classes'] > 0 && empty($corps['avec_classes'])) {
+                erreur("Ce compte possède {$possessions['classes']} classe(s) et {$possessions['eleves']} élève(s) : confirme leur suppression.", 409);
+            }
+            supprimer_prof($pdo, $autre['id']);
+            repondre(['ok' => true] + $possessions);
 
         // ------------------------------------------------------------------ classes
 

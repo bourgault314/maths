@@ -3,6 +3,9 @@
 
 declare(strict_types=1);
 
+// Pour oublier_compteurs_du_code() à la suppression d'un compte.
+require_once __DIR__ . '/limite.php';
+
 const DUREE_SESSION_HEURES = 12;
 // Les comptes sont hachés en bcrypt à coût fixe : le coût par défaut de PHP
 // change d'une version à l'autre (10 en 8.2, 12 en 8.4) et le hachage de
@@ -12,23 +15,58 @@ const COUT_BCRYPT = 10;
 // ne lui correspond, mais password_verify() met le même temps à le dire.
 const HASH_DE_REMPLACEMENT = '$2y$10$W34TaICveBz/iuy8Y4cjmui7TjnGnYY.R5iJ2W4MVC58NYV..KEEO';
 
-function creer_prof(PDO $pdo, string $identifiant, string $motdepasse, bool $admin = false): int
+// Ce qu'on demande à un mot de passe : la LONGUEUR (12 caractères au moins),
+// pas des majuscules ou des symboles imposés — c'est la recommandation actuelle
+// (ANSSI, NIST) : une phrase longue vaut mieux qu'un « P@ssw0rd! » ; et le
+// serveur freine à 12 essais par 10 minutes, ce qui rend la devinette en ligne
+// impossible. Deux refus de bon sens seulement : rien que des chiffres (une
+// date, un téléphone) et l'identifiant dedans. Renvoie le reproche, ou null.
+function motdepasse_refuse(string $motdepasse, string $identifiant): ?string
+{
+    if (strlen($motdepasse) < 12) {
+        return "Le mot de passe doit faire au moins 12 caractères.";
+    }
+    if (ctype_digit($motdepasse)) {
+        return "Un mot de passe fait seulement de chiffres (date, téléphone…) est trop facile à deviner.";
+    }
+    $identifiant = trim($identifiant);
+    if ($identifiant !== '' && mb_strlen($identifiant) >= 3 && mb_stripos($motdepasse, $identifiant) !== false) {
+        return "Le mot de passe ne doit pas contenir l'identifiant.";
+    }
+    return null;
+}
+
+function creer_prof(PDO $pdo, string $identifiant, string $motdepasse, bool $admin = false, bool $temporaire = false): int
 {
     $identifiant = trim($identifiant);
     if ($identifiant === '' || mb_strlen($identifiant) > 40) {
         throw new InvalidArgumentException("Identifiant invalide.");
     }
-    if (strlen($motdepasse) < 12) {
-        throw new InvalidArgumentException("Le mot de passe doit faire au moins 12 caractères.");
+    if (($reproche = motdepasse_refuse($motdepasse, $identifiant)) !== null) {
+        throw new InvalidArgumentException($reproche);
     }
     $existe = $pdo->prepare('SELECT id FROM profs WHERE identifiant = ?');
     $existe->execute([$identifiant]);
     if ($existe->fetchColumn() !== false) {
         throw new InvalidArgumentException("Cet identifiant est déjà pris.");
     }
-    $pdo->prepare('INSERT INTO profs (identifiant, mdp_hash, admin, cree_le) VALUES (?, ?, ?, ?)')
-        ->execute([$identifiant, hacher_motdepasse($motdepasse), $admin ? 1 : 0, maintenant()]);
+    $pdo->prepare('INSERT INTO profs (identifiant, mdp_hash, admin, mdp_temporaire, cree_le) VALUES (?, ?, ?, ?, ?)')
+        ->execute([$identifiant, hacher_motdepasse($motdepasse), $admin ? 1 : 0, $temporaire ? 1 : 0, maintenant()]);
     return (int)$pdo->lastInsertId();
+}
+
+// Un compte pour un collègue : l'administrateur ne choisit pas son mot de
+// passe — le serveur en tire un temporaire, rendu une seule fois, que le
+// collègue remplace à sa première connexion. L'administrateur ne connaît donc
+// jamais le vrai mot de passe de personne.
+function creer_prof_temporaire(PDO $pdo, string $identifiant): array
+{
+    // Retiré si, par hasard, il contenait l'identifiant.
+    do {
+        $temporaire = motdepasse_temporaire();
+    } while (motdepasse_refuse($temporaire, $identifiant) !== null);
+    $id = creer_prof($pdo, $identifiant, $temporaire, false, true);
+    return ['id' => $id, 'motdepasse' => $temporaire];
 }
 
 function hacher_motdepasse(string $motdepasse): string
@@ -83,14 +121,14 @@ function ouvrir_session(PDO $pdo, string $identifiant, string $motdepasse): ?arr
 // de l'être.
 function changer_motdepasse(PDO $pdo, int $profId, string $jetonCourant, string $ancien, string $nouveau): void
 {
-    $requete = $pdo->prepare('SELECT mdp_hash FROM profs WHERE id = ?');
+    $requete = $pdo->prepare('SELECT mdp_hash, identifiant FROM profs WHERE id = ?');
     $requete->execute([$profId]);
-    $hash = $requete->fetchColumn();
-    if ($hash === false || !password_verify($ancien, (string)$hash)) {
+    $prof = $requete->fetch();
+    if ($prof === false || !password_verify($ancien, (string)$prof['mdp_hash'])) {
         throw new InvalidArgumentException("L'ancien mot de passe est incorrect.");
     }
-    if (strlen($nouveau) < 12) {
-        throw new InvalidArgumentException("Le nouveau mot de passe doit faire au moins 12 caractères.");
+    if (($reproche = motdepasse_refuse($nouveau, (string)$prof['identifiant'])) !== null) {
+        throw new InvalidArgumentException($reproche);
     }
     if ($nouveau === $ancien) {
         throw new InvalidArgumentException("Le nouveau mot de passe doit être différent de l'ancien.");
@@ -117,6 +155,47 @@ function reinitialiser_motdepasse(PDO $pdo, int $profId): string
 function fermer_sessions_du_prof(PDO $pdo, int $profId): void
 {
     $pdo->prepare('DELETE FROM sessions_prof WHERE prof_id = ?')->execute([$profId]);
+}
+
+// Ce qu'un compte possède : ses classes et les élèves qu'elles contiennent.
+function possessions_du_prof(PDO $pdo, int $profId): array
+{
+    $classes = $pdo->prepare('SELECT COUNT(*) FROM classes WHERE prof_id = ?');
+    $classes->execute([$profId]);
+    $eleves = $pdo->prepare('SELECT COUNT(*) FROM eleves WHERE classe_id IN (SELECT id FROM classes WHERE prof_id = ?)');
+    $eleves->execute([$profId]);
+    return ['classes' => (int)$classes->fetchColumn(), 'eleves' => (int)$eleves->fetchColumn()];
+}
+
+// Supprimer un compte, tout ou rien : ses sessions, les partages qu'il a reçus,
+// et — s'il en possède — ses classes avec leurs élèves, leurs progressions,
+// leurs partages et leurs compteurs. Rien d'orphelin ne reste.
+function supprimer_prof(PDO $pdo, int $profId): void
+{
+    $pdo->beginTransaction();
+    try {
+        $requete = $pdo->prepare('SELECT id FROM classes WHERE prof_id = ?');
+        $requete->execute([$profId]);
+        foreach ($requete->fetchAll() as $classe) {
+            $classeId = (int)$classe['id'];
+            $elevesDeLaClasse = $pdo->prepare('SELECT id, code FROM eleves WHERE classe_id = ?');
+            $elevesDeLaClasse->execute([$classeId]);
+            foreach ($elevesDeLaClasse->fetchAll() as $eleve) {
+                $pdo->prepare('DELETE FROM progressions WHERE eleve_id = ?')->execute([(int)$eleve['id']]);
+                oublier_compteurs_du_code($pdo, (string)$eleve['code']);
+            }
+            $pdo->prepare('DELETE FROM eleves WHERE classe_id = ?')->execute([$classeId]);
+            $pdo->prepare('DELETE FROM partages WHERE classe_id = ?')->execute([$classeId]);
+            $pdo->prepare('DELETE FROM classes WHERE id = ?')->execute([$classeId]);
+        }
+        $pdo->prepare('DELETE FROM partages WHERE prof_id = ?')->execute([$profId]);
+        $pdo->prepare('DELETE FROM sessions_prof WHERE prof_id = ?')->execute([$profId]);
+        $pdo->prepare('DELETE FROM profs WHERE id = ?')->execute([$profId]);
+        $pdo->commit();
+    } catch (Throwable $e) {
+        if ($pdo->inTransaction()) $pdo->rollBack();
+        throw $e;
+    }
 }
 
 function prof_de_session(PDO $pdo, string $jeton): ?int

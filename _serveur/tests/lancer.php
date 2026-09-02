@@ -589,14 +589,25 @@ $classeDeGwenael = null;
 $eleveDeGwenael = null;
 $classeDeClaire = null;
 
-verifier("le compte administrateur crée un deuxième professeur", function () use (&$jeton, &$jetonClaire) {
+verifier("le compte administrateur crée un deuxième professeur : mot de passe temporaire tiré par le serveur, à changer d'abord", function () use (&$jeton, &$jetonClaire) {
+    // Lot S2b : l'administrateur ne choisit plus le mot de passe du collègue.
     $r = appel('/api/prof.php', ['action' => 'profs.ajouter', 'identifiant' => 'claire',
-        'motdepasse' => 'motdepasse-de-claire-2026'], ['jeton' => $jeton]);
+        'motdepasse' => 'ceci-est-ignore-par-le-serveur'], ['jeton' => $jeton]);
     egal(200, $r['code'], 'code HTTP');
-    $r = appel('/api/prof.php', ['action' => 'connexion', 'identifiant' => 'claire',
-        'motdepasse' => 'motdepasse-de-claire-2026']);
-    egal(200, $r['code'], 'la nouvelle prof doit pouvoir se connecter');
+    $temporaire = $r['json']['motdepasse'] ?? '';
+    vrai((bool)preg_match('/^[a-z2-9]{4}-[a-z2-9]{4}-[a-z2-9]{4}$/', $temporaire), "un temporaire lisible est renvoyé ($temporaire)");
+    egal(401, appel('/api/prof.php', ['action' => 'connexion', 'identifiant' => 'claire',
+        'motdepasse' => 'ceci-est-ignore-par-le-serveur'])['code'], 'le mot de passe envoyé par l’administrateur ne vaut rien');
+    $r = appel('/api/prof.php', ['action' => 'connexion', 'identifiant' => 'claire', 'motdepasse' => $temporaire]);
+    egal(200, $r['code'], 'la nouvelle prof se connecte avec le temporaire');
+    egal(true, $r['json']['mdp_temporaire'], 'et doit le changer');
     $jetonClaire = $r['json']['jeton'];
+    egal(403, appel('/api/prof.php', ['action' => 'classes.liste'], ['jeton' => $jetonClaire])['code'], 'rien d’autre avant');
+    egal(200, appel('/api/prof.php', ['action' => 'profs.motdepasse', 'ancien' => $temporaire,
+        'nouveau' => 'mdp-collegue-2026-secret'], ['jeton' => $jetonClaire])['code'], 'elle choisit le sien');
+    egal(401, appel('/api/prof.php', ['action' => 'connexion', 'identifiant' => 'claire', 'motdepasse' => $temporaire])['code'], 'le temporaire est mort');
+    egal(200, appel('/api/prof.php', ['action' => 'connexion', 'identifiant' => 'claire',
+        'motdepasse' => 'mdp-collegue-2026-secret'])['code'], 'le sien passe');
 });
 
 verifier("le premier compte est administrateur, pas le second", function () use (&$jeton, &$jetonClaire) {
@@ -626,10 +637,9 @@ verifier("un identifiant déjà pris est refusé", function () use (&$jeton) {
     egal(400, $r['code'], 'code HTTP');
 });
 
-verifier("un mot de passe trop court est refusé", function () use (&$jeton) {
-    $r = appel('/api/prof.php', ['action' => 'profs.ajouter', 'identifiant' => 'court',
-        'motdepasse' => 'court'], ['jeton' => $jeton]);
-    egal(400, $r['code'], 'code HTTP');
+verifier("un identifiant vide ou trop long est refusé", function () use (&$jeton) {
+    egal(400, appel('/api/prof.php', ['action' => 'profs.ajouter', 'identifiant' => '  '], ['jeton' => $jeton])['code'], 'vide');
+    egal(400, appel('/api/prof.php', ['action' => 'profs.ajouter', 'identifiant' => str_repeat('x', 41)], ['jeton' => $jeton])['code'], 'trop long');
 });
 
 verifier("chacun ne voit que ses propres classes", function () use (&$jeton, &$jetonClaire, &$classeDeGwenael, &$classeDeClaire, &$eleveDeGwenael) {
@@ -1291,21 +1301,43 @@ verifier("changer son mot de passe : l'ancien doit être le bon, le nouveau long
     $mauvais = appel('/api/prof.php', ['action' => 'profs.motdepasse', 'ancien' => 'pas-le-bon-du-tout', 'nouveau' => 'un-nouveau-mot-de-passe-2026'], ['jeton' => $jetonClaire]);
     egal(400, $mauvais['code'], 'ancien incorrect');
     vrai(str_contains($mauvais['json']['erreur'], 'ancien'), 'le message le dit');
-    egal(400, appel('/api/prof.php', ['action' => 'profs.motdepasse', 'ancien' => 'motdepasse-de-claire-2026', 'nouveau' => 'court'], ['jeton' => $jetonClaire])['code'], 'trop court');
-    egal(400, appel('/api/prof.php', ['action' => 'profs.motdepasse', 'ancien' => 'motdepasse-de-claire-2026', 'nouveau' => 'motdepasse-de-claire-2026'], ['jeton' => $jetonClaire])['code'], 'identique à l’ancien');
-    egal(200, connexion('claire', 'motdepasse-de-claire-2026')['code'], 'rien n’a changé : l’ancien mot de passe marche encore');
+    egal(400, appel('/api/prof.php', ['action' => 'profs.motdepasse', 'ancien' => 'mdp-collegue-2026-secret', 'nouveau' => 'court'], ['jeton' => $jetonClaire])['code'], 'trop court');
+    egal(400, appel('/api/prof.php', ['action' => 'profs.motdepasse', 'ancien' => 'mdp-collegue-2026-secret', 'nouveau' => 'mdp-collegue-2026-secret'], ['jeton' => $jetonClaire])['code'], 'identique à l’ancien');
+    egal(200, connexion('claire', 'mdp-collegue-2026-secret')['code'], 'rien n’a changé : l’ancien mot de passe marche encore');
+});
+
+verifier("les règles du mot de passe : la longueur, pas la composition ; ni chiffres seuls, ni l'identifiant dedans", function () use (&$jetonClaire) {
+    $essai = fn(string $nouveau) => appel('/api/prof.php', ['action' => 'profs.motdepasse', 'ancien' => 'mdp-collegue-2026-secret', 'nouveau' => $nouveau], ['jeton' => $jetonClaire]);
+    $r = $essai('199012251980');
+    egal(400, $r['code'], 'douze chiffres (une date) : refusé');
+    vrai(str_contains($r['json']['erreur'], 'chiffres'), 'le message le dit');
+    $r = $essai('Claire-au-college-2026');
+    egal(400, $r['code'], 'contient l’identifiant (même en majuscule) : refusé');
+    vrai(str_contains($r['json']['erreur'], 'identifiant'), 'le message le dit');
+    egal(400, $essai('onze-lettre')['code'], 'onze caractères : refusé');
+    // Rien d'autre n'est imposé : une phrase en minuscules avec des espaces passe.
+    egal(200, $essai('les tables de sept en chantant')['code'], 'une phrase longue en minuscules passe');
+    egal(200, connexion('claire', 'les tables de sept en chantant')['code'], 'et ouvre une session');
+    // Retour au mot de passe des tests suivants.
+    egal(200, appel('/api/prof.php', ['action' => 'profs.motdepasse', 'ancien' => 'les tables de sept en chantant', 'nouveau' => 'mdp-collegue-2026-secret'], ['jeton' => $jetonClaire])['code'], 'retour');
+    // installer.php applique les mêmes règles au premier compte.
+    require_once dirname(__DIR__) . '/public/lib/auth.php';
+    vrai(motdepasse_refuse('123456789012', 'gwenael') !== null, 'chiffres seuls (installateur)');
+    vrai(motdepasse_refuse('gwenael-est-la-2026', 'gwenael') !== null, 'identifiant dedans (installateur)');
+    egal(null, motdepasse_refuse('douze lettres', 'gwenael'), 'douze caractères simples : accepté');
+    egal(null, motdepasse_refuse('ab-est-dedans-mais-court', 'ab'), 'un identifiant de deux lettres ne compte pas');
 });
 
 verifier("changer son mot de passe ferme les AUTRES sessions, garde celle-ci, et l'ancien mot de passe ne marche plus", function () use (&$jetonClaire, &$jetonClaire2) {
     vider_compteurs();
-    $jetonClaire2 = connexion('claire', 'motdepasse-de-claire-2026')['json']['jeton'];
+    $jetonClaire2 = connexion('claire', 'mdp-collegue-2026-secret')['json']['jeton'];
     egal(200, appel('/api/prof.php', ['action' => 'moi'], ['jeton' => $jetonClaire2])['code'], 'deuxième appareil connecté');
-    $r = appel('/api/prof.php', ['action' => 'profs.motdepasse', 'ancien' => 'motdepasse-de-claire-2026', 'nouveau' => 'nouveau-mot-de-claire-2026'], ['jeton' => $jetonClaire]);
+    $r = appel('/api/prof.php', ['action' => 'profs.motdepasse', 'ancien' => 'mdp-collegue-2026-secret', 'nouveau' => 'nouveau-mdp-collegue-2026'], ['jeton' => $jetonClaire]);
     egal(200, $r['code'], 'changement');
     egal(401, appel('/api/prof.php', ['action' => 'moi'], ['jeton' => $jetonClaire2])['code'], 'l’autre appareil est déconnecté');
     egal(200, appel('/api/prof.php', ['action' => 'moi'], ['jeton' => $jetonClaire])['code'], 'celui qui a changé reste connecté');
-    egal(401, connexion('claire', 'motdepasse-de-claire-2026')['code'], 'l’ancien mot de passe est refusé');
-    $r = connexion('claire', 'nouveau-mot-de-claire-2026');
+    egal(401, connexion('claire', 'mdp-collegue-2026-secret')['code'], 'l’ancien mot de passe est refusé');
+    $r = connexion('claire', 'nouveau-mdp-collegue-2026');
     egal(200, $r['code'], 'le nouveau passe');
     egal(false, $r['json']['mdp_temporaire'], 'et il n’est pas temporaire');
     // Le hachage en base est un bcrypt au coût des comptes, pas un mot de passe en clair.
@@ -1322,7 +1354,7 @@ verifier("douze essais d'ancien mot de passe par compte, puis 429 : une session 
     egal(12, count(array_keys($statuts, 400, true)), 'douze refus ordinaires');
     egal(429, $statuts[12], 'le treizième est freiné');
     vider_compteurs();
-    egal(200, connexion('claire', 'nouveau-mot-de-claire-2026')['code'], 'le mot de passe n’a pas bougé');
+    egal(200, connexion('claire', 'nouveau-mdp-collegue-2026')['code'], 'le mot de passe n’a pas bougé');
 });
 
 // --------------------------------------------- réinitialisation par l'administrateur
@@ -1360,7 +1392,7 @@ verifier("réinitialiser donne un mot de passe temporaire lisible, ferme ses ses
 
 verifier("avec un mot de passe temporaire : connexion possible, mais rien d'autre que le changer", function () use (&$jetonClaire, &$temporaire, &$classeDeClaire) {
     vider_compteurs();
-    egal(401, connexion('claire', 'nouveau-mot-de-claire-2026')['code'], 'l’ancien mot de passe ne marche plus');
+    egal(401, connexion('claire', 'nouveau-mdp-collegue-2026')['code'], 'l’ancien mot de passe ne marche plus');
     $r = connexion('claire', $temporaire);
     egal(200, $r['code'], 'le temporaire ouvre une session');
     egal(true, $r['json']['mdp_temporaire'], 'et la réponse dit qu’il est temporaire');
@@ -1372,11 +1404,11 @@ verifier("avec un mot de passe temporaire : connexion possible, mais rien d'autr
     egal(403, appel('/api/prof.php', ['action' => 'tableau', 'classe_id' => $classeDeClaire], ['jeton' => $jetonClaire])['code'], 'ni le tableau');
     egal(403, appel('/api/prof.php', ['action' => 'classes.creer', 'libelle' => 'x'], ['jeton' => $jetonClaire])['code'], 'ni créer');
     // Le changement passe, et lève la contrainte.
-    egal(200, appel('/api/prof.php', ['action' => 'profs.motdepasse', 'ancien' => $temporaire, 'nouveau' => 'mot-de-claire-definitif-2026'], ['jeton' => $jetonClaire])['code'], 'changement');
+    egal(200, appel('/api/prof.php', ['action' => 'profs.motdepasse', 'ancien' => $temporaire, 'nouveau' => 'mdp-collegue-definitif-2026'], ['jeton' => $jetonClaire])['code'], 'changement');
     egal(false, appel('/api/prof.php', ['action' => 'moi'], ['jeton' => $jetonClaire])['json']['mdp_temporaire'], 'plus temporaire');
     egal(200, appel('/api/prof.php', ['action' => 'classes.liste'], ['jeton' => $jetonClaire])['code'], 'ses classes reviennent');
     egal(401, connexion('claire', $temporaire)['code'], 'le temporaire ne marche plus');
-    egal(200, connexion('claire', 'mot-de-claire-definitif-2026')['code'], 'le définitif oui');
+    egal(200, connexion('claire', 'mdp-collegue-definitif-2026')['code'], 'le définitif oui');
 });
 
 // ------------------------------------------------------------- désactiver un compte
@@ -1396,7 +1428,7 @@ verifier("désactiver ferme ses sessions et refuse la connexion avec le MÊME me
     egal(200, appel('/api/prof.php', ['action' => 'profs.desactiver', 'prof_id' => $claireId], ['jeton' => $jetonS1])['code'], 'désactivation');
     egal(401, appel('/api/prof.php', ['action' => 'moi'], ['jeton' => $jetonClaire])['code'], 'sa session est fermée');
     egal(0, (int)bd_test()->query("SELECT COUNT(*) FROM sessions_prof WHERE prof_id = $claireId")->fetchColumn(), 'et supprimée de la base, pas seulement refusée');
-    $refusDesactive = connexion('claire', 'mot-de-claire-definitif-2026');
+    $refusDesactive = connexion('claire', 'mdp-collegue-definitif-2026');
     $refusMauvais = connexion('claire', 'un-mauvais-mot-de-passe');
     $refusInconnu = connexion('personne', 'un-mauvais-mot-de-passe');
     egal(401, $refusDesactive['code'], 'connexion refusée');
@@ -1415,7 +1447,7 @@ verifier("désactiver ferme ses sessions et refuse la connexion avec le MÊME me
     $mienne = appel('/api/prof.php', ['action' => 'classes.liste'], ['jeton' => $jetonS1])['json']['classes'][0]['id'];
     egal(404, appel('/api/prof.php', ['action' => 'partages.ajouter', 'classe_id' => $mienne, 'prof_id' => $claireId, 'droit' => 'lecture'], ['jeton' => $jetonS1])['code'], 'on ne partage pas avec un compte désactivé');
     // Un temps de refus comparable : le hachage est calculé avant de regarder « actif ».
-    $debut = hrtime(true); connexion('claire', 'mot-de-claire-definitif-2026'); $tDesactive = (hrtime(true) - $debut) / 1e6;
+    $debut = hrtime(true); connexion('claire', 'mdp-collegue-definitif-2026'); $tDesactive = (hrtime(true) - $debut) / 1e6;
     $debut = hrtime(true); connexion('gwenael', 'un-mauvais-mot-de-passe'); $tMauvais = (hrtime(true) - $debut) / 1e6;
     vrai(abs($tDesactive - $tMauvais) < max(60, 0.5 * max($tDesactive, $tMauvais)), sprintf('temps de refus comparables (%.0f ms contre %.0f ms)', $tDesactive, $tMauvais));
     $r = formulaire('/verifier.php', ['jeton' => 'JETON-DE-TEST']);
@@ -1426,7 +1458,7 @@ verifier("réactiver : la connexion et ses classes reviennent, ses partages auss
     vider_compteurs();
     egal(401, appel('/api/prof.php', ['action' => 'profs.reactiver', 'prof_id' => $claireId], ['jeton' => str_repeat('a', 64)])['code'], 'sans session : refusé');
     egal(200, appel('/api/prof.php', ['action' => 'profs.reactiver', 'prof_id' => $claireId], ['jeton' => $jetonS1])['code'], 'réactivation');
-    $r = connexion('claire', 'mot-de-claire-definitif-2026');
+    $r = connexion('claire', 'mdp-collegue-definitif-2026');
     egal(200, $r['code'], 'elle se reconnecte avec son mot de passe');
     $jetonClaire = $r['json']['jeton'];
     $siennes = appel('/api/prof.php', ['action' => 'classes.liste'], ['jeton' => $jetonClaire])['json']['classes'];
@@ -1442,8 +1474,92 @@ verifier("un compte désactivé pendant qu'une session est ouverte est refusé a
     bd_test()->exec("UPDATE profs SET actif = 0 WHERE id = $claireId");
     egal(401, appel('/api/prof.php', ['action' => 'moi'], ['jeton' => $jetonClaire])['code'], 'session refusée');
     bd_test()->exec("UPDATE profs SET actif = 1 WHERE id = $claireId");
-    $jetonClaire = connexion('claire', 'mot-de-claire-definitif-2026')['json']['jeton'];
+    $jetonClaire = connexion('claire', 'mdp-collegue-definitif-2026')['json']['jeton'];
     egal(200, appel('/api/prof.php', ['action' => 'moi'], ['jeton' => $jetonClaire])['code'], 'reconnectée');
+});
+
+// ------------------------------------------------------------- supprimer un compte
+
+verifier("supprimer un compte : administrateur seulement, jamais soi-même ; sans classes, tout part proprement", function () use (&$jetonS1, &$jetonClaire) {
+    vider_compteurs();
+    $cree = appel('/api/prof.php', ['action' => 'profs.ajouter', 'identifiant' => 'essai'], ['jeton' => $jetonS1])['json'];
+    $essaiId = (int)$cree['id'];
+    $sessionEssai = connexion('essai', $cree['motdepasse'])['json']['jeton'];
+    $moi = null;
+    foreach (appel('/api/prof.php', ['action' => 'profs.liste'], ['jeton' => $jetonS1])['json']['profs'] as $p) if ($p['identifiant'] === 'gwenael') $moi = $p['id'];
+    egal(403, appel('/api/prof.php', ['action' => 'profs.supprimer', 'prof_id' => $essaiId], ['jeton' => $jetonClaire])['code'], 'Claire ne peut pas');
+    egal(400, appel('/api/prof.php', ['action' => 'profs.supprimer', 'prof_id' => $moi], ['jeton' => $jetonS1])['code'], 'pas soi-même');
+    egal(404, appel('/api/prof.php', ['action' => 'profs.supprimer', 'prof_id' => 999999], ['jeton' => $jetonS1])['code'], 'compte inconnu');
+    $r = appel('/api/prof.php', ['action' => 'profs.supprimer', 'prof_id' => $essaiId], ['jeton' => $jetonS1]);
+    egal(200, $r['code'], 'suppression');
+    egal(0, $r['json']['classes'], 'aucune classe emportée');
+    egal(401, appel('/api/prof.php', ['action' => 'moi'], ['jeton' => $sessionEssai])['code'], 'sa session est morte');
+    egal(401, connexion('essai', $cree['motdepasse'])['code'], 'il ne se connecte plus');
+    $reste = array_column(appel('/api/prof.php', ['action' => 'profs.liste'], ['jeton' => $jetonS1])['json']['profs'], 'identifiant');
+    vrai(!in_array('essai', $reste, true), 'disparu de la liste');
+    egal(0, (int)bd_test()->query("SELECT COUNT(*) FROM sessions_prof WHERE prof_id = $essaiId")->fetchColumn(), 'plus de session en base');
+    egal(0, (int)bd_test()->query("SELECT COUNT(*) FROM profs WHERE identifiant = 'essai'")->fetchColumn(), 'plus de compte en base');
+    // L'identifiant redevient libre.
+    egal(200, appel('/api/prof.php', ['action' => 'profs.ajouter', 'identifiant' => 'essai'], ['jeton' => $jetonS1])['code'], 'recréable');
+});
+
+verifier("supprimer un compte qui possède des classes exige un oui explicite, puis emporte tout, sans orphelin", function () use (&$jetonS1, &$jetonClaire) {
+    vider_compteurs();
+    // Un professeur avec deux classes, quatre élèves, une progression, un partage reçu et un partage donné.
+    $r = appel('/api/prof.php', ['action' => 'profs.ajouter', 'identifiant' => 'partant'], ['jeton' => $jetonS1]);
+    egal(200, $r['code'], 'création du partant (' . $r['texte'] . ')');
+    $cree = $r['json'];
+    $partantId = (int)$cree['id'];
+    $jp = connexion('partant', $cree['motdepasse'])['json']['jeton'];
+    appel('/api/prof.php', ['action' => 'profs.motdepasse', 'ancien' => $cree['motdepasse'], 'nouveau' => 'le-mdp-du-collegue-qui-sen-va'], ['jeton' => $jp]);
+    $c1 = appel('/api/prof.php', ['action' => 'classes.creer', 'libelle' => 'P1'], ['jeton' => $jp])['json']['id'];
+    $c2 = appel('/api/prof.php', ['action' => 'classes.creer', 'libelle' => 'P2'], ['jeton' => $jp])['json']['id'];
+    $e1 = appel('/api/prof.php', ['action' => 'eleves.ajouter', 'classe_id' => $c1, 'nombre' => 3], ['jeton' => $jp])['json']['eleves'];
+    appel('/api/prof.php', ['action' => 'eleves.ajouter', 'classe_id' => $c2, 'nombre' => 1], ['jeton' => $jp]);
+    egal(200, ecrire($e1[0]['code'], ['version' => 1, 'tables' => ['2' => ['acquise' => '2026-09-01']]], 0)['code'], 'une progression');
+    $claireId = null; $moi = null;
+    foreach (appel('/api/prof.php', ['action' => 'profs.liste'], ['jeton' => $jetonS1])['json']['profs'] as $p) {
+        if ($p['identifiant'] === 'claire') $claireId = $p['id'];
+        if ($p['identifiant'] === 'gwenael') $moi = $p['id'];
+    }
+    appel('/api/prof.php', ['action' => 'partages.ajouter', 'classe_id' => $c1, 'prof_id' => $claireId, 'droit' => 'lecture'], ['jeton' => $jp]);
+    $mienne = appel('/api/prof.php', ['action' => 'classes.liste'], ['jeton' => $jetonS1])['json']['classes'][0]['id'];
+    appel('/api/prof.php', ['action' => 'partages.ajouter', 'classe_id' => $mienne, 'prof_id' => $partantId, 'droit' => 'lecture'], ['jeton' => $jetonS1]);
+    $liste = null;
+    foreach (appel('/api/prof.php', ['action' => 'profs.liste'], ['jeton' => $jetonS1])['json']['profs'] as $p) if ($p['id'] === $partantId) $liste = $p;
+    egal(2, $liste['classes'], 'la liste compte ses classes');
+    egal(4, $liste['eleves'], 'et ses élèves');
+    egal(1, $liste['partagees'], 'et ce qu’il a reçu');
+
+    $r = appel('/api/prof.php', ['action' => 'profs.supprimer', 'prof_id' => $partantId], ['jeton' => $jetonS1]);
+    egal(409, $r['code'], 'sans oui explicite : refusé');
+    vrai(str_contains($r['json']['erreur'], '2 classe') && str_contains($r['json']['erreur'], '4 élève'), 'le refus dit ce qui partirait');
+    egal(200, lire($e1[0]['code'])['code'], 'rien n’a bougé');
+
+    $avantEleves = (int)bd_test()->query('SELECT COUNT(*) FROM eleves')->fetchColumn();
+    $r = appel('/api/prof.php', ['action' => 'profs.supprimer', 'prof_id' => $partantId, 'avec_classes' => true], ['jeton' => $jetonS1]);
+    egal(200, $r['code'], 'avec le oui : supprimé');
+    egal(['classes' => 2, 'eleves' => 4], ['classes' => $r['json']['classes'], 'eleves' => $r['json']['eleves']], 'la réponse dit ce qui est parti');
+    // Le compteur du code est purgé avec lui — regardé AVANT la lecture qui suit
+    // (elle en recréerait un : le limiteur compte avant de savoir si le code existe).
+    $compteur = bd_test()->prepare('SELECT COUNT(*) FROM compteurs WHERE cle = ?');
+    $compteur->execute([cle_compteur_test('code:' . $e1[0]['code'], 300)]);
+    $restants = (int)$compteur->fetchColumn();
+    $compteur->closeCursor(); // sinon le processus de test garde un verrou SQLite et le serveur bloque
+    egal(0, $restants, 'le compteur du code supprimé est purgé');
+    egal(404, lire($e1[0]['code'])['code'], 'ses codes ne marchent plus');
+    egal($avantEleves - 4, (int)bd_test()->query('SELECT COUNT(*) FROM eleves')->fetchColumn(), 'quatre élèves de moins, pas un de plus');
+    egal(0, (int)bd_test()->query("SELECT COUNT(*) FROM classes WHERE id IN ($c1, $c2)")->fetchColumn(), 'ses classes sont parties');
+    egal(0, (int)bd_test()->query("SELECT COUNT(*) FROM eleves WHERE classe_id IN ($c1, $c2)")->fetchColumn(), 'aucun élève orphelin');
+    egal(0, (int)bd_test()->query('SELECT COUNT(*) FROM progressions WHERE eleve_id NOT IN (SELECT id FROM eleves)')->fetchColumn(), 'aucune progression orpheline');
+    egal(0, (int)bd_test()->query("SELECT COUNT(*) FROM partages WHERE prof_id = $partantId OR classe_id IN ($c1, $c2)")->fetchColumn(), 'aucun partage orphelin, reçu ou donné');
+    egal(0, (int)bd_test()->query("SELECT COUNT(*) FROM sessions_prof WHERE prof_id = $partantId")->fetchColumn(), 'aucune session');
+    egal(401, connexion('partant', 'le-mdp-du-collegue-qui-sen-va')['code'], 'il ne se connecte plus');
+    // Les autres n'ont rien perdu : la classe de Gwenaël est là, celle partagée à Claire par le partant a disparu de sa liste sans erreur.
+    egal(200, appel('/api/prof.php', ['action' => 'tableau', 'classe_id' => $mienne], ['jeton' => $jetonS1])['code'], 'la classe de Gwenaël est intacte');
+    $deClaire = appel('/api/prof.php', ['action' => 'classes.liste'], ['jeton' => $jetonClaire]);
+    egal(200, $deClaire['code'], 'Claire liste ses classes sans erreur');
+    vrai(!in_array($c1, array_column($deClaire['json']['classes'], 'id'), true), 'la classe partagée par le partant ne s’y trouve plus');
 });
 
 // ---------------------------------------------------------------------- résultat

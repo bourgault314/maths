@@ -4,15 +4,18 @@
 </FilesMatch>
 
 # En-tetes de securite. PHP les envoie lui-meme sur chaque reponse
-# (lib/entetes.php, avec en plus la Content-Security-Policy a nonce des pages) ;
-# ici, ils couvrent ce que PHP ne sert pas : le moteur JS copie dans prof/.
-# « Header set » et non « Header always set » : « always » s'ajouterait aux
-# en-tetes de PHP au lieu de les remplacer, et chaque reponse en porterait deux.
+# (lib/entetes.php, avec en plus la Content-Security-Policy a nonce des pages).
+# Ici, SEULEMENT sur ce que PHP ne sert pas : le moteur JS copie dans prof/.
+# Constate chez OVH le 30/08/2026 : une directive Header posee sur tout le
+# dossier s'AJOUTE aux en-tetes envoyes par PHP au lieu de les remplacer, et
+# chaque page en portait deux (« DENY, DENY »). D'ou le FilesMatch.
 <IfModule mod_headers.c>
-  Header set X-Content-Type-Options "nosniff"
-  Header set Referrer-Policy "strict-origin-when-cross-origin"
-  Header set X-Frame-Options "DENY"
-  Header set Strict-Transport-Security "max-age=31536000"
+  <FilesMatch "\.js$">
+    Header set X-Content-Type-Options "nosniff"
+    Header set Referrer-Policy "strict-origin-when-cross-origin"
+    Header set X-Frame-Options "DENY"
+    Header set Strict-Transport-Security "max-age=31536000"
+  </FilesMatch>
 </IfModule>
 
 # Apache ne transmet pas l'en-tete Authorization a PHP en CGI/FastCGI (c'est le
