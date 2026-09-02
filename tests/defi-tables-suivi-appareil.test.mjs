@@ -9,7 +9,7 @@
 
 import test from "node:test";
 import assert from "node:assert/strict";
-import {PARCOURS, html, SOURCE_AIGUILLAGE, SOURCE_BOOTSTRAP, entre, fauxStockage, fauxReseau, demarrerAppli,
+import {PARCOURS, html, SOURCE_AIGUILLAGE, SOURCE_BOOTSTRAP, fauxStockage, fauxReseau, demarrerAppli,
   parcoursAvecTravail, tic, CLE} from "./defi-tables-faux-monde.mjs";
 
 const A = "AXKQ7T", B = "BZ4MHP";
@@ -110,110 +110,38 @@ test("une série en cours n’est pas interrompue : la fusion se fait, l’écra
 
 // ------------------------------------------------------ le travail fait sans code
 
-// Lot 2 (02/09/2026) : la case proposée n'est jamais celle du code actif —
-// c'est celle d'un autre code, ou d'aucun. Le prénom qu'elle contient est donc
-// celui d'un autre enfant, peut-être : l'audit du 01/09 a vu « C'est toi, Léa ? »
-// affiché à Sam. La question ne nomme plus personne, nulle part.
-test("du travail fait sans code sur l’appareil : la question est posée, sans nommer personne", async () => {
+// Lot 2b (02/09/2026) : ce qui est fait sans code reste sans code. Plus aucune
+// question « c'est le tien ? » — c'était la seule porte par laquelle le travail
+// (et le prénom) d'un enfant passait à un autre sur une tablette partagée. La
+// règle est simple et tient en une phrase : seul ce qui est fait sous le code
+// compte pour le suivi.
+test("du travail fait sans code sur l’appareil : rien n’est proposé, rien ne bouge, Bob est sur sa case vide", async () => {
   const local = fauxStockage({[CLE]: JSON.stringify(parcoursAvecTravail("Léa", 4))});
-  const appli = demarrerAppli({entree: {code: B}, local});
+  const reseau = fauxReseau();
+  const appli = demarrerAppli({entree: {code: B}, local, reseau});
   appli.api.demarrerSuivi();
   await tic();
-  assert.deepEqual(appli.api.questionFusion, {source: ""}, "la question ne porte aucun prénom");
-  const texte = appli.api.texteQuestionFusion();
-  assert.match(texte, /travail fait sans code sur cet appareil/);
-  assert.doesNotMatch(texte, /Léa/, "Bob ne doit jamais lire le prénom de Léa");
-  assert.doesNotMatch(texte, /C’est toi/, "et on ne lui demande pas s’il est quelqu’un d’autre");
-  assert.equal(PARCOURS.estVide(appli.api.parcours), true, "en attendant la réponse, Bob est sur sa case, vide");
-});
-
-test("la page affiche ce texte-là, et rien d’autre : plus aucun prénom dans la question de fusion", () => {
-  assert.match(html, /\$\("parcours-fusion-text"\)\.textContent = texteQuestionFusion\(\);/,
-    "renderParcours prend le texte du bloc de suivi, testé ci-dessus");
-  const rendu = entre('$("parcours-fusion").hidden', '$("parcours-fusion-oui")');
-  assert.doesNotMatch(rendu, /\$\{|prenom|C’est toi/, "aucune phrase nominative n’est recomposée dans renderParcours");
-  const bloc = entre("function texteQuestionFusion", "function reprendreLeTravailSansCode");
-  assert.doesNotMatch(bloc, /\$\{|prenom/, "ni dans texteQuestionFusion");
-});
-
-test("la question n’est posée qu’une fois par code sur l’appareil : à sa première ouverture ici", async () => {
-  const local = fauxStockage({[CLE]: JSON.stringify(parcoursAvecTravail("Léa", 4))});
-  const premiere = demarrerAppli({entree: {code: B}, local});
-  premiere.api.demarrerSuivi();
-  await tic();
-  assert.deepEqual(premiere.api.questionFusion, {source: ""}, "première ouverture de Bob ici : la question est posée");
-  premiere.api.reprendreLeTravailSansCode(false);
-  assert.notEqual(local.getItem(PARCOURS.cleSync(B)), null, "le passage de Bob est noté sur l’appareil");
-
-  // Bob revient (onglet neuf, même appareil) : la case de Léa est toujours là,
-  // mais on ne la lui propose plus.
-  const retour = demarrerAppli({entree: {code: B}, local, session: fauxStockage()});
-  retour.api.demarrerSuivi();
-  await tic();
-  assert.equal(retour.api.questionFusion, null, "on ne repose pas la question à Bob");
-  assert.deepEqual(PARCOURS.charger(local, ""), parcoursAvecTravail("Léa", 4), "la case sans code n’a pas bougé");
-
-  // Un troisième élève, code jamais vu ici : une fois, pour lui aussi.
-  const autre = demarrerAppli({entree: {code: A}, local, session: fauxStockage()});
-  autre.api.demarrerSuivi();
-  await tic();
-  assert.deepEqual(autre.api.questionFusion, {source: ""});
-});
-
-test("« Non, ce n’est pas le mien » ne touche à rien", async () => {
-  const local = fauxStockage({[CLE]: JSON.stringify(parcoursAvecTravail("Léa", 4))});
-  const appli = demarrerAppli({entree: {code: B}, local});
-  appli.api.demarrerSuivi();
-  await tic();
-  appli.api.reprendreLeTravailSansCode(false);
-  assert.equal(appli.api.questionFusion, null);
+  assert.equal(PARCOURS.estVide(appli.api.parcours), true, "Bob est sur sa case, vide");
+  assert.equal(appli.api.parcours.prenom, "", "et le prénom de Léa n’y est pas");
   assert.deepEqual(PARCOURS.charger(local, ""), parcoursAvecTravail("Léa", 4), "la case sans code est intacte");
-  assert.equal(PARCOURS.estVide(appli.api.parcours), true);
+  assert.equal(reseau.appels.filter(a => a.parcours && a.parcours.tables["4"].acquise).length, 0, "rien du travail de Léa ne part sous le code de Bob");
+  assert.equal(appli.document.getElementById("parcours-fusion-text").textContent, "", "aucune question n’est écrite");
+  assert.doesNotMatch(html, /parcours-fusion|reprendreLeTravailSansCode|proposerLeTravailSansCode|casesDetachees/,
+    "la page n’a plus ni la question, ni le mécanisme de reprise");
 });
 
-test("« Oui, c’est le mien » copie ce travail dans la case du code, l’envoie, et ne vide la case sans code qu’à la réponse 200", async () => {
-  const local = fauxStockage({[CLE]: JSON.stringify(parcoursAvecTravail("Léa", 4))});
-  const reseau = fauxReseau({mode: "lent", delai: 30});
+test("une case restée sous un ancien code refusé n’est jamais proposée ni transférée", async () => {
+  const local = fauxStockage({[`${CLE}:${A}`]: JSON.stringify(parcoursAvecTravail("Léa", 4))});
+  PARCOURS.sauverSync(local, A, {revision: 3, dirty: true, detache: true, maj: Date.now() - 1000});
+  const reseau = fauxReseau();
   const appli = demarrerAppli({entree: {code: B}, local, reseau});
   appli.api.demarrerSuivi();
-  await tic(60);
-  appli.api.reprendreLeTravailSansCode(true);
-  assert.equal(appli.api.parcours.tables[4].acquise, "2026-08-29");
-  assert.equal(appli.api.parcours.prenom, "", "le prénom de la case reprise ne suit pas : ce n’est peut-être pas le sien");
-  assert.equal(PARCOURS.charger(local, B).tables[4].acquise, "2026-08-29", "rangé dans la case de Bob");
-  assert.deepEqual(PARCOURS.charger(local, ""), parcoursAvecTravail("Léa", 4),
-    "tant que le serveur n’a pas confirmé, la case sans code est intacte");
-  assert.deepEqual(appli.api.fusionEnAttente, {source: ""}, "l’effacement attend la réponse");
-  await tic(60);
-  assert.ok(reseau.appels.some(a => a.code === B && a.parcours && a.parcours.tables["4"].acquise), "il part au serveur");
-  assert.equal(PARCOURS.estVide(PARCOURS.charger(local, "")), true, "réponse 200 reçue : la case sans code est vidée, ce travail a trouvé son propriétaire");
-  assert.equal(appli.api.fusionEnAttente, null);
-});
-
-test("« Oui » puis « Ce n’est pas moi » avant la réponse du serveur : la case sans code n’est pas effacée", async () => {
-  const local = fauxStockage({[CLE]: JSON.stringify(parcoursAvecTravail("Léa", 4))});
-  const reseau = fauxReseau({mode: "lent", delai: 30});
-  const appli = demarrerAppli({entree: {code: B}, local, reseau});
-  appli.api.demarrerSuivi();
-  await tic(60);
-  appli.api.reprendreLeTravailSansCode(true);
-  appli.api.quitterSuivi();
-  await tic(80);
-  assert.deepEqual(PARCOURS.charger(local, ""), parcoursAvecTravail("Léa", 4), "la case de Léa est toujours là");
-  assert.equal(appli.api.fusionEnAttente, null);
-});
-
-test("pas de question quand la case du code n’est pas vide, ni quand la case sans code l’est", async () => {
-  const dejaLa = fauxStockage({[CLE]: JSON.stringify(parcoursAvecTravail("Léa", 4)),
-    [`${CLE}:${B}`]: JSON.stringify(parcoursAvecTravail("Bob", 3))});
-  const appli = demarrerAppli({entree: {code: B}, local: dejaLa});
-  appli.api.demarrerSuivi();
   await tic();
-  assert.equal(appli.api.questionFusion, null, "Bob a déjà sa case : on ne lui propose rien");
-  const vide = demarrerAppli({entree: {code: B}});
-  vide.api.demarrerSuivi();
-  await tic();
-  assert.equal(vide.api.questionFusion, null, "rien fait sans code : rien à proposer");
+  assert.equal(PARCOURS.estVide(appli.api.parcours), true, "Bob repart de sa case, vide");
+  assert.deepEqual(PARCOURS.charger(local, A), parcoursAvecTravail("Léa", 4), "la case de Léa est intacte, avec son prénom");
+  assert.equal(PARCOURS.chargerSync(local, A).detache, true, "et son état");
+  assert.equal(reseau.sousLeCode(A).length, 0, "rien ne part sous le code de Léa");
+  assert.equal(reseau.appels.filter(a => a.parcours && a.parcours.tables["4"].acquise).length, 0, "ni sous celui de Bob");
 });
 
 // ------------------------------------------------------------ « Ce n’est pas moi »
@@ -223,7 +151,6 @@ test("« Ce n’est pas moi » envoie ce qui restait, oublie le code, revient à
   const appli = demarrerAppli({entree: {code: B}, local});
   appli.api.demarrerSuivi();
   await tic();
-  appli.api.reprendreLeTravailSansCode(false);
   appli.api.parcours.tables[2].apprends.construct = 2;
   // L'envoi est différé de 700 ms dans la vraie page ; le faux setTimeout du
   // harnais l'exécute aussitôt, ce qui masquerait le seul moment où « envoie ce
@@ -244,7 +171,6 @@ test("« Ce n’est pas moi » envoie ce qui restait, oublie le code, revient à
   assert.equal(appli.api.parcours.prenom, "Léa", "on est revenu sur la case sans code");
   assert.equal(PARCOURS.charger(local, B).tables[2].apprends.construct, 2, "la case de Bob reste sur l’appareil");
   assert.equal(appli.api.suiviIdentite, null);
-  assert.equal(appli.api.questionFusion, null);
   assert.equal(appli.repere().hidden, true, "plus de repère");
   assert.deepEqual(appli.window.allees, ["https://suivi.mathsgo.re/?oublier=1"],
     "l’espace élève doit oublier le code lui aussi, dans le même geste");
