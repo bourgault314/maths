@@ -125,6 +125,16 @@ $versionMoteur = is_file($moteur) ? substr(md5_file($moteur), 0, 10) : '0';
   .fiche h2 { margin-top: 0; }
   .fiche table { font-size: 1rem; }
   .fiche td.code { font-size: 1.15rem; }
+  .fiche td.numero { color: var(--muted); font-weight: 800; text-align: right; width: 2.4em; }
+  /* Aperçu « code → prénom » dans la boîte « Coller la liste des prénoms ». */
+  .apercu { list-style: none; margin: 10px 0 0; padding: 8px 12px; max-height: 200px; overflow: auto;
+            background: #fbfcfe; border: 1px solid var(--line); border-radius: 10px;
+            font-size: .9rem; line-height: 1.5; }
+  .apercu li { display: flex; gap: 8px; align-items: baseline; }
+  .apercu li .numero { flex: 0 0 2em; text-align: right; color: var(--muted); font-weight: 800; }
+  .apercu li .code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; letter-spacing: .06em; }
+  .apercu li.vide { color: var(--muted); font-style: italic; }
+  .apercu li.alerte { color: var(--rouge); font-weight: 700; }
   dialog { border: 0; border-radius: 14px; padding: 18px; max-width: 420px; width: calc(100% - 32px);
            box-shadow: 0 20px 50px rgba(16,41,74,.28); }
   dialog::backdrop { background: rgba(16,41,74,.45); }
@@ -292,7 +302,7 @@ $versionMoteur = is_file($moteur) ? substr(md5_file($moteur), 0, 10) : '0';
     <div class="fiche" id="fiche">
       <h2 id="fiche-titre"></h2>
       <table>
-        <thead><tr><th>Élève</th><th>Code</th><th>Découper</th></tr></thead>
+        <thead><tr><th>N°</th><th>Élève</th><th>Code</th><th>Découper</th></tr></thead>
         <tbody id="fiche-corps"></tbody>
       </table>
       <div class="pied-impression">
@@ -632,24 +642,56 @@ $versionMoteur = is_file($moteur) ? substr(md5_file($moteur), 0, 10) : '0';
     bloc.hidden = false;
   }
 
+  // ---------------------------------------------------------------- feuille imprimée
+
+  // L'ORDRE DE LA FEUILLE IMPRIMÉE, calculé à UN SEUL endroit : les élèves qui
+  // ont un prénom d'abord, par prénom, puis ceux qui n'en ont pas encore, par
+  // code. « Coller la liste des prénoms » suit exactement cet ordre — c'est ce
+  // qui garantit que le prénom n° 3 de la liste collée va au code de la ligne 3
+  // de la feuille que le professeur a sous les yeux. Avant le lot 1 (02/09/2026),
+  // le collage suivait l'ordre de CRÉATION des codes alors que la feuille les
+  // rangeait par code : 8 associations fausses sur 8 en essai, chaque enfant
+  // repartait avec le code d'un camarade.
+  //
+  // Fonction pure : ne modifie ni `eleves` ni le tri du tableau (qui, lui, suit
+  // la colonne choisie par le professeur). Les codes se comparent caractère par
+  // caractère (majuscules et chiffres) : le même ordre sur tous les navigateurs,
+  // donc une feuille imprimée sur un poste et une liste collée sur un autre
+  // parlent bien du même ordre.
+  function ordreDeLaFeuille(liste) {
+    return [...liste].sort((a, b) => {
+      const x = (a.prenom || "").toLocaleLowerCase("fr");
+      const y = (b.prenom || "").toLocaleLowerCase("fr");
+      if (x && !y) return -1;
+      if (!x && y) return 1;
+      const parPrenom = x.localeCompare(y, "fr");
+      if (parPrenom) return parPrenom;
+      const cx = a.code || "", cy = b.code || "";
+      return cx < cy ? -1 : cx > cy ? 1 : 0;
+    });
+  }
+
   function dessinerFiche() {
     $("fiche-titre").textContent = `Codes des élèves — ${classe.libelle}`;
     const corps = $("fiche-corps");
     corps.textContent = "";
-    [...eleves].sort((a, b) => (a.prenom || "￿").localeCompare(b.prenom || "￿", "fr"))
-      .forEach(eleve => {
-        const ligne = document.createElement("tr");
-        const nom = document.createElement("td");
-        nom.textContent = nomAffiche(eleve) || "—";
-        const code = document.createElement("td");
-        code.className = "code";
-        code.textContent = eleve.code;
-        const vide = document.createElement("td");
-        vide.textContent = "✂";
-        vide.style.color = "#bbb";
-        ligne.append(nom, code, vide);
-        corps.appendChild(ligne);
-      });
+    ordreDeLaFeuille(eleves).forEach((eleve, index) => {
+      const ligne = document.createElement("tr");
+      // Numéro de ligne : la liste collée se lit dans cet ordre, sans ambiguïté.
+      const numero = document.createElement("td");
+      numero.className = "numero";
+      numero.textContent = String(index + 1);
+      const nom = document.createElement("td");
+      nom.textContent = nomAffiche(eleve) || "—";
+      const code = document.createElement("td");
+      code.className = "code";
+      code.textContent = eleve.code;
+      const vide = document.createElement("td");
+      vide.textContent = "✂";
+      vide.style.color = "#bbb";
+      ligne.append(numero, nom, code, vide);
+      corps.appendChild(ligne);
+    });
   }
 
   // ---------------------------------------------------------------- actions
@@ -948,11 +990,51 @@ $versionMoteur = is_file($moteur) ? substr(md5_file($moteur), 0, 10) : '0';
     } catch (erreur) { surErreur(erreur, "message-classe"); }
   }
 
-  function demander(texte, champs) {
+  // options.apercu(valeurs) → liste de {numero, code, texte, classe} affichée
+  // sous les champs et recalculée à chaque frappe : ce que « Confirmer » va faire,
+  // montré AVANT qu'on le fasse.
+  function demander(texte, champs, options) {
     return new Promise(resolve => {
       $("boite-texte").textContent = texte;
       const zone = $("boite-champs");
       zone.textContent = "";
+      const lireValeurs = () => {
+        const sortie = {};
+        (champs || []).forEach(champ => { sortie[champ.nom] = $("boite-" + champ.nom).value; });
+        return sortie;
+      };
+      let apercu = null;
+      let rafraichirApercu = () => {};
+      if (options && options.apercu) {
+        apercu = document.createElement("ul");
+        apercu.className = "apercu";
+        apercu.id = "boite-apercu";
+        rafraichirApercu = () => {
+          apercu.textContent = "";
+          options.apercu(lireValeurs()).forEach(ligne => {
+            const li = document.createElement("li");
+            if (ligne.classe) li.className = ligne.classe;
+            if (ligne.numero !== undefined) {
+              const numero = document.createElement("span");
+              numero.className = "numero";
+              numero.textContent = ligne.numero + ".";
+              li.appendChild(numero);
+            }
+            if (ligne.code) {
+              const code = document.createElement("span");
+              code.className = "code";
+              code.textContent = ligne.code;
+              const fleche = document.createElement("span");
+              fleche.textContent = "→";
+              li.append(code, fleche);
+            }
+            const texte = document.createElement("span");
+            texte.textContent = ligne.texte;
+            li.appendChild(texte);
+            apercu.appendChild(li);
+          });
+        };
+      }
       (champs || []).forEach(champ => {
         const etiquette = document.createElement("label");
         etiquette.textContent = champ.libelle;
@@ -989,18 +1071,22 @@ $versionMoteur = is_file($moteur) ? substr(md5_file($moteur), 0, 10) : '0';
         entree.id = "boite-" + champ.nom;
         zone.append(etiquette, entree);
       });
+      if (apercu) {
+        zone.appendChild(apercu);
+        zone.addEventListener("input", rafraichirApercu);
+        rafraichirApercu();
+      }
       const boite = $("boite");
       const fermer = valeur => {
         boite.close();
+        zone.removeEventListener("input", rafraichirApercu);
         $("form-boite").onsubmit = null;
         $("boite-non").onclick = null;
         resolve(valeur);
       };
       $("form-boite").onsubmit = event => {
         event.preventDefault();
-        const sortie = {};
-        (champs || []).forEach(champ => { sortie[champ.nom] = $("boite-" + champ.nom).value; });
-        fermer(sortie);
+        fermer(lireValeurs());
       };
       $("boite-non").onclick = () => fermer(null);
       boite.showModal();
@@ -1024,8 +1110,9 @@ $versionMoteur = is_file($moteur) ? substr(md5_file($moteur), 0, 10) : '0';
 
   // Coller une liste de prénoms : quatre classes de vingt-huit, c'est cent dix
   // saisies à la main. Les prénoms sont attribués DANS L'ORDRE aux élèves qui
-  // n'ont pas encore de nom, dans l'ordre où leurs codes ont été créés —
-  // c'est-à-dire l'ordre de la liste imprimée.
+  // n'ont pas encore de nom, pris dans l'ordre de la feuille imprimée
+  // (ordreDeLaFeuille : les sans-nom y sont rangés par code, jamais par date de
+  // création). La boîte montre « code → prénom » avant qu'on confirme.
   function decouperPrenoms(texte) {
     return String(texte || "")
       .split(/[\r\n;,\t]+/)
@@ -1033,29 +1120,58 @@ $versionMoteur = is_file($moteur) ? substr(md5_file($moteur), 0, 10) : '0';
       .filter(Boolean);
   }
 
-  $("coller-prenoms").addEventListener("click", async () => {
-    const sansNom = eleves.filter(eleve => !eleve.prenom).sort((a, b) => a.id - b.id);
-    if (!sansNom.length) {
-      messager("message-classe", "Tous les élèves de cette classe ont déjà un prénom. Pour en changer un, écris directement dans le tableau.", "erreur");
-      return;
-    }
-    const reponse = await demander(
-      `Colle les prénoms, un par ligne. Ils seront attribués dans l’ordre aux ${sansNom.length} élève(s) qui n’ont pas encore de nom, dans l’ordre de la liste imprimée.`,
-      [{nom: "liste", libelle: "Un prénom par ligne (tu peux ajouter l’initiale : « Léa B »)", multiligne: true}]);
-    if (!reponse) return;
-    const prenoms = decouperPrenoms(reponse.liste);
-    if (!prenoms.length) {
-      messager("message-classe", "Aucun prénom trouvé dans ce que tu as collé.", "erreur");
-      return;
-    }
+  // Les élèves sans prénom, dans l'ordre de la feuille imprimée.
+  function sansPrenomDansLOrdre(liste) {
+    return ordreDeLaFeuille(liste).filter(eleve => !eleve.prenom);
+  }
+
+  // Ce que le collage va faire, ligne par ligne, pour l'aperçu de la boîte.
+  function apercuCollage(prenoms, sansNom) {
+    if (!prenoms.length) return [{texte: "Colle les prénoms : l’aperçu s’affiche ici.", classe: "vide"}];
+    const lignes = prenoms.slice(0, sansNom.length).map((prenom, index) =>
+      ({numero: index + 1, code: sansNom[index].code, texte: prenom}));
     if (prenoms.length > sansNom.length) {
-      messager("message-classe",
-        `Tu as collé ${prenoms.length} prénoms pour ${sansNom.length} élève(s) sans nom. Ajoute d’abord des élèves, ou enlève les prénoms en trop.`,
-        "erreur");
-      return;
+      const trop = prenoms.length - sansNom.length;
+      lignes.push({texte: `${trop} prénom(s) en trop (${prenoms.slice(sansNom.length).join(", ")}) : ajoute des élèves ou enlève-les.`, classe: "alerte"});
+    } else if (prenoms.length < sansNom.length) {
+      const reste = sansNom.length - prenoms.length;
+      lignes.push({texte: `${reste} code(s) restent sans prénom.`, classe: "vide"});
     }
-    messager("message-classe", "Saisie en cours…", "");
+    return lignes;
+  }
+
+  $("coller-prenoms").addEventListener("click", async () => {
+    const bouton = $("coller-prenoms");
+    if (bouton.disabled) return;
+    // Désactivé jusqu'à la fin de la boucle : un double clic ne lance pas deux
+    // collages sur les mêmes élèves.
+    bouton.disabled = true;
     try {
+      // La liste est rechargée AVANT de calculer l'ordre : un prénom saisi
+      // entre-temps (autre onglet, collègue en écriture) ne décale pas tout.
+      await ouvrirClasse(classe.id);
+      const sansNom = sansPrenomDansLOrdre(eleves);
+      if (!sansNom.length) {
+        messager("message-classe", "Tous les élèves de cette classe ont déjà un prénom. Pour en changer un, écris directement dans le tableau.", "erreur");
+        return;
+      }
+      const reponse = await demander(
+        `Colle les prénoms, un par ligne, dans l’ordre de la feuille imprimée (numéros 1, 2, 3…). Ils iront aux ${sansNom.length} élève(s) qui n’ont pas encore de nom. Vérifie l’aperçu avant de confirmer.`,
+        [{nom: "liste", libelle: "Un prénom par ligne (tu peux ajouter l’initiale : « Léa B »)", multiligne: true}],
+        {apercu: valeurs => apercuCollage(decouperPrenoms(valeurs.liste), sansNom)});
+      if (!reponse) return;
+      const prenoms = decouperPrenoms(reponse.liste);
+      if (!prenoms.length) {
+        messager("message-classe", "Aucun prénom trouvé dans ce que tu as collé.", "erreur");
+        return;
+      }
+      if (prenoms.length > sansNom.length) {
+        messager("message-classe",
+          `Tu as collé ${prenoms.length} prénoms pour ${sansNom.length} élève(s) sans nom. Ajoute d’abord des élèves, ou enlève les prénoms en trop.`,
+          "erreur");
+        return;
+      }
+      messager("message-classe", "Saisie en cours…", "");
       for (let index = 0; index < prenoms.length; index += 1) {
         const eleve = sansNom[index];
         const morceaux = prenoms[index].split(" ");
@@ -1068,6 +1184,7 @@ $versionMoteur = is_file($moteur) ? substr(md5_file($moteur), 0, 10) : '0';
         `${prenoms.length} prénom(s) enregistré(s). Vérifie l’ordre dans le tableau, puis imprime la liste des codes.`,
         "ok");
     } catch (erreur) { surErreur(erreur, "message-classe"); }
+    finally { bouton.disabled = false; }
   });
 
   async function regenerer(eleve) {
