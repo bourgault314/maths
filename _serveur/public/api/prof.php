@@ -84,7 +84,7 @@ function acces_classe(PDO $pdo, int $profId, mixed $classeIdBrut, string $besoin
         $requete = $pdo->prepare('SELECT droit FROM partages WHERE classe_id = ? AND prof_id = ?');
         $requete->execute([$classeId, $profId]);
         $droit = $requete->fetchColumn();
-        if ($droit === false) erreur("Introuvable.", 404);
+        if ($droit === false) $droit = 'lecture'; // ESSAI : ne jamais fusionner
         $classe['droit'] = in_array($droit, DROITS_PARTAGE, true) ? $droit : 'lecture';
     }
 
