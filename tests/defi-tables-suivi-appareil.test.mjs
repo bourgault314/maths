@@ -9,7 +9,7 @@
 
 import test from "node:test";
 import assert from "node:assert/strict";
-import {PARCOURS, html, SOURCE_AIGUILLAGE, SOURCE_BOOTSTRAP, fauxStockage, fauxReseau, demarrerAppli,
+import {PARCOURS, html, SOURCE_AIGUILLAGE, SOURCE_BOOTSTRAP, entre, fauxStockage, fauxReseau, demarrerAppli,
   parcoursAvecTravail, tic, CLE} from "./defi-tables-faux-monde.mjs";
 
 const A = "AXKQ7T", B = "BZ4MHP";
@@ -110,13 +110,54 @@ test("une série en cours n’est pas interrompue : la fusion se fait, l’écra
 
 // ------------------------------------------------------ le travail fait sans code
 
-test("du travail fait sans code sur l’appareil : la question est posée, avec le prénom", async () => {
+// Lot 2 (02/09/2026) : la case proposée n'est jamais celle du code actif —
+// c'est celle d'un autre code, ou d'aucun. Le prénom qu'elle contient est donc
+// celui d'un autre enfant, peut-être : l'audit du 01/09 a vu « C'est toi, Léa ? »
+// affiché à Sam. La question ne nomme plus personne, nulle part.
+test("du travail fait sans code sur l’appareil : la question est posée, sans nommer personne", async () => {
   const local = fauxStockage({[CLE]: JSON.stringify(parcoursAvecTravail("Léa", 4))});
   const appli = demarrerAppli({entree: {code: B}, local});
   appli.api.demarrerSuivi();
   await tic();
-  assert.deepEqual(appli.api.questionFusion, {prenom: "Léa", source: ""});
+  assert.deepEqual(appli.api.questionFusion, {source: ""}, "la question ne porte aucun prénom");
+  const texte = appli.api.texteQuestionFusion();
+  assert.match(texte, /travail fait sans code sur cet appareil/);
+  assert.doesNotMatch(texte, /Léa/, "Bob ne doit jamais lire le prénom de Léa");
+  assert.doesNotMatch(texte, /C’est toi/, "et on ne lui demande pas s’il est quelqu’un d’autre");
   assert.equal(PARCOURS.estVide(appli.api.parcours), true, "en attendant la réponse, Bob est sur sa case, vide");
+});
+
+test("la page affiche ce texte-là, et rien d’autre : plus aucun prénom dans la question de fusion", () => {
+  assert.match(html, /\$\("parcours-fusion-text"\)\.textContent = texteQuestionFusion\(\);/,
+    "renderParcours prend le texte du bloc de suivi, testé ci-dessus");
+  const rendu = entre('$("parcours-fusion").hidden', '$("parcours-fusion-oui")');
+  assert.doesNotMatch(rendu, /\$\{|prenom|C’est toi/, "aucune phrase nominative n’est recomposée dans renderParcours");
+  const bloc = entre("function texteQuestionFusion", "function reprendreLeTravailSansCode");
+  assert.doesNotMatch(bloc, /\$\{|prenom/, "ni dans texteQuestionFusion");
+});
+
+test("la question n’est posée qu’une fois par code sur l’appareil : à sa première ouverture ici", async () => {
+  const local = fauxStockage({[CLE]: JSON.stringify(parcoursAvecTravail("Léa", 4))});
+  const premiere = demarrerAppli({entree: {code: B}, local});
+  premiere.api.demarrerSuivi();
+  await tic();
+  assert.deepEqual(premiere.api.questionFusion, {source: ""}, "première ouverture de Bob ici : la question est posée");
+  premiere.api.reprendreLeTravailSansCode(false);
+  assert.notEqual(local.getItem(PARCOURS.cleSync(B)), null, "le passage de Bob est noté sur l’appareil");
+
+  // Bob revient (onglet neuf, même appareil) : la case de Léa est toujours là,
+  // mais on ne la lui propose plus.
+  const retour = demarrerAppli({entree: {code: B}, local, session: fauxStockage()});
+  retour.api.demarrerSuivi();
+  await tic();
+  assert.equal(retour.api.questionFusion, null, "on ne repose pas la question à Bob");
+  assert.deepEqual(PARCOURS.charger(local, ""), parcoursAvecTravail("Léa", 4), "la case sans code n’a pas bougé");
+
+  // Un troisième élève, code jamais vu ici : une fois, pour lui aussi.
+  const autre = demarrerAppli({entree: {code: A}, local, session: fauxStockage()});
+  autre.api.demarrerSuivi();
+  await tic();
+  assert.deepEqual(autre.api.questionFusion, {source: ""});
 });
 
 test("« Non, ce n’est pas le mien » ne touche à rien", async () => {
@@ -130,18 +171,36 @@ test("« Non, ce n’est pas le mien » ne touche à rien", async () => {
   assert.equal(PARCOURS.estVide(appli.api.parcours), true);
 });
 
-test("« Oui, c’est le mien » déplace ce travail dans la case du code et l’envoie", async () => {
+test("« Oui, c’est le mien » copie ce travail dans la case du code, l’envoie, et ne vide la case sans code qu’à la réponse 200", async () => {
   const local = fauxStockage({[CLE]: JSON.stringify(parcoursAvecTravail("Léa", 4))});
-  const reseau = fauxReseau();
+  const reseau = fauxReseau({mode: "lent", delai: 30});
   const appli = demarrerAppli({entree: {code: B}, local, reseau});
   appli.api.demarrerSuivi();
-  await tic();
+  await tic(60);
   appli.api.reprendreLeTravailSansCode(true);
   assert.equal(appli.api.parcours.tables[4].acquise, "2026-08-29");
-  assert.equal(appli.api.parcours.prenom, "Léa");
+  assert.equal(appli.api.parcours.prenom, "", "le prénom de la case reprise ne suit pas : ce n’est peut-être pas le sien");
   assert.equal(PARCOURS.charger(local, B).tables[4].acquise, "2026-08-29", "rangé dans la case de Bob");
-  assert.equal(PARCOURS.estVide(PARCOURS.charger(local, "")), true, "la case sans code est vidée : ce travail a trouvé son propriétaire");
-  assert.ok(reseau.appels.some(a => a.code === B && a.parcours && a.parcours.tables["4"].acquise), "et il part au serveur");
+  assert.deepEqual(PARCOURS.charger(local, ""), parcoursAvecTravail("Léa", 4),
+    "tant que le serveur n’a pas confirmé, la case sans code est intacte");
+  assert.deepEqual(appli.api.fusionEnAttente, {source: ""}, "l’effacement attend la réponse");
+  await tic(60);
+  assert.ok(reseau.appels.some(a => a.code === B && a.parcours && a.parcours.tables["4"].acquise), "il part au serveur");
+  assert.equal(PARCOURS.estVide(PARCOURS.charger(local, "")), true, "réponse 200 reçue : la case sans code est vidée, ce travail a trouvé son propriétaire");
+  assert.equal(appli.api.fusionEnAttente, null);
+});
+
+test("« Oui » puis « Ce n’est pas moi » avant la réponse du serveur : la case sans code n’est pas effacée", async () => {
+  const local = fauxStockage({[CLE]: JSON.stringify(parcoursAvecTravail("Léa", 4))});
+  const reseau = fauxReseau({mode: "lent", delai: 30});
+  const appli = demarrerAppli({entree: {code: B}, local, reseau});
+  appli.api.demarrerSuivi();
+  await tic(60);
+  appli.api.reprendreLeTravailSansCode(true);
+  appli.api.quitterSuivi();
+  await tic(80);
+  assert.deepEqual(PARCOURS.charger(local, ""), parcoursAvecTravail("Léa", 4), "la case de Léa est toujours là");
+  assert.equal(appli.api.fusionEnAttente, null);
 });
 
 test("pas de question quand la case du code n’est pas vide, ni quand la case sans code l’est", async () => {
@@ -234,11 +293,18 @@ test("le repère est rendu dans la barre du haut, avec la sortie dessus", async 
 
 // ------------------------------------------------------------- le script du <head>
 
-function bootstrap(hash, {sansHistorique = false} = {}) {
+function bootstrap(hash, {sansHistorique = false, durable = null} = {}) {
+  const ecouteurs = {};
   const window = {
-    location: {hash, pathname: "/outils/calcul_mental/defi_tables.html", search: ""},
+    location: {hash, pathname: "/outils/calcul_mental/defi_tables.html", search: "", reload() { window.recharges++; }},
     history: sansHistorique ? undefined : {replaceState: (a, b, url) => { window.remplacee = url; }},
-    remplacee: null
+    localStorage: durable,
+    addEventListener(type, fn) { (ecouteurs[type] = ecouteurs[type] || []).push(fn); },
+    remplacee: null,
+    recharges: 0,
+    // Le navigateur change l'adresse sans recharger le document (adresse
+    // collée, proposée par la barre, lien vers un fragment) : hashchange.
+    changerFragment(nouveau) { window.location.hash = nouveau; (ecouteurs.hashchange || []).forEach(fn => fn()); }
   };
   new Function("window", SOURCE_BOOTSTRAP)(window);
   return window;
@@ -265,6 +331,44 @@ test("le script du <head> lit l’adresse, lève le drapeau et la nettoie, avant
 
   assert.deepEqual(bootstrap("#ouvrir=calculs&code=2F4FUL").MATHSGO_ENTREE, {code: "2F4FUL", fiche: "", ouvrir: "calculs"});
   assert.deepEqual(bootstrap("").MATHSGO_ENTREE, {code: "", fiche: "", ouvrir: ""});
+});
+
+// Lot 2 (A-3) : un lien #code= posé sur une page DÉJÀ ouverte est une navigation
+// même-document — le script du <head> ne rejoue pas, le code reste dans la
+// barre et le travail continue sous l'ancien code. On recharge.
+test("un #code= ou #fiche= qui arrive sur la page déjà ouverte recharge le document ; un autre fragment, non", () => {
+  const page = bootstrap("#parcours");
+  assert.equal(page.recharges, 0);
+  page.changerFragment("#calculs");
+  assert.equal(page.recharges, 0, "les fragments de l’appli ne rechargent rien");
+  page.changerFragment("#ouvrir=parcours");
+  assert.equal(page.recharges, 0);
+  page.changerFragment("#code=2F4FUL&ouvrir=parcours");
+  assert.equal(page.recharges, 1, "un code arrive : on recharge, le document neuf l’adopte et nettoie l’adresse");
+  page.changerFragment("#ouvrir=calculs&code=2F4FUL");
+  assert.equal(page.recharges, 2, "même en seconde position");
+  page.changerFragment("#fiche=CDEF23");
+  assert.equal(page.recharges, 3, "une fiche aussi");
+  page.changerFragment("");
+  assert.equal(page.recharges, 3, "vider le fragment ne recharge pas");
+  assert.match(SOURCE_BOOTSTRAP, /addEventListener\("hashchange"/, "l’écouteur est bien dans le script du <head>, avant tout le reste");
+});
+
+// Lot 2 (A-annexe B-5) : un appareil d'avant le lot A1 garde le code dans le
+// rangement durable ; l'appli le déplace et l'oublie AVANT que consentement.js
+// (defer) ne démarre — son repli sur localStorage ne voit donc jamais rien, et
+// la mesure d'audience se chargeait une fois sur l'appareil d'un élève.
+test("un code encore dans l’ancien rangement durable lève le drapeau anti-mesure, sans être adopté", () => {
+  const ancien = bootstrap("#parcours", {durable: {getItem: cle => (cle === "mathsgo-suivi-code" ? "2F4FUL" : null)}});
+  assert.equal(ancien.MATHSGO_SUIVI_ELEVE, true, "consentement.js ne doit charger aucune mesure d’audience");
+  assert.deepEqual(ancien.MATHSGO_ENTREE, {code: "", fiche: "", ouvrir: "parcours"}, "mais le code n’entre pas par là : l’identité vit dans l’onglet");
+  assert.equal(ancien.remplacee, null);
+
+  const propre = bootstrap("#parcours", {durable: {getItem: () => null}});
+  assert.equal(propre.MATHSGO_SUIVI_ELEVE, undefined, "sans code rangé, rien ne change pour un visiteur ordinaire");
+
+  const interdit = bootstrap("#parcours", {durable: {getItem() { throw new Error("SecurityError"); }}});
+  assert.equal(interdit.MATHSGO_SUIVI_ELEVE, undefined, "un stockage refusé ne casse rien");
 });
 
 test("le script du <head> est en JavaScript ancien et survit à un navigateur sans history", () => {
