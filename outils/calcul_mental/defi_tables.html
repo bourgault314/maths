@@ -52,6 +52,30 @@
             + window.location.search + (reste.length ? "#" + reste.join("&") : ""));
         } catch (e) {}
       }
+      // Un appareil suivi par l'appli d'avant le lot A1 garde encore le code
+      // dans le rangement durable. L'appli va le déplacer (et l'oublier) avant
+      // que consentement.js ne démarre : c'est donc ICI, avant tout, qu'on lève
+      // le drapeau, sinon la mesure d'audience se chargerait une fois sur
+      // l'appareil d'un élève. Le code n'est pas adopté pour autant : l'identité
+      // ne vit que le temps de l'onglet.
+      if (!window.MATHSGO_SUIVI_ELEVE) {
+        try {
+          if (window.localStorage && window.localStorage.getItem("mathsgo-suivi-code")) {
+            window.MATHSGO_SUIVI_ELEVE = true;
+          }
+        } catch (e) {}
+      }
+      // Un lien #code= (ou #fiche=) posé sur une page DÉJÀ ouverte — adresse
+      // collée ou proposée par la barre du navigateur — n'est pas un nouveau
+      // document : ce script ne rejouerait pas, le code resterait affiché dans
+      // la barre et le travail continuerait sous l'ancien code. On recharge :
+      // le document neuf repasse par ici, adopte le code et nettoie l'adresse.
+      try {
+        window.addEventListener("hashchange", function () {
+          var hash = String(window.location.hash || "");
+          if (/(^#|&)(code|fiche)=/.test(hash)) window.location.reload();
+        });
+      } catch (e) {}
     })(window);
   </script>
   <script defer src="../../assets/js/consentement.js"
@@ -1591,6 +1615,9 @@
       let suiviIdentite = null;
       let suiviHorsLigne = false;
       let questionFusion = null;
+      // La case reprise par « Oui, c'est le mien », à effacer — mais seulement
+      // quand le serveur aura confirmé (200) qu'il a reçu ce travail.
+      let fusionEnAttente = null;
       let envoiEnAttente = null;
       let envoiEnVol = false;
       let renvoiDemande = false;
@@ -1728,14 +1755,19 @@
         renvoiDemande = false;
         const code = codeSuivi;
         const base = sync.revision;
+        // Ce paquet contient-il le travail repris d'une autre case ? Si oui,
+        // c'est SA réponse 200 qui autorisera l'effacement de cette case.
+        const fusion = fusionEnAttente;
         appelSuivi("/api/parcours.php", {
           method: "POST",
           headers: {"Content-Type": "text/plain;charset=UTF-8"},
           body: paquetParcours(code, parcours, base)
         }).then(reponse => {
           envoiEnVol = false;
+          // Réponse tardive d'un élève qui n'est plus là (« Ce n'est pas
+          // moi » entre-temps) : elle ne touche à rien, ni case, ni révision.
           if (code !== codeSuivi) return;
-          traiterReponseEnvoi(reponse, base);
+          traiterReponseEnvoi(reponse, base, fusion);
         });
       }
 
@@ -1759,7 +1791,7 @@
       //  429  trop de demandes — on attend ce que le serveur demande ;
       //  5xx/0  panne ou coupure — on garde tout ici, relances à 2 s, 10 s,
       //       60 s, puis au retour du réseau et au prochain démarrage.
-      function traiterReponseEnvoi(reponse, base) {
+      function traiterReponseEnvoi(reponse, base, fusion) {
         const donnees = reponse.donnees;
         if (reponse.statut === 200 && donnees && donnees.ok) {
           sync.revision = Number.isInteger(donnees.revision) ? donnees.revision : base + 1;
@@ -1768,6 +1800,15 @@
           fusionsSuccessives = 0;
           suiviHorsLigne = false;
           sauverSync();
+          // Le serveur a reçu le travail repris d'une autre case : c'est
+          // seulement maintenant que cette case-là est effacée. Avant — serveur
+          // injoignable, code refusé, page fermée — elle reste entière sur
+          // l'appareil, avec ce qu'elle n'avait pas encore envoyé.
+          if (fusion && fusion === fusionEnAttente) {
+            PARCOURS.effacer(storage(), fusion.source);
+            if (fusion.source) PARCOURS.effacerSync(storage(), fusion.source);
+            fusionEnAttente = null;
+          }
           renderRepere();
           // Le prénom et la classe n'avaient pas pu être lus (réseau absent au
           // démarrage) : maintenant que le serveur répond, on les demande.
@@ -1930,6 +1971,7 @@
         echecsSuccessifs = 0;
         fusionsSuccessives = 0;
         questionFusion = null;
+        fusionEnAttente = null;
         PARCOURS.effacerCode(stockageSession());
         parcours = PARCOURS.charger(storage(), "");
         sync = PARCOURS.chargerSync(storage(), "");
@@ -1941,30 +1983,67 @@
       }
 
       // Du travail fait sans code sur cet appareil, et rien encore sous ce code :
-      // on demande une fois si c'est le sien, en le nommant quand on le peut.
-      // Rien ne bloque pendant ce temps — l'élève joue déjà sous SON code.
+      // on demande une fois si c'est le sien. Rien ne bloque pendant ce temps —
+      // l'élève joue déjà sous SON code.
+      //
+      // Sur un appareil partagé, la case proposée est par construction celle
+      // d'un AUTRE code (ou d'aucun) : le prénom qu'elle contient n'est donc pas
+      // forcément celui de l'élève devant l'écran. La question ne nomme jamais
+      // personne (voir texteQuestionFusion), et une case détachée n'est proposée
+      // que si elle a bougé récemment — au-delà, c'est presque sûrement le
+      // travail d'un camarade d'avant, pas un code régénéré la semaine dernière.
+      const CASE_RECENTE_MS = 30 * 24 * 60 * 60 * 1000;
       function proposerLeTravailSansCode() {
         if (!suiviActif() || sync.detache || !PARCOURS.estVide(parcours)) return;
         const invite = PARCOURS.charger(storage(), "");
         if (!PARCOURS.estVide(invite)) {
-          questionFusion = {prenom: invite.prenom || "", source: ""};
+          questionFusion = {source: ""};
           return;
         }
         // Ou le travail resté sous un ancien code refusé par le serveur (code
-        // régénéré) : c'est très probablement celui du même élève.
+        // régénéré) : la plus récente des cases détachées, si elle est récente.
         const detachee = PARCOURS.casesDetachees(storage())[0];
-        if (detachee && detachee.code !== codeSuivi) {
-          questionFusion = {prenom: detachee.prenom || "", source: detachee.code};
+        if (detachee && detachee.code !== codeSuivi && detachee.maj > Date.now() - CASE_RECENTE_MS) {
+          questionFusion = {source: detachee.code};
         }
       }
 
+      // Une seule fois par code sur cet appareil : la question n'est posée qu'à
+      // la première ouverture du code ici — tant que sa case de synchronisation
+      // n'existe pas. Sans cela, chaque élève d'une tablette partagée se la
+      // verrait reposer à chaque passage, et finirait par cliquer « Oui ».
+      function premiereOuvertureIci() {
+        try {
+          const s = storage();
+          return !s || s.getItem(PARCOURS.cleSync(codeSuivi)) === null;
+        } catch (_) {
+          return false;
+        }
+      }
+
+      // Le texte de la question : jamais de prénom. L'audit du 01/09 a vu
+      // « C'est toi, Léa ? » affiché à Sam — la case proposée n'est pas la
+      // sienne, son prénom n'est pas le sien.
+      function texteQuestionFusion() {
+        if (!questionFusion) return "";
+        return questionFusion.source
+          ? "Il y a du travail fait avec un ancien code sur cet appareil. Est-ce que c’est le tien ?"
+          : "Il y a déjà du travail fait sans code sur cet appareil. Est-ce que c’est le tien ?";
+      }
+
       function reprendreLeTravailSansCode(oui) {
-        const source = questionFusion ? questionFusion.source : "";
+        const question = questionFusion;
         questionFusion = null;
-        if (oui) {
-          parcours = PARCOURS.fusionner(parcours, PARCOURS.charger(storage(), source));
-          PARCOURS.effacer(storage(), source);
-          if (source) PARCOURS.effacerSync(storage(), source);
+        if (oui && question) {
+          // Le prénom de la case reprise ne suit pas : s'il s'agissait d'un
+          // autre enfant, son prénom n'a rien à faire dans le titre de celui-ci.
+          // L'élève peut toujours se nommer lui-même dans « Mon parcours ».
+          const repris = PARCOURS.definirPrenom(PARCOURS.charger(storage(), question.source), "");
+          parcours = PARCOURS.fusionner(parcours, repris);
+          // La case reprise reste en place : elle ne sera effacée qu'à la
+          // réponse 200 du serveur (traiterReponseEnvoi). Serveur injoignable,
+          // code refusé, onglet fermé avant : rien n'est perdu pour personne.
+          fusionEnAttente = {source: question.source};
           state.nameSkipped = true;
           sauverParcours();
         }
@@ -1974,7 +2053,10 @@
       function demarrerSuivi() {
         if (!suiviActif()) return;
         PARCOURS.sauverCode(stockageSession(), codeSuivi);
-        proposerLeTravailSansCode();
+        if (premiereOuvertureIci()) proposerLeTravailSansCode();
+        // La case de synchronisation du code existe désormais sur l'appareil :
+        // la question ci-dessus ne sera plus posée pour ce code ici.
+        sauverSync();
         // Du travail dans la case et aucune révision confirmée : par définition,
         // il est à envoyer (case remplie hors ligne, ou par une appli d'avant).
         if (!sync.detache && sync.revision === 0 && !sync.dirty && !PARCOURS.estVide(parcours)) {
@@ -3289,17 +3371,9 @@
         // rien : ce travail reste dans sa case, pour celui à qui il appartient.
         $("parcours-fusion").hidden = !questionFusion;
         if (questionFusion) {
-          const qui = questionFusion.prenom;
-          const ancienCode = Boolean(questionFusion.source);
-          if (ancienCode) {
-            $("parcours-fusion-text").textContent = qui
-              ? `Il y a le travail de ${qui}, fait avec un ancien code, sur cet appareil. C’est toi, ${qui} ?`
-              : "Il y a du travail fait avec un ancien code sur cet appareil. Est-ce que c’est le tien ?";
-          } else {
-            $("parcours-fusion-text").textContent = qui
-              ? `Il y a déjà le travail de ${qui}, fait sans code, sur cet appareil. C’est toi, ${qui} ?`
-              : "Il y a déjà du travail fait sans code sur cet appareil. Est-ce que c’est le tien ?";
-          }
+          // Le texte vient du bloc de suivi (texteQuestionFusion) : il ne nomme
+          // jamais personne, et c'est testé là-bas.
+          $("parcours-fusion-text").textContent = texteQuestionFusion();
           $("parcours-fusion-oui").textContent = "Oui, c’est le mien";
           $("parcours-fusion-non").textContent = "Non, ce n’est pas le mien";
         }

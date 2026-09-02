@@ -259,11 +259,15 @@ test("au démarrage suivant, un code refusé (404 à la lecture) détache aussi"
   assert.equal(serveur.appels.filter(x => x.parcours).length, 0, "rien n'est envoyé sous un code mort");
 });
 
-test("un nouveau code arrive après un code refusé : l’appli propose le travail de l’ancienne case, et le transfère", async () => {
+// Lot 2 (02/09/2026, A-2) : la case détachée est proposée sans nommer personne,
+// seulement si elle est récente, et elle n'est effacée qu'à la réponse 200 du
+// serveur — jamais avant. L'ancien test exigeait l'inverse (effacement immédiat).
+test("un nouveau code arrive après un code refusé : l’appli propose le travail de l’ancienne case, sans nommer personne, et ne l’efface qu’une fois le transfert confirmé", async () => {
   const serveur = fauxServeur();
   const local = fauxStockage();
   const a = appli(serveur, {local});
   await demarrer(a);
+  a.api.parcours = PARCOURS.definirPrenom(a.api.parcours, "Léa");
   travailler(a, 2);
   await a.temps.avancer(1000);
   serveur.forcer = {statut: 404, donnees: {ok: false}};
@@ -274,26 +278,112 @@ test("un nouveau code arrive après un code refusé : l’appli propose le trava
   // Le nouveau code N, dans un onglet neuf.
   const b = appli(serveur, {local, session: fauxStockage(), entree: {code: N}});
   await demarrer(b);
-  assert.deepEqual(b.api.questionFusion, {prenom: "", source: B}, "la case détachée est proposée");
+  assert.deepEqual(b.api.questionFusion, {source: B}, "la case détachée est proposée, sans prénom");
+  assert.doesNotMatch(b.api.texteQuestionFusion(), /Léa|C’est toi/, "la question ne nomme personne");
+  serveur.delai = 30;
+  b.api.reprendreLeTravailSansCode(true);
+  assert.deepEqual(PARCOURS.tablesAcquises(b.api.parcours), [2, 3], "copié sous le nouveau code");
+  assert.equal(b.api.parcours.prenom, "", "sans le prénom de l’ancienne case");
+  assert.deepEqual(PARCOURS.tablesAcquises(PARCOURS.charger(local, B)), [2, 3], "l’ancienne case est encore là : le serveur n’a rien confirmé");
+  await b.temps.avancer(1000);
+  await tic(60);
+  assert.deepEqual(PARCOURS.tablesAcquises(PARCOURS.normaliserParcours(serveur.etat(N).parcours)), [2, 3], "envoyé");
+  assert.equal(local.getItem(PARCOURS.cleStockage(B)), null, "réponse 200 : l’ancienne case est vidée");
+  assert.equal(local.getItem(PARCOURS.cleSync(B)), null, "avec son état");
+  assert.equal(b.api.fusionEnAttente, null);
+});
+
+test("serveur injoignable après « Oui » : la case de Léa reste entière, et n’est effacée qu’au retour du réseau, après le 200", async () => {
+  const serveur = fauxServeur();
+  const local = fauxStockage({[`${CLE}:${B}`]: JSON.stringify(parcoursAvecTravail("Léa", 4))});
+  PARCOURS.sauverSync(local, B, {revision: 3, dirty: true, detache: true, maj: Date.now() - 1000});
+  serveur.mode = "coupe";
+  const b = appli(serveur, {local, entree: {code: N}});
+  await demarrer(b);
+  assert.deepEqual(b.api.questionFusion, {source: B});
+  b.api.reprendreLeTravailSansCode(true);
+  await b.temps.avancer(80000); // relances à 2 s, 10 s, 60 s : toujours coupé
+  assert.deepEqual(PARCOURS.tablesAcquises(b.api.parcours), [4], "le travail est dans la case du nouveau code");
+  assert.equal(b.api.sync.dirty, true, "à envoyer");
+  assert.deepEqual(PARCOURS.charger(local, B), parcoursAvecTravail("Léa", 4), "la case de Léa est toujours là, avec son prénom");
+  assert.equal(PARCOURS.chargerSync(local, B).detache, true, "et son état");
+  assert.deepEqual(b.api.fusionEnAttente, {source: B});
+  serveur.mode = "ok";
+  b.declencher("online");
+  await tic();
+  assert.deepEqual(PARCOURS.tablesAcquises(PARCOURS.normaliserParcours(serveur.etat(N).parcours)), [4], "parti au retour du réseau");
+  assert.equal(local.getItem(PARCOURS.cleStockage(B)), null, "et seulement alors, la case de Léa est vidée");
+  assert.equal(b.api.fusionEnAttente, null);
+});
+
+test("le nouveau code est refusé à son tour (404) après « Oui » : rien n’est effacé", async () => {
+  const serveur = fauxServeur();
+  const local = fauxStockage({[`${CLE}:${B}`]: JSON.stringify(parcoursAvecTravail("Léa", 4))});
+  PARCOURS.sauverSync(local, B, {revision: 3, dirty: false, detache: true, maj: Date.now() - 1000});
+  serveur.forcer = {statut: 404, donnees: {ok: false}};
+  const b = appli(serveur, {local, entree: {code: N}});
+  await demarrer(b);
   b.api.reprendreLeTravailSansCode(true);
   await b.temps.avancer(1000);
-  assert.deepEqual(PARCOURS.tablesAcquises(b.api.parcours), [2, 3], "transféré sous le nouveau code");
-  assert.deepEqual(PARCOURS.tablesAcquises(PARCOURS.normaliserParcours(serveur.etat(N).parcours)), [2, 3], "et envoyé");
-  assert.equal(local.getItem(PARCOURS.cleStockage(B)), null, "l'ancienne case est vidée");
-  assert.equal(local.getItem(PARCOURS.cleSync(B)), null, "avec son état");
+  assert.equal(b.api.sync.detache, true);
+  assert.deepEqual(PARCOURS.charger(local, B), parcoursAvecTravail("Léa", 4), "la case de Léa est intacte");
 });
 
 test("« Non » à la proposition laisse la case détachée en place", async () => {
   const serveur = fauxServeur();
   const local = fauxStockage({[`${CLE}:${B}`]: JSON.stringify(parcoursAvecTravail("Léa", 4))});
-  PARCOURS.sauverSync(local, B, {revision: 3, dirty: false, detache: true, maj: 5});
+  PARCOURS.sauverSync(local, B, {revision: 3, dirty: false, detache: true, maj: Date.now() - 1000});
   const b = appli(serveur, {local, entree: {code: N}});
   await demarrer(b);
-  assert.equal(b.api.questionFusion.source, B);
-  assert.equal(b.api.questionFusion.prenom, "Léa");
+  assert.deepEqual(b.api.questionFusion, {source: B}, "proposée, sans le prénom de Léa");
   b.api.reprendreLeTravailSansCode(false);
   assert.deepEqual(PARCOURS.charger(local, B), parcoursAvecTravail("Léa", 4), "intacte");
   assert.equal(PARCOURS.estVide(b.api.parcours), true);
+});
+
+test("une case détachée qui n’a pas bougé depuis plus de trente jours n’est plus proposée : c’est le travail d’un camarade d’avant", async () => {
+  const serveur = fauxServeur();
+  const local = fauxStockage({[`${CLE}:${B}`]: JSON.stringify(parcoursAvecTravail("Léa", 4))});
+  PARCOURS.sauverSync(local, B, {revision: 3, dirty: false, detache: true, maj: Date.now() - 31 * 24 * 3600 * 1000});
+  const b = appli(serveur, {local, entree: {code: N}});
+  await demarrer(b);
+  assert.equal(b.api.questionFusion, null, "trop ancienne : on ne la propose pas");
+  assert.deepEqual(PARCOURS.charger(local, B), parcoursAvecTravail("Léa", 4), "et on n’y touche pas");
+  const recente = fauxStockage({[`${CLE}:${B}`]: JSON.stringify(parcoursAvecTravail("Léa", 4))});
+  PARCOURS.sauverSync(recente, B, {revision: 3, dirty: false, detache: true, maj: Date.now() - 29 * 24 * 3600 * 1000});
+  const c = appli(serveur, {local: recente, entree: {code: N}});
+  await demarrer(c);
+  assert.deepEqual(c.api.questionFusion, {source: B}, "à vingt-neuf jours, encore proposée");
+});
+
+// ------------------------------------------------------- une réponse tardive
+
+// La garde `if (code !== codeSuivi) return;` n'avait aucun test (audit du
+// 02/09, sabotage non détecté). Léa a des demandes en vol — lecture, identité,
+// envoi — et clique « Ce n'est pas moi » ; les réponses arrivent après. Rien ne
+// doit bouger : ni la case sans code, ni son état, ni le repère.
+test("réponse tardive de Léa après « Ce n’est pas moi » : rien ne bouge", async () => {
+  const serveur = fauxServeur();
+  serveur.poser(B, parcoursAvecTravail("", 5), 1);
+  serveur.delai = 30;
+  const a = appli(serveur);
+  a.api.demarrerSuivi();          // lecture et identité en vol (30 ms)
+  travailler(a, 2);
+  await a.temps.avancer(700);     // l'envoi part (base 0 → 409 attendu), en vol lui aussi
+  assert.equal(serveur.appels.length, 3, "trois demandes en vol sous le code de Léa");
+  a.api.quitterSuivi();           // Sam prend l'appareil
+  assert.equal(a.api.codeSuivi, "");
+  await tic(80);                  // les trois réponses arrivent, trop tard
+  await a.temps.avancer(5000);
+  assert.equal(a.api.codeSuivi, "");
+  assert.equal(PARCOURS.estVide(PARCOURS.charger(a.local, "")), true, "la case sans code n’a rien reçu de Léa (ni du serveur, ni du 409)");
+  assert.equal(PARCOURS.estVide(a.api.parcours), true);
+  assert.equal(a.local.getItem(PARCOURS.cleSync("")), null, "aucun état de synchronisation écrit pour la case sans code");
+  assert.equal(a.api.sync.revision, 0);
+  assert.equal(a.api.suiviIdentite, null, "l’identité de Léa n’est pas revenue");
+  assert.equal(a.repere().hidden, true, "et le repère reste éteint");
+  assert.equal(serveur.appels.filter(x => x.code === "").length, 0, "rien n’est parti sous aucun code");
+  assert.deepEqual(PARCOURS.tablesAcquises(PARCOURS.charger(a.local, B)), [2], "le travail de Léa est resté dans SA case");
 });
 
 // ------------------------------------------------------------------- une série

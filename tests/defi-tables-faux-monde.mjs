@@ -196,9 +196,9 @@ export function demarrerAppli({entree = {}, local, session, reseau, running = fa
       get codeSuivi() { return codeSuivi; }, get parcours() { return parcours; }, set parcours(p) { parcours = p; },
       get suiviHorsLigne() { return suiviHorsLigne; }, get questionFusion() { return questionFusion; },
       get suiviIdentite() { return suiviIdentite; }, get sync() { return sync; },
-      get erreurDefinitive() { return erreurDefinitive; },
+      get erreurDefinitive() { return erreurDefinitive; }, get fusionEnAttente() { return fusionEnAttente; },
       ENTREE, suiviActif, demarrerSuivi, quitterSuivi, sauverParcours, envoyerAvantDeFermer, envoyerMaintenant,
-      reprendreLeTravailSansCode, renderRepere, majLienRetour
+      reprendreLeTravailSansCode, texteQuestionFusion, renderRepere, majLienRetour
     };`)(window, document, navigator, reseau.fetch, PARCOURS, () => local, () => session, state,
     () => rendus.push("parcours"));
   return {api, local, session, reseau, window, document, state, rendus, balises, temps,
