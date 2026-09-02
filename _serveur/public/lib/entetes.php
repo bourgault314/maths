@@ -3,9 +3,9 @@
 //
 // Ils ne dépendent pas de .htaccess : chez un hébergeur sans mod_headers, ou
 // dans les tests (serveur intégré de PHP), ils sortent quand même. Le
-// .htaccess pose les mêmes sur les fichiers que PHP ne sert pas (le moteur
-// JS copié dans prof/), avec « Header set » — pas « always » — pour qu'une
-// réponse PHP ne les porte jamais en double.
+// .htaccess pose les mêmes sur le seul fichier que PHP ne sert pas (le moteur
+// JS copié dans prof/), et sur lui seulement : chez OVH, une directive Header
+// posée sur tout le dossier s'ajoutait à ceux-ci au lieu de les remplacer.
 
 declare(strict_types=1);
 

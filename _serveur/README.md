@@ -119,22 +119,38 @@ compte ne voit rien tant qu'aucune classe ne lui a été partagée.
 
 ### Les comptes (lot S2)
 
-- **Mon compte** : chaque professeur change son mot de passe (ancien + nouveau
-  de 12 caractères au moins, différent de l'ancien). Les **autres** sessions du
-  compte sont fermées, celle qui fait le changement reste ouverte.
-- **Nouveau mot de passe** (administrateur, sur un autre compte) : le serveur
-  tire un mot de passe temporaire lisible à l'oral (`xxxx-xxxx-xxxx`, sans l, o,
-  i, 0, 1), l'affiche **une seule fois**, ferme les sessions du compte et pose
-  `mdp_temporaire = 1`. À sa connexion, ce professeur ne peut rien faire d'autre
-  que choisir un nouveau mot de passe : la page l'impose, et l'API refuse (403)
-  toute autre action.
+- **Ajouter un professeur** (administrateur) : seulement un identifiant. Le
+  serveur tire un mot de passe temporaire lisible à l'oral (`xxxx-xxxx-xxxx`,
+  sans l, o, i, 0, 1), l'affiche **une seule fois** et pose `mdp_temporaire = 1`.
+  À sa première connexion, le collègue ne peut rien faire d'autre que choisir
+  son mot de passe : la page l'impose, et l'API refuse (403) toute autre action.
+  L'administrateur ne connaît donc jamais le vrai mot de passe de personne.
+- **Mon compte** : chaque professeur change son mot de passe (ancien + nouveau,
+  différent de l'ancien). Les **autres** sessions du compte sont fermées, celle
+  qui fait le changement reste ouverte.
+- **Règles du mot de passe** (`motdepasse_refuse()` dans `lib/auth.php`, mêmes
+  règles pour l'installateur) : **12 caractères au moins**, et c'est tout —
+  pas de majuscule ni de symbole imposés (recommandation ANSSI / NIST : la
+  longueur protège plus que la composition, et le frein à 12 essais / 10 min
+  rend la devinette en ligne impossible). Deux refus de bon sens : rien que des
+  chiffres (date, téléphone), et l'identifiant dedans.
+- **Nouveau mot de passe** (administrateur, sur un autre compte) : même
+  mécanique que la création — temporaire affiché une fois, sessions du compte
+  fermées, changement imposé à la connexion suivante.
 - **Désactiver / Réactiver** (administrateur, sur un autre compte) : un compte
   désactivé ne se connecte plus, avec **le même refus** qu'un mauvais mot de
   passe (rien ne dit de dehors qu'il existe) ; ses sessions sont fermées ; ses
   classes, ses élèves et leurs progressions restent en base ; il sort de
   l'annuaire de partage. Réactiver rend tout.
-- On ne se réinitialise ni ne se désactive soi-même : l'administrateur unique se
-  retrouverait dehors sans personne pour le faire rentrer.
+- **Supprimer** (administrateur, sur un autre compte) : le compte, ses sessions
+  et les partages qu'il a reçus disparaissent. S'il **possède des classes**, le
+  serveur refuse (409) sans `avec_classes: true` ; la page demande alors une
+  confirmation qui dit le nombre de classes et d'élèves, et tout part avec
+  (classes, codes, progressions, partages, compteurs), en une transaction. Pour
+  garder ses classes, désactiver suffit.
+- On ne se réinitialise, ne se désactive ni ne se supprime soi-même :
+  l'administrateur unique se retrouverait dehors sans personne pour le faire
+  rentrer.
 
 ### Mettre à niveau une base déjà installée
 
@@ -153,7 +169,7 @@ codes, ni aux progressions, et peut être relancée sans risque.
 | POST | `/api/parcours.php` `{code, appli, lire: true}` | lit la progression, avec sa `revision` |
 | POST | `/api/parcours.php` `{code, appli, parcours, base_revision}` | l'enregistre si `base_revision` est la révision en base ; sinon **409** avec l'état actuel, que l'appli fusionne avant de renvoyer. Le serveur ne garde que ce que `lib/applis.php` déclare (`lib/progression.php`) : jamais un prénom ni un texte libre. La version précédente est conservée (`donnees_avant`) |
 | POST | `/api/eleve.php` `{code}` | prénom, classe et applis de l'élève (page d'accueil) |
-| POST | `/api/prof.php` `{action, …}` | `connexion` (répond aussi `mdp_temporaire`), `deconnexion`, `moi`, `profs.motdepasse` `{ancien, nouveau}`, `profs.annuaire`, `profs.liste/ajouter/reinitialiser/desactiver/reactiver` (administrateur), `classes.liste/creer/modifier/supprimer`, `partages.liste/ajouter/supprimer`, `eleves.ajouter/nommer/regenerer/restaurer/supprimer`, `tableau` |
+| POST | `/api/prof.php` `{action, …}` | `connexion` (répond aussi `mdp_temporaire`), `deconnexion`, `moi`, `profs.motdepasse` `{ancien, nouveau}`, `profs.annuaire`, `profs.liste/ajouter/reinitialiser/desactiver/reactiver/supprimer` (administrateur ; `ajouter` et `reinitialiser` renvoient le temporaire ; `supprimer` veut `avec_classes: true` si le compte possède des classes), `classes.liste/creer/modifier/supprimer`, `partages.liste/ajouter/supprimer`, `eleves.ajouter/nommer/regenerer/restaurer/supprimer`, `tableau` |
 
 ## Sécurité
 
@@ -184,7 +200,9 @@ codes, ni aux progressions, et peut être relancée sans risque.
   verrouille dès qu'un compte prof existe.
 - Aucun message d'erreur technique n'est renvoyé au navigateur.
 - **En-têtes de sécurité** (`lib/entetes.php`, envoyés par PHP sur chaque
-  réponse, pages et API — le `.htaccess` pose les mêmes sur le moteur JS) :
+  réponse, pages et API — le `.htaccess` pose les mêmes sur le moteur JS **et
+  sur lui seul** : chez OVH, une directive `Header` posée sur tout le dossier
+  s'ajoute à ceux de PHP au lieu de les remplacer, constaté le 30/08) :
   `X-Content-Type-Options: nosniff`, `Referrer-Policy:
   strict-origin-when-cross-origin`, `X-Frame-Options: DENY`,
   `Strict-Transport-Security: max-age=31536000`. Les pages HTML ajoutent une
@@ -235,9 +253,15 @@ réinitialisation (format du temporaire, sessions fermées, rien d'autre que le
 changer, liste qui le dit), désactivation (même réponse qu'un mauvais mot de
 passe, temps de refus comparable, classes conservées et invisibles, hors
 annuaire, partage refusé, session refusée même si elle survivait),
-réactivation, `verifier.php`.
+réactivation, `verifier.php`. Lot S2b : création d'un compte sans mot de passe
+(temporaire tiré, changement imposé, celui envoyé par l'administrateur ne vaut
+rien), règles du mot de passe (chiffres seuls, identifiant dedans, phrase longue
+acceptée, installateur), suppression d'un compte (droits, jamais soi, sans
+classes ; avec classes : 409 sans le oui explicite, puis aucun orphelin —
+élèves, progressions, partages reçus et donnés, sessions, compteurs — et les
+autres n'ont rien perdu).
 
-**107 tests, 0 échec au 30/08/2026**, rejoués sur SQLite **et** sur MariaDB
+**110 tests, 0 échec au 30/08/2026**, rejoués sur SQLite **et** sur MariaDB
 (le limiteur emploie une instruction différente sur chaque moteur) :
 
 ```

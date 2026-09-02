@@ -828,7 +828,8 @@ $versionMoteur = is_file($moteur) ? substr(md5_file($moteur), 0, 10) : '0';
         if (prof.actif === false) morceaux.push("désactivé");
         if (prof.mdp_temporaire) morceaux.push("mot de passe temporaire, pas encore changé");
         // Formulation sans genre : l'application n'a pas à savoir qui est qui.
-        morceaux.push(`${prof.classes} classe${prof.classes > 1 ? "s" : ""} créée${prof.classes > 1 ? "s" : ""}`);
+        morceaux.push(`${prof.classes} classe${prof.classes > 1 ? "s" : ""} créée${prof.classes > 1 ? "s" : ""}`
+          + (prof.eleves ? ` (${prof.eleves} élève${prof.eleves > 1 ? "s" : ""})` : ""));
         // « partagée » sans dire par qui : la table des partages n'enregistre pas
         // l'auteur du partage, et ce compte pourra un jour en recevoir d'ailleurs.
         if (prof.partagees) morceaux.push(`${prof.partagees} reçue${prof.partagees > 1 ? "s" : ""} en partage`);
@@ -850,7 +851,13 @@ $versionMoteur = is_file($moteur) ? substr(md5_file($moteur), 0, 10) : '0';
           etat.className = prof.actif === false ? "secondaire petit" : "danger petit";
           etat.textContent = prof.actif === false ? "Réactiver" : "Désactiver";
           etat.addEventListener("click", () => (prof.actif === false ? reactiverProf(prof) : desactiverProf(prof)));
-          fin.append(reinit, etat);
+          const sup = document.createElement("button");
+          sup.type = "button";
+          sup.className = "danger petit";
+          sup.textContent = "Supprimer";
+          sup.title = prof.classes ? "Supprimer le compte et ses classes" : "Supprimer le compte";
+          sup.addEventListener("click", () => supprimerProf(prof));
+          fin.append(reinit, etat, sup);
           li.append(fin);
         }
         if (prof.actif === false) li.style.opacity = ".7";
@@ -893,21 +900,38 @@ $versionMoteur = is_file($moteur) ? substr(md5_file($moteur), 0, 10) : '0';
   }
 
   $("ajouter-prof").addEventListener("click", async () => {
+    // Pas de mot de passe à choisir : le serveur en tire un temporaire, affiché
+    // une fois, que le collègue remplace à sa première connexion. Personne
+    // d'autre que lui ne connaît son vrai mot de passe.
     const reponse = await demander(
-      "Nouveau professeur. Choisis-lui un identifiant et un mot de passe, et transmets-les-lui de vive voix.",
-      [
-        {nom: "identifiant", libelle: "Identifiant", maxlength: 40},
-        {nom: "motdepasse", libelle: "Mot de passe (12 caractères minimum)", type: "password"}
-      ]);
+      "Nouveau professeur. Choisis-lui un identifiant ; tu recevras un mot de passe temporaire à lui transmettre de vive voix, qu'il changera à sa première connexion.",
+      [{nom: "identifiant", libelle: "Identifiant", maxlength: 40}]);
     if (!reponse) return;
     try {
-      await api("profs.ajouter", {identifiant: reponse.identifiant, motdepasse: reponse.motdepasse});
+      const donnees = await api("profs.ajouter", {identifiant: reponse.identifiant});
       await chargerProfs();
       messager("message-profs",
-        `Compte créé pour ${reponse.identifiant}. Il ne verra aucune classe tant que tu ne lui en auras pas partagé une.`,
+        `Compte créé pour ${reponse.identifiant.trim()}. Mot de passe temporaire : ${donnees.motdepasse} — note-le maintenant, il ne sera plus affiché. Il ne verra aucune classe tant que tu ne lui en auras pas partagé une.`,
         "ok");
     } catch (erreur) { surErreur(erreur, "message-profs"); }
   });
+
+  async function supprimerProf(prof) {
+    // Un compte qui possède des classes : on dit ce qui part avec, et on
+    // propose l'autre voie (désactiver garde tout).
+    const classes = prof.classes > 1 ? `ses ${prof.classes} classes` : "sa classe";
+    const eleves = `${prof.eleves} élève${prof.eleves > 1 ? "s" : ""}`;
+    const question = prof.classes
+      ? `Supprimer le compte de ${prof.identifiant} ET ${classes} (${eleves}, avec leurs codes et leurs progressions) ? Cette action est définitive. Pour garder ${prof.classes > 1 ? "ses classes" : "sa classe"}, désactive plutôt le compte.`
+      : `Supprimer le compte de ${prof.identifiant} ? Cette action est définitive.`;
+    const reponse = await demander(question);
+    if (!reponse) return;
+    try {
+      await api("profs.supprimer", {prof_id: prof.id, avec_classes: Boolean(prof.classes)});
+      await chargerProfs();
+      messager("message-profs", `Compte de ${prof.identifiant} supprimé.`, "ok");
+    } catch (erreur) { surErreur(erreur, "message-profs"); }
+  }
 
   async function nommer(eleve, champ) {
     const texte = champ.value.trim().replace(/\s+/g, " ");
