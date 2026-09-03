@@ -179,6 +179,22 @@ if ($autorise) {
         }
         return "en place (" . number_format((float)filesize($chemin), 0, ',', ' ') . " octets, empreinte " . substr(md5_file($chemin), 0, 10) . ")";
     });
+    // Lot 7 (03/09/2026) : le logo et les icônes sont servis d'ici, la
+    // politique de contenu n'accepte plus d'image d'un autre domaine. S'ils
+    // manquent, les deux pages s'affichent sans logo et sans favicon.
+    verif($lignes, "Logo et icônes servis localement", function () {
+        $manquants = [];
+        $total = 0;
+        foreach (['mathsgo-logo.png', 'mathsgo-logo-print.png', 'favicon.ico', 'favicon.svg', 'apple-touch-icon.png'] as $fichier) {
+            $chemin = __DIR__ . '/' . $fichier;
+            if (!is_file($chemin) || filesize($chemin) === 0) { $manquants[] = $fichier; continue; }
+            $total += (int)filesize($chemin);
+        }
+        if ($manquants !== []) {
+            throw new RuntimeException(implode(', ', $manquants) . " absent(s) : à déposer à la racine du suivi (copies du dépôt).");
+        }
+        return "5 fichiers en place (" . number_format((float)$total, 0, ',', ' ') . " octets)";
+    });
     verif($lignes, "Fichiers d'installation supprimés", function () {
         $restants = [];
         foreach (['installer.php', 'migrer.php'] as $fichier) {

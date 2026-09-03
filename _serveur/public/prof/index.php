@@ -17,9 +17,14 @@ $versionMoteur = is_file($moteur) ? substr(md5_file($moteur), 0, 10) : '0';
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
-<link rel="icon" href="https://mathsgo.re/favicon.ico" sizes="48x48">
-<link rel="icon" type="image/svg+xml" href="https://mathsgo.re/favicon.svg">
-<link rel="apple-touch-icon" href="https://mathsgo.re/assets/img/apple-touch-icon.png">
+<!-- Lot 7 : les icônes et le logo sont servis d'ICI. Avant, mathsgo.re (et
+     tout ce qui est devant lui) apprenait l'adresse IP et l'horaire de chaque
+     ouverture de l'espace des professeurs, à chaque fois, y compris avant la
+     connexion. Copies octet pour octet des fichiers du dépôt, vérifiées par un
+     test ; la politique de contenu n'autorise plus d'image d'ailleurs. -->
+<link rel="icon" href="../favicon.ico" sizes="48x48">
+<link rel="icon" type="image/svg+xml" href="../favicon.svg">
+<link rel="apple-touch-icon" href="../apple-touch-icon.png">
 <title>Ma classe | maths&amp;go</title>
 <style>
   :root {
@@ -121,11 +126,40 @@ $versionMoteur = is_file($moteur) ? substr(md5_file($moteur), 0, 10) : '0';
   .fragiles li span { font-size: .82rem; font-weight: 600; color: #a15c11; }
   .barre-outils { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-top: 14px; }
   .barre-outils .espace { margin-left: auto; }
-  .fiche { display: none; }
+  /* Le papier (lot 7). Deux impressions distinctes, jamais ensemble : les
+     BANDELETTES à distribuer (adresse, code, consigne — aucun prénom du côté
+     donné à l'élève) et la FEUILLE prénom ↔ code, que le professeur garde.
+     À l'écran, ni l'une ni l'autre ne s'affiche. */
+  .fiche, .bandelettes, .note-impression { display: none; }
   .fiche h2 { margin-top: 0; }
   .fiche table { font-size: 1rem; }
   .fiche td.code { font-size: 1.15rem; }
   .fiche td.numero { color: var(--muted); font-weight: 800; text-align: right; width: 2.4em; }
+  .avertissement-papier { margin: 0 0 6mm; padding: 3mm 4mm; border: 1px solid #999;
+                          border-radius: 2mm; font-size: .82rem; color: #333; }
+  .bandelettes h2 { margin: 0 0 2mm; }
+  .bandelettes-liste { list-style: none; margin: 0; padding: 0; }
+  /* Une bandelette = une souche (le professeur la détache et la garde : le
+     numéro et le prénom, JAMAIS le code) et la partie remise à l'élève
+     (l'adresse, le code, la consigne, JAMAIS le prénom). Séparées, aucune des
+     deux n'associe un enfant à un code : ce lien n'existe que sur la feuille
+     récapitulative, imprimée à part. */
+  .bandelette { display: flex; align-items: stretch; margin: 0 0 2mm; line-height: 1.35;
+                border: 1px dashed #8a8a8a; border-radius: 2mm;
+                break-inside: avoid; page-break-inside: avoid; }
+  .bandelette .souche { flex: 0 0 40mm; display: flex; align-items: center; gap: 3mm;
+                        padding: 2mm 3mm; border-right: 1px dashed #8a8a8a; }
+  .bandelette .souche .numero { font-weight: 800; color: #666; font-size: .85rem; }
+  .bandelette .souche .nom { font-weight: 700; }
+  .bandelette .part { flex: 1; padding: 2mm 4mm; }
+  .bandelette .marque { font-family: Georgia, serif; font-weight: 700; font-size: .88rem; color: #063f86; }
+  .bandelette .marque .appli { margin-left: 6px; font-family: inherit; font-weight: 400; color: #444; }
+  .bandelette .adresse { font-weight: 700; font-size: .98rem; }
+  .bandelette .code-ligne { display: flex; align-items: baseline; gap: 3mm; }
+  .bandelette .code-ligne .etiquette { font-size: .8rem; color: #444; }
+  .bandelette .code-ligne .code { font-family: ui-monospace, Consolas, monospace;
+                                  font-size: 1.25rem; font-weight: 800; letter-spacing: .12em; }
+  .bandelette .consigne { font-size: .78rem; }
   /* Aperçu « code → prénom » dans la boîte « Coller la liste des prénoms ». */
   .apercu { list-style: none; margin: 10px 0 0; padding: 8px 12px; max-height: 200px; overflow: auto;
             background: #fbfcfe; border: 1px solid var(--line); border-radius: 10px;
@@ -161,10 +195,18 @@ $versionMoteur = is_file($moteur) ? substr(md5_file($moteur), 0, 10) : '0';
     #tableau td.actions-eleve button { flex: 1 1 auto; margin-left: 0 !important; }
   }
   @media print {
-    .barre, header, footer, .barre-outils, .actions, #ecran-classe > *:not(.fiche) { display: none !important; }
+    @page { margin: 12mm; }
+    .barre, header, footer, .barre-outils, .actions,
+    #ecran-classe > *:not(.fiche):not(.bandelettes):not(.note-impression) { display: none !important; }
     body { background: #fff; }
     main { max-width: none; padding: 0; }
-    .fiche { display: block; }
+    /* Le bouton pose la classe sur <body> juste avant window.print() et
+       l'enlève au retour (afterprint) : une seule des deux feuilles sort, et
+       celle qu'on a demandée. Sans classe — un Ctrl+P direct —, on n'imprime
+       pas les codes de la classe par surprise : on imprime le mode d'emploi. */
+    body.imprime-recap .fiche { display: block; }
+    body.imprime-bandelettes .bandelettes { display: block; }
+    body:not(.imprime-recap):not(.imprime-bandelettes) .note-impression { display: block; }
     .fiche th, .fiche td { border-bottom: 1px solid #999; }
     .pied-impression { margin-top: 18px; display: flex; align-items: center;
                        justify-content: space-between; font-size: .78rem; color: #444; }
@@ -174,7 +216,7 @@ $versionMoteur = is_file($moteur) ? substr(md5_file($moteur), 0, 10) : '0';
 <body>
 <div class="barre"></div>
 <header>
-  <img src="https://mathsgo.re/assets/img/mathsgo-logo.png" alt="maths&go">
+  <img src="../mathsgo-logo.png" alt="maths&go">
   <span class="titre">Ma classe</span>
   <span class="droite">
     <span id="qui" hidden></span>
@@ -210,7 +252,7 @@ $versionMoteur = is_file($moteur) ? substr(md5_file($moteur), 0, 10) : '0';
       <form id="form-classe">
         <label for="libelle">Nom de la classe</label>
         <input id="libelle" type="text" maxlength="40" placeholder="405" required>
-        <div class="actions"><button type="submit">Créer la classe</button></div>
+        <div class="actions"><button type="submit" id="creer-classe">Créer la classe</button></div>
       </form>
     </div>
     <p class="message" id="message-classes" hidden></p>
@@ -240,7 +282,8 @@ $versionMoteur = is_file($moteur) ? substr(md5_file($moteur), 0, 10) : '0';
     <div class="barre-outils">
       <button type="button" class="secondaire" id="ajouter">Ajouter des élèves</button>
       <button type="button" class="secondaire" id="coller-prenoms">Coller la liste des prénoms</button>
-      <button type="button" class="secondaire" id="imprimer">Imprimer la liste des codes</button>
+      <button type="button" class="secondaire" id="imprimer-bandelettes">Imprimer les bandelettes</button>
+      <button type="button" class="secondaire" id="imprimer-recap">Imprimer la feuille prénom&nbsp;↔&nbsp;code</button>
       <label for="tri" style="margin:0;font-size:.88rem;color:var(--muted);font-weight:600">Trier&nbsp;par</label>
       <select id="tri" style="width:auto;min-width:170px">
         <option value="prenom">Prénom</option>
@@ -298,15 +341,52 @@ $versionMoteur = is_file($moteur) ? substr(md5_file($moteur), 0, 10) : '0';
       </div>
     </div>
 
-    <!-- Fiche à imprimer : code ↔ élève -->
+    <!-- Ce qui sort de l'imprimante (lot 7).
+
+         1. LES BANDELETTES, à découper et à distribuer. La partie remise à
+            l'enfant porte l'adresse, son code et la consigne, et RIEN d'autre :
+            une bandelette trouvée par terre est un code sans nom. La souche,
+            que le professeur détache et garde, porte le numéro et le prénom, et
+            PAS le code : une souche perdue est un nom sans code.
+         2. LA FEUILLE PRÉNOM ↔ CODE, imprimée à part. C'est le seul papier qui
+            associe les deux ; il est fait pour rester dans le classeur du
+            professeur, et il le dit en haut. -->
+    <div class="bandelettes" id="bandelettes">
+      <h2 id="bandelettes-titre"></h2>
+      <p class="avertissement-papier">Découpe sur les pointillés. Tu détaches la souche de gauche
+      (numéro et prénom) et tu la gardes ; l’élève reçoit la partie de droite, qui ne porte pas son
+      prénom. Les numéros sont les mêmes que sur la feuille prénom ↔ code.</p>
+      <ul class="bandelettes-liste" id="bandelettes-liste"></ul>
+      <div class="pied-impression">
+        <img src="../mathsgo-logo-print.png" alt="maths&go" style="height:26px">
+        <span>mathsgo.re · CC BY-NC-SA 4.0</span>
+      </div>
+    </div>
+
     <div class="fiche" id="fiche">
       <h2 id="fiche-titre"></h2>
+      <p class="avertissement-papier">Feuille à garder : c’est le seul papier qui associe un prénom
+      à un code. Ne la laisse pas sur l’imprimante ni sur ton bureau ; jette-la à la déchiqueteuse
+      quand elle ne sert plus.</p>
       <table>
-        <thead><tr><th>N°</th><th>Élève</th><th>Code</th><th>Découper</th></tr></thead>
+        <thead><tr><th>N°</th><th>Élève</th><th>Code</th></tr></thead>
         <tbody id="fiche-corps"></tbody>
       </table>
       <div class="pied-impression">
-        <img src="https://mathsgo.re/assets/img/mathsgo-logo-print.png" alt="maths&go" style="height:26px">
+        <img src="../mathsgo-logo-print.png" alt="maths&go" style="height:26px">
+        <span>mathsgo.re · CC BY-NC-SA 4.0</span>
+      </div>
+    </div>
+
+    <!-- Ctrl+P sans passer par un bouton : on n'imprime pas les codes par
+         surprise, on explique quel bouton appuyer. -->
+    <div class="note-impression">
+      <h2>Que veux-tu imprimer ?</h2>
+      <p>Reviens à la page et choisis un bouton : <strong>« Imprimer les bandelettes »</strong>
+      (une par élève, à découper et à distribuer) ou <strong>« Imprimer la feuille prénom ↔ code »</strong>
+      (celle que tu gardes). Chaque bouton n’imprime que sa feuille.</p>
+      <div class="pied-impression">
+        <img src="../mathsgo-logo-print.png" alt="maths&go" style="height:26px">
         <span>mathsgo.re · CC BY-NC-SA 4.0</span>
       </div>
     </div>
@@ -341,6 +421,23 @@ $versionMoteur = is_file($moteur) ? substr(md5_file($moteur), 0, 10) : '0';
   <a href="https://mathsgo.re/">mathsgo.re</a> · CC BY-NC-SA 4.0
 </footer>
 
+<!-- Un secret que l'on ne montre qu'une fois (mot de passe temporaire d'un
+     collègue). Avant, il restait écrit en clair dans la page jusqu'à la
+     navigation suivante — sur un vidéoprojecteur ou un poste partagé, pour une
+     durée indéterminée. -->
+<dialog id="secret">
+  <p id="secret-texte" style="margin:0 0 10px;font-weight:600"></p>
+  <p style="margin:0 0 6px"><code id="secret-valeur" style="display:block;padding:10px 12px;
+     background:#eef3f9;border-radius:10px;font-family:ui-monospace,Consolas,monospace;
+     font-size:1.15rem;font-weight:700;letter-spacing:.06em;word-break:break-all"></code></p>
+  <p class="sous" style="margin:0;font-size:.86rem">Note-le maintenant : il ne sera plus affiché.
+  Il s’efface tout seul au bout de deux minutes.</p>
+  <div class="actions" style="justify-content:flex-end">
+    <button type="button" class="secondaire" id="secret-copier">Copier</button>
+    <button type="button" id="secret-note">J’ai noté</button>
+  </div>
+</dialog>
+
 <dialog id="boite">
   <form method="dialog" id="form-boite">
     <p id="boite-texte" style="margin:0 0 10px;font-weight:600"></p>
@@ -363,6 +460,16 @@ $versionMoteur = is_file($moteur) ? substr(md5_file($moteur), 0, 10) : '0';
   const $ = id => document.getElementById(id);
   const PARCOURS = window.MATHSGO_DEFI_TABLES_MON_PARCOURS || null;
   const CLE_JETON = "mathsgo-suivi-jeton";
+  // Un mot à dire après le rechargement de la page : la déconnexion recharge,
+  // et un message écrit avant serait emporté. Il vit le temps d'un onglet.
+  const CLE_AVIS = "mathsgo-suivi-avis";
+  const AVIS = {
+    inactivite: "Tu as été déconnecté après 30 minutes sans rien faire sur cette page. Reconnecte-toi.",
+    "serveur-muet": "Déconnexion faite sur cet appareil, mais le serveur n’a pas répondu. Si tu es sur un poste partagé, change ton mot de passe."
+  };
+  // Poste partagé : au bout de ce temps sans un geste, la page se déconnecte
+  // seule. Le serveur, lui, ferme la session au bout de DUREE_SESSION_HEURES.
+  const INACTIVITE_MS = 30 * 60 * 1000;
   let jeton = "";
   let classes = [];
   let classe = null;
@@ -376,6 +483,53 @@ $versionMoteur = is_file($moteur) ? substr(md5_file($moteur), 0, 10) : '0';
   let annuaire = [];
 
   try { jeton = sessionStorage.getItem(CLE_JETON) || ""; } catch (_) {}
+
+  // ------------------------------------------------------- verrou d'inactivité
+  //
+  // Sur un poste de salle des profs, l'onglet reste ouvert entre deux cours :
+  // F5, retour arrière, onglet minimisé rouvert trois heures plus tard, on
+  // retombait sur « Mes classes » sans rien taper. On mesure le TEMPS ÉCOULÉ
+  // (l'horloge), pas un minuteur : une machine mise en veille n'avance pas ses
+  // setTimeout, mais l'heure, elle, avance quand même.
+  function creerVeille(delaiMs) {
+    let dernier = 0;
+    return {
+      geste(maintenant) { if (dernier > 0) dernier = maintenant; },
+      demarrer(maintenant) { dernier = maintenant; },
+      arreter() { dernier = 0; },
+      active() { return dernier > 0; },
+      doitFermer(maintenant) { return dernier > 0 && (maintenant - dernier) >= delaiMs; }
+    };
+  }
+  const veille = creerVeille(INACTIVITE_MS);
+
+  // ------------------------------------------------------ redessins et saisies
+  //
+  // `nommer()` est asynchrone. Cliquer sur un en-tête de tri fait d'abord
+  // perdre le focus au champ (donc partir la saisie), puis redessinait le
+  // tableau à partir d'un prénom pas encore mis à jour : la correction
+  // disparaissait de l'écran alors qu'elle était en base, et la collègue la
+  // retapait dans la ligne d'un AUTRE élève. Ici, un redessin demandé pendant
+  // qu'une saisie est en vol attend la dernière réponse.
+  function creerFileRedessin(dessiner) {
+    let enVol = 0;
+    let enAttente = false;
+    return {
+      debut() { enVol += 1; },
+      fin() {
+        enVol = Math.max(0, enVol - 1);
+        if (enVol === 0 && enAttente) { enAttente = false; dessiner(); }
+      },
+      demander() {
+        if (enVol > 0) { enAttente = true; return false; }
+        dessiner();
+        return true;
+      },
+      combien() { return enVol; },
+      enAttente() { return enAttente; }
+    };
+  }
+  const redessin = creerFileRedessin(() => dessinerTableau());
 
   async function api(action, corps = {}) {
     // Le jeton voyage DANS LE CORPS, et pas seulement dans l'en-tête
@@ -418,17 +572,97 @@ $versionMoteur = is_file($moteur) ? substr(md5_file($moteur), 0, 10) : '0';
     $("retour-compte").hidden = mdpTemporaire;
   }
 
-  async function deconnecter(silencieux) {
-    try { if (jeton) await api("deconnexion"); } catch (_) {}
+  // ------------------------------------------------------------ se déconnecter
+  //
+  // Tout ce que la page peut contenir d'un élève ou d'un collègue. Après
+  // « Se déconnecter », l'écran montrait bien le formulaire de connexion —
+  // mais les 28 prénoms et les 28 codes étaient toujours dans le document :
+  // Ctrl+U, Ctrl+S, l'inspecteur ou une extension les lisaient encore.
+  const ZONES_TEXTE = ["corps", "fiche-corps", "fiche-titre", "bandelettes-liste",
+    "bandelettes-titre", "liste-classes", "liste-profs", "liste-partages", "fragiles-liste",
+    "fragiles-sous", "titre-classe", "resume-classe", "qui", "compte-qui", "boite-texte",
+    "boite-champs", "secret-texte", "secret-valeur"];
+  const ZONES_MESSAGE = ["erreur-connexion", "message-classes", "message-classe",
+    "message-profs", "message-partage", "message-compte", "bandeau-droit"];
+  const CHAMPS_A_VIDER = ["identifiant", "motdepasse", "libelle",
+    "mdp-ancien", "mdp-nouveau", "mdp-confirme"];
+  const BLOCS_A_CACHER = ["fiche", "bandelettes", "fragiles", "bloc-partage", "bloc-profs"];
+
+  function viderZones() {
+    ZONES_TEXTE.forEach(id => { const noeud = $(id); if (noeud) noeud.textContent = ""; });
+    ZONES_MESSAGE.forEach(id => { const noeud = $(id); if (noeud) { noeud.textContent = ""; noeud.hidden = true; } });
+    CHAMPS_A_VIDER.forEach(id => { const noeud = $(id); if (noeud) noeud.value = ""; });
+    BLOCS_A_CACHER.forEach(id => { const noeud = $(id); if (noeud) noeud.hidden = true; });
+    ["boite", "secret"].forEach(id => {
+      const boite = $(id);
+      if (boite && boite.open) { try { boite.close(); } catch (_) {} }
+    });
+  }
+
+  function oublierEtat() {
     jeton = "";
+    classes = [];
+    classe = null;
+    eleves = [];
     estAdmin = false;
     mdpTemporaire = false;
     identifiant = "";
     droitClasse = "proprietaire";
     annuaire = [];
+    tri = {colonne: "prenom", sens: 1};
+    veille.arreter();
+  }
+
+  function poserAvis(cle) {
+    try { sessionStorage.setItem(CLE_AVIS, cle); } catch (_) {}
+  }
+
+  function lireAvis() {
+    let cle = "";
+    try { cle = sessionStorage.getItem(CLE_AVIS) || ""; sessionStorage.removeItem(CLE_AVIS); } catch (_) {}
+    return AVIS[cle] || "";
+  }
+
+  // Fermer la session côté serveur. Le jeton est passé en paramètre parce qu'à
+  // ce moment-là la page l'a déjà oublié : on vide d'abord, on prévient le
+  // serveur ensuite. Deux essais — un wifi de collège qui hoquette ne doit pas
+  // laisser une session ouverte pour rien.
+  async function fermerSession(jetonAFermer) {
+    if (!jetonAFermer) return true;
+    for (let essai = 0; essai < 2; essai += 1) {
+      try {
+        const reponse = await fetch("../api/prof.php", {
+          method: "POST",
+          headers: {"Content-Type": "application/json", "Authorization": "Bearer " + jetonAFermer},
+          body: JSON.stringify({action: "deconnexion", jeton: jetonAFermer}),
+          cache: "no-store"
+        });
+        // 401 : la session n'existe déjà plus, c'est le résultat voulu.
+        if (reponse.ok || reponse.status === 401) return true;
+      } catch (_) {}
+    }
+    return false;
+  }
+
+  // On vide l'état ET le document AVANT toute attente : si le réseau traîne ou
+  // si le rechargement tarde, la page ne contient déjà plus rien.
+  function deconnecter(options) {
+    const opt = options || {};
+    const jetonAFermer = jeton;
+    oublierEtat();
+    viderZones();
     try { sessionStorage.removeItem(CLE_JETON); } catch (_) {}
+    if (opt.avis) poserAvis(opt.avis);
     montrer("ecran-connexion");
-    if (!silencieux) messager("erreur-connexion", "", "");
+    if (opt.message) messager("erreur-connexion", opt.message, "erreur");
+    const fin = fermerSession(jetonAFermer);
+    if (opt.recharger) {
+      fin.then(serveurOk => {
+        if (!serveurOk) poserAvis("serveur-muet");
+        location.reload();
+      });
+    }
+    return fin;
   }
 
   // Une erreur écrite dans un écran masqué est une erreur perdue : l'utilisateur
@@ -441,7 +675,7 @@ $versionMoteur = is_file($moteur) ? substr(md5_file($moteur), 0, 10) : '0';
   }
 
   function surErreur(erreur, zone) {
-    if (erreur.statut === 401) { deconnecter(true); messager("erreur-connexion", "Session terminée, reconnecte-toi.", "erreur"); return; }
+    if (erreur.statut === 401) { deconnecter({message: "Session terminée, reconnecte-toi."}); return; }
     messager(zoneVisible(zone) ? zone : "erreur-connexion", erreur.message, "erreur");
   }
 
@@ -613,7 +847,7 @@ $versionMoteur = is_file($moteur) ? substr(md5_file($moteur), 0, 10) : '0';
         "La progression ne peut pas être détaillée : le moteur de Défi tables (prof/defi_tables_mon_parcours.js) n’a pas pu être chargé — vérifie qu’il est bien déposé sur le serveur.",
         "erreur");
     }
-    dessinerFiche();
+    dessinerPapier();
   }
 
   // Ce qu'il faut revoir au tableau lundi matin. Aucune donnée de plus n'est
@@ -670,7 +904,7 @@ $versionMoteur = is_file($moteur) ? substr(md5_file($moteur), 0, 10) : '0';
   }
 
   function dessinerFiche() {
-    $("fiche-titre").textContent = `Codes des élèves — ${classe.libelle}`;
+    $("fiche-titre").textContent = `Prénom ↔ code — ${classe.libelle}`;
     const corps = $("fiche-corps");
     corps.textContent = "";
     ordreDeLaFeuille(eleves).forEach((eleve, index) => {
@@ -684,12 +918,104 @@ $versionMoteur = is_file($moteur) ? substr(md5_file($moteur), 0, 10) : '0';
       const code = document.createElement("td");
       code.className = "code";
       code.textContent = eleve.code;
-      const vide = document.createElement("td");
-      vide.textContent = "✂";
-      vide.style.color = "#bbb";
-      ligne.append(numero, nom, code, vide);
+      ligne.append(numero, nom, code);
       corps.appendChild(ligne);
     });
+  }
+
+  // LES BANDELETTES. Même ordre et mêmes numéros que la feuille prénom ↔ code
+  // (ordreDeLaFeuille, une seule fonction pour les deux) : la ligne 3 de la
+  // feuille est la bandelette n° 3.
+  //
+  // Ce qui part chez l'enfant : l'adresse où entrer, son code, et « ton code
+  // est personnel ». Pas son prénom — une bandelette ramassée par terre ne dit
+  // pas de qui elle est. Ce que le professeur détache et garde : le numéro et
+  // le prénom. Pas le code — une souche oubliée n'ouvre rien.
+  const CONSIGNE_BANDELETTE = "Ton code est personnel : ne le prête à personne.";
+  const ADRESSE_ELEVE = "suivi.mathsgo.re";
+
+  function dessinerBandelettes() {
+    $("bandelettes-titre").textContent = `Bandelettes à découper — ${classe.libelle}`;
+    const liste = $("bandelettes-liste");
+    liste.textContent = "";
+    ordreDeLaFeuille(eleves).forEach((eleve, index) => {
+      const item = document.createElement("li");
+      item.className = "bandelette";
+
+      const souche = document.createElement("div");
+      souche.className = "souche";
+      const numero = document.createElement("span");
+      numero.className = "numero";
+      numero.textContent = `n° ${index + 1}`;
+      const nom = document.createElement("span");
+      nom.className = "nom";
+      nom.textContent = nomAffiche(eleve) || "—";
+      souche.append(numero, nom);
+
+      const part = document.createElement("div");
+      part.className = "part";
+      const marque = document.createElement("div");
+      marque.className = "marque";
+      marque.textContent = "maths&go";
+      const appli = document.createElement("span");
+      appli.className = "appli";
+      appli.textContent = "Défi tables";
+      marque.appendChild(appli);
+      const adresse = document.createElement("div");
+      adresse.className = "adresse";
+      adresse.textContent = ADRESSE_ELEVE;
+      const ligneCode = document.createElement("div");
+      ligneCode.className = "code-ligne";
+      const etiquette = document.createElement("span");
+      etiquette.className = "etiquette";
+      etiquette.textContent = "ton code";
+      const code = document.createElement("span");
+      code.className = "code";
+      code.textContent = eleve.code;
+      ligneCode.append(etiquette, code);
+      const consigne = document.createElement("div");
+      consigne.className = "consigne";
+      consigne.textContent = CONSIGNE_BANDELETTE;
+      part.append(marque, adresse, ligneCode, consigne);
+
+      item.append(souche, part);
+      liste.appendChild(item);
+    });
+  }
+
+  // En lecture seule, le serveur ne donne pas les codes : la feuille sortait
+  // avec 28 lignes vides sous le titre « Codes des élèves », et la collègue
+  // croyait à une panne. Maintenant elle n'est simplement pas construite.
+  function dessinerPapier() {
+    const ecriture = droitClasse !== "lecture";
+    $("fiche").hidden = !ecriture;
+    $("bandelettes").hidden = !ecriture;
+    if (!ecriture) {
+      $("fiche-corps").textContent = "";
+      $("bandelettes-liste").textContent = "";
+      $("fiche-titre").textContent = "";
+      $("bandelettes-titre").textContent = "";
+      return;
+    }
+    dessinerFiche();
+    dessinerBandelettes();
+  }
+
+  // Une impression à la fois, et seulement celle qu'on a demandée.
+  function imprimer(quoi) {
+    if (droitClasse === "lecture") return false;
+    const classeCss = quoi === "bandelettes" ? "imprime-bandelettes" : "imprime-recap";
+    document.body.classList.add(classeCss);
+    const nettoyer = () => {
+      document.body.classList.remove(classeCss);
+      window.removeEventListener("afterprint", nettoyer);
+    };
+    window.addEventListener("afterprint", nettoyer);
+    // Filet : si le navigateur n'envoie jamais « afterprint » (impression
+    // annulée d'une drôle de façon), la classe ne reste pas collée au <body>.
+    setTimeout(nettoyer, 60000);
+    window.print();
+    return true;
   }
 
   // ---------------------------------------------------------------- actions
@@ -753,7 +1079,8 @@ $versionMoteur = is_file($moteur) ? substr(md5_file($moteur), 0, 10) : '0';
     const ecriture = droitClasse !== "lecture";
     $("ajouter").hidden = !ecriture;
     $("coller-prenoms").hidden = !ecriture;
-    $("imprimer").hidden = !ecriture;
+    $("imprimer-bandelettes").hidden = !ecriture;
+    $("imprimer-recap").hidden = !ecriture;
     $("supprimer-classe").hidden = !proprietaire;
     $("bloc-partage").hidden = !proprietaire;
     messager("message-partage", "", "");
@@ -795,7 +1122,7 @@ $versionMoteur = is_file($moteur) ? substr(md5_file($moteur), 0, 10) : '0';
         changer.type = "button";
         changer.className = "secondaire petit";
         changer.textContent = partage.droit === "ecriture" ? "Passer en lecture" : "Autoriser à modifier";
-        changer.addEventListener("click", () => partager(partage.prof_id,
+        changer.addEventListener("click", () => demanderPuisPartager(partage,
           partage.droit === "ecriture" ? "lecture" : "ecriture"));
         const retirer = document.createElement("button");
         retirer.type = "button";
@@ -807,6 +1134,26 @@ $versionMoteur = is_file($moteur) ? substr(md5_file($moteur), 0, 10) : '0';
         liste.appendChild(li);
       });
     } catch (erreur) { surErreur(erreur, "message-partage"); }
+  }
+
+  // Passer un collègue en écriture, c'est lui donner LES CODES de la classe —
+  // et avec un code on ouvre l'appli comme l'enfant. « Retirer » est juste à
+  // côté et demande confirmation, lui : la protection était du mauvais côté.
+  // Retirer un droit ne donne rien à personne : pas de question dans ce sens.
+  function texteConfirmationPartage(identifiantCollegue, droit, nombreEleves) {
+    if (droit !== "ecriture") return "";
+    const combien = nombreEleves === 1
+      ? "le code de l’élève"
+      : (nombreEleves > 1 ? `les ${nombreEleves} codes des élèves` : "les codes des élèves");
+    return `Autoriser ${identifiantCollegue} à modifier cette classe ? Il verra ${combien}`
+      + " — avec un code, on ouvre l’appli comme l’élève et on peut changer sa progression —,"
+      + " et il pourra ajouter des élèves, saisir les prénoms et donner de nouveaux codes.";
+  }
+
+  async function demanderPuisPartager(partage, droit) {
+    const question = texteConfirmationPartage(partage.identifiant, droit, eleves.length);
+    if (question && !await demander(question)) return;
+    partager(partage.prof_id, droit);
   }
 
   async function partager(profId, droit) {
@@ -846,7 +1193,11 @@ $versionMoteur = is_file($moteur) ? substr(md5_file($moteur), 0, 10) : '0';
       ]}
     ]);
     if (!reponse) return;
-    partager(parseInt(reponse.prof, 10), reponse.droit === "ecriture" ? "ecriture" : "lecture");
+    const droit = reponse.droit === "ecriture" ? "ecriture" : "lecture";
+    const choisi = annuaire.find(prof => String(prof.id) === String(reponse.prof));
+    const question = texteConfirmationPartage(choisi ? choisi.identifiant : "ce collègue", droit, eleves.length);
+    if (question && !await demander(question)) return;
+    partager(parseInt(reponse.prof, 10), droit);
   });
 
   // ------------------------------------------------------------- comptes professeurs
@@ -913,10 +1264,11 @@ $versionMoteur = is_file($moteur) ? substr(md5_file($moteur), 0, 10) : '0';
     try {
       const donnees = await api("profs.reinitialiser", {prof_id: prof.id});
       await chargerProfs();
-      // Affiché une seule fois : le serveur ne le garde que haché.
-      messager("message-profs",
-        `Mot de passe temporaire de ${prof.identifiant} : ${donnees.motdepasse} — note-le maintenant, il ne sera plus affiché.`,
-        "ok");
+      // Affiché une seule fois, DANS UNE BOÎTE que l'on referme : le serveur ne
+      // le garde que haché, et il n'a pas à rester en clair dans la page.
+      messager("message-profs", `Nouveau mot de passe temporaire pour ${prof.identifiant}.`, "ok");
+      montrerSecret(`Mot de passe temporaire de ${prof.identifiant}, à lui transmettre de vive voix :`,
+        donnees.motdepasse);
     } catch (erreur) { surErreur(erreur, "message-profs"); }
   }
 
@@ -951,8 +1303,10 @@ $versionMoteur = is_file($moteur) ? substr(md5_file($moteur), 0, 10) : '0';
       const donnees = await api("profs.ajouter", {identifiant: reponse.identifiant});
       await chargerProfs();
       messager("message-profs",
-        `Compte créé pour ${reponse.identifiant.trim()}. Mot de passe temporaire : ${donnees.motdepasse} — note-le maintenant, il ne sera plus affiché. Il ne verra aucune classe tant que tu ne lui en auras pas partagé une.`,
+        `Compte créé pour ${reponse.identifiant.trim()}. Il ne verra aucune classe tant que tu ne lui en auras pas partagé une.`,
         "ok");
+      montrerSecret(`Mot de passe temporaire de ${reponse.identifiant.trim()}, à lui transmettre de vive voix :`,
+        donnees.motdepasse);
     } catch (erreur) { surErreur(erreur, "message-profs"); }
   });
 
@@ -973,19 +1327,36 @@ $versionMoteur = is_file($moteur) ? substr(md5_file($moteur), 0, 10) : '0';
     } catch (erreur) { surErreur(erreur, "message-profs"); }
   }
 
+  // « Léa B » → prénom « Léa », initiale « B ». Une seule lecture pour la
+  // saisie dans le tableau et pour la liste collée.
+  function lireNom(texte) {
+    const propre = String(texte || "").trim().replace(/\s+/g, " ");
+    const morceaux = propre.split(" ");
+    return {prenom: morceaux[0] || "", initiale: (morceaux[1] || "").replace(/\./g, "").slice(0, 1)};
+  }
+
   async function nommer(eleve, champ) {
-    const texte = champ.value.trim().replace(/\s+/g, " ");
-    const morceaux = texte.split(" ");
-    const prenom = morceaux[0] || "";
-    const initiale = (morceaux[1] || "").replace(/\./g, "").slice(0, 1);
+    const {prenom, initiale} = lireNom(champ.value);
+    const avant = {prenom: eleve.prenom, initiale: eleve.initiale};
+    // Mise à jour optimiste : ce qui vient d'être tapé est vrai tout de suite
+    // pour le tableau et pour le papier. En cas de refus du serveur, on remet
+    // l'ancien nom et on le dit. Pendant l'appel, aucun redessin (creerFileRedessin).
+    eleve.prenom = prenom;
+    eleve.initiale = initiale.toUpperCase();
+    champ.value = nomAffiche(eleve);
+    redessin.debut();
     try {
       await api("eleves.nommer", {eleve_id: eleve.id, prenom, initiale});
-      eleve.prenom = prenom;
-      eleve.initiale = initiale.toUpperCase();
-      champ.value = nomAffiche(eleve);
-      dessinerFiche();
+      dessinerPapier();
       messager("message-classe", "", "");
-    } catch (erreur) { surErreur(erreur, "message-classe"); }
+    } catch (erreur) {
+      eleve.prenom = avant.prenom;
+      eleve.initiale = avant.initiale;
+      champ.value = nomAffiche(eleve);
+      surErreur(erreur, "message-classe");
+    } finally {
+      redessin.fin();
+    }
   }
 
   // options.apercu(valeurs) → liste de {numero, code, texte, classe} affichée
@@ -1091,7 +1462,36 @@ $versionMoteur = is_file($moteur) ? substr(md5_file($moteur), 0, 10) : '0';
     });
   }
 
+  // Un secret que l'on montre UNE fois : mot de passe temporaire d'un collègue.
+  // Il quitte la page au premier des trois : « J'ai noté », fermeture de la
+  // boîte, ou deux minutes.
+  function montrerSecret(texte, valeur) {
+    const boite = $("secret");
+    if (!boite) return;
+    $("secret-texte").textContent = texte;
+    $("secret-valeur").textContent = valeur;
+    let minuteur = 0;
+    const effacer = () => {
+      clearTimeout(minuteur);
+      $("secret-valeur").textContent = "";
+      $("secret-texte").textContent = "";
+      $("secret-note").onclick = null;
+      $("secret-copier").onclick = null;
+      boite.removeEventListener("close", effacer);
+      if (boite.open) { try { boite.close(); } catch (_) {} }
+    };
+    $("secret-note").onclick = effacer;
+    $("secret-copier").onclick = () => {
+      try { navigator.clipboard.writeText(valeur); } catch (_) {}
+    };
+    boite.addEventListener("close", effacer);
+    minuteur = setTimeout(effacer, 120000);
+    boite.showModal();
+  }
+
   $("ajouter").addEventListener("click", async () => {
+    const bouton = $("ajouter");
+    if (bouton.disabled) return;
     const reponse = await demander("Combien d’élèves ajouter à cette classe ?",
       [{nom: "nombre", libelle: "Nombre d’élèves", type: "number", valeur: "25", min: 1, max: 60}]);
     if (!reponse) return;
@@ -1099,11 +1499,14 @@ $versionMoteur = is_file($moteur) ? substr(md5_file($moteur), 0, 10) : '0';
     if (!nombre || nombre < 1 || nombre > 60) {
       messager("message-classe", "Indique un nombre entre 1 et 60.", "erreur"); return;
     }
+    // Désactivé pendant l'envoi : un double clic n'ajoute pas deux fois 25 codes.
+    bouton.disabled = true;
     try {
       await api("eleves.ajouter", {classe_id: classe.id, nombre});
       await ouvrirClasse(classe.id);
-      messager("message-classe", `${nombre} code${nombre > 1 ? "s" : ""} créé${nombre > 1 ? "s" : ""}. Écris les prénoms en face, puis imprime la liste.`, "ok");
+      messager("message-classe", `${nombre} code${nombre > 1 ? "s" : ""} créé${nombre > 1 ? "s" : ""}. Écris les prénoms en face, puis imprime les bandelettes.`, "ok");
     } catch (erreur) { surErreur(erreur, "message-classe"); }
+    finally { bouton.disabled = false; }
   });
 
   // Coller une liste de prénoms : quatre classes de vingt-huit, c'est cent dix
@@ -1172,9 +1575,7 @@ $versionMoteur = is_file($moteur) ? substr(md5_file($moteur), 0, 10) : '0';
       messager("message-classe", "Saisie en cours…", "");
       for (let index = 0; index < prenoms.length; index += 1) {
         const eleve = sansNom[index];
-        const morceaux = prenoms[index].split(" ");
-        const prenom = morceaux[0] || "";
-        const initiale = (morceaux[1] || "").replace(/\./g, "").slice(0, 1);
+        const {prenom, initiale} = lireNom(prenoms[index]);
         await api("eleves.nommer", {eleve_id: eleve.id, prenom, initiale});
       }
       await ouvrirClasse(classe.id);
@@ -1214,8 +1615,13 @@ $versionMoteur = is_file($moteur) ? substr(md5_file($moteur), 0, 10) : '0';
     try {
       const donnees = await api("eleves.regenerer", {eleve_id: eleve.id});
       eleve.code = donnees.code;
-      dessinerTableau();
-      messager("message-classe", `Nouveau code : ${donnees.code}`, "ok");
+      redessin.demander();
+      // Les élèves sans prénom sont rangés par code : un seul code nouveau peut
+      // décaler les numéros de toute la feuille. On le dit, au lieu de laisser
+      // une feuille imprimée cinq minutes plus tôt devenir fausse en silence.
+      messager("message-classe",
+        `Nouveau code : ${donnees.code}. Réimprime sa bandelette — et, si des élèves n’ont pas encore de prénom, les numéros ont pu changer : réimprime la feuille prénom ↔ code.`,
+        "ok");
     } catch (erreur) { surErreur(erreur, "message-classe"); }
   }
 
@@ -1237,7 +1643,7 @@ $versionMoteur = is_file($moteur) ? substr(md5_file($moteur), 0, 10) : '0';
     try {
       await api("eleves.supprimer", {eleve_id: eleve.id});
       eleves = eleves.filter(autre => autre.id !== eleve.id);
-      dessinerTableau();
+      redessin.demander();
       messager("message-classe", "Élève supprimé.", "ok");
     } catch (erreur) { surErreur(erreur, "message-classe"); }
   }
@@ -1253,7 +1659,8 @@ $versionMoteur = is_file($moteur) ? substr(md5_file($moteur), 0, 10) : '0';
     } catch (erreur) { surErreur(erreur, "message-classe"); }
   });
 
-  $("imprimer").addEventListener("click", () => window.print());
+  $("imprimer-bandelettes").addEventListener("click", () => imprimer("bandelettes"));
+  $("imprimer-recap").addEventListener("click", () => imprimer("recap"));
   $("retour").addEventListener("click", () => { chargerClasses(); });
 
   document.querySelectorAll("th button[data-tri]").forEach(bouton => {
@@ -1261,26 +1668,34 @@ $versionMoteur = is_file($moteur) ? substr(md5_file($moteur), 0, 10) : '0';
       const colonne = bouton.dataset.tri;
       tri = {colonne, sens: tri.colonne === colonne ? -tri.sens : (colonne === "prenom" ? 1 : -1)};
       $("tri").value = colonne;
-      dessinerTableau();
+      // Passe par la file : un tri déclenché juste après une saisie de prénom
+      // attend la réponse du serveur au lieu d'effacer la correction à l'écran.
+      redessin.demander();
     });
   });
 
   $("tri").addEventListener("change", event => {
     const colonne = event.target.value;
     tri = {colonne, sens: colonne === "prenom" ? 1 : -1};
-    dessinerTableau();
+    redessin.demander();
   });
 
   $("form-classe").addEventListener("submit", async event => {
     event.preventDefault();
+    const bouton = $("creer-classe");
+    if (bouton.disabled) return;
     const libelle = $("libelle").value.trim();
     if (!libelle) return;
+    // Désactivé pendant l'envoi : deux clics faisaient deux classes du même
+    // nom, impossibles à distinguer dans la liste.
+    bouton.disabled = true;
     try {
       const donnees = await api("classes.creer", {libelle, applis: ["defi-tables"]});
       $("libelle").value = "";
       await chargerClasses();
-      ouvrirClasse(donnees.id);
+      await ouvrirClasse(donnees.id);
     } catch (erreur) { surErreur(erreur, "message-classes"); }
+    finally { bouton.disabled = false; }
   });
 
   $("form-connexion").addEventListener("submit", async event => {
@@ -1304,6 +1719,7 @@ $versionMoteur = is_file($moteur) ? substr(md5_file($moteur), 0, 10) : '0';
       jeton = donnees.jeton;
       try { sessionStorage.setItem(CLE_JETON, jeton); } catch (_) {}
       $("motdepasse").value = "";
+      veille.demarrer(Date.now());
       venaitDeSeConnecter = true;
       demarrer().finally(() => { venaitDeSeConnecter = false; });
     } catch (_) {
@@ -1311,7 +1727,21 @@ $versionMoteur = is_file($moteur) ? substr(md5_file($moteur), 0, 10) : '0';
     }
   });
 
-  $("deconnexion").addEventListener("click", () => deconnecter(false));
+  // Le rechargement est la seule façon d'être sûr que RIEN n'est resté dans le
+  // document — une zone oubliée dans viderZones() ne survit pas à un reload.
+  $("deconnexion").addEventListener("click", () => deconnecter({recharger: true}));
+
+  // ---------------------------------------------------------- veille du poste
+  ["pointerdown", "keydown", "wheel", "touchstart"].forEach(evenement => {
+    window.addEventListener(evenement, () => veille.geste(Date.now()), {capture: true, passive: true});
+  });
+  function controlerVeille() {
+    if (veille.doitFermer(Date.now())) deconnecter({recharger: true, avis: "inactivite"});
+  }
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "visible") controlerVeille();
+  });
+  setInterval(controlerVeille, 60000);
 
   // ------------------------------------------------------------------ mon compte
 
@@ -1345,6 +1775,7 @@ $versionMoteur = is_file($moteur) ? substr(md5_file($moteur), 0, 10) : '0';
   // Une seule porte d'entrée : on demande qui on est (et si on est administrateur),
   // puis on affiche les classes.
   function demarrer() {
+    veille.demarrer(Date.now());
     return api("moi").then(donnees => {
       identifiant = donnees.identifiant;
       $("qui").textContent = donnees.identifiant;
@@ -1353,7 +1784,7 @@ $versionMoteur = is_file($moteur) ? substr(md5_file($moteur), 0, 10) : '0';
       if (mdpTemporaire) { ouvrirCompte(); return undefined; }
       return chargerClasses();
     }).catch(erreur => {
-      deconnecter(true);
+      deconnecter({silencieux: true});
       if (!erreur) return;
       // Un refus juste après avoir tapé son mot de passe n'est PAS une session
       // expirée : c'est que le serveur n'a pas reçu le jeton qu'il vient de
@@ -1369,6 +1800,8 @@ $versionMoteur = is_file($moteur) ? substr(md5_file($moteur), 0, 10) : '0';
     });
   }
 
+  const avis = lireAvis();
+  if (avis) messager("erreur-connexion", avis, "erreur");
   if (jeton) demarrer();
 })();
 </script>

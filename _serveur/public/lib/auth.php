@@ -7,7 +7,11 @@ declare(strict_types=1);
 require_once __DIR__ . '/limite.php';
 require_once __DIR__ . '/billets.php';
 
-const DUREE_SESSION_HEURES = 12;
+// Lot 7 : quatre heures, pas douze. Douze couvraient une journée entière de
+// collège ; quatre couvrent une demi-journée, et la page se déconnecte d'elle-même
+// au bout de 30 minutes sans activité (prof/index.php). Une session oubliée sur
+// un poste de salle des profs ne traverse plus la pause de midi.
+const DUREE_SESSION_HEURES = 4;
 // Les comptes sont hachés en bcrypt à coût fixe : le coût par défaut de PHP
 // change d'une version à l'autre (10 en 8.2, 12 en 8.4) et le hachage de
 // remplacement ci-dessous doit coûter exactement le même temps qu'un compte.
