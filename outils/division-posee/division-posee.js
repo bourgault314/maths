@@ -1,4 +1,4 @@
-import { getOperationDisplayState, makeDisplayMetrics, makeDivision, makeSteps } from "./division-engine.mjs?v=3";
+import { getOperationDisplayState, makeDisplayMetrics, makeDivision, makeSteps } from "./division-engine.mjs?v=4";
 
 const $ = (selector) => document.querySelector(selector);
 const dividendInput = $("#dividend");
@@ -28,7 +28,7 @@ function setMode(mode) {
 }
 
 function visibleQuotient(step) {
-  if (step.kind === "predict") return "";
+  if (["bound", "estimate"].includes(step.kind)) return "";
   let result = "";
   let comma = false;
   division.operations.forEach((operation, index) => {
@@ -36,6 +36,11 @@ function visibleQuotient(step) {
     if (operation.isDecimalDigit && !comma) { result += ","; comma = true; }
     result += operation.quotientDigit;
   });
+  const currentOperation = step.opIndex === undefined ? null : division.operations[step.opIndex];
+  const decimalStarted = step.kind === "decimal"
+    || currentOperation?.isDecimalDigit
+    || (step.kind === "bring" && currentOperation?.nextEndColumn >= division.integerLength);
+  if (decimalStarted && !result.includes(",")) result += ",";
   return result;
 }
 
@@ -100,11 +105,15 @@ function dividendRow(step) {
   const visibleEnd = operationEnd;
   division.digits.forEach((digit, index) => {
     const cell = document.createElement("span");
-    const isLowered = step.kind === "bring" && division.operations[step.opIndex]?.nextEndColumn === index;
+    const isLowered = step.kind === "bring"
+      && division.operations[step.opIndex]?.nextEndColumn === index
+      && index < division.integerLength;
     cell.className = `digit ${index > visibleEnd ? "pending" : ""} ${isLowered ? "falling-source" : ""}`;
     if (index === division.integerLength - 1 && division.mode === "decimal" && visibleEnd >= division.integerLength) cell.classList.add("comma-after");
     cell.style.gridColumn = String(index + 1);
-    cell.textContent = digit;
+    const isUnrevealedDecimal = index >= division.integerLength && index > visibleEnd;
+    cell.textContent = isUnrevealedDecimal ? "" : digit;
+    if (isUnrevealedDecimal) cell.setAttribute("aria-hidden", "true");
     if (isLowered) {
       const arrow = document.createElement("span");
       arrow.className = "lower-arrow";
@@ -146,7 +155,7 @@ function renderDivision(step) {
     work.append(digitRow(resultValue, resultEndColumn, showsNext ? "partial-row" : "remainder-row", {
       visible: Boolean(visible.result),
       active: (["subtract", "bring"].includes(step.kind) && step.opIndex === index)
-        || (step.kind === "choose" && step.opIndex === index + 1),
+        || (["ask", "choose"].includes(step.kind) && step.opIndex === index + 1),
       brought: step.kind === "bring" && step.opIndex === index
     }));
   });
@@ -183,7 +192,7 @@ function renderDivision(step) {
 }
 
 function renderTable(step) {
-  const active = step.opIndex !== undefined && step.kind !== "bring"
+  const active = step.opIndex !== undefined && ["choose", "multiply", "subtract"].includes(step.kind)
     ? division.operations[step.opIndex]?.quotientDigit
     : null;
   $("#table-title").textContent = `Table de ${division.divisor}`;

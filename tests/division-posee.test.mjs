@@ -5,7 +5,8 @@ import {
   getOperationDisplayState,
   makeDisplayMetrics,
   makeDivision,
-  makeSteps
+  makeSteps,
+  placeValueName
 } from "../outils/division-posee/division-engine.mjs";
 
 const interfaceHtml = readFileSync(new URL("../outils/division-posee/division-posee.html", import.meta.url), "utf8");
@@ -54,7 +55,7 @@ test("la multiplication, la soustraction et l'abaissement ont chacun leur étape
   const steps = makeSteps(division);
   assert.deepEqual(
     steps.map(({ kind }) => kind),
-    ["predict", "choose", "multiply", "subtract", "bring", "choose", "multiply", "subtract", "finish"]
+    ["bound", "estimate", "ask", "choose", "multiply", "subtract", "bring", "ask", "choose", "multiply", "subtract", "finish"]
   );
   assert.equal(steps.filter(({ kind }) => kind === "bring").length, 1);
   assert.equal(steps.filter(({ kind }) => kind === "multiply").length, 2);
@@ -79,21 +80,58 @@ test("la multiplication, la soustraction et l'abaissement ont chacun leur étape
   assert.equal(getOperationDisplayState(division, 0, firstBring).result, "next");
 });
 
-test("l'anticipation explique l'encadrement et propose un calcul simple", () => {
-  const [anticipation] = makeSteps(makeDivision(584, 7, "integer", 2));
-  assert.equal(anticipation.sentence, "Le quotient entier aura 2 chiffres.");
-  assert.equal(anticipation.quotientDigitCount, 2);
-  assert.match(anticipation.detail, /7 × 10 = 70/);
-  assert.match(anticipation.detail, /7 × 100 = 700/);
-  assert.match(anticipation.detail, /le quotient est entre 10 et 100/);
-  assert.match(anticipation.detail, /560 ÷ 7 = 80, donc 584 ÷ 7 ≈ 80/);
+test("l'anticipation sépare l'encadrement exact de l'estimation", () => {
+  const [bound, estimate] = makeSteps(makeDivision(584, 7, "integer", 2));
+  assert.equal(bound.kind, "bound");
+  assert.equal(bound.sentence, "7 × 10 = 70 ≤ 584 < 700 = 7 × 100");
+  assert.equal(bound.detail, "10 ≤ 584 ÷ 7 < 100 : le quotient aura 2 chiffres.");
+  assert.equal(bound.quotientDigitCount, 2);
+  assert.equal(estimate.kind, "estimate");
+  assert.equal(estimate.sentence, "560 ÷ 7 = 80");
+  assert.match(estimate.detail, /560 est proche de 584/);
+  assert.match(estimate.detail, /proche de 80/);
 });
 
-test("le choix du chiffre distingue la question de l'explication", () => {
+test("la question précède la révélation du chiffre", () => {
   const division = makeDivision(584, 21, "integer", 2);
-  const choice = makeSteps(division).find(({ kind }) => kind === "choose");
-  assert.equal(choice.sentence, "Dans 58, combien de fois 21 ?");
-  assert.equal(choice.detail, "2 fois : 2 × 21 = 42, et 3 × 21 = 63 serait trop grand.");
+  const steps = makeSteps(division);
+  const question = steps.find(({ kind }) => kind === "ask");
+  const choice = steps.find(({ kind }) => kind === "choose");
+  assert.equal(question.sentence, "58 dizaines ÷ 21 : combien de dizaines au quotient ?");
+  assert.equal(question.detail, undefined);
+  assert.deepEqual(getOperationDisplayState(division, 0, question), {
+    quotient: false,
+    product: false,
+    subtraction: false,
+    result: null
+  });
+  assert.equal(choice.sentence, "J’écris 2 au rang des dizaines.");
+  assert.equal(choice.detail, "2 × 21 = 42, et 3 × 21 = 63 serait trop grand.");
+  assert.equal(getOperationDisplayState(division, 0, choice).quotient, true);
+});
+
+test("le vocabulaire suit la valeur de position à chaque échange", () => {
+  const division = makeDivision(5849, 7, "integer", 2);
+  const steps = makeSteps(division);
+  assert.equal(placeValueName(division, 1), "centaines");
+  assert.equal(steps.find(({ kind }) => kind === "ask").sentence, "58 centaines ÷ 7 : combien de centaines au quotient ?");
+  assert.equal(steps.find(({ kind }) => kind === "bring").sentence, "2 centaines = 20 dizaines.");
+  assert.equal(steps.find(({ kind }) => kind === "bring").detail, "J’abaisse 4 dizaines : j’obtiens 24 dizaines.");
+  assert.ok(steps.some(({ sentence }) => sentence === "39 unités ÷ 7 : combien d’unités au quotient ?"));
+});
+
+test("la poursuite décimale introduit la virgule puis les zéros un par un", () => {
+  const division = makeDivision(5849, 7, "decimal", 2);
+  const steps = makeSteps(division);
+  const decimal = steps.find(({ kind }) => kind === "decimal");
+  const decimalBringSteps = steps.filter(({ kind, opIndex }) => kind === "bring" && division.operations[opIndex].nextEndColumn >= division.integerLength);
+  assert.equal(decimal.sentence, "Il reste 4 unités.");
+  assert.equal(decimal.detail, "J’écris la virgule au quotient pour continuer.");
+  assert.deepEqual(decimalBringSteps.map(({ sentence }) => sentence), [
+    "4 unités = 40 dixièmes.",
+    "5 dixièmes = 50 centièmes."
+  ]);
+  assert.ok(decimalBringSteps.every(({ detail }) => detail.startsWith("Je fais apparaître un 0")));
 });
 
 test("l'affichage réserve toutes les lignes et s'adapte aux longues divisions", () => {
@@ -114,8 +152,8 @@ test("l'affichage réserve toutes les lignes et s'adapte aux longues divisions",
 
 test("l'anticipation indique clairement un quotient inférieur à un", () => {
   const [anticipation] = makeSteps(makeDivision(3, 7, "integer", 2));
-  assert.equal(anticipation.sentence, "Le quotient entier est 0.");
-  assert.match(anticipation.detail, /inférieur à 1/);
+  assert.equal(anticipation.sentence, "0 ≤ 3 ÷ 7 < 1");
+  assert.equal(anticipation.detail, "Le quotient entier est 0.");
 });
 
 test("l'interface conserve les repères visuels demandés", () => {
@@ -131,6 +169,8 @@ test("l'interface conserve les repères visuels demandés", () => {
   assert.match(interfaceCss, /\.quotient-slot\.is-empty\s*\{[^}]*border-bottom/);
   assert.match(interfaceJs, /decimalPlaces\.disabled = mode !== "decimal"/);
   assert.match(interfaceJs, /const visibleEnd = operationEnd/);
+  assert.match(interfaceJs, /isUnrevealedDecimal/);
+  assert.match(interfaceJs, /\["ask", "choose"\]/);
   assert.match(interfaceJs, /quotientWriting\(step\)/);
   assert.match(interfaceJs, /document\.exitFullscreen/);
   assert.match(interfaceJs, /fullscreenchange/);
