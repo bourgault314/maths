@@ -55,14 +55,16 @@ test("la multiplication, la soustraction et l'abaissement ont chacun leur étape
   const steps = makeSteps(division);
   assert.deepEqual(
     steps.map(({ kind }) => kind),
-    ["bound", "estimate", "ask", "choose", "multiply", "subtract", "bring", "ask", "choose", "multiply", "subtract", "finish"]
+    ["bound", "digits", "estimate", "ask", "choose", "multiply", "subtract-ask", "subtract", "bring", "ask", "choose", "multiply", "subtract-ask", "subtract", "finish"]
   );
   assert.equal(steps.filter(({ kind }) => kind === "bring").length, 1);
   assert.equal(steps.filter(({ kind }) => kind === "multiply").length, 2);
   assert.equal(steps.filter(({ kind }) => kind === "subtract").length, 2);
+  assert.equal(steps.filter(({ kind }) => kind === "subtract-ask").length, 2);
   assert.equal(steps.at(-1).kind, "finish");
 
   const firstMultiply = steps.find(({ kind, opIndex }) => kind === "multiply" && opIndex === 0);
+  const firstSubtractQuestion = steps.find(({ kind, opIndex }) => kind === "subtract-ask" && opIndex === 0);
   const firstSubtract = steps.find(({ kind, opIndex }) => kind === "subtract" && opIndex === 0);
   const firstBring = steps.find(({ kind, opIndex }) => kind === "bring" && opIndex === 0);
   assert.deepEqual(getOperationDisplayState(division, 0, firstMultiply), {
@@ -77,15 +79,26 @@ test("la multiplication, la soustraction et l'abaissement ont chacun leur étape
     subtraction: true,
     result: "remainder"
   });
+  assert.deepEqual(getOperationDisplayState(division, 0, firstSubtractQuestion), {
+    quotient: true,
+    product: true,
+    subtraction: true,
+    result: null
+  });
+  assert.equal(firstSubtractQuestion.sentence, "58 − 56 = ?");
   assert.equal(getOperationDisplayState(division, 0, firstBring).result, "next");
 });
 
 test("l'anticipation sépare l'encadrement exact de l'estimation", () => {
-  const [bound, estimate] = makeSteps(makeDivision(584, 7, "integer", 2));
+  const [bound, digits, estimate] = makeSteps(makeDivision(584, 7, "integer", 2));
   assert.equal(bound.kind, "bound");
-  assert.equal(bound.sentence, "7 × 10 = 70 ≤ 584 < 700 = 7 × 100");
-  assert.equal(bound.detail, "10 ≤ 584 ÷ 7 < 100 : le quotient aura 2 chiffres.");
-  assert.equal(bound.quotientDigitCount, 2);
+  assert.equal(bound.sentence, "70 ≤ 584 < 700");
+  assert.equal(bound.detail, "7 × 10 = 70 et 7 × 100 = 700");
+  assert.equal(bound.quotientDigitCount, undefined);
+  assert.equal(digits.kind, "digits");
+  assert.equal(digits.sentence, "10 ≤ 584 ÷ 7 < 100");
+  assert.equal(digits.detail, "Le quotient aura 2 chiffres.");
+  assert.equal(digits.quotientDigitCount, 2);
   assert.equal(estimate.kind, "estimate");
   assert.equal(estimate.sentence, "560 ÷ 7 = 80");
   assert.match(estimate.detail, /560 est proche de 584/);
@@ -136,6 +149,7 @@ test("la poursuite décimale introduit la virgule puis les zéros un par un", ()
 
 test("l'affichage réserve toutes les lignes et s'adapte aux longues divisions", () => {
   const shortMetrics = makeDisplayMetrics(makeDivision(584, 7, "integer", 2));
+  const threeLevelMetrics = makeDisplayMetrics(makeDivision(5849, 7, "integer", 2));
   const longMetrics = makeDisplayMetrics(makeDivision(12345678, 7, "decimal", 6));
   assert.deepEqual(shortMetrics, {
     rowCount: 5,
@@ -144,6 +158,8 @@ test("l'affichage réserve toutes les lignes et s'adapte aux longues divisions",
     columnWidth: 48,
     quotientSize: 35
   });
+  assert.equal(threeLevelMetrics.rowHeight, 47);
+  assert.ok(threeLevelMetrics.rowCount * threeLevelMetrics.rowHeight <= 330);
   assert.ok(longMetrics.rowCount > shortMetrics.rowCount);
   assert.ok(longMetrics.rowHeight < shortMetrics.rowHeight);
   assert.ok(longMetrics.rowCount * longMetrics.rowHeight <= 410);
@@ -151,9 +167,11 @@ test("l'affichage réserve toutes les lignes et s'adapte aux longues divisions",
 });
 
 test("l'anticipation indique clairement un quotient inférieur à un", () => {
-  const [anticipation] = makeSteps(makeDivision(3, 7, "integer", 2));
-  assert.equal(anticipation.sentence, "0 ≤ 3 ÷ 7 < 1");
-  assert.equal(anticipation.detail, "Le quotient entier est 0.");
+  const [bound, digits] = makeSteps(makeDivision(3, 7, "integer", 2));
+  assert.equal(bound.sentence, "0 ≤ 3 < 7");
+  assert.equal(bound.detail, "Le dividende est plus petit que le diviseur.");
+  assert.equal(digits.sentence, "0 ≤ 3 ÷ 7 < 1");
+  assert.equal(digits.detail, "Le quotient entier est 0.");
 });
 
 test("l'interface conserve les repères visuels demandés", () => {
@@ -165,13 +183,15 @@ test("l'interface conserve les repères visuels demandés", () => {
   assert.match(interfaceCss, /\.instruction\s*\{[^}]*height:\s*104px/);
   assert.match(interfaceCss, /\.digit-row\s*\{[^}]*height:\s*var\(--row-height/);
   assert.match(interfaceCss, /\.subtraction-rule\s*\{/);
-  assert.match(interfaceCss, /\.lower-arrow\s*\{[^}]*z-index:\s*3[^}]*height:\s*calc\(var\(--row-height, 50px\) \* 1\.16\)/);
+  assert.match(interfaceCss, /\.lower-arrow\s*\{[^}]*z-index:\s*3[^}]*top:\s*92%[^}]*height:\s*calc\(var\(--row-height, 50px\) \* 1\.02\)/);
   assert.match(interfaceCss, /\.quotient-slot\.is-empty\s*\{[^}]*border-bottom/);
   assert.match(interfaceJs, /decimalPlaces\.disabled = mode !== "decimal"/);
   assert.match(interfaceJs, /const visibleEnd = operationEnd/);
   assert.match(interfaceJs, /isUnrevealedDecimal/);
   assert.match(interfaceJs, /\["ask", "choose"\]/);
   assert.match(interfaceJs, /quotientWriting\(step\)/);
+  assert.match(interfaceJs, /const showEmptySlots = step\.kind !== "bound"/);
+  assert.match(interfaceJs, /button\.textContent = "⛶"/);
   assert.match(interfaceJs, /document\.exitFullscreen/);
   assert.match(interfaceJs, /fullscreenchange/);
   assert.match(interfaceJs, /work\.append\(digitRow\(operation\.product/);

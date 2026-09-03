@@ -11,10 +11,14 @@ function anticipationFor(data) {
   if (integerQuotient === 0) {
     return {
       digitCount: 1,
-      bound: `0 ≤ ${data.dividend} ÷ ${data.divisor} < 1`,
-      conclusion: data.mode === "integer"
-        ? "Le quotient entier est 0."
-        : "La partie entière du quotient est 0.",
+      rangeSentence: `0 ≤ ${data.dividend} < ${data.divisor}`,
+      rangeExpression: `Le dividende est plus petit que le diviseur.`,
+      quotientSentence: data.mode === "integer"
+        ? `0 ≤ ${data.dividend} ÷ ${data.divisor} < 1`
+        : `0 ≤ ${data.dividend} ÷ ${data.divisor} < 1`,
+      quotientExpression: data.mode === "integer"
+        ? `Le quotient entier est 0.`
+        : `La partie entière du quotient est 0.`,
       estimate: null
     };
   }
@@ -38,8 +42,10 @@ function anticipationFor(data) {
 
   return {
     digitCount,
-    bound: `${data.divisor} × ${lowerQuotient} = ${lowerProduct} ≤ ${data.dividend} < ${upperProduct} = ${data.divisor} × ${upperQuotient}`,
-    conclusion: `${lowerQuotient} ≤ ${data.dividend} ÷ ${data.divisor} < ${upperQuotient} : ${label.toLowerCase()} aura ${digitCount} chiffre${digitCount > 1 ? "s" : ""}.`,
+    rangeSentence: `${lowerProduct} ≤ ${data.dividend} < ${upperProduct}`,
+    rangeExpression: `${data.divisor} × ${lowerQuotient} = ${lowerProduct} et ${data.divisor} × ${upperQuotient} = ${upperProduct}`,
+    quotientSentence: `${lowerQuotient} ≤ ${data.dividend} ÷ ${data.divisor} < ${upperQuotient}`,
+    quotientExpression: `${label} aura ${digitCount} chiffre${digitCount > 1 ? "s" : ""}.`,
     estimate
   };
 }
@@ -76,7 +82,7 @@ function afterDe(place) {
 
 export function makeDisplayMetrics(data) {
   const rowCount = 1 + data.operations.length * 2;
-  const rowHeight = Math.min(50, Math.max(14, Math.floor(390 / rowCount)));
+  const rowHeight = Math.min(50, Math.max(14, Math.floor(330 / rowCount)));
   const digitSize = Math.min(36, Math.max(13, Math.floor(rowHeight * 0.72)));
   const columnWidth = Math.min(48, Math.max(22, Math.floor(520 / data.digits.length)));
   const quotientSize = Math.min(35, Math.max(14, Math.floor(210 / Math.max(4, data.quotient.length))));
@@ -98,6 +104,9 @@ export function getOperationDisplayState(data, index, step) {
   if (step.kind === "ask") return hidden;
   if (step.kind === "choose") return { ...hidden, quotient: true };
   if (step.kind === "multiply") return { ...hidden, quotient: true, product: true };
+  if (step.kind === "subtract-ask") {
+    return { quotient: true, product: true, subtraction: true, result: null };
+  }
   if (step.kind === "subtract") {
     return { quotient: true, product: true, subtraction: true, result: "remainder" };
   }
@@ -186,8 +195,13 @@ export function makeSteps(data) {
   const steps = [{
     kind: "bound",
     title: "J’encadre",
-    sentence: anticipation.bound,
-    detail: anticipation.conclusion,
+    sentence: anticipation.rangeSentence,
+    detail: anticipation.rangeExpression
+  }, {
+    kind: "digits",
+    title: "J’en déduis",
+    sentence: anticipation.quotientSentence,
+    detail: anticipation.quotientExpression,
     quotientDigitCount: anticipation.digitCount
   }];
 
@@ -224,8 +238,15 @@ export function makeSteps(data) {
       opIndex
     });
     steps.push({
-      kind: "subtract",
+      kind: "subtract-ask",
       title: "Je soustrais",
+      sentence: `${operation.partial} − ${operation.product} = ?`,
+      detail: "Quel est le reste ?",
+      opIndex
+    });
+    steps.push({
+      kind: "subtract",
+      title: "Je trouve le reste",
       sentence: `${operation.partial} − ${operation.product} = ${operation.remainder}.`,
       detail: `Il reste ${operation.remainder} ${placeValueName(data, operation.endColumn, operation.remainder)}.`,
       opIndex
