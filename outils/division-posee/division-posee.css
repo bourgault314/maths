@@ -101,6 +101,10 @@ button, input, select { font: inherit; }
 .potence-box { min-height: 82px; display: grid; place-items: center; position: relative; padding: 14px 10px 24px; font-family: "DejaVu Sans Mono", Consolas, monospace; font-size: var(--quotient-size, 35px); font-weight: 850; }
 .potence-box:first-child { border-bottom: 4px solid var(--navy); color: var(--teal); }
 .potence-box:last-child { color: var(--orange); }
+.quotient-writing { display: inline-flex; align-items: flex-end; justify-content: center; gap: .24em; min-height: 1.05em; }
+.quotient-slot { display: inline-grid; min-width: .62em; min-height: 1em; place-items: center; line-height: 1; }
+.quotient-slot.is-empty { min-height: .82em; border-bottom: 3px solid color-mix(in srgb, var(--orange) 48%, transparent); }
+.quotient-comma { margin-left: -.15em; line-height: 1; }
 .role-label { position: absolute; left: 50%; bottom: 5px; transform: translateX(-50%); color: var(--muted); font-family: "Segoe UI", system-ui, sans-serif; font-size: .65rem; font-weight: 850; letter-spacing: .08em; text-transform: uppercase; }
 .role-strip { display: grid; grid-template-columns: repeat(7, auto); justify-content: center; align-items: center; gap: 10px; margin-top: 14px; }
 .role-card { min-width: 125px; display: grid; gap: 3px; padding: 10px 16px; border: 2px solid var(--role-color); border-radius: 11px; text-align: center; background: var(--role-soft); }

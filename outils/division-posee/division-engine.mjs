@@ -148,14 +148,16 @@ export function makeSteps(data) {
     kind: "predict",
     title: "J’anticipe",
     sentence: anticipation.sentence,
-    detail: anticipation.detail
+    detail: anticipation.detail,
+    quotientDigitCount: anticipation.digitCount
   }];
 
   data.operations.forEach((operation, opIndex) => {
     steps.push({
       kind: "choose",
       title: "Je cherche",
-      sentence: `Dans ${operation.partial}, combien de fois ${data.divisor} ? ${operation.quotientDigit} fois.`,
+      sentence: `Dans ${operation.partial}, combien de fois ${data.divisor} ?`,
+      detail: `${operation.quotientDigit} fois : ${operation.quotientDigit} × ${data.divisor} = ${operation.product}, et ${operation.quotientDigit + 1} × ${data.divisor} = ${(operation.quotientDigit + 1) * data.divisor} serait trop grand.`,
       opIndex
     });
     steps.push({

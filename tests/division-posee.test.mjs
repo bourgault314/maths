@@ -82,10 +82,18 @@ test("la multiplication, la soustraction et l'abaissement ont chacun leur étape
 test("l'anticipation explique l'encadrement et propose un calcul simple", () => {
   const [anticipation] = makeSteps(makeDivision(584, 7, "integer", 2));
   assert.equal(anticipation.sentence, "Le quotient entier aura 2 chiffres.");
+  assert.equal(anticipation.quotientDigitCount, 2);
   assert.match(anticipation.detail, /7 × 10 = 70/);
   assert.match(anticipation.detail, /7 × 100 = 700/);
   assert.match(anticipation.detail, /le quotient est entre 10 et 100/);
   assert.match(anticipation.detail, /560 ÷ 7 = 80, donc 584 ÷ 7 ≈ 80/);
+});
+
+test("le choix du chiffre distingue la question de l'explication", () => {
+  const division = makeDivision(584, 21, "integer", 2);
+  const choice = makeSteps(division).find(({ kind }) => kind === "choose");
+  assert.equal(choice.sentence, "Dans 58, combien de fois 21 ?");
+  assert.equal(choice.detail, "2 fois : 2 × 21 = 42, et 3 × 21 = 63 serait trop grand.");
 });
 
 test("l'affichage réserve toutes les lignes et s'adapte aux longues divisions", () => {
@@ -118,7 +126,10 @@ test("l'interface conserve les repères visuels demandés", () => {
   assert.match(interfaceCss, /\.digit-row\s*\{[^}]*height:\s*var\(--row-height/);
   assert.match(interfaceCss, /\.subtraction-rule\s*\{/);
   assert.match(interfaceCss, /\.lower-arrow\s*\{[^}]*z-index:\s*3[^}]*height:\s*calc\(var\(--row-height, 50px\) \* 1\.16\)/);
+  assert.match(interfaceCss, /\.quotient-slot\.is-empty\s*\{[^}]*border-bottom/);
   assert.match(interfaceJs, /decimalPlaces\.disabled = mode !== "decimal"/);
+  assert.match(interfaceJs, /const visibleEnd = operationEnd/);
+  assert.match(interfaceJs, /quotientWriting\(step\)/);
   assert.match(interfaceJs, /work\.append\(digitRow\(operation\.product/);
   assert.match(interfaceJs, /work\.append\(digitRow\(resultValue/);
 });

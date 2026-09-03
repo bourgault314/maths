@@ -39,6 +39,30 @@ function visibleQuotient(step) {
   return result;
 }
 
+function quotientWriting(step) {
+  const writing = document.createElement("span");
+  writing.className = "quotient-writing";
+  const visible = visibleQuotient(step);
+  const integerSlotCount = steps[0]?.quotientDigitCount
+    ?? division.operations.filter(({ isDecimalDigit }) => !isDecimalDigit).length;
+  const visibleIntegerCount = visible.split(",")[0].length;
+
+  for (const character of visible) {
+    const slot = document.createElement("span");
+    slot.className = character === "," ? "quotient-comma" : "quotient-slot is-filled";
+    slot.textContent = character;
+    writing.append(slot);
+  }
+  for (let index = visibleIntegerCount; index < integerSlotCount; index += 1) {
+    const slot = document.createElement("span");
+    slot.className = "quotient-slot is-empty";
+    slot.setAttribute("aria-hidden", "true");
+    writing.append(slot);
+  }
+  writing.setAttribute("aria-label", visible || `${integerSlotCount} emplacement${integerSlotCount > 1 ? "s" : ""} pour le quotient`);
+  return writing;
+}
+
 function digitRow(value, endColumn, className, options = {}) {
   const row = document.createElement("div");
   row.className = `digit-row ${className}`;
@@ -73,7 +97,7 @@ function dividendRow(step) {
     : step.opIndex === undefined
       ? division.integerLength - 1
       : division.operations[step.opIndex].endColumn + (step.kind === "bring" ? 1 : 0);
-  const visibleEnd = Math.max(division.integerLength - 1, operationEnd);
+  const visibleEnd = operationEnd;
   division.digits.forEach((digit, index) => {
     const cell = document.createElement("span");
     const isLowered = step.kind === "bring" && division.operations[step.opIndex]?.nextEndColumn === index;
@@ -128,7 +152,21 @@ function renderDivision(step) {
 
   const potence = document.createElement("div");
   potence.className = "potence";
-  potence.innerHTML = `<div class="potence-box">${division.divisor}<span class="role-label">diviseur</span></div><div class="potence-box">${visibleQuotient(step) || "—"}<span class="role-label">quotient</span></div>`;
+  const divisorBox = document.createElement("div");
+  divisorBox.className = "potence-box";
+  divisorBox.append(String(division.divisor));
+  const divisorLabel = document.createElement("span");
+  divisorLabel.className = "role-label";
+  divisorLabel.textContent = "diviseur";
+  divisorBox.append(divisorLabel);
+  const quotientBox = document.createElement("div");
+  quotientBox.className = "potence-box";
+  quotientBox.append(quotientWriting(step));
+  const quotientLabel = document.createElement("span");
+  quotientLabel.className = "role-label";
+  quotientLabel.textContent = "quotient";
+  quotientBox.append(quotientLabel);
+  potence.append(divisorBox, quotientBox);
   root.append(work, potence);
 
   const showValues = step.kind === "finish";
