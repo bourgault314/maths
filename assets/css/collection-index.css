@@ -80,13 +80,21 @@ h1 { margin: 0; color: var(--blue-dark); font-family: Georgia, "Times New Roman"
 }
 .tool-card:hover { transform: translateY(-3px); box-shadow: 0 12px 25px rgba(15, 40, 72, .12); }
 .thumb {
-  height: 145px;
+  height: var(--thumb-height, 145px);
   display: grid;
   place-items: center;
+  overflow: hidden;
   padding: 17px;
   background: var(--card-soft, var(--soft));
 }
-.thumb img { display: block; width: 100%; height: 100%; object-fit: contain; }
+.thumb img {
+  display: block;
+  width: auto;
+  max-width: 100%;
+  height: auto;
+  max-height: 100%;
+  object-fit: contain;
+}
 .tool-copy { flex: 1; display: flex; flex-direction: column; padding: 15px 16px 16px; }
 .tool-copy h2,
 .tool-copy h3 { margin: 0; color: #16304f; font-size: 1.05rem; line-height: 1.25; }
