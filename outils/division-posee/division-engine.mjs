@@ -29,13 +29,13 @@ function anticipationFor(data) {
   const friendlyDividend = estimatedQuotient * data.divisor;
   const label = data.mode === "integer" ? "Le quotient entier" : "La partie entière du quotient";
   const estimate = friendlyDividend !== lowerProduct && friendlyDividend !== upperProduct
-    ? ` Pour estimer : ${friendlyDividend} ÷ ${data.divisor} = ${estimatedQuotient}.`
+    ? ` Estimation : ${friendlyDividend} ÷ ${data.divisor} = ${estimatedQuotient}, donc ${data.dividend} ÷ ${data.divisor} ≈ ${estimatedQuotient}.`
     : "";
 
   return {
     digitCount,
     sentence: `${label} aura ${digitCount} chiffre${digitCount > 1 ? "s" : ""}.`,
-    detail: `${data.divisor} × ${lowerQuotient} = ${lowerProduct} et ${data.divisor} × ${upperQuotient} = ${upperProduct} : ${data.dividend} est entre les deux.${estimate}`
+    detail: `${data.divisor} × ${lowerQuotient} = ${lowerProduct} et ${data.divisor} × ${upperQuotient} = ${upperProduct} : le quotient est entre ${lowerQuotient} et ${upperQuotient}.${estimate}`
   };
 }
 
@@ -148,14 +148,16 @@ export function makeSteps(data) {
     kind: "predict",
     title: "J’anticipe",
     sentence: anticipation.sentence,
-    detail: anticipation.detail
+    detail: anticipation.detail,
+    quotientDigitCount: anticipation.digitCount
   }];
 
   data.operations.forEach((operation, opIndex) => {
     steps.push({
       kind: "choose",
       title: "Je cherche",
-      sentence: `Dans ${operation.partial}, combien de fois ${data.divisor} ? ${operation.quotientDigit} fois.`,
+      sentence: `Dans ${operation.partial}, combien de fois ${data.divisor} ?`,
+      detail: `${operation.quotientDigit} fois : ${operation.quotientDigit} × ${data.divisor} = ${operation.product}, et ${operation.quotientDigit + 1} × ${data.divisor} = ${(operation.quotientDigit + 1) * data.divisor} serait trop grand.`,
       opIndex
     });
     steps.push({

@@ -59,6 +59,8 @@ def role_box(c, x, y, w, h, role, color, soft, label_below=True):
     panel(c, x, y, w, h, fill=soft, stroke=color, radius=6, line=1.35)
     if label_below:
         text(c, role, x + w / 2, y - 13, 7.2, MUTED, "GoSans-Bold", "center")
+    else:
+        text(c, role, x + w / 2, y + h + 6, 7.2, MUTED, "GoSans-Bold", "center")
 
 
 def dotted_line(c, x1, y, x2):
@@ -82,9 +84,11 @@ def title_line(c, decimal):
     text(c, title, 28, y, 19.5, NAVY, "GoSerif-Bold")
     title_width = pdfmetrics.stringWidth(title, "GoSerif-Bold", 19.5)
     x_dividend = 28 + title_width + 12
-    role_box(c, x_dividend, y - 9, 99, 34, "dividende", BLUE, BLUE_SOFT)
-    text(c, "par", x_dividend + 111, y, 15, NAVY, "GoSerif-Bold")
-    role_box(c, x_dividend + 146, y - 9, 76, 34, "diviseur", TEAL, TEAL_SOFT)
+    dividend_width = 99 if decimal else 116
+    x_par = x_dividend + dividend_width + 12
+    role_box(c, x_dividend, y - 9, dividend_width, 34, "dividende", BLUE, BLUE_SOFT, label_below=decimal)
+    text(c, "par", x_par, y, 15, NAVY, "GoSerif-Bold")
+    role_box(c, x_par + 35, y - 9, 76, 34, "diviseur", TEAL, TEAL_SOFT, label_below=decimal)
 
 
 def anticipation(c, decimal):
@@ -109,7 +113,7 @@ def anticipation(c, decimal):
     dotted_line(c, estimate_x + 181, y + 15, x + w - 14)
 
 
-def operation_area(c):
+def operation_area(c, decimal):
     x, y, w, h = 28, 263, 386, 418
     panel(c, x, y, w, h, fill=WHITE, stroke=LINE, radius=11)
     text(c, "JE POSE", x + 15, y + h - 25, 8.2, BLUE, "GoSans-Bold")
@@ -135,8 +139,10 @@ def operation_area(c):
     c.line(pot_x, pot_y + 46, pot_x, y + 51)
     c.line(pot_x, pot_y, x + w - 17, pot_y)
 
-    role_box(c, x + 87, pot_y + 15, 115, 43, "dividende", BLUE, BLUE_SOFT)
-    role_box(c, pot_x + 17, pot_y + 15, 82, 43, "diviseur", TEAL, TEAL_SOFT)
+    dividend_x = x + (87 if decimal else 70)
+    dividend_width = 115 if decimal else 150
+    role_box(c, dividend_x, pot_y + 15, dividend_width, 43, "dividende", BLUE, BLUE_SOFT, label_below=decimal)
+    role_box(c, pot_x + 17, pot_y + 15, 82, 43, "diviseur", TEAL, TEAL_SOFT, label_below=decimal)
     role_box(c, pot_x + 17, pot_y - 68, 82, 43, "quotient", ORANGE, ORANGE_SOFT)
     role_box(c, x + 101, y + 55, 95, 43, "reste", VIOLET, VIOLET_SOFT)
     return x, y, w, h
@@ -164,7 +170,9 @@ def verification(c, decimal):
     panel(c, x, y, w, h, fill=BLUE_SOFT, stroke=BLUE_SOFT, radius=11)
     text(c, "JE VÉRIFIE", x + 15, y + h - 25, 8.2, BLUE, "GoSans-Bold")
     box_w, box_h = 91, 38
-    positions = [x + 15, x + 134, x + 269, x + 404]
+    dividend_extra = 0 if decimal else 17
+    positions = [x + 15, x + 134 + dividend_extra, x + 269 + dividend_extra, x + 404 + dividend_extra]
+    widths = [box_w + dividend_extra, box_w, box_w, box_w]
     roles = [
         ("dividende", BLUE, BLUE_SOFT),
         ("quotient", ORANGE, ORANGE_SOFT),
@@ -172,9 +180,13 @@ def verification(c, decimal):
         ("reste", VIOLET, VIOLET_SOFT),
     ]
     formula_y = y + 62
-    for px, (role, color, soft) in zip(positions, roles):
-        role_box(c, px, formula_y, box_w, box_h, role, color, WHITE)
-    signs = [(x + 120, "="), (x + 254, "×"), (x + 389, "+")]
+    for px, width, (role, color, soft) in zip(positions, widths, roles):
+        role_box(c, px, formula_y, width, box_h, role, color, WHITE)
+    signs = [
+        (x + 120 + dividend_extra, "="),
+        (x + 254 + dividend_extra, "×"),
+        (x + 389 + dividend_extra, "+"),
+    ]
     for px, sign in signs:
         text(c, sign, px, formula_y + 12, 15, NAVY, "GoSans-Bold", "center")
     note = "reste = 0 si la division est exacte" if decimal else "0 ≤ reste < diviseur"
@@ -192,7 +204,7 @@ def build(decimal=False):
     c.setSubject("Gabarit A4 à imprimer et plastifier")
     title_line(c, decimal)
     anticipation(c, decimal)
-    operation_area(c)
+    operation_area(c, decimal)
     divisor_table(c)
     verification(c, decimal)
     footer(c)
