@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 400" role="img" aria-labelledby="title desc">
+  <title id="title">Division posée pas à pas</title>
+  <desc id="desc">Une division de 584 par 7 avec le quotient, le reste et la table de 7.</desc>
+  <rect width="640" height="400" rx="30" fill="#f7faff"/>
+  <rect x="28" y="28" width="584" height="344" rx="24" fill="#fff" stroke="#d8e2ec" stroke-width="3"/>
+  <rect x="50" y="50" width="360" height="54" rx="13" fill="#e8f8f5"/>
+  <circle cx="78" cy="77" r="10" fill="#08aaa5"/>
+  <rect x="99" y="68" width="180" height="8" rx="4" fill="#063f86" opacity=".85"/>
+  <rect x="99" y="83" width="236" height="6" rx="3" fill="#637287" opacity=".35"/>
+  <g font-family="DejaVu Sans Mono, monospace" font-weight="700" text-anchor="middle">
+    <text x="102" y="173" font-size="36" fill="#0b67b2">5</text><text x="148" y="173" font-size="36" fill="#0b67b2">8</text><text x="194" y="173" font-size="36" fill="#0b67b2">4</text>
+    <line x1="222" y1="127" x2="222" y2="300" stroke="#063f86" stroke-width="5"/>
+    <line x1="222" y1="186" x2="376" y2="186" stroke="#063f86" stroke-width="5"/>
+    <text x="290" y="170" font-size="36" fill="#08aaa5">7</text><text x="290" y="236" font-size="36" fill="#f58220">83</text>
+    <text x="148" y="232" font-size="29" fill="#10294a">− 56</text><line x1="91" y1="244" x2="204" y2="244" stroke="#10294a" stroke-width="3"/>
+    <text x="171" y="286" font-size="29" fill="#0b67b2">24</text><text x="171" y="332" font-size="29" fill="#7b42b4">3</text>
+  </g>
+  <rect x="428" y="50" width="160" height="286" rx="16" fill="#fff2e7"/>
+  <text x="451" y="82" font-family="system-ui,sans-serif" font-size="18" font-weight="800" fill="#f58220">TABLE DE 7</text>
+  <g font-family="system-ui,sans-serif" font-size="17" font-weight="700" fill="#10294a">
+    <text x="454" y="124">6 × 7</text><text x="548" y="124">42</text>
+    <rect x="444" y="142" width="128" height="34" rx="8" fill="#ffd9b7"/><text x="454" y="165" fill="#d86b16">7 × 7</text><text x="548" y="165" fill="#d86b16">49</text>
+    <text x="454" y="207">8 × 7</text><text x="548" y="207">56</text>
+    <text x="454" y="249">9 × 7</text><text x="548" y="249">63</text>
+    <text x="454" y="291">10 × 7</text><text x="548" y="291">70</text>
+  </g>
+</svg>

@@ -1,6 +1,6 @@
 # Sources et signature des PDF imprimables
 
-Ce document est l'inventaire technique des 50 PDF publics de maths&go.
+Ce document est l'inventaire technique des 52 PDF publics de maths&go.
 
 ## Référence graphique
 
@@ -95,6 +95,24 @@ sur une feuille A4 paysage. Leurs sources sont conservées dans
 vérification exhaustive. La procédure de régénération est décrite dans le
 `README.md` de ce dossier. Une publication ordinaire réutilise les PDF déjà
 validés sans exécuter cette chaîne.
+
+## Gabarits possédant une source Python
+
+Les deux gabarits de division sont produits par un même générateur ReportLab :
+
+| PDF public | Source |
+|---|---|
+| `division-posee/gabarit-division-euclidienne.pdf` | `division-posee/_generer_gabarits.py` |
+| `division-posee/gabarit-division-decimale.pdf` | `division-posee/_generer_gabarits.py` |
+
+Pour les régénérer depuis la racine du dépôt :
+
+```bash
+python3 outils/division-posee/_generer_gabarits.py
+```
+
+Le script utilise le logo canonique d’impression et écrit directement la
+signature `mathsgo.re · CC BY-NC-SA 4.0` dans chaque page.
 
 ## Fiches imprimées directement depuis un outil
 
