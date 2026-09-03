@@ -1,7 +1,8 @@
 <?php
 // Catalogue des applis proposables aux classes.
 // Une seule copie de chaque appli : on ouvre celle de mathsgo.re en lui
-// passant le code de l'élève dans l'adresse (#code=…).
+// passant un billet d'entrée dans l'adresse (#b=…, lib/billets.php) — jamais
+// le code lui-même, qui entrerait dans l'historique du navigateur.
 
 declare(strict_types=1);
 

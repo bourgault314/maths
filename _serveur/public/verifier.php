@@ -79,7 +79,7 @@ if ($autorise) {
     verif($lignes, "Tables du suivi", function () {
         $pdo = bd();
         $manquantes = [];
-        foreach (['classes', 'eleves', 'progressions', 'profs', 'partages', 'sessions_prof', 'compteurs'] as $table) {
+        foreach (['classes', 'eleves', 'progressions', 'profs', 'partages', 'sessions_prof', 'compteurs', 'billets'] as $table) {
             try { $pdo->query("SELECT 1 FROM $table LIMIT 1"); }
             catch (Throwable $e) { $manquantes[] = $table; }
         }

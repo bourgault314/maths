@@ -66,11 +66,16 @@ _serveur/
 
 - `https://suivi.mathsgo.re/` — page des élèves. Un champ de six caractères, puis
   la liste des applis proposées à sa classe. Chaque appli ouvre l'appli unique de
-  mathsgo.re en lui passant le code, suivi de l'écran à ouvrir quand l'appli en
-  déclare un (`…/defi_tables.html#code=XXXXXX&ouvrir=parcours`) : aucune copie
-  d'appli n'est faite ici. C'est bien cette adresse complète qu'il faut essayer
-  quand on vérifie le suivi — la forme abrégée `#code=XXXXXX` a longtemps caché
-  que l'appli ne savait pas lire la vraie.
+  mathsgo.re en lui passant un **billet d'entrée** (lot 3, 03/09/2026 :
+  `…/defi_tables.html#b=<32 caractères>&ouvrir=parcours`), jamais le code —
+  une adresse entre dans l'historique du navigateur. Le billet est délivré par
+  `api/eleve.php` (`{code, billet: true}`), vaut deux minutes et ne sert
+  qu'une fois ; l'appli l'échange contre le code (`{billet}`) et nettoie
+  l'adresse (`lib/billets.php`, table `billets`). Aucune copie d'appli n'est
+  faite ici. C'est bien cette adresse complète qu'il faut essayer quand on
+  vérifie le suivi — une forme abrégée a longtemps caché que l'appli ne savait
+  pas lire la vraie. « Voir sa fiche » dans Ma classe passe par un billet de
+  lecture (`eleves.fiche`, `#b=…&vue=fiche`) qui ne rend jamais le code.
 - `https://suivi.mathsgo.re/prof/` — page « Ma classe », protégée par mot de passe :
   créer une classe, générer N codes, saisir prénom + initiale, voir le tableau
   (tables acquises, mélange, Expert, dernière activité), trier, régénérer un code,
@@ -259,9 +264,14 @@ rien), règles du mot de passe (chiffres seuls, identifiant dedans, phrase longu
 acceptée, installateur), suppression d'un compte (droits, jamais soi, sans
 classes ; avec classes : 409 sans le oui explicite, puis aucun orphelin —
 élèves, progressions, partages reçus et donnés, sessions, compteurs — et les
-autres n'ont rien perdu).
+autres n'ont rien perdu). Lot 3 (03/09/2026) : billets d'entrée — émis sur
+demande seulement, empreinte en base, deux minutes, usage unique (cinq échanges
+simultanés → un seul passe), périmé ou inconnu → 404 et échec compté pour
+l'adresse, billet de fiche sans le code et refusé par `parcours.php`, fiche
+accessible en lecture partagée, révoqués par un nouveau code ou la suppression,
+purge à chaque appel, `verifier.php` et `migrer.php` connaissent la table.
 
-**110 tests, 0 échec au 30/08/2026**, rejoués sur SQLite **et** sur MariaDB
+**122 tests, 0 échec au 03/09/2026**, rejoués sur SQLite **et** sur MySQL 8
 (le limiteur emploie une instruction différente sur chaque moteur) :
 
 ```

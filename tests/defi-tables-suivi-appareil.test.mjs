@@ -238,7 +238,7 @@ function bootstrap(hash, {sansHistorique = false, durable = null} = {}) {
 
 test("le script du <head> lit l’adresse, lève le drapeau et la nettoie, avant tout le reste", () => {
   const lien = bootstrap("#code=2F4FUL&ouvrir=parcours");
-  assert.deepEqual(lien.MATHSGO_ENTREE, {code: "2F4FUL", fiche: "", ouvrir: "parcours"});
+  assert.deepEqual(lien.MATHSGO_ENTREE, {code: "2F4FUL", fiche: "", billet: "", vue: "", ouvrir: "parcours"});
   assert.equal(lien.MATHSGO_SUIVI_ELEVE, true, "consentement.js ne doit charger aucune mesure d’audience");
   assert.equal(lien.remplacee, "/outils/calcul_mental/defi_tables.html#ouvrir=parcours", "le code sort, le reste survit");
 
@@ -246,17 +246,17 @@ test("le script du <head> lit l’adresse, lève le drapeau et la nettoie, avant
   assert.equal(seul.remplacee, "/outils/calcul_mental/defi_tables.html");
 
   const fiche = bootstrap("#fiche=CDEF23");
-  assert.deepEqual(fiche.MATHSGO_ENTREE, {code: "", fiche: "CDEF23", ouvrir: ""});
+  assert.deepEqual(fiche.MATHSGO_ENTREE, {code: "", fiche: "CDEF23", billet: "", vue: "", ouvrir: ""});
   assert.equal(fiche.MATHSGO_SUIVI_ELEVE, true);
   assert.equal(fiche.remplacee, "/outils/calcul_mental/defi_tables.html", "un code de fiche est un code élève : il disparaît aussi");
 
   const parcours = bootstrap("#parcours");
-  assert.deepEqual(parcours.MATHSGO_ENTREE, {code: "", fiche: "", ouvrir: "parcours"});
+  assert.deepEqual(parcours.MATHSGO_ENTREE, {code: "", fiche: "", billet: "", vue: "", ouvrir: "parcours"});
   assert.equal(parcours.remplacee, null, "sans code, on ne touche pas à l’adresse");
   assert.equal(parcours.MATHSGO_SUIVI_ELEVE, undefined, "sans code, rien ne change pour un visiteur ordinaire");
 
-  assert.deepEqual(bootstrap("#ouvrir=calculs&code=2F4FUL").MATHSGO_ENTREE, {code: "2F4FUL", fiche: "", ouvrir: "calculs"});
-  assert.deepEqual(bootstrap("").MATHSGO_ENTREE, {code: "", fiche: "", ouvrir: ""});
+  assert.deepEqual(bootstrap("#ouvrir=calculs&code=2F4FUL").MATHSGO_ENTREE, {code: "2F4FUL", fiche: "", billet: "", vue: "", ouvrir: "calculs"});
+  assert.deepEqual(bootstrap("").MATHSGO_ENTREE, {code: "", fiche: "", billet: "", vue: "", ouvrir: ""});
 });
 
 // Lot 2 (A-3) : un lien #code= posé sur une page DÉJÀ ouverte est une navigation
@@ -287,7 +287,7 @@ test("un #code= ou #fiche= qui arrive sur la page déjà ouverte recharge le doc
 test("un code encore dans l’ancien rangement durable lève le drapeau anti-mesure, sans être adopté", () => {
   const ancien = bootstrap("#parcours", {durable: {getItem: cle => (cle === "mathsgo-suivi-code" ? "2F4FUL" : null)}});
   assert.equal(ancien.MATHSGO_SUIVI_ELEVE, true, "consentement.js ne doit charger aucune mesure d’audience");
-  assert.deepEqual(ancien.MATHSGO_ENTREE, {code: "", fiche: "", ouvrir: "parcours"}, "mais le code n’entre pas par là : l’identité vit dans l’onglet");
+  assert.deepEqual(ancien.MATHSGO_ENTREE, {code: "", fiche: "", billet: "", vue: "", ouvrir: "parcours"}, "mais le code n’entre pas par là : l’identité vit dans l’onglet");
   assert.equal(ancien.remplacee, null);
 
   const propre = bootstrap("#parcours", {durable: {getItem: () => null}});
@@ -313,10 +313,14 @@ test("le script du <head> est en JavaScript ancien et survit à un navigateur sa
 test("l’aiguillage ouvre le bon écran à partir de ce que le <head> a lu", () => {
   const aiguiller = entree => {
     const appels = [];
-    new Function("ENTREE", "openParcours", "openCalculs", "ouvrirFicheEleve", "demarrerSuivi", SOURCE_AIGUILLAGE)(
-      {code: "", fiche: "", ouvrir: "", ...entree},
+    new Function("ENTREE", "openParcours", "openCalculs", "ouvrirFicheEleve", "demarrerSuivi", "entrerParBillet", "ouvrirFicheParBillet", SOURCE_AIGUILLAGE)(
+      {code: "", fiche: "", billet: "", vue: "", ouvrir: "", ...entree},
       () => appels.push("parcours"), () => appels.push("calculs"),
-      code => appels.push("fiche:" + code), () => appels.push("suivi"));
+      code => appels.push("fiche:" + code), () => appels.push("suivi"),
+      // Le billet : l'échange d'abord, l'écran ensuite — on joue l'échange
+      // réussi tout de suite pour voir quel écran il ouvrirait.
+      (billet, ouvrir) => { appels.push("billet:" + billet); ouvrir(); },
+      billet => appels.push("fiche-billet:" + billet));
     return appels;
   };
   assert.deepEqual(aiguiller({code: "2F4FUL", ouvrir: "parcours"}), ["parcours", "suivi"], "le lien réel de l’espace élève");
@@ -325,4 +329,11 @@ test("l’aiguillage ouvre le bon écran à partir de ce que le <head> a lu", ()
   assert.deepEqual(aiguiller({ouvrir: "calculs", code: "2F4FUL"}), ["calculs", "suivi"]);
   assert.deepEqual(aiguiller({fiche: "CDEF23"}), ["fiche:CDEF23"], "la fiche du professeur ne démarre aucun suivi");
   assert.deepEqual(aiguiller({}), ["suivi"], "sans adresse, l’appli s’ouvre normalement (demarrerSuivi ne fait rien sans code)");
+  // Lot 3 : le lien réel de l'espace élève porte un billet, plus le code.
+  const b = "0123456789abcdef0123456789abcdef";
+  assert.deepEqual(aiguiller({billet: b, ouvrir: "parcours"}), ["billet:" + b, "parcours"], "le lien de l’espace élève : échange, puis Mon parcours (demarrerSuivi est appelé par entrerParBillet)");
+  assert.deepEqual(aiguiller({billet: b}), ["billet:" + b, "parcours"], "sans « ouvrir », Mon parcours quand même : c’est là qu’un élève suivi va");
+  assert.deepEqual(aiguiller({billet: b, ouvrir: "calculs"}), ["billet:" + b, "calculs"]);
+  assert.deepEqual(aiguiller({billet: b, vue: "fiche"}), ["fiche-billet:" + b], "« Voir sa fiche » : la fiche par billet, aucun suivi");
+  assert.deepEqual(aiguiller({fiche: "CDEF23", billet: b}), ["fiche:CDEF23"], "un vieux #fiche= garde la priorité : il ne peut venir que d’une page « Ma classe » pas encore à jour");
 });

@@ -21,8 +21,14 @@
     // d'audience est coupée. Le code ne doit apparaître dans AUCUNE adresse :
     // une adresse part dans la mesure d'audience (fragment compris), reste
     // dans l'historique, et s'affiche quand la page est projetée au tableau.
+    //
+    // Lot 3 (03/09/2026) : l'espace élève et « Ma classe » n'envoient plus le
+    // code mais un BILLET (#b=…, 32 caractères, deux minutes, usage unique)
+    // que l'appli échange contre le code auprès du serveur. L'historique ne
+    // garde qu'un billet mort. #code= et #fiche= sont encore compris, le temps
+    // que les deux moitiés du système soient à jour (voir la notice du lot).
     (function (window) {
-      var entree = {code: "", fiche: "", ouvrir: ""};
+      var entree = {code: "", fiche: "", billet: "", vue: "", ouvrir: ""};
       var reste = [];
       try {
         var brut = String(window.location.hash || "").replace(/^#/, "");
@@ -37,13 +43,15 @@
             try { cle = decodeURIComponent(cle); valeur = decodeURIComponent(valeur); } catch (e) {}
             if (cle === "code") entree.code = valeur;
             else if (cle === "fiche") entree.fiche = valeur;
+            else if (cle === "b") entree.billet = valeur;
+            else if (cle === "vue") { entree.vue = valeur; reste.push(morceaux[i]); }
             else if (cle === "ouvrir") { entree.ouvrir = valeur; reste.push(morceaux[i]); }
             else if (morceaux[i]) reste.push(morceaux[i]);
           }
         }
       } catch (e) {}
       window.MATHSGO_ENTREE = entree;
-      if (entree.code || entree.fiche) {
+      if (entree.code || entree.fiche || entree.billet) {
         // Signalé AVANT consentement.js (chargé en « defer ») : dès qu'un élève
         // est identifié par un code, aucune mesure d'audience ne se charge.
         window.MATHSGO_SUIVI_ELEVE = true;
@@ -65,15 +73,16 @@
           }
         } catch (e) {}
       }
-      // Un lien #code= (ou #fiche=) posé sur une page DÉJÀ ouverte — adresse
-      // collée ou proposée par la barre du navigateur — n'est pas un nouveau
-      // document : ce script ne rejouerait pas, le code resterait affiché dans
-      // la barre et le travail continuerait sous l'ancien code. On recharge :
-      // le document neuf repasse par ici, adopte le code et nettoie l'adresse.
+      // Un lien #b= (ou #code=, #fiche=) posé sur une page DÉJÀ ouverte —
+      // adresse collée ou proposée par la barre du navigateur — n'est pas un
+      // nouveau document : ce script ne rejouerait pas, le billet resterait
+      // affiché dans la barre et le travail continuerait sous l'ancien code.
+      // On recharge : le document neuf repasse par ici, échange le billet et
+      // nettoie l'adresse.
       try {
         window.addEventListener("hashchange", function () {
           var hash = String(window.location.hash || "");
-          if (/(^#|&)(code|fiche)=/.test(hash)) window.location.reload();
+          if (/(^#|&)(code|fiche|b)=/.test(hash)) window.location.reload();
         });
       } catch (e) {}
     })(window);
@@ -1581,19 +1590,25 @@
       function lireEntree() {
         const e = window.MATHSGO_ENTREE;
         if (e && typeof e === "object") {
-          return {code: String(e.code || ""), fiche: String(e.fiche || ""), ouvrir: String(e.ouvrir || "")};
+          return {code: String(e.code || ""), fiche: String(e.fiche || ""), billet: String(e.billet || ""),
+            vue: String(e.vue || ""), ouvrir: String(e.ouvrir || "")};
         }
         const adresse = window.location.hash || "";
-        if (adresse === "#parcours" || adresse === "#calculs") return {code: "", fiche: "", ouvrir: adresse.slice(1)};
+        if (adresse === "#parcours" || adresse === "#calculs") return {code: "", fiche: "", billet: "", vue: "", ouvrir: adresse.slice(1)};
         const parametres = new URLSearchParams(adresse.replace(/^#/, ""));
-        return {code: parametres.get("code") || "", fiche: parametres.get("fiche") || "", ouvrir: parametres.get("ouvrir") || ""};
+        return {code: parametres.get("code") || "", fiche: parametres.get("fiche") || "", billet: parametres.get("b") || "",
+          vue: parametres.get("vue") || "", ouvrir: parametres.get("ouvrir") || ""};
       }
       const ENTREE = lireEntree();
 
       // Le code actif : celui de l'adresse s'il y en a un (et qu'on n'ouvre pas
       // la fiche d'un élève), sinon celui de l'onglet. Décidé AVANT de charger
       // le parcours : c'est ce qui fait qu'on ne montre jamais la case d'un autre.
+      // Un billet (lot 3) est une entrée NEUVE : l'identité que l'onglet gardait
+      // ne compte plus, et le code n'arrive qu'après l'échange avec le serveur
+      // (entrerParBillet) — en attendant, personne n'est suivi.
       function codeInitial(entree) {
+        if (entree.billet) return "";
         if (!entree.fiche) {
           const code = PARCOURS.normaliserCode(entree.code);
           if (PARCOURS.codeValide(code)) return code;
@@ -1601,6 +1616,7 @@
         return PARCOURS.chargerCode(stockageSession());
       }
       PARCOURS.migrerStockage(storage());
+      if (ENTREE.billet) PARCOURS.effacerCode(stockageSession());
       let codeSuivi = codeInitial(ENTREE);
       let parcours = PARCOURS.charger(storage(), codeSuivi);
       // L'état de synchronisation de la case active : dernière révision connue
@@ -1616,6 +1632,9 @@
       let echecsSuccessifs = 0;
       let fusionsSuccessives = 0;
       let erreurDefinitive = false;
+      // Un billet refusé par le serveur : "expire" (inconnu, déjà utilisé ou
+      // périmé) ou "injoignable". Le repère l'affiche, avec le chemin du retour.
+      let entreeRefusee = null;
 
       function sauverSync() {
         PARCOURS.sauverSync(storage(), codeSuivi, sync);
@@ -1641,7 +1660,8 @@
         logoAria: "Retour à mon espace"
       };
       function majLienRetour() {
-        const vers = suiviActif() ? RETOUR_ESPACE : RETOUR_CATALOGUE;
+        // Un élève dont le billet a été refusé vient quand même de son espace.
+        const vers = suiviActif() || entreeRefusee ? RETOUR_ESPACE : RETOUR_CATALOGUE;
         // Le logo suit la même règle que le lien du haut. C'était la dernière
         // porte qui faisait sortir un élève suivi de son espace : pour lui, le
         // logo ramène à son espace, pas à l'accueil du site. Pour tous les
@@ -1702,6 +1722,16 @@
           method: "POST",
           headers: {"Content-Type": "text/plain;charset=UTF-8"},
           body: JSON.stringify({code})
+        });
+      }
+
+      // Le billet d'entrée (lot 3) : le serveur le consomme et rend le code —
+      // ou, pour un billet de fiche, la progression sans le code.
+      function echangerBillet(billet) {
+        return appelSuivi("/api/eleve.php", {
+          method: "POST",
+          headers: {"Content-Type": "text/plain;charset=UTF-8"},
+          body: JSON.stringify({billet, appli: "defi-tables"})
         });
       }
 
@@ -1900,6 +1930,7 @@
       function renderRepere() {
         const repere = document.getElementById("suivi-repere");
         if (!repere) return;
+        if (!suiviActif() && entreeRefusee) { renderEntreeRefusee(repere); return; }
         repere.hidden = !suiviActif();
         if (!suiviActif()) { repere.replaceChildren(); return; }
         const qui = suiviIdentite && suiviIdentite.prenom ? ` · ${suiviIdentite.prenom}` : "";
@@ -1934,6 +1965,70 @@
         repere.append(bloc);
       }
 
+      // Le billet n'a rien ouvert : on le dit à la place du repère, avec le
+      // seul geste utile — repasser par l'espace, qui a encore le code dans
+      // son onglet. Rien d'autre ne change : l'appli reste utilisable sans
+      // code, et rien de ce qui s'y fait ne sera compté.
+      function renderEntreeRefusee(repere) {
+        repere.hidden = false;
+        repere.replaceChildren();
+        repere.classList.toggle("detache", true);
+        repere.classList.toggle("hors-ligne", false);
+        const puce = document.createElement("span");
+        puce.className = "puce";
+        puce.setAttribute("aria-hidden", "true");
+        const texte = entreeRefusee === "expire"
+          ? "Ce lien a expiré, repasse par ton espace"
+          : "Le serveur ne répond pas, repasse par ton espace";
+        const retour = document.createElement("a");
+        retour.href = SUIVI_URL + "/";
+        retour.textContent = "Mon espace";
+        const bloc = document.createElement("span");
+        bloc.append(document.createTextNode("· "), retour);
+        repere.append(puce, document.createTextNode(texte), bloc);
+      }
+
+      // Adopter un code en cours de route (après l'échange d'un billet) : la
+      // même bascule que quitterSuivi, dans l'autre sens — la case de ce code,
+      // son état d'envoi, et rien de l'état d'avant.
+      function adopterCode(code) {
+        codeSuivi = code;
+        entreeRefusee = null;
+        suiviIdentite = null;
+        suiviHorsLigne = false;
+        erreurDefinitive = false;
+        echecsSuccessifs = 0;
+        fusionsSuccessives = 0;
+        parcours = PARCOURS.charger(storage(), codeSuivi);
+        sync = PARCOURS.chargerSync(storage(), codeSuivi);
+        majLienRetour();
+        renderRepere();
+        renderParcours();
+      }
+
+      // L'entrée par un billet (lot 3) : l'échange d'abord, puis tout se passe
+      // comme si le code était arrivé dans l'adresse — `ouvrir` ouvre l'écran
+      // demandé, demarrerSuivi lit le serveur. Un billet refusé (déjà utilisé,
+      // périmé, ou serveur muet) laisse l'appli sans code et le dit.
+      async function entrerParBillet(billet, ouvrir) {
+        const reponse = await echangerBillet(billet);
+        const donnees = reponse.statut === 200 && reponse.donnees && reponse.donnees.ok ? reponse.donnees : null;
+        const code = donnees && donnees.type === "entree" ? PARCOURS.normaliserCode(donnees.code || "") : "";
+        if (!PARCOURS.codeValide(code)) {
+          entreeRefusee = reponse.statut === 404 || donnees ? "expire" : "injoignable";
+          majLienRetour();
+          renderRepere();
+          return false;
+        }
+        adopterCode(code);
+        // Le serveur vient de dire qui c'est : le repère le montre tout de
+        // suite, demarrerSuivi le confirmera.
+        suiviIdentite = {prenom: donnees.prenom || "", classe: donnees.classe || ""};
+        if (typeof ouvrir === "function") ouvrir();
+        demarrerSuivi();
+        return true;
+      }
+
       // « Ce n'est pas moi » : on envoie ce qui restait à envoyer, on oublie le
       // code, on revient à la case « sans code » — la case de l'élève reste sur
       // l'appareil, on n'efface le travail de personne — puis on renvoie à
@@ -1944,6 +2039,7 @@
         envoyerAvantDeFermer();
         if (relance !== null) { window.clearTimeout(relance); relance = null; }
         codeSuivi = "";
+        entreeRefusee = null;
         suiviIdentite = null;
         suiviHorsLigne = false;
         erreurDefinitive = false;
@@ -2020,6 +2116,40 @@
 
       // Vue « fiche d'un élève », ouverte par le professeur depuis « Ma classe ».
       // Elle ne touche jamais au parcours de cet appareil.
+      function afficherFicheEleve({existe, parcours: brut, maj_le, prenom, classe}) {
+        const distant = existe ? PARCOURS.normaliserParcours(brut) : PARCOURS.creerParcours();
+        if (!distant.prenom && prenom) distant.prenom = prenom;
+        $("fiche-ecran-nom").textContent = distant.prenom || "Fiche de suivi";
+        $("fiche-classe").textContent = classe || "";
+        $("fiche-ecran-info").textContent = [
+          classe ? `Classe ${classe}` : "",
+          maj_le
+            ? `dernière activité le ${new Date(maj_le).toLocaleDateString("fr-FR")}`
+            : "aucune activité enregistrée"
+        ].filter(Boolean).join(" · ");
+        renderFiche(distant);
+        ajusterFiche();
+      }
+
+      // Par un billet de fiche (lot 3) : « Ma classe » ne met plus le code dans
+      // l'adresse. Le serveur rend la progression et le prénom — jamais le code.
+      async function ouvrirFicheParBillet(billet) {
+        document.body.classList.add("mode-fiche");
+        $("fiche-ecran").hidden = false;
+        $("fiche-ecran-info").textContent = "Un instant…";
+        const reponse = await echangerBillet(billet);
+        const donnees = reponse.statut === 200 && reponse.donnees && reponse.donnees.ok ? reponse.donnees : null;
+        if (!donnees || donnees.type !== "fiche") {
+          $("fiche-ecran-info").textContent = reponse.statut === 404 || donnees
+            ? "Ce lien a expiré : rouvre la fiche depuis « Ma classe »."
+            : "Le serveur n’a pas répondu. Réessaie dans un instant.";
+          return;
+        }
+        afficherFicheEleve(donnees);
+      }
+
+      // Par le code dans l'adresse (#fiche=) : encore compris le temps que la
+      // page « Ma classe » en ligne émette des billets ; à retirer ensuite.
       async function ouvrirFicheEleve(codeBrut) {
         const code = PARCOURS.normaliserCode(codeBrut);
         document.body.classList.add("mode-fiche");
@@ -2039,20 +2169,13 @@
           return;
         }
         const qui = identite.statut === 200 && identite.donnees && identite.donnees.ok ? identite.donnees : null;
-        const distant = progression.donnees.existe
-          ? PARCOURS.normaliserParcours(progression.donnees.parcours)
-          : PARCOURS.creerParcours();
-        if (!distant.prenom && qui && qui.prenom) distant.prenom = qui.prenom;
-        $("fiche-ecran-nom").textContent = distant.prenom || "Fiche de suivi";
-        $("fiche-classe").textContent = (qui && qui.classe) || "";
-        $("fiche-ecran-info").textContent = [
-          qui && qui.classe ? `Classe ${qui.classe}` : "",
-          progression.donnees.maj_le
-            ? `dernière activité le ${new Date(progression.donnees.maj_le).toLocaleDateString("fr-FR")}`
-            : "aucune activité enregistrée"
-        ].filter(Boolean).join(" · ");
-        renderFiche(distant);
-        ajusterFiche();
+        afficherFicheEleve({
+          existe: Boolean(progression.donnees.existe),
+          parcours: progression.donnees.parcours,
+          maj_le: progression.donnees.maj_le,
+          prenom: qui ? qui.prenom : "",
+          classe: qui ? qui.classe : ""
+        });
       }
 
       // La fiche fait 186 mm de large parce qu'elle est faite pour du A4. Sur un
@@ -3808,11 +3931,20 @@
       majLienRetour();
       renderRepere();
       // L'adresse a été lue et nettoyée par le script du <head>, avant tout le
-      // reste (ENTREE). L'espace élève construit « #code=XXXXXX&ouvrir=parcours » :
-      // le code a déjà décidé de la case chargée, il ne reste qu'à aiguiller.
+      // reste (ENTREE). L'espace élève construit « #b=<billet>&ouvrir=parcours »
+      // (lot 3) — ou encore « #code=XXXXXX&ouvrir=parcours » tant qu'il n'est
+      // pas à jour : le billet s'échange d'abord, le code a déjà décidé de la
+      // case chargée, il ne reste qu'à aiguiller. « Ma classe » ouvre la fiche
+      // par « #b=<billet>&vue=fiche » (ou encore « #fiche=XXXXXX »).
       // [aiguillage:debut]
       if (ENTREE.fiche) {
         ouvrirFicheEleve(ENTREE.fiche);
+      } else if (ENTREE.billet && ENTREE.vue === "fiche") {
+        ouvrirFicheParBillet(ENTREE.billet);
+      } else if (ENTREE.billet) {
+        entrerParBillet(ENTREE.billet, () => {
+          if (ENTREE.ouvrir === "calculs") openCalculs(); else openParcours();
+        });
       } else {
         if (ENTREE.ouvrir === "calculs") openCalculs();
         else if (ENTREE.ouvrir === "parcours" || ENTREE.code) openParcours();

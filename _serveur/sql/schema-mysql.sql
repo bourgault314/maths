@@ -65,3 +65,11 @@ CREATE TABLE IF NOT EXISTS compteurs (
   fenetre INTEGER NOT NULL,
   nombre INTEGER NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS billets (
+  hash VARCHAR(64) NOT NULL PRIMARY KEY,
+  eleve_id INTEGER NOT NULL,
+  type VARCHAR(10) NOT NULL,
+  expire_le INTEGER NOT NULL,
+  KEY billets_eleve (eleve_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

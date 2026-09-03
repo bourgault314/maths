@@ -752,11 +752,18 @@ test("la feuille de style de Défi tables est équilibrée, et @media print surv
 test("le lien fabriqué par l’espace élève ne porte que des paramètres que l’appli lit", async () => {
   const fs = await import("node:fs/promises");
   const espaceEleve = await fs.readFile(new URL("../_serveur/public/index.php", import.meta.url), "utf8");
-  const gabarit = /lien\.href = `\$\{appli\.url\}([^`]*)`\s*\+\s*\(appli\.ancre \? `([^`]*)`/.exec(espaceEleve);
-  assert.ok(gabarit, "le gabarit du lien doit rester trouvable dans l’espace élève");
+  // Lot 3 : l'adresse porte un billet (#b=), plus jamais le code.
+  const gabarit = /return `\$\{appli\.url\}([^`]*)`\s*\+\s*\(appli\.ancre \? `([^`]*)`/.exec(espaceEleve);
+  assert.ok(gabarit, "le gabarit du lien (adresseAppli) doit rester trouvable dans l’espace élève");
   const parametres = [...`${gabarit[1]}${gabarit[2]}`.matchAll(/[#&]([a-z]+)=/g)].map(trouve => trouve[1]);
-  assert.deepEqual(parametres, ["code", "ouvrir"]);
-  parametres.forEach(nom => {
+  assert.deepEqual(parametres, ["b", "ouvrir"]);
+  // Et « Ma classe » ouvre la fiche par « #b=…&vue=fiche ».
+  const maClasse = await fs.readFile(new URL("../_serveur/public/prof/index.php", import.meta.url), "utf8");
+  const gabaritFiche = /defi_tables\.html(#b=\$\{encodeURIComponent\(r\.billet\)\}&vue=fiche)`/.exec(maClasse);
+  assert.ok(gabaritFiche, "le gabarit de « Voir sa fiche » doit rester trouvable dans Ma classe");
+  const parametresFiche = [...gabaritFiche[1].matchAll(/[#&]([a-z]+)=/g)].map(trouve => trouve[1]);
+  assert.deepEqual(parametresFiche, ["b", "vue"]);
+  [...new Set([...parametres, ...parametresFiche])].forEach(nom => {
     assert.ok(html.includes(`cle === "${nom}"`),
       `le script du <head> doit lire le paramètre « ${nom} » que le serveur met dans l’adresse`);
     assert.ok(html.includes(`parametres.get("${nom}")`),
@@ -779,7 +786,7 @@ test("le lien du haut ramène l’élève suivi à son espace, les autres au cat
   assert.ok(debut > 0, "le bloc du lien de retour doit exister");
   const source = html.slice(debut, html.indexOf(fin) + fin.length);
 
-  function executer(suivi) {
+  function executer(suivi, entreeRefusee = null) {
     const lien = {
       href: "",
       attributs: {},
@@ -798,8 +805,8 @@ test("le lien du haut ramène l’élève suivi à son espace, les autres au cat
       getElementById: id => (id === "lien-retour" ? lien : null),
       querySelector: selecteur => (selecteur === "a.brand" ? logo : null)
     };
-    new Function("SUIVI_URL", "document", "suiviActif", `${source}\nreturn majLienRetour;`)(
-      "https://suivi.mathsgo.re", faux, () => suivi
+    new Function("SUIVI_URL", "document", "suiviActif", "entreeRefusee", `${source}\nreturn majLienRetour;`)(
+      "https://suivi.mathsgo.re", faux, () => suivi, entreeRefusee
     )();
     return {lien, logo};
   }
@@ -813,6 +820,12 @@ test("le lien du haut ramène l’élève suivi à son espace, les autres au cat
   assert.equal(avecCode.href, "https://suivi.mathsgo.re/");
   assert.equal(avecCode.etiquette.textContent, "Mon espace");
   assert.equal(avecCode.attributs["aria-label"], "Retour à mon espace");
+
+  // Lot 3 : un billet refusé laisse l'élève sans code, mais il vient de son
+  // espace — c'est là qu'il doit pouvoir repartir.
+  const billetRefuse = executer(false, "expire").lien;
+  assert.equal(billetRefuse.href, "https://suivi.mathsgo.re/");
+  assert.equal(billetRefuse.etiquette.textContent, "Mon espace");
 
   // Le logo était la dernière porte de sortie : il ramenait toujours à
   // l'accueil du site, y compris pour un élève arrivé de son espace.

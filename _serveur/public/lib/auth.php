@@ -5,6 +5,7 @@ declare(strict_types=1);
 
 // Pour oublier_compteurs_du_code() à la suppression d'un compte.
 require_once __DIR__ . '/limite.php';
+require_once __DIR__ . '/billets.php';
 
 const DUREE_SESSION_HEURES = 12;
 // Les comptes sont hachés en bcrypt à coût fixe : le coût par défaut de PHP
@@ -183,6 +184,7 @@ function supprimer_prof(PDO $pdo, int $profId): void
             foreach ($elevesDeLaClasse->fetchAll() as $eleve) {
                 $pdo->prepare('DELETE FROM progressions WHERE eleve_id = ?')->execute([(int)$eleve['id']]);
                 oublier_compteurs_du_code($pdo, (string)$eleve['code']);
+                oublier_billets_de_l_eleve($pdo, (int)$eleve['id']);
             }
             $pdo->prepare('DELETE FROM eleves WHERE classe_id = ?')->execute([$classeId]);
             $pdo->prepare('DELETE FROM partages WHERE classe_id = ?')->execute([$classeId]);
