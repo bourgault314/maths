@@ -1,4 +1,4 @@
-import { makeDivision, makeSteps } from "./division-engine.mjs";
+import { getOperationDisplayState, makeDisplayMetrics, makeDivision, makeSteps } from "./division-engine.mjs";
 
 const $ = (selector) => document.querySelector(selector);
 const dividendInput = $("#dividend");
@@ -20,22 +20,11 @@ function setMode(mode) {
     button.setAttribute("aria-pressed", String(active));
   });
   decimalField.hidden = mode !== "decimal";
+  decimalPlaces.disabled = mode !== "decimal";
   $("#page-title").textContent = mode === "integer" ? "Division euclidienne" : "Division posée décimale";
   const pdf = $("#pdf-link");
   pdf.href = mode === "integer" ? "gabarit-division-euclidienne.pdf" : "gabarit-division-decimale.pdf";
   pdf.textContent = mode === "integer" ? "Gabarit euclidien" : "Gabarit décimal";
-}
-
-function visibility(index, step) {
-  if (step.kind === "finish") return { quotient: true, product: true, remainder: true, next: true };
-  if (step.opIndex === undefined || index > step.opIndex) return { quotient: false, product: false, remainder: false, next: false };
-  if (index < step.opIndex) return { quotient: true, product: true, remainder: true, next: true };
-  return {
-    quotient: true,
-    product: ["subtract", "bring"].includes(step.kind),
-    remainder: ["subtract", "bring"].includes(step.kind),
-    next: step.kind === "bring"
-  };
 }
 
 function visibleQuotient(step) {
@@ -43,7 +32,7 @@ function visibleQuotient(step) {
   let result = "";
   let comma = false;
   division.operations.forEach((operation, index) => {
-    if (!visibility(index, step).quotient) return;
+    if (!getOperationDisplayState(division, index, step).quotient) return;
     if (operation.isDecimalDigit && !comma) { result += ","; comma = true; }
     result += operation.quotientDigit;
   });
@@ -53,16 +42,25 @@ function visibleQuotient(step) {
 function digitRow(value, endColumn, className, options = {}) {
   const row = document.createElement("div");
   row.className = `digit-row ${className}`;
+  row.classList.toggle("is-placeholder", !options.visible);
+  if (!options.visible) row.setAttribute("aria-hidden", "true");
   row.style.setProperty("--columns", division.digits.length);
   const chars = String(value).split("");
   const start = endColumn - chars.length + 1;
   chars.forEach((char, offset) => {
     const cell = document.createElement("span");
-    cell.className = `digit ${options.active ? "active" : ""} ${options.falling && offset === chars.length - 1 ? "falling-digit" : ""}`;
+    cell.className = `digit ${options.active ? "active" : ""} ${options.brought && offset === chars.length - 1 ? "brought-digit" : ""}`;
     cell.style.gridColumn = String(start + offset + 1);
     cell.textContent = char;
     row.append(cell);
   });
+  if (options.subtraction) {
+    const rule = document.createElement("span");
+    rule.className = "subtraction-rule";
+    rule.setAttribute("aria-hidden", "true");
+    rule.style.gridColumn = `${start + 1} / ${endColumn + 2}`;
+    row.append(rule);
+  }
   return row;
 }
 
@@ -70,18 +68,25 @@ function dividendRow(step) {
   const row = document.createElement("div");
   row.className = "digit-row dividend-row";
   row.style.setProperty("--columns", division.digits.length);
-  const visibleEnd = step.kind === "finish"
+  const operationEnd = step.kind === "finish"
     ? division.digits.length - 1
     : step.opIndex === undefined
       ? division.integerLength - 1
       : division.operations[step.opIndex].endColumn + (step.kind === "bring" ? 1 : 0);
+  const visibleEnd = Math.max(division.integerLength - 1, operationEnd);
   division.digits.forEach((digit, index) => {
     const cell = document.createElement("span");
-    const descending = step.kind === "bring" && division.operations[step.opIndex]?.nextEndColumn === index;
-    cell.className = `digit ${index > visibleEnd ? "pending" : ""} ${descending ? "falling-digit" : ""}`;
+    const isLowered = step.kind === "bring" && division.operations[step.opIndex]?.nextEndColumn === index;
+    cell.className = `digit ${index > visibleEnd ? "pending" : ""} ${isLowered ? "falling-source" : ""}`;
     if (index === division.integerLength - 1 && division.mode === "decimal" && visibleEnd >= division.integerLength) cell.classList.add("comma-after");
     cell.style.gridColumn = String(index + 1);
     cell.textContent = digit;
+    if (isLowered) {
+      const arrow = document.createElement("span");
+      arrow.className = "lower-arrow";
+      arrow.setAttribute("aria-hidden", "true");
+      cell.append(arrow);
+    }
     row.append(cell);
   });
   return row;
@@ -94,27 +99,31 @@ function roleCard(kind, label, value) {
 function renderDivision(step) {
   const root = $("#long-division");
   root.replaceChildren();
+  const metrics = makeDisplayMetrics(division);
+  root.style.setProperty("--row-height", `${metrics.rowHeight}px`);
+  root.style.setProperty("--digit-size", `${metrics.digitSize}px`);
+  root.style.setProperty("--column-width", `${metrics.columnWidth}px`);
+  root.style.setProperty("--quotient-size", `${metrics.quotientSize}px`);
   const work = document.createElement("div");
   work.className = "work-column";
   work.append(dividendRow(step));
 
   division.operations.forEach((operation, index) => {
-    const visible = visibility(index, step);
-    if (visible.product) {
-      work.append(digitRow(operation.product, operation.endColumn, "subtraction-row", {
-        active: step.kind === "subtract" && step.opIndex === index
-      }));
-    }
-    const finalOperation = index === division.operations.length - 1;
-    if (operation.nextPartial !== undefined && visible.next) {
-      work.append(digitRow(operation.nextPartial, operation.nextEndColumn, "partial-row", {
-        active: true
-      }));
-    } else if (finalOperation && visible.remainder) {
-      work.append(digitRow(operation.remainder, operation.endColumn, "partial-row", {
-        active: step.kind === "subtract" && step.opIndex === index
-      }));
-    }
+    const visible = getOperationDisplayState(division, index, step);
+    work.append(digitRow(operation.product, operation.endColumn, "product-row", {
+      visible: visible.product,
+      subtraction: visible.subtraction,
+      active: step.kind === "multiply" && step.opIndex === index
+    }));
+
+    const showsNext = visible.result === "next" && operation.nextPartial !== undefined;
+    const resultValue = showsNext ? operation.nextPartial : operation.remainder;
+    const resultEndColumn = showsNext ? operation.nextEndColumn : operation.endColumn;
+    work.append(digitRow(resultValue, resultEndColumn, showsNext ? "partial-row" : "remainder-row", {
+      visible: Boolean(visible.result),
+      active: ["subtract", "bring"].includes(step.kind) && step.opIndex === index,
+      brought: step.kind === "bring" && step.opIndex === index
+    }));
   });
 
   const potence = document.createElement("div");
@@ -148,6 +157,8 @@ function render() {
   const step = steps[stepIndex];
   $("#step-title").textContent = step.title;
   $("#step-sentence").textContent = step.sentence;
+  $("#step-detail").textContent = step.detail || "";
+  $("#step-detail").hidden = !step.detail;
   $("#step-count").textContent = `${stepIndex + 1} / ${steps.length}`;
   $("#progress-bar").style.width = `${((stepIndex + 1) / steps.length) * 100}%`;
   $("#previous").disabled = stepIndex === 0;

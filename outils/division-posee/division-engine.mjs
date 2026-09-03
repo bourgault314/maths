@@ -6,6 +6,69 @@ export function formatRemainder(remainder, decimalPlaces) {
   return fraction ? `${whole},${fraction}` : String(whole);
 }
 
+function anticipationFor(data) {
+  const integerQuotient = Math.floor(data.dividend / data.divisor);
+  if (integerQuotient === 0) {
+    return {
+      digitCount: 1,
+      sentence: data.mode === "integer"
+        ? "Le quotient entier est 0."
+        : "La partie entière du quotient est 0.",
+      detail: `${data.dividend} est plus petit que ${data.divisor} : le quotient est inférieur à 1.`
+    };
+  }
+
+  const digitCount = String(integerQuotient).length;
+  const lowerQuotient = 10 ** (digitCount - 1);
+  const upperQuotient = 10 ** digitCount;
+  const lowerProduct = data.divisor * lowerQuotient;
+  const upperProduct = data.divisor * upperQuotient;
+  const exactQuotient = data.dividend / data.divisor;
+  const estimateMagnitude = 10 ** Math.floor(Math.log10(exactQuotient));
+  const estimatedQuotient = Math.max(1, Math.round(exactQuotient / estimateMagnitude) * estimateMagnitude);
+  const friendlyDividend = estimatedQuotient * data.divisor;
+  const label = data.mode === "integer" ? "Le quotient entier" : "La partie entière du quotient";
+  const estimate = friendlyDividend !== lowerProduct && friendlyDividend !== upperProduct
+    ? ` Pour estimer : ${friendlyDividend} ÷ ${data.divisor} = ${estimatedQuotient}.`
+    : "";
+
+  return {
+    digitCount,
+    sentence: `${label} aura ${digitCount} chiffre${digitCount > 1 ? "s" : ""}.`,
+    detail: `${data.divisor} × ${lowerQuotient} = ${lowerProduct} et ${data.divisor} × ${upperQuotient} = ${upperProduct} : ${data.dividend} est entre les deux.${estimate}`
+  };
+}
+
+export function makeDisplayMetrics(data) {
+  const rowCount = 1 + data.operations.length * 2;
+  const rowHeight = Math.min(50, Math.max(14, Math.floor(390 / rowCount)));
+  const digitSize = Math.min(36, Math.max(13, Math.floor(rowHeight * 0.72)));
+  const columnWidth = Math.min(48, Math.max(22, Math.floor(520 / data.digits.length)));
+  const quotientSize = Math.min(35, Math.max(14, Math.floor(210 / Math.max(4, data.quotient.length))));
+  return { rowCount, rowHeight, digitSize, columnWidth, quotientSize };
+}
+
+export function getOperationDisplayState(data, index, step) {
+  const hidden = { quotient: false, product: false, subtraction: false, result: null };
+  const operation = data.operations[index];
+  const completed = {
+    quotient: true,
+    product: true,
+    subtraction: true,
+    result: operation.nextPartial === undefined ? "remainder" : "next"
+  };
+  if (step.kind === "finish") return completed;
+  if (step.opIndex === undefined || index > step.opIndex) return hidden;
+  if (index < step.opIndex) return completed;
+  if (step.kind === "choose") return { ...hidden, quotient: true };
+  if (step.kind === "multiply") return { ...hidden, quotient: true, product: true };
+  if (step.kind === "subtract") {
+    return { quotient: true, product: true, subtraction: true, result: "remainder" };
+  }
+  if (step.kind === "bring") return completed;
+  return hidden;
+}
+
 export function makeDivision(dividend, divisor, mode = "integer", requestedDecimals = 2) {
   if (!Number.isInteger(dividend) || dividend < 0) throw new RangeError("Le dividende doit être un entier positif ou nul.");
   if (!Number.isInteger(divisor) || divisor < 1) throw new RangeError("Le diviseur doit être un entier strictement positif.");
@@ -80,14 +143,12 @@ export function makeDivision(dividend, divisor, mode = "integer", requestedDecim
 }
 
 export function makeSteps(data) {
-  const integerQuotient = Math.floor(data.dividend / data.divisor);
-  const digitCount = String(integerQuotient).length;
+  const anticipation = anticipationFor(data);
   const steps = [{
     kind: "predict",
     title: "J’anticipe",
-    sentence: data.mode === "integer"
-      ? `Le quotient entier aura ${digitCount} chiffre${digitCount > 1 ? "s" : ""}.`
-      : `La partie entière du quotient aura ${digitCount} chiffre${digitCount > 1 ? "s" : ""}.`
+    sentence: anticipation.sentence,
+    detail: anticipation.detail
   }];
 
   data.operations.forEach((operation, opIndex) => {
@@ -98,9 +159,15 @@ export function makeSteps(data) {
       opIndex
     });
     steps.push({
+      kind: "multiply",
+      title: "Je multiplie",
+      sentence: `${operation.quotientDigit} × ${data.divisor} = ${operation.product}. J’écris ${operation.product} sous ${operation.partial}.`,
+      opIndex
+    });
+    steps.push({
       kind: "subtract",
       title: "Je soustrais",
-      sentence: `${operation.quotientDigit} × ${data.divisor} = ${operation.product}, puis ${operation.partial} − ${operation.product} = ${operation.remainder}.`,
+      sentence: `${operation.partial} − ${operation.product} = ${operation.remainder}.`,
       opIndex
     });
     if (operation.nextDigit !== undefined) {
