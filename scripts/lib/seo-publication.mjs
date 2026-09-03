@@ -118,12 +118,14 @@ const COLLECTION_DESCRIPTIONS = {
   montessori: "Des bouliers Montessori interactifs pour placer les nombres et travailler les additions et soustractions.",
   soroban: "Des outils Soroban pour représenter les nombres et s’initier au calcul sur boulier japonais.",
   gerbert: "Une progression avec l’abaque de Gerbert pour représenter les nombres et effectuer des additions et soustractions.",
+  "division-posee": "Une division euclidienne ou décimale expliquée pas à pas, avec deux gabarits A4 à imprimer et plastifier.",
   "tuiles-algebriques": "Des tuiles algébriques pour représenter les expressions littérales, développer, réduire et résoudre des équations.",
   splat: "Des outils Splat et équaSplat pour représenter une inconnue, manipuler une équation et créer des problèmes."
 };
 
 const COLLECTION_TITLES = {
-  rekenrek: "Rekenrek : boulier interactif et activités de calcul | maths&go"
+  rekenrek: "Rekenrek : boulier interactif et activités de calcul | maths&go",
+  "division-posee": "Division posée : manipuler et imprimer | maths&go"
 };
 
 const GROUP_PRESENTATION = {

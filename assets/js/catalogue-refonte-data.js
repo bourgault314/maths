@@ -93,6 +93,15 @@ window.MATHSGO_CATALOGUE = {
       "collapseInNotion": true
     },
     {
+      "id": "division-posee",
+      "title": "Division posée",
+      "domain": "nombres-calculs",
+      "notions": ["numeration"],
+      "hub": "division-posee/index.html",
+      "hiddenFromBrowse": false,
+      "collapseInNotion": true
+    },
+    {
       "id": "rekenrek",
       "title": "Rekenrek",
       "domain": "nombres-calculs",
@@ -419,6 +428,30 @@ window.MATHSGO_CATALOGUE = {
       "tags": ["numeration", "decimaux", "materiel", "imprimer", "gabarit"],
       "thumbnail": "assets/img/thumbnails/numeration/maker-decimal.png?v=2",
       "cardDescription": "Préparer des planches d’unités, dixièmes et centièmes personnalisées pour l’impression."
+    },
+    "outils/division-posee/division-posee.html": {
+      "primaryNotion": "numeration",
+      "primaryGroup": "manipuler",
+      "collections": ["division-posee"],
+      "tags": ["division", "calcul-pose", "euclidienne", "decimale", "pas-a-pas", "table"],
+      "thumbnail": "assets/img/thumbnails/numeration/division-posee.svg?v=1",
+      "cardDescription": "Entrer le dividende et le diviseur, puis afficher la division euclidienne ou décimale étape par étape avec la table du diviseur."
+    },
+    "outils/division-posee/gabarit-division-euclidienne.pdf": {
+      "primaryNotion": "numeration",
+      "primaryGroup": "imprimer",
+      "collections": ["division-posee"],
+      "tags": ["division", "euclidienne", "gabarit", "plastifier", "imprimer"],
+      "thumbnail": "assets/img/thumbnails/numeration/gabarit-division-euclidienne.png?v=1",
+      "cardDescription": "Un gabarit A4 à plastifier avec anticipation, potence, table du diviseur et relation de vérification."
+    },
+    "outils/division-posee/gabarit-division-decimale.pdf": {
+      "primaryNotion": "numeration",
+      "primaryGroup": "imprimer",
+      "collections": ["division-posee"],
+      "tags": ["division", "decimale", "gabarit", "plastifier", "imprimer"],
+      "thumbnail": "assets/img/thumbnails/numeration/gabarit-division-decimale.png?v=1",
+      "cardDescription": "Un gabarit A4 séparé pour poser une division décimale et choisir la précision du quotient."
     },
     "auto/index.html": {
       "primaryNotion": "calcul-mental",
@@ -3746,6 +3779,54 @@ window.MATHSGO_CATALOGUE = {
       "status": "published",
       "featured": false,
       "recent": false
+    },
+    {
+      "id": "outils-division-posee-division-posee-html",
+      "title": "Division posée pas à pas",
+      "description": "Une division euclidienne ou décimale guidée étape par étape, avec la table du diviseur toujours visible.",
+      "path": "outils/division-posee/division-posee.html",
+      "domains": ["nombres-calculs"],
+      "notions": ["numeration"],
+      "uses": ["manipuler", "projeter"],
+      "types": ["exerciseur"],
+      "filters": [],
+      "keywords": ["division posée", "division euclidienne", "division décimale", "quotient", "reste", "pas à pas"],
+      "kind": "tool",
+      "status": "published",
+      "featured": false,
+      "recent": true
+    },
+    {
+      "id": "outils-division-posee-gabarit-euclidienne-pdf",
+      "title": "Gabarit — division euclidienne",
+      "description": "Une fiche A4 épurée à glisser sous pochette pour anticiper, poser et vérifier une division euclidienne.",
+      "path": "outils/division-posee/gabarit-division-euclidienne.pdf",
+      "domains": ["nombres-calculs"],
+      "notions": ["numeration"],
+      "uses": ["imprimer", "entrainer"],
+      "types": ["imprimable"],
+      "filters": ["materiel-imprimer"],
+      "keywords": ["division euclidienne", "gabarit", "potence", "plastifier", "reste"],
+      "kind": "document",
+      "status": "published",
+      "featured": false,
+      "recent": true
+    },
+    {
+      "id": "outils-division-posee-gabarit-decimale-pdf",
+      "title": "Gabarit — division décimale",
+      "description": "Une fiche A4 séparée pour anticiper, poser et vérifier une division avec un quotient décimal.",
+      "path": "outils/division-posee/gabarit-division-decimale.pdf",
+      "domains": ["nombres-calculs"],
+      "notions": ["numeration"],
+      "uses": ["imprimer", "entrainer"],
+      "types": ["imprimable"],
+      "filters": ["materiel-imprimer"],
+      "keywords": ["division décimale", "gabarit", "potence", "plastifier", "quotient"],
+      "kind": "document",
+      "status": "published",
+      "featured": false,
+      "recent": true
     },
     {
       "id": "outils-plateaux-manipulation-glisse-nombres-decimaux-html",
