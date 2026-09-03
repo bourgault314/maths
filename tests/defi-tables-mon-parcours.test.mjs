@@ -26,9 +26,14 @@ function stockageMemoire(initial = {}) {
     getItem: cle => (cle in donnees ? donnees[cle] : null),
     setItem: (cle, valeur) => { donnees[cle] = String(valeur); },
     removeItem: cle => { delete donnees[cle]; },
+    key: i => Object.keys(donnees)[i] ?? null,
+    get length() { return Object.keys(donnees).length; },
     donnees
   };
 }
+
+// Sous un code, la case durable ne porte pas de prénom (lot 8).
+const sansPrenom = p => parcours.definirPrenom(p, "");
 
 test("le parcours couvre les tables 2 à 10 et conseille les faciles d’abord", () => {
   assert.deepEqual([...parcours.TABLES], [2, 3, 4, 5, 6, 7, 8, 9, 10]);
@@ -296,23 +301,59 @@ test("une case par code sur l’appareil, plus la case « sans code »", () => {
   const lea = acquerirTables(parcours.definirPrenom(parcours.creerParcours(), "Léa"), [2, 5]);
   const tom = acquerirTables(parcours.definirPrenom(parcours.creerParcours(), "Tom"), [3]);
   const invite = parcours.definirPrenom(parcours.creerParcours(), "Invité");
-  assert.equal(parcours.cleStockage("AXKQ7T"), parcours.CLE_STOCKAGE + ":AXKQ7T");
-  assert.equal(parcours.cleStockage("axkq7t"), parcours.CLE_STOCKAGE + ":AXKQ7T", "le code est normalisé");
-  assert.equal(parcours.cleStockage(""), parcours.CLE_STOCKAGE, "sans code : la clé historique");
-  assert.equal(parcours.cleStockage(undefined), parcours.CLE_STOCKAGE);
+  // Lot 8 : la clé porte une EMPREINTE du code (16 hexadécimaux), jamais le code.
+  const cle = parcours.cleStockage("AXKQ7T", stockage);
+  assert.match(cle, new RegExp(`^${parcours.CLE_STOCKAGE}:[0-9a-f]{16}$`));
+  assert.doesNotMatch(cle, /AXKQ7T/);
+  assert.equal(parcours.cleStockage("axkq7t", stockage), cle, "le code est normalisé");
+  assert.notEqual(parcours.cleStockage("BZ4MHP", stockage), cle, "deux codes, deux cases");
+  assert.equal(parcours.cleStockage("", stockage), parcours.CLE_STOCKAGE, "sans code : la clé historique");
+  assert.equal(parcours.cleStockage(undefined, stockage), parcours.CLE_STOCKAGE);
+  assert.equal(parcours.cleSync("AXKQ7T", stockage), parcours.CLE_SYNC + cle.slice(parcours.CLE_STOCKAGE.length),
+    "l’état de synchronisation porte la même empreinte");
 
   assert.ok(parcours.sauver(stockage, lea, "AXKQ7T"));
   assert.ok(parcours.sauver(stockage, tom, "BZ4MHP"));
   assert.ok(parcours.sauver(stockage, invite));
-  assert.deepEqual(parcours.charger(stockage, "AXKQ7T"), lea);
-  assert.deepEqual(parcours.charger(stockage, "BZ4MHP"), tom);
-  assert.deepEqual(parcours.charger(stockage), invite, "la case sans code n’a pas été touchée");
+  assert.deepEqual(parcours.charger(stockage, "AXKQ7T"), sansPrenom(lea), "sous un code, la case n’a pas de prénom");
+  assert.deepEqual(parcours.charger(stockage, "BZ4MHP"), sansPrenom(tom));
+  assert.deepEqual(parcours.charger(stockage), invite, "la case sans code n’a pas été touchée, prénom compris");
   assert.deepEqual(parcours.charger(stockage, "CCCCCC"), parcours.creerParcours(), "un code jamais vu : case vide");
+  assert.equal(parcours.clesRevelentUnCode(stockage), false, "aucune clé ne laisse lire un code");
+  assert.doesNotMatch(JSON.stringify(stockage.donnees), /Léa|Tom/, "aucun prénom d’élève suivi dans le stockage durable");
+  assert.match(JSON.stringify(stockage.donnees), /Invité/, "le prénom de la case sans code, lui, reste");
 
   assert.ok(parcours.effacer(stockage, "AXKQ7T"));
   assert.deepEqual(parcours.charger(stockage, "AXKQ7T"), parcours.creerParcours());
-  assert.deepEqual(parcours.charger(stockage, "BZ4MHP"), tom, "effacer une case ne touche pas les autres");
+  assert.deepEqual(parcours.charger(stockage, "BZ4MHP"), sansPrenom(tom), "effacer une case ne touche pas les autres");
   assert.deepEqual(parcours.charger(stockage), invite);
+});
+
+test("l’empreinte : SHA-256 de Node, sel par appareil, dix mille tours, seize hexadécimaux", async () => {
+  const {createHash, webcrypto} = await import("node:crypto");
+  for (const texte of ["", "abc", "sel:AXKQ7T", "éà🙂", "a".repeat(55), "a".repeat(56), "a".repeat(64), "x".repeat(1000)]) {
+    assert.equal(parcours.sha256Hex(texte), createHash("sha256").update(texte, "utf8").digest("hex"), JSON.stringify(texte.slice(0, 12)));
+  }
+  // crypto.subtle, l'autre référence, sur un code.
+  const subtle = Buffer.from(await webcrypto.subtle.digest("SHA-256", new TextEncoder().encode("sel:AXKQ7T"))).toString("hex");
+  assert.equal(parcours.sha256Hex("sel:AXKQ7T"), subtle);
+  // L'empreinte = SHA-256 répété ITERATIONS_EMPREINTE fois sur « sel:code », tronqué.
+  assert.equal(parcours.ITERATIONS_EMPREINTE, 10000);
+  let h = createHash("sha256").update("0123456789abcdef0123456789abcdef:AXKQ7T").digest();
+  for (let i = 1; i < parcours.ITERATIONS_EMPREINTE; i += 1) h = createHash("sha256").update(h).digest();
+  assert.equal(parcours.empreinteCode("AXKQ7T", "0123456789abcdef0123456789abcdef"), h.toString("hex").slice(0, 16));
+  assert.equal(parcours.LONGUEUR_EMPREINTE, 16);
+  // Le sel : tiré une fois par appareil, relu ensuite ; deux appareils, deux clés.
+  const a = stockageMemoire();
+  const b = stockageMemoire();
+  const selA = parcours.selAppareil(a);
+  assert.match(selA, /^[0-9a-f]{32}$/);
+  assert.equal(parcours.selAppareil(a), selA, "relu, pas retiré");
+  assert.equal(a.donnees[parcours.CLE_SEL], selA);
+  assert.notEqual(parcours.selAppareil(b), selA);
+  assert.notEqual(parcours.cleStockage("AXKQ7T", a), parcours.cleStockage("AXKQ7T", b), "le même code n’a pas la même clé sur deux appareils");
+  assert.equal(parcours.selAppareil(null), "", "sans stockage : sel vide, jamais d’erreur");
+  assert.equal(parcours.selAppareil(stockageMemoire({[parcours.CLE_SEL]: "pas un sel"})).length, 32, "un sel abîmé est remplacé");
 });
 
 test("un appareil suivi par l’ancienne appli est repris : son parcours va dans la case du code, le code durable est oublié", () => {
@@ -321,10 +362,12 @@ test("un appareil suivi par l’ancienne appli est repris : son parcours va dans
     [parcours.CLE_CODE]: "AXKQ7T",
     [parcours.CLE_STOCKAGE]: JSON.stringify(lea)
   });
-  assert.equal(parcours.migrerStockage(ancien), true);
+  assert.equal(parcours.migrerStockage(ancien, 1756800000000), true);
   assert.equal(ancien.getItem(parcours.CLE_CODE), null, "l’identité ne vit plus dans le stockage durable");
-  assert.deepEqual(parcours.charger(ancien, "AXKQ7T"), lea, "le parcours est dans la case du code");
+  assert.deepEqual(parcours.charger(ancien, "AXKQ7T"), sansPrenom(lea), "le parcours est dans la case du code, sans le prénom");
+  assert.equal(parcours.chargerSync(ancien, "AXKQ7T").maj, 1756800000000, "la case est datée de la migration, pour la purge (trouvé au navigateur)");
   assert.deepEqual(parcours.charger(ancien), parcours.creerParcours(), "la case sans code est vide");
+  assert.equal(parcours.clesRevelentUnCode(ancien), false);
   assert.equal(parcours.migrerStockage(ancien), false, "une seconde fois, il n’y a plus rien à faire");
 
   // Sans code rangé, la case unique est déjà la case « sans code » : rien à faire.
@@ -343,6 +386,84 @@ test("un appareil suivi par l’ancienne appli est repris : son parcours va dans
   assert.deepEqual(parcours.charger(deuxFois, "AXKQ7T"), tom);
   assert.deepEqual(parcours.charger(deuxFois), lea, "l’ancienne case reste, en case sans code");
   assert.equal(parcours.migrerStockage(null), false);
+});
+
+test("un appareil des lots A1 à 5 (cases au code en clair, prénoms compris) passe sous les empreintes, sans rien perdre", () => {
+  const lea = acquerirTables(parcours.definirPrenom(parcours.creerParcours(), "Léa"), [2, 5]);
+  const tom = acquerirTables(parcours.definirPrenom(parcours.creerParcours(), "Tom"), [3]);
+  const invite = parcours.definirPrenom(parcours.creerParcours(), "Invité");
+  const avant = stockageMemoire({
+    [parcours.CLE_STOCKAGE]: JSON.stringify(invite),
+    [parcours.CLE_STOCKAGE + ":AXKQ7T"]: JSON.stringify(lea),
+    [parcours.CLE_SYNC + ":AXKQ7T"]: JSON.stringify({revision: 4, dirty: true, detache: false, maj: 1756500000000}),
+    [parcours.CLE_STOCKAGE + ":BZ4MHP"]: JSON.stringify(tom),
+    [parcours.CLE_SYNC + ":BZ4MHP"]: JSON.stringify({revision: 2, dirty: false, detache: true, maj: 0}),
+    "soley-save-v5": "{\"autre\":\"outil\"}"
+  });
+  const maintenant = 1756800000000;
+  assert.equal(parcours.migrerStockage(avant, maintenant), true);
+  assert.equal(parcours.clesRevelentUnCode(avant), false, "plus aucune clé ne porte un code");
+  assert.doesNotMatch(JSON.stringify(avant.donnees), /Léa|Tom/, "plus aucun prénom d’élève suivi");
+  assert.deepEqual(parcours.charger(avant, "AXKQ7T"), sansPrenom(lea), "la progression de Léa est dans sa case à empreinte");
+  assert.deepEqual(parcours.charger(avant, "BZ4MHP"), sansPrenom(tom));
+  assert.deepEqual(parcours.charger(avant), invite, "la case sans code n’a pas bougé");
+  assert.deepEqual(parcours.chargerSync(avant, "AXKQ7T"), {revision: 4, dirty: true, detache: false, maj: 1756500000000}, "l’état d’envoi suit");
+  assert.deepEqual(parcours.chargerSync(avant, "BZ4MHP"), {revision: 2, dirty: false, detache: true, maj: maintenant}, "une case sans date est datée du jour de la migration");
+  assert.equal(avant.donnees["soley-save-v5"], "{\"autre\":\"outil\"}", "les clés des autres outils ne sont pas touchées");
+  assert.equal(parcours.migrerStockage(avant, maintenant), false, "une seconde fois, rien à faire");
+
+  // La case à empreinte existe déjà (appareil passé par la nouvelle appli, puis
+  // par l'ancienne encore en cache) : les deux fusionnent, rien ne se perd.
+  const double = stockageMemoire();
+  parcours.sauver(double, tom, "AXKQ7T");
+  double.setItem(parcours.CLE_STOCKAGE + ":AXKQ7T", JSON.stringify(lea));
+  parcours.migrerStockage(double, maintenant);
+  const fusion = parcours.charger(double, "AXKQ7T");
+  assert.deepEqual(parcours.tablesAcquises(fusion), [2, 3, 5]);
+  assert.equal(fusion.prenom, "");
+});
+
+test("la purge : une case à code que personne n’a ouverte depuis 90 jours quitte l’appareil, jamais la case active ni la case sans code", () => {
+  const jour = 24 * 60 * 60 * 1000;
+  const maintenant = 1756800000000;
+  const stockage = stockageMemoire({[parcours.CLE_STOCKAGE]: JSON.stringify(parcours.definirPrenom(parcours.creerParcours(), "Invité"))});
+  const poser = (code, ilYA, extra = {}) => {
+    parcours.sauver(stockage, acquerirTables(parcours.creerParcours(), [3]), code);
+    parcours.sauverSync(stockage, code, {revision: 1, dirty: false, detache: false, maj: ilYA === null ? 0 : maintenant - ilYA, ...extra});
+  };
+  poser("AXKQ7T", 91 * jour);
+  poser("BZ4MHP", 89 * jour);
+  poser("C4FXRJ", 200 * jour);
+  poser("D5GHJK", 400 * jour, {dirty: true, detache: true});
+  poser("E6HJKL", null);
+  assert.equal(parcours.DUREE_CONSERVATION_MS, 90 * jour);
+  assert.equal(parcours.purger(stockage, {maintenant, garder: "C4FXRJ"}), 2, "deux cases retirées : 91 jours et 400 jours");
+  assert.deepEqual(parcours.charger(stockage, "AXKQ7T"), parcours.creerParcours(), "la case de 91 jours est partie");
+  assert.deepEqual(parcours.chargerSync(stockage, "AXKQ7T"), {revision: 0, dirty: false, detache: false, maj: 0}, "et son état");
+  assert.deepEqual(parcours.charger(stockage, "D5GHJK"), parcours.creerParcours(), "détachée et jamais envoyée : partie aussi, le code ne vaut plus rien");
+  assert.deepEqual(parcours.tablesAcquises(parcours.charger(stockage, "BZ4MHP")), [3], "89 jours : gardée");
+  assert.deepEqual(parcours.tablesAcquises(parcours.charger(stockage, "C4FXRJ")), [3], "200 jours mais c’est le code qui arrive : gardée");
+  assert.deepEqual(parcours.tablesAcquises(parcours.charger(stockage, "E6HJKL")), [3], "date inconnue : gardée");
+  assert.equal(parcours.charger(stockage).prenom, "Invité", "la case sans code n’est jamais purgée");
+  assert.equal(parcours.purger(stockage, {maintenant, garder: "C4FXRJ"}), 0, "une seconde fois, rien");
+  assert.equal(parcours.purger(null), 0);
+  assert.equal(parcours.purger(stockage, {maintenant: maintenant + 2 * jour}), 2, "deux jours plus tard, sans code actif : la case de 200 jours et celle qui en a maintenant 91 partent à leur tour");
+  assert.deepEqual(parcours.tablesAcquises(parcours.charger(stockage, "E6HJKL")), [3], "date inconnue : toujours gardée");
+});
+
+test("l’identité donnée par le serveur ne vit que dans l’onglet, avec le code, et pour ce code seulement", () => {
+  const onglet = stockageMemoire();
+  assert.equal(parcours.CLE_IDENTITE, "mathsgo-suivi-identite");
+  assert.equal(parcours.chargerIdentiteOnglet(onglet, "AXKQ7T"), null);
+  assert.ok(parcours.sauverIdentiteOnglet(onglet, "axkq7t", {prenom: "  Léa ", classe: "6eB"}));
+  assert.deepEqual(parcours.chargerIdentiteOnglet(onglet, "AXKQ7T"), {prenom: "Léa", classe: "6eB"});
+  assert.equal(parcours.chargerIdentiteOnglet(onglet, "BZ4MHP"), null, "un autre code ne la lit pas");
+  assert.equal(parcours.chargerIdentiteOnglet(onglet, ""), null);
+  assert.equal(parcours.sauverIdentiteOnglet(onglet, "BOF", {prenom: "X"}), false, "code invalide : rien d’écrit");
+  parcours.effacerCode(onglet);
+  assert.equal(onglet.getItem(parcours.CLE_IDENTITE), null, "oublier le code, c’est oublier l’identité");
+  assert.equal(parcours.chargerIdentiteOnglet(stockageMemoire({[parcours.CLE_IDENTITE]: "{pas du json"}), "AXKQ7T"), null);
+  assert.equal(parcours.chargerIdentiteOnglet(null, "AXKQ7T"), null);
 });
 
 // Le serveur ne garde que ce qu'il connaît (_serveur/public/lib/progression.php).
@@ -928,9 +1049,10 @@ test("le prénom tapé par l’élève ne part pas au serveur", () => {
 // tests/defi-tables-suivi-appareil.test.mjs (faux stockage, faux réseau, faux
 // document) : ce qui est chargé, ce qui est envoyé, et sous quel code.
 test("la sortie est posée sur le repère de suivi, dans la barre du haut", () => {
-  assert.match(html, /sortie\.textContent = "Ce n’est pas moi";/);
-  assert.match(html, /sortie\.addEventListener\("click", quitterSuivi\);/);
-  assert.match(html, /bloc\.append\(document\.createTextNode\("· "\), sortie\);/,
+  assert.match(html, /bouton\("Ce n’est pas moi", /);
+  assert.match(html, /bouton\("Quitter", quitterSuivi\)/);
+  assert.match(html, /bouton\("Quitter et effacer mon travail de cette tablette", quitterEtEffacer\)/);
+  assert.match(html, /bloc\.append\(document\.createTextNode\("· "\), bouton\("Ce n’est pas moi"/,
     "le séparateur doit revenir à la ligne avec le bouton, pas rester seul en fin de ligne");
   assert.match(html, /repere\.append\(bloc\);/, "la sortie doit être ajoutée au repère lui-même");
   assert.doesNotMatch(html, /id="parcours-code-remove"/, "et pas dans un menu");

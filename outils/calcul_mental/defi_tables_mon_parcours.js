@@ -674,22 +674,178 @@
     };
   }
 
+  // ---------------------------------------------------- le rangement par code
+  //
   // Un rangement PAR CODE sur l'appareil (lot A1, 30/08/2026) : la case
   // « sans code » garde la clé historique, chaque code élève a la sienne.
   // Changer de code, c'est changer de case avant d'afficher quoi que ce soit —
   // Bob qui arrive sur la tablette d'Alice ne voit ni n'écrase rien d'elle, et
   // rien de lui ne part sous son code. Aucun verrou, aucune course contre le
   // réseau : les cases sont séparées par construction.
-  function cleStockage(code) {
+  //
+  // Depuis le lot 8 (03/09/2026), la clé d'une case ne porte plus le code en
+  // clair mais une EMPREINTE du code : n'importe quel script chargé par une
+  // page du site peut lire le stockage durable de mathsgo.re (les scripts
+  // tiers du lot 10, par exemple), et une tablette de CDI y gardait la liste
+  // des codes de tous les élèves passés dessus. L'empreinte est un SHA-256
+  // répété (ITERATIONS_EMPREINTE fois) de « sel:code », tronqué à 16
+  // caractères hexadécimaux ; le sel est tiré au hasard une fois par appareil
+  // et rangé à côté des cases. Lire les clés ne donne donc plus les codes :
+  // les retrouver demanderait d'essayer le milliard de codes possibles, sel
+  // compris, un milliard de fois dix mille SHA-256 par appareil. Le SHA-256
+  // est écrit ici, en JavaScript pur, plutôt qu'emprunté à crypto.subtle : le
+  // rangement doit rester SYNCHRONE (la case est chargée avant le premier
+  // affichage, sans attendre une promesse), et une même clé doit sortir sur
+  // tous les navigateurs, y compris là où crypto.subtle manque (page ouverte
+  // en http sur un réseau local). Les tests comparent cette implémentation à
+  // celle de Node.
+  //
+  // Sous un code, la case ne contient plus de prénom : celui que le professeur
+  // a saisi arrive du serveur et ne vit que le temps de l'onglet, avec le code
+  // (voir chargerIdentiteOnglet). La case « sans code » garde le sien — c'est
+  // l'appareil d'une famille, pas celui d'une classe.
+  const CLE_SEL = "mathsgo-defi-tables-sel";
+  const ITERATIONS_EMPREINTE = 10000;
+  const LONGUEUR_EMPREINTE = 16;
+  const memoEmpreintes = new Map();
+
+  // SHA-256 (FIPS 180-4) sur un texte, encodé en UTF-8 ; résultat en hexadécimal.
+  const SHA256_K = [
+    0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5, 0x3956c25b, 0x59f111f1, 0x923f82a4, 0xab1c5ed5,
+    0xd807aa98, 0x12835b01, 0x243185be, 0x550c7dc3, 0x72be5d74, 0x80deb1fe, 0x9bdc06a7, 0xc19bf174,
+    0xe49b69c1, 0xefbe4786, 0x0fc19dc6, 0x240ca1cc, 0x2de92c6f, 0x4a7484aa, 0x5cb0a9dc, 0x76f988da,
+    0x983e5152, 0xa831c66d, 0xb00327c8, 0xbf597fc7, 0xc6e00bf3, 0xd5a79147, 0x06ca6351, 0x14292967,
+    0x27b70a85, 0x2e1b2138, 0x4d2c6dfc, 0x53380d13, 0x650a7354, 0x766a0abb, 0x81c2c92e, 0x92722c85,
+    0xa2bfe8a1, 0xa81a664b, 0xc24b8b70, 0xc76c51a3, 0xd192e819, 0xd6990624, 0xf40e3585, 0x106aa070,
+    0x19a4c116, 0x1e376c08, 0x2748774c, 0x34b0bcb5, 0x391c0cb3, 0x4ed8aa4a, 0x5b9cca4f, 0x682e6ff3,
+    0x748f82ee, 0x78a5636f, 0x84c87814, 0x8cc70208, 0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f2
+  ];
+
+  function octetsUtf8(texte) {
+    const chaine = String(texte);
+    const octets = [];
+    for (let i = 0; i < chaine.length; i += 1) {
+      let point = chaine.charCodeAt(i);
+      if (point >= 0xd800 && point <= 0xdbff && i + 1 < chaine.length) {
+        const suivant = chaine.charCodeAt(i + 1);
+        if (suivant >= 0xdc00 && suivant <= 0xdfff) {
+          point = 0x10000 + ((point - 0xd800) << 10) + (suivant - 0xdc00);
+          i += 1;
+        }
+      }
+      if (point < 0x80) octets.push(point);
+      else if (point < 0x800) octets.push(0xc0 | (point >> 6), 0x80 | (point & 63));
+      else if (point < 0x10000) octets.push(0xe0 | (point >> 12), 0x80 | ((point >> 6) & 63), 0x80 | (point & 63));
+      else octets.push(0xf0 | (point >> 18), 0x80 | ((point >> 12) & 63), 0x80 | ((point >> 6) & 63), 0x80 | (point & 63));
+    }
+    return octets;
+  }
+
+  function sha256Octets(source) {
+    const octets = source.slice();
+    const longueurBits = octets.length * 8;
+    octets.push(0x80);
+    while (octets.length % 64 !== 56) octets.push(0);
+    for (let i = 7; i >= 0; i -= 1) octets.push(Math.floor(longueurBits / Math.pow(2, i * 8)) & 255);
+    const h = [0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a, 0x510e527f, 0x9b05688c, 0x1f83d9ab, 0x5be0cd19];
+    const w = new Array(64);
+    for (let debut = 0; debut < octets.length; debut += 64) {
+      for (let t = 0; t < 16; t += 1) {
+        const o = debut + t * 4;
+        w[t] = ((octets[o] << 24) | (octets[o + 1] << 16) | (octets[o + 2] << 8) | octets[o + 3]) >>> 0;
+      }
+      for (let t = 16; t < 64; t += 1) {
+        const x = w[t - 15];
+        const y = w[t - 2];
+        const s0 = ((x >>> 7) | (x << 25)) ^ ((x >>> 18) | (x << 14)) ^ (x >>> 3);
+        const s1 = ((y >>> 17) | (y << 15)) ^ ((y >>> 19) | (y << 13)) ^ (y >>> 10);
+        w[t] = (w[t - 16] + s0 + w[t - 7] + s1) >>> 0;
+      }
+      let a = h[0], b = h[1], c = h[2], d = h[3], e = h[4], f = h[5], g = h[6], hh = h[7];
+      for (let t = 0; t < 64; t += 1) {
+        const S1 = ((e >>> 6) | (e << 26)) ^ ((e >>> 11) | (e << 21)) ^ ((e >>> 25) | (e << 7));
+        const ch = (e & f) ^ (~e & g);
+        const t1 = (hh + S1 + ch + SHA256_K[t] + w[t]) >>> 0;
+        const S0 = ((a >>> 2) | (a << 30)) ^ ((a >>> 13) | (a << 19)) ^ ((a >>> 22) | (a << 10));
+        const maj = (a & b) ^ (a & c) ^ (b & c);
+        const t2 = (S0 + maj) >>> 0;
+        hh = g; g = f; f = e; e = (d + t1) >>> 0;
+        d = c; c = b; b = a; a = (t1 + t2) >>> 0;
+      }
+      h[0] = (h[0] + a) >>> 0; h[1] = (h[1] + b) >>> 0; h[2] = (h[2] + c) >>> 0; h[3] = (h[3] + d) >>> 0;
+      h[4] = (h[4] + e) >>> 0; h[5] = (h[5] + f) >>> 0; h[6] = (h[6] + g) >>> 0; h[7] = (h[7] + hh) >>> 0;
+    }
+    const resultat = [];
+    h.forEach(mot => resultat.push((mot >>> 24) & 255, (mot >>> 16) & 255, (mot >>> 8) & 255, mot & 255));
+    return resultat;
+  }
+
+  function enHex(octets) {
+    return octets.map(o => o.toString(16).padStart(2, "0")).join("");
+  }
+
+  function sha256Hex(texte) {
+    return enHex(sha256Octets(octetsUtf8(texte)));
+  }
+
+  // Le sel de l'appareil : 32 caractères hexadécimaux tirés au hasard la
+  // première fois, puis relus. Sans stockage (ou stockage cassé), sel vide :
+  // les clés restent calculables, il n'y a de toute façon rien à lire.
+  function selAppareil(stockage) {
+    try {
+      if (!stockage) return "";
+      const existant = stockage.getItem(CLE_SEL);
+      if (typeof existant === "string" && /^[0-9a-f]{32}$/.test(existant)) return existant;
+      const octets = new Array(16);
+      let tire = false;
+      try {
+        const alea = typeof globalThis !== "undefined" && globalThis.crypto && globalThis.crypto.getRandomValues;
+        if (alea) {
+          const tampon = new Uint8Array(16);
+          globalThis.crypto.getRandomValues(tampon);
+          for (let i = 0; i < 16; i += 1) octets[i] = tampon[i];
+          tire = true;
+        }
+      } catch (_) {}
+      if (!tire) for (let i = 0; i < 16; i += 1) octets[i] = Math.floor(Math.random() * 256);
+      const sel = octets.map(o => o.toString(16).padStart(2, "0")).join("");
+      stockage.setItem(CLE_SEL, sel);
+      return sel;
+    } catch (_) {
+      return "";
+    }
+  }
+
+  function empreinteCode(code, sel) {
+    const memo = sel + ":" + code;
+    const connue = memoEmpreintes.get(memo);
+    if (connue) return connue;
+    let h = sha256Octets(octetsUtf8(memo));
+    for (let i = 1; i < ITERATIONS_EMPREINTE; i += 1) h = sha256Octets(h);
+    const empreinte = enHex(h).slice(0, LONGUEUR_EMPREINTE);
+    memoEmpreintes.set(memo, empreinte);
+    return empreinte;
+  }
+
+  function estEmpreinte(valeur) {
+    return typeof valeur === "string" && valeur.length === LONGUEUR_EMPREINTE && /^[0-9a-f]+$/.test(valeur);
+  }
+
+  function cleStockage(code, stockage) {
     const propre = normaliserCode(code || "");
-    return codeValide(propre) ? CLE_STOCKAGE + ":" + propre : CLE_STOCKAGE;
+    return codeValide(propre) ? CLE_STOCKAGE + ":" + empreinteCode(propre, selAppareil(stockage)) : CLE_STOCKAGE;
+  }
+
+  // Sous un code, jamais de prénom dans la case durable.
+  function sansPrenomSousCode(parcours, code) {
+    return codeValide(code) ? definirPrenom(parcours, "") : parcours;
   }
 
   function charger(stockage, code) {
     try {
-      const brut = stockage && stockage.getItem(cleStockage(code));
+      const brut = stockage && stockage.getItem(cleStockage(code, stockage));
       if (!brut) return creerParcours();
-      return normaliserParcours(JSON.parse(brut));
+      return sansPrenomSousCode(normaliserParcours(JSON.parse(brut)), code);
     } catch (_) {
       return creerParcours();
     }
@@ -698,7 +854,7 @@
   function sauver(stockage, parcours, code) {
     try {
       if (!stockage) return false;
-      stockage.setItem(cleStockage(code), JSON.stringify(normaliserParcours(parcours)));
+      stockage.setItem(cleStockage(code, stockage), JSON.stringify(sansPrenomSousCode(normaliserParcours(parcours), code)));
       return true;
     } catch (_) {
       return false;
@@ -707,7 +863,7 @@
 
   function effacer(stockage, code) {
     try {
-      if (stockage) stockage.removeItem(cleStockage(code));
+      if (stockage) stockage.removeItem(cleStockage(code, stockage));
       return true;
     } catch (_) {
       return false;
@@ -720,27 +876,37 @@
   // CÔTÉ de la case, pas dedans : normaliserParcours ignorerait ces champs.
   const CLE_SYNC = "mathsgo-defi-tables-sync";
 
-  function cleSync(code) {
+  function cleSync(code, stockage) {
     const propre = normaliserCode(code || "");
-    return codeValide(propre) ? CLE_SYNC + ":" + propre : CLE_SYNC;
+    return codeValide(propre) ? CLE_SYNC + ":" + empreinteCode(propre, selAppareil(stockage)) : CLE_SYNC;
   }
 
   function syncNeutre() {
     return {revision: 0, dirty: false, detache: false, maj: 0};
   }
 
+  function normaliserSync(lu) {
+    const sync = syncNeutre();
+    if (!lu || typeof lu !== "object") return sync;
+    sync.revision = entier(lu.revision, 0, 1000000000);
+    sync.dirty = Boolean(lu.dirty);
+    sync.detache = Boolean(lu.detache);
+    sync.maj = entier(lu.maj, 0, Number.MAX_SAFE_INTEGER);
+    return sync;
+  }
+
+  function lireSyncBrut(stockage, cle) {
+    try {
+      const brut = stockage && stockage.getItem(cle);
+      return brut ? normaliserSync(JSON.parse(brut)) : syncNeutre();
+    } catch (_) {
+      return syncNeutre();
+    }
+  }
+
   function chargerSync(stockage, code) {
     try {
-      const brut = stockage && stockage.getItem(cleSync(code));
-      const sync = syncNeutre();
-      if (!brut) return sync;
-      const lu = JSON.parse(brut);
-      if (!lu || typeof lu !== "object") return sync;
-      sync.revision = entier(lu.revision, 0, 1000000000);
-      sync.dirty = Boolean(lu.dirty);
-      sync.detache = Boolean(lu.detache);
-      sync.maj = entier(lu.maj, 0, Number.MAX_SAFE_INTEGER);
-      return sync;
+      return lireSyncBrut(stockage, cleSync(code, stockage));
     } catch (_) {
       return syncNeutre();
     }
@@ -750,7 +916,7 @@
     try {
       if (!stockage) return false;
       const propre = Object.assign(syncNeutre(), sync || {});
-      stockage.setItem(cleSync(code), JSON.stringify(propre));
+      stockage.setItem(cleSync(code, stockage), JSON.stringify(propre));
       return true;
     } catch (_) {
       return false;
@@ -759,56 +925,137 @@
 
   function effacerSync(stockage, code) {
     try {
-      if (stockage) stockage.removeItem(cleSync(code));
+      if (stockage) stockage.removeItem(cleSync(code, stockage));
       return true;
     } catch (_) {
       return false;
     }
   }
 
-  // Les cases dont le code a été refusé par le serveur (régénéré, supprimé),
-  // la plus récente d'abord : quand un nouveau code arrive sur l'appareil, on
-  // propose ce travail-là, pour qu'il ne reste pas orphelin.
-  function casesDetachees(stockage) {
-    const cases = [];
+  function clesDuStockage(stockage) {
+    const cles = [];
     try {
-      if (!stockage || typeof stockage.length !== "number") return cases;
-      for (let i = 0; i < stockage.length; i++) {
+      if (!stockage || typeof stockage.length !== "number" || typeof stockage.key !== "function") return cles;
+      for (let i = 0; i < stockage.length; i += 1) {
         const cle = stockage.key(i);
-        if (typeof cle !== "string" || !cle.startsWith(CLE_SYNC + ":")) continue;
-        const code = cle.slice(CLE_SYNC.length + 1);
-        const sync = chargerSync(stockage, code);
-        if (!sync.detache) continue;
-        const parcours = charger(stockage, code);
-        if (estVide(parcours)) continue;
-        cases.push({code, prenom: parcours.prenom, maj: sync.maj});
+        if (typeof cle === "string") cles.push(cle);
       }
     } catch (_) {}
-    return cases.sort((x, y) => y.maj - x.maj);
+    return cles;
   }
 
-  // Un appareil suivi par l'ancienne appli rangeait le code actif ET le parcours
-  // dans le stockage durable, sous une seule case. On déplace ce parcours dans
-  // la case du code, et on oublie le code : l'identité ne vit plus que le temps
-  // d'un onglet (l'élève revient par son espace, dont le lien porte le code).
+  // Ce qu'un appareil « d'avant » peut encore contenir, et ce qu'on en fait :
+  //  - avant le lot A1 : le code actif ET le parcours dans le stockage durable,
+  //    sous une seule case → le parcours va dans la case du code, le code est
+  //    oublié (l'identité ne vit plus que le temps d'un onglet) ;
+  //  - du lot A1 au lot 5 : une case par code, le code EN CLAIR dans la clé,
+  //    prénom compris → la case passe sous l'empreinte du code, sans prénom ;
+  //    si la case à empreinte existe déjà, les deux fusionnent (rien ne se
+  //    perd) ; l'état de synchronisation suit, daté d'aujourd'hui s'il ne
+  //    l'était pas, pour que la purge de fin d'année sache compter.
   // Sans code rangé, la case unique devient la case « sans code » : rien à faire.
-  function migrerStockage(stockage) {
+  function migrerStockage(stockage, maintenant = Date.now()) {
+    let fait = false;
     try {
       if (!stockage) return false;
+      const enClair = (prefixe, cle) => {
+        if (!cle.startsWith(prefixe + ":")) return null;
+        const code = cle.slice(prefixe.length + 1);
+        return code.length === LONGUEUR_CODE && codeValide(code) && normaliserCode(code) === code ? code : null;
+      };
+      // 1. Les cases au code en clair (lots A1 à 5) passent sous l'empreinte.
+      const cles = clesDuStockage(stockage);
+      cles.forEach(cle => {
+        const code = enClair(CLE_STOCKAGE, cle);
+        if (!code) return;
+        fait = true;
+        let parcours = null;
+        try { parcours = normaliserParcours(JSON.parse(stockage.getItem(cle))); } catch (_) {}
+        stockage.removeItem(cle);
+        if (!parcours) return;
+        const existante = stockage.getItem(cleStockage(code, stockage));
+        sauver(stockage, existante ? fusionner(charger(stockage, code), parcours) : parcours, code);
+        // Une case sans état d'envoi (appli d'avant le lot A2) : on la date,
+        // sinon la purge ne saurait jamais quand elle a servi.
+        if (!stockage.getItem(cleSync(code, stockage)) && !stockage.getItem(CLE_SYNC + ":" + code)) {
+          sauverSync(stockage, code, {maj: entier(maintenant, 0, Number.MAX_SAFE_INTEGER)});
+        }
+      });
+      cles.forEach(cle => {
+        const code = enClair(CLE_SYNC, cle);
+        if (!code) return;
+        fait = true;
+        const ancienSync = lireSyncBrut(stockage, cle);
+        stockage.removeItem(cle);
+        const nouveau = stockage.getItem(cleSync(code, stockage)) ? chargerSync(stockage, code) : null;
+        const fusion = nouveau
+          ? {revision: Math.max(nouveau.revision, ancienSync.revision), dirty: nouveau.dirty || ancienSync.dirty,
+            detache: nouveau.detache && ancienSync.detache, maj: Math.max(nouveau.maj, ancienSync.maj)}
+          : ancienSync;
+        if (!fusion.maj) fusion.maj = entier(maintenant, 0, Number.MAX_SAFE_INTEGER);
+        sauverSync(stockage, code, fusion);
+      });
+      // 2. Le code durable d'avant le lot A1 : son parcours va dans la case du
+      //    code (si elle n'existe pas déjà, sous l'empreinte ou en clair), et
+      //    le code est oublié.
       const ancien = stockage.getItem(CLE_CODE);
-      if (!ancien) return false;
-      stockage.removeItem(CLE_CODE);
-      const code = normaliserCode(ancien);
-      if (!codeValide(code)) return false;
-      const brut = stockage.getItem(CLE_STOCKAGE);
-      if (brut && !stockage.getItem(cleStockage(code))) {
-        stockage.setItem(cleStockage(code), brut);
-        stockage.removeItem(CLE_STOCKAGE);
+      if (ancien) {
+        stockage.removeItem(CLE_CODE);
+        const code = normaliserCode(ancien);
+        if (codeValide(code)) {
+          fait = true;
+          const brut = stockage.getItem(CLE_STOCKAGE);
+          const dejaLa = stockage.getItem(cleStockage(code, stockage)) || stockage.getItem(CLE_STOCKAGE + ":" + code);
+          if (brut && !dejaLa) {
+            let parcours = null;
+            try { parcours = normaliserParcours(JSON.parse(brut)); } catch (_) {}
+            if (parcours) {
+              sauver(stockage, parcours, code);
+              stockage.removeItem(CLE_STOCKAGE);
+              if (!stockage.getItem(cleSync(code, stockage))) {
+                sauverSync(stockage, code, {maj: entier(maintenant, 0, Number.MAX_SAFE_INTEGER)});
+              }
+            }
+          }
+        }
       }
-      return true;
-    } catch (_) {
-      return false;
-    }
+    } catch (_) {}
+    return fait;
+  }
+
+  // La purge (lot 8) : une case à code que personne n'a ouverte depuis
+  // DUREE_CONSERVATION_MS (90 jours) est retirée de l'appareil — élève parti,
+  // classe de l'an dernier, tablette de CDI. Le serveur, lui, garde tout : un
+  // élève qui revient retrouve sa progression par son code. La case active
+  // (« garder ») n'est jamais touchée, ni la case sans code, ni une case dont
+  // la date est inconnue (maj à 0). Rend le nombre de cases retirées.
+  const DUREE_CONSERVATION_MS = 90 * 24 * 60 * 60 * 1000;
+
+  function purger(stockage, {maintenant = Date.now(), garder = "", duree = DUREE_CONSERVATION_MS} = {}) {
+    let retirees = 0;
+    try {
+      if (!stockage) return 0;
+      const gardee = codeValide(garder) ? cleSync(garder, stockage) : null;
+      clesDuStockage(stockage).forEach(cle => {
+        if (!cle.startsWith(CLE_SYNC + ":") || cle === gardee) return;
+        const empreinte = cle.slice(CLE_SYNC.length + 1);
+        if (!estEmpreinte(empreinte)) return;
+        const sync = lireSyncBrut(stockage, cle);
+        if (!sync.maj || maintenant - sync.maj <= duree) return;
+        stockage.removeItem(cle);
+        stockage.removeItem(CLE_STOCKAGE + ":" + empreinte);
+        retirees += 1;
+      });
+    } catch (_) {}
+    return retirees;
+  }
+
+  // Vrai si une clé du stockage durable laisse lire un code élève : c'est ce
+  // que le lot 8 interdit, et ce que les tests vérifient après une séance.
+  function clesRevelentUnCode(stockage) {
+    return clesDuStockage(stockage).some(cle => {
+      return cle.split(":").slice(1).some(morceau => morceau.length === LONGUEUR_CODE && codeValide(morceau));
+    });
   }
 
   // --------------------------------------------------------------- le code élève
@@ -845,7 +1092,44 @@
 
   function effacerCode(stockage) {
     try {
-      if (stockage) stockage.removeItem(CLE_CODE);
+      if (stockage) {
+        stockage.removeItem(CLE_CODE);
+        stockage.removeItem(CLE_IDENTITE);
+      }
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  // L'identité que le serveur a donnée pour le code (prénom saisi par le
+  // professeur, classe) : rangée dans l'ONGLET, avec le code, jamais dans le
+  // stockage durable (lot 8). Elle ne vaut que pour ce code : un autre code
+  // dans le même onglet ne la lit pas.
+  const CLE_IDENTITE = "mathsgo-suivi-identite";
+
+  function chargerIdentiteOnglet(stockage, code) {
+    try {
+      const propre = normaliserCode(code || "");
+      const brut = stockage && codeValide(propre) ? stockage.getItem(CLE_IDENTITE) : null;
+      if (!brut) return null;
+      const lu = JSON.parse(brut);
+      if (!lu || typeof lu !== "object" || lu.code !== propre) return null;
+      return {prenom: nettoyerPrenom(lu.prenom), classe: typeof lu.classe === "string" ? lu.classe.slice(0, 40) : ""};
+    } catch (_) {
+      return null;
+    }
+  }
+
+  function sauverIdentiteOnglet(stockage, code, identite) {
+    try {
+      const propre = normaliserCode(code || "");
+      if (!stockage || !codeValide(propre) || !identite || typeof identite !== "object") return false;
+      stockage.setItem(CLE_IDENTITE, JSON.stringify({
+        code: propre,
+        prenom: nettoyerPrenom(identite.prenom),
+        classe: typeof identite.classe === "string" ? identite.classe.slice(0, 40) : ""
+      }));
       return true;
     } catch (_) {
       return false;
@@ -1042,25 +1326,36 @@
     configRevision,
     prochaineEtape,
     etatAffichage,
+    CLE_SEL,
+    ITERATIONS_EMPREINTE,
+    LONGUEUR_EMPREINTE,
+    DUREE_CONSERVATION_MS,
+    sha256Hex,
+    selAppareil,
+    empreinteCode,
     cleStockage,
     charger,
     sauver,
     effacer,
     migrerStockage,
+    purger,
+    clesRevelentUnCode,
     CLE_SYNC,
     cleSync,
     chargerSync,
     sauverSync,
     effacerSync,
-    casesDetachees,
     estVide,
     CLE_CODE,
+    CLE_IDENTITE,
     LONGUEUR_CODE,
     normaliserCode,
     codeValide,
     chargerCode,
     sauverCode,
     effacerCode,
+    chargerIdentiteOnglet,
+    sauverIdentiteOnglet,
     fusionner,
     fragilesDeLaClasse
   });

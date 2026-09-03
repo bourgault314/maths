@@ -243,7 +243,7 @@ test("J’apprends garde le bâton pour construire et le propose en aide tempora
   // « PARCOURS.chargerSync is not a function », plus de repère de suivi, plus
   // rien envoyé au professeur, et une page d'accueil d'apparence normale.
   // Changer ce numéro à chaque modification du moteur ; ce test le rappelle.
-  assert.match(html, /defi_tables_mon_parcours\.js\?v=20260830-11/);
+  assert.match(html, /defi_tables_mon_parcours\.js\?v=20260903-12/);
 });
 
 test("le numéro de question est séparé du calcul dans le bilan", () => {

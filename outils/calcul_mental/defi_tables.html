@@ -168,6 +168,14 @@
                             cursor: pointer; opacity: .85; min-height: 28px; }
     .suivi-repere .sortie:hover, .suivi-repere .sortie:focus-visible { opacity: 1; }
     body.mode-fiche .suivi-repere { display: none; }
+    .suivi-garde { position: fixed; inset: 0; z-index: 50; display: flex; align-items: center; justify-content: center;
+      padding: 16px; background: rgba(20, 52, 81, .55); }
+    .suivi-garde[hidden] { display: none; }
+    .suivi-garde-carte { background: #fff; color: var(--ink); border-radius: 16px; padding: 22px 20px; max-width: 420px; width: 100%;
+      box-shadow: 0 18px 40px rgba(20, 52, 81, .3); text-align: center; }
+    .suivi-garde-titre { margin: 0 0 8px; font-size: 1.35rem; font-weight: 700; }
+    .suivi-garde-note { margin: 0 0 16px; color: var(--muted); font-size: .95rem; line-height: 1.4; }
+    .suivi-garde-boutons { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; }
 
     .brand img { display: block; width: 105px; height: auto; }
     .back-icon { display: grid; place-items: center; flex: 0 0 auto; }
@@ -1229,6 +1237,16 @@
            doit toujours savoir que son travail part chez son professeur, pas
            seulement sur l'écran Mon parcours. -->
       <p id="suivi-repere" class="suivi-repere" hidden></p>
+      <div id="suivi-garde" class="suivi-garde" role="dialog" aria-modal="true" aria-labelledby="suivi-garde-titre" hidden>
+        <div class="suivi-garde-carte">
+          <p id="suivi-garde-titre" class="suivi-garde-titre">C’est toujours toi ?</p>
+          <p class="suivi-garde-note">Personne n’a touché à cet écran depuis un moment. Si ce n’est pas toi, dis-le : ton camarade retrouvera son parcours avec son code.</p>
+          <div class="suivi-garde-boutons">
+            <button id="suivi-garde-oui" class="primary" type="button">Oui, c’est moi</button>
+            <button id="suivi-garde-non" class="secondary" type="button">Non, ce n’est pas moi</button>
+          </div>
+        </div>
+      </div>
     </header>
 
     <section class="panel">
@@ -1541,7 +1559,7 @@
   </footer>
 
   <script src="./defi_tables_core.js?v=20260830-9"></script>
-  <script src="./defi_tables_mon_parcours.js?v=20260830-11"></script>
+  <script src="./defi_tables_mon_parcours.js?v=20260903-12"></script>
   <script>
     (() => {
       "use strict";
@@ -1615,15 +1633,22 @@
         }
         return PARCOURS.chargerCode(stockageSession());
       }
+      // Un appareil « d'avant » (code durable, ou cases au code en clair) est
+      // rangé à la nouvelle façon avant toute lecture ; puis les cases que
+      // personne n'a ouvertes depuis 90 jours quittent l'appareil (lot 8). La
+      // case du code qui arrive n'est jamais purgée : c'est elle qu'on ouvre.
       PARCOURS.migrerStockage(storage());
       if (ENTREE.billet) PARCOURS.effacerCode(stockageSession());
       let codeSuivi = codeInitial(ENTREE);
+      PARCOURS.purger(storage(), {maintenant: Date.now(), garder: codeSuivi});
       let parcours = PARCOURS.charger(storage(), codeSuivi);
       // L'état de synchronisation de la case active : dernière révision connue
       // du serveur, travail en attente d'envoi (dirty), code refusé (détaché).
       // Il survit à la fermeture de la page : ce qui n'est pas parti partira.
       let sync = PARCOURS.chargerSync(storage(), codeSuivi);
-      let suiviIdentite = null;
+      // Le prénom et la classe donnés par le serveur pour ce code : relus depuis
+      // l'onglet (même code seulement) en attendant que le serveur réponde.
+      let suiviIdentite = PARCOURS.chargerIdentiteOnglet(stockageSession(), codeSuivi);
       let suiviHorsLigne = false;
       let envoiEnAttente = null;
       let envoiEnVol = false;
@@ -1637,10 +1662,20 @@
       let entreeRefusee = null;
 
       function sauverSync() {
+        // Une case datée, toujours : c'est sur « maj » que la purge compte.
+        if (!sync.maj) sync.maj = Date.now();
         PARCOURS.sauverSync(storage(), codeSuivi, sync);
       }
 
       function suiviActif() { return Boolean(codeSuivi); }
+
+      // Le prénom qu'on affiche : sous un code, celui que le professeur a saisi
+      // (il vient du serveur, il ne vit que dans l'onglet) ; sans code, celui
+      // que l'élève a tapé, qui reste dans la case sans code de l'appareil.
+      function prenomAffiche() {
+        if (suiviActif()) return suiviIdentite && suiviIdentite.prenom ? suiviIdentite.prenom : "";
+        return parcours.prenom || "";
+      }
 
       // Le lien du haut ramenait toujours au catalogue de mathsgo.re. Un élève
       // suivi n'arrive pas de là : il vient de son espace, et c'est là qu'il
@@ -1918,10 +1953,15 @@
       async function chargerIdentite(code) {
         const reponse = await lireIdentiteDuServeur(code);
         if (code !== codeSuivi) return;
-        suiviIdentite = reponse.statut === 200 && reponse.donnees && reponse.donnees.ok
-          ? {prenom: reponse.donnees.prenom || "", classe: reponse.donnees.classe || ""}
-          : null;
+        if (reponse.statut === 200 && reponse.donnees && reponse.donnees.ok) {
+          suiviIdentite = {prenom: reponse.donnees.prenom || "", classe: reponse.donnees.classe || ""};
+          PARCOURS.sauverIdentiteOnglet(stockageSession(), code, suiviIdentite);
+        } else if (reponse.statut === 404) {
+          suiviIdentite = null;
+        }
+        // Serveur muet ou en panne : on garde ce que l'onglet savait déjà.
         renderRepere();
+        if (!state.running) renderParcours();
       }
 
       // Le repère de suivi, dans la barre du haut : vert quand le serveur a
@@ -1952,16 +1992,28 @@
         repere.append(puce, document.createTextNode(texte));
         // La porte de sortie est ICI, sur le repère, et pas dans un menu :
         // sans elle, un appareil partagé reste celui du dernier élève, et
-        // même les liens de retour ramènent à son espace.
-        const sortie = document.createElement("button");
-        sortie.type = "button";
-        sortie.className = "sortie";
-        sortie.textContent = "Ce n’est pas moi";
-        sortie.addEventListener("click", quitterSuivi);
+        // même les liens de retour ramènent à son espace. Un clic dessus
+        // propose deux sorties (lot 8) : partir en laissant sa case sur
+        // l'appareil, ou partir en l'effaçant — le serveur garde tout, et un
+        // élève qui a joué sur la tablette du CDI n'y laisse rien.
+        const bouton = (texte, action) => {
+          const b = document.createElement("button");
+          b.type = "button";
+          b.className = "sortie";
+          b.textContent = texte;
+          b.addEventListener("click", action);
+          return b;
+        };
         // Le séparateur voyage AVEC le bouton : sur téléphone, le bandeau passe
         // à la ligne, et un « · » resté seul en fin de ligne se lit « 405· ».
         const bloc = document.createElement("span");
-        bloc.append(document.createTextNode("· "), sortie);
+        if (sortieProposee) {
+          bloc.append(document.createTextNode("· "), bouton("Quitter", quitterSuivi),
+            document.createTextNode(" · "), bouton("Quitter et effacer mon travail de cette tablette", quitterEtEffacer),
+            document.createTextNode(" · "), bouton("Annuler", () => { sortieProposee = false; renderRepere(); }));
+        } else {
+          bloc.append(document.createTextNode("· "), bouton("Ce n’est pas moi", () => { sortieProposee = true; renderRepere(); }));
+        }
         repere.append(bloc);
       }
 
@@ -2024,6 +2076,7 @@
         // Le serveur vient de dire qui c'est : le repère le montre tout de
         // suite, demarrerSuivi le confirmera.
         suiviIdentite = {prenom: donnees.prenom || "", classe: donnees.classe || ""};
+        PARCOURS.sauverIdentiteOnglet(stockageSession(), code, suiviIdentite);
         if (typeof ouvrir === "function") ouvrir();
         demarrerSuivi();
         return true;
@@ -2035,6 +2088,8 @@
       // l'espace élève avec ?oublier=1, pour que l'espace oublie lui aussi ce
       // code dans cet onglet : un seul geste vide les deux domaines et laisse
       // l'appareil prêt pour le camarade suivant.
+      let sortieProposee = false;
+
       function quitterSuivi() {
         envoyerAvantDeFermer();
         if (relance !== null) { window.clearTimeout(relance); relance = null; }
@@ -2045,15 +2100,115 @@
         erreurDefinitive = false;
         echecsSuccessifs = 0;
         fusionsSuccessives = 0;
+        sortieProposee = false;
+        gardeVisible = false;
         PARCOURS.effacerCode(stockageSession());
         parcours = PARCOURS.charger(storage(), "");
         sync = PARCOURS.chargerSync(storage(), "");
         state.parcoursOptionsOpen = false;
         majLienRetour();
         renderRepere();
+        renderGarde();
         renderParcours();
         try { window.location.assign(SUIVI_URL + "/?oublier=1"); } catch (_) {}
       }
+
+      // « Quitter et effacer mon travail de cette tablette » : ce qui restait
+      // à envoyer part d'abord (quitterSuivi s'en charge), puis la case du code
+      // et son état quittent l'appareil. Le serveur garde la progression : sur
+      // un autre appareil, ou ici avec son code, l'élève la retrouve.
+      function quitterEtEffacer() {
+        const code = codeSuivi;
+        envoyerAvantDeFermer();
+        if (code) {
+          PARCOURS.effacer(storage(), code);
+          PARCOURS.effacerSync(storage(), code);
+        }
+        quitterSuivi();
+      }
+
+      // Le garde-fou de temps (lot 8, C-9) : en salle informatique, personne
+      // ne clique « Ce n'est pas moi » ; la classe suivante arrive et l'onglet
+      // est encore celui de Léa. Après GARDE_INACTIVITE_MS sans un geste, ou
+      // quand la page redevient visible après une aussi longue absence, on
+      // redemande « C'est toujours toi ? » : « Oui » reprend, « Non » quitte
+      // (comme « Ce n'est pas moi », en gardant la case). Le premier geste
+      // fait après l'absence est retenu : il ne passe pas à l'appli.
+      const GARDE_INACTIVITE_MS = 45 * 60 * 1000;
+      let derniereActivite = Date.now();
+      let gardeVisible = false;
+
+      function absenceTropLongue() {
+        return suiviActif() && Date.now() - derniereActivite > GARDE_INACTIVITE_MS;
+      }
+
+      function verifierGarde() {
+        if (gardeVisible || !absenceTropLongue()) return false;
+        gardeVisible = true;
+        renderGarde();
+        return true;
+      }
+
+      function retenir(evenement) {
+        if (!evenement || typeof evenement.preventDefault !== "function") return;
+        evenement.preventDefault();
+        if (typeof evenement.stopPropagation === "function") evenement.stopPropagation();
+      }
+
+      function noterActivite(evenement) {
+        if (gardeVisible) {
+          // Tant que la question est posée, seuls ses deux boutons répondent.
+          const cible = evenement && evenement.target;
+          const dansLaGarde = cible && typeof cible.closest === "function" && cible.closest("#suivi-garde");
+          if (!dansLaGarde) retenir(evenement);
+          return;
+        }
+        if (absenceTropLongue()) {
+          retenir(evenement);
+          verifierGarde();
+          return;
+        }
+        derniereActivite = Date.now();
+      }
+
+      function renderGarde() {
+        const garde = document.getElementById("suivi-garde");
+        if (!garde) return;
+        garde.hidden = !gardeVisible;
+        const titre = document.getElementById("suivi-garde-titre");
+        if (titre) {
+          const qui = prenomAffiche();
+          titre.textContent = qui ? `C’est toujours toi, ${qui} ?` : "C’est toujours toi ?";
+        }
+        if (gardeVisible) {
+          const oui = document.getElementById("suivi-garde-oui");
+          if (oui && typeof oui.focus === "function") { try { oui.focus({preventScroll: true}); } catch (_) {} }
+        }
+      }
+
+      function repondreGarde(cestMoi) {
+        gardeVisible = false;
+        derniereActivite = Date.now();
+        if (cestMoi) { renderGarde(); return; }
+        quitterSuivi();
+      }
+
+      try {
+        const oui = document.getElementById("suivi-garde-oui");
+        const non = document.getElementById("suivi-garde-non");
+        if (oui) oui.addEventListener("click", () => repondreGarde(true));
+        if (non) non.addEventListener("click", () => repondreGarde(false));
+        ["pointerdown", "keydown", "touchstart"].forEach(type => {
+          document.addEventListener(type, noterActivite, true);
+        });
+        document.addEventListener("visibilitychange", () => {
+          if (document.visibilityState === "visible") verifierGarde();
+        });
+        // Un contrôle par minute, pour que la question soit déjà à l'écran
+        // quand la classe suivante s'installe.
+        if (typeof window.setInterval === "function") window.setInterval(verifierGarde, 60000);
+        renderGarde();
+      } catch (_) {}
 
       // Le travail fait SANS code sur cet appareil — ou resté sous un ancien
       // code refusé — n'est jamais proposé ni transféré. Il reste dans sa case,
@@ -3343,7 +3498,8 @@
 
       /* ---------- Mon parcours ---------- */
       function parcoursTitle() {
-        return parcours.prenom ? `Le parcours de ${parcours.prenom}` : "Mon parcours";
+        const prenom = prenomAffiche();
+        return prenom ? `Le parcours de ${prenom}` : "Mon parcours";
       }
 
       function launchFromParcours(config) {
@@ -3397,7 +3553,10 @@
         majLienRetour();
         const etat = PARCOURS.etatAffichage(parcours);
         $("parcours-title").textContent = parcoursTitle();
-        $("parcours-name").hidden = !((!parcours.prenom && PARCOURS.estVide(parcours) && !state.nameSkipped) || state.renaming);
+        // Sous un code, on ne demande pas de prénom : le professeur l'a déjà
+        // saisi, et rien de tapé ici ne resterait sur l'appareil (lot 8).
+        $("parcours-name").hidden = suiviActif() || !((!parcours.prenom && PARCOURS.estVide(parcours) && !state.nameSkipped) || state.renaming);
+        $("parcours-rename").hidden = suiviActif();
         $("parcours-confirm").hidden = !state.confirmingReset;
         $("parcours-options").hidden = !state.parcoursOptionsOpen;
         $("parcours-more").setAttribute("aria-expanded", String(Boolean(state.parcoursOptionsOpen)));
@@ -3803,8 +3962,8 @@
       $("parcours-reset").addEventListener("click", () => {
         state.confirmingReset = true;
         state.parcoursOptionsOpen = false;
-        $("parcours-confirm-text").textContent = parcours.prenom
-          ? `Effacer le parcours de ${parcours.prenom} ? Cette action ne peut pas être annulée.`
+        $("parcours-confirm-text").textContent = prenomAffiche()
+          ? `Effacer le parcours de ${prenomAffiche()} ? Cette action ne peut pas être annulée.`
           : "Effacer tout ton parcours ? Cette action ne peut pas être annulée.";
         renderParcours();
         $("parcours-confirm-no").focus?.({preventScroll: true});
