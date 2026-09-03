@@ -11,10 +11,11 @@ function anticipationFor(data) {
   if (integerQuotient === 0) {
     return {
       digitCount: 1,
-      sentence: data.mode === "integer"
+      bound: `0 ≤ ${data.dividend} ÷ ${data.divisor} < 1`,
+      conclusion: data.mode === "integer"
         ? "Le quotient entier est 0."
         : "La partie entière du quotient est 0.",
-      detail: `${data.dividend} est plus petit que ${data.divisor} : le quotient est inférieur à 1.`
+      estimate: null
     };
   }
 
@@ -27,16 +28,50 @@ function anticipationFor(data) {
   const estimateMagnitude = 10 ** Math.floor(Math.log10(exactQuotient));
   const estimatedQuotient = Math.max(1, Math.round(exactQuotient / estimateMagnitude) * estimateMagnitude);
   const friendlyDividend = estimatedQuotient * data.divisor;
-  const label = data.mode === "integer" ? "Le quotient entier" : "La partie entière du quotient";
-  const estimate = friendlyDividend !== lowerProduct && friendlyDividend !== upperProduct
-    ? ` Estimation : ${friendlyDividend} ÷ ${data.divisor} = ${estimatedQuotient}, donc ${data.dividend} ÷ ${data.divisor} ≈ ${estimatedQuotient}.`
-    : "";
+  const label = data.mode === "integer" ? "Le quotient" : "La partie entière du quotient";
+  const estimate = friendlyDividend !== data.dividend
+    ? {
+        calculation: `${friendlyDividend} ÷ ${data.divisor} = ${estimatedQuotient}`,
+        explanation: `${friendlyDividend} est proche de ${data.dividend} : ${label.toLowerCase()} sera proche de ${estimatedQuotient}.`
+      }
+    : null;
 
   return {
     digitCount,
-    sentence: `${label} aura ${digitCount} chiffre${digitCount > 1 ? "s" : ""}.`,
-    detail: `${data.divisor} × ${lowerQuotient} = ${lowerProduct} et ${data.divisor} × ${upperQuotient} = ${upperProduct} : le quotient est entre ${lowerQuotient} et ${upperQuotient}.${estimate}`
+    bound: `${data.divisor} × ${lowerQuotient} = ${lowerProduct} ≤ ${data.dividend} < ${upperProduct} = ${data.divisor} × ${upperQuotient}`,
+    conclusion: `${lowerQuotient} ≤ ${data.dividend} ÷ ${data.divisor} < ${upperQuotient} : ${label.toLowerCase()} aura ${digitCount} chiffre${digitCount > 1 ? "s" : ""}.`,
+    estimate
   };
+}
+
+const INTEGER_PLACES = [
+  ["unité", "unités"],
+  ["dizaine", "dizaines"],
+  ["centaine", "centaines"],
+  ["millier", "milliers"],
+  ["dizaine de milliers", "dizaines de milliers"],
+  ["centaine de milliers", "centaines de milliers"],
+  ["million", "millions"],
+  ["dizaine de millions", "dizaines de millions"]
+];
+const DECIMAL_PLACES = [
+  ["dixième", "dixièmes"],
+  ["centième", "centièmes"],
+  ["millième", "millièmes"],
+  ["dix-millième", "dix-millièmes"],
+  ["cent-millième", "cent-millièmes"],
+  ["millionième", "millionièmes"]
+];
+
+export function placeValueName(data, endColumn, quantity = 2) {
+  const rank = data.integerLength - 1 - endColumn;
+  const names = rank >= 0 ? INTEGER_PLACES[rank] : DECIMAL_PLACES[-rank - 1];
+  if (!names) return quantity === 1 ? "unité de numération" : "unités de numération";
+  return names[quantity === 1 ? 0 : 1];
+}
+
+function afterDe(place) {
+  return /^[aeiouyàâäéèêëîïôöùûü]/i.test(place) ? `d’${place}` : `de ${place}`;
 }
 
 export function makeDisplayMetrics(data) {
@@ -60,9 +95,13 @@ export function getOperationDisplayState(data, index, step) {
   if (step.kind === "finish") return completed;
   if (step.opIndex === undefined || index > step.opIndex) return hidden;
   if (index < step.opIndex) return completed;
+  if (step.kind === "ask") return hidden;
   if (step.kind === "choose") return { ...hidden, quotient: true };
   if (step.kind === "multiply") return { ...hidden, quotient: true, product: true };
   if (step.kind === "subtract") {
+    return { quotient: true, product: true, subtraction: true, result: "remainder" };
+  }
+  if (step.kind === "decimal") {
     return { quotient: true, product: true, subtraction: true, result: "remainder" };
   }
   if (step.kind === "bring") return completed;
@@ -145,41 +184,72 @@ export function makeDivision(dividend, divisor, mode = "integer", requestedDecim
 export function makeSteps(data) {
   const anticipation = anticipationFor(data);
   const steps = [{
-    kind: "predict",
-    title: "J’anticipe",
-    sentence: anticipation.sentence,
-    detail: anticipation.detail,
+    kind: "bound",
+    title: "J’encadre",
+    sentence: anticipation.bound,
+    detail: anticipation.conclusion,
     quotientDigitCount: anticipation.digitCount
   }];
 
+  if (anticipation.estimate) {
+    steps.push({
+      kind: "estimate",
+      title: "J’estime",
+      sentence: anticipation.estimate.calculation,
+      detail: anticipation.estimate.explanation,
+      quotientDigitCount: anticipation.digitCount
+    });
+  }
+
   data.operations.forEach((operation, opIndex) => {
+    const place = placeValueName(data, operation.endColumn);
+    steps.push({
+      kind: "ask",
+      title: "Je cherche",
+      sentence: `${operation.partial} ${place} ÷ ${data.divisor} : combien ${afterDe(place)} au quotient ?`,
+      opIndex
+    });
     steps.push({
       kind: "choose",
-      title: "Je cherche",
-      sentence: `Dans ${operation.partial}, combien de fois ${data.divisor} ?`,
-      detail: `${operation.quotientDigit} fois : ${operation.quotientDigit} × ${data.divisor} = ${operation.product}, et ${operation.quotientDigit + 1} × ${data.divisor} = ${(operation.quotientDigit + 1) * data.divisor} serait trop grand.`,
+      title: "Je choisis",
+      sentence: `J’écris ${operation.quotientDigit} au rang des ${place}.`,
+      detail: `${operation.quotientDigit} × ${data.divisor} = ${operation.product}, et ${operation.quotientDigit + 1} × ${data.divisor} = ${(operation.quotientDigit + 1) * data.divisor} serait trop grand.`,
       opIndex
     });
     steps.push({
       kind: "multiply",
       title: "Je multiplie",
-      sentence: `${operation.quotientDigit} × ${data.divisor} = ${operation.product}. J’écris ${operation.product} sous ${operation.partial}.`,
+      sentence: `${operation.quotientDigit} × ${data.divisor} = ${operation.product}.`,
+      detail: `Je pose ${operation.product} ${place} sous ${operation.partial} ${place}.`,
       opIndex
     });
     steps.push({
       kind: "subtract",
       title: "Je soustrais",
       sentence: `${operation.partial} − ${operation.product} = ${operation.remainder}.`,
+      detail: `Il reste ${operation.remainder} ${placeValueName(data, operation.endColumn, operation.remainder)}.`,
       opIndex
     });
     if (operation.nextDigit !== undefined) {
       const decimalStart = operation.nextEndColumn === data.integerLength;
+      const generatedDecimal = operation.nextEndColumn >= data.integerLength;
+      const nextPlace = placeValueName(data, operation.nextEndColumn);
+      if (decimalStart) {
+        steps.push({
+          kind: "decimal",
+          title: "Je passe aux décimales",
+          sentence: `Il reste ${operation.remainder} ${placeValueName(data, operation.endColumn, operation.remainder)}.`,
+          detail: "J’écris la virgule au quotient pour continuer.",
+          opIndex
+        });
+      }
       steps.push({
         kind: "bring",
-        title: decimalStart ? "Je passe aux décimales" : "J’abaisse",
-        sentence: decimalStart
-          ? `J’écris la virgule et j’abaisse un 0 : j’obtiens ${operation.nextPartial}.`
-          : `J’abaisse ${operation.nextDigit} : j’obtiens ${operation.nextPartial}.`,
+        title: generatedDecimal ? "J’échange" : "J’échange et j’abaisse",
+        sentence: `${operation.remainder} ${placeValueName(data, operation.endColumn, operation.remainder)} = ${operation.remainder * 10} ${nextPlace}.`,
+        detail: generatedDecimal
+          ? `Je fais apparaître un 0 au rang des ${nextPlace} : j’obtiens ${operation.nextPartial} ${nextPlace}.`
+          : `J’abaisse ${operation.nextDigit} ${placeValueName(data, operation.nextEndColumn, operation.nextDigit)} : j’obtiens ${operation.nextPartial} ${nextPlace}.`,
         opIndex
       });
     }
