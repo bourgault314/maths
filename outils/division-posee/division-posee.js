@@ -1,4 +1,4 @@
-import { getOperationDisplayState, makeDisplayMetrics, makeDivision, makeSteps } from "./division-engine.mjs?v=5";
+import { getOperationDisplayState, makeDisplayMetrics, makeDivision, makeSteps } from "./division-engine.mjs?v=6";
 
 const $ = (selector) => document.querySelector(selector);
 const dividendInput = $("#dividend");
@@ -28,7 +28,7 @@ function setMode(mode) {
 }
 
 function visibleQuotient(step) {
-  if (["bound", "estimate"].includes(step.kind)) return "";
+  if (["bound", "digits", "estimate"].includes(step.kind)) return "";
   let result = "";
   let comma = false;
   division.operations.forEach((operation, index) => {
@@ -48,7 +48,7 @@ function quotientWriting(step) {
   const writing = document.createElement("span");
   writing.className = "quotient-writing";
   const visible = visibleQuotient(step);
-  const integerSlotCount = steps[0]?.quotientDigitCount
+  const integerSlotCount = steps.find(({ quotientDigitCount }) => quotientDigitCount)?.quotientDigitCount
     ?? division.operations.filter(({ isDecimalDigit }) => !isDecimalDigit).length;
   const visibleIntegerCount = visible.split(",")[0].length;
 
@@ -58,7 +58,8 @@ function quotientWriting(step) {
     slot.textContent = character;
     writing.append(slot);
   }
-  for (let index = visibleIntegerCount; index < integerSlotCount; index += 1) {
+  const showEmptySlots = step.kind !== "bound";
+  for (let index = visibleIntegerCount; showEmptySlots && index < integerSlotCount; index += 1) {
     const slot = document.createElement("span");
     slot.className = "quotient-slot is-empty";
     slot.setAttribute("aria-hidden", "true");
@@ -192,7 +193,7 @@ function renderDivision(step) {
 }
 
 function renderTable(step) {
-  const active = step.opIndex !== undefined && ["choose", "multiply", "subtract"].includes(step.kind)
+  const active = step.opIndex !== undefined && ["choose", "multiply", "subtract-ask", "subtract"].includes(step.kind)
     ? division.operations[step.opIndex]?.quotientDigit
     : null;
   $("#table-title").textContent = `Table de ${division.divisor}`;
@@ -246,7 +247,7 @@ $("#show-all").addEventListener("click", () => { stepIndex = steps.length - 1; r
 function updateFullscreenButton() {
   const button = $("#fullscreen");
   const isFullscreen = Boolean(document.fullscreenElement);
-  button.textContent = isFullscreen ? "×" : "⛶";
+  button.textContent = "⛶";
   button.setAttribute("aria-label", isFullscreen ? "Quitter le plein écran" : "Afficher en plein écran");
   button.title = isFullscreen ? "Quitter le plein écran" : "Afficher en plein écran";
 }
