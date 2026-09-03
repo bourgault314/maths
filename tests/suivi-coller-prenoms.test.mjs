@@ -120,7 +120,9 @@ async function collageRejoue(eleves, texteColle, options = {}) {
     ordreDeLaFeuille, sansPrenomDansLOrdre, apercuCollage,
   };
   const gestionnaire = new Function(...Object.keys(contexte),
-    `${fonction("decouperPrenoms")}\nreturn (${sourceCollage.replace(/^\$\("coller-prenoms"\)\.addEventListener\("click", /, "")});`
+    // Depuis le lot 7, le collage lit « Léa B » avec la MÊME fonction que la
+    // saisie au clavier dans le tableau (lireNom) : une seule règle pour les deux.
+    `${fonction("decouperPrenoms")}\n${fonction("lireNom")}\nreturn (${sourceCollage.replace(/^\$\("coller-prenoms"\)\.addEventListener\("click", /, "")});`
   )(...Object.values(contexte));
   await gestionnaire();
   return {nommes, bouton};

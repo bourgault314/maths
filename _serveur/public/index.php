@@ -15,9 +15,11 @@ $nonce = entetes_page();
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
 <meta name="description" content="Espace élèves de maths&go : entre ton code pour retrouver tes activités.">
-<link rel="icon" href="https://mathsgo.re/favicon.ico" sizes="48x48">
-<link rel="icon" type="image/svg+xml" href="https://mathsgo.re/favicon.svg">
-<link rel="apple-touch-icon" href="https://mathsgo.re/assets/img/apple-touch-icon.png">
+<!-- Lot 7 : icônes et logo servis d'ICI (copies du dépôt, vérifiées par un
+     test). La politique de contenu n'autorise plus d'image d'un autre domaine. -->
+<link rel="icon" href="favicon.ico" sizes="48x48">
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
 <title>Mon espace | maths&amp;go</title>
 <style>
   :root {
@@ -81,7 +83,7 @@ $nonce = entetes_page();
 <body>
 <div class="barre"></div>
 <header>
-  <img src="https://mathsgo.re/assets/img/mathsgo-logo.png" alt="maths&go">
+  <img src="mathsgo-logo.png" alt="maths&go">
 </header>
 
 <main>
@@ -113,7 +115,7 @@ $nonce = entetes_page();
     <p class="sous-titre">Choisis une activité. Ton travail est enregistré tout seul.</p>
     <ul id="applis"></ul>
     <p class="aide">
-      <button type="button" class="secondaire" id="changer">Ce n’est pas moi</button>
+      <button type="button" class="secondaire" id="changer">Se déconnecter</button>
     </p>
   </section>
 </main>
@@ -296,9 +298,17 @@ $nonce = entetes_page();
     ouvrir(code, false);
   });
 
+  // « Se déconnecter » (lot 7 : le même mot que dans l'appli, un seul geste à
+  // apprendre). Le code est oublié, et RIEN du précédent élève ne reste dans la
+  // page : ni son prénom, ni sa classe, ni ses activités.
   $("changer").addEventListener("click", () => {
     ecrireCode("");
     $("code").value = "";
+    $("titre").textContent = "Mon espace";
+    $("classe").textContent = "";
+    $("classe").hidden = true;
+    $("applis").textContent = "";
+    afficherErreur("");
     $("ecran-espace").hidden = true;
     $("ecran-code").hidden = false;
     $("code").focus();

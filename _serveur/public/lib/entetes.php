@@ -31,15 +31,23 @@ function entetes_securite(): void
 //   droits de la session du professeur.
 // - style-src 'self' 'unsafe-inline' : les feuilles de style sont dans les
 //   pages (pas de script possible par un style).
-// - img-src 'self' https://mathsgo.re data: : le logo et les icônes du site.
+// - img-src 'self' data: : depuis le lot 7, le logo et les icônes sont copiés
+//   ici (racine du suivi). Avant, mathsgo.re — et tout ce qui est devant lui —
+//   apprenait l'adresse IP et l'horaire de chaque ouverture de l'espace des
+//   professeurs, y compris avant la connexion.
 // - connect-src 'self' : les appels d'API restent sur suivi.mathsgo.re.
 // - frame-ancestors 'none' : la version moderne de X-Frame-Options: DENY.
 function entetes_page(): string
 {
     entetes_securite();
     $nonce = base64_encode(random_bytes(16));
+    // Une page du suivi n'a rien à faire dans le cache disque du navigateur :
+    // elle ne contient pas de donnée d'élève (l'API répond déjà en no-store),
+    // mais sur un poste partagé la coquille revient parfois hors ligne, et
+    // « pas de cache » est la règle la plus simple à tenir.
+    header('Cache-Control: no-store');
     header("Content-Security-Policy: default-src 'self'; script-src 'self' 'nonce-$nonce'; "
-        . "style-src 'self' 'unsafe-inline'; img-src 'self' https://mathsgo.re data:; "
+        . "style-src 'self' 'unsafe-inline'; img-src 'self' data:; "
         . "connect-src 'self'; font-src 'self'; object-src 'none'; base-uri 'self'; "
         . "form-action 'self'; frame-ancestors 'none'");
     return $nonce;

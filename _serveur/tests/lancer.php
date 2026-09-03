@@ -1364,8 +1364,9 @@ verifier("l'espace élève et Ma classe envoient une politique de contenu à non
         vrai($csp !== null, "$chemin : Content-Security-Policy présente");
         vrai((bool)preg_match("/script-src 'self' 'nonce-([A-Za-z0-9+\/=]+)'/", $csp, $m), "$chemin : script-src 'self' + nonce ($csp)");
         $nonce = $m[1];
-        vrai(!str_contains($csp, 'mathsgo.re\'') && !str_contains(explode('img-src', $csp)[0], 'mathsgo.re'), "$chemin : aucun script d'un autre domaine autorisé");
-        vrai(str_contains($csp, "img-src 'self' https://mathsgo.re data:"), "$chemin : le logo et les icônes de mathsgo.re restent permis");
+        vrai(!str_contains($csp, 'mathsgo.re'), "$chemin : plus aucun domaine extérieur dans la politique de contenu");
+        vrai(str_contains($csp, "img-src 'self' data:"), "$chemin : les images ne viennent plus que d'ici (lot 7)");
+        egal('no-store', entete($r, 'Cache-Control'), "$chemin : Cache-Control no-store");
         vrai(str_contains($csp, "connect-src 'self'") && str_contains($csp, "frame-ancestors 'none'") && str_contains($csp, "object-src 'none'"), "$chemin : connect-src, frame-ancestors, object-src");
         preg_match_all('/<script(?![^>]*\bsrc=)[^>]*>/', $r['texte'], $balises);
         egal($scriptsEnLigne, count($balises[0]), "$chemin : scripts en ligne");
@@ -1378,6 +1379,34 @@ verifier("l'espace élève et Ma classe envoient une politique de contenu à non
         // Deux requêtes, deux nonces : un nonce deviné ne sert pas deux fois.
         $csp2 = entete(page($chemin), 'Content-Security-Policy');
         vrai($csp2 !== $csp, "$chemin : le nonce change à chaque requête");
+    }
+});
+
+// Lot 7 (03/09/2026) — le logo et les icônes sont servis d'ici, octet pour
+// octet ceux du dépôt : mathsgo.re n'apprend plus l'adresse IP et l'horaire de
+// chaque ouverture de l'espace des professeurs.
+verifier("le logo et les icônes sont servis d'ici, identiques à ceux du dépôt", function () use ($racine) {
+    $depot = dirname($racine);
+    $attendus = [
+        'mathsgo-logo.png' => '/assets/img/mathsgo-logo-390.png',
+        'mathsgo-logo-print.png' => '/assets/img/mathsgo-logo-print.png',
+        'apple-touch-icon.png' => '/assets/img/apple-touch-icon.png',
+        'favicon.svg' => '/favicon.svg',
+        'favicon.ico' => '/favicon.ico',
+    ];
+    foreach ($attendus as $servi => $source) {
+        $r = page('/' . $servi);
+        egal(200, $r['code'], "/$servi servi");
+        vrai(strlen($r['texte']) > 0, "/$servi n'est pas vide");
+        if (is_file($depot . $source)) {
+            egal(md5_file($depot . $source), md5($r['texte']),
+                "/$servi est octet pour octet $source (sinon : cp $depot$source _serveur/public/$servi)");
+        }
+    }
+    foreach (['/' => 'espace élève', '/prof/' => 'Ma classe'] as $chemin => $quoi) {
+        $texte = page($chemin)['texte'];
+        vrai(!str_contains($texte, 'https://mathsgo.re/assets/img/'), "$quoi : plus d'image de mathsgo.re");
+        vrai(!str_contains($texte, 'https://mathsgo.re/favicon'), "$quoi : plus de favicon de mathsgo.re");
     }
 });
 
