@@ -21,6 +21,9 @@ function cors(): void
     }
     header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
     header('Access-Control-Allow-Headers: Content-Type');
+    // Sans cette ligne, un script de mathsgo.re ne verrait jamais Retry-After
+    // sur un 429 : le navigateur ne lui montre que les en-têtes « simples ».
+    header('Access-Control-Expose-Headers: Retry-After');
     header('Access-Control-Max-Age: 86400');
     if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'OPTIONS') {
         http_response_code(204);
@@ -28,18 +31,22 @@ function cors(): void
     }
 }
 
-function repondre(array $donnees, int $code = 200): never
+// $entetes : en-têtes supplémentaires, nom => valeur (ex. Retry-After sur un 429).
+function repondre(array $donnees, int $code = 200, array $entetes = []): never
 {
     http_response_code($code);
     header('Content-Type: application/json; charset=utf-8');
     header('Cache-Control: no-store');
+    foreach ($entetes as $nom => $valeur) {
+        header($nom . ': ' . $valeur);
+    }
     echo json_encode($donnees, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
     exit;
 }
 
-function erreur(string $message, int $code = 400): never
+function erreur(string $message, int $code = 400, array $entetes = []): never
 {
-    repondre(['ok' => false, 'erreur' => $message], $code);
+    repondre(['ok' => false, 'erreur' => $message], $code, $entetes);
 }
 
 function corps_json(int $maxOctets): array

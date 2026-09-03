@@ -133,9 +133,26 @@ try {
     $pdo = bd();
 
     if ($action === 'connexion') {
-        limiter('connexion:' . adresse_appelante(), 12, 600);
-        $session = ouvrir_session($pdo, (string)($corps['identifiant'] ?? ''), (string)($corps['motdepasse'] ?? ''));
+        // Seuls les ÉCHECS comptent (lot 5) : un collège entier se connecte
+        // derrière une seule adresse, et treize réussites dans le quart
+        // d'heure n'ont rien d'une attaque. Deux compteurs : l'adresse (60
+        // échecs / 10 min) et l'identifiant visé (12 / 10 min), tous deux
+        // regardés AVANT le hachage, pour qu'un refus ne coûte rien.
+        $identifiant = (string)($corps['identifiant'] ?? '');
+        $adresse = adresse_appelante();
+        $cleAdresse = 'connexion-echec:' . $adresse;
+        $cleIdentifiant = 'connexion-id:' . mb_strtolower(trim($identifiant));
+        limiter_deja_atteint($cleAdresse, ECHECS_CONNEXION_PAR_ADRESSE, FENETRE_ECHECS_CONNEXION);
+        limiter_deja_atteint($cleIdentifiant, ECHECS_CONNEXION_PAR_IDENTIFIANT, FENETRE_ECHECS_CONNEXION);
+        $session = ouvrir_session($pdo, $identifiant, (string)($corps['motdepasse'] ?? ''));
         if ($session === null) {
+            // Les deux compteurs avancent, puis le refus : le 13e mauvais mot
+            // de passe sur un compte répond déjà 429, pas 401.
+            $parAdresse = compter($cleAdresse, FENETRE_ECHECS_CONNEXION);
+            $parIdentifiant = compter($cleIdentifiant, FENETRE_ECHECS_CONNEXION);
+            if ($parAdresse > ECHECS_CONNEXION_PAR_ADRESSE || $parIdentifiant > ECHECS_CONNEXION_PAR_IDENTIFIANT) {
+                refuser_trop_de_demandes(FENETRE_ECHECS_CONNEXION);
+            }
             erreur("Identifiant ou mot de passe incorrect.", 401);
         }
         repondre(['ok' => true] + $session);

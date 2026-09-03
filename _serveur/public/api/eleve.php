@@ -45,9 +45,11 @@ try {
     // Par adresse, on ne compte que les ÉCHECS : un collège entier sort par
     // une seule adresse IP, et trente élèves qui entrent en même temps ne
     // doivent pas être pris pour une attaque. Un curieux qui essaie des codes
-    // (ou des billets) en série, lui, produit un échec par essai.
+    // (ou des billets) en série, lui, produit un échec par essai : au-delà de
+    // 60, chaque requête de l'adresse est ralentie (elle répond encore juste),
+    // au-delà de 600 elle est refusée (lib/limite.php).
     $adresse = adresse_appelante();
-    limiter_deja_atteint('echec-ip:' . $adresse, 60, 300);
+    freiner_adresse($adresse);
 
     // ------------------------------------------------------- échange d'un billet
 
@@ -67,7 +69,7 @@ try {
         $eleve = $echange === null ? false : identite_eleve($pdo, $echange['eleve_id']);
         if ($eleve === false) {
             // Inconnu, périmé, déjà utilisé, ou élève supprimé : même réponse.
-            limiter('echec-ip:' . $adresse, 60, 300);
+            compter_echec_adresse($adresse);
             erreur("Ce lien a expiré.", 404);
         }
 
@@ -118,7 +120,7 @@ try {
     $eleve = $requete->fetch();
     $requete->closeCursor();
     if ($eleve === false) {
-        limiter('echec-ip:' . $adresse, 60, 300);
+        compter_echec_adresse($adresse);
         erreur("Code inconnu.", 404);
     }
 

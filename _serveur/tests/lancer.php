@@ -852,8 +852,13 @@ verifier("un déluge de requêtes sur un code est freiné", function () use (&$j
     $freine = false;
     $avant = 0;
     for ($i = 0; $i < 330; $i++) {
-        $statut = lire($code)['code'];
-        if ($statut === 429) { $freine = true; break; }
+        $r = lire($code);
+        $statut = $r['code'];
+        if ($statut === 429) {
+            $freine = true;
+            vrai(ctype_digit((string)entete($r, 'Retry-After')), 'le 429 porte Retry-After');
+            break;
+        }
         if ($statut === 200) $avant++;
     }
     vrai($freine, "le serveur aurait dû répondre 429 après trois cents requêtes");
@@ -879,6 +884,37 @@ function cle_compteur_test(string $cle, int $secondes): string
 {
     // Même calcul que lib/limite.php, avec le secret de la config de test.
     return 'l:' . substr(hash_hmac('sha256', $cle, 'JETON-DE-TEST'), 0, 40) . ':' . $secondes;
+}
+
+// Écrit directement un compteur dans la base de test, comme si « nombre »
+// échecs avaient déjà été comptés dans la fenêtre courante. Six cents vrais
+// échecs ralentis prendraient un quart d'heure ; ici, une ligne.
+function semer_compteur(string $cle, int $secondes, int $nombre): void
+{
+    // Même calcul de fenêtre que lib/limite.php. Si elle se ferme dans moins
+    // de cinq secondes, on attend la suivante : sinon le test et le serveur
+    // pourraient ne pas parler de la même fenêtre.
+    $fin = (intdiv(time(), $secondes) + 1) * $secondes;
+    if ($fin - time() < 5) {
+        sleep($fin - time() + 1);
+        $fin = (intdiv(time(), $secondes) + 1) * $secondes;
+    }
+    bd_test()->prepare('DELETE FROM compteurs WHERE cle = ?')->execute([cle_compteur_test($cle, $secondes)]);
+    bd_test()->prepare('INSERT INTO compteurs (cle, fenetre, nombre) VALUES (?, ?, ?)')
+        ->execute([cle_compteur_test($cle, $secondes), $fin, $nombre]);
+}
+
+function semer_echecs_adresse(int $nombre): void
+{
+    semer_compteur('echec-ip:127.0.0.1', 300, $nombre);
+}
+
+// Durée d'un appel, en secondes.
+function chronometre(callable $appel, &$resultat): float
+{
+    $debut = hrtime(true);
+    $resultat = $appel();
+    return (hrtime(true) - $debut) / 1e9;
 }
 
 $jetonS1 = null;
@@ -925,24 +961,96 @@ verifier("70 appels VALIDES depuis une même adresse passent tous (une classe en
         "aucun échec ne doit avoir été compté");
 });
 
-verifier("soixante codes inventés passent en 404, le suivant est freiné (eleve.php)", function () use (&$codesS1) {
+// Lot 5 (03/09/2026). Avant : au 61e échec, l'adresse entière était refusée
+// (429), bons codes compris, « sinon le 200 trahirait les bons codes ». Un
+// collège sort par une seule adresse : trente élèves qui se trompent deux
+// fois en début d'heure fermaient la porte à tout le monde pour cinq minutes.
+// Maintenant : au-delà de 60 échecs, chaque requête de l'adresse est RALENTIE
+// (1,5 s) et répond juste — 200 pour un bon code, 404 sinon. Le
+// ralentissement ferme l'énumération à lui seul (2 400 essais à l'heure sur
+// un milliard de codes) ; il n'y a plus besoin de cacher les 200. Le 429 ne
+// tombe qu'à 600 échecs : une attaque, pas une classe maladroite.
+verifier("soixante et un codes inventés passent en 404 sans attendre ; ensuite l'adresse est ralentie mais répond juste (eleve.php)", function () use (&$codesS1) {
     vider_compteurs();
     $statuts = [];
     for ($i = 0; $i < 61; $i++) $statuts[] = identite(code_inconnu($i))['code'];
-    egal(60, count(array_filter($statuts, fn($s) => $s === 404)), '404 pour les 60 premiers');
-    egal(429, $statuts[60], 'le 61e');
-    egal(429, identite($codesS1[0])['code'], "tant que la fenêtre dure, même un bon code est freiné depuis cette adresse (sinon le 200 trahirait les bons codes)");
-    egal(429, lire($codesS1[0])['code'], "la même limite vaut pour parcours.php : quota partagé");
+    egal(61, count(array_filter($statuts, fn($s) => $s === 404)), '404 pour les 61 : aucun 429');
+    // Le 61e n'attend pas encore (60 échecs comptés avant lui) : on le rejoue
+    // pour le chronométrer, il devient le 62e échec.
+    $duree = chronometre(fn() => identite(code_inconnu(61)), $r);
+    egal(404, $r['code'], 'le 62e essai est encore un 404');
+    vrai($duree >= 1.4, sprintf('mais lui attend 1,5 s (%.2f s)', $duree));
+    $duree = chronometre(fn() => identite($codesS1[0]), $r);
+    egal(200, $r['code'], "un bon code depuis cette adresse passe : plus de porte fermée pour la classe");
+    vrai($duree >= 1.4, sprintf('ralenti de 1,5 s, lui aussi (%.2f s)', $duree));
+    $duree = chronometre(fn() => lire($codesS1[0]), $r);
+    egal(200, $r['code'], "la même règle vaut pour parcours.php : quota partagé");
+    vrai($duree >= 1.4, sprintf('et le même ralentissement (%.2f s)', $duree));
+    vider_compteurs();
+    $duree = chronometre(fn() => identite($codesS1[0]), $r);
+    egal(200, $r['code'], 'contrôle : après remise à zéro, le bon code passe');
+    vrai($duree < 1.0, sprintf('sans attendre (%.2f s)', $duree));
+});
+
+verifier("parcours.php : même ralentissement sur les codes inventés, et le 404 reste un 404", function () use (&$codesS1) {
+    vider_compteurs();
+    semer_echecs_adresse(60);
+    $duree = chronometre(fn() => lire(code_inconnu(0)), $r);
+    egal(404, $r['code'], 'le 61e échec');
+    vrai($duree < 1.0, sprintf('sans attendre (%.2f s)', $duree));
+    $duree = chronometre(fn() => lire(code_inconnu(1)), $r);
+    egal(404, $r['code'], 'le 62e : toujours 404, pas 429');
+    vrai($duree >= 1.4, sprintf('mais ralenti (%.2f s)', $duree));
+    vider_compteurs();
+});
+
+verifier("six cents échecs : l'adresse est refusée (429) avec Retry-After, exposé au navigateur", function () use (&$codesS1) {
+    vider_compteurs();
+    semer_echecs_adresse(600);
+    $r = appel('/api/eleve.php', ['code' => code_inconnu(0)], ['origine' => 'https://mathsgo.re']);
+    egal(429, $r['code'], 'le 601e échec est refusé');
+    $attente = entete($r, 'Retry-After');
+    vrai($attente !== null && ctype_digit($attente) && (int)$attente >= 1 && (int)$attente <= 300,
+        "Retry-After doit donner les secondes jusqu'à la fin de la fenêtre (obtenu " . json_encode($attente) . ")");
+    egal('Retry-After', entete($r, 'Access-Control-Expose-Headers'), "sans cet en-tête, un script de mathsgo.re ne verrait jamais Retry-After");
+    egal('https://mathsgo.re', entete($r, 'Access-Control-Allow-Origin'), 'réponse CORS ordinaire');
+    $duree = chronometre(fn() => identite($codesS1[0]), $r);
+    egal(429, $r['code'], "au-delà de 600, même un bon code est refusé : c'est une attaque, pas une classe");
+    vrai($duree < 1.0, sprintf("et le refus n'attend pas : pas de processus qui dort (%.2f s)", $duree));
+    egal(429, lire($codesS1[0])['code'], 'parcours.php aussi');
     vider_compteurs();
     egal(200, identite($codesS1[0])['code'], 'contrôle : après remise à zéro, le bon code passe');
 });
 
-verifier("parcours.php : même frein sur les codes inventés", function () use (&$codesS1) {
+verifier("connexion prof : treize réussites de suite passent toutes (seuls les échecs comptent)", function () {
     vider_compteurs();
     $statuts = [];
-    for ($i = 0; $i < 61; $i++) $statuts[] = lire(code_inconnu($i))['code'];
-    egal(60, count(array_filter($statuts, fn($s) => $s === 404)), '404 pour les 60 premiers');
-    egal(429, $statuts[60], 'le 61e');
+    for ($i = 0; $i < 13; $i++) $statuts[] = connexion('gwenael', 'motdepasse-de-test-2026')['code'];
+    egal(array_fill(0, 13, 200), $statuts, 'treize professeurs du même collège dans le quart d\'heure');
+    egal(0, count(array_filter(compteurs(), fn($l) => str_starts_with($l['cle'], 'l:'))), "et aucun compteur n'a bougé");
+});
+
+verifier("connexion prof : douze mauvais mots de passe sur un compte, puis 429 même avec le bon ; un autre identifiant passe encore", function () {
+    vider_compteurs();
+    $statuts = [];
+    for ($i = 0; $i < 13; $i++) $statuts[] = connexion('gwenael', "mauvais-$i")['code'];
+    egal(array_fill(0, 12, 401), array_slice($statuts, 0, 12), 'douze refus ordinaires');
+    egal(429, $statuts[12], 'le treizième est freiné');
+    $r = connexion('gwenael', 'motdepasse-de-test-2026');
+    egal(429, $r['code'], 'le bon mot de passe ne passe plus pendant la fenêtre');
+    vrai(ctype_digit((string)entete($r, 'Retry-After')), 'avec Retry-After');
+    egal(401, connexion('personne', 'motdepasse-de-test-2026')['code'], "un autre identifiant depuis la même adresse : refus ordinaire, pas 429 (compteur par identifiant)");
+    vider_compteurs();
+    egal(200, connexion('gwenael', 'motdepasse-de-test-2026')['code'], 'contrôle : après remise à zéro, la connexion passe');
+});
+
+verifier("connexion prof : soixante échecs depuis une adresse, puis 429 pour tout identifiant", function () {
+    vider_compteurs();
+    semer_compteur('connexion-echec:127.0.0.1', 600, 60);
+    $r = connexion('personne', 'x');
+    egal(429, $r['code'], 'le 61e échec de l\'adresse est refusé');
+    vrai(ctype_digit((string)entete($r, 'Retry-After')), 'avec Retry-After');
+    egal(429, connexion('gwenael', 'motdepasse-de-test-2026')['code'], 'même le bon compte, depuis cette adresse');
     vider_compteurs();
 });
 
@@ -1031,6 +1139,9 @@ verifier("verifier.php, une fois installé, joue le limiteur sur la vraie base",
     vrai((bool)preg_match('/oui">✓<\/span>\s*Limiteur/u', $page), "et elle doit être verte");
     vrai(str_contains($page, 'purgés à chaque appel'), "avec son détail");
     vrai(!str_contains($page, 'PDOException') && !str_contains($page, 'SQLSTATE'), "aucun message technique");
+    // Lot 5 : l'adresse que le serveur croit être celle du visiteur, pour voir
+    // une fois pour toutes si l'hébergeur transmet la vraie.
+    vrai((bool)preg_match('/oui">✓<\/span>\s*Adresse vue par le serveur.*?127\.0\.0\.1/su', $page), "la ligne « Adresse vue par le serveur » doit montrer 127.0.0.1");
 });
 
 verifier("aucune erreur PHP n'est affichée : un corps de requête absurde répond en JSON propre", function () {
@@ -1349,10 +1460,13 @@ verifier("douze essais d'ancien mot de passe par compte, puis 429 : une session 
     vider_compteurs();
     $statuts = [];
     for ($i = 0; $i < 13; $i++) {
-        $statuts[] = appel('/api/prof.php', ['action' => 'profs.motdepasse', 'ancien' => "essai-$i", 'nouveau' => 'un-nouveau-mot-de-passe-2026'], ['jeton' => $jetonClaire])['code'];
+        $r = appel('/api/prof.php', ['action' => 'profs.motdepasse', 'ancien' => "essai-$i", 'nouveau' => 'un-nouveau-mot-de-passe-2026'], ['jeton' => $jetonClaire]);
+        $statuts[] = $r['code'];
     }
     egal(12, count(array_keys($statuts, 400, true)), 'douze refus ordinaires');
     egal(429, $statuts[12], 'le treizième est freiné');
+    $attente = entete($r, 'Retry-After');
+    vrai($attente !== null && ctype_digit($attente) && (int)$attente <= 600, 'le 429 porte Retry-After, en secondes (obtenu ' . json_encode($attente) . ')');
     vider_compteurs();
     egal(200, connexion('claire', 'nouveau-mdp-collegue-2026')['code'], 'le mot de passe n’a pas bougé');
 });

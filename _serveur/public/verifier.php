@@ -137,6 +137,28 @@ if ($autorise) {
         $lignesCompteurs = (int)$pdo->query('SELECT COUNT(*) FROM compteurs')->fetchColumn();
         return "en place ($lignesCompteurs compteur(s) en cours, purgés à chaque appel)";
     });
+    // Lot 5 (03/09/2026) : le limiteur compte les échecs PAR ADRESSE. Si le
+    // serveur voyait l'adresse d'un équipement placé devant lui (équilibreur,
+    // mandataire) au lieu de celle du visiteur, toute la planète partagerait
+    // un seul compteur. La ligne montre ce que le serveur voit : à comparer
+    // avec l'adresse que donne « mon ip » dans un moteur de recherche.
+    verif($lignes, "Adresse vue par le serveur", function () {
+        $adresse = adresse_appelante();
+        $detail = $adresse;
+        $privee = filter_var($adresse, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE) === false;
+        if ($privee) {
+            $detail .= " — adresse locale ou privée : c'est celle d'un équipement devant le serveur (ou un serveur de test), pas celle du visiteur ; en production, tous les visiteurs partageraient alors le même compteur";
+        } else {
+            $detail .= " — doit être TON adresse (celle que donne « mon ip » dans un moteur de recherche), pas une adresse de l'hébergeur";
+        }
+        // Un équipement devant le serveur transmet en général l'adresse
+        // d'origine dans cet en-tête ; on le montre sans s'y fier (il se forge).
+        $transmise = (string)($_SERVER['HTTP_X_FORWARDED_FOR'] ?? '');
+        if ($transmise !== '') {
+            $detail .= " ; en-tête X-Forwarded-For reçu : " . substr($transmise, 0, 80);
+        }
+        return $detail;
+    });
     verif($lignes, "Comptes prof", function () {
         $nombre = (int)bd()->query('SELECT COUNT(*) FROM profs')->fetchColumn();
         if ($nombre === 0) throw new RuntimeException("aucun compte : ouvre installer.php.");
