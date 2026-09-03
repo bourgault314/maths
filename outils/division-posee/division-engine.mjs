@@ -29,13 +29,13 @@ function anticipationFor(data) {
   const friendlyDividend = estimatedQuotient * data.divisor;
   const label = data.mode === "integer" ? "Le quotient entier" : "La partie entière du quotient";
   const estimate = friendlyDividend !== lowerProduct && friendlyDividend !== upperProduct
-    ? ` Pour estimer : ${friendlyDividend} ÷ ${data.divisor} = ${estimatedQuotient}.`
+    ? ` Estimation : ${friendlyDividend} ÷ ${data.divisor} = ${estimatedQuotient}, donc ${data.dividend} ÷ ${data.divisor} ≈ ${estimatedQuotient}.`
     : "";
 
   return {
     digitCount,
     sentence: `${label} aura ${digitCount} chiffre${digitCount > 1 ? "s" : ""}.`,
-    detail: `${data.divisor} × ${lowerQuotient} = ${lowerProduct} et ${data.divisor} × ${upperQuotient} = ${upperProduct} : ${data.dividend} est entre les deux.${estimate}`
+    detail: `${data.divisor} × ${lowerQuotient} = ${lowerProduct} et ${data.divisor} × ${upperQuotient} = ${upperProduct} : le quotient est entre ${lowerQuotient} et ${upperQuotient}.${estimate}`
   };
 }
 

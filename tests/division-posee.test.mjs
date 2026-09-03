@@ -84,7 +84,8 @@ test("l'anticipation explique l'encadrement et propose un calcul simple", () => 
   assert.equal(anticipation.sentence, "Le quotient entier aura 2 chiffres.");
   assert.match(anticipation.detail, /7 × 10 = 70/);
   assert.match(anticipation.detail, /7 × 100 = 700/);
-  assert.match(anticipation.detail, /560 ÷ 7 = 80/);
+  assert.match(anticipation.detail, /le quotient est entre 10 et 100/);
+  assert.match(anticipation.detail, /560 ÷ 7 = 80, donc 584 ÷ 7 ≈ 80/);
 });
 
 test("l'affichage réserve toutes les lignes et s'adapte aux longues divisions", () => {
@@ -116,7 +117,7 @@ test("l'interface conserve les repères visuels demandés", () => {
   assert.match(interfaceCss, /\.table-card\s*\{[^}]*height:\s*100%/);
   assert.match(interfaceCss, /\.digit-row\s*\{[^}]*height:\s*var\(--row-height/);
   assert.match(interfaceCss, /\.subtraction-rule\s*\{/);
-  assert.match(interfaceCss, /\.lower-arrow\s*\{/);
+  assert.match(interfaceCss, /\.lower-arrow\s*\{[^}]*z-index:\s*3[^}]*height:\s*calc\(var\(--row-height, 50px\) \* 1\.16\)/);
   assert.match(interfaceJs, /decimalPlaces\.disabled = mode !== "decimal"/);
   assert.match(interfaceJs, /work\.append\(digitRow\(operation\.product/);
   assert.match(interfaceJs, /work\.append\(digitRow\(resultValue/);

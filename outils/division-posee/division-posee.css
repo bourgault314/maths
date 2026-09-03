@@ -93,7 +93,7 @@ button, input, select { font: inherit; }
 .remainder-row .digit.active { color: var(--violet); background: var(--violet-soft); }
 .falling-source, .brought-digit { z-index: 2; color: var(--teal); }
 .brought-digit { animation: reveal-digit .7s ease-out both; }
-.lower-arrow { position: absolute; z-index: 1; top: 78%; left: 50%; width: 0; height: calc(var(--row-height, 50px) * 1.58); border-left: 2px solid var(--teal); animation: show-arrow 1.25s ease both; }
+.lower-arrow { position: absolute; z-index: 3; top: 78%; left: 50%; width: 0; height: calc(var(--row-height, 50px) * 1.16); border-left: 2px solid var(--teal); animation: show-arrow 1.25s ease both; }
 .lower-arrow::after { content: ""; position: absolute; left: -5px; bottom: -1px; width: 8px; height: 8px; border-right: 2px solid var(--teal); border-bottom: 2px solid var(--teal); transform: rotate(45deg); }
 @keyframes reveal-digit { from { opacity: .18; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
 @keyframes show-arrow { 0% { opacity: 0; } 15%, 72% { opacity: .9; } 100% { opacity: .25; } }
