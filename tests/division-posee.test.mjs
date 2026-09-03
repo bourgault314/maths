@@ -123,6 +123,8 @@ test("l'interface conserve les repères visuels demandés", () => {
   assert.match(interfaceHtml, /id="decimal-field" hidden/);
   assert.match(interfaceCss, /\.decimal-field\[hidden\][^{]*\{[^}]*display:\s*none/);
   assert.match(interfaceCss, /\.table-card\s*\{[^}]*height:\s*100%/);
+  assert.match(interfaceCss, /--stage-min-height:\s*clamp\(380px,\s*calc\(100svh - 477px\),\s*535px\)/);
+  assert.match(interfaceCss, /\.instruction\s*\{[^}]*height:\s*104px/);
   assert.match(interfaceCss, /\.digit-row\s*\{[^}]*height:\s*var\(--row-height/);
   assert.match(interfaceCss, /\.subtraction-rule\s*\{/);
   assert.match(interfaceCss, /\.lower-arrow\s*\{[^}]*z-index:\s*3[^}]*height:\s*calc\(var\(--row-height, 50px\) \* 1\.16\)/);
@@ -130,6 +132,8 @@ test("l'interface conserve les repères visuels demandés", () => {
   assert.match(interfaceJs, /decimalPlaces\.disabled = mode !== "decimal"/);
   assert.match(interfaceJs, /const visibleEnd = operationEnd/);
   assert.match(interfaceJs, /quotientWriting\(step\)/);
+  assert.match(interfaceJs, /document\.exitFullscreen/);
+  assert.match(interfaceJs, /fullscreenchange/);
   assert.match(interfaceJs, /work\.append\(digitRow\(operation\.product/);
   assert.match(interfaceJs, /work\.append\(digitRow\(resultValue/);
 });

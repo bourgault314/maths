@@ -145,7 +145,8 @@ function renderDivision(step) {
     const resultEndColumn = showsNext ? operation.nextEndColumn : operation.endColumn;
     work.append(digitRow(resultValue, resultEndColumn, showsNext ? "partial-row" : "remainder-row", {
       visible: Boolean(visible.result),
-      active: ["subtract", "bring"].includes(step.kind) && step.opIndex === index,
+      active: (["subtract", "bring"].includes(step.kind) && step.opIndex === index)
+        || (step.kind === "choose" && step.opIndex === index + 1),
       brought: step.kind === "bring" && step.opIndex === index
     }));
   });
@@ -233,7 +234,21 @@ $("#division-form").addEventListener("submit", submit);
 $("#previous").addEventListener("click", () => { stepIndex = Math.max(0, stepIndex - 1); render(); });
 $("#next").addEventListener("click", () => { stepIndex = Math.min(steps.length - 1, stepIndex + 1); render(); });
 $("#show-all").addEventListener("click", () => { stepIndex = steps.length - 1; render(); });
-$("#fullscreen").addEventListener("click", () => document.documentElement.requestFullscreen?.());
+function updateFullscreenButton() {
+  const button = $("#fullscreen");
+  const isFullscreen = Boolean(document.fullscreenElement);
+  button.textContent = isFullscreen ? "×" : "⛶";
+  button.setAttribute("aria-label", isFullscreen ? "Quitter le plein écran" : "Afficher en plein écran");
+  button.title = isFullscreen ? "Quitter le plein écran" : "Afficher en plein écran";
+}
+
+async function toggleFullscreen() {
+  if (document.fullscreenElement) await document.exitFullscreen?.();
+  else await document.documentElement.requestFullscreen?.();
+}
+
+$("#fullscreen").addEventListener("click", toggleFullscreen);
+document.addEventListener("fullscreenchange", updateFullscreenButton);
 document.addEventListener("keydown", (event) => {
   if (["INPUT", "SELECT"].includes(event.target.tagName)) return;
   if (event.key === "ArrowRight") { stepIndex = Math.min(steps.length - 1, stepIndex + 1); render(); }
@@ -241,4 +256,5 @@ document.addEventListener("keydown", (event) => {
 });
 
 setMode("integer");
+updateFullscreenButton();
 render();
