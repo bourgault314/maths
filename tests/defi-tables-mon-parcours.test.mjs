@@ -1049,10 +1049,10 @@ test("le prénom tapé par l’élève ne part pas au serveur", () => {
 // tests/defi-tables-suivi-appareil.test.mjs (faux stockage, faux réseau, faux
 // document) : ce qui est chargé, ce qui est envoyé, et sous quel code.
 test("la sortie est posée sur le repère de suivi, dans la barre du haut", () => {
-  assert.match(html, /bouton\("Ce n’est pas moi", /);
-  assert.match(html, /bouton\("Quitter", quitterSuivi\)/);
-  assert.match(html, /bouton\("Quitter et effacer mon travail de cette tablette", quitterEtEffacer\)/);
-  assert.match(html, /bloc\.append\(document\.createTextNode\("· "\), bouton\("Ce n’est pas moi"/,
+  assert.match(html, /sortie\.textContent = "Se déconnecter";/);
+  assert.match(html, /sortie\.addEventListener\("click", quitterSuivi\);/);
+  assert.doesNotMatch(html, /quitterEtEffacer|et effacer mon travail/, "un seul clic pour se déconnecter, pas de sous-menu (décision du 03/09/2026)");
+  assert.match(html, /bloc\.append\(document\.createTextNode\("· "\), sortie\);/,
     "le séparateur doit revenir à la ligne avec le bouton, pas rester seul en fin de ligne");
   assert.match(html, /repere\.append\(bloc\);/, "la sortie doit être ajoutée au repère lui-même");
   assert.doesNotMatch(html, /id="parcours-code-remove"/, "et pas dans un menu");

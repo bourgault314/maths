@@ -223,8 +223,8 @@ export function demarrerAppli({entree = {}, local, session, reseau, running = fa
       get suiviHorsLigne() { return suiviHorsLigne; },
       get suiviIdentite() { return suiviIdentite; }, get sync() { return sync; },
       get erreurDefinitive() { return erreurDefinitive; }, get entreeRefusee() { return entreeRefusee; },
-      get gardeVisible() { return gardeVisible; }, get sortieProposee() { return sortieProposee; },
-      ENTREE, suiviActif, demarrerSuivi, quitterSuivi, quitterEtEffacer, sauverParcours, envoyerAvantDeFermer, envoyerMaintenant,
+      get gardeVisible() { return gardeVisible; },
+      ENTREE, suiviActif, demarrerSuivi, quitterSuivi, sauverParcours, envoyerAvantDeFermer, envoyerMaintenant,
       renderRepere, majLienRetour, entrerParBillet, adopterCode, echangerBillet, prenomAffiche,
       verifierGarde, repondreGarde, GARDE_INACTIVITE_MS
     };`)(window, document, navigator, reseau.fetch, PARCOURS, () => local, () => session, state,
@@ -233,8 +233,7 @@ export function demarrerAppli({entree = {}, local, session, reseau, running = fa
     declencher: type => (ecouteurs[type] || []).forEach(fn => fn()),
     repere: () => document.getElementById("suivi-repere"),
     garde: () => document.getElementById("suivi-garde"),
-    // Les boutons du repère (« Ce n’est pas moi », puis « Quitter » / « Quitter et
-    // effacer… » / « Annuler »), par leur texte.
+    // Un bouton du repère (« Se déconnecter »), par son texte.
     boutonRepere(texte) {
       const bloc = document.getElementById("suivi-repere").enfants.at(-1);
       return (bloc && bloc.enfants || []).find(n => n && n.textContent === texte) || null;

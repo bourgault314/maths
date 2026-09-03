@@ -147,9 +147,9 @@ test("une case restée sous un ancien code refusé n’est jamais proposée ni t
   assert.equal(reseau.appels.filter(a => a.parcours && a.parcours.tables["4"].acquise).length, 0, "ni sous celui de Bob");
 });
 
-// ------------------------------------------------------------ « Ce n’est pas moi »
+// ------------------------------------------------------------ « Se déconnecter »
 
-test("« Ce n’est pas moi » envoie ce qui restait, oublie le code, revient à la case sans code et renvoie l’espace vers ?oublier=1", async () => {
+test("« Se déconnecter » envoie ce qui restait, oublie le code, revient à la case sans code et renvoie l’espace vers ?oublier=1", async () => {
   const local = fauxStockage({[CLE]: JSON.stringify(parcoursAvecTravail("Léa", 4))});
   const appli = demarrerAppli({entree: {code: B}, local});
   appli.api.demarrerSuivi();
@@ -210,10 +210,10 @@ test("le repère est rendu dans la barre du haut, avec la sortie dessus", async 
   await tic();
   const repere = appli.repere();
   assert.equal(repere.hidden, false);
-  assert.match(repere.texte, /^Suivi par ton professeur · Léa · 405· Ce n’est pas moi$/);
+  assert.match(repere.texte, /^Suivi par ton professeur · Léa · 405· Se déconnecter$/);
   const bloc = repere.enfants[repere.enfants.length - 1];
   const sortie = bloc.enfants[1];
-  assert.equal(sortie.textContent, "Ce n’est pas moi");
+  assert.equal(sortie.textContent, "Se déconnecter");
   assert.equal(typeof sortie.ecouteurs.click, "function", "la sortie est un bouton qui agit");
   assert.equal(bloc.enfants[0], "· ", "le séparateur voyage avec le bouton");
   assert.match(html, /<header class="topbar">[\s\S]*<p id="suivi-repere" class="suivi-repere" hidden><\/p>\s*<div id="suivi-garde"[\s\S]*<\/header>/,
@@ -399,53 +399,29 @@ test("l’identité donnée par le serveur vit dans l’onglet, avec le code : r
   assert.equal(autre.api.suiviIdentite, null);
   assert.equal(autre.api.prenomAffiche(), "");
 
-  // « Ce n’est pas moi » oublie le code ET l’identité.
+  // « Se déconnecter » oublie le code ET l’identité.
   premiere.api.quitterSuivi();
   assert.equal(session.getItem(PARCOURS.CLE_IDENTITE), null);
   assert.equal(session.getItem(PARCOURS.CLE_CODE), null);
 });
 
-test("« Ce n’est pas moi » propose de partir en gardant sa case, ou en l’effaçant de la tablette — après avoir envoyé ce qui restait", async () => {
+test("« Se déconnecter » : un seul clic, la case reste sur l’appareil (sans prénom ni code), rien de plus n’est proposé", async () => {
   const local = fauxStockage();
   const appli = demarrerAppli({entree: {code: B}, local});
   appli.api.demarrerSuivi();
   await tic();
-  assert.equal(appli.boutonRepere("Ce n’est pas moi") !== null, true);
-  assert.equal(appli.boutonRepere("Quitter"), null, "avant le clic, une seule porte");
-  appli.boutonRepere("Ce n’est pas moi").ecouteurs.click();
-  assert.equal(appli.api.sortieProposee, true);
-  assert.match(appli.repere().texte, /Quitter · Quitter et effacer mon travail de cette tablette · Annuler$/);
-  appli.boutonRepere("Annuler").ecouteurs.click();
-  assert.equal(appli.api.sortieProposee, false);
-  assert.match(appli.repere().texte, /· Ce n’est pas moi$/, "« Annuler » remet le repère comme avant");
-
-  // Quitter et effacer : l'envoi en attente part d'abord, puis la case s'en va.
-  appli.api.parcours.tables[2].apprends.construct = 2;
-  appli.window.setTimeout = () => 2; // l'envoi reste VRAIMENT en attente, comme dans un navigateur
+  const boutons = appli.repere().enfants.at(-1).enfants.filter(n => typeof n !== "string");
+  assert.equal(boutons.length, 1, "un seul bouton sur le repère");
+  assert.equal(boutons[0].textContent, "Se déconnecter");
+  appli.api.parcours.tables[3].apprends.construct = 2;
   appli.api.sauverParcours();
-  assert.equal(PARCOURS.charger(local, B).tables[2].apprends.construct, 2, "la case est sur l’appareil");
-  appli.boutonRepere("Ce n’est pas moi").ecouteurs.click();
-  appli.boutonRepere("Quitter et effacer mon travail de cette tablette").ecouteurs.click();
-  const dernier = appli.balises.at(-1);
-  assert.ok(dernier, "ce qui restait à envoyer est parti");
-  const paquet = JSON.parse(await dernier.blob.text());
-  assert.equal(paquet.code, B);
-  assert.equal(paquet.parcours.tables[2].apprends.construct, 2);
-  assert.equal(appli.api.codeSuivi, "");
-  assert.equal(local.getItem(PARCOURS.cleStockage(B, local)), null, "la case de Bob a quitté l’appareil");
-  assert.equal(local.getItem(PARCOURS.cleSync(B, local)), null, "et son état");
+  boutons[0].ecouteurs.click();
+  assert.equal(appli.api.codeSuivi, "", "déconnecté au premier clic");
+  assert.equal(appli.session.getItem(PARCOURS.CLE_CODE), null);
+  assert.equal(PARCOURS.charger(local, B).tables[3].apprends.construct, 2, "la case de Bob reste, pour la prochaine fois sur cet appareil");
+  assert.equal(PARCOURS.clesRevelentUnCode(local), false, "sans qu’aucune clé ne dise qui");
   assert.deepEqual(appli.window.allees, ["https://suivi.mathsgo.re/?oublier=1"]);
-
-  // Quitter (sans effacer) : la case reste, comme avant le lot 8.
-  const garde = demarrerAppli({entree: {code: A}, local});
-  garde.api.demarrerSuivi();
-  await tic();
-  garde.api.parcours.tables[3].apprends.construct = 2;
-  garde.api.sauverParcours();
-  garde.boutonRepere("Ce n’est pas moi").ecouteurs.click();
-  garde.boutonRepere("Quitter").ecouteurs.click();
-  assert.equal(garde.api.codeSuivi, "");
-  assert.equal(PARCOURS.charger(local, A).tables[3].apprends.construct, 2, "la case d’Alice reste");
+  assert.doesNotMatch(html, /quitterEtEffacer|effacer mon travail de cette tablette/, "l’option d’effacement prévue par l’audit a été écartée : deux clics pour chaque élève sur son propre téléphone, pour protéger une case qui n’a plus ni prénom ni code et que la purge retire à 90 jours");
 });
 
 test("garde-fou de temps : après 45 minutes sans un geste, « C’est toujours toi, Léa ? » ; le premier geste est retenu ; « Non » quitte en gardant la case", async () => {

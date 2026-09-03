@@ -1992,28 +1992,24 @@
         repere.append(puce, document.createTextNode(texte));
         // La porte de sortie est ICI, sur le repère, et pas dans un menu :
         // sans elle, un appareil partagé reste celui du dernier élève, et
-        // même les liens de retour ramènent à son espace. Un clic dessus
-        // propose deux sorties (lot 8) : partir en laissant sa case sur
-        // l'appareil, ou partir en l'effaçant — le serveur garde tout, et un
-        // élève qui a joué sur la tablette du CDI n'y laisse rien.
-        const bouton = (texte, action) => {
-          const b = document.createElement("button");
-          b.type = "button";
-          b.className = "sortie";
-          b.textContent = texte;
-          b.addEventListener("click", action);
-          return b;
-        };
+        // même les liens de retour ramènent à son espace. Elle s'appelle
+        // « Se déconnecter » (choix de Gwenaël, 03/09/2026) : c'est le mot que
+        // l'élève qui a fini cherche ; le camarade suivant, lui, voit un prénom
+        // qui n'est pas le sien juste à côté — et c'est le garde-fou de temps
+        // qui lui parle avec « ce n'est pas moi ». Un seul clic, pas de
+        // sous-menu : l'option d'effacement de la case au moment de partir,
+        // prévue par l'audit, a été écartée (Gwenaël, 03/09/2026) — ce qui
+        // reste sur l'appareil n'a plus ni prénom ni code, et la purge à
+        // 90 jours s'en charge.
+        const sortie = document.createElement("button");
+        sortie.type = "button";
+        sortie.className = "sortie";
+        sortie.textContent = "Se déconnecter";
+        sortie.addEventListener("click", quitterSuivi);
         // Le séparateur voyage AVEC le bouton : sur téléphone, le bandeau passe
         // à la ligne, et un « · » resté seul en fin de ligne se lit « 405· ».
         const bloc = document.createElement("span");
-        if (sortieProposee) {
-          bloc.append(document.createTextNode("· "), bouton("Quitter", quitterSuivi),
-            document.createTextNode(" · "), bouton("Quitter et effacer mon travail de cette tablette", quitterEtEffacer),
-            document.createTextNode(" · "), bouton("Annuler", () => { sortieProposee = false; renderRepere(); }));
-        } else {
-          bloc.append(document.createTextNode("· "), bouton("Ce n’est pas moi", () => { sortieProposee = true; renderRepere(); }));
-        }
+        bloc.append(document.createTextNode("· "), sortie);
         repere.append(bloc);
       }
 
@@ -2082,14 +2078,12 @@
         return true;
       }
 
-      // « Ce n'est pas moi » : on envoie ce qui restait à envoyer, on oublie le
+      // « Se déconnecter » : on envoie ce qui restait à envoyer, on oublie le
       // code, on revient à la case « sans code » — la case de l'élève reste sur
       // l'appareil, on n'efface le travail de personne — puis on renvoie à
       // l'espace élève avec ?oublier=1, pour que l'espace oublie lui aussi ce
       // code dans cet onglet : un seul geste vide les deux domaines et laisse
       // l'appareil prêt pour le camarade suivant.
-      let sortieProposee = false;
-
       function quitterSuivi() {
         envoyerAvantDeFermer();
         if (relance !== null) { window.clearTimeout(relance); relance = null; }
@@ -2100,7 +2094,6 @@
         erreurDefinitive = false;
         echecsSuccessifs = 0;
         fusionsSuccessives = 0;
-        sortieProposee = false;
         gardeVisible = false;
         PARCOURS.effacerCode(stockageSession());
         parcours = PARCOURS.charger(storage(), "");
@@ -2113,26 +2106,12 @@
         try { window.location.assign(SUIVI_URL + "/?oublier=1"); } catch (_) {}
       }
 
-      // « Quitter et effacer mon travail de cette tablette » : ce qui restait
-      // à envoyer part d'abord (quitterSuivi s'en charge), puis la case du code
-      // et son état quittent l'appareil. Le serveur garde la progression : sur
-      // un autre appareil, ou ici avec son code, l'élève la retrouve.
-      function quitterEtEffacer() {
-        const code = codeSuivi;
-        envoyerAvantDeFermer();
-        if (code) {
-          PARCOURS.effacer(storage(), code);
-          PARCOURS.effacerSync(storage(), code);
-        }
-        quitterSuivi();
-      }
-
       // Le garde-fou de temps (lot 8, C-9) : en salle informatique, personne
-      // ne clique « Ce n'est pas moi » ; la classe suivante arrive et l'onglet
+      // ne clique « Se déconnecter » ; la classe suivante arrive et l'onglet
       // est encore celui de Léa. Après GARDE_INACTIVITE_MS sans un geste, ou
       // quand la page redevient visible après une aussi longue absence, on
       // redemande « C'est toujours toi ? » : « Oui » reprend, « Non » quitte
-      // (comme « Ce n'est pas moi », en gardant la case). Le premier geste
+      // (comme « Se déconnecter », en gardant la case). Le premier geste
       // fait après l'absence est retenu : il ne passe pas à l'appli.
       const GARDE_INACTIVITE_MS = 45 * 60 * 1000;
       let derniereActivite = Date.now();
