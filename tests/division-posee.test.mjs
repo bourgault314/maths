@@ -179,6 +179,7 @@ test("l'interface conserve les repères visuels demandés", () => {
   assert.match(interfaceHtml, /id="decimal-field" hidden/);
   assert.match(interfaceCss, /\.decimal-field\[hidden\][^{]*\{[^}]*display:\s*none/);
   assert.match(interfaceCss, /\.table-card\s*\{[^}]*height:\s*100%/);
+  assert.match(interfaceCss, /grid-template-rows:\s*repeat\(10,/);
   assert.match(interfaceCss, /--stage-min-height:\s*clamp\(380px,\s*calc\(100svh - 477px\),\s*535px\)/);
   assert.match(interfaceCss, /\.instruction\s*\{[^}]*height:\s*104px/);
   assert.match(interfaceCss, /\.digit-row\s*\{[^}]*height:\s*var\(--row-height/);
@@ -190,6 +191,7 @@ test("l'interface conserve les repères visuels demandés", () => {
   assert.match(interfaceJs, /isUnrevealedDecimal/);
   assert.match(interfaceJs, /\["ask", "choose"\]/);
   assert.match(interfaceJs, /quotientWriting\(step\)/);
+  assert.match(interfaceJs, /Array\.from\(\{ length: 10 \}/);
   assert.match(interfaceJs, /const showEmptySlots = step\.kind !== "bound"/);
   assert.match(interfaceJs, /button\.textContent = "⛶"/);
   assert.match(interfaceJs, /document\.exitFullscreen/);
