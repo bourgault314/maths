@@ -45,7 +45,7 @@ test("chaque envoi porte la révision lue, et la réponse la fait avancer", asyn
   assert.equal(envoi.base, 0, "le premier envoi part de la révision 0");
   assert.equal(a.api.sync.revision, 1, "puis prend la révision renvoyée");
   assert.equal(a.api.sync.dirty, false, "plus rien à envoyer");
-  assert.equal(a.local.getItem(PARCOURS.cleSync(B)) !== null, true, "l'état est rangé sur l'appareil");
+  assert.equal(a.local.getItem(PARCOURS.cleSync(B, a.local)) !== null, true, "l'état est rangé sur l'appareil");
   travailler(a, 3);
   await a.temps.avancer(1000);
   assert.equal(serveur.appels.filter(x => x.parcours).pop().base, 1);
@@ -284,7 +284,7 @@ test("un nouveau code arrive après un code refusé : l’ancienne case reste en
   assert.deepEqual(PARCOURS.tablesAcquises(b.api.parcours), [2], "la progression connue du serveur revient, sans question");
   assert.equal(b.api.parcours.prenom, "", "sans le prénom de l’ancienne case");
   assert.deepEqual(PARCOURS.tablesAcquises(PARCOURS.charger(local, B)), [2, 3], "l’ancienne case est intacte, table 3 comprise");
-  assert.equal(PARCOURS.charger(local, B).prenom, "Léa");
+  assert.equal(PARCOURS.charger(local, B).prenom, "", "sans prénom dans la case durable (lot 8)");
   assert.equal(PARCOURS.chargerSync(local, B).detache, true, "avec son état");
   assert.equal(serveur.appels.filter(x => x.code === N && x.parcours && x.parcours.tables["3"].acquise).length, 0,
     "rien de la case détachée ne part sous le nouveau code");

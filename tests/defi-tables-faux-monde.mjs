@@ -65,11 +65,21 @@ export function fauxElement(id) {
 
 export function fauxDocument() {
   const elements = new Map();
+  const ecouteurs = {};
   const doc = {
+    visibilityState: "visible",
     getElementById: id => { if (!elements.has(id)) elements.set(id, fauxElement(id)); return elements.get(id); },
     querySelector: sel => doc.getElementById(sel),
     createElement: tag => fauxElement(tag),
-    createTextNode: t => t
+    createTextNode: t => t,
+    addEventListener(type, fn) { (ecouteurs[type] = ecouteurs[type] || []).push(fn); },
+    // Déclenche un événement du document (pointerdown, visibilitychange…) et
+    // rend l'événement, pour lire s'il a été retenu (preventDefault).
+    declencher(type, evenement = {}) {
+      const e = {type, retenu: false, preventDefault() { e.retenu = true; }, stopPropagation() {}, ...evenement};
+      (ecouteurs[type] || []).forEach(fn => fn(e));
+      return e;
+    }
   };
   return doc;
 }
@@ -193,6 +203,9 @@ export function demarrerAppli({entree = {}, local, session, reseau, running = fa
   const balises = [];
   const ecouteurs = {};
   const temps = minuteries === "immediates" ? null : minuteries;
+  // L'horloge de la page : celle des fausses minuteries quand il y en a, pour
+  // que « 45 minutes sans un geste » se joue en avançant le temps.
+  const horloge = temps ? {now: () => temps.maintenant} : Date;
   const window = {
     MATHSGO_ENTREE: {code: "", fiche: "", billet: "", vue: "", ouvrir: "", ...entree},
     location: {hash: "", pathname: "/outils/calcul_mental/defi_tables.html", search: "", assign(url) { window.allees.push(url); }},
@@ -204,20 +217,31 @@ export function demarrerAppli({entree = {}, local, session, reseau, running = fa
   const navigator = {sendBeacon(url, blob) { balises.push({url, blob}); return true; }};
   const state = {parcoursOptionsOpen: false, nameSkipped: false, running};
   const api = new Function("window", "document", "navigator", "fetch", "PARCOURS", "storage", "stockageSession",
-    "state", "renderParcours", `${SOURCE_SUIVI}
+    "state", "renderParcours", "Date", `${SOURCE_SUIVI}
     return {
       get codeSuivi() { return codeSuivi; }, get parcours() { return parcours; }, set parcours(p) { parcours = p; },
       get suiviHorsLigne() { return suiviHorsLigne; },
       get suiviIdentite() { return suiviIdentite; }, get sync() { return sync; },
       get erreurDefinitive() { return erreurDefinitive; }, get entreeRefusee() { return entreeRefusee; },
+      get gardeVisible() { return gardeVisible; },
       ENTREE, suiviActif, demarrerSuivi, quitterSuivi, sauverParcours, envoyerAvantDeFermer, envoyerMaintenant,
-      renderRepere, majLienRetour, entrerParBillet, adopterCode, echangerBillet
+      renderRepere, majLienRetour, entrerParBillet, adopterCode, echangerBillet, prenomAffiche,
+      verifierGarde, repondreGarde, GARDE_INACTIVITE_MS
     };`)(window, document, navigator, reseau.fetch, PARCOURS, () => local, () => session, state,
-    () => rendus.push("parcours"));
+    () => rendus.push("parcours"), horloge);
   return {api, local, session, reseau, window, document, state, rendus, balises, temps,
     declencher: type => (ecouteurs[type] || []).forEach(fn => fn()),
-    repere: () => document.getElementById("suivi-repere")};
+    repere: () => document.getElementById("suivi-repere"),
+    garde: () => document.getElementById("suivi-garde"),
+    // Un bouton du repère (« Se déconnecter »), par son texte.
+    boutonRepere(texte) {
+      const bloc = document.getElementById("suivi-repere").enfants.at(-1);
+      return (bloc && bloc.enfants || []).find(n => n && n.textContent === texte) || null;
+    }};
 }
+
+// Sous un code, la case durable ne porte pas de prénom (lot 8).
+export const sansPrenom = p => PARCOURS.definirPrenom(p, "");
 
 export function parcoursAvecTravail(prenom, table) {
   let p = PARCOURS.creerParcours();
