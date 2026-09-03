@@ -1,4 +1,4 @@
-import { getOperationDisplayState, makeDisplayMetrics, makeDivision, makeSteps } from "./division-engine.mjs?v=4";
+import { getOperationDisplayState, makeDisplayMetrics, makeDivision, makeSteps } from "./division-engine.mjs?v=5";
 
 const $ = (selector) => document.querySelector(selector);
 const dividendInput = $("#dividend");

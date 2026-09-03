@@ -136,6 +136,7 @@ test("la poursuite décimale introduit la virgule puis les zéros un par un", ()
 
 test("l'affichage réserve toutes les lignes et s'adapte aux longues divisions", () => {
   const shortMetrics = makeDisplayMetrics(makeDivision(584, 7, "integer", 2));
+  const threeLevelMetrics = makeDisplayMetrics(makeDivision(5849, 7, "integer", 2));
   const longMetrics = makeDisplayMetrics(makeDivision(12345678, 7, "decimal", 6));
   assert.deepEqual(shortMetrics, {
     rowCount: 5,
@@ -144,6 +145,8 @@ test("l'affichage réserve toutes les lignes et s'adapte aux longues divisions",
     columnWidth: 48,
     quotientSize: 35
   });
+  assert.equal(threeLevelMetrics.rowHeight, 47);
+  assert.ok(threeLevelMetrics.rowCount * threeLevelMetrics.rowHeight <= 330);
   assert.ok(longMetrics.rowCount > shortMetrics.rowCount);
   assert.ok(longMetrics.rowHeight < shortMetrics.rowHeight);
   assert.ok(longMetrics.rowCount * longMetrics.rowHeight <= 410);

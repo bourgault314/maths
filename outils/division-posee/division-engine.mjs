@@ -76,7 +76,7 @@ function afterDe(place) {
 
 export function makeDisplayMetrics(data) {
   const rowCount = 1 + data.operations.length * 2;
-  const rowHeight = Math.min(50, Math.max(14, Math.floor(390 / rowCount)));
+  const rowHeight = Math.min(50, Math.max(14, Math.floor(330 / rowCount)));
   const digitSize = Math.min(36, Math.max(13, Math.floor(rowHeight * 0.72)));
   const columnWidth = Math.min(48, Math.max(22, Math.floor(520 / data.digits.length)));
   const quotientSize = Math.min(35, Math.max(14, Math.floor(210 / Math.max(4, data.quotient.length))));
