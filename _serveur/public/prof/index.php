@@ -553,17 +553,15 @@ $versionMoteur = is_file($moteur) ? substr(md5_file($moteur), 0, 10) : '0';
 
       const cActions = document.createElement("td");
       // La fiche vit dans l'appli du site : un seul gabarit, une seule vérité.
-      // Elle s'ouvre par le code de l'élève, donc pas en lecture seule (le
-      // serveur ne donne pas les codes à un collègue en lecture).
-      if (eleve.code) {
-        const fiche = document.createElement("a");
-        fiche.className = "secondaire petit bouton-lien";
-        fiche.href = `https://mathsgo.re/outils/calcul_mental/defi_tables.html#fiche=${encodeURIComponent(eleve.code)}`;
-        fiche.target = "_blank";
-        fiche.rel = "noopener";
-        fiche.textContent = "Voir sa fiche";
-        cActions.append(fiche);
-      }
+      // Depuis le lot 3, elle s'ouvre par un BILLET de lecture demandé au
+      // serveur au moment du clic (voirFiche), jamais par le code dans
+      // l'adresse : un collègue en lecture seule y a donc droit lui aussi.
+      const fiche = document.createElement("button");
+      fiche.type = "button";
+      fiche.className = "secondaire petit";
+      fiche.textContent = "Voir sa fiche";
+      fiche.addEventListener("click", () => voirFiche(eleve, fiche));
+      cActions.append(fiche);
       if (ecriture && eleve.restaurable) {
         // Le serveur garde la version précédente de chaque progression : un
         // écrasement (par quelqu'un qui avait le code, ou un « Recommencer à
@@ -1186,6 +1184,28 @@ $versionMoteur = is_file($moteur) ? substr(md5_file($moteur), 0, 10) : '0';
     } catch (erreur) { surErreur(erreur, "message-classe"); }
     finally { bouton.disabled = false; }
   });
+
+  // « Voir sa fiche » (lot 3) : un billet de lecture, à usage unique, valable
+  // deux minutes, glissé dans l'adresse de l'appli à la place du code — le
+  // code n'entre plus dans l'historique de ce navigateur. L'onglet est ouvert
+  // AVANT d'attendre le serveur (les navigateurs ne laissent ouvrir une
+  // fenêtre que dans le geste du clic), puis dirigé vers la fiche.
+  async function voirFiche(eleve, bouton) {
+    const fenetre = window.open("about:blank", "_blank");
+    if (fenetre) { try { fenetre.opener = null; } catch (_) {} }
+    if (bouton) bouton.disabled = true;
+    try {
+      const r = await api("eleves.fiche", {eleve_id: eleve.id});
+      const adresse = `https://mathsgo.re/outils/calcul_mental/defi_tables.html#b=${encodeURIComponent(r.billet)}&vue=fiche`;
+      if (fenetre) fenetre.location.href = adresse;
+      else window.location.assign(adresse);
+    } catch (erreur) {
+      if (fenetre) { try { fenetre.close(); } catch (_) {} }
+      surErreur(erreur, "message-classe");
+    } finally {
+      if (bouton) bouton.disabled = false;
+    }
+  }
 
   async function regenerer(eleve) {
     const reponse = await demander(

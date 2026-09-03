@@ -15,6 +15,7 @@ require __DIR__ . '/../lib/reponse.php';
 require __DIR__ . '/../lib/codes.php';
 require __DIR__ . '/../lib/limite.php';
 require __DIR__ . '/../lib/auth.php';
+require_once __DIR__ . '/../lib/billets.php';
 
 const MAX_ELEVES_PAR_LOT = 60;
 const APPLIS_PROPOSABLES = ['defi-tables', 'automatismes'];
@@ -108,6 +109,18 @@ function eleve_modifiable(PDO $pdo, int $profId, mixed $eleveIdBrut): array
     // pas pouvoir distinguer « n'existe pas » de « appartient à un collègue ».
     if ($eleve === false) erreur("Introuvable.", 404);
     acces_classe($pdo, $profId, (int)$eleve['classe_id'], 'ecriture');
+    return $eleve;
+}
+
+// Pour lire ce qui concerne un élève (sa fiche) : la classe en lecture suffit.
+function eleve_lisible(PDO $pdo, int $profId, mixed $eleveIdBrut): array
+{
+    $eleveId = (int)$eleveIdBrut;
+    $requete = $pdo->prepare('SELECT id, classe_id FROM eleves WHERE id = ?');
+    $requete->execute([$eleveId]);
+    $eleve = $requete->fetch();
+    if ($eleve === false) erreur("Introuvable.", 404);
+    acces_classe($pdo, $profId, (int)$eleve['classe_id'], 'lecture');
     return $eleve;
 }
 
@@ -312,6 +325,7 @@ try {
                 foreach ($requete->fetchAll() as $eleve) {
                     $pdo->prepare('DELETE FROM progressions WHERE eleve_id = ?')->execute([(int)$eleve['id']]);
                     oublier_compteurs_du_code($pdo, (string)$eleve['code']);
+                    oublier_billets_de_l_eleve($pdo, (int)$eleve['id']);
                 }
                 $pdo->prepare('DELETE FROM eleves WHERE classe_id = ?')->execute([(int)$classe['id']]);
                 $pdo->prepare('DELETE FROM partages WHERE classe_id = ?')->execute([(int)$classe['id']]);
@@ -401,7 +415,20 @@ try {
             $code = code_libre($pdo);
             $pdo->prepare('UPDATE eleves SET code = ? WHERE id = ?')->execute([$code, (int)$eleve['id']]);
             oublier_compteurs_du_code($pdo, (string)$eleve['code']);
+            // Un billet d'entrée émis sous l'ancien code rendrait le nouveau :
+            // régénérer, c'est révoquer, billets compris.
+            oublier_billets_de_l_eleve($pdo, (int)$eleve['id']);
             repondre(['ok' => true, 'code' => $code]);
+
+        case 'eleves.fiche':
+            // « Voir sa fiche » : un billet de LECTURE, à usage unique, valable
+            // deux minutes, que la page glisse dans l'adresse de l'appli à la
+            // place du code (lot 3, constat C-1 : le code entrait dans
+            // l'historique du navigateur du professeur). La classe en lecture
+            // suffit : un collègue à qui la classe est partagée voit la fiche
+            // sans jamais recevoir le code.
+            $eleve = eleve_lisible($pdo, $profId, $corps['eleve_id'] ?? 0);
+            repondre(['ok' => true, 'billet' => emettre_billet($pdo, (int)$eleve['id'], 'fiche')]);
 
         case 'eleves.restaurer':
             // Revenir à la version précédente d'une progression : couvre
@@ -436,6 +463,7 @@ try {
                 $pdo->prepare('DELETE FROM progressions WHERE eleve_id = ?')->execute([(int)$eleve['id']]);
                 $pdo->prepare('DELETE FROM eleves WHERE id = ?')->execute([(int)$eleve['id']]);
                 oublier_compteurs_du_code($pdo, (string)$eleve['code']);
+                oublier_billets_de_l_eleve($pdo, (int)$eleve['id']);
                 $pdo->commit();
             } catch (Throwable $e) {
                 $pdo->rollBack();

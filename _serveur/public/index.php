@@ -1,5 +1,7 @@
 <?php
 // Page d'accueil des élèves : un code, et les applis de sa classe. Rien d'autre.
+// Depuis le lot 3 (03/09/2026), les liens vers les applis portent un billet
+// d'entrée à usage unique (lib/billets.php), jamais le code lui-même.
 require_once __DIR__ . '/lib/entetes.php';
 header('Content-Type: text/html; charset=utf-8');
 // Politique de contenu (voir lib/entetes.php) : seul le script portant ce
@@ -168,6 +170,33 @@ $nonce = entetes_page();
     + 'stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" '
     + 'aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>';
 
+  // L'adresse de l'appli, avec le BILLET d'entrée (lot 3) — jamais le code :
+  // une adresse entre dans l'historique du navigateur, et sur un poste
+  // partagé l'historique garderait tous les codes de la classe. Le billet est
+  // délivré par le serveur, vaut deux minutes et ne sert qu'une fois ; l'appli
+  // l'échange contre le code et nettoie l'adresse.
+  function adresseAppli(appli, billet) {
+    return `${appli.url}#b=${encodeURIComponent(billet)}`
+      + (appli.ancre ? `&ouvrir=${encodeURIComponent(appli.ancre)}` : "");
+  }
+
+  // Un billet neuf au moment du clic : celui reçu à l'entrée peut avoir
+  // expiré si l'élève a pris son temps. Si le serveur ne répond pas, on part
+  // avec le billet de l'entrée — il vaut peut-être encore.
+  async function billetFrais(code) {
+    try {
+      const reponse = await fetch("api/eleve.php", {
+        method: "POST",
+        headers: {"Content-Type": "text/plain;charset=UTF-8"},
+        body: JSON.stringify({code, billet: true}),
+        cache: "no-store"
+      });
+      const donnees = await reponse.json().catch(() => null);
+      if (reponse.ok && donnees && donnees.ok && typeof donnees.billet === "string") return donnees.billet;
+    } catch (_) {}
+    return "";
+  }
+
   function afficherEspace(donnees, code) {
     $("titre").textContent = donnees.prenom ? `Bonjour ${donnees.prenom}` : "Mon espace";
     $("classe").textContent = donnees.classe || "";
@@ -182,8 +211,18 @@ $nonce = entetes_page();
       const li = document.createElement("li");
       const lien = document.createElement("a");
       lien.className = "appli";
-      lien.href = `${appli.url}#code=${encodeURIComponent(code)}`
-        + (appli.ancre ? `&ouvrir=${encodeURIComponent(appli.ancre)}` : "");
+      // Le billet de l'entrée sert de secours (clic du milieu, « ouvrir dans un
+      // nouvel onglet ») ; un clic ordinaire en demande un frais.
+      lien.href = adresseAppli(appli, donnees.billet || "");
+      lien.addEventListener("click", async event => {
+        if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+        event.preventDefault();
+        if (lien.dataset.enCours) return;
+        lien.dataset.enCours = "1";
+        const billet = await billetFrais(code);
+        window.location.assign(adresseAppli(appli, billet || donnees.billet || ""));
+        window.setTimeout(() => { delete lien.dataset.enCours; }, 2000);
+      });
       lien.innerHTML = `<div><strong></strong><span></span></div>${FLECHE}`;
       lien.querySelector("strong").textContent = appli.nom;
       lien.querySelector("span").textContent = appli.description;
@@ -217,10 +256,11 @@ $nonce = entetes_page();
     try {
       // Le code part dans le CORPS de la requête, jamais dans l'adresse : une
       // adresse s'inscrit en clair dans les journaux de l'hébergeur.
+      // « billet: true » : le serveur joint un billet d'entrée, pour les liens.
       const reponse = await fetch("api/eleve.php", {
         method: "POST",
         headers: {"Content-Type": "text/plain;charset=UTF-8"},
-        body: JSON.stringify({code}),
+        body: JSON.stringify({code, billet: true}),
         cache: "no-store"
       });
       const donnees = await reponse.json().catch(() => null);

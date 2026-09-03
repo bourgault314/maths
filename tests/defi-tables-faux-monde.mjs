@@ -83,15 +83,28 @@ const reponseHttp = (statut, donnees, entetes = {}) => ({
 // Un faux réseau sans mémoire : répond selon le chemin, enregistre chaque appel
 // avec le code qu'il portait. `mode` : "ok", "muet" (ne répond jamais), "coupe"
 // (le réseau échoue), "lent" (répond après `delai` ms).
-export function fauxReseau({mode = "ok", delai = 0, progression = null, existe = false, identite = {prenom: "Léa", classe: "405"}} = {}) {
+// `billets` (lot 3) : billet → code, ou billet → {fiche: {...}} ; tout autre
+// billet est refusé (404), et un billet ne sert qu'une fois, comme au serveur.
+export function fauxReseau({mode = "ok", delai = 0, progression = null, existe = false, identite = {prenom: "Léa", classe: "405"}, billets = {}} = {}) {
   const appels = [];
+  const consommes = new Set();
   const fetch = (url, options) => {
     const corps = options && options.body ? JSON.parse(String(options.body)) : {};
-    appels.push({url, code: corps.code, lire: Boolean(corps.lire), parcours: corps.parcours || null, base: corps.base_revision});
+    appels.push({url, code: corps.code, billet: corps.billet, lire: Boolean(corps.lire), parcours: corps.parcours || null, base: corps.base_revision});
     if (mode === "muet") return new Promise(() => {});
     if (mode === "coupe") return Promise.reject(new TypeError("Failed to fetch"));
     let r;
-    if (url.endsWith("/api/eleve.php")) r = reponseHttp(200, {ok: true, ...identite});
+    if (url.endsWith("/api/eleve.php") && corps.billet) {
+      const vaut = billets[corps.billet];
+      if (vaut === undefined || consommes.has(corps.billet)) r = reponseHttp(404, {ok: false, erreur: "Ce lien a expiré."});
+      else {
+        consommes.add(corps.billet);
+        r = typeof vaut === "string"
+          ? reponseHttp(200, {ok: true, type: "entree", code: vaut, ...identite})
+          : reponseHttp(200, {ok: true, type: "fiche", ...identite, ...vaut});
+      }
+    }
+    else if (url.endsWith("/api/eleve.php")) r = reponseHttp(200, {ok: true, ...identite});
     else if (corps.lire) r = reponseHttp(200, {ok: true, existe, parcours: existe ? progression : null, maj_le: null, revision: existe ? 1 : 0});
     else r = reponseHttp(200, {ok: true, maj_le: "2026-08-30", revision: (corps.base_revision || 0) + 1});
     return mode === "lent" ? new Promise(res => setTimeout(() => res(r), delai)) : Promise.resolve(r);
@@ -181,7 +194,7 @@ export function demarrerAppli({entree = {}, local, session, reseau, running = fa
   const ecouteurs = {};
   const temps = minuteries === "immediates" ? null : minuteries;
   const window = {
-    MATHSGO_ENTREE: {code: "", fiche: "", ouvrir: "", ...entree},
+    MATHSGO_ENTREE: {code: "", fiche: "", billet: "", vue: "", ouvrir: "", ...entree},
     location: {hash: "", pathname: "/outils/calcul_mental/defi_tables.html", search: "", assign(url) { window.allees.push(url); }},
     allees: [],
     setTimeout: temps ? (fn, ms) => temps.setTimeout(fn, ms) : (fn) => { fn(); return 1; },
@@ -196,9 +209,9 @@ export function demarrerAppli({entree = {}, local, session, reseau, running = fa
       get codeSuivi() { return codeSuivi; }, get parcours() { return parcours; }, set parcours(p) { parcours = p; },
       get suiviHorsLigne() { return suiviHorsLigne; },
       get suiviIdentite() { return suiviIdentite; }, get sync() { return sync; },
-      get erreurDefinitive() { return erreurDefinitive; },
+      get erreurDefinitive() { return erreurDefinitive; }, get entreeRefusee() { return entreeRefusee; },
       ENTREE, suiviActif, demarrerSuivi, quitterSuivi, sauverParcours, envoyerAvantDeFermer, envoyerMaintenant,
-      renderRepere, majLienRetour
+      renderRepere, majLienRetour, entrerParBillet, adopterCode, echangerBillet
     };`)(window, document, navigator, reseau.fetch, PARCOURS, () => local, () => session, state,
     () => rendus.push("parcours"));
   return {api, local, session, reseau, window, document, state, rendus, balises, temps,

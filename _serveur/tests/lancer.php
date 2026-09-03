@@ -38,7 +38,7 @@ function bd_test(): PDO
     return $pdo;
 }
 if (getenv('SUIVI_TEST_DSN')) {
-    foreach (['partages', 'sessions_prof', 'compteurs', 'progressions', 'eleves', 'classes', 'profs'] as $table) {
+    foreach (['billets', 'partages', 'sessions_prof', 'compteurs', 'progressions', 'eleves', 'classes', 'profs'] as $table) {
         bd_test()->exec("DROP TABLE IF EXISTS $table");
     }
     echo "Base de test : " . $bdTest['dsn'] . "\n";
@@ -1560,6 +1560,186 @@ verifier("supprimer un compte qui possède des classes exige un oui explicite, p
     $deClaire = appel('/api/prof.php', ['action' => 'classes.liste'], ['jeton' => $jetonClaire]);
     egal(200, $deClaire['code'], 'Claire liste ses classes sans erreur');
     vrai(!in_array($c1, array_column($deClaire['json']['classes'], 'id'), true), 'la classe partagée par le partant ne s’y trouve plus');
+});
+
+// ------------------------------------------- lot 3 (03/09/2026) — billets d'entrée
+//
+// Le code ne voyage plus dans une adresse : l'espace élève et « Ma classe »
+// demandent un BILLET (32 caractères, deux minutes, usage unique), l'appli
+// l'échange contre le code (ou contre la fiche, sans le code). lib/billets.php.
+
+function echanger(string $billet, array $enPlus = []): array
+{
+    return appel('/api/eleve.php', ['billet' => $billet] + $enPlus);
+}
+
+function billets_en_base(): int
+{
+    return (int)bd_test()->query('SELECT COUNT(*) FROM billets')->fetchColumn();
+}
+
+$classeBillets = null;
+$elevesBillets = [];
+
+verifier("préparation : une classe, deux élèves nommés, Claire en lecture", function () use (&$jetonS1, &$jetonClaire, &$claireId, &$classeBillets, &$elevesBillets) {
+    vider_compteurs();
+    $classeBillets = appel('/api/prof.php', ['action' => 'classes.creer', 'libelle' => 'test-billets'], ['jeton' => $jetonS1])['json']['id'];
+    $elevesBillets = appel('/api/prof.php', ['action' => 'eleves.ajouter', 'classe_id' => $classeBillets, 'nombre' => 2], ['jeton' => $jetonS1])['json']['eleves'];
+    egal(2, count($elevesBillets), 'deux élèves');
+    egal(200, appel('/api/prof.php', ['action' => 'eleves.nommer', 'eleve_id' => $elevesBillets[0]['id'], 'prenom' => 'Sam', 'initiale' => 'B'], ['jeton' => $jetonS1])['code'], 'Sam nommé');
+    egal(200, ecrire($elevesBillets[0]['code'], ['version' => 1, 'tables' => ['3' => ['acquise' => '2026-09-01']]], 0)['code'], 'Sam a une progression');
+    egal(200, appel('/api/prof.php', ['action' => 'partages.ajouter', 'classe_id' => $classeBillets, 'prof_id' => $claireId, 'droit' => 'lecture'], ['jeton' => $jetonS1])['code'], 'partagée à Claire en lecture');
+});
+
+verifier("l'identité par le code ne donne un billet que si on le demande", function () use (&$elevesBillets) {
+    $sans = appel('/api/eleve.php', ['code' => $elevesBillets[0]['code']]);
+    egal(200, $sans['code'], 'code HTTP');
+    vrai(!array_key_exists('billet', $sans['json']), 'sans « billet: true », pas de billet');
+    $avec = appel('/api/eleve.php', ['code' => $elevesBillets[0]['code'], 'billet' => true]);
+    egal(200, $avec['code'], 'code HTTP');
+    egal('Sam', $avec['json']['prenom'], 'l’identité est toujours là');
+    vrai(is_array($avec['json']['applis']), 'et les applis');
+    vrai((bool)preg_match('/^[0-9a-f]{32}$/', (string)($avec['json']['billet'] ?? '')), 'un billet de 32 caractères hexadécimaux');
+    // Seule l'empreinte est en base, avec une échéance à deux minutes.
+    $ligne = bd_test()->query('SELECT hash, type, expire_le FROM billets ORDER BY expire_le DESC LIMIT 1')->fetch(PDO::FETCH_ASSOC);
+    egal(hash('sha256', $avec['json']['billet']), $ligne['hash'], 'le billet en clair n’est pas en base, seulement son empreinte');
+    egal('entree', $ligne['type']);
+    vrai(abs(((int)$ligne['expire_le']) - (time() + 120)) <= 5, 'valable deux minutes');
+});
+
+verifier("un billet d'entrée s'échange contre le code, une seule fois", function () use (&$elevesBillets) {
+    $billet = appel('/api/eleve.php', ['code' => $elevesBillets[0]['code'], 'billet' => true])['json']['billet'];
+    $r = echanger($billet);
+    egal(200, $r['code'], 'premier échange');
+    egal('entree', $r['json']['type']);
+    egal($elevesBillets[0]['code'], $r['json']['code'], 'le code revient');
+    egal('Sam', $r['json']['prenom']);
+    egal('test-billets', $r['json']['classe']);
+    $encore = echanger($billet);
+    egal(404, $encore['code'], 'le même billet, une seconde fois : refusé');
+    vrai(str_contains((string)$encore['json']['erreur'], 'expiré'), 'avec le mot que l’appli affiche');
+    egal(0, (int)bd_test()->query('SELECT COUNT(*) FROM billets WHERE hash = ' . bd_test()->quote(hash('sha256', $billet)))->fetchColumn(), 'et il n’est plus en base');
+});
+
+verifier("un billet inconnu ou mal formé est refusé, et compte comme un échec de l'adresse", function () {
+    vider_compteurs();
+    egal(404, echanger(bin2hex(random_bytes(16)))['code'], 'inconnu');
+    egal(400, echanger('pas-un-billet')['code'], 'mal formé');
+    egal(400, echanger('')['code'], 'vide');
+    egal(400, appel('/api/eleve.php', ['billet' => 12345])['code'], 'pas une chaîne');
+    $compteur = bd_test()->prepare('SELECT nombre FROM compteurs WHERE cle = ?');
+    $compteur->execute([cle_compteur_test('echec-ip:127.0.0.1', 300)]);
+    $nombre = $compteur->fetchColumn();
+    $compteur->closeCursor();
+    egal(1, (int)$nombre, 'l’inconnu compte pour un échec de l’adresse, comme un code inventé');
+});
+
+verifier("un billet périmé est refusé et purgé", function () use (&$elevesBillets) {
+    $billet = appel('/api/eleve.php', ['code' => $elevesBillets[0]['code'], 'billet' => true])['json']['billet'];
+    bd_test()->exec('UPDATE billets SET expire_le = ' . (time() - 1) . ' WHERE hash = ' . bd_test()->quote(hash('sha256', $billet)));
+    egal(404, echanger($billet)['code'], 'périmé : refusé');
+    egal(0, (int)bd_test()->query('SELECT COUNT(*) FROM billets WHERE hash = ' . bd_test()->quote(hash('sha256', $billet)))->fetchColumn(), 'la purge l’a emporté');
+});
+
+verifier("cinq échanges simultanés du même billet : un seul passe", function () use (&$elevesBillets) {
+    $billet = appel('/api/eleve.php', ['code' => $elevesBillets[0]['code'], 'billet' => true])['json']['billet'];
+    $codes = appels_paralleles('/api/eleve.php', ['billet' => $billet], 5);
+    sort($codes);
+    egal([200, 404, 404, 404, 404], $codes, 'un 200, quatre 404, aucune erreur');
+});
+
+verifier("« Voir sa fiche » : un billet de fiche rend la progression et le prénom, jamais le code", function () use (&$jetonS1, &$elevesBillets) {
+    $r = appel('/api/prof.php', ['action' => 'eleves.fiche', 'eleve_id' => $elevesBillets[0]['id']], ['jeton' => $jetonS1]);
+    egal(200, $r['code'], 'le propriétaire obtient un billet');
+    $billet = (string)$r['json']['billet'];
+    vrai((bool)preg_match('/^[0-9a-f]{32}$/', $billet), 'de la même forme');
+    $fiche = echanger($billet, ['appli' => 'defi-tables']);
+    egal(200, $fiche['code'], 'échange');
+    egal('fiche', $fiche['json']['type']);
+    egal('Sam', $fiche['json']['prenom']);
+    egal('test-billets', $fiche['json']['classe']);
+    egal(true, $fiche['json']['existe']);
+    egal('2026-09-01', $fiche['json']['parcours']['tables']['3']['acquise'], 'la progression est là');
+    vrai(!array_key_exists('code', $fiche['json']), 'et le code n’y est PAS');
+    egal(404, echanger($billet)['code'], 'un billet de fiche aussi est à usage unique');
+
+    $vide = appel('/api/prof.php', ['action' => 'eleves.fiche', 'eleve_id' => $elevesBillets[1]['id']], ['jeton' => $jetonS1])['json']['billet'];
+    $fiche = echanger($vide);
+    egal(200, $fiche['code']);
+    egal(false, $fiche['json']['existe'], 'un élève sans progression : existe = false');
+    egal(null, $fiche['json']['parcours']);
+    egal('', $fiche['json']['prenom'], 'sans prénom, rien d’inventé');
+
+    $inconnue = appel('/api/prof.php', ['action' => 'eleves.fiche', 'eleve_id' => $elevesBillets[1]['id']], ['jeton' => $jetonS1])['json']['billet'];
+    egal(400, echanger($inconnue, ['appli' => 'inconnue'])['code'], 'une appli inconnue est refusée');
+    egal(200, echanger($inconnue)['code'], 'sans consommer le billet');
+});
+
+verifier("un billet de fiche ne permet pas d'écrire", function () use (&$jetonS1, &$elevesBillets) {
+    $billet = appel('/api/prof.php', ['action' => 'eleves.fiche', 'eleve_id' => $elevesBillets[0]['id']], ['jeton' => $jetonS1])['json']['billet'];
+    // parcours.php ne connaît que le code : un billet n'y ouvre rien.
+    $r = appel('/api/parcours.php', ['billet' => $billet, 'appli' => 'defi-tables', 'parcours' => ['version' => 1, 'tables' => ['9' => ['acquise' => '2026-09-02']]], 'base_revision' => 1]);
+    egal(400, $r['code'], 'refusé avant même de regarder le billet');
+    $r = appel('/api/parcours.php', ['billet' => $billet, 'appli' => 'defi-tables', 'lire' => true]);
+    egal(400, $r['code'], 'ni lire');
+    // Le billet n'a pas été consommé par ces refus : il s'échange encore, et
+    // ne rend toujours pas le code.
+    $fiche = echanger($billet);
+    egal(200, $fiche['code']);
+    vrai(!array_key_exists('code', $fiche['json']), 'pas de code');
+    $relu = lire($elevesBillets[0]['code']);
+    egal('2026-09-01', $relu['json']['parcours']['tables']['3']['acquise'], 'la progression de Sam est intacte');
+    vrai(!isset($relu['json']['parcours']['tables']['9']), 'rien d’écrit');
+});
+
+verifier("la fiche suit le cloisonnement : Claire (lecture) l'obtient, un collègue sans partage non", function () use (&$jetonS1, &$jetonClaire, &$claireId, &$classeBillets, &$elevesBillets) {
+    $r = appel('/api/prof.php', ['action' => 'eleves.fiche', 'eleve_id' => $elevesBillets[0]['id']], ['jeton' => $jetonClaire]);
+    egal(200, $r['code'], 'la classe lui est partagée en lecture : la fiche, oui');
+    $fiche = echanger($r['json']['billet']);
+    egal('Sam', $fiche['json']['prenom']);
+    vrai(!array_key_exists('code', $fiche['json']), 'sans le code : elle ne l’a pas dans le tableau non plus');
+    egal(403, appel('/api/prof.php', ['action' => 'eleves.nommer', 'eleve_id' => $elevesBillets[0]['id'], 'prenom' => 'X'], ['jeton' => $jetonClaire])['code'], 'et toujours pas le droit d’écrire');
+
+    egal(200, appel('/api/prof.php', ['action' => 'partages.supprimer', 'classe_id' => $classeBillets, 'prof_id' => $claireId], ['jeton' => $jetonS1])['code'], 'partage retiré');
+    egal(404, appel('/api/prof.php', ['action' => 'eleves.fiche', 'eleve_id' => $elevesBillets[0]['id']], ['jeton' => $jetonClaire])['code'], 'sans partage : introuvable, comme le reste');
+    egal(404, appel('/api/prof.php', ['action' => 'eleves.fiche', 'eleve_id' => 999999], ['jeton' => $jetonS1])['code'], 'élève inexistant');
+    egal(401, appel('/api/prof.php', ['action' => 'eleves.fiche', 'eleve_id' => $elevesBillets[0]['id']])['code'], 'sans session');
+});
+
+verifier("un nouveau code, ou la suppression de l'élève, emporte ses billets", function () use (&$jetonS1, &$elevesBillets) {
+    $ancien = $elevesBillets[1]['code'];
+    $billet = appel('/api/eleve.php', ['code' => $ancien, 'billet' => true])['json']['billet'];
+    $nouveau = appel('/api/prof.php', ['action' => 'eleves.regenerer', 'eleve_id' => $elevesBillets[1]['id']], ['jeton' => $jetonS1])['json']['code'];
+    vrai($nouveau !== $ancien, 'nouveau code');
+    egal(404, echanger($billet)['code'], 'le billet émis sous l’ancien code ne rend pas le nouveau');
+
+    $billet = appel('/api/eleve.php', ['code' => $nouveau, 'billet' => true])['json']['billet'];
+    $fiche = appel('/api/prof.php', ['action' => 'eleves.fiche', 'eleve_id' => $elevesBillets[1]['id']], ['jeton' => $jetonS1])['json']['billet'];
+    egal(200, appel('/api/prof.php', ['action' => 'eleves.supprimer', 'eleve_id' => $elevesBillets[1]['id']], ['jeton' => $jetonS1])['code'], 'supprimé');
+    egal(0, (int)bd_test()->query('SELECT COUNT(*) FROM billets WHERE eleve_id = ' . (int)$elevesBillets[1]['id'])->fetchColumn(), 'plus aucun billet à son nom');
+    egal(404, echanger($billet)['code']);
+    egal(404, echanger($fiche)['code']);
+});
+
+verifier("les billets périmés sont purgés à chaque appel, comme les compteurs", function () use (&$elevesBillets) {
+    bd_test()->exec('DELETE FROM billets');
+    for ($i = 0; $i < 3; $i++) appel('/api/eleve.php', ['code' => $elevesBillets[0]['code'], 'billet' => true]);
+    egal(3, billets_en_base(), 'trois billets vivants');
+    bd_test()->exec('UPDATE billets SET expire_le = ' . (time() - 1));
+    appel('/api/eleve.php', ['code' => $elevesBillets[0]['code'], 'billet' => true]);
+    egal(1, billets_en_base(), 'un appel plus tard, seul le billet neuf reste');
+});
+
+verifier("verifier.php compte la table des billets", function () {
+    $r = formulaire('/verifier.php', ['jeton' => 'JETON-DE-TEST']);
+    vrai(str_contains($r['texte'], 'toutes présentes'), 'toutes les tables présentes, billets comprise');
+    bd_test()->exec('DROP TABLE billets');
+    $r = formulaire('/verifier.php', ['jeton' => 'JETON-DE-TEST']);
+    vrai(str_contains($r['texte'], 'manquantes : billets'), 'sans la table, verifier.php la nomme');
+    // migrer.php la recrée : c'est l'étape 1 de la mise en ligne du lot 3.
+    $r = formulaire('/migrer.php', ['jeton' => 'JETON-DE-TEST']);
+    vrai(str_contains($r['texte'], 'billets'), 'migrer.php annonce la table créée');
+    egal(0, billets_en_base(), 'table recréée, vide');
 });
 
 // ---------------------------------------------------------------------- résultat

@@ -126,6 +126,17 @@ function schema(string $pilote): array
   fenetre INTEGER NOT NULL,
   nombre INTEGER NOT NULL
 )$fin",
+
+        // Lot 3 (03/09/2026) : billets d'entrée à usage unique (lib/billets.php).
+        // Seule l'empreinte SHA-256 du billet est rangée ; expire_le est un
+        // instant epoch, comme compteurs.fenetre, pour une purge à chaque appel.
+        "CREATE TABLE IF NOT EXISTS billets (
+  hash VARCHAR(64) NOT NULL PRIMARY KEY,
+  eleve_id INTEGER NOT NULL,
+  type VARCHAR(10) NOT NULL,
+  expire_le INTEGER NOT NULL"
+        . ($mysql ? ",\n  KEY billets_eleve (eleve_id)" : "")
+        . "\n)$fin",
     ];
 
     if ($mysql) return $tables;
@@ -138,6 +149,7 @@ function schema(string $pilote): array
         'CREATE INDEX IF NOT EXISTS classes_prof ON classes (prof_id)',
         'CREATE UNIQUE INDEX IF NOT EXISTS partages_classe_prof ON partages (classe_id, prof_id)',
         'CREATE INDEX IF NOT EXISTS partages_prof ON partages (prof_id)',
+        'CREATE INDEX IF NOT EXISTS billets_eleve ON billets (eleve_id)',
     ]);
 }
 
@@ -213,7 +225,13 @@ function migrer_schema(?PDO $pdo = null): array
     }
 
     // Puis les tables et index absents (dont « partages »), sans toucher au reste.
+    // Lot 3 (03/09/2026) : la table des billets d'entrée arrive par ici ; on
+    // le dit, pour que la page de mise à niveau montre qu'elle a servi.
+    $billetsAbsente = !table_existe($pdo, 'billets');
     installer_tables($pdo);
+    if ($billetsAbsente) {
+        $faits[] = "Table « billets » créée (liens d'entrée à usage unique, lot 3).";
+    }
 
     // Le premier compte créé devient administrateur et récupère les classes
     // qui n'ont pas encore de propriétaire : impossible de perdre la main.
