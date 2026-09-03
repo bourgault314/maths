@@ -197,7 +197,7 @@ function renderTable(step) {
     ? division.operations[step.opIndex]?.quotientDigit
     : null;
   $("#table-title").textContent = `Table de ${division.divisor}`;
-  $("#multiples").innerHTML = Array.from({ length: 11 }, (_, multiplier) =>
+  $("#multiples").innerHTML = Array.from({ length: 10 }, (_, multiplier) =>
     `<div class="multiple ${multiplier === active ? "is-active" : ""}"><span>${multiplier} × ${division.divisor}</span><b>=</b><strong>${multiplier * division.divisor}</strong></div>`
   ).join("");
 }

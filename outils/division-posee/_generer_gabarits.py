@@ -75,7 +75,7 @@ def dotted_line(c, x1, y, x2):
 def footer(c):
     c.drawImage(str(LOGO), 28, 13, width=102, height=47, preserveAspectRatio=True, mask="auto")
     text(c, "mathsgo.re · CC BY-NC-SA 4.0", A4[0] / 2, 24, 7.2, MUTED, "GoSans-Bold", "center")
-    text(c, "Gabarit plastifiable · feutre effaçable", A4[0] - 28, 24, 6.8, MUTED, "GoSans", "right")
+    text(c, "Gabarit plastifiable", A4[0] - 28, 24, 6.8, MUTED, "GoSans", "right")
 
 
 def title_line(c, decimal):
@@ -92,9 +92,15 @@ def title_line(c, decimal):
 
 
 def anticipation(c, decimal):
-    x, y, w, h = 28, 700, A4[0] - 56, 48
+    x, y, w, h = 28, 690, A4[0] - 56, 78
     panel(c, x, y, w, h, fill=ORANGE_SOFT, stroke=ORANGE_SOFT, radius=9)
-    text(c, "J’ANTICIPE", x + 15, y + 18, 8.2, ORANGE, "GoSans-Bold")
+    text(c, "J’ANTICIPE", x + 15, y + 45, 8.2, ORANGE, "GoSans-Bold")
+    text(c, "encadrement", x + 118, y + 48, 9.2)
+    dotted_line(c, x + 205, y + 46, x + 297)
+    text(c, "≤", x + 309, y + 43, 12, NAVY, "GoSans-Bold", "center")
+    dotted_line(c, x + 321, y + 46, x + 413)
+    text(c, "<", x + 425, y + 43, 12, NAVY, "GoSans-Bold", "center")
+    dotted_line(c, x + 437, y + 46, x + w - 14)
     if decimal:
         text(c, "quotient à", x + 118, y + 17, 9.2)
         dotted_line(c, x + 182, y + 15, x + 211)
@@ -154,11 +160,11 @@ def divisor_table(c):
     text(c, "TABLE DE", x + 14, y + h - 25, 8.2, ORANGE, "GoSans-Bold")
     dotted_line(c, x + 68, y + h - 27, x + w - 13)
     top = y + h - 58
-    row_h = 30.5
-    for multiplier in range(11):
+    row_h = 33.5
+    for multiplier in range(10):
         row_y = top - multiplier * row_h
         if multiplier % 2 == 0:
-            c.setFillColor(BLUE_SOFT if multiplier not in (0, 10) else ORANGE_SOFT)
+            c.setFillColor(BLUE_SOFT if multiplier != 0 else ORANGE_SOFT)
             c.roundRect(x + 9, row_y - 20, w - 18, 25, 5, stroke=0, fill=1)
         text(c, f"× {multiplier}", x + 19, row_y - 13, 8.7, INK, "GoSans")
         text(c, "=", x + 55, row_y - 13, 8.7, MUTED, "GoSans")
