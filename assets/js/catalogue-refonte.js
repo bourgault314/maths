@@ -900,6 +900,7 @@
   function matchingSearchCollections() {
     if (!state.query) return [];
     const candidates = (catalogue.collections || []).filter((collection) => {
+      if (collection.searchable === false) return false;
       if (!collectionResourceCount(collection.id)) return false;
       const design = collectionDesign[collection.id] || {};
       const notionTitles = (collection.notions || []).map((id) => notionMap.get(id)?.title || "");
@@ -956,7 +957,7 @@
   function matchingResources() {
     const collectionTitleMatches = state.query && !state.notion && !state.collection
       ? new Set((catalogue.collections || [])
-        .filter((collection) => allWordsMatch(collection.title, state.query))
+        .filter((collection) => collection.searchable !== false && allWordsMatch(collection.title, state.query))
         .map((collection) => collectionRootId(collection.id)))
       : new Set();
     const resources = published.filter((resource) => {

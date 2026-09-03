@@ -98,8 +98,9 @@ window.MATHSGO_CATALOGUE = {
       "domain": "nombres-calculs",
       "notions": ["numeration"],
       "hub": "division-posee/index.html",
-      "hiddenFromBrowse": false,
-      "collapseInNotion": true
+      "hiddenFromBrowse": true,
+      "collapseInNotion": false,
+      "searchable": false
     },
     {
       "id": "rekenrek",
@@ -164,7 +165,7 @@ window.MATHSGO_CATALOGUE = {
       "primaryNotion": "numeration",
       "primaryGroup": "cours",
       "thumbnail": "assets/img/thumbnails/bouliers/gerbert-video-origine.png?v=1",
-      "collections": ["gerbert"],
+      "collections": ["bouliers", "gerbert"],
       "tags": ["abaque", "gerbert", "histoire", "video"],
       "rang": 1,
       "cardDescription": "D’où vient l’abaque de Gerbert, à quoi il servait, et comment s’en servir en classe."
@@ -173,7 +174,7 @@ window.MATHSGO_CATALOGUE = {
       "primaryNotion": "numeration",
       "primaryGroup": "cours",
       "thumbnail": "assets/img/thumbnails/bouliers/reference-busser.png?v=1",
-      "collections": ["gerbert"],
+      "collections": ["bouliers", "gerbert"],
       "tags": ["abaque", "jetons", "irem"],
       "rang": 2,
       "cardDescription": "Article de l’IREM de La Réunion sur l’abaque à jetons, par Alain Busser."
@@ -182,7 +183,7 @@ window.MATHSGO_CATALOGUE = {
       "primaryNotion": "numeration",
       "primaryGroup": "cours",
       "thumbnail": "assets/img/thumbnails/bouliers/reference-daval-tournes.png?v=1",
-      "collections": ["gerbert"],
+      "collections": ["bouliers", "gerbert"],
       "tags": ["abaque", "jetons", "calcul-pose", "irem"],
       "rang": 3,
       "cardDescription": "Du geste sur l’abaque à jetons jusqu’à la technique de calcul posé, par Nathalie Daval et Dominique Tournès."

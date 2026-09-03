@@ -291,6 +291,48 @@ test("les tableaux de proportionnalité partagent une carte avec deux choix expl
   assert.equal(family?.labels?.[withoutCoefficientPath], "Sans coefficient");
 });
 
+test("la division posée reste un outil normal de Numération, avec deux gabarits trouvables", () => {
+  const collection = Array.from(catalogue.collections || []).find(({ id }) => id === "division-posee");
+  const appPath = "outils/division-posee/division-posee.html";
+  const templatePaths = [
+    "outils/division-posee/gabarit-division-euclidienne.pdf",
+    "outils/division-posee/gabarit-division-decimale.pdf"
+  ];
+
+  assert.equal(collection?.hiddenFromBrowse, true);
+  assert.equal(collection?.collapseInNotion, false);
+  assert.equal(collection?.searchable, false);
+  assert.equal(classifications[appPath]?.primaryNotion, "numeration");
+  assert.equal(classifications[appPath]?.primaryGroup, "manipuler");
+
+  for (const path of templatePaths) {
+    const resource = publishedByPath.get(path);
+    assert.ok(resource, `${path} doit rester publié.`);
+    assert.equal(classifications[path]?.primaryNotion, "numeration");
+    assert.equal(classifications[path]?.primaryGroup, "imprimer");
+    assert.match(
+      `${resource.title} ${(resource.keywords || []).join(" ")} ${(classifications[path]?.tags || []).join(" ")}`,
+      /gabarit/i,
+      `${path} doit être trouvé par la recherche « gabarit ».`
+    );
+  }
+});
+
+test("les références de Gerbert restent à l'intérieur de Bouliers et abaques", () => {
+  const referencePaths = [
+    "https://www.youtube.com/watch?v=_ubBAAgLiok",
+    "https://iremi.univ-reunion.fr/?p=617",
+    "https://www.univ-irem.fr/chapitre-2-de-l-abaque-a-jetons-au-calcul-pose"
+  ];
+  for (const path of referencePaths) {
+    assert.deepEqual(
+      Array.from(classifications[path]?.collections || []),
+      ["bouliers", "gerbert"],
+      `${path} ne doit pas ressortir seul dans Cours et progressions.`
+    );
+  }
+});
+
 test("aucun titre publié n’expose un marqueur technique ou de version", () => {
   const technicalMarker = /\b(?:finale?|layout|pro|stable|undo|version|v\d+|xl)\b|zoom étendu|barre haute|millim[eé]tr[eé]/i;
   const offenders = published
