@@ -165,10 +165,11 @@ try {
         erreur("Application inconnue.", 400);
     }
 
-    // Par adresse, seuls les échecs comptent (voir eleve.php) ; par code, la
-    // limite est large parce que l'appli envoie après chaque réponse.
+    // Par adresse, seuls les échecs comptent, et ils ralentissent avant de
+    // refuser (voir eleve.php et lib/limite.php) ; par code, la limite est
+    // large parce que l'appli envoie après chaque réponse.
     $adresse = adresse_appelante();
-    limiter_deja_atteint('echec-ip:' . $adresse, 60, 300);
+    freiner_adresse($adresse);
     limiter('code:' . $code, 300, 300);
 
     $pdo = bd();
@@ -182,7 +183,7 @@ try {
     $requete->closeCursor();
     if ($eleve === false) {
         // On ne dit pas si le code a existé : réponse identique dans tous les cas.
-        limiter('echec-ip:' . $adresse, 60, 300);
+        compter_echec_adresse($adresse);
         erreur("Code inconnu.", 404);
     }
     $eleveId = (int)$eleve['id'];
