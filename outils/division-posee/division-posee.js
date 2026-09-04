@@ -6,6 +6,15 @@ import {
   multiplicationBracket,
   placeValueMarker
 } from "./division-engine.mjs?v=8";
+import {
+  createRankMarker,
+  createPotence,
+  createQuotientSlot,
+  createRelationSign,
+  createRoleCard,
+  renderMultiplicationTable,
+  scheduleLoweringArrow
+} from "./division-view.mjs?v=1";
 
 const $ = (selector) => document.querySelector(selector);
 const dividendInput = $("#dividend");
@@ -22,6 +31,7 @@ let steps = makeSteps(division);
 let stepIndex = 0;
 let projectionEditing = false;
 let showRankGuides = false;
+let tableVisible = true;
 
 try {
   showRankGuides = window.localStorage.getItem(rankGuidesStorageKey) === "true";
@@ -72,21 +82,17 @@ function activePlaceColumn(step) {
 }
 
 function rankMarker(endColumn, activeColumn) {
-  const marker = document.createElement("span");
-  marker.className = "rank-marker";
-  marker.classList.toggle("is-active", endColumn === activeColumn);
-  marker.textContent = placeValueMarker(division, endColumn);
-  marker.setAttribute("aria-hidden", "true");
-  return marker;
+  return createRankMarker(placeValueMarker(division, endColumn), endColumn === activeColumn);
 }
 
 function quotientSlot(value, endColumn, activeColumn) {
-  const slot = document.createElement("span");
-  slot.className = `quotient-slot ${value ? "is-filled" : "is-empty"}`;
-  if (value) slot.textContent = value;
-  else slot.setAttribute("aria-hidden", "true");
-  if (showRankGuides && endColumn !== undefined) slot.append(rankMarker(endColumn, activeColumn));
-  return slot;
+  return createQuotientSlot({
+    classNames: [value ? "is-filled" : "is-empty"],
+    content: value,
+    rankLabel: showRankGuides && endColumn !== undefined ? placeValueMarker(division, endColumn) : "",
+    rankActive: endColumn === activeColumn,
+    ariaHidden: !value
+  });
 }
 
 function quotientWriting(step) {
@@ -186,19 +192,9 @@ function dividendRow(step) {
     cell.textContent = isUnrevealedDecimal ? "" : digit;
     if (isUnrevealedDecimal) cell.setAttribute("aria-hidden", "true");
     if (showRankGuides && index <= visibleEnd) cell.append(rankMarker(index, activeColumn));
-    if (isLowered) {
-      const arrow = document.createElement("span");
-      arrow.className = "lower-arrow";
-      arrow.setAttribute("aria-hidden", "true");
-      cell.append(arrow);
-    }
     row.append(cell);
   });
   return row;
-}
-
-function roleCard(kind, label, value) {
-  return `<div class="role-card ${kind}"><strong>${value}</strong><small>${label}</small></div>`;
 }
 
 function renderDivision(step) {
@@ -244,35 +240,20 @@ function renderDivision(step) {
     }));
   });
 
-  const potence = document.createElement("div");
-  potence.className = "potence";
-  const divisorBox = document.createElement("div");
-  divisorBox.className = "potence-box";
-  divisorBox.append(String(division.divisor));
-  const divisorLabel = document.createElement("span");
-  divisorLabel.className = "role-label";
-  divisorLabel.textContent = "diviseur";
-  divisorBox.append(divisorLabel);
-  const quotientBox = document.createElement("div");
-  quotientBox.className = "potence-box";
-  quotientBox.append(quotientWriting(step));
-  const quotientLabel = document.createElement("span");
-  quotientLabel.className = "role-label";
-  quotientLabel.textContent = "quotient";
-  quotientBox.append(quotientLabel);
-  potence.append(divisorBox, quotientBox);
+  const potence = createPotence(division.divisor, quotientWriting(step));
   root.append(work, potence);
 
   const showValues = step.kind === "finish";
-  $("#role-strip").innerHTML = [
-    roleCard("dividend", "dividende", showValues ? division.dividend : "…"),
-    '<span class="relation-sign">=</span>',
-    roleCard("quotient", "quotient", showValues ? division.quotient : "…"),
-    '<span class="relation-sign">×</span>',
-    roleCard("divisor", "diviseur", showValues ? division.divisor : "…"),
-    '<span class="relation-sign">+</span>',
-    roleCard("remainder", "reste", showValues ? division.scaledRemainder : "…")
-  ].join("");
+  $("#role-strip").replaceChildren(
+    createRoleCard("dividend", "dividende", showValues ? division.dividend : "…"),
+    createRelationSign("="),
+    createRoleCard("quotient", "quotient", showValues ? division.quotient : "…"),
+    createRelationSign("×"),
+    createRoleCard("divisor", "diviseur", showValues ? division.divisor : "…"),
+    createRelationSign("+"),
+    createRoleCard("remainder", "reste", showValues ? division.scaledRemainder : "…")
+  );
+  scheduleLoweringArrow(root);
 }
 
 function renderTable(step) {
@@ -282,18 +263,17 @@ function renderTable(step) {
   const bracket = step.kind === "choose" && step.opIndex !== undefined
     ? multiplicationBracket(division, step.opIndex)
     : null;
-  const bracketLine = $("#table-bracket");
-  bracketLine.hidden = !bracket;
-  bracketLine.textContent = bracket
-    ? `${bracket.lowerProduct} ≤ ${bracket.target} < ${bracket.upperProduct}`
-    : "";
-  $("#table-title").textContent = `Table de ${division.divisor}`;
-  $("#multiples").innerHTML = Array.from({ length: 10 }, (_, multiplier) => {
-    const classes = ["multiple"];
-    if (multiplier === active) classes.push("is-active");
-    if (bracket && multiplier === bracket.upperMultiplier) classes.push("is-upper-bound");
-    return `<div class="${classes.join(" ")}"><span>${multiplier} × ${division.divisor}</span><span>=</span><strong>${multiplier * division.divisor}</strong></div>`;
-  }).join("");
+  renderMultiplicationTable({
+    division,
+    title: $("#table-title"),
+    bracketLine: $("#table-bracket"),
+    multiples: $("#multiples"),
+    card: $("#table-card"),
+    toggle: $("#table-toggle"),
+    visible: tableVisible,
+    activeMultiplier: active,
+    bracket
+  });
 }
 
 function render() {
@@ -352,6 +332,10 @@ rankGuides.addEventListener("change", () => {
 $("#previous").addEventListener("click", () => { stepIndex = Math.max(0, stepIndex - 1); render(); });
 $("#next").addEventListener("click", () => { stepIndex = Math.min(steps.length - 1, stepIndex + 1); render(); });
 $("#show-all").addEventListener("click", () => { stepIndex = steps.length - 1; render(); });
+$("#table-toggle").addEventListener("click", () => {
+  tableVisible = !tableVisible;
+  renderTable(steps[stepIndex]);
+});
 function updateFullscreenButton() {
   const button = $("#fullscreen");
   const isFullscreen = Boolean(document.fullscreenElement);

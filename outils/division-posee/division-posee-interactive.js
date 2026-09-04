@@ -4,6 +4,15 @@ import {
   placeValueMarker
 } from "./division-engine.mjs?v=8";
 import {
+  createPotence,
+  createQuotientSlot,
+  createRankMarker,
+  createRelationSign,
+  createRoleCard,
+  renderMultiplicationTable,
+  scheduleLoweringArrow
+} from "./division-view.mjs?v=1";
+import {
   firstTrainingError,
   hintForTask,
   makeTrainingTasks,
@@ -169,12 +178,7 @@ function appendNumber(row, value, endColumn, className = "", options = {}) {
 }
 
 function rankMarker(endColumn, activeColumn) {
-  const marker = document.createElement("span");
-  marker.className = "rank-marker";
-  marker.classList.toggle("is-active", endColumn === activeColumn);
-  marker.textContent = placeValueMarker(division, endColumn);
-  marker.setAttribute("aria-hidden", "true");
-  return marker;
+  return createRankMarker(placeValueMarker(division, endColumn), endColumn === activeColumn);
 }
 
 function appendGridInputs(row, field, endColumn, expected, className) {
@@ -238,11 +242,7 @@ function makeDividendRow(task) {
     if (activeIndex > 0 && index < activeEnd) digit.classList.add("used-division-digit");
     if (activeIndex > 0 && index === activeEnd) digit.classList.add("lowered-source");
     if (activeIndex >= 0 && index > activeEnd) digit.classList.add("pending");
-    if (transitionOperation?.nextEndColumn === index) {
-      digit.classList.add("falling-source");
-      const arrow = makeLowerArrow(transitionIndex);
-      if (arrow) digit.append(arrow);
-    }
+    if (transitionOperation?.nextEndColumn === index) digit.classList.add("falling-source");
     if (showRankGuides) digit.append(rankMarker(index, activeEnd));
     row.append(digit);
   });
@@ -283,18 +283,6 @@ function makeOperationRows(index, task) {
   return [productRow, resultRow];
 }
 
-function makeLowerArrow(index) {
-  const operation = division.operations[index];
-  if (operation.nextDigit === undefined) return null;
-  const arrow = document.createElement("span");
-  arrow.className = "practice-lower-arrow";
-  arrow.setAttribute("aria-hidden", "true");
-  const root = $("#long-division");
-  const rowHeight = Number.parseFloat(root.style.getPropertyValue("--row-height")) || 48;
-  arrow.style.height = `${rowHeight * (1.02 + (2 * index))}px`;
-  return arrow;
-}
-
 function quotientWriting(task) {
   const writing = document.createElement("span");
   writing.className = "quotient-writing practice-quotient";
@@ -312,47 +300,32 @@ function quotientWriting(task) {
   }
 
   division.operations.forEach((operation, index) => {
-    const slot = document.createElement("span");
-    slot.className = "quotient-slot";
+    const classNames = [];
+    let content = null;
     const stored = completed.get(`stage-${index}`);
     if (stored) {
-      slot.classList.add("is-filled");
-      slot.append(answerSpan(stored.quotient));
+      classNames.push("is-filled");
+      content = answerSpan(stored.quotient);
     } else if (task.kind === "stage" && task.opIndex === index) {
-      slot.classList.add("is-active-slot");
-      slot.append(createAnswerInput("quotient", {
+      classNames.push("is-active-slot");
+      content = createAnswerInput("quotient", {
         className: "answer-input quotient-answer",
         label: `Chiffre ${index + 1} du quotient`,
         maxLength: 1,
         autoAdvance: true
-      }));
+      });
     } else {
-      slot.classList.add("is-empty", "is-locked-slot");
-      slot.setAttribute("aria-hidden", "true");
+      classNames.push("is-empty", "is-locked-slot");
     }
-    if (showRankGuides) slot.append(rankMarker(operation.endColumn, activeColumn));
-    writing.append(slot);
+    writing.append(createQuotientSlot({
+      classNames,
+      content,
+      rankLabel: showRankGuides ? placeValueMarker(division, operation.endColumn) : "",
+      rankActive: operation.endColumn === activeColumn,
+      ariaHidden: !stored && !(task.kind === "stage" && task.opIndex === index)
+    }));
   });
   return writing;
-}
-
-function roleCard(kind, label, content) {
-  const card = document.createElement("div");
-  card.className = `role-card ${kind}`;
-  const value = document.createElement("strong");
-  if (content instanceof Node) value.append(content);
-  else value.textContent = String(content);
-  const caption = document.createElement("small");
-  caption.textContent = label;
-  card.append(value, caption);
-  return card;
-}
-
-function relationSign(value) {
-  const sign = document.createElement("span");
-  sign.className = "relation-sign";
-  sign.textContent = value;
-  return sign;
 }
 
 function makeRelationDigitGroup(field, expected, label) {
@@ -394,13 +367,13 @@ function makeRelation(task) {
   }
 
   relation.append(
-    roleCard("dividend", "dividende", division.dividend),
-    relationSign("="),
-    roleCard("quotient", "quotient", quotientContent),
-    relationSign("×"),
-    roleCard("divisor", "diviseur", division.divisor),
-    relationSign("+"),
-    roleCard("remainder", "reste", remainderContent)
+    createRoleCard("dividend", "dividende", division.dividend),
+    createRelationSign("="),
+    createRoleCard("quotient", "quotient", quotientContent),
+    createRelationSign("×"),
+    createRoleCard("divisor", "diviseur", division.divisor),
+    createRelationSign("+"),
+    createRoleCard("remainder", "reste", remainderContent)
   );
   relation.classList.toggle("is-active", verifying);
   relation.classList.toggle("is-complete", finished || Boolean(accepted));
@@ -439,25 +412,10 @@ function renderDivision(task) {
     work.append(...makeOperationRows(index, task));
   });
 
-  const potence = document.createElement("div");
-  potence.className = "potence";
-  const divisorBox = document.createElement("div");
-  divisorBox.className = "potence-box";
-  divisorBox.append(String(division.divisor));
-  const divisorLabel = document.createElement("span");
-  divisorLabel.className = "role-label";
-  divisorLabel.textContent = "diviseur";
-  divisorBox.append(divisorLabel);
-  const quotientBox = document.createElement("div");
-  quotientBox.className = "potence-box";
-  quotientBox.append(quotientWriting(task));
-  const quotientLabel = document.createElement("span");
-  quotientLabel.className = "role-label";
-  quotientLabel.textContent = "quotient";
-  quotientBox.append(quotientLabel);
-  potence.append(divisorBox, quotientBox);
+  const potence = createPotence(division.divisor, quotientWriting(task));
   root.append(potence, work);
   makeRelation(task);
+  scheduleLoweringArrow(root);
 }
 
 function renderTable(task) {
@@ -465,28 +423,17 @@ function renderTable(task) {
   const bracket = task.kind === "stage" && highlightedMultiplier !== null
     ? multiplicationBracket(division, task.opIndex)
     : null;
-  const bracketLine = $("#table-bracket");
-  bracketLine.hidden = !bracket;
-  bracketLine.textContent = bracket
-    ? `${bracket.lowerProduct} ≤ ${bracket.target} < ${bracket.upperProduct}`
-    : "";
-  $("#table-title").textContent = `Table de ${division.divisor}`;
-  const multiples = $("#multiples");
-  multiples.replaceChildren();
-  Array.from({ length: 10 }, (_, multiplier) => {
-    const row = document.createElement("div");
-    row.className = "multiple";
-    if (multiplier === highlightedMultiplier) row.classList.add("is-active");
-    if (bracket && multiplier === bracket.upperMultiplier) row.classList.add("is-upper-bound");
-    row.innerHTML = `<span>${multiplier} × ${division.divisor}</span><b>=</b><strong>${tableVisible ? multiplier * division.divisor : "?"}</strong>`;
-    multiples.append(row);
+  renderMultiplicationTable({
+    division,
+    title: $("#table-title"),
+    bracketLine: $("#table-bracket"),
+    multiples: $("#multiples"),
+    card: $("#table-card"),
+    toggle: $("#table-toggle"),
+    visible: tableVisible,
+    activeMultiplier: highlightedMultiplier,
+    bracket
   });
-  const card = $("#table-card");
-  card.classList.toggle("is-open", tableVisible);
-  card.classList.toggle("is-revealed", tableVisible);
-  const toggle = $("#table-toggle");
-  toggle.textContent = tableVisible ? "Masquer la table" : "Voir la table";
-  toggle.setAttribute("aria-expanded", String(tableVisible));
 }
 
 function renderInstruction(task) {
