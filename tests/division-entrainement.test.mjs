@@ -80,7 +80,8 @@ test("les zéros du quotient et le cas dividende inférieur au diviseur sont con
 });
 
 test("l’interface propose validation par bloc, table facultative et adaptation mobile", () => {
-  assert.match(html, /division-posee-interactive\.css\?v=1/);
+  assert.match(html, /division-posee-interactive\.css\?v=2/);
+  assert.match(html, /division-posee-interactive\.js\?v=2/);
   assert.match(html, /id="validate"[^>]*>Vérifier l’étape/);
   assert.match(html, /id="help"[^>]*>Un indice/);
   assert.match(html, /id="table-toggle"[^>]*>Voir la table/);
@@ -96,6 +97,18 @@ test("l’interface propose validation par bloc, table facultative et adaptation
   assert.match(css, /@media \(max-width: 520px\)/);
   assert.match(css, /\.practice-table:not\(\.is-open\) \.practice-multiples/);
   assert.match(css, /grid-template-columns:\s*minmax\(58px, 1fr\) auto/);
+});
+
+test("les réponses sont saisies chiffre par chiffre dans leur colonne", () => {
+  assert.match(js, /function appendGridInputs\(/);
+  assert.match(js, /holder\.style\.gridColumn = String\(start \+ offset \+ 1\)/);
+  assert.match(js, /input\.dataset\.digitIndex/);
+  assert.match(js, /function makeRelationDigitGroup\(/);
+  assert.match(js, /function setDigitDraft\(/);
+  assert.match(js, /document\.addEventListener\("paste"/);
+  assert.match(css, /--practice-cell-size:\s*min\(38px, calc\(var\(--column-width/);
+  assert.match(css, /\.practice-quotient \.quotient-slot\.is-empty[^}]*border:\s*2px dashed/);
+  assert.match(css, /\.relation-digit-group[^}]*grid-template-columns:\s*repeat\(var\(--digit-count\)/);
 });
 
 test("la collection sépare comprendre, s’entraîner et imprimer", () => {
