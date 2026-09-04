@@ -42,20 +42,41 @@ function fieldLabel(field) {
   }[field] || field;
 }
 
+function rawDraftForCurrentTask() {
+  return { ...(drafts.get(currentTask().id) || {}) };
+}
+
+function normalizedValue(value) {
+  if (!Array.isArray(value)) return value ?? "";
+  if (value.length === 0 || value.some((digit) => String(digit ?? "") === "")) return "";
+  return value.join("");
+}
+
 function createAnswerInput(field, options = {}) {
   const input = document.createElement("input");
+  const isDigitCell = Number.isInteger(options.digitIndex);
+  const rawValue = rawDraftForCurrentTask()[field];
   input.type = "text";
   input.inputMode = "numeric";
   input.autocomplete = "off";
   input.spellcheck = false;
   input.pattern = "[0-9]*";
-  input.maxLength = options.maxLength || 8;
+  input.maxLength = isDigitCell ? 1 : options.maxLength || 8;
   input.className = options.className || "answer-input";
   input.dataset.answer = field;
+  if (options.autoAdvance) input.dataset.autoAdvance = "true";
+  if (isDigitCell) {
+    input.dataset.digitIndex = String(options.digitIndex);
+    input.dataset.digitCount = String(options.digitCount);
+    input.dataset.digitGroup = options.digitGroup || `${currentTask().id}-${field}`;
+  }
   input.setAttribute("aria-label", options.label || fieldLabel(field));
-  input.value = String(drafts.get(currentTask().id)?.[field] ?? "");
+  input.value = isDigitCell
+    ? String((Array.isArray(rawValue) ? rawValue[options.digitIndex] : "") ?? "")
+    : String(rawValue ?? "");
   input.disabled = Boolean(options.disabled || transitioningTaskId);
-  if (wrongField === field) {
+  const wrongDigit = !isDigitCell || input.value !== String(options.expectedDigit);
+  if (wrongField === field && wrongDigit) {
     input.classList.add("is-wrong");
     input.setAttribute("aria-invalid", "true");
   }
@@ -133,28 +154,34 @@ function appendNumber(row, value, endColumn, className = "", options = {}) {
   return { start, end: endColumn };
 }
 
-function appendGridInput(row, field, endColumn, expected, className) {
-  const width = Math.max(1, String(expected).length);
-  const start = Math.max(0, endColumn - width + 1);
-  const holder = document.createElement("span");
-  holder.className = `grid-answer ${className}`;
-  holder.style.gridColumn = `${start + 1} / ${endColumn + 2}`;
-  holder.append(createAnswerInput(field, {
-    className: "answer-input operation-answer",
-    label: fieldLabel(field),
-    maxLength: Math.max(2, width + 1)
-  }));
-  row.append(holder);
+function appendGridInputs(row, field, endColumn, expected, className) {
+  const characters = String(expected).split("");
+  const start = Math.max(0, endColumn - characters.length + 1);
+  characters.forEach((character, offset) => {
+    const holder = document.createElement("span");
+    holder.className = `grid-answer ${className}`;
+    holder.style.gridColumn = String(start + offset + 1);
+    holder.append(createAnswerInput(field, {
+      className: "answer-input operation-answer",
+      label: `${fieldLabel(field)}, chiffre ${offset + 1} sur ${characters.length}`,
+      digitIndex: offset,
+      digitCount: characters.length,
+      expectedDigit: character
+    }));
+    row.append(holder);
+  });
   return { start, end: endColumn };
 }
 
-function appendPlaceholder(row, endColumn, expected, className) {
-  const width = Math.max(1, String(expected).length);
-  const start = Math.max(0, endColumn - width + 1);
-  const placeholder = document.createElement("span");
-  placeholder.className = `grid-placeholder ${className}`;
-  placeholder.style.gridColumn = `${start + 1} / ${endColumn + 2}`;
-  row.append(placeholder);
+function appendPlaceholders(row, endColumn, expected, className) {
+  const characters = String(expected).split("");
+  const start = Math.max(0, endColumn - characters.length + 1);
+  characters.forEach((_, offset) => {
+    const placeholder = document.createElement("span");
+    placeholder.className = `grid-placeholder ${className}`;
+    placeholder.style.gridColumn = String(start + offset + 1);
+    row.append(placeholder);
+  });
   return { start, end: endColumn };
 }
 
@@ -203,8 +230,8 @@ function makeOperationRows(index, task) {
   let productRange;
 
   if (status === "active") {
-    productRange = appendGridInput(productRow, "product", operation.endColumn, operation.product, "product-answer");
-    appendGridInput(resultRow, "remainder", operation.endColumn, operation.remainder, "remainder-answer");
+    productRange = appendGridInputs(productRow, "product", operation.endColumn, operation.product, "product-answer");
+    appendGridInputs(resultRow, "remainder", operation.endColumn, operation.remainder, "remainder-answer");
   } else if (status === "completed") {
     productRange = appendNumber(productRow, operation.product, operation.endColumn, "completed-digit");
     const showNextPartial = operation.nextPartial !== undefined;
@@ -216,8 +243,8 @@ function makeOperationRows(index, task) {
       { brought: transitioningTaskId === `stage-${index}` && showNextPartial }
     );
   } else {
-    productRange = appendPlaceholder(productRow, operation.endColumn, operation.product, "product-placeholder");
-    appendPlaceholder(resultRow, operation.endColumn, operation.remainder, "remainder-placeholder");
+    productRange = appendPlaceholders(productRow, operation.endColumn, operation.product, "product-placeholder");
+    appendPlaceholders(resultRow, operation.endColumn, operation.remainder, "remainder-placeholder");
   }
   appendSubtractionRule(productRow, productRange);
   return [productRow, resultRow];
@@ -234,8 +261,9 @@ function makeLowerArrow(index) {
   const columnWidth = Number.parseFloat(root.style.getPropertyValue("--column-width")) || 48;
   const rightPadding = window.innerWidth <= 520 ? 7 : 12;
   const right = rightPadding + ((division.digits.length - operation.nextEndColumn - .5) * columnWidth);
+  arrow.style.top = `${rowHeight * .82}px`;
   arrow.style.right = `${right}px`;
-  arrow.style.height = `${rowHeight * (1.28 + (2 * index))}px`;
+  arrow.style.height = `${rowHeight * (1.34 + (2 * index))}px`;
   return arrow;
 }
 
@@ -264,7 +292,8 @@ function quotientWriting(task) {
       slot.append(createAnswerInput("quotient", {
         className: "answer-input quotient-answer",
         label: `Chiffre ${index + 1} du quotient`,
-        maxLength: 1
+        maxLength: 1,
+        autoAdvance: true
       }));
     } else {
       slot.classList.add("is-empty", "is-locked-slot");
@@ -294,6 +323,27 @@ function relationSign(value) {
   return sign;
 }
 
+function makeRelationDigitGroup(field, expected, label) {
+  const characters = String(expected).split("");
+  const group = document.createElement("span");
+  group.className = "relation-digit-group";
+  group.style.setProperty("--digit-count", characters.length);
+  group.style.setProperty("--group-width", `${(characters.length * 32) + ((characters.length - 1) * 3)}px`);
+  group.setAttribute("role", "group");
+  group.setAttribute("aria-label", label);
+  characters.forEach((character, index) => {
+    group.append(createAnswerInput(field, {
+      className: "answer-input relation-digit-answer",
+      label: `${label}, chiffre ${index + 1} sur ${characters.length}`,
+      digitIndex: index,
+      digitCount: characters.length,
+      digitGroup: `relation-${field}`,
+      expectedDigit: character
+    }));
+  });
+  return group;
+}
+
 function makeRelation(task) {
   const relation = $("#role-strip");
   relation.replaceChildren();
@@ -304,16 +354,8 @@ function makeRelation(task) {
   let quotientContent = "…";
   let remainderContent = "…";
   if (verifying && !accepted) {
-    quotientContent = createAnswerInput("quotient", {
-      className: "answer-input relation-answer",
-      label: "Quotient de vérification",
-      maxLength: Math.max(2, division.quotient.length + 1)
-    });
-    remainderContent = createAnswerInput("remainder", {
-      className: "answer-input relation-answer",
-      label: "Reste de vérification",
-      maxLength: Math.max(2, String(division.remainder).length + 1)
-    });
+    quotientContent = makeRelationDigitGroup("quotient", division.quotient, "Quotient de vérification");
+    remainderContent = makeRelationDigitGroup("remainder", division.remainder, "Reste de vérification");
   } else if (finished || accepted) {
     quotientContent = division.quotient;
     remainderContent = division.remainder;
@@ -437,7 +479,7 @@ function renderActions(task) {
     validate.textContent = "Nouvelle division";
     validate.disabled = false;
   } else {
-    const draft = drafts.get(task.id) || {};
+    const draft = draftForCurrentTask();
     const field = firstTrainingError(task, draft);
     const level = field ? hintLevels.get(`${task.id}:${field}`) || 0 : 0;
     help.textContent = level > 0 ? "Un autre indice" : "Un indice";
@@ -450,9 +492,12 @@ function renderActions(task) {
 function focusFirstAnswer() {
   if (transitioningTaskId) return;
   window.requestAnimationFrame(() => {
-    const target = wrongField
-      ? document.querySelector(`[data-answer="${wrongField}"]`)
-      : document.querySelector("[data-answer]:not(:disabled)");
+    const wrongAnswers = wrongField
+      ? [...document.querySelectorAll(`[data-answer="${wrongField}"]:not(:disabled)`)]
+      : [];
+    const target = wrongAnswers.find((input) => input.classList.contains("is-wrong") && !input.value)
+      || wrongAnswers.find((input) => input.classList.contains("is-wrong"))
+      || document.querySelector("[data-answer]:not(:disabled)");
     target?.focus({ preventScroll: true });
   });
 }
@@ -468,7 +513,9 @@ function render({ focus = false } = {}) {
 }
 
 function draftForCurrentTask() {
-  return { ...(drafts.get(currentTask().id) || {}) };
+  return Object.fromEntries(
+    Object.entries(rawDraftForCurrentTask()).map(([field, value]) => [field, normalizedValue(value)])
+  );
 }
 
 function errorMessage(field, value) {
@@ -629,28 +676,108 @@ $("#table-toggle").addEventListener("click", () => {
 });
 $("#fullscreen").addEventListener("click", toggleFullscreen);
 document.addEventListener("fullscreenchange", updateFullscreenButton);
+
+function clearFieldFeedback(field) {
+  if (wrongField !== field) return;
+  wrongField = null;
+  document.querySelectorAll(`[data-answer="${field}"]`).forEach((input) => {
+    input.classList.remove("is-wrong");
+    input.removeAttribute("aria-invalid");
+  });
+  feedback = "";
+  feedbackKind = "";
+  $("#feedback").textContent = "";
+  $("#feedback").className = "feedback";
+}
+
+function activeAnswerInputs() {
+  return [...document.querySelectorAll("[data-answer]:not(:disabled)")];
+}
+
+function focusAfter(target) {
+  const inputs = activeAnswerInputs();
+  const next = inputs[inputs.indexOf(target) + 1];
+  next?.focus({ preventScroll: true });
+  next?.select();
+}
+
+function setDigitDraft(target, value) {
+  const task = currentTask();
+  const field = target.dataset.answer;
+  const index = Number(target.dataset.digitIndex);
+  const count = Number(target.dataset.digitCount);
+  const answer = rawDraftForCurrentTask();
+  const digits = Array.isArray(answer[field])
+    ? [...answer[field]].slice(0, count)
+    : Array(count).fill("");
+  while (digits.length < count) digits.push("");
+  digits[index] = value;
+  answer[field] = digits;
+  drafts.set(task.id, answer);
+}
+
 document.addEventListener("input", (event) => {
   const field = event.target.dataset.answer;
   if (!field) return;
-  const cleaned = event.target.value.replace(/\D/g, "").slice(0, Number(event.target.maxLength) || 8);
+  const isDigitCell = event.target.dataset.digitIndex !== undefined;
+  const cleaned = event.target.value
+    .replace(/\D/g, "")
+    .slice(0, isDigitCell ? 1 : Number(event.target.maxLength) || 8);
   if (event.target.value !== cleaned) event.target.value = cleaned;
-  const task = currentTask();
-  const answer = { ...(drafts.get(task.id) || {}), [field]: cleaned };
-  drafts.set(task.id, answer);
-  if (wrongField === field) {
-    wrongField = null;
-    event.target.classList.remove("is-wrong");
-    event.target.removeAttribute("aria-invalid");
-    feedback = "";
-    feedbackKind = "";
-    $("#feedback").textContent = "";
-    $("#feedback").className = "feedback";
+  if (isDigitCell) setDigitDraft(event.target, cleaned);
+  else {
+    const task = currentTask();
+    drafts.set(task.id, { ...rawDraftForCurrentTask(), [field]: cleaned });
   }
+  clearFieldFeedback(field);
+  if ((isDigitCell || event.target.dataset.autoAdvance === "true") && cleaned) focusAfter(event.target);
+});
+document.addEventListener("paste", (event) => {
+  const target = event.target;
+  if (!target.matches("[data-answer][data-digit-index]")) return;
+  const pastedDigits = event.clipboardData?.getData("text").replace(/\D/g, "") || "";
+  if (pastedDigits.length < 2) return;
+  event.preventDefault();
+  const group = target.dataset.digitGroup;
+  const start = Number(target.dataset.digitIndex);
+  const cells = [...document.querySelectorAll(`[data-digit-group="${group}"]`)]
+    .sort((left, right) => Number(left.dataset.digitIndex) - Number(right.dataset.digitIndex));
+  let lastFilled = target;
+  pastedDigits.split("").forEach((digit, offset) => {
+    const cell = cells[start + offset];
+    if (!cell) return;
+    cell.value = digit;
+    setDigitDraft(cell, digit);
+    lastFilled = cell;
+  });
+  clearFieldFeedback(target.dataset.answer);
+  focusAfter(lastFilled);
 });
 document.addEventListener("keydown", (event) => {
   if (event.key === "Enter" && event.target.matches("[data-answer]")) {
     event.preventDefault();
     validateCurrentTask();
+    return;
+  }
+  if (!event.target.matches("[data-answer][data-digit-index]")) return;
+  const inputs = activeAnswerInputs();
+  const position = inputs.indexOf(event.target);
+  if (event.key === "ArrowLeft" && position > 0) {
+    event.preventDefault();
+    inputs[position - 1].focus({ preventScroll: true });
+    inputs[position - 1].select();
+  } else if (event.key === "ArrowRight" && position < inputs.length - 1) {
+    event.preventDefault();
+    inputs[position + 1].focus({ preventScroll: true });
+    inputs[position + 1].select();
+  } else if (event.key === "Backspace" && !event.target.value && position > 0) {
+    const previous = inputs[position - 1];
+    if (previous.dataset.digitIndex === undefined) return;
+    event.preventDefault();
+    previous.value = "";
+    setDigitDraft(previous, "");
+    clearFieldFeedback(previous.dataset.answer);
+    previous.focus({ preventScroll: true });
   }
 });
 window.addEventListener("resize", () => {
