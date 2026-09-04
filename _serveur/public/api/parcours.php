@@ -34,96 +34,65 @@ function lire_progression(PDO $pdo, int $eleveId, string $appli): ?array
 }
 
 // Écriture avec numéro de révision.
-//  1. Création optimiste, hors transaction : si la ligne n'existe pas, elle est
-//     créée en révision 1. Deux premiers envois simultanés se heurtent à la clé
-//     unique ; le second continue comme une mise à jour. (Prendre d'abord un
-//     verrou sur une ligne absente ferait s'interbloquer InnoDB : constaté avec
-//     vingt créations simultanées.)
+//  1. Première écriture : elle exige base_revision 0 — l'appli dit qu'elle
+//     n'a rien lu, et le serveur n'a rien. Création optimiste, hors
+//     transaction : deux premiers envois simultanés se heurtent à la clé
+//     unique ; le second continue comme une mise à jour, et y trouve une
+//     révision 1 qu'il n'avait pas vue → conflit. (Prendre d'abord un verrou
+//     sur une ligne absente ferait s'interbloquer InnoDB : constaté avec vingt
+//     créations simultanées.) Avant le lot 6, l'INSERT passait AVANT tout
+//     contrôle : une appli qui annonçait la révision 5 créait la ligne en
+//     révision 1 sans que personne ne s'en aperçoive.
 //  2. Mise à jour dans une transaction qui verrouille LA ligne (SELECT … FOR
 //     UPDATE sur MySQL, BEGIN IMMEDIATE sur SQLite) : $base différente de la
 //     révision en base → conflit, avec l'état actuel pour que l'appli
 //     fusionne ; sinon la version précédente est gardée dans
 //     donnees_avant (« Restaurer la version précédente » dans Ma classe), et la
 //     révision monte d'un cran.
-//  3. Un interblocage ou un verrou refusé se réessaie deux fois.
+//  3. Un interblocage ou un verrou refusé se réessaie deux fois (lib/bd.php).
 function ecrire_progression(PDO $pdo, int $eleveId, string $appli, string $donnees, int $base): array
 {
-    for ($tentative = 1; ; $tentative++) {
-        try {
-            return ecrire_progression_une_fois($pdo, $eleveId, $appli, $donnees, $base);
-        } catch (PDOException $e) {
-            transaction_annuler($pdo);
-            if ($tentative >= 3 || !verrou_refuse($e)) throw $e;
-            usleep(random_int(20000, 80000));
-        }
-    }
+    return avec_reprise($pdo, fn () => ecrire_progression_une_fois($pdo, $eleveId, $appli, $donnees, $base));
 }
 
-function doublon(PDOException $e): bool
+// Ce que l'appli reçoit avec un 409 quand la ligne n'existe pas (ou plus) :
+// « le serveur n'a rien, révision 0 ». Elle fusionne avec ce rien, reprend
+// la révision 0 et renvoie — c'est exactement le chemin de la première
+// écriture, elle se remet d'aplomb seule.
+function etat_absent(): array
 {
-    return (string)$e->getCode() === '23000';
-}
-
-function verrou_refuse(PDOException $e): bool
-{
-    $message = $e->getMessage();
-    return (string)$e->getCode() === '40001' || str_contains($message, '1213') || str_contains($message, 'database is locked');
-}
-
-// La transaction, selon le moteur. Sur MySQL, celle de PDO. Sur SQLite,
-// BEGIN IMMEDIATE prend le verrou d'écriture tout de suite (une transaction
-// ordinaire qui passe de lecture à écriture se fait refuser net au lieu
-// d'attendre son tour). Mais PDO ne voit pas ce BEGIN écrit en SQL avant
-// PHP 8.4 : ses commit() et rollBack() répondent « There is no active
-// transaction » — trouvé par la CI, sur PHP 8.2, dès son premier passage.
-// On termine donc la transaction SQLite comme on l'a ouverte : en SQL.
-function transaction_ouvrir(PDO $pdo): void
-{
-    if (pilote($pdo) === 'mysql') $pdo->beginTransaction(); else $pdo->exec('BEGIN IMMEDIATE');
-}
-
-function transaction_valider(PDO $pdo): void
-{
-    if (pilote($pdo) === 'mysql') $pdo->commit(); else $pdo->exec('COMMIT');
-}
-
-function transaction_annuler(PDO $pdo): void
-{
-    if (pilote($pdo) === 'mysql') {
-        if ($pdo->inTransaction()) $pdo->rollBack();
-        return;
-    }
-    try {
-        $pdo->exec('ROLLBACK');
-    } catch (PDOException) {
-        // Aucune transaction ouverte : rien à annuler.
-    }
+    return ['parcours' => null, 'maj_le' => null, 'revision' => 0];
 }
 
 function ecrire_progression_une_fois(PDO $pdo, int $eleveId, string $appli, string $donnees, int $base): array
 {
     $maj = aujourdhui();
-    $mysql = pilote($pdo) === 'mysql';
 
-    try {
-        $pdo->prepare('INSERT INTO progressions (eleve_id, appli, donnees, maj_le, revision, donnees_avant) VALUES (?, ?, ?, ?, 1, NULL)')
-            ->execute([$eleveId, $appli, $donnees, $maj]);
-        return ['revision' => 1, 'maj_le' => $maj];
-    } catch (PDOException $e) {
-        if (!doublon($e)) throw $e;
-        // La ligne existe (peut-être depuis une milliseconde) : mise à jour.
+    if ($base === 0) {
+        try {
+            $pdo->prepare('INSERT INTO progressions (eleve_id, appli, donnees, maj_le, revision, donnees_avant) VALUES (?, ?, ?, ?, 1, NULL)')
+                ->execute([$eleveId, $appli, $donnees, $maj]);
+            return ['revision' => 1, 'maj_le' => $maj];
+        } catch (PDOException $e) {
+            if (!doublon($e)) throw $e;
+            // La ligne existe (peut-être depuis une milliseconde) : mise à jour.
+        }
     }
 
     transaction_ouvrir($pdo);
-    $requete = $pdo->prepare('SELECT id, revision, donnees, maj_le FROM progressions WHERE eleve_id = ? AND appli = ?'
-        . ($mysql ? ' FOR UPDATE' : ''));
+    $requete = $pdo->prepare('SELECT id, revision, donnees, maj_le FROM progressions WHERE eleve_id = ? AND appli = ?' . pour_mise_a_jour($pdo));
     $requete->execute([$eleveId, $appli]);
     $ligne = $requete->fetch();
     $requete->closeCursor();
     if ($ligne === false) {
-        // Supprimée entre-temps : on laisse la boucle réessayer la création.
         transaction_annuler($pdo);
-        throw new PDOException('database is locked (ligne disparue)', 0);
+        if ($base === 0) {
+            // Créée puis supprimée entre-temps : on laisse la boucle réessayer la création.
+            throw new PDOException('database is locked (ligne disparue)', 0);
+        }
+        // L'appli croit avoir lu une révision que le serveur n'a pas (élève
+        // recréé, progression effacée) : conflit, avec l'état vide.
+        return ['conflit' => true, 'actuel' => etat_absent()];
     }
     $revision = (int)$ligne['revision'];
     if ($base !== $revision) {
@@ -139,7 +108,7 @@ function ecrire_progression_une_fois(PDO $pdo, int $eleveId, string $appli, stri
     if ($requete->rowCount() !== 1) {
         transaction_annuler($pdo);
         $actuel = lire_progression($pdo, $eleveId, $appli);
-        return ['conflit' => true, 'actuel' => $actuel ?? ['parcours' => null, 'maj_le' => null, 'revision' => 0]];
+        return ['conflit' => true, 'actuel' => $actuel ?? etat_absent()];
     }
     transaction_valider($pdo);
     return ['revision' => $revision + 1, 'maj_le' => $maj];

@@ -268,3 +268,75 @@ function aujourdhui(): string
 {
     return gmdate('Y-m-d');
 }
+
+// ------------------------------------------------------------ transactions
+//
+// Une seule façon de verrouiller une ligne pour tout le serveur (lot 6) :
+// l'écriture de l'élève (api/parcours.php) et la restauration du professeur
+// (api/prof.php) passent par les mêmes fonctions — la seconde avait été écrite
+// à part, sans verrou ni reprise, et pouvait réutiliser un numéro de révision.
+//
+// La transaction, selon le moteur. Sur MySQL, celle de PDO. Sur SQLite,
+// BEGIN IMMEDIATE prend le verrou d'écriture tout de suite (une transaction
+// ordinaire qui passe de lecture à écriture se fait refuser net au lieu
+// d'attendre son tour). Mais PDO ne voit pas ce BEGIN écrit en SQL avant
+// PHP 8.4 : ses commit() et rollBack() répondent « There is no active
+// transaction » — trouvé par la CI, sur PHP 8.2, dès son premier passage.
+// On termine donc la transaction SQLite comme on l'a ouverte : en SQL.
+function transaction_ouvrir(PDO $pdo): void
+{
+    if (pilote($pdo) === 'mysql') $pdo->beginTransaction(); else $pdo->exec('BEGIN IMMEDIATE');
+}
+
+function transaction_valider(PDO $pdo): void
+{
+    if (pilote($pdo) === 'mysql') $pdo->commit(); else $pdo->exec('COMMIT');
+}
+
+function transaction_annuler(PDO $pdo): void
+{
+    if (pilote($pdo) === 'mysql') {
+        if ($pdo->inTransaction()) $pdo->rollBack();
+        return;
+    }
+    try {
+        $pdo->exec('ROLLBACK');
+    } catch (PDOException) {
+        // Aucune transaction ouverte : rien à annuler.
+    }
+}
+
+// « SELECT … FOR UPDATE » n'existe que sur MySQL ; sur SQLite, c'est BEGIN
+// IMMEDIATE qui tient le verrou pour toute la transaction.
+function pour_mise_a_jour(PDO $pdo): string
+{
+    return pilote($pdo) === 'mysql' ? ' FOR UPDATE' : '';
+}
+
+function doublon(PDOException $e): bool
+{
+    return (string)$e->getCode() === '23000';
+}
+
+function verrou_refuse(PDOException $e): bool
+{
+    $message = $e->getMessage();
+    return (string)$e->getCode() === '40001' || str_contains($message, '1213') || str_contains($message, 'database is locked');
+}
+
+// Rejoue $operation (qui ouvre et ferme sa propre transaction) jusqu'à trois
+// fois quand un verrou est refusé ou qu'InnoDB tranche un interblocage ; toute
+// autre erreur remonte telle quelle. La transaction restée ouverte par une
+// tentative ratée est annulée avant de recommencer.
+function avec_reprise(PDO $pdo, callable $operation): mixed
+{
+    for ($tentative = 1; ; $tentative++) {
+        try {
+            return $operation();
+        } catch (PDOException $e) {
+            transaction_annuler($pdo);
+            if ($tentative >= 3 || !verrou_refuse($e)) throw $e;
+            usleep(random_int(20000, 80000));
+        }
+    }
+}

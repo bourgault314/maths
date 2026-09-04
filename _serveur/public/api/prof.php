@@ -124,6 +124,40 @@ function eleve_lisible(PDO $pdo, int $profId, mixed $eleveIdBrut): array
     return $eleve;
 }
 
+// La restauration écrit dans la même ligne que l'appli de l'élève, avec le
+// même verrou qu'elle (lib/bd.php, lot 6) : la ligne est verrouillée le temps
+// de lire la version précédente et de l'écrire, et l'UPDATE ne passe que si
+// la révision lue est encore celle en base. Avant, un SELECT sans verrou puis
+// un UPDATE sans condition pouvaient attribuer deux fois le même numéro de
+// révision quand l'élève enregistrait au même instant : l'une des deux
+// écritures — le plus souvent la restauration — disparaissait sans un mot.
+// Renvoie ['rien' => true] s'il n'y a pas de version précédente,
+// ['conflit' => true] si la ligne a bougé sous le verrou (ne devrait pas
+// arriver : garde-fou), sinon ['donnees' => …, 'revision' => …].
+function restaurer_progression(PDO $pdo, int $eleveId, string $appli): array
+{
+    return avec_reprise($pdo, function () use ($pdo, $eleveId, $appli): array {
+        transaction_ouvrir($pdo);
+        $requete = $pdo->prepare('SELECT id, donnees, donnees_avant, revision FROM progressions WHERE eleve_id = ? AND appli = ?' . pour_mise_a_jour($pdo));
+        $requete->execute([$eleveId, $appli]);
+        $ligne = $requete->fetch();
+        $requete->closeCursor();
+        if ($ligne === false || $ligne['donnees_avant'] === null) {
+            transaction_annuler($pdo);
+            return ['rien' => true];
+        }
+        $revision = (int)$ligne['revision'];
+        $requete = $pdo->prepare('UPDATE progressions SET donnees = ?, donnees_avant = ?, revision = ?, maj_le = ? WHERE id = ? AND revision = ?');
+        $requete->execute([$ligne['donnees_avant'], $ligne['donnees'], $revision + 1, aujourdhui(), (int)$ligne['id'], $revision]);
+        if ($requete->rowCount() !== 1) {
+            transaction_annuler($pdo);
+            return ['conflit' => true];
+        }
+        transaction_valider($pdo);
+        return ['donnees' => $ligne['donnees_avant'], 'revision' => $revision + 1];
+    });
+}
+
 try {
     if (($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'POST') {
         erreur("Méthode non autorisée.", 405);
@@ -455,23 +489,10 @@ try {
             $eleve = eleve_modifiable($pdo, $profId, $corps['eleve_id'] ?? 0);
             $appli = (string)($corps['appli'] ?? 'defi-tables');
             if (!in_array($appli, APPLIS_PROPOSABLES, true)) erreur("Application inconnue.", 400);
-            $pdo->beginTransaction();
-            try {
-                $requete = $pdo->prepare('SELECT id, donnees, donnees_avant, revision FROM progressions WHERE eleve_id = ? AND appli = ?');
-                $requete->execute([(int)$eleve['id'], $appli]);
-                $ligne = $requete->fetch();
-                if ($ligne === false || $ligne['donnees_avant'] === null) {
-                    $pdo->rollBack();
-                    erreur("Aucune version précédente à restaurer.", 409);
-                }
-                $pdo->prepare('UPDATE progressions SET donnees = ?, donnees_avant = ?, revision = ?, maj_le = ? WHERE id = ?')
-                    ->execute([$ligne['donnees_avant'], $ligne['donnees'], (int)$ligne['revision'] + 1, aujourdhui(), (int)$ligne['id']]);
-                $pdo->commit();
-            } catch (Throwable $e) {
-                if ($pdo->inTransaction()) $pdo->rollBack();
-                throw $e;
-            }
-            repondre(['ok' => true, 'parcours' => json_decode($ligne['donnees_avant'], false), 'revision' => (int)$ligne['revision'] + 1]);
+            $resultat = restaurer_progression($pdo, (int)$eleve['id'], $appli);
+            if (isset($resultat['rien'])) erreur("Aucune version précédente à restaurer.", 409);
+            if (isset($resultat['conflit'])) erreur("La progression a changé pendant la restauration : regarde le tableau, puis réessaie.", 409);
+            repondre(['ok' => true, 'parcours' => json_decode($resultat['donnees'], false), 'revision' => $resultat['revision']]);
 
         case 'eleves.supprimer':
             $eleve = eleve_modifiable($pdo, $profId, $corps['eleve_id'] ?? 0);
