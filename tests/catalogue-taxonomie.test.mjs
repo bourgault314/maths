@@ -71,6 +71,34 @@ test("le catalogue conserve 166 entrées dont 159 publiées", () => {
   assert.equal(new Set(resources.map((resource) => resource.path)).size, resources.length, "Chaque chemin doit être unique.");
 });
 
+test("la recherche gabarit trouve les fiches Thalès mais pas le générateur de matériel décimal", () => {
+  const normalise = (value) => value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase();
+  const matches = new Set(published
+    .filter((resource) => normalise([
+      resource.title,
+      resource.description,
+      ...(resource.keywords || []),
+      ...(classifications[resource.path]?.tags || [])
+    ].join(" ")).includes("gabarit"))
+    .map((resource) => resource.path));
+
+  for (const path of [
+    "outils/fiche_thales_direct_a_verifier.pdf",
+    "outils/fiche_reciproque_thales.pdf",
+    "outils/fiche_thales_criteres_a_verifier.pdf",
+    "outils/multiples_et_fractions_d_une_quantite.pdf"
+  ]) {
+    assert.ok(matches.has(path), `${path} doit sortir pour la recherche « gabarit ».`);
+  }
+  assert.ok(
+    !matches.has("outils/fabrication_materiel/numeration_decimale_maker.html"),
+    "Le générateur de matériel décimal n'est pas un gabarit plastifiable à remplir."
+  );
+});
+
 test("chaque ressource a un groupe principal déterministe parmi les sept groupes autorisés", () => {
   const missing = resources
     .filter((resource) => !resolvedPrimaryGroup(resource))
