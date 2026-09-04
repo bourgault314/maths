@@ -765,16 +765,16 @@ window.MATHSGO_CATALOGUE = {
       "primaryGroup": "imprimer",
       "collections": [],
       "tags": ["gabarit", "plastifier", "droite-graduee", "graduations", "nombres-relatifs", "fractions", "decimaux"],
-      "thumbnail": "assets/img/thumbnails/relatifs/gabarit-droites-graduees.png?v=1",
-      "cardDescription": "Deux pages plastifiables sans zéro ni valeurs imposés : droites régulières, puis repères visuels par 4 et par 10."
+      "thumbnail": "assets/img/thumbnails/relatifs/gabarit-droites-graduees.png?v=2",
+      "cardDescription": "Deux pages plastifiables sans zéro ni valeurs imposés : droite vierge, graduations de 1 cm et 5 mm, puis graduation millimétrique."
     },
     "outils/gabarit_reperes_plan.pdf": {
       "primaryNotion": "reperage",
       "primaryGroup": "imprimer",
       "collections": [],
-      "tags": ["gabarit", "plastifier", "repere", "coordonnees", "quadrillage", "axes", "origine"],
+      "tags": ["gabarit", "plastifier", "repere", "coordonnees", "coordonnees-positives", "quadrillage", "axes", "origine"],
       "thumbnail": "assets/img/thumbnails/reperage/gabarit-reperes-plan.png?v=1",
-      "cardDescription": "Quatre repères plastifiables : origine centrée ou décalée, avec quadrillage ou en version libre à orienter."
+      "cardDescription": "Six repères plastifiables : origine centrée, décalée ou en bas à gauche pour les coordonnées positives, avec ou sans quadrillage."
     },
     "outils/plateaux_manipulation/feuille_coupee_puissance.html": {
       "primaryNotion": "puissances",
@@ -2992,7 +2992,7 @@ window.MATHSGO_CATALOGUE = {
     {
       "id": "outils-gabarit-reperes-plan-pdf",
       "title": "Gabarit — repères du plan",
-      "description": "Quatre repères A4 à plastifier : origine centrée ou décalée, avec quadrillage de 5 mm et axes orientés, ou sans flèches pour choisir librement l’orientation.",
+      "description": "Six repères A4 à plastifier : origine centrée, décalée ou en bas à gauche pour les coordonnées positives, avec ou sans quadrillage de 5 mm.",
       "path": "outils/gabarit_reperes_plan.pdf",
       "domains": [
         "geometrie"
@@ -3014,6 +3014,7 @@ window.MATHSGO_CATALOGUE = {
         "gabarit",
         "repère du plan",
         "coordonnées",
+        "coordonnées positives",
         "quadrillage",
         "origine",
         "axes",
@@ -4677,7 +4678,7 @@ window.MATHSGO_CATALOGUE = {
     {
       "id": "outils-gabarit-droites-graduees-pdf",
       "title": "Gabarit — droites graduées",
-      "description": "Deux pages A4 paysage à plastifier, sans zéro ni valeurs imposés : quatre droites à graduations régulières de 1 cm, puis des variantes avec repères visuels par 4 et par 10.",
+      "description": "Deux pages A4 paysage à plastifier, sans zéro ni valeurs imposés : une droite vierge, des graduations de 1 cm et 5 mm, puis une droite millimétrique.",
       "path": "outils/gabarit_droites_graduees.pdf",
       "domains": [
         "nombres-calculs"

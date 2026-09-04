@@ -67,18 +67,22 @@
 \end{tikzpicture}%
 }
 
-\newcommand{\AxesLibresCentres}{%
+\newcommand{\AxesOrientesCentresSansQuadrillage}{%
 \begin{tikzpicture}[x=1cm,y=1cm]
   \useasboundingbox (-9,-11.5) rectangle (9,11.5);
-  \draw[axisInk,line width=1.15pt] (-9,0) -- (9,0);
-  \draw[axisInk,line width=1.15pt] (0,-11.5) -- (0,11.5);
+  \draw[brandOrange,line width=1.25pt,-{Latex[length=3.0mm,width=2.2mm]}]
+    (-9,0) -- (8.82,0);
+  \draw[brandTeal,line width=1.25pt,-{Latex[length=3.0mm,width=2.2mm]}]
+    (0,-11.5) -- (0,11.32);
   \foreach \x in {-8,...,8}{
-    \draw[axisInk,line width=0.85pt] (\x,-0.12) -- (\x,0.12);
+    \draw[brandOrange,line width=0.85pt] (\x,-0.12) -- (\x,0.12);
   }
   \foreach \y in {-11,...,11}{
-    \draw[axisInk,line width=0.85pt] (-0.12,\y) -- (0.12,\y);
+    \draw[brandTeal,line width=0.85pt] (-0.12,\y) -- (0.12,\y);
   }
   \node[anchor=north east,font=\fontsize{8}{9}\selectfont,text=axisInk] at (-0.18,-0.18) {0};
+  \node[anchor=south east,font=\bfseries\fontsize{9}{10}\selectfont,text=brandOrange] at (8.48,0.28) {$x$};
+  \node[anchor=north west,font=\bfseries\fontsize{9}{10}\selectfont,text=brandTeal] at (0.28,10.98) {$y$};
 \end{tikzpicture}%
 }
 
@@ -118,6 +122,46 @@
 \end{tikzpicture}%
 }
 
+\newcommand{\AxesPositifsQuadrilles}{%
+\begin{tikzpicture}[x=1cm,y=1cm]
+  \useasboundingbox (-0.5,-0.5) rectangle (17.5,22.5);
+  \draw[minorGrid,line width=0.30pt,step=0.5cm] (0,0) grid (17.5,22.5);
+  \draw[majorGrid,line width=0.45pt,step=1cm] (0,0) grid (17,22);
+  \draw[brandOrange,line width=1.25pt,-{Latex[length=3.0mm,width=2.2mm]}]
+    (0,0) -- (17.32,0);
+  \draw[brandTeal,line width=1.25pt,-{Latex[length=3.0mm,width=2.2mm]}]
+    (0,0) -- (0,22.32);
+  \foreach \x in {1,...,17}{
+    \draw[brandOrange,line width=0.85pt] (\x,-0.12) -- (\x,0.12);
+  }
+  \foreach \y in {1,...,22}{
+    \draw[brandTeal,line width=0.85pt] (-0.12,\y) -- (0.12,\y);
+  }
+  \node[anchor=north east,font=\fontsize{8}{9}\selectfont,text=axisInk] at (-0.18,-0.18) {0};
+  \node[anchor=south east,font=\bfseries\fontsize{9}{10}\selectfont,text=brandOrange] at (16.98,0.28) {$x$};
+  \node[anchor=north west,font=\bfseries\fontsize{9}{10}\selectfont,text=brandTeal] at (0.28,21.98) {$y$};
+\end{tikzpicture}%
+}
+
+\newcommand{\AxesPositifsSansQuadrillage}{%
+\begin{tikzpicture}[x=1cm,y=1cm]
+  \useasboundingbox (-0.5,-0.5) rectangle (17.5,22.5);
+  \draw[brandOrange,line width=1.25pt,-{Latex[length=3.0mm,width=2.2mm]}]
+    (0,0) -- (17.32,0);
+  \draw[brandTeal,line width=1.25pt,-{Latex[length=3.0mm,width=2.2mm]}]
+    (0,0) -- (0,22.32);
+  \foreach \x in {1,...,17}{
+    \draw[brandOrange,line width=0.85pt] (\x,-0.12) -- (\x,0.12);
+  }
+  \foreach \y in {1,...,22}{
+    \draw[brandTeal,line width=0.85pt] (-0.12,\y) -- (0.12,\y);
+  }
+  \node[anchor=north east,font=\fontsize{8}{9}\selectfont,text=axisInk] at (-0.18,-0.18) {0};
+  \node[anchor=south east,font=\bfseries\fontsize{9}{10}\selectfont,text=brandOrange] at (16.98,0.28) {$x$};
+  \node[anchor=north west,font=\bfseries\fontsize{9}{10}\selectfont,text=brandTeal] at (0.28,21.98) {$y$};
+\end{tikzpicture}%
+}
+
 \begin{document}
 
 \TitrePage{Origine centrée - repère quadrillé tous les 5 mm}
@@ -127,9 +171,9 @@
 
 \newpage
 
-\TitrePage{Origine centrée - repère libre, à orienter au feutre}
+\TitrePage{Origine centrée - repère sans quadrillage}
 \begin{center}
-  \AxesLibresCentres
+  \AxesOrientesCentresSansQuadrillage
 \end{center}
 
 \newpage
@@ -144,6 +188,20 @@
 \TitrePage{Origine décalée - repère libre, à orienter au feutre}
 \begin{center}
   \AxesLibresDecales
+\end{center}
+
+\newpage
+
+\TitrePage{Coordonnées positives - origine en bas à gauche, quadrillage tous les 5 mm}
+\begin{center}
+  \AxesPositifsQuadrilles
+\end{center}
+
+\newpage
+
+\TitrePage{Coordonnées positives - origine en bas à gauche, sans quadrillage}
+\begin{center}
+  \AxesPositifsSansQuadrillage
 \end{center}
 
 \end{document}
