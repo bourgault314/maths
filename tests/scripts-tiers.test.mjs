@@ -254,6 +254,9 @@ test("aucun domaine tiers ne sert de feuille de style au site", () => {
 //    un fichier remplacé ou abîmé fait passer ce test au rouge.
 //    Pour mettre une bibliothèque à jour : remplace le fichier, recalcule l'empreinte
 //    (sha256sum), corrige la ligne ci-dessous, et dis-le dans la notice du lot.
+//    polices/polices.css est le seul fichier de vendor/ écrit à la main : scellé lui
+//    aussi, un @import ou une @font-face vers un autre domaine y ferait passer ce
+//    test au rouge.
 // ---------------------------------------------------------------------------
 const EMPREINTES = [
   ["gsap-3.12.2/gsap.min.js", "efc85c7eb141819717cda0033484a84b1c890d13b02e355a2fec79d424b20e7a"],
@@ -269,6 +272,7 @@ const EMPREINTES = [
   ["polices/montserrat-latin-wght-normal.woff2", "06b16db7a969135d48d38c49183be7fb88d4452e2a3011957c7851941f4e4879"],
   ["polices/nunito-latin-ext-wght-normal.woff2", "2c8d792869818ecb253a46bc3c63c7013df7aac2f69291c3c85e5cdc94160960"],
   ["polices/nunito-latin-wght-normal.woff2", "ba344451eab25b217a165363b1982048a5e5830a0daf36577973955a04cac793"],
+  ["polices/polices.css", "fa54e5292c15b1482b47c707aedc3baecbc8c64b4f20ad580b34483aeba55c64"],
   ["tailwind/tailwind-outils.css", "f683657e968f540d1262f36daff4f8f627d9fabaaff4ec0a34c591093931b675"],
   ["three-0.128.0/OrbitControls.js", "02bb4ade710f3e607329e37a21f098bc3ac70eb6e33daf8a65e79f4db785e7b2"],
   ["three-0.128.0/three.min.js", "9274bbcec8d96168626c732b5d31c775aa8cfb7eaa0599bec0c175908a2c1ce2"],
