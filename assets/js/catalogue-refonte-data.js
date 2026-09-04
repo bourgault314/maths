@@ -765,7 +765,7 @@ window.MATHSGO_CATALOGUE = {
       "primaryGroup": "imprimer",
       "collections": [],
       "tags": ["gabarit", "plastifier", "droite-graduee", "graduations", "nombres-relatifs", "fractions", "decimaux"],
-      "thumbnail": "assets/img/thumbnails/relatifs/gabarit-droites-graduees.png?v=2",
+      "thumbnail": "assets/img/thumbnails/relatifs/gabarit-droites-graduees.png?v=3",
       "cardDescription": "Deux pages plastifiables sans zéro ni valeurs imposés : droite vierge, graduations de 1 cm et 5 mm, puis graduation millimétrique."
     },
     "outils/gabarit_reperes_plan.pdf": {
