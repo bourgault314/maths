@@ -427,7 +427,7 @@ window.MATHSGO_CATALOGUE = {
       "primaryNotion": "numeration",
       "primaryGroup": "generer",
       "collections": [],
-      "tags": ["numeration", "decimaux", "materiel", "imprimer", "gabarit"],
+      "tags": ["numeration", "decimaux", "materiel", "imprimer", "generateur"],
       "thumbnail": "assets/img/thumbnails/numeration/maker-decimal.png?v=2",
       "cardDescription": "Préparer des planches d’unités, dixièmes et centièmes personnalisées pour l’impression."
     },
@@ -644,9 +644,9 @@ window.MATHSGO_CATALOGUE = {
       "primaryNotion": "fractions",
       "primaryGroup": "imprimer",
       "collections": [],
-      "tags": ["fractions", "multiples", "divisibilite", "quantite"],
+      "tags": ["fractions", "multiples", "divisibilite", "quantite", "gabarit", "plastifier", "imprimable"],
       "thumbnail": "assets/img/thumbnails/fractions/fractions-quantite.png?v=2",
-      "cardDescription": "Modéliser une fraction d’une quantité avec des schémas en barres à observer et à compléter."
+      "cardDescription": "Un gabarit plastifiable à compléter pour représenter la moitié, le quart, le tiers, le double, le triple et d’autres rapports simples."
     },
     "outils/fractions/fractions_produit_manipulation.html": {
       "primaryNotion": "fractions",
@@ -964,25 +964,25 @@ window.MATHSGO_CATALOGUE = {
       "primaryNotion": "thales",
       "primaryGroup": "cours",
       "collections": [],
-      "tags": ["thales", "theoreme-direct", "longueur", "proportionnalite", "imprimable"],
+      "tags": ["thales", "theoreme-direct", "longueur", "proportionnalite", "gabarit", "plastifier", "imprimable"],
       "thumbnail": "assets/img/thumbnails/thales/thales-direct-a-verifier.png?v=3",
-      "cardDescription": "Tableau de proportionnalité, choix des colonnes utiles et rédaction pour calculer une longueur."
+      "cardDescription": "Un gabarit guidé à imprimer et plastifier pour associer les côtés, écrire les rapports et calculer une longueur."
     },
     "outils/fiche_reciproque_thales.pdf": {
       "primaryNotion": "thales",
       "primaryGroup": "cours",
       "collections": [],
-      "tags": ["thales", "reciproque", "contraposee", "imprimable"],
+      "tags": ["thales", "reciproque", "contraposee", "gabarit", "plastifier", "imprimable"],
       "thumbnail": "assets/img/thumbnails/thales/reciproque-contraposee.png?v=3",
-      "cardDescription": "Une méthode guidée, une fiche adaptable et deux exemples pour utiliser la réciproque ou la contraposée de Thalès."
+      "cardDescription": "Un gabarit guidé à imprimer et plastifier pour choisir les rapports, vérifier la disposition et conclure par réciproque ou contraposée."
     },
     "outils/fiche_thales_criteres_a_verifier.pdf": {
       "primaryNotion": "thales",
       "primaryGroup": "cours",
       "collections": [],
-      "tags": ["thales", "reciproque", "contraposee", "criteres", "imprimable"],
+      "tags": ["thales", "reciproque", "contraposee", "criteres", "gabarit", "plastifier", "imprimable"],
       "thumbnail": "assets/img/thumbnails/thales/tester-parallelisme-a-verifier.png?v=3",
-      "cardDescription": "Une fiche-guide pour calculer et comparer les rapports, puis vérifier la disposition des points lorsque nécessaire."
+      "cardDescription": "Un gabarit guidé à imprimer et plastifier pour calculer et comparer les rapports, puis tester le parallélisme."
     },
     "outils/gabarits_proportionnalite_tableaux.pdf": {
       "primaryNotion": "proportionnalite",
@@ -4470,8 +4470,8 @@ window.MATHSGO_CATALOGUE = {
     },
     {
       "id": "outils-multiples-et-fractions-d-une-quantite-pdf",
-      "title": "Multiples et fractions d’une quantité",
-      "description": "Modéliser une fraction d’une quantité avec des schémas en barres à observer et à compléter.",
+      "title": "Gabarit — fractions et multiples d’une quantité",
+      "description": "Un gabarit plastifiable à compléter pour représenter la moitié, le quart, le tiers, le double, le triple et d’autres rapports simples.",
       "path": "outils/multiples_et_fractions_d_une_quantite.pdf",
       "domains": [
         "nombres-calculs"
@@ -4486,10 +4486,19 @@ window.MATHSGO_CATALOGUE = {
       "types": [
         "imprimable"
       ],
-      "filters": [],
+      "filters": [
+        "materiel-imprimer"
+      ],
       "keywords": [
         "fraction",
-        "partage"
+        "partage",
+        "gabarit",
+        "plastifiable",
+        "moitié",
+        "quart",
+        "tiers",
+        "double",
+        "triple"
       ],
       "kind": "document",
       "status": "published",
@@ -6086,8 +6095,8 @@ window.MATHSGO_CATALOGUE = {
     },
     {
       "id": "outils-fiche-thales-direct-a-verifier-pdf",
-      "title": "Thalès — calculer une longueur",
-      "description": "Tableau de proportionnalité, choix des colonnes utiles et rédaction pour calculer une longueur.",
+      "title": "Gabarit Thalès — calculer une longueur",
+      "description": "Un gabarit guidé à imprimer et plastifier pour associer les côtés, écrire les rapports et calculer une longueur.",
       "path": "outils/fiche_thales_direct_a_verifier.pdf",
       "domains": [
         "geometrie"
@@ -6108,7 +6117,9 @@ window.MATHSGO_CATALOGUE = {
       "keywords": [
         "théorème de Thalès",
         "longueur",
-        "tableau de proportionnalité"
+        "tableau de proportionnalité",
+        "gabarit",
+        "plastifiable"
       ],
       "kind": "document",
       "status": "published",
@@ -6117,8 +6128,8 @@ window.MATHSGO_CATALOGUE = {
     },
     {
       "id": "outils-fiche-reciproque-thales-pdf",
-      "title": "Thalès — réciproque et contraposée",
-      "description": "Une méthode guidée, une fiche adaptable et deux exemples pour utiliser la réciproque ou la contraposée de Thalès.",
+      "title": "Gabarit Thalès — réciproque et contraposée",
+      "description": "Un gabarit guidé à imprimer et plastifier pour choisir les rapports, vérifier la disposition et conclure par réciproque ou contraposée.",
       "path": "outils/fiche_reciproque_thales.pdf",
       "domains": [
         "geometrie"
@@ -6140,7 +6151,9 @@ window.MATHSGO_CATALOGUE = {
         "réciproque",
         "contraposée",
         "droites parallèles",
-        "rapports"
+        "rapports",
+        "gabarit",
+        "plastifiable"
       ],
       "kind": "document",
       "status": "published",
@@ -6149,8 +6162,8 @@ window.MATHSGO_CATALOGUE = {
     },
     {
       "id": "outils-fiche-thales-criteres-a-verifier-pdf",
-      "title": "Thalès — fiche-guide pour tester un parallélisme",
-      "description": "Une fiche-guide pour calculer et comparer les rapports, puis vérifier la disposition des points lorsque nécessaire.",
+      "title": "Gabarit Thalès — tester un parallélisme",
+      "description": "Un gabarit guidé à imprimer et plastifier pour calculer et comparer les rapports, puis tester le parallélisme.",
       "path": "outils/fiche_thales_criteres_a_verifier.pdf",
       "domains": [
         "geometrie"
@@ -6171,7 +6184,9 @@ window.MATHSGO_CATALOGUE = {
       "keywords": [
         "réciproque",
         "contraposée",
-        "critère de parallélisme"
+        "critère de parallélisme",
+        "gabarit",
+        "plastifiable"
       ],
       "kind": "document",
       "status": "published",
