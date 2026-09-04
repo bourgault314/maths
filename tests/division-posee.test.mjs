@@ -6,6 +6,7 @@ import {
   makeDisplayMetrics,
   makeDivision,
   makeSteps,
+  multiplicationBracket,
   placeValueMarker,
   placeValueName
 } from "../outils/division-posee/division-engine.mjs";
@@ -13,6 +14,7 @@ import {
 const interfaceHtml = readFileSync(new URL("../outils/division-posee/division-posee.html", import.meta.url), "utf8");
 const interfaceCss = readFileSync(new URL("../outils/division-posee/division-posee.css", import.meta.url), "utf8");
 const interfaceJs = readFileSync(new URL("../outils/division-posee/division-posee.js", import.meta.url), "utf8");
+const gabaritGenerator = readFileSync(new URL("../outils/division-posee/_generer_gabarits.py", import.meta.url), "utf8");
 
 test("division euclidienne exacte", () => {
   const result = makeDivision(584, 7, "integer", 2);
@@ -159,6 +161,17 @@ test("les repères abrégés suivent les rangs entiers et décimaux", () => {
   );
 });
 
+test("la table peut encadrer le dividende partiel entre deux produits", () => {
+  const division = makeDivision(534, 7, "integer", 2);
+  assert.deepEqual(multiplicationBracket(division, 0), {
+    target: 53,
+    lowerMultiplier: 7,
+    lowerProduct: 49,
+    upperMultiplier: 8,
+    upperProduct: 56
+  });
+});
+
 test("l'affichage réserve toutes les lignes et s'adapte aux longues divisions", () => {
   const shortMetrics = makeDisplayMetrics(makeDivision(584, 7, "integer", 2));
   const threeLevelMetrics = makeDisplayMetrics(makeDivision(5849, 7, "integer", 2));
@@ -198,10 +211,11 @@ test("l'anticipation indique clairement un quotient inférieur à un", () => {
 });
 
 test("l'interface conserve les repères visuels demandés", () => {
-  assert.match(interfaceHtml, /href="\/outils\/\?domain=nombres-calculs&amp;notion=divisibilite"/);
+  assert.match(interfaceHtml, /class="back-link" href="\.\/">← Division posée<\/a>/);
   assert.match(interfaceHtml, /id="decimal-field" hidden/);
   assert.match(interfaceHtml, /id="rank-guides" type="checkbox"/);
   assert.match(interfaceHtml, /id="projection-recap"[^>]*hidden/);
+  assert.match(interfaceHtml, /id="table-bracket"[^>]*hidden/);
   assert.match(interfaceCss, /\.decimal-field\[hidden\][^{]*\{[^}]*display:\s*none/);
   assert.match(interfaceCss, /\.table-card\s*\{[^}]*height:\s*100%/);
   assert.match(interfaceCss, /grid-template-rows:\s*repeat\(10,/);
@@ -211,6 +225,9 @@ test("l'interface conserve les repères visuels demandés", () => {
   assert.match(interfaceCss, /\.subtraction-rule\s*\{/);
   assert.match(interfaceCss, /\.lower-arrow\s*\{[^}]*z-index:\s*3[^}]*top:\s*92%[^}]*height:\s*calc\(var\(--row-height, 50px\) \* 1\.02\)/);
   assert.match(interfaceCss, /\.quotient-slot\.is-empty\s*\{[^}]*border-bottom/);
+  assert.match(interfaceCss, /\.quotient-slot\s*\{[^}]*position:\s*relative/);
+  assert.match(interfaceCss, /\.long-division\.has-rank-guides \.potence-box:last-child\s*\{[^}]*padding-top:\s*23px/);
+  assert.match(interfaceCss, /\.multiple\.is-upper-bound\s*\{/);
   assert.match(interfaceCss, /\.rank-marker\s*\{/);
   assert.match(interfaceCss, /body\.is-projection \.controls-card|body\.is-projection/);
   assert.doesNotMatch(interfaceCss, /\.relation-sign\s*\{[^}]*display:\s*none/);
@@ -222,12 +239,14 @@ test("l'interface conserve les repères visuels demandés", () => {
   assert.match(interfaceJs, /Array\.from\(\{ length: 10 \}/);
   assert.match(interfaceJs, /const showIntegerSlots = step\.kind !== "bound"/);
   assert.match(interfaceJs, /mathsgo-division-rank-guides/);
+  assert.match(interfaceJs, /step\.kind === "choose"[^?]*\? multiplicationBracket/s);
   assert.match(interfaceJs, /syncProjectionMode/);
   assert.match(interfaceJs, /button\.textContent = "⛶"/);
   assert.match(interfaceJs, /document\.exitFullscreen/);
   assert.match(interfaceJs, /fullscreenchange/);
   assert.match(interfaceJs, /work\.append\(digitRow\(operation\.product/);
   assert.match(interfaceJs, /work\.append\(digitRow\(resultValue/);
+  assert.doesNotMatch(gabaritGenerator, /BLUE_SOFT if multiplier != 0 else ORANGE_SOFT/);
 });
 
 test("les entrées invalides sont refusées", () => {

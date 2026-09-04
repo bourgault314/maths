@@ -452,7 +452,7 @@ window.MATHSGO_CATALOGUE = {
       "primaryGroup": "imprimer",
       "collections": ["division-posee"],
       "tags": ["division", "euclidienne", "gabarit", "plastifier", "imprimer"],
-      "thumbnail": "assets/img/thumbnails/numeration/gabarit-division-euclidienne.png?v=1",
+      "thumbnail": "assets/img/thumbnails/numeration/gabarit-division-euclidienne.png?v=3",
       "cardDescription": "Un gabarit A4 à plastifier avec anticipation, potence, table du diviseur et relation de vérification."
     },
     "outils/division-posee/gabarit-division-decimale.pdf": {
@@ -460,7 +460,7 @@ window.MATHSGO_CATALOGUE = {
       "primaryGroup": "imprimer",
       "collections": ["division-posee"],
       "tags": ["division", "decimale", "gabarit", "plastifier", "imprimer"],
-      "thumbnail": "assets/img/thumbnails/numeration/gabarit-division-decimale.png?v=1",
+      "thumbnail": "assets/img/thumbnails/numeration/gabarit-division-decimale.png?v=3",
       "cardDescription": "Un gabarit A4 séparé pour poser une division décimale et choisir la précision du quotient."
     },
     "auto/index.html": {

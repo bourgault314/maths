@@ -209,6 +209,20 @@ export function makeDivision(dividend, divisor, mode = "integer", requestedDecim
   };
 }
 
+export function multiplicationBracket(data, operationIndex) {
+  const operation = data.operations[operationIndex];
+  if (!operation) return null;
+  const lowerMultiplier = operation.quotientDigit;
+  const upperMultiplier = lowerMultiplier + 1;
+  return {
+    target: operation.partial,
+    lowerMultiplier,
+    lowerProduct: lowerMultiplier * data.divisor,
+    upperMultiplier,
+    upperProduct: upperMultiplier * data.divisor
+  };
+}
+
 export function makeSteps(data) {
   const anticipation = anticipationFor(data);
   const steps = [{
