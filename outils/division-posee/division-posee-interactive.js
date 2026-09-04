@@ -431,6 +431,7 @@ function renderTable(task) {
     card: $("#table-card"),
     toggle: $("#table-toggle"),
     visible: tableVisible,
+    compactToggle: true,
     activeMultiplier: highlightedMultiplier,
     bracket
   });
