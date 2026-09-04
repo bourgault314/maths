@@ -348,6 +348,10 @@
       icon: "abacus",
       thumbnail: "assets/img/thumbnails/bouliers/gerbert-photo.svg?v=1"
     },
+    "division-posee": {
+      description: "Comprendre, pratiquer et imprimer la division posée.",
+      thumbnail: "assets/img/thumbnails/numeration/division-posee.svg?v=2"
+    },
     "tuiles-algebriques": {
       description: "Retrouver les plateaux, générateurs et livrets de tuiles algébriques.",
       icon: "tiles"

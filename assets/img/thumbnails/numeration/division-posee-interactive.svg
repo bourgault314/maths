@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 400" role="img" aria-labelledby="title desc">
+  <title id="title">Division posée interactive</title>
+  <desc id="desc">Une division de 584 par 7 avec des cases à compléter et un bouton de vérification.</desc>
+  <rect width="640" height="400" rx="30" fill="#f7faff"/>
+  <rect x="28" y="28" width="584" height="344" rx="24" fill="#fff" stroke="#d8e2ec" stroke-width="3"/>
+  <rect x="50" y="50" width="538" height="62" rx="14" fill="#fff2e7"/>
+  <text x="72" y="76" font-family="system-ui,sans-serif" font-size="14" font-weight="800" fill="#f58220">JE POSE</text>
+  <text x="72" y="98" font-family="system-ui,sans-serif" font-size="17" font-weight="750" fill="#10294a">Dans 58 dizaines, combien de fois 7 ?</text>
+  <g font-family="DejaVu Sans Mono, monospace" font-weight="700" text-anchor="middle">
+    <rect x="72" y="130" width="72" height="48" rx="10" fill="#eaf5ff"/>
+    <text x="90" y="165" font-size="32" fill="#0b67b2">5</text><text x="126" y="165" font-size="32" fill="#0b67b2">8</text><text x="166" y="165" font-size="32" fill="#0b67b2" opacity=".18">4</text>
+    <line x1="198" y1="126" x2="198" y2="308" stroke="#063f86" stroke-width="5"/>
+    <line x1="198" y1="188" x2="354" y2="188" stroke="#063f86" stroke-width="5"/>
+    <text x="274" y="169" font-size="34" fill="#08aaa5">7</text>
+    <rect x="247" y="207" width="54" height="45" rx="9" fill="#fff" stroke="#f58220" stroke-width="3"/>
+    <text x="274" y="239" font-size="27" fill="#f58220">8</text>
+    <rect x="90" y="198" width="72" height="43" rx="9" fill="#fff" stroke="#637287" stroke-width="3"/>
+    <text x="126" y="228" font-size="25" fill="#10294a">56</text>
+    <line x1="88" y1="250" x2="164" y2="250" stroke="#10294a" stroke-width="3"/>
+    <rect x="108" y="263" width="43" height="41" rx="9" fill="#fffafd" stroke="#7b42b4" stroke-width="3"/>
+    <text x="130" y="292" font-size="24" fill="#7b42b4">2</text>
+  </g>
+  <rect x="398" y="132" width="176" height="172" rx="16" fill="#f8fafc" stroke="#d8e2ec" stroke-width="2"/>
+  <text x="420" y="160" font-family="system-ui,sans-serif" font-size="14" font-weight="850" fill="#08aaa5">TABLE DE 7</text>
+  <g font-family="system-ui,sans-serif" font-size="16" font-weight="700" fill="#637287">
+    <text x="420" y="194">6 × 7</text><text x="534" y="194">?</text>
+    <text x="420" y="229">7 × 7</text><text x="534" y="229">?</text>
+    <text x="420" y="264">8 × 7</text><text x="534" y="264">?</text>
+  </g>
+  <rect x="398" y="322" width="176" height="34" rx="10" fill="#063f86"/>
+  <text x="486" y="344" text-anchor="middle" font-family="system-ui,sans-serif" font-size="13" font-weight="800" fill="#fff">VÉRIFIER L’ÉTAPE</text>
+</svg>

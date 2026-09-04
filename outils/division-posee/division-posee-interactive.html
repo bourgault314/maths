@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="description" content="Une division euclidienne à compléter par blocs, avec validation, indices progressifs et table du diviseur facultative.">
+  <link rel="canonical" href="https://mathsgo.re/outils/division-posee/division-posee-interactive.html">
+  <meta name="robots" content="index, follow, max-image-preview:large">
+  <meta name="author" content="Gwenaël Bourgault">
+  <meta name="theme-color" content="#f6f8fb">
+  <title>À toi de poser la division | maths&amp;go</title>
+  <link rel="icon" href="/favicon.ico" sizes="48x48">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="stylesheet" href="division-posee.css?v=6">
+  <link rel="stylesheet" href="division-posee-interactive.css?v=1">
+  <link rel="stylesheet" href="../../assets/css/consentement.css">
+  <script defer src="../../assets/js/consentement.js"></script>
+  <script type="module" src="division-posee-interactive.js?v=1"></script>
+</head>
+<body class="practice-page">
+  <a class="skip-link" href="#outil">Aller à l’entraînement</a>
+  <div class="page-shell">
+    <header class="site-header">
+      <div class="brand-nav">
+        <a class="brand" href="/" aria-label="Accueil maths&go">
+          <img src="/assets/img/logos/mathsgo/logo.png" alt="maths&go" width="1338" height="622">
+        </a>
+        <a class="back-link" href="./">← Division posée</a>
+      </div>
+      <div class="title-lockup">
+        <p>S’entraîner</p>
+        <h1>Division euclidienne</h1>
+      </div>
+      <div class="header-actions">
+        <a class="button button-light" href="division-posee.html">Voir le pas à pas</a>
+        <button class="icon-button" type="button" id="fullscreen" aria-label="Afficher en plein écran" title="Afficher en plein écran">⛶</button>
+      </div>
+    </header>
+
+    <main id="outil">
+      <section class="controls-card" aria-label="Choix de la division">
+        <form id="division-form">
+          <label class="number-field role-dividend">
+            <span>Dividende</span>
+            <input id="dividend" inputmode="numeric" type="number" min="0" max="99999999" value="584" required>
+          </label>
+          <span class="division-symbol" aria-hidden="true">÷</span>
+          <label class="number-field role-divisor">
+            <span>Diviseur</span>
+            <input id="divisor" inputmode="numeric" type="number" min="1" max="9999" value="7" required>
+          </label>
+          <button class="button button-secondary" id="random-problem" type="button">Au hasard</button>
+          <button class="button button-primary" type="submit">Commencer</button>
+        </form>
+        <p class="form-error" id="form-error" role="alert" hidden></p>
+      </section>
+
+      <section class="workspace practice-workspace">
+        <article class="board-card practice-board">
+          <div class="instruction practice-instruction" id="instruction" aria-live="polite">
+            <div class="instruction-copy">
+              <p id="step-title">J’encadre</p>
+              <h2 id="step-sentence">Complète l’encadrement.</h2>
+              <p class="step-detail" id="step-detail" hidden></p>
+              <div class="prompt-answer" id="prompt-answer"></div>
+            </div>
+            <span id="step-count"></span>
+          </div>
+
+          <div class="division-stage practice-stage">
+            <div class="long-division" id="long-division"></div>
+            <div class="role-strip practice-relation" id="role-strip"></div>
+          </div>
+
+          <div class="practice-actions">
+            <button class="button button-light help-button" id="help" type="button">Un indice</button>
+            <p class="feedback" id="feedback" role="status" aria-live="polite"></p>
+            <button class="button button-primary validate-button" id="validate" type="button">Vérifier l’étape</button>
+          </div>
+          <div class="practice-progress" aria-hidden="true"><span id="progress-bar"></span></div>
+        </article>
+
+        <aside class="table-card practice-table" id="table-card" aria-labelledby="table-title">
+          <div class="table-heading practice-table-heading">
+            <div><p>Table du diviseur</p><h2 id="table-title">Table de 7</h2></div>
+            <button class="button button-light table-toggle" id="table-toggle" type="button" aria-expanded="false">Voir la table</button>
+          </div>
+          <div id="multiples" class="multiples practice-multiples"></div>
+        </aside>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <span>Gwenaël Bourgault</span><span aria-hidden="true">·</span>
+      <a href="mailto:gwenael@mathsgo.re?subject=Contact%20depuis%20mathsgo.re">Me contacter</a><span aria-hidden="true">·</span>
+      <a href="/outils/">Toutes les ressources</a><span aria-hidden="true">·</span>
+      <a href="/mentions-legales.html">Mentions légales</a><span aria-hidden="true">·</span>
+      <a href="/confidentialite.html">Confidentialité</a><span aria-hidden="true">·</span>
+      <a href="/licence.html">Licence</a><span aria-hidden="true">·</span>
+      <button type="button" data-mathsgo-consent-open onclick="window.mathsgoConsentement &amp;&amp; window.mathsgoConsentement.ouvrir()">Gérer mes cookies</button>
+    </footer>
+  </div>
+</body>
+</html>
