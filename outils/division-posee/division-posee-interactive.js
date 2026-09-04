@@ -196,6 +196,10 @@ function appendSubtractionRule(row, range) {
 function makeDividendRow(task) {
   const row = digitRow("dividend-row");
   const activeIndex = task.kind === "stage" ? task.opIndex : -1;
+  const transitionIndex = transitioningTaskId?.startsWith("stage-")
+    ? Number(transitioningTaskId.split("-")[1])
+    : -1;
+  const transitionOperation = transitionIndex >= 0 ? division.operations[transitionIndex] : null;
   const activeEnd = activeIndex >= 0 ? division.operations[activeIndex].endColumn : -1;
   const activeStart = activeIndex === 0
     ? activeEnd - String(division.operations[activeIndex].partial).length + 1
@@ -211,6 +215,11 @@ function makeDividendRow(task) {
     if (activeIndex > 0 && index < activeEnd) digit.classList.add("used-division-digit");
     if (activeIndex > 0 && index === activeEnd) digit.classList.add("lowered-source");
     if (activeIndex >= 0 && index > activeEnd) digit.classList.add("pending");
+    if (transitionOperation?.nextEndColumn === index) {
+      digit.classList.add("falling-source");
+      const arrow = makeLowerArrow(transitionIndex);
+      if (arrow) digit.append(arrow);
+    }
     row.append(digit);
   });
   return row;
@@ -258,12 +267,7 @@ function makeLowerArrow(index) {
   arrow.setAttribute("aria-hidden", "true");
   const root = $("#long-division");
   const rowHeight = Number.parseFloat(root.style.getPropertyValue("--row-height")) || 48;
-  const columnWidth = Number.parseFloat(root.style.getPropertyValue("--column-width")) || 48;
-  const rightPadding = window.innerWidth <= 520 ? 7 : 12;
-  const right = rightPadding + ((division.digits.length - operation.nextEndColumn - .5) * columnWidth);
-  arrow.style.top = `${rowHeight * .82}px`;
-  arrow.style.right = `${right}px`;
-  arrow.style.height = `${rowHeight * (1.34 + (2 * index))}px`;
+  arrow.style.height = `${rowHeight * (1.02 + (2 * index))}px`;
   return arrow;
 }
 
@@ -405,10 +409,6 @@ function renderDivision(task) {
   division.operations.forEach((operation, index) => {
     work.append(...makeOperationRows(index, task));
   });
-  if (transitioningTaskId?.startsWith("stage-")) {
-    const arrow = makeLowerArrow(Number(transitioningTaskId.split("-")[1]));
-    if (arrow) work.append(arrow);
-  }
 
   const potence = document.createElement("div");
   potence.className = "potence";

@@ -80,8 +80,8 @@ test("les zéros du quotient et le cas dividende inférieur au diviseur sont con
 });
 
 test("l’interface propose validation par bloc, table facultative et adaptation mobile", () => {
-  assert.match(html, /division-posee-interactive\.css\?v=3/);
-  assert.match(html, /division-posee-interactive\.js\?v=2/);
+  assert.match(html, /division-posee-interactive\.css\?v=4/);
+  assert.match(html, /division-posee-interactive\.js\?v=3/);
   assert.match(html, /id="validate"[^>]*>Vérifier l’étape/);
   assert.match(html, /id="help"[^>]*>Un indice/);
   assert.match(html, /id="table-toggle"[^>]*>Voir la table/);
@@ -91,7 +91,9 @@ test("l’interface propose validation par bloc, table facultative et adaptation
   assert.match(js, /Array\.from\(\{ length: 10 \}/);
   assert.match(js, /window\.innerWidth <= 780/);
   assert.match(js, /window\.addEventListener\("resize"/);
-  assert.match(js, /arrow\.style\.top = `\$\{rowHeight \* \.82\}px`/);
+  assert.match(js, /digit\.append\(arrow\)/);
+  assert.match(js, /arrow\.style\.height = `\$\{rowHeight \* \(1\.02 \+ \(2 \* index\)\)\}px`/);
+  assert.match(css, /\.practice-lower-arrow[^}]*top:\s*calc\(100% \+ 4px\)[^}]*left:\s*50%/);
   assert.match(css, /\.practice-stage[^}]*overflow:\s*hidden/);
   assert.match(css, /@media \(max-width: 930px\)/);
   assert.match(css, /@media \(max-width: 520px\)/);
@@ -113,6 +115,13 @@ test("les réponses sont saisies chiffre par chiffre dans leur colonne", () => {
 });
 
 test("la collection sépare comprendre, s’entraîner et imprimer", () => {
+  assert.match(collection, /catalogue-refonte\.css\?v=breadcrumb-align-20260829-1/);
+  assert.match(collection, /<body class="catalogue-is-deep">/);
+  assert.match(collection, /class="site-shell"/);
+  assert.match(collection, /class="catalogue-breadcrumb"/);
+  assert.match(collection, /class="main-panel catalogue-deep-view"/);
+  assert.match(collection, />Numération<\/a>/);
+  assert.doesNotMatch(collection, /collection-index\.css/);
   assert.match(collection, /Comprendre &amp; projeter/);
   assert.match(collection, /S’entraîner/);
   assert.match(collection, /Imprimer &amp; plastifier/);
