@@ -22,8 +22,8 @@ export const CURATED_PAGES = [
   },
   {
     path: "confidentialite.html",
-    title: "Confidentialité et cookies | maths&go",
-    description: "Politique de confidentialité et gestion des cookies sur le site pédagogique maths&go."
+    title: "Confidentialité | maths&go",
+    description: "Politique de confidentialité du site pédagogique maths&go : aucun cookie, aucune mesure d’audience, des données qui restent sur votre appareil."
   },
   {
     path: "outils/index.html",
@@ -460,8 +460,7 @@ export function buildDirectoryHtml(catalogue) {
   <link rel="icon" href="/favicon.ico" sizes="48x48">
   <link rel="icon" type="image/svg+xml" href="/favicon.svg">
   <link rel="stylesheet" href="../assets/css/annuaire-ressources.css?v=20260810-1">
-  <link rel="stylesheet" href="../assets/css/consentement.css">
-  <script defer src="../assets/js/consentement.js"></script>
+  <script defer src="../assets/js/mention-confidentialite.js"></script>
 </head>
 <body>
   <a class="skip-link" href="#ressources">Aller aux ressources</a>
@@ -493,7 +492,7 @@ ${domainSections}
     <a href="/mentions-legales.html">Mentions légales</a><span aria-hidden="true">·</span>
     <a href="/confidentialite.html">Confidentialité</a><span aria-hidden="true">·</span>
     <a href="/licence.html">Licence</a><span aria-hidden="true">·</span>
-    <button type="button" data-mathsgo-consent-open onclick="window.mathsgoConsentement &amp;&amp; window.mathsgoConsentement.ouvrir()">Gérer mes cookies</button>
+    <span data-mathsgo-confidentialite>Sans cookie ni traceur</span>
   </footer>
 </body>
 </html>

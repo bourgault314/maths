@@ -14,6 +14,22 @@ sans que personne ne s'en aperçoive.
 **La règle, tenue par `tests/scripts-tiers.test.mjs` :** une page du site ne
 charge un script d'un autre domaine que s'il porte un attribut
 `integrity="sha384-…"`. Aujourd'hui il n'y en a aucun, et c'est le mieux.
+Depuis le lot 10b (04/09/2026), le même test tient aussi une **liste blanche** :
+tout ce qu'une page ou un fichier du site (et du serveur de suivi) charge par
+une adresse absolue — script, module, worker, feuille de style, police — doit
+venir de `mathsgo.re`. Une exception s'ajoute dans `ORIGINES_AUTORISEES` du
+test et se dit dans la notice du lot.
+
+## `polices/` — les polices du site (lot 10b)
+
+Trente-six pages demandaient Fredoka, Nunito, Caveat ou Montserrat à
+`fonts.googleapis.com` : chaque page ouverte faisait connaître l'adresse de
+connexion du visiteur à Google. Les quatre polices sont ici, en version
+variable (un seul fichier par famille et par sous-ensemble, tous les poids
+dedans), et une seule feuille les déclare : `polices/polices.css`. Une page
+charge cette feuille à la place du lien Google ; le navigateur ne télécharge
+que les polices que la page utilise vraiment. Fredoka s'arrête au poids 700
+(Google n'en a pas d'autre) : les pages qui demandaient 800 obtenaient déjà le 700.
 
 ## Ce qu'il y a ici, et d'où ça vient
 
@@ -24,6 +40,7 @@ charge un script d'un autre domaine que s'il porte un attribut
 | `pdfjs-3.4.120/` | 3.4.120 | npm `pdfjs-dist@3.4.120`, `build/pdf.min.js` et `build/pdf.worker.min.js` |
 | `three-0.128.0/` | r128 | npm `three@0.128.0`, `build/three.min.js` et `examples/js/controls/OrbitControls.js` |
 | `tailwind/` | construit ici | voir ci-dessous |
+| `polices/` | Fredoka v17, Nunito v32, Caveat v23, Montserrat v31 | npm `@fontsource-variable/{fredoka,nunito,caveat,montserrat}@5.3.0`, fichiers `files/*-latin-wght-normal.woff2` et `*-latin-ext-wght-normal.woff2` (mêmes polices variables que Google Fonts, licence SIL OFL 1.1) ; déclarées par `polices/polices.css` |
 
 Les empreintes SHA-256 de ces fichiers sont inscrites dans
 `tests/scripts-tiers.test.mjs` : un fichier remplacé ou abîmé fait passer les

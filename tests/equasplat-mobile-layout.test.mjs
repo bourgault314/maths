@@ -300,20 +300,21 @@ test("la validation mobile garde toujours la même hauteur", () => {
   assert.match(html, /renderActions\(\);\s*stabilizeMobileActionZone\(\);/);
 });
 
-test("le lien de gestion des cookies reste accessible en réception, sans toucher à l’usage libre", () => {
-  assert.doesNotMatch(html, /body\.importMode \.mg-consent-manage-slot,\s*body\.importMode \.mg-consent-manage\{\s*display:none !important;/);
-  assert.match(html, /<div class="actionZone" id="actionZone"><\/div>\s*<button class="mobileConsentLink" type="button" aria-label="Gérer mes choix de cookies">Gérer mes cookies<\/button>/);
-  assert.match(html, /<footer class="equasplatConsentFooter">\s*<button class="equasplatConsentLink" type="button" aria-label="Gérer mes choix de cookies">Gérer mes cookies<\/button>/);
+test("la mention de confidentialité reste accessible en réception, sans toucher à l’usage libre", () => {
+  assert.doesNotMatch(html, /body\.importMode \.mg-mention-slot\{\s*display:none !important;/);
+  assert.match(html, /<div class="actionZone" id="actionZone"><\/div>\s*<a class="mobileConsentLink" href="\.\.\/confidentialite\.html">Sans cookie ni traceur · Confidentialité<\/a>/);
+  assert.match(html, /<footer class="equasplatConsentFooter">\s*<a class="equasplatConsentLink" href="\.\.\/confidentialite\.html">Sans cookie ni traceur · Confidentialité<\/a>/);
   assert.match(html, /\.mobileConsentLink\{\s*display:none;/);
   assert.match(html, /\.stage:not\(:fullscreen\) \.mobileConsentLink\{\s*display:inline-flex;[^}]*min-height:32px;/s);
   assert.match(html, /\.equasplatConsentFooter\{\s*display:none;/);
   assert.match(html, /body\.importMode \.equasplatConsentFooter\{\s*display:flex;/);
   assert.match(html, /body\.importMode \.equasplatConsentFooter\{\s*display:none;/);
   assert.match(html, /@media \(max-width:760px\) and \(max-height:680px\)[\s\S]*?\.board\{\s*height:220px;\s*min-height:220px;\s*max-height:220px;/);
-  // En usage libre, aucun bouton ne porte l'attribut : consentement.js garde son
-  // lien automatique. En réception, l'attribut est posé et le lien automatique
-  // (flottant sur écran verrouillé) s'efface.
-  assert.ok(!/<button[^>]*data-mathsgo-consent-open/.test(html), "pas d’attribut dans le HTML statique");
-  assert.match(html, /function bindReceptionConsentLinks\(\)\{[\s\S]*?button\.setAttribute\("data-mathsgo-consent-open", ""\);/);
+  // En usage libre, aucun lien ne porte l'attribut : mention-confidentialite.js
+  // garde sa mention automatique. En réception, l'attribut est posé et la mention
+  // automatique (flottante sur écran verrouillé) s'efface.
+  assert.ok(!/<a[^>]*data-mathsgo-confidentialite/.test(html), "pas d’attribut dans le HTML statique");
+  assert.match(html, /function bindReceptionConsentLinks\(\)\{[\s\S]*?lien\.setAttribute\("data-mathsgo-confidentialite", ""\);/);
   assert.match(html, /if\(reception\) bindReceptionConsentLinks\(\);/);
+  assert.doesNotMatch(html, /mathsgoConsentement|consent-open|Gérer mes cookies/, "plus rien de l’ancienne bannière");
 });

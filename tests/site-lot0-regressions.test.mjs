@@ -2,8 +2,7 @@ import assert from "node:assert/strict";
 import { readFile, readdir } from "node:fs/promises";
 import test from "node:test";
 
-const consentScript = await readFile(new URL("../assets/js/consentement.js", import.meta.url), "utf8");
-const consentStyles = await readFile(new URL("../assets/css/consentement.css", import.meta.url), "utf8");
+const mentionScript = await readFile(new URL("../assets/js/mention-confidentialite.js", import.meta.url), "utf8");
 const catalogueScript = await readFile(new URL("../assets/js/catalogue-refonte.js", import.meta.url), "utf8");
 const homePage = await readFile(new URL("../index.html", import.meta.url), "utf8");
 const automatismesPage = await readFile(new URL("../auto/index.html", import.meta.url), "utf8");
@@ -34,19 +33,19 @@ const returnPages = Object.fromEntries(await Promise.all([
   "outils/labo-des-regularites.html",
 ].map(async (path) => [path, await readFile(new URL(`../${path}`, import.meta.url), "utf8")])));
 
-test("le bouton Cookies injecté ne prend jamais toute la hauteur d'une page flex", () => {
-  assert.match(consentScript, /const viewportLocked = \[bodyStyle\.overflow, bodyStyle\.overflowY, rootStyle\.overflow, rootStyle\.overflowY\]/);
-  assert.match(consentScript, /const horizontalFlexLayout = \["flex", "inline-flex"\]/);
-  assert.match(consentScript, /manageSlot\.classList\.toggle\("mg-consent-manage-slot--fixed", viewportLocked \|\| horizontalFlexLayout\)/);
+test("la mention de confidentialité injectée ne prend jamais toute la hauteur d'une page flex", () => {
+  assert.match(mentionScript, /var ecranVerrouille = \[styleCorps\.overflow, styleCorps\.overflowY, styleRacine\.overflow, styleRacine\.overflowY\]/);
+  assert.match(mentionScript, /var colonnes = \["flex", "inline-flex"\]/);
+  assert.match(mentionScript, /slot\.classList\.toggle\("mg-mention-slot--fixe", ecranVerrouille \|\| colonnes\)/);
   assert.match(
-    consentStyles,
-    /\.mg-consent-manage-slot\s*\{[^}]*position:\s*relative;[^}]*flex:\s*0\s+0\s+auto;/s,
+    mentionScript,
+    /\.mg-mention-slot\{position:relative;[^}]*flex:0 0 auto;/,
     "le conteneur injecté doit garder sa hauteur de contenu dans les pages flex",
   );
-  assert.doesNotMatch(consentStyles, /\.mg-consent-manage-slot\s*\{[^}]*flex:\s*0\s+0\s+100%;/s);
+  assert.doesNotMatch(mentionScript, /\.mg-mention-slot\{[^}]*flex:0 0 100%;/);
   assert.match(
-    consentStyles,
-    /\.mg-consent-manage-slot--fixed\s*\{[^}]*position:\s*fixed;/s,
+    mentionScript,
+    /\.mg-mention-slot--fixe\{position:fixed;/,
     "seuls les écrans sans défilement utilisent le secours fixe",
   );
 });
@@ -57,12 +56,12 @@ test("les six générateurs retrouvent leur présentation autonome", () => {
   }
 });
 
-test("Automatismes garde les cookies dans son pied de page compact", () => {
-  assert.match(automatismesPage, /<div class="credit-row">[\s\S]*data-mathsgo-consent-open[\s\S]*Gérer mes cookies[\s\S]*<\/div>/);
+test("Automatismes garde la mention de confidentialité dans son pied de page compact", () => {
+  assert.match(automatismesPage, /<div class="credit-row">[\s\S]*data-mathsgo-confidentialite[\s\S]*Sans cookie ni traceur · Confidentialité[\s\S]*<\/div>/);
   assert.match(automatismesPage, /<div class="setup-action-shell is-empty"/);
   assert.ok(
-    automatismesPage.indexOf("data-mathsgo-consent-open") < automatismesPage.indexOf("setup-action-shell is-empty"),
-    "le lien Cookies doit rester dans le pied du menu, avant la barre de lancement",
+    automatismesPage.indexOf("data-mathsgo-confidentialite") < automatismesPage.indexOf("setup-action-shell is-empty"),
+    "la mention doit rester dans le pied du menu, avant la barre de lancement",
   );
 });
 

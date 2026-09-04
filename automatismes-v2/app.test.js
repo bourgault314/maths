@@ -2335,9 +2335,9 @@ it("propose le parcours DNB puis lance Au tableau sans saisie ni score", async (
   assert.equal((application.innerHTML.match(/role="checkbox" aria-checked="false"/g) ?? []).length, 2);
   assert.match(application.innerHTML, /<summary>Remerciements<\/summary>/);
   assert.match(application.innerHTML, /Un grand merci à Claire pour son regard pédagogique, ses relectures attentives et toutes ses précieuses idées/);
-  assert.equal((application.innerHTML.match(/Gérer mes cookies/g) ?? []).length, 1);
-  assert.match(application.innerHTML, /data-mathsgo-consent-open/);
-  assert.match(application.innerHTML, />Gérer mes cookies<\/button>/);
+  assert.equal((application.innerHTML.match(/Sans cookie ni traceur/g) ?? []).length, 1);
+  assert.match(application.innerHTML, /data-mathsgo-confidentialite/);
+  assert.match(application.innerHTML, /<a class="cookie-manage-link" data-mathsgo-confidentialite href="\.\.\/confidentialite\.html">Sans cookie ni traceur · Confidentialité<\/a>/);
   assert.doesNotMatch(application.innerHTML, /DocTools|Eric Hakenholz|Crédits et remerciements/);
   assert.doesNotMatch(application.innerHTML, /class="setup-action-shell"/);
   assert.doesNotMatch(application.innerHTML, /data-action="preparer"/);

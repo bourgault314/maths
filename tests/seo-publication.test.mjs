@@ -61,14 +61,14 @@ test("l’annuaire contient un lien HTML direct vers chaque ressource publiée",
   }
 });
 
-test("l’annuaire généré expose le socle légal et le gestionnaire de consentement", () => {
+test("l’annuaire généré expose le socle légal et la mention de confidentialité", () => {
   const html = buildDirectoryHtml(catalogue);
-  assert.match(html, /href="\.\.\/assets\/css\/consentement\.css"/);
-  assert.match(html, /src="\.\.\/assets\/js\/consentement\.js"/);
+  assert.doesNotMatch(html, /consentement\.(css|js)/, "plus de bannière de consentement depuis le lot 10b");
+  assert.match(html, /src="\.\.\/assets\/js\/mention-confidentialite\.js"/);
   assert.match(html, /href="mailto:gwenael@mathsgo\.re\?subject=Contact%20depuis%20mathsgo\.re"/);
   assert.match(html, /href="\/mentions-legales\.html"/);
   assert.match(html, /href="\/confidentialite\.html"/);
-  assert.match(html, /data-mathsgo-consent-open[^>]*>Gérer mes cookies<\/button>/);
+  assert.match(html, /<span data-mathsgo-confidentialite>Sans cookie ni traceur<\/span>/);
 });
 
 test("l’annuaire range les bouliers en Numération et réserve Calcul mental aux six ressources validées", () => {

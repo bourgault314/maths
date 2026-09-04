@@ -17,8 +17,7 @@
 <link rel="icon" type="image/png" sizes="32x32" href="/assets/img/favicon-32.png">
 <link rel="icon" type="image/png" sizes="192x192" href="/assets/img/favicon-192.png">
 <link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png">
-<link rel="stylesheet" href="../../assets/css/consentement.css">
-<script defer src="../../assets/js/consentement.js"></script>
+<script defer src="../../assets/js/mention-confidentialite.js"></script>
 
 <!-- ==========================================================================
      GARDE-FOU : la sauvegarde du jeu est sacrée (SPEC-ATELIER-NIVEAUX.md §8.1)
@@ -33,7 +32,7 @@
          repli « try{…}catch(e){memStore=save;} » et écrit dans un objet mémoire
          jetable, exactement ce que la spec demande.
      Toutes les autres clés passent normalement : l'atelier a besoin de la sienne
-     (soley-atelier-v1) et le bandeau de consentement de la sienne.
+     (soley-atelier-v1).
      ========================================================================== -->
 <script>
 (function(){
@@ -513,7 +512,7 @@ body.at.at-jouer #atwin{display:block; text-align:left; width:100%; max-width:42
       <span>Gwenaël Bourgault</span><span aria-hidden="true">·</span>
       <button type="button" id="aproposbtn">D'où vient Solèy ?</button><span aria-hidden="true">·</span>
       <a href="soley.html">Le jeu</a><span aria-hidden="true">·</span>
-      <button type="button" data-mathsgo-consent-open onclick="window.mathsgoConsentement &amp;&amp; window.mathsgoConsentement.ouvrir()">Gérer mes cookies</button>
+      <a data-mathsgo-confidentialite href="../../confidentialite.html">Sans cookie ni traceur · Confidentialité</a>
     </div>
   </footer>
 </div>

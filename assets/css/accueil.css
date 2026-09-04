@@ -310,6 +310,11 @@ h1 {
   font-weight: 500;
 }
 
+.footer-row-legal .footer-mention {
+  color: #526d8d;
+  font-weight: 500;
+}
+
 .modal-overlay {
   display: none;
   position: fixed;

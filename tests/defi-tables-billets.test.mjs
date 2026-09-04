@@ -33,10 +33,9 @@ function bootstrap(hash) {
   return window;
 }
 
-test("le script du <head> lit #b=, lève le drapeau et sort le billet de l’adresse", () => {
+test("le script du <head> lit #b= et sort le billet de l’adresse", () => {
   const lien = bootstrap(`#b=${BILLET}&ouvrir=parcours`);
   assert.deepEqual(lien.MATHSGO_ENTREE, {code: "", fiche: "", billet: BILLET, vue: "", ouvrir: "parcours"});
-  assert.equal(lien.MATHSGO_SUIVI_ELEVE, true, "un billet identifie un élève : aucune mesure d’audience");
   assert.equal(lien.remplacee, "/outils/calcul_mental/defi_tables.html#ouvrir=parcours", "le billet sort, l’écran demandé reste");
 
   const seul = bootstrap(`#b=${BILLET}`);
@@ -44,7 +43,6 @@ test("le script du <head> lit #b=, lève le drapeau et sort le billet de l’adr
 
   const fiche = bootstrap(`#b=${BILLET}&vue=fiche`);
   assert.deepEqual(fiche.MATHSGO_ENTREE, {code: "", fiche: "", billet: BILLET, vue: "fiche", ouvrir: ""});
-  assert.equal(fiche.MATHSGO_SUIVI_ELEVE, true);
   assert.equal(fiche.remplacee, "/outils/calcul_mental/defi_tables.html#vue=fiche", "« vue » n’est pas un secret : il reste, le billet part");
 
   const encode = bootstrap(`#ouvrir=calculs&b=${encodeURIComponent(BILLET)}`);
