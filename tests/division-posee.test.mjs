@@ -216,18 +216,23 @@ test("l'interface conserve les repères visuels demandés", () => {
   assert.match(interfaceHtml, /id="rank-guides" type="checkbox"/);
   assert.match(interfaceHtml, /id="projection-recap"[^>]*hidden/);
   assert.match(interfaceHtml, /id="table-bracket"[^>]*hidden/);
+  assert.match(interfaceHtml, /id="table-toggle"[^>]*aria-expanded="true"[^>]*>Masquer la table/);
   assert.match(interfaceCss, /\.decimal-field\[hidden\][^{]*\{[^}]*display:\s*none/);
   assert.match(interfaceCss, /\.table-card\s*\{[^}]*height:\s*100%/);
   assert.match(interfaceCss, /grid-template-rows:\s*repeat\(10,/);
   assert.match(interfaceCss, /--stage-min-height:\s*clamp\(380px,\s*calc\(100svh - 477px\),\s*535px\)/);
-  assert.match(interfaceCss, /\.instruction\s*\{[^}]*height:\s*104px/);
+  assert.match(interfaceCss, /\.board-card\s*\{[^}]*grid-template-rows:\s*116px/);
   assert.match(interfaceCss, /\.digit-row\s*\{[^}]*height:\s*var\(--row-height/);
   assert.match(interfaceCss, /\.subtraction-rule\s*\{/);
-  assert.match(interfaceCss, /\.lower-arrow\s*\{[^}]*z-index:\s*3[^}]*top:\s*92%[^}]*height:\s*calc\(var\(--row-height, 50px\) \* 1\.02\)/);
-  assert.match(interfaceCss, /\.quotient-slot\.is-empty\s*\{[^}]*border-bottom/);
-  assert.match(interfaceCss, /\.quotient-slot\s*\{[^}]*position:\s*relative/);
-  assert.match(interfaceCss, /\.long-division\.has-rank-guides \.potence-box:last-child\s*\{[^}]*padding-top:\s*23px/);
-  assert.match(interfaceCss, /\.multiple\.is-upper-bound\s*\{/);
+  assert.match(interfaceCss, /\.lower-arrow\s*\{[^}]*position:\s*absolute[^}]*z-index:\s*6/);
+  assert.doesNotMatch(interfaceCss, /\.lower-arrow\s*\{[^}]*top:\s*92%/);
+  assert.match(interfaceCss, /\.quotient-slot\.is-empty \.quotient-slot-value::after/);
+  assert.match(interfaceCss, /\.quotient-slot\s*\{[^}]*grid-template-rows:\s*minmax\(0, 1fr\)/);
+  assert.match(interfaceCss, /\.long-division\.has-rank-guides \.quotient-slot\s*\{[^}]*grid-template-rows:\s*\.38em 1\.05em/);
+  assert.match(interfaceCss, /\.multiple\.is-upper-bound \.multiple-equation\s*\{/);
+  assert.match(interfaceCss, /\.table-target-badge\s*\{/);
+  assert.match(interfaceCss, /\.multiple\.is-target-after \.table-target-badge/);
+  assert.match(interfaceCss, /@media \(min-width: 1280px\)[\s\S]*\.instruction[^}]*grid-column:\s*1[^}]*grid-row:\s*1 \/ 3/);
   assert.match(interfaceCss, /\.rank-marker\s*\{/);
   assert.match(interfaceCss, /body\.is-projection \.controls-card|body\.is-projection/);
   assert.doesNotMatch(interfaceCss, /\.relation-sign\s*\{[^}]*display:\s*none/);
@@ -236,7 +241,8 @@ test("l'interface conserve les repères visuels demandés", () => {
   assert.match(interfaceJs, /isUnrevealedDecimal/);
   assert.match(interfaceJs, /\["ask", "choose"\]/);
   assert.match(interfaceJs, /quotientWriting\(step\)/);
-  assert.match(interfaceJs, /Array\.from\(\{ length: 10 \}/);
+  assert.match(interfaceJs, /division-view\.mjs\?v=1/);
+  assert.match(interfaceJs, /renderMultiplicationTable\(/);
   assert.match(interfaceJs, /const showIntegerSlots = step\.kind !== "bound"/);
   assert.match(interfaceJs, /mathsgo-division-rank-guides/);
   assert.match(interfaceJs, /step\.kind === "choose"[^?]*\? multiplicationBracket/s);
@@ -246,6 +252,7 @@ test("l'interface conserve les repères visuels demandés", () => {
   assert.match(interfaceJs, /fullscreenchange/);
   assert.match(interfaceJs, /work\.append\(digitRow\(operation\.product/);
   assert.match(interfaceJs, /work\.append\(digitRow\(resultValue/);
+  assert.match(interfaceJs, /scheduleLoweringArrow\(root\)/);
   assert.doesNotMatch(gabaritGenerator, /BLUE_SOFT if multiplier != 0 else ORANGE_SOFT/);
 });
 

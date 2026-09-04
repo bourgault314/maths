@@ -11,6 +11,7 @@ import {
   trainingBounds,
   trainingErrors
 } from "../outils/division-posee/division-entrainement-engine.mjs";
+import { loweringArrowGeometry } from "../outils/division-posee/division-view.mjs";
 
 const html = readFileSync(new URL("../outils/division-posee/division-posee-interactive.html", import.meta.url), "utf8");
 const css = readFileSync(new URL("../outils/division-posee/division-posee-interactive.css", import.meta.url), "utf8");
@@ -80,8 +81,8 @@ test("les zéros du quotient et le cas dividende inférieur au diviseur sont con
 });
 
 test("l’interface propose validation par bloc, table facultative et adaptation mobile", () => {
-  assert.match(html, /division-posee-interactive\.css\?v=5/);
-  assert.match(html, /division-posee-interactive\.js\?v=4/);
+  assert.match(html, /division-posee-interactive\.css\?v=6/);
+  assert.match(html, /division-posee-interactive\.js\?v=5/);
   assert.match(html, /id="rank-guides" type="checkbox"/);
   assert.match(html, /id="table-bracket"[^>]*hidden/);
   assert.match(html, /id="validate"[^>]*>Vérifier l’étape/);
@@ -90,16 +91,17 @@ test("l’interface propose validation par bloc, table facultative et adaptation
   assert.match(js, /firstTrainingError\(task, answer\)/);
   assert.match(js, /completed\.set\(task\.id, answer\)/);
   assert.match(js, /task\.kind === "stage" \? 820 : 480/);
-  assert.match(js, /Array\.from\(\{ length: 10 \}/);
+  assert.match(js, /division-view\.mjs\?v=1/);
+  assert.match(js, /renderMultiplicationTable\(/);
   assert.match(js, /multiplicationBracket\(division, task\.opIndex\)/);
   assert.match(js, /mathsgo-division-rank-guides/);
-  assert.match(js, /slot\.append\(rankMarker\(operation\.endColumn, activeColumn\)\)/);
+  assert.match(js, /createQuotientSlot\(\{/);
   assert.match(js, /window\.innerWidth <= 780/);
   assert.match(js, /window\.addEventListener\("resize"/);
-  assert.match(js, /digit\.append\(arrow\)/);
-  assert.match(js, /arrow\.style\.height = `\$\{rowHeight \* \(1\.02 \+ \(2 \* index\)\)\}px`/);
-  assert.match(css, /\.practice-lower-arrow[^}]*top:\s*calc\(100% \+ 4px\)[^}]*left:\s*50%/);
+  assert.match(js, /scheduleLoweringArrow\(root\)/);
+  assert.doesNotMatch(js, /rowHeight \* \(1\.02 \+ \(2 \* index\)\)/);
   assert.match(css, /\.practice-stage[^}]*overflow:\s*hidden/);
+  assert.match(css, /@media \(min-width: 1280px\)[\s\S]*\.practice-instruction[^}]*grid-column:\s*1[^}]*grid-row:\s*1 \/ 4/);
   assert.match(css, /@media \(max-width: 930px\)/);
   assert.match(css, /@media \(max-width: 520px\)/);
   assert.match(css, /\.practice-table:not\(\.is-open\) \.practice-multiples/);
@@ -115,8 +117,27 @@ test("les réponses sont saisies chiffre par chiffre dans leur colonne", () => {
   assert.match(js, /document\.addEventListener\("paste"/);
   assert.match(css, /--practice-cell-size:\s*min\(38px, calc\(var\(--column-width/);
   assert.match(css, /\.operation-answer[^}]*width:\s*var\(--practice-cell-size\)[^}]*height:\s*var\(--practice-cell-size\)/);
-  assert.match(css, /\.practice-quotient \.quotient-slot\.is-empty[^}]*border:\s*2px dashed/);
+  assert.match(css, /\.practice-quotient \.quotient-slot\.is-empty \.quotient-slot-value[^}]*border:\s*2px dashed/);
   assert.match(css, /\.relation-digit-group[^}]*grid-template-columns:\s*repeat\(var\(--digit-count\)/);
+});
+
+test("la flèche relie réellement le chiffre source au chiffre abaissé", () => {
+  assert.deepEqual(
+    loweringArrowGeometry(
+      { left: 520, width: 40, bottom: 170 },
+      { top: 545 },
+      { left: 100, top: 80 }
+    ),
+    { left: 440, top: 95, height: 363 }
+  );
+  assert.equal(
+    loweringArrowGeometry(
+      { left: 520, width: 40, bottom: 560 },
+      { top: 545 },
+      { left: 100, top: 80 }
+    ),
+    null
+  );
 });
 
 test("la collection sépare comprendre, s’entraîner et imprimer", () => {
