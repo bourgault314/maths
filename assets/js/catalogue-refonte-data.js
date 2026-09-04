@@ -1067,18 +1067,6 @@ window.MATHSGO_CATALOGUE = {
       "collections": [],
       "tags": ["automatismes", "archive", "entrainement"]
     },
-    "outils/plateaux_manipulation/boite_bonbons.html": {
-      "primaryNotion": "espace-constructions",
-      "primaryGroup": "manipuler",
-      "collections": [],
-      "tags": ["espace", "solides", "patron", "manipulation"]
-    },
-    "outils/plateaux_manipulation/boite_bonbons_3d_toutes_boites.html": {
-      "primaryNotion": "espace-constructions",
-      "primaryGroup": "manipuler",
-      "collections": [],
-      "tags": ["espace", "solides", "patron", "manipulation"]
-    },
     "outils/bouliers/rekenrek/rekenrek_FD.html": {
       "primaryNotion": "numeration",
       "primaryGroup": "manipuler",
@@ -2230,64 +2218,6 @@ window.MATHSGO_CATALOGUE = {
       "keywords": [],
       "kind": "tool",
       "status": "published",
-      "featured": false,
-      "recent": false
-    },
-    {
-      "id": "outils-plateaux-manipulation-boite-bonbons-html",
-      "title": "Boîte à bonbons — 3D / Cavalière / Patron",
-      "description": "Une ressource maths&go pour travailler divisibilité, multiples et pgcd.",
-      "path": "outils/plateaux_manipulation/boite_bonbons.html",
-      "domains": [
-        "nombres-calculs",
-        "proportionnalite-mesures"
-      ],
-      "notions": [
-        "divisibilite",
-        "proportionnalite"
-      ],
-      "uses": [
-        "manipuler",
-        "projeter",
-        "entrainer"
-      ],
-      "types": [
-        "plateau",
-        "exerciseur"
-      ],
-      "filters": [],
-      "keywords": [],
-      "kind": "tool",
-      "status": "review",
-      "featured": false,
-      "recent": false
-    },
-    {
-      "id": "outils-plateaux-manipulation-boite-bonbons-3d-toutes-boites-html",
-      "title": "Boîte à bonbons — 3D / Cavalière / Patron",
-      "description": "Une ressource maths&go pour travailler divisibilité, multiples et pgcd.",
-      "path": "outils/plateaux_manipulation/boite_bonbons_3d_toutes_boites.html",
-      "domains": [
-        "nombres-calculs",
-        "proportionnalite-mesures"
-      ],
-      "notions": [
-        "divisibilite",
-        "proportionnalite"
-      ],
-      "uses": [
-        "manipuler",
-        "projeter",
-        "entrainer"
-      ],
-      "types": [
-        "plateau",
-        "exerciseur"
-      ],
-      "filters": [],
-      "keywords": [],
-      "kind": "tool",
-      "status": "review",
       "featured": false,
       "recent": false
     },

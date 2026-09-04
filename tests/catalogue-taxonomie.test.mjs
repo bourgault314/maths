@@ -64,9 +64,9 @@ function assertPathsInGroup(group, paths) {
   }
 }
 
-test("le catalogue conserve 168 entrées dont 159 publiées", () => {
+test("le catalogue conserve 166 entrées dont 159 publiées", () => {
   assert.equal(catalogue.schemaVersion, 5);
-  assert.equal(resources.length, 168);
+  assert.equal(resources.length, 166);
   assert.equal(published.length, 159);
   assert.equal(new Set(resources.map((resource) => resource.path)).size, resources.length, "Chaque chemin doit être unique.");
 });
