@@ -30,9 +30,12 @@ build _fiche_thales_direct_a_verifier.tex fiche_thales_direct_a_verifier.pdf
 build _pythabarre_recto_verso.tex pythabarre_recto_verso.pdf
 build _gabarit_reciproque_pythagore.tex gabarit_reciproque_pythagore.pdf
 build _gabarit_criteres_divisibilite.tex gabarit_criteres_divisibilite.pdf
+build _gabarit_droites_graduees.tex gabarit_droites_graduees.pdf
+build _gabarit_reperes_plan.tex gabarit_reperes_plan.pdf
 build angles/_fiche_angles_triangles.tex angles/fiche_angles_triangles.pdf
 
 python3 "$ROOT/scripts/uniformiser-signature-pdf.py" \
   "$ROOT/outils/_source_gabarits_partage_equitable.pdf" \
   "$ROOT/outils/gabarits_partage_equitable_2_3_4_5.pdf" \
-  --mode partage
+  --mode partage \
+  --gabarit-plastifiable

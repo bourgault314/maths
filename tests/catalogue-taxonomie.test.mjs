@@ -36,7 +36,7 @@ const expectedGroupCounts = {
   manipuler: 39,
   entrainer: 29,
   generer: 33,
-  imprimer: 20,
+  imprimer: 22,
   activites: 14,
   cours: 15,
   jeux: 9
@@ -46,7 +46,7 @@ const expectedVisibleCardCounts = {
   manipuler: 35,
   entrainer: 27,
   generer: 33,
-  imprimer: 17,
+  imprimer: 19,
   activites: 12,
   cours: 9,
   jeux: 9
@@ -64,10 +64,10 @@ function assertPathsInGroup(group, paths) {
   }
 }
 
-test("le catalogue conserve 166 entrées dont 159 publiées", () => {
+test("le catalogue conserve 168 entrées dont 161 publiées", () => {
   assert.equal(catalogue.schemaVersion, 5);
-  assert.equal(resources.length, 166);
-  assert.equal(published.length, 159);
+  assert.equal(resources.length, 168);
+  assert.equal(published.length, 161);
   assert.equal(new Set(resources.map((resource) => resource.path)).size, resources.length, "Chaque chemin doit être unique.");
 });
 
@@ -89,7 +89,9 @@ test("la recherche gabarit trouve les fiches Thalès mais pas le générateur de
     "outils/fiche_thales_direct_a_verifier.pdf",
     "outils/fiche_reciproque_thales.pdf",
     "outils/fiche_thales_criteres_a_verifier.pdf",
-    "outils/multiples_et_fractions_d_une_quantite.pdf"
+    "outils/multiples_et_fractions_d_une_quantite.pdf",
+    "outils/gabarit_droites_graduees.pdf",
+    "outils/gabarit_reperes_plan.pdf"
   ]) {
     assert.ok(matches.has(path), `${path} doit sortir pour la recherche « gabarit ».`);
   }
@@ -140,7 +142,7 @@ test("aucune carte publiée ne conserve la description générique", () => {
   assert.deepEqual(offenders, []);
 });
 
-test("la répartition arbitrée des 159 ressources reste stable", () => {
+test("la répartition arbitrée des 161 ressources reste stable", () => {
   const actual = Object.fromEntries([...allowedGroups].map((group) => [group, 0]));
   for (const resource of published) actual[resolvedPrimaryGroup(resource)] += 1;
   assert.deepEqual(actual, expectedGroupCounts);
@@ -406,6 +408,6 @@ test("les familles regroupent toutes leurs variantes sans perte ni chevauchement
   for (const family of families) visibleCardsByGroup[family.group] += 1;
 
   assert.equal(representedResourceCount, published.length, "Aucune variante publiée ne doit disparaître du catalogue.");
-  assert.equal(visibleCardCount, 142, "Les 159 ressources doivent être représentées par 142 cartes après regroupement.");
+  assert.equal(visibleCardCount, 144, "Les 161 ressources doivent être représentées par 144 cartes après regroupement.");
   assert.deepEqual(visibleCardsByGroup, expectedVisibleCardCounts);
 });
