@@ -234,8 +234,9 @@ function makeLowerArrow(index) {
   const columnWidth = Number.parseFloat(root.style.getPropertyValue("--column-width")) || 48;
   const rightPadding = window.innerWidth <= 520 ? 7 : 12;
   const right = rightPadding + ((division.digits.length - operation.nextEndColumn - .5) * columnWidth);
+  arrow.style.top = `${rowHeight * .82}px`;
   arrow.style.right = `${right}px`;
-  arrow.style.height = `${rowHeight * (1.28 + (2 * index))}px`;
+  arrow.style.height = `${rowHeight * (1.34 + (2 * index))}px`;
   return arrow;
 }
 

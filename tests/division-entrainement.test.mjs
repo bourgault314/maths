@@ -90,6 +90,7 @@ test("l’interface propose validation par bloc, table facultative et adaptation
   assert.match(js, /Array\.from\(\{ length: 10 \}/);
   assert.match(js, /window\.innerWidth <= 780/);
   assert.match(js, /window\.addEventListener\("resize"/);
+  assert.match(js, /arrow\.style\.top = `\$\{rowHeight \* \.82\}px`/);
   assert.match(css, /\.practice-stage[^}]*overflow:\s*hidden/);
   assert.match(css, /@media \(max-width: 930px\)/);
   assert.match(css, /@media \(max-width: 520px\)/);
