@@ -1243,12 +1243,6 @@ window.MATHSGO_CATALOGUE = {
       "tags": ["rekenrek", "passage-dizaine", "addition", "entrainement"],
       "cardDescription": "S’entraîner aux calculs qui franchissent la dizaine avec vérification et aide visuelle."
     },
-    "outils/plateaux_manipulation/prisme345_h6_patron (1).html": {
-      "primaryNotion": "espace-constructions",
-      "primaryGroup": "manipuler",
-      "collections": [],
-      "tags": ["espace", "prisme", "patron", "manipulation"]
-    },
     "outils/bouliers/rekenrek/jeu_des_doubles.html": {
       "primaryNotion": "numeration",
       "primaryGroup": "entrainer",
@@ -5042,31 +5036,6 @@ window.MATHSGO_CATALOGUE = {
       "keywords": [],
       "kind": "document",
       "status": "published",
-      "featured": false,
-      "recent": false
-    },
-    {
-      "id": "outils-plateaux-manipulation-prisme345-h6-patron-1-html",
-      "title": "Prisme droit 3-4-5 (h=6) — Patron qui s’ouvre",
-      "description": "Une ressource maths&go pour travailler espace, patrons et constructions.",
-      "path": "outils/plateaux_manipulation/prisme345_h6_patron (1).html",
-      "domains": [
-        "geometrie"
-      ],
-      "notions": [
-        "espace-constructions"
-      ],
-      "uses": [
-        "manipuler",
-        "projeter"
-      ],
-      "types": [
-        "plateau"
-      ],
-      "filters": [],
-      "keywords": [],
-      "kind": "tool",
-      "status": "review",
       "featured": false,
       "recent": false
     },
