@@ -122,6 +122,9 @@ test("la mention écrite dans un pied de page respecte la règle « un seul lien
       if (balise === "span") {
         assert.equal(texte, MENTION, `${rel(chemin)} : texte de la mention ${texte}`);
         assert.ok(lienDeja, `${rel(chemin)} : mention sans lien alors que le pied n'a pas de lien Confidentialité`);
+      } else if (texte === "Confidentialité") {
+        // Accueil : la marque est sur le lien Confidentialité lui-même, sans texte ajouté.
+        assert.match(attrs, /href="(?:\.\.\/)*confidentialite\.html"/, `${rel(chemin)} : le lien marqué ne mène pas à confidentialite.html`);
       } else {
         assert.equal(texte, `${MENTION} · Confidentialité`, `${rel(chemin)} : texte du lien ${texte}`);
         assert.match(attrs, /href="(?:\.\.\/)*confidentialite\.html"/, `${rel(chemin)} : le lien ne mène pas à confidentialite.html`);
@@ -133,11 +136,24 @@ test("la mention écrite dans un pied de page respecte la règle « un seul lien
   assert.ok(mentions >= 26, `${mentions} mentions écrites seulement`);
 });
 
-test("l'accueil, les trois pages légales et l'annuaire écrivent la mention dans leur pied", () => {
-  for (const relatif of ["index.html", "confidentialite.html", "mentions-legales.html", "licence.html", "outils/toutes-les-ressources.html"]) {
+test("les trois pages légales et l'annuaire écrivent la mention dans leur pied", () => {
+  for (const relatif of ["confidentialite.html", "mentions-legales.html", "licence.html", "outils/toutes-les-ressources.html"]) {
     const page = readFileSync(join(racine, relatif), "utf8");
     assert.match(page, new RegExp(`<span[^>]*data-mathsgo-confidentialite>${MENTION}</span>`), relatif);
   }
+});
+
+// L'accueil est la seule page SANS la mention (décision de Gwenaël du 04/09/2026 :
+// son pied tient sur une ligne à toute largeur, et il a déjà son lien Confidentialité).
+// La marque est posée sur ce lien : le script commun ne pose rien, mais il continue
+// d'effacer les anciens cookies de mesure — c'est la page la plus visitée.
+test("l'accueil garde son pied d'une ligne : pas de mention, la marque est sur le lien Confidentialité", () => {
+  const page = readFileSync(join(racine, "index.html"), "utf8");
+  assert.ok(!page.includes(MENTION), "pas de « Sans cookie ni traceur » sur l'accueil");
+  assert.match(page, /<a class="footer-link" href="confidentialite\.html" data-mathsgo-confidentialite>Confidentialité<\/a>/);
+  assert.match(page, /<script defer src="assets\/js\/mention-confidentialite\.js"><\/script>/, "le script reste chargé (nettoyage des anciens cookies)");
+  assert.ok(!page.includes('<a class="footer-link" href="licence.html">Licence</a><span aria-hidden="true">·</span>'),
+    "plus de séparateur orphelin après « Licence »");
 });
 
 // ---------------------------------------------------------------------------
@@ -225,12 +241,19 @@ test("le script ne charge rien et ne contacte personne", () => {
 test("confidentialite.html annonce zéro cookie, zéro traceur tiers, et décrit ce qui reste sur l'appareil", () => {
   const page = readFileSync(join(racine, "confidentialite.html"), "utf8");
   assert.match(page, /n’utilise aucun cookie de mesure ni aucun traceur tiers/);
-  assert.match(page, /garde sur votre appareil, et seulement là, vos réglages et vos progressions dans les jeux/);
+  assert.match(page, /gardent sur votre appareil, et seulement là, vos réglages et votre progression/);
   assert.match(page, /rien n’est transmis/);
   assert.match(page, /Dernière mise à jour : 4 septembre 2026/);
   assert.match(page, /mathsgo-suivi-identite/, "la clé d'identité de l'onglet (lot 8) est déclarée");
   assert.doesNotMatch(page, /<code>_ga<\/code>/, "plus de ligne _ga dans le tableau");
   assert.doesNotMatch(page, /mathsgo:consentement:v1/, "plus de clé de consentement dans le tableau");
   assert.doesNotMatch(page, /Après votre accord|Uniquement après accord|Refuser les statistiques/);
+  // Retours de Gwenaël du 04/09 : une intro générale (pas seulement Défi tables), le suivi
+  // présenté comme son usage et non comme un service ouvert, et plus de tableau technique.
+  assert.match(page, /Plusieurs jeux et outils gardent sur votre appareil/);
+  assert.match(page, /Ce n’est pas un service ouvert/);
+  assert.doesNotMatch(page, /<table class="privacy-table">/, "le tableau technique a laissé place à une liste en français");
+  assert.match(page, /<details class="legal-details">[\s\S]*soley-save-v5[\s\S]*mathsgo-suivi-identite[\s\S]*<\/details>/, "les clés exactes restent dans le repliable");
+  assert.doesNotMatch(page, /Un professeur peut ouvrir/);
   assert.match(page, /Cette mesure a été retirée/, "l'historique est dit franchement");
 });
