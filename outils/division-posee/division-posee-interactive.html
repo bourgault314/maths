@@ -11,11 +11,11 @@
   <title>À toi de poser la division | maths&amp;go</title>
   <link rel="icon" href="/favicon.ico" sizes="48x48">
   <link rel="icon" type="image/svg+xml" href="/favicon.svg">
-  <link rel="stylesheet" href="division-posee.css?v=7">
-  <link rel="stylesheet" href="division-posee-interactive.css?v=4">
+  <link rel="stylesheet" href="division-posee.css?v=8">
+  <link rel="stylesheet" href="division-posee-interactive.css?v=5">
   <link rel="stylesheet" href="../../assets/css/consentement.css">
   <script defer src="../../assets/js/consentement.js"></script>
-  <script type="module" src="division-posee-interactive.js?v=3"></script>
+  <script type="module" src="division-posee-interactive.js?v=4"></script>
 </head>
 <body class="practice-page">
   <a class="skip-link" href="#outil">Aller à l’entraînement</a>
@@ -48,6 +48,11 @@
           <label class="number-field role-divisor">
             <span>Diviseur</span>
             <input id="divisor" inputmode="numeric" type="number" min="1" max="9999" value="7" required>
+          </label>
+          <label class="rank-control" for="rank-guides">
+            <input id="rank-guides" type="checkbox">
+            <span class="rank-switch" aria-hidden="true"></span>
+            <span class="rank-copy"><strong>Repères de rang</strong><small>c · d · u</small></span>
           </label>
           <button class="button button-secondary" id="random-problem" type="button">Au hasard</button>
           <button class="button button-primary" type="submit">Commencer</button>
@@ -85,6 +90,7 @@
             <div><p>Table du diviseur</p><h2 id="table-title">Table de 7</h2></div>
             <button class="button button-light table-toggle" id="table-toggle" type="button" aria-expanded="false">Voir la table</button>
           </div>
+          <p class="table-bracket" id="table-bracket" aria-live="polite" hidden></p>
           <div id="multiples" class="multiples practice-multiples"></div>
         </aside>
       </section>

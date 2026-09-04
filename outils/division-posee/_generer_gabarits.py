@@ -164,7 +164,7 @@ def divisor_table(c):
     for multiplier in range(10):
         row_y = top - multiplier * row_h
         if multiplier % 2 == 0:
-            c.setFillColor(BLUE_SOFT if multiplier != 0 else ORANGE_SOFT)
+            c.setFillColor(BLUE_SOFT)
             c.roundRect(x + 9, row_y - 20, w - 18, 25, 5, stroke=0, fill=1)
         text(c, f"× {multiplier}", x + 19, row_y - 13, 8.7, INK, "GoSans")
         text(c, "=", x + 55, row_y - 13, 8.7, MUTED, "GoSans")

@@ -1,4 +1,8 @@
-import { makeDivision } from "./division-engine.mjs?v=6";
+import {
+  makeDivision,
+  multiplicationBracket,
+  placeValueMarker
+} from "./division-engine.mjs?v=8";
 import {
   firstTrainingError,
   hintForTask,
@@ -10,6 +14,8 @@ const $ = (selector) => document.querySelector(selector);
 const dividendInput = $("#dividend");
 const divisorInput = $("#divisor");
 const errorBox = $("#form-error");
+const rankGuides = $("#rank-guides");
+const rankGuidesStorageKey = "mathsgo-division-rank-guides";
 const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
 
 let division = makeDivision(584, 7, "integer", 2);
@@ -26,6 +32,14 @@ let highlightedMultiplier = null;
 let transitioningTaskId = null;
 let transitionToken = 0;
 let resizeTimer = null;
+let showRankGuides = false;
+
+try {
+  showRankGuides = window.localStorage.getItem(rankGuidesStorageKey) === "true";
+} catch {
+  showRankGuides = false;
+}
+rankGuides.checked = showRankGuides;
 
 function currentTask() {
   return tasks[taskIndex];
@@ -154,6 +168,15 @@ function appendNumber(row, value, endColumn, className = "", options = {}) {
   return { start, end: endColumn };
 }
 
+function rankMarker(endColumn, activeColumn) {
+  const marker = document.createElement("span");
+  marker.className = "rank-marker";
+  marker.classList.toggle("is-active", endColumn === activeColumn);
+  marker.textContent = placeValueMarker(division, endColumn);
+  marker.setAttribute("aria-hidden", "true");
+  return marker;
+}
+
 function appendGridInputs(row, field, endColumn, expected, className) {
   const characters = String(expected).split("");
   const start = Math.max(0, endColumn - characters.length + 1);
@@ -220,6 +243,7 @@ function makeDividendRow(task) {
       const arrow = makeLowerArrow(transitionIndex);
       if (arrow) digit.append(arrow);
     }
+    if (showRankGuides) digit.append(rankMarker(index, activeEnd));
     row.append(digit);
   });
   return row;
@@ -274,6 +298,9 @@ function makeLowerArrow(index) {
 function quotientWriting(task) {
   const writing = document.createElement("span");
   writing.className = "quotient-writing practice-quotient";
+  const activeColumn = task.kind === "stage"
+    ? division.operations[task.opIndex].endColumn
+    : null;
   const anticipationDone = completed.has("anticipation") || task.kind !== "anticipation";
   if (!anticipationDone) {
     const waiting = document.createElement("span");
@@ -303,6 +330,7 @@ function quotientWriting(task) {
       slot.classList.add("is-empty", "is-locked-slot");
       slot.setAttribute("aria-hidden", "true");
     }
+    if (showRankGuides) slot.append(rankMarker(operation.endColumn, activeColumn));
     writing.append(slot);
   });
   return writing;
@@ -402,6 +430,7 @@ function setDivisionMetrics(root) {
 function renderDivision(task) {
   const root = $("#long-division");
   root.replaceChildren();
+  root.classList.toggle("has-rank-guides", showRankGuides);
   setDivisionMetrics(root);
   const work = document.createElement("div");
   work.className = "work-column practice-work-column";
@@ -433,6 +462,14 @@ function renderDivision(task) {
 
 function renderTable(task) {
   if (task.kind !== "stage") highlightedMultiplier = null;
+  const bracket = task.kind === "stage" && highlightedMultiplier !== null
+    ? multiplicationBracket(division, task.opIndex)
+    : null;
+  const bracketLine = $("#table-bracket");
+  bracketLine.hidden = !bracket;
+  bracketLine.textContent = bracket
+    ? `${bracket.lowerProduct} ≤ ${bracket.target} < ${bracket.upperProduct}`
+    : "";
   $("#table-title").textContent = `Table de ${division.divisor}`;
   const multiples = $("#multiples");
   multiples.replaceChildren();
@@ -440,6 +477,7 @@ function renderTable(task) {
     const row = document.createElement("div");
     row.className = "multiple";
     if (multiplier === highlightedMultiplier) row.classList.add("is-active");
+    if (bracket && multiplier === bracket.upperMultiplier) row.classList.add("is-upper-bound");
     row.innerHTML = `<span>${multiplier} × ${division.divisor}</span><b>=</b><strong>${tableVisible ? multiplier * division.divisor : "?"}</strong>`;
     multiples.append(row);
   });
@@ -667,6 +705,15 @@ async function toggleFullscreen() {
 
 $("#division-form").addEventListener("submit", submitProblem);
 $("#random-problem").addEventListener("click", randomProblem);
+rankGuides.addEventListener("change", () => {
+  showRankGuides = rankGuides.checked;
+  try {
+    window.localStorage.setItem(rankGuidesStorageKey, String(showRankGuides));
+  } catch {
+    // Les repères restent utilisables même si le stockage local est bloqué.
+  }
+  render();
+});
 $("#validate").addEventListener("click", validateCurrentTask);
 $("#help").addEventListener("click", showHint);
 $("#table-toggle").addEventListener("click", () => {

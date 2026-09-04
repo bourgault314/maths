@@ -80,8 +80,10 @@ test("les zéros du quotient et le cas dividende inférieur au diviseur sont con
 });
 
 test("l’interface propose validation par bloc, table facultative et adaptation mobile", () => {
-  assert.match(html, /division-posee-interactive\.css\?v=4/);
-  assert.match(html, /division-posee-interactive\.js\?v=3/);
+  assert.match(html, /division-posee-interactive\.css\?v=5/);
+  assert.match(html, /division-posee-interactive\.js\?v=4/);
+  assert.match(html, /id="rank-guides" type="checkbox"/);
+  assert.match(html, /id="table-bracket"[^>]*hidden/);
   assert.match(html, /id="validate"[^>]*>Vérifier l’étape/);
   assert.match(html, /id="help"[^>]*>Un indice/);
   assert.match(html, /id="table-toggle"[^>]*>Voir la table/);
@@ -89,6 +91,9 @@ test("l’interface propose validation par bloc, table facultative et adaptation
   assert.match(js, /completed\.set\(task\.id, answer\)/);
   assert.match(js, /task\.kind === "stage" \? 820 : 480/);
   assert.match(js, /Array\.from\(\{ length: 10 \}/);
+  assert.match(js, /multiplicationBracket\(division, task\.opIndex\)/);
+  assert.match(js, /mathsgo-division-rank-guides/);
+  assert.match(js, /slot\.append\(rankMarker\(operation\.endColumn, activeColumn\)\)/);
   assert.match(js, /window\.innerWidth <= 780/);
   assert.match(js, /window\.addEventListener\("resize"/);
   assert.match(js, /digit\.append\(arrow\)/);

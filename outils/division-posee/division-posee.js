@@ -3,8 +3,9 @@ import {
   makeDisplayMetrics,
   makeDivision,
   makeSteps,
+  multiplicationBracket,
   placeValueMarker
-} from "./division-engine.mjs?v=7";
+} from "./division-engine.mjs?v=8";
 
 const $ = (selector) => document.querySelector(selector);
 const dividendInput = $("#dividend");
@@ -278,10 +279,21 @@ function renderTable(step) {
   const active = step.opIndex !== undefined && ["choose", "multiply", "subtract-ask", "subtract"].includes(step.kind)
     ? division.operations[step.opIndex]?.quotientDigit
     : null;
+  const bracket = step.kind === "choose" && step.opIndex !== undefined
+    ? multiplicationBracket(division, step.opIndex)
+    : null;
+  const bracketLine = $("#table-bracket");
+  bracketLine.hidden = !bracket;
+  bracketLine.textContent = bracket
+    ? `${bracket.lowerProduct} ≤ ${bracket.target} < ${bracket.upperProduct}`
+    : "";
   $("#table-title").textContent = `Table de ${division.divisor}`;
-  $("#multiples").innerHTML = Array.from({ length: 10 }, (_, multiplier) =>
-    `<div class="multiple ${multiplier === active ? "is-active" : ""}"><span>${multiplier} × ${division.divisor}</span><span>=</span><strong>${multiplier * division.divisor}</strong></div>`
-  ).join("");
+  $("#multiples").innerHTML = Array.from({ length: 10 }, (_, multiplier) => {
+    const classes = ["multiple"];
+    if (multiplier === active) classes.push("is-active");
+    if (bracket && multiplier === bracket.upperMultiplier) classes.push("is-upper-bound");
+    return `<div class="${classes.join(" ")}"><span>${multiplier} × ${division.divisor}</span><span>=</span><strong>${multiplier * division.divisor}</strong></div>`;
+  }).join("");
 }
 
 function render() {
