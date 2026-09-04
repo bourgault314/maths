@@ -69,6 +69,9 @@ const DECIMAL_PLACES = [
   ["millionième", "millionièmes"]
 ];
 
+const INTEGER_PLACE_MARKERS = ["u", "d", "c", "um", "dm", "cm", "uM", "dM"];
+const DECIMAL_PLACE_MARKERS = ["d", "c", "m", "dm", "cm", "mi"];
+
 export function placeValueName(data, endColumn, quantity = 2) {
   const rank = data.integerLength - 1 - endColumn;
   const names = rank >= 0 ? INTEGER_PLACES[rank] : DECIMAL_PLACES[-rank - 1];
@@ -76,16 +79,32 @@ export function placeValueName(data, endColumn, quantity = 2) {
   return names[quantity === 1 ? 0 : 1];
 }
 
+export function placeValueMarker(data, endColumn) {
+  const rank = data.integerLength - 1 - endColumn;
+  return rank >= 0
+    ? INTEGER_PLACE_MARKERS[rank] || "…"
+    : DECIMAL_PLACE_MARKERS[-rank - 1] || "…";
+}
+
 function afterDe(place) {
   return /^[aeiouyàâäéèêëîïôöùûü]/i.test(place) ? `d’${place}` : `de ${place}`;
 }
 
-export function makeDisplayMetrics(data) {
+export function makeDisplayMetrics(data, options = {}) {
+  const {
+    rowBudget = 330,
+    columnBudget = 520,
+    quotientBudget = 210,
+    maxRowHeight = 50,
+    maxColumnWidth = 48,
+    maxDigitSize = 36,
+    maxQuotientSize = 35
+  } = options;
   const rowCount = 1 + data.operations.length * 2;
-  const rowHeight = Math.min(50, Math.max(14, Math.floor(330 / rowCount)));
-  const digitSize = Math.min(36, Math.max(13, Math.floor(rowHeight * 0.72)));
-  const columnWidth = Math.min(48, Math.max(22, Math.floor(520 / data.digits.length)));
-  const quotientSize = Math.min(35, Math.max(14, Math.floor(210 / Math.max(4, data.quotient.length))));
+  const rowHeight = Math.min(maxRowHeight, Math.max(14, Math.floor(rowBudget / rowCount)));
+  const digitSize = Math.min(maxDigitSize, Math.max(13, Math.floor(rowHeight * 0.72)));
+  const columnWidth = Math.min(maxColumnWidth, Math.max(22, Math.floor(columnBudget / data.digits.length)));
+  const quotientSize = Math.min(maxQuotientSize, Math.max(14, Math.floor(quotientBudget / Math.max(4, data.quotient.length))));
   return { rowCount, rowHeight, digitSize, columnWidth, quotientSize };
 }
 
@@ -111,7 +130,7 @@ export function getOperationDisplayState(data, index, step) {
     return { quotient: true, product: true, subtraction: true, result: "remainder" };
   }
   if (step.kind === "decimal") {
-    return { quotient: true, product: true, subtraction: true, result: "remainder" };
+    return completed;
   }
   if (step.kind === "bring") return completed;
   return hidden;
@@ -257,22 +276,30 @@ export function makeSteps(data) {
       const nextPlace = placeValueName(data, operation.nextEndColumn);
       if (decimalStart) {
         steps.push({
+          kind: "bring",
+          title: "J’échange",
+          sentence: `${operation.remainder} ${placeValueName(data, operation.endColumn, operation.remainder)} = ${operation.remainder * 10} ${nextPlace}.`,
+          detail: `Je fais apparaître un 0 au rang des ${nextPlace} dans le dividende : j’obtiens ${operation.nextPartial} ${nextPlace}.`,
+          opIndex
+        });
+        steps.push({
           kind: "decimal",
-          title: "Je passe aux décimales",
-          sentence: `Il reste ${operation.remainder} ${placeValueName(data, operation.endColumn, operation.remainder)}.`,
-          detail: "J’écris la virgule au quotient pour continuer.",
+          title: "Je prépare le quotient",
+          sentence: `Le dividende comporte maintenant des ${nextPlace}.`,
+          detail: `J’écris la virgule et je réserve la place des ${nextPlace} au quotient.`,
+          opIndex
+        });
+      } else {
+        steps.push({
+          kind: "bring",
+          title: generatedDecimal ? "J’échange" : "J’échange et j’abaisse",
+          sentence: `${operation.remainder} ${placeValueName(data, operation.endColumn, operation.remainder)} = ${operation.remainder * 10} ${nextPlace}.`,
+          detail: generatedDecimal
+            ? `Je fais apparaître un 0 au rang des ${nextPlace} dans le dividende : j’obtiens ${operation.nextPartial} ${nextPlace}.`
+            : `J’abaisse ${operation.nextDigit} ${placeValueName(data, operation.nextEndColumn, operation.nextDigit)} : j’obtiens ${operation.nextPartial} ${nextPlace}.`,
           opIndex
         });
       }
-      steps.push({
-        kind: "bring",
-        title: generatedDecimal ? "J’échange" : "J’échange et j’abaisse",
-        sentence: `${operation.remainder} ${placeValueName(data, operation.endColumn, operation.remainder)} = ${operation.remainder * 10} ${nextPlace}.`,
-        detail: generatedDecimal
-          ? `Je fais apparaître un 0 au rang des ${nextPlace} : j’obtiens ${operation.nextPartial} ${nextPlace}.`
-          : `J’abaisse ${operation.nextDigit} ${placeValueName(data, operation.nextEndColumn, operation.nextDigit)} : j’obtiens ${operation.nextPartial} ${nextPlace}.`,
-        opIndex
-      });
     }
   });
 

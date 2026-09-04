@@ -120,7 +120,7 @@ test("la collection sépare comprendre, s’entraîner et imprimer", () => {
   assert.match(collection, /class="site-shell"/);
   assert.match(collection, /class="catalogue-breadcrumb"/);
   assert.match(collection, /class="main-panel catalogue-deep-view"/);
-  assert.match(collection, />Numération<\/a>/);
+  assert.match(collection, />Nombres entiers et divisibilité<\/a>/);
   assert.doesNotMatch(collection, /collection-index\.css/);
   assert.match(collection, /Comprendre &amp; projeter/);
   assert.match(collection, /S’entraîner/);

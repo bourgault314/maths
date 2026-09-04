@@ -6,6 +6,7 @@ import {
   makeDisplayMetrics,
   makeDivision,
   makeSteps,
+  placeValueMarker,
   placeValueName
 } from "../outils/division-posee/division-engine.mjs";
 
@@ -133,18 +134,29 @@ test("le vocabulaire suit la valeur de position à chaque échange", () => {
   assert.ok(steps.some(({ sentence }) => sentence === "39 unités ÷ 7 : combien d’unités au quotient ?"));
 });
 
-test("la poursuite décimale introduit la virgule puis les zéros un par un", () => {
+test("la poursuite décimale introduit le dixième au dividende avant la virgule au quotient", () => {
   const division = makeDivision(5849, 7, "decimal", 2);
   const steps = makeSteps(division);
   const decimal = steps.find(({ kind }) => kind === "decimal");
   const decimalBringSteps = steps.filter(({ kind, opIndex }) => kind === "bring" && division.operations[opIndex].nextEndColumn >= division.integerLength);
-  assert.equal(decimal.sentence, "Il reste 4 unités.");
-  assert.equal(decimal.detail, "J’écris la virgule au quotient pour continuer.");
+  assert.ok(steps.indexOf(decimalBringSteps[0]) < steps.indexOf(decimal));
+  assert.equal(decimal.sentence, "Le dividende comporte maintenant des dixièmes.");
+  assert.equal(decimal.detail, "J’écris la virgule et je réserve la place des dixièmes au quotient.");
   assert.deepEqual(decimalBringSteps.map(({ sentence }) => sentence), [
     "4 unités = 40 dixièmes.",
     "5 dixièmes = 50 centièmes."
   ]);
   assert.ok(decimalBringSteps.every(({ detail }) => detail.startsWith("Je fais apparaître un 0")));
+  assert.ok(decimalBringSteps.every(({ detail }) => detail.includes("dans le dividende")));
+  assert.equal(getOperationDisplayState(division, decimal.opIndex, decimal).result, "next");
+});
+
+test("les repères abrégés suivent les rangs entiers et décimaux", () => {
+  const division = makeDivision(5849, 7, "decimal", 3);
+  assert.deepEqual(
+    division.digits.map((_, column) => placeValueMarker(division, column)),
+    ["um", "c", "d", "u", "d", "c", "m"]
+  );
 });
 
 test("l'affichage réserve toutes les lignes et s'adapte aux longues divisions", () => {
@@ -164,6 +176,17 @@ test("l'affichage réserve toutes les lignes et s'adapte aux longues divisions",
   assert.ok(longMetrics.rowHeight < shortMetrics.rowHeight);
   assert.ok(longMetrics.rowCount * longMetrics.rowHeight <= 410);
   assert.ok(longMetrics.digitSize >= 13);
+  const projectionMetrics = makeDisplayMetrics(makeDivision(584, 7, "integer", 2), {
+    rowBudget: 430,
+    columnBudget: 680,
+    quotientBudget: 300,
+    maxRowHeight: 60,
+    maxColumnWidth: 58,
+    maxDigitSize: 43,
+    maxQuotientSize: 43
+  });
+  assert.ok(projectionMetrics.digitSize > shortMetrics.digitSize);
+  assert.ok(projectionMetrics.columnWidth > shortMetrics.columnWidth);
 });
 
 test("l'anticipation indique clairement un quotient inférieur à un", () => {
@@ -175,8 +198,10 @@ test("l'anticipation indique clairement un quotient inférieur à un", () => {
 });
 
 test("l'interface conserve les repères visuels demandés", () => {
-  assert.match(interfaceHtml, /href="\/outils\/\?domain=nombres-calculs&amp;notion=numeration"/);
+  assert.match(interfaceHtml, /href="\/outils\/\?domain=nombres-calculs&amp;notion=divisibilite"/);
   assert.match(interfaceHtml, /id="decimal-field" hidden/);
+  assert.match(interfaceHtml, /id="rank-guides" type="checkbox"/);
+  assert.match(interfaceHtml, /id="projection-recap"[^>]*hidden/);
   assert.match(interfaceCss, /\.decimal-field\[hidden\][^{]*\{[^}]*display:\s*none/);
   assert.match(interfaceCss, /\.table-card\s*\{[^}]*height:\s*100%/);
   assert.match(interfaceCss, /grid-template-rows:\s*repeat\(10,/);
@@ -186,13 +211,18 @@ test("l'interface conserve les repères visuels demandés", () => {
   assert.match(interfaceCss, /\.subtraction-rule\s*\{/);
   assert.match(interfaceCss, /\.lower-arrow\s*\{[^}]*z-index:\s*3[^}]*top:\s*92%[^}]*height:\s*calc\(var\(--row-height, 50px\) \* 1\.02\)/);
   assert.match(interfaceCss, /\.quotient-slot\.is-empty\s*\{[^}]*border-bottom/);
+  assert.match(interfaceCss, /\.rank-marker\s*\{/);
+  assert.match(interfaceCss, /body\.is-projection \.controls-card|body\.is-projection/);
+  assert.doesNotMatch(interfaceCss, /\.relation-sign\s*\{[^}]*display:\s*none/);
   assert.match(interfaceJs, /decimalPlaces\.disabled = mode !== "decimal"/);
   assert.match(interfaceJs, /const visibleEnd = operationEnd/);
   assert.match(interfaceJs, /isUnrevealedDecimal/);
   assert.match(interfaceJs, /\["ask", "choose"\]/);
   assert.match(interfaceJs, /quotientWriting\(step\)/);
   assert.match(interfaceJs, /Array\.from\(\{ length: 10 \}/);
-  assert.match(interfaceJs, /const showEmptySlots = step\.kind !== "bound"/);
+  assert.match(interfaceJs, /const showIntegerSlots = step\.kind !== "bound"/);
+  assert.match(interfaceJs, /mathsgo-division-rank-guides/);
+  assert.match(interfaceJs, /syncProjectionMode/);
   assert.match(interfaceJs, /button\.textContent = "⛶"/);
   assert.match(interfaceJs, /document\.exitFullscreen/);
   assert.match(interfaceJs, /fullscreenchange/);
