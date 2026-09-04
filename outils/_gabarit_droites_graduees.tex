@@ -1,0 +1,128 @@
+\documentclass[10pt]{article}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[provide=*,french]{babel}
+\usepackage[a4paper,landscape,left=0.65cm,right=0.65cm,top=0.55cm,bottom=0.80cm]{geometry}
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta}
+\usepackage{eso-pic}
+\usepackage{helvet}
+
+\renewcommand{\familydefault}{\sfdefault}
+\pagestyle{empty}
+\setlength{\parindent}{0pt}
+
+\definecolor{brandNavy}{RGB}{11,53,112}
+\definecolor{softGray}{RGB}{92,105,120}
+\definecolor{lineInk}{RGB}{42,51,64}
+
+\newcommand{\MathsGoPrintFooter}{%
+\begin{tikzpicture}[remember picture,overlay]
+  \node[anchor=south west,inner sep=0pt]
+    at ([xshift=0.48cm,yshift=0.20cm]current page.south west)
+    {\includegraphics[width=2.45cm]{../assets/img/mathsgo-logo.png}};
+  \node[anchor=south,text=brandNavy!70,font=\sffamily\bfseries\fontsize{7}{7}\selectfont]
+    at ([yshift=0.30cm]current page.south)
+    {mathsgo.re \textperiodcentered\ CC BY-NC-SA 4.0};
+  \node[anchor=south east,text=brandNavy!70,font=\sffamily\fontsize{6.8}{6.8}\selectfont]
+    at ([xshift=-0.48cm,yshift=0.30cm]current page.south east)
+    {Gabarit plastifiable};
+\end{tikzpicture}%
+}
+\AddToShipoutPictureFG{\MathsGoPrintFooter}
+
+\newcommand{\TitrePage}[1]{%
+  \begin{center}
+    {\fontsize{22}{24}\selectfont\bfseries\color{brandNavy}Gabarit de droites graduées}\par
+    \vspace{0.08cm}
+    {\fontsize{10.5}{12}\selectfont\color{softGray}#1}
+  \end{center}
+}
+
+\newcommand{\DroiteReguliere}{%
+\begin{tikzpicture}[x=1cm,y=1cm]
+  \useasboundingbox (0,-0.95) rectangle (28.35,0.95);
+  \draw[lineInk,line width=1.25pt,-{Latex[length=3.2mm,width=2.35mm]}]
+    (0.15,0) -- (28.10,0);
+  \foreach \i in {0,...,26}{
+    \pgfmathsetmacro{\x}{1+\i}
+    \draw[lineInk,line width=0.95pt] (\x,-0.34) -- (\x,0.34);
+  }
+\end{tikzpicture}%
+}
+
+\newcommand{\DroiteQuarts}{%
+\begin{tikzpicture}[x=1cm,y=1cm]
+  \useasboundingbox (0,-0.95) rectangle (28.35,0.95);
+  \draw[lineInk,line width=1.25pt,-{Latex[length=3.2mm,width=2.35mm]}]
+    (0.15,0) -- (28.10,0);
+  \foreach \i in {0,...,26}{
+    \pgfmathsetmacro{\x}{1+\i}
+    \pgfmathtruncatemacro{\reste}{mod(\i,4)}
+    \ifnum\reste=0
+      \draw[lineInk,line width=1.05pt] (\x,-0.47) -- (\x,0.47);
+    \else
+      \pgfmathtruncatemacro{\demi}{mod(\i,2)}
+      \ifnum\demi=0
+        \draw[lineInk,line width=0.95pt] (\x,-0.35) -- (\x,0.35);
+      \else
+        \draw[lineInk,line width=0.85pt] (\x,-0.25) -- (\x,0.25);
+      \fi
+    \fi
+  }
+\end{tikzpicture}%
+}
+
+\newcommand{\DroiteDixiemes}{%
+\begin{tikzpicture}[x=1cm,y=1cm]
+  \useasboundingbox (0,-0.95) rectangle (28.35,0.95);
+  \draw[lineInk,line width=1.25pt,-{Latex[length=3.2mm,width=2.35mm]}]
+    (0.15,0) -- (28.10,0);
+  \foreach \i in {0,...,26}{
+    \pgfmathsetmacro{\x}{1+\i}
+    \pgfmathtruncatemacro{\resteDix}{mod(\i,10)}
+    \pgfmathtruncatemacro{\resteCinq}{mod(\i,5)}
+    \ifnum\resteDix=0
+      \draw[lineInk,line width=1.05pt] (\x,-0.47) -- (\x,0.47);
+    \else
+      \ifnum\resteCinq=0
+        \draw[lineInk,line width=0.95pt] (\x,-0.35) -- (\x,0.35);
+      \else
+        \draw[lineInk,line width=0.80pt] (\x,-0.22) -- (\x,0.22);
+      \fi
+    \fi
+  }
+\end{tikzpicture}%
+}
+
+\newcommand{\Intertitre}[1]{%
+  \vspace{0.05cm}
+  {\hspace{0.88cm}\bfseries\color{brandNavy}#1}\par
+  \vspace{0.05cm}
+}
+
+\begin{document}
+
+\TitrePage{Graduations régulières espacées de 1 cm}
+\vspace{0.30cm}
+\centering
+\DroiteReguliere\par\vspace{1.30cm}
+\DroiteReguliere\par\vspace{1.30cm}
+\DroiteReguliere\par\vspace{1.30cm}
+\DroiteReguliere
+
+\newpage
+
+\TitrePage{Graduations espacées de 1 cm, avec repères visuels}
+\Intertitre{Partages en quarts}
+\centering
+\DroiteQuarts\par\vspace{0.75cm}
+\DroiteQuarts\par\vspace{0.55cm}
+\Intertitre{Partages en dixièmes}
+\centering
+\DroiteDixiemes\par\vspace{0.75cm}
+\DroiteDixiemes
+
+\end{document}

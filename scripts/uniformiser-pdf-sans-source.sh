@@ -11,13 +11,18 @@ for pdf in \
   detective_des_grandeurs_additive__1.pdf \
   detective_des_grandeurs_additive__2.pdf \
   detective_des_grandeurs_multiplicative__1.pdf \
-  fractions/gabarits_fractions.pdf \
   fractions_multiples_problemes.pdf \
   pourcentages_recherche.pdf
 do
   python3 "$ROOT/scripts/uniformiser-signature-pdf.py" \
     "$ROOT/outils/$pdf" "$ROOT/outils/$pdf" --mode pied-complet
 done
+
+python3 "$ROOT/scripts/uniformiser-signature-pdf.py" \
+  "$ROOT/outils/fractions/gabarits_fractions.pdf" \
+  "$ROOT/outils/fractions/gabarits_fractions.pdf" \
+  --mode pied-complet \
+  --gabarit-plastifiable
 
 for pdf in \
   nombres_relatifs/nombres_relatifs_couleur_mathsgo.pdf \

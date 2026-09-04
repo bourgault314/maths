@@ -760,6 +760,22 @@ window.MATHSGO_CATALOGUE = {
       "thumbnail": "assets/img/thumbnails/divisibilite/gabarit-criteres-divisibilite.png?v=1",
       "cardDescription": "Tester un nombre avec les critères de 2, 3, 5, 9 et 10 : chiffre des unités d'un côté, somme des chiffres de l'autre."
     },
+    "outils/gabarit_droites_graduees.pdf": {
+      "primaryNotion": "relatifs",
+      "primaryGroup": "imprimer",
+      "collections": [],
+      "tags": ["gabarit", "plastifier", "droite-graduee", "graduations", "nombres-relatifs", "fractions", "decimaux"],
+      "thumbnail": "assets/img/thumbnails/relatifs/gabarit-droites-graduees.png?v=1",
+      "cardDescription": "Deux pages plastifiables sans zéro ni valeurs imposés : droites régulières, puis repères visuels par 4 et par 10."
+    },
+    "outils/gabarit_reperes_plan.pdf": {
+      "primaryNotion": "reperage",
+      "primaryGroup": "imprimer",
+      "collections": [],
+      "tags": ["gabarit", "plastifier", "repere", "coordonnees", "quadrillage", "axes", "origine"],
+      "thumbnail": "assets/img/thumbnails/reperage/gabarit-reperes-plan.png?v=1",
+      "cardDescription": "Quatre repères plastifiables : origine centrée ou décalée, avec quadrillage ou en version libre à orienter."
+    },
     "outils/plateaux_manipulation/feuille_coupee_puissance.html": {
       "primaryNotion": "puissances",
       "primaryGroup": "activites",
@@ -2974,6 +2990,41 @@ window.MATHSGO_CATALOGUE = {
       "recent": false
     },
     {
+      "id": "outils-gabarit-reperes-plan-pdf",
+      "title": "Gabarit — repères du plan",
+      "description": "Quatre repères A4 à plastifier : origine centrée ou décalée, avec quadrillage de 5 mm et axes orientés, ou sans flèches pour choisir librement l’orientation.",
+      "path": "outils/gabarit_reperes_plan.pdf",
+      "domains": [
+        "geometrie"
+      ],
+      "notions": [
+        "reperage"
+      ],
+      "uses": [
+        "imprimer",
+        "entrainer"
+      ],
+      "types": [
+        "imprimable"
+      ],
+      "filters": [
+        "materiel-imprimer"
+      ],
+      "keywords": [
+        "gabarit",
+        "repère du plan",
+        "coordonnées",
+        "quadrillage",
+        "origine",
+        "axes",
+        "plastifiable"
+      ],
+      "kind": "document",
+      "status": "published",
+      "featured": false,
+      "recent": true
+    },
+    {
       "id": "outils-chat-index-html",
       "title": "Chat, c’est toi le chat !",
       "description": "Le jeu de repérage spatial « Chat, c’est toi le chat ! » sous toutes ses formes : jouer en ligne, projeter des défis en classe, ou imprimer le guide et les cartes pour jouer avec des cerceaux.",
@@ -4622,6 +4673,43 @@ window.MATHSGO_CATALOGUE = {
       "status": "published",
       "featured": false,
       "recent": false
+    },
+    {
+      "id": "outils-gabarit-droites-graduees-pdf",
+      "title": "Gabarit — droites graduées",
+      "description": "Deux pages A4 paysage à plastifier, sans zéro ni valeurs imposés : quatre droites à graduations régulières de 1 cm, puis des variantes avec repères visuels par 4 et par 10.",
+      "path": "outils/gabarit_droites_graduees.pdf",
+      "domains": [
+        "nombres-calculs"
+      ],
+      "notions": [
+        "relatifs",
+        "fractions",
+        "numeration"
+      ],
+      "uses": [
+        "imprimer",
+        "entrainer"
+      ],
+      "types": [
+        "imprimable"
+      ],
+      "filters": [
+        "materiel-imprimer"
+      ],
+      "keywords": [
+        "gabarit",
+        "droite graduée",
+        "graduations",
+        "nombres relatifs",
+        "fractions",
+        "nombres décimaux",
+        "plastifiable"
+      ],
+      "kind": "document",
+      "status": "published",
+      "featured": false,
+      "recent": true
     },
     {
       "id": "outils-nombres-relatifs-nombres-relatifs-somme-difference-html",

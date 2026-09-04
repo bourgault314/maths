@@ -57,7 +57,21 @@ def draw_address(overlay: canvas.Canvas, page_width: float, y: float = ADDRESS_Y
     overlay.drawCentredString(page_width / 2, y, "mathsgo.re")
 
 
-def make_overlay(width: float, height: float, logo: Path, mode: str) -> bytes:
+def draw_template_label(
+    overlay: canvas.Canvas, page_width: float, y: float = ADDRESS_Y
+) -> None:
+    overlay.setFillColor(BRAND_NAVY)
+    overlay.setFont("Helvetica", 6.8)
+    overlay.drawRightString(page_width - 15.6, y, "Gabarit plastifiable")
+
+
+def make_overlay(
+    width: float,
+    height: float,
+    logo: Path,
+    mode: str,
+    mark_as_template: bool,
+) -> bytes:
     buffer = io.BytesIO()
     overlay = canvas.Canvas(buffer, pagesize=(width, height))
 
@@ -84,6 +98,9 @@ def make_overlay(width: float, height: float, logo: Path, mode: str) -> bytes:
 
     else:  # garde-fou pour un éventuel appel direct hors argparse
         raise ValueError(f"Mode inconnu : {mode}")
+
+    if mark_as_template:
+        draw_template_label(overlay, width)
 
     overlay.save()
     return buffer.getvalue()
@@ -118,7 +135,13 @@ def remove_xobjects(page: object, reader: PdfReader) -> None:
     page[NameObject("/Contents")] = stream
 
 
-def uniformize(source: Path, destination: Path, logo: Path, mode: str) -> None:
+def uniformize(
+    source: Path,
+    destination: Path,
+    logo: Path,
+    mode: str,
+    mark_as_template: bool,
+) -> None:
     # La lecture en mémoire autorise source == destination sans corrompre le PDF.
     reader = PdfReader(io.BytesIO(source.read_bytes()))
     writer = PdfWriter()
@@ -129,7 +152,7 @@ def uniformize(source: Path, destination: Path, logo: Path, mode: str) -> None:
         remove_obsolete_address(page)
         width = float(page.mediabox.width)
         height = float(page.mediabox.height)
-        overlay_bytes = make_overlay(width, height, logo, mode)
+        overlay_bytes = make_overlay(width, height, logo, mode, mark_as_template)
         page.merge_page(PdfReader(io.BytesIO(overlay_bytes)).pages[0])
         writer.add_page(page)
 
@@ -154,8 +177,19 @@ def main() -> None:
         required=True,
         choices=("pied-complet", "adresse-liseré", "partage"),
     )
+    parser.add_argument(
+        "--gabarit-plastifiable",
+        action="store_true",
+        help="Ajoute la mention Gabarit plastifiable en bas à droite.",
+    )
     args = parser.parse_args()
-    uniformize(args.source, args.destination, args.logo, args.mode)
+    uniformize(
+        args.source,
+        args.destination,
+        args.logo,
+        args.mode,
+        args.gabarit_plastifiable,
+    )
 
 
 if __name__ == "__main__":

@@ -1,6 +1,6 @@
 # Sources et signature des PDF imprimables
 
-Ce document est l'inventaire technique des 52 PDF publics de maths&go.
+Ce document est l'inventaire technique des 54 PDF publics de maths&go.
 
 ## Référence graphique
 
@@ -15,7 +15,7 @@ Ce document est l'inventaire technique des 52 PDF publics de maths&go.
 
 ## PDF possédant une source LaTeX
 
-Ces 15 documents sont entièrement modifiables et recompilables :
+Ces 17 documents sont entièrement modifiables et recompilables :
 
 | PDF public | Source |
 |---|---|
@@ -24,9 +24,11 @@ Ces 15 documents sont entièrement modifiables et recompilables :
 | `fiche_thales_criteres_a_verifier.pdf` | `_fiche_thales_criteres_a_verifier.tex` |
 | `fiche_thales_direct_a_verifier.pdf` | `_fiche_thales_direct_a_verifier.tex` |
 | `gabarit_criteres_divisibilite.pdf` | `_gabarit_criteres_divisibilite.tex` |
+| `gabarit_droites_graduees.pdf` | `_gabarit_droites_graduees.tex` |
 | `gabarit_pourcentages_double_ligne_graduee.pdf` | `_gabarit_pourcentages_double_ligne_graduee.tex` |
 | `gabarit_proportionnalite_double_ligne_graduee.pdf` | `_gabarit_proportionnalite_double_ligne_graduee.tex` |
 | `gabarit_proportionnalite_tableau_sans_coefficient.pdf` | `_gabarit_proportionnalite_tableau_sans_coefficient.tex` |
+| `gabarit_reperes_plan.pdf` | `_gabarit_reperes_plan.tex` |
 | `gabarits_enquetes_additive.pdf` | `_gabarits_enquetes_additive.tex` |
 | `gabarits_enquetes_multiplicative.pdf` | `_gabarits_enquetes_multiplicative.tex` |
 | `gabarits_pourcentages.pdf` | `_gabarits_pourcentages.tex` |
