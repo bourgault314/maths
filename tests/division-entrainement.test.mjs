@@ -80,7 +80,7 @@ test("les zéros du quotient et le cas dividende inférieur au diviseur sont con
 });
 
 test("l’interface propose validation par bloc, table facultative et adaptation mobile", () => {
-  assert.match(html, /division-posee-interactive\.css\?v=2/);
+  assert.match(html, /division-posee-interactive\.css\?v=3/);
   assert.match(html, /division-posee-interactive\.js\?v=2/);
   assert.match(html, /id="validate"[^>]*>Vérifier l’étape/);
   assert.match(html, /id="help"[^>]*>Un indice/);
@@ -107,6 +107,7 @@ test("les réponses sont saisies chiffre par chiffre dans leur colonne", () => {
   assert.match(js, /function setDigitDraft\(/);
   assert.match(js, /document\.addEventListener\("paste"/);
   assert.match(css, /--practice-cell-size:\s*min\(38px, calc\(var\(--column-width/);
+  assert.match(css, /\.operation-answer[^}]*width:\s*var\(--practice-cell-size\)[^}]*height:\s*var\(--practice-cell-size\)/);
   assert.match(css, /\.practice-quotient \.quotient-slot\.is-empty[^}]*border:\s*2px dashed/);
   assert.match(css, /\.relation-digit-group[^}]*grid-template-columns:\s*repeat\(var\(--digit-count\)/);
 });

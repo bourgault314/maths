@@ -38,7 +38,7 @@ body[data-task="finish"] .practice-instruction { align-items: center; }
 .grid-answer { display: grid; place-items: center; }
 .grid-placeholder { border: 2px dashed #9fb1c4; background: rgba(240,244,248,.55); }
 .grid-placeholder.remainder-placeholder { border-color: #ab91c6; background: var(--violet-soft); }
-.operation-answer { width: 100%; height: 100%; min-width: 0; padding: 0; font-size: var(--digit-size, 30px); line-height: 1; }
+.operation-answer { width: var(--practice-cell-size); height: var(--practice-cell-size); min-width: 0; max-width: 100%; max-height: 100%; padding: 0; font-size: var(--digit-size, 30px); line-height: 1; }
 .product-answer .operation-answer { border-color: #75879a; }
 .remainder-answer .operation-answer { border-color: var(--violet); color: var(--violet); background: #fffafd; }
 .completed-digit { animation: reveal-answer .3s ease both; }
