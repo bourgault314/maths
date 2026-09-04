@@ -250,10 +250,13 @@ export function makeSteps(data) {
 
   data.operations.forEach((operation, opIndex) => {
     const place = placeValueName(data, operation.endColumn);
+    const question = operation.endColumn >= data.integerLength
+      ? `Pour trouver le chiffre des ${place} du quotient, je cherche combien de fois ${data.divisor} dans ${operation.partial}.`
+      : `${operation.partial} ${place} ÷ ${data.divisor} : combien ${afterDe(place)} au quotient ?`;
     steps.push({
       kind: "ask",
       title: "Je cherche",
-      sentence: `${operation.partial} ${place} ÷ ${data.divisor} : combien ${afterDe(place)} au quotient ?`,
+      sentence: question,
       opIndex
     });
     steps.push({

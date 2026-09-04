@@ -82,7 +82,7 @@ test("les zéros du quotient et le cas dividende inférieur au diviseur sont con
 
 test("l’interface propose validation par bloc, table facultative et adaptation mobile", () => {
   assert.match(html, /division-posee-interactive\.css\?v=7/);
-  assert.match(html, /division-posee-interactive\.js\?v=7/);
+  assert.match(html, /division-posee-interactive\.js\?v=8/);
   assert.match(html, /id="rank-guides" type="checkbox"/);
   assert.match(html, /id="table-bracket"[^>]*hidden/);
   assert.match(html, /id="validate"[^>]*>Vérifier l’étape/);
@@ -91,6 +91,7 @@ test("l’interface propose validation par bloc, table facultative et adaptation
   assert.match(js, /firstTrainingError\(task, answer\)/);
   assert.match(js, /completed\.set\(task\.id, answer\)/);
   assert.match(js, /task\.kind === "stage" \? 820 : 480/);
+  assert.match(js, /division-engine\.mjs\?v=9/);
   assert.match(js, /division-view\.mjs\?v=2/);
   assert.match(js, /renderMultiplicationTable\(/);
   assert.match(js, /compactToggle:\s*true/);

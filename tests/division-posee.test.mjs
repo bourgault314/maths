@@ -148,6 +148,12 @@ test("la poursuite décimale introduit le dixième au dividende avant la virgule
     "4 unités = 40 dixièmes.",
     "5 dixièmes = 50 centièmes."
   ]);
+  const decimalQuestions = steps.filter(({ kind, opIndex }) => kind === "ask" && division.operations[opIndex].endColumn >= division.integerLength);
+  assert.deepEqual(decimalQuestions.map(({ sentence }) => sentence), [
+    "Pour trouver le chiffre des dixièmes du quotient, je cherche combien de fois 7 dans 40.",
+    "Pour trouver le chiffre des centièmes du quotient, je cherche combien de fois 7 dans 50."
+  ]);
+  assert.ok(decimalBringSteps.every((step, index) => steps.indexOf(step) < steps.indexOf(decimalQuestions[index])));
   assert.ok(decimalBringSteps.every(({ detail }) => detail.startsWith("Je fais apparaître un 0")));
   assert.ok(decimalBringSteps.every(({ detail }) => detail.includes("dans le dividende")));
   assert.equal(getOperationDisplayState(division, decimal.opIndex, decimal).result, "next");
@@ -211,6 +217,7 @@ test("l'anticipation indique clairement un quotient inférieur à un", () => {
 });
 
 test("l'interface conserve les repères visuels demandés", () => {
+  assert.match(interfaceHtml, /division-posee\.js\?v=13/);
   assert.match(interfaceHtml, /class="back-link" href="\.\/">← Division posée<\/a>/);
   assert.match(interfaceHtml, /id="decimal-field" hidden/);
   assert.match(interfaceHtml, /id="rank-guides" type="checkbox"/);
@@ -241,6 +248,7 @@ test("l'interface conserve les repères visuels demandés", () => {
   assert.match(interfaceJs, /isUnrevealedDecimal/);
   assert.match(interfaceJs, /\["ask", "choose"\]/);
   assert.match(interfaceJs, /quotientWriting\(step\)/);
+  assert.match(interfaceJs, /division-engine\.mjs\?v=9/);
   assert.match(interfaceJs, /division-view\.mjs\?v=2/);
   assert.match(interfaceJs, /renderMultiplicationTable\(/);
   assert.match(interfaceJs, /const showIntegerSlots = step\.kind !== "bound"/);
