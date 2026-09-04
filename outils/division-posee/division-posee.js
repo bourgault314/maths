@@ -14,7 +14,7 @@ import {
   createRoleCard,
   renderMultiplicationTable,
   scheduleLoweringArrow
-} from "./division-view.mjs?v=1";
+} from "./division-view.mjs?v=2";
 
 const $ = (selector) => document.querySelector(selector);
 const dividendInput = $("#dividend");
@@ -271,6 +271,7 @@ function renderTable(step) {
     card: $("#table-card"),
     toggle: $("#table-toggle"),
     visible: tableVisible,
+    compactToggle: true,
     activeMultiplier: active,
     bracket
   });

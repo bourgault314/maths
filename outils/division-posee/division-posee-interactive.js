@@ -11,7 +11,7 @@ import {
   createRoleCard,
   renderMultiplicationTable,
   scheduleLoweringArrow
-} from "./division-view.mjs?v=1";
+} from "./division-view.mjs?v=2";
 import {
   firstTrainingError,
   hintForTask,

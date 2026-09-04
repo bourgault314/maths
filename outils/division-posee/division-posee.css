@@ -146,7 +146,7 @@ button, input, select { font: inherit; }
 .table-card { height: 100%; display: flex; flex-direction: column; padding: 16px; }
 .table-heading { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 3px 4px 12px; }
 .table-heading > div { min-width: 0; }
-.table-heading h2 { margin: 0; color: var(--navy); font-size: 1.3rem; }
+.table-heading h2 { margin: 0; color: var(--navy); font-size: 1.3rem; white-space: nowrap; }
 .table-toggle { min-height: 38px; padding: 7px 10px; font-size: .74rem; line-height: 1.05; white-space: nowrap; }
 .table-bracket[hidden] { display: none; }
 .table-bracket { flex: none; margin: -3px 4px 7px; padding: 5px 8px; border: 1px solid #b9d5ee; border-radius: 8px; color: var(--navy); background: var(--blue-soft); font-size: .86rem; font-weight: 900; line-height: 1.15; text-align: center; font-variant-numeric: tabular-nums; }
