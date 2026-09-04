@@ -3,6 +3,7 @@ import { readFileSync } from "node:fs";
 import test from "node:test";
 import {
   getOperationDisplayState,
+  makeAnticipationChecks,
   makeDisplayMetrics,
   makeDivision,
   makeSteps,
@@ -14,6 +15,7 @@ import {
 const interfaceHtml = readFileSync(new URL("../outils/division-posee/division-posee.html", import.meta.url), "utf8");
 const interfaceCss = readFileSync(new URL("../outils/division-posee/division-posee.css", import.meta.url), "utf8");
 const interfaceJs = readFileSync(new URL("../outils/division-posee/division-posee.js", import.meta.url), "utf8");
+const viewJs = readFileSync(new URL("../outils/division-posee/division-view.mjs", import.meta.url), "utf8");
 const gabaritGenerator = readFileSync(new URL("../outils/division-posee/_generer_gabarits.py", import.meta.url), "utf8");
 
 test("division euclidienne exacte", () => {
@@ -58,7 +60,7 @@ test("la multiplication, la soustraction et l'abaissement ont chacun leur étape
   const steps = makeSteps(division);
   assert.deepEqual(
     steps.map(({ kind }) => kind),
-    ["bound", "digits", "estimate", "ask", "choose", "multiply", "subtract-ask", "subtract", "bring", "ask", "choose", "multiply", "subtract-ask", "subtract", "finish"]
+    ["anticipation-question", "anticipation-answer", "anticipation-question", "anticipation-result", "estimate", "ask", "choose", "multiply", "subtract-ask", "subtract", "bring", "ask", "choose", "multiply", "subtract-ask", "subtract", "finish"]
   );
   assert.equal(steps.filter(({ kind }) => kind === "bring").length, 1);
   assert.equal(steps.filter(({ kind }) => kind === "multiply").length, 2);
@@ -92,16 +94,24 @@ test("la multiplication, la soustraction et l'abaissement ont chacun leur étape
   assert.equal(getOperationDisplayState(division, 0, firstBring).result, "next");
 });
 
-test("l'anticipation sépare l'encadrement exact de l'estimation", () => {
-  const [bound, digits, estimate] = makeSteps(makeDivision(584, 7, "integer", 2));
-  assert.equal(bound.kind, "bound");
-  assert.equal(bound.sentence, "70 ≤ 584 < 700");
-  assert.equal(bound.detail, "7 × 10 = 70 et 7 × 100 = 700");
-  assert.equal(bound.quotientDigitCount, undefined);
-  assert.equal(digits.kind, "digits");
-  assert.equal(digits.sentence, "10 ≤ 584 ÷ 7 < 100");
-  assert.equal(digits.detail, "Le quotient aura 2 chiffres.");
-  assert.equal(digits.quotientDigitCount, 2);
+test("l'anticipation cherche le premier rang partageable avant l'estimation", () => {
+  const division = makeDivision(584, 7, "integer", 2);
+  assert.deepEqual(makeAnticipationChecks(division).map(({ endColumn, partial, canShare }) => ({ endColumn, partial, canShare })), [
+    { endColumn: 0, partial: 5, canShare: false },
+    { endColumn: 1, partial: 58, canShare: true }
+  ]);
+  const [firstQuestion, firstAnswer, secondQuestion, result, estimate] = makeSteps(division);
+  assert.equal(firstQuestion.kind, "anticipation-question");
+  assert.equal(firstQuestion.sentence, "Puis-je donner au moins 1 centaine à chacune des 7 parts ?");
+  assert.equal(firstQuestion.detail, "Je regarde 5 centaines.");
+  assert.equal(firstQuestion.anticipationEndColumn, 0);
+  assert.equal(firstAnswer.sentence, "Non : je n’ai que 5 centaines.");
+  assert.equal(secondQuestion.sentence, "Puis-je donner au moins 1 dizaine à chacune des 7 parts ?");
+  assert.equal(secondQuestion.anticipationEndColumn, 1);
+  assert.equal(result.kind, "anticipation-result");
+  assert.equal(result.sentence, "Oui. Le quotient commence au rang des dizaines.");
+  assert.equal(result.detail, "Il aura 2 chiffres.");
+  assert.equal(result.quotientDigitCount, 2);
   assert.equal(estimate.kind, "estimate");
   assert.equal(estimate.sentence, "560 ÷ 7 = 80");
   assert.match(estimate.detail, /560 est proche de 584/);
@@ -209,15 +219,15 @@ test("l'affichage réserve toutes les lignes et s'adapte aux longues divisions",
 });
 
 test("l'anticipation indique clairement un quotient inférieur à un", () => {
-  const [bound, digits] = makeSteps(makeDivision(3, 7, "integer", 2));
-  assert.equal(bound.sentence, "0 ≤ 3 < 7");
-  assert.equal(bound.detail, "Le dividende est plus petit que le diviseur.");
-  assert.equal(digits.sentence, "0 ≤ 3 ÷ 7 < 1");
-  assert.equal(digits.detail, "Le quotient entier est 0.");
+  const [question, result] = makeSteps(makeDivision(3, 7, "integer", 2));
+  assert.equal(question.sentence, "Puis-je donner au moins 1 unité à chacune des 7 parts ?");
+  assert.equal(question.detail, "Je regarde 3 unités.");
+  assert.equal(result.sentence, "Non : je n’ai que 3 unités.");
+  assert.equal(result.detail, "Le quotient entier est 0.");
 });
 
 test("l'interface conserve les repères visuels demandés", () => {
-  assert.match(interfaceHtml, /division-posee\.js\?v=13/);
+  assert.match(interfaceHtml, /division-posee\.js\?v=14/);
   assert.match(interfaceHtml, /class="back-link" href="\.\/">← Division posée<\/a>/);
   assert.match(interfaceHtml, /id="decimal-field" hidden/);
   assert.match(interfaceHtml, /id="rank-guides" type="checkbox"/);
@@ -248,10 +258,10 @@ test("l'interface conserve les repères visuels demandés", () => {
   assert.match(interfaceJs, /isUnrevealedDecimal/);
   assert.match(interfaceJs, /\["ask", "choose"\]/);
   assert.match(interfaceJs, /quotientWriting\(step\)/);
-  assert.match(interfaceJs, /division-engine\.mjs\?v=9/);
-  assert.match(interfaceJs, /division-view\.mjs\?v=2/);
+  assert.match(interfaceJs, /division-engine\.mjs\?v=10/);
+  assert.match(interfaceJs, /division-view\.mjs\?v=3/);
   assert.match(interfaceJs, /renderMultiplicationTable\(/);
-  assert.match(interfaceJs, /const showIntegerSlots = step\.kind !== "bound"/);
+  assert.match(interfaceJs, /const showIntegerSlots = !\["anticipation-question", "anticipation-answer"\]\.includes\(step\.kind\)/);
   assert.match(interfaceJs, /mathsgo-division-rank-guides/);
   assert.match(interfaceJs, /step\.kind === "choose"[^?]*\? multiplicationBracket/s);
   assert.match(interfaceJs, /syncProjectionMode/);
@@ -261,6 +271,8 @@ test("l'interface conserve les repères visuels demandés", () => {
   assert.match(interfaceJs, /work\.append\(digitRow\(operation\.product/);
   assert.match(interfaceJs, /work\.append\(digitRow\(resultValue/);
   assert.match(interfaceJs, /scheduleLoweringArrow\(root\)/);
+  assert.match(viewJs, /bracketLine\.hidden = true/);
+  assert.match(viewJs, /multiples\.classList\.add\("has-target-marker"\)/);
   assert.doesNotMatch(gabaritGenerator, /BLUE_SOFT if multiplier != 0 else ORANGE_SOFT/);
 });
 

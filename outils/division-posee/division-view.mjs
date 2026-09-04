@@ -70,13 +70,11 @@ export function renderMultiplicationTable({
   const revealedBracket = visible ? bracket : null;
   const revealedMultiplier = visible ? activeMultiplier : null;
   title.textContent = `Table de ${division.divisor}`;
-  bracketLine.hidden = !revealedBracket;
-  bracketLine.textContent = revealedBracket
-    ? `${revealedBracket.lowerProduct} ≤ ${revealedBracket.target} < ${revealedBracket.upperProduct}`
-    : "";
+  bracketLine.hidden = true;
+  bracketLine.textContent = "";
 
   multiples.replaceChildren();
-  multiples.classList.toggle("has-target-marker", Boolean(revealedBracket));
+  multiples.classList.add("has-target-marker");
   const targetRow = revealedBracket
     ? Math.min(9, revealedBracket.upperMultiplier)
     : null;

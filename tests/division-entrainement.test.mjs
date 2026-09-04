@@ -8,7 +8,6 @@ import {
   hintForTask,
   makeTrainingTasks,
   taskRevealsTable,
-  trainingBounds,
   trainingErrors
 } from "../outils/division-posee/division-entrainement-engine.mjs";
 import { loweringArrowGeometry } from "../outils/division-posee/division-view.mjs";
@@ -21,16 +20,18 @@ const collection = readFileSync(new URL("../outils/division-posee/index.html", i
 test("l’entraînement valide un bloc mathématique complet à chaque étape", () => {
   const division = makeDivision(584, 7, "integer", 2);
   const tasks = makeTrainingTasks(division);
-  assert.deepEqual(tasks.map(({ kind }) => kind), ["anticipation", "stage", "stage", "verify", "finish"]);
-  assert.deepEqual(tasks[0].expected, { lower: 70, upper: 700, digitCount: 2 });
-  assert.deepEqual(tasks[1].expected, { quotient: 8, product: 56, remainder: 2 });
-  assert.deepEqual(tasks[2].expected, { quotient: 3, product: 21, remainder: 3 });
-  assert.equal(checkTrainingAnswer(tasks[1], { quotient: "8", product: "56", remainder: "2" }), true);
-  assert.equal(checkTrainingAnswer(tasks[1], { quotient: "7", product: "49", remainder: "9" }), false);
+  assert.deepEqual(tasks.map(({ kind }) => kind), ["anticipation", "anticipation", "stage", "stage", "verify", "finish"]);
+  assert.deepEqual(tasks[0].expected, { decision: "no" });
+  assert.deepEqual(tasks[1].expected, { decision: "yes" });
+  assert.equal(tasks[1].successSentence, "Oui. Le quotient commence au rang des dizaines : il aura 2 chiffres.");
+  assert.deepEqual(tasks[2].expected, { quotient: 8, product: 56, remainder: 2 });
+  assert.deepEqual(tasks[3].expected, { quotient: 3, product: 21, remainder: 3 });
+  assert.equal(checkTrainingAnswer(tasks[2], { quotient: "8", product: "56", remainder: "2" }), true);
+  assert.equal(checkTrainingAnswer(tasks[2], { quotient: "7", product: "49", remainder: "9" }), false);
 });
 
 test("la première erreur est signalée dans l’ordre causal", () => {
-  const stage = makeTrainingTasks(makeDivision(584, 7, "integer", 2))[1];
+  const stage = makeTrainingTasks(makeDivision(584, 7, "integer", 2)).find(({ kind }) => kind === "stage");
   assert.deepEqual(trainingErrors(stage, { quotient: 7, product: 49, remainder: 9 }), ["quotient", "product", "remainder"]);
   assert.equal(firstTrainingError(stage, { quotient: 7, product: 49, remainder: 9 }), "quotient");
   assert.equal(firstTrainingError(stage, { quotient: 8, product: 49, remainder: 9 }), "product");
@@ -40,9 +41,11 @@ test("la première erreur est signalée dans l’ordre causal", () => {
 
 test("les indices deviennent précis sans révéler toute la division d’un coup", () => {
   const division = makeDivision(584, 7, "integer", 2);
-  const [anticipation, stage] = makeTrainingTasks(division);
-  assert.match(hintForTask(division, anticipation, "lower", 0), /produits de 7 par 10, 100/);
-  assert.equal(hintForTask(division, anticipation, "lower", 1), "7 × 10 = 70 et 7 × 100 = 700.");
+  const tasks = makeTrainingTasks(division);
+  const anticipation = tasks[0];
+  const stage = tasks.find(({ kind }) => kind === "stage");
+  assert.match(hintForTask(division, anticipation, "decision", 0), /Compare 5 centaines aux 7 parts/);
+  assert.equal(hintForTask(division, anticipation, "decision", 1), "5 est plus petit que 7 : chaque part ne peut pas recevoir 1 centaine.");
   assert.match(hintForTask(division, stage, "quotient", 0), /plus grand produit/);
   assert.match(hintForTask(division, stage, "quotient", 1), /8 × 7 = 56/);
   assert.equal(taskRevealsTable(stage, "quotient"), true);
@@ -52,37 +55,37 @@ test("les indices deviennent précis sans révéler toute la division d’un cou
 
 test("l’anticipation fonctionne avec un diviseur à deux chiffres", () => {
   const division = makeDivision(584, 21, "integer", 2);
-  assert.deepEqual(trainingBounds(division), {
-    lower: 210,
-    upper: 2100,
-    lowerQuotient: 10,
-    upperQuotient: 100,
-    digitCount: 2
-  });
   const tasks = makeTrainingTasks(division);
-  assert.equal(tasks[1].sentence, "Dans 58 dizaines, combien de fois 21 ?");
-  assert.deepEqual(tasks[1].expected, { quotient: 2, product: 42, remainder: 16 });
+  assert.equal(tasks[0].sentence, "Puis-je donner au moins 1 centaine à chacune des 21 parts ?");
+  assert.deepEqual(tasks[0].expected, { decision: "no" });
+  assert.equal(tasks[1].sentence, "Puis-je donner au moins 1 dizaine à chacune des 21 parts ?");
+  assert.deepEqual(tasks[1].expected, { decision: "yes" });
+  const stage = tasks.find(({ kind }) => kind === "stage");
+  assert.equal(stage.sentence, "Dans 58 dizaines, combien de fois 21 ?");
+  assert.deepEqual(stage.expected, { quotient: 2, product: 42, remainder: 16 });
 });
 
 test("le vocabulaire de numération suit les étages de la division", () => {
   const tasks = makeTrainingTasks(makeDivision(5849, 7, "integer", 2));
-  assert.equal(tasks[1].sentence, "Dans 58 centaines, combien de fois 7 ?");
-  assert.equal(tasks[2].sentence, "Dans 24 dizaines, combien de fois 7 ?");
-  assert.equal(tasks[3].sentence, "Dans 39 unités, combien de fois 7 ?");
+  const stages = tasks.filter(({ kind }) => kind === "stage");
+  assert.equal(stages[0].sentence, "Dans 58 centaines, combien de fois 7 ?");
+  assert.equal(stages[1].sentence, "Dans 24 dizaines, combien de fois 7 ?");
+  assert.equal(stages[2].sentence, "Dans 39 unités, combien de fois 7 ?");
 });
 
 test("les zéros du quotient et le cas dividende inférieur au diviseur sont conservés", () => {
   const zeroTasks = makeTrainingTasks(makeDivision(1005, 5, "integer", 2));
   assert.deepEqual(zeroTasks.filter(({ kind }) => kind === "stage").map(({ expected }) => expected.quotient), [2, 0, 1]);
   const smallTasks = makeTrainingTasks(makeDivision(3, 7, "integer", 2));
-  assert.deepEqual(smallTasks[0].expected, { lower: 0, upper: 7, digitCount: 1 });
+  assert.deepEqual(smallTasks[0].expected, { decision: "no" });
+  assert.equal(smallTasks[0].successSentence, "Non. Le quotient entier est 0.");
   assert.deepEqual(smallTasks[1].expected, { quotient: 0, product: 0, remainder: 3 });
   assert.ok(!smallTasks.some(({ kind }) => kind === "estimate"));
 });
 
 test("l’interface propose validation par bloc, table facultative et adaptation mobile", () => {
-  assert.match(html, /division-posee-interactive\.css\?v=7/);
-  assert.match(html, /division-posee-interactive\.js\?v=8/);
+  assert.match(html, /division-posee-interactive\.css\?v=8/);
+  assert.match(html, /division-posee-interactive\.js\?v=9/);
   assert.match(html, /id="rank-guides" type="checkbox"/);
   assert.match(html, /id="table-bracket"[^>]*hidden/);
   assert.match(html, /id="validate"[^>]*>Vérifier l’étape/);
@@ -90,9 +93,9 @@ test("l’interface propose validation par bloc, table facultative et adaptation
   assert.match(html, /id="table-toggle"[^>]*>Voir la table/);
   assert.match(js, /firstTrainingError\(task, answer\)/);
   assert.match(js, /completed\.set\(task\.id, answer\)/);
-  assert.match(js, /task\.kind === "stage" \? 820 : 480/);
-  assert.match(js, /division-engine\.mjs\?v=9/);
-  assert.match(js, /division-view\.mjs\?v=2/);
+  assert.match(js, /task\.kind === "anticipation" \? 1200 : 480/);
+  assert.match(js, /division-engine\.mjs\?v=10/);
+  assert.match(js, /division-view\.mjs\?v=3/);
   assert.match(js, /renderMultiplicationTable\(/);
   assert.match(js, /compactToggle:\s*true/);
   assert.match(js, /multiplicationBracket\(division, task\.opIndex\)/);
@@ -101,6 +104,8 @@ test("l’interface propose validation par bloc, table facultative et adaptation
   assert.match(js, /window\.innerWidth <= 780/);
   assert.match(js, /window\.addEventListener\("resize"/);
   assert.match(js, /scheduleLoweringArrow\(root\)/);
+  assert.match(js, /button\.dataset\.decision = value/);
+  assert.match(css, /\.anticipation-choice\.is-selected/);
   assert.doesNotMatch(js, /rowHeight \* \(1\.02 \+ \(2 \* index\)\)/);
   assert.match(css, /\.practice-stage[^}]*overflow:\s*hidden/);
   assert.match(css, /@media \(min-width: 1280px\)[\s\S]*\.practice-instruction[^}]*grid-column:\s*1[^}]*grid-row:\s*1 \/ 4/);
@@ -148,7 +153,7 @@ test("la collection sépare comprendre, s’entraîner et imprimer", () => {
   assert.match(collection, /class="site-shell"/);
   assert.match(collection, /class="catalogue-breadcrumb"/);
   assert.match(collection, /class="main-panel catalogue-deep-view"/);
-  assert.match(collection, />Nombres entiers et divisibilité<\/a>/);
+  assert.match(collection, />Calculs posés<\/a>/);
   assert.doesNotMatch(collection, /collection-index\.css/);
   assert.match(collection, /Comprendre &amp; projeter/);
   assert.match(collection, /S’entraîner/);

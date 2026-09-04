@@ -11,23 +11,11 @@ function anticipationFor(data) {
   if (integerQuotient === 0) {
     return {
       digitCount: 1,
-      rangeSentence: `0 ≤ ${data.dividend} < ${data.divisor}`,
-      rangeExpression: `Le dividende est plus petit que le diviseur.`,
-      quotientSentence: data.mode === "integer"
-        ? `0 ≤ ${data.dividend} ÷ ${data.divisor} < 1`
-        : `0 ≤ ${data.dividend} ÷ ${data.divisor} < 1`,
-      quotientExpression: data.mode === "integer"
-        ? `Le quotient entier est 0.`
-        : `La partie entière du quotient est 0.`,
       estimate: null
     };
   }
 
   const digitCount = String(integerQuotient).length;
-  const lowerQuotient = 10 ** (digitCount - 1);
-  const upperQuotient = 10 ** digitCount;
-  const lowerProduct = data.divisor * lowerQuotient;
-  const upperProduct = data.divisor * upperQuotient;
   const exactQuotient = data.dividend / data.divisor;
   const estimateMagnitude = 10 ** Math.floor(Math.log10(exactQuotient));
   const estimatedQuotient = Math.max(1, Math.round(exactQuotient / estimateMagnitude) * estimateMagnitude);
@@ -42,10 +30,6 @@ function anticipationFor(data) {
 
   return {
     digitCount,
-    rangeSentence: `${lowerProduct} ≤ ${data.dividend} < ${upperProduct}`,
-    rangeExpression: `${data.divisor} × ${lowerQuotient} = ${lowerProduct} et ${data.divisor} × ${upperQuotient} = ${upperProduct}`,
-    quotientSentence: `${lowerQuotient} ≤ ${data.dividend} ÷ ${data.divisor} < ${upperQuotient}`,
-    quotientExpression: `${label} aura ${digitCount} chiffre${digitCount > 1 ? "s" : ""}.`,
     estimate
   };
 }
@@ -84,6 +68,25 @@ export function placeValueMarker(data, endColumn) {
   return rank >= 0
     ? INTEGER_PLACE_MARKERS[rank] || "…"
     : DECIMAL_PLACE_MARKERS[-rank - 1] || "…";
+}
+
+export function makeAnticipationChecks(data) {
+  const firstOperation = data.operations[0];
+  const integerDigits = data.digits.slice(0, data.integerLength);
+  const lastCandidateColumn = firstOperation?.endColumn ?? 0;
+  let partial = 0;
+
+  return integerDigits.slice(0, lastCandidateColumn + 1).map((digit, endColumn) => {
+    partial = (partial * 10) + digit;
+    return {
+      endColumn,
+      partial,
+      placeSingular: placeValueName(data, endColumn, 1),
+      placeForQuantity: placeValueName(data, endColumn, partial),
+      rankPlace: placeValueName(data, endColumn, 2),
+      canShare: partial >= data.divisor
+    };
+  });
 }
 
 function afterDe(place) {
@@ -225,18 +228,45 @@ export function multiplicationBracket(data, operationIndex) {
 
 export function makeSteps(data) {
   const anticipation = anticipationFor(data);
-  const steps = [{
-    kind: "bound",
-    title: "J’encadre",
-    sentence: anticipation.rangeSentence,
-    detail: anticipation.rangeExpression
-  }, {
-    kind: "digits",
-    title: "J’en déduis",
-    sentence: anticipation.quotientSentence,
-    detail: anticipation.quotientExpression,
-    quotientDigitCount: anticipation.digitCount
-  }];
+  const checks = makeAnticipationChecks(data);
+  const steps = [];
+  const recipients = data.divisor === 1 ? "à l’unique part" : `à chacune des ${data.divisor} parts`;
+
+  checks.forEach((check, index) => {
+    steps.push({
+      kind: "anticipation-question",
+      title: "J’anticipe",
+      sentence: `Puis-je donner au moins 1 ${check.placeSingular} ${recipients} ?`,
+      detail: `Je regarde ${check.partial} ${check.placeForQuantity}.`,
+      anticipationEndColumn: check.endColumn
+    });
+
+    const isLastCheck = index === checks.length - 1;
+    if (!isLastCheck) {
+      steps.push({
+        kind: "anticipation-answer",
+        title: "Je poursuis",
+        sentence: `Non : je n’ai que ${check.partial} ${check.placeForQuantity}.`,
+        detail: "Je regarde donc le rang suivant.",
+        anticipationEndColumn: check.endColumn
+      });
+      return;
+    }
+
+    const quotientLabel = data.mode === "integer" ? "Le quotient" : "La partie entière du quotient";
+    steps.push({
+      kind: "anticipation-result",
+      title: "J’en déduis",
+      sentence: check.canShare
+        ? `Oui. ${quotientLabel} commence au rang des ${check.rankPlace}.`
+        : `Non : je n’ai que ${check.partial} ${check.placeForQuantity}.`,
+      detail: check.canShare
+        ? `${data.mode === "integer" ? "Il" : "Elle"} aura ${anticipation.digitCount} chiffre${anticipation.digitCount > 1 ? "s" : ""}.`
+        : data.mode === "integer" ? "Le quotient entier est 0." : "La partie entière du quotient est 0.",
+      anticipationEndColumn: check.endColumn,
+      quotientDigitCount: anticipation.digitCount
+    });
+  });
 
   if (anticipation.estimate) {
     steps.push({

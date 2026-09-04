@@ -5,7 +5,7 @@ import {
   makeSteps,
   multiplicationBracket,
   placeValueMarker
-} from "./division-engine.mjs?v=9";
+} from "./division-engine.mjs?v=10";
 import {
   createRankMarker,
   createPotence,
@@ -14,7 +14,7 @@ import {
   createRoleCard,
   renderMultiplicationTable,
   scheduleLoweringArrow
-} from "./division-view.mjs?v=2";
+} from "./division-view.mjs?v=3";
 
 const $ = (selector) => document.querySelector(selector);
 const dividendInput = $("#dividend");
@@ -57,7 +57,7 @@ function setMode(mode) {
 }
 
 function visibleQuotient(step) {
-  if (["bound", "digits", "estimate"].includes(step.kind)) return "";
+  if (["anticipation-question", "anticipation-answer", "anticipation-result", "estimate"].includes(step.kind)) return "";
   let result = "";
   let comma = false;
   division.operations.forEach((operation, index) => {
@@ -73,6 +73,7 @@ function visibleQuotient(step) {
 }
 
 function activePlaceColumn(step) {
+  if (step.anticipationEndColumn !== undefined) return step.anticipationEndColumn;
   if (step.opIndex === undefined) return null;
   const operation = division.operations[step.opIndex];
   if (["bring", "decimal"].includes(step.kind) && operation.nextEndColumn !== undefined) {
@@ -103,7 +104,7 @@ function quotientWriting(step) {
   const integerOperations = division.operations.filter(({ isDecimalDigit }) => !isDecimalDigit);
   const decimalOperations = division.operations.filter(({ isDecimalDigit }) => isDecimalDigit);
   const activeColumn = activePlaceColumn(step);
-  const showIntegerSlots = step.kind !== "bound";
+  const showIntegerSlots = !["anticipation-question", "anticipation-answer"].includes(step.kind);
 
   integerOperations.forEach((operation, index) => {
     if (!showIntegerSlots) return;
@@ -180,12 +181,15 @@ function dividendRow(step) {
       : division.operations[step.opIndex].endColumn + (revealsNextDigit ? 1 : 0);
   const visibleEnd = operationEnd;
   const activeColumn = activePlaceColumn(step);
+  const anticipationEnd = step.anticipationEndColumn;
   division.digits.forEach((digit, index) => {
     const cell = document.createElement("span");
     const isLowered = step.kind === "bring"
       && division.operations[step.opIndex]?.nextEndColumn === index
       && index < division.integerLength;
-    cell.className = `digit ${index > visibleEnd ? "pending" : ""} ${isLowered ? "falling-source" : ""}`;
+    const isAnticipationActive = anticipationEnd !== undefined && index <= anticipationEnd;
+    const isAnticipationPending = anticipationEnd !== undefined && index > anticipationEnd;
+    cell.className = `digit ${index > visibleEnd || isAnticipationPending ? "pending" : ""} ${isAnticipationActive ? "active" : ""} ${isLowered ? "falling-source" : ""}`;
     if (index === division.integerLength - 1 && division.mode === "decimal" && visibleEnd >= division.integerLength) cell.classList.add("comma-after");
     cell.style.gridColumn = String(index + 1);
     const isUnrevealedDecimal = index >= division.integerLength && index > visibleEnd;
@@ -203,14 +207,15 @@ function renderDivision(step) {
   root.classList.toggle("has-rank-guides", showRankGuides);
   const stage = root.closest(".division-stage");
   const projectionMode = document.body.classList.contains("is-projection");
-  const metricOptions = projectionMode ? {
-    rowBudget: Math.max(280, Math.min(520, stage.clientHeight - $("#role-strip").offsetHeight - 28)),
-    columnBudget: Math.max(420, Math.min(700, Math.floor(root.clientWidth * .72))),
-    quotientBudget: Math.max(220, Math.min(330, Math.floor(root.clientWidth * .3))),
-    maxRowHeight: 60,
-    maxColumnWidth: 58,
-    maxDigitSize: 43,
-    maxQuotientSize: 43
+  const wideMode = projectionMode || window.innerWidth >= 1280;
+  const metricOptions = wideMode ? {
+    rowBudget: Math.max(320, Math.min(projectionMode ? 590 : 500, stage.clientHeight - $("#role-strip").offsetHeight - 28)),
+    columnBudget: Math.max(460, Math.min(projectionMode ? 820 : 740, Math.floor(root.clientWidth * .76))),
+    quotientBudget: Math.max(240, Math.min(projectionMode ? 390 : 350, Math.floor(root.clientWidth * .32))),
+    maxRowHeight: projectionMode ? 76 : 68,
+    maxColumnWidth: projectionMode ? 70 : 64,
+    maxDigitSize: projectionMode ? 56 : 50,
+    maxQuotientSize: projectionMode ? 55 : 49
   } : undefined;
   const metrics = makeDisplayMetrics(division, metricOptions);
   root.style.setProperty("--row-height", `${metrics.rowHeight}px`);
