@@ -5,7 +5,7 @@ import {
   makeSteps,
   multiplicationBracket,
   placeValueMarker
-} from "./division-engine.mjs?v=8";
+} from "./division-engine.mjs?v=9";
 import {
   createRankMarker,
   createPotence,
