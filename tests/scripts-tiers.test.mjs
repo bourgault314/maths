@@ -66,6 +66,44 @@ test("aucune page du site ne charge un script venu d'ailleurs sans sceau integri
       + "et crossorigin=\"anonymous\" :\n  " + fautives.join("\n  "));
 });
 
+// Le test ci-dessus ne lit que les balises <script src=…> écrites dans le HTML.
+// Une page peut aussi fabriquer sa balise en JavaScript : c'est ce que faisaient les
+// deux « boîtes à bonbons », en passant une adresse unpkg à leur fonction loadScript().
+// Invisible pour une recherche de balises, mais le script s'exécutait bel et bien sur
+// l'origine mathsgo.re. Ce second balayage cherche donc l'ADRESSE, où qu'elle soit
+// écrite — balise, chaîne de caractères, commentaire — dans les pages ET dans les
+// fichiers JavaScript du site.
+//
+// Angle mort du lot 10 repéré par Claude Code en relisant la PR #637, bouché au lot 10c.
+const HÔTES_INTERDITS = [
+  /(^|\/\/)unpkg\.com\//,
+  /cdnjs\.cloudflare\.com\//,
+  /jsdelivr\.net\//,
+  /cdn\.tailwindcss\.com/,
+  /geogebra\.org\//,
+  /esm\.sh\//,
+  /skypack\.dev\//,
+];
+
+test("aucune adresse de CDN tiers n'est écrite nulle part dans le site publié", () => {
+  const fautives = [];
+  for (const chemin of [...pagesDuSite, ...fichiersDuSitePublie([".js", ".mjs", ".cjs"])]) {
+    // assets/vendor/ contient les bibliothèques elles-mêmes : leurs propres commentaires
+    // peuvent citer une adresse. Elles sont scellées par leur empreinte, plus bas.
+    if (chemin.includes(`${sep}vendor${sep}`)) continue;
+    const texte = readFileSync(chemin, "utf8");
+    for (const url of texte.match(/https?:\/\/[^\s"'`)<>]+/g) ?? []) {
+      if (HÔTES_INTERDITS.some((h) => h.test(url))) {
+        fautives.push(`${relative(racine, chemin).split(sep).join("/")} → ${url}`);
+      }
+    }
+  }
+  assert.deepEqual(fautives, [],
+    "ces fichiers citent encore l'adresse d'un CDN tiers ; même chargée par du "
+      + "JavaScript, une bibliothèque venue d'ailleurs s'exécute sur l'origine "
+      + "mathsgo.re et lit le même stockage local :\n  " + fautives.join("\n  "));
+});
+
 // Même règle côté serveur de suivi : ses pages tournent avec la session du professeur.
 test("les pages du serveur de suivi ne chargent aucun script d'un autre domaine", () => {
   const fautives = [];
@@ -231,11 +269,13 @@ test("les icônes des plateaux sont écrites dans la page, pas chargées depuis 
 //    reprenables, mais ne sont plus en ligne — et leurs scripts venus d'ailleurs
 //    (GeoGebra, three@0.160.0) ne s'exécutent donc plus sur l'origine mathsgo.re.
 // ---------------------------------------------------------------------------
-test("les essais GeoGebra et le patron du prisme ne sont plus dans le site publié", () => {
+test("les pages mises de côté (GeoGebra, prisme, boîtes à bonbons) ne sont plus publiées", () => {
   for (const parti of [
     "claire",
     "outils/plateaux_manipulation/prisme345_h6_patron.html",
     "outils/plateaux_manipulation/prisme345_h6_patron (1).html",
+    "outils/plateaux_manipulation/boite_bonbons.html",
+    "outils/plateaux_manipulation/boite_bonbons_3d_toutes_boites.html",
   ]) {
     assert.ok(!existsSync(join(racine, parti)),
       `${parti} est revenu dans le site publié : sa place est dans _sources/`);
@@ -244,11 +284,15 @@ test("les essais GeoGebra et le patron du prisme ne sont plus dans le site publi
     "_sources/claire/geometrie.html",
     "_sources/claire/index.html",
     "_sources/plateaux-manipulation/prisme345_h6_patron.html",
+    "_sources/plateaux-manipulation/boite_bonbons.html",
+    "_sources/plateaux-manipulation/boite_bonbons_3d_toutes_boites.html",
   ]) {
     assert.ok(existsSync(join(racine, garde)),
       `${garde} a disparu : ces pages sont gardées, pas supprimées`);
   }
   const catalogue = readFileSync(join(racine, "assets/js/catalogue-refonte-data.js"), "utf8");
-  assert.ok(!catalogue.includes("prisme345_h6_patron"),
-    "le catalogue déclare encore le patron du prisme, qui n'est plus publié");
+  for (const nom of ["prisme345_h6_patron", "boite_bonbons"]) {
+    assert.ok(!catalogue.includes(nom),
+      `le catalogue déclare encore ${nom}, qui n'est plus publié`);
+  }
 });
