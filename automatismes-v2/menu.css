@@ -200,10 +200,9 @@
   text-transform: uppercase;
 }
 
-/* Le pied du menu possède déjà son accès permanent aux cookies. La commande
-   de secours injectée par le gestionnaire global ne doit pas le doubler. */
-.mg-consent-manage-slot,
-.mg-consent-manage {
+/* Le pied du menu écrit déjà la mention « Sans cookie ni traceur ». Celle que
+   mention-confidentialite.js pose sinon en bas de page ne doit pas la doubler. */
+.mg-mention-slot {
   display: none !important;
 }
 

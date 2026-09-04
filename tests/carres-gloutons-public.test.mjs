@@ -88,10 +88,10 @@ test("le plein écran et le socle public restent disponibles", () => {
   assert.match(page, /html\.fullscreen-fallback body\s*\{[\s\S]*?position:\s*fixed;[\s\S]*?height:\s*100dvh;/);
   assert.match(script, /root\.classList\.add\("fullscreen-fallback"\)/);
   assert.match(script, /event\.key !== "Escape" \|\| !root\.classList\.contains\("fullscreen-fallback"\)/);
-  assert.match(page, /href="\.\.\/\.\.\/assets\/css\/consentement\.css"/);
-  assert.match(page, /src="\.\.\/\.\.\/assets\/js\/consentement\.js"/);
+  assert.doesNotMatch(page, /consentement\.(css|js)/);
+  assert.match(page, /src="\.\.\/\.\.\/assets\/js\/mention-confidentialite\.js"/);
   assert.match(page, /Gwenaël Bourgault/);
-  assert.match(page, />Gérer mes cookies<\/button>/);
+  assert.match(page, /<span data-mathsgo-confidentialite>Sans cookie ni traceur<\/span>/);
   assert.match(page, /body\.game-fullscreen \.site-footer \{ display: none; \}/);
 });
 

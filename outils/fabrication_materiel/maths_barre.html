@@ -9,7 +9,7 @@
 <link rel="icon" type="image/png" sizes="192x192" href="/assets/img/favicon-192.png">
 <link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png">
     <meta name="robots" content="noindex, follow">
-    <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/vendor/polices/polices.css">
     <style>
         body { font-family: 'Segoe UI', Tahoma, sans-serif; background-color: #f8fafc; margin: 0; padding: 15px; display: flex; flex-direction: column; align-items: center; height: 100vh; box-sizing: border-box; overflow: hidden; }
         
@@ -78,8 +78,7 @@
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
         ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
     </style>
-<link rel="stylesheet" href="../../assets/css/consentement.css">
-<script defer src="../../assets/js/consentement.js"></script>
+<script defer src="../../assets/js/mention-confidentialite.js"></script>
 </head>
 <body>
 
@@ -458,7 +457,6 @@
             const mainFont = isSketch ? "'Caveat', cursive, Arial, sans-serif" : "Arial, sans-serif";
 
             svg.innerHTML = `<defs>
-                <style>@import url("https://fonts.googleapis.com/css2?family=Caveat:wght@600&amp;display=swap");</style>
                 <pattern id="hatch" width="10" height="10" patternUnits="userSpaceOnUse">
                     <path d="M-1,1 l2,-2 M0,10 l10,-10 M9,11 l2,-2" stroke="#94a3b8" stroke-width="2"/>
                 </pattern>

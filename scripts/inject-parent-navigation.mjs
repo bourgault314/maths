@@ -56,9 +56,9 @@ for (const [resourcePath, resource] of resourcesByPath) {
     updated = html.replace(/<\/head>/i, `${tag}\n</head>`);
   } else if (/<body\b/i.test(html)) {
     updated = html.replace(/<body\b/i, `${tag}\n<body`);
-  } else if (/<script\b[^>]*consentement\.js[^>]*><\/script>/i.test(html)) {
+  } else if (/<script\b[^>]*mention-confidentialite\.js[^>]*><\/script>/i.test(html)) {
     updated = html.replace(
-      /(<script\b[^>]*consentement\.js[^>]*><\/script>)/i,
+      /(<script\b[^>]*mention-confidentialite\.js[^>]*><\/script>)/i,
       `$1\n${tag}`,
     );
   } else if (/<\/style>/i.test(html)) {

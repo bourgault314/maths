@@ -48,14 +48,14 @@ describe("menu Cycle 4 – DNB responsive", () => {
       css,
       /\.menu-v10 \.cookie-manage-link:focus-visible,\s*\.menu-v10 \.acknowledgements > summary:focus-visible\s*\{[^}]*outline:/s,
     );
-    assert.match(html, /href="\.\.\/assets\/css\/consentement\.css"/);
-    assert.match(html, /src="\.\.\/assets\/js\/consentement\.js"/);
+    assert.doesNotMatch(html, /consentement\.(css|js)/);
+    assert.match(html, /src="\.\.\/assets\/js\/mention-confidentialite\.js"/);
   });
 
-  it("masque le second accès aux cookies injecté par le gestionnaire global", () => {
+  it("masque la seconde mention de confidentialité que le script commun poserait", () => {
     assert.match(
       css,
-      /\.mg-consent-manage-slot,\s*\.mg-consent-manage\s*\{[^}]*display:\s*none !important;/s,
+      /\.mg-mention-slot\s*\{[^}]*display:\s*none !important;/s,
     );
   });
 

@@ -250,6 +250,6 @@ it("invalide ensemble le cache de la coque V2", async () => {
 
 it("conserve la façade du menu et recharge le libellé DNB", async () => {
   const source = await readFile(new URL("../automatismes-v2/index.html", import.meta.url), "utf8");
-  assert.match(source, /menu\.css\?v=54&amp;rev=51/);
-  assert.match(source, /app\.js\?v=54&amp;rev=57/);
+  assert.match(source, /menu\.css\?v=54&amp;rev=52/);
+  assert.match(source, /app\.js\?v=54&amp;rev=58/);
 });

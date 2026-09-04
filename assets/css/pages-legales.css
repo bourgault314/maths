@@ -252,21 +252,8 @@ h1 {
   gap: 8px 16px;
 }
 
-.legal-footer-button {
-  margin: 0;
-  padding: 0;
-  border: 0;
-  color: var(--mg-blue);
-  background: transparent;
-  font: inherit;
-  text-decoration: underline;
-  text-underline-offset: 3px;
-  cursor: pointer;
-}
-
-.legal-footer-button:hover,
-.legal-footer-button:focus-visible {
-  color: #0b62b9;
+.legal-footer-mention {
+  color: var(--mg-muted);
 }
 
 @media (max-width: 620px) {
@@ -310,8 +297,7 @@ h1 {
   .legal-header,
   .legal-footer,
   .legal-actions,
-  .mg-consent,
-  .mg-consent-manage {
+  .mg-mention-slot {
     display: none !important;
   }
 

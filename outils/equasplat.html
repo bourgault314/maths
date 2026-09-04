@@ -3334,8 +3334,8 @@
     display:none;
   }
 
-  /* Lien cookies explicite : seulement en réception (en usage libre, le lien
-     automatique de consentement.js reste en place). */
+  /* Mention « Sans cookie ni traceur » explicite : seulement en réception (en
+     usage libre, celle que mention-confidentialite.js pose reste en place). */
   .equasplatConsentFooter{
     display:none;
     justify-content:center;
@@ -3348,6 +3348,8 @@
   }
 
   .equasplatConsentLink{
+    display:inline-flex;
+    align-items:center;
     min-height:32px;
     padding:5px 7px;
     border:0;
@@ -3957,7 +3959,7 @@
       overflow:hidden;
     }
 
-    /* Réception : sous le bloc vivent le lien « Gérer mes cookies » (32 px,
+    /* Réception : sous le bloc vivent la mention de confidentialité (32 px,
        marges −8/18) et les marges 6/8 du bloc lui-même, soit 56 px ; avec
        100vh − 28px la page défilait de 28 px. On redonne cette place pour que
        le bloc et le lien tiennent ensemble dans la fenêtre, comme avant. */
@@ -4445,8 +4447,7 @@
   .eleveCarton .finSorties{display:flex;justify-content:center;gap:22px;flex-wrap:wrap}
   .eleveCarton .finSorties button, .eleveCarton .finSorties a{font:inherit;font-weight:700;font-size:14px;color:#5c6c82;background:none;border:none;border-radius:0;padding:6px 4px;cursor:pointer;text-decoration:underline;text-underline-offset:3px}
 </style>
-<link rel="stylesheet" href="../assets/css/consentement.css">
-<script defer src="../assets/js/consentement.js"></script>
+<script defer src="../assets/js/mention-confidentialite.js"></script>
 </head>
 <body>
 <main id="appMain" class="startMode">
@@ -4610,14 +4611,14 @@
       </div>
 
       <div class="actionZone" id="actionZone"></div>
-      <button class="mobileConsentLink" type="button" aria-label="Gérer mes choix de cookies">Gérer mes cookies</button>
+      <a class="mobileConsentLink" href="../confidentialite.html">Sans cookie ni traceur · Confidentialité</a>
     </div>
     <div class="solution" id="solution"></div>
   </section>
 </main>
 
 <footer class="equasplatConsentFooter">
-  <button class="equasplatConsentLink" type="button" aria-label="Gérer mes choix de cookies">Gérer mes cookies</button>
+  <a class="equasplatConsentLink" href="../confidentialite.html">Sans cookie ni traceur · Confidentialité</a>
 </footer>
 
 <dialog id="decomposeDialog">
@@ -5062,19 +5063,13 @@
   }
 
   function bindReceptionConsentLinks(){
-    // En réception, le lien « Gérer mes cookies » est posé dans la page
-    // (pied de page sur ordinateur, commandes du bas au téléphone) : le lien
-    // automatique de consentement.js, flottant quand l'écran est verrouillé,
-    // chevauchait la barre d'outils. En usage libre, rien ne change.
-    [mobileConsentLink, desktopConsentLink].forEach(button => {
-      if(!button || button.dataset.consentBound === "1") return;
-      button.dataset.consentBound = "1";
-      button.setAttribute("data-mathsgo-consent-open", "");
-      button.addEventListener("click", () => {
-        if(window.mathsgoConsentement && typeof window.mathsgoConsentement.ouvrir === "function"){
-          window.mathsgoConsentement.ouvrir();
-        }
-      });
+    // En réception, la mention « Sans cookie ni traceur » est posée dans la
+    // page (pied de page sur ordinateur, commandes du bas au téléphone) : celle
+    // que mention-confidentialite.js ajoute sinon, flottante quand l'écran est
+    // verrouillé, chevauchait la barre d'outils. En usage libre, rien ne change.
+    [mobileConsentLink, desktopConsentLink].forEach(lien => {
+      if(!lien) return;
+      lien.setAttribute("data-mathsgo-confidentialite", "");
     });
   }
 

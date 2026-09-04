@@ -422,8 +422,8 @@ test("l’accueil masque réellement le plateau et reprend la charte du site", (
   assert.match(css, /#play\.screen\.active\{display:flex;\}/);
   assert.match(html, /class="brandmark" href="\/"/);
   assert.match(html, /assets\/img\/mathsgo-logo-soley\.png/);
-  assert.match(html, /assets\/js\/consentement\.js/);
-  assert.match(html, /Gérer mes cookies/);
+  assert.match(html, /assets\/js\/mention-confidentialite\.js/);
+  assert.match(html, /<span data-mathsgo-confidentialite>Sans cookie ni traceur<\/span>/);
   assert.match(html, /aria-label="Recommencer le niveau"/);
   assert.match(js.ui, /class="chip[^"]*"[^>]*aria-pressed=/);
   assert.match(html, /meta name="description" content="Un jeu de réflexion en 73 niveaux/);

@@ -21,7 +21,7 @@ const positions=requiredOrder.map(required=>scriptSources.findIndex(source=>sour
 
 assert.doesNotMatch(index,/noindex|BÊTA ·/,'La version publique ne doit conserver ni noindex ni le marquage bêta.');
 assert.doesNotMatch(index,/revision-badge|V1\.25|BÊTA/,'La version publique ne doit afficher aucun badge de version bêta.');
-assert.match(index,/data-mathsgo-consent-open/,'La gestion des cookies doit rester directement accessible dans le menu public.');
+assert.match(index,/data-mathsgo-confidentialite/,'La mention « Sans cookie ni traceur » doit rester directement accessible dans le menu public.');
 assert.match(index,/class="segment-btn segment-btn-dnb"/,'Le menu public doit reprendre le bouton DNB de la bêta validée.');
 assert.doesNotMatch(index,/scripts\/90-objets-officiels\.js/,'Le transfert public ne doit pas réactiver un ancien moteur absent de la bêta validée.');
 assert.ok(positions.every(position=>position>=0),'Un script essentiel des Automatismes manque dans auto/index.html.');

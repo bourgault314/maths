@@ -31,7 +31,7 @@ test("le pied d’accueil sépare la signature, les actions et les liens légaux
 
   assert.match(
     footer,
-    /footer-row footer-row-legal[\s\S]*Mentions légales[\s\S]*Confidentialité[\s\S]*Cookies/
+    /footer-row footer-row-legal[\s\S]*Mentions légales[\s\S]*Confidentialité[\s\S]*Sans cookie ni traceur/
   );
 });
 

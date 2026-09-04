@@ -240,10 +240,9 @@ function bootstrap(hash, {sansHistorique = false, durable = null} = {}) {
   return window;
 }
 
-test("le script du <head> lit l’adresse, lève le drapeau et la nettoie, avant tout le reste", () => {
+test("le script du <head> lit l’adresse et la nettoie, avant tout le reste", () => {
   const lien = bootstrap("#code=2F4FUL&ouvrir=parcours");
   assert.deepEqual(lien.MATHSGO_ENTREE, {code: "2F4FUL", fiche: "", billet: "", vue: "", ouvrir: "parcours"});
-  assert.equal(lien.MATHSGO_SUIVI_ELEVE, true, "consentement.js ne doit charger aucune mesure d’audience");
   assert.equal(lien.remplacee, "/outils/calcul_mental/defi_tables.html#ouvrir=parcours", "le code sort, le reste survit");
 
   const seul = bootstrap("#code=2F4FUL");
@@ -251,13 +250,11 @@ test("le script du <head> lit l’adresse, lève le drapeau et la nettoie, avant
 
   const fiche = bootstrap("#fiche=CDEF23");
   assert.deepEqual(fiche.MATHSGO_ENTREE, {code: "", fiche: "CDEF23", billet: "", vue: "", ouvrir: ""});
-  assert.equal(fiche.MATHSGO_SUIVI_ELEVE, true);
   assert.equal(fiche.remplacee, "/outils/calcul_mental/defi_tables.html", "un code de fiche est un code élève : il disparaît aussi");
 
   const parcours = bootstrap("#parcours");
   assert.deepEqual(parcours.MATHSGO_ENTREE, {code: "", fiche: "", billet: "", vue: "", ouvrir: "parcours"});
   assert.equal(parcours.remplacee, null, "sans code, on ne touche pas à l’adresse");
-  assert.equal(parcours.MATHSGO_SUIVI_ELEVE, undefined, "sans code, rien ne change pour un visiteur ordinaire");
 
   assert.deepEqual(bootstrap("#ouvrir=calculs&code=2F4FUL").MATHSGO_ENTREE, {code: "2F4FUL", fiche: "", billet: "", vue: "", ouvrir: "calculs"});
   assert.deepEqual(bootstrap("").MATHSGO_ENTREE, {code: "", fiche: "", billet: "", vue: "", ouvrir: ""});
@@ -285,30 +282,28 @@ test("un #code= ou #fiche= qui arrive sur la page déjà ouverte recharge le doc
 });
 
 // Lot 2 (A-annexe B-5) : un appareil d'avant le lot A1 garde le code dans le
-// rangement durable ; l'appli le déplace et l'oublie AVANT que consentement.js
-// (defer) ne démarre — son repli sur localStorage ne voit donc jamais rien, et
-// la mesure d'audience se chargeait une fois sur l'appareil d'un élève.
-test("un code encore dans l’ancien rangement durable lève le drapeau anti-mesure, sans être adopté", () => {
+// rangement durable ; le script du <head> ne l'adopte pas pour autant (l'identité
+// vit dans l'onglet), et ne le lit même plus depuis le lot 10b : le drapeau
+// « élève identifié, pas de mesure d'audience » qu'il levait pour consentement.js
+// n'a plus de lecteur, la mesure d'audience ayant quitté le site.
+test("un code encore dans l’ancien rangement durable n’est pas adopté, et le script n’y touche pas", () => {
   const ancien = bootstrap("#parcours", {durable: {getItem: cle => (cle === "mathsgo-suivi-code" ? "2F4FUL" : null)}});
-  assert.equal(ancien.MATHSGO_SUIVI_ELEVE, true, "consentement.js ne doit charger aucune mesure d’audience");
-  assert.deepEqual(ancien.MATHSGO_ENTREE, {code: "", fiche: "", billet: "", vue: "", ouvrir: "parcours"}, "mais le code n’entre pas par là : l’identité vit dans l’onglet");
+  assert.deepEqual(ancien.MATHSGO_ENTREE, {code: "", fiche: "", billet: "", vue: "", ouvrir: "parcours"}, "le code n’entre pas par là : l’identité vit dans l’onglet");
   assert.equal(ancien.remplacee, null);
-
-  const propre = bootstrap("#parcours", {durable: {getItem: () => null}});
-  assert.equal(propre.MATHSGO_SUIVI_ELEVE, undefined, "sans code rangé, rien ne change pour un visiteur ordinaire");
+  assert.equal(ancien.MATHSGO_SUIVI_ELEVE, undefined, "plus de drapeau anti-mesure : il n’existait que pour Google Analytics");
+  assert.doesNotMatch(SOURCE_BOOTSTRAP, /localStorage|MATHSGO_SUIVI_ELEVE|consentement/, "le script du <head> ne lit plus le rangement durable");
 
   const interdit = bootstrap("#parcours", {durable: {getItem() { throw new Error("SecurityError"); }}});
-  assert.equal(interdit.MATHSGO_SUIVI_ELEVE, undefined, "un stockage refusé ne casse rien");
+  assert.equal(interdit.recharges, 0, "un stockage refusé ne casse rien");
 });
 
 test("le script du <head> est en JavaScript ancien et survit à un navigateur sans history", () => {
   const sansCommentaires = SOURCE_BOOTSTRAP.replace(/^\s*\/\/.*$/gm, "");
   assert.doesNotMatch(sansCommentaires, /\bconst\b|\blet\b|=>|\?\.|URLSearchParams/, "pas de syntaxe récente : il doit tourner partout");
   const vieux = bootstrap("#code=2F4FUL", {sansHistorique: true});
-  assert.equal(vieux.MATHSGO_ENTREE.code, "2F4FUL", "même sans pouvoir nettoyer l’adresse, le code est lu et le drapeau levé");
-  assert.equal(vieux.MATHSGO_SUIVI_ELEVE, true);
-  assert.ok(html.indexOf("MATHSGO_ENTREE") < html.indexOf('src="../../assets/js/consentement.js"'),
-    "il précède consentement.js dans la page");
+  assert.equal(vieux.MATHSGO_ENTREE.code, "2F4FUL", "même sans pouvoir nettoyer l’adresse, le code est lu");
+  assert.ok(html.indexOf("MATHSGO_ENTREE") < html.indexOf('src="../../assets/js/mention-confidentialite.js"'),
+    "il précède les scripts de la page");
   assert.ok(html.indexOf("MATHSGO_ENTREE") < html.indexOf("<body>"), "et il est dans le <head>");
 });
 

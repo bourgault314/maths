@@ -75,6 +75,8 @@ test("aucune page du site ne charge un script venu d'ailleurs sans sceau integri
 // fichiers JavaScript du site.
 //
 // Angle mort du lot 10 repéré par Claude Code en relisant la PR #637, bouché au lot 10c.
+// Google Tag Manager et Google Analytics ajoutés au lot 10b : c'était le dernier
+// script tiers que le site pouvait encore charger (par JavaScript, après la bannière).
 const HÔTES_INTERDITS = [
   /(^|\/\/)unpkg\.com\//,
   /cdnjs\.cloudflare\.com\//,
@@ -83,14 +85,40 @@ const HÔTES_INTERDITS = [
   /geogebra\.org\//,
   /esm\.sh\//,
   /skypack\.dev\//,
+  /googletagmanager\.com/,
+  /google-analytics\.com/,
+  /fonts\.googleapis\.com/,
+  /fonts\.gstatic\.com/,
 ];
 
-test("aucune adresse de CDN tiers n'est écrite nulle part dans le site publié", () => {
+// Les fichiers du serveur de suivi : ses pages tournent avec la session du
+// professeur, et son JavaScript manipule les codes et les prénoms. Le garde-fou
+// doit y être au moins aussi strict que sur le site (angle mort du lot 10c
+// signalé par Claude Code : seules les balises <script src> y étaient lues).
+function fichiersDuServeur() {
+  const trouves = [];
+  (function parcourir(dossier) {
+    for (const nom of readdirSync(dossier)) {
+      if (nom === "node_modules") continue;
+      const chemin = join(dossier, nom);
+      if (statSync(chemin).isDirectory()) parcourir(chemin);
+      else if (/\.(php|html|js|mjs|css)$/i.test(nom)) trouves.push(chemin);
+    }
+  })(join(racine, "_serveur", "public"));
+  return trouves.sort();
+}
+
+const fichiersAExaminer = [
+  ...pagesDuSite,
+  ...fichiersDuSitePublie([".js", ".mjs", ".cjs", ".css"]),
+  ...fichiersDuServeur(),
+  // assets/vendor/ contient les bibliothèques elles-mêmes : leurs propres commentaires
+  // peuvent citer une adresse. Elles sont scellées par leur empreinte, plus bas.
+].filter((chemin) => !chemin.includes(`${sep}vendor${sep}`));
+
+test("aucune adresse de CDN tiers ou de mesure d'audience n'est écrite nulle part (site et serveur)", () => {
   const fautives = [];
-  for (const chemin of [...pagesDuSite, ...fichiersDuSitePublie([".js", ".mjs", ".cjs"])]) {
-    // assets/vendor/ contient les bibliothèques elles-mêmes : leurs propres commentaires
-    // peuvent citer une adresse. Elles sont scellées par leur empreinte, plus bas.
-    if (chemin.includes(`${sep}vendor${sep}`)) continue;
+  for (const chemin of fichiersAExaminer) {
     const texte = readFileSync(chemin, "utf8");
     for (const url of texte.match(/https?:\/\/[^\s"'`)<>]+/g) ?? []) {
       if (HÔTES_INTERDITS.some((h) => h.test(url))) {
@@ -104,36 +132,108 @@ test("aucune adresse de CDN tiers n'est écrite nulle part dans le site publié"
       + "mathsgo.re et lit le même stockage local :\n  " + fautives.join("\n  "));
 });
 
-// Même règle côté serveur de suivi : ses pages tournent avec la session du professeur.
-test("les pages du serveur de suivi ne chargent aucun script d'un autre domaine", () => {
+// ---------------------------------------------------------------------------
+// LA RÈGLE (lot 10b) : la liste ci-dessus est une liste NOIRE, elle ne connaît
+// que les hôtes qu'on lui a appris. Un loadScript() vers un CDN inconnu ajouté
+// demain ne déclencherait rien. D'où cette LISTE BLANCHE : partout où une
+// adresse absolue sert à CHARGER quelque chose qui s'exécute ou s'applique à la
+// page — script, module, worker, feuille de style, police —, son hôte doit être
+// mathsgo.re. Pas d'exception aujourd'hui, et c'est le mieux : en ajouter une
+// se fait ici, dans ORIGINES_AUTORISEES, et se dit dans la notice du lot.
+//
+// Les simples liens (href d'un <a>, canonical, xmlns d'un SVG, adresses citées
+// dans un texte) ne chargent rien : ils ne sont pas concernés.
+// ---------------------------------------------------------------------------
+const ORIGINES_AUTORISEES = ["mathsgo.re", "suivi.mathsgo.re"];
+
+const CONTEXTES_DE_CHARGEMENT = [
+  // HTML
+  /<script\b[^>]*\bsrc\s*=\s*["']?(https?:\/\/[^"'\s>]+)/gi,
+  /<link\b[^>]*\brel\s*=\s*["'][^"']*(?:stylesheet|preload|modulepreload|preconnect|dns-prefetch|prefetch|manifest|icon)[^"']*["'][^>]*\bhref\s*=\s*["']?(https?:\/\/[^"'\s>]+)/gi,
+  /<link\b[^>]*\bhref\s*=\s*["']?(https?:\/\/[^"'\s>]+)["']?[^>]*\brel\s*=\s*["'][^"']*(?:stylesheet|preload|modulepreload|preconnect|dns-prefetch|prefetch|manifest|icon)/gi,
+  /<(?:iframe|embed|object)\b[^>]*\b(?:src|data)\s*=\s*["']?(https?:\/\/[^"'\s>]+)/gi,
+  // JavaScript : balise fabriquée, import dynamique ou statique, worker, script chargé par une fonction maison
+  /\.src\s*=\s*["'`](https?:\/\/[^"'`]+)/g,
+  /\bimport\s*\(\s*["'`](https?:\/\/[^"'`]+)/g,
+  /\bfrom\s+["'](https?:\/\/[^"']+)/g,
+  /\bimportScripts\s*\(\s*["'`](https?:\/\/[^"'`]+)/g,
+  /\bnew\s+(?:Shared)?Worker\s*\(\s*["'`](https?:\/\/[^"'`]+)/g,
+  /\bload(?:Script|Style|Css|Font)\w*\s*\(\s*["'`](https?:\/\/[^"'`]+)/gi,
+  // CSS : @import et url() vers une police ou une feuille
+  /@import\s+(?:url\()?\s*["']?(https?:\/\/[^"')\s]+)/gi,
+  /\burl\(\s*["']?(https?:\/\/[^"')\s]+\.(?:css|js|mjs|woff2?|ttf|otf|eot)(?:[?#][^"')\s]*)?)/gi,
+  // Toute chaîne qui désigne un fichier exécutable ou une police, quel que soit le contexte
+  /["'`](https?:\/\/[^"'`\s]+\.(?:js|mjs|cjs|css|woff2?|ttf|otf)(?:[?#][^"'`\s]*)?)["'`]/gi,
+];
+
+function hoteAutorise(url) {
+  try {
+    return ORIGINES_AUTORISEES.includes(new URL(url).hostname);
+  } catch (_erreur) {
+    return false;
+  }
+}
+
+test("tout ce qu'une page charge (script, module, worker, feuille, police) vient de mathsgo.re — liste blanche", () => {
   const fautives = [];
-  (function parcourir(dossier) {
-    for (const nom of readdirSync(dossier)) {
-      if (nom === "node_modules") continue;
-      const chemin = join(dossier, nom);
-      if (statSync(chemin).isDirectory()) parcourir(chemin);
-      else if (/\.(php|html)$/i.test(nom)) {
-        const page = readFileSync(chemin, "utf8");
-        for (const balise of page.match(/<script\b[^>]*>/gi) ?? []) {
-          if (/\bsrc\s*=\s*["']https?:\/\//i.test(balise)) {
-            fautives.push(`${relative(racine, chemin).split(sep).join("/")} → ${balise.trim()}`);
-          }
+  for (const chemin of fichiersAExaminer) {
+    const texte = readFileSync(chemin, "utf8");
+    for (const motif of CONTEXTES_DE_CHARGEMENT) {
+      motif.lastIndex = 0;
+      for (const m of texte.matchAll(motif)) {
+        const url = m[1];
+        if (!hoteAutorise(url)) {
+          fautives.push(`${relative(racine, chemin).split(sep).join("/")} → ${url}`);
         }
       }
     }
-  })(join(racine, "_serveur", "public"));
-  assert.deepEqual(fautives, [], fautives.join("\n"));
+  }
+  assert.deepEqual([...new Set(fautives)], [],
+    "ces fichiers chargent quelque chose depuis un autre domaine que mathsgo.re. "
+      + "Copie-le dans assets/vendor/ (voir LISEZMOI.md) ; si c'est vraiment impossible, "
+      + "ajoute l'origine à ORIGINES_AUTORISEES et dis-le dans la notice du lot :\n  "
+      + [...new Set(fautives)].join("\n  "));
+});
+
+test("la liste blanche voit bien une adresse fabriquée en JavaScript ou cachée dans du CSS", () => {
+  // Les adresses des pièges sont assemblées en deux morceaux : ce fichier est lui-même
+  // dans le site publié, et les balayages ci-dessus le lisent aussi.
+  const h = (hote, chemin) => "https:" + "//" + hote + chemin;
+  const pieges = [
+    `const s = document.createElement("script"); s.src = "${h("cdn.autre-chose.io", "/lib.min.js")}";`,
+    `await loadScript('${h("unpkg.com", "/three@0.160.0/build/three.min.js")}')`,
+    `script.src = "${h("www.googletagmanager.com", "/gtag/js?id=")}" + id;`,
+    `import("${h("esm.sh", "/lodash")}")`,
+    `@import url("${h("fonts.googleapis.com", "/css2?family=Fredoka")}");`,
+    `<link href="${h("fonts.googleapis.com", "/css2?family=Nunito")}" rel="stylesheet">`,
+    "new Worker(`" + h("exemple.org", "/w.js") + "`)",
+    `const url = "${h("exemple.org", "/dossier/police.woff2")}";`,
+  ];
+  for (const piege of pieges) {
+    const vus = CONTEXTES_DE_CHARGEMENT.some((motif) => { motif.lastIndex = 0; return [...piege.matchAll(motif)].some((m) => !hoteAutorise(m[1])); });
+    assert.ok(vus, `le piège n'est pas vu : ${piege}`);
+  }
+  for (const innocent of [
+    `<a href="${h("www.cnil.fr", "/fr/plaintes")}">CNIL</a>`,
+    '<svg xmlns="http:' + '//www.w3.org/2000/svg">',
+    `<link rel="canonical" href="${h("mathsgo.re", "/outils/")}">`,
+    `const s = document.createElement("script"); s.src = "${h("mathsgo.re", "/assets/js/x.js")}";`,
+  ]) {
+    const vus = CONTEXTES_DE_CHARGEMENT.some((motif) => { motif.lastIndex = 0; return [...innocent.matchAll(motif)].some((m) => !hoteAutorise(m[1])); });
+    assert.ok(!vus, `fausse alerte sur : ${innocent}`);
+  }
 });
 
 // ---------------------------------------------------------------------------
 // 2. LE CLIQUET : la liste des domaines tiers encore utilisés par des FEUILLES DE STYLE.
 //    Une feuille de style ne peut pas lire le stockage local, mais chaque page ouverte
 //    fait connaître l'adresse de connexion de l'élève au domaine qui la sert.
-//    Cette liste doit être VIDÉE par le lot 10b (polices rapatriées dans le dépôt).
+//    Lot 10 : ["fonts.googleapis.com"] (36 pages). Lot 10b : VIDE, les polices
+//    Fredoka, Nunito, Caveat et Montserrat vivent dans assets/vendor/polices/.
 // ---------------------------------------------------------------------------
-const DOMAINES_STYLE_TOLERES = ["fonts.googleapis.com"];
+const DOMAINES_STYLE_TOLERES = [];
 
-test("aucun nouveau domaine tiers n'apparaît dans les feuilles de style du site", () => {
+test("aucun domaine tiers ne sert de feuille de style au site", () => {
   const domaines = new Set();
   for (const chemin of pagesDuSite) {
     const page = readFileSync(chemin, "utf8");
@@ -144,8 +244,8 @@ test("aucun nouveau domaine tiers n'apparaît dans les feuilles de style du site
     }
   }
   assert.deepEqual([...domaines].sort(), [...DOMAINES_STYLE_TOLERES].sort(),
-    "la liste des domaines tiers servant des feuilles de style a changé ; "
-      + "le lot 10b doit la vider, pas l'allonger");
+    "un domaine tiers sert une feuille de style au site ; depuis le lot 10b il ne doit "
+      + "plus y en avoir aucun (polices : assets/vendor/polices/)");
 });
 
 // ---------------------------------------------------------------------------
@@ -161,6 +261,14 @@ const EMPREINTES = [
   ["katex-0.16.9/katex.min.js", "dc84b296ec3e884de093158f760fd9d45b6c7abe58b5381557f4e138f46a58ae"],
   ["pdfjs-3.4.120/pdf.min.js", "519415484a0c6c9f36ff7b858ede2660e4d55472089ad929eeedcbe8b307ebf6"],
   ["pdfjs-3.4.120/pdf.worker.min.js", "e6a7f30b71ca739ee2738c2ada7e120390b3c6faa3f3d4aa172bb6ece586eab1"],
+  ["polices/caveat-latin-ext-wght-normal.woff2", "f626b95c1efa95cf6b7c9b043d3bbe8862b6abbe5f55a082102f33f7de2fd4f9"],
+  ["polices/caveat-latin-wght-normal.woff2", "891951df5e8b5b0f0bc760d31375405e795c666b5add70437de12d4a6482b33f"],
+  ["polices/fredoka-latin-ext-wght-normal.woff2", "18a1723c878c0d8acc2e45a108fd62fbb976e408337804afa2908982fac13e2a"],
+  ["polices/fredoka-latin-wght-normal.woff2", "99d6c78e043710d4f83ed90716779798b7b04eb690f73e0ad0e8f32d1f0e98c2"],
+  ["polices/montserrat-latin-ext-wght-normal.woff2", "54d9a78b7ff60b689ad9f3017ffac8547b5d871afec733f6c1c3ae36577ee504"],
+  ["polices/montserrat-latin-wght-normal.woff2", "06b16db7a969135d48d38c49183be7fb88d4452e2a3011957c7851941f4e4879"],
+  ["polices/nunito-latin-ext-wght-normal.woff2", "2c8d792869818ecb253a46bc3c63c7013df7aac2f69291c3c85e5cdc94160960"],
+  ["polices/nunito-latin-wght-normal.woff2", "ba344451eab25b217a165363b1982048a5e5830a0daf36577973955a04cac793"],
   ["tailwind/tailwind-outils.css", "f683657e968f540d1262f36daff4f8f627d9fabaaff4ec0a34c591093931b675"],
   ["three-0.128.0/OrbitControls.js", "02bb4ade710f3e607329e37a21f098bc3ac70eb6e33daf8a65e79f4db785e7b2"],
   ["three-0.128.0/three.min.js", "9274bbcec8d96168626c732b5d31c775aa8cfb7eaa0599bec0c175908a2c1ce2"],
@@ -173,6 +281,39 @@ test("les copies locales des bibliothèques ont l'empreinte attendue", () => {
     assert.equal(obtenue, empreinte,
       `assets/vendor/${nom} n'est plus le fichier attendu (${contenu.length} octets)`);
   }
+});
+
+// ---------------------------------------------------------------------------
+// 3b. LES POLICES DU SITE (lot 10b) : Fredoka, Nunito, Caveat et Montserrat étaient
+//     demandées à fonts.googleapis.com par 36 pages. Elles vivent maintenant dans
+//     assets/vendor/polices/, déclarées par une seule feuille que ces pages chargent.
+// ---------------------------------------------------------------------------
+const PAGES_AVEC_POLICES = 36;
+
+test("les pages qui utilisent une police du site la prennent dans assets/vendor/polices/", () => {
+  const css = readFileSync(join(racine, "assets/vendor/polices/polices.css"), "utf8");
+  for (const famille of ["Fredoka", "Nunito", "Caveat", "Montserrat"]) {
+    assert.ok(css.includes(`font-family: "${famille}";`), `polices.css ne déclare pas ${famille}`);
+  }
+  for (const fichier of css.match(/url\(\.\/([^)]+)\)/g).map((u) => u.slice(6, -1))) {
+    assert.ok(existsSync(join(racine, "assets/vendor/polices", fichier)), `polices.css cite ${fichier}, qui n'existe pas`);
+  }
+  let chargeuses = 0;
+  for (const chemin of pagesDuSite) {
+    const page = readFileSync(chemin, "utf8");
+    const lien = (page.match(/<link rel="stylesheet" href="(?:\.\.\/)*assets\/vendor\/polices\/polices\.css">/g) ?? []).length;
+    assert.ok(lien <= 1, `${relative(racine, chemin)} charge ${lien} fois la feuille des polices`);
+    chargeuses += lien;
+    // Une page qui nomme une de ces polices dans ses styles doit charger la feuille,
+    // sinon elle retombe en silence sur la police de secours.
+    const styles = (page.match(/<style\b[^>]*>[\s\S]*?<\/style>/gi) ?? []).join("\n");
+    const utilise = /font-family\s*:[^;}]*\b(Fredoka|Nunito|Caveat|Montserrat)\b/.test(styles);
+    if (utilise && lien === 0) {
+      assert.fail(`${relative(racine, chemin).split(sep).join("/")} utilise une police du site sans charger assets/vendor/polices/polices.css`);
+    }
+  }
+  assert.equal(chargeuses, PAGES_AVEC_POLICES,
+    `${chargeuses} pages chargent polices.css (${PAGES_AVEC_POLICES} attendues) : mets à jour PAGES_AVEC_POLICES si c'est voulu`);
 });
 
 test("les polices de KaTeX accompagnent sa feuille de style", () => {
