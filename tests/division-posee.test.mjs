@@ -216,7 +216,7 @@ test("l'interface conserve les repères visuels demandés", () => {
   assert.match(interfaceHtml, /id="rank-guides" type="checkbox"/);
   assert.match(interfaceHtml, /id="projection-recap"[^>]*hidden/);
   assert.match(interfaceHtml, /id="table-bracket"[^>]*hidden/);
-  assert.match(interfaceHtml, /id="table-toggle"[^>]*aria-expanded="true"[^>]*>Masquer la table/);
+  assert.match(interfaceHtml, /id="table-toggle"[^>]*aria-label="Masquer la table"[^>]*aria-expanded="true"[^>]*>Masquer/);
   assert.match(interfaceCss, /\.decimal-field\[hidden\][^{]*\{[^}]*display:\s*none/);
   assert.match(interfaceCss, /\.table-card\s*\{[^}]*height:\s*100%/);
   assert.match(interfaceCss, /grid-template-rows:\s*repeat\(10,/);
@@ -241,7 +241,7 @@ test("l'interface conserve les repères visuels demandés", () => {
   assert.match(interfaceJs, /isUnrevealedDecimal/);
   assert.match(interfaceJs, /\["ask", "choose"\]/);
   assert.match(interfaceJs, /quotientWriting\(step\)/);
-  assert.match(interfaceJs, /division-view\.mjs\?v=1/);
+  assert.match(interfaceJs, /division-view\.mjs\?v=2/);
   assert.match(interfaceJs, /renderMultiplicationTable\(/);
   assert.match(interfaceJs, /const showIntegerSlots = step\.kind !== "bound"/);
   assert.match(interfaceJs, /mathsgo-division-rank-guides/);

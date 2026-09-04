@@ -63,6 +63,7 @@ export function renderMultiplicationTable({
   card,
   toggle,
   visible,
+  compactToggle = false,
   activeMultiplier = null,
   bracket = null
 }) {
@@ -111,7 +112,11 @@ export function renderMultiplicationTable({
 
   card.classList.toggle("is-open", visible);
   card.classList.toggle("is-revealed", visible);
-  toggle.textContent = visible ? "Masquer la table" : "Voir la table";
+  const fullToggleLabel = visible ? "Masquer la table" : "Voir la table";
+  toggle.textContent = compactToggle
+    ? (visible ? "Masquer" : "Afficher")
+    : fullToggleLabel;
+  toggle.setAttribute("aria-label", fullToggleLabel);
   toggle.setAttribute("aria-expanded", String(visible));
 }
 

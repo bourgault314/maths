@@ -94,7 +94,10 @@ body[data-task="finish"] .practice-instruction { align-items: center; }
   .practice-instruction { grid-column: 1; grid-row: 1 / 4; align-items: flex-start !important; padding: 24px 54px 24px 24px; }
   .practice-instruction h2 { font-size: clamp(1.18rem, 1.42vw, 1.6rem); overflow-wrap: anywhere; }
   .practice-instruction .step-detail { margin-top: 10px; font-size: clamp(.9rem, 1vw, 1.04rem); line-height: 1.42; }
-  .practice-instruction .anticipation-prompt { align-items: flex-start; }
+  .practice-instruction .anticipation-prompt { display: grid; grid-template-columns: 1fr; align-items: flex-start; gap: 15px; }
+  .practice-instruction .prompt-equation { width: 100%; display: grid; grid-template-columns: minmax(0, 1fr) auto auto auto minmax(0, 1fr); gap: 4px; font-size: .96rem; white-space: normal; }
+  .practice-instruction .prompt-equation .inline-answer { width: 100%; min-width: 0; max-width: none; }
+  .practice-instruction .prompt-conclusion { flex-wrap: wrap; line-height: 1.35; white-space: normal; }
   .practice-stage { grid-column: 2; grid-row: 1; padding-top: 10px; }
   .practice-actions { grid-column: 2; grid-row: 2; }
   .practice-progress { grid-column: 2; grid-row: 3; }
