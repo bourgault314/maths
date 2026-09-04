@@ -99,7 +99,8 @@ window.MATHSGO_CATALOGUE = {
       "notions": ["numeration"],
       "hub": "division-posee/index.html",
       "hiddenFromBrowse": true,
-      "collapseInNotion": false,
+      "collapseInNotion": true,
+      "navigation": "hub",
       "searchable": false
     },
     {
@@ -435,8 +436,16 @@ window.MATHSGO_CATALOGUE = {
       "primaryGroup": "manipuler",
       "collections": ["division-posee"],
       "tags": ["division", "calcul-pose", "euclidienne", "decimale", "pas-a-pas", "table"],
-      "thumbnail": "assets/img/thumbnails/numeration/division-posee.svg?v=1",
+      "thumbnail": "assets/img/thumbnails/numeration/division-posee.svg?v=2",
       "cardDescription": "Entrer le dividende et le diviseur, puis afficher la division euclidienne ou décimale étape par étape avec la table du diviseur."
+    },
+    "outils/division-posee/division-posee-interactive.html": {
+      "primaryNotion": "numeration",
+      "primaryGroup": "entrainer",
+      "collections": ["division-posee"],
+      "tags": ["division", "calcul-pose", "euclidienne", "entrainement", "interactif", "aide", "table"],
+      "thumbnail": "assets/img/thumbnails/numeration/division-posee-interactive.svg?v=1",
+      "cardDescription": "Poser soi-même une division euclidienne, vérifier chaque bloc et demander des indices progressifs ou la table du diviseur."
     },
     "outils/division-posee/gabarit-division-euclidienne.pdf": {
       "primaryNotion": "numeration",
@@ -3792,6 +3801,22 @@ window.MATHSGO_CATALOGUE = {
       "types": ["exerciseur"],
       "filters": [],
       "keywords": ["division posée", "division euclidienne", "division décimale", "quotient", "reste", "pas à pas"],
+      "kind": "tool",
+      "status": "published",
+      "featured": false,
+      "recent": true
+    },
+    {
+      "id": "outils-division-posee-division-posee-interactive-html",
+      "title": "À toi de poser la division",
+      "description": "Une division euclidienne à compléter par blocs, avec validation, indices progressifs et table du diviseur facultative.",
+      "path": "outils/division-posee/division-posee-interactive.html",
+      "domains": ["nombres-calculs"],
+      "notions": ["numeration"],
+      "uses": ["entrainer"],
+      "types": ["exerciseur"],
+      "filters": [],
+      "keywords": ["division posée", "division euclidienne", "entraînement", "quotient", "reste", "aide", "table"],
       "kind": "tool",
       "status": "published",
       "featured": false,

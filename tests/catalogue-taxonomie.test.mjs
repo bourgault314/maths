@@ -34,7 +34,7 @@ const allowedGroups = new Set([
 
 const expectedGroupCounts = {
   manipuler: 39,
-  entrainer: 28,
+  entrainer: 29,
   generer: 33,
   imprimer: 20,
   activites: 14,
@@ -44,7 +44,7 @@ const expectedGroupCounts = {
 
 const expectedVisibleCardCounts = {
   manipuler: 35,
-  entrainer: 26,
+  entrainer: 27,
   generer: 33,
   imprimer: 17,
   activites: 12,
@@ -64,10 +64,10 @@ function assertPathsInGroup(group, paths) {
   }
 }
 
-test("le catalogue conserve 168 entrées dont 158 publiées", () => {
+test("le catalogue conserve 169 entrées dont 159 publiées", () => {
   assert.equal(catalogue.schemaVersion, 5);
-  assert.equal(resources.length, 168);
-  assert.equal(published.length, 158);
+  assert.equal(resources.length, 169);
+  assert.equal(published.length, 159);
   assert.equal(new Set(resources.map((resource) => resource.path)).size, resources.length, "Chaque chemin doit être unique.");
 });
 
@@ -112,7 +112,7 @@ test("aucune carte publiée ne conserve la description générique", () => {
   assert.deepEqual(offenders, []);
 });
 
-test("la répartition arbitrée des 158 ressources reste stable", () => {
+test("la répartition arbitrée des 159 ressources reste stable", () => {
   const actual = Object.fromEntries([...allowedGroups].map((group) => [group, 0]));
   for (const resource of published) actual[resolvedPrimaryGroup(resource)] += 1;
   assert.deepEqual(actual, expectedGroupCounts);
@@ -291,19 +291,24 @@ test("les tableaux de proportionnalité partagent une carte avec deux choix expl
   assert.equal(family?.labels?.[withoutCoefficientPath], "Sans coefficient");
 });
 
-test("la division posée reste un outil normal de Numération, avec deux gabarits trouvables", () => {
+test("la division posée forme une famille de Numération, avec entraînement et gabarits trouvables", () => {
   const collection = Array.from(catalogue.collections || []).find(({ id }) => id === "division-posee");
   const appPath = "outils/division-posee/division-posee.html";
+  const trainingPath = "outils/division-posee/division-posee-interactive.html";
   const templatePaths = [
     "outils/division-posee/gabarit-division-euclidienne.pdf",
     "outils/division-posee/gabarit-division-decimale.pdf"
   ];
 
   assert.equal(collection?.hiddenFromBrowse, true);
-  assert.equal(collection?.collapseInNotion, false);
+  assert.equal(collection?.collapseInNotion, true);
+  assert.equal(collection?.navigation, "hub");
   assert.equal(collection?.searchable, false);
   assert.equal(classifications[appPath]?.primaryNotion, "numeration");
   assert.equal(classifications[appPath]?.primaryGroup, "manipuler");
+  assert.equal(classifications[trainingPath]?.primaryNotion, "numeration");
+  assert.equal(classifications[trainingPath]?.primaryGroup, "entrainer");
+  assert.ok(publishedByPath.has(trainingPath));
 
   for (const path of templatePaths) {
     const resource = publishedByPath.get(path);
@@ -372,6 +377,6 @@ test("les familles regroupent toutes leurs variantes sans perte ni chevauchement
   for (const family of families) visibleCardsByGroup[family.group] += 1;
 
   assert.equal(representedResourceCount, published.length, "Aucune variante publiée ne doit disparaître du catalogue.");
-  assert.equal(visibleCardCount, 141, "Les 158 ressources doivent être représentées par 141 cartes après regroupement.");
+  assert.equal(visibleCardCount, 142, "Les 159 ressources doivent être représentées par 142 cartes après regroupement.");
   assert.deepEqual(visibleCardsByGroup, expectedVisibleCardCounts);
 });

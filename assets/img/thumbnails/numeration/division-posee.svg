@@ -18,10 +18,10 @@
   <rect x="428" y="50" width="160" height="286" rx="16" fill="#fff2e7"/>
   <text x="451" y="82" font-family="system-ui,sans-serif" font-size="18" font-weight="800" fill="#f58220">TABLE DE 7</text>
   <g font-family="system-ui,sans-serif" font-size="17" font-weight="700" fill="#10294a">
-    <text x="454" y="124">6 × 7</text><text x="548" y="124">42</text>
-    <rect x="444" y="142" width="128" height="34" rx="8" fill="#ffd9b7"/><text x="454" y="165" fill="#d86b16">7 × 7</text><text x="548" y="165" fill="#d86b16">49</text>
-    <text x="454" y="207">8 × 7</text><text x="548" y="207">56</text>
-    <text x="454" y="249">9 × 7</text><text x="548" y="249">63</text>
-    <text x="454" y="291">10 × 7</text><text x="548" y="291">70</text>
+    <text x="454" y="124">5 × 7</text><text x="548" y="124">35</text>
+    <text x="454" y="165">6 × 7</text><text x="548" y="165">42</text>
+    <text x="454" y="207">7 × 7</text><text x="548" y="207">49</text>
+    <rect x="444" y="226" width="128" height="34" rx="8" fill="#ffd9b7"/><text x="454" y="249" fill="#d86b16">8 × 7</text><text x="548" y="249" fill="#d86b16">56</text>
+    <text x="454" y="291">9 × 7</text><text x="548" y="291">63</text>
   </g>
 </svg>
