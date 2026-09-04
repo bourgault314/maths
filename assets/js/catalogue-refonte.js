@@ -148,6 +148,11 @@
       keywords: "entier diviseur multiple pgcd sachets mur nombre premier",
       icon: "divisibilite"
     },
+    "calculs-poses": {
+      description: "Poser les opérations et comprendre chaque étape du calcul.",
+      keywords: "calcul posé opération addition soustraction multiplication division potence",
+      icon: "calculs-poses"
+    },
     puissances: {
       description: "Construire et visualiser les puissances.",
       keywords: "exposant carré feuille pliage",

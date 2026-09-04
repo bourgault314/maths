@@ -13,17 +13,17 @@ body[data-task="finish"] .practice-instruction { align-items: center; }
 .practice-instruction #step-count { padding-top: 2px; }
 .prompt-answer[hidden] { display: none; }
 .prompt-answer { margin-top: 10px; }
-.anticipation-prompt { display: flex; flex-wrap: wrap; align-items: center; gap: 9px 24px; }
-.prompt-equation { display: flex; align-items: center; gap: 8px; color: var(--navy); font-family: "DejaVu Sans Mono", Consolas, monospace; font-size: clamp(1rem, 1.7vw, 1.28rem); font-weight: 850; white-space: nowrap; }
-.prompt-conclusion { display: flex; align-items: center; gap: 7px; color: var(--ink); font-size: .95rem; font-weight: 750; white-space: nowrap; }
+.anticipation-prompt { display: flex; align-items: center; gap: 10px; }
+.anticipation-choice { min-width: 88px; min-height: 42px; border: 2px solid #b8c7d7; border-radius: 11px; color: var(--navy); background: #fff; font-weight: 850; cursor: pointer; transition: border-color .15s ease, box-shadow .15s ease, background .15s ease; }
+.anticipation-choice:hover { border-color: var(--blue); }
+.anticipation-choice:focus-visible { outline: 0; border-color: var(--blue); box-shadow: 0 0 0 4px rgba(11,103,178,.13); }
+.anticipation-choice.is-selected { border-color: var(--teal); color: #087c76; background: var(--teal-soft); box-shadow: inset 0 0 0 1px rgba(8,170,165,.16); }
+.anticipation-choice.is-wrong { border-color: #c43b4d; color: #9f2033; background: #fff2f3; animation: wrong-answer .28s ease; }
+.anticipation-choice:disabled { cursor: default; opacity: .78; }
 .answer-input { border: 2px solid #aebdce; border-radius: 9px; color: var(--ink); background: #fff; font-family: "DejaVu Sans Mono", Consolas, monospace; font-weight: 850; text-align: center; outline: none; transition: border-color .15s ease, box-shadow .15s ease, background .15s ease; }
 .answer-input:focus { border-color: var(--blue); box-shadow: 0 0 0 4px rgba(11,103,178,.13); }
 .answer-input.is-wrong { border-color: #c43b4d; color: #9f2033; background: #fff2f3; box-shadow: 0 0 0 4px rgba(196,59,77,.12); animation: wrong-answer .28s ease; }
 .answer-input:disabled { opacity: .78; }
-.inline-answer { width: clamp(64px, 9vw, 104px); height: 40px; font-size: 1rem; }
-.digit-count-answer { width: 46px; height: 40px; font-size: 1.05rem; border-color: var(--orange); }
-.accepted-answer { display: inline-grid; min-width: 68px; min-height: 38px; place-items: center; padding: 3px 9px; border: 2px solid var(--teal); border-radius: 9px; color: var(--teal); background: var(--teal-soft); }
-.accepted-answer.compact { min-width: 42px; }
 @keyframes wrong-answer { 40% { transform: translateX(3px); } 75% { transform: translateX(-3px); } }
 
 .practice-stage { min-height: var(--stage-min-height); padding: 18px 22px 12px; overflow: hidden; }
@@ -33,7 +33,6 @@ body[data-task="finish"] .practice-instruction { align-items: center; }
 .practice-work-column { grid-column: 1; grid-row: 1; }
 .practice-work-column .digit-row { min-width: 0; }
 .practice-work-column .digit-row.is-ghost { visibility: visible; opacity: .2; }
-.muted-division-digit { opacity: .42; }
 .used-division-digit { opacity: .5; }
 .lowered-source { color: var(--teal); }
 .digit.pending.falling-source { opacity: 1; }
@@ -94,11 +93,9 @@ body[data-task="finish"] .practice-instruction { align-items: center; }
   .practice-instruction { grid-column: 1; grid-row: 1 / 4; align-items: flex-start !important; padding: 24px 54px 24px 24px; }
   .practice-instruction h2 { font-size: clamp(1.18rem, 1.42vw, 1.6rem); overflow-wrap: anywhere; }
   .practice-instruction .step-detail { margin-top: 10px; font-size: clamp(.9rem, 1vw, 1.04rem); line-height: 1.42; }
-  .practice-instruction .anticipation-prompt { display: grid; grid-template-columns: 1fr; align-items: flex-start; gap: 15px; }
-  .practice-instruction .prompt-equation { width: 100%; display: grid; grid-template-columns: minmax(0, 1fr) auto auto auto minmax(0, 1fr); gap: 4px; font-size: .96rem; white-space: normal; }
-  .practice-instruction .prompt-equation .inline-answer { width: 100%; min-width: 0; max-width: none; }
-  .practice-instruction .prompt-conclusion { flex-wrap: wrap; line-height: 1.35; white-space: normal; }
+  .practice-instruction .anticipation-prompt { align-items: flex-start; }
   .practice-stage { grid-column: 2; grid-row: 1; padding-top: 10px; }
+  .practice-stage .long-division { width: min(100%, 920px); }
   .practice-actions { grid-column: 2; grid-row: 2; }
   .practice-progress { grid-column: 2; grid-row: 3; }
 }
@@ -130,7 +127,7 @@ body[data-task="finish"] .practice-instruction { align-items: center; }
   .practice-page #division-form .button-primary { grid-column: 2 / 4; }
   .practice-board { grid-template-rows: 168px minmax(var(--stage-min-height), auto) auto auto; }
   .practice-instruction { padding: 12px 13px; }
-  .anticipation-prompt { gap: 8px 14px; }
+  .anticipation-prompt { gap: 8px; }
   .practice-stage { min-height: var(--stage-min-height); padding: 15px 4px 11px; overflow: hidden; }
   .practice-stage .long-division { min-width: 0; grid-template-columns: minmax(0, 1fr) var(--potence-width, 108px); }
   .practice-relation { width: 100%; grid-template-columns: minmax(58px, 1fr) auto minmax(58px, 1fr) auto minmax(58px, 1fr) auto minmax(58px, 1fr); gap: 3px; }
@@ -158,10 +155,7 @@ body[data-task="finish"] .practice-instruction { align-items: center; }
   .practice-instruction h2 { font-size: .91rem; }
   .practice-instruction .step-detail { font-size: .76rem; }
   .practice-instruction #step-count { font-size: .7rem; }
-  .prompt-equation { gap: 5px; font-size: .94rem; }
-  .inline-answer { width: clamp(58px, 19vw, 82px); height: 38px; }
-  .digit-count-answer { width: 42px; height: 38px; }
-  .prompt-conclusion { gap: 5px; font-size: .83rem; }
+  .anticipation-choice { min-width: 76px; min-height: 38px; }
   .practice-stage { padding-top: 12px; }
   .practice-work-column { padding-right: 7px; }
   .practice-relation { margin-top: 9px; }
@@ -182,8 +176,7 @@ body[data-task="finish"] .practice-instruction { align-items: center; }
   .practice-page .title-lockup h1 { font-size: 1.02rem; }
   .practice-board { padding-inline: 7px; }
   .practice-instruction { padding-inline: 10px; }
-  .prompt-equation { gap: 4px; }
-  .inline-answer { width: 56px; }
+  .anticipation-choice { min-width: 70px; }
   .practice-relation .role-card { padding-inline: 1px; }
   .practice-relation .role-card strong { font-size: .9rem; }
 }

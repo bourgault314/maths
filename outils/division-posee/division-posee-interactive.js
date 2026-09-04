@@ -2,7 +2,7 @@ import {
   makeDivision,
   multiplicationBracket,
   placeValueMarker
-} from "./division-engine.mjs?v=9";
+} from "./division-engine.mjs?v=10";
 import {
   createPotence,
   createQuotientSlot,
@@ -11,13 +11,13 @@ import {
   createRoleCard,
   renderMultiplicationTable,
   scheduleLoweringArrow
-} from "./division-view.mjs?v=2";
+} from "./division-view.mjs?v=3";
 import {
   firstTrainingError,
   hintForTask,
   makeTrainingTasks,
   taskRevealsTable
-} from "./division-entrainement-engine.mjs?v=1";
+} from "./division-entrainement-engine.mjs?v=2";
 
 const $ = (selector) => document.querySelector(selector);
 const dividendInput = $("#dividend");
@@ -56,9 +56,7 @@ function currentTask() {
 
 function fieldLabel(field) {
   return {
-    lower: "borne de gauche",
-    upper: "borne de droite",
-    digitCount: "nombre de chiffres du quotient",
+    decision: "réponse Oui ou Non",
     quotient: "quotient",
     product: "produit",
     remainder: "reste"
@@ -109,39 +107,26 @@ function createAnswerInput(field, options = {}) {
 function makeAnticipationPrompt(task) {
   const container = document.createElement("div");
   container.className = "anticipation-prompt";
-  const accepted = completed.get(task.id);
-  const inequality = document.createElement("div");
-  inequality.className = "prompt-equation";
-
-  if (accepted) {
-    inequality.innerHTML = `<strong class="accepted-answer">${accepted.lower}</strong><span>≤</span><strong>${division.dividend}</strong><span>&lt;</span><strong class="accepted-answer">${accepted.upper}</strong>`;
-  } else {
-    inequality.append(
-      createAnswerInput("lower", { className: "answer-input inline-answer", label: "Borne inférieure" }),
-      document.createTextNode(" ≤ "),
-      Object.assign(document.createElement("strong"), { textContent: String(division.dividend) }),
-      document.createTextNode(" < "),
-      createAnswerInput("upper", { className: "answer-input inline-answer", label: "Borne supérieure" })
-    );
-  }
-
-  const conclusion = document.createElement("div");
-  conclusion.className = "prompt-conclusion";
-  conclusion.append("Le quotient aura ");
-  if (accepted) {
-    const value = document.createElement("strong");
-    value.className = "accepted-answer compact";
-    value.textContent = accepted.digitCount;
-    conclusion.append(value);
-  } else {
-    conclusion.append(createAnswerInput("digitCount", {
-      className: "answer-input digit-count-answer",
-      label: "Nombre de chiffres du quotient",
-      maxLength: 1
-    }));
-  }
-  conclusion.append(` ${accepted?.digitCount === 1 ? "chiffre" : "chiffres"}.`);
-  container.append(inequality, conclusion);
+  container.setAttribute("role", "group");
+  container.setAttribute("aria-label", "Choisir Oui ou Non");
+  const selected = rawDraftForCurrentTask().decision || "";
+  [["yes", "Oui"], ["no", "Non"]].forEach(([value, label]) => {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "anticipation-choice";
+    button.dataset.answer = "decision";
+    button.dataset.decision = value;
+    button.value = value;
+    button.textContent = label;
+    button.disabled = Boolean(transitioningTaskId);
+    button.setAttribute("aria-pressed", String(selected === value));
+    if (selected === value) button.classList.add("is-selected");
+    if (wrongField === "decision" && selected === value) {
+      button.classList.add("is-wrong");
+      button.setAttribute("aria-invalid", "true");
+    }
+    container.append(button);
+  });
   return container;
 }
 
@@ -223,6 +208,7 @@ function appendSubtractionRule(row, range) {
 function makeDividendRow(task) {
   const row = digitRow("dividend-row");
   const activeIndex = task.kind === "stage" ? task.opIndex : -1;
+  const anticipationEnd = task.kind === "anticipation" ? task.check.endColumn : -1;
   const transitionIndex = transitioningTaskId?.startsWith("stage-")
     ? Number(transitioningTaskId.split("-")[1])
     : -1;
@@ -237,7 +223,8 @@ function makeDividendRow(task) {
     digit.className = "digit";
     digit.style.gridColumn = String(index + 1);
     digit.textContent = value;
-    if (task.kind === "anticipation") digit.classList.add("muted-division-digit");
+    if (task.kind === "anticipation" && index <= anticipationEnd) digit.classList.add("active");
+    if (task.kind === "anticipation" && index > anticipationEnd) digit.classList.add("pending");
     if (activeIndex === 0 && index >= activeStart && index <= activeEnd) digit.classList.add("active");
     if (activeIndex > 0 && index < activeEnd) digit.classList.add("used-division-digit");
     if (activeIndex > 0 && index === activeEnd) digit.classList.add("lowered-source");
@@ -289,13 +276,11 @@ function quotientWriting(task) {
   const activeColumn = task.kind === "stage"
     ? division.operations[task.opIndex].endColumn
     : null;
-  const anticipationDone = completed.has("anticipation") || task.kind !== "anticipation";
+  const anticipationDone = tasks
+    .filter(({ kind }) => kind === "anticipation")
+    .every(({ id }) => completed.has(id));
   if (!anticipationDone) {
-    const waiting = document.createElement("span");
-    waiting.className = "quotient-waiting";
-    waiting.textContent = "?";
-    waiting.setAttribute("aria-label", "Nombre de chiffres à déterminer");
-    writing.append(waiting);
+    writing.setAttribute("aria-label", "Emplacements du quotient à déterminer");
     return writing;
   }
 
@@ -382,17 +367,18 @@ function makeRelation(task) {
 function setDivisionMetrics(root) {
   const mobile = window.innerWidth <= 780;
   const compact = window.innerWidth <= 480;
+  const wide = window.innerWidth >= 1280;
   const rowCount = 1 + (division.operations.length * 2);
   const availableHeight = mobile
     ? Math.min(390, Math.max(245, window.innerHeight * .43))
-    : Math.min(430, Math.max(275, window.innerHeight * .45));
-  const rowHeight = Math.min(compact ? 42 : 48, Math.max(23, Math.floor(availableHeight / rowCount)));
-  const potenceWidth = compact ? 92 : mobile ? 108 : 142;
+    : Math.min(wide ? 520 : 430, Math.max(275, window.innerHeight * (wide ? .54 : .45)));
+  const rowHeight = Math.min(compact ? 42 : wide ? 64 : 48, Math.max(23, Math.floor(availableHeight / rowCount)));
+  const potenceWidth = compact ? 92 : mobile ? 108 : wide ? 170 : 142;
   const rootWidth = root.clientWidth || Math.max(300, window.innerWidth - 90);
   const workWidth = Math.max(150, rootWidth - potenceWidth - 14);
-  const columnWidth = Math.min(48, Math.max(compact ? 19 : 22, Math.floor(workWidth / division.digits.length)));
-  const digitSize = Math.min(compact ? 28 : 34, Math.max(16, Math.floor(Math.min(rowHeight * .68, columnWidth * .72))));
-  const quotientSize = Math.min(compact ? 27 : 33, Math.max(17, Math.floor(potenceWidth / Math.max(4, division.operations.length + 1))));
+  const columnWidth = Math.min(wide ? 62 : 48, Math.max(compact ? 19 : 22, Math.floor(workWidth / division.digits.length)));
+  const digitSize = Math.min(compact ? 28 : wide ? 46 : 34, Math.max(16, Math.floor(Math.min(rowHeight * .78, columnWidth * .8))));
+  const quotientSize = Math.min(compact ? 27 : wide ? 45 : 33, Math.max(17, Math.floor(potenceWidth / Math.max(4, division.operations.length + 1))));
   root.style.setProperty("--row-height", `${rowHeight}px`);
   root.style.setProperty("--digit-size", `${digitSize}px`);
   root.style.setProperty("--column-width", `${columnWidth}px`);
@@ -438,14 +424,18 @@ function renderTable(task) {
 }
 
 function renderInstruction(task) {
-  $("#step-title").textContent = task.title;
-  $("#step-sentence").textContent = task.sentence;
-  $("#step-detail").textContent = task.detail || "";
-  $("#step-detail").hidden = !task.detail;
+  const accepted = task.kind === "anticipation" && completed.has(task.id);
+  const title = accepted ? task.successTitle : task.title;
+  const sentence = accepted ? task.successSentence : task.sentence;
+  const detail = accepted ? "" : task.detail || "";
+  $("#step-title").textContent = title;
+  $("#step-sentence").textContent = sentence;
+  $("#step-detail").textContent = detail;
+  $("#step-detail").hidden = !detail;
   const prompt = $("#prompt-answer");
   prompt.replaceChildren();
-  prompt.hidden = task.kind !== "anticipation";
-  if (task.kind === "anticipation") prompt.append(makeAnticipationPrompt(task));
+  prompt.hidden = task.kind !== "anticipation" || accepted;
+  if (task.kind === "anticipation" && !accepted) prompt.append(makeAnticipationPrompt(task));
 
   const totalChecks = tasks.length - 1;
   $("#step-count").textContent = task.kind === "finish" ? "Terminé" : `${taskIndex + 1} / ${totalChecks}`;
@@ -505,6 +495,7 @@ function draftForCurrentTask() {
 }
 
 function errorMessage(field, value) {
+  if (field === "decision") return value ? "La réponse est à revoir." : "Choisis Oui ou Non.";
   const empty = String(value ?? "").trim() === "";
   if (empty) return `Complète d’abord le ${fieldLabel(field)}.`;
   return `Le ${fieldLabel(field)} est à revoir.`;
@@ -519,7 +510,7 @@ function advanceAfterSuccess(task) {
     : "Étape juste.";
   feedbackKind = "success";
   render();
-  const duration = reducedMotion.matches ? 80 : task.kind === "stage" ? 820 : 480;
+  const duration = reducedMotion.matches ? 80 : task.kind === "stage" ? 820 : task.kind === "anticipation" ? 1200 : 480;
   window.setTimeout(() => {
     if (token !== transitionToken) return;
     transitioningTaskId = null;
@@ -710,6 +701,15 @@ function setDigitDraft(target, value) {
   answer[field] = digits;
   drafts.set(task.id, answer);
 }
+
+document.addEventListener("click", (event) => {
+  const choice = event.target.closest("[data-decision]");
+  if (!choice || choice.disabled) return;
+  const task = currentTask();
+  drafts.set(task.id, { ...rawDraftForCurrentTask(), decision: choice.dataset.decision });
+  clearFieldFeedback("decision");
+  render();
+});
 
 document.addEventListener("input", (event) => {
   const field = event.target.dataset.answer;

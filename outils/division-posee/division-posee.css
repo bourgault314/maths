@@ -180,7 +180,7 @@ body.is-projection .instruction p { font-size: .66rem; }
 body.is-projection .instruction h2 { font-size: clamp(1rem, 1.55vw, 1.2rem); }
 body.is-projection .instruction .step-detail { margin-top: 2px; font-size: clamp(.72rem, 1.05vw, .84rem); }
 body.is-projection .division-stage { min-height: 0; padding: 10px 20px 8px; }
-body.is-projection .long-division { width: min(100%, 980px); grid-template-columns: minmax(360px, 1fr) minmax(170px, .36fr); }
+body.is-projection .long-division { width: min(100%, 1080px); grid-template-columns: minmax(390px, 1fr) minmax(190px, .36fr); }
 body.is-projection .role-strip { margin-top: 7px; }
 body.is-projection .role-card { min-width: 116px; padding-block: 7px; }
 body.is-projection .step-controls { padding-top: 7px; }
@@ -200,6 +200,7 @@ body.is-projection.is-projection-editing .instruction { min-height: 0; }
   .instruction h2 { margin-top: 5px; font-size: clamp(1.25rem, 1.55vw, 1.8rem); line-height: 1.28; overflow-wrap: anywhere; }
   .instruction .step-detail { margin-top: 12px; font-size: clamp(.95rem, 1.05vw, 1.08rem); line-height: 1.45; }
   .division-stage { grid-column: 2; grid-row: 1; padding-top: 10px; }
+  .division-stage .long-division { width: min(100%, 920px); }
   .step-controls { grid-column: 2; grid-row: 2; }
 
   body.is-projection .board-card { grid-template-columns: minmax(320px, .45fr) minmax(0, 1fr); grid-template-rows: minmax(0, 1fr) auto; column-gap: 14px; }
@@ -208,6 +209,7 @@ body.is-projection.is-projection-editing .instruction { min-height: 0; }
   body.is-projection .instruction h2 { font-size: clamp(1.35rem, 1.65vw, 1.82rem); }
   body.is-projection .instruction .step-detail { margin-top: 12px; font-size: clamp(.94rem, 1.06vw, 1.08rem); }
   body.is-projection .division-stage { padding-top: 8px; }
+  body.is-projection .division-stage .long-division { width: min(100%, 1080px); }
 }
 
 @media (max-width: 1200px) {

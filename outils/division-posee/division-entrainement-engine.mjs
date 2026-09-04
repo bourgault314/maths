@@ -1,8 +1,4 @@
-import { placeValueName } from "./division-engine.mjs";
-
-function plural(value, singular, pluralForm = `${singular}s`) {
-  return Number(value) === 1 ? singular : pluralForm;
-}
+import { makeAnticipationChecks, placeValueName } from "./division-engine.mjs";
 
 function integerValue(value) {
   if (typeof value === "number") return Number.isInteger(value) ? value : null;
@@ -11,44 +7,30 @@ function integerValue(value) {
   return Number(normalized);
 }
 
-export function trainingBounds(division) {
-  const integerQuotient = Math.floor(division.dividend / division.divisor);
-  if (integerQuotient === 0) {
-    return {
-      lower: 0,
-      upper: division.divisor,
-      lowerQuotient: 0,
-      upperQuotient: 1,
-      digitCount: 1
-    };
-  }
-  const digitCount = String(integerQuotient).length;
-  const lowerQuotient = 10 ** (digitCount - 1);
-  const upperQuotient = 10 ** digitCount;
-  return {
-    lower: division.divisor * lowerQuotient,
-    upper: division.divisor * upperQuotient,
-    lowerQuotient,
-    upperQuotient,
-    digitCount
-  };
-}
-
 export function makeTrainingTasks(division) {
   if (division.mode !== "integer") throw new RangeError("L’entraînement porte sur la division euclidienne.");
-  const bounds = trainingBounds(division);
-  const tasks = [{
-    id: "anticipation",
-    kind: "anticipation",
-    title: "J’anticipe",
-    sentence: "Complète l’encadrement, puis le nombre de chiffres du quotient.",
-    expected: {
-      lower: bounds.lower,
-      upper: bounds.upper,
-      digitCount: bounds.digitCount
-    },
-    bounds
-  }];
+  const checks = makeAnticipationChecks(division);
+  const digitCount = String(Math.floor(division.dividend / division.divisor)).length;
+  const recipients = division.divisor === 1 ? "à l’unique part" : `à chacune des ${division.divisor} parts`;
+  const tasks = checks.map((check, index) => {
+    const next = checks[index + 1];
+    const isLast = index === checks.length - 1;
+    return {
+      id: `anticipation-${index}`,
+      kind: "anticipation",
+      title: "J’anticipe",
+      sentence: `Puis-je donner au moins 1 ${check.placeSingular} ${recipients} ?`,
+      detail: `Je regarde ${check.partial} ${check.placeForQuantity}.`,
+      expected: { decision: check.canShare ? "yes" : "no" },
+      check,
+      successTitle: isLast ? "J’en déduis" : "Je poursuis",
+      successSentence: check.canShare
+        ? `Oui. Le quotient commence au rang des ${check.rankPlace} : il aura ${digitCount} chiffre${digitCount > 1 ? "s" : ""}.`
+        : next
+          ? `Non. Je regarde maintenant ${next.partial} ${next.placeForQuantity}.`
+          : "Non. Le quotient entier est 0."
+    };
+  });
 
   division.operations.forEach((operation, opIndex) => {
     const place = placeValueName(division, operation.endColumn, operation.partial);
@@ -89,11 +71,14 @@ export function makeTrainingTasks(division) {
 export function trainingErrors(task, answer) {
   if (task.kind === "finish") return [];
   const fields = task.kind === "anticipation"
-    ? ["lower", "upper", "digitCount"]
+    ? ["decision"]
     : task.kind === "stage"
       ? ["quotient", "product", "remainder"]
       : ["quotient", "remainder"];
-  return fields.filter((field) => integerValue(answer?.[field]) !== task.expected[field]);
+  return fields.filter((field) => {
+    if (field === "decision") return String(answer?.[field] || "") !== task.expected[field];
+    return integerValue(answer?.[field]) !== task.expected[field];
+  });
 }
 
 export function firstTrainingError(task, answer) {
@@ -106,15 +91,13 @@ export function checkTrainingAnswer(task, answer) {
 
 export function hintForTask(division, task, field, level = 0) {
   const strong = level > 0;
-  if (task.kind === "anticipation" && ["lower", "upper"].includes(field)) {
+  if (task.kind === "anticipation" && field === "decision") {
+    const { partial, placeForQuantity, placeSingular, canShare } = task.check;
     return strong
-      ? `${division.divisor} × ${task.bounds.lowerQuotient} = ${task.bounds.lower} et ${division.divisor} × ${task.bounds.upperQuotient} = ${task.bounds.upper}.`
-      : `Cherche deux produits de ${division.divisor} par 10, 100, 1 000… qui encadrent ${division.dividend}.`;
-  }
-  if (task.kind === "anticipation" && field === "digitCount") {
-    return strong
-      ? `${task.bounds.lowerQuotient} ≤ ${division.dividend} ÷ ${division.divisor} < ${task.bounds.upperQuotient} : le quotient possède ${task.bounds.digitCount} ${plural(task.bounds.digitCount, "chiffre")}.`
-      : `Transforme l’encadrement : entre quelles puissances de 10 se trouve ${division.dividend} ÷ ${division.divisor} ?`;
+      ? canShare
+        ? `${partial} est au moins égal à ${division.divisor} : chaque part peut recevoir 1 ${placeSingular}.`
+        : `${partial} est plus petit que ${division.divisor} : chaque part ne peut pas recevoir 1 ${placeSingular}.`
+      : `Compare ${partial} ${placeForQuantity} aux ${division.divisor} parts.`;
   }
   if (task.kind === "stage") {
     const operation = division.operations[task.opIndex];

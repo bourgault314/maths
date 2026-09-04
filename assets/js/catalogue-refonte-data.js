@@ -96,7 +96,7 @@ window.MATHSGO_CATALOGUE = {
       "id": "division-posee",
       "title": "Division posée",
       "domain": "nombres-calculs",
-      "notions": ["divisibilite"],
+      "notions": ["calculs-poses"],
       "hub": "division-posee/index.html",
       "hiddenFromBrowse": true,
       "collapseInNotion": true,
@@ -432,7 +432,7 @@ window.MATHSGO_CATALOGUE = {
       "cardDescription": "Préparer des planches d’unités, dixièmes et centièmes personnalisées pour l’impression."
     },
     "outils/division-posee/division-posee.html": {
-      "primaryNotion": "divisibilite",
+      "primaryNotion": "calculs-poses",
       "primaryGroup": "manipuler",
       "collections": ["division-posee"],
       "tags": ["division", "calcul-pose", "euclidienne", "decimale", "pas-a-pas", "table"],
@@ -440,7 +440,7 @@ window.MATHSGO_CATALOGUE = {
       "cardDescription": "Entrer le dividende et le diviseur, puis afficher la division euclidienne ou décimale étape par étape avec la table du diviseur."
     },
     "outils/division-posee/division-posee-interactive.html": {
-      "primaryNotion": "divisibilite",
+      "primaryNotion": "calculs-poses",
       "primaryGroup": "entrainer",
       "collections": ["division-posee"],
       "tags": ["division", "calcul-pose", "euclidienne", "entrainement", "interactif", "aide", "table"],
@@ -448,7 +448,7 @@ window.MATHSGO_CATALOGUE = {
       "cardDescription": "Poser soi-même une division euclidienne, vérifier chaque bloc et demander des indices progressifs ou la table du diviseur."
     },
     "outils/division-posee/gabarit-division-euclidienne.pdf": {
-      "primaryNotion": "divisibilite",
+      "primaryNotion": "calculs-poses",
       "primaryGroup": "imprimer",
       "collections": ["division-posee"],
       "tags": ["division", "euclidienne", "gabarit", "plastifier", "imprimer"],
@@ -456,7 +456,7 @@ window.MATHSGO_CATALOGUE = {
       "cardDescription": "Un gabarit A4 à plastifier avec anticipation, potence, table du diviseur et relation de vérification."
     },
     "outils/division-posee/gabarit-division-decimale.pdf": {
-      "primaryNotion": "divisibilite",
+      "primaryNotion": "calculs-poses",
       "primaryGroup": "imprimer",
       "collections": ["division-posee"],
       "tags": ["division", "decimale", "gabarit", "plastifier", "imprimer"],
@@ -1592,6 +1592,11 @@ window.MATHSGO_CATALOGUE = {
     {
       "id": "divisibilite",
       "title": "Nombres entiers et divisibilité",
+      "domain": "nombres-calculs"
+    },
+    {
+      "id": "calculs-poses",
+      "title": "Calculs posés",
       "domain": "nombres-calculs"
     },
     {
@@ -3772,7 +3777,7 @@ window.MATHSGO_CATALOGUE = {
       "description": "Une division euclidienne ou décimale guidée étape par étape, avec la table du diviseur toujours visible.",
       "path": "outils/division-posee/division-posee.html",
       "domains": ["nombres-calculs"],
-      "notions": ["divisibilite"],
+      "notions": ["calculs-poses"],
       "uses": ["manipuler", "projeter"],
       "types": ["exerciseur"],
       "filters": [],
@@ -3788,7 +3793,7 @@ window.MATHSGO_CATALOGUE = {
       "description": "Une division euclidienne à compléter par blocs, avec validation, indices progressifs et table du diviseur facultative.",
       "path": "outils/division-posee/division-posee-interactive.html",
       "domains": ["nombres-calculs"],
-      "notions": ["divisibilite"],
+      "notions": ["calculs-poses"],
       "uses": ["entrainer"],
       "types": ["exerciseur"],
       "filters": [],
@@ -3804,7 +3809,7 @@ window.MATHSGO_CATALOGUE = {
       "description": "Une fiche A4 épurée à glisser sous pochette pour anticiper, poser et vérifier une division euclidienne.",
       "path": "outils/division-posee/gabarit-division-euclidienne.pdf",
       "domains": ["nombres-calculs"],
-      "notions": ["divisibilite"],
+      "notions": ["calculs-poses"],
       "uses": ["imprimer", "entrainer"],
       "types": ["imprimable"],
       "filters": ["materiel-imprimer"],
@@ -3820,7 +3825,7 @@ window.MATHSGO_CATALOGUE = {
       "description": "Une fiche A4 séparée pour anticiper, poser et vérifier une division avec un quotient décimal.",
       "path": "outils/division-posee/gabarit-division-decimale.pdf",
       "domains": ["nombres-calculs"],
-      "notions": ["divisibilite"],
+      "notions": ["calculs-poses"],
       "uses": ["imprimer", "entrainer"],
       "types": ["imprimable"],
       "filters": ["materiel-imprimer"],
