@@ -3,73 +3,122 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Division posée : manipuler et imprimer | maths&amp;go</title>
+  <link rel="icon" href="/favicon.ico" sizes="48x48">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="icon" type="image/png" sizes="32x32" href="/assets/img/favicon-32.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="/assets/img/favicon-192.png">
+  <link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png">
   <meta name="description" content="Une division euclidienne ou décimale expliquée pas à pas, avec deux gabarits A4 à imprimer et plastifier.">
   <link rel="canonical" href="https://mathsgo.re/outils/division-posee/">
   <meta name="robots" content="index, follow, max-image-preview:large">
   <meta name="author" content="Gwenaël Bourgault">
   <meta name="theme-color" content="#f6f8fb">
-  <title>Division posée : manipuler et imprimer | maths&amp;go</title>
-  <link rel="icon" href="/favicon.ico" sizes="48x48">
-  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
-  <link rel="stylesheet" href="../../assets/css/collection-index.css?v=division-20260903-2">
+  <link rel="stylesheet" href="../../assets/css/entry-alignment.css?v=cartes-alignees-20260719-4">
+  <link rel="stylesheet" href="../../assets/css/catalogue-refonte.css?v=breadcrumb-align-20260829-1">
   <link rel="stylesheet" href="../../assets/css/consentement.css">
   <script defer src="../../assets/js/consentement.js"></script>
+  <style>
+    /* Les liens statiques reprennent exactement les boutons générés par le catalogue. */
+    .catalogue-breadcrumb a {
+      min-height: 44px;
+      display: inline-flex;
+      align-items: center;
+      padding: 7px 12px;
+      border: 1px solid #d8e4ef;
+      border-radius: 999px;
+      color: var(--blue);
+      background: #f7fafc;
+      font-weight: 760;
+      text-align: left;
+      white-space: normal;
+      text-decoration: none;
+    }
+    .catalogue-breadcrumb a:hover,
+    .catalogue-breadcrumb a:focus-visible {
+      border-color: #a9c9e8;
+      background: #edf5fc;
+    }
+  </style>
 </head>
-<body style="--accent:#0b67b2;--soft:#eaf5ff;--thumb-height:175px">
-  <div class="shell">
+<body class="catalogue-is-deep">
+  <div class="site-shell">
     <header class="site-header">
-      <a class="brand" href="/" aria-label="Accueil maths&go"><img src="/assets/img/logos/mathsgo/logo.png" alt="maths&go" width="1338" height="622"></a>
-      <a class="back" href="/outils/?domain=nombres-calculs&amp;notion=numeration">← Numération</a>
+      <a class="brand-link" href="../../index.html" aria-label="Accueil maths&amp;go">
+        <img src="../../assets/img/mathsgo-logo.png" alt="maths&amp;go" width="1338" height="622">
+      </a>
+      <nav class="catalogue-breadcrumb" aria-label="Fil d’Ariane">
+        <a class="breadcrumb-back" href="../index.html"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5m6-6-6 6 6 6"/></svg> Tous les domaines</a>
+        <a class="breadcrumb-parent" href="../index.html?domain=nombres-calculs&amp;notion=numeration" title="Revenir à Numération">Numération</a>
+      </nav>
+      <a class="header-home" href="../../index.html">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m4 11 8-7 8 7v9h-5v-6H9v6H4Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>
+        <span>Accueil</span>
+      </a>
     </header>
-    <main class="panel">
-      <nav class="breadcrumbs" aria-label="Fil d’Ariane"><a href="/outils/">Outils</a><span>›</span><a href="/outils/?domain=nombres-calculs&amp;notion=numeration">Numération</a><span>›</span><span>Division posée</span></nav>
-      <header class="hero">
-        <p class="eyebrow">Calcul posé</p>
-        <h1>Division posée</h1>
-        <p class="lead">Comprendre la méthode, s’entraîner à la compléter, puis retrouver la même structure sur un gabarit A4.</p>
-      </header>
 
-      <section class="group" aria-labelledby="comprendre-title">
-        <div class="group-heading"><h2 id="comprendre-title">Comprendre &amp; projeter</h2><p>Entrer les nombres et faire apparaître la méthode une étape après l’autre.</p></div>
-        <div class="card-grid collection-grid">
-          <a class="tool-card" href="division-posee.html" style="--card-accent:#0b67b2;--card-soft:#eaf5ff">
-            <div class="thumb"><img src="../../assets/img/thumbnails/numeration/division-posee.svg?v=2" alt="Aperçu d’une division posée avec quotient et table du diviseur"></div>
-            <div class="tool-copy"><h2>Division posée pas à pas</h2><p>Division euclidienne ou décimale, expliquée une étape après l’autre.</p><div class="tags"><span class="tag">Manipuler</span><span class="tag">Projeter</span></div></div>
-          </a>
-        </div>
+    <main class="main-panel catalogue-deep-view" id="catalogue">
+      <section class="hero" aria-labelledby="page-title">
+        <h1 id="page-title" tabindex="-1">Division posée</h1>
       </section>
 
-      <section class="group" aria-labelledby="entrainer-title">
-        <div class="group-heading"><h2 id="entrainer-title">S’entraîner</h2><p>Compléter chaque étape, vérifier ses réponses et demander un indice si nécessaire.</p></div>
-        <div class="card-grid collection-grid">
-          <a class="tool-card" href="division-posee-interactive.html" style="--card-accent:#f58220;--card-soft:#fff2e7">
-            <div class="thumb"><img src="../../assets/img/thumbnails/numeration/division-posee-interactive.svg?v=1" alt="Aperçu d’une division posée à compléter par l’élève"></div>
-            <div class="tool-copy"><h2>À toi de poser la division</h2><p>Une division euclidienne à compléter par blocs, avec table et indices progressifs.</p><div class="tags"><span class="tag">S’entraîner</span><span class="tag">Avec aide</span></div></div>
-          </a>
-        </div>
-      </section>
+      <div class="resource-grid">
+        <section class="resource-group" aria-labelledby="resource-group-comprendre">
+          <div class="resource-group-heading">
+            <h2 id="resource-group-comprendre">Comprendre &amp; projeter</h2>
+            <span>1 entrée</span>
+          </div>
+          <div class="resource-group-grid">
+            <a class="resource-card resource-card-visual" href="division-posee.html" style="--accent:#0b67b2;--soft:#eaf5ff">
+              <span class="resource-thumbnail"><img src="../../assets/img/thumbnails/numeration/division-posee.svg?v=2" alt="" loading="eager"></span>
+              <span class="resource-copy"><h3>Division posée pas à pas</h3><span class="resource-description">Division euclidienne ou décimale, expliquée une étape après l’autre.</span><span class="resource-meta resource-uses">Manipuler · Projeter</span></span>
+              <span class="resource-arrow" aria-hidden="true">→</span>
+            </a>
+          </div>
+        </section>
 
-      <section class="group" aria-labelledby="imprimer-title">
-        <div class="group-heading"><h2 id="imprimer-title">Imprimer &amp; plastifier</h2><p>Deux gabarits plastifiables, séparés et épurés.</p></div>
-        <div class="card-grid collection-grid">
-          <a class="tool-card" href="gabarit-division-euclidienne.pdf" style="--card-accent:#08aaa5;--card-soft:#e8f8f5">
-            <div class="thumb"><img src="../../assets/img/thumbnails/numeration/gabarit-division-euclidienne.png?v=2" alt="Aperçu du gabarit de division euclidienne"></div>
-            <div class="tool-copy"><h3>Gabarit — division euclidienne</h3><p>Anticipation, potence, table du diviseur et relation de vérification.</p><div class="tags"><span class="tag">PDF</span><span class="tag">A4</span></div></div>
-          </a>
-          <a class="tool-card" href="gabarit-division-decimale.pdf" style="--card-accent:#f58220;--card-soft:#fff2e7">
-            <div class="thumb"><img src="../../assets/img/thumbnails/numeration/gabarit-division-decimale.png?v=2" alt="Aperçu du gabarit de division décimale"></div>
-            <div class="tool-copy"><h3>Gabarit — division décimale</h3><p>La même organisation avec le choix du nombre de décimales.</p><div class="tags"><span class="tag">PDF</span><span class="tag">A4</span></div></div>
-          </a>
-        </div>
-      </section>
+        <section class="resource-group" aria-labelledby="resource-group-entrainer">
+          <div class="resource-group-heading">
+            <h2 id="resource-group-entrainer">S’entraîner</h2>
+            <span>1 entrée</span>
+          </div>
+          <div class="resource-group-grid">
+            <a class="resource-card resource-card-visual" href="division-posee-interactive.html" style="--accent:#f58220;--soft:#fff2e7">
+              <span class="resource-thumbnail"><img src="../../assets/img/thumbnails/numeration/division-posee-interactive.svg?v=1" alt="" loading="lazy"></span>
+              <span class="resource-copy"><h3>À toi de poser la division</h3><span class="resource-description">Une division euclidienne à compléter par blocs, avec table et indices progressifs.</span><span class="resource-meta resource-uses">S’entraîner · Avec aide</span></span>
+              <span class="resource-arrow" aria-hidden="true">→</span>
+            </a>
+          </div>
+        </section>
+
+        <section class="resource-group" aria-labelledby="resource-group-imprimer">
+          <div class="resource-group-heading">
+            <h2 id="resource-group-imprimer">Imprimer &amp; plastifier</h2>
+            <span>2 entrées</span>
+          </div>
+          <div class="resource-group-grid">
+            <a class="resource-card resource-card-visual" href="gabarit-division-euclidienne.pdf" style="--accent:#08aaa5;--soft:#e8f8f5">
+              <span class="resource-thumbnail"><picture class="catalogue-thumbnail-picture"><source srcset="../../assets/img/thumbnails/numeration/gabarit-division-euclidienne.webp" type="image/webp"><img src="../../assets/img/thumbnails/numeration/gabarit-division-euclidienne.png?v=2" alt="" loading="lazy"></picture></span>
+              <span class="resource-copy"><h3>Gabarit — division euclidienne</h3><span class="resource-description">Anticipation, potence, table du diviseur et relation de vérification.</span><span class="resource-meta resource-uses">PDF · A4</span></span>
+              <span class="resource-arrow" aria-hidden="true">→</span>
+            </a>
+            <a class="resource-card resource-card-visual" href="gabarit-division-decimale.pdf" style="--accent:#f58220;--soft:#fff2e7">
+              <span class="resource-thumbnail"><picture class="catalogue-thumbnail-picture"><source srcset="../../assets/img/thumbnails/numeration/gabarit-division-decimale.webp" type="image/webp"><img src="../../assets/img/thumbnails/numeration/gabarit-division-decimale.png?v=2" alt="" loading="lazy"></picture></span>
+              <span class="resource-copy"><h3>Gabarit — division décimale</h3><span class="resource-description">La même organisation avec le choix du nombre de décimales.</span><span class="resource-meta resource-uses">PDF · A4</span></span>
+              <span class="resource-arrow" aria-hidden="true">→</span>
+            </a>
+          </div>
+        </section>
+      </div>
     </main>
+
     <footer class="site-footer">
       <span>Gwenaël Bourgault</span><span aria-hidden="true">·</span>
       <a href="mailto:gwenael@mathsgo.re?subject=Contact%20depuis%20mathsgo.re">Me contacter</a><span aria-hidden="true">·</span>
-      <a href="/outils/">Toutes les ressources</a><span aria-hidden="true">·</span>
-      <a href="/mentions-legales.html">Mentions légales</a><span aria-hidden="true">·</span>
-      <a href="/confidentialite.html">Confidentialité</a><span aria-hidden="true">·</span>
-      <a href="/licence.html">Licence</a><span aria-hidden="true">·</span>
+      <a href="../toutes-les-ressources.html">Toutes les ressources</a><span aria-hidden="true">·</span>
+      <a href="../../mentions-legales.html">Mentions légales</a><span aria-hidden="true">·</span>
+      <a href="../../confidentialite.html">Confidentialité</a><span aria-hidden="true">·</span>
+      <a href="../../licence.html">Licence</a><span aria-hidden="true">·</span>
       <button type="button" data-mathsgo-consent-open onclick="window.mathsgoConsentement &amp;&amp; window.mathsgoConsentement.ouvrir()">Gérer mes cookies</button>
     </footer>
   </div>
