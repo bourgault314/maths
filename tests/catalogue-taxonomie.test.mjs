@@ -291,7 +291,7 @@ test("les tableaux de proportionnalité partagent une carte avec deux choix expl
   assert.equal(family?.labels?.[withoutCoefficientPath], "Sans coefficient");
 });
 
-test("la division posée forme une famille de Numération, avec entraînement et gabarits trouvables", () => {
+test("la division posée forme une famille de Nombres entiers et divisibilité, avec entraînement et gabarits trouvables", () => {
   const collection = Array.from(catalogue.collections || []).find(({ id }) => id === "division-posee");
   const appPath = "outils/division-posee/division-posee.html";
   const trainingPath = "outils/division-posee/division-posee-interactive.html";
@@ -304,16 +304,17 @@ test("la division posée forme une famille de Numération, avec entraînement et
   assert.equal(collection?.collapseInNotion, true);
   assert.equal(collection?.navigation, "hub");
   assert.equal(collection?.searchable, false);
-  assert.equal(classifications[appPath]?.primaryNotion, "numeration");
+  assert.deepEqual(Array.from(collection?.notions || []), ["divisibilite"]);
+  assert.equal(classifications[appPath]?.primaryNotion, "divisibilite");
   assert.equal(classifications[appPath]?.primaryGroup, "manipuler");
-  assert.equal(classifications[trainingPath]?.primaryNotion, "numeration");
+  assert.equal(classifications[trainingPath]?.primaryNotion, "divisibilite");
   assert.equal(classifications[trainingPath]?.primaryGroup, "entrainer");
   assert.ok(publishedByPath.has(trainingPath));
 
   for (const path of templatePaths) {
     const resource = publishedByPath.get(path);
     assert.ok(resource, `${path} doit rester publié.`);
-    assert.equal(classifications[path]?.primaryNotion, "numeration");
+    assert.equal(classifications[path]?.primaryNotion, "divisibilite");
     assert.equal(classifications[path]?.primaryGroup, "imprimer");
     assert.match(
       `${resource.title} ${(resource.keywords || []).join(" ")} ${(classifications[path]?.tags || []).join(" ")}`,

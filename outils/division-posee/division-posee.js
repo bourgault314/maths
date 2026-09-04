@@ -1,4 +1,10 @@
-import { getOperationDisplayState, makeDisplayMetrics, makeDivision, makeSteps } from "./division-engine.mjs?v=6";
+import {
+  getOperationDisplayState,
+  makeDisplayMetrics,
+  makeDivision,
+  makeSteps,
+  placeValueMarker
+} from "./division-engine.mjs?v=7";
 
 const $ = (selector) => document.querySelector(selector);
 const dividendInput = $("#dividend");
@@ -6,14 +12,26 @@ const divisorInput = $("#divisor");
 const decimalField = $("#decimal-field");
 const decimalPlaces = $("#decimal-places");
 const errorBox = $("#form-error");
+const rankGuides = $("#rank-guides");
+const rankGuidesStorageKey = "mathsgo-division-rank-guides";
 let selectedMode = "integer";
 let problem = { dividend: 584, divisor: 7, mode: "integer", decimals: 2 };
 let division = makeDivision(584, 7, "integer", 2);
 let steps = makeSteps(division);
 let stepIndex = 0;
+let projectionEditing = false;
+let showRankGuides = false;
+
+try {
+  showRankGuides = window.localStorage.getItem(rankGuidesStorageKey) === "true";
+} catch {
+  showRankGuides = false;
+}
+rankGuides.checked = showRankGuides;
 
 function setMode(mode) {
   selectedMode = mode;
+  $("#division-form").classList.toggle("is-decimal", mode === "decimal");
   document.querySelectorAll("[data-mode]").forEach((button) => {
     const active = button.dataset.mode === mode;
     button.classList.toggle("is-active", active);
@@ -38,33 +56,82 @@ function visibleQuotient(step) {
   });
   const currentOperation = step.opIndex === undefined ? null : division.operations[step.opIndex];
   const decimalStarted = step.kind === "decimal"
-    || currentOperation?.isDecimalDigit
-    || (step.kind === "bring" && currentOperation?.nextEndColumn >= division.integerLength);
+    || currentOperation?.isDecimalDigit;
   if (decimalStarted && !result.includes(",")) result += ",";
   return result;
+}
+
+function activePlaceColumn(step) {
+  if (step.opIndex === undefined) return null;
+  const operation = division.operations[step.opIndex];
+  if (["bring", "decimal"].includes(step.kind) && operation.nextEndColumn !== undefined) {
+    return operation.nextEndColumn;
+  }
+  return operation.endColumn;
+}
+
+function rankMarker(endColumn, activeColumn) {
+  const marker = document.createElement("span");
+  marker.className = "rank-marker";
+  marker.classList.toggle("is-active", endColumn === activeColumn);
+  marker.textContent = placeValueMarker(division, endColumn);
+  marker.setAttribute("aria-hidden", "true");
+  return marker;
+}
+
+function quotientSlot(value, endColumn, activeColumn) {
+  const slot = document.createElement("span");
+  slot.className = `quotient-slot ${value ? "is-filled" : "is-empty"}`;
+  if (value) slot.textContent = value;
+  else slot.setAttribute("aria-hidden", "true");
+  if (showRankGuides && endColumn !== undefined) slot.append(rankMarker(endColumn, activeColumn));
+  return slot;
 }
 
 function quotientWriting(step) {
   const writing = document.createElement("span");
   writing.className = "quotient-writing";
   const visible = visibleQuotient(step);
-  const integerSlotCount = steps.find(({ quotientDigitCount }) => quotientDigitCount)?.quotientDigitCount
-    ?? division.operations.filter(({ isDecimalDigit }) => !isDecimalDigit).length;
-  const visibleIntegerCount = visible.split(",")[0].length;
+  const [visibleInteger, visibleDecimal = ""] = visible.split(",");
+  const integerOperations = division.operations.filter(({ isDecimalDigit }) => !isDecimalDigit);
+  const decimalOperations = division.operations.filter(({ isDecimalDigit }) => isDecimalDigit);
+  const activeColumn = activePlaceColumn(step);
+  const showIntegerSlots = step.kind !== "bound";
 
-  for (const character of visible) {
-    const slot = document.createElement("span");
-    slot.className = character === "," ? "quotient-comma" : "quotient-slot is-filled";
-    slot.textContent = character;
-    writing.append(slot);
+  integerOperations.forEach((operation, index) => {
+    if (!showIntegerSlots) return;
+    writing.append(quotientSlot(visibleInteger[index] || "", operation.endColumn, activeColumn));
+  });
+
+  const commaVisible = visible.includes(",");
+  if (commaVisible) {
+    const comma = document.createElement("span");
+    comma.className = "quotient-comma";
+    comma.textContent = ",";
+    writing.append(comma);
+
+    visibleDecimal.split("").forEach((character, index) => {
+      writing.append(quotientSlot(character, decimalOperations[index]?.endColumn, activeColumn));
+    });
+
+    const currentOperation = step.opIndex === undefined ? null : division.operations[step.opIndex];
+    const currentState = currentOperation
+      ? getOperationDisplayState(division, step.opIndex, step)
+      : null;
+    const needsCurrentDecimalSlot = currentOperation?.isDecimalDigit && !currentState?.quotient;
+    const needsNextDecimalSlot = step.kind === "decimal"
+      || (step.kind === "bring"
+        && currentOperation?.isDecimalDigit
+        && currentOperation.nextEndColumn >= division.integerLength);
+    if (needsCurrentDecimalSlot || needsNextDecimalSlot) {
+      const nextOperation = needsCurrentDecimalSlot
+        ? currentOperation
+        : division.operations[step.opIndex + 1];
+      writing.append(quotientSlot("", nextOperation?.endColumn, activeColumn));
+    }
   }
-  const showEmptySlots = step.kind !== "bound";
-  for (let index = visibleIntegerCount; showEmptySlots && index < integerSlotCount; index += 1) {
-    const slot = document.createElement("span");
-    slot.className = "quotient-slot is-empty";
-    slot.setAttribute("aria-hidden", "true");
-    writing.append(slot);
-  }
+
+  const integerSlotCount = integerOperations.length;
   writing.setAttribute("aria-label", visible || `${integerSlotCount} emplacement${integerSlotCount > 1 ? "s" : ""} pour le quotient`);
   return writing;
 }
@@ -98,12 +165,14 @@ function dividendRow(step) {
   const row = document.createElement("div");
   row.className = "digit-row dividend-row";
   row.style.setProperty("--columns", division.digits.length);
+  const revealsNextDigit = ["bring", "decimal"].includes(step.kind);
   const operationEnd = step.kind === "finish"
     ? division.digits.length - 1
     : step.opIndex === undefined
       ? division.integerLength - 1
-      : division.operations[step.opIndex].endColumn + (step.kind === "bring" ? 1 : 0);
+      : division.operations[step.opIndex].endColumn + (revealsNextDigit ? 1 : 0);
   const visibleEnd = operationEnd;
+  const activeColumn = activePlaceColumn(step);
   division.digits.forEach((digit, index) => {
     const cell = document.createElement("span");
     const isLowered = step.kind === "bring"
@@ -115,6 +184,7 @@ function dividendRow(step) {
     const isUnrevealedDecimal = index >= division.integerLength && index > visibleEnd;
     cell.textContent = isUnrevealedDecimal ? "" : digit;
     if (isUnrevealedDecimal) cell.setAttribute("aria-hidden", "true");
+    if (showRankGuides && index <= visibleEnd) cell.append(rankMarker(index, activeColumn));
     if (isLowered) {
       const arrow = document.createElement("span");
       arrow.className = "lower-arrow";
@@ -133,7 +203,19 @@ function roleCard(kind, label, value) {
 function renderDivision(step) {
   const root = $("#long-division");
   root.replaceChildren();
-  const metrics = makeDisplayMetrics(division);
+  root.classList.toggle("has-rank-guides", showRankGuides);
+  const stage = root.closest(".division-stage");
+  const projectionMode = document.body.classList.contains("is-projection");
+  const metricOptions = projectionMode ? {
+    rowBudget: Math.max(280, Math.min(520, stage.clientHeight - $("#role-strip").offsetHeight - 28)),
+    columnBudget: Math.max(420, Math.min(700, Math.floor(root.clientWidth * .72))),
+    quotientBudget: Math.max(220, Math.min(330, Math.floor(root.clientWidth * .3))),
+    maxRowHeight: 60,
+    maxColumnWidth: 58,
+    maxDigitSize: 43,
+    maxQuotientSize: 43
+  } : undefined;
+  const metrics = makeDisplayMetrics(division, metricOptions);
   root.style.setProperty("--row-height", `${metrics.rowHeight}px`);
   root.style.setProperty("--digit-size", `${metrics.digitSize}px`);
   root.style.setProperty("--column-width", `${metrics.columnWidth}px`);
@@ -155,7 +237,7 @@ function renderDivision(step) {
     const resultEndColumn = showsNext ? operation.nextEndColumn : operation.endColumn;
     work.append(digitRow(resultValue, resultEndColumn, showsNext ? "partial-row" : "remainder-row", {
       visible: Boolean(visible.result),
-      active: (["subtract", "bring"].includes(step.kind) && step.opIndex === index)
+      active: (["subtract", "bring", "decimal"].includes(step.kind) && step.opIndex === index)
         || (["ask", "choose"].includes(step.kind) && step.opIndex === index + 1),
       brought: step.kind === "bring" && step.opIndex === index
     }));
@@ -198,7 +280,7 @@ function renderTable(step) {
     : null;
   $("#table-title").textContent = `Table de ${division.divisor}`;
   $("#multiples").innerHTML = Array.from({ length: 10 }, (_, multiplier) =>
-    `<div class="multiple ${multiplier === active ? "is-active" : ""}"><span>${multiplier} × ${division.divisor}</span><b>=</b><strong>${multiplier * division.divisor}</strong></div>`
+    `<div class="multiple ${multiplier === active ? "is-active" : ""}"><span>${multiplier} × ${division.divisor}</span><span>=</span><strong>${multiplier * division.divisor}</strong></div>`
   ).join("");
 }
 
@@ -213,6 +295,7 @@ function render() {
   $("#previous").disabled = stepIndex === 0;
   $("#next").disabled = stepIndex === steps.length - 1;
   $("#show-all").hidden = stepIndex === steps.length - 1;
+  $("#projection-problem").textContent = `${problem.dividend} ÷ ${problem.divisor} · ${problem.mode === "integer" ? "Entier" : `${problem.decimals} décimale${problem.decimals > 1 ? "s" : ""}`}`;
   renderDivision(step);
   renderTable(step);
 }
@@ -236,11 +319,24 @@ function submit(event) {
   division = makeDivision(problem.dividend, problem.divisor, problem.mode, problem.decimals);
   steps = makeSteps(division);
   stepIndex = 0;
+  if (document.fullscreenElement) {
+    projectionEditing = false;
+    syncProjectionMode(false);
+  }
   render();
 }
 
 document.querySelectorAll("[data-mode]").forEach((button) => button.addEventListener("click", () => setMode(button.dataset.mode)));
 $("#division-form").addEventListener("submit", submit);
+rankGuides.addEventListener("change", () => {
+  showRankGuides = rankGuides.checked;
+  try {
+    window.localStorage.setItem(rankGuidesStorageKey, String(showRankGuides));
+  } catch {
+    // Le repère reste utilisable même si le stockage local est bloqué.
+  }
+  render();
+});
 $("#previous").addEventListener("click", () => { stepIndex = Math.max(0, stepIndex - 1); render(); });
 $("#next").addEventListener("click", () => { stepIndex = Math.min(steps.length - 1, stepIndex + 1); render(); });
 $("#show-all").addEventListener("click", () => { stepIndex = steps.length - 1; render(); });
@@ -252,19 +348,44 @@ function updateFullscreenButton() {
   button.title = isFullscreen ? "Quitter le plein écran" : "Afficher en plein écran";
 }
 
+function syncProjectionMode(shouldRender = true) {
+  const active = Boolean(document.fullscreenElement);
+  if (!active) projectionEditing = false;
+  document.body.classList.toggle("is-projection", active);
+  document.body.classList.toggle("is-projection-editing", active && projectionEditing);
+  $(".controls-card").hidden = active && !projectionEditing;
+  $("#projection-recap").hidden = !active || projectionEditing;
+  updateFullscreenButton();
+  if (shouldRender) window.requestAnimationFrame(render);
+}
+
 async function toggleFullscreen() {
   if (document.fullscreenElement) await document.exitFullscreen?.();
   else await document.documentElement.requestFullscreen?.();
 }
 
 $("#fullscreen").addEventListener("click", toggleFullscreen);
-document.addEventListener("fullscreenchange", updateFullscreenButton);
+$("#edit-problem").addEventListener("click", () => {
+  projectionEditing = true;
+  syncProjectionMode();
+  window.requestAnimationFrame(() => dividendInput.focus());
+});
+document.addEventListener("fullscreenchange", () => {
+  projectionEditing = false;
+  syncProjectionMode();
+});
 document.addEventListener("keydown", (event) => {
   if (["INPUT", "SELECT"].includes(event.target.tagName)) return;
   if (event.key === "ArrowRight") { stepIndex = Math.min(steps.length - 1, stepIndex + 1); render(); }
   if (event.key === "ArrowLeft") { stepIndex = Math.max(0, stepIndex - 1); render(); }
 });
 
+let resizeFrame = 0;
+window.addEventListener("resize", () => {
+  window.cancelAnimationFrame(resizeFrame);
+  resizeFrame = window.requestAnimationFrame(render);
+});
+
 setMode("integer");
-updateFullscreenButton();
+syncProjectionMode(false);
 render();
