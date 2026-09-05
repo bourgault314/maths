@@ -34,6 +34,12 @@
 }
 .calculation-prompt:empty { display: none; }
 .calculation-prompt .prompt-sign { color: var(--navy); }
+.calculation-prompt .prompt-optional {
+  color: var(--muted);
+  font-family: "Segoe UI", system-ui, sans-serif;
+  font-size: .72rem;
+  font-weight: 750;
+}
 .answer-input {
   min-width: 44px;
   min-height: 44px;

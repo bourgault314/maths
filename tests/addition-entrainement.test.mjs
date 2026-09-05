@@ -120,14 +120,17 @@ test("les décimaux gardent l’alignement et les zéros fournis par le même mo
   assert.equal(makeTrainingTasks(crossing)[0].memo, "10 dixièmes = 1 unité");
 });
 
-test("une erreur est localisée dans l’ordre total, chiffre, retenue puis peut être corrigée", () => {
+test("le calcul intermédiaire est facultatif mais contrôlé lorsqu’il est rempli", () => {
   const addition = makeAddition(["584", "279"]);
   const task = makeTrainingTasks(addition)[0];
   assert.deepEqual(trainingFields(task), ["total", "result", "carry"]);
   assert.deepEqual(trainingErrors(task, { total: 12, result: 2, carry: 0 }), ["total", "result", "carry"]);
   assert.equal(firstTrainingError(task, { total: 12, result: 2, carry: 0 }), "total");
+  assert.equal(firstTrainingError(task, { total: "", result: 2, carry: 0 }), "result");
   assert.equal(firstTrainingError(task, { total: 13, result: 2, carry: 0 }), "result");
   assert.equal(firstTrainingError(task, { total: 13, result: 3, carry: 0 }), "carry");
+  assert.equal(firstTrainingError(task, { total: "", result: "3", carry: "1" }), null);
+  assert.equal(checkTrainingAnswer(task, { result: "3", carry: "1" }), true);
   assert.equal(firstTrainingError(task, { total: "13", result: "3", carry: "1" }), null);
   assert.equal(checkTrainingAnswer(task, { total: "13", result: "3", carry: "1" }), true);
 });
@@ -137,7 +140,8 @@ test("les indices restent progressifs et ne révèlent qu’un champ à la fois"
   const task = makeTrainingTasks(addition)[0];
   assert.match(hintForTask(addition, task, "total", 0), /Additionne tous les chiffres/);
   assert.equal(hintForTask(addition, task, "total", 1), "4 + 9 = 13.");
-  assert.match(hintForTask(addition, task, "result", 0), /chiffre des unités/);
+  assert.match(hintForTask(addition, task, "result", 0), /quel chiffre faut-il écrire ici/);
+  assert.doesNotMatch(hintForTask(addition, task, "result", 0), /13/);
   assert.match(hintForTask(addition, task, "result", 1), /est 3/);
   assert.match(hintForTask(addition, task, "carry", 0), /Combien de dizaines/);
   assert.match(hintForTask(addition, task, "carry", 1), /je retiens 1 dizaine/);
@@ -158,8 +162,8 @@ test("toutes les étapes attendues conduisent à la réussite complète", () => 
 });
 
 test("l’interface élève réutilise le moteur, reste tactile et ne contient pas de solution initiale", () => {
-  assert.match(html, /addition-posee-interactive\.css\?v=2/);
-  assert.match(html, /addition-posee-interactive\.js\?v=2/);
+  assert.match(html, /addition-posee-interactive\.css\?v=3/);
+  assert.match(html, /addition-posee-interactive\.js\?v=3/);
   assert.doesNotMatch(html, /data-mode="(?:integer|decimal)"/);
   assert.match(html, /id="rank-guides" type="checkbox"/);
   assert.match(html, /id="placement-mode" type="checkbox"/);
@@ -170,7 +174,10 @@ test("l’interface élève réutilise le moteur, reste tactile et ne contient p
   assert.match(html, /fullscreen-collapse[^>]*hidden/);
   assert.doesNotMatch(html, />863</);
   assert.match(js, /addition-engine\.mjs\?v=1/);
-  assert.match(js, /addition-entrainement-engine\.mjs\?v=1/);
+  assert.match(js, /addition-entrainement-engine\.mjs\?v=2/);
+  assert.match(js, /Total de la colonne, facultatif/);
+  assert.match(js, /"prompt-optional", "facultatif"/);
+  assert.match(js, /find\(\(input\) => input\.dataset\.answer !== "total"\)/);
   assert.match(js, /makeAddition\(\[firstInput\.value, secondInput\.value\]\)/);
   assert.match(js, /Math\.random\(\) < \.45 \? 1 \+ Math\.floor\(Math\.random\(\) \* 3\) : 0/);
   assert.match(js, /makeTrainingTasks\(addition, \{ includePlacement: selfPlacement \}\)/);

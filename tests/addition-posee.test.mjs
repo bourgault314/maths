@@ -16,7 +16,7 @@ import {
   getAdditionDisplayState,
   makeSteps
 } from "../outils/addition-posee/addition-steps.mjs";
-import { buildAdditionAriaLabel } from "../outils/addition-posee/addition-view.mjs";
+import { buildAdditionAriaLabel, renderVocabulary } from "../outils/addition-posee/addition-view.mjs";
 
 const interfaceHtml = readFileSync(new URL("../outils/addition-posee/addition-posee.html", import.meta.url), "utf8");
 const interfaceCss = readFileSync(new URL("../outils/addition-posee/addition-posee.css", import.meta.url), "utf8");
@@ -185,6 +185,23 @@ test("le vocabulaire de rang couvre les bornes autorisées", () => {
   assert.equal(placeValueName(-6, 1), "millionième");
 });
 
+test("la vérification finale écrit l’égalité numérique avec le vocabulaire", () => {
+  const values = [{ textContent: "" }, { textContent: "" }, { textContent: "" }];
+  const attributes = new Map();
+  const container = {
+    hidden: true,
+    querySelectorAll: () => values,
+    setAttribute: (name, value) => attributes.set(name, value)
+  };
+  renderVocabulary(container, makeAddition(["584", "279"]), true);
+  assert.equal(container.hidden, false);
+  assert.deepEqual(values.map(({ textContent }) => textContent), ["584", "279", "863"]);
+  assert.equal(
+    attributes.get("aria-label"),
+    "584 plus 279 égale 863. Premier terme plus second terme égale somme."
+  );
+});
+
 test("l’interface est professorale, projetable et conforme à l’identité maths&go", () => {
   assert.match(interfaceHtml, /<h1 id="page-title">Addition posée<\/h1>/);
   assert.match(interfaceHtml, /Outil de classe/);
@@ -195,6 +212,10 @@ test("l’interface est professorale, projetable et conforme à l’identité ma
   assert.match(interfaceHtml, /href="gabarit-addition-entiere\.pdf"[^>]*id="pdf-link"/);
   assert.match(interfaceHtml, /id="rank-guides" type="checkbox"/);
   assert.match(interfaceHtml, /class="instruction" aria-live="polite" aria-atomic="true"/);
+  assert.equal((interfaceHtml.match(/data-vocabulary-value/g) || []).length, 3);
+  assert.match(interfaceHtml, /data-vocabulary-value><\/strong><small>premier terme<\/small>/);
+  assert.match(interfaceHtml, /data-vocabulary-value><\/strong><small>second terme<\/small>/);
+  assert.match(interfaceHtml, /data-vocabulary-value><\/strong><small>somme<\/small>/);
   assert.match(interfaceHtml, /id="projection-recap"[^>]*hidden/);
   assert.match(interfaceHtml, /fullscreen-collapse[^>]*hidden/);
   assert.match(interfaceHtml, /Gwenaël Bourgault/);
@@ -219,7 +240,8 @@ test("l’interface est professorale, projetable et conforme à l’identité ma
   assert.match(interfaceJs, /\["INPUT", "SELECT", "TEXTAREA"\]/);
   assert.match(interfaceJs, /addition-engine\.mjs\?v=1/);
   assert.match(interfaceJs, /addition-steps\.mjs\?v=1/);
-  assert.match(interfaceJs, /addition-view\.mjs\?v=1/);
+  assert.match(interfaceJs, /addition-view\.mjs\?v=2/);
+  assert.match(interfaceJs, /renderVocabulary\(\$\("#vocabulary-strip"\), addition, step\.kind === "verify"\)/);
   assert.match(interfaceJs, /function syncGabaritLink\(\)/);
   assert.match(interfaceJs, /gabarit-addition-decimale\.pdf/);
   assert.match(interfaceJs, /some\(\(value\) => \/\[\.,\]\/.test\(value\)\)/);

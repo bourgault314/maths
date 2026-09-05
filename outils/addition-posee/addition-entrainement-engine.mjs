@@ -47,8 +47,8 @@ export function makeTrainingTasks(addition, { includePlacement = false } = {}) {
     title: "Je calcule",
     sentence: searchSentence(operation),
     detail: operation.carryOut > 0
-      ? "Complète le calcul, puis écris le chiffre de la somme et la retenue."
-      : "Complète le calcul, puis écris le chiffre de la somme.",
+      ? "Écris le chiffre de la somme et la retenue. Le calcul ci-dessous est facultatif."
+      : "Écris le chiffre de la somme. Le calcul ci-dessous est facultatif.",
     memo: operation.carryOut > 0
       ? `10 ${placeValueName(operation.exponent, 10)} = 1 ${placeValueName(operation.exponent + 1, 1)}`
       : "",
@@ -114,6 +114,7 @@ export function trainingErrors(task, answer) {
     });
   }
   return trainingFields(task).filter((field) => {
+    if (field === "total" && String(answer?.total ?? "").trim() === "") return false;
     if (field === "sum") {
       return String(answer?.sum ?? "").replace(/[.,]/g, "") !== task.expected.sum;
     }
@@ -159,7 +160,7 @@ export function hintForTask(addition, task, field, level = 0) {
     if (field === "result") {
       return strong
         ? `Dans ${operation.total}, le chiffre à écrire au rang des ${rank} est ${operation.resultDigit}.`
-        : `Quel est le chiffre des unités dans ${operation.total} ?`;
+        : "Après avoir calculé la somme de la colonne, quel chiffre faut-il écrire ici ?";
     }
     const nextRank = placeValueName(operation.exponent + 1, operation.carryOut);
     const nextRankPlural = placeValueName(operation.exponent + 1, 2);

@@ -126,6 +126,16 @@ export function renderAddition({
   return state;
 }
 
-export function renderVocabulary(container, visible) {
+export function renderVocabulary(container, addition, visible) {
   container.hidden = !visible;
+  if (!visible) return;
+  const values = [addition.displayTerms[0], addition.displayTerms[1], addition.resultDisplay];
+  container.querySelectorAll("[data-vocabulary-value]").forEach((node, index) => {
+    node.textContent = values[index];
+  });
+  container.setAttribute(
+    "aria-label",
+    `${addition.displayTerms[0]} plus ${addition.displayTerms[1]} égale ${addition.resultDisplay}. `
+      + "Premier terme plus second terme égale somme."
+  );
 }
