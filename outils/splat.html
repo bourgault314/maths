@@ -6636,10 +6636,11 @@ function fitPrintTokenToTray(cx, cy, radius, tray, strokeWidth=5){
 function getRelationCorrectionPrintProfile(card){
   // C direct n'a que deux étapes et peut donc utiliser davantage de la hauteur
   // disponible. Les largeurs restent identiques et les équations continuent
-  // de réduire automatiquement leur police si une ligne est longue.
+  // de réduire automatiquement leur police si une ligne est longue. La police
+  // suit davantage l'agrandissement des cadres pour éviter un rendu trop vide.
   return card && card._directSubstitution
-    ? { verticalScale:1.40, fontScale:1.15 }
-    : { verticalScale:1.20, fontScale:1.15 };
+    ? { verticalScale:1.40, fontScale:1.30 }
+    : { verticalScale:1.20, fontScale:1.25 };
 }
 
 function renderCardIntoSvg(targetSvg, card, printMode){
