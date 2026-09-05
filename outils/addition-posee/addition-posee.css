@@ -127,9 +127,11 @@ button, input { font: inherit; }
 .rank-marker { position: absolute; top: 3px; left: 50%; transform: translateX(-50%); color: #718198; font-family: "Segoe UI", system-ui, sans-serif; font-size: clamp(.63rem, .18em, .78rem); font-weight: 900; letter-spacing: 0; line-height: 1; white-space: nowrap; }
 .has-rank-guides .term-one-cell { padding-top: .17em; }
 
-.vocabulary-strip { width: min(100%, 720px); display: grid; grid-template-columns: minmax(0, 1.18fr) auto minmax(0, 1.18fr) auto minmax(0, .85fr); align-items: center; gap: 8px; margin: 3px auto 0; padding: 10px 14px; border: 1px solid var(--line); border-radius: 13px; background: #f8fafc; text-align: center; }
-.vocabulary-strip strong { color: var(--navy); font-size: 1.15rem; }
-.vocabulary-role { min-width: 0; font-size: clamp(.72rem, 1.1vw, .88rem); font-weight: 850; line-height: 1.15; }
+.vocabulary-strip { width: min(100%, 720px); display: grid; grid-template-columns: max-content auto max-content auto max-content; align-items: center; justify-content: safe center; gap: 8px; margin: 3px auto 0; padding: 10px 14px; overflow-x: auto; border: 1px solid var(--line); border-radius: 13px; background: #f8fafc; text-align: center; scrollbar-width: thin; }
+.vocabulary-sign { color: var(--navy); font-size: 1.15rem; font-weight: 900; }
+.vocabulary-role { min-width: max-content; display: grid; gap: 2px; font-weight: 850; line-height: 1.15; }
+.vocabulary-role strong { font-family: "DejaVu Sans Mono", Consolas, monospace; font-size: clamp(.92rem, 1.5vw, 1.2rem); }
+.vocabulary-role small { color: currentColor; font-size: clamp(.62rem, .9vw, .78rem); }
 .first-role { color: var(--blue); }
 .second-role { color: var(--teal); }
 .sum-role { color: var(--orange); }
@@ -219,7 +221,7 @@ body.is-projection .site-footer { flex: none; gap: 5px; padding: 5px 8px 6px; fo
   .instruction .exchange-memo { margin-top: 9px; }
   .addition-stage { min-height: 310px; padding-inline: 0; }
   .vocabulary-strip { gap: 4px; padding-inline: 7px; }
-  .vocabulary-strip strong { font-size: .92rem; }
+  .vocabulary-role strong { font-size: .92rem; }
   .step-controls { grid-template-columns: 1fr 1fr; gap: 8px; }
   #previous { grid-column: 1; grid-row: 1; }
   #next { grid-column: 2; grid-row: 1; }
@@ -240,7 +242,7 @@ body.is-projection .site-footer { flex: none; gap: 5px; padding: 5px 8px 6px; fo
   .board-card { padding-inline: 7px; }
   .instruction { padding-inline: 10px; }
   .instruction > span { font-size: .74rem; }
-  .vocabulary-role { font-size: .65rem; }
+  .vocabulary-role small { font-size: .6rem; }
 }
 
 @media (prefers-reduced-motion: reduce) {
