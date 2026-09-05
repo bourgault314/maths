@@ -207,6 +207,8 @@ test("l’interface est professorale, projetable et conforme à l’identité ma
   assert.match(interfaceCss, /\.posed-addition\.has-decimals/);
   assert.match(interfaceCss, /\.carry-cell\.is-used[^}]*text-decoration:\s*line-through/);
   assert.match(interfaceCss, /@media \(min-width: 1280px\)[\s\S]*\.instruction[^}]*grid-column:\s*1/);
+  assert.match(interfaceCss, /\.instruction h2 \{[^}]*font-size:\s*clamp\(1\.42rem, 1\.8vw, 2\.08rem\)/);
+  assert.match(interfaceCss, /body\.is-projection \.instruction h2 \{[^}]*font-size:\s*clamp\(1\.55rem, 1\.9vw, 2\.18rem\)/);
   assert.match(interfaceCss, /@media \(prefers-reduced-motion: reduce\)/);
   assert.match(interfaceJs, /document\.exitFullscreen\(\)/);
   assert.match(interfaceJs, /fullscreenchange/);

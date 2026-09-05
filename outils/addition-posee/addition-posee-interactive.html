@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="description" content="Une addition d’entiers ou de décimaux à compléter colonne par colonne, avec des erreurs localisées et des indices progressifs.">
+  <meta name="description" content="Une addition d’entiers ou de décimaux à poser en option puis à compléter colonne par colonne, avec des erreurs localisées et des indices progressifs.">
   <link rel="canonical" href="https://mathsgo.re/outils/addition-posee/addition-posee-interactive.html">
   <meta name="robots" content="index, follow, max-image-preview:large">
   <meta name="author" content="Gwenaël Bourgault">
@@ -51,11 +51,18 @@
             <span>Second terme</span>
             <input id="second-term" inputmode="decimal" type="text" maxlength="15" value="279" autocomplete="off" spellcheck="false" enterkeyhint="go" aria-describedby="form-error" required>
           </label>
-          <label class="rank-control" for="rank-guides">
-            <input id="rank-guides" type="checkbox">
-            <span class="rank-switch" aria-hidden="true"></span>
-            <span class="rank-copy"><strong>Repères de rang</strong><small>c · d · u</small></span>
-          </label>
+          <div class="practice-options" aria-label="Options de l’entraînement">
+            <label class="rank-control" for="rank-guides">
+              <input id="rank-guides" type="checkbox">
+              <span class="rank-switch" aria-hidden="true"></span>
+              <span class="rank-copy"><strong>Repères de rang</strong><small>c · d · u</small></span>
+            </label>
+            <label class="rank-control placement-control" for="placement-mode">
+              <input id="placement-mode" type="checkbox">
+              <span class="rank-switch" aria-hidden="true"></span>
+              <span class="rank-copy"><strong>Je place les nombres</strong><small>Avant de calculer</small></span>
+            </label>
+          </div>
           <button class="button button-secondary" id="random-problem" type="button">Au hasard</button>
           <button class="button button-primary" type="submit">Commencer</button>
         </form>

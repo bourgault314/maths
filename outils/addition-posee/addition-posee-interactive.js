@@ -15,6 +15,7 @@ const firstInput = $("#first-term");
 const secondInput = $("#second-term");
 const errorBox = $("#form-error");
 const rankGuides = $("#rank-guides");
+const placementMode = $("#placement-mode");
 const rankGuidesStorageKey = "mathsgo-addition-rank-guides";
 const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
 
@@ -31,6 +32,7 @@ let transitioningTaskId = null;
 let transitionToken = 0;
 let projectionEditing = false;
 let showRankGuides = false;
+let selfPlacement = false;
 let resizeFrame = 0;
 
 try {
@@ -55,9 +57,9 @@ function normalizedValue(value) {
 }
 
 function draftForCurrentTask() {
-  return Object.fromEntries(
-    Object.entries(rawDraftForCurrentTask()).map(([field, value]) => [field, normalizedValue(value)])
-  );
+  const draft = rawDraftForCurrentTask();
+  if (currentTask().kind === "placement") return draft;
+  return Object.fromEntries(Object.entries(draft).map(([field, value]) => [field, normalizedValue(value)]));
 }
 
 function fieldLabel(field) {
@@ -65,7 +67,9 @@ function fieldLabel(field) {
     total: "total de la colonne",
     result: "chiffre de la somme",
     carry: "retenue",
-    sum: "somme"
+    sum: "somme",
+    term0: "placement du premier terme",
+    term1: "placement du second terme"
   }[field] || field;
 }
 
@@ -111,7 +115,39 @@ function currentOperation() {
   return task.kind === "column" ? addition.operations[task.opIndex] : null;
 }
 
-function addTermRow(grid, cells, row, className) {
+function addPlacementTermRow(grid, row, termIndex) {
+  const task = currentTask();
+  const field = `term${termIndex}`;
+  const expected = task.expected[field];
+  const role = termIndex === 0 ? "Premier terme" : "Second terme";
+  expected.forEach((expectedDigit, layoutIndex) => {
+    if (layoutIndex < addition.extraIntegerPlaces) return;
+    const holder = createElement("span", `practice-input-holder practice-term-holder term-${termIndex + 1}-holder`);
+    holder.style.gridColumn = String(digitGridColumn(layoutIndex));
+    holder.style.gridRow = String(row);
+    holder.append(createAnswerInput(field, {
+      className: `answer-input term-placement-answer term-${termIndex + 1}-answer`,
+      label: `${role}, rang ${placeValueMarker(addition.places[layoutIndex].exponent)}`,
+      digitIndex: layoutIndex,
+      digitCount: addition.layoutColumnCount,
+      digitGroup: `placement-${field}`,
+      expectedDigit
+    }));
+    if (showRankGuides && termIndex === 0) {
+      const marker = createElement("span", "rank-marker placement-rank-marker", placeValueMarker(addition.places[layoutIndex].exponent));
+      marker.setAttribute("aria-hidden", "true");
+      holder.append(marker);
+    }
+    grid.append(holder);
+  });
+  addComma(grid, row, termIndex === 0 ? "term-one-cell" : "term-two-cell");
+}
+
+function addTermRow(grid, cells, row, className, termIndex) {
+  if (currentTask().kind === "placement") {
+    addPlacementTermRow(grid, row, termIndex);
+    return;
+  }
   const operation = currentOperation();
   cells.forEach((value, layoutIndex) => {
     const cell = createElement("span", `digit-cell ${className}`, value ?? "");
@@ -273,6 +309,7 @@ function renderAddition(task) {
     `posed-addition practice-addition ${addition.decimalPlaces > 0 ? "has-decimals" : "has-integers-only"}`
   );
   grid.classList.toggle("has-rank-guides", showRankGuides);
+  grid.classList.toggle("is-placement", task.kind === "placement");
   grid.style.setProperty("--integer-columns", addition.layoutIntegerPlaces);
   grid.style.setProperty("--decimal-columns", addition.decimalPlaces);
   grid.style.setProperty("--column-width", `${metrics.columnWidth}px`);
@@ -283,8 +320,8 @@ function renderAddition(task) {
   grid.setAttribute("role", "group");
   grid.setAttribute("aria-label", buildAdditionAriaLabel(task));
 
-  addTermRow(grid, addition.termCells[0], 2, "term-one-cell");
-  addTermRow(grid, addition.termCells[1], 3, "term-two-cell");
+  addTermRow(grid, addition.termCells[0], 2, "term-one-cell", 0);
+  addTermRow(grid, addition.termCells[1], 3, "term-two-cell", 1);
 
   const sign = createElement("span", "addition-sign", "+");
   sign.style.gridColumn = "1";
@@ -462,7 +499,9 @@ function render({ focus = false } = {}) {
 }
 
 function errorMessage(field, value) {
-  const empty = String(value ?? "").trim() === "";
+  const empty = Array.isArray(value)
+    ? value.every((digit) => String(digit ?? "").trim() === "")
+    : String(value ?? "").trim() === "";
   if (empty) return `Complète d’abord le ${fieldLabel(field)}.`;
   return `Le ${fieldLabel(field)} est à revoir.`;
 }
@@ -531,11 +570,12 @@ function showHint() {
   render({ focus: true });
 }
 
-function resetTraining(nextAddition, { focus = true } = {}) {
+function resetTraining(nextAddition, { focus = true, includePlacement = placementMode.checked } = {}) {
   transitionToken += 1;
   transitioningTaskId = null;
   addition = nextAddition;
-  tasks = makeTrainingTasks(addition);
+  selfPlacement = Boolean(includePlacement);
+  tasks = makeTrainingTasks(addition, { includePlacement: selfPlacement });
   taskIndex = 0;
   drafts = new Map();
   completed = new Map();
@@ -564,7 +604,7 @@ function submitProblem(event) {
     projectionEditing = false;
     syncProjectionMode(false);
   }
-  resetTraining(nextAddition);
+  resetTraining(nextAddition, { includePlacement: placementMode.checked });
 }
 
 function randomTerm(decimalPlaces) {
@@ -585,7 +625,8 @@ function randomProblem() {
 function restartSameProblem() {
   firstInput.value = addition.displayTerms[0];
   secondInput.value = addition.displayTerms[1];
-  resetTraining(makeAddition(addition.displayTerms));
+  placementMode.checked = selfPlacement;
+  resetTraining(makeAddition(addition.displayTerms), { includePlacement: selfPlacement });
 }
 
 function updateFullscreenButton() {
@@ -699,7 +740,7 @@ document.addEventListener("paste", (event) => {
   event.preventDefault();
   const cells = [...document.querySelectorAll(`[data-digit-group="${target.dataset.digitGroup}"]`)]
     .sort((left, right) => Number(left.dataset.digitIndex) - Number(right.dataset.digitIndex));
-  const start = Number(target.dataset.digitIndex);
+  const start = cells.indexOf(target);
   let lastFilled = target;
   pastedDigits.split("").forEach((digit, offset) => {
     const cell = cells[start + offset];

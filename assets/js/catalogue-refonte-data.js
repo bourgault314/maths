@@ -456,7 +456,7 @@ window.MATHSGO_CATALOGUE = {
       "collections": ["addition-posee"],
       "tags": ["addition", "calcul-pose", "entiers", "decimaux", "entrainement", "retenues", "aide"],
       "thumbnail": "assets/img/thumbnails/numeration/addition-posee-interactive.svg?v=1",
-      "cardDescription": "Compléter une addition d’entiers ou de décimaux colonne par colonne, avec des erreurs localisées et des indices progressifs."
+      "cardDescription": "Placer soi-même les termes en option, puis compléter une addition d’entiers ou de décimaux avec des erreurs localisées."
     },
     "outils/addition-posee/gabarit-addition-posee.pdf": {
       "primaryNotion": "calculs-poses",
@@ -3825,7 +3825,7 @@ window.MATHSGO_CATALOGUE = {
     {
       "id": "outils-addition-posee-addition-posee-interactive-html",
       "title": "À toi de poser l’addition",
-      "description": "Une addition d’entiers ou de décimaux à compléter colonne par colonne, avec des erreurs localisées et des indices progressifs.",
+      "description": "Une addition d’entiers ou de décimaux à poser en option puis à compléter colonne par colonne, avec des erreurs localisées et des indices progressifs.",
       "path": "outils/addition-posee/addition-posee-interactive.html",
       "domains": ["nombres-calculs"],
       "notions": ["calculs-poses"],

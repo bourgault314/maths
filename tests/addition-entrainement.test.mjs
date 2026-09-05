@@ -28,6 +28,48 @@ test("l’entraînement reprend exactement les colonnes du moteur partagé", () 
   assert.equal(tasks.at(-2).expected.sum, addition.resultCells.join(""));
 });
 
+test("le placement des termes est une première étape réellement facultative", () => {
+  const addition = makeAddition(["584", "279"]);
+  const standardTasks = makeTrainingTasks(addition);
+  const placementTasks = makeTrainingTasks(addition, { includePlacement: true });
+  const placement = placementTasks[0];
+
+  assert.equal(standardTasks[0].kind, "column");
+  assert.equal(placement.kind, "placement");
+  assert.equal(placement.title, "Je pose");
+  assert.deepEqual(trainingFields(placement), ["term0", "term1"]);
+  assert.deepEqual(placement.expected, {
+    term0: ["5", "8", "4"],
+    term1: ["2", "7", "9"]
+  });
+  assert.deepEqual(trainingErrors(placement, {
+    term0: ["5", "8", "4"],
+    term1: ["", "2", "7"]
+  }), ["term1"]);
+  assert.equal(checkTrainingAnswer(placement, placement.expected), true);
+  assert.deepEqual(placementTasks.slice(1).map(({ kind }) => kind), standardTasks.map(({ kind }) => kind));
+});
+
+test("le placement partage les colonnes, les zéros utiles et la virgule du moteur", () => {
+  const decimal = makeAddition(["12,7", "3,45"]);
+  const decimalPlacement = makeTrainingTasks(decimal, { includePlacement: true })[0];
+  assert.deepEqual(decimalPlacement.expected, {
+    term0: ["1", "2", "7", "0"],
+    term1: ["", "3", "4", "5"]
+  });
+  assert.match(decimalPlacement.sentence, /alignant les virgules/);
+  assert.match(hintForTask(decimal, decimalPlacement, "term0", 0), /rangs décimaux manquants avec 0/);
+  assert.match(hintForTask(decimal, decimalPlacement, "term1", 0), /juste à gauche de la virgule/);
+
+  const finalCarry = makeAddition(["999", "1"]);
+  const carryPlacement = makeTrainingTasks(finalCarry, { includePlacement: true })[0];
+  assert.equal(finalCarry.extraIntegerPlaces, 1);
+  assert.deepEqual(carryPlacement.expected, {
+    term0: ["", "9", "9", "9"],
+    term1: ["", "", "", "1"]
+  });
+});
+
 test("une colonne sans retenue et les zéros se valident sans ambiguïté", () => {
   const noCarry = makeTrainingTasks(makeAddition(["123", "456"])).filter(({ kind }) => kind === "column");
   assert.deepEqual(noCarry.map(({ expected }) => expected), [
@@ -104,10 +146,10 @@ test("les indices restent progressifs et ne révèlent qu’un champ à la fois"
 test("toutes les étapes attendues conduisent à la réussite complète", () => {
   for (const values of [["0", "0"], ["584", "279"], ["999", "1"], ["12,7", "3,45"]]) {
     const addition = makeAddition(values);
-    const tasks = makeTrainingTasks(addition);
+    const tasks = makeTrainingTasks(addition, { includePlacement: true });
     for (const task of tasks.filter(({ kind }) => kind !== "finish")) {
       const answer = Object.fromEntries(
-        Object.entries(task.expected).map(([field, value]) => [field, String(value)])
+        Object.entries(task.expected).map(([field, value]) => [field, Array.isArray(value) ? [...value] : String(value)])
       );
       assert.equal(checkTrainingAnswer(task, answer), true, `${values.join(" + ")} — ${task.id}`);
     }
@@ -119,6 +161,8 @@ test("l’interface élève réutilise le moteur, reste tactile et ne contient p
   assert.match(html, /addition-posee-interactive\.css\?v=1/);
   assert.match(html, /addition-posee-interactive\.js\?v=1/);
   assert.match(html, /id="rank-guides" type="checkbox"/);
+  assert.match(html, /id="placement-mode" type="checkbox"/);
+  assert.match(html, /Je place les nombres/);
   assert.match(html, /id="validate"[^>]*>Vérifier l’étape/);
   assert.match(html, /id="help"[^>]*>Un indice/);
   assert.match(html, /aria-live="polite" aria-atomic="true"/);
@@ -127,6 +171,7 @@ test("l’interface élève réutilise le moteur, reste tactile et ne contient p
   assert.match(js, /addition-engine\.mjs\?v=1/);
   assert.match(js, /addition-entrainement-engine\.mjs\?v=1/);
   assert.match(js, /makeAddition\(\[firstInput\.value, secondInput\.value\]\)/);
+  assert.match(js, /makeTrainingTasks\(addition, \{ includePlacement: selfPlacement \}\)/);
   assert.match(js, /completed\.set\(task\.id, answer\)/);
   assert.match(js, /document\.addEventListener\("paste"/);
   assert.match(js, /document\.exitFullscreen\(\)/);

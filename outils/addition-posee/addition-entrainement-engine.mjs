@@ -23,8 +23,25 @@ function searchSentence(operation) {
   return `${parts.join(" + ")} = ?`;
 }
 
-export function makeTrainingTasks(addition) {
-  const tasks = addition.operations.map((operation) => ({
+export function makeTrainingTasks(addition, { includePlacement = false } = {}) {
+  const tasks = [];
+  if (includePlacement) {
+    tasks.push({
+      id: "placement",
+      kind: "placement",
+      title: "Je pose",
+      sentence: addition.decimalPlaces > 0
+        ? "Place les deux termes dans la grille en alignant les virgules."
+        : "Place les deux termes en mettant les unités sous les unités.",
+      detail: `À placer : ${addition.displayTerms.join(" + ")}.`,
+      expected: {
+        term0: addition.termCells[0].map((digit) => digit ?? ""),
+        term1: addition.termCells[1].map((digit) => digit ?? "")
+      }
+    });
+  }
+
+  tasks.push(...addition.operations.map((operation) => ({
     id: `column-${operation.processingIndex}`,
     kind: "column",
     title: "Je calcule",
@@ -41,7 +58,7 @@ export function makeTrainingTasks(addition) {
       result: operation.resultDigit,
       ...(operation.carryOut > 0 ? { carry: operation.carryOut } : {})
     }
-  }));
+  })));
 
   if (addition.hasFinalCarry) {
     const carry = addition.finalCarryDigits.join("");
@@ -77,6 +94,7 @@ export function makeTrainingTasks(addition) {
 }
 
 export function trainingFields(task) {
+  if (task.kind === "placement") return ["term0", "term1"];
   if (task.kind === "column") {
     return Object.hasOwn(task.expected, "carry")
       ? ["total", "result", "carry"]
@@ -88,6 +106,13 @@ export function trainingFields(task) {
 }
 
 export function trainingErrors(task, answer) {
+  if (task.kind === "placement") {
+    return trainingFields(task).filter((field) => {
+      const expected = task.expected[field];
+      const actual = Array.isArray(answer?.[field]) ? answer[field] : [];
+      return expected.some((digit, index) => String(actual[index] ?? "") !== digit);
+    });
+  }
   return trainingFields(task).filter((field) => {
     if (field === "sum") {
       return String(answer?.sum ?? "").replace(/[.,]/g, "") !== task.expected.sum;
@@ -106,6 +131,22 @@ export function checkTrainingAnswer(task, answer) {
 
 export function hintForTask(addition, task, field, level = 0) {
   const strong = level > 0;
+  if (task.kind === "placement") {
+    const termIndex = field === "term1" ? 1 : 0;
+    const label = termIndex === 0 ? "premier terme" : "second terme";
+    const value = addition.displayTerms[termIndex];
+    if (addition.decimalPlaces > 0) {
+      const needsPadding = addition.terms[termIndex].fraction.length < addition.decimalPlaces;
+      return strong
+        ? `Pour le ${label}, recopie ${value} autour de la virgule déjà placée.`
+        : needsPadding
+          ? `Dans le ${label}, aligne la virgule puis complète les rangs décimaux manquants avec 0.`
+          : `Dans le ${label}, place le chiffre des unités juste à gauche de la virgule.`;
+    }
+    return strong
+      ? `Pour le ${label}, recopie ${value} en terminant dans la colonne u.`
+      : `Dans le ${label}, commence par placer le chiffre des unités dans la colonne u.`;
+  }
   if (task.kind === "column") {
     const operation = addition.operations[task.opIndex];
     const parts = calculationParts(operation);
