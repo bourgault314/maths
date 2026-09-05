@@ -959,7 +959,7 @@ $versionMoteur = is_file($moteur) ? substr(md5_file($moteur), 0, 10) : '0';
       marque.textContent = "maths&go";
       const appli = document.createElement("span");
       appli.className = "appli";
-      appli.textContent = "Défi tables";
+      appli.textContent = "Mon espace";
       marque.appendChild(appli);
       const adresse = document.createElement("div");
       adresse.className = "adresse";

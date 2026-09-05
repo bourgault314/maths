@@ -136,7 +136,7 @@ $nonce = entetes_page();
   // visite à l'autre : sur un poste partagé au collège, l'espace ne doit pas
   // rouvrir « Bonjour Léa » au camarade suivant. Retaper six caractères est
   // le geste qui dit « c'est moi ». (L'appli, elle, garde le code sur
-  // l'appareil : c'est là que vit « Ce n'est pas moi ».)
+  // l'appareil : c'est là que vit « Se déconnecter ».)
   function stockage() {
     try { return window.sessionStorage; } catch (_) { return null; }
   }
@@ -154,7 +154,7 @@ $nonce = entetes_page();
     $("erreur").hidden = !message;
   }
 
-  // « Ce n'est pas moi » dans l'appli renvoie ici avec ?oublier=1 : l'espace
+  // « Se déconnecter » dans l'appli renvoie ici avec ?oublier=1 : l'espace
   // oublie à son tour le code de cet onglet — les deux domaines ont chacun
   // leur mémoire, un seul geste doit vider les deux — et l'adresse est
   // nettoyée pour qu'un rechargement ne recommence pas.

@@ -1301,6 +1301,212 @@ verifier("restaurer la version précédente depuis Ma classe", function () use (
     egal(403, appel('/api/prof.php', ['action' => 'eleves.restaurer', 'eleve_id' => $eleve['id']], ['jeton' => $jetonClaire])['code'], 'partage en lecture');
 });
 
+// ------------------------------------------- audit du 02/09/2026 — lot 6
+//
+// Restauration sous verrou (B-F06, C-7), première écriture qui exige
+// base_revision 0 (B-F10), Cache-Control: no-store sur l'API (S9).
+
+// Plusieurs requêtes DIFFÉRENTES lancées en même temps (chemin, corps, jeton) :
+// renvoie pour chacune ['code' => …, 'json' => …], dans l'ordre donné.
+function appels_paralleles_mixtes(array $requetes): array
+{
+    global $url;
+    $multi = curl_multi_init();
+    $canaux = [];
+    foreach ($requetes as $requete) {
+        $entetes = ['Content-Type: application/json'];
+        if (isset($requete['jeton'])) $entetes[] = 'Authorization: Bearer ' . $requete['jeton'];
+        $ch = curl_init($url . $requete['chemin']);
+        curl_setopt_array($ch, [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_POST => true,
+            CURLOPT_POSTFIELDS => json_encode($requete['corps']),
+            CURLOPT_HTTPHEADER => $entetes,
+            CURLOPT_TIMEOUT => 20,
+        ]);
+        curl_multi_add_handle($multi, $ch);
+        $canaux[] = $ch;
+    }
+    do {
+        $etat = curl_multi_exec($multi, $actifs);
+        if ($actifs) curl_multi_select($multi, 1.0);
+    } while ($actifs && $etat === CURLM_OK);
+    $reponses = [];
+    foreach ($canaux as $ch) {
+        $texte = (string)curl_multi_getcontent($ch);
+        $reponses[] = ['code' => (int)curl_getinfo($ch, CURLINFO_HTTP_CODE), 'json' => json_decode($texte, true)];
+        curl_multi_remove_handle($multi, $ch);
+        curl_close($ch);
+    }
+    curl_multi_close($multi);
+    return $reponses;
+}
+
+// Une requête lancée SANS attendre sa réponse : on garde la main pendant
+// qu'elle est en vol (pour la faire attendre derrière un verrou tenu par le
+// test), puis on la termine avec terminer_appel_en_vol().
+function lancer_appel_en_vol(string $chemin, array $corps, ?string $jeton = null): array
+{
+    global $url;
+    $entetes = ['Content-Type: application/json'];
+    if ($jeton !== null) $entetes[] = 'Authorization: Bearer ' . $jeton;
+    $multi = curl_multi_init();
+    $ch = curl_init($url . $chemin);
+    curl_setopt_array($ch, [
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_POST => true,
+        CURLOPT_POSTFIELDS => json_encode($corps),
+        CURLOPT_HTTPHEADER => $entetes,
+        CURLOPT_TIMEOUT => 20,
+    ]);
+    curl_multi_add_handle($multi, $ch);
+    curl_multi_exec($multi, $actifs);
+    return ['multi' => $multi, 'canal' => $ch];
+}
+
+// Fait avancer l'appel en vol pendant $millisecondes ; vrai s'il a répondu.
+function avancer_appel_en_vol(array $vol, int $millisecondes): bool
+{
+    $fin = microtime(true) + $millisecondes / 1000;
+    do {
+        curl_multi_exec($vol['multi'], $actifs);
+        if (!$actifs) return true;
+        curl_multi_select($vol['multi'], 0.05);
+    } while (microtime(true) < $fin);
+    return false;
+}
+
+function terminer_appel_en_vol(array $vol): array
+{
+    do {
+        $etat = curl_multi_exec($vol['multi'], $actifs);
+        if ($actifs) curl_multi_select($vol['multi'], 1.0);
+    } while ($actifs && $etat === CURLM_OK);
+    $texte = (string)curl_multi_getcontent($vol['canal']);
+    $reponse = ['code' => (int)curl_getinfo($vol['canal'], CURLINFO_HTTP_CODE), 'json' => json_decode($texte, true)];
+    curl_multi_remove_handle($vol['multi'], $vol['canal']);
+    curl_close($vol['canal']);
+    curl_multi_close($vol['multi']);
+    return $reponse;
+}
+
+function pilote_test(): string
+{
+    return bd_test()->getAttribute(PDO::ATTR_DRIVER_NAME);
+}
+
+$codesL6 = [];
+verifier("préparation : une classe et deux élèves pour le lot 6", function () use (&$jetonS1, &$codesL6) {
+    vider_compteurs();
+    $classe = appel('/api/prof.php', ['action' => 'classes.creer', 'libelle' => 'test-lot6'], ['jeton' => $jetonS1])['json']['id'];
+    $eleves = appel('/api/prof.php', ['action' => 'eleves.ajouter', 'classe_id' => $classe, 'nombre' => 2], ['jeton' => $jetonS1])['json']['eleves'];
+    foreach ($eleves as $e) $codesL6[] = ['id' => $e['id'], 'code' => $e['code'], 'classe' => $classe];
+    egal(2, count($codesL6));
+});
+
+verifier("première écriture : une révision autre que 0 est un conflit (409, état vide), rien n’est créé", function () use (&$codesL6) {
+    $code = $codesL6[0]['code'];
+    $r = ecrire($code, ['version' => 1, 'tables' => ['4' => ['acquise' => '2026-09-04']]], 5);
+    egal(409, $r['code'], 'une appli qui annonce la révision 5 alors que le serveur n’a rien');
+    egal(true, $r['json']['conflit']);
+    egal(0, $r['json']['revision'], 'l’état renvoyé est la révision 0');
+    egal(null, $r['json']['parcours'], 'et un parcours vide : l’appli fusionne avec rien et repart de 0');
+    $r = lire($code);
+    egal(false, $r['json']['existe'], 'aucune ligne créée');
+    egal(0, $r['json']['revision']);
+    egal(0, (int)bd_test()->query('SELECT COUNT(*) FROM progressions WHERE eleve_id = ' . (int)$codesL6[0]['id'])->fetchColumn(), 'en base non plus');
+    $r = ecrire($code, ['version' => 1, 'tables' => ['4' => ['acquise' => '2026-09-04']]], 0);
+    egal(200, $r['code'], 'avec la révision 0, la création passe');
+    egal(1, $r['json']['revision']);
+    $r = ecrire($code, ['version' => 1, 'tables' => ['4' => ['acquise' => '2026-09-04'], '6' => ['acquise' => '2026-09-04']]], 1);
+    egal(2, $r['json']['revision'], 'puis la mise à jour normale');
+});
+
+verifier("la restauration attend le verrou de la ligne et repart de la révision qu’elle trouve, jamais d’une révision périmée", function () use (&$jetonS1, &$codesL6) {
+    // L'élève est en révision 2 : donnees = {4, 6}, version précédente = {4}.
+    $eleve = $codesL6[0];
+    $bd = bd_test();
+    $mysql = pilote_test() === 'mysql';
+    $id = (int)$bd->query('SELECT id FROM progressions WHERE eleve_id = ' . (int)$eleve['id'])->fetchColumn();
+    vrai($id > 0, 'la progression existe');
+
+    // Le test tient LA ligne verrouillée, comme l'appli de l'élève au milieu
+    // d'une écriture, et lance la restauration pendant ce temps.
+    if ($mysql) {
+        $bd->beginTransaction();
+        $bd->query('SELECT id FROM progressions WHERE id = ' . $id . ' FOR UPDATE')->fetchAll();
+    } else {
+        $bd->exec('BEGIN IMMEDIATE');
+    }
+    $vol = lancer_appel_en_vol('/api/prof.php', ['action' => 'eleves.restaurer', 'eleve_id' => $eleve['id'], 'appli' => 'defi-tables'], $jetonS1);
+    $repondu = avancer_appel_en_vol($vol, 700);
+    // Pendant que la restauration attend, l'élève finit son écriture : révision 3.
+    $bd->prepare('UPDATE progressions SET donnees_avant = donnees, donnees = ?, revision = 3, maj_le = ? WHERE id = ? AND revision = 2')
+        ->execute(['{"version":1,"tables":{"4":{"acquise":"2026-09-04"},"6":{"acquise":"2026-09-04"},"8":{"acquise":"2026-09-04"}}}', '2026-09-04', $id]);
+    $bd->exec('COMMIT');
+    $r = terminer_appel_en_vol($vol);
+    vrai(!$repondu, 'la restauration n’a pas répondu tant que la ligne était verrouillée');
+    egal(200, $r['code'], 'la restauration passe une fois le verrou rendu (aucun 500, même sur SQLite : C-7)');
+    egal(4, $r['json']['revision'], 'elle a relu la ligne APRÈS le verrou : révision 3 → 4, pas 2 → 3');
+    // Ce qu'elle a restauré, c'est la version précédente de la révision 3
+    // (= {4, 6}), pas celle qu'elle aurait lue avant le verrou (= {4}).
+    egal([4, 6], array_map('intval', array_keys($r['json']['parcours']['tables'])), 'la version précédente au moment de l’écriture');
+    $lu = lire($eleve['code'])['json'];
+    egal(4, $lu['revision'], 'en base aussi');
+    egal([4, 6], array_map('intval', array_keys($lu['parcours']['tables'])));
+    $ligne = $bd->query('SELECT donnees_avant FROM progressions WHERE id = ' . $id)->fetch(PDO::FETCH_ASSOC);
+    vrai(str_contains((string)$ligne['donnees_avant'], '"8"'), 'l’écriture de l’élève (avec la table de 8) est devenue la version précédente : rien n’est perdu');
+});
+
+verifier("dix restaurations et dix écritures de l’élève en même temps : aucune révision attribuée deux fois, aucun 500", function () use (&$jetonS1, &$codesL6) {
+    vider_compteurs();
+    $eleve = $codesL6[1];
+    ecrire($eleve['code'], ['version' => 1, 'tables' => ['2' => ['acquise' => '2026-09-04']]], 0);
+    ecrire($eleve['code'], ['version' => 1, 'tables' => ['2' => ['acquise' => '2026-09-04'], '3' => ['acquise' => '2026-09-04']]], 1);
+    $revisions = [];
+    $statuts = [];
+    for ($tour = 0; $tour < 10; $tour++) {
+        // L'appli lit la révision, puis écrit ; le professeur clique au même instant.
+        $base = (int)lire($eleve['code'])['json']['revision'];
+        $reponses = appels_paralleles_mixtes([
+            ['chemin' => '/api/prof.php', 'jeton' => $jetonS1, 'corps' => ['action' => 'eleves.restaurer', 'eleve_id' => $eleve['id'], 'appli' => 'defi-tables']],
+            ['chemin' => '/api/parcours.php', 'corps' => ['code' => $eleve['code'], 'base_revision' => $base,
+                'parcours' => ['version' => 1, 'tables' => ['2' => ['acquise' => '2026-09-04'], (string)(4 + $tour % 6) => ['acquise' => '2026-09-04']]]]],
+        ]);
+        foreach ($reponses as $r) {
+            $statuts[] = $r['code'];
+            if ($r['code'] === 200) $revisions[] = (int)$r['json']['revision'];
+        }
+    }
+    $comptes = array_count_values($statuts);
+    egal(0, $comptes[500] ?? 0, 'aucune erreur serveur (statuts : ' . json_encode($comptes) . ')');
+    vrai(($comptes[200] ?? 0) >= 10, 'au moins les dix restaurations ont abouti (statuts : ' . json_encode($comptes) . ')');
+    egal(count($revisions), count(array_unique($revisions)), 'révisions renvoyées par les 200 toutes différentes : ' . json_encode($revisions));
+    egal(max($revisions), (int)lire($eleve['code'])['json']['revision'], 'la dernière révision attribuée est celle en base');
+});
+
+verifier("aucune réponse de l’API ne peut rester dans un cache : Cache-Control no-store, réussie ou non", function () use (&$codesL6, &$jetonS1) {
+    vider_compteurs();
+    foreach ([
+        'lecture 200' => lire($codesL6[0]['code']),
+        'écriture 409' => ecrire($codesL6[0]['code'], ['version' => 1], 1),
+        'identité 200' => identite($codesL6[0]['code']),
+        'code inconnu 404' => identite(code_inconnu(0)),
+        'tableau prof 200' => appel('/api/prof.php', ['action' => 'tableau', 'classe_id' => $codesL6[0]['classe']], ['jeton' => $jetonS1]),
+        'prof sans jeton 401' => appel('/api/prof.php', ['action' => 'moi']),
+        'GET refusé 405' => appel('/api/parcours.php', null),
+    ] as $quoi => $r) {
+        egal('no-store', entete($r, 'Cache-Control'), "$quoi : Cache-Control no-store");
+    }
+});
+
+verifier("l’espace élève ne parle plus de « Ce n’est pas moi », même dans ses commentaires", function () {
+    $r = page('/');
+    egal(200, $r['code']);
+    vrai(!str_contains($r['texte'], 'pas moi'), 'aucun « pas moi » dans le HTML envoyé à l’élève');
+    vrai(str_contains($r['texte'], 'Se déconnecter'), 'le mot est « Se déconnecter »');
+});
+
 verifier("la mise à niveau ajoute révision, version précédente et les colonnes réservées au lot S2", function () use ($travail) {
     require_once dirname(__DIR__) . '/public/lib/bd.php';
     $ancienne = $travail . '/ancienne-a2.sqlite';

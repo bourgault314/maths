@@ -218,7 +218,13 @@ codes, ni aux progressions, et peut être relancée sans risque.
   `<script>` en ligne porte le nonce ; aucun attribut `on…=` ; aucun script
   d'un autre domaine. Un contenu injecté dans la page ne s'exécute pas.
 - `base_revision` est **obligatoire** à l'écriture (400 sans elle) : un client
-  qui ne dit pas ce qu'il a lu n'écrase rien.
+  qui ne dit pas ce qu'il a lu n'écrase rien. La première écriture exige la
+  révision 0 (lot 6) : annoncer une révision que le serveur n'a pas est un
+  409 avec l'état vide, jamais une création.
+- La restauration d'une version précédente (« Ma classe ») verrouille la ligne
+  comme l'écriture de l'élève et n'écrit que si la révision lue est encore
+  celle en base (lot 6) : un clic du professeur pendant que l'élève enregistre
+  ne réutilise jamais un numéro de révision, rien ne se perd en silence.
 - Changer son mot de passe : 12 essais d'ancien mot de passe par compte et par
   10 min (une session volée ne devine pas l'ancien).
 
@@ -270,8 +276,15 @@ simultanés → un seul passe), périmé ou inconnu → 404 et échec compté po
 l'adresse, billet de fiche sans le code et refusé par `parcours.php`, fiche
 accessible en lecture partagée, révoqués par un nouveau code ou la suppression,
 purge à chaque appel, `verifier.php` et `migrer.php` connaissent la table.
+Lot 6 (04/09/2026) : première écriture avec une révision autre que 0 → 409
+et rien de créé ; restauration lancée pendant que le test tient la ligne
+verrouillée (elle attend, puis repart de la révision qu'elle trouve) ; dix
+restaurations et dix écritures simultanées sans révision attribuée deux fois
+ni 500 (sur MySQL, l'ancien code en attribuait cinq en double) ;
+`Cache-Control: no-store` sur sept réponses de l'API ; l'espace élève sans
+« Ce n'est pas moi ».
 
-**122 tests, 0 échec au 03/09/2026**, rejoués sur SQLite **et** sur MySQL 8
+**133 tests, 0 échec au 04/09/2026**, rejoués sur SQLite **et** sur MySQL 8
 (le limiteur emploie une instruction différente sur chaque moteur) :
 
 ```
