@@ -132,13 +132,34 @@ son nom même ne sort pas du serveur.
 
 Le propriétaire peut la **partager** avec un collègue (table `partages`) :
 
-- **lecture** — il voit le tableau et les codes, il ne change rien ;
-- **écriture** — il peut en plus ajouter des élèves, saisir les prénoms et
-  donner un nouveau code.
+- **lecture** — il voit le tableau et les progressions, **sans les codes**
+  (`api/prof.php` répond `'code' => null`) et sans rien pouvoir changer. Un code
+  ouvre l'appli comme l'élève et permet d'écrire à sa place : le prêter, ce
+  serait déjà de l'écriture ;
+- **écriture** — il voit les codes, et il peut ajouter des élèves, saisir les
+  prénoms, donner un nouveau code et restaurer la version précédente d'une
+  progression (dépanner un élève sans déranger le propriétaire).
 
-Supprimer une classe reste réservé au propriétaire. Pour les actions sur un
-élève, c'est la classe **de l'élève** qui décide, jamais le `classe_id` envoyé
-par le navigateur.
+**Réservé au propriétaire :** supprimer la classe, supprimer un élève, renommer
+la classe (ou changer ses applis), et partager ou retirer un partage. Tout ce
+qui efface pour de bon, et tout ce qui change la classe elle-même.
+
+Cette répartition est écrite **à un seul endroit**, la table `DROIT_PAR_ACTION`
+en tête de `api/prof.php` (lot 11, 05/09/2026) ; les actions de comptes
+(`profs.*`) sont dans `ACTIONS_ADMIN` juste en dessous. Chaque case a son test
+dans `tests/lancer.php` (« lot 11 — matrice … ») : déplacer un droit sans le
+vouloir rend un test rouge. Une action de classe qui ne figure pas dans la
+table est refusée (400), jamais devinée.
+
+Pour les actions sur un élève, c'est la classe **de l'élève** qui décide, jamais
+le `classe_id` envoyé par le navigateur.
+
+**Quotas** (lot 11) : 40 classes par professeur, 200 élèves par classe, 60
+élèves par lot de création. Très au-dessus d'un usage réel — ils n'arrêtent
+qu'un emballement (session volée, clic resté enfoncé) qui remplirait les 250 Mo
+de l'hébergement. Le compte des élèves est fait **dans la même transaction** que
+les créations : deux demandes simultanées ne franchissent pas le plafond, et un
+lot interrompu ne crée aucun élève.
 
 Le premier compte créé par `installer.php` est **administrateur** : lui seul
 voit l'écran « Professeurs » et peut ouvrir un compte à un collègue. Un nouveau
@@ -222,16 +243,46 @@ tables, ce serait deux occasions d'en oublier une.
   énumération de codes le soit dès le 61ᵉ essai (y compris sur les bons codes,
   sinon la réponse trahirait lesquels existent).
 - La table `compteurs` ne contient ni adresse IP ni code en clair (clés
-  hachées avec un secret : `secret` de `config.php`, sinon
-  `jeton_installation`), l'incrément tient en une instruction (UPSERT), et
+  hachées avec un secret), l'incrément tient en une instruction (UPSERT), et
   les fenêtres fermées sont effacées à chaque appel : aucune adresse n'y
-  survit plus de cinq minutes.
-- `verifier.php` ne montre rien sans le `jeton_installation` ; aucune page
-  n'affiche d'erreur PHP (`display_errors` forcé à 0 dans `lib/bd.php`).
+  survit plus de cinq minutes. **Ce secret n'est pas le mot de passe
+  d'installation** (lot 11) : c'est `secret` de `config.php` s'il est
+  renseigné — le mieux —, sinon une valeur **dérivée** de `jeton_installation`
+  par HMAC avec une étiquette d'usage. Connaître l'un ne donne pas l'autre.
+  `verifier.php` dit lequel des deux cas s'applique.
+- **En IPv6, le compteur par adresse regroupe le bloc `/64`** (lot 11) : un
+  abonné reçoit le bloc entier et en change à volonté ; compter l'adresse
+  exacte revenait à offrir un compteur neuf à chaque essai.
+- `verifier.php` ne montre rien sans le `jeton_installation`, et **douze
+  mauvais essais par adresse et par 10 min** ferment la porte pour le reste de
+  la fenêtre (lot 11) — seuls les échecs comptent, vérifier vingt fois de suite
+  avec le bon mot de passe ne gêne personne. Aucune page n'affiche d'erreur PHP
+  (`display_errors` forcé à 0 dans `lib/bd.php`).
+- **PHP n'annonce plus sa version** : `header_remove('X-Powered-By')` dans
+  `lib/entetes.php` (lot 11). `expose_php = Off` n'était pas une option ici :
+  ce réglage est de niveau système, un `.user.ini` déposé dans le dossier ne le
+  change pas.
+- **Rien de ce que le client envoie n'est pris pour argent comptant** (lot 11) :
+  `appli` et `jeton` sont vérifiés `is_string` (un tableau donnait la bonne
+  réponse mais salissait le journal du serveur) ; un prénom est débarrassé des
+  caractères de commande, des caractères invisibles et de `<` `>` **à
+  l'entrée**, en plus de l'encodage à l'affichage ; une « date » de progression
+  doit être une vraie date (`checkdate`), plus seulement dix chiffres bien
+  placés ; la réponse de `api/eleve.php` ne publie plus la description du filtre
+  de progression (`cles`, `mots`, `motifs`), seulement ce que la page affiche.
 - Le refus de connexion prend le même temps qu'un identifiant existe ou non
   (hachage de remplacement bcrypt réel, coût 10, comme les comptes).
 - `installer.php` exige un jeton présent dans `config.php` et se
-  verrouille dès qu'un compte prof existe.
+  verrouille dès qu'un compte prof existe. Depuis le lot 11, il ne recopie plus
+  le message brut d'une exception dans la page (une erreur PDO cite l'hôte, la
+  base et l'utilisateur) : le détail va au journal de l'hébergement.
+- **Quotas** (lot 11) : 40 classes par professeur, 200 élèves par classe. Le
+  compte est fait dans la même transaction que les créations — deux demandes
+  simultanées ne franchissent pas le plafond, et un lot de codes interrompu ne
+  crée aucun élève.
+- **Qui a le droit de faire quoi est écrit à un seul endroit** (lot 11) :
+  `DROIT_PAR_ACTION` et `ACTIONS_ADMIN` en tête de `api/prof.php`, avec un test
+  par case. Voir « Chacun ses classes » plus haut.
 - Aucun message d'erreur technique n'est renvoyé au navigateur.
 - **En-têtes de sécurité** (`lib/entetes.php`, envoyés par PHP sur chaque
   réponse, pages et API — le `.htaccess` pose les mêmes sur le moteur JS **et

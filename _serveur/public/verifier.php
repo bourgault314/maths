@@ -16,6 +16,10 @@ header('X-Robots-Tag: noindex, nofollow');
 // Pas de script dans cette page : le nonce renvoyé ne sert pas.
 entetes_page();
 
+// Lot 11 : le frein de cette page (voir plus bas).
+const ESSAIS_VERIFIER = 12;
+const FENETRE_ESSAIS_VERIFIER = 600;
+
 $configOk = is_file(__DIR__ . '/config.php');
 $autorise = false;
 $message = '';
@@ -45,13 +49,51 @@ if (!$configOk) {
     require __DIR__ . '/lib/archives.php';
     if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
         try {
-            $attendu = (string)(config()['jeton_installation'] ?? '');
-            if ($attendu === '' || $attendu === 'à-remplacer') {
-                $message = "Renseigne d'abord « jeton_installation » dans config.php.";
-            } elseif (!hash_equals($attendu, (string)($_POST['jeton'] ?? ''))) {
-                $message = "Mot de passe d'installation incorrect.";
+            // Lot 11 (05/09/2026, B-F08) : cette page était la seule porte du
+            // serveur sans frein. Le mot de passe d'installation ouvre aussi
+            // secours.php (un nouveau mot de passe administrateur) : on ne le
+            // laisse pas deviner à la vitesse du réseau. DOUZE essais par
+            // adresse et par dix minutes, comme le changement de mot de passe
+            // d'un professeur — un humain qui cherche dans ses papiers en fait
+            // trois, pas douze.
+            $adresse = adresse_limitee();
+            // Le frein a besoin de la base. Deux cas où elle ne peut pas le
+            // porter, et où il s'efface SANS fermer la page :
+            //  - avant la toute première installation, la table « compteurs »
+            //    n'existe pas encore ;
+            //  - la base ne répond pas — et c'est PRÉCISÉMENT le jour où cette
+            //    page doit s'ouvrir, pour afficher en rouge « Connexion à la
+            //    base de données ». Un diagnostic qui s'éteint quand la base
+            //    tombe ne sert à rien (trouvé à la relecture du lot 11).
+            $freinPossible = false;
+            $dejaTrop = false;
+            try {
+                $freinPossible = table_existe(bd(), 'compteurs');
+                if ($freinPossible) {
+                    $dejaTrop = compte_courant('verifier:' . $adresse, FENETRE_ESSAIS_VERIFIER) >= ESSAIS_VERIFIER;
+                }
+            } catch (Throwable $e) {
+                error_log('verifier (frein indisponible, base injoignable ?) : ' . $e->getMessage());
+            }
+            if ($dejaTrop) {
+                $attente = (int)ceil((fin_de_fenetre(FENETRE_ESSAIS_VERIFIER) - time()) / 60);
+                $message = "Trop d'essais depuis cette adresse. Réessaie dans " . max(1, $attente) . " minute(s).";
             } else {
-                $autorise = true;
+                $attendu = (string)(config()['jeton_installation'] ?? '');
+                if ($attendu === '' || $attendu === 'à-remplacer') {
+                    $message = "Renseigne d'abord « jeton_installation » dans config.php.";
+                } elseif (!hash_equals($attendu, (string)($_POST['jeton'] ?? ''))) {
+                    // Seuls les ÉCHECS comptent : vérifier vingt fois d'affilée
+                    // avec le bon mot de passe (ce qui arrive le jour d'un dépôt)
+                    // ne ferme jamais la porte.
+                    if ($freinPossible) {
+                        try { compter('verifier:' . $adresse, FENETRE_ESSAIS_VERIFIER); }
+                        catch (Throwable $e) { error_log('verifier (compteur) : ' . $e->getMessage()); }
+                    }
+                    $message = "Mot de passe d'installation incorrect.";
+                } else {
+                    $autorise = true;
+                }
             }
         } catch (Throwable $e) {
             error_log('verifier: ' . $e->getMessage());
@@ -158,6 +200,12 @@ if ($autorise) {
         if ($transmise !== '') {
             $detail .= " ; en-tête X-Forwarded-For reçu : " . substr($transmise, 0, 80);
         }
+        // Lot 11 : en IPv6, le compteur regroupe le bloc /64 (un abonné reçoit
+        // le bloc entier et en change à volonté). La ligne le montre.
+        $comptee = adresse_limitee();
+        if ($comptee !== $adresse) {
+            $detail .= " ; comptée dans le limiteur comme " . $comptee . " (bloc IPv6 de l'abonné)";
+        }
         return $detail;
     });
     // Lot 12 : la fin d'année. Cette ligne NE TOUCHE À RIEN — elle montre ce
@@ -179,6 +227,18 @@ if ($autorise) {
         }
         throw new RuntimeException(count($echues) . " classe(s) d'une année passée : " . implode(', ', array_slice($noms, 0, 6))
             . " — dont $mures sera(ont) SUPPRIMÉE(S) à la prochaine ouverture de « Ma classe ». Vérifie que c'est bien voulu avant de continuer.");
+    });
+    // Lot 11 (05/09/2026) : le secret qui brouille les clés du limiteur ne doit
+    // pas être le mot de passe d'installation lui-même. Sans « secret » dans
+    // config.php, il en est maintenant DÉRIVÉ (HMAC) : c'est déjà correct, et
+    // la ligne dit comment faire mieux en une ligne de config.
+    verif($lignes, "Secret des compteurs", function () {
+        if (secret_compteurs_dedie()) {
+            return "un secret à lui dans config.php — c'est le mieux";
+        }
+        return "dérivé du mot de passe d'installation, distinct de lui (correct). "
+            . "Pour un secret entièrement séparé : ajoute une ligne « 'secret' => '…' » dans config.php "
+            . "(une longue suite de caractères au hasard). Les compteurs en cours repartent de zéro, sans conséquence.";
     });
     verif($lignes, "Comptes prof", function () {
         $nombre = (int)bd()->query('SELECT COUNT(*) FROM profs')->fetchColumn();

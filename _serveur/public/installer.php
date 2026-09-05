@@ -40,7 +40,14 @@ try {
         }
     }
 } catch (Throwable $e) {
-    $message = "Erreur : " . $e->getMessage();
+    // Lot 11 (05/09/2026) : le message d'origine était recopié tel quel dans la
+    // page. Une exception PDO cite l'hôte de la base, le nom de la base et
+    // l'utilisateur — installer.php est en ligne quelques minutes, mais n'importe
+    // qui peut l'ouvrir pendant ce temps. Le détail va au journal du serveur,
+    // que seul l'hébergeur donne.
+    error_log('installer: ' . $e->getMessage());
+    $message = "Le serveur n'a pas pu répondre : vérifie config.php (hôte, base, "
+        . "utilisateur, mot de passe). Le détail est dans le journal d'erreurs de l'hébergement.";
 }
 ?>
 <!doctype html>

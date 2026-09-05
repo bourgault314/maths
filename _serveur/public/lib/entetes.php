@@ -12,6 +12,15 @@ declare(strict_types=1);
 // Les en-têtes communs à toute réponse.
 function entetes_securite(): void
 {
+    // Lot 11 (05/09/2026) : PHP annonce sa version exacte dans « X-Powered-By »
+    // (constaté : « PHP/8.4.21 »). Ce n'est pas une faille, c'est un panneau
+    // indicateur : le jour où une version précise a un défaut connu, le serveur
+    // dit lui-même s'il est concerné. On le retire ici, dans PHP, et pas par
+    // « expose_php = Off » : ce réglage est de niveau système (php.ini), un
+    // fichier .user.ini déposé dans le dossier ne le change pas — c'est écrit
+    // dans la documentation de PHP, et c'est pourquoi la piste .user.ini a été
+    // abandonnée. header_remove() marche partout, y compris chez OVH.
+    header_remove('X-Powered-By');
     header('X-Content-Type-Options: nosniff');
     header('Referrer-Policy: strict-origin-when-cross-origin');
     // Aucune page d'ici ne se met dans un cadre : ni le formulaire de code,

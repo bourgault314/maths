@@ -129,7 +129,10 @@ try {
     if (!code_valide($code)) {
         erreur("Code élève invalide.", 400);
     }
-    $appli = (string)($corps['appli'] ?? 'defi-tables');
+    // is_string : un client qui envoie un tableau obtenait déjà un 400 propre,
+    // mais laissait « Array to string conversion » dans le journal du serveur
+    // (lot 11, A-annexe 9).
+    $appli = is_string($corps['appli'] ?? null) ? $corps['appli'] : 'defi-tables';
     if (!in_array($appli, APPLIS_CONNUES, true)) {
         erreur("Application inconnue.", 400);
     }
@@ -137,7 +140,7 @@ try {
     // Par adresse, seuls les échecs comptent, et ils ralentissent avant de
     // refuser (voir eleve.php et lib/limite.php) ; par code, la limite est
     // large parce que l'appli envoie après chaque réponse.
-    $adresse = adresse_appelante();
+    $adresse = adresse_limitee();
     freiner_adresse($adresse);
     limiter('code:' . $code, 300, 300);
 

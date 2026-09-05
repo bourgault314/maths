@@ -25,8 +25,12 @@ return [
     // Invente n'importe quelle suite de caractères.
     'jeton_installation' => 'à-remplacer',
 
-    // Facultatif : secret servant à hacher les compteurs de limitation
-    // (adresses IP et codes n'y sont jamais en clair). S'il manque,
-    // jeton_installation joue ce rôle.
+    // RECOMMANDÉ : secret servant à brouiller les compteurs de limitation
+    // (aucune adresse IP ni aucun code élève n'est rangé en clair dans la base).
+    // S'il manque, le serveur en fabrique un À PARTIR de jeton_installation :
+    // c'est déjà distinct du mot de passe d'installation, mais un secret à lui
+    // vaut mieux. Invente une longue suite de caractères au hasard, différente
+    // de tout le reste de ce fichier, et ne la change plus ensuite (les
+    // compteurs en cours repartiraient de zéro — sans conséquence).
     // 'secret' => 'une-longue-suite-de-caractères-au-hasard',
 ];
