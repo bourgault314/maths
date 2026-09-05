@@ -4,7 +4,7 @@ import {
   makeDisplayMetrics
 } from "./addition-engine.mjs?v=1";
 import { makeSteps } from "./addition-steps.mjs?v=1";
-import { renderAddition, renderVocabulary } from "./addition-view.mjs?v=1";
+import { renderAddition, renderVocabulary } from "./addition-view.mjs?v=2";
 
 const $ = (selector) => document.querySelector(selector);
 const firstInput = $("#first-term");
@@ -109,7 +109,7 @@ function render() {
   $("#show-all").hidden = stepIndex === steps.length - 1;
   $("#projection-problem").textContent = addition.displayTerms.join(" + ");
 
-  renderVocabulary($("#vocabulary-strip"), step.kind === "verify");
+  renderVocabulary($("#vocabulary-strip"), addition, step.kind === "verify");
   renderAddition({
     root: $("#posed-addition"),
     addition,
