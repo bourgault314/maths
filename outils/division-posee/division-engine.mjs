@@ -89,8 +89,23 @@ export function makeAnticipationChecks(data) {
   });
 }
 
-function afterDe(place) {
-  return /^[aeiouyàâäéèêëîïôöùûü]/i.test(place) ? `d’${place}` : `de ${place}`;
+function equalParts(divisor) {
+  return divisor === 1 ? "1 part égale" : `${divisor} parts égales`;
+}
+
+export function anticipationPrompt(data, check) {
+  return {
+    sentence: `Je partage ${check.partial} ${check.placeForQuantity} en ${equalParts(data.divisor)}.`,
+    detail: `Chaque part peut-elle recevoir au moins 1 ${check.placeSingular} ?`
+  };
+}
+
+export function quotientDigitPrompt(data, operation) {
+  const place = placeValueName(data, operation.endColumn);
+  return {
+    sentence: `Pour trouver le chiffre des ${place} du quotient, je cherche : dans ${operation.partial}, combien de fois ${data.divisor} ?`,
+    detail: `Je partage ${operation.partial} ${placeValueName(data, operation.endColumn, operation.partial)} en ${equalParts(data.divisor)}.`
+  };
 }
 
 export function makeDisplayMetrics(data, options = {}) {
@@ -230,24 +245,26 @@ export function makeSteps(data) {
   const anticipation = anticipationFor(data);
   const checks = makeAnticipationChecks(data);
   const steps = [];
-  const recipients = data.divisor === 1 ? "à l’unique part" : `à chacune des ${data.divisor} parts`;
 
   checks.forEach((check, index) => {
+    const prompt = anticipationPrompt(data, check);
     steps.push({
       kind: "anticipation-question",
       title: "J’anticipe",
-      sentence: `Puis-je donner au moins 1 ${check.placeSingular} ${recipients} ?`,
-      detail: `Je regarde ${check.partial} ${check.placeForQuantity}.`,
+      sentence: prompt.sentence,
+      detail: prompt.detail,
       anticipationEndColumn: check.endColumn
     });
 
     const isLastCheck = index === checks.length - 1;
     if (!isLastCheck) {
+      const next = checks[index + 1];
+      const nextDigit = next.partial - (check.partial * 10);
       steps.push({
         kind: "anticipation-answer",
         title: "Je poursuis",
-        sentence: `Non : je n’ai que ${check.partial} ${check.placeForQuantity}.`,
-        detail: "Je regarde donc le rang suivant.",
+        sentence: `Non. J’échange ${check.partial} ${check.placeForQuantity} contre ${check.partial * 10} ${next.rankPlace}.`,
+        detail: `Avec ${nextDigit} ${placeValueName(data, next.endColumn, nextDigit)}, j’obtiens ${next.partial} ${next.placeForQuantity}.`,
         anticipationEndColumn: check.endColumn
       });
       return;
@@ -280,13 +297,12 @@ export function makeSteps(data) {
 
   data.operations.forEach((operation, opIndex) => {
     const place = placeValueName(data, operation.endColumn);
-    const question = operation.endColumn >= data.integerLength
-      ? `Pour trouver le chiffre des ${place} du quotient, je cherche combien de fois ${data.divisor} dans ${operation.partial}.`
-      : `${operation.partial} ${place} ÷ ${data.divisor} : combien ${afterDe(place)} au quotient ?`;
+    const prompt = quotientDigitPrompt(data, operation);
     steps.push({
       kind: "ask",
       title: "Je cherche",
-      sentence: question,
+      sentence: prompt.sentence,
+      detail: prompt.detail,
       opIndex
     });
     steps.push({

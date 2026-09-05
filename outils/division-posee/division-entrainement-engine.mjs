@@ -1,4 +1,9 @@
-import { makeAnticipationChecks, placeValueName } from "./division-engine.mjs";
+import {
+  anticipationPrompt,
+  makeAnticipationChecks,
+  placeValueName,
+  quotientDigitPrompt
+} from "./division-engine.mjs";
 
 function integerValue(value) {
   if (typeof value === "number") return Number.isInteger(value) ? value : null;
@@ -11,35 +16,36 @@ export function makeTrainingTasks(division) {
   if (division.mode !== "integer") throw new RangeError("L’entraînement porte sur la division euclidienne.");
   const checks = makeAnticipationChecks(division);
   const digitCount = String(Math.floor(division.dividend / division.divisor)).length;
-  const recipients = division.divisor === 1 ? "à l’unique part" : `à chacune des ${division.divisor} parts`;
   const tasks = checks.map((check, index) => {
     const next = checks[index + 1];
     const isLast = index === checks.length - 1;
+    const prompt = anticipationPrompt(division, check);
+    const nextDigit = next ? next.partial - (check.partial * 10) : null;
     return {
       id: `anticipation-${index}`,
       kind: "anticipation",
       title: "J’anticipe",
-      sentence: `Puis-je donner au moins 1 ${check.placeSingular} ${recipients} ?`,
-      detail: `Je regarde ${check.partial} ${check.placeForQuantity}.`,
+      sentence: prompt.sentence,
+      detail: prompt.detail,
       expected: { decision: check.canShare ? "yes" : "no" },
       check,
       successTitle: isLast ? "J’en déduis" : "Je poursuis",
       successSentence: check.canShare
         ? `Oui. Le quotient commence au rang des ${check.rankPlace} : il aura ${digitCount} chiffre${digitCount > 1 ? "s" : ""}.`
         : next
-          ? `Non. Je regarde maintenant ${next.partial} ${next.placeForQuantity}.`
+          ? `Non. J’échange ${check.partial} ${check.placeForQuantity} contre ${check.partial * 10} ${next.rankPlace}. Avec ${nextDigit} ${placeValueName(division, next.endColumn, nextDigit)}, j’obtiens ${next.partial} ${next.placeForQuantity}.`
           : "Non. Le quotient entier est 0."
     };
   });
 
   division.operations.forEach((operation, opIndex) => {
-    const place = placeValueName(division, operation.endColumn, operation.partial);
+    const prompt = quotientDigitPrompt(division, operation);
     tasks.push({
       id: `stage-${opIndex}`,
       kind: "stage",
       title: "Je pose",
-      sentence: `Dans ${operation.partial} ${place}, combien de fois ${division.divisor} ?`,
-      detail: "Complète le quotient, le produit, puis le reste.",
+      sentence: prompt.sentence,
+      detail: prompt.detail,
       expected: {
         quotient: operation.quotientDigit,
         product: operation.product,

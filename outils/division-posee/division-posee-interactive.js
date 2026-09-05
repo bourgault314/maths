@@ -2,7 +2,7 @@ import {
   makeDivision,
   multiplicationBracket,
   placeValueMarker
-} from "./division-engine.mjs?v=10";
+} from "./division-engine.mjs?v=11";
 import {
   createPotence,
   createQuotientSlot,

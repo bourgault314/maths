@@ -56,21 +56,28 @@ test("les indices deviennent précis sans révéler toute la division d’un cou
 test("l’anticipation fonctionne avec un diviseur à deux chiffres", () => {
   const division = makeDivision(584, 21, "integer", 2);
   const tasks = makeTrainingTasks(division);
-  assert.equal(tasks[0].sentence, "Puis-je donner au moins 1 centaine à chacune des 21 parts ?");
+  assert.equal(tasks[0].sentence, "Je partage 5 centaines en 21 parts égales.");
+  assert.equal(tasks[0].detail, "Chaque part peut-elle recevoir au moins 1 centaine ?");
   assert.deepEqual(tasks[0].expected, { decision: "no" });
-  assert.equal(tasks[1].sentence, "Puis-je donner au moins 1 dizaine à chacune des 21 parts ?");
+  assert.equal(tasks[0].successSentence, "Non. J’échange 5 centaines contre 50 dizaines. Avec 8 dizaines, j’obtiens 58 dizaines.");
+  assert.equal(tasks[1].sentence, "Je partage 58 dizaines en 21 parts égales.");
+  assert.equal(tasks[1].detail, "Chaque part peut-elle recevoir au moins 1 dizaine ?");
   assert.deepEqual(tasks[1].expected, { decision: "yes" });
   const stage = tasks.find(({ kind }) => kind === "stage");
-  assert.equal(stage.sentence, "Dans 58 dizaines, combien de fois 21 ?");
+  assert.equal(stage.sentence, "Pour trouver le chiffre des dizaines du quotient, je cherche : dans 58, combien de fois 21 ?");
+  assert.equal(stage.detail, "Je partage 58 dizaines en 21 parts égales.");
   assert.deepEqual(stage.expected, { quotient: 2, product: 42, remainder: 16 });
 });
 
 test("le vocabulaire de numération suit les étages de la division", () => {
   const tasks = makeTrainingTasks(makeDivision(5849, 7, "integer", 2));
   const stages = tasks.filter(({ kind }) => kind === "stage");
-  assert.equal(stages[0].sentence, "Dans 58 centaines, combien de fois 7 ?");
-  assert.equal(stages[1].sentence, "Dans 24 dizaines, combien de fois 7 ?");
-  assert.equal(stages[2].sentence, "Dans 39 unités, combien de fois 7 ?");
+  assert.equal(stages[0].sentence, "Pour trouver le chiffre des centaines du quotient, je cherche : dans 58, combien de fois 7 ?");
+  assert.equal(stages[0].detail, "Je partage 58 centaines en 7 parts égales.");
+  assert.equal(stages[1].sentence, "Pour trouver le chiffre des dizaines du quotient, je cherche : dans 24, combien de fois 7 ?");
+  assert.equal(stages[1].detail, "Je partage 24 dizaines en 7 parts égales.");
+  assert.equal(stages[2].sentence, "Pour trouver le chiffre des unités du quotient, je cherche : dans 39, combien de fois 7 ?");
+  assert.equal(stages[2].detail, "Je partage 39 unités en 7 parts égales.");
 });
 
 test("les zéros du quotient et le cas dividende inférieur au diviseur sont conservés", () => {
@@ -85,7 +92,7 @@ test("les zéros du quotient et le cas dividende inférieur au diviseur sont con
 
 test("l’interface propose validation par bloc, table facultative et adaptation mobile", () => {
   assert.match(html, /division-posee-interactive\.css\?v=8/);
-  assert.match(html, /division-posee-interactive\.js\?v=9/);
+  assert.match(html, /division-posee-interactive\.js\?v=10/);
   assert.match(html, /id="rank-guides" type="checkbox"/);
   assert.match(html, /id="table-bracket"[^>]*hidden/);
   assert.match(html, /id="validate"[^>]*>Vérifier l’étape/);
@@ -94,7 +101,7 @@ test("l’interface propose validation par bloc, table facultative et adaptation
   assert.match(js, /firstTrainingError\(task, answer\)/);
   assert.match(js, /completed\.set\(task\.id, answer\)/);
   assert.match(js, /task\.kind === "anticipation" \? 1200 : 480/);
-  assert.match(js, /division-engine\.mjs\?v=10/);
+  assert.match(js, /division-engine\.mjs\?v=11/);
   assert.match(js, /division-view\.mjs\?v=3/);
   assert.match(js, /renderMultiplicationTable\(/);
   assert.match(js, /compactToggle:\s*true/);
