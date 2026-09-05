@@ -134,6 +134,9 @@ test("les gabarits entier et décimal sont séparés, vierges et régénérables
   assert.match(generator, /gabarit-addition-entiere\.pdf/);
   assert.match(generator, /gabarit-addition-decimale\.pdf/);
   assert.match(generator, /copyfile\(decimal_output, LEGACY_OUTPUT\)/);
+  assert.match(generator, /title = "Addition posée de"/);
+  assert.match(generator, /role_box\(c, first_x,[^\n]*"premier terme", BLUE, BLUE_SOFT\)/);
+  assert.match(generator, /role_box\(c, and_x \+ 27,[^\n]*"second terme", TEAL, TEAL_SOFT\)/);
   assert.match(generator, /row_label\(c, "retenues"/);
   assert.match(generator, /row_label\(c, "premier terme"/);
   assert.match(generator, /row_label\(c, "second terme"/);
