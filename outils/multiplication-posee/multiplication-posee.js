@@ -11,7 +11,7 @@ import {
   renderDecimalPreparation,
   renderMultiplication,
   renderVocabulary
-} from "./multiplication-view.mjs?v=1";
+} from "./multiplication-view.mjs?v=2";
 
 const $ = (selector) => document.querySelector(selector);
 const firstInput = $("#first-factor");
