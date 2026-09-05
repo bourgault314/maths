@@ -8,7 +8,7 @@ import {
   firstTrainingError,
   hintForTask,
   makeTrainingTasks
-} from "./addition-entrainement-engine.mjs?v=1";
+} from "./addition-entrainement-engine.mjs?v=2";
 
 const $ = (selector) => document.querySelector(selector);
 const firstInput = $("#first-term");
@@ -415,9 +415,10 @@ function renderInstruction(task) {
       createElement("span", "prompt-sign", "="),
       createAnswerInput("total", {
         className: "answer-input total-answer",
-        label: "Total de la colonne",
+        label: "Total de la colonne, facultatif",
         maxLength: 2
-      })
+      }),
+      createElement("small", "prompt-optional", "facultatif")
     );
   }
 
@@ -480,6 +481,8 @@ function focusFirstAnswer() {
       : [];
     const target = wrongAnswers.find((input) => input.classList.contains("is-wrong") && !input.value)
       || wrongAnswers.find((input) => input.classList.contains("is-wrong"))
+      || [...document.querySelectorAll("[data-answer]:not(:disabled)")]
+        .find((input) => input.dataset.answer !== "total")
       || document.querySelector("[data-answer]:not(:disabled)");
     target?.focus({ preventScroll: true });
     target?.select();
