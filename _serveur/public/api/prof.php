@@ -16,6 +16,7 @@ require __DIR__ . '/../lib/codes.php';
 require __DIR__ . '/../lib/limite.php';
 require __DIR__ . '/../lib/auth.php';
 require_once __DIR__ . '/../lib/billets.php';
+require_once __DIR__ . '/../lib/archives.php';
 
 const MAX_ELEVES_PAR_LOT = 60;
 const APPLIS_PROPOSABLES = ['defi-tables', 'automatismes'];
@@ -319,6 +320,12 @@ try {
         // ------------------------------------------------------------------ classes
 
         case 'classes.liste':
+            // Fin d'année (lot 12) : ce qui reste de l'année scolaire écoulée
+            // est supprimé ici, à la première ouverture de « Ma classe » à
+            // partir du 1er août — prénoms, codes et progressions, il ne reste
+            // rien. Aucune classe qui a servi dans les trois dernières
+            // semaines n'est touchée.
+            $supprimeesMaintenant = supprimer_classes_echues($pdo, $profId);
             $requete = $pdo->prepare(
                 'SELECT c.id, c.libelle, c.applis, c.cree_le, c.prof_id,
                         (SELECT COUNT(*) FROM eleves e WHERE e.classe_id = c.id) AS eleves,
@@ -338,12 +345,23 @@ try {
                     'libelle' => $ligne['libelle'],
                     'applis' => explode(',', (string)$ligne['applis']),
                     'cree_le' => $ligne['cree_le'],
+                    'annee' => annee_scolaire((string)$ligne['cree_le']),
                     'eleves' => (int)$ligne['eleves'],
                     'droit' => $mien ? 'proprietaire' : (in_array($ligne['partage'], DROITS_PARTAGE, true) ? $ligne['partage'] : 'lecture'),
                     'proprietaire' => $mien ? null : (string)$ligne['proprietaire'],
                 ];
             }
-            repondre(['ok' => true, 'classes' => $classes]);
+            repondre([
+                'ok' => true,
+                'classes' => $classes,
+                // Ce que la page annonce au professeur : ce qui vient d'être
+                // supprimé sous ses yeux, et l'année scolaire en cours avec son
+                // préavis (en juillet, « ces classes seront supprimées le 1er août »).
+                'supprimees_maintenant' => $supprimeesMaintenant,
+                'annee_courante' => annee_scolaire_courante(),
+                'preavis_fin_annee' => preavis_de_fin_d_annee(),
+                'purge_le' => purge_de_l_annee(annee_scolaire_courante()),
+            ]);
 
         case 'classes.creer':
             $libelle = texte($corps['libelle'] ?? '', 40);
@@ -365,27 +383,11 @@ try {
             repondre(['ok' => true]);
 
         case 'classes.supprimer':
-            // Supprimer une classe efface des progressions : réservé au propriétaire.
+            // Supprimer une classe efface des progressions : réservé au
+            // propriétaire. C'est aussi ce que fait la fin d'année, par le même
+            // chemin (lib/archives.php) : un seul code qui efface ces tables.
             $classe = acces_classe($pdo, $profId, $corps['classe_id'] ?? 0, 'proprietaire');
-            // Tout ou rien : une panne au milieu ne laisse ni élève sans classe
-            // ni progression orpheline.
-            $pdo->beginTransaction();
-            try {
-                $requete = $pdo->prepare('SELECT id, code FROM eleves WHERE classe_id = ?');
-                $requete->execute([(int)$classe['id']]);
-                foreach ($requete->fetchAll() as $eleve) {
-                    $pdo->prepare('DELETE FROM progressions WHERE eleve_id = ?')->execute([(int)$eleve['id']]);
-                    oublier_compteurs_du_code($pdo, (string)$eleve['code']);
-                    oublier_billets_de_l_eleve($pdo, (int)$eleve['id']);
-                }
-                $pdo->prepare('DELETE FROM eleves WHERE classe_id = ?')->execute([(int)$classe['id']]);
-                $pdo->prepare('DELETE FROM partages WHERE classe_id = ?')->execute([(int)$classe['id']]);
-                $pdo->prepare('DELETE FROM classes WHERE id = ?')->execute([(int)$classe['id']]);
-                $pdo->commit();
-            } catch (Throwable $e) {
-                $pdo->rollBack();
-                throw $e;
-            }
+            supprimer_classe($pdo, (int)$classe['id']);
             repondre(['ok' => true]);
 
         // ----------------------------------------------------------------- partages

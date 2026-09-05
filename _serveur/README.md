@@ -31,10 +31,17 @@ la logique de « Mon parcours » reste dans
 ## Données stockées
 
 `classes` (propriétaire, libellé, applis proposées) · `eleves` (code de
-6 caractères, prénom, initiale) · `progressions` (JSON, date) · `profs`
-(identifiant, mot de passe haché, administrateur, compte actif, mot de passe
-temporaire) · `partages` (classe, professeur, droit) · `sessions_prof` ·
-`compteurs` (limitation de débit).
+6 caractères, prénom, initiale) · `progressions` (JSON, date) · `profs` (identifiant, mot de passe
+haché, administrateur, compte actif, mot de passe temporaire) · `partages`
+(classe, professeur, droit) · `sessions_prof` · `compteurs` (limitation de
+débit) · `billets` (liens d'entrée à usage unique).
+
+**Combien de temps ?** Les prénoms, les codes et les progressions d'une année
+scolaire sont **supprimés au plus tard le 1er août** qui suit — après la fin des
+cours (début juillet à La Réunion) et avant la rentrée suivante (mi-août). Il
+n'en reste rien : pas de ligne de bilan, pas même le nom de la classe. Ce qui
+rend cette suppression sereine, c'est la sauvegarde mensuelle chiffrée. Voir
+[EXPLOITATION.md](EXPLOITATION.md).
 
 Pas de nom de famille, pas de date de naissance, pas d'adresse mail
 d'élève, pas de mot de passe d'élève.
@@ -52,15 +59,30 @@ _serveur/
     api/prof.php       API prof : connexion, classes, élèves, tableau
     lib/               bd, réponses/CORS, en-têtes de sécurité, codes, limitation,
                        sessions, catalogue d'applis, filtre des progressions
+    lib/archives.php   fin d'année : année scolaire, suppression d'une classe
     config.exemple.php à recopier en config.php sur le serveur (JAMAIS commité)
     installer.php      création des tables + premier compte, à SUPPRIMER après
     migrer.php         mise à niveau d'une base déjà installée, à SUPPRIMER après
+    secours.php        mot de passe administrateur perdu, à SUPPRIMER après
+    sauvegarde.php     export chiffré de la base, à SUPPRIMER après
+    menage.php         suppression de fin d'année, EN LIGNE DE COMMANDE seulement
     verifier.php       page de diagnostic en français
+    VERSION            empreintes des fichiers déposés (généré)
     .htaccess
   sql/schema-mysql.sql (généré)
   outils/generer-sql.php
+  outils/generer-version.php   fabrique public/VERSION
+  outils/dechiffrer.php        repli pour relire une sauvegarde chiffrée
   tests/lancer.php
+  EXPLOITATION.md    conservation, sauvegarde, restauration, secours, 2FA
 ```
+
+**Les quatre fichiers qu'on dépose puis qu'on retire** — `installer.php`,
+`migrer.php`, `secours.php`, `sauvegarde.php` — ne sont jamais en ligne en
+temps normal : chacun ouvre, à qui connaît le `jeton_installation`, quelque
+chose qu'on ne laisse pas ouvert (les tables, un mot de passe administrateur,
+toute la base). `verifier.php` devient rouge tant que l'un d'eux traîne, et
+`VERSION` ne les décrit pas.
 
 ## Les deux pages
 
@@ -176,6 +198,13 @@ codes, ni aux progressions, et peut être relancée sans risque.
 | POST | `/api/eleve.php` `{code}` | prénom, classe et applis de l'élève (page d'accueil) |
 | POST | `/api/prof.php` `{action, …}` | `connexion` (répond aussi `mdp_temporaire`), `deconnexion`, `moi`, `profs.motdepasse` `{ancien, nouveau}`, `profs.annuaire`, `profs.liste/ajouter/reinitialiser/desactiver/reactiver/supprimer` (administrateur ; `ajouter` et `reinitialiser` renvoient le temporaire ; `supprimer` veut `avec_classes: true` si le compte possède des classes), `classes.liste/creer/modifier/supprimer`, `partages.liste/ajouter/supprimer`, `eleves.ajouter/nommer/regenerer/restaurer/supprimer`, `tableau` |
 
+`classes.liste` supprime au passage les classes de l'année scolaire écoulée
+(lot 12, seulement celles du professeur connecté) et rend, en plus des classes,
+`supprimees_maintenant`, `annee_courante`, `preavis_fin_annee` et `purge_le`.
+`classes.supprimer` et la fin d'année passent par **la même fonction**
+(`lib/archives.php`, `supprimer_classe()`) : deux codes qui effacent les mêmes
+tables, ce serait deux occasions d'en oublier une.
+
 ## Sécurité
 
 - Toutes les requêtes SQL sont préparées (aucune concaténation).
@@ -227,6 +256,14 @@ codes, ni aux progressions, et peut être relancée sans risque.
   ne réutilise jamais un numéro de révision, rien ne se perd en silence.
 - Changer son mot de passe : 12 essais d'ancien mot de passe par compte et par
   10 min (une session volée ne devine pas l'ancien).
+- **Ce qui est en ligne est ce qui a été testé** (lot 12) : chaque lot dépose un
+  fichier `VERSION` (empreintes SHA-256 de tous les fichiers du serveur), que
+  `verifier.php` recalcule sur place. Un fichier oublié pendant le dépôt, ou
+  transporté en mode texte, se nomme tout seul.
+- **Sauvegarde chiffrée** (`sauvegarde.php`, déposé le temps de l'opération) :
+  AES-256-CBC au format d'openssl, clé dérivée par PBKDF2-SHA256 (200 000
+  tours) d'une phrase que le serveur ne connaît pas. Une restauration a été
+  faite pour de vrai le 05/09/2026 — compte rendu dans `EXPLOITATION.md`.
 
 ## Tests
 
@@ -284,7 +321,19 @@ ni 500 (sur MySQL, l'ancien code en attribuait cinq en double) ;
 `Cache-Control: no-store` sur sept réponses de l'API ; l'espace élève sans
 « Ce n'est pas moi ».
 
-**133 tests, 0 échec au 04/09/2026**, rejoués sur SQLite **et** sur MySQL 8
+Lot 12 (05/09/2026) : l'année scolaire réunionnaise (pivot au 1er août) ; la
+suppression d'une classe qui n'en laisse RIEN (élèves, codes, progressions,
+billets, compteurs, partages ; les codes ne rendent plus rien) ; la suppression
+automatique du 1er août, son garde-fou des 21 jours sans activité, et le fait
+qu'elle ne touche jamais aux classes d'un collègue ; `menage.php` refusé par
+HTTP et effectif en ligne de commande ; le manifeste `VERSION` (fichier modifié, absent, ou transféré en
+mode texte : chaque cas nommé) ; `secours.php` (mot de passe d'installation
+exigé, règles du mot de passe, sessions fermées, compte rendu utilisable) ;
+`sauvegarde.php` (fichier au format openssl, déchiffré et vérifié table par
+table, illisible sans la phrase, structure des trois tables de jetons
+présente — sans elle une base restaurée répondait 500).
+
+**143 tests, 0 échec au 05/09/2026**, rejoués sur SQLite **et** sur MySQL 8
 (le limiteur emploie une instruction différente sur chaque moteur) :
 
 ```
@@ -297,6 +346,8 @@ rejouer ; sinon ils restent exécutés côté Claude.
 
 Après toute modification du schéma : `php outils/generer-sql.php`
 (et `--verifier` pour contrôler que le `.sql` est à jour).
+Après toute modification de `public/` : `php outils/generer-version.php <lot>`
+(le test `tests/suivi-version-manifeste.test.mjs` du dépôt le vérifie).
 
 ## Ce qui n'est pas ici
 

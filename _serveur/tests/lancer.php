@@ -2091,6 +2091,251 @@ verifier("verifier.php compte la table des billets", function () {
     egal(0, billets_en_base(), 'table recréée, vide');
 });
 
+// --------------------------- lot 12 (05/09/2026) — fin d'année, manifeste, secours
+//
+// Trois choses se testent ici :
+//  - l'année scolaire réunionnaise et la suppression de fin d'année (il ne
+//    reste RIEN d'une classe passée) ;
+//  - le manifeste VERSION que verifier.php recompte en ligne ;
+//  - les deux pages qu'on dépose puis qu'on retire (secours, sauvegarde).
+//
+// Sabotages attendus (chacun rend un test rouge) :
+//  a) faire commencer l'année scolaire au 1er septembre (pivot 8 → 9)
+//  b) enlever le garde-fou des 21 jours sans activité
+//  c) oublier une table dans supprimer_classe (progressions, billets, partages…)
+//  d) retirer secours.php de la liste des fichiers à supprimer
+//  e) ne plus comparer les empreintes du manifeste
+
+$classeFin = null;
+$elevesFin = [];
+
+// Les fonctions de fin d'année sont jouées ICI, dans le processus de test, pas
+// seulement à travers l'API : c'est la seule façon d'éprouver le pivot du
+// calendrier sans attendre le mois d'août.
+require_once dirname(__DIR__) . '/public/lib/archives.php';
+
+verifier("l'année scolaire suit le calendrier réunionnais : pivot au 1er août", function () {
+    // Rentrée le 18 août 2026, fin des cours le 3 juillet 2027 : tout ce qui
+    // se crée à partir du 1er août appartient à l'année qui commence.
+    $r = formulaire('/verifier.php', ['jeton' => 'JETON-DE-TEST']);
+    vrai(str_contains($r['texte'], htmlspecialchars("Suppression de fin d'année", ENT_QUOTES)),
+        'verifier.php montre la ligne de fin d’année');
+    egal('2026-2027', annee_scolaire('2026-08-01'), '1er août 2026');
+    egal('2026-2027', annee_scolaire('2026-08-18T06:00:00Z'), 'rentrée du 18 août 2026');
+    egal('2026-2027', annee_scolaire('2027-07-03'), 'dernier jour de cours');
+    egal('2025-2026', annee_scolaire('2026-07-31'), '31 juillet 2026 : encore l’année d’avant');
+    egal('2027-2028', annee_scolaire('2027-08-01'), 'le pivot suivant');
+    egal('2027-08-01', purge_de_l_annee('2026-2027'), 'la suppression tombe avant la rentrée de mi-août');
+    egal('2027-07-01', fin_des_cours_de_l_annee('2026-2027'), 'le préavis commence le 1er juillet');
+});
+
+verifier("préparation : une classe de fin d'année, trois élèves, deux progressions, un partage", function () use (&$jetonS1, &$jetonClaire, &$claireId, &$classeFin, &$elevesFin) {
+    vider_compteurs();
+    $classeFin = appel('/api/prof.php', ['action' => 'classes.creer', 'libelle' => 'test-fin-annee'], ['jeton' => $jetonS1])['json']['id'];
+    $elevesFin = appel('/api/prof.php', ['action' => 'eleves.ajouter', 'classe_id' => $classeFin, 'nombre' => 3], ['jeton' => $jetonS1])['json']['eleves'];
+    egal(3, count($elevesFin), 'trois élèves');
+    foreach ([0, 1] as $i) {
+        egal(200, appel('/api/prof.php', ['action' => 'eleves.nommer', 'eleve_id' => $elevesFin[$i]['id'], 'prenom' => 'Enfant' . $i, 'initiale' => 'Z'], ['jeton' => $jetonS1])['code']);
+        egal(200, ecrire($elevesFin[$i]['code'], ['version' => 1, 'tables' => ['4' => ['acquise' => '2026-09-01']]], 0)['code'], 'progression écrite');
+    }
+    egal(200, appel('/api/prof.php', ['action' => 'partages.ajouter', 'classe_id' => $classeFin, 'prof_id' => $claireId, 'droit' => 'lecture'], ['jeton' => $jetonS1])['code'], 'partagée à Claire');
+    // Un billet vivant, pour vérifier qu'il part avec le reste.
+    vrai(is_string(appel('/api/eleve.php', ['code' => $elevesFin[0]['code'], 'billet' => true])['json']['billet'] ?? null), 'un billet est émis');
+
+    // Une classe de l'année en cours n'est jamais échue.
+    $r = appel('/api/prof.php', ['action' => 'classes.liste'], ['jeton' => $jetonS1]);
+    egal([], $r['json']['supprimees_maintenant'], 'rien n’est supprimé automatiquement dans l’année en cours');
+    egal(annee_scolaire(gmdate('Y-m-d')), $r['json']['annee_courante'], 'l’année scolaire annoncée');
+    vrai(array_key_exists('preavis_fin_annee', $r['json']), 'le préavis est annoncé à la page');
+    egal(purge_de_l_annee(annee_scolaire(gmdate('Y-m-d'))), $r['json']['purge_le'], 'et la date de suppression');
+});
+
+verifier("supprimer une classe n'en laisse RIEN : ni élève, ni code, ni progression, ni billet, ni partage", function () use (&$jetonS1, &$classeFin, &$elevesFin) {
+    $codes = array_map(fn($e) => (string)$e['code'], $elevesFin);
+    $ids = implode(',', array_map('intval', array_column($elevesFin, 'id')));
+    egal(200, appel('/api/prof.php', ['action' => 'classes.supprimer', 'classe_id' => $classeFin], ['jeton' => $jetonS1])['code'], 'supprimée');
+
+    egal(0, (int)bd_test()->query('SELECT COUNT(*) FROM classes WHERE id = ' . (int)$classeFin)->fetchColumn(), 'plus de classe');
+    egal(0, (int)bd_test()->query('SELECT COUNT(*) FROM eleves WHERE classe_id = ' . (int)$classeFin)->fetchColumn(), 'plus un seul élève');
+    egal(0, (int)bd_test()->query("SELECT COUNT(*) FROM progressions WHERE eleve_id IN ($ids)")->fetchColumn(), 'plus une seule progression');
+    egal(0, (int)bd_test()->query("SELECT COUNT(*) FROM billets WHERE eleve_id IN ($ids)")->fetchColumn(), 'plus un seul billet');
+    egal(0, (int)bd_test()->query('SELECT COUNT(*) FROM partages WHERE classe_id = ' . (int)$classeFin)->fetchColumn(), 'plus de partage');
+    foreach ($codes as $code) {
+        egal(404, identite($code)['code'], "le code $code ne rend plus rien");
+    }
+    // Et la classe a disparu de la liste : aucune ligne de bilan ne survit.
+    foreach (appel('/api/prof.php', ['action' => 'classes.liste'], ['jeton' => $jetonS1])['json']['classes'] as $c) {
+        vrai((int)$c['id'] !== (int)$classeFin, 'la classe supprimée ne figure plus nulle part');
+    }
+});
+
+verifier("le 1er août, l'année écoulée part toute seule — mais jamais une classe encore utilisée", function () use (&$jetonS1) {
+    $vieille = appel('/api/prof.php', ['action' => 'classes.creer', 'libelle' => 'test-an-dernier'], ['jeton' => $jetonS1])['json']['id'];
+    $eleves = appel('/api/prof.php', ['action' => 'eleves.ajouter', 'classe_id' => $vieille, 'nombre' => 2], ['jeton' => $jetonS1])['json']['eleves'];
+    egal(200, ecrire($eleves[0]['code'], ['version' => 1, 'tables' => ['5' => ['acquise' => '2026-09-01']]], 0)['code'], 'une progression');
+
+    // On la fait dater d'une année scolaire passée, mais avec une activité
+    // d'aujourd'hui : le garde-fou des 21 jours doit la retenir.
+    $anPasse = (string)(((int)substr(annee_scolaire(gmdate('Y-m-d')), 0, 4)) - 1) . '-09-15T08:00:00Z';
+    bd_test()->exec("UPDATE classes SET cree_le = '" . $anPasse . "' WHERE id = " . (int)$vieille);
+    bd_test()->exec("UPDATE progressions SET maj_le = '" . gmdate('Y-m-d') . "' WHERE eleve_id = " . (int)$eleves[0]['id']);
+    $r = appel('/api/prof.php', ['action' => 'classes.liste'], ['jeton' => $jetonS1]);
+    egal([], $r['json']['supprimees_maintenant'], 'une classe encore utilisée n’est pas effacée par surprise');
+    egal(2, (int)bd_test()->query('SELECT COUNT(*) FROM eleves WHERE classe_id = ' . (int)$vieille)->fetchColumn(), 'ses élèves sont là');
+
+    // Même classe, plus d'activité depuis deux mois : elle part, entièrement.
+    $vieuxJour = gmdate('Y-m-d', time() - 60 * 86400);
+    bd_test()->exec("UPDATE progressions SET maj_le = '" . $vieuxJour . "' WHERE eleve_id = " . (int)$eleves[0]['id']);
+    $r = appel('/api/prof.php', ['action' => 'classes.liste'], ['jeton' => $jetonS1]);
+    egal(['test-an-dernier'], $r['json']['supprimees_maintenant'], 'supprimée toute seule, et la page le dit');
+    egal(0, (int)bd_test()->query('SELECT COUNT(*) FROM classes WHERE id = ' . (int)$vieille)->fetchColumn(), 'il ne reste aucune ligne de la classe');
+    egal(0, (int)bd_test()->query('SELECT COUNT(*) FROM eleves WHERE classe_id = ' . (int)$vieille)->fetchColumn(), 'plus un élève');
+    egal(404, identite($eleves[1]['code'])['code'], 'le code d’un élève supprimé ne rend plus rien');
+});
+
+verifier("une classe d'un collègue n'est jamais supprimée par la fin d'année de quelqu'un d'autre", function () use (&$jetonS1, &$jetonClaire) {
+    // Claire crée une classe, on la fait dater de l'an dernier et inactive.
+    $sienne = appel('/api/prof.php', ['action' => 'classes.creer', 'libelle' => 'classe-de-claire'], ['jeton' => $jetonClaire])['json']['id'];
+    $anPasse = (string)(((int)substr(annee_scolaire(gmdate('Y-m-d')), 0, 4)) - 1) . '-09-15T08:00:00Z';
+    bd_test()->exec("UPDATE classes SET cree_le = '" . $anPasse . "' WHERE id = " . (int)$sienne);
+    // Gwenaël ouvre SA liste : la classe de Claire ne bouge pas.
+    appel('/api/prof.php', ['action' => 'classes.liste'], ['jeton' => $jetonS1]);
+    egal(1, (int)bd_test()->query('SELECT COUNT(*) FROM classes WHERE id = ' . (int)$sienne)->fetchColumn(), 'la classe de Claire est intacte');
+    // Claire ouvre la sienne : elle part, chez elle.
+    $r = appel('/api/prof.php', ['action' => 'classes.liste'], ['jeton' => $jetonClaire]);
+    egal(['classe-de-claire'], $r['json']['supprimees_maintenant'], 'chacun sa fin d’année');
+    egal(0, (int)bd_test()->query('SELECT COUNT(*) FROM classes WHERE id = ' . (int)$sienne)->fetchColumn());
+});
+
+verifier("menage.php ne s'ouvre pas dans un navigateur, et fait le ménage en ligne de commande", function () use (&$jetonS1, &$travail) {
+    egal(404, appel('/menage.php')['code'], 'refusé par HTTP');
+    $vieille = appel('/api/prof.php', ['action' => 'classes.creer', 'libelle' => 'test-menage'], ['jeton' => $jetonS1])['json']['id'];
+    appel('/api/prof.php', ['action' => 'eleves.ajouter', 'classe_id' => $vieille, 'nombre' => 2], ['jeton' => $jetonS1]);
+    $anPasse = (string)(((int)substr(annee_scolaire(gmdate('Y-m-d')), 0, 4)) - 1) . '-09-15T08:00:00Z';
+    bd_test()->exec("UPDATE classes SET cree_le = '" . $anPasse . "' WHERE id = " . (int)$vieille);
+    $sortie = shell_exec('php ' . escapeshellarg($travail . '/menage.php') . ' 2>&1');
+    vrai(str_contains((string)$sortie, 'test-menage'), "le ménage devrait nommer la classe supprimée — sortie : " . trim((string)$sortie));
+    egal(0, (int)bd_test()->query('SELECT COUNT(*) FROM classes WHERE id = ' . (int)$vieille)->fetchColumn(), 'la classe est partie');
+});
+
+verifier("le manifeste VERSION : verifier.php compare chaque fichier, et nomme celui qui diffère", function () use (&$travail) {
+    $r = formulaire('/verifier.php', ['jeton' => 'JETON-DE-TEST']);
+    vrai(str_contains($r['texte'], 'tous identiques au dépôt'), "les fichiers déposés devraient être conformes");
+
+    // Un fichier modifié après le dépôt (ou oublié pendant) : il se nomme.
+    $cible = $travail . '/api/eleve.php';
+    $original = (string)file_get_contents($cible);
+    file_put_contents($cible, $original . "\n// modification après dépôt\n");
+    $r = formulaire('/verifier.php', ['jeton' => 'JETON-DE-TEST']);
+    vrai(str_contains($r['texte'], 'différent(s) du dépôt') && str_contains($r['texte'], 'api/eleve.php'),
+        'le fichier modifié devrait être nommé');
+    file_put_contents($cible, $original);
+
+    // Le même fichier transporté en mode texte (CRLF) : le diagnostic change.
+    file_put_contents($cible, str_replace("\n", "\r\n", $original));
+    $r = formulaire('/verifier.php', ['jeton' => 'JETON-DE-TEST']);
+    vrai(str_contains($r['texte'], 'mode texte'), 'des fins de ligne changées devraient être reconnues comme telles');
+    file_put_contents($cible, $original);
+
+    // Un fichier oublié pendant le dépôt.
+    rename($cible, $cible . '.range');
+    $r = formulaire('/verifier.php', ['jeton' => 'JETON-DE-TEST']);
+    vrai(str_contains($r['texte'], 'absent(s)') && str_contains($r['texte'], 'api/eleve.php'), 'un fichier manquant devrait être nommé');
+    rename($cible . '.range', $cible);
+
+    $r = formulaire('/verifier.php', ['jeton' => 'JETON-DE-TEST']);
+    vrai(str_contains($r['texte'], 'tous identiques au dépôt'), 'tout est remis en place');
+});
+
+verifier("verifier.php exige que secours.php et sauvegarde.php ne restent pas en ligne", function () use (&$travail) {
+    foreach (['secours.php', 'sauvegarde.php'] as $fichier) {
+        vrai(is_file($travail . '/' . $fichier), "$fichier est bien livré (mais pas déposé en temps normal)");
+    }
+    $r = formulaire('/verifier.php', ['jeton' => 'JETON-DE-TEST']);
+    vrai(str_contains($r['texte'], 'secours.php') && str_contains($r['texte'], 'sauvegarde.php'),
+        'tant qu’ils sont là, la page les nomme');
+    // Le manifeste ne les décrit pas : ils ne doivent pas être en ligne.
+    $manifeste = (string)file_get_contents($travail . '/VERSION');
+    foreach (['secours.php', 'sauvegarde.php', 'installer.php', 'migrer.php', 'config.php'] as $fichier) {
+        vrai(!str_contains($manifeste, '  ' . $fichier), "$fichier ne doit pas figurer au manifeste");
+    }
+    vrai(str_contains($manifeste, '  menage.php'), 'menage.php, lui, se dépose');
+});
+
+verifier("secours.php remet un mot de passe administrateur, et rien qu'avec le mot de passe d'installation", function () use (&$jetonS1) {
+    $r = formulaire('/secours.php', ['jeton' => 'faux']);
+    vrai(str_contains($r['texte'], 'incorrect'), 'un mauvais mot de passe d’installation est refusé');
+    vrai(!str_contains($r['texte'], 'gwenael'), 'et aucun identifiant ne sort');
+
+    $r = formulaire('/secours.php', ['jeton' => 'JETON-DE-TEST']);
+    vrai(str_contains($r['texte'], 'gwenael'), 'avec le bon, la liste des comptes s’affiche');
+    $profId = (int)bd_test()->query("SELECT id FROM profs WHERE identifiant = 'gwenael'")->fetchColumn();
+
+    // Trop court : refusé, et le mot de passe actuel n'a pas bougé.
+    $r = formulaire('/secours.php', ['jeton' => 'JETON-DE-TEST', 'prof_id' => $profId, 'nouveau' => 'court', 'repete' => 'court']);
+    vrai(str_contains($r['texte'], '12 caractères'), 'les règles du mot de passe s’appliquent');
+    // Deux saisies différentes : refusé aussi.
+    $r = formulaire('/secours.php', ['jeton' => 'JETON-DE-TEST', 'prof_id' => $profId, 'nouveau' => 'phrase-de-secours-2026', 'repete' => 'autre-chose-encore']);
+    vrai(str_contains($r['texte'], 'pas les mêmes'), 'les deux saisies doivent coïncider');
+    egal(200, appel('/api/prof.php', ['action' => 'moi'], ['jeton' => $jetonS1])['code'], 'la session en cours vit encore');
+
+    $r = formulaire('/secours.php', ['jeton' => 'JETON-DE-TEST', 'prof_id' => $profId, 'nouveau' => 'phrase-de-secours-2026', 'repete' => 'phrase-de-secours-2026']);
+    vrai(str_contains($r['texte'], 'SUPPRIME MAINTENANT'), 'la page rappelle de retirer le fichier');
+    egal(401, appel('/api/prof.php', ['action' => 'moi'], ['jeton' => $jetonS1])['code'], 'toutes ses sessions sont fermées');
+    $r = appel('/api/prof.php', ['action' => 'connexion', 'identifiant' => 'gwenael', 'motdepasse' => 'phrase-de-secours-2026']);
+    egal(200, $r['code'], 'le nouveau mot de passe ouvre le compte');
+    vrai($r['json']['mdp_temporaire'] === false, 'et il n’est pas temporaire : rien à rechanger');
+    $jetonS1 = $r['json']['jeton'];
+    egal(true, appel('/api/prof.php', ['action' => 'moi'], ['jeton' => $jetonS1])['json']['admin'], 'toujours administrateur');
+});
+
+verifier("sauvegarde.php rend un fichier chiffré qui se déchiffre par openssl et contient toute la base", function () use (&$jetonS1) {
+    $r = formulaire('/sauvegarde.php', ['jeton' => 'faux']);
+    vrai(str_contains($r['texte'], 'incorrect'), 'un mauvais mot de passe d’installation est refusé');
+    vrai(!str_contains($r['texte'], 'ligne(s)'), 'et rien de la base ne sort');
+
+    $r = formulaire('/sauvegarde.php', ['jeton' => 'JETON-DE-TEST']);
+    vrai(str_contains($r['texte'], 'ligne(s)'), 'avec le bon, la page compte les lignes de chaque table');
+
+    if (!function_exists('openssl_encrypt')) {
+        throw new RuntimeException("cette version de PHP n'a pas openssl : le test ne peut pas conclure");
+    }
+    $phrase = 'phrase-de-sauvegarde-2026';
+    $r = formulaire('/sauvegarde.php', ['jeton' => 'JETON-DE-TEST', 'etape' => 'telecharger',
+        'phrase' => $phrase, 'repete' => $phrase]);
+    $brut = $r['texte'];
+    egal('Salted__', substr($brut, 0, 8), 'le format d’openssl');
+    vrai(!str_contains($brut, 'INSERT INTO'), 'rien ne sort en clair');
+
+    $sel = substr($brut, 8, 8);
+    $matiere = hash_pbkdf2('sha256', $phrase, $sel, 200000, 48, true);
+    $clair = openssl_decrypt(substr($brut, 16), 'aes-256-cbc', substr($matiere, 0, 32), OPENSSL_RAW_DATA, substr($matiere, 32, 16));
+    vrai(is_string($clair) && $clair !== '', 'le fichier se déchiffre avec la phrase');
+    vrai(str_contains($clair, 'maths&go'), 'c’est bien une sauvegarde du suivi');
+    foreach (['profs', 'classes', 'eleves', 'progressions', 'partages'] as $table) {
+        vrai(str_contains($clair, "INSERT INTO `$table`") || (int)bd_test()->query("SELECT COUNT(*) FROM `$table`")->fetchColumn() === 0,
+            "la table $table devrait être dans la sauvegarde");
+    }
+    // Trouvé le 05/09/2026 en faisant vraiment la restauration : oublier ces
+    // trois tables rendait une base restaurée INUTILISABLE — la première
+    // connexion d'un professeur répondait 500. Leur structure part donc dans
+    // la sauvegarde, leur contenu non (jetons de courte durée).
+    foreach (['sessions_prof', 'compteurs', 'billets'] as $table) {
+        vrai(str_contains($clair, "CREATE TABLE `$table`") || str_contains($clair, "EXISTS $table ("),
+            "la structure de $table doit être dans la sauvegarde : sans elle, le serveur restauré répond 500");
+        vrai(!str_contains($clair, "INSERT INTO `$table`"), "mais pas son contenu : $table ne tient que des jetons périmés");
+    }
+
+    // Une autre phrase ne rend rien.
+    $matiere = hash_pbkdf2('sha256', 'pas-la-bonne-phrase', $sel, 200000, 48, true);
+    $rate = openssl_decrypt(substr($brut, 16), 'aes-256-cbc', substr($matiere, 0, 32), OPENSSL_RAW_DATA, substr($matiere, 32, 16));
+    vrai($rate === false || !str_contains((string)$rate, 'maths&go'), 'sans la bonne phrase, le fichier reste illisible');
+
+    // Une phrase trop courte est refusée : c'est elle qui protège tout.
+    $r = formulaire('/sauvegarde.php', ['jeton' => 'JETON-DE-TEST', 'etape' => 'telecharger', 'phrase' => 'court', 'repete' => 'court']);
+    vrai(str_contains($r['texte'], '12 caractères'), 'une phrase trop courte est refusée');
+});
+
 // ---------------------------------------------------------------------- résultat
 
 echo "\n";
