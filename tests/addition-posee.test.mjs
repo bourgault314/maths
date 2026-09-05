@@ -188,7 +188,7 @@ test("le vocabulaire de rang couvre les bornes autorisées", () => {
 test("l’interface est professorale, projetable et conforme à l’identité maths&go", () => {
   assert.match(interfaceHtml, /<h1 id="page-title">Addition posée<\/h1>/);
   assert.match(interfaceHtml, /Outil de classe/);
-  assert.match(interfaceHtml, /← Calculs posés/);
+  assert.match(interfaceHtml, /href="\.\/">← Addition posée/);
   assert.match(interfaceHtml, /id="first-term"[^>]*inputmode="decimal"/);
   assert.match(interfaceHtml, /id="second-term"[^>]*inputmode="decimal"/);
   assert.match(interfaceHtml, /id="rank-guides" type="checkbox"/);
@@ -207,6 +207,8 @@ test("l’interface est professorale, projetable et conforme à l’identité ma
   assert.match(interfaceCss, /\.posed-addition\.has-decimals/);
   assert.match(interfaceCss, /\.carry-cell\.is-used[^}]*text-decoration:\s*line-through/);
   assert.match(interfaceCss, /@media \(min-width: 1280px\)[\s\S]*\.instruction[^}]*grid-column:\s*1/);
+  assert.match(interfaceCss, /\.instruction h2 \{[^}]*font-size:\s*clamp\(1\.42rem, 1\.8vw, 2\.08rem\)/);
+  assert.match(interfaceCss, /body\.is-projection \.instruction h2 \{[^}]*font-size:\s*clamp\(1\.55rem, 1\.9vw, 2\.18rem\)/);
   assert.match(interfaceCss, /@media \(prefers-reduced-motion: reduce\)/);
   assert.match(interfaceJs, /document\.exitFullscreen\(\)/);
   assert.match(interfaceJs, /fullscreenchange/);
@@ -234,7 +236,7 @@ test("la miniature est accessible, au format 640 × 400 et non rognée", () => {
   assert.match(thumbnailSvg, /<desc id="desc">[^<]*retenue/i);
 });
 
-test("l’addition est une ressource directe de Calculs posés", () => {
+test("l’addition professeur est rangée dans l’entrée Addition posée", () => {
   const data = catalogue();
   const path = "outils/addition-posee/addition-posee.html";
   const resource = data.resources.find((candidate) => candidate.path === path);
@@ -243,9 +245,9 @@ test("l’addition est une ressource directe de Calculs posés", () => {
   assert.equal(resource.title, "Addition posée pas à pas");
   assert.deepEqual(Array.from(resource.uses), ["manipuler", "projeter"]);
   assert.deepEqual(Array.from(resource.notions), ["calculs-poses"]);
-  assert.deepEqual(Array.from(classification.collections), []);
+  assert.deepEqual(Array.from(classification.collections), ["addition-posee"]);
   assert.equal(classification.primaryGroup, "manipuler");
-  assert.equal(classification.thumbnail, "assets/img/thumbnails/numeration/addition-posee.svg?v=1");
+  assert.equal(classification.thumbnail, "assets/img/thumbnails/numeration/addition-posee.svg?v=2");
   assert.equal(
     resource.description,
     "Une addition d’entiers ou de décimaux expliquée colonne par colonne, avec les retenues rendues visibles."

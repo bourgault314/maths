@@ -160,20 +160,21 @@ body.is-projection .step-controls .button { min-height: 44px; padding-block: 6px
 body.is-projection .site-footer { flex: none; gap: 5px; padding: 5px 8px 6px; font-size: .68rem; }
 
 @media (min-width: 1280px) {
-  .board-card { grid-template-columns: minmax(320px, .42fr) minmax(0, 1fr); grid-template-rows: minmax(var(--stage-min-height), 1fr) auto; column-gap: 18px; }
+  .board-card { grid-template-columns: minmax(340px, .46fr) minmax(0, 1fr); grid-template-rows: minmax(var(--stage-min-height), 1fr) auto; column-gap: 18px; }
   .instruction { grid-column: 1; grid-row: 1 / 3; position: relative; align-items: flex-start; padding: 24px 55px 24px 24px; }
-  .instruction > span { position: absolute; top: 23px; right: 20px; }
-  .instruction h2 { margin-top: 5px; font-size: clamp(1.25rem, 1.55vw, 1.8rem); line-height: 1.3; overflow-wrap: anywhere; }
-  .instruction .step-detail { margin-top: 12px; font-size: clamp(.95rem, 1.05vw, 1.08rem); line-height: 1.45; }
-  .instruction .exchange-memo { margin-top: 18px; font-size: clamp(.88rem, 1vw, 1rem); }
+  .instruction p { font-size: .86rem; }
+  .instruction > span { position: absolute; top: 23px; right: 20px; font-size: .95rem; }
+  .instruction h2 { margin-top: 6px; font-size: clamp(1.42rem, 1.8vw, 2.08rem); line-height: 1.24; overflow-wrap: anywhere; }
+  .instruction .step-detail { margin-top: 14px; font-size: clamp(1.05rem, 1.2vw, 1.24rem); line-height: 1.4; }
+  .instruction .exchange-memo { margin-top: 20px; font-size: clamp(.98rem, 1.08vw, 1.12rem); }
   .addition-stage { grid-column: 2; grid-row: 1; }
   .step-controls { grid-column: 2; grid-row: 2; }
 
-  body.is-projection .board-card { grid-template-columns: minmax(340px, .43fr) minmax(0, 1fr); grid-template-rows: minmax(0, 1fr) auto; column-gap: 16px; }
+  body.is-projection .board-card { grid-template-columns: minmax(350px, .46fr) minmax(0, 1fr); grid-template-rows: minmax(0, 1fr) auto; column-gap: 16px; }
   body.is-projection .instruction { padding: 23px 56px 23px 23px; }
-  body.is-projection .instruction p { font-size: .78rem; }
-  body.is-projection .instruction h2 { font-size: clamp(1.35rem, 1.65vw, 1.9rem); }
-  body.is-projection .instruction .step-detail { margin-top: 12px; font-size: clamp(.94rem, 1.06vw, 1.08rem); }
+  body.is-projection .instruction p { font-size: .9rem; }
+  body.is-projection .instruction h2 { font-size: clamp(1.55rem, 1.9vw, 2.18rem); }
+  body.is-projection .instruction .step-detail { margin-top: 14px; font-size: clamp(1.08rem, 1.22vw, 1.3rem); }
 }
 
 @media (max-width: 1080px) {

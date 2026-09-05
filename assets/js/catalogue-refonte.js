@@ -354,8 +354,12 @@
       thumbnail: "assets/img/thumbnails/bouliers/gerbert-photo.svg?v=1"
     },
     "division-posee": {
-      description: "Comprendre, pratiquer et imprimer la division posée.",
+      description: "Comprendre, s’entraîner ou imprimer un gabarit pour la division posée.",
       thumbnail: "assets/img/thumbnails/numeration/division-posee.svg?v=2"
+    },
+    "addition-posee": {
+      description: "Comprendre, s’entraîner ou imprimer un gabarit pour l’addition posée.",
+      thumbnail: "assets/img/thumbnails/numeration/addition-posee.svg?v=2"
     },
     "tuiles-algebriques": {
       description: "Retrouver les plateaux, générateurs et livrets de tuiles algébriques.",
@@ -657,6 +661,10 @@
       return `<span class="notion-icon collection-thumbnail">${thumbnailMarkup(design.thumbnail)}</span>`;
     }
     return `<span class="notion-icon">${icon(design.icon)}</span>`;
+  }
+
+  function isOperationEntry(collection) {
+    return collection?.presentation === "operation";
   }
 
   function typeIcon(resource, group = "") {
@@ -1015,15 +1023,16 @@
       const design = collectionDesign[collection.id] || {};
       const count = collectionResourceCount(collection.id);
       const hasThumbnail = Boolean(design.thumbnail);
-      return `<a class="notion-card collection-card${hasThumbnail ? " collection-card-visual" : ""}" data-collection-card="${escapeHtml(collection.id)}" href="${escapeHtml(collectionHref(collection))}" style="${domainStyle(collection.domain)}">
+      const operationEntry = isOperationEntry(collection);
+      return `<a class="notion-card ${operationEntry ? "operation-entry-card" : "collection-card"}${hasThumbnail ? " collection-card-visual" : ""}" data-collection-card="${escapeHtml(collection.id)}" href="${escapeHtml(collectionHref(collection))}" style="${domainStyle(collection.domain)}">
         ${hasThumbnail ? `<span class="resource-thumbnail collection-card-thumbnail">${thumbnailMarkup(design.thumbnail)}</span>` : ""}
-        <span class="collection-label">Collection</span>
+        ${operationEntry ? "" : `<span class="collection-label">Collection</span>`}
         <span class="notion-top">
           ${hasThumbnail ? "" : collectionVisual(collection)}
           <h3>${escapeHtml(collection.title)}</h3>
         </span>
-        <p>${escapeHtml(design.description || "Retrouver cette collection d’outils.")}</p>
-        <span class="notion-count">${count} ressource${count > 1 ? "s" : ""}</span>
+        <p>${escapeHtml(design.description || (operationEntry ? "Choisir l’outil adapté à cet usage." : "Retrouver cette collection d’outils."))}</p>
+        <span class="notion-count">${count} ${operationEntry ? "outil" : "ressource"}${count > 1 ? "s" : ""}</span>
       </a>`;
     });
     notionGrid.innerHTML = [...notionCards, ...collectionCards].join("") || `<p class="empty-state">Aucun thème ne correspond à cette recherche.</p>`;
@@ -1207,13 +1216,14 @@
         </div>
         <div class="search-direct-grid">${separateCollections.map((collection) => {
           const design = collectionDesign[collection.id] || {};
-          return `<a class="notion-card collection-card" data-collection-card="${escapeHtml(collection.id)}" href="${escapeHtml(collectionHref(collection))}" style="${domainStyle(collection.domain)}">
-            <span class="collection-label">Collection</span>
+          const operationEntry = isOperationEntry(collection);
+          return `<a class="notion-card ${operationEntry ? "operation-entry-card" : "collection-card"}" data-collection-card="${escapeHtml(collection.id)}" href="${escapeHtml(collectionHref(collection))}" style="${domainStyle(collection.domain)}">
+            ${operationEntry ? "" : `<span class="collection-label">Collection</span>`}
             <span class="notion-top">
               ${collectionVisual(collection)}
               <h3>${escapeHtml(collection.title)}</h3>
             </span>
-            <p>${escapeHtml(design.description || "Retrouver cette collection d’outils.")}</p>
+            <p>${escapeHtml(design.description || (operationEntry ? "Choisir l’outil adapté à cet usage." : "Retrouver cette collection d’outils."))}</p>
           </a>`;
         }).join("")}</div>
       </section>`
@@ -1308,7 +1318,13 @@
       const directCollections = selectedNotion
         ? matchingNotionCollections(selectedNotion.id)
         : (state.query ? matchingSearchCollections() : []);
-      renderResources(resources, directCollections, selectedNotion ? "Choisir une famille" : "Accès direct");
+      const onlyOperationEntries = directCollections.length > 0
+        && directCollections.every(isOperationEntry);
+      renderResources(
+        resources,
+        directCollections,
+        selectedNotion && onlyOperationEntries ? "Choisir une opération" : selectedNotion ? "Choisir une famille" : "Accès direct"
+      );
 
       if (selectedCollection) {
         pageTitle.textContent = selectedCollection.title;
@@ -1326,7 +1342,7 @@
 
       summary.textContent = [
         directCollections.length
-          ? `${directCollections.length} ${selectedNotion ? `famille${directCollections.length > 1 ? "s" : ""}` : `accès direct${directCollections.length > 1 ? "s" : ""}`}`
+          ? `${directCollections.length} ${selectedNotion && onlyOperationEntries ? `opération${directCollections.length > 1 ? "s" : ""}` : selectedNotion ? `famille${directCollections.length > 1 ? "s" : ""}` : `accès direct${directCollections.length > 1 ? "s" : ""}`}`
           : "",
         resourceDisplayCount(resources)
           ? `${resourceDisplayCount(resources)} entrée${resourceDisplayCount(resources) > 1 ? "s" : ""}`
