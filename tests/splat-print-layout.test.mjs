@@ -91,7 +91,7 @@ test("la correction C agrandit seulement ses blocs imprimes", () => {
   const profileSource = functionSource("getRelationCorrectionPrintProfile", "renderCardIntoSvg");
   const getProfile = Function(`return (${profileSource})`)();
 
-  assert.deepEqual(getProfile({_directSubstitution:false}), {verticalScale:1.20, fontScale:1.25});
+  assert.deepEqual(getProfile({_directSubstitution:false}), {verticalScale:1.20, fontScale:1.25, barShiftX:30});
   assert.deepEqual(getProfile({_directSubstitution:true}), {verticalScale:1.40, fontScale:1.30});
 
   const screenRenderer = functionSource("renderCard", "approxTextWidthForLabel");
@@ -99,6 +99,38 @@ test("la correction C agrandit seulement ses blocs imprimes", () => {
   assert.doesNotMatch(screenRenderer, /getRelationCorrectionPrintProfile/);
   assert.match(printRenderer, /if\(card\.family === "C" && card\._rel && printRevealState > 0\)/);
   assert.match(printRenderer, /const printProfile = getRelationCorrectionPrintProfile\(card\)/);
+});
+
+test("la correction C enquete decale ensemble ses trois tableaux sans les retrecir", () => {
+  const layoutSource = functionSource("getRelationSchemaLayout", "getRelationDrawingMetrics");
+  const getLayout = Function(`return (${layoutSource})`)();
+  const screenLayout = getLayout();
+  const inquiryPrintLayout = getLayout({barShiftX:30});
+
+  assert.equal(screenLayout.labelW, 150);
+  assert.equal(screenLayout.equationW, 660);
+  assert.equal(screenLayout.barX, 210);
+  assert.equal(screenLayout.barW, 636);
+  assert.equal(screenLayout.equationCenterX, 1210);
+
+  assert.equal(inquiryPrintLayout.labelW, 180);
+  assert.equal(inquiryPrintLayout.equationW, 630);
+  assert.equal(inquiryPrintLayout.barX, 240);
+  assert.equal(inquiryPrintLayout.barW, screenLayout.barW);
+  assert.equal(inquiryPrintLayout.equationCenterX, 1225);
+  assert.equal(
+    inquiryPrintLayout.barX + inquiryPrintLayout.barW + 34 + inquiryPrintLayout.equationW,
+    screenLayout.barX + screenLayout.barW + 34 + screenLayout.equationW
+  );
+
+  for(const [name, nextName] of [
+    ["drawRelationSituationSchema", "drawRelationSubstitutionStep"],
+    ["drawRelationSubstitutionStep", "relationResolutionPlan"],
+    ["drawRelationOrderedSchema", "drawRelationGroupedSchema"],
+    ["drawRelationGroupedSchema", "drawBarModelPartsInGroup"]
+  ]){
+    assert.match(functionSource(name, nextName), /getRelationSchemaLayout\(opts\)/);
+  }
 });
 
 test("les blocs C agrandis gardent une marge basse dans le SVG imprime", () => {
