@@ -102,11 +102,13 @@ test("l'anticipation cherche le premier rang partageable avant l'estimation", ()
   ]);
   const [firstQuestion, firstAnswer, secondQuestion, result, estimate] = makeSteps(division);
   assert.equal(firstQuestion.kind, "anticipation-question");
-  assert.equal(firstQuestion.sentence, "Puis-je donner au moins 1 centaine à chacune des 7 parts ?");
-  assert.equal(firstQuestion.detail, "Je regarde 5 centaines.");
+  assert.equal(firstQuestion.sentence, "Je partage 5 centaines en 7 parts égales.");
+  assert.equal(firstQuestion.detail, "Chaque part peut-elle recevoir au moins 1 centaine ?");
   assert.equal(firstQuestion.anticipationEndColumn, 0);
-  assert.equal(firstAnswer.sentence, "Non : je n’ai que 5 centaines.");
-  assert.equal(secondQuestion.sentence, "Puis-je donner au moins 1 dizaine à chacune des 7 parts ?");
+  assert.equal(firstAnswer.sentence, "Non. J’échange 5 centaines contre 50 dizaines.");
+  assert.equal(firstAnswer.detail, "Avec 8 dizaines, j’obtiens 58 dizaines.");
+  assert.equal(secondQuestion.sentence, "Je partage 58 dizaines en 7 parts égales.");
+  assert.equal(secondQuestion.detail, "Chaque part peut-elle recevoir au moins 1 dizaine ?");
   assert.equal(secondQuestion.anticipationEndColumn, 1);
   assert.equal(result.kind, "anticipation-result");
   assert.equal(result.sentence, "Oui. Le quotient commence au rang des dizaines.");
@@ -123,8 +125,8 @@ test("la question précède la révélation du chiffre", () => {
   const steps = makeSteps(division);
   const question = steps.find(({ kind }) => kind === "ask");
   const choice = steps.find(({ kind }) => kind === "choose");
-  assert.equal(question.sentence, "58 dizaines ÷ 21 : combien de dizaines au quotient ?");
-  assert.equal(question.detail, undefined);
+  assert.equal(question.sentence, "Pour trouver le chiffre des dizaines du quotient, je cherche : dans 58, combien de fois 21 ?");
+  assert.equal(question.detail, "Je partage 58 dizaines en 21 parts égales.");
   assert.deepEqual(getOperationDisplayState(division, 0, question), {
     quotient: false,
     product: false,
@@ -148,10 +150,11 @@ test("le vocabulaire suit la valeur de position à chaque échange", () => {
   const division = makeDivision(5849, 7, "integer", 2);
   const steps = makeSteps(division);
   assert.equal(placeValueName(division, 1), "centaines");
-  assert.equal(steps.find(({ kind }) => kind === "ask").sentence, "58 centaines ÷ 7 : combien de centaines au quotient ?");
+  assert.equal(steps.find(({ kind }) => kind === "ask").sentence, "Pour trouver le chiffre des centaines du quotient, je cherche : dans 58, combien de fois 7 ?");
+  assert.equal(steps.find(({ kind }) => kind === "ask").detail, "Je partage 58 centaines en 7 parts égales.");
   assert.equal(steps.find(({ kind }) => kind === "bring").sentence, "2 centaines = 20 dizaines.");
   assert.equal(steps.find(({ kind }) => kind === "bring").detail, "J’abaisse 4 dizaines : j’obtiens 24 dizaines.");
-  assert.ok(steps.some(({ sentence }) => sentence === "39 unités ÷ 7 : combien d’unités au quotient ?"));
+  assert.ok(steps.some(({ sentence }) => sentence === "Pour trouver le chiffre des unités du quotient, je cherche : dans 39, combien de fois 7 ?"));
 });
 
 test("la poursuite décimale introduit le dixième au dividende avant la virgule au quotient", () => {
@@ -168,8 +171,12 @@ test("la poursuite décimale introduit le dixième au dividende avant la virgule
   ]);
   const decimalQuestions = steps.filter(({ kind, opIndex }) => kind === "ask" && division.operations[opIndex].endColumn >= division.integerLength);
   assert.deepEqual(decimalQuestions.map(({ sentence }) => sentence), [
-    "Pour trouver le chiffre des dixièmes du quotient, je cherche combien de fois 7 dans 40.",
-    "Pour trouver le chiffre des centièmes du quotient, je cherche combien de fois 7 dans 50."
+    "Pour trouver le chiffre des dixièmes du quotient, je cherche : dans 40, combien de fois 7 ?",
+    "Pour trouver le chiffre des centièmes du quotient, je cherche : dans 50, combien de fois 7 ?"
+  ]);
+  assert.deepEqual(decimalQuestions.map(({ detail }) => detail), [
+    "Je partage 40 dixièmes en 7 parts égales.",
+    "Je partage 50 centièmes en 7 parts égales."
   ]);
   assert.ok(decimalBringSteps.every((step, index) => steps.indexOf(step) < steps.indexOf(decimalQuestions[index])));
   assert.ok(decimalBringSteps.every(({ detail }) => detail.startsWith("Je fais apparaître un 0")));
@@ -228,14 +235,14 @@ test("l'affichage réserve toutes les lignes et s'adapte aux longues divisions",
 
 test("l'anticipation indique clairement un quotient inférieur à un", () => {
   const [question, result] = makeSteps(makeDivision(3, 7, "integer", 2));
-  assert.equal(question.sentence, "Puis-je donner au moins 1 unité à chacune des 7 parts ?");
-  assert.equal(question.detail, "Je regarde 3 unités.");
+  assert.equal(question.sentence, "Je partage 3 unités en 7 parts égales.");
+  assert.equal(question.detail, "Chaque part peut-elle recevoir au moins 1 unité ?");
   assert.equal(result.sentence, "Non : je n’ai que 3 unités.");
   assert.equal(result.detail, "Le quotient entier est 0.");
 });
 
 test("l'interface conserve les repères visuels demandés", () => {
-  assert.match(interfaceHtml, /division-posee\.js\?v=14/);
+  assert.match(interfaceHtml, /division-posee\.js\?v=15/);
   assert.match(interfaceHtml, /class="back-link" href="\.\/">← Division posée<\/a>/);
   assert.match(interfaceHtml, /id="decimal-field" hidden/);
   assert.match(interfaceHtml, /id="rank-guides" type="checkbox"/);
@@ -266,7 +273,7 @@ test("l'interface conserve les repères visuels demandés", () => {
   assert.match(interfaceJs, /isUnrevealedDecimal/);
   assert.match(interfaceJs, /\["ask", "choose"\]/);
   assert.match(interfaceJs, /quotientWriting\(step\)/);
-  assert.match(interfaceJs, /division-engine\.mjs\?v=10/);
+  assert.match(interfaceJs, /division-engine\.mjs\?v=11/);
   assert.match(interfaceJs, /division-view\.mjs\?v=3/);
   assert.match(interfaceJs, /renderMultiplicationTable\(/);
   assert.match(interfaceJs, /const showIntegerSlots = !\["anticipation-question", "anticipation-answer"\]\.includes\(step\.kind\)/);
