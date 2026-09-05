@@ -91,8 +91,8 @@ test("la correction C agrandit seulement ses blocs imprimes", () => {
   const profileSource = functionSource("getRelationCorrectionPrintProfile", "renderCardIntoSvg");
   const getProfile = Function(`return (${profileSource})`)();
 
-  assert.deepEqual(getProfile({_directSubstitution:false}), {verticalScale:1.20, fontScale:1.15});
-  assert.deepEqual(getProfile({_directSubstitution:true}), {verticalScale:1.40, fontScale:1.15});
+  assert.deepEqual(getProfile({_directSubstitution:false}), {verticalScale:1.20, fontScale:1.25});
+  assert.deepEqual(getProfile({_directSubstitution:true}), {verticalScale:1.40, fontScale:1.30});
 
   const screenRenderer = functionSource("renderCard", "approxTextWidthForLabel");
   const printRenderer = functionSource("renderCardIntoSvg", "printSheet");
