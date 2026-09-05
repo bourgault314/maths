@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 400" role="img" aria-labelledby="title desc">
+  <title id="title">Addition posée pas à pas</title>
+  <desc id="desc">L’addition posée de 584 et 279, avec le résultat 863 et deux retenues violettes visibles.</desc>
+  <rect width="640" height="400" rx="30" fill="#f7faff"/>
+  <rect x="28" y="28" width="584" height="344" rx="24" fill="#fff" stroke="#d8e2ec" stroke-width="3"/>
+  <rect x="50" y="50" width="538" height="54" rx="13" fill="#e8f8f5"/>
+  <circle cx="78" cy="77" r="10" fill="#08aaa5"/>
+  <rect x="99" y="68" width="160" height="8" rx="4" fill="#063f86" opacity=".85"/>
+  <rect x="99" y="83" width="222" height="6" rx="3" fill="#637287" opacity=".35"/>
+
+  <g font-family="DejaVu Sans Mono, monospace" font-weight="800" text-anchor="middle">
+    <g fill="#7b42b4" font-size="22">
+      <rect x="231" y="119" width="36" height="31" rx="8" fill="#f5edff"/>
+      <rect x="293" y="119" width="36" height="31" rx="8" fill="#f5edff"/>
+      <text x="249" y="142">1</text>
+      <text x="311" y="142">1</text>
+    </g>
+    <g fill="#0b67b2" font-size="42">
+      <text x="249" y="193">5</text>
+      <text x="311" y="193">8</text>
+      <text x="373" y="193">4</text>
+    </g>
+    <g fill="#08aaa5" font-size="42">
+      <text x="249" y="247">2</text>
+      <text x="311" y="247">7</text>
+      <text x="373" y="247">9</text>
+    </g>
+    <text x="191" y="247" fill="#063f86" font-size="38">+</text>
+    <line x1="216" y1="264" x2="403" y2="264" stroke="#063f86" stroke-width="5" stroke-linecap="round"/>
+    <g fill="#f58220" font-size="46">
+      <text x="249" y="321">8</text>
+      <text x="311" y="321">6</text>
+      <text x="373" y="321">3</text>
+    </g>
+  </g>
+
+  <rect x="438" y="132" width="138" height="122" rx="16" fill="#f5edff" stroke="#d9c4ef" stroke-width="2"/>
+  <text x="507" y="161" text-anchor="middle" font-family="system-ui, sans-serif" font-size="13" font-weight="850" fill="#7b42b4">J’ÉCHANGE</text>
+  <text x="507" y="195" text-anchor="middle" font-family="DejaVu Sans Mono, monospace" font-size="17" font-weight="800" fill="#10294a">13 unités</text>
+  <text x="507" y="222" text-anchor="middle" font-family="DejaVu Sans Mono, monospace" font-size="16" font-weight="800" fill="#7b42b4">1 dizaine + 3</text>
+  <rect x="438" y="279" width="138" height="42" rx="11" fill="#fff2e7"/>
+  <text x="507" y="306" text-anchor="middle" font-family="system-ui, sans-serif" font-size="14" font-weight="850" fill="#f58220">SOMME : 863</text>
+</svg>

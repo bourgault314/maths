@@ -9,6 +9,7 @@
     "packages/*"
   ],
   "scripts": {
+    "dev": "node scripts/serve-static.mjs",
     "test": "node --test",
     "seo:generer": "node scripts/generate-seo.mjs",
     "seo:verifier": "node scripts/generate-seo.mjs --check",
