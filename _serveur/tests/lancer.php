@@ -12,7 +12,39 @@ $travail = sys_get_temp_dir() . '/suivi-test-' . bin2hex(random_bytes(4));
 $base = $travail . '/test.sqlite';
 
 mkdir($travail, 0700, true);
-exec(sprintf('cp -r %s/. %s/', escapeshellarg($racine . '/public'), escapeshellarg($travail)));
+
+// Lot 11 (05/09/2026) — trouvaille de Claude Code. La copie se faisait par
+// exec('cp -r …') : sous Windows, « cp » n'existe ni dans cmd ni dans
+// PowerShell (seulement dans git-bash), la copie ne se faisait PAS, et la
+// batterie annonçait 135 échecs sur 143 — un faux désastre qui a coûté une
+// soirée. Même chose pour le ménage de fin (« rm -rf »). Tout se fait
+// maintenant en PHP pur : mêmes gestes sur les trois systèmes.
+function copier_dossier(string $source, string $destination): void
+{
+    if (!is_dir($destination)) mkdir($destination, 0700, true);
+    $entrees = new DirectoryIterator($source);
+    foreach ($entrees as $entree) {
+        if ($entree->isDot()) continue;
+        $de = $entree->getPathname();
+        $vers = $destination . DIRECTORY_SEPARATOR . $entree->getFilename();
+        if ($entree->isDir()) copier_dossier($de, $vers);
+        else copy($de, $vers);
+    }
+}
+
+function effacer_dossier(string $chemin): void
+{
+    if (!is_dir($chemin)) { @unlink($chemin); return; }
+    foreach (scandir($chemin) ?: [] as $nom) {
+        if ($nom === '.' || $nom === '..') continue;
+        $sous = $chemin . DIRECTORY_SEPARATOR . $nom;
+        if (is_dir($sous) && !is_link($sous)) effacer_dossier($sous);
+        else @unlink($sous);
+    }
+    @rmdir($chemin);
+}
+
+copier_dossier($racine . '/public', $travail);
 
 // Par défaut, SQLite jetable. Pour rejouer les mêmes tests sur MySQL/MariaDB
 // (la production est sur MySQL, et le limiteur y emploie une instruction
@@ -59,12 +91,36 @@ $serveur = proc_open(
     [1 => ['file', PHP_OS_FAMILY === 'Windows' ? 'NUL' : '/dev/null', 'w'], 2 => ['file', $travail . '/serveur.log', 'w']],
     $tuyaux
 );
-register_shutdown_function(function () use ($serveur, $travail) {
-    if (is_resource($serveur)) {
-        $etat = proc_get_status($serveur);
-        if ($etat['running']) exec('kill -9 ' . $etat['pid'] . ' 2>/dev/null');
-        proc_close($serveur);
+// Arrêter le serveur de test, sur les trois systèmes.
+//
+// Lot 11 — deuxième trouvaille de Claude Code : sous Windows, la batterie
+// PENDAIT à la fin. proc_open() y passe par un cmd.exe intermédiaire, donc
+// proc_get_status() rend le PID de CE cmd.exe et non celui du « php -S » ;
+// « kill » n'existe pas, et proc_close() attendait indéfiniment un serveur qui
+// ne s'arrêtait jamais. proc_terminate() sur le processus, puis taskkill /T
+// (l'arbre complet) sous Windows, règlent les deux.
+function arreter_serveur($serveur): void
+{
+    if (!is_resource($serveur)) return;
+    $etat = proc_get_status($serveur);
+    if (!empty($etat['running'])) {
+        if (PHP_OS_FAMILY === 'Windows') {
+            @exec('taskkill /F /T /PID ' . (int)$etat['pid'] . ' 2>NUL');
+        }
+        @proc_terminate($serveur, 9);
+        // Laisser au système le temps de le rendre : proc_close() n'attend
+        // alors plus rien.
+        for ($i = 0; $i < 40; $i++) {
+            $etat = proc_get_status($serveur);
+            if (empty($etat['running'])) break;
+            usleep(50000);
+        }
     }
+    @proc_close($serveur);
+}
+
+register_shutdown_function(function () use ($serveur, $travail) {
+    arreter_serveur($serveur);
     // En cas d'échec, le journal du serveur de test est gardé : c'est lui qui
     // dit pourquoi une requête a répondu 500.
     global $echecs;
@@ -73,7 +129,7 @@ register_shutdown_function(function () use ($serveur, $travail) {
         @copy($travail . '/serveur.log', $journal);
         echo "Journal du serveur de test : $journal\n";
     }
-    exec('rm -rf ' . escapeshellarg($travail));
+    effacer_dossier($travail);
 });
 
 $url = "http://127.0.0.1:$port";
@@ -848,10 +904,23 @@ verifier("un déluge de requêtes sur un code est freiné", function () use (&$j
     $classe = appel('/api/prof.php', ['action' => 'classes.creer', 'libelle' => 'test-debit'], ['jeton' => $j])['json']['id'];
     $code = appel('/api/prof.php', ['action' => 'eleves.ajouter', 'classe_id' => $classe, 'nombre' => 1], ['jeton' => $j])['json']['eleves'][0]['code'];
 
+    // La fenêtre du limiteur est ALIGNÉE SUR L'HORLOGE (lib/limite.php,
+    // fin_de_fenetre) : elle se referme toutes les cinq minutes, à heure fixe.
+    // Sur une machine lente — Windows, où le serveur intégré ne traite qu'une
+    // requête à la fois parce que PHP_CLI_SERVER_WORKERS n'y fait rien —, les
+    // trois cent trente requêtes de ce test peuvent enjamber ce changement de
+    // fenêtre : le compteur du serveur repart de zéro au milieu, et le test
+    // annonçait un échec là où le limiteur avait parfaitement fonctionné.
+    // C'est l'instabilité relevée le 05/09 (verte sur la CI Linux, rouge une
+    // fois sur deux sous Windows). On surveille donc la fenêtre nous aussi, et
+    // on recommence à compter quand elle tourne — ce que fait le serveur.
+    $fenetre = fn(): int => intdiv(time(), 300);
     vider_compteurs();
+    $courante = $fenetre();
     $freine = false;
     $avant = 0;
-    for ($i = 0; $i < 330; $i++) {
+    for ($i = 0; $i < 800; $i++) {
+        if ($fenetre() !== $courante) { $courante = $fenetre(); $avant = 0; }
         $r = lire($code);
         $statut = $r['code'];
         if ($statut === 429) {
@@ -862,7 +931,11 @@ verifier("un déluge de requêtes sur un code est freiné", function () use (&$j
         if ($statut === 200) $avant++;
     }
     vrai($freine, "le serveur aurait dû répondre 429 après trois cents requêtes");
-    egal(300, $avant, "trois cents lectures passent avant le frein (l'appli envoie après chaque réponse)");
+    // Une tolérance d'un cran : la fenêtre peut tourner entre notre lecture de
+    // l'horloge et celle du serveur. Ce que le test prouve reste entier — le
+    // frein arrive à trois cents, pas à trente ni à trois mille.
+    vrai($avant >= 299 && $avant <= 301,
+        "trois cents lectures passent avant le frein (l'appli envoie après chaque réponse) — obtenu $avant");
     vider_compteurs();
 });
 
@@ -880,10 +953,24 @@ function code_inconnu(int $i): string
     return 'ZZZZ' . ALPHABET_TEST[$i % 32] . ALPHABET_TEST[intdiv($i, 32) % 32];
 }
 
+// Le secret que le serveur emploie pour brouiller les clés des compteurs.
+//
+// Lot 11 (05/09/2026) : ce n'est plus le mot de passe d'installation lui-même,
+// mais une valeur DÉRIVÉE de lui par HMAC avec une étiquette d'usage (voir
+// secret_compteurs() dans lib/limite.php). Le test refait le même calcul —
+// changer l'un sans l'autre rend rouges tous les tests de limitation, ce qui
+// est exactement ce qu'on veut d'un garde-fou.
+const SECRET_COMPTEURS_TEST_ETIQUETTE = 'compteurs-de-limitation';
+
+function secret_compteurs_test(): string
+{
+    return hash_hmac('sha256', SECRET_COMPTEURS_TEST_ETIQUETTE, 'JETON-DE-TEST');
+}
+
 function cle_compteur_test(string $cle, int $secondes): string
 {
     // Même calcul que lib/limite.php, avec le secret de la config de test.
-    return 'l:' . substr(hash_hmac('sha256', $cle, 'JETON-DE-TEST'), 0, 40) . ':' . $secondes;
+    return 'l:' . substr(hash_hmac('sha256', $cle, secret_compteurs_test()), 0, 40) . ':' . $secondes;
 }
 
 // Écrit directement un compteur dans la base de test, comme si « nombre »
@@ -2334,6 +2421,380 @@ verifier("sauvegarde.php rend un fichier chiffré qui se déchiffre par openssl 
     // Une phrase trop courte est refusée : c'est elle qui protège tout.
     $r = formulaire('/sauvegarde.php', ['jeton' => 'JETON-DE-TEST', 'etape' => 'telecharger', 'phrase' => 'court', 'repete' => 'court']);
     vrai(str_contains($r['texte'], '12 caractères'), 'une phrase trop courte est refusée');
+});
+
+// ============================================================ LOT 11 (05/09/2026)
+//
+// Hygiène du serveur : la matrice droits x actions écrite et testée case par
+// case, les quotas, le secret des compteurs, le frein de verifier.php, le bloc
+// IPv6 /64, le prénom nettoyé, les vraies dates, les entrées à type inattendu.
+
+// La matrice, telle qu'elle est écrite dans api/prof.php. Chaque case a son
+// test ci-dessous : c'est la promesse du lot, et un droit déplacé par
+// inadvertance rend un test rouge.
+const MATRICE_ATTENDUE = [
+    'tableau' => 'lecture',
+    'partages.liste' => 'lecture',
+    'eleves.fiche' => 'lecture',
+    'eleves.ajouter' => 'ecriture',
+    'eleves.nommer' => 'ecriture',
+    'eleves.regenerer' => 'ecriture',
+    'eleves.restaurer' => 'ecriture',
+    'classes.modifier' => 'proprietaire',
+    'classes.supprimer' => 'proprietaire',
+    'eleves.supprimer' => 'proprietaire',
+    'partages.ajouter' => 'proprietaire',
+    'partages.supprimer' => 'proprietaire',
+];
+
+$lot11 = ['classe' => null, 'eleve' => null, 'jetonProprio' => null, 'jetonPartage' => null, 'profPartage' => null];
+
+verifier("lot 11 — mise en place : une classe à moi, partagée à un collègue neuf", function () use (&$lot11) {
+    vider_compteurs();
+    // Le mot de passe de « gwenael » a changé en cours de route : le test de
+    // secours.php (lot 12) lui en a donné un nouveau. On accepte les deux, pour
+    // que ce bloc reste valable quel que soit l'ordre des tests plus haut.
+    $lot11['jetonProprio'] = null;
+    foreach (['phrase-de-secours-2026', 'motdepasse-de-test-2026'] as $essai) {
+        $r = connexion('gwenael', $essai);
+        if (($r['json']['jeton'] ?? null) !== null) { $lot11['jetonProprio'] = $r['json']['jeton']; break; }
+    }
+    vrai(is_string($lot11['jetonProprio']), 'la session du propriétaire est ouverte');
+
+    // Un collègue tout neuf : les comptes des tests précédents ont été
+    // désactivés, réinitialisés et supprimés dans tous les sens. Celui-ci
+    // n'appartient qu'au lot 11.
+    $cree = appel('/api/prof.php', ['action' => 'profs.ajouter', 'identifiant' => 'lot11-collegue'],
+        ['jeton' => $lot11['jetonProprio']])['json'];
+    $lot11['profPartage'] = (int)$cree['id'];
+    $jetonNeuf = connexion('lot11-collegue', $cree['motdepasse'])['json']['jeton'];
+    egal(200, appel('/api/prof.php', ['action' => 'profs.motdepasse', 'ancien' => $cree['motdepasse'],
+        'nouveau' => 'une phrase pour le collegue 2026'], ['jeton' => $jetonNeuf])['code'], 'il choisit son mot de passe');
+    $lot11['jetonPartage'] = $jetonNeuf;
+
+    $lot11['classe'] = appel('/api/prof.php', ['action' => 'classes.creer', 'libelle' => 'lot11'],
+        ['jeton' => $lot11['jetonProprio']])['json']['id'];
+    vrai(is_int($lot11['classe']), 'la classe du lot 11 est créée');
+    $lot11['eleve'] = appel('/api/prof.php', ['action' => 'eleves.ajouter',
+        'classe_id' => $lot11['classe'], 'nombre' => 2], ['jeton' => $lot11['jetonProprio']])['json']['eleves'][0];
+
+    // Une progression avec une version précédente, pour que « Version
+    // précédente » ait un sens dans la matrice.
+    ecrire($lot11['eleve']['code'], ['version' => 1], 0);
+    ecrire($lot11['eleve']['code'], ['version' => 1, 'expert' => 1], 1);
+});
+
+// Une action de la matrice, jouée avec un corps valide. On ne regarde que le
+// code HTTP : 200 (autorisé), 403 (droit insuffisant), 404 (classe hors de
+// portée — on ne révèle pas l'existence des classes des collègues).
+function jouer_action_lot11(string $action, array $lot11, string $jeton): int
+{
+    $corps = ['action' => $action];
+    switch ($action) {
+        case 'tableau':
+        case 'partages.liste':
+        case 'classes.supprimer':
+            $corps['classe_id'] = $lot11['classe'];
+            break;
+        case 'classes.modifier':
+            $corps['classe_id'] = $lot11['classe'];
+            $corps['libelle'] = 'lot11';
+            break;
+        case 'eleves.ajouter':
+            $corps['classe_id'] = $lot11['classe'];
+            $corps['nombre'] = 1;
+            break;
+        case 'partages.ajouter':
+            $corps['classe_id'] = $lot11['classe'];
+            $corps['prof_id'] = $lot11['profPartage'];
+            $corps['droit'] = 'ecriture';
+            break;
+        case 'partages.supprimer':
+            $corps['classe_id'] = $lot11['classe'];
+            $corps['prof_id'] = 0; // personne : la vérification du droit passe avant
+            break;
+        case 'eleves.fiche':
+        case 'eleves.regenerer':
+        case 'eleves.supprimer':
+            $corps['eleve_id'] = $lot11['eleve']['id'];
+            break;
+        case 'eleves.nommer':
+            $corps['eleve_id'] = $lot11['eleve']['id'];
+            $corps['prenom'] = 'Léa';
+            $corps['initiale'] = 'B';
+            break;
+        case 'eleves.restaurer':
+            $corps['eleve_id'] = $lot11['eleve']['id'];
+            $corps['appli'] = 'defi-tables';
+            break;
+    }
+    return appel('/api/prof.php', $corps, ['jeton' => $jeton])['code'];
+}
+
+verifier("lot 11 — matrice : en LECTURE seule, seules les trois actions de lecture passent", function () use (&$lot11) {
+    appel('/api/prof.php', ['action' => 'partages.ajouter', 'classe_id' => $lot11['classe'],
+        'prof_id' => $lot11['profPartage'], 'droit' => 'lecture'], ['jeton' => $lot11['jetonProprio']]);
+    foreach (MATRICE_ATTENDUE as $action => $droit) {
+        if ($action === 'classes.supprimer' || $action === 'eleves.supprimer') continue; // joués à part : ils effacent
+        $obtenu = jouer_action_lot11($action, $lot11, $lot11['jetonPartage']);
+        if ($droit === 'lecture') egal(200, $obtenu, "en lecture, « $action » doit passer");
+        else egal(403, $obtenu, "en lecture, « $action » doit être refusé");
+    }
+});
+
+verifier("lot 11 — matrice : en ÉCRITURE, on prépare et on dépanne, on n'efface pas", function () use (&$lot11) {
+    appel('/api/prof.php', ['action' => 'partages.ajouter', 'classe_id' => $lot11['classe'],
+        'prof_id' => $lot11['profPartage'], 'droit' => 'ecriture'], ['jeton' => $lot11['jetonProprio']]);
+    foreach (MATRICE_ATTENDUE as $action => $droit) {
+        if ($action === 'classes.supprimer' || $action === 'eleves.supprimer') continue;
+        $obtenu = jouer_action_lot11($action, $lot11, $lot11['jetonPartage']);
+        if ($droit === 'proprietaire') egal(403, $obtenu, "en écriture, « $action » doit rester au propriétaire");
+        else egal(200, $obtenu, "en écriture, « $action » doit passer");
+    }
+    // Les deux qui effacent, joués pour de bon : refusés, et rien n'a bougé.
+    egal(403, jouer_action_lot11('eleves.supprimer', $lot11, $lot11['jetonPartage']), 'supprimer un élève');
+    egal(403, jouer_action_lot11('classes.supprimer', $lot11, $lot11['jetonPartage']), 'supprimer la classe');
+    $tableau = appel('/api/prof.php', ['action' => 'tableau', 'classe_id' => $lot11['classe']],
+        ['jeton' => $lot11['jetonProprio']])['json'];
+    vrai(count($tableau['eleves']) >= 2, 'les élèves sont toujours là');
+});
+
+verifier("lot 11 — matrice : le PROPRIÉTAIRE peut tout, y compris ce qui efface", function () use (&$lot11) {
+    foreach (MATRICE_ATTENDUE as $action => $droit) {
+        if ($action === 'classes.supprimer' || $action === 'eleves.supprimer') continue;
+        egal(200, jouer_action_lot11($action, $lot11, $lot11['jetonProprio']), "le propriétaire fait « $action »");
+    }
+    egal(200, jouer_action_lot11('eleves.supprimer', $lot11, $lot11['jetonProprio']), 'supprimer un élève');
+});
+
+verifier("lot 11 — matrice : une action de classe inconnue est refusée, pas devinée", function () use (&$lot11) {
+    egal(400, appel('/api/prof.php', ['action' => 'classes.exporter', 'classe_id' => $lot11['classe']],
+        ['jeton' => $lot11['jetonProprio']])['code'], 'action inventée');
+    egal(400, appel('/api/prof.php', ['action' => 'eleves.tout_effacer', 'eleve_id' => $lot11['eleve']['id']],
+        ['jeton' => $lot11['jetonProprio']])['code'], 'action inventée sur un élève');
+});
+
+verifier("lot 11 — matrice : les actions de comptes restent à l'administrateur", function () use (&$lot11) {
+    foreach (['profs.liste', 'profs.ajouter', 'profs.supprimer', 'profs.reinitialiser',
+              'profs.desactiver', 'profs.reactiver'] as $action) {
+        $r = appel('/api/prof.php', ['action' => $action, 'prof_id' => 1, 'identifiant' => 'intrus',
+            'motdepasse' => 'motdepasse-intrus-2026'], ['jeton' => $lot11['jetonPartage']]);
+        egal(403, $r['code'], "« $action » doit être refusé à un professeur ordinaire");
+    }
+});
+
+verifier("lot 11 — quota : une classe s'arrête à deux cents élèves, et le refus ne crée rien", function () use (&$lot11) {
+    $classe = appel('/api/prof.php', ['action' => 'classes.creer', 'libelle' => 'lot11-quota'],
+        ['jeton' => $lot11['jetonProprio']])['json']['id'];
+    for ($i = 0; $i < 3; $i++) {
+        egal(200, appel('/api/prof.php', ['action' => 'eleves.ajouter', 'classe_id' => $classe,
+            'nombre' => 60], ['jeton' => $lot11['jetonProprio']])['code'], "lot de 60 n°" . ($i + 1));
+    }
+    // 180 élèves. Vingt de plus : d'accord. Vingt et un : non.
+    $r = appel('/api/prof.php', ['action' => 'eleves.ajouter', 'classe_id' => $classe, 'nombre' => 21],
+        ['jeton' => $lot11['jetonProprio']]);
+    egal(409, $r['code'], '181 + 20 dépasse le plafond');
+    $combien = fn() => count(appel('/api/prof.php', ['action' => 'tableau', 'classe_id' => $classe],
+        ['jeton' => $lot11['jetonProprio']])['json']['eleves']);
+    egal(180, $combien(), 'le refus n’a créé aucun élève');
+    egal(200, appel('/api/prof.php', ['action' => 'eleves.ajouter', 'classe_id' => $classe, 'nombre' => 20],
+        ['jeton' => $lot11['jetonProprio']])['code'], 'les vingt derniers passent');
+    egal(200, $combien(), 'la classe est pleine, exactement');
+    egal(409, appel('/api/prof.php', ['action' => 'eleves.ajouter', 'classe_id' => $classe, 'nombre' => 1],
+        ['jeton' => $lot11['jetonProprio']])['code'], 'un de plus est refusé');
+    appel('/api/prof.php', ['action' => 'classes.supprimer', 'classe_id' => $classe], ['jeton' => $lot11['jetonProprio']]);
+});
+
+verifier("lot 11 — le lot d'élèves est tout ou rien : deux demandes simultanées ne franchissent pas le plafond", function () use (&$lot11) {
+    $classe = appel('/api/prof.php', ['action' => 'classes.creer', 'libelle' => 'lot11-course'],
+        ['jeton' => $lot11['jetonProprio']])['json']['id'];
+    for ($i = 0; $i < 3; $i++) {
+        appel('/api/prof.php', ['action' => 'eleves.ajouter', 'classe_id' => $classe, 'nombre' => 60],
+            ['jeton' => $lot11['jetonProprio']]);
+    }
+    // 180 élèves, plafond 200. Chacune des deux demandes tient toute seule
+    // (180 + 20 = 200), les deux ensemble non (220). Sans le compte DANS la
+    // transaction, les deux liraient 180 et passeraient.
+    $codes = appels_paralleles('/api/prof.php', ['action' => 'eleves.ajouter', 'classe_id' => $classe,
+        'nombre' => 20, 'jeton' => $lot11['jetonProprio']], 2);
+    sort($codes);
+    egal([200, 409], $codes, 'une passe, l’autre est refusée');
+    $eleves = appel('/api/prof.php', ['action' => 'tableau', 'classe_id' => $classe],
+        ['jeton' => $lot11['jetonProprio']])['json']['eleves'];
+    egal(200, count($eleves), 'exactement deux cents élèves, jamais deux cent vingt');
+    appel('/api/prof.php', ['action' => 'classes.supprimer', 'classe_id' => $classe], ['jeton' => $lot11['jetonProprio']]);
+});
+
+verifier("lot 11 — quota : un professeur s'arrête à quarante classes", function () use (&$lot11) {
+    $jeton = $lot11['jetonProprio'];
+    $possedees = 0;
+    foreach (appel('/api/prof.php', ['action' => 'classes.liste'], ['jeton' => $jeton])['json']['classes'] as $c) {
+        if ($c['droit'] === 'proprietaire') $possedees++;
+    }
+    $creees = [];
+    while ($possedees + count($creees) < 40) {
+        $r = appel('/api/prof.php', ['action' => 'classes.creer', 'libelle' => 'q' . count($creees)], ['jeton' => $jeton]);
+        egal(200, $r['code'], 'sous le plafond, on crée');
+        $creees[] = (int)$r['json']['id'];
+    }
+    egal(409, appel('/api/prof.php', ['action' => 'classes.creer', 'libelle' => 'la-41e'], ['jeton' => $jeton])['code'],
+        'la quarante et unième est refusée');
+    foreach ($creees as $id) {
+        appel('/api/prof.php', ['action' => 'classes.supprimer', 'classe_id' => $id], ['jeton' => $jeton]);
+    }
+    egal(200, appel('/api/prof.php', ['action' => 'classes.creer', 'libelle' => 'apres-menage'], ['jeton' => $jeton])['code'],
+        'de la place libérée, on recrée');
+});
+
+verifier("lot 11 — le secret des compteurs n'est PAS le mot de passe d'installation", function () {
+    vider_compteurs();
+    // Un échec de connexion sur un identifiant connu de nous seuls : le
+    // compteur « connexion-id:<identifiant> » doit exister sous une clé hachée.
+    $identifiant = 'temoin-secret-' . bin2hex(random_bytes(3));
+    connexion($identifiant, 'mauvais-mot-de-passe-2026');
+    $cleClaire = 'connexion-id:' . $identifiant;
+    $secondes = 600;
+    $avecJetonBrut = 'l:' . substr(hash_hmac('sha256', $cleClaire, 'JETON-DE-TEST'), 0, 40) . ':' . $secondes;
+    $avecSecretDerive = cle_compteur_test($cleClaire, $secondes);
+    $cles = array_column(bd_test()->query('SELECT cle FROM compteurs')->fetchAll(), 'cle');
+    vrai(!in_array($avecJetonBrut, $cles, true),
+        'la clé ne doit plus être calculée avec le mot de passe d’installation lui-même');
+    vrai(in_array($avecSecretDerive, $cles, true),
+        'elle doit l’être avec le secret dérivé (HMAC + étiquette d’usage)');
+    // Et aucune clé ne contient l'identifiant en clair.
+    foreach ($cles as $cle) {
+        vrai(!str_contains($cle, $identifiant), 'aucun identifiant en clair dans la table des compteurs');
+    }
+    vider_compteurs();
+});
+
+verifier("lot 11 — verifier.php : douze mauvais mots de passe, puis la porte se ferme", function () {
+    vider_compteurs();
+    for ($i = 0; $i < 12; $i++) {
+        $r = formulaire('/verifier.php', ['jeton' => 'faux-' . $i]);
+        vrai(str_contains($r['texte'], 'incorrect'), "essai " . ($i + 1) . " : refus ordinaire");
+    }
+    $r = formulaire('/verifier.php', ['jeton' => 'faux-encore']);
+    // La page échappe les apostrophes (htmlspecialchars) : on cherche un
+    // morceau de phrase qui n'en contient pas.
+    vrai(str_contains($r['texte'], 'essais depuis cette adresse'),
+        'le treizième essai est freiné — ' . substr(strip_tags($r['texte']), 0, 200));
+    // Le BON mot de passe ne passe plus non plus pendant la fenêtre : sinon le
+    // frein se contournerait en glissant un bon essai entre deux mauvais.
+    $r = formulaire('/verifier.php', ['jeton' => 'JETON-DE-TEST']);
+    vrai(!str_contains($r['texte'], 'Tout est en ordre') && !str_contains($r['texte'], 'reste quelque chose'),
+        'la page ne montre rien pendant la fenêtre de frein');
+    vider_compteurs();
+    $r = formulaire('/verifier.php', ['jeton' => 'JETON-DE-TEST']);
+    vrai(str_contains($r['texte'], 'Tout est en ordre') || str_contains($r['texte'], 'reste quelque chose'),
+        'après remise à zéro, le bon mot de passe ouvre la page');
+});
+
+verifier("lot 11 — verifier.php : seuls les échecs comptent, vingt vérifications de suite passent", function () {
+    vider_compteurs();
+    for ($i = 0; $i < 20; $i++) {
+        $r = formulaire('/verifier.php', ['jeton' => 'JETON-DE-TEST']);
+        vrai(str_contains($r['texte'], 'Tout est en ordre') || str_contains($r['texte'], 'reste quelque chose'),
+            "vérification n°" . ($i + 1) . " : la page s'ouvre encore");
+    }
+    vider_compteurs();
+});
+
+verifier("lot 11 — en IPv6, c'est le bloc /64 qui compte, pas l'adresse", function () use ($racine) {
+    require_once $racine . '/public/lib/limite.php';
+    $avant = $_SERVER['REMOTE_ADDR'] ?? null;
+    $essais = [
+        // Deux adresses du MÊME abonné : un seul et même compteur.
+        '2001:db8:1234:5678:1:2:3:4' => '2001:db8:1234:5678::/64',
+        '2001:db8:1234:5678:aaaa:bbbb:cccc:dddd' => '2001:db8:1234:5678::/64',
+        // Un autre bloc : un autre compteur.
+        '2001:db8:1234:9999::1' => '2001:db8:1234:9999::/64',
+        // IPv4 : inchangée, c'est déjà une adresse d'abonné.
+        '203.0.113.4' => '203.0.113.4',
+        // IPv4 écrite à la mode IPv6 : c'est une IPv4, on ne regroupe pas.
+        '::ffff:203.0.113.4' => '::ffff:203.0.113.4',
+    ];
+    foreach ($essais as $adresse => $attendu) {
+        $_SERVER['REMOTE_ADDR'] = $adresse;
+        egal($attendu, adresse_limitee(), "$adresse");
+    }
+    if ($avant === null) unset($_SERVER['REMOTE_ADDR']); else $_SERVER['REMOTE_ADDR'] = $avant;
+});
+
+verifier("lot 11 — un prénom ne peut pas porter de HTML ni de caractère invisible", function () use (&$lot11) {
+    $eleve = appel('/api/prof.php', ['action' => 'eleves.ajouter', 'classe_id' => $lot11['classe'],
+        'nombre' => 1], ['jeton' => $lot11['jetonProprio']])['json']['eleves'][0];
+    appel('/api/prof.php', ['action' => 'eleves.nommer', 'eleve_id' => $eleve['id'],
+        'prenom' => "<img src=x onerror=alert(1)>Lé\u{200B}a", 'initiale' => '<b>'], ['jeton' => $lot11['jetonProprio']]);
+    $tableau = appel('/api/prof.php', ['action' => 'tableau', 'classe_id' => $lot11['classe']],
+        ['jeton' => $lot11['jetonProprio']])['json']['eleves'];
+    $prenom = null;
+    foreach ($tableau as $ligne) {
+        if ((int)$ligne['id'] === (int)$eleve['id']) $prenom = (string)$ligne['prenom'];
+    }
+    vrai($prenom !== null, 'l’élève est dans le tableau');
+    vrai(!str_contains($prenom, '<') && !str_contains($prenom, '>'), "aucun « < » ni « > » : obtenu " . json_encode($prenom));
+    vrai(!str_contains($prenom, "\u{200B}"), 'aucun caractère invisible');
+    vrai(str_contains($prenom, 'Léa'), "le vrai prénom est gardé : obtenu " . json_encode($prenom));
+    appel('/api/prof.php', ['action' => 'eleves.supprimer', 'eleve_id' => $eleve['id']], ['jeton' => $lot11['jetonProprio']]);
+});
+
+verifier("lot 11 — une date impossible n'est plus enregistrée comme une date", function () use (&$lot11) {
+    $eleve = appel('/api/prof.php', ['action' => 'eleves.ajouter', 'classe_id' => $lot11['classe'],
+        'nombre' => 1], ['jeton' => $lot11['jetonProprio']])['json']['eleves'][0];
+    $code = $eleve['code'];
+    ecrire($code, ['version' => 1, 'epoque' => '9999-99-99', 'dernier' => '2026-02-29'], 0);
+    $lu = (array)lire($code)['json']['parcours'];
+    vrai(!array_key_exists('epoque', $lu), '« 9999-99-99 » n’est pas une date : elle est retirée');
+    vrai(!array_key_exists('dernier', $lu), '« 2026-02-29 » n’existe pas (2026 n’est pas bissextile) : retirée');
+    ecrire($code, ['version' => 1, 'epoque' => '2024-02-29'], 1);
+    $lu = (array)lire($code)['json']['parcours'];
+    egal('2024-02-29', $lu['epoque'] ?? null, 'le 29 février d’une année bissextile, lui, est gardé');
+    appel('/api/prof.php', ['action' => 'eleves.supprimer', 'eleve_id' => $eleve['id']], ['jeton' => $lot11['jetonProprio']]);
+});
+
+verifier("lot 11 — la page élève ne publie plus le mode d'emploi du filtre", function () use (&$lot11) {
+    $eleve = appel('/api/prof.php', ['action' => 'eleves.ajouter', 'classe_id' => $lot11['classe'],
+        'nombre' => 1], ['jeton' => $lot11['jetonProprio']])['json']['eleves'][0];
+    $r = identite($eleve['code']);
+    egal(200, $r['code'], 'la page élève répond');
+    $appli = $r['json']['applis'][0];
+    foreach (['cles', 'mots', 'motifs'] as $champ) {
+        vrai(!array_key_exists($champ, (array)$appli), "« $champ » n’a rien à faire dans la réponse");
+    }
+    foreach (['cle', 'nom', 'description', 'url', 'ancre', 'disponible'] as $champ) {
+        vrai(array_key_exists($champ, (array)$appli), "« $champ » sert à l’affichage : il doit rester");
+    }
+    vrai(!str_contains($r['texte'], 'desordre'), 'aucun mot de la liste fermée dans la réponse');
+    appel('/api/prof.php', ['action' => 'eleves.supprimer', 'eleve_id' => $eleve['id']], ['jeton' => $lot11['jetonProprio']]);
+});
+
+verifier("lot 11 — PHP n'annonce plus sa version dans les en-têtes", function () use (&$lot11) {
+    foreach ([['/api/prof.php', ['action' => 'moi', 'jeton' => $lot11['jetonProprio']]],
+              ['/api/eleve.php', ['code' => 'ZZZZZZ']]] as [$chemin, $corps]) {
+        $r = appel($chemin, $corps);
+        egal(null, entete($r, 'X-Powered-By'), "X-Powered-By ne doit plus sortir de $chemin");
+    }
+    $r = appel('/verifier.php', null);
+    vrai(!str_contains(strtolower($r['entetes']), 'x-powered-by'), 'ni de la page de vérification');
+});
+
+verifier("lot 11 — une entrée de type inattendu ne salit plus le journal du serveur", function () use (&$lot11, $travail) {
+    // Un client bricolé envoie un tableau là où le serveur attend un texte.
+    // La réponse était déjà correcte ; c'est le JOURNAL qu'on vérifie ici :
+    // « Array to string conversion » y noyait les vraies pannes.
+    $avant = is_file($travail . '/serveur.log') ? (int)filesize($travail . '/serveur.log') : 0;
+    appel('/api/prof.php', ['action' => 'classes.liste', 'jeton' => ['un', 'tableau']]);
+    appel('/api/parcours.php', ['code' => 'ZZZZZZ', 'appli' => ['un', 'tableau'], 'lire' => true]);
+    appel('/api/prof.php', ['action' => 'tableau', 'classe_id' => $lot11['classe'],
+        'appli' => ['un', 'tableau'], 'jeton' => $lot11['jetonProprio']]);
+    appel('/api/prof.php', ['action' => 'eleves.restaurer', 'eleve_id' => $lot11['eleve']['id'],
+        'appli' => ['un', 'tableau'], 'jeton' => $lot11['jetonProprio']]);
+    usleep(200000);
+    $journal = is_file($travail . '/serveur.log') ? (string)file_get_contents($travail . '/serveur.log') : '';
+    $nouveau = substr($journal, $avant);
+    vrai(!str_contains($nouveau, 'Array to string conversion'),
+        "le journal ne doit plus porter « Array to string conversion » : " . substr($nouveau, 0, 300));
 });
 
 // ---------------------------------------------------------------------- résultat

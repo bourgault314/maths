@@ -37,6 +37,20 @@ function regles_progression(string $appli): array
     ];
 }
 
+// Une VRAIE date « AAAA-MM-JJ ».
+//
+// Lot 11 (05/09/2026, A-annexe 8) : la règle disait « une date », le contrôle
+// ne regardait que la FORME — « 9999-99-99 » et « 0000-00-00 » entraient et
+// étaient rangés tels quels. Aucun danger (des chiffres et des tirets, jamais
+// du texte libre), mais une promesse plus large que ce qu'elle tenait ; et
+// l'appli, elle, compare ces dates entre elles. checkdate() vérifie le mois,
+// le jour et les années bissextiles.
+function date_reelle(string $valeur): bool
+{
+    if (preg_match('/^(\d{4})-(\d{2})-(\d{2})$/', $valeur, $m) !== 1) return false;
+    return checkdate((int)$m[2], (int)$m[3], (int)$m[1]);
+}
+
 function cle_progression_acceptee(string $cle, array $regles): bool
 {
     if (isset($regles['cles'][$cle])) return true;
@@ -65,7 +79,7 @@ function valeur_progression_acceptee(mixed $valeur, array $regles, int $profonde
         return (int)$valeur;
     }
     if (is_string($valeur)) {
-        if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $valeur) === 1) return $valeur;
+        if (date_reelle($valeur)) return $valeur;
         if (isset($regles['mots'][$valeur])) return $valeur;
         $garder = false;
         return null;

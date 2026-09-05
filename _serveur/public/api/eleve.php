@@ -48,7 +48,10 @@ try {
     // (ou des billets) en série, lui, produit un échec par essai : au-delà de
     // 60, chaque requête de l'adresse est ralentie (elle répond encore juste),
     // au-delà de 600 elle est refusée (lib/limite.php).
-    $adresse = adresse_appelante();
+    // adresse_limitee() : en IPv6, c'est le bloc /64 qui compte, pas l'adresse
+    // exacte — sinon un curieux change d'adresse à chaque essai et le compteur
+    // ne monte jamais (lot 11, lib/limite.php).
+    $adresse = adresse_limitee();
     freiner_adresse($adresse);
 
     // ------------------------------------------------------- échange d'un billet

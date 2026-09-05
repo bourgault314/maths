@@ -21,6 +21,16 @@
   Require all denied
 </FilesMatch>
 
+# Lot 11 (05/09/2026) : le manifeste VERSION donne la liste de tous les fichiers
+# du serveur avec leur empreinte. verifier.php le lit sur le DISQUE, jamais par
+# HTTP : personne d'autre n'a a le telecharger. Idem pour un eventuel .user.ini.
+<Files "VERSION">
+  Require all denied
+</Files>
+<FilesMatch "^\.user\.ini$">
+  Require all denied
+</FilesMatch>
+
 # En-tetes de securite. PHP les envoie lui-meme sur chaque reponse
 # (lib/entetes.php, avec en plus la Content-Security-Policy a nonce des pages).
 # Ici, SEULEMENT sur ce que PHP ne sert pas : le moteur JS copie dans prof/.

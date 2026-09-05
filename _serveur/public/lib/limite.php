@@ -37,14 +37,36 @@ const FENETRE_ECHECS_CONNEXION = 600;
 const ECHECS_CONNEXION_PAR_ADRESSE = 60;
 const ECHECS_CONNEXION_PAR_IDENTIFIANT = 12;
 
-// Secret servant à hacher les clés. « secret » dans config.php si présent,
-// sinon le jeton d'installation, qui y est déjà : rien à ajouter chez OVH.
+// Secret servant à hacher les clés.
+//
+// Lot 11 (05/09/2026) : ce secret ne doit PAS être le mot de passe
+// d'installation lui-même. Les deux vivent dans le même fichier, mais ils ne
+// servent pas à la même chose — l'un ouvre verifier.php et secours.php, l'autre
+// ne fait que brouiller des adresses IP dans une table. Employer la même valeur
+// pour deux usages, c'est offrir à qui aurait l'un des deux le moyen de
+// travailler sur l'autre (recalculer les clés de la table « compteurs » pour
+// savoir si telle adresse est passée, par exemple).
+//
+// Deux cas :
+//  - « secret » est renseigné dans config.php : il sert tel quel, et c'est le
+//    réglage recommandé (verifier.php le dit) ;
+//  - il manque : on ne prend plus le jeton d'installation brut, mais une valeur
+//    DÉRIVÉE de lui par HMAC avec une étiquette d'usage. Personne n'a rien à
+//    changer chez OVH, et le secret des compteurs n'est plus le mot de passe
+//    d'installation — le connaître ne donne pas l'autre, et l'inverse non plus
+//    (on ne remonte pas un HMAC).
 function secret_compteurs(): string
 {
     $c = config();
     $secret = (string)($c['secret'] ?? '');
-    if ($secret === '') $secret = (string)($c['jeton_installation'] ?? '');
-    return $secret;
+    if ($secret !== '') return $secret;
+    return hash_hmac('sha256', 'compteurs-de-limitation', (string)($c['jeton_installation'] ?? ''));
+}
+
+// Vrai si config.php porte un secret à lui : ce que verifier.php affiche.
+function secret_compteurs_dedie(): bool
+{
+    return (string)(config()['secret'] ?? '') !== '';
 }
 
 function cle_compteur(string $cle, int $secondes): string
@@ -171,4 +193,33 @@ function oublier_compteurs_du_code(PDO $pdo, string $code): void
 function adresse_appelante(): string
 {
     return (string)($_SERVER['REMOTE_ADDR'] ?? 'inconnue');
+}
+
+// L'adresse telle qu'elle COMPTE dans le limiteur.
+//
+// Lot 11 (05/09/2026) : en IPv4, une adresse est une adresse. En IPv6, non —
+// le moindre abonné reçoit un bloc entier (/64, soit 18 milliards de milliards
+// d'adresses) et en change à volonté. Compter l'adresse complète, c'est offrir
+// à qui essaie des codes autant de compteurs neufs qu'il en veut : les 600
+// échecs qui ferment la porte ne se déclencheraient jamais.
+//
+// On compte donc le BLOC /64, c'est-à-dire les 64 premiers bits : le préfixe
+// que l'abonné ne choisit pas. C'est la granularité retenue partout ailleurs
+// pour la limitation en IPv6, et elle ne regroupe pas deux abonnés différents.
+//
+// Le résultat n'est jamais rangé tel quel : il passe par le HMAC de
+// cle_compteur(), comme le reste (aucune adresse en clair dans la base).
+function adresse_limitee(): string
+{
+    $adresse = adresse_appelante();
+    $binaire = @inet_pton($adresse);
+    if ($binaire === false || strlen($binaire) !== 16) {
+        return $adresse; // IPv4, ou quelque chose qui n'est pas une adresse.
+    }
+    // IPv4 déguisée en IPv6 (::ffff:203.0.113.4) : c'est une vraie IPv4, on la
+    // compte entière, sinon tout l'espace ::ffff:0:0/64 serait un seul compteur.
+    if (str_starts_with($binaire, "\0\0\0\0\0\0\0\0\0\0\xff\xff")) {
+        return $adresse;
+    }
+    return inet_ntop(substr($binaire, 0, 8) . str_repeat("\0", 8)) . '/64';
 }

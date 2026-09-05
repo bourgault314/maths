@@ -44,13 +44,27 @@ function appli_connue(string $cle): bool
     return array_key_exists($cle, CATALOGUE_APPLIS);
 }
 
+// Ce que la page élève affiche, et RIEN d'autre.
+//
+// Lot 11 (05/09/2026, A-annexe 5) : jusqu'ici, la réponse de api/eleve.php
+// recopiait l'entrée entière du catalogue — donc « cles », « mots » et
+// « motifs », c'est-à-dire la description exacte de ce que le filtre du serveur
+// accepte d'enregistrer. Le filtre tient (l'audit l'a éprouvé), mais publier
+// son mode d'emploi à qui a un code d'élève n'apporte rien à personne : la page
+// n'utilise que le nom, la description, l'adresse, l'ancre et « disponible ».
+const CHAMPS_AFFICHES_APPLI = ['nom', 'description', 'url', 'ancre', 'disponible'];
+
 function applis_de_classe(string $liste): array
 {
     $sortie = [];
     foreach (explode(',', $liste) as $cle) {
         $cle = trim($cle);
         if (!appli_connue($cle)) continue;
-        $sortie[] = ['cle' => $cle] + CATALOGUE_APPLIS[$cle];
+        $appli = ['cle' => $cle];
+        foreach (CHAMPS_AFFICHES_APPLI as $champ) {
+            $appli[$champ] = CATALOGUE_APPLIS[$cle][$champ] ?? null;
+        }
+        $sortie[] = $appli;
     }
     return $sortie;
 }

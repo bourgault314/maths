@@ -22,13 +22,106 @@ const MAX_ELEVES_PAR_LOT = 60;
 const APPLIS_PROPOSABLES = ['defi-tables', 'automatismes'];
 const DROITS_PARTAGE = ['lecture', 'ecriture'];
 
+// ------------------------------------------------------------------- quotas
+//
+// Lot 11 (05/09/2026). Rien n'a jamais débordé, mais rien ne l'empêchait non
+// plus : une session volée, ou simplement un clic resté enfoncé, pouvait créer
+// des classes et des élèves jusqu'à remplir les 250 Mo de l'hébergement — et
+// une base pleine, c'est le suivi de TOUTE la classe qui s'arrête. Les deux
+// bornes sont très au-dessus d'un usage réel (un professeur de collège a
+// quatre à six classes de trente) : elles n'arrêtent que ce qui n'est pas un
+// usage.
+const MAX_CLASSES_PAR_PROF = 40;
+const MAX_ELEVES_PAR_CLASSE = 200;
+
+// ------------------------------------------------------- droits × actions
+//
+// Lot 11 (05/09/2026) : QUI a le droit de faire QUOI, écrit à un seul endroit.
+//
+// Avant, le droit exigé était choisi action par action, au fil du code — et
+// deux actions s'étaient glissées dans « écriture » sans que personne l'ait
+// décidé : supprimer un élève (avec sa progression, définitivement) et
+// renommer la classe. Le README, lui, promettait à un collègue en écriture
+// « ajouter des élèves, saisir les prénoms et donner un nouveau code », rien de
+// plus. Décision de Gwenaël (05/09) : le code s'aligne sur la promesse, plus
+// « Version précédente » (dépanner un élève sans le déranger) ; supprimer un
+// élève et renommer la classe redeviennent réservés au PROPRIÉTAIRE.
+//
+// Cette table est la seule source : chaque case a son test (tests/lancer.php).
+// Une action de classe absente d'ici est refusée, pas devinée.
+const DROIT_PAR_ACTION = [
+    // Lecture : voir, sans jamais rien changer ni recevoir un code.
+    'tableau' => 'lecture',
+    'partages.liste' => 'lecture',
+    'eleves.fiche' => 'lecture',
+    // Écriture : préparer la classe et dépanner un élève.
+    'eleves.ajouter' => 'ecriture',
+    'eleves.nommer' => 'ecriture',
+    'eleves.regenerer' => 'ecriture',
+    'eleves.restaurer' => 'ecriture',
+    // Propriétaire : ce qui efface, et ce qui change la classe elle-même.
+    'classes.modifier' => 'proprietaire',
+    'classes.supprimer' => 'proprietaire',
+    'eleves.supprimer' => 'proprietaire',
+    'partages.ajouter' => 'proprietaire',
+    'partages.supprimer' => 'proprietaire',
+];
+
+// Les actions réservées au compte administrateur (gestion des comptes prof).
+// Elles ne portent sur aucune classe : elles ne passent pas par la table
+// ci-dessus, mais elles sont listées ici pour que « qui peut quoi » tienne en
+// un seul endroit lisible.
+const ACTIONS_ADMIN = [
+    'profs.liste', 'profs.ajouter', 'profs.supprimer',
+    'profs.reinitialiser', 'profs.desactiver', 'profs.reactiver',
+];
+
+// Le droit qu'exige une action portant sur une classe.
+function droit_requis(string $action): string
+{
+    $droit = DROIT_PAR_ACTION[$action] ?? null;
+    if ($droit === null) erreur("Action inconnue.", 400);
+    return $droit;
+}
+
 cors();
 
+// Le texte que le serveur accepte de ranger : espaces compactés, longueur
+// bornée, et — lot 11 — plus aucun caractère de commande ni caractère de mise
+// en forme invisible (U+200B…U+200F, U+2060…, marques de sens d'écriture).
+// Ils ne servent à rien dans un nom de classe et se cachent dans une liste
+// collée depuis un tableur ou une page web.
 function texte(mixed $valeur, int $max): string
 {
     $texte = is_string($valeur) ? $valeur : '';
+    // Caractères de commande (C0 et C1) et caractères invisibles de mise en
+    // forme : retirés, pas remplacés par un espace.
+    $texte = preg_replace('/[\x{0000}-\x{0008}\x{000B}\x{000C}\x{000E}-\x{001F}\x{007F}-\x{009F}\x{200B}-\x{200F}\x{202A}-\x{202E}\x{2060}-\x{2064}\x{FEFF}]/u', '', $texte) ?? '';
     $texte = preg_replace('/\s+/u', ' ', $texte) ?? '';
     return mb_substr(trim($texte), 0, $max);
+}
+
+// Un PRÉNOM d'élève. En plus du nettoyage ci-dessus : ni « < » ni « > ».
+//
+// Lot 11 (05/09/2026), défense en profondeur. Il n'y a pas de faille
+// aujourd'hui — la page prof n'écrit jamais un prénom par innerHTML, et sa
+// politique de contenu à nonce neutraliserait un gestionnaire d'évènement en
+// ligne. Mais l'audit du 01/09 a montré qu'on peut ENREGISTRER
+// « <img src=x onerror=…> » comme prénom : la sûreté ne tient alors qu'à la
+// discipline de tous les affichages futurs. Un prénom n'a aucune raison de
+// porter du HTML : on le refuse à l'entrée, une fois pour toutes.
+function texte_prenom(mixed $valeur, int $max): string
+{
+    return texte(str_replace(['<', '>'], '', is_string($valeur) ? $valeur : ''), $max);
+}
+
+// Le nom d'une appli reçu du client. Lot 11 (A-annexe 9) : un client qui envoie
+// un tableau au lieu d'un texte obtenait la bonne réponse (400) mais laissait
+// « PHP Warning: Array to string conversion » dans le journal du serveur — du
+// bruit qui masque les vraies pannes.
+function appli_recue(mixed $valeur): string
+{
+    return is_string($valeur) ? $valeur : 'defi-tables';
 }
 
 // Le compte connecté : identifiant, droit d'administration, mot de passe
@@ -52,6 +145,15 @@ function prof_courant(PDO $pdo, int $profId): array
 function exiger_admin(array $prof): void
 {
     if (!$prof['admin']) erreur("Seul le compte administrateur peut gérer les professeurs.", 403);
+}
+
+// Lot 11 : la deuxième moitié de la matrice. Toute action de la liste
+// ACTIONS_ADMIN passe par ici AVANT d'entrer dans son cas — un « exiger_admin »
+// oublié dans un cas ne peut plus ouvrir une porte, et le test qui parcourt la
+// liste le prouve action par action.
+function garder_actions_admin(array $prof, string $action): void
+{
+    if (in_array($action, ACTIONS_ADMIN, true)) exiger_admin($prof);
 }
 
 // Un autre compte que le sien, pour les actions d'administration : on ne se
@@ -91,7 +193,7 @@ function acces_classe(PDO $pdo, int $profId, mixed $classeIdBrut, string $besoin
     }
 
     if ($besoin === 'proprietaire' && $classe['droit'] !== 'proprietaire') {
-        erreur("Cette classe ne t'appartient pas.", 403);
+        erreur("Cette classe ne t'appartient pas : seul son propriétaire peut faire cela.", 403);
     }
     if ($besoin === 'ecriture' && $classe['droit'] === 'lecture') {
         erreur("Cette classe t'est partagée en lecture seule.", 403);
@@ -99,8 +201,10 @@ function acces_classe(PDO $pdo, int $profId, mixed $classeIdBrut, string $besoin
     return $classe;
 }
 
-// Pour toute action sur un élève : on remonte à sa classe et on vérifie là.
-function eleve_modifiable(PDO $pdo, int $profId, mixed $eleveIdBrut): array
+// Pour toute action sur un élève : on remonte à SA classe et on vérifie là, avec
+// le droit que la matrice exige pour cette action — jamais le classe_id envoyé
+// par le navigateur.
+function eleve_pour_action(PDO $pdo, int $profId, mixed $eleveIdBrut, string $action): array
 {
     $eleveId = (int)$eleveIdBrut;
     $requete = $pdo->prepare('SELECT id, classe_id, code FROM eleves WHERE id = ?');
@@ -109,19 +213,7 @@ function eleve_modifiable(PDO $pdo, int $profId, mixed $eleveIdBrut): array
     // Même message qu'une classe interdite : un professeur connecté ne doit
     // pas pouvoir distinguer « n'existe pas » de « appartient à un collègue ».
     if ($eleve === false) erreur("Introuvable.", 404);
-    acces_classe($pdo, $profId, (int)$eleve['classe_id'], 'ecriture');
-    return $eleve;
-}
-
-// Pour lire ce qui concerne un élève (sa fiche) : la classe en lecture suffit.
-function eleve_lisible(PDO $pdo, int $profId, mixed $eleveIdBrut): array
-{
-    $eleveId = (int)$eleveIdBrut;
-    $requete = $pdo->prepare('SELECT id, classe_id FROM eleves WHERE id = ?');
-    $requete->execute([$eleveId]);
-    $eleve = $requete->fetch();
-    if ($eleve === false) erreur("Introuvable.", 404);
-    acces_classe($pdo, $profId, (int)$eleve['classe_id'], 'lecture');
+    acces_classe($pdo, $profId, (int)$eleve['classe_id'], droit_requis($action));
     return $eleve;
 }
 
@@ -174,7 +266,7 @@ try {
         // échecs / 10 min) et l'identifiant visé (12 / 10 min), tous deux
         // regardés AVANT le hachage, pour qu'un refus ne coûte rien.
         $identifiant = (string)($corps['identifiant'] ?? '');
-        $adresse = adresse_appelante();
+        $adresse = adresse_limitee();
         $cleAdresse = 'connexion-echec:' . $adresse;
         $cleIdentifiant = 'connexion-id:' . mb_strtolower(trim($identifiant));
         limiter_deja_atteint($cleAdresse, ECHECS_CONNEXION_PAR_ADRESSE, FENETRE_ECHECS_CONNEXION);
@@ -205,6 +297,11 @@ try {
     if ($prof['mdp_temporaire'] && !in_array($action, ['moi', 'deconnexion', 'profs.motdepasse'], true)) {
         erreur("Choisis d'abord un nouveau mot de passe.", 403);
     }
+
+    // La matrice, appliquée avant tout le reste : les actions de comptes au
+    // compte administrateur, les actions de classe au droit que la table exige
+    // (droit_requis(), appelé dans chaque cas au moment où la classe est lue).
+    garder_actions_admin($prof, $action);
 
     switch ($action) {
         case 'deconnexion':
@@ -366,6 +463,12 @@ try {
         case 'classes.creer':
             $libelle = texte($corps['libelle'] ?? '', 40);
             if ($libelle === '') erreur("Donne un nom à la classe.", 400);
+            $compte = $pdo->prepare('SELECT COUNT(*) FROM classes WHERE prof_id = ?');
+            $compte->execute([$profId]);
+            $possedees = (int)$compte->fetchColumn();
+            if ($possedees >= MAX_CLASSES_PAR_PROF) {
+                erreur("Tu as déjà " . MAX_CLASSES_PAR_PROF . " classes : supprime celles dont tu n'as plus besoin.", 409);
+            }
             $applis = array_values(array_intersect(APPLIS_PROPOSABLES, (array)($corps['applis'] ?? ['defi-tables'])));
             if ($applis === []) $applis = ['defi-tables'];
             $pdo->prepare('INSERT INTO classes (prof_id, libelle, applis, cree_le) VALUES (?, ?, ?, ?)')
@@ -373,7 +476,10 @@ try {
             repondre(['ok' => true, 'id' => (int)$pdo->lastInsertId()]);
 
         case 'classes.modifier':
-            $classe = acces_classe($pdo, $profId, $corps['classe_id'] ?? 0, 'ecriture');
+            // Renommer la classe ou changer ses applis : c'est la classe
+            // elle-même qu'on change, et elle porte le nom sous lequel son
+            // propriétaire la reconnaît. Réservé au propriétaire (lot 11).
+            $classe = acces_classe($pdo, $profId, $corps['classe_id'] ?? 0, droit_requis($action));
             $libelle = texte($corps['libelle'] ?? $classe['libelle'], 40);
             if ($libelle === '') erreur("Donne un nom à la classe.", 400);
             $applis = array_values(array_intersect(APPLIS_PROPOSABLES, (array)($corps['applis'] ?? explode(',', $classe['applis']))));
@@ -386,14 +492,14 @@ try {
             // Supprimer une classe efface des progressions : réservé au
             // propriétaire. C'est aussi ce que fait la fin d'année, par le même
             // chemin (lib/archives.php) : un seul code qui efface ces tables.
-            $classe = acces_classe($pdo, $profId, $corps['classe_id'] ?? 0, 'proprietaire');
+            $classe = acces_classe($pdo, $profId, $corps['classe_id'] ?? 0, droit_requis($action));
             supprimer_classe($pdo, (int)$classe['id']);
             repondre(['ok' => true]);
 
         // ----------------------------------------------------------------- partages
 
         case 'partages.liste':
-            $classe = acces_classe($pdo, $profId, $corps['classe_id'] ?? 0, 'lecture');
+            $classe = acces_classe($pdo, $profId, $corps['classe_id'] ?? 0, droit_requis($action));
             $requete = $pdo->prepare(
                 'SELECT g.prof_id, g.droit, p.identifiant
                  FROM partages g JOIN profs p ON p.id = g.prof_id
@@ -411,7 +517,7 @@ try {
             repondre(['ok' => true, 'partages' => $partages, 'droit' => $classe['droit']]);
 
         case 'partages.ajouter':
-            $classe = acces_classe($pdo, $profId, $corps['classe_id'] ?? 0, 'proprietaire');
+            $classe = acces_classe($pdo, $profId, $corps['classe_id'] ?? 0, droit_requis($action));
             $autreId = (int)($corps['prof_id'] ?? 0);
             if ($autreId === $profId) erreur("Cette classe est déjà la tienne.", 400);
             $requete = $pdo->prepare('SELECT id FROM profs WHERE id = ? AND actif = 1');
@@ -432,7 +538,7 @@ try {
             repondre(['ok' => true]);
 
         case 'partages.supprimer':
-            $classe = acces_classe($pdo, $profId, $corps['classe_id'] ?? 0, 'proprietaire');
+            $classe = acces_classe($pdo, $profId, $corps['classe_id'] ?? 0, droit_requis($action));
             $pdo->prepare('DELETE FROM partages WHERE classe_id = ? AND prof_id = ?')
                 ->execute([(int)$classe['id'], (int)($corps['prof_id'] ?? 0)]);
             repondre(['ok' => true]);
@@ -440,31 +546,65 @@ try {
         // ------------------------------------------------------------------- élèves
 
         case 'eleves.ajouter':
-            $classe = acces_classe($pdo, $profId, $corps['classe_id'] ?? 0, 'ecriture');
+            $classe = acces_classe($pdo, $profId, $corps['classe_id'] ?? 0, droit_requis($action));
             $nombre = (int)($corps['nombre'] ?? 1);
             if ($nombre < 1 || $nombre > MAX_ELEVES_PAR_LOT) {
                 erreur("Nombre d'élèves à créer entre 1 et " . MAX_ELEVES_PAR_LOT . ".", 400);
             }
-            $crees = [];
-            for ($i = 0; $i < $nombre; $i++) {
-                $code = code_libre($pdo);
-                $pdo->prepare('INSERT INTO eleves (classe_id, code, prenom, initiale, cree_le) VALUES (?, ?, ?, ?, ?)')
-                    ->execute([(int)$classe['id'], $code, '', '', maintenant()]);
-                $crees[] = ['id' => (int)$pdo->lastInsertId(), 'code' => $code];
-            }
+            // Tout ou rien (lot 11), et le compte des élèves DANS la même
+            // transaction que les créations.
+            //
+            // Deux choses se jouent ici. (1) Un lot de 28 codes interrompu au
+            // 17e laissait la feuille imprimée et la classe en désaccord, sans
+            // que rien ne le dise. (2) Compter AVANT d'ouvrir la transaction
+            // laissait deux demandes simultanées lire le même total et passer
+            // toutes les deux : le quota se franchissait sans que personne ne
+            // triche. La ligne de la classe est donc verrouillée d'abord, puis
+            // le compte est une lecture verrouillée (donc à jour, y compris sur
+            // MySQL où une lecture ordinaire voit l'instantané du début de
+            // transaction) — les deux demandes s'attendent, la seconde voit le
+            // total réel et se fait refuser.
+            $crees = avec_reprise($pdo, function () use ($pdo, $classe, $nombre): array {
+                transaction_ouvrir($pdo);
+                try {
+                    $verrou = $pdo->prepare('SELECT id FROM classes WHERE id = ?' . pour_mise_a_jour($pdo));
+                    $verrou->execute([(int)$classe['id']]);
+                    $verrou->closeCursor();
+                    $compte = $pdo->prepare('SELECT COUNT(*) FROM eleves WHERE classe_id = ?' . pour_mise_a_jour($pdo));
+                    $compte->execute([(int)$classe['id']]);
+                    $deja = (int)$compte->fetchColumn();
+                    $compte->closeCursor();
+                    if ($deja + $nombre > MAX_ELEVES_PAR_CLASSE) {
+                        transaction_annuler($pdo);
+                        erreur("Une classe ne peut pas dépasser " . MAX_ELEVES_PAR_CLASSE . " élèves (elle en a déjà $deja).", 409);
+                    }
+                    $faits = [];
+                    for ($i = 0; $i < $nombre; $i++) {
+                        $code = code_libre($pdo);
+                        $pdo->prepare('INSERT INTO eleves (classe_id, code, prenom, initiale, cree_le) VALUES (?, ?, ?, ?, ?)')
+                            ->execute([(int)$classe['id'], $code, '', '', maintenant()]);
+                        $faits[] = ['id' => (int)$pdo->lastInsertId(), 'code' => $code];
+                    }
+                    transaction_valider($pdo);
+                    return $faits;
+                } catch (Throwable $e) {
+                    transaction_annuler($pdo);
+                    throw $e;
+                }
+            });
             repondre(['ok' => true, 'eleves' => $crees]);
 
         case 'eleves.nommer':
-            $eleve = eleve_modifiable($pdo, $profId, $corps['eleve_id'] ?? 0);
+            $eleve = eleve_pour_action($pdo, $profId, $corps['eleve_id'] ?? 0, $action);
             $pdo->prepare('UPDATE eleves SET prenom = ?, initiale = ? WHERE id = ?')->execute([
-                texte($corps['prenom'] ?? '', 40),
-                mb_strtoupper(mb_substr(texte($corps['initiale'] ?? '', 4), 0, 1)),
+                texte_prenom($corps['prenom'] ?? '', 40),
+                mb_strtoupper(mb_substr(texte_prenom($corps['initiale'] ?? '', 4), 0, 1)),
                 (int)$eleve['id'],
             ]);
             repondre(['ok' => true]);
 
         case 'eleves.regenerer':
-            $eleve = eleve_modifiable($pdo, $profId, $corps['eleve_id'] ?? 0);
+            $eleve = eleve_pour_action($pdo, $profId, $corps['eleve_id'] ?? 0, $action);
             $code = code_libre($pdo);
             $pdo->prepare('UPDATE eleves SET code = ? WHERE id = ?')->execute([$code, (int)$eleve['id']]);
             oublier_compteurs_du_code($pdo, (string)$eleve['code']);
@@ -480,7 +620,7 @@ try {
             // l'historique du navigateur du professeur). La classe en lecture
             // suffit : un collègue à qui la classe est partagée voit la fiche
             // sans jamais recevoir le code.
-            $eleve = eleve_lisible($pdo, $profId, $corps['eleve_id'] ?? 0);
+            $eleve = eleve_pour_action($pdo, $profId, $corps['eleve_id'] ?? 0, $action);
             repondre(['ok' => true, 'billet' => emettre_billet($pdo, (int)$eleve['id'], 'fiche')]);
 
         case 'eleves.restaurer':
@@ -488,8 +628,8 @@ try {
             // l'écrasement par quelqu'un qui connaissait le code, et le petit
             // frère qui a cliqué « Recommencer à zéro ». Une seule version en
             // arrière ; la révision monte, l'appli de l'élève fusionnera.
-            $eleve = eleve_modifiable($pdo, $profId, $corps['eleve_id'] ?? 0);
-            $appli = (string)($corps['appli'] ?? 'defi-tables');
+            $eleve = eleve_pour_action($pdo, $profId, $corps['eleve_id'] ?? 0, $action);
+            $appli = appli_recue($corps['appli'] ?? null);
             if (!in_array($appli, APPLIS_PROPOSABLES, true)) erreur("Application inconnue.", 400);
             $resultat = restaurer_progression($pdo, (int)$eleve['id'], $appli);
             if (isset($resultat['rien'])) erreur("Aucune version précédente à restaurer.", 409);
@@ -497,7 +637,9 @@ try {
             repondre(['ok' => true, 'parcours' => json_decode($resultat['donnees'], false), 'revision' => $resultat['revision']]);
 
         case 'eleves.supprimer':
-            $eleve = eleve_modifiable($pdo, $profId, $corps['eleve_id'] ?? 0);
+            // Supprimer un élève efface sa progression pour de bon : depuis le
+            // lot 11, c'est au propriétaire de la classe, comme la supprimer.
+            $eleve = eleve_pour_action($pdo, $profId, $corps['eleve_id'] ?? 0, $action);
             $pdo->beginTransaction();
             try {
                 $pdo->prepare('DELETE FROM progressions WHERE eleve_id = ?')->execute([(int)$eleve['id']]);
@@ -514,8 +656,8 @@ try {
         // ------------------------------------------------------------------ tableau
 
         case 'tableau':
-            $classe = acces_classe($pdo, $profId, $corps['classe_id'] ?? 0, 'lecture');
-            $appli = (string)($corps['appli'] ?? 'defi-tables');
+            $classe = acces_classe($pdo, $profId, $corps['classe_id'] ?? 0, droit_requis($action));
+            $appli = appli_recue($corps['appli'] ?? null);
             if (!in_array($appli, APPLIS_PROPOSABLES, true)) erreur("Application inconnue.", 400);
             $requete = $pdo->prepare(
                 'SELECT e.id, e.code, e.prenom, e.initiale, p.donnees, p.maj_le,

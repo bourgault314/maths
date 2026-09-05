@@ -332,7 +332,8 @@ $versionMoteur = is_file($moteur) ? substr(md5_file($moteur), 0, 10) : '0';
         <p class="sous" style="margin-bottom:12px">Un collègue en <strong>lecture</strong> voit le tableau,
         sans les codes des élèves et sans rien pouvoir changer. En <strong>écriture</strong>, il voit les
         codes — avec un code, on ouvre l'appli comme l'élève et on peut modifier sa progression —,
-        il peut ajouter des élèves, saisir les prénoms et donner un nouveau code. Toi seul peux
+        il peut ajouter des élèves, saisir les prénoms, donner un nouveau code et restaurer la version
+        précédente d'une progression. Toi seul peux supprimer un élève, renommer la classe et
         supprimer la classe.</p>
         <ul class="profs" id="liste-partages"></ul>
         <div class="actions">
@@ -815,12 +816,18 @@ $versionMoteur = is_file($moteur) ? substr(md5_file($moteur), 0, 10) : '0';
         regen.className = "secondaire petit";
         regen.textContent = "Nouveau code";
         regen.addEventListener("click", () => regenerer(eleve));
+        cActions.append(regen);
+      }
+      // Supprimer un élève efface sa progression pour de bon : depuis le lot 11,
+      // c'est au propriétaire de la classe, comme la supprimer. Un collègue en
+      // écriture prépare et dépanne, il n'efface pas.
+      if (droitClasse === "proprietaire") {
         const sup = document.createElement("button");
         sup.type = "button";
         sup.className = "danger petit";
         sup.textContent = "Supprimer";
         sup.addEventListener("click", () => supprimerEleve(eleve));
-        cActions.append(regen, sup);
+        cActions.append(sup);
       }
 
       cNom.dataset.libelle = "";
@@ -1114,7 +1121,7 @@ $versionMoteur = is_file($moteur) ? substr(md5_file($moteur), 0, 10) : '0';
       chargerPartages();
     } else {
       messager("bandeau-droit", ecriture
-        ? "Classe partagée avec toi : tu peux voir et modifier, mais pas supprimer la classe."
+        ? "Classe partagée avec toi : tu peux ajouter des élèves, saisir les prénoms, donner un nouveau code et restaurer une version précédente. Supprimer un élève ou la classe reste au propriétaire."
         : "Classe partagée avec toi en lecture seule : tu vois la progression, sans les codes des élèves, et tu ne modifies rien.", "info");
     }
   }
@@ -1172,7 +1179,8 @@ $versionMoteur = is_file($moteur) ? substr(md5_file($moteur), 0, 10) : '0';
       : (nombreEleves > 1 ? `les ${nombreEleves} codes des élèves` : "les codes des élèves");
     return `Autoriser ${identifiantCollegue} à modifier cette classe ? Il verra ${combien}`
       + " — avec un code, on ouvre l’appli comme l’élève et on peut changer sa progression —,"
-      + " et il pourra ajouter des élèves, saisir les prénoms et donner de nouveaux codes.";
+      + " et il pourra ajouter des élèves, saisir les prénoms, donner de nouveaux codes et restaurer"
+      + " une version précédente. Il ne pourra ni supprimer un élève, ni renommer ou supprimer la classe.";
   }
 
   async function demanderPuisPartager(partage, droit) {
@@ -1683,6 +1691,15 @@ $versionMoteur = is_file($moteur) ? substr(md5_file($moteur), 0, 10) : '0';
     return eleves.filter(eleve => eleve.lu.lisible && eleve.lu.acquises.length === PARCOURS.TABLES.length).length;
   }
 
+  // Combien de prénoms sont RÉELLEMENT saisis — pas combien il y a d'élèves.
+  // Lot 11 : la confirmation annonçait « Les 3 prénoms … seront supprimés »
+  // dans une classe de trois élèves dont deux seulement étaient nommés. Elle
+  // promettait d'effacer un prénom qui n'existait pas ; le professeur, lui,
+  // relit ce chiffre pour savoir ce qu'il perd.
+  function combienDePrenoms() {
+    return eleves.filter(eleve => (eleve.prenom || "").trim() !== "").length;
+  }
+
   function texteBilanDeLaClasse() {
     const auBout = combienAuBoutDesTables();
     const actifs = eleves.filter(eleve => eleve.maj_le).length;
@@ -1694,13 +1711,14 @@ $versionMoteur = is_file($moteur) ? substr(md5_file($moteur), 0, 10) : '0';
   $("supprimer-classe").addEventListener("click", async () => {
     const bouton = $("supprimer-classe");
     if (bouton.disabled) return;
+    const nommes = combienDePrenoms();
     const reponse = await demander(
       `Supprimer la classe ${classe.libelle} ?\n\n`
       + `Bilan de l’année : ${texteBilanDeLaClasse()}. Note ces chiffres maintenant si tu veux les `
       + `garder : rien n’en sera conservé.\n\n`
-      + `Les ${eleves.length} prénom${eleves.length > 1 ? "s" : ""}, `
-      + `les ${eleves.length} code${eleves.length > 1 ? "s" : ""} et toutes les progressions seront `
-      + `supprimés. Cette action est définitive — seule ta sauvegarde du mois les contient encore.`);
+      + (nommes === 0 ? "Aucun prénom n’a été saisi. " : (nommes === 1 ? "Le prénom saisi, " : `Les ${nommes} prénoms saisis, `))
+      + `${nommes === 0 ? "Les" : "les"} ${eleves.length} code${eleves.length > 1 ? "s" : ""} et toutes les progressions seront `
+      + `supprimés. Cette action est définitive — seule la sauvegarde du mois les contient encore.`);
     if (!reponse) return;
     bouton.disabled = true;
     try {

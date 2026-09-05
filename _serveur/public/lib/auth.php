@@ -229,5 +229,7 @@ function jeton_recu(array $corps): string
 {
     $entete = $_SERVER['HTTP_AUTHORIZATION'] ?? '';
     if (str_starts_with($entete, 'Bearer ')) return substr($entete, 7);
-    return (string)($corps['jeton'] ?? '');
+    // is_string : un « jeton » envoyé sous forme de tableau donnait la bonne
+    // réponse (401) mais salissait le journal du serveur (lot 11, A-annexe 9).
+    return is_string($corps['jeton'] ?? null) ? $corps['jeton'] : '';
 }
