@@ -4350,16 +4350,20 @@ function drawRightTotalBrace(g, x, y, h, label, opts={}){
     "font-size":fontSize, "font-weight":950, fill:"var(--ink)"
   }));
 }
-function getRelationSchemaLayout(){
+function getRelationSchemaLayout(opts = {}){
   // Cadre élargi (60 → 1540) et colonne d'équation plus large (620) : les lignes
   // de la résolution reçoivent leurs flèches d'opération à gauche et à droite.
+  // À l'impression, C Enquête peut réserver un peu plus de place aux noms de
+  // couleurs sans modifier la largeur du tableau ni le bord droit de l'équation.
+  const rawBarShift = Number(opts.barShiftX);
+  const barShiftX = Number.isFinite(rawBarShift) ? Math.max(0, Math.min(120, rawBarShift)) : 0;
   const boxX = 60;
   const boxW = 1480;
-  const labelW = 150;
-  const equationW = 660;
+  const labelW = 150 + barShiftX;
+  const equationW = 660 - barShiftX;
   const barX = boxX + labelW;
   const barW = boxW - labelW - equationW - 34;
-  return { boxX, boxW, labelW, equationW, barX, barW, equationCenterX: barX + barW + 34 + equationW / 2 };
+  return { boxX, boxW, labelW, equationW, barX, barW, barShiftX, equationCenterX: barX + barW + 34 + equationW / 2 };
 }
 
 /* Les schémas C partagent leur dessin entre l'écran et l'impression.
@@ -4430,7 +4434,7 @@ function drawRelationSituationSchema(targetGroup, card, opts = {}){
   const taskCount = baseRows.length;
   const hasVisibleRow = visibleSum > 0;
 
-  const layout = getRelationSchemaLayout();
+  const layout = getRelationSchemaLayout(opts);
   const boxX = layout.boxX;
   const boxY = 620;
   const boxW = layout.boxW;
@@ -4750,7 +4754,7 @@ function drawRelationSubstitutionStep(targetGroup, card, opts = {}){
   const metrics = getRelationDrawingMetrics(opts);
   const v = metrics.y;
   const f = metrics.font;
-  const layout = getRelationSchemaLayout();
+  const layout = getRelationSchemaLayout(opts);
   const boxX = layout.boxX;
   const boxY = 620;
   const boxW = layout.boxW;
@@ -4868,7 +4872,7 @@ function drawRelationOrderedSchema(targetGroup, card, opts = {}){
   const metrics = getRelationDrawingMetrics(opts);
   const v = metrics.y;
   const f = metrics.font;
-  const layout = getRelationSchemaLayout();
+  const layout = getRelationSchemaLayout(opts);
   const boxX = layout.boxX;
   const isFullscreenProjection = !!document.fullscreenElement;
   const boxY = 620;
@@ -4962,7 +4966,7 @@ function drawRelationGroupedSchema(targetGroup, card, opts = {}){
   const parts = grouped.parts;
   const groups = grouped.groups;
   const xParts = grouped.xParts;
-  const layout = getRelationSchemaLayout();
+  const layout = getRelationSchemaLayout(opts);
   const boxX = layout.boxX;
   const isFullscreenProjection = !!document.fullscreenElement;
   const boxY = 620;
@@ -6640,7 +6644,7 @@ function getRelationCorrectionPrintProfile(card){
   // suit davantage l'agrandissement des cadres pour éviter un rendu trop vide.
   return card && card._directSubstitution
     ? { verticalScale:1.40, fontScale:1.30 }
-    : { verticalScale:1.20, fontScale:1.25 };
+    : { verticalScale:1.20, fontScale:1.25, barShiftX:30 };
 }
 
 function renderCardIntoSvg(targetSvg, card, printMode){
