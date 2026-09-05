@@ -471,7 +471,7 @@ window.MATHSGO_CATALOGUE = {
       "primaryGroup": "imprimer",
       "collections": ["addition-posee"],
       "tags": ["addition", "calcul-pose", "entiers", "gabarit", "plastifier", "retenues"],
-      "thumbnail": "assets/img/thumbnails/numeration/gabarit-addition-entiere.png?v=1",
+      "thumbnail": "assets/img/thumbnails/numeration/gabarit-addition-entiere.png?v=2",
       "cardDescription": "Une grande grille A4 paysage sans virgule, avec de larges cases pour poser une addition d’entiers."
     },
     "outils/addition-posee/gabarit-addition-decimale.pdf": {
@@ -479,7 +479,7 @@ window.MATHSGO_CATALOGUE = {
       "primaryGroup": "imprimer",
       "collections": ["addition-posee"],
       "tags": ["addition", "calcul-pose", "decimaux", "gabarit", "plastifier", "retenues", "virgule"],
-      "thumbnail": "assets/img/thumbnails/numeration/gabarit-addition-decimale.png?v=1",
+      "thumbnail": "assets/img/thumbnails/numeration/gabarit-addition-decimale.png?v=2",
       "cardDescription": "Une grande grille A4 paysage avec une colonne dédiée pour aligner les virgules des nombres décimaux."
     },
     "outils/division-posee/division-posee.html": {

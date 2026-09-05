@@ -64,6 +64,25 @@ def panel(c, x, y, w, h, fill=WHITE, stroke=LINE, radius=10, line=0.8):
     c.roundRect(x, y, w, h, radius, fill=1, stroke=1)
 
 
+def role_box(c, x, y, w, h, role, color, soft):
+    panel(c, x, y, w, h, fill=soft, stroke=color, radius=6, line=1.35)
+    text(c, role, x + w / 2, y + h + 5, 6.8, MUTED, "GoSans-Bold", "center")
+
+
+def title_line(c):
+    y = PAGE_HEIGHT - 46
+    title = "Addition posée de"
+    text(c, title, 28, y, 20.5, NAVY, "GoSerif-Bold")
+    title_width = pdfmetrics.stringWidth(title, "GoSerif-Bold", 20.5)
+    first_x = 28 + title_width + 12
+    box_width = 138
+    box_y = y - 10
+    role_box(c, first_x, box_y, box_width, 34, "premier terme", BLUE, BLUE_SOFT)
+    and_x = first_x + box_width + 13
+    text(c, "et", and_x, y, 15, NAVY, "GoSerif-Bold")
+    role_box(c, and_x + 27, box_y, box_width, 34, "second terme", TEAL, TEAL_SOFT)
+
+
 def footer(c):
     c.drawImage(str(LOGO), 28, 10, width=92, height=42, preserveAspectRatio=True, mask="auto")
     text(c, "mathsgo.re · CC BY-NC-SA 4.0", PAGE_WIDTH / 2, 20, 7.2, MUTED, "GoSans-Bold", "center")
@@ -93,7 +112,7 @@ def build(decimal=False):
     c.setAuthor("Gwenaël Bourgault - maths&go")
     c.setSubject("Gabarit A4 paysage à imprimer et plastifier")
 
-    text(c, "Addition posée", 28, PAGE_HEIGHT - 43, 20.5, NAVY, "GoSerif-Bold")
+    title_line(c)
     badge_w = 148
     badge_x = PAGE_WIDTH - 28 - badge_w
     panel(c, badge_x, PAGE_HEIGHT - 55, badge_w, 27, fill=TEAL_SOFT, stroke=TEAL_SOFT, radius=8)
