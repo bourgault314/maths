@@ -61,3 +61,16 @@ test("la nouvelle disposition reste limitee au rendu ecran", () => {
   assert.doesNotMatch(printRenderer, /abBarCenterX|abEquationCenterX|finalCalcLines/);
   assert.match(printRenderer, /const printTray = getPrintTrayConfig\(card\.family\)/);
 });
+
+test("C et C direct gardent leur mise en page normale mais rentrent dans le plein ecran", () => {
+  const renderer = functionSource("renderCard", "approxTextWidthForLabel");
+
+  assert.match(renderer, /isFullscreenProjection \? "translate\(210 -32\) scale\(0\.74\)" : "translate\(240 -46\) scale\(0\.70\)"/);
+  assert.match(renderer, /isFullscreenProjection \? -38 : -42/);
+
+  // En plein écran, le plateau descend avec TOTAL et reste séparé du premier schéma.
+  const trayTop = -32 + 0.74 * 270;
+  const trayBottom = trayTop + 0.74 * 550;
+  assert.ok(trayTop > 160);
+  assert.ok(trayBottom < 620);
+});
