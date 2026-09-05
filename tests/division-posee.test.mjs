@@ -136,6 +136,14 @@ test("la question précède la révélation du chiffre", () => {
   assert.equal(getOperationDisplayState(division, 0, choice).quotient, true);
 });
 
+test("la navigation mobile aligne précédente et suivante puis centre tout afficher", () => {
+  assert.match(interfaceHtml, /division-posee\.css\?v=11/);
+  assert.match(interfaceCss, /@media \(max-width: 780px\)[\s\S]*\.step-controls #previous \{ grid-column: 1; grid-row: 1; \}/);
+  assert.match(interfaceCss, /@media \(max-width: 780px\)[\s\S]*\.step-controls #next \{ grid-column: 2; grid-row: 1; \}/);
+  assert.match(interfaceCss, /@media \(max-width: 780px\)[\s\S]*\.step-controls #show-all \{ grid-column: 1 \/ -1; grid-row: 2; justify-self: center; \}/);
+  assert.match(interfaceCss, /padding-bottom: max\(18px, env\(safe-area-inset-bottom\)\)/);
+});
+
 test("le vocabulaire suit la valeur de position à chaque échange", () => {
   const division = makeDivision(5849, 7, "integer", 2);
   const steps = makeSteps(division);
