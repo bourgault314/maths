@@ -93,6 +93,17 @@ window.MATHSGO_CATALOGUE = {
       "collapseInNotion": true
     },
     {
+      "id": "addition-posee",
+      "title": "Addition posée",
+      "domain": "nombres-calculs",
+      "notions": ["calculs-poses"],
+      "hub": "addition-posee/index.html",
+      "hiddenFromBrowse": true,
+      "collapseInNotion": true,
+      "navigation": "hub",
+      "presentation": "operation"
+    },
+    {
       "id": "division-posee",
       "title": "Division posée",
       "domain": "nombres-calculs",
@@ -101,7 +112,7 @@ window.MATHSGO_CATALOGUE = {
       "hiddenFromBrowse": true,
       "collapseInNotion": true,
       "navigation": "hub",
-      "searchable": false
+      "presentation": "operation"
     },
     {
       "id": "rekenrek",
@@ -434,10 +445,26 @@ window.MATHSGO_CATALOGUE = {
     "outils/addition-posee/addition-posee.html": {
       "primaryNotion": "calculs-poses",
       "primaryGroup": "manipuler",
-      "collections": [],
+      "collections": ["addition-posee"],
       "tags": ["addition", "calcul-pose", "entiers", "decimaux", "pas-a-pas", "retenues"],
-      "thumbnail": "assets/img/thumbnails/numeration/addition-posee.svg?v=1",
+      "thumbnail": "assets/img/thumbnails/numeration/addition-posee.svg?v=2",
       "cardDescription": "Une addition d’entiers ou de décimaux expliquée colonne par colonne, avec les retenues rendues visibles."
+    },
+    "outils/addition-posee/addition-posee-interactive.html": {
+      "primaryNotion": "calculs-poses",
+      "primaryGroup": "entrainer",
+      "collections": ["addition-posee"],
+      "tags": ["addition", "calcul-pose", "entiers", "decimaux", "entrainement", "retenues", "aide"],
+      "thumbnail": "assets/img/thumbnails/numeration/addition-posee-interactive.svg?v=1",
+      "cardDescription": "Compléter une addition d’entiers ou de décimaux colonne par colonne, avec des erreurs localisées et des indices progressifs."
+    },
+    "outils/addition-posee/gabarit-addition-posee.pdf": {
+      "primaryNotion": "calculs-poses",
+      "primaryGroup": "imprimer",
+      "collections": ["addition-posee"],
+      "tags": ["addition", "calcul-pose", "decimaux", "gabarit", "plastifier", "retenues", "virgule"],
+      "thumbnail": "assets/img/thumbnails/numeration/gabarit-addition-posee.png?v=1",
+      "cardDescription": "Une grande grille A4 paysage à plastifier pour aligner les termes, la virgule, les retenues et la somme."
     },
     "outils/division-posee/division-posee.html": {
       "primaryNotion": "calculs-poses",
@@ -3791,6 +3818,38 @@ window.MATHSGO_CATALOGUE = {
       "filters": [],
       "keywords": ["addition posée", "addition décimale", "retenue", "somme", "termes", "pas à pas"],
       "kind": "tool",
+      "status": "published",
+      "featured": false,
+      "recent": true
+    },
+    {
+      "id": "outils-addition-posee-addition-posee-interactive-html",
+      "title": "À toi de poser l’addition",
+      "description": "Une addition d’entiers ou de décimaux à compléter colonne par colonne, avec des erreurs localisées et des indices progressifs.",
+      "path": "outils/addition-posee/addition-posee-interactive.html",
+      "domains": ["nombres-calculs"],
+      "notions": ["calculs-poses"],
+      "uses": ["entrainer"],
+      "types": ["exerciseur"],
+      "filters": [],
+      "keywords": ["addition posée", "addition décimale", "entraînement", "retenue", "somme", "aide"],
+      "kind": "tool",
+      "status": "published",
+      "featured": false,
+      "recent": true
+    },
+    {
+      "id": "outils-addition-posee-gabarit-pdf",
+      "title": "Gabarit — addition posée",
+      "description": "Une grande grille A4 paysage à imprimer et plastifier pour aligner les termes, la virgule, les retenues et la somme.",
+      "path": "outils/addition-posee/gabarit-addition-posee.pdf",
+      "domains": ["nombres-calculs"],
+      "notions": ["calculs-poses"],
+      "uses": ["imprimer", "entrainer"],
+      "types": ["imprimable"],
+      "filters": ["materiel-imprimer"],
+      "keywords": ["addition posée", "addition décimale", "gabarit", "plastifier", "retenue", "virgule"],
+      "kind": "document",
       "status": "published",
       "featured": false,
       "recent": true

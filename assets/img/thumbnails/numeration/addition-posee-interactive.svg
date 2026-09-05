@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 400" role="img" aria-labelledby="title desc">
+  <title id="title">Addition posée à compléter</title>
+  <desc id="desc">L’addition posée de 584 et 279 avec des cases distinctes pour le calcul, le résultat et les retenues.</desc>
+  <rect width="640" height="400" rx="30" fill="#f7faff"/>
+  <rect x="28" y="28" width="584" height="344" rx="24" fill="#fff" stroke="#d8e2ec" stroke-width="3"/>
+  <rect x="50" y="50" width="538" height="66" rx="14" fill="#fff2e7"/>
+  <text x="72" y="76" font-family="system-ui,sans-serif" font-size="14" font-weight="850" fill="#f58220">JE CALCULE</text>
+  <g font-family="DejaVu Sans Mono,monospace" font-size="20" font-weight="800" fill="#10294a">
+    <text x="72" y="101">8 + 7 + 1 =</text>
+    <rect x="221" y="76" width="54" height="32" rx="8" fill="#fff" stroke="#0b67b2" stroke-width="2.5"/>
+  </g>
+
+  <g font-family="DejaVu Sans Mono,monospace" font-weight="800" text-anchor="middle">
+    <g font-size="21" fill="#7b42b4">
+      <rect x="226" y="130" width="38" height="32" rx="8" fill="#fff" stroke="#7b42b4" stroke-width="2.5"/>
+      <rect x="288" y="130" width="38" height="32" rx="8" fill="#f5edff" stroke="#7b42b4" stroke-width="2"/>
+      <text x="307" y="153">1</text>
+    </g>
+    <g fill="#0b67b2" font-size="42">
+      <text x="245" y="207">5</text><text x="307" y="207">8</text><text x="369" y="207">4</text>
+    </g>
+    <g fill="#08aaa5" font-size="42">
+      <text x="245" y="258">2</text><text x="307" y="258">7</text><text x="369" y="258">9</text>
+    </g>
+    <text x="189" y="258" fill="#063f86" font-size="38">+</text>
+    <line x1="215" y1="276" x2="397" y2="276" stroke="#063f86" stroke-width="5" stroke-linecap="round"/>
+    <rect x="226" y="291" width="38" height="48" rx="9" fill="#fff" stroke="#d8e2ec" stroke-width="2.5"/>
+    <rect x="288" y="291" width="38" height="48" rx="9" fill="#fffaf6" stroke="#f58220" stroke-width="3"/>
+    <rect x="350" y="291" width="38" height="48" rx="9" fill="#fff2e7" stroke="#f58220" stroke-width="2"/>
+    <text x="369" y="325" fill="#f58220" font-size="34">3</text>
+  </g>
+
+  <rect x="431" y="143" width="137" height="112" rx="16" fill="#f8fafc" stroke="#d8e2ec" stroke-width="2"/>
+  <text x="450" y="172" font-family="system-ui,sans-serif" font-size="13" font-weight="850" fill="#08aaa5">À TOI DE JOUER</text>
+  <rect x="450" y="188" width="42" height="42" rx="9" fill="#fff" stroke="#f58220" stroke-width="2.5"/>
+  <rect x="505" y="188" width="42" height="42" rx="9" fill="#fff" stroke="#7b42b4" stroke-width="2.5"/>
+  <text x="471" y="243" text-anchor="middle" font-family="system-ui,sans-serif" font-size="10" font-weight="800" fill="#f58220">SOMME</text>
+  <text x="526" y="243" text-anchor="middle" font-family="system-ui,sans-serif" font-size="10" font-weight="800" fill="#7b42b4">RETENUE</text>
+  <rect x="431" y="289" width="137" height="42" rx="11" fill="#063f86"/>
+  <text x="500" y="316" text-anchor="middle" font-family="system-ui,sans-serif" font-size="13" font-weight="850" fill="#fff">VÉRIFIER L’ÉTAPE</text>
+</svg>

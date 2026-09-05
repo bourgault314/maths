@@ -3,20 +3,21 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="description" content="Une addition d’entiers ou de décimaux expliquée colonne par colonne, avec les retenues rendues visibles.">
-  <link rel="canonical" href="https://mathsgo.re/outils/addition-posee/addition-posee.html">
+  <meta name="description" content="Une addition d’entiers ou de décimaux à compléter colonne par colonne, avec des erreurs localisées et des indices progressifs.">
+  <link rel="canonical" href="https://mathsgo.re/outils/addition-posee/addition-posee-interactive.html">
   <meta name="robots" content="index, follow, max-image-preview:large">
   <meta name="author" content="Gwenaël Bourgault">
   <meta name="theme-color" content="#f6f8fb">
-  <title>Addition posée pas à pas | maths&amp;go</title>
+  <title>À toi de poser l’addition | maths&amp;go</title>
   <link rel="icon" href="../../favicon.ico" sizes="48x48">
   <link rel="icon" type="image/svg+xml" href="../../favicon.svg">
   <link rel="stylesheet" href="addition-posee.css?v=1">
+  <link rel="stylesheet" href="addition-posee-interactive.css?v=1">
   <script defer src="../../assets/js/mention-confidentialite.js"></script>
-  <script type="module" src="addition-posee.js?v=1"></script>
+  <script type="module" src="addition-posee-interactive.js?v=1"></script>
 </head>
-<body>
-  <a class="skip-link" href="#outil">Aller à l’outil</a>
+<body class="practice-page">
+  <a class="skip-link" href="#outil">Aller à l’entraînement</a>
   <div class="page-shell">
     <header class="site-header">
       <div class="brand-nav">
@@ -26,10 +27,11 @@
         <a class="back-link" href="./">← Addition posée</a>
       </div>
       <div class="title-lockup">
-        <p>Outil de classe</p>
-        <h1 id="page-title">Addition posée</h1>
+        <p>S’entraîner</p>
+        <h1>Addition posée</h1>
       </div>
       <div class="header-actions">
+        <a class="button button-light walkthrough-link" href="addition-posee.html">Voir le pas à pas</a>
         <button class="icon-button" type="button" id="fullscreen" aria-label="Afficher en plein écran" title="Afficher en plein écran">
           <svg class="fullscreen-expand" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 4H4v5M15 4h5v5M9 20H4v-5M15 20h5v-5"/></svg>
           <svg class="fullscreen-collapse" viewBox="0 0 24 24" aria-hidden="true" hidden><path d="M4 9h5V4M20 9h-5V4M4 15h5v5M20 15h-5v5"/></svg>
@@ -54,7 +56,8 @@
             <span class="rank-switch" aria-hidden="true"></span>
             <span class="rank-copy"><strong>Repères de rang</strong><small>c · d · u</small></span>
           </label>
-          <button class="button button-primary" type="submit">Poser l’addition</button>
+          <button class="button button-secondary" id="random-problem" type="button">Au hasard</button>
+          <button class="button button-primary" type="submit">Commencer</button>
         </form>
         <p class="form-error" id="form-error" role="alert" hidden></p>
       </section>
@@ -64,37 +67,32 @@
         <button class="button button-light" id="edit-problem" type="button">Modifier</button>
       </section>
 
-      <section class="workspace">
-        <article class="board-card">
-          <div class="instruction" aria-live="polite" aria-atomic="true">
+      <section class="workspace practice-workspace">
+        <article class="board-card practice-board">
+          <div class="instruction practice-instruction" aria-live="polite" aria-atomic="true">
             <div class="instruction-copy">
-              <p id="step-title">Je pose</p>
+              <p id="step-title">Je calcule</p>
               <h2 id="step-sentence"></h2>
               <p class="step-detail" id="step-detail" hidden></p>
+              <div class="calculation-prompt" id="calculation-prompt"></div>
               <p class="exchange-memo" id="exchange-memo" hidden></p>
             </div>
             <span id="step-count"></span>
           </div>
 
-          <div class="addition-stage">
+          <div class="addition-stage practice-stage">
             <div class="addition-scroll" id="addition-scroll">
               <div id="posed-addition"></div>
             </div>
-            <div class="vocabulary-strip" id="vocabulary-strip" hidden aria-label="Vocabulaire de l’addition">
-              <span class="vocabulary-role first-role">premier terme</span>
-              <strong aria-hidden="true">+</strong>
-              <span class="vocabulary-role second-role">second terme</span>
-              <strong aria-hidden="true">=</strong>
-              <span class="vocabulary-role sum-role">somme</span>
-            </div>
+            <div class="verification-relation" id="verification-relation" hidden aria-label="Vérification de l’addition"></div>
           </div>
 
-          <nav class="step-controls" aria-label="Étapes de l’addition">
-            <button class="button button-secondary" id="previous" type="button">← Précédente</button>
-            <div class="progress" id="progress" role="progressbar" aria-label="Progression dans l’addition" aria-valuemin="1"><span id="progress-bar"></span></div>
-            <button class="button button-quiet" id="show-all" type="button">Tout afficher</button>
-            <button class="button button-primary" id="next" type="button">Suivante →</button>
-          </nav>
+          <div class="practice-actions">
+            <button class="button button-light help-button" id="help" type="button">Un indice</button>
+            <p class="feedback" id="feedback" role="status" aria-live="polite"></p>
+            <button class="button button-primary validate-button" id="validate" type="button">Vérifier l’étape</button>
+          </div>
+          <div class="practice-progress" role="progressbar" aria-label="Progression dans l’addition" aria-valuemin="0"><span id="progress-bar"></span></div>
         </article>
       </section>
     </main>

@@ -34,9 +34,9 @@ const allowedGroups = new Set([
 
 const expectedGroupCounts = {
   manipuler: 40,
-  entrainer: 29,
+  entrainer: 30,
   generer: 33,
-  imprimer: 22,
+  imprimer: 23,
   activites: 14,
   cours: 15,
   jeux: 9
@@ -44,9 +44,9 @@ const expectedGroupCounts = {
 
 const expectedVisibleCardCounts = {
   manipuler: 36,
-  entrainer: 27,
+  entrainer: 28,
   generer: 33,
-  imprimer: 19,
+  imprimer: 20,
   activites: 12,
   cours: 9,
   jeux: 9
@@ -64,10 +64,10 @@ function assertPathsInGroup(group, paths) {
   }
 }
 
-test("le catalogue conserve 169 entrées dont 162 publiées", () => {
+test("le catalogue conserve 171 entrées dont 164 publiées", () => {
   assert.equal(catalogue.schemaVersion, 5);
-  assert.equal(resources.length, 169);
-  assert.equal(published.length, 162);
+  assert.equal(resources.length, 171);
+  assert.equal(published.length, 164);
   assert.equal(new Set(resources.map((resource) => resource.path)).size, resources.length, "Chaque chemin doit être unique.");
 });
 
@@ -142,7 +142,7 @@ test("aucune carte publiée ne conserve la description générique", () => {
   assert.deepEqual(offenders, []);
 });
 
-test("la répartition arbitrée des 162 ressources reste stable", () => {
+test("la répartition arbitrée des 164 ressources reste stable", () => {
   const actual = Object.fromEntries([...allowedGroups].map((group) => [group, 0]));
   for (const resource of published) actual[resolvedPrimaryGroup(resource)] += 1;
   assert.deepEqual(actual, expectedGroupCounts);
@@ -321,7 +321,7 @@ test("les tableaux de proportionnalité partagent une carte avec deux choix expl
   assert.equal(family?.labels?.[withoutCoefficientPath], "Sans coefficient");
 });
 
-test("la division posée forme une famille de Calculs posés, avec entraînement et gabarits trouvables", () => {
+test("la division posée forme une entrée d’opération, avec entraînement et gabarits trouvables", () => {
   const collection = Array.from(catalogue.collections || []).find(({ id }) => id === "division-posee");
   const appPath = "outils/division-posee/division-posee.html";
   const trainingPath = "outils/division-posee/division-posee-interactive.html";
@@ -333,7 +333,7 @@ test("la division posée forme une famille de Calculs posés, avec entraînement
   assert.equal(collection?.hiddenFromBrowse, true);
   assert.equal(collection?.collapseInNotion, true);
   assert.equal(collection?.navigation, "hub");
-  assert.equal(collection?.searchable, false);
+  assert.equal(collection?.presentation, "operation");
   assert.deepEqual(Array.from(collection?.notions || []), ["calculs-poses"]);
   assert.equal(classifications[appPath]?.primaryNotion, "calculs-poses");
   assert.equal(classifications[appPath]?.primaryGroup, "manipuler");
@@ -408,6 +408,6 @@ test("les familles regroupent toutes leurs variantes sans perte ni chevauchement
   for (const family of families) visibleCardsByGroup[family.group] += 1;
 
   assert.equal(representedResourceCount, published.length, "Aucune variante publiée ne doit disparaître du catalogue.");
-  assert.equal(visibleCardCount, 145, "Les 162 ressources doivent être représentées par 145 cartes après regroupement.");
+  assert.equal(visibleCardCount, 147, "Les 164 ressources doivent être représentées par 147 cartes après regroupement.");
   assert.deepEqual(visibleCardsByGroup, expectedVisibleCardCounts);
 });

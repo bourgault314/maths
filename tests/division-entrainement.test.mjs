@@ -15,7 +15,7 @@ import { loweringArrowGeometry } from "../outils/division-posee/division-view.mj
 const html = readFileSync(new URL("../outils/division-posee/division-posee-interactive.html", import.meta.url), "utf8");
 const css = readFileSync(new URL("../outils/division-posee/division-posee-interactive.css", import.meta.url), "utf8");
 const js = readFileSync(new URL("../outils/division-posee/division-posee-interactive.js", import.meta.url), "utf8");
-const collection = readFileSync(new URL("../outils/division-posee/index.html", import.meta.url), "utf8");
+const entryPage = readFileSync(new URL("../outils/division-posee/index.html", import.meta.url), "utf8");
 
 test("l’entraînement valide un bloc mathématique complet à chaque étape", () => {
   const division = makeDivision(584, 7, "integer", 2);
@@ -154,16 +154,17 @@ test("la flèche relie réellement le chiffre source au chiffre abaissé", () =>
   );
 });
 
-test("la collection sépare comprendre, s’entraîner et imprimer", () => {
-  assert.match(collection, /catalogue-refonte\.css\?v=breadcrumb-align-20260829-1/);
-  assert.match(collection, /<body class="catalogue-is-deep">/);
-  assert.match(collection, /class="site-shell"/);
-  assert.match(collection, /class="catalogue-breadcrumb"/);
-  assert.match(collection, /class="main-panel catalogue-deep-view"/);
-  assert.match(collection, />Calculs posés<\/a>/);
-  assert.doesNotMatch(collection, /collection-index\.css/);
-  assert.match(collection, /Comprendre &amp; projeter/);
-  assert.match(collection, /S’entraîner/);
-  assert.match(collection, /Imprimer &amp; plastifier/);
-  assert.match(collection, /href="division-posee-interactive\.html"/);
+test("la page d’entrée sépare comprendre, s’entraîner et imprimer", () => {
+  assert.match(entryPage, /catalogue-refonte\.css\?v=breadcrumb-align-20260829-1/);
+  assert.match(entryPage, /operation-entry\.css\?v=1/);
+  assert.match(entryPage, /<body class="catalogue-is-deep operation-entry">/);
+  assert.match(entryPage, /class="site-shell"/);
+  assert.match(entryPage, /class="catalogue-breadcrumb"/);
+  assert.match(entryPage, /class="main-panel catalogue-deep-view"/);
+  assert.match(entryPage, />Calculs posés<\/a>/);
+  assert.doesNotMatch(entryPage, /collection/i);
+  assert.match(entryPage, /Comprendre et projeter/);
+  assert.match(entryPage, /S’entraîner/);
+  assert.match(entryPage, /Imprimer et plastifier/);
+  assert.match(entryPage, /href="division-posee-interactive\.html"/);
 });

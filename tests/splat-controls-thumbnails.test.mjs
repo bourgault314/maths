@@ -56,7 +56,7 @@ test("les cinq miniatures utilisent des vues fideles et adaptees aux outils", ()
   assert.match(catalogue, /assets\/img\/thumbnails\/splat\/splat\.png\?v=6/);
   assert.match(catalogue, /assets\/img\/thumbnails\/splat\/splat-equations\.png\?v=6/);
   assert.match(catalogue, /assets\/img\/thumbnails\/splat\/petit-splat\.png\?v=5/);
-  assert.match(cataloguePage, /catalogue-refonte-data\.js\?v=addition-posee-20260905-1/);
+  assert.match(cataloguePage, /catalogue-refonte-data\.js\?v=operations-posees-20260905-1/);
   for(const thumbnail of [equasplatThumb, equascribeThumb, classicThumb, equationThumb, petitThumb]){
     assert.deepEqual(pngSize(thumbnail), {width:720, height:320});
   }
@@ -67,7 +67,7 @@ test("les cinq miniatures utilisent des vues fideles et adaptees aux outils", ()
 test("la collection Splat suit l'ordre pedagogique valide", () => {
   assert.match(catalogueScript, /path === "outils\/splat_tache_barre\.html"\) return 0;[\s\S]*path === "outils\/splat\.html"\) return 1;[\s\S]*path === "outils\/splat_equations\.html"\) return 2;[\s\S]*path === "outils\/equasplat\.html"\) return 3;[\s\S]*path === "outils\/equascribe\.html"\) return 4;/);
   assert.match(catalogueScript, /collectionCardRank\(state\.collection, item\.resource\.path\)/);
-  assert.match(cataloguePage, /catalogue-refonte\.js\?v=geometrie-hierarchie-20260830-1/);
+  assert.match(cataloguePage, /catalogue-refonte\.js\?v=operations-posees-20260905-1/);
 });
 
 test("les quatre outils Splat utilisent une fleche de retour vers la collection", () => {
