@@ -361,6 +361,10 @@
       description: "Comprendre, s’entraîner ou imprimer les gabarits d’addition d’entiers et de décimaux.",
       thumbnail: "assets/img/thumbnails/numeration/addition-posee.svg?v=2"
     },
+    "multiplication-posee": {
+      description: "Comprendre la multiplication posée d’entiers et de décimaux, étape par étape.",
+      thumbnail: "assets/img/thumbnails/numeration/multiplication-posee.svg?v=1"
+    },
     "tuiles-algebriques": {
       description: "Retrouver les plateaux, générateurs et livrets de tuiles algébriques.",
       icon: "tiles"

@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="description" content="Une multiplication d’entiers ou de décimaux expliquée chiffre par chiffre, avec les retenues, décalages et produits partiels visibles.">
+  <link rel="canonical" href="https://mathsgo.re/outils/multiplication-posee/multiplication-posee.html">
+  <meta name="robots" content="index, follow, max-image-preview:large">
+  <meta name="author" content="Gwenaël Bourgault">
+  <meta name="theme-color" content="#f6f8fb">
+  <title>Multiplication posée pas à pas | maths&amp;go</title>
+  <link rel="icon" href="../../favicon.ico" sizes="48x48">
+  <link rel="icon" type="image/svg+xml" href="../../favicon.svg">
+  <link rel="stylesheet" href="multiplication-posee.css?v=1">
+  <script defer src="../../assets/js/mention-confidentialite.js"></script>
+  <script type="module" src="multiplication-posee.js?v=1"></script>
+</head>
+<body>
+  <a class="skip-link" href="#outil">Aller à l’outil</a>
+  <div class="page-shell">
+    <header class="site-header">
+      <div class="brand-nav">
+        <a class="brand" href="../../index.html" aria-label="Accueil maths&amp;go">
+          <img src="../../assets/img/logos/mathsgo/logo.png" alt="maths&amp;go" width="1338" height="622">
+        </a>
+        <a class="back-link" href="./">← Multiplication posée</a>
+      </div>
+      <div class="title-lockup">
+        <p>Outil de classe</p>
+        <h1 id="page-title">Multiplication posée</h1>
+      </div>
+      <div class="header-actions">
+        <button class="icon-button" type="button" id="fullscreen" aria-label="Afficher en plein écran" title="Afficher en plein écran">
+          <svg class="fullscreen-expand" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 4H4v5M15 4h5v5M9 20H4v-5M15 20h5v-5"/></svg>
+          <svg class="fullscreen-collapse" viewBox="0 0 24 24" aria-hidden="true" hidden><path d="M4 9h5V4M20 9h-5V4M4 15h5v5M20 15h-5v5"/></svg>
+        </button>
+      </div>
+    </header>
+
+    <main id="outil">
+      <section class="controls-card" aria-label="Choix de la multiplication">
+        <form id="multiplication-form" novalidate>
+          <label class="number-field role-first">
+            <span>Premier facteur</span>
+            <input id="first-factor" inputmode="decimal" type="text" maxlength="15" value="327" autocomplete="off" spellcheck="false" enterkeyhint="next" aria-describedby="form-error" required>
+          </label>
+          <span class="multiplication-form-symbol" aria-hidden="true">×</span>
+          <label class="number-field role-second">
+            <span>Second facteur</span>
+            <input id="second-factor" inputmode="decimal" type="text" maxlength="15" value="46" autocomplete="off" spellcheck="false" enterkeyhint="go" aria-describedby="form-error" required>
+          </label>
+          <label class="rank-control" for="rank-guides">
+            <input id="rank-guides" type="checkbox">
+            <span class="rank-switch" aria-hidden="true"></span>
+            <span class="rank-copy"><strong>Repères de rang</strong><small>c · d · u</small></span>
+          </label>
+          <button class="button button-primary" type="submit">Poser la multiplication</button>
+        </form>
+        <p class="form-error" id="form-error" role="alert" hidden></p>
+      </section>
+
+      <section class="projection-recap" id="projection-recap" aria-label="Multiplication affichée" hidden>
+        <strong id="projection-problem">327 × 46</strong>
+        <button class="button button-light" id="edit-problem" type="button">Modifier</button>
+      </section>
+
+      <section class="workspace">
+        <article class="board-card">
+          <div class="instruction" aria-live="polite" aria-atomic="true">
+            <div class="instruction-copy">
+              <p id="step-title">Je pose</p>
+              <h2 id="step-sentence"></h2>
+              <p class="step-detail" id="step-detail" hidden></p>
+            </div>
+            <span id="step-count"></span>
+          </div>
+
+          <div class="multiplication-stage">
+            <div class="decimal-preparation" id="decimal-preparation" hidden></div>
+            <div class="multiplication-scroll" id="multiplication-scroll">
+              <div id="posed-multiplication"></div>
+            </div>
+            <div class="vocabulary-strip" id="vocabulary-strip" hidden aria-label="Vocabulaire de la multiplication">
+              <span class="vocabulary-role first-role"><strong class="first-factor-value"></strong><small>facteur</small></span>
+              <strong aria-hidden="true">×</strong>
+              <span class="vocabulary-role second-role"><strong class="second-factor-value"></strong><small>facteur</small></span>
+              <strong aria-hidden="true">=</strong>
+              <span class="vocabulary-role product-role"><strong class="product-value"></strong><small>produit</small></span>
+            </div>
+          </div>
+
+          <nav class="step-controls" aria-label="Étapes de la multiplication">
+            <button class="button button-secondary" id="previous" type="button">← Précédente</button>
+            <div class="progress" id="progress" role="progressbar" aria-label="Progression dans la multiplication" aria-valuemin="1"><span id="progress-bar"></span></div>
+            <button class="button button-quiet" id="show-all" type="button">Tout afficher</button>
+            <button class="button button-primary" id="next" type="button">Suivante →</button>
+          </nav>
+        </article>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <span>Gwenaël Bourgault</span><span aria-hidden="true">·</span>
+      <a href="mailto:gwenael@mathsgo.re?subject=Contact%20depuis%20mathsgo.re">Me contacter</a><span aria-hidden="true">·</span>
+      <a href="../toutes-les-ressources.html">Toutes les ressources</a><span aria-hidden="true">·</span>
+      <a href="../../mentions-legales.html">Mentions légales</a><span aria-hidden="true">·</span>
+      <a href="../../confidentialite.html">Confidentialité</a><span aria-hidden="true">·</span>
+      <a href="../../licence.html">Licence</a><span aria-hidden="true">·</span>
+      <span data-mathsgo-confidentialite>Sans cookie ni traceur</span>
+    </footer>
+  </div>
+</body>
+</html>

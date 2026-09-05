@@ -1,0 +1,61 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 400" role="img" aria-labelledby="title desc">
+  <title id="title">Multiplication posée pas à pas</title>
+  <desc id="desc">La multiplication posée de 327 par 46, avec les produits partiels 1 962 et 13 080, les décalages et le produit final 15 042.</desc>
+  <rect width="640" height="400" rx="30" fill="#f7faff"/>
+  <rect x="28" y="28" width="584" height="344" rx="24" fill="#fff" stroke="#d8e2ec" stroke-width="3"/>
+  <rect x="50" y="50" width="538" height="54" rx="13" fill="#e8f8f5"/>
+  <circle cx="78" cy="77" r="10" fill="#08aaa5"/>
+  <rect x="99" y="68" width="184" height="8" rx="4" fill="#063f86" opacity=".85"/>
+  <rect x="99" y="83" width="262" height="6" rx="3" fill="#637287" opacity=".35"/>
+
+  <g font-family="DejaVu Sans Mono, monospace" font-weight="800" text-anchor="middle">
+    <g fill="#7b42b4" font-size="15">
+      <rect x="274" y="112" width="29" height="24" rx="7" fill="#f5edff"/>
+      <rect x="316" y="112" width="29" height="24" rx="7" fill="#f5edff"/>
+      <text x="288.5" y="130">2</text>
+      <text x="330.5" y="130">4</text>
+    </g>
+    <g fill="#0b67b2" font-size="32">
+      <text x="288" y="174">3</text>
+      <text x="330" y="174">2</text>
+      <text x="372" y="174">7</text>
+    </g>
+    <g fill="#08aaa5" font-size="32">
+      <text x="330" y="212">4</text>
+      <text x="372" y="212">6</text>
+    </g>
+    <text x="246" y="212" fill="#063f86" font-size="30">×</text>
+    <line x1="264" y1="223" x2="396" y2="223" stroke="#063f86" stroke-width="4" stroke-linecap="round"/>
+
+    <g fill="#10294a" font-size="25">
+      <text x="246" y="256">1</text>
+      <text x="288" y="256">9</text>
+      <text x="330" y="256">6</text>
+      <text x="372" y="256">2</text>
+      <text x="204" y="291">1</text>
+      <text x="246" y="291">3</text>
+      <text x="288" y="291">0</text>
+      <text x="330" y="291">8</text>
+      <text x="372" y="291" fill="#08aaa5">0</text>
+    </g>
+    <text x="162" y="291" fill="#063f86" font-size="27">+</text>
+    <line x1="180" y1="302" x2="396" y2="302" stroke="#063f86" stroke-width="4" stroke-linecap="round"/>
+    <g fill="#f58220" font-size="31">
+      <text x="204" y="341">1</text>
+      <text x="246" y="341">5</text>
+      <text x="288" y="341">0</text>
+      <text x="330" y="341">4</text>
+      <text x="372" y="341">2</text>
+    </g>
+  </g>
+
+  <rect x="430" y="122" width="146" height="92" rx="16" fill="#f5edff" stroke="#d9c4ef" stroke-width="2"/>
+  <text x="503" y="150" text-anchor="middle" font-family="system-ui, sans-serif" font-size="13" font-weight="850" fill="#7b42b4">JE MULTIPLIE</text>
+  <text x="503" y="177" text-anchor="middle" font-family="DejaVu Sans Mono, monospace" font-size="17" font-weight="800" fill="#10294a">327 × 6</text>
+  <text x="503" y="199" text-anchor="middle" font-family="DejaVu Sans Mono, monospace" font-size="15" font-weight="800" fill="#7b42b4">= 1 962</text>
+  <rect x="430" y="230" width="146" height="59" rx="13" fill="#e8f8f5"/>
+  <text x="503" y="254" text-anchor="middle" font-family="system-ui, sans-serif" font-size="12" font-weight="850" fill="#08aaa5">JE DÉCALE D’UN RANG</text>
+  <text x="503" y="277" text-anchor="middle" font-family="DejaVu Sans Mono, monospace" font-size="14" font-weight="800" fill="#10294a">327 × 40</text>
+  <rect x="430" y="306" width="146" height="39" rx="11" fill="#fff2e7"/>
+  <text x="503" y="331" text-anchor="middle" font-family="system-ui, sans-serif" font-size="13" font-weight="850" fill="#f58220">PRODUIT : 15 042</text>
+</svg>

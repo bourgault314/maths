@@ -33,7 +33,7 @@ const allowedGroups = new Set([
 ]);
 
 const expectedGroupCounts = {
-  manipuler: 40,
+  manipuler: 41,
   entrainer: 30,
   generer: 33,
   imprimer: 24,
@@ -43,7 +43,7 @@ const expectedGroupCounts = {
 };
 
 const expectedVisibleCardCounts = {
-  manipuler: 36,
+  manipuler: 37,
   entrainer: 28,
   generer: 33,
   imprimer: 21,
@@ -64,10 +64,10 @@ function assertPathsInGroup(group, paths) {
   }
 }
 
-test("le catalogue conserve 173 entrées dont 165 publiées", () => {
+test("le catalogue conserve 174 entrées dont 166 publiées", () => {
   assert.equal(catalogue.schemaVersion, 5);
-  assert.equal(resources.length, 173);
-  assert.equal(published.length, 165);
+  assert.equal(resources.length, 174);
+  assert.equal(published.length, 166);
   assert.equal(new Set(resources.map((resource) => resource.path)).size, resources.length, "Chaque chemin doit être unique.");
 });
 
@@ -142,7 +142,7 @@ test("aucune carte publiée ne conserve la description générique", () => {
   assert.deepEqual(offenders, []);
 });
 
-test("la répartition arbitrée des 165 ressources reste stable", () => {
+test("la répartition arbitrée des 166 ressources reste stable", () => {
   const actual = Object.fromEntries([...allowedGroups].map((group) => [group, 0]));
   for (const resource of published) actual[resolvedPrimaryGroup(resource)] += 1;
   assert.deepEqual(actual, expectedGroupCounts);
@@ -354,6 +354,24 @@ test("la division posée forme une entrée d’opération, avec entraînement et
   }
 });
 
+test("la multiplication posée forme une entrée d’opération avec le seul pas-à-pas publié", () => {
+  const collection = Array.from(catalogue.collections || []).find(({ id }) => id === "multiplication-posee");
+  const appPath = "outils/multiplication-posee/multiplication-posee.html";
+
+  assert.equal(collection?.hiddenFromBrowse, true);
+  assert.equal(collection?.collapseInNotion, true);
+  assert.equal(collection?.navigation, "hub");
+  assert.equal(collection?.presentation, "operation");
+  assert.deepEqual(Array.from(collection?.notions || []), ["calculs-poses"]);
+  assert.equal(classifications[appPath]?.primaryNotion, "calculs-poses");
+  assert.equal(classifications[appPath]?.primaryGroup, "manipuler");
+
+  const multiplicationPaths = resources
+    .filter(({ path }) => path.startsWith("outils/multiplication-posee/"))
+    .map(({ path }) => path);
+  assert.deepEqual(multiplicationPaths, [appPath]);
+});
+
 test("les références de Gerbert restent à l'intérieur de Bouliers et abaques", () => {
   const referencePaths = [
     "https://www.youtube.com/watch?v=_ubBAAgLiok",
@@ -408,6 +426,6 @@ test("les familles regroupent toutes leurs variantes sans perte ni chevauchement
   for (const family of families) visibleCardsByGroup[family.group] += 1;
 
   assert.equal(representedResourceCount, published.length, "Aucune variante publiée ne doit disparaître du catalogue.");
-  assert.equal(visibleCardCount, 148, "Les 165 ressources doivent être représentées par 148 cartes après regroupement.");
+  assert.equal(visibleCardCount, 149, "Les 166 ressources doivent être représentées par 149 cartes après regroupement.");
   assert.deepEqual(visibleCardsByGroup, expectedVisibleCardCounts);
 });
