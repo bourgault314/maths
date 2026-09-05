@@ -64,16 +64,21 @@ test("la page Addition posée relie les trois usages et conserve les URL directe
   assert.match(additionEntry, /Imprimer et plastifier/);
   assert.match(additionEntry, /href="addition-posee\.html"/);
   assert.match(additionEntry, /href="addition-posee-interactive\.html"/);
-  assert.match(additionEntry, /href="gabarit-addition-posee\.pdf"/);
+  assert.match(additionEntry, /href="gabarit-addition-entiere\.pdf"/);
+  assert.match(additionEntry, /href="gabarit-addition-decimale\.pdf"/);
   assert.match(additionTeacher, /href="\.\/">← Addition posée<\/a>/);
   assert.match(additionStudent, /href="\.\/">← Addition posée<\/a>/);
+  assert.match(additionTeacher, /href="gabarit-addition-entiere\.pdf"[^>]*id="pdf-link"/);
+  assert.doesNotMatch(additionTeacher, /data-mode="(?:integer|decimal)"/);
+  assert.doesNotMatch(additionStudent, /data-mode="(?:integer|decimal)"/);
 });
 
-test("les trois ressources d’addition utilisent la même entrée technique", () => {
+test("les quatre ressources d’addition utilisent la même entrée technique", () => {
   const paths = [
     "outils/addition-posee/addition-posee.html",
     "outils/addition-posee/addition-posee-interactive.html",
-    "outils/addition-posee/gabarit-addition-posee.pdf"
+    "outils/addition-posee/gabarit-addition-entiere.pdf",
+    "outils/addition-posee/gabarit-addition-decimale.pdf"
   ];
   for (const path of paths) {
     const resource = catalogue.resources.find((candidate) => candidate.path === path);
@@ -85,6 +90,11 @@ test("les trois ressources d’addition utilisent la même entrée technique", (
   assert.equal(catalogue.resourceClassifications[paths[0]].primaryGroup, "manipuler");
   assert.equal(catalogue.resourceClassifications[paths[1]].primaryGroup, "entrainer");
   assert.equal(catalogue.resourceClassifications[paths[2]].primaryGroup, "imprimer");
+  assert.equal(catalogue.resourceClassifications[paths[3]].primaryGroup, "imprimer");
+  assert.equal(
+    catalogue.resources.find(({ path }) => path === "outils/addition-posee/gabarit-addition-posee.pdf")?.status,
+    "hidden"
+  );
 });
 
 test("les miniatures d’addition sont distinctes, accessibles et au format 640 × 400", () => {
@@ -97,22 +107,33 @@ test("les miniatures d’addition sont distinctes, accessibles et au format 640 
     assert.match(svg, /<desc id="desc">[^<]+<\/desc>/);
   }
   assert.match(student, /cases distinctes/i);
-  const templatePng = readFileSync(new URL("assets/img/thumbnails/numeration/gabarit-addition-posee.png", root));
-  const templateWebp = readFileSync(new URL("assets/img/thumbnails/numeration/gabarit-addition-posee.webp", root));
-  assert.deepEqual(pngDimensions(templatePng), { width: 640, height: 400 });
-  assert.equal(templateWebp.subarray(0, 4).toString("ascii"), "RIFF");
-  assert.equal(templateWebp.subarray(8, 12).toString("ascii"), "WEBP");
-  assert.ok(templateWebp.length < templatePng.length);
+  for (const name of ["gabarit-addition-entiere", "gabarit-addition-decimale"]) {
+    const templatePng = readFileSync(new URL(`assets/img/thumbnails/numeration/${name}.png`, root));
+    const templateWebp = readFileSync(new URL(`assets/img/thumbnails/numeration/${name}.webp`, root));
+    assert.deepEqual(pngDimensions(templatePng), { width: 640, height: 400 });
+    assert.equal(templateWebp.subarray(0, 4).toString("ascii"), "RIFF");
+    assert.equal(templateWebp.subarray(8, 12).toString("ascii"), "WEBP");
+    assert.ok(templateWebp.length < templatePng.length);
+  }
 });
 
-test("le gabarit est un PDF A4 paysage unique, vierge et régénérable", () => {
-  const pdf = readFileSync(new URL("outils/addition-posee/gabarit-addition-posee.pdf", root));
-  const pdfSource = pdf.toString("latin1");
-  assert.equal(pdf.subarray(0, 5).toString("ascii"), "%PDF-");
-  assert.match(pdfSource, /\/MediaBox\s*\[\s*0\s+0\s+841\.8898\s+595\.2756\s*\]/);
+test("les gabarits entier et décimal sont séparés, vierges et régénérables", () => {
+  const integerPdf = readFileSync(new URL("outils/addition-posee/gabarit-addition-entiere.pdf", root));
+  const decimalPdf = readFileSync(new URL("outils/addition-posee/gabarit-addition-decimale.pdf", root));
+  const legacyPdf = readFileSync(new URL("outils/addition-posee/gabarit-addition-posee.pdf", root));
+  for (const pdf of [integerPdf, decimalPdf]) {
+    const pdfSource = pdf.toString("latin1");
+    assert.equal(pdf.subarray(0, 5).toString("ascii"), "%PDF-");
+    assert.match(pdfSource, /\/MediaBox\s*\[\s*0\s+0\s+841\.8898\s+595\.2756\s*\]/);
+  }
+  assert.deepEqual(legacyPdf, decimalPdf, "L’ancienne URL doit rester une copie exacte du gabarit décimal.");
   assert.match(generator, /PAGE_WIDTH, PAGE_HEIGHT = landscape\(A4\)/);
-  assert.match(generator, /INTEGER_MARKERS = \["dM", "uM", "cm", "dm", "um", "c", "d", "u"\]/);
+  assert.match(generator, /INTEGER_ONLY_MARKERS = \["cM", "dM", "uM", "cm", "dm", "um", "c", "d", "u"\]/);
+  assert.match(generator, /DECIMAL_INTEGER_MARKERS = \["dM", "uM", "cm", "dm", "um", "c", "d", "u"\]/);
   assert.match(generator, /DECIMAL_MARKERS = \["d", "c", "m", "dm", "cm", "mi"\]/);
+  assert.match(generator, /gabarit-addition-entiere\.pdf/);
+  assert.match(generator, /gabarit-addition-decimale\.pdf/);
+  assert.match(generator, /copyfile\(decimal_output, LEGACY_OUTPUT\)/);
   assert.match(generator, /row_label\(c, "retenues"/);
   assert.match(generator, /row_label\(c, "premier terme"/);
   assert.match(generator, /row_label\(c, "second terme"/);

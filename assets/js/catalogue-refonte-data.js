@@ -464,7 +464,23 @@ window.MATHSGO_CATALOGUE = {
       "collections": ["addition-posee"],
       "tags": ["addition", "calcul-pose", "decimaux", "gabarit", "plastifier", "retenues", "virgule"],
       "thumbnail": "assets/img/thumbnails/numeration/gabarit-addition-posee.png?v=1",
-      "cardDescription": "Une grande grille A4 paysage à plastifier pour aligner les termes, la virgule, les retenues et la somme."
+      "cardDescription": "Ancienne adresse conservée pour ouvrir le gabarit décimal sans casser les liens déjà partagés."
+    },
+    "outils/addition-posee/gabarit-addition-entiere.pdf": {
+      "primaryNotion": "calculs-poses",
+      "primaryGroup": "imprimer",
+      "collections": ["addition-posee"],
+      "tags": ["addition", "calcul-pose", "entiers", "gabarit", "plastifier", "retenues"],
+      "thumbnail": "assets/img/thumbnails/numeration/gabarit-addition-entiere.png?v=1",
+      "cardDescription": "Une grande grille A4 paysage sans virgule, avec de larges cases pour poser une addition d’entiers."
+    },
+    "outils/addition-posee/gabarit-addition-decimale.pdf": {
+      "primaryNotion": "calculs-poses",
+      "primaryGroup": "imprimer",
+      "collections": ["addition-posee"],
+      "tags": ["addition", "calcul-pose", "decimaux", "gabarit", "plastifier", "retenues", "virgule"],
+      "thumbnail": "assets/img/thumbnails/numeration/gabarit-addition-decimale.png?v=1",
+      "cardDescription": "Une grande grille A4 paysage avec une colonne dédiée pour aligner les virgules des nombres décimaux."
     },
     "outils/division-posee/division-posee.html": {
       "primaryNotion": "calculs-poses",
@@ -3840,8 +3856,8 @@ window.MATHSGO_CATALOGUE = {
     },
     {
       "id": "outils-addition-posee-gabarit-pdf",
-      "title": "Gabarit — addition posée",
-      "description": "Une grande grille A4 paysage à imprimer et plastifier pour aligner les termes, la virgule, les retenues et la somme.",
+      "title": "Gabarit — addition posée (ancienne adresse)",
+      "description": "Ancienne adresse conservée pour ouvrir le gabarit décimal sans casser les liens déjà partagés.",
       "path": "outils/addition-posee/gabarit-addition-posee.pdf",
       "domains": ["nombres-calculs"],
       "notions": ["calculs-poses"],
@@ -3849,6 +3865,38 @@ window.MATHSGO_CATALOGUE = {
       "types": ["imprimable"],
       "filters": ["materiel-imprimer"],
       "keywords": ["addition posée", "addition décimale", "gabarit", "plastifier", "retenue", "virgule"],
+      "kind": "document",
+      "status": "hidden",
+      "featured": false,
+      "recent": false
+    },
+    {
+      "id": "outils-addition-posee-gabarit-entiere-pdf",
+      "title": "Gabarit — addition d’entiers",
+      "description": "Une grande grille A4 paysage sans virgule, avec de larges cases pour poser une addition d’entiers.",
+      "path": "outils/addition-posee/gabarit-addition-entiere.pdf",
+      "domains": ["nombres-calculs"],
+      "notions": ["calculs-poses"],
+      "uses": ["imprimer", "entrainer"],
+      "types": ["imprimable"],
+      "filters": ["materiel-imprimer"],
+      "keywords": ["addition posée", "addition entière", "nombres entiers", "gabarit", "plastifier", "retenue"],
+      "kind": "document",
+      "status": "published",
+      "featured": false,
+      "recent": true
+    },
+    {
+      "id": "outils-addition-posee-gabarit-decimale-pdf",
+      "title": "Gabarit — addition de décimaux",
+      "description": "Une grande grille A4 paysage avec une colonne dédiée pour aligner les virgules des nombres décimaux.",
+      "path": "outils/addition-posee/gabarit-addition-decimale.pdf",
+      "domains": ["nombres-calculs"],
+      "notions": ["calculs-poses"],
+      "uses": ["imprimer", "entrainer"],
+      "types": ["imprimable"],
+      "filters": ["materiel-imprimer"],
+      "keywords": ["addition posée", "addition décimale", "nombres décimaux", "gabarit", "plastifier", "retenue", "virgule"],
       "kind": "document",
       "status": "published",
       "featured": false,

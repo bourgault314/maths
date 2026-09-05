@@ -11,7 +11,7 @@
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 8px;
 }
-.practice-options .rank-control { min-width: 0; padding-inline: 8px; }
+.practice-options .rank-control { min-width: 0; grid-column: auto; grid-row: auto; justify-self: stretch; padding-inline: 8px; }
 .practice-options .rank-copy strong { overflow-wrap: anywhere; white-space: normal; }
 .placement-control input:checked + .rank-switch { background: var(--violet); }
 .practice-workspace { display: flex; }
