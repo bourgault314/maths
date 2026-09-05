@@ -431,6 +431,14 @@ window.MATHSGO_CATALOGUE = {
       "thumbnail": "assets/img/thumbnails/numeration/maker-decimal.png?v=2",
       "cardDescription": "Préparer des planches d’unités, dixièmes et centièmes personnalisées pour l’impression."
     },
+    "outils/addition-posee/addition-posee.html": {
+      "primaryNotion": "calculs-poses",
+      "primaryGroup": "manipuler",
+      "collections": [],
+      "tags": ["addition", "calcul-pose", "entiers", "decimaux", "pas-a-pas", "retenues"],
+      "thumbnail": "assets/img/thumbnails/numeration/addition-posee.svg?v=1",
+      "cardDescription": "Une addition d’entiers ou de décimaux expliquée colonne par colonne, avec les retenues rendues visibles."
+    },
     "outils/division-posee/division-posee.html": {
       "primaryNotion": "calculs-poses",
       "primaryGroup": "manipuler",
@@ -3770,6 +3778,22 @@ window.MATHSGO_CATALOGUE = {
       "status": "published",
       "featured": false,
       "recent": false
+    },
+    {
+      "id": "outils-addition-posee-addition-posee-html",
+      "title": "Addition posée pas à pas",
+      "description": "Une addition d’entiers ou de décimaux expliquée colonne par colonne, avec les retenues rendues visibles.",
+      "path": "outils/addition-posee/addition-posee.html",
+      "domains": ["nombres-calculs"],
+      "notions": ["calculs-poses"],
+      "uses": ["manipuler", "projeter"],
+      "types": ["exerciseur"],
+      "filters": [],
+      "keywords": ["addition posée", "addition décimale", "retenue", "somme", "termes", "pas à pas"],
+      "kind": "tool",
+      "status": "published",
+      "featured": false,
+      "recent": true
     },
     {
       "id": "outils-division-posee-division-posee-html",
