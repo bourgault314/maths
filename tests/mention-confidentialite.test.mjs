@@ -19,7 +19,7 @@ const racine = join(dirname(fileURLToPath(import.meta.url)), "..");
 // Ces tests interdisent le retour en arrière et vérifient que la mention est là.
 
 const MENTION = "Sans cookie ni traceur";
-const PAGES_AVEC_MENTION = 158;
+const PAGES_AVEC_MENTION = 160;
 const SCRIPT = "assets/js/mention-confidentialite.js";
 const source = readFileSync(join(racine, SCRIPT), "utf8");
 

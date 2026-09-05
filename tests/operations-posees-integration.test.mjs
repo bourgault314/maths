@@ -8,11 +8,14 @@ const readText = (path) => readFileSync(new URL(path, root), "utf8");
 const catalogueSource = readText("assets/js/catalogue-refonte-data.js");
 const catalogueUi = readText("assets/js/catalogue-refonte.js");
 const additionEntry = readText("outils/addition-posee/index.html");
+const subtractionEntry = readText("outils/soustraction-posee/index.html");
 const multiplicationEntry = readText("outils/multiplication-posee/index.html");
 const divisionEntry = readText("outils/division-posee/index.html");
 const additionTeacher = readText("outils/addition-posee/addition-posee.html");
 const additionStudent = readText("outils/addition-posee/addition-posee-interactive.html");
+const subtractionTeacher = readText("outils/soustraction-posee/soustraction-posee.html");
 const generator = readText("outils/addition-posee/_generer_gabarit.py");
+const subtractionGenerator = readText("outils/soustraction-posee/_generer_gabarit.py");
 
 const context = vm.createContext({ window: {} });
 vm.runInContext(catalogueSource, context);
@@ -23,15 +26,17 @@ function pngDimensions(buffer) {
   return { width: buffer.readUInt32BE(16), height: buffer.readUInt32BE(20) };
 }
 
-test("Calculs posés expose exactement les entrées Addition, Multiplication et Division", () => {
+test("Calculs posés expose les opérations dans l’ordre logique", () => {
   const operations = Array.from(catalogue.collections || []).filter((entry) => (
     entry.presentation === "operation" && (entry.notions || []).includes("calculs-poses")
   ));
-  assert.deepEqual(operations.map(({ id, title }) => ({ id, title })), [
+  const expected = [
     { id: "addition-posee", title: "Addition posée" },
+    { id: "soustraction-posee", title: "Soustraction posée" },
     { id: "multiplication-posee", title: "Multiplication posée" },
     { id: "division-posee", title: "Division posée" }
-  ]);
+  ];
+  assert.deepEqual(operations.map(({ id, title }) => ({ id, title })), expected);
   for (const operation of operations) {
     assert.equal(operation.navigation, "hub");
     assert.equal(operation.collapseInNotion, true);
@@ -40,10 +45,11 @@ test("Calculs posés expose exactement les entrées Addition, Multiplication et 
 });
 
 test("les opérations n’affichent ni badge ni formulation de collection", () => {
-  for (const page of [additionEntry, multiplicationEntry, divisionEntry]) {
+  for (const page of [additionEntry, subtractionEntry, multiplicationEntry, divisionEntry]) {
     assert.doesNotMatch(page, /collection/i);
   }
   assert.match(additionEntry, /Choisissez l’outil adapté/);
+  assert.match(subtractionEntry, /Choisissez l’outil adapté/);
   assert.match(divisionEntry, /Choisissez l’outil adapté/);
   assert.match(multiplicationEntry, /Expliquez la méthode pas à pas/);
   assert.match(catalogueUi, /function isOperationEntry\(collection\)/);
@@ -56,6 +62,10 @@ test("les opérations n’affichent ni badge ni formulation de collection", () =
     /collection/i
   );
   assert.doesNotMatch(
+    catalogueUi.match(/"soustraction-posee": \{[\s\S]*?\n    \},/)?.[0] || "",
+    /collection/i
+  );
+  assert.doesNotMatch(
     catalogueUi.match(/"division-posee": \{[\s\S]*?\n    \},/)?.[0] || "",
     /collection/i
   );
@@ -63,6 +73,70 @@ test("les opérations n’affichent ni badge ni formulation de collection", () =
     catalogueUi.match(/"multiplication-posee": \{[\s\S]*?\n    \},/)?.[0] || "",
     /collection/i
   );
+});
+
+test("la page Soustraction posée ne propose que le pas-à-pas et les deux gabarits", () => {
+  assert.match(subtractionEntry, /<h1[^>]*>Soustraction posée<\/h1>/);
+  assert.match(subtractionEntry, /Comprendre et projeter/);
+  assert.match(subtractionEntry, /Imprimer et plastifier/);
+  assert.doesNotMatch(subtractionEntry, /S’entraîner|soustraction-posee-interactive/i);
+  assert.match(subtractionEntry, /href="soustraction-posee\.html"/);
+  assert.match(subtractionEntry, /href="gabarit-soustraction-entiere\.pdf"/);
+  assert.match(subtractionEntry, /href="gabarit-soustraction-decimale\.pdf"/);
+  assert.match(subtractionTeacher, /href="\.\/">← Soustraction posée<\/a>/);
+  assert.match(subtractionTeacher, /href="gabarit-soustraction-entiere\.pdf"[^>]*id="pdf-link"/);
+  assert.doesNotMatch(subtractionTeacher, /data-mode="(?:integer|decimal)"|Vérifier l’étape|score/i);
+});
+
+test("les trois ressources de soustraction utilisent la même entrée technique", () => {
+  const paths = [
+    "outils/soustraction-posee/soustraction-posee.html",
+    "outils/soustraction-posee/gabarit-soustraction-entiere.pdf",
+    "outils/soustraction-posee/gabarit-soustraction-decimale.pdf"
+  ];
+  for (const path of paths) {
+    const resource = catalogue.resources.find((candidate) => candidate.path === path);
+    const classification = catalogue.resourceClassifications[path];
+    assert.equal(resource?.status, "published", path);
+    assert.deepEqual(Array.from(classification?.collections || []), ["soustraction-posee"], path);
+    assert.equal(classification?.primaryNotion, "calculs-poses", path);
+  }
+  assert.equal(catalogue.resourceClassifications[paths[0]].primaryGroup, "manipuler");
+  assert.equal(catalogue.resourceClassifications[paths[1]].primaryGroup, "imprimer");
+  assert.equal(catalogue.resourceClassifications[paths[2]].primaryGroup, "imprimer");
+});
+
+test("les miniatures et les PDF de soustraction ont les formats attendus", () => {
+  const teacher = readText("assets/img/thumbnails/numeration/soustraction-posee.svg");
+  assert.match(teacher, /viewBox="0 0 640 400"/);
+  assert.match(teacher, /role="img" aria-labelledby="title desc"/);
+  assert.match(teacher, /<title id="title">Soustraction posée pas à pas<\/title>/);
+  assert.match(teacher, /<desc id="desc">[^<]+<\/desc>/);
+
+  for (const name of ["gabarit-soustraction-entiere", "gabarit-soustraction-decimale"]) {
+    const templatePng = readFileSync(new URL(`assets/img/thumbnails/numeration/${name}.png`, root));
+    const templateWebp = readFileSync(new URL(`assets/img/thumbnails/numeration/${name}.webp`, root));
+    assert.deepEqual(pngDimensions(templatePng), { width: 640, height: 400 });
+    assert.equal(templateWebp.subarray(0, 4).toString("ascii"), "RIFF");
+    assert.equal(templateWebp.subarray(8, 12).toString("ascii"), "WEBP");
+    assert.ok(templateWebp.length < templatePng.length);
+  }
+
+  const integerPdf = readFileSync(new URL("outils/soustraction-posee/gabarit-soustraction-entiere.pdf", root));
+  const decimalPdf = readFileSync(new URL("outils/soustraction-posee/gabarit-soustraction-decimale.pdf", root));
+  for (const pdf of [integerPdf, decimalPdf]) {
+    const pdfSource = pdf.toString("latin1");
+    assert.equal(pdf.subarray(0, 5).toString("ascii"), "%PDF-");
+    assert.match(pdfSource, /\/MediaBox\s*\[\s*0\s+0\s+841\.8898\s+595\.2756\s*\]/);
+    assert.match(pdfSource, /\/Count 1 \/Kids/);
+  }
+  assert.match(integerPdf.toString("latin1"), /mode=integer;comma-column=no/);
+  assert.match(decimalPdf.toString("latin1"), /mode=decimal;comma-column=yes/);
+  assert.match(subtractionGenerator, /PAGE_WIDTH, PAGE_HEIGHT = landscape\(A4\)/);
+  assert.match(subtractionGenerator, /row_label\(c, "échanges"/);
+  assert.match(subtractionGenerator, /row_label\(c, "différence"/);
+  assert.match(subtractionGenerator, /text\(c, "−"/);
+  assert.doesNotMatch(subtractionGenerator, /584|279|exemple|leçon|retenues/i);
 });
 
 test("la page Addition posée relie les trois usages et conserve les URL directes", () => {

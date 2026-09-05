@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 400" role="img" aria-labelledby="title desc">
+  <title id="title">Soustraction posée pas à pas</title>
+  <desc id="desc">La soustraction posée de 584 et 279, avec un échange violet transformant 8 dizaines et 4 unités en 7 dizaines et 14 unités.</desc>
+  <rect width="640" height="400" rx="30" fill="#f7faff"/>
+  <rect x="28" y="28" width="584" height="344" rx="24" fill="#fff" stroke="#d8e2ec" stroke-width="3"/>
+  <rect x="50" y="50" width="538" height="54" rx="13" fill="#e8f8f5"/>
+  <circle cx="78" cy="77" r="10" fill="#08aaa5"/>
+  <rect x="99" y="68" width="180" height="8" rx="4" fill="#063f86" opacity=".85"/>
+  <rect x="99" y="83" width="250" height="6" rx="3" fill="#637287" opacity=".35"/>
+
+  <g font-family="DejaVu Sans Mono, monospace" font-weight="800" text-anchor="middle">
+    <g fill="#7b42b4" font-size="21">
+      <rect x="280" y="115" width="42" height="32" rx="8" fill="#f5edff" stroke="#d9c4ef"/>
+      <rect x="338" y="115" width="48" height="32" rx="8" fill="#f5edff" stroke="#d9c4ef"/>
+      <text x="301" y="138">7</text>
+      <text x="362" y="138">14</text>
+    </g>
+    <g fill="#0b67b2" font-size="42">
+      <text x="242" y="194">5</text>
+      <text x="302" y="194" opacity=".42" text-decoration="line-through">8</text>
+      <text x="362" y="194" opacity=".42" text-decoration="line-through">4</text>
+    </g>
+    <g fill="#08aaa5" font-size="42">
+      <text x="242" y="248">2</text>
+      <text x="302" y="248">7</text>
+      <text x="362" y="248">9</text>
+    </g>
+    <text x="188" y="248" fill="#063f86" font-size="38">−</text>
+    <line x1="210" y1="266" x2="392" y2="266" stroke="#063f86" stroke-width="5" stroke-linecap="round"/>
+    <g fill="#f58220" font-size="46">
+      <text x="242" y="326">3</text>
+      <text x="302" y="326">0</text>
+      <text x="362" y="326">5</text>
+    </g>
+  </g>
+
+  <rect x="423" y="126" width="155" height="142" rx="16" fill="#f5edff" stroke="#d9c4ef" stroke-width="2"/>
+  <text x="500.5" y="155" text-anchor="middle" font-family="system-ui, sans-serif" font-size="13" font-weight="850" fill="#7b42b4">J’ÉCHANGE</text>
+  <text x="500.5" y="188" text-anchor="middle" font-family="system-ui, sans-serif" font-size="15" font-weight="800" fill="#10294a">1 dizaine</text>
+  <text x="500.5" y="215" text-anchor="middle" font-family="system-ui, sans-serif" font-size="15" font-weight="800" fill="#7b42b4">contre 10 unités</text>
+  <rect x="437" y="232" width="127" height="24" rx="8" fill="#fff"/>
+  <text x="500.5" y="249" text-anchor="middle" font-family="system-ui, sans-serif" font-size="11" font-weight="750" fill="#637287">8 → 7 · 4 → 14</text>
+  <rect x="423" y="286" width="155" height="42" rx="11" fill="#fff2e7"/>
+  <text x="500.5" y="313" text-anchor="middle" font-family="system-ui, sans-serif" font-size="14" font-weight="850" fill="#f58220">DIFFÉRENCE : 305</text>
+</svg>

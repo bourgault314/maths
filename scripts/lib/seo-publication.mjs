@@ -119,6 +119,7 @@ const COLLECTION_DESCRIPTIONS = {
   soroban: "Des outils Soroban pour représenter les nombres et s’initier au calcul sur boulier japonais.",
   gerbert: "Une progression avec l’abaque de Gerbert pour représenter les nombres et effectuer des additions et soustractions.",
   "addition-posee": "Choisissez l’outil d’addition posée adapté : pas à pas projeté, entraînement interactif ou gabarits A4 pour entiers et décimaux.",
+  "soustraction-posee": "Choisissez l’outil de soustraction posée adapté : pas à pas projeté avec échanges visibles ou gabarits A4 pour entiers et décimaux.",
   "multiplication-posee": "Une multiplication d’entiers ou de décimaux expliquée pas à pas, avec les retenues et les produits partiels rendus visibles.",
   "division-posee": "Une division euclidienne ou décimale expliquée pas à pas, avec deux gabarits A4 à imprimer et plastifier.",
   "tuiles-algebriques": "Des tuiles algébriques pour représenter les expressions littérales, développer, réduire et résoudre des équations.",

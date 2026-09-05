@@ -33,20 +33,20 @@ const allowedGroups = new Set([
 ]);
 
 const expectedGroupCounts = {
-  manipuler: 41,
+  manipuler: 42,
   entrainer: 30,
   generer: 33,
-  imprimer: 24,
+  imprimer: 26,
   activites: 14,
   cours: 15,
   jeux: 9
 };
 
 const expectedVisibleCardCounts = {
-  manipuler: 37,
+  manipuler: 38,
   entrainer: 28,
   generer: 33,
-  imprimer: 21,
+  imprimer: 23,
   activites: 12,
   cours: 9,
   jeux: 9
@@ -64,10 +64,10 @@ function assertPathsInGroup(group, paths) {
   }
 }
 
-test("le catalogue conserve 174 entrées dont 166 publiées", () => {
+test("le catalogue conserve 177 entrées dont 169 publiées", () => {
   assert.equal(catalogue.schemaVersion, 5);
-  assert.equal(resources.length, 174);
-  assert.equal(published.length, 166);
+  assert.equal(resources.length, 177);
+  assert.equal(published.length, 169);
   assert.equal(new Set(resources.map((resource) => resource.path)).size, resources.length, "Chaque chemin doit être unique.");
 });
 
@@ -142,7 +142,7 @@ test("aucune carte publiée ne conserve la description générique", () => {
   assert.deepEqual(offenders, []);
 });
 
-test("la répartition arbitrée des 166 ressources reste stable", () => {
+test("la répartition arbitrée des 169 ressources reste stable", () => {
   const actual = Object.fromEntries([...allowedGroups].map((group) => [group, 0]));
   for (const resource of published) actual[resolvedPrimaryGroup(resource)] += 1;
   assert.deepEqual(actual, expectedGroupCounts);
@@ -426,6 +426,6 @@ test("les familles regroupent toutes leurs variantes sans perte ni chevauchement
   for (const family of families) visibleCardsByGroup[family.group] += 1;
 
   assert.equal(representedResourceCount, published.length, "Aucune variante publiée ne doit disparaître du catalogue.");
-  assert.equal(visibleCardCount, 149, "Les 166 ressources doivent être représentées par 149 cartes après regroupement.");
+  assert.equal(visibleCardCount, 152, "Les 169 ressources doivent être représentées par 152 cartes après regroupement.");
   assert.deepEqual(visibleCardsByGroup, expectedVisibleCardCounts);
 });

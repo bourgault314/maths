@@ -361,6 +361,10 @@
       description: "Comprendre, s’entraîner ou imprimer les gabarits d’addition d’entiers et de décimaux.",
       thumbnail: "assets/img/thumbnails/numeration/addition-posee.svg?v=2"
     },
+    "soustraction-posee": {
+      description: "Comprendre la soustraction par échanges ou imprimer les gabarits pour entiers et décimaux.",
+      thumbnail: "assets/img/thumbnails/numeration/soustraction-posee.svg?v=1"
+    },
     "multiplication-posee": {
       description: "Comprendre la multiplication posée d’entiers et de décimaux, étape par étape.",
       thumbnail: "assets/img/thumbnails/numeration/multiplication-posee.svg?v=1"
