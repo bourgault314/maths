@@ -4361,6 +4361,24 @@ function getRelationSchemaLayout(){
   const barW = boxW - labelW - equationW - 34;
   return { boxX, boxW, labelW, equationW, barX, barW, equationCenterX: barX + barW + 34 + equationW / 2 };
 }
+
+/* Les schémas C partagent leur dessin entre l'écran et l'impression.
+   Par défaut, ces métriques valent exactement 1 : l'affichage validé ne bouge pas.
+   La correction imprimée peut seulement gagner de la hauteur et de la lisibilité
+   en passant explicitement ses deux coefficients. */
+function getRelationDrawingMetrics(opts = {}){
+  const rawVertical = Number(opts.verticalScale);
+  const rawFont = Number(opts.fontScale);
+  const verticalScale = Number.isFinite(rawVertical) && rawVertical > 0 ? rawVertical : 1;
+  const fontScale = Number.isFinite(rawFont) && rawFont > 0 ? rawFont : 1;
+  return {
+    verticalScale,
+    fontScale,
+    y:value => Math.round(Number(value) * verticalScale),
+    font:value => Math.round(Number(value) * fontScale)
+  };
+}
+
 function getRelationGroupedParts(card){
   const totals = relationTotalsForBarModel(card);
   const parts = [];
@@ -4401,6 +4419,9 @@ function drawRelationSituationSchema(targetGroup, card, opts = {}){
 
   const filled = !!opts.filled;
   const totals = relationTotalsForBarModel(card);
+  const metrics = getRelationDrawingMetrics(opts);
+  const v = metrics.y;
+  const f = metrics.font;
 
   // Le schéma de situation ne doit pas travailler avec le total déjà simplifié.
   // On ajoute donc, si besoin, une ligne pour les jetons visibles du plateau.
@@ -4414,13 +4435,13 @@ function drawRelationSituationSchema(targetGroup, card, opts = {}){
   const boxY = 620;
   const boxW = layout.boxW;
   const displayRowCount = taskCount + (hasVisibleRow ? 1 : 0);
-  const rowH = displayRowCount >= 4 ? 52 : (displayRowCount >= 3 ? 60 : 72);
-  const gap = displayRowCount >= 4 ? 10 : (displayRowCount >= 3 ? 12 : 17);
-  const titleH = 56; // espace clair sous le titre avant les barres
+  const rowH = v(displayRowCount >= 4 ? 52 : (displayRowCount >= 3 ? 60 : 72));
+  const gap = v(displayRowCount >= 4 ? 10 : (displayRowCount >= 3 ? 12 : 17));
+  const titleH = v(56); // espace clair sous le titre avant les barres
   const labelW = layout.labelW;
   const barX = layout.barX;
   const barW = layout.barW;
-  const boxH = titleH + displayRowCount * rowH + (displayRowCount - 1) * gap + 24;
+  const boxH = titleH + displayRowCount * rowH + (displayRowCount - 1) * gap + v(24);
 
   const grouped = getRelationGroupedParts(card);
   const groupedWeight = Math.max(1, grouped.parts.reduce((s,p)=>s + Math.max(0.35, Number(p.weight)||1),0));
@@ -4437,8 +4458,8 @@ function drawRelationSituationSchema(targetGroup, card, opts = {}){
     x:boxX, y:boxY, width:boxW, height:boxH, rx:22,
     fill:"rgba(255,255,255,0.94)", stroke:"#000", "stroke-width":3
   }));
-  g.appendChild(text(boxX+boxW/2, boxY+29, filled ? "Schéma rempli de la situation" : "Schéma vide de la situation", {
-    "text-anchor":"middle", "font-size":25, "font-weight":950, fill:"var(--ink)"
+  g.appendChild(text(boxX+boxW/2, boxY+v(29), filled ? "Schéma rempli de la situation" : "Schéma vide de la situation", {
+    "text-anchor":"middle", "font-size":f(25), "font-weight":950, fill:"var(--ink)"
   }));
 
   const rowsTop = boxY + titleH;
@@ -4448,14 +4469,14 @@ function drawRelationSituationSchema(targetGroup, card, opts = {}){
     const isVisible = hasVisibleRow && i === rows.length - 1;
 
     if(isVisible){
-      g.appendChild(el("circle",{cx:boxX+30, cy:y+rowH/2, r:10, fill:"rgba(249,115,22,0.35)", stroke:"rgba(0,0,0,.22)", "stroke-width":2}));
+      g.appendChild(el("circle",{cx:boxX+30, cy:y+rowH/2, r:f(10), fill:"rgba(249,115,22,0.35)", stroke:"rgba(0,0,0,.22)", "stroke-width":2}));
       g.appendChild(text(boxX+54, y+rowH/2+1, "visibles",{
-        "dominant-baseline":"middle", "font-size":20, "font-weight":950, fill:"var(--ink)"
+        "dominant-baseline":"middle", "font-size":f(20), "font-weight":950, fill:"var(--ink)"
       }));
     } else {
-      g.appendChild(el("circle",{cx:boxX+30, cy:y+rowH/2, r:12, fill:taskSplatColor(i, card), stroke:"rgba(0,0,0,.20)", "stroke-width":2}));
+      g.appendChild(el("circle",{cx:boxX+30, cy:y+rowH/2, r:f(12), fill:taskSplatColor(i, card), stroke:"rgba(0,0,0,.20)", "stroke-width":2}));
       g.appendChild(text(boxX+54, y+rowH/2+1, taskShortName(i, card),{
-        "dominant-baseline":"middle", "font-size":21, "font-weight":950, fill:"var(--ink)"
+        "dominant-baseline":"middle", "font-size":f(21), "font-weight":950, fill:"var(--ink)"
       }));
     }
 
@@ -4463,7 +4484,7 @@ function drawRelationSituationSchema(targetGroup, card, opts = {}){
     for(const part of rows[i].parts){
       const w = Math.max(part.kind === "diff" || part.kind === "visible" ? 52 : 52, unitW * Math.max(0.35, Number(part.weight)||1));
       // Pour le schéma vide, les barres existent mais les valeurs ne sont pas encore écrites.
-      drawBarCell(g, x, y, w, rowH, part, filled, {fontSize: displayRowCount >= 4 ? 23 : 28});
+      drawBarCell(g, x, y, w, rowH, part, filled, {fontSize:f(displayRowCount >= 4 ? 23 : 28)});
       x += w;
     }
     maxRowEnd = Math.max(maxRowEnd, x);
@@ -4476,23 +4497,26 @@ function drawRelationSituationSchema(targetGroup, card, opts = {}){
     rowsTop,
     displayRowCount*rowH + (displayRowCount-1)*gap,
     filled ? formatRelationNumber(totals.trueTotal) : "total",
-    {fontSize: filled ? 28 : 25, labelGap: 28}
+    {fontSize:f(filled ? 28 : 25), labelGap:28}
   );
   targetGroup.appendChild(g);
   return boxH;
 }
 
-function drawRelationOwnerBrace(g, x1, x2, y, label){
+function drawRelationOwnerBrace(g, x1, x2, y, label, opts = {}){
+  const metrics = getRelationDrawingMetrics(opts);
+  const v = metrics.y;
+  const f = metrics.font;
   const w = Math.max(18, x2 - x1);
   const mid = x1 + w / 2;
   g.appendChild(el("path",{
-    d:`M ${x1+5} ${y} V ${y+12} H ${x2-5} V ${y}`,
+    d:`M ${x1+5} ${y} V ${y+v(12)} H ${x2-5} V ${y}`,
     fill:"none", stroke:"#000", "stroke-width":2.5,
     "stroke-linecap":"round", "stroke-linejoin":"round"
   }));
-  g.appendChild(text(mid, y+33, label, {
+  g.appendChild(text(mid, y+v(33), label, {
     "text-anchor":"middle", "dominant-baseline":"middle",
-    "font-size":17, "font-weight":950, fill:"#334155"
+    "font-size":f(17), "font-weight":950, fill:"#334155"
   }));
 }
 
@@ -4723,24 +4747,27 @@ function drawRelationSubstitutionStep(targetGroup, card, opts = {}){
   if(!rel) return;
   const totals = relationTotalsForBarModel(card);
   const items = totals.items || [];
+  const metrics = getRelationDrawingMetrics(opts);
+  const v = metrics.y;
+  const f = metrics.font;
   const layout = getRelationSchemaLayout();
   const boxX = layout.boxX;
   const boxY = 620;
   const boxW = layout.boxW;
   const rows = Math.max(1, items.length);
-  const rowH = rows >= 3 ? 58 : 72;
-  const gap = rows >= 3 ? 12 : 18;
-  const titleH = 60;
-  const boxH = titleH + rows * rowH + (rows - 1) * gap + 40;
+  const rowH = v(rows >= 3 ? 58 : 72);
+  const gap = v(rows >= 3 ? 12 : 18);
+  const titleH = v(60);
+  const boxH = titleH + rows * rowH + (rows - 1) * gap + v(40);
   const g = el("g", { id:"relationDirectSubstitutionStep" });
 
   g.appendChild(el("rect",{x:boxX, y:boxY, width:boxW, height:boxH, rx:22, fill:"rgba(255,255,255,0.95)", stroke:"#000", "stroke-width":3}));
-  g.appendChild(text(boxX+boxW/2, boxY+34, "Substitution", {"text-anchor":"middle", "font-size":27, "font-weight":950, fill:"var(--ink)"}));
+  g.appendChild(text(boxX+boxW/2, boxY+v(34), "Substitution", {"text-anchor":"middle", "font-size":f(27), "font-weight":950, fill:"var(--ink)"}));
 
   const leftX = boxX + 110;
   const exprX = boxX + 280;
   const exprW = boxW - 420;
-  const startY = boxY + titleH + 14;
+  const startY = boxY + titleH + v(14);
 
   const allParts = [];
   items.forEach(it => (it.parts || []).forEach(p => allParts.push(p)));
@@ -4750,9 +4777,9 @@ function drawRelationSubstitutionStep(targetGroup, card, opts = {}){
   for(let i=0;i<rows;i++){
     const item = items[i] || {parts:[{kind:"x", label:getNumberedDisplayVarChar(card), weight:1}]};
     const cy = startY + i * (rowH + gap) + rowH/2;
-    const splatR = 30;
+    const splatR = f(30);
     g.appendChild(el("path",{d:blobPath(leftX, cy, splatR), fill:taskSplatColor(i, card), stroke:"rgba(0,0,0,0.20)", "stroke-width":2}));
-    g.appendChild(text(leftX + 66, cy + 1, ":", {"text-anchor":"middle", "dominant-baseline":"middle", "font-size":36, "font-weight":900, fill:"var(--ink)"}));
+    g.appendChild(text(leftX + 66, cy + 1, ":", {"text-anchor":"middle", "dominant-baseline":"middle", "font-size":f(36), "font-weight":900, fill:"var(--ink)"}));
 
     const parts = item.parts && item.parts.length ? item.parts : [{kind:"x", label:getNumberedDisplayVarChar(card), weight:1}];
     const rowWeight = Math.max(1, parts.reduce((s,p)=>s + Math.max(0.35, Number(p.weight)||1),0));
@@ -4761,7 +4788,7 @@ function drawRelationSubstitutionStep(targetGroup, card, opts = {}){
     for(let j=0;j<parts.length;j++){
       const part = parts[j];
       const w = Math.max(56, rowUnitW * Math.max(0.35, Number(part.weight)||1));
-      drawBarCell(g, x, cy-rowH/2, w, rowH, part, true, {fontSize:28});
+      drawBarCell(g, x, cy-rowH/2, w, rowH, part, true, {fontSize:f(28)});
       x += w;
     }
   }
@@ -4805,12 +4832,13 @@ function relationResolutionPlan(card, totals, coefficient, constantParts, consta
    flèches. On mesure, on réserve la place des flèches, et si ça ne tient pas on
    réduit la police (34 → 22 au plus) ; le signe égal se place au milieu de la colonne
    quand c'est possible, sinon le bloc est poussé contre le tableau. */
-function relationEquationFit(lines, ops, layout){
+function relationEquationFit(lines, ops, layout, opts = {}){
   const colLeft = layout.barX + layout.barW + 34;
   const colRight = layout.boxX + layout.boxW - 8;
   const colW = Math.max(120, colRight - colLeft);
   const eqGap = 22;
   const margin = 30;
+  const maxFont = Math.max(34, getRelationDrawingMetrics(opts).font(34));
   const hasArrows = Array.isArray(ops) && ops.some(Boolean);
   const roomFor = (fs) => {
     let lhsW = 0, rhsW = 0;
@@ -4823,7 +4851,7 @@ function relationEquationFit(lines, ops, layout){
     const arrowRoom = hasArrows ? (margin + Math.round(labelFs * 0.9) + 6 + labelW + 4) : 12;
     return { needL: lhsW + eqGap + arrowRoom, needR: rhsW + eqGap + arrowRoom };
   };
-  for(let fs = 34; fs >= 22; fs--){
+  for(let fs = maxFont; fs >= 22; fs--){
     const need = roomFor(fs);
     if(Math.max(need.needL, need.needR) <= colW / 2) return { fontSize: fs, margin, eqCenter: colLeft + colW / 2 };
     if(need.needL + need.needR <= colW) return { fontSize: fs, margin, eqCenter: colLeft + need.needL };
@@ -4837,6 +4865,9 @@ function drawRelationOrderedSchema(targetGroup, card, opts = {}){
   const solved = !!opts.solved;
   const grouped = getRelationGroupedDisplayGroups(card);
   const totals = grouped.totals;
+  const metrics = getRelationDrawingMetrics(opts);
+  const v = metrics.y;
+  const f = metrics.font;
   const layout = getRelationSchemaLayout();
   const boxX = layout.boxX;
   const isFullscreenProjection = !!document.fullscreenElement;
@@ -4844,9 +4875,9 @@ function drawRelationOrderedSchema(targetGroup, card, opts = {}){
   const boxW = layout.boxW;
   const barX = layout.barX;
   const barW = layout.barW;
-  const topH = 68;
-  const botH = 72;
-  const boxH = 274;
+  const topH = v(68);
+  const botH = v(72);
+  const boxH = v(274);
   const g = el("g", { id: solved ? "relationOrderedSchemaSolved" : "relationOrderedSchema" });
 
   const coefficient = Math.max(1, Math.round(Number(totals.sumCoef) || grouped.xParts || 1));
@@ -4856,16 +4887,16 @@ function drawRelationOrderedSchema(targetGroup, card, opts = {}){
   const unitW = barW / Math.max(1, totalWeight);
 
   g.appendChild(el("rect",{x:boxX, y:boxY, width:boxW, height:boxH, rx:22, fill:"rgba(255,255,255,0.95)", stroke:"#000", "stroke-width":3}));
-  g.appendChild(text(boxX+boxW/2, boxY+32, solved ? "Résolution" : (opts.direct ? "Schéma en barres" : "Schéma ordonné"), {"text-anchor":"middle", "font-size":27, "font-weight":950, fill:"var(--ink)"}));
+  g.appendChild(text(boxX+boxW/2, boxY+v(32), solved ? "Résolution" : (opts.direct ? "Schéma en barres" : "Schéma ordonné"), {"text-anchor":"middle", "font-size":f(27), "font-weight":950, fill:"var(--ink)"}));
 
-  const yTop = boxY + 68;
+  const yTop = boxY + v(68);
   if(!solved){
     drawEquabarSolveButton(g, card, boxX + 22, yTop + topH - 22);
   }
 
-  g.appendChild(text(barX+barW/2, yTop-13, "Total", {"text-anchor":"middle", "dominant-baseline":"middle", "font-size":22, "font-weight":950, fill:"#334155"}));
+  g.appendChild(text(barX+barW/2, yTop-v(13), "Total", {"text-anchor":"middle", "dominant-baseline":"middle", "font-size":f(22), "font-weight":950, fill:"#334155"}));
   g.appendChild(el("rect",{x:barX, y:yTop, width:barW, height:topH, fill:"#fff", stroke:"#000", "stroke-width":3}));
-  g.appendChild(text(barX+barW/2, yTop+topH/2+1, formatRelationNumber(totals.trueTotal), {"text-anchor":"middle", "dominant-baseline":"middle", "font-size":34, "font-weight":950, fill:"var(--ink)"}));
+  g.appendChild(text(barX+barW/2, yTop+topH/2+1, formatRelationNumber(totals.trueTotal), {"text-anchor":"middle", "dominant-baseline":"middle", "font-size":f(34), "font-weight":950, fill:"var(--ink)"}));
 
   let x = barX;
   // Les cases 𝑥 sont celles des taches (une par 𝑥, ou une case « k𝑥 » par tache quand
@@ -4883,7 +4914,7 @@ function drawRelationOrderedSchema(targetGroup, card, opts = {}){
     const part = orderedParts[i];
     const isLast = i === orderedParts.length - 1;
     const w = isLast ? (barX + barW - x) : cellWidths[i];
-    drawBarCell(g, x, yTop+topH, w, botH, part, true, {fontSize:30});
+    drawBarCell(g, x, yTop+topH, w, botH, part, true, {fontSize:f(30)});
     x += w;
   }
 
@@ -4891,11 +4922,11 @@ function drawRelationOrderedSchema(targetGroup, card, opts = {}){
   // le même plan qu'au schéma regroupé (relationResolutionPlan / relationEquationFit).
   const relVarChar = getNumberedDisplayVarChar(card);
   const plan = relationResolutionPlan(card, totals, coefficient, constantParts, constantTotal, relVarChar);
-  const fit = relationEquationFit(plan.lines, plan.ops, layout);
+  const fit = relationEquationFit(plan.lines, plan.ops, layout, opts);
   const eqCenter = fit.eqCenter;
-  const eqStartY = solved ? yTop + 20 : yTop + 79;
+  const eqStartY = solved ? yTop + v(20) : yTop + v(79);
   const eqFontSize = fit.fontSize;
-  const eqLineGap = 48;
+  const eqLineGap = v(48);
   const eqLinesDrawn = [];
   let eqY = eqStartY;
   function eqLine(left, right){
@@ -4925,6 +4956,9 @@ function drawRelationGroupedSchema(targetGroup, card, opts = {}){
   const solved = !!opts.solved;
   const grouped = getRelationGroupedDisplayGroups(card);
   const totals = grouped.totals;
+  const metrics = getRelationDrawingMetrics(opts);
+  const v = metrics.y;
+  const f = metrics.font;
   const parts = grouped.parts;
   const groups = grouped.groups;
   const xParts = grouped.xParts;
@@ -4936,24 +4970,24 @@ function drawRelationGroupedSchema(targetGroup, card, opts = {}){
   const equationW = layout.equationW;
   const barX = layout.barX;
   const barW = layout.barW;
-  const topH = 68;
-  const botH = 72;
-  const boxH = 274;
+  const topH = v(68);
+  const botH = v(72);
+  const boxH = v(274);
   const g = el("g", { id: solved ? "relationGroupedSchemaSolved" : "relationGroupedSchema" });
 
   const totalWeight = Math.max(1, parts.reduce((s,p)=>s + Math.max(0.35, Number(p.weight)||1),0));
   const unitW = barW / totalWeight;
 
   g.appendChild(el("rect",{x:boxX, y:boxY, width:boxW, height:boxH, rx:22, fill:"rgba(255,255,255,0.95)", stroke:"#000", "stroke-width":3}));
-  g.appendChild(text(boxX+boxW/2, boxY+32, solved ? "Résolution" : "Schéma regroupé", {"text-anchor":"middle", "font-size":27, "font-weight":950, fill:"var(--ink)"}));
+  g.appendChild(text(boxX+boxW/2, boxY+v(32), solved ? "Résolution" : "Schéma regroupé", {"text-anchor":"middle", "font-size":f(27), "font-weight":950, fill:"var(--ink)"}));
 
-  const yTop = boxY + 68;
+  const yTop = boxY + v(68);
   // Le bouton Résoudre n’apparaît pas ici : cette étape montre encore le regroupement par origine.
   // Il apparaît à l’étape suivante, quand le tableau est ordonné/réduit.
   // Le mot Total est au-dessus du tableau, pas en bas à gauche.
-  g.appendChild(text(barX+barW/2, yTop-13, "Total", {"text-anchor":"middle", "dominant-baseline":"middle", "font-size":22, "font-weight":950, fill:"#334155"}));
+  g.appendChild(text(barX+barW/2, yTop-v(13), "Total", {"text-anchor":"middle", "dominant-baseline":"middle", "font-size":f(22), "font-weight":950, fill:"#334155"}));
   g.appendChild(el("rect",{x:barX, y:yTop, width:barW, height:topH, fill:"#fff", stroke:"#000", "stroke-width":3}));
-  g.appendChild(text(barX+barW/2, yTop+topH/2+1, formatRelationNumber(totals.trueTotal), {"text-anchor":"middle", "dominant-baseline":"middle", "font-size":34, "font-weight":950, fill:"var(--ink)"}));
+  g.appendChild(text(barX+barW/2, yTop+topH/2+1, formatRelationNumber(totals.trueTotal), {"text-anchor":"middle", "dominant-baseline":"middle", "font-size":f(34), "font-weight":950, fill:"var(--ink)"}));
 
   let x = barX;
   const groupSpans = [];
@@ -4968,7 +5002,7 @@ function drawRelationGroupedSchema(targetGroup, card, opts = {}){
       const isLastOverall = (x >= barX + barW - 1) || (group === groups[groups.length-1] && j === group.parts.length-1);
       const w0 = cellWidths[cellIndex++];
       const w = isLastOverall ? (barX+barW-x) : w0;
-      drawBarCell(g, x, yTop+topH, w, botH, part, true, {fontSize:30});
+      drawBarCell(g, x, yTop+topH, w, botH, part, true, {fontSize:f(30)});
       x += w;
     }
     groupSpans.push({x1:groupStart, x2:x, label:group.label});
@@ -4976,9 +5010,9 @@ function drawRelationGroupedSchema(targetGroup, card, opts = {}){
 
   // Accolades sous le schéma regroupé : elles identifient les morceaux qui viennent
   // de chaque tache, puis les jetons visibles s'il y en a.
-  const braceY = yTop + topH + botH + 8;
+  const braceY = yTop + topH + botH + v(8);
   for(const span of groupSpans){
-    if(span.x2 - span.x1 > 10) drawRelationOwnerBrace(g, span.x1, span.x2, braceY, span.label);
+    if(span.x2 - span.x1 > 10) drawRelationOwnerBrace(g, span.x1, span.x2, braceY, span.label, opts);
   }
 
   // L'équation doit rester clairement séparée du tableau : même police et même
@@ -4988,14 +5022,14 @@ function drawRelationGroupedSchema(targetGroup, card, opts = {}){
   const constantParts = getRelationOrderedConstantParts(card, grouped);
   const constantTotal = constantParts.reduce((sum, part) => sum + Number(part.value || 0), 0);
   const plan = relationResolutionPlan(card, totals, coefficient, constantParts, constantTotal, relVarChar);
-  const fit = relationEquationFit(plan.lines, plan.ops, layout);
+  const fit = relationEquationFit(plan.lines, plan.ops, layout, opts);
   const eqCenter = fit.eqCenter;
-  let eqY = solved ? yTop + 20 : yTop + 79;
+  let eqY = solved ? yTop + v(20) : yTop + v(79);
   function eqLine(left, right){
     drawProjectionEquationLine(g, eqCenter, eqY, left, right, {
       text:(x,y,t,a)=>text(x,y,t,a), fill:"var(--ink)", fontSize:fit.fontSize, equalFontSize:fit.fontSize, eqGap:22
     });
-    eqY += 48;
+    eqY += v(48);
   }
   // L'équation décrit exactement les cases visibles du schéma : les constantes ne sont pas encore regroupées.
   const shownLines = solved ? plan.lines : plan.lines.slice(0, 1);
@@ -5246,7 +5280,7 @@ function renderCard(card, revealState){
   const bottomAidTyAB = isABTwoColumnLayout ? (abBarTopY + 56) : 865;
 
   const trayTransform = isCRelationLayout
-    ? (isFullscreenProjection ? "translate(210 -52) scale(0.74)" : "translate(240 -46) scale(0.70)")
+    ? (isFullscreenProjection ? "translate(210 -32) scale(0.74)" : "translate(240 -46) scale(0.70)")
     : (isSplatTwoColumnLayout ? abTrayTransform : (introTrayShiftY ? `translate(0 ${introTrayShiftY})` : ""));
   const trayLayer = trayTransform
     ? el("g", { id:isCRelationLayout ? "relationTrayScale" : "introTrayShift", transform:trayTransform })
@@ -5260,9 +5294,10 @@ function renderCard(card, revealState){
 
   // Mode C avec schéma : le total du haut reste au-dessus du plateau compact
   // et suit légèrement la remontée du plateau, sans toucher aux autres modes.
-  // En mode C avec schéma, le plein écran validé reste inchangé.
-  // En mode normal, on remonte moins la bulle TOTAL pour éviter qu'elle soit coupée en haut.
-  const relationLayoutShiftY = isCRelationLayout ? (isFullscreenProjection ? -58 : -42) : 0;
+  // En plein écran seulement, TOTAL et plateau descendent ensemble de 20 unités :
+  // le bord du cartouche reste dans le SVG sans se rapprocher du plateau.
+  // Le mode normal validé reste strictement inchangé.
+  const relationLayoutShiftY = isCRelationLayout ? (isFullscreenProjection ? -38 : -42) : 0;
   let tx = isSplatTwoColumnLayout ? abLeftCenterX : 800;
   let ty = isSplatTwoColumnLayout ? 86 : (92 + introTotalShiftY + relationLayoutShiftY); 
 
@@ -6598,6 +6633,15 @@ function fitPrintTokenToTray(cx, cy, radius, tray, strokeWidth=5){
   };
 }
 
+function getRelationCorrectionPrintProfile(card){
+  // C direct n'a que deux étapes et peut donc utiliser davantage de la hauteur
+  // disponible. Les largeurs restent identiques et les équations continuent
+  // de réduire automatiquement leur police si une ligne est longue.
+  return card && card._directSubstitution
+    ? { verticalScale:1.40, fontScale:1.15 }
+    : { verticalScale:1.20, fontScale:1.15 };
+}
+
 function renderCardIntoSvg(targetSvg, card, printMode){
   while(targetSvg.firstChild) targetSvg.removeChild(targetSvg.firstChild);
 
@@ -6707,6 +6751,7 @@ function renderCardIntoSvg(targetSvg, card, printMode){
   if(card.family === "C" && card._rel && printRevealState > 0){
     const stepGap = 40;
     let stepTop = trayY + trayH + 70;
+    const printProfile = getRelationCorrectionPrintProfile(card);
     const placeStep = (draw) => {
       const layer = tEl("g", { transform:`translate(0 ${Math.round(stepTop - 620)})` });
       targetSvg.appendChild(layer);
@@ -6714,12 +6759,12 @@ function renderCardIntoSvg(targetSvg, card, printMode){
       stepTop += h + stepGap;
     };
     if(card._directSubstitution){
-      placeStep(layer => drawRelationSubstitutionStep(layer, card));
-      placeStep(layer => drawRelationOrderedSchema(layer, card, { solved:true, direct:true }));
+      placeStep(layer => drawRelationSubstitutionStep(layer, card, printProfile));
+      placeStep(layer => drawRelationOrderedSchema(layer, card, { solved:true, direct:true, ...printProfile }));
     }else{
-      placeStep(layer => drawRelationSituationSchema(layer, card, { filled:true }));
-      placeStep(layer => drawRelationGroupedSchema(layer, card));
-      placeStep(layer => drawRelationOrderedSchema(layer, card, { solved:true }));
+      placeStep(layer => drawRelationSituationSchema(layer, card, { filled:true, ...printProfile }));
+      placeStep(layer => drawRelationGroupedSchema(layer, card, printProfile));
+      placeStep(layer => drawRelationOrderedSchema(layer, card, { solved:true, ...printProfile }));
     }
   }
   const cover = "rgb(0,0,0)";
