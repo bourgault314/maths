@@ -246,6 +246,7 @@ $versionMoteur = is_file($moteur) ? substr(md5_file($moteur), 0, 10) : '0';
   <section id="ecran-classes" hidden>
     <h1>Mes classes</h1>
     <p class="sous">Choisis une classe, ou crée-en une nouvelle.</p>
+    <p class="message" id="bandeau-annee" hidden></p>
     <ul class="classes" id="liste-classes"></ul>
     <h2>Nouvelle classe</h2>
     <div class="carte" style="max-width:420px">
@@ -583,7 +584,7 @@ $versionMoteur = is_file($moteur) ? substr(md5_file($moteur), 0, 10) : '0';
     "fragiles-sous", "titre-classe", "resume-classe", "qui", "compte-qui", "boite-texte",
     "boite-champs", "secret-texte", "secret-valeur"];
   const ZONES_MESSAGE = ["erreur-connexion", "message-classes", "message-classe",
-    "message-profs", "message-partage", "message-compte", "bandeau-droit"];
+    "message-profs", "message-partage", "message-compte", "bandeau-droit", "bandeau-annee"];
   const CHAMPS_A_VIDER = ["identifiant", "motdepasse", "libelle",
     "mdp-ancien", "mdp-nouveau", "mdp-confirme"];
   const BLOCS_A_CACHER = ["fiche", "bandelettes", "fragiles", "bloc-partage", "bloc-profs"];
@@ -1020,6 +1021,29 @@ $versionMoteur = is_file($moteur) ? substr(md5_file($moteur), 0, 10) : '0';
 
   // ---------------------------------------------------------------- actions
 
+  // Ce que la page dit de l'année scolaire : ce qui vient d'être supprimé tout
+  // seul (1er août), et le préavis de juillet.
+  function annoncerFinAnnee(donnees, combienEnCours) {
+    const parties = donnees.supprimees_maintenant || [];
+    if (parties.length) {
+      messager("bandeau-annee",
+        `Fin d’année : ${parties.length} classe${parties.length > 1 ? "s" : ""} de l’année écoulée `
+        + `${parties.length > 1 ? "ont" : "a"} été supprimée${parties.length > 1 ? "s" : ""} `
+        + `(${parties.join(", ")}). Prénoms, codes et progressions : il n’en reste rien. `
+        + `Si tu en as besoin, la sauvegarde du mois les contient encore.`, "ok");
+      return;
+    }
+    if (donnees.preavis_fin_annee && combienEnCours) {
+      messager("bandeau-annee",
+        `L’année scolaire ${donnees.annee_courante} se termine. Les classes de cette année seront `
+        + `supprimées automatiquement à partir du 1er août : prénoms, codes et progressions, il n’en `
+        + `restera rien. Fais ta sauvegarde avant, et supprime toi-même les classes que tu ne veux `
+        + `plus voir.`, "info");
+      return;
+    }
+    messager("bandeau-annee", "", "");
+  }
+
   async function chargerClasses() {
     try {
       const donnees = await api("classes.liste");
@@ -1052,6 +1076,7 @@ $versionMoteur = is_file($moteur) ? substr(md5_file($moteur), 0, 10) : '0';
         li.textContent = "Aucune classe pour l’instant.";
         liste.appendChild(li);
       }
+      annoncerFinAnnee(donnees, classes.length);
       montrer("ecran-classes");
       $("bloc-profs").hidden = !estAdmin;
       if (estAdmin) chargerProfs();
@@ -1648,15 +1673,42 @@ $versionMoteur = is_file($moteur) ? substr(md5_file($moteur), 0, 10) : '0';
     } catch (erreur) { surErreur(erreur, "message-classe"); }
   }
 
+  // Le bilan de l'année, montré AVANT d'effacer — jamais enregistré.
+  // « Combien sont allés au bout des tables » se compte ici, avec le moteur
+  // déjà chargé pour le tableau : le serveur, lui, n'ouvre jamais une
+  // progression. Rien de ce bilan ne survit à la suppression ; c'est pour ça
+  // que la confirmation dit de le noter maintenant si on y tient.
+  function combienAuBoutDesTables() {
+    if (!PARCOURS || !PARCOURS.TABLES) return null;
+    return eleves.filter(eleve => eleve.lu.lisible && eleve.lu.acquises.length === PARCOURS.TABLES.length).length;
+  }
+
+  function texteBilanDeLaClasse() {
+    const auBout = combienAuBoutDesTables();
+    const actifs = eleves.filter(eleve => eleve.maj_le).length;
+    return `${eleves.length} élève${eleves.length > 1 ? "s" : ""}, `
+      + `${actifs} entraîné${actifs > 1 ? "s" : ""}`
+      + (auBout === null ? "" : `, ${auBout} au bout des tables`);
+  }
+
   $("supprimer-classe").addEventListener("click", async () => {
+    const bouton = $("supprimer-classe");
+    if (bouton.disabled) return;
     const reponse = await demander(
-      `Supprimer la classe ${classe.libelle}, ses ${eleves.length} élève(s) et toutes leurs progressions ? Cette action est définitive.`);
+      `Supprimer la classe ${classe.libelle} ?\n\n`
+      + `Bilan de l’année : ${texteBilanDeLaClasse()}. Note ces chiffres maintenant si tu veux les `
+      + `garder : rien n’en sera conservé.\n\n`
+      + `Les ${eleves.length} prénom${eleves.length > 1 ? "s" : ""}, `
+      + `les ${eleves.length} code${eleves.length > 1 ? "s" : ""} et toutes les progressions seront `
+      + `supprimés. Cette action est définitive — seule ta sauvegarde du mois les contient encore.`);
     if (!reponse) return;
+    bouton.disabled = true;
     try {
       await api("classes.supprimer", {classe_id: classe.id});
       await chargerClasses();
-      messager("message-classes", "Classe supprimée.", "ok");
+      messager("message-classes", `Classe ${classe.libelle} supprimée : il n’en reste rien.`, "ok");
     } catch (erreur) { surErreur(erreur, "message-classe"); }
+    finally { bouton.disabled = false; }
   });
 
   $("imprimer-bandelettes").addEventListener("click", () => imprimer("bandelettes"));

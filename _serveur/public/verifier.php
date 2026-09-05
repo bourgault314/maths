@@ -42,6 +42,7 @@ if (!$configOk) {
     require __DIR__ . '/lib/bd.php';
     require __DIR__ . '/lib/reponse.php';
     require __DIR__ . '/lib/limite.php';
+    require __DIR__ . '/lib/archives.php';
     if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
         try {
             $attendu = (string)(config()['jeton_installation'] ?? '');
@@ -159,6 +160,26 @@ if ($autorise) {
         }
         return $detail;
     });
+    // Lot 12 : la fin d'année. Cette ligne NE TOUCHE À RIEN — elle montre ce
+    // que la suppression automatique prendra, pour qu'on le voie AVANT, jamais
+    // après. Les prénoms, les codes et les progressions d'une année scolaire
+    // sont supprimés au plus tard le 1er août qui suit (fiche de registre).
+    verif($lignes, "Suppression de fin d'année", function () {
+        $courante = annee_scolaire_courante();
+        $echues = classes_echues(bd());
+        if ($echues === []) {
+            $quand = purge_de_l_annee($courante);
+            return "rien à supprimer — année scolaire en cours : $courante ; les classes de cette année partiront le " . $quand;
+        }
+        $noms = [];
+        $mures = 0;
+        foreach ($echues as $classe) {
+            $noms[] = $classe['libelle'] . ' (' . $classe['annee'] . ', dernière activité le ' . $classe['derniere_activite'] . ')';
+            if ($classe['mure']) $mures++;
+        }
+        throw new RuntimeException(count($echues) . " classe(s) d'une année passée : " . implode(', ', array_slice($noms, 0, 6))
+            . " — dont $mures sera(ont) SUPPRIMÉE(S) à la prochaine ouverture de « Ma classe ». Vérifie que c'est bien voulu avant de continuer.");
+    });
     verif($lignes, "Comptes prof", function () {
         $nombre = (int)bd()->query('SELECT COUNT(*) FROM profs')->fetchColumn();
         if ($nombre === 0) throw new RuntimeException("aucun compte : ouvre installer.php.");
@@ -195,9 +216,73 @@ if ($autorise) {
         }
         return "5 fichiers en place (" . number_format((float)$total, 0, ',', ' ') . " octets)";
     });
+    // Lot 12 (05/09/2026) — B-F09 : la publication du serveur est manuelle
+    // (WinSCP), et rien ne prouvait que ce qui tourne est ce qui a été testé.
+    // Chaque lot dépose un fichier VERSION : la liste des fichiers avec leur
+    // empreinte SHA-256. On la refait ici, sur les fichiers réellement en
+    // place. Un fichier oublié pendant le dépôt se nomme tout seul.
+    verif($lignes, "Fichiers du serveur conformes au dépôt", function () {
+        $manifeste = __DIR__ . '/VERSION';
+        if (!is_file($manifeste)) {
+            throw new RuntimeException("fichier VERSION absent : il se dépose avec le lot, à la racine du suivi.");
+        }
+        $texte = (string)file_get_contents($manifeste);
+        preg_match('/^lot (.+)$/m', $texte, $m);
+        $lot = isset($m[1]) ? trim($m[1]) : 'inconnu';
+        preg_match('/^manifeste ([0-9a-f]{64})$/m', $texte, $m);
+        $empreinte = $m[1] ?? '';
+
+        $manquants = [];
+        $differents = [];
+        $finsDeLigne = [];
+        $comptes = 0;
+        foreach (explode("\n", $texte) as $ligne) {
+            if (!preg_match('/^([0-9a-f]{64})  (.+)$/', $ligne, $m)) continue;
+            [$tout, $attendu, $relatif] = $m;
+            $comptes++;
+            // Aucun chemin fantaisiste : le manifeste ne décrit que ce dossier.
+            if (str_contains($relatif, '..')) { $differents[] = $relatif; continue; }
+            $chemin = __DIR__ . '/' . $relatif;
+            if (!is_file($chemin)) { $manquants[] = $relatif; continue; }
+            $contenu = (string)file_get_contents($chemin);
+            if (hash('sha256', $contenu) === $attendu) continue;
+            // Un client FTP en mode « texte » remplace les fins de ligne : le
+            // fichier est le bon, transporté de travers. On le dit, sinon la
+            // page devient rouge partout sans expliquer pourquoi.
+            if (hash('sha256', str_replace("\r\n", "\n", $contenu)) === $attendu) $finsDeLigne[] = $relatif;
+            else $differents[] = $relatif;
+        }
+        if ($comptes === 0) {
+            throw new RuntimeException("le fichier VERSION ne contient aucune empreinte : il a été abîmé pendant le transfert.");
+        }
+        $ennuis = [];
+        if ($manquants !== []) $ennuis[] = count($manquants) . " absent(s) : " . implode(', ', array_slice($manquants, 0, 6));
+        if ($differents !== []) $ennuis[] = count($differents) . " différent(s) du dépôt : " . implode(', ', array_slice($differents, 0, 6));
+        if ($finsDeLigne !== []) {
+            $ennuis[] = count($finsDeLigne) . " transféré(s) en mode texte (seules les fins de ligne diffèrent) : "
+                . "passe ton client FTP en mode binaire et redépose — " . implode(', ', array_slice($finsDeLigne, 0, 4));
+        }
+        if ($ennuis !== []) {
+            throw new RuntimeException(implode(' ; ', $ennuis) . " — redépose ces fichiers.");
+        }
+        return "$comptes fichiers, tous identiques au dépôt (lot « $lot », manifeste " . substr($empreinte, 0, 10) . ")";
+    });
+    // Lot 12 : la sauvegarde de la base est chiffrée avant de quitter le
+    // serveur. On vérifie ici que l'hébergeur sait le faire, le jour calme,
+    // et pas le jour où on en a besoin.
+    verif($lignes, "Chiffrement des sauvegardes disponible", function () {
+        if (!function_exists('openssl_encrypt') || !in_array('aes-256-cbc', openssl_get_cipher_methods(), true)) {
+            throw new RuntimeException("l'extension openssl de PHP manque : sauvegarde.php ne pourra produire qu'un fichier EN CLAIR, à chiffrer toi-même sur ton ordinateur.");
+        }
+        return "oui (AES-256-CBC, format openssl)";
+    });
     verif($lignes, "Fichiers d'installation supprimés", function () {
         $restants = [];
-        foreach (['installer.php', 'migrer.php'] as $fichier) {
+        // secours.php et sauvegarde.php sont du même genre : on les dépose le
+        // temps d'une opération, jamais plus. Laissés en ligne, ils offrent à
+        // qui connaît le mot de passe d'installation un nouveau mot de passe
+        // administrateur, ou toute la base.
+        foreach (['installer.php', 'migrer.php', 'secours.php', 'sauvegarde.php'] as $fichier) {
             if (is_file(__DIR__ . '/' . $fichier)) $restants[] = $fichier;
         }
         if ($restants !== []) {
