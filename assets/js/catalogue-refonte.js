@@ -358,7 +358,7 @@
       thumbnail: "assets/img/thumbnails/numeration/division-posee.svg?v=2"
     },
     "addition-posee": {
-      description: "Comprendre, s’entraîner ou imprimer un gabarit pour l’addition posée.",
+      description: "Comprendre, s’entraîner ou imprimer les gabarits d’addition d’entiers et de décimaux.",
       thumbnail: "assets/img/thumbnails/numeration/addition-posee.svg?v=2"
     },
     "tuiles-algebriques": {

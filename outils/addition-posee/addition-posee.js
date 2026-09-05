@@ -26,6 +26,13 @@ try {
 }
 rankGuides.checked = showRankGuides;
 
+function syncGabaritLink() {
+  const isDecimal = [firstInput.value, secondInput.value].some((value) => /[.,]/.test(value));
+  const pdf = $("#pdf-link");
+  pdf.href = isDecimal ? "gabarit-addition-decimale.pdf" : "gabarit-addition-entiere.pdf";
+  pdf.textContent = isDecimal ? "Gabarit décimal" : "Gabarit entier";
+}
+
 function clearError() {
   errorBox.hidden = true;
   errorBox.textContent = "";
@@ -170,7 +177,10 @@ async function toggleFullscreen() {
 }
 
 $("#addition-form").addEventListener("submit", submit);
-[firstInput, secondInput].forEach((input) => input.addEventListener("input", clearError));
+[firstInput, secondInput].forEach((input) => input.addEventListener("input", () => {
+  clearError();
+  syncGabaritLink();
+}));
 rankGuides.addEventListener("change", () => {
   showRankGuides = rankGuides.checked;
   try {
@@ -225,5 +235,6 @@ window.addEventListener("resize", () => {
   resizeFrame = window.requestAnimationFrame(render);
 });
 
+syncGabaritLink();
 syncProjectionMode(false);
 render();

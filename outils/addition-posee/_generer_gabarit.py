@@ -1,4 +1,5 @@
 from pathlib import Path
+from shutil import copyfile
 
 from reportlab.lib.colors import HexColor
 from reportlab.lib.pagesizes import A4, landscape
@@ -10,7 +11,9 @@ from reportlab.pdfgen import canvas
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[1]
 LOGO = ROOT / "assets/img/logos/mathsgo/logo-print.png"
-OUTPUT = HERE / "gabarit-addition-posee.pdf"
+INTEGER_OUTPUT = HERE / "gabarit-addition-entiere.pdf"
+DECIMAL_OUTPUT = HERE / "gabarit-addition-decimale.pdf"
+LEGACY_OUTPUT = HERE / "gabarit-addition-posee.pdf"
 
 PAGE_WIDTH, PAGE_HEIGHT = landscape(A4)
 NAVY = HexColor("#063F86")
@@ -27,7 +30,8 @@ VIOLET = HexColor("#7B42B4")
 VIOLET_SOFT = HexColor("#FAF6FE")
 WHITE = HexColor("#FFFFFF")
 
-INTEGER_MARKERS = ["dM", "uM", "cm", "dm", "um", "c", "d", "u"]
+INTEGER_ONLY_MARKERS = ["cM", "dM", "uM", "cm", "dm", "um", "c", "d", "u"]
+DECIMAL_INTEGER_MARKERS = ["dM", "uM", "cm", "dm", "um", "c", "d", "u"]
 DECIMAL_MARKERS = ["d", "c", "m", "dm", "cm", "mi"]
 
 
@@ -79,10 +83,13 @@ def row_label(c, label, y, color):
     text(c, label, 58, y + 33, 7.3, color, "GoSans-Bold")
 
 
-def build():
+def build(decimal=False):
     register_fonts()
-    c = canvas.Canvas(str(OUTPUT), pagesize=landscape(A4))
-    c.setTitle("Gabarit d’addition posée")
+    output = DECIMAL_OUTPUT if decimal else INTEGER_OUTPUT
+    label = "NOMBRES DÉCIMAUX" if decimal else "NOMBRES ENTIERS"
+    number_kind = "décimaux" if decimal else "entiers"
+    c = canvas.Canvas(str(output), pagesize=landscape(A4))
+    c.setTitle(f"Gabarit d’addition de nombres {number_kind}")
     c.setAuthor("Gwenaël Bourgault - maths&go")
     c.setSubject("Gabarit A4 paysage à imprimer et plastifier")
 
@@ -90,25 +97,28 @@ def build():
     badge_w = 148
     badge_x = PAGE_WIDTH - 28 - badge_w
     panel(c, badge_x, PAGE_HEIGHT - 55, badge_w, 27, fill=TEAL_SOFT, stroke=TEAL_SOFT, radius=8)
-    text(c, "ENTIERS OU DÉCIMAUX", badge_x + badge_w / 2, PAGE_HEIGHT - 46, 7.8, TEAL, "GoSans-Bold", "center")
+    text(c, label, badge_x + badge_w / 2, PAGE_HEIGHT - 46, 7.8, TEAL, "GoSans-Bold", "center")
 
     panel(c, 28, 65, PAGE_WIDTH - 56, 456, fill=WHITE, stroke=HexColor("#D2DFEB"), radius=12)
 
     grid_left = 154
     grid_right = PAGE_WIDTH - 46
     grid_width = grid_right - grid_left
-    comma_width = 22
-    digit_width = (grid_width - comma_width) / (len(INTEGER_MARKERS) + len(DECIMAL_MARKERS))
+    comma_width = 22 if decimal else 0
+    integer_markers = DECIMAL_INTEGER_MARKERS if decimal else INTEGER_ONLY_MARKERS
+    digit_count = len(integer_markers) + (len(DECIMAL_MARKERS) if decimal else 0)
+    digit_width = (grid_width - comma_width) / digit_count
     segments = []
     cursor = grid_left
-    for marker in INTEGER_MARKERS:
+    for marker in integer_markers:
         segments.append(("digit", cursor, digit_width, marker))
         cursor += digit_width
-    segments.append(("comma", cursor, comma_width, ","))
-    cursor += comma_width
-    for marker in DECIMAL_MARKERS:
-        segments.append(("digit", cursor, digit_width, marker))
-        cursor += digit_width
+    if decimal:
+        segments.append(("comma", cursor, comma_width, ","))
+        cursor += comma_width
+        for marker in DECIMAL_MARKERS:
+            segments.append(("digit", cursor, digit_width, marker))
+            cursor += digit_width
 
     marker_y = 481
     carry_y, carry_h = 397, 58
@@ -147,12 +157,18 @@ def build():
     c.line(grid_left, sum_y + sum_h + 10, grid_right, sum_y + sum_h + 10)
 
     text(c, "u : unités", 43, 80, 6.5, MUTED, "GoSans")
-    text(c, "La colonne grisée accueille la virgule si elle est nécessaire.", grid_right, 80, 6.5, MUTED, "GoSans", "right")
+    if decimal:
+        text(c, "Les virgules s’alignent dans la colonne grisée.", grid_right, 80, 6.5, MUTED, "GoSans", "right")
     footer(c)
     c.showPage()
     c.save()
-    return OUTPUT
+    return output
 
 
 if __name__ == "__main__":
-    print(build())
+    integer_output = build(decimal=False)
+    decimal_output = build(decimal=True)
+    copyfile(decimal_output, LEGACY_OUTPUT)
+    print(integer_output)
+    print(decimal_output)
+    print(f"Compatibilité : {LEGACY_OUTPUT}")

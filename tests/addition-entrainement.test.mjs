@@ -158,8 +158,9 @@ test("toutes les étapes attendues conduisent à la réussite complète", () => 
 });
 
 test("l’interface élève réutilise le moteur, reste tactile et ne contient pas de solution initiale", () => {
-  assert.match(html, /addition-posee-interactive\.css\?v=1/);
-  assert.match(html, /addition-posee-interactive\.js\?v=1/);
+  assert.match(html, /addition-posee-interactive\.css\?v=2/);
+  assert.match(html, /addition-posee-interactive\.js\?v=2/);
+  assert.doesNotMatch(html, /data-mode="(?:integer|decimal)"/);
   assert.match(html, /id="rank-guides" type="checkbox"/);
   assert.match(html, /id="placement-mode" type="checkbox"/);
   assert.match(html, /Je place les nombres/);
@@ -171,6 +172,7 @@ test("l’interface élève réutilise le moteur, reste tactile et ne contient p
   assert.match(js, /addition-engine\.mjs\?v=1/);
   assert.match(js, /addition-entrainement-engine\.mjs\?v=1/);
   assert.match(js, /makeAddition\(\[firstInput\.value, secondInput\.value\]\)/);
+  assert.match(js, /Math\.random\(\) < \.45 \? 1 \+ Math\.floor\(Math\.random\(\) \* 3\) : 0/);
   assert.match(js, /makeTrainingTasks\(addition, \{ includePlacement: selfPlacement \}\)/);
   assert.match(js, /completed\.set\(task\.id, answer\)/);
   assert.match(js, /document\.addEventListener\("paste"/);

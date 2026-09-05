@@ -191,6 +191,8 @@ test("l’interface est professorale, projetable et conforme à l’identité ma
   assert.match(interfaceHtml, /href="\.\/">← Addition posée/);
   assert.match(interfaceHtml, /id="first-term"[^>]*inputmode="decimal"/);
   assert.match(interfaceHtml, /id="second-term"[^>]*inputmode="decimal"/);
+  assert.doesNotMatch(interfaceHtml, /data-mode="(?:integer|decimal)"/);
+  assert.match(interfaceHtml, /href="gabarit-addition-entiere\.pdf"[^>]*id="pdf-link"/);
   assert.match(interfaceHtml, /id="rank-guides" type="checkbox"/);
   assert.match(interfaceHtml, /class="instruction" aria-live="polite" aria-atomic="true"/);
   assert.match(interfaceHtml, /id="projection-recap"[^>]*hidden/);
@@ -202,7 +204,8 @@ test("l’interface est professorale, projetable et conforme à l’identité ma
   assert.match(interfaceHtml, /Confidentialité/);
   assert.match(interfaceHtml, /Licence/);
   assert.match(interfaceHtml, /Sans cookie ni traceur/);
-  assert.doesNotMatch(interfaceHtml, /Gabarit A4|Vérifier l’étape|score|indice/i);
+  assert.match(interfaceHtml, /Gabarit entier/);
+  assert.doesNotMatch(interfaceHtml, /Vérifier l’étape|score|indice/i);
 
   assert.match(interfaceCss, /\.posed-addition\.has-decimals/);
   assert.match(interfaceCss, /\.carry-cell\.is-used[^}]*text-decoration:\s*line-through/);
@@ -217,6 +220,9 @@ test("l’interface est professorale, projetable et conforme à l’identité ma
   assert.match(interfaceJs, /addition-engine\.mjs\?v=1/);
   assert.match(interfaceJs, /addition-steps\.mjs\?v=1/);
   assert.match(interfaceJs, /addition-view\.mjs\?v=1/);
+  assert.match(interfaceJs, /function syncGabaritLink\(\)/);
+  assert.match(interfaceJs, /gabarit-addition-decimale\.pdf/);
+  assert.match(interfaceJs, /some\(\(value\) => \/\[\.,\]\/.test\(value\)\)/);
 });
 
 test("l’étiquette accessible suit l’état réellement révélé", () => {

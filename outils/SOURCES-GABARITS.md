@@ -116,6 +116,22 @@ python3 outils/division-posee/_generer_gabarits.py
 Le script utilise le logo canonique d’impression et écrit directement la
 signature `mathsgo.re · CC BY-NC-SA 4.0` dans chaque page.
 
+Les deux gabarits d’addition sont également produits par un même générateur
+ReportLab. L’ancienne adresse du gabarit reste une copie du gabarit décimal pour
+ne pas casser les liens déjà partagés :
+
+| PDF public | Source |
+|---|---|
+| `addition-posee/gabarit-addition-entiere.pdf` | `addition-posee/_generer_gabarit.py` |
+| `addition-posee/gabarit-addition-decimale.pdf` | `addition-posee/_generer_gabarit.py` |
+| `addition-posee/gabarit-addition-posee.pdf` | copie de compatibilité produite par `addition-posee/_generer_gabarit.py` |
+
+Pour les régénérer depuis la racine du dépôt :
+
+```bash
+python3 outils/addition-posee/_generer_gabarit.py
+```
+
 ## Fiches imprimées directement depuis un outil
 
 Les quatorze fiches `plateaux_manipulation/fiches_moulin/moulin-pythagore-<clé>.pdf`
