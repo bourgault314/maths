@@ -104,6 +104,17 @@ window.MATHSGO_CATALOGUE = {
       "presentation": "operation"
     },
     {
+      "id": "multiplication-posee",
+      "title": "Multiplication posée",
+      "domain": "nombres-calculs",
+      "notions": ["calculs-poses"],
+      "hub": "multiplication-posee/index.html",
+      "hiddenFromBrowse": true,
+      "collapseInNotion": true,
+      "navigation": "hub",
+      "presentation": "operation"
+    },
+    {
       "id": "division-posee",
       "title": "Division posée",
       "domain": "nombres-calculs",
@@ -481,6 +492,14 @@ window.MATHSGO_CATALOGUE = {
       "tags": ["addition", "calcul-pose", "decimaux", "gabarit", "plastifier", "retenues", "virgule"],
       "thumbnail": "assets/img/thumbnails/numeration/gabarit-addition-decimale.png?v=2",
       "cardDescription": "Une grande grille A4 paysage avec une colonne dédiée pour aligner les virgules des nombres décimaux."
+    },
+    "outils/multiplication-posee/multiplication-posee.html": {
+      "primaryNotion": "calculs-poses",
+      "primaryGroup": "manipuler",
+      "collections": ["multiplication-posee"],
+      "tags": ["multiplication", "calcul-pose", "entiers", "decimaux", "pas-a-pas", "retenues", "produits-partiels", "decalage"],
+      "thumbnail": "assets/img/thumbnails/numeration/multiplication-posee.svg?v=1",
+      "cardDescription": "Une multiplication d’entiers ou de décimaux expliquée chiffre par chiffre, avec les retenues, décalages et produits partiels visibles."
     },
     "outils/division-posee/division-posee.html": {
       "primaryNotion": "calculs-poses",
@@ -3898,6 +3917,22 @@ window.MATHSGO_CATALOGUE = {
       "filters": ["materiel-imprimer"],
       "keywords": ["addition posée", "addition décimale", "nombres décimaux", "gabarit", "plastifier", "retenue", "virgule"],
       "kind": "document",
+      "status": "published",
+      "featured": false,
+      "recent": true
+    },
+    {
+      "id": "outils-multiplication-posee-multiplication-posee-html",
+      "title": "Multiplication posée pas à pas",
+      "description": "Une multiplication d’entiers ou de décimaux expliquée chiffre par chiffre, avec les retenues, décalages et produits partiels visibles.",
+      "path": "outils/multiplication-posee/multiplication-posee.html",
+      "domains": ["nombres-calculs"],
+      "notions": ["calculs-poses"],
+      "uses": ["manipuler", "projeter"],
+      "types": ["exerciseur"],
+      "filters": [],
+      "keywords": ["multiplication posée", "multiplication décimale", "retenue", "produit partiel", "décalage", "pas à pas"],
+      "kind": "tool",
       "status": "published",
       "featured": false,
       "recent": true

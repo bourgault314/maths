@@ -8,6 +8,7 @@ const readText = (path) => readFileSync(new URL(path, root), "utf8");
 const catalogueSource = readText("assets/js/catalogue-refonte-data.js");
 const catalogueUi = readText("assets/js/catalogue-refonte.js");
 const additionEntry = readText("outils/addition-posee/index.html");
+const multiplicationEntry = readText("outils/multiplication-posee/index.html");
 const divisionEntry = readText("outils/division-posee/index.html");
 const additionTeacher = readText("outils/addition-posee/addition-posee.html");
 const additionStudent = readText("outils/addition-posee/addition-posee-interactive.html");
@@ -22,12 +23,13 @@ function pngDimensions(buffer) {
   return { width: buffer.readUInt32BE(16), height: buffer.readUInt32BE(20) };
 }
 
-test("Calculs posés expose exactement une entrée Addition et une entrée Division", () => {
+test("Calculs posés expose exactement les entrées Addition, Multiplication et Division", () => {
   const operations = Array.from(catalogue.collections || []).filter((entry) => (
     entry.presentation === "operation" && (entry.notions || []).includes("calculs-poses")
   ));
   assert.deepEqual(operations.map(({ id, title }) => ({ id, title })), [
     { id: "addition-posee", title: "Addition posée" },
+    { id: "multiplication-posee", title: "Multiplication posée" },
     { id: "division-posee", title: "Division posée" }
   ]);
   for (const operation of operations) {
@@ -38,10 +40,12 @@ test("Calculs posés expose exactement une entrée Addition et une entrée Divis
 });
 
 test("les opérations n’affichent ni badge ni formulation de collection", () => {
-  for (const page of [additionEntry, divisionEntry]) {
+  for (const page of [additionEntry, multiplicationEntry, divisionEntry]) {
     assert.doesNotMatch(page, /collection/i);
-    assert.match(page, /Choisissez l’outil adapté/);
   }
+  assert.match(additionEntry, /Choisissez l’outil adapté/);
+  assert.match(divisionEntry, /Choisissez l’outil adapté/);
+  assert.match(multiplicationEntry, /Expliquez la méthode pas à pas/);
   assert.match(catalogueUi, /function isOperationEntry\(collection\)/);
   assert.match(catalogueUi, /operationEntry \? "" : `<span class="collection-label">Collection<\/span>`/);
   assert.match(catalogueUi, /onlyOperationEntries \? "Choisir une opération"/);
@@ -53,6 +57,10 @@ test("les opérations n’affichent ni badge ni formulation de collection", () =
   );
   assert.doesNotMatch(
     catalogueUi.match(/"division-posee": \{[\s\S]*?\n    \},/)?.[0] || "",
+    /collection/i
+  );
+  assert.doesNotMatch(
+    catalogueUi.match(/"multiplication-posee": \{[\s\S]*?\n    \},/)?.[0] || "",
     /collection/i
   );
 });
@@ -94,6 +102,31 @@ test("les quatre ressources d’addition utilisent la même entrée technique", 
   assert.equal(
     catalogue.resources.find(({ path }) => path === "outils/addition-posee/gabarit-addition-posee.pdf")?.status,
     "hidden"
+  );
+});
+
+test("la page Multiplication posée n’annonce que les usages disponibles", () => {
+  assert.match(multiplicationEntry, /<h1[^>]*>Multiplication posée<\/h1>/);
+  assert.match(multiplicationEntry, /Comprendre et projeter/);
+  assert.doesNotMatch(multiplicationEntry, /S’entraîner|interactive|Imprimer et plastifier|gabarit-multiplication/i);
+  assert.match(multiplicationEntry, /href="multiplication-posee\.html"/);
+});
+
+test("la seule ressource de multiplication utilise son entrée technique", () => {
+  const path = "outils/multiplication-posee/multiplication-posee.html";
+  const resource = catalogue.resources.find((candidate) => candidate.path === path);
+  const classification = catalogue.resourceClassifications[path];
+  assert.equal(resource?.status, "published");
+  assert.deepEqual(Array.from(classification?.collections || []), ["multiplication-posee"]);
+  assert.equal(classification?.primaryNotion, "calculs-poses");
+  assert.equal(classification?.primaryGroup, "manipuler");
+  assert.deepEqual(
+    Array.from(
+      catalogue.resources
+        .filter(({ path: candidate }) => candidate.startsWith("outils/multiplication-posee/"))
+        .map(({ path: candidate }) => candidate)
+    ),
+    [path]
   );
 });
 
