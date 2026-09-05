@@ -104,6 +104,17 @@ window.MATHSGO_CATALOGUE = {
       "presentation": "operation"
     },
     {
+      "id": "soustraction-posee",
+      "title": "Soustraction posée",
+      "domain": "nombres-calculs",
+      "notions": ["calculs-poses"],
+      "hub": "soustraction-posee/index.html",
+      "hiddenFromBrowse": true,
+      "collapseInNotion": true,
+      "navigation": "hub",
+      "presentation": "operation"
+    },
+    {
       "id": "multiplication-posee",
       "title": "Multiplication posée",
       "domain": "nombres-calculs",
@@ -492,6 +503,30 @@ window.MATHSGO_CATALOGUE = {
       "tags": ["addition", "calcul-pose", "decimaux", "gabarit", "plastifier", "retenues", "virgule"],
       "thumbnail": "assets/img/thumbnails/numeration/gabarit-addition-decimale.png?v=2",
       "cardDescription": "Une grande grille A4 paysage avec une colonne dédiée pour aligner les virgules des nombres décimaux."
+    },
+    "outils/soustraction-posee/soustraction-posee.html": {
+      "primaryNotion": "calculs-poses",
+      "primaryGroup": "manipuler",
+      "collections": ["soustraction-posee"],
+      "tags": ["soustraction", "calcul-pose", "difference", "echange", "emprunt", "entiers", "decimaux", "pas-a-pas"],
+      "thumbnail": "assets/img/thumbnails/numeration/soustraction-posee.svg?v=1",
+      "cardDescription": "Une soustraction d’entiers ou de décimaux expliquée colonne après colonne, avec les échanges rendus visibles."
+    },
+    "outils/soustraction-posee/gabarit-soustraction-entiere.pdf": {
+      "primaryNotion": "calculs-poses",
+      "primaryGroup": "imprimer",
+      "collections": ["soustraction-posee"],
+      "tags": ["soustraction", "calcul-pose", "difference", "echange", "emprunt", "entiers", "gabarit", "plastifier"],
+      "thumbnail": "assets/img/thumbnails/numeration/gabarit-soustraction-entiere.png?v=1",
+      "cardDescription": "Une grande grille A4 paysage sans virgule, avec un espace dédié aux échanges."
+    },
+    "outils/soustraction-posee/gabarit-soustraction-decimale.pdf": {
+      "primaryNotion": "calculs-poses",
+      "primaryGroup": "imprimer",
+      "collections": ["soustraction-posee"],
+      "tags": ["soustraction", "calcul-pose", "difference", "echange", "emprunt", "decimaux", "gabarit", "plastifier", "virgule"],
+      "thumbnail": "assets/img/thumbnails/numeration/gabarit-soustraction-decimale.png?v=1",
+      "cardDescription": "Une grille A4 paysage dédiée aux nombres décimaux, avec une colonne grisée pour aligner les virgules."
     },
     "outils/multiplication-posee/multiplication-posee.html": {
       "primaryNotion": "calculs-poses",
@@ -3916,6 +3951,54 @@ window.MATHSGO_CATALOGUE = {
       "types": ["imprimable"],
       "filters": ["materiel-imprimer"],
       "keywords": ["addition posée", "addition décimale", "nombres décimaux", "gabarit", "plastifier", "retenue", "virgule"],
+      "kind": "document",
+      "status": "published",
+      "featured": false,
+      "recent": true
+    },
+    {
+      "id": "outils-soustraction-posee-soustraction-posee-html",
+      "title": "Soustraction posée pas à pas",
+      "description": "Une soustraction d’entiers ou de décimaux expliquée colonne après colonne, avec les échanges rendus visibles.",
+      "path": "outils/soustraction-posee/soustraction-posee.html",
+      "domains": ["nombres-calculs"],
+      "notions": ["calculs-poses"],
+      "uses": ["manipuler", "projeter"],
+      "types": ["exerciseur"],
+      "filters": [],
+      "keywords": ["soustraction", "soustraction posée", "différence", "échange", "emprunt", "nombres entiers", "nombres décimaux", "pas à pas"],
+      "kind": "tool",
+      "status": "published",
+      "featured": false,
+      "recent": true
+    },
+    {
+      "id": "outils-soustraction-posee-gabarit-entiere-pdf",
+      "title": "Gabarit — soustraction d’entiers",
+      "description": "Une grande grille A4 paysage sans virgule, avec un espace dédié aux échanges.",
+      "path": "outils/soustraction-posee/gabarit-soustraction-entiere.pdf",
+      "domains": ["nombres-calculs"],
+      "notions": ["calculs-poses"],
+      "uses": ["imprimer", "entrainer"],
+      "types": ["imprimable"],
+      "filters": ["materiel-imprimer"],
+      "keywords": ["soustraction", "soustraction posée", "différence", "échange", "emprunt", "nombres entiers", "gabarit", "plastifier"],
+      "kind": "document",
+      "status": "published",
+      "featured": false,
+      "recent": true
+    },
+    {
+      "id": "outils-soustraction-posee-gabarit-decimale-pdf",
+      "title": "Gabarit — soustraction de décimaux",
+      "description": "Une grille A4 paysage dédiée aux nombres décimaux, avec une colonne grisée pour aligner les virgules.",
+      "path": "outils/soustraction-posee/gabarit-soustraction-decimale.pdf",
+      "domains": ["nombres-calculs"],
+      "notions": ["calculs-poses"],
+      "uses": ["imprimer", "entrainer"],
+      "types": ["imprimable"],
+      "filters": ["materiel-imprimer"],
+      "keywords": ["soustraction", "soustraction posée", "différence", "échange", "emprunt", "nombres décimaux", "gabarit", "plastifier", "virgule"],
       "kind": "document",
       "status": "published",
       "featured": false,
