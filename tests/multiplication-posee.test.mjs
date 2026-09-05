@@ -76,6 +76,48 @@ test("327 × 46 produit deux produits partiels correctement décalés", () => {
   );
 });
 
+test("les retenues suivent le décalage de chaque produit partiel", () => {
+  const multiplication = makeMultiplication(["327", "543"]);
+  assert.deepEqual(
+    multiplication.partials.map(({ shift, operations }) => ({
+      shift,
+      carries: operations
+        .filter(({ carryOut }) => carryOut > 0)
+        .map(({ resultLayoutIndex, carryTargetLayoutIndex }) => ({
+          resultLayoutIndex,
+          carryTargetLayoutIndex
+        }))
+    })),
+    [
+      { shift: 0, carries: [{ resultLayoutIndex: 5, carryTargetLayoutIndex: 4 }] },
+      {
+        shift: 1,
+        carries: [
+          { resultLayoutIndex: 4, carryTargetLayoutIndex: 3 },
+          { resultLayoutIndex: 3, carryTargetLayoutIndex: 2 },
+          { resultLayoutIndex: 2, carryTargetLayoutIndex: 1 }
+        ]
+      },
+      {
+        shift: 2,
+        carries: [
+          { resultLayoutIndex: 3, carryTargetLayoutIndex: 2 },
+          { resultLayoutIndex: 2, carryTargetLayoutIndex: 1 },
+          { resultLayoutIndex: 1, carryTargetLayoutIndex: 0 }
+        ]
+      }
+    ]
+  );
+  for (const partial of multiplication.partials) {
+    for (const operation of partial.operations) {
+      assert.equal(
+        operation.carryTargetLayoutIndex,
+        operation.carryOut > 0 ? operation.resultLayoutIndex - 1 : null
+      );
+    }
+  }
+});
+
 test("chaque chiffre du multiplicateur crée sa ligne, y compris zéro", () => {
   const multiplication = makeMultiplication(["1005", "101"]);
   assert.equal(multiplication.resultDisplay, "101505");
@@ -188,6 +230,7 @@ test("le déroulé sépare question, calcul, écriture, retenue, décalage et ad
   assert.ok(steps.some(({ kind }) => kind === "addition-calculate"));
   assert.ok(steps.some(({ kind }) => kind === "addition-write"));
   assert.equal(steps.at(-1).detail, "facteur × facteur = produit");
+  assert.equal(steps.find(({ kind }) => kind === "align")?.sentence, "J’aligne les unités : je place 6 sous 7.");
 });
 
 test("les futurs chiffres restent cachés et les retenues restent rattachées au produit partiel", () => {
@@ -276,6 +319,8 @@ test("les repères et les dimensions suivent le calcul", () => {
   assert.equal(longMetrics.visibleRows, 10);
   assert.ok(longMetrics.columnWidth <= shortMetrics.columnWidth);
   assert.ok(projectionMetrics.digitSize > shortMetrics.digitSize);
+  assert.equal(makeMultiplication(["7", "1234"]).factorLayoutStart, 0);
+  assert.equal(makeMultiplication(["327", "43"]).factorLayoutStart, 2);
 });
 
 test("le signe plus remplace le libellé de la dernière ligne au début de l’addition", () => {
@@ -316,10 +361,13 @@ test("l’interface est professorale, responsive, projetable et sans version él
   assert.match(interfaceJs, /document\.exitFullscreen\(\)/);
   assert.match(interfaceJs, /fullscreenchange/);
   assert.match(interfaceJs, /keepActiveColumnVisible/);
-  assert.match(interfaceJs, /multiplication-engine\.mjs\?v=1/);
-  assert.match(interfaceJs, /multiplication-steps\.mjs\?v=1/);
-  assert.match(interfaceJs, /multiplication-view\.mjs\?v=2/);
-  assert.match(interfaceHtml, /multiplication-posee\.js\?v=2/);
+  assert.match(interfaceCss, /\.alignment-column[^}]*border:/);
+  assert.match(interfaceCss, /\.alignment-column\.is-units-column/);
+  assert.match(interfaceJs, /multiplication-engine\.mjs\?v=2/);
+  assert.match(interfaceJs, /multiplication-steps\.mjs\?v=2/);
+  assert.match(interfaceJs, /multiplication-view\.mjs\?v=3/);
+  assert.match(interfaceHtml, /multiplication-posee\.css\?v=2/);
+  assert.match(interfaceHtml, /multiplication-posee\.js\?v=3/);
   assert.doesNotMatch(interfaceJs, /gabaritForValues|syncGabaritLink/);
 });
 

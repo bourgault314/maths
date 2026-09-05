@@ -2,16 +2,16 @@ import {
   makeDisplayMetrics,
   makeMultiplication,
   MultiplicationInputError
-} from "./multiplication-engine.mjs?v=1";
+} from "./multiplication-engine.mjs?v=2";
 import {
   getMultiplicationDisplayState,
   makeSteps
-} from "./multiplication-steps.mjs?v=1";
+} from "./multiplication-steps.mjs?v=2";
 import {
   renderDecimalPreparation,
   renderMultiplication,
   renderVocabulary
-} from "./multiplication-view.mjs?v=2";
+} from "./multiplication-view.mjs?v=3";
 
 const $ = (selector) => document.querySelector(selector);
 const firstInput = $("#first-factor");
