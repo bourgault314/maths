@@ -257,6 +257,10 @@ export function makeMultiplication(values) {
   );
   const firstFactorCells = leftPadCells(multiplicand, layoutColumnCount);
   const secondFactorCells = leftPadCells(multiplier, layoutColumnCount);
+  const factorLayoutStart = Math.min(
+    layoutColumnCount - multiplicand.length,
+    layoutColumnCount - multiplier.length
+  );
 
   const partials = partialDrafts.map((partial, partialIndex) => {
     const cells = leftPadCells(partial.shiftedWritten, layoutColumnCount);
@@ -267,9 +271,9 @@ export function makeMultiplication(values) {
     );
     partial.operations.forEach((operation) => {
       operation.resultLayoutIndex = layoutColumnCount - 1 - partial.shift - operation.processingIndex;
-      operation.carryTargetLayoutIndex = operation.digitIndex > 0
-        ? layoutColumnCount - multiplicand.length + operation.digitIndex - 1
-        : coreStart;
+      operation.carryTargetLayoutIndex = operation.carryOut > 0
+        ? operation.resultLayoutIndex - 1
+        : null;
     });
     return {
       ...partial,
@@ -290,6 +294,7 @@ export function makeMultiplication(values) {
     integerFactors,
     firstFactorCells,
     secondFactorCells,
+    factorLayoutStart,
     partials,
     additionOperations,
     productCells,

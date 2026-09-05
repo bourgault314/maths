@@ -71,9 +71,9 @@ export function makeSteps(multiplication) {
   steps.push({
     kind: "align",
     title: "J’aligne",
-    sentence: "J’aligne les chiffres à droite, en plaçant les unités sous les unités.",
+    sentence: `J’aligne les unités : je place ${multiplication.integerFactors[1].at(-1)} sous ${multiplication.integerFactors[0].at(-1)}.`,
     detail: multiplication.isDecimal
-      ? "En multiplication, je n’aligne pas les virgules : elles sont provisoirement retirées."
+      ? "Les virgules sont provisoirement retirées ; les chiffres de même rang restent dans la même colonne."
       : "Les chiffres de même rang sont dans la même colonne."
   });
   steps.push({

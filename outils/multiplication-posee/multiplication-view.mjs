@@ -12,6 +12,25 @@ function gridColumn(layoutIndex) {
   return String(layoutIndex + 2);
 }
 
+function addAlignmentColumns(grid, multiplication, state) {
+  if (!state.alignmentActive) return;
+  for (
+    let layoutIndex = multiplication.factorLayoutStart;
+    layoutIndex < multiplication.layoutColumnCount;
+    layoutIndex += 1
+  ) {
+    const column = element("span", "alignment-column");
+    column.classList.toggle(
+      "is-units-column",
+      layoutIndex === multiplication.layoutColumnCount - 1
+    );
+    column.style.gridColumn = gridColumn(layoutIndex);
+    column.style.gridRow = "1 / 3";
+    column.setAttribute("aria-hidden", "true");
+    grid.append(column);
+  }
+}
+
 function addFactorRow(grid, multiplication, state, factorIndex, row, showRankGuides) {
   const cells = factorIndex === 0
     ? multiplication.firstFactorCells
@@ -32,10 +51,17 @@ function addFactorRow(grid, multiplication, state, factorIndex, row, showRankGui
       ? state.activeMultiplicandDigitIndex === digitIndex
       : state.activeMultiplierDigitIndex === digitIndex;
     cell.classList.toggle("is-active", active && value !== null);
-    cell.classList.toggle("is-aligned", state.alignmentActive && value !== null);
+    cell.classList.toggle(
+      "is-aligned",
+      state.alignmentActive && layoutIndex >= multiplication.factorLayoutStart
+    );
     cell.setAttribute("aria-hidden", "true");
 
-    if (showRankGuides && factorIndex === 0 && value !== null) {
+    if (
+      showRankGuides
+      && factorIndex === 0
+      && layoutIndex >= multiplication.factorLayoutStart
+    ) {
       const exponent = multiplication.layoutColumnCount - layoutIndex - 1;
       const marker = element("span", "rank-marker", placeValueMarker(exponent));
       marker.setAttribute("aria-hidden", "true");
@@ -195,6 +221,7 @@ export function renderMultiplication({
   metrics
 }) {
   const state = getMultiplicationDisplayState(multiplication, steps, stepIndex);
+  const visibleRankGuides = showRankGuides || state.alignmentActive;
   root.hidden = !state.showGrid;
   if (!state.showGrid) {
     root.replaceChildren();
@@ -202,7 +229,8 @@ export function renderMultiplication({
   }
 
   const grid = element("div", "posed-multiplication");
-  grid.classList.toggle("has-rank-guides", showRankGuides);
+  grid.classList.toggle("has-rank-guides", visibleRankGuides);
+  grid.classList.toggle("is-alignment-step", state.alignmentActive);
   grid.style.setProperty("--column-count", multiplication.layoutColumnCount);
   grid.style.setProperty("--partial-count", multiplication.partials.length);
   grid.style.setProperty("--column-width", `${metrics.columnWidth}px`);
@@ -212,7 +240,8 @@ export function renderMultiplication({
   grid.setAttribute("role", "img");
   grid.setAttribute("aria-label", buildMultiplicationAriaLabel(multiplication, state.step));
 
-  addFactorRow(grid, multiplication, state, 0, 1, showRankGuides);
+  addAlignmentColumns(grid, multiplication, state);
+  addFactorRow(grid, multiplication, state, 0, 1, visibleRankGuides);
   addFactorRow(grid, multiplication, state, 1, 2, false);
 
   if (state.showSign) {
