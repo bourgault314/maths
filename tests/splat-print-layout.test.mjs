@@ -39,7 +39,7 @@ test("l'impression dessine le meme plateau que celui utilise pour placer les jet
 });
 
 test("l'impression ramene chaque jeton entierement dans son plateau", () => {
-  const fitToken = functionSource("fitPrintTokenToTray", "renderCardIntoSvg");
+  const fitToken = functionSource("fitPrintTokenToTray", "getRelationCorrectionPrintProfile");
   const fitPrintTokenToTray = Function(`return (${fitToken})`)();
   const tray = {x:120, y:210, w:1360, h:660};
 
@@ -85,4 +85,39 @@ test("la page classique reserve un bandeau, une consigne et un pied de page comp
   assert.match(html, /\.print-page-footer\{flex:0 0 3\.5mm/);
   assert.match(html, /title\.textContent = "Splat!"/);
   assert.match(html, /mathsgo\.re\/splat\/classique/);
+});
+
+test("la correction C agrandit seulement ses blocs imprimes", () => {
+  const profileSource = functionSource("getRelationCorrectionPrintProfile", "renderCardIntoSvg");
+  const getProfile = Function(`return (${profileSource})`)();
+
+  assert.deepEqual(getProfile({_directSubstitution:false}), {verticalScale:1.20, fontScale:1.15});
+  assert.deepEqual(getProfile({_directSubstitution:true}), {verticalScale:1.40, fontScale:1.15});
+
+  const screenRenderer = functionSource("renderCard", "approxTextWidthForLabel");
+  const printRenderer = functionSource("renderCardIntoSvg", "printSheet");
+  assert.doesNotMatch(screenRenderer, /getRelationCorrectionPrintProfile/);
+  assert.match(printRenderer, /if\(card\.family === "C" && card\._rel && printRevealState > 0\)/);
+  assert.match(printRenderer, /const printProfile = getRelationCorrectionPrintProfile\(card\)/);
+});
+
+test("les blocs C agrandis gardent une marge basse dans le SVG imprime", () => {
+  const canvasHeight = 2200;
+  const stepTop = 270 + 550 + 70;
+  const stepGap = 40;
+
+  // Enquête la plus haute : trois relations et une ligne de jetons visibles.
+  const inquiryFirstHeight = 67 + 4 * 62 + 3 * 12 + 29;
+  const inquiryOtherHeight = 329;
+  const inquiryBottom = stepTop + inquiryFirstHeight + stepGap + inquiryOtherHeight + stepGap + inquiryOtherHeight;
+
+  // C direct le plus haut : trois lignes de substitution puis la résolution.
+  const directFirstHeight = 84 + 3 * 81 + 2 * 17 + 56;
+  const directResolutionHeight = 384;
+  const directBottom = stepTop + directFirstHeight + stepGap + directResolutionHeight;
+
+  assert.ok(inquiryBottom <= 2010);
+  assert.ok(directBottom <= 1740);
+  assert.ok(canvasHeight - inquiryBottom >= 190);
+  assert.ok(canvasHeight - directBottom >= 460);
 });
