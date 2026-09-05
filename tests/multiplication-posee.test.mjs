@@ -20,7 +20,10 @@ import {
   getMultiplicationDisplayState,
   makeSteps
 } from "../outils/multiplication-posee/multiplication-steps.mjs";
-import { buildMultiplicationAriaLabel } from "../outils/multiplication-posee/multiplication-view.mjs";
+import {
+  buildMultiplicationAriaLabel,
+  partialRowMarker
+} from "../outils/multiplication-posee/multiplication-view.mjs";
 
 const root = new URL("../", import.meta.url);
 const readText = (path) => readFileSync(new URL(path, root), "utf8");
@@ -275,6 +278,18 @@ test("les repères et les dimensions suivent le calcul", () => {
   assert.ok(projectionMetrics.digitSize > shortMetrics.digitSize);
 });
 
+test("le signe plus remplace le libellé de la dernière ligne au début de l’addition", () => {
+  const multiplication = makeMultiplication(["327", "46"]);
+  assert.deepEqual(
+    partialRowMarker(multiplication.partials[1], 1, multiplication.partials.length, false),
+    { className: "partial-label", text: "× 4" }
+  );
+  assert.deepEqual(
+    partialRowMarker(multiplication.partials[1], 1, multiplication.partials.length, true),
+    { className: "addition-sign", text: "+" }
+  );
+});
+
 test("l’interface est professorale, responsive, projetable et sans version élève", () => {
   assert.match(interfaceHtml, /<h1 id="page-title">Multiplication posée<\/h1>/);
   assert.match(interfaceHtml, /Outil de classe/);
@@ -303,7 +318,8 @@ test("l’interface est professorale, responsive, projetable et sans version él
   assert.match(interfaceJs, /keepActiveColumnVisible/);
   assert.match(interfaceJs, /multiplication-engine\.mjs\?v=1/);
   assert.match(interfaceJs, /multiplication-steps\.mjs\?v=1/);
-  assert.match(interfaceJs, /multiplication-view\.mjs\?v=1/);
+  assert.match(interfaceJs, /multiplication-view\.mjs\?v=2/);
+  assert.match(interfaceHtml, /multiplication-posee\.js\?v=2/);
   assert.doesNotMatch(interfaceJs, /gabaritForValues|syncGabaritLink/);
 });
 

@@ -51,6 +51,13 @@ function addCarry(cell, value, status, className) {
   cell.append(carry);
 }
 
+export function partialRowMarker(partial, partialIndex, partialCount, showPlusSign) {
+  if (showPlusSign && partialIndex === partialCount - 1) {
+    return { className: "addition-sign", text: "+" };
+  }
+  return { className: "partial-label", text: `× ${partial.multiplierDigit}` };
+}
+
 function addPartialRows(grid, multiplication, state) {
   multiplication.partials.forEach((partial, partialIndex) => {
     const row = 4 + partialIndex;
@@ -58,12 +65,21 @@ function addPartialRows(grid, multiplication, state) {
     const rowStarted = state.activePartialIndex === partialIndex || visible.some(Boolean);
     if (!rowStarted) return;
 
-    const rank = element("span", "partial-label", `× ${partial.multiplierDigit}`);
-    rank.style.gridColumn = "1";
-    rank.style.gridRow = String(row);
-    rank.classList.toggle("is-active", state.activePartialIndex === partialIndex);
-    rank.setAttribute("aria-hidden", "true");
-    grid.append(rank);
+    const marker = partialRowMarker(
+      partial,
+      partialIndex,
+      multiplication.partials.length,
+      state.showPlusSign
+    );
+    const markerElement = element("span", marker.className, marker.text);
+    markerElement.style.gridColumn = "1";
+    markerElement.style.gridRow = String(row);
+    markerElement.classList.toggle(
+      "is-active",
+      marker.className === "partial-label" && state.activePartialIndex === partialIndex
+    );
+    markerElement.setAttribute("aria-hidden", "true");
+    grid.append(markerElement);
 
     const carries = state.multiplicationCarries.filter((carry) => (
       carry.partialIndex === partialIndex && carry.visible
@@ -216,14 +232,6 @@ export function renderMultiplication({
   }
 
   addPartialRows(grid, multiplication, state);
-
-  if (state.showPlusSign) {
-    const plus = element("span", "addition-sign", "+");
-    plus.style.gridColumn = "1";
-    plus.style.gridRow = String(3 + multiplication.partials.length);
-    plus.setAttribute("aria-hidden", "true");
-    grid.append(plus);
-  }
 
   if (state.showSecondRule) {
     const secondRule = element("span", "operation-rule second-rule");
