@@ -1391,7 +1391,7 @@
             <button class="primary" type="submit">OK</button>
             <button id="parcours-name-skip" class="secondary" type="button">Plus tard</button>
           </div>
-          <small id="parcours-name-note">Ton prénom reste sur cet appareil.</small>
+          <small id="parcours-name-note">Ton prénom n’est pas envoyé : il reste ici, le temps de ta séance.</small>
         </form>
         <div id="parcours-confirm" class="parcours-confirm" hidden>
           <p id="parcours-confirm-text">Effacer tout ton parcours&nbsp;? Cette action ne peut pas être annulée.</p>
@@ -3669,8 +3669,8 @@
         // qui n'existe pas pour ce visiteur. Avec un code, la phrase doit dire
         // exactement ce qui se passe.
         $("parcours-name-note").textContent = suiviActif()
-          ? "Ton prénom reste sur cet appareil. Ta progression, elle, est enregistrée pour ton professeur."
-          : "Ton prénom reste sur cet appareil.";
+          ? "Ton prénom n’est pas envoyé : il reste ici, le temps de ta séance. Ta progression, elle, est enregistrée pour ton professeur."
+          : "Ton prénom n’est pas envoyé : il reste ici, le temps de ta séance.";
 
         const next = $("parcours-next");
         next.replaceChildren();

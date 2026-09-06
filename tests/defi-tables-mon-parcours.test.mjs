@@ -699,7 +699,7 @@ test("la page charge le moteur du parcours et propose la carte Mon parcours", ()
 
 test("prénom local, remise à zéro confirmée dans la page, résultat relié au parcours", () => {
   assert.match(html, /id="parcours-name-input"[^>]*maxlength="20"/);
-  assert.match(html, /Ton prénom reste sur cet appareil\./);
+  assert.match(html, /Ton prénom n’est pas envoyé : il reste ici, le temps de ta séance\./);
   assert.match(html, /id="parcours-reset"[\s\S]*Recommencer à zéro/);
   assert.match(html, /id="parcours-confirm-yes"[\s\S]*Effacer/);
   assert.doesNotMatch(html, /window\.confirm\(/);
@@ -1009,8 +1009,8 @@ test("la fiche d’un élève se met à l’échelle de l’écran, jamais du pa
   assert.equal(executer({page: 390, besoin: 518, modeFiche: false}), undefined);
 });
 
-// La phrase sous le champ prénom dit « Ton prénom reste sur cet appareil ». Elle
-// doit être VRAIE, y compris pour un élève suivi : c'est exactement le genre de
+// La phrase sous le champ prénom dit « Ton prénom n’est pas envoyé ». Elle doit
+// être VRAIE, y compris pour un élève suivi : c'est exactement le genre de
 // phrase qu'une famille cite de travers si elle ne l'est pas. Or le prénom est
 // une clé du parcours, et le parcours entier partait au serveur. Ce test EXÉCUTE
 // la fabrication du paquet telle qu'elle est écrite dans la page.
