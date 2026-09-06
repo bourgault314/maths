@@ -24,6 +24,7 @@ body {
   font-family: "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
 }
 button, input, select { font: inherit; }
+button, a, .rank-control { touch-action: manipulation; }
 .skip-link { position: fixed; left: 12px; top: -80px; z-index: 20; padding: 10px 14px; border-radius: 8px; color: #fff; background: var(--navy); }
 .skip-link:focus { top: 12px; }
 .page-shell { --stage-min-height: clamp(380px, calc(100svh - 477px), 535px); width: min(1480px, calc(100% - 28px)); min-height: 100vh; margin: 0 auto; display: flex; flex-direction: column; }

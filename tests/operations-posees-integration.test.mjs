@@ -16,6 +16,15 @@ const divisionEntry = readText("outils/division-posee/index.html");
 const additionTeacher = readText("outils/addition-posee/addition-posee.html");
 const additionStudent = readText("outils/addition-posee/addition-posee-interactive.html");
 const subtractionTeacher = readText("outils/soustraction-posee/soustraction-posee.html");
+const multiplicationTeacher = readText("outils/multiplication-posee/multiplication-posee.html");
+const divisionTeacher = readText("outils/division-posee/division-posee.html");
+const divisionStudent = readText("outils/division-posee/division-posee-interactive.html");
+const operationAppStyles = [
+  ["addition", readText("outils/addition-posee/addition-posee.css")],
+  ["soustraction", readText("outils/soustraction-posee/soustraction-posee.css")],
+  ["multiplication", readText("outils/multiplication-posee/multiplication-posee.css")],
+  ["division", readText("outils/division-posee/division-posee.css")]
+];
 const generator = readText("outils/addition-posee/_generer_gabarit.py");
 const subtractionGenerator = readText("outils/soustraction-posee/_generer_gabarit.py");
 
@@ -38,6 +47,29 @@ test("les quatre pages d’opération conservent l’espace mobile réservé à 
   );
   assert.match(operationEntryStyles, /:where\(\.operation-entry\) \.catalogue-breadcrumb a\s*\{/);
   assert.doesNotMatch(operationEntryStyles, /^\.operation-entry \.catalogue-breadcrumb a\s*\{/m);
+});
+
+test("les six applications empêchent le double-tap sur les contrôles sans bloquer le zoom manuel", () => {
+  for (const [operation, styles] of operationAppStyles) {
+    assert.match(
+      styles,
+      /button,\s*a,\s*\.rank-control\s*\{[^}]*touch-action:\s*manipulation;/s,
+      operation
+    );
+  }
+
+  const pages = [
+    additionTeacher,
+    additionStudent,
+    subtractionTeacher,
+    multiplicationTeacher,
+    divisionTeacher,
+    divisionStudent
+  ];
+  for (const page of pages) {
+    assert.match(page, /<meta name="viewport"[^>]*width=device-width[^>]*>/);
+    assert.doesNotMatch(page, /user-scalable\s*=\s*(?:no|0)|maximum-scale\s*=\s*1(?:\.0)?/i);
+  }
 });
 
 test("Calculs posés expose les opérations dans l’ordre logique", () => {
