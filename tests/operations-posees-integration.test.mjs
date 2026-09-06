@@ -7,6 +7,8 @@ const root = new URL("../", import.meta.url);
 const readText = (path) => readFileSync(new URL(path, root), "utf8");
 const catalogueSource = readText("assets/js/catalogue-refonte-data.js");
 const catalogueUi = readText("assets/js/catalogue-refonte.js");
+const catalogueStyles = readText("assets/css/catalogue-refonte.css");
+const operationEntryStyles = readText("assets/css/operation-entry.css");
 const additionEntry = readText("outils/addition-posee/index.html");
 const subtractionEntry = readText("outils/soustraction-posee/index.html");
 const multiplicationEntry = readText("outils/multiplication-posee/index.html");
@@ -25,6 +27,18 @@ function pngDimensions(buffer) {
   assert.equal(buffer.subarray(1, 4).toString("ascii"), "PNG");
   return { width: buffer.readUInt32BE(16), height: buffer.readUInt32BE(20) };
 }
+
+test("les quatre pages d’opération conservent l’espace mobile réservé à la flèche", () => {
+  for (const page of [additionEntry, subtractionEntry, multiplicationEntry, divisionEntry]) {
+    assert.match(page, /operation-entry\.css\?v=2/);
+  }
+  assert.match(
+    catalogueStyles,
+    /body\.catalogue-is-deep \.breadcrumb-parent\s*\{[^}]*padding:\s*5px 10px 5px 31px/s
+  );
+  assert.match(operationEntryStyles, /:where\(\.operation-entry\) \.catalogue-breadcrumb a\s*\{/);
+  assert.doesNotMatch(operationEntryStyles, /^\.operation-entry \.catalogue-breadcrumb a\s*\{/m);
+});
 
 test("Calculs posés expose les opérations dans l’ordre logique", () => {
   const operations = Array.from(catalogue.collections || []).filter((entry) => (
