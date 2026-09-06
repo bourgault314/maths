@@ -66,6 +66,49 @@ test("le schéma regroupé remplace les noms de couleurs par leurs splats", () =
   assert.match(groupedSource, /ownerSplatColor:taskSplatColor\(span\.splatIndex, card\)/);
 });
 
+test("l'équation du schéma regroupé suit le tableau et condense les x par tache", () => {
+  const equationSource = functionSource("relationGroupedEquationLine", "relationPartNumberValue");
+  const relationGroupedEquationLine = Function(
+    "getRelationGroupedDisplayGroups",
+    "getNumberedDisplayVarChar",
+    "formatCoeffUnknownTerm",
+    "relationPartNumberValue",
+    "formatRelationNumber",
+    `return (${equationSource})`
+  )(
+    () => { throw new Error("le groupe est fourni par le test"); },
+    () => "x",
+    (coefficient, variable) => coefficient === 1 ? variable : `${coefficient}${variable}`,
+    part => Number(part.value ?? part.label),
+    value => String(value)
+  );
+
+  const grouped = {
+    totals:{trueTotal:44},
+    groups:[
+      {parts:[{kind:"x", coef:1}, {kind:"diff", value:20}]},
+      {parts:[{kind:"x", coef:1}]},
+      {parts:[{kind:"visible", value:10}]}
+    ]
+  };
+  assert.deepEqual(relationGroupedEquationLine({}, grouped), {left:"x + 20 + x + 10", right:"44"});
+
+  const extreme = {
+    totals:{trueTotal:200},
+    groups:[
+      {parts:Array.from({length:8}, () => ({kind:"x", coef:1}))},
+      {parts:[{kind:"x", coef:16}, {kind:"diff", value:20}]},
+      {parts:[{kind:"visible", value:30}]}
+    ]
+  };
+  assert.deepEqual(relationGroupedEquationLine({}, extreme), {left:"8x + 16x + 20 + 30", right:"200"});
+
+  const groupedSource = functionSource("drawRelationGroupedSchema", "drawBarModelPartsInGroup");
+  assert.match(groupedSource, /const groupedEquation = relationGroupedEquationLine\\(card, grouped\\)/);
+  assert.match(groupedSource, /const fitLines = solved \\? plan\\.lines : \\[groupedEquation\\]/);
+  assert.match(groupedSource, /const fitOps = solved \\? plan\\.ops : \\[\\]/);
+});
+
 test("la correction C conserve exactement ses trois blocs", () => {
   const printSource = functionSource("renderCardIntoSvg", "printSheet");
   const normalCorrection = printSource.match(/if\(card\._directSubstitution\)\{[\s\S]*?\}else\{([\s\S]*?)\n    \}/);
