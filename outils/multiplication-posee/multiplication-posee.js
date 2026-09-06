@@ -2,16 +2,17 @@ import {
   makeDisplayMetrics,
   makeMultiplication,
   MultiplicationInputError
-} from "./multiplication-engine.mjs?v=1";
+} from "./multiplication-engine.mjs?v=3";
 import {
   getMultiplicationDisplayState,
   makeSteps
-} from "./multiplication-steps.mjs?v=1";
+} from "./multiplication-steps.mjs?v=3";
 import {
   renderDecimalPreparation,
+  renderInstructionSentence,
   renderMultiplication,
   renderVocabulary
-} from "./multiplication-view.mjs?v=2";
+} from "./multiplication-view.mjs?v=4";
 
 const $ = (selector) => document.querySelector(selector);
 const firstInput = $("#first-factor");
@@ -100,7 +101,7 @@ function keepActiveColumnVisible() {
 function render() {
   const step = steps[stepIndex];
   $("#step-title").textContent = step.title;
-  $("#step-sentence").textContent = step.sentence;
+  renderInstructionSentence($("#step-sentence"), step);
   $("#step-detail").textContent = step.detail || "";
   $("#step-detail").hidden = !step.detail;
   $("#step-count").textContent = `${stepIndex + 1} / ${steps.length}`;

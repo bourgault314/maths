@@ -92,7 +92,7 @@ export function parseFactorInput(value) {
 export function placeValueName(exponent, quantity = 2) {
   const names = INTEGER_PLACES[exponent];
   if (!names) return `rang 10^${exponent}`;
-  return names[quantity === 1 ? 0 : 1];
+  return names[quantity === 0 || quantity === 1 ? 0 : 1];
 }
 
 export function placeValueMarker(exponent) {
@@ -257,6 +257,11 @@ export function makeMultiplication(values) {
   );
   const firstFactorCells = leftPadCells(multiplicand, layoutColumnCount);
   const secondFactorCells = leftPadCells(multiplier, layoutColumnCount);
+  const firstFactorLayoutStart = layoutColumnCount - multiplicand.length;
+  const factorLayoutStart = Math.min(
+    firstFactorLayoutStart,
+    layoutColumnCount - multiplier.length
+  );
 
   const partials = partialDrafts.map((partial, partialIndex) => {
     const cells = leftPadCells(partial.shiftedWritten, layoutColumnCount);
@@ -267,9 +272,12 @@ export function makeMultiplication(values) {
     );
     partial.operations.forEach((operation) => {
       operation.resultLayoutIndex = layoutColumnCount - 1 - partial.shift - operation.processingIndex;
-      operation.carryTargetLayoutIndex = operation.digitIndex > 0
-        ? layoutColumnCount - multiplicand.length + operation.digitIndex - 1
-        : coreStart;
+      operation.carryTargetLayoutIndex = operation.carryOut > 0
+        ? operation.resultLayoutIndex - 1
+        : null;
+      operation.carryTargetFactorLayoutIndex = operation.carryOut > 0 && !operation.isLastDigit
+        ? firstFactorLayoutStart + operation.digitIndex - 1
+        : null;
     });
     return {
       ...partial,
@@ -277,6 +285,9 @@ export function makeMultiplication(values) {
       cells,
       coreStart,
       shiftLayoutIndices,
+      multiplierPlaceValue: partial.multiplierDigit === 0
+        ? "0"
+        : `${partial.multiplierDigit}${"0".repeat(partial.shift)}`,
       multiplierDigitIndex: multiplier.length - partialIndex - 1
     };
   });
@@ -290,6 +301,8 @@ export function makeMultiplication(values) {
     integerFactors,
     firstFactorCells,
     secondFactorCells,
+    firstFactorLayoutStart,
+    factorLayoutStart,
     partials,
     additionOperations,
     productCells,
@@ -333,7 +346,15 @@ export function makeDisplayMetrics(multiplication, options = {}) {
     Math.min(Math.floor(columnWidth * 0.72), Math.floor(rowHeight * 0.66)),
     maxDigitSize
   );
-  const signWidth = clamp(40, Math.floor(columnWidth * 0.72), 58);
+  const longestPartialLabel = Math.max(
+    ...multiplication.partials.map(({ multiplierPlaceValue }) => multiplierPlaceValue.length + 2)
+  );
+  const partialLabelWidth = Math.ceil(longestPartialLabel * digitSize * 0.24) + 8;
+  const signWidth = clamp(
+    40,
+    Math.max(Math.floor(columnWidth * 0.72), partialLabelWidth),
+    84
+  );
 
   return { columnWidth, rowHeight, digitSize, signWidth, visibleRows };
 }

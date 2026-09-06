@@ -12,6 +12,56 @@ function gridColumn(layoutIndex) {
   return String(layoutIndex + 2);
 }
 
+function framedUnitNumber(value) {
+  const number = element("span", "instruction-number-with-unit");
+  const digits = [...String(value)];
+  number.setAttribute(
+    "aria-label",
+    `${value}, chiffre des unités ${digits.at(-1)}`
+  );
+  digits.forEach((digit, index) => {
+    const isUnit = index === digits.length - 1;
+    const node = element(isUnit ? "strong" : "span", isUnit ? "instruction-unit-digit" : "", digit);
+    node.setAttribute("aria-hidden", "true");
+    number.append(node);
+  });
+  return number;
+}
+
+export function renderInstructionSentence(container, step) {
+  if (step.kind !== "identify-units" || !Array.isArray(step.unitFactors)) {
+    container.textContent = step.sentence;
+    return;
+  }
+
+  container.replaceChildren(
+    document.createTextNode("Je repère le chiffre des unités dans "),
+    framedUnitNumber(step.unitFactors[0]),
+    document.createTextNode(" et dans "),
+    framedUnitNumber(step.unitFactors[1]),
+    document.createTextNode(".")
+  );
+}
+
+function addAlignmentColumns(grid, multiplication, state) {
+  if (!state.alignmentActive) return;
+  for (
+    let layoutIndex = multiplication.factorLayoutStart;
+    layoutIndex < multiplication.layoutColumnCount;
+    layoutIndex += 1
+  ) {
+    const column = element("span", "alignment-column");
+    column.classList.toggle(
+      "is-units-column",
+      layoutIndex === multiplication.layoutColumnCount - 1
+    );
+    column.style.gridColumn = gridColumn(layoutIndex);
+    column.style.gridRow = "1 / 3";
+    column.setAttribute("aria-hidden", "true");
+    grid.append(column);
+  }
+}
+
 function addFactorRow(grid, multiplication, state, factorIndex, row, showRankGuides) {
   const cells = factorIndex === 0
     ? multiplication.firstFactorCells
@@ -20,6 +70,11 @@ function addFactorRow(grid, multiplication, state, factorIndex, row, showRankGui
   const factorStart = multiplication.layoutColumnCount - factorDigits.length;
 
   cells.forEach((value, layoutIndex) => {
+    const carry = factorIndex === 0
+      ? state.multiplicationCarries.find((candidate) => (
+          candidate.visible && candidate.targetLayoutIndex === layoutIndex
+        ))
+      : null;
     const cell = element(
       "span",
       `digit-cell factor-cell factor-${factorIndex + 1}-cell`,
@@ -32,15 +87,24 @@ function addFactorRow(grid, multiplication, state, factorIndex, row, showRankGui
       ? state.activeMultiplicandDigitIndex === digitIndex
       : state.activeMultiplierDigitIndex === digitIndex;
     cell.classList.toggle("is-active", active && value !== null);
-    cell.classList.toggle("is-aligned", state.alignmentActive && value !== null);
+    cell.classList.toggle(
+      "is-aligned",
+      state.alignmentActive && layoutIndex >= multiplication.factorLayoutStart
+    );
     cell.setAttribute("aria-hidden", "true");
 
-    if (showRankGuides && factorIndex === 0 && value !== null) {
+    if (
+      showRankGuides
+      && factorIndex === 0
+      && layoutIndex >= multiplication.factorLayoutStart
+      && !carry
+    ) {
       const exponent = multiplication.layoutColumnCount - layoutIndex - 1;
       const marker = element("span", "rank-marker", placeValueMarker(exponent));
       marker.setAttribute("aria-hidden", "true");
       cell.append(marker);
     }
+    if (carry) addCarry(cell, carry.value, carry.status, "multiplication-carry");
     grid.append(cell);
   });
 }
@@ -55,7 +119,7 @@ export function partialRowMarker(partial, partialIndex, partialCount, showPlusSi
   if (showPlusSign && partialIndex === partialCount - 1) {
     return { className: "addition-sign", text: "+" };
   }
-  return { className: "partial-label", text: `× ${partial.multiplierDigit}` };
+  return { className: "partial-label", text: `× ${partial.multiplierPlaceValue}` };
 }
 
 function addPartialRows(grid, multiplication, state) {
@@ -81,9 +145,9 @@ function addPartialRows(grid, multiplication, state) {
     markerElement.setAttribute("aria-hidden", "true");
     grid.append(markerElement);
 
-    const carries = state.multiplicationCarries.filter((carry) => (
-      carry.partialIndex === partialIndex && carry.visible
-    ));
+    const additionCarries = partialIndex === 0
+      ? state.additionCarries.filter(({ visible: carryVisible }) => carryVisible)
+      : [];
 
     partial.cells.forEach((value, layoutIndex) => {
       const isVisible = visible[layoutIndex] && value !== null;
@@ -101,8 +165,12 @@ function addPartialRows(grid, multiplication, state) {
           && state.activePartialTarget === layoutIndex
           && !isVisible
       );
-      const carry = carries.find((candidate) => candidate.targetLayoutIndex === layoutIndex);
-      if (carry) addCarry(cell, carry.value, carry.status, "multiplication-carry");
+      const additionCarry = additionCarries.find((candidate) => (
+        candidate.targetLayoutIndex === layoutIndex
+      ));
+      if (additionCarry) {
+        addCarry(cell, additionCarry.value, additionCarry.status, "addition-carry");
+      }
       cell.setAttribute("aria-hidden", "true");
       grid.append(cell);
     });
@@ -120,7 +188,6 @@ function addResultRow(grid, multiplication, state) {
     return;
   }
 
-  const carries = state.additionCarries.filter(({ visible }) => visible);
   multiplication.productCells.forEach((value, layoutIndex) => {
     const isVisible = state.resultVisible[layoutIndex] && value !== null;
     const cell = element("span", "digit-cell result-cell", isVisible ? value : "");
@@ -131,8 +198,6 @@ function addResultRow(grid, multiplication, state) {
       "is-target",
       state.activeAdditionTarget === layoutIndex && !isVisible
     );
-    const carry = carries.find((candidate) => candidate.targetLayoutIndex === layoutIndex);
-    if (carry) addCarry(cell, carry.value, carry.status, "addition-carry");
     cell.setAttribute("aria-hidden", "true");
     grid.append(cell);
   });
@@ -195,6 +260,7 @@ export function renderMultiplication({
   metrics
 }) {
   const state = getMultiplicationDisplayState(multiplication, steps, stepIndex);
+  const visibleRankGuides = showRankGuides || state.alignmentActive;
   root.hidden = !state.showGrid;
   if (!state.showGrid) {
     root.replaceChildren();
@@ -202,7 +268,8 @@ export function renderMultiplication({
   }
 
   const grid = element("div", "posed-multiplication");
-  grid.classList.toggle("has-rank-guides", showRankGuides);
+  grid.classList.toggle("has-rank-guides", visibleRankGuides);
+  grid.classList.toggle("is-alignment-step", state.alignmentActive);
   grid.style.setProperty("--column-count", multiplication.layoutColumnCount);
   grid.style.setProperty("--partial-count", multiplication.partials.length);
   grid.style.setProperty("--column-width", `${metrics.columnWidth}px`);
@@ -212,7 +279,8 @@ export function renderMultiplication({
   grid.setAttribute("role", "img");
   grid.setAttribute("aria-label", buildMultiplicationAriaLabel(multiplication, state.step));
 
-  addFactorRow(grid, multiplication, state, 0, 1, showRankGuides);
+  addAlignmentColumns(grid, multiplication, state);
+  addFactorRow(grid, multiplication, state, 0, 1, visibleRankGuides);
   addFactorRow(grid, multiplication, state, 1, 2, false);
 
   if (state.showSign) {
