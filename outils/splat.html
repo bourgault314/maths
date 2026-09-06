@@ -839,7 +839,6 @@
       <option value="N">B — Paquets de jetons</option>
       <option value="NPM">B± — Paquets de jetons relatifs</option>
       <option value="C">C — Enquête (relations, 3 couleurs)</option>
-      <option value="CD">C direct — Substitution</option>
       <option value="D">D — Système (sommes, 3 couleurs)</option>
       <option value="C9">F — Opérations en 9 (9 → 99)</option>
       <option value="C8">G — Opérations en 8 (8 → 98)</option>
@@ -1885,10 +1884,20 @@ function loadSharedConfiguration(){
   return true;
 }
 
+/* Les anciens liens C direct restent utilisables : ils ouvrent désormais le
+   parcours C Enquête complet, qui génère exactement les mêmes cartes. */
+function normalizeLegacyInvestigateMode(params){
+  if(!params || typeof params.get !== "function" || params.get("mode") !== "CD") return params;
+  const normalized = new URLSearchParams(params);
+  normalized.set("mode", "C");
+  return normalized;
+}
+
 /* Applique un jeu de réglages (adresse partagée) aux contrôles de la page.
    Séparé de loadSharedConfiguration pour pouvoir être rappelé sur chaque partie
    d'une étape composée. */
 function appliquerConfiguration(params){
+  params = normalizeLegacyInvestigateMode(params);
   setSelectFromShare(params, "mode", activityEl);
   applyDefaultUnknownDisplayForActivity();
   syncSettingsUI();
@@ -4478,7 +4487,13 @@ function drawRelationSituationSchema(targetGroup, card, opts = {}){
         "dominant-baseline":"middle", "font-size":f(20), "font-weight":950, fill:"var(--ink)"
       }));
     } else {
-      g.appendChild(el("circle",{cx:boxX+30, cy:y+rowH/2, r:f(12), fill:taskSplatColor(i, card), stroke:"rgba(0,0,0,.20)", "stroke-width":2}));
+      g.appendChild(el("path",{
+        d:blobPath(boxX+30, y+rowH/2, f(13)),
+        fill:taskSplatColor(i, card),
+        stroke:"rgba(0,0,0,.20)",
+        "stroke-width":2,
+        "aria-hidden":"true"
+      }));
       g.appendChild(text(boxX+54, y+rowH/2+1, taskShortName(i, card),{
         "dominant-baseline":"middle", "font-size":f(21), "font-weight":950, fill:"var(--ink)"
       }));
@@ -4518,10 +4533,22 @@ function drawRelationOwnerBrace(g, x1, x2, y, label, opts = {}){
     fill:"none", stroke:"#000", "stroke-width":2.5,
     "stroke-linecap":"round", "stroke-linejoin":"round"
   }));
-  g.appendChild(text(mid, y+v(33), label, {
-    "text-anchor":"middle", "dominant-baseline":"middle",
-    "font-size":f(17), "font-weight":950, fill:"#334155"
-  }));
+  const ownerSplatColor = opts.ownerSplatColor || "";
+  if(ownerSplatColor){
+    g.appendChild(el("path",{
+      d:blobPath(mid, y+v(33), f(15)),
+      fill:ownerSplatColor,
+      stroke:"rgba(0,0,0,.20)",
+      "stroke-width":2,
+      role:"img",
+      "aria-label":label
+    }));
+  }else{
+    g.appendChild(text(mid, y+v(33), label, {
+      "text-anchor":"middle", "dominant-baseline":"middle",
+      "font-size":f(17), "font-weight":950, fill:"#334155"
+    }));
+  }
 }
 
 function getRelationGroupedDisplayGroups(card){
@@ -4531,12 +4558,13 @@ function getRelationGroupedDisplayGroups(card){
 
   for(let i=0;i<totals.items.length;i++){
     const item = totals.items[i];
-    groups.push({ label: taskShortName(i, card), parts: item.parts.map(p => ({...p})) });
+    groups.push({ label: taskShortName(i, card), splatIndex:i, parts: item.parts.map(p => ({...p})) });
   }
 
   if(totals.visibleSum > 0){
     groups.push({
       label: "visibles",
+      splatIndex:null,
       parts: [{kind:"visible", label:formatRelationNumber(totals.visibleSum), weight:Math.max(0.35, totals.visibleSum / unitValue)}]
     });
   }
@@ -5009,14 +5037,18 @@ function drawRelationGroupedSchema(targetGroup, card, opts = {}){
       drawBarCell(g, x, yTop+topH, w, botH, part, true, {fontSize:f(30)});
       x += w;
     }
-    groupSpans.push({x1:groupStart, x2:x, label:group.label});
+    groupSpans.push({x1:groupStart, x2:x, label:group.label, splatIndex:group.splatIndex});
   }
 
   // Accolades sous le schéma regroupé : elles identifient les morceaux qui viennent
   // de chaque tache, puis les jetons visibles s'il y en a.
   const braceY = yTop + topH + botH + v(8);
   for(const span of groupSpans){
-    if(span.x2 - span.x1 > 10) drawRelationOwnerBrace(g, span.x1, span.x2, braceY, span.label, opts);
+    if(span.x2 - span.x1 <= 10) continue;
+    const ownerOpts = span.splatIndex == null
+      ? opts
+      : {...opts, ownerSplatColor:taskSplatColor(span.splatIndex, card)};
+    drawRelationOwnerBrace(g, span.x1, span.x2, braceY, span.label, ownerOpts);
   }
 
   // L'équation doit rester clairement séparée du tableau : même police et même
