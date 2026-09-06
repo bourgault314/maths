@@ -2,13 +2,14 @@ import {
   AdditionInputError,
   makeAddition,
   makeDisplayMetrics,
+  placeValueName,
   placeValueMarker
 } from "./addition-engine.mjs?v=1";
 import {
   firstTrainingError,
   hintForTask,
   makeTrainingTasks
-} from "./addition-entrainement-engine.mjs?v=2";
+} from "./addition-entrainement-engine.mjs?v=3";
 
 const $ = (selector) => document.querySelector(selector);
 const firstInput = $("#first-term");
@@ -64,7 +65,7 @@ function draftForCurrentTask() {
 
 function fieldLabel(field) {
   return {
-    total: "total de la colonne",
+    total: "calcul facultatif",
     result: "chiffre de la somme",
     carry: "retenue",
     sum: "somme",
@@ -96,15 +97,24 @@ function createElement(tag, className, text) {
   return node;
 }
 
+function leadingPracticeColumnCount() {
+  return addition.extraIntegerPlaces === 0 ? 1 : 0;
+}
+
+function practiceColumnCount() {
+  return addition.layoutColumnCount + leadingPracticeColumnCount();
+}
+
 function digitGridColumn(layoutIndex) {
+  const shiftedLayoutIndex = layoutIndex + leadingPracticeColumnCount();
   const decimalOffset = addition.decimalPlaces > 0 && layoutIndex >= addition.layoutIntegerPlaces ? 1 : 0;
-  return 2 + layoutIndex + decimalOffset;
+  return 2 + shiftedLayoutIndex + decimalOffset;
 }
 
 function addComma(grid, row, className) {
   if (addition.decimalPlaces === 0) return;
   const comma = createElement("span", `comma-cell ${className}`, ",");
-  comma.style.gridColumn = String(2 + addition.layoutIntegerPlaces);
+  comma.style.gridColumn = String(2 + addition.layoutIntegerPlaces + leadingPracticeColumnCount());
   comma.style.gridRow = String(row);
   comma.setAttribute("aria-hidden", "true");
   grid.append(comma);
@@ -214,31 +224,39 @@ function addCarries(grid) {
   const task = currentTask();
   const operation = currentOperation();
   addition.operations.forEach((sourceOperation, opIndex) => {
-    if (sourceOperation.carryOut === 0 || sourceOperation.targetCarryLayoutIndex === null) return;
+    const targetLayoutIndex = sourceOperation.layoutIndex - 1;
     const stored = completed.get(`column-${opIndex}`);
     const isCurrentCarry = task.kind === "column" && task.opIndex === opIndex;
-    if (!stored && !isCurrentCarry) return;
-
-    const holder = createElement("span", "practice-input-holder practice-carry-holder");
-    holder.style.gridColumn = String(digitGridColumn(sourceOperation.targetCarryLayoutIndex));
+    const state = isCurrentCarry ? "current" : stored ? "complete" : "future";
+    const holder = createElement(
+      "span",
+      `practice-input-holder practice-carry-holder is-${state}`
+    );
+    holder.style.gridColumn = String(digitGridColumn(targetLayoutIndex));
     holder.style.gridRow = "1";
     if (isCurrentCarry) {
       holder.append(createAnswerInput("carry", {
         className: "answer-input",
-        label: `Retenue à écrire au rang ${placeValueMarker(addition.places[sourceOperation.targetCarryLayoutIndex].exponent)}`,
+        label: `Retenue éventuelle au rang des ${placeValueName(sourceOperation.exponent + 1, 2)}`,
         maxLength: 1
       }));
       grid.append(holder);
       return;
     }
 
-    const active = operation?.layoutIndex === sourceOperation.targetCarryLayoutIndex
-      || (task.kind === "final-carry" && sourceOperation.targetCarryLayoutIndex === 0);
-    const carry = createElement("span", `carry-cell is-${active ? "active" : "used"}`, stored.carry);
-    carry.style.gridColumn = String(digitGridColumn(sourceOperation.targetCarryLayoutIndex));
-    carry.style.gridRow = "1";
-    carry.setAttribute("aria-hidden", "true");
-    grid.append(carry);
+    const storedCarry = String(stored?.carry ?? "");
+    if (storedCarry) {
+      const active = operation?.layoutIndex === sourceOperation.layoutIndex - 1
+        || (task.kind === "final-carry" && sourceOperation.layoutIndex - 1 === 0);
+      const carry = createElement("span", `carry-cell is-${active ? "active" : "used"}`, storedCarry);
+      carry.setAttribute("aria-hidden", "true");
+      holder.append(carry);
+    } else {
+      const placeholder = createElement("span", "carry-placeholder");
+      placeholder.setAttribute("aria-hidden", "true");
+      holder.append(placeholder);
+    }
+    grid.append(holder);
   });
 }
 
@@ -303,14 +321,17 @@ function buildAdditionAriaLabel(task) {
 
 function renderAddition(task) {
   const root = $("#posed-addition");
-  const metrics = makeDisplayMetrics(addition, metricOptions());
+  const metrics = makeDisplayMetrics({
+    ...addition,
+    layoutColumnCount: practiceColumnCount()
+  }, metricOptions());
   const grid = createElement(
     "div",
     `posed-addition practice-addition ${addition.decimalPlaces > 0 ? "has-decimals" : "has-integers-only"}`
   );
   grid.classList.toggle("has-rank-guides", showRankGuides);
   grid.classList.toggle("is-placement", task.kind === "placement");
-  grid.style.setProperty("--integer-columns", addition.layoutIntegerPlaces);
+  grid.style.setProperty("--integer-columns", addition.layoutIntegerPlaces + leadingPracticeColumnCount());
   grid.style.setProperty("--decimal-columns", addition.decimalPlaces);
   grid.style.setProperty("--column-width", `${metrics.columnWidth}px`);
   grid.style.setProperty("--row-height", `${metrics.rowHeight}px`);
@@ -415,7 +436,7 @@ function renderInstruction(task) {
       createElement("span", "prompt-sign", "="),
       createAnswerInput("total", {
         className: "answer-input total-answer",
-        label: "Total de la colonne, facultatif",
+        label: "Résultat du calcul en ligne, facultatif",
         maxLength: 2
       }),
       createElement("small", "prompt-optional", "facultatif")
@@ -505,6 +526,9 @@ function errorMessage(field, value) {
   const empty = Array.isArray(value)
     ? value.every((digit) => String(digit ?? "").trim() === "")
     : String(value ?? "").trim() === "";
+  if (field === "carry" && currentTask().expected.carry === "" && !empty) {
+    return "S’il n’y a rien à retenir, laisse la case vide.";
+  }
   if (empty) return `Complète d’abord le ${fieldLabel(field)}.`;
   return `Le ${fieldLabel(field)} est à revoir.`;
 }

@@ -21,7 +21,7 @@ test("l’entraînement reprend exactement les colonnes du moteur partagé", () 
   assert.deepEqual(tasks.map(({ kind }) => kind), ["column", "column", "column", "verify", "finish"]);
   assert.deepEqual(tasks[0].expected, { total: 13, result: 3, carry: 1 });
   assert.deepEqual(tasks[1].expected, { total: 16, result: 6, carry: 1 });
-  assert.deepEqual(tasks[2].expected, { total: 8, result: 8 });
+  assert.deepEqual(tasks[2].expected, { total: 8, result: 8, carry: "" });
   assert.equal(tasks[0].opIndex, addition.operations[0].processingIndex);
   assert.equal(tasks[0].sentence, "4 unités + 9 unités = ?");
   assert.equal(tasks[1].sentence, "8 dizaines + 7 dizaines + 1 dizaine retenue = ?");
@@ -57,9 +57,9 @@ test("le placement partage les colonnes, les zéros utiles et la virgule du mote
     term0: ["1", "2", "7", "0"],
     term1: ["", "3", "4", "5"]
   });
-  assert.match(decimalPlacement.sentence, /alignant les virgules/);
-  assert.match(hintForTask(decimal, decimalPlacement, "term0", 0), /rangs décimaux manquants avec 0/);
-  assert.match(hintForTask(decimal, decimalPlacement, "term1", 0), /juste à gauche de la virgule/);
+  assert.equal(decimalPlacement.sentence, "Repère les chiffres des unités et aligne-les.");
+  assert.match(hintForTask(decimal, decimalPlacement, "term0", 0), /chiffre des unités/);
+  assert.match(hintForTask(decimal, decimalPlacement, "term1", 1), /colonne u/);
 
   const finalCarry = makeAddition(["999", "1"]);
   const carryPlacement = makeTrainingTasks(finalCarry, { includePlacement: true })[0];
@@ -73,18 +73,21 @@ test("le placement partage les colonnes, les zéros utiles et la virgule du mote
 test("une colonne sans retenue et les zéros se valident sans ambiguïté", () => {
   const noCarry = makeTrainingTasks(makeAddition(["123", "456"])).filter(({ kind }) => kind === "column");
   assert.deepEqual(noCarry.map(({ expected }) => expected), [
-    { total: 9, result: 9 },
-    { total: 7, result: 7 },
-    { total: 5, result: 5 }
+    { total: 9, result: 9, carry: "" },
+    { total: 7, result: 7, carry: "" },
+    { total: 5, result: 5, carry: "" }
   ]);
   const withZeros = makeTrainingTasks(makeAddition(["1005", "97"])).filter(({ kind }) => kind === "column");
   assert.deepEqual(withZeros.map(({ expected }) => expected), [
     { total: 12, result: 2, carry: 1 },
     { total: 10, result: 0, carry: 1 },
-    { total: 1, result: 1 },
-    { total: 1, result: 1 }
+    { total: 1, result: 1, carry: "" },
+    { total: 1, result: 1, carry: "" }
   ]);
   assert.equal(checkTrainingAnswer(withZeros[1], { total: "10", result: "0", carry: "1" }), true);
+  assert.equal(checkTrainingAnswer(noCarry[0], { result: "9", carry: "" }), true);
+  assert.equal(checkTrainingAnswer(noCarry[0], { result: "9" }), true);
+  assert.deepEqual(trainingErrors(noCarry[0], { result: "9", carry: "0" }), ["carry"]);
 });
 
 test("les retenues successives et la retenue finale ont chacune leur emplacement", () => {
@@ -108,7 +111,7 @@ test("les décimaux gardent l’alignement et les zéros fournis par le même mo
   assert.deepEqual(mixed.displayTerms, ["12,70", "3,45"]);
   assert.equal(mixed.resultDisplay, "16,15");
   assert.equal(tasks[0].sentence, "0 centièmes + 5 centièmes = ?");
-  assert.equal(tasks[1].memo, "10 dixièmes = 1 unité");
+  assert.equal(tasks[1].memo, "");
   assert.deepEqual(tasks.at(-2).expected, { sum: "1615" });
 
   const small = makeAddition(["0,09", "0,8"]);
@@ -117,7 +120,7 @@ test("les décimaux gardent l’alignement et les zéros fournis par le même mo
 
   const crossing = makeAddition(["0,8", "0,7"]);
   assert.equal(crossing.resultDisplay, "1,5");
-  assert.equal(makeTrainingTasks(crossing)[0].memo, "10 dixièmes = 1 unité");
+  assert.equal(makeTrainingTasks(crossing)[0].memo, "");
 });
 
 test("le calcul intermédiaire est facultatif mais contrôlé lorsqu’il est rempli", () => {
@@ -138,13 +141,20 @@ test("le calcul intermédiaire est facultatif mais contrôlé lorsqu’il est re
 test("les indices restent progressifs et ne révèlent qu’un champ à la fois", () => {
   const addition = makeAddition(["584", "279"]);
   const task = makeTrainingTasks(addition)[0];
-  assert.match(hintForTask(addition, task, "total", 0), /Additionne tous les chiffres/);
-  assert.equal(hintForTask(addition, task, "total", 1), "4 + 9 = 13.");
-  assert.match(hintForTask(addition, task, "result", 0), /quel chiffre faut-il écrire ici/);
+  assert.match(hintForTask(addition, task, "total", 0), /Additionne les unités/);
+  assert.equal(hintForTask(addition, task, "total", 1), "4 + 9 = 13. Tu obtiens 13 unités.");
+  assert.match(hintForTask(addition, task, "result", 0), /quel chiffre dois-tu écrire au rang des unités/);
   assert.doesNotMatch(hintForTask(addition, task, "result", 0), /13/);
-  assert.match(hintForTask(addition, task, "result", 1), /est 3/);
-  assert.match(hintForTask(addition, task, "carry", 0), /Combien de dizaines/);
-  assert.match(hintForTask(addition, task, "carry", 1), /je retiens 1 dizaine/);
+  assert.match(hintForTask(addition, task, "result", 1), /1 dizaine et 3 unités/);
+  assert.match(hintForTask(addition, task, "carry", 0), /Combien de dizaines retiens-tu/);
+  assert.match(hintForTask(addition, task, "carry", 1), /1 dizaine et 3 unités/);
+
+  const noCarry = makeTrainingTasks(makeAddition(["123", "456"]))[0];
+  assert.match(hintForTask(makeAddition(["123", "456"]), noCarry, "carry", 0), /inférieur à 10/);
+  assert.equal(
+    hintForTask(makeAddition(["123", "456"]), noCarry, "carry", 1),
+    "Il n’y a rien à retenir : laisse la case vide."
+  );
 });
 
 test("toutes les étapes attendues conduisent à la réussite complète", () => {
@@ -162,8 +172,9 @@ test("toutes les étapes attendues conduisent à la réussite complète", () => 
 });
 
 test("l’interface élève réutilise le moteur, reste tactile et ne contient pas de solution initiale", () => {
-  assert.match(html, /addition-posee-interactive\.css\?v=3/);
-  assert.match(html, /addition-posee-interactive\.js\?v=3/);
+  assert.match(html, /addition-posee\.css\?v=4/);
+  assert.match(html, /addition-posee-interactive\.css\?v=4/);
+  assert.match(html, /addition-posee-interactive\.js\?v=4/);
   assert.doesNotMatch(html, /data-mode="(?:integer|decimal)"/);
   assert.match(html, /id="rank-guides" type="checkbox"/);
   assert.match(html, /id="placement-mode" type="checkbox"/);
@@ -174,10 +185,14 @@ test("l’interface élève réutilise le moteur, reste tactile et ne contient p
   assert.match(html, /fullscreen-collapse[^>]*hidden/);
   assert.doesNotMatch(html, />863</);
   assert.match(js, /addition-engine\.mjs\?v=1/);
-  assert.match(js, /addition-entrainement-engine\.mjs\?v=2/);
-  assert.match(js, /Total de la colonne, facultatif/);
+  assert.match(js, /addition-entrainement-engine\.mjs\?v=3/);
+  assert.match(js, /Résultat du calcul en ligne, facultatif/);
   assert.match(js, /"prompt-optional", "facultatif"/);
   assert.match(js, /find\(\(input\) => input\.dataset\.answer !== "total"\)/);
+  assert.match(js, /leadingPracticeColumnCount\(\)/);
+  assert.match(js, /sourceOperation\.layoutIndex - 1/);
+  assert.match(js, /Retenue éventuelle au rang des/);
+  assert.match(js, /S’il n’y a rien à retenir, laisse la case vide\./);
   assert.match(js, /makeAddition\(\[firstInput\.value, secondInput\.value\]\)/);
   assert.match(js, /Math\.random\(\) < \.45 \? 1 \+ Math\.floor\(Math\.random\(\) \* 3\) : 0/);
   assert.match(js, /makeTrainingTasks\(addition, \{ includePlacement: selfPlacement \}\)/);
@@ -187,6 +202,7 @@ test("l’interface élève réutilise le moteur, reste tactile et ne contient p
   assert.match(js, /fullscreenchange/);
   assert.match(js, /window\.addEventListener\("resize"/);
   assert.match(css, /min-width:\s*44px/);
+  assert.match(css, /\.practice-carry-holder \.carry-placeholder/);
   assert.match(css, /@media \(max-width: 520px\)/);
   assert.match(css, /@media \(prefers-reduced-motion: reduce\)/);
 });

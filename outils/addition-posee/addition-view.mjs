@@ -30,7 +30,11 @@ function addTermRow(grid, addition, cells, row, className, state, showRankGuides
     const isCurrentDigit = value !== null
       && state.activeArea === "terms"
       && state.activeLayoutIndex === layoutIndex;
+    const isUnitAnchor = value !== null
+      && state.step.kind === "pose"
+      && addition.places[layoutIndex].exponent === 0;
     cell.classList.toggle("is-active", isCurrentDigit);
+    cell.classList.toggle("is-unit-anchor", isUnitAnchor);
     cell.setAttribute("aria-hidden", "true");
     if (showRankGuides && row === 2) {
       const marker = element("span", "rank-marker", placeValueMarker(addition.places[layoutIndex].exponent));

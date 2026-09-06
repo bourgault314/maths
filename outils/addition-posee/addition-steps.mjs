@@ -22,9 +22,7 @@ export function makeSteps(addition) {
   const steps = [{
     kind: "pose",
     title: "Je pose",
-    sentence: addition.decimalPlaces > 0
-      ? "J’aligne les virgules et les chiffres de même rang."
-      : "J’aligne les unités et les chiffres de même rang.",
+    sentence: "Je repère les chiffres des unités et je les aligne.",
     detail: "Je place le signe + et je trace le trait du résultat."
   }];
 
@@ -44,7 +42,7 @@ export function makeSteps(addition) {
       kind: "calculate",
       title: "Je calcule",
       sentence: `${parts.join(" + ")} = ${operation.total}.`,
-      detail: `Je calcule la colonne des ${rank}.`,
+      detail: `J’obtiens ${operation.total} ${placeValueName(operation.exponent, operation.total)}.`,
       opIndex
     });
 
@@ -76,7 +74,7 @@ export function makeSteps(addition) {
     steps.push({
       kind: "final-carry",
       title: "J’écris la retenue",
-      sentence: `La retenue devient le chiffre des ${finalRank}.`,
+      sentence: `Il reste ${carryValue} ${placeValueName(finalPlace.exponent, Number(carryValue))} en retenue.`,
       detail: `J’écris ${carryValue} au rang des ${finalRank}.`,
       resultLayoutIndices: addition.finalCarryDigits.map((_, index) => index)
     });
@@ -84,7 +82,7 @@ export function makeSteps(addition) {
 
   steps.push({
     kind: "verify",
-    title: "Je vérifie",
+    title: "Je conclus",
     sentence: `${addition.displayTerms.join(" + ")} = ${addition.resultDisplay}.`,
     detail: "L’addition est entièrement complétée."
   });

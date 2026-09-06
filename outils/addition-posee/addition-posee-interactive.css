@@ -68,8 +68,10 @@
 
 .practice-stage { min-height: var(--stage-min-height); padding: 10px 18px 8px; overflow: hidden; }
 .practice-stage .addition-scroll { padding-block: 3px 8px; }
-.practice-addition .digit-cell.is-current-term { background: var(--blue-soft); }
-.practice-addition .term-two-cell.is-current-term { background: var(--teal-soft); }
+.practice-addition .digit-cell.is-current-term {
+  background: var(--rank-focus);
+  box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--rank-focus-line) 42%, transparent);
+}
 .practice-addition .result-cell.is-future { opacity: .3; }
 .practice-addition .result-cell.is-complete { animation: reveal-answer .3s ease both; }
 @keyframes reveal-answer { from { opacity: .35; transform: translateY(-3px); } to { opacity: 1; transform: translateY(0); } }
@@ -96,6 +98,16 @@
   align-self: end;
 }
 .practice-carry-holder .answer-input { border-color: var(--violet); color: var(--violet); background: #fffafd; font-size: 1.1rem; }
+.practice-carry-holder .carry-placeholder {
+  width: 30px;
+  height: 30px;
+  border: 2px dashed color-mix(in srgb, var(--violet) 45%, #fff);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--violet-soft) 55%, #fff);
+}
+.practice-carry-holder.is-future .carry-placeholder { opacity: .48; }
+.practice-carry-holder.is-complete .carry-placeholder { opacity: .2; }
+.practice-carry-holder .carry-cell { width: 100%; }
 .practice-addition .carry-cell.is-active { opacity: 1; }
 
 .verification-relation {
@@ -166,8 +178,8 @@
     column-gap: 18px;
   }
   .practice-instruction { grid-column: 1; grid-row: 1 / 4; align-items: flex-start; padding: 24px 55px 24px 24px; }
-  .practice-instruction h2 { font-size: clamp(1.18rem, 1.42vw, 1.62rem); overflow-wrap: anywhere; }
-  .practice-instruction .step-detail { margin-top: 10px; font-size: clamp(.9rem, 1vw, 1.04rem); line-height: 1.42; }
+  .practice-instruction h2 { font-size: clamp(1.35rem, 1.65vw, 1.78rem); overflow-wrap: anywhere; }
+  .practice-instruction .step-detail { margin-top: 10px; font-size: clamp(1rem, 1.12vw, 1.16rem); line-height: 1.42; }
   .practice-stage { grid-column: 2; grid-row: 1; }
   .practice-actions { grid-column: 2; grid-row: 2; }
   .practice-progress { grid-column: 2; grid-row: 3; }

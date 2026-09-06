@@ -3,8 +3,8 @@ import {
   makeAddition,
   makeDisplayMetrics
 } from "./addition-engine.mjs?v=1";
-import { makeSteps } from "./addition-steps.mjs?v=1";
-import { renderAddition, renderVocabulary } from "./addition-view.mjs?v=2";
+import { makeSteps } from "./addition-steps.mjs?v=2";
+import { renderAddition, renderVocabulary } from "./addition-view.mjs?v=3";
 
 const $ = (selector) => document.querySelector(selector);
 const firstInput = $("#first-term");
