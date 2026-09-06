@@ -156,7 +156,7 @@ test("la flèche relie réellement le chiffre source au chiffre abaissé", () =>
 
 test("la page d’entrée sépare comprendre, s’entraîner et imprimer", () => {
   assert.match(entryPage, /catalogue-refonte\.css\?v=breadcrumb-align-20260829-1/);
-  assert.match(entryPage, /operation-entry\.css\?v=1/);
+  assert.match(entryPage, /operation-entry\.css\?v=2/);
   assert.match(entryPage, /<body class="catalogue-is-deep operation-entry">/);
   assert.match(entryPage, /class="site-shell"/);
   assert.match(entryPage, /class="catalogue-breadcrumb"/);

@@ -1,4 +1,4 @@
-.operation-entry .catalogue-breadcrumb a {
+:where(.operation-entry) .catalogue-breadcrumb a {
   min-height: 44px;
   display: inline-flex;
   align-items: center;
@@ -13,8 +13,8 @@
   text-decoration: none;
 }
 
-.operation-entry .catalogue-breadcrumb a:hover,
-.operation-entry .catalogue-breadcrumb a:focus-visible {
+:where(.operation-entry) .catalogue-breadcrumb a:hover,
+:where(.operation-entry) .catalogue-breadcrumb a:focus-visible {
   border-color: #a9c9e8;
   background: #edf5fc;
 }
