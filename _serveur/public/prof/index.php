@@ -413,12 +413,12 @@ $versionMoteur = is_file($moteur) ? substr(md5_file($moteur), 0, 10) : '0';
     <h1>Mon compte</h1>
     <p class="sous" id="compte-qui"></p>
     <p class="message info" id="bandeau-temporaire" hidden>Ton mot de passe est temporaire : choisis-en un nouveau
-    pour continuer. Il doit faire au moins 12 caractères.</p>
+    pour continuer. Il doit faire 12 à 72 caractères.</p>
     <div class="carte" style="max-width:420px">
       <form id="form-motdepasse" autocomplete="on">
         <label for="mdp-ancien">Mot de passe actuel</label>
         <input id="mdp-ancien" name="password" type="password" autocomplete="current-password" required>
-        <label for="mdp-nouveau">Nouveau mot de passe (12 caractères minimum)</label>
+        <label for="mdp-nouveau">Nouveau mot de passe (12 à 72 caractères)</label>
         <input id="mdp-nouveau" name="new-password" type="password" autocomplete="new-password" minlength="12" required>
         <label for="mdp-confirme">Nouveau mot de passe, une deuxième fois</label>
         <input id="mdp-confirme" name="confirm-password" type="password" autocomplete="new-password" minlength="12" required>
@@ -476,6 +476,11 @@ $versionMoteur = is_file($moteur) ? substr(md5_file($moteur), 0, 10) : '0';
   // Un mot à dire après le rechargement de la page : la déconnexion recharge,
   // et un message écrit avant serait emporté. Il vit le temps d'un onglet.
   const CLE_AVIS = "mathsgo-suivi-avis";
+  // L'instant du dernier geste, rangé à côté du jeton (lot serveur B,
+  // constat 7). Il survit au rechargement de la page comme le jeton, et pour
+  // la même raison : sans lui, le verrou d'inactivité repartait de zéro à
+  // chaque F5 et ne fermait donc jamais rien sur un poste partagé.
+  const CLE_GESTE = "mathsgo-suivi-prof-dernier-geste";
   const AVIS = {
     inactivite: "Tu as été déconnecté après 30 minutes sans rien faire sur cette page. Reconnecte-toi.",
     "serveur-muet": "Déconnexion faite sur cet appareil, mais le serveur n’a pas répondu. Si tu es sur un poste partagé, change ton mot de passe."
@@ -506,17 +511,48 @@ $versionMoteur = is_file($moteur) ? substr(md5_file($moteur), 0, 10) : '0';
   // retombait sur « Mes classes » sans rien taper. On mesure le TEMPS ÉCOULÉ
   // (l'horloge), pas un minuteur : une machine mise en veille n'avance pas ses
   // setTimeout, mais l'heure, elle, avance quand même.
-  function creerVeille(delaiMs) {
+  //
+  // Lot serveur B (06/09/2026), constat 7 de l'audit du 05/09 : le verrou
+  // NE SURVIVAIT PAS AU F5. `demarrer(Date.now())` était rejoué à chaque
+  // démarrage de la page, donc un rechargement — ou un onglet rouvert le
+  // lendemain matin — remettait le compteur à zéro et rendait « Mes classes »
+  // à qui appuyait sur F5, pendant les quatre heures de la session serveur.
+  // L'instant du dernier geste est donc rangé où le jeton l'est déjà : dans le
+  // sessionStorage de l'onglet. `reprendre()` le relit au lieu de repartir de
+  // l'horloge, et la page se déconnecte AVANT de montrer quoi que ce soit.
+  //
+  // `lire` et `ecrire` sont passés de l'extérieur : le test du dépôt joue la
+  // fonction avec un rangement de poche, sans navigateur.
+  function creerVeille(delaiMs, lire, ecrire) {
     let dernier = 0;
+    const ranger = valeur => { if (ecrire) ecrire(valeur); };
     return {
-      geste(maintenant) { if (dernier > 0) dernier = maintenant; },
-      demarrer(maintenant) { dernier = maintenant; },
-      arreter() { dernier = 0; },
+      geste(maintenant) { if (dernier > 0) { dernier = maintenant; ranger(maintenant); } },
+      demarrer(maintenant) { dernier = maintenant; ranger(maintenant); },
+      // Au démarrage de la page : l'absence se mesure depuis le dernier geste
+      // RANGÉ, pas depuis maintenant. Sans valeur rangée (premier passage,
+      // onglet neuf), on repart de maintenant.
+      reprendre(maintenant) {
+        const range = lire ? lire() : 0;
+        dernier = range > 0 ? range : maintenant;
+        if (!(range > 0)) ranger(dernier);
+        return dernier;
+      },
+      arreter() { dernier = 0; ranger(0); },
       active() { return dernier > 0; },
       doitFermer(maintenant) { return dernier > 0 && (maintenant - dernier) >= delaiMs; }
     };
   }
-  const veille = creerVeille(INACTIVITE_MS);
+  const veille = creerVeille(
+    INACTIVITE_MS,
+    () => { try { return Number(sessionStorage.getItem(CLE_GESTE)) || 0; } catch (_) { return 0; } },
+    valeur => {
+      try {
+        if (valeur > 0) sessionStorage.setItem(CLE_GESTE, String(valeur));
+        else sessionStorage.removeItem(CLE_GESTE);
+      } catch (_) {}
+    }
+  );
 
   // ------------------------------------------------------ redessins et saisies
   //
@@ -1779,8 +1815,13 @@ $versionMoteur = is_file($moteur) ? substr(md5_file($moteur), 0, 10) : '0';
       if (choix.version !== "avant") corps.jour = choix.version;
       await api("eleves.restaurer", corps);
       await ouvrirClasse(classe.id);
+      // Lot serveur B : ce n'est plus seulement « elle la récupérera », c'est
+      // « elle l'adoptera ». Depuis que la restauration repose une époque plus
+      // haute, un appareil resté ouvert sur l'ancien état ne le rend plus —
+      // il se range. La phrase le dit, parce que c'est la question que
+      // Gwenaël s'est posée devant l'écran le 06/09.
       messager("message-classe",
-        `Version restaurée : ${choisie.libelle}. L’appli de l’élève la récupérera à sa prochaine ouverture.`, "ok");
+        `Version restaurée : ${choisie.libelle}. L’appareil de l’élève adoptera cette version à sa prochaine connexion.`, "ok");
     } catch (erreur) { surErreur(erreur, "message-classe"); }
   }
 
@@ -1946,7 +1987,13 @@ $versionMoteur = is_file($moteur) ? substr(md5_file($moteur), 0, 10) : '0';
     event.preventDefault();
     const ancien = $("mdp-ancien").value;
     const nouveau = $("mdp-nouveau").value;
-    if (nouveau.length < 12) { messager("message-compte", "Le nouveau mot de passe doit faire au moins 12 caractères.", "erreur"); return; }
+    // La même règle que le serveur, et comptée pareil : en OCTETS (M-03).
+    // `nouveau.length` compte des caractères — « é » en vaut un ici, deux pour
+    // bcrypt. Un contrôle en caractères laisserait donc passer une phrase que
+    // le serveur refuse, et la collègue verrait un message venu d'ailleurs.
+    const octets = new TextEncoder().encode(nouveau).length;
+    if (octets < 12) { messager("message-compte", "Le nouveau mot de passe doit faire 12 à 72 caractères : celui-ci est trop court.", "erreur"); return; }
+    if (octets > 72) { messager("message-compte", "Le nouveau mot de passe doit faire 12 à 72 caractères : celui-ci est trop long (les lettres accentuées comptent double).", "erreur"); return; }
     if (nouveau !== $("mdp-confirme").value) { messager("message-compte", "Les deux saisies du nouveau mot de passe ne sont pas identiques.", "erreur"); return; }
     try {
       await api("profs.motdepasse", {ancien, nouveau});
@@ -1960,7 +2007,7 @@ $versionMoteur = is_file($moteur) ? substr(md5_file($moteur), 0, 10) : '0';
   // Une seule porte d'entrée : on demande qui on est (et si on est administrateur),
   // puis on affiche les classes.
   function demarrer() {
-    veille.demarrer(Date.now());
+    veille.reprendre(Date.now());
     return api("moi").then(donnees => {
       identifiant = donnees.identifiant;
       $("qui").textContent = donnees.identifiant;
@@ -1987,7 +2034,14 @@ $versionMoteur = is_file($moteur) ? substr(md5_file($moteur), 0, 10) : '0';
 
   const avis = lireAvis();
   if (avis) messager("erreur-connexion", avis, "erreur");
-  if (jeton) demarrer();
+  if (jeton) {
+    // Poste partagé : on décide AVANT d'afficher quoi que ce soit. Si la page
+    // a été laissée plus de 30 minutes, le jeton part et l'écran de connexion
+    // s'affiche — celui qui trouve l'onglet ne voit jamais les classes.
+    veille.reprendre(Date.now());
+    if (veille.doitFermer(Date.now())) deconnecter({recharger: true, avis: "inactivite"});
+    else demarrer();
+  }
 })();
 </script>
 </body>

@@ -177,10 +177,16 @@ compte ne voit rien tant qu'aucune classe ne lui a été partagée.
   différent de l'ancien). Les **autres** sessions du compte sont fermées, celle
   qui fait le changement reste ouverte.
 - **Règles du mot de passe** (`motdepasse_refuse()` dans `lib/auth.php`, mêmes
-  règles pour l'installateur) : **12 caractères au moins**, et c'est tout —
+  règles pour l'installateur) : **12 à 72 caractères**, et c'est tout —
   pas de majuscule ni de symbole imposés (recommandation ANSSI / NIST : la
-  longueur protège plus que la composition, et le frein à 12 essais / 10 min
-  rend la devinette en ligne impossible). Deux refus de bon sens : rien que des
+  longueur protège plus que la composition, et le ralentissement des essais
+  rend la devinette en ligne impossible). Le maximum n'est pas un choix de
+  confort : **bcrypt ne lit que les 72 premiers octets** et jette le reste sans
+  rien dire, si bien que deux phrases identiques sur 72 octets ouvriraient le
+  même compte (lot serveur B, M-03). La longueur est comptée en **octets**, pas
+  en caractères — un « é » en vaut deux, un émoji quatre —, côté serveur comme
+  dans les deux formulaires de la page prof : un `maxlength` compte des
+  caractères, il ne suffit pas. Deux refus de bon sens en plus : rien que des
   chiffres (date, téléphone), et l'identifiant dedans.
 - **Nouveau mot de passe** (administrateur, sur un autre compte) : même
   mécanique que la création — temporaire affiché une fois, sessions du compte
@@ -227,8 +233,10 @@ et `purge_le`. Le professeur les supprime lui-même par
 `classes.supprimer_echues` `{classes: [id, …]}`, qui revérifie chaque
 identifiant côté serveur (propriétaire, année écoulée, trois semaines sans
 activité) et supprime tout ou rien. La suppression AUTOMATIQUE, elle, reste
-chez `menage.php` seul (tâche planifiée OVH) : c'est lui qui tient la promesse
-du 1er août. `classes.supprimer`, `classes.supprimer_echues` et le ménage
+chez `menage.php` seul, la **tâche planifiée OVH en place depuis le
+06/09/2026** (2 août et 2 septembre à 3 h 08) : c'est elle qui tient la
+promesse du 1er août, même si personne n'ouvre Ma classe de tout l'été. À
+l'ouverture de « Ma classe », le professeur est **interrogé**, jamais surpris. `classes.supprimer`, `classes.supprimer_echues` et le ménage
 passent par **la même fonction** (`lib/archives.php`, `supprimer_classe()`) :
 deux codes qui effacent les mêmes tables, ce serait deux occasions d'en oublier
 une.
@@ -242,18 +250,36 @@ dernière création d'élève, création de la classe.
 
 - Toutes les requêtes SQL sont préparées (aucune concaténation).
 - Mot de passe prof haché (`password_hash`), jeton de session stocké haché,
-  expiration 12 h, comparaison à temps constant à la connexion.
+  comparaison à temps constant à la connexion. **La session vit 4 h côté
+  serveur** (`DUREE_SESSION_HEURES`, lot 7 : une demi-journée de collège, pas
+  une journée entière), et la page « Ma classe » se déconnecte d'elle-même
+  après **30 minutes sans un geste**. Depuis le lot serveur B, l'instant du
+  dernier geste est rangé dans le `sessionStorage` de l'onglet
+  (`mathsgo-suivi-prof-dernier-geste`) : le verrou **survit au rechargement**
+  — avant, un F5 le remettait à zéro et rendait « Mes classes » à qui trouvait
+  l'onglet, pendant les quatre heures de la session.
 - CORS limité à `https://mathsgo.re` et `https://suivi.mathsgo.re`.
 - **Le code élève et le jeton prof ne voyagent jamais dans une adresse** :
   les API élève n'acceptent que POST (405 sinon), le jeton passe par
   l'en-tête `Authorization` ou le corps. Une adresse s'inscrit en clair dans
   les journaux de l'hébergeur, un corps non.
-- Progression plafonnée à 40 ko ; 300 requêtes / 5 min par code ;
-  12 tentatives de connexion / 10 min par adresse IP ; par adresse IP, seuls
-  les **échecs** (codes inconnus) sont comptés — 60 / 5 min — pour qu'un
-  collège entier derrière une seule adresse ne soit jamais freiné, et qu'une
-  énumération de codes le soit dès le 61ᵉ essai (y compris sur les bons codes,
-  sinon la réponse trahirait lesquels existent).
+- Progression plafonnée à 40 ko ; 300 requêtes / 5 min par code. Par adresse
+  IP, seuls les **échecs** (codes inconnus) sont comptés — 60 / 5 min — pour
+  qu'un collège entier derrière une seule adresse ne soit jamais freiné, et
+  qu'une énumération de codes le soit dès le 61ᵉ essai (y compris sur les bons
+  codes, sinon la réponse trahirait lesquels existent).
+- **Connexion du professeur, deux seuils qui ne font pas la même chose**
+  (`lib/limite.php`, lot serveur B) : **60 échecs par adresse et par 10 min**
+  refusent net (429) — c'est ce seuil qui borne la dépense du serveur, et il
+  vise une machine ; **12 échecs par identifiant et par 10 min** ne refusent
+  rien, ils **ralentissent** chaque tentative de 1,5 s et laissent passer le
+  bon mot de passe. Ils refusaient jusqu'au 06/09/2026, et treize mauvais mots
+  de passe tapés par n'importe qui, depuis n'importe où, fermaient le compte
+  visé pendant dix minutes — au bon mot de passe compris (constat 3 de l'audit
+  du 05/09). Un seuil qui protège un compte ne doit pas être l'outil le plus
+  simple pour l'éteindre. À 1,5 s l'essai, une devinette en ligne contre douze
+  caractères au minimum n'aboutit pas ; et le coût reste borné, puisqu'une
+  adresse qui dépasse ses 60 échecs est refusée **sans dormir**.
 - La table `compteurs` ne contient ni adresse IP ni code en clair (clés
   hachées avec un secret), l'incrément tient en une instruction (UPSERT), et
   les fenêtres fermées sont effacées à chaque appel : aucune adresse n'y
@@ -270,10 +296,23 @@ dernière création d'élève, création de la classe.
   la fenêtre (lot 11) — seuls les échecs comptent, vérifier vingt fois de suite
   avec le bon mot de passe ne gêne personne. Aucune page n'affiche d'erreur PHP
   (`display_errors` forcé à 0 dans `lib/bd.php`).
-- **PHP n'annonce plus sa version** : `header_remove('X-Powered-By')` dans
-  `lib/entetes.php` (lot 11). `expose_php = Off` n'était pas une option ici :
-  ce réglage est de niveau système, un `.user.ini` déposé dans le dossier ne le
-  change pas.
+- **PHP n'annonce plus sa version, sur AUCUNE réponse** :
+  `header_remove('X-Powered-By')` dans `lib/entetes.php` (lot 11) **et dans
+  `menage.php`** (lot serveur B, M-04), qui répond 404 avant tout `require` et
+  était donc la dernière réponse à annoncer « PHP/8.2.31 ». `expose_php = Off`
+  n'était pas une option ici : ce réglage est de niveau système, un `.user.ini`
+  déposé dans le dossier ne le change pas.
+- **Ce qui ne doit pas sortir par HTTP est refusé par le `.htaccess`** :
+  `<FilesMatch "^config">` (lot serveur B, constat 6 — l'ancien
+  `<Files "config.php">` ne couvrait que ce nom exact et laissait sortir un
+  `config.php.bak`, un `config.old` ou un `config.php.txt`, avec le mot de
+  passe MySQL dedans) ; `<Files "menage.php">` (Apache répond 403 sans même
+  appeler PHP ; la tâche planifiée passe par la ligne de commande, elle n'est
+  pas gênée) ; `VERSION`, un éventuel `.user.ini`, et tout `.md`, `.sql`,
+  `.log` ou `.exemple.php`.
+- **Les freins de `secours.php` et `sauvegarde.php` comptent le bloc `/64`**
+  (lot serveur B, M-02) comme le reste du limiteur depuis le lot 11 : compter
+  l'adresse IPv6 exacte revenait à offrir dix essais neufs à chaque requête.
 - **Rien de ce que le client envoie n'est pris pour argent comptant** (lot 11) :
   `appli` et `jeton` sont vérifiés `is_string` (un tableau donnait la bonne
   réponse mais salissait le journal du serveur) ; un prénom est débarrassé des
@@ -317,12 +356,39 @@ dernière création d'élève, création de la classe.
   comme l'écriture de l'élève et n'écrit que si la révision lue est encore
   celle en base (lot 6) : un clic du professeur pendant que l'élève enregistre
   ne réutilise jamais un numéro de révision, rien ne se perd en silence.
+- **Historique** (lot serveur A) : le serveur garde **une version par jour,
+  sept jours**, à l'heure de La Réunion — la ligne d'un jour est l'état à la
+  FIN de ce jour-là —, **plus** la version d'avant le dernier enregistrement
+  (`progressions.donnees_avant`), la seule utile dans l'heure qui suit un
+  accident. « Revenir à… », dans Ma classe, propose les deux.
+- **Une restauration gagne contre l'appareil de l'élève** (lot serveur B, défaut
+  vu en production le 06/09/2026) : la version restaurée est réécrite avec une
+  `epoque` strictement supérieure aux deux états en présence
+  (`version_avec_epoque_relevee()`, `lib/progression.php`). La fusion du moteur
+  ne donne raison à un état en bloc que si son époque est plus haute ; à époque
+  égale elle ADDITIONNE, si bien qu'un appareil resté ouvert sur l'état abîmé
+  rendait les dégâts à la synchronisation suivante et défaisait la restauration.
+  Le moteur, lui, n'a pas changé — et le prénom reste celui de l'appareil.
+- **Journal des actions du professeur** (lot serveur A) : une ligne par action
+  (connexion, déconnexion, changement de mot de passe, classes, élèves,
+  partages, comptes, refus de droit), gardée **douze mois** et purgée par
+  `menage.php`. Aucun prénom, aucun code, aucune adresse, aucun texte libre :
+  un numéro de professeur, un mot d'une liste fermée, une cible, un résultat.
+  Il se lit dans `verifier.php`, après le mot de passe d'installation — c'est
+  un registre, pas un outil pour surveiller un collègue depuis Ma classe.
 - Changer son mot de passe : 12 essais d'ancien mot de passe par compte et par
   10 min (une session volée ne devine pas l'ancien).
 - **Ce qui est en ligne est ce qui a été testé** (lot 12) : chaque lot dépose un
   fichier `VERSION` (empreintes SHA-256 de tous les fichiers du serveur), que
   `verifier.php` recalcule sur place. Un fichier oublié pendant le dépôt, ou
-  transporté en mode texte, se nomme tout seul.
+  transporté en mode texte, se nomme tout seul. Depuis le lot serveur B (I-05),
+  deux contrôles de plus : l'en-tête du manifeste annonce **combien** de lignes
+  il doit contenir, et `verifier.php` le compare — un manifeste **tronqué**
+  laissait la page toute verte, puisque les fichiers qu'il ne nommait plus
+  n'étaient simplement plus comparés ; et tout `.php` **présent sur le serveur
+  et absent du manifeste** est nommé (« fichier inattendu »), à l'exception des
+  six qui n'y figurent jamais — `config.php`, `config.exemple.php` et les
+  quatre pages d'opération, qui ont déjà leur propre ligne.
 - **Sauvegarde chiffrée** (`sauvegarde.php`, déposé le temps de l'opération) :
   AES-256-CBC au format d'openssl, clé dérivée par PBKDF2-SHA256 (200 000
   tours) d'une phrase que le serveur ne connaît pas. Une restauration a été
@@ -384,7 +450,8 @@ ni 500 (sur MySQL, l'ancien code en attribuait cinq en double) ;
 `Cache-Control: no-store` sur sept réponses de l'API ; l'espace élève sans
 « Ce n'est pas moi ».
 
-Lot 12 (05/09/2026) : l'année scolaire réunionnaise (pivot au 1er août) ; la
+Lot 12 (05/09/2026) : l'année scolaire réunionnaise (le pivot était alors au
+1er août ; il est passé au 1er juillet avec le lot serveur A) ; la
 suppression d'une classe qui n'en laisse RIEN (élèves, codes, progressions,
 billets, compteurs, partages ; les codes ne rendent plus rien) ; la suppression
 automatique du 1er août, son garde-fou des 21 jours sans activité, et le fait
@@ -396,7 +463,23 @@ exigé, règles du mot de passe, sessions fermées, compte rendu utilisable) ;
 table, illisible sans la phrase, structure des trois tables de jetons
 présente — sans elle une base restaurée répondait 500).
 
-**143 tests, 0 échec au 05/09/2026**, rejoués sur SQLite **et** sur MySQL 8
+Lot serveur A (06/09/2026) : l'historique des sept journées (trois
+enregistrements le même jour = une ligne, neuf journées simulées = sept
+gardées, la frontière de jour à l'heure de La Réunion), « Revenir à… » et la
+restauration d'une journée, le journal des actions (une ligne par action, les
+refus, rien de personnel dedans), la sauvegarde en instantané, « nouveau code »
+en une transaction, la fin d'année sans suppression muette.
+
+Lot serveur B (06/09/2026) : la restauration qui repose une époque plus haute
+(et son témoin côté moteur, `tests/suivi-lot-serveur-b.test.mjs` : à époque
+égale la fusion additionne — c'est bien le serveur qu'il fallait corriger) ;
+treize mauvais mots de passe qui ralentissent au lieu de fermer le compte ; le
+verrou d'inactivité qui survit au F5 ; le manifeste tronqué et le fichier
+inattendu ; les freins en `/64` ; 73 octets refusés et 72 acceptés (36 lettres
+accentuées) ; `menage.php` sans `X-Powered-By` ; le `.htaccess` et les actions
+GitHub épinglées par SHA.
+
+**185 tests, 0 échec au 06/09/2026**, rejoués sur SQLite **et** sur MySQL 8
 (le limiteur emploie une instruction différente sur chaque moteur) :
 
 ```

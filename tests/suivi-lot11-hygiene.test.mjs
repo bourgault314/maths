@@ -126,6 +126,11 @@ test("le secret des compteurs n'est jamais le mot de passe d'installation lui-m�
 test("PHP n'annonce plus sa version", () => {
   assert.ok(/header_remove\('X-Powered-By'\);/.test(lire("_serveur/public/lib/entetes.php")),
     "lib/entetes.php doit retirer X-Powered-By sur chaque réponse");
+  // Lot serveur B (M-04) : menage.php répond avant tout require, donc sans
+  // passer par lib/entetes.php. C'était la dernière réponse du serveur qui
+  // annonçait encore la version de PHP.
+  assert.ok(/header_remove\('X-Powered-By'\);/.test(lire("_serveur/public/menage.php")),
+    "menage.php doit le retirer lui-même : il répond 404 sans charger lib/entetes.php");
 });
 
 test("verifier.php freine les essais de mot de passe, et ne compte que les échecs", () => {
@@ -139,7 +144,10 @@ test("verifier.php freine les essais de mot de passe, et ne compte que les éche
 
 test("les fichiers qui ne doivent pas sortir par HTTP sont refusés par .htaccess", () => {
   const htaccess = lire("_serveur/public/.htaccess");
-  assert.ok(/<Files "config\.php">[\s\S]*?Require all denied/.test(htaccess), "config.php");
+  // Lot serveur B : <Files "config.php"> est devenu <FilesMatch "^config">,
+  // qui couvre aussi config.php.bak, config.old et config.php.txt.
+  assert.ok(/<FilesMatch "\^config">[\s\S]*?Require all denied/.test(htaccess), "tout ce qui commence par config");
+  assert.ok(/<Files "menage\.php">[\s\S]*?Require all denied/.test(htaccess), "menage.php");
   assert.ok(/<Files "VERSION">[\s\S]*?Require all denied/.test(htaccess),
     "VERSION donne la liste de tous les fichiers du serveur : il se lit sur le disque, pas par HTTP");
   assert.ok(/\\\.user\\\.ini/.test(htaccess), "un .user.ini éventuel");

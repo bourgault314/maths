@@ -254,7 +254,17 @@ function eleve_pour_action(PDO $pdo, int $profId, mixed $eleveIdBrut, string $ac
 // La ligne de la table versions n'est PAS touchée par une restauration : sinon
 // on ne pourrait plus revenir une seconde fois au même jour. Ce qui est
 // remplacé, c'est donnees_avant — la restauration elle-même s'annule donc d'un
-// clic, comme avant.
+// clic, comme avant. Les lignes gardent aussi leur époque d'origine : sans
+// importance, puisque c'est au moment de restaurer qu'on en repose une plus
+// haute (lot serveur B).
+//
+// Lot serveur B (06/09/2026) : ce qui est écrit n'est pas la version telle
+// quelle, mais la version AVEC UNE ÉPOQUE PLUS HAUTE que l'état courant. Sans
+// cela, l'appareil de l'élève — qui porte encore l'état abîmé — refusait en
+// bloc la restauration à sa synchronisation suivante et rendait les dégâts :
+// à époque égale, la fusion du moteur additionne au lieu de trancher. Défaut
+// vu en production le jour de la mise en ligne de la PR A. Voir
+// lib/progression.php, version_avec_epoque_relevee().
 function restaurer_progression(PDO $pdo, int $eleveId, string $appli, ?string $jour = null): array
 {
     return avec_reprise($pdo, function () use ($pdo, $eleveId, $appli, $jour): array {
@@ -280,6 +290,10 @@ function restaurer_progression(PDO $pdo, int $eleveId, string $appli, ?string $j
                 return ['inconnu' => true];
             }
         }
+        // L'époque est relevée ICI, sous le verrou : l'état courant qu'elle
+        // doit dépasser est celui qu'on vient de lire, pas celui d'avant
+        // l'attente.
+        $vers = version_avec_epoque_relevee($appli, $vers, (string)$ligne['donnees']);
         $revision = (int)$ligne['revision'];
         $requete = $pdo->prepare('UPDATE progressions SET donnees = ?, donnees_avant = ?, revision = ?, maj_le = ? WHERE id = ? AND revision = ?');
         $requete->execute([$vers, $ligne['donnees'], $revision + 1, aujourdhui(), (int)$ligne['id'], $revision]);
@@ -303,22 +317,31 @@ try {
     if ($action === 'connexion') {
         // Seuls les ÉCHECS comptent (lot 5) : un collège entier se connecte
         // derrière une seule adresse, et treize réussites dans le quart
-        // d'heure n'ont rien d'une attaque. Deux compteurs : l'adresse (60
-        // échecs / 10 min) et l'identifiant visé (12 / 10 min), tous deux
-        // regardés AVANT le hachage, pour qu'un refus ne coûte rien.
+        // d'heure n'ont rien d'une attaque. Deux compteurs, tous deux regardés
+        // AVANT le hachage pour qu'un refus ne coûte rien — mais ils ne font
+        // PAS la même chose depuis le lot serveur B (constat 3 du 05/09/2026) :
+        //
+        //  - l'ADRESSE (60 échecs / 10 min) refuse net. C'est le seuil qui
+        //    borne la dépense du serveur, et il vise une machine, pas une
+        //    personne ;
+        //  - l'IDENTIFIANT (12 / 10 min) ne refuse plus rien : il RALENTIT de
+        //    1,5 s. Il refusait, et treize mauvais mots de passe tapés par
+        //    n'importe qui, depuis n'importe où, fermaient le compte visé
+        //    pendant dix minutes — au bon mot de passe compris. Un seuil qui
+        //    protège un compte ne doit pas être l'outil qui le ferme.
         $identifiant = (string)($corps['identifiant'] ?? '');
         $adresse = adresse_limitee();
         $cleAdresse = 'connexion-echec:' . $adresse;
-        $cleIdentifiant = 'connexion-id:' . mb_strtolower(trim($identifiant));
+        $identifiantCompte = mb_strtolower(trim($identifiant));
+        $cleIdentifiant = 'connexion-id:' . $identifiantCompte;
         limiter_deja_atteint($cleAdresse, ECHECS_CONNEXION_PAR_ADRESSE, FENETRE_ECHECS_CONNEXION);
-        limiter_deja_atteint($cleIdentifiant, ECHECS_CONNEXION_PAR_IDENTIFIANT, FENETRE_ECHECS_CONNEXION);
+        freiner_identifiant($identifiantCompte);
         $session = ouvrir_session($pdo, $identifiant, (string)($corps['motdepasse'] ?? ''));
         if ($session === null) {
-            // Les deux compteurs avancent, puis le refus : le 13e mauvais mot
-            // de passe sur un compte répond déjà 429, pas 401.
+            // Les deux compteurs avancent ; seul celui de l'adresse refuse.
             $parAdresse = compter($cleAdresse, FENETRE_ECHECS_CONNEXION);
-            $parIdentifiant = compter($cleIdentifiant, FENETRE_ECHECS_CONNEXION);
-            if ($parAdresse > ECHECS_CONNEXION_PAR_ADRESSE || $parIdentifiant > ECHECS_CONNEXION_PAR_IDENTIFIANT) {
+            compter($cleIdentifiant, FENETRE_ECHECS_CONNEXION);
+            if ($parAdresse > ECHECS_CONNEXION_PAR_ADRESSE) {
                 refuser_trop_de_demandes(FENETRE_ECHECS_CONNEXION);
             }
             erreur("Identifiant ou mot de passe incorrect.", 401);

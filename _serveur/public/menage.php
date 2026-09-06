@@ -16,12 +16,26 @@
 // le 2 août et le 2 septembre à 3 h 08 :
 //     php /home/<login>/www/suivi/menage.php
 //
+// Le mode ligne de commande ne dépend d'aucune variable d'Apache : PHP_SAPI,
+// puis lib/bd.php (config.php) et la base. Le <Files> du .htaccess ne le gêne
+// donc pas — il ne s'applique qu'aux requêtes HTTP.
+//
 // Refusé net par HTTP : rien à ouvrir dans un navigateur, donc rien à
-// attaquer. Voir _serveur/EXPLOITATION.md.
+// attaquer. Deux verrous, indépendants l'un de l'autre :
+//  - le .htaccess refuse le fichier (403 d'Apache, PHP n'est même pas appelé) ;
+//  - et si le .htaccess venait à ne pas être lu, ces trois lignes-ci coupent.
+// Voir _serveur/EXPLOITATION.md.
 
 declare(strict_types=1);
 
 if (PHP_SAPI !== 'cli') {
+    // Lot serveur B (constat 5 / M-04) : ce 404 était la SEULE réponse du
+    // serveur qui annonçait encore « X-Powered-By: PHP/8.2.31 ». Le reste du
+    // suivi passe par lib/entetes.php, qui le retire ; celle-ci sortait avant
+    // tout require. Un attaquant n'avait qu'à demander menage.php pour
+    // connaître la version exacte de PHP, et donc savoir si les défauts
+    // publiés du mois la concernent.
+    header_remove('X-Powered-By');
     http_response_code(404);
     exit;
 }

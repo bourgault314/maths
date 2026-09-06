@@ -53,7 +53,12 @@ try {
         // mot de passe d'installation en boucle. On compte soi-même plutôt que
         // d'appeler limiter() : celui-ci répondrait en JSON, ce qui n'a pas de
         // sens sur une page qui s'affiche.
-        $essais = compter('secours:' . adresse_appelante(), 600);
+        //
+        // adresse_limitee(), pas adresse_appelante() (M-02, audit du 05/09) :
+        // en IPv6 un abonné reçoit un bloc /64 entier et en change à volonté,
+        // si bien que dix essais par adresse exacte n'était aucun frein. Le
+        // frein compte le bloc, comme partout ailleurs depuis le lot 11.
+        $essais = compter('secours:' . adresse_limitee(), 600);
         $attendu = (string)(config()['jeton_installation'] ?? '');
         if ($essais > 10) {
             $message = "Trop d'essais depuis cette adresse : attends dix minutes.";
@@ -146,7 +151,7 @@ try {
             $compte['admin'] ? ' (administrateur)' : '' ?><?= $compte['actif'] ? '' : ' — désactivé' ?></option>
         <?php endforeach; ?>
       </select>
-      <label for="nouveau">Nouveau mot de passe (12 caractères au moins)</label>
+      <label for="nouveau">Nouveau mot de passe (12 à 72 caractères)</label>
       <input id="nouveau" name="nouveau" type="password" required autofocus>
       <label for="repete">Le même, pour être sûr</label>
       <input id="repete" name="repete" type="password" required>

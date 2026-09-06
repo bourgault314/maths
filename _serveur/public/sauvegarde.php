@@ -140,7 +140,7 @@ try {
     $pdo = bd();
     if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
         // On compte soi-même : limiter() répondrait en JSON sur une page HTML.
-        $essais = compter('sauvegarde:' . adresse_appelante(), 600);
+        $essais = compter('sauvegarde:' . adresse_limitee(), 600);
         $attendu = (string)(config()['jeton_installation'] ?? '');
         if ($essais > 10) {
             $message = "Trop d'essais depuis cette adresse : attends dix minutes.";

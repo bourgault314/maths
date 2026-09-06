@@ -308,7 +308,7 @@ verifier("installer.php refuse un mauvais mot de passe d'installation", function
 
 verifier("installer.php refuse un mot de passe trop court", function () {
     $r = formulaire('/installer.php', ['jeton' => 'JETON-DE-TEST', 'identifiant' => 'gwenael', 'motdepasse' => 'court']);
-    vrai(str_contains($r['texte'], '12 caractères'), "la longueur minimale devrait être rappelée");
+    vrai(str_contains($r['texte'], '12 à 72 caractères'), "la longueur attendue devrait être rappelée");
 });
 
 verifier("installer.php crée le compte prof", function () {
@@ -1117,18 +1117,45 @@ verifier("connexion prof : treize réussites de suite passent toutes (seuls les 
     egal(0, count(array_filter(compteurs(), fn($l) => str_starts_with($l['cle'], 'l:'))), "et aucun compteur n'a bougé");
 });
 
-verifier("connexion prof : douze mauvais mots de passe sur un compte, puis 429 même avec le bon ; un autre identifiant passe encore", function () {
+// Lot serveur B (06/09/2026) — constat 3 de l'audit du 05/09.
+//
+// Ce test disait l'inverse jusqu'ici : « douze mauvais mots de passe sur un
+// compte, puis 429 même avec le bon ». C'était le comportement du code, et
+// c'était un défaut, pas une protection : n'importe qui, de n'importe où,
+// fermait le compte de Gwenaël pour dix minutes en tapant treize bêtises sur
+// son identifiant — sans rien connaître de son mot de passe. Le seuil censé
+// protéger le compte était devenu l'outil le plus simple pour l'éteindre.
+//
+// Le seuil par identifiant RALENTIT maintenant (1,5 s) au lieu de refuser. À
+// ce rythme, une devinette en ligne contre un mot de passe de douze caractères
+// au minimum n'aboutit pas ; le professeur, lui, entre.
+verifier("connexion prof : treize mauvais mots de passe sur un compte ralentissent, mais le bon passe encore", function () {
     vider_compteurs();
     $statuts = [];
     for ($i = 0; $i < 13; $i++) $statuts[] = connexion('gwenael', "mauvais-$i")['code'];
-    egal(array_fill(0, 12, 401), array_slice($statuts, 0, 12), 'douze refus ordinaires');
-    egal(429, $statuts[12], 'le treizième est freiné');
+    egal(array_fill(0, 13, 401), $statuts, 'treize refus ordinaires, aucun 429');
+    // Le bon mot de passe passe — et il a été RALENTI : c'est là qu'on le voit.
+    $debut = hrtime(true);
     $r = connexion('gwenael', 'motdepasse-de-test-2026');
-    egal(429, $r['code'], 'le bon mot de passe ne passe plus pendant la fenêtre');
-    vrai(ctype_digit((string)entete($r, 'Retry-After')), 'avec Retry-After');
-    egal(401, connexion('personne', 'motdepasse-de-test-2026')['code'], "un autre identifiant depuis la même adresse : refus ordinaire, pas 429 (compteur par identifiant)");
+    $duree = (hrtime(true) - $debut) / 1e9;
+    egal(200, $r['code'], 'le bon mot de passe passe malgré les treize échecs');
+    vrai($duree >= 1.4, sprintf('et il a été ralenti (%.2f s, au moins 1,4 attendu)', $duree));
+    // Le même compte visé depuis TROIS adresses : aucune n'atteint son propre
+    // seuil (60 échecs), mais le compteur de l'identifiant, lui, les additionne.
+    // C'est le cas qui fermait le compte sans qu'on puisse rien y faire.
     vider_compteurs();
-    egal(200, connexion('gwenael', 'motdepasse-de-test-2026')['code'], 'contrôle : après remise à zéro, la connexion passe');
+    semer_compteur('connexion-id:gwenael', 600, 13);
+    $debut = hrtime(true);
+    egal(200, connexion('gwenael', 'motdepasse-de-test-2026')['code'],
+        'treize échecs venus de trois adresses ne ferment pas le compte');
+    vrai((hrtime(true) - $debut) / 1e9 >= 1.4, 'ils le ralentissent seulement');
+    // Un autre identifiant depuis la même adresse n'est pas concerné.
+    vider_compteurs();
+    semer_compteur('connexion-id:gwenael', 600, 13);
+    $debut = hrtime(true);
+    egal(401, connexion('personne', 'motdepasse-de-test-2026')['code'], 'un autre identifiant : refus ordinaire');
+    vrai((hrtime(true) - $debut) / 1e9 < 1.4, "et sans ralentissement : le compteur est bien par identifiant");
+    vider_compteurs();
 });
 
 verifier("connexion prof : soixante échecs depuis une adresse, puis 429 pour tout identifiant", function () {
@@ -1197,15 +1224,37 @@ verifier("le hachage de remplacement de la connexion est un vrai bcrypt au coût
     vrai(!password_verify('', HASH_DE_REMPLACEMENT) && !password_verify('motdepasse-de-test-2026', HASH_DE_REMPLACEMENT),
         "aucun mot de passe ne doit lui correspondre");
     vider_compteurs();
-    $mesure = function (string $identifiant): float {
-        $debut = hrtime(true);
-        for ($i = 0; $i < 3; $i++) appel('/api/prof.php', ['action' => 'connexion', 'identifiant' => $identifiant, 'motdepasse' => 'mauvais-mot-de-passe']);
-        return (hrtime(true) - $debut) / 3e6;
+    // Lot serveur B (B8) — ce test rougissait par intermittence sur le runner
+    // de GitHub : 747 ms contre 148 ms le 05/09, sans qu'aucune ligne de code
+    // ait changé. Une machine partagée s'interrompt, et une moyenne de trois
+    // mesures suffit à ce qu'une seule interruption emporte le verdict.
+    //
+    // Deux corrections, l'une et l'autre nécessaires :
+    //  - MÉDIANE de cinq mesures, pas moyenne : une interruption devient une
+    //    valeur extrême, et la médiane l'ignore ;
+    //  - seuil RELATIF et à SENS UNIQUE. Ce qu'on protège, c'est le secret de
+    //    « ce compte existe » : le refus d'un identifiant inconnu ne doit pas
+    //    être plus rapide, sinon on le devine au chronomètre. Qu'il soit plus
+    //    LENT n'apprend rien à personne — et c'est exactement ce que le bruit
+    //    d'un runner fabrique. Borner les deux côtés revenait à demander à une
+    //    machine partagée d'être régulière : elle ne l'est pas.
+    $mediane = function (string $identifiant): float {
+        $mesures = [];
+        for ($i = 0; $i < 5; $i++) {
+            $debut = hrtime(true);
+            appel('/api/prof.php', ['action' => 'connexion', 'identifiant' => $identifiant, 'motdepasse' => 'mauvais-mot-de-passe']);
+            $mesures[] = (hrtime(true) - $debut) / 1e6;
+        }
+        sort($mesures);
+        return $mesures[2];
     };
-    $inconnu = $mesure('personne-de-ce-nom');
-    $connu = $mesure('gwenael');
-    echo sprintf("       (connexion refusée : identifiant inconnu %.0f ms, identifiant existant %.0f ms)\n", $inconnu, $connu);
-    vrai($inconnu > $connu / 3 && $inconnu < $connu * 3, "les deux refus doivent prendre un temps du même ordre");
+    $inconnu = $mediane('personne-de-ce-nom');
+    $connu = $mediane('gwenael');
+    echo sprintf("       (connexion refusée, médiane de 5 : identifiant inconnu %.0f ms, identifiant existant %.0f ms)\n", $inconnu, $connu);
+    vrai($inconnu >= $connu / 2,
+        sprintf("le refus d'un identifiant inconnu (%.0f ms) ne doit pas être plus de deux fois plus rapide "
+            . "que celui d'un mauvais mot de passe (%.0f ms) : la différence dirait quels comptes existent", $inconnu, $connu));
+    vider_compteurs();
 });
 
 verifier("un professeur connecté ne distingue pas « inexistant » de « chez un collègue »", function () use (&$jetonClaire, &$eleveDeGwenael, &$classeDeGwenael) {
@@ -2477,8 +2526,51 @@ verifier("le manifeste VERSION : verifier.php compare chaque fichier, et nomme c
     vrai(str_contains($r['texte'], 'absent(s)') && str_contains($r['texte'], 'api/eleve.php'), 'un fichier manquant devrait être nommé');
     rename($cible . '.range', $cible);
 
+    // Lot serveur B (I-05) — le manifeste TRONQUÉ. Sans le nombre annoncé en
+    // en-tête, ce cas-là passait tout vert : les lignes disparues n'étaient
+    // simplement plus comparées, et rien ne disait qu'on ne vérifiait plus
+    // rien. C'est le pire des deux mondes — un contrôle qui se tait.
+    $version = $travail . '/VERSION';
+    $manifesteEntier = (string)file_get_contents($version);
+    $lignes = explode("\n", rtrim($manifesteEntier, "\n"));
+    array_pop($lignes);
+    file_put_contents($version, implode("\n", $lignes) . "\n");
+    $r = formulaire('/verifier.php', ['jeton' => 'JETON-DE-TEST']);
+    vrai(str_contains($r['texte'], 'Manifeste tronqué'), 'un manifeste amputé de sa dernière ligne doit se voir');
+    vrai((bool)preg_match('/non">✗<\/span>\s*Fichiers du serveur/u',
+        html_entity_decode($r['texte'], ENT_QUOTES | ENT_HTML5, 'UTF-8')), 'et la ligne doit être rouge');
+    file_put_contents($version, $manifesteEntier);
+
+    // Lot serveur B (I-05) — dans l'autre sens : un .php posé ici que le
+    // manifeste ne décrit pas. Un fichier d'un lot précédent devenu inutile,
+    // une copie de travail : du code que le serveur exécuterait si on le lui
+    // demandait, et que rien ne nommait jusqu'ici.
+    $intrus = $travail . '/api/ancienne-version.php';
+    file_put_contents($intrus, "<?php // reste d'un ancien lot\n");
+    $r = formulaire('/verifier.php', ['jeton' => 'JETON-DE-TEST']);
+    vrai(str_contains($r['texte'], 'inattendu') && str_contains($r['texte'], 'api/ancienne-version.php'),
+        'un .php absent du manifeste doit être nommé');
+    unlink($intrus);
+
+    // Les six qui n'ont JAMAIS à figurer au manifeste ne sont pas des intrus :
+    // config.php et config.exemple.php sont là pour de bonnes raisons, et les
+    // quatre pages d'opération ont déjà leur propre ligne (« Fichiers
+    // d'installation supprimés »). Elles sont toutes les six présentes dans
+    // cette copie de test : si l'une d'elles était comptée, la ligne serait
+    // rouge en permanence et ne voudrait plus rien dire.
+    foreach (['config.php', 'config.exemple.php', 'installer.php', 'migrer.php',
+              'secours.php', 'sauvegarde.php'] as $tolere) {
+        vrai(is_file($travail . '/' . $tolere), "$tolere est bien présent dans la copie de test");
+    }
+    $r = formulaire('/verifier.php', ['jeton' => 'JETON-DE-TEST']);
+    vrai(!str_contains($r['texte'], 'inattendu'), 'aucune des six n’est comptée comme un intrus');
+    // Un « config.php.bak », lui, n'est pas du .php : ce n'est pas cette ligne
+    // qui le retient, c'est le <FilesMatch "^config"> du .htaccess (lot B, B7),
+    // éprouvé par tests/suivi-htaccess.test.mjs.
+
     $r = formulaire('/verifier.php', ['jeton' => 'JETON-DE-TEST']);
     vrai(str_contains($r['texte'], 'tous identiques au dépôt'), 'tout est remis en place');
+    vrai(!str_contains($r['texte'], 'inattendu'), 'et plus aucun intrus');
 });
 
 verifier("verifier.php exige que secours.php et sauvegarde.php ne restent pas en ligne", function () use (&$travail) {
@@ -2507,7 +2599,7 @@ verifier("secours.php remet un mot de passe administrateur, et rien qu'avec le m
 
     // Trop court : refusé, et le mot de passe actuel n'a pas bougé.
     $r = formulaire('/secours.php', ['jeton' => 'JETON-DE-TEST', 'prof_id' => $profId, 'nouveau' => 'court', 'repete' => 'court']);
-    vrai(str_contains($r['texte'], '12 caractères'), 'les règles du mot de passe s’appliquent');
+    vrai(str_contains($r['texte'], '12 à 72 caractères'), 'les règles du mot de passe s’appliquent');
     // Deux saisies différentes : refusé aussi.
     $r = formulaire('/secours.php', ['jeton' => 'JETON-DE-TEST', 'prof_id' => $profId, 'nouveau' => 'phrase-de-secours-2026', 'repete' => 'autre-chose-encore']);
     vrai(str_contains($r['texte'], 'pas les mêmes'), 'les deux saisies doivent coïncider');
@@ -2982,6 +3074,22 @@ verifier("lot 11 — une entrée de type inattendu ne salit plus le journal du s
 //  i) sortir les trois écritures de « nouveau code » de la transaction → « ancien code intact »
 //  j) sortir les SELECT de sauvegarde.php de l'instantané → « comptes et INSERT d'accord »
 
+// L'époque d'un JSON de progression, et le même JSON sans elle : deux
+// utilitaires du lot serveur B, employés dès la section du lot A.
+function epoque_json(string $json): int
+{
+    $objet = json_decode($json, true);
+    return is_array($objet) && isset($objet['epoque']) && is_int($objet['epoque']) ? $objet['epoque'] : 0;
+}
+
+function sans_epoque(string $json): array
+{
+    $objet = json_decode($json, true);
+    if (!is_array($objet)) return [];
+    unset($objet['epoque']);
+    return $objet;
+}
+
 $serveurA = ['classe' => null, 'eleve' => null, 'jeton' => null];
 
 verifier("lot A — mise en place : une classe, un élève, une progression", function () use (&$jetonS1, &$serveurA) {
@@ -3100,7 +3208,14 @@ verifier("lot A — revenir à la fin d'une journée précise, et pouvoir reveni
     egal(200, appel('/api/prof.php', ['action' => 'eleves.restaurer', 'eleve_id' => $id, 'appli' => 'defi-tables'],
         ['jeton' => $serveurA['jeton']])['code'], 'retour en arrière');
     $final = bd_test()->query("SELECT donnees FROM progressions WHERE eleve_id = $id")->fetch(PDO::FETCH_ASSOC);
-    egal((string)$avant['donnees'], (string)$final['donnees'], 'on est revenu exactement où on était');
+    // « À l'époque près » depuis le lot serveur B : chaque restauration repose
+    // une époque plus haute, sans quoi l'appareil de l'élève rendrait l'état
+    // qu'on vient d'écarter (voir la section B0 plus bas). Le CONTENU, lui,
+    // doit être exactement celui d'avant.
+    egal(sans_epoque((string)$avant['donnees']), sans_epoque((string)$final['donnees']),
+        'on est revenu exactement où on était, à l’époque près');
+    vrai(epoque_json((string)$final['donnees']) > epoque_json((string)$avant['donnees']),
+        'et l’époque a monté : l’appareil de l’élève adoptera cet état');
     // L'élève, lui, retrouvera tout ça par la révision.
     vrai(is_array(lire($code)['json'] ?? null), 'l’élève relit sa progression');
 });
@@ -3316,6 +3431,140 @@ verifier("lot A — « nouveau code » est une seule transaction : une panne lai
     egal(200, $r['code'], 'la table revenue, le nouveau code passe');
     vrai((string)$r['json']['code'] !== $ancien, 'et c’est un code neuf');
     appel('/api/prof.php', ['action' => 'classes.supprimer', 'classe_id' => $classe], ['jeton' => $jetonS1]);
+});
+
+// ============================================================ LOT SERVEUR B (06/09/2026)
+//
+// Hygiène du serveur, et un défaut trouvé en production le jour même : la
+// restauration ne gagnait pas contre l'appareil de l'élève.
+//
+// Sabotages attendus (chacun rend au moins un test rouge) :
+//  a) retirer l'incrément d'époque de version_avec_epoque_relevee()
+//  b) remettre le 429 sur le seuil par identifiant (api/prof.php)
+//  c) remettre adresse_appelante() dans secours.php ou sauvegarde.php
+//  d) retirer la borne des 72 octets de motdepasse_refuse()
+//  e) enlever header_remove('X-Powered-By') de menage.php
+//  f) remettre <Files "config.php"> à la place de <FilesMatch "^config">
+//  g) retirer le nombre annoncé de l'en-tête du manifeste, ou sa comparaison
+//     dans verifier.php
+//
+// (b), (f) et (g) ont leur test plus haut : ils vivent avec le code qu'ils
+// gardent — B1 dans la section des limiteurs, le manifeste dans celle du lot 12.
+
+verifier("lot B — une restauration repose une époque plus haute que les DEUX états en présence", function () use (&$jetonS1) {
+    $classe = appel('/api/prof.php', ['action' => 'classes.creer', 'libelle' => 'lot-B-epoque'], ['jeton' => $jetonS1])['json']['id'];
+    $eleve = appel('/api/prof.php', ['action' => 'eleves.ajouter', 'classe_id' => $classe, 'nombre' => 1], ['jeton' => $jetonS1])['json']['eleves'][0];
+    $id = (int)$eleve['id'];
+    $code = (string)$eleve['code'];
+
+    // L'élève enregistre deux fois : la deuxième écriture pousse la première
+    // dans donnees_avant. Les deux portent une époque de 5 — c'est le cas de
+    // Gwenaël : rien n'a été remis à zéro, l'élève a simplement joué.
+    egal(200, ecrire($code, ['version' => 1, 'epoque' => 5, 'expert' => 1], 0)['code'], 'premier enregistrement');
+    egal(200, ecrire($code, ['version' => 1, 'epoque' => 5, 'expert' => 2], 1)['code'], 'deuxième enregistrement');
+
+    // Le professeur restaure « avant le dernier enregistrement ».
+    egal(200, appel('/api/prof.php', ['action' => 'eleves.restaurer', 'eleve_id' => $id, 'appli' => 'defi-tables'],
+        ['jeton' => $jetonS1])['code'], 'restauration');
+    $apres = (string)bd_test()->query("SELECT donnees FROM progressions WHERE eleve_id = $id")->fetchColumn();
+    egal(1, sans_epoque($apres)['expert'] ?? null, 'c’est bien l’état d’avant qui est revenu');
+    egal(6, epoque_json($apres),
+        'et son époque dépasse les deux états (5 et 5) : sans cela, l’appareil de l’élève rendrait l’état écarté');
+
+    // Deuxième restauration (celle qui annule la première) : l'époque monte
+    // encore. Basculer d'une version à l'autre reste donc décisif à chaque
+    // fois — c'est ce que Gwenaël a essayé, et qui convergeait vers « tout ».
+    egal(200, appel('/api/prof.php', ['action' => 'eleves.restaurer', 'eleve_id' => $id, 'appli' => 'defi-tables'],
+        ['jeton' => $jetonS1])['code'], 'on annule la restauration');
+    $encore = (string)bd_test()->query("SELECT donnees FROM progressions WHERE eleve_id = $id")->fetchColumn();
+    egal(2, sans_epoque($encore)['expert'] ?? null, 'l’état de départ est revenu');
+    egal(7, epoque_json($encore), 'et l’époque a encore monté');
+
+    // Restaurer une JOURNÉE fait pareil, et la ligne d'historique, elle, garde
+    // son époque d'origine (sans importance : c'est au moment de restaurer
+    // qu'on en repose une plus haute).
+    $jour = jour_local();
+    bd_test()->prepare('UPDATE versions SET donnees = ? WHERE eleve_id = ? AND jour = ?')
+        ->execute(['{"version":1,"epoque":2,"expert":9}', $id, $jour]);
+    egal(200, appel('/api/prof.php', ['action' => 'eleves.restaurer', 'eleve_id' => $id,
+        'appli' => 'defi-tables', 'jour' => $jour], ['jeton' => $jetonS1])['code'], 'restauration d’une journée');
+    $parJour = (string)bd_test()->query("SELECT donnees FROM progressions WHERE eleve_id = $id")->fetchColumn();
+    egal(9, sans_epoque($parJour)['expert'] ?? null, 'la journée est revenue');
+    egal(8, epoque_json($parJour), 'avec une époque plus haute que l’état courant (7), pas celle de la ligne (2)');
+    egal(2, epoque_json((string)bd_test()->query("SELECT donnees FROM versions WHERE eleve_id = $id AND jour = '$jour'")->fetchColumn()),
+        'la ligne d’historique, elle, n’a pas bougé');
+
+    // Rien d'autre n'entre par cette porte : la version restaurée repasse par
+    // le filtre de lib/progression.php, comme n'importe quelle écriture.
+    bd_test()->prepare('UPDATE versions SET donnees = ? WHERE eleve_id = ? AND jour = ?')
+        ->execute(['{"version":1,"epoque":1,"prenom":"Léa","expert":3}', $id, $jour]);
+    egal(200, appel('/api/prof.php', ['action' => 'eleves.restaurer', 'eleve_id' => $id,
+        'appli' => 'defi-tables', 'jour' => $jour], ['jeton' => $jetonS1])['code'], 'restauration');
+    $filtre = (string)bd_test()->query("SELECT donnees FROM progressions WHERE eleve_id = $id")->fetchColumn();
+    vrai(!str_contains($filtre, 'Léa'), 'aucun texte libre ne peut entrer par la restauration');
+
+    appel('/api/prof.php', ['action' => 'classes.supprimer', 'classe_id' => $classe], ['jeton' => $jetonS1]);
+});
+
+verifier("lot B — les freins de secours.php et sauvegarde.php comptent le bloc /64", function () {
+    // M-02 : en IPv6 un abonné reçoit un /64 entier et en change à volonté.
+    // Compter l'adresse exacte, c'est offrir dix essais neufs à chaque requête.
+    // Le serveur de test répond toujours depuis 127.0.0.1 : ce qui se vérifie
+    // ici, c'est que les deux pages emploient bien la CLÉ du bloc — et
+    // adresse_limitee() a son propre test plus haut (lot 11).
+    foreach (['secours.php' => 'secours:', 'sauvegarde.php' => 'sauvegarde:'] as $fichier => $prefixe) {
+        $source = (string)file_get_contents(dirname(__DIR__) . '/public/' . $fichier);
+        vrai(str_contains($source, "compter('$prefixe' . adresse_limitee(), 600)"),
+            "$fichier doit compter le bloc, pas l’adresse exacte");
+        vrai(!str_contains($source, "compter('$prefixe' . adresse_appelante("), "et plus l’adresse exacte");
+    }
+    // Et pour de vrai : deux adresses du même /64 tombent sur la même clé de
+    // compteur, deux /64 différents sur deux clés.
+    $avant = $_SERVER['REMOTE_ADDR'] ?? null;
+    $cle = function (string $adresse): string {
+        $_SERVER['REMOTE_ADDR'] = $adresse;
+        return cle_compteur_test('secours:' . adresse_limitee(), 600);
+    };
+    $a = $cle('2001:db8:1234:5678::1');
+    $b = $cle('2001:db8:1234:5678:ffff::9');
+    $c = $cle('2001:db8:1234:9999::1');
+    if ($avant === null) unset($_SERVER['REMOTE_ADDR']); else $_SERVER['REMOTE_ADDR'] = $avant;
+    egal($a, $b, 'deux adresses du même /64 partagent le compteur');
+    vrai($a !== $c, 'deux /64 différents ne le partagent pas');
+});
+
+verifier("lot B — un mot de passe de plus de 72 octets est refusé (bcrypt n’en lit pas plus)", function () use (&$jetonS1) {
+    // bcrypt ne lit que 72 octets et jette le reste sans rien dire : deux
+    // phrases identiques sur 72 octets ouvrent le même compte. Compté en
+    // OCTETS, pas en caractères — « é » en vaut deux.
+    $r = appel('/api/prof.php', ['action' => 'profs.motdepasse', 'ancien' => 'phrase-de-secours-2026',
+        'nouveau' => str_repeat('a', 73)], ['jeton' => $jetonS1]);
+    egal(400, $r['code'], '73 octets : refusé');
+    vrai(str_contains((string)($r['json']['erreur'] ?? ''), '12 à 72 caractères'), 'et la règle est dite en français');
+    // 36 caractères accentués = 72 octets : accepté. 37 = 74 octets : refusé.
+    egal(72, strlen(str_repeat('é', 36)), 'témoin : 36 « é » font 72 octets');
+    $r = appel('/api/prof.php', ['action' => 'profs.motdepasse', 'ancien' => 'phrase-de-secours-2026',
+        'nouveau' => str_repeat('é', 37)], ['jeton' => $jetonS1]);
+    egal(400, $r['code'], '37 lettres accentuées font 74 octets : refusé, alors qu’un maxlength les aurait laissées passer');
+    $nouveau = str_repeat('é', 36);
+    egal(200, appel('/api/prof.php', ['action' => 'profs.motdepasse', 'ancien' => 'phrase-de-secours-2026',
+        'nouveau' => $nouveau], ['jeton' => $jetonS1])['code'], '72 octets tout juste : accepté');
+    egal(200, connexion('gwenael', $nouveau)['code'], 'et il ouvre le compte');
+    // On remet le mot de passe attendu par la suite de la batterie.
+    egal(200, appel('/api/prof.php', ['action' => 'profs.motdepasse', 'ancien' => $nouveau,
+        'nouveau' => 'phrase-de-secours-2026'], ['jeton' => $jetonS1])['code'], 'remise en état');
+    vider_compteurs();
+});
+
+verifier("lot B — menage.php refuse par HTTP SANS annoncer la version de PHP", function () {
+    // M-04 : c'était la seule réponse du serveur qui portait encore
+    // « X-Powered-By ». En production, le .htaccess la refuse avant même
+    // d'appeler PHP ; ici (serveur intégré, pas de .htaccess), c'est le
+    // header_remove() du fichier qui est éprouvé — les deux verrous existent.
+    $r = appel('/menage.php');
+    egal(404, $r['code'], 'refusé par HTTP');
+    vrai(entete($r, 'X-Powered-By') === null, 'et sans annoncer la version de PHP');
+    egal('', trim((string)$r['texte']), 'ni rien d’autre');
 });
 
 // ---------------------------------------------------------------------- résultat

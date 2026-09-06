@@ -83,7 +83,7 @@ try {
     <input id="jeton" name="jeton" type="password" autocomplete="off" required>
     <label for="identifiant">Ton identifiant de prof</label>
     <input id="identifiant" name="identifiant" type="text" autocomplete="username" required>
-    <label for="motdepasse">Ton mot de passe (12 caractères minimum)</label>
+    <label for="motdepasse">Ton mot de passe (12 à 72 caractères)</label>
     <input id="motdepasse" name="motdepasse" type="password" autocomplete="new-password" minlength="12" required>
     <button type="submit">Créer mon compte</button>
   </form>

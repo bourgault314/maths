@@ -67,18 +67,41 @@ test("la redirection ne part que si NI %{HTTPS} NI X-Forwarded-Proto ne dit « d
   }
 });
 
-test("config.php n'est jamais servi, même si PHP tombait", () => {
-  const bloc = htaccess.match(/<Files\s+"config\.php"\s*>([\s\S]*?)<\/Files\s*>/i);
+test("rien de ce qui commence par « config » n'est servi, même si PHP tombait", () => {
+  // Lot serveur B (constat 6 du 05/09/2026) : <Files "config.php"> ne couvrait
+  // QUE ce nom exact. Un « config.php.bak » laissé par un éditeur, un
+  // « config.old » rangé à la main avant une modification : chacun sort en
+  // clair — avec le mot de passe MySQL dedans — et aucun n'est interprété par
+  // PHP. Le motif « ^config » les couvre tous, y compris ceux qu'on n'a pas
+  // encore imaginés.
+  const bloc = htaccess.match(/<FilesMatch\s+"\^config"\s*>([\s\S]*?)<\/FilesMatch\s*>/i);
   assert.ok(
     bloc,
-    `${CHEMIN} : il manque le bloc <Files "config.php">, sans lequel le mot de passe MySQL `
-      + "peut sortir en clair si PHP cesse d'interpréter le fichier."
+    `${CHEMIN} : il manque le bloc <FilesMatch "^config">, sans lequel une copie de config.php `
+      + "(config.php.bak, config.old, config.php.txt) sort en clair avec le mot de passe MySQL."
   );
   assert.match(
     bloc[1],
     /\bRequire\s+all\s+denied\b/i,
-    `${CHEMIN} : le bloc <Files "config.php"> doit contenir « Require all denied ».`
+    `${CHEMIN} : le bloc <FilesMatch "^config"> doit contenir « Require all denied ».`
   );
+  // Le motif doit bien attraper les quatre noms qui ont motivé le lot.
+  const motif = /^config/;
+  for (const nom of ["config.php", "config.php.bak", "config.old", "config.php.txt", "config.exemple.php"]) {
+    assert.ok(motif.test(nom), `${nom} doit être couvert par « ^config »`);
+  }
+});
+
+test("menage.php n'est pas ouvrable par le web", () => {
+  // Constat 5 : le ménage de fin d'année se lance par la tâche planifiée OVH,
+  // en ligne de commande. Il refusait déjà lui-même (404), mais en laissant
+  // PHP annoncer sa version au passage ; ici Apache répond 403 sans appeler
+  // PHP du tout. La tâche planifiée passe par la ligne de commande : cette
+  // règle ne la gêne pas.
+  const bloc = htaccess.match(/<Files\s+"menage\.php"\s*>([\s\S]*?)<\/Files\s*>/i);
+  assert.ok(bloc, `${CHEMIN} : il manque le bloc <Files "menage.php">.`);
+  assert.match(bloc[1], /\bRequire\s+all\s+denied\b/i,
+    `${CHEMIN} : le bloc <Files "menage.php"> doit contenir « Require all denied ».`);
 });
 
 test("la redirection HTTPS passe avant la règle Authorization", () => {

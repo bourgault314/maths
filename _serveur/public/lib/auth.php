@@ -21,17 +21,38 @@ const COUT_BCRYPT = 10;
 // password_hash() d'une valeur aléatoire jetée, coût 10 : aucun mot de passe
 // ne lui correspond, mais password_verify() met le même temps à le dire.
 const HASH_DE_REMPLACEMENT = '$2y$10$W34TaICveBz/iuy8Y4cjmui7TjnGnYY.R5iJ2W4MVC58NYV..KEEO';
+// Longueur d'un mot de passe, en OCTETS. Le maximum n'est pas un choix de
+// confort : c'est la limite de bcrypt (voir motdepasse_refuse()).
+const LONGUEUR_MOTDEPASSE_MIN = 12;
+const LONGUEUR_MOTDEPASSE_MAX = 72;
 
-// Ce qu'on demande à un mot de passe : la LONGUEUR (12 caractères au moins),
-// pas des majuscules ou des symboles imposés — c'est la recommandation actuelle
-// (ANSSI, NIST) : une phrase longue vaut mieux qu'un « P@ssw0rd! » ; et le
-// serveur freine à 12 essais par 10 minutes, ce qui rend la devinette en ligne
-// impossible. Deux refus de bon sens seulement : rien que des chiffres (une
-// date, un téléphone) et l'identifiant dedans. Renvoie le reproche, ou null.
+// Ce qu'on demande à un mot de passe : la LONGUEUR, pas des majuscules ou des
+// symboles imposés — c'est la recommandation actuelle (ANSSI, NIST) : une
+// phrase longue vaut mieux qu'un « P@ssw0rd! » ; et le serveur ralentit les
+// essais sur un même compte, ce qui rend la devinette en ligne impossible.
+// Deux refus de bon sens en plus : rien que des chiffres (une date, un
+// téléphone) et l'identifiant dedans. Renvoie le reproche, ou null.
 function motdepasse_refuse(string $motdepasse, string $identifiant): ?string
 {
-    if (strlen($motdepasse) < 12) {
-        return "Le mot de passe doit faire au moins 12 caractères.";
+    // Compté en OCTETS, jamais en caractères (M-03, audit du 05/09/2026).
+    //
+    // bcrypt ne lit que les 72 PREMIERS octets de ce qu'on lui donne et jette
+    // silencieusement le reste : deux phrases qui commencent pareil sur 72
+    // octets ouvrent le même compte. Une phrase de 90 caractères ne protège
+    // donc pas mieux qu'une de 72 — elle donne seulement l'impression de le
+    // faire, et c'est cela qu'on refuse.
+    //
+    // Et en octets parce qu'un « é » en compte deux, un émoji quatre : une
+    // phrase de quarante caractères accentués peut dépasser 72 octets. Un
+    // maxlength dans le formulaire compte des caractères, il ne suffit pas —
+    // c'est ici que la règle se tient.
+    $octets = strlen($motdepasse);
+    if ($octets < LONGUEUR_MOTDEPASSE_MIN) {
+        return "Le mot de passe doit faire 12 à 72 caractères : celui-ci est trop court.";
+    }
+    if ($octets > LONGUEUR_MOTDEPASSE_MAX) {
+        return "Le mot de passe doit faire 12 à 72 caractères : celui-ci est trop long "
+            . "(les lettres accentuées et les émojis comptent double ou plus).";
     }
     if (ctype_digit($motdepasse)) {
         return "Un mot de passe fait seulement de chiffres (date, téléphone…) est trop facile à deviner.";
@@ -122,7 +143,7 @@ function ouvrir_session(PDO $pdo, string $identifiant, string $motdepasse): ?arr
 }
 
 // Le professeur change son propre mot de passe : l'ancien doit être le bon, le
-// nouveau fait au moins 12 caractères et n'est pas l'ancien. Les AUTRES
+// nouveau fait 12 à 72 octets et n'est pas l'ancien. Les AUTRES
 // sessions du compte sont fermées (un jeton volé ne survit pas au changement) ;
 // celle qui fait le changement reste ouverte. Un mot de passe temporaire cesse
 // de l'être.

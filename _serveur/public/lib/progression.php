@@ -124,6 +124,58 @@ function filtrer_progression(string $appli, object $donnees): stdClass
     return $propre instanceof stdClass ? $propre : new stdClass();
 }
 
+// ------------------------------------------------- l'époque d'une progression
+//
+// Lot serveur B (06/09/2026) — défaut TROUVÉ EN PRODUCTION par Gwenaël, sur la
+// classe « test », le jour même de la mise en ligne de la PR A.
+//
+// Ce qu'il a vu : Léa valide la table 1 ; le professeur restaure « avant le
+// dernier enregistrement » (zéro table) ; Léa valide la table 2 ; le tableau
+// affiche DEUX tables. En basculant plusieurs fois d'une version à l'autre,
+// tout converge vers « deux tables » : la restauration est défaite à chaque
+// fois. Autrement dit, le bouton du professeur ne servait à rien dès que
+// l'appareil de l'élève était encore ouvert — et c'est précisément le cas où
+// l'on s'en sert (un intrus vient de jouer sur la tablette du CDI).
+//
+// Pourquoi. La fusion vit dans l'appli (defi_tables_mon_parcours.js,
+// « fusionner »), et elle est faite pour ne RIEN perdre : à époque égale, elle
+// prend le maximum de chaque compteur et garde toute table acquise. Elle ne
+// donne raison à un état EN BLOC que si son « epoque » est plus haute — c'est
+// ce qui fait marcher la remise à zéro de l'élève, seule à l'incrémenter
+// jusqu'ici. Une restauration, elle, reposait l'ancien JSON tel quel, époque
+// comprise : pour l'appareil, ce n'était pas « reviens en arrière », c'était
+// « voici un autre état de la même génération », et il additionnait.
+//
+// Le correctif tient côté SERVEUR, le moteur ne change pas : une version
+// restaurée repart avec une époque strictement supérieure aux deux états en
+// présence. Tout appareil qui porte une époque plus basse l'adopte en bloc à
+// sa prochaine synchronisation. Le prénom, lui, reste celui de l'appareil
+// devant l'élève : « fusionner » le préserve même quand une époque gagne.
+function epoque_de(string $donneesJson): int
+{
+    $objet = json_decode($donneesJson, false);
+    if (!is_object($objet)) return 0;
+    $epoque = $objet->epoque ?? 0;
+    if (is_float($epoque) && floor($epoque) === $epoque) $epoque = (int)$epoque;
+    return is_int($epoque) && $epoque >= 0 ? $epoque : 0;
+}
+
+// La version à restaurer, avec une époque qui gagne contre $courantJson.
+//
+// Repasse par filtrer_progression() comme n'importe quelle écriture : rien ne
+// doit pouvoir entrer par cette porte-là qui ne serait pas entré par l'autre.
+// Si l'appli ne déclare pas « epoque » dans son catalogue, le filtre la retire
+// et la restauration se comporte comme avant — c'est voulu : l'époque est une
+// notion de l'appli, pas du serveur.
+function version_avec_epoque_relevee(string $appli, string $versJson, string $courantJson): string
+{
+    $vers = json_decode($versJson, false);
+    if (!is_object($vers)) return $versJson;
+    $vers->epoque = max(epoque_de($versJson), epoque_de($courantJson)) + 1;
+    $encode = json_encode(filtrer_progression($appli, $vers), JSON_UNESCAPED_UNICODE);
+    return is_string($encode) ? $encode : $versJson;
+}
+
 // Combien d'éléments sous la clé que l'appli DÉCLARE comme comptable
 // (lib/applis.php, « compteur »). Pour Défi tables, c'est « calculs » : le
 // nombre de calculs de la grille sur lesquels l'élève a travaillé — le chiffre

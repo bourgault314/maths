@@ -17,6 +17,15 @@
 // échecs, chaque requête de l'adresse est RALENTIE (1,5 s) mais répond encore
 // juste ; le refus (429) n'arrive qu'à 600 échecs par cinq minutes — une
 // attaque, pas trente élèves qui se trompent deux fois en début d'heure.
+//
+// Une cinquième, apprise par l'audit du 05/09/2026 (constat 3, lot serveur B) :
+// la même leçon vaut pour le compte du PROFESSEUR. Le seuil par identifiant
+// répondait 429 même au bon mot de passe : n'importe qui, de n'importe où,
+// fermait le compte de Gwenaël pour dix minutes en tapant treize bêtises sur
+// son identifiant — le mot de passe n'a même pas besoin d'être approché. Ce
+// seuil RALENTIT maintenant (1,5 s) au lieu de refuser. Le seuil par ADRESSE,
+// lui, garde son refus net : c'est lui qui borne la dépense (une adresse qui
+// dépasse 60 échecs est refusée SANS dormir).
 
 declare(strict_types=1);
 
@@ -36,6 +45,9 @@ const RALENTISSEMENT_ADRESSE_US = 1500000;
 const FENETRE_ECHECS_CONNEXION = 600;
 const ECHECS_CONNEXION_PAR_ADRESSE = 60;
 const ECHECS_CONNEXION_PAR_IDENTIFIANT = 12;
+// Au-delà du seuil PAR IDENTIFIANT, chaque tentative sur ce compte attend
+// RALENTISSEMENT_CONNEXION_US — elle n'est pas refusée. Voir freiner_identifiant().
+const RALENTISSEMENT_CONNEXION_US = 1500000;
 
 // Secret servant à hacher les clés.
 //
@@ -172,6 +184,28 @@ function freiner_adresse(string $adresse): void
     }
     if ($echecs > ECHECS_ADRESSE_RALENTIE) {
         usleep(RALENTISSEMENT_ADRESSE_US);
+    }
+}
+
+// Connexion d'un professeur : le compte visé a déjà trop d'échecs récents.
+//
+// Constat 3 de l'audit du 05/09/2026, reproduit : treize mauvais mots de passe
+// sur « gwenael », depuis n'importe quelle machine, et le vrai mot de passe
+// répondait 429 pendant dix minutes. Le seuil censé protéger le compte servait
+// à le fermer, pour le prix de treize requêtes.
+//
+// On ralentit donc au lieu de refuser : 1,5 s par tentative, le bon mot de
+// passe passe. À 1,5 s l'essai, une devinette en ligne contre un mot de passe
+// de douze caractères au minimum n'aboutit pas — et le professeur, lui, entre.
+//
+// Ce que cela coûte au serveur est borné par l'autre seuil : une adresse qui
+// dépasse 60 échecs par dix minutes est refusée d'emblée, sans dormir. Une
+// adresse ne peut donc pas faire dormir plus d'une minute et demie de processus
+// PHP par tranche de dix minutes.
+function freiner_identifiant(string $identifiant): void
+{
+    if (compte_courant('connexion-id:' . $identifiant, FENETRE_ECHECS_CONNEXION) > ECHECS_CONNEXION_PAR_IDENTIFIANT) {
+        usleep(RALENTISSEMENT_CONNEXION_US);
     }
 }
 
