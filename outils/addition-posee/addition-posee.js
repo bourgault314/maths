@@ -3,8 +3,9 @@ import {
   makeAddition,
   makeDisplayMetrics
 } from "./addition-engine.mjs?v=1";
-import { makeSteps } from "./addition-steps.mjs?v=2";
-import { renderAddition, renderVocabulary } from "./addition-view.mjs?v=3";
+import { makeSteps } from "./addition-steps.mjs?v=3";
+import { renderAddition, renderVocabulary } from "./addition-view.mjs?v=4";
+import { createRekenrek20Help } from "./rekenrek-20.js?v=1";
 
 const $ = (selector) => document.querySelector(selector);
 const firstInput = $("#first-term");
@@ -12,6 +13,13 @@ const secondInput = $("#second-term");
 const errorBox = $("#form-error");
 const rankGuides = $("#rank-guides");
 const rankGuidesStorageKey = "mathsgo-addition-rank-guides";
+const rekenrekHelp = createRekenrek20Help({
+  trigger: $("#rekenrek-help"),
+  getOperation: () => {
+    const step = steps[stepIndex];
+    return step?.kind === "search" ? addition.operations[step.opIndex] : null;
+  }
+});
 
 let addition = makeAddition(["584", "279"]);
 let steps = makeSteps(addition);
@@ -53,13 +61,11 @@ function displayError(error) {
 function metricOptions() {
   const scroll = $("#addition-scroll");
   const stage = scroll.closest(".addition-stage");
-  const vocabulary = $("#vocabulary-strip");
   const projection = document.body.classList.contains("is-projection");
   const wide = projection || window.innerWidth >= 1280;
   const availableWidth = Math.max(220, scroll.clientWidth || 720);
   const horizontalReserve = addition.decimalPlaces > 0 ? 82 : 70;
-  const vocabularyHeight = vocabulary.hidden ? 0 : vocabulary.offsetHeight;
-  const availableHeight = Math.max(220, (stage.clientHeight || 390) - vocabularyHeight - 22);
+  const availableHeight = Math.max(220, (scroll.clientHeight || stage.clientHeight || 390) - 18);
 
   return {
     columnBudget: Math.max(180, availableWidth - horizontalReserve),
@@ -108,6 +114,9 @@ function render() {
   $("#next").disabled = stepIndex === steps.length - 1;
   $("#show-all").hidden = stepIndex === steps.length - 1;
   $("#projection-problem").textContent = addition.displayTerms.join(" + ");
+  const canUseRekenrek = step.kind === "search";
+  $("#rekenrek-help").hidden = !canUseRekenrek;
+  $("#rekenrek-help").disabled = !canUseRekenrek;
 
   renderVocabulary($("#vocabulary-strip"), addition, step.kind === "verify");
   renderAddition({
@@ -211,6 +220,7 @@ $("#edit-problem").addEventListener("click", () => {
 
 document.addEventListener("fullscreenchange", () => {
   projectionEditing = false;
+  rekenrekHelp.close();
   syncProjectionMode();
 });
 document.addEventListener("keydown", (event) => {

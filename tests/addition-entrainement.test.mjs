@@ -18,14 +18,14 @@ const js = readFileSync(new URL("../outils/addition-posee/addition-posee-interac
 test("l’entraînement reprend exactement les colonnes du moteur partagé", () => {
   const addition = makeAddition(["584", "279"]);
   const tasks = makeTrainingTasks(addition);
-  assert.deepEqual(tasks.map(({ kind }) => kind), ["column", "column", "column", "verify", "finish"]);
-  assert.deepEqual(tasks[0].expected, { total: 13, result: 3, carry: 1 });
-  assert.deepEqual(tasks[1].expected, { total: 16, result: 6, carry: 1 });
-  assert.deepEqual(tasks[2].expected, { total: 8, result: 8, carry: "" });
+  assert.deepEqual(tasks.map(({ kind }) => kind), ["column", "column", "column", "finish"]);
+  assert.deepEqual(tasks[0].expected, { result: 3, carry: 1 });
+  assert.deepEqual(tasks[1].expected, { result: 6, carry: 1 });
+  assert.deepEqual(tasks[2].expected, { result: 8, carry: "" });
   assert.equal(tasks[0].opIndex, addition.operations[0].processingIndex);
   assert.equal(tasks[0].sentence, "4 unités + 9 unités = ?");
   assert.equal(tasks[1].sentence, "8 dizaines + 7 dizaines + 1 dizaine retenue = ?");
-  assert.equal(tasks.at(-2).expected.sum, addition.resultCells.join(""));
+  assert.equal(tasks.at(-1).sentence, "584 + 279 = 863.");
 });
 
 test("le placement des termes est une première étape réellement facultative", () => {
@@ -73,18 +73,18 @@ test("le placement partage les colonnes, les zéros utiles et la virgule du mote
 test("une colonne sans retenue et les zéros se valident sans ambiguïté", () => {
   const noCarry = makeTrainingTasks(makeAddition(["123", "456"])).filter(({ kind }) => kind === "column");
   assert.deepEqual(noCarry.map(({ expected }) => expected), [
-    { total: 9, result: 9, carry: "" },
-    { total: 7, result: 7, carry: "" },
-    { total: 5, result: 5, carry: "" }
+    { result: 9, carry: "" },
+    { result: 7, carry: "" },
+    { result: 5, carry: "" }
   ]);
   const withZeros = makeTrainingTasks(makeAddition(["1005", "97"])).filter(({ kind }) => kind === "column");
   assert.deepEqual(withZeros.map(({ expected }) => expected), [
-    { total: 12, result: 2, carry: 1 },
-    { total: 10, result: 0, carry: 1 },
-    { total: 1, result: 1, carry: "" },
-    { total: 1, result: 1, carry: "" }
+    { result: 2, carry: 1 },
+    { result: 0, carry: 1 },
+    { result: 1, carry: "" },
+    { result: 1, carry: "" }
   ]);
-  assert.equal(checkTrainingAnswer(withZeros[1], { total: "10", result: "0", carry: "1" }), true);
+  assert.equal(checkTrainingAnswer(withZeros[1], { result: "0", carry: "1" }), true);
   assert.equal(checkTrainingAnswer(noCarry[0], { result: "9", carry: "" }), true);
   assert.equal(checkTrainingAnswer(noCarry[0], { result: "9" }), true);
   assert.deepEqual(trainingErrors(noCarry[0], { result: "9", carry: "0" }), ["carry"]);
@@ -95,14 +95,15 @@ test("les retenues successives et la retenue finale ont chacune leur emplacement
   const tasks = makeTrainingTasks(addition);
   const columns = tasks.filter(({ kind }) => kind === "column");
   assert.deepEqual(columns.map(({ expected }) => expected), [
-    { total: 10, result: 0, carry: 1 },
-    { total: 10, result: 0, carry: 1 },
-    { total: 10, result: 0, carry: 1 }
+    { result: 0, carry: 1 },
+    { result: 0, carry: 1 },
+    { result: 0, carry: 1 }
   ]);
   const finalCarry = tasks.find(({ kind }) => kind === "final-carry");
   assert.deepEqual(finalCarry.resultLayoutIndices, [0]);
   assert.deepEqual(finalCarry.expected, { result: 1 });
-  assert.equal(finalCarry.sentence, "Recopie la retenue au rang des milliers.");
+  assert.equal(finalCarry.title, "J’écris la dernière retenue");
+  assert.equal(finalCarry.sentence, "La dernière retenue devient le chiffre des milliers de la somme.");
 });
 
 test("les décimaux gardent l’alignement et les zéros fournis par le même moteur", () => {
@@ -112,37 +113,31 @@ test("les décimaux gardent l’alignement et les zéros fournis par le même mo
   assert.equal(mixed.resultDisplay, "16,15");
   assert.equal(tasks[0].sentence, "0 centièmes + 5 centièmes = ?");
   assert.equal(tasks[1].memo, "");
-  assert.deepEqual(tasks.at(-2).expected, { sum: "1615" });
+  assert.equal(tasks.at(-1).sentence, "12,70 + 3,45 = 16,15.");
 
   const small = makeAddition(["0,09", "0,8"]);
   assert.deepEqual(small.displayTerms, ["0,09", "0,80"]);
-  assert.deepEqual(makeTrainingTasks(small).at(-2).expected, { sum: "089" });
+  assert.equal(makeTrainingTasks(small).at(-1).sentence, "0,09 + 0,80 = 0,89.");
 
   const crossing = makeAddition(["0,8", "0,7"]);
   assert.equal(crossing.resultDisplay, "1,5");
   assert.equal(makeTrainingTasks(crossing)[0].memo, "");
 });
 
-test("le calcul intermédiaire est facultatif mais contrôlé lorsqu’il est rempli", () => {
+test("l’élève ne saisit que le chiffre de la somme et la retenue éventuelle", () => {
   const addition = makeAddition(["584", "279"]);
   const task = makeTrainingTasks(addition)[0];
-  assert.deepEqual(trainingFields(task), ["total", "result", "carry"]);
-  assert.deepEqual(trainingErrors(task, { total: 12, result: 2, carry: 0 }), ["total", "result", "carry"]);
-  assert.equal(firstTrainingError(task, { total: 12, result: 2, carry: 0 }), "total");
-  assert.equal(firstTrainingError(task, { total: "", result: 2, carry: 0 }), "result");
-  assert.equal(firstTrainingError(task, { total: 13, result: 2, carry: 0 }), "result");
-  assert.equal(firstTrainingError(task, { total: 13, result: 3, carry: 0 }), "carry");
-  assert.equal(firstTrainingError(task, { total: "", result: "3", carry: "1" }), null);
+  assert.deepEqual(trainingFields(task), ["result", "carry"]);
+  assert.deepEqual(trainingErrors(task, { result: 2, carry: 0 }), ["result", "carry"]);
+  assert.equal(firstTrainingError(task, { result: 2, carry: 0 }), "result");
+  assert.equal(firstTrainingError(task, { result: 3, carry: 0 }), "carry");
   assert.equal(checkTrainingAnswer(task, { result: "3", carry: "1" }), true);
-  assert.equal(firstTrainingError(task, { total: "13", result: "3", carry: "1" }), null);
-  assert.equal(checkTrainingAnswer(task, { total: "13", result: "3", carry: "1" }), true);
+  assert.equal(Object.hasOwn(task.expected, "total"), false);
 });
 
 test("les indices restent progressifs et ne révèlent qu’un champ à la fois", () => {
   const addition = makeAddition(["584", "279"]);
   const task = makeTrainingTasks(addition)[0];
-  assert.match(hintForTask(addition, task, "total", 0), /Additionne les unités/);
-  assert.equal(hintForTask(addition, task, "total", 1), "4 + 9 = 13. Tu obtiens 13 unités.");
   assert.match(hintForTask(addition, task, "result", 0), /quel chiffre dois-tu écrire au rang des unités/);
   assert.doesNotMatch(hintForTask(addition, task, "result", 0), /13/);
   assert.match(hintForTask(addition, task, "result", 1), /1 dizaine et 3 unités/);
@@ -172,23 +167,25 @@ test("toutes les étapes attendues conduisent à la réussite complète", () => 
 });
 
 test("l’interface élève réutilise le moteur, reste tactile et ne contient pas de solution initiale", () => {
-  assert.match(html, /addition-posee\.css\?v=4/);
-  assert.match(html, /addition-posee-interactive\.css\?v=4/);
-  assert.match(html, /addition-posee-interactive\.js\?v=4/);
+  assert.match(html, /addition-posee\.css\?v=5/);
+  assert.match(html, /addition-posee-interactive\.css\?v=5/);
+  assert.match(html, /addition-posee-interactive\.js\?v=5/);
+  assert.match(html, /rekenrek-20\.css\?v=1/);
   assert.doesNotMatch(html, /data-mode="(?:integer|decimal)"/);
   assert.match(html, /id="rank-guides" type="checkbox"/);
   assert.match(html, /id="placement-mode" type="checkbox"/);
   assert.match(html, /Je place les nombres/);
   assert.match(html, /id="validate"[^>]*>Vérifier l’étape/);
   assert.match(html, /id="help"[^>]*>Un indice/);
+  assert.match(html, /id="rekenrek-help"[^>]*hidden>Rekenrek 20/);
   assert.match(html, /aria-live="polite" aria-atomic="true"/);
   assert.match(html, /fullscreen-collapse[^>]*hidden/);
   assert.doesNotMatch(html, />863</);
   assert.match(js, /addition-engine\.mjs\?v=1/);
-  assert.match(js, /addition-entrainement-engine\.mjs\?v=3/);
-  assert.match(js, /Résultat du calcul en ligne, facultatif/);
-  assert.match(js, /"prompt-optional", "facultatif"/);
-  assert.match(js, /find\(\(input\) => input\.dataset\.answer !== "total"\)/);
+  assert.match(js, /addition-entrainement-engine\.mjs\?v=4/);
+  assert.match(js, /rekenrek-20\.js\?v=1/);
+  assert.doesNotMatch(`${html}\n${js}`, /facultatif|total-answer|prompt-optional/i);
+  assert.doesNotMatch(js, /makeRelationDigitGroup|data-answer.*sum/);
   assert.match(js, /leadingPracticeColumnCount\(\)/);
   assert.match(js, /sourceOperation\.layoutIndex - 1/);
   assert.match(js, /Retenue éventuelle au rang des/);

@@ -20,26 +20,6 @@
 .practice-instruction .instruction-copy { width: 100%; }
 .practice-instruction #step-count { padding-top: 2px; }
 
-.calculation-prompt {
-  min-height: 48px;
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 7px;
-  margin-top: 10px;
-  color: var(--ink);
-  font-family: "DejaVu Sans Mono", Consolas, monospace;
-  font-size: 1.05rem;
-  font-weight: 800;
-}
-.calculation-prompt:empty { display: none; }
-.calculation-prompt .prompt-sign { color: var(--navy); }
-.calculation-prompt .prompt-optional {
-  color: var(--muted);
-  font-family: "Segoe UI", system-ui, sans-serif;
-  font-size: .72rem;
-  font-weight: 750;
-}
 .answer-input {
   min-width: 44px;
   min-height: 44px;
@@ -63,7 +43,6 @@
   animation: wrong-answer .28s ease;
 }
 .answer-input:disabled { opacity: .8; }
-.total-answer { width: 68px; height: 46px; font-size: 1.15rem; }
 @keyframes wrong-answer { 40% { transform: translateX(3px); } 75% { transform: translateX(-3px); } }
 
 .practice-stage { min-height: var(--stage-min-height); padding: 10px 18px 8px; overflow: hidden; }
@@ -123,7 +102,9 @@
   border: 1px solid var(--line);
   border-radius: 14px;
   background: #f7f9fc;
+  visibility: hidden;
 }
+.verification-relation.is-visible { visibility: visible; }
 .verification-role {
   min-width: 0;
   min-height: 56px;
@@ -145,16 +126,6 @@
 .verification-role.second { --role-color: var(--teal); --role-soft: var(--teal-soft); }
 .verification-role.sum { --role-color: var(--orange); --role-soft: var(--orange-soft); }
 .verification-sign { color: var(--navy); font-size: 1.22rem; font-weight: 900; }
-.relation-digit-group {
-  min-width: max-content;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 3px;
-}
-.relation-digit-answer { width: 36px; height: 42px; min-width: 36px; min-height: 42px; padding: 0; border-color: var(--orange); color: var(--orange); font-size: 1rem; }
-.relation-comma { align-self: end; padding-bottom: 8px; color: var(--orange); font-size: 1.35rem; }
-
 .practice-actions {
   min-height: 64px;
   display: grid;
@@ -164,6 +135,7 @@
   padding: 11px 2px 4px;
   border-top: 1px solid #e7edf4;
 }
+.practice-help-actions { display: flex; align-items: center; gap: 8px; }
 .feedback { min-width: 0; margin: 0; color: var(--muted); font-size: .88rem; font-weight: 700; line-height: 1.3; text-align: center; }
 .feedback.is-error { color: #a22c38; }
 .feedback.is-hint { color: var(--navy); }
@@ -231,17 +203,14 @@
   .practice-instruction h2 { font-size: .91rem; }
   .practice-instruction .step-detail { font-size: .76rem; }
   .practice-instruction #step-count { font-size: .7rem; }
-  .calculation-prompt { margin-top: 7px; font-size: .92rem; }
-  .total-answer { width: 58px; }
   .practice-stage { padding-top: 6px; }
   .verification-relation { grid-template-columns: minmax(66px, 1fr) auto minmax(66px, 1fr) auto minmax(88px, 1.2fr); gap: 4px; padding-inline: 5px; }
   .verification-role { min-height: 50px; padding-inline: 3px; font-size: .82rem; }
   .verification-role small { font-size: .5rem; letter-spacing: 0; }
-  .relation-digit-answer { width: 32px; min-width: 32px; height: 40px; }
-  .practice-actions { min-height: 104px; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .practice-actions { min-height: 152px; grid-template-columns: 1fr 1fr; gap: 8px; }
   .practice-actions .feedback { grid-column: 1 / -1; grid-row: 1; min-height: 35px; font-size: .8rem; }
-  .practice-actions .help-button { grid-column: 1; grid-row: 2; }
-  .practice-actions .validate-button { grid-column: 2; grid-row: 2; }
+  .practice-help-actions { grid-column: 1 / -1; grid-row: 2; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .practice-actions .validate-button { grid-column: 1 / -1; grid-row: 3; }
   .practice-actions .button { min-height: 44px; padding-inline: 7px; font-size: .79rem; }
   body.is-projection .site-footer { display: none; }
 }
@@ -252,6 +221,10 @@
   .practice-board { padding-inline: 7px; }
   .practice-instruction { padding-inline: 10px; }
   .verification-role small { display: none; }
+}
+
+@media (max-width: 520px) {
+  .verification-relation:not(.is-visible) { display: none; }
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -106,7 +106,7 @@ button, a, .rank-control { touch-action: manipulation; }
 .instruction .exchange-memo { width: max-content; max-width: 100%; margin: 12px 0 0; padding: 7px 10px; border: 1px solid #d9c4ef; border-radius: 10px; color: var(--violet); background: var(--violet-soft); font-size: clamp(.78rem, 1.1vw, .9rem); font-weight: 850; letter-spacing: 0; line-height: 1.15; text-transform: none; }
 .instruction > span { flex: none; color: var(--muted); font-size: .82rem; font-weight: 800; }
 
-.addition-stage { min-width: 0; min-height: var(--stage-min-height); display: grid; grid-template-rows: minmax(0, 1fr) auto; align-items: center; padding: 14px 22px 12px; overflow: hidden; }
+.addition-stage { min-width: 0; min-height: var(--stage-min-height); display: grid; grid-template-rows: minmax(0, 1fr) auto; align-items: center; padding: 8px 22px 12px; overflow: hidden; }
 .addition-scroll { min-width: 0; width: 100%; max-width: 100%; overflow-x: auto; overflow-y: hidden; padding: 10px 2px 14px; scrollbar-color: #b5c5d7 transparent; scrollbar-width: thin; }
 #posed-addition { width: max-content; min-width: 0; margin: 0 auto; }
 .posed-addition { display: grid; grid-template-rows: calc(var(--row-height) * .58) var(--row-height) var(--row-height) 14px var(--row-height); align-items: center; width: max-content; padding: 4px 8px 8px 0; font-family: "DejaVu Sans Mono", Consolas, monospace; font-size: var(--digit-size); font-weight: 800; font-variant-numeric: tabular-nums; }
@@ -134,14 +134,16 @@ button, a, .rank-control { touch-action: manipulation; }
 .rank-marker { position: absolute; top: 3px; left: 50%; transform: translateX(-50%); color: #718198; font-family: "Segoe UI", system-ui, sans-serif; font-size: clamp(.63rem, .18em, .78rem); font-weight: 900; letter-spacing: 0; line-height: 1; white-space: nowrap; }
 .has-rank-guides .term-one-cell { padding-top: .17em; }
 
-.vocabulary-strip { width: min(100%, 720px); display: grid; grid-template-columns: max-content auto max-content auto max-content; align-items: center; justify-content: safe center; gap: 8px; margin: 3px auto 0; padding: 10px 14px; overflow-x: auto; border: 1px solid var(--line); border-radius: 13px; background: #f8fafc; text-align: center; scrollbar-width: thin; }
-.vocabulary-sign { color: var(--navy); font-size: 1.15rem; font-weight: 900; }
+.vocabulary-strip { width: min(100%, 860px); min-height: 82px; visibility: hidden; display: grid; grid-template-columns: max-content auto max-content auto max-content; align-items: center; justify-content: safe center; gap: clamp(8px, 1.2vw, 16px); margin: 3px auto 0; padding: 12px 20px; overflow-x: auto; border: 1px solid var(--line); border-radius: 15px; background: #f8fafc; text-align: center; scrollbar-width: thin; }
+.vocabulary-strip.is-visible { visibility: visible; }
+.vocabulary-sign { color: var(--navy); font-size: clamp(1.35rem, 1.8vw, 1.65rem); font-weight: 900; }
 .vocabulary-role { min-width: max-content; display: grid; gap: 2px; font-weight: 850; line-height: 1.15; }
-.vocabulary-role strong { font-family: "DejaVu Sans Mono", Consolas, monospace; font-size: clamp(.92rem, 1.5vw, 1.2rem); }
-.vocabulary-role small { color: currentColor; font-size: clamp(.62rem, .9vw, .78rem); }
+.vocabulary-role strong { font-family: "DejaVu Sans Mono", Consolas, monospace; font-size: clamp(1.25rem, 1.9vw, 1.7rem); }
+.vocabulary-role small { color: currentColor; font-size: clamp(.75rem, 1vw, .9rem); }
 .first-role { color: var(--blue); }
 .second-role { color: var(--teal); }
 .sum-role { color: var(--orange); }
+.rekenrek-help-button { min-height: 44px; margin-top: 20px; }
 
 .step-controls { display: grid; grid-template-columns: auto minmax(80px, 1fr) auto auto; align-items: center; gap: 10px; padding-top: 12px; border-top: 1px solid #e7edf4; }
 .progress { height: 6px; overflow: hidden; border-radius: 999px; background: #e9eef5; }
@@ -163,7 +165,7 @@ body.is-projection .instruction .step-detail { margin-top: 3px; font-size: clamp
 body.is-projection .instruction .exchange-memo { margin-top: 6px; padding-block: 5px; }
 body.is-projection .addition-stage { min-height: 0; padding: 4px 16px 3px; }
 body.is-projection .addition-scroll { padding-block: 2px 5px; }
-body.is-projection .vocabulary-strip { padding-block: 7px; }
+body.is-projection .vocabulary-strip { min-height: 78px; padding-block: 9px; }
 body.is-projection .step-controls { padding-top: 7px; }
 body.is-projection .step-controls .button { min-height: 44px; padding-block: 6px; }
 body.is-projection .site-footer { flex: none; gap: 5px; padding: 5px 8px 6px; font-size: .68rem; }
@@ -227,8 +229,10 @@ body.is-projection .site-footer { flex: none; gap: 5px; padding: 5px 8px 6px; fo
   .instruction .step-detail { font-size: .78rem; }
   .instruction .exchange-memo { margin-top: 9px; }
   .addition-stage { min-height: 310px; padding-inline: 0; }
-  .vocabulary-strip { gap: 4px; padding-inline: 7px; }
-  .vocabulary-role strong { font-size: .92rem; }
+  .vocabulary-strip { min-height: 68px; gap: 5px; padding: 8px 7px; }
+  .vocabulary-sign { font-size: 1.05rem; }
+  .vocabulary-role strong { font-size: clamp(.9rem, 4vw, 1.08rem); }
+  .vocabulary-role small { font-size: clamp(.55rem, 2.4vw, .68rem); }
   .step-controls { grid-template-columns: 1fr 1fr; gap: 8px; }
   #previous { grid-column: 1; grid-row: 1; }
   #next { grid-column: 2; grid-row: 1; }
@@ -249,7 +253,7 @@ body.is-projection .site-footer { flex: none; gap: 5px; padding: 5px 8px 6px; fo
   .board-card { padding-inline: 7px; }
   .instruction { padding-inline: 10px; }
   .instruction > span { font-size: .74rem; }
-  .vocabulary-role small { font-size: .6rem; }
+  .vocabulary-role small { font-size: .55rem; }
 }
 
 @media (prefers-reduced-motion: reduce) {

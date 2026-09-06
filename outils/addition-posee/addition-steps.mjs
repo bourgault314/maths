@@ -73,8 +73,8 @@ export function makeSteps(addition) {
     const carryValue = addition.finalCarryDigits.join("");
     steps.push({
       kind: "final-carry",
-      title: "J’écris la retenue",
-      sentence: `Il reste ${carryValue} ${placeValueName(finalPlace.exponent, Number(carryValue))} en retenue.`,
+      title: "J’écris la dernière retenue",
+      sentence: `La dernière retenue devient le chiffre des ${finalRank} de la somme.`,
       detail: `J’écris ${carryValue} au rang des ${finalRank}.`,
       resultLayoutIndices: addition.finalCarryDigits.map((_, index) => index)
     });
@@ -83,8 +83,7 @@ export function makeSteps(addition) {
   steps.push({
     kind: "verify",
     title: "Je conclus",
-    sentence: `${addition.displayTerms.join(" + ")} = ${addition.resultDisplay}.`,
-    detail: "L’addition est entièrement complétée."
+    sentence: "Je lis l’addition complétée."
   });
 
   return steps;

@@ -65,7 +65,7 @@ test("chaque colonne sépare question, calcul et écriture ou échange", () => {
   assert.equal(steps[3].detail, "J’écris 3 au rang des unités et je retiens 1 dizaine.");
   assert.equal(steps[4].sentence, "8 dizaines + 7 dizaines + 1 dizaine retenue = ?");
   assert.equal(steps.at(-1).title, "Je conclus");
-  assert.equal(steps.at(-1).sentence, "584 + 279 = 863.");
+  assert.equal(steps.at(-1).sentence, "Je lis l’addition complétée.");
 });
 
 test("les futurs chiffres restent cachés et les retenues deviennent consommées", () => {
@@ -93,7 +93,8 @@ test("999 + 1 réserve une étape distincte à la retenue finale", () => {
   assert.equal(addition.hasFinalCarry, true);
   assert.equal(addition.layoutIntegerPlaces, 4);
   assert.equal(steps.at(-2).kind, "final-carry");
-  assert.equal(steps.at(-2).sentence, "Il reste 1 millier en retenue.");
+  assert.equal(steps.at(-2).title, "J’écris la dernière retenue");
+  assert.equal(steps.at(-2).sentence, "La dernière retenue devient le chiffre des milliers de la somme.");
 
   const before = getAdditionDisplayState(addition, steps, steps.length - 3);
   const finalCarry = getAdditionDisplayState(addition, steps, steps.length - 2);
@@ -190,13 +191,23 @@ test("le vocabulaire de rang couvre les bornes autorisées", () => {
 test("la vérification finale écrit l’égalité numérique avec le vocabulaire", () => {
   const values = [{ textContent: "" }, { textContent: "" }, { textContent: "" }];
   const attributes = new Map();
+  const classes = new Set();
   const container = {
     hidden: true,
     querySelectorAll: () => values,
+    classList: {
+      toggle: (name, active) => active ? classes.add(name) : classes.delete(name)
+    },
     setAttribute: (name, value) => attributes.set(name, value)
   };
+  renderVocabulary(container, makeAddition(["584", "279"]), false);
+  assert.equal(container.hidden, false, "la bande garde sa place avant la conclusion");
+  assert.equal(classes.has("is-visible"), false);
+  assert.equal(attributes.get("aria-hidden"), "true");
   renderVocabulary(container, makeAddition(["584", "279"]), true);
   assert.equal(container.hidden, false);
+  assert.equal(classes.has("is-visible"), true);
+  assert.equal(attributes.get("aria-hidden"), "false");
   assert.deepEqual(values.map(({ textContent }) => textContent), ["584", "279", "863"]);
   assert.equal(
     attributes.get("aria-label"),
@@ -218,6 +229,8 @@ test("l’interface est professorale, projetable et conforme à l’identité ma
   assert.match(interfaceHtml, /data-vocabulary-value><\/strong><small>premier terme<\/small>/);
   assert.match(interfaceHtml, /data-vocabulary-value><\/strong><small>second terme<\/small>/);
   assert.match(interfaceHtml, /data-vocabulary-value><\/strong><small>somme<\/small>/);
+  assert.match(interfaceHtml, /id="rekenrek-help"[^>]*hidden>Avec le Rekenrek 20<\/button>/);
+  assert.match(interfaceHtml, /rekenrek-20\.css\?v=1/);
   assert.match(interfaceHtml, /id="projection-recap"[^>]*hidden/);
   assert.match(interfaceHtml, /fullscreen-collapse[^>]*hidden/);
   assert.match(interfaceHtml, /Gwenaël Bourgault/);
@@ -236,16 +249,19 @@ test("l’interface est professorale, projetable et conforme à l’identité ma
   assert.match(interfaceCss, /\.instruction h2 \{[^}]*font-size:\s*clamp\(1\.55rem, 2\.1vw, 2\.25rem\)/);
   assert.match(interfaceCss, /body\.is-projection \.instruction h2 \{[^}]*font-size:\s*clamp\(1\.7rem, 2\.15vw, 2\.35rem\)/);
   assert.match(interfaceCss, /\.digit-cell\.is-unit-anchor/);
+  assert.match(interfaceCss, /\.vocabulary-strip[^}]*min-height:\s*82px[^}]*visibility:\s*hidden/);
+  assert.match(interfaceCss, /\.vocabulary-strip\.is-visible\s*\{[^}]*visibility:\s*visible/);
   assert.match(interfaceCss, /@media \(prefers-reduced-motion: reduce\)/);
   assert.match(interfaceJs, /document\.exitFullscreen\(\)/);
   assert.match(interfaceJs, /fullscreenchange/);
   assert.match(interfaceJs, /window\.addEventListener\("resize"/);
   assert.match(interfaceJs, /\["INPUT", "SELECT", "TEXTAREA"\]/);
   assert.match(interfaceJs, /addition-engine\.mjs\?v=1/);
-  assert.match(interfaceHtml, /addition-posee\.css\?v=4/);
-  assert.match(interfaceHtml, /addition-posee\.js\?v=4/);
-  assert.match(interfaceJs, /addition-steps\.mjs\?v=2/);
-  assert.match(interfaceJs, /addition-view\.mjs\?v=3/);
+  assert.match(interfaceHtml, /addition-posee\.css\?v=5/);
+  assert.match(interfaceHtml, /addition-posee\.js\?v=5/);
+  assert.match(interfaceJs, /addition-steps\.mjs\?v=3/);
+  assert.match(interfaceJs, /addition-view\.mjs\?v=4/);
+  assert.match(interfaceJs, /rekenrek-20\.js\?v=1/);
   assert.match(interfaceJs, /renderVocabulary\(\$\("#vocabulary-strip"\), addition, step\.kind === "verify"\)/);
   assert.match(interfaceJs, /function syncGabaritLink\(\)/);
   assert.match(interfaceJs, /gabarit-addition-decimale\.pdf/);

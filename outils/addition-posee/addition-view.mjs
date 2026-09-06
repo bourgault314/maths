@@ -131,12 +131,13 @@ export function renderAddition({
 }
 
 export function renderVocabulary(container, addition, visible) {
-  container.hidden = !visible;
-  if (!visible) return;
+  container.hidden = false;
   const values = [addition.displayTerms[0], addition.displayTerms[1], addition.resultDisplay];
   container.querySelectorAll("[data-vocabulary-value]").forEach((node, index) => {
     node.textContent = values[index];
   });
+  container.classList.toggle("is-visible", visible);
+  container.setAttribute("aria-hidden", String(!visible));
   container.setAttribute(
     "aria-label",
     `${addition.displayTerms[0]} plus ${addition.displayTerms[1]} égale ${addition.resultDisplay}. `

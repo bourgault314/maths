@@ -9,7 +9,8 @@ import {
   firstTrainingError,
   hintForTask,
   makeTrainingTasks
-} from "./addition-entrainement-engine.mjs?v=3";
+} from "./addition-entrainement-engine.mjs?v=4";
+import { createRekenrek20Help } from "./rekenrek-20.js?v=1";
 
 const $ = (selector) => document.querySelector(selector);
 const firstInput = $("#first-term");
@@ -35,6 +36,13 @@ let projectionEditing = false;
 let showRankGuides = false;
 let selfPlacement = false;
 let resizeFrame = 0;
+const rekenrekHelp = createRekenrek20Help({
+  trigger: $("#rekenrek-help"),
+  getOperation: () => {
+    const task = currentTask();
+    return task?.kind === "column" ? addition.operations[task.opIndex] : null;
+  }
+});
 
 try {
   showRankGuides = window.localStorage.getItem(rankGuidesStorageKey) === "true";
@@ -65,10 +73,8 @@ function draftForCurrentTask() {
 
 function fieldLabel(field) {
   return {
-    total: "calcul facultatif",
     result: "chiffre de la somme",
     carry: "retenue",
-    sum: "somme",
     term0: "placement du premier terme",
     term1: "placement du second terme"
   }[field] || field;
@@ -295,13 +301,11 @@ function addResultRow(grid) {
 function metricOptions() {
   const scroll = $("#addition-scroll");
   const stage = scroll.closest(".addition-stage");
-  const verification = $("#verification-relation");
   const projection = document.body.classList.contains("is-projection");
   const wide = projection || window.innerWidth >= 1280;
   const availableWidth = Math.max(220, scroll.clientWidth || 720);
   const horizontalReserve = addition.decimalPlaces > 0 ? 82 : 70;
-  const verificationHeight = verification.hidden ? 0 : verification.offsetHeight;
-  const availableHeight = Math.max(230, (stage.clientHeight || 390) - verificationHeight - 18);
+  const availableHeight = Math.max(230, (scroll.clientHeight || stage.clientHeight || 390) - 16);
   return {
     columnBudget: Math.max(190, availableWidth - horizontalReserve),
     rowBudget: availableHeight,
@@ -370,47 +374,30 @@ function makeRelationRole(className, label, content) {
   return role;
 }
 
-function makeRelationDigitGroup() {
-  const task = currentTask();
-  const group = createElement("span", "relation-digit-group");
-  group.setAttribute("role", "group");
-  group.setAttribute("aria-label", "Somme de vérification");
-  let digitIndex = 0;
-  addition.resultDisplay.split("").forEach((character) => {
-    if (character === ",") {
-      group.append(createElement("span", "relation-comma", ","));
-      return;
-    }
-    group.append(createAnswerInput("sum", {
-      className: "answer-input relation-digit-answer",
-      label: `Somme, chiffre ${digitIndex + 1} sur ${addition.resultCells.length}`,
-      digitIndex,
-      digitCount: addition.resultCells.length,
-      digitGroup: `relation-${task.id}-sum`,
-      expectedDigit: addition.resultCells[digitIndex]
-    }));
-    digitIndex += 1;
-  });
-  return group;
-}
-
 function renderRelation(task) {
   const relation = $("#verification-relation");
-  const visible = task.kind === "verify" || task.kind === "finish";
-  relation.hidden = !visible;
+  const visible = task.kind === "finish";
+  relation.hidden = false;
   relation.replaceChildren();
-  if (!visible) return;
-  const sumContent = task.kind === "verify" && !completed.has("verify")
-    ? makeRelationDigitGroup()
-    : addition.resultDisplay;
+  relation.classList.toggle("is-visible", visible);
+  relation.classList.toggle("is-complete", visible);
+  relation.setAttribute("aria-hidden", String(!visible));
+  if (!visible) {
+    relation.removeAttribute("aria-label");
+    return;
+  }
   relation.append(
     makeRelationRole("first", "premier terme", addition.displayTerms[0]),
     createElement("span", "verification-sign", "+"),
     makeRelationRole("second", "second terme", addition.displayTerms[1]),
     createElement("span", "verification-sign", "="),
-    makeRelationRole("sum", "somme", sumContent)
+    makeRelationRole("sum", "somme", addition.resultDisplay)
   );
-  relation.classList.toggle("is-complete", task.kind === "finish" || completed.has("verify"));
+  relation.setAttribute(
+    "aria-label",
+    `${addition.displayTerms[0]} plus ${addition.displayTerms[1]} égale ${addition.resultDisplay}. `
+      + "Premier terme plus second terme égale somme."
+  );
 }
 
 function renderInstruction(task) {
@@ -420,28 +407,6 @@ function renderInstruction(task) {
   $("#step-detail").hidden = !task.detail;
   $("#exchange-memo").textContent = task.memo || "";
   $("#exchange-memo").hidden = !task.memo;
-
-  const prompt = $("#calculation-prompt");
-  prompt.replaceChildren();
-  if (task.kind === "column") {
-    const operation = addition.operations[task.opIndex];
-    operation.addendDigits.forEach((digit, index) => {
-      if (index > 0) prompt.append(createElement("span", "prompt-sign", "+"));
-      prompt.append(createElement("span", "", digit));
-    });
-    if (operation.carryIn > 0) {
-      prompt.append(createElement("span", "prompt-sign", "+"), createElement("span", "", operation.carryIn));
-    }
-    prompt.append(
-      createElement("span", "prompt-sign", "="),
-      createAnswerInput("total", {
-        className: "answer-input total-answer",
-        label: "Résultat du calcul en ligne, facultatif",
-        maxLength: 2
-      }),
-      createElement("small", "prompt-optional", "facultatif")
-    );
-  }
 
   const totalChecks = tasks.length - 1;
   $("#step-count").textContent = task.kind === "finish" ? "Terminé" : `${taskIndex + 1} / ${totalChecks}`;
@@ -457,17 +422,23 @@ function renderInstruction(task) {
 
 function renderActions(task) {
   const help = $("#help");
+  const rekenrek = $("#rekenrek-help");
   const validate = $("#validate");
   const status = $("#feedback");
   status.textContent = feedback;
   status.className = `feedback ${feedbackKind ? `is-${feedbackKind}` : ""}`;
   if (task.kind === "finish") {
+    rekenrek.hidden = true;
+    rekenrek.disabled = true;
     help.textContent = "Recommencer";
     help.disabled = false;
     validate.textContent = "Nouvelle addition";
     validate.disabled = false;
     return;
   }
+  const canUseRekenrek = task.kind === "column";
+  rekenrek.hidden = !canUseRekenrek;
+  rekenrek.disabled = !canUseRekenrek || Boolean(transitioningTaskId);
   const field = firstTrainingError(task, draftForCurrentTask());
   const level = field ? hintLevels.get(`${task.id}:${field}`) || 0 : 0;
   help.textContent = level > 0 ? "Un autre indice" : "Un indice";
@@ -502,8 +473,6 @@ function focusFirstAnswer() {
       : [];
     const target = wrongAnswers.find((input) => input.classList.contains("is-wrong") && !input.value)
       || wrongAnswers.find((input) => input.classList.contains("is-wrong"))
-      || [...document.querySelectorAll("[data-answer]:not(:disabled)")]
-        .find((input) => input.dataset.answer !== "total")
       || document.querySelector("[data-answer]:not(:disabled)");
     target?.focus({ preventScroll: true });
     target?.select();
@@ -529,6 +498,9 @@ function errorMessage(field, value) {
   if (field === "carry" && currentTask().expected.carry === "" && !empty) {
     return "S’il n’y a rien à retenir, laisse la case vide.";
   }
+  if (field === "carry") {
+    return empty ? "Complète d’abord la retenue." : "La retenue est à revoir.";
+  }
   if (empty) return `Complète d’abord le ${fieldLabel(field)}.`;
   return `Le ${fieldLabel(field)} est à revoir.`;
 }
@@ -537,10 +509,10 @@ function advanceAfterSuccess(task) {
   const token = ++transitionToken;
   transitioningTaskId = task.id;
   wrongField = null;
-  feedback = task.kind === "verify" ? "Bravo, l’addition est juste." : "Étape juste.";
+  feedback = "Étape juste.";
   feedbackKind = "success";
   render();
-  const duration = reducedMotion.matches ? 70 : task.kind === "verify" ? 650 : 420;
+  const duration = reducedMotion.matches ? 70 : 420;
   window.setTimeout(() => {
     if (token !== transitionToken) return;
     transitioningTaskId = null;
@@ -598,6 +570,7 @@ function showHint() {
 }
 
 function resetTraining(nextAddition, { focus = true, includePlacement = placementMode.checked } = {}) {
+  rekenrekHelp.close();
   transitionToken += 1;
   transitioningTaskId = null;
   addition = nextAddition;
@@ -810,6 +783,7 @@ document.addEventListener("keydown", (event) => {
 
 document.addEventListener("fullscreenchange", () => {
   projectionEditing = false;
+  rekenrekHelp.close();
   syncProjectionMode();
 });
 window.addEventListener("resize", () => {
