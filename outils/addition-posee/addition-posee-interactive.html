@@ -11,10 +11,11 @@
   <title>À toi de poser l’addition | maths&amp;go</title>
   <link rel="icon" href="../../favicon.ico" sizes="48x48">
   <link rel="icon" type="image/svg+xml" href="../../favicon.svg">
-  <link rel="stylesheet" href="addition-posee.css?v=4">
-  <link rel="stylesheet" href="addition-posee-interactive.css?v=4">
+  <link rel="stylesheet" href="addition-posee.css?v=5">
+  <link rel="stylesheet" href="addition-posee-interactive.css?v=5">
+  <link rel="stylesheet" href="rekenrek-20.css?v=1">
   <script defer src="../../assets/js/mention-confidentialite.js"></script>
-  <script type="module" src="addition-posee-interactive.js?v=4"></script>
+  <script type="module" src="addition-posee-interactive.js?v=5"></script>
 </head>
 <body class="practice-page">
   <a class="skip-link" href="#outil">Aller à l’entraînement</a>
@@ -81,7 +82,6 @@
               <p id="step-title">Je calcule</p>
               <h2 id="step-sentence"></h2>
               <p class="step-detail" id="step-detail" hidden></p>
-              <div class="calculation-prompt" id="calculation-prompt"></div>
               <p class="exchange-memo" id="exchange-memo" hidden></p>
             </div>
             <span id="step-count"></span>
@@ -95,7 +95,10 @@
           </div>
 
           <div class="practice-actions">
-            <button class="button button-light help-button" id="help" type="button">Un indice</button>
+            <div class="practice-help-actions">
+              <button class="button button-light help-button" id="help" type="button">Un indice</button>
+              <button class="button button-light rekenrek-button" id="rekenrek-help" type="button" hidden>Rekenrek 20</button>
+            </div>
             <p class="feedback" id="feedback" role="status" aria-live="polite"></p>
             <button class="button button-primary validate-button" id="validate" type="button">Vérifier l’étape</button>
           </div>

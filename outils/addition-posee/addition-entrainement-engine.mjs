@@ -7,12 +7,6 @@ function integerValue(value) {
   return Number(normalized);
 }
 
-function calculationParts(operation) {
-  const parts = operation.addendDigits.map(String);
-  if (operation.carryIn > 0) parts.push(String(operation.carryIn));
-  return parts;
-}
-
 function searchSentence(operation) {
   const parts = operation.addendDigits.map((digit) => (
     `${digit} ${placeValueName(operation.exponent, digit)}`
@@ -44,11 +38,10 @@ export function makeTrainingTasks(addition, { includePlacement = false } = {}) {
     kind: "column",
     title: "Je calcule",
     sentence: searchSentence(operation),
-    detail: `Écris le chiffre de la somme au rang des ${placeValueName(operation.exponent, 2)} et, si nécessaire, la retenue au rang suivant. Le calcul du haut est facultatif.`,
+    detail: `Écris le chiffre de la somme au rang des ${placeValueName(operation.exponent, 2)} et, si nécessaire, la retenue au rang suivant.`,
     memo: "",
     opIndex: operation.processingIndex,
     expected: {
-      total: operation.total,
       result: operation.resultDigit,
       carry: operation.carryOut > 0 ? operation.carryOut : ""
     }
@@ -60,27 +53,20 @@ export function makeTrainingTasks(addition, { includePlacement = false } = {}) {
     tasks.push({
       id: "final-carry",
       kind: "final-carry",
-      title: "J’écris la retenue",
-      sentence: `Recopie la retenue au rang des ${placeValueName(finalPlace.exponent, 2)}.`,
-      detail: "La retenue finale devient un chiffre de la somme.",
+      title: "J’écris la dernière retenue",
+      sentence: `La dernière retenue devient le chiffre des ${placeValueName(finalPlace.exponent, 2)} de la somme.`,
+      detail: `Écris-la au rang des ${placeValueName(finalPlace.exponent, 2)}, dans la somme.`,
       expected: { result: integerValue(carry) },
       resultLayoutIndices: addition.finalCarryDigits.map((_, index) => index)
     });
   }
 
   tasks.push({
-    id: "verify",
-    kind: "verify",
-    title: "Je vérifie",
-    sentence: "Complète la relation.",
-    detail: "premier terme + second terme = somme",
-    expected: { sum: addition.resultCells.join("") }
-  }, {
     id: "finish",
     kind: "finish",
     title: "Addition réussie",
     sentence: `${addition.displayTerms.join(" + ")} = ${addition.resultDisplay}.`,
-    detail: "Tous les chiffres et toutes les retenues sont bien placés.",
+    detail: "Bravo, tous les chiffres et toutes les retenues sont bien placés.",
     expected: null
   });
 
@@ -89,11 +75,8 @@ export function makeTrainingTasks(addition, { includePlacement = false } = {}) {
 
 export function trainingFields(task) {
   if (task.kind === "placement") return ["term0", "term1"];
-  if (task.kind === "column") {
-    return ["total", "result", "carry"];
-  }
+  if (task.kind === "column") return ["result", "carry"];
   if (task.kind === "final-carry") return ["result"];
-  if (task.kind === "verify") return ["sum"];
   return [];
 }
 
@@ -106,12 +89,8 @@ export function trainingErrors(task, answer) {
     });
   }
   return trainingFields(task).filter((field) => {
-    if (field === "total" && String(answer?.total ?? "").trim() === "") return false;
     if (field === "carry" && task.expected.carry === "") {
       return String(answer?.carry ?? "").trim() !== "";
-    }
-    if (field === "sum") {
-      return String(answer?.sum ?? "").replace(/[.,]/g, "") !== task.expected.sum;
     }
     return integerValue(answer?.[field]) !== task.expected[field];
   });
@@ -137,13 +116,7 @@ export function hintForTask(addition, task, field, level = 0) {
   }
   if (task.kind === "column") {
     const operation = addition.operations[task.opIndex];
-    const parts = calculationParts(operation);
     const rank = placeValueName(operation.exponent, 2);
-    if (field === "total") {
-      return strong
-        ? `${parts.join(" + ")} = ${operation.total}. Tu obtiens ${operation.total} ${placeValueName(operation.exponent, operation.total)}.`
-        : `Additionne les ${rank}, sans oublier la retenue éventuelle.`;
-    }
     if (field === "result") {
       return strong
         ? operation.carryOut > 0
@@ -165,13 +138,8 @@ export function hintForTask(addition, task, field, level = 0) {
   if (task.kind === "final-carry") {
     const carry = task.expected.result;
     return strong
-      ? `Écris ${carry} dans la première case de la somme.`
-      : "Regarde la dernière retenue violette : elle n’a plus de colonne à rejoindre.";
-  }
-  if (task.kind === "verify") {
-    return strong
-      ? `La somme est ${addition.resultDisplay}.`
-      : "Relis les chiffres orange de gauche à droite.";
+      ? `Écris ${carry} au rang indiqué dans la somme.`
+      : "Regarde la dernière retenue violette : elle devient le premier chiffre de la somme.";
   }
   return "";
 }
