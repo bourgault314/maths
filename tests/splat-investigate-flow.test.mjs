@@ -104,9 +104,9 @@ test("l'équation du schéma regroupé suit le tableau et condense les x par tac
   assert.deepEqual(relationGroupedEquationLine({}, extreme), {left:"8x + 16x + 20 + 30", right:"200"});
 
   const groupedSource = functionSource("drawRelationGroupedSchema", "drawBarModelPartsInGroup");
-  assert.match(groupedSource, /const groupedEquation = relationGroupedEquationLine\\(card, grouped\\)/);
-  assert.match(groupedSource, /const fitLines = solved \\? plan\\.lines : \\[groupedEquation\\]/);
-  assert.match(groupedSource, /const fitOps = solved \\? plan\\.ops : \\[\\]/);
+  assert.match(groupedSource, /const groupedEquation = relationGroupedEquationLine\(card, grouped\)/);
+  assert.match(groupedSource, /const fitLines = solved \? plan\.lines : \[groupedEquation\]/);
+  assert.match(groupedSource, /const fitOps = solved \? plan\.ops : \[\]/);
 });
 
 test("la correction C conserve exactement ses trois blocs", () => {
