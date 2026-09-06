@@ -17,6 +17,8 @@ require __DIR__ . '/../lib/limite.php';
 require __DIR__ . '/../lib/auth.php';
 require_once __DIR__ . '/../lib/billets.php';
 require_once __DIR__ . '/../lib/archives.php';
+require_once __DIR__ . '/../lib/versions.php';
+require_once __DIR__ . '/../lib/journal.php';
 
 const MAX_ELEVES_PAR_LOT = 60;
 const APPLIS_PROPOSABLES = ['defi-tables', 'automatismes'];
@@ -62,6 +64,10 @@ const DROIT_PAR_ACTION = [
     // Propriétaire : ce qui efface, et ce qui change la classe elle-même.
     'classes.modifier' => 'proprietaire',
     'classes.supprimer' => 'proprietaire',
+    // Lot serveur A (06/09/2026) : la suppression des classes de l'année
+    // écoulée, demandée par le professeur depuis le bandeau de « Ma classe ».
+    // Elle efface : propriétaire, comme « Supprimer la classe ».
+    'classes.supprimer_echues' => 'proprietaire',
     'eleves.supprimer' => 'proprietaire',
     'partages.ajouter' => 'proprietaire',
     'partages.supprimer' => 'proprietaire',
@@ -151,9 +157,13 @@ function exiger_admin(array $prof): void
 // ACTIONS_ADMIN passe par ici AVANT d'entrer dans son cas — un « exiger_admin »
 // oublié dans un cas ne peut plus ouvrir une porte, et le test qui parcourt la
 // liste le prouve action par action.
-function garder_actions_admin(array $prof, string $action): void
+function garder_actions_admin(PDO $pdo, array $prof, string $action): void
 {
-    if (in_array($action, ACTIONS_ADMIN, true)) exiger_admin($prof);
+    if (!in_array($action, ACTIONS_ADMIN, true)) return;
+    if (!$prof['admin']) {
+        journaliser($pdo, $prof['id'], $action, 'compte', 0, 'refus');
+    }
+    exiger_admin($prof);
 }
 
 // Un autre compte que le sien, pour les actions d'administration : on ne se
@@ -174,7 +184,13 @@ function autre_prof(PDO $pdo, array $prof, mixed $profIdBrut): array
 // $besoin vaut 'lecture', 'ecriture' ou 'proprietaire'.
 // Une classe à laquelle il n'a aucun droit est déclarée introuvable : on ne
 // révèle pas l'existence des classes des collègues.
-function acces_classe(PDO $pdo, int $profId, mixed $classeIdBrut, string $besoin): array
+//
+// $action, depuis le lot serveur A : le nom de l'action, pour que le REFUS
+// s'inscrive au journal (lib/journal.php). C'est le seul endroit où l'on
+// verrait un collègue en lecture seule essayer d'écrire — et c'est justement
+// ce qu'un registre doit pouvoir montrer. Le « introuvable » (404), lui, n'est
+// pas journalisé : il ne dit rien, par construction.
+function acces_classe(PDO $pdo, int $profId, mixed $classeIdBrut, string $besoin, ?string $action = null): array
 {
     $classeId = (int)$classeIdBrut;
     $requete = $pdo->prepare('SELECT * FROM classes WHERE id = ?');
@@ -193,9 +209,11 @@ function acces_classe(PDO $pdo, int $profId, mixed $classeIdBrut, string $besoin
     }
 
     if ($besoin === 'proprietaire' && $classe['droit'] !== 'proprietaire') {
+        if ($action !== null) journaliser($pdo, $profId, $action, 'classe', $classeId, 'refus');
         erreur("Cette classe ne t'appartient pas : seul son propriétaire peut faire cela.", 403);
     }
     if ($besoin === 'ecriture' && $classe['droit'] === 'lecture') {
+        if ($action !== null) journaliser($pdo, $profId, $action, 'classe', $classeId, 'refus');
         erreur("Cette classe t'est partagée en lecture seule.", 403);
     }
     return $classe;
@@ -213,7 +231,7 @@ function eleve_pour_action(PDO $pdo, int $profId, mixed $eleveIdBrut, string $ac
     // Même message qu'une classe interdite : un professeur connecté ne doit
     // pas pouvoir distinguer « n'existe pas » de « appartient à un collègue ».
     if ($eleve === false) erreur("Introuvable.", 404);
-    acces_classe($pdo, $profId, (int)$eleve['classe_id'], droit_requis($action));
+    acces_classe($pdo, $profId, (int)$eleve['classe_id'], droit_requis($action), $action);
     return $eleve;
 }
 
@@ -224,30 +242,53 @@ function eleve_pour_action(PDO $pdo, int $profId, mixed $eleveIdBrut, string $ac
 // un UPDATE sans condition pouvaient attribuer deux fois le même numéro de
 // révision quand l'élève enregistrait au même instant : l'une des deux
 // écritures — le plus souvent la restauration — disparaissait sans un mot.
-// Renvoie ['rien' => true] s'il n'y a pas de version précédente,
-// ['conflit' => true] si la ligne a bougé sous le verrou (ne devrait pas
-// arriver : garde-fou), sinon ['donnees' => …, 'revision' => …].
-function restaurer_progression(PDO $pdo, int $eleveId, string $appli): array
+// Renvoie ['rien' => true] s'il n'y a rien à restaurer, ['inconnu' => true] si
+// le jour demandé n'existe pas (ou plus) dans l'historique, ['conflit' => true]
+// si la ligne a bougé sous le verrou (ne devrait pas arriver : garde-fou),
+// sinon ['donnees' => …, 'revision' => …].
+//
+// $jour, depuis le lot serveur A : « AAAA-MM-JJ » pour revenir à la fin d'une
+// journée gardée (table versions, sept jours) ; null pour l'ancien
+// comportement, « avant le dernier enregistrement » (progressions.donnees_avant).
+//
+// La ligne de la table versions n'est PAS touchée par une restauration : sinon
+// on ne pourrait plus revenir une seconde fois au même jour. Ce qui est
+// remplacé, c'est donnees_avant — la restauration elle-même s'annule donc d'un
+// clic, comme avant.
+function restaurer_progression(PDO $pdo, int $eleveId, string $appli, ?string $jour = null): array
 {
-    return avec_reprise($pdo, function () use ($pdo, $eleveId, $appli): array {
+    return avec_reprise($pdo, function () use ($pdo, $eleveId, $appli, $jour): array {
         transaction_ouvrir($pdo);
         $requete = $pdo->prepare('SELECT id, donnees, donnees_avant, revision FROM progressions WHERE eleve_id = ? AND appli = ?' . pour_mise_a_jour($pdo));
         $requete->execute([$eleveId, $appli]);
         $ligne = $requete->fetch();
         $requete->closeCursor();
-        if ($ligne === false || $ligne['donnees_avant'] === null) {
+        if ($ligne === false) {
             transaction_annuler($pdo);
             return ['rien' => true];
         }
+        if ($jour === null) {
+            $vers = $ligne['donnees_avant'];
+            if ($vers === null) {
+                transaction_annuler($pdo);
+                return ['rien' => true];
+            }
+        } else {
+            $vers = version_du_jour($pdo, $eleveId, $appli, $jour);
+            if ($vers === null) {
+                transaction_annuler($pdo);
+                return ['inconnu' => true];
+            }
+        }
         $revision = (int)$ligne['revision'];
         $requete = $pdo->prepare('UPDATE progressions SET donnees = ?, donnees_avant = ?, revision = ?, maj_le = ? WHERE id = ? AND revision = ?');
-        $requete->execute([$ligne['donnees_avant'], $ligne['donnees'], $revision + 1, aujourdhui(), (int)$ligne['id'], $revision]);
+        $requete->execute([$vers, $ligne['donnees'], $revision + 1, aujourdhui(), (int)$ligne['id'], $revision]);
         if ($requete->rowCount() !== 1) {
             transaction_annuler($pdo);
             return ['conflit' => true];
         }
         transaction_valider($pdo);
-        return ['donnees' => $ligne['donnees_avant'], 'revision' => $revision + 1];
+        return ['donnees' => $vers, 'revision' => $revision + 1];
     });
 }
 
@@ -282,6 +323,11 @@ try {
             }
             erreur("Identifiant ou mot de passe incorrect.", 401);
         }
+        // Journal (lot serveur A) : les connexions RÉUSSIES seulement. Les
+        // échecs n'ont pas de compte fiable à nommer — c'est le limiteur qui
+        // s'en occupe, et une table pleine d'identifiants essayés serait à son
+        // tour un renseignement à protéger.
+        journaliser($pdo, (int)prof_de_session($pdo, (string)$session['jeton']), 'connexion', 'session', 0);
         repondre(['ok' => true] + $session);
     }
 
@@ -301,10 +347,11 @@ try {
     // La matrice, appliquée avant tout le reste : les actions de comptes au
     // compte administrateur, les actions de classe au droit que la table exige
     // (droit_requis(), appelé dans chaque cas au moment où la classe est lue).
-    garder_actions_admin($prof, $action);
+    garder_actions_admin($pdo, $prof, $action);
 
     switch ($action) {
         case 'deconnexion':
+            journaliser($pdo, $profId, 'deconnexion', 'session', 0);
             fermer_session($pdo, $jeton);
             repondre(['ok' => true]);
 
@@ -323,12 +370,14 @@ try {
             } catch (InvalidArgumentException $e) {
                 erreur($e->getMessage(), 400);
             }
+            journaliser($pdo, $profId, 'motdepasse', 'compte', $profId);
             repondre(['ok' => true]);
 
         case 'profs.reinitialiser':
             exiger_admin($prof);
             $autre = autre_prof($pdo, $prof, $corps['prof_id'] ?? 0);
             $temporaire = reinitialiser_motdepasse($pdo, $autre['id']);
+            journaliser($pdo, $profId, 'profs.reinitialiser', 'compte', $autre['id']);
             // Le mot de passe temporaire part une fois, dans cette réponse, à
             // l'administrateur qui le transmet de vive voix. Il n'est stocké
             // que haché.
@@ -342,12 +391,14 @@ try {
             // connexion lui répondra exactement comme à un mauvais mot de passe.
             $pdo->prepare('UPDATE profs SET actif = 0 WHERE id = ?')->execute([$autre['id']]);
             fermer_sessions_du_prof($pdo, $autre['id']);
+            journaliser($pdo, $profId, 'profs.desactiver', 'compte', $autre['id']);
             repondre(['ok' => true]);
 
         case 'profs.reactiver':
             exiger_admin($prof);
             $autre = autre_prof($pdo, $prof, $corps['prof_id'] ?? 0);
             $pdo->prepare('UPDATE profs SET actif = 1 WHERE id = ?')->execute([$autre['id']]);
+            journaliser($pdo, $profId, 'profs.reactiver', 'compte', $autre['id']);
             repondre(['ok' => true]);
 
         case 'profs.annuaire':
@@ -399,6 +450,7 @@ try {
             } catch (InvalidArgumentException $e) {
                 erreur($e->getMessage(), 400);
             }
+            journaliser($pdo, $profId, 'profs.ajouter', 'compte', (int)($nouveau['id'] ?? 0));
             repondre(['ok' => true] + $nouveau);
 
         case 'profs.supprimer':
@@ -412,17 +464,23 @@ try {
                 erreur("Ce compte possède {$possessions['classes']} classe(s) et {$possessions['eleves']} élève(s) : confirme leur suppression.", 409);
             }
             supprimer_prof($pdo, $autre['id']);
+            journaliser($pdo, $profId, 'profs.supprimer', 'compte', $autre['id']);
             repondre(['ok' => true] + $possessions);
 
         // ------------------------------------------------------------------ classes
 
         case 'classes.liste':
-            // Fin d'année (lot 12) : ce qui reste de l'année scolaire écoulée
-            // est supprimé ici, à la première ouverture de « Ma classe » à
-            // partir du 1er août — prénoms, codes et progressions, il ne reste
-            // rien. Aucune classe qui a servi dans les trois dernières
-            // semaines n'est touchée.
-            $supprimeesMaintenant = supprimer_classes_echues($pdo, $profId);
+            // Fin d'année. JUSQU'AU 06/09/2026, cette ligne SUPPRIMAIT : ouvrir
+            // « Ma classe » après le 1er août effaçait, sans un mot et sans
+            // retour possible, les classes de l'année écoulée. L'audit a montré
+            // qu'une classe préparée en juillet y passait aussi (constat 2).
+            //
+            // Désormais, ouvrir la liste ne supprime RIEN. Les classes échues
+            // sont renvoyées telles quelles ; la page les montre dans un
+            // bandeau et le professeur décide (« classes.supprimer_echues »).
+            // La suppression automatique reste, mais chez menage.php seul — la
+            // tâche planifiée d'OVH, qui tient la promesse du 1er août.
+            $echues = classes_a_proposer($pdo, $profId);
             $requete = $pdo->prepare(
                 'SELECT c.id, c.libelle, c.applis, c.cree_le, c.prof_id,
                         (SELECT COUNT(*) FROM eleves e WHERE e.classe_id = c.id) AS eleves,
@@ -451,10 +509,11 @@ try {
             repondre([
                 'ok' => true,
                 'classes' => $classes,
-                // Ce que la page annonce au professeur : ce qui vient d'être
-                // supprimé sous ses yeux, et l'année scolaire en cours avec son
-                // préavis (en juillet, « ces classes seront supprimées le 1er août »).
-                'supprimees_maintenant' => $supprimeesMaintenant,
+                // Ce que la page annonce au professeur : les classes de l'année
+                // écoulée qui ne servent plus (il décide), et l'année scolaire
+                // en cours avec son préavis (« ces classes seront supprimées à
+                // partir du 1er août »).
+                'echues' => $echues,
                 'annee_courante' => annee_scolaire_courante(),
                 'preavis_fin_annee' => preavis_de_fin_d_annee(),
                 'purge_le' => purge_de_l_annee(annee_scolaire_courante()),
@@ -473,33 +532,71 @@ try {
             if ($applis === []) $applis = ['defi-tables'];
             $pdo->prepare('INSERT INTO classes (prof_id, libelle, applis, cree_le) VALUES (?, ?, ?, ?)')
                 ->execute([$profId, $libelle, implode(',', $applis), maintenant()]);
-            repondre(['ok' => true, 'id' => (int)$pdo->lastInsertId()]);
+            $classeCreee = (int)$pdo->lastInsertId();
+            journaliser($pdo, $profId, 'classes.creer', 'classe', $classeCreee);
+            repondre(['ok' => true, 'id' => $classeCreee]);
 
         case 'classes.modifier':
             // Renommer la classe ou changer ses applis : c'est la classe
             // elle-même qu'on change, et elle porte le nom sous lequel son
             // propriétaire la reconnaît. Réservé au propriétaire (lot 11).
-            $classe = acces_classe($pdo, $profId, $corps['classe_id'] ?? 0, droit_requis($action));
+            $classe = acces_classe($pdo, $profId, $corps['classe_id'] ?? 0, droit_requis($action), $action);
             $libelle = texte($corps['libelle'] ?? $classe['libelle'], 40);
             if ($libelle === '') erreur("Donne un nom à la classe.", 400);
             $applis = array_values(array_intersect(APPLIS_PROPOSABLES, (array)($corps['applis'] ?? explode(',', $classe['applis']))));
             if ($applis === []) $applis = ['defi-tables'];
             $pdo->prepare('UPDATE classes SET libelle = ?, applis = ? WHERE id = ?')
                 ->execute([$libelle, implode(',', $applis), (int)$classe['id']]);
+            journaliser($pdo, $profId, 'classes.modifier', 'classe', (int)$classe['id']);
             repondre(['ok' => true]);
 
         case 'classes.supprimer':
             // Supprimer une classe efface des progressions : réservé au
             // propriétaire. C'est aussi ce que fait la fin d'année, par le même
             // chemin (lib/archives.php) : un seul code qui efface ces tables.
-            $classe = acces_classe($pdo, $profId, $corps['classe_id'] ?? 0, droit_requis($action));
+            $classe = acces_classe($pdo, $profId, $corps['classe_id'] ?? 0, droit_requis($action), $action);
             supprimer_classe($pdo, (int)$classe['id']);
+            journaliser($pdo, $profId, 'classes.supprimer', 'classe', (int)$classe['id']);
             repondre(['ok' => true]);
+
+        case 'classes.supprimer_echues':
+            // Le professeur a lu le bandeau et dit oui. On ne fait PAS confiance
+            // à la liste reçue : chaque identifiant repasse par le contrôle de
+            // propriété (acces_classe) PUIS par le calendrier (échue ET sans
+            // activité depuis trois semaines). Une classe de l'année en cours
+            // envoyée à la main ne sera jamais supprimée par ce chemin.
+            //
+            // Tout ou rien : si UN identifiant ne convient pas, rien n'est
+            // effacé et la page recharge sa liste. Effacer « celles qui
+            // passent » laisserait le professeur devant un bandeau à moitié
+            // vrai, sans savoir ce qui est parti.
+            $demandees = $corps['classes'] ?? null;
+            if (!is_array($demandees) || $demandees === []) {
+                erreur("Aucune classe à supprimer.", 400);
+            }
+            if (count($demandees) > MAX_CLASSES_PAR_PROF) {
+                erreur("Trop de classes à la fois.", 400);
+            }
+            $aSupprimer = [];
+            foreach ($demandees as $classeBrute) {
+                $classe = acces_classe($pdo, $profId, $classeBrute, droit_requis($action), $action);
+                if (!classe_echue_et_mure($pdo, $profId, (int)$classe['id'])) {
+                    erreur("Cette liste n'est plus à jour : recharge « Mes classes » avant de supprimer.", 409);
+                }
+                $aSupprimer[(int)$classe['id']] = (string)$classe['libelle'];
+            }
+            $noms = [];
+            foreach ($aSupprimer as $classeId => $libelle) {
+                supprimer_classe($pdo, $classeId);
+                journaliser($pdo, $profId, 'classes.supprimer_echues', 'classe', $classeId);
+                $noms[] = $libelle;
+            }
+            repondre(['ok' => true, 'supprimees' => $noms]);
 
         // ----------------------------------------------------------------- partages
 
         case 'partages.liste':
-            $classe = acces_classe($pdo, $profId, $corps['classe_id'] ?? 0, droit_requis($action));
+            $classe = acces_classe($pdo, $profId, $corps['classe_id'] ?? 0, droit_requis($action), $action);
             $requete = $pdo->prepare(
                 'SELECT g.prof_id, g.droit, p.identifiant
                  FROM partages g JOIN profs p ON p.id = g.prof_id
@@ -517,7 +614,7 @@ try {
             repondre(['ok' => true, 'partages' => $partages, 'droit' => $classe['droit']]);
 
         case 'partages.ajouter':
-            $classe = acces_classe($pdo, $profId, $corps['classe_id'] ?? 0, droit_requis($action));
+            $classe = acces_classe($pdo, $profId, $corps['classe_id'] ?? 0, droit_requis($action), $action);
             $autreId = (int)($corps['prof_id'] ?? 0);
             if ($autreId === $profId) erreur("Cette classe est déjà la tienne.", 400);
             $requete = $pdo->prepare('SELECT id FROM profs WHERE id = ? AND actif = 1');
@@ -535,18 +632,20 @@ try {
             } else {
                 $pdo->prepare('UPDATE partages SET droit = ? WHERE id = ?')->execute([$droit, (int)$existant]);
             }
+            journaliser($pdo, $profId, 'partages.ajouter', 'partage', $autreId);
             repondre(['ok' => true]);
 
         case 'partages.supprimer':
-            $classe = acces_classe($pdo, $profId, $corps['classe_id'] ?? 0, droit_requis($action));
+            $classe = acces_classe($pdo, $profId, $corps['classe_id'] ?? 0, droit_requis($action), $action);
             $pdo->prepare('DELETE FROM partages WHERE classe_id = ? AND prof_id = ?')
                 ->execute([(int)$classe['id'], (int)($corps['prof_id'] ?? 0)]);
+            journaliser($pdo, $profId, 'partages.supprimer', 'partage', (int)($corps['prof_id'] ?? 0));
             repondre(['ok' => true]);
 
         // ------------------------------------------------------------------- élèves
 
         case 'eleves.ajouter':
-            $classe = acces_classe($pdo, $profId, $corps['classe_id'] ?? 0, droit_requis($action));
+            $classe = acces_classe($pdo, $profId, $corps['classe_id'] ?? 0, droit_requis($action), $action);
             $nombre = (int)($corps['nombre'] ?? 1);
             if ($nombre < 1 || $nombre > MAX_ELEVES_PAR_LOT) {
                 erreur("Nombre d'élèves à créer entre 1 et " . MAX_ELEVES_PAR_LOT . ".", 400);
@@ -592,6 +691,7 @@ try {
                     throw $e;
                 }
             });
+            journaliser($pdo, $profId, 'eleves.ajouter', 'classe', (int)$classe['id']);
             repondre(['ok' => true, 'eleves' => $crees]);
 
         case 'eleves.nommer':
@@ -601,16 +701,35 @@ try {
                 mb_strtoupper(mb_substr(texte_prenom($corps['initiale'] ?? '', 4), 0, 1)),
                 (int)$eleve['id'],
             ]);
+            journaliser($pdo, $profId, 'eleves.nommer', 'eleve', (int)$eleve['id']);
             repondre(['ok' => true]);
 
         case 'eleves.regenerer':
+            // Donner un nouveau code, c'est TROIS écritures : le code lui-même,
+            // les compteurs de l'ancien code, et les billets d'entrée émis sous
+            // l'ancien (un billet vivant rendrait le nouveau code : régénérer,
+            // c'est révoquer). Elles se faisaient l'une après l'autre : une
+            // panne au milieu laissait un code neuf ET un billet valable sur
+            // l'ancien. Depuis le lot serveur A, les trois tiennent dans UNE
+            // transaction (constat M-01 de la confrontation des audits) :
+            // l'élève garde son ancien code, ou reçoit le nouveau, jamais un
+            // état intermédiaire.
             $eleve = eleve_pour_action($pdo, $profId, $corps['eleve_id'] ?? 0, $action);
-            $code = code_libre($pdo);
-            $pdo->prepare('UPDATE eleves SET code = ? WHERE id = ?')->execute([$code, (int)$eleve['id']]);
-            oublier_compteurs_du_code($pdo, (string)$eleve['code']);
-            // Un billet d'entrée émis sous l'ancien code rendrait le nouveau :
-            // régénérer, c'est révoquer, billets compris.
-            oublier_billets_de_l_eleve($pdo, (int)$eleve['id']);
+            $code = avec_reprise($pdo, function () use ($pdo, $eleve, $profId): string {
+                transaction_ouvrir($pdo);
+                try {
+                    $code = code_libre($pdo);
+                    $pdo->prepare('UPDATE eleves SET code = ? WHERE id = ?')->execute([$code, (int)$eleve['id']]);
+                    oublier_compteurs_du_code($pdo, (string)$eleve['code']);
+                    oublier_billets_de_l_eleve($pdo, (int)$eleve['id']);
+                    transaction_valider($pdo);
+                    return $code;
+                } catch (Throwable $e) {
+                    transaction_annuler($pdo);
+                    throw $e;
+                }
+            });
+            journaliser($pdo, $profId, 'eleves.regenerer', 'eleve', (int)$eleve['id']);
             repondre(['ok' => true, 'code' => $code]);
 
         case 'eleves.fiche':
@@ -624,16 +743,32 @@ try {
             repondre(['ok' => true, 'billet' => emettre_billet($pdo, (int)$eleve['id'], 'fiche')]);
 
         case 'eleves.restaurer':
-            // Revenir à la version précédente d'une progression : couvre
-            // l'écrasement par quelqu'un qui connaissait le code, et le petit
-            // frère qui a cliqué « Recommencer à zéro ». Une seule version en
-            // arrière ; la révision monte, l'appli de l'élève fusionnera.
+            // « Revenir à… » : couvre l'écrasement par quelqu'un qui
+            // connaissait le code, et le petit frère qui a cliqué
+            // « Recommencer à zéro ». Deux façons de revenir :
+            //  - sans « jour » : la version d'avant le tout dernier
+            //    enregistrement (progressions.donnees_avant), comme avant ;
+            //  - avec « jour » : la fin de cette journée-là, prise dans les
+            //    sept jours gardés (lot serveur A). C'est ce qu'il faut quand
+            //    l'écrasement date d'hier et que le dernier enregistrement est
+            //    celui de l'intrus.
+            // La révision monte dans les deux cas, l'appli de l'élève fusionnera.
             $eleve = eleve_pour_action($pdo, $profId, $corps['eleve_id'] ?? 0, $action);
             $appli = appli_recue($corps['appli'] ?? null);
             if (!in_array($appli, APPLIS_PROPOSABLES, true)) erreur("Application inconnue.", 400);
-            $resultat = restaurer_progression($pdo, (int)$eleve['id'], $appli);
+            $jour = null;
+            if (isset($corps['jour']) && $corps['jour'] !== null && $corps['jour'] !== '') {
+                $jour = is_string($corps['jour']) ? $corps['jour'] : '';
+                if (!date_reelle($jour)) erreur("Jour à restaurer invalide.", 400);
+            }
+            $resultat = restaurer_progression($pdo, (int)$eleve['id'], $appli, $jour);
+            if (isset($resultat['inconnu'])) {
+                journaliser($pdo, $profId, 'eleves.restaurer', 'eleve', (int)$eleve['id'], 'erreur');
+                erreur("Cette journée n'est plus dans l'historique : recharge la classe.", 404);
+            }
             if (isset($resultat['rien'])) erreur("Aucune version précédente à restaurer.", 409);
             if (isset($resultat['conflit'])) erreur("La progression a changé pendant la restauration : regarde le tableau, puis réessaie.", 409);
+            journaliser($pdo, $profId, 'eleves.restaurer', 'eleve', (int)$eleve['id']);
             repondre(['ok' => true, 'parcours' => json_decode($resultat['donnees'], false), 'revision' => $resultat['revision']]);
 
         case 'eleves.supprimer':
@@ -643,6 +778,8 @@ try {
             $pdo->beginTransaction();
             try {
                 $pdo->prepare('DELETE FROM progressions WHERE eleve_id = ?')->execute([(int)$eleve['id']]);
+                // Son historique des sept jours part avec lui (lot serveur A).
+                oublier_versions_de_l_eleve($pdo, (int)$eleve['id']);
                 $pdo->prepare('DELETE FROM eleves WHERE id = ?')->execute([(int)$eleve['id']]);
                 oublier_compteurs_du_code($pdo, (string)$eleve['code']);
                 oublier_billets_de_l_eleve($pdo, (int)$eleve['id']);
@@ -651,16 +788,17 @@ try {
                 $pdo->rollBack();
                 throw $e;
             }
+            journaliser($pdo, $profId, 'eleves.supprimer', 'eleve', (int)$eleve['id']);
             repondre(['ok' => true]);
 
         // ------------------------------------------------------------------ tableau
 
         case 'tableau':
-            $classe = acces_classe($pdo, $profId, $corps['classe_id'] ?? 0, droit_requis($action));
+            $classe = acces_classe($pdo, $profId, $corps['classe_id'] ?? 0, droit_requis($action), $action);
             $appli = appli_recue($corps['appli'] ?? null);
             if (!in_array($appli, APPLIS_PROPOSABLES, true)) erreur("Application inconnue.", 400);
             $requete = $pdo->prepare(
-                'SELECT e.id, e.code, e.prenom, e.initiale, p.donnees, p.maj_le,
+                'SELECT e.id, e.code, e.prenom, e.initiale, p.donnees, p.maj_le, p.revision,
                         (p.donnees_avant IS NOT NULL) AS restaurable
                  FROM eleves e
                  LEFT JOIN progressions p ON p.eleve_id = e.id AND p.appli = ?
@@ -671,8 +809,25 @@ try {
             // Un code ouvre l'appli comme l'élève et permet de modifier sa
             // progression : un collègue en lecture seule ne le reçoit pas.
             $avecCodes = $classe['droit'] !== 'lecture';
+            $brutes = $requete->fetchAll();
+            // Les journées gardées, pour le menu « Revenir à… » : le JOUR et le
+            // NOMBRE de calculs, jamais les données (sept progressions par
+            // élève, trente élèves, c'est plusieurs mégaoctets à chaque
+            // ouverture de la classe).
+            $revisions = [];
+            foreach ($brutes as $ligne) {
+                if ($ligne['revision'] !== null) $revisions[(int)$ligne['id']] = (int)$ligne['revision'];
+            }
+            $versionsParEleve = versions_des_eleves($pdo, array_column($brutes, 'id'), $appli, $revisions);
             $lignes = [];
-            foreach ($requete->fetchAll() as $ligne) {
+            foreach ($brutes as $ligne) {
+                $journees = [];
+                foreach ($versionsParEleve[(int)$ligne['id']] ?? [] as $version) {
+                    // La version qui porte la révision du moment EST l'état
+                    // actuel : y « revenir » ne ferait rien.
+                    if ($version['courante']) continue;
+                    $journees[] = ['jour' => $version['jour'], 'calculs' => $version['calculs']];
+                }
                 $lignes[] = [
                     'id' => (int)$ligne['id'],
                     'code' => $avecCodes ? $ligne['code'] : null,
@@ -680,8 +835,9 @@ try {
                     'initiale' => $ligne['initiale'],
                     'parcours' => $ligne['donnees'] === null ? null : json_decode($ligne['donnees'], false),
                     'maj_le' => $ligne['maj_le'],
-                    // Une version précédente existe : « Restaurer » a un sens.
+                    // Une version précédente existe : « Revenir à… » a un sens.
                     'restaurable' => (int)$ligne['restaurable'] === 1,
+                    'journees' => $journees,
                 ];
             }
             repondre([

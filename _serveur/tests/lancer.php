@@ -70,7 +70,7 @@ function bd_test(): PDO
     return $pdo;
 }
 if (getenv('SUIVI_TEST_DSN')) {
-    foreach (['billets', 'partages', 'sessions_prof', 'compteurs', 'progressions', 'eleves', 'classes', 'profs'] as $table) {
+    foreach (['journal', 'versions', 'billets', 'partages', 'sessions_prof', 'compteurs', 'progressions', 'eleves', 'classes', 'profs'] as $table) {
         bd_test()->exec("DROP TABLE IF EXISTS $table");
     }
     echo "Base de test : " . $bdTest['dsn'] . "\n";
@@ -1609,7 +1609,19 @@ verifier("la mise à niveau ajoute révision, version précédente et les colonn
     }
     egal(0, (int)$vieux->query('SELECT revision FROM progressions')->fetchColumn(), 'les lignes existantes partent en révision 0');
     egal('{"version":1}', (string)$vieux->query('SELECT donnees FROM progressions')->fetchColumn(), 'sans toucher aux données');
+    // Lot serveur A : les deux tables neuves arrivent par la même mise à
+    // niveau, et elles sont ANNONCÉES (la page de migration doit montrer ce
+    // qu'elle a fait, sinon on ne sait pas si elle a servi).
+    egal(true, table_existe($vieux, 'versions'), 'la table versions');
+    egal(true, table_existe($vieux, 'journal'), 'la table journal');
+    $dits = implode(' | ', $faits);
+    vrai(str_contains($dits, 'versions') && str_contains($dits, 'journal'),
+        'la mise à niveau annonce les deux tables neuves : ' . $dits);
+    // Rejouable deux fois de suite sans erreur ET sans rien redire.
     egal([], migrer_schema($vieux), 'relancer ne fait plus rien');
+    egal([], migrer_schema($vieux), 'une troisième fois non plus');
+    egal('{"version":1}', (string)$vieux->query('SELECT donnees FROM progressions')->fetchColumn(),
+        'et les données n’ont toujours pas bougé');
 });
 
 // ------------------------------------------- audit du 30/08/2026 — lot S2
@@ -2200,21 +2212,45 @@ $elevesFin = [];
 // seulement à travers l'API : c'est la seule façon d'éprouver le pivot du
 // calendrier sans attendre le mois d'août.
 require_once dirname(__DIR__) . '/public/lib/archives.php';
+// Lot serveur A : jour_local(), premier_jour_garde(), journaliser(),
+// purger_journal() et les instantanés sont joués ici aussi, dans le processus
+// de test — c'est la seule façon d'éprouver un fuseau ou une purge sans
+// attendre neuf jours.
+require_once dirname(__DIR__) . '/public/lib/versions.php';
+require_once dirname(__DIR__) . '/public/lib/journal.php';
 
-verifier("l'année scolaire suit le calendrier réunionnais : pivot au 1er août", function () {
-    // Rentrée le 18 août 2026, fin des cours le 3 juillet 2027 : tout ce qui
-    // se crée à partir du 1er août appartient à l'année qui commence.
+verifier("l'année scolaire suit le calendrier réunionnais : pivot au 1er JUILLET", function () {
+    // Rentrée le 18 août 2026, fin des cours le 3 juillet 2027. Le pivot est
+    // passé du 1er août au 1er JUILLET le 06/09/2026 (constat 2 de l'audit) :
+    // une classe préparée pendant les vacances appartient à l'année qui vient,
+    // pas à celle qui s'achève — sinon elle naît « échue » et disparaît à la
+    // rentrée.
     $r = formulaire('/verifier.php', ['jeton' => 'JETON-DE-TEST']);
     vrai(str_contains($r['texte'], htmlspecialchars("Suppression de fin d'année", ENT_QUOTES)),
         'verifier.php montre la ligne de fin d’année');
-    egal('2026-2027', annee_scolaire('2026-08-01'), '1er août 2026');
+    egal('2026-2027', annee_scolaire('2026-07-01'), '1er juillet 2026 : l’année qui vient');
+    egal('2026-2027', annee_scolaire('2026-07-25'), 'la classe préparée le 25 juillet (le cas de l’audit)');
     egal('2026-2027', annee_scolaire('2026-08-18T06:00:00Z'), 'rentrée du 18 août 2026');
-    egal('2026-2027', annee_scolaire('2027-07-03'), 'dernier jour de cours');
-    egal('2025-2026', annee_scolaire('2026-07-31'), '31 juillet 2026 : encore l’année d’avant');
-    egal('2027-2028', annee_scolaire('2027-08-01'), 'le pivot suivant');
+    egal('2026-2027', annee_scolaire('2027-06-30'), 'dernier jour de l’année scolaire');
+    egal('2025-2026', annee_scolaire('2026-06-30'), '30 juin 2026 : encore l’année d’avant');
+    egal('2027-2028', annee_scolaire('2027-07-01'), 'le pivot suivant');
     egal('2027-08-01', purge_de_l_annee('2026-2027'), 'la suppression tombe avant la rentrée de mi-août');
-    egal('2027-07-01', fin_des_cours_de_l_annee('2026-2027'), 'le préavis commence le 1er juillet');
+    egal('2027-06-01', fin_des_cours_de_l_annee('2026-2027'), 'le préavis commence le 1er juin');
 });
+
+// Vieillir une classe ET ses élèves : depuis le 06/09/2026, créer un élève
+// compte comme de l'activité (constat 2). Une classe « de l'an dernier » dont
+// les élèves ont été créés ce matin n'est donc PAS inactive — et c'est voulu.
+function vieillir_classe(int $classeId, string $instant): void
+{
+    bd_test()->exec("UPDATE classes SET cree_le = '" . $instant . "' WHERE id = " . $classeId);
+    bd_test()->exec("UPDATE eleves SET cree_le = '" . $instant . "' WHERE classe_id = " . $classeId);
+}
+
+function an_passe(): string
+{
+    return (string)(((int)substr(annee_scolaire(gmdate('Y-m-d')), 0, 4)) - 1) . '-09-15T08:00:00Z';
+}
 
 verifier("préparation : une classe de fin d'année, trois élèves, deux progressions, un partage", function () use (&$jetonS1, &$jetonClaire, &$claireId, &$classeFin, &$elevesFin) {
     vider_compteurs();
@@ -2231,7 +2267,9 @@ verifier("préparation : une classe de fin d'année, trois élèves, deux progre
 
     // Une classe de l'année en cours n'est jamais échue.
     $r = appel('/api/prof.php', ['action' => 'classes.liste'], ['jeton' => $jetonS1]);
-    egal([], $r['json']['supprimees_maintenant'], 'rien n’est supprimé automatiquement dans l’année en cours');
+    egal([], $r['json']['echues'], 'aucune classe échue dans l’année en cours');
+    vrai(!array_key_exists('supprimees_maintenant', $r['json']),
+        'ouvrir la liste ne supprime plus rien : la clé « supprimees_maintenant » a disparu');
     egal(annee_scolaire(gmdate('Y-m-d')), $r['json']['annee_courante'], 'l’année scolaire annoncée');
     vrai(array_key_exists('preavis_fin_annee', $r['json']), 'le préavis est annoncé à la page');
     egal(purge_de_l_annee(annee_scolaire(gmdate('Y-m-d'))), $r['json']['purge_le'], 'et la date de suppression');
@@ -2256,53 +2294,162 @@ verifier("supprimer une classe n'en laisse RIEN : ni élève, ni code, ni progre
     }
 });
 
-verifier("le 1er août, l'année écoulée part toute seule — mais jamais une classe encore utilisée", function () use (&$jetonS1) {
+verifier("ouvrir « Ma classe » ne supprime plus rien : les classes échues sont PROPOSÉES", function () use (&$jetonS1) {
     $vieille = appel('/api/prof.php', ['action' => 'classes.creer', 'libelle' => 'test-an-dernier'], ['jeton' => $jetonS1])['json']['id'];
     $eleves = appel('/api/prof.php', ['action' => 'eleves.ajouter', 'classe_id' => $vieille, 'nombre' => 2], ['jeton' => $jetonS1])['json']['eleves'];
     egal(200, ecrire($eleves[0]['code'], ['version' => 1, 'tables' => ['5' => ['acquise' => '2026-09-01']]], 0)['code'], 'une progression');
 
-    // On la fait dater d'une année scolaire passée, mais avec une activité
-    // d'aujourd'hui : le garde-fou des 21 jours doit la retenir.
-    $anPasse = (string)(((int)substr(annee_scolaire(gmdate('Y-m-d')), 0, 4)) - 1) . '-09-15T08:00:00Z';
-    bd_test()->exec("UPDATE classes SET cree_le = '" . $anPasse . "' WHERE id = " . (int)$vieille);
+    // Année scolaire passée, mais une activité d'aujourd'hui : le garde-fou
+    // des 21 jours la retient, elle n'est même pas proposée.
+    vieillir_classe((int)$vieille, an_passe());
     bd_test()->exec("UPDATE progressions SET maj_le = '" . gmdate('Y-m-d') . "' WHERE eleve_id = " . (int)$eleves[0]['id']);
     $r = appel('/api/prof.php', ['action' => 'classes.liste'], ['jeton' => $jetonS1]);
-    egal([], $r['json']['supprimees_maintenant'], 'une classe encore utilisée n’est pas effacée par surprise');
+    egal([], $r['json']['echues'], 'une classe encore utilisée n’est pas proposée à la suppression');
     egal(2, (int)bd_test()->query('SELECT COUNT(*) FROM eleves WHERE classe_id = ' . (int)$vieille)->fetchColumn(), 'ses élèves sont là');
 
-    // Même classe, plus d'activité depuis deux mois : elle part, entièrement.
+    // Même classe, plus d'activité depuis deux mois : elle est PROPOSÉE, et
+    // rien n'a été supprimé — c'est tout le changement du 06/09/2026.
     $vieuxJour = gmdate('Y-m-d', time() - 60 * 86400);
     bd_test()->exec("UPDATE progressions SET maj_le = '" . $vieuxJour . "' WHERE eleve_id = " . (int)$eleves[0]['id']);
     $r = appel('/api/prof.php', ['action' => 'classes.liste'], ['jeton' => $jetonS1]);
-    egal(['test-an-dernier'], $r['json']['supprimees_maintenant'], 'supprimée toute seule, et la page le dit');
+    egal(1, count($r['json']['echues']), 'une classe proposée');
+    egal('test-an-dernier', $r['json']['echues'][0]['libelle'], 'nommée');
+    egal(2, $r['json']['echues'][0]['eleves'], 'avec le nombre d’élèves qu’elle contient');
+    vrai(array_key_exists('annee', $r['json']['echues'][0]) && array_key_exists('derniere_activite', $r['json']['echues'][0]),
+        'et son année et sa dernière activité, pour que le bandeau puisse le dire');
+    egal(2, (int)bd_test()->query('SELECT COUNT(*) FROM eleves WHERE classe_id = ' . (int)$vieille)->fetchColumn(),
+        'RIEN n’a été supprimé en ouvrant la liste');
+
+    // Le professeur dit oui : là, et seulement là, tout part.
+    $r = appel('/api/prof.php', ['action' => 'classes.supprimer_echues', 'classes' => [$vieille]], ['jeton' => $jetonS1]);
+    egal(200, $r['code'], 'suppression demandée par le professeur');
+    egal(['test-an-dernier'], $r['json']['supprimees'], 'la page reçoit le nom de ce qui est parti');
     egal(0, (int)bd_test()->query('SELECT COUNT(*) FROM classes WHERE id = ' . (int)$vieille)->fetchColumn(), 'il ne reste aucune ligne de la classe');
     egal(0, (int)bd_test()->query('SELECT COUNT(*) FROM eleves WHERE classe_id = ' . (int)$vieille)->fetchColumn(), 'plus un élève');
     egal(404, identite($eleves[1]['code'])['code'], 'le code d’un élève supprimé ne rend plus rien');
 });
 
-verifier("une classe d'un collègue n'est jamais supprimée par la fin d'année de quelqu'un d'autre", function () use (&$jetonS1, &$jetonClaire) {
-    // Claire crée une classe, on la fait dater de l'an dernier et inactive.
+verifier("« supprimer les classes échues » refuse une classe qui ne l'est pas, même envoyée à la main", function () use (&$jetonS1) {
+    $enCours = appel('/api/prof.php', ['action' => 'classes.creer', 'libelle' => 'test-cette-annee'], ['jeton' => $jetonS1])['json']['id'];
+    $r = appel('/api/prof.php', ['action' => 'classes.supprimer_echues', 'classes' => [$enCours]], ['jeton' => $jetonS1]);
+    egal(409, $r['code'], 'une classe de l’année en cours n’est jamais supprimée par ce chemin');
+    egal(1, (int)bd_test()->query('SELECT COUNT(*) FROM classes WHERE id = ' . (int)$enCours)->fetchColumn(), 'elle est intacte');
+    egal(400, appel('/api/prof.php', ['action' => 'classes.supprimer_echues', 'classes' => []], ['jeton' => $jetonS1])['code'], 'liste vide');
+    egal(400, appel('/api/prof.php', ['action' => 'classes.supprimer_echues'], ['jeton' => $jetonS1])['code'], 'aucune liste');
+
+    // Tout ou rien : une bonne et une mauvaise dans le même envoi, rien ne part.
+    $vieille = appel('/api/prof.php', ['action' => 'classes.creer', 'libelle' => 'test-tout-ou-rien'], ['jeton' => $jetonS1])['json']['id'];
+    vieillir_classe((int)$vieille, an_passe());
+    $r = appel('/api/prof.php', ['action' => 'classes.supprimer_echues', 'classes' => [$vieille, $enCours]], ['jeton' => $jetonS1]);
+    egal(409, $r['code'], 'un identifiant qui ne convient pas arrête tout');
+    egal(1, (int)bd_test()->query('SELECT COUNT(*) FROM classes WHERE id = ' . (int)$vieille)->fetchColumn(), 'même la classe échue est restée');
+    egal(200, appel('/api/prof.php', ['action' => 'classes.supprimer_echues', 'classes' => [$vieille]], ['jeton' => $jetonS1])['code'], 'seule, elle part');
+    egal(200, appel('/api/prof.php', ['action' => 'classes.supprimer', 'classe_id' => $enCours], ['jeton' => $jetonS1])['code'], 'ménage du test');
+});
+
+verifier("la classe d'un collègue n'est ni proposée ni supprimable par quelqu'un d'autre", function () use (&$jetonS1, &$jetonClaire) {
     $sienne = appel('/api/prof.php', ['action' => 'classes.creer', 'libelle' => 'classe-de-claire'], ['jeton' => $jetonClaire])['json']['id'];
-    $anPasse = (string)(((int)substr(annee_scolaire(gmdate('Y-m-d')), 0, 4)) - 1) . '-09-15T08:00:00Z';
-    bd_test()->exec("UPDATE classes SET cree_le = '" . $anPasse . "' WHERE id = " . (int)$sienne);
-    // Gwenaël ouvre SA liste : la classe de Claire ne bouge pas.
-    appel('/api/prof.php', ['action' => 'classes.liste'], ['jeton' => $jetonS1]);
+    vieillir_classe((int)$sienne, an_passe());
+    // Gwenaël ouvre SA liste : la classe de Claire n'y est pas, et rien ne bouge.
+    $r = appel('/api/prof.php', ['action' => 'classes.liste'], ['jeton' => $jetonS1]);
+    foreach ($r['json']['echues'] as $classe) {
+        vrai((int)$classe['id'] !== (int)$sienne, 'la classe de Claire n’est pas proposée à Gwenaël');
+    }
+    egal(404, appel('/api/prof.php', ['action' => 'classes.supprimer_echues', 'classes' => [$sienne]], ['jeton' => $jetonS1])['code'],
+        'et il ne peut pas la supprimer : elle lui est introuvable');
     egal(1, (int)bd_test()->query('SELECT COUNT(*) FROM classes WHERE id = ' . (int)$sienne)->fetchColumn(), 'la classe de Claire est intacte');
-    // Claire ouvre la sienne : elle part, chez elle.
+    // Claire ouvre la sienne : elle lui est proposée, et elle décide.
     $r = appel('/api/prof.php', ['action' => 'classes.liste'], ['jeton' => $jetonClaire]);
-    egal(['classe-de-claire'], $r['json']['supprimees_maintenant'], 'chacun sa fin d’année');
+    egal(1, count($r['json']['echues']), 'chacun sa fin d’année');
+    egal(200, appel('/api/prof.php', ['action' => 'classes.supprimer_echues', 'classes' => [$sienne]], ['jeton' => $jetonClaire])['code']);
     egal(0, (int)bd_test()->query('SELECT COUNT(*) FROM classes WHERE id = ' . (int)$sienne)->fetchColumn());
+});
+
+// --------------------------------------------- constat 2 de l'audit du 05/09
+//
+// Le cas qui a coûté une classe entière en essai : préparée le 25 juillet,
+// vingt-cinq prénoms saisis le 20 août, effacée sans un mot le 5 septembre à
+// la première ouverture de « Ma classe ». Deux corrections l'empêchent
+// désormais (pivot au 1er juillet, création d'élève = activité) ; le témoin
+// prouve que la vraie fin d'année, elle, marche toujours.
+verifier("constat 2 — la classe préparée en juillet survit à la rentrée (cas A et cas B)", function () use (&$jetonS1) {
+    $an = (int)gmdate('Y');
+    // Cas A : créée le 25 juillet de cette année civile, élèves nommés en août.
+    $casA = appel('/api/prof.php', ['action' => 'classes.creer', 'libelle' => 'cas-A-juillet'], ['jeton' => $jetonS1])['json']['id'];
+    appel('/api/prof.php', ['action' => 'eleves.ajouter', 'classe_id' => $casA, 'nombre' => 3], ['jeton' => $jetonS1]);
+    bd_test()->exec("UPDATE classes SET cree_le = '$an-07-25T08:00:00Z' WHERE id = " . (int)$casA);
+    bd_test()->exec("UPDATE eleves SET cree_le = '$an-08-20T08:00:00Z' WHERE classe_id = " . (int)$casA);
+    $r = appel('/api/prof.php', ['action' => 'classes.liste'], ['jeton' => $jetonS1]);
+    foreach ($r['json']['echues'] as $classe) {
+        vrai((int)$classe['id'] !== (int)$casA, 'la classe du 25 juillet n’est pas « de l’année passée »');
+    }
+    egal(3, (int)bd_test()->query('SELECT COUNT(*) FROM eleves WHERE classe_id = ' . (int)$casA)->fetchColumn(), 'ses trois élèves sont là');
+
+    // Cas B : classe de juillet, aucun enregistrement depuis 22 jours — mais
+    // ses élèves ont été créés il y a peu : ce n'est pas une classe morte.
+    $casB = appel('/api/prof.php', ['action' => 'classes.creer', 'libelle' => 'cas-B-juillet'], ['jeton' => $jetonS1])['json']['id'];
+    $elevesB = appel('/api/prof.php', ['action' => 'eleves.ajouter', 'classe_id' => $casB, 'nombre' => 2], ['jeton' => $jetonS1])['json']['eleves'];
+    ecrire($elevesB[0]['code'], ['version' => 1], 0);
+    bd_test()->exec("UPDATE classes SET cree_le = '$an-07-10T08:00:00Z' WHERE id = " . (int)$casB);
+    bd_test()->exec("UPDATE progressions SET maj_le = '" . gmdate('Y-m-d', time() - 22 * 86400) . "' WHERE eleve_id = " . (int)$elevesB[0]['id']);
+    $r = appel('/api/prof.php', ['action' => 'classes.liste'], ['jeton' => $jetonS1]);
+    foreach ($r['json']['echues'] as $classe) {
+        vrai((int)$classe['id'] !== (int)$casB, 'la classe de juillet sans envoi depuis 22 jours reste');
+    }
+
+    // Témoin : une VRAIE classe de l'an dernier, sans rien depuis, est bien
+    // proposée. Sans lui, on pourrait « corriger » en n'effaçant plus jamais.
+    $temoin = appel('/api/prof.php', ['action' => 'classes.creer', 'libelle' => 'temoin-an-dernier'], ['jeton' => $jetonS1])['json']['id'];
+    appel('/api/prof.php', ['action' => 'eleves.ajouter', 'classe_id' => $temoin, 'nombre' => 1], ['jeton' => $jetonS1]);
+    vieillir_classe((int)$temoin, ($an - 1) . '-05-15T08:00:00Z');
+    $r = appel('/api/prof.php', ['action' => 'classes.liste'], ['jeton' => $jetonS1]);
+    $proposees = array_column($r['json']['echues'], 'id');
+    vrai(in_array((int)$temoin, $proposees, true), 'la classe de mai de l’an dernier est bien proposée');
+
+    foreach ([$casA, $casB] as $id) {
+        appel('/api/prof.php', ['action' => 'classes.supprimer', 'classe_id' => $id], ['jeton' => $jetonS1]);
+    }
+    appel('/api/prof.php', ['action' => 'classes.supprimer_echues', 'classes' => [$temoin]], ['jeton' => $jetonS1]);
+});
+
+verifier("constat 2 — CRÉER des élèves compte comme activité, pas seulement leurs enregistrements", function () use (&$jetonS1) {
+    // La deuxième moitié du constat, indépendante du pivot. Une classe d'une
+    // année scolaire PASSÉE, donc échue — mais dont le professeur vient de
+    // créer les élèves. Avant, seul progressions.maj_le comptait : préparer
+    // une classe entière et saisir vingt-cinq prénoms n'était pas « de
+    // l'activité », et trois semaines plus tard tout partait.
+    $classe = appel('/api/prof.php', ['action' => 'classes.creer', 'libelle' => 'constat2-eleves-neufs'], ['jeton' => $jetonS1])['json']['id'];
+    appel('/api/prof.php', ['action' => 'eleves.ajouter', 'classe_id' => $classe, 'nombre' => 25], ['jeton' => $jetonS1]);
+    // La classe date de l'an dernier ; les élèves, d'il y a cinq jours.
+    bd_test()->exec("UPDATE classes SET cree_le = '" . an_passe() . "' WHERE id = " . (int)$classe);
+    bd_test()->exec("UPDATE eleves SET cree_le = '" . gmdate('Y-m-d\TH:i:s\Z', time() - 5 * 86400) . "' WHERE classe_id = " . (int)$classe);
+    $r = appel('/api/prof.php', ['action' => 'classes.liste'], ['jeton' => $jetonS1]);
+    vrai(!in_array((int)$classe, array_column($r['json']['echues'], 'id'), true),
+        'vingt-cinq élèves créés il y a cinq jours : ce n’est pas une classe morte');
+
+    // Les mêmes élèves créés il y a trente jours, et toujours aucun
+    // enregistrement : cette fois, elle est bien proposée.
+    bd_test()->exec("UPDATE eleves SET cree_le = '" . gmdate('Y-m-d\TH:i:s\Z', time() - 30 * 86400) . "' WHERE classe_id = " . (int)$classe);
+    $r = appel('/api/prof.php', ['action' => 'classes.liste'], ['jeton' => $jetonS1]);
+    vrai(in_array((int)$classe, array_column($r['json']['echues'], 'id'), true),
+        'trente jours sans rien : elle est proposée');
+    appel('/api/prof.php', ['action' => 'classes.supprimer_echues', 'classes' => [$classe]], ['jeton' => $jetonS1]);
 });
 
 verifier("menage.php ne s'ouvre pas dans un navigateur, et fait le ménage en ligne de commande", function () use (&$jetonS1, &$travail) {
     egal(404, appel('/menage.php')['code'], 'refusé par HTTP');
     $vieille = appel('/api/prof.php', ['action' => 'classes.creer', 'libelle' => 'test-menage'], ['jeton' => $jetonS1])['json']['id'];
     appel('/api/prof.php', ['action' => 'eleves.ajouter', 'classe_id' => $vieille, 'nombre' => 2], ['jeton' => $jetonS1]);
-    $anPasse = (string)(((int)substr(annee_scolaire(gmdate('Y-m-d')), 0, 4)) - 1) . '-09-15T08:00:00Z';
-    bd_test()->exec("UPDATE classes SET cree_le = '" . $anPasse . "' WHERE id = " . (int)$vieille);
+    vieillir_classe((int)$vieille, an_passe());
     $sortie = shell_exec('php ' . escapeshellarg($travail . '/menage.php') . ' 2>&1');
     vrai(str_contains((string)$sortie, 'test-menage'), "le ménage devrait nommer la classe supprimée — sortie : " . trim((string)$sortie));
     egal(0, (int)bd_test()->query('SELECT COUNT(*) FROM classes WHERE id = ' . (int)$vieille)->fetchColumn(), 'la classe est partie');
+    // Depuis le 06/09/2026, c'est LUI qui supprime tout seul — et il le dit.
+    vrai(str_contains((string)$sortie, 'journal'), "le ménage devrait rendre compte du journal — sortie : " . trim((string)$sortie));
+    egal(1, (int)bd_test()->query("SELECT COUNT(*) FROM journal WHERE action = 'classes.menage' AND cible_id = " . (int)$vieille)->fetchColumn(),
+        'une ligne de journal au nom du ménage automatique');
+    egal(0, (int)bd_test()->query("SELECT prof_id FROM journal WHERE action = 'classes.menage' AND cible_id = " . (int)$vieille)->fetchColumn(),
+        'prof_id = 0 : personne ne l’a demandé');
 });
 
 verifier("le manifeste VERSION : verifier.php compare chaque fichier, et nomme celui qui diffère", function () use (&$travail) {
@@ -2442,10 +2589,15 @@ const MATRICE_ATTENDUE = [
     'eleves.restaurer' => 'ecriture',
     'classes.modifier' => 'proprietaire',
     'classes.supprimer' => 'proprietaire',
+    'classes.supprimer_echues' => 'proprietaire',
     'eleves.supprimer' => 'proprietaire',
     'partages.ajouter' => 'proprietaire',
     'partages.supprimer' => 'proprietaire',
 ];
+
+// Les actions qui EFFACENT ne sont pas jouées dans les boucles de la matrice :
+// elles sont éprouvées à part, pour de bon.
+const ACTIONS_QUI_EFFACENT = ['classes.supprimer', 'eleves.supprimer', 'classes.supprimer_echues'];
 
 $lot11 = ['classe' => null, 'eleve' => null, 'jetonProprio' => null, 'jetonPartage' => null, 'profPartage' => null];
 
@@ -2535,7 +2687,7 @@ verifier("lot 11 — matrice : en LECTURE seule, seules les trois actions de lec
     appel('/api/prof.php', ['action' => 'partages.ajouter', 'classe_id' => $lot11['classe'],
         'prof_id' => $lot11['profPartage'], 'droit' => 'lecture'], ['jeton' => $lot11['jetonProprio']]);
     foreach (MATRICE_ATTENDUE as $action => $droit) {
-        if ($action === 'classes.supprimer' || $action === 'eleves.supprimer') continue; // joués à part : ils effacent
+        if (in_array($action, ACTIONS_QUI_EFFACENT, true)) continue; // joués à part : ils effacent
         $obtenu = jouer_action_lot11($action, $lot11, $lot11['jetonPartage']);
         if ($droit === 'lecture') egal(200, $obtenu, "en lecture, « $action » doit passer");
         else egal(403, $obtenu, "en lecture, « $action » doit être refusé");
@@ -2546,7 +2698,7 @@ verifier("lot 11 — matrice : en ÉCRITURE, on prépare et on dépanne, on n'ef
     appel('/api/prof.php', ['action' => 'partages.ajouter', 'classe_id' => $lot11['classe'],
         'prof_id' => $lot11['profPartage'], 'droit' => 'ecriture'], ['jeton' => $lot11['jetonProprio']]);
     foreach (MATRICE_ATTENDUE as $action => $droit) {
-        if ($action === 'classes.supprimer' || $action === 'eleves.supprimer') continue;
+        if (in_array($action, ACTIONS_QUI_EFFACENT, true)) continue;
         $obtenu = jouer_action_lot11($action, $lot11, $lot11['jetonPartage']);
         if ($droit === 'proprietaire') egal(403, $obtenu, "en écriture, « $action » doit rester au propriétaire");
         else egal(200, $obtenu, "en écriture, « $action » doit passer");
@@ -2561,10 +2713,23 @@ verifier("lot 11 — matrice : en ÉCRITURE, on prépare et on dépanne, on n'ef
 
 verifier("lot 11 — matrice : le PROPRIÉTAIRE peut tout, y compris ce qui efface", function () use (&$lot11) {
     foreach (MATRICE_ATTENDUE as $action => $droit) {
-        if ($action === 'classes.supprimer' || $action === 'eleves.supprimer') continue;
+        if (in_array($action, ACTIONS_QUI_EFFACENT, true)) continue;
         egal(200, jouer_action_lot11($action, $lot11, $lot11['jetonProprio']), "le propriétaire fait « $action »");
     }
     egal(200, jouer_action_lot11('eleves.supprimer', $lot11, $lot11['jetonProprio']), 'supprimer un élève');
+});
+
+verifier("matrice — « supprimer les classes échues » est réservé au propriétaire", function () use (&$lot11) {
+    // Le collègue en écriture voit la classe, mais il n'efface pas : c'est la
+    // même règle que « Supprimer la classe ». Ici la classe n'est pas échue —
+    // le contrôle du droit passe AVANT celui du calendrier, et c'est bien lui
+    // qu'on éprouve (403, pas 409).
+    appel('/api/prof.php', ['action' => 'partages.ajouter', 'classe_id' => $lot11['classe'],
+        'prof_id' => $lot11['profPartage'], 'droit' => 'ecriture'], ['jeton' => $lot11['jetonProprio']]);
+    egal(403, appel('/api/prof.php', ['action' => 'classes.supprimer_echues', 'classes' => [$lot11['classe']]],
+        ['jeton' => $lot11['jetonPartage']])['code'], 'en écriture, la suppression de fin d’année est refusée');
+    egal(1, (int)bd_test()->query('SELECT COUNT(*) FROM classes WHERE id = ' . (int)$lot11['classe'])->fetchColumn(),
+        'la classe est intacte');
 });
 
 verifier("lot 11 — matrice : une action de classe inconnue est refusée, pas devinée", function () use (&$lot11) {
@@ -2795,6 +2960,362 @@ verifier("lot 11 — une entrée de type inattendu ne salit plus le journal du s
     $nouveau = substr($journal, $avant);
     vrai(!str_contains($nouveau, 'Array to string conversion'),
         "le journal ne doit plus porter « Array to string conversion » : " . substr($nouveau, 0, 300));
+});
+
+// ================================================ LOT SERVEUR A (06/09/2026)
+//
+// Trois chantiers :
+//  - l'historique : une version par JOUR, sept jours, heure de La Réunion ;
+//  - le journal des actions du professeur, douze mois, sans rien de personnel ;
+//  - la sauvegarde prise dans un instantané, et « nouveau code » en une
+//    transaction.
+//
+// Sabotages attendus (chacun rend un test rouge) :
+//  a) retirer la purge de enregistrer_version() → « neuf journées, sept gardées »
+//  b) écrire la version du jour AVANT l'écriture au lieu d'APRÈS → « fin de journée »
+//  c) écraser la ligne du jour pendant une restauration → « la journée reste »
+//  d) remettre supprimer_classes_echues() dans classes.liste → « ouvrir ne supprime plus rien »
+//  e) ne compter que progressions.maj_le comme activité → « cas A »
+//  f) remettre le pivot au 1er août → « pivot au 1er JUILLET »
+//  g) retirer une ligne journaliser() → le test de l'action correspondante
+//  h) ranger le prénom ou le code dans le journal → « le journal ne dit RIEN de personnel »
+//  i) sortir les trois écritures de « nouveau code » de la transaction → « ancien code intact »
+//  j) sortir les SELECT de sauvegarde.php de l'instantané → « comptes et INSERT d'accord »
+
+$serveurA = ['classe' => null, 'eleve' => null, 'jeton' => null];
+
+verifier("lot A — mise en place : une classe, un élève, une progression", function () use (&$jetonS1, &$serveurA) {
+    vider_compteurs();
+    $serveurA['jeton'] = $jetonS1;
+    $serveurA['classe'] = appel('/api/prof.php', ['action' => 'classes.creer', 'libelle' => 'lot-A'],
+        ['jeton' => $jetonS1])['json']['id'];
+    $eleves = appel('/api/prof.php', ['action' => 'eleves.ajouter', 'classe_id' => $serveurA['classe'],
+        'nombre' => 1], ['jeton' => $jetonS1])['json']['eleves'];
+    $serveurA['eleve'] = $eleves[0];
+    egal(200, appel('/api/prof.php', ['action' => 'eleves.nommer', 'eleve_id' => $serveurA['eleve']['id'],
+        'prenom' => 'Léa', 'initiale' => 'B'], ['jeton' => $jetonS1])['code'], 'un prénom connu, pour le test du journal');
+    vrai(is_int($serveurA['classe']), 'la classe du lot A est créée');
+});
+
+verifier("lot A — le jour est celui de LA RÉUNION : 23 h 30 et 00 h 30 ne tombent pas le même jour", function () {
+    // La Réunion est à UTC+4 toute l'année (pas d'heure d'été). Un élève qui
+    // travaille le 8 septembre à 23 h 30 (19 h 30 UTC) doit voir « lundi 8 »,
+    // pas « mardi 9 » : c'est le seul endroit du serveur qui quitte le temps
+    // universel, et c'est pour cette raison-là.
+    egal('2026-09-08', jour_local(strtotime('2026-09-08T19:30:00Z')), '23 h 30 à Saint-Denis');
+    egal('2026-09-09', jour_local(strtotime('2026-09-08T20:30:00Z')), '00 h 30 le lendemain');
+    egal('2026-09-08', jour_local(strtotime('2026-09-07T20:30:00Z')), 'et minuit et demi du 8');
+    // La purge garde SEPT journées, aujourd'hui compris.
+    egal('2026-09-02', premier_jour_garde('2026-09-08'), 'le plus ancien jour gardé');
+});
+
+verifier("lot A — trois enregistrements le même jour ne font qu'UNE ligne, égale au dernier état", function () use (&$serveurA) {
+    $code = $serveurA['eleve']['code'];
+    $id = (int)$serveurA['eleve']['id'];
+    egal(200, ecrire($code, ['version' => 1, 'calculs' => ['3-4' => ['cases' => 1]]], 0)['code'], '1er envoi');
+    egal(200, ecrire($code, ['version' => 1, 'calculs' => ['3-4' => ['cases' => 1], '5-6' => ['cases' => 1]]], 1)['code'], '2e');
+    egal(200, ecrire($code, ['version' => 1, 'calculs' => ['3-4' => ['cases' => 1], '5-6' => ['cases' => 1], '7-8' => ['cases' => 1]]], 2)['code'], '3e');
+
+    $lignes = bd_test()->query("SELECT jour, revision, calculs, donnees FROM versions WHERE eleve_id = $id AND appli = 'defi-tables'")->fetchAll(PDO::FETCH_ASSOC);
+    egal(1, count($lignes), 'une seule ligne pour la journée');
+    egal(jour_local(), (string)$lignes[0]['jour'], 'la journée d’aujourd’hui, heure Réunion');
+    egal(3, (int)$lignes[0]['revision'], 'elle porte la révision du dernier enregistrement');
+    egal(3, (int)$lignes[0]['calculs'], 'et le nombre de calculs comptés par le serveur');
+    vrai(str_contains((string)$lignes[0]['donnees'], '7-8'),
+        'elle contient l’état APRÈS le dernier envoi : c’est « la fin de la journée »');
+});
+
+verifier("lot A — neuf journées enregistrées, SEPT gardées : les deux plus vieilles partent", function () use (&$serveurA) {
+    $id = (int)$serveurA['eleve']['id'];
+    // Neuf journées : les huit d'avant sont semées directement (on ne peut pas
+    // attendre neuf jours), la neuvième est un vrai enregistrement d'aujourd'hui.
+    bd_test()->exec("DELETE FROM versions WHERE eleve_id = $id");
+    $aujourdhui = jour_local();
+    for ($recul = 8; $recul >= 1; $recul--) {
+        $jour = gmdate('Y-m-d', strtotime($aujourdhui . ' 12:00:00 UTC') - $recul * 86400);
+        $requete = bd_test()->prepare('INSERT INTO versions (eleve_id, appli, jour, revision, calculs, donnees, maj_le) VALUES (?, ?, ?, ?, ?, ?, ?)');
+        $requete->execute([$id, 'defi-tables', $jour, 0, $recul, '{"version":1}', $jour . 'T12:00:00Z']);
+    }
+    egal(8, (int)bd_test()->query("SELECT COUNT(*) FROM versions WHERE eleve_id = $id")->fetchColumn(), 'huit journées semées');
+
+    $r = lire($serveurA['eleve']['code']);
+    egal(200, ecrire($serveurA['eleve']['code'], ['version' => 1, 'calculs' => ['2-2' => ['cases' => 1]]], (int)$r['json']['revision'])['code'],
+        'un enregistrement d’aujourd’hui');
+
+    $jours = bd_test()->query("SELECT jour FROM versions WHERE eleve_id = $id ORDER BY jour")->fetchAll(PDO::FETCH_COLUMN);
+    egal(7, count($jours), 'sept journées gardées, pas neuf');
+    egal(premier_jour_garde($aujourdhui), (string)$jours[0], 'la plus ancienne est celle d’il y a six jours');
+    egal($aujourdhui, (string)$jours[6], 'la plus récente est aujourd’hui');
+});
+
+verifier("lot A — « Revenir à… » : le tableau reçoit les journées et leur nombre de calculs, jamais les données", function () use (&$serveurA) {
+    $r = appel('/api/prof.php', ['action' => 'tableau', 'classe_id' => $serveurA['classe']], ['jeton' => $serveurA['jeton']]);
+    egal(200, $r['code'], 'tableau');
+    $ligne = null;
+    foreach ($r['json']['eleves'] as $eleve) {
+        if ((int)$eleve['id'] === (int)$serveurA['eleve']['id']) $ligne = $eleve;
+    }
+    vrai($ligne !== null, 'l’élève est dans le tableau');
+    vrai(is_array($ligne['journees']), 'la liste des journées est là');
+    // Six journées proposées sur sept : celle d'aujourd'hui EST l'état actuel.
+    egal(6, count($ligne['journees']), 'la journée qui porte la révision du moment n’est pas proposée');
+    foreach ($ligne['journees'] as $journee) {
+        vrai(array_key_exists('jour', $journee) && array_key_exists('calculs', $journee), 'jour et nombre de calculs');
+        vrai(!array_key_exists('donnees', $journee) && !array_key_exists('parcours', $journee),
+            'JAMAIS les données : sept progressions par élève, ce sont des mégaoctets à chaque ouverture');
+    }
+});
+
+verifier("lot A — revenir à la fin d'une journée précise, et pouvoir revenir en arrière", function () use (&$serveurA) {
+    $id = (int)$serveurA['eleve']['id'];
+    $code = $serveurA['eleve']['code'];
+    // Une journée J-2 reconnaissable, écrite à la main dans l'historique.
+    $jourCible = gmdate('Y-m-d', strtotime(jour_local() . ' 12:00:00 UTC') - 2 * 86400);
+    bd_test()->prepare('UPDATE versions SET donnees = ?, calculs = ? WHERE eleve_id = ? AND jour = ?')
+        ->execute(['{"version":1,"expert":42}', 1, $id, $jourCible]);
+
+    $avant = bd_test()->query("SELECT donnees, revision FROM progressions WHERE eleve_id = $id")->fetch(PDO::FETCH_ASSOC);
+    $r = appel('/api/prof.php', ['action' => 'eleves.restaurer', 'eleve_id' => $id,
+        'appli' => 'defi-tables', 'jour' => $jourCible], ['jeton' => $serveurA['jeton']]);
+    egal(200, $r['code'], 'restauration d’une journée');
+
+    $apres = bd_test()->query("SELECT donnees, donnees_avant, revision FROM progressions WHERE eleve_id = $id")->fetch(PDO::FETCH_ASSOC);
+    vrai(str_contains((string)$apres['donnees'], '42'), 'la progression est celle de la journée demandée');
+    egal((int)$avant['revision'] + 1, (int)$apres['revision'], 'la révision monte d’un cran');
+    egal((string)$avant['donnees'], (string)$apres['donnees_avant'], 'l’état d’avant devient la version précédente : on peut annuler');
+
+    // AUCUNE ligne de l'historique n'est touchée par une restauration.
+    // Celle du jour demandé, sinon on ne pourrait pas y revenir une seconde
+    // fois ; et celle d'AUJOURD'HUI, qui garde l'état d'avant la restauration
+    // — c'est le seul moyen de revenir sur une restauration malheureuse une
+    // fois que l'élève a réenregistré (donnees_avant, elle, aura été remplacée).
+    $ligne = bd_test()->query("SELECT donnees FROM versions WHERE eleve_id = $id AND jour = '$jourCible'")->fetch(PDO::FETCH_ASSOC);
+    vrai(str_contains((string)$ligne['donnees'], '42'), 'la journée restaurée reste dans l’historique');
+    $duJour = bd_test()->query("SELECT donnees FROM versions WHERE eleve_id = $id AND jour = '" . jour_local() . "'")->fetch(PDO::FETCH_ASSOC);
+    vrai($duJour !== false, 'la journée d’aujourd’hui est bien là');
+    egal((string)$avant['donnees'], (string)$duJour['donnees'],
+        'la version du jour garde l’état d’AVANT la restauration : restaurer n’écrase pas l’historique');
+
+    // Annuler la restauration : « avant le dernier enregistrement ».
+    egal(200, appel('/api/prof.php', ['action' => 'eleves.restaurer', 'eleve_id' => $id, 'appli' => 'defi-tables'],
+        ['jeton' => $serveurA['jeton']])['code'], 'retour en arrière');
+    $final = bd_test()->query("SELECT donnees FROM progressions WHERE eleve_id = $id")->fetch(PDO::FETCH_ASSOC);
+    egal((string)$avant['donnees'], (string)$final['donnees'], 'on est revenu exactement où on était');
+    // L'élève, lui, retrouvera tout ça par la révision.
+    vrai(is_array(lire($code)['json'] ?? null), 'l’élève relit sa progression');
+});
+
+verifier("lot A — une journée qui n'existe pas : 404, et rien n'a changé", function () use (&$serveurA) {
+    $id = (int)$serveurA['eleve']['id'];
+    $avant = (string)bd_test()->query("SELECT donnees FROM progressions WHERE eleve_id = $id")->fetchColumn();
+    $r = appel('/api/prof.php', ['action' => 'eleves.restaurer', 'eleve_id' => $id,
+        'appli' => 'defi-tables', 'jour' => '2020-01-01'], ['jeton' => $serveurA['jeton']]);
+    egal(404, $r['code'], 'une journée hors historique');
+    egal(400, appel('/api/prof.php', ['action' => 'eleves.restaurer', 'eleve_id' => $id,
+        'appli' => 'defi-tables', 'jour' => '9999-99-99'], ['jeton' => $serveurA['jeton']])['code'], 'une fausse date');
+    egal(400, appel('/api/prof.php', ['action' => 'eleves.restaurer', 'eleve_id' => $id,
+        'appli' => 'defi-tables', 'jour' => ['un', 'tableau']], ['jeton' => $serveurA['jeton']])['code'], 'un type inattendu');
+    egal($avant, (string)bd_test()->query("SELECT donnees FROM progressions WHERE eleve_id = $id")->fetchColumn(), 'rien n’a bougé');
+});
+
+verifier("lot A — supprimer l'élève, puis la classe, emporte l'historique", function () use (&$jetonS1) {
+    $classe = appel('/api/prof.php', ['action' => 'classes.creer', 'libelle' => 'lot-A-suppression'], ['jeton' => $jetonS1])['json']['id'];
+    $eleves = appel('/api/prof.php', ['action' => 'eleves.ajouter', 'classe_id' => $classe, 'nombre' => 2], ['jeton' => $jetonS1])['json']['eleves'];
+    foreach ($eleves as $eleve) {
+        egal(200, ecrire($eleve['code'], ['version' => 1, 'calculs' => ['2-3' => ['cases' => 1]]], 0)['code'], 'une progression');
+    }
+    $un = (int)$eleves[0]['id'];
+    $deux = (int)$eleves[1]['id'];
+    egal(1, (int)bd_test()->query("SELECT COUNT(*) FROM versions WHERE eleve_id = $un")->fetchColumn(), 'une version pour le premier');
+
+    egal(200, appel('/api/prof.php', ['action' => 'eleves.supprimer', 'eleve_id' => $un], ['jeton' => $jetonS1])['code'], 'élève supprimé');
+    egal(0, (int)bd_test()->query("SELECT COUNT(*) FROM versions WHERE eleve_id = $un")->fetchColumn(), 'son historique est parti avec lui');
+    egal(1, (int)bd_test()->query("SELECT COUNT(*) FROM versions WHERE eleve_id = $deux")->fetchColumn(), 'celui de l’autre est intact');
+
+    egal(200, appel('/api/prof.php', ['action' => 'classes.supprimer', 'classe_id' => $classe], ['jeton' => $jetonS1])['code'], 'classe supprimée');
+    egal(0, (int)bd_test()->query("SELECT COUNT(*) FROM versions WHERE eleve_id = $deux")->fetchColumn(), 'plus une seule version');
+});
+
+// ------------------------------------------------------------------ journal
+
+verifier("lot A — le journal écrit UNE ligne par action du professeur", function () use (&$jetonS1, &$jetonClaire, &$claireId) {
+    bd_test()->exec('DELETE FROM journal');
+    $classe = appel('/api/prof.php', ['action' => 'classes.creer', 'libelle' => 'lot-A-journal'], ['jeton' => $jetonS1])['json']['id'];
+    $eleves = appel('/api/prof.php', ['action' => 'eleves.ajouter', 'classe_id' => $classe, 'nombre' => 1], ['jeton' => $jetonS1])['json']['eleves'];
+    $eleveId = (int)$eleves[0]['id'];
+    appel('/api/prof.php', ['action' => 'eleves.nommer', 'eleve_id' => $eleveId, 'prenom' => 'Léa', 'initiale' => 'B'], ['jeton' => $jetonS1]);
+    ecrire($eleves[0]['code'], ['version' => 1], 0);
+    ecrire($eleves[0]['code'], ['version' => 1, 'expert' => 1], 1);
+    appel('/api/prof.php', ['action' => 'eleves.restaurer', 'eleve_id' => $eleveId], ['jeton' => $jetonS1]);
+    appel('/api/prof.php', ['action' => 'eleves.regenerer', 'eleve_id' => $eleveId], ['jeton' => $jetonS1]);
+    appel('/api/prof.php', ['action' => 'classes.modifier', 'classe_id' => $classe, 'libelle' => 'lot-A-journal-2'], ['jeton' => $jetonS1]);
+    appel('/api/prof.php', ['action' => 'partages.ajouter', 'classe_id' => $classe, 'prof_id' => $claireId, 'droit' => 'lecture'], ['jeton' => $jetonS1]);
+    appel('/api/prof.php', ['action' => 'partages.supprimer', 'classe_id' => $classe, 'prof_id' => $claireId], ['jeton' => $jetonS1]);
+    appel('/api/prof.php', ['action' => 'eleves.supprimer', 'eleve_id' => $eleveId], ['jeton' => $jetonS1]);
+    appel('/api/prof.php', ['action' => 'classes.supprimer', 'classe_id' => $classe], ['jeton' => $jetonS1]);
+
+    $comptes = [];
+    foreach (bd_test()->query("SELECT action, COUNT(*) AS n FROM journal WHERE resultat = 'ok' GROUP BY action")->fetchAll(PDO::FETCH_ASSOC) as $ligne) {
+        $comptes[(string)$ligne['action']] = (int)$ligne['n'];
+    }
+    foreach (['classes.creer', 'eleves.ajouter', 'eleves.nommer', 'eleves.restaurer', 'eleves.regenerer',
+              'classes.modifier', 'partages.ajouter', 'partages.supprimer', 'eleves.supprimer', 'classes.supprimer'] as $action) {
+        egal(1, $comptes[$action] ?? 0, "« $action » doit écrire exactement une ligne");
+    }
+    // L'élève qui enregistre, lui, n'écrit RIEN au journal : ce n'est pas un
+    // registre de ce que font les enfants.
+    egal(0, (int)bd_test()->query("SELECT COUNT(*) FROM journal WHERE cible_type = 'eleve' AND action = 'connexion'")->fetchColumn(),
+        'aucune ligne pour les envois de l’élève');
+});
+
+verifier("lot A — un refus de droit laisse une ligne « refus »", function () use (&$jetonS1, &$jetonClaire, &$claireId) {
+    bd_test()->exec('DELETE FROM journal');
+    $classe = appel('/api/prof.php', ['action' => 'classes.creer', 'libelle' => 'lot-A-refus'], ['jeton' => $jetonS1])['json']['id'];
+    $eleves = appel('/api/prof.php', ['action' => 'eleves.ajouter', 'classe_id' => $classe, 'nombre' => 1], ['jeton' => $jetonS1])['json']['eleves'];
+    appel('/api/prof.php', ['action' => 'partages.ajouter', 'classe_id' => $classe, 'prof_id' => $claireId, 'droit' => 'lecture'], ['jeton' => $jetonS1]);
+    // Claire, en LECTURE, essaie d'écrire : c'est exactement ce qu'un registre
+    // doit pouvoir montrer.
+    egal(403, appel('/api/prof.php', ['action' => 'eleves.nommer', 'eleve_id' => $eleves[0]['id'],
+        'prenom' => 'Intrus', 'initiale' => 'X'], ['jeton' => $jetonClaire])['code'], 'refusé');
+    egal(1, (int)bd_test()->query("SELECT COUNT(*) FROM journal WHERE action = 'eleves.nommer' AND resultat = 'refus'")->fetchColumn(),
+        'une ligne « refus » au nom de Claire');
+    egal($claireId, (int)bd_test()->query("SELECT prof_id FROM journal WHERE resultat = 'refus' ORDER BY id DESC LIMIT 1")->fetchColumn(),
+        'et c’est bien son compte');
+    // Une action d'administration refusée aussi : Claire n'est pas
+    // administratrice, elle ne réinitialise le mot de passe de personne.
+    egal(403, appel('/api/prof.php', ['action' => 'profs.reinitialiser', 'prof_id' => 1], ['jeton' => $jetonClaire])['code'], 'refusé');
+    egal(1, (int)bd_test()->query("SELECT COUNT(*) FROM journal WHERE action = 'profs.reinitialiser' AND resultat = 'refus'")->fetchColumn(),
+        'une action réservée à l’administrateur, refusée et notée');
+    appel('/api/prof.php', ['action' => 'classes.supprimer', 'classe_id' => $classe], ['jeton' => $jetonS1]);
+});
+
+verifier("lot A — le journal ne dit RIEN de personnel : ni prénom, ni code, ni adresse", function () use (&$jetonS1) {
+    bd_test()->exec('DELETE FROM journal');
+    $classe = appel('/api/prof.php', ['action' => 'classes.creer', 'libelle' => 'lot-A-prive'], ['jeton' => $jetonS1])['json']['id'];
+    $eleves = appel('/api/prof.php', ['action' => 'eleves.ajouter', 'classe_id' => $classe, 'nombre' => 1], ['jeton' => $jetonS1])['json']['eleves'];
+    $code = (string)$eleves[0]['code'];
+    appel('/api/prof.php', ['action' => 'eleves.nommer', 'eleve_id' => $eleves[0]['id'], 'prenom' => 'Léa', 'initiale' => 'B'], ['jeton' => $jetonS1]);
+    appel('/api/prof.php', ['action' => 'eleves.regenerer', 'eleve_id' => $eleves[0]['id']], ['jeton' => $jetonS1]);
+
+    $tout = '';
+    foreach (bd_test()->query('SELECT * FROM journal')->fetchAll(PDO::FETCH_ASSOC) as $ligne) {
+        foreach ($ligne as $valeur) $tout .= '|' . (string)$valeur;
+    }
+    vrai($tout !== '', 'le journal n’est pas vide (sinon ce test ne prouve rien)');
+    vrai(!str_contains($tout, 'Léa'), "aucun prénom dans le journal : " . substr($tout, 0, 200));
+    vrai(!str_contains($tout, $code), "aucun code élève dans le journal");
+    vrai(!str_contains($tout, 'lot-A-prive'), "aucun nom de classe dans le journal");
+    vrai(!str_contains($tout, 'gwenael'), "aucun identifiant de professeur : le journal ne range que son numéro");
+    vrai(!str_contains($tout, '127.0.0.1'), "aucune adresse IP");
+    // Et les colonnes sont bien celles annoncées, ni plus ni moins.
+    $colonnes = array_keys(bd_test()->query('SELECT * FROM journal LIMIT 1')->fetch(PDO::FETCH_ASSOC));
+    sort($colonnes);
+    egal(['action', 'cible_id', 'cible_type', 'id', 'prof_id', 'quand', 'resultat'], $colonnes, 'les colonnes du journal');
+    appel('/api/prof.php', ['action' => 'classes.supprimer', 'classe_id' => $classe], ['jeton' => $jetonS1]);
+});
+
+verifier("lot A — une action inventée n'entre pas dans le journal, et une connexion réussie y entre", function () use (&$jetonS1) {
+    bd_test()->exec('DELETE FROM journal');
+    journaliser(bd_test(), 1, 'action.inventee', 'classe', 1);
+    journaliser(bd_test(), 1, 'classes.creer', 'cible-inventee', 1);
+    egal(0, (int)bd_test()->query('SELECT COUNT(*) FROM journal')->fetchColumn(),
+        'la liste fermée tient : rien d’autre ne peut entrer');
+    $r = connexion('gwenael', 'phrase-de-secours-2026');
+    vrai(is_string($r['json']['jeton'] ?? null), 'connexion réussie');
+    egal(1, (int)bd_test()->query("SELECT COUNT(*) FROM journal WHERE action = 'connexion'")->fetchColumn(), 'une ligne');
+    egal(200, appel('/api/prof.php', ['action' => 'deconnexion'], ['jeton' => $r['json']['jeton']])['code'], 'déconnexion');
+    egal(1, (int)bd_test()->query("SELECT COUNT(*) FROM journal WHERE action = 'deconnexion'")->fetchColumn(), 'et une pour la sortie');
+    // Un échec de connexion, lui, n'écrit rien : pas de compte fiable à nommer.
+    appel('/api/prof.php', ['action' => 'connexion', 'identifiant' => 'gwenael', 'motdepasse' => 'raté']);
+    egal(1, (int)bd_test()->query("SELECT COUNT(*) FROM journal WHERE action = 'connexion'")->fetchColumn(), 'toujours une seule');
+    vider_compteurs();
+});
+
+verifier("lot A — verifier.php montre le journal, mais seulement avec le mot de passe", function () use (&$jetonS1) {
+    bd_test()->exec("INSERT INTO journal (quand, prof_id, action, cible_type, cible_id, resultat) VALUES ('" . maintenant() . "', 1, 'connexion', 'session', 0, 'ok')");
+    $r = appel('/verifier.php');
+    vrai(!str_contains($r['texte'], 'Dernières actions'), 'sans le mot de passe, aucun journal');
+    $r = formulaire('/verifier.php', ['jeton' => 'JETON-DE-TEST']);
+    vrai(str_contains($r['texte'], 'Dernières actions'), 'avec le mot de passe, le journal s’affiche');
+    vrai(str_contains($r['texte'], htmlspecialchars("Historique et journal", ENT_QUOTES)), 'et la ligne de diagnostic');
+    vrai(str_contains($r['texte'], 'journée(s) gardée(s)'), 'qui compte les journées gardées');
+    // Le ménage efface au-delà de douze mois.
+    bd_test()->exec("INSERT INTO journal (quand, prof_id, action, cible_type, cible_id, resultat) VALUES ('2020-01-01T00:00:00Z', 1, 'connexion', 'session', 0, 'ok')");
+    egal(1, purger_journal(bd_test()), 'une ligne de 2020 est effacée');
+});
+
+// ------------------------------------------------ instantané et transaction
+
+verifier("lot A — la sauvegarde est prise dans un instantané : comptes et INSERT d'accord", function () {
+    $r = formulaire('/sauvegarde.php', ['jeton' => 'JETON-DE-TEST', 'etape' => 'telecharger',
+        'phrase' => 'phrase-de-sauvegarde-2026', 'repete' => 'phrase-de-sauvegarde-2026']);
+    $brut = $r['texte'];
+    $sel = substr($brut, 8, 8);
+    $matiere = hash_pbkdf2('sha256', 'phrase-de-sauvegarde-2026', $sel, 200000, 48, true);
+    $clair = (string)openssl_decrypt(substr($brut, 16), 'aes-256-cbc', substr($matiere, 0, 32), OPENSSL_RAW_DATA, substr($matiere, 32, 16));
+    vrai(str_contains($clair, 'maths&go'), 'le fichier se déchiffre');
+    // Les nouvelles tables y sont.
+    foreach (['versions', 'journal'] as $table) {
+        vrai(str_contains($clair, "EXISTS $table (") || str_contains($clair, "CREATE TABLE `$table`"),
+            "la structure de $table doit être dans la sauvegarde");
+    }
+    // L'en-tête annonce N lignes par table ; le corps en contient exactement N.
+    // Hors instantané, les comptes étaient pris AVANT les SELECT : un envoi
+    // d'élève pendant l'export les mettait en désaccord.
+    foreach (['profs', 'classes', 'eleves', 'progressions', 'partages', 'versions', 'journal'] as $table) {
+        vrai(preg_match('/^-- ' . $table . ' : (\d+) ligne\(s\)$/m', $clair, $m) === 1, "l’en-tête compte $table");
+        egal((int)$m[1], substr_count($clair, "INSERT INTO `$table` ("), "$table : autant d’INSERT que d’annoncé");
+    }
+});
+
+verifier("lot A — l'instantané ne voit pas une écriture faite après son ouverture (MySQL)", function () {
+    if (pilote_test() !== 'mysql') {
+        // SQLite garde une transaction de lecture cohérente elle aussi, mais
+        // une écriture concurrente y est REFUSÉE (« database is locked ») au
+        // lieu d'être invisible : on ne peut pas le montrer de la même façon.
+        // On éprouve alors ce qui est éprouvable : l'instantané s'ouvre, se
+        // ferme, et ne laisse pas la connexion en transaction.
+        $pdo = bd_test();
+        instantane_ouvrir($pdo);
+        $pdo->query('SELECT COUNT(*) FROM classes')->fetchColumn();
+        instantane_fermer($pdo);
+        $pdo->exec('CREATE TABLE IF NOT EXISTS essai_instantane (id INTEGER)');
+        $pdo->exec('DROP TABLE essai_instantane');
+        return;
+    }
+    $lecteur = new PDO($GLOBALS['bdTest']['dsn'], $GLOBALS['bdTest']['utilisateur'] ?? null,
+        $GLOBALS['bdTest']['motdepasse'] ?? null,
+        [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION, PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC]);
+    instantane_ouvrir($lecteur);
+    $avant = (int)$lecteur->query('SELECT COUNT(*) FROM classes')->fetchColumn();
+    bd_test()->exec("INSERT INTO classes (prof_id, libelle, applis, cree_le) VALUES (1, 'instantane', 'defi-tables', '" . maintenant() . "')");
+    $pendant = (int)$lecteur->query('SELECT COUNT(*) FROM classes')->fetchColumn();
+    instantane_fermer($lecteur);
+    egal($avant, $pendant, 'la classe créée après l’ouverture de l’instantané n’y apparaît pas');
+    $apres = (int)bd_test()->query('SELECT COUNT(*) FROM classes')->fetchColumn();
+    egal($avant + 1, $apres, 'elle existe pourtant bien');
+    bd_test()->exec("DELETE FROM classes WHERE libelle = 'instantane'");
+});
+
+verifier("lot A — « nouveau code » est une seule transaction : une panne laisse l'ancien code intact", function () use (&$jetonS1) {
+    $classe = appel('/api/prof.php', ['action' => 'classes.creer', 'libelle' => 'lot-A-transaction'], ['jeton' => $jetonS1])['json']['id'];
+    $eleve = appel('/api/prof.php', ['action' => 'eleves.ajouter', 'classe_id' => $classe, 'nombre' => 1], ['jeton' => $jetonS1])['json']['eleves'][0];
+    $ancien = (string)$eleve['code'];
+
+    // Panne injectée pour de bon : la table des billets disparaît. La troisième
+    // écriture de « nouveau code » échoue ; sans transaction, le code aurait
+    // déjà changé — et un billet émis sous l'ancien serait resté valable.
+    bd_test()->exec('DROP TABLE billets');
+    $r = appel('/api/prof.php', ['action' => 'eleves.regenerer', 'eleve_id' => $eleve['id']], ['jeton' => $jetonS1]);
+    egal(500, $r['code'], 'la panne remonte proprement');
+    egal($ancien, (string)bd_test()->query('SELECT code FROM eleves WHERE id = ' . (int)$eleve['id'])->fetchColumn(),
+        'l’ancien code est intact : rien n’a été à moitié fait');
+
+    installer_tables(bd_test());
+    $r = appel('/api/prof.php', ['action' => 'eleves.regenerer', 'eleve_id' => $eleve['id']], ['jeton' => $jetonS1]);
+    egal(200, $r['code'], 'la table revenue, le nouveau code passe');
+    vrai((string)$r['json']['code'] !== $ancien, 'et c’est un code neuf');
+    appel('/api/prof.php', ['action' => 'classes.supprimer', 'classe_id' => $classe], ['jeton' => $jetonS1]);
 });
 
 // ---------------------------------------------------------------------- résultat

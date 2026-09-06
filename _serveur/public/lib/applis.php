@@ -25,6 +25,14 @@ const CATALOGUE_APPLIS = [
             'calculs', 'cases', 'vu', 'erreur', 'gagne'],
         'mots' => ['desordre', 'trous', 'mixte'],
         'motifs' => ['/^(?:[2-9]|10)$/', '/^\d{1,2}-\d{1,2}$/'],
+        // Lot serveur A (06/09/2026) : la SEULE chose que le serveur compte
+        // dans une progression. Il ne la comprend toujours pas — il compte les
+        // entrées d'une clé DÉCLARÉE ici, et range le nombre à côté de la
+        // version du jour (lib/versions.php) pour que « Revenir à… » puisse
+        // écrire « fin de journée du mardi 8 septembre — 11 calculs » sans
+        // renvoyer sept progressions entières par élève. Une appli qui ne
+        // déclare rien n'est pas comptée.
+        'compteur' => 'calculs',
     ],
     'automatismes' => [
         'nom' => 'Automatismes',
@@ -36,6 +44,7 @@ const CATALOGUE_APPLIS = [
         'cles' => [],
         'mots' => [],
         'motifs' => [],
+        'compteur' => null,
     ],
 ];
 

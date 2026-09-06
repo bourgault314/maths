@@ -247,6 +247,17 @@ $versionMoteur = is_file($moteur) ? substr(md5_file($moteur), 0, 10) : '0';
     <h1>Mes classes</h1>
     <p class="sous">Choisis une classe, ou crée-en une nouvelle.</p>
     <p class="message" id="bandeau-annee" hidden></p>
+    <!-- Fin d'année (lot serveur A, 06/09/2026). Le serveur ne supprime plus
+         rien à l'ouverture de cette page : il dit ce qui ne sert plus, et le
+         professeur décide. Une suppression définitive ne doit jamais être le
+         prix d'un clic sur « Mes classes ». -->
+    <div class="message info" id="bandeau-echues" hidden>
+      <p id="echues-texte" style="margin:0 0 10px"></p>
+      <div class="actions">
+        <button type="button" class="danger" id="supprimer-echues"></button>
+        <button type="button" class="secondaire" id="echues-plus-tard">Plus tard</button>
+      </div>
+    </div>
     <ul class="classes" id="liste-classes"></ul>
     <h2>Nouvelle classe</h2>
     <div class="carte" style="max-width:420px">
@@ -483,6 +494,8 @@ $versionMoteur = is_file($moteur) ? substr(md5_file($moteur), 0, 10) : '0';
   let identifiant = "";
   let droitClasse = "proprietaire";
   let annuaire = [];
+  // Les classes de l'année écoulée que le serveur propose de supprimer.
+  let echues = [];
 
   try { jeton = sessionStorage.getItem(CLE_JETON) || ""; } catch (_) {}
 
@@ -583,12 +596,13 @@ $versionMoteur = is_file($moteur) ? substr(md5_file($moteur), 0, 10) : '0';
   const ZONES_TEXTE = ["corps", "fiche-corps", "fiche-titre", "bandelettes-liste",
     "bandelettes-titre", "liste-classes", "liste-profs", "liste-partages", "fragiles-liste",
     "fragiles-sous", "titre-classe", "resume-classe", "qui", "compte-qui", "boite-texte",
-    "boite-champs", "secret-texte", "secret-valeur"];
+    "boite-champs", "secret-texte", "secret-valeur", "echues-texte", "supprimer-echues"];
   const ZONES_MESSAGE = ["erreur-connexion", "message-classes", "message-classe",
     "message-profs", "message-partage", "message-compte", "bandeau-droit", "bandeau-annee"];
   const CHAMPS_A_VIDER = ["identifiant", "motdepasse", "libelle",
     "mdp-ancien", "mdp-nouveau", "mdp-confirme"];
-  const BLOCS_A_CACHER = ["fiche", "bandelettes", "fragiles", "bloc-partage", "bloc-profs"];
+  const BLOCS_A_CACHER = ["fiche", "bandelettes", "fragiles", "bloc-partage", "bloc-profs",
+    "bandeau-echues"];
 
   function viderZones() {
     ZONES_TEXTE.forEach(id => { const noeud = $(id); if (noeud) noeud.textContent = ""; });
@@ -611,6 +625,7 @@ $versionMoteur = is_file($moteur) ? substr(md5_file($moteur), 0, 10) : '0';
     identifiant = "";
     droitClasse = "proprietaire";
     annuaire = [];
+    echues = [];
     tri = {colonne: "prenom", sens: 1};
     veille.arreter();
   }
@@ -710,6 +725,17 @@ $versionMoteur = is_file($moteur) ? substr(md5_file($moteur), 0, 10) : '0';
     return date.toLocaleDateString("fr-FR", {day: "2-digit", month: "2-digit", year: "2-digit"});
   }
 
+  // « mardi 8 septembre » : le jour tel que l'élève et le professeur l'ont
+  // vécu. Le serveur découpe les journées à minuit HEURE DE LA RÉUNION
+  // (lib/bd.php) ; l'affichage doit suivre le même fuseau, sinon un travail du
+  // 8 au soir s'annoncerait « mercredi 9 » sur un ordinateur réglé sur Paris.
+  function jourLisible(jour) {
+    const date = new Date(String(jour) + "T12:00:00Z");
+    if (isNaN(date)) return String(jour);
+    return date.toLocaleDateString("fr-FR",
+      {timeZone: "Indian/Reunion", weekday: "long", day: "numeric", month: "long"});
+  }
+
   function nomAffiche(eleve) {
     if (!eleve.prenom) return "";
     return eleve.initiale ? `${eleve.prenom} ${eleve.initiale}.` : eleve.prenom;
@@ -798,17 +824,18 @@ $versionMoteur = is_file($moteur) ? substr(md5_file($moteur), 0, 10) : '0';
       fiche.textContent = "Voir sa fiche";
       fiche.addEventListener("click", () => voirFiche(eleve, fiche));
       cActions.append(fiche);
-      if (ecriture && eleve.restaurable) {
-        // Le serveur garde la version précédente de chaque progression : un
-        // écrasement (par quelqu'un qui avait le code, ou un « Recommencer à
-        // zéro » malheureux) se répare d'un clic.
-        const restaurer = document.createElement("button");
-        restaurer.type = "button";
-        restaurer.className = "secondaire petit";
-        restaurer.textContent = "Version précédente";
-        restaurer.title = "Restaurer la version précédente de sa progression";
-        restaurer.addEventListener("click", () => restaurerProgression(eleve));
-        cActions.append(restaurer);
+      if (ecriture && (eleve.restaurable || (eleve.journees || []).length)) {
+        // Le serveur garde la version d'avant le dernier enregistrement ET la
+        // fin de chacune des sept dernières journées : un écrasement (par
+        // quelqu'un qui avait le code, ou un « Recommencer à zéro »
+        // malheureux) se répare même si on ne s'en aperçoit que le lendemain.
+        const revenir = document.createElement("button");
+        revenir.type = "button";
+        revenir.className = "secondaire petit";
+        revenir.textContent = "Revenir à…";
+        revenir.title = "Revenir à une version précédente de sa progression";
+        revenir.addEventListener("click", () => revenirA(eleve));
+        cActions.append(revenir);
       }
       if (ecriture) {
         const regen = document.createElement("button");
@@ -1028,18 +1055,15 @@ $versionMoteur = is_file($moteur) ? substr(md5_file($moteur), 0, 10) : '0';
 
   // ---------------------------------------------------------------- actions
 
-  // Ce que la page dit de l'année scolaire : ce qui vient d'être supprimé tout
-  // seul (1er août), et le préavis de juillet.
+  // Ce que la page dit de l'année scolaire.
+  //
+  // CHANGÉ LE 06/09/2026 : le serveur ne supprime plus rien à l'ouverture de
+  // « Mes classes ». Il envoie « echues » — les classes de l'année écoulée qui
+  // n'ont pas servi depuis trois semaines — et le professeur décide. Le
+  // préavis de fin d'année, lui, ne change pas.
   function annoncerFinAnnee(donnees, combienEnCours) {
-    const parties = donnees.supprimees_maintenant || [];
-    if (parties.length) {
-      messager("bandeau-annee",
-        `Fin d’année : ${parties.length} classe${parties.length > 1 ? "s" : ""} de l’année écoulée `
-        + `${parties.length > 1 ? "ont" : "a"} été supprimée${parties.length > 1 ? "s" : ""} `
-        + `(${parties.join(", ")}). Prénoms, codes et progressions : il n’en reste rien. `
-        + `Si tu en as besoin, la sauvegarde du mois les contient encore.`, "ok");
-      return;
-    }
+    echues = donnees.echues || [];
+    montrerEchues();
     if (donnees.preavis_fin_annee && combienEnCours) {
       messager("bandeau-annee",
         `L’année scolaire ${donnees.annee_courante} se termine. Les classes de cette année seront `
@@ -1050,6 +1074,63 @@ $versionMoteur = is_file($moteur) ? substr(md5_file($moteur), 0, 10) : '0';
     }
     messager("bandeau-annee", "", "");
   }
+
+  function texteDesEchues(liste) {
+    const noms = liste.map(classe => classe.libelle).join(", ");
+    const annees = [...new Set(liste.map(classe => classe.annee))].join(" et ");
+    const plusieurs = liste.length > 1;
+    return `${liste.length} classe${plusieurs ? "s" : ""} de l’année ${annees} `
+      + `ne ${plusieurs ? "servent" : "sert"} plus (${noms}). `
+      + `${plusieurs ? "Les" : "La"} supprimer maintenant ? Prénoms, codes et progressions : `
+      + `il n’en restera rien. Fais ta sauvegarde avant.`;
+  }
+
+  function montrerEchues() {
+    const bloc = $("bandeau-echues");
+    if (!echues.length) {
+      $("echues-texte").textContent = "";
+      $("supprimer-echues").textContent = "";
+      bloc.hidden = true;
+      return;
+    }
+    $("echues-texte").textContent = texteDesEchues(echues);
+    $("supprimer-echues").textContent = echues.length > 1
+      ? `Supprimer ces ${echues.length} classes` : "Supprimer cette classe";
+    bloc.hidden = false;
+  }
+
+  // « Plus tard » : le bandeau disparaît pour cette visite, et revient à la
+  // prochaine ouverture. Rien n'est enregistré, rien n'est supprimé.
+  $("echues-plus-tard").addEventListener("click", () => {
+    echues = [];
+    montrerEchues();
+  });
+
+  $("supprimer-echues").addEventListener("click", async (evenement) => {
+    const bouton = evenement.currentTarget;
+    const liste = echues.slice();
+    if (!liste.length) return;
+    const reponse = await demander(
+      `Supprimer définitivement ${liste.length > 1 ? "ces " + liste.length + " classes" : "cette classe"} `
+      + `(${liste.map(classe => classe.libelle).join(", ")}) ? `
+      + `Prénoms, codes et progressions seront effacés : il n’en restera rien. `
+      + `Cette action est définitive — seule la sauvegarde du mois les contiendrait encore.`);
+    if (!reponse) return;
+    bouton.disabled = true;
+    try {
+      const faits = await api("classes.supprimer_echues", {classes: liste.map(classe => classe.id)});
+      const partis = faits.supprimees || [];
+      await chargerClasses();
+      messager("message-classes",
+        `${partis.length} classe${partis.length > 1 ? "s" : ""} supprimée${partis.length > 1 ? "s" : ""} `
+        + `(${partis.join(", ")}). Il n’en reste rien.`, "ok");
+    } catch (erreur) {
+      surErreur(erreur, "message-classes");
+      await chargerClasses();
+    } finally {
+      bouton.disabled = false;
+    }
+  });
 
   async function chargerClasses() {
     try {
@@ -1658,14 +1739,48 @@ $versionMoteur = is_file($moteur) ? substr(md5_file($moteur), 0, 10) : '0';
     } catch (erreur) { surErreur(erreur, "message-classe"); }
   }
 
-  async function restaurerProgression(eleve) {
+  // « Revenir à… » : la version d'avant le dernier enregistrement, ou la fin
+  // de l'une des sept journées gardées par le serveur. Deux boîtes : on
+  // choisit, PUIS on confirme en nommant la date choisie — revenir en arrière
+  // écrase le travail actuel, cela ne se fait pas d'un seul clic.
+  function versionsProposees(eleve) {
+    const options = [];
+    if (eleve.restaurable) {
+      const quand = dateLisible(eleve.maj_le);
+      options.push({valeur: "avant",
+        libelle: "avant le dernier enregistrement" + (quand ? ` (du ${quand})` : "")});
+    }
+    (eleve.journees || []).forEach(journee => {
+      options.push({valeur: journee.jour,
+        libelle: `fin de journée du ${jourLisible(journee.jour)} — ${journee.calculs} calcul`
+          + (journee.calculs > 1 ? "s" : "")});
+    });
+    return options;
+  }
+
+  async function revenirA(eleve) {
+    const options = versionsProposees(eleve);
+    if (!options.length) {
+      messager("message-classe", "Aucune version à restaurer pour cet élève.", "info");
+      return;
+    }
+    const choix = await demander(
+      `À quelle version revenir pour ${nomAffiche(eleve) || "cet élève"} ? Le serveur garde la fin de chacune des sept dernières journées.`,
+      [{nom: "version", libelle: "Revenir à", options}]);
+    if (!choix) return;
+    const choisie = options.find(option => option.valeur === choix.version);
+    if (!choisie) return;
     const reponse = await demander(
-      `Revenir à la version précédente de la progression de ${nomAffiche(eleve) || "cet élève"} ? La version actuelle devient la « précédente » : tu pourras refaire l’inverse.`);
+      `Revenir à « ${choisie.libelle} » pour ${nomAffiche(eleve) || "cet élève"} ? `
+      + `La version actuelle devient la « précédente » : tu pourras refaire l’inverse.`);
     if (!reponse) return;
     try {
-      await api("eleves.restaurer", {eleve_id: eleve.id, appli: "defi-tables"});
+      const corps = {eleve_id: eleve.id, appli: "defi-tables"};
+      if (choix.version !== "avant") corps.jour = choix.version;
+      await api("eleves.restaurer", corps);
       await ouvrirClasse(classe.id);
-      messager("message-classe", "Version précédente restaurée. L’appli de l’élève la récupérera à sa prochaine ouverture.", "ok");
+      messager("message-classe",
+        `Version restaurée : ${choisie.libelle}. L’appli de l’élève la récupérera à sa prochaine ouverture.`, "ok");
     } catch (erreur) { surErreur(erreur, "message-classe"); }
   }
 

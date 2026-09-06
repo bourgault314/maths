@@ -215,16 +215,28 @@ codes, ni aux progressions, et peut être relancée sans risque.
 | Méthode | URL | Effet |
 |---|---|---|
 | POST | `/api/parcours.php` `{code, appli, lire: true}` | lit la progression, avec sa `revision` |
-| POST | `/api/parcours.php` `{code, appli, parcours, base_revision}` | l'enregistre si `base_revision` est la révision en base ; sinon **409** avec l'état actuel, que l'appli fusionne avant de renvoyer. Le serveur ne garde que ce que `lib/applis.php` déclare (`lib/progression.php`) : jamais un prénom ni un texte libre. La version précédente est conservée (`donnees_avant`) |
+| POST | `/api/parcours.php` `{code, appli, parcours, base_revision}` | l'enregistre si `base_revision` est la révision en base ; sinon **409** avec l'état actuel, que l'appli fusionne avant de renvoyer. Le serveur ne garde que ce que `lib/applis.php` déclare (`lib/progression.php`) : jamais un prénom ni un texte libre. La version précédente est conservée (`donnees_avant`), et l'état de fin de journée est rangé dans `versions` (une ligne par jour, sept jours) |
 | POST | `/api/eleve.php` `{code}` | prénom, classe et applis de l'élève (page d'accueil) |
-| POST | `/api/prof.php` `{action, …}` | `connexion` (répond aussi `mdp_temporaire`), `deconnexion`, `moi`, `profs.motdepasse` `{ancien, nouveau}`, `profs.annuaire`, `profs.liste/ajouter/reinitialiser/desactiver/reactiver/supprimer` (administrateur ; `ajouter` et `reinitialiser` renvoient le temporaire ; `supprimer` veut `avec_classes: true` si le compte possède des classes), `classes.liste/creer/modifier/supprimer`, `partages.liste/ajouter/supprimer`, `eleves.ajouter/nommer/regenerer/restaurer/supprimer`, `tableau` |
+| POST | `/api/prof.php` `{action, …}` | `connexion` (répond aussi `mdp_temporaire`), `deconnexion`, `moi`, `profs.motdepasse` `{ancien, nouveau}`, `profs.annuaire`, `profs.liste/ajouter/reinitialiser/desactiver/reactiver/supprimer` (administrateur ; `ajouter` et `reinitialiser` renvoient le temporaire ; `supprimer` veut `avec_classes: true` si le compte possède des classes), `classes.liste/creer/modifier/supprimer/supprimer_echues`, `partages.liste/ajouter/supprimer`, `eleves.ajouter/nommer/regenerer/restaurer/supprimer` (`restaurer` accepte `jour: "AAAA-MM-JJ"` pour revenir à la fin d'une journée gardée), `tableau` |
 
-`classes.liste` supprime au passage les classes de l'année scolaire écoulée
-(lot 12, seulement celles du professeur connecté) et rend, en plus des classes,
-`supprimees_maintenant`, `annee_courante`, `preavis_fin_annee` et `purge_le`.
-`classes.supprimer` et la fin d'année passent par **la même fonction**
-(`lib/archives.php`, `supprimer_classe()`) : deux codes qui effacent les mêmes
-tables, ce serait deux occasions d'en oublier une.
+`classes.liste` **ne supprime rien** (changé le 06/09/2026 : ouvrir « Ma
+classe » effaçait les classes de l'année écoulée, sans un mot et sans retour).
+Elle rend, en plus des classes, `echues` — celles de l'année écoulée qui n'ont
+rien enregistré depuis trois semaines —, `annee_courante`, `preavis_fin_annee`
+et `purge_le`. Le professeur les supprime lui-même par
+`classes.supprimer_echues` `{classes: [id, …]}`, qui revérifie chaque
+identifiant côté serveur (propriétaire, année écoulée, trois semaines sans
+activité) et supprime tout ou rien. La suppression AUTOMATIQUE, elle, reste
+chez `menage.php` seul (tâche planifiée OVH) : c'est lui qui tient la promesse
+du 1er août. `classes.supprimer`, `classes.supprimer_echues` et le ménage
+passent par **la même fonction** (`lib/archives.php`, `supprimer_classe()`) :
+deux codes qui effacent les mêmes tables, ce serait deux occasions d'en oublier
+une.
+
+L'année scolaire pivote au **1er juillet** (et non au 1er août) : une classe
+préparée pendant les vacances appartient à l'année qui vient. L'activité d'une
+classe, c'est le plus récent des trois : dernier enregistrement d'un élève,
+dernière création d'élève, création de la classe.
 
 ## Sécurité
 

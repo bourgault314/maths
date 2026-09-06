@@ -13,6 +13,7 @@ require __DIR__ . '/../lib/codes.php';
 require __DIR__ . '/../lib/limite.php';
 require __DIR__ . '/../lib/applis.php';
 require __DIR__ . '/../lib/progression.php';
+require __DIR__ . '/../lib/versions.php';
 
 const TAILLE_MAX_PROGRESSION = 40000; // octets
 const APPLIS_CONNUES = ['defi-tables', 'automatismes'];
@@ -47,8 +48,9 @@ function lire_progression(PDO $pdo, int $eleveId, string $appli): ?array
 //     UPDATE sur MySQL, BEGIN IMMEDIATE sur SQLite) : $base différente de la
 //     révision en base → conflit, avec l'état actuel pour que l'appli
 //     fusionne ; sinon la version précédente est gardée dans
-//     donnees_avant (« Restaurer la version précédente » dans Ma classe), et la
-//     révision monte d'un cran.
+//     donnees_avant (« Revenir à… » dans Ma classe), et la révision monte d'un
+//     cran. La version du JOUR est rangée dans le même mouvement
+//     (lib/versions.php) : une ligne par journée, sept journées gardées.
 //  3. Un interblocage ou un verrou refusé se réessaie deux fois (lib/bd.php).
 function ecrire_progression(PDO $pdo, int $eleveId, string $appli, string $donnees, int $base): array
 {
@@ -72,6 +74,16 @@ function ecrire_progression_une_fois(PDO $pdo, int $eleveId, string $appli, stri
         try {
             $pdo->prepare('INSERT INTO progressions (eleve_id, appli, donnees, maj_le, revision, donnees_avant) VALUES (?, ?, ?, ?, 1, NULL)')
                 ->execute([$eleveId, $appli, $donnees, $maj]);
+            // La version du jour (lot serveur A). Cette première écriture se
+            // fait exprès HORS transaction (voir ci-dessus) : l'historique est
+            // un confort, la progression est la donnée. S'il ne peut pas
+            // s'écrire, l'élève garde quand même son travail et l'ennui part
+            // au journal d'erreurs.
+            try {
+                enregistrer_version($pdo, $eleveId, $appli, $donnees, 1);
+            } catch (Throwable $e) {
+                error_log('parcours (version du jour) : ' . $e->getMessage());
+            }
             return ['revision' => 1, 'maj_le' => $maj];
         } catch (PDOException $e) {
             if (!doublon($e)) throw $e;
@@ -110,6 +122,10 @@ function ecrire_progression_une_fois(PDO $pdo, int $eleveId, string $appli, stri
         $actuel = lire_progression($pdo, $eleveId, $appli);
         return ['conflit' => true, 'actuel' => $actuel ?? etat_absent()];
     }
+    // La version du jour, DANS le verrou : la ligne « fin de journée » et la
+    // progression avancent ensemble, ou aucune des deux. Elle porte l'état
+    // APRÈS écriture — c'est bien « ce qu'il y avait à la fin de ce jour-là ».
+    enregistrer_version($pdo, $eleveId, $appli, $donnees, $revision + 1);
     transaction_valider($pdo);
     return ['revision' => $revision + 1, 'maj_le' => $maj];
 }

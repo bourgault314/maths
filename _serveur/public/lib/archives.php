@@ -19,6 +19,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/bd.php';
 require_once __DIR__ . '/limite.php';
 require_once __DIR__ . '/billets.php';
+require_once __DIR__ . '/versions.php';
 
 // Une classe encore utilisée n'est JAMAIS effacée par surprise : la
 // suppression automatique attend trois semaines sans un seul enregistrement.
@@ -31,15 +32,27 @@ const JOURS_SANS_ACTIVITE_AVANT_SUPPRESSION = 21;
 //
 // À La Réunion, la rentrée est mi-août et les cours finissent début juillet
 // (rentrée 2026 : le 18 août ; fin de l'année 2026-2027 : le 3 juillet 2027).
-// Le pivot est donc le 1er août : ce qui est créé à partir du 1er août
-// appartient à l'année qui commence. Tout est calculé en temps universel,
-// comme le reste du serveur ; La Réunion est à UTC+4, l'écart ne joue que
-// pendant les quatre heures du 31 juillet au soir.
+//
+// LE PIVOT EST LE 1er JUILLET (changé le 06/09/2026, constat 2 de l'audit).
+// Il était au 1er août, et c'était un piège : une classe préparée pendant les
+// vacances — le 25 juillet, ce que fait tout professeur qui s'avance — était
+// rangée dans l'année ÉCOULÉE, donc « échue » dès sa création, donc supprimée
+// à la première ouverture de « Ma classe » de la rentrée. Reproduit
+// localement : classe du 25 juillet, vingt-cinq élèves nommés le 20 août,
+// effacée sans un mot le 5 septembre.
+//
+// Avec le 1er juillet, ce qui est créé pendant les vacances appartient à
+// l'année qui vient — c'est bien pour elle qu'on le prépare. La suppression,
+// elle, ne bouge pas : les données d'une année partent au plus tard le 1er
+// août qui suit (purge_de_l_annee), comme le dit la fiche de registre.
+//
+// Tout est calculé en temps universel, comme le reste du serveur ; La Réunion
+// est à UTC+4, l'écart ne joue que pendant les quatre heures du 30 juin au soir.
 function annee_scolaire(string $date): string
 {
     $an = (int)substr($date, 0, 4);
     $mois = (int)substr($date, 5, 2);
-    $debut = $mois >= 8 ? $an : $an - 1;
+    $debut = $mois >= 7 ? $an : $an - 1;
     return $debut . '-' . ($debut + 1);
 }
 
@@ -55,22 +68,34 @@ function purge_de_l_annee(string $annee): string
     return ((int)substr($annee, 5, 4)) . '-08-01';
 }
 
-// Le jour à partir duquel on prévient : les cours sont finis, la suppression
-// approche. Un mois de préavis, affiché dans « Ma classe ».
+// Le jour à partir duquel on prévient : la fin de l'année approche, la
+// suppression aussi. Deux mois de préavis, affichés dans « Ma classe ».
+//
+// Le 1er JUIN depuis le 06/09/2026 : avec le pivot du 1er juillet, l'année
+// scolaire en cours change de nom ce jour-là. Un préavis calé sur le 1er
+// juillet ne se serait donc plus jamais affiché — il aurait parlé de l'année
+// SUIVANTE. Juin est de toute façon le bon moment pour dire « fais ta
+// sauvegarde » : les cours durent encore, le professeur est là.
 function fin_des_cours_de_l_annee(string $annee): string
 {
-    return ((int)substr($annee, 5, 4)) . '-07-01';
+    return ((int)substr($annee, 5, 4)) . '-06-01';
 }
 
-// Vrai si l'année scolaire en cours est dans son dernier mois (juillet) : les
-// classes de l'année vont être supprimées le 1er août.
+// Vrai si l'année scolaire en cours touche à sa fin : les classes de cette
+// année partiront à partir du 1er août.
 function preavis_de_fin_d_annee(): bool
 {
     return gmdate('Y-m-d') >= fin_des_cours_de_l_annee(annee_scolaire_courante());
 }
 
-// Le jour de la dernière activité d'une classe : la plus récente des dates
-// d'enregistrement de ses élèves, sinon le jour de sa création.
+// Le jour de la dernière activité d'une classe.
+//
+// TROIS dates depuis le 06/09/2026, la plus récente gagne (constat 2 de
+// l'audit) : le dernier enregistrement d'un élève, la dernière création
+// d'élève, et la création de la classe. Avant, seuls les enregistrements
+// comptaient — préparer une classe entière, saisir vingt-cinq prénoms et la
+// laisser trois semaines sans qu'un élève s'y connecte, ce n'était pas de
+// l'activité. Or c'est exactement ce que fait un professeur en août.
 function derniere_activite_de_la_classe(PDO $pdo, int $classeId, string $creeLe): string
 {
     $requete = $pdo->prepare(
@@ -79,10 +104,20 @@ function derniere_activite_de_la_classe(PDO $pdo, int $classeId, string $creeLe)
     );
     $requete->execute([$classeId]);
     $maj = $requete->fetchColumn();
-    $jourCreation = substr($creeLe, 0, 10);
-    if ($maj === false || $maj === null || $maj === '') return $jourCreation;
-    $maj = substr((string)$maj, 0, 10);
-    return $maj > $jourCreation ? $maj : $jourCreation;
+    $requete->closeCursor();
+
+    $requete = $pdo->prepare('SELECT MAX(e.cree_le) FROM eleves e WHERE e.classe_id = ?');
+    $requete->execute([$classeId]);
+    $dernierEleve = $requete->fetchColumn();
+    $requete->closeCursor();
+
+    $jour = substr($creeLe, 0, 10);
+    foreach ([$maj, $dernierEleve] as $candidat) {
+        if ($candidat === false || $candidat === null || $candidat === '') continue;
+        $candidat = substr((string)$candidat, 0, 10);
+        if ($candidat > $jour) $jour = $candidat;
+    }
+    return $jour;
 }
 
 // Les classes dont l'année scolaire est passée. NE MODIFIE RIEN : c'est ce que
@@ -112,12 +147,17 @@ function classes_echues(PDO $pdo, ?int $profId = null): array
         $annee = annee_scolaire((string)$ligne['cree_le']);
         if ($annee >= $courante) continue;
         $activite = derniere_activite_de_la_classe($pdo, (int)$ligne['id'], (string)$ligne['cree_le']);
+        $combien = $pdo->prepare('SELECT COUNT(*) FROM eleves WHERE classe_id = ?');
+        $combien->execute([(int)$ligne['id']]);
+        $eleves = (int)$combien->fetchColumn();
+        $combien->closeCursor();
         $echues[] = [
             'id' => (int)$ligne['id'],
             'libelle' => (string)$ligne['libelle'],
             'prof_id' => (int)$ligne['prof_id'],
             'annee' => $annee,
             'derniere_activite' => $activite,
+            'eleves' => $eleves,
             'mure' => $activite < $limite,
         ];
     }
@@ -142,6 +182,9 @@ function supprimer_classe(PDO $pdo, int $classeId): void
             $requete->execute([$classeId]);
             foreach ($requete->fetchAll() as $eleve) {
                 $pdo->prepare('DELETE FROM progressions WHERE eleve_id = ?')->execute([(int)$eleve['id']]);
+                // L'historique des sept jours part avec le reste : une classe
+                // supprimée ne doit rien laisser derrière elle (06/09/2026).
+                oublier_versions_de_l_eleve($pdo, (int)$eleve['id']);
                 oublier_compteurs_du_code($pdo, (string)$eleve['code']);
                 oublier_billets_de_l_eleve($pdo, (int)$eleve['id']);
             }
@@ -156,17 +199,56 @@ function supprimer_classe(PDO $pdo, int $classeId): void
     });
 }
 
-// La suppression automatique de fin d'année. Jouée à chaque ouverture de la
-// liste des classes (api/prof.php) et par menage.php : le 1er août, ce qui
-// reste de l'année écoulée part tout seul. Renvoie les noms des classes
-// supprimées, pour que la page le dise au professeur.
+// La suppression automatique de fin d'année.
+//
+// CHANGÉ LE 06/09/2026 : elle n'est plus jouée à l'ouverture de « Ma classe ».
+// Elle ne l'est plus que par menage.php, la tâche planifiée d'OVH (2 août et
+// 2 septembre à 3 h 08) — c'est LUI qui tient la promesse « supprimées à
+// partir du 1er août » du registre. Dans « Ma classe », le professeur est
+// désormais INTERROGÉ : la liste des classes échues lui est montrée, il
+// décide. Une suppression définitive ne doit jamais être le prix d'un clic sur
+// « Mes classes ».
+//
+// Renvoie [['id' => …, 'libelle' => …], …] : menage.php en tire son résumé et
+// une ligne de journal par classe.
 function supprimer_classes_echues(PDO $pdo, ?int $profId = null): array
 {
     $supprimees = [];
     foreach (classes_echues($pdo, $profId) as $classe) {
         if (!$classe['mure']) continue;
         supprimer_classe($pdo, $classe['id']);
-        $supprimees[] = $classe['libelle'];
+        $supprimees[] = ['id' => $classe['id'], 'libelle' => $classe['libelle']];
     }
     return $supprimees;
+}
+
+// Les classes échues D'UN professeur, mûres seulement : celles que « Ma
+// classe » lui propose de supprimer. Une classe échue mais utilisée il y a
+// moins de trois semaines n'y figure pas — on ne dérange pas pour rien.
+function classes_a_proposer(PDO $pdo, int $profId): array
+{
+    $sortie = [];
+    foreach (classes_echues($pdo, $profId) as $classe) {
+        if (!$classe['mure']) continue;
+        $sortie[] = [
+            'id' => $classe['id'],
+            'libelle' => $classe['libelle'],
+            'annee' => $classe['annee'],
+            'derniere_activite' => $classe['derniere_activite'],
+            'eleves' => $classe['eleves'],
+        ];
+    }
+    return $sortie;
+}
+
+// Vrai si CETTE classe est échue ET mûre pour ce professeur : le contrôle que
+// « classes.supprimer_echues » refait côté serveur sur chaque identifiant
+// reçu. Le navigateur peut envoyer ce qu'il veut, il ne fera jamais supprimer
+// une classe de l'année en cours.
+function classe_echue_et_mure(PDO $pdo, int $profId, int $classeId): bool
+{
+    foreach (classes_echues($pdo, $profId) as $classe) {
+        if ($classe['id'] === $classeId) return (bool)$classe['mure'];
+    }
+    return false;
 }

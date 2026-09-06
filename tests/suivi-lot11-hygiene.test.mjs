@@ -35,7 +35,7 @@ function matriceDuCode() {
   const fin = prof.indexOf("];", debut);
   const bloc = prof.slice(debut, fin);
   const table = {};
-  for (const [, action, droit] of bloc.matchAll(/'([a-z.]+)'\s*=>\s*'(lecture|ecriture|proprietaire)'/g)) {
+  for (const [, action, droit] of bloc.matchAll(/'([a-z._]+)'\s*=>\s*'(lecture|ecriture|proprietaire)'/g)) {
     table[action] = droit;
   }
   return table;
@@ -45,7 +45,7 @@ function actionsAdminDuCode() {
   const debut = prof.indexOf("const ACTIONS_ADMIN = [");
   assert.ok(debut > 0, "api/prof.php doit définir ACTIONS_ADMIN");
   const bloc = prof.slice(debut, prof.indexOf("];", debut));
-  return [...bloc.matchAll(/'([a-z.]+)'/g)].map((m) => m[1]);
+  return [...bloc.matchAll(/'([a-z._]+)'/g)].map((m) => m[1]);
 }
 
 // Les actions qui ne portent sur aucune classe : elles n'ont rien à faire dans
@@ -65,6 +65,9 @@ test("la matrice décrit exactement les droits décidés le 05/09/2026", () => {
     "eleves.restaurer": "ecriture",
     "classes.modifier": "proprietaire",
     "classes.supprimer": "proprietaire",
+    // Lot serveur A (06/09/2026) : supprimer les classes de l'année écoulée,
+    // à la demande du professeur. Elle efface : propriétaire.
+    "classes.supprimer_echues": "proprietaire",
     "eleves.supprimer": "proprietaire",
     "partages.ajouter": "proprietaire",
     "partages.supprimer": "proprietaire",
@@ -74,7 +77,7 @@ test("la matrice décrit exactement les droits décidés le 05/09/2026", () => {
 test("toute action de l'API est dans la matrice, dans les actions d'administration, ou déclarée sans classe", () => {
   const matrice = matriceDuCode();
   const admin = actionsAdminDuCode();
-  const cas = [...prof.matchAll(/^\s*case '([a-z.]+)':/gm)].map((m) => m[1]);
+  const cas = [...prof.matchAll(/^\s*case '([a-z._]+)':/gm)].map((m) => m[1]);
   assert.ok(cas.length >= 20, `le switch devrait avoir une vingtaine de cas (trouvé ${cas.length})`);
   for (const action of cas) {
     assert.ok(

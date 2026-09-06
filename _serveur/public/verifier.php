@@ -47,6 +47,7 @@ if (!$configOk) {
     require __DIR__ . '/lib/reponse.php';
     require __DIR__ . '/lib/limite.php';
     require __DIR__ . '/lib/archives.php';
+    require __DIR__ . '/lib/journal.php';
     if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
         try {
             // Lot 11 (05/09/2026, B-F08) : cette page était la seule porte du
@@ -122,7 +123,7 @@ if ($autorise) {
     verif($lignes, "Tables du suivi", function () {
         $pdo = bd();
         $manquantes = [];
-        foreach (['classes', 'eleves', 'progressions', 'profs', 'partages', 'sessions_prof', 'compteurs', 'billets'] as $table) {
+        foreach (['classes', 'eleves', 'progressions', 'profs', 'partages', 'sessions_prof', 'compteurs', 'billets', 'versions', 'journal'] as $table) {
             try { $pdo->query("SELECT 1 FROM $table LIMIT 1"); }
             catch (Throwable $e) { $manquantes[] = $table; }
         }
@@ -161,6 +162,25 @@ if ($autorise) {
             throw new RuntimeException("manque " . implode(', ', $manquants) . " — relance migrer.php avec ton mot de passe d'installation.");
         }
         return "révision et version précédente en place";
+    });
+    // Lot serveur A (06/09/2026) : l'historique des sept jours et le journal
+    // des actions. Une table présente ne suffit pas — il faut ses colonnes,
+    // sinon un enregistrement d'élève tombe en panne.
+    verif($lignes, "Historique et journal", function () {
+        $pdo = bd();
+        $manquants = [];
+        foreach ([['versions', 'jour'], ['versions', 'calculs'], ['versions', 'revision'],
+                  ['journal', 'quand'], ['journal', 'action'], ['journal', 'resultat']] as [$table, $colonne]) {
+            if (!colonne_existe($pdo, $table, $colonne)) $manquants[] = "$table.$colonne";
+        }
+        if ($manquants !== []) {
+            throw new RuntimeException("manque " . implode(', ', $manquants) . " — relance migrer.php avec ton mot de passe d'installation.");
+        }
+        $versions = (int)$pdo->query('SELECT COUNT(*) FROM versions')->fetchColumn();
+        $journees = (int)$pdo->query('SELECT COUNT(DISTINCT jour) FROM versions')->fetchColumn();
+        $actions = (int)$pdo->query('SELECT COUNT(*) FROM journal')->fetchColumn();
+        return "$versions version(s) sur $journees journée(s) gardée(s) (sept au plus), "
+            . "$actions ligne(s) de journal (douze mois, effacées par la tâche planifiée)";
     });
     // Le limiteur d'essais s'écrit avec une instruction propre à chaque moteur
     // (MySQL chez OVH, SQLite dans les tests) : on la joue ici, sur la vraie
@@ -226,7 +246,9 @@ if ($autorise) {
             if ($classe['mure']) $mures++;
         }
         throw new RuntimeException(count($echues) . " classe(s) d'une année passée : " . implode(', ', array_slice($noms, 0, 6))
-            . " — dont $mures sera(ont) SUPPRIMÉE(S) à la prochaine ouverture de « Ma classe ». Vérifie que c'est bien voulu avant de continuer.");
+            . " — dont $mures sera(ont) SUPPRIMÉE(S) au prochain passage de la tâche planifiée (menage.php). "
+            . "Ouvrir « Ma classe » ne supprime plus rien : le professeur y est interrogé. "
+            . "Vérifie que c'est bien voulu avant de continuer.");
     });
     // Lot 11 (05/09/2026) : le secret qui brouille les clés du limiteur ne doit
     // pas être le mot de passe d'installation lui-même. Sans « secret » dans
@@ -352,6 +374,20 @@ if ($autorise) {
     });
 }
 
+// Le journal des actions du professeur (lot serveur A), lu SEULEMENT après le
+// mot de passe d'installation. Il ne porte ni prénom, ni code, ni adresse :
+// des numéros de lignes et des mots d'une liste fermée. Il n'est pas dans
+// « Ma classe » — un professeur n'a pas à surveiller son collègue depuis
+// l'application ; c'est un registre, il se lit ici.
+$journal = [];
+if ($autorise) {
+    try {
+        $journal = dernieres_lignes_du_journal(bd(), 200);
+    } catch (Throwable $e) {
+        error_log('verifier (journal) : ' . $e->getMessage());
+    }
+}
+
 $tout = $lignes !== [] && array_reduce($lignes, fn($acc, $l) => $acc && $l['ok'], true);
 ?>
 <!doctype html>
@@ -377,6 +413,13 @@ $tout = $lignes !== [] && array_reduce($lignes, fn($acc, $l) => $acc && $l['ok']
   button { margin-top: 1.4rem; min-height: 44px; padding: 0 1.2rem; font-size: 1rem; font-weight: 600;
            color: #fff; background: #1d6fb8; border: 0; border-radius: 8px; cursor: pointer; }
   .message { margin-top: 1rem; padding: .8rem 1rem; border-radius: 8px; background: #fdf3d8; }
+  h2 { font-size: 1.05rem; margin: 1.6rem 0 .3rem; }
+  .journal { width: 100%; border-collapse: collapse; font-size: .85rem; }
+  .journal th, .journal td { text-align: left; padding: .3rem .5rem; border-top: 1px solid #e6ecf2;
+                             white-space: nowrap; }
+  .journal th { color: #5b6b7c; font-weight: 600; }
+  .journal .refus { color: #b42318; font-weight: 700; }
+  .cadre { max-height: 22rem; overflow: auto; border: 1px solid #e6ecf2; border-radius: 8px; }
 </style>
 </head>
 <body>
@@ -392,6 +435,28 @@ $tout = $lignes !== [] && array_reduce($lignes, fn($acc, $l) => $acc && $l['ok']
         </li>
       <?php endforeach; ?>
     </ul>
+    <?php if ($journal !== []): ?>
+      <h2>Dernières actions des professeurs</h2>
+      <p class="detail" style="margin:0 0 .5rem">Les <?= count($journal) ?> dernières, heure de La Réunion.
+      Douze mois sont gardés. Aucun prénom, aucun code, aucune adresse : seulement qui a fait quoi,
+      sur quelle ligne, et si c'est passé.</p>
+      <div class="cadre">
+        <table class="journal">
+          <thead><tr><th>Quand</th><th>Qui</th><th>Action</th><th>Sur</th><th>Résultat</th></tr></thead>
+          <tbody>
+            <?php foreach ($journal as $l): ?>
+              <tr>
+                <td><?= htmlspecialchars($l['quand'], ENT_QUOTES) ?></td>
+                <td><?= htmlspecialchars($l['qui'], ENT_QUOTES) ?></td>
+                <td><?= htmlspecialchars($l['action'], ENT_QUOTES) ?></td>
+                <td><?= htmlspecialchars($l['cible'], ENT_QUOTES) ?></td>
+                <td class="<?= $l['resultat'] === 'refus' ? 'refus' : '' ?>"><?= htmlspecialchars($l['resultat'], ENT_QUOTES) ?></td>
+              </tr>
+            <?php endforeach; ?>
+          </tbody>
+        </table>
+      </div>
+    <?php endif; ?>
   <?php else: ?>
     <h1>Vérification du serveur de suivi</h1>
     <form method="post" autocomplete="off">

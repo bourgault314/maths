@@ -137,6 +137,41 @@ function schema(string $pilote): array
   expire_le INTEGER NOT NULL"
         . ($mysql ? ",\n  KEY billets_eleve (eleve_id)" : "")
         . "\n)$fin",
+
+        // Lot serveur A (06/09/2026) : l'historique des progressions.
+        // UNE ligne par élève, par appli et par JOUR (jour de La Réunion) :
+        // l'état à la fin de ce jour-là. Sept jours sont gardés, pas plus —
+        // c'est ce qui est annoncé à la déléguée à la protection des données.
+        // « calculs » est le nombre d'éléments comptés au moment de
+        // l'enregistrement (lib/progression.php) : il sert à nommer les
+        // versions dans « Revenir à… » sans jamais relire les données.
+        "CREATE TABLE IF NOT EXISTS versions (
+  id $id,
+  eleve_id INTEGER NOT NULL,
+  appli VARCHAR(30) NOT NULL,
+  jour VARCHAR(10) NOT NULL,
+  revision INTEGER NOT NULL DEFAULT 0,
+  calculs INTEGER NOT NULL DEFAULT 0,
+  donnees $texte NOT NULL,
+  maj_le VARCHAR(25) NOT NULL"
+        . ($mysql ? ",\n  UNIQUE KEY versions_eleve_appli_jour (eleve_id, appli, jour),\n  KEY versions_eleve (eleve_id)" : "")
+        . "\n)$fin",
+
+        // Lot serveur A (06/09/2026) : le journal des actions du professeur.
+        // Douze mois, purgés par menage.php. AUCUN prénom, AUCUN code, AUCUNE
+        // adresse, aucun texte libre : des identifiants de lignes et des mots
+        // d'une liste fermée (lib/journal.php). C'est ce qui permet de dire à
+        // la DPD qui a fait quoi sans conserver quoi que ce soit de personnel.
+        "CREATE TABLE IF NOT EXISTS journal (
+  id $id,
+  quand VARCHAR(25) NOT NULL,
+  prof_id INTEGER NOT NULL DEFAULT 0,
+  action VARCHAR(40) NOT NULL,
+  cible_type VARCHAR(10) NOT NULL DEFAULT '',
+  cible_id INTEGER NOT NULL DEFAULT 0,
+  resultat VARCHAR(10) NOT NULL DEFAULT 'ok'"
+        . ($mysql ? ",\n  KEY journal_quand (quand)" : "")
+        . "\n)$fin",
     ];
 
     if ($mysql) return $tables;
@@ -150,6 +185,9 @@ function schema(string $pilote): array
         'CREATE UNIQUE INDEX IF NOT EXISTS partages_classe_prof ON partages (classe_id, prof_id)',
         'CREATE INDEX IF NOT EXISTS partages_prof ON partages (prof_id)',
         'CREATE INDEX IF NOT EXISTS billets_eleve ON billets (eleve_id)',
+        'CREATE UNIQUE INDEX IF NOT EXISTS versions_eleve_appli_jour ON versions (eleve_id, appli, jour)',
+        'CREATE INDEX IF NOT EXISTS versions_eleve ON versions (eleve_id)',
+        'CREATE INDEX IF NOT EXISTS journal_quand ON journal (quand)',
     ]);
 }
 
@@ -227,10 +265,22 @@ function migrer_schema(?PDO $pdo = null): array
     // Puis les tables et index absents (dont « partages »), sans toucher au reste.
     // Lot 3 (03/09/2026) : la table des billets d'entrée arrive par ici ; on
     // le dit, pour que la page de mise à niveau montre qu'elle a servi.
+    // Lot serveur A (06/09/2026) : « versions » (historique de sept jours) et
+    // « journal » (actions du professeur, douze mois) arrivent par ici. On
+    // regarde AVANT de créer, pour que la page de mise à niveau montre ce
+    // qu'elle a vraiment fait — et pour qu'un second passage ne dise rien.
     $billetsAbsente = !table_existe($pdo, 'billets');
+    $versionsAbsente = !table_existe($pdo, 'versions');
+    $journalAbsent = !table_existe($pdo, 'journal');
     installer_tables($pdo);
     if ($billetsAbsente) {
         $faits[] = "Table « billets » créée (liens d'entrée à usage unique, lot 3).";
+    }
+    if ($versionsAbsente) {
+        $faits[] = "Table « versions » créée (historique des sept derniers jours).";
+    }
+    if ($journalAbsent) {
+        $faits[] = "Table « journal » créée (actions des professeurs, douze mois).";
     }
 
     // Le premier compte créé devient administrateur et récupère les classes
@@ -259,6 +309,32 @@ function migrer_schema(?PDO $pdo = null): array
 function maintenant(): string
 {
     return gmdate('Y-m-d\TH:i:s\Z');
+}
+
+// Le fuseau de La Réunion (UTC+4, sans heure d'été). Il ne sert QUE là où un
+// jour doit être celui du professeur et de l'élève : le découpage de
+// l'historique en journées (« fin de journée du mardi 8 septembre ») et
+// l'affichage du journal. Tout le reste du serveur reste en temps universel.
+const FUSEAU = 'Indian/Reunion';
+
+// Le jour à La Réunion, « AAAA-MM-JJ ». Un enregistrement fait le 8 septembre
+// à 23 h 30 (19 h 30 UTC) appartient au 8, pas au 9.
+function jour_local(?int $instant = null): string
+{
+    return (new DateTimeImmutable('@' . ($instant ?? time())))
+        ->setTimezone(new DateTimeZone(FUSEAU))->format('Y-m-d');
+}
+
+// Un instant UTC (« 2026-09-08T19:30:00Z ») écrit en heure de La Réunion,
+// pour les yeux d'un humain : « 08/09/2026 23:30 ».
+function instant_local_lisible(string $instantUtc): string
+{
+    try {
+        return (new DateTimeImmutable($instantUtc))
+            ->setTimezone(new DateTimeZone(FUSEAU))->format('d/m/Y H:i');
+    } catch (Throwable) {
+        return $instantUtc;
+    }
 }
 
 // La date de dernière activité d'un élève : le JOUR seulement.
@@ -311,6 +387,30 @@ function transaction_annuler(PDO $pdo): void
 function pour_mise_a_jour(PDO $pdo): string
 {
     return pilote($pdo) === 'mysql' ? ' FOR UPDATE' : '';
+}
+
+// ------------------------------------------------------------- instantané
+//
+// Lot serveur A (06/09/2026), constat I-06 de l'audit GPT. sauvegarde.php
+// lisait ses tables les unes après les autres, hors transaction : un élève qui
+// enregistrait pendant l'export pouvait laisser un fichier où sa progression
+// existe mais pas son élève. Sur MySQL, « WITH CONSISTENT SNAPSHOT » fige la
+// base telle qu'elle est à cet instant pour toute la transaction ; sur SQLite,
+// une transaction de lecture ordinaire suffit. La transaction s'ouvre et se
+// ferme EN SQL des deux côtés : PDO ne voit pas un BEGIN écrit à la main
+// (même raison qu'au verrou ci-dessus).
+function instantane_ouvrir(PDO $pdo): void
+{
+    $pdo->exec(pilote($pdo) === 'mysql' ? 'START TRANSACTION WITH CONSISTENT SNAPSHOT' : 'BEGIN');
+}
+
+function instantane_fermer(PDO $pdo): void
+{
+    try {
+        $pdo->exec('COMMIT');
+    } catch (PDOException) {
+        // Rien à valider : l'instantané n'a jamais été ouvert.
+    }
 }
 
 function doublon(PDOException $e): bool
