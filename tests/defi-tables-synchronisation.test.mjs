@@ -13,9 +13,12 @@ import {PARCOURS, fauxStockage, fauxServeur, fauxTemps, demarrerAppli, parcoursA
 
 const B = "BZ4MHP", N = "NP7Q4C";
 
-function appli(serveur, {local, session, entree = {code: B}, running = false} = {}) {
+// Depuis le lot « appareil partagé », une adresse ne porte plus de code : un
+// onglet déjà sous un code est un onglet qui a échangé son billet au chargement
+// d'avant (codeOnglet).
+function appli(serveur, {local, session, codeOnglet = B, entree = {}, running = false} = {}) {
   const temps = fauxTemps();
-  const a = demarrerAppli({entree, local, session, reseau: serveur, running, minuteries: temps});
+  const a = demarrerAppli({entree, local, session, reseau: serveur, running, minuteries: temps, codeOnglet});
   a.temps = temps;
   return a;
 }
@@ -146,7 +149,7 @@ test("hors ligne, le travail reste marqué « à envoyer », survit à un rechar
   const tentativesCoupe = serveur.appels.filter(x => x.parcours).length;
   assert.ok(tentativesCoupe >= 4, `relances pendant la coupure (${tentativesCoupe})`);
   // Rechargement de la page (même appareil, même onglet) : l'état survit.
-  const b = appli(serveur, {local: a.local, session: a.session, entree: {}});
+  const b = appli(serveur, {local: a.local, session: a.session, codeOnglet: ""});
   assert.equal(b.api.sync.dirty, true, "« à envoyer » a été rangé sur l'appareil");
   // Le réseau revient.
   serveur.mode = "ok";
@@ -279,7 +282,7 @@ test("un nouveau code arrive après un code refusé : l’ancienne case reste en
   assert.equal(a.api.sync.detache, true);
   serveur.forcer = null;
   // Le nouveau code N, dans un onglet neuf.
-  const b = appli(serveur, {local, session: fauxStockage(), entree: {code: N}});
+  const b = appli(serveur, {local, session: fauxStockage(), codeOnglet: N});
   await demarrer(b);
   assert.deepEqual(PARCOURS.tablesAcquises(b.api.parcours), [2], "la progression connue du serveur revient, sans question");
   assert.equal(b.api.parcours.prenom, "", "sans le prénom de l’ancienne case");

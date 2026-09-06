@@ -44,7 +44,7 @@ export function fauxStockage(initial = {}) {
 
 export function fauxElement(id) {
   const el = {
-    id, hidden: false, textContent: "", href: "", enfants: [], classes: new Set(), attributs: {}, ecouteurs: {},
+    id, hidden: false, textContent: "", value: "", href: "", enfants: [], classes: new Set(), attributs: {}, ecouteurs: {},
     append(...noeuds) { noeuds.forEach(n => el.enfants.push(n)); },
     replaceChildren(...noeuds) { el.enfants = [...noeuds]; },
     setAttribute(n, v) { el.attributs[n] = v; },
@@ -194,9 +194,15 @@ export function fauxTemps() {
 
 // Exécute le bloc « suivi de classe » de la page dans ce faux monde.
 // minuteries : "immediates" (tout timer part tout de suite) ou un fauxTemps().
-export function demarrerAppli({entree = {}, local, session, reseau, running = false, minuteries = "immediates"} = {}) {
+// codeOnglet : le code déjà actif dans l'onglet au chargement. Depuis le lot
+// « appareil partagé » (06/09/2026), c'est le SEUL chemin par lequel une page
+// qui s'ouvre est déjà sous un code — une adresse n'en porte plus (#code= a
+// disparu), un billet doit d'abord être échangé. C'est ce que vit un onglet
+// rechargé (F5) après une entrée par billet.
+export function demarrerAppli({entree = {}, local, session, reseau, running = false, minuteries = "immediates", codeOnglet = ""} = {}) {
   local = local || fauxStockage();
   session = session || fauxStockage();
+  if (codeOnglet) PARCOURS.sauverCode(session, codeOnglet);
   reseau = reseau || fauxReseau();
   const rendus = [];
   const document = fauxDocument();
@@ -204,10 +210,10 @@ export function demarrerAppli({entree = {}, local, session, reseau, running = fa
   const ecouteurs = {};
   const temps = minuteries === "immediates" ? null : minuteries;
   // L'horloge de la page : celle des fausses minuteries quand il y en a, pour
-  // que « 45 minutes sans un geste » se joue en avançant le temps.
+  // que « dix minutes sans un geste » se joue en avançant le temps.
   const horloge = temps ? {now: () => temps.maintenant} : Date;
   const window = {
-    MATHSGO_ENTREE: {code: "", fiche: "", billet: "", vue: "", ouvrir: "", ...entree},
+    MATHSGO_ENTREE: {billet: "", vue: "", ouvrir: "", ...entree},
     location: {hash: "", pathname: "/outils/calcul_mental/defi_tables.html", search: "", assign(url) { window.allees.push(url); }},
     allees: [],
     setTimeout: temps ? (fn, ms) => temps.setTimeout(fn, ms) : (fn) => { fn(); return 1; },
@@ -226,13 +232,20 @@ export function demarrerAppli({entree = {}, local, session, reseau, running = fa
       get gardeVisible() { return gardeVisible; },
       ENTREE, suiviActif, demarrerSuivi, quitterSuivi, sauverParcours, envoyerAvantDeFermer, envoyerMaintenant,
       renderRepere, majLienRetour, entrerParBillet, adopterCode, echangerBillet, prenomAffiche,
-      verifierGarde, repondreGarde, GARDE_INACTIVITE_MS
+      verifierGarde, repondreGarde, GARDE_INACTIVITE_MS, GARDE_ESSAIS_MAX,
+      CLE_PRENOM_ONGLET, CLE_DERNIER_GESTE, lirePrenomOnglet
     };`)(window, document, navigator, reseau.fetch, PARCOURS, () => local, () => session, state,
     () => rendus.push("parcours"), horloge);
   return {api, local, session, reseau, window, document, state, rendus, balises, temps,
     declencher: type => (ecouteurs[type] || []).forEach(fn => fn()),
     repere: () => document.getElementById("suivi-repere"),
     garde: () => document.getElementById("suivi-garde"),
+    champGarde: () => document.getElementById("suivi-garde-code"),
+    // Répondre à la question comme un élève : taper un code, cliquer « C'est moi ».
+    tapeLeCode(code) {
+      document.getElementById("suivi-garde-code").value = code;
+      document.getElementById("suivi-garde-oui").ecouteurs.click();
+    },
     // Un bouton du repère (« Se déconnecter »), par son texte.
     boutonRepere(texte) {
       const bloc = document.getElementById("suivi-repere").enfants.at(-1);
