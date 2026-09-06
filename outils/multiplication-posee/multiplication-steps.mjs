@@ -10,15 +10,75 @@ function decimalCountSentence(factor, position) {
 }
 
 function multiplicationCalculation(operation) {
-  const parts = [`${operation.multiplicandDigit} × ${operation.multiplierDigit}`];
-  if (operation.carryIn > 0) parts.push(String(operation.carryIn));
-  return parts.join(" + ");
+  return `${operation.multiplierDigit} × ${operation.multiplicandDigit}`;
 }
 
 function additionCalculation(operation) {
   const parts = operation.addendDigits.map(String);
   if (operation.carryIn > 0) parts.push(String(operation.carryIn));
   return parts.join(" + ");
+}
+
+function formatFrenchList(values) {
+  if (values.length < 2) return values[0] || "";
+  return `${values.slice(0, -1).join(", ")} et ${values.at(-1)}`;
+}
+
+function operationExponent(partial, operation) {
+  return partial.shift + operation.processingIndex;
+}
+
+function quantityAtRank(value, exponent) {
+  return `${value} ${placeValueName(exponent, value)}`;
+}
+
+function multiplicationPlaceDetail(partial, operation, value, suffix = "") {
+  return `Cela représente ${quantityAtRank(value, operationExponent(partial, operation))}${suffix}.`;
+}
+
+function shiftedRanks(partial) {
+  return Array.from(
+    { length: partial.shift },
+    (_, exponent) => placeValueName(exponent, 2)
+  );
+}
+
+function shiftedZeroSentence(partial) {
+  const ranks = shiftedRanks(partial);
+  if (ranks.length === 1) return `J’écris 0 au rang des ${ranks[0]}.`;
+  return `J’écris 0 aux rangs des ${formatFrenchList(ranks)}.`;
+}
+
+function shiftedZeroDetail(multiplication, partial) {
+  const factor = formatInteger(partial.multiplierPlaceValue);
+  const rank = placeValueName(partial.shift, 2);
+  if (partial.multiplierDigit === 0) {
+    return `Le chiffre des ${rank} vaut 0 : ce produit partiel sera entièrement nul.`;
+  }
+  if (partial.shift === 1) {
+    return `Je calcule ${multiplication.integerFactors[0]} × ${factor} : le produit est un nombre entier de ${rank}. Son chiffre des unités est donc 0.`;
+  }
+  return `Je calcule ${multiplication.integerFactors[0]} × ${factor} : le produit est un nombre entier de ${rank}. Les ${partial.shift} rangs inférieurs sont donc occupés par des 0.`;
+}
+
+function writePartialSentence(partial, operation) {
+  const exponent = operationExponent(partial, operation);
+  if (operation.isLastDigit && operation.carryOut > 0) {
+    return {
+      sentence: `La ligne est terminée : j’écris directement ${operation.total}.`,
+      detail: multiplicationPlaceDetail(partial, operation, operation.total)
+    };
+  }
+  if (operation.carryOut > 0) {
+    return {
+      sentence: `J’écris ${quantityAtRank(operation.resultDigit, exponent)} et je retiens ${quantityAtRank(operation.carryOut, exponent + 1)}.`,
+      detail: `La retenue sera ajoutée après la multiplication suivante.`
+    };
+  }
+  return {
+    sentence: `J’écris ${quantityAtRank(operation.resultDigit, exponent)}.`,
+    detail: operation.isLastDigit ? "La ligne est terminée." : ""
+  };
 }
 
 export function makeSteps(multiplication) {
@@ -61,20 +121,22 @@ export function makeSteps(multiplication) {
       title: "Je pose",
       sentence: `J’écris le premier facteur : ${multiplication.displayFactors[0]}.`
     });
-    steps.push({
-      kind: "pose-second",
-      title: "Je pose",
-      sentence: `J’écris le second facteur : ${multiplication.displayFactors[1]}.`
-    });
   }
+
+  steps.push({
+    kind: "identify-units",
+    title: "Je repère",
+    sentence: `Je repère le chiffre des unités dans ${multiplication.integerFactors[0]} et dans ${multiplication.integerFactors[1]}.`,
+    unitFactors: [...multiplication.integerFactors]
+  });
 
   steps.push({
     kind: "align",
     title: "J’aligne",
-    sentence: "J’aligne les chiffres à droite, en plaçant les unités sous les unités.",
+    sentence: "J’écris le second facteur en alignant les chiffres des unités que je viens de repérer.",
     detail: multiplication.isDecimal
-      ? "En multiplication, je n’aligne pas les virgules : elles sont provisoirement retirées."
-      : "Les chiffres de même rang sont dans la même colonne."
+      ? "Les virgules sont provisoirement retirées ; les chiffres de même rang se retrouvent dans la même colonne."
+      : "Les chiffres de même rang se retrouvent alors dans la même colonne."
   });
   steps.push({
     kind: "setup",
@@ -86,84 +148,91 @@ export function makeSteps(multiplication) {
     const rank = placeValueName(partial.shift, 2);
     steps.push({
       kind: "select-multiplier",
-      title: partialIndex === 0 ? "Je commence" : "Je poursuis",
+      title: partialIndex === 0 ? "Je commence" : `Je passe aux ${rank}`,
       sentence: partialIndex === 0
         ? `Je commence par ${partial.multiplierDigit}, le chiffre des ${rank} du second facteur.`
-        : `Je passe à ${partial.multiplierDigit}, le chiffre des ${rank} du second facteur.`,
-      detail: `Je vais multiplier chaque chiffre du premier facteur par ${partial.multiplierDigit}.`,
+        : partial.multiplierDigit === 0
+          ? `Dans ${multiplication.integerFactors[1]}, le chiffre 0 est au rang des ${rank} : il vaut 0.`
+          : `Dans ${multiplication.integerFactors[1]}, le chiffre ${partial.multiplierDigit} représente ${partial.multiplierDigit} ${placeValueName(partial.shift, partial.multiplierDigit)}, c’est-à-dire ${formatInteger(partial.multiplierPlaceValue)}.`,
+      detail: `Je vais calculer ${multiplication.integerFactors[0]} × ${formatInteger(partial.multiplierPlaceValue)}.`,
       partialIndex
     });
 
     if (partial.shift > 0) {
-      const zeros = "0".repeat(partial.shift);
       steps.push({
         kind: "shift",
-        title: "Je décale",
-        sentence: `Ce nouveau produit partiel commence au rang des ${rank}.`,
-        detail: `Je réserve ${partial.shift} rang${partial.shift > 1 ? "s" : ""} à droite en écrivant ${zeros}.`,
+        title: "Je prépare la nouvelle ligne",
+        sentence: shiftedZeroSentence(partial),
+        detail: shiftedZeroDetail(multiplication, partial),
         partialIndex
       });
     }
 
     partial.operations.forEach((operation, opIndex) => {
       const calculation = multiplicationCalculation(operation);
+      const product = operation.multiplicandDigit * operation.multiplierDigit;
       steps.push({
         kind: "multiply-ask",
         title: "Je multiplie",
         sentence: `${calculation} = ?`,
-        detail: operation.carryIn > 0
-          ? `J’ajoute la retenue ${operation.carryIn} au produit.`
-          : "Je n’anticipe pas les chiffres suivants.",
         partialIndex,
         opIndex
       });
       steps.push({
         kind: "multiply-calculate",
-        title: "Je calcule",
-        sentence: `${calculation} = ${operation.total}.`,
+        title: "Je multiplie",
+        sentence: `${calculation} = ${product}.`,
+        detail: multiplicationPlaceDetail(
+          partial,
+          operation,
+          product,
+          operation.carryIn > 0 ? " avant d’ajouter la retenue" : ""
+        ),
         partialIndex,
         opIndex
       });
 
-      let detail = "";
-      if (operation.carryOut > 0 && operation.isLastDigit) {
-        detail = `Il reste une retenue de ${operation.carryOut} à placer à gauche.`;
-      } else if (operation.carryOut > 0) {
-        detail = `La retenue ${operation.carryOut} sera ajoutée au calcul suivant.`;
-      }
-      steps.push({
-        kind: "partial-write",
-        title: "J’écris",
-        sentence: operation.carryOut > 0
-          ? `J’écris ${operation.resultDigit} et je retiens ${operation.carryOut}.`
-          : `J’écris ${operation.resultDigit} dans le produit partiel.`,
-        detail,
-        partialIndex,
-        opIndex
-      });
-
-      if (operation.isLastDigit && operation.carryOut > 0) {
+      if (operation.carryIn > 0) {
         steps.push({
-          kind: "partial-final-carry",
-          title: "J’écris la retenue",
-          sentence: `J’écris la dernière retenue ${operation.carryOut} à gauche du produit partiel.`,
+          kind: "carry-add-ask",
+          title: "J’ajoute la retenue",
+          sentence: `${product} + ${operation.carryIn} = ?`,
+          detail: `La retenue ${quantityAtRank(operation.carryIn, operationExponent(partial, operation))} est au même rang.`,
+          partialIndex,
+          opIndex
+        });
+        steps.push({
+          kind: "carry-add-calculate",
+          title: "J’ajoute la retenue",
+          sentence: `${product} + ${operation.carryIn} = ${operation.total}.`,
+          detail: multiplicationPlaceDetail(partial, operation, operation.total),
           partialIndex,
           opIndex
         });
       }
+
+      const writing = writePartialSentence(partial, operation);
+      steps.push({
+        kind: "partial-write",
+        title: "J’écris",
+        sentence: writing.sentence,
+        detail: writing.detail,
+        partialIndex,
+        opIndex
+      });
     });
 
     steps.push({
       kind: "partial-complete",
       title: "J’obtiens un produit partiel",
-      sentence: partial.shift === 0
-        ? `${multiplication.integerFactors[0]} × ${partial.multiplierDigit} = ${formatInteger(partial.coreProduct)}.`
-        : `${multiplication.integerFactors[0]} × ${partial.multiplierDigit} = ${formatInteger(partial.coreProduct)}, puis le décalage donne ${formatInteger(partial.shiftedProduct)}.`,
-      detail: partial.shift === 0
+      sentence: `${multiplication.integerFactors[0]} × ${formatInteger(partial.multiplierPlaceValue)} = ${formatInteger(partial.shiftedProduct)}.`,
+      detail: partial.multiplierDigit === 0 && partial.shift > 0
+        ? `Cette ligne est nulle : le chiffre des ${rank} du second facteur vaut 0.`
+        : partial.shift === 0
         ? "Le premier produit partiel est terminé."
         : partial.shift === 1
-          ? "Le rang réservé à droite matérialise le changement de rang."
-          : `Les ${partial.shift} rangs réservés à droite matérialisent le changement de rang.`,
+          ? "Le zéro écrit à droite traduit la multiplication par 10."
+          : `Les ${partial.shift} zéros écrits à droite traduisent la multiplication par ${formatInteger(10 ** partial.shift)}.`,
       partialIndex
     });
   });
@@ -261,36 +330,34 @@ function multiplicationCarries(multiplication, steps, currentStepIndex) {
   return multiplication.partials.flatMap((partial, partialIndex) => (
     partial.operations
       .map((operation, opIndex) => ({ operation, opIndex }))
-      .filter(({ operation }) => operation.carryOut > 0)
+      .filter(({ operation }) => operation.carryOut > 0 && !operation.isLastDigit)
       .map(({ operation, opIndex }) => {
         const sourceStepIndex = steps.findIndex((step) => (
           step.kind === "partial-write"
           && step.partialIndex === partialIndex
           && step.opIndex === opIndex
         ));
-        const consumeStepIndex = operation.isLastDigit
-          ? steps.findIndex((step) => (
-              step.kind === "partial-final-carry"
-              && step.partialIndex === partialIndex
-              && step.opIndex === opIndex
-            ))
-          : steps.findIndex((step) => (
-              step.kind === "partial-write"
-              && step.partialIndex === partialIndex
-              && step.opIndex === opIndex + 1
-            ));
-        const visible = currentStepIndex >= sourceStepIndex;
+        const consumeStepIndex = steps.findIndex((step) => (
+          step.kind === "carry-add-calculate"
+          && step.partialIndex === partialIndex
+          && step.opIndex === opIndex + 1
+        ));
+        const completeStepIndex = steps.findIndex((step) => (
+          step.kind === "partial-complete" && step.partialIndex === partialIndex
+        ));
+        const visible = currentStepIndex >= sourceStepIndex
+          && (completeStepIndex === -1 || currentStepIndex < completeStepIndex);
         let status = "hidden";
         if (visible) {
           if (currentStepIndex === sourceStepIndex) status = "fresh";
-          else if (currentStepIndex < consumeStepIndex) status = "active";
+          else if (consumeStepIndex === -1 || currentStepIndex < consumeStepIndex) status = "active";
           else status = "used";
         }
         return {
           partialIndex,
           opIndex,
           value: operation.carryOut,
-          targetLayoutIndex: operation.carryTargetLayoutIndex,
+          targetLayoutIndex: operation.carryTargetFactorLayoutIndex,
           visible,
           status
         };
@@ -351,13 +418,11 @@ export function getMultiplicationDisplayState(multiplication, steps, currentStep
     if (step.kind === "integerize") {
       showGrid = true;
       showFirstFactor = true;
-      showSecondFactor = true;
     }
     if (step.kind === "pose-first") {
       showGrid = true;
       showFirstFactor = true;
     }
-    if (step.kind === "pose-second") showSecondFactor = true;
     if (step.kind === "align") {
       showGrid = true;
       showFirstFactor = true;
@@ -376,11 +441,9 @@ export function getMultiplicationDisplayState(multiplication, steps, currentStep
       const partial = multiplication.partials[step.partialIndex];
       const operation = partial.operations[step.opIndex];
       partialVisible[step.partialIndex][operation.resultLayoutIndex] = true;
-    }
-    if (step.kind === "partial-final-carry") {
-      const partial = multiplication.partials[step.partialIndex];
-      const operation = partial.operations[step.opIndex];
-      partialVisible[step.partialIndex][operation.carryTargetLayoutIndex] = true;
+      if (operation.isLastDigit && operation.carryOut > 0) {
+        partialVisible[step.partialIndex][operation.carryTargetLayoutIndex] = true;
+      }
     }
     if (step.kind === "partial-complete") {
       multiplication.partials[step.partialIndex].cells.forEach((value, layoutIndex) => {
