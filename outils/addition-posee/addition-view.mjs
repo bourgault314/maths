@@ -30,7 +30,11 @@ function addTermRow(grid, addition, cells, row, className, state, showRankGuides
     const isCurrentDigit = value !== null
       && state.activeArea === "terms"
       && state.activeLayoutIndex === layoutIndex;
+    const isUnitAnchor = value !== null
+      && state.step.kind === "pose"
+      && addition.places[layoutIndex].exponent === 0;
     cell.classList.toggle("is-active", isCurrentDigit);
+    cell.classList.toggle("is-unit-anchor", isUnitAnchor);
     cell.setAttribute("aria-hidden", "true");
     if (showRankGuides && row === 2) {
       const marker = element("span", "rank-marker", placeValueMarker(addition.places[layoutIndex].exponent));
@@ -126,6 +130,16 @@ export function renderAddition({
   return state;
 }
 
-export function renderVocabulary(container, visible) {
+export function renderVocabulary(container, addition, visible) {
   container.hidden = !visible;
+  if (!visible) return;
+  const values = [addition.displayTerms[0], addition.displayTerms[1], addition.resultDisplay];
+  container.querySelectorAll("[data-vocabulary-value]").forEach((node, index) => {
+    node.textContent = values[index];
+  });
+  container.setAttribute(
+    "aria-label",
+    `${addition.displayTerms[0]} plus ${addition.displayTerms[1]} égale ${addition.resultDisplay}. `
+      + "Premier terme plus second terme égale somme."
+  );
 }

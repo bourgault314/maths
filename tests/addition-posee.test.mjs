@@ -16,7 +16,7 @@ import {
   getAdditionDisplayState,
   makeSteps
 } from "../outils/addition-posee/addition-steps.mjs";
-import { buildAdditionAriaLabel } from "../outils/addition-posee/addition-view.mjs";
+import { buildAdditionAriaLabel, renderVocabulary } from "../outils/addition-posee/addition-view.mjs";
 
 const interfaceHtml = readFileSync(new URL("../outils/addition-posee/addition-posee.html", import.meta.url), "utf8");
 const interfaceCss = readFileSync(new URL("../outils/addition-posee/addition-posee.css", import.meta.url), "utf8");
@@ -60,9 +60,11 @@ test("chaque colonne sépare question, calcul et écriture ou échange", () => {
   );
   assert.equal(steps[1].sentence, "4 unités + 9 unités = ?");
   assert.equal(steps[2].sentence, "4 + 9 = 13.");
+  assert.equal(steps[2].detail, "J’obtiens 13 unités.");
   assert.equal(steps[3].sentence, "13 unités = 1 dizaine et 3 unités.");
   assert.equal(steps[3].detail, "J’écris 3 au rang des unités et je retiens 1 dizaine.");
   assert.equal(steps[4].sentence, "8 dizaines + 7 dizaines + 1 dizaine retenue = ?");
+  assert.equal(steps.at(-1).title, "Je conclus");
   assert.equal(steps.at(-1).sentence, "584 + 279 = 863.");
 });
 
@@ -91,7 +93,7 @@ test("999 + 1 réserve une étape distincte à la retenue finale", () => {
   assert.equal(addition.hasFinalCarry, true);
   assert.equal(addition.layoutIntegerPlaces, 4);
   assert.equal(steps.at(-2).kind, "final-carry");
-  assert.equal(steps.at(-2).sentence, "La retenue devient le chiffre des milliers.");
+  assert.equal(steps.at(-2).sentence, "Il reste 1 millier en retenue.");
 
   const before = getAdditionDisplayState(addition, steps, steps.length - 3);
   const finalCarry = getAdditionDisplayState(addition, steps, steps.length - 2);
@@ -185,6 +187,23 @@ test("le vocabulaire de rang couvre les bornes autorisées", () => {
   assert.equal(placeValueName(-6, 1), "millionième");
 });
 
+test("la vérification finale écrit l’égalité numérique avec le vocabulaire", () => {
+  const values = [{ textContent: "" }, { textContent: "" }, { textContent: "" }];
+  const attributes = new Map();
+  const container = {
+    hidden: true,
+    querySelectorAll: () => values,
+    setAttribute: (name, value) => attributes.set(name, value)
+  };
+  renderVocabulary(container, makeAddition(["584", "279"]), true);
+  assert.equal(container.hidden, false);
+  assert.deepEqual(values.map(({ textContent }) => textContent), ["584", "279", "863"]);
+  assert.equal(
+    attributes.get("aria-label"),
+    "584 plus 279 égale 863. Premier terme plus second terme égale somme."
+  );
+});
+
 test("l’interface est professorale, projetable et conforme à l’identité maths&go", () => {
   assert.match(interfaceHtml, /<h1 id="page-title">Addition posée<\/h1>/);
   assert.match(interfaceHtml, /Outil de classe/);
@@ -195,6 +214,10 @@ test("l’interface est professorale, projetable et conforme à l’identité ma
   assert.match(interfaceHtml, /href="gabarit-addition-entiere\.pdf"[^>]*id="pdf-link"/);
   assert.match(interfaceHtml, /id="rank-guides" type="checkbox"/);
   assert.match(interfaceHtml, /class="instruction" aria-live="polite" aria-atomic="true"/);
+  assert.equal((interfaceHtml.match(/data-vocabulary-value/g) || []).length, 3);
+  assert.match(interfaceHtml, /data-vocabulary-value><\/strong><small>premier terme<\/small>/);
+  assert.match(interfaceHtml, /data-vocabulary-value><\/strong><small>second terme<\/small>/);
+  assert.match(interfaceHtml, /data-vocabulary-value><\/strong><small>somme<\/small>/);
   assert.match(interfaceHtml, /id="projection-recap"[^>]*hidden/);
   assert.match(interfaceHtml, /fullscreen-collapse[^>]*hidden/);
   assert.match(interfaceHtml, /Gwenaël Bourgault/);
@@ -210,16 +233,20 @@ test("l’interface est professorale, projetable et conforme à l’identité ma
   assert.match(interfaceCss, /\.posed-addition\.has-decimals/);
   assert.match(interfaceCss, /\.carry-cell\.is-used[^}]*text-decoration:\s*line-through/);
   assert.match(interfaceCss, /@media \(min-width: 1280px\)[\s\S]*\.instruction[^}]*grid-column:\s*1/);
-  assert.match(interfaceCss, /\.instruction h2 \{[^}]*font-size:\s*clamp\(1\.42rem, 1\.8vw, 2\.08rem\)/);
-  assert.match(interfaceCss, /body\.is-projection \.instruction h2 \{[^}]*font-size:\s*clamp\(1\.55rem, 1\.9vw, 2\.18rem\)/);
+  assert.match(interfaceCss, /\.instruction h2 \{[^}]*font-size:\s*clamp\(1\.55rem, 2\.1vw, 2\.25rem\)/);
+  assert.match(interfaceCss, /body\.is-projection \.instruction h2 \{[^}]*font-size:\s*clamp\(1\.7rem, 2\.15vw, 2\.35rem\)/);
+  assert.match(interfaceCss, /\.digit-cell\.is-unit-anchor/);
   assert.match(interfaceCss, /@media \(prefers-reduced-motion: reduce\)/);
   assert.match(interfaceJs, /document\.exitFullscreen\(\)/);
   assert.match(interfaceJs, /fullscreenchange/);
   assert.match(interfaceJs, /window\.addEventListener\("resize"/);
   assert.match(interfaceJs, /\["INPUT", "SELECT", "TEXTAREA"\]/);
   assert.match(interfaceJs, /addition-engine\.mjs\?v=1/);
-  assert.match(interfaceJs, /addition-steps\.mjs\?v=1/);
-  assert.match(interfaceJs, /addition-view\.mjs\?v=1/);
+  assert.match(interfaceHtml, /addition-posee\.css\?v=4/);
+  assert.match(interfaceHtml, /addition-posee\.js\?v=4/);
+  assert.match(interfaceJs, /addition-steps\.mjs\?v=2/);
+  assert.match(interfaceJs, /addition-view\.mjs\?v=3/);
+  assert.match(interfaceJs, /renderVocabulary\(\$\("#vocabulary-strip"\), addition, step\.kind === "verify"\)/);
   assert.match(interfaceJs, /function syncGabaritLink\(\)/);
   assert.match(interfaceJs, /gabarit-addition-decimale\.pdf/);
   assert.match(interfaceJs, /some\(\(value\) => \/\[\.,\]\/.test\(value\)\)/);
