@@ -244,7 +244,15 @@ test("les workflows bloquent le SEO désynchronisé et excluent le gabarit Axell
   assert.match(publishWorkflow, /node scripts\/generate-seo\.mjs --check/);
   assert.match(publishWorkflow, /--exclude 'axelle\/daily\/template-index\.html'/);
   assert.match(publishWorkflow, /concurrency:[\s\S]*group: pages[\s\S]*cancel-in-progress: true/);
-  assert.match(publishWorkflow, /publier:[\s\S]*runs-on: ubuntu-latest[\s\S]*actions\/deploy-pages@v4/);
+  // Ce que ce test garde, c'est que le job de publication existe et publie ;
+  // la manière d'écrire la version de l'action ne le regarde pas. Depuis le
+  // lot serveur B, les actions sont épinglées par SHA de 40 caractères avec
+  // la version en commentaire (« @d6db9016… # v4.0.5 ») : une étiquette
+  // « @v4 » se déplace, et qui la déplace exécute son code dans la CI. Que
+  // chaque action soit bien épinglée est vérifié, lui, par
+  // tests/suivi-lot-serveur-b.test.mjs.
+  assert.match(publishWorkflow,
+    /publier:[\s\S]*runs-on: ubuntu-latest[\s\S]*actions\/deploy-pages@(?:v4|[0-9a-f]{40} # v4)/);
 });
 
 test("les sorties générées présentes dans le dépôt sont synchronisées", () => {
