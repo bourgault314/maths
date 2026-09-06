@@ -707,7 +707,7 @@ test("prénom local, remise à zéro confirmée dans la page, résultat relié a
   assert.match(html, /PARCOURS\.demarrerSerie\(parcours, config\)/);
   assert.match(html, /id="result-parcours"/);
   assert.match(html, /id="result-open-parcours"[\s\S]*Voir mon parcours/);
-  assert.match(html, /ENTREE\.ouvrir === "parcours" \|\| ENTREE\.code\) openParcours\(\);/);
+  assert.match(html, /ENTREE\.ouvrir === "parcours"\) openParcours\(\);/);
 });
 
 test("Je m’entraîne propose produits, trous ou les deux ; la validation se lance en 1 min 30, 2 ou 3 min", () => {
@@ -765,8 +765,8 @@ test("l’appli est branchée au suivi de classe sans jamais bloquer", () => {
   // script du <head> (tests/defi-tables-suivi-appareil.test.mjs l'exécute) ;
   // l'appli a un repli qui la lit de la même façon si ce script n'a pas tourné.
   assert.match(html, /window\.MATHSGO_ENTREE = entree;/);
-  assert.match(html, /parametres\.get\("code"\)/);
-  assert.match(html, /parametres\.get\("fiche"\)/);
+  assert.match(html, /parametres\.get\("b"\)/, "le billet, seul chemin d’entrée depuis le lot « appareil partagé »");
+  assert.doesNotMatch(html, /parametres\.get\("code"\)|parametres\.get\("fiche"\)/, "ni code ni fiche dans l’adresse");
   assert.match(html, /parametres\.get\("ouvrir"\)/);
   // Le site public ne parle plus du tout du suivi : on n'y tape pas de code, et
   // on n'y renvoie même pas vers l'espace élève. Un élève entre par
@@ -788,7 +788,9 @@ test("l’appli est branchée au suivi de classe sans jamais bloquer", () => {
 
   // Chaque enregistrement local part aussi au serveur, sans être attendu — et
   // dans la case du code actif.
-  assert.match(html, /function sauverParcours\(\) \{\s*PARCOURS\.sauver\(storage\(\), parcours, codeSuivi\);/);
+  assert.match(html, /function sauverParcours\(\) \{\s*sauverCase\(\);/);
+  assert.match(html, /function sauverCase\(\) \{\s*if \(suiviActif\(\)\) \{\s*PARCOURS\.sauver\(storage\(\), parcours, codeSuivi\);/,
+    "sous un code, la case du code ; sans code, la case sans code et sans prénom");
   assert.match(html, /sync\.dirty = true;[\s\S]{0,120}sauverSync\(\);\s*\}\s*envoyerParcours\(\);/, "chaque sauvegarde marque du travail à envoyer, puis envoie");
   assert.doesNotMatch(html, /await envoyerParcours\(\)/, "l'envoi ne doit jamais être attendu");
   assert.match(html, /navigator\.sendBeacon/, "le dernier envoi part même si la page se ferme");

@@ -16,18 +16,24 @@ const A = "AXKQ7T", B = "BZ4MHP";
 
 // ----------------------------------------------------------- les cases par code
 
-test("un code différent de celui d’avant bascule sur SA case avant tout affichage, sans rien envoyer sous l’autre", async () => {
+test("un billet d’entrée bascule sur SA case avant tout affichage, sans rien envoyer sous le code d’avant", async () => {
+  const BILLET = "b".repeat(32);
   const local = fauxStockage({[`${CLE}:${A}`]: JSON.stringify(parcoursAvecTravail("Alice", 7))});
   const session = fauxStockage({[PARCOURS.CLE_CODE]: A});
-  const reseau = fauxReseau({mode: "lent", delai: 30});
-  const appli = demarrerAppli({entree: {code: B, ouvrir: "parcours"}, local, session, reseau});
+  const reseau = fauxReseau({mode: "lent", delai: 30, billets: {[BILLET]: B}});
+  const appli = demarrerAppli({entree: {billet: BILLET, ouvrir: "parcours"}, local, session, reseau});
 
-  // Avant même que le serveur ait répondu : c'est la case de Bob, vide.
-  assert.equal(appli.api.codeSuivi, B, "le code de l’adresse est actif dès le départ");
+  // Un billet est une entrée neuve : avant l'échange, personne n'est suivi —
+  // surtout pas Alice, dont l'onglet gardait le code.
+  assert.equal(appli.api.codeSuivi, "", "tant que le billet n’est pas échangé, personne");
+  assert.equal(PARCOURS.chargerCode(session), "", "l’identité de l’onglet est oubliée tout de suite");
   assert.equal(PARCOURS.estVide(appli.api.parcours), true, "rien d’Alice n’est chargé");
   assert.equal(appli.api.parcours.prenom, "", "surtout pas le prénom d’Alice");
 
-  appli.api.demarrerSuivi();
+  await appli.api.entrerParBillet(BILLET, () => {});
+  assert.equal(appli.api.codeSuivi, B, "le code rendu par le serveur est adopté");
+  assert.equal(PARCOURS.estVide(appli.api.parcours), true, "et c’est la case de Bob, vide");
+
   // Bob joue avant la réponse du serveur.
   appli.api.parcours.tables[3].apprends.construct = 1;
   appli.api.sauverParcours();
@@ -46,9 +52,11 @@ test("un code différent de celui d’avant bascule sur SA case avant tout affic
 
 test("serveur muet à l’arrivée : le nouveau code est adopté quand même, en orange, sans mélange", async () => {
   const local = fauxStockage({[`${CLE}:${A}`]: JSON.stringify(parcoursAvecTravail("Alice", 7))});
-  const session = fauxStockage({[PARCOURS.CLE_CODE]: A});
   const reseau = fauxReseau({mode: "muet"});
-  const appli = demarrerAppli({entree: {code: B}, local, session, reseau});
+  // L'onglet est celui d'Alice ; Bob arrive et son code est adopté en cours de
+  // route (c'est ce que fait entrerParBillet une fois le billet échangé).
+  const appli = demarrerAppli({codeOnglet: A, local, reseau});
+  appli.api.adopterCode(B);
   appli.api.demarrerSuivi();
   await tic();
   assert.equal(appli.api.codeSuivi, B);
@@ -62,7 +70,7 @@ test("serveur muet à l’arrivée : le nouveau code est adopté quand même, en
 
 test("réseau coupé : le repère dit que rien n’est parti, et ne promet rien", async () => {
   const reseau = fauxReseau({mode: "coupe"});
-  const appli = demarrerAppli({entree: {code: B}, reseau});
+  const appli = demarrerAppli({codeOnglet: B, reseau});
   appli.api.demarrerSuivi();
   await tic();
   assert.equal(appli.api.suiviHorsLigne, true);
@@ -77,7 +85,7 @@ test("serveur qui répond : fusion avec la case du code, prénom et classe sur l
   const distant = parcoursAvecTravail("", 5);
   const reseau = fauxReseau({existe: true, progression: distant});
   const local = fauxStockage({[`${CLE}:${B}`]: JSON.stringify(parcoursAvecTravail("Bob", 3))});
-  const appli = demarrerAppli({entree: {code: B}, local, reseau});
+  const appli = demarrerAppli({codeOnglet: B, local, reseau});
   appli.api.demarrerSuivi();
   await tic();
   assert.equal(appli.api.suiviHorsLigne, false);
@@ -95,7 +103,7 @@ test("serveur qui répond : fusion avec la case du code, prénom et classe sur l
 test("rien sur le serveur mais du travail dans la case : il part sans attendre un geste de plus", async () => {
   const local = fauxStockage({[`${CLE}:${B}`]: JSON.stringify(parcoursAvecTravail("Bob", 3))});
   const reseau = fauxReseau({existe: false});
-  const appli = demarrerAppli({entree: {code: B}, local, reseau});
+  const appli = demarrerAppli({codeOnglet: B, local, reseau});
   appli.api.demarrerSuivi();
   await tic();
   assert.ok(reseau.appels.some(a => a.code === B && a.parcours && a.parcours.tables["3"].acquise === "2026-08-29"),
@@ -104,7 +112,7 @@ test("rien sur le serveur mais du travail dans la case : il part sans attendre u
 
 test("une série en cours n’est pas interrompue : la fusion se fait, l’écran attend", async () => {
   const reseau = fauxReseau({existe: true, progression: parcoursAvecTravail("", 5)});
-  const appli = demarrerAppli({entree: {code: B}, reseau, running: true});
+  const appli = demarrerAppli({codeOnglet: B, reseau, running: true});
   appli.api.demarrerSuivi();
   await tic();
   assert.equal(appli.api.parcours.tables[5].acquise, "2026-08-29", "fusionné quand même");
@@ -121,7 +129,7 @@ test("une série en cours n’est pas interrompue : la fusion se fait, l’écra
 test("du travail fait sans code sur l’appareil : rien n’est proposé, rien ne bouge, Bob est sur sa case vide", async () => {
   const local = fauxStockage({[CLE]: JSON.stringify(parcoursAvecTravail("Léa", 4))});
   const reseau = fauxReseau();
-  const appli = demarrerAppli({entree: {code: B}, local, reseau});
+  const appli = demarrerAppli({codeOnglet: B, local, reseau});
   appli.api.demarrerSuivi();
   await tic();
   assert.equal(PARCOURS.estVide(appli.api.parcours), true, "Bob est sur sa case, vide");
@@ -137,7 +145,7 @@ test("une case restée sous un ancien code refusé n’est jamais proposée ni t
   const local = fauxStockage({[`${CLE}:${A}`]: JSON.stringify(parcoursAvecTravail("Léa", 4))});
   PARCOURS.sauverSync(local, A, {revision: 3, dirty: true, detache: true, maj: Date.now() - 1000});
   const reseau = fauxReseau();
-  const appli = demarrerAppli({entree: {code: B}, local, reseau});
+  const appli = demarrerAppli({codeOnglet: B, local, reseau});
   appli.api.demarrerSuivi();
   await tic();
   assert.equal(PARCOURS.estVide(appli.api.parcours), true, "Bob repart de sa case, vide");
@@ -151,7 +159,7 @@ test("une case restée sous un ancien code refusé n’est jamais proposée ni t
 
 test("« Se déconnecter » envoie ce qui restait, oublie le code, revient à la case sans code et renvoie l’espace vers ?oublier=1", async () => {
   const local = fauxStockage({[CLE]: JSON.stringify(parcoursAvecTravail("Léa", 4))});
-  const appli = demarrerAppli({entree: {code: B}, local});
+  const appli = demarrerAppli({codeOnglet: B, local});
   appli.api.demarrerSuivi();
   await tic();
   appli.api.parcours.tables[2].apprends.construct = 2;
@@ -192,20 +200,23 @@ test("sans code dans l’adresse, l’identité vient de l’onglet seulement �
   assert.deepEqual(PARCOURS.tablesAcquises(onglet.api.parcours), [7], "avec sa progression");
 });
 
-test("la fiche d’un élève (#fiche=) ne touche ni à l’identité ni aux cases", () => {
+test("un vieux #fiche= dans l’entrée n’ouvre plus rien et ne touche ni à l’identité ni aux cases", () => {
   const session = fauxStockage({[PARCOURS.CLE_CODE]: A});
   const local = fauxStockage({[`${CLE}:${A}`]: JSON.stringify(parcoursAvecTravail("Alice", 7))});
+  // Même si un MATHSGO_ENTREE d'avant portait « fiche », la page ne le lit plus.
   const appli = demarrerAppli({entree: {fiche: B}, session, local});
-  assert.equal(appli.api.codeSuivi, A, "le code de la fiche n’est pas adopté");
+  assert.equal(appli.api.ENTREE.fiche, undefined, "l’entrée ne porte plus de code de fiche");
+  assert.equal(appli.api.codeSuivi, A, "l’onglet reste celui d’Alice");
   assert.equal(session.getItem(PARCOURS.CLE_CODE), A);
   assert.deepEqual(local.cles().filter(c => c !== PARCOURS.CLE_SEL).sort(), [PARCOURS.cleStockage(A, local), PARCOURS.cleSync(A, local)].sort(),
     "aucune case créée (la case d’Alice a seulement changé de clé, et reçu une date)");
+  assert.doesNotMatch(html, /ouvrirFicheEleve/, "la fonction qui ouvrait une fiche par son code n’existe plus : seul un billet ouvre une fiche");
 });
 
 // --------------------------------------------------------------------- le repère
 
 test("le repère est rendu dans la barre du haut, avec la sortie dessus", async () => {
-  const appli = demarrerAppli({entree: {code: B}});
+  const appli = demarrerAppli({codeOnglet: B});
   appli.api.demarrerSuivi();
   await tic();
   const repere = appli.repere();
@@ -240,24 +251,32 @@ function bootstrap(hash, {sansHistorique = false, durable = null} = {}) {
   return window;
 }
 
-test("le script du <head> lit l’adresse et la nettoie, avant tout le reste", () => {
+// Lot « appareil partagé » (06/09/2026) : #code= et #fiche= ne sont plus lus du
+// tout. Un vieux lien — historique, favori, adresse recopiée à la main sur la
+// tablette voisine — n'identifie plus personne. Le code y est seulement effacé
+// de la barre d'adresse, pour qu'il ne reste pas affiché au tableau.
+test("le script du <head> n’adopte plus ni #code= ni #fiche=, mais les efface de l’adresse", () => {
   const lien = bootstrap("#code=2F4FUL&ouvrir=parcours");
-  assert.deepEqual(lien.MATHSGO_ENTREE, {code: "2F4FUL", fiche: "", billet: "", vue: "", ouvrir: "parcours"});
-  assert.equal(lien.remplacee, "/outils/calcul_mental/defi_tables.html#ouvrir=parcours", "le code sort, le reste survit");
+  assert.deepEqual(lien.MATHSGO_ENTREE, {billet: "", vue: "", ouvrir: "parcours"}, "aucun code n’entre dans l’appli");
+  assert.equal(lien.remplacee, "/outils/calcul_mental/defi_tables.html#ouvrir=parcours", "le code sort quand même de l’adresse, le reste survit");
 
   const seul = bootstrap("#code=2F4FUL");
   assert.equal(seul.remplacee, "/outils/calcul_mental/defi_tables.html");
 
   const fiche = bootstrap("#fiche=CDEF23");
-  assert.deepEqual(fiche.MATHSGO_ENTREE, {code: "", fiche: "CDEF23", billet: "", vue: "", ouvrir: ""});
+  assert.deepEqual(fiche.MATHSGO_ENTREE, {billet: "", vue: "", ouvrir: ""}, "un code de fiche non plus");
   assert.equal(fiche.remplacee, "/outils/calcul_mental/defi_tables.html", "un code de fiche est un code élève : il disparaît aussi");
 
   const parcours = bootstrap("#parcours");
-  assert.deepEqual(parcours.MATHSGO_ENTREE, {code: "", fiche: "", billet: "", vue: "", ouvrir: "parcours"});
-  assert.equal(parcours.remplacee, null, "sans code, on ne touche pas à l’adresse");
+  assert.deepEqual(parcours.MATHSGO_ENTREE, {billet: "", vue: "", ouvrir: "parcours"});
+  assert.equal(parcours.remplacee, null, "sans code ni billet, on ne touche pas à l’adresse");
 
-  assert.deepEqual(bootstrap("#ouvrir=calculs&code=2F4FUL").MATHSGO_ENTREE, {code: "2F4FUL", fiche: "", billet: "", vue: "", ouvrir: "calculs"});
-  assert.deepEqual(bootstrap("").MATHSGO_ENTREE, {code: "", fiche: "", billet: "", vue: "", ouvrir: ""});
+  assert.deepEqual(bootstrap("#ouvrir=calculs&code=2F4FUL").MATHSGO_ENTREE, {billet: "", vue: "", ouvrir: "calculs"});
+  assert.deepEqual(bootstrap("").MATHSGO_ENTREE, {billet: "", vue: "", ouvrir: ""});
+
+  // Le billet, lui, entre toujours : c'est le seul chemin qui reste.
+  const billet = bootstrap("#b=" + "a".repeat(32) + "&ouvrir=parcours");
+  assert.deepEqual(billet.MATHSGO_ENTREE, {billet: "a".repeat(32), vue: "", ouvrir: "parcours"});
 });
 
 // Lot 2 (A-3) : un lien #code= posé sur une page DÉJÀ ouverte est une navigation
@@ -271,7 +290,7 @@ test("un #code= ou #fiche= qui arrive sur la page déjà ouverte recharge le doc
   page.changerFragment("#ouvrir=parcours");
   assert.equal(page.recharges, 0);
   page.changerFragment("#code=2F4FUL&ouvrir=parcours");
-  assert.equal(page.recharges, 1, "un code arrive : on recharge, le document neuf l’adopte et nettoie l’adresse");
+  assert.equal(page.recharges, 1, "un code arrive : on recharge, le document neuf l’ignore et nettoie l’adresse");
   page.changerFragment("#ouvrir=calculs&code=2F4FUL");
   assert.equal(page.recharges, 2, "même en seconde position");
   page.changerFragment("#fiche=CDEF23");
@@ -288,7 +307,7 @@ test("un #code= ou #fiche= qui arrive sur la page déjà ouverte recharge le doc
 // n'a plus de lecteur, la mesure d'audience ayant quitté le site.
 test("un code encore dans l’ancien rangement durable n’est pas adopté, et le script n’y touche pas", () => {
   const ancien = bootstrap("#parcours", {durable: {getItem: cle => (cle === "mathsgo-suivi-code" ? "2F4FUL" : null)}});
-  assert.deepEqual(ancien.MATHSGO_ENTREE, {code: "", fiche: "", billet: "", vue: "", ouvrir: "parcours"}, "le code n’entre pas par là : l’identité vit dans l’onglet");
+  assert.deepEqual(ancien.MATHSGO_ENTREE, {billet: "", vue: "", ouvrir: "parcours"}, "le code n’entre pas par là : l’identité vit dans l’onglet");
   assert.equal(ancien.remplacee, null);
   assert.equal(ancien.MATHSGO_SUIVI_ELEVE, undefined, "plus de drapeau anti-mesure : il n’existait que pour Google Analytics");
   assert.doesNotMatch(SOURCE_BOOTSTRAP, /localStorage|MATHSGO_SUIVI_ELEVE|consentement/, "le script du <head> ne lit plus le rangement durable");
@@ -301,7 +320,7 @@ test("le script du <head> est en JavaScript ancien et survit à un navigateur sa
   const sansCommentaires = SOURCE_BOOTSTRAP.replace(/^\s*\/\/.*$/gm, "");
   assert.doesNotMatch(sansCommentaires, /\bconst\b|\blet\b|=>|\?\.|URLSearchParams/, "pas de syntaxe récente : il doit tourner partout");
   const vieux = bootstrap("#code=2F4FUL", {sansHistorique: true});
-  assert.equal(vieux.MATHSGO_ENTREE.code, "2F4FUL", "même sans pouvoir nettoyer l’adresse, le code est lu");
+  assert.deepEqual(vieux.MATHSGO_ENTREE, {billet: "", vue: "", ouvrir: ""}, "même sans pouvoir nettoyer l’adresse, aucun code n’est adopté");
   assert.ok(html.indexOf("MATHSGO_ENTREE") < html.indexOf('src="../../assets/js/mention-confidentialite.js"'),
     "il précède les scripts de la page");
   assert.ok(html.indexOf("MATHSGO_ENTREE") < html.indexOf("<body>"), "et il est dans le <head>");
@@ -312,29 +331,31 @@ test("le script du <head> est en JavaScript ancien et survit à un navigateur sa
 test("l’aiguillage ouvre le bon écran à partir de ce que le <head> a lu", () => {
   const aiguiller = entree => {
     const appels = [];
-    new Function("ENTREE", "openParcours", "openCalculs", "ouvrirFicheEleve", "demarrerSuivi", "entrerParBillet", "ouvrirFicheParBillet", SOURCE_AIGUILLAGE)(
-      {code: "", fiche: "", billet: "", vue: "", ouvrir: "", ...entree},
+    new Function("ENTREE", "openParcours", "openCalculs", "demarrerSuivi", "entrerParBillet", "ouvrirFicheParBillet", SOURCE_AIGUILLAGE)(
+      {billet: "", vue: "", ouvrir: "", ...entree},
       () => appels.push("parcours"), () => appels.push("calculs"),
-      code => appels.push("fiche:" + code), () => appels.push("suivi"),
+      () => appels.push("suivi"),
       // Le billet : l'échange d'abord, l'écran ensuite — on joue l'échange
       // réussi tout de suite pour voir quel écran il ouvrirait.
       (billet, ouvrir) => { appels.push("billet:" + billet); ouvrir(); },
       billet => appels.push("fiche-billet:" + billet));
     return appels;
   };
-  assert.deepEqual(aiguiller({code: "2F4FUL", ouvrir: "parcours"}), ["parcours", "suivi"], "le lien réel de l’espace élève");
-  assert.deepEqual(aiguiller({code: "2F4FUL"}), ["parcours", "suivi"]);
   assert.deepEqual(aiguiller({ouvrir: "parcours"}), ["parcours", "suivi"]);
-  assert.deepEqual(aiguiller({ouvrir: "calculs", code: "2F4FUL"}), ["calculs", "suivi"]);
-  assert.deepEqual(aiguiller({fiche: "CDEF23"}), ["fiche:CDEF23"], "la fiche du professeur ne démarre aucun suivi");
+  assert.deepEqual(aiguiller({ouvrir: "calculs"}), ["calculs", "suivi"]);
   assert.deepEqual(aiguiller({}), ["suivi"], "sans adresse, l’appli s’ouvre normalement (demarrerSuivi ne fait rien sans code)");
+  // Lot « appareil partagé » : une adresse ne porte plus de code, et ce qu'un
+  // vieux lien en met n'aiguille plus rien — ni écran, ni fiche.
+  assert.deepEqual(aiguiller({code: "2F4FUL", ouvrir: "parcours"}), ["parcours", "suivi"], "le « code » d’un vieux lien ne change rien");
+  assert.deepEqual(aiguiller({code: "2F4FUL"}), ["suivi"], "et sans « ouvrir », il n’ouvre même plus Mon parcours");
+  assert.deepEqual(aiguiller({fiche: "CDEF23"}), ["suivi"], "un vieux #fiche= n’ouvre plus aucune fiche");
   // Lot 3 : le lien réel de l'espace élève porte un billet, plus le code.
   const b = "0123456789abcdef0123456789abcdef";
   assert.deepEqual(aiguiller({billet: b, ouvrir: "parcours"}), ["billet:" + b, "parcours"], "le lien de l’espace élève : échange, puis Mon parcours (demarrerSuivi est appelé par entrerParBillet)");
   assert.deepEqual(aiguiller({billet: b}), ["billet:" + b, "parcours"], "sans « ouvrir », Mon parcours quand même : c’est là qu’un élève suivi va");
   assert.deepEqual(aiguiller({billet: b, ouvrir: "calculs"}), ["billet:" + b, "calculs"]);
   assert.deepEqual(aiguiller({billet: b, vue: "fiche"}), ["fiche-billet:" + b], "« Voir sa fiche » : la fiche par billet, aucun suivi");
-  assert.deepEqual(aiguiller({fiche: "CDEF23", billet: b}), ["fiche:CDEF23"], "un vieux #fiche= garde la priorité : il ne peut venir que d’une page « Ma classe » pas encore à jour");
+  assert.deepEqual(aiguiller({fiche: "CDEF23", billet: b}), ["billet:" + b, "parcours"], "un vieux #fiche= ne prend plus le pas sur le billet : il n’existe plus pour l’appli");
 });
 
 // ------------------------------------------------- ce qui reste sur l’appareil (lot 8)
@@ -352,7 +373,7 @@ test("après trois élèves, aucune clé du stockage durable ne contient un code
   const local = fauxStockage();
   for (const [code, prenom] of [[A, "Alice"], [B, "Bob"], [C, "Chloé"]]) {
     const reseau = fauxReseau({identite: {prenom, classe: "6eB"}});
-    const appli = demarrerAppli({entree: {code, ouvrir: "parcours"}, local, session: fauxStockage(), reseau});
+    const appli = demarrerAppli({codeOnglet: code, entree: {ouvrir: "parcours"}, local, session: fauxStockage(), reseau});
     appli.api.demarrerSuivi();
     await tic();
     assert.equal(appli.api.prenomAffiche(), prenom, "le prénom du professeur s’affiche");
@@ -374,7 +395,7 @@ test("après trois élèves, aucune clé du stockage durable ne contient un code
 
 test("l’identité donnée par le serveur vit dans l’onglet, avec le code : rechargée hors ligne, elle est encore là ; sous un autre code, non", async () => {
   const session = fauxStockage();
-  const premiere = demarrerAppli({entree: {code: A}, session, reseau: fauxReseau({identite: {prenom: "Léa", classe: "6eB"}})});
+  const premiere = demarrerAppli({codeOnglet: A, session, reseau: fauxReseau({identite: {prenom: "Léa", classe: "6eB"}})});
   premiere.api.demarrerSuivi();
   await tic();
   assert.deepEqual(PARCOURS.chargerIdentiteOnglet(session, A), {prenom: "Léa", classe: "6eB"});
@@ -390,7 +411,7 @@ test("l’identité donnée par le serveur vit dans l’onglet, avec le code : r
   assert.deepEqual(rechargee.api.suiviIdentite, {prenom: "Léa", classe: "6eB"});
 
   // Un autre code dans le même onglet : rien de Léa.
-  const autre = demarrerAppli({entree: {code: B}, session, reseau: fauxReseau({mode: "muet"})});
+  const autre = demarrerAppli({codeOnglet: B, session, reseau: fauxReseau({mode: "muet"})});
   assert.equal(autre.api.suiviIdentite, null);
   assert.equal(autre.api.prenomAffiche(), "");
 
@@ -402,7 +423,7 @@ test("l’identité donnée par le serveur vit dans l’onglet, avec le code : r
 
 test("« Se déconnecter » : un seul clic, la case reste sur l’appareil (sans prénom ni code), rien de plus n’est proposé", async () => {
   const local = fauxStockage();
-  const appli = demarrerAppli({entree: {code: B}, local});
+  const appli = demarrerAppli({codeOnglet: B, local});
   appli.api.demarrerSuivi();
   await tic();
   const boutons = appli.repere().enfants.at(-1).enfants.filter(n => typeof n !== "string");
@@ -419,47 +440,60 @@ test("« Se déconnecter » : un seul clic, la case reste sur l’appareil (sans
   assert.doesNotMatch(html, /quitterEtEffacer|effacer mon travail de cette tablette/, "l’option d’effacement prévue par l’audit a été écartée : deux clics pour chaque élève sur son propre téléphone, pour protéger une case qui n’a plus ni prénom ni code et que la purge retire à 90 jours");
 });
 
-test("garde-fou de temps : après 45 minutes sans un geste, « C’est toujours toi, Léa ? » ; le premier geste est retenu ; « Non » quitte en gardant la case", async () => {
+// Lot « appareil partagé » (06/09/2026), I-01 de l'audit GPT et constat 7 de
+// l'audit Claude : quarante-cinq minutes laissaient l'onglet de Léa ouvert pour
+// la classe suivante (cinq minutes d'intercours), et « Oui, c'est moi » ne
+// prouvait rien. Désormais dix minutes, et le code de la bandelette à retaper.
+test("garde-fou de temps : après dix minutes sans un geste, « C’est toujours toi, Léa ? » ; le premier geste est retenu ; « Non » quitte en gardant la case", async () => {
   const temps = fauxTemps();
   const local = fauxStockage();
-  const appli = demarrerAppli({entree: {code: B}, local, minuteries: temps, reseau: fauxReseau({identite: {prenom: "Léa", classe: "6eB"}})});
+  const appli = demarrerAppli({codeOnglet: B, local, minuteries: temps, reseau: fauxReseau({identite: {prenom: "Léa", classe: "6eB"}})});
   appli.api.demarrerSuivi();
   await tic();
-  assert.equal(appli.api.GARDE_INACTIVITE_MS, 45 * MIN);
+  assert.equal(appli.api.GARDE_INACTIVITE_MS, 10 * MIN, "dix minutes, pas quarante-cinq");
   assert.equal(appli.garde().hidden, true, "rien au départ");
 
   // Des gestes réguliers : jamais de question.
   for (let i = 0; i < 5; i += 1) {
-    await temps.avancer(20 * MIN);
+    await temps.avancer(5 * MIN);
     assert.equal(appli.document.declencher("pointerdown").retenu, false, "un geste normal passe");
     assert.equal(appli.api.verifierGarde(), false);
   }
-  assert.equal(appli.api.gardeVisible, false, "100 minutes de travail régulier, pas de question");
+  assert.equal(appli.api.gardeVisible, false, "25 minutes de travail régulier, pas de question");
 
-  // 46 minutes sans rien : la question s'affiche (contrôle périodique ou retour de visibilité).
-  await temps.avancer(46 * MIN);
+  // 11 minutes sans rien : la question s'affiche (contrôle périodique ou retour de visibilité).
+  await temps.avancer(11 * MIN);
   assert.equal(appli.api.verifierGarde(), true);
   assert.equal(appli.api.gardeVisible, true);
   assert.equal(appli.garde().hidden, false);
   assert.equal(appli.document.getElementById("suivi-garde-titre").textContent, "C’est toujours toi, Léa ?");
   assert.equal(appli.document.declencher("pointerdown").retenu, true, "pendant la question, rien ne passe à l’appli");
 
-  // « Oui » : on reprend, le compteur repart.
-  appli.document.getElementById("suivi-garde-oui").ecouteurs.click();
-  assert.equal(appli.api.gardeVisible, false);
+  // Un mauvais code ne rouvre rien, et la question reste posée.
+  appli.tapeLeCode("AAAAAA");
+  assert.equal(appli.api.gardeVisible, true, "un mauvais code ne rend pas l’écran");
+  assert.equal(appli.api.codeSuivi, B, "et ne déconnecte pas non plus, pas encore");
+  assert.equal(appli.document.getElementById("suivi-garde-erreur").textContent, "Ce n’est pas le bon code.");
+  assert.equal(appli.document.getElementById("suivi-garde-erreur").hidden, false, "le message est visible");
+
+  // Le bon code, en minuscules et avec un espace : c'est bien lui.
+  appli.tapeLeCode(" bz4mhp ");
+  assert.equal(appli.api.gardeVisible, false, "le code de la bandelette rouvre l’écran");
   assert.equal(appli.garde().hidden, true);
   assert.equal(appli.api.codeSuivi, B, "toujours Bob");
-  await temps.avancer(10 * MIN);
-  assert.equal(appli.api.verifierGarde(), false, "dix minutes après « Oui » : rien");
+  assert.equal(appli.champGarde().value, "", "et le champ est vidé derrière lui");
+  assert.equal(appli.document.getElementById("suivi-garde-erreur").hidden, true, "plus de message d’erreur");
+  await temps.avancer(9 * MIN);
+  assert.equal(appli.api.verifierGarde(), false, "neuf minutes après : rien");
 
   // Longue absence puis un geste AVANT le contrôle périodique : le geste est
   // retenu (il n'ouvre rien dans l'appli) et la question s'affiche.
-  await temps.avancer(50 * MIN);
+  await temps.avancer(12 * MIN);
   const geste = appli.document.declencher("pointerdown");
   assert.equal(geste.retenu, true, "le premier geste du camarade suivant ne passe pas");
   assert.equal(appli.api.gardeVisible, true);
 
-  // « Non, ce n'est pas moi » : comme « Ce n'est pas moi », la case reste.
+  // « Non, ce n'est pas moi » : comme « Se déconnecter », la case reste.
   appli.api.parcours.tables[5].apprends.construct = 2;
   appli.api.sauverParcours();
   appli.document.getElementById("suivi-garde-non").ecouteurs.click();
@@ -475,25 +509,153 @@ test("garde-fou de temps : après 45 minutes sans un geste, « C’est toujours 
   assert.equal(appli.document.declencher("pointerdown").retenu, false);
 });
 
-test("garde-fou de temps : la page qui redevient visible après une longue absence pose la question, sans prénom si le serveur n’a rien dit", async () => {
+test("garde-fou de temps : trois mauvais codes rendent l’onglet au camarade suivant", async () => {
   const temps = fauxTemps();
-  const appli = demarrerAppli({entree: {code: B}, minuteries: temps, reseau: fauxReseau({mode: "muet"})});
+  const local = fauxStockage();
+  const appli = demarrerAppli({codeOnglet: B, local, minuteries: temps, reseau: fauxReseau({identite: {prenom: "Léa", classe: "6eB"}})});
   appli.api.demarrerSuivi();
   await tic();
-  await temps.avancer(30 * MIN);
+  appli.api.parcours.tables[5].apprends.construct = 2;
+  appli.api.sauverParcours();
+  await temps.avancer(11 * MIN);
+  assert.equal(appli.api.verifierGarde(), true);
+
+  assert.equal(appli.api.GARDE_ESSAIS_MAX, 3);
+  appli.tapeLeCode("AAAAAA");
+  assert.equal(appli.api.codeSuivi, B, "premier essai raté : la question reste");
+  appli.tapeLeCode("BBBBBB");
+  assert.equal(appli.api.codeSuivi, B, "deuxième essai raté : la question reste");
+  appli.tapeLeCode("CCCCCC");
+  assert.equal(appli.api.codeSuivi, "", "troisième essai raté : on ne laisse pas essayer en boucle");
+  assert.equal(appli.api.gardeVisible, false, "l’écran est rendu, sans question posée");
+  assert.equal(appli.session.getItem(PARCOURS.CLE_CODE), null, "l’onglet ne retient plus personne");
+  assert.equal(PARCOURS.charger(local, B).tables[5].apprends.construct, 2, "et la case de Léa reste sur l’appareil");
+  assert.deepEqual(appli.window.allees, ["https://suivi.mathsgo.re/?oublier=1"], "l’espace élève oublie le code lui aussi");
+});
+
+// Constat 7 de l'audit du 05/09 : l'instant du dernier geste ne vivait qu'en
+// mémoire — un F5 pendant la question remettait le compteur à zéro et rouvrait
+// l'onglet de Léa sans rien demander.
+test("garde-fou de temps : un F5 pendant l’absence ne remet pas le compteur à zéro — la question revient au chargement", async () => {
+  const temps = fauxTemps();
+  const local = fauxStockage();
+  const session = fauxStockage();
+  const premiere = demarrerAppli({codeOnglet: B, local, session, minuteries: temps, reseau: fauxReseau({identite: {prenom: "Léa", classe: "6eB"}})});
+  premiere.api.demarrerSuivi();
+  await tic();
+  premiere.document.declencher("pointerdown");
+  assert.equal(session.getItem(premiere.api.CLE_DERNIER_GESTE), "0", "le dernier geste est rangé dans l’onglet");
+
+  // Douze minutes plus tard, la question est à l'écran ; l'élève (ou son
+  // camarade) recharge la page.
+  await temps.avancer(12 * MIN);
+  assert.equal(premiere.api.verifierGarde(), true);
+
+  const rechargee = demarrerAppli({local, session, minuteries: temps, reseau: fauxReseau({identite: {prenom: "Léa", classe: "6eB"}})});
+  assert.equal(rechargee.api.codeSuivi, B, "l’onglet est toujours celui de Léa");
+  assert.equal(rechargee.api.gardeVisible, true, "et la question est déjà posée au chargement, avant tout le reste");
+  assert.equal(rechargee.garde().hidden, false);
+
+  // Le bon code la referme, et le compteur repart de maintenant.
+  rechargee.tapeLeCode(B);
+  assert.equal(rechargee.api.gardeVisible, false);
+  assert.equal(session.getItem(rechargee.api.CLE_DERNIER_GESTE), String(12 * MIN), "l’instant du dernier geste est remis à l’heure");
+  await temps.avancer(9 * MIN);
+  assert.equal(rechargee.api.verifierGarde(), false, "neuf minutes de plus : rien");
+});
+
+test("garde-fou de temps : la page qui redevient visible après une longue absence pose la question, sans prénom si le serveur n’a rien dit", async () => {
+  const temps = fauxTemps();
+  const appli = demarrerAppli({codeOnglet: B, minuteries: temps, reseau: fauxReseau({mode: "muet"})});
+  appli.api.demarrerSuivi();
+  await tic();
+  await temps.avancer(8 * MIN);
   appli.document.declencher("visibilitychange");
-  assert.equal(appli.api.gardeVisible, false, "30 minutes : rien");
-  await temps.avancer(20 * MIN);
+  assert.equal(appli.api.gardeVisible, false, "huit minutes : rien");
+  await temps.avancer(4 * MIN);
   appli.document.visibilityState = "hidden";
   appli.document.declencher("visibilitychange");
   assert.equal(appli.api.gardeVisible, false, "la page qui se cache ne pose rien");
   appli.document.visibilityState = "visible";
   appli.document.declencher("visibilitychange");
-  assert.equal(appli.api.gardeVisible, true, "50 minutes sans geste, page de retour : la question");
+  assert.equal(appli.api.gardeVisible, true, "douze minutes sans geste, page de retour : la question");
   assert.equal(appli.document.getElementById("suivi-garde-titre").textContent, "C’est toujours toi ?");
   assert.match(html, /<div id="suivi-garde" class="suivi-garde" role="dialog" aria-modal="true" aria-labelledby="suivi-garde-titre" hidden>/);
   assert.match(html, /window\.setInterval\(verifierGarde, 60000\)/, "un contrôle par minute dans le navigateur");
   assert.match(html, /\["pointerdown", "keydown", "touchstart"\]\.forEach\(type => \{\s*document\.addEventListener\(type, noterActivite, true\);/, "les gestes sont écoutés en capture");
+  assert.match(html, /<input id="suivi-garde-code"[^>]*maxlength="6"/, "un champ de six caractères, pas un bouton");
+  assert.match(html, /Si c’est toi, retape ton code/, "et la note dit quoi faire");
+  assert.doesNotMatch(html, /Oui, c’est moi/, "le bouton qui ne vérifiait rien a disparu");
+});
+
+// ------------------------------------- le prénom tapé sans code (lot appareil partagé)
+//
+// I-02 de l'audit GPT du 05/09 : le prénom que l'élève tape sans code restait
+// pour toujours dans la case durable, que la purge des 90 jours ne touche pas.
+// Sur une tablette de CDI, le suivant retrouvait le prénom du précédent. Il vit
+// désormais dans l'ONGLET : l'appareil n'en garde rien.
+
+test("prénom tapé sans code : absent du stockage durable, présent dans l’onglet, réaffiché au rechargement du même onglet — mais pas dans un onglet neuf", () => {
+  const local = fauxStockage();
+  const session = fauxStockage();
+  const appli = demarrerAppli({local, session});
+  assert.equal(appli.api.codeSuivi, "", "personne n’est suivi : c’est la case sans code");
+
+  // L'élève tape son prénom et travaille (c'est ce que fait le formulaire de
+  // « Mon parcours » : definirPrenom puis sauverParcours).
+  appli.api.parcours = PARCOURS.definirPrenom(appli.api.parcours, "Léa");
+  appli.api.parcours.tables[4].apprends.construct = 2;
+  appli.api.sauverParcours();
+
+  assert.equal(appli.api.prenomAffiche(), "Léa", "à l’écran, son prénom est bien là");
+  assert.equal(PARCOURS.charger(local, "").prenom, "", "mais la case durable ne le porte pas");
+  assert.doesNotMatch(JSON.stringify(local.cles().map(c => [c, local.brut(c)])), /Léa/, "et il n’est nulle part ailleurs dans le stockage durable");
+  assert.equal(PARCOURS.charger(local, "").tables[4].apprends.construct, 2, "le travail, lui, reste sur l’appareil");
+  assert.equal(session.getItem(appli.api.CLE_PRENOM_ONGLET), "Léa", "le prénom vit dans l’onglet");
+
+  // Rechargement du MÊME onglet (F5) : le prénom revient.
+  const rechargee = demarrerAppli({local, session});
+  assert.equal(rechargee.api.parcours.prenom, "Léa", "au rechargement, l’élève se retrouve");
+  assert.equal(rechargee.api.parcours.tables[4].apprends.construct, 2, "avec son travail");
+
+  // Onglet neuf (l'élève suivant du CDI) : le travail est là, le prénom non.
+  const neuf = demarrerAppli({local, session: fauxStockage()});
+  assert.equal(neuf.api.parcours.prenom, "", "un onglet neuf ne connaît personne");
+  assert.equal(neuf.api.prenomAffiche(), "");
+  assert.equal(neuf.api.parcours.tables[4].apprends.construct, 2, "la case sans code, elle, est bien celle de l’appareil");
+});
+
+test("migration : une case sans code d’avant ce lot perd son prénom au premier démarrage", () => {
+  const local = fauxStockage({[CLE]: JSON.stringify(parcoursAvecTravail("Léa", 4))});
+  const session = fauxStockage();
+  const appli = demarrerAppli({local, session});
+
+  assert.equal(PARCOURS.charger(local, "").prenom, "", "le prénom est sorti de la case durable, tout de suite");
+  assert.doesNotMatch(JSON.stringify(local.cles().map(c => [c, local.brut(c)])), /Léa/, "et du stockage durable en entier");
+  assert.deepEqual(PARCOURS.tablesAcquises(PARCOURS.charger(local, "")), [4], "sans toucher au travail");
+  assert.equal(appli.api.parcours.prenom, "Léa", "l’enfant qui jouait ne perd rien : son prénom passe dans l’onglet courant");
+  assert.equal(session.getItem(appli.api.CLE_PRENOM_ONGLET), "Léa");
+
+  // L'élève suivant, dans un onglet neuf : plus rien.
+  const suivant = demarrerAppli({local, session: fauxStockage()});
+  assert.equal(suivant.api.parcours.prenom, "", "le suivant ne retrouve pas le prénom du précédent");
+});
+
+test("sous un code, la case sans code n’est pas touchée ; « Se déconnecter » y ramène le prénom de l’onglet", async () => {
+  const local = fauxStockage({[CLE]: JSON.stringify(parcoursAvecTravail("Léa", 4))});
+  const session = fauxStockage();
+  const appli = demarrerAppli({codeOnglet: B, local, session, reseau: fauxReseau({identite: {prenom: "Bob", classe: "6eB"}})});
+  appli.api.demarrerSuivi();
+  await tic();
+  assert.equal(PARCOURS.charger(local, "").prenom, "Léa", "tant qu’on est sous un code, la case sans code n’est ni lue ni changée");
+
+  // « Se déconnecter » : on revient sur la case sans code, et c'est là que le
+  // vieux prénom en sort.
+  appli.api.quitterSuivi();
+  assert.equal(PARCOURS.charger(local, "").prenom, "", "le prénom durable est parti");
+  assert.equal(appli.api.parcours.prenom, "Léa", "il n’est plus que dans l’onglet");
+  assert.equal(session.getItem(appli.api.CLE_PRENOM_ONGLET), "Léa");
+  assert.deepEqual(PARCOURS.tablesAcquises(appli.api.parcours), [4], "avec le travail fait sans code");
 });
 
 test("au démarrage, les cases que personne n’a ouvertes depuis 90 jours quittent l’appareil — sauf celle du code qui arrive", async () => {
@@ -508,7 +670,7 @@ test("au démarrage, les cases que personne n’a ouvertes depuis 90 jours quitt
   poser(C, 10 * jour);
   // Et une case de l'appli d'avant, au code en clair, sans date : migrée, datée d'aujourd'hui, gardée.
   local.setItem(`${CLE}:D5GHJK`, JSON.stringify(parcoursAvecTravail("Dan", 6)));
-  const appli = demarrerAppli({entree: {code: B}, local, reseau: fauxReseau({mode: "muet"})});
+  const appli = demarrerAppli({codeOnglet: B, local, reseau: fauxReseau({mode: "muet"})});
   assert.deepEqual(PARCOURS.tablesAcquises(appli.api.parcours), [3], "Bob retrouve sa case, même vieille de 100 jours");
   assert.deepEqual(PARCOURS.charger(local, A), PARCOURS.creerParcours(), "la case d’Alice, 100 jours, est partie");
   assert.equal(local.getItem(PARCOURS.cleSync(A, local)), null);

@@ -23,11 +23,17 @@
     // Lot 3 (03/09/2026) : l'espace élève et « Ma classe » n'envoient plus le
     // code mais un BILLET (#b=…, 32 caractères, deux minutes, usage unique)
     // que l'appli échange contre le code auprès du serveur. L'historique ne
-    // garde qu'un billet mort. #code= et #fiche= sont encore compris, le temps
-    // que les deux moitiés du système soient à jour (voir la notice du lot).
+    // garde qu'un billet mort.
+    //
+    // Lot « appareil partagé » (06/09/2026) : les deux moitiés du système
+    // émettent des billets depuis le 3 septembre, alors #code= et #fiche= ne
+    // sont plus compris DU TOUT. Un vieux lien, ou une adresse fabriquée à la
+    // main, n'ouvre plus rien et n'identifie plus personne : le code y est
+    // seulement effacé de l'adresse, pour qu'il ne reste pas affiché.
     (function (window) {
-      var entree = {code: "", fiche: "", billet: "", vue: "", ouvrir: ""};
+      var entree = {billet: "", vue: "", ouvrir: ""};
       var reste = [];
+      var aEffacer = false;
       try {
         var brut = String(window.location.hash || "").replace(/^#/, "");
         if (brut === "parcours" || brut === "calculs") {
@@ -39,8 +45,7 @@
             var cle = egal < 0 ? morceaux[i] : morceaux[i].slice(0, egal);
             var valeur = egal < 0 ? "" : morceaux[i].slice(egal + 1);
             try { cle = decodeURIComponent(cle); valeur = decodeURIComponent(valeur); } catch (e) {}
-            if (cle === "code") entree.code = valeur;
-            else if (cle === "fiche") entree.fiche = valeur;
+            if (cle === "code" || cle === "fiche") aEffacer = true;
             else if (cle === "b") entree.billet = valeur;
             else if (cle === "vue") { entree.vue = valeur; reste.push(morceaux[i]); }
             else if (cle === "ouvrir") { entree.ouvrir = valeur; reste.push(morceaux[i]); }
@@ -49,18 +54,19 @@
         }
       } catch (e) {}
       window.MATHSGO_ENTREE = entree;
-      if (entree.code || entree.fiche || entree.billet) {
+      if (aEffacer || entree.billet) {
         try {
           window.history.replaceState(null, "", window.location.pathname
             + window.location.search + (reste.length ? "#" + reste.join("&") : ""));
         } catch (e) {}
       }
-      // Un lien #b= (ou #code=, #fiche=) posé sur une page DÉJÀ ouverte —
-      // adresse collée ou proposée par la barre du navigateur — n'est pas un
-      // nouveau document : ce script ne rejouerait pas, le billet resterait
-      // affiché dans la barre et le travail continuerait sous l'ancien code.
-      // On recharge : le document neuf repasse par ici, échange le billet et
-      // nettoie l'adresse.
+      // Un lien #b= posé sur une page DÉJÀ ouverte — adresse collée ou proposée
+      // par la barre du navigateur — n'est pas un nouveau document : ce script
+      // ne rejouerait pas, le billet resterait affiché dans la barre et le
+      // travail continuerait sous l'ancien code. On recharge : le document neuf
+      // repasse par ici, échange le billet et nettoie l'adresse. Un #code= ou un
+      // #fiche= qui arrive de la même façon recharge aussi : il n'ouvre rien,
+      // mais le document neuf le retire de la barre d'adresse.
       try {
         window.addEventListener("hashchange", function () {
           var hash = String(window.location.hash || "");
@@ -157,6 +163,13 @@
     .suivi-garde-titre { margin: 0 0 8px; font-size: 1.35rem; font-weight: 700; }
     .suivi-garde-note { margin: 0 0 16px; color: var(--muted); font-size: .95rem; line-height: 1.4; }
     .suivi-garde-boutons { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; }
+    .suivi-garde-form { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+    .suivi-garde-label { font-size: .9rem; font-weight: 700; color: var(--muted); }
+    .suivi-garde-code { font: 700 1.5rem/1.2 inherit; letter-spacing: .18em; text-align: center; text-transform: uppercase;
+      width: 6.5em; min-height: 48px; padding: 6px 8px; border: 2px solid #c9d8e6; border-radius: 12px; color: var(--ink); background: #f7fbff; }
+    .suivi-garde-code:focus { outline: 3px solid #7fb3e0; outline-offset: 1px; }
+    .suivi-garde-erreur { margin: 0; color: #b3261e; font-size: .9rem; font-weight: 700; }
+    .suivi-garde-erreur[hidden] { display: none; }
 
     .brand img { display: block; width: 105px; height: auto; }
     .back-icon { display: grid; place-items: center; flex: 0 0 auto; }
@@ -1221,11 +1234,16 @@
       <div id="suivi-garde" class="suivi-garde" role="dialog" aria-modal="true" aria-labelledby="suivi-garde-titre" hidden>
         <div class="suivi-garde-carte">
           <p id="suivi-garde-titre" class="suivi-garde-titre">C’est toujours toi ?</p>
-          <p class="suivi-garde-note">Personne n’a touché à cet écran depuis un moment. Si ce n’est pas toi, dis-le : ton camarade retrouvera son parcours avec son code.</p>
-          <div class="suivi-garde-boutons">
-            <button id="suivi-garde-oui" class="primary" type="button">Oui, c’est moi</button>
-            <button id="suivi-garde-non" class="secondary" type="button">Non, ce n’est pas moi</button>
-          </div>
+          <p class="suivi-garde-note">Personne n’a touché à cet écran depuis un moment. Si c’est toi, retape ton code (il est sur ta bandelette). Sinon, clique «&nbsp;Non&nbsp;» : ton camarade retrouvera son parcours avec son code.</p>
+          <form id="suivi-garde-form" class="suivi-garde-form" autocomplete="off">
+            <label class="suivi-garde-label" for="suivi-garde-code">Ton code</label>
+            <input id="suivi-garde-code" class="suivi-garde-code" type="text" inputmode="latin" autocapitalize="characters" autocomplete="off" autocorrect="off" spellcheck="false" maxlength="6" size="6" aria-describedby="suivi-garde-erreur">
+            <p id="suivi-garde-erreur" class="suivi-garde-erreur" role="alert" hidden></p>
+            <div class="suivi-garde-boutons">
+              <button id="suivi-garde-oui" class="primary" type="button">C’est moi</button>
+              <button id="suivi-garde-non" class="secondary" type="button">Non, ce n’est pas moi</button>
+            </div>
+          </form>
         </div>
       </div>
     </header>
@@ -1589,31 +1607,64 @@
       function lireEntree() {
         const e = window.MATHSGO_ENTREE;
         if (e && typeof e === "object") {
-          return {code: String(e.code || ""), fiche: String(e.fiche || ""), billet: String(e.billet || ""),
-            vue: String(e.vue || ""), ouvrir: String(e.ouvrir || "")};
+          return {billet: String(e.billet || ""), vue: String(e.vue || ""), ouvrir: String(e.ouvrir || "")};
         }
         const adresse = window.location.hash || "";
-        if (adresse === "#parcours" || adresse === "#calculs") return {code: "", fiche: "", billet: "", vue: "", ouvrir: adresse.slice(1)};
+        if (adresse === "#parcours" || adresse === "#calculs") return {billet: "", vue: "", ouvrir: adresse.slice(1)};
         const parametres = new URLSearchParams(adresse.replace(/^#/, ""));
-        return {code: parametres.get("code") || "", fiche: parametres.get("fiche") || "", billet: parametres.get("b") || "",
-          vue: parametres.get("vue") || "", ouvrir: parametres.get("ouvrir") || ""};
+        return {billet: parametres.get("b") || "", vue: parametres.get("vue") || "", ouvrir: parametres.get("ouvrir") || ""};
       }
       const ENTREE = lireEntree();
 
-      // Le code actif : celui de l'adresse s'il y en a un (et qu'on n'ouvre pas
-      // la fiche d'un élève), sinon celui de l'onglet. Décidé AVANT de charger
-      // le parcours : c'est ce qui fait qu'on ne montre jamais la case d'un autre.
-      // Un billet (lot 3) est une entrée NEUVE : l'identité que l'onglet gardait
-      // ne compte plus, et le code n'arrive qu'après l'échange avec le serveur
-      // (entrerParBillet) — en attendant, personne n'est suivi.
+      // Le code actif : celui de l'onglet, et rien d'autre. Décidé AVANT de
+      // charger le parcours : c'est ce qui fait qu'on ne montre jamais la case
+      // d'un autre. Une adresse n'identifie plus personne (lot « appareil
+      // partagé ») ; un billet (lot 3) est une entrée NEUVE : l'identité que
+      // l'onglet gardait ne compte plus, et le code n'arrive qu'après l'échange
+      // avec le serveur (entrerParBillet) — en attendant, personne n'est suivi.
       function codeInitial(entree) {
         if (entree.billet) return "";
-        if (!entree.fiche) {
-          const code = PARCOURS.normaliserCode(entree.code);
-          if (PARCOURS.codeValide(code)) return code;
-        }
         return PARCOURS.chargerCode(stockageSession());
       }
+      // Le prénom tapé SANS code ne vit que dans l'ONGLET (lot « appareil
+      // partagé », 06/09/2026). Il restait jusqu'ici dans la case durable, que
+      // la purge des 90 jours ne touche pas : sur la tablette du CDI, l'élève
+      // suivant retrouvait le prénom du précédent. Sous un code, c'est le moteur
+      // qui tient cette règle depuis le lot 8 ; sans code, c'est ici.
+      // Conséquence assumée : à la maison, fermer le navigateur oblige à
+      // retaper son prénom — le parcours, lui, reste sur l'appareil.
+      const CLE_PRENOM_ONGLET = "mathsgo-defi-tables-prenom";
+
+      function lirePrenomOnglet() {
+        try {
+          const onglet = stockageSession();
+          return onglet ? PARCOURS.nettoyerPrenom(onglet.getItem(CLE_PRENOM_ONGLET) || "") : "";
+        } catch (_) { return ""; }
+      }
+
+      function ecrirePrenomOnglet(prenom) {
+        try {
+          const onglet = stockageSession();
+          if (!onglet) return;
+          const propre = PARCOURS.nettoyerPrenom(prenom || "");
+          if (propre) onglet.setItem(CLE_PRENOM_ONGLET, propre);
+          else onglet.removeItem(CLE_PRENOM_ONGLET);
+        } catch (_) {}
+      }
+
+      // La case sans code, telle qu'on la présente : le prénom qu'un appareil
+      // d'avant ce lot y avait laissé en sort au passage (il rejoint l'onglet
+      // courant, une fois, pour que l'enfant qui jouait ne perde rien), et c'est
+      // l'onglet qui dit quel prénom afficher.
+      function caseSansCode() {
+        const lue = PARCOURS.charger(storage(), "");
+        if (lue.prenom) {
+          if (!lirePrenomOnglet()) ecrirePrenomOnglet(lue.prenom);
+          PARCOURS.sauver(storage(), PARCOURS.definirPrenom(lue, ""), "");
+        }
+        return PARCOURS.definirPrenom(lue, lirePrenomOnglet());
+      }
+
       // Un appareil « d'avant » (code durable, ou cases au code en clair) est
       // rangé à la nouvelle façon avant toute lecture ; puis les cases que
       // personne n'a ouvertes depuis 90 jours quittent l'appareil (lot 8). La
@@ -1622,7 +1673,7 @@
       if (ENTREE.billet) PARCOURS.effacerCode(stockageSession());
       let codeSuivi = codeInitial(ENTREE);
       PARCOURS.purger(storage(), {maintenant: Date.now(), garder: codeSuivi});
-      let parcours = PARCOURS.charger(storage(), codeSuivi);
+      let parcours = codeSuivi ? PARCOURS.charger(storage(), codeSuivi) : caseSansCode();
       // L'état de synchronisation de la case active : dernière révision connue
       // du serveur, travail en attente d'envoi (dirty), code refusé (détaché).
       // Il survit à la fermeture de la page : ce qui n'est pas parti partira.
@@ -1845,7 +1896,7 @@
           parcours = PARCOURS.fusionner(parcours, PARCOURS.normaliserParcours(donnees.parcours));
           sync.revision = Number.isInteger(donnees.revision) ? donnees.revision : base;
           sync.dirty = true;
-          PARCOURS.sauver(storage(), parcours, codeSuivi);
+          sauverCase();
           sauverSync();
           if (!state.running) renderParcours();
           fusionsSuccessives++;
@@ -1896,8 +1947,20 @@
         });
       }
 
+      // Ranger la case active sur l'appareil. Sous un code, le moteur retire le
+      // prénom lui-même ; sans code, on le met de côté dans l'onglet et la case
+      // durable part sans lui.
+      function sauverCase() {
+        if (suiviActif()) {
+          PARCOURS.sauver(storage(), parcours, codeSuivi);
+          return;
+        }
+        ecrirePrenomOnglet(parcours.prenom);
+        PARCOURS.sauver(storage(), PARCOURS.definirPrenom(parcours, ""), "");
+      }
+
       function sauverParcours() {
-        PARCOURS.sauver(storage(), parcours, codeSuivi);
+        sauverCase();
         if (suiviActif()) {
           sync.dirty = true;
           sync.maj = Date.now();
@@ -2022,6 +2085,7 @@
       // son état d'envoi, et rien de l'état d'avant.
       function adopterCode(code) {
         codeSuivi = code;
+        noterDernierGeste(Date.now());
         entreeRefusee = null;
         suiviIdentite = null;
         suiviHorsLigne = false;
@@ -2076,8 +2140,11 @@
         echecsSuccessifs = 0;
         fusionsSuccessives = 0;
         gardeVisible = false;
+        gardeErreur = "";
+        gardeEssais = 0;
+        noterDernierGeste(Date.now());
         PARCOURS.effacerCode(stockageSession());
-        parcours = PARCOURS.charger(storage(), "");
+        parcours = caseSansCode();
         sync = PARCOURS.chargerSync(storage(), "");
         state.parcoursOptionsOpen = false;
         majLienRetour();
@@ -2087,16 +2154,57 @@
         try { window.location.assign(SUIVI_URL + "/?oublier=1"); } catch (_) {}
       }
 
-      // Le garde-fou de temps (lot 8, C-9) : en salle informatique, personne
-      // ne clique « Se déconnecter » ; la classe suivante arrive et l'onglet
-      // est encore celui de Léa. Après GARDE_INACTIVITE_MS sans un geste, ou
-      // quand la page redevient visible après une aussi longue absence, on
-      // redemande « C'est toujours toi ? » : « Oui » reprend, « Non » quitte
-      // (comme « Se déconnecter », en gardant la case). Le premier geste
-      // fait après l'absence est retenu : il ne passe pas à l'appli.
-      const GARDE_INACTIVITE_MS = 45 * 60 * 1000;
-      let derniereActivite = Date.now();
+      // Le garde-fou de temps (lot 8, C-9 ; resserré le 06/09/2026, lot
+      // « appareil partagé »). En salle informatique, personne ne clique
+      // « Se déconnecter » : la classe suivante arrive et l'onglet est encore
+      // celui de Léa. Après GARDE_INACTIVITE_MS sans un geste, ou quand la page
+      // redevient visible après une aussi longue absence, on redemande
+      // « C'est toujours toi ? ».
+      //
+      // Deux choses ont changé après l'audit du 05/09 (I-01 de GPT, constat 7) :
+      //  — dix minutes, pas quarante-cinq : entre deux cours il s'écoule cinq
+      //    minutes, et l'ancien délai laissait l'onglet ouvert pour la classe
+      //    suivante ;
+      //  — « Oui, c'est moi » ne suffit plus, il faut RETAPER le code de sa
+      //    bandelette. Un bouton ne prouve rien ; le code, si. La comparaison
+      //    est locale, aucun appel au serveur, et trois erreurs rendent l'onglet
+      //    au camarade suivant (quitterSuivi) plutôt que d'ouvrir un jeu de
+      //    devinettes.
+      // L'instant du dernier geste est rangé dans l'ONGLET : un F5 ne remet plus
+      // le compteur à zéro, et la question revient dès le chargement suivant.
+      const GARDE_INACTIVITE_MS = 10 * 60 * 1000;
+      const GARDE_ESSAIS_MAX = 3;
+      const CLE_DERNIER_GESTE = "mathsgo-suivi-dernier-geste";
+
+      function lireDernierGeste() {
+        try {
+          const onglet = stockageSession();
+          const brut = onglet ? onglet.getItem(CLE_DERNIER_GESTE) : null;
+          if (brut !== null && brut !== "") {
+            const lu = Number(brut);
+            // Une valeur venue du futur (horloge changée) ne doit pas rendre
+            // l'appli muette : on repart de maintenant.
+            if (Number.isFinite(lu) && lu >= 0 && lu <= Date.now()) return lu;
+          }
+        } catch (_) {}
+        return Date.now();
+      }
+
+      // Écrit à chaque geste retenu : ce sont des pointerdown, keydown et
+      // touchstart, pas des mouvements de souris — quelques écritures par
+      // minute, invisibles.
+      function noterDernierGeste(instant) {
+        derniereActivite = instant;
+        try {
+          const onglet = stockageSession();
+          if (onglet) onglet.setItem(CLE_DERNIER_GESTE, String(instant));
+        } catch (_) {}
+      }
+
+      let derniereActivite = lireDernierGeste();
       let gardeVisible = false;
+      let gardeEssais = 0;
+      let gardeErreur = "";
 
       function absenceTropLongue() {
         return suiviActif() && Date.now() - derniereActivite > GARDE_INACTIVITE_MS;
@@ -2105,6 +2213,10 @@
       function verifierGarde() {
         if (gardeVisible || !absenceTropLongue()) return false;
         gardeVisible = true;
+        gardeEssais = 0;
+        gardeErreur = "";
+        const champ = document.getElementById("suivi-garde-code");
+        if (champ) champ.value = "";
         renderGarde();
         return true;
       }
@@ -2128,7 +2240,7 @@
           verifierGarde();
           return;
         }
-        derniereActivite = Date.now();
+        noterDernierGeste(Date.now());
       }
 
       function renderGarde() {
@@ -2140,23 +2252,79 @@
           const qui = prenomAffiche();
           titre.textContent = qui ? `C’est toujours toi, ${qui} ?` : "C’est toujours toi ?";
         }
-        if (gardeVisible) {
-          const oui = document.getElementById("suivi-garde-oui");
-          if (oui && typeof oui.focus === "function") { try { oui.focus({preventScroll: true}); } catch (_) {} }
+        const erreur = document.getElementById("suivi-garde-erreur");
+        if (erreur) {
+          erreur.textContent = gardeErreur;
+          erreur.hidden = !gardeErreur;
+        }
+        const champ = document.getElementById("suivi-garde-code");
+        if (!gardeVisible) {
+          if (champ) champ.value = "";
+        } else if (champ && typeof champ.focus === "function") {
+          try { champ.focus({preventScroll: true}); } catch (_) {}
         }
       }
 
-      function repondreGarde(cestMoi) {
-        gardeVisible = false;
-        derniereActivite = Date.now();
-        if (cestMoi) { renderGarde(); return; }
-        quitterSuivi();
+      // Le même nettoyage que l'espace élève : majuscules, et seulement les
+      // caractères de l'alphabet des codes (ni O ni 0, ni I ni 1 — on ne les
+      // confond pas sur une bandelette photocopiée). Cet alphabet vit dans le
+      // moteur, pas ici : on lui demande, caractère par caractère, s'il
+      // l'accepterait.
+      function nettoyerCodeSaisi(brut) {
+        let propre = "";
+        for (const caractere of PARCOURS.normaliserCode(brut)) {
+          if (PARCOURS.codeValide(caractere.repeat(PARCOURS.LONGUEUR_CODE))) propre += caractere;
+        }
+        return propre;
+      }
+
+      // « C'est moi » n'est accepté que si le code tapé est celui de l'élève
+      // suivi — comparaison locale, aucun appel au serveur, donc rien à attendre
+      // et rien à apprendre pour qui essaie au hasard. Trois erreurs et l'onglet
+      // repart à la case sans code, comme « Non ».
+      function repondreGarde(cestMoi, codeTape) {
+        if (!cestMoi) {
+          gardeErreur = "";
+          gardeEssais = 0;
+          quitterSuivi();
+          return false;
+        }
+        if (nettoyerCodeSaisi(codeTape) === codeSuivi && suiviActif()) {
+          gardeVisible = false;
+          gardeErreur = "";
+          gardeEssais = 0;
+          noterDernierGeste(Date.now());
+          renderGarde();
+          return true;
+        }
+        gardeEssais += 1;
+        if (gardeEssais >= GARDE_ESSAIS_MAX) {
+          gardeErreur = "";
+          gardeEssais = 0;
+          quitterSuivi();
+          return false;
+        }
+        gardeErreur = "Ce n’est pas le bon code.";
+        renderGarde();
+        return false;
       }
 
       try {
+        const champ = document.getElementById("suivi-garde-code");
+        const form = document.getElementById("suivi-garde-form");
         const oui = document.getElementById("suivi-garde-oui");
         const non = document.getElementById("suivi-garde-non");
-        if (oui) oui.addEventListener("click", () => repondreGarde(true));
+        const valider = () => repondreGarde(true, champ ? champ.value : "");
+        if (champ) champ.addEventListener("input", () => {
+          const propre = nettoyerCodeSaisi(champ.value);
+          if (champ.value !== propre) champ.value = propre;
+        });
+        // Le formulaire, pour la touche Entrée ; le bouton, pour le doigt.
+        if (form) form.addEventListener("submit", evenement => {
+          if (evenement && typeof evenement.preventDefault === "function") evenement.preventDefault();
+          valider();
+        });
+        if (oui) oui.addEventListener("click", valider);
         if (non) non.addEventListener("click", () => repondreGarde(false));
         ["pointerdown", "keydown", "touchstart"].forEach(type => {
           document.addEventListener(type, noterActivite, true);
@@ -2167,6 +2335,10 @@
         // Un contrôle par minute, pour que la question soit déjà à l'écran
         // quand la classe suivante s'installe.
         if (typeof window.setInterval === "function") window.setInterval(verifierGarde, 60000);
+        // Et un contrôle TOUT DE SUITE : si l'absence dure déjà depuis dix
+        // minutes au chargement (un F5 pendant que la question était posée), la
+        // question revient avant que l'appli ne montre quoi que ce soit.
+        verifierGarde();
         renderGarde();
       } catch (_) {}
 
@@ -2208,7 +2380,7 @@
             // chaque ouverture ferait monter la révision pour rien.
             const apporte = sync.dirty || JSON.stringify(paquetParcours("", fusion)) !== JSON.stringify(paquetParcours("", distant));
             parcours = fusion;
-            PARCOURS.sauver(storage(), parcours, codeSuivi);
+            sauverCase();
             sync.dirty = apporte;
             sauverSync();
             if (apporte) envoyerParcours();
@@ -2261,36 +2433,6 @@
           return;
         }
         afficherFicheEleve(donnees);
-      }
-
-      // Par le code dans l'adresse (#fiche=) : encore compris le temps que la
-      // page « Ma classe » en ligne émette des billets ; à retirer ensuite.
-      async function ouvrirFicheEleve(codeBrut) {
-        const code = PARCOURS.normaliserCode(codeBrut);
-        document.body.classList.add("mode-fiche");
-        $("fiche-ecran").hidden = false;
-        if (!PARCOURS.codeValide(code)) {
-          $("fiche-ecran-info").textContent = "Ce code n’est pas valide.";
-          return;
-        }
-        const [progression, identite] = await Promise.all([
-          lireParcoursDuServeur(code),
-          lireIdentiteDuServeur(code)
-        ]);
-        if (progression.statut !== 200 || !progression.donnees || !progression.donnees.ok) {
-          $("fiche-ecran-info").textContent = progression.statut === 404
-            ? "Ce code n’existe pas."
-            : "Le serveur n’a pas répondu. Réessaie dans un instant.";
-          return;
-        }
-        const qui = identite.statut === 200 && identite.donnees && identite.donnees.ok ? identite.donnees : null;
-        afficherFicheEleve({
-          existe: Boolean(progression.donnees.existe),
-          parcours: progression.donnees.parcours,
-          maj_le: progression.donnees.maj_le,
-          prenom: qui ? qui.prenom : "",
-          classe: qui ? qui.classe : ""
-        });
       }
 
       // La fiche fait 186 mm de large parce qu'elle est faite pour du A4. Sur un
@@ -4051,14 +4193,12 @@
       renderRepere();
       // L'adresse a été lue et nettoyée par le script du <head>, avant tout le
       // reste (ENTREE). L'espace élève construit « #b=<billet>&ouvrir=parcours »
-      // (lot 3) — ou encore « #code=XXXXXX&ouvrir=parcours » tant qu'il n'est
-      // pas à jour : le billet s'échange d'abord, le code a déjà décidé de la
-      // case chargée, il ne reste qu'à aiguiller. « Ma classe » ouvre la fiche
-      // par « #b=<billet>&vue=fiche » (ou encore « #fiche=XXXXXX »).
+      // (lot 3) : le billet s'échange d'abord, il ne reste qu'à aiguiller.
+      // « Ma classe » ouvre la fiche par « #b=<billet>&vue=fiche ». Une adresse
+      // ne porte plus jamais de code : #code= et #fiche= n'aiguillent plus rien
+      // (lot « appareil partagé »).
       // [aiguillage:debut]
-      if (ENTREE.fiche) {
-        ouvrirFicheEleve(ENTREE.fiche);
-      } else if (ENTREE.billet && ENTREE.vue === "fiche") {
+      if (ENTREE.billet && ENTREE.vue === "fiche") {
         ouvrirFicheParBillet(ENTREE.billet);
       } else if (ENTREE.billet) {
         entrerParBillet(ENTREE.billet, () => {
@@ -4066,7 +4206,7 @@
         });
       } else {
         if (ENTREE.ouvrir === "calculs") openCalculs();
-        else if (ENTREE.ouvrir === "parcours" || ENTREE.code) openParcours();
+        else if (ENTREE.ouvrir === "parcours") openParcours();
         demarrerSuivi();
       }
       // [aiguillage:fin]

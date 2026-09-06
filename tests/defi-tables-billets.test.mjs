@@ -35,14 +35,14 @@ function bootstrap(hash) {
 
 test("le script du <head> lit #b= et sort le billet de l’adresse", () => {
   const lien = bootstrap(`#b=${BILLET}&ouvrir=parcours`);
-  assert.deepEqual(lien.MATHSGO_ENTREE, {code: "", fiche: "", billet: BILLET, vue: "", ouvrir: "parcours"});
+  assert.deepEqual(lien.MATHSGO_ENTREE, {billet: BILLET, vue: "", ouvrir: "parcours"});
   assert.equal(lien.remplacee, "/outils/calcul_mental/defi_tables.html#ouvrir=parcours", "le billet sort, l’écran demandé reste");
 
   const seul = bootstrap(`#b=${BILLET}`);
   assert.equal(seul.remplacee, "/outils/calcul_mental/defi_tables.html");
 
   const fiche = bootstrap(`#b=${BILLET}&vue=fiche`);
-  assert.deepEqual(fiche.MATHSGO_ENTREE, {code: "", fiche: "", billet: BILLET, vue: "fiche", ouvrir: ""});
+  assert.deepEqual(fiche.MATHSGO_ENTREE, {billet: BILLET, vue: "fiche", ouvrir: ""});
   assert.equal(fiche.remplacee, "/outils/calcul_mental/defi_tables.html#vue=fiche", "« vue » n’est pas un secret : il reste, le billet part");
 
   const encode = bootstrap(`#ouvrir=calculs&b=${encodeURIComponent(BILLET)}`);
@@ -60,6 +60,38 @@ test("un #b= qui arrive sur la page déjà ouverte recharge le document", () => 
   assert.equal(page.recharges, 2, "« vue » seul n’est pas une entrée");
   page.changerFragment("#calculs");
   assert.equal(page.recharges, 2);
+});
+
+// -------------------------------------------- ce qu’un vieux #code= fait encore
+//
+// Lot « appareil partagé » (06/09/2026), étape 4 du lot 3 et constat 1 de
+// l'audit du 05/09. Un lien d'avant le 3 septembre — dans l'historique, en
+// favori, recopié à la main sur la tablette d'à côté — portait le code en clair.
+// Il n'ouvre plus rien : aucun code n'est adopté, aucune fiche n'est ouverte,
+// et le code est effacé de la barre d'adresse pour qu'il ne reste pas affiché.
+
+test("un vieux #code= n’est plus compris : rien n’est adopté, et l’adresse est nettoyée quand même", async () => {
+  const lien = bootstrap("#code=ABC234&ouvrir=parcours");
+  assert.equal(lien.MATHSGO_ENTREE.code, undefined, "l’entrée ne porte plus de code");
+  assert.equal(lien.MATHSGO_ENTREE.ouvrir, "parcours", "l’écran demandé, lui, survit");
+  assert.equal(lien.remplacee, "/outils/calcul_mental/defi_tables.html#ouvrir=parcours", "le code sort de l’adresse");
+
+  // Et dans l'appli : un onglet neuf reste un onglet de personne.
+  const local = fauxStockage();
+  const reseau = fauxReseau();
+  const appli = demarrerAppli({entree: {code: "ABC234", ouvrir: "parcours"}, local, reseau});
+  appli.api.demarrerSuivi();
+  await tic();
+  assert.equal(appli.api.codeSuivi, "", "aucun code n’est adopté");
+  assert.equal(appli.api.suiviActif(), false);
+  assert.equal(reseau.appels.length, 0, "et le serveur n’est même pas appelé");
+});
+
+test("un vieux #fiche= n’ouvre plus aucune fiche, et le code en sort de l’adresse", () => {
+  const fiche = bootstrap("#fiche=ABC234");
+  assert.equal(fiche.MATHSGO_ENTREE.fiche, undefined, "l’entrée ne porte plus de code de fiche");
+  assert.equal(fiche.remplacee, "/outils/calcul_mental/defi_tables.html", "un code de fiche est un code élève : il disparaît aussi");
+  assert.doesNotMatch(html, /ouvrirFicheEleve/, "et la page n’a plus de quoi ouvrir une fiche par son code");
 });
 
 // ------------------------------------------------------------ l’entrée par billet
@@ -164,16 +196,18 @@ test("« Ce n’est pas moi » après un billet refusé efface le message comme 
 
 // ------------------------------------------------------------------- statique
 
-test("l’échange envoie le billet dans le CORPS, vers eleve.php, et #code=/#fiche= restent compris pour l’instant", () => {
+test("l’échange envoie le billet dans le CORPS, vers eleve.php, et le billet est le SEUL chemin d’entrée", () => {
   assert.match(SOURCE_SUIVI, /function echangerBillet\(billet\)[\s\S]*?"\/api\/eleve\.php"[\s\S]*?JSON\.stringify\(\{billet, appli: "defi-tables"\}\)/,
     "le billet part en POST, dans le corps, jamais dans une adresse");
   assert.match(SOURCE_SUIVI, /if \(ENTREE\.billet\) PARCOURS\.effacerCode\(stockageSession\(\)\);/,
     "un billet efface l’identité de l’onglet AVANT de choisir la case");
   assert.match(SOURCE_SUIVI, /if \(entree\.billet\) return "";/, "codeInitial n’adopte rien tant que le billet n’est pas échangé");
-  // Étape 4 du lot 3 (plus tard) : retirer #code= et #fiche=. Tant que l'espace
-  // élève et « Ma classe » en ligne peuvent encore les émettre, ils restent.
-  assert.match(html, /if \(cle === "code"\) entree\.code = valeur;/, "#code= encore compris (retrait prévu à l’étape 4)");
-  assert.match(html, /ouvrirFicheEleve\(ENTREE\.fiche\)/, "#fiche= encore compris (retrait prévu à l’étape 4)");
+  // Étape 4 du lot 3, faite le 06/09/2026 (lot « appareil partagé ») : #code= et
+  // #fiche= ont disparu. Les deux moitiés du système émettent des billets depuis
+  // le 3 septembre ; plus rien ne doit lire un code dans une adresse.
+  assert.doesNotMatch(html, /entree\.code|entree\.fiche|ENTREE\.code|ENTREE\.fiche/,
+    "ni le script du <head>, ni l’appli, n’adoptent plus de code venu de l’adresse");
+  assert.doesNotMatch(html, /ouvrirFicheEleve/, "et la fiche par code n’existe plus");
   assert.match(html, /ouvrirFicheParBillet\(ENTREE\.billet\)/, "la fiche par billet est branchée");
   assert.match(html, /body\.classList\.add\("mode-fiche"\);\s*\n\s*\$\("fiche-ecran"\)\.hidden = false;\s*\n\s*\$\("fiche-ecran-info"\)\.textContent = "Un instant…";/,
     "en mode fiche, l’appli se cache AVANT d’attendre le serveur");
