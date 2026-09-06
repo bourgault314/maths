@@ -24,7 +24,10 @@ require_once __DIR__ . '/lib/entetes.php';
 // Sur toutes les réponses, y compris le fichier téléchargé.
 entetes_securite();
 
-const TABLES_SAUVEGARDEES = ['profs', 'classes', 'eleves', 'progressions', 'partages'];
+// « versions » (historique de sept jours) et « journal » (actions des
+// professeurs, douze mois) sont arrivés le 06/09/2026 : une sauvegarde doit
+// rendre un serveur ENTIER, pas seulement les progressions du jour.
+const TABLES_SAUVEGARDEES = ['profs', 'classes', 'eleves', 'progressions', 'partages', 'versions', 'journal'];
 // sessions_prof, compteurs et billets : leur STRUCTURE part dans la
 // sauvegarde, leur CONTENU non. Ils ne tiennent que des jetons à durée de vie
 // courte (sessions ouvertes, compteurs de cinq minutes, liens d'entrée de deux
@@ -39,8 +42,28 @@ const TABLES_STRUCTURE_SEULE = ['sessions_prof', 'compteurs', 'billets'];
 const ITERATIONS_PBKDF2 = 200000;
 
 // Le fichier SQL, en clair, tel qu'on le rendrait à phpMyAdmin.
-function texte_de_la_sauvegarde(PDO $pdo, array $comptes): string
+//
+// TOUT est lu dans un même INSTANTANÉ (lib/bd.php) depuis le 06/09/2026,
+// COMPTES COMPRIS — constat I-06 de l'audit de ChatGPT. Les tables étaient
+// lues l'une après l'autre, hors transaction : un élève qui enregistrait
+// pendant l'export (une classe de 4e à 10 h, c'est une écriture par calcul)
+// pouvait laisser un fichier où sa progression existe mais pas son élève, ou
+// un en-tête « eleves : 27 ligne(s) » suivi de 28 INSERT. Une sauvegarde qui
+// ne se recolle pas est pire que pas de sauvegarde : on ne s'en aperçoit que
+// le jour où on la restaure.
+function texte_de_la_sauvegarde(PDO $pdo): string
 {
+    instantane_ouvrir($pdo);
+    try {
+        return texte_de_la_sauvegarde_dans_l_instantane($pdo);
+    } finally {
+        instantane_fermer($pdo);
+    }
+}
+
+function texte_de_la_sauvegarde_dans_l_instantane(PDO $pdo): string
+{
+    $comptes = comptes_des_tables($pdo);
     $mysql = pilote($pdo) === 'mysql';
     $sql = "-- Sauvegarde du serveur de suivi maths&go (suivi.mathsgo.re)\n";
     $sql .= "-- date : " . maintenant() . "\n";
@@ -137,7 +160,7 @@ try {
                 } elseif (strlen($phrase) < 12 && $chiffrementPossible) {
                     $message = "La phrase de chiffrement doit faire au moins 12 caractères : c'est elle qui protège tout le fichier.";
                 } else {
-                    $clair = texte_de_la_sauvegarde($pdo, $comptes);
+                    $clair = texte_de_la_sauvegarde($pdo);
                     $jour = gmdate('Y-m-d');
                     if ($chiffrementPossible) {
                         $corps = chiffrer_comme_openssl($clair, $phrase);

@@ -22,6 +22,8 @@
 
 declare(strict_types=1);
 
+require_once __DIR__ . '/applis.php';
+
 const PROGRESSION_PROFONDEUR_MAX = 6;
 const PROGRESSION_CLES_MAX = 2000;
 const PROGRESSION_LISTE_MAX = 100;
@@ -120,4 +122,24 @@ function filtrer_progression(string $appli, object $donnees): stdClass
     $garder = true;
     $propre = valeur_progression_acceptee($donnees, $regles, 0, $compte, $garder);
     return $propre instanceof stdClass ? $propre : new stdClass();
+}
+
+// Combien d'éléments sous la clé que l'appli DÉCLARE comme comptable
+// (lib/applis.php, « compteur »). Pour Défi tables, c'est « calculs » : le
+// nombre de calculs de la grille sur lesquels l'élève a travaillé — le chiffre
+// que le professeur voit déjà dans la fiche.
+//
+// C'est tout ce que le serveur sait lire d'une progression, et c'est voulu :
+// il ne juge rien, il compte des entrées pour pouvoir NOMMER une version dans
+// « Revenir à… ». Une appli sans « compteur » rend 0.
+function compter_elements_declares(string $appli, string $donneesJson): int
+{
+    $cle = CATALOGUE_APPLIS[$appli]['compteur'] ?? null;
+    if (!is_string($cle) || $cle === '') return 0;
+    $objet = json_decode($donneesJson, false);
+    if (!is_object($objet)) return 0;
+    $partie = $objet->{$cle} ?? null;
+    if (is_object($partie)) return count(get_object_vars($partie));
+    if (is_array($partie)) return count($partie);
+    return 0;
 }

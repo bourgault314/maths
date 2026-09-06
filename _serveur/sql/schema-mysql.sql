@@ -73,3 +73,27 @@ CREATE TABLE IF NOT EXISTS billets (
   expire_le INTEGER NOT NULL,
   KEY billets_eleve (eleve_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS versions (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  eleve_id INTEGER NOT NULL,
+  appli VARCHAR(30) NOT NULL,
+  jour VARCHAR(10) NOT NULL,
+  revision INTEGER NOT NULL DEFAULT 0,
+  calculs INTEGER NOT NULL DEFAULT 0,
+  donnees MEDIUMTEXT NOT NULL,
+  maj_le VARCHAR(25) NOT NULL,
+  UNIQUE KEY versions_eleve_appli_jour (eleve_id, appli, jour),
+  KEY versions_eleve (eleve_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS journal (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  quand VARCHAR(25) NOT NULL,
+  prof_id INTEGER NOT NULL DEFAULT 0,
+  action VARCHAR(40) NOT NULL,
+  cible_type VARCHAR(10) NOT NULL DEFAULT '',
+  cible_id INTEGER NOT NULL DEFAULT 0,
+  resultat VARCHAR(10) NOT NULL DEFAULT 'ok',
+  KEY journal_quand (quand)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

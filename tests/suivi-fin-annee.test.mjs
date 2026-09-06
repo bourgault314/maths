@@ -21,11 +21,17 @@ const ARCHIVES = "_serveur/public/lib/archives.php";
 // garde-fou des 21 jours, le cloisonnement entre professeurs) est éprouvé côté
 // serveur par _serveur/tests/lancer.php, qui exécute vraiment les suppressions.
 //
+// MIS À JOUR LE 06/09/2026 (lot serveur A) : le pivot de l'année scolaire est
+// passé au 1er JUILLET, et ouvrir « Ma classe » ne supprime PLUS rien — le
+// professeur est interrogé, la suppression automatique reste chez menage.php.
+//
 // Sabotages attendus (chacun rend un test rouge) :
-//  a) faire commencer l'année scolaire au 1er septembre (calendrier métropolitain)
+//  a) faire commencer l'année scolaire au 1er août ou au 1er septembre
 //  b) retirer le garde-fou des 21 jours sans activité
 //  c) retirer de la confirmation ce qui va être supprimé, ou le bilan
 //  d) laisser deux chemins de suppression différents dans le serveur
+//  e) remettre supprimer_classes_echues() dans classes.liste
+//  f) supprimer les classes échues sans passer par une confirmation
 
 const page = readFileSync(join(racine, PAGE), "utf8");
 const api = readFileSync(join(racine, API), "utf8");
@@ -64,12 +70,25 @@ const gestionnaireSuppression = (() => {
 })();
 
 test("le calendrier de La Réunion est écrit dans le code, pas seulement dans une notice", () => {
-  // Rentrée mi-août, fin des cours début juillet : le pivot est le 1er août.
-  assert.match(archives, /\$debut = \$mois >= 8 \? \$an : \$an - 1;/,
-    "pivot au 1er août — une rentrée métropolitaine (septembre) laisserait les prénoms de l'an dernier "
-    + "dans la base pendant la rentrée réunionnaise");
+  // Rentrée mi-août, fin des cours début juillet. Le pivot est le 1er JUILLET
+  // depuis le 06/09/2026 : une classe préparée pendant les vacances appartient
+  // à l'année qui vient. Avec le 1er août, elle naissait « échue » et
+  // disparaissait à la rentrée — c'est arrivé, en vrai (constat 2 de l'audit).
+  assert.match(archives, /\$debut = \$mois >= 7 \? \$an : \$an - 1;/,
+    "pivot au 1er juillet — au 1er août, la classe préparée le 25 juillet est rangée dans l'année "
+    + "écoulée et supprimée à la rentrée réunionnaise");
   assert.match(archives, /'-08-01'/, "la suppression tombe le 1er août");
-  assert.match(archives, /'-07-01'/, "le préavis commence le 1er juillet");
+  assert.match(archives, /'-06-01'/, "le préavis commence le 1er juin");
+});
+
+test("l'activité d'une classe, ce n'est pas seulement ce que les élèves enregistrent", () => {
+  // Préparer une classe et saisir vingt-cinq prénoms est de l'activité. Sans
+  // cela, une classe entière préparée en août partait trois semaines plus tard.
+  const activite = archives.slice(archives.indexOf("function derniere_activite_de_la_classe"));
+  const corps = activite.slice(0, activite.indexOf("function classes_echues"));
+  assert.match(corps, /MAX\(p\.maj_le\)/, "les enregistrements des élèves comptent");
+  assert.match(corps, /MAX\(e\.cree_le\)/, "la création des élèves aussi");
+  assert.match(corps, /\$jour = substr\(\$creeLe, 0, 10\);/, "et la création de la classe reste le plancher");
 });
 
 test("une classe encore utilisée n'est jamais supprimée par surprise", () => {
@@ -125,16 +144,57 @@ test("le bilan est calculé avec le moteur, montré, et jamais envoyé au serveu
     "on n'envoie que l'identifiant de la classe — aucun chiffre n'est enregistré");
 });
 
-test("la page annonce la fin d'année : ce qui vient de partir, ou le préavis", () => {
-  const annonce = fonction("annoncerFinAnnee");
-  assert.match(annonce, /donnees\.supprimees_maintenant/, "ce que le serveur vient de supprimer");
-  assert.match(annonce, /donnees\.preavis_fin_annee/, "et le préavis de juillet");
+test("ouvrir « Mes classes » ne supprime plus rien : le serveur PROPOSE, le professeur décide", () => {
+  // Le changement du 06/09/2026. Avant, classes.liste appelait la suppression
+  // automatique : ouvrir la liste effaçait, sans un mot et sans retour.
+  const liste = api.slice(api.indexOf("case 'classes.liste':"), api.indexOf("case 'classes.creer':"));
+  assert.ok(!/supprimer_classes_echues/.test(liste),
+    "classes.liste ne doit plus appeler la suppression automatique");
+  assert.match(liste, /classes_a_proposer\(\$pdo, \$profId\)/, "elle renvoie ce qui pourrait être supprimé");
+  assert.match(liste, /'echues' => \$echues/, "sous la clé « echues »");
+  // La suppression automatique existe toujours — mais chez menage.php seul.
+  const menage = readFileSync(join(racine, "_serveur/public/menage.php"), "utf8");
+  assert.match(menage, /supprimer_classes_echues\(\$pdo\)/,
+    "la tâche planifiée reste ce qui tient la promesse du 1er août");
+});
+
+// Les longues phrases de la page sont écrites en morceaux (`…` + `…`) pour
+// tenir dans la largeur : on les recolle avant de chercher un mot, sinon
+// « il n'en restera rien » coupé en deux passerait pour absent.
+function recolle(source) {
+  return source.replace(/`\s*\+\s*`/g, "");
+}
+
+test("la page annonce la fin d'année : ce qu'elle propose de supprimer, ou le préavis", () => {
+  const annonce = recolle(fonction("annoncerFinAnnee"));
+  assert.match(annonce, /donnees\.echues/, "les classes que le serveur propose de supprimer");
+  assert.match(annonce, /donnees\.preavis_fin_annee/, "et le préavis de fin d'année");
   assert.ok(annonce.includes("1er août"), "la date est dite en toutes lettres");
   assert.ok(annonce.includes("il n’en reste rien") || annonce.includes("il n’en restera rien"),
     "et le fait qu'il ne reste rien");
   assert.ok(annonce.includes("sauvegarde"), "avec le rappel de la sauvegarde, seul recours");
   // Le préavis ne s'affiche pas s'il n'y a aucune classe en cours à prévenir.
   assert.match(annonce, /donnees\.preavis_fin_annee && combienEnCours/);
+  // Le bandeau nomme les classes, dit ce qui disparaît, et rappelle la sauvegarde.
+  const texte = recolle(fonction("texteDesEchues"));
+  for (const mot of ["libelle", "Prénoms", "codes", "progressions", "sauvegarde"]) {
+    assert.ok(texte.includes(mot), `le bandeau doit parler de « ${mot} »`);
+  }
+});
+
+test("le bandeau ne supprime rien sans un oui explicite, et « Plus tard » n'écrit rien", () => {
+  const position = script.indexOf('$("supprimer-echues").addEventListener');
+  assert.ok(position > 0, "la page doit brancher le bouton de suppression");
+  const gestionnaire = blocDepuis(script, position);
+  assert.match(gestionnaire, /await demander\(/, "rien ne s'efface sans un oui explicite");
+  assert.ok(gestionnaire.indexOf("await demander(") < gestionnaire.indexOf('api("classes.supprimer_echues"'),
+    "on demande AVANT d'appeler le serveur");
+  assert.match(gestionnaire, /définitive/, "la confirmation dit que c'est définitif");
+  assert.match(gestionnaire, /bouton\.disabled = true;/, "deux clics ne font pas deux suppressions");
+  // « Plus tard » ne fait que masquer : le bandeau revient à la prochaine ouverture.
+  const tard = blocDepuis(script, script.indexOf('$("echues-plus-tard").addEventListener'));
+  assert.ok(!/api\(/.test(tard), "« Plus tard » n'appelle pas le serveur");
+  assert.ok(!/localStorage|sessionStorage/.test(tard), "et n'enregistre rien nulle part");
 });
 
 test("aucune trace d'une classe passée ne survit dans la page", () => {
