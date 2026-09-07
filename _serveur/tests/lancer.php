@@ -1004,6 +1004,48 @@ function chronometre(callable $appel, &$resultat): float
     return (hrtime(true) - $debut) / 1e9;
 }
 
+// Mesurer un temps de réponse sur une machine partagée, en millisecondes
+// ----------------------------------------------------------------------
+// Le serveur de GitHub est une machine partagée : elle s'interrompt sans
+// prévenir. Une mesure isolée peut y être trois fois trop longue sans qu'une
+// seule ligne de code ait changé — c'est ce qui rendait rouges, au hasard, les
+// deux tests de temps de ce fichier : dix-neuf fois en cinq jours pour celui
+// du compte désactivé, sur des pull requests qui ne touchaient pas au serveur.
+//
+// Deux précautions, toujours les mêmes, et une seule façon de mesurer dans
+// tout le fichier (introduite au lot serveur B, point B8) :
+//   - un essai d'ÉCHAUFFEMENT, jeté : le premier appel paie l'ouverture de la
+//     connexion et le réveil de la base ;
+//   - la MÉDIANE de cinq mesures, jamais la moyenne : une interruption devient
+//     une valeur extrême, et la médiane l'ignore.
+function mediane_ms(callable $appel, int $mesures = 5): float
+{
+    $appel(); // échauffement : jeté
+    $temps = [];
+    for ($i = 0; $i < $mesures; $i++) {
+        $debut = hrtime(true);
+        $appel();
+        $temps[] = (hrtime(true) - $debut) / 1e6;
+    }
+    sort($temps);
+    return $temps[intdiv(count($temps), 2)];
+}
+
+// Les mesures de temps ne tournent que sur demande : SUIVI_TESTS_TEMPS=1, posé
+// par le rendez-vous hebdomadaire et par les lancements à la main
+// (.github/workflows/verifications.yml), jamais sur une pull request.
+//
+// Ce qu'elles gardent — l'impossibilité de deviner au chronomètre quels
+// comptes existent — n'est PAS laissé sans surveillance entre deux dimanches :
+// il est vérifié à chaque pull request, sans chronomètre, en lisant le code
+// lui-même (tests/suivi-temps-constant.test.mjs, qui tourne dans « node --test »
+// et n'est jamais sauté). Une mesure constate un symptôme ; la lecture du code
+// établit la cause — et c'est la cause qui protège.
+function mesures_de_temps_demandees(): bool
+{
+    return getenv('SUIVI_TESTS_TEMPS') === '1';
+}
+
 $jetonS1 = null;
 $codesS1 = [];
 
@@ -1238,18 +1280,19 @@ verifier("le hachage de remplacement de la connexion est un vrai bcrypt au coût
     //    LENT n'apprend rien à personne — et c'est exactement ce que le bruit
     //    d'un runner fabrique. Borner les deux côtés revenait à demander à une
     //    machine partagée d'être régulière : elle ne l'est pas.
-    $mediane = function (string $identifiant): float {
-        $mesures = [];
-        for ($i = 0; $i < 5; $i++) {
-            $debut = hrtime(true);
-            appel('/api/prof.php', ['action' => 'connexion', 'identifiant' => $identifiant, 'motdepasse' => 'mauvais-mot-de-passe']);
-            $mesures[] = (hrtime(true) - $debut) / 1e6;
-        }
-        sort($mesures);
-        return $mesures[2];
-    };
-    $inconnu = $mediane('personne-de-ce-nom');
-    $connu = $mediane('gwenael');
+    // Depuis le tri des jobs (07/09/2026), la mesure elle-même ne tourne qu'au
+    // rendez-vous hebdomadaire : ce qui précède — un vrai bcrypt, au coût des
+    // comptes, qu'aucun mot de passe ne satisfait — est vérifié à chaque fois,
+    // et c'est lui qui fait le temps constant.
+    if (!mesures_de_temps_demandees()) {
+        echo "       (mesure de temps non jouée ici : SUIVI_TESTS_TEMPS=1 la demande)\n";
+        vider_compteurs();
+        return;
+    }
+    $refus = fn(string $identifiant): callable => fn() => appel('/api/prof.php',
+        ['action' => 'connexion', 'identifiant' => $identifiant, 'motdepasse' => 'mauvais-mot-de-passe']);
+    $inconnu = mediane_ms($refus('personne-de-ce-nom'));
+    $connu = mediane_ms($refus('gwenael'));
     echo sprintf("       (connexion refusée, médiane de 5 : identifiant inconnu %.0f ms, identifiant existant %.0f ms)\n", $inconnu, $connu);
     vrai($inconnu >= $connu / 2,
         sprintf("le refus d'un identifiant inconnu (%.0f ms) ne doit pas être plus de deux fois plus rapide "
@@ -1943,10 +1986,30 @@ verifier("désactiver ferme ses sessions et refuse la connexion avec le MÊME me
     vrai(!in_array($claireId, $annuaire, true), 'absente de l’annuaire');
     $mienne = appel('/api/prof.php', ['action' => 'classes.liste'], ['jeton' => $jetonS1])['json']['classes'][0]['id'];
     egal(404, appel('/api/prof.php', ['action' => 'partages.ajouter', 'classe_id' => $mienne, 'prof_id' => $claireId, 'droit' => 'lecture'], ['jeton' => $jetonS1])['code'], 'on ne partage pas avec un compte désactivé');
-    // Un temps de refus comparable : le hachage est calculé avant de regarder « actif ».
-    $debut = hrtime(true); connexion('claire', 'mdp-collegue-definitif-2026'); $tDesactive = (hrtime(true) - $debut) / 1e6;
-    $debut = hrtime(true); connexion('gwenael', 'un-mauvais-mot-de-passe'); $tMauvais = (hrtime(true) - $debut) / 1e6;
-    vrai(abs($tDesactive - $tMauvais) < max(60, 0.5 * max($tDesactive, $tMauvais)), sprintf('temps de refus comparables (%.0f ms contre %.0f ms)', $tDesactive, $tMauvais));
+    // Un temps de refus comparable : le hachage est calculé avant de regarder
+    // « actif » (lib/auth.php). Que le code le fasse bien dans cet ordre est
+    // vérifié à chaque pull request, sans chronomètre, par
+    // tests/suivi-temps-constant.test.mjs. Ici, on MESURE — et une mesure ne
+    // vaut que sur une machine tranquille : voir mediane_ms() plus haut.
+    if (mesures_de_temps_demandees()) {
+        vider_compteurs();
+        $tDesactive = mediane_ms(fn() => connexion('claire', 'mdp-collegue-definitif-2026'));
+        $tMauvais = mediane_ms(fn() => connexion('gwenael', 'un-mauvais-mot-de-passe'));
+        echo sprintf("       (refus, médiane de 5 : compte désactivé %.0f ms, mauvais mot de passe %.0f ms)\n", $tDesactive, $tMauvais);
+        // Seuil à SENS UNIQUE. Ce qu'on protège, c'est le secret de « ce compte
+        // existe encore » : le refus d'un compte DÉSACTIVÉ ne doit pas être plus
+        // RAPIDE, sinon on le devine au chronomètre. Qu'il soit plus LENT
+        // n'apprend rien à personne — et c'est justement ce que le bruit d'une
+        // machine partagée fabrique. L'ancien seuil bornait les deux côtés : il
+        // demandait à un serveur partagé d'être régulier, et il rougissait au
+        // hasard (221 ms contre 67, puis 58 contre 169, puis vert sans qu'une
+        // ligne ait changé).
+        vrai($tDesactive >= $tMauvais / 2,
+            sprintf("le refus d'un compte désactivé (%.0f ms) ne doit pas être plus de deux fois plus "
+                . "rapide que celui d'un mauvais mot de passe (%.0f ms) : la différence dirait qu'il existe",
+                $tDesactive, $tMauvais));
+        vider_compteurs();
+    }
     $r = formulaire('/verifier.php', ['jeton' => 'JETON-DE-TEST']);
     vrai(str_contains($r['texte'], '1 désactivé(s)'), 'verifier.php compte le compte désactivé');
 });

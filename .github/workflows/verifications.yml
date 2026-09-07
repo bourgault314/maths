@@ -14,6 +14,11 @@
 #                             production (le limiteur et les verrous y prennent
 #                             un autre chemin que sur SQLite).
 # Les tests serveur tournent sur PHP 8.2, la version de la production.
+#
+# Les deux coches « serveur » ne sont réclamées que si la pull request touche au
+# serveur (voir le job « changements » ci-dessous). Sur une pull request qui ne
+# change qu'un outil du site, elles sont SAUTÉES : la coche existe, elle est
+# verte, et la fusion reste possible. « verifications », lui, tourne toujours.
 
 name: Vérifications
 
@@ -21,8 +26,97 @@ on:
   pull_request:
   push:
     branches: [main]
+  # Un rendez-vous hebdomadaire sur main : tout est rejoué, y compris ce qui ne
+  # tourne jamais sur une pull request (les mesures de temps, qui rougissent au
+  # hasard sur une machine partagée). Dimanche 18:00 UTC = 22 h à La Réunion.
+  schedule:
+    - cron: "0 18 * * 0"
+  # Et le même passage complet à la demande, depuis l'onglet « Actions ».
+  workflow_dispatch:
+
+# Un seul passage à la fois par pull request. Quand on pousse deux fois de
+# suite, le premier passage vérifie un état déjà remplacé : il occupe une
+# machine pour rien, et son échec envoie un mail qui ne veut plus rien dire.
+#
+# Sur main, RIEN n'est annulé : chaque état publié doit avoir été vérifié en
+# entier, et le rendez-vous hebdomadaire ne doit pas être coupé par un push.
+# D'où la condition sur cancel-in-progress, et le groupe qui retombe sur le SHA
+# (hors pull request, chaque commit a le sien : aucun passage n'en annule un autre).
+concurrency:
+  group: verifications-${{ github.event.pull_request.number || github.sha }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
+  # Faut-il lancer les tests du serveur de suivi ?
+  #
+  # Ils durent une minute et n'apprennent rien sur une pull request qui ne
+  # touche qu'un outil du site — mais ils tirent à chaque fois, et un test de
+  # bout en bout qui tire souvent finit par rougir sans raison.
+  #
+  # Pourquoi pas un « paths: » sur le workflow entier ? Parce qu'un workflow qui
+  # ne se déclenche pas ne produit AUCUNE coche : « serveur (SQLite) » resterait
+  # « Expected » pour toujours, et la fusion serait bloquée sans rien à cliquer.
+  # Un job SAUTÉ, lui, produit bien sa coche.
+  changements:
+    runs-on: ubuntu-latest
+    outputs:
+      serveur: ${{ steps.tri.outputs.serveur }}
+    steps:
+      - name: Récupérer le dépôt
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          # Tout l'historique : sans lui, la base de la pull request n'est pas
+          # là et le « git diff » ci-dessous n'a rien à comparer.
+          fetch-depth: 0
+
+      - name: Décider si les tests du serveur doivent tourner
+        id: tri
+        env:
+          EVENEMENT: ${{ github.event_name }}
+          BASE: ${{ github.event.pull_request.base.sha }}
+          TETE: ${{ github.event.pull_request.head.sha }}
+        run: |
+          tout() {
+            echo "serveur=true" >> "$GITHUB_OUTPUT"
+            echo "-> $1"
+            exit 0
+          }
+          # Hors pull request (mise à jour de main, rendez-vous hebdomadaire,
+          # lancement à la main), on ne trie pas : tout tourne.
+          [ "$EVENEMENT" = "pull_request" ] || tout "événement « $EVENEMENT » : les tests du serveur tournent."
+          # En cas de doute — un SHA absent, un diff impossible — on lance tout.
+          # Mieux vaut une minute de trop qu'un contrôle sauté par erreur.
+          git cat-file -e "$BASE^{commit}" 2>/dev/null || tout "base introuvable : par prudence, les tests du serveur tournent."
+          git cat-file -e "$TETE^{commit}" 2>/dev/null || tout "tête introuvable : par prudence, les tests du serveur tournent."
+          souche=$(git merge-base "$BASE" "$TETE") || tout "souche commune introuvable : par prudence, les tests du serveur tournent."
+          fichiers=$(git diff --name-only "$souche" "$TETE") || tout "diff impossible : par prudence, les tests du serveur tournent."
+          echo "Fichiers modifiés depuis $souche :"
+          echo "$fichiers" | sed 's/^/  /'
+          # Ce que le serveur de suivi lit vraiment. Hors _serveur/, la liste ne
+          # se devine pas : elle vient de _serveur/tests/lancer.php lui-même, qui
+          # compare octet pour octet le moteur de Défi tables et les images
+          # servies à ceux du dépôt (« octet pour octet le fichier de l'appli »,
+          # « le logo et les icônes sont servis d'ici »). Toucher l'un de ces
+          # fichiers sans recopier sa copie dans _serveur/public/ rend les tests
+          # du serveur rouges : ils doivent donc tourner.
+          # Les workflows eux-mêmes en font partie : les modifier, c'est changer
+          # la façon dont ces tests sont lancés.
+          motif='^_serveur/'
+          motif="$motif"'|^\.github/workflows/'
+          motif="$motif"'|^outils/calcul_mental/defi_tables_mon_parcours\.js$'
+          motif="$motif"'|^assets/img/mathsgo-logo-390\.png$'
+          motif="$motif"'|^assets/img/mathsgo-logo-print\.png$'
+          motif="$motif"'|^assets/img/apple-touch-icon\.png$'
+          motif="$motif"'|^favicon\.svg$'
+          motif="$motif"'|^favicon\.ico$'
+          if echo "$fichiers" | grep -qE "$motif"; then
+            echo "serveur=true" >> "$GITHUB_OUTPUT"
+            echo "-> une dépendance du serveur a bougé : les tests du serveur tournent."
+          else
+            echo "serveur=false" >> "$GITHUB_OUTPUT"
+            echo "-> aucune dépendance du serveur n'a bougé : ses tests sont sautés."
+          fi
+
   verifications:
     runs-on: ubuntu-latest
     steps:
@@ -65,11 +159,13 @@ jobs:
         run: node scripts/audit-mobile.mjs
         continue-on-error: true
 
-  # Le serveur de suivi : les 110 tests de bout en bout (un vrai serveur PHP est
+  # Le serveur de suivi : les tests de bout en bout (un vrai serveur PHP est
   # lancé sur une copie de _serveur/public/, puis interrogé comme le ferait
   # l'appli). D'abord sur SQLite, la base par défaut de lancer.php.
   serveur-sqlite:
     name: serveur (SQLite)
+    needs: changements
+    if: needs.changements.outputs.serveur == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -86,6 +182,12 @@ jobs:
           tools: none
 
       - name: Tests du serveur sur SQLite
+        env:
+          # Les mesures de temps ne tournent qu'au rendez-vous hebdomadaire et
+          # sur lancement à la main : sur une machine partagée, un chronomètre
+          # rougit au hasard. Ce qu'elles gardent est vérifié à chaque pull
+          # request, sans chronomètre, par tests/suivi-temps-constant.test.mjs.
+          SUIVI_TESTS_TEMPS: ${{ (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch') && '1' || '' }}
         run: php _serveur/tests/lancer.php
 
       # En cas d'échec, lancer.php garde le journal du serveur de test : c'est lui
@@ -118,6 +220,8 @@ jobs:
   # et la base est vidée au début de chaque passage par lancer.php.
   serveur-mysql:
     name: serveur (MySQL)
+    needs: changements
+    if: needs.changements.outputs.serveur == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     services:
@@ -155,6 +259,9 @@ jobs:
           SUIVI_TEST_DSN: "mysql:host=127.0.0.1;port=3306;dbname=suivi_test;charset=utf8mb4"
           SUIVI_TEST_UTILISATEUR: suivi
           SUIVI_TEST_MOTDEPASSE: suivi-test-ci
+          # Voir la note du job SQLite : les mesures de temps ne tournent qu'au
+          # rendez-vous hebdomadaire et sur lancement à la main.
+          SUIVI_TESTS_TEMPS: ${{ (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch') && '1' || '' }}
         run: php _serveur/tests/lancer.php
 
       # En cas d'échec, lancer.php garde le journal du serveur de test : c'est lui
