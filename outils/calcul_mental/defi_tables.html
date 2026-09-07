@@ -923,26 +923,77 @@
     .number-stick-cell.has-draft .number-stick-value::after { display: none; }
     .expression.is-stick-activity { font-size: clamp(1.8rem, 6vw, 2.8rem); }
     @keyframes stick-pop { 0% { transform: scale(.72); } 70% { transform: scale(1.12); } 100% { transform: scale(1); } }
-    .keypad { max-width: 390px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 12px auto; }
+    /* Le pavé numérique (lot 1 « clavier », 07/09/2026) : les mêmes touches
+       partout, mais à la taille de l'écran. Les mesures vivent sur #play pour
+       que la rangée Valider suive le pavé : même largeur, même espacement.
+       Téléphone : touches de 50 px (44 sur les écrans courts, comme avant) ;
+       tablette : 56 px ; ordinateur (≥ 1040 px) : 64 px. La hauteur suit celle
+       de la fenêtre (dvh) pour que le défi tienne toujours sans défiler : un
+       portable 1366 × 768 n'a que 625 px de haut sous la barre de Chrome. */
+    #play {
+      --pave-largeur: 360px;
+      --touche-h: clamp(44px, 7.5dvh, 50px);
+      --touche-ecart: clamp(2px, .45dvh, 3px);
+      --touche-gap: 6px;
+      --touche-police: 1.5rem;
+      --valider-gap: 14px;
+      --valider-police: 1.15rem;
+    }
+    /* Comme le clavier numérique d'un téléphone : un fond teinté, des touches
+       blanches, et pas de zone morte — chaque bouton occupe toute sa case de
+       la grille, seule sa face visible (::before) est en retrait de
+       --touche-ecart. Un doigt qui tombe entre deux touches touche quand même
+       la plus proche au lieu de ne rien faire. */
+    .keypad { width: min(100%, var(--pave-largeur)); display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0; margin: 8px auto 0; padding: 2px 4px; border-radius: 18px; background: #e3ecf2; }
     .keypad button {
-      min-height: 49px;
-      border: 1px solid #a9c8da;
-      border-radius: 10px;
+      position: relative;
+      isolation: isolate;
+      min-height: 44px;
+      height: calc(var(--touche-h) + 2 * var(--touche-ecart));
+      padding: 0 4px;
+      border: 0;
       color: var(--ink);
-      background: #f8fcff;
-      box-shadow: 0 2px 0 #c3d8e5;
+      background: none;
+      font-size: var(--touche-police);
       font-weight: 950;
+      line-height: 1;
       cursor: pointer;
     }
+    .keypad button::before {
+      content: "";
+      position: absolute;
+      inset: var(--touche-ecart);
+      z-index: -1;
+      border-radius: 12px;
+      background: #fff;
+      box-shadow: 0 1px 0 #b3c6d3;
+    }
+    .keypad button[data-key="clear"],
+    .keypad button[data-key="backspace"] { color: #2c4a63; }
+    .keypad button[data-key="clear"]::before,
+    .keypad button[data-key="backspace"]::before { background: #cbdae5; }
+    .keypad button[data-key="clear"] { font-size: calc(var(--touche-police) * .68); }
+    .keypad button:active::before { background: #d6e3ec; box-shadow: none; }
     .keypad button:disabled { opacity: .45; cursor: default; }
+    .keypad button:focus-visible { outline: none; }
+    .keypad button:focus-visible::before { outline: 3px solid rgba(15, 108, 249, .3); outline-offset: 1px; }
 
     .launch-screen { min-height: 520px; display: grid; place-content: center; justify-items: center; gap: 14px; text-align: center; }
     .launch-heading { max-width: 620px; margin: 0; color: var(--blue); font-size: clamp(1.8rem, 6vw, 3.2rem); }
     .launch-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-top: 8px; }
     .launch-actions button { min-width: 150px; }
 
-    .actions { display: flex; justify-content: center; gap: 9px; margin-top: 13px; }
-    .actions button { min-width: 140px; }
+    /* Valider a sa propre rangée, séparée des chiffres par un vrai espace et
+       large comme deux touches (sous 1-2, 4-5, 7-8, Effacer-0) ; Passer prend
+       la troisième colonne. Sans Passer (J'apprends), Valider fait toute la
+       largeur du pavé. */
+    .actions { width: min(100%, var(--pave-largeur)); display: grid; grid-template-columns: 2fr 1fr; gap: var(--touche-gap); margin: var(--valider-gap) auto 0; }
+    .actions button { min-width: 0; min-height: 44px; height: var(--touche-h); padding: 0 10px; font-size: var(--valider-police); }
+    .question.no-skip .actions { grid-template-columns: 1fr; }
+    /* Dans J'apprends, le bâton prend sa place au-dessus du pavé : les touches
+       redescendent un peu (46 px sur téléphone, jamais moins de 44) pour que
+       tout tienne sans défiler. */
+    .question.show-learn-sequence { --touche-h: clamp(44px, 6.9dvh, 46px); }
     .result-message { padding: 12px 15px; border-radius: 14px; color: #31566c !important; background: #eef8ff; font-weight: 850; }
     .corrections { margin: 20px 0; padding: 16px; border: 2px solid #efc9c9; border-radius: 18px; background: #fffafa; text-align: left; }
     .corrections h2 { margin: 0; font-size: 1.3rem; }
@@ -1046,7 +1097,6 @@
       .type-button small { margin: 0; text-align: right; }
       .question { min-height: 560px; padding: 19px 10px; }
       .expression { min-height: 135px; }
-      .keypad button { min-height: 47px; }
       .result-actions { flex-direction: column; }
 
       .challenge-playing { height: 100dvh; overflow: hidden; }
@@ -1058,38 +1108,82 @@
       .challenge-playing #play { height: 100%; display: flex; flex-direction: column; }
       .challenge-playing .status { min-height: 34px; }
       .challenge-playing .status strong { min-width: 78px; padding: 4px 10px; font-size: 1.05rem; }
-      .challenge-playing .progress-track { height: 6px; margin: 4px 0 6px; }
-      .challenge-playing .question { flex: 1; min-height: 0; display: flex; flex-direction: column; justify-content: flex-start; padding: 6px 10px 8px; overflow-y: auto; overscroll-behavior: contain; }
-      .challenge-playing .expression { min-height: clamp(68px, 12dvh, 92px); margin: 3px 0 6px; padding: 7px; font-size: clamp(2rem, 9vw, 3.2rem); }
-      .challenge-playing .learn-sequence { margin-top: 10px; }
+      .challenge-playing .progress-track { height: 6px; margin: 4px 0 4px; }
+      .challenge-playing .question { flex: 1; min-height: 0; display: flex; flex-direction: column; justify-content: flex-start; padding: 6px 10px 6px; overflow-y: auto; overscroll-behavior: contain; }
+      /* Le calcul s'écrit aussi gros que la largeur le permet : 12,4vw fait tenir
+         la plus longue écriture (« ? × 10 = 100 », mesurée) sur une seule ligne
+         à 320, 375 et 390 px ; 8dvh retient les écrans courts. Sur un iPhone
+         courant on passe de 35 à 48 px. Le cadre garde sa hauteur : la place
+         libre reste entre le calcul et le pavé, comme au-dessus d'un clavier. */
+      .challenge-playing .expression { min-height: clamp(68px, 12dvh, 92px); margin: 3px 0 6px; padding: 7px; font-size: clamp(2rem, min(12.4vw, 8dvh), 3.4rem); }
+      .challenge-playing .learn-sequence { margin-top: 6px; }
       .challenge-playing .number-stick { padding: 2px; border-width: 2px; border-radius: 8px; }
       .challenge-playing .number-stick-cell { min-height: 54px; grid-template-rows: 16px minmax(38px, 1fr); }
       .challenge-playing .number-stick-multiplier { font-size: clamp(.5rem, 2.4vw, .64rem); }
       .challenge-playing .number-stick-value { min-height: 38px; font-size: clamp(.68rem, 3vw, .9rem); }
-      .challenge-playing .answer-feedback { min-height: 38px; margin-top: 3px; padding: 5px 8px; font-size: .86rem; }
-      .challenge-playing .keypad { width: min(100%, 330px); gap: 5px; margin: 6px auto; }
-      .challenge-playing .keypad button { min-height: 44px; height: 44px; }
-      .challenge-playing .actions { margin: 5px 0 auto; }
-      .challenge-playing .actions .primary,
-      .challenge-playing .actions .secondary { min-height: 44px; padding: 7px 15px; }
+      .challenge-playing .answer-feedback { min-height: 36px; margin-top: 2px; padding: 5px 10px; font-size: .95rem; }
+      /* Sur téléphone le pavé se cale en bas de la carte, là où le pouce est
+         à l'aise ; le calcul et la correction restent en haut. */
+      .challenge-playing .keypad { margin: auto auto 0; }
+      .challenge-playing .actions { margin-bottom: 0; }
+      .challenge-playing .question.stick-trace .expression { min-height: 68px; }
+      .challenge-playing .stick-help-button { min-height: 32px; padding: 4px 12px; }
+      .challenge-playing .question.stick-trace .learn-sequence { gap: 4px; }
+      /* Dans « Je construis le bâton » et « bâton à trous », l'en-tête n'est
+         que le titre « Table de 7 » : pas besoin de la hauteur d'une question
+         à trou, et ces 20 px font tenir le pavé agrandi sur un iPhone. */
+      .challenge-playing .question.stick-main .expression { min-height: 56px; }
+      .challenge-playing .question.stick-trace .learn-sequence { margin-bottom: 4px; }
       .challenge-playing footer { display: none; }
     }
 
     @media (min-width: 621px) and (max-height: 900px) {
       .challenge-playing { height: 100dvh; overflow: hidden; }
       .challenge-playing .shell { height: 100dvh; display: grid; grid-template-rows: auto minmax(0, 1fr); padding: 0; }
+      .challenge-playing .topbar { min-height: 50px; }
       .challenge-playing .panel { min-height: 0; height: auto; padding: 12px 36px; overflow: hidden; }
       .challenge-playing #play { height: 100%; display: flex; flex-direction: column; }
       .challenge-playing .status { min-height: 38px; }
-      .challenge-playing .progress-track { height: 7px; margin: 5px 0 9px; }
+      .challenge-playing .progress-track { height: 7px; margin: 5px 0 7px; }
       .challenge-playing .question { flex: 1; min-height: 0; display: flex; flex-direction: column; justify-content: flex-start; padding: 10px 28px 12px; overflow-y: auto; overscroll-behavior: contain; }
       .challenge-playing .question > .eyebrow { margin: auto 0 3px; }
-      .challenge-playing .expression { min-height: 100px; margin: 4px 0 8px; padding: 10px; font-size: clamp(2.2rem, 7vw, 3.5rem); }
-      .challenge-playing .keypad { gap: 6px; margin: 8px auto; }
-      .challenge-playing .keypad button { min-height: 44px; height: 44px; }
-      .challenge-playing .actions { margin: 6px 0 auto; }
-      .challenge-playing .actions .primary,
-      .challenge-playing .actions .secondary { min-height: 44px; padding: 7px 15px; }
+      .challenge-playing .expression { min-height: 84px; margin: 4px 0 8px; padding: 10px; font-size: clamp(2.2rem, min(7vw, 8.5dvh), 4rem); }
+      .challenge-playing .question.stick-main .expression { min-height: 60px; }
+      .challenge-playing .question.stick-trace .learn-sequence { margin-bottom: 4px; }
+      /* 38 px, la hauteur mesurée d'une ligne de retour ici (7 px de marge
+         intérieure en haut et en bas, 24 px de texte) : à 36 px, la boîte
+         grandissait de 2 px au premier message et poussait le pavé d'autant,
+         à chaque réponse. Sur téléphone la même ligne fait 36 px pile (marge
+         de 5 px, texte plus petit), et le pavé y est calé en bas de toute façon. */
+      .challenge-playing .answer-feedback { min-height: 38px; margin-top: 4px; }
+      .challenge-playing .keypad { margin: 6px auto 0; }
+      .challenge-playing .actions { margin-bottom: auto; }
+    }
+
+    /* Tablette et ordinateur : le pavé grandit avec l'écran. La hauteur des
+       touches suit aussi la hauteur de la fenêtre (dvh) pour que le défi tienne
+       sans défiler ; l'espacement suit dans les mêmes proportions. */
+    @media (min-width: 621px) {
+      #play {
+        --touche-h: clamp(46px, calc(12.6dvh - 41px), 56px);
+        --touche-ecart: 3px;
+        --touche-gap: clamp(6px, 1.2dvh, 8px);
+        --touche-police: 1.5rem;
+        --valider-gap: 16px;
+        --valider-police: 1.25rem;
+      }
+      .question.show-learn-sequence { --touche-h: clamp(46px, calc(10.5dvh - 30px), 56px); }
+    }
+    @media (min-width: 1040px) {
+      #play {
+        --pave-largeur: 390px;
+        --touche-h: clamp(46px, calc(12.6dvh - 33px), 64px);
+        --touche-gap: clamp(6px, 1.2dvh, 10px);
+        --touche-police: 1.7rem;
+        --valider-gap: 18px;
+        --valider-police: 1.35rem;
+      }
+      .question.show-learn-sequence { --touche-h: clamp(46px, calc(10.5dvh - 30px), 64px); }
     }
 
     /* Sur un écran large, Mon parcours passe en deux colonnes plus serrées :
