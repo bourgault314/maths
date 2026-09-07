@@ -4573,6 +4573,38 @@ function getRelationGroupedDisplayGroups(card){
   return { totals, groups, parts, xParts: Math.max(1, Math.round(Number(totals.sumCoef) || 1)) };
 }
 
+/* Équation du schéma regroupé : elle suit l'ordre visuel des groupes et de leurs
+   morceaux. Les x d'une même tache sont toutefois condensés (4x, jamais
+   x + x + x + x), afin de garder une lecture fidèle sans faire déborder la ligne. */
+function relationGroupedEquationLine(card, grouped=null){
+  const source = grouped || getRelationGroupedDisplayGroups(card);
+  const relVarChar = getNumberedDisplayVarChar(card);
+  const terms = [];
+
+  (Array.isArray(source.groups) ? source.groups : []).forEach(group => {
+    let groupCoefficient = 0;
+    (Array.isArray(group.parts) ? group.parts : []).forEach(part => {
+      if(part && part.kind === "x"){
+        const coefficient = Number(part.coef);
+        groupCoefficient += Number.isFinite(coefficient) && coefficient > 0 ? coefficient : 1;
+        return;
+      }
+      if(groupCoefficient > 0){
+        terms.push(formatCoeffUnknownTerm(groupCoefficient, relVarChar));
+        groupCoefficient = 0;
+      }
+      const value = relationPartNumberValue(part);
+      if(Number.isFinite(value) && value !== 0) terms.push(formatRelationNumber(value));
+    });
+    if(groupCoefficient > 0) terms.push(formatCoeffUnknownTerm(groupCoefficient, relVarChar));
+  });
+
+  return {
+    left: terms.join(" + ") || "0",
+    right: formatRelationNumber(source.totals.trueTotal)
+  };
+}
+
 function relationPartNumberValue(part){
   if(!part) return 0;
   const direct = Number(part.value);
@@ -5058,7 +5090,10 @@ function drawRelationGroupedSchema(targetGroup, card, opts = {}){
   const constantParts = getRelationOrderedConstantParts(card, grouped);
   const constantTotal = constantParts.reduce((sum, part) => sum + Number(part.value || 0), 0);
   const plan = relationResolutionPlan(card, totals, coefficient, constantParts, constantTotal, relVarChar);
-  const fit = relationEquationFit(plan.lines, plan.ops, layout, opts);
+  const groupedEquation = relationGroupedEquationLine(card, grouped);
+  const fitLines = solved ? plan.lines : [groupedEquation];
+  const fitOps = solved ? plan.ops : [];
+  const fit = relationEquationFit(fitLines, fitOps, layout, opts);
   const eqCenter = fit.eqCenter;
   let eqY = solved ? yTop + v(20) : yTop + v(79);
   function eqLine(left, right){
@@ -5067,8 +5102,9 @@ function drawRelationGroupedSchema(targetGroup, card, opts = {}){
     });
     eqY += v(48);
   }
-  // L'équation décrit exactement les cases visibles du schéma : les constantes ne sont pas encore regroupées.
-  const shownLines = solved ? plan.lines : plan.lines.slice(0, 1);
+  // L'équation décrit les groupes dans l'ordre exact du tableau ; seuls les x
+  // répétés à l'intérieur d'une même tache sont condensés en kx.
+  const shownLines = solved ? plan.lines : [groupedEquation];
   shownLines.forEach(line => eqLine(line.left, line.right));
 
   targetGroup.appendChild(g);
