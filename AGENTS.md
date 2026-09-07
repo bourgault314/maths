@@ -22,6 +22,15 @@ Automatismes V2, lire dans cet ordre :
 - Ne jamais fusionner une pull request sans validation explicite de Gwenaël.
 - JavaScript moderne, sans dépendance externe ni compilation.
 - Toute logique testable doit fonctionner avec `node --test`, sans navigateur.
+- Les tests du serveur de suivi (« serveur (SQLite) » et « serveur (MySQL) ») ne
+  tournent en CI que si la pull request touche `_serveur/`, les workflows, ou
+  l'un des fichiers du dépôt que `_serveur/tests/lancer.php` compare octet pour
+  octet — le moteur de Défi tables et les images servies. Ailleurs, les deux
+  coches sont sautées, et la fusion reste possible. Le passage complet a lieu
+  chaque dimanche à 18:00 UTC (22 h à La Réunion) et à la demande, par « Run
+  workflow ». Un lot serveur se vérifie en local avec
+  `SUIVI_TESTS_TEMPS=1 php _serveur/tests/lancer.php` : cette variable joue en
+  plus les mesures de temps, que les pull requests ne jouent jamais.
 - Vérifier les cas limites mathématiques et le déterminisme des générations.
 
 ## Automatismes V2
