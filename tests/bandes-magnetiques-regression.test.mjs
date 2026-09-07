@@ -140,3 +140,134 @@ test('les identifiants HTML restent uniques', () => {
   const duplicates = ids.filter((id, index) => ids.indexOf(id) !== index);
   assert.deepEqual(duplicates, []);
 });
+
+function loadClosestCircleIntersection() {
+  const match = html.match(
+    /(function closestCircleIntersection[\s\S]*?\n\s*})\n\s*function getFixedNeighborConstraints/
+  );
+  assert.ok(match, 'le calcul robuste des intersections de cercles doit exister');
+  const context = { input: null, result: null };
+  vm.createContext(context);
+  vm.runInContext(`${match[1]}; result = (...args) => closestCircleIntersection(...args);`, context);
+  return (...args) => context.result(...args);
+}
+
+function loadGeometryHelpers(state) {
+  const helperNames = [
+    'closestCircleIntersection',
+    'getFixedNeighborConstraints',
+    'constrainPointToFixedNeighbors',
+    'stabilizeClosedTriangleAtPoint',
+  ];
+  const sources = helperNames.map(name => {
+    const start = html.indexOf(`function ${name}(`);
+    assert.ok(start >= 0, `${name} doit exister`);
+    const openBrace = html.indexOf('{', start);
+    let depth = 0;
+    for (let index = openBrace; index < html.length; index += 1) {
+      if (html[index] === '{') depth += 1;
+      if (html[index] === '}') depth -= 1;
+      if (depth === 0) return html.slice(start, index + 1);
+    }
+    assert.fail(`la fin de ${name} est introuvable`);
+  });
+
+  const context = {
+    state,
+    result: null,
+    getStripLength: strip => strip.lengthPx,
+    isPointPinned: point => Boolean(point && (point.pinned || point.fixed)),
+    protractorAnchorShouldPin: () => false,
+  };
+  vm.createContext(context);
+  vm.runInContext(
+    `${sources.join('\n')}\nresult = { constrainPointToFixedNeighbors, stabilizeClosedTriangleAtPoint };`,
+    context
+  );
+  return context.result;
+}
+
+test('le triangle plat 2,2 + 2,9 = 5,1 possède un sommet fini et exactement colinéaire', () => {
+  const intersect = loadClosestCircleIntersection();
+  const pixelsPerUnit = 50;
+  const left = {x: 0, y: 0};
+  const right = {x: 5.1 * pixelsPerUnit, y: 0};
+  const result = intersect(
+    left,
+    2.2 * pixelsPerUnit,
+    right,
+    2.9 * pixelsPerUnit,
+    120,
+    30
+  );
+
+  assert.ok(result);
+  assert.ok(Number.isFinite(result.x) && Number.isFinite(result.y));
+  assert.ok(Math.abs(result.y) < 1e-9, `le sommet devrait être sur la base, y=${result.y}`);
+  assert.ok(Math.abs(Math.hypot(result.x - left.x, result.y - left.y) - 2.2 * pixelsPerUnit) < 1e-8);
+  assert.ok(Math.abs(Math.hypot(result.x - right.x, result.y - right.y) - 2.9 * pixelsPerUnit) < 1e-8);
+});
+
+test('le sommet 3-3-5 reste à l’intersection exacte des deux côtés fixés pendant le glisser', () => {
+  const intersect = loadClosestCircleIntersection();
+  const left = {x: 0, y: 0};
+  const right = {x: 500, y: 0};
+  const result = intersect(left, 300, right, 300, 250, -400);
+
+  assert.ok(result);
+  assert.ok(result.y < 0, 'le sommet doit rester du côté indiqué par le pointeur');
+  assert.ok(Math.abs(Math.hypot(result.x - left.x, result.y - left.y) - 300) < 1e-8);
+  assert.ok(Math.abs(Math.hypot(result.x - right.x, result.y - right.y) - 300) < 1e-8);
+});
+
+test('la contrainte de glisser 3-3-5 ne modifie jamais les deux points de la base fixée', () => {
+  const state = {
+    points: [
+      {id: 1, x: 0, y: 0, fixed: true},
+      {id: 2, x: 500, y: 0, fixed: true},
+      {id: 3, x: 250, y: -Math.sqrt(300 ** 2 - 250 ** 2), pinned: true},
+    ],
+    strips: [
+      {id: 4, p1: 1, p2: 2, lengthPx: 500, fixed: true},
+      {id: 5, p1: 1, p2: 3, lengthPx: 300},
+      {id: 6, p1: 2, p2: 3, lengthPx: 300},
+    ],
+  };
+  const helpers = loadGeometryHelpers(state);
+  const leftBefore = {...state.points[0]};
+  const rightBefore = {...state.points[1]};
+  const result = helpers.constrainPointToFixedNeighbors(state.points[2], 900, 600);
+
+  assert.ok(result);
+  assert.deepEqual(state.points[0], leftBefore);
+  assert.deepEqual(state.points[1], rightBefore);
+  assert.ok(Math.abs(Math.hypot(result.x, result.y) - 300) < 1e-8);
+  assert.ok(Math.abs(Math.hypot(result.x - 500, result.y) - 300) < 1e-8);
+});
+
+test('la fermeture du triangle plat recale immédiatement le sommet sur la plus longue bande', () => {
+  const state = {
+    points: [
+      {id: 1, x: 0, y: 0},
+      {id: 2, x: 255, y: 0},
+      {id: 3, x: 112, y: 14},
+    ],
+    strips: [
+      {id: 4, p1: 1, p2: 2, lengthPx: 255},
+      {id: 5, p1: 1, p2: 3, lengthPx: 110},
+      {id: 6, p1: 2, p2: 3, lengthPx: 145},
+    ],
+  };
+  const helpers = loadGeometryHelpers(state);
+
+  assert.equal(helpers.stabilizeClosedTriangleAtPoint(3, 112, 14), true);
+  assert.ok(Math.abs(state.points[2].x - 110) < 1e-8);
+  assert.ok(Math.abs(state.points[2].y) < 1e-8);
+});
+
+test('une fixation reste une ancre absolue pendant les déplacements et les aimantations', () => {
+  assert.match(html, /fixedNeighborConstraints\.length >= 2[\s\S]{0,250}constrainPointToFixedNeighbors/);
+  assert.match(html, /groupContainsFixedPoint[\s\S]{0,120}!groupContainsFixedPoint/);
+  assert.match(html, /if \(!p \|\| p\.toBeRemoved \|\| p\.fixed\) return;/);
+  assert.match(html, /if \(snapped\) stabilizeClosedTriangleAtPoint\(target\.id, target\.x, target\.y\)/);
+});
