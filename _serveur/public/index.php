@@ -34,9 +34,13 @@ $nonce = entetes_page();
     font: 16px/1.55 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   }
   .barre { height: 5px; background: var(--brand-gradient); }
-  header { padding: 14px 16px; background: var(--paper); border-bottom: 1px solid var(--line); }
+  header { padding: 12px 16px; background: var(--paper); border-bottom: 1px solid var(--line);
+           display: flex; align-items: center; gap: 10px; }
   header img { display: block; height: 34px; width: auto; }
-  main { flex: 1; width: 100%; max-width: 640px; margin: 0 auto; padding: 22px 16px 30px; }
+  /* Le bout droit de l'en-tête n'existe que pour un élève entré : sa classe,
+     et le geste pour sortir. Avant l'entrée, il n'y a rien à montrer. */
+  .entete-droite { margin-left: auto; display: flex; align-items: center; gap: 8px; }
+  main { flex: 1; width: 100%; max-width: 780px; margin: 0 auto; padding: 22px 16px 30px; }
   h1 { margin: 0 0 6px; font-family: Georgia, "Times New Roman", serif;
        font-size: clamp(1.5rem, 5vw, 2rem); line-height: 1.15; color: var(--blue-dark); }
   .sous-titre { margin: 0 0 22px; color: var(--muted); }
@@ -61,18 +65,36 @@ $nonce = entetes_page();
   .actions { display: flex; gap: 10px; margin-top: 14px; flex-wrap: wrap; }
   .erreur { margin-top: 12px; padding: 10px 12px; border-radius: 10px;
             background: #fdecec; color: #a3261f; font-weight: 600; }
-  .bonjour { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; margin-bottom: 4px; }
-  .classe { padding: 3px 10px; border-radius: 999px; background: #e6f6f5;
+  .classe { padding: 4px 11px; border-radius: 999px; background: #e6f6f5;
             color: #06716e; font-size: .82rem; font-weight: 800; }
-  ul { list-style: none; margin: 18px 0 0; padding: 0; display: grid; gap: 12px; }
-  .appli { display: flex; align-items: center; gap: 14px; padding: 16px;
+  /* Une seule mise en page pour toutes les tailles de liste : une colonne tant
+     qu'il n'y a qu'une ou deux activités (la tuile reste large et la page ne
+     paraît pas vide), deux ou trois dès qu'il y en a plus — sans rien réécrire
+     le jour où une appli de plus est proposée à la classe. */
+  ul { list-style: none; margin: 18px 0 0; padding: 0;
+       display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }
+  .appli { display: flex; align-items: center; gap: 13px; padding: 15px 16px; height: 100%;
            background: var(--paper); border: 1px solid var(--line); border-left: 5px solid var(--teal);
            border-radius: 12px; text-decoration: none; color: inherit; min-height: 44px; }
   .appli:hover { border-color: var(--blue); border-left-color: var(--blue); background: #f3f8fc; }
+  .appli .texte { min-width: 0; }
   .appli strong { display: block; font-size: 1.05rem; color: var(--blue-dark); }
   .appli span { color: var(--muted); font-size: .92rem; }
   .appli .fleche { margin-left: auto; flex: 0 0 auto; color: var(--blue); }
-  .appli.bientot { border-left-color: var(--line); opacity: .65; cursor: default; }
+  /* Le dessin ne remplace jamais le nom : à 40 px, aucun pictogramme ne dit
+     « critères de divisibilité ». Il sert à retrouver d'un coup d'œil une
+     activité déjà connue, pas à la deviner. */
+  .icone { flex: 0 0 auto; display: block; }
+  /* Une activité annoncée mais pas ouverte. Elle est visiblement en retrait —
+     fond plus pâle, titre gris, pas de liseré coloré — mais son DESSIN garde ses
+     couleurs : le soleil de Solèy et l'orange de Splat sont justement ce qui
+     donne envie d'y revenir. Grisés, les cinq à venir se ressemblaient tous
+     (comparé au navigateur le 07/09/2026). La pastille dit le reste. */
+  .appli.bientot { border-left-color: var(--line); background: #fbfcfe; cursor: default; }
+  .appli.bientot strong { color: var(--muted); }
+  .pastille { margin-left: auto; flex: 0 0 auto; background: #eef2f7; color: var(--muted);
+              font-size: .68rem; font-weight: 800; letter-spacing: .04em; text-transform: uppercase;
+              padding: 4px 9px; border-radius: 999px; }
   .aide { margin-top: 20px; color: var(--muted); font-size: .9rem; }
   footer { padding: 16px; border-top: 1px solid var(--line); background: var(--paper);
            color: var(--muted); font-size: .82rem; text-align: center; }
@@ -84,6 +106,10 @@ $nonce = entetes_page();
 <div class="barre"></div>
 <header>
   <img src="mathsgo-logo.png" alt="maths&go">
+  <div class="entete-droite" id="entete-droite" hidden>
+    <span class="classe" id="classe"></span>
+    <button type="button" class="secondaire" id="changer">Se déconnecter</button>
+  </div>
 </header>
 
 <main>
@@ -108,15 +134,9 @@ $nonce = entetes_page();
   </section>
 
   <section id="ecran-espace" hidden>
-    <div class="bonjour">
-      <h1 id="titre">Mon espace</h1>
-      <span class="classe" id="classe"></span>
-    </div>
+    <h1 id="titre">Mon espace</h1>
     <p class="sous-titre">Choisis une activité. Ton travail est enregistré tout seul.</p>
     <ul id="applis"></ul>
-    <p class="aide">
-      <button type="button" class="secondaire" id="changer">Se déconnecter</button>
-    </p>
   </section>
 </main>
 
@@ -168,6 +188,89 @@ $nonce = entetes_page();
     return true;
   }
 
+  // Les dessins vivent dans la PAGE, pas dans la réponse du serveur : la
+  // politique de contenu interdit une image d'un autre domaine, et surtout
+  // rien de ce qui vient du serveur ne doit entrer dans la page autrement que
+  // par textContent. La clé de l'appli (« defi-tables ») ne sert donc qu'à
+  // choisir dans ce tableau ; une appli inconnue prend le dessin par défaut.
+  const ICONES = {
+    // Défi tables : des cases rangées en tableau, et le signe × dans la case
+    // d'angle — comme l'en-tête d'un carré de Pythagore. Quatre cases et non
+    // neuf : à 40 px, la taille où l'élève le voit vraiment, un × logé dans
+    // une case de 8 px disparaît. Essayé, comparé au navigateur, écarté.
+    "defi-tables":
+      '<svg class="icone" width="40" height="40" viewBox="0 0 46 46" aria-hidden="true" focusable="false">'
+      + '<rect width="46" height="46" rx="12" fill="#eaf1fa"/><g transform="translate(9,9)">'
+      + '<rect x="0" y="0" width="13" height="13" rx="3" fill="#063f86"/>'
+      + '<rect x="15" y="0" width="13" height="13" rx="3" fill="#063f86"/>'
+      + '<rect x="0" y="15" width="13" height="13" rx="3" fill="#063f86"/>'
+      + '<rect x="15" y="15" width="13" height="13" rx="3" fill="#08aaa5"/>'
+      + '<g stroke="#fff" stroke-width="2.6" stroke-linecap="round">'
+      + '<path d="M4 4l5 5M9 4l-5 5"/></g>'
+      + '</g></svg>',
+    // Défi calcul : les quatre opérations, aux couleurs de la vignette du site
+    // (bleu #0755b8 et orange #d95f02) — l'appli ne fait pas que des additions.
+    "defi-calcul":
+      '<svg class="icone" width="40" height="40" viewBox="0 0 46 46" aria-hidden="true" focusable="false">'
+      + '<rect width="46" height="46" rx="12" fill="#eaf1fa"/>'
+      + '<g stroke="#0755b8" stroke-width="3.6" stroke-linecap="round">'
+      + '<path d="M15 9.5v9M10.5 14h9"/><path d="M26.5 14h9"/></g>'
+      + '<g stroke="#d95f02" stroke-width="3.6" stroke-linecap="round">'
+      + '<path d="M11 27.5l8 8M19 27.5l-8 8"/><path d="M26.5 31.5h9"/></g>'
+      + '<g fill="#d95f02"><circle cx="31" cy="26.5" r="2.2"/><circle cx="31" cy="36.5" r="2.2"/></g>'
+      + '</svg>',
+    // Automatismes : LE MÉTRONOME de la bibliothèque d'icônes du site
+    // (assets/js/mathsgo-icon-library.js, clé « automatismes »), repris tel
+    // quel — c'est le dessin déjà utilisé partout ailleurs sur mathsgo.re.
+    "automatismes":
+      '<svg class="icone" width="40" height="40" viewBox="0 0 64 64" aria-hidden="true"><path d="m18 53 6-43h16l6 4'
+      + '3Z" fill="#eff6ff" stroke="#0b67b2" stroke-width="2.4" stroke-linejoin="round"/><g stroke="#08aaa5" stroke-w'
+      + 'idth="1.7" stroke-linecap="round"><path d="M26.5 24h11"/><path d="M26.5 30h11"/><path d="M26.5 36h11"/><path'
+      + ' d="M26.5 42h11"/></g><g data-mathsgo-metronome-needle="" transform="rotate(0 32 14.75)"><path d="M32 14.75V'
+      + '45" fill="none" stroke="#f58220" stroke-width="3.2" stroke-linecap="round"/><circle cx="32" cy="45" r="3.1" '
+      + 'fill="#f58220" stroke="#a8440b" stroke-width="1.2"/></g><rect data-mathsgo-metronome-pivot="" x="28.5" y="12'
+      + '" width="7" height="5.5" rx="1.4" fill="#f9bf3b" stroke="#a85b08" stroke-width="1.2"/><path d="M15 53h34v6H1'
+      + '5Z" fill="#0b67b2" stroke="#063f86" stroke-width="1.8" stroke-linejoin="round"/></svg>',
+    // Splat ! Équations : LE SPLAT de la même bibliothèque (clé « splat »),
+    // repris tel quel SAUF la couleur, passée du violet au bleu maths&go.
+    // Sur le site la lettre change chaque jour (daily-splat-letter.js) ; ici
+    // elle reste « x », l'inconnue.
+    "splat-equations":
+      '<svg class="icone" width="40" height="40" viewBox="-2 -2 28 28" aria-hidden="true"><path d="M21.45 12c.529.4'
+      + '93 1.283 1.157 1.472 1.73.189.573-.034 1.225-.337 1.709-.303.485-.991.847-1.481 1.2-.49.352-.965.666-1.459.9'
+      + '16-.494.25-.993.462-1.506.584-.513.122-1.142.006-1.572.147-.43.141-.732.251-1.007.701-.274.451-.335 1.345-.6'
+      + '4 2-.305.656-.703 1.578-1.19 1.935-.487.357-1.175.346-1.73.208-.555-.138-1.112-.681-1.598-1.038-.487-.357-.9'
+      + '32-.712-1.322-1.105-.391-.392-.747-.801-1.022-1.251-.274-.45-.358-1.085-.625-1.45-.267-.365-.465-.619-.978-.'
+      + '741-.513-.122-1.382.097-2.1.01-.718-.088-1.718-.182-2.208-.535-.49-.352-.692-1.01-.732-1.581-.04-.57.304-1.2'
+      + '67.493-1.841.189-.573.389-1.105.642-1.598.253-.493.531-.958.875-1.358.343-.4.921-.676 1.185-1.043.265-.367.4'
+      + '45-.634.403-1.159-.043-.526-.52-1.285-.658-1.995-.139-.709-.358-1.689-.174-2.264.184-.575.747-.971 1.277-1.1'
+      + '85.53-.215 1.3-.103 1.903-.1.604.003 1.172.028 1.719.117.547.088 1.075.209 1.562.412.487.203.927.667 1.358.8'
+      + '05.431.138.74.227 1.227.024.486-.202 1.061-.89 1.693-1.241.632-.352 1.497-.863 2.1-.866.604-.003 1.155.411 1'
+      + '.522.849.368.438.499 1.204.683 1.779.184.575.335 1.123.42 1.67.085.548.133 1.088.091 1.613-.043.526-.348 1.0'
+      + '88-.346 1.541.001.452.012.774.356 1.174.343.4 1.175.734 1.704 1.227Z" fill="#0b67b2" stroke="#052f67" stroke'
+      + '-width="1.05"/><text x="12.4" y="14.2" text-anchor="middle" fill="#fff" font-family="Times New Roman, Times,'
+      + ' serif" font-size="10" font-weight="700" font-style="italic">x</text></svg>',
+    // Solèy : le soleil doré sur ciel violet, les couleurs de sa vignette. La
+    // bibliothèque n'a qu'une icône « fractions » (des bandes) : elle irait à
+    // n'importe quel outil de fractions et ne dit pas Solèy.
+    "soley":
+      '<svg class="icone" width="40" height="40" viewBox="0 0 46 46" aria-hidden="true" focusable="false">'
+      + '<rect width="46" height="46" rx="12" fill="#241b4d"/>'
+      + '<circle cx="23" cy="23" r="7.5" fill="#ffc94d"/>'
+      + '<g stroke="#ffc94d" stroke-width="2.8" stroke-linecap="round">'
+      + '<path d="M23 8.5v3.5M23 34v3.5M8.5 23h3.5M34 23h3.5M12.8 12.8l2.5 2.5M30.7 30.7l2.5 2.5'
+      + 'M33.2 12.8l-2.5 2.5M15.3 30.7l-2.5 2.5"/></g></svg>'
+  };
+  const ICONE_DEFAUT =
+    '<svg class="icone" width="40" height="40" viewBox="0 0 46 46" aria-hidden="true" focusable="false">'
+    + '<rect width="46" height="46" rx="12" fill="#eaf1fa"/><g fill="#063f86">'
+    + '<circle cx="17" cy="17" r="4"/><circle cx="29" cy="17" r="4"/>'
+    + '<circle cx="17" cy="29" r="4"/><circle cx="29" cy="29" r="4"/></g></svg>';
+
+  function icone(cle) {
+    return Object.prototype.hasOwnProperty.call(ICONES, cle) ? ICONES[cle] : ICONE_DEFAUT;
+  }
+
   const FLECHE = '<svg class="fleche" width="22" height="22" viewBox="0 0 24 24" fill="none" '
     + 'stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" '
     + 'aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>';
@@ -203,6 +306,7 @@ $nonce = entetes_page();
     $("titre").textContent = donnees.prenom ? `Bonjour ${donnees.prenom}` : "Mon espace";
     $("classe").textContent = donnees.classe || "";
     $("classe").hidden = !donnees.classe;
+    $("entete-droite").hidden = false;
 
     const liste = $("applis");
     liste.textContent = "";
@@ -225,7 +329,7 @@ $nonce = entetes_page();
         window.location.assign(adresseAppli(appli, billet || donnees.billet || ""));
         window.setTimeout(() => { delete lien.dataset.enCours; }, 2000);
       });
-      lien.innerHTML = `<div><strong></strong><span></span></div>${FLECHE}`;
+      lien.innerHTML = `${icone(appli.cle)}<div class="texte"><strong></strong><span></span></div>${FLECHE}`;
       lien.querySelector("strong").textContent = appli.nom;
       lien.querySelector("span").textContent = appli.description;
       li.appendChild(lien);
@@ -236,8 +340,11 @@ $nonce = entetes_page();
       const li = document.createElement("li");
       const bloc = document.createElement("div");
       bloc.className = "appli bientot";
-      bloc.innerHTML = "<div><strong></strong><span>Bientôt disponible.</span></div>";
+      bloc.innerHTML = icone(appli.cle)
+        + '<div class="texte"><strong></strong><span></span></div>'
+        + '<span class="pastille">Bientôt</span>';
       bloc.querySelector("strong").textContent = appli.nom;
+      bloc.querySelector(".texte span").textContent = appli.description || "";
       li.appendChild(bloc);
       liste.appendChild(li);
     });
@@ -307,6 +414,7 @@ $nonce = entetes_page();
     $("titre").textContent = "Mon espace";
     $("classe").textContent = "";
     $("classe").hidden = true;
+    $("entete-droite").hidden = true;
     $("applis").textContent = "";
     afficherErreur("");
     $("ecran-espace").hidden = true;

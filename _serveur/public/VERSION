@@ -1,10 +1,10 @@
 # Manifeste du serveur de suivi maths&go — produit par outils/generer-version.php.
 # Ne pas modifier à la main : un test du dépôt refait ce calcul à chaque passage.
 # verifier.php relit ce fichier en ligne et compare chaque empreinte.
-lot limiteur-fenetre-glissante
+lot suivi-espace-eleve
 genere_le 2026-09-07
 fichiers 27
-manifeste 913b1b6403be249c11dcf061e40a59c04802be9dfbe39887aca02dac80cc08fc
+manifeste ae9bc71108d15ecd9fcf902768aefc7d1077a23a5c863bc81bd7b556bd1664e2
 61b230d36219b3c4515e56c1ff59afb1a85ffa12343956bd73b16ba04867cdca  .htaccess
 d1cdf00b3e672130b90da1f1aa9333949036fc3d5ad866d539cd11aef7fd8204  api/eleve.php
 dc938db0cb546fdfc4121ddeebdf558ca62259f20d6aecb398c84e2382697675  api/parcours.php
@@ -12,9 +12,9 @@ a3e0c097d89c3cb582a59a436ac7263b789e15e72780cb40f83ae36259ede8ee  api/prof.php
 94ac7a5f0a2a898be85b74095b42754e7b1d31b73f2498ebce4771ad48554992  apple-touch-icon.png
 2ebd7777bfa62e332ddaeb0be3a93e6c3a20bde30deccc6d3e86ca4de8345fce  favicon.ico
 b901e292ec96dadfd1a9415bc315027c93b635d0f4254a6da8ff7afd92c6520e  favicon.svg
-67dd9aa9e1c24c98a12481d75b8e35f61202026af0eef777515d345ca0e8766c  index.php
+e4859079a6692b2c2398d323aeb042932012a37845c441ee1a9c05a04730cf5b  index.php
 fa28d421a28ed9b6f4b997d5119c2b8adbacff6e2dd119a179b71230f9664934  lib/.htaccess
-519041b23330700fe5f4f256ddc9bb02b25adfe34eb44000dcd60efcf5fe2d70  lib/applis.php
+4cdcb65c65754c79ef1b06fa843c6bc16599cfe119939164399115ec287d7430  lib/applis.php
 e082ac8fa5282bb3b7b78ec75e1e9d3c726c44d8f8e8a9e3e4f4e776b4645270  lib/archives.php
 817e5e7501933e4bf2ca5b6bce94ba921e652d056540b864fdcad427823f8ac8  lib/auth.php
 e37d31d8793760bcc94e06112ba335a350c83a441eda960ebaf2f30eed91c96d  lib/bd.php
