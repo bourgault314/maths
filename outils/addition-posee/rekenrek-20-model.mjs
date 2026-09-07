@@ -1,6 +1,8 @@
 export const REKENREK_ROW_SIZE = 10;
 export const REKENREK_ROW_COUNT = 2;
 export const REKENREK_CAPACITY = REKENREK_ROW_SIZE * REKENREK_ROW_COUNT;
+export const REKENREK_FRAME_WIDTH = 820;
+export const REKENREK_BEAD_WIDTH = 38;
 
 function integerBetween(value, minimum, maximum, label) {
   if (!Number.isInteger(value) || value < minimum || value > maximum) {
@@ -35,6 +37,34 @@ export function moveRekenrekBead(rows, rowIndex, beadIndex) {
   return nextRows;
 }
 
+export function settleRekenrekDrag(
+  rows,
+  rowIndex,
+  beadIndex,
+  beadLeft,
+  { frameWidth = REKENREK_FRAME_WIDTH, beadWidth = REKENREK_BEAD_WIDTH } = {}
+) {
+  integerBetween(rowIndex, 0, REKENREK_ROW_COUNT - 1, "Le numéro de rangée");
+  integerBetween(beadIndex, 0, REKENREK_ROW_SIZE - 1, "Le numéro de bille");
+  rekenrekValue(rows);
+  if (![beadLeft, frameWidth, beadWidth].every(Number.isFinite) || frameWidth <= 0 || beadWidth <= 0) {
+    throw new TypeError("Les dimensions du Rekenrek doivent être des nombres positifs.");
+  }
+
+  const nextRows = [...rows];
+  const currentCount = nextRows[rowIndex];
+  const targetLeft = beadIndex * beadWidth;
+  const targetRight = frameWidth - (REKENREK_ROW_SIZE - beadIndex) * beadWidth;
+  const snapMargin = beadWidth;
+
+  if (beadIndex >= currentCount && beadLeft <= targetLeft + snapMargin) {
+    nextRows[rowIndex] = beadIndex + 1;
+  } else if (beadIndex < currentCount && beadLeft >= targetRight - snapMargin) {
+    nextRows[rowIndex] = beadIndex;
+  }
+  return nextRows;
+}
+
 export function makeRekenrekCalculation(operation) {
   if (!operation || !Array.isArray(operation.addendDigits) || operation.addendDigits.length < 2) {
     throw new TypeError("Une colonne d’addition est nécessaire pour préparer le Rekenrek.");
@@ -44,16 +74,12 @@ export function makeRekenrekCalculation(operation) {
   ));
   const carry = integerBetween(operation.carryIn ?? 0, 0, 9, "La retenue");
   const parts = [...addendDigits, ...(carry > 0 ? [carry] : [])];
-  const total = parts.reduce((sum, value) => sum + value, 0);
-  if (total > REKENREK_CAPACITY) {
+  if (parts.reduce((sum, value) => sum + value, 0) > REKENREK_CAPACITY) {
     throw new RangeError("Ce calcul dépasse la capacité du Rekenrek 20.");
   }
   return {
     parts,
-    start: addendDigits[0],
-    additions: [...addendDigits.slice(1), ...(carry > 0 ? [carry] : [])],
     carry,
-    total,
-    rows: splitRekenrekValue(addendDigits[0])
+    rows: [0, 0]
   };
 }

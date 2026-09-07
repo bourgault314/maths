@@ -169,8 +169,8 @@ test("toutes les étapes attendues conduisent à la réussite complète", () => 
 test("l’interface élève réutilise le moteur, reste tactile et ne contient pas de solution initiale", () => {
   assert.match(html, /addition-posee\.css\?v=5/);
   assert.match(html, /addition-posee-interactive\.css\?v=5/);
-  assert.match(html, /addition-posee-interactive\.js\?v=5/);
-  assert.match(html, /rekenrek-20\.css\?v=1/);
+  assert.match(html, /addition-posee-interactive\.js\?v=6/);
+  assert.match(html, /rekenrek-20\.css\?v=2/);
   assert.doesNotMatch(html, /data-mode="(?:integer|decimal)"/);
   assert.match(html, /id="rank-guides" type="checkbox"/);
   assert.match(html, /id="placement-mode" type="checkbox"/);
@@ -183,7 +183,7 @@ test("l’interface élève réutilise le moteur, reste tactile et ne contient p
   assert.doesNotMatch(html, />863</);
   assert.match(js, /addition-engine\.mjs\?v=1/);
   assert.match(js, /addition-entrainement-engine\.mjs\?v=4/);
-  assert.match(js, /rekenrek-20\.js\?v=1/);
+  assert.match(js, /rekenrek-20\.js\?v=2/);
   assert.doesNotMatch(`${html}\n${js}`, /facultatif|total-answer|prompt-optional/i);
   assert.doesNotMatch(js, /makeRelationDigitGroup|data-answer.*sum/);
   assert.match(js, /leadingPracticeColumnCount\(\)/);

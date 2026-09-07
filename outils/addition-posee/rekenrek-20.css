@@ -1,6 +1,6 @@
 .rekenrek-dialog {
-  width: min(720px, calc(100% - 20px));
-  max-height: min(92svh, 720px);
+  width: min(950px, calc(100% - 24px));
+  max-height: min(94svh, 720px);
   margin: auto;
   padding: 0;
   overflow: auto;
@@ -11,9 +11,14 @@
   box-shadow: 0 24px 70px rgba(16, 41, 74, .3);
 }
 .rekenrek-dialog::backdrop { background: rgba(10, 31, 59, .48); }
-.rekenrek-panel { display: grid; gap: 14px; padding: 20px; }
+.rekenrek-panel { display: grid; gap: 13px; padding: 20px; }
 .rekenrek-header { display: flex; align-items: center; justify-content: space-between; gap: 14px; }
-.rekenrek-header h2 { margin: 0; color: var(--navy); font-family: Georgia, "Times New Roman", serif; font-size: clamp(1.5rem, 4vw, 2rem); }
+.rekenrek-header h2 {
+  margin: 0;
+  color: var(--navy);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(1.5rem, 4vw, 2rem);
+}
 .rekenrek-close {
   width: 44px;
   height: 44px;
@@ -30,7 +35,10 @@
   cursor: pointer;
 }
 .rekenrek-close:focus-visible,
-.rekenrek-bead:focus-visible { outline: 3px solid color-mix(in srgb, var(--blue) 35%, transparent); outline-offset: 3px; }
+.rekenrek-bead:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--blue) 35%, transparent);
+  outline-offset: 3px;
+}
 .rekenrek-equation {
   min-height: 58px;
   display: flex;
@@ -48,70 +56,126 @@
 .rekenrek-equation-value { display: grid; place-items: center; line-height: 1; }
 .rekenrek-equation-sign { color: var(--navy); }
 .rekenrek-equation-question { color: var(--orange); }
-.rekenrek-carry-label { margin-top: 3px; color: var(--violet); font-family: "Segoe UI", system-ui, sans-serif; font-size: .5em; line-height: 1; }
-.rekenrek-description { margin: 0; color: var(--ink); font-size: clamp(1rem, 2.6vw, 1.18rem); font-weight: 750; line-height: 1.4; text-align: center; }
-.rekenrek-rank-note { margin: -5px 0 0; color: var(--muted); font-size: .9rem; font-weight: 650; line-height: 1.35; text-align: center; }
+.rekenrek-carry-label {
+  margin-top: 3px;
+  color: var(--violet);
+  font-family: "Segoe UI", system-ui, sans-serif;
+  font-size: .5em;
+  line-height: 1;
+}
+.rekenrek-description {
+  margin: 0;
+  color: var(--ink);
+  font-size: clamp(1rem, 2.6vw, 1.18rem);
+  font-weight: 750;
+  line-height: 1.4;
+  text-align: center;
+}
+.rekenrek-rank-note {
+  margin: -5px 0 0;
+  color: var(--muted);
+  font-size: .9rem;
+  font-weight: 650;
+  line-height: 1.35;
+  text-align: center;
+}
 .rekenrek-frame {
+  width: min(820px, calc(100% - 60px));
+  justify-self: center;
   display: grid;
-  gap: 12px;
-  padding: 14px 10px;
-  border-right: 12px solid #aa7b43;
-  border-left: 12px solid #aa7b43;
-  border-radius: 10px;
+  gap: 0;
+  padding: 0;
+  border-right: 30px solid #9b6a36;
+  border-left: 30px solid #9b6a36;
   background: #fbfcfe;
+  box-shadow: 0 4px 12px rgba(16, 41, 74, .18);
 }
 .rekenrek-row {
+  width: 100%;
+  height: 56px;
   min-width: 0;
-  min-height: 44px;
   position: relative;
-  display: flex;
-  align-items: center;
-  gap: clamp(1px, .65vw, 4px);
+  touch-action: none;
 }
-.rekenrek-row::before {
-  content: "";
+.rekenrek-rod {
   position: absolute;
-  right: -10px;
-  left: -10px;
+  z-index: 1;
   top: 50%;
+  right: 0;
+  left: 0;
   height: 4px;
   transform: translateY(-50%);
-  border-radius: 999px;
-  background: #718096;
+  background: #66717e;
 }
 .rekenrek-bead {
-  position: relative;
-  z-index: 1;
-  width: clamp(23px, 6.8vw, 38px);
-  aspect-ratio: 1;
-  flex: none;
+  position: absolute;
+  z-index: 2;
+  top: 50%;
+  width: clamp(24px, calc((100vw - 80px) / 10), 38px);
+  height: clamp(24px, calc((100vw - 80px) / 10), 38px);
   padding: 0;
-  border: 1px solid rgba(16, 41, 74, .28);
+  transform: translateY(-50%);
+  border: 0;
   border-radius: 50%;
-  box-shadow: inset -3px -3px 5px rgba(16, 41, 74, .2), 0 2px 4px rgba(16, 41, 74, .18);
-  cursor: pointer;
-  transition: transform .16s ease, margin .22s ease;
+  box-shadow: inset -3px -3px 6px rgba(16, 41, 74, .28), 2px 2px 5px rgba(16, 41, 74, .25);
+  cursor: grab;
+  touch-action: none;
+  transition: left .22s ease-out;
 }
-.rekenrek-bead:hover { transform: translateY(-1px); }
-.rekenrek-bead.is-red { background: radial-gradient(circle at 32% 28%, #ff7777 0 16%, #dc3038 55%, #a81723 100%); }
-.rekenrek-bead.is-white { background: radial-gradient(circle at 32% 28%, #fff 0 25%, #f2f4f7 60%, #c5ccd5 100%); }
-.rekenrek-bead.is-first-right { margin-left: auto; }
-.rekenrek-bead.is-last-left { margin-right: auto; }
-.rekenrek-live { min-height: 1.3em; margin: -5px 0 0; color: var(--muted); font-size: .82rem; font-weight: 700; text-align: center; }
-.rekenrek-controls { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
-.rekenrek-footer { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 10px; padding-top: 4px; border-top: 1px solid var(--line); }
+.rekenrek-bead:active,
+.rekenrek-bead.is-moving { cursor: grabbing; }
+.rekenrek-bead.is-red {
+  background: radial-gradient(circle at 30% 30%, #ff5f5f, #a00);
+}
+.rekenrek-bead.is-white {
+  border: 1px solid #c7cdd5;
+  background: radial-gradient(circle at 30% 30%, #fff, #bbb);
+}
+.rekenrek-manipulation-hint {
+  margin: -2px 0 0;
+  color: var(--muted);
+  font-size: .86rem;
+  font-weight: 700;
+  text-align: center;
+}
+.rekenrek-panel .sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+.rekenrek-footer {
+  display: flex;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding-top: 5px;
+  border-top: 1px solid var(--line);
+}
+
+@media (max-width: 640px) {
+  .rekenrek-frame {
+    width: min(820px, calc(100% - 18px));
+    border-right-width: 9px;
+    border-left-width: 9px;
+  }
+  .rekenrek-row { height: 48px; }
+}
 
 @media (max-width: 520px) {
   .rekenrek-dialog { width: calc(100% - 12px); border-radius: 18px; }
-  .rekenrek-panel { gap: 11px; padding: 13px 11px; }
-  .rekenrek-equation { min-height: 52px; gap: 7px; padding-inline: 8px; }
+  .rekenrek-panel { gap: 10px; padding: 13px 11px; }
+  .rekenrek-equation { min-height: 50px; gap: 7px; padding-inline: 8px; }
   .rekenrek-rank-note { font-size: .78rem; }
-  .rekenrek-frame { gap: 8px; padding: 9px 5px; border-right-width: 8px; border-left-width: 8px; }
-  .rekenrek-row::before { right: -5px; left: -5px; }
   .rekenrek-footer { display: grid; grid-template-columns: 1fr; }
   .rekenrek-footer .button { width: 100%; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .rekenrek-bead { transition: none; }
+  .rekenrek-bead { transition: none !important; }
 }
