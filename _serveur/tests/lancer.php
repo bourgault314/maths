@@ -904,23 +904,19 @@ verifier("un déluge de requêtes sur un code est freiné", function () use (&$j
     $classe = appel('/api/prof.php', ['action' => 'classes.creer', 'libelle' => 'test-debit'], ['jeton' => $j])['json']['id'];
     $code = appel('/api/prof.php', ['action' => 'eleves.ajouter', 'classe_id' => $classe, 'nombre' => 1], ['jeton' => $j])['json']['eleves'][0]['code'];
 
-    // La fenêtre du limiteur est ALIGNÉE SUR L'HORLOGE (lib/limite.php,
-    // fin_de_fenetre) : elle se referme toutes les cinq minutes, à heure fixe.
-    // Sur une machine lente — Windows, où le serveur intégré ne traite qu'une
-    // requête à la fois parce que PHP_CLI_SERVER_WORKERS n'y fait rien —, les
-    // trois cent trente requêtes de ce test peuvent enjamber ce changement de
-    // fenêtre : le compteur du serveur repart de zéro au milieu, et le test
-    // annonçait un échec là où le limiteur avait parfaitement fonctionné.
-    // C'est l'instabilité relevée le 05/09 (verte sur la CI Linux, rouge une
-    // fois sur deux sous Windows). On surveille donc la fenêtre nous aussi, et
-    // on recommence à compter quand elle tourne — ce que fait le serveur.
-    $fenetre = fn(): int => intdiv(time(), 300);
+    // Ce test surveillait autrefois l'horloge en même temps que le serveur, et
+    // remettait son propre compte à zéro quand la fenêtre tournait : le
+    // limiteur était alors aligné sur l'horloge, et les trois cent trente
+    // requêtes de ce test pouvaient enjamber une frontière commune (instabilité
+    // relevée le 05/09, verte sur la CI Linux, rouge une fois sur deux sous
+    // Windows). Depuis le lot limiteur (07/09/2026), la fenêtre est ouverte par
+    // la première requête comptée : il n'y a plus de frontière à enjamber, et
+    // cette surveillance a été retirée — elle décrivait un limiteur qui
+    // n'existe plus.
     vider_compteurs();
-    $courante = $fenetre();
     $freine = false;
     $avant = 0;
     for ($i = 0; $i < 800; $i++) {
-        if ($fenetre() !== $courante) { $courante = $fenetre(); $avant = 0; }
         $r = lire($code);
         $statut = $r['code'];
         if ($statut === 429) {
@@ -931,11 +927,10 @@ verifier("un déluge de requêtes sur un code est freiné", function () use (&$j
         if ($statut === 200) $avant++;
     }
     vrai($freine, "le serveur aurait dû répondre 429 après trois cents requêtes");
-    // Une tolérance d'un cran : la fenêtre peut tourner entre notre lecture de
-    // l'horloge et celle du serveur. Ce que le test prouve reste entier — le
-    // frein arrive à trois cents, pas à trente ni à trois mille.
-    vrai($avant >= 299 && $avant <= 301,
-        "trois cents lectures passent avant le frein (l'appli envoie après chaque réponse) — obtenu $avant");
+    // Le compte est exact depuis que la fenêtre ne tourne plus sous nos pieds :
+    // le frein arrive à trois cents, pile.
+    egal(300, $avant,
+        "trois cents lectures passent avant le frein (l'appli envoie après chaque réponse)");
     vider_compteurs();
 });
 
@@ -978,14 +973,14 @@ function cle_compteur_test(string $cle, int $secondes): string
 // échecs ralentis prendraient un quart d'heure ; ici, une ligne.
 function semer_compteur(string $cle, int $secondes, int $nombre): void
 {
-    // Même calcul de fenêtre que lib/limite.php. Si elle se ferme dans moins
-    // de cinq secondes, on attend la suivante : sinon le test et le serveur
-    // pourraient ne pas parler de la même fenêtre.
-    $fin = (intdiv(time(), $secondes) + 1) * $secondes;
-    if ($fin - time() < 5) {
-        sleep($fin - time() + 1);
-        $fin = (intdiv(time(), $secondes) + 1) * $secondes;
-    }
+    // Même calcul de fenêtre que lib/limite.php : elle part de maintenant et
+    // court $secondes. Ce code attendait autrefois quand la fenêtre allait se
+    // fermer dans moins de cinq secondes, parce qu'elle était alignée sur
+    // l'horloge et que le test et le serveur pouvaient alors ne pas parler de
+    // la même. Depuis que la fenêtre est ouverte par la première tentative
+    // (lot limiteur, 07/09/2026), il n'y a plus de frontière commune à rater :
+    // l'attente a été retirée.
+    $fin = time() + $secondes;
     bd_test()->prepare('DELETE FROM compteurs WHERE cle = ?')->execute([cle_compteur_test($cle, $secondes)]);
     bd_test()->prepare('INSERT INTO compteurs (cle, fenetre, nombre) VALUES (?, ?, ?)')
         ->execute([cle_compteur_test($cle, $secondes), $fin, $nombre]);
@@ -2026,6 +2021,129 @@ verifier("réactiver : la connexion et ses classes reviennent, ses partages auss
     vrai(count(array_filter($siennes, fn($c) => $c['droit'] !== 'proprietaire')) >= 1, 'et la classe partagée en lecture (lot A2) aussi');
     $annuaire = array_column(appel('/api/prof.php', ['action' => 'profs.annuaire'], ['jeton' => $jetonS1])['json']['profs'], 'id');
     vrai(in_array($claireId, $annuaire, true), 'de retour dans l’annuaire');
+});
+
+// ============================================== lot limiteur (07/09/2026)
+//
+// La fenêtre du limiteur est désormais ouverte par la PREMIÈRE tentative
+// comptée. Elle l'était par l'horloge — « (intdiv(time(), $secondes) + 1) *
+// $secondes » —, ce qui découpait le temps en tranches communes à tout le monde
+// et remettait le compteur à 1 au passage de chacune.
+//
+// Ces frontières se calculent de l'extérieur : elles ne dépendent d'aucun
+// secret. Il suffisait d'y coller sa rafale pour en obtenir deux — douze essais
+// juste avant, douze juste après, en une seconde, sans un seul refus. Le débit
+// réel de tous ces freins valait le double de ce qu'ils annonçaient.
+//
+// C'est aussi ce qui rendait rouges, au hasard, « soixante et un codes
+// inventés », « douze essais d'ancien mot de passe » et « lot 11 —
+// verifier.php » : leurs tentatives enjambaient une frontière, et le compte du
+// serveur repartait au milieu.
+//
+// Sabotages attendus (chacun rend un test rouge) :
+//  a) revenir à « CASE WHEN fenetre = excluded.fenetre » dans compter()
+//     -> « la rafale ne passe pas deux fois », par le compteur semé
+//  b) recalculer Retry-After depuis l'horloge plutôt que depuis la ligne
+//     -> « le Retry-After dit le temps qui reste sur SA fenêtre »
+//  c) ne corriger qu'un seul des deux chemins SQL (SQLite ou MySQL)
+//     -> les mêmes tests, mais sur le moteur laissé en arrière SEULEMENT
+
+verifier("lot limiteur — la fenêtre part de la première tentative, pas de l'horloge", function () {
+    vider_compteurs();
+    // Une connexion ratée sur un identifiant qui n'existe pas : elle compte,
+    // et ouvre la fenêtre de « connexion-id: ».
+    $identifiant = 'personne-du-lot-limiteur';
+    $avant = time();
+    egal(401, connexion($identifiant, 'un-mauvais-mot-de-passe')['code'], 'la tentative est refusée');
+    $apres = time();
+
+    $requete = bd_test()->prepare('SELECT fenetre, nombre FROM compteurs WHERE cle = ?');
+    $requete->execute([cle_compteur_test('connexion-id:' . $identifiant, 600)]);
+    $ligne = $requete->fetch();
+    $requete->closeCursor();   // sans quoi SQLite garde un verrou de lecture
+    vrai($ligne !== false, 'la tentative a ouvert une fenêtre');
+    egal(1, (int)$ligne['nombre'], 'et elle compte pour une');
+
+    $fin = (int)$ligne['fenetre'];
+    vrai($fin >= $avant + 600 && $fin <= $apres + 600,
+        sprintf('la fenêtre se ferme 600 s après la PREMIÈRE tentative (fin %d, attendue entre %d et %d)',
+            $fin, $avant + 600, $apres + 600));
+    // Et la preuve que l'horloge n'y est plus pour rien : une fin alignée
+    // serait un multiple exact de la durée. Celle-ci n'en est un que si la
+    // tentative est tombée pile sur une seconde ronde — une sur six cents, et
+    // le test le dit alors au lieu de rougir.
+    if ($avant % 600 !== 0 && $apres % 600 !== 0) {
+        vrai($fin % 600 !== 0,
+            "la fin de fenêtre ne doit plus être un multiple de la durée : ce serait l'ancien "
+            . "alignement sur l'horloge (fin $fin)");
+    } else {
+        echo "       (tentative tombée sur une seconde ronde : l'alignement n'est pas distinguable cette fois)\n";
+    }
+    vider_compteurs();
+});
+
+verifier("lot limiteur — la rafale à cheval sur une frontière d'horloge ne passe pas deux fois", function () use (&$jetonClaire, &$claireId) {
+    vider_compteurs();
+    // Vingt-quatre essais d'ancien mot de passe d'affilée, sur un seuil de
+    // douze par dix minutes. Douze passent, douze sont refusés — quelle que
+    // soit l'heure qu'il est. Du temps de l'alignement, une rafale calée sur
+    // une frontière en faisait passer vingt-quatre.
+    $passes = 0;
+    $refuses = 0;
+    for ($i = 0; $i < 24; $i++) {
+        $r = appel('/api/prof.php', ['action' => 'profs.motdepasse', 'ancien' => "rafale-$i",
+            'nouveau' => 'un-nouveau-mot-de-passe-2026'], ['jeton' => $jetonClaire]);
+        $r['code'] === 429 ? $refuses++ : $passes++;
+    }
+    egal(12, $passes, 'douze essais passent : le seuil annoncé, pas le double');
+    egal(12, $refuses, 'les douze suivants sont refusés, frontière d’horloge ou pas');
+
+    // Ce qui précède ne distingue les deux limiteurs que si une frontière tombe
+    // pendant la rafale — une fois sur trois cents. Voici la même chose, à coup
+    // sûr : un compteur PLEIN dont la fenêtre ne tombe pas sur un multiple de
+    // dix minutes. L'ancien code comparait la fenêtre de la ligne à celle de
+    // l'horloge ; les trouvant différentes, il remettait le compte à 1 et
+    // laissait passer. Le nouveau regarde si elle est encore ouverte.
+    vider_compteurs();
+    semer_compteur('motdepasse:' . $claireId, 600, 12);
+    $requete = bd_test()->prepare('SELECT fenetre FROM compteurs WHERE cle = ?');
+    $requete->execute([cle_compteur_test('motdepasse:' . $claireId, 600)]);
+    $fin = (int)$requete->fetchColumn();
+    $requete->closeCursor();   // sans quoi l'écriture du serveur attendrait ce curseur
+    if ($fin % 600 === 0) {          // une seconde sur six cents : on décale
+        sleep(1);
+        semer_compteur('motdepasse:' . $claireId, 600, 12);
+    }
+    $r = appel('/api/prof.php', ['action' => 'profs.motdepasse', 'ancien' => 'peu-importe',
+        'nouveau' => 'un-nouveau-mot-de-passe-2026'], ['jeton' => $jetonClaire]);
+    egal(429, $r['code'],
+        'un compteur plein refuse, même si sa fenêtre ne tombe pas sur un multiple de dix minutes');
+    vider_compteurs();
+});
+
+verifier("lot limiteur — le Retry-After dit le temps qui reste sur SA fenêtre", function () use (&$jetonClaire, &$claireId) {
+    vider_compteurs();
+    // Une fenêtre pleine qui vient de s'ouvrir : il doit rester près de dix
+    // minutes. L'ancien Retry-After lisait l'horloge et pouvait annoncer une
+    // seconde là où il en restait six cents — ou l'inverse.
+    semer_compteur('motdepasse:' . $claireId, 600, 12);
+    $requete = bd_test()->prepare('SELECT fenetre FROM compteurs WHERE cle = ?');
+    $requete->execute([cle_compteur_test('motdepasse:' . $claireId, 600)]);
+    $fin = (int)$requete->fetchColumn();
+    $requete->closeCursor();   // idem : le serveur va écrire, il lui faut le verrou
+
+    $r = appel('/api/prof.php', ['action' => 'profs.motdepasse', 'ancien' => 'peu-importe',
+        'nouveau' => 'un-nouveau-mot-de-passe-2026'], ['jeton' => $jetonClaire]);
+    egal(429, $r['code'], 'refusé');
+    $attente = entete($r, 'Retry-After');
+    vrai($attente !== null && ctype_digit((string)$attente), "le 429 porte un Retry-After en secondes (obtenu " . json_encode($attente) . ')');
+    $reste = $fin - time();
+    vrai(abs((int)$attente - $reste) <= 2,
+        sprintf('Retry-After (%s s) doit dire le temps qui reste sur la fenêtre de la ligne (%d s)', $attente, $reste));
+    vrai((int)$attente > 500,
+        sprintf('une fenêtre qui vient de s’ouvrir laisse près de dix minutes, pas %s s : '
+            . "c'est l'horloge qui serait lue, pas la ligne", $attente));
+    vider_compteurs();
 });
 
 verifier("un compte désactivé pendant qu'une session est ouverte est refusé au premier appel suivant", function () use (&$jetonS1, &$jetonClaire, &$claireId) {

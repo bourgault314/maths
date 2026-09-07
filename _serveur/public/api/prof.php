@@ -342,7 +342,7 @@ try {
             $parAdresse = compter($cleAdresse, FENETRE_ECHECS_CONNEXION);
             compter($cleIdentifiant, FENETRE_ECHECS_CONNEXION);
             if ($parAdresse > ECHECS_CONNEXION_PAR_ADRESSE) {
-                refuser_trop_de_demandes(FENETRE_ECHECS_CONNEXION);
+                refuser_trop_de_demandes($cleAdresse, FENETRE_ECHECS_CONNEXION);
             }
             erreur("Identifiant ou mot de passe incorrect.", 401);
         }
