@@ -34,13 +34,54 @@ const CATALOGUE_APPLIS = [
         // déclare rien n'est pas comptée.
         'compteur' => 'calculs',
     ],
+    // Les entrées qui suivent sont ANNONCÉES, pas ouvertes : l'appli ne sait pas
+    // encore parler au serveur (« disponible » à false, « url » à null). Elles
+    // s'affichent dans l'espace élève avec la pastille « Bientôt », sans lien.
+    // L'ORDRE DE CE TABLEAU EST L'ORDRE D'AFFICHAGE (choisi par Gwenaël le
+    // 07/09/2026) : tables, calcul, automatismes, Splat, Solèy.
+    // Le jour où l'une d'elles s'ouvre, elle reçoit son adresse, ses clés
+    // acceptées et son compteur, passe à « disponible », et c'est alors la
+    // liste de la classe qui décide qui la voit.
+    'defi-calcul' => [
+        'nom' => 'Défi calcul',
+        'description' => 'Tout le calcul mental du collège.',
+        'url' => null,
+        'ancre' => null,
+        'disponible' => false,
+        'cles' => [],
+        'mots' => [],
+        'motifs' => [],
+        'compteur' => null,
+    ],
     'automatismes' => [
         'nom' => 'Automatismes',
-        'description' => 'Entraînement aux automatismes du collège.',
+        'description' => "S'entraîner aux automatismes, sans calculatrice.",
         'url' => null,
         'ancre' => null,
         'disponible' => false,
         // Pas encore d'appli : rien n'est accepté. À déclarer avec l'appli.
+        'cles' => [],
+        'mots' => [],
+        'motifs' => [],
+        'compteur' => null,
+    ],
+    'splat-equations' => [
+        'nom' => 'Splat ! Équations',
+        'description' => 'Trouver le nombre caché sous la tache.',
+        'url' => null,
+        'ancre' => null,
+        'disponible' => false,
+        'cles' => [],
+        'mots' => [],
+        'motifs' => [],
+        'compteur' => null,
+    ],
+    'soley' => [
+        'nom' => 'Solèy',
+        'description' => 'Les fractions avec des rayons de soleil.',
+        'url' => null,
+        'ancre' => null,
+        'disponible' => false,
         'cles' => [],
         'mots' => [],
         'motifs' => [],
@@ -63,17 +104,38 @@ function appli_connue(string $cle): bool
 // n'utilise que le nom, la description, l'adresse, l'ancre et « disponible ».
 const CHAMPS_AFFICHES_APPLI = ['nom', 'description', 'url', 'ancre', 'disponible'];
 
+function appli_affichable(string $cle): array
+{
+    $appli = ['cle' => $cle];
+    foreach (CHAMPS_AFFICHES_APPLI as $champ) {
+        $appli[$champ] = CATALOGUE_APPLIS[$cle][$champ] ?? null;
+    }
+    return $appli;
+}
+
+// D'abord les activités de la classe — celles que l'élève peut vraiment ouvrir,
+// dans l'ordre choisi par son professeur. Puis, pour TOUT LE MONDE, celles que
+// le catalogue annonce sans les avoir ouvertes, dans l'ordre du catalogue.
+//
+// Une activité « bientôt » est une annonce, pas une attribution : elle n'a pas
+// d'adresse, donc rien à ouvrir, et la liste de la classe garde entièrement la
+// main sur ce qui est accessible. C'est ce qui permet à un élève de voir ce qui
+// se prépare sans que le professeur ait à cocher quoi que ce soit — et le jour
+// où l'activité s'ouvre, elle disparaît d'ici : elle n'apparaît plus que dans
+// les classes qui l'ont dans leur liste.
 function applis_de_classe(string $liste): array
 {
     $sortie = [];
+    $vues = [];
     foreach (explode(',', $liste) as $cle) {
         $cle = trim($cle);
-        if (!appli_connue($cle)) continue;
-        $appli = ['cle' => $cle];
-        foreach (CHAMPS_AFFICHES_APPLI as $champ) {
-            $appli[$champ] = CATALOGUE_APPLIS[$cle][$champ] ?? null;
-        }
-        $sortie[] = $appli;
+        if (!appli_connue($cle) || isset($vues[$cle])) continue;
+        $vues[$cle] = true;
+        $sortie[] = appli_affichable($cle);
+    }
+    foreach (CATALOGUE_APPLIS as $cle => $appli) {
+        if (isset($vues[$cle]) || ($appli['disponible'] ?? false)) continue;
+        $sortie[] = appli_affichable((string)$cle);
     }
     return $sortie;
 }

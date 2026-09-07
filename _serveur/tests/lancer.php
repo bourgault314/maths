@@ -502,10 +502,39 @@ verifier("la page élève reconnaît le code et donne les applis de la classe", 
     egal(200, $r['code'], 'code HTTP');
     egal('Léa', $r['json']['prenom']);
     egal('405', $r['json']['classe']);
-    egal(1, count($r['json']['applis']), 'nombre d\'applis');
-    egal('defi-tables', $r['json']['applis'][0]['cle']);
+    egal('defi-tables', $r['json']['applis'][0]['cle'], 'la classe a Défi tables, en premier');
     egal(true, $r['json']['applis'][0]['disponible']);
     vrai(str_contains($r['json']['applis'][0]['url'], 'defi_tables.html'), "l'appli doit pointer vers mathsgo.re");
+    // 07/09/2026 : les activités que le catalogue annonce sans les avoir
+    // ouvertes suivent, pour TOUTE classe, dans l'ordre du catalogue. Ce ne
+    // sont pas des attributions : ni adresse, ni « disponible ».
+    $suite = array_slice($r['json']['applis'], 1);
+    vrai($suite !== [], 'les activités à venir sont annoncées');
+    foreach ($suite as $appli) {
+        egal(false, $appli['disponible'], $appli['cle'] . " est annoncée, pas ouverte");
+        egal(null, $appli['url'], $appli['cle'] . " ne doit avoir aucune adresse à ouvrir");
+        vrai(($appli['description'] ?? '') !== '', $appli['cle'] . " doit dire ce qu'elle sera");
+    }
+    egal(['defi-calcul', 'automatismes', 'splat-equations', 'soley'],
+        array_column($suite, 'cle'), "l'ordre est celui du catalogue");
+});
+
+// Le filtre « disponible » de applis_de_classe() ne se voit pas depuis l'API
+// tant qu'une seule appli est ouverte ET qu'elle est dans la liste de la
+// classe : sans lui, la sortie serait la même. Il se prouve donc sur la
+// fonction elle-même, avec une classe qui n'a PAS Défi tables — sans le
+// filtre, Défi tables serait annoncée à cette classe, adresse comprise, donc
+// ouvrable par un élève à qui elle n'est pas proposée.
+verifier("une activité OUVERTE n'est jamais annoncée à une classe qui ne l'a pas", function () {
+    require_once __DIR__ . '/../public/lib/applis.php';
+    $cles = array_column(applis_de_classe('automatismes'), 'cle');
+    vrai(!in_array('defi-tables', $cles, true),
+        'Défi tables est ouverte : elle ne doit apparaître que dans les classes qui l’ont');
+    egal('automatismes', $cles[0], 'la liste de la classe passe devant');
+    foreach (applis_de_classe('automatismes') as $appli) {
+        if ($appli['disponible']) continue;
+        egal(null, $appli['url'], $appli['cle'] . ' : une annonce n’a rien à ouvrir');
+    }
 });
 
 verifier("la page élève refuse un code inconnu ou mal formé", function () {
