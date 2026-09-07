@@ -10,7 +10,7 @@ import {
   hintForTask,
   makeTrainingTasks
 } from "./addition-entrainement-engine.mjs?v=4";
-import { createRekenrek20Help } from "./rekenrek-20.js?v=1";
+import { createRekenrek20Help } from "./rekenrek-20.js?v=2";
 
 const $ = (selector) => document.querySelector(selector);
 const firstInput = $("#first-term");

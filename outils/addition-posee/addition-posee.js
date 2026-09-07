@@ -5,7 +5,7 @@ import {
 } from "./addition-engine.mjs?v=1";
 import { makeSteps } from "./addition-steps.mjs?v=3";
 import { renderAddition, renderVocabulary } from "./addition-view.mjs?v=4";
-import { createRekenrek20Help } from "./rekenrek-20.js?v=1";
+import { createRekenrek20Help } from "./rekenrek-20.js?v=2";
 
 const $ = (selector) => document.querySelector(selector);
 const firstInput = $("#first-term");

@@ -230,7 +230,7 @@ test("l’interface est professorale, projetable et conforme à l’identité ma
   assert.match(interfaceHtml, /data-vocabulary-value><\/strong><small>second terme<\/small>/);
   assert.match(interfaceHtml, /data-vocabulary-value><\/strong><small>somme<\/small>/);
   assert.match(interfaceHtml, /id="rekenrek-help"[^>]*hidden>Avec le Rekenrek 20<\/button>/);
-  assert.match(interfaceHtml, /rekenrek-20\.css\?v=1/);
+  assert.match(interfaceHtml, /rekenrek-20\.css\?v=2/);
   assert.match(interfaceHtml, /id="projection-recap"[^>]*hidden/);
   assert.match(interfaceHtml, /fullscreen-collapse[^>]*hidden/);
   assert.match(interfaceHtml, /Gwenaël Bourgault/);
@@ -258,10 +258,10 @@ test("l’interface est professorale, projetable et conforme à l’identité ma
   assert.match(interfaceJs, /\["INPUT", "SELECT", "TEXTAREA"\]/);
   assert.match(interfaceJs, /addition-engine\.mjs\?v=1/);
   assert.match(interfaceHtml, /addition-posee\.css\?v=5/);
-  assert.match(interfaceHtml, /addition-posee\.js\?v=5/);
+  assert.match(interfaceHtml, /addition-posee\.js\?v=6/);
   assert.match(interfaceJs, /addition-steps\.mjs\?v=3/);
   assert.match(interfaceJs, /addition-view\.mjs\?v=4/);
-  assert.match(interfaceJs, /rekenrek-20\.js\?v=1/);
+  assert.match(interfaceJs, /rekenrek-20\.js\?v=2/);
   assert.match(interfaceJs, /renderVocabulary\(\$\("#vocabulary-strip"\), addition, step\.kind === "verify"\)/);
   assert.match(interfaceJs, /function syncGabaritLink\(\)/);
   assert.match(interfaceJs, /gabarit-addition-decimale\.pdf/);
