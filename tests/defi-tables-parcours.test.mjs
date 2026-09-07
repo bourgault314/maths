@@ -266,3 +266,38 @@ test("la fiche PDF est publique mais sa source modifiable n’est pas proposée 
   assert.doesNotMatch(html, /\.pdf"[^>]*\sdownload/);
   assert.doesNotMatch(html, /fiche_tables_multiplication\.docx/);
 });
+
+test("le pavé numérique a la taille de l’écran et Valider sa propre rangée (lot 1 clavier, 07/09/2026)", () => {
+  // Téléphone : 50 px sur un iPhone courant, jamais moins que les 44 px d’avant ; chiffres à 1.5rem.
+  assert.match(html, /#play \{[^}]*--pave-largeur: 360px;[^}]*--touche-h: clamp\(44px, 7\.5dvh, 50px\);[^}]*--touche-ecart: clamp\(2px, \.45dvh, 3px\);[^}]*--touche-police: 1\.5rem;[^}]*--valider-gap: 14px;/);
+  // Tablette 56 px, ordinateur 64 px, la hauteur suivant celle de la fenêtre.
+  assert.match(html, /@media \(min-width: 621px\) \{\s*#play \{[^}]*--touche-h: clamp\(46px, calc\(12\.6dvh - 41px\), 56px\);[^}]*--touche-police: 1\.5rem;/);
+  assert.match(html, /@media \(min-width: 1040px\) \{\s*#play \{[^}]*--pave-largeur: 390px;[^}]*--touche-h: clamp\(46px, calc\(12\.6dvh - 33px\), 64px\);[^}]*--touche-police: 1\.7rem;/);
+  // Comme un clavier de téléphone : fond teinté, touches blanches, aucune zone morte (le bouton
+  // remplit sa case, seule sa face ::before est en retrait), Effacer et ⌫ grisés.
+  assert.match(html, /\.keypad \{ width: min\(100%, var\(--pave-largeur\)\); display: grid; grid-template-columns: repeat\(3, minmax\(0, 1fr\)\); gap: 0;[^}]*background: #e3ecf2; \}/);
+  assert.match(html, /\.keypad button \{[^}]*isolation: isolate;[^}]*min-height: 44px;[^}]*height: calc\(var\(--touche-h\) \+ 2 \* var\(--touche-ecart\)\);[^}]*background: none;[^}]*font-size: var\(--touche-police\);/);
+  assert.match(html, /\.keypad button::before \{[^}]*inset: var\(--touche-ecart\);[^}]*z-index: -1;[^}]*background: #fff;/);
+  assert.match(html, /\.keypad button\[data-key="clear"\]::before,\s*\.keypad button\[data-key="backspace"\]::before \{ background: #cbdae5; \}/);
+  // Valider : même largeur que le pavé, deux colonnes sur trois, séparé des chiffres par --valider-gap ;
+  // Passer dans la troisième colonne ; seul (J’apprends), Valider prend toute la largeur.
+  assert.match(html, /\.actions \{ width: min\(100%, var\(--pave-largeur\)\); display: grid; grid-template-columns: 2fr 1fr; gap: var\(--touche-gap\); margin: var\(--valider-gap\) auto 0; \}/);
+  assert.match(html, /\.actions button \{ min-width: 0; min-height: 44px; height: var\(--touche-h\);/);
+  assert.match(html, /\.question\.no-skip \.actions \{ grid-template-columns: 1fr; \}/);
+  // Dans J’apprends le bâton prend sa place : les touches redescendent un peu pour que tout tienne.
+  assert.match(html, /\.question\.show-learn-sequence \{ --touche-h: clamp\(44px, 6\.9dvh, 46px\); \}/);
+  assert.match(html, /\.question\.show-learn-sequence \{ --touche-h: clamp\(46px, calc\(10\.5dvh - 30px\), 56px\); \}/);
+  assert.match(html, /\.question\.show-learn-sequence \{ --touche-h: clamp\(46px, calc\(10\.5dvh - 30px\), 64px\); \}/);
+  // Téléphone : le pavé se cale en bas de la carte.
+  assert.match(html, /\.challenge-playing \.keypad \{ margin: auto auto 0; \}/);
+  // Le calcul s’écrit aussi gros que la largeur le permet (12,4vw fait tenir « ? × 10 = 100 » dès 320 px).
+  assert.match(html, /\.challenge-playing \.expression \{ min-height: clamp\(68px, 12dvh, 92px\);[^}]*font-size: clamp\(2rem, min\(12\.4vw, 8dvh\), 3\.4rem\); \}/);
+  assert.match(html, /\.challenge-playing \.expression \{ min-height: 84px;[^}]*font-size: clamp\(2\.2rem, min\(7vw, 8\.5dvh\), 4rem\); \}/);
+  // Sur ordinateur, la boîte du retour est aussi haute qu'une ligne de texte (38 px mesurés) :
+  // sinon elle grandit au premier message et pousse le pavé de 2 px à chaque réponse.
+  assert.match(html, /\.challenge-playing \.answer-feedback \{ min-height: 38px; margin-top: 4px; \}/);
+  // Les anciennes tailles fixes du défi en cours ont disparu.
+  assert.doesNotMatch(html, /\.challenge-playing \.keypad button \{ min-height: 44px; height: 44px; \}/);
+  assert.doesNotMatch(html, /\.challenge-playing \.keypad \{ width: min\(100%, 330px\)/);
+  assert.doesNotMatch(html, /\.actions button \{ min-width: 140px; \}/);
+});
