@@ -103,7 +103,7 @@ if (!$configOk) {
                 error_log('verifier (frein indisponible, base injoignable ?) : ' . $e->getMessage());
             }
             if ($dejaTrop) {
-                $attente = (int)ceil((fin_de_fenetre(FENETRE_ESSAIS_VERIFIER) - time()) / 60);
+                $attente = (int)ceil(max(0, fin_de_fenetre_de('verifier:' . $adresse, FENETRE_ESSAIS_VERIFIER) - time()) / 60);
                 $message = "Trop d'essais depuis cette adresse. Réessaie dans " . max(1, $attente) . " minute(s).";
             } else {
                 $attendu = (string)(config()['jeton_installation'] ?? '');

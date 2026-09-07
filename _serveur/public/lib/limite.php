@@ -29,7 +29,8 @@
 
 declare(strict_types=1);
 
-// Échecs par adresse (codes ou billets inconnus), par fenêtre de 5 minutes.
+// Échecs par adresse (codes ou billets inconnus) : la fenêtre dure 5 minutes
+// à partir du premier échec compté pour cette adresse.
 const FENETRE_ECHECS_ADRESSE = 300;
 // Au-delà : chaque requête de l'adresse attend RALENTISSEMENT_ADRESSE_US.
 const ECHECS_ADRESSE_RALENTIE = 60;
@@ -86,48 +87,82 @@ function cle_compteur(string $cle, int $secondes): string
     return 'l:' . substr(hash_hmac('sha256', $cle, secret_compteurs()), 0, 40) . ':' . $secondes;
 }
 
-// Instant (epoch) où la fenêtre courante se ferme.
-function fin_de_fenetre(int $secondes): int
+// La fenêtre est ouverte par la PREMIÈRE tentative comptée, et court $secondes
+// à partir d'elle. Elle n'est plus alignée sur l'horloge.
+//
+// Pourquoi ce changement (07/09/2026) — l'ancien calcul,
+// « (intdiv(time(), $secondes) + 1) * $secondes », découpait le temps en
+// tranches communes à tout le monde, et remettait le compteur à 1 au passage
+// de chaque tranche. Ces frontières se calculent de l'extérieur : elles ne
+// dépendent d'aucun secret. Il suffisait de coller sa rafale à l'une d'elles
+// pour en obtenir DEUX — douze essais juste avant, douze juste après, en une
+// seconde, sans un seul refus. Le débit réel de tous ces freins valait le
+// double de ce qu'ils annonçaient. Mesuré, puis vérifié corrigé, par les deux
+// tests « lot limiteur » de tests/lancer.php.
+//
+// Effet de bord voulu : le compte d'un professeur bloqué se rouvre au plus
+// tard dix minutes après sa PREMIÈRE erreur, et non « à la prochaine
+// frontière » — ce qui pouvait être dans une seconde comme dans dix minutes.
+
+// Fin (epoch) de la fenêtre ouverte pour cette clé, 0 si aucune n'est ouverte.
+function fin_de_fenetre_de(string $cle, int $secondes, ?int $maintenant = null): int
 {
-    return (intdiv(time(), $secondes) + 1) * $secondes;
+    $maintenant = $maintenant ?? time();
+    $requete = bd()->prepare('SELECT fenetre FROM compteurs WHERE cle = ? AND fenetre > ?');
+    $requete->execute([cle_compteur($cle, $secondes), $maintenant]);
+    $fin = $requete->fetchColumn();
+    $requete->closeCursor();
+    return $fin === false ? 0 : (int)$fin;
 }
 
-function purger_compteurs(PDO $pdo): void
+function purger_compteurs(PDO $pdo, int $maintenant): void
 {
-    $pdo->prepare('DELETE FROM compteurs WHERE fenetre < ?')->execute([time()]);
+    $pdo->prepare('DELETE FROM compteurs WHERE fenetre < ?')->execute([$maintenant]);
 }
 
 // Refus 429. L'en-tête Retry-After dit dans combien de secondes la fenêtre
 // se rouvre : l'appli peut le lire (cors() l'expose) et attendre juste ce
-// qu'il faut au lieu de réessayer à l'aveugle.
-function refuser_trop_de_demandes(int $secondes): never
+// qu'il faut au lieu de réessayer à l'aveugle. Il se lit sur la LIGNE du
+// compteur : depuis que la fenêtre part de la première tentative, elle ne se
+// déduit plus de l'horloge.
+function refuser_trop_de_demandes(string $cle, int $secondes): never
 {
+    $maintenant = time();
+    $fin = fin_de_fenetre_de($cle, $secondes, $maintenant);
     erreur("Trop de demandes, réessaie dans un instant.", 429,
-        ['Retry-After' => (string)max(1, fin_de_fenetre($secondes) - time())]);
+        ['Retry-After' => (string)max(1, $fin - $maintenant)]);
 }
 
 // Compte cet appel et rend le total de la fenêtre courante.
+//
+// Une ligne dont la fin est encore dans le futur est incrémentée ; une ligne
+// expirée est remplacée par un compte de 1 et une fenêtre neuve. Les deux
+// moteurs disent la même chose, et l'instant courant leur est passé plutôt que
+// relu : deux appels à time() encadrant une seconde ne donneraient pas le même
+// verdict aux deux endroits.
 function compter(string $cle, int $secondes): int
 {
     $pdo = bd();
-    $fin = fin_de_fenetre($secondes);
+    $maintenant = time();
+    $fin = $maintenant + $secondes;
     $cle = cle_compteur($cle, $secondes);
-    purger_compteurs($pdo);
+    purger_compteurs($pdo, $maintenant);
 
     if (pilote($pdo) === 'mysql') {
         // L'ordre des deux affectations compte : « nombre » lit encore
         // l'ancienne fenêtre, puis « fenetre » est remplacée.
         $pdo->prepare(
             'INSERT INTO compteurs (cle, fenetre, nombre) VALUES (?, ?, 1)
-             ON DUPLICATE KEY UPDATE nombre = IF(fenetre = ?, nombre + 1, 1), fenetre = ?'
-        )->execute([$cle, $fin, $fin, $fin]);
+             ON DUPLICATE KEY UPDATE nombre = IF(fenetre > ?, nombre + 1, 1),
+                                     fenetre = IF(fenetre > ?, fenetre, ?)'
+        )->execute([$cle, $fin, $maintenant, $maintenant, $fin]);
     } else {
         $pdo->prepare(
             'INSERT INTO compteurs (cle, fenetre, nombre) VALUES (?, ?, 1)
              ON CONFLICT(cle) DO UPDATE SET
-               nombre = CASE WHEN fenetre = excluded.fenetre THEN nombre + 1 ELSE 1 END,
-               fenetre = excluded.fenetre'
-        )->execute([$cle, $fin]);
+               nombre  = CASE WHEN fenetre > ? THEN nombre + 1 ELSE 1 END,
+               fenetre = CASE WHEN fenetre > ? THEN fenetre ELSE ? END'
+        )->execute([$cle, $fin, $maintenant, $maintenant, $fin]);
     }
 
     $requete = $pdo->prepare('SELECT nombre FROM compteurs WHERE cle = ?');
@@ -141,15 +176,15 @@ function compter(string $cle, int $secondes): int
 function limiter(string $cle, int $maximum, int $secondes): void
 {
     if (compter($cle, $secondes) > $maximum) {
-        refuser_trop_de_demandes($secondes);
+        refuser_trop_de_demandes($cle, $secondes);
     }
 }
 
 // Total de la fenêtre courante, sans compter cet appel (0 si rien n'est compté).
 function compte_courant(string $cle, int $secondes): int
 {
-    $requete = bd()->prepare('SELECT nombre FROM compteurs WHERE cle = ? AND fenetre = ?');
-    $requete->execute([cle_compteur($cle, $secondes), fin_de_fenetre($secondes)]);
+    $requete = bd()->prepare('SELECT nombre FROM compteurs WHERE cle = ? AND fenetre > ?');
+    $requete->execute([cle_compteur($cle, $secondes), time()]);
     $nombre = $requete->fetchColumn();
     $requete->closeCursor();
     return $nombre === false ? 0 : (int)$nombre;
@@ -160,7 +195,7 @@ function compte_courant(string $cle, int $secondes): int
 function limiter_deja_atteint(string $cle, int $maximum, int $secondes): void
 {
     if (compte_courant($cle, $secondes) > $maximum) {
-        refuser_trop_de_demandes($secondes);
+        refuser_trop_de_demandes($cle, $secondes);
     }
 }
 
@@ -180,7 +215,7 @@ function freiner_adresse(string $adresse): void
 {
     $echecs = compte_courant('echec-ip:' . $adresse, FENETRE_ECHECS_ADRESSE);
     if ($echecs > ECHECS_ADRESSE_BLOQUEE) {
-        refuser_trop_de_demandes(FENETRE_ECHECS_ADRESSE);
+        refuser_trop_de_demandes('echec-ip:' . $adresse, FENETRE_ECHECS_ADRESSE);
     }
     if ($echecs > ECHECS_ADRESSE_RALENTIE) {
         usleep(RALENTISSEMENT_ADRESSE_US);
@@ -201,7 +236,7 @@ function freiner_adresse(string $adresse): void
 // Ce que cela coûte au serveur est borné par l'autre seuil : une adresse qui
 // dépasse 60 échecs par dix minutes est refusée d'emblée, sans dormir. Une
 // adresse ne peut donc pas faire dormir plus d'une minute et demie de processus
-// PHP par tranche de dix minutes.
+// PHP pendant les dix minutes qui suivent son premier échec.
 function freiner_identifiant(string $identifiant): void
 {
     if (compte_courant('connexion-id:' . $identifiant, FENETRE_ECHECS_CONNEXION) > ECHECS_CONNEXION_PAR_IDENTIFIANT) {

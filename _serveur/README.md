@@ -269,11 +269,12 @@ dernière création d'élève, création de la classe.
   qu'une énumération de codes le soit dès le 61ᵉ essai (y compris sur les bons
   codes, sinon la réponse trahirait lesquels existent).
 - **Connexion du professeur, deux seuils qui ne font pas la même chose**
-  (`lib/limite.php`, lot serveur B) : **60 échecs par adresse et par 10 min**
-  refusent net (429) — c'est ce seuil qui borne la dépense du serveur, et il
-  vise une machine ; **12 échecs par identifiant et par 10 min** ne refusent
-  rien, ils **ralentissent** chaque tentative de 1,5 s et laissent passer le
-  bon mot de passe. Ils refusaient jusqu'au 06/09/2026, et treize mauvais mots
+  (`lib/limite.php`, lot serveur B) : **60 échecs par adresse pendant les
+  10 min qui suivent le premier** refusent net (429) — c'est ce seuil qui borne
+  la dépense du serveur, et il vise une machine ; **12 échecs par identifiant
+  pendant les 10 min qui suivent le premier** ne refusent rien, ils
+  **ralentissent** chaque tentative de 1,5 s et laissent passer le bon mot de
+  passe. Ils refusaient jusqu'au 06/09/2026, et treize mauvais mots
   de passe tapés par n'importe qui, depuis n'importe où, fermaient le compte
   visé pendant dix minutes — au bon mot de passe compris (constat 3 de l'audit
   du 05/09). Un seuil qui protège un compte ne doit pas être l'outil le plus
@@ -283,7 +284,13 @@ dernière création d'élève, création de la classe.
 - La table `compteurs` ne contient ni adresse IP ni code en clair (clés
   hachées avec un secret), l'incrément tient en une instruction (UPSERT), et
   les fenêtres fermées sont effacées à chaque appel : aucune adresse n'y
-  survit plus de cinq minutes. **Ce secret n'est pas le mot de passe
+  survit plus de cinq minutes. **Une fenêtre est ouverte par la première
+  tentative comptée** et court à partir d'elle (lot limiteur, 07/09/2026).
+  Elle était auparavant alignée sur l'horloge — des tranches communes à tout le
+  monde, qui remettaient le compteur à zéro à heure fixe. Comme ces frontières
+  se calculent de l'extérieur, il suffisait d'y coller sa rafale pour en
+  obtenir deux : douze essais juste avant, douze juste après, sans un seul
+  refus. Chaque frein laissait passer le double de ce qu'il annonçait. **Ce secret n'est pas le mot de passe
   d'installation** (lot 11) : c'est `secret` de `config.php` s'il est
   renseigné — le mieux —, sinon une valeur **dérivée** de `jeton_installation`
   par HMAC avec une étiquette d'usage. Connaître l'un ne donne pas l'autre.
@@ -292,8 +299,8 @@ dernière création d'élève, création de la classe.
   abonné reçoit le bloc entier et en change à volonté ; compter l'adresse
   exacte revenait à offrir un compteur neuf à chaque essai.
 - `verifier.php` ne montre rien sans le `jeton_installation`, et **douze
-  mauvais essais par adresse et par 10 min** ferment la porte pour le reste de
-  la fenêtre (lot 11) — seuls les échecs comptent, vérifier vingt fois de suite
+  mauvais essais par adresse** ferment la porte pour les dix minutes qui
+  suivent le premier (lot 11) — seuls les échecs comptent, vérifier vingt fois de suite
   avec le bon mot de passe ne gêne personne. Aucune page n'affiche d'erreur PHP
   (`display_errors` forcé à 0 dans `lib/bd.php`).
 - **PHP n'annonce plus sa version, sur AUCUNE réponse** :
@@ -479,7 +486,7 @@ inattendu ; les freins en `/64` ; 73 octets refusés et 72 acceptés (36 lettres
 accentuées) ; `menage.php` sans `X-Powered-By` ; le `.htaccess` et les actions
 GitHub épinglées par SHA.
 
-**185 tests, 0 échec au 06/09/2026**, rejoués sur SQLite **et** sur MySQL 8
+**188 tests, 0 échec au 07/09/2026**, rejoués sur SQLite **et** sur MySQL 8
 (le limiteur emploie une instruction différente sur chaque moteur) :
 
 ```
