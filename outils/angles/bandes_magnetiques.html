@@ -1212,6 +1212,146 @@
             return Boolean(point && (point.pinned || point.fixed));
         }
 
+        // Renvoie l'intersection de deux cercles la plus proche du pointeur.
+        // Le cas tangent (triangle plat) est traité comme une intersection unique :
+        // cela évite qu'un très petit arrondi fasse basculer le sommet d'un côté à l'autre.
+        function closestCircleIntersection(anchor1, radius1, anchor2, radius2, hintX, hintY, fallbackX = hintX, fallbackY = hintY) {
+            const dx = anchor2.x - anchor1.x;
+            const dy = anchor2.y - anchor1.y;
+            const distance = Math.hypot(dx, dy);
+            const scale = Math.max(1, radius1, radius2, distance);
+            const epsilon = scale * 1e-7;
+
+            if (!Number.isFinite(distance) || distance <= epsilon) return null;
+            if (distance > radius1 + radius2 + epsilon) return null;
+            if (distance < Math.abs(radius1 - radius2) - epsilon) return null;
+
+            const along = (radius1 * radius1 - radius2 * radius2 + distance * distance) / (2 * distance);
+            const heightSquared = Math.max(0, radius1 * radius1 - along * along);
+            const height = Math.sqrt(heightSquared);
+            const ux = dx / distance;
+            const uy = dy / distance;
+            const baseX = anchor1.x + along * ux;
+            const baseY = anchor1.y + along * uy;
+
+            if (height <= epsilon) return { x: baseX, y: baseY };
+
+            const candidate1 = { x: baseX - uy * height, y: baseY + ux * height };
+            const candidate2 = { x: baseX + uy * height, y: baseY - ux * height };
+            const hintDistance1 = Math.hypot(candidate1.x - hintX, candidate1.y - hintY);
+            const hintDistance2 = Math.hypot(candidate2.x - hintX, candidate2.y - hintY);
+            if (Math.abs(hintDistance1 - hintDistance2) > epsilon) {
+                return hintDistance1 < hintDistance2 ? candidate1 : candidate2;
+            }
+
+            const fallbackDistance1 = Math.hypot(candidate1.x - fallbackX, candidate1.y - fallbackY);
+            const fallbackDistance2 = Math.hypot(candidate2.x - fallbackX, candidate2.y - fallbackY);
+            return fallbackDistance1 <= fallbackDistance2 ? candidate1 : candidate2;
+        }
+
+        function getFixedNeighborConstraints(pointId) {
+            const constraints = [];
+            state.strips.forEach(strip => {
+                if (strip.p1 !== pointId && strip.p2 !== pointId) return;
+                const otherId = strip.p1 === pointId ? strip.p2 : strip.p1;
+                const anchor = state.points.find(point => point.id === otherId);
+                if (!anchor) return;
+                if (!isPointPinned(anchor) && !protractorAnchorShouldPin(anchor.id)) return;
+                constraints.push({ anchor, radius: getStripLength(strip) });
+            });
+            return constraints;
+        }
+
+        function constrainPointToFixedNeighbors(point, hintX, hintY) {
+            const constraints = getFixedNeighborConstraints(point.id);
+            if (constraints.length < 2) return null;
+
+            let best = null;
+            let bestDistance = Infinity;
+            for (let i = 0; i < constraints.length - 1; i++) {
+                for (let j = i + 1; j < constraints.length; j++) {
+                    const candidate = closestCircleIntersection(
+                        constraints[i].anchor,
+                        constraints[i].radius,
+                        constraints[j].anchor,
+                        constraints[j].radius,
+                        hintX,
+                        hintY,
+                        point.x,
+                        point.y
+                    );
+                    if (!candidate) continue;
+                    const pointerDistance = Math.hypot(candidate.x - hintX, candidate.y - hintY);
+                    if (pointerDistance < bestDistance) {
+                        best = candidate;
+                        bestDistance = pointerDistance;
+                    }
+                }
+            }
+            return best;
+        }
+
+        // Après la fermeture d'un triangle, place immédiatement son sommet à la
+        // position géométrique exacte. La plus longue bande sert de base : les cas
+        // ordinaires ne sautent pas et l'égalité a + b = c devient bien colinéaire.
+        function stabilizeClosedTriangleAtPoint(pointId, hintX, hintY) {
+            const point = state.points.find(candidate => candidate.id === pointId);
+            if (!point) return false;
+
+            const incident = state.strips.filter(strip => strip.p1 === pointId || strip.p2 === pointId);
+            for (let i = 0; i < incident.length - 1; i++) {
+                for (let j = i + 1; j < incident.length; j++) {
+                    const firstOtherId = incident[i].p1 === pointId ? incident[i].p2 : incident[i].p1;
+                    const secondOtherId = incident[j].p1 === pointId ? incident[j].p2 : incident[j].p1;
+                    if (firstOtherId === secondOtherId) continue;
+
+                    const closingStrip = state.strips.find(strip =>
+                        (strip.p1 === firstOtherId && strip.p2 === secondOtherId) ||
+                        (strip.p1 === secondOtherId && strip.p2 === firstOtherId)
+                    );
+                    if (!closingStrip) continue;
+
+                    const triangleEdges = [incident[i], incident[j], closingStrip];
+                    const trianglePointIds = [pointId, firstOtherId, secondOtherId];
+                    const longestEdge = triangleEdges.reduce((longest, edge) =>
+                        getStripLength(edge) > getStripLength(longest) ? edge : longest
+                    );
+                    const oppositeLongestId = trianglePointIds.find(id => id !== longestEdge.p1 && id !== longestEdge.p2);
+                    const candidates = [...new Set([oppositeLongestId, pointId, firstOtherId, secondOtherId])];
+
+                    for (const movableId of candidates) {
+                        const movable = state.points.find(candidate => candidate.id === movableId);
+                        if (!movable || isPointPinned(movable) || protractorAnchorShouldPin(movable.id)) continue;
+
+                        const movableEdges = triangleEdges.filter(edge => edge.p1 === movableId || edge.p2 === movableId);
+                        if (movableEdges.length !== 2) continue;
+                        const anchor1Id = movableEdges[0].p1 === movableId ? movableEdges[0].p2 : movableEdges[0].p1;
+                        const anchor2Id = movableEdges[1].p1 === movableId ? movableEdges[1].p2 : movableEdges[1].p1;
+                        const anchor1 = state.points.find(candidate => candidate.id === anchor1Id);
+                        const anchor2 = state.points.find(candidate => candidate.id === anchor2Id);
+                        if (!anchor1 || !anchor2) continue;
+
+                        const useSnapHint = movableId === pointId;
+                        const exact = closestCircleIntersection(
+                            anchor1,
+                            getStripLength(movableEdges[0]),
+                            anchor2,
+                            getStripLength(movableEdges[1]),
+                            useSnapHint ? hintX : movable.x,
+                            useSnapHint ? hintY : movable.y,
+                            movable.x,
+                            movable.y
+                        );
+                        if (!exact) continue;
+                        movable.x = exact.x;
+                        movable.y = exact.y;
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+
         function updateFixedPointFlags() {
             state.points.forEach(point => { point.fixed = false; });
             state.strips.forEach(strip => {
@@ -2811,21 +2951,20 @@ state.draggingPoint = point; point.pinned = true; container.style.cursor = 'grab
                 // on force une rotation autour du sommet (longueur conservée), ce qui évite que le sommet glisse.
                 const proT = state.tools.protractor;
                 let rotLocked = false;
-                const fixedLink = state.strips.find(strip => {
-                    if (strip.p1 !== self.id && strip.p2 !== self.id) return false;
-                    const otherId = strip.p1 === self.id ? strip.p2 : strip.p1;
-                    return state.points.find(point => point.id === otherId)?.fixed;
-                });
-                if (fixedLink) {
-                    const pivotId = fixedLink.p1 === self.id ? fixedLink.p2 : fixedLink.p1;
-                    const pivot = state.points.find(point => point.id === pivotId);
-                    if (pivot) {
-                        rotLocked = true;
-                        const radius = getStripLength(fixedLink);
-                        const angle = Math.atan2(pos.y - pivot.y, pos.x - pivot.x);
-                        targetX = pivot.x + radius * Math.cos(angle);
-                        targetY = pivot.y + radius * Math.sin(angle);
-                    }
+                const fixedNeighborConstraints = getFixedNeighborConstraints(self.id);
+                if (fixedNeighborConstraints.length >= 2) {
+                    rotLocked = true;
+                    const exact = constrainPointToFixedNeighbors(self, pos.x, pos.y);
+                    // Si les contraintes sont incompatibles, ne pas étirer arbitrairement
+                    // une bande : on conserve la dernière position valide.
+                    targetX = exact ? exact.x : self.x;
+                    targetY = exact ? exact.y : self.y;
+                } else if (fixedNeighborConstraints.length === 1) {
+                    const { anchor: pivot, radius } = fixedNeighborConstraints[0];
+                    rotLocked = true;
+                    const angle = Math.atan2(pos.y - pivot.y, pos.x - pivot.x);
+                    targetX = pivot.x + radius * Math.cos(angle);
+                    targetY = pivot.y + radius * Math.sin(angle);
                 }
                 if (!rotLocked && proT.visible && proT.attachedPointId && proT.attachedPointId !== self.id && protractorAnchorShouldPin(proT.attachedPointId)) {
                     const pivotP = state.points.find(p => p.id === proT.attachedPointId);
@@ -3037,6 +3176,7 @@ if (state.draggingPoint) {
                 self.pinned = false;
                 state.draggingPoint = null;
                 cleanupAngleGroups();
+                if (snapped) stabilizeClosedTriangleAtPoint(target.id, target.x, target.y);
                 // IMPORTANT : après une fusion (clip), on résout quelques itérations pour stabiliser les figures (boucles/quadrilatères).
                 queueSolveRender(snapped ? 20 : 3);
             }
@@ -3060,7 +3200,8 @@ if (state.draggingPoint) {
                 }
                 
                 // Snap du groupe sur le centre du rapporteur (aimant virtuel)
-                if (state.tools.protractor.visible) {
+                const groupContainsFixedPoint = state.draggingStrip.some(point => point?.fixed);
+                if (state.tools.protractor.visible && !groupContainsFixedPoint) {
                     const t = state.tools.protractor;
                     const pivotX = t.x + t.pivot.x;
                     const pivotY = t.y + t.pivot.y;
@@ -3085,7 +3226,11 @@ if (state.draggingPoint) {
 
                 // NOUVEAU: Logique d'aimantage pour le drag de bandes
                 let snapped = false;
+                const snappedPointIds = new Set();
                 state.draggingStrip.forEach(p => {
+                    // Un point fixé est une ancre absolue : il ne doit jamais être
+                    // remplacé par un aimant extérieur lors du lâcher du groupe.
+                    if (!p || p.toBeRemoved || p.fixed) return;
                     // Chercher un point cible qui n'est PAS dans le groupe en cours de déplacement
                     const target = state.points.find(targetP => 
                         !state.draggingStrip.some(dp => dp.id === targetP.id) && 
@@ -3094,6 +3239,7 @@ if (state.draggingPoint) {
 
                     if (target) {
                         snapped = true;
+                        snappedPointIds.add(target.id);
                         replaceAnglePointId(p.id, target.id);
                         // Fusionner p vers target
                         state.strips.forEach(s => {
@@ -3117,6 +3263,10 @@ if (state.draggingPoint) {
                 });
                 
                 cleanupAngleGroups();
+                snappedPointIds.forEach(id => {
+                    const target = state.points.find(point => point.id === id);
+                    if (target) stabilizeClosedTriangleAtPoint(id, target.x, target.y);
+                });
                 state.draggingStrip = null; state.draggingStripRef = null;
                 // IMPORTANT : après une fusion (clip/aimantation), on résout quelques itérations
                 // pour garantir que les longueurs et les angles fixes se “recalent” immédiatement.
