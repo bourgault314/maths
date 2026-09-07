@@ -25,6 +25,32 @@ $autorise = false;
 $message = '';
 $lignes = [];
 
+// Les .php réellement posés dans public/, en chemins relatifs — pour les
+// comparer au manifeste (lot serveur B, I-05). On ne balaie que les .php :
+// c'est le seul type de fichier qui s'exécute, et une image oubliée n'est pas
+// un ennui. Un dossier illisible n'arrête rien : la ligne dirait « aucun
+// fichier inattendu » alors qu'elle n'a pas pu regarder, et c'est le contrôle
+// des empreintes qui reste le juge.
+function fichiers_php_en_place(string $racine): array
+{
+    $trouves = [];
+    try {
+        $iterateur = new RecursiveIteratorIterator(
+            new RecursiveDirectoryIterator($racine, FilesystemIterator::SKIP_DOTS)
+        );
+        foreach ($iterateur as $fichier) {
+            if (!$fichier->isFile()) continue;
+            if (strtolower($fichier->getExtension()) !== 'php') continue;
+            $trouves[] = str_replace('\\', '/', substr($fichier->getPathname(), strlen($racine) + 1));
+        }
+    } catch (Throwable $e) {
+        error_log('verifier (parcours des fichiers) : ' . $e->getMessage());
+        return [];
+    }
+    sort($trouves, SORT_STRING);
+    return $trouves;
+}
+
 function verif(array &$lignes, string $titre, callable $test): void
 {
     try {
@@ -313,15 +339,25 @@ if ($autorise) {
         $lot = isset($m[1]) ? trim($m[1]) : 'inconnu';
         preg_match('/^manifeste ([0-9a-f]{64})$/m', $texte, $m);
         $empreinte = $m[1] ?? '';
+        // Lot serveur B (06/09/2026) — I-05. L'en-tête annonce COMBIEN de
+        // lignes le manifeste doit contenir. Sans ce nombre, un manifeste
+        // tronqué (transfert coupé, fichier écrasé à moitié) laissait la page
+        // toute verte : les fichiers qu'il ne nommait plus n'étaient tout
+        // simplement plus comparés. Un contrôle qui rétrécit en silence est
+        // pire que pas de contrôle — on croit que c'est vérifié.
+        preg_match('/^fichiers (\d+)$/m', $texte, $m);
+        $annonces = isset($m[1]) ? (int)$m[1] : -1;
 
         $manquants = [];
         $differents = [];
         $finsDeLigne = [];
+        $decrits = [];
         $comptes = 0;
         foreach (explode("\n", $texte) as $ligne) {
             if (!preg_match('/^([0-9a-f]{64})  (.+)$/', $ligne, $m)) continue;
             [$tout, $attendu, $relatif] = $m;
             $comptes++;
+            $decrits[$relatif] = true;
             // Aucun chemin fantaisiste : le manifeste ne décrit que ce dossier.
             if (str_contains($relatif, '..')) { $differents[] = $relatif; continue; }
             $chemin = __DIR__ . '/' . $relatif;
@@ -337,7 +373,31 @@ if ($autorise) {
         if ($comptes === 0) {
             throw new RuntimeException("le fichier VERSION ne contient aucune empreinte : il a été abîmé pendant le transfert.");
         }
+        // Dans l'autre sens : un .php POSÉ ICI et absent du manifeste. Le
+        // manifeste dit ce qui doit être là ; il ne disait rien de ce qui est
+        // là EN TROP — un fichier d'un lot précédent devenu inutile, une copie
+        // de travail (« prof.php.bak »), un fichier déposé par erreur. Chacun
+        // est du code que le serveur exécuterait si on lui demandait.
+        $inattendus = [];
+        foreach (fichiers_php_en_place(__DIR__) as $relatif) {
+            if (isset($decrits[$relatif])) continue;
+            // Les six qui n'ont JAMAIS à figurer au manifeste : config.php
+            // n'existe que chez OVH, config.exemple.php est un modèle refusé
+            // par .htaccess, et les quatre pages d'opération ont déjà leur
+            // propre ligne (« Fichiers d'installation supprimés »).
+            if (in_array($relatif, ['config.php', 'config.exemple.php',
+                'installer.php', 'migrer.php', 'secours.php', 'sauvegarde.php'], true)) continue;
+            $inattendus[] = $relatif;
+        }
         $ennuis = [];
+        if ($annonces >= 0 && $comptes !== $annonces) {
+            $ennuis[] = "Manifeste tronqué : son en-tête annonce $annonces fichier(s), il n'en décrit que $comptes "
+                . "— redépose VERSION en mode binaire (les autres lignes n'ont donc pas toutes été vérifiées)";
+        }
+        if ($inattendus !== []) {
+            $ennuis[] = count($inattendus) . " fichier(s) inattendu(s), présents ici et absents du manifeste : "
+                . implode(', ', array_slice($inattendus, 0, 6)) . " — à supprimer du serveur";
+        }
         if ($manquants !== []) $ennuis[] = count($manquants) . " absent(s) : " . implode(', ', array_slice($manquants, 0, 6));
         if ($differents !== []) $ennuis[] = count($differents) . " différent(s) du dépôt : " . implode(', ', array_slice($differents, 0, 6));
         if ($finsDeLigne !== []) {

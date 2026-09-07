@@ -12,14 +12,30 @@
 </IfModule>
 
 # Le mot de passe MySQL n'a jamais a sortir par HTTP, meme si PHP tombait.
-<Files "config.php">
+#
+# Lot serveur B (constat 6 du 05/09/2026) : <Files "config.php"> ne protegeait
+# QUE ce nom exact. Un « config.php.bak » laisse par un editeur, un
+# « config.old » range a la main avant une modification, un « config.php.txt »
+# renomme pour le relire : chacun sort en clair, avec le mot de passe MySQL
+# dedans, et aucun n'est du PHP interprete. FilesMatch "^config" les couvre
+# tous — y compris ceux qu'on n'a pas encore imagines.
+<FilesMatch "^config">
   Require all denied
-</Files>
+</FilesMatch>
 
 # Le serveur de suivi n'expose que ses points d'entrée.
 <FilesMatch "\.(md|sql|log|exemple\.php)$">
   Require all denied
 </FilesMatch>
+
+# Lot serveur B (constat 5) : le menage de fin d'annee se lance par la tache
+# planifiee OVH, en ligne de commande. Rien a ouvrir dans un navigateur. Il
+# refusait deja lui-meme (404), mais en laissant PHP annoncer sa version au
+# passage ; ici, Apache repond 403 sans meme appeler PHP. La tache planifiee
+# passe par la ligne de commande : cette regle ne la gene pas.
+<Files "menage.php">
+  Require all denied
+</Files>
 
 # Lot 11 (05/09/2026) : le manifeste VERSION donne la liste de tous les fichiers
 # du serveur avec leur empreinte. verifier.php le lit sur le DISQUE, jamais par

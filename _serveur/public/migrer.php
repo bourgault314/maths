@@ -1,9 +1,18 @@
 <?php
-// Mise à niveau de la base, à utiliser UNE SEULE FOIS puis à supprimer.
+// Mise à niveau de la base, à déposer le temps d'un lot puis à supprimer.
 //
-// Ajoute ce qui manque pour que chaque classe ait un propriétaire et puisse
-// être partagée. Ne touche jamais aux élèves, aux codes ni aux progressions.
-// On peut la relancer sans risque : elle ne refait pas ce qui est déjà fait.
+// Elle ne fait qu'une chose : appeler migrer_schema() de lib/bd.php, qui ajoute
+// à la base les tables et les colonnes que la version déposée attend et qui n'y
+// sont pas encore. Ce qu'elle ajoute change donc d'un lot à l'autre — la liste
+// est dans lib/bd.php, et la page affiche ce qu'elle a fait, ligne par ligne.
+//
+// Elle ne touche jamais aux élèves, aux codes ni aux progressions : elle ajoute,
+// elle ne supprime ni ne réécrit rien. On peut la relancer sans risque, elle ne
+// refait pas ce qui est déjà fait.
+//
+// IMPORTANT pour le dépôt par FTP : elle appelle du code de lib/. Le dossier
+// lib/ doit donc être déposé AVANT elle, sinon elle tourne avec l'ancienne
+// version des fonctions et n'ajoute pas ce que le nouveau lot attend.
 
 declare(strict_types=1);
 
@@ -68,9 +77,11 @@ try {
 <body>
 <main>
   <h1>Mise à jour du serveur de suivi</h1>
-  <p class="intro">Cette page ajoute à la base ce qu'il faut pour que chaque classe
-  appartienne à un professeur et puisse être partagée. Les élèves, les codes et
-  les progressions ne sont pas touchés.</p>
+  <p class="intro">Cette page ajoute à la base les tables et les colonnes que la
+  version que tu viens de déposer attend et qui n'y sont pas encore. Elle dira
+  ci-dessous exactement ce qu'elle a ajouté. Les élèves, les codes et les
+  progressions ne sont pas touchés : elle ajoute, elle n'efface rien. Tu peux la
+  relancer, elle ne refait pas ce qui est déjà fait.</p>
   <?php if ($message !== ''): ?>
     <p class="message <?= $termine ? 'fini' : '' ?>"><?= htmlspecialchars($message, ENT_QUOTES) ?></p>
     <?php if ($faits !== []): ?>
