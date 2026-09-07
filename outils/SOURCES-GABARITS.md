@@ -181,3 +181,6 @@ Les PDF sont tous déclarés dans `assets/js/catalogue-refonte-data.js` et dans
 `sitemap.xml`. Leur classement visible se fait par domaine et notion dans le
 catalogue ; leur chemin physique historique n'a pas été déplacé afin de préserver
 les liens publics existants.
+
+Note ajoutée pour une démonstration de la CI : cette ligne ne touche qu un
+fichier de outils/, donc les tests du serveur doivent être SAUTÉS.
