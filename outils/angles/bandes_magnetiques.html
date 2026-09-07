@@ -604,7 +604,8 @@
     <script>
         /* --- CONFIGURATION --- */
         const CONFIG = {
-            snapDistance: 45, 
+            snapDistance: 45,
+            flatTriangleSnapDistance: 10,
             normalStripWidth: 26,
             thinStripWidth: 0.7, // Encore plus fin (était 1.0)
             currentStripWidth: 26, 
@@ -1212,6 +1213,99 @@
             return Boolean(point && (point.pinned || point.fixed));
         }
 
+        function getTriangleLengthMode(edges) {
+            const lengths = edges.map(getStripLength).sort((a, b) => a - b);
+            if (lengths.length !== 3 || lengths.some(length => !Number.isFinite(length) || length <= 0)) {
+                return 'normal';
+            }
+
+            const longest = lengths[2];
+            const shorterSum = lengths[0] + lengths[1];
+            const epsilon = Math.max(1, longest) * 1e-7;
+            if (longest > shorterSum + epsilon) return 'impossible';
+            if (Math.abs(longest - shorterSum) <= epsilon) return 'flat';
+            return 'normal';
+        }
+
+        // Détermine si la fusion de deux aimants fermerait un triangle. Un triangle
+        // plat doit attendre que les deux aimants soient presque superposés ; sinon
+        // le seuil d'aimantation habituel crée momentanément une boucle impossible.
+        function getMergeTriangleMode(sourceId, targetId) {
+            const sourceEdges = state.strips.filter(strip => strip.p1 === sourceId || strip.p2 === sourceId);
+            const targetEdges = state.strips.filter(strip => strip.p1 === targetId || strip.p2 === targetId);
+            let mode = 'normal';
+
+            for (const sourceEdge of sourceEdges) {
+                const sourceOtherId = sourceEdge.p1 === sourceId ? sourceEdge.p2 : sourceEdge.p1;
+                if (sourceOtherId === targetId) continue;
+
+                for (const targetEdge of targetEdges) {
+                    const targetOtherId = targetEdge.p1 === targetId ? targetEdge.p2 : targetEdge.p1;
+                    if (targetOtherId === sourceId || targetOtherId === sourceOtherId) continue;
+
+                    const closingEdge = state.strips.find(strip =>
+                        (strip.p1 === sourceOtherId && strip.p2 === targetOtherId) ||
+                        (strip.p1 === targetOtherId && strip.p2 === sourceOtherId)
+                    );
+                    if (!closingEdge) continue;
+
+                    const triangleMode = getTriangleLengthMode([sourceEdge, targetEdge, closingEdge]);
+                    if (triangleMode === 'impossible') return 'impossible';
+                    if (triangleMode === 'flat') mode = 'flat';
+                }
+            }
+            return mode;
+        }
+
+        function canSnapPointPair(source, target, sourceX = source?.x, sourceY = source?.y) {
+            if (!source || !target || !Number.isFinite(sourceX) || !Number.isFinite(sourceY)) return false;
+            const distance = Math.hypot(target.x - sourceX, target.y - sourceY);
+            if (distance >= CONFIG.snapDistance) return false;
+
+            const triangleMode = getMergeTriangleMode(source.id, target.id);
+            if (triangleMode === 'impossible') return false;
+
+            const maxDistance = triangleMode === 'flat'
+                ? CONFIG.flatTriangleSnapDistance / Math.max(0.01, state.zoom || 1)
+                : CONFIG.snapDistance;
+            return distance < maxDistance;
+        }
+
+        function normalizeStripToTargetLength(strip) {
+            const point1 = state.points.find(point => point.id === strip.p1);
+            const point2 = state.points.find(point => point.id === strip.p2);
+            if (!point1 || !point2) return false;
+
+            const dx = point2.x - point1.x;
+            const dy = point2.y - point1.y;
+            const distance = Math.hypot(dx, dy);
+            const targetLength = getStripLength(strip);
+            const epsilon = Math.max(1, targetLength) * 1e-7;
+            if (!Number.isFinite(distance) || distance <= epsilon) return false;
+
+            const pinned1 = isPointPinned(point1) || protractorAnchorShouldPin(point1.id);
+            const pinned2 = isPointPinned(point2) || protractorAnchorShouldPin(point2.id);
+            if (pinned1 && pinned2) return Math.abs(distance - targetLength) <= epsilon;
+
+            const ux = dx / distance;
+            const uy = dy / distance;
+            if (pinned1) {
+                point2.x = point1.x + ux * targetLength;
+                point2.y = point1.y + uy * targetLength;
+            } else if (pinned2) {
+                point1.x = point2.x - ux * targetLength;
+                point1.y = point2.y - uy * targetLength;
+            } else {
+                const middleX = (point1.x + point2.x) / 2;
+                const middleY = (point1.y + point2.y) / 2;
+                point1.x = middleX - ux * targetLength / 2;
+                point1.y = middleY - uy * targetLength / 2;
+                point2.x = middleX + ux * targetLength / 2;
+                point2.y = middleY + uy * targetLength / 2;
+            }
+            return true;
+        }
+
         // Renvoie l'intersection de deux cercles la plus proche du pointeur.
         // Le cas tangent (triangle plat) est traité comme une intersection unique :
         // cela évite qu'un très petit arrondi fasse basculer le sommet d'un côté à l'autre.
@@ -1313,9 +1407,12 @@
 
                     const triangleEdges = [incident[i], incident[j], closingStrip];
                     const trianglePointIds = [pointId, firstOtherId, secondOtherId];
+                    const triangleMode = getTriangleLengthMode(triangleEdges);
+                    if (triangleMode === 'impossible') continue;
                     const longestEdge = triangleEdges.reduce((longest, edge) =>
                         getStripLength(edge) > getStripLength(longest) ? edge : longest
                     );
+                    if (triangleMode === 'flat' && !normalizeStripToTargetLength(longestEdge)) continue;
                     const oppositeLongestId = trianglePointIds.find(id => id !== longestEdge.p1 && id !== longestEdge.p2);
                     const candidates = [...new Set([oppositeLongestId, pointId, firstOtherId, secondOtherId])];
 
@@ -2867,11 +2964,9 @@ state.draggingPoint = point; point.pinned = true; container.style.cursor = 'grab
 
                         // Snap du sommet (comme un magnet normal), mais translation du groupe entier.
                         const groupIds = new Set([S.id, A.id, B.id]);
-                        const snap2 = CONFIG.snapDistance * CONFIG.snapDistance;
                         const snapTarget = state.points.find(p => {
                             if (groupIds.has(p.id)) return false;
-                            const dx = p.x - targetX, dy = p.y - targetY;
-                            return (dx*dx + dy*dy) < snap2;
+                            return canSnapPointPair(S, p, targetX, targetY);
                         });
                         if (snapTarget) { targetX = snapTarget.x; targetY = snapTarget.y; }
 
@@ -2982,11 +3077,9 @@ state.draggingPoint = point; point.pinned = true; container.style.cursor = 'grab
 
                 let bestD = CONFIG.snapDistance;
                 if (!rotLocked) {
-                    const snap2 = CONFIG.snapDistance * CONFIG.snapDistance;
                     const snapTarget = state.points.find(p => {
                         if (p.id === self.id) return false;
-                        const dx = p.x - pos.x, dy = p.y - pos.y;
-                        return (dx*dx + dy*dy) < snap2;
+                        return canSnapPointPair(self, p, pos.x, pos.y);
                     });
                     if (snapTarget) {
                         targetX = snapTarget.x; targetY = snapTarget.y;
@@ -3057,6 +3150,7 @@ state.draggingPoint = point; point.pinned = true; container.style.cursor = 'grab
 
             // Déplacement rigide d'un angle fixe quand on attrape le sommet (fin du drag)
             if (state.draggingAngleMove) {
+                let snappedTarget = null;
                 const g = state.angleGroups.find(ag => ag.id === state.draggingAngleMove.groupId);
                 if (g) {
                     const S = state.points.find(p => p.id === g.vertexId);
@@ -3066,13 +3160,12 @@ state.draggingPoint = point; point.pinned = true; container.style.cursor = 'grab
                     // Fusion du sommet si on relâche sur un autre magnet
                     if (S) {
                         const groupIds = new Set([g.vertexId, g.aId, g.bId]);
-                        const snap2 = CONFIG.snapDistance * CONFIG.snapDistance;
                         const target = state.points.find(p => {
                             if (groupIds.has(p.id)) return false;
-                            const dx = p.x - S.x, dy = p.y - S.y;
-                            return (dx*dx + dy*dy) < snap2;
+                            return canSnapPointPair(S, p);
                         });
                         if (target) {
+                            snappedTarget = target;
                             playSound('snap');
                             replaceAnglePointId(S.id, target.id);
                             state.strips.forEach(s => {
@@ -3089,7 +3182,12 @@ state.draggingPoint = point; point.pinned = true; container.style.cursor = 'grab
                 }
                 state.draggingAngleMove = null;
                 cleanupAngleGroups();
-                render();
+                if (snappedTarget) {
+                    stabilizeClosedTriangleAtPoint(snappedTarget.id, snappedTarget.x, snappedTarget.y);
+                    queueSolveRender(20);
+                } else {
+                    render();
+                }
                 return;
             }
 
@@ -3112,18 +3210,18 @@ state.draggingPoint = point; point.pinned = true; container.style.cursor = 'grab
             // Fin rotation rigide (verrou global)
             if (state.draggingRigidRotate) {
                 const rr = state.draggingRigidRotate;
+                let snappedTarget = null;
 
                 const self = rr.pointRef ? rr.pointRef.get(rr.grabId) : state.points.find(p => p.id === rr.grabId);
                 if (self) {
-                    const snap2 = CONFIG.snapDistance * CONFIG.snapDistance;
                     const target = state.points.find(p => {
                         if (p.id === self.id) return false;
                         if (rr.groupIds && rr.groupIds.has(p.id)) return false;
-                        const dx = p.x - self.x, dy = p.y - self.y;
-                        return (dx*dx + dy*dy) < snap2;
+                        return canSnapPointPair(self, p);
                     });
 
                     if (target) {
+                        snappedTarget = target;
                         playSound('snap');
                         replaceAnglePointId(self.id, target.id);
                         state.strips.forEach(s => {
@@ -3146,17 +3244,20 @@ state.draggingPoint = point; point.pinned = true; container.style.cursor = 'grab
 
                 state.draggingRigidRotate = null;
                 cleanupAngleGroups();
-                render();
+                if (snappedTarget) {
+                    stabilizeClosedTriangleAtPoint(snappedTarget.id, snappedTarget.x, snappedTarget.y);
+                    queueSolveRender(20);
+                } else {
+                    render();
+                }
                 return;
             }
 
 if (state.draggingPoint) {
                 const self = state.draggingPoint;
-                const snap2 = CONFIG.snapDistance * CONFIG.snapDistance;
                 const target = state.points.find(p => {
                     if (p.id === self.id) return false;
-                    const dx = p.x - self.x, dy = p.y - self.y;
-                    return (dx*dx + dy*dy) < snap2;
+                    return canSnapPointPair(self, p);
                 });
 
                 let snapped = false;
@@ -3233,8 +3334,8 @@ if (state.draggingPoint) {
                     if (!p || p.toBeRemoved || p.fixed) return;
                     // Chercher un point cible qui n'est PAS dans le groupe en cours de déplacement
                     const target = state.points.find(targetP => 
-                        !state.draggingStrip.some(dp => dp.id === targetP.id) && 
-                        Math.hypot(targetP.x - p.x, targetP.y - p.y) < CONFIG.snapDistance
+                        !state.draggingStrip.some(dp => dp.id === targetP.id) &&
+                        canSnapPointPair(p, targetP)
                     );
 
                     if (target) {

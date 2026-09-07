@@ -154,6 +154,10 @@ function loadClosestCircleIntersection() {
 
 function loadGeometryHelpers(state) {
   const helperNames = [
+    'getTriangleLengthMode',
+    'getMergeTriangleMode',
+    'canSnapPointPair',
+    'normalizeStripToTargetLength',
     'closestCircleIntersection',
     'getFixedNeighborConstraints',
     'constrainPointToFixedNeighbors',
@@ -174,6 +178,7 @@ function loadGeometryHelpers(state) {
 
   const context = {
     state,
+    CONFIG: {snapDistance: 45, flatTriangleSnapDistance: 10},
     result: null,
     getStripLength: strip => strip.lengthPx,
     isPointPinned: point => Boolean(point && (point.pinned || point.fixed)),
@@ -181,7 +186,7 @@ function loadGeometryHelpers(state) {
   };
   vm.createContext(context);
   vm.runInContext(
-    `${sources.join('\n')}\nresult = { constrainPointToFixedNeighbors, stabilizeClosedTriangleAtPoint };`,
+    `${sources.join('\n')}\nresult = { getMergeTriangleMode, canSnapPointPair, constrainPointToFixedNeighbors, stabilizeClosedTriangleAtPoint };`,
     context
   );
   return context.result;
@@ -206,6 +211,71 @@ test('le triangle plat 2,2 + 2,9 = 5,1 possède un sommet fini et exactement col
   assert.ok(Math.abs(result.y) < 1e-9, `le sommet devrait être sur la base, y=${result.y}`);
   assert.ok(Math.abs(Math.hypot(result.x - left.x, result.y - left.y) - 2.2 * pixelsPerUnit) < 1e-8);
   assert.ok(Math.abs(Math.hypot(result.x - right.x, result.y - right.y) - 2.9 * pixelsPerUnit) < 1e-8);
+});
+
+test('le triangle plat 3 + 2 = 5 ne s’aimante que lorsque ses deux rivets coïncident presque', () => {
+  const state = {
+    zoom: 1,
+    points: [
+      {id: 1, x: 0, y: 0},
+      {id: 2, x: 250, y: 0},
+      {id: 3, x: 145, y: 20},
+      {id: 4, x: 160, y: 20},
+    ],
+    strips: [
+      {id: 5, p1: 1, p2: 2, lengthPx: 250},
+      {id: 6, p1: 1, p2: 3, lengthPx: 150},
+      {id: 7, p1: 2, p2: 4, lengthPx: 100},
+    ],
+  };
+  const helpers = loadGeometryHelpers(state);
+
+  assert.equal(helpers.getMergeTriangleMode(3, 4), 'flat');
+  assert.equal(helpers.canSnapPointPair(state.points[2], state.points[3]), false, '15 px est encore trop tôt');
+  state.points[2].x = 155;
+  assert.equal(helpers.canSnapPointPair(state.points[2], state.points[3]), true, '5 px autorise la fermeture exacte');
+});
+
+test('le seuil spécial ne modifie pas l’aimantation d’un triangle 3-3-5 ordinaire', () => {
+  const state = {
+    zoom: 1,
+    points: [
+      {id: 1, x: 0, y: 0},
+      {id: 2, x: 250, y: 0},
+      {id: 3, x: 120, y: -170},
+      {id: 4, x: 150, y: -170},
+    ],
+    strips: [
+      {id: 5, p1: 1, p2: 2, lengthPx: 250},
+      {id: 6, p1: 1, p2: 3, lengthPx: 150},
+      {id: 7, p1: 2, p2: 4, lengthPx: 150},
+    ],
+  };
+  const helpers = loadGeometryHelpers(state);
+
+  assert.equal(helpers.getMergeTriangleMode(3, 4), 'normal');
+  assert.equal(helpers.canSnapPointPair(state.points[2], state.points[3]), true, 'le seuil normal de 45 px reste actif');
+});
+
+test('une combinaison impossible ne peut pas créer une boucle instable', () => {
+  const state = {
+    zoom: 1,
+    points: [
+      {id: 1, x: 0, y: 0},
+      {id: 2, x: 300, y: 0},
+      {id: 3, x: 149, y: 0},
+      {id: 4, x: 150, y: 0},
+    ],
+    strips: [
+      {id: 5, p1: 1, p2: 2, lengthPx: 300},
+      {id: 6, p1: 1, p2: 3, lengthPx: 150},
+      {id: 7, p1: 2, p2: 4, lengthPx: 100},
+    ],
+  };
+  const helpers = loadGeometryHelpers(state);
+
+  assert.equal(helpers.getMergeTriangleMode(3, 4), 'impossible');
+  assert.equal(helpers.canSnapPointPair(state.points[2], state.points[3]), false);
 });
 
 test('le sommet 3-3-5 reste à l’intersection exacte des deux côtés fixés pendant le glisser', () => {
@@ -263,6 +333,34 @@ test('la fermeture du triangle plat recale immédiatement le sommet sur la plus 
   assert.equal(helpers.stabilizeClosedTriangleAtPoint(3, 112, 14), true);
   assert.ok(Math.abs(state.points[2].x - 110) < 1e-8);
   assert.ok(Math.abs(state.points[2].y) < 1e-8);
+});
+
+test('la fermeture 3-2-5 corrige aussi la légère compression de la grande bande', () => {
+  const state = {
+    points: [
+      {id: 1, x: 0, y: 0},
+      {id: 2, x: 248, y: 0},
+      {id: 3, x: 149, y: 12},
+    ],
+    strips: [
+      {id: 4, p1: 1, p2: 2, lengthPx: 250},
+      {id: 5, p1: 1, p2: 3, lengthPx: 150},
+      {id: 6, p1: 2, p2: 3, lengthPx: 100},
+    ],
+  };
+  const helpers = loadGeometryHelpers(state);
+
+  assert.equal(helpers.stabilizeClosedTriangleAtPoint(3, 149, 12), true);
+  const [left, right, middle] = state.points;
+  assert.ok(Math.abs(Math.hypot(right.x - left.x, right.y - left.y) - 250) < 1e-8);
+  assert.ok(Math.abs(Math.hypot(middle.x - left.x, middle.y - left.y) - 150) < 1e-8);
+  assert.ok(Math.abs(Math.hypot(middle.x - right.x, middle.y - right.y) - 100) < 1e-8);
+  assert.ok(Math.abs((right.x - left.x) * (middle.y - left.y) - (right.y - left.y) * (middle.x - left.x)) < 1e-8);
+});
+
+test('toutes les fusions de rivets utilisent la garde des triangles plats', () => {
+  assert.ok((html.match(/canSnapPointPair\(/g) || []).length >= 7);
+  assert.match(html, /flatTriangleSnapDistance:\s*10/);
 });
 
 test('une fixation reste une ancre absolue pendant les déplacements et les aimantations', () => {
