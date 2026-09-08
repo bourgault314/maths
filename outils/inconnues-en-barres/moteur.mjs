@@ -6,7 +6,7 @@ export const FAMILLES = {
   ecart: { titre: 'Une quantité dépasse l’autre', forme: 'A = B + d ; mA + nB = T', niveaux: ['Un écart à retirer', 'Plusieurs parts', 'Plusieurs écarts à retirer'] },
   lot: { titre: 'Un lot connu, puis un lot mixte', forme: 'rA = U ; mA + nB = T', niveaux: ['Un objet connu', 'Partager le premier lot', 'Reconstruire un autre lot'] },
   combinaison: { titre: 'Deux lots à comparer', forme: 'mA + nB = T ; pA + qB = U', niveaux: ['Retirer un lot commun', 'Multiplier un lot entier', 'Ajuster les deux lots'] },
-  trois: { titre: 'Trois quantités liées', forme: 'A = kB ; C = B + d ; A + B + C = T', niveaux: ['Trois parts et un écart', 'Un multiple et un écart', 'Plusieurs lots liés'] },
+  trois: { titre: 'Trois quantités liées', forme: 'A = kB ; C = B + d ; mA + B + C = T', niveaux: ['Trois parts et un écart', 'Un multiple et un écart', 'Plusieurs lots liés'] },
   equilibre: { titre: 'La même quantité dans deux lots égaux', forme: 'aA + b = cA + d', niveaux: ['Retirer les parts communes', 'Comparer deux lots égaux', 'Plus de parts communes'] }
 };
 export const CONTEXTES = {
@@ -95,7 +95,7 @@ export function enonce(p) {
     else if(e.droite.length===1&&!e.droite[0].symbol) lines.push(`${texteLot(p,e.gauche)} ${verb} ${mesure(p,e.droite[0].value)}.`);
     else if(e.gauche.length===1&&e.gauche[0].n===1&&e.droite.length===1&&e.droite[0].symbol) lines.push(`${texteLot(p,e.gauche)} ${verb} autant que ${texteLot(p,e.droite)}.`);
     else if(e.gauche.length===1&&e.gauche[0].n===1&&e.droite.length===2&&!e.droite[1].symbol) lines.push(`${texteLot(p,e.gauche)} ${verb} ${mesure(p,e.droite[1].value)} de plus que ${texteLot(p,[e.droite[0]])}.`);
-    else lines.push(`Le lot « ${texteLot(p,e.gauche)} » a la même ${ctx.grandeur} que le lot « ${texteLot(p,e.droite)} ».`);
+    else lines.push(`Le lot « ${texteLot(p,e.gauche)} » a ${ctx.grandeur==='prix'?'le même prix':`la même ${ctx.grandeur}`} que le lot « ${texteLot(p,e.droite)} ».`);
   }
   return {lignes:lines.map(s=>s[0].toUpperCase()+s.slice(1)),question:`Trouve ${ctx.grandeur==='masse'?'la masse':ctx.grandeur==='prix'?'le prix':'la valeur'} ${p.inconnues.length===1?`d’${objet(p,'A').article} ${objet(p,'A').nom}`:'de chaque sorte d’objet'}.`,convention:`Tous les objets d’une même sorte ont ${ctx.grandeur==='masse'?'la même masse':ctx.grandeur==='prix'?'le même prix':'la même valeur'}.`};
 }
@@ -122,31 +122,31 @@ export function parcours(p,methode=methodes(p)[0].id) {
     } else {
       const parts=m*k+n;
       add(2,'Repérer ce que l’on remplace',`On remplace chaque ${objet(p,'A').nom} par ${k} ${objet(p,'B').pluriel}.`,[p.donnees[0],eq([S('A',m,'remplacer'),S('B',n)],T)]);
-      add(2,'Remplacer sans changer le total',`Les ${m} grandes parts donnent ${m*k} petites parts. Avec les ${n} autres, cela fait ${parts} parts égales.`,[eq([S('B',parts)],T)]);
+      add(2,'Remplacer sans changer le total',`Le remplacement donne ${m*k} petites parts. On en ajoute ${n} : cela fait ${parts} parts égales.`,[eq([S('B',parts)],T)]);
       solve('B',B,[`${nombre(T)} ÷ ${parts} = ${nombre(B)}`],`On partage ${mesure(p,T)} en ${parts} parts égales.`);
       solve('A',A,[`${k} × ${nombre(B)} = ${nombre(A)}`],`On reprend la relation : la grande quantité vaut ${k} fois la petite.`);
     }
   } else if(p.famille==='ecart'||p.famille==='trois') {
     const triple=p.famille==='trois',parts=triple?m*k+n+r:m+n,ecarts=triple?r:m,reste=T-ecarts*d;
-    add(2,'Remplacer les quantités liées',triple?`On remplace la première sorte par ${k} parts de référence et la troisième par une part et ${mesure(p,d)}.`:`Chaque grande quantité devient une petite quantité et un supplément de ${mesure(p,d)}.`,[eq([S('B',parts),N(ecarts*d)],T)]);
+    add(2,'Remplacer les quantités liées',triple?`On remplace chaque objet de la première sorte par ${k===1?'une part':`${k} parts`} de référence et chaque objet de la troisième sorte par une part et ${mesure(p,d)}.`:`Chaque grande quantité devient une petite quantité et un supplément de ${mesure(p,d)}.`,[eq([S('B',parts),N(ecarts*d)],T)]);
     add(2,'Retirer tous les suppléments',`Il y a ${ecarts} supplément${ecarts>1?'s':''} de ${mesure(p,d)}. On retire donc ${mesure(p,ecarts*d)}.`,[eq([S('B',parts)],reste)],[`${nombre(T)} − ${nombre(ecarts*d)} = ${nombre(reste)}`]);
     solve('B',B,[`${nombre(reste)} ÷ ${parts} = ${nombre(B)}`],`On partage le reste en ${parts} parts égales.`);
     solve('A',A,[triple?`${k} × ${nombre(B)} = ${nombre(A)}`:`${nombre(B)} + ${nombre(d)} = ${nombre(A)}`],'On reprend la première relation.');
     if(triple)solve('C',C,[`${nombre(B)} + ${nombre(d)} = ${nombre(C)}`],'On reprend la seconde relation.');
   } else if(p.famille==='lot') {
     add(2,'Utiliser le premier lot',r===1?'La première donnée donne directement une quantité.':`On partage le premier lot en ${r} parts égales.`,[eq([S('A')],A)],[`${nombre(U)} ÷ ${r} = ${nombre(A)}`],['A']);
-    add(2,'Reconstituer la partie connue',`Dans le lot mixte, les ${m} ${m===1?objet(p,'A').nom:objet(p,'A').pluriel} représentent ${mesure(p,m*A)}.`,[eq([N(m*A),S('B',n)],T)],[`${m} × ${nombre(A)} = ${nombre(m*A)}`]);
-    add(3,'Retirer la partie connue',`Il reste ${n} objets de la seconde sorte.`,[eq([S('B',n)],T-m*A)],[`${nombre(T)} − ${nombre(m*A)} = ${nombre(T-m*A)}`]);
+    add(2,'Reconstituer la partie connue',`Dans le lot mixte, ${objets(p,'A',m)} ${m===1?'représente':'représentent'} ${mesure(p,m*A)}.`,[eq([N(m*A),S('B',n)],T)],[`${m} × ${nombre(A)} = ${nombre(m*A)}`]);
+    add(3,'Retirer la partie connue',`Il reste ${objets(p,'B',n)}.`,[eq([S('B',n)],T-m*A)],[`${nombre(T)} − ${nombre(m*A)} = ${nombre(T-m*A)}`]);
     solve('B',B,[`${nombre(T-m*A)} ÷ ${n} = ${nombre(B)}`],`On partage le reste en ${n} parts égales.`);
   } else if(p.famille==='combinaison') {
     if(methode==='substitution') {
       const first=m===1?{b:n,total:T}:{b:p.q,total:U};
       const second=m===1?{a:r,b:p.q,total:U}:{a:m,b:n,total:T};
       // Moving the negative B term to the other side keeps all drawn quantities positive.
-      add(2,'Isoler la première quantité',`Dans le lot qui contient un seul ${objet(p,'A').nom}, on retire ${first.b} ${first.b===1?objet(p,'B').nom:objet(p,'B').pluriel}.`,[eq([S('A'),S('B',first.b,'remplacer')],first.total)],[`A = ${nombre(first.total)} − ${first.b===1?'B':first.b+'B'}`]);
+      add(2,'Isoler la première quantité',`Dans le lot qui contient ${objet(p,'A').article} ${objet(p,'A').article==='une'?'seule':'seul'} ${objet(p,'A').nom}, on retire ${objets(p,'B',first.b)}.`,[eq([S('A'),S('B',first.b,'remplacer')],first.total)],[`A = ${nombre(first.total)} − ${first.b===1?'B':first.b+'B'}`]);
       add(2,'Remplacer dans l’autre donnée','On remplace la première quantité par cette expression, puis on rassemble les parts de la seconde sorte.',[eq([S('A',second.a,'remplacer'),S('B',second.b)],second.total)],[`${second.a} × (${nombre(first.total)} − ${first.b===1?'B':first.b+'B'}) + ${second.b===1?'B':second.b+'B'} = ${nombre(second.total)}`]);
       const coeff=second.b-second.a*first.b, delta=second.total-second.a*first.total;
-      add(2,'Garder des parts positives',coeff>0?'On retire la quantité connue des deux côtés.':'On déplace les parts soustraites de l’autre côté, puis on retire la quantité connue.',[eq([S('B',Math.abs(coeff))],Math.abs(delta))],[`${nombre(Math.max(second.total,second.a*first.total))} − ${nombre(Math.min(second.total,second.a*first.total))} = ${nombre(Math.abs(delta))}`]);
+      add(2,'Garder des parts positives',coeff>0?'On retire la quantité connue des deux côtés.':`On ajoute ${objets(p,'B',-coeff)} des deux côtés, puis on retire ${mesure(p,second.total)} des deux côtés. L’égalité reste vraie.`,[eq([S('B',Math.abs(coeff))],Math.abs(delta))],[`${nombre(Math.max(second.total,second.a*first.total))} − ${nombre(Math.min(second.total,second.a*first.total))} = ${nombre(Math.abs(delta))}`]);
       solve('B',B,[`${nombre(Math.abs(delta))} ÷ ${Math.abs(coeff)} = ${nombre(B)}`],'On partage la différence en parts égales.');
       solve('A',A,[`${nombre(first.total)} − ${first.b} × ${nombre(B)} = ${nombre(A)}`],'On reprend le lot qui contient un seul objet de la première sorte.');
     } else {
@@ -154,9 +154,9 @@ export function parcours(p,methode=methodes(p)[0].id) {
       if(f1>1||f2>1)add(2,'Préparer des lots comparables',`On multiplie le lot 1 par ${f1} et le lot 2 par ${f2}. Chaque objet et chaque total sont multipliés.`,[eq(termes(ac,b1),t1,`Lot 1 × ${f1}`),eq(termes(ac,b2),t2,`Lot 2 × ${f2}`)],[`${f1} × ${nombre(T)} = ${nombre(t1)}`,`${f2} × ${nombre(U)} = ${nombre(t2)}`]);
       const commun=Math.min(b1,b2),delta=Math.abs(t1-t2),parts=Math.abs(b1-b2);
       add(2,'Repérer la partie commune',`Les deux lots contiennent la même partie : ${objets(p,'A',ac)} et ${objets(p,'B',commun)}.`,[eq([S('A',ac,'commun'),S('B',commun,'commun'),...(b1>commun?[S('B',b1-commun)]:[])],t1),eq([S('A',ac,'commun'),S('B',commun,'commun'),...(b2>commun?[S('B',b2-commun)]:[])],t2)]);
-      add(2,'Retirer la partie commune',`La différence des deux lots correspond à ${parts} objets de la seconde sorte.`,[eq([S('B',parts)],delta)],[`${nombre(Math.max(t1,t2))} − ${nombre(Math.min(t1,t2))} = ${nombre(delta)}`]);
+      add(2,'Retirer la partie commune',`La différence des deux lots correspond à ${objets(p,'B',parts)}.`,[eq([S('B',parts)],delta)],[`${nombre(Math.max(t1,t2))} − ${nombre(Math.min(t1,t2))} = ${nombre(delta)}`]);
       solve('B',B,[`${nombre(delta)} ÷ ${parts} = ${nombre(B)}`],'On partage la différence en parts égales.');
-      add(3,'Retrouver la première quantité',`Dans le lot 1, on retire les ${n} objets maintenant connus, puis on partage ce qui reste entre les ${m} autres.`,[eq([S('A',m)],T-n*B),eq([S('A')],A)],[`${nombre(T)} − ${n} × ${nombre(B)} = ${nombre(T-n*B)}`,`${nombre(T-n*B)} ÷ ${m} = ${nombre(A)}`],['A']);
+      add(3,'Retrouver la première quantité',`On retire ${objets(p,'B',n)} du lot 1, puis on partage le reste en ${m} part${m>1?'s':''} égale${m>1?'s':''}.`,[eq([S('A',m)],T-n*B),eq([S('A')],A)],[`${nombre(T)} − ${n} × ${nombre(B)} = ${nombre(T-n*B)}`,`${nombre(T-n*B)} ÷ ${m} = ${nombre(A)}`],['A']);
     }
   } else if(p.famille==='equilibre') {
     add(2,'Retirer les parts communes',`On retire ${p.c} ${p.c===1?objet(p,'A').nom:objet(p,'A').pluriel} de chaque côté. L’égalité reste vraie.`,[eq(termes(m-p.c,0,0,p.b),p.d)]);
