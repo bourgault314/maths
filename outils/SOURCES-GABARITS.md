@@ -7,11 +7,22 @@ Ce document est l'inventaire technique des 54 PDF publics de maths&go.
 - Logo maître : `assets/img/mathsgo-logo.png`
 - Copie optimisée pour les surimpressions PDF :
   `assets/img/mathsgo-logo-print.png`
+- Logo de l'IREM de La Réunion : `assets/img/logos/irem/logo-print.png`
 - Adresse imprimée : `mathsgo.re`
 - Gabarit sans en-tête : logo en bas à gauche et adresse centrée en pied.
+- Gabarit plastifiable conçu dans le cadre de l'IREM : logo IREM à gauche,
+  logo maths&go à droite, avec des dimensions adaptées au pied de page.
 - Fiche avec en-tête : logo en haut à droite et adresse seule en pied.
 - Anciennes variantes avec la baseline « Manipuler • Comprendre • Progresser » :
   interdites dans les PDF publics.
+
+## Périmètre des gabarits plastifiables
+
+Le catalogue publie 24 gabarits PDF plastifiables. Le fichier historique
+`addition-posee/gabarit-addition-posee.pdf` est une copie technique du gabarit
+d'addition décimale : il est régénéré lui aussi pour préserver les anciens
+liens, mais ne constitue pas un 25e gabarit. Les deux outils HTML de construction
+de gabarits d'angles ne font pas partie de ce lot.
 
 ## PDF possédant une source LaTeX
 
@@ -43,7 +54,8 @@ Pour les recompiler, depuis la racine du dépôt :
 bash scripts/compiler-gabarits.sh
 ```
 
-Cette commande régénère également `gabarits_partage_equitable_2_3_4_5.pdf`.
+Cette commande régénère également `gabarits_partage_equitable_2_3_4_5.pdf`
+ainsi que les six gabarits d'opérations posées produits en Python.
 Ce document n'a pas de source éditable : son PDF d'origine est conservé dans
 `_source_gabarits_partage_equitable.pdf`, puis la signature publique est créée
 par `scripts/uniformiser-signature-pdf.py`.
@@ -130,6 +142,17 @@ Pour les régénérer depuis la racine du dépôt :
 
 ```bash
 python3 outils/addition-posee/_generer_gabarit.py
+```
+
+Les deux gabarits de soustraction sont produits de la même manière :
+
+| PDF public | Source |
+|---|---|
+| `soustraction-posee/gabarit-soustraction-entiere.pdf` | `soustraction-posee/_generer_gabarit.py` |
+| `soustraction-posee/gabarit-soustraction-decimale.pdf` | `soustraction-posee/_generer_gabarit.py` |
+
+```bash
+python3 outils/soustraction-posee/_generer_gabarit.py
 ```
 
 ## Fiches imprimées directement depuis un outil
