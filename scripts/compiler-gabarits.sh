@@ -38,7 +38,6 @@ python3 "$ROOT/scripts/uniformiser-signature-pdf.py" \
   "$ROOT/outils/_source_gabarits_partage_equitable.pdf" \
   "$ROOT/outils/gabarits_partage_equitable_2_3_4_5.pdf" \
   --mode partage \
-  --with-irem \
   --gabarit-plastifiable
 
 python3 "$ROOT/outils/addition-posee/_generer_gabarit.py"

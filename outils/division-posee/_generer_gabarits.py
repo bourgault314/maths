@@ -194,9 +194,11 @@ def divisor_table(c):
         if multiplier % 2 == 0:
             c.setFillColor(BLUE_SOFT)
             c.roundRect(x + 9, row_y - 20, w - 18, 25, 5, stroke=0, fill=1)
-        text(c, f"× {multiplier}", x + 19, row_y - 13, 8.7, INK, "GoSans")
-        text(c, "=", x + 55, row_y - 13, 8.7, MUTED, "GoSans")
-        dotted_line(c, x + 69, row_y - 14, x + w - 15)
+        # L'élève complète le diviseur avant chaque produit, puis le résultat.
+        dotted_line(c, x + 15, row_y - 14, x + 35)
+        text(c, f"× {multiplier}", x + 41, row_y - 13, 8.7, INK, "GoSans")
+        text(c, "=", x + 72, row_y - 13, 8.7, MUTED, "GoSans")
+        dotted_line(c, x + 85, row_y - 14, x + w - 15)
 
 
 def verification(c, decimal):
