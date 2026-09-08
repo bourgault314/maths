@@ -71,7 +71,14 @@
     .question-box { padding: 30px 40px 10px 40px; text-align: center; }
     .question-text { font-size: 2.5rem; font-weight: bold; color: #1f2a44; line-height: 1.4; margin: 0; }
 
-    .hint-box { padding: 10px 40px; display: none; justify-content: center; }
+    .hint-box { padding: 10px 40px; display: none; flex-direction: column; align-items: center; }
+    .unit-note { display: block; margin-top: 8px; font-size: .5em; font-weight: normal; color: var(--muted); }
+    .help-toggle { align-self: center; min-height: 44px; padding: 8px 14px; border: 1px solid #cfd8ea; border-radius: 8px; background: #f8fafc; color: var(--text); font: inherit; font-size: .95rem; cursor: pointer; touch-action: manipulation; }
+    .help-toggle:hover { background: #eef4ff; }
+    .help-toggle:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
+    .calculation-help { width: 100%; text-align: center; }
+    .help-caption { margin: 12px 0 0; font-size: 1rem; color: var(--muted); }
+    [hidden] { display: none !important; }
     .correction-box { padding: 10px 40px 30px 40px; text-align: center; display: none; }
     .correction-text { font-size: 2.2rem; color: var(--success); margin: 0; line-height: 1.3;}
     
@@ -95,10 +102,9 @@
     #diapoContainer:fullscreen svg { max-height: 75vh; max-width: 1200px; }
     #diapoContainer:-webkit-full-screen svg { max-height: 75vh; max-width: 1200px; }
 
-    #diapoContainer.layout-tall-25 .hint-box { padding: 6px 40px 0 40px; }
-    #diapoContainer.layout-tall-25 .correction-box { padding: 0 40px 10px 40px; margin-top: -18px; }
-    #diapoContainer.layout-tall-25:fullscreen svg { max-height: 58vh; max-width: 1200px; }
-    #diapoContainer.layout-tall-25:-webkit-full-screen svg { max-height: 58vh; max-width: 1200px; }
+    #diapoContainer.help-open:fullscreen svg { max-height: 25vh; }
+    #diapoContainer.help-open:-webkit-full-screen svg { max-height: 25vh; }
+    #diapoContainer.help-open .correction-box { margin-top: 0; }
 
     #diapoContainer.layout-shift-50 .hint-box { padding: 6px 40px 0 40px; }
     #diapoContainer.layout-shift-50 .correction-box { padding: 0 40px 10px 40px; margin-top: -18px; }
@@ -158,6 +164,8 @@
       .print-q-text { font-size: 1.15rem; margin-bottom: 5px; line-height: 1.4; }
       .print-q svg { width: 100%; max-width: 580px; display: block; margin: 0 auto; } 
       .print-c-text { color: var(--success); font-size: 1.1rem; margin-top: 5px; margin-bottom: 10px; line-height: 1.3;}
+      .print-q .unit-note { font-size: .8rem; }
+      .print-q .help-caption { text-align: center; font-size: .85rem; margin-top: 4px; }
       .spacer-reponse { height: 60px; } 
     }
   </style>
@@ -206,7 +214,7 @@
         <h3>🔥 2. Le Boss (100 cases)</h3>
         <div class="checkbox-list">
           <label class="cb-row"><input type="checkbox" value="base_1"> <div><strong>1 %</strong><span class="cb-desc">Le centième pur</span></div></label>
-          <label class="cb-row"><input type="checkbox" value="mult_1"> <div><strong>2 % à 49 %</strong></div></label>
+          <label class="cb-row"><input type="checkbox" value="mult_1"> <div><strong>2 % à 49 %</strong><span class="cb-desc">Au niveau 1 : de 2 % à 9 %</span></div></label>
           <label class="cb-row"><input type="checkbox" value="mult_hi"> <div><strong>51 % à 99 %</strong><span class="cb-desc">Gros pourcentages</span></div></label>
         </div>
         <hr>
@@ -296,7 +304,14 @@
     </div>
 
     <div class="question-box"><p class="question-text" id="qText"></p></div>
-    <div class="hint-box" id="hBox"><div class="stage-wrap"><svg id="svgStage" viewBox="0 0 1000 320"></svg></div></div>
+    <div class="hint-box" id="hBox">
+      <div class="stage-wrap"><svg id="svgStage" viewBox="0 0 1000 320"></svg></div>
+      <button class="help-toggle" id="btnHelp" type="button" aria-expanded="false" aria-controls="calculationHelp" onclick="toggleCalculationHelp()" hidden></button>
+      <div class="calculation-help" id="calculationHelp" hidden>
+        <p class="help-caption" id="helpCaption"></p>
+        <div class="stage-wrap"><svg id="helpStage" viewBox="0 0 1000 320"></svg></div>
+      </div>
+    </div>
     <div class="correction-box" id="cBox"><p class="correction-text" id="cText"></p></div>
     
     <div class="thumbnails-bar" id="thumbBar"></div>
@@ -319,7 +334,8 @@
     function rand(min, max) { return Math.floor(seededRandom() * (max - min + 1)) + min; }
     function pick(arr) { return arr[Math.floor(seededRandom() * arr.length)]; }
 
-    function fmt(n) { return n.toString().replace('.', ','); }
+    const numberFormat = new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 2 });
+    function fmt(n) { return numberFormat.format(n); }
     function frPlural(n, singular, plural) { return Math.abs(Number(n)) === 1 ? singular : plural; }
 
     function initSeed() {
@@ -350,7 +366,7 @@
     const colors = { 2: "var(--c-50)", 4: "var(--c-25)", 5: "var(--c-20)", 10: "var(--c-10)", 20: "var(--c-5)", 100: "var(--c-1)" };
 
     document.addEventListener("keydown", (e) => {
-      if (document.getElementById('diapoContainer').style.display !== "none") {
+      if (quizData.length && !e.target?.closest('input, select, textarea') && document.getElementById('diapoContainer').style.display !== "none") {
         if (e.key === "ArrowRight") { if (!document.getElementById('btnNext').disabled) nextAction(); } 
         else if (e.key === "ArrowLeft") { if (!document.getElementById('btnPrev').disabled) prevSlide(); }
       }
@@ -447,176 +463,184 @@
 
 
     function buildText(q) {
-      const hasDecimals = !Number.isInteger(q.totalVal) || !Number.isInteger(q.calcVal);
-      const evoMode = document.getElementById('selEvoMode') ? document.getElementById('selEvoMode').value : '4eme';
-      
-      let availableTypes = ['brut', 'argent', 'distance', 'poids', 'capacite', 'nourriture', 'batterie', 'telechargement'];
-      if (!hasDecimals) {
-          availableTypes.push('ecole', 'sport');
-      }
-      
-      if (q.calcVal > 0 && q.calcVal < 1) {
-          availableTypes = ['brut', 'argent', 'distance', 'poids', 'capacite']; 
-      }
+      const t = q.totalVal, a = q.calcVal;
+      const hasDecimals = !Number.isInteger(t) || !Number.isInteger(a);
+      const evoMode = document.getElementById('selEvoMode')?.value || '4eme';
 
+      // Adapter le contexte aux nombres déjà tirés, sans changer le calcul ni
+      // consommer de tirage supplémentaire : les fiches restent reproductibles.
+      let availableTypes = ['brut', 'argent', 'distance', 'poids', 'capacite', 'nourriture'];
+      if (t >= 2000 && t <= 6000) availableTypes.push('batterie');
+      availableTypes.push('telechargement');
+      if (!hasDecimals) {
+        if (t <= 1200) availableTypes.push('ecole');
+        availableTypes.push('sport');
+      }
+      if (a > 0 && a < 1) availableTypes = ['brut', 'argent', 'distance', 'poids', 'capacite'];
       let cType = pick(availableTypes);
 
-      let qHtml = "", cHtml = "", unit = "";
-      const t = q.totalVal; 
-      const eleveTotalLabel = frPlural(t, 'élève', 'élèves');
-      const eleveCalcLabel = frPlural(q.calcVal, 'élève', 'élèves');
-      const verbeCantine = Math.abs(Number(q.calcVal)) === 1 ? 'mange' : 'mangent';
+      const total = `<strong>${fmt(t)}</strong>`;
+      const part = `<strong>${fmt(a)}</strong>`;
+      const percent = `<strong>${fmt(q.percent)} %</strong>`;
+      const amount = (n, unit) => `<strong>${fmt(n)} ${unit}</strong>`;
+      const upper = s => s.charAt(0).toUpperCase() + s.slice(1);
+      const eleveTotal = frPlural(t, 'élève', 'élèves');
+      const elevePart = frPlural(a, 'élève', 'élèves');
+      const mange = a === 1 ? 'mange' : 'mangent';
+      const ecole = t < 20 ? 'un groupe' : t <= 35 ? 'une classe' : t <= 200 ? 'une école' : 'un collège';
+      const lieu = t < 8 ? 'Une voiture' : t < 20 ? 'Un minibus' : t <= 200 ? 'Une salle de cinéma' : t <= 2000 ? 'Une tribune' : 'Un stade';
+      const personne = t < 20 ? 'passager' : 'spectateur';
+      const personnes = frPlural(a, personne, personne + 's');
+      const trajet = t < 10 ? 'une randonnée à pied' : t <= 100 ? 'une balade à vélo' : 'un voyage';
+      const masseObjet = t < 10 ? 'Le contenu d’un colis postal' : t <= 25 ? 'Le contenu d’une valise' : 'Un chargement';
+      const recipient = t < 5 ? 'Une bouteille' : t <= 20 ? 'Un seau' : t <= 500 ? 'Une cuve' : 'Un réservoir';
+      const ingredient = q.percent > 60 ? 'cacao' : q.percent >= 30 ? 'farine' : 'sucre';
+      const ingredientAvecArticle = ingredient === 'farine' ? 'la farine' : 'le ' + ingredient;
+      const nourriture = q.percent > 60
+        ? (t < 100 ? 'une portion de chocolat noir' : t <= 300 ? 'une tablette de chocolat noir' : 'un lot de chocolat noir')
+        : (q.percent >= 30 ? 'une pâte à pain' : 'une préparation pour gâteau');
+      const article = t >= 5 && t <= 40 ? 'un livre' : t > 40 && t <= 150 ? 'un vêtement' : t >= 400 && t <= 2500 ? 'un ordinateur' : t > 2500 ? 'un équipement' : 'un article';
 
-      let ecoleLieu = t < 40 ? "une classe" : (t <= 200 ? "une école" : "un collège");
-      let sportLieu = t < 20 ? "Un minibus" : (t <= 200 ? "Une salle de cinéma" : "Un stade");
-      let distLieu = t < 10 ? "une randonnée à pied" : (t <= 100 ? "une balade à vélo" : "un voyage");
-      let poidsObjet = t < 10 ? "un colis postal" : (t <= 50 ? "une valise" : "un chargement");
-      let capObjet = t < 5 ? "Une grande bouteille" : (t <= 50 ? "Un grand seau" : (t <= 500 ? "Une cuve" : "Une piscine"));
-      
-      let nourObjet = q.percent > 60 ? "une tablette de chocolat noir" : (q.percent >= 30 ? "un pain" : "un gâteau");
-      let nourIngr = q.percent > 60 ? "cacao" : (q.percent >= 30 ? "farine" : "sucre");
-      
-      let argentObjet = t < 20 ? "un livre" : (t <= 150 ? "un vêtement" : "un ordinateur");
-
-      let mathStr = "";
-
-      if (q.mode === 'evo_inc') {
-        let evoIncTypes = ['loyer', 'facture'];
-        if (!hasDecimals) evoIncTypes.push('population');
-        cType = pick(evoIncTypes);
-
-        if (cType === 'loyer') { 
-            unit = " €"; 
-            let subject = t < 150 ? "Un abonnement téléphonique" : "Un loyer";
-            qHtml = `${subject} de <strong>${fmt(t)} €</strong> augmente de <strong>${fmt(q.percent)} %</strong>.<br>Quel est le nouveau montant ?`; 
-        }
-        else if (cType === 'facture') { unit = " €"; qHtml = `Une facture de <strong>${fmt(t)} €</strong> s'alourdit de <strong>${fmt(q.percent)} %</strong>.<br>Quel est le nouveau montant à payer ?`; }
-        else { 
-            unit = " habitants"; 
-            let subject = t < 500 ? "Un village" : "Une ville";
-            qHtml = `${subject} de <strong>${fmt(t)} habitants</strong> a vu sa population croître de <strong>${fmt(q.percent)} %</strong>.<br>Quelle est la nouvelle population ?`; 
-        }
-        
-        let varVal = parseFloat(((t * q.percent) / 100).toFixed(2));
-        if (evoMode === '4eme') {
-            mathStr = `<strong>${fmt(q.percent)} % de ${fmt(t)} = ${fmt(varVal)}</strong><br><strong>${fmt(t)} + ${fmt(varVal)} = ${fmt(q.calcVal)}</strong><br>`;
+      let qHtml = '', cHtml = '', unit = '', answer = '';
+      if (q.mode === 'evo_inc' || q.mode === 'evo_dec') {
+        const increasing = q.mode === 'evo_inc';
+        const contexts = increasing ? ['facture'] : ['solde'];
+        if (increasing && ((t >= 5 && t <= 100) || (t >= 300 && t <= 2500))) contexts.push('loyer');
+        if (!increasing && t >= 5 && t <= 120) contexts.push('jeu');
+        if (!hasDecimals && t >= (increasing ? 50 : 10)) contexts.push('population');
+        cType = pick(contexts);
+        unit = ' €';
+        if (cType === 'facture') {
+          qHtml = `Une facture de ${amount(t, '€')} augmente de ${percent}.<br>Quel est le nouveau montant à payer ?`;
+        } else if (cType === 'loyer') {
+          const subject = t <= 100 ? 'Un abonnement téléphonique mensuel' : 'Un loyer mensuel';
+          qHtml = `${subject} de ${amount(t, '€')} augmente de ${percent}.<br>Quel est le nouveau montant ?`;
+        } else if (cType === 'solde') {
+          qHtml = `${upper(article)} à ${amount(t, '€')} bénéficie d’une réduction de ${percent}.<br>Quel est le nouveau prix ?`;
+        } else if (cType === 'jeu') {
+          qHtml = `Un jeu vidéo qui coûtait ${amount(t, '€')} baisse de ${percent}.<br>Quel est son nouveau prix ?`;
+        } else if (increasing) {
+          unit = ' ' + frPlural(a, 'habitant', 'habitants');
+          qHtml = `${t < 2000 ? 'Un village' : 'Une commune'} de ${amount(t, 'habitants')} voit sa population augmenter de ${percent}.<br>Quelle est la nouvelle population ?`;
         } else {
-            mathStr = `<strong>${fmt(100 + q.percent)} % de ${fmt(t)} = ${fmt(q.calcVal)}</strong><br>`;
+          unit = ' ' + frPlural(a, 'membre', 'membres');
+          qHtml = `${t < 50 ? 'Un club' : 'Une association'} de ${amount(t, 'membres')} perd ${percent} de ses inscrits.<br>Combien reste-t-il de membres ?`;
         }
-        cHtml = mathStr + `<br>Le nouveau total est de <strong>${fmt(q.calcVal)}${unit === ' habitants' ? unit : unit}</strong>.`;
+        const variation = parseFloat((t * q.percent / 100).toFixed(2));
+        const math = evoMode === '4eme'
+          ? `<strong>${fmt(q.percent)} % de ${fmt(t)} = ${fmt(variation)}</strong><br><strong>${fmt(t)} ${increasing ? '+' : '−'} ${fmt(variation)} = ${fmt(a)}</strong><br>`
+          : `<strong>${fmt(100 + (increasing ? q.percent : -q.percent))} % de ${fmt(t)} = ${fmt(a)}</strong><br>`;
+        answer = cType === 'population'
+          ? (increasing ? `La nouvelle population est de <strong>${fmt(a)}${unit}</strong>.` : `Il reste <strong>${fmt(a)}${unit}</strong>.`)
+          : `Le nouveau ${increasing ? 'montant' : 'prix'} est de ${amount(a, '€')}.`;
+        return { qHtml, cHtml: math + '<br>' + answer, unit, context: cType };
       }
-      else if (q.mode === 'evo_dec') {
-        let evoDecTypes = ['solde', 'jeu'];
-        if (!hasDecimals) evoDecTypes.push('population');
-        cType = pick(evoDecTypes);
 
-        if (cType === 'solde') { 
-            unit = " €"; 
-            let subject = t < 50 ? "Un t-shirt" : (t <= 200 ? "Un vélo" : "Un ordinateur");
-            qHtml = `${subject} à <strong>${fmt(t)} €</strong> est soldé à <strong>- ${fmt(q.percent)} %</strong>.<br>Quel est le nouveau prix ?`; 
-        }
-        else if (cType === 'jeu') { unit = " €"; qHtml = `Un jeu vidéo qui coûtait <strong>${fmt(t)} €</strong> baisse de <strong>${fmt(q.percent)} %</strong>.<br>Quel est son nouveau prix ?`; }
-        else { 
-            unit = " membres"; 
-            let subject = t < 50 ? "Un petit club" : "Une association";
-            qHtml = `${subject} de <strong>${fmt(t)} membres</strong> perd <strong>${fmt(q.percent)} %</strong> de ses inscrits.<br>Combien reste-t-il de membres ?`; 
-        }
-        
-        let varVal = parseFloat(((t * q.percent) / 100).toFixed(2));
-        if (evoMode === '4eme') {
-            mathStr = `<strong>${fmt(q.percent)} % de ${fmt(t)} = ${fmt(varVal)}</strong><br><strong>${fmt(t)} - ${fmt(varVal)} = ${fmt(q.calcVal)}</strong><br>`;
-        } else {
-            mathStr = `<strong>${fmt(100 - q.percent)} % de ${fmt(t)} = ${fmt(q.calcVal)}</strong><br>`;
-        }
-        cHtml = mathStr + `<br>La nouvelle valeur est de <strong>${fmt(q.calcVal)}${unit === ' membres' ? unit : unit}</strong>.`;
+      let questions;
+      switch (cType) {
+        case 'brut':
+          questions = {
+            direct: `Calcule ${percent} de ${total}.`,
+            find_percent: `Quel pourcentage représente ${part} par rapport à ${total} ?`,
+            find_total: `${percent} d’un nombre vaut ${part}.<br>Quel est ce nombre ?`
+          };
+          answer = `Le résultat est ${part}.`;
+          break;
+        case 'argent':
+          unit = ' €';
+          questions = {
+            direct: `${upper(article)} coûte ${amount(t, '€')}. Il y a une réduction de ${percent}.<br>Quel est le montant de la réduction ?`,
+            find_percent: `${upper(article)} coûtait ${amount(t, '€')}. La réduction est de ${amount(a, '€')}.<br>Quel est le pourcentage de réduction ?`,
+            find_total: `Une remise de ${percent} sur ${article} représente ${amount(a, '€')}.<br>Quel était le prix initial ?`
+          };
+          answer = `La réduction est de ${amount(a, '€')}.`;
+          break;
+        case 'ecole':
+          unit = ' ' + frPlural(q.mode === 'find_total' ? t : a, 'élève', 'élèves');
+          questions = {
+            direct: `Dans ${ecole} de ${amount(t, eleveTotal)}, ${percent} mangent à la cantine.<br>Combien d’élèves mangent à la cantine ?`,
+            find_percent: `Dans ${ecole} de ${amount(t, eleveTotal)}, ${amount(a, elevePart)} ${mange} à la cantine.<br>Quel pourcentage cela représente-t-il ?`,
+            find_total: `Dans ${ecole}, ${percent} des élèves sont externes. Cela représente ${amount(a, elevePart)}.<br>Combien y a-t-il d’élèves au total ?`
+          };
+          answer = `${amount(a, elevePart)} ${mange} à la cantine.`;
+          break;
+        case 'sport':
+          unit = q.mode === 'find_total' ? ' ' + frPlural(t, 'place', 'places') : ' ' + personnes;
+          questions = {
+            direct: `${lieu} dispose de ${amount(t, frPlural(t, 'place', 'places'))}. ${percent} des places sont occupées.<br>Combien y a-t-il de ${personne}s ?`,
+            find_percent: `${lieu} dispose de ${amount(t, frPlural(t, 'place', 'places'))} et accueille ${amount(a, personnes)}.<br>Quel est le pourcentage de places occupées ?`,
+            find_total: `${lieu} accueille ${amount(a, personnes)}, soit ${percent} de sa capacité.<br>Combien de places y a-t-il au total ?`
+          };
+          answer = `Il y a ${amount(a, personnes)}.`;
+          break;
+        case 'distance':
+          unit = ' km';
+          questions = {
+            direct: `Lors d’${trajet} de ${amount(t, 'km')}, tu parcours ${percent} du trajet.<br>Quelle distance as-tu parcourue ?`,
+            find_percent: `Lors d’${trajet} de ${amount(t, 'km')}, tu parcours ${amount(a, 'km')}.<br>Quel pourcentage du trajet as-tu effectué ?`,
+            find_total: `Lors d’${trajet}, tu parcours ${percent} du trajet, soit ${amount(a, 'km')}.<br>Quelle est la distance totale ?`
+          };
+          answer = `Tu as parcouru ${amount(a, 'km')}.`;
+          break;
+        case 'poids':
+          unit = ' kg';
+          questions = {
+            direct: `${masseObjet} a une masse de ${amount(t, 'kg')}. On en retire ${percent}.<br>Quelle masse cela représente-t-il ?`,
+            find_percent: `${masseObjet} a une masse de ${amount(t, 'kg')}. On en retire ${amount(a, 'kg')}.<br>Quel pourcentage de la masse a été retiré ?`,
+            find_total: `On retire ${amount(a, 'kg')} d’un chargement, soit ${percent} de sa masse initiale.<br>Quelle était sa masse initiale ?`
+          };
+          answer = `La masse retirée est de ${amount(a, 'kg')}.`;
+          break;
+        case 'capacite':
+          unit = ' L';
+          questions = {
+            direct: `${recipient} contient ${amount(t, 'L')} d’eau. On retire ${percent} de cette eau.<br>Quel volume d’eau a été retiré ?`,
+            find_percent: `${recipient} contient initialement ${amount(t, 'L')} d’eau. On en utilise ${amount(a, 'L')}.<br>Quel pourcentage de ce volume a été utilisé ?`,
+            find_total: `${recipient} contient ${amount(a, 'L')} d’eau, soit ${percent} de sa contenance.<br>Quelle est sa contenance totale ?`
+          };
+          answer = `Le volume retiré est de ${amount(a, 'L')}.`;
+          break;
+        case 'nourriture':
+          unit = ' g';
+          questions = {
+            direct: `Dans ${nourriture} de ${amount(t, 'g')}, ${ingredientAvecArticle} représente ${percent} de la masse totale.<br>Quelle est la masse de ${ingredient} ?`,
+            find_percent: `Dans ${nourriture} de ${amount(t, 'g')}, il y a ${amount(a, 'g')} de ${ingredient}.<br>Quel pourcentage de la masse totale cela représente-t-il ?`,
+            find_total: `Dans ${nourriture}, ${ingredientAvecArticle} représente ${percent} de la masse totale, soit ${amount(a, 'g')}.<br>Quelle est la masse totale ?`
+          };
+          answer = `La masse de ${ingredient} est de ${amount(a, 'g')}.`;
+          break;
+        case 'batterie':
+          unit = ' mAh';
+          questions = {
+            direct: `La batterie d’un smartphone a une capacité de ${amount(t, 'mAh')}. Elle est chargée à ${percent}.<br>Quelle quantité de charge reste-t-il ?`,
+            find_percent: `La batterie d’un smartphone a une capacité de ${amount(t, 'mAh')}. Il reste ${amount(a, 'mAh')} de charge.<br>Quel est le pourcentage de charge restant ?`,
+            find_total: `La batterie d’un smartphone est chargée à ${percent}, ce qui correspond à ${amount(a, 'mAh')}.<br>Quelle est sa capacité totale ?`
+          };
+          answer = `Il reste ${amount(a, 'mAh')} de charge.`;
+          break;
+        case 'telechargement':
+          unit = ' Mo';
+          questions = {
+            direct: `Le téléchargement d’un fichier de ${amount(t, 'Mo')} est terminé à ${percent}.<br>Quelle quantité de données a été téléchargée ?`,
+            find_percent: `Pour un fichier de ${amount(t, 'Mo')}, on a déjà téléchargé ${amount(a, 'Mo')}.<br>Quel pourcentage du fichier a été téléchargé ?`,
+            find_total: `On a téléchargé ${percent} d’un fichier, soit ${amount(a, 'Mo')}.<br>Quelle est la taille totale du fichier ?`
+          };
+          answer = `La quantité téléchargée est de ${amount(a, 'Mo')}.`;
+          break;
       }
-      else if (q.mode === 'find_total') {
-            mathStr = `<strong>Si ${fmt(q.percent)} % du total = ${fmt(q.calcVal)}</strong><br>`;
-            
-            if (cType === 'brut') { qHtml = `<strong>${fmt(q.percent)} %</strong> d'un nombre vaut <strong>${fmt(q.calcVal)}</strong>.<br>Quel est ce nombre ?`; } 
-            else if (cType === 'argent') { unit = " €"; qHtml = `Une remise de <strong>${fmt(q.percent)} %</strong> sur ${argentObjet} représente <strong>${fmt(q.calcVal)} €</strong>.<br>Quel était le prix initial ?`; } 
-            else if (cType === 'ecole') { unit = " élèves"; qHtml = `Dans ${ecoleLieu}, <strong>${fmt(q.percent)} %</strong> des élèves sont externes. Cela représente <strong>${fmt(q.calcVal)} ${eleveCalcLabel}</strong>.<br>Combien y a-t-il d'élèves au total ?`; } 
-            else if (cType === 'sport') { unit = " places"; qHtml = `${sportLieu} est rempli(e) à <strong>${fmt(q.percent)} %</strong>, ce qui correspond à <strong>${fmt(q.calcVal)} spectateurs</strong> (ou passagers).<br>Quelle est la capacité totale ?`; } 
-            else if (cType === 'distance') { unit = " km"; qHtml = `Lors d'${distLieu}, tu as parcouru <strong>${fmt(q.percent)} %</strong> du trajet, soit <strong>${fmt(q.calcVal)} km</strong>.<br>Quelle est la distance totale ?`; }
-            else if (cType === 'poids') { unit = " kg"; qHtml = `<strong>${fmt(q.percent)} %</strong> du poids d'${poidsObjet} correspond à <strong>${fmt(q.calcVal)} kg</strong>.<br>Quel est le poids total ?`; }
-            else if (cType === 'capacite') { unit = " L"; qHtml = `${capObjet} est remplie à <strong>${fmt(q.percent)} %</strong>, ce qui représente <strong>${fmt(q.calcVal)} L</strong>.<br>Quelle est la contenance totale ?`; }
-            else if (cType === 'nourriture') { unit = " g"; qHtml = `Tu as utilisé <strong>${fmt(q.calcVal)} g</strong> de ${nourIngr}, ce qui représente <strong>${fmt(q.percent)} %</strong> d'${nourObjet}.<br>Quel était le poids total ?`; }
-            else if (cType === 'batterie') { unit = " mAh"; qHtml = `Ton smartphone affiche <strong>${fmt(q.percent)} %</strong> de batterie, ce qui représente <strong>${fmt(q.calcVal)} mAh</strong>.<br>Quelle est la capacité totale ?`; }
-            else if (cType === 'telechargement') { unit = " Mo"; qHtml = `<strong>${fmt(q.percent)} %</strong> du fichier a été téléchargé, soit <strong>${fmt(q.calcVal)} Mo</strong>.<br>Quelle est la taille totale ?`; }
-            
-            cHtml = mathStr + `<br>Le total (100 %) est de <strong>${fmt(t)}${unit}</strong>.`;
+      qHtml = questions[q.mode];
+      if (cType === 'batterie') qHtml += '<small class="unit-note">mAh : milliampère-heure, unité de quantité de charge électrique.</small>';
+      if (cType === 'telechargement') qHtml += '<small class="unit-note">Mo : mégaoctet, unité de taille d’un fichier.</small>';
+      if (q.mode === 'find_total') {
+        cHtml = `<strong>Si ${fmt(q.percent)} % du total = ${fmt(a)}</strong><br><br>Le total (100 %) est de <strong>${fmt(t)}${unit}</strong>.`;
+      } else if (q.mode === 'find_percent') {
+        cHtml = `<strong>${fmt(a)} sur ${fmt(t)} = ${fmt(q.percent)} %</strong><br><br>Cela représente ${percent}.`;
+      } else {
+        cHtml = `<strong>${fmt(q.percent)} % de ${fmt(t)} = ${fmt(a)}</strong><br><br>${answer}`;
       }
-      else if (q.mode === 'find_percent') {
-            mathStr = `<strong>${fmt(q.calcVal)} sur ${fmt(t)} = ${fmt(q.percent)} %</strong><br>`;
-            
-            if (cType === 'brut') { qHtml = `Quel pourcentage représente <strong>${fmt(q.calcVal)}</strong> par rapport à <strong>${fmt(t)}</strong> ?`; } 
-            else if (cType === 'argent') { unit = " €"; qHtml = `${argentObjet.charAt(0).toUpperCase() + argentObjet.slice(1)} coûtait <strong>${fmt(t)} €</strong>. La réduction est de <strong>${fmt(q.calcVal)} €</strong>.<br>Quel est le pourcentage de réduction ?`; } 
-            else if (cType === 'ecole') { unit = " élèves"; qHtml = `Dans ${ecoleLieu} de <strong>${fmt(t)} ${eleveTotalLabel}</strong>, <strong>${fmt(q.calcVal)} ${eleveCalcLabel}</strong> ${verbeCantine} à la cantine.<br>Quel pourcentage cela représente-t-il ?`; } 
-            else if (cType === 'sport') { unit = " places"; qHtml = `${sportLieu} de <strong>${fmt(t)} places</strong> est occupé(e) par <strong>${fmt(q.calcVal)} personnes</strong>.<br>Quel est le pourcentage de remplissage ?`; }
-            else if (cType === 'distance') { unit = " km"; qHtml = `Sur ${distLieu} de <strong>${fmt(t)} km</strong>, <strong>${fmt(q.calcVal)} km</strong> ont été parcourus.<br>Quel pourcentage du trajet a été effectué ?`; }
-            else if (cType === 'poids') { unit = " kg"; qHtml = `${poidsObjet.charAt(0).toUpperCase() + poidsObjet.slice(1)} pèse <strong>${fmt(t)} kg</strong>. On en retire <strong>${fmt(q.calcVal)} kg</strong>.<br>Quel pourcentage a été retiré ?`; }
-            else if (cType === 'capacite') { unit = " L"; qHtml = `Sur ${capObjet.toLowerCase()} de <strong>${fmt(t)} L</strong>, <strong>${fmt(q.calcVal)} L</strong> ont été utilisés.<br>Quel pourcentage a été vidé ?`; }
-            else if (cType === 'nourriture') { unit = " g"; qHtml = `Dans ${nourObjet} de <strong>${fmt(t)} g</strong>, il y a <strong>${fmt(q.calcVal)} g</strong> de ${nourIngr}.<br>Quel est le pourcentage de ${nourIngr} ?`; }
-            else if (cType === 'batterie') { unit = " mAh"; qHtml = `Sur une batterie de <strong>${fmt(t)} mAh</strong>, il reste <strong>${fmt(q.calcVal)} mAh</strong>.<br>Quel est le pourcentage de batterie ?`; }
-            else if (cType === 'telechargement') { unit = " Mo"; qHtml = `Sur un fichier de <strong>${fmt(t)} Mo</strong>, <strong>${fmt(q.calcVal)} Mo</strong> ont été téléchargés.<br>Quel pourcentage est terminé ?`; }
-            
-            cHtml = mathStr + `<br>Cela représente <strong>${fmt(q.percent)} %</strong>.`;
-      }
-      else {
-            mathStr = `<strong>${fmt(q.percent)} % de ${fmt(t)} = ${fmt(q.calcVal)}</strong><br>`;
-            
-            if (cType === 'brut') { 
-                qHtml = `Calcule <strong>${fmt(q.percent)} %</strong> de <strong>${fmt(t)}</strong>.`; 
-                cHtml = mathStr + `<br>Le résultat est <strong>${fmt(q.calcVal)}</strong>.`;
-            } 
-            else if (cType === 'argent') { 
-                unit = " €"; 
-                qHtml = `${argentObjet.charAt(0).toUpperCase() + argentObjet.slice(1)} coûte <strong>${fmt(t)} €</strong>. Il y a une réduction de <strong>${fmt(q.percent)} %</strong>.<br>Quel est le montant de la réduction ?`; 
-                cHtml = mathStr + `<br>La réduction est de <strong>${fmt(q.calcVal)} €</strong>.`;
-            } 
-            else if (cType === 'ecole') { 
-                unit = " élèves"; 
-                qHtml = `Dans ${ecoleLieu} de <strong>${fmt(t)} ${eleveTotalLabel}</strong>, <strong>${fmt(q.percent)} %</strong> mangent à la cantine.<br>Combien d'élèves mangent à la cantine ?`; 
-                cHtml = mathStr + `<br><strong>${fmt(q.calcVal)} ${eleveCalcLabel}</strong> ${verbeCantine} à la cantine.`;
-            } 
-            else if (cType === 'sport') { 
-                unit = " personnes"; 
-                qHtml = `${sportLieu} de <strong>${fmt(t)} places</strong> est rempli(e) à <strong>${fmt(q.percent)} %</strong>.<br>Combien y a-t-il de personnes ?`; 
-                cHtml = mathStr + `<br>Il y a donc <strong>${fmt(q.calcVal)} personnes</strong>.`;
-            }
-            else if (cType === 'distance') { 
-                unit = " km"; 
-                qHtml = `Sur ${distLieu} de <strong>${fmt(t)} km</strong>, tu as parcouru <strong>${fmt(q.percent)} %</strong>.<br>Combien de kilomètres as-tu parcourus ?`; 
-                cHtml = mathStr + `<br>Tu as parcouru <strong>${fmt(q.calcVal)} km</strong>.`;
-            }
-            else if (cType === 'poids') { 
-                unit = " kg"; 
-                qHtml = `${poidsObjet.charAt(0).toUpperCase() + poidsObjet.slice(1)} pèse <strong>${fmt(t)} kg</strong>. On doit en retirer <strong>${fmt(q.percent)} %</strong>.<br>Quelle masse cela représente-t-il ?`; 
-                cHtml = mathStr + `<br>Cela représente <strong>${fmt(q.calcVal)} kg</strong>.`;
-            }
-            else if (cType === 'capacite') { 
-                unit = " L"; 
-                qHtml = `${capObjet} contient <strong>${fmt(t)} L</strong> d'eau. On la vide de <strong>${fmt(q.percent)} %</strong>.<br>Combien de litres ont été retirés ?`; 
-                cHtml = mathStr + `<br><strong>${fmt(q.calcVal)} L</strong> ont été retirés.`;
-            }
-            else if (cType === 'nourriture') { 
-                unit = " g"; 
-                qHtml = `Pour préparer ${nourObjet} de <strong>${fmt(t)} g</strong>, la recette demande <strong>${fmt(q.percent)} %</strong> de ${nourIngr}.<br>Quelle quantité vas-tu utiliser ?`; 
-                cHtml = mathStr + `<br>Tu vas utiliser <strong>${fmt(q.calcVal)} g</strong>.`;
-            }
-            else if (cType === 'batterie') { 
-                unit = " mAh"; 
-                qHtml = `Un smartphone avec une batterie de <strong>${fmt(t)} mAh</strong> est chargé à <strong>${fmt(q.percent)} %</strong>.<br>Quelle capacité cela représente-t-il ?`; 
-                cHtml = mathStr + `<br>Cela représente <strong>${fmt(q.calcVal)} mAh</strong>.`;
-            }
-            else if (cType === 'telechargement') { 
-                unit = " Mo"; 
-                qHtml = `Un fichier de <strong>${fmt(t)} Mo</strong> est téléchargé à <strong>${fmt(q.percent)} %</strong>.<br>Combien de Mo ont été récupérés ?`; 
-                cHtml = mathStr + `<br><strong>${fmt(q.calcVal)} Mo</strong> ont été téléchargés.`;
-            }
-      }
-      return { qHtml, cHtml, unit };
+      return { qHtml, cHtml, unit, context: cType };
     }
+
 
     function pickBase50Total(level, useDecimals) {
       if (!useDecimals) {
@@ -954,9 +978,9 @@
 
       calcVal = parseFloat(calcVal.toFixed(2));
 
-      let q = { percent, parts, activeParts, totalVal, calcVal, mode, phase: 0 };
+      let q = { type, level, useDecimals, percent, parts, activeParts, totalVal, calcVal, mode, phase: 0, helpOpen: false };
       let texts = buildText(q);
-      q.qHtml = texts.qHtml; q.cHtml = texts.cHtml; q.unit = texts.unit;
+      q.qHtml = texts.qHtml; q.cHtml = texts.cHtml; q.unit = texts.unit; q.context = texts.context;
       return q;
     }
 
@@ -976,6 +1000,15 @@
       
       let types = Array.from(checkboxes).map(cb => cb.value);
       const count = parseInt(document.getElementById('selCount').value, 10);
+
+      // Les places restantes doivent pouvoir revenir à toutes les catégories cochées.
+      // Une seule catégorie conserve exactement la même suite de tirages qu'avant.
+      if (count % types.length !== 0) {
+        for (let i = types.length - 1; i > 0; i--) {
+          const j = Math.floor(seededRandom() * (i + 1));
+          [types[i], types[j]] = [types[j], types[i]];
+        }
+      }
       
       let distributedTypes = [];
       for (let i = 0; i < count; i++) { distributedTypes.push(types[i % types.length]); }
@@ -1225,128 +1258,107 @@
       document.getElementById('diapoContainer').scrollIntoView({ behavior: "smooth" });
     }
 
+    function getCalculationHelp(q) {
+      if (q.mode !== 'direct' || q.activeParts !== 1) return null;
+      let parts, label, caption;
+      if (q.parts === 4 && q.percent === 25) {
+        parts = 2; label = 'Aide : deux moitiés';
+        caption = 'Je prends la moitié, puis encore la moitié.';
+      } else if (q.parts === 5 && q.percent === 20) {
+        // En mode Entiers, ne pas imposer un intermédiaire décimal.
+        if (!q.useDecimals && !Number.isInteger(q.totalVal / 10)) return null;
+        parts = 10; label = 'Aide : passer par 10 %';
+        caption = 'Je trouve 10 %, puis je double.';
+      } else if (q.parts === 20 && q.percent === 5) {
+        parts = 10; label = 'Aide : passer par 10 %';
+        caption = 'Je trouve 10 %, puis je prends la moitié.';
+      } else return null;
+      return {
+        label, caption,
+        diagram: { ...q, parts, activeParts: 1, percent: 100 / parts, calcVal: parseFloat((q.totalVal / parts).toFixed(2)) }
+      };
+    }
+
+    function drawQuestionDiagram(q, isCorrection, stage) {
+      emptyElement(stage);
+      const evolution = q.mode === 'evo_inc' || q.mode === 'evo_dec';
+      stage.setAttribute('viewBox', evolution ? '0 0 1000 380' : '0 0 1000 320');
+      if (evolution) drawEvolutionBar(q, isCorrection, stage, 0);
+      else if (q.parts === 100) draw100Parts(q, isCorrection, stage);
+      else drawSVGBar(q, isCorrection, stage, 18);
+    }
+
+    function toggleCalculationHelp() {
+      const q = quizData[currentIndex];
+      if (!q || q.phase === 0 || !getCalculationHelp(q)) return;
+      q.helpOpen = !q.helpOpen;
+      updateUI();
+    }
+
     function updateUI() {
-      const q = quizData[currentIndex]; const btnNext = document.getElementById('btnNext');
+      const q = quizData[currentIndex];
+      const btnNext = document.getElementById('btnNext');
+      const container = document.getElementById('diapoContainer');
       document.getElementById('slideCounter').textContent = `Question ${currentIndex + 1} / ${quizData.length}`;
       document.getElementById('qText').innerHTML = q.qHtml;
       document.getElementById('btnPrev').disabled = (currentIndex === 0 && q.phase === 0);
-      
-      let stage = document.getElementById('svgStage');
-      document.getElementById('diapoContainer').classList.remove('layout-tall-25');
-      document.getElementById('diapoContainer').classList.remove('layout-shift-50');
-      document.getElementById('diapoContainer').classList.remove('layout-shift-10');
-      document.getElementById('diapoContainer').classList.remove('layout-evo');
-      document.getElementById('diapoContainer').classList.remove('layout-find-percent');
-      document.getElementById('diapoContainer').classList.remove('layout-find-total');
+      btnNext.disabled = q.phase === 2 && currentIndex === quizData.length - 1;
+      for (const name of ['layout-shift-50', 'layout-shift-10', 'layout-evo', 'layout-find-percent', 'layout-find-total', 'help-open']) container.classList.remove(name);
+
+      const stage = document.getElementById('svgStage');
+      const helpStage = document.getElementById('helpStage');
+      const helpButton = document.getElementById('btnHelp');
+      const helpPanel = document.getElementById('calculationHelp');
+      const help = getCalculationHelp(q);
+      const showHelp = q.phase > 0 && Boolean(help) && q.helpOpen;
       emptyElement(stage);
+      emptyElement(helpStage);
+      helpButton.hidden = q.phase === 0 || !help;
+      helpButton.textContent = help ? `${help.label} ${showHelp ? '▴' : '▾'}` : '';
+      helpButton.setAttribute('aria-expanded', String(Boolean(showHelp)));
+      helpPanel.hidden = !showHelp;
+      document.getElementById('helpCaption').textContent = help ? help.caption : '';
+      document.getElementById('hBox').style.display = q.phase > 0 ? 'flex' : 'none';
+      document.getElementById('cBox').style.display = q.phase === 2 ? 'block' : 'none';
+      document.getElementById('cText').innerHTML = q.phase === 2 ? q.cHtml : '';
 
-      if (q.phase === 0) {
-        document.getElementById('hBox').style.display = 'none'; document.getElementById('cBox').style.display = 'none';
-        btnNext.innerHTML = "Indice (Schéma) 💡 ►";
-      } else if (q.phase === 1) {
-        document.getElementById('hBox').style.display = 'flex'; document.getElementById('cBox').style.display = 'none';
-        btnNext.innerHTML = "Correction 👀 ►"; 
-        
-        if (q.mode === 'evo_inc' || q.mode === 'evo_dec') {
-            document.getElementById('diapoContainer').classList.add('layout-evo');
-            stage.setAttribute("viewBox", "0 0 1000 380");
-            drawEvolutionBar(q, false, stage, 0);
-        } else if (q.mode === 'find_percent') {
-            document.getElementById('diapoContainer').classList.add('layout-find-percent');
-            stage.setAttribute("viewBox", "0 0 1000 320");
-            drawSVGBar(q, false, stage, 18);
-        } else if (q.mode === 'find_total') {
-            document.getElementById('diapoContainer').classList.add('layout-find-total');
-            stage.setAttribute("viewBox", "0 0 1000 320");
-            drawSVGBar(q, false, stage, 18);
-        } else if(q.parts === 100) {
-            stage.setAttribute("viewBox", "0 0 1000 320");
-            draw100Parts(q, false, stage); 
-        } else if (q.parts === 4 && q.mode === 'direct') {
-            document.getElementById('diapoContainer').classList.add('layout-tall-25');
-            stage.setAttribute("viewBox", "0 0 1000 520");
-            let q50 = { ...q, parts: 2, activeParts: 0, percent: 50, calcVal: q.totalVal / 2 };
-            drawSVGBar(q50, false, stage, 18);
-            drawSVGBar(q, false, stage, 252);
-        } else if (q.parts === 5 && q.mode === 'direct') {
-            document.getElementById('diapoContainer').classList.add('layout-tall-25');
-            stage.setAttribute("viewBox", "0 0 1000 520");
-            let q10 = { ...q, parts: 10, activeParts: 0, percent: 10, calcVal: parseFloat((q.totalVal / 10).toFixed(2)) };
-            drawSVGBar(q, false, stage, 18);
-            drawSVGBar(q10, false, stage, 252);
-        } else if (q.parts === 20 && q.mode === 'direct') {
-            document.getElementById('diapoContainer').classList.add('layout-tall-25');
-            stage.setAttribute("viewBox", "0 0 1000 520");
-            let q10 = { ...q, parts: 10, activeParts: 0, percent: 10, calcVal: parseFloat((q.totalVal / 10).toFixed(2)) };
-            drawSVGBar(q10, false, stage, 18);
-            drawSVGBar(q, false, stage, 252);
-        } else if (q.parts === 2 && q.mode === 'direct') {
-            document.getElementById('diapoContainer').classList.add('layout-shift-50');
-            stage.setAttribute("viewBox", "0 0 1000 320");
-            drawSVGBar(q, false, stage, 18);
-        } else if (q.parts === 10 && q.mode === 'direct') {
-            document.getElementById('diapoContainer').classList.add('layout-shift-10');
-            stage.setAttribute("viewBox", "0 0 1000 320");
-            drawSVGBar(q, false, stage, 18);
-        } else {
-            stage.setAttribute("viewBox", "0 0 1000 320");
-            drawSVGBar(q, false, stage, 0);
+      if (q.phase === 0) btnNext.innerHTML = 'Indice (Schéma) 💡 ►';
+      else {
+        if (q.mode.startsWith('evo')) container.classList.add('layout-evo');
+        else if (q.mode === 'find_percent') container.classList.add('layout-find-percent');
+        else if (q.mode === 'find_total') container.classList.add('layout-find-total');
+        else if (q.parts === 2) container.classList.add('layout-shift-50');
+        else if (q.parts === 10) container.classList.add('layout-shift-10');
+        drawQuestionDiagram(q, q.phase === 2, stage);
+        if (showHelp) {
+          container.classList.add('help-open');
+          drawQuestionDiagram(help.diagram, q.phase === 2, helpStage);
         }
-      } else if (q.phase === 2) {
-        document.getElementById('hBox').style.display = 'flex'; document.getElementById('cBox').style.display = 'block';
-        document.getElementById('cText').innerHTML = q.cHtml; 
-        
-        if (q.mode === 'evo_inc' || q.mode === 'evo_dec') {
-            document.getElementById('diapoContainer').classList.add('layout-evo');
-            stage.setAttribute("viewBox", "0 0 1000 380");
-            drawEvolutionBar(q, true, stage, 0);
-        } else if (q.mode === 'find_percent') {
-            document.getElementById('diapoContainer').classList.add('layout-find-percent');
-            stage.setAttribute("viewBox", "0 0 1000 320");
-            drawSVGBar(q, true, stage, 18);
-        } else if (q.mode === 'find_total') {
-            document.getElementById('diapoContainer').classList.add('layout-find-total');
-            stage.setAttribute("viewBox", "0 0 1000 320");
-            drawSVGBar(q, true, stage, 18);
-        } else if(q.parts === 100) {
-            stage.setAttribute("viewBox", "0 0 1000 320");
-            draw100Parts(q, true, stage); 
-        } else if (q.parts === 4 && q.mode === 'direct') {
-            document.getElementById('diapoContainer').classList.add('layout-tall-25');
-            stage.setAttribute("viewBox", "0 0 1000 520");
-            let q50 = { ...q, parts: 2, activeParts: 0, percent: 50, calcVal: q.totalVal / 2 };
-            drawSVGBar(q50, true, stage, 18);
-            drawSVGBar(q, true, stage, 252);
-        } else if (q.parts === 5 && q.mode === 'direct') {
-            document.getElementById('diapoContainer').classList.add('layout-tall-25');
-            stage.setAttribute("viewBox", "0 0 1000 520");
-            let q10 = { ...q, parts: 10, activeParts: 0, percent: 10, calcVal: parseFloat((q.totalVal / 10).toFixed(2)) };
-            drawSVGBar(q, true, stage, 18);
-            drawSVGBar(q10, true, stage, 252);
-        } else if (q.parts === 20 && q.mode === 'direct') {
-            document.getElementById('diapoContainer').classList.add('layout-tall-25');
-            stage.setAttribute("viewBox", "0 0 1000 520");
-            let q10 = { ...q, parts: 10, activeParts: 0, percent: 10, calcVal: parseFloat((q.totalVal / 10).toFixed(2)) };
-            drawSVGBar(q10, true, stage, 18);
-            drawSVGBar(q, true, stage, 252);
-        } else if (q.parts === 2 && q.mode === 'direct') {
-            document.getElementById('diapoContainer').classList.add('layout-shift-50');
-            stage.setAttribute("viewBox", "0 0 1000 320");
-            drawSVGBar(q, true, stage, 18);
-        } else if (q.parts === 10 && q.mode === 'direct') {
-            document.getElementById('diapoContainer').classList.add('layout-shift-10');
-            stage.setAttribute("viewBox", "0 0 1000 320");
-            drawSVGBar(q, true, stage, 18);
-        } else {
-            stage.setAttribute("viewBox", "0 0 1000 320");
-            drawSVGBar(q, true, stage, 0);
-        }
-
-        if (currentIndex === quizData.length - 1) { btnNext.innerHTML = "Terminé ✓"; btnNext.disabled = true; } 
-        else { btnNext.innerHTML = "Question suiv. ►"; btnNext.disabled = false; }
+        btnNext.innerHTML = q.phase === 1 ? 'Correction 👀 ►' : btnNext.disabled ? 'Terminé ✓' : 'Question suiv. ►';
       }
       updateThumbnails();
     }
+
+    function appendQuestionDiagrams(q, isCorrection, container) {
+      const appendDiagram = diagram => {
+        const wrap = document.createElement('div');
+        wrap.className = 'stage-wrap';
+        const svg = document.createElementNS(svgNS, 'svg');
+        drawQuestionDiagram(diagram, isCorrection, svg);
+        wrap.appendChild(svg);
+        container.appendChild(wrap);
+      };
+      appendDiagram(q);
+      const help = getCalculationHelp(q);
+      if (help && q.helpOpen) {
+        const caption = document.createElement('p');
+        caption.className = 'help-caption';
+        caption.textContent = help.caption;
+        container.appendChild(caption);
+        appendDiagram(help.diagram);
+      }
+    }
+
 
     function loadSlide(index, startPhase = 0) { currentIndex = index; quizData[currentIndex].phase = startPhase; document.getElementById('btnNext').disabled = false; updateUI(); }
     function nextAction() { const q = quizData[currentIndex]; if (q.phase === 0) q.phase = 1; else if (q.phase === 1) q.phase = 2; else if (q.phase === 2 && currentIndex < quizData.length - 1) loadSlide(currentIndex + 1, 0); updateUI(); }
@@ -1380,37 +1392,7 @@
         qDiv.innerHTML = `<div class="print-q-text"><strong>Question ${i+1} :</strong> ${q.qHtml}</div>`;
         
         if (withGabarits) {
-          let svgWrap = document.createElement('div'); svgWrap.className = "stage-wrap";
-          let svg = document.createElementNS(svgNS, "svg"); 
-          if (q.mode === 'evo_inc' || q.mode === 'evo_dec') {
-              svg.setAttribute("viewBox", "0 0 1000 380");
-              drawEvolutionBar(q, false, svg, 0);
-          } else if (q.mode === 'find_percent' || q.mode === 'find_total') {
-              svg.setAttribute("viewBox", "0 0 1000 320");
-              drawSVGBar(q, false, svg, 18);
-          } else if (q.parts === 4 && q.mode === 'direct') {
-              svg.setAttribute("viewBox", "0 0 1000 520");
-              let q50 = { ...q, parts: 2, activeParts: 0, percent: 50, calcVal: q.totalVal / 2 };
-              drawSVGBar(q50, false, svg, 18);
-              drawSVGBar(q, false, svg, 252);
-          } else if (q.parts === 5 && q.mode === 'direct') {
-              svg.setAttribute("viewBox", "0 0 1000 520");
-              let q10 = { ...q, parts: 10, activeParts: 0, percent: 10, calcVal: parseFloat((q.totalVal / 10).toFixed(2)) };
-              drawSVGBar(q, false, svg, 18);
-              drawSVGBar(q10, false, svg, 252);
-          } else if (q.parts === 20 && q.mode === 'direct') {
-              svg.setAttribute("viewBox", "0 0 1000 520");
-              let q10 = { ...q, parts: 10, activeParts: 0, percent: 10, calcVal: parseFloat((q.totalVal / 10).toFixed(2)) };
-              drawSVGBar(q10, false, svg, 18);
-              drawSVGBar(q, false, svg, 252);
-          } else {
-              svg.setAttribute("viewBox", "0 0 1000 320");
-              if(q.parts === 100) draw100Parts(q, false, svg); 
-              else if (q.parts === 2 && q.mode === 'direct') drawSVGBar(q, false, svg, 18);
-              else if (q.parts === 10 && q.mode === 'direct') drawSVGBar(q, false, svg, 18);
-              else drawSVGBar(q, false, svg, 0);
-          }
-          svgWrap.appendChild(svg); qDiv.appendChild(svgWrap);
+          appendQuestionDiagrams(q, false, qDiv);
         } else {
           qDiv.innerHTML += `<div class="spacer-reponse"></div>`;
         }
@@ -1434,38 +1416,8 @@
           <div class="print-c-text">✅ ${q.cHtml}</div>
         `;
         
-        let svgWrap = document.createElement('div'); svgWrap.className = "stage-wrap";
-        let svg = document.createElementNS(svgNS, "svg"); 
-        if (q.mode === 'evo_inc' || q.mode === 'evo_dec') {
-            svg.setAttribute("viewBox", "0 0 1000 380");
-            drawEvolutionBar(q, true, svg, 0);
-        } else if (q.mode === 'find_percent' || q.mode === 'find_total') {
-            svg.setAttribute("viewBox", "0 0 1000 320");
-            drawSVGBar(q, true, svg, 18);
-        } else if (q.parts === 4 && q.mode === 'direct') {
-            svg.setAttribute("viewBox", "0 0 1000 520");
-            let q50 = { ...q, parts: 2, activeParts: 0, percent: 50, calcVal: q.totalVal / 2 };
-            drawSVGBar(q50, true, svg, 18);
-            drawSVGBar(q, true, svg, 252);
-        } else if (q.parts === 5 && q.mode === 'direct') {
-            svg.setAttribute("viewBox", "0 0 1000 520");
-            let q10 = { ...q, parts: 10, activeParts: 0, percent: 10, calcVal: parseFloat((q.totalVal / 10).toFixed(2)) };
-            drawSVGBar(q, true, svg, 18);
-            drawSVGBar(q10, true, svg, 252);
-        } else if (q.parts === 20 && q.mode === 'direct') {
-            svg.setAttribute("viewBox", "0 0 1000 520");
-            let q10 = { ...q, parts: 10, activeParts: 0, percent: 10, calcVal: parseFloat((q.totalVal / 10).toFixed(2)) };
-            drawSVGBar(q10, true, svg, 18);
-            drawSVGBar(q, true, svg, 252);
-        } else {
-            svg.setAttribute("viewBox", "0 0 1000 320");
-            if(q.parts === 100) draw100Parts(q, true, svg); 
-            else if (q.parts === 2 && q.mode === 'direct') drawSVGBar(q, true, svg, 18);
-            else if (q.parts === 10 && q.mode === 'direct') drawSVGBar(q, true, svg, 18);
-            else drawSVGBar(q, true, svg, 0);
-        }
-        svgWrap.appendChild(svg); qDiv.appendChild(svgWrap);
-        
+        appendQuestionDiagrams(q, true, qDiv);
+
         page2.appendChild(qDiv);
       });
       container.appendChild(page2);
