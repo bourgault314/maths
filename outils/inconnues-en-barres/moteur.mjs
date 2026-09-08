@@ -104,7 +104,7 @@ export function parcours(p,methode=methodes(p)[0].id) {
   if(!methodes(p).some(m=>m.id===methode))throw new RangeError('Méthode non disponible pour cet exercice.');
   const {A,B,C}=p.valeurs,{m,n,k,d,r,T,U}=p, f=[];
   f.push(frame(0,'À toi de chercher','Lis les données. Qu’est-ce qui reste à trouver ?'));
-  f.push({...frame(1,'Construire le schéma','Place les données dans ces cases. Les cases qui portent le même objet représentent la même quantité.',p.donnees),vide:true});
+  f.push({...frame(1,'Construire le schéma','Comment compléter ces cases ? Propose un schéma sur ton cahier ou à l’oral, puis révèle les données.',p.donnees),vide:true});
   f.push(frame(1,'Les données représentées','Chaque ligne décrit une même quantité de deux façons.',p.donnees));
   const add=(phase,title,text,rows=[],calcs=[],answers=[])=>f.push(frame(phase,title,text,rows,calcs,answers));
   const solve=(s,value,calcs,explanation)=>add(3,`Trouver ${objet(p,s).article} ${objet(p,s).nom}`,explanation,[eq([S(s)],value)],calcs,[s]);
