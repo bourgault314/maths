@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Inconnues en barres | maths&amp;go</title>
+  <meta name="description" content="Résolvez des problèmes à une, deux ou trois inconnues avec des schémas en barres, par substitution ou combinaison. Projection et fiches à imprimer.">
+  <link rel="canonical" href="https://mathsgo.re/outils/inconnues-en-barres/">
+  <meta name="robots" content="index, follow, max-image-preview:large">
+  <link rel="icon" href="/favicon.ico" sizes="48x48">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="./style.css">
+  <script type="module" src="./app.mjs"></script>
+  <script defer src="/assets/js/tool-parent-navigation.js"></script>
+</head>
+<body data-mathsgo-parent-href="/outils/index.html?domain=algebre&amp;notion=schemas-barres" data-mathsgo-parent-link="#retour" data-mathsgo-parent-label="Schémas en barres">
+  <a class="evitement" href="#scene">Aller au problème</a>
+  <div id="application">
+    <header class="app-header">
+      <a class="brand" href="/" aria-label="Accueil maths&go"><img src="/assets/img/logos/mathsgo/logo-390.png" alt="maths&go" width="195" height="91"></a>
+      <div class="app-titre"><a id="retour" href="/outils/index.html?domain=algebre&amp;notion=schemas-barres">← Schémas en barres</a><h1>Inconnues en barres</h1></div>
+      <div class="header-actions"><button id="settingsBtn" aria-expanded="false" aria-controls="reglages">Réglages</button><button id="printBtn">Imprimer</button><button id="fullscreenBtn" title="Agrandir pour la projection">Plein écran</button></div>
+    </header>
+    <div class="atelier">
+      <aside id="reglages" class="reglages" aria-label="Réglages du problème" hidden>
+        <div class="reglages-entete"><h2>Préparer le problème</h2><button id="closeSettings" aria-label="Fermer les réglages">✕</button></div>
+        <fieldset><legend>Le problème</legend>
+          <label for="family">Type de problème</label><select id="family"></select>
+          <label for="level">Progression</label><select id="level"><option value="0">1 · Découvrir</option><option value="1">2 · S’entraîner</option><option value="2">3 · Approfondir</option></select><p id="levelHelp" class="aide-reglage"></p>
+          <label for="context">Contexte</label><select id="context"></select>
+        </fieldset>
+        <fieldset id="methodGroup"><legend>La résolution</legend><label for="method">Méthode</label><select id="method"></select><p id="methodHelp" class="aide-reglage"></p></fieldset>
+        <fieldset><legend>L’affichage</legend><label for="style">Écritures associées</label><select id="style"><option value="barres">Schémas seuls</option><option value="pictos">Schémas + pictogrammes</option><option value="lettres">Schémas + lettres</option><option value="tout">Toutes les écritures</option></select>
+          <label class="check"><input type="checkbox" id="projection"> Grands caractères</label>
+        </fieldset>
+        <details id="teacher"><summary>Repères pour l’enseignant</summary><div id="teacherInfo"></div><p>Les lettres désignent des quantités, dans l’unité de l’énoncé. Les schémas sont proportionnels ; on justifie les calculs à partir des données.</p><p>Les regroupements « n × » comptent des objets identiques. Les grandes situations ne multiplient pas les petites cases illisibles.</p><p><a href="./guide.html" target="_blank" rel="noopener">Progression et mode d’emploi</a></p></details>
+        <details><summary>Retrouver un exercice</summary><form id="restoreForm"><label for="exerciseId">Identifiant de la fiche</label><input id="exerciseId" autocomplete="off" placeholder="IB1-000-…" maxlength="20"><button type="submit">Ouvrir cet exercice</button></form><label for="historySelect">Exercices de cette séance</label><select id="historySelect"><option value="">Choisir…</option></select></details>
+        <p class="aide-reglage">Les réglages de type, de niveau et de contexte créent un nouvel exercice.</p>
+      </aside>
+      <main id="scene" tabindex="-1">
+        <div class="scene-heading"><div><p class="eyebrow" id="familyLabel"></p><p class="exercise-ref" id="reference"></p></div><div class="scene-actions"><button id="restartBtn" title="Reprendre le même problème au début">Recommencer</button><button class="primary" id="newBtn">Nouveau problème</button></div></div>
+        <nav class="etapes" aria-label="Étapes de résolution" id="steps"></nav>
+        <section class="enonce" aria-label="Énoncé du problème" id="statement"></section>
+        <section class="travail" aria-labelledby="frameTitle"><div class="travail-heading"><span id="phaseLabel" class="etiquette"></span><span id="progressText" class="progress-text"></span></div><h2 id="frameTitle"></h2><p id="frameText" class="instruction"></p><div id="board"></div></section>
+        <nav class="navigation" aria-label="Avancer dans le raisonnement"><button id="prevBtn">← Précédent</button><p id="nextHint"></p><button id="nextBtn" class="primary">Suivant →</button></nav>
+        <footer class="app-footer"><a href="/outils/splat/index.html">Poursuivre avec Splat</a><span>maths&go · Gwenaël Bourgault</span><button id="shareBtn">Copier le lien de l’exercice</button></footer>
+      </main>
+    </div>
+    <p class="status" id="status" role="status" aria-live="polite"></p>
+    <dialog id="printDialog" aria-labelledby="printTitle"><form method="dialog"><button class="fermer-dialog" aria-label="Fermer">✕</button></form><h2 id="printTitle">Imprimer cet exercice</h2><p>La fiche garde exactement les données de l’écran.</p><label for="printType">Document</label><select id="printType"><option value="enonce">Énoncé et espace de recherche</option><option value="guidee" selected>Fiche guidée, schémas à compléter</option><option value="corrige">Corrigé avec toutes les étapes</option></select><div class="dialog-actions"><button id="previewPrint">Aperçu</button><button id="doPrint" class="primary">Imprimer</button></div><p class="aide-reglage">Format A4. Les objets sont aussi identifiés dans le texte pour une lecture en noir et blanc.</p></dialog>
+    <dialog id="previewDialog" class="preview-dialog" aria-label="Aperçu de la fiche"><div class="preview-actions"><button id="closePreview">Fermer l’aperçu</button><button id="printPreview" class="primary">Imprimer cette fiche</button></div><div id="printPreviewContent"></div></dialog>
+  </div>
+  <div id="printRoot"></div>
+  <noscript>Active JavaScript pour utiliser cette application de résolution de problèmes.</noscript>
+</body>
+</html>

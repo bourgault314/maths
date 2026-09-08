@@ -195,6 +195,14 @@ window.MATHSGO_CATALOGUE = {
     }
   ],
   "resourceClassifications": {
+    "outils/inconnues-en-barres/index.html": {
+      "primaryNotion": "schemas-barres",
+      "primaryGroup": "generer",
+      "thumbnail": "assets/img/thumbnails/schemas-barres/inconnues.svg?v=1",
+      "collections": ["splat"],
+      "tags": ["schema-barres", "inconnues", "substitution", "combinaison", "equations"],
+      "cardDescription": "Chercher une, deux ou trois quantités inconnues, remplacer ou comparer les lots, puis vérifier. Schémas, pictogrammes, lettres et fiches."
+    },
     "https://www.youtube.com/watch?v=_ubBAAgLiok": {
       "primaryNotion": "numeration",
       "primaryGroup": "cours",
@@ -1879,6 +1887,22 @@ window.MATHSGO_CATALOGUE = {
     }
   ],
   "resources": [
+    {
+      "id": "inconnues-en-barres",
+      "title": "Inconnues en barres",
+      "description": "Résolvez des problèmes à une, deux ou trois inconnues avec des schémas en barres, par substitution ou combinaison. Projection et fiches à imprimer.",
+      "path": "outils/inconnues-en-barres/index.html",
+      "domains": ["algebre"],
+      "notions": ["schemas-barres", "equations", "calcul-litteral"],
+      "uses": ["projeter", "imprimer", "entrainer"],
+      "types": ["generateur"],
+      "filters": ["generateur-exercices"],
+      "keywords": ["inconnue", "système", "deux inconnues", "trois inconnues", "substitution", "combinaison", "schémas en barres", "préalgèbre", "cycle 3", "cycle 4"],
+      "kind": "tool",
+      "status": "published",
+      "featured": false,
+      "recent": true
+    },
     {
       "id": "reference-gerbert-video-origine",
       "title": "L’abaque de Gerbert — origine, histoire, utilisation",

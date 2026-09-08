@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 400" role="img" aria-label="Inconnues en barres : comparer A plus trois B et A plus B">
+<rect width="640" height="400" fill="#f3f7fc"/>
+<text x="36" y="46" font-family="system-ui,sans-serif" font-size="24" font-weight="750" fill="#193b5d">Inconnues en barres</text>
+<text x="36" y="76" font-family="system-ui,sans-serif" font-size="15" fill="#526b81">Des objets aux équations</text>
+<g stroke="#637b92" stroke-width="1.5"><path fill="#ecf9ef" d="M36 105h568v58H36z"/><path fill="#ffe8cc" d="M36 163h168v74H36z"/><path fill="#d9eaff" d="M204 163h133v74H204zm133 0h133v74H337zm133 0h134v74H470z"/><path fill="#ecf9ef" d="M36 267h301v48H36z"/><path fill="#ffe8cc" d="M36 315h168v58H36z"/><path fill="#d9eaff" d="M204 315h133v58H204z"/></g>
+<g font-family="Georgia,serif" font-style="italic" font-weight="700" font-size="34" text-anchor="middle" fill="#193b5d"><text x="120" y="211">A</text><text x="271" y="211">B</text><text x="404" y="211">B</text><text x="537" y="211">B</text><text x="120" y="355">A</text><text x="271" y="355">B</text></g>
+<g font-family="system-ui,sans-serif" font-weight="750" fill="#265c3e" font-size="30" text-anchor="middle"><text x="320" y="145">17</text><text x="186" y="301">9</text></g>
+<path d="M345 177h245v46H345z" fill="none" stroke="#246cd0" stroke-width="3"/>
+<text x="467" y="310" font-family="system-ui,sans-serif" font-size="22" font-weight="700" text-anchor="middle" fill="#2460a0">2B = 17 − 9</text>
+<text x="467" y="347" font-family="system-ui,sans-serif" font-size="25" font-weight="750" text-anchor="middle" fill="#bd3d33">B = 4</text>
+</svg>
