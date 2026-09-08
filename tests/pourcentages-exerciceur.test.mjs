@@ -271,6 +271,52 @@ test('toutes les familles se parcourent dans les deux sens, jusque « Terminé �
   assert.equal(el('btnPrev').disabled, true);
 });
 
+test('ouvrir l’aide conserve le cadrage et la géométrie du grand tableau', () => {
+  // Le défaut venait aussi de la limite CSS de 25vh appliquée à l'ouverture.
+  // Aucun réglage de taille des SVG ne doit dépendre de cet état.
+  const css = source.match(/<style>([\s\S]*?)<\/style>/)[1];
+  for (const [, selectors, declarations] of css.matchAll(/([^{}]+)\{([^{}]*)\}/g)) {
+    if (selectors.includes('.help-open') && /\bsvg\b/.test(selectors)) {
+      assert.doesNotMatch(declarations, /\b(?:max-height|max-width|width|height|transform|scale)\s*:/);
+    }
+  }
+  const { api, el } = runtime();
+  const geometry = stage => descendants(stage, 'rect').map(rect => ({ ...rect.attributes }));
+  for (const [type, total] of [['base_25', 140], ['base_20', 140], ['base_5', 140]]) {
+    const q = { ...api.createQuestion(type, 1, false), totalVal: total, phase: 1 };
+    api.setData([q]);
+    const before = geometry(el('svgStage'));
+    const closedViewBox = el('svgStage').getAttribute('viewBox');
+    assert.match(el('diapoContainer').className, /layout-help/);
+    api.toggle();
+    assert.deepEqual(geometry(el('svgStage')), before);
+    assert.equal(el('svgStage').getAttribute('viewBox'), closedViewBox);
+    assert.equal(el('helpStage').getAttribute('viewBox'), closedViewBox);
+    for (const stage of [el('svgStage'), el('helpStage')]) {
+      const [left, top, width, height] = stage.getAttribute('viewBox').split(' ').map(Number);
+      assert.equal(width, 1000); // La largeur initiale est conservée.
+      assert.ok(height < 160); // Les deux rangées ne gardent pas 200 unités de vide.
+      const rects = geometry(stage);
+      assert.equal(rects[0].width, '800');
+      for (const rect of rects) {
+        const halfStroke = Number(rect['stroke-width']) / 2;
+        assert.ok(Number(rect.x) - halfStroke >= left);
+        assert.ok(Number(rect.y) - halfStroke >= top);
+        assert.ok(Number(rect.x) + Number(rect.width) + halfStroke <= left + width);
+        assert.ok(Number(rect.y) + Number(rect.height) + halfStroke <= top + height);
+      }
+    }
+    api.nextAction();
+    assert.equal(el('svgStage').getAttribute('viewBox'), closedViewBox);
+    assert.equal(el('helpStage').getAttribute('viewBox'), closedViewBox);
+    api.toggle();
+    assert.equal(el('svgStage').getAttribute('viewBox'), closedViewBox);
+  }
+  api.setData([{ ...api.createQuestion('base_50', 1, false), phase: 1 }]);
+  assert.doesNotMatch(el('diapoContainer').className, /layout-help/);
+  assert.equal(el('svgStage').getAttribute('viewBox'), '0 0 1000 320');
+});
+
 test('l’impression suit les aides choisies et ne révèle rien dans les gabarits élèves', () => {
   const run = runtime();
   const { api, el, configure } = run;
@@ -284,6 +330,7 @@ test('l’impression suit les aides choisies et ne révèle rien dans les gabari
   assert.equal(descendants(sheet, 'svg').length, 4);
   assert.equal(descendants(correction, 'svg').length, 4);
   for (const svg of descendants(sheet, 'svg')) assert.equal(descendants(svg, 'text').length, 1);
+  for (const svg of descendants(sheet, 'svg')) assert.equal(svg.getAttribute('viewBox'), '0 0 1000 320');
   for (const svg of descendants(correction, 'svg')) assert.ok(descendants(svg, 'text').length > 1);
   assert.equal(JSON.stringify(api.data), before);
   assert.equal(api.seed, seed);
