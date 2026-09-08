@@ -94,17 +94,27 @@
     .thumb-btn.done { background: var(--success); color: white; border-color: var(--success); }
 
     /* CSS PLEIN ECRAN STABLE */
-    #diapoContainer:fullscreen { max-width: none; width: 100vw; height: 100vh; border-radius: 0; border: none; justify-content: flex-start; overflow-y: auto; background: white;}
-    #diapoContainer:-webkit-full-screen { max-width: none; width: 100vw; height: 100vh; border-radius: 0; border: none; justify-content: flex-start; overflow-y: auto; background: white;}
+    #diapoContainer:fullscreen { max-width: none; width: 100vw; height: 100vh; margin: 0; border-radius: 0; border: none; justify-content: flex-start; overflow-y: auto; background: white;}
+    #diapoContainer:-webkit-full-screen { max-width: none; width: 100vw; height: 100vh; margin: 0; border-radius: 0; border: none; justify-content: flex-start; overflow-y: auto; background: white;}
     #diapoContainer:fullscreen .thumbnails-bar { display: none !important; }
     #diapoContainer:-webkit-full-screen .thumbnails-bar { display: none !important; }
     
     #diapoContainer:fullscreen svg { max-height: 75vh; max-width: 1200px; }
     #diapoContainer:-webkit-full-screen svg { max-height: 75vh; max-width: 1200px; }
 
-    #diapoContainer.help-open:fullscreen svg { max-height: 25vh; }
-    #diapoContainer.help-open:-webkit-full-screen svg { max-height: 25vh; }
-    #diapoContainer.help-open .correction-box { margin-top: 0; }
+    /* La même échelle, que l'aide soit ouverte ou fermée. Les SVG de ces
+       questions sont cadrés autour des cases, sans leurs marges blanches. */
+    #diapoContainer.layout-help > * { flex-shrink: 0; }
+    #diapoContainer.layout-help .question-box { padding-block: 12px 6px; }
+    #diapoContainer.layout-help .hint-box { padding-block: 4px 0; gap: 8px; }
+    #diapoContainer.layout-help svg { display: block; max-height: none; }
+    #diapoContainer.layout-help .help-caption { margin: 0 0 6px; }
+    #diapoContainer.layout-help .correction-box { padding-block: 6px 10px; margin-top: 0; }
+    #diapoContainer.layout-help .correction-text br + br { display: none; }
+    #diapoContainer.layout-help:fullscreen .question-text { font-size: clamp(1.25rem, 3.7vh, 2.5rem); line-height: 1.18; }
+    #diapoContainer.layout-help:-webkit-full-screen .question-text { font-size: clamp(1.25rem, 3.7vh, 2.5rem); line-height: 1.18; }
+    #diapoContainer.layout-help:fullscreen .correction-text { font-size: clamp(1.125rem, 3.2vh, 2.2rem); line-height: 1.16; }
+    #diapoContainer.layout-help:-webkit-full-screen .correction-text { font-size: clamp(1.125rem, 3.2vh, 2.2rem); line-height: 1.16; }
 
     #diapoContainer.layout-shift-50 .hint-box { padding: 6px 40px 0 40px; }
     #diapoContainer.layout-shift-50 .correction-box { padding: 0 40px 10px 40px; margin-top: -18px; }
@@ -1279,10 +1289,10 @@
       };
     }
 
-    function drawQuestionDiagram(q, isCorrection, stage) {
+    function drawQuestionDiagram(q, isCorrection, stage, compact = false) {
       emptyElement(stage);
       const evolution = q.mode === 'evo_inc' || q.mode === 'evo_dec';
-      stage.setAttribute('viewBox', evolution ? '0 0 1000 380' : '0 0 1000 320');
+      stage.setAttribute('viewBox', evolution ? '0 0 1000 380' : compact ? '0 50 1000 136' : '0 0 1000 320');
       if (evolution) drawEvolutionBar(q, isCorrection, stage, 0);
       else if (q.parts === 100) draw100Parts(q, isCorrection, stage);
       else drawSVGBar(q, isCorrection, stage, 18);
@@ -1303,13 +1313,14 @@
       document.getElementById('qText').innerHTML = q.qHtml;
       document.getElementById('btnPrev').disabled = (currentIndex === 0 && q.phase === 0);
       btnNext.disabled = q.phase === 2 && currentIndex === quizData.length - 1;
-      for (const name of ['layout-shift-50', 'layout-shift-10', 'layout-evo', 'layout-find-percent', 'layout-find-total', 'help-open']) container.classList.remove(name);
+      for (const name of ['layout-shift-50', 'layout-shift-10', 'layout-evo', 'layout-find-percent', 'layout-find-total', 'layout-help', 'help-open']) container.classList.remove(name);
 
       const stage = document.getElementById('svgStage');
       const helpStage = document.getElementById('helpStage');
       const helpButton = document.getElementById('btnHelp');
       const helpPanel = document.getElementById('calculationHelp');
       const help = getCalculationHelp(q);
+      if (help) container.classList.add('layout-help');
       const showHelp = q.phase > 0 && Boolean(help) && q.helpOpen;
       emptyElement(stage);
       emptyElement(helpStage);
@@ -1329,10 +1340,10 @@
         else if (q.mode === 'find_total') container.classList.add('layout-find-total');
         else if (q.parts === 2) container.classList.add('layout-shift-50');
         else if (q.parts === 10) container.classList.add('layout-shift-10');
-        drawQuestionDiagram(q, q.phase === 2, stage);
+        drawQuestionDiagram(q, q.phase === 2, stage, Boolean(help));
         if (showHelp) {
           container.classList.add('help-open');
-          drawQuestionDiagram(help.diagram, q.phase === 2, helpStage);
+          drawQuestionDiagram(help.diagram, q.phase === 2, helpStage, true);
         }
         btnNext.innerHTML = q.phase === 1 ? 'Correction 👀 ►' : btnNext.disabled ? 'Terminé ✓' : 'Question suiv. ►';
       }
