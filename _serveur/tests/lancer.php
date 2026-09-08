@@ -537,6 +537,59 @@ verifier("une activité OUVERTE n'est jamais annoncée à une classe qui ne l'a 
     }
 });
 
+// ------------------------------------------------------------------------
+// Lot « cohérence des sorties » (08/09/2026). L'espace élève existe pour que
+// les élèves n'aillent pas sur mathsgo.re. Le pied de la page les y renvoyait
+// depuis la première version, vers une page de confidentialité écrite pour un
+// visiteur du site, qui les déposait ensuite sur l'accueil du site. Tout ce
+// qui les concerne est maintenant dit dans une page à eux, sans sortie.
+
+verifier("le pied de l'espace élève ne renvoie plus sur le site", function () {
+    $r = page('/');
+    egal(200, $r['code'], 'code HTTP');
+    vrai((bool)preg_match('#<footer>(.*?)</footer>#s', $r['texte'], $m), 'la page doit avoir un pied');
+    preg_match_all('/href="([^"]+)"/', $m[1], $liens);
+    egal(['infos.php'], $liens[1], 'un seul lien dans le pied, et il reste dans l’espace');
+    vrai(!str_contains($r['texte'], 'https://mathsgo.re'),
+        'plus aucune adresse du site dans la page de l’espace élève');
+});
+
+verifier("la page Infos répond, sans une seule porte de sortie", function () {
+    $r = page('/infos.php');
+    egal(200, $r['code'], 'code HTTP');
+    egal('no-store', entete($r, 'Cache-Control'), 'Cache-Control');
+    egal('nosniff', entete($r, 'X-Content-Type-Options'), 'nosniff');
+    egal('DENY', entete($r, 'X-Frame-Options'), 'X-Frame-Options');
+    egal('max-age=31536000', entete($r, 'Strict-Transport-Security'), 'HSTS');
+    vrai(str_contains($r['texte'], '← Retour à mon espace'), 'le bouton de retour');
+    vrai(str_contains($r['texte'], 'OVH SAS'), 'l’hébergeur de CE sous-domaine, pas celui du site');
+
+    // Aucun lien vers un autre domaine : les adresses du site sont écrites en
+    // texte. « mailto: » est la seule exception, et elle ne fait sortir
+    // personne — elle ouvre la messagerie de l’appareil par-dessus la page.
+    preg_match_all('/href="([^"]+)"/', $r['texte'], $liens);
+    foreach ($liens[1] as $lien) {
+        vrai(!preg_match('#^https?://#', $lien), "la page Infos ne doit pas sortir : $lien");
+    }
+    vrai(in_array('./', $liens[1], true), 'le retour à l’espace');
+
+    // Le mot « compte » est le cœur du problème : la page du site dit
+    // « maths&go ne crée pas de compte élève » à un enfant qui se croit
+    // connecté à un compte. Ici on dit « espace », et « compte » n’apparaît
+    // que dans la phrase qui explique que ce n’en est pas un.
+    $corps = substr($r['texte'], (int)strpos($r['texte'], '<body>'));
+    egal(1, preg_match_all('/\bcomptes?\b/u', $corps), 'le mot « compte » n’apparaît qu’une fois');
+    vrai(str_contains($corps, 'Ce n’est pas un compte'), 'et c’est pour dire que ce n’en est pas un');
+});
+
+verifier("le manifeste connaît la page Infos", function () {
+    $manifeste = (string)file_get_contents(__DIR__ . '/../public/VERSION');
+    vrai((bool)preg_match('/^[0-9a-f]{64}  infos\.php$/m', $manifeste),
+        'infos.php doit figurer au manifeste : sans lui, verifier.php ne dirait pas si la page déposée est la bonne');
+    vrai((bool)preg_match('/^fichiers 28$/m', $manifeste),
+        'le serveur compte 28 fichiers depuis l’ajout de la page Infos');
+});
+
 verifier("la page élève refuse un code inconnu ou mal formé", function () {
     egal(404, identite('ZZZZZZ')['code'], 'code HTTP');
     egal(400, identite('AB')['code'], 'code HTTP');
@@ -1777,8 +1830,8 @@ verifier("les en-têtes de sécurité sortent sur chaque réponse de l'API, réu
     }
 });
 
-verifier("l'espace élève et Ma classe envoient une politique de contenu à nonce, posé sur leur script", function () {
-    foreach (['/' => 1, '/prof/' => 1] as $chemin => $scriptsEnLigne) {
+verifier("l'espace élève, la page Infos et Ma classe envoient une politique de contenu à nonce, posé sur leur script", function () {
+    foreach (['/' => 1, '/prof/' => 1, '/infos.php' => 0] as $chemin => $scriptsEnLigne) {
         $r = page($chemin);
         egal(200, $r['code'], "$chemin");
         $csp = entete($r, 'Content-Security-Policy');
