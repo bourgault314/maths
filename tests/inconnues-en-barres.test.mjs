@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import vm from 'node:vm';
+import {readFileSync} from 'node:fs';
 import {FAMILLES,CONTEXTES,generer,depuisIdentifiant,methodes,parcours,evaluer,verifierEssai,enonce} from '../outils/inconnues-en-barres/moteur.mjs';
 import {renduFrame,renduImpression,equationTexte} from '../outils/inconnues-en-barres/affichage.mjs';
 
@@ -72,4 +73,15 @@ test('Les égalités affichées dans les calculs sont vraies, y compris en subst
       assert.equal(vm.runInNewContext(g,p.valeurs),vm.runInNewContext(d,p.valeurs),`${p.id} : ${c}`);
     }
   }
+});
+test('La carte est réellement visible dans Schémas en barres, comme application autonome',()=>{
+  const window={};vm.runInNewContext(readFileSync(new URL('../assets/js/catalogue-refonte-data.js',import.meta.url),'utf8'),{window});
+  const catalogue=window.MATHSGO_CATALOGUE,source=readFileSync(new URL('../assets/js/catalogue-refonte.js',import.meta.url),'utf8');
+  const noms=['resourceClassification','resourceBelongsToNotion','resourceCollections','resourceBelongsToCollapsedCollection','matchingResources'];
+  const code=noms.map(n=>{const f=source.match(new RegExp('  function '+n+'\\([^]*?\\n  \\}'));assert.ok(f,n);return f[0];}).join('\n');
+  const ctx={catalogue,resourceClassifications:catalogue.resourceClassifications,collectionMap:new Map(catalogue.collections.map(c=>[c.id,c])),published:catalogue.resources.filter(r=>r.status==='published'),state:{domain:'algebre',notion:'schemas-barres',collection:'',query:''}};
+  vm.runInNewContext(code+'\nresultat=matchingResources();',ctx);
+  assert.ok(ctx.resultat.some(r=>r.path==='outils/inconnues-en-barres/index.html'));
+  assert.doesNotMatch(readFileSync(new URL('../outils/splat/index.html',import.meta.url),'utf8'),/href="\.\.\/inconnues-en-barres\/index\.html"/);
+  assert.doesNotMatch(readFileSync(new URL('../outils/inconnues-en-barres/index.html',import.meta.url),'utf8'),/Poursuivre avec Splat/);
 });

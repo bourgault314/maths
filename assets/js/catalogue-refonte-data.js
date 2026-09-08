@@ -199,7 +199,7 @@ window.MATHSGO_CATALOGUE = {
       "primaryNotion": "schemas-barres",
       "primaryGroup": "generer",
       "thumbnail": "assets/img/thumbnails/schemas-barres/inconnues.svg?v=1",
-      "collections": ["splat"],
+      "collections": [],
       "tags": ["schema-barres", "inconnues", "substitution", "combinaison", "equations"],
       "cardDescription": "Chercher une, deux ou trois quantités inconnues, remplacer ou comparer les lots, puis vérifier. Schémas, pictogrammes, lettres et fiches."
     },
