@@ -140,10 +140,15 @@ $nonce = entetes_page();
   </section>
 </main>
 
+<!-- 08/09/2026 : le pied ne propose plus qu'une seule chose, et elle reste
+     ici. Il offrait auparavant deux sorties vers mathsgo.re, dont une page de
+     confidentialité écrite pour un visiteur du site — elle parle de cookies et
+     de mesure d'audience, elle dit « maths&go ne crée pas de compte élève » à
+     un enfant qui se croit connecté, et son bouton « Retour à l'accueil » le
+     déposait sur l'accueil du site. La licence n'est plus rappelée ici :
+     l'espace est un service, pas un document ; elle est dite dans infos.php. -->
 <footer>
-  <a href="https://mathsgo.re/">mathsgo.re</a> ·
-  <a href="https://mathsgo.re/confidentialite.html">Confidentialité</a> ·
-  CC BY-NC-SA 4.0
+  <a href="infos.php">Infos et confidentialité</a>
 </footer>
 
 <script nonce="<?= htmlspecialchars($nonce, ENT_QUOTES) ?>">
@@ -405,10 +410,12 @@ $nonce = entetes_page();
     ouvrir(code, false);
   });
 
-  // « Se déconnecter » (lot 7 : le même mot que dans l'appli, un seul geste à
-  // apprendre). Le code est oublié, et RIEN du précédent élève ne reste dans la
-  // page : ni son prénom, ni sa classe, ni ses activités.
-  $("changer").addEventListener("click", () => {
+  // Le retour à l'écran du code. Le code est oublié, et RIEN du précédent
+  // élève ne reste dans la page : ni son prénom, ni sa classe, ni ses
+  // activités. Une seule fonction, appelée par deux chemins (le bouton, et le
+  // retour d'un cache ci-dessous) : deux ménages écrits séparément, c'est un
+  // jour où l'un des deux oublie une ligne.
+  function revenirAuCode() {
     ecrireCode("");
     $("code").value = "";
     $("titre").textContent = "Mon espace";
@@ -419,7 +426,27 @@ $nonce = entetes_page();
     afficherErreur("");
     $("ecran-espace").hidden = true;
     $("ecran-code").hidden = false;
+  }
+
+  // « Se déconnecter » (lot 7 : le même mot que dans l'appli, un seul geste à
+  // apprendre).
+  $("changer").addEventListener("click", () => {
+    revenirAuCode();
     $("code").focus();
+  });
+
+  // Le bouton « précédent » après une déconnexion (08/09/2026). Chrome garde
+  // une page entière dans un cache arrière/avant et la RESSORT telle quelle,
+  // sans réexécuter le script — y compris quand la réponse dit « no-store »,
+  // tant qu'aucun cookie n'entre en jeu, et l'espace n'en pose aucun. L'écran
+  // du précédent élève, prénom et activités compris, pouvait donc revenir sans
+  // qu'un code ait été retapé. « persisted » ne vaut vrai QUE dans ce cas ; le
+  // sessionStorage, lui, dit la vérité de l'onglet, et « Se déconnecter » l'a
+  // vidé. Pas de code : on refait le ménage.
+  window.addEventListener("pageshow", event => {
+    if (!event.persisted) return;
+    if (nettoyer(lireCode()).length === 6) return;
+    revenirAuCode();
   });
 
   if (oublierSiDemande()) {

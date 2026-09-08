@@ -988,6 +988,12 @@
 
     .site-footer button { cursor: pointer; }
 
+    /* Le pied d'un élève suivi (08/09/2026) : deux liens au lieu de cinq
+       éléments, et des cibles qu'un doigt trouve sur une tablette. Le pied du
+       site garde sa mise en page serrée — cette règle ne s'applique qu'au pied
+       reconstruit pour l'espace élève. */
+    .site-footer.pied-espace a { padding: 15px 10px; }
+
     html.fullscreen-fallback { width: 100%; height: 100%; overflow: hidden; }
     html.fullscreen-fallback body {
       position: fixed;
@@ -1796,6 +1802,47 @@
         logoHref: SUIVI_URL + "/",
         logoAria: "Retour à mon espace"
       };
+      // Le pied de page (08/09/2026). Celui du site propose « Me contacter »,
+      // « Mentions légales », « Confidentialité » et « Licence » : quatre
+      // portes de plus par lesquelles un élève sort de son espace, vers des
+      // pages écrites pour un visiteur du site. Pour lui — et pour lui seul —
+      // le pied devient deux liens qui restent chez lui. Rien ne change pour
+      // les autres visiteurs : sans code, cette fonction ne touche à rien.
+      //
+      // Le remplacement ne se défait pas : un élève arrivé de son espace en
+      // vient toujours, même si son billet a été refusé ou si son code a été
+      // détaché en cours de route — c'est justement là qu'il faut un chemin de
+      // retour. Et il ne se fait qu'une fois (majLienRetour est appelée à
+      // chaque redessin).
+      let piedRefait = false;
+      function majPiedDePage(versEspace) {
+        if (!versEspace || piedRefait) return;
+        const pied = document.querySelector("footer.site-footer");
+        if (!pied) return;
+        const lien = (adresse, texte) => {
+          const a = document.createElement("a");
+          a.href = adresse;
+          a.textContent = texte;
+          return a;
+        };
+        const separateur = document.createElement("span");
+        separateur.setAttribute("aria-hidden", "true");
+        separateur.textContent = "·";
+        const infos = lien(SUIVI_URL + "/infos.php", "Infos et confidentialité");
+        // PIÈGE, trouvé en relisant l'ordre d'exécution. mention-confidentialite.js
+        // (chargé en « defer », donc APRÈS ce script) pose de lui-même, en bas de
+        // page, « Sans cookie ni traceur · Confidentialité » — un lien de plus vers
+        // le site — SAUF si la page porte déjà un élément marqué
+        // « data-mathsgo-confidentialite ». Le pied d'origine en portait un ; en le
+        // remplaçant sans le remarquer, on rouvrait la porte qu'on venait de fermer.
+        // Le lien Infos reprend donc la marque : c'est bien lui, ici, la mention de
+        // confidentialité de la page.
+        infos.setAttribute("data-mathsgo-confidentialite", "");
+        pied.replaceChildren(lien(SUIVI_URL + "/", "Mon espace"), separateur, infos);
+        pied.classList.add("pied-espace");
+        piedRefait = true;
+      }
+
       function majLienRetour() {
         // Un élève dont le billet a été refusé vient quand même de son espace.
         const vers = suiviActif() || entreeRefusee ? RETOUR_ESPACE : RETOUR_CATALOGUE;
@@ -1804,6 +1851,7 @@
         // l'évaluation CM1 — la classe est lue par le CSS (body.mode-eleve).
         // Aucun paramètre d'adresse : c'est le code, et lui seul, qui le dit.
         if (document.body) document.body.classList.toggle("mode-eleve", Boolean(suiviActif() || entreeRefusee));
+        majPiedDePage(vers === RETOUR_ESPACE);
         // Le logo suit la même règle que le lien du haut. C'était la dernière
         // porte qui faisait sortir un élève suivi de son espace : pour lui, le
         // logo ramène à son espace, pas à l'accueil du site. Pour tous les

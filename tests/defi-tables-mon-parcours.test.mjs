@@ -930,14 +930,27 @@ test("le lien du haut ramène l’élève suivi à son espace, les autres au cat
       attributs: {},
       setAttribute(nom, valeur) { this.attributs[nom] = valeur; }
     };
+    // Le pied de page du site, tel qu'il est dans la page : on ne regarde pas
+    // ce qu'il contient au départ, seulement ce que la fonction en fait.
+    const pied = {
+      enfants: null,
+      classes: new Set(),
+      classList: {add: c => pied.classes.add(c)},
+      replaceChildren(...noeuds) { pied.enfants = noeuds; }
+    };
     const faux = {
       getElementById: id => (id === "lien-retour" ? lien : null),
-      querySelector: selecteur => (selecteur === "a.brand" ? logo : null)
+      querySelector: selecteur => (selecteur === "a.brand" ? logo
+        : selecteur === "footer.site-footer" ? pied : null),
+      createElement: () => ({
+        href: "", textContent: "", attributs: {},
+        setAttribute(nom, valeur) { this.attributs[nom] = valeur; }
+      })
     };
     new Function("SUIVI_URL", "document", "suiviActif", "entreeRefusee", `${source}\nreturn majLienRetour;`)(
       "https://suivi.mathsgo.re", faux, () => suivi, entreeRefusee
     )();
-    return {lien, logo};
+    return {lien, logo, pied};
   }
 
   const sansCode = executer(false).lien;
@@ -964,6 +977,56 @@ test("le lien du haut ramène l’élève suivi à son espace, les autres au cat
   assert.equal(executer(true).logo.href, "https://suivi.mathsgo.re/",
     "pour un élève suivi, le logo ramène à son espace");
   assert.equal(executer(true).logo.attributs["aria-label"], "Retour à mon espace");
+
+  // 08/09/2026 — le pied de page. C'était la dernière poignée de portes de
+  // sortie : quatre liens (Me contacter, Mentions légales, Confidentialité,
+  // Licence) qui déposent un élève sur des pages écrites pour un visiteur du
+  // site. Pour un élève suivi, le pied devient deux liens qui restent chez lui.
+  assert.equal(executer(false).pied.enfants, null,
+    "pour un visiteur ordinaire, le pied du site n'est pas touché");
+  assert.equal(executer(false, "expire").pied.enfants.length, 3,
+    "un billet refusé laisse quand même un élève venu de son espace");
+
+  const piedSuivi = executer(true).pied.enfants;
+  const liens = piedSuivi.filter(noeud => noeud.href);
+  assert.equal(liens.length, 2, "un élève suivi n'a que deux liens sous les yeux");
+  assert.deepEqual(liens.map(a => a.href),
+    ["https://suivi.mathsgo.re/", "https://suivi.mathsgo.re/infos.php"],
+    "et tous les deux restent sur son espace");
+  assert.deepEqual(liens.map(a => a.textContent), ["Mon espace", "Infos et confidentialité"]);
+
+  // mention-confidentialite.js, chargé en « defer », s'exécute APRÈS ce script :
+  // il ajoute de lui-même « Sans cookie ni traceur · Confidentialité » en bas de
+  // page — un lien de plus vers le site — sauf si la page porte déjà un élément
+  // marqué. Le pied d'origine en portait un ; en le remplaçant sans reprendre la
+  // marque, on rouvrait la porte qu'on venait de fermer.
+  assert.ok("data-mathsgo-confidentialite" in liens[1].attributs,
+    "le lien Infos reprend la marque du pied d'origine, sinon la mention flottante revient avec son lien vers le site");
+
+  // Sur une tablette, le pied du site aligne cinq éléments en tout petit : ses
+  // liens font 18 px de haut. Ceux de l'élève suivi sont élargis à 44 px, sans
+  // toucher au pied que voient les autres visiteurs.
+  assert.ok(executer(true).pied.classes.has("pied-espace"),
+    "le pied reconstruit porte sa classe, celle qui élargit les cibles");
+  assert.match(html, /\.site-footer\.pied-espace a \{ padding: 15px 10px; \}/,
+    "et la règle qui va avec doit être dans la page");
+});
+
+// Le pied du site, lui, doit rester entier pour tous les autres : ce test
+// garde les quatre liens d'origine dans la page. Le jour où l'un d'eux est
+// retiré ou renommé, c'est une décision — pas un effet de bord du lot suivi.
+test("hors suivi, le pied du site garde ses quatre liens", () => {
+  const pied = html.match(/<footer class="site-footer">[\s\S]*?<\/footer>/);
+  assert.ok(pied, "la page doit avoir le pied du site");
+  const adresses = [...pied[0].matchAll(/href="([^"]+)"/g)].map(m => m[1]);
+  assert.deepEqual(adresses, [
+    "mailto:gwenael@mathsgo.re?subject=Contact%20depuis%20mathsgo.re",
+    "../../mentions-legales.html",
+    "../../confidentialite.html",
+    "../../licence.html"
+  ]);
+  assert.doesNotMatch(pied[0], /suivi\.mathsgo\.re/,
+    "le pied de l'élève suivi se construit en JavaScript, il n'est pas écrit dans la page");
 });
 
 

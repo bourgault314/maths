@@ -84,3 +84,134 @@ test("une tuile « bientôt » garde son dessin en couleur et porte la pastille"
   assert.match(page, /bloc\.querySelector\("\.texte span"\)\.textContent = appli\.description/,
     "la pastille est un <span> elle aussi : viser celui du texte, pas le premier venu");
 });
+
+// -------------------------------------------------------------------------
+// Lot « cohérence des sorties » (08/09/2026). Gwenaël a créé cet espace pour
+// que ses élèves n'aillent pas sur mathsgo.re ; le pied de page les y renvoyait
+// depuis la première version, et la page de confidentialité du site, écrite
+// pour un visiteur, les déposait ensuite sur l'accueil du site. Un élève entré
+// par son code ne quitte plus son espace, quel que soit le lien cliqué.
+
+const INFOS = join(racine, "_serveur/public/infos.php");
+const infos = readFileSync(INFOS, "utf8");
+
+test("le pied de l'espace ne propose qu'une chose, et elle reste dans l'espace", () => {
+  const pied = page.match(/<footer>[\s\S]*?<\/footer>/);
+  assert.ok(pied, "la page doit avoir un pied");
+  const adresses = [...pied[0].matchAll(/href="([^"]+)"/g)].map(m => m[1]);
+  assert.deepEqual(adresses, ["infos.php"], "un seul lien, vers la page Infos de l'espace");
+  assert.doesNotMatch(page, /https?:\/\/mathsgo\.re/,
+    "plus aucune adresse du site dans la page de l'espace élève");
+});
+
+test("la page Infos ne fait sortir personne", () => {
+  assert.doesNotMatch(infos, /href="https?:\/\//,
+    "aucun lien vers un autre domaine : les adresses du site sont écrites en texte");
+  assert.match(infos, /href="\.\/"[^>]*>← Retour à mon espace/,
+    "le seul bouton ramène à l'espace");
+  assert.match(infos, /href="mailto:gwenael@mathsgo\.re/,
+    "l'adresse de l'éditeur (obligation légale) ouvre la messagerie de l'appareil, sans quitter la page");
+  assert.match(infos, /entetes_page\(\);/,
+    "mêmes en-têtes que l'accueil : politique de contenu et Cache-Control: no-store");
+  assert.doesNotMatch(infos, /<script/, "pas de script : rien à exécuter sur cette page");
+  assert.doesNotMatch(infos, /<img[^>]+src="https?:\/\//,
+    "aucune image d'un autre domaine (politique de contenu)");
+});
+
+// Le mot « compte » est le cœur du problème signalé par Gwenaël : la page du
+// site dit « maths&go ne crée pas de compte élève » à un enfant qui se croit
+// connecté à un compte. Ici on dit « espace », et le mot « compte » n'apparaît
+// que dans la phrase qui explique que ce n'en est pas un.
+test("la page Infos dit « espace », jamais « compte »", () => {
+  const corps = infos.slice(infos.indexOf("<body>"));
+  const occurrences = corps.match(/\bcomptes?\b/g) || [];
+  assert.equal(occurrences.length, 1, `« compte » apparaît ${occurrences.length} fois au lieu d'une`);
+  assert.match(corps, /Ce n’est pas un compte : il n’y a pas d’identifiant/,
+    "la seule occurrence est celle qui dit que ce n'en est pas un");
+  assert.ok(corps.includes("ton espace"), "le mot employé partout ailleurs est « espace »");
+});
+
+// Le « précédent » du navigateur après une déconnexion. Chrome ressort une
+// page entière de son cache arrière/avant sans réexécuter le script, même en
+// « no-store », tant qu'aucun cookie n'entre en jeu — et l'espace n'en pose
+// aucun. Ce test EXÉCUTE le gestionnaire tel qu'il est écrit dans la page :
+// une assertion sur le texte du fichier décrirait l'intention au lieu de la
+// vérifier.
+function executerPageshow({persisted, codeEnMemoire}) {
+  const debut = page.indexOf("  function revenirAuCode() {");
+  assert.ok(debut > 0, "la page doit ranger le ménage dans une fonction");
+  const ancre = page.indexOf('window.addEventListener("pageshow"', debut);
+  assert.ok(ancre > debut, "la page doit écouter « pageshow »");
+  const fin = page.indexOf("\n  });", ancre) + "\n  });".length;
+  const source = page.slice(debut, fin);
+
+  const elements = new Map();
+  const $ = id => {
+    if (!elements.has(id)) {
+      elements.set(id, {
+        id, hidden: false, textContent: "", value: "", ecouteurs: {},
+        focus() {},
+        addEventListener(type, fn) { this.ecouteurs[type] = fn; }
+      });
+    }
+    return elements.get(id);
+  };
+  // L'écran tel qu'il revient du cache : celui du précédent élève.
+  $("titre").textContent = "Bonjour Léa";
+  $("classe").textContent = "405";
+  $("classe").hidden = false;
+  $("entete-droite").hidden = false;
+  $("applis").textContent = "Défi tables";
+  $("code").value = "ABC123";
+  $("ecran-code").hidden = true;
+  $("ecran-espace").hidden = false;
+
+  let gestionnaire = null;
+  const fenetre = {addEventListener(type, fn) { if (type === "pageshow") gestionnaire = fn; }};
+  const nettoyer = brut => (brut || "").toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 6);
+  new Function("$", "window", "ecrireCode", "lireCode", "nettoyer", "afficherErreur", source)(
+    $, fenetre, () => {}, () => codeEnMemoire, nettoyer, () => {});
+  assert.ok(gestionnaire, "le gestionnaire de « pageshow » doit être posé");
+  gestionnaire({persisted});
+  return {$, elements};
+}
+
+// Le bouton et le retour de cache doivent faire EXACTEMENT le même ménage :
+// c'est la raison d'être de la fonction commune. Ce test exécute l'autre
+// chemin, celui du bouton, sur le même écran de départ.
+test("« Se déconnecter » fait le même ménage que le retour de cache", () => {
+  const {$} = executerPageshow({persisted: false, codeEnMemoire: "ABC123"});
+  $("changer").ecouteurs.click();
+  assert.equal($("ecran-code").hidden, false);
+  assert.equal($("ecran-espace").hidden, true);
+  assert.equal($("titre").textContent, "Mon espace");
+  assert.equal($("classe").textContent, "");
+  assert.equal($("entete-droite").hidden, true);
+  assert.equal($("applis").textContent, "");
+  assert.equal($("code").value, "");
+});
+
+test("après « Se déconnecter », le bouton « précédent » ne rouvre pas l'espace", () => {
+  const {$} = executerPageshow({persisted: true, codeEnMemoire: ""});
+  assert.equal($("ecran-code").hidden, false, "l'écran du code revient");
+  assert.equal($("ecran-espace").hidden, true, "l'espace est refermé");
+  assert.equal($("titre").textContent, "Mon espace", "le prénom du précédent élève a disparu");
+  assert.equal($("classe").textContent, "", "sa classe aussi");
+  assert.equal($("classe").hidden, true);
+  assert.equal($("entete-droite").hidden, true, "et la sortie n'a plus lieu d'être");
+  assert.equal($("applis").textContent, "", "ses activités aussi");
+  assert.equal($("code").value, "", "le champ est vide");
+});
+
+test("le retour d'un cache ne dérange pas un élève encore identifié", () => {
+  const {$} = executerPageshow({persisted: true, codeEnMemoire: "ABC123"});
+  assert.equal($("ecran-espace").hidden, false, "l'onglet a encore son code : rien ne bouge");
+  assert.equal($("titre").textContent, "Bonjour Léa");
+});
+
+test("un affichage ordinaire (pas un retour de cache) ne touche à rien", () => {
+  const {$} = executerPageshow({persisted: false, codeEnMemoire: ""});
+  assert.equal($("ecran-espace").hidden, false,
+    "sans « persisted », le script de la page vient de s'exécuter : c'est lui qui décide");
+  assert.equal($("titre").textContent, "Bonjour Léa");
+});
