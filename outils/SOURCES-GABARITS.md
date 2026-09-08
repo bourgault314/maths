@@ -24,6 +24,11 @@ d'addition décimale : il est régénéré lui aussi pour préserver les anciens
 liens, mais ne constitue pas un 25e gabarit. Les deux outils HTML de construction
 de gabarits d'angles ne font pas partie de ce lot.
 
+Le logo IREM est réservé aux 21 gabarits effectivement conçus dans ce cadre.
+Les gabarits d'enquêtes additive et multiplicative ainsi que le document de
+partage équitable restent plastifiables, mais portent uniquement le logo
+maths&go.
+
 ## PDF possédant une source LaTeX
 
 Ces 17 documents sont entièrement modifiables et recompilables :
