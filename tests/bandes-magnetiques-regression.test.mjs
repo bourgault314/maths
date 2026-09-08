@@ -369,3 +369,173 @@ test('une fixation reste une ancre absolue pendant les déplacements et les aima
   assert.match(html, /if \(!p \|\| p\.toBeRemoved \|\| p\.fixed\) return;/);
   assert.match(html, /if \(snapped\) stabilizeClosedTriangleAtPoint\(target\.id, target\.x, target\.y\)/);
 });
+
+// Exécute les vrais gestionnaires prendre/déplacer/lâcher avec seulement les
+// effets DOM/rendu remplacés. Les contraintes et les fusions ne sont pas simulées.
+function loadInteraction(state) {
+  const names = ['getStripLength','isPointPinned','getTriangleLengthMode','getMergeTriangleMode',
+    'canSnapPointPair','getGeometryEdges','geometryIsValid','projectGeometry','beginAnchoredDrag',
+    'moveAnchoredDrag','tryAnchoredSnap','normalizeStripToTargetLength','closestCircleIntersection',
+    'getFixedNeighborConstraints','constrainPointToFixedNeighbors','stabilizeClosedTriangleAtPoint',
+    'updateFixedPointFlags','getAllConnectedPoints','getPointAt','getStripAt','findAngleGroupByPointId',
+    'isGlobalLockActive','replaceAnglePointId','cleanupAngleGroups','solveConstraints',
+    'handleStart','handleMove','handleEnd'];
+  const source = name => {
+    const start=html.indexOf(`function ${name}(`);
+    assert.ok(start>=0,name);
+    let depth=0;
+    for(let i=html.indexOf('{',start);i<html.length;i++) {
+      if(html[i]==='{')depth++;
+      if(html[i]==='}' && --depth===0)return html.slice(start,i+1);
+    }
+    assert.fail(name);
+  };
+  const noop=()=>{};
+  Object.assign(state,{zoom:state.zoom||1,tool:'hand',tracedPointIds:new Set(),activePointTraceStrokes:new Map(),tools:{protractor:{visible:false}},angleGroups:state.angleGroups||[]});
+  const context={state,CONFIG:{snapDistance:45,flatTriangleSnapDistance:10,currentStripWidth:.7},
+    container:{style:{},getBoundingClientRect:()=>({left:0,top:0})},
+    header:{getBoundingClientRect:()=>({bottom:0}),classList:{add:noop,remove:noop}},
+    geoDragState:{active:false},getPos:e=>({x:e.clientX,y:e.clientY}),getClientPos:e=>({x:e.clientX,y:e.clientY}),
+    protractorAnchorShouldPin:()=>false,beginPointTraceCapture:noop,endPointTraceCapture:noop,
+    recordTracedPoints:noop,queueRenderOnly:noop,render:noop,clearTrashPreview:noop,
+    updateConstructionToolsUI:noop,showSelectionHint:noop,setTimeout:noop,playSound:noop};
+  vm.createContext(context);
+  vm.runInContext(names.map(source).join('\n'),context);
+  let detach;
+  context.container.addEventListener=(name,handler)=>{if(name==='dblclick')detach=handler;};
+  vm.runInContext(html.slice(html.indexOf("container.addEventListener('dblclick'"),html.indexOf('/* --- RENDU --- */')),context);
+  context.queueSolveRender=n=>context.solveConstraints(n);
+  const event=(x,y)=>({clientX:x,clientY:y,button:0,target:{closest:()=>null},preventDefault:noop});
+  return {start:(x,y)=>context.handleStart(event(x,y)),move:(x,y)=>context.handleMove(event(x,y)),
+    end:()=>context.handleEnd(event(600,600)),doubleClick:(x,y)=>detach(event(x,y)),canSnap:context.canSnapPointPair};
+}
+
+function anchoredChain(a=150,b=100) {
+  return {points:[{id:1,x:0,y:100,fixed:true},{id:2,x:a+b,y:100,fixed:true},
+    {id:3,x:a/2,y:100+a*Math.sqrt(3)/2},{id:4,x:(a+b)/2,y:100+(a+b)*Math.sqrt(3)/2}],
+    strips:[{id:5,p1:1,p2:2,lengthPx:a+b,fixed:true},{id:6,p1:1,p2:3,lengthPx:a},{id:7,p1:3,p2:4,lengthPx:b}]};
+}
+
+function assertLengths(state) {
+  for(const strip of state.strips){
+    const a=state.points.find(p=>p.id===strip.p1),b=state.points.find(p=>p.id===strip.p2);
+    assert.ok(a&&b);
+    const actual=Math.hypot(b.x-a.x,b.y-a.y);
+    assert.ok(Math.abs(actual-strip.lengthPx)<=1e-4,`bande ${strip.id}: ${actual} au lieu de ${strip.lengthPx}`);
+  }
+  assert.equal(state.points.find(p=>p.id===1).x,0);
+  assert.equal(state.points.find(p=>p.id===1).y,100);
+  assert.equal(state.points.find(p=>p.id===2).y,100);
+}
+
+test('prendre le corps du 2 attaché ne rallonge jamais le 3, même pendant le geste',()=>{
+  const state=anchoredChain(),ui=loadInteraction(state);
+  const endBefore={...state.points[3]};
+  ui.start(100,100+100*Math.sqrt(3));
+  assert.ok(state.draggingConstrained);
+  for(const [x,y] of [[200,300],[500,100],[100,500],[25,110]]){ui.move(x,y);assertLengths(state);}
+  assert.notEqual(state.points[3].x,endBefore.x,'la chaîne reste manipulable');
+  ui.end();assertLengths(state);
+});
+
+test('la chaîne 3–2 suit le pointeur jusqu’à sa portée maximale et minimale sans étirement',()=>{
+  for(const [a,b] of [[150,100],[110,145],[150,150]]){
+    const state=anchoredChain(a,b),ui=loadInteraction(state);
+    ui.start(state.points[3].x,state.points[3].y);
+    ui.move(1000,100);
+    assertLengths(state);
+    assert.ok(Math.abs(state.points[3].x-(a+b))<1e-7);
+    ui.move(1,100);
+    assertLengths(state);
+    assert.ok(Math.abs(Math.hypot(state.points[3].x,state.points[3].y-100)-Math.max(1,Math.abs(a-b)))<1e-6);
+    ui.end();assertLengths(state);
+  }
+});
+
+test('le triangle plat se ferme exactement sur la base fixée et reste plat pendant le glisser',()=>{
+  const state=anchoredChain(),ui=loadInteraction(state);
+  ui.start(state.points[3].x,state.points[3].y);ui.move(250,100);ui.end();
+  assert.equal(state.points.length,3,'les deux aimants ont fusionné');
+  assertLengths(state);
+  ui.start(150,100);ui.move(900,900);assertLengths(state);ui.end();
+  assert.equal(state.points.find(p=>p.id===3).y,100);
+});
+
+test('deux longueurs différentes ne fusionnent pas sur les mêmes extrémités, quel que soit leur ordre',()=>{
+  for(const reverse of [false,true]){
+    const state=anchoredChain();if(reverse)state.strips.reverse();
+    const ui=loadInteraction(state);
+    const source=state.points[3],target=state.points[0];
+    assert.equal(ui.canSnap(source,target,target.x,target.y),false);
+    ui.start(source.x,source.y);ui.move(1,100);ui.end();
+    assert.equal(state.points.length,4);assertLengths(state);
+  }
+});
+
+test('la jonction 3–2 peut tourner autour de la base et conserve les deux longueurs',()=>{
+  const state=anchoredChain(),ui=loadInteraction(state);
+  ui.start(state.points[2].x,state.points[2].y);
+  ui.move(0,300);assertLengths(state);
+  assert.ok(Math.abs(state.points[2].x)<1e-6);
+  assert.ok(Math.abs(state.points[2].y-250)<1e-6);
+  ui.end();assertLengths(state);
+});
+
+test('un groupe rigide fixé en deux points reste immobile',()=>{
+  const state=anchoredChain();state.globalLock=true;
+  const ui=loadInteraction(state),before=state.points.map(p=>({x:p.x,y:p.y}));
+  ui.start(state.points[3].x,state.points[3].y);ui.move(600,600);ui.end();
+  assert.deepEqual(state.points.map(p=>({x:p.x,y:p.y})),before);
+});
+
+test('un angle créé relié à une base fixe conserve ses longueurs et son angle',()=>{
+  const state=anchoredChain();
+  state.angleGroups=[{id:8,vertexId:3,aId:1,bId:4,strip1Id:6,strip2Id:7,leg1Len:150,leg2Len:100,degrees:180}];
+  const ui=loadInteraction(state);
+  ui.start(state.points[3].x,state.points[3].y);ui.move(800,300);assertLengths(state);ui.end();assertLengths(state);
+  assert.ok(state.points[3].x>200,'l’angle fixé reste orientable autour de son ancre');
+  const [a,,m,b]=state.points;
+  assert.ok(Math.abs((m.x-a.x)*(b.y-a.y)-(m.y-a.y)*(b.x-a.x))<.1);
+});
+
+test('le déplacement libre d’une construction sans fixation reste une translation',()=>{
+  const state=anchoredChain();state.points.forEach(p=>p.fixed=false);state.strips[0].fixed=false;
+  const ui=loadInteraction(state),before=state.points.map(p=>({x:p.x,y:p.y}));
+  ui.start(100,100+100*Math.sqrt(3));assert.ok(state.draggingStrip);
+  ui.move(200,100+100*Math.sqrt(3));
+  state.points.forEach((p,i)=>{assert.equal(p.x,before[i].x+100);assert.equal(p.y,before[i].y);});
+  ui.end();
+});
+
+test('le triangle ordinaire 3–3–5 fixé reste indéformable sur toute la séquence',()=>{
+  const state=anchoredChain(150,150);
+  state.points.pop();state.points[1].x=250;state.points[2].x=125;state.points[2].y=100+Math.sqrt(150**2-125**2);
+  state.strips[0].lengthPx=250;state.strips[2].p2=2;
+  const ui=loadInteraction(state),before=state.points.map(p=>({...p}));
+  ui.start(state.points[2].x,state.points[2].y);
+  for(const [x,y] of [[800,800],[-400,100],[125,-600]]){ui.move(x,y);assertLengths(state);}
+  ui.end();assertLengths(state);
+  state.points.forEach((p,i)=>{assert.ok(Math.hypot(p.x-before[i].x,p.y-before[i].y)<1e-7);});
+});
+
+test('détacher près d’un segment fixé préserve ses deux ancres quel que soit l’ordre des bandes',()=>{
+  for(const reverse of [false,true]){
+    const state=anchoredChain();state.nextId=20;if(reverse)state.strips.reverse();
+    const base=state.strips.find(s=>s.fixed),before={...base};
+    const ui=loadInteraction(state);ui.doubleClick(0,100);
+    assert.deepEqual(base,before);assertLengths(state);
+    const detached=state.points.find(p=>p.id===20);
+    assert.ok(detached && !detached.fixed);
+    assert.equal(state.points[0].fixed,true);
+  }
+});
+
+test('une chaîne plus longue attachée conserve toutes ses longueurs pendant les gestes successifs',()=>{
+  const state=anchoredChain();state.points.push({id:8,x:225,y:100+125*Math.sqrt(3)});
+  state.strips.push({id:9,p1:4,p2:8,lengthPx:100});
+  const ui=loadInteraction(state),start={...state.points[4]};
+  ui.start(start.x,start.y);
+  for(let i=1;i<=20;i++){ui.move(start.x+i*3,start.y+i*2);assertLengths(state);}
+  assert.ok(Math.hypot(state.points[4].x-start.x,state.points[4].y-start.y)>5);
+  ui.end();assertLengths(state);
+});
