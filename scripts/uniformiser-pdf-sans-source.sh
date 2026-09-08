@@ -22,6 +22,7 @@ python3 "$ROOT/scripts/uniformiser-signature-pdf.py" \
   "$ROOT/outils/fractions/gabarits_fractions.pdf" \
   "$ROOT/outils/fractions/gabarits_fractions.pdf" \
   --mode pied-complet \
+  --with-irem \
   --gabarit-plastifiable
 
 for pdf in \

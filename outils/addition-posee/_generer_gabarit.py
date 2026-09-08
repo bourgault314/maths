@@ -3,6 +3,7 @@ from shutil import copyfile
 
 from reportlab.lib.colors import HexColor
 from reportlab.lib.pagesizes import A4, landscape
+from reportlab.lib.utils import ImageReader
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.pdfgen import canvas
@@ -10,7 +11,8 @@ from reportlab.pdfgen import canvas
 
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[1]
-LOGO = ROOT / "assets/img/logos/mathsgo/logo-print.png"
+IREM_LOGO = ROOT / "assets/img/logos/irem/logo-print.png"
+MATHSGO_LOGO = ROOT / "assets/img/logos/mathsgo/logo-print.png"
 INTEGER_OUTPUT = HERE / "gabarit-addition-entiere.pdf"
 DECIMAL_OUTPUT = HERE / "gabarit-addition-decimale.pdf"
 LEGACY_OUTPUT = HERE / "gabarit-addition-posee.pdf"
@@ -84,7 +86,33 @@ def title_line(c):
 
 
 def footer(c):
-    c.drawImage(str(LOGO), 28, 10, width=92, height=42, preserveAspectRatio=True, mask="auto")
+    mathsgo = ImageReader(str(MATHSGO_LOGO))
+    mathsgo_px_width, mathsgo_px_height = mathsgo.getSize()
+    mathsgo_height = 42
+    mathsgo_width = mathsgo_height * mathsgo_px_width / mathsgo_px_height
+
+    irem = ImageReader(str(IREM_LOGO))
+    irem_px_width, irem_px_height = irem.getSize()
+    irem_height = mathsgo_height * 1.2
+    irem_width = irem_height * irem_px_width / irem_px_height
+
+    center_y = 10 + mathsgo_height / 2
+    c.drawImage(
+        irem,
+        28,
+        center_y - irem_height / 2,
+        width=irem_width,
+        height=irem_height,
+        mask="auto",
+    )
+    c.drawImage(
+        mathsgo,
+        28 + irem_width + 8.5,
+        10,
+        width=mathsgo_width,
+        height=mathsgo_height,
+        mask="auto",
+    )
     text(c, "mathsgo.re · CC BY-NC-SA 4.0", PAGE_WIDTH / 2, 20, 7.2, MUTED, "GoSans-Bold", "center")
     text(c, "Imprimer à 100 % · Gabarit plastifiable", PAGE_WIDTH - 28, 20, 6.8, MUTED, "GoSans", "right")
 
