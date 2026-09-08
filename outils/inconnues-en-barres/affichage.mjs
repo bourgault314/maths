@@ -1,4 +1,4 @@
-import {CONTEXTES, FAMILLES, objet, nombre, mesure, enonce, evaluer, parcours} from './moteur.mjs';
+import {CONTEXTES, FAMILLES, objet, nombre, mesure, enonce, evaluer, parcours} from './moteur.mjs?v=20260908-3';
 
 export const echapper = s => String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const couleurs={A:'#ffead1',B:'#dbeafe',C:'#e8ddfa'};

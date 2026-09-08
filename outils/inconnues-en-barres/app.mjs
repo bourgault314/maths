@@ -1,5 +1,5 @@
-import {FAMILLES,CONTEXTES,generer,depuisIdentifiant,methodes,parcours,enonce,objet,mesure,nombre,verifierEssai} from './moteur.mjs?v=20260908-2';
-import {echapper,renduEnonce,renduFrame,renduImpression,equationHTML,definitions} from './affichage.mjs?v=20260908-2';
+import {FAMILLES,CONTEXTES,generer,depuisIdentifiant,methodes,parcours,enonce,objet,mesure,nombre,verifierEssai} from './moteur.mjs?v=20260908-3';
+import {echapper,renduEnonce,renduFrame,renduImpression,equationHTML,definitions} from './affichage.mjs?v=20260908-3';
 
 const $=id=>document.getElementById(id);
 const PHASES=['Comprendre','Représenter','Transformer','Calculer','Vérifier'];
