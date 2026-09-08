@@ -11,17 +11,17 @@ export function equationHTML(e,p,litteral=false,numerique=false){
 }
 function cellules(terms,compact){const regrouper=compact||terms.reduce((n,t)=>n+(t.symbol?t.n:1),0)>12;return terms.flatMap(t=>t.symbol&&!regrouper?Array.from({length:t.n},()=>({...t,n:1})):[t]);}
 function schema(e,p,max,options,compact=false){
-  const W=compact?600:1080, H=compact?150:190, margin=3, rw=W-2*margin, rh=(H-8)/2;
+  const W=600, H=150, margin=3, rw=W-2*margin, rh=(H-8)/2;
   let out=`<svg class="schema ${compact?'schema-compact':'schema-detail'}" viewBox="0 0 ${W} ${H}" role="img" aria-label="${echapper(options.vide?'Schéma à compléter':equationTexte(e,p,true))}">`;
   [e.droite,e.gauche].forEach((terms,row)=>{
     let x=margin;
-    for(const t of cellules(terms,compact)){
+    for(const t of cellules(terms,compact&&!options.vide)){
       const value=t.symbol?t.n*p.valeurs[t.symbol]:t.value, width=rw*value/max, y=4+row*rh;
       const fill=t.symbol?couleurs[t.symbol]:'#f0fdf4';
       out+=`<rect x="${x}" y="${y}" width="${width}" height="${rh}" fill="${options.vide?'#fff':fill}" stroke="#627082" stroke-width="1.8"/>`;
       if(t.etat){out+=`<rect x="${x+2}" y="${y+2}" width="${Math.max(0,width-4)}" height="${rh-4}" fill="${t.etat==='commun'?'#f97316':'#3b82f6'}" fill-opacity=".16" stroke="${t.etat==='commun'?'#c45b17':'#2364ca'}" stroke-dasharray="7 4" stroke-width="2"/>`;}
       const label=options.vide?'…':t.symbol?`${t.n>1?t.n+' × ':''}${options.style==='lettres'?t.symbol:objet(p,t.symbol).picto}`:mesure(p,t.value);
-      const maxSize=compact?30:40, fontSize=Math.min(maxSize,(width-10)/Math.max(1,[...label].length)*1.6);
+      const maxSize=30, fontSize=Math.min(maxSize,(width-10)/Math.max(1,[...label].length)*1.6);
       // A small segment keeps its exact width; its label remains readable in the caption.
       if(fontSize>=(compact?20:22))out+=`<text x="${x+width/2}" y="${y+rh/2}" dominant-baseline="central" text-anchor="middle" font-family="system-ui,sans-serif" font-weight="750" font-size="${fontSize}" fill="#14283b">${echapper(label)}</text>`;
       x+=width;
