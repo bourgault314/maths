@@ -46,7 +46,7 @@ export function renduFrame(f,p,options={}){
   if(f.reponses.length&&!f.verification)html+=`<div class="resultats">${f.reponses.map(s=>`<p>${symboleHTML(s,p,style==='lettres')} <span>${echapper(objet(p,s).nom)}</span><strong>${echapper(mesure(p,p.valeurs[s]))}</strong></p>`).join('')}</div>`;
   if(f.verification){
     html=`<div class="resultats">${p.inconnues.map(s=>`<p>${symboleHTML(s,p,style==='lettres')} <span>${echapper(objet(p,s).nom)}</span><strong>${echapper(mesure(p,p.valeurs[s]))}</strong></p>`).join('')}</div>`+html;
-    html+=`<div class="verifications"><h3>Vérifier les données de départ</h3>${p.donnees.map((e,i)=>`<p><span class="valide" aria-label="Vérifiée">✓</span><span><b>Donnée ${i+1}</b> ${equationHTML(e,p,true,true)}<small>${nombre(evaluer(e.gauche,p))} = ${nombre(evaluer(e.droite,p))} ${echapper(CONTEXTES[p.contexte].unite)}</small></span></p>`).join('')}</div>`;
+    html+=`<div class="verifications"><h3>Vérifier les données de départ</h3>${p.donnees.map((e,i)=>`<p><span class="valide" aria-label="Vérifiée">✓</span><span><b>Donnée ${i+1}</b> ${equationHTML(e,p,true,true)}<small>${echapper(mesure(p,evaluer(e.gauche,p)))} = ${echapper(mesure(p,evaluer(e.droite,p)))}</small></span></p>`).join('')}</div>`;
   }
   return html;
 }

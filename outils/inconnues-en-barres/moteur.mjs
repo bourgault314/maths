@@ -91,7 +91,8 @@ export function enonce(p) {
   const ctx=CONTEXTES[p.contexte], lines=[];
   for(const e of p.donnees) {
     const verb=e.gauche.length===1&&e.gauche[0].n===1?ctx.verbe:ctx.total;
-    if(e.droite.length===1&&!e.droite[0].symbol) lines.push(`${texteLot(p,e.gauche)} ${verb} ${mesure(p,e.droite[0].value)}.`);
+    if(p.famille==='une'&&p.d>0) lines.push(p.contexte==='classe'?`${objets(p,'A',p.m)}, avec ${mesure(p,p.d)} de frais fixes, coûtent ${mesure(p,p.T)}.`:p.contexte==='fruits'?`${objets(p,'A',p.m)}, avec un emballage de ${mesure(p,p.d)}, pèsent ${mesure(p,p.T)}.`:`${objets(p,'A',p.m)}, avec un bonus de ${mesure(p,p.d)}, valent ${mesure(p,p.T)}.`);
+    else if(e.droite.length===1&&!e.droite[0].symbol) lines.push(`${texteLot(p,e.gauche)} ${verb} ${mesure(p,e.droite[0].value)}.`);
     else if(e.gauche.length===1&&e.gauche[0].n===1&&e.droite.length===1&&e.droite[0].symbol) lines.push(`${texteLot(p,e.gauche)} ${verb} autant que ${texteLot(p,e.droite)}.`);
     else if(e.gauche.length===1&&e.gauche[0].n===1&&e.droite.length===2&&!e.droite[1].symbol) lines.push(`${texteLot(p,e.gauche)} ${verb} ${mesure(p,e.droite[1].value)} de plus que ${texteLot(p,[e.droite[0]])}.`);
     else lines.push(`Le lot « ${texteLot(p,e.gauche)} » a la même ${ctx.grandeur} que le lot « ${texteLot(p,e.droite)} ».`);
