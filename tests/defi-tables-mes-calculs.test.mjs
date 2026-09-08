@@ -268,15 +268,18 @@ test("appliquerReponse ne modifie jamais l’objet reçu", () => {
 const html = await (await import("node:fs/promises")).readFile(new URL("../outils/calcul_mental/defi_tables.html", import.meta.url), "utf8");
 const confidentialite = await (await import("node:fs/promises")).readFile(new URL("../confidentialite.html", import.meta.url), "utf8");
 
-test("la page a l’écran Mes calculs : entrée depuis Mon parcours, grille, détail, révision", () => {
+test("la page a l’écran Mes calculs : entrée depuis l’accueil, grille, détail, révision", () => {
   assert.match(html, /\["intro", "launch", "play", "result", "parcours", "calculs"\]/);
-  assert.match(html, /id="parcours-calculs"[\s\S]*Mes calculs/);
+  assert.match(html, /id="open-calculs" class="acc-lien"[\s\S]*Mes calculs/, "l’entrée est la carte de l’accueil (lot 2)");
+  assert.doesNotMatch(html, /id="parcours-calculs"/, "plus de bouton-carte dans le parcours");
   assert.match(html, /id="calculs"[^>]*class="calculs-screen"/);
   assert.match(html, /id="calculs-resume"/);
   assert.match(html, /id="calculs-grille"/);
   assert.match(html, /id="calculs-detail"/);
   assert.match(html, /id="calculs-reviser"[\s\S]*Réviser mes calculs/);
-  assert.ok(html.indexOf('id="calculs-reviser"') < html.indexOf('class="calculs-note"'), "le bouton passe avant le paragraphe d’explication, sinon il tombe sous la ligne de flottaison sur un portable");
+  assert.ok(html.indexOf('id="calculs-reviser"') < html.indexOf('id="calculs-resume"'), "Réviser EN HAUT, au-dessus du résumé et de la grille (décision du 08/09/2026)");
+  assert.ok(html.indexOf('id="calculs-resume"') < html.indexOf('id="calculs-grille"'));
+  assert.doesNotMatch(html, /class="calculs-note"/, "le paragraphe de règles a disparu : les règles vivent dans « Comment ça marche ? »");
   assert.match(html, /id="calculs-back"/);
   assert.match(html, /PARCOURS\.serieAlimenteGrille/);
   assert.match(html, /PARCOURS\.appliquerReponse/);
@@ -302,7 +305,8 @@ test("le détail d’une case écrit le calcul dans les deux sens et empile ses 
 test("seule la première réponse compte pour la grille, et un raté ne revient qu’une fois", () => {
   assert.match(html, /if \(!question\.retry\) alimenterMesCalculs\(question, correct && !skip\);/, "les calculs qui reviennent n’alimentent pas la grille");
   assert.match(html, /const willRetry = !correct && !question\.retry;/, "un calcul raté revient une seule fois par série de révision");
-  assert.match(html, /repartira dans la prochaine révision/);
+  assert.doesNotMatch(html, /repartira dans la prochaine révision/, "la règle n’est plus écrite sur l’écran de résultat (lot 2)");
+  assert.match(html, /\$\("result-detail"\)\.textContent = `Série terminée en \$\{formatElapsed\(elapsed\)\}\.`;/);
 });
 
 test("la révision : 10 questions sans chrono, retour des ratés, Encore 10", () => {
@@ -312,7 +316,8 @@ test("la révision : 10 questions sans chrono, retour des ratés, Encore 10", ()
   assert.match(html, /au vert/);
   assert.match(html, /au premier essai/);
   assert.match(html, /entry\.retour \? "Il est revenu" : `Question \$\{entry\.number\}`/, "un calcul qui revient n’est plus numéroté Question 11, 12…");
-  assert.match(html, /Rien à retravailler pour l’instant : on complète et on entretient ta grille\./);
+  assert.match(html, /Rien à revoir pour l’instant : on complète et on entretient ta grille\./);
+  assert.match(html, /Tout est su ! 10 questions pour entretenir ta grille\./);
   assert.match(html, /Ta grille est vide : on découvre les 10 premiers calculs\./);
   assert.match(html, /L’étoile valide toutes tes tables d’un coup : les 9 passent en Acquise ✓\./, "le résultat Expert explique pourquoi tout se coche");
   assert.match(html, /id="result-fete"/);

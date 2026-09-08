@@ -155,6 +155,11 @@
                             cursor: pointer; opacity: .85; min-height: 28px; }
     .suivi-repere .sortie:hover, .suivi-repere .sortie:focus-visible { opacity: 1; }
     body.mode-fiche .suivi-repere { display: none; }
+    /* Les deux classes, pas seulement `.suivi-sortie` : `.catalogue-link` est
+       déclarée plus bas, avec la même spécificité, et gagnerait — la pilule
+       s'afficherait aussi sur PC et tablette, en double avec la sortie du
+       repère. Même raison dans la media query « téléphone ». */
+    .catalogue-link.suivi-sortie { display: none; }
     .suivi-garde { position: fixed; inset: 0; z-index: 50; display: flex; align-items: center; justify-content: center;
       padding: 16px; background: rgba(20, 52, 81, .55); }
     .suivi-garde[hidden] { display: none; }
@@ -233,8 +238,9 @@
 
     .intro,
     .result { max-width: 650px; margin: 40px auto; text-align: center; }
-    .intro { max-width: 720px; }
-    .mode-screen h1 { font-size: clamp(2rem, 5vw, 3rem); }
+    /* L'accueil « Ma table » est plus haut que l'ancien menu : il monte pour
+       tenir dans une fenêtre de 768 px, bandeau de suivi compris. */
+    .intro { max-width: 720px; margin: 14px auto 24px; }
     .hero-icon { display: block; font-size: 4.2rem; }
     .eyebrow {
       margin: 8px 0;
@@ -251,88 +257,65 @@
     .result > p:not(.eyebrow) { color: var(--muted); }
     .previous-score { margin: 11px 0; color: #31566c !important; font-size: .92rem; font-weight: 850; }
 
-    .mode-choice {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 10px;
-      margin: 22px 0 12px;
-      text-align: left;
+    /* ---- L'accueil « Ma table » (lot 2, 08/09/2026) ----
+       Un seul écran de commande : la table en cours et ses trois étapes, le
+       bouton Réviser, deux portes (Mon parcours, Mes calculs). L'appli ne
+       choisit rien à la place de l'élève : les trois étapes restent toujours
+       disponibles, elle SURLIGNE seulement celle qu'elle conseille. */
+    .acc { display: grid; gap: 12px; max-width: 560px; margin: 0 auto; text-align: left; }
+    .matable { padding: 14px 14px 12px; border: 2px solid #cfe2ed; border-radius: 22px; background: #fff; }
+    .matable-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; margin-bottom: 10px; }
+    .matable-droite { display: grid; justify-items: end; gap: 0; padding-top: 4px; text-align: right; }
+    .matable-droite small { color: #5b7286; font-weight: 800; font-size: .8rem; line-height: 1.2; }
+    .matable-head .eyebrow { margin: 0; font-size: .74rem; letter-spacing: .06em; }
+    .matable-head h1 { display: block; margin: 0; font-size: 1.55rem; font-weight: 900; color: var(--ink); line-height: 1.1; }
+    .matable-head h1:focus { outline: none; }
+    .matable-changer { min-height: 36px; padding: 0 4px; border: 0; background: none; color: var(--blue); font-size: .84rem; font-weight: 850; text-decoration: underline; text-underline-offset: 3px; white-space: nowrap; cursor: pointer; }
+    .matable-choix { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 12px; padding: 10px; border: 1px solid #c9dbe6; border-radius: 15px; background: #f3f9fc; }
+    .matable-choix button { min-height: 44px; min-width: 52px; padding: 6px 8px; border: 2px solid #bed3e0; border-radius: 12px; background: #fff; color: var(--ink); font-weight: 950; cursor: pointer; }
+    .matable-choix button.is-acquise { color: var(--green); border-color: #b8dfc8; background: var(--green-soft); }
+    .matable-choix button.is-selected { border-color: var(--blue); box-shadow: inset 0 0 0 1px var(--blue); color: var(--blue); background: #eef6ff; }
+    .etapes { display: grid; gap: 8px; }
+    .etape { width: 100%; min-height: 58px; display: grid; grid-template-columns: 36px minmax(0, 1fr) auto; align-items: center; gap: 10px; padding: 8px 12px; border: 1px solid #c9dbe6; border-radius: 15px; background: #f8fcff; box-shadow: 0 2px 0 #c3d8e5; color: var(--ink); text-align: left; font: inherit; cursor: pointer; }
+    .etape .num { width: 32px; height: 32px; display: grid; place-items: center; border-radius: 50%; background: #e3ecf2; color: #2c4a63; font-weight: 950; }
+    .etape strong { display: block; font-size: 1.05rem; line-height: 1.15; }
+    .etape small { display: block; color: #5b7286; font-size: .78rem; font-weight: 800; line-height: 1.25; margin-top: 2px; }
+    .etape .dots { display: flex; gap: 4px; }
+    .etape .dots i { width: 12px; height: 12px; border-radius: 50%; border: 2px solid var(--teal); background: #fff; }
+    .etape .dots i.is-started { background: linear-gradient(90deg, var(--teal) 50%, #fff 50%); }
+    .etape .dots i.on { background: var(--teal); }
+    .etape .dots i.is-check { width: auto; height: auto; border: 0; border-radius: 0; background: none; color: var(--green); font-style: normal; font-weight: 950; font-size: 1.15rem; line-height: 1; }
+    .etape .dots i.is-check.off { color: #9db4c4; }
+    .etape.is-next { border-color: var(--blue); box-shadow: 0 0 0 2px rgba(7, 85, 184, .18), 0 2px 0 #b7cfe8; background: #fff; }
+    .etape.is-next .num { background: var(--blue); color: #fff; }
+    .etape.valide strong { color: var(--blue); }
+    .etape.melange .num { background: #fff3cd; color: #7a5a00; }
+    .etape.melange.is-next .num { background: #e0a800; color: #fff; }
+    .reviser { width: 100%; min-height: 56px; display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 10px; padding: 8px 14px 8px 16px; border: 0; border-radius: 16px; background: #fff3e0; color: #7a3d00; font: inherit; text-align: left; cursor: pointer; box-shadow: 0 2px 0 #f0c98f; }
+    .reviser strong { display: block; font-size: 1.02rem; line-height: 1.15; }
+    .reviser small { display: block; color: #9a5a13; font-size: .78rem; font-weight: 800; line-height: 1.25; }
+    .reviser .go { padding: 9px 14px; border-radius: 999px; background: #e0771a; color: #fff; font-weight: 950; white-space: nowrap; }
+    .reviser.is-next { box-shadow: 0 0 0 2px rgba(224, 119, 26, .35), 0 2px 0 #f0c98f; }
+    .acc-liens { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .acc-lien { min-height: 64px; display: grid; grid-template-columns: 34px minmax(0, 1fr); align-items: center; gap: 10px; padding: 8px 12px; border: 1px solid #c5d9e6; border-radius: 15px; background: #fff; color: var(--blue); font: inherit; font-weight: 900; text-align: left; cursor: pointer; }
+    .acc-lien .ico { width: 34px; height: 34px; }
+    .acc-lien span { display: grid; gap: 2px; }
+    .acc-lien small { color: #5b7286; font-weight: 800; font-size: .74rem; line-height: 1.25; }
+    .acc-bas { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px 18px; margin-top: 2px; }
+    .acc-bas button { min-height: 40px; padding: 0 2px; border: 0; background: none; color: #5b7286; font: inherit; font-size: .82rem; font-weight: 800; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+    /* Sous un code (ou venu de son espace), l'élève ne voit ni Réglages
+       libres ni l'évaluation CM1 : le même signal que le lien du haut
+       (majLienRetour) pose la classe sur <body>. */
+    body.mode-eleve .acc-site { display: none !important; }
+    .notice { margin: 8px 0 0; padding: 12px 14px; border: 1px solid #c9dbe6; border-radius: 15px; background: #f8fcff; color: var(--ink); font-size: .9rem; text-align: left; }
+    .notice p { margin: 0; line-height: 1.45; }
+    .notice p + p { margin-top: 8px; }
+    .notice b { color: var(--teal); }
+    @media (min-width: 621px) {
+      .acc { max-width: 620px; }
+      .etape { min-height: 60px; }
+      .etape strong { font-size: 1.12rem; }
     }
-
-    .mode-card {
-      position: relative;
-      min-height: 82px;
-      display: grid;
-      grid-template-columns: auto minmax(0, 1fr);
-      align-items: center;
-      gap: 11px;
-      padding: 12px 38px 12px 14px;
-      border: 2px solid #c9dce8;
-      border-radius: 18px;
-      color: var(--ink);
-      background: #fff;
-      box-shadow: 0 4px 0 rgba(113, 155, 181, .16);
-      text-align: left;
-      cursor: pointer;
-    }
-
-    .mode-card-icon { font-size: 1.65rem; line-height: 1; }
-    .mode-card strong { display: block; color: var(--blue); font-size: 1rem; line-height: 1.2; }
-    .mode-card small { display: block; margin-top: 3px; color: var(--muted); font-size: .78rem; line-height: 1.25; }
-    .mode-card.is-selected {
-      border-color: var(--blue);
-      background: #eef6ff;
-      box-shadow: 0 0 0 3px rgba(7, 85, 184, .1), 0 4px 0 rgba(7, 85, 184, .18);
-    }
-
-    .mode-card.is-selected::after {
-      content: "✓";
-      position: absolute;
-      top: 10px;
-      right: 11px;
-      width: 25px;
-      height: 25px;
-      display: grid;
-      place-items: center;
-      border-radius: 50%;
-      color: #fff;
-      background: var(--blue);
-      font-weight: 950;
-    }
-
-    .secondary-mode-choice {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-      gap: 8px;
-      margin: 0 0 14px;
-    }
-
-    .secondary-mode-button {
-      min-height: 42px;
-      padding: 8px 13px;
-      border: 1px solid #bfd3df;
-      border-radius: 999px;
-      color: #31566c;
-      background: #fff;
-      font-size: .82rem;
-      font-weight: 900;
-      cursor: pointer;
-    }
-
-    .secondary-mode-button.is-selected {
-      border-color: var(--blue);
-      color: var(--blue);
-      background: #eef6ff;
-      box-shadow: inset 0 0 0 1px var(--blue);
-    }
-
-    .mode-card-parcours {
-      grid-column: 1 / -1;
-      border-color: #9fd3cb;
-      background: linear-gradient(90deg, #e9f8f5, #fff 60%);
-    }
-    .mode-card-parcours strong { color: var(--teal); }
 
     /* ---- Mon parcours ---- */
     .parcours-screen { max-width: 720px; margin: 0 auto; }
@@ -398,21 +381,6 @@
     }
     .parcours-confirm p { margin: 0 0 10px; color: var(--ink); font-weight: 900; }
     .parcours-confirm .danger { color: #fff; border: 0; background: var(--red); box-shadow: 0 4px 0 #7a1f1f; }
-    .parcours-next {
-      display: grid;
-      grid-template-columns: minmax(0, 1fr) auto;
-      align-items: center;
-      gap: 10px;
-      margin: 14px 0 0;
-      padding: 12px 14px;
-      border-radius: 14px;
-      color: #31566c;
-      background: #eef8ff;
-      font-weight: 850;
-      text-align: left;
-    }
-    .parcours-next strong { display: block; color: var(--teal); font-size: .78rem; letter-spacing: .08em; text-transform: uppercase; }
-    .parcours-next .primary { min-height: 44px; padding: 8px 14px; }
     .parcours-legend { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px 14px; margin: 12px 0 4px; color: var(--muted); font-size: .8rem; font-weight: 850; }
     .parcours-legend .cell { width: 22px; height: 22px; min-height: 0; font-size: .8rem; pointer-events: none; }
     .parcours-list { display: grid; gap: 8px; margin: 10px 0 0; padding: 0; list-style: none; }
@@ -468,7 +436,7 @@
     .parcours-extra-cells .cell { min-width: 52px; }
     .parcours-extra-cells .secondary { min-height: 44px; padding: 8px 14px; }
     .parcours-extra p { margin: 6px 0 0; color: var(--muted); font-size: .88rem; }
-    .parcours-note { margin: 14px 0 0; color: var(--muted); font-size: .82rem; text-align: center; }
+    .parcours-notice-action { margin-top: 14px; }
     .launch-durations { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
     .launch-durations .type-button { min-height: 48px; min-width: 96px; display: grid; place-items: center; text-align: center; }
     .launch-hint { margin: 0; color: var(--muted); font-size: .9rem; }
@@ -515,26 +483,6 @@
       font-weight: 950;
       cursor: pointer;
     }
-    .parcours-calculs {
-      display: grid;
-      grid-template-columns: auto minmax(0, 1fr) auto;
-      align-items: center;
-      gap: 10px;
-      width: 100%;
-      margin: 10px 0 0;
-      padding: 12px 14px;
-      border: 2px solid #cfe2ed;
-      border-radius: 14px;
-      color: #31566c;
-      background: #fff;
-      font-weight: 850;
-      text-align: left;
-      cursor: pointer;
-    }
-    .parcours-calculs-icon { font-size: 1.35rem; line-height: 1; }
-    .parcours-calculs strong { display: block; color: var(--blue); font-size: .95rem; }
-    .parcours-calculs small { display: block; margin-top: 2px; color: var(--muted); font-size: .8rem; }
-    .parcours-calculs .back-icon svg { transform: rotate(180deg); }
     .calculs-screen { max-width: 560px; margin: 0 auto; }
     .calculs-resume { margin: 12px 0 0; color: var(--ink); font-weight: 900; text-align: center; }
     .calculs-detail {
@@ -560,7 +508,7 @@
     .mc-detail-note { font-size: .78rem; font-weight: 700; opacity: .85; }
     .calculs-detail.is-su { border-color: #9ed4b4; color: var(--green); background: var(--green-soft); }
     .calculs-detail.is-en-cours { border-color: #a9c8e8; color: var(--blue); background: #eef6ff; }
-    .calculs-detail.is-a-travailler { border-color: #f2c59a; color: #9a4207; background: #fff1e4; }
+    .calculs-detail.is-a-travailler { border-color: #efb4b4; color: var(--red); background: var(--red-soft); }
     .calculs-grille {
       display: grid;
       grid-template-columns: auto repeat(8, minmax(0, 1fr));
@@ -586,7 +534,7 @@
       background: #eef3f7;
       cursor: pointer;
     }
-    .mc-cell.is-a-travailler { border-color: #f2c59a; color: #b45309; background: #fff1e4; }
+    .mc-cell.is-a-travailler { border-color: #efb4b4; color: var(--red); background: var(--red-soft); }
     .mc-cell.is-en-cours { border-color: #a9c8e8; color: var(--blue); background: #eef6ff; }
     .mc-cell.is-su { border-color: #9ed4b4; color: var(--green); background: var(--green-soft); }
     .mc-cell.is-miroir { opacity: .35; }
@@ -597,7 +545,6 @@
     .mc-case.is-pleine { background: currentColor; }
     .calculs-legende { display: flex; flex-wrap: wrap; justify-content: center; gap: 5px 12px; margin: 10px 0 0; color: var(--muted); font-size: .8rem; font-weight: 850; }
     .calculs-legende .mc-cell { min-height: 22px; min-width: 26px; pointer-events: none; }
-    .calculs-note { margin: 10px 0 0; color: var(--muted); font-size: .82rem; text-align: center; }
     .calculs-action { margin: 14px 0 0; text-align: center; }
     .calculs-action .primary { width: min(100%, 340px); }
     .calculs-hint { margin: 8px 0 0; color: var(--muted); font-size: .85rem; text-align: center; }
@@ -1070,18 +1017,26 @@
 
     @media (max-width: 620px) {
       .shell { width: 100%; }
-      .topbar { min-height: 58px; padding: 5px 10px; }
+      .topbar { min-height: 58px; padding: 5px 10px; gap: 6px 12px; }
       .brand img { width: 82px; }
       .topbar-actions { gap: 4px; }
       .catalogue-link { padding: 0 10px; font-size: .73rem; }
       .fullscreen-toggle { display: none; }
+      /* En-tête compact (lot 2, point 9 ; version A choisie par Gwenaël le
+         08/09) : ligne 1 = logo, « Se déconnecter » en pilule, flèche ; ligne 2
+         = le repère de suivi sur toute la largeur, une seule ligne — la même
+         hiérarchie que sur PC. 130 → 85 px. Le texte du repère ne change pas.
+         Les états longs (code refusé, hors ligne) gardent le droit de passer à
+         la ligne : rien n'y est coupé. */
+      .suivi-repere { display: block; margin: -2px 0 0; padding: 4px 10px; font-size: .8rem; border-radius: 10px; text-align: center; }
+      .suivi-repere .puce { display: inline-block; vertical-align: middle; margin-right: 6px; }
+      .suivi-repere:not(.detache):not(.hors-ligne) { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .suivi-repere .sortie-bloc { display: none; }
+      .catalogue-link.suivi-sortie { display: inline-flex; }
       .panel { min-height: calc(100vh - 96px); padding: 18px 12px 27px; border-right: 0; border-left: 0; border-radius: 20px; }
       .intro,
       .result { margin: 20px auto; }
-      .mode-screen h1 { font-size: 2.1rem; }
-      .mode-choice { grid-template-columns: 1fr; gap: 7px; margin-top: 14px; }
-      .mode-card { min-height: 66px; padding: 9px 38px 9px 12px; }
-      .mode-card-icon { font-size: 1.45rem; }
+      .intro { margin: 6px auto 14px; }
       .settings-toolbar { padding: 0 70px; }
       .settings-back { padding: 6px 10px; font-size: .74rem; }
       .settings-panel { margin: 8px 0 0; padding: 11px 9px; }
@@ -1203,8 +1158,6 @@
 
     @media (max-width: 480px) {
       .parcours-toolbar { padding: 0 50px; }
-      .parcours-next { grid-template-columns: 1fr; }
-      .parcours-next .primary { width: 100%; }
       .parcours-row { padding: 9px 8px 10px; }
       .parcours-cells { gap: 3px; grid-template-columns: repeat(4, minmax(0, 1fr)) 5px repeat(3, minmax(0, 1fr)) 5px minmax(48px, 1.4fr); }
       .parcours-group-label { font-size: .58rem; letter-spacing: .01em; }
@@ -1281,7 +1234,7 @@
     /* Mêmes couleurs que l'écran « Mes calculs » de l'appli : la fiche imprimée
        et l'écran racontent exactement la même chose, au même coup d'œil. */
     .fiche-carre td.jamais-vu { background: #f8fcff; color: #7ea1b8; }
-    .fiche-carre td.a-travailler { background: #fff1e4; color: #b45309; }
+    .fiche-carre td.a-travailler { background: #ffebeb; color: #a93030; }
     .fiche-carre td.en-cours { background: #eef6ff; color: #0b57b7; }
     .fiche-carre td.su { background: #e9f7ef; color: #147447; }
     .fiche-carre td.miroir { background: #eef1f5; }
@@ -1317,6 +1270,11 @@
         <img src="/assets/img/mathsgo-logo.png" alt="maths&amp;go" width="1338" height="622">
       </a>
       <div class="topbar-actions">
+        <!-- En-tête compact sur téléphone (lot 2, point 9) : le repère passe
+             sur sa propre ligne, tout en haut, et « Se déconnecter » devient
+             cette pilule à côté de la flèche. Sur PC et tablette elle n'existe
+             pas : la sortie reste sur le repère lui-même. -->
+        <button id="suivi-sortie" class="catalogue-link suivi-sortie" type="button" hidden>Se déconnecter</button>
         <a id="lien-retour" class="catalogue-link" href="../index.html?domain=nombres-calculs&amp;notion=calcul-mental" aria-label="Retour au calcul mental"><span class="back-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="20" height="20"><path d="M19 12H5M11 6l-6 6 6 6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="catalogue-link-label">Calcul mental</span></a>
         <button class="fullscreen-toggle" type="button" data-fullscreen-toggle aria-pressed="false" aria-label="Passer en plein écran"><span class="fullscreen-toggle-icon" data-fullscreen-icon aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><path class="fullscreen-expand" d="M8 3H3v5M16 3h5v5M8 21H3v-5M16 21h5v-5"/><path class="fullscreen-collapse" d="M3 8h5V3M21 8h-5V3M3 16h5v5M21 16h-5v5"/></svg></span><span data-fullscreen-label>Plein écran</span></button>
       </div>
@@ -1345,31 +1303,38 @@
     <section class="panel">
       <div id="intro" class="intro">
         <section id="mode-screen" class="mode-screen">
-          <h1 id="intro-title" tabindex="-1">Comment veux-tu travailler&nbsp;?</h1>
-          <div class="mode-choice" role="group" aria-label="Choisis ton parcours">
-            <button id="open-parcours" class="mode-card mode-card-parcours" type="button" aria-controls="parcours">
-              <span class="mode-card-icon" aria-hidden="true">🗺️</span>
-              <span><strong>Mon parcours</strong><small>Mes tables, mes progrès, ma prochaine étape</small></span>
-            </button>
-            <button class="mode-card" type="button" data-mode="learn" aria-controls="settings-screen">
-              <span class="mode-card-icon" aria-hidden="true">🌱</span>
-              <span><strong>J’apprends</strong><small>1 table · activités au choix</small></span>
-            </button>
-            <button class="mode-card" type="button" data-mode="train" aria-controls="settings-screen">
-              <span class="mode-card-icon" aria-hidden="true">🎯</span>
-              <span><strong>Je m’entraîne</strong><small>10 ou 20 questions · à mon rythme</small></span>
-            </button>
-            <button class="mode-card" type="button" data-mode="test" aria-controls="settings-screen">
-              <span class="mode-card-icon" aria-hidden="true">⏱️</span>
-              <span><strong>Je deviens expert</strong><small>3 niveaux · 1 à 3 minutes</small></span>
-            </button>
-            <button class="mode-card" type="button" data-mode="custom" aria-controls="settings-screen">
-              <span class="mode-card-icon" aria-hidden="true">⚙️</span>
-              <span><strong>Réglages</strong><small>Je choisis tout</small></span>
-            </button>
-          </div>
-          <div class="secondary-mode-choice">
-            <button class="secondary-mode-button" type="button" data-mode="evaluation" aria-controls="settings-screen">Comme l’évaluation CM1</button>
+          <!-- L'accueil « Ma table » (lot 2) : tout ce qui s'y lit est calculé
+               par renderAccueil() à partir du parcours. Rien n'est verrouillé,
+               rien n'est imposé : les trois étapes sont toujours toutes
+               disponibles, l'appli surligne celle qu'elle conseille. -->
+          <div class="acc">
+            <!-- Pas de ligne « Bonjour » (Gwenaël, 08/09) : le bandeau de suivi
+                 dit déjà qui est là, l'accueil commence par le bloc Ma table. -->
+            <section class="matable" aria-labelledby="acc-table-titre">
+              <div class="matable-head">
+                <div><p class="eyebrow">Ma table</p><h1 id="acc-table-titre" tabindex="-1">La table de 2</h1></div>
+                <div class="matable-droite">
+                  <button id="acc-changer" class="matable-changer" type="button" aria-expanded="false" aria-controls="acc-choix">Changer de table</button>
+                  <small id="acc-acquises">0 table acquise sur 9</small>
+                </div>
+              </div>
+              <div id="acc-choix" class="matable-choix" role="group" aria-label="Choisir ma table" hidden></div>
+              <div id="acc-etapes" class="etapes"></div>
+            </section>
+            <button id="acc-reviser" class="reviser" type="button"><span><strong id="acc-reviser-titre">Réviser mes calculs</strong><small id="acc-reviser-note">10 questions sans chrono</small></span><span class="go">Réviser&nbsp;→</span></button>
+            <div class="acc-liens">
+              <button id="open-parcours" class="acc-lien" type="button" aria-controls="parcours"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6.5 9 4l6 2.5 6-2.5v13l-6 2.5-6-2.5-6 2.5z" fill="#e7f8f5" stroke="#087a71" stroke-width="1.8" stroke-linejoin="round"/><path d="M9 4v13M15 6.5v13" stroke="#087a71" stroke-width="1.8"/><circle cx="12" cy="10" r="1.8" fill="#e0771a"/></svg><span>Mon parcours<small>toutes mes tables, le mélange, Expert</small></span></button>
+              <button id="open-calculs" class="acc-lien" type="button" aria-controls="calculs"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="3" fill="#fff" stroke="#0755b8" stroke-width="1.8"/><path d="M3 9h18M3 15h18M9 3v18M15 3v18" stroke="#0755b8" stroke-width="1.5"/><rect x="9.8" y="9.8" width="4.4" height="4.4" fill="#147447"/><rect x="15.8" y="3.8" width="4.4" height="4.4" fill="#a93030"/><rect x="3.8" y="15.8" width="4.4" height="4.4" fill="#0755b8"/></svg><span>Mes calculs<small>la grille des 36 calculs</small></span></button>
+            </div>
+            <div class="acc-bas">
+              <button id="acc-print" type="button">Imprimer ma fiche</button>
+              <button id="acc-notice-bouton" type="button" aria-expanded="false" aria-controls="acc-notice">Comment ça marche&nbsp;?</button>
+              <!-- Sans code (mathsgo.re) seulement : deux portes pour les
+                   professeurs. Avec un code élève, body.mode-eleve les retire. -->
+              <button class="acc-site" type="button" data-mode="custom" aria-controls="settings-screen">Réglages libres</button>
+              <button class="acc-site" type="button" data-mode="evaluation" aria-controls="settings-screen">Évaluation CM1</button>
+            </div>
+            <div id="acc-notice" class="notice" data-notice hidden></div>
           </div>
         </section>
 
@@ -1380,7 +1345,7 @@
           </div>
           <div id="settings-panel" class="settings-panel">
           <fieldset id="table-settings" class="setting-group">
-            <legend class="sr-only">Tables à travailler</legend>
+            <legend class="sr-only">Tables à choisir</legend>
             <div class="table-options">
               <button id="all-tables" class="selection-button all-tables" type="button" data-all-tables aria-pressed="false">Toutes les tables</button>
               <button class="selection-button" type="button" data-table="1" aria-pressed="false">× 1</button>
@@ -1469,14 +1434,15 @@
 
       <div id="parcours" class="parcours-screen" hidden>
         <div class="parcours-toolbar">
-          <button id="parcours-back" class="settings-back" type="button" aria-label="Retour au menu"><span class="back-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="20" height="20"><path d="M19 12H5M11 6l-6 6 6 6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="settings-back-label">Menu</span></button>
+          <button id="parcours-back" class="settings-back" type="button" aria-label="Retour à Ma table"><span class="back-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="20" height="20"><path d="M19 12H5M11 6l-6 6 6 6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="settings-back-label">Ma table</span></button>
           <h1 id="parcours-title" class="settings-heading" tabindex="-1">Mon parcours</h1>
           <button id="parcours-more" class="parcours-more" type="button" aria-label="Options du parcours" aria-expanded="false" aria-controls="parcours-options">⋯</button>
         </div>
         <div id="parcours-options" class="parcours-options" hidden>
           <button id="parcours-rename" class="secondary" type="button">Modifier mon prénom</button>
-          <button id="parcours-print-option" class="secondary" type="button">Imprimer ma fiche</button>
           <button id="parcours-reset" class="secondary" type="button">Recommencer à zéro</button>
+          <button id="parcours-print-option" class="secondary" type="button">Imprimer ma fiche</button>
+          <button id="parcours-notice-option" class="secondary" type="button">Comment ça marche&nbsp;?</button>
         </div>
         <form id="parcours-name" class="parcours-name" hidden>
           <label for="parcours-name-input">Comment t’appelles-tu&nbsp;? <span class="sr-only">(facultatif)</span></label>
@@ -1494,12 +1460,6 @@
             <button id="parcours-confirm-no" class="secondary" type="button">Garder</button>
           </div>
         </div>
-        <div id="parcours-next" class="parcours-next"></div>
-        <button id="parcours-calculs" class="parcours-calculs" type="button" aria-controls="calculs">
-          <span class="parcours-calculs-icon" aria-hidden="true">🔢</span>
-          <span><strong>Mes calculs</strong><small id="parcours-calculs-compteur">Ta grille des 36 calculs</small></span>
-          <span class="back-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="20" height="20"><path d="M19 12H5M11 6l-6 6 6 6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
-        </button>
         <div class="parcours-legend" aria-hidden="true">
           <span><span class="cell"><span class="dot"></span></span> pas fait</span>
           <span><span class="cell is-started"><span class="dot"></span></span> commencé</span>
@@ -1508,7 +1468,10 @@
         <ol id="parcours-list" class="parcours-list"></ol>
         <div id="parcours-melange" class="parcours-row parcours-extra" hidden></div>
         <div id="parcours-expert" class="parcours-row parcours-extra"></div>
-        <p class="parcours-note">Réglages et Évaluation CM1 sont à part : ils ne comptent ni dans cette carte, ni dans Mes calculs. Touche un rond, un ✓ ou une étoile pour lancer la bonne série.</p>
+        <div class="acc-bas parcours-notice-action">
+          <button id="parcours-notice-bouton" type="button" aria-expanded="false" aria-controls="parcours-notice">Comment ça marche&nbsp;?</button>
+        </div>
+        <div id="parcours-notice" class="notice" data-notice hidden></div>
         <div class="parcours-print-action">
           <button id="parcours-print" class="secondary" type="button">🖨 Imprimer ma fiche</button>
           <a class="revision-sheet-link" href="./fiche_parcours_tables.pdf" target="_blank" rel="noopener">Fiche vierge à remplir</a>
@@ -1518,23 +1481,26 @@
 
       <div id="calculs" class="calculs-screen" hidden>
         <div class="settings-toolbar">
-          <button id="calculs-back" class="settings-back" type="button" aria-label="Retour à mon parcours"><span class="back-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="20" height="20"><path d="M19 12H5M11 6l-6 6 6 6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="settings-back-label">Parcours</span></button>
+          <button id="calculs-back" class="settings-back" type="button" aria-label="Retour à Ma table"><span class="back-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="20" height="20"><path d="M19 12H5M11 6l-6 6 6 6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="settings-back-label">Ma table</span></button>
           <h1 id="calculs-title" class="settings-heading" tabindex="-1">Mes calculs</h1>
+        </div>
+        <!-- Le bouton d'abord, sous le titre (décision du 08/09/2026) : c'est
+             l'action ; la grille se lit ensuite. Les règles ne sont plus
+             écrites ici — elles vivent dans « Comment ça marche ? » — et le
+             détail d'une case dit la seule phrase utile au bon moment. -->
+        <div class="calculs-action">
+          <button id="calculs-reviser" class="primary" type="button">Réviser mes calculs</button>
+          <p id="calculs-hint" class="calculs-hint">10 questions sans chrono, sur ce que tu sais le moins.</p>
         </div>
         <p id="calculs-resume" class="calculs-resume"></p>
         <p id="calculs-detail" class="calculs-detail" role="status" aria-live="polite"></p>
         <div id="calculs-grille" class="calculs-grille" role="grid" aria-label="Grille des 36 calculs, de 2 fois 2 à 9 fois 9"></div>
         <div class="calculs-legende" aria-hidden="true">
           <span><span class="mc-cell"><span class="mc-cases"><span class="mc-case"></span><span class="mc-case"></span><span class="mc-case"></span></span></span> pas encore vu</span>
-          <span><span class="mc-cell is-a-travailler"><span class="mc-cases"><span class="mc-case"></span><span class="mc-case"></span><span class="mc-case"></span></span></span> à travailler</span>
-          <span><span class="mc-cell is-en-cours"><span class="mc-cases"><span class="mc-case is-pleine"></span><span class="mc-case"></span><span class="mc-case"></span></span></span> en cours</span>
+          <span><span class="mc-cell is-a-travailler"><span class="mc-cases"><span class="mc-case"></span><span class="mc-case"></span><span class="mc-case"></span></span></span> à revoir</span>
+          <span><span class="mc-cell is-en-cours"><span class="mc-cases"><span class="mc-case is-pleine"></span><span class="mc-case"></span><span class="mc-case"></span></span></span> en route</span>
           <span><span class="mc-cell is-su"><span class="mc-cases"><span class="mc-case is-pleine"></span><span class="mc-case is-pleine"></span><span class="mc-case is-pleine"></span></span></span> su</span>
         </div>
-        <div class="calculs-action">
-          <button id="calculs-reviser" class="primary" type="button">Réviser mes calculs</button>
-          <p id="calculs-hint" class="calculs-hint">10 questions sans chrono, sur ce que tu sais le moins.</p>
-        </div>
-        <p class="calculs-note">Une case gagnée par bonne réponse — au plus une par jour et par calcul, su = trois jours différents — et une case perdue à chaque erreur. La grille se remplit dans les séries du parcours et les révisions, jamais dans J’apprends, Réglages ou l’évaluation CM1. 7 × 8 et 8 × 7 comptent ensemble : la moitié grisée du tableau est le miroir de l’autre.</p>
       </div>
 
       <div id="play" hidden>
@@ -1576,10 +1542,9 @@
         <p id="result-previous" class="previous-score" hidden></p>
         <section id="corrections" class="corrections" aria-live="polite"></section>
         <div class="result-actions">
-          <button id="retry" class="primary" type="button">Rejouer pareil</button>
-          <button id="change-settings" class="secondary" type="button">Changer d’entraînement</button>
+          <button id="result-accueil" class="primary" type="button">Ma table</button>
+          <button id="retry" class="secondary" type="button">Rejouer</button>
           <button id="result-open-parcours" class="secondary" type="button">Voir mon parcours</button>
-          <a class="secondary" href="../index.html?domain=nombres-calculs&amp;notion=calcul-mental">Retour au calcul mental</a>
         </div>
       </div>
     </section>
@@ -1631,7 +1596,7 @@
       <h1 class="fiche-page2-title">Mes calculs</h1>
       <p class="fiche-page2-subtitle" id="fiche-calculs-subtitle">Trois cases par calcul : une bonne réponse en coche une (au plus une par jour), une erreur en efface une. Trois cases = calcul su.</p>
       <table id="fiche-calculs" class="fiche-carre"><tbody></tbody></table>
-      <p class="fiche-carre-note">Gris clair : pas encore vu · orange : à travailler · bleu : en cours · vert : su. La moitié grisée est le miroir de l’autre — 7 × 8 et 8 × 7 sont le même calcul.</p>
+      <p class="fiche-carre-note">Gris clair : pas encore vu · rouge : à revoir · bleu : en route · vert : su. La moitié grisée est le miroir de l’autre — 7 × 8 et 8 × 7 sont le même calcul.</p>
       <div class="fiche-rules">
         <strong>Comment lire la grille</strong>
         <p><b>7 × 8 = 8 × 7</b> : c’est le même calcul à mémoriser, il n’occupe qu’une case du tableau. C’est pourquoi une moitié est grisée.</p>
@@ -1642,6 +1607,17 @@
       <footer class="fiche-foot">mathsgo.re · CC BY-NC-SA 4.0</footer>
     </section>
   </section>
+  <!-- « Comment ça marche ? » : les règles ACTUELLES en quatre phrases, écrites
+       une seule fois et clonées dans l'accueil et dans Mon parcours. Rien
+       d'autre n'explique de règle sur les écrans de l'élève (à part le détail
+       d'une case de Mes calculs). Le mélange obligatoire, les étoiles et les
+       rangs du lot 3 s'ajouteront ICI, pas ailleurs. -->
+  <template id="notice-regles">
+    <p><b>Une table.</b> Je l’apprends si je veux, je m’entraîne 3 fois — dans le désordre, avec des trous, puis les deux — et je la valide : 20 questions en 1 min 30, 2 erreurs au maximum.</p>
+    <p><b>Mes calculs.</b> Chaque calcul a 3 cases. Une bonne réponse = 1 case, mais une seule par jour : un calcul est su quand je l’ai réussi trois jours différents. Une erreur enlève une case, et ce jour-là je ne peux pas la regagner.</p>
+    <p><b>Réviser.</b> 10 questions sans chrono sur ce que je sais le moins.</p>
+    <p><b>Le mélange et Expert.</b> Dès 2 tables acquises, le mélange de mes tables : 25 produits en 2 min, à refaire à chaque nouvelle table. Expert mélange toutes les tables de 2 à 10 : ★ produits, ★★ avec des trous, ★★★ avec des divisions — 25 questions en 2 min, 2 erreurs au maximum.</p>
+  </template>
   <footer class="site-footer">
     <span>Gwenaël Bourgault</span><span aria-hidden="true">·</span>
     <a href="mailto:gwenael@mathsgo.re?subject=Contact%20depuis%20mathsgo.re">Me contacter</a><span aria-hidden="true">·</span>
@@ -1823,6 +1799,11 @@
       function majLienRetour() {
         // Un élève dont le billet a été refusé vient quand même de son espace.
         const vers = suiviActif() || entreeRefusee ? RETOUR_ESPACE : RETOUR_CATALOGUE;
+        // Le même signal décide de l'accueil (lot 2, 08/09/2026) : sous un code,
+        // ou venu de son espace, l'élève ne voit ni Réglages libres ni
+        // l'évaluation CM1 — la classe est lue par le CSS (body.mode-eleve).
+        // Aucun paramètre d'adresse : c'est le code, et lui seul, qui le dit.
+        if (document.body) document.body.classList.toggle("mode-eleve", Boolean(suiviActif() || entreeRefusee));
         // Le logo suit la même règle que le lien du haut. C'était la dernière
         // porte qui faisait sortir un élève suivi de son espace : pour lui, le
         // logo ramène à son espace, pas à l'accueil du site. Pour tous les
@@ -2106,6 +2087,7 @@
       // répondu, orange quand rien n'est encore parti. Jamais un secret, et la
       // porte de sortie est dessus.
       function renderRepere() {
+        renderSortieBarre();
         const repere = document.getElementById("suivi-repere");
         if (!repere) return;
         if (!suiviActif() && entreeRefusee) { renderEntreeRefusee(repere); return; }
@@ -2147,8 +2129,16 @@
         // Le séparateur voyage AVEC le bouton : sur téléphone, le bandeau passe
         // à la ligne, et un « · » resté seul en fin de ligne se lit « 405· ».
         const bloc = document.createElement("span");
+        bloc.className = "sortie-bloc";
         bloc.append(document.createTextNode("· "), sortie);
         repere.append(bloc);
+      }
+
+      // La pilule « Se déconnecter » de l'en-tête compact (téléphone) : le même
+      // geste que la sortie du repère, visible seulement sous un code.
+      function renderSortieBarre() {
+        const pilule = document.getElementById("suivi-sortie");
+        if (pilule) pilule.hidden = !suiviActif();
       }
 
       // Le billet n'a rien ouvert : on le dit à la place du repère, avec le
@@ -2689,13 +2679,14 @@
 
       function show(name) {
         ["intro", "launch", "play", "result", "parcours", "calculs"].forEach(id => { $(id).hidden = id !== name; });
+        if (name === "intro") renderAccueil();
         if (name === "parcours") renderParcours();
         if (name === "calculs") renderCalculs();
         document.body.classList.toggle("challenge-playing", name === "play" || name === "launch");
         if (name === "intro") syncControls();
         document.body.classList.toggle("settings-open", name === "intro" && Boolean(configuration.mode));
         window.scrollTo({top: 0, behavior: "auto"});
-        if (name === "intro") (configuration.mode ? $("settings-title") : $("intro-title")).focus?.({preventScroll: true});
+        if (name === "intro") (configuration.mode ? $("settings-title") : $("acc-table-titre")).focus?.({preventScroll: true});
         if (name === "launch") $("launch-summary").focus?.({preventScroll: true});
         if (name === "result") $("result-title").focus?.({preventScroll: true});
         if (name === "parcours") $("parcours-title").focus?.({preventScroll: true});
@@ -2754,7 +2745,6 @@
         stopTimer();
         show("intro");
         window.scrollTo({top: 0, behavior: "auto"});
-        $("intro-title").focus?.({preventScroll: true});
       }
 
       function allTablesFor(mode) {
@@ -3413,7 +3403,7 @@
             if (correct) state.revisionPremierScore += 1;
           }
           // Un calcul raté revient UNE fois dans la série ; s'il est encore raté,
-          // il reste « à travailler » et la prochaine révision le reprendra.
+          // il reste « à revoir » et la prochaine révision le reprendra.
           const willRetry = !correct && !question.retry;
           if (willRetry) {
             const dejaEnAttente = state.questions.slice(state.index + 1).some(candidate => candidate.factKey === question.factKey);
@@ -3512,18 +3502,30 @@
         return span;
       }
 
+      // Les trois mots d'état, tranchés le 08/09/2026 : « à revoir » (rouge,
+      // 0 case après une erreur), « en route » (bleu, 1 ou 2 cases), « su »
+      // (vert, 3 cases). Les clés du moteur (a-travailler, en-cours) ne
+      // changent pas : ce sont des identifiants, pas des mots pour l'élève.
       function resumeCalculsTexte(resume) {
-        const morceaux = [`${pluriel(resume.sus, "calcul")} su${resume.sus > 1 ? "s" : ""}`, `${resume.enCours} en cours`, `${resume.aTravailler} à travailler`];
+        const morceaux = [`${resume.sus} su${resume.sus > 1 ? "s" : ""}`, `${resume.enCours} en route`, `${resume.aTravailler} à revoir`];
         if (resume.jamaisVus) morceaux.push(`${resume.jamaisVus} pas encore vu${resume.jamaisVus > 1 ? "s" : ""}`);
         return morceaux.join(" · ");
       }
 
       const LIBELLES_ETATS_CALCULS = Object.freeze({
         "jamais-vu": "pas encore vu",
-        "a-travailler": "à travailler",
-        "en-cours": "en cours",
+        "a-travailler": "à revoir",
+        "en-cours": "en route",
         "su": "su"
       });
+
+      // La phrase du bouton Réviser, la même sur l'accueil et dans Mes calculs.
+      function phraseReviser(resume) {
+        if (resume.aTravailler || resume.enCours) return "10 questions sans chrono, sur ce que tu sais le moins.";
+        if (resume.sus === resume.total) return "Tout est su ! 10 questions pour entretenir ta grille.";
+        if (resume.sus) return "Rien à revoir pour l’instant : on complète et on entretient ta grille.";
+        return "Ta grille est vide : on découvre les 10 premiers calculs.";
+      }
 
       function renderCalculsDetail() {
         const zone = $("calculs-detail");
@@ -3548,9 +3550,12 @@
         const calcul = ligne === colonne
           ? `${ligne} × ${colonne} = ${produit}`
           : `${ligne} × ${colonne} = ${colonne} × ${ligne} = ${produit}`;
+        // C'est ICI, et seulement ici, que la règle du jour est dite — quand
+        // elle explique ce que l'élève a sous les yeux.
         let note = "";
-        if (fait && fait.erreur) note = `Dernière erreur : ${formaterJour(fait.erreur)}.`;
+        if (fait && fait.erreur === jourDuJour()) note = "Tu t’es trompé aujourd’hui : entraîne-toi, et reviens demain pour regagner ta case.";
         else if (fait && fait.gagne === jourDuJour()) note = "Une case par jour : reviens demain.";
+        else if (fait && fait.erreur) note = `Dernière erreur : ${formaterJour(fait.erreur)}.`;
         else if (fait && fait.vu) note = `Vu ${formaterJour(fait.vu)}.`;
         zone.className = `calculs-detail is-${etat}`;
         zone.replaceChildren();
@@ -3562,11 +3567,7 @@
       function renderCalculs() {
         const grille = PARCOURS.grilleCalculs(parcours);
         $("calculs-resume").textContent = resumeCalculsTexte(grille.resume);
-        $("calculs-hint").textContent = grille.resume.aTravailler || grille.resume.enCours
-          ? "10 questions sans chrono, sur ce que tu sais le moins."
-          : grille.resume.sus
-            ? "Rien à retravailler pour l’instant : on complète et on entretient ta grille."
-            : "Ta grille est vide : on découvre les 10 premiers calculs.";
+        $("calculs-hint").textContent = phraseReviser(grille.resume);
         const zone = $("calculs-grille");
         zone.replaceChildren();
         const coin = document.createElement("span");
@@ -3659,7 +3660,9 @@
         $("result-title").textContent = `${score} / ${total} au premier essai`;
         $("result-config").textContent = `Réviser mes calculs${table ? ` · table de ${table}` : ""} · ${total} questions · sans chronomètre`;
         $("result-icon").hidden = score < Math.ceil(total * .8);
-        $("result-detail").textContent = `Un calcul raté revient une fois dans la série ; ce qui reste faux repartira dans la prochaine révision. Une case par calcul et par jour : reviens un autre jour pour continuer à remplir ta grille. Série terminée en ${formatElapsed(elapsed)}.`;
+        // La règle (retour unique, une case par jour) n'est plus écrite ici :
+        // elle vit dans « Comment ça marche ? » et dans le détail d'une case.
+        $("result-detail").textContent = `Série terminée en ${formatElapsed(elapsed)}.`;
         $("result-message").hidden = true;
         $("result-previous").hidden = true;
         $("retry").hidden = true;
@@ -3671,7 +3674,7 @@
         const bilan = document.createElement("p");
         bilan.textContent = [
           verts ? `${pluriel(verts, "calcul")} passé${verts > 1 ? "s" : ""} au vert` : "Aucun calcul passé au vert cette fois",
-          resume.aTravailler ? `${resume.aTravailler} calcul${resume.aTravailler > 1 ? "s restent" : " reste"} à travailler` : "plus aucun calcul à travailler"
+          resume.aTravailler ? `${resume.aTravailler} calcul${resume.aTravailler > 1 ? "s restent" : " reste"} à revoir` : "plus aucun calcul à revoir"
         ].join(" · ") + ".";
         zone.append(bilan);
         const actions = document.createElement("div");
@@ -3692,16 +3695,244 @@
         show("result");
       }
 
+      /* ---------- L'accueil « Ma table » (lot 2, 08/09/2026) ---------- */
+      // La table choisie par « Changer de table » ne vit que dans l'onglet,
+      // avec le code sous lequel elle a été choisie : rien n'est ajouté au
+      // parcours (donc rien à déclarer au serveur, rien à fusionner), et le
+      // camarade suivant sur le même onglet retrouve l'ordre conseillé. Une
+      // table acquise n'est plus « ma table » : l'accueil passe à la suivante
+      // de l'ordre conseillé (2, 10, 5, 3, 4, 6, 7, 8, 9).
+      const CLE_TABLE_CHOISIE = "mathsgo-defi-tables-table";
+
+      function lireTableChoisie() {
+        try {
+          const onglet = stockageSession();
+          const lu = onglet ? JSON.parse(onglet.getItem(CLE_TABLE_CHOISIE) || "null") : null;
+          if (!lu || lu.code !== codeSuivi) return null;
+          const table = Number(lu.table);
+          return PARCOURS_TABLES.includes(table) ? table : null;
+        } catch (_) { return null; }
+      }
+
+      function ecrireTableChoisie(table) {
+        try {
+          const onglet = stockageSession();
+          if (!onglet) return;
+          if (table) onglet.setItem(CLE_TABLE_CHOISIE, JSON.stringify({code: codeSuivi, table}));
+          else onglet.removeItem(CLE_TABLE_CHOISIE);
+        } catch (_) {}
+      }
+
+      function tableEnCours(etat) {
+        const choisie = lireTableChoisie();
+        if (choisie && !etat.acquises.includes(choisie)) return choisie;
+        const ordre = PARCOURS.ORDRE_CONSEIL;
+        return ordre.find(table => !etat.acquises.includes(table)) || ordre[ordre.length - 1];
+      }
+
+      // L'étape conseillée pour UNE table — la même lecture que le moteur
+      // (etapeTable, dans defi_tables_mon_parcours.js) : validation quand les
+      // trois entraînements sont réussis, J'apprends tant que rien n'est
+      // commencé, sinon le premier entraînement qui n'est pas réussi.
+      function etapeConseillee(ligne) {
+        const reussis = ligne.entraine.filter(item => item.etat === 2).length;
+        if (ligne.acquise) return "valide";
+        if (reussis === ligne.entraine.length) return "valide";
+        const commence = ligne.apprends.some(item => item.etat > 0) || ligne.entraine.some(item => item.etat > 0);
+        return commence ? "entraine" : "apprends";
+      }
+
+      const NOMS_ENTRAINEMENTS = Object.freeze({desordre: "le désordre", trous: "les trous", mixte: "les deux"});
+
+      function listeTables(tables) {
+        if (tables.length <= 1) return tables.join("");
+        return `${tables.slice(0, -1).join(", ")} et ${tables[tables.length - 1]}`;
+      }
+
+      function etoile(on, extra = "") {
+        const i = document.createElement("i");
+        i.className = `${on === 2 ? "on" : on === 1 ? "is-started" : ""} ${extra}`.trim();
+        return i;
+      }
+
+      function ligneEtape({classe, num, titre, sousTitre, points, conseille, aria, action}) {
+        const bouton = document.createElement("button");
+        bouton.type = "button";
+        bouton.className = `etape ${classe}${conseille ? " is-next" : ""}`.trim();
+        const numero = document.createElement("span");
+        numero.className = "num";
+        numero.textContent = num;
+        const texte = document.createElement("span");
+        const fort = document.createElement("strong");
+        fort.textContent = titre;
+        const petit = document.createElement("small");
+        petit.textContent = sousTitre;
+        texte.append(fort, petit);
+        const dots = document.createElement("span");
+        dots.className = "dots";
+        dots.setAttribute("aria-hidden", "true");
+        points.forEach(point => dots.append(point));
+        bouton.append(numero, texte, dots);
+        bouton.setAttribute("aria-label", `${aria}${conseille ? " Étape conseillée." : ""} Lancer.`);
+        bouton.addEventListener("click", action);
+        return bouton;
+      }
+
+      function renderAccueil() {
+        const etat = PARCOURS.etatAffichage(parcours);
+        const nombre = etat.acquises.length;
+        $("acc-acquises").textContent = `${nombre} table${nombre > 1 ? "s" : ""} acquise${nombre > 1 ? "s" : ""} sur ${PARCOURS_TABLES.length}`;
+
+        const table = tableEnCours(etat);
+        const ligne = etat.lignes.find(item => item.table === table);
+        $("acc-table-titre").textContent = `La table de ${table}`;
+
+        // Le choix de la table : neuf cases, les acquises cochées.
+        const choix = $("acc-choix");
+        choix.hidden = !state.choixTableOuvert;
+        $("acc-changer").setAttribute("aria-expanded", String(Boolean(state.choixTableOuvert)));
+        choix.replaceChildren();
+        PARCOURS_TABLES.forEach(candidate => {
+          const bouton = document.createElement("button");
+          bouton.type = "button";
+          const acquise = etat.acquises.includes(candidate);
+          bouton.className = `${acquise ? "is-acquise" : ""}${candidate === table ? " is-selected" : ""}`.trim();
+          bouton.textContent = acquise ? `${candidate} ✓` : String(candidate);
+          bouton.setAttribute("aria-pressed", String(candidate === table));
+          bouton.setAttribute("aria-label", `Table de ${candidate}${acquise ? ", acquise" : ""}`);
+          bouton.addEventListener("click", () => {
+            ecrireTableChoisie(candidate);
+            state.choixTableOuvert = false;
+            renderAccueil();
+            $("acc-table-titre").focus?.({preventScroll: true});
+          });
+          choix.append(bouton);
+        });
+
+        // L'étape surlignée : celle que le moteur conseille (révision dès 5
+        // calculs à revoir, puis le mélange, puis la table) — mais pour la
+        // table affichée, qui peut être celle que l'élève a choisie.
+        const prochaine = etat.prochaine;
+        const conseil = prochaine.type === "revision" ? "reviser"
+          : prochaine.type === "melange" || prochaine.type === "expert" ? "melange"
+          : prochaine.type === "champion" ? ""
+          : etapeConseillee(ligne);
+
+        const etapes = $("acc-etapes");
+        etapes.replaceChildren();
+
+        const terminees = ligne.apprends.filter(item => item.etat === 2).length;
+        const prochaineActivite = ligne.apprends.find(item => item.etat !== 2);
+        etapes.append(ligneEtape({
+          classe: "apprends",
+          num: "1",
+          titre: "J’apprends",
+          sousTitre: terminees ? `facultatif · ${terminees} activité${terminees > 1 ? "s" : ""} sur 4` : "facultatif · 4 activités",
+          points: ligne.apprends.map(item => etoile(item.etat)),
+          conseille: conseil === "apprends",
+          aria: `J’apprends la table de ${table}, facultatif : ${terminees} activité${terminees > 1 ? "s" : ""} sur 4.`,
+          action: () => launchFromParcours(PARCOURS.configApprends(table, (prochaineActivite || ligne.apprends[0]).activite), "menu")
+        }));
+
+        const reussis = ligne.entraine.filter(item => item.etat === 2).length;
+        const prochainEntrainement = ligne.entraine.find(item => item.etat !== 2);
+        etapes.append(ligneEtape({
+          classe: "entraine",
+          num: "2",
+          titre: "Je m’entraîne",
+          sousTitre: reussis === 3
+            ? "3 réussis sur 3 ✓"
+            : reussis
+              ? `${reussis} réussi${reussis > 1 ? "s" : ""} sur 3 · prochain : ${NOMS_ENTRAINEMENTS[prochainEntrainement.entrainement]}`
+              : `3 entraînements · d’abord : ${NOMS_ENTRAINEMENTS[prochainEntrainement.entrainement]}`,
+          points: ligne.entraine.map(item => etoile(item.etat)),
+          conseille: conseil === "entraine",
+          aria: `Je m’entraîne sur la table de ${table} : ${reussis} réussi${reussis > 1 ? "s" : ""} sur 3.`,
+          action: () => launchFromParcours(PARCOURS.configEntraine(table, (prochainEntrainement || ligne.entraine[0]).entrainement), "menu")
+        }));
+
+        const coche = document.createElement("i");
+        coche.className = `is-check${ligne.acquise ? "" : " off"}`;
+        coche.textContent = ligne.acquise ? "✓" : "○";
+        etapes.append(ligneEtape({
+          classe: "valide",
+          num: "3",
+          titre: "Je valide ma table",
+          sousTitre: ligne.acquise ? "acquise ✓ · 20 questions · 1 min 30" : "20 questions · 1 min 30",
+          points: [coche],
+          conseille: conseil === "valide",
+          aria: `Je valide la table de ${table}, 20 questions en 1 min 30 : ${ligne.acquise ? "acquise" : "pas encore"}.`,
+          action: () => launchFromParcours(PARCOURS.configValidation(table), "menu")
+        }));
+
+        // Dès 2 tables acquises, la ligne ★ « Je deviens expert » : le mélange
+        // de mes tables acquises (facultatif à ce lot ; au lot 3 il deviendra
+        // « Mon mélange », dû et surligné). Quand les 9 tables sont acquises,
+        // la même ligne porte les étoiles Expert.
+        if (etat.melange.visible) {
+          const melange = etat.melange;
+          etapes.append(ligneEtape({
+            classe: "melange",
+            num: "★",
+            titre: "Je deviens expert",
+            sousTitre: `mélange de mes tables ${listeTables(melange.tables)} · ${melange.aJour ? "à jour ✓" : melange.aRefaireAvec ? `à refaire avec la table de ${melange.aRefaireAvec}` : "à faire"}`,
+            points: [etoile(melange.aJour ? 2 : 0)],
+            conseille: conseil === "melange",
+            aria: `Je deviens expert : mélange de mes tables ${listeTables(melange.tables)}, ${melange.aJour ? "à jour" : "à faire"}.`,
+            action: () => launchFromParcours(PARCOURS.configMelange(parcours), "menu")
+          }));
+        } else if (nombre === PARCOURS_TABLES.length) {
+          const niveau = etat.expert.niveau;
+          const suivant = Math.min(niveau + 1, 3);
+          etapes.append(ligneEtape({
+            classe: "melange",
+            num: "★",
+            titre: "Je deviens expert",
+            sousTitre: etat.expert.champion ? "toutes les tables · Champion des tables 🏆" : `toutes les tables · ${"★".repeat(niveau)}${"☆".repeat(3 - niveau)} · tenter ${"★".repeat(suivant)}`,
+            points: [1, 2, 3].map(n => etoile(n <= niveau ? 2 : 0)),
+            conseille: conseil === "melange",
+            aria: `Je deviens expert, toutes les tables : ${niveau} étoile${niveau > 1 ? "s" : ""} sur 3.`,
+            action: () => launchFromParcours(PARCOURS.configExpert(suivant), "menu")
+          }));
+        }
+
+        // Le bouton Réviser : le compte des calculs à revoir, ou la phrase
+        // existante quand il n'y a rien à revoir.
+        const resume = etat.calculs;
+        const reviser = $("acc-reviser");
+        reviser.classList.toggle("is-next", conseil === "reviser");
+        $("acc-reviser-titre").textContent = resume.aTravailler ? `${pluriel(resume.aTravailler, "calcul")} à revoir` : "Réviser mes calculs";
+        $("acc-reviser-note").textContent = resume.aTravailler ? "10 questions sans chrono" : phraseReviser(resume);
+        reviser.setAttribute("aria-label", `${$("acc-reviser-titre").textContent} : ${$("acc-reviser-note").textContent}${conseil === "reviser" ? " Étape conseillée." : ""} Réviser.`);
+      }
+
+      // « Comment ça marche ? » : la notice est écrite une fois (template
+      // notice-regles) et clonée là où on la déplie — accueil et parcours.
+      function poserNotices() {
+        const modele = $("notice-regles");
+        if (!modele || !modele.content) return;
+        document.querySelectorAll("[data-notice]").forEach(zone => zone.append(modele.content.cloneNode(true)));
+      }
+
+      function basculerNotice(idBouton, idZone, ouvrir) {
+        const zone = $(idZone);
+        const bouton = $(idBouton);
+        const visible = ouvrir === undefined ? zone.hidden : ouvrir;
+        zone.hidden = !visible;
+        bouton.setAttribute("aria-expanded", String(visible));
+        if (visible) zone.scrollIntoView?.({block: "nearest", behavior: "smooth"});
+      }
+
       /* ---------- Mon parcours ---------- */
       function parcoursTitle() {
         const prenom = prenomAffiche();
         return prenom ? `Le parcours de ${prenom}` : "Mon parcours";
       }
 
-      function launchFromParcours(config) {
+      function launchFromParcours(config, origin = "parcours") {
         if (!config) return;
         if (config.mode === "revision") {
-          startRevision(config.table ?? null, "parcours");
+          startRevision(config.table ?? null, origin);
           return;
         }
         configuration.mode = config.mode;
@@ -3715,7 +3946,7 @@
         configuration.total = config.total || CORE.PRESETS[config.mode].total;
         configuration.duration = config.duration === undefined ? CORE.PRESETS[config.mode].duration : config.duration;
         configuration.testLevel = config.testLevel || 1;
-        state.origin = "parcours";
+        state.origin = origin;
         start();
       }
 
@@ -3747,6 +3978,9 @@
 
       function renderParcours() {
         majLienRetour();
+        // L'accueil lit le même parcours : il se redessine avec la carte, pour
+        // que le suivi (identité reçue, fusion avec le serveur) s'y voie aussi.
+        renderAccueil();
         const etat = PARCOURS.etatAffichage(parcours);
         $("parcours-title").textContent = parcoursTitle();
         // Sous un code, on ne demande pas de prénom : le professeur l'a déjà
@@ -3766,29 +4000,9 @@
           ? "Ton prénom n’est pas envoyé : il reste ici, le temps de ta séance. Ta progression, elle, est enregistrée pour ton professeur."
           : "Ton prénom n’est pas envoyé : il reste ici, le temps de ta séance.";
 
-        const next = $("parcours-next");
-        next.replaceChildren();
-        const nextText = document.createElement("span");
-        const nextTitle = document.createElement("strong");
-        nextTitle.textContent = "Prochaine étape";
-        nextText.append(nextTitle, document.createTextNode(etat.prochaine.libelle));
-        next.append(nextText);
-        if (etat.prochaine.config) {
-          const go = document.createElement("button");
-          go.type = "button";
-          go.className = "primary";
-          go.textContent = "C’est parti";
-          go.addEventListener("click", () => launchFromParcours(etat.prochaine.config));
-          next.append(go);
-        }
-
-        const resumeCalculs = etat.calculs;
-        $("parcours-calculs-compteur").textContent = resumeCalculs.aTravailler
-          ? `${pluriel(resumeCalculs.aTravailler, "calcul")} à travailler`
-          : resumeCalculs.sus || resumeCalculs.enCours
-            ? resumeCalculsTexte(resumeCalculs)
-            : "Ta grille des 36 calculs";
-
+        // Plus de « Prochaine étape » ni d'entrée Mes calculs ici (lot 2) :
+        // c'est l'accueil « Ma table » qui dit quoi faire. Le parcours est la
+        // carte complète, où l'élève fait ce qu'il veut dans l'ordre qu'il veut.
         const list = $("parcours-list");
         list.replaceChildren();
         etat.lignes.forEach(ligne => {
@@ -3809,7 +4023,7 @@
             revoir.className = "parcours-revoir";
             revoir.textContent = "à revoir";
             revoir.setAttribute("aria-label", `Table de ${ligne.table} : des calculs sont retombés à zéro. Lancer une révision de 10 questions sur cette table.`);
-            revoir.title = `Des calculs de la table de ${ligne.table} sont à retravailler`;
+            revoir.title = `Des calculs de la table de ${ligne.table} sont à revoir`;
             revoir.addEventListener("click", () => startRevision(ligne.table, "parcours"));
             etatGroupe.append(revoir);
           }
@@ -3862,9 +4076,7 @@
             label: "Mélange de mes tables acquises (25 questions en 2 min)",
             config: PARCOURS.configMelange(parcours)
           }));
-          const hint = document.createElement("p");
-          hint.textContent = "25 produits, 2 minutes, 2 erreurs max. À refaire à chaque nouvelle table acquise.";
-          melange.append(head, row, hint);
+          melange.append(head, row);
         }
 
         const expert = $("parcours-expert");
@@ -3886,9 +4098,7 @@
           label: `Expert niveau ${niveau}, ${starLabels[niveau]} (25 questions en 2 min)`,
           config: PARCOURS.configExpert(niveau)
         })));
-        const expertHint = document.createElement("p");
-        expertHint.textContent = "★ produits · ★★ + trous · ★★★ + divisions. 25 questions, 2 minutes, 2 erreurs max. Réussir ★ valide toutes tes tables d’un coup.";
-        expert.append(expertHead, stars, expertHint);
+        expert.append(expertHead, stars);
       }
 
       function evenementMessage(evenement) {
@@ -3980,18 +4190,8 @@
           line.textContent = text;
           zone.append(line);
         });
-        const prochaine = PARCOURS.prochaineEtape(parcours);
-        const nextLine = document.createElement("p");
-        nextLine.textContent = `Prochaine étape : ${prochaine.libelle}`;
-        zone.append(nextLine);
-        if (prochaine.config) {
-          const go = document.createElement("button");
-          go.type = "button";
-          go.className = "primary";
-          go.textContent = "Lancer la prochaine étape";
-          go.addEventListener("click", () => launchFromParcours(prochaine.config));
-          zone.append(go);
-        }
+        // La suite n'est plus annoncée ici : le bouton « Ma table » ramène à
+        // l'accueil, qui la surligne, état mis à jour.
       }
 
       // source : le parcours à imprimer. Par défaut celui de l'appareil ; la vue
@@ -4115,12 +4315,28 @@
         show("parcours");
       }
 
+      $("suivi-sortie").addEventListener("click", quitterSuivi);
       $("open-parcours").addEventListener("click", openParcours);
       $("result-open-parcours").addEventListener("click", openParcours);
+      $("result-accueil").addEventListener("click", backToModes);
       $("parcours-back").addEventListener("click", backToModes);
-      $("parcours-calculs").addEventListener("click", openCalculs);
-      $("calculs-back").addEventListener("click", openParcours);
+      $("open-calculs").addEventListener("click", openCalculs);
+      $("calculs-back").addEventListener("click", backToModes);
       $("calculs-reviser").addEventListener("click", () => startRevision(null, "calculs"));
+      $("acc-reviser").addEventListener("click", () => startRevision(null, "menu"));
+      $("acc-print").addEventListener("click", printFiche);
+      $("acc-changer").addEventListener("click", () => {
+        state.choixTableOuvert = !state.choixTableOuvert;
+        renderAccueil();
+        if (state.choixTableOuvert) $("acc-choix").querySelector("button")?.focus?.({preventScroll: true});
+      });
+      $("acc-notice-bouton").addEventListener("click", () => basculerNotice("acc-notice-bouton", "acc-notice"));
+      $("parcours-notice-bouton").addEventListener("click", () => basculerNotice("parcours-notice-bouton", "parcours-notice"));
+      $("parcours-notice-option").addEventListener("click", () => {
+        state.parcoursOptionsOpen = false;
+        renderParcours();
+        basculerNotice("parcours-notice-bouton", "parcours-notice", true);
+      });
       $("parcours-print").addEventListener("click", printFiche);
       $("parcours-print-option").addEventListener("click", () => {
         state.parcoursOptionsOpen = false;
@@ -4247,8 +4463,8 @@
       $("retry").addEventListener("click", start);
       $("game-menu").addEventListener("click", returnToMenu);
       $("back-to-modes").addEventListener("click", backToModes);
-      $("change-settings").addEventListener("click", backToModes);
       setupFullscreen();
+      poserNotices();
       document.addEventListener("keydown", event => {
         if (!state.running) return;
         if (/^\d$/.test(event.key)) enterDigit(event.key);
@@ -4285,6 +4501,7 @@
       syncControls();
       majLienRetour();
       renderRepere();
+      renderAccueil();
       // L'adresse a été lue et nettoyée par le script du <head>, avant tout le
       // reste (ENTREE). L'espace élève construit « #b=<billet>&ouvrir=parcours »
       // (lot 3) : le billet s'échange d'abord, il ne reste qu'à aiguiller.
@@ -4292,15 +4509,18 @@
       // ne porte plus jamais de code : #code= et #fiche= n'aiguillent plus rien
       // (lot « appareil partagé »).
       // [aiguillage:debut]
+      // Depuis le lot 2 (08/09/2026), « ouvrir=parcours » — ce que l'espace
+      // élève demande — mène à l'accueil « Ma table », qui EST l'entrée de
+      // l'élève (Mon parcours y est à un tap). Seul « calculs » ouvre un autre
+      // écran directement.
       if (ENTREE.billet && ENTREE.vue === "fiche") {
         ouvrirFicheParBillet(ENTREE.billet);
       } else if (ENTREE.billet) {
         entrerParBillet(ENTREE.billet, () => {
-          if (ENTREE.ouvrir === "calculs") openCalculs(); else openParcours();
+          if (ENTREE.ouvrir === "calculs") openCalculs(); else backToModes();
         });
       } else {
         if (ENTREE.ouvrir === "calculs") openCalculs();
-        else if (ENTREE.ouvrir === "parcours") openParcours();
         demarrerSuivi();
       }
       // [aiguillage:fin]

@@ -688,12 +688,13 @@ const confidentialite = await (await import("node:fs/promises")).readFile(new UR
 test("la page charge le moteur du parcours et propose la carte Mon parcours", () => {
   assert.match(html, /<script src="\.\/defi_tables_mon_parcours\.js\?v=[^"]+"><\/script>/);
   assert.match(html, /window\.MATHSGO_DEFI_TABLES_MON_PARCOURS/);
-  assert.match(html, /id="open-parcours"[^>]*class="mode-card mode-card-parcours"[\s\S]*Mon parcours/);
+  assert.match(html, /id="open-parcours" class="acc-lien"[\s\S]*Mon parcours/);
   assert.match(html, /id="parcours"[^>]*class="parcours-screen"/);
   assert.match(html, /id="parcours-list"/);
   assert.match(html, /id="parcours-melange"/);
   assert.match(html, /id="parcours-expert"/);
-  assert.match(html, /id="parcours-next"/);
+  assert.doesNotMatch(html, /id="parcours-next"/, "« Prochaine étape » a quitté le parcours (lot 2) : l’accueil dit quoi faire");
+  assert.doesNotMatch(html, /C’est parti<\/button>|"C’est parti"/, "et son bouton avec");
   assert.match(html, /\["intro", "launch", "play", "result", "parcours", "calculs"\]/);
 });
 
@@ -706,8 +707,13 @@ test("prénom local, remise à zéro confirmée dans la page, résultat relié a
   assert.match(html, /PARCOURS\.appliquerSerie\(parcours, state\.configuration, \{correct: state\.correct, total: TOTAL\}\)/);
   assert.match(html, /PARCOURS\.demarrerSerie\(parcours, config\)/);
   assert.match(html, /id="result-parcours"/);
+  assert.match(html, /id="result-accueil" class="primary"[^>]*>Ma table<\/button>/, "le bouton principal du résultat ramène à l’accueil");
   assert.match(html, /id="result-open-parcours"[\s\S]*Voir mon parcours/);
-  assert.match(html, /ENTREE\.ouvrir === "parcours"\) openParcours\(\);/);
+  assert.match(html, /\$\("result-accueil"\)\.addEventListener\("click", backToModes\)/);
+  // « ouvrir=parcours » (l’espace élève) mène à l’accueil « Ma table », qui est
+  // l’entrée de l’élève ; seul « calculs » ouvre un autre écran directement.
+  assert.match(html, /if \(ENTREE\.ouvrir === "calculs"\) openCalculs\(\); else backToModes\(\);/);
+  assert.doesNotMatch(html, /ENTREE\.ouvrir === "parcours"\) openParcours\(\);/);
 });
 
 test("Je m’entraîne propose produits, trous ou les deux ; la validation se lance en 1 min 30, 2 ou 3 min", () => {

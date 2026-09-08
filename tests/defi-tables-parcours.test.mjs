@@ -148,13 +148,16 @@ test("le parcours CM1 conserve son mélange spécifique", () => {
   assert.ok(questions.every(question => question.first >= 1 && question.second >= 1));
 });
 
-test("l’accueil compact distingue quatre choix principaux et l’évaluation CM1", () => {
-  assert.equal((html.match(/class="mode-card"/g) || []).length, 4);
-  assert.match(html, /data-mode="learn"[\s\S]*J’apprends/);
-  assert.match(html, /data-mode="train"[\s\S]*Je m’entraîne/);
-  assert.match(html, /data-mode="test"[\s\S]*Je deviens expert/);
-  assert.match(html, /data-mode="evaluation"[\s\S]*Comme l’évaluation CM1/);
-  assert.match(html, /data-mode="custom"[\s\S]*Réglages[\s\S]*Je choisis tout/);
+test("l’accueil « Ma table » a remplacé les cinq cartes ; Réglages libres et l’évaluation CM1 restent des portes du mode site", () => {
+  // Lot 2 (08/09/2026) : plus aucune carte de mode, plus de « Comment veux-tu
+  // travailler ? ». Les deux seuls [data-mode] qui restent sont les petits liens
+  // pour les professeurs, cachés sous un code (tests/defi-tables-accueil.test.mjs).
+  assert.doesNotMatch(html, /class="mode-card/);
+  assert.doesNotMatch(html, /Comment veux-tu travailler/);
+  assert.doesNotMatch(html, /data-mode="learn"|data-mode="train"|data-mode="test"/);
+  assert.match(html, /class="acc-site" type="button" data-mode="custom"[^>]*>Réglages libres</);
+  assert.match(html, /class="acc-site" type="button" data-mode="evaluation"[^>]*>Évaluation CM1</);
+  assert.match(html, /id="acc-etapes"/);
   assert.doesNotMatch(html, /revision-sheet-action/);
   assert.match(html, /data-question-type="division"[\s\S]*Division/);
   assert.match(html, /data-test-level="1"[\s\S]*Niveau 1/);
@@ -163,7 +166,6 @@ test("l’accueil compact distingue quatre choix principaux et l’évaluation C
   assert.match(html, /data-duration="180"[\s\S]*3 min/);
   assert.match(html, /data-duration="120"[\s\S]*2 min/);
   assert.match(html, /data-duration="60"[\s\S]*1 min/);
-  assert.match(html, /data-mode="train"[\s\S]*10 ou 20 questions/);
   assert.match(html, /count-settings[\s\S]*data-total="10"[\s\S]*data-total="20"/);
   assert.match(html, /data-learn-activity="construct"[\s\S]*Je construis le bâton/);
   assert.match(html, /class="type-button is-selected"[^>]*data-learn-activity="construct"/);

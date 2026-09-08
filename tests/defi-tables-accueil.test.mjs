@@ -1,0 +1,293 @@
+// Lot 2 de Défi tables v2 (08/09/2026) : l'accueil « Ma table ».
+//
+// Un seul écran de commande pour l'élève — la table en cours et ses trois
+// étapes, le bouton Réviser, deux portes (Mon parcours, Mes calculs) — et,
+// sans code seulement, deux petits liens pour les professeurs (Réglages
+// libres, Évaluation CM1). Aucune règle de l'appli ne change : ce test
+// vérifie ce qui s'affiche, ce qui se cache, et les mots employés.
+
+import test from "node:test";
+import assert from "node:assert/strict";
+import {readFile} from "node:fs/promises";
+import {createRequire} from "node:module";
+import {demarrerAppli, fauxReseau, fauxStockage, tic} from "./defi-tables-faux-monde.mjs";
+
+const require = createRequire(import.meta.url);
+const PARCOURS = require("../outils/calcul_mental/defi_tables_mon_parcours.js");
+const html = await readFile(new URL("../outils/calcul_mental/defi_tables.html", import.meta.url), "utf8");
+const confidentialite = await readFile(new URL("../confidentialite.html", import.meta.url), "utf8");
+
+// ------------------------------------------------------------- ce que la page contient
+
+test("l’accueil : Ma table et ses trois étapes, Réviser, Mon parcours, Mes calculs, les petits liens", () => {
+  assert.match(html, /<section id="mode-screen" class="mode-screen">[\s\S]*<div class="acc">/);
+  assert.match(html, /<div class="acc">\s*<!--[^>]*-->\s*<section class="matable"/, "l’accueil commence par le bloc Ma table");
+  assert.match(html, /<p class="eyebrow">Ma table<\/p><h1 id="acc-table-titre" tabindex="-1">/, "« La table de N » est le titre de l’écran");
+  assert.match(html, /id="acc-changer" class="matable-changer"[^>]*aria-controls="acc-choix">Changer de table</);
+  assert.match(html, /id="acc-acquises"/);
+  assert.ok(html.indexOf('id="acc-changer"') < html.indexOf('id="acc-acquises"'), "« 2 tables acquises sur 9 » sous « Changer de table » (complément du 08/09)");
+  assert.match(html, /id="acc-etapes" class="etapes"/);
+  assert.match(html, /id="acc-reviser" class="reviser"[\s\S]*Réviser&nbsp;→/);
+  assert.match(html, /id="open-parcours" class="acc-lien"[\s\S]*<svg class="ico"[\s\S]*Mon parcours<small>toutes mes tables, le mélange, Expert<\/small>/);
+  assert.match(html, /id="open-calculs" class="acc-lien"[\s\S]*<svg class="ico"[\s\S]*Mes calculs<small>la grille des 36 calculs<\/small>/);
+  assert.match(html, /id="acc-print"[^>]*>Imprimer ma fiche</);
+  assert.match(html, /id="acc-notice-bouton"[^>]*aria-controls="acc-notice">Comment ça marche&nbsp;\?</);
+  assert.match(html, /id="acc-notice" class="notice" data-notice hidden/);
+  // Les trois étapes sont construites par renderAccueil, numérotées 1-2-3 ; la
+  // 4e ligne ★ n'existe qu'à partir de 2 tables acquises.
+  assert.match(html, /num: "1",\s*titre: "J’apprends"/);
+  assert.match(html, /num: "2",\s*titre: "Je m’entraîne"/);
+  assert.match(html, /num: "3",\s*titre: "Je valide ma table"/);
+  assert.match(html, /num: "★",\s*titre: "Je deviens expert"/);
+  assert.match(html, /if \(etat\.melange\.visible\) \{/, "la ligne ★ suit la règle du moteur : dès 2 tables acquises, tant que les 9 ne le sont pas");
+  assert.match(html, /sousTitre: ligne\.acquise \? "acquise ✓ · 20 questions · 1 min 30" : "20 questions · 1 min 30"/, "la seule règle écrite sur l’accueil");
+});
+
+test("l’appli ne choisit rien : les trois étapes restent des boutons, elle surligne seulement la conseillée", () => {
+  assert.match(html, /bouton\.className = `etape \$\{classe\}\$\{conseille \? " is-next" : ""\}`/);
+  assert.doesNotMatch(html, /bouton\.disabled = /, "aucune étape n’est verrouillée avant le lot 3");
+  assert.match(html, /const conseil = prochaine\.type === "revision" \? "reviser"/, "le conseil suit prochaineEtape du moteur");
+  assert.match(html, /\.etape\.is-next \{ border-color: var\(--blue\)/);
+  assert.match(html, /\.etape\.is-next \.num \{ background: var\(--blue\); color: #fff; \}/);
+  assert.match(html, /reviser\.classList\.toggle\("is-next", conseil === "reviser"\)/);
+});
+
+test("pas de ligne « Bonjour », avec ou sans code : le bandeau de suivi dit déjà qui est là", () => {
+  assert.doesNotMatch(visible, /Bonjour/, "décision de Gwenaël du 08/09");
+  assert.doesNotMatch(html, /id="intro-title"|acc-hello/);
+  assert.match(html, /if \(name === "intro"\) \(configuration\.mode \? \$\("settings-title"\) : \$\("acc-table-titre"\)\)\.focus/, "le focus va au titre « La table de N »");
+});
+
+const visible = html.replace(/\/\/[^\n]*/g, "").replace(/\/\*[\s\S]*?\*\//g, "").replace(/<!--[\s\S]*?-->/g, "");
+
+test("« Prochaine étape » a disparu du parcours et du résultat ; le résultat ramène à Ma table", () => {
+  assert.doesNotMatch(visible, /Prochaine étape/);
+  assert.doesNotMatch(visible, /Lancer la prochaine étape/);
+  assert.doesNotMatch(html, /id="change-settings"/, "« Changer d’entraînement » et « Retour au calcul mental » ont quitté le résultat : Ma table les remplace");
+  assert.doesNotMatch(html, /<a class="secondary" href="\.\.\/index\.html/, "plus de porte de sortie du résultat vers le catalogue pour un élève suivi");
+  assert.match(html, /<button id="result-accueil" class="primary" type="button">Ma table<\/button>\s*<button id="retry" class="secondary" type="button">Rejouer<\/button>\s*<button id="result-open-parcours" class="secondary" type="button">Voir mon parcours<\/button>/);
+});
+
+test("le menu ⋯ du parcours garde ses quatre options, dans cet ordre", () => {
+  assert.match(html, /id="parcours-rename"[\s\S]*Modifier mon prénom[\s\S]*id="parcours-reset"[\s\S]*Recommencer à zéro[\s\S]*id="parcours-print-option"[\s\S]*Imprimer ma fiche[\s\S]*id="parcours-notice-option"[\s\S]*Comment ça marche/);
+  assert.match(html, /id="parcours-notice-bouton"[^>]*aria-controls="parcours-notice"/);
+  assert.match(html, /id="parcours-notice" class="notice" data-notice hidden/);
+  assert.match(html, /\$\("parcours-back"\)\.addEventListener\("click", backToModes\)/);
+  assert.match(html, /<span class="settings-back-label">Ma table<\/span><\/button>\s*<h1 id="parcours-title"/);
+  assert.match(html, /\$\("calculs-back"\)\.addEventListener\("click", backToModes\)/, "Mes calculs revient à Ma table, pas au parcours");
+});
+
+// ---------------------------------------------------------------- les mots
+
+test("les trois mots d’état : à revoir (rouge) · en route (bleu) · su (vert), partout", () => {
+  assert.match(html, /"a-travailler": "à revoir",\s*"en-cours": "en route",\s*"su": "su"/);
+  assert.match(html, /`\$\{resume\.sus\} su\$\{resume\.sus > 1 \? "s" : ""\}`, `\$\{resume\.enCours\} en route`, `\$\{resume\.aTravailler\} à revoir`/);
+  assert.match(html, /is-a-travailler"><span class="mc-cases">[\s\S]*?<\/span><\/span> à revoir<\/span>/, "légende de la grille");
+  assert.match(html, /is-en-cours"><span class="mc-cases">[\s\S]*?<\/span><\/span> en route<\/span>/);
+  assert.match(html, /rouge : à revoir · bleu : en route · vert : su/, "fiche imprimable, page 2");
+  assert.match(html, /\.mc-cell\.is-a-travailler \{ border-color: #efb4b4; color: var\(--red\); background: var\(--red-soft\); \}/, "« à revoir » est rouge");
+  assert.match(html, /\.fiche-carre td\.a-travailler \{ background: #ffebeb; color: #a93030; \}/);
+  // Plus aucun « à travailler » ni « en cours » (au sens de la grille) sur les écrans de l'élève.
+  assert.doesNotMatch(visible, /à travailler|à retravailler/, "le mot « à travailler » ne s’affiche plus");
+  assert.doesNotMatch(visible, /\ben cours\b(?! de route)/, "le mot « en cours » ne s’affiche plus");
+  // Le bouton « à revoir » d'une table acquise existait déjà : même mot, même sens.
+  assert.match(html, /revoir\.textContent = "à revoir";/);
+});
+
+test("le détail d’une case dit la règle du jour, et seulement là", () => {
+  assert.match(html, /if \(fait && fait\.erreur === jourDuJour\(\)\) note = "Tu t’es trompé aujourd’hui : entraîne-toi, et reviens demain pour regagner ta case\.";/);
+  assert.match(html, /else if \(fait && fait\.gagne === jourDuJour\(\)\) note = "Une case par jour : reviens demain\.";/);
+  assert.match(html, /else if \(fait && fait\.erreur\) note = `Dernière erreur : \$\{formaterJour\(fait\.erreur\)\}\.`;/);
+});
+
+test("plus aucun texte de règle sur les écrans de l’élève en dehors de la notice", () => {
+  assert.doesNotMatch(html, /Une case gagnée par bonne réponse/);
+  assert.doesNotMatch(html, /Réglages et Évaluation CM1 sont à part/);
+  assert.doesNotMatch(html, /25 produits, 2 minutes, 2 erreurs max\. À refaire/);
+  assert.doesNotMatch(html, /Réussir ★ valide toutes tes tables d’un coup\./);
+  assert.doesNotMatch(html, /Un calcul raté revient une fois dans la série/);
+  assert.doesNotMatch(html, /class="parcours-note"/);
+});
+
+test("la notice « Comment ça marche ? » : les règles ACTUELLES, écrites une fois, clonées deux fois", () => {
+  const notice = html.match(/<template id="notice-regles">([\s\S]*?)<\/template>/);
+  assert.ok(notice, "le gabarit de la notice existe");
+  const texte = notice[1];
+  assert.equal((texte.match(/<p>/g) || []).length, 4, "quatre phrases");
+  assert.match(texte, /<b>Une table\.<\/b> Je l’apprends si je veux, je m’entraîne 3 fois — dans le désordre, avec des trous, puis les deux — et je la valide : 20 questions en 1 min 30, 2 erreurs au maximum\./);
+  assert.match(texte, /<b>Mes calculs\.<\/b> Chaque calcul a 3 cases\. Une bonne réponse = 1 case, mais une seule par jour : un calcul est su quand je l’ai réussi trois jours différents\. Une erreur enlève une case, et ce jour-là je ne peux pas la regagner\./);
+  assert.match(texte, /<b>Réviser\.<\/b> 10 questions sans chrono sur ce que je sais le moins\./);
+  assert.match(texte, /<b>Le mélange et Expert\.<\/b> Dès 2 tables acquises, le mélange de mes tables : 25 produits en 2 min, à refaire à chaque nouvelle table\. Expert mélange toutes les tables de 2 à 10 : ★ produits, ★★ avec des trous, ★★★ avec des divisions — 25 questions en 2 min, 2 erreurs au maximum\./);
+  // Rien du lot 3 : ni mélange obligatoire, ni escalier d'étoiles, ni rangs.
+  assert.doesNotMatch(texte, /avant d’en valider|cadenas|Bronze|Argent|Platine|Diamant|Légende|1 min 45|1 min 15|★★★★/);
+  assert.equal((html.match(/data-notice hidden/g) || []).length, 2, "accueil + parcours");
+  assert.match(html, /document\.querySelectorAll\("\[data-notice\]"\)\.forEach\(zone => zone\.append\(modele\.content\.cloneNode\(true\)\)\)/);
+});
+
+// ------------------------------------------------------ la table en cours (exécuté)
+
+// Les fonctions de l'accueil qui décident sans le DOM, telles qu'elles sont
+// écrites dans la page : table en cours, étape conseillée, phrases de Réviser.
+function chargerLogiqueAccueil(codeSuivi, session = fauxStockage()) {
+  const debut = html.indexOf("const CLE_TABLE_CHOISIE");
+  const fin = "const NOMS_ENTRAINEMENTS";
+  const source = html.slice(debut, html.indexOf(fin));
+  const util = html.slice(html.indexOf("function pluriel(nombre, mot)"), html.indexOf("const LIBELLES_ETATS_CALCULS"))
+    + html.slice(html.indexOf("function phraseReviser(resume)"), html.indexOf("function renderCalculsDetail()"));
+  return new Function("PARCOURS", "PARCOURS_TABLES", "codeSuivi", "stockageSession", `${util}\n${source}
+    return {lireTableChoisie, ecrireTableChoisie, tableEnCours, etapeConseillee, phraseReviser, resumeCalculsTexte};`)(
+    PARCOURS, [...PARCOURS.TABLES], codeSuivi, () => session
+  );
+}
+
+function lea() {
+  let p = PARCOURS.creerParcours();
+  for (const t of [2, 10]) {
+    p.tables[t].entraine = {desordre: 2, trous: 2, mixte: 2, dernier: null};
+    p.tables[t].acquise = "2026-09-03";
+  }
+  p.tables[5].apprends = {construct: 2, gaps: 2, ordered: 0, random: 0};
+  p.tables[5].entraine = {desordre: 2, trous: 0, mixte: 2, dernier: null};
+  p.melange = {tables: [2, 10], aJour: true, aRefaireAvec: null, dernier: "2026-09-04"};
+  return PARCOURS.normaliserParcours(p);
+}
+
+test("Ma table = la prochaine de l’ordre conseillé qui n’est pas acquise, sauf choix de l’élève", () => {
+  const session = fauxStockage();
+  const logique = chargerLogiqueAccueil("", session);
+  const etat = PARCOURS.etatAffichage(lea());
+  assert.equal(logique.tableEnCours(etat), 5, "2 et 10 acquises → la table de 5");
+  assert.equal(logique.tableEnCours(PARCOURS.etatAffichage(PARCOURS.creerParcours())), 2, "parcours vide → la table de 2");
+
+  logique.ecrireTableChoisie(7);
+  assert.equal(logique.tableEnCours(etat), 7, "l’élève a choisi la table de 7");
+  assert.equal(logique.lireTableChoisie(), 7);
+  logique.ecrireTableChoisie(2);
+  assert.equal(logique.tableEnCours(etat), 5, "une table acquise n’est plus « ma table » : retour à l’ordre conseillé");
+  logique.ecrireTableChoisie(null);
+  assert.equal(logique.lireTableChoisie(), null);
+
+  // Le choix vit dans l'onglet, AVEC le code : le camarade suivant ne l'hérite pas.
+  const sousCode = chargerLogiqueAccueil("ABC234", session);
+  sousCode.ecrireTableChoisie(9);
+  assert.equal(sousCode.tableEnCours(etat), 9);
+  assert.equal(chargerLogiqueAccueil("XYZ789", session).lireTableChoisie(), null, "un autre code ne voit pas ce choix");
+  assert.equal(chargerLogiqueAccueil("", session).lireTableChoisie(), null, "ni la case sans code");
+  assert.match(session.brut("mathsgo-defi-tables-table"), /"table":9/);
+
+  // Tout acquis : la ligne reste sur la dernière table de l'ordre conseillé.
+  const tout = PARCOURS.creerParcours();
+  PARCOURS.TABLES.forEach(t => { tout.tables[t].acquise = "2026-09-01"; });
+  assert.equal(logique.tableEnCours(PARCOURS.etatAffichage(PARCOURS.normaliserParcours(tout))), 9);
+});
+
+test("l’étape conseillée d’une table suit la même lecture que le moteur", () => {
+  const logique = chargerLogiqueAccueil("");
+  const ligneDe = (parcours, table) => PARCOURS.etatAffichage(parcours).lignes.find(l => l.table === table);
+  const vide = PARCOURS.creerParcours();
+  assert.equal(logique.etapeConseillee(ligneDe(vide, 2)), "apprends", "rien de commencé → J’apprends");
+  assert.equal(logique.etapeConseillee(ligneDe(lea(), 5)), "entraine", "2 entraînements sur 3 → Je m’entraîne");
+  assert.equal(logique.etapeConseillee(ligneDe(lea(), 2)), "valide", "acquise → Je valide (déjà ✓)");
+  const prete = lea();
+  prete.tables[5].entraine.trous = 2;
+  assert.equal(logique.etapeConseillee(ligneDe(prete, 5)), "valide", "3 sur 3 → Je valide ma table");
+  const commence = PARCOURS.creerParcours();
+  commence.tables[3].apprends.construct = 1;
+  assert.equal(logique.etapeConseillee(ligneDe(commence, 3)), "entraine", "une activité commencée → on passe aux entraînements, comme etapeTable");
+  // Cohérence avec le moteur sur le parcours de Léa.
+  assert.equal(PARCOURS.prochaineEtape(lea()).type, "entraine");
+  assert.equal(PARCOURS.prochaineEtape(lea()).table, 5);
+});
+
+test("le bouton Réviser reprend les phrases existantes quand il n’y a rien à revoir", () => {
+  const logique = chargerLogiqueAccueil("");
+  assert.equal(logique.phraseReviser({aTravailler: 4, enCours: 0, sus: 0, total: 36}), "10 questions sans chrono, sur ce que tu sais le moins.");
+  assert.equal(logique.phraseReviser({aTravailler: 0, enCours: 0, sus: 8, total: 36}), "Rien à revoir pour l’instant : on complète et on entretient ta grille.");
+  assert.equal(logique.phraseReviser({aTravailler: 0, enCours: 0, sus: 36, total: 36}), "Tout est su ! 10 questions pour entretenir ta grille.");
+  assert.equal(logique.phraseReviser({aTravailler: 0, enCours: 0, sus: 0, total: 36}), "Ta grille est vide : on découvre les 10 premiers calculs.");
+  assert.equal(logique.resumeCalculsTexte({sus: 24, enCours: 8, aTravailler: 4, jamaisVus: 0, total: 36}), "24 sus · 8 en route · 4 à revoir");
+  assert.equal(logique.resumeCalculsTexte({sus: 1, enCours: 0, aTravailler: 0, jamaisVus: 35, total: 36}), "1 su · 0 en route · 0 à revoir · 35 pas encore vus");
+});
+
+// -------------------------------------------------------- le mode élève (exécuté)
+
+test("avec un code, les liens Réglages libres et Évaluation CM1 n’existent pas ; sans code, ils sont là", async () => {
+  assert.match(html, /body\.mode-eleve \.acc-site \{ display: none !important; \}/);
+  assert.equal((html.match(/class="acc-site"/g) || []).length, 2);
+  assert.match(html, /if \(document\.body\) document\.body\.classList\.toggle\("mode-eleve", Boolean\(suiviActif\(\) \|\| entreeRefusee\)\);/,
+    "le même signal que le lien du haut (majLienRetour), pas un paramètre d’adresse");
+
+  // Sans code : mode site.
+  const site = demarrerAppli({});
+  site.api.majLienRetour();
+  assert.equal(site.document.body.classes.has("mode-eleve"), false);
+
+  // Sous un code (onglet rechargé) : mode élève.
+  const eleve = demarrerAppli({codeOnglet: "ABC234"});
+  eleve.api.majLienRetour();
+  assert.equal(eleve.document.body.classes.has("mode-eleve"), true);
+  eleve.api.demarrerSuivi();
+  await tic(20);
+  assert.equal(eleve.document.body.classes.has("mode-eleve"), true, "toujours après la réponse du serveur");
+
+  // Entré par un billet : mode élève dès l'échange.
+  const parBillet = demarrerAppli({entree: {billet: "b1", ouvrir: "parcours"}, reseau: fauxReseau({billets: {b1: "DEF567"}})});
+  assert.equal(parBillet.document.body.classes.has("mode-eleve"), false, "avant l’échange, personne n’est suivi");
+  await parBillet.api.entrerParBillet("b1", () => {});
+  assert.equal(parBillet.api.codeSuivi, "DEF567");
+  assert.equal(parBillet.document.body.classes.has("mode-eleve"), true);
+
+  // Billet refusé : l'élève vient quand même de son espace → mode élève aussi.
+  const refuse = demarrerAppli({entree: {billet: "mort"}, reseau: fauxReseau({billets: {}})});
+  await refuse.api.entrerParBillet("mort", () => {});
+  assert.equal(refuse.api.entreeRefusee, "expire");
+  assert.equal(refuse.document.body.classes.has("mode-eleve"), true);
+
+  // « Se déconnecter » : retour au mode site.
+  eleve.api.quitterSuivi();
+  assert.equal(eleve.document.body.classes.has("mode-eleve"), false);
+});
+
+// ------------------------------------------------- l'en-tête compact (point 9)
+
+test("sur téléphone, le repère de suivi tient sur une ligne sous le logo et « Se déconnecter » devient une pilule", async () => {
+  // Version A, choisie par Gwenaël le 08/09/2026 : ligne 1 = logo, pilule
+  // « Se déconnecter », flèche ; ligne 2 = le repère sur toute la largeur,
+  // une seule ligne, coupé par « … » si le prénom est très long. Rien ne
+  // change sur PC et tablette : la sortie reste sur le repère (règle du 03/09).
+  assert.match(html, /<button id="suivi-sortie" class="catalogue-link suivi-sortie" type="button" hidden>Se déconnecter<\/button>/);
+  assert.ok(html.indexOf('id="suivi-sortie"') < html.indexOf('id="lien-retour"'), "la pilule est à côté de la flèche, avant elle");
+  assert.match(html, /\$\("suivi-sortie"\)\.addEventListener\("click", quitterSuivi\)/, "le même geste que la sortie du repère");
+  // Les DEUX classes dans le sélecteur : `.suivi-sortie` seule perd contre
+  // `.catalogue-link`, déclarée plus bas dans la même feuille avec la même
+  // spécificité — la pilule s'affichait aussi sur PC et tablette, en double
+  // avec la sortie du repère (mesuré au navigateur le 08/09 : 124 × 44 à
+  // 1366 px, à côté du « · Se déconnecter » du repère).
+  assert.match(html, /\n    \.catalogue-link\.suivi-sortie \{ display: none; \}/, "invisible hors téléphone");
+  assert.ok(html.indexOf(".catalogue-link.suivi-sortie { display: none; }") < html.indexOf("\n    .catalogue-link {"),
+    "la règle de base est écrite AVANT `.catalogue-link` : seule sa spécificité la fait gagner");
+  const mobile = html.slice(html.indexOf("@media (max-width: 620px) {"), html.indexOf("@media (min-width: 621px) and (max-height: 900px)"));
+  assert.match(mobile, /\.suivi-repere \{ display: block; margin: -2px 0 0; padding: 4px 10px; font-size: \.8rem;/, "le repère reste sous le logo, sur une ligne");
+  assert.doesNotMatch(mobile, /\.suivi-repere \{ order: -1/, "pas de bande d’état au-dessus du logo (version B écartée)");
+  assert.match(mobile, /\.suivi-repere:not\(\.detache\):not\(\.hors-ligne\) \{ white-space: nowrap; overflow: hidden; text-overflow: ellipsis; \}/, "une seule ligne, « … » si le prénom est long ; les états longs (code refusé, hors ligne) gardent le droit de passer à la ligne");
+  assert.match(mobile, /\.suivi-repere \.sortie-bloc \{ display: none; \}/);
+  assert.match(mobile, /\.catalogue-link\.suivi-sortie \{ display: inline-flex; \}/, "même sélecteur à deux classes, sinon la règle de base gagnerait ici");
+  assert.match(html, /bloc\.className = "sortie-bloc";/);
+  assert.doesNotMatch(html, /Suivi par ton professeur\$\{qui\}\$\{ou\}[^`]/, "le texte du repère ne change pas");
+
+  // Exécuté : la pilule suit le code, comme le repère.
+  const site = demarrerAppli({});
+  site.api.renderRepere();
+  assert.equal(site.document.getElementById("suivi-sortie").hidden, true, "sans code, pas de pilule");
+  const eleve = demarrerAppli({codeOnglet: "ABC234"});
+  eleve.api.renderRepere();
+  assert.equal(eleve.document.getElementById("suivi-sortie").hidden, false, "sous un code, la pilule est là");
+  assert.equal(eleve.boutonRepere("Se déconnecter")?.textContent, "Se déconnecter", "et la sortie du repère aussi (PC, tablette)");
+  eleve.api.quitterSuivi();
+  assert.equal(eleve.document.getElementById("suivi-sortie").hidden, true, "après « Se déconnecter », plus de pilule");
+});
+
+test("la page Confidentialité nomme les deux clés de session de l’accueil", () => {
+  assert.match(confidentialite, /<code>mathsgo-defi-tables-prenom<\/code>, <code>mathsgo-defi-tables-table<\/code>/);
+  assert.match(confidentialite, /table choisie sur l’accueil de Défi tables/);
+});
