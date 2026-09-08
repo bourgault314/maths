@@ -68,6 +68,8 @@ export function fauxDocument() {
   const ecouteurs = {};
   const doc = {
     visibilityState: "visible",
+    // <body> : majLienRetour y pose la classe « mode-eleve » (lot 2, 08/09/2026).
+    body: fauxElement("body"),
     getElementById: id => { if (!elements.has(id)) elements.set(id, fauxElement(id)); return elements.get(id); },
     querySelector: sel => doc.getElementById(sel),
     createElement: tag => fauxElement(tag),

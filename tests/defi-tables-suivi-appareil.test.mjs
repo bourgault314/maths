@@ -329,11 +329,15 @@ test("le script du <head> est en JavaScript ancien et survit à un navigateur sa
 // ----------------------------------------------------------------- l’aiguillage
 
 test("l’aiguillage ouvre le bon écran à partir de ce que le <head> a lu", () => {
+  // Lot 2 (08/09/2026) : « ouvrir=parcours » — ce que l'espace élève demande —
+  // mène à l'accueil « Ma table » (backToModes), qui EST l'entrée de l'élève ;
+  // seul « calculs » ouvre un autre écran directement. openParcours n'est
+  // plus appelé par l'aiguillage.
   const aiguiller = entree => {
     const appels = [];
-    new Function("ENTREE", "openParcours", "openCalculs", "demarrerSuivi", "entrerParBillet", "ouvrirFicheParBillet", SOURCE_AIGUILLAGE)(
+    new Function("ENTREE", "openParcours", "backToModes", "openCalculs", "demarrerSuivi", "entrerParBillet", "ouvrirFicheParBillet", SOURCE_AIGUILLAGE)(
       {billet: "", vue: "", ouvrir: "", ...entree},
-      () => appels.push("parcours"), () => appels.push("calculs"),
+      () => appels.push("parcours"), () => appels.push("accueil"), () => appels.push("calculs"),
       () => appels.push("suivi"),
       // Le billet : l'échange d'abord, l'écran ensuite — on joue l'échange
       // réussi tout de suite pour voir quel écran il ouvrirait.
@@ -341,21 +345,22 @@ test("l’aiguillage ouvre le bon écran à partir de ce que le <head> a lu", ()
       billet => appels.push("fiche-billet:" + billet));
     return appels;
   };
-  assert.deepEqual(aiguiller({ouvrir: "parcours"}), ["parcours", "suivi"]);
+  assert.deepEqual(aiguiller({ouvrir: "parcours"}), ["suivi"], "l’accueil est l’écran de départ : rien d’autre à ouvrir");
   assert.deepEqual(aiguiller({ouvrir: "calculs"}), ["calculs", "suivi"]);
   assert.deepEqual(aiguiller({}), ["suivi"], "sans adresse, l’appli s’ouvre normalement (demarrerSuivi ne fait rien sans code)");
   // Lot « appareil partagé » : une adresse ne porte plus de code, et ce qu'un
   // vieux lien en met n'aiguille plus rien — ni écran, ni fiche.
-  assert.deepEqual(aiguiller({code: "2F4FUL", ouvrir: "parcours"}), ["parcours", "suivi"], "le « code » d’un vieux lien ne change rien");
-  assert.deepEqual(aiguiller({code: "2F4FUL"}), ["suivi"], "et sans « ouvrir », il n’ouvre même plus Mon parcours");
+  assert.deepEqual(aiguiller({code: "2F4FUL", ouvrir: "parcours"}), ["suivi"], "le « code » d’un vieux lien ne change rien");
+  assert.deepEqual(aiguiller({code: "2F4FUL"}), ["suivi"], "et sans « ouvrir », il n’ouvre rien de plus");
   assert.deepEqual(aiguiller({fiche: "CDEF23"}), ["suivi"], "un vieux #fiche= n’ouvre plus aucune fiche");
   // Lot 3 : le lien réel de l'espace élève porte un billet, plus le code.
   const b = "0123456789abcdef0123456789abcdef";
-  assert.deepEqual(aiguiller({billet: b, ouvrir: "parcours"}), ["billet:" + b, "parcours"], "le lien de l’espace élève : échange, puis Mon parcours (demarrerSuivi est appelé par entrerParBillet)");
-  assert.deepEqual(aiguiller({billet: b}), ["billet:" + b, "parcours"], "sans « ouvrir », Mon parcours quand même : c’est là qu’un élève suivi va");
+  assert.deepEqual(aiguiller({billet: b, ouvrir: "parcours"}), ["billet:" + b, "accueil"], "le lien de l’espace élève : échange, puis l’accueil Ma table (demarrerSuivi est appelé par entrerParBillet)");
+  assert.deepEqual(aiguiller({billet: b}), ["billet:" + b, "accueil"], "sans « ouvrir », l’accueil quand même : c’est là qu’un élève suivi va");
   assert.deepEqual(aiguiller({billet: b, ouvrir: "calculs"}), ["billet:" + b, "calculs"]);
   assert.deepEqual(aiguiller({billet: b, vue: "fiche"}), ["fiche-billet:" + b], "« Voir sa fiche » : la fiche par billet, aucun suivi");
-  assert.deepEqual(aiguiller({fiche: "CDEF23", billet: b}), ["billet:" + b, "parcours"], "un vieux #fiche= ne prend plus le pas sur le billet : il n’existe plus pour l’appli");
+  assert.deepEqual(aiguiller({fiche: "CDEF23", billet: b}), ["billet:" + b, "accueil"], "un vieux #fiche= ne prend plus le pas sur le billet : il n’existe plus pour l’appli");
+  assert.ok(!aiguiller({billet: b, ouvrir: "parcours"}).includes("parcours"), "openParcours n’est plus appelé par l’aiguillage");
 });
 
 // ------------------------------------------------- ce qui reste sur l’appareil (lot 8)
