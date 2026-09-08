@@ -648,6 +648,7 @@
             fixedFlashStripId: null,
             stripMode: 'normal', 
             draggingPoint: null,
+            draggingConstrained: null,
             draggingStrip: null, 
             dragOffset: {x:0, y:0},
             nextId: 1,
@@ -1261,6 +1262,18 @@
             if (!source || !target || !Number.isFinite(sourceX) || !Number.isFinite(sourceY)) return false;
             const distance = Math.hypot(target.x - sourceX, target.y - sourceY);
             if (distance >= CONFIG.snapDistance) return false;
+            // Deux bandes de longueurs différentes ne peuvent pas partager les
+            // deux mêmes extrémités. Ne pas supprimer non plus une bande sur elle-même.
+            const lengthsByNeighbor = new Map();
+            for (const strip of state.strips) {
+                if (![strip.p1, strip.p2].some(id => id === source.id || id === target.id)) continue;
+                const other = strip.p1 === source.id || strip.p1 === target.id ? strip.p2 : strip.p1;
+                if (other === source.id || other === target.id) return false;
+                const length = getStripLength(strip);
+                const previous = lengthsByNeighbor.get(other);
+                if (previous !== undefined && Math.abs(previous - length) > 1e-7 * Math.max(1, length, previous)) return false;
+                lengthsByNeighbor.set(other, length);
+            }
 
             const triangleMode = getMergeTriangleMode(source.id, target.id);
             if (triangleMode === 'impossible') return false;
@@ -1269,6 +1282,190 @@
                 ? CONFIG.flatTriangleSnapDistance / Math.max(0.01, state.zoom || 1)
                 : CONFIG.snapDistance;
             return distance < maxDistance;
+        }
+
+        // Les coordonnées proposées par la souris ne sont jamais des contraintes
+        // permanentes. On calcule sur une copie, puis on accepte seulement une
+        // construction qui conserve TOUTES les longueurs et les ancres.
+        function getGeometryEdges(strips = state.strips, angles = state.angleGroups) {
+            const edges = strips.map(s => ({p1: s.p1, p2: s.p2, length: getStripLength(s)}));
+            for (const angle of angles) {
+                edges.push({p1: angle.aId, p2: angle.bId, length: Math.sqrt(Math.max(0,
+                    angle.leg1Len ** 2 + angle.leg2Len ** 2 - 2 * angle.leg1Len * angle.leg2Len * Math.cos(angle.degrees * Math.PI / 180)))});
+            }
+            return edges;
+        }
+
+        function geometryIsValid(points, edges) {
+            return edges.every(edge => {
+                const a = points.get(edge.p1), b = points.get(edge.p2);
+                return a && b && Number.isFinite(a.x + a.y + b.x + b.y) &&
+                    Math.abs(Math.hypot(b.x - a.x, b.y - a.y) - edge.length) <= 1e-4;
+            });
+        }
+
+        function projectGeometry(points, edges, locked, iterations = 160) {
+            for (let iteration = 0; iteration < iterations; iteration++) {
+                for (const edge of edges) {
+                    const a = points.get(edge.p1), b = points.get(edge.p2);
+                    if (!a || !b) return false;
+                    const wa = locked.has(a.id) ? 0 : 1, wb = locked.has(b.id) ? 0 : 1;
+                    if (!wa && !wb) continue;
+                    const dx = b.x - a.x, dy = b.y - a.y;
+                    const distance = Math.hypot(dx, dy);
+                    const ux = distance > 1e-12 ? dx / distance : 1;
+                    const uy = distance > 1e-12 ? dy / distance : 0;
+                    const correction = (distance - edge.length) / (wa + wb);
+                    a.x += wa * ux * correction; a.y += wa * uy * correction;
+                    b.x -= wb * ux * correction; b.y -= wb * uy * correction;
+                }
+                if (geometryIsValid(points, edges)) return true;
+            }
+            return false;
+        }
+
+        function beginAnchoredDrag(point, strip, fromBody = false) {
+            const group = getAllConnectedPoints(strip).filter(Boolean);
+            const anchors = group.filter(p => p.fixed || protractorAnchorShouldPin(p.id));
+            if (!anchors.length) return false;
+            const ids = new Set(group.map(p => p.id));
+            state.draggingConstrained = {
+                pointId: point.id,
+                strip,
+                fromBody,
+                group,
+                anchors: new Map(anchors.map(p => [p.id, {x:p.x, y:p.y}])),
+                edges: getGeometryEdges().filter(e => ids.has(e.p1) && ids.has(e.p2)),
+                rigid: isGlobalLockActive()
+            };
+            container.style.cursor = 'grabbing';
+            return true;
+        }
+
+        function moveAnchoredDrag(x, y) {
+            const drag = state.draggingConstrained;
+            if (!drag || drag.anchors.has(drag.pointId)) return;
+            const original = new Map(drag.group.map(p => [p.id, {...p}]));
+            const old = original.get(drag.pointId);
+            const locked = new Set(drag.anchors.keys());
+            const copy = () => new Map([...original].map(([id,p]) => [id,{...p}]));
+            const commit = points => {
+                if (!geometryIsValid(points, drag.edges)) return false;
+                if ([...drag.anchors].some(([id,p]) => points.get(id).x !== p.x || points.get(id).y !== p.y)) return false;
+                drag.group.forEach(p => {p.x = points.get(p.id).x; p.y = points.get(p.id).y;});
+                return true;
+            };
+
+            if (drag.rigid) {
+                const anchors = [...drag.anchors.values()];
+                const pivot = anchors[0];
+                if (anchors.some(p => Math.hypot(p.x-pivot.x,p.y-pivot.y) > 1e-7)) return;
+                const delta = Math.atan2(y-pivot.y,x-pivot.x) - Math.atan2(old.y-pivot.y,old.x-pivot.x);
+                const points = copy();
+                points.forEach(p => {
+                    if (locked.has(p.id)) return;
+                    const dx=p.x-pivot.x,dy=p.y-pivot.y;
+                    p.x=pivot.x+dx*Math.cos(delta)-dy*Math.sin(delta);
+                    p.y=pivot.y+dx*Math.sin(delta)+dy*Math.cos(delta);
+                });
+                commit(points);
+                return;
+            }
+
+            // Chaîne à deux bandes : intersection exacte, y compris à portée
+            // maximale/minimale. Évite la singularité du solveur lorsque tout est plat.
+            const incident = drag.edges.filter(e => e.p1 === old.id || e.p2 === old.id);
+            const movableEdges = incident.filter(e=>!locked.has(e.p1 === old.id ? e.p2 : e.p1));
+            if (movableEdges.length === 1) {
+                const endEdge = movableEdges[0];
+                const jointId = endEdge.p1 === old.id ? endEdge.p2 : endEdge.p1;
+                const jointEdges = drag.edges.filter(e => e.p1 === jointId || e.p2 === jointId);
+                const rootEdge = jointEdges.find(e => e !== endEdge && locked.has(e.p1 === jointId ? e.p2 : e.p1));
+                if (rootEdge && jointEdges.length === 2 && !locked.has(jointId)) {
+                    const points = copy();
+                    const root = points.get(rootEdge.p1 === jointId ? rootEdge.p2 : rootEdge.p1);
+                    const joint = points.get(jointId), end = points.get(old.id);
+                    const angle = Math.atan2(y-root.y,x-root.x);
+                    const rootConstraint=incident.find(e=>(e.p1===root.id && e.p2===old.id)||(e.p2===root.id && e.p1===old.id));
+                    const reach = rootConstraint ? rootConstraint.length : Math.max(Math.abs(rootEdge.length-endEdge.length),
+                        Math.min(rootEdge.length+endEdge.length, Math.hypot(x-root.x,y-root.y)));
+                    end.x=root.x+reach*Math.cos(angle); end.y=root.y+reach*Math.sin(angle);
+                    const exact = closestCircleIntersection(root,rootEdge.length,end,endEdge.length,joint.x,joint.y);
+                    if (exact) {joint.x=exact.x; joint.y=exact.y; if (commit(points)) return;}
+                }
+            }
+
+            // Limiter la cible aux disques accessibles depuis chaque ancre, même
+            // lorsque l'ancre est plusieurs bandes plus loin dans la construction.
+            let target = {x,y};
+            for (const [anchorId, anchor] of drag.anchors) {
+                const distances = new Map([[anchorId,0]]);
+                for (let i=0;i<drag.group.length;i++) {
+                    let changed=false;
+                    for (const edge of drag.edges) {
+                        for (const [a,b] of [[edge.p1,edge.p2],[edge.p2,edge.p1]]) {
+                            const distance=(distances.get(a) ?? Infinity)+edge.length;
+                            if (distance < (distances.get(b) ?? Infinity)) {distances.set(b,distance); changed=true;}
+                        }
+                    }
+                    if (!changed) break;
+                }
+                const max=distances.get(old.id),distance=Math.hypot(target.x-anchor.x,target.y-anchor.y);
+                if (distance > max) {target.x=anchor.x+(target.x-anchor.x)*max/distance; target.y=anchor.y+(target.y-anchor.y)*max/distance;}
+            }
+            for (const fraction of [1,.5,.25,.125,.0625]) {
+                const points=copy(), point=points.get(old.id);
+                point.x=old.x+(target.x-old.x)*fraction; point.y=old.y+(target.y-old.y)*fraction;
+                const fixedEdges=incident.filter(e => locked.has(e.p1 === old.id ? e.p2 : e.p1));
+                if (fixedEdges.length) {
+                    const first=fixedEdges[0], a=points.get(first.p1 === old.id ? first.p2 : first.p1);
+                    if (fixedEdges.length === 1) {
+                        const angle=Math.atan2(point.y-a.y,point.x-a.x);
+                        point.x=a.x+first.length*Math.cos(angle); point.y=a.y+first.length*Math.sin(angle);
+                    } else {
+                        const second=fixedEdges[1], b=points.get(second.p1 === old.id ? second.p2 : second.p1);
+                        const exact=closestCircleIntersection(a,first.length,b,second.length,old.x,old.y);
+                        if (!exact) continue;
+                        point.x=exact.x; point.y=exact.y;
+                    }
+                }
+                if (projectGeometry(points,drag.edges,new Set([...locked,old.id])) && commit(points)) return;
+            }
+            // Aucune solution validée : conserver la dernière géométrie correcte.
+        }
+
+        function tryAnchoredSnap(source, target) {
+            if (!canSnapPointPair(source,target)) return false;
+            const drag=state.draggingConstrained;
+            const ids=new Set(drag.group.map(p=>p.id));
+            // Inclure également la construction de la cible dans la validation.
+            const targetStrip=state.strips.find(s=>s.p1===target.id || s.p2===target.id);
+            if (targetStrip) getAllConnectedPoints(targetStrip).forEach(p=>ids.add(p.id));
+            const points=new Map(state.points.filter(p=>ids.has(p.id) && p.id!==source.id).map(p=>[p.id,{...p}]));
+            const mapId=id=>id===source.id ? target.id : id;
+            const edges=getGeometryEdges().filter(e=>ids.has(e.p1)&&ids.has(e.p2))
+                .map(e=>({...e,p1:mapId(e.p1),p2:mapId(e.p2)}));
+            const locked=new Set([...points.values()].filter(p=>p.fixed || protractorAnchorShouldPin(p.id)).map(p=>p.id));
+            // Pour une fermeture plate, projeter aussi la contrainte colinéaire
+            // explicitement (la projection par distances converge trop lentement).
+            for (const base of edges) {
+                for (const side of edges.filter(e=>e.p1===base.p1 || e.p2===base.p1)) {
+                    const middleId=side.p1===base.p1 ? side.p2 : side.p1;
+                    if (middleId===base.p2 || locked.has(middleId)) continue;
+                    const other=edges.find(e=>(e.p1===middleId&&e.p2===base.p2)||(e.p2===middleId&&e.p1===base.p2));
+                    if (!other || Math.abs(side.length+other.length-base.length)>1e-7) continue;
+                    const a=points.get(base.p1),b=points.get(base.p2),m=points.get(middleId);
+                    if (Math.abs(Math.hypot(b.x-a.x,b.y-a.y)-base.length)>1e-4) continue;
+                    m.x=a.x+(b.x-a.x)*side.length/base.length; m.y=a.y+(b.y-a.y)*side.length/base.length;
+                }
+            }
+            if (!projectGeometry(points,edges,locked,400)) return false;
+            points.forEach(p=>{const original=state.points.find(q=>q.id===p.id);original.x=p.x;original.y=p.y;});
+            replaceAnglePointId(source.id,target.id);
+            state.strips.forEach(s=>{s.p1=mapId(s.p1);s.p2=mapId(s.p2);});
+            state.points=state.points.filter(p=>p.id!==source.id);
+            cleanupAngleGroups();
+            return true;
         }
 
         function normalizeStripToTargetLength(strip) {
@@ -2346,7 +2543,7 @@ const positionGhost = (clientX, clientY) => {
                 solveRenderQueued = false;
                 const it = pendingSolveIters || 0;
                 pendingSolveIters = 0;
-                if (it > 0) solveConstraints(it);
+                if (it > 0 && !state.draggingConstrained) solveConstraints(it);
                 recordTracedPoints();
                 render();
             });
@@ -2528,6 +2725,7 @@ const positionGhost = (clientX, clientY) => {
             state.draggingAngleMove = null;
             state.draggingRigidRotate = null;
             state.draggingPoint = null;
+            state.draggingConstrained = null;
             state.draggingStrip = null;
             state.trashPreviewStripIds = null;
             state.trashPreviewPointIds = null;
@@ -2609,11 +2807,14 @@ const positionGhost = (clientX, clientY) => {
 
         function getPointAt(x, y) {
             const radius = Math.max(12, 40 / state.zoom);
-            const r2 = radius * radius;
-            return state.points.find(p => {
-                const dx = p.x - x, dy = p.y - y;
-                return (dx*dx + dy*dy) < r2;
-            });
+            let best=null, bestDistance=radius;
+            for (const point of state.points) {
+                const distance=Math.hypot(point.x-x,point.y-y);
+                if (distance < bestDistance || (distance === bestDistance && best?.fixed && !point.fixed)) {
+                    best=point;bestDistance=distance;
+                }
+            }
+            return best;
         }
 
         function getStripAt(x, y) {
@@ -2754,6 +2955,10 @@ const positionGhost = (clientX, clientY) => {
                     return;
                 }
 
+                if (attachedId && point.id === attachedId) proTool.attachedPointId = null;
+                const attachedStrip = state.strips.find(s => s.p1 === point.id || s.p2 === point.id);
+                if (attachedStrip && beginAnchoredDrag(point, attachedStrip)) return;
+
                 // Angles fixes (créés via +) :
                 // - si on attrape une branche => rotation rigide
                 // - si on attrape le sommet => déplacement normal (comme avant)
@@ -2874,6 +3079,9 @@ state.draggingPoint = point; point.pinned = true; container.style.cursor = 'grab
                 }
                 const p1 = state.points.find(point => point.id === strip.p1);
                 const p2 = state.points.find(point => point.id === strip.p2);
+                const handle = p1 && !p1.fixed && (!p2 || p2.fixed ||
+                    Math.hypot(pos.x-p1.x,pos.y-p1.y) < Math.hypot(pos.x-p2.x,pos.y-p2.y)) ? p1 : p2;
+                if (handle && beginAnchoredDrag(handle, strip, true)) return;
                 if (p1 && p2 && p1.fixed !== p2.fixed) {
                     const movableEndpoint = p1.fixed ? p2 : p1;
                     state.draggingPoint = movableEndpoint;
@@ -2919,6 +3127,22 @@ state.draggingPoint = point; point.pinned = true; container.style.cursor = 'grab
             if (geoDragState.active) return;
             const pos = getPos(e);
             const clientPos = getClientPos(e);
+            if (state.draggingConstrained) {
+                e.preventDefault();
+                if (state.draggingConstrained.fromBody && clientPos.y <= header.getBoundingClientRect().bottom) {
+                    header.classList.add('trash-active');
+                    const ids=new Set(state.draggingConstrained.group.map(p=>p.id));
+                    state.trashPreviewPointIds=ids;
+                    state.trashPreviewStripIds=new Set(state.strips.filter(s=>ids.has(s.p1)&&ids.has(s.p2)).map(s=>s.id));
+                } else {
+                    header.classList.remove('trash-active');
+                    clearTrashPreview();
+                }
+                moveAnchoredDrag(pos.x,pos.y);
+                recordTracedPoints();
+                queueRenderOnly();
+                return;
+            }
             
 
             if (state.tool === 'pen' && !state.penRightOverride) { updateCustomCursor(e); return; }
@@ -3133,6 +3357,11 @@ state.draggingPoint = point; point.pinned = true; container.style.cursor = 'grab
 
         // Sécurité : si la fenêtre perd le focus pendant un drag/pan, on relâche.
         window.addEventListener('blur', () => {
+            if (state.draggingConstrained) {
+                state.draggingConstrained=null;
+                endPointTraceCapture();
+                render();
+            }
             if (state.penRightOverride) {
                 exitPenRightOverride();
             }
@@ -3141,6 +3370,26 @@ state.draggingPoint = point; point.pinned = true; container.style.cursor = 'grab
         function handleEnd(e) {
             header.classList.remove('trash-active');
             clearTrashPreview();
+            if (state.draggingConstrained) {
+                const clientY=e.changedTouches ? e.changedTouches[0].clientY : e.clientY;
+                if (state.draggingConstrained.fromBody && clientY <= header.getBoundingClientRect().bottom) {
+                    const strip=state.draggingConstrained.strip;
+                    state.draggingConstrained=null;
+                    endPointTraceCapture();
+                    removeConnectedGroup(strip);
+                    return;
+                }
+                const source=state.points.find(p=>p.id===state.draggingConstrained.pointId);
+                if (source && !source.fixed && !state.draggingConstrained.rigid) {
+                    for (const target of state.points) {
+                        if (source.id !== target.id && tryAnchoredSnap(source,target)) {playSound('snap');break;}
+                    }
+                }
+                state.draggingConstrained=null;
+                endPointTraceCapture();
+                render();
+                return;
+            }
 
             // Fin du mode "main" au bouton droit en mode stylo
             if (!e.touches && state.penRightOverride) {
@@ -3410,12 +3659,17 @@ if (state.draggingPoint) {
                 const connectedStrips = state.strips.filter(s => s.p1 === point.id || s.p2 === point.id);
                 if (connectedStrips.length > 1) {
                     playSound('detach');
-                    for (let i = 1; i < connectedStrips.length; i++) {
-                        const s = connectedStrips[i];
-                        const newP = { id: state.nextId++, x: point.x + (Math.random()*20 - 10), y: point.y + (Math.random()*20 - 10), pinned: false };
+                    const keep = connectedStrips.find(s=>s.fixed) || connectedStrips[0];
+                    for (const s of connectedStrips) {
+                        if (s === keep || s.fixed) continue;
+                        const other=state.points.find(p=>p.id===(s.p1===point.id?s.p2:s.p1));
+                        const length=getStripLength(s);
+                        const angle=Math.atan2(point.y-other.y,point.x-other.x)+Math.min(.1,10/length);
+                        const newP = { id: state.nextId++, x: other.x+length*Math.cos(angle), y: other.y+length*Math.sin(angle), pinned: false };
                         state.points.push(newP);
                         if (s.p1 === point.id) s.p1 = newP.id; else s.p2 = newP.id;
                     }
+                    cleanupAngleGroups();
                     render();
                 }
             }
@@ -3425,7 +3679,7 @@ if (state.draggingPoint) {
         function render() {
             ctxStrips.clearRect(0, 0, canvasStrips.width, canvasStrips.height);
 
-            const isDragging = !!(state.draggingPoint || state.draggingStrip || state.draggingAngle || state.draggingAngleMove || state.draggingRigidRotate || state.isSidebarDragging);
+            const isDragging = !!(state.draggingConstrained || state.draggingPoint || state.draggingStrip || state.draggingAngle || state.draggingAngleMove || state.draggingRigidRotate || state.isSidebarDragging);
 
             // Cache du tri (coûteux) : on ne retrie que si on ajoute/supprime une bande.
             let sortedStrips = state._sortedStripsCache;
