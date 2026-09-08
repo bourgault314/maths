@@ -191,7 +191,7 @@ test("J’apprends et Je m’entraîne démarrent directement, les autres parcou
   assert.doesNotMatch(html, /setTimeout\(beginRound/);
   assert.match(html, /if \(config\.mode === "learn" \|\| config\.mode === "train"\) \{[\s\S]*beginRound\(\);[\s\S]*return;/);
   assert.match(html, /de ×0 à ×10/);
-  assert.match(html, /niveau \$\{config\.testLevel\} · 25 questions/);
+  assert.match(html, /produits, trous, divisions · 25 questions/, "lot 3 : une marche de l’escalier, tout dedans, seule la durée change");
 });
 
 test("J’apprends garde le bâton pour construire et le propose en aide temporaire pour mémoriser", () => {
@@ -237,7 +237,7 @@ test("J’apprends garde le bâton pour construire et le propose en aide tempora
   assert.match(html, /textContent = enabled \? "Valider" : "Suivant"/);
   assert.match(html, /completeReview = state\.configuration\.mode === "test"/);
   assert.match(html, /Bilan de tes réponses/);
-  assert.match(html, /defi_tables_core\.js\?v=20260830-9/);
+  assert.match(html, /defi_tables_core\.js\?v=20260908-10/);
   // Le moteur était le seul des deux scripts sans épingle, et le lot A2 est
   // passé au travers : il ajoutait chargerSync / sauverSync / casesDetachees au
   // moteur sans monter son numéro. Un navigateur qui avait déjà l'ancien moteur
@@ -245,7 +245,7 @@ test("J’apprends garde le bâton pour construire et le propose en aide tempora
   // « PARCOURS.chargerSync is not a function », plus de repère de suivi, plus
   // rien envoyé au professeur, et une page d'accueil d'apparence normale.
   // Changer ce numéro à chaque modification du moteur ; ce test le rappelle.
-  assert.match(html, /defi_tables_mon_parcours\.js\?v=20260903-12/);
+  assert.match(html, /defi_tables_mon_parcours\.js\?v=20260908-13/);
 });
 
 test("le numéro de question est séparé du calcul dans le bilan", () => {

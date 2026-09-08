@@ -243,7 +243,7 @@ test("confidentialite.html annonce zéro cookie, zéro traceur tiers, et décrit
   assert.match(page, /n’utilise aucun cookie de mesure ni aucun traceur tiers/);
   assert.match(page, /gardent sur votre appareil, et seulement là, vos réglages et votre progression/);
   assert.match(page, /rien n’est transmis/);
-  assert.match(page, /Dernière mise à jour : 4 septembre 2026/);
+  assert.match(page, /Dernière mise à jour : 8 septembre 2026/);
   assert.match(page, /mathsgo-suivi-identite/, "la clé d'identité de l'onglet (lot 8) est déclarée");
   assert.doesNotMatch(page, /<code>_ga<\/code>/, "plus de ligne _ga dans le tableau");
   assert.doesNotMatch(page, /mathsgo:consentement:v1/, "plus de clé de consentement dans le tableau");

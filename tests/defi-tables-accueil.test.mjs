@@ -21,8 +21,10 @@ const confidentialite = await readFile(new URL("../confidentialite.html", import
 
 test("l’accueil : Ma table et ses trois étapes, Réviser, Mon parcours, Mes calculs, les petits liens", () => {
   assert.match(html, /<section id="mode-screen" class="mode-screen">[\s\S]*<div class="acc">/);
-  assert.match(html, /<div class="acc">\s*<!--[^>]*-->\s*<section class="matable"/, "l’accueil commence par le bloc Ma table");
-  assert.match(html, /<p class="eyebrow">Ma table<\/p><h1 id="acc-table-titre" tabindex="-1">/, "« La table de N » est le titre de l’écran");
+  // Lot 3 : avant le bloc Ma table, l'avis unique de migration (caché) et le
+  // bloc « Je deviens expert » (caché tant que les 9 tables ne sont pas acquises).
+  assert.match(html, /<div class="acc">\s*<!--[^>]*-->\s*<div id="acc-avis" class="avis" role="status" hidden>[\s\S]*?<section id="acc-expert" class="expert"[^>]*hidden>[\s\S]*?<section class="matable"/, "l’accueil commence par le bloc Ma table (l’avis et l’escalier ne s’affichent que quand ils ont lieu d’être)");
+  assert.match(html, /<p id="acc-table-eyebrow" class="eyebrow">Ma table<\/p><h1 id="acc-table-titre" tabindex="-1">/, "« La table de N » est le titre de l’écran (« Mes tables » quand les 9 sont acquises)");
   assert.match(html, /id="acc-changer" class="matable-changer"[^>]*aria-controls="acc-choix">Changer de table</);
   assert.match(html, /id="acc-acquises"/);
   assert.ok(html.indexOf('id="acc-changer"') < html.indexOf('id="acc-acquises"'), "« 2 tables acquises sur 9 » sous « Changer de table » (complément du 08/09)");
@@ -38,14 +40,14 @@ test("l’accueil : Ma table et ses trois étapes, Réviser, Mon parcours, Mes c
   assert.match(html, /num: "1",\s*titre: "J’apprends"/);
   assert.match(html, /num: "2",\s*titre: "Je m’entraîne"/);
   assert.match(html, /num: "3",\s*titre: "Je valide ma table"/);
-  assert.match(html, /num: "★",\s*titre: "Je deviens expert"/);
-  assert.match(html, /if \(etat\.melange\.visible\) \{/, "la ligne ★ suit la règle du moteur : dès 2 tables acquises, tant que les 9 ne le sont pas");
+  assert.match(html, /num: "★",\s*titre: "Mon mélange"/, "lot 3 : la ligne ★ s’appelle « Mon mélange »");
+  assert.match(html, /if \(etat\.melange\.visible && !toutes\) \{/, "la ligne ★ suit la règle du moteur : dès 2 tables acquises ; avec les 9, elle vit dans le bloc Je deviens expert");
   assert.match(html, /sousTitre: ligne\.acquise \? "acquise ✓ · 20 questions · 1 min 30" : "20 questions · 1 min 30"/, "la seule règle écrite sur l’accueil");
 });
 
 test("l’appli ne choisit rien : les trois étapes restent des boutons, elle surligne seulement la conseillée", () => {
   assert.match(html, /bouton\.className = `etape \$\{classe\}\$\{conseille \? " is-next" : ""\}`/);
-  assert.doesNotMatch(html, /bouton\.disabled = /, "aucune étape n’est verrouillée avant le lot 3");
+  assert.doesNotMatch(html, /bouton\.disabled = /, "rien n’est désactivé en silence : le cadenas du lot 3 est un bouton qui explique et mène au mélange");
   assert.match(html, /const conseil = prochaine\.type === "revision" \? "reviser"/, "le conseil suit prochaineEtape du moteur");
   assert.match(html, /\.etape\.is-next \{ border-color: var\(--blue\)/);
   assert.match(html, /\.etape\.is-next \.num \{ background: var\(--blue\); color: #fff; \}/);
@@ -109,17 +111,19 @@ test("plus aucun texte de règle sur les écrans de l’élève en dehors de la 
   assert.doesNotMatch(html, /class="parcours-note"/);
 });
 
-test("la notice « Comment ça marche ? » : les règles ACTUELLES, écrites une fois, clonées deux fois", () => {
+test("la notice « Comment ça marche ? » : les règles, écrites une fois, clonées deux fois", () => {
   const notice = html.match(/<template id="notice-regles">([\s\S]*?)<\/template>/);
   assert.ok(notice, "le gabarit de la notice existe");
   const texte = notice[1];
-  assert.equal((texte.match(/<p>/g) || []).length, 4, "quatre phrases");
+  assert.equal((texte.match(/<p>/g) || []).length, 6, "six phrases (lot 3 : le mélange, les étoiles, mon rang)");
   assert.match(texte, /<b>Une table\.<\/b> Je l’apprends si je veux, je m’entraîne 3 fois — dans le désordre, avec des trous, puis les deux — et je la valide : 20 questions en 1 min 30, 2 erreurs au maximum\./);
+  assert.match(texte, /<b>Le mélange\.<\/b> Dès que j’ai 2 tables, je dois réussir le mélange de mes tables avant d’en valider une nouvelle\. Même règle : 20 questions en 1 min 30, 2 erreurs au maximum\. Chaque nouvelle table le remet à faire\./);
   assert.match(texte, /<b>Mes calculs\.<\/b> Chaque calcul a 3 cases\. Une bonne réponse = 1 case, mais une seule par jour : un calcul est su quand je l’ai réussi trois jours différents\. Une erreur enlève une case, et ce jour-là je ne peux pas la regagner\./);
-  assert.match(texte, /<b>Réviser\.<\/b> 10 questions sans chrono sur ce que je sais le moins\./);
-  assert.match(texte, /<b>Le mélange et Expert\.<\/b> Dès 2 tables acquises, le mélange de mes tables : 25 produits en 2 min, à refaire à chaque nouvelle table\. Expert mélange toutes les tables de 2 à 10 : ★ produits, ★★ avec des trous, ★★★ avec des divisions — 25 questions en 2 min, 2 erreurs au maximum\./);
-  // Rien du lot 3 : ni mélange obligatoire, ni escalier d'étoiles, ni rangs.
-  assert.doesNotMatch(texte, /avant d’en valider|cadenas|Bronze|Argent|Platine|Diamant|Légende|1 min 45|1 min 15|★★★★/);
+  assert.match(texte, /<b>Réviser\.<\/b> Jusqu’à 10 questions sans chrono sur ce que je sais le moins — jamais un calcul que je n’ai pas encore rencontré\./);
+  assert.match(texte, /<b>Les étoiles\.<\/b> Quand mes 9 tables sont acquises et le dernier mélange réussi, je deviens expert : 25 questions avec des divisions, toutes les tables, de plus en plus vite — ★ 2 min, ★★ 1 min 45, ★★★ 1 min 30, ★★★★ 1 min 15\. À 1 minute, je suis une Légende des tables 👑\./);
+  assert.match(texte, /<b>Mon rang\.<\/b> Bronze dès ma première table, puis Argent \(3 tables\), Or \(6\), Platine \(9 tables et le mélange\), Diamant \(★★★★\), Légende \(👑\)\. On ne redescend jamais\./);
+  // Plus rien de l'ancien système : ni mélange à 25 en 2 min, ni Champion.
+  assert.doesNotMatch(texte, /25 produits|Champion|★ produits/);
   assert.equal((html.match(/data-notice hidden/g) || []).length, 2, "accueil + parcours");
   assert.match(html, /document\.querySelectorAll\("\[data-notice\]"\)\.forEach\(zone => zone\.append\(modele\.content\.cloneNode\(true\)\)\)/);
 });
@@ -201,10 +205,13 @@ test("l’étape conseillée d’une table suit la même lecture que le moteur",
 
 test("le bouton Réviser reprend les phrases existantes quand il n’y a rien à revoir", () => {
   const logique = chargerLogiqueAccueil("");
-  assert.equal(logique.phraseReviser({aTravailler: 4, enCours: 0, sus: 0, total: 36}), "10 questions sans chrono, sur ce que tu sais le moins.");
-  assert.equal(logique.phraseReviser({aTravailler: 0, enCours: 0, sus: 8, total: 36}), "Rien à revoir pour l’instant : on complète et on entretient ta grille.");
-  assert.equal(logique.phraseReviser({aTravailler: 0, enCours: 0, sus: 36, total: 36}), "Tout est su ! 10 questions pour entretenir ta grille.");
-  assert.equal(logique.phraseReviser({aTravailler: 0, enCours: 0, sus: 0, total: 36}), "Ta grille est vide : on découvre les 10 premiers calculs.");
+  // Lot 3 (08/09) : la révision ne propose jamais un calcul jamais vu — la
+  // phrase compte les questions possibles, et une grille vide ne lance rien.
+  assert.equal(logique.phraseReviser({aTravailler: 4, enCours: 0, sus: 6, jamaisVus: 26, total: 36}), "10 questions sans chrono, sur ce que tu sais le moins.");
+  assert.equal(logique.phraseReviser({aTravailler: 3, enCours: 1, sus: 0, jamaisVus: 32, total: 36}), "4 questions sans chrono, sur ce que tu sais le moins.");
+  assert.equal(logique.phraseReviser({aTravailler: 0, enCours: 0, sus: 8, jamaisVus: 28, total: 36}), "Rien à revoir pour l’instant : 8 questions pour entretenir ta grille.");
+  assert.equal(logique.phraseReviser({aTravailler: 0, enCours: 0, sus: 36, jamaisVus: 0, total: 36}), "Tout est su ! 10 questions pour entretenir ta grille.");
+  assert.equal(logique.phraseReviser({aTravailler: 0, enCours: 0, sus: 0, jamaisVus: 36, total: 36}), "Ta grille est vide : elle se remplit dans Je m’entraîne et les validations.");
   assert.equal(logique.resumeCalculsTexte({sus: 24, enCours: 8, aTravailler: 4, jamaisVus: 0, total: 36}), "24 sus · 8 en route · 4 à revoir");
   assert.equal(logique.resumeCalculsTexte({sus: 1, enCours: 0, aTravailler: 0, jamaisVus: 35, total: 36}), "1 su · 0 en route · 0 à revoir · 35 pas encore vus");
 });

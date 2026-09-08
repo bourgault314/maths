@@ -291,11 +291,66 @@
     .etape.valide strong { color: var(--blue); }
     .etape.melange .num { background: #fff3cd; color: #7a5a00; }
     .etape.melange.is-next .num { background: #e0a800; color: #fff; }
+    /* Lot 3 : le mélange dû est surligné en jaune, « Je valide » d'une table
+       non acquise est cadenassé tant qu'il n'est pas réussi. */
+    .etape.melange.is-next { border-color: #e0a800; box-shadow: 0 0 0 2px rgba(224, 168, 0, .22), 0 2px 0 #e9cf86; background: #fffdf5; }
+    .etape.melange.is-next strong { color: #7a5a00; }
+    .etape.verrou { background: #f3f6f8; border-style: dashed; box-shadow: none; color: #6b7f90; }
+    .etape.verrou .num { background: #e9eef2; color: #8093a3; }
+    .etape.verrou strong { color: #6b7f90; }
+    .etape.verrou small { color: #7a5a00; }
+    .etape.verrou .cadenas { font-size: 1.15rem; line-height: 1; }
+    /* Le rang : un badge sous « N tables acquises sur 9 », nulle part ailleurs. */
+    .rang { display: inline-flex; align-items: center; gap: 5px; padding: 3px 9px 3px 6px; border-radius: 999px; font-size: .74rem; font-weight: 950; border: 1px solid transparent; white-space: nowrap; }
+    .rang:empty { display: none; }
+    .rang i { width: 12px; height: 12px; border-radius: 50%; display: inline-block; box-shadow: inset 0 -2px 0 rgba(0, 0, 0, .18), inset 0 1px 0 rgba(255, 255, 255, .7); }
+    .rang.bronze { background: #f7e9dc; color: #7a4416; border-color: #e6c9ad; } .rang.bronze i { background: linear-gradient(135deg, #e0a06a, #b8722f); }
+    .rang.argent { background: #eef1f4; color: #465563; border-color: #d3dbe3; } .rang.argent i { background: linear-gradient(135deg, #e6ebf0, #98a5b3); }
+    .rang.or { background: #fff4cc; color: #7a5a00; border-color: #f0dc8c; } .rang.or i { background: linear-gradient(135deg, #ffe17a, #d9a300); }
+    .rang.platine { background: #e8f4f8; color: #2c5d70; border-color: #bfdde8; } .rang.platine i { background: linear-gradient(135deg, #e6f6fa, #7db7c9); }
+    .rang.diamant { background: #e9f0ff; color: #2a4c93; border-color: #c2d3f7; } .rang.diamant i { background: linear-gradient(135deg, #b9d3ff, #4f7fd6); border-radius: 3px; transform: rotate(45deg) scale(.85); }
+    .rang.legende { background: linear-gradient(135deg, #fff1c2, #ffe08a); color: #6b4a00; border-color: #e6c25a; }
+    .matable-droite .rang { margin-top: 3px; }
+    /* Les jours : « N jours cette semaine · N cases t'attendent demain ». */
+    .jours { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 6px 10px; margin: -4px 4px 0; color: #4c6274; font-size: .84rem; font-weight: 800; text-align: center; }
+    .jours .k { display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px; border-radius: 999px; background: #eef7f5; color: #1b4d44; }
+    /* L'avis unique « le parcours a changé » (migration vers les règles du lot 3). */
+    .avis { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 10px; padding: 10px 12px 10px 14px; border-radius: 14px; background: #e9f0ff; color: #2a4c93; font-weight: 800; font-size: .86rem; line-height: 1.35; text-align: left; }
+    .avis p { margin: 0; }
+    .avis button { min-height: 40px; padding: 0 14px; border: 0; border-radius: 999px; background: var(--blue); color: #fff; font: inherit; font-weight: 950; cursor: pointer; }
+    /* Je deviens expert : le bloc principal quand les 9 tables sont acquises. */
+    .expert { padding: 14px 14px 14px; border: 2px solid #f0dc8c; border-radius: 22px; background: linear-gradient(180deg, #fffdf3, #fff); }
+    .expert .eyebrow { margin: 0; color: #7a5a00; font-size: .74rem; letter-spacing: .06em; }
+    .expert h2 { margin: 2px 0 12px; font-size: 1.35rem; line-height: 1.15; color: var(--ink); }
+    .escalier { display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px; align-items: end; margin: 0 0 12px; }
+    .marche { display: grid; justify-items: center; gap: 4px; }
+    .marche .bloc { width: 100%; border-radius: 10px 10px 4px 4px; display: grid; place-items: end center; padding-bottom: 6px; font-size: 1.05rem; letter-spacing: -.06em; border: 2px solid #dfe6ec; background: #f1f4f7; color: #b0bcc7; line-height: 1; }
+    .marche:nth-child(1) .bloc { height: 40px; } .marche:nth-child(2) .bloc { height: 52px; } .marche:nth-child(3) .bloc { height: 64px; } .marche:nth-child(4) .bloc { height: 76px; } .marche:nth-child(5) .bloc { height: 88px; font-size: 1.3rem; letter-spacing: 0; }
+    .marche.is-gagnee .bloc { background: linear-gradient(180deg, #ffe89a, #f2c230); border-color: #d9a300; color: #7a5a00; }
+    .marche.is-suivante .bloc { background: #fff; border-color: var(--blue); color: var(--blue); box-shadow: 0 0 0 3px rgba(7, 85, 184, .16); }
+    .marche small { font-size: .72rem; font-weight: 900; color: #5b7286; white-space: nowrap; }
+    .marche.is-gagnee small { color: #7a5a00; } .marche.is-suivante small { color: var(--blue); }
+    .expert .etape { min-height: 60px; }
+    .expert .etape.is-next .num { font-size: 1.15rem; }
+    .expert .etape.is-next strong { color: var(--blue); }
+    .expert .etape.melange.is-next strong { color: #7a5a00; }
+    .expert .etape.melange.is-next .num { font-size: 1rem; }
+    .matable.is-toutes .matable-head { margin-bottom: 0; }
+    .matable.is-toutes .matable-head h1 { font-size: 1.15rem; white-space: nowrap; }
+    .matable.is-toutes #acc-acquises { display: none; }
+    .matable.is-toutes .matable-changer { font-size: .8rem; }
+    .matable.is-toutes .matable-droite { padding-top: 0; }
+    .matable.is-toutes .matable-head h1 .ok { color: var(--teal); }
+    .matable.is-toutes .etapes:empty { display: none; }
+    .matable.is-toutes .matable-choix { margin-top: 12px; margin-bottom: 0; }
     .reviser { width: 100%; min-height: 56px; display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 10px; padding: 8px 14px 8px 16px; border: 0; border-radius: 16px; background: #fff3e0; color: #7a3d00; font: inherit; text-align: left; cursor: pointer; box-shadow: 0 2px 0 #f0c98f; }
     .reviser strong { display: block; font-size: 1.02rem; line-height: 1.15; }
     .reviser small { display: block; color: #9a5a13; font-size: .78rem; font-weight: 800; line-height: 1.25; }
     .reviser .go { padding: 9px 14px; border-radius: 999px; background: #e0771a; color: #fff; font-weight: 950; white-space: nowrap; }
     .reviser.is-next { box-shadow: 0 0 0 2px rgba(224, 119, 26, .35), 0 2px 0 #f0c98f; }
+    .reviser.is-vide { box-shadow: none; cursor: default; }
+    .reviser.is-vide .go { background: #d9c2a6; }
+    #calculs-reviser.is-vide { opacity: .55; cursor: default; }
     .acc-liens { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
     .acc-lien { min-height: 64px; display: grid; grid-template-columns: 34px minmax(0, 1fr); align-items: center; gap: 10px; padding: 8px 12px; border: 1px solid #c5d9e6; border-radius: 15px; background: #fff; color: var(--blue); font: inherit; font-weight: 900; text-align: left; cursor: pointer; }
     .acc-lien .ico { width: 34px; height: 34px; }
@@ -315,6 +370,8 @@
       .acc { max-width: 620px; }
       .etape { min-height: 60px; }
       .etape strong { font-size: 1.12rem; }
+      .escalier { gap: 8px; }
+      .marche:nth-child(1) .bloc { height: 48px; } .marche:nth-child(2) .bloc { height: 62px; } .marche:nth-child(3) .bloc { height: 76px; } .marche:nth-child(4) .bloc { height: 90px; } .marche:nth-child(5) .bloc { height: 104px; }
     }
 
     /* ---- Mon parcours ---- */
@@ -429,6 +486,16 @@
     .cell.is-check.is-done { color: #fff; border-color: var(--green); background: var(--green); }
     .cell.is-star { color: #c9d6df; font-size: 1.4rem; }
     .cell.is-star.is-done { color: #b7791f; border-color: #e7c86a; background: #fff8e1; }
+    /* Lot 3 : la case Acquise cadenassée tant que le mélange est dû ; les cinq
+       marches de l'escalier, avec leur durée dessous. */
+    .cell.is-lock { color: #8093a3; font-size: 1.1rem; border-style: dashed; background: #f3f6f8; }
+    .cell.is-star.n2 { font-size: 1.05rem; letter-spacing: -.08em; }
+    .cell.is-star.n3 { font-size: .85rem; letter-spacing: -.08em; }
+    .cell.is-star.n4 { font-size: .68rem; letter-spacing: -.1em; }
+    .cell.is-star.n5 { font-size: 1.25rem; }
+    .cell.is-star.is-fermee { color: #d3dce4; background: #f6f8fa; border-style: dashed; }
+    .marche-cell { display: grid; justify-items: center; gap: 2px; }
+    .marche-cell small { font-size: .7rem; font-weight: 900; color: var(--muted); white-space: nowrap; }
     .cell:focus-visible { outline: 3px solid var(--blue); outline-offset: 2px; }
     .parcours-extra { margin-top: 12px; }
     .parcours-extra .parcours-row-head { margin-bottom: 8px; }
@@ -466,6 +533,9 @@
     .result-fete strong { display: block; margin-top: 6px; color: var(--teal); font-size: 1.35rem; }
     .result-fete.is-champion { border-color: #e7c86a; background: linear-gradient(135deg, #fff8e1, #fff); }
     .result-fete.is-champion strong { color: #b7791f; }
+    /* Lot 3 : le passage d'un rang, sous la fête du moment (ou seul). */
+    .result-fete-rang { display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 10px; color: var(--ink); font-weight: 850; font-size: .95rem; }
+    .result-fete-rang .rang { font-size: .86rem; padding: 4px 11px 4px 8px; }
     @keyframes fete-pop { 0% { transform: scale(.85); opacity: 0; } 60% { transform: scale(1.04); } 100% { transform: scale(1); opacity: 1; } }
     .result-parcours-actions { display: flex; flex-wrap: wrap; gap: 8px; }
     .result-parcours-actions .secondary { min-height: 44px; margin-top: 10px; padding: 8px 14px; }
@@ -1220,7 +1290,8 @@
     .fiche-block p { margin: 1.5mm 0 0; color: #506b7d; font-size: 8pt; }
     .fiche-state { position: absolute; top: 3mm; right: 4mm; padding: .8mm 2.5mm; border-radius: 3mm; background: #fff; color: #147447; font-size: 8pt; font-weight: 700; }
     .fiche-state:empty { display: none; }
-    .fiche-stars { position: absolute; top: 2mm; right: 4mm; color: #c9d6df; font-size: 16pt; letter-spacing: 3mm; }
+    .fiche-stars { position: absolute; top: 2mm; right: 4mm; color: #c9d6df; font-size: 11pt; letter-spacing: -.5pt; white-space: nowrap; }
+    .fiche-stars b, .fiche-stars span { margin-left: 2.5mm; }
     .fiche-stars b { color: #b7791f; font-weight: 400; }
     .fiche-rules { margin-top: 5mm; color: #506b7d; font-size: 8.3pt; }
     .fiche-rules strong { display: block; margin-bottom: 1mm; color: #143451; font-size: 9pt; }
@@ -1310,24 +1381,37 @@
       <div id="intro" class="intro">
         <section id="mode-screen" class="mode-screen">
           <!-- L'accueil « Ma table » (lot 2) : tout ce qui s'y lit est calculé
-               par renderAccueil() à partir du parcours. Rien n'est verrouillé,
-               rien n'est imposé : les trois étapes sont toujours toutes
-               disponibles, l'appli surligne celle qu'elle conseille. -->
+               par renderAccueil() à partir du parcours. Les trois étapes sont
+               toujours toutes disponibles, l'appli surligne celle qu'elle
+               conseille — à une exception près, depuis le lot 3 : « Je valide »
+               d'une table non acquise est cadenassé tant que le mélange est dû.
+               Quand les 9 tables sont acquises, le bloc « Je deviens expert »
+               (l'escalier des étoiles) passe devant et « Ma table » devient
+               « Mes tables : 9 sur 9 acquises ». -->
           <div class="acc">
             <!-- Pas de ligne « Bonjour » (Gwenaël, 08/09) : le bandeau de suivi
                  dit déjà qui est là, l'accueil commence par le bloc Ma table. -->
+            <div id="acc-avis" class="avis" role="status" hidden><p id="acc-avis-texte"></p><button id="acc-avis-ok" type="button">OK</button></div>
+            <section id="acc-expert" class="expert" aria-labelledby="acc-expert-titre" hidden>
+              <p class="eyebrow">Je deviens expert</p>
+              <h2 id="acc-expert-titre">Toutes les tables, de plus en plus vite</h2>
+              <div id="acc-escalier" class="escalier" aria-label="L’escalier des étoiles"></div>
+              <div id="acc-expert-action" class="etapes"></div>
+            </section>
             <section class="matable" aria-labelledby="acc-table-titre">
               <div class="matable-head">
-                <div><p class="eyebrow">Ma table</p><h1 id="acc-table-titre" tabindex="-1">La table de 2</h1></div>
+                <div><p id="acc-table-eyebrow" class="eyebrow">Ma table</p><h1 id="acc-table-titre" tabindex="-1">La table de 2</h1></div>
                 <div class="matable-droite">
                   <button id="acc-changer" class="matable-changer" type="button" aria-expanded="false" aria-controls="acc-choix">Changer de table</button>
                   <small id="acc-acquises">0 table acquise sur 9</small>
+                  <span id="acc-rang" class="rang"></span>
                 </div>
               </div>
               <div id="acc-choix" class="matable-choix" role="group" aria-label="Choisir ma table" hidden></div>
               <div id="acc-etapes" class="etapes"></div>
             </section>
             <button id="acc-reviser" class="reviser" type="button"><span><strong id="acc-reviser-titre">Réviser mes calculs</strong><small id="acc-reviser-note">10 questions sans chrono</small></span><span class="go">Réviser&nbsp;→</span></button>
+            <div id="acc-jours" class="jours" hidden></div>
             <div class="acc-liens">
               <button id="open-parcours" class="acc-lien" type="button" aria-controls="parcours"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6.5 9 4l6 2.5 6-2.5v13l-6 2.5-6-2.5-6 2.5z" fill="#e7f8f5" stroke="#087a71" stroke-width="1.8" stroke-linejoin="round"/><path d="M9 4v13M15 6.5v13" stroke="#087a71" stroke-width="1.8"/><circle cx="12" cy="10" r="1.8" fill="#e0771a"/></svg><span>Mon parcours<small>toutes mes tables, le mélange, Expert</small></span></button>
               <button id="open-calculs" class="acc-lien" type="button" aria-controls="calculs"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="3" fill="#fff" stroke="#0755b8" stroke-width="1.8"/><path d="M3 9h18M3 15h18M9 3v18M15 3v18" stroke="#0755b8" stroke-width="1.5"/><rect x="9.8" y="9.8" width="4.4" height="4.4" fill="#147447"/><rect x="15.8" y="3.8" width="4.4" height="4.4" fill="#a93030"/><rect x="3.8" y="15.8" width="4.4" height="4.4" fill="#0755b8"/></svg><span>Mes calculs<small>la grille des 36 calculs</small></span></button>
@@ -1581,21 +1665,21 @@
       <tbody id="fiche-rows"></tbody>
     </table>
     <div class="fiche-block fiche-melange">
-      <strong>Mélange de mes tables acquises</strong>
+      <strong>Mon mélange : mes tables acquises</strong>
       <span id="fiche-melange-state" class="fiche-state"></span>
-      <p>Dès 2 tables acquises. À refaire à chaque nouvelle table : note la date de chaque mélange réussi. <span class="fiche-dates">dates : ______ ______ ______ ______</span></p>
+      <p>Dès 2 tables acquises, à réussir avant de valider une nouvelle table (20 questions en 1 min 30). À refaire à chaque nouvelle table : note la date de chaque mélange réussi. <span class="fiche-dates">dates : ______ ______ ______ ______</span></p>
     </div>
     <div class="fiche-block fiche-expert">
-      <strong>Expert : toutes les tables de 2 à 10 mélangées</strong>
+      <strong>Je deviens expert : toutes les tables, de plus en plus vite</strong>
       <span id="fiche-stars" class="fiche-stars"></span>
-      <p>★ produits · ★★ + trous · ★★★ + divisions. Trois étoiles = Champion des tables !</p>
+      <p>Quand mes 9 tables sont acquises et le mélange réussi : 25 questions avec des divisions — ★ 2 min · ★★ 1 min 45 · ★★★ 1 min 30 · ★★★★ 1 min 15 · 👑 1 min = Légende des tables.</p>
     </div>
     <div class="fiche-rules">
       <strong>Les règles</strong>
       <p><b>J’apprends</b> : un rond par activité terminée. On découvre la table, il n’y a rien à réussir.</p>
       <p><b>Je m’entraîne</b> : 10 questions sans chronomètre, 1 erreur au maximum. Trois entraînements différents.</p>
       <p><b>Acquise ✓</b> : 20 questions (produits et nombres manquants) en 1 min 30, 2 erreurs au maximum.</p>
-      <p><b>Mélange</b> : 25 produits des tables acquises en 2 min. <b>Expert</b> : les tables 2 à 10 mélangées — ★ produits · ★★ + trous · ★★★ + divisions.</p>
+      <p><b>Mon mélange</b> : même règle, sur mes tables acquises — à réussir avant de valider une nouvelle table. <b>Mon rang</b> : Bronze dès ma première table, puis Argent, Or, Platine, Diamant, Légende. On ne redescend jamais.</p>
     </div>
     <footer class="fiche-foot">mathsgo.re · CC BY-NC-SA 4.0</footer>
     <section class="fiche-page2">
@@ -1613,16 +1697,19 @@
       <footer class="fiche-foot">mathsgo.re · CC BY-NC-SA 4.0</footer>
     </section>
   </section>
-  <!-- « Comment ça marche ? » : les règles ACTUELLES en quatre phrases, écrites
-       une seule fois et clonées dans l'accueil et dans Mon parcours. Rien
-       d'autre n'explique de règle sur les écrans de l'élève (à part le détail
-       d'une case de Mes calculs). Le mélange obligatoire, les étoiles et les
-       rangs du lot 3 s'ajouteront ICI, pas ailleurs. -->
+  <!-- « Comment ça marche ? » : les règles en six phrases, écrites une seule
+       fois et clonées dans l'accueil et dans Mon parcours. Rien d'autre
+       n'explique de règle sur les écrans de l'élève (à part le détail d'une
+       case de Mes calculs). Lot 3 (08/09/2026) : le mélange, les étoiles et le
+       rang s'ajoutent ici — « un test, c'est 20 questions en 1 min 30 » vaut
+       pour les validations et les mélanges, pas pour les étoiles. -->
   <template id="notice-regles">
     <p><b>Une table.</b> Je l’apprends si je veux, je m’entraîne 3 fois — dans le désordre, avec des trous, puis les deux — et je la valide : 20 questions en 1 min 30, 2 erreurs au maximum.</p>
+    <p><b>Le mélange.</b> Dès que j’ai 2 tables, je dois réussir le mélange de mes tables avant d’en valider une nouvelle. Même règle : 20 questions en 1 min 30, 2 erreurs au maximum. Chaque nouvelle table le remet à faire.</p>
     <p><b>Mes calculs.</b> Chaque calcul a 3 cases. Une bonne réponse = 1 case, mais une seule par jour : un calcul est su quand je l’ai réussi trois jours différents. Une erreur enlève une case, et ce jour-là je ne peux pas la regagner.</p>
-    <p><b>Réviser.</b> 10 questions sans chrono sur ce que je sais le moins.</p>
-    <p><b>Le mélange et Expert.</b> Dès 2 tables acquises, le mélange de mes tables : 25 produits en 2 min, à refaire à chaque nouvelle table. Expert mélange toutes les tables de 2 à 10 : ★ produits, ★★ avec des trous, ★★★ avec des divisions — 25 questions en 2 min, 2 erreurs au maximum.</p>
+    <p><b>Réviser.</b> Jusqu’à 10 questions sans chrono sur ce que je sais le moins — jamais un calcul que je n’ai pas encore rencontré.</p>
+    <p><b>Les étoiles.</b> Quand mes 9 tables sont acquises et le dernier mélange réussi, je deviens expert : 25 questions avec des divisions, toutes les tables, de plus en plus vite — ★ 2 min, ★★ 1 min 45, ★★★ 1 min 30, ★★★★ 1 min 15. À 1 minute, je suis une Légende des tables 👑.</p>
+    <p><b>Mon rang.</b> Bronze dès ma première table, puis Argent (3 tables), Or (6), Platine (9 tables et le mélange), Diamant (★★★★), Légende (👑). On ne redescend jamais.</p>
   </template>
   <footer class="site-footer">
     <span>Gwenaël Bourgault</span><span aria-hidden="true">·</span>
@@ -1633,8 +1720,8 @@
     <span data-mathsgo-confidentialite>Sans cookie ni traceur</span>
   </footer>
 
-  <script src="./defi_tables_core.js?v=20260830-9"></script>
-  <script src="./defi_tables_mon_parcours.js?v=20260903-12"></script>
+  <script src="./defi_tables_core.js?v=20260908-10"></script>
+  <script src="./defi_tables_mon_parcours.js?v=20260908-13"></script>
   <script>
     (() => {
       "use strict";
@@ -3314,8 +3401,12 @@
           const typeLabels = {direct: "produits", missing: "trous"};
           return `${tables} · ${config.questionTypes.map(type => typeLabels[type]).join(" et ")} · ${config.total} questions · sans chronomètre`;
         }
+        if (config.mode === "validation" && config.tables.length > 1) {
+          const lesquelles = config.tables.length === PARCOURS_TABLES.length ? "mes 9 tables" : `tables ${listeTables(config.tables)}`;
+          return `Mon mélange · ${lesquelles} · 20 questions · ${CORE.durationLabel(config.duration)}`;
+        }
         if (config.mode === "validation") return `${tables} · 20 questions · ${CORE.durationLabel(config.duration)}`;
-        if (config.mode === "test") return `${tables} · niveau ${config.testLevel} · 25 questions · ${CORE.durationLabel(config.duration)}`;
+        if (config.mode === "test") return `${tables} · produits, trous, divisions · 25 questions · ${CORE.durationLabel(config.duration)}`;
         const questionLabels = {direct: "produits", missing: "trous", division: "divisions"};
         return `${tables} · ${config.questionTypes.map(type => questionLabels[type]).join(" + ")} · ${config.total} questions · ${CORE.durationLabel(config.duration)}`;
       }
@@ -3377,8 +3468,11 @@
           beginRound();
           return;
         }
-        $("launch-durations").hidden = config.mode !== "validation";
-        $("launch-hint").hidden = config.mode !== "validation";
+        // Le choix 1 min 30 / 2 min / 3 min ne vaut que pour UNE table : le
+        // mélange (même mode, plusieurs tables) se joue en 1 min 30, point.
+        const validationTable = config.mode === "validation" && config.tables.length === 1;
+        $("launch-durations").hidden = !validationTable;
+        $("launch-hint").hidden = !validationTable;
         document.querySelectorAll("[data-launch-duration]").forEach(button => {
           const selected = Number(button.dataset.launchDuration) === config.duration;
           button.classList.toggle("is-selected", selected);
@@ -3534,9 +3628,10 @@
 
       // Même convention de date que le moteur (defi_tables_mon_parcours.js),
       // sinon l’affichage et la règle « une case par jour » ne parleraient pas
-      // du même jour.
+      // du même jour : le jour LOCAL de l'appareil (lot 3 — jusque-là le jour
+      // UTC, qui basculait à 4 h du matin à la Réunion).
       function jourDuJour() {
-        return new Date().toISOString().slice(0, 10);
+        return PARCOURS.jourLocal();
       }
 
       function majuscule(texte) {
@@ -3568,11 +3663,20 @@
       });
 
       // La phrase du bouton Réviser, la même sur l'accueil et dans Mes calculs.
+      // La révision ne propose jamais un calcul jamais vu (lot 3, décision du
+      // 08/09) : elle reprend ce que la grille connaît, en série plus courte
+      // s'il y a moins de 10 calculs vus, et rien du tout sur une grille vide.
       function phraseReviser(resume) {
-        if (resume.aTravailler || resume.enCours) return "10 questions sans chrono, sur ce que tu sais le moins.";
+        const questions = questionsRevision(resume);
+        if (!questions) return "Ta grille est vide : elle se remplit dans Je m’entraîne et les validations.";
+        if (resume.aTravailler || resume.enCours) return `${pluriel(questions, "question")} sans chrono, sur ce que tu sais le moins.`;
         if (resume.sus === resume.total) return "Tout est su ! 10 questions pour entretenir ta grille.";
-        if (resume.sus) return "Rien à revoir pour l’instant : on complète et on entretient ta grille.";
-        return "Ta grille est vide : on découvre les 10 premiers calculs.";
+        return `Rien à revoir pour l’instant : ${pluriel(questions, "question")} pour entretenir ta grille.`;
+      }
+
+      // Combien de questions la révision peut poser : les calculs déjà vus, 10 au plus.
+      function questionsRevision(resume) {
+        return Math.min(PARCOURS.SEUILS.revision.total, resume.total - resume.jamaisVus);
       }
 
       function renderCalculsDetail() {
@@ -3616,6 +3720,8 @@
         const grille = PARCOURS.grilleCalculs(parcours);
         $("calculs-resume").textContent = resumeCalculsTexte(grille.resume);
         $("calculs-hint").textContent = phraseReviser(grille.resume);
+        $("calculs-reviser").classList.toggle("is-vide", !questionsRevision(grille.resume));
+        $("calculs-reviser").setAttribute("aria-disabled", String(!questionsRevision(grille.resume)));
         const zone = $("calculs-grille");
         zone.replaceChildren();
         const coin = document.createElement("span");
@@ -3730,7 +3836,7 @@
         const encore = document.createElement("button");
         encore.type = "button";
         encore.className = "primary";
-        encore.textContent = "Encore 10 questions";
+        encore.textContent = "Encore une révision";
         encore.addEventListener("click", () => startRevision(table, state.origin));
         const voir = document.createElement("button");
         voir.type = "button";
@@ -3773,7 +3879,9 @@
 
       function tableEnCours(etat) {
         const choisie = lireTableChoisie();
-        if (choisie && !etat.acquises.includes(choisie)) return choisie;
+        // Une table acquise n'est plus « ma table »… sauf quand les 9 le sont :
+        // « M'entraîner sur une table » (lot 3) choisit alors n'importe laquelle.
+        if (choisie && (!etat.acquises.includes(choisie) || etat.acquises.length === PARCOURS_TABLES.length)) return choisie;
         const ordre = PARCOURS.ORDRE_CONSEIL;
         return ordre.find(table => !etat.acquises.includes(table)) || ordre[ordre.length - 1];
       }
@@ -3826,14 +3934,146 @@
         return bouton;
       }
 
+      // Le badge du rang (Bronze… Légende des tables) : un point de métal et le
+      // nom ; la couronne pour la Légende. Vide avant la première table.
+      function badgeRang(rang, badge = document.createElement("span")) {
+        badge.className = `rang${rang && rang.niveau ? ` ${rang.cle}` : ""}`;
+        badge.replaceChildren();
+        badge.removeAttribute("aria-label");
+        if (!rang || !rang.niveau) return badge;
+        if (rang.cle !== "legende") {
+          const point = document.createElement("i");
+          point.setAttribute("aria-hidden", "true");
+          badge.append(point);
+        }
+        badge.append(document.createTextNode(rang.cle === "legende" ? `👑 ${rang.nom}` : rang.nom));
+        badge.setAttribute("aria-label", `Mon rang : ${rang.nom}`);
+        return badge;
+      }
+
+      // Le sous-titre de la ligne « Mon mélange » : les tables (listées jusqu'à
+      // trois, comptées au-delà), l'état, et le format quand il est à faire.
+      function sousTitreMelange(melange) {
+        const tables = melange.tables.length <= 3 ? `tables ${listeTables(melange.tables)}` : `mes ${melange.tables.length} tables`;
+        const etat = melange.aJour ? "à jour ✓" : melange.aRefaireAvec ? `à refaire avec la table de ${melange.aRefaireAvec}` : "à faire";
+        return melange.aJour ? `${tables} · ${etat}` : `${tables} · ${etat} · 20\u00a0questions · 1\u00a0min\u00a030`;
+      }
+
+      // L'avis unique « le parcours a changé » (migration des parcours d'avant
+      // le lot 3), adapté à l'état : rien de « il te reste le mélange » pour
+      // un élève à 0 ou 1 table.
+      function texteAvis(etat) {
+        const nombre = etat.acquises.length;
+        if (nombre >= PARCOURS_TABLES.length) {
+          return `Le parcours a changé : réussis le mélange de tes 9 tables pour ouvrir l’escalier des étoiles${etat.expert.niveau ? " — ta ★★★ d’avant est devenue la première étoile" : ""}.`;
+        }
+        if (nombre >= 2) return `Le parcours a changé : réussis ton mélange (tables ${listeTables(etat.acquises)}) avant de valider une nouvelle table.`;
+        return "Le parcours a changé : dès 2 tables acquises, tu réussis le mélange de tes tables avant d’en valider une nouvelle.";
+      }
+
+      function renderAvis(etat) {
+        const zone = $("acc-avis");
+        zone.hidden = !etat.avis;
+        if (etat.avis) $("acc-avis-texte").textContent = texteAvis(etat);
+      }
+
+      // Le bloc « Je deviens expert » : l'escalier des étoiles (gagnées dorées,
+      // la suivante cerclée, les autres grises) et un seul bouton — « Tenter ★★ »
+      // quand l'escalier est ouvert, « Mon mélange » tant que le mélange des
+      // 9 tables n'est pas réussi. Visible seulement quand les 9 tables sont
+      // acquises.
+      function renderExpert(etat, conseil) {
+        const zone = $("acc-expert");
+        const toutes = etat.acquises.length === PARCOURS_TABLES.length;
+        zone.hidden = !toutes;
+        if (!toutes) return;
+        const expert = etat.expert;
+        $("acc-expert-titre").textContent = expert.ouvert ? "Toutes les tables, de plus en plus vite" : "Réussis le mélange de tes 9 tables";
+        const escalier = $("acc-escalier");
+        escalier.replaceChildren();
+        expert.marches.forEach(marche => {
+          const item = document.createElement("div");
+          item.className = `marche${marche.gagnee ? " is-gagnee" : ""}${marche.suivante ? " is-suivante" : ""}`;
+          const bloc = document.createElement("div");
+          bloc.className = "bloc";
+          bloc.textContent = marche.symbole;
+          const duree = document.createElement("small");
+          duree.textContent = marche.libelleDuree;
+          item.append(bloc, duree);
+          item.setAttribute("aria-label", `${marche.symbole} en ${marche.libelleDuree} : ${marche.gagnee ? "gagnée" : marche.suivante ? "à tenter" : "plus tard"}`);
+          escalier.append(item);
+        });
+        const action = $("acc-expert-action");
+        action.replaceChildren();
+        if (!expert.ouvert) {
+          const melange = etat.melange;
+          action.append(ligneEtape({
+            classe: "melange",
+            num: "★",
+            titre: "Mon mélange",
+            sousTitre: sousTitreMelange(melange),
+            points: [etoile(melange.aJour ? 2 : 0)],
+            conseille: conseil === "melange",
+            aria: `Mon mélange, mes 9 tables : ${melange.aJour ? "à jour" : "à faire"}.`,
+            action: () => launchFromParcours(PARCOURS.configMelange(parcours), "menu")
+          }));
+          return;
+        }
+        if (!expert.suivante) {
+          const fin = document.createElement("p");
+          fin.className = "launch-hint";
+          fin.textContent = "Légende des tables 👑 : l’escalier est terminé. Rejoue une marche quand tu veux depuis Mon parcours.";
+          action.append(fin);
+          return;
+        }
+        const suivante = expert.suivante;
+        action.append(ligneEtape({
+          classe: "expert-tenter",
+          num: suivante.etoile === PARCOURS.ETOILES_MAX ? "👑" : "★",
+          titre: `Tenter ${suivante.symbole}`,
+          sousTitre: `25\u00a0questions · produits, trous, divisions · ${suivante.libelleDuree.replace(/ /g, "\u00a0")}`,
+          points: [],
+          conseille: true,
+          aria: `Tenter ${suivante.symbole} : 25 questions, produits, trous et divisions, toutes les tables, en ${suivante.libelleDuree}.`,
+          action: () => launchFromParcours(suivante.config, "menu")
+        }));
+      }
+
       function renderAccueil() {
         const etat = PARCOURS.etatAffichage(parcours);
         const nombre = etat.acquises.length;
+        const toutes = nombre === PARCOURS_TABLES.length;
         $("acc-acquises").textContent = `${nombre} table${nombre > 1 ? "s" : ""} acquise${nombre > 1 ? "s" : ""} sur ${PARCOURS_TABLES.length}`;
+        badgeRang(etat.rang, $("acc-rang"));
+        renderAvis(etat);
 
+        // L'étape surlignée : celle que le moteur conseille (révision dès 5
+        // calculs à revoir, puis le mélange dû, puis la table, puis l'escalier)
+        // — mais pour la table affichée, qui peut être celle que l'élève a choisie.
+        const prochaine = etat.prochaine;
+        const choisie = lireTableChoisie();
         const table = tableEnCours(etat);
         const ligne = etat.lignes.find(item => item.table === table);
-        $("acc-table-titre").textContent = `La table de ${table}`;
+        // Quand les 9 tables sont acquises, le bloc Ma table se replie en « Mes
+        // tables : 9 sur 9 acquises ✓ » ; « M'entraîner sur une table » ouvre
+        // le choix, et une table choisie redéploie ses trois étapes.
+        const replie = toutes && !choisie;
+        const conseil = prochaine.type === "revision" ? "reviser"
+          : prochaine.type === "melange" ? "melange"
+          : prochaine.type === "etoile" || prochaine.type === "legende" ? "expert"
+          : etapeConseillee(ligne);
+        renderExpert(etat, conseil);
+
+        const bloc = document.querySelector(".matable");
+        bloc.classList.toggle("is-toutes", replie);
+        $("acc-table-eyebrow").textContent = replie ? "Mes tables" : "Ma table";
+        const titre = $("acc-table-titre");
+        if (replie) {
+          titre.replaceChildren(document.createTextNode("9 sur 9 acquises "), Object.assign(document.createElement("span"), {className: "ok", textContent: "✓"}));
+        } else {
+          titre.textContent = `La table de ${table}`;
+        }
+        $("acc-changer").textContent = replie ? "M’entraîner sur une table" : toutes ? "Mes tables" : "Changer de table";
 
         // Le choix de la table : neuf cases, les acquises cochées.
         const choix = $("acc-choix");
@@ -3844,9 +4084,10 @@
           const bouton = document.createElement("button");
           bouton.type = "button";
           const acquise = etat.acquises.includes(candidate);
-          bouton.className = `${acquise ? "is-acquise" : ""}${candidate === table ? " is-selected" : ""}`.trim();
+          const selectionnee = !replie && candidate === table;
+          bouton.className = `${acquise ? "is-acquise" : ""}${selectionnee ? " is-selected" : ""}`.trim();
           bouton.textContent = acquise ? `${candidate} ✓` : String(candidate);
-          bouton.setAttribute("aria-pressed", String(candidate === table));
+          bouton.setAttribute("aria-pressed", String(selectionnee));
           bouton.setAttribute("aria-label", `Table de ${candidate}${acquise ? ", acquise" : ""}`);
           bouton.addEventListener("click", () => {
             ecrireTableChoisie(candidate);
@@ -3857,90 +4098,93 @@
           choix.append(bouton);
         });
 
-        // L'étape surlignée : celle que le moteur conseille (révision dès 5
-        // calculs à revoir, puis le mélange, puis la table) — mais pour la
-        // table affichée, qui peut être celle que l'élève a choisie.
-        const prochaine = etat.prochaine;
-        const conseil = prochaine.type === "revision" ? "reviser"
-          : prochaine.type === "melange" || prochaine.type === "expert" ? "melange"
-          : prochaine.type === "champion" ? ""
-          : etapeConseillee(ligne);
-
         const etapes = $("acc-etapes");
         etapes.replaceChildren();
+        if (!replie) {
+          const terminees = ligne.apprends.filter(item => item.etat === 2).length;
+          const prochaineActivite = ligne.apprends.find(item => item.etat !== 2);
+          etapes.append(ligneEtape({
+            classe: "apprends",
+            num: "1",
+            titre: "J’apprends",
+            sousTitre: terminees ? `facultatif · ${terminees} activité${terminees > 1 ? "s" : ""} sur 4` : "facultatif · 4 activités",
+            points: ligne.apprends.map(item => etoile(item.etat)),
+            conseille: conseil === "apprends",
+            aria: `J’apprends la table de ${table}, facultatif : ${terminees} activité${terminees > 1 ? "s" : ""} sur 4.`,
+            action: () => launchFromParcours(PARCOURS.configApprends(table, (prochaineActivite || ligne.apprends[0]).activite), "menu")
+          }));
 
-        const terminees = ligne.apprends.filter(item => item.etat === 2).length;
-        const prochaineActivite = ligne.apprends.find(item => item.etat !== 2);
-        etapes.append(ligneEtape({
-          classe: "apprends",
-          num: "1",
-          titre: "J’apprends",
-          sousTitre: terminees ? `facultatif · ${terminees} activité${terminees > 1 ? "s" : ""} sur 4` : "facultatif · 4 activités",
-          points: ligne.apprends.map(item => etoile(item.etat)),
-          conseille: conseil === "apprends",
-          aria: `J’apprends la table de ${table}, facultatif : ${terminees} activité${terminees > 1 ? "s" : ""} sur 4.`,
-          action: () => launchFromParcours(PARCOURS.configApprends(table, (prochaineActivite || ligne.apprends[0]).activite), "menu")
-        }));
+          const reussis = ligne.entraine.filter(item => item.etat === 2).length;
+          const prochainEntrainement = ligne.entraine.find(item => item.etat !== 2);
+          etapes.append(ligneEtape({
+            classe: "entraine",
+            num: "2",
+            titre: "Je m’entraîne",
+            sousTitre: reussis === 3
+              ? "3 réussis sur 3 ✓"
+              : reussis
+                ? `${reussis} réussi${reussis > 1 ? "s" : ""} sur 3 · prochain : ${NOMS_ENTRAINEMENTS[prochainEntrainement.entrainement]}`
+                : `3 entraînements · d’abord : ${NOMS_ENTRAINEMENTS[prochainEntrainement.entrainement]}`,
+            points: ligne.entraine.map(item => etoile(item.etat)),
+            conseille: conseil === "entraine",
+            aria: `Je m’entraîne sur la table de ${table} : ${reussis} réussi${reussis > 1 ? "s" : ""} sur 3.`,
+            action: () => launchFromParcours(PARCOURS.configEntraine(table, (prochainEntrainement || ligne.entraine[0]).entrainement), "menu")
+          }));
 
-        const reussis = ligne.entraine.filter(item => item.etat === 2).length;
-        const prochainEntrainement = ligne.entraine.find(item => item.etat !== 2);
-        etapes.append(ligneEtape({
-          classe: "entraine",
-          num: "2",
-          titre: "Je m’entraîne",
-          sousTitre: reussis === 3
-            ? "3 réussis sur 3 ✓"
-            : reussis
-              ? `${reussis} réussi${reussis > 1 ? "s" : ""} sur 3 · prochain : ${NOMS_ENTRAINEMENTS[prochainEntrainement.entrainement]}`
-              : `3 entraînements · d’abord : ${NOMS_ENTRAINEMENTS[prochainEntrainement.entrainement]}`,
-          points: ligne.entraine.map(item => etoile(item.etat)),
-          conseille: conseil === "entraine",
-          aria: `Je m’entraîne sur la table de ${table} : ${reussis} réussi${reussis > 1 ? "s" : ""} sur 3.`,
-          action: () => launchFromParcours(PARCOURS.configEntraine(table, (prochainEntrainement || ligne.entraine[0]).entrainement), "menu")
-        }));
+          // « Je valide ma table » : cadenassé tant que le mélange est dû (une
+          // table déjà acquise se rejoue librement). Le cadenas est un bouton
+          // qui explique et mène à la ligne « Mon mélange » — rien n'est
+          // désactivé en silence.
+          const verrouillee = etat.verrou && !ligne.acquise;
+          if (verrouillee) {
+            const cadenas = document.createElement("span");
+            cadenas.className = "cadenas";
+            cadenas.setAttribute("aria-hidden", "true");
+            cadenas.textContent = "🔒";
+            const ligneVerrou = ligneEtape({
+              classe: "valide verrou",
+              num: "3",
+              titre: "Je valide ma table",
+              sousTitre: "Réussis d’abord ton mélange",
+              points: [cadenas],
+              conseille: false,
+              aria: `Je valide la table de ${table} : verrouillé, réussis d’abord ton mélange.`,
+              action: () => (document.querySelector(".etape.melange") || $("acc-expert")).focus?.({preventScroll: false})
+            });
+            ligneVerrou.setAttribute("aria-label", `Je valide la table de ${table} : verrouillé. Réussis d’abord ton mélange.`);
+            ligneVerrou.setAttribute("aria-disabled", "true");
+            etapes.append(ligneVerrou);
+          } else {
+            const coche = document.createElement("i");
+            coche.className = `is-check${ligne.acquise ? "" : " off"}`;
+            coche.textContent = ligne.acquise ? "✓" : "○";
+            etapes.append(ligneEtape({
+              classe: "valide",
+              num: "3",
+              titre: "Je valide ma table",
+              sousTitre: ligne.acquise ? "acquise ✓ · 20 questions · 1 min 30" : "20 questions · 1 min 30",
+              points: [coche],
+              conseille: conseil === "valide",
+              aria: `Je valide la table de ${table}, 20 questions en 1 min 30 : ${ligne.acquise ? "acquise" : "pas encore"}.`,
+              action: () => launchFromParcours(PARCOURS.configValidation(table), "menu")
+            }));
+          }
+        }
 
-        const coche = document.createElement("i");
-        coche.className = `is-check${ligne.acquise ? "" : " off"}`;
-        coche.textContent = ligne.acquise ? "✓" : "○";
-        etapes.append(ligneEtape({
-          classe: "valide",
-          num: "3",
-          titre: "Je valide ma table",
-          sousTitre: ligne.acquise ? "acquise ✓ · 20 questions · 1 min 30" : "20 questions · 1 min 30",
-          points: [coche],
-          conseille: conseil === "valide",
-          aria: `Je valide la table de ${table}, 20 questions en 1 min 30 : ${ligne.acquise ? "acquise" : "pas encore"}.`,
-          action: () => launchFromParcours(PARCOURS.configValidation(table), "menu")
-        }));
-
-        // Dès 2 tables acquises, la ligne ★ « Je deviens expert » : le mélange
-        // de mes tables acquises (facultatif à ce lot ; au lot 3 il deviendra
-        // « Mon mélange », dû et surligné). Quand les 9 tables sont acquises,
-        // la même ligne porte les étoiles Expert.
-        if (etat.melange.visible) {
+        // Dès 2 tables acquises, la 4e ligne ★ « Mon mélange » : le mélange de
+        // mes tables acquises, surligné quand il est dû. Avec les 9 tables, il
+        // vit dans le bloc « Je deviens expert » (renderExpert), pas ici.
+        if (etat.melange.visible && !toutes) {
           const melange = etat.melange;
           etapes.append(ligneEtape({
             classe: "melange",
             num: "★",
-            titre: "Je deviens expert",
-            sousTitre: `mélange de mes tables ${listeTables(melange.tables)} · ${melange.aJour ? "à jour ✓" : melange.aRefaireAvec ? `à refaire avec la table de ${melange.aRefaireAvec}` : "à faire"}`,
+            titre: "Mon mélange",
+            sousTitre: sousTitreMelange(melange),
             points: [etoile(melange.aJour ? 2 : 0)],
             conseille: conseil === "melange",
-            aria: `Je deviens expert : mélange de mes tables ${listeTables(melange.tables)}, ${melange.aJour ? "à jour" : "à faire"}.`,
+            aria: `Mon mélange, tables ${listeTables(melange.tables)} : ${melange.aJour ? "à jour" : melange.aRefaireAvec ? `à refaire avec la table de ${melange.aRefaireAvec}` : "à faire"}.`,
             action: () => launchFromParcours(PARCOURS.configMelange(parcours), "menu")
-          }));
-        } else if (nombre === PARCOURS_TABLES.length) {
-          const niveau = etat.expert.niveau;
-          const suivant = Math.min(niveau + 1, 3);
-          etapes.append(ligneEtape({
-            classe: "melange",
-            num: "★",
-            titre: "Je deviens expert",
-            sousTitre: etat.expert.champion ? "toutes les tables · Champion des tables 🏆" : `toutes les tables · ${"★".repeat(niveau)}${"☆".repeat(3 - niveau)} · tenter ${"★".repeat(suivant)}`,
-            points: [1, 2, 3].map(n => etoile(n <= niveau ? 2 : 0)),
-            conseille: conseil === "melange",
-            aria: `Je deviens expert, toutes les tables : ${niveau} étoile${niveau > 1 ? "s" : ""} sur 3.`,
-            action: () => launchFromParcours(PARCOURS.configExpert(suivant), "menu")
           }));
         }
 
@@ -3950,8 +4194,34 @@
         const reviser = $("acc-reviser");
         reviser.classList.toggle("is-next", conseil === "reviser");
         $("acc-reviser-titre").textContent = resume.aTravailler ? `${pluriel(resume.aTravailler, "calcul")} à revoir` : "Réviser mes calculs";
-        $("acc-reviser-note").textContent = resume.aTravailler ? "10 questions sans chrono" : phraseReviser(resume);
+        $("acc-reviser-note").textContent = resume.aTravailler ? `${pluriel(questionsRevision(resume), "question")} sans chrono` : phraseReviser(resume);
+        // Grille vide : le bouton explique et ne lance rien.
+        reviser.classList.toggle("is-vide", !questionsRevision(resume));
+        reviser.setAttribute("aria-disabled", String(!questionsRevision(resume)));
         reviser.setAttribute("aria-label", `${$("acc-reviser-titre").textContent} : ${$("acc-reviser-note").textContent}${conseil === "reviser" ? " Étape conseillée." : ""} Réviser.`);
+
+        // Les jours : « N jours cette semaine » (depuis lundi, rien à casser)
+        // et « N cases t'attendent demain » (gagnées aujourd'hui, pas encore à
+        // trois). Rien du tout tant qu'il n'y a rien à dire.
+        renderJours(etat.jours);
+      }
+
+      function renderJours(jours) {
+        const zone = $("acc-jours");
+        zone.replaceChildren();
+        zone.hidden = !jours.semaine && !jours.casesDemain;
+        if (zone.hidden) return;
+        if (jours.semaine) {
+          const chip = document.createElement("span");
+          chip.className = "k";
+          chip.textContent = `✓ ${pluriel(jours.semaine, "jour")} cette semaine`;
+          zone.append(chip);
+        }
+        if (jours.casesDemain) {
+          const attente = document.createElement("span");
+          attente.textContent = `${pluriel(jours.casesDemain, "case")} t’attend${jours.casesDemain > 1 ? "ent" : ""} demain`;
+          zone.append(attente);
+        }
       }
 
       // « Comment ça marche ? » : la notice est écrite une fois (template
@@ -3998,21 +4268,23 @@
         start();
       }
 
-      function makeCell({kind, etat, label, config, extraClass = ""}) {
+      function makeCell({kind, etat, label, config, extraClass = "", texte = null, action = null}) {
         const cell = document.createElement("button");
         cell.type = "button";
-        cell.className = `cell ${kind === "dot" ? "" : kind === "check" ? "is-check" : "is-star"} ${etat === 1 ? "is-started" : etat === 2 ? "is-done" : ""} ${extraClass}`.replace(/\s+/g, " ").trim();
+        cell.className = `cell ${kind === "dot" ? "" : kind === "check" ? "is-check" : kind === "lock" ? "is-lock" : "is-star"} ${etat === 1 ? "is-started" : etat === 2 ? "is-done" : ""} ${extraClass}`.replace(/\s+/g, " ").trim();
         if (kind === "dot") {
           const dot = document.createElement("span");
           dot.className = "dot";
           cell.append(dot);
         } else {
-          cell.textContent = kind === "check" ? "✓" : "★";
+          cell.textContent = texte !== null ? texte : kind === "check" ? "✓" : kind === "lock" ? "🔒" : "★";
         }
-        const stateLabel = etat === 2 ? "réussi" : etat === 1 ? "commencé" : "pas encore fait";
-        cell.setAttribute("aria-label", `${label} : ${stateLabel}. Lancer.`);
+        // Le cadenas dit déjà « verrouillé » dans son label : ne pas le répéter.
+        const stateLabel = kind === "lock" ? "" : etat === 2 ? "réussi" : etat === 1 ? "commencé" : "pas encore fait";
+        cell.setAttribute("aria-label", `${label}${stateLabel ? ` : ${stateLabel}` : ""}. ${config ? "Lancer." : ""}`.trim());
+        if (kind === "lock" || (!config && action)) cell.setAttribute("aria-disabled", "true");
         cell.title = label;
-        cell.addEventListener("click", () => launchFromParcours(config));
+        cell.addEventListener("click", () => (config ? launchFromParcours(config) : action && action()));
         return cell;
       }
 
@@ -4094,16 +4366,31 @@
             config: PARCOURS.configEntraine(ligne.table, entrainement.entrainement)
           })));
           cells.append(document.createElement("span"));
-          cells.append(makeCell({
-            kind: "check",
-            etat: ligne.acquise ? 2 : 0,
-            label: `Table de ${ligne.table}, valider ma table (20 questions en 1 min 30)`,
-            config: PARCOURS.configValidation(ligne.table)
-          }));
+          // Lot 3 : la case Acquise d'une table non acquise est cadenassée tant
+          // que le mélange est dû ; le cadenas mène à la ligne « Mon mélange ».
+          if (etat.verrou && !ligne.acquise) {
+            cells.append(makeCell({
+              kind: "lock",
+              etat: 0,
+              label: `Table de ${ligne.table}, valider ma table : verrouillé, réussis d’abord ton mélange`,
+              config: null,
+              action: () => $("parcours-melange").querySelector(".cell")?.focus?.()
+            }));
+          } else {
+            cells.append(makeCell({
+              kind: "check",
+              etat: ligne.acquise ? 2 : 0,
+              label: `Table de ${ligne.table}, valider ma table (20 questions en 1 min 30)`,
+              config: PARCOURS.configValidation(ligne.table)
+            }));
+          }
           item.append(head, cells);
           list.append(item);
         });
 
+        // « Mon mélange » : dès 2 tables acquises, jusqu'aux 9 — obligatoire
+        // avant de valider une nouvelle table, et c'est le mélange des 9 qui
+        // ouvre l'escalier.
         const melange = $("parcours-melange");
         melange.hidden = !etat.melange.visible;
         melange.replaceChildren();
@@ -4111,7 +4398,7 @@
           const head = document.createElement("div");
           head.className = "parcours-row-head";
           const title = document.createElement("strong");
-          title.textContent = `Mélange de mes tables acquises (${etat.melange.tables.join(", ")})`;
+          title.textContent = etat.melange.tables.length === PARCOURS_TABLES.length ? "Mon mélange : mes 9 tables" : `Mon mélange : tables ${listeTables(etat.melange.tables)}`;
           const badge = document.createElement("span");
           badge.className = `parcours-badge${etat.melange.aJour ? "" : " is-pending"}`;
           badge.textContent = etat.melange.aJour ? "À jour ✓" : etat.melange.aRefaireAvec ? `À refaire avec la table de ${etat.melange.aRefaireAvec}` : "À faire";
@@ -4121,31 +4408,45 @@
           row.append(makeCell({
             kind: "check",
             etat: etat.melange.aJour ? 2 : 0,
-            label: "Mélange de mes tables acquises (25 questions en 2 min)",
+            label: "Mon mélange, mes tables acquises (20 questions en 1 min 30)",
             config: PARCOURS.configMelange(parcours)
           }));
           melange.append(head, row);
         }
 
+        // « Je deviens expert » : l'escalier des cinq marches, ouvert quand les
+        // 9 tables sont acquises et le dernier mélange réussi. Chaque marche est
+        // une case ; une marche réussie valide les précédentes.
         const expert = $("parcours-expert");
         expert.replaceChildren();
         const expertHead = document.createElement("div");
         expertHead.className = "parcours-row-head";
         const expertTitle = document.createElement("strong");
-        expertTitle.textContent = "Expert : toutes les tables de 2 à 10 mélangées";
+        expertTitle.textContent = "Je deviens expert : toutes les tables, de plus en plus vite";
         const expertBadge = document.createElement("span");
-        expertBadge.className = `parcours-badge${etat.expert.champion ? "" : " is-pending"}`;
-        expertBadge.textContent = etat.expert.champion ? "Champion des tables 🏆" : etat.expert.niveau ? `${"★".repeat(etat.expert.niveau)}` : "";
+        const couronne = etat.expert.niveau === PARCOURS.ETOILES_MAX;
+        expertBadge.className = `parcours-badge${couronne ? "" : " is-pending"}`;
+        expertBadge.textContent = couronne ? "👑 Légende des tables" : etat.expert.niveau ? PARCOURS.symboleEtoile(etat.expert.niveau) : etat.expert.ouvert ? "" : "après le mélange des 9 tables";
         expertHead.append(expertTitle, expertBadge);
         const stars = document.createElement("div");
         stars.className = "parcours-extra-cells";
-        const starLabels = {1: "produits", 2: "produits et trous", 3: "produits, trous et divisions"};
-        [1, 2, 3].forEach(niveau => stars.append(makeCell({
-          kind: "star",
-          etat: niveau <= etat.expert.niveau ? 2 : 0,
-          label: `Expert niveau ${niveau}, ${starLabels[niveau]} (25 questions en 2 min)`,
-          config: PARCOURS.configExpert(niveau)
-        })));
+        etat.expert.marches.forEach(marche => {
+          const colonne = document.createElement("span");
+          colonne.className = "marche-cell";
+          colonne.append(makeCell({
+            kind: "star",
+            etat: marche.gagnee ? 2 : 0,
+            label: `${marche.symbole} : toutes les tables, produits, trous et divisions, 25 questions en ${marche.libelleDuree}${etat.expert.ouvert ? "" : " — après le mélange des 9 tables"}`,
+            config: etat.expert.ouvert ? marche.config : null,
+            extraClass: `n${marche.etoile}${etat.expert.ouvert ? "" : " is-fermee"}`,
+            texte: marche.symbole,
+            action: etat.expert.ouvert ? null : () => $("parcours-melange").querySelector(".cell")?.focus?.()
+          }));
+          const duree = document.createElement("small");
+          duree.textContent = marche.libelleDuree;
+          colonne.append(duree);
+          stars.append(colonne);
+        });
         expert.append(expertHead, stars);
       }
 
@@ -4160,6 +4461,7 @@
             return `Table de ${table} : entraînement « ${PARCOURS.LIBELLES_ENTRAINEMENTS[evenement.entrainement]} » réussi (${evenement.reussites} / 3).`;
           case "validation":
             if (!evenement.reussi) return `Table de ${table} : ${evenement.score} / ${evenement.total}. Pour valider, il faut au moins ${evenement.total - PARCOURS.SEUILS.validation.erreursMax} / ${evenement.total} en 1 min 30.`;
+            if (evenement.verrouillee) return `Table de ${table} : ${evenement.score} / ${evenement.total} en 1 min 30, bravo — réussis d’abord ton mélange, puis reviens la valider.`;
             if (evenement.nouvelle) return `Table de ${table} acquise ✓ (${evenement.score} / ${evenement.total} en 1 min 30). Bravo !`;
             return `Table de ${table} : toujours acquise ✓ (${evenement.score} / ${evenement.total}).`;
           case "preparation":
@@ -4167,54 +4469,62 @@
               ? `Bravo, ${evenement.score} / ${evenement.total} en ${CORE.durationLabel(evenement.duree)} ! Maintenant, essaie en 1 min 30 pour valider ta table.`
               : `${evenement.score} / ${evenement.total} en ${CORE.durationLabel(evenement.duree)}. Continue à t’entraîner, puis vise 18 / 20 en 1 min 30.`;
           case "melange-debloque":
-            return "Deux tables acquises : le mélange de tes tables est débloqué.";
+            return "Deux tables acquises : réussis maintenant ton mélange avant de valider une nouvelle table.";
           case "melange-a-refaire":
-            return `Nouvelle table : refais le mélange de tes tables acquises avec la table de ${table}.`;
+            return `Nouvelle table : refais ton mélange avec la table de ${table} avant d’en valider une autre.`;
           case "toutes-acquises":
-            return "Toutes tes tables sont acquises ! Place à Expert.";
+            return "Toutes tes tables sont acquises ! Réussis le mélange des 9 pour ouvrir l’escalier des étoiles.";
           case "melange":
-            return evenement.reussi
-              ? `Mélange de tes tables (${evenement.tables.join(", ")}) à jour ✓ (${evenement.score} / ${evenement.total}).`
-              : `Mélange : ${evenement.score} / ${evenement.total}. Il faut au moins ${evenement.total - PARCOURS.SEUILS.melange.erreursMax} / ${evenement.total} pour le mettre à jour.`;
-          case "expert": {
-            if (!evenement.reussi) return `Expert niveau ${evenement.niveau} : ${evenement.score} / ${evenement.total}. Il faut au moins ${evenement.total - PARCOURS.SEUILS.expert.erreursMax} / ${evenement.total}.`;
-            const validees = evenement.tablesValidees || [];
-            const bonus = !validees.length
-              ? ""
-              : validees.length === PARCOURS.TABLES.length
-                ? " L’étoile valide toutes tes tables d’un coup : les 9 passent en Acquise ✓."
-                : validees.length === 1
-                  ? ` L’étoile valide aussi la table de ${validees[0]} : Acquise ✓.`
-                  : ` L’étoile valide aussi les tables de ${validees.join(", ")} : Acquises ✓.`;
-            if (evenement.champion) return `★★★ Champion des tables ! (${evenement.score} / ${evenement.total})${bonus}`;
-            if (evenement.nouveau) return `Expert ${"★".repeat(evenement.niveau)} obtenu (${evenement.score} / ${evenement.total}) !${bonus}`;
-            return `Expert niveau ${evenement.niveau} réussi (${evenement.score} / ${evenement.total}), déjà obtenu.${bonus}`;
+            if (!evenement.reussi) return `Mélange : ${evenement.score} / ${evenement.total}. Il faut au moins ${evenement.total - PARCOURS.SEUILS.melange.erreursMax} / ${evenement.total} en 1 min 30.`;
+            if (evenement.escalierOuvert) return `Mélange de tes 9 tables réussi ✓ (${evenement.score} / ${evenement.total}) : l’escalier des étoiles est ouvert !`;
+            return `Mélange de tes tables (${evenement.tables.join(", ")}) à jour ✓ (${evenement.score} / ${evenement.total}) : tu peux valider une nouvelle table.`;
+          case "etoile": {
+            const symbole = PARCOURS.symboleEtoile(evenement.etoile);
+            const duree = PARCOURS.libelleDuree(PARCOURS.dureeEtoile(evenement.etoile));
+            if (!evenement.reussi) return `${symbole} en ${duree} : ${evenement.score} / ${evenement.total}. Il faut au moins ${evenement.total - PARCOURS.SEUILS.etoile.erreursMax} / ${evenement.total}.`;
+            if (evenement.couronne) return `👑 Légende des tables ! Toutes les tables en 1 minute (${evenement.score} / ${evenement.total}).`;
+            if (evenement.nouveau) return `${symbole} obtenue (${evenement.score} / ${evenement.total} en ${duree}) !`;
+            return `${symbole} réussie encore (${evenement.score} / ${evenement.total} en ${duree}), déjà obtenue.`;
           }
+          case "rang":
+            return `Nouveau rang : ${evenement.nom}.`;
           default:
             return "";
         }
       }
 
-      // Écran de fête sur les grands moments : table acquise, étoile Expert, Champion.
+      // Écran de fête sur les grands moments (lot 3) : 🎉 pour chaque table et
+      // chaque mélange réussis, 🌟 pour chaque étoile, un écran de rang à
+      // chaque passage, 👑 au sommet. Sobres, sans son ; l'animation respecte
+      // prefers-reduced-motion (règle plus haut, comme avant).
       function renderResultFete(evenements) {
         const zone = $("result-fete");
         zone.replaceChildren();
         zone.hidden = true;
         zone.classList.remove("is-champion");
-        const expert = (evenements || []).find(evenement => evenement.type === "expert" && evenement.reussi);
-        const validation = (evenements || []).find(evenement => evenement.type === "validation" && evenement.nouvelle);
+        const liste = evenements || [];
+        const etoile = liste.find(evenement => evenement.type === "etoile" && evenement.reussi && evenement.nouveau);
+        const melange = liste.find(evenement => evenement.type === "melange" && evenement.reussi);
+        const validation = liste.find(evenement => evenement.type === "validation" && evenement.nouvelle);
+        const rangMonte = liste.find(evenement => evenement.type === "rang");
         let icone = null;
         let texte = null;
-        if (expert && expert.champion) {
-          icone = "🏆";
-          texte = "Champion des tables !";
+        if (etoile && etoile.couronne) {
+          icone = "👑";
+          texte = "Légende des tables !";
           zone.classList.add("is-champion");
-        } else if (expert && expert.nouveau) {
+        } else if (etoile) {
           icone = "🌟";
-          texte = `Expert ${"★".repeat(expert.niveau)} !`;
+          texte = `${PARCOURS.symboleEtoile(etoile.etoile)} obtenue !`;
         } else if (validation) {
           icone = "🎉";
           texte = `Table de ${validation.table} acquise !`;
+        } else if (melange) {
+          icone = "🎉";
+          texte = melange.escalierOuvert ? "Mélange des 9 tables réussi !" : "Mélange réussi !";
+        } else if (rangMonte) {
+          icone = "🏅";
+          texte = "Nouveau rang !";
         }
         if (!texte) return;
         const iconeZone = document.createElement("span");
@@ -4224,6 +4534,15 @@
         const titre = document.createElement("strong");
         titre.textContent = texte;
         zone.append(iconeZone, titre);
+        // Le passage d'un rang : sous la fête du moment, avec son badge — sauf
+        // la Légende, que la couronne dit déjà.
+        if (rangMonte && !(etoile && etoile.couronne)) {
+          const ligneRang = document.createElement("span");
+          ligneRang.className = "result-fete-rang";
+          ligneRang.append(document.createTextNode("Tu passes "), badgeRang(PARCOURS.rang(rangMonte.rang)));
+          zone.append(ligneRang);
+          if (rangMonte.rang >= 5) zone.classList.add("is-champion");
+        }
         zone.hidden = false;
         $("result-icon").hidden = true;
       }
@@ -4289,9 +4608,9 @@
           : "";
         const stars = $("fiche-stars");
         stars.replaceChildren();
-        [1, 2, 3].forEach(niveau => {
-          const star = document.createElement(niveau <= etat.expert.niveau ? "b" : "span");
-          star.textContent = "★";
+        etat.expert.marches.forEach(marche => {
+          const star = document.createElement(marche.gagnee ? "b" : "span");
+          star.textContent = marche.symbole;
           stars.append(star);
         });
         $("fiche-calculs-subtitle").textContent = Object.keys(fiche.calculs).length
@@ -4374,9 +4693,24 @@
       $("acc-reviser").addEventListener("click", () => startRevision(null, "menu"));
       $("acc-print").addEventListener("click", printFiche);
       $("acc-changer").addEventListener("click", () => {
+        // Les 9 tables acquises et une table choisie : « Mes tables » replie le
+        // bloc (le choix est oublié) au lieu d'ouvrir le choix.
+        if (PARCOURS.toutesAcquises(parcours) && lireTableChoisie()) {
+          ecrireTableChoisie(null);
+          state.choixTableOuvert = false;
+          renderAccueil();
+          $("acc-table-titre").focus?.({preventScroll: true});
+          return;
+        }
         state.choixTableOuvert = !state.choixTableOuvert;
         renderAccueil();
         if (state.choixTableOuvert) $("acc-choix").querySelector("button")?.focus?.({preventScroll: true});
+      });
+      $("acc-avis-ok").addEventListener("click", () => {
+        parcours = PARCOURS.marquerAvisVu(parcours);
+        sauverParcours();
+        renderAccueil();
+        $("acc-table-titre").focus?.({preventScroll: true});
       });
       $("acc-notice-bouton").addEventListener("click", () => basculerNotice("acc-notice-bouton", "acc-notice"));
       $("parcours-notice-bouton").addEventListener("click", () => basculerNotice("parcours-notice-bouton", "parcours-notice"));

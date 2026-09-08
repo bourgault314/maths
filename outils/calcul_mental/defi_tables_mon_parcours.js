@@ -10,9 +10,32 @@
   //  - par table (2 à 10) : J'apprends (4 activités), Je m'entraîne (3 entraînements
   //    différents), Acquise (validation 20 questions, 1 min 30, 2 erreurs max) ;
   //  - Mélange des tables acquises (dès 2 tables) : un ✓ « à jour » qui repasse
-  //    « à refaire » à chaque nouvelle table acquise ;
-  //  - Expert : grand mélange des tables 2 à 10, ★ produits, ★★ + trous,
-  //    ★★★ + divisions ; ★ valide toutes les tables d'un coup.
+  //    « à refaire » à chaque nouvelle table acquise.
+  // Lot 3 de Défi tables v2 « les règles » (décisions des 7 et 8/09/2026) :
+  //  - le mélange est OBLIGATOIRE : dès 2 tables acquises, tant qu'il n'est
+  //    pas réussi, « Je valide » des autres tables est verrouillé ; J'apprends
+  //    et Je m'entraîne restent libres. Même format que la validation d'une
+  //    table (20 questions = 14 produits + 6 trous, 1 min 30, 2 erreurs max),
+  //    sur les tables acquises seulement, sans division — y compris le dernier,
+  //    avec les 9 tables. Chaque nouvelle table le remet « à faire » ;
+  //  - les étoiles n'arrivent qu'à la fin : 9 tables acquises ET dernier
+  //    mélange réussi ouvrent l'escalier — 25 questions, produits + trous +
+  //    divisions dès la première étoile, toutes les tables, 2 erreurs max, seule
+  //    la durée change : ★ 2 min · ★★ 1 min 45 · ★★★ 1 min 30 · ★★★★ 1 min 15 ·
+  //    👑 1 min (Légende des tables). Une étoile réussie valide les précédentes.
+  //    L'ancien Expert « ouvert dès le début » et son raccourci « ★ valide les
+  //    9 tables » n'existent plus ;
+  //  - un RANG, qui ne redescend jamais : Bronze (1 table acquise) · Argent (3)
+  //    · Or (6) · Platine (9 tables + dernier mélange) · Diamant (★★★★) ·
+  //    Légende des tables (👑) ;
+  //  - les JOURS travaillés (un jour compte dès qu'une série de la grille est
+  //    jouée) : « N jours cette semaine », jamais de série à ne pas casser ;
+  //  - le JOUR est le jour LOCAL de l'appareil (jourLocal), plus le jour UTC :
+  //    à la Réunion, le jour UTC basculait à 4 h du matin ;
+  //  - les parcours d'avant sont migrés une seule fois (version 2) : les tables
+  //    acquises restent acquises, l'ancienne ★★★ (divisions en 2 min) devient
+  //    la nouvelle ★, les anciennes ★ et ★★ ne valent rien, le mélange est remis
+  //    « à faire », et un avis unique attend la première ouverture.
   // Lot 4 « Mes calculs » (29/08/2026, idée de Claire) :
   //  - grille des 36 faits 2×2 à 9×9, sens confondus (7×8 et 8×7 = un seul fait) ;
   //  - 3 cases par fait : +1 par bonne réponse, −1 par erreur ou question passée,
@@ -24,7 +47,11 @@
   //    0 case ratés récemment, puis 1, puis 2, puis les jamais vus des tables
   //    acquises, puis l'entretien, puis les jamais vus restants.
 
-  const VERSION = 1;
+  // Version du parcours enregistré. 1 = jusqu'au lot 2 de Défi tables v2 ;
+  // 2 = lot 3 (mélange obligatoire, escalier des étoiles, rang, jours). Un
+  // parcours d'une version plus basse est migré par normaliserParcours — donc
+  // à la lecture de la case, à la fusion, à la sauvegarde — et jamais deux fois.
+  const VERSION = 2;
   const CLE_STOCKAGE = "mathsgo-defi-tables-parcours";
   const TABLES = Object.freeze(Array.from({length: 9}, (_, index) => index + 2));
   const ORDRE_CONSEIL = Object.freeze([2, 10, 5, 3, 4, 6, 7, 8, 9]);
@@ -42,10 +69,29 @@
   const SEUILS = Object.freeze({
     entrainement: Object.freeze({total: 10, erreursMax: 1}),
     validation: Object.freeze({total: 20, dureeMax: 90, erreursMax: 2}),
-    melange: Object.freeze({total: 25, dureeMax: 120, erreursMax: 2}),
-    expert: Object.freeze({total: 25, dureeMax: 120, erreursMax: 2}),
-    revision: Object.freeze({total: 10, casesMax: 3, conseil: 5, aRevoirMin: 2})
+    // Le mélange a le format de la validation : 20 questions (14 produits +
+    // 6 trous) en 1 min 30, 2 erreurs max — dès 2 tables acquises.
+    melange: Object.freeze({total: 20, dureeMax: 90, erreursMax: 2, tablesMin: 2}),
+    // L'escalier des étoiles : 25 questions, toutes les tables, produits +
+    // trous + divisions, 2 erreurs max ; une durée par marche, en secondes.
+    etoile: Object.freeze({total: 25, erreursMax: 2, durees: Object.freeze([120, 105, 90, 75, 60])}),
+    revision: Object.freeze({total: 10, casesMax: 3, conseil: 5, aRevoirMin: 2}),
+    // Les jours travaillés gardés dans le parcours (dates, sans heure).
+    jours: Object.freeze({garder: 14})
   });
+  const ETOILES_MAX = SEUILS.etoile.durees.length;
+
+  // Les rangs, dans l'ordre : l'indice est le niveau (0 = pas encore de rang).
+  const RANGS = Object.freeze([
+    Object.freeze({niveau: 0, cle: "", nom: ""}),
+    Object.freeze({niveau: 1, cle: "bronze", nom: "Bronze"}),
+    Object.freeze({niveau: 2, cle: "argent", nom: "Argent"}),
+    Object.freeze({niveau: 3, cle: "or", nom: "Or"}),
+    Object.freeze({niveau: 4, cle: "platine", nom: "Platine"}),
+    Object.freeze({niveau: 5, cle: "diamant", nom: "Diamant"}),
+    Object.freeze({niveau: 6, cle: "legende", nom: "Légende des tables"})
+  ]);
+  const SEUILS_RANG = Object.freeze({argent: 3, or: 6});
 
   // Les 36 faits de la grille « Mes calculs » : 2×2 à 9×9, sens confondus.
   const FAIT_MIN = 2;
@@ -103,7 +149,18 @@
       prenom: "",
       tables,
       melange: {tables: [], aJour: false, aRefaireAvec: null, dernier: null},
-      expert: {niveau: 0, dernier: null, champion: null},
+      // etoiles : 0 à 5 (5 = 👑) ; couronne : le jour de la Légende.
+      expert: {etoiles: 0, dernier: null, couronne: null},
+      // Le meilleur rang atteint (0 à 6) : il ne redescend jamais.
+      rang: 0,
+      // Les jours travaillés (jour local, « AAAA-MM-JJ »), les 14 derniers.
+      jours: [],
+      // L'avis « le parcours a changé » : avis = version des règles à annoncer
+      // (0 = rien), avisVu = version dont l'avis a été lu. L'avis attend tant
+      // que avis > avisVu. Les deux montent, jamais ne redescendent : un autre
+      // appareil resté sur l'ancienne version ne fait pas revenir l'avis.
+      avis: 0,
+      avisVu: 0,
       calculs: {}
     };
   }
@@ -120,9 +177,33 @@
     return typeof valeur === "string" && /^\d{4}-\d{2}-\d{2}$/.test(valeur) ? valeur : null;
   }
 
+  // LE jour du parcours : le jour local de l'appareil, « AAAA-MM-JJ ».
+  // Jusqu'au lot 2, c'était le jour UTC (toISOString) : à la Réunion (UTC+4),
+  // une journée basculait à 4 h du matin, et « reviens demain » voulait dire
+  // « après 4 h ». Le jour local est celui que l'élève lit sur sa montre ; c'est
+  // aussi celui que le serveur de suivi et la page du professeur affichent
+  // (minuit, heure de la Réunion). Une seule définition, ici, pour la grille
+  // (une case par jour), les jours travaillés, les dates d'acquisition.
+  function jourLocal(instant = new Date()) {
+    const d = instant instanceof Date && !Number.isNaN(instant.getTime()) ? instant : new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  }
+
+  function normaliserJours(liste) {
+    const jours = new Set();
+    (Array.isArray(liste) ? liste : []).forEach(valeur => {
+      const jour = dateOuNull(valeur);
+      if (jour) jours.add(jour);
+    });
+    return [...jours].sort().slice(-SEUILS.jours.garder);
+  }
+
   function normaliserParcours(brut) {
     const parcours = creerParcours();
     if (!brut || typeof brut !== "object") return parcours;
+    // Un parcours sans version, ou de version 1, vient d'avant le lot 3 : ce
+    // qu'il porte est lu à l'ancienne, puis migré une seule fois (plus bas).
+    const ancienne = entier(brut.version, 1, 1000, 1) < VERSION;
     parcours.epoque = entier(brut.epoque, 0, 1000000);
     parcours.prenom = nettoyerPrenom(brut.prenom);
     TABLES.forEach(table => {
@@ -151,9 +232,22 @@
       parcours.melange.dernier = dateOuNull(brut.melange.dernier);
     }
     if (brut.expert && typeof brut.expert === "object") {
-      parcours.expert.niveau = entier(brut.expert.niveau, 0, 3);
       parcours.expert.dernier = dateOuNull(brut.expert.dernier);
-      parcours.expert.champion = dateOuNull(brut.expert.champion);
+      if (ancienne) {
+        // L'ancien escalier (★ produits / ★★ + trous / ★★★ + divisions, 2 min) :
+        // seule ★★★ contenait déjà les divisions en 2 min — elle devient la
+        // nouvelle ★. Champion (★★★) n'existe plus : rien à garder.
+        parcours.expert.etoiles = entier(brut.expert.niveau, 0, 3) === 3 ? 1 : 0;
+      } else {
+        parcours.expert.etoiles = entier(brut.expert.etoiles, 0, ETOILES_MAX);
+        parcours.expert.couronne = dateOuNull(brut.expert.couronne);
+      }
+    }
+    if (!ancienne) {
+      parcours.rang = entier(brut.rang, 0, RANGS.length - 1);
+      parcours.jours = normaliserJours(brut.jours);
+      parcours.avis = entier(brut.avis, 0, 1000);
+      parcours.avisVu = entier(brut.avisVu, 0, 1000);
     }
     if (brut.calculs && typeof brut.calculs === "object") {
       FAITS.forEach(cle => {
@@ -170,11 +264,106 @@
       });
     }
     parcours.melange.tables = tablesAcquises(parcours);
-    if (parcours.melange.tables.length < 2) {
+    if (parcours.melange.tables.length < SEUILS.melange.tablesMin) {
       parcours.melange.aJour = false;
       parcours.melange.aRefaireAvec = null;
     }
+    if (ancienne) migrerVersion2(parcours);
+    // Le rang ne redescend jamais : le meilleur du rang enregistré et de celui
+    // que l'état donne — un parcours d'avant reçoit ainsi son rang.
+    parcours.rang = Math.max(parcours.rang, rangDeLEtat(parcours));
     return parcours;
+  }
+
+  // La migration vers les règles du lot 3 (version 2), appliquée UNE fois, au
+  // moment où un parcours d'avant est lu. Les tables acquises restent acquises
+  // et la grille ne bouge pas ; l'ancien mélange (25 produits en 2 min) ne vaut
+  // pas le nouveau : il est remis « à faire » pour qui a au moins 2 tables ; les
+  // étoiles ont été converties plus haut (★★★ → ★). Un parcours qui a déjà du
+  // travail reçoit un avis à lire une fois ; un parcours vide n'a rien à
+  // annoncer. Un appareil resté sur l'ancienne appli renvoie un parcours de
+  // version 1 : il repasse ici, et la fusion (maximum de chaque compteur) fait
+  // que rien de ce qui a été gagné sous les nouvelles règles ne se perd.
+  function migrerVersion2(parcours) {
+    parcours.version = VERSION;
+    parcours.expert.couronne = null;
+    parcours.rang = 0;
+    parcours.jours = [];
+    parcours.avisVu = 0;
+    if (parcours.melange.tables.length >= SEUILS.melange.tablesMin) {
+      parcours.melange.aJour = false;
+      parcours.melange.aRefaireAvec = null;
+    }
+    parcours.avis = estVide(parcours) ? 0 : VERSION;
+  }
+
+  // Le rang que l'état du parcours donne, sans mémoire : le rang enregistré
+  // est le maximum de tous ceux-là au fil du temps.
+  function rangDeLEtat(parcours) {
+    const acquises = tablesAcquises(parcours).length;
+    const etoiles = parcours.expert.etoiles;
+    if (etoiles >= ETOILES_MAX) return 6;
+    if (etoiles >= ETOILES_MAX - 1) return 5;
+    if (acquises === TABLES.length && parcours.melange.aJour) return 4;
+    if (acquises >= SEUILS_RANG.or) return 3;
+    if (acquises >= SEUILS_RANG.argent) return 2;
+    if (acquises >= 1) return 1;
+    return 0;
+  }
+
+  function rang(niveau) {
+    return RANGS[entier(niveau, 0, RANGS.length - 1)];
+  }
+
+  // Vrai tant que le mélange est dû : dès 2 tables acquises et tant qu'il n'est
+  // pas « à jour ». C'est lui qui verrouille « Je valide » des autres tables.
+  function melangeDu(parcours) {
+    return tablesAcquises(parcours).length >= SEUILS.melange.tablesMin && !parcours.melange.aJour;
+  }
+
+  // L'escalier des étoiles n'est ouvert que quand les 9 tables sont acquises ET
+  // que le dernier mélange (avec les 9) est réussi.
+  function escalierOuvert(parcours) {
+    return toutesAcquises(parcours) && parcours.melange.aJour;
+  }
+
+  // L'avis « le parcours a changé » est-il à afficher ?
+  function avisEnAttente(parcours) {
+    return parcours.avis > parcours.avisVu;
+  }
+
+  function marquerAvisVu(parcours) {
+    const copie = cloner(parcours);
+    copie.avisVu = Math.max(copie.avisVu, copie.avis);
+    return copie;
+  }
+
+  // Note un jour travaillé (au plus SEUILS.jours.garder jours gardés).
+  function noterJour(parcours, date) {
+    const jour = dateOuNull(date);
+    if (!jour || parcours.jours.includes(jour)) return;
+    parcours.jours = normaliserJours([...parcours.jours, jour]);
+  }
+
+  // Le lundi de la semaine d'un jour « AAAA-MM-JJ » (semaine du lundi au dimanche).
+  function lundiDe(jour) {
+    const d = new Date(`${jour}T12:00:00`);
+    if (Number.isNaN(d.getTime())) return jour;
+    const recul = (d.getDay() + 6) % 7;
+    d.setDate(d.getDate() - recul);
+    return jourLocal(d);
+  }
+
+  // « N jours cette semaine » : les jours travaillés depuis le lundi, aujourd'hui
+  // compris ; « N cases t'attendent demain » : les calculs qui ont gagné une
+  // case aujourd'hui et qui n'en sont pas encore à trois — ils pourront en
+  // gagner une autre demain. Rien de punitif, jamais de série à ne pas casser.
+  function bilanJours(parcours, aujourdhui = jourLocal()) {
+    const lundi = lundiDe(aujourdhui);
+    const semaine = parcours.jours.filter(jour => jour >= lundi && jour <= aujourdhui).length;
+    const casesDemain = Object.values(parcours.calculs)
+      .filter(fait => fait.gagne === aujourdhui && fait.cases < SEUILS.revision.casesMax).length;
+    return {semaine, casesDemain, aujourdhui: parcours.jours.includes(aujourdhui)};
   }
 
   function nettoyerPrenom(valeur) {
@@ -239,23 +428,33 @@
       return {type: "entraine", table, entrainement};
     }
     if (config.mode === "validation") {
-      if (table === null || Number(config.total) !== SEUILS.validation.total) return null;
       const duree = Number(config.duration);
-      if (!duree) return null;
+      if (Number(config.total) !== SEUILS.validation.total || !duree) return null;
+      // Le mélange a le format de la validation, sur EXACTEMENT les tables
+      // acquises (au moins 2), en 1 min 30 — un mélange choisi à la main, ou
+      // joué en 2 ou 3 minutes, ne compte pas.
+      const tables = (config.tables || []).map(Number);
+      if (tables.length > 1) {
+        const acquises = tablesAcquises(parcours);
+        if (acquises.length >= SEUILS.melange.tablesMin && memesTables(tables, acquises) && duree <= SEUILS.melange.dureeMax) {
+          return {type: "melange", tables: acquises};
+        }
+        return null;
+      }
+      if (table === null) return null;
       return duree <= SEUILS.validation.dureeMax
         ? {type: "validation", table}
         : {type: "preparation", table, duree};
     }
     if (config.mode === "test") {
+      // Une marche de l'escalier : 25 questions, produits + trous + divisions
+      // (niveau 3), les tables 2 à 10, et une des cinq durées. L'escalier doit
+      // être ouvert : sinon la série ne compte pas.
       const duree = Number(config.duration);
-      if (Number(config.total) !== SEUILS.expert.total || !duree || duree > SEUILS.expert.dureeMax) return null;
-      const tables = (config.tables || []).map(Number);
-      if (memesTables(tables, TABLES)) return {type: "expert", niveau: entier(config.testLevel, 1, 3, 1)};
-      const acquises = tablesAcquises(parcours);
-      if (acquises.length >= 2 && !toutesAcquises(parcours) && memesTables(tables, acquises) && entier(config.testLevel, 1, 3, 1) === 1) {
-        return {type: "melange", tables: acquises};
-      }
-      return null;
+      const etoile = SEUILS.etoile.durees.indexOf(duree) + 1;
+      if (Number(config.total) !== SEUILS.etoile.total || !etoile || entier(config.testLevel, 1, 3, 1) !== 3) return null;
+      if (!memesTables((config.tables || []).map(Number), TABLES) || !escalierOuvert(parcours)) return null;
+      return {type: "etoile", etoile};
     }
     return null;
   }
@@ -269,25 +468,32 @@
     return copie;
   }
 
+  // Une table de plus : dès la deuxième, le mélange est dû (« à faire », puis
+  // « à refaire avec la table de N ») — y compris la neuvième, dont le mélange
+  // ouvre l'escalier des étoiles.
   function acquerir(copie, table, date, evenements) {
     const ligne = copie.tables[table];
     if (ligne.acquise) return false;
     ligne.acquise = date;
     const acquises = tablesAcquises(copie);
     copie.melange.tables = acquises;
-    if (acquises.length >= 2 && !toutesAcquises(copie)) {
+    if (acquises.length >= SEUILS.melange.tablesMin) {
       const etaitAJour = copie.melange.aJour;
       copie.melange.aJour = false;
-      copie.melange.aRefaireAvec = acquises.length === 2 ? null : table;
-      if (acquises.length === 2) evenements.push({type: "melange-debloque", tables: acquises});
+      copie.melange.aRefaireAvec = acquises.length === SEUILS.melange.tablesMin ? null : table;
+      if (acquises.length === SEUILS.melange.tablesMin) evenements.push({type: "melange-debloque", tables: acquises});
       else if (etaitAJour) evenements.push({type: "melange-a-refaire", table, tables: acquises});
     }
-    if (toutesAcquises(copie)) {
-      copie.melange.aJour = false;
-      copie.melange.aRefaireAvec = null;
-      evenements.push({type: "toutes-acquises"});
-    }
+    if (toutesAcquises(copie)) evenements.push({type: "toutes-acquises"});
     return true;
+  }
+
+  // Le rang a-t-il monté ? Alors un événement le dit (écran de rang).
+  function relancerRang(copie, evenements) {
+    const nouveau = rangDeLEtat(copie);
+    if (nouveau <= copie.rang) return;
+    copie.rang = nouveau;
+    evenements.push({type: "rang", rang: nouveau, nom: RANGS[nouveau].nom, cle: RANGS[nouveau].cle});
   }
 
   // Applique une série TERMINÉE au parcours. resultat = {correct, total, date}.
@@ -296,7 +502,7 @@
     const classement = classerSerie(parcours, config);
     if (!classement) return {parcours, evenements, classement: null};
     const copie = cloner(parcours);
-    const date = resultat && typeof resultat.date === "string" ? resultat.date : new Date().toISOString().slice(0, 10);
+    const date = dateOuNull(resultat && resultat.date) || jourLocal();
     const correct = entier(resultat && resultat.correct, 0, 100);
     const total = entier(resultat && resultat.total, 1, 100, 1);
     const erreurs = total - correct;
@@ -328,44 +534,46 @@
     } else if (classement.type === "validation") {
       const reussi = erreurs <= SEUILS.validation.erreursMax;
       const dejaAcquise = Boolean(copie.tables[classement.table].acquise);
-      const evenement = {type: "validation", table: classement.table, reussi, score: correct, total, dejaAcquise, nouvelle: false};
+      // Le verrou : tant que le mélange est dû, une NOUVELLE table ne se valide
+      // pas — la série est jouée, comptée dans la grille, mais la table reste à
+      // valider après le mélange. Une table déjà acquise se rejoue librement.
+      const verrouillee = !dejaAcquise && melangeDu(copie);
+      const evenement = {type: "validation", table: classement.table, reussi, score: correct, total, dejaAcquise, nouvelle: false, verrouillee};
       evenements.push(evenement);
-      if (reussi) evenement.nouvelle = acquerir(copie, classement.table, date, evenements);
+      if (reussi && !verrouillee) evenement.nouvelle = acquerir(copie, classement.table, date, evenements);
     } else if (classement.type === "preparation") {
       const reussi = erreurs <= SEUILS.validation.erreursMax;
       evenements.push({type: "preparation", table: classement.table, reussi, score: correct, total, duree: classement.duree});
     } else if (classement.type === "melange") {
       const reussi = erreurs <= SEUILS.melange.erreursMax;
+      const evenement = {type: "melange", reussi, score: correct, total, tables: classement.tables, escalierOuvert: false};
       if (reussi) {
         copie.melange.aJour = true;
         copie.melange.aRefaireAvec = null;
         copie.melange.dernier = date;
+        evenement.escalierOuvert = escalierOuvert(copie);
       }
-      evenements.push({type: "melange", reussi, score: correct, total, tables: classement.tables});
-    } else if (classement.type === "expert") {
-      const reussi = erreurs <= SEUILS.expert.erreursMax;
-      const niveauAvant = copie.expert.niveau;
-      const evenement = {type: "expert", niveau: classement.niveau, reussi, score: correct, total, niveauAvant, nouveau: false, champion: false, tablesValidees: []};
+      evenements.push(evenement);
+    } else if (classement.type === "etoile") {
+      const reussi = erreurs <= SEUILS.etoile.erreursMax;
+      const avant = copie.expert.etoiles;
+      const evenement = {type: "etoile", etoile: classement.etoile, reussi, score: correct, total, etoilesAvant: avant, nouveau: false, couronne: false};
       evenements.push(evenement);
       if (reussi) {
         copie.expert.dernier = date;
-        if (classement.niveau > copie.expert.niveau) {
-          copie.expert.niveau = classement.niveau;
+        // Une étoile réussie valide les précédentes ; une marche déjà gagnée
+        // ne retire rien.
+        if (classement.etoile > avant) {
+          copie.expert.etoiles = classement.etoile;
           evenement.nouveau = true;
         }
-        // Les acquisitions déclenchées par l'étoile ne racontent pas leurs étapes
-        // intermédiaires (mélange débloqué, à refaire, toutes acquises) : c'est
-        // l'événement expert lui-même qui dit que les tables sont validées.
-        const evenementsAcquisition = [];
-        TABLES.forEach(table => {
-          if (acquerir(copie, table, date, evenementsAcquisition)) evenement.tablesValidees.push(table);
-        });
-        if (copie.expert.niveau === 3 && !copie.expert.champion) {
-          copie.expert.champion = date;
-          evenement.champion = true;
+        if (copie.expert.etoiles === ETOILES_MAX && !copie.expert.couronne) {
+          copie.expert.couronne = date;
+          evenement.couronne = true;
         }
       }
     }
+    relancerRang(copie, evenements);
     return {parcours: copie, evenements, classement};
   }
 
@@ -382,20 +590,28 @@
     return {mode: "validation", tables: [table], total: SEUILS.validation.total, duration: duree};
   }
 
+  // Le mélange de mes tables acquises : le format de la validation, sur toutes
+  // les tables acquises (au moins 2) — jusqu'aux 9.
   function configMelange(parcours) {
     const acquises = tablesAcquises(parcours);
-    if (acquises.length < 2 || toutesAcquises(parcours)) return null;
-    return {mode: "test", tables: acquises, testLevel: 1, total: SEUILS.melange.total, duration: SEUILS.melange.dureeMax};
+    if (acquises.length < SEUILS.melange.tablesMin) return null;
+    return {mode: "validation", tables: acquises, total: SEUILS.melange.total, duration: SEUILS.melange.dureeMax};
   }
 
-  function configExpert(niveau) {
-    return {mode: "test", tables: [...TABLES], testLevel: entier(niveau, 1, 3, 1), total: SEUILS.expert.total, duration: SEUILS.expert.dureeMax};
+  // Une marche de l'escalier (1 à 5) : tout, de plus en plus vite.
+  function configEtoile(etoile) {
+    const marche = entier(etoile, 1, ETOILES_MAX, 1);
+    return {mode: "test", tables: [...TABLES], testLevel: 3, total: SEUILS.etoile.total, duration: SEUILS.etoile.durees[marche - 1]};
+  }
+
+  function dureeEtoile(etoile) {
+    return SEUILS.etoile.durees[entier(etoile, 1, ETOILES_MAX, 1) - 1];
   }
 
   /* ---------- Mes calculs (grille des 36 faits) ---------- */
 
   function dateDuJour(valeur) {
-    return typeof valeur === "string" && valeur ? valeur : new Date().toISOString().slice(0, 10);
+    return dateOuNull(valeur) || jourLocal();
   }
 
   function melanger(valeurs, random = Math.random) {
@@ -460,6 +676,9 @@
     if (!cle) return {parcours, fait: null};
     const copie = cloner(parcours);
     const date = dateDuJour(reponse.date);
+    // Un jour compte dès qu'une série de la grille est jouée (Je m'entraîne,
+    // validations, mélanges, étoiles, révisions) — jamais J'apprends.
+    noterJour(copie, date);
     const avant = copie.calculs[cle] || {cases: 0, vu: null, erreur: null, gagne: null};
     const fait = {...avant, vu: date};
     if (reponse.correcte) {
@@ -535,33 +754,28 @@
     return tablesAcquises(parcours).filter(table => calculsATravailler(parcours, table).length >= SEUILS.revision.aRevoirMin);
   }
 
-  // Le plan des 10 questions de révision : priorité 0 case (ratés récemment
-  // d'abord), puis 1 case, puis 2, puis les faits jamais vus des tables DÉJÀ
-  // ACQUISES (on ne confronte pas l'élève à une table qu'il n'a pas apprise),
-  // puis l'entretien des faits sus les plus anciens, et en tout dernier recours
-  // les faits jamais vus des autres tables (grille encore vide). Jamais deux
-  // fois le même fait, sauf quand la grille d'une table (8 faits) ne suffit pas
-  // à remplir la série.
+  // Le plan de révision : priorité 0 case (ratés récemment d'abord), puis
+  // 1 case, puis 2, puis l'entretien des faits sus les plus anciens — et RIEN
+  // d'autre. La révision ne propose JAMAIS un calcul jamais vu (décision de
+  // Gwenaël, spécification du 29/08/2026 rappelée le 08/09) : elle répare ce
+  // que la grille connaît, et la grille se remplit dans les entraînements, les
+  // validations, les mélanges et les étoiles. Jamais deux fois le même fait ;
+  // s'il y a moins de 10 calculs déjà vus, la série est plus courte ; une
+  // grille vide ne donne aucune question.
   function planRevision(parcours, {table = null, random = Math.random} = {}) {
     const dansLaTable = cle => table === null || facteursFait(cle).includes(Number(table));
     const enregistres = Object.entries(parcours.calculs).filter(([cle]) => dansLaTable(cle));
     const groupe = cases => enregistres.filter(([, fait]) => fait.cases === cases);
-    const acquises = tablesAcquises(parcours);
-    const jamaisVus = melanger(FAITS.filter(cle => dansLaTable(cle) && !parcours.calculs[cle]), random);
-    const jamaisVusAcquis = jamaisVus.filter(cle => facteursFait(cle).some(facteur => acquises.includes(facteur)));
     const ordre = [
       ...trierParErreurRecente(groupe(0)),
       ...trierParVuAncien(groupe(1)),
-      ...trierParVuAncien(groupe(2))
+      ...trierParVuAncien(groupe(2)),
+      ...trierParVuAncien(groupe(SEUILS.revision.casesMax))
     ].map(([cle]) => cle);
-    ordre.push(...jamaisVusAcquis);
-    ordre.push(...trierParVuAncien(groupe(SEUILS.revision.casesMax)).map(([cle]) => cle));
-    ordre.push(...jamaisVus.filter(cle => !jamaisVusAcquis.includes(cle)));
     const selection = ordre.slice(0, SEUILS.revision.total);
-    for (let index = 0; selection.length < SEUILS.revision.total && ordre.length; index += 1) {
-      selection.push(ordre[index % ordre.length]);
-    }
-    const divisionsPermises = parcours.expert.niveau >= 3;
+    // Les divisions n'entrent en révision qu'une fois rencontrées dans
+    // l'escalier (elles y sont dès la première étoile).
+    const divisionsPermises = parcours.expert.etoiles >= 1;
     const categories = melanger(selection.map((_, index) => {
       if (divisionsPermises && index % 3 === 2) return "division";
       return index % 2 ? "missing" : "direct";
@@ -613,11 +827,16 @@
       };
     }
     const acquises = tablesAcquises(parcours);
-    if (acquises.length >= 2 && !toutesAcquises(parcours) && !parcours.melange.aJour) {
+    // Le mélange dû passe avant tout le reste du parcours : il verrouille
+    // « Je valide » des autres tables (J'apprends et Je m'entraîne restent
+    // libres), et c'est lui qui ouvre l'escalier après la neuvième table.
+    if (melangeDu(parcours)) {
       const avec = parcours.melange.aRefaireAvec;
       return {
         type: "melange",
-        libelle: avec ? `Refais le mélange de tes tables acquises avec la table de ${avec}` : `Mélange tes tables acquises (${acquises.join(", ")})`,
+        libelle: toutesAcquises(parcours)
+          ? "Réussis le mélange de tes 9 tables pour ouvrir l’escalier des étoiles"
+          : avec ? `Refais le mélange de tes tables acquises avec la table de ${avec}` : `Mélange tes tables acquises (${acquises.join(", ")})`,
         config: configMelange(parcours)
       };
     }
@@ -625,24 +844,43 @@
       const etape = etapeTable(parcours, table);
       if (etape) return etape;
     }
-    if (parcours.expert.niveau < 3) {
-      const niveau = parcours.expert.niveau + 1;
-      const libelles = {1: "Expert ★ : toutes les tables, produits", 2: "Expert ★★ : toutes les tables, produits et trous", 3: "Expert ★★★ : toutes les tables, avec les divisions"};
-      return {type: "expert", niveau, libelle: libelles[niveau], config: configExpert(niveau)};
+    if (parcours.expert.etoiles < ETOILES_MAX) {
+      const etoile = parcours.expert.etoiles + 1;
+      return {type: "etoile", etoile, libelle: `Tenter ${symboleEtoile(etoile)} : toutes les tables en ${libelleDuree(dureeEtoile(etoile))}`, config: configEtoile(etoile)};
     }
-    // Champion, mais les étoiles valident par échantillon (25 questions) : le
-    // parcours ne dit « fini » que quand chacun des 36 calculs de la grille est
-    // vert — c'est elle, la preuve complète.
+    // Légende des tables — mais les étoiles valident par échantillon
+    // (25 questions) : le parcours ne dit « fini » que quand chacun des 36
+    // calculs de la grille est vert — c'est elle, la preuve complète. La
+    // révision ne reprend que les calculs déjà vus ; ceux qui n'ont jamais été
+    // rencontrés le seront en rejouant une marche.
     const resume = resumeCalculs(parcours);
-    const restants = resume.total - resume.sus;
-    if (restants) {
+    const aReprendre = resume.aTravailler + resume.enCours;
+    if (aReprendre) {
       return {
         type: "revision",
-        libelle: `Champion des tables ! Pour une grille parfaite, il reste ${restants} calcul${restants > 1 ? "s" : ""} à passer au vert dans Mes calculs`,
+        libelle: `Légende des tables ! Pour une grille parfaite, il reste ${aReprendre} calcul${aReprendre > 1 ? "s" : ""} à passer au vert dans Mes calculs`,
         config: configRevision()
       };
     }
-    return {type: "champion", libelle: "Champion des tables, et les 36 calculs sont verts : tout est là !", config: null};
+    if (resume.jamaisVus) {
+      return {
+        type: "legende",
+        libelle: `Légende des tables ! Il reste ${resume.jamaisVus} calcul${resume.jamaisVus > 1 ? "s" : ""} que tu n’as jamais rencontré${resume.jamaisVus > 1 ? "s" : ""} : rejoue une marche de l’escalier`,
+        config: configEtoile(ETOILES_MAX)
+      };
+    }
+    return {type: "legende", libelle: "Légende des tables, et les 36 calculs sont verts : tout est là !", config: null};
+  }
+
+  // « ★ », « ★★★★ », « 👑 » : le symbole d'une marche de l'escalier.
+  function symboleEtoile(etoile) {
+    const marche = entier(etoile, 1, ETOILES_MAX, 1);
+    return marche === ETOILES_MAX ? "👑" : "★".repeat(marche);
+  }
+
+  function libelleDuree(secondes) {
+    if (secondes % 60 === 0) return `${secondes / 60} min`;
+    return `${Math.floor(secondes / 60)} min ${String(secondes % 60).padStart(2, "0")}`;
   }
 
   // Résumé prêt à afficher (sans DOM) : symboles par ligne.
@@ -660,15 +898,33 @@
         aRevoir: aRevoir.includes(table)
       };
     });
-    const melange = acquises.length >= 2 && !toutesAcquises(parcours)
-      ? {visible: true, tables: acquises, aJour: parcours.melange.aJour, aRefaireAvec: parcours.melange.aRefaireAvec}
-      : {visible: false, tables: acquises, aJour: false, aRefaireAvec: null};
+    const visible = acquises.length >= SEUILS.melange.tablesMin;
+    const melange = visible
+      ? {visible: true, tables: acquises, aJour: parcours.melange.aJour, aRefaireAvec: parcours.melange.aRefaireAvec, du: melangeDu(parcours), dernier: parcours.melange.dernier}
+      : {visible: false, tables: acquises, aJour: false, aRefaireAvec: null, du: false, dernier: null};
+    const ouvert = escalierOuvert(parcours);
+    const etoiles = parcours.expert.etoiles;
+    const marches = SEUILS.etoile.durees.map((duree, index) => ({
+      etoile: index + 1,
+      symbole: symboleEtoile(index + 1),
+      duree,
+      libelleDuree: libelleDuree(duree),
+      gagnee: index + 1 <= etoiles,
+      suivante: ouvert && index + 1 === etoiles + 1,
+      config: configEtoile(index + 1)
+    }));
     return {
       prenom: parcours.prenom,
       lignes,
       acquises,
+      // Le verrou de « Je valide » (les tables non acquises seulement).
+      verrou: melangeDu(parcours),
       melange,
-      expert: {niveau: parcours.expert.niveau, etoiles: [1, 2, 3].map(niveau => niveau <= parcours.expert.niveau), champion: parcours.expert.champion},
+      // « niveau » reste le nombre d'étoiles, pour la page du professeur.
+      expert: {niveau: etoiles, etoiles: marches.map(marche => marche.gagnee), ouvert, marches, suivante: ouvert && etoiles < ETOILES_MAX ? marches[etoiles] : null, couronne: parcours.expert.couronne},
+      rang: rang(parcours.rang),
+      jours: bilanJours(parcours),
+      avis: avisEnAttente(parcours) ? parcours.avis : 0,
       calculs: resumeCalculs(parcours),
       prochaine: prochaineEtape(parcours)
     };
@@ -1212,9 +1468,16 @@
       fusion.melange.aRefaireAvec = acquisesFusion.length >= 3 ? derniereTableAcquise(fusion) : null;
     }
 
-    fusion.expert.niveau = Math.max(a.expert.niveau, b.expert.niveau);
+    // Les étoiles prennent le meilleur des deux, la couronne sa première date ;
+    // le rang ne redescend jamais ; les jours travaillés se réunissent ; l'avis
+    // et sa lecture ne reviennent jamais en arrière.
+    fusion.expert.etoiles = Math.max(a.expert.etoiles, b.expert.etoiles);
     fusion.expert.dernier = dateLaPlusRecente(a.expert.dernier, b.expert.dernier);
-    fusion.expert.champion = dateLaPlusAncienne(a.expert.champion, b.expert.champion);
+    fusion.expert.couronne = dateLaPlusAncienne(a.expert.couronne, b.expert.couronne);
+    fusion.rang = Math.max(a.rang, b.rang);
+    fusion.jours = normaliserJours([...a.jours, ...b.jours]);
+    fusion.avis = Math.max(a.avis, b.avis);
+    fusion.avisVu = Math.max(a.avisVu, b.avisVu);
 
     FAITS.forEach(cle => {
       const faitA = a.calculs[cle];
@@ -1276,7 +1539,7 @@
   }
 
   function estVide(parcours) {
-    return !parcours.prenom && !parcours.expert.niveau && !Object.keys(parcours.calculs).length && TABLES.every(table => {
+    return !parcours.prenom && !parcours.expert.etoiles && !Object.keys(parcours.calculs).length && TABLES.every(table => {
       const ligne = parcours.tables[table];
       return !ligne.acquise
         && ACTIVITES_APPRENDS.every(activite => ligne.apprends[activite] === 0)
@@ -1292,6 +1555,8 @@
     ACTIVITES_APPRENDS,
     ENTRAINEMENTS,
     SEUILS,
+    ETOILES_MAX,
+    RANGS,
     LIBELLES_ENTRAINEMENTS,
     LIBELLES_APPRENDS,
     PRENOM_MAX,
@@ -1309,7 +1574,19 @@
     configEntraine,
     configValidation,
     configMelange,
-    configExpert,
+    configEtoile,
+    dureeEtoile,
+    symboleEtoile,
+    libelleDuree,
+    melangeDu,
+    escalierOuvert,
+    rang,
+    rangDeLEtat,
+    jourLocal,
+    lundiDe,
+    bilanJours,
+    avisEnAttente,
+    marquerAvisVu,
     FAITS,
     cleFait,
     facteursFait,
