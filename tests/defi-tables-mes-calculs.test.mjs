@@ -84,7 +84,8 @@ test("la grille appartient au parcours : entraînements, validations, mélanges,
   assert.equal(parcours.serieAlimenteGrille(normaliser(parcours.configApprends(7, "random"))), false, "J’apprends n’alimente jamais la grille");
   assert.equal(parcours.serieAlimenteGrille(normaliser(parcours.configEntraine(7, "trous"))), true);
   assert.equal(parcours.serieAlimenteGrille(normaliser(parcours.configValidation(7))), true);
-  assert.equal(parcours.serieAlimenteGrille(normaliser(parcours.configExpert(3))), true);
+  assert.equal(parcours.serieAlimenteGrille(normaliser(parcours.configEtoile(3))), true);
+  assert.equal(parcours.serieAlimenteGrille(normaliser({mode: "validation", tables: [2, 10], total: 20, duration: 90})), true, "le mélange aussi");
   assert.equal(parcours.serieAlimenteGrille(normaliser({mode: "custom", tables: [7]})), false, "Réglages est à part du parcours");
   assert.equal(parcours.serieAlimenteGrille(normaliser({mode: "evaluation"})), false, "l’évaluation CM1 est à part du parcours");
   assert.equal(parcours.serieAlimenteGrille(parcours.configRevision()), true);
@@ -116,7 +117,7 @@ test("le résumé et la grille 8×8 : moitié active, miroir grisé du même fai
   assert.equal(miroir76.etat, "a-travailler", "le miroir montre l’état du même fait");
 });
 
-test("la révision priorise : 0 case ratés récemment, puis 1, puis 2, puis jamais vus, puis entretien", () => {
+test("la révision priorise : 0 case ratés récemment, puis 1, puis 2, puis entretien — jamais un calcul jamais vu", () => {
   let etat = parcours.creerParcours();
   etat = repondre(etat, "6-7", false, "2026-09-01");
   etat = repondre(etat, "7-8", false, "2026-09-03");
@@ -129,12 +130,12 @@ test("la révision priorise : 0 case ratés récemment, puis 1, puis 2, puis jam
   assert.deepEqual(parcours.calculsATravailler(etat, 7), ["7-8", "6-7"]);
 
   const plan = parcours.planRevision(etat, {random: () => 0});
-  assert.equal(plan.length, 10);
+  assert.equal(plan.length, 5, "cinq calculs vus : cinq questions, pas une de plus (lot 3, décision du 08/09)");
   assert.deepEqual(plan.slice(0, 3).map(item => item.cle), ["7-8", "3-9", "6-7"]);
   assert.equal(plan[3].cle, "2-5", "puis 1 case");
   assert.equal(plan[4].cle, "4-4", "puis 2 cases");
-  assert.ok(plan.slice(5).every(item => !etat.calculs[item.cle]), "le reste vient des faits jamais vus");
-  assert.equal(new Set(plan.map(item => item.cle)).size, 10, "jamais deux fois le même fait");
+  assert.ok(plan.every(item => etat.calculs[item.cle]), "aucun calcul jamais vu");
+  assert.equal(new Set(plan.map(item => item.cle)).size, 5, "jamais deux fois le même fait");
 
   const questions = plan.map(item => core.tableQuestion(item.type, item.first, item.second));
   questions.forEach((question, index) => {
@@ -145,17 +146,16 @@ test("la révision priorise : 0 case ratés récemment, puis 1, puis 2, puis jam
   assert.ok(questions.some(question => question.category === "missing"));
 });
 
-test("les jamais vus des tables acquises passent avant l’entretien, ceux des autres tables en dernier", () => {
+test("la révision ne propose jamais un calcul jamais vu, même sur une table acquise ; une grille vide ne donne rien", () => {
+  assert.deepEqual(parcours.planRevision(parcours.creerParcours()), [], "grille vide : aucune question");
   let etat = acquerir(parcours.creerParcours(), 2);
   // table 2 acquise ; 6-7 su (3 jours) ; tout le reste jamais vu
   etat = repondre(etat, "6-7", true, "2026-09-01");
   etat = repondre(etat, "6-7", true, "2026-09-02");
   etat = repondre(etat, "6-7", true, "2026-09-03");
   const plan = parcours.planRevision(etat, {random: () => 0});
-  const clesTable2 = new Set(parcours.faitsDeLaTable(2));
-  assert.ok(plan.slice(0, 8).every(item => clesTable2.has(item.cle)), "les 8 faits jamais vus de la table 2 (acquise) d’abord");
-  assert.equal(plan[8].cle, "6-7", "puis l’entretien du su");
-  assert.ok(!clesTable2.has(plan[9].cle) && !etat.calculs[plan[9].cle], "et en dernier recours un jamais vu d’une table non acquise");
+  assert.deepEqual(plan.map(item => item.cle), ["6-7"], "seul le calcul vu (su, en entretien) ; les faits jamais vus de la table 2 restent hors révision");
+  assert.deepEqual(parcours.planRevision(etat, {table: 2}), [], "sur la table 2 : rien de vu, rien à réviser");
 });
 
 test("l’entretien des faits sus arrive en dernier, du plus ancien au plus récent", () => {
@@ -171,23 +171,41 @@ test("l’entretien des faits sus arrive en dernier, du plus ancien au plus réc
   assert.deepEqual(plan.slice(0, 2).map(item => item.cle), ["6-7", "2-9"], "les sus les plus anciens d’abord quand tout est su");
 });
 
-test("les divisions n’apparaissent en révision qu’avec les trois étoiles Expert", () => {
+// Un parcours au sommet de l'escalier : les 9 tables, le mélange, puis une marche.
+function legende(etoile = 1) {
   let etat = parcours.creerParcours();
-  etat = parcours.appliquerSerie(etat, normaliser(parcours.configExpert(3)), {correct: 25, total: 25, date: DATE}).parcours;
-  assert.equal(etat.expert.niveau, 3);
+  parcours.TABLES.forEach(table => {
+    if (parcours.melangeDu(etat)) etat = parcours.appliquerSerie(etat, normaliser(parcours.configMelange(etat)), {correct: 20, total: 20, date: DATE}).parcours;
+    etat = parcours.appliquerSerie(etat, normaliser(parcours.configValidation(table)), {correct: 20, total: 20, date: DATE}).parcours;
+  });
+  etat = parcours.appliquerSerie(etat, normaliser(parcours.configMelange(etat)), {correct: 20, total: 20, date: DATE}).parcours;
+  return parcours.appliquerSerie(etat, normaliser(parcours.configEtoile(etoile)), {correct: 25, total: 25, date: DATE}).parcours;
+}
+
+test("les divisions n’apparaissent en révision qu’à partir de la première étoile", () => {
+  assert.ok(!parcours.planRevision(parcours.creerParcours(), {random: () => 0}).some(item => item.type.startsWith("division")), "sans étoile, pas de division");
+  let etat = legende(1);
+  assert.equal(etat.expert.etoiles, 1);
+  parcours.FAITS.slice(0, 10).forEach(cle => { etat = repondre(etat, cle, true, "2026-09-02"); });
   const plan = parcours.planRevision(etat, {random: () => 0});
   const questions = plan.map(item => core.tableQuestion(item.type, item.first, item.second));
   assert.ok(questions.some(question => question.category === "division"));
 });
 
-test("révision sur une table : 8 faits, la série de 10 reboucle sans jamais sortir de la table", () => {
+test("révision sur une table : les calculs vus de cette table, ratés d’abord, sans jamais en sortir", () => {
   let etat = parcours.creerParcours();
   etat = repondre(etat, "7-8", false);
+  etat = repondre(etat, "6-7", true);
+  etat = repondre(etat, "3-4", false);
   const plan = parcours.planRevision(etat, {table: 7, random: () => 0});
-  assert.equal(plan.length, 10);
+  assert.deepEqual(plan.map(item => item.cle), ["7-8", "6-7"]);
   assert.ok(plan.every(item => parcours.facteursFait(item.cle).includes(7)));
-  assert.equal(plan[0].cle, "7-8");
-  assert.equal(new Set(plan.map(item => item.cle)).size, 8, "les 8 faits de la table, deux repassent une seconde fois");
+  // Dix calculs vus ou plus : dix questions, jamais deux fois le même.
+  let plein = parcours.creerParcours();
+  parcours.FAITS.slice(0, 14).forEach(cle => { plein = repondre(plein, cle, cle.endsWith("5"), "2026-09-02"); });
+  const dix = parcours.planRevision(plein, {random: () => 0});
+  assert.equal(dix.length, 10);
+  assert.equal(new Set(dix.map(item => item.cle)).size, 10);
 });
 
 test("la prochaine étape conseille une révision dès 5 calculs à travailler", () => {
@@ -203,11 +221,18 @@ test("la prochaine étape conseille une révision dès 5 calculs à travailler",
 });
 
 test("les étoiles valident par échantillon : le parcours ne dit « fini » que grille verte", () => {
-  let etat = parcours.appliquerSerie(parcours.creerParcours(), normaliser(parcours.configExpert(3)), {correct: 25, total: 25, date: DATE}).parcours;
-  assert.equal(etat.expert.champion, DATE);
+  let etat = legende(5);
+  assert.equal(etat.expert.couronne, DATE);
   let etape = parcours.prochaineEtape(etat);
-  assert.equal(etape.type, "revision", "champion avec des calculs jamais vus : révision conseillée");
-  assert.match(etape.libelle, /36 calculs à passer au vert/);
+  assert.equal(etape.type, "legende", "Légende avec une grille jamais remplie : la révision n’a rien à reprendre, c’est l’escalier qui fait rencontrer les calculs");
+  assert.match(etape.libelle, /36 calculs que tu n’as jamais rencontrés : rejoue une marche/);
+  assert.deepEqual(etape.config, parcours.configEtoile(5));
+
+  etat = repondre(etat, "7-8", false, "2026-09-01");
+  etat = repondre(etat, "6-9", true, "2026-09-01");
+  etape = parcours.prochaineEtape(etat);
+  assert.equal(etape.type, "revision", "des calculs vus mais pas sus : révision conseillée");
+  assert.match(etape.libelle, /2 calculs à passer au vert/);
   assert.deepEqual(etape.config, {mode: "revision", table: null});
 
   parcours.FAITS.forEach(cle => {
@@ -216,7 +241,7 @@ test("les étoiles valident par échantillon : le parcours ne dit « fini » que
     etat = repondre(etat, cle, true, "2026-09-04");
   });
   etape = parcours.prochaineEtape(etat);
-  assert.equal(etape.type, "champion");
+  assert.equal(etape.type, "legende");
   assert.match(etape.libelle, /36 calculs sont verts/);
 });
 
@@ -297,7 +322,7 @@ test("le détail d’une case écrit le calcul dans les deux sens et empile ses 
   assert.match(html, /ligneDetail\("mc-detail-etat", /);
   assert.match(html, /majuscule\(LIBELLES_ETATS_CALCULS\[etat\]\)/);
   assert.match(html, /Une case par jour : reviens demain\./, "la date n’est écrite que lorsqu’elle veut dire quelque chose");
-  assert.match(html, /function jourDuJour\(\)[\s\S]*?toISOString\(\)\.slice\(0, 10\)/, "même convention de date que le moteur");
+  assert.match(html, /function jourDuJour\(\) \{\s*return PARCOURS\.jourLocal\(\);/, "même convention de date que le moteur : le jour local (lot 3)");
   assert.match(html, /\.mc-detail-calcul \{ font-size: 1\.05rem/);
   assert.match(html, /\.calculs-detail \{[\s\S]*?min-height: 78px/, "la hauteur réservée couvre trois lignes : la grille ne saute pas");
 });
@@ -309,20 +334,23 @@ test("seule la première réponse compte pour la grille, et un raté ne revient 
   assert.match(html, /\$\("result-detail"\)\.textContent = `Série terminée en \$\{formatElapsed\(elapsed\)\}\.`;/);
 });
 
-test("la révision : 10 questions sans chrono, retour des ratés, Encore 10", () => {
+test("la révision : jusqu’à 10 questions sans chrono, retour des ratés, Encore une révision", () => {
   assert.match(html, /function startRevision\(/);
   assert.match(html, /mode: "revision"/);
-  assert.match(html, /Encore 10 questions/);
+  assert.match(html, /Encore une révision/);
+  assert.match(html, /if \(!plan\.length\) return;/, "une grille vide ne lance rien");
+  assert.match(html, /reviser\.classList\.toggle\("is-vide", !questionsRevision\(resume\)\)/, "et le bouton le montre");
   assert.match(html, /au vert/);
   assert.match(html, /au premier essai/);
   assert.match(html, /entry\.retour \? "Il est revenu" : `Question \$\{entry\.number\}`/, "un calcul qui revient n’est plus numéroté Question 11, 12…");
-  assert.match(html, /Rien à revoir pour l’instant : on complète et on entretient ta grille\./);
+  assert.match(html, /Rien à revoir pour l’instant : \$\{pluriel\(questions, "question"\)\} pour entretenir ta grille\./);
   assert.match(html, /Tout est su ! 10 questions pour entretenir ta grille\./);
-  assert.match(html, /Ta grille est vide : on découvre les 10 premiers calculs\./);
-  assert.match(html, /L’étoile valide toutes tes tables d’un coup : les 9 passent en Acquise ✓\./, "le résultat Expert explique pourquoi tout se coche");
+  assert.match(html, /Ta grille est vide : elle se remplit dans Je m’entraîne et les validations\./);
+  assert.doesNotMatch(html, /on découvre les 10 premiers calculs/, "plus de découverte de calculs par la révision (lot 3)");
+  assert.doesNotMatch(html, /L’étoile valide toutes tes tables d’un coup/, "lot 3 : plus de raccourci « ★ valide les 9 tables »");
   assert.match(html, /id="result-fete"/);
   assert.match(html, /renderResultFete\(suivi\.evenements\)/);
-  assert.match(html, /Champion des tables !/, "écran de fête 🏆");
+  assert.match(html, /texte = "Légende des tables !";/, "écran de fête 👑");
   assert.match(html, /Table de \$\{validation\.table\} acquise !/, "écran de fête 🎉 à chaque table validée");
   assert.match(html, /animation: none !important/, "la fête respecte prefers-reduced-motion");
 });

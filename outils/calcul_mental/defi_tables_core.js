@@ -82,7 +82,9 @@
     const allowedTotals = mode === "train" ? [10, 20] : [10, 20, 25];
     const total = allowedTotals.includes(Number(input.total)) ? Number(input.total) : preset.total;
     const duration = [null, 60, 120, 180].includes(input.duration) ? input.duration : preset.duration;
-    const testDuration = [60, 120, 180].includes(Number(input.duration)) ? Number(input.duration) : preset.duration;
+    // Je deviens expert : les cinq marches de l'escalier (2 min, 1 min 45,
+    // 1 min 30, 1 min 15, 1 min) ; 3 minutes reste possible hors parcours.
+    const testDuration = [60, 75, 90, 105, 120, 180].includes(Number(input.duration)) ? Number(input.duration) : preset.duration;
     const validationDuration = [90, 120, 180].includes(Number(input.duration)) ? Number(input.duration) : preset.duration;
     const testLevel = [1, 2, 3].includes(Number(input.testLevel)) ? Number(input.testLevel) : (preset.testLevel || 1);
     const testQuestionTypes = testLevel === 1
@@ -238,7 +240,7 @@
   function durationLabel(duration) {
     if (duration === null) return "sans chronomètre";
     if (duration === 60) return "1 minute";
-    if (duration === 90) return "1 min 30";
+    if (duration % 60) return `${Math.floor(duration / 60)} min ${String(duration % 60).padStart(2, "0")}`;
     return `${duration / 60} minutes`;
   }
 
@@ -253,7 +255,9 @@
       validation: "Je valide ma table",
       custom: "Réglages"
     };
-    const details = [modeLabels[normalized.mode], tablesLabel(normalized.tables)];
+    // Le mélange du parcours a le format de la validation, sur plusieurs tables.
+    const melange = normalized.mode === "validation" && normalized.tables.length > 1;
+    const details = [melange ? "Mon mélange" : modeLabels[normalized.mode], tablesLabel(normalized.tables)];
     if (normalized.mode === "learn") {
       const activityLabels = {
         construct: "je construis le bâton",
@@ -263,7 +267,10 @@
       };
       details.push(activityLabels[normalized.learnActivity]);
     }
-    if (normalized.mode === "test") details.push(`niveau ${normalized.testLevel}`);
+    if (normalized.mode === "test") {
+      const labels = {direct: "produits", missing: "trous", division: "divisions"};
+      details.push(normalized.questionTypes.map(type => labels[type]).join(", "));
+    }
     if (normalized.mode === "train" && normalized.questionTypes.join() !== "direct") {
       const labels = {direct: "produits", missing: "nombres manquants", division: "divisions"};
       details.push(normalized.questionTypes.map(type => labels[type]).join(" + "));

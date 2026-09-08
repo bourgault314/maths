@@ -16,8 +16,13 @@ function jouer(etat, config, correct, total) {
   return parcours.appliquerSerie(etat, normaliser(config), {correct, total, date: DATE});
 }
 
+// Valide des tables l'une après l'autre — en réussissant le mélange dès qu'il
+// est dû (lot 3 : sinon « Je valide » est verrouillé).
 function acquerirTables(etat, tables) {
-  return tables.reduce((courant, table) => jouer(courant, parcours.configValidation(table), 20, 20).parcours, etat);
+  return tables.reduce((courant, table) => {
+    const debloque = parcours.melangeDu(courant) ? jouer(courant, parcours.configMelange(courant), 20, 20).parcours : courant;
+    return jouer(debloque, parcours.configValidation(table), 20, 20).parcours;
+  }, etat);
 }
 
 function stockageMemoire(initial = {}) {
@@ -39,7 +44,7 @@ test("le parcours couvre les tables 2 à 10 et conseille les faciles d’abord",
   assert.deepEqual([...parcours.TABLES], [2, 3, 4, 5, 6, 7, 8, 9, 10]);
   assert.deepEqual([...parcours.ORDRE_CONSEIL], [2, 10, 5, 3, 4, 6, 7, 8, 9]);
   const vide = parcours.creerParcours();
-  assert.equal(vide.version, 1);
+  assert.equal(vide.version, 2, "lot 3 : version 2 du parcours (mélange obligatoire, escalier, rang, jours)");
   assert.equal(vide.prenom, "");
   assert.deepEqual(Object.keys(vide.tables).map(Number), [...parcours.TABLES]);
   assert.ok(parcours.estVide(vide));
@@ -72,12 +77,30 @@ test("les configurations du parcours sont acceptées par le moteur de questions"
   assert.equal(normaliser(parcours.configValidation(7, 60)).duration, 90, "pas de validation en 1 minute");
   assert.equal(normaliser(parcours.configValidation(7, 180)).duration, 180);
 
-  const expert = normaliser(parcours.configExpert(3));
-  assert.equal(expert.mode, "test");
-  assert.deepEqual(expert.tables, [2, 3, 4, 5, 6, 7, 8, 9, 10]);
-  assert.equal(expert.total, 25);
-  assert.equal(expert.duration, 120);
-  assert.deepEqual(expert.questionTypes, ["direct", "missing", "division"]);
+  // Le mélange (lot 3) : le format de la validation, sur les tables acquises.
+  const melange = normaliser(parcours.configMelange(acquerirTables(parcours.creerParcours(), [2, 10])));
+  assert.equal(melange.mode, "validation");
+  assert.deepEqual(melange.tables, [2, 10]);
+  assert.equal(melange.total, 20);
+  assert.equal(melange.duration, 90);
+  const questionsMelange = core.generateQuestions(melange);
+  assert.equal(questionsMelange.filter(question => question.category === "direct").length, 14);
+  assert.equal(questionsMelange.filter(question => question.category === "missing").length, 6);
+  assert.equal(questionsMelange.filter(question => question.category === "division").length, 0, "sans division, même le dernier");
+  assert.deepEqual([...new Set(questionsMelange.map(question => question.focusTable))].sort(), [10, 2]);
+  assert.equal(core.configurationLabel(melange), "Mon mélange · Tables de 2 et 10 · 20 questions · 1 min 30");
+
+  // Une marche de l'escalier : tout, toutes les tables, seule la durée change.
+  const etoile = normaliser(parcours.configEtoile(2));
+  assert.equal(etoile.mode, "test");
+  assert.deepEqual(etoile.tables, [2, 3, 4, 5, 6, 7, 8, 9, 10]);
+  assert.equal(etoile.total, 25);
+  assert.equal(etoile.duration, 105);
+  assert.deepEqual(etoile.questionTypes, ["direct", "missing", "division"], "les divisions dès la première étoile");
+  assert.deepEqual([1, 2, 3, 4, 5].map(n => normaliser(parcours.configEtoile(n)).duration), [120, 105, 90, 75, 60]);
+  assert.equal(core.durationLabel(105), "1 min 45");
+  assert.equal(core.durationLabel(75), "1 min 15");
+  assert.equal(core.configurationLabel(etoile), "Je deviens expert · Tables de 2 à 10 · produits, trous, divisions · 25 questions · 1 min 45");
 });
 
 test("J’apprends : ◐ quand on commence, ● quand l’activité est terminée", () => {
@@ -133,7 +156,10 @@ test("Acquise : 20 questions en 1 min 30 avec 2 erreurs max ; 2 ou 3 minutes = p
   resultat = jouer(etat, parcours.configValidation(7), 18, 20);
   etat = resultat.parcours;
   assert.equal(etat.tables[7].acquise, DATE);
-  assert.deepEqual(resultat.evenements, [{type: "validation", table: 7, reussi: true, score: 18, total: 20, dejaAcquise: false, nouvelle: true}]);
+  assert.deepEqual(resultat.evenements, [
+    {type: "validation", table: 7, reussi: true, score: 18, total: 20, dejaAcquise: false, nouvelle: true, verrouillee: false},
+    {type: "rang", rang: 1, nom: "Bronze", cle: "bronze"}
+  ], "la première table donne le rang Bronze");
 
   const encore = jouer(etat, parcours.configValidation(7), 20, 20);
   assert.equal(encore.evenements[0].dejaAcquise, true);
@@ -156,16 +182,16 @@ test("le mélange apparaît à 2 tables acquises et repasse « à refaire » à 
   resultat = jouer(etat, parcours.configValidation(5), 20, 20);
   etat = resultat.parcours;
   assert.deepEqual(resultat.evenements.map(evenement => evenement.type), ["validation", "melange-debloque"]);
-  assert.deepEqual(parcours.configMelange(etat), {mode: "test", tables: [2, 5], testLevel: 1, total: 25, duration: 120});
+  assert.deepEqual(parcours.configMelange(etat), {mode: "validation", tables: [2, 5], total: 20, duration: 90});
   assert.equal(etat.melange.aJour, false);
   assert.equal(parcours.prochaineEtape(etat).type, "melange", "le mélange passe avant la table suivante");
 
-  resultat = jouer(etat, parcours.configMelange(etat), 22, 25);
+  resultat = jouer(etat, parcours.configMelange(etat), 17, 20);
   assert.equal(resultat.evenements[0].type, "melange");
   assert.equal(resultat.evenements[0].reussi, false);
   assert.equal(resultat.parcours.melange.aJour, false);
 
-  resultat = jouer(etat, parcours.configMelange(etat), 23, 25);
+  resultat = jouer(etat, parcours.configMelange(etat), 18, 20);
   etat = resultat.parcours;
   assert.equal(etat.melange.aJour, true);
   assert.equal(etat.melange.dernier, DATE);
@@ -173,57 +199,98 @@ test("le mélange apparaît à 2 tables acquises et repasse « à refaire » à 
 
   resultat = jouer(etat, parcours.configValidation(10), 19, 20);
   etat = resultat.parcours;
-  assert.deepEqual(resultat.evenements.map(evenement => evenement.type), ["validation", "melange-a-refaire"]);
+  assert.deepEqual(resultat.evenements.map(evenement => evenement.type), ["validation", "melange-a-refaire", "rang"]);
   assert.equal(etat.melange.aJour, false);
   assert.equal(etat.melange.aRefaireAvec, 10);
   assert.deepEqual(etat.melange.tables, [2, 5, 10]);
   assert.match(parcours.prochaineEtape(etat).libelle, /avec la table de 10/);
 });
 
-test("un test Expert sur un mélange choisi à la main ne compte pas", () => {
+test("un mélange choisi à la main, ou joué en 2 ou 3 minutes, ne compte pas", () => {
   let etat = acquerirTables(parcours.creerParcours(), [2, 5, 10]);
-  assert.equal(parcours.classerSerie(etat, normaliser({mode: "test", tables: [2, 5], testLevel: 1})), null, "pas exactement les tables acquises");
-  assert.equal(parcours.classerSerie(etat, normaliser({mode: "test", tables: [2, 5, 10], testLevel: 2})), null, "le mélange des acquises est en produits seulement");
-  assert.equal(parcours.classerSerie(etat, normaliser({mode: "test", tables: [2, 5, 10], testLevel: 1, duration: 180})), null, "3 minutes ne comptent pas");
-  assert.deepEqual(parcours.classerSerie(etat, normaliser({mode: "test", tables: [2, 5, 10], testLevel: 1})), {type: "melange", tables: [2, 5, 10]});
-  assert.equal(parcours.classerSerie(etat, normaliser({mode: "test", tables: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10], testLevel: 1})), null, "1 à 10 n’est pas le grand mélange");
+  assert.equal(parcours.classerSerie(etat, normaliser({mode: "validation", tables: [2, 5], total: 20, duration: 90})), null, "pas exactement les tables acquises");
+  assert.equal(parcours.classerSerie(etat, normaliser({mode: "validation", tables: [2, 5, 10], total: 20, duration: 120})), null, "2 minutes ne comptent pas");
+  assert.equal(parcours.classerSerie(etat, normaliser({mode: "validation", tables: [2, 5, 10], total: 20, duration: 180})), null, "3 minutes non plus");
+  assert.deepEqual(parcours.classerSerie(etat, normaliser({mode: "validation", tables: [2, 5, 10], total: 20, duration: 90})), {type: "melange", tables: [2, 5, 10]});
+  assert.equal(parcours.classerSerie(etat, normaliser({mode: "test", tables: [2, 5, 10], testLevel: 1})), null, "l’ancien mélange à 25 (mode test) ne compte plus");
+  assert.equal(parcours.classerSerie(etat, normaliser({mode: "test", tables: [2, 3, 4, 5, 6, 7, 8, 9, 10], testLevel: 3, duration: 120})), null, "l’escalier est fermé tant que les 9 tables + le mélange ne sont pas là");
 });
 
-test("Expert : trois étoiles sur le grand mélange 2 à 10, ★ valide toutes les tables, ★★★ = champion", () => {
-  let etat = parcours.creerParcours();
-  let resultat = jouer(etat, parcours.configExpert(1), 22, 25);
-  assert.equal(resultat.evenements[0].reussi, false);
-  assert.equal(resultat.parcours.expert.niveau, 0);
-  assert.equal(parcours.tablesAcquises(resultat.parcours).length, 0);
-
-  resultat = jouer(etat, parcours.configExpert(1), 23, 25);
-  etat = resultat.parcours;
-  assert.equal(etat.expert.niveau, 1);
-  assert.equal(resultat.evenements[0].nouveau, true);
-  assert.deepEqual(resultat.evenements[0].tablesValidees, [2, 3, 4, 5, 6, 7, 8, 9, 10]);
-  assert.equal(resultat.evenements.length, 1, "l’étoile ne raconte pas les étapes intermédiaires (mélange débloqué, toutes acquises)");
+test("l’escalier n’est ouvert qu’avec les 9 tables ET le dernier mélange ; ★ à 👑 par la durée seule", () => {
+  let etat = acquerirTables(parcours.creerParcours(), [2, 10, 5, 3, 4, 6, 7, 8]);
+  assert.equal(parcours.classerSerie(etat, normaliser(parcours.configEtoile(1))), null, "8 tables : fermé");
+  etat = acquerirTables(etat, [9]);
   assert.ok(parcours.toutesAcquises(etat));
-  assert.equal(parcours.configMelange(etat), null, "toutes acquises : le mélange intermédiaire disparaît");
-  assert.equal(parcours.prochaineEtape(etat).type, "expert");
-  assert.equal(parcours.prochaineEtape(etat).niveau, 2);
+  assert.equal(etat.melange.aRefaireAvec, 9, "la neuvième table remet le mélange à refaire, comme les autres");
+  assert.equal(parcours.escalierOuvert(etat), false);
+  assert.equal(parcours.classerSerie(etat, normaliser(parcours.configEtoile(1))), null, "9 tables mais mélange à refaire : fermé");
+  assert.equal(parcours.prochaineEtape(etat).type, "melange");
+  assert.match(parcours.prochaineEtape(etat).libelle, /9 tables/);
 
-  resultat = jouer(etat, parcours.configExpert(3), 24, 25);
+  let resultat = jouer(etat, parcours.configMelange(etat), 20, 20);
   etat = resultat.parcours;
-  assert.equal(etat.expert.niveau, 3, "réussir le niveau 3 directement donne les trois étoiles");
-  assert.equal(etat.expert.champion, DATE);
-  assert.equal(resultat.evenements[0].champion, true);
-  const apresChampion = parcours.prochaineEtape(etat);
-  assert.equal(apresChampion.type, "revision", "champion mais grille incomplète : le parcours envoie vers Mes calculs");
-  assert.match(apresChampion.libelle, /Champion des tables/);
+  assert.equal(resultat.evenements[0].escalierOuvert, true);
+  assert.deepEqual(resultat.evenements.map(evenement => evenement.type), ["melange", "rang"]);
+  assert.equal(resultat.evenements[1].nom, "Platine");
+  assert.ok(parcours.escalierOuvert(etat));
+  assert.deepEqual(parcours.prochaineEtape(etat).config, parcours.configEtoile(1));
 
-  const rejoue = jouer(etat, parcours.configExpert(2), 25, 25);
+  resultat = jouer(etat, parcours.configEtoile(1), 22, 25);
+  assert.equal(resultat.evenements[0].reussi, false, "3 erreurs : raté");
+  assert.equal(resultat.parcours.expert.etoiles, 0);
+
+  resultat = jouer(etat, parcours.configEtoile(1), 23, 25);
+  etat = resultat.parcours;
+  assert.equal(etat.expert.etoiles, 1);
+  assert.equal(resultat.evenements[0].nouveau, true);
+  assert.equal(parcours.prochaineEtape(etat).etoile, 2);
+
+  resultat = jouer(etat, parcours.configEtoile(3), 24, 25);
+  etat = resultat.parcours;
+  assert.equal(etat.expert.etoiles, 3, "réussir ★★★ directement valide ★ et ★★");
+  assert.equal(etat.rang, 4, "toujours Platine : Diamant attend ★★★★");
+
+  const rejoue = jouer(etat, parcours.configEtoile(2), 25, 25);
   assert.equal(rejoue.evenements[0].nouveau, false);
-  assert.equal(rejoue.parcours.expert.niveau, 3, "un niveau inférieur ne retire rien");
+  assert.equal(rejoue.parcours.expert.etoiles, 3, "une marche inférieure ne retire rien");
+
+  resultat = jouer(etat, parcours.configEtoile(4), 25, 25);
+  etat = resultat.parcours;
+  assert.equal(etat.rang, 5, "★★★★ = Diamant");
+  assert.equal(resultat.evenements.find(evenement => evenement.type === "rang").nom, "Diamant");
+
+  resultat = jouer(etat, parcours.configEtoile(5), 25, 25);
+  etat = resultat.parcours;
+  assert.equal(etat.expert.etoiles, 5);
+  assert.equal(etat.expert.couronne, DATE);
+  assert.equal(resultat.evenements[0].couronne, true);
+  assert.equal(etat.rang, 6, "👑 = Légende des tables");
+  const apres = parcours.prochaineEtape(etat);
+  assert.equal(apres.type, "legende", "Légende mais grille jamais remplie : rien à réviser, rejouer une marche");
+  assert.match(apres.libelle, /Légende des tables/);
 });
 
-test("Expert est ouvert dès le début, sans verrou", () => {
-  const etat = parcours.creerParcours();
-  assert.deepEqual(parcours.classerSerie(etat, normaliser(parcours.configExpert(2))), {type: "expert", niveau: 2});
+test("le verrou : tant que le mélange est dû, une nouvelle table ne se valide pas — les entraînements restent libres", () => {
+  let etat = acquerirTables(parcours.creerParcours(), [2, 10]);
+  assert.ok(parcours.melangeDu(etat));
+  let resultat = jouer(etat, parcours.configValidation(5), 20, 20);
+  assert.equal(resultat.evenements[0].reussi, true, "la série est réussie…");
+  assert.equal(resultat.evenements[0].verrouillee, true, "…mais verrouillée");
+  assert.equal(resultat.evenements[0].nouvelle, false);
+  assert.equal(resultat.parcours.tables[5].acquise, null, "la table n’est pas acquise");
+  assert.equal(parcours.etatAffichage(etat).verrou, true);
+  // J'apprends et Je m'entraîne, sur n'importe quelle table : libres.
+  assert.equal(jouer(etat, parcours.configEntraine(5, "trous"), 10, 10).parcours.tables[5].entraine.trous, 2);
+  assert.equal(jouer(etat, parcours.configApprends(7, "ordered"), 11, 11).parcours.tables[7].apprends.ordered, 2);
+  // Une table déjà acquise se rejoue librement.
+  assert.equal(jouer(etat, parcours.configValidation(2), 20, 20).evenements[0].verrouillee, false);
+  // Le mélange réussi lève le verrou.
+  etat = jouer(etat, parcours.configMelange(etat), 19, 20).parcours;
+  assert.equal(parcours.melangeDu(etat), false);
+  assert.equal(parcours.etatAffichage(etat).verrou, false);
+  resultat = jouer(etat, parcours.configValidation(5), 20, 20);
+  assert.equal(resultat.evenements[0].nouvelle, true);
+  assert.ok(parcours.melangeDu(resultat.parcours), "et la nouvelle table le remet");
 });
 
 test("la prochaine étape suit le parcours d’une table : bâton → entraînements → validation", () => {
@@ -261,7 +328,10 @@ test("l’état d’affichage résume la carte sans DOM", () => {
   assert.equal(etat2.lignes.find(ligne => ligne.table === 2).acquise, DATE);
   assert.deepEqual(etat2.acquises, [2, 5]);
   assert.equal(etat2.melange.visible, true);
-  assert.deepEqual(etat2.expert.etoiles, [false, false, false]);
+  assert.equal(etat2.melange.du, true);
+  assert.deepEqual(etat2.expert.etoiles, [false, false, false, false, false]);
+  assert.equal(etat2.expert.ouvert, false);
+  assert.equal(etat2.rang.nom, "Bronze", "2 tables acquises : Bronze (Argent à 3)");
   assert.equal(etat2.prochaine.type, "melange");
 });
 
@@ -286,7 +356,7 @@ test("sauvegarde locale : aller-retour, données abîmées et stockage absent", 
   assert.equal(abime.prenom, "");
   assert.equal(abime.tables[7].apprends.random, 0);
   assert.equal(abime.tables[7].acquise, "2026-09-01");
-  assert.equal(abime.expert.niveau, 0);
+  assert.equal(abime.expert.etoiles, 0);
   assert.equal(abime.melange.aJour, false);
 
   assert.deepEqual(parcours.charger(null), parcours.creerParcours());
@@ -487,7 +557,9 @@ test("appliquerSerie ne modifie jamais l’objet reçu", () => {
   const etat = parcours.creerParcours();
   const copie = JSON.stringify(etat);
   jouer(etat, parcours.configValidation(7), 20, 20);
-  jouer(etat, parcours.configExpert(3), 25, 25);
+  jouer(etat, parcours.configEtoile(3), 25, 25);
+  parcours.appliquerReponse(etat, "7-8", {correcte: true, date: DATE});
+  parcours.marquerAvisVu(etat);
   parcours.demarrerSerie(etat, normaliser(parcours.configApprends(7, "gaps")));
   assert.equal(JSON.stringify(etat), copie);
 });
@@ -604,20 +676,23 @@ test("les dates ne sont gardées que sous la forme AAAA-MM-JJ", () => {
   const abime = parcours.normaliserParcours({
     tables: {7: {acquise: "hier"}},
     melange: {dernier: "2026-09-01T10:00:00Z"},
-    expert: {niveau: 1, dernier: "2026-09-02", champion: "x".repeat(300)},
-    calculs: {"3-8": {cases: 1, vu: "pas une date"}, "6-7": {cases: 1, vu: "2026-09-03", erreur: "<script>", gagne: "2026-09-03"}}
+    expert: {etoiles: 1, dernier: "2026-09-02", couronne: "x".repeat(300)},
+    jours: ["2026-09-03", "hier", 12, "2026-09-03"],
+    calculs: {"3-8": {cases: 1, vu: "pas une date"}, "6-7": {cases: 1, vu: "2026-09-03", erreur: "<script>", gagne: "2026-09-03"}},
+    version: 2
   });
   assert.equal(abime.tables[7].acquise, null);
   assert.equal(abime.melange.dernier, null);
   assert.equal(abime.expert.dernier, "2026-09-02");
-  assert.equal(abime.expert.champion, null);
+  assert.equal(abime.expert.couronne, null);
+  assert.deepEqual(abime.jours, ["2026-09-03"], "les jours : des dates, sans doublon");
   assert.equal(abime.calculs["3-8"], undefined, "un calcul sans jour valide n'existe pas");
   assert.deepEqual(abime.calculs["6-7"], {cases: 1, vu: "2026-09-03", erreur: null, gagne: "2026-09-03"});
 });
 
 test("fusion : le mélange redevient à refaire si l’autre appareil a plus de tables", () => {
   const cinq = acquerirTables(parcours.creerParcours(), [2, 3, 4, 5, 6]);
-  const cinqAJour = jouer(cinq, parcours.configMelange(cinq), 25, 25).parcours;
+  const cinqAJour = jouer(cinq, parcours.configMelange(cinq), 20, 20).parcours;
   assert.equal(cinqAJour.melange.aJour, true);
 
   const sept = acquerirTables(parcours.creerParcours(), [2, 3, 4, 5, 6, 7, 8]);
@@ -630,13 +705,17 @@ test("fusion : le mélange redevient à refaire si l’autre appareil a plus de 
   assert.equal(parcours.fusionner(cinqAJour, memeCinq).melange.aJour, true);
 });
 
-test("fusion : les étoiles Expert prennent le meilleur niveau, le titre sa première date", () => {
-  const a = parcours.normaliserParcours({expert: {niveau: 1, dernier: "2026-09-01", champion: null}});
-  const b = parcours.normaliserParcours({expert: {niveau: 3, dernier: "2026-10-01", champion: "2026-10-01"}});
+test("fusion : les étoiles prennent le meilleur des deux, la couronne sa première date, le rang ne redescend pas, les jours se réunissent", () => {
+  const a = parcours.normaliserParcours({version: 2, expert: {etoiles: 1, dernier: "2026-09-01", couronne: null}, rang: 5, jours: ["2026-09-01", "2026-09-02"], avis: 2, avisVu: 2});
+  const b = parcours.normaliserParcours({version: 2, expert: {etoiles: 5, dernier: "2026-10-01", couronne: "2026-10-01"}, rang: 6, jours: ["2026-09-02", "2026-09-03"], avis: 2, avisVu: 0});
   const fusion = parcours.fusionner(a, b);
-  assert.equal(fusion.expert.niveau, 3);
+  assert.equal(fusion.expert.etoiles, 5);
   assert.equal(fusion.expert.dernier, "2026-10-01");
-  assert.equal(fusion.expert.champion, "2026-10-01");
+  assert.equal(fusion.expert.couronne, "2026-10-01");
+  assert.equal(fusion.rang, 6);
+  assert.deepEqual(fusion.jours, ["2026-09-01", "2026-09-02", "2026-09-03"]);
+  assert.equal(fusion.avisVu, 2, "l’avis lu d’un côté ne revient pas de l’autre");
+  assert.deepEqual(parcours.fusionner(b, a), fusion);
 });
 
 test("fusion : le prénom de l’appareil devant l’élève l’emporte", () => {
@@ -727,7 +806,7 @@ test("Je m’entraîne propose produits, trous ou les deux ; la validation se la
 test("dans Je deviens expert, « Toutes les tables » coche 2 à 10", () => {
   assert.match(html, /return mode === "test" \? PARCOURS_TABLES : ALL_TABLES;/);
   assert.match(html, /"Toutes les tables \(2 à 10\)"/);
-  assert.equal(core.configurationLabel(normaliser({mode: "test", tables: [2, 3, 4, 5, 6, 7, 8, 9, 10]})), "Je deviens expert · Tables de 2 à 10 · niveau 1 · 25 questions · 2 minutes");
+  assert.equal(core.configurationLabel(normaliser({mode: "test", tables: [2, 3, 4, 5, 6, 7, 8, 9, 10], testLevel: 3})), "Je deviens expert · Tables de 2 à 10 · produits, trous, divisions · 25 questions · 2 minutes");
   assert.equal(core.configurationLabel(normaliser(parcours.configEntraine(7, "trous"))), "Je m’entraîne · Table de 7 · nombres manquants · 10 questions · sans chronomètre");
   assert.equal(core.configurationLabel(normaliser({mode: "train", tables: [6, 7]})), "Je m’entraîne · Tables de 6 et 7 · 10 questions · sans chronomètre");
 });
@@ -1092,11 +1171,11 @@ test("le prénom tapé par l’élève ne part pas au serveur", () => {
   const paquetParcours = new Function(`${source}\nreturn paquetParcours;`)();
 
   const parcours = {
-    version: 1,
+    version: 2,
     prenom: "Léa Dupont",
     tables: {5: {acquise: "2026-08-30"}},
     melange: {tables: [5, 7], aJour: false},
-    expert: {niveau: 0},
+    expert: {etoiles: 0},
     calculs: {"5-7": {cases: 1, gagne: "2026-08-30"}}
   };
   const envoye = JSON.parse(paquetParcours("2F4FUL", parcours));
@@ -1108,7 +1187,7 @@ test("le prénom tapé par l’élève ne part pas au serveur", () => {
   assert.deepEqual(envoye.parcours.tables, parcours.tables, "la progression, elle, doit partir entière");
   assert.deepEqual(envoye.parcours.calculs, parcours.calculs);
   assert.deepEqual(envoye.parcours.melange, parcours.melange);
-  assert.equal(envoye.parcours.expert.niveau, 0);
+  assert.equal(envoye.parcours.expert.etoiles, 0);
 
   // Et l’appareil de l’élève, lui, garde son prénom : on n’a pas le droit de le
   // lui effacer en passant.

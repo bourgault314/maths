@@ -19,9 +19,15 @@ const CATALOGUE_APPLIS = [
         // « 3-7 ». Tout le reste — un prénom, un texte — est retiré. Si l'appli
         // gagne un champ, il faut l'ajouter ici : tests/parcours-reference.json
         // (généré par l'appli) casse un test tant que ce n'est pas fait.
+        // Lot 3 de Défi tables v2 (08/09/2026) : « etoiles », « couronne »
+        // (l'escalier), « rang », « jours » (une liste de dates), « avis » et
+        // « avisVu » (l'avis unique de migration). « niveau » et « champion »
+        // restent acceptés : un appareil resté sur l'ancienne appli les envoie
+        // encore, et c'est l'appli qui les migre.
         'cles' => ['version', 'epoque', 'tables', 'apprends', 'construct', 'gaps', 'ordered', 'random',
             'entraine', 'desordre', 'trous', 'mixte', 'dernier', 'entrainement', 'score', 'total',
             'acquise', 'melange', 'aJour', 'aRefaireAvec', 'expert', 'niveau', 'champion',
+            'etoiles', 'couronne', 'rang', 'jours', 'avis', 'avisVu',
             'calculs', 'cases', 'vu', 'erreur', 'gagne'],
         'mots' => ['desordre', 'trous', 'mixte'],
         'motifs' => ['/^(?:[2-9]|10)$/', '/^\d{1,2}-\d{1,2}$/'],
