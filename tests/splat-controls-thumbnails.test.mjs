@@ -56,7 +56,7 @@ test("les cinq miniatures utilisent des vues fideles et adaptees aux outils", ()
   assert.match(catalogue, /assets\/img\/thumbnails\/splat\/splat\.png\?v=6/);
   assert.match(catalogue, /assets\/img\/thumbnails\/splat\/splat-equations\.png\?v=6/);
   assert.match(catalogue, /assets\/img\/thumbnails\/splat\/petit-splat\.png\?v=5/);
-  assert.match(cataloguePage, /catalogue-refonte-data\.js\?v=multiplication-posee-20260905-1/);
+  assert.match(cataloguePage, /catalogue-refonte-data\.js\?v=inconnues-en-barres-20260908-1/);
   for(const thumbnail of [equasplatThumb, equascribeThumb, classicThumb, equationThumb, petitThumb]){
     assert.deepEqual(pngSize(thumbnail), {width:720, height:320});
   }
