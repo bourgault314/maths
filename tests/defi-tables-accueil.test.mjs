@@ -102,6 +102,16 @@ test("le détail d’une case dit la règle du jour, et seulement là", () => {
   assert.match(html, /else if \(fait && fait\.erreur\) note = `Dernière erreur : \$\{formaterJour\(fait\.erreur\)\}\.`;/);
 });
 
+test("Ctrl+P remplit la fiche : l’écouteur beforeprint ne passe pas l’événement à renderFiche", () => {
+  // renderFiche(source) prend « source » pour un parcours. Passée directement à
+  // addEventListener, elle recevait l’objet Event : etatAffichage() lisait alors
+  // parcours.tables[2] sur un tables absent et levait une TypeError — la fiche
+  // sortait vide pour qui imprimait par Ctrl+P au lieu du bouton.
+  assert.match(html, /addEventListener\("beforeprint", \(\) => renderFiche\(\)\)/,
+    "Ctrl+P remplit la fiche : l'écouteur ne passe pas l'événement à renderFiche");
+  assert.doesNotMatch(html, /"beforeprint", renderFiche\)/);
+});
+
 test("plus aucun texte de règle sur les écrans de l’élève en dehors de la notice", () => {
   assert.doesNotMatch(html, /Une case gagnée par bonne réponse/);
   assert.doesNotMatch(html, /Réglages et Évaluation CM1 sont à part/);

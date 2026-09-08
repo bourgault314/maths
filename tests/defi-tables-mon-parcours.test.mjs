@@ -831,7 +831,9 @@ test("la fiche « Mon parcours des tables » s’imprime depuis l’appli et exi
   assert.match(html, /body > \*:not\(#fiche-print\) \{ display: none !important; \}/);
   assert.match(html, /@page \{ size: A4 portrait; margin: 12mm; \}/);
   assert.match(html, /id="parcours-print"[\s\S]*Imprimer ma fiche/);
-  assert.match(html, /window\.addEventListener\("beforeprint", renderFiche\)/);
+  // La fonction est appelée, pas passée en écouteur : elle recevrait l'objet
+  // Event pour parcours (tests/defi-tables-accueil.test.mjs le détaille).
+  assert.match(html, /window\.addEventListener\("beforeprint", \(\) => renderFiche\(\)\)/);
   assert.match(html, /href="\.\/fiche_parcours_tables\.pdf" target="_blank" rel="noopener">Fiche vierge à remplir/);
   assert.match(html, /src="\.\.\/\.\.\/assets\/img\/qr-defi-tables-parcours\.svg"/);
   assert.match(html, /mathsgo\.re · CC BY-NC-SA 4\.0/);
