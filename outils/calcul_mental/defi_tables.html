@@ -177,6 +177,7 @@
     .suivi-garde-erreur[hidden] { display: none; }
 
     .brand img { display: block; width: 105px; height: auto; }
+    #launch-back { display: inline-flex; align-items: center; justify-content: center; gap: 7px; }
     .back-icon { display: grid; place-items: center; flex: 0 0 auto; }
     .back-icon svg { display: block; width: 20px; height: 20px; }
     .catalogue-link {
@@ -315,8 +316,6 @@
     .choix-activite .tag { padding: 3px 9px; border-radius: 999px; background: #e7f0fb; color: var(--blue); font-size: .68rem; font-weight: 950; white-space: nowrap; }
     .choix-activite.is-next { border-color: var(--blue); box-shadow: 0 0 0 2px rgba(7, 85, 184, .16); }
     .choix-activite.is-plus { border-style: dashed; background: #fbfdff; }
-    /* L'accueil dit pourquoi « ma table » a changé, au lieu de le faire en silence. */
-    .acc-suite { margin: 0 0 8px; padding: 9px 12px; border-radius: 12px; background: #e7f8f5; color: #08635a; font-size: .87rem; font-weight: 900; }
     /* « Mes calculs » s'ouvre sur la grille : la barre du haut reste collée,
        donc le retour « Ma table » ne disparaît jamais de l'écran. */
     .calculs-screen .settings-toolbar { position: sticky; top: 0; z-index: 5; padding: 4px 0 6px; background: #fff; box-shadow: 0 8px 10px -9px rgba(18, 50, 74, .45); }
@@ -536,6 +535,16 @@
       font-weight: 850;
       text-align: left;
     }
+    /* Quand la fête annonce la nouvelle (table acquise, mélange, étoile),
+       l'écran ne garde que l'essentiel : la nouvelle, le score, la suite et le
+       bilan des réponses. Le rappel des réglages et le temps mis n'apprennent
+       rien de plus à ce moment-là (Gwenaël, 09/09) — ils restent affichés sur
+       les séries qui ne se fêtent pas, où ils disent ce qu'on vient de faire. */
+    .result.a-fete > .eyebrow,
+    .result.a-fete > .hero-icon,
+    .result.a-fete #result-config,
+    .result.a-fete #result-detail { display: none; }
+    .result.a-fete .result-parcours { text-align: center; }
     .result-parcours p { margin: 0; line-height: 1.45; }
     .result-parcours p + p { margin-top: 8px; }
     .result-parcours .primary { min-height: 44px; margin-top: 10px; padding: 8px 14px; }
@@ -1427,7 +1436,6 @@
                 </div>
               </div>
               <div id="acc-choix" class="matable-choix" role="group" aria-label="Choisir ma table" hidden></div>
-              <p id="acc-suite" class="acc-suite" role="status" hidden></p>
               <div id="acc-etapes" class="etapes"></div>
             </section>
             <button id="acc-reviser" class="reviser" type="button"><span><strong id="acc-reviser-titre">Réviser mes calculs</strong><small id="acc-reviser-note">10 questions sans chrono</small></span><span class="go">Réviser&nbsp;→</span></button>
@@ -1533,7 +1541,7 @@
         <p id="launch-hint" class="launch-hint" hidden></p>
         <div class="launch-actions">
           <button id="launch-start" class="primary" type="button">C’est parti&nbsp;!</button>
-          <button id="launch-back" class="secondary" type="button">Modifier</button>
+          <button id="launch-back" class="secondary" type="button"><span id="launch-back-fleche" class="back-icon" aria-hidden="true" hidden><svg viewBox="0 0 24 24" width="20" height="20"><path d="M19 12H5M11 6l-6 6 6 6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span id="launch-back-label">Modifier</span></button>
         </div>
       </div>
 
@@ -2730,7 +2738,6 @@
         launchReady: false,
         origin: "menu",
         etapeOuverte: null,
-        tableAnnoncee: null,
         revisionPremierScore: 0,
         revisionPremierTotal: 0,
         revisionAvantSus: new Set()
@@ -3260,13 +3267,27 @@
         zone.replaceChildren();
         zone.classList.toggle("is-clean", !wrongEntries.length);
         const title = document.createElement("h2");
-        title.textContent = completeReview ? "Bilan de tes réponses" : entries.length ? "Tes corrections" : "Aucune erreur à corriger";
+        title.textContent = completeReview
+          ? (wrongEntries.length ? "Bilan de tes réponses" : "Aucune erreur à corriger")
+          : entries.length ? "Tes corrections" : "Aucune erreur à corriger";
         zone.append(title);
         if (!entries.length) {
           const message = document.createElement("p");
           message.textContent = completeReview
             ? "Aucune réponse n’a été validée avant la fin du temps."
             : "Toutes les réponses que tu as données sont justes.";
+          zone.append(message);
+          return;
+        }
+        // Une série sans faute : dérouler les vingt calculs justes n'apprend
+        // rien à personne, une phrase suffit — comme sur les entraînements
+        // (Gwenaël, 09/09). Avec des fautes, le bilan complet garde son sens :
+        // l'élève relit la série entière autour de ce qu'il a raté.
+        if (completeReview && !wrongEntries.length) {
+          const message = document.createElement("p");
+          message.textContent = rightEntries.length > 1
+            ? `Tes ${rightEntries.length} réponses sont justes.`
+            : "Ta réponse est juste.";
           zone.append(message);
           return;
         }
@@ -3373,8 +3394,6 @@
         parcours = suivi.parcours;
         sauverParcours();
         renderResultParcours(suivi);
-        const acquise = suivi.evenements.find(evenement => evenement.type === "validation" && evenement.nouvelle);
-        if (acquise) state.tableAnnoncee = acquise.table;
         const principal = suivi.evenements.find(evenement => typeof evenement.reussi === "boolean");
         if (principal) $("result-icon").hidden = !principal.reussi;
         renderResultFete(suivi.evenements);
@@ -3495,7 +3514,11 @@
         const chrono = config.duration !== null;
         $("launch-hint").hidden = !chrono;
         $("launch-hint").textContent = chrono ? "Le chrono part quand tu appuies sur « C’est parti ! »." : "";
-        $("launch-back").textContent = state.origin === "reglages" ? "Modifier" : "← Ma table";
+        // La vraie flèche du site (le SVG épais), jamais le caractère « ← » :
+        // il est trop maigre et trop petit à côté du texte (règle de Gwenaël).
+        const versReglages = state.origin === "reglages";
+        $("launch-back-fleche").hidden = versReglages;
+        $("launch-back-label").textContent = versReglages ? "Modifier" : sortieDeSerie().mot;
         show("launch");
       }
 
@@ -3538,15 +3561,26 @@
         quitterSerie();
       }
 
-      // Le bouton de sortie de l'écran de jeu dit OÙ il ramène : « Ma table »
-      // pour un élève, « Réglages » pour qui vient des réglages libres.
+      // Le bouton de sortie dit OÙ il ramène — et quitterSerie ramène là d'où
+      // la série est partie. Les quatre origines ont donc leur mot : sans ça,
+      // « Ma table » mentait aux séries lancées depuis Mon parcours ou depuis
+      // Mes calculs (défaut mesuré par Claude Code, 09/09).
+      const SORTIES = Object.freeze({
+        reglages: {mot: "Réglages", ou: "aux réglages"},
+        parcours: {mot: "Mon parcours", ou: "à Mon parcours"},
+        calculs: {mot: "Mes calculs", ou: "à Mes calculs"},
+        menu: {mot: "Ma table", ou: "à Ma table"}
+      });
+
+      function sortieDeSerie() {
+        return SORTIES[state.origin] || SORTIES.menu;
+      }
+
       function majSortieJeu() {
+        const sortie = sortieDeSerie();
         const bouton = $("game-menu");
-        const reglages = state.origin === "reglages";
-        bouton.querySelector(".game-menu-label").textContent = reglages ? "Réglages" : "Ma table";
-        bouton.setAttribute("aria-label", reglages
-          ? "Arrêter la série et revenir aux réglages"
-          : "Arrêter la série et revenir à Ma table");
+        bouton.querySelector(".game-menu-label").textContent = sortie.mot;
+        bouton.setAttribute("aria-label", `Arrêter la série et revenir ${sortie.ou}`);
       }
 
       function advanceAfterResponse() {
@@ -3929,6 +3963,15 @@
         } catch (_) {}
       }
 
+      // La table qui prend la place de celle qu'on vient d'acquérir. Rien à
+      // annoncer quand les neuf sont acquises : l'accueil se replie alors sur
+      // « Mes tables : 9 sur 9 ✓ ».
+      function tableSuivanteApres(acquise) {
+        if (PARCOURS.toutesAcquises(parcours)) return null;
+        const suivante = tableEnCours(PARCOURS.etatAffichage(parcours));
+        return suivante && suivante !== acquise ? suivante : null;
+      }
+
       function tableEnCours(etat) {
         const choisie = lireTableChoisie();
         // Une table acquise n'est plus « ma table »… sauf quand les 9 le sont :
@@ -4216,14 +4259,6 @@
           choix.append(bouton);
         });
 
-        // Une table validée n'est plus « ma table » : l'accueil passe à la
-        // suivante. On le DIT, au lieu de changer le titre en silence.
-        const suite = $("acc-suite");
-        const annoncee = state.tableAnnoncee;
-        const aAnnoncer = Boolean(annoncee) && !replie && annoncee !== table;
-        suite.hidden = !aAnnoncer;
-        suite.textContent = aAnnoncer ? `Table de ${annoncee} acquise ✓ — on continue avec la table de ${table}.` : "";
-
         const etapes = $("acc-etapes");
         etapes.replaceChildren();
         if (!replie) {
@@ -4423,8 +4458,6 @@
 
       function launchFromParcours(config, origin = "parcours") {
         if (!config) return;
-        // L'élève est reparti : l'annonce a fait son travail.
-        state.tableAnnoncee = null;
         if (config.mode === "revision") {
           startRevision(config.table ?? null, origin);
           return;
@@ -4638,7 +4671,12 @@
           case "validation":
             if (!evenement.reussi) return `Table de ${table} : ${evenement.score} / ${evenement.total}. Pour valider, il faut au moins ${evenement.total - PARCOURS.SEUILS.validation.erreursMax} / ${evenement.total} en 1 min 30.`;
             if (evenement.verrouillee) return `Table de ${table} : ${evenement.score} / ${evenement.total} en 1 min 30, bravo — réussis d’abord ton mélange, puis reviens la valider.`;
-            if (evenement.nouvelle) return `Table de ${table} acquise ✓ (${evenement.score} / ${evenement.total} en 1 min 30). Bravo !`;
+            // Quand la fête du haut l'annonce déjà, messageApresFete ne garde
+            // que la fin de cette phrase : la table qui prend la place.
+            if (evenement.nouvelle) {
+              const suivante = tableSuivanteApres(evenement.table);
+              return `Table de ${table} acquise ✓ (${evenement.score} / ${evenement.total} en 1 min 30). Bravo !${suivante ? ` On continue avec la table de ${suivante}.` : ""}`;
+            }
             return `Table de ${table} : toujours acquise ✓ (${evenement.score} / ${evenement.total}).`;
           case "preparation":
             return evenement.reussi
@@ -4673,16 +4711,26 @@
       // chaque mélange réussis, 🌟 pour chaque étoile, un écran de rang à
       // chaque passage, 👑 au sommet. Sobres, sans son ; l'animation respecte
       // prefers-reduced-motion (règle plus haut, comme avant).
-      function renderResultFete(evenements) {
-        const zone = $("result-fete");
-        zone.replaceChildren();
-        zone.hidden = true;
-        zone.classList.remove("is-champion");
+      // Ce que la fête du haut va annoncer. Lue AUSSI par le bilan vert, pour
+      // qu'il ne redise pas la même chose trois lignes plus bas (Gwenaël,
+      // 09/09 : « certaines infos apparaissent deux fois »).
+      function feteDuResultat(evenements) {
         const liste = evenements || [];
         const etoile = liste.find(evenement => evenement.type === "etoile" && evenement.reussi && evenement.nouveau);
         const melange = liste.find(evenement => evenement.type === "melange" && evenement.reussi);
         const validation = liste.find(evenement => evenement.type === "validation" && evenement.nouvelle);
         const rangMonte = liste.find(evenement => evenement.type === "rang");
+        const principal = etoile || validation || melange || rangMonte || null;
+        return {etoile, melange, validation, rangMonte, principal, rangAffiche: Boolean(rangMonte)};
+      }
+
+      function renderResultFete(evenements) {
+        const zone = $("result-fete");
+        zone.replaceChildren();
+        zone.hidden = true;
+        zone.classList.remove("is-champion");
+        $("result").classList.remove("a-fete");
+        const {etoile, melange, validation, rangMonte} = feteDuResultat(evenements);
         let icone = null;
         let texte = null;
         if (etoile && etoile.couronne) {
@@ -4710,6 +4758,9 @@
         const titre = document.createElement("strong");
         titre.textContent = texte;
         zone.append(iconeZone, titre);
+        // La fête dit la nouvelle : le reste de l'écran s'allège (voir le CSS
+        // de .result.a-fete). Il ne reste que le score, la suite et le bilan.
+        $("result").classList.add("a-fete");
         // Le passage d'un rang : sous la fête du moment, avec son badge — sauf
         // la Légende, que la couronne dit déjà.
         if (rangMonte && !(etoile && etoile.couronne)) {
@@ -4723,12 +4774,25 @@
         $("result-icon").hidden = true;
       }
 
+      // La fête annonce la nouvelle et le rang gagné : le bilan ne garde alors
+      // que ce qu'elle ne dit pas — la suite du parcours. Un écran, une
+      // information, une fois.
+      function messageApresFete(evenement, fete) {
+        if (evenement.type === "rang" && fete.rangAffiche) return "";
+        if (evenement === fete.validation && evenement === fete.principal) {
+          const suivante = tableSuivanteApres(evenement.table);
+          return suivante ? `On continue avec la table de ${suivante}.` : "";
+        }
+        return evenementMessage(evenement);
+      }
+
       function renderResultParcours(suivi) {
         const zone = $("result-parcours");
         zone.replaceChildren();
         zone.hidden = !suivi.classement;
         if (!suivi.classement) return;
-        suivi.evenements.map(evenementMessage).filter(Boolean).forEach(text => {
+        const fete = feteDuResultat(suivi.evenements);
+        suivi.evenements.map(evenement => messageApresFete(evenement, fete)).filter(Boolean).forEach(text => {
           const line = document.createElement("p");
           line.textContent = text;
           zone.append(line);

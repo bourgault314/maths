@@ -27,7 +27,10 @@ test("une série lancée depuis l’accueil revient à l’accueil, jamais sur l
 test("le bouton de sortie de l’écran de jeu dit où il ramène", () => {
   assert.match(html, /id="game-menu"[^>]*aria-label="Arrêter la série et revenir à Ma table"/);
   assert.match(html, /<span class="game-menu-label">Ma table<\/span>/, "« Menu » ne disait pas où il menait — et il menait ailleurs");
-  assert.match(html, /function majSortieJeu\(\) \{[\s\S]*?game-menu-label"\)\.textContent = reglages \? "Réglages" : "Ma table"/);
+  assert.match(html, /const SORTIES = Object\.freeze\(\{\s*reglages: \{mot: "Réglages", ou: "aux réglages"\},\s*parcours: \{mot: "Mon parcours", ou: "à Mon parcours"\},\s*calculs: \{mot: "Mes calculs", ou: "à Mes calculs"\},\s*menu: \{mot: "Ma table", ou: "à Ma table"\}/, "les QUATRE origines ont leur mot : quitterSerie ramène là d’où la série est partie, le bouton doit le dire");
+  assert.match(html, /bouton\.querySelector\("\.game-menu-label"\)\.textContent = sortie\.mot;/);
+  assert.match(html, /bouton\.setAttribute\("aria-label", `Arrêter la série et revenir \$\{sortie\.ou\}`\);/);
+  assert.match(html, /function sortieDeSerie\(\) \{\s*return SORTIES\[state\.origin\] \|\| SORTIES\.menu;/, "une origine inconnue retombe sur Ma table, jamais sur un bouton vide");
   assert.match(html, /majSortieJeu\(\);\s*show\("play"\);/, "le nom est posé avant que l’écran s’affiche");
 });
 
@@ -61,7 +64,9 @@ test("« Je valide ma table » se joue en 1 min 30, sans choix de durée", () =>
   assert.doesNotMatch(html, /launch-durations/, "le groupe et son CSS partent avec elles");
   assert.doesNotMatch(html, /Ta table est validée en 1 min 30\. En 2 ou 3 min/, "la phrase qui expliquait le choix n’a plus d’objet");
   assert.match(html, /\$\("launch-hint"\)\.textContent = chrono \? "Le chrono part quand tu appuies sur « C’est parti ! »\." : ""/, "l’écran de départ garde son seul rôle : le chrono ne part pas sous le doigt");
-  assert.match(html, /\$\("launch-back"\)\.textContent = state\.origin === "reglages" \? "Modifier" : "← Ma table"/);
+  assert.match(html, /\$\("launch-back-label"\)\.textContent = versReglages \? "Modifier" : sortieDeSerie\(\)\.mot;/, "le retour de l’écran de lancement nomme lui aussi l’écran d’origine");
+  assert.match(html, /id="launch-back-fleche" class="back-icon"[^>]*><svg viewBox="0 0 24 24"/, "la vraie flèche du site, pas le caractère « ← » (règle de Gwenaël du 21/08)");
+  assert.doesNotMatch(html, /"← Ma table"/, "aucun chevron typographique en guise de flèche");
   assert.match(html, /action: \(\) => launchFromParcours\(PARCOURS\.configValidation\(table\), "menu"\)/, "l’étape 3 part sur la durée par défaut du moteur, 1 min 30");
 });
 
@@ -74,15 +79,43 @@ test("la même épreuve avec plus de temps devient un entraînement de l’étap
 
 // ------------------------------------------- 4. l’accueil dit ce qu’il fait
 
-test("l’accueil annonce le passage à la table suivante", () => {
-  assert.match(html, /<p id="acc-suite" class="acc-suite" role="status" hidden><\/p>/);
-  assert.match(html, /suite\.textContent = aAnnoncer \? `Table de \$\{annoncee\} acquise ✓ — on continue avec la table de \$\{table\}\.` : ""/);
-  assert.match(html, /const aAnnoncer = Boolean\(annoncee\) && !replie && annoncee !== table;/, "rien à dire si la table n’a pas changé (mélange dû) ni sur l’accueil replié des 9 tables");
-  assert.match(html, /const acquise = suivi\.evenements\.find\(evenement => evenement\.type === "validation" && evenement\.nouvelle\);\s*if \(acquise\) state\.tableAnnoncee = acquise\.table;/, "seule une table NOUVELLEMENT acquise s’annonce");
-  assert.match(html, /state\.tableAnnoncee = null;/, "l’annonce disparaît dès que l’élève relance quelque chose");
+test("l’écran de résultat annonce la table suivante — et l’accueil ne bouge plus", () => {
+  // 09/09 : l'annonce était d'abord sur l'accueil ; elle s'insérait au-dessus
+  // des étapes et les décalait sous les yeux de l'élève quand il y revenait.
+  // Elle se dit maintenant là où la table vient d'être acquise.
+  assert.doesNotMatch(html, /acc-suite/, "plus rien ne s’insère au-dessus des étapes");
+  assert.match(html, /function tableSuivanteApres\(acquise\) \{\s*if \(PARCOURS\.toutesAcquises\(parcours\)\) return null;/, "rien à annoncer quand les neuf sont acquises");
+  assert.match(html, /return suivante && suivante !== acquise \? suivante : null;/);
+  assert.match(html, /Bravo !\$\{suivante \? ` On continue avec la table de \$\{suivante\}\.` : ""\}/);
+});
+
+test("l’écran de résultat ne dit pas deux fois la même chose", () => {
+  // La fête annonçait « Table de 2 acquise ! Tu passes Bronze », et le bilan
+  // vert redisait « Table de 2 acquise ✓ (20/20…) » puis « Nouveau rang :
+  // Bronze ». Un écran, une information, une fois.
+  assert.match(html, /function feteDuResultat\(evenements\) \{/, "une seule lecture des événements, partagée par la fête et le bilan");
+  assert.match(html, /const \{etoile, melange, validation, rangMonte\} = feteDuResultat\(evenements\);/, "la fête ne recalcule plus la sienne dans son coin");
+  assert.match(html, /if \(evenement\.type === "rang" && fete\.rangAffiche\) return "";/, "le rang est déjà sur le badge de la fête");
+  assert.match(html, /if \(evenement === fete\.validation && evenement === fete\.principal\) \{[\s\S]*?return suivante \? `On continue avec la table de \$\{suivante\}\.` : "";/, "il ne reste que ce que la fête ne dit pas : la suite");
+  assert.match(html, /suivi\.evenements\.map\(evenement => messageApresFete\(evenement, fete\)\)/);
+});
+
+test("quand l’écran fête une nouvelle, il ne garde que l’essentiel", () => {
+  assert.match(html, /\$\("result"\)\.classList\.add\("a-fete"\);/);
+  assert.match(html, /\$\("result"\)\.classList\.remove\("a-fete"\);/, "et il la retire pour les séries qui ne se fêtent pas");
+  assert.match(html, /\.result\.a-fete > \.eyebrow,\s*\.result\.a-fete > \.hero-icon,\s*\.result\.a-fete #result-config,\s*\.result\.a-fete #result-detail \{ display: none; \}/, "« Série terminée », le ✓, le rappel des réglages et le temps mis n’apprennent rien de plus quand on vient d’acquérir une table");
+  assert.match(html, /\.result\.a-fete \.result-parcours \{ text-align: center; \}/);
+  assert.match(html, /<p id="result-config" class="result-config"><\/p>\s*<p id="result-detail"><\/p>/, "les lignes restent dans la page : elles servent aux séries sans fête (entraînement, validation ratée)");
 });
 
 // --------------------------------------------------- 5. Mes calculs
+
+test("une série sans faute ne déroule pas la liste de toutes les bonnes réponses", () => {
+  assert.match(html, /if \(completeReview && !wrongEntries\.length\) \{[\s\S]*?`Tes \$\{rightEntries\.length\} réponses sont justes\.`[\s\S]*?return;/, "une phrase au lieu de vingt pastilles");
+  assert.match(html, /: "Ta réponse est juste\."/, "et le singulier quand il n’y en a qu’une");
+  assert.match(html, /\? \(wrongEntries\.length \? "Bilan de tes réponses" : "Aucune erreur à corriger"\)/);
+  assert.match(html, /if \(completeReview && rightEntries\.length\) \{/, "avec des fautes, le bilan complet garde son sens : l’élève relit la série entière");
+});
 
 test("« Mes calculs » s’ouvre sur la grille, et le retour reste à l’écran", () => {
   assert.match(html, /show\("calculs"\);[\s\S]{0,300}\$\("calculs-grille"\)\.scrollIntoView\?\.\(\{block: "start", behavior: "auto"\}\)/);
