@@ -229,14 +229,17 @@ test("un affichage ordinaire (pas un retour de cache) ne touche à rien", () => 
 //
 // Sabotages attendus (chacun rend un test rouge) :
 //   f) compter les tables acquises dans la page au lieu d'appeler le moteur
-//   g) enlever le garde-fou « parcours vide » → une tuile jamais ouverte
-//      afficherait « 0 table acquise sur 9 »
+//   g) enlever le garde-fou « aucune table acquise » (`if (!fait) return null`)
+//      → une tuile jamais ouverte, ou jouée sans réussir encore une table,
+//      afficherait « 0 table acquise sur 9 » au-dessus d'une barre vide
 //   h) charger le moteur depuis mathsgo.re
 //   i) attendre (await) la jauge avant d'afficher la grille
 //   j) écrire le compte avec innerHTML
 //   k) mettre le code de l'élève dans l'adresse de api/parcours.php
 //   q) retirer l'écouteur « error » du chargement du moteur → la promesse ne
 //      se résout jamais et le test « moteur introuvable » expire
+//   t) inverser la largeur de la barre (`1 - part`) ou l'écrire en dur
+//      (`100%`) → la barre ne suit plus le compte
 
 const MOTEUR_SERVI = join(racine, "_serveur/public/prof/defi_tables_mon_parcours.js");
 const { createRequire } = await import("node:module");
@@ -298,6 +301,27 @@ test("une activité jamais ouverte n'a pas de jauge du tout", () => {
   const lire = lecteurDeJauge()["defi-tables"];
   assert.equal(lire(PARCOURS, PARCOURS.creerParcours()), null,
     "une barre vide n'apprend rien à l'élève et ressemble à un reproche");
+});
+
+// Le jour de la distribution des codes : l'élève ouvre l'appli, s'entraîne,
+// et n'acquiert pas encore de table (20 bonnes réponses en 1 min 30, 2 erreurs
+// au plus). Son parcours n'est plus vide — un score a bougé — mais sa tuile
+// n'a toujours rien à montrer : « 0 table acquise sur 9 » au-dessus d'une
+// barre vide est le symétrique exact de ce qu'on refuse à la carte de classe
+// du professeur. Trouvé par Claude Code le 09/09/2026, sur la vraie page.
+test("une activité ouverte et jouée sans table acquise n'a pas de jauge non plus", () => {
+  const lire = lecteurDeJauge()["defi-tables"];
+  const joue = parcoursFabrique();
+  joue.tables[PARCOURS.TABLES[0]].entraine[PARCOURS.ENTRAINEMENTS[0]] = 1;
+  joue.jours = ["2026-09-09"];
+  const relu = PARCOURS.normaliserParcours(JSON.parse(JSON.stringify(joue)));
+  assert.equal(PARCOURS.estVide(relu), false,
+    "le parcours a bien bougé : ce n'est pas le cas « jamais ouverte », le moteur le sait");
+  assert.equal(PARCOURS.etatAffichage(relu).acquises.length, 0, "et pourtant aucune table n'est acquise");
+  assert.equal(lire(PARCOURS, relu), null,
+    "« 0 table acquise sur 9 » avec une barre vide, le premier jour, est le reproche qu'on refuse");
+  assert.notEqual(lire(PARCOURS, parcoursFabrique({acquises: 1})), null,
+    "dès la première table, la jauge apparaît");
 });
 
 test("le moteur est servi d'ici et n'est chargé que s'il y a un parcours à lire", () => {
@@ -429,4 +453,27 @@ test("parcours reçu : la jauge est posée sur la tuile", async () => {
   await habiller;
   assert.equal(tuile.enfants.length, 1, "la jauge est ajoutée");
   assert.deepEqual(tuile.classes, ["a-jauge"], "et la tuile passe en plusieurs lignes");
+});
+
+// La barre est le seul élément graphique du lot, et jusqu'ici aucun test ne la
+// regardait : une barre toujours pleine, ou inversée, laissait 2 295 tests
+// verts (relevé par Claude Code le 09/09/2026). Elle se mesure ici sur la
+// tuile construite par la page : la partie remplie a une largeur en pour cent,
+// arrondie, égale à la part des tables acquises.
+async function largeurDeLaBarre(acquises) {
+  const parcours = JSON.parse(JSON.stringify(parcoursFabrique({acquises, melangeAJour: true})));
+  const {habiller, tuile} = jouerHabillage({
+    reponse: () => Promise.resolve({ok: true, json: () => Promise.resolve({ok: true, existe: true, parcours})})
+  });
+  await habiller;
+  const [bloc] = tuile.enfants;
+  const [barre] = bloc.enfants;
+  const [remplie] = barre.enfants;
+  return remplie.style.width;
+}
+
+test("la barre de la tuile est remplie à la mesure des tables acquises", async () => {
+  assert.equal(await largeurDeLaBarre(4), "44%", "4 tables sur 9 : 44,4 % arrondi à 44");
+  assert.equal(await largeurDeLaBarre(1), "11%", "1 table sur 9");
+  assert.equal(await largeurDeLaBarre(9), "100%", "9 sur 9 : la barre est pleine");
 });

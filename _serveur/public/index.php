@@ -105,8 +105,9 @@ $versionMoteur = is_file($moteur) ? substr(md5_file($moteur), 0, 10) : '0';
      memes mots et le meme badge que sur l'accueil de l'activite
      (outils/calcul_mental/defi_tables.html) : l'eleve doit retrouver son
      chiffre a l'identique d'un ecran a l'autre, sinon il croit avoir perdu
-     quelque chose. Une activite jamais ouverte n'a pas de jauge du tout : une
-     barre vide n'apprend rien et ressemble a un reproche. */
+     quelque chose. Une activite sans table acquise n'a pas de jauge du tout
+     (jamais ouverte, ou jouee sans encore reussir une table) : une barre vide
+     n'apprend rien et ressemble a un reproche. */
   /* La jauge occupe toute la largeur de la tuile, sous la ligne du nom : la
      barre est lisible, et « 4 tables acquises sur 9 » tient a cote du rang
      meme sur un telephone. Seule une tuile qui PORTE une jauge passe en
@@ -400,10 +401,16 @@ $versionMoteur = is_file($moteur) ? substr(md5_file($moteur), 0, 10) : '0';
   const JAUGES = {
     "defi-tables": (P, brut) => {
       const parcours = P.normaliserParcours(brut);
-      if (P.estVide(parcours)) return null;
       const etat = P.etatAffichage(parcours);
       const fait = etat.acquises.length;
       const total = P.TABLES.length;
+      // Pas de jauge tant qu'AUCUNE table n'est acquise : activité jamais
+      // ouverte, ou ouverte et jouée sans encore réussir une table — il faut
+      // 20 bonnes réponses en 1 min 30 avec 2 erreurs au plus, et le jour de
+      // la distribution des codes, c'est toute la classe. « 0 table acquise
+      // sur 9 » au-dessus d'une barre vide est le reproche qu'on refuse ; c'est
+      // le même seuil que la carte de classe du professeur (09/09/2026).
+      if (!fait) return null;
       return {
         fait, total,
         // Mot pour mot la phrase de l'accueil de Défi tables.

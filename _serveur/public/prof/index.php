@@ -1000,16 +1000,28 @@ $versionMoteur = is_file($moteur) ? substr(md5_file($moteur), 0, 10) : '0';
     dessinerObjectif();
     dessinerFragiles();
 
-    const sans = eleves.filter(e => !e.maj_le).length;
-    $("resume-classe").textContent = eleves.length
-      ? `${eleves.length} élève${eleves.length > 1 ? "s" : ""} · ${sans} n’${sans > 1 ? "ont" : "a"} encore rien fait`
-      : "Aucun élève. Commence par en ajouter.";
+    $("resume-classe").textContent = resumeDeLaClasse(eleves);
     if (!PARCOURS) {
       messager("message-classe",
         "La progression ne peut pas être détaillée : le moteur de Défi tables (prof/defi_tables_mon_parcours.js) n’a pas pu être chargé — vérifie qu’il est bien déposé sur le serveur.",
         "erreur");
     }
     dessinerPapier();
+  }
+
+  // La ligne au-dessus du tableau : combien d'élèves, et combien n'ont encore
+  // rien fait. Quand tout le monde a commencé, elle le DIT — « 6 élèves ·
+  // 0 n'a encore rien fait » (lot 7) était faux de forme exactement le jour
+  // où la carte de classe se tait (toute la classe a ouvert l'appli, personne
+  // n'a encore acquis de table), alors que cette ligne est ce qui reste pour
+  // le dire. Trouvé par Claude Code le 09/09/2026.
+  function resumeDeLaClasse(liste) {
+    if (!liste.length) return "Aucun élève. Commence par en ajouter.";
+    const sans = liste.filter(e => !e.maj_le).length;
+    const reste = sans === 0
+      ? "tout le monde a commencé"
+      : `${sans} n’${sans > 1 ? "ont" : "a"} encore rien fait`;
+    return `${liste.length} élève${liste.length > 1 ? "s" : ""} · ${reste}`;
   }
 
   // L'objectif COMMUN de la classe, calculé sur les progressions déjà chargées :

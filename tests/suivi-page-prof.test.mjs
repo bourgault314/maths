@@ -487,6 +487,11 @@ test("dans l'espace élève, le bouton s'appelle « Se déconnecter » et ne lai
 //   n) demander les totaux au serveur au lieu de les compter ici
 //   o) retirer « objectif » de BLOCS_A_CACHER → les chiffres d'une classe
 //      restent affichés sous la suivante
+//   r) montrer la carte alors qu'aucune table n'est acquise (seuil sur les
+//      parcours au lieu de `objectif.fait`)
+//   u) inverser la largeur de la barre de classe (`1 - part`) ou l'écrire en
+//      dur (`100%`) → la barre ne suit plus le compte
+//   v) remettre « 0 n'a encore rien fait » quand tout le monde a commencé
 
 const MOTEUR_PROF = join(racine, "_serveur/public/prof/defi_tables_mon_parcours.js");
 const { createRequire: requerir } = await import("node:module");
@@ -656,6 +661,58 @@ test("une seule table acquise dans toute la classe suffit à ouvrir la jauge", (
   assert.equal(zones.get("objectif").hidden, false, "dès qu'un chiffre bouge, la classe a un objectif");
   assert.equal(zones.get("objectif-compte").textContent, "Ensemble : 1 table acquise sur 18",
     "le dénominateur compte TOUS les élèves, y compris ceux qui n'ont pas commencé");
+});
+
+// La barre est le seul élément graphique de la carte, et aucun test ne la
+// regardait : inversée ou toujours pleine, 2 295 tests restaient verts (relevé
+// par Claude Code le 09/09/2026). Sa largeur est la part des tables acquises,
+// en pour cent arrondi.
+test("la barre de classe est remplie à la mesure des tables acquises", () => {
+  const largeur = eleves => jaugeDeClasse(eleves).zones.get("objectif-barre").style.width;
+  assert.equal(largeur([
+    eleveDeTest("Léa", "ABCD01", 9, 2),
+    eleveDeTest("Noé", "ABCD02", 4, 1),
+    eleveDeTest("Amina", "ABCD03", 0, 0)
+  ]), "48%", "13 tables sur 27 : 48,1 % arrondi à 48");
+  assert.equal(largeur([
+    eleveDeTest("Léa", "ABCD01", 1, 1),
+    eleveDeTest("Noé", "ABCD02", 0, 0)
+  ]), "6%", "1 table sur 18");
+  assert.equal(largeur([eleveDeTest("Léa", "ABCD01", 9, 1)]), "100%", "9 sur 9 : pleine");
+});
+
+// La ligne au-dessus du tableau, extraite telle qu'elle est écrite dans la
+// page. C'est elle qui reste quand la carte de classe se tait : elle doit
+// dire juste, surtout ce jour-là.
+function resumeDeLaClasse() {
+  const debut = page.indexOf("  function resumeDeLaClasse(liste) {");
+  assert.ok(debut > 0, "la page doit avoir sa ligne de résumé de classe");
+  const fin = page.indexOf("\n  }", debut) + "\n  }".length;
+  return new Function(page.slice(debut, fin) + "\n  return resumeDeLaClasse;")();
+}
+
+test("le résumé de classe compte ceux qui n'ont encore rien fait", () => {
+  const resume = resumeDeLaClasse();
+  const eleve = maj_le => ({maj_le});
+  assert.equal(resume([]), "Aucun élève. Commence par en ajouter.");
+  assert.equal(resume([eleve(null), eleve(null), eleve(null)]), "3 élèves · 3 n’ont encore rien fait",
+    "les codes sont distribués, personne n'a joué");
+  assert.equal(resume([eleve("2026-09-09"), eleve(null), eleve(null)]), "3 élèves · 2 n’ont encore rien fait");
+  assert.equal(resume([eleve("2026-09-09"), eleve("2026-09-09"), eleve(null)]), "3 élèves · 1 n’a encore rien fait",
+    "au singulier");
+  assert.equal(resume([eleve(null)]), "1 élève · 1 n’a encore rien fait");
+});
+
+// Le jour de la distribution des codes, en fin d'heure : tout le monde a ouvert
+// l'appli, personne n'a encore acquis de table. La carte de classe se tait, et
+// c'est cette ligne qui doit dire que ça a tourné — pas « 0 n'a encore rien
+// fait » (lot 7), une phrase juste par le nombre et fausse par la forme.
+test("quand tout le monde a commencé, le résumé le dit au lieu de compter zéro", () => {
+  const resume = resumeDeLaClasse();
+  const commence = ["2026-09-09", "2026-09-09", "2026-09-08"].map(maj_le => ({maj_le}));
+  const texte = resume(commence);
+  assert.equal(texte, "3 élèves · tout le monde a commencé");
+  assert.ok(!/\b0 n/.test(texte), "« 0 n'a encore rien fait » n'est pas une phrase");
 });
 
 test("la jauge de classe ne demande rien de plus au serveur", () => {
