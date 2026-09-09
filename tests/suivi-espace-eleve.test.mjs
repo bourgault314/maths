@@ -404,7 +404,12 @@ test("réponse illisible : pas de jauge, pas d'erreur affichée", async () => {
 // Le moteur absent, c'est le fichier oublié pendant un dépôt FTP, ou un cache
 // qui rend une page vide. Le parcours de l'élève arrive, mais plus rien ne sait
 // le lire : sa tuile doit rester exactement ce qu'elle était.
-test("moteur introuvable : la grille reste entière, sans jauge et sans message", async () => {
+// Le délai est porté PAR LE TEST, pas par la ligne de commande : « node --test »
+// n'a aucune expiration par défaut, et sans cela le jour où le chargement du
+// moteur cesse de se résoudre, la CI attendrait indéfiniment au lieu d'afficher
+// un rouge. Un test qui pend n'est pas un test qui échoue. (Constaté en
+// rejouant le sabotage q le 09/09/2026.)
+test("moteur introuvable : la grille reste entière, sans jauge et sans message", {timeout: 5000}, async () => {
   const parcours = JSON.parse(JSON.stringify(parcoursFabrique({acquises: 4})));
   const {habiller, tuile} = jouerHabillage({
     reponse: () => Promise.resolve({ok: true, json: () => Promise.resolve({ok: true, existe: true, parcours})}),

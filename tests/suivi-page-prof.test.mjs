@@ -620,9 +620,9 @@ test("une classe sans élève ne montre pas de jauge vide", () => {
 });
 
 // Le vrai cas de la rentrée : les codes sont distribués, personne n'a encore
-// joué. « Ensemble : 0 tables acquises sur 54 » redit, en moins clair, la
-// phrase déjà écrite au-dessus du tableau (« 12 élèves · 12 n'ont encore rien
-// fait ») — et c'est exactement ce qu'on refuse à l'élève.
+// joué. « Ensemble : 0 table acquise sur 54 » redit, en moins clair, la phrase
+// déjà écrite au-dessus du tableau (« 12 élèves · 12 n'ont encore rien fait »)
+// — et c'est exactement ce qu'on refuse à l'élève.
 test("une classe où personne n'a commencé ne montre pas de jauge à zéro", () => {
   const attendent = ["Léa", "Noé", "Amina"].map((prenom, i) => ({
     prenom, code: `ABCD0${i + 1}`,
@@ -633,7 +633,22 @@ test("une classe où personne n'a commencé ne montre pas de jauge à zéro", ()
     "une barre à zéro n'est pas un objectif de classe, c'est un constat déjà écrit ailleurs");
 });
 
-test("un seul élève qui a commencé suffit à ouvrir la jauge", () => {
+// Le jour de la distribution des codes : toute la classe OUVRE l'appli, joue
+// un peu, et personne n'acquiert de table dans l'heure — il en faut 20 bonnes
+// réponses en 1 min 30. Ces élèves ont donc un parcours enregistré. Compter
+// les parcours ramenait la barre à zéro exactement le jour qu'on voulait
+// éviter : le seuil porte sur les TABLES acquises.
+test("des élèves qui ont ouvert l'appli sans rien acquérir ne suffisent pas", () => {
+  const ouvert = ["Léa", "Noé", "Amina"].map((prenom, i) => ({
+    prenom, code: `ABCD0${i + 1}`,
+    lu: {acquises: [], semaine: 1, parcours: {}, melange: "—"}
+  }));
+  const {zones} = jaugeDeClasse(ouvert);
+  assert.equal(zones.get("objectif").hidden, true,
+    "ils ont bien travaillé, mais la jauge n'a toujours rien à montrer : « 0 table acquise sur 27 » est la barre vide qu'on refuse");
+});
+
+test("une seule table acquise dans toute la classe suffit à ouvrir la jauge", () => {
   const {zones} = jaugeDeClasse([
     eleveDeTest("Léa", "ABCD01", 1, 1),
     {prenom: "Noé", code: "ABCD02", lu: {acquises: [], semaine: 0, parcours: null, melange: "—"}}

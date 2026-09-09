@@ -1022,9 +1022,6 @@ $versionMoteur = is_file($moteur) ? substr(md5_file($moteur), 0, 10) : '0';
     const total = eleves.length * PARCOURS.TABLES.length;
     return {
       eleves: eleves.length,
-      // Combien ont VRAIMENT commencé : c'est ce nombre, et pas celui des
-      // élèves inscrits, qui décide si la carte a quelque chose à dire.
-      commences: lus.length,
       fait: lus.reduce((somme, lu) => somme + lu.acquises.length, 0),
       total,
       semaine: lus.filter(lu => lu.semaine > 0).length
@@ -1034,14 +1031,22 @@ $versionMoteur = is_file($moteur) ? substr(md5_file($moteur), 0, 10) : '0';
   function dessinerObjectif() {
     const bloc = $("objectif");
     const objectif = objectifDeLaClasse();
-    // Tant que personne n'a commencé, la carte ne s'affiche pas. « Ensemble :
-    // 0 tables acquises sur 54 » n'est pas un objectif : c'est la phrase
-    // « 12 élèves · 12 n'ont encore rien fait », déjà écrite juste au-dessus,
-    // redite sous une forme moins claire — et c'est exactement ce qu'on refuse
-    // à l'élève (une barre vide ressemble à un reproche). Constaté sur une
-    // classe neuve le 09/09/2026 ; la carte « les calculs qui coincent » se
-    // tait déjà de la même façon.
-    if (!objectif || !objectif.total || !objectif.commences) { bloc.hidden = true; return; }
+    // La carte ne s'affiche pas tant qu'AUCUNE TABLE n'est acquise dans la
+    // classe. « Ensemble : 0 table acquise sur 54 » n'est pas un objectif :
+    // c'est la phrase « 12 élèves · 12 n'ont encore rien fait », déjà écrite
+    // juste au-dessus, redite sous une forme moins claire — et c'est exactement
+    // ce qu'on refuse à l'élève (une barre vide ressemble à un reproche). La
+    // carte « les calculs qui coincent » se tait déjà de la même façon.
+    //
+    // Le seuil porte sur les TABLES, pas sur les parcours enregistrés (essayé
+    // le 09/09/2026, corrigé le jour même) : le jour de la distribution des
+    // codes, toute la classe ouvre l'appli sans acquérir une table dans
+    // l'heure — acquérir demande 20 questions en 1 min 30 avec 2 erreurs au
+    // plus. Compter les parcours ramenait donc la barre à zéro exactement le
+    // jour qu'on voulait éviter. Ce que la carte perd alors — « N élèves ont
+    // travaillé cette semaine » — est déjà dit au-dessus du tableau, et de
+    // façon plus utile (« 12 élèves · 2 n'ont encore rien fait »).
+    if (!objectif || !objectif.total || !objectif.fait) { bloc.hidden = true; return; }
     const part = Math.max(0, Math.min(1, objectif.fait / objectif.total));
     $("objectif-barre").style.width = `${Math.round(part * 100)}%`;
     // Le singulier, comme sur la tuile de l'élève et sur l'accueil de l'appli :
