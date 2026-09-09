@@ -471,3 +471,158 @@ test("dans l'espace élève, le bouton s'appelle « Se déconnecter » et ne lai
     assert.ok(!/https?:\/\//.test(balise), `image ou icône chargée d'ailleurs : ${balise}`);
   });
 });
+
+// -------------------------------------------------------------------------
+// Lot « jauges » (08/09/2026). Deux choses arrivent dans « Ma classe » :
+//   - la colonne Expert montre 👑 pour une Légende (elle affichait cinq
+//     étoiles : depuis le lot 3 de Défi tables, la couronne est la MARCHE
+//     D'APRÈS les quatre étoiles, pas une cinquième), et la pastille du rang
+//     à côté ;
+//   - une jauge de classe, un objectif commun, calculée sur les progressions
+//     DÉJÀ chargées : aucun appel de plus, et surtout aucun élève désigné.
+//
+// Sabotages attendus (chacun rend un test rouge) :
+//   l) remettre "★".repeat(etat.expert.niveau) → une Légende reprend 5 étoiles
+//   m) faire dire un prénom ou un code à la jauge de classe
+//   n) demander les totaux au serveur au lieu de les compter ici
+//   o) retirer « objectif » de BLOCS_A_CACHER → les chiffres d'une classe
+//      restent affichés sous la suivante
+
+const MOTEUR_PROF = join(racine, "_serveur/public/prof/defi_tables_mon_parcours.js");
+const { createRequire: requerir } = await import("node:module");
+const MON_PARCOURS = requerir(import.meta.url)(MOTEUR_PROF);
+
+// Les deux fabriques de la page, extraites telles qu'elles y sont écrites.
+function fabriquesDuTableau() {
+  const debut = page.indexOf("  function badgeRang(rang) {");
+  assert.ok(debut > 0, "la page doit avoir son badge de rang");
+  const fin = page.indexOf("\n  }", page.indexOf("  function caseExpert(lu) {", debut)) + "\n  }".length;
+  const source = page.slice(debut, fin) + "\n  return {badgeRang, caseExpert};";
+  const noeud = () => {
+    const n = {style: {}, textContent: "", className: "", title: "", enfants: [],
+      append(...e) { n.enfants.push(...e); }, setAttribute() {}};
+    return n;
+  };
+  const document = {createElement: noeud, createTextNode: t => ({texte: t})};
+  return new Function("document", source)(document);
+}
+
+// Ce que la case Expert MONTRE, à plat.
+function texteDeLaCase(case_) {
+  const morceaux = [];
+  const visiter = noeud => {
+    if (!noeud) return;
+    if (noeud.texte) morceaux.push(noeud.texte);
+    if (noeud.textContent) morceaux.push(noeud.textContent);
+    (noeud.enfants || []).forEach(visiter);
+  };
+  visiter(case_);
+  return morceaux.join(" ");
+}
+
+test("une Légende des tables affiche la couronne, pas cinq étoiles", () => {
+  const {caseExpert} = fabriquesDuTableau();
+  const legende = caseExpert({etoiles: 5, couronne: "2026-09-08", rang: MON_PARCOURS.rang(6)});
+  assert.match(texteDeLaCase(legende), /\u{1F451}/u,
+    "la couronne est la marche d'après les quatre étoiles, pas une cinquième étoile");
+  assert.doesNotMatch(texteDeLaCase(legende), /★★★★★/, "cinq étoiles n'existent pas dans l'escalier");
+});
+
+test("les marches déjà gagnées restent des étoiles, et zéro reste un tiret", () => {
+  const {caseExpert} = fabriquesDuTableau();
+  assert.match(texteDeLaCase(caseExpert({etoiles: 4, couronne: null, rang: MON_PARCOURS.rang(5)})), /★★★★/);
+  assert.match(texteDeLaCase(caseExpert({etoiles: 0, couronne: null, rang: MON_PARCOURS.rang(0)})), /—/,
+    "un élève sans étoile ne voit rien s'afficher de faux");
+});
+
+test("le rang s'affiche à côté de l'escalier, et la couronne ne s'y répète pas", () => {
+  const {caseExpert} = fabriquesDuTableau();
+  const legende = caseExpert({etoiles: 5, couronne: "2026-09-08", rang: MON_PARCOURS.rang(6)});
+  const texte = texteDeLaCase(legende);
+  assert.ok(texte.includes("Légende des tables"), "le nom du rang est là");
+  assert.equal((texte.match(/\u{1F451}/gu) || []).length, 1,
+    "une seule couronne sur la ligne : celle de l'escalier (vu à la capture du 08/09/2026)");
+  const or = caseExpert({etoiles: 0, couronne: null, rang: MON_PARCOURS.rang(3)});
+  assert.ok(texteDeLaCase(or).includes("Or"), "le rang s'affiche même sans étoile : c'est lui qui bouge en septembre");
+});
+
+test("« lireProgression » demande au moteur la couronne, le rang et les jours", () => {
+  const debut = page.indexOf("  function lireProgression(brut) {");
+  const bloc = page.slice(debut, page.indexOf("\n  }", debut));
+  ["couronne: etat.expert.couronne", "rang: etat.rang", "etat.jours ? etat.jours.semaine : 0"]
+    .forEach(attendu => assert.ok(bloc.includes(attendu),
+      `la page doit lire « ${attendu} » dans l'état rendu par le moteur, sans le recalculer`));
+  assert.match(bloc, /const vide = \{[^}]*couronne: null[^}]*rang: null/s,
+    "un parcours illisible doit donner un état vide complet, sinon la case plante");
+});
+
+// La jauge de classe. Le point sensible n'est pas le calcul, c'est ce qu'elle
+// dit : jamais un nom, jamais un chiffre par élève, jamais un classement.
+function jaugeDeClasse(eleves) {
+  const debut = page.indexOf("  function objectifDeLaClasse() {");
+  assert.ok(debut > 0, "la page doit calculer son objectif de classe");
+  const fin = page.indexOf("\n  }", page.indexOf("  function dessinerObjectif() {", debut)) + "\n  }".length;
+  const source = page.slice(debut, fin) + "\n  return {objectifDeLaClasse, dessinerObjectif};";
+  const zones = new Map();
+  const noeud = id => {
+    if (!zones.has(id)) zones.set(id, {id, style: {}, textContent: "", hidden: true, enfants: [],
+      append(...e) { zones.get(id).enfants.push(...e); }, appendChild(e) { zones.get(id).enfants.push(e); }});
+    return zones.get(id);
+  };
+  const document = {createElement: () => {
+    const n = {style: {}, textContent: "", enfants: [], append(...e) { n.enfants.push(...e); }};
+    return n;
+  }, createTextNode: t => ({texte: t})};
+  const fabriques = new Function("$", "document", "eleves", "PARCOURS", "Math", source)(
+    noeud, document, eleves, MON_PARCOURS, Math);
+  fabriques.dessinerObjectif();
+  return {zones, ...fabriques};
+}
+
+function eleveDeTest(prenom, code, acquises, semaine) {
+  return {
+    prenom, code,
+    lu: {acquises: MON_PARCOURS.TABLES.slice(0, acquises), semaine, parcours: {}, melange: "à jour"}
+  };
+}
+
+test("la jauge de classe additionne, et ne nomme personne", () => {
+  const {zones} = jaugeDeClasse([
+    eleveDeTest("Léa", "ABCD01", 9, 2),
+    eleveDeTest("Noé", "ABCD02", 4, 1),
+    eleveDeTest("Amina", "ABCD03", 0, 0)
+  ]);
+  const compte = zones.get("objectif-compte").textContent;
+  assert.equal(compte, "Ensemble : 13 tables acquises sur 27", "9 + 4 + 0 sur 3 élèves × 9 tables");
+  const tout = [compte, JSON.stringify([...zones.values()].map(z => [z.textContent, z.enfants]))].join(" ");
+  ["Léa", "Noé", "Amina", "ABCD01", "ABCD02", "ABCD03"].forEach(interdit =>
+    assert.ok(!tout.includes(interdit),
+      `« ${interdit} » n'a rien à faire dans un objectif de classe : c'est le seul endroit de la page où personne n'est désigné`));
+  assert.equal(zones.get("objectif").hidden, false, "la carte s'affiche");
+});
+
+test("la ligne de la semaine compte des élèves, jamais lesquels", () => {
+  const {zones} = jaugeDeClasse([
+    eleveDeTest("Léa", "ABCD01", 9, 2),
+    eleveDeTest("Noé", "ABCD02", 4, 1),
+    eleveDeTest("Amina", "ABCD03", 0, 0)
+  ]);
+  const lignes = zones.get("objectif-lignes").enfants;
+  assert.equal(lignes.length, 1, "une seule petite ligne : le signe de vie de la semaine");
+  const texte = lignes[0].enfants.map(e => e.texte || e.textContent).join("");
+  assert.equal(texte, "2 élèves ont travaillé cette semaine");
+});
+
+test("une classe sans élève ne montre pas de jauge vide", () => {
+  const {zones} = jaugeDeClasse([]);
+  assert.equal(zones.get("objectif").hidden, true, "« 0 sur 0 » n'est pas un objectif");
+});
+
+test("la jauge de classe ne demande rien de plus au serveur", () => {
+  const debut = page.indexOf("  function objectifDeLaClasse() {");
+  const bloc = page.slice(debut, page.indexOf("  // Ce qu'il faut revoir au tableau", debut));
+  assert.doesNotMatch(bloc, /\bapi\(|fetch\(/,
+    "elle se calcule sur les progressions déjà chargées : un point d'API de plus serait une surface de plus à protéger");
+  assert.ok(BLOCS_A_CACHER.includes("objectif"),
+    "la carte doit disparaître à la déconnexion, comme les autres blocs de la classe ouverte");
+});

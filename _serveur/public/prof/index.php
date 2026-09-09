@@ -117,6 +117,44 @@ $versionMoteur = is_file($moteur) ? substr(md5_file($moteur), 0, 10) : '0';
   .retour-icone { display: inline-flex; align-items: center; gap: 6px; }
   .retour-icone svg { display: block; }
   .note-tableau { margin: 10px 0 0; font-size: .88rem; }
+  /* L'objectif de la classe : UN nombre, celui de tout le monde. Jamais un
+     classement, jamais un prenom : c'est le seul tableau de la page ou aucun
+     eleve n'est designe. Calcule ici, a partir des progressions deja chargees
+     — aucune donnee de plus n'est demandee au serveur. */
+  .objectif { margin-top: 14px; border-left: 5px solid var(--teal); }
+  .objectif strong { display: block; color: var(--blue-dark); font-family: Georgia, serif; font-size: 1.05rem; }
+  .objectif .jauge-barre { height: 10px; margin-top: 10px; border-radius: 999px;
+                           background: #e6ecf3; overflow: hidden; }
+  .objectif .jauge-barre i { display: block; height: 100%; border-radius: 999px;
+                             background: linear-gradient(90deg, #08aaa5, #0b67b2); }
+  .objectif .compte { display: block; margin-top: 8px; color: var(--ink);
+                      font-size: 1.02rem; font-weight: 800; }
+  .objectif .lignes { list-style: none; display: flex; flex-wrap: wrap; gap: 8px 18px;
+                      margin: 10px 0 0; padding: 0; color: var(--muted); font-size: .9rem; }
+  .objectif .lignes b { color: var(--ink); }
+  /* Le rang dans le tableau : la meme pastille que sur l'accueil de l'eleve. */
+  .rang { display: inline-flex; align-items: center; gap: 5px; padding: 2px 9px 2px 6px;
+          border-radius: 999px; font-size: .74rem; font-weight: 950; border: 1px solid transparent;
+          white-space: nowrap; }
+  .rang:empty { display: none; }
+  .rang i { width: 11px; height: 11px; border-radius: 50%; display: inline-block;
+            box-shadow: inset 0 -2px 0 rgba(0, 0, 0, .18), inset 0 1px 0 rgba(255, 255, 255, .7); }
+  .rang.bronze { background: #f7e9dc; color: #7a4416; border-color: #e6c9ad; }
+  .rang.bronze i { background: linear-gradient(135deg, #e0a06a, #b8722f); }
+  .rang.argent { background: #eef1f4; color: #465563; border-color: #d3dbe3; }
+  .rang.argent i { background: linear-gradient(135deg, #e6ebf0, #98a5b3); }
+  .rang.or { background: #fff4cc; color: #7a5a00; border-color: #f0dc8c; }
+  .rang.or i { background: linear-gradient(135deg, #ffe17a, #d9a300); }
+  .rang.platine { background: #e8f4f8; color: #2c5d70; border-color: #bfdde8; }
+  .rang.platine i { background: linear-gradient(135deg, #e6f6fa, #7db7c9); }
+  .rang.diamant { background: #e9f0ff; color: #2a4c93; border-color: #c2d3f7; }
+  .rang.diamant i { background: linear-gradient(135deg, #b9d3ff, #4f7fd6); border-radius: 3px;
+                    transform: rotate(45deg) scale(.85); }
+  .rang.legende { background: linear-gradient(135deg, #fff1c2, #ffe08a); color: #6b4a00;
+                  border-color: #e6c25a; }
+  .rang.legende i { background: linear-gradient(135deg, #ffe9a8, #d9a300); }
+  .expert-case { display: inline-flex; align-items: center; gap: 7px; }
+  .expert-case .etoiles { color: #c9860a; letter-spacing: .08em; font-weight: 800; }
   .fragiles { margin-top: 14px; border-left: 5px solid var(--orange); }
   .fragiles strong { display: block; color: var(--blue-dark); font-family: Georgia, serif; font-size: 1.05rem; }
   .fragiles p { margin: 4px 0 10px; color: var(--muted); font-size: .88rem; }
@@ -304,6 +342,15 @@ $versionMoteur = is_file($moteur) ? substr(md5_file($moteur), 0, 10) : '0';
         <option value="date">Dernière activité</option>
       </select>
       <button type="button" class="danger espace" id="supprimer-classe">Supprimer la classe</button>
+    </div>
+
+    <!-- L'objectif commun de la classe. Aucun nom, aucun chiffre par élève :
+         c'est ce qu'on peut montrer au tableau sans désigner personne. -->
+    <div class="carte objectif" id="objectif" hidden>
+      <strong>Notre classe, ensemble</strong>
+      <div class="jauge-barre"><i id="objectif-barre"></i></div>
+      <span class="compte" id="objectif-compte"></span>
+      <ul class="lignes" id="objectif-lignes"></ul>
     </div>
 
     <!-- Vue d'ensemble : ce qu'il faut revoir au tableau, pas élève par élève.
@@ -631,13 +678,14 @@ $versionMoteur = is_file($moteur) ? substr(md5_file($moteur), 0, 10) : '0';
   // Ctrl+U, Ctrl+S, l'inspecteur ou une extension les lisaient encore.
   const ZONES_TEXTE = ["corps", "fiche-corps", "fiche-titre", "bandelettes-liste",
     "bandelettes-titre", "liste-classes", "liste-profs", "liste-partages", "fragiles-liste",
-    "fragiles-sous", "titre-classe", "resume-classe", "qui", "compte-qui", "boite-texte",
+    "fragiles-sous", "titre-classe", "resume-classe", "objectif-compte", "objectif-lignes",
+    "qui", "compte-qui", "boite-texte",
     "boite-champs", "secret-texte", "secret-valeur", "echues-texte", "supprimer-echues"];
   const ZONES_MESSAGE = ["erreur-connexion", "message-classes", "message-classe",
     "message-profs", "message-partage", "message-compte", "bandeau-droit", "bandeau-annee"];
   const CHAMPS_A_VIDER = ["identifiant", "motdepasse", "libelle",
     "mdp-ancien", "mdp-nouveau", "mdp-confirme"];
-  const BLOCS_A_CACHER = ["fiche", "bandelettes", "fragiles", "bloc-partage", "bloc-profs",
+  const BLOCS_A_CACHER = ["fiche", "bandelettes", "objectif", "fragiles", "bloc-partage", "bloc-profs",
     "bandeau-echues"];
 
   function viderZones() {
@@ -735,7 +783,8 @@ $versionMoteur = is_file($moteur) ? substr(md5_file($moteur), 0, 10) : '0';
   // ---------------------------------------------------------------- lecture d'une progression
 
   function lireProgression(brut) {
-    const vide = {acquises: [], melange: "—", etoiles: 0, travailler: null, parcours: null, lisible: Boolean(PARCOURS)};
+    const vide = {acquises: [], melange: "—", etoiles: 0, couronne: null, rang: null,
+                  semaine: 0, travailler: null, parcours: null, lisible: Boolean(PARCOURS)};
     if (!PARCOURS || !brut) return vide;
     try {
       const parcours = PARCOURS.normaliserParcours(brut);
@@ -747,6 +796,14 @@ $versionMoteur = is_file($moteur) ? substr(md5_file($moteur), 0, 10) : '0';
         acquises: etat.acquises,
         melange,
         etoiles: etat.expert.niveau,
+        // Depuis le lot 3 de Défi tables (08/09/2026) : la couronne (👑) est la
+        // marche du dessus, pas une cinquième étoile — la colonne montrait
+        // « ★★★★★ » à une Légende. Le rang, lui, ne redescend jamais.
+        couronne: etat.expert.couronne,
+        rang: etat.rang,
+        // « N jours cette semaine », compté par le moteur (semaine du lundi,
+        // heure de La Réunion) : le seul chiffre de temps de la page.
+        semaine: etat.jours ? etat.jours.semaine : 0,
         travailler: PARCOURS.calculsATravailler ? PARCOURS.calculsATravailler(parcours) : null,
         parcours,
         lisible: true
@@ -792,6 +849,43 @@ $versionMoteur = is_file($moteur) ? substr(md5_file($moteur), 0, 10) : '0';
       if (x > y) return 1 * tri.sens;
       return (a.code || "").localeCompare(b.code || "");
     });
+  }
+
+  // Le badge du rang, même dessin que sur l'accueil de l'élève (un point de
+  // métal et le nom ; la couronne pour la Légende).
+  // Le badge du rang, même dessin que sur l'accueil de l'élève (un point de
+  // métal et le nom). La couronne de la Légende, elle, reste dans la colonne
+  // Expert : sur l'accueil de l'élève le badge est seul, ici il voisine avec
+  // l'escalier — et « 👑 👑 Légende des tables » sur la même ligne, c'est une
+  // couronne de trop (vu à la capture).
+  function badgeRang(rang) {
+    const badge = document.createElement("span");
+    if (!rang || !rang.niveau) return badge;
+    badge.className = `rang ${rang.cle}`;
+    const point = document.createElement("i");
+    point.setAttribute("aria-hidden", "true");
+    badge.append(point, document.createTextNode(rang.nom));
+    return badge;
+  }
+
+  // La case « Expert » : l'escalier tel que l'élève le voit. Une couronne n'est
+  // pas cinq étoiles — c'est la marche d'après, et elle s'écrit 👑.
+  function caseExpert(lu) {
+    const bloc = document.createElement("span");
+    bloc.className = "expert-case";
+    const marches = document.createElement("span");
+    marches.className = "etoiles";
+    if (lu.couronne) {
+      marches.textContent = "\u{1F451}";
+      marches.title = "Légende des tables";
+    } else if (lu.etoiles) {
+      marches.textContent = "\u2605".repeat(lu.etoiles);
+    } else {
+      marches.textContent = "—";
+      marches.style.color = "var(--muted)";
+    }
+    bloc.append(marches, badgeRang(lu.rang));
+    return bloc;
   }
 
   function dessinerTableau() {
@@ -840,9 +934,7 @@ $versionMoteur = is_file($moteur) ? substr(md5_file($moteur), 0, 10) : '0';
         : `<span class="pastille ${m === "à refaire" ? "p-orange" : "p-vert"}">${m}</span>`;
 
       const cExpert = document.createElement("td");
-      cExpert.textContent = eleve.lu.etoiles ? "★".repeat(eleve.lu.etoiles) : "—";
-      cExpert.style.color = eleve.lu.etoiles ? "#c9860a" : "var(--muted)";
-      cExpert.style.letterSpacing = ".08em";
+      cExpert.append(caseExpert(eleve.lu));
 
       const cDate = document.createElement("td");
       const quand = dateLisible(eleve.maj_le);
@@ -907,6 +999,7 @@ $versionMoteur = is_file($moteur) ? substr(md5_file($moteur), 0, 10) : '0';
       corps.appendChild(ligne);
     });
 
+    dessinerObjectif();
     dessinerFragiles();
 
     const sans = eleves.filter(e => !e.maj_le).length;
@@ -919,6 +1012,46 @@ $versionMoteur = is_file($moteur) ? substr(md5_file($moteur), 0, 10) : '0';
         "erreur");
     }
     dessinerPapier();
+  }
+
+  // L'objectif COMMUN de la classe, calculé sur les progressions déjà chargées :
+  // aucun appel de plus, et surtout aucun élève désigné. Deux nombres, tous
+  // deux additionnés : les tables acquises de tout le monde, et combien ont
+  // travaillé cette semaine.
+  function objectifDeLaClasse() {
+    const lus = eleves.map(eleve => eleve.lu).filter(lu => lu.parcours);
+    if (!PARCOURS || !eleves.length) return null;
+    const total = eleves.length * PARCOURS.TABLES.length;
+    return {
+      eleves: eleves.length,
+      fait: lus.reduce((somme, lu) => somme + lu.acquises.length, 0),
+      total,
+      semaine: lus.filter(lu => lu.semaine > 0).length
+    };
+  }
+
+  function dessinerObjectif() {
+    const bloc = $("objectif");
+    const objectif = objectifDeLaClasse();
+    if (!objectif || !objectif.total) { bloc.hidden = true; return; }
+    const part = Math.max(0, Math.min(1, objectif.fait / objectif.total));
+    $("objectif-barre").style.width = `${Math.round(part * 100)}%`;
+    $("objectif-compte").textContent =
+      `Ensemble : ${objectif.fait} tables acquises sur ${objectif.total}`;
+    // Une seule petite ligne, et c'est le SIGNE DE VIE de la semaine : est-ce
+    // que ça tourne, ou pas. « N élèves ont réussi leur mélange » a été écarté
+    // le 08/09/2026 : ce nombre DESCEND quand un élève acquiert une table (son
+    // mélange repasse « à refaire »), et un objectif de classe qui recule
+    // pendant que la classe travaille est un mauvais chiffre.
+    const lignes = $("objectif-lignes");
+    lignes.textContent = "";
+    const li = document.createElement("li");
+    const b = document.createElement("b");
+    b.textContent = `${objectif.semaine} élève${objectif.semaine > 1 ? "s" : ""}`;
+    li.append(b, document.createTextNode(
+      objectif.semaine > 1 ? " ont travaillé cette semaine" : " a travaillé cette semaine"));
+    lignes.appendChild(li);
+    bloc.hidden = false;
   }
 
   // Ce qu'il faut revoir au tableau lundi matin. Aucune donnée de plus n'est
