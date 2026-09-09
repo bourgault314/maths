@@ -45,6 +45,8 @@ function runtime(html = source) {
   const config = { types: ['base_10'], levels: [1], nombres: ['entiers'], count: 5, seed: 1 };
   const el = id => { if (!elements.has(id)) elements.set(id, new Element()); return elements.get(id); };
   el('selEvoMode').value = '4eme';
+  el('cbPrintHelp').checked = false;
+  el('cbPrintCorrection').checked = true;
   let prints = 0;
   const document = {
     getElementById: el,
@@ -375,7 +377,7 @@ test('ouvrir l’aide conserve le cadrage et la géométrie du grand tableau', (
   assert.equal(el('svgStage').getAttribute('viewBox'), '0 0 1000 320');
 });
 
-test('l’impression suit les aides choisies et ne révèle rien dans les gabarits élèves', () => {
+test('les réglages papier sont indépendants des aides ouvertes dans le diaporama', () => {
   const run = runtime();
   const { api, el, configure } = run;
   configure({ types: ['base_25'], count: 3, seed: 69 });
@@ -385,21 +387,101 @@ test('l’impression suit les aides choisies et ne révèle rien dans les gabari
   api.generatePrint();
   assert.equal(run.prints, 1);
   const [sheet, correction] = el('printContainer').children;
-  assert.equal(descendants(sheet, 'svg').length, 4);
-  assert.equal(descendants(correction, 'svg').length, 4);
+  assert.equal(descendants(sheet, 'svg').length, 3);
+  assert.equal(descendants(correction, 'svg').length, 3);
   for (const svg of descendants(sheet, 'svg')) assert.equal(descendants(svg, 'text').length, 1);
-  for (const svg of descendants(sheet, 'svg')) assert.equal(svg.getAttribute('viewBox'), '0 0 1000 320');
   for (const svg of descendants(correction, 'svg')) assert.ok(descendants(svg, 'text').length > 1);
   assert.equal(JSON.stringify(api.data), before);
   assert.equal(api.seed, seed);
+  el('cbPrintHelp').checked = true;
+  api.generatePrint();
+  assert.equal(descendants(el('printContainer').children[0], 'svg').length, 6);
+  assert.equal(descendants(el('printContainer').children[1], 'svg').length, 6);
+  assert.equal(JSON.stringify(api.data), before);
+  api.toggle();
+  api.generatePrint();
+  assert.equal(descendants(el('printContainer'), 'svg').length, 12);
+  assert.equal(el('calculationHelp').hidden, true);
+  assert.equal(el('cbPrintHelp').checked, true);
+  const inputs = id => source.match(new RegExp('<input[^>]*id="' + id + '"[^>]*>'))[0];
+  assert.match(inputs('cbEmptyGabarits'), /checked/);
+  assert.match(inputs('cbPrintCorrection'), /checked/);
+  assert.doesNotMatch(inputs('cbPrintHelp'), /checked/);
+});
+
+test('les huit choix d’impression conservent la série et les aides autorisées en Entiers', () => {
+  const { api, el } = runtime();
+  const make = (type, t, decimals) => {
+    const q = api.createQuestion(type, 1, decimals);
+    q.totalVal = t; q.calcVal = round(t * q.percent / 100);
+    Object.assign(q, api.buildText(q));
+    return q;
+  };
+  api.setData([
+    make('base_25', 26, true), make('base_20', 80, false),
+    make('base_20', 25, false), make('base_5', 38, true), make('base_1', 70, true)
+  ]);
+  const before = JSON.stringify(api.data), seed = api.seed;
+  for (const gabarits of [false, true]) for (const help of [false, true]) for (const correction of [false, true]) {
+    el('cbEmptyGabarits').checked = gabarits;
+    el('cbPrintHelp').checked = help;
+    el('cbPrintCorrection').checked = correction;
+    api.generatePrint();
+    const pages = el('printContainer').children;
+    assert.equal(pages.length, correction ? 2 : 1);
+    assert.equal(descendants(pages[0], 'svg').length, gabarits ? 5 + (help ? 3 : 0) : 0);
+    if (correction) assert.equal(descendants(pages[1], 'svg').length, 5 + (help ? 3 : 0));
+    const questions = pages[0].children.flatMap(row => row.children);
+    assert.deepEqual(questions.map(q => q.getAttribute('data-question')), ['1', '2', '3', '4', '5']);
+    assert.ok(questions.every(q => q.children.some(child => child.className === 'spacer-reponse')));
+    assert.ok(questions.every(q => !q.children.some(child => child.className === 'print-c-text')));
+    assert.equal(JSON.stringify(api.data), before);
+    assert.equal(api.seed, seed);
+  }
+});
+
+test('les questions ordinaires vont par deux ; les gabarits découpés gardent toute la largeur', () => {
+  const { api, el } = runtime();
+  const data = ['base_50', 'base_25', 'base_20', 'base_5', 'base_1', 'base_10', 'mult_25'].map(type => api.createQuestion(type, 1, true));
+  api.setData(data);
+  api.generatePrint();
+  const rows = el('printContainer').children[0].children;
+  assert.deepEqual(rows.map(row => row.className), ['print-row pair', 'print-row single', 'print-row wide', 'print-row wide', 'print-row pair']);
+  assert.deepEqual(rows.flatMap(row => row.children.map(q => Number(q.getAttribute('data-question')))), [1, 2, 3, 4, 5, 6, 7]);
   el('cbEmptyGabarits').checked = false;
   api.generatePrint();
-  assert.equal(descendants(el('printContainer').children[0], 'svg').length, 0);
-  assert.equal(descendants(el('printContainer').children[1], 'svg').length, 4);
-  api.toggle();
-  el('cbEmptyGabarits').checked = true;
-  api.generatePrint();
-  assert.equal(descendants(el('printContainer'), 'svg').length, 6);
+  assert.deepEqual(el('printContainer').children[0].children.map(row => row.className), ['print-row pair', 'print-row pair', 'print-row pair', 'print-row single']);
+  assert.deepEqual(el('printContainer').children[1].children.map(row => row.className), rows.map(row => row.className));
+});
+
+test('les cadres papier contiennent toutes les cases et réservent la place des accolades', () => {
+  const { api, el } = runtime();
+  for (const type of types) for (const level of [1, 3]) for (const decimals of [false, true]) {
+    const q = api.createQuestion(type, level, decimals);
+    api.setData([q]);
+    el('cbPrintHelp').checked = true;
+    api.generatePrint();
+    for (const svg of descendants(el('printContainer'), 'svg')) {
+      const [x, y, width, height] = svg.getAttribute('viewBox').split(' ').map(Number);
+      for (const rect of descendants(svg, 'rect')) {
+        const a = rect.attributes;
+        const stroke = Number(a['stroke-width'] || 0) / 2;
+        assert.ok(Number(a.x) - stroke >= x && Number(a.y) - stroke >= y, type);
+        assert.ok(Number(a.x) + Number(a.width) + stroke <= x + width, type);
+        assert.ok(Number(a.y) + Number(a.height) + stroke <= y + height, type);
+      }
+      for (const text of descendants(svg, 'text')) {
+        const baseline = Number(text.getAttribute('y'));
+        const font = Number(text.getAttribute('font-size'));
+        assert.ok(baseline - font >= y && baseline + font * .3 <= y + height, `${type}: ${text.textContent}`);
+      }
+    }
+  }
+});
+
+test('le lot papier conserve les 46 800 calculs Entiers et Décimaux de la progression publiée', () => {
+  // Relevée avant le lot papier sur le blob b035ccd8382584b6ed1dac821db1e1f1f7ece859 (PR #702).
+  assert.equal(numericalDigest(source, [false, true]), '21d1fa89fc89a8b730f23297e1b017f32b02d60057bbd0df3967d252b1a4180e');
 });
 
 test('les options de correction des évolutions conservent les deux méthodes', () => {
