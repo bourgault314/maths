@@ -301,6 +301,17 @@
         <button class="btn-main print" onclick="generatePrint()">🖨️ Fiche PDF/Papier</button>
       </div>
     </div>
+    <details style="margin-top: 12px; font-size: 0.9rem; line-height: 1.5;">
+      <summary style="cursor: pointer;">Progression des niveaux décimaux</summary>
+      <p>Au niveau 1, les nombres de départ sont inférieurs à 100 et les valeurs à calculer ont au plus un chiffre après la virgule. Le niveau 2 introduit les centièmes ; le niveau 3 travaille davantage les décompositions. Les nombres de départ restent entiers.</p>
+      <ul>
+        <li><strong>Trouver le % et le tout :</strong> au niveau 1, moitiés, 25 %, 20 %, ou 10 et 20 % dans les dixièmes. Au niveau 2, ajout de 75 %, 40 % dans les cinquièmes, 30 et 40 % dans les dixièmes. Au niveau 3, toutes les possibilités des cases cochées.</li>
+        <li><strong>Boss 2 à 49 % :</strong> niveau 1, de 2 à 9 % ; niveau 2, de 2 à 9 % ou de 11 à 49 % ; niveau 3, de 2 à 9 %, de 11 à 15 %, 21 ou 25 %, sur 30, 70, 150 ou 250.</li>
+        <li><strong>Boss 51 à 99 % :</strong> niveau 1, 90, 95 ou 99 % ; niveau 2, 60, 70, 80, 90, 95, 98 ou 99 % ; niveau 3, de 51 à 99 %.</li>
+        <li><strong>Évolutions :</strong> niveau 1, 10, 20 ou 50 % ; niveau 2, ajout de 25, 30 et 40 % ; niveau 3, ajout de 60, 70, 75, 80 et 90 %.</li>
+      </ul>
+      <p>Si Entiers et Décimaux sont cochés, chaque question est tirée au hasard dans l’un des deux modes, sans alternance imposée. Un résultat entier reste possible dans certains calculs du mode Décimaux.</p>
+    </details>
   </div>
 
   <div class="diapo-container" id="diapoContainer">
@@ -418,50 +429,101 @@
       return { parts: 10, activeParts: 9, percent };
     }
 
-    function buildEvolutionValuePools(useDecimals) {
+    // Progression décimale validée le 09/09/2026. Historique et retour arrière :
+    // docs/pourcentages-progression-decimaux-2026-09-09.md
+    // Ces banques ne consomment aucun tirage et ne modifient pas le mode Entiers.
+    function decimalRange(min, max, accepts = () => true) {
+      const values = [];
+      for (let value = min; value <= max; value++) if (accepts(value)) values.push(value);
+      return values;
+    }
+
+    const decimalTotals = {
+      50: {
+        1: decimalRange(1, 99, v => v % 2 === 1),
+        2: decimalRange(101, 399, v => v % 2 === 1),
+        3: decimalRange(401, 1999, v => v % 2 === 1)
+      },
+      25: {
+        1: decimalRange(2, 98, v => v % 4 === 2),
+        2: decimalRange(1, 199, v => v % 4 !== 0),
+        3: decimalRange(201, 999, v => v % 4 !== 0)
+      },
+      75: {
+        1: decimalRange(2, 50, v => v % 4 === 2),
+        2: decimalRange(52, 198, v => v % 4 === 2),
+        3: decimalRange(1, 399, v => v % 4 !== 0)
+      },
+      20: {
+        1: decimalRange(1, 49, v => v % 5 !== 0),
+        2: decimalRange(51, 199, v => v % 5 !== 0),
+        3: decimalRange(201, 999, v => v % 5 !== 0)
+      },
+      10: {
+        1: decimalRange(1, 99, v => v % 10 !== 0),
+        2: decimalRange(101, 999, v => v % 10 !== 0),
+        3: decimalRange(1001, 9999, v => v % 10 !== 0)
+      },
+      5: {
+        1: decimalRange(2, 98, v => v % 2 === 0 && v % 20 !== 0),
+        2: decimalRange(2, 499, v => (v % 2 === 0 || v % 10 === 5) && v % 20 !== 0),
+        3: decimalRange(1, 999, v => v % 20 !== 0)
+      },
+      tenths: {
+        1: decimalRange(1, 9),
+        2: decimalRange(11, 99, v => v % 10 !== 0),
+        3: decimalRange(101, 909, v => v % 100 >= 1 && v % 100 <= 9)
+      },
+      1: {
+        1: decimalRange(10, 90, v => v % 10 === 0),
+        2: decimalRange(1, 999, v => v % 100 !== 0),
+        3: decimalRange(1001, 9999, v => v % 100 !== 0)
+      }
+    };
+    const decimalBossTotals = [30, 70, 150, 250]; // 1 % = 0,3 ; 0,7 ; 1,5 ; 2,5.
+    const decimalHighPercents = { 1: [90, 95, 99], 2: [60, 70, 80, 90, 95, 98, 99], 3: decimalRange(51, 99) };
+    const decimalEvolutionPercents = {
+      1: [10, 20, 50],
+      2: [10, 20, 25, 30, 40, 50],
+      3: [10, 20, 25, 30, 40, 50, 60, 70, 75, 80, 90]
+    };
+    const decimalEvolutionTotals = {};
+    for (const level of [1, 2, 3]) {
+      decimalEvolutionTotals[level] = {};
+      for (const percent of decimalEvolutionPercents[level]) {
+        // Les dixièmes du N3 utilisent 100a + b, y compris 10 % : la banque
+        // directe de 10 % commence à 1001 et ne convient pas au plafond 999.
+        const family = level === 3 && [10, 30, 40, 60, 70, 80, 90].includes(percent)
+          ? 'tenths' : (decimalTotals[percent] ? percent : 'tenths');
+        const limit = { 1: 99, 2: 199, 3: 999 }[level];
+        decimalEvolutionTotals[level][percent] = decimalTotals[family][level].filter(v => v <= limit);
+      }
+    }
+
+    function buildEvolutionValuePools() {
       const pools = { tenths: {1: [], 2: [], 3: []}, quarter: {1: [], 2: [], 3: []}, half: {1: [], 2: [], 3: []} };
-
-      if (!useDecimals) {
-        for (let v = 10; v <= 9990; v += 10) {
-          const nz = countNonZeroDigits(v);
-          if (nz === 1) pools.tenths[1].push(v);
-          else if (nz === 2) pools.tenths[2].push(v);
-          else pools.tenths[3].push(v);
-        }
-      } else {
-        for (let v = 1; v <= 9999; v++) {
-          if (v % 10 === 0) continue;
-          const nz = countNonZeroDigits(v);
-          if (nz === 2 && v <= 1000) pools.tenths[1].push(v);
-          else if ((nz === 2 && v > 1000) || (nz === 3 && hasInternalZero(v))) pools.tenths[2].push(v);
-          else pools.tenths[3].push(v);
-        }
+      for (let v = 10; v <= 9990; v += 10) {
+        const nz = countNonZeroDigits(v);
+        if (nz === 1) pools.tenths[1].push(v);
+        else if (nz === 2) pools.tenths[2].push(v);
+        else pools.tenths[3].push(v);
       }
-
-      if (!useDecimals) {
-        for (let v = 4; v <= 200; v += 4) pools.quarter[1].push(v);
-        for (let v = 204; v <= 1000; v += 4) pools.quarter[2].push(v);
-        for (let v = 1004; v <= 4000; v += 4) pools.quarter[3].push(v);
-      } else {
-        for (let v = 1; v <= 199; v++) if (v % 4 !== 0) pools.quarter[1].push(v);
-        for (let v = 201; v <= 999; v++) if (v % 4 !== 0) pools.quarter[2].push(v);
-        for (let v = 1001; v <= 3999; v++) if (v % 4 !== 0) pools.quarter[3].push(v);
-      }
-
-      if (!useDecimals) {
-        for (let v = 2; v <= 200; v += 2) pools.half[1].push(v);
-        for (let v = 202; v <= 2000; v += 2) pools.half[2].push(v);
-        for (let v = 2002; v <= 9998; v += 2) pools.half[3].push(v);
-      } else {
-        for (let v = 1; v <= 199; v += 2) pools.half[1].push(v);
-        for (let v = 201; v <= 1999; v += 2) pools.half[2].push(v);
-        for (let v = 2001; v <= 9999; v += 2) pools.half[3].push(v);
-      }
-
+      for (let v = 4; v <= 200; v += 4) pools.quarter[1].push(v);
+      for (let v = 204; v <= 1000; v += 4) pools.quarter[2].push(v);
+      for (let v = 1004; v <= 4000; v += 4) pools.quarter[3].push(v);
+      for (let v = 2; v <= 200; v += 2) pools.half[1].push(v);
+      for (let v = 202; v <= 2000; v += 2) pools.half[2].push(v);
+      for (let v = 2002; v <= 9998; v += 2) pools.half[3].push(v);
       return pools;
     }
 
+
     function pickEvolutionConfig(level, useDecimals) {
+      if (useDecimals) {
+        const percent = pick(decimalEvolutionPercents[level]);
+        const totalVal = pick(decimalEvolutionTotals[level][percent]);
+        return { ...canonicalConfigForPercent(percent), totalVal };
+      }
       const percentsByLevel = {
         1: [10, 20, 25, 30, 50],
         2: [10, 20, 25, 30, 40, 50, 60, 70],
@@ -469,7 +531,7 @@
       };
       const percent = pick(percentsByLevel[level] || percentsByLevel[1]);
       const family = (percent === 50) ? 'half' : ((percent === 25 || percent === 75) ? 'quarter' : 'tenths');
-      const pools = buildEvolutionValuePools(useDecimals);
+      const pools = buildEvolutionValuePools();
       const totalVal = pick(pools[family][level]);
       return { ...canonicalConfigForPercent(percent), totalVal };
     }
@@ -662,10 +724,9 @@
         return rand(1001, 4999) * 2;                  // 2002 à 9998
       }
 
-      if (level === 1) return rand(0, 99) * 2 + 1;    // 1 à 199 impairs
-      if (level === 2) return rand(100, 999) * 2 + 1; // 201 à 1999 impairs
-      return rand(1000, 4999) * 2 + 1;                // 2001 à 9999 impairs
+      return pick(decimalTotals[50][level]);
     }
+
 
     function pickBase20Total(level, useDecimals) {
       if (!useDecimals) {
@@ -674,15 +735,9 @@
         return rand(201, 800) * 5;                    // 1005 à 4000
       }
 
-      let min, max;
-      if (level === 1) { min = 11; max = 99; }
-      else if (level === 2) { min = 101; max = 399; }
-      else { min = 401; max = 999; }
-
-      let val;
-      do { val = rand(min, max); } while (val % 5 === 0);
-      return val;
+      return pick(decimalTotals[20][level]);
     }
+
 
     function pickBase5Total(level, useDecimals) {
       if (!useDecimals) {
@@ -691,31 +746,9 @@
         return rand(101, 500) * 20;                    // 2020 à 10000
       }
 
-      let val;
-      if (level === 1) {
-        do { val = rand(1, 500) * 2; } while (val % 20 === 0); // pairs non multiples de 20, 2 à 1000
-        return val;
-      }
-
-      if (level === 2) {
-        if (rand(0, 1) === 0) {
-          do { val = rand(1, 5000) * 2; } while (val % 20 === 0); // cas faciles jusqu'à 10000
-        } else {
-          do { val = rand(0, 999) * 10 + 5; } while (val > 10000 || val % 20 === 0); // ...25 / ...75
-        }
-        return val;
-      }
-
-      const family = pick(['easy', 'quarter', 'fine']);
-      if (family === 'easy') {
-        do { val = rand(1, 5000) * 2; } while (val % 20 === 0);
-      } else if (family === 'quarter') {
-        do { val = rand(0, 999) * 10 + 5; } while (val > 10000 || val % 20 === 0);
-      } else {
-        do { val = rand(1, 9999); } while (val % 2 === 0 || val % 5 === 0); // impairs non multiples de 5
-      }
-      return val;
+      return pick(decimalTotals[5][level]);
     }
+
 
     function countNonZeroDigits(n) {
       return Math.abs(Math.trunc(n)).toString().replace(/0/g, '').length;
@@ -726,21 +759,16 @@
       return s.length > 1 && s.slice(0, -1).includes('0');
     }
 
-    function pickBase25LikeTotal(level, useDecimals) {
+    function pickBase25LikeTotal(level, useDecimals, percent = 25) {
       if (!useDecimals) {
         if (level === 1) return rand(1, 50) * 4;       // 4 à 200
         if (level === 2) return rand(51, 250) * 4;     // 204 à 1000
         return rand(251, 1000) * 4;                    // 1004 à 4000
       }
 
-      let min, max, val;
-      if (level === 1) { min = 1; max = 199; }
-      else if (level === 2) { min = 201; max = 999; }
-      else { min = 1001; max = 3999; }
-
-      do { val = rand(min, max); } while (val % 4 === 0);
-      return val;
+      return pick(decimalTotals[percent][level]);
     }
+
 
     function pickMult10Total(level, useDecimals) {
       if (!useDecimals) {
@@ -762,25 +790,7 @@
         return val; // 1010 à 9990, hors cas trop ronds
       }
 
-      let val;
-      if (level === 1) {
-        do {
-          val = rand(1, 9999);
-        } while (val % 10 === 0 || countNonZeroDigits(val) !== 2);
-        return val;
-      }
-
-      if (level === 2) {
-        do {
-          val = rand(1, 9999);
-        } while (val % 10 === 0 || countNonZeroDigits(val) !== 3 || !hasInternalZero(val));
-        return val;
-      }
-
-      do {
-        val = rand(1, 9999);
-      } while (val % 10 === 0 || (countNonZeroDigits(val) === 2) || (countNonZeroDigits(val) === 3 && hasInternalZero(val)));
-      return val;
+      return pick(decimalTotals['tenths'][level]);
     }
 
 
@@ -799,33 +809,30 @@
         return pick(values);
       }
 
-      const values = [];
-      if (level === 1) {
-        for (let v = 10; v <= 990; v += 10) {
-          if (v % 100 !== 0 && countNonZeroDigits(v) === 2) values.push(v);
-        }
-        return pick(values);
-      }
-
-      if (level === 2) {
-        for (let v = 1010; v <= 9990; v += 10) {
-          if (v % 100 !== 0 && countNonZeroDigits(v) === 2) values.push(v);
-        }
-        return pick(values);
-      }
-
-      for (let v = 10; v <= 9990; v += 10) {
-        if (v % 100 !== 0 && countNonZeroDigits(v) === 3) values.push(v);
-      }
-      return pick(values);
+      if (level === 1) return rand(1, 9) * 10;
+      if (level === 2) return rand(11, 19) * 10;
+      return pick(decimalBossTotals);
     }
+
 
     function getMult10ActiveParts(level, useDecimals) {
       return [2, 3, 4, 6, 7, 8, 9];
     }
 
-    function getInverseTenthsActiveParts() {
+    function getInverseTenthsActiveParts(level, useDecimals) {
+      if (useDecimals && level === 1) return [1, 2];
+      if (useDecimals && level === 2) return [1, 2, 3, 4];
       return [1, 2, 3, 4, 6, 7, 8, 9];
+    }
+
+    function getInverseQuarterActiveParts(level, useDecimals) {
+      return useDecimals && level === 1 ? [1] : [1, 3];
+    }
+
+    function getInverseFifthActiveParts(level, useDecimals) {
+      if (useDecimals && level === 1) return [1];
+      if (useDecimals && level === 2) return [1, 2];
+      return [1, 2, 3, 4];
     }
 
 
@@ -850,11 +857,11 @@
          if (type === 'tot_50') {
              parts = 2; activeParts = 1; totalVal = pickBase50Total(level, useDecimals);
          } else if (type === 'tot_25') {
-             parts = 4; activeParts = pick([1, 3]); totalVal = pickBase25LikeTotal(level, useDecimals);
+             parts = 4; activeParts = pick(getInverseQuarterActiveParts(level, useDecimals)); totalVal = pickBase25LikeTotal(level, useDecimals, activeParts * 25);
          } else if (type === 'tot_20') {
-             parts = 5; activeParts = pick([1, 2, 3, 4]); totalVal = pickBase20Total(level, useDecimals);
+             parts = 5; activeParts = pick(getInverseFifthActiveParts(level, useDecimals)); totalVal = pickBase20Total(level, useDecimals);
          } else if (type === 'tot_10') {
-             parts = 10; activeParts = pick(getInverseTenthsActiveParts()); totalVal = pickMult10Total(level, useDecimals);
+             parts = 10; activeParts = pick(getInverseTenthsActiveParts(level, useDecimals)); totalVal = pickMult10Total(level, useDecimals);
          }
          percent = (100 / parts) * activeParts;
          calcVal = (totalVal / parts) * activeParts;
@@ -864,11 +871,11 @@
          if (type === 'inv_50') {
              parts = 2; activeParts = 1; totalVal = pickBase50Total(level, useDecimals);
          } else if (type === 'inv_25') {
-             parts = 4; activeParts = pick([1, 3]); totalVal = pickBase25LikeTotal(level, useDecimals);
+             parts = 4; activeParts = pick(getInverseQuarterActiveParts(level, useDecimals)); totalVal = pickBase25LikeTotal(level, useDecimals, activeParts * 25);
          } else if (type === 'inv_20') {
-             parts = 5; activeParts = pick([1, 2, 3, 4]); totalVal = pickBase20Total(level, useDecimals);
+             parts = 5; activeParts = pick(getInverseFifthActiveParts(level, useDecimals)); totalVal = pickBase20Total(level, useDecimals);
          } else if (type === 'inv_10') {
-             parts = 10; activeParts = pick(getInverseTenthsActiveParts()); totalVal = pickMult10Total(level, useDecimals);
+             parts = 10; activeParts = pick(getInverseTenthsActiveParts(level, useDecimals)); totalVal = pickMult10Total(level, useDecimals);
          }
          percent = (100 / parts) * activeParts;
          calcVal = (totalVal / parts) * activeParts;
@@ -902,7 +909,7 @@
          else if (type === 'base_5') { parts = 20; activeParts = 1; percent = 5; totalVal = pickBase5Total(level, useDecimals); }
          else if (type === 'mult_25') { 
              parts = 4; activeParts = 3; percent = 75; 
-             totalVal = pickBase25LikeTotal(level, useDecimals);
+             totalVal = pickBase25LikeTotal(level, useDecimals, 75);
          }
          else if (type === 'mult_10') { 
              parts = 10;
@@ -917,14 +924,12 @@
                  else if (level === 2) totalVal = rand(11, 50) * 100;
                  else totalVal = rand(51, 150) * 100;
              } else {
-                 if (level === 1) { let val; do { val = rand(11, 99) * 10; } while (val % 100 === 0); totalVal = val; } 
-                 else if (level === 2) { let val; do { val = rand(101, 999); } while (val % 10 === 0); totalVal = val; } 
-                 else { if (rand(0, 1) === 0) { totalVal = rand(1, 99); } else { totalVal = rand(1001, 9999); } }
+                 totalVal = pick(decimalTotals[1][level]);
              }
          }
          else if (type === 'mult_hi') { 
              parts = 100;
-             activeParts = rand(51, 99);
+             activeParts = useDecimals ? pick(decimalHighPercents[level]) : rand(51, 99);
              percent = activeParts;
              totalVal = pickHighPercentTotal(level, useDecimals);
          }
@@ -955,30 +960,19 @@
              } else {
                  if (level === 1) {
                      p = rand(2, 9);
-                     t = rand(0, 1) === 0 ? rand(1, 9) : rand(1, 9) * 10;
+                     t = rand(1, 9) * 10;
                  } else if (level === 2) {
                      if (rand(0, 1) === 0) {
                          p = rand(11, 49);
-                         t = rand(0, 1) === 0 ? rand(1, 9) : rand(1, 9) * 10;
+                         t = pick([10, 20, 50]);
                      } else {
                          p = rand(2, 9);
-                         let val = rand(11, 99);
-                         t = rand(0, 1) === 0 ? val : val * 10; 
+                         t = rand(11, 99);
                      }
-                 } else { 
-                     let scenario = rand(0, 2);
-                     if (scenario === 0) { 
-                         p = rand(2, 9);
-                         t = rand(51, 99);
-                     } else if (scenario === 1) { 
-                         p = rand(11, 15);
-                         t = rand(0, 1) === 0 ? rand(11, 15) : rand(11, 15) * 10;
-                     } else { 
-                         p = pick([2, 3, 4, 5, 11, 12, 15, 21, 25]);
-                         let x = rand(1, 5);
-                         let y = rand(1, 5);
-                         t = rand(0, 1) === 0 ? (x * 100 + y) : (x * 1000 + y); 
-                     }
+                 } else {
+                     // Conserver les pourcentages mentaux de l'ancien N3.
+                     p = pick([2, 3, 4, 5, 6, 7, 8, 9, 11, 12, 13, 14, 15, 21, 25]);
+                     t = pick(decimalBossTotals);
                  }
              }
              activeParts = p;
