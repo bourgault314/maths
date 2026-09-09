@@ -2,9 +2,9 @@
 # Ne pas modifier à la main : un test du dépôt refait ce calcul à chaque passage.
 # verifier.php relit ce fichier en ligne et compare chaque empreinte.
 lot suivi-jauges
-genere_le 2026-09-08
+genere_le 2026-09-09
 fichiers 28
-manifeste 98b0fefcfd937e017c1e505e1191fe814a3ae3d38882087c574b6d04173c6c33
+manifeste d5d0bd13f3698a8079bd22269521feb798198b8662c9b0357cf8aedde324da7f
 61b230d36219b3c4515e56c1ff59afb1a85ffa12343956bd73b16ba04867cdca  .htaccess
 d1cdf00b3e672130b90da1f1aa9333949036fc3d5ad866d539cd11aef7fd8204  api/eleve.php
 dc938db0cb546fdfc4121ddeebdf558ca62259f20d6aecb398c84e2382697675  api/parcours.php
@@ -31,5 +31,5 @@ b476cc832c9b7497eed6194afecee863a686469e9162ad1832bd7e7732ccc304  mathsgo-logo-p
 2a442b4a4ae2452f649f77224a0aae91e6fe0ac83566253d65d1dc1807cdb6a2  mathsgo-logo.png
 4cc15b863e2b7d4afaa761685a411b7309fe133ecff7625420ff1dedfa365502  menage.php
 120fda82c4776eb491127fc7afaf1e2c249891bcdcbae0fa12d3a34b2967a126  prof/defi_tables_mon_parcours.js
-a1a445331ebd3e730848833e5d496e0a89a84f70db7916c6f2d02a628605d28e  prof/index.php
+22221b4e2b83ed263a9f8810873f4ab81a7cdbf8ccd18a27a65b765b9dec6dcb  prof/index.php
 bd509f1f05320588a65c6256a121c478a2a0c6f01adc37f15e83ca44038f00bc  verifier.php

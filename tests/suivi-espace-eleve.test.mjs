@@ -235,6 +235,8 @@ test("un affichage ordinaire (pas un retour de cache) ne touche à rien", () => 
 //   i) attendre (await) la jauge avant d'afficher la grille
 //   j) écrire le compte avec innerHTML
 //   k) mettre le code de l'élève dans l'adresse de api/parcours.php
+//   q) retirer l'écouteur « error » du chargement du moteur → la promesse ne
+//      se résout jamais et le test « moteur introuvable » expire
 
 const MOTEUR_SERVI = join(racine, "_serveur/public/prof/defi_tables_mon_parcours.js");
 const { createRequire } = await import("node:module");
@@ -359,13 +361,24 @@ function jouerHabillage({reponse, moteurCharge = true}) {
   const applis = {querySelector: () => tuile, firstChild: null, insertBefore() {}};
   const $ = () => applis;
   const faireNoeud = () => {
-    const noeud = {style: {}, textContent: "", enfants: [],
+    const noeud = {style: {}, textContent: "", enfants: [], ecouteurs: {},
       append(...n) { noeud.enfants.push(...n); },
+      // La page écoute « load » et « error » par addEventListener : sans cette
+      // ligne, le faux <script> n'a pas d'écouteur du tout et la promesse du
+      // moteur ne se résout jamais.
+      addEventListener(type, fn) { noeud.ecouteurs[type] = fn; },
       setAttribute() {}, querySelector: () => null};
     return noeud;
   };
+  // Le moteur se charge par un <script> ajouté à la volée. Le faux document
+  // rend « load » ou « error » selon `moteurCharge` : c'est le seul moyen
+  // d'éprouver le MOTEUR INTROUVABLE, un cas qu'aucun serveur simulé ne
+  // produit — et le troisième pied de la règle nº 1, à côté du serveur muet et
+  // de la réponse illisible.
   const doc = {createElement: faireNoeud, createTextNode: t => ({texte: t}),
-    head: {appendChild(script) { setTimeout(() => (moteurCharge ? script : script).onerror?.(), 0); }}};
+    head: {appendChild(script) {
+      setTimeout(() => script.ecouteurs[moteurCharge ? "load" : "error"]?.(), 0);
+    }}};
   const fenetre = {MATHSGO_DEFI_TABLES_MON_PARCOURS: moteurCharge ? PARCOURS : null};
   const habiller = new Function("$", "window", "document", "fetch", "CSS", "Promise", "Math", source)(
     $, fenetre, doc, reponse, {escape: s => s}, Promise, Math);
@@ -386,6 +399,21 @@ test("réponse illisible : pas de jauge, pas d'erreur affichée", async () => {
   });
   await habiller;
   assert.deepEqual(tuile.enfants, [], "un parcours illisible ne casse rien et n'écrit rien");
+});
+
+// Le moteur absent, c'est le fichier oublié pendant un dépôt FTP, ou un cache
+// qui rend une page vide. Le parcours de l'élève arrive, mais plus rien ne sait
+// le lire : sa tuile doit rester exactement ce qu'elle était.
+test("moteur introuvable : la grille reste entière, sans jauge et sans message", async () => {
+  const parcours = JSON.parse(JSON.stringify(parcoursFabrique({acquises: 4})));
+  const {habiller, tuile} = jouerHabillage({
+    reponse: () => Promise.resolve({ok: true, json: () => Promise.resolve({ok: true, existe: true, parcours})}),
+    moteurCharge: false
+  });
+  await habiller;
+  assert.deepEqual(tuile.enfants, [],
+    "le parcours est bien arrivé, mais rien ne peut le lire : la tuile ne bouge pas");
+  assert.deepEqual(tuile.classes, [], "et elle ne change même pas de classe");
 });
 
 test("parcours reçu : la jauge est posée sur la tuile", async () => {

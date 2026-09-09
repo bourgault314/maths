@@ -594,6 +594,7 @@ test("la jauge de classe additionne, et ne nomme personne", () => {
   ]);
   const compte = zones.get("objectif-compte").textContent;
   assert.equal(compte, "Ensemble : 13 tables acquises sur 27", "9 + 4 + 0 sur 3 élèves × 9 tables");
+  assert.ok(compte.includes("tables acquises"), "au pluriel dès 2 : le singulier est réservé à « 1 table acquise »");
   const tout = [compte, JSON.stringify([...zones.values()].map(z => [z.textContent, z.enfants]))].join(" ");
   ["Léa", "Noé", "Amina", "ABCD01", "ABCD02", "ABCD03"].forEach(interdit =>
     assert.ok(!tout.includes(interdit),
@@ -616,6 +617,30 @@ test("la ligne de la semaine compte des élèves, jamais lesquels", () => {
 test("une classe sans élève ne montre pas de jauge vide", () => {
   const {zones} = jaugeDeClasse([]);
   assert.equal(zones.get("objectif").hidden, true, "« 0 sur 0 » n'est pas un objectif");
+});
+
+// Le vrai cas de la rentrée : les codes sont distribués, personne n'a encore
+// joué. « Ensemble : 0 tables acquises sur 54 » redit, en moins clair, la
+// phrase déjà écrite au-dessus du tableau (« 12 élèves · 12 n'ont encore rien
+// fait ») — et c'est exactement ce qu'on refuse à l'élève.
+test("une classe où personne n'a commencé ne montre pas de jauge à zéro", () => {
+  const attendent = ["Léa", "Noé", "Amina"].map((prenom, i) => ({
+    prenom, code: `ABCD0${i + 1}`,
+    lu: {acquises: [], semaine: 0, parcours: null, melange: "—"}
+  }));
+  const {zones} = jaugeDeClasse(attendent);
+  assert.equal(zones.get("objectif").hidden, true,
+    "une barre à zéro n'est pas un objectif de classe, c'est un constat déjà écrit ailleurs");
+});
+
+test("un seul élève qui a commencé suffit à ouvrir la jauge", () => {
+  const {zones} = jaugeDeClasse([
+    eleveDeTest("Léa", "ABCD01", 1, 1),
+    {prenom: "Noé", code: "ABCD02", lu: {acquises: [], semaine: 0, parcours: null, melange: "—"}}
+  ]);
+  assert.equal(zones.get("objectif").hidden, false, "dès qu'un chiffre bouge, la classe a un objectif");
+  assert.equal(zones.get("objectif-compte").textContent, "Ensemble : 1 table acquise sur 18",
+    "le dénominateur compte TOUS les élèves, y compris ceux qui n'ont pas commencé");
 });
 
 test("la jauge de classe ne demande rien de plus au serveur", () => {

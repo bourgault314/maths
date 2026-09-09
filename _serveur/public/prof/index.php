@@ -852,8 +852,6 @@ $versionMoteur = is_file($moteur) ? substr(md5_file($moteur), 0, 10) : '0';
   }
 
   // Le badge du rang, même dessin que sur l'accueil de l'élève (un point de
-  // métal et le nom ; la couronne pour la Légende).
-  // Le badge du rang, même dessin que sur l'accueil de l'élève (un point de
   // métal et le nom). La couronne de la Légende, elle, reste dans la colonne
   // Expert : sur l'accueil de l'élève le badge est seul, ici il voisine avec
   // l'escalier — et « 👑 👑 Légende des tables » sur la même ligne, c'est une
@@ -1024,6 +1022,9 @@ $versionMoteur = is_file($moteur) ? substr(md5_file($moteur), 0, 10) : '0';
     const total = eleves.length * PARCOURS.TABLES.length;
     return {
       eleves: eleves.length,
+      // Combien ont VRAIMENT commencé : c'est ce nombre, et pas celui des
+      // élèves inscrits, qui décide si la carte a quelque chose à dire.
+      commences: lus.length,
       fait: lus.reduce((somme, lu) => somme + lu.acquises.length, 0),
       total,
       semaine: lus.filter(lu => lu.semaine > 0).length
@@ -1033,11 +1034,22 @@ $versionMoteur = is_file($moteur) ? substr(md5_file($moteur), 0, 10) : '0';
   function dessinerObjectif() {
     const bloc = $("objectif");
     const objectif = objectifDeLaClasse();
-    if (!objectif || !objectif.total) { bloc.hidden = true; return; }
+    // Tant que personne n'a commencé, la carte ne s'affiche pas. « Ensemble :
+    // 0 tables acquises sur 54 » n'est pas un objectif : c'est la phrase
+    // « 12 élèves · 12 n'ont encore rien fait », déjà écrite juste au-dessus,
+    // redite sous une forme moins claire — et c'est exactement ce qu'on refuse
+    // à l'élève (une barre vide ressemble à un reproche). Constaté sur une
+    // classe neuve le 09/09/2026 ; la carte « les calculs qui coincent » se
+    // tait déjà de la même façon.
+    if (!objectif || !objectif.total || !objectif.commences) { bloc.hidden = true; return; }
     const part = Math.max(0, Math.min(1, objectif.fait / objectif.total));
     $("objectif-barre").style.width = `${Math.round(part * 100)}%`;
+    // Le singulier, comme sur la tuile de l'élève et sur l'accueil de l'appli :
+    // « 1 table acquise », jamais « 1 tables acquises ». Cas rare mais réel —
+    // c'est l'état d'une classe le lendemain de la distribution des codes.
+    const pluriel = objectif.fait > 1 ? "s" : "";
     $("objectif-compte").textContent =
-      `Ensemble : ${objectif.fait} tables acquises sur ${objectif.total}`;
+      `Ensemble : ${objectif.fait} table${pluriel} acquise${pluriel} sur ${objectif.total}`;
     // Une seule petite ligne, et c'est le SIGNE DE VIE de la semaine : est-ce
     // que ça tourne, ou pas. « N élèves ont réussi leur mélange » a été écarté
     // le 08/09/2026 : ce nombre DESCEND quand un élève acquiert une table (son
