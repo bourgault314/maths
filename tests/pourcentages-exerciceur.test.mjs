@@ -60,7 +60,7 @@ function runtime(html = source) {
   const code = [...html.matchAll(/<script\b[^>]*>([\s\S]*?)<\/script>/g)].map(m => m[1]).find(s => s.includes('function createQuestion'));
   vm.runInContext(code, context);
   // Mémoriser uniquement les tables pures pour les grands échantillons de tests.
-  vm.runInContext('const poolsForTests = [buildEvolutionValuePools(false), buildEvolutionValuePools(true)]; buildEvolutionValuePools = d => poolsForTests[Number(d)];', context);
+  vm.runInContext('const poolsForTests = buildEvolutionValuePools(); buildEvolutionValuePools = () => poolsForTests;', context);
   const api = vm.runInContext(`({ createQuestion, setSeed, buildText, getQuizData, generateQuiz, generatePrint, loadSlide, nextAction, prevSlide, updateUI,
     get data() { return quizData; }, get index() { return currentIndex; }, get seed() { return currentSeed; },
     setData(data) { quizData = data; currentIndex = 0; buildThumbnails(); updateUI(); },
@@ -82,10 +82,58 @@ function descendants(element, tag) {
 const numbers = q => [q.mode, q.percent, q.parts, q.activeParts, q.totalVal, q.calcVal];
 const round = n => Math.round((n + Number.EPSILON) * 100) / 100;
 
-function numericalDigest(html = source) {
+function assertDecimalQuestion(q, banks, evolutionBanks) {
+  const { type, level, percent: p, totalVal: t } = q;
+  const label = JSON.stringify([type, level, p, t]);
+  if (type.startsWith('evo_')) {
+    const rates = { 1: [10, 20, 50], 2: [10, 20, 25, 30, 40, 50], 3: [10, 20, 25, 30, 40, 50, 60, 70, 75, 80, 90] };
+    assert.ok(rates[level].includes(p), label);
+    assert.ok(evolutionBanks[level][p].includes(t), label);
+  } else if (type.startsWith('base_') || type === 'mult_25') {
+    assert.ok(banks[p][level].includes(t), label);
+    assert.ok(!Number.isInteger(q.calcVal), label);
+  } else if (type === 'mult_10') {
+    assert.ok([20, 30, 40, 60, 70, 80, 90].includes(p), label);
+    assert.ok(banks.tenths[level].includes(t), label);
+  } else if (type.startsWith('inv_') || type.startsWith('tot_')) {
+    const family = Number(type.split('_')[1]);
+    const rates = {
+      50: [[50], [50], [50]],
+      25: [[25], [25, 75], [25, 75]],
+      20: [[20], [20, 40], [20, 40, 60, 80]],
+      10: [[10, 20], [10, 20, 30, 40], [10, 20, 30, 40, 60, 70, 80, 90]]
+    };
+    assert.ok(rates[family][level - 1].includes(p), label);
+    const bank = family === 10 ? 'tenths' : family === 25 ? p : family;
+    assert.ok(banks[bank][level].includes(t), label);
+    assert.equal(round(q.calcVal * 100 / p), t, label);
+    assert.equal(round(q.calcVal * 100 / t), p, label);
+  } else if (type === 'mult_1') {
+    if (level === 1) {
+      assert.ok(p >= 2 && p <= 9 && t >= 10 && t <= 90 && t % 10 === 0, label);
+    } else if (level === 2) {
+      assert.ok(p >= 2 && p <= 9 ? t >= 11 && t <= 99 : p >= 11 && p <= 49 && [10, 20, 50].includes(t), label);
+    } else {
+      assert.ok([2, 3, 4, 5, 6, 7, 8, 9, 11, 12, 13, 14, 15, 21, 25].includes(p), label);
+      assert.ok([30, 70, 150, 250].includes(t), label);
+    }
+  } else if (type === 'mult_hi') {
+    if (level === 1) assert.ok([90, 95, 99].includes(p) && t >= 10 && t <= 90 && t % 10 === 0, label);
+    else if (level === 2) assert.ok([60, 70, 80, 90, 95, 98, 99].includes(p) && t >= 110 && t <= 190 && t % 10 === 0, label);
+    else assert.ok(p >= 51 && p <= 99 && [30, 70, 150, 250].includes(t), label);
+  } else assert.fail(label);
+  if (level === 1) {
+    assert.ok(t < 100, label);
+    for (const value of [q.calcVal, t / q.parts]) {
+      assert.ok(Math.abs(value * 10 - Math.round(value * 10)) < 1e-8, label);
+    }
+  }
+}
+
+function numericalDigest(html = source, modes = [false], selectedTypes = types) {
   const { api, configure } = runtime(html);
   const hash = createHash('sha256');
-  for (const type of types) for (const level of [1, 2, 3]) for (const decimals of [false, true]) {
+  for (const type of selectedTypes) for (const level of [1, 2, 3]) for (const decimals of modes) {
     api.setSeed(314159);
     for (let i = 0; i < 250; i++) hash.update(JSON.stringify(numbers(api.createQuestion(type, level, decimals))));
     for (const seed of [1, 32, 69, 88, 312, 1150, 9999]) {
@@ -97,14 +145,23 @@ function numericalDigest(html = source) {
   return hash.digest('hex');
 }
 
-test('les 46 800 calculs et tirages de référence restent identiques à la version publiée', () => {
-  // Empreinte calculée AVANT modification sur le blob e902efc8ae4be59a2be809be976d1ad493a380cb.
-  const expected = 'fc53067c8567fab2537c186d98a9e03e45d76226b9c921d12ee7900eac24060f';
+test('les 23 400 calculs et tirages Entiers restent identiques à la version précédant le chantier décimal', () => {
+  // Empreinte Entiers calculée AVANT modification sur le blob
+  // 71eaa15699ca50fbdc732641d2f3323d87e6af96 (main f1f378b7).
+  // L'ancienne empreinte des DEUX modes était fc53067c8567fab2537c186d98a9e03e45d76226b9c921d12ee7900eac24060f.
+  const expected = '466ad21f7de9434573b748496023a616ffafd0f6d3ce30ba61a4db2065022a73';
   assert.equal(numericalDigest(), expected);
 });
 
+test('10 % direct conserve aussi ses 1 170 calculs et tirages décimaux de référence', () => {
+  // Même référence publiée, empreinte relevée avant toute modification.
+  assert.equal(numericalDigest(source, [true], ['base_10']), '385018044c49818fe9fa7d460f21733634c5a71d5c1471cdac3a6cf6dca4436e');
+});
+
 test('120 combinaisons de catégories, niveaux et nombres : 120 000 questions correctes et cohérentes', () => {
-  const { api } = runtime();
+  const { api, context } = runtime();
+  const banks = JSON.parse(vm.runInContext('JSON.stringify(decimalTotals)', context));
+  const evolutionBanks = JSON.parse(vm.runInContext('JSON.stringify(decimalEvolutionTotals)', context));
   const seenContexts = new Set();
   assert.equal(types.length, 20);
   for (const type of types) for (const level of [1, 2, 3]) for (const decimals of [false, true]) {
@@ -115,6 +172,7 @@ test('120 combinaisons de catégories, niveaux et nombres : 120 000 questions co
       assert.equal(q.calcVal, round(expected), `${type}/${level}/${decimals}`);
       assert.ok(q.totalVal > 0 && q.calcVal > 0 && q.percent > 0 && q.percent < 100);
       if (!decimals) assert.ok(Number.isInteger(q.calcVal), JSON.stringify(numbers(q)));
+      else assertDecimalQuestion(q, banks, evolutionBanks);
       assert.equal(q.phase, 0);
       assert.equal(q.helpOpen, false);
       assert.ok(q.qHtml && q.cHtml && !/undefined|NaN|\(e\)|le farine|ampères|poids total/.test(q.qHtml + q.cHtml));
@@ -353,4 +411,112 @@ test('les options de correction des évolutions conservent les deux méthodes', 
   api.setSeed(1);
   assert.match(api.buildText(q).cHtml, /120 % de 80 = 96/);
   assert.match(api.buildText({ ...q, calcVal: 64, mode: 'evo_dec' }).cHtml, /80 % de 80 = 64/);
+});
+
+test('les banques décimales complètes respectent les bornes, exclusions et effectifs validés', () => {
+  const { context } = runtime();
+  const banks = JSON.parse(vm.runInContext('JSON.stringify(decimalTotals)', context));
+  // Contrat pédagogique indépendant : [effectif, minimum, maximum] par niveau.
+  const limits = {
+    50: [[50, 1, 99], [150, 101, 399], [800, 401, 1999]],
+    25: [[25, 2, 98], [150, 1, 199], [600, 201, 999]],
+    75: [[13, 2, 50], [37, 54, 198], [300, 1, 399]],
+    20: [[40, 1, 49], [120, 51, 199], [640, 201, 999]],
+    10: [[90, 1, 99], [810, 101, 999], [8100, 1001, 9999]],
+    5: [[45, 2, 98], [275, 2, 498], [950, 1, 999]],
+    tenths: [[9, 1, 9], [81, 11, 99], [81, 101, 909]],
+    1: [[9, 10, 90], [990, 1, 999], [8910, 1001, 9999]]
+  };
+  for (const [family, levels] of Object.entries(limits)) for (const level of [1, 2, 3]) {
+    const bank = banks[family][level];
+    const [count, min, max] = levels[level - 1];
+    assert.equal(bank.length, count, `${family}/${level}`);
+    assert.equal(new Set(bank).size, count);
+    assert.equal(Math.min(...bank), min);
+    assert.equal(Math.max(...bank), max);
+    for (const t of bank) {
+      assert.ok(Number.isInteger(t) && t > 0);
+      if (family !== 'tenths') assert.notEqual((t * Number(family)) % 100, 0);
+      if (family === '25' && level === 1 || family === '75' && level <= 2) assert.equal(t % 2, 0);
+      if (family === '5' && level === 1) assert.equal(t % 2, 0);
+      if (family === '5' && level === 2) assert.ok(t % 2 === 0 || t % 10 === 5);
+      if (family === '1' && level === 1) assert.equal(t % 10, 0);
+      if (family === 'tenths') {
+        assert.notEqual(t % 10, 0);
+        if (level === 3) assert.match(String(t), /^[1-9]0[1-9]$/);
+      }
+    }
+  }
+  const evolution = JSON.parse(vm.runInContext('JSON.stringify(decimalEvolutionTotals)', context));
+  const caps = [99, 199, 999];
+  for (const level of [1, 2, 3]) for (const [percent, bank] of Object.entries(evolution[level])) {
+    assert.ok(bank.length > 0, `Banque vide : évolution ${percent}/${level}`);
+    const family = level === 3 && [10, 30, 40, 60, 70, 80, 90].includes(Number(percent))
+      ? 'tenths' : ['20', '25', '50', '75', '10'].includes(percent) ? percent : 'tenths';
+    assert.deepEqual(bank, banks[family][level].filter(t => t <= caps[level - 1]));
+  }
+});
+
+test('les exemples approuvés appartiennent aux banques et les inversions retrouvent exactement le total', () => {
+  const { api, context } = runtime();
+  const banks = JSON.parse(vm.runInContext('JSON.stringify(decimalTotals)', context));
+  const examples = [
+    [50, 1, 37, 18.5], [50, 2, 153, 76.5], [50, 3, 753, 376.5],
+    [25, 1, 26, 6.5], [25, 2, 37, 9.25], [25, 3, 237, 59.25],
+    [20, 1, 24, 4.8], [20, 2, 124, 24.8], [20, 3, 324, 64.8],
+    [10, 1, 37, 3.7], [10, 2, 237, 23.7], [10, 3, 2737, 273.7],
+    [5, 1, 38, 1.9], [5, 2, 135, 6.75], [5, 3, 137, 6.85],
+    [75, 1, 26, 19.5], [75, 2, 126, 94.5], [75, 3, 137, 102.75],
+    [1, 1, 70, 0.7], [1, 2, 147, 1.47], [1, 3, 2745, 27.45]
+  ];
+  for (const [p, level, t, part] of examples) {
+    assert.ok(banks[p][level].includes(t));
+    assert.equal(round(t * p / 100), part);
+    for (const mode of ['direct', 'find_total', 'find_percent']) {
+      const result = api.buildText({ percent: p, totalVal: t, calcVal: part, mode });
+      assert.ok(result.qHtml && result.cHtml);
+      assert.doesNotMatch(result.cHtml, /undefined|NaN/);
+    }
+    assert.equal(round(part * 100 / p), t);
+  }
+});
+
+test('les séries décimales restent reproductibles, même quand la petite banque de 1 % est épuisée', () => {
+  const { api, configure } = runtime();
+  for (const type of types) for (const level of [1, 2, 3]) {
+    configure({ types: [type], levels: [level], nombres: ['decimaux'], count: 20, seed: 140 });
+    assert.equal(api.getQuizData(), true);
+    assert.equal(api.data.length, 20);
+    assert.ok(api.data.every(q => q.type === type && q.level === level && q.useDecimals));
+    const first = JSON.stringify(api.data);
+    assert.equal(api.getQuizData(), true);
+    assert.equal(JSON.stringify(api.data), first);
+  }
+  configure({ types: ['base_1'], levels: [1], nombres: ['decimaux'], count: 20, seed: 140 });
+  api.getQuizData();
+  assert.equal(new Set(api.data.map(q => q.totalVal)).size, 9);
+  assert.ok(api.data.every(q => q.calcVal >= 0.1 && q.calcVal <= 0.9));
+});
+
+test('Entiers et Décimaux se mélangent par question, avec les niveaux cochés et sans quota imposé', () => {
+  const { api, configure } = runtime();
+  const counts = { entiers: 0, decimaux: 0 };
+  const seenLevels = new Set();
+  let sameModeSeries = 0;
+  for (let seed = 1; seed <= 1000; seed++) {
+    configure({ types, levels: [1, 2, 3], nombres: ['entiers', 'decimaux'], count: 5, seed });
+    api.getQuizData();
+    const first = JSON.stringify(api.data);
+    for (const q of api.data) {
+      counts[q.useDecimals ? 'decimaux' : 'entiers']++;
+      seenLevels.add(q.level);
+    }
+    if (new Set(api.data.map(q => q.useDecimals)).size === 1) sameModeSeries++;
+    api.getQuizData();
+    assert.equal(JSON.stringify(api.data), first);
+  }
+  assert.ok(counts.entiers > 2300 && counts.entiers < 2700, JSON.stringify(counts));
+  assert.ok(counts.decimaux > 2300 && counts.decimaux < 2700, JSON.stringify(counts));
+  assert.deepEqual([...seenLevels].sort(), [1, 2, 3]);
+  assert.ok(sameModeSeries > 0); // Une série courte n'impose pas les deux modes.
 });
