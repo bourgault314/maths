@@ -73,6 +73,7 @@
 
     .hint-box { padding: 10px 40px; display: none; flex-direction: column; align-items: center; }
     .unit-note { display: block; margin-top: 8px; font-size: .5em; font-weight: normal; color: var(--muted); }
+    .help-controls { display: flex; justify-content: flex-end; flex-shrink: 0; margin-top: auto; padding: 8px 24px 16px; }
     .help-toggle { align-self: center; min-height: 44px; padding: 8px 14px; border: 1px solid #cfd8ea; border-radius: 8px; background: #f8fafc; color: var(--text); font: inherit; font-size: .95rem; cursor: pointer; touch-action: manipulation; }
     .help-toggle:hover { background: #eef4ff; }
     .help-toggle:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
@@ -316,13 +317,15 @@
     <div class="question-box"><p class="question-text" id="qText"></p></div>
     <div class="hint-box" id="hBox">
       <div class="stage-wrap"><svg id="svgStage" viewBox="0 0 1000 320"></svg></div>
-      <button class="help-toggle" id="btnHelp" type="button" aria-expanded="false" aria-controls="calculationHelp" onclick="toggleCalculationHelp()" hidden></button>
       <div class="calculation-help" id="calculationHelp" hidden>
         <p class="help-caption" id="helpCaption"></p>
         <div class="stage-wrap"><svg id="helpStage" viewBox="0 0 1000 320"></svg></div>
       </div>
     </div>
     <div class="correction-box" id="cBox"><p class="correction-text" id="cText"></p></div>
+    <div class="help-controls" id="helpControls" hidden>
+      <button class="help-toggle" id="btnHelp" type="button" aria-expanded="false" aria-controls="calculationHelp" onclick="toggleCalculationHelp()" hidden></button>
+    </div>
     
     <div class="thumbnails-bar" id="thumbBar"></div>
   </div>
@@ -1325,6 +1328,7 @@
       emptyElement(stage);
       emptyElement(helpStage);
       helpButton.hidden = q.phase === 0 || !help;
+      document.getElementById('helpControls').hidden = helpButton.hidden;
       helpButton.textContent = help ? `${help.label} ${showHelp ? '▴' : '▾'}` : '';
       helpButton.setAttribute('aria-expanded', String(Boolean(showHelp)));
       helpPanel.hidden = !showHelp;
