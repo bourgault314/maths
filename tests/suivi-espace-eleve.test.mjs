@@ -215,3 +215,265 @@ test("un affichage ordinaire (pas un retour de cache) ne touche à rien", () => 
     "sans « persisted », le script de la page vient de s'exécuter : c'est lui qui décide");
   assert.equal($("titre").textContent, "Bonjour Léa");
 });
+
+// -------------------------------------------------------------------------
+// Lot « jauges » (08/09/2026). La tuile d'une activité COMMENCÉE porte une
+// barre, « 4 tables acquises sur 9 », le badge de rang, et « Mon mélange à
+// faire » quand il est dû. Trois règles tiennent tout ce qui suit, et ce sont
+// elles que ce bloc garde :
+//   1. la grille s'affiche d'abord, entière ; la jauge arrive après et ne peut
+//      jamais l'empêcher d'exister (serveur muet, réponse illisible, moteur
+//      absent : la tuile reste ce qu'elle était, sans message d'erreur) ;
+//   2. c'est le MOTEUR de l'activité qui lit son parcours, pas cette page ;
+//   3. rien de ce qui vient du serveur n'entre autrement que par textContent.
+//
+// Sabotages attendus (chacun rend un test rouge) :
+//   f) compter les tables acquises dans la page au lieu d'appeler le moteur
+//   g) enlever le garde-fou « aucune table acquise » (`if (!fait) return null`)
+//      → une tuile jamais ouverte, ou jouée sans réussir encore une table,
+//      afficherait « 0 table acquise sur 9 » au-dessus d'une barre vide
+//   h) charger le moteur depuis mathsgo.re
+//   i) attendre (await) la jauge avant d'afficher la grille
+//   j) écrire le compte avec innerHTML
+//   k) mettre le code de l'élève dans l'adresse de api/parcours.php
+//   q) retirer l'écouteur « error » du chargement du moteur → la promesse ne
+//      se résout jamais et le test « moteur introuvable » expire
+//   t) inverser la largeur de la barre (`1 - part`) ou l'écrire en dur
+//      (`100%`) → la barre ne suit plus le compte
+
+const MOTEUR_SERVI = join(racine, "_serveur/public/prof/defi_tables_mon_parcours.js");
+const { createRequire } = await import("node:module");
+const PARCOURS = createRequire(import.meta.url)(MOTEUR_SERVI);
+
+// La fonction de lecture telle qu'elle est ÉCRITE dans la page, exécutée sur
+// le vrai moteur : une assertion sur le texte du fichier décrirait l'intention
+// au lieu de la vérifier.
+function lecteurDeJauge() {
+  const debut = page.indexOf("  const JAUGES = {");
+  assert.ok(debut > 0, "la page doit ranger ses lecteurs de jauge dans JAUGES");
+  const fin = page.indexOf("\n  };", debut) + "\n  };".length;
+  const source = page.slice(debut, fin) + "\n  return JAUGES;";
+  return new Function(source)();
+}
+
+function parcoursFabrique({acquises = 0, melangeAJour = false, etoiles = 0} = {}) {
+  const parcours = PARCOURS.normaliserParcours(PARCOURS.creerParcours());
+  PARCOURS.TABLES.slice(0, acquises).forEach(table => { parcours.tables[table].acquise = "2026-09-05"; });
+  parcours.melange.aJour = melangeAJour;
+  parcours.expert.etoiles = etoiles;
+  if (etoiles >= PARCOURS.ETOILES_MAX) parcours.expert.couronne = "2026-09-08";
+  parcours.rang = PARCOURS.rangDeLEtat(parcours);
+  return parcours;
+}
+
+test("le compte de la tuile est mot pour mot celui de l'accueil de Défi tables", () => {
+  const lire = lecteurDeJauge()["defi-tables"];
+  assert.equal(lire(PARCOURS, parcoursFabrique({acquises: 4})).compte, "4 tables acquises sur 9");
+  assert.equal(lire(PARCOURS, parcoursFabrique({acquises: 1})).compte, "1 table acquise sur 9",
+    "au singulier, comme sur l'accueil : « 1 table acquise »");
+  assert.equal(lire(PARCOURS, parcoursFabrique({acquises: 9, melangeAJour: true})).compte,
+    "9 tables acquises sur 9");
+});
+
+test("la jauge lit le parcours par le moteur, jamais par la page", () => {
+  const jauges = page.slice(page.indexOf("  const JAUGES = {"), page.indexOf("\n  };", page.indexOf("  const JAUGES = {")));
+  assert.match(jauges, /P\.normaliserParcours\(brut\)/, "le parcours reçu passe d'abord par le moteur");
+  assert.match(jauges, /P\.etatAffichage\(parcours\)/, "et c'est le moteur qui dit l'état");
+  // « acquise », « rang » et « mélange » sont les règles du moteur, et elles
+  // ont changé le 08/09/2026 (lot 3). Les relire ici, c'est les réécrire.
+  assert.doesNotMatch(jauges, /parcours\.tables|\.acquise\b|parcours\.rang|parcours\.melange/,
+    "la page ne doit pas fouiller le parcours elle-même");
+});
+
+test("le rang et le mélange de la tuile sont ceux de l'état, pas un calcul d'ici", () => {
+  const lire = lecteurDeJauge()["defi-tables"];
+  const quatre = lire(PARCOURS, parcoursFabrique({acquises: 4}));
+  assert.equal(quatre.rang.nom, "Argent", "3 tables acquises ouvrent Argent (règle du moteur)");
+  assert.equal(quatre.note, "Mon mélange à faire", "dès 2 tables acquises, le mélange bloque la suite");
+  const ajour = lire(PARCOURS, parcoursFabrique({acquises: 4, melangeAJour: true}));
+  assert.equal(ajour.note, "", "mélange réussi : plus rien d'orange dans la tuile");
+  const legende = lire(PARCOURS, parcoursFabrique({acquises: 9, melangeAJour: true, etoiles: 5}));
+  assert.equal(legende.rang.cle, "legende");
+  assert.equal(legende.fait, legende.total, "la barre est pleine");
+});
+
+test("une activité jamais ouverte n'a pas de jauge du tout", () => {
+  const lire = lecteurDeJauge()["defi-tables"];
+  assert.equal(lire(PARCOURS, PARCOURS.creerParcours()), null,
+    "une barre vide n'apprend rien à l'élève et ressemble à un reproche");
+});
+
+// Le jour de la distribution des codes : l'élève ouvre l'appli, s'entraîne,
+// et n'acquiert pas encore de table (20 bonnes réponses en 1 min 30, 2 erreurs
+// au plus). Son parcours n'est plus vide — un score a bougé — mais sa tuile
+// n'a toujours rien à montrer : « 0 table acquise sur 9 » au-dessus d'une
+// barre vide est le symétrique exact de ce qu'on refuse à la carte de classe
+// du professeur. Trouvé par Claude Code le 09/09/2026, sur la vraie page.
+test("une activité ouverte et jouée sans table acquise n'a pas de jauge non plus", () => {
+  const lire = lecteurDeJauge()["defi-tables"];
+  const joue = parcoursFabrique();
+  joue.tables[PARCOURS.TABLES[0]].entraine[PARCOURS.ENTRAINEMENTS[0]] = 1;
+  joue.jours = ["2026-09-09"];
+  const relu = PARCOURS.normaliserParcours(JSON.parse(JSON.stringify(joue)));
+  assert.equal(PARCOURS.estVide(relu), false,
+    "le parcours a bien bougé : ce n'est pas le cas « jamais ouverte », le moteur le sait");
+  assert.equal(PARCOURS.etatAffichage(relu).acquises.length, 0, "et pourtant aucune table n'est acquise");
+  assert.equal(lire(PARCOURS, relu), null,
+    "« 0 table acquise sur 9 » avec une barre vide, le premier jour, est le reproche qu'on refuse");
+  assert.notEqual(lire(PARCOURS, parcoursFabrique({acquises: 1})), null,
+    "dès la première table, la jauge apparaît");
+});
+
+test("le moteur est servi d'ici et n'est chargé que s'il y a un parcours à lire", () => {
+  assert.match(page, /const MOTEUR = "prof\/defi_tables_mon_parcours\.js\?v=/,
+    "la copie servie par le suivi : la politique de contenu interdit un script d'un autre domaine");
+  const bloc = page.slice(page.indexOf("  async function habillerJauges"));
+  const lecture = bloc.indexOf("lireParcours(code, cle)");
+  const chargement = bloc.indexOf("await chargerMoteur()");
+  assert.ok(lecture > 0 && chargement > lecture,
+    "70 ko de moteur ne se téléchargent qu'après avoir su qu'il y a quelque chose à afficher");
+  assert.match(bloc, /if \(!parcours\.some\(Boolean\)\) return;/,
+    "aucun parcours : on s'arrête avant le moteur");
+});
+
+test("la grille s'affiche avant la jauge, et rien ne l'attend", () => {
+  const ordre = page.indexOf('$("ecran-espace").hidden = false;');
+  const appel = page.indexOf("habillerJauges(donnees, code);", ordre);
+  assert.ok(ordre > 0 && appel > ordre, "la grille est à l'écran avant que la jauge soit demandée");
+  assert.doesNotMatch(page.slice(ordre, appel + 60), /await habillerJauges/,
+    "un « await » ici, et un serveur lent retiendrait la liste des activités");
+});
+
+test("la jauge se construit par textContent, jamais en HTML", () => {
+  const debut = page.indexOf("  function poserJauge(");
+  const bloc = page.slice(debut, page.indexOf("\n  }", debut));
+  assert.doesNotMatch(bloc, /innerHTML/, "un parcours est fabriqué par l'appareil d'un élève");
+  assert.match(bloc, /compte\.textContent = jauge\.compte;/);
+  assert.match(bloc, /note\.textContent = jauge\.note;/);
+});
+
+test("lire un parcours n'écrit jamais le code dans une adresse", () => {
+  const debut = page.indexOf("  async function lireParcours(");
+  const bloc = page.slice(debut, page.indexOf("\n  }", debut));
+  assert.match(bloc, /fetch\("api\/parcours\.php", \{\s*\n\s*method: "POST"/,
+    "le code voyage dans le corps : une adresse s'inscrit en clair dans les journaux de l'hébergeur");
+  assert.match(bloc, /body: JSON\.stringify\(\{code, appli: cle, lire: true\}\)/);
+  assert.doesNotMatch(page, /parcours\.php\?/, "aucun paramètre d'adresse sur ce point d'entrée");
+  assert.match(bloc, /catch \(_\) \{ return null; \}/, "toute avarie rend null : pas de message d'erreur à l'élève");
+});
+
+// La règle nº 1, exécutée et pas décrite : serveur muet, la grille reste
+// intacte. Le bloc de la jauge est extrait tel qu'il est écrit dans la page,
+// et joué avec un serveur qui ne répond jamais.
+function jouerHabillage({reponse, moteurCharge = true}) {
+  const debut = page.indexOf('  const MOTEUR = "prof/defi_tables_mon_parcours.js');
+  assert.ok(debut > 0, "la page doit nommer le moteur qu'elle charge");
+  const ancre = page.indexOf("  async function habillerJauges(donnees, code) {", debut);
+  const fin = page.indexOf("\n  }", page.indexOf("for (let i = aLire.length - 1", ancre)) + "\n  }".length;
+  const source = page.slice(debut, fin)
+    .replace(/<\?=[\s\S]*?\?>/, "0123456789")
+    + "\n  return habillerJauges;";
+
+  const tuile = {
+    classes: [],
+    enfants: [],
+    classList: {add(nom) { tuile.classes.push(nom); }},
+    querySelector: () => null,
+    closest: () => ({}),
+    append(noeud) { tuile.enfants.push(noeud); }
+  };
+  const applis = {querySelector: () => tuile, firstChild: null, insertBefore() {}};
+  const $ = () => applis;
+  const faireNoeud = () => {
+    const noeud = {style: {}, textContent: "", enfants: [], ecouteurs: {},
+      append(...n) { noeud.enfants.push(...n); },
+      // La page écoute « load » et « error » par addEventListener : sans cette
+      // ligne, le faux <script> n'a pas d'écouteur du tout et la promesse du
+      // moteur ne se résout jamais.
+      addEventListener(type, fn) { noeud.ecouteurs[type] = fn; },
+      setAttribute() {}, querySelector: () => null};
+    return noeud;
+  };
+  // Le moteur se charge par un <script> ajouté à la volée. Le faux document
+  // rend « load » ou « error » selon `moteurCharge` : c'est le seul moyen
+  // d'éprouver le MOTEUR INTROUVABLE, un cas qu'aucun serveur simulé ne
+  // produit — et le troisième pied de la règle nº 1, à côté du serveur muet et
+  // de la réponse illisible.
+  const doc = {createElement: faireNoeud, createTextNode: t => ({texte: t}),
+    head: {appendChild(script) {
+      setTimeout(() => script.ecouteurs[moteurCharge ? "load" : "error"]?.(), 0);
+    }}};
+  const fenetre = {MATHSGO_DEFI_TABLES_MON_PARCOURS: moteurCharge ? PARCOURS : null};
+  const habiller = new Function("$", "window", "document", "fetch", "CSS", "Promise", "Math", source)(
+    $, fenetre, doc, reponse, {escape: s => s}, Promise, Math);
+  const donnees = {applis: [{cle: "defi-tables", disponible: true, url: "https://exemple/", ancre: null}]};
+  return {habiller: habiller(donnees, "ABC123"), tuile};
+}
+
+test("serveur muet : la tuile reste exactement ce qu'elle était", async () => {
+  const {habiller, tuile} = jouerHabillage({reponse: () => Promise.reject(new Error("réseau"))});
+  await habiller;
+  assert.deepEqual(tuile.enfants, [], "rien n'a été ajouté à la tuile");
+  assert.deepEqual(tuile.classes, [], "et elle n'a même pas changé de classe");
+});
+
+test("réponse illisible : pas de jauge, pas d'erreur affichée", async () => {
+  const {habiller, tuile} = jouerHabillage({
+    reponse: () => Promise.resolve({ok: true, json: () => Promise.resolve({ok: true, existe: true, parcours: "pas un objet"})})
+  });
+  await habiller;
+  assert.deepEqual(tuile.enfants, [], "un parcours illisible ne casse rien et n'écrit rien");
+});
+
+// Le moteur absent, c'est le fichier oublié pendant un dépôt FTP, ou un cache
+// qui rend une page vide. Le parcours de l'élève arrive, mais plus rien ne sait
+// le lire : sa tuile doit rester exactement ce qu'elle était.
+// Le délai est porté PAR LE TEST, pas par la ligne de commande : « node --test »
+// n'a aucune expiration par défaut, et sans cela le jour où le chargement du
+// moteur cesse de se résoudre, la CI attendrait indéfiniment au lieu d'afficher
+// un rouge. Un test qui pend n'est pas un test qui échoue. (Constaté en
+// rejouant le sabotage q le 09/09/2026.)
+test("moteur introuvable : la grille reste entière, sans jauge et sans message", {timeout: 5000}, async () => {
+  const parcours = JSON.parse(JSON.stringify(parcoursFabrique({acquises: 4})));
+  const {habiller, tuile} = jouerHabillage({
+    reponse: () => Promise.resolve({ok: true, json: () => Promise.resolve({ok: true, existe: true, parcours})}),
+    moteurCharge: false
+  });
+  await habiller;
+  assert.deepEqual(tuile.enfants, [],
+    "le parcours est bien arrivé, mais rien ne peut le lire : la tuile ne bouge pas");
+  assert.deepEqual(tuile.classes, [], "et elle ne change même pas de classe");
+});
+
+test("parcours reçu : la jauge est posée sur la tuile", async () => {
+  const parcours = JSON.parse(JSON.stringify(parcoursFabrique({acquises: 4})));
+  const {habiller, tuile} = jouerHabillage({
+    reponse: () => Promise.resolve({ok: true, json: () => Promise.resolve({ok: true, existe: true, parcours})})
+  });
+  await habiller;
+  assert.equal(tuile.enfants.length, 1, "la jauge est ajoutée");
+  assert.deepEqual(tuile.classes, ["a-jauge"], "et la tuile passe en plusieurs lignes");
+});
+
+// La barre est le seul élément graphique du lot, et jusqu'ici aucun test ne la
+// regardait : une barre toujours pleine, ou inversée, laissait 2 295 tests
+// verts (relevé par Claude Code le 09/09/2026). Elle se mesure ici sur la
+// tuile construite par la page : la partie remplie a une largeur en pour cent,
+// arrondie, égale à la part des tables acquises.
+async function largeurDeLaBarre(acquises) {
+  const parcours = JSON.parse(JSON.stringify(parcoursFabrique({acquises, melangeAJour: true})));
+  const {habiller, tuile} = jouerHabillage({
+    reponse: () => Promise.resolve({ok: true, json: () => Promise.resolve({ok: true, existe: true, parcours})})
+  });
+  await habiller;
+  const [bloc] = tuile.enfants;
+  const [barre] = bloc.enfants;
+  const [remplie] = barre.enfants;
+  return remplie.style.width;
+}
+
+test("la barre de la tuile est remplie à la mesure des tables acquises", async () => {
+  assert.equal(await largeurDeLaBarre(4), "44%", "4 tables sur 9 : 44,4 % arrondi à 44");
+  assert.equal(await largeurDeLaBarre(1), "11%", "1 table sur 9");
+  assert.equal(await largeurDeLaBarre(9), "100%", "9 sur 9 : la barre est pleine");
+});

@@ -1,10 +1,10 @@
 # Manifeste du serveur de suivi maths&go — produit par outils/generer-version.php.
 # Ne pas modifier à la main : un test du dépôt refait ce calcul à chaque passage.
 # verifier.php relit ce fichier en ligne et compare chaque empreinte.
-lot defi-tables-lot3-regles
-genere_le 2026-09-08
+lot suivi-jauges
+genere_le 2026-09-09
 fichiers 28
-manifeste 84d3349d833bdc539fedcc8bd3c08ec447c5f4505ebfceb0bb8b9f2fb19bd211
+manifeste d95f06070e1ec9203e7a56e93c6706f4cd7876f1a196c95d71eddbe2fd730352
 61b230d36219b3c4515e56c1ff59afb1a85ffa12343956bd73b16ba04867cdca  .htaccess
 d1cdf00b3e672130b90da1f1aa9333949036fc3d5ad866d539cd11aef7fd8204  api/eleve.php
 dc938db0cb546fdfc4121ddeebdf558ca62259f20d6aecb398c84e2382697675  api/parcours.php
@@ -12,7 +12,7 @@ a3e0c097d89c3cb582a59a436ac7263b789e15e72780cb40f83ae36259ede8ee  api/prof.php
 94ac7a5f0a2a898be85b74095b42754e7b1d31b73f2498ebce4771ad48554992  apple-touch-icon.png
 2ebd7777bfa62e332ddaeb0be3a93e6c3a20bde30deccc6d3e86ca4de8345fce  favicon.ico
 b901e292ec96dadfd1a9415bc315027c93b635d0f4254a6da8ff7afd92c6520e  favicon.svg
-89f82e3c072a678131c2c16dc32ffbf5b28c68e4011c6ed774b9b5a6efccac33  index.php
+e111e03d4df8ad99633ff69c50963b65ef41c7089b96ca16bd1d7587dff74ca0  index.php
 014a992fe48e48144dcaa218601a11ec8745fe1fe7a7d30f3323ec9e213159d5  infos.php
 fa28d421a28ed9b6f4b997d5119c2b8adbacff6e2dd119a179b71230f9664934  lib/.htaccess
 b9458dea207080a2fa17bc67e25327308e219170d346ea3eb904b1cad7ea3ede  lib/applis.php
@@ -31,5 +31,5 @@ b476cc832c9b7497eed6194afecee863a686469e9162ad1832bd7e7732ccc304  mathsgo-logo-p
 2a442b4a4ae2452f649f77224a0aae91e6fe0ac83566253d65d1dc1807cdb6a2  mathsgo-logo.png
 4cc15b863e2b7d4afaa761685a411b7309fe133ecff7625420ff1dedfa365502  menage.php
 120fda82c4776eb491127fc7afaf1e2c249891bcdcbae0fa12d3a34b2967a126  prof/defi_tables_mon_parcours.js
-2d835efedc5175afc509b89d9a621af574bd599e6e8de424a31f1a0b67b0ea2b  prof/index.php
+65111874c8f8683f95a94a07d1cb5ea447fcb7daca42e9f1fecd10d6a48f114f  prof/index.php
 bd509f1f05320588a65c6256a121c478a2a0c6f01adc37f15e83ca44038f00bc  verifier.php

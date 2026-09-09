@@ -7,6 +7,12 @@ header('Content-Type: text/html; charset=utf-8');
 // Politique de contenu (voir lib/entetes.php) : seul le script portant ce
 // nonce s'exécute dans la page.
 $nonce = entetes_page();
+// Le moteur de Defi tables, copie du depot servie d'ici (prof/), est charge par
+// la page pour lire un parcours : lui seul connait les regles (tables acquises,
+// rang, melange). Sa version dans l'adresse suit son contenu, comme dans
+// prof/index.php : un nouveau fichier depose n'est jamais masque par le cache.
+$moteur = __DIR__ . '/prof/defi_tables_mon_parcours.js';
+$versionMoteur = is_file($moteur) ? substr(md5_file($moteur), 0, 10) : '0';
 ?>
 <!doctype html>
 <html lang="fr">
@@ -95,6 +101,52 @@ $nonce = entetes_page();
   .pastille { margin-left: auto; flex: 0 0 auto; background: #eef2f7; color: var(--muted);
               font-size: .68rem; font-weight: 800; letter-spacing: .04em; text-transform: uppercase;
               padding: 4px 9px; border-radius: 999px; }
+  /* La jauge d'une activite COMMENCEE : une barre, le compte, le rang. Les
+     memes mots et le meme badge que sur l'accueil de l'activite
+     (outils/calcul_mental/defi_tables.html) : l'eleve doit retrouver son
+     chiffre a l'identique d'un ecran a l'autre, sinon il croit avoir perdu
+     quelque chose. Une activite sans table acquise n'a pas de jauge du tout
+     (jamais ouverte, ou jouee sans encore reussir une table) : une barre vide
+     n'apprend rien et ressemble a un reproche. */
+  /* La jauge occupe toute la largeur de la tuile, sous la ligne du nom : la
+     barre est lisible, et « 4 tables acquises sur 9 » tient a cote du rang
+     meme sur un telephone. Seule une tuile qui PORTE une jauge passe en
+     plusieurs lignes ; les autres gardent leur mise en page d'avant (une
+     pastille « Bientot » ne doit pas se retrouver a la ligne). */
+  .appli.a-jauge { flex-wrap: wrap; }
+  .appli.a-jauge .jauge { flex: 0 0 100%; }
+  /* Sans base zero, le texte garde sa largeur de contenu et c'est LUI qui
+     passe a la ligne : le dessin se retrouvait seul sur la premiere. */
+  .appli.a-jauge .texte { flex: 1 1 0; }
+  .jauge { margin-top: 8px; }
+  .jauge-barre { height: 7px; border-radius: 999px; background: #e6ecf3; overflow: hidden; }
+  .jauge-barre i { display: block; height: 100%; border-radius: 999px;
+                   background: linear-gradient(90deg, #08aaa5, #0b67b2); }
+  .jauge-ligne { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 6px; }
+  .appli .jauge-ligne .compte { color: var(--ink); font-size: .86rem; font-weight: 800; }
+  .appli .jauge-note { display: block; margin-top: 4px; color: #a15c11;
+                       font-size: .82rem; font-weight: 700; }
+  /* Le badge de rang, repris tel quel de l'accueil de Defi tables : un point de
+     metal et le nom (une couronne pour la Legende). */
+  .rang { display: inline-flex; align-items: center; gap: 5px; padding: 3px 9px 3px 6px;
+          border-radius: 999px; font-size: .74rem; font-weight: 950; border: 1px solid transparent;
+          white-space: nowrap; }
+  .rang:empty { display: none; }
+  .rang i { width: 12px; height: 12px; border-radius: 50%; display: inline-block;
+            box-shadow: inset 0 -2px 0 rgba(0, 0, 0, .18), inset 0 1px 0 rgba(255, 255, 255, .7); }
+  .appli .rang.bronze { background: #f7e9dc; color: #7a4416; border-color: #e6c9ad; }
+  .rang.bronze i { background: linear-gradient(135deg, #e0a06a, #b8722f); }
+  .appli .rang.argent { background: #eef1f4; color: #465563; border-color: #d3dbe3; }
+  .rang.argent i { background: linear-gradient(135deg, #e6ebf0, #98a5b3); }
+  .appli .rang.or { background: #fff4cc; color: #7a5a00; border-color: #f0dc8c; }
+  .rang.or i { background: linear-gradient(135deg, #ffe17a, #d9a300); }
+  .appli .rang.platine { background: #e8f4f8; color: #2c5d70; border-color: #bfdde8; }
+  .rang.platine i { background: linear-gradient(135deg, #e6f6fa, #7db7c9); }
+  .appli .rang.diamant { background: #e9f0ff; color: #2a4c93; border-color: #c2d3f7; }
+  .rang.diamant i { background: linear-gradient(135deg, #b9d3ff, #4f7fd6); border-radius: 3px;
+                    transform: rotate(45deg) scale(.85); }
+  .appli .rang.legende { background: linear-gradient(135deg, #fff1c2, #ffe08a); color: #6b4a00;
+                         border-color: #e6c25a; }
   .aide { margin-top: 20px; color: var(--muted); font-size: .9rem; }
   footer { padding: 16px; border-top: 1px solid var(--line); background: var(--paper);
            color: var(--muted); font-size: .82rem; text-align: center; }
@@ -307,6 +359,161 @@ $nonce = entetes_page();
     return "";
   }
 
+  // ------------------------------------------------------------------ la jauge
+  //
+  // Ce que la tuile d'une activité COMMENCÉE montre en plus : une barre, le
+  // compte (« 4 tables acquises sur 9 ») et le rang. Trois règles tiennent
+  // tout ce qui suit :
+  //  1. la grille s'affiche d'abord, entière, et la jauge arrive après. Un
+  //     serveur muet, une réponse illisible, un moteur qui ne se charge pas :
+  //     la tuile reste exactement ce qu'elle était, sans message d'erreur.
+  //     L'élève doit pouvoir ouvrir son activité même quand la jauge échoue ;
+  //  2. rien de ce que le serveur renvoie n'entre dans la page autrement que
+  //     par textContent — c'est la règle du serveur depuis le premier lot, et
+  //     un parcours est un objet fabriqué par un appareil d'élève ;
+  //  3. c'est le MOTEUR de l'activité qui lit son parcours, jamais cette page :
+  //     « acquise », « rang », « mélange » sont ses règles à lui, et elles
+  //     changent (elles ont changé le 08/09/2026). La page ne fait que
+  //     l'appeler.
+  const MOTEUR = "prof/defi_tables_mon_parcours.js?v=<?= htmlspecialchars($versionMoteur, ENT_QUOTES) ?>";
+  let moteurEnCours = null;
+
+  // Le moteur est chargé UNE fois, et seulement s'il y a une activité commencée
+  // à habiller : 70 ko qu'un élève qui n'a rien commencé n'a aucune raison de
+  // télécharger. Il est servi d'ici (politique de contenu : jamais un script
+  // de mathsgo.re dans cette page) ; le fichier est le même que celui de la
+  // page du professeur, gardé identique au dépôt par un test.
+  function chargerMoteur() {
+    if (window.MATHSGO_DEFI_TABLES_MON_PARCOURS) return Promise.resolve(window.MATHSGO_DEFI_TABLES_MON_PARCOURS);
+    if (moteurEnCours) return moteurEnCours;
+    moteurEnCours = new Promise(resolve => {
+      const script = document.createElement("script");
+      script.src = MOTEUR;
+      script.addEventListener("load", () => resolve(window.MATHSGO_DEFI_TABLES_MON_PARCOURS || null));
+      script.addEventListener("error", () => resolve(null));
+      document.head.appendChild(script);
+    });
+    return moteurEnCours;
+  }
+
+  // Une entrée par activité qui sait se raconter. Tant qu'une activité n'a pas
+  // de lecteur ici, elle n'a pas de jauge — et rien ne casse.
+  const JAUGES = {
+    "defi-tables": (P, brut) => {
+      const parcours = P.normaliserParcours(brut);
+      const etat = P.etatAffichage(parcours);
+      const fait = etat.acquises.length;
+      const total = P.TABLES.length;
+      // Pas de jauge tant qu'AUCUNE table n'est acquise : activité jamais
+      // ouverte, ou ouverte et jouée sans encore réussir une table — il faut
+      // 20 bonnes réponses en 1 min 30 avec 2 erreurs au plus, et le jour de
+      // la distribution des codes, c'est toute la classe. « 0 table acquise
+      // sur 9 » au-dessus d'une barre vide est le reproche qu'on refuse ; c'est
+      // le même seuil que la carte de classe du professeur (09/09/2026).
+      if (!fait) return null;
+      return {
+        fait, total,
+        // Mot pour mot la phrase de l'accueil de Défi tables.
+        compte: `${fait} table${fait > 1 ? "s" : ""} acquise${fait > 1 ? "s" : ""} sur ${total}`,
+        rang: etat.rang,
+        note: etat.melange.du ? "Mon mélange à faire" : ""
+      };
+    }
+  };
+
+  // Le parcours d'une activité, lu comme tout le reste : le code dans le CORPS
+  // d'un POST, jamais dans l'adresse. Toute avarie rend null.
+  async function lireParcours(code, cle) {
+    try {
+      const reponse = await fetch("api/parcours.php", {
+        method: "POST",
+        headers: {"Content-Type": "text/plain;charset=UTF-8"},
+        body: JSON.stringify({code, appli: cle, lire: true}),
+        cache: "no-store"
+      });
+      if (!reponse.ok) return null;
+      const donnees = await reponse.json().catch(() => null);
+      if (!donnees || !donnees.ok || !donnees.existe || !donnees.parcours) return null;
+      return donnees.parcours;
+    } catch (_) { return null; }
+  }
+
+  // Le badge du rang : le même dessin que sur l'accueil de l'activité (un point
+  // de métal et le nom ; la couronne pour la Légende).
+  function badgeRang(rang) {
+    const badge = document.createElement("span");
+    if (!rang || !rang.niveau) return badge;
+    badge.className = `rang ${rang.cle}`;
+    if (rang.cle !== "legende") {
+      const point = document.createElement("i");
+      point.setAttribute("aria-hidden", "true");
+      badge.append(point);
+    }
+    badge.append(document.createTextNode(rang.cle === "legende" ? `\u{1F451} ${rang.nom}` : rang.nom));
+    badge.setAttribute("aria-label", `Mon rang : ${rang.nom}`);
+    return badge;
+  }
+
+  // La jauge posée dans la tuile. Tout est construit par createElement et
+  // textContent : rien du serveur ne devient du HTML.
+  function poserJauge(tuile, jauge) {
+    const bloc = document.createElement("div");
+    bloc.className = "jauge";
+    const barre = document.createElement("div");
+    barre.className = "jauge-barre";
+    const remplie = document.createElement("i");
+    const part = jauge.total > 0 ? Math.max(0, Math.min(1, jauge.fait / jauge.total)) : 0;
+    remplie.style.width = `${Math.round(part * 100)}%`;
+    barre.append(remplie);
+    const ligne = document.createElement("div");
+    ligne.className = "jauge-ligne";
+    const compte = document.createElement("span");
+    compte.className = "compte";
+    compte.textContent = jauge.compte;
+    ligne.append(compte, badgeRang(jauge.rang));
+    bloc.append(barre, ligne);
+    if (jauge.note) {
+      const note = document.createElement("span");
+      note.className = "jauge-note";
+      note.textContent = jauge.note;
+      bloc.append(note);
+    }
+    tuile.classList.add("a-jauge");
+    tuile.append(bloc);
+  }
+
+  // Les activités commencées passent en tête : c'est là que l'élève retourne.
+  // L'ordre des autres ne bouge pas, et les annonces « Bientôt » restent après
+  // (elles sont déjà les dernières de la liste). Avec une seule activité
+  // ouverte aujourd'hui, cela ne se voit pas — c'est le jour où il y en aura
+  // trois que la règle servira.
+  function remonter(li) {
+    const liste = $("applis");
+    if (liste.firstChild && liste.firstChild !== li) liste.insertBefore(li, liste.firstChild);
+  }
+
+  async function habillerJauges(donnees, code) {
+    const aLire = (donnees.applis || [])
+      .filter(appli => appli.disponible && appli.url && JAUGES[appli.cle])
+      .map(appli => appli.cle);
+    if (!aLire.length) return;
+    const parcours = await Promise.all(aLire.map(cle => lireParcours(code, cle)));
+    if (!parcours.some(Boolean)) return;
+    const P = await chargerMoteur();
+    if (!P) return;
+    // À l'envers : la première activité commencée finit bien la première.
+    for (let i = aLire.length - 1; i >= 0; i -= 1) {
+      if (!parcours[i]) continue;
+      const tuile = $("applis").querySelector(`.appli[data-cle="${CSS.escape(aLire[i])}"]`);
+      if (!tuile || tuile.querySelector(".jauge")) continue;
+      let jauge = null;
+      try { jauge = JAUGES[aLire[i]](P, parcours[i]); } catch (_) { jauge = null; }
+      if (!jauge) continue;
+      poserJauge(tuile, jauge);
+      remonter(tuile.closest("li"));
+    }
+  }
+
   function afficherEspace(donnees, code) {
     $("titre").textContent = donnees.prenom ? `Bonjour ${donnees.prenom}` : "Mon espace";
     $("classe").textContent = donnees.classe || "";
@@ -322,6 +529,9 @@ $nonce = entetes_page();
       const li = document.createElement("li");
       const lien = document.createElement("a");
       lien.className = "appli";
+      // La clé sert à retrouver la tuile quand son parcours arrive (voir
+      // habillerJauges). Elle vient du catalogue du serveur, pas de l'élève.
+      lien.dataset.cle = appli.cle;
       // Le billet de l'entrée sert de secours (clic du milieu, « ouvrir dans un
       // nouvel onglet ») ; un clic ordinaire en demande un frais.
       lien.href = adresseAppli(appli, donnees.billet || "");
@@ -363,6 +573,10 @@ $nonce = entetes_page();
 
     $("ecran-code").hidden = true;
     $("ecran-espace").hidden = false;
+
+    // La grille est à l'écran, entière : ce qui suit ne peut plus l'empêcher
+    // d'exister. Volontairement sans await — rien n'attend la jauge.
+    habillerJauges(donnees, code);
   }
 
   async function ouvrir(code, silencieux) {
