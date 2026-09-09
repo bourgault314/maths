@@ -795,11 +795,16 @@ test("prénom local, remise à zéro confirmée dans la page, résultat relié a
   assert.doesNotMatch(html, /ENTREE\.ouvrir === "parcours"\) openParcours\(\);/);
 });
 
-test("Je m’entraîne propose produits, trous ou les deux ; la validation se lance en 1 min 30, 2 ou 3 min", () => {
+test("Je m’entraîne propose produits, trous ou les deux ; la validation se joue en 1 min 30", () => {
   assert.match(html, /id="train-type-settings"[\s\S]*data-train-type="desordre"[\s\S]*data-train-type="trous"[\s\S]*data-train-type="mixte"/);
   assert.match(html, /const TRAIN_TYPES = \{desordre: \["direct"\], trous: \["missing"\], mixte: \["direct", "missing"\]\}/);
-  assert.match(html, /data-launch-duration="90"[\s\S]*data-launch-duration="120"[\s\S]*data-launch-duration="180"/);
-  assert.match(html, /Ta table est validée en 1 min 30\./);
+  // 09/09 : plus de choix 1 min 30 / 2 min / 3 min avant l'épreuve. La durée
+  // de validation est celle du moteur, et « la même épreuve avec plus de
+  // temps » est devenue un entraînement de l'étape 2 (voir
+  // tests/defi-tables-navigation.test.mjs).
+  assert.doesNotMatch(html, /data-launch-duration/);
+  assert.equal(parcours.configValidation(7).duration, 90);
+  assert.equal(parcours.configValidation(7, 120).duration, 120, "la préparation reste possible, à la demande");
   assert.match(html, /const completeReview = state\.configuration\.mode === "test" \|\| state\.configuration\.mode === "validation";/);
 });
 
