@@ -200,12 +200,17 @@ test("J’apprends garde le bâton pour construire et le propose en aide tempora
   assert.match(html, /\.question\.show-learn-sequence \.actions \{ margin-bottom: 0; \}/);
   assert.match(html, /function createNumberStick/);
   assert.match(html, /grid-template-columns: repeat\(11/);
-  assert.match(html, /multiplierLabel\.textContent = `×\$\{multiplier\}`/);
+  // Lot 4a (09/09/2026) : l'étiquette porte la multiplication entière et
+  // collée (« 0×3 … 10×3 ») au lieu de « ×0, ×1 », qui se lit « fois zéro »,
+  // à l'envers du sens n × table retenu avec Claire. Collée partout : à onze
+  // cases sur un téléphone, « 10 × 3 » ne tient pas dans la case.
+  assert.match(html, /multiplierLabel\.textContent = `\$\{multiplier\}×\$\{table\}`/);
   assert.match(html, /multiplierLabel\.setAttribute\("aria-hidden", "true"\)/);
   assert.match(html, /cell\.append\(multiplierLabel, value\)/);
   assert.match(html, /const visible = state\.configuration\?\.mode === "learn"/);
   assert.match(html, /state\.revealedLearnResults\.add\(question\.multiplier\)/);
-  assert.match(html, /config\.learnActivity === "gaps" \? \[0, 5, 10\] : \[\]/);
+  assert.match(html, /config\.learnActivity === "gaps" \? \[0, 5, 10\] : config\.learnActivity === "beads" \? \[0\] : \[\]/,
+    "« à trous » commence avec ×0, ×5 et ×10 remplis ; « je pousse les perles » avec la seule case 0 (0 × table = 0, sans geste)");
   assert.match(html, /const stick = createNumberStick\(table, state\.revealedLearnResults, \{/, "le bâton d’aide ne montre que les cases déjà répondues");
   assert.doesNotMatch(html, /ALL_MULTIPLIERS/);
   assert.match(html, /draftMultiplier: stickOnly \? question\?\.multiplier : null/);
@@ -237,7 +242,7 @@ test("J’apprends garde le bâton pour construire et le propose en aide tempora
   assert.match(html, /textContent = enabled \? "Valider" : "Suivant"/);
   assert.match(html, /completeReview = state\.configuration\.mode === "test"/);
   assert.match(html, /Bilan de tes réponses/);
-  assert.match(html, /defi_tables_core\.js\?v=20260908-10/);
+  assert.match(html, /defi_tables_core\.js\?v=20260909-1/);
   // Le moteur était le seul des deux scripts sans épingle, et le lot A2 est
   // passé au travers : il ajoutait chargerSync / sauverSync / casesDetachees au
   // moteur sans monter son numéro. Un navigateur qui avait déjà l'ancien moteur

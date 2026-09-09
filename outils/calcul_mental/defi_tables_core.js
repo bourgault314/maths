@@ -66,7 +66,7 @@
     if (!mode) return {mode: null, tables: [], order: "ordered", learnActivity: "construct", questionTypes: ["direct"], total: 20, duration: null, testLevel: 1};
     const preset = PRESETS[mode];
     const tables = mode === "evaluation" ? [...ALL_TABLES] : normalizedTables(input.tables);
-    const requestedLearnActivity = ["construct", "gaps", "ordered", "random"].includes(input.learnActivity)
+    const requestedLearnActivity = ["beads", "construct", "gaps", "ordered", "random"].includes(input.learnActivity)
       ? input.learnActivity
       : input.order === "random" ? "random" : preset.learnActivity || "ordered";
     const order = requestedLearnActivity === "random" ? "random" : preset.order;
@@ -260,6 +260,7 @@
     const details = [melange ? "Mon mélange" : modeLabels[normalized.mode], tablesLabel(normalized.tables)];
     if (normalized.mode === "learn") {
       const activityLabels = {
+        beads: "je pousse les perles",
         construct: "je construis le bâton",
         gaps: "je complète un bâton à trous",
         ordered: "dans l’ordre",
