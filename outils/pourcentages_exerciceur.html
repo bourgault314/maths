@@ -132,6 +132,11 @@
     #diapoContainer.layout-find-total .correction-box { padding: 0 40px 10px 40px; margin-top: -18px; }
 
     /* LAYOUT IMPRESSION */
+    .print-settings { display: flex; flex-wrap: wrap; gap: 10px 24px; border: 1px solid var(--panel-border); border-radius: 8px; margin: 14px 0 0; padding: 10px 14px; font-size: .9rem; }
+    .print-settings legend { font-weight: bold; padding: 0 5px; }
+    .print-settings label { cursor: pointer; display: flex; align-items: center; gap: 6px; }
+    .print-settings input { accent-color: var(--success); }
+    .print-settings p { flex-basis: 100%; margin: 0; color: var(--muted); font-size: .85rem; line-height: 1.4; }
     #printContainer { display: none; width: 100%; max-width: 850px; background: white; }
     @media screen and (max-width: 700px) {
       body { padding: 8px; }
@@ -160,24 +165,34 @@
       .thumbnails-bar { flex-wrap: nowrap; justify-content: flex-start; overflow-x: auto; }
       .thumb-btn { flex: 0 0 auto; }
     }
+    @page { size: A4 portrait; margin: 12mm 12mm 14mm; }
     @media print {
-      body { background: white; padding: 0; margin: 0; align-items: flex-start; justify-content: center; }
+      body { display: block; min-height: 0; background: white; padding: 0; margin: 0; }
       .config-panel, .diapo-container, svg.defs-only { display: none !important; }
-      #printContainer { display: block !important; margin: 0 auto; }
-      .print-page { page-break-after: always; padding: 10px 0; }
-      .print-page:last-child { page-break-after: auto; }
-      
-      .print-header { display: flex; justify-content: flex-start; gap: 30px; font-size: 0.95rem; color: #333; margin-bottom: 10px; padding-bottom: 5px; border-bottom: 1px solid #ccc; position: relative;}
-      .print-seed { position: absolute; right: 0; top: 0; font-weight: bold; color: var(--muted); }
-      .print-title { text-align: center; font-size: 1.2rem; margin: 5px 0 20px 0; color: #1f2a44; font-weight: bold; }
-      
-      .print-q { margin-bottom: 15px; page-break-inside: avoid; }
-      .print-q-text { font-size: 1.15rem; margin-bottom: 5px; line-height: 1.4; }
-      .print-q svg { width: 100%; max-width: 580px; display: block; margin: 0 auto; } 
-      .print-c-text { color: var(--success); font-size: 1.1rem; margin-top: 5px; margin-bottom: 10px; line-height: 1.3;}
-      .print-q .unit-note { font-size: .8rem; }
-      .print-q .help-caption { text-align: center; font-size: .85rem; margin-top: 4px; }
-      .spacer-reponse { height: 60px; } 
+      #printContainer { display: block !important; width: 100%; max-width: none; margin: 0; }
+      .print-page { padding: 0; break-after: page; page-break-after: always; }
+      .print-page:last-child { break-after: auto; page-break-after: auto; }
+      .print-header { display: flex; align-items: baseline; justify-content: space-between; gap: 8mm; border-bottom: 1px solid #555; padding-bottom: 2mm; margin-bottom: 3mm; }
+      .print-title { font-size: 15pt; line-height: 1.2; margin: 0; color: #1f2a44; }
+      .print-seed { white-space: nowrap; font-size: 9pt; color: #444; }
+      .print-identity { display: flex; justify-content: space-between; gap: 5mm; font-size: 9pt; margin-bottom: 5mm; }
+      .print-row { display: table; table-layout: fixed; width: 100%; margin-bottom: 3mm; break-inside: avoid; page-break-inside: avoid; }
+      .print-q { display: table-cell; vertical-align: top; padding-bottom: 3mm; break-inside: avoid; page-break-inside: avoid; }
+      .print-row.pair .print-q { width: 50%; }
+      .print-row.pair .print-q:first-child { padding-right: 4mm; }
+      .print-row.pair .print-q:last-child { padding-left: 4mm; }
+      .print-row.single .print-q { width: 50%; padding-right: 4mm; }
+      .print-row.single::after { content: ''; display: table-cell; width: 50%; }
+      .print-q-text { font-size: 10.5pt; line-height: 1.25; margin-bottom: 2.5mm; }
+      .print-q .stage-wrap { display: block; width: 100%; margin: 0; padding: 0; }
+      .print-q svg { width: 100%; height: auto; max-width: none; display: block; margin: 0; }
+      .print-c-text { color: #176044; font-size: 10pt; margin: 2mm 0 3mm; line-height: 1.25; }
+      .print-c-text br + br { display: none; }
+      .print-q .unit-note { font-size: 8pt; margin-top: 1mm; }
+      .print-q .help-caption { text-align: left; font-size: 8.5pt; line-height: 1.2; margin: 3mm 0 1.5mm; }
+      .spacer-reponse { margin-top: 1mm; }
+      .print-answer-line { height: 5.5mm; border-bottom: 1px dotted #999; }
+      #printContainer { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
     }
   </style>
 <script defer src="../assets/js/mention-confidentialite.js"></script>
@@ -288,9 +303,6 @@
           </select>
         </div>
         <div class="config-block" style="border-left: 2px solid #dbe4f3; padding-left: 15px; margin-left: 5px;">
-          <label style="cursor: pointer;"><input type="checkbox" id="cbEmptyGabarits" checked style="accent-color: var(--success); transform: scale(1.2);"> 📝 Gabarits</label>
-        </div>
-        <div class="config-block" style="border-left: 2px solid #dbe4f3; padding-left: 15px; margin-left: 5px;">
           <label>Seed :</label>
           <input type="text" id="inputSeed" placeholder="Auto" style="width: 80px; text-align: center;">
         </div>
@@ -301,6 +313,13 @@
         <button class="btn-main print" onclick="generatePrint()">🖨️ Fiche PDF/Papier</button>
       </div>
     </div>
+    <fieldset class="print-settings">
+      <legend>Fiche papier</legend>
+      <label><input type="checkbox" id="cbEmptyGabarits" checked> Gabarits</label>
+      <label><input type="checkbox" id="cbPrintHelp"> Ajouter les aides de calcul</label>
+      <label><input type="checkbox" id="cbPrintCorrection" checked> Inclure le corrigé</label>
+      <p>Les aides choisies ici s’appliquent à toute la fiche, indépendamment du diaporama.</p>
+    </fieldset>
     <details style="margin-top: 12px; font-size: 0.9rem; line-height: 1.5;">
       <summary style="cursor: pointer;">Progression des niveaux décimaux</summary>
       <p>Au niveau 1, les nombres de départ sont inférieurs à 100 et les valeurs à calculer ont au plus un chiffre après la virgule. Le niveau 2 introduit les centièmes ; le niveau 3 travaille davantage les décompositions. Les nombres de départ restent entiers.</p>
@@ -1348,24 +1367,87 @@
       updateThumbnails();
     }
 
-    function appendQuestionDiagrams(q, isCorrection, container) {
+    // Le papier a ses propres réglages ; ouvrir une aide dans le diaporama
+    // ne change jamais la fiche. Les générateurs et les dessins restent partagés.
+    function isWidePrintQuestion(q, withDiagrams) {
+      return withDiagrams && (q.parts >= 20 || (q.mode === 'evo_inc' && q.parts + q.activeParts > 10));
+    }
+
+    function drawPrintDiagram(q, isCorrection, svg, wide) {
+      drawQuestionDiagram(q, isCorrection, svg);
+      // Retirer les marges du canevas, sans changer la largeur des cases.
+      // Garder l'espace nécessaire aux flèches, accolades et légendes.
+      const evolution = q.mode === 'evo_inc' || q.mode === 'evo_dec';
+      if (evolution) svg.setAttribute('viewBox', `70 48 820 ${isCorrection ? 202 : 138}`);
+      else if (q.parts === 100) svg.setAttribute('viewBox', `90 60 820 ${q.activeParts > 1 ? 238 : 178}`);
+      else {
+        const brace = (!isCorrection && q.mode === 'find_total' && q.activeParts > 1)
+          || (isCorrection && (q.mode === 'find_percent' ? q.parts !== 2 && q.parts !== 4 : q.activeParts > 1));
+        svg.setAttribute('viewBox', `90 48 820 ${brace ? 202 : 138}`);
+      }
+      // En demi-page, les nombres restent lisibles malgré la largeur réduite.
+      if (!wide) for (const node of Array.from(svg.children)) {
+        if (node.tagName.toLowerCase() === 'text') {
+          node.setAttribute('font-size', Math.max(26, Number(node.getAttribute('font-size')) * 1.25));
+        }
+      }
+    }
+
+    function appendQuestionDiagrams(q, isCorrection, container, withHelp, wide) {
       const appendDiagram = diagram => {
         const wrap = document.createElement('div');
         wrap.className = 'stage-wrap';
         const svg = document.createElementNS(svgNS, 'svg');
-        drawQuestionDiagram(diagram, isCorrection, svg);
+        drawPrintDiagram(diagram, isCorrection, svg, wide);
         wrap.appendChild(svg);
         container.appendChild(wrap);
       };
       appendDiagram(q);
-      const help = getCalculationHelp(q);
-      if (help && q.helpOpen) {
+      const help = withHelp ? getCalculationHelp(q) : null;
+      if (help) {
         const caption = document.createElement('p');
         caption.className = 'help-caption';
         caption.textContent = help.caption;
         container.appendChild(caption);
         appendDiagram(help.diagram);
       }
+    }
+
+    function appendPrintQuestions(page, isCorrection, withGabarits, withHelp) {
+      const withDiagrams = isCorrection || withGabarits;
+      let pendingRow = null;
+      quizData.forEach((q, i) => {
+        const wide = isWidePrintQuestion(q, withDiagrams);
+        let row;
+        if (wide || !pendingRow) {
+          row = document.createElement('div');
+          row.className = wide ? 'print-row wide' : 'print-row single';
+          page.appendChild(row);
+          pendingRow = wide ? null : row;
+        } else {
+          row = pendingRow;
+          row.className = 'print-row pair';
+          pendingRow = null;
+        }
+        const qDiv = document.createElement('div');
+        qDiv.className = 'print-q';
+        qDiv.setAttribute('data-question', i + 1);
+        qDiv.innerHTML = `<div class="print-q-text"><strong>Question ${i + 1} :</strong> ${q.qHtml}</div>`;
+        if (isCorrection) {
+          const answer = document.createElement('div');
+          answer.className = 'print-c-text';
+          answer.innerHTML = q.cHtml;
+          qDiv.appendChild(answer);
+        }
+        if (withDiagrams) appendQuestionDiagrams(q, isCorrection, qDiv, withHelp, wide);
+        if (!isCorrection) {
+          const space = document.createElement('div');
+          space.className = 'spacer-reponse';
+          space.innerHTML = '<div class="print-answer-line"></div><div class="print-answer-line"></div>';
+          qDiv.appendChild(space);
+        }
+        row.appendChild(qDiv);
+      });
     }
 
 
@@ -1378,59 +1460,38 @@
         alert("⚠️ Veuillez d'abord cliquer sur '💻 Générer le diapo' pour créer la série !");
         return;
       }
-      
       const withGabarits = document.getElementById('cbEmptyGabarits').checked;
+      const withHelp = document.getElementById('cbPrintHelp').checked;
+      const withCorrection = document.getElementById('cbPrintCorrection').checked;
       const container = document.getElementById('printContainer');
-      container.innerHTML = ''; 
+      container.innerHTML = '';
 
-      let page1 = document.createElement('div');
-      page1.className = 'print-page';
-      page1.innerHTML = `
+      const sheet = document.createElement('div');
+      sheet.className = 'print-page';
+      sheet.innerHTML = `
         <div class="print-header">
-          <div>Nom : ........................................</div>
-          <div>Prénom : ........................................</div>
-          <div>Classe : ....................</div>
-          <div class="print-seed">Fiche n° ${quizSeed}</div>
+          <h2 class="print-title">Pourcentages</h2>
+          <span class="print-seed">Fiche n° ${quizSeed}</span>
         </div>
-        <h2 class="print-title">Exercices : Les Pourcentages</h2>
-      `;
-      
-      quizData.forEach((q, i) => {
-        let qDiv = document.createElement('div');
-        qDiv.className = 'print-q';
-        qDiv.innerHTML = `<div class="print-q-text"><strong>Question ${i+1} :</strong> ${q.qHtml}</div>`;
-        
-        if (withGabarits) {
-          appendQuestionDiagrams(q, false, qDiv);
-        } else {
-          qDiv.innerHTML += `<div class="spacer-reponse"></div>`;
-        }
-        page1.appendChild(qDiv);
-      });
-      container.appendChild(page1);
+        <div class="print-identity">
+          <span>Nom et prénom : ....................................................</span>
+          <span>Classe : ..............</span>
+          <span>Date : ..................</span>
+        </div>`;
+      appendPrintQuestions(sheet, false, withGabarits, withHelp);
+      container.appendChild(sheet);
 
-      let page2 = document.createElement('div');
-      page2.className = 'print-page';
-      page2.innerHTML = `
-        <div class="print-header">
-          <div class="print-seed">CORRIGÉ — Fiche n° ${quizSeed}</div>
-        </div>
-        <h2 class="print-title">Correction Détaillée</h2>`;
-      
-      quizData.forEach((q, i) => {
-        let qDiv = document.createElement('div');
-        qDiv.className = 'print-q';
-        qDiv.innerHTML = `
-          <div class="print-q-text"><strong>Question ${i+1} :</strong> ${q.qHtml}</div>
-          <div class="print-c-text">✅ ${q.cHtml}</div>
-        `;
-        
-        appendQuestionDiagrams(q, true, qDiv);
-
-        page2.appendChild(qDiv);
-      });
-      container.appendChild(page2);
-
+      if (withCorrection) {
+        const correction = document.createElement('div');
+        correction.className = 'print-page';
+        correction.innerHTML = `
+          <div class="print-header">
+            <h2 class="print-title">Pourcentages — Corrigé</h2>
+            <span class="print-seed">Fiche n° ${quizSeed}</span>
+          </div>`;
+        appendPrintQuestions(correction, true, withGabarits, withHelp);
+        container.appendChild(correction);
+      }
       setTimeout(() => { window.print(); }, 300);
     }
   </script>
