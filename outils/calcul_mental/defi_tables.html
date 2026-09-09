@@ -300,6 +300,27 @@
     .etape.verrou strong { color: #6b7f90; }
     .etape.verrou small { color: #7a5a00; }
     .etape.verrou .cadenas { font-size: 1.15rem; line-height: 1; }
+    /* Le choix déplié sous une étape (09/09/2026) : l'élève voit les quatre
+       activités, leur état et celle qu'on lui conseille — il choisit, et il
+       peut en refaire une plus tard. Rien n'est verrouillé, rien n'impose
+       l'ordre : l'appli conseille, l'élève décide. */
+    .etape-choix { display: grid; gap: 6px; margin: -2px 0 2px; padding: 9px 10px; border: 1px solid #cfe0ea; border-left: 3px solid var(--blue); border-radius: 13px; background: #f4f9fc; }
+    .etape-choix > p { margin: 0 0 1px 2px; color: #5b7286; font-size: .72rem; font-weight: 950; text-transform: uppercase; letter-spacing: .05em; }
+    .choix-activite { width: 100%; min-height: 46px; display: grid; grid-template-columns: 20px minmax(0, 1fr) auto; align-items: center; gap: 9px; padding: 7px 11px; border: 1px solid #c9dbe6; border-radius: 12px; background: #fff; color: var(--ink); text-align: left; font: inherit; cursor: pointer; }
+    .choix-activite strong { display: block; font-size: .95rem; font-weight: 900; line-height: 1.15; }
+    .choix-activite small { display: block; margin-top: 2px; color: #5b7286; font-size: .74rem; font-weight: 800; }
+    .choix-activite .etat { color: var(--green); font-style: normal; font-weight: 950; font-size: 1.05rem; line-height: 1; text-align: center; }
+    .choix-activite .etat.off { color: #9db4c4; }
+    .choix-activite .etat.neutre { color: #5b7286; font-size: .95rem; }
+    .choix-activite .tag { padding: 3px 9px; border-radius: 999px; background: #e7f0fb; color: var(--blue); font-size: .68rem; font-weight: 950; white-space: nowrap; }
+    .choix-activite.is-next { border-color: var(--blue); box-shadow: 0 0 0 2px rgba(7, 85, 184, .16); }
+    .choix-activite.is-plus { border-style: dashed; background: #fbfdff; }
+    /* L'accueil dit pourquoi « ma table » a changé, au lieu de le faire en silence. */
+    .acc-suite { margin: 0 0 8px; padding: 9px 12px; border-radius: 12px; background: #e7f8f5; color: #08635a; font-size: .87rem; font-weight: 900; }
+    /* « Mes calculs » s'ouvre sur la grille : la barre du haut reste collée,
+       donc le retour « Ma table » ne disparaît jamais de l'écran. */
+    .calculs-screen .settings-toolbar { position: sticky; top: 0; z-index: 5; padding: 4px 0 6px; background: #fff; box-shadow: 0 8px 10px -9px rgba(18, 50, 74, .45); }
+    #calculs-grille { scroll-margin-top: 58px; }
     /* Le rang : un badge sous « N tables acquises sur 9 », nulle part ailleurs. */
     .rang { display: inline-flex; align-items: center; gap: 5px; padding: 3px 9px 3px 6px; border-radius: 999px; font-size: .74rem; font-weight: 950; border: 1px solid transparent; white-space: nowrap; }
     .rang:empty { display: none; }
@@ -504,8 +525,6 @@
     .parcours-extra-cells .secondary { min-height: 44px; padding: 8px 14px; }
     .parcours-extra p { margin: 6px 0 0; color: var(--muted); font-size: .88rem; }
     .parcours-notice-action { margin-top: 14px; }
-    .launch-durations { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
-    .launch-durations .type-button { min-height: 48px; min-width: 96px; display: grid; place-items: center; text-align: center; }
     .launch-hint { margin: 0; color: var(--muted); font-size: .9rem; }
     .result-parcours {
       margin: 12px 0 0;
@@ -1408,6 +1427,7 @@
                 </div>
               </div>
               <div id="acc-choix" class="matable-choix" role="group" aria-label="Choisir ma table" hidden></div>
+              <p id="acc-suite" class="acc-suite" role="status" hidden></p>
               <div id="acc-etapes" class="etapes"></div>
             </section>
             <button id="acc-reviser" class="reviser" type="button"><span><strong id="acc-reviser-titre">Réviser mes calculs</strong><small id="acc-reviser-note">10 questions sans chrono</small></span><span class="go">Réviser&nbsp;→</span></button>
@@ -1510,12 +1530,7 @@
       <div id="launch" class="launch-screen" hidden>
         <p class="eyebrow">Tu as choisi</p>
         <h1 id="launch-summary" class="launch-heading" tabindex="-1"></h1>
-        <div id="launch-durations" class="launch-durations" role="group" aria-label="Durée de la validation" hidden>
-          <button class="type-button is-selected" type="button" data-launch-duration="90" aria-pressed="true"><strong>1 min 30</strong></button>
-          <button class="type-button" type="button" data-launch-duration="120" aria-pressed="false"><strong>2 min</strong></button>
-          <button class="type-button" type="button" data-launch-duration="180" aria-pressed="false"><strong>3 min</strong></button>
-        </div>
-        <p id="launch-hint" class="launch-hint" hidden>Ta table est validée en 1 min 30. En 2 ou 3 min, c’est de l’entraînement.</p>
+        <p id="launch-hint" class="launch-hint" hidden></p>
         <div class="launch-actions">
           <button id="launch-start" class="primary" type="button">C’est parti&nbsp;!</button>
           <button id="launch-back" class="secondary" type="button">Modifier</button>
@@ -1596,7 +1611,7 @@
       <div id="play" hidden>
         <div class="status">
           <div class="status-left">
-            <button id="game-menu" class="game-menu" type="button" aria-label="Arrêter le défi et revenir au choix de l’entraînement"><span class="back-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="20" height="20"><path d="M19 12H5M11 6l-6 6 6 6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span>Menu</span></button>
+            <button id="game-menu" class="game-menu" type="button" aria-label="Arrêter la série et revenir à Ma table"><span class="back-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="20" height="20"><path d="M19 12H5M11 6l-6 6 6 6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="game-menu-label">Ma table</span></button>
             <span id="question-count">1 / 25</span>
           </div>
           <strong id="time" role="timer" aria-label="Temps restant">1:00</strong>
@@ -2714,6 +2729,8 @@
         answer: "",
         launchReady: false,
         origin: "menu",
+        etapeOuverte: null,
+        tableAnnoncee: null,
         revisionPremierScore: 0,
         revisionPremierTotal: 0,
         revisionAvantSus: new Set()
@@ -3356,6 +3373,8 @@
         parcours = suivi.parcours;
         sauverParcours();
         renderResultParcours(suivi);
+        const acquise = suivi.evenements.find(evenement => evenement.type === "validation" && evenement.nouvelle);
+        if (acquise) state.tableAnnoncee = acquise.table;
         const principal = suivi.evenements.find(evenement => typeof evenement.reussi === "boolean");
         if (principal) $("result-icon").hidden = !principal.reussi;
         renderResultFete(suivi.evenements);
@@ -3422,6 +3441,7 @@
         $("time").classList.remove("urgent");
         $("time").setAttribute("aria-label", DURATION === null ? "Sans chronomètre" : "Temps restant");
         $("timer-alert").textContent = "";
+        majSortieJeu();
         show("play");
         renderQuestion();
         if (DURATION !== null) state.timer = window.setInterval(updateTimer, 200);
@@ -3468,16 +3488,14 @@
           beginRound();
           return;
         }
-        // Le choix 1 min 30 / 2 min / 3 min ne vaut que pour UNE table : le
-        // mélange (même mode, plusieurs tables) se joue en 1 min 30, point.
-        const validationTable = config.mode === "validation" && config.tables.length === 1;
-        $("launch-durations").hidden = !validationTable;
-        $("launch-hint").hidden = !validationTable;
-        document.querySelectorAll("[data-launch-duration]").forEach(button => {
-          const selected = Number(button.dataset.launchDuration) === config.duration;
-          button.classList.toggle("is-selected", selected);
-          button.setAttribute("aria-pressed", String(selected));
-        });
+        // Plus de choix de durée ici (décision du 09/09) : « Je valide ma
+        // table », c'est 1 min 30, point — la même épreuve avec plus de temps
+        // est un entraînement, proposé dans l'étape 2. L'écran garde son seul
+        // rôle utile : le chrono ne part qu'au « C'est parti ! ».
+        const chrono = config.duration !== null;
+        $("launch-hint").hidden = !chrono;
+        $("launch-hint").textContent = chrono ? "Le chrono part quand tu appuies sur « C’est parti ! »." : "";
+        $("launch-back").textContent = state.origin === "reglages" ? "Modifier" : "← Ma table";
         show("launch");
       }
 
@@ -3486,19 +3504,49 @@
         return state.origin === "parcours" ? "parcours" : "intro";
       }
 
-      function cancelLaunch() {
+      // Quitter une série. Le piège corrigé le 09/09 : l'écran « intro » est
+      // DEUX écrans (syncControls affiche les réglages dès qu'un mode est
+      // posé), et une série lancée depuis l'accueil laisse ce mode en place —
+      // on retombait donc sur « choisis une table / choisis une activité »
+      // au lieu de sa table. Seule une série lancée DEPUIS les réglages
+      // (origine « reglages », les deux portes professeur de l'accueil) y
+      // revient ; toutes les autres reviennent là d'où elles sont parties.
+      function quitterSerie() {
         state.launchReady = false;
         state.running = false;
         stopTimer();
-        show(homeScreen());
+        if (state.origin === "reglages") {
+          show("intro");
+          return;
+        }
+        const cible = homeScreen();
+        if (cible === "intro") {
+          backToModes();
+          return;
+        }
+        configuration.mode = null;
+        configuration.tables = new Set();
+        show(cible);
+      }
+
+      function cancelLaunch() {
+        quitterSerie();
       }
 
       function returnToMenu() {
         if (!state.running && !state.launchReady) return;
-        state.launchReady = false;
-        state.running = false;
-        stopTimer();
-        show(homeScreen());
+        quitterSerie();
+      }
+
+      // Le bouton de sortie de l'écran de jeu dit OÙ il ramène : « Ma table »
+      // pour un élève, « Réglages » pour qui vient des réglages libres.
+      function majSortieJeu() {
+        const bouton = $("game-menu");
+        const reglages = state.origin === "reglages";
+        bouton.querySelector(".game-menu-label").textContent = reglages ? "Réglages" : "Ma table";
+        bouton.setAttribute("aria-label", reglages
+          ? "Arrêter la série et revenir aux réglages"
+          : "Arrêter la série et revenir à Ma table");
       }
 
       function advanceAfterResponse() {
@@ -3773,6 +3821,10 @@
         state.running = false;
         stopTimer();
         show("calculs");
+        // « Mes calculs », c'est la grille : on l'ouvre dessus (Gwenaël,
+        // 08/09) au lieu de la laisser sous la ligne de flottaison. La barre
+        // du haut est collée, donc « Ma table » reste atteignable.
+        $("calculs-grille").scrollIntoView?.({block: "start", behavior: "auto"});
       }
 
       function startRevision(table = null, origin = "calculs") {
@@ -3911,7 +3963,7 @@
         return i;
       }
 
-      function ligneEtape({classe, num, titre, sousTitre, points, conseille, aria, action}) {
+      function ligneEtape({classe, num, titre, sousTitre, points, conseille, aria, action, deplie = null, controle = null}) {
         const bouton = document.createElement("button");
         bouton.type = "button";
         bouton.className = `etape ${classe}${conseille ? " is-next" : ""}`.trim();
@@ -3929,9 +3981,75 @@
         dots.setAttribute("aria-hidden", "true");
         points.forEach(point => dots.append(point));
         bouton.append(numero, texte, dots);
-        bouton.setAttribute("aria-label", `${aria}${conseille ? " Étape conseillée." : ""} Lancer.`);
+        bouton.setAttribute("aria-label", `${aria}${conseille ? " Étape conseillée." : ""} ${deplie === null ? "Lancer." : deplie ? "Fermer le choix." : "Choisir l’activité."}`);
+        if (controle) {
+          bouton.setAttribute("aria-controls", controle);
+          bouton.setAttribute("aria-expanded", String(Boolean(deplie)));
+        }
         bouton.addEventListener("click", action);
         return bouton;
+      }
+
+      function majuscule(texte) {
+        return texte ? texte.charAt(0).toUpperCase() + texte.slice(1) : "";
+      }
+
+      // Le panneau déplié sous une étape : une ligne par activité, son état,
+      // et la mention « conseillé » sur celle que l'appli propose. L'ordre est
+      // conseillé, jamais imposé (décision du 09/09/2026).
+      function panneauChoix({id, legende, items}) {
+        const zone = document.createElement("div");
+        zone.className = "etape-choix";
+        zone.id = id;
+        const titre = document.createElement("p");
+        titre.textContent = legende;
+        zone.append(titre);
+        items.forEach(item => zone.append(boutonChoix(item)));
+        return zone;
+      }
+
+      function boutonChoix({libelle, detail = "", fait = false, commence = false, conseillee = false, marqueur = "", extraClasse = "", lancer}) {
+        const bouton = document.createElement("button");
+        bouton.type = "button";
+        bouton.className = `choix-activite${conseillee ? " is-next" : ""}${extraClasse ? ` ${extraClasse}` : ""}`;
+        const etat = document.createElement("i");
+        etat.className = `etat${marqueur ? " neutre" : fait ? "" : " off"}`;
+        etat.setAttribute("aria-hidden", "true");
+        etat.textContent = marqueur || (fait ? "✓" : commence ? "◔" : "○");
+        const texte = document.createElement("span");
+        const fort = document.createElement("strong");
+        fort.textContent = libelle;
+        texte.append(fort);
+        if (detail) {
+          const petit = document.createElement("small");
+          petit.textContent = detail;
+          texte.append(petit);
+        }
+        bouton.append(etat, texte);
+        if (conseillee) {
+          const tag = document.createElement("span");
+          tag.className = "tag";
+          tag.textContent = "conseillé";
+          bouton.append(tag);
+        }
+        bouton.setAttribute("aria-label", marqueur
+          ? `${libelle}${detail ? `, ${detail}` : ""}. Lancer.`
+          : `${libelle}${detail ? `, ${detail}` : ""} : ${fait ? "déjà réussi" : commence ? "commencé" : "pas encore fait"}.${conseillee ? " Conseillé." : ""} Lancer.`);
+        bouton.addEventListener("click", lancer);
+        return bouton;
+      }
+
+      // Ouvrir ou fermer le choix d'une étape. Le panneau reste ouvert quand
+      // l'élève revient de son activité : il retrouve sa liste, avec le ✓ de
+      // celle qu'il vient de faire, et en choisit une autre.
+      function basculerEtape(nom) {
+        state.etapeOuverte = state.etapeOuverte === nom ? null : nom;
+        renderAccueil();
+        const ouvert = state.etapeOuverte === nom;
+        const cible = ouvert
+          ? document.querySelector(".etape-choix .choix-activite")
+          : document.querySelector(`.etape.${nom}`);
+        cible?.focus?.({preventScroll: true});
       }
 
       // Le badge du rang (Bronze… Légende des tables) : un point de métal et le
@@ -4098,11 +4216,20 @@
           choix.append(bouton);
         });
 
+        // Une table validée n'est plus « ma table » : l'accueil passe à la
+        // suivante. On le DIT, au lieu de changer le titre en silence.
+        const suite = $("acc-suite");
+        const annoncee = state.tableAnnoncee;
+        const aAnnoncer = Boolean(annoncee) && !replie && annoncee !== table;
+        suite.hidden = !aAnnoncer;
+        suite.textContent = aAnnoncer ? `Table de ${annoncee} acquise ✓ — on continue avec la table de ${table}.` : "";
+
         const etapes = $("acc-etapes");
         etapes.replaceChildren();
         if (!replie) {
           const terminees = ligne.apprends.filter(item => item.etat === 2).length;
           const prochaineActivite = ligne.apprends.find(item => item.etat !== 2);
+          const apprendsOuvert = state.etapeOuverte === "apprends";
           etapes.append(ligneEtape({
             classe: "apprends",
             num: "1",
@@ -4111,11 +4238,27 @@
             points: ligne.apprends.map(item => etoile(item.etat)),
             conseille: conseil === "apprends",
             aria: `J’apprends la table de ${table}, facultatif : ${terminees} activité${terminees > 1 ? "s" : ""} sur 4.`,
-            action: () => launchFromParcours(PARCOURS.configApprends(table, (prochaineActivite || ligne.apprends[0]).activite), "menu")
+            deplie: apprendsOuvert,
+            controle: "acc-choix-apprends",
+            action: () => basculerEtape("apprends")
           }));
+          if (apprendsOuvert) {
+            etapes.append(panneauChoix({
+              id: "acc-choix-apprends",
+              legende: "Choisis ton activité",
+              items: ligne.apprends.map(item => ({
+                libelle: majuscule(PARCOURS.LIBELLES_APPRENDS[item.activite]),
+                fait: item.etat === 2,
+                commence: item.etat === 1,
+                conseillee: Boolean(prochaineActivite) && item.activite === prochaineActivite.activite,
+                lancer: () => launchFromParcours(PARCOURS.configApprends(table, item.activite), "menu")
+              }))
+            }));
+          }
 
           const reussis = ligne.entraine.filter(item => item.etat === 2).length;
           const prochainEntrainement = ligne.entraine.find(item => item.etat !== 2);
+          const entraineOuvert = state.etapeOuverte === "entraine";
           etapes.append(ligneEtape({
             classe: "entraine",
             num: "2",
@@ -4128,8 +4271,39 @@
             points: ligne.entraine.map(item => etoile(item.etat)),
             conseille: conseil === "entraine",
             aria: `Je m’entraîne sur la table de ${table} : ${reussis} réussi${reussis > 1 ? "s" : ""} sur 3.`,
-            action: () => launchFromParcours(PARCOURS.configEntraine(table, (prochainEntrainement || ligne.entraine[0]).entrainement), "menu")
+            deplie: entraineOuvert,
+            controle: "acc-choix-entraine",
+            action: () => basculerEtape("entraine")
           }));
+          if (entraineOuvert) {
+            const choixEntraine = ligne.entraine.map(item => ({
+              libelle: majuscule(PARCOURS.LIBELLES_ENTRAINEMENTS[item.entrainement]),
+              detail: "10 questions, sans chrono",
+              fait: item.etat === 2,
+              commence: item.etat === 1,
+              conseillee: Boolean(prochainEntrainement) && item.entrainement === prochainEntrainement.entrainement,
+              lancer: () => launchFromParcours(PARCOURS.configEntraine(table, item.entrainement), "menu")
+            }));
+            // L'épreuve de validation avec plus de temps : c'est un
+            // ENTRAÎNEMENT, donc elle vit ici et plus sur l'écran de
+            // lancement de l'étape 3 (décision du 09/09/2026). Le moteur la
+            // reconnaît déjà comme une « préparation » : elle ne valide pas
+            // la table, et elle le dit à la fin.
+            if (!ligne.acquise) {
+              choixEntraine.push({
+                libelle: "Comme la validation, en 2 min",
+                detail: "20 questions — pour s’entraîner avant de valider",
+                marqueur: "⏱",
+                extraClasse: "is-plus",
+                lancer: () => launchFromParcours(PARCOURS.configValidation(table, 120), "menu")
+              });
+            }
+            etapes.append(panneauChoix({
+              id: "acc-choix-entraine",
+              legende: "Choisis ton entraînement",
+              items: choixEntraine
+            }));
+          }
 
           // « Je valide ma table » : cadenassé tant que le mélange est dû (une
           // table déjà acquise se rejoue librement). Le cadenas est un bouton
@@ -4249,6 +4423,8 @@
 
       function launchFromParcours(config, origin = "parcours") {
         if (!config) return;
+        // L'élève est reparti : l'annonce a fait son travail.
+        state.tableAnnoncee = null;
         if (config.mode === "revision") {
           startRevision(config.table ?? null, origin);
           return;
@@ -4809,11 +4985,6 @@
         configuration.trainType = button.dataset.trainType;
         syncControls();
       }));
-      document.querySelectorAll("[data-launch-duration]").forEach(button => button.addEventListener("click", () => {
-        if (!state.configuration || state.configuration.mode !== "validation") return;
-        configuration.duration = Number(button.dataset.launchDuration);
-        start();
-      }));
       document.querySelectorAll("[data-question-type]").forEach(button => button.addEventListener("click", () => {
         const type = button.dataset.questionType;
         if (configuration.questionTypes.has(type) && configuration.questionTypes.size > 1) configuration.questionTypes.delete(type);
@@ -4843,7 +5014,12 @@
       }));
       $("validate").addEventListener("click", () => next(false));
       $("skip").addEventListener("click", () => next(true));
-      $("start").addEventListener("click", start);
+      // Les deux portes professeur de l'accueil passent par les réglages :
+      // c'est la seule origine qui y ramène en fin de série.
+      $("start").addEventListener("click", () => {
+        state.origin = "reglages";
+        start();
+      });
       $("launch-start").addEventListener("click", beginRound);
       $("launch-back").addEventListener("click", cancelLaunch);
       $("retry").addEventListener("click", start);

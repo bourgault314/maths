@@ -448,9 +448,13 @@ test("le résultat et les fêtes : 🎉 table et mélange, 🌟 étoile, un écr
   assert.match(html, /case "rang":\s*return `Nouveau rang : \$\{evenement\.nom\}\.`;/);
 });
 
-test("le lancement : le mélange se joue en 1 min 30, sans le choix 2 ou 3 min réservé à une table", () => {
-  assert.match(html, /const validationTable = config\.mode === "validation" && config\.tables\.length === 1;/);
-  assert.match(html, /\$\("launch-durations"\)\.hidden = !validationTable;/);
+test("le lancement : le mélange se joue en 1 min 30, comme la validation d’une table", () => {
+  // 09/09 : l'écran de lancement ne propose plus de durée du tout — le
+  // mélange et la validation partent sur celle du moteur.
+  assert.doesNotMatch(html, /const validationTable = /);
+  assert.doesNotMatch(html, /launch-durations/);
+  assert.equal(P.SEUILS.melange.dureeMax, 90);
+  assert.equal(P.SEUILS.validation.dureeMax, 90);
   assert.match(html, /return `Mon mélange · \$\{lesquelles\} · 20 questions · \$\{CORE\.durationLabel\(config\.duration\)\}`;/);
 });
 
