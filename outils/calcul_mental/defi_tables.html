@@ -1293,12 +1293,19 @@
     .fiche-identity span { flex: 1; }
     .fiche-identity b { display: inline-block; min-width: 40mm; border-bottom: .3mm solid #cfe2ed; font-weight: 700; color: #0b57b7; }
     .fiche-subtitle { margin: 0 0 3mm; color: #506b7d; font-size: 9pt; }
-    .fiche-table { width: 100%; border-collapse: separate; border-spacing: 0 2mm; }
+    /* La feuille 1 tient sur UNE page A4, pied compris : 273 mm utiles
+       (297 − 2 × 12 de marge). Mesuré dans le PDF de Chrome (10/09/2026) :
+       avec des lignes de 12,5 mm, 2 mm d'écart et 8 mm au-dessus du pied,
+       elle en demandait 280,9 et le pied partait seul sur une page — la
+       fiche sortait en 3 pages. Au pas de 13 mm (11,5 + 1,5) et à 6 mm du
+       pied, elle en prend 264 : 9 mm de reste en Arial, et elle tient encore
+       en Verdana forcé. Tout ajout à cette feuille se remesure au PDF. */
+    .fiche-table { width: 100%; border-collapse: separate; border-spacing: 0 1.5mm; }
     .fiche-table th { padding: 0 0 .5mm; color: #506b7d; font-size: 8pt; text-align: center; text-transform: uppercase; }
     .fiche-table th small { display: block; font-size: 6.3pt; font-weight: 400; text-transform: none; }
     .fiche-table th:first-child { width: 36mm; }
     .fiche-table tbody tr { break-inside: avoid; }
-    .fiche-table td { height: 12.5mm; padding: 0; border-top: .3mm solid #cfe2ed; border-bottom: .3mm solid #cfe2ed; background: #f8fcff; text-align: center; vertical-align: middle; }
+    .fiche-table td { height: 11.5mm; padding: 0; border-top: .3mm solid #cfe2ed; border-bottom: .3mm solid #cfe2ed; background: #f8fcff; text-align: center; vertical-align: middle; }
     .fiche-table td:first-child { padding-left: 4mm; border-left: .3mm solid #cfe2ed; border-radius: 3mm 0 0 3mm; color: #143451; font-size: 12.5pt; font-weight: 700; text-align: left; }
     .fiche-table td:last-child { border-right: .3mm solid #cfe2ed; border-radius: 0 3mm 3mm 0; }
     .fiche-table td.fiche-gap { width: 6mm; background: transparent; border: 0; }
@@ -1324,7 +1331,7 @@
     .fiche-rules { margin-top: 5mm; color: #506b7d; font-size: 8.3pt; }
     .fiche-rules strong { display: block; margin-bottom: 1mm; color: #143451; font-size: 9pt; }
     .fiche-rules p { margin: 0 0 1mm; }
-    .fiche-foot { margin-top: 8mm; color: #506b7d; font-size: 8pt; text-align: center; }
+    .fiche-foot { margin-top: 6mm; color: #506b7d; font-size: 8pt; text-align: center; }
     .fiche-page2 { padding-top: 2mm; }
     .fiche-page2-title { margin: 0; color: #0b57b7; font-size: 21pt; line-height: 1.05; text-align: center; text-transform: uppercase; }
     .fiche-page2-subtitle { margin: 2mm 0 0; color: #506b7d; font-size: 9pt; text-align: center; }
@@ -1497,7 +1504,10 @@
 
     @media print {
       @page { size: A4 portrait; margin: 12mm; }
-      body { margin: 0; background: #fff !important; color: #143451; }
+      /* html aussi : son fond bleu clair (#edf5fb) s'imprimait sous la
+         dernière ligne de chaque feuille dès que l'on coche « Graphiques
+         d'arrière-plan » (le blanc du body ne couvre que sa propre boîte). */
+      html, body { margin: 0; background: #fff !important; color: #143451; }
       body > *:not(#fiche-print) { display: none !important; }
       #fiche-print { display: block !important; }
       .fiche-page2 { break-before: page; page-break-before: always; }
