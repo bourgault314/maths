@@ -24,8 +24,14 @@
 //    attendait. Le 4a acceptait tout et remplissait quatre cases d'un coup ;
 //    « il y en a qui vont faire plus un, plus un, plus un » a tranché le reste.
 //
-// Enfin : ce lot ne touche pas au moteur du parcours. L'activité ne compte
-// pour rien tant que le lot 4b ne l'a pas ajoutée à ACTIVITES_APPRENDS.
+// 5. LA CONSIGNE (lot 4b, deuxième essai au doigt) : elle suit l'étape, et
+//    les refus ne donnent plus la réponse. « Pousse 8 perles. » / « Pousse
+//    8 perles en deux coups. » / après le premier coup « 2 + ? = 8 » ; refus :
+//    « Trop de perles ! », « Pas assez de perles ! », « Finis la rangée
+//    d'abord ! ». « Pousse-en 6 » disait la décomposition à la place de l'élève.
+//
+// Depuis le lot 4b, l'activité COMPTE : « beads » est la première des cinq
+// activités de J'apprends du moteur épinglé, ouverte à tous.
 
 import test from "node:test";
 import assert from "node:assert/strict";
@@ -77,8 +83,11 @@ test("le cadre fait 20 perles de large : la coupure tombe au milieu, sur tous le
 
 test("la bande prend la largeur du boulier et se pose dessous", () => {
   assert.match(html, /dom\.bande\.style\.width = `\$\{interieur \+ montant \* 2\}px`;/);
-  assert.match(html, /bloc\.append\(consigne, scene, bande, addition, tableFinale, terminer\);/,
-    "consigne, boulier, bande, addition : la bande est collée au boulier, l'addition en dessous et en grand");
+  assert.match(html, /scene\.append\(cadre, bande, addition\);\s*bloc\.append\(consigne, scene, tableFinale, terminer\);/,
+    "boulier, bande, addition vivent dans la même scène, centrés ensemble sous la consigne (lot 4b : l'espace libre ne se glisse plus entre eux)");
+  assert.match(html, /\.perles-scene \{[^}]*grid-auto-rows: max-content; align-content: space-evenly;/, "l'espace libre se partage à égalité autour et entre les trois");
+  assert.match(html, /let hauteur = dom\.scene\.clientHeight - dom\.bande\.offsetHeight - dom\.addition\.offsetHeight - interligne \* 2;/,
+    "la mesure du boulier retire la bande et l'addition de la hauteur disponible");
 });
 
 // ------------------------------------------------------------- la prise
@@ -150,17 +159,18 @@ test("un seul geste est accepté : le bon nombre, d’un coup, sur la rangée en
   assert.match(html, /if \(ecart\) \{ leverRefus\(\); enregistrerGeste\(ecart\); \}/, "« Trop de perles ! » ne reste pas pendant que la case se remplit");
 });
 
-test("le refus dit ce qu’on attendait, en rouge, à la même place, puis la consigne revient", () => {
+test("le refus ne dit que la direction, en rouge, à la même place, puis la consigne revient", () => {
   const messageRefus = fonction("messageRefus");
-  assert.equal(messageRefus({motif: "trop", nombre: 2}), "Trop de perles ! Pousse-en 2, pas plus.");
-  assert.equal(messageRefus({motif: "peu", nombre: 3}), "D’un seul coup ! Pousse 3 perles ensemble.");
-  assert.equal(messageRefus({motif: "peu", nombre: 2}), "D’un seul coup ! Pousse 2 perles ensemble.");
+  assert.equal(messageRefus({motif: "trop", nombre: 2}), "Trop de perles !");
+  assert.equal(messageRefus({motif: "peu", nombre: 3}), "Pas assez de perles !");
+  assert.equal(messageRefus({motif: "peu", nombre: 6}), "Pas assez de perles !", "jamais le nombre : « Pousse-en 6 » donnait la décomposition 2 + 6");
   assert.equal(messageRefus({motif: "rangee", nombre: 2}), "Finis la rangée d’abord !");
+  assert.doesNotMatch(source("messageRefus"), /refus\.nombre/, "le nombre attendu ne sort jamais vers l’élève");
   assert.match(html, /consigne\.classList\.remove\("est-refus"\);\s*void consigne\.offsetWidth;\s*consigne\.classList\.add\("est-refus"\);/,
     "le tremblement rejoue à chaque refus, même enchaîné");
   assert.match(html, /boulier\.refus = setTimeout\(leverRefus, 1800\);/);
   assert.match(html, /consigne\.textContent = consigneDeBase\(\);\s*consigne\.classList\.remove\("est-refus"\);/,
-    "la consigne redevient « Pousse N perles. » — jamais un autre texte");
+    "la consigne redevient celle de l’étape — jamais un autre texte");
   assert.match(html, /\.perles-consigne\.est-refus \{ color: var\(--red\);/);
   assert.match(html, /clearTimeout\(boulier\.refus\);\s*Object\.assign\(boulier, \{/, "un boulier neuf n’hérite pas d’un refus en cours");
 });
@@ -186,9 +196,35 @@ test("la phrase se fige quand la case se remplit, et se défait quand l’élèv
     "filet : ce qui est écrit est toujours ce que montre le boulier");
 });
 
-test("aucun guidage : la consigne ne change jamais", () => {
-  assert.match(html, /consigne\.textContent = `Pousse \$\{table\} perle\$\{table > 1 \? "s" : ""\}\.`;/);
-  assert.doesNotMatch(html, /pour finir la rangée/, "on n’explique pas le passage de la dizaine : l’écriture le montre");
+test("la consigne suit l’étape : « en deux coups » quand la rangée ne peut pas tout prendre, puis « 2 + ? = 8 »", () => {
+  // consigneDeBase lit l'état du boulier : on le joue avec de vrais états.
+  const code = [source("gesteAttendu"), source("totalPerles"), source("consigneDeBase")].join("\n");
+  const consigne = (table, etape, ...valeurs) => new Function(`const PERLES = {parRangee: 10, rangees: 10};
+    const boulier = {table: ${table}, etape: ${etape}, etats: Object.assign(Array(10).fill(0), ${JSON.stringify(valeurs)})};
+    ${code}
+    return consigneDeBase();`)();
+  // Table de 8 : 8 d'un coup ; puis la rangée n'a que 2 perles libres → en deux coups ; après le 2 → 2 + ? = 8.
+  assert.equal(consigne(8, 0), "Pousse 8 perles.");
+  assert.equal(consigne(8, 1, 8), "Pousse 8 perles en deux coups.", "la rangée en cours ne peut pas prendre les 8");
+  assert.equal(consigne(8, 1, 10), "2 + ? = 8", "après le premier coup : la question, jamais le 6");
+  assert.equal(consigne(8, 2, 10, 6), "Pousse 8 perles en deux coups.", "16 : il reste 4 sur la rangée");
+  assert.equal(consigne(8, 2, 10, 10), "4 + ? = 8");
+  assert.equal(consigne(8, 3, 10, 10, 4), "Pousse 8 perles en deux coups.", "24 : la rangée n’a que 6 places");
+  assert.equal(consigne(8, 5, 10, 10, 10, 10), "Pousse 8 perles.", "40 : rangée neuve, ça tient");
+  // Table de 3 : 3, 3, 3, puis 9 + 1 + 2.
+  assert.equal(consigne(3, 3, 9), "Pousse 3 perles en deux coups.");
+  assert.equal(consigne(3, 3, 10), "1 + ? = 3");
+  assert.equal(consigne(3, 4, 10, 2), "Pousse 3 perles.");
+  // Table de 2 : jamais en deux coups (10 est pair). Table de 10 : une rangée par case.
+  for (let etape = 0; etape < 10; etape += 1) assert.equal(consigne(2, etape, ...Array(Math.floor(etape * 2 / 10)).fill(10), (etape * 2) % 10), "Pousse 2 perles.");
+  assert.equal(consigne(10, 3, 10, 10, 10), "Pousse 10 perles.");
+  assert.equal(consigne(1, 0), "Pousse 1 perle.");
+  assert.equal(consigne(3, 10, ...Array(10).fill(10)), "", "table finie : plus de consigne (elle est cachée de toute façon)");
+  // Elle est posée à la construction et recalculée après chaque geste accepté — pas pendant un refus.
+  assert.match(html, /consigne\.textContent = consigneDeBase\(\);\s*const scene = document\.createElement\("div"\);/);
+  assert.match(html, /if \(consigne && !consigne\.classList\.contains\("est-refus"\)\) consigne\.textContent = consigneDeBase\(\);/,
+    "majBoulier remet la consigne à jour, sauf pendant le message rouge (leverRefus s’en charge)");
+  assert.doesNotMatch(html.replace(/\/\/[^\n]*/g, ""), /pour finir la rangée|D’un seul coup|Pousse-en/, "on n’explique pas la décomposition : l’élève la trouve, l’écriture la montre (hors commentaires)");
 });
 
 test("à la fin, le boulier s’efface et la table entière reste", () => {
@@ -216,35 +252,123 @@ test("les étiquettes de la bande portent la multiplication entière, collée", 
   assert.match(html, /@media \(min-width: 1040px\) \{\s*\.number-stick \{ width: min\(100%, 860px\); \}\s*\.number-stick-cell \{ min-height: 86px;/);
 });
 
-// ------------------------------------------------- ce que le lot NE fait PAS
+// ------------------------------------------------- l'activité compte (lot 4b)
 
-test("l’activité n’apparaît qu’à son adresse d’essai", () => {
-  assert.match(html, /get\("essai"\) === "perles"/);
-  assert.match(html, /return lit\(window\.location\.hash\) \|\| lit\(window\.location\.search\);/,
-    "#essai=perles ou ?essai=perles : sur un téléphone, le « # » saute facilement");
-  assert.match(html, /\.\.\.\(ESSAI_PERLES \? \[\{\s*libelle: "Je pousse les perles",/,
-    "elle se place en tête de « Choisis ton activité », là où elle vivra au lot 4b");
-  assert.match(html, /lancer: \(\) => launchFromParcours\(\{mode: "learn", tables: \[table\], learnActivity: "beads"\}, "menu"\)/);
+test("l’activité est ouverte à tous, en tête de J’apprends", () => {
+  assert.doesNotMatch(html, /ESSAI_PERLES|essai=perles|get\("essai"\)/, "plus de garde d’essai");
+  assert.equal(parcours.ACTIVITES_APPRENDS[0], "beads", "première des cinq activités du moteur");
+  assert.equal(parcours.ACTIVITES_APPRENDS.length, 5);
+  assert.equal(parcours.LIBELLES_APPRENDS.beads, "je pousse les perles");
+  assert.equal(parcours.CONSIGNES_APPRENDS.beads, "pousse les perles");
+  // L'accueil liste ligne.apprends, donc les perles en tête, sans rien d'ajouté à la main.
+  assert.match(html, /items: ligne\.apprends\.map\(item => \(\{\s*libelle: majuscule\(PARCOURS\.LIBELLES_APPRENDS\[item\.activite\]\),/);
+  assert.doesNotMatch(html, /sur 4`|4 activités"|\/ 4\)/, "plus aucun « sur 4 » écrit en dur : le nombre vient du moteur");
 });
 
-test("le moteur du parcours ignore l’activité : rien n’est compté, rien n’est enregistré", () => {
+test("le moteur du parcours compte l’activité : commencée, terminée, « 1 activité sur 5 »", () => {
   const config = core.normalizeConfiguration({mode: "learn", tables: [3], learnActivity: "beads"});
   assert.equal(config.learnActivity, "beads", "le noyau la connaît (il fabrique les onze produits)");
   assert.deepEqual(config.tables, [3]);
   assert.equal(core.generateQuestions(config).length, 11);
   assert.deepEqual(core.generateQuestions(config).map(question => question.multiplier), [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
-    "dans l’ordre, comme « je construis le bâton »");
-  assert.ok(!parcours.ACTIVITES_APPRENDS.includes("beads"), "le moteur épinglé, lui, ne la connaît pas encore : c’est le lot 4b");
-  assert.equal(parcours.classerSerie(parcours.creerParcours(), config), null, "donc la série ne compte pour rien");
+    "dans l’ordre, comme « je construis la bande »");
+  assert.deepEqual(parcours.classerSerie(parcours.creerParcours(), config), {type: "apprends", table: 3, activite: "beads"});
   const etat = parcours.creerParcours();
-  assert.equal(parcours.demarrerSerie(etat, config), etat, "aucune case « commencée »");
-  const apres = parcours.appliquerSerie(etat, config, {correct: 11, total: 11});
-  assert.equal(apres.classement, null);
-  assert.deepEqual(apres.parcours, etat, "et le parcours enregistré ne bouge pas d’un octet");
+  const commence = parcours.demarrerSerie(etat, config);
+  assert.equal(commence.tables[3].apprends.beads, 1, "la case « commencée »");
+  assert.equal(etat.tables[3].apprends.beads, 0, "sans toucher à l’objet reçu");
+  const apres = parcours.appliquerSerie(commence, config, {correct: 11, total: 11});
+  assert.equal(apres.parcours.tables[3].apprends.beads, 2);
+  assert.deepEqual(apres.evenements, [{type: "apprends", table: 3, activite: "beads", termines: 1}]);
+  assert.deepEqual(parcours.etatAffichage(apres.parcours).lignes[1].apprends.map(item => item.activite), ["beads", "construct", "gaps", "ordered", "random"]);
   assert.ok(!parcours.serieAlimenteGrille(config), "J’apprends n’alimente jamais la grille des 36 calculs");
 });
 
-test("le moteur épinglé n’est pas touché par ce lot", () => {
-  assert.match(html, /defi_tables_mon_parcours\.js\?v=20260908-13/, "pas de nouveau numéro : pas de dépôt FTP pour ce lot");
-  assert.match(html, /defi_tables_core\.js\?v=20260909-1/, "le noyau, lui, a changé (il accepte « beads ») : son numéro suit");
+test("un parcours d’avant garde ses cases : rien ne glisse d’un cran", () => {
+  // Les activités sont rangées PAR NOM : un parcours enregistré avant le lot
+  // 4b (v1 ou v2) retrouve exactement ses cases, et la perle qui lui manque
+  // vaut 0. « Les élèves qui ont déjà validé des activités gardent leurs
+  // cases ; la nouvelle s'insère AVANT, rien ne doit glisser d'un cran. »
+  const cases = {construct: 2, gaps: 1, ordered: 2, random: 0};
+  [
+    {version: 2, tables: {7: {apprends: cases}}, rang: 0, jours: []},
+    {version: 1, tables: {7: {apprends: cases, acquise: "2026-09-01"}}, expert: {niveau: 3}},
+    {tables: {7: {apprends: cases}}}
+  ].forEach(brut => {
+    const relu = parcours.normaliserParcours(brut);
+    assert.deepEqual(relu.tables[7].apprends, {beads: 0, construct: 2, gaps: 1, ordered: 2, random: 0}, `parcours ${brut.version || "sans version"}`);
+    assert.equal(relu.version, 2);
+    const ligne = parcours.etatAffichage(relu).lignes.find(item => item.table === 7);
+    assert.deepEqual(ligne.apprends.map(item => item.etat), [0, 2, 1, 2, 0], "l’accueil montre ○ ✓ ◔ ✓ ○ : les perles à faire, le reste tel quel");
+    assert.equal(ligne.apprends.filter(item => item.etat === 2).length, 2, "« 2 activités sur 5 »");
+  });
+  // Un parcours de référence complet (tel que le serveur le renvoie) : idem.
+  const reference = JSON.parse(JSON.stringify(parcours.normaliserParcours({version: 2, tables: {5: {apprends: {construct: 2, gaps: 2, ordered: 2, random: 2}}}})));
+  assert.deepEqual(reference.tables[5].apprends, {beads: 0, construct: 2, gaps: 2, ordered: 2, random: 2});
+  // La fusion de deux appareils, dont un resté sur l'ancienne appli (sans « beads ») : le maximum par nom.
+  const neuf = parcours.normaliserParcours({version: 2, tables: {5: {apprends: {beads: 2, construct: 1}}}});
+  const vieux = {version: 2, tables: {5: {apprends: {construct: 2, gaps: 2}}}};
+  [parcours.fusionner(neuf, vieux), parcours.fusionner(vieux, neuf)].forEach(fusion => {
+    assert.deepEqual(fusion.tables[5].apprends, {beads: 2, construct: 2, gaps: 2, ordered: 0, random: 0});
+  });
+  // Et la remise à zéro repart avec les cinq.
+  assert.deepEqual(parcours.remettreAZero(neuf).tables[5].apprends, {beads: 0, construct: 0, gaps: 0, ordered: 0, random: 0});
+});
+
+test("le rond bleu : J’apprends tant que les cinq ne sont pas terminées et qu’aucun entraînement n’est réussi", () => {
+  // Règle de Gwenaël, 10/09/2026 : « finir un J'apprends ne veut pas dire
+  // qu'il connaît ». Deux portes vers Je m'entraîne : les cinq activités
+  // terminées, OU un entraînement réussi (valeur 2) de lui-même.
+  const ligne = (apprends = {}, entraine = {}) => {
+    const p = parcours.normaliserParcours({version: 2, tables: {6: {apprends, entraine}}});
+    return parcours.etatAffichage(p).lignes.find(item => item.table === 6);
+  };
+  assert.equal(parcours.conseilTable(parcours.creerParcours().tables[6]), "apprends", "parcours vierge → J’apprends");
+  assert.equal(parcours.prochaineEtape(parcours.creerParcours()).activite, "beads", "… et d’abord les perles");
+  assert.equal(ligne({construct: 1}).conseil, "apprends", "une activité à moitié → toujours J’apprends");
+  assert.equal(ligne({beads: 2, construct: 2, gaps: 2, ordered: 2}).conseil, "apprends", "4 sur 5 → toujours J’apprends");
+  assert.equal(ligne({beads: 2, construct: 2, gaps: 2, ordered: 2, random: 2}).conseil, "entraine", "5 sur 5 → Je m’entraîne");
+  assert.equal(ligne({}, {desordre: 2}).conseil, "entraine", "un entraînement réussi avec 0 activité → Je m’entraîne");
+  assert.equal(ligne({}, {desordre: 1}).conseil, "apprends", "un entraînement seulement tenté (1) ne compte pas");
+  assert.equal(ligne({}, {desordre: 2, trous: 2, mixte: 2}).conseil, "valide", "les trois réussis → Je valide");
+  assert.equal(ligne({beads: 2}, {desordre: 2, trous: 2, mixte: 2, acquise: null}).conseil, "valide");
+  // prochaineEtape suit la même règle, et nomme l'activité conseillée.
+  const p = parcours.normaliserParcours({version: 2, tables: {2: {apprends: {beads: 2, construct: 2}}}});
+  assert.deepEqual(parcours.prochaineEtape(p), {type: "apprends", table: 2, activite: "gaps", libelle: "Table de 2 : complète une bande à trous", config: {mode: "learn", tables: [2], learnActivity: "gaps"}});
+  // Un élève qui saute tout et valide : la table est acquise, le moteur passe à la suivante, comme aujourd'hui.
+  const direct = parcours.appliquerSerie(parcours.creerParcours(), parcours.configValidation(2), {correct: 20, total: 20}).parcours;
+  assert.ok(direct.tables[2].acquise);
+  assert.equal(parcours.prochaineEtape(direct).table, 10);
+});
+
+test("le moteur épinglé a changé : nouveau numéro, copie serveur identique, serveur qui accepte « beads »", async () => {
+  assert.match(html, /defi_tables_mon_parcours\.js\?v=20260910-1/, "le moteur a changé : son numéro monte (et un dépôt FTP suit)");
+  assert.match(html, /defi_tables_core\.js\?v=20260910-1/, "le noyau aussi (« la bande » dans ses libellés)");
+  const moteur = await readFile(new URL("../outils/calcul_mental/defi_tables_mon_parcours.js", import.meta.url));
+  const copie = await readFile(new URL("../_serveur/public/prof/defi_tables_mon_parcours.js", import.meta.url));
+  assert.ok(moteur.equals(copie), "_serveur/public/prof/defi_tables_mon_parcours.js : la copie octet pour octet");
+  const applis = await readFile(new URL("../_serveur/public/lib/applis.php", import.meta.url), "utf8");
+  assert.match(applis, /'apprends', 'beads', 'construct'/, "sans « beads » dans lib/applis.php, le serveur jetterait la case à la synchro");
+});
+
+test("la bande s’appelle la bande, partout où l’élève lit", async () => {
+  assert.equal(parcours.LIBELLES_APPRENDS.construct, "je construis la bande");
+  assert.equal(parcours.LIBELLES_APPRENDS.gaps, "je complète une bande à trous");
+  assert.equal(parcours.CONSIGNES_APPRENDS.construct, "construis la bande");
+  assert.match(html, /<strong>Je construis la bande<\/strong>/);
+  assert.match(html, /<strong>Je complète une bande à trous<\/strong>/);
+  assert.match(html, /"Voir la bande \(vide\)"/);
+  assert.match(html, /"La bande est complète\. Choisis une autre activité quand tu es prêt\."/);
+  assert.match(html, /"Les 11 cases de la bande ont été complétées"/);
+  assert.match(html, /"Bravo ! On le reverra sans la bande\."/);
+  const coreSource = await readFile(new URL("../outils/calcul_mental/defi_tables_core.js", import.meta.url), "utf8");
+  assert.match(coreSource, /construct: "je construis la bande"/);
+  const moteurSource = await readFile(new URL("../outils/calcul_mental/defi_tables_mon_parcours.js", import.meta.url), "utf8");
+  [html, coreSource, moteurSource].forEach(texte => {
+    assert.doesNotMatch(texte.replace(/ex-bâton/g, ""), /bâton/i, "le mot ne reste que dans le commentaire d’en-tête du moteur, qui raconte le renommage");
+  });
+  assert.match(html, /stick\.className = "number-stick";/, "le nom interne ne change pas");
+  // La fiche imprimée : cinq colonnes dans J'apprends.
+  assert.match(html, /<th colspan="5">J’apprends<small>perles · bande · à trous · ordre · désordre<\/small><\/th>/);
+  assert.match(html, /\.fiche-table td:nth-child\(7\), \.fiche-table td:nth-child\(10\) \{ border-left/, "les traits de groupe ont suivi : Je m’entraîne commence à la 7e cellule, Acquise est la 10e");
 });

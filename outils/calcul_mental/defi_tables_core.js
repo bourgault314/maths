@@ -261,8 +261,8 @@
     if (normalized.mode === "learn") {
       const activityLabels = {
         beads: "je pousse les perles",
-        construct: "je construis le bâton",
-        gaps: "je complète un bâton à trous",
+        construct: "je construis la bande",
+        gaps: "je complète une bande à trous",
         ordered: "dans l’ordre",
         random: "dans le désordre"
       };

@@ -167,9 +167,10 @@ test("l’accueil « Ma table » a remplacé les cinq cartes ; Réglages libres 
   assert.match(html, /data-duration="120"[\s\S]*2 min/);
   assert.match(html, /data-duration="60"[\s\S]*1 min/);
   assert.match(html, /count-settings[\s\S]*data-total="10"[\s\S]*data-total="20"/);
-  assert.match(html, /data-learn-activity="construct"[\s\S]*Je construis le bâton/);
+  assert.match(html, /data-learn-activity="construct"[\s\S]*Je construis la bande/, "lot 4b : le bâton s’appelle la bande");
   assert.match(html, /class="type-button is-selected"[^>]*data-learn-activity="construct"/);
-  assert.match(html, /data-learn-activity="gaps"[\s\S]*Je complète un bâton à trous/);
+  assert.match(html, /data-learn-activity="gaps"[\s\S]*Je complète une bande à trous/);
+  assert.doesNotMatch(html, /bâton/, "le mot ne survit nulle part dans la page (number-stick-* reste le nom interne)");
   assert.match(html, /data-learn-activity="ordered"[\s\S]*Je réponds dans l’ordre/);
   assert.match(html, /data-learn-activity="random"[\s\S]*Je réponds dans le désordre/);
   assert.doesNotMatch(html, /Choisis ton objectif\. L’application prépare le reste pour toi/);
@@ -194,7 +195,7 @@ test("J’apprends et Je m’entraîne démarrent directement, les autres parcou
   assert.match(html, /produits, trous, divisions · 25 questions/, "lot 3 : une marche de l’escalier, tout dedans, seule la durée change");
 });
 
-test("J’apprends garde le bâton pour construire et le propose en aide temporaire pour mémoriser", () => {
+test("J’apprends garde la bande pour construire et la propose en aide temporaire pour mémoriser", () => {
   assert.match(html, /class="keypad"[\s\S]*class="actions"[\s\S]*id="learn-sequence"/);
   assert.match(html, /question-card"\)\.classList\.toggle\("show-learn-sequence", visible\)/);
   assert.match(html, /\.question\.show-learn-sequence \.actions \{ margin-bottom: 0; \}/);
@@ -211,13 +212,13 @@ test("J’apprends garde le bâton pour construire et le propose en aide tempora
   assert.match(html, /state\.revealedLearnResults\.add\(question\.multiplier\)/);
   assert.match(html, /config\.learnActivity === "gaps" \? \[0, 5, 10\] : config\.learnActivity === "beads" \? \[0\] : \[\]/,
     "« à trous » commence avec ×0, ×5 et ×10 remplis ; « je pousse les perles » avec la seule case 0 (0 × table = 0, sans geste)");
-  assert.match(html, /const stick = createNumberStick\(table, state\.revealedLearnResults, \{/, "le bâton d’aide ne montre que les cases déjà répondues");
+  assert.match(html, /const stick = createNumberStick\(table, state\.revealedLearnResults, \{/, "la bande d’aide ne montre que les cases déjà répondues");
   assert.doesNotMatch(html, /ALL_MULTIPLIERS/);
   assert.match(html, /draftMultiplier: stickOnly \? question\?\.multiplier : null/);
   assert.match(html, /activeMultiplier: question\?\.multiplier/);
   assert.match(html, /if \(stickOnly\) \$\("answer-feedback"\)\.before\(zone\)/);
   assert.match(html, /else \$\("expression"\)\.before\(zone\)/);
-  assert.match(html, /helpButton\.textContent = state\.learnStickHelpVisible \? "Masquer" : revealedCount \? `Voir le bâton \(\$\{revealedCount\} \/ 11\)` : "Voir le bâton \(vide\)"/);
+  assert.match(html, /helpButton\.textContent = state\.learnStickHelpVisible \? "Masquer" : revealedCount \? `Voir la bande \(\$\{revealedCount\} \/ 11\)` : "Voir la bande \(vide\)"/);
   assert.match(html, /helpButton\.addEventListener\("click", toggleLearnStickHelp\)/);
   assert.match(html, /\}, 6000\);/);
   assert.match(html, /state\.learnStickHelpVisible = false;[\s\S]*state\.learnStickHelpUsed = false;[\s\S]*renderExpression\(question\)/);
@@ -225,7 +226,7 @@ test("J’apprends garde le bâton pour construire et le propose en aide tempora
   assert.match(html, /const shouldRetry = !stickActivity && \(!correct \|\| assisted\)/);
   assert.match(html, /if \(correct && !assisted\) state\.mastered\.add\(question\.factKey\)/);
   assert.match(html, /showAnswerFeedback\(question, correct, skip \? null : value, shouldRetry, assisted\)/);
-  assert.match(html, /assisted \? "Bravo ! On le reverra sans le bâton\." : "Bravo !"/);
+  assert.match(html, /assisted \? "Bravo ! On le reverra sans la bande\." : "Bravo !"/);
   assert.match(html, /const label = stickActivity \? "cases complétées" : "calculs maîtrisés"/);
   assert.match(html, /question\?\.multiplier === 0 \? "Commence à 0\." : `Ajoute \$\{table\}\.\`/);
   assert.match(html, /if \(correct\) \{[\s\S]*\$\("validate"\)\.style\.visibility = "hidden";[\s\S]*scheduleAutoAdvance\(\);/);
@@ -242,7 +243,7 @@ test("J’apprends garde le bâton pour construire et le propose en aide tempora
   assert.match(html, /textContent = enabled \? "Valider" : "Suivant"/);
   assert.match(html, /completeReview = state\.configuration\.mode === "test"/);
   assert.match(html, /Bilan de tes réponses/);
-  assert.match(html, /defi_tables_core\.js\?v=20260909-1/);
+  assert.match(html, /defi_tables_core\.js\?v=20260910-1/);
   // Le moteur était le seul des deux scripts sans épingle, et le lot A2 est
   // passé au travers : il ajoutait chargerSync / sauverSync / casesDetachees au
   // moteur sans monter son numéro. Un navigateur qui avait déjà l'ancien moteur
@@ -250,7 +251,7 @@ test("J’apprends garde le bâton pour construire et le propose en aide tempora
   // « PARCOURS.chargerSync is not a function », plus de repère de suivi, plus
   // rien envoyé au professeur, et une page d'accueil d'apparence normale.
   // Changer ce numéro à chaque modification du moteur ; ce test le rappelle.
-  assert.match(html, /defi_tables_mon_parcours\.js\?v=20260908-13/);
+  assert.match(html, /defi_tables_mon_parcours\.js\?v=20260910-1/);
 });
 
 test("le numéro de question est séparé du calcul dans le bilan", () => {

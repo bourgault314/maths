@@ -20,14 +20,17 @@ const CATALOGUE_APPLIS = [
         // gagne un champ, il faut l'ajouter ici : tests/parcours-reference.json
         // (généré par l'appli) casse un test tant que ce n'est pas fait.
         // Lot 3 de Défi tables v2 (08/09/2026) : « etoiles », « couronne »
-        // (l'escalier), « rang », « jours » (une liste de dates), « avis » et
-        // « avisVu » (l'avis unique de migration). « niveau » et « champion »
-        // restent acceptés : un appareil resté sur l'ancienne appli les envoie
-        // encore, et c'est l'appli qui les migre.
-        'cles' => ['version', 'epoque', 'tables', 'apprends', 'construct', 'gaps', 'ordered', 'random',
+        // (l'escalier), « rang », « jours » (une liste de dates). « niveau » et
+        // « champion » restent acceptés : un appareil resté sur l'ancienne
+        // appli les envoie encore, et c'est l'appli qui les migre.
+        // Lot 4b (10/09/2026) : « beads », la cinquième activité de J'apprends
+        // (« je pousse les perles ») ; « avis » et « avisVu » (l'avis unique de
+        // migration du lot 3, retiré) ne sont plus déclarés — un vieil appareil
+        // qui les envoie encore les voit simplement filtrés.
+        'cles' => ['version', 'epoque', 'tables', 'apprends', 'beads', 'construct', 'gaps', 'ordered', 'random',
             'entraine', 'desordre', 'trous', 'mixte', 'dernier', 'entrainement', 'score', 'total',
             'acquise', 'melange', 'aJour', 'aRefaireAvec', 'expert', 'niveau', 'champion',
-            'etoiles', 'couronne', 'rang', 'jours', 'avis', 'avisVu',
+            'etoiles', 'couronne', 'rang', 'jours',
             'calculs', 'cases', 'vu', 'erreur', 'gagne'],
         'mots' => ['desordre', 'trous', 'mixte'],
         'motifs' => ['/^(?:[2-9]|10)$/', '/^\d{1,2}-\d{1,2}$/'],

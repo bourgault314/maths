@@ -21,9 +21,11 @@ const confidentialite = await readFile(new URL("../confidentialite.html", import
 
 test("l’accueil : Ma table et ses trois étapes, Réviser, Mon parcours, Mes calculs, les petits liens", () => {
   assert.match(html, /<section id="mode-screen" class="mode-screen">[\s\S]*<div class="acc">/);
-  // Lot 3 : avant le bloc Ma table, l'avis unique de migration (caché) et le
-  // bloc « Je deviens expert » (caché tant que les 9 tables ne sont pas acquises).
-  assert.match(html, /<div class="acc">\s*<!--[^>]*-->\s*<div id="acc-avis" class="avis" role="status" hidden>[\s\S]*?<section id="acc-expert" class="expert"[^>]*hidden>[\s\S]*?<section class="matable"/, "l’accueil commence par le bloc Ma table (l’avis et l’escalier ne s’affichent que quand ils ont lieu d’être)");
+  // Lot 3 : avant le bloc Ma table, le bloc « Je deviens expert » (caché tant
+  // que les 9 tables ne sont pas acquises). L'avis unique de migration qui le
+  // précédait a été retiré au lot 4b : il n'y avait pas d'élèves à prévenir.
+  assert.match(html, /<div class="acc">\s*<!--[^>]*-->\s*<section id="acc-expert" class="expert"[^>]*hidden>[\s\S]*?<section class="matable"/, "l’accueil commence par le bloc Ma table (l’escalier ne s’affiche que quand il a lieu d’être)");
+  assert.doesNotMatch(html, /acc-avis|marquerAvisVu|texteAvis/, "plus d’avis « le parcours a changé » : ni bloc, ni texte, ni bouton OK");
   assert.match(html, /<p id="acc-table-eyebrow" class="eyebrow">Ma table<\/p><h1 id="acc-table-titre" tabindex="-1">/, "« La table de N » est le titre de l’écran (« Mes tables » quand les 9 sont acquises)");
   assert.match(html, /id="acc-changer" class="matable-changer"[^>]*aria-controls="acc-choix">Changer de table</);
   assert.match(html, /id="acc-acquises"/);
@@ -205,9 +207,18 @@ test("l’étape conseillée d’une table suit la même lecture que le moteur",
   const prete = lea();
   prete.tables[5].entraine.trous = 2;
   assert.equal(logique.etapeConseillee(ligneDe(prete, 5)), "valide", "3 sur 3 → Je valide ma table");
+  // Lot 4b, règle du 10/09 : J'apprends tant que les cinq activités ne sont
+  // pas toutes terminées ET qu'aucun entraînement n'est réussi — la page lit
+  // le conseil que le moteur calcule (ligne.conseil), une seule règle.
   const commence = PARCOURS.creerParcours();
   commence.tables[3].apprends.construct = 1;
-  assert.equal(logique.etapeConseillee(ligneDe(commence, 3)), "entraine", "une activité commencée → on passe aux entraînements, comme etapeTable");
+  assert.equal(logique.etapeConseillee(ligneDe(commence, 3)), "apprends", "une activité commencée → toujours J’apprends (« finir un J’apprends ne veut pas dire qu’il connaît »)");
+  PARCOURS.ACTIVITES_APPRENDS.forEach(activite => { commence.tables[3].apprends[activite] = 2; });
+  assert.equal(logique.etapeConseillee(ligneDe(commence, 3)), "entraine", "les cinq terminées → Je m’entraîne");
+  const seul = PARCOURS.creerParcours();
+  seul.tables[4].entraine.desordre = 2;
+  assert.equal(logique.etapeConseillee(ligneDe(seul, 4)), "entraine", "un entraînement réussi sans rien apprendre → Je m’entraîne");
+  assert.match(html, /function etapeConseillee\(ligne\) \{\s*return ligne\.conseil;\s*\}/, "la page ne recopie pas la règle : elle lit le moteur");
   // Cohérence avec le moteur sur le parcours de Léa.
   assert.equal(PARCOURS.prochaineEtape(lea()).type, "entraine");
   assert.equal(PARCOURS.prochaineEtape(lea()).table, 5);

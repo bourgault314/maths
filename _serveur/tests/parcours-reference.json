@@ -5,6 +5,7 @@
   "tables": {
     "2": {
       "apprends": {
+        "beads": 2,
         "construct": 2,
         "gaps": 2,
         "ordered": 2,
@@ -24,6 +25,7 @@
     },
     "3": {
       "apprends": {
+        "beads": 2,
         "construct": 2,
         "gaps": 2,
         "ordered": 2,
@@ -43,6 +45,7 @@
     },
     "4": {
       "apprends": {
+        "beads": 2,
         "construct": 2,
         "gaps": 2,
         "ordered": 2,
@@ -62,6 +65,7 @@
     },
     "5": {
       "apprends": {
+        "beads": 2,
         "construct": 2,
         "gaps": 2,
         "ordered": 2,
@@ -81,6 +85,7 @@
     },
     "6": {
       "apprends": {
+        "beads": 2,
         "construct": 2,
         "gaps": 2,
         "ordered": 2,
@@ -100,6 +105,7 @@
     },
     "7": {
       "apprends": {
+        "beads": 2,
         "construct": 2,
         "gaps": 2,
         "ordered": 2,
@@ -119,6 +125,7 @@
     },
     "8": {
       "apprends": {
+        "beads": 2,
         "construct": 2,
         "gaps": 2,
         "ordered": 2,
@@ -138,6 +145,7 @@
     },
     "9": {
       "apprends": {
+        "beads": 2,
         "construct": 2,
         "gaps": 2,
         "ordered": 2,
@@ -157,6 +165,7 @@
     },
     "10": {
       "apprends": {
+        "beads": 2,
         "construct": 2,
         "gaps": 2,
         "ordered": 2,
@@ -211,8 +220,6 @@
     "2026-09-22",
     "2026-09-23"
   ],
-  "avis": 2,
-  "avisVu": 2,
   "calculs": {
     "2-2": {
       "cases": 0,
