@@ -1353,6 +1353,144 @@
     .fiche-case { width: 4.2mm; height: 4.2mm; border: .35mm solid #7ea1b8; border-radius: 1mm; background: #fff; }
     .fiche-case.is-pleine { border-color: #087f75; background: #087f75; }
     .fiche-page2 .fiche-rules { margin-top: 5mm; }
+
+    /* ---------- « Je pousse les perles » : le rekenrek de la table ----------
+       Reporté de son boulier (outils/bouliers/rekenrek/tables.html). UNE règle
+       de géométrie à tous les écrans : l'intérieur du cadre fait exactement
+       20 perles de large, donc les 10 perles d'une rangée en occupent la
+       moitié et la coupure entre les perles poussées et celles au repos tombe
+       toujours au MILIEU — c'est ce qui rend un rekenrek lisible (sur son
+       appli : cadre de 1 240 px pour des perles de 55). Les tailles sont
+       calculées en JS (mesurerBoulier), pas zoomées : montants 0,45 perle,
+       rangée 1,49 perle, perle = min(largeur / 20,9 ; hauteur / 14,9 ; 55 px),
+       jamais moins de 14. */
+    .question.perles-main { display: flex; flex-direction: column; align-items: center; }
+    .question.perles-main .keypad,
+    .question.perles-main .actions,
+    .question.perles-main .answer-feedback { display: none; }
+    .question.perles-main .learn-sequence { flex: 1 1 auto; min-height: 0; display: flex; }
+    /* Le titre tient en une ligne : la bande écrit onze fois la table juste en
+       dessous, et chaque pixel repris ici agrandit le boulier d'autant. */
+    .question.perles-main .expression { min-height: 0; margin: 0 0 3px; padding: 4px 12px; font-size: clamp(1.05rem, 3.6vw, 1.45rem); }
+    .challenge-playing .question.perles-main .expression { min-height: 0; margin: 0 0 3px; padding: 4px 12px; }
+    .perles-zone { flex: 1 1 auto; min-height: 0; width: 100%; display: flex; flex-direction: column; align-items: center; }
+    .perles-consigne { margin: 0 0 4px; }
+    .perles-scene { flex: 1 1 auto; min-height: 132px; width: 100%; display: grid; place-items: center; padding-bottom: clamp(10px, 1.6vh, 18px); }
+    .question.perles-main .number-stick { max-width: 100%; }
+    .perles-cadre {
+      position: relative;
+      border-radius: 10px;
+      background: #f3e3c9;
+      box-shadow: 0 3px 10px rgba(43, 67, 84, .16);
+      touch-action: none;
+      -webkit-user-select: none;
+      user-select: none;
+    }
+    .perles-montant { position: absolute; top: 0; bottom: 0; z-index: 3; background: #b08d57; }
+    .perles-montant.gauche { left: 0; border-radius: 10px 0 0 10px; }
+    .perles-montant.droite { right: 0; border-radius: 0 10px 10px 0; }
+    .perles-interieur { position: relative; overflow: hidden; touch-action: none; cursor: grab; }
+    .perles-rangee { position: relative; width: 100%; }
+    .perles-tige { position: absolute; top: 50%; right: 0; left: 0; height: 2px; transform: translateY(-50%); background: #a98352; }
+    .perle {
+      position: absolute;
+      top: 50%;
+      z-index: 2;
+      border-radius: 50%;
+      transform: translateY(-50%);
+      box-shadow: inset -3px -3px 7px rgba(0, 0, 0, .34), 0 1px 3px rgba(0, 0, 0, .35);
+      pointer-events: none;
+    }
+    .perle.rouge { background: radial-gradient(circle at 30% 30%, #ff5f5f, #a00); }
+    .perle.blanche { background: radial-gradient(circle at 30% 30%, #fff, #bbb); }
+    /* L'addition s'écrit toute seule au fil des gestes : c'est elle qui fait la
+       leçon (9 + 1 + 2 est court, 9 + 1 + 1 + 1 est long et laid). Elle se
+       fige en vert quand la case de la bande se remplit. */
+    .perles-addition {
+      min-height: 1.3em;
+      margin: 6px 0 4px;
+      color: var(--ink);
+      font-size: clamp(1.3rem, 5.4vw, 2.1rem);
+      font-weight: 950;
+      line-height: 1.15;
+      text-align: center;
+      font-variant-numeric: tabular-nums;
+    }
+    .perles-addition.est-figee { color: var(--green); }
+    .perles-table { display: none; }
+    .perles-terminer { display: none; }
+    /* À la fin, le boulier ne disparaît pas : il rétrécit et laisse la place aux
+       onze lignes de la table. Alignées les unes sous les autres, elles montrent
+       seules le motif des unités (5-0-5-0 pour la table de 5). */
+    /* L'écran de fin est une affiche : le titre, la table, le bouton, groupés
+       et centrés dans la carte — pas une liste posée en haut d'un grand vide. */
+    .question.perles-main.est-finie .expression { margin: 0 0 8px; font-size: clamp(1.45rem, 5.6vw, 2.2rem); }
+    .question.perles-main.est-finie .learn-sequence,
+    .question.perles-main.est-finie .perles-zone { flex: 0 1 auto; }
+    .question.perles-main.est-finie .perles-table { margin: 0; }
+    .question.perles-main.est-finie .perles-scene,
+    .question.perles-main.est-finie .perles-consigne,
+    .question.perles-main.est-finie .perles-addition,
+    .question.perles-main.est-finie .number-stick { display: none; }
+    .question.perles-main.est-finie .perles-table { display: grid; }
+    .question.perles-main.est-finie .perles-terminer { display: block; }
+    .perles-table {
+      flex: 0 1 auto;
+      min-height: 0;
+      max-width: 100%;
+      display: grid;
+      grid-template-columns: auto auto auto;
+      justify-content: center;
+      column-gap: .4em;
+      margin: 0;
+      padding: 0;
+      overflow: auto;
+      list-style: none;
+      color: var(--ink);
+      font-size: clamp(1.1rem, 4.6vw, 1.7rem);
+      font-weight: 900;
+      line-height: 1.5;
+      font-variant-numeric: tabular-nums;
+    }
+    /* Les trois colonnes forment UNE grille : le bloc entier se centre sous le
+       titre (les lignes centrées une par une tiraient l'écriture vers la
+       droite), et les unités des produits restent les unes sous les autres. */
+    .perles-table li { display: contents; }
+    .perles-table li span { text-align: right; }
+    .perles-table li i { font-style: normal; color: var(--muted); }
+    .perles-table li b { text-align: right; color: var(--teal); }
+    .perles-terminer { width: min(100%, 260px); min-height: 44px; margin: 18px 0 0; }
+
+    /* La bande, plus grande dès la tablette : il y a la place, et l'écriture
+       complète (« 10×3 », collée) doit se lire d'un rang de classe. */
+    @media (min-width: 621px) {
+      .number-stick { width: min(100%, 760px); padding: 4px; }
+      .number-stick-cell { min-height: 74px; grid-template-rows: 22px minmax(50px, 1fr); }
+      .number-stick-multiplier { font-size: .82rem; }
+      .number-stick-value { min-height: 50px; font-size: 1.4rem; }
+      .question.stick-trace .number-stick { width: min(100%, 760px); }
+      .question.stick-trace .number-stick-cell { min-height: 52px; grid-template-rows: 17px minmax(35px, 1fr); }
+      .question.stick-trace .number-stick-multiplier { font-size: .64rem; }
+      .question.stick-trace .number-stick-value { min-height: 35px; font-size: 1.02rem; }
+    }
+    @media (min-width: 1040px) {
+      .number-stick { width: min(100%, 860px); }
+      .number-stick-cell { min-height: 86px; grid-template-rows: 26px minmax(58px, 1fr); }
+      .number-stick-multiplier { font-size: .95rem; }
+      .number-stick-value { min-height: 58px; font-size: 1.7rem; }
+    }
+    /* Sur un grand écran, la carte du défi n'est plus contrainte en hauteur :
+       sans cette hauteur, le boulier n'aurait aucune place à mesurer. */
+    /* Sur un téléphone, chaque millimètre de marge est une perle plus
+       grosse : le boulier est un objet à manipuler, il prend toute la
+       largeur qu'il peut. */
+    @media (max-width: 620px) {
+      .challenge-playing .question.perles-main { padding-right: 3px; padding-left: 3px; }
+    }
+    @media (min-width: 621px) and (min-height: 901px) {
+      .challenge-playing .question.perles-main { height: min(76dvh, 860px); }
+    }
+
     @media print {
       @page { size: A4 portrait; margin: 12mm; }
       body { margin: 0; background: #fff !important; color: #143451; }
@@ -1743,7 +1881,7 @@
     <span data-mathsgo-confidentialite>Sans cookie ni traceur</span>
   </footer>
 
-  <script src="./defi_tables_core.js?v=20260908-10"></script>
+  <script src="./defi_tables_core.js?v=20260909-1"></script>
   <script src="./defi_tables_mon_parcours.js?v=20260908-13"></script>
   <script>
     (() => {
@@ -1801,6 +1939,21 @@
         return {billet: parametres.get("b") || "", vue: parametres.get("vue") || "", ouvrir: parametres.get("ouvrir") || ""};
       }
       const ENTREE = lireEntree();
+
+      // Lot 4a (09/09/2026) : l'activité « Je pousse les perles » n'apparaît
+      // dans « J'apprends » qu'en ouvrant la page avec #essai=perles, le temps
+      // qu'elle soit essayée en vrai sur un TNI et sur un téléphone. Rien ne
+      // change pour les élèves, et rien n'est enregistré : le moteur du parcours
+      // ne connaît pas cette activité (classerSerie renvoie null pour elle),
+      // donc elle ne coche aucune case et ne compte dans aucun « sur 4 ».
+      // Le lot 4b l'ouvrira à tous — c'est lui qui touche au moteur.
+      const ESSAI_PERLES = (() => {
+        try {
+          return new URLSearchParams(String(window.location.hash || "").replace(/^#/, "")).get("essai") === "perles";
+        } catch (erreur) {
+          return false;
+        }
+      })();
 
       // Le code actif : celui de l'onglet, et rien d'autre. Décidé AVANT de
       // charger le parcours : c'est ce qui fait qu'on ne montre jamais la case
@@ -3002,7 +3155,8 @@
       }
 
       function renderExpression(question) {
-        const stickOnly = state.configuration?.mode === "learn" && ["construct", "gaps"].includes(state.configuration.learnActivity);
+        const stickOnly = state.configuration?.mode === "learn"
+          && (["construct", "gaps"].includes(state.configuration.learnActivity) || activitePerles(state.configuration));
         $("expression").classList.toggle("is-stick-activity", stickOnly);
         if (stickOnly) {
           $("expression").textContent = `Table de ${question.focusTable}`;
@@ -3030,7 +3184,10 @@
           const filled = revealedMultipliers.has(multiplier);
           cell.className = `number-stick-cell ${filled ? "is-filled" : "is-empty"}`;
           multiplierLabel.className = "number-stick-multiplier";
-          multiplierLabel.textContent = `×${multiplier}`;
+          // « 0×3 … 10×3 » et non « ×0, ×1 » : le sens retenu est n × table,
+          // et « ×3 » se lit « fois trois », à l'envers. Collé sur tous les
+          // écrans : à onze cases sur un téléphone, « 10 × 3 » ne tient pas.
+          multiplierLabel.textContent = `${multiplier}×${table}`;
           multiplierLabel.setAttribute("aria-hidden", "true");
           value.className = "number-stick-value";
           const hasDraft = !filled && multiplier === draftMultiplier && Boolean(draftValue);
@@ -3052,22 +3209,30 @@
           cell.append(multiplierLabel, value);
           stick.append(cell);
         }
-        stick.setAttribute("aria-label", `Bâton de la table de ${table}`);
+        stick.setAttribute("aria-label", `Bande de la table de ${table}`);
         return stick;
       }
 
       function renderLearnSequence() {
         const zone = $("learn-sequence");
         const visible = state.configuration?.mode === "learn";
+        const perles = visible && activitePerles(state.configuration);
         const stickOnly = visible && ["construct", "gaps"].includes(state.configuration.learnActivity);
         $("question-card").classList.toggle("no-skip", visible);
         $("question-card").classList.toggle("stick-main", stickOnly);
-        $("question-card").classList.toggle("stick-trace", visible && !stickOnly);
+        $("question-card").classList.toggle("stick-trace", visible && !stickOnly && !perles);
+        $("question-card").classList.toggle("perles-main", perles);
         zone.hidden = !visible;
         $("question-card").classList.toggle("show-learn-sequence", visible);
         if (!visible) return;
         const table = state.configuration.tables[0];
         const question = state.questions[state.index];
+        if (perles) {
+          $("answer-feedback").before(zone);
+          if (!boulier.dom || boulier.table !== table) construireBoulier(table);
+          majBoulier();
+          return;
+        }
         if (stickOnly) $("answer-feedback").before(zone);
         else $("expression").before(zone);
         // Dans l’ordre et dans le désordre, le bâton d’aide ne montre que les cases déjà répondues :
@@ -3128,8 +3293,344 @@
         else showLearnStickHelp();
       }
 
+      /* ---------------------------------------------------------------
+         « Je pousse les perles » : le rekenrek de la table.
+
+         L'élève construit la table en poussant des perles sur le cent, et la
+         table s'écrit sous ses doigts. La mécanique est PORTÉE de son boulier
+         (outils/bouliers/rekenrek/tables.html), pas réinventée :
+         etats[r] = nombre de perles poussées sur la rangée r ; attraper la
+         perle d'indice i déplace TOUT le groupe de etats[r] à i ; le doigt est
+         suivi en direct, et au relâché c'est tout ou rien, à une perle près —
+         le boulier n'est jamais dans un état bâtard.
+
+         Deux différences voulues, apprises en l'essayant au doigt :
+         - aucune zone de prise par perle. La RANGÉE entière écoute et on
+           cherche la perle la plus proche du doigt : des zones par perle se
+           chevauchaient d'une rangée à l'autre (« je clique au-dessus et ça
+           prend en dessous »), et écarter les rangées n'était pas la solution.
+         - la géométrie est RECALCULÉE pour chaque écran au lieu d'être zoomée.
+
+         Ce que l'appli écrit sous le boulier n'est pas la multiplication (la
+         bande la porte déjà) mais l'ADDITION du geste : 9 + 1 + 2 = 12. Les
+         deux passages de la dizaine sortent tout seuls, sans être programmés.
+         --------------------------------------------------------------- */
+      const PERLES = Object.freeze({
+        rangees: 10, parRangee: 10,
+        montant: .45, hauteurRangee: 1.49, largeurCadre: 20.9, hauteurCadre: 14.9,
+        maxi: 55, mini: 14
+      });
+      const boulier = {
+        table: 0, taille: 0, etats: [], etape: 0, morceaux: [], pile: [],
+        phrase: "", figee: false, finie: false, drag: null, dom: null, observer: null
+      };
+
+      function activitePerles(config) {
+        return config?.mode === "learn" && config?.learnActivity === "beads";
+      }
+
+      function sommeMorceaux(liste) {
+        return liste.reduce((total, valeur) => total + valeur, 0);
+      }
+
+      function totalPerles() {
+        return boulier.etats.reduce((total, valeur) => total + valeur, 0);
+      }
+
+      // Où se trouve la perle d'indice i : poussée à gauche, ou au repos à
+      // droite. L'intérieur du cadre fait 20 perles de large, donc le vide entre
+      // les deux groupes fait toujours 10 perles — seule sa position bouge.
+      function positionPerle(index, poussee) {
+        return (poussee ? index : PERLES.parRangee + index) * boulier.taille;
+      }
+
+      function construireBoulier(table) {
+        const zone = $("learn-sequence");
+        Object.assign(boulier, {
+          table, taille: 0, etats: Array.from({length: PERLES.rangees}, () => 0),
+          etape: 0, morceaux: [], pile: [], phrase: "", figee: false, finie: false, drag: null
+        });
+        $("question-card").classList.remove("est-finie");
+
+        const bloc = document.createElement("div");
+        bloc.className = "perles-zone";
+        const consigne = document.createElement("p");
+        consigne.className = "learn-instruction perles-consigne";
+        consigne.textContent = `Pousse ${table} perle${table > 1 ? "s" : ""}.`;
+        const scene = document.createElement("div");
+        scene.className = "perles-scene";
+        const cadre = document.createElement("div");
+        cadre.className = "perles-cadre";
+        const montants = ["gauche", "droite"].map(cote => {
+          const montant = document.createElement("span");
+          montant.className = `perles-montant ${cote}`;
+          return montant;
+        });
+        const interieur = document.createElement("div");
+        interieur.className = "perles-interieur";
+        interieur.setAttribute("role", "img");
+        const rangees = [];
+        for (let r = 0; r < PERLES.rangees; r += 1) {
+          const rangee = document.createElement("div");
+          rangee.className = "perles-rangee";
+          const tige = document.createElement("span");
+          tige.className = "perles-tige";
+          rangee.append(tige);
+          const liste = [];
+          for (let i = 0; i < PERLES.parRangee; i += 1) {
+            const perle = document.createElement("span");
+            // Rouges et blanches par paquets de 5, damier inversé à partir de la
+            // 6e rangée : l'œil compte cinq puis cinq, et deux rangées voisines
+            // ne se confondent pas.
+            const rouge = r < 5 ? i < 5 : i >= 5;
+            perle.className = `perle ${rouge ? "rouge" : "blanche"}`;
+            rangee.append(perle);
+            liste.push(perle);
+          }
+          interieur.append(rangee);
+          rangees.push({element: rangee, perles: liste});
+        }
+        cadre.append(montants[0], montants[1], interieur);
+        scene.append(cadre);
+        const addition = document.createElement("p");
+        addition.className = "perles-addition";
+        addition.setAttribute("role", "status");
+        addition.setAttribute("aria-live", "polite");
+        const bande = createNumberStick(table, state.revealedLearnResults, {activeMultiplier: 1});
+        const tableFinale = document.createElement("ol");
+        tableFinale.className = "perles-table";
+        const terminer = document.createElement("button");
+        terminer.type = "button";
+        terminer.className = "primary perles-terminer";
+        terminer.textContent = "Terminer";
+        terminer.addEventListener("click", () => { if (state.running) finish(); });
+        bloc.append(consigne, scene, bande, addition, tableFinale, terminer);
+        zone.replaceChildren(bloc);
+
+        boulier.dom = {zone, bloc, scene, cadre, interieur, montants, rangees, addition, bande, tableFinale, terminer};
+        interieur.addEventListener("pointerdown", perlesPointerDown);
+        interieur.addEventListener("pointermove", perlesPointerMove);
+        interieur.addEventListener("pointerup", perlesPointerUp);
+        interieur.addEventListener("pointercancel", perlesPointerUp);
+        boulier.observer?.disconnect();
+        if (typeof ResizeObserver === "function") {
+          boulier.observer = new ResizeObserver(() => mesurerBoulier());
+          boulier.observer.observe(scene);
+        }
+        mesurerBoulier();
+      }
+
+      function mesurerBoulier() {
+        const dom = boulier.dom;
+        if (!dom) return;
+        const largeur = dom.scene.clientWidth || dom.zone.clientWidth || 320;
+        let hauteur = dom.scene.clientHeight;
+        if (!(hauteur > 120)) hauteur = Math.round(window.innerHeight * .45);
+        const taille = Math.max(PERLES.mini, Math.floor(Math.min(
+          largeur / PERLES.largeurCadre,
+          hauteur / PERLES.hauteurCadre,
+          PERLES.maxi
+        )));
+        if (taille === boulier.taille) return;
+        boulier.taille = taille;
+        dessinerBoulier(false);
+      }
+
+      function dessinerBoulier(animer) {
+        const dom = boulier.dom;
+        if (!dom || !boulier.taille) return;
+        const taille = boulier.taille;
+        const montant = Math.max(4, Math.round(taille * PERLES.montant));
+        const hauteurRangee = Math.round(taille * PERLES.hauteurRangee);
+        const interieur = taille * PERLES.parRangee * 2;
+        dom.cadre.style.width = `${interieur + montant * 2}px`;
+        dom.cadre.style.height = `${hauteurRangee * PERLES.rangees}px`;
+        dom.interieur.style.width = `${interieur}px`;
+        dom.interieur.style.height = `${hauteurRangee * PERLES.rangees}px`;
+        dom.interieur.style.marginLeft = `${montant}px`;
+        dom.montants.forEach(element => { element.style.width = `${montant}px`; });
+        // La bande prend EXACTEMENT la largeur du boulier et se pose dessous :
+        // les deux ne font qu'un objet, l'un montre ce que l'autre écrit.
+        dom.bande.style.width = `${interieur + montant * 2}px`;
+        dom.rangees.forEach((rangee, r) => {
+          rangee.element.style.height = `${hauteurRangee}px`;
+          rangee.perles.forEach((perle, i) => {
+            perle.style.width = `${taille}px`;
+            perle.style.height = `${taille}px`;
+            perle.style.transition = animer ? "left .18s ease-out" : "none";
+            perle.style.left = `${positionPerle(i, i < boulier.etats[r])}px`;
+          });
+        });
+      }
+
+      function perlesPointerDown(event) {
+        if (!boulier.dom || boulier.finie || !state.running) return;
+        const rect = boulier.dom.interieur.getBoundingClientRect();
+        const hauteurRangee = rect.height / PERLES.rangees;
+        const rangee = Math.min(PERLES.rangees - 1, Math.max(0, Math.floor((event.clientY - rect.top) / hauteurRangee)));
+        const x = event.clientX - rect.left;
+        // La perle la plus proche du doigt, poussées et au repos confondues :
+        // on attrape la rangée, pas une cible de 44 px.
+        let index = 0;
+        let meilleure = Infinity;
+        for (let i = 0; i < PERLES.parRangee; i += 1) {
+          const centre = positionPerle(i, i < boulier.etats[rangee]) + boulier.taille / 2;
+          const distance = Math.abs(centre - x);
+          if (distance < meilleure) { meilleure = distance; index = i; }
+        }
+        boulier.drag = {rangee, index, depart: event.clientX, position: positionPerle(index, index < boulier.etats[rangee])};
+        boulier.dom.interieur.setPointerCapture?.(event.pointerId);
+        event.preventDefault();
+      }
+
+      function perlesPointerMove(event) {
+        const drag = boulier.drag;
+        if (!drag) return;
+        const etat = boulier.etats[drag.rangee];
+        const pousse = drag.index >= etat;
+        const premiere = pousse ? etat : drag.index;
+        const derniere = pousse ? drag.index : etat - 1;
+        const ecart = event.clientX - drag.depart;
+        const rangee = boulier.dom.rangees[drag.rangee];
+        for (let i = premiere; i <= derniere; i += 1) {
+          const depart = positionPerle(i, !pousse);
+          const gauche = Math.max(positionPerle(i, true), Math.min(positionPerle(i, false), depart + ecart));
+          rangee.perles[i].style.transition = "none";
+          rangee.perles[i].style.left = `${gauche}px`;
+          if (i === drag.index) drag.position = gauche;
+        }
+      }
+
+      function perlesPointerUp() {
+        const drag = boulier.drag;
+        if (!drag) return;
+        boulier.drag = null;
+        const etat = boulier.etats[drag.rangee];
+        const pousse = drag.index >= etat;
+        // Tout ou rien, à une perle près, comme dans son appli : un groupe qui
+        // n'est pas arrivé revient d'où il vient.
+        const tolerance = boulier.taille;
+        let nouvel = etat;
+        if (pousse && drag.position <= positionPerle(drag.index, true) + tolerance) nouvel = drag.index + 1;
+        if (!pousse && drag.position >= positionPerle(drag.index, false) - tolerance) nouvel = drag.index;
+        const ecart = nouvel - etat;
+        boulier.etats[drag.rangee] = nouvel;
+        dessinerBoulier(true);
+        if (ecart) enregistrerGeste(ecart);
+        majBoulier();
+      }
+
+      // Coupe la suite des morceaux en deux : ce qui a servi à atteindre la
+      // cible, et ce qui la dépasse (un élève peut pousser cinq perles d'un
+      // coup alors qu'il en fallait trois).
+      function couperMorceaux(morceaux, quantite) {
+        const debut = [];
+        const reste = morceaux.slice();
+        let manque = quantite;
+        while (manque > 0 && reste.length) {
+          const premier = reste[0];
+          if (premier <= manque) { debut.push(reste.shift()); manque -= premier; }
+          else { debut.push(manque); reste[0] = premier - manque; manque = 0; }
+        }
+        return {debut, reste};
+      }
+
+      function phraseAddition(base, morceaux) {
+        if (!morceaux.length) return base ? String(base) : "";
+        const total = base + sommeMorceaux(morceaux);
+        if (!base && morceaux.length === 1) return String(total);
+        return `${base ? `${base} + ` : ""}${morceaux.join(" + ")} = ${total}`;
+      }
+
+      function enregistrerGeste(ecart) {
+        boulier.figee = false;
+        if (ecart > 0) boulier.morceaux.push(ecart);
+        else {
+          // L'élève ramène des perles à droite : les morceaux se défont dans
+          // l'ordre inverse, et la bande se dépeuple avec eux.
+          let reste = -ecart;
+          while (reste > 0) {
+            if (!boulier.morceaux.length) {
+              if (!boulier.etape) break;
+              state.revealedLearnResults.delete(boulier.etape);
+              boulier.etape -= 1;
+              boulier.morceaux = (boulier.pile.pop() || []).concat(boulier.morceaux);
+              boulier.finie = false;
+              $("question-card").classList.remove("est-finie");
+              continue;
+            }
+            const dernier = boulier.morceaux[boulier.morceaux.length - 1];
+            if (dernier > reste) { boulier.morceaux[boulier.morceaux.length - 1] = dernier - reste; reste = 0; }
+            else { boulier.morceaux.pop(); reste -= dernier; }
+          }
+        }
+        // Filet : ce qui est écrit doit toujours être ce que montre le boulier.
+        const attendu = totalPerles() - boulier.etape * boulier.table;
+        if (sommeMorceaux(boulier.morceaux) !== attendu) boulier.morceaux = attendu > 0 ? [attendu] : [];
+        verifierEtape();
+      }
+
+      function verifierEtape() {
+        const total = totalPerles();
+        let valide = false;
+        while (boulier.etape < PERLES.parRangee && (boulier.etape + 1) * boulier.table <= total) {
+          const cible = (boulier.etape + 1) * boulier.table;
+          const {debut, reste} = couperMorceaux(boulier.morceaux, cible - boulier.etape * boulier.table);
+          boulier.phrase = phraseAddition(boulier.etape * boulier.table, debut);
+          boulier.pile.push(debut);
+          boulier.morceaux = reste;
+          boulier.etape += 1;
+          state.revealedLearnResults.add(boulier.etape);
+          valide = true;
+        }
+        // La phrase se fige à l'écran au moment où la case se remplit : elle ne
+        // doit pas disparaître au succès. Elle repart dès la perle suivante.
+        if (valide) boulier.figee = !boulier.morceaux.length;
+        if (boulier.etape === PERLES.parRangee && !boulier.finie) terminerPerles();
+      }
+
+      function terminerPerles() {
+        const dom = boulier.dom;
+        boulier.finie = true;
+        dom.tableFinale.replaceChildren(...Array.from({length: 11}, (rien, multiplicateur) => {
+          const ligne = document.createElement("li");
+          const calcul = document.createElement("span");
+          calcul.textContent = `${multiplicateur} × ${boulier.table}`;
+          const egal = document.createElement("i");
+          egal.textContent = "=";
+          const produit = document.createElement("b");
+          produit.textContent = String(multiplicateur * boulier.table);
+          ligne.append(calcul, egal, produit);
+          return ligne;
+        }));
+        // À la fin, le boulier s'efface : il a fait son travail, et des perles
+        // éparpillées n'apprennent plus rien (« le rekenrek ne sert plus à rien
+        // à cette étape », Gwenaël sur la maquette). Reste la table entière,
+        // alignée : c'est l'élève qui vient de la fabriquer.
+        $("question-card").classList.add("est-finie");
+        mesurerBoulier();
+        dom.terminer.focus?.({preventScroll: true});
+      }
+
+      function majBoulier() {
+        const dom = boulier.dom;
+        if (!dom) return;
+        dom.addition.textContent = boulier.figee
+          ? boulier.phrase
+          : phraseAddition(boulier.etape * boulier.table, boulier.morceaux);
+        dom.addition.classList.toggle("est-figee", boulier.figee);
+        const bande = createNumberStick(boulier.table, state.revealedLearnResults, {
+          activeMultiplier: boulier.finie ? null : boulier.etape + 1,
+          newMultiplier: boulier.figee ? boulier.etape : null
+        });
+        bande.style.width = dom.bande.style.width;
+        dom.bande.replaceWith(bande);
+        dom.bande = bande;
+        renderLearnProgress();
+      }
+
       function renderLearnProgress() {
-        const stickActivity = ["construct", "gaps"].includes(state.configuration.learnActivity);
+        const stickActivity = ["beads", "construct", "gaps"].includes(state.configuration.learnActivity);
         const completed = stickActivity ? state.revealedLearnResults.size : state.mastered.size;
         const total = stickActivity ? 11 : TOTAL;
         const label = stickActivity ? "cases complétées" : "calculs maîtrisés";
@@ -3340,6 +3841,7 @@
 
       function scoreMessage(score, config) {
         if (config.mode === "learn") {
+          if (config.learnActivity === "beads") return "Tu as fabriqué la table entière, perle par perle. Essaie maintenant de l’écrire sans le boulier.";
           if (["construct", "gaps"].includes(config.learnActivity)) return "Le bâton est complet. Choisis une autre activité quand tu es prêt.";
           return config.learnActivity === "ordered"
             ? "Tu peux maintenant essayer les calculs dans le désordre."
@@ -3376,12 +3878,16 @@
         $("result-icon").hidden = state.configuration.mode !== "learn" && state.correct < Math.ceil(TOTAL * .8);
         const remaining = TOTAL - state.index;
         if (state.configuration.mode === "learn") {
+          if (activitePerles(state.configuration)) {
+            $("result-detail").textContent = `Les 11 produits de la table ont été construits sur le boulier en ${formatElapsed(elapsed)}.`;
+          } else {
           const what = state.configuration.learnActivity === "gaps"
             ? `Les ${TOTAL} cases manquantes ont été complétées`
             : state.configuration.learnActivity === "construct"
               ? "Les 11 cases du bâton ont été complétées"
               : "Les 11 produits ont été retrouvés";
           $("result-detail").textContent = `${what} en ${state.responses.length} essai${state.responses.length > 1 ? "s" : ""} et ${formatElapsed(elapsed)}.`;
+          }
         } else if (state.configuration.duration === null) {
           $("result-detail").textContent = `Tu as terminé les ${TOTAL} questions en ${formatElapsed(elapsed)}.`;
         } else {
@@ -3428,6 +3934,7 @@
         const tables = shortTablesLabel(config);
         if (config.mode === "learn") {
           const activityLabels = {
+            beads: "je pousse les perles",
             construct: "je construis le bâton",
             gaps: "je complète un bâton à trous",
             ordered: "je réponds dans l’ordre",
@@ -3493,8 +4000,11 @@
         state.waitingForContinue = false;
         state.mastered = new Set();
         state.revealedLearnResults = new Set(config.mode === "learn"
-          ? config.learnActivity === "gaps" ? [0, 5, 10] : []
+          ? config.learnActivity === "gaps" ? [0, 5, 10] : config.learnActivity === "beads" ? [0] : []
           : []);
+        // Le boulier se rebâtit à chaque série, même table et même activité :
+        // sinon on rejouerait sur les perles déjà poussées.
+        boulier.dom = null;
         state.lastRevealedLearnMultiplier = null;
         state.learnStickHelpVisible = false;
         state.learnStickHelpUsed = false;
@@ -4281,13 +4791,23 @@
             etapes.append(panneauChoix({
               id: "acc-choix-apprends",
               legende: "Choisis ton activité",
-              items: ligne.apprends.map(item => ({
-                libelle: majuscule(PARCOURS.LIBELLES_APPRENDS[item.activite]),
-                fait: item.etat === 2,
-                commence: item.etat === 1,
-                conseillee: Boolean(prochaineActivite) && item.activite === prochaineActivite.activite,
-                lancer: () => launchFromParcours(PARCOURS.configApprends(table, item.activite), "menu")
-              }))
+              items: [
+                // En essai : elle se place en tête, là où elle vivra au lot 4b.
+                ...(ESSAI_PERLES ? [{
+                  libelle: "Je pousse les perles",
+                  fait: false,
+                  commence: false,
+                  conseillee: false,
+                  lancer: () => launchFromParcours({mode: "learn", tables: [table], learnActivity: "beads"}, "menu")
+                }] : []),
+                ...ligne.apprends.map(item => ({
+                  libelle: majuscule(PARCOURS.LIBELLES_APPRENDS[item.activite]),
+                  fait: item.etat === 2,
+                  commence: item.etat === 1,
+                  conseillee: Boolean(prochaineActivite) && item.activite === prochaineActivite.activite,
+                  lancer: () => launchFromParcours(PARCOURS.configApprends(table, item.activite), "menu")
+                }))
+              ]
             }));
           }
 
@@ -5093,6 +5613,9 @@
       poserNotices();
       document.addEventListener("keydown", event => {
         if (!state.running) return;
+        // « Je pousse les perles » se joue au doigt : aucune touche ne répond,
+        // et surtout pas Entrée, qui validerait une question sans réponse.
+        if (activitePerles(state.configuration)) return;
         if (/^\d$/.test(event.key)) enterDigit(event.key);
         else if (event.key === "Backspace") {
           state.answer = state.answer.slice(0, -1);
