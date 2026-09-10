@@ -316,20 +316,20 @@
     <div class="group">
       <a id="backMenu" href="../index.html?domain=geometrie&amp;notion=pythagore" aria-label="Retour au menu Pythagore" title="Retour au menu Pythagore">← Menu</a>
       <select id="puzzleSelect">
-      <option value="perigal" selected>1. Périgal (5 pièces)</option>
-      <option value="bhaskara">2. Bhaskara (4 triangles + 1 carré)</option>
-      <option value="leitzmann">3. Liu Hui (8 triangles)</option>
+      <option value="moulinIsocele" selected>1. Moulin isocèle (4 pièces)</option>
+      <option value="sixEquilibre">2. Découpage 3 + 3 (6 pièces)</option>
+      <option value="bhaskara">3. Bhaskara (4 triangles + 1 carré)</option>
       <option value="quatreIdentiques">4. Découpage croisé (4 pièces + 1 carré)</option>
-      <option value="lapeyronnie">5. Lapeyronnie (5 pièces)</option>
-      <option value="sixEquilibre">6. Découpage 3 + 3 (6 pièces)</option>
-      <option value="tangram">7. Tangram 2 + 5 (7 pièces)</option>
-      <option value="mosaiqueOblique">8. Mosaïque oblique (6 pièces)</option>
-      <option value="moulinIsocele">9. Moulin isocèle (4 pièces)</option>
-      <option value="mosaiqueSept">10. Puzzle de Brest (7 pièces)</option>
-      <option value="liuHuiSept">11. Liu Hui — 2 + 5 (7 pièces)</option>
-      <option value="pavageOblique">12. Pavage oblique (6 pièces)</option>
-      <option value="quadrillageQuatre">13. Quadrillage 3-4-5 (4 pièces)</option>
-      <option value="quadrillageCinq">14. Quadrillage 3-4-5 (5 pièces)</option>
+      <option value="perigal">5. Périgal (5 pièces)</option>
+      <option value="quadrillageQuatre">6. Quadrillage 3-4-5 (4 pièces)</option>
+      <option value="quadrillageCinq">7. Quadrillage 3-4-5 (5 pièces)</option>
+      <option value="tangram">8. Tangram 2 + 5 (7 pièces)</option>
+      <option value="lapeyronnie">9. Lapeyronnie (5 pièces)</option>
+      <option value="pavageOblique">10. Pavage oblique (6 pièces)</option>
+      <option value="mosaiqueOblique">11. Mosaïque oblique (6 pièces)</option>
+      <option value="mosaiqueSept">12. Puzzle de Brest (7 pièces)</option>
+      <option value="liuHuiSept">13. Liu Hui — 2 + 5 (7 pièces)</option>
+      <option value="leitzmann">14. Liu Hui (8 triangles)</option>
     </select>
     </div>
 
@@ -465,7 +465,7 @@
   const state = {
     mode: "eleves",
     layoutCompact: null,
-    puzzle: "perigal",
+    puzzle: "moulinIsocele",
     snapEnabled: true,
     angleSnapEnabled: true,
     lettersEnabled: false,
@@ -1545,7 +1545,7 @@
   // ---------- ÉNONCÉS ----------
   const ENONCES = {
     perigal: {
-      title: "Puzzle 1 — Périgal",
+      title: "Puzzle 5 — Périgal",
       html: `
         <p><strong>Objectif :</strong> déplacer les <strong>5 pièces</strong> provenant de <em>a²</em> et <em>b²</em> pour reconstituer le carré de l'hypoténuse <em>c²</em>.</p>
         <p class="muted">Conseil : commence par placer la grande pièce quadrilatère, puis complète avec les triangles.</p>
@@ -1556,56 +1556,56 @@
       `
     },
     bhaskara: {
-      title: "Puzzle 2 — Bhāskara",
+      title: "Puzzle 3 — Bhāskara",
       html: `
         <p><strong>Objectif :</strong> placer <strong>4 triangles</strong> et le <strong>carré</strong> pour reconstruire <em>c²</em>.</p>
         <p class="muted">Indice : les 4 triangles forment une sorte de cadre ; le petit carré comble le trou central.</p>
       `
     },
     lapeyronnie: {
-      title: "Puzzle 5 — Lapeyronnie, 5 pièces",
+      title: "Puzzle 9 — Lapeyronnie, 5 pièces",
       html: `
         <p><strong>Objectif :</strong> réunir les <strong>3 pièces</strong> de <em>b²</em> et les <strong>2 pièces</strong> de <em>a²</em> dans le carré <em>c²</em>.</p>
         <p class="muted">Construction reprise à partir du puzzle GeoGebra de Jason Lapeyronnie. Commence par le grand quadrilatère bleu.</p>
       `
     },
     sixEquilibre: {
-      title: "Puzzle 6 — Découpage 3 + 3",
+      title: "Puzzle 2 — Découpage 3 + 3",
       html: `
         <p><strong>Objectif :</strong> reconstituer <em>c²</em> avec les <strong>6 triangles</strong> provenant de deux carrés égaux.</p>
         <p class="muted">Le triangle du moulin est rectangle isocèle : les deux carrés de départ ont donc la même aire.</p>
       `
     },
     tangram: {
-      title: "Puzzle 7 — Tangram 2 + 5",
+      title: "Puzzle 8 — Tangram 2 + 5",
       html: `
         <p><strong>Objectif :</strong> placer les <strong>7 tans</strong> dans <em>c²</em>.</p>
         <p class="muted">Un carré contient les 2 grands triangles ; l’autre contient les 5 petites pièces du tangram classique.</p>
       `
     },
     mosaiqueOblique: {
-      title: "Puzzle 8 — Mosaïque oblique",
+      title: "Puzzle 11 — Mosaïque oblique",
       html: `
         <p><strong>Objectif :</strong> déplacer les <strong>6 pièces</strong> issues des deux carrés pour reconstituer <em>c²</em>.</p>
         <p class="muted">Le découpage est volontairement irrégulier : commence par les deux petites pièces triangulaires, puis raccorde les longues arêtes obliques.</p>
       `
     },
     moulinIsocele: {
-      title: "Puzzle 9 — Moulin isocèle",
+      title: "Puzzle 1 — Moulin isocèle",
       html: `
         <p><strong>Objectif :</strong> réunir les <strong>4 triangles rectangles isocèles</strong> dans <em>c²</em>.</p>
         <p class="muted">Les quatre angles droits se rejoignent au centre et dessinent les ailes d’un moulin.</p>
       `
     },
     mosaiqueSept: {
-      title: "Puzzle 10 — Puzzle de Brest",
+      title: "Puzzle 12 — Puzzle de Brest",
       html: `
         <p><strong>Objectif :</strong> recomposer <em>c²</em> avec <strong>7 pièces</strong> pour le triangle rectangle <strong>3-4-5</strong>.</p>
         <p class="muted">Les 2 pièces rouges remplissent <em>a²</em> et les 5 bleues <em>b²</em>. Dans <em>c²</em>, reconstitue quatre triangles rectangles autour du petit carré central.</p>
       `
     },
     liuHuiSept: {
-      title: "Puzzle 11 — Liu Hui, 2 + 5",
+      title: "Puzzle 13 — Liu Hui, 2 + 5",
       html: `
         <p><strong>Objectif :</strong> réunir les <strong>2 triangles rouges</strong> de <em>a²</em> et les <strong>5 pièces bleues</strong> de <em>b²</em> pour reconstituer <em>c²</em>.</p>
         <p class="muted">Le triangle rectangle est non isocèle, avec le rapport <strong>3:5</strong>. Le petit carré bleu a pour côté la différence <em>b − a</em>.</p>
@@ -1613,7 +1613,7 @@
       `
     },
     leitzmann: {
-      title: "Puzzle 3 — Liu Hui",
+      title: "Puzzle 14 — Liu Hui",
       html: `
         <p><strong>Objectif :</strong> reconstituer <em>c²</em> avec <strong>8 triangles</strong> (4 venant de <em>a²</em> et 4 de <em>b²</em>).</p>
         <p class="muted">Indice : commence par placer 4 triangles pour dessiner le contour de <em>c²</em>, puis remplis.</p>
