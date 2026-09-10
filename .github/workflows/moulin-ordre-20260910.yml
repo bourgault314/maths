@@ -1,0 +1,90 @@
+name: Ordre progressif du Moulin (ponctuel)
+on:
+  push:
+    branches: [fix/moulin-ordre-progressif-20260910]
+    paths: [.github/workflows/moulin-ordre-20260910.yml]
+permissions:
+  contents: write
+jobs:
+  preparer:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: fix/moulin-ordre-progressif-20260910
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: 22
+      - name: Appliquer uniquement l’ordre, les numéros et le puzzle initial
+        run: |
+          python3 - <<'PY'
+          import hashlib,re
+          from pathlib import Path
+          def sha(data):
+              return hashlib.sha1(b'blob '+str(len(data)).encode()+b'\0'+data).hexdigest()
+          p=Path('outils/plateaux_manipulation/moulin_pythagore.html')
+          b=p.read_bytes()
+          assert sha(b)=='f05e4294a8c708b74436be672de5db5a8d40868d', 'Le Moulin a changé : arrêt sans écraser.'
+          before=b.decode()
+          order=['moulinIsocele','sixEquilibre','bhaskara','quatreIdentiques','perigal','quadrillageQuatre','quadrillageCinq','tangram','lapeyronnie','pavageOblique','mosaiqueOblique','mosaiqueSept','liuHuiSept','leitzmann']
+          block=re.search(r'(<select id="puzzleSelect">\n)([\s\S]*?)(    </select>)',before)
+          assert block
+          entries=re.findall(r'      <option value="([^"]+)"(?: selected)?>(\d+)\. ([^<]+)</option>\n',block[2])
+          assert len(entries)==14 and set(x[0] for x in entries)==set(order)
+          labels={key:label for key,_,label in entries}
+          number={int(old):order.index(key)+1 for key,old,_ in entries}
+          options=''.join(f'      <option value="{key}"'+(' selected' if i==1 else '')+f'>{i}. {labels[key]}</option>\n' for i,key in enumerate(order,1))
+          after=before[:block.start(2)]+options+before[block.end(2):]
+          assert after.count('    puzzle: "perigal",')==1
+          after=after.replace('    puzzle: "perigal",','    puzzle: "moulinIsocele",',1)
+          after,n=re.subn(r'(title: "Puzzle )(\d+)( —)',lambda m:m[1]+str(number[int(m[2])])+m[3],after)
+          assert n==11
+          normalize=lambda text:re.sub(r'title: "Puzzle \d+ —','title: "Puzzle # —',text.split('<script>')[1]).replace('    puzzle: "moulinIsocele",','    puzzle: "perigal",')
+          assert normalize(before)==normalize(after), 'Modification non autorisée dans le JavaScript.'
+          assert before.split('<select id="puzzleSelect">')[0]==after.split('<select id="puzzleSelect">')[0]
+          p.write_bytes(after.encode())
+          v=Path('scripts/validate-pythagore-tools.mjs')
+          original=v.read_bytes()
+          assert sha(original)=='34c634b5b741640009265f669b2314bc0dd69b86', 'Le validateur a changé.'
+          text=original.decode()
+          changes={
+          "if(!html.includes('<option value=\"perigal\" selected>')) fail('Périgal doit être le puzzle ouvert par défaut.');": "if(!html.includes('<option value=\"moulinIsocele\" selected>') || !html.includes('    puzzle: \"moulinIsocele\",')) fail('Le moulin isocèle doit être ouvert par défaut dans le menu et dans le jeu.');",
+          '<option value="lapeyronnie">5. Lapeyronnie': '<option value="lapeyronnie">9. Lapeyronnie',
+          '<option value="moulinIsocele">': '<option value="moulinIsocele" selected>',
+          '<option value="mosaiqueSept">10. Puzzle de Brest': '<option value="mosaiqueSept">12. Puzzle de Brest',
+          '<option value="liuHuiSept">11. Liu Hui': '<option value="liuHuiSept">13. Liu Hui',
+          }
+          for old,new in changes.items():
+              assert text.count(old)==1,old
+              text=text.replace(old,new,1)
+          anchor="if(!html.includes('ratio: 3/5,')"
+          assert text.count(anchor)==1
+          extra="""// Ordre pédagogique validé : identifiants stables, numéros continus et début accessible.
+          const puzzleOrder = ['moulinIsocele','sixEquilibre','bhaskara','quatreIdentiques','perigal','quadrillageQuatre','quadrillageCinq','tangram','lapeyronnie','pavageOblique','mosaiqueOblique','mosaiqueSept','liuHuiSept','leitzmann'];
+          const puzzleMenu = html.match(/<select id="puzzleSelect">([\\s\\S]*?)<\\/select>/)?.[1] || '';
+          const puzzleOptions = [...puzzleMenu.matchAll(/<option value="([^"]+)"(?: selected)?>(\\d+)\\. ([^<]+)<\\/option>/g)];
+          if(puzzleOptions.length !== puzzleOrder.length || puzzleOptions.some((option,index) => option[1] !== puzzleOrder[index] || Number(option[2]) !== index+1)) fail('Les 14 puzzles doivent garder leur identifiant et suivre l’ordre pédagogique validé, numéroté de 1 à 14.');
+          """
+          text=text.replace(anchor,extra+anchor,1)
+          v.write_bytes(text.encode())
+          print('Ordre et puzzle initial mis à jour ; solutions, validation, aimantation, progression, CSS et impression inchangés.')
+          PY
+          git diff --check
+          git diff --stat
+      - name: Contrôler les puzzles et l’aimantation
+        run: |
+          node scripts/validate-pythagore-tools.mjs
+          node scripts/validate-pythagore-snap-engine.mjs
+      - name: Exécuter tous les tests
+        run: |
+          node --test > /tmp/moulin-tests.log 2>&1 || { tail -n 100 /tmp/moulin-tests.log; exit 1; }
+          tail -n 15 /tmp/moulin-tests.log
+      - name: Enregistrer le changement et retirer ce workflow ponctuel
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add outils/plateaux_manipulation/moulin_pythagore.html scripts/validate-pythagore-tools.mjs
+          git rm .github/workflows/moulin-ordre-20260910.yml
+          git commit -m 'fix(moulin): commencer par les puzzles accessibles sans changer leur mécanique'
+          git push origin HEAD:refs/heads/fix/moulin-ordre-progressif-20260910
