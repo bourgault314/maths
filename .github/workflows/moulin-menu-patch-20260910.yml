@@ -1,0 +1,54 @@
+name: Correctif ponctuel du menu Moulin
+
+on:
+  push:
+    branches: [fix/moulin-menu-coches-seules-20260910]
+    paths: [.github/workflows/moulin-menu-patch-20260910.yml]
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    if: github.repository == 'bourgault314/maths'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: fix/moulin-menu-coches-seules-20260910
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Retirer uniquement la couleur du menu, avec contrôle de la version
+        run: |
+          python3 - <<'PY'
+          import hashlib
+          from pathlib import Path
+          p = Path('outils/plateaux_manipulation/moulin_pythagore.html')
+          before = p.read_bytes()
+          sha = hashlib.sha1(b'blob ' + str(len(before)).encode() + b'\0' + before).hexdigest()
+          assert sha == '677aed463cec6766ca7e8014b5b8475efbb0e949', 'Le fichier a changé : arrêt sans écrasement.'
+          line = b'  #puzzleSelect.dejaReussi{border-color:#86efac; background:#f0fdf4; color:#14532d;}\n'
+          assert before.count(line) == 1, 'La règle CSS attendue doit être unique.'
+          after = before.replace(line, b'', 1)
+          assert before.split(b'<script>')[1:] == after.split(b'<script>')[1:], 'Aucune modification JavaScript autorisée.'
+          assert before.split(b'</style>', 1)[1] == after.split(b'</style>', 1)[1], 'Tout ce qui suit les styles doit rester identique.'
+          p.write_bytes(after)
+          print('Une seule règle CSS retirée. HTML, JavaScript, géométrie et impression identiques.')
+          PY
+          git diff --check
+          git diff --stat
+      - name: Vérifier les outils et les puzzles de Pythagore
+        run: |
+          node scripts/validate-pythagore-tools.mjs
+          node scripts/validate-pythagore-snap-engine.mjs
+      - name: Exécuter les tests du dépôt
+        run: node --test
+      - name: Enregistrer uniquement la correction du Moulin
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add outils/plateaux_manipulation/moulin_pythagore.html
+          git commit -m 'fix(moulin): garder les coches sans colorer tout le menu'
+          git push origin HEAD:refs/heads/fix/moulin-menu-coches-seules-20260910
