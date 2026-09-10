@@ -1375,6 +1375,10 @@
     .challenge-playing .question.perles-main .expression { min-height: 0; margin: 0 0 3px; padding: 4px 12px; }
     .perles-zone { flex: 1 1 auto; min-height: 0; width: 100%; display: flex; flex-direction: column; align-items: center; }
     .perles-consigne { margin: 0 0 4px; }
+    /* Un geste de trop : la consigne le dit en rouge, à la même place et à la
+       même taille, pour que rien ne bouge sous le boulier. */
+    .perles-consigne.est-refus { color: var(--red); animation: perles-refus .28s ease-out; }
+    @keyframes perles-refus { 0%, 100% { transform: translateX(0); } 30% { transform: translateX(-5px); } 70% { transform: translateX(5px); } }
     .perles-scene { flex: 1 1 auto; min-height: 132px; width: 100%; display: grid; place-items: center; padding-bottom: clamp(10px, 1.6vh, 18px); }
     .question.perles-main .number-stick { max-width: 100%; }
     .perles-cadre {
@@ -1947,9 +1951,12 @@
       // ne connaît pas cette activité (classerSerie renvoie null pour elle),
       // donc elle ne coche aucune case et ne compte dans aucun « sur 4 ».
       // Le lot 4b l'ouvrira à tous — c'est lui qui touche au moteur.
+      // « ?essai=perles » (avant le #) est accepté aussi : sur un téléphone, le
+      // « # » saute facilement (adresse proposée par Safari, lien envoyé à soi).
       const ESSAI_PERLES = (() => {
         try {
-          return new URLSearchParams(String(window.location.hash || "").replace(/^#/, "")).get("essai") === "perles";
+          const lit = adresse => new URLSearchParams(String(adresse || "").replace(/^[#?]/, "")).get("essai") === "perles";
+          return lit(window.location.hash) || lit(window.location.search);
         } catch (erreur) {
           return false;
         }
@@ -3314,6 +3321,13 @@
          Ce que l'appli écrit sous le boulier n'est pas la multiplication (la
          bande la porte déjà) mais l'ADDITION du geste : 9 + 1 + 2 = 12. Les
          deux passages de la dizaine sortent tout seuls, sans être programmés.
+
+         Correctif du 10/09/2026, après l'essai au doigt : « Pousse 2 perles »
+         veut dire deux, pas huit. Un geste qui dépasse la case en cours ne
+         compte pas — le groupe revient à droite et la consigne le dit en
+         rouge. Le 4a acceptait le paquet et remplissait quatre cases d'un
+         coup : c'était un choix, et c'était le mauvais (« on voulait qu'il
+         pousse de deux en deux »).
          --------------------------------------------------------------- */
       const PERLES = Object.freeze({
         rangees: 10, parRangee: 10,
@@ -3322,7 +3336,7 @@
       });
       const boulier = {
         table: 0, taille: 0, etats: [], etape: 0, morceaux: [], pile: [],
-        phrase: "", figee: false, finie: false, drag: null, dom: null, observer: null
+        phrase: "", figee: false, finie: false, drag: null, dom: null, observer: null, refus: 0
       };
 
       function activitePerles(config) {
@@ -3346,9 +3360,10 @@
 
       function construireBoulier(table) {
         const zone = $("learn-sequence");
+        clearTimeout(boulier.refus);
         Object.assign(boulier, {
           table, taille: 0, etats: Array.from({length: PERLES.rangees}, () => 0),
-          etape: 0, morceaux: [], pile: [], phrase: "", figee: false, finie: false, drag: null
+          etape: 0, morceaux: [], pile: [], phrase: "", figee: false, finie: false, drag: null, refus: 0
         });
         $("question-card").classList.remove("est-finie");
 
@@ -3514,15 +3529,48 @@
         if (pousse && drag.position <= positionPerle(drag.index, true) + tolerance) nouvel = drag.index + 1;
         if (!pousse && drag.position >= positionPerle(drag.index, false) - tolerance) nouvel = drag.index;
         const ecart = nouvel - etat;
+        // Un geste de trop ne compte pas : le groupe repart d'où il vient, et
+        // la consigne dit combien il en fallait.
+        const manque = tropDePerles(totalPerles(), boulier.etape, boulier.table, ecart);
+        if (manque) {
+          dessinerBoulier(true);
+          refuserGeste(manque);
+          return;
+        }
         boulier.etats[drag.rangee] = nouvel;
         dessinerBoulier(true);
         if (ecart) enregistrerGeste(ecart);
         majBoulier();
       }
 
+      // « Pousse 3 perles » veut dire trois, pas dix : un geste qui ferait
+      // dépasser la case en cours est refusé. Renvoie 0 si le geste passe,
+      // sinon le nombre de perles qu'il fallait pousser, pour le dire à l'élève.
+      // Ramener des perles à droite est toujours permis.
+      function tropDePerles(total, etape, table, ecart) {
+        if (ecart <= 0) return 0;
+        const manque = (etape + 1) * table - total;
+        return ecart > manque ? manque : 0;
+      }
+
+      function refuserGeste(manque) {
+        const consigne = boulier.dom?.bloc.querySelector(".perles-consigne");
+        if (!consigne) return;
+        clearTimeout(boulier.refus);
+        consigne.textContent = manque === boulier.table
+          ? `Trop de perles ! Pousse-en ${manque}, pas plus.`
+          : `Trop de perles ! Il en manque juste ${manque}.`;
+        consigne.classList.add("est-refus");
+        boulier.refus = setTimeout(() => {
+          consigne.textContent = `Pousse ${boulier.table} perle${boulier.table > 1 ? "s" : ""}.`;
+          consigne.classList.remove("est-refus");
+        }, 1800);
+      }
+
       // Coupe la suite des morceaux en deux : ce qui a servi à atteindre la
-      // cible, et ce qui la dépasse (un élève peut pousser cinq perles d'un
-      // coup alors qu'il en fallait trois).
+      // cible, et ce qui la dépasse. Depuis le correctif du 10/09 un geste ne
+      // peut plus dépasser la case (tropDePerles) : c'est un filet, qui garde
+      // l'écriture juste quoi qu'il arrive.
       function couperMorceaux(morceaux, quantite) {
         const debut = [];
         const reste = morceaux.slice();
