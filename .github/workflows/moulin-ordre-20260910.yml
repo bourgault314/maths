@@ -69,6 +69,17 @@ jobs:
           text=text.replace(anchor,extra+anchor,1)
           v.write_bytes(text.encode())
           print('Ordre et puzzle initial mis à jour ; solutions, validation, aimantation, progression, CSS et impression inchangés.')
+          f=Path('outils/plateaux_manipulation/moulin_pythagore_fiches.html')
+          raw=f.read_bytes()
+          assert sha(raw)=='73534277cfac2d783aec1cb2cdf840edd10ba173', 'La page des fiches a changé.'
+          page=raw.decode()
+          cards=list(re.finditer(r'            <a class="resource-card resource-card-visual" href="fiches_moulin/moulin-pythagore-([^".]+)\.pdf"[\s\S]*?</a>\n',page))
+          assert len(cards)==14 and set(m[1] for m in cards)==set(order)
+          assert ''.join(m[0] for m in cards)==page[cards[0].start():cards[-1].end()]
+          by_key={m[1]:m[0] for m in cards}
+          new_cards=''.join(re.sub(r'loading="(?:eager|lazy)"','loading="'+('eager' if i<3 else 'lazy')+'"',by_key[key]) for i,key in enumerate(order))
+          f.write_bytes((page[:cards[0].start()]+new_cards+page[cards[-1].end():]).encode())
+          print('Cartes des fiches réordonnées ; liens, contenus et fichiers PDF conservés.')
           PY
           git diff --check
           git diff --stat
@@ -76,15 +87,16 @@ jobs:
         run: |
           node scripts/validate-pythagore-tools.mjs
           node scripts/validate-pythagore-snap-engine.mjs
+          node --test tests/moulin-fiches.test.mjs
       - name: Exécuter tous les tests
         run: |
-          node --test > /tmp/moulin-tests.log 2>&1 || { tail -n 100 /tmp/moulin-tests.log; exit 1; }
+          node --test > /tmp/moulin-tests.log 2>&1 || { grep -n -A 60 -B 5 'not ok' /tmp/moulin-tests.log; tail -n 20 /tmp/moulin-tests.log; exit 1; }
           tail -n 15 /tmp/moulin-tests.log
       - name: Enregistrer le changement et retirer ce workflow ponctuel
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add outils/plateaux_manipulation/moulin_pythagore.html scripts/validate-pythagore-tools.mjs
+          git add outils/plateaux_manipulation/moulin_pythagore.html outils/plateaux_manipulation/moulin_pythagore_fiches.html scripts/validate-pythagore-tools.mjs
           git rm .github/workflows/moulin-ordre-20260910.yml
           git commit -m 'fix(moulin): commencer par les puzzles accessibles sans changer leur mécanique'
           git push origin HEAD:refs/heads/fix/moulin-ordre-progressif-20260910
