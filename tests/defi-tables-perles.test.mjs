@@ -17,10 +17,12 @@
 //    (la bande la porte) mais l'ADDITION du geste : 9 + 1 + 2 = 12. Les deux
 //    passages de la dizaine sortent tout seuls, sans guidage.
 //
-// 4. LA MESURE (correctif du 10/09/2026, premier essai au doigt de Gwenaël).
-//    « Pousse 2 perles » veut dire deux, pas huit : un geste qui dépasse la
-//    case en cours est refusé, le groupe revient à droite et la consigne le
-//    dit. Le 4a acceptait le paquet et remplissait quatre cases d'un coup.
+// 4. LE GESTE (correctifs du 10/09/2026, premier essai au doigt de Gwenaël).
+//    « Pousse 2 perles » veut dire deux, pas huit — et pas un plus un non plus.
+//    Un seul geste est accepté : le bon nombre, d'un coup, sur la rangée en
+//    cours ; tout autre groupe revient à droite et la consigne dit ce qu'on
+//    attendait. Le 4a acceptait tout et remplissait quatre cases d'un coup ;
+//    « il y en a qui vont faire plus un, plus un, plus un » a tranché le reste.
 //
 // Enfin : ce lot ne touche pas au moteur du parcours. L'activité ne compte
 // pour rien tant que le lot 4b ne l'a pas ajoutée à ACTIVITES_APPRENDS.
@@ -114,26 +116,50 @@ test("l’addition s’écrit toute seule au fil des gestes", () => {
   assert.equal(phraseAddition(12, []), "12", "juste après une case remplie");
 });
 
-test("un geste qui dépasse la case en cours ne compte pas — « pousse 2 » veut dire deux, pas huit", () => {
-  const tropDePerles = fonction("tropDePerles");
-  assert.equal(tropDePerles(0, 0, 2, 8), 2, "table de 2, huit perles d’un coup : refusé, il en fallait 2");
-  assert.equal(tropDePerles(0, 0, 6, 10), 6, "table de 6, dix perles d’un coup : refusé, il en fallait 6");
-  assert.equal(tropDePerles(0, 0, 2, 2), 0, "deux perles : permis");
-  assert.equal(tropDePerles(0, 0, 2, 1), 0, "une seule : permis, l’addition écrira 1 + 1 = 2");
-  assert.equal(tropDePerles(1, 0, 2, 3), 1, "une déjà poussée, trois de plus : refusé, il n’en manquait qu’une");
-  assert.equal(tropDePerles(1, 0, 2, 1), 0, "une déjà poussée, une de plus : la case se remplit");
-  assert.equal(tropDePerles(9, 3, 3, 1), 0, "9 poussées à la table de 3 : la dixième finit la rangée, permis");
-  assert.equal(tropDePerles(9, 3, 3, 3), 0, "trois d’un coup depuis 9 : 12, pile la case — permis (dans les faits la rangée n’a qu’une perle libre, c’est le boulier qui oblige 9 + 1 + 2)");
-  assert.equal(tropDePerles(9, 3, 3, 4), 3, "quatre d’un coup depuis 9 : 13 dépasse 12, refusé");
-  assert.equal(tropDePerles(6, 3, 2, -4), 0, "ramener des perles à droite est toujours permis");
-  // Dans le geste : le refus passe AVANT d’écrire l’état, et redessine.
-  assert.match(html, /const manque = tropDePerles\(totalPerles\(\), boulier\.etape, boulier\.table, ecart\);\s*if \(manque\) \{\s*dessinerBoulier\(true\);\s*refuserGeste\(manque\);\s*return;\s*\}\s*boulier\.etats\[drag\.rangee\] = nouvel;/,
+test("un seul geste est accepté : le bon nombre, d’un coup, sur la rangée en cours", () => {
+  const PERLES = {parRangee: 10};
+  const code = [source("gesteAttendu"), source("verifierGeste")].join("\n");
+  const {gesteAttendu, verifierGeste} = new Function(`const PERLES = ${JSON.stringify(PERLES)};\n${code}\nreturn {gesteAttendu, verifierGeste};`)();
+  const vide = () => Array(10).fill(0);
+  const etats = (...valeurs) => Object.assign(vide(), valeurs);
+
+  // Le geste attendu, table de 8 : 8 d’un coup, puis 2 (la rangée se finit) et 6, puis 4 et 4.
+  assert.deepEqual(gesteAttendu(vide(), 0, 8), {rangee: 0, nombre: 8});
+  assert.deepEqual(gesteAttendu(etats(8), 1, 8), {rangee: 0, nombre: 2}, "il ne reste que 2 perles libres sur la rangée");
+  assert.deepEqual(gesteAttendu(etats(10), 1, 8), {rangee: 1, nombre: 6}, "puis les 6 qui manquent, sur la rangée suivante");
+  assert.deepEqual(gesteAttendu(etats(10, 6), 2, 8), {rangee: 1, nombre: 4});
+  assert.deepEqual(gesteAttendu(etats(10, 10), 2, 8), {rangee: 2, nombre: 4});
+  // Table de 3, arrivé à 9 : 1 puis 2 — l’écriture dira 9 + 1 + 2 = 12.
+  assert.deepEqual(gesteAttendu(etats(9), 3, 3), {rangee: 0, nombre: 1});
+  assert.deepEqual(gesteAttendu(etats(10), 3, 3), {rangee: 1, nombre: 2});
+
+  // Les trois refus, et le bon geste.
+  assert.equal(verifierGeste(vide(), 0, 2, 0, 2), null, "table de 2 : deux perles d’un coup, c’est le bon geste");
+  assert.deepEqual(verifierGeste(vide(), 0, 2, 0, 8), {motif: "trop", nombre: 2}, "huit d’un coup : trop");
+  assert.deepEqual(verifierGeste(vide(), 0, 3, 0, 1), {motif: "peu", nombre: 3}, "une seule à la table de 3 : le +1+1+1 est refusé");
+  assert.deepEqual(verifierGeste(etats(8), 1, 8, 1, 8), {motif: "rangee", nombre: 2}, "sauter à la rangée du dessous sans finir celle-ci");
+  assert.equal(verifierGeste(etats(8), 1, 8, 0, 2), null, "finir la rangée avec 2 : bon geste");
+  assert.equal(verifierGeste(etats(10), 1, 8, 1, 6), null, "puis 6 sur la suivante : bon geste");
+  assert.deepEqual(verifierGeste(etats(10), 1, 8, 1, 8), {motif: "trop", nombre: 6});
+  assert.equal(verifierGeste(etats(9), 3, 3, 0, 1), null, "9 + 1 : la seule perle libre, c’est le bon geste");
+  assert.equal(verifierGeste(etats(6, 3), 4, 2, 2, -3), null, "ramener des perles à droite est toujours permis, sur n’importe quelle rangée");
+
+  // Dans le geste : le refus passe AVANT d’écrire l’état, et redessine ; un bon geste lève le refus.
+  assert.match(html, /const refus = verifierGeste\(boulier\.etats, boulier\.etape, boulier\.table, drag\.rangee, ecart\);\s*if \(refus\) \{\s*dessinerBoulier\(true\);\s*refuserGeste\(refus\);\s*return;\s*\}\s*boulier\.etats\[drag\.rangee\] = nouvel;/,
     "le groupe repart d’où il vient : etats[r] n’est pas touché");
-  // Ce que voit l’élève : la consigne, en rouge, à la même place, puis elle revient.
-  assert.match(html, /`Trop de perles ! Pousse-en \$\{manque\}, pas plus\.`/);
-  assert.match(html, /`Trop de perles ! Il en manque juste \$\{manque\}\.`/);
-  assert.match(html, /consigne\.classList\.add\("est-refus"\)/);
-  assert.match(html, /consigne\.textContent = `Pousse \$\{boulier\.table\} perle\$\{boulier\.table > 1 \? "s" : ""\}\.`;\s*consigne\.classList\.remove\("est-refus"\);/,
+  assert.match(html, /if \(ecart\) \{ leverRefus\(\); enregistrerGeste\(ecart\); \}/, "« Trop de perles ! » ne reste pas pendant que la case se remplit");
+});
+
+test("le refus dit ce qu’on attendait, en rouge, à la même place, puis la consigne revient", () => {
+  const messageRefus = fonction("messageRefus");
+  assert.equal(messageRefus({motif: "trop", nombre: 2}), "Trop de perles ! Pousse-en 2, pas plus.");
+  assert.equal(messageRefus({motif: "peu", nombre: 3}), "D’un seul coup ! Pousse 3 perles ensemble.");
+  assert.equal(messageRefus({motif: "peu", nombre: 2}), "D’un seul coup ! Pousse 2 perles ensemble.");
+  assert.equal(messageRefus({motif: "rangee", nombre: 2}), "Finis la rangée d’abord !");
+  assert.match(html, /consigne\.classList\.remove\("est-refus"\);\s*void consigne\.offsetWidth;\s*consigne\.classList\.add\("est-refus"\);/,
+    "le tremblement rejoue à chaque refus, même enchaîné");
+  assert.match(html, /boulier\.refus = setTimeout\(leverRefus, 1800\);/);
+  assert.match(html, /consigne\.textContent = consigneDeBase\(\);\s*consigne\.classList\.remove\("est-refus"\);/,
     "la consigne redevient « Pousse N perles. » — jamais un autre texte");
   assert.match(html, /\.perles-consigne\.est-refus \{ color: var\(--red\);/);
   assert.match(html, /clearTimeout\(boulier\.refus\);\s*Object\.assign\(boulier, \{/, "un boulier neuf n’hérite pas d’un refus en cours");
