@@ -144,9 +144,14 @@ if(!html.includes('const interactiveTarget = left;')) fail('Le snap doit viser l
 if(!html.includes('leftX+(b+2*a)+BASE.gap,')) fail('Les deux moulins imprimés doivent rester côte à côte, même depuis un téléphone.');
 if(!html.includes('${drawMoulinStatic(L, true)}\n  ${drawMoulinStatic(R, true)}')) fail('Les deux moulins imprimés doivent être identiques et remplis.');
 if(html.includes('id="showSolution"')) fail('La solution ne doit pas être accessible depuis l’interface élève.');
-if(!html.includes('<option value="perigal" selected>')) fail('Périgal doit être le puzzle ouvert par défaut.');
-if(!html.includes('<option value="lapeyronnie">5. Lapeyronnie (5 pièces)</option>') || html.includes('IREM — 5 pièces')) fail('Le puzzle de Lapeyronnie doit porter un nom explicite.');
-if(!html.includes('<option value="sixEquilibre">') || !html.includes('<option value="tangram">') || !html.includes('<option value="mosaiqueOblique">') || !html.includes('<option value="moulinIsocele">') || !html.includes('<option value="mosaiqueSept">10. Puzzle de Brest (7 pièces)</option>') || !html.includes('<option value="liuHuiSept">11. Liu Hui — 2 + 5 (7 pièces)</option>')) fail('Les découpages ajoutés et restaurés doivent tous être proposés.');
+if(!html.includes('<option value="moulinIsocele" selected>') || !html.includes('    puzzle: "moulinIsocele",')) fail('Le moulin isocèle doit être ouvert par défaut dans le menu et dans le jeu.');
+if(!html.includes('<option value="lapeyronnie">9. Lapeyronnie (5 pièces)</option>') || html.includes('IREM — 5 pièces')) fail('Le puzzle de Lapeyronnie doit porter un nom explicite.');
+if(!html.includes('<option value="sixEquilibre">') || !html.includes('<option value="tangram">') || !html.includes('<option value="mosaiqueOblique">') || !html.includes('<option value="moulinIsocele" selected>') || !html.includes('<option value="mosaiqueSept">12. Puzzle de Brest (7 pièces)</option>') || !html.includes('<option value="liuHuiSept">13. Liu Hui — 2 + 5 (7 pièces)</option>')) fail('Les découpages ajoutés et restaurés doivent tous être proposés.');
+// Ordre pédagogique validé : identifiants stables, numéros continus et début accessible.
+const puzzleOrder = ['moulinIsocele','sixEquilibre','bhaskara','quatreIdentiques','perigal','quadrillageQuatre','quadrillageCinq','tangram','lapeyronnie','pavageOblique','mosaiqueOblique','mosaiqueSept','liuHuiSept','leitzmann'];
+const puzzleMenu = html.match(/<select id="puzzleSelect">([\s\S]*?)<\/select>/)?.[1] || '';
+const puzzleOptions = [...puzzleMenu.matchAll(/<option value="([^"]+)"(?: selected)?>(\d+)\. ([^<]+)<\/option>/g)];
+if(puzzleOptions.length !== puzzleOrder.length || puzzleOptions.some((option,index) => option[1] !== puzzleOrder[index] || Number(option[2]) !== index+1)) fail('Les 14 puzzles doivent garder leur identifiant et suivre l’ordre pédagogique validé, numéroté de 1 à 14.');
 if(!html.includes('ratio: 3/5,') || !html.includes('Le petit carré bleu a pour côté la différence <em>b − a</em>.')) fail('La construction 3:5 de Liu Hui et son repère pédagogique doivent rester explicites.');
 if(!html.includes('href="../index.html?domain=geometrie&amp;notion=pythagore"') || !html.includes('Retour au menu Pythagore')) fail('La flèche du Moulin doit revenir au menu Pythagore.');
 if(!html.includes('<button id="enonce">Fiche</button>') || !html.includes('class="screenActions"><button type="button" onclick="window.print()">Imprimer</button>')) fail('La fiche doit être consultable avant impression.');
