@@ -189,7 +189,7 @@ if(!/catch\(_err\)\{\s*return new Set\(\);/.test(html)) fail('Une lecture de pro
 // La jauge doit faire exactement la hauteur des boutons : plus haute, elle
 // grandit la barre d'outils, ce qui décale le cadrage des 14 miniatures.
 if(!/#scoreReussites\{[^}]*box-sizing:border-box/.test(html)) fail('La jauge doit tenir dans la hauteur des boutons, sinon la barre grandit et les miniatures dérivent.');
-if(!html.includes('#puzzleSelect.dejaReussi')) fail('Un découpage déjà réussi doit se voir sur le menu fermé : une coche dans un <option> ne peut être ni colorée ni grossie.');
+if(html.includes('#puzzleSelect.dejaReussi')) fail('Le menu doit rester neutre après une réussite : seule la coche du découpage indique la réussite, sans colorer toute la liste.');
 if(!html.includes('`✔ ${opt.dataset.libelle}`')) fail('La coche doit précéder le libellé : en fin de nom, le menu fermé la coupe sur téléphone.');
 [...html.matchAll(/<option\b[^>]*>([^<]*)<\/option>/g)].forEach(([,libelle])=>{
   if(libelle.includes('✓') || libelle.includes('✔')) fail('Aucune coche ne doit être écrite dans le HTML : les libellés titrent les fiches PDF.');
