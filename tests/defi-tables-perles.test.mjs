@@ -17,6 +17,11 @@
 //    (la bande la porte) mais l'ADDITION du geste : 9 + 1 + 2 = 12. Les deux
 //    passages de la dizaine sortent tout seuls, sans guidage.
 //
+// 4. LA MESURE (correctif du 10/09/2026, premier essai au doigt de Gwenaël).
+//    « Pousse 2 perles » veut dire deux, pas huit : un geste qui dépasse la
+//    case en cours est refusé, le groupe revient à droite et la consigne le
+//    dit. Le 4a acceptait le paquet et remplissait quatre cases d'un coup.
+//
 // Enfin : ce lot ne touche pas au moteur du parcours. L'activité ne compte
 // pour rien tant que le lot 4b ne l'a pas ajoutée à ACTIVITES_APPRENDS.
 
@@ -109,6 +114,31 @@ test("l’addition s’écrit toute seule au fil des gestes", () => {
   assert.equal(phraseAddition(12, []), "12", "juste après une case remplie");
 });
 
+test("un geste qui dépasse la case en cours ne compte pas — « pousse 2 » veut dire deux, pas huit", () => {
+  const tropDePerles = fonction("tropDePerles");
+  assert.equal(tropDePerles(0, 0, 2, 8), 2, "table de 2, huit perles d’un coup : refusé, il en fallait 2");
+  assert.equal(tropDePerles(0, 0, 6, 10), 6, "table de 6, dix perles d’un coup : refusé, il en fallait 6");
+  assert.equal(tropDePerles(0, 0, 2, 2), 0, "deux perles : permis");
+  assert.equal(tropDePerles(0, 0, 2, 1), 0, "une seule : permis, l’addition écrira 1 + 1 = 2");
+  assert.equal(tropDePerles(1, 0, 2, 3), 1, "une déjà poussée, trois de plus : refusé, il n’en manquait qu’une");
+  assert.equal(tropDePerles(1, 0, 2, 1), 0, "une déjà poussée, une de plus : la case se remplit");
+  assert.equal(tropDePerles(9, 3, 3, 1), 0, "9 poussées à la table de 3 : la dixième finit la rangée, permis");
+  assert.equal(tropDePerles(9, 3, 3, 3), 0, "trois d’un coup depuis 9 : 12, pile la case — permis (dans les faits la rangée n’a qu’une perle libre, c’est le boulier qui oblige 9 + 1 + 2)");
+  assert.equal(tropDePerles(9, 3, 3, 4), 3, "quatre d’un coup depuis 9 : 13 dépasse 12, refusé");
+  assert.equal(tropDePerles(6, 3, 2, -4), 0, "ramener des perles à droite est toujours permis");
+  // Dans le geste : le refus passe AVANT d’écrire l’état, et redessine.
+  assert.match(html, /const manque = tropDePerles\(totalPerles\(\), boulier\.etape, boulier\.table, ecart\);\s*if \(manque\) \{\s*dessinerBoulier\(true\);\s*refuserGeste\(manque\);\s*return;\s*\}\s*boulier\.etats\[drag\.rangee\] = nouvel;/,
+    "le groupe repart d’où il vient : etats[r] n’est pas touché");
+  // Ce que voit l’élève : la consigne, en rouge, à la même place, puis elle revient.
+  assert.match(html, /`Trop de perles ! Pousse-en \$\{manque\}, pas plus\.`/);
+  assert.match(html, /`Trop de perles ! Il en manque juste \$\{manque\}\.`/);
+  assert.match(html, /consigne\.classList\.add\("est-refus"\)/);
+  assert.match(html, /consigne\.textContent = `Pousse \$\{boulier\.table\} perle\$\{boulier\.table > 1 \? "s" : ""\}\.`;\s*consigne\.classList\.remove\("est-refus"\);/,
+    "la consigne redevient « Pousse N perles. » — jamais un autre texte");
+  assert.match(html, /\.perles-consigne\.est-refus \{ color: var\(--red\);/);
+  assert.match(html, /clearTimeout\(boulier\.refus\);\s*Object\.assign\(boulier, \{/, "un boulier neuf n’hérite pas d’un refus en cours");
+});
+
 test("un morceau à cheval sur une case se coupe au bon endroit", () => {
   const couperMorceaux = fonction("couperMorceaux");
   assert.deepEqual(couperMorceaux([3], 3), {debut: [3], reste: []});
@@ -164,6 +194,8 @@ test("les étiquettes de la bande portent la multiplication entière, collée", 
 
 test("l’activité n’apparaît qu’à son adresse d’essai", () => {
   assert.match(html, /get\("essai"\) === "perles"/);
+  assert.match(html, /return lit\(window\.location\.hash\) \|\| lit\(window\.location\.search\);/,
+    "#essai=perles ou ?essai=perles : sur un téléphone, le « # » saute facilement");
   assert.match(html, /\.\.\.\(ESSAI_PERLES \? \[\{\s*libelle: "Je pousse les perles",/,
     "elle se place en tête de « Choisis ton activité », là où elle vivra au lot 4b");
   assert.match(html, /lancer: \(\) => launchFromParcours\(\{mode: "learn", tables: \[table\], learnActivity: "beads"\}, "menu"\)/);
