@@ -598,6 +598,109 @@ async function auditIntroMemo(browser, base, width, errors) {
   }
 }
 
+// Grand écran (ordinateur, vidéoprojection) : tout le plateau et ses commandes tiennent sans défilement,
+// le cours complet montre ses quatre cartes d'un coup, et une clé gagnée attend le bouton « Coffre suivant ».
+async function auditGrandEcran(browser, base, { width, height }, errors) {
+  const page = await browser.newPage({ viewport: { width, height } });
+  const label = `grand écran ${width} × ${height}`;
+  page.on("pageerror", error => errors.push(`${label} : ${error.message}`));
+  await page.addInitScript(() => {
+    const nativeTimeout = window.setTimeout.bind(window);
+    window.setTimeout = (callback, delay, ...args) => nativeTimeout(callback, Math.min(delay, 25), ...args);
+  });
+  try {
+    await page.goto(`${base}/outils/calcul_mental/coffres_magiques_solo.html?mode=solo`, { waitUntil: "load" });
+    await page.waitForFunction(() => document.activeElement.id === "start-game");
+    const lesson = await page.evaluate(() => {
+      const grid = document.querySelector("#lesson .operation-grid");
+      const cards = [...document.querySelectorAll("#lesson article[data-operation]")].map(card => card.getBoundingClientRect());
+      const button = document.querySelector("#start-game").getBoundingClientRect();
+      return { scrollHeight: grid.scrollHeight, clientHeight: grid.clientHeight, cards, buttonBottom: button.bottom, viewportHeight: innerHeight };
+    });
+    assert(lesson.scrollHeight <= lesson.clientHeight + 1, `${label} : le cours complet devrait montrer ses quatre cartes sans défilement (${lesson.scrollHeight} > ${lesson.clientHeight}).`);
+    assert(lesson.cards.length === 4 && lesson.cards.every(card => card.top >= 0 && card.bottom <= lesson.viewportHeight) && lesson.buttonBottom <= lesson.viewportHeight, `${label} : une carte du cours ou le bouton de départ sort de l’écran.`);
+    await assertNoHorizontalOverflow(page, `${label} : cours`);
+    await page.screenshot({ path: path.join(CAPTURES, `cours-${width}x${height}.png`) });
+
+    await page.locator("#start-game").click();
+    await page.locator("#lesson").waitFor({ state: "hidden" });
+    const layout = await page.evaluate(() => {
+      const box = element => element.getBoundingClientRect();
+      const board = box(document.querySelector("#board"));
+      const toolbar = box(document.querySelector(".solo-toolbar"));
+      const challenge = box(document.querySelector(".challenge"));
+      const rune = getComputedStyle(document.querySelector(".rune"));
+      return { board, toolbar, challenge, runeFont: parseFloat(rune.fontSize), mainBottom: box(document.querySelector("main.solo-page")).bottom, viewportHeight: innerHeight };
+    });
+    assert(layout.mainBottom <= layout.viewportHeight + 1, `${label} : la carte du plateau dépasse de l’écran (${layout.mainBottom} > ${layout.viewportHeight}).`);
+    assert(layout.board.bottom <= layout.viewportHeight && layout.toolbar.bottom <= layout.viewportHeight && layout.toolbar.top >= 0, `${label} : le plateau ou les boutons Aide / Nouvelle partie sortent de l’écran.`);
+    assert(layout.board.width >= 500 && Math.abs(layout.board.width - layout.board.height) <= 1, `${label} : le plateau n’occupe pas la hauteur disponible (${layout.board.width} × ${layout.board.height}).`);
+    assert(layout.challenge.right <= layout.board.left, `${label} : le défi n’est pas à gauche du plateau.`);
+    assert(layout.runeFont >= 48, `${label} : les nombres du plateau restent petits (${layout.runeFont}px).`);
+    await page.screenshot({ path: path.join(CAPTURES, `plateau-${width}x${height}.png`) });
+
+    await page.locator("#help-button").click();
+    await page.waitForFunction(() => document.activeElement.id === "help-title");
+    const help = await page.evaluate(() => {
+      const card = document.querySelector("#help-dialog .dialog-card").getBoundingClientRect();
+      const actions = [...document.querySelectorAll("#help-dialog .dialog-actions button")].map(button => button.getBoundingClientRect());
+      return { width: card.width, top: card.top, bottom: card.bottom, actions, viewportHeight: innerHeight };
+    });
+    assert(help.width >= 900, `${label} : l’aide reste étroite (${help.width}px).`);
+    assert(help.top >= 0 && help.bottom <= help.viewportHeight && help.actions.every(button => button.bottom <= help.viewportHeight), `${label} : l’aide ou ses actions sortent de l’écran.`);
+    await page.screenshot({ path: path.join(CAPTURES, `aide-${width}x${height}.png`) });
+    await page.keyboard.press("Escape");
+    await page.locator("#help-dialog").waitFor({ state: "hidden" });
+
+    const before = await state(page);
+    assert(await page.locator("#next-button").isHidden(), `${label} : « Coffre suivant » est visible avant toute réussite.`);
+    const [first, second] = solutionFor(before);
+    await page.locator(`.rune[data-index="${first}"]`).click();
+    await page.locator(`.rune[data-index="${second}"]`).click();
+    await page.waitForFunction(expected => window.MATHSGO_COFFRES_SOLO.getState().keys === expected, before.keys + 1);
+    await page.waitForFunction(() => document.activeElement.id === "next-button");
+    await page.waitForTimeout(120);
+    const waiting = await state(page);
+    assert(waiting.boardId === before.boardId && waiting.locked, `${label} : le coffre suivant arrive tout seul au lieu d’attendre le bouton.`);
+    assert((await page.locator("#status").innerText()).includes("clé gagnée"), `${label} : l’égalité gagnante n’est plus affichée pendant l’attente.`);
+    assert((await page.locator("#next-button").innerText()).trim() === "Coffre suivant", `${label} : le libellé du bouton d’attente est incorrect.`);
+    await page.screenshot({ path: path.join(CAPTURES, `cle-gagnee-${width}x${height}.png`) });
+    await page.keyboard.press("Enter");
+    await page.waitForFunction(previous => window.MATHSGO_COFFRES_SOLO.getState().boardId > previous, before.boardId);
+    assert(await page.locator("#next-button").isHidden(), `${label} : « Coffre suivant » reste affiché sur le nouveau plateau.`);
+    assert((await state(page)).keys === before.keys + 1, `${label} : la clé gagnée n’est pas conservée.`);
+    await page.waitForFunction(() => document.activeElement.classList.contains("rune"));
+    await assertNoHorizontalOverflow(page, `${label} : plateau`);
+  } finally {
+    await page.close();
+  }
+}
+
+// Petit écran : le passage automatique au coffre suivant est conservé, sans bouton d'attente.
+async function auditPetitEcranAutomatique(browser, base, errors) {
+  const page = await browser.newPage({ viewport: { width: 390, height: 844 } });
+  page.on("pageerror", error => errors.push(`automatique 390 : ${error.message}`));
+  await page.addInitScript(() => {
+    const nativeTimeout = window.setTimeout.bind(window);
+    window.setTimeout = (callback, delay, ...args) => nativeTimeout(callback, Math.min(delay, 25), ...args);
+  });
+  try {
+    await page.goto(`${base}/outils/calcul_mental/coffres_magiques_solo.html?mode=solo`, { waitUntil: "load" });
+    await page.waitForFunction(() => document.activeElement.id === "start-game");
+    await page.locator("#start-game").click();
+    await page.locator("#lesson").waitFor({ state: "hidden" });
+    const before = await state(page);
+    const [first, second] = solutionFor(before);
+    await page.locator(`.rune[data-index="${first}"]`).click();
+    await page.locator(`.rune[data-index="${second}"]`).click();
+    await page.waitForFunction(previous => window.MATHSGO_COFFRES_SOLO.getState().boardId > previous, before.boardId);
+    assert(await page.locator("#next-button").isHidden(), "automatique 390 : le bouton « Coffre suivant » apparaît sur téléphone.");
+    assert((await state(page)).keys === before.keys + 1, "automatique 390 : la clé gagnée n’est pas conservée.");
+  } finally {
+    await page.close();
+  }
+}
+
 (async () => {
   fs.mkdirSync(CAPTURES, { recursive: true });
   const server = await startServer();
@@ -703,6 +806,9 @@ async function auditIntroMemo(browser, base, width, errors) {
     await page.locator(`.rune[data-index="${rightSecond}"]`).click();
     await page.waitForFunction(expected => window.MATHSGO_COFFRES_SOLO.getState().keys === expected, beforeSuccess.keys + 1);
 
+    await auditGrandEcran(browser, base, { width: 1280, height: 720 }, errors);
+    await auditGrandEcran(browser, base, { width: 1440, height: 900 }, errors);
+    await auditPetitEcranAutomatique(browser, base, errors);
     await auditPointJourney(browser, base, .9, "sum", errors);
     await auditPointJourney(browser, base, .2, "difference", errors);
     await auditPointJourney(browser, base, .13, "product", errors);
@@ -749,7 +855,7 @@ async function auditIntroMemo(browser, base, width, errors) {
     console.log(JSON.stringify({
       ok: true,
       captures: CAPTURES,
-      checks: ["bordures réelles somme/différence duo à 320/390/1366 px", "repère somme pleine largeur", "différence 12−10 et 12−11 : crochet exact, libellé centré et sur une ligne", "produit solo/duo : nombres droits, crochet supérieur pleine largeur et crochet latéral pleine hauteur à 320/390/1366 px", "quotient 36÷6 : barres empilées jusqu’à 520 px", "rectangles à angles droits", "lignes collées", "aria avec équations parlées", "aide sans révélation", "solution demandée", "correction après erreur", "même opération", "aucune clé offerte", "focus/Tab/Échap", "320/390/520/1366"]
+      checks: ["bordures réelles somme/différence duo à 320/390/1366 px", "repère somme pleine largeur", "différence 12−10 et 12−11 : crochet exact, libellé centré et sur une ligne", "produit solo/duo : nombres droits, crochet supérieur pleine largeur et crochet latéral pleine hauteur à 320/390/1366 px", "quotient 36÷6 : barres empilées jusqu’à 520 px", "rectangles à angles droits", "lignes collées", "aria avec équations parlées", "aide sans révélation", "solution demandée", "correction après erreur", "même opération", "aucune clé offerte", "focus/Tab/Échap", "320/390/520/1366", "grand écran 1280×720 et 1440×900 : plateau et cours sans défilement, aide ≥ 900 px, clé gagnée qui attend « Coffre suivant »", "téléphone : passage automatique conservé"]
     }, null, 2));
   } finally {
     await page.close();

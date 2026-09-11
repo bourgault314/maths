@@ -322,14 +322,45 @@
       text-align: center;
     }
 
-    .learn-card {
-      width: min(840px, 100%);
+    /* Cours, aide et correction : le pictogramme partage la ligne du titre (au lieu d'occuper une ligne entière),
+       le titre reste réellement centré grâce aux deux colonnes latérales égales. */
+    .learn-card,
+    .help-card,
+    .correction-card {
       display: grid;
-      grid-template-rows: auto auto auto minmax(0, 1fr) auto;
+      grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
       overflow: hidden;
     }
+
+    .learn-card { width: min(840px, 100%); grid-template-rows: auto auto minmax(0, 1fr) auto; }
+    .correction-card { grid-template-rows: auto auto auto auto auto; overflow: auto; }
+
+    .learn-card > .dialog-icon,
+    .help-card > .dialog-icon,
+    .correction-card > .dialog-icon {
+      grid-row: 1;
+      grid-column: 1;
+      justify-self: end;
+      align-self: center;
+      margin: 5px 10px 10px 0;
+    }
+
+    .learn-card > h2,
+    .help-card > h2,
+    .correction-card > h2 { grid-row: 1; grid-column: 2; }
+
+    .learn-card > :not(.dialog-icon):not(h2),
+    .help-card > :not(.dialog-icon):not(h2),
+    .correction-card > :not(.dialog-icon):not(h2) { grid-column: 1 / -1; }
+
+    .learn-card > p { grid-row: 2; }
+    .learn-card > .operation-grid { grid-row: 3; }
+    .learn-card > .lesson-actions { grid-row: 4; }
+
     .dialog-icon { font-size: 2.6rem; }
-    .learn-card .dialog-icon { font-size: 1.55rem; font-weight: 900; letter-spacing: .12em; }
+    .learn-card .dialog-icon { font-size: 1.2rem; font-weight: 900; letter-spacing: .12em; color: #41677f; }
+    .help-card .dialog-icon,
+    .correction-card .dialog-icon { font-size: 1.6rem; line-height: 1; color: #41677f; }
     .dialog-card h2 { margin: 5px 0 10px; color: #143e62; font-size: 1.65rem; }
     .dialog-card > p { margin: 8px 0; color: #49677b; line-height: 1.42; }
 
@@ -471,16 +502,9 @@
       text-align: center;
     }
 
-    .help-card {
-      display: grid;
-      grid-template-rows: auto auto minmax(0, 1fr) auto;
-      overflow: hidden;
-    }
-
-    .help-card > .dialog-icon { grid-row: 1; }
-    .help-card > h2 { grid-row: 2; }
-    .help-card > .help-operation-grid { grid-row: 3; }
-    .help-card > .dialog-actions { grid-row: 4; }
+    .help-card { grid-template-rows: auto minmax(0, 1fr) auto; }
+    .help-card > .help-operation-grid { grid-row: 2; }
+    .help-card > .dialog-actions { grid-row: 3; }
 
     .help-operation-grid .operation-conventions {
       grid-template-columns: 1fr;
@@ -533,7 +557,7 @@
       margin-bottom: 6px;
       border-bottom: 2px solid #bd7900;
       color: #765000;
-      font-size: .74rem;
+      font-size: .8rem;
       font-weight: 950;
       line-height: 1.2;
       text-align: center;
@@ -659,14 +683,14 @@
       max-width: calc(100% - 4px);
       transform: translateX(-50%);
       color: #765000;
-      font-size: .7rem;
+      font-size: .76rem;
       font-weight: 950;
       line-height: 1.05;
       text-align: center;
       white-space: nowrap;
     }
 
-    .difference-marker-label.compact { font-size: .6rem; }
+    .difference-marker-label.compact { font-size: .66rem; }
     .difference-marker-label.near { top: 17px; }
 
     .difference-marker::before,
@@ -708,7 +732,7 @@
       padding-bottom: 4px;
       border-bottom: 2px solid #6d3ac7;
       color: #69419b;
-      font-size: .64rem;
+      font-size: .74rem;
       font-weight: 950;
       line-height: 1.15;
       text-align: center;
@@ -739,7 +763,7 @@
       display: grid;
       place-items: center;
       color: #69419b;
-      font-size: .64rem;
+      font-size: .74rem;
       font-weight: 950;
       line-height: 1.1;
       writing-mode: horizontal-tb;
@@ -769,7 +793,7 @@
       grid-row: 2;
     }
 
-    .product-note { color: #69419b; font-size: .73rem; font-weight: 900; text-align: center; }
+    .product-note { color: #69419b; font-size: .8rem; font-weight: 900; text-align: center; }
 
     .dual-learning-views,
     .quotient-interpretations {
@@ -790,7 +814,7 @@
       border-radius: 10px;
       background: #fbfdff;
       color: #48677b;
-      font-size: .68rem;
+      font-size: .76rem;
       font-weight: 900;
       line-height: 1.25;
       text-align: center;
@@ -1003,6 +1027,231 @@
       margin-bottom: 0;
     }
 
+    .next-row { display: grid; justify-items: center; }
+
+    .next-button {
+      flex: none;
+      width: min(100%, 320px);
+      margin: 6px auto 0;
+      font-size: 1.1rem;
+    }
+
+    /* Grand écran : ordinateur et vidéoprojection. Le plateau prend la hauteur disponible,
+       le défi et les commandes se placent à sa gauche, les fenêtres pédagogiques s'élargissent
+       et leurs schémas grandissent réellement (points, rangées, repères, légendes). */
+    @media (min-width: 900px) {
+      .topbar { width: min(100%, 1180px); }
+
+      .solo-page {
+        --board-size: min(calc(100svh - 150px), 640px, calc(100vw - 520px));
+        width: min(1180px, calc(100% - 32px));
+        min-height: calc(100svh - 76px);
+        display: grid;
+        grid-template-columns: minmax(300px, 1fr) auto;
+        grid-template-rows: auto auto auto auto auto;
+        align-content: center;
+        align-items: center;
+        column-gap: 32px;
+        padding: 20px 32px 24px;
+      }
+
+      .solo-heading {
+        grid-column: 1;
+        grid-row: 1;
+        max-width: none;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+      }
+
+      .solo-heading h1 { font-size: clamp(2rem, 3vw, 2.7rem); }
+      .solo-heading p:last-child { font-size: 1rem; }
+      .mode-switch-button { font-size: .82rem; }
+      .solo-stats { padding: 10px 18px; font-size: 1.3rem; }
+
+      .status-line {
+        grid-column: 1;
+        grid-row: 2;
+        width: 100%;
+        min-height: 56px;
+        margin: 0;
+        font-size: 1.05rem;
+      }
+
+      .challenge {
+        grid-column: 1;
+        grid-row: 3;
+        width: 100%;
+        min-height: 96px;
+        margin: 0;
+        font-size: 1.3rem;
+      }
+
+      .challenge strong { font-size: 2.2rem; }
+      .status-line.good { font-size: 1.15rem; }
+      /* La ligne du bouton garde sa hauteur même vide : rien ne bouge quand « Coffre suivant » apparaît. */
+      .next-row { grid-column: 1; grid-row: 4; min-height: 62px; align-content: center; }
+      .next-button { min-height: 56px; margin: 0 auto; font-size: 1.2rem; }
+      body.fullscreen-active .solo-page { min-height: calc(100dvh - 76px); }
+
+      .rune-board {
+        grid-column: 2;
+        grid-row: 1 / -1;
+        width: var(--board-size);
+        gap: 10px;
+        padding: 12px;
+      }
+
+      .rune { font-size: calc(var(--board-size) * .11); border-radius: 18px; }
+
+      .solo-toolbar { grid-column: 1; grid-row: 5; margin-top: 0; }
+      .rules-button,
+      .help-button,
+      .reset-button { min-height: 48px; padding: 8px 18px; font-size: 1.02rem; }
+
+      /* Cours complet : quatre cartes visibles d'un coup, texte à gauche et schéma à droite dans chaque carte. */
+      .learn-card { width: min(1200px, 100%); padding: 18px 24px; }
+      .dialog-card h2 { font-size: 1.8rem; }
+      .learn-card > p { margin: 2px 0 6px; font-size: 1.05rem; }
+      .learn-card > .operation-grid { margin-block: 10px; }
+      .operation-grid { gap: 12px; }
+
+      #lesson-course article {
+        grid-template-columns: minmax(0, 4fr) minmax(0, 8fr);
+        grid-template-areas: "title picture" "example picture" "equation picture" "definition picture";
+        align-content: center;
+        gap: 6px 14px;
+        padding: 12px 14px;
+      }
+
+      #lesson-course article h3 { grid-area: title; font-size: 1.1rem; line-height: 1.2; }
+      #lesson-course article .operation-example { grid-area: example; font-size: 1rem; }
+      #lesson-course article .operation-picture { grid-area: picture; align-self: center; }
+      #lesson-course article > strong { grid-area: equation; font-size: 1.15rem; text-align: left; }
+      #lesson-course article .operation-definition { grid-area: definition; font-size: .88rem; }
+      #lesson-course .operation-conventions { grid-template-columns: auto 1fr 1fr; align-items: stretch; }
+      #lesson-course .operation-conventions .operation-order { grid-column: auto; display: grid; align-items: center; }
+      #lesson-course .operation-conventions p { margin: 0; font-size: .88rem; }
+      #lesson-course .operation-conventions strong { display: inline; margin-right: 4px; }
+      .overlay { padding: 10px; }
+      .dialog-card { max-height: calc(100svh - 20px); }
+
+      /* Aide et correction : plus larges, schémas plus grands. */
+      .help-card,
+      .correction-card { width: min(940px, 100%); padding: 22px 28px; }
+      .help-operation-grid article { padding: 16px 20px; }
+      .help-operation-grid h3 { font-size: 1.35rem; }
+      .help-operation-grid .operation-example { font-size: 1.15rem; }
+      .help-operation-grid article > strong { font-size: 1.3rem; }
+      .help-operation-grid .operation-definition { font-size: 1rem; }
+      .operation-conventions p { font-size: .92rem; }
+      .dialog-actions .reset-button,
+      .dialog-actions .primary-button { min-height: 54px; font-size: 1.05rem; }
+
+      .correction-choice {
+        justify-self: center;
+        padding: 8px 16px;
+        border-radius: 12px;
+        background: #fff3ea;
+        font-size: 1.05rem;
+      }
+
+      .correction-solution { font-size: 1.35rem; }
+      .learning-panel h3 { font-size: 1.3rem; }
+      .learning-copy { font-size: 1.05rem; }
+      .demo-caption { font-size: 1rem; }
+      .demo-interpretation { font-size: .95rem; }
+
+      /* Échelle des schémas (mêmes proportions, tout est plus grand). */
+      .operation-picture { padding: 12px; }
+      .quantity-model,
+      .comparison-model { width: min(100%, 520px); }
+      .quantity-dot { width: 13px; height: 13px; }
+      .quantity-row { min-height: 48px; }
+      .sum-marker-row { min-height: 38px; }
+      .sum-marker { font-size: .92rem; }
+      .comparison-upper { min-height: 48px; }
+      .comparison-lower { min-height: 68px; grid-template-rows: 44px minmax(24px, auto); }
+      .compare-known { min-height: 44px; }
+      .difference-marker-label { top: 48px; font-size: .9rem; }
+      .difference-marker-label.compact { font-size: .78rem; }
+      .difference-marker-label.near { top: 20px; }
+      .dot-array { grid-template-columns: repeat(var(--dot-columns), 15px); gap: 6px; padding: 9px 12px; }
+      .dot-array i { width: 15px; height: 15px; }
+      .dimension-columns,
+      .dimension-rows { font-size: .92rem; }
+      .dimension-rows { min-width: 28px; padding-right: 12px; }
+      .product-note { font-size: .92rem; }
+      .mini-learning-view { padding: 10px 8px; font-size: .92rem; }
+      .quotient-bar { min-height: 42px; }
+      .quotient-bar-unit { min-height: 38px; }
+      .quotient-bar-unit::after { width: clamp(4px, 48%, 11px); }
+      .learning-demo { --demo-dot: 14px; min-height: 120px; padding: 14px; }
+      .demo-dot-grid { gap: 5px; padding: 10px; }
+
+      /* Aide et correction ont toute la place : une seule opération, schéma encore plus grand. */
+      .help-card .quantity-model,
+      .help-card .comparison-model,
+      .correction-card .quantity-model,
+      .correction-card .comparison-model { width: min(100%, 640px); }
+      .help-card .quantity-dot,
+      .correction-card .quantity-dot { width: 16px; height: 16px; }
+      .help-card .quantity-row,
+      .help-card .comparison-upper,
+      .correction-card .quantity-row,
+      .correction-card .comparison-upper { min-height: 56px; }
+      .help-card .sum-marker-row,
+      .correction-card .sum-marker-row { min-height: 42px; }
+      .help-card .sum-marker,
+      .help-card .difference-marker-label,
+      .correction-card .sum-marker,
+      .correction-card .difference-marker-label { font-size: 1.02rem; }
+      .help-card .comparison-lower,
+      .correction-card .comparison-lower { min-height: 78px; grid-template-rows: 52px minmax(26px, auto); }
+      .help-card .compare-known,
+      .correction-card .compare-known { min-height: 52px; }
+      .help-card .difference-marker-label,
+      .correction-card .difference-marker-label { top: 56px; }
+      .help-card .difference-marker-label.compact,
+      .correction-card .difference-marker-label.compact { font-size: .86rem; }
+      .help-card .difference-marker-label.near,
+      .correction-card .difference-marker-label.near { top: 24px; }
+      .help-card .dot-array,
+      .correction-card .dot-array { grid-template-columns: repeat(var(--dot-columns), 20px); gap: 8px; padding: 12px 14px; }
+      .help-card .dot-array i,
+      .correction-card .dot-array i { width: 20px; height: 20px; }
+      .help-card .dimension-columns,
+      .help-card .dimension-rows,
+      .correction-card .dimension-columns,
+      .correction-card .dimension-rows { font-size: 1.05rem; }
+      .help-card .dimension-rows,
+      .correction-card .dimension-rows { min-width: 32px; }
+      .help-card .mini-learning-view,
+      .correction-card .mini-learning-view { padding: 14px 10px; font-size: 1.02rem; }
+      .help-card .quotient-bar,
+      .correction-card .quotient-bar { min-height: 54px; }
+      .help-card .quotient-bar-unit,
+      .correction-card .quotient-bar-unit { min-height: 50px; }
+      .help-card .quotient-bar-unit::after,
+      .correction-card .quotient-bar-unit::after { width: clamp(5px, 48%, 14px); }
+      .correction-card .learning-demo { --demo-dot: 18px; min-height: 140px; padding: 16px; }
+      .correction-card .demo-dot-grid { gap: 7px; padding: 12px 14px; }
+      .correction-card .demo-interpretations { gap: 14px; }
+      .correction-card .demo-interpretation { padding: 12px; }
+    }
+
+    /* Grand écran peu haut (vidéoprojecteur 1280 × 720) : sous Windows, Segoe UI a des lignes plus hautes
+       et le bas des règles d'ordre passait sous le bouton. On resserre les marges du cours, jamais le texte ni les schémas. */
+    @media (min-width: 900px) and (max-height: 800px) {
+      .learn-card { padding-block: 12px; }
+      .learn-card > h2 { margin: 0 0 6px; }
+      .learn-card > p { margin: 0 0 4px; }
+      .learn-card > .operation-grid { margin-block: 6px; }
+      #lesson-course { gap: 10px; }
+      #lesson-course article { padding-block: 10px; }
+      #lesson-course .operation-conventions { padding-block: 7px; }
+    }
+
     @media (max-width: 520px) {
       .topbar { min-height: 46px; padding-block: 4px; }
       .brand img { width: 84px; }
@@ -1020,10 +1269,11 @@
       .operation-grid { grid-template-columns: 1fr; }
       .operation-conventions { grid-template-columns: 1fr; }
       .dialog-card { padding: 21px 17px; }
+      .learn-card .dialog-icon { display: none; }
       .help-card,
       .correction-card { padding: 16px 14px; }
       .help-card .dialog-icon,
-      .correction-card .dialog-icon { font-size: 2rem; line-height: 1; }
+      .correction-card .dialog-icon { font-size: 1.45rem; margin-block: 2px 7px; }
       .help-card h2,
       .correction-card h2 { margin-block: 2px 7px; font-size: 1.5rem; }
       .help-card .learning-panel,
@@ -1034,9 +1284,10 @@
         min-width: 0;
         flex: 1 1 0;
         padding-inline: 8px;
-        font-size: .88rem;
+        font-size: .92rem;
         line-height: 1.15;
       }
+      .dialog-actions .reset-button { flex: 0 1 auto; }
       .learning-demo { --demo-dot: 9px; padding-inline: 7px; }
       .quantity-dot { width: 9px; height: 9px; }
       .demo-interpretations { grid-template-columns: 1fr; }
@@ -1095,6 +1346,7 @@
 
     <div id="status" class="status-line" aria-live="polite">Lis d’abord le petit mémo.</div>
     <div class="challenge">Ouvre le coffre avec <span id="challenge-text">deux cases voisines</span></div>
+    <div class="next-row"><button id="next-button" class="primary-button next-button" type="button" hidden>Coffre suivant</button></div>
     <div id="board" class="rune-board" role="grid" aria-label="Seize cases numérotées"></div>
     <div class="solo-toolbar">
       <button id="help-button" class="help-button" type="button">Aide</button>
@@ -1298,7 +1550,11 @@
       const correctionChoice = document.querySelector("#correction-choice");
       const correctionSolution = document.querySelector("#correction-solution");
       const correctionVisual = document.querySelector("#correction-visual");
+      const nextButton = document.querySelector("#next-button");
       const result = document.querySelector("#result");
+      // Grand écran (ordinateur, projection) : après une clé gagnée, l'égalité reste affichée
+      // et c'est le bouton « Coffre suivant » qui fait avancer. Petit écran : passage automatique.
+      const largeScreen = window.matchMedia("(min-width: 900px)");
       const requestedMode = new URLSearchParams(window.location.search).get("mode");
       const origin = resolveOrigin();
       let values = [];
@@ -1312,6 +1568,7 @@
       let boardId = 0;
       let modeDialogMandatory = false;
       let gameStarted = false;
+      let lastResolvedPosition = null;
 
       function createModalController() {
         const focusableSelector = [
@@ -1810,6 +2067,7 @@
         target = calculate(mode, solution[0], solution[1]);
         boardId += 1;
         locked = false;
+        hideNextButton();
         challenge.innerHTML = `${operationArticles[mode]} <b>${operationLabels[mode]}</b> de <strong>${target}</strong>`;
         status.className = "status-line";
         status.textContent = "Choisis deux cases qui se touchent par un côté.";
@@ -1875,8 +2133,37 @@
         openCorrection({ trigger });
       }
 
+      function showNextButton() {
+        nextButton.textContent = keys === GOAL ? "Ouvrir le trésor" : "Coffre suivant";
+        nextButton.hidden = false;
+        window.requestAnimationFrame(() => nextButton.focus({ preventScroll: true }));
+      }
+
+      function hideNextButton() {
+        nextButton.hidden = true;
+      }
+
+      function advance() {
+        if (pendingTimer) window.clearTimeout(pendingTimer);
+        pendingTimer = null;
+        hideNextButton();
+        if (keys === GOAL) {
+          complete();
+          return;
+        }
+        makeChallenge();
+      }
+
+      function advanceFromButton() {
+        const position = lastResolvedPosition;
+        advance();
+        if (keys === GOAL) return;
+        focusAfterReset(position === null ? null : board.querySelector(`[data-index="${position}"]`));
+      }
+
       function complete() {
         locked = true;
+        hideNextButton();
         document.querySelector("#result-score").textContent = `${GOAL} clés trouvées`;
         dialogs.open(result, { initialFocus: "#play-again" });
       }
@@ -1901,7 +2188,9 @@
         if (correct) {
           keys += 1;
           updateCounter();
-          pendingTimer = window.setTimeout(() => keys === GOAL ? complete() : makeChallenge(), 750);
+          lastResolvedPosition = secondPosition;
+          if (largeScreen.matches) showNextButton();
+          else pendingTimer = window.setTimeout(advance, 750);
         } else {
           openCorrection({ chosenPair: [firstValue, secondValue], trigger: secondButton });
         }
@@ -1949,6 +2238,7 @@
         gameStarted = true;
         if (pendingTimer) window.clearTimeout(pendingTimer);
         pendingTimer = null;
+        hideNextButton();
         dialogs.close(result, { restoreFocus: false });
         dialogs.close(lesson, { restoreFocus: false });
         dialogs.close(helpDialog, { restoreFocus: false });
@@ -1986,6 +2276,7 @@
       document.querySelector("#close-help").addEventListener("click", closeHelp);
       document.querySelector("#show-solution").addEventListener("click", showSolution);
       document.querySelector("#close-correction").addEventListener("click", retryAfterLearning);
+      nextButton.addEventListener("click", advanceFromButton);
       document.querySelector("#reset-button").addEventListener("click", () => start());
       document.querySelector("#play-again").addEventListener("click", () => {
         const trigger = dialogs.trigger(result);
