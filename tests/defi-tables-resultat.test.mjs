@@ -41,6 +41,13 @@ test("la suite tient en une phrase, et les nombres ne se coupent pas", () => {
   assert.match(html, /function soude\(texte\) \{/);
   assert.match(html, /\.replace\(\/\\bmin \(\\d\)\/g, "min\\u00a0\$1"\)/, "« 1 min 30 » reste sur une ligne (audit, A14)");
   assert.match(html, /\$\("result-score"\)\.textContent = soude\(verdict\.score\);/);
+  // Relecture (Claude Code, 11/09) : la fonction elle-même, jouée sur les
+  // phrases du verdict. « il en faut 18 » reste entier : à 390 px, « il en /
+  // faut 18 » se coupait sous « Temps écoulé ».
+  const soude = new Function(`${html.match(/function soude\(texte\) \{[\s\S]*?;\s*\}/)[0]}; return soude;`)();
+  const nb = String.fromCharCode(160);
+  assert.equal(soude("4 réponses sur 20 en 1 min 30 — il en faut 18"), `4${nb}réponses sur${nb}20 en 1${nb}min${nb}30 — il${nb}en${nb}faut${nb}18`);
+  assert.equal(soude("Refais ton mélange avec la table de 5, puis la table de 3."), `Refais ton mélange avec la table de${nb}5, puis la table de${nb}3.`);
 });
 
 test("les corrections : les erreurs seules, les réponses justes repliées, jamais de cadre vert", () => {
@@ -50,6 +57,11 @@ test("les corrections : les erreurs seules, les réponses justes repliées, jama
   assert.doesNotMatch(html, /Aucune erreur à corriger/);
   assert.doesNotMatch(html, /is-clean/);
   assert.match(html, /\.corrections:empty \{ display: none; \}/);
+  // Relecture (Claude Code, 11/09) : un calcul passé (« Passer ») n'a pas de
+  // réponse à barrer — « Pas de réponse » reste lisible, sans trait.
+  assert.match(html, /passe: Boolean\(response\.skipped\),/);
+  assert.match(html, /if \(entry\.passe\) \{\s*given\.classList\.add\("is-passe"\);\s*given\.setAttribute\("aria-label", "Pas de réponse"\);/);
+  assert.match(html, /\.given-answer\.is-passe \{ text-decoration: none; \}/);
 });
 
 test("téléphone : le bouton principal sur toute la largeur, Rejouer devant sur un échec, rien ne bouge dans le HTML", () => {
@@ -63,6 +75,9 @@ test("téléphone : le bouton principal sur toute la largeur, Rejouer devant sur
 
 test("la révision garde son bilan et ses deux boutons, sans verdict réussi / raté", () => {
   assert.match(html, /\$\("result-title"\)\.textContent = "Révision terminée";/);
-  assert.match(html, /\$\("result-score"\)\.textContent = `\$\{score\} sur \$\{total\} au premier essai`;/);
+  // Relecture (Claude Code, 11/09) : le temps rejoint le score, comme sur les
+  // autres verdicts — plus de « Série terminée en 13 s. » sous « Révision terminée ».
+  assert.match(html, /\$\("result-score"\)\.textContent = soude\(`\$\{score\} sur \$\{total\} au premier essai · \$\{formatElapsed\(elapsed\)\}`\);/);
+  assert.doesNotMatch(html, /Série terminée/);
   assert.match(html, /encore\.textContent = "Encore une révision";/);
 });

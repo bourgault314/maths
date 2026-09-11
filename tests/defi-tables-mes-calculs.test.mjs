@@ -331,7 +331,9 @@ test("seule la première réponse compte pour la grille, et un raté ne revient 
   assert.match(html, /if \(!question\.retry\) alimenterMesCalculs\(question, correct && !skip\);/, "les calculs qui reviennent n’alimentent pas la grille");
   assert.match(html, /const willRetry = !correct && !question\.retry;/, "un calcul raté revient une seule fois par série de révision");
   assert.doesNotMatch(html, /repartira dans la prochaine révision/, "la règle n’est plus écrite sur l’écran de résultat (lot 2)");
-  assert.match(html, /\$\("result-detail"\)\.textContent = `Série terminée en \$\{formatElapsed\(elapsed\)\}\.`;/);
+  // Relecture du lot R2 : le temps de la révision est passé sur la ligne du
+  // score ; la ligne du dessous reste vide (ni la règle, ni « Série terminée »).
+  assert.match(html, /\$\("result-detail"\)\.textContent = "";/);
 });
 
 test("la révision : jusqu’à 10 questions sans chrono, retour des ratés, Encore une révision", () => {

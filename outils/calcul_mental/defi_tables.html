@@ -1073,6 +1073,8 @@
     .correction-expression { color: var(--ink); font-size: 1.05rem; font-weight: 900; }
     .correction-expression .expected-answer { color: var(--green); font-weight: 950; }
     .given-answer { color: var(--red); font-size: .95rem; font-weight: 800; text-decoration: line-through; }
+    /* Un calcul passé n'a pas de réponse à barrer (relecture du lot R2). */
+    .given-answer.is-passe { text-decoration: none; }
     .correction-details { margin: 8px 0 0; }
     .correction-details summary { padding: 11px 12px; border: 1px dashed #c5d9e6; border-radius: 12px; color: var(--blue); font-size: .95rem; font-weight: 850; cursor: pointer; list-style: none; }
     .correction-details summary::-webkit-details-marker { display: none; }
@@ -3895,6 +3897,7 @@
             retour: Boolean(state.questions[index].retry),
             prompt: state.questions[index].prompt,
             given: response.skipped ? "Pas de réponse" : String(response.value),
+            passe: Boolean(response.skipped),
             expected: String(state.questions[index].answer),
             correct: false
           }];
@@ -3908,6 +3911,7 @@
             number: index + 1,
             prompt: state.questions[index].prompt,
             given: response.skipped ? "Pas de réponse" : String(response.value),
+            passe: Boolean(response.skipped),
             expected: String(state.questions[index].answer),
             correct: response.correct
           }];
@@ -3956,6 +3960,12 @@
             given.className = "given-answer";
             given.setAttribute("aria-label", `Ta réponse : ${entry.given}`);
             given.textContent = entry.given;
+            // Un calcul passé (« Passer ») n'a pas de réponse à barrer :
+            // « Pas de réponse » reste lisible, sans trait (relecture du lot R2).
+            if (entry.passe) {
+              given.classList.add("is-passe");
+              given.setAttribute("aria-label", "Pas de réponse");
+            }
             item.append(questionLine, given);
             list.append(item);
           });
@@ -4149,13 +4159,16 @@
       }
 
       // Les nombres et leurs unités ne se coupent pas en bout de ligne : « 1 min
-      // 30 » et « 17 sur 20 » restent entiers (audit, A14).
+      // 30 » et « 17 sur 20 » restent entiers (audit, A14). « il en faut 18 »
+      // aussi : sans l'avant-dernière ligne, le téléphone de 390 px coupait
+      // « il en / faut 18 » sous « Temps écoulé » (relecture du lot R2).
       function soude(texte) {
         return String(texte)
           .replace(/(\d) (min|s|minute|minutes|sur|questions?|calculs?|réponses?|erreurs?)\b/g, "$1\u00a0$2")
           .replace(/\bmin (\d)/g, "min\u00a0$1")
           .replace(/\bsur (\d)/g, "sur\u00a0$1")
           .replace(/\bfaut (\d)/g, "faut\u00a0$1")
+          .replace(/\bil en faut\b/g, "il\u00a0en\u00a0faut")
           .replace(/\bde (\d)/g, "de\u00a0$1");
       }
 
@@ -4678,11 +4691,14 @@
         $("result-verdict").classList.remove("is-champion");
         $("result-icon").textContent = "✓";
         $("result-title").textContent = "Révision terminée";
-        $("result-score").textContent = `${score} sur ${total} au premier essai`;
+        // Le temps rejoint le score, comme sur les autres verdicts (« 20 sur 20
+        // · 9 s ») : la ligne du dessous, qui redisait que la série était finie
+        // sous « Révision terminée », disparaît (relecture du lot R2).
+        $("result-score").textContent = soude(`${score} sur ${total} au premier essai · ${formatElapsed(elapsed)}`);
         $("result-config").textContent = `Réviser mes calculs${table ? ` · table de ${table}` : ""} · ${total} questions · sans chronomètre`;
         // La règle (retour unique, une case par jour) n'est plus écrite ici :
         // elle vit dans « Comment ça marche ? » et dans le détail d'une case.
-        $("result-detail").textContent = `Série terminée en ${formatElapsed(elapsed)}.`;
+        $("result-detail").textContent = "";
         $("result-rang").hidden = true;
         $("result-message").hidden = true;
         $("result-previous").hidden = true;
