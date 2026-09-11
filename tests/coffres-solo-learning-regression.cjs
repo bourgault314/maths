@@ -701,6 +701,343 @@ async function auditPetitEcranAutomatique(browser, base, errors) {
   }
 }
 
+// ---------------------------------------------------------------------------------------------
+// Lot 2 : nombre de paires (1 ou 2), vérification bonus sur grand écran, niveau 2 et aides en barres.
+// ---------------------------------------------------------------------------------------------
+
+function allSolutions(state) {
+  return neighborPairs().filter(([first, second]) => valueFor(state.mode, state.values[first], state.values[second]) === state.target);
+}
+
+async function restartUntil(page, predicate, label, tries = 400) {
+  for (let attempt = 0; attempt < tries; attempt += 1) {
+    const current = await state(page);
+    if (predicate(current)) return current;
+    await page.evaluate(() => window.MATHSGO_COFFRES_SOLO.start());
+  }
+  throw new Error(`${label} : aucun plateau ne remplit la condition après ${tries} parties.`);
+}
+
+// Le tirage garantit 1 ou 2 paires voisines gagnantes, jamais plus, et le repère le dit.
+async function auditNombreDePaires(browser, base, level, errors) {
+  const page = await browser.newPage({ viewport: { width: 1366, height: 768 } });
+  const label = `paires niveau ${level}`;
+  page.on("pageerror", error => errors.push(`${label} : ${error.message}`));
+  try {
+    await page.goto(`${base}/outils/calcul_mental/coffres_magiques_solo.html?mode=solo${level === 2 ? "&niveau=2" : ""}`, { waitUntil: "load" });
+    await page.locator("#start-game").click();
+    await page.locator("#lesson").waitFor({ state: "hidden" });
+    const seen = { 1: 0, 2: 0 };
+    const modesSeen = new Set();
+    for (let board = 0; board < 120; board += 1) {
+      const current = await state(page);
+      assert(current.level === level, `${label} : le niveau de la partie n'est pas ${level}.`);
+      const found = allSolutions(current);
+      assert(found.length === 1 || found.length === 2, `${label} : ${found.length} paires gagnantes pour ${current.mode} = ${current.target} (${current.values.join(" ")}).`);
+      assert(found.length === current.solutions, `${label} : l'appli annonce ${current.solutions} paire(s) au lieu de ${found.length}.`);
+      const hint = await page.locator("#pair-count").innerText();
+      assert(hint.trim() === (found.length === 1 ? "1 paire" : "2 paires"), `${label} : le repère dit « ${hint} » pour ${found.length} paire(s).`);
+      assert(await page.locator("#pair-count").isVisible(), `${label} : le repère de paires n'est pas visible.`);
+      const fillMax = level === 2 ? 20 : 12;
+      current.values.forEach((value, position) => {
+        const inSolution = found.some(pair => pair.includes(position));
+        if (current.mode === "quotient" && inSolution) return;
+        assert(value >= 1 && value <= fillMax, `${label} : la case ${value} sort de 1 à ${fillMax} (${current.mode}).`);
+      });
+      if (level === 2) {
+        const ranges = { sum: [12, 40], difference: [3, 19], product: [33, 300], quotient: [2, 9] };
+        const [minimum, maximum] = ranges[current.mode];
+        assert(current.target >= minimum && current.target <= maximum, `${label} : cible ${current.target} hors bornes pour ${current.mode}.`);
+      } else {
+        const ranges = { sum: [4, 18], difference: [2, 8], product: [4, 81], quotient: [2, 6] };
+        const [minimum, maximum] = ranges[current.mode];
+        assert(current.target >= minimum && current.target <= maximum, `${label} : cible ${current.target} hors des tirages historiques pour ${current.mode}.`);
+      }
+      if (found.length === 2) {
+        const cells = found.flat();
+        assert(new Set(cells).size === 4, `${label} : les deux paires partagent une case.`);
+        assert(!found[0].some(first => found[1].some(second => Math.abs(Math.floor(first / 4) - Math.floor(second / 4)) + Math.abs((first % 4) - (second % 4)) === 1)), `${label} : les deux paires se touchent.`);
+      }
+      seen[found.length] += 1;
+      modesSeen.add(current.mode);
+      await page.evaluate(() => window.MATHSGO_COFFRES_SOLO.start());
+    }
+    assert(seen[1] > 10 && seen[2] > 10, `${label} : répartition suspecte des paires (${seen[1]} simples, ${seen[2]} doubles).`);
+    assert(modesSeen.size === 4, `${label} : les quatre opérations n'ont pas toutes été tirées.`);
+  } finally {
+    await page.close();
+  }
+}
+
+// Grand écran : pendant que « Coffre suivant » attend, l'autre paire est confirmée sans clé, une paire fausse dit non.
+async function auditVerificationBonus(browser, base, errors) {
+  const page = await browser.newPage({ viewport: { width: 1280, height: 720 } });
+  const label = "vérification bonus 1280 × 720";
+  page.on("pageerror", error => errors.push(`${label} : ${error.message}`));
+  try {
+    await page.goto(`${base}/outils/calcul_mental/coffres_magiques_solo.html?mode=solo`, { waitUntil: "load" });
+    await page.locator("#start-game").click();
+    await page.locator("#lesson").waitFor({ state: "hidden" });
+    const before = await restartUntil(page, current => allSolutions(current).length === 2, label);
+    const [first, second] = allSolutions(before);
+    await page.locator(`.rune[data-index="${first[0]}"]`).click();
+    await page.locator(`.rune[data-index="${first[1]}"]`).click();
+    await page.waitForFunction(expected => window.MATHSGO_COFFRES_SOLO.getState().keys === expected, before.keys + 1);
+    await page.waitForFunction(() => document.activeElement.id === "next-button");
+    assert((await state(page)).bonusOpen === true, `${label} : le plateau n'est pas ouvert à la vérification.`);
+
+    await page.locator(`.rune[data-index="${second[0]}"]`).click();
+    await page.locator(`.rune[data-index="${second[1]}"]`).click();
+    const confirmed = await state(page);
+    const confirmedStatus = (await page.locator("#status").innerText()).trim();
+    assert(confirmedStatus.endsWith("aussi !") && confirmedStatus.includes(`= ${before.target}`), `${label} : l'autre paire n'est pas confirmée (« ${confirmedStatus} »).`);
+    assert(confirmed.keys === before.keys + 1 && confirmed.boardId === before.boardId, `${label} : la seconde paire ajoute une clé ou change le plateau.`);
+    assert(await page.locator("#next-button").isVisible(), `${label} : « Coffre suivant » disparaît après la vérification.`);
+    assert(await page.locator("#correction-dialog").isHidden(), `${label} : la correction s'ouvre après une paire juste.`);
+    assert((await page.locator(".rune.success").count()) === 4, `${label} : les deux paires gagnantes ne sont pas toutes vertes.`);
+    await page.screenshot({ path: path.join(CAPTURES, "bonus-autre-paire-1280x720.png") });
+
+    const used = [...first, ...second];
+    const wrong = neighborPairs().find(pair => valueFor(before.mode, before.values[pair[0]], before.values[pair[1]]) !== before.target && pair.every(position => !used.includes(position)));
+    assert(wrong, `${label} : aucune paire fausse disponible.`);
+    await page.locator(`.rune[data-index="${wrong[0]}"]`).click();
+    await page.locator(`.rune[data-index="${wrong[1]}"]`).click();
+    const refused = await state(page);
+    const refusedStatus = (await page.locator("#status").innerText()).trim();
+    assert(/: non/.test(refusedStatus), `${label} : la paire fausse n'est pas refusée simplement (« ${refusedStatus} »).`);
+    assert(await page.locator("#correction-dialog").isHidden(), `${label} : la correction s'ouvre pendant la vérification bonus.`);
+    assert(refused.keys === before.keys + 1 && refused.boardId === before.boardId, `${label} : la paire fausse change la clé ou le plateau.`);
+    assert((await page.locator(".rune.failure").count()) === 2 && (await page.locator(".rune.success").count()) === 4, `${label} : les cases gagnantes perdent leur couleur après une paire fausse.`);
+    await page.screenshot({ path: path.join(CAPTURES, "bonus-paire-fausse-1280x720.png") });
+
+    await page.locator(`.rune[data-index="${first[0]}"]`).click();
+    await page.locator(`.rune[data-index="${first[1]}"]`).click();
+    assert((await page.locator("#status").innerText()).includes("déjà trouvée"), `${label} : recliquer la paire gagnante n'est pas signalé.`);
+
+    await page.locator("#next-button").click();
+    await page.waitForFunction(previous => window.MATHSGO_COFFRES_SOLO.getState().boardId > previous, before.boardId);
+    const after = await state(page);
+    assert(after.keys === before.keys + 1 && after.bonusOpen === false, `${label} : le coffre suivant n'arrive pas proprement après la vérification.`);
+  } finally {
+    await page.close();
+  }
+}
+
+// Niveau 2 : aides et corrections en barres, avec les nombres écrits dedans.
+async function assertBarVisual(page, selector, mode, label) {
+  const visual = page.locator(selector);
+  assert(await visual.isVisible(), `${label} : le schéma en barres n'est pas visible.`);
+  assert((await visual.locator(".quantity-dot, .demo-dot, .quotient-bar-unit").count()) === 0, `${label} : des points du niveau 1 subsistent dans le schéma du niveau 2.`);
+  const box = element => {
+    const rect = element.getBoundingClientRect();
+    return { left: rect.left, right: rect.right, top: rect.top, bottom: rect.bottom, width: rect.width, height: rect.height };
+  };
+  if (mode === "sum" || mode === "difference") {
+    const data = await visual.evaluate((node, isSum) => {
+      const box = element => { const r = element.getBoundingClientRect(); return { left: r.left, right: r.right, top: r.top, bottom: r.bottom, width: r.width, height: r.height }; };
+      const rows = [...node.querySelectorAll(".bar-row")];
+      const parts = [...rows[1].querySelectorAll(":scope > .bar-part")].map(part => ({ ...box(part), text: part.textContent.trim(), gap: part.classList.contains("bar-gap") }));
+      const marker = isSum ? node.querySelector(".sum-marker") : node.querySelector(".bar-marker-label");
+      const cell = isSum ? null : node.querySelector(".bar-marker-cell");
+      return {
+        aria: node.closest("[aria-label]").getAttribute("aria-label"),
+        diagram: box(node.querySelector(".bar-model")),
+        rows: rows.map(row => ({ ...box(row), text: row.textContent.trim(), radius: getComputedStyle(row).borderRadius })),
+        parts,
+        marker: { ...box(marker), text: marker.textContent.trim() },
+        cell: cell ? box(cell) : null,
+        viewportWidth: innerWidth
+      };
+    }, mode === "sum");
+    assert(data.rows.length === 2 && data.parts.length === 2, `${label} : la barre doit avoir deux lignes et deux parties.`);
+    const total = Number(data.rows[0].text);
+    const [first, second] = data.parts.map(part => Number(part.text));
+    assert(data.rows.every(row => row.radius === "0px"), `${label} : les barres n'ont pas des angles droits.`);
+    assert(Math.abs(data.rows[0].bottom - data.rows[1].top) <= 1 && Math.abs(data.rows[0].width - data.rows[1].width) <= 1, `${label} : les deux lignes ne sont pas collées et alignées.`);
+    assert(total === first + second, `${label} : ${first} et ${second} n'écrivent pas ${total}.`);
+    assert(Math.abs(data.parts[0].width / data.parts[1].width - first / second) <= .1 * Math.max(1, first / second), `${label} : les largeurs ne sont pas proportionnelles (${first} : ${second}).`);
+    if (mode === "sum") {
+      assert(data.marker.text === `somme = ${total}`, `${label} : le repère de somme est inexact.`);
+      assert(Math.abs(data.marker.left - data.rows[0].left) <= 1 && Math.abs(data.marker.width - data.rows[0].width) <= 1 && data.marker.bottom <= data.rows[0].top, `${label} : le repère de somme n'est pas au-dessus de toute la barre.`);
+      assert(new RegExp(`${first} plus ${second} égale ${total}\\.$`).test(data.aria), `${label} : l'équation parlée de la somme manque.`);
+    } else {
+      assert(data.parts[1].gap && !data.parts[0].gap, `${label} : la partie manquante n'est pas hachurée à droite.`);
+      assert(data.marker.text === `différence = ${second}`, `${label} : le libellé de différence est inexact.`);
+      assert(Math.abs(data.cell.left - data.parts[1].left) <= 3 && Math.abs(data.cell.right - data.parts[1].right) <= 3 && data.cell.top >= data.rows[1].bottom - 1, `${label} : le repère de différence n'est pas sous la partie manquante (${JSON.stringify({ cell: data.cell, gap: data.parts[1], row: data.rows[1] })}).`);
+      assert(data.marker.left >= data.diagram.left - 1 && data.marker.right <= data.diagram.right + 1 && data.marker.right <= data.viewportWidth, `${label} : le libellé de différence sort du schéma.`);
+      assert(new RegExp(`${total} moins ${first} égale ${second}\\.$`).test(data.aria), `${label} : l'équation parlée de la différence manque.`);
+    }
+  } else if (mode === "product") {
+    const data = await visual.evaluate(node => {
+      const box = element => { const r = element.getBoundingClientRect(); return { left: r.left, right: r.right, top: r.top, bottom: r.bottom, width: r.width, height: r.height }; };
+      const area = node.querySelector(".area-model");
+      const style = getComputedStyle(area);
+      return {
+        aria: node.closest("[aria-label]").getAttribute("aria-label"),
+        area: { ...box(area), columns: Number(style.getPropertyValue("--area-columns")), rows: Number(style.getPropertyValue("--area-rows")), unit: parseFloat(style.getPropertyValue("--area-unit")) },
+        total: node.querySelector(".area-total").textContent.trim(),
+        columnsMarker: { ...box(node.querySelector(".dimension-columns")), text: node.querySelector(".dimension-columns").textContent.trim() },
+        rowsMarker: { ...box(node.querySelector(".dimension-rows")), text: node.querySelector(".dimension-rows").textContent.trim() },
+        viewportWidth: innerWidth
+      };
+    });
+    assert(Number(data.total) === data.area.columns * data.area.rows, `${label} : le total ${data.total} n'est pas ${data.area.rows} × ${data.area.columns}.`);
+    assert(data.columnsMarker.text === String(data.area.columns) && data.rowsMarker.text === String(data.area.rows), `${label} : les dimensions écrites ne correspondent pas au rectangle.`);
+    assert(Math.abs((data.area.width - 4) / (data.area.height - 4) - data.area.columns / data.area.rows) <= .06, `${label} : le rectangle n'est pas proportionnel (${data.area.width} × ${data.area.height} pour ${data.area.columns} × ${data.area.rows}).`);
+    assert(data.area.unit >= 10, `${label} : le quadrillage est trop serré (${data.area.unit}px).`);
+    assert(Math.abs(data.columnsMarker.left - data.area.left) <= 1 && Math.abs(data.columnsMarker.width - data.area.width) <= 1 && data.columnsMarker.bottom <= data.area.top, `${label} : le repère des colonnes n'est pas aligné sur le rectangle.`);
+    assert(data.rowsMarker.right <= data.area.left && Math.abs(data.rowsMarker.top - data.area.top) <= 1 && Math.abs(data.rowsMarker.height - data.area.height) <= 1, `${label} : le repère des rangées n'est pas aligné sur le côté.`);
+    assert(data.area.right <= data.viewportWidth, `${label} : le rectangle sort de l'écran.`);
+    assert(new RegExp(`${data.area.rows} fois ${data.area.columns} égale ${data.total}\\.$`).test(data.aria), `${label} : l'équation parlée du produit manque.`);
+  } else {
+    const data = await visual.evaluate(node => {
+      const box = element => { const r = element.getBoundingClientRect(); return { left: r.left, right: r.right, top: r.top, bottom: r.bottom, width: r.width, height: r.height }; };
+      return {
+        aria: node.closest("[aria-label]").getAttribute("aria-label"),
+        viewportWidth: innerWidth,
+        layoutColumns: getComputedStyle(node.querySelector(".demo-interpretations")).gridTemplateColumns.split(/\s+/).filter(Boolean).length,
+        views: [...node.querySelectorAll(".demo-interpretation")].map(view => {
+          const bar = view.querySelector(".packet-bar");
+          return {
+            label: view.querySelector(".demo-caption").textContent.trim(),
+            marker: view.querySelector(".sum-marker").textContent.trim(),
+            bar: { ...box(bar), groupCount: Number(bar.dataset.groupCount), groupSize: Number(bar.dataset.groupSize), totalUnits: Number(bar.dataset.totalUnits) },
+            packets: [...bar.querySelectorAll(":scope > .packet")].map(packet => ({ ...box(packet), text: packet.textContent.trim(), fontSize: parseFloat(getComputedStyle(packet).fontSize) }))
+          };
+        })
+      };
+    });
+    assert(data.views.length === 2, `${label} : les deux interprétations du quotient manquent.`);
+    assert(data.layoutColumns === (data.viewportWidth <= 520 ? 1 : 2), `${label} : les interprétations n'ont pas la disposition attendue à ${data.viewportWidth} px.`);
+    const grouping = data.views[0].label.match(/^Grouper : (\d+) paquets de (\d+)$/);
+    const sharing = data.views[1].label.match(/^Partager : (\d+) paquets de (\d+)$/);
+    assert(grouping && sharing, `${label} : les légendes grouper / partager manquent.`);
+    data.views.forEach((view, index) => {
+      const wanted = index === 0 ? grouping : sharing;
+      const count = Number(wanted[1]);
+      const size = Number(wanted[2]);
+      assert(view.bar.groupCount === count && view.packets.length === count, `${label} : la barre ${index + 1} n'a pas ${count} paquets.`);
+      assert(view.bar.groupSize === size && view.packets.every(packet => packet.text === String(size)), `${label} : chaque paquet de la barre ${index + 1} doit porter ${size}.`);
+      assert(view.marker === String(count * size) && view.bar.totalUnits === count * size, `${label} : le total au-dessus de la barre ${index + 1} est inexact.`);
+      const widths = view.packets.map(packet => packet.width);
+      assert(Math.max(...widths) - Math.min(...widths) <= 2, `${label} : les paquets de la barre ${index + 1} n'ont pas la même largeur.`);
+      assert(view.packets.every(packet => packet.fontSize >= 9.5), `${label} : un nombre de paquet est illisible (${Math.min(...view.packets.map(packet => packet.fontSize))}px).`);
+      assert(view.bar.right <= data.viewportWidth, `${label} : la barre ${index + 1} sort de l'écran.`);
+    });
+    assert(data.aria.includes(`Combien de paquets de ${grouping[2]} dans ${Number(grouping[1]) * Number(grouping[2])} ? ${grouping[1]}.`), `${label} : le sens « grouper » manque dans l'alternative accessible.`);
+  }
+}
+
+async function auditNiveauDeux(browser, base, { width, height }, errors) {
+  const page = await browser.newPage({ viewport: { width, height } });
+  const label = `niveau 2 à ${width} px`;
+  page.on("pageerror", error => errors.push(`${label} : ${error.message}`));
+  await page.addInitScript(() => {
+    const nativeTimeout = window.setTimeout.bind(window);
+    window.setTimeout = (callback, delay, ...args) => nativeTimeout(callback, Math.min(delay, 25), ...args);
+  });
+  const courseSentences = {
+    sum: "La somme de 13 et de 8 est 21.",
+    difference: "La différence entre 17 et 9 est 8.",
+    product: "Le produit de 12 par 15 est 180.",
+    quotient: "Le quotient de 60 par 15 est 4."
+  };
+  try {
+    await page.goto(`${base}/outils/calcul_mental/coffres_magiques_solo.html?mode=solo&niveau=2`, { waitUntil: "load" });
+    await page.waitForFunction(() => document.activeElement.id === "start-game");
+    assert((await page.locator("#lesson .quantity-dot").count()) > 0 && (await page.locator("#lesson .bar-model").count()) === 0, `${label} : le cours complet doit garder ses schémas à points.`);
+    await page.locator("#start-game").click();
+    await page.locator("#lesson").waitFor({ state: "hidden" });
+    assert((await page.locator("#level-label").innerText()).trim() === "niveau 2", `${label} : la ligne de titre n'annonce pas le niveau 2.`);
+    for (const mode of ["sum", "difference", "product", "quotient"]) {
+      const current = await restartUntil(page, candidate => candidate.mode === mode, `${label} ${mode}`);
+      assert(current.level === 2, `${label} : la partie n'est pas au niveau 2.`);
+      await page.locator("#help-button").click();
+      await page.waitForFunction(() => document.activeElement.id === "help-title");
+      const card = page.locator(`#help-visual > article[data-operation="${mode}"][data-level="2"]`);
+      assert(await card.count() === 1, `${label} : l'aide ${mode} n'est pas la carte du niveau 2.`);
+      assert((await card.innerText()).includes(courseSentences[mode]), `${label} : la phrase du niveau 2 manque dans l'aide ${mode}.`);
+      const sourceTitle = await page.locator(`#lesson article[data-operation="${mode}"] h3`).innerText();
+      assert((await card.locator("h3").innerText()) === sourceTitle, `${label} : le titre de l'aide ${mode} diffère du cours.`);
+      await assertBarVisual(page, `#help-visual > article[data-operation="${mode}"] .operation-picture`, mode, `Aide niveau 2 ${mode} à ${width} px`);
+      await assertNoHorizontalOverflow(page, `${label} : aide ${mode}`);
+      const helpBox = await page.locator("#help-dialog .dialog-card").evaluate(node => {
+        const rect = node.getBoundingClientRect();
+        const actions = [...node.querySelectorAll(".dialog-actions button")].map(button => button.getBoundingClientRect().bottom);
+        return { top: rect.top, bottom: rect.bottom, actions, viewportHeight: innerHeight };
+      });
+      assert(helpBox.top >= 0 && helpBox.actions.every(bottom => bottom <= helpBox.viewportHeight + 1), `${label} : les actions de l'aide ${mode} sortent de l'écran.`);
+      await page.screenshot({ path: path.join(CAPTURES, `aide-niveau2-${mode}-${width}.png`) });
+      if (mode === "difference" || mode === "quotient") {
+        assert((await page.locator("#help-visual .operation-conventions").count()) === 1, `${label} : la convention d'ordre manque dans l'aide ${mode}.`);
+      }
+      await page.locator("#show-solution").click();
+      await page.waitForFunction(() => document.activeElement.id === "correction-title");
+      const solution = (await page.locator("#correction-solution").innerText()).trim();
+      const expected = allSolutions(current);
+      assert(expected.some(pair => solution.includes(`${current.values[pair[0]]} et ${current.values[pair[1]]} conviennent`)), `${label} : la correction ${mode} ne reprend pas une paire réelle du plateau.`);
+      await assertBarVisual(page, "#correction-visual .learning-demo", mode, `Correction niveau 2 ${mode} à ${width} px`);
+      await assertNoHorizontalOverflow(page, `${label} : correction ${mode}`);
+      await page.screenshot({ path: path.join(CAPTURES, `correction-niveau2-${mode}-${width}.png`) });
+      await page.locator("#close-correction").click();
+      await page.locator("#correction-dialog").waitFor({ state: "hidden" });
+    }
+  } finally {
+    await page.close();
+  }
+}
+
+// Le niveau se choisit dans la fenêtre Solo / Duo et voyage dans l'adresse (?niveau=2).
+async function auditChoixDuNiveau(browser, base, errors) {
+  const page = await browser.newPage({ viewport: { width: 1280, height: 720 } });
+  const label = "choix du niveau";
+  page.on("pageerror", error => errors.push(`${label} : ${error.message}`));
+  try {
+    await page.goto(`${base}/outils/calcul_mental/coffres_magiques_solo.html`, { waitUntil: "load" });
+    await page.locator("#mode-dialog:not([hidden])").waitFor();
+    const pills = page.locator(".level-choice");
+    assert(await pills.count() === 2, `${label} : la fenêtre ne propose pas exactement deux niveaux.`);
+    assert(await pills.nth(0).getAttribute("aria-pressed") === "true", `${label} : le niveau 1 n'est pas sélectionné par défaut.`);
+    await page.screenshot({ path: path.join(CAPTURES, "fenetre-mode-niveaux-1280.png") });
+    await pills.nth(1).click();
+    assert(await pills.nth(1).getAttribute("aria-pressed") === "true" && await pills.nth(0).getAttribute("aria-pressed") === "false", `${label} : le clic sur Niveau 2 ne le sélectionne pas.`);
+    assert(new URL(page.url()).searchParams.get("niveau") === "2", `${label} : l'adresse ne mémorise pas ?niveau=2.`);
+    await page.locator("#choose-solo").click();
+    await page.waitForFunction(() => document.activeElement.id === "start-game");
+    await page.locator("#start-game").click();
+    await page.locator("#lesson").waitFor({ state: "hidden" });
+    assert((await state(page)).level === 2, `${label} : la partie ne démarre pas au niveau 2.`);
+    assert((await page.locator("#level-label").innerText()).trim() === "niveau 2", `${label} : la ligne de titre n'indique pas le niveau 2.`);
+    assert((await page.locator("#choose-duo").count()) === 1, `${label} : le bouton Duo manque.`);
+
+    // Changer de niveau en cours de partie : Échap abandonne, « Nouvelle partie au niveau 1 » applique.
+    const running = await state(page);
+    await page.locator("[data-change-mode]").click();
+    await page.locator("#mode-dialog:not([hidden])").waitFor();
+    await pills.nth(0).click();
+    assert((await page.locator("#continue-current-mode").innerText()).trim() === "Nouvelle partie au niveau 1", `${label} : le bouton de reprise n'annonce pas la nouvelle partie.`);
+    await page.keyboard.press("Escape");
+    await page.locator("#mode-dialog").waitFor({ state: "hidden" });
+    const kept = await state(page);
+    assert(kept.level === 2 && kept.boardId === running.boardId && new URL(page.url()).searchParams.get("niveau") === "2", `${label} : Échap a changé le niveau ou le plateau.`);
+    await page.locator("[data-change-mode]").click();
+    await page.locator("#mode-dialog:not([hidden])").waitFor();
+    assert(await pills.nth(1).getAttribute("aria-pressed") === "true", `${label} : la fenêtre ne réaffiche pas le niveau de la partie.`);
+    await pills.nth(0).click();
+    await page.locator("#continue-current-mode").click();
+    await page.locator("#mode-dialog").waitFor({ state: "hidden" });
+    const restarted = await state(page);
+    assert(restarted.level === 1 && restarted.keys === 0 && restarted.boardId > running.boardId, `${label} : la nouvelle partie au niveau 1 n'a pas démarré.`);
+    assert(new URL(page.url()).searchParams.get("niveau") === null, `${label} : l'adresse garde ?niveau=2 après retour au niveau 1.`);
+    assert((await page.locator("#level-label").innerText()).trim() === "niveau 1", `${label} : la ligne de titre n'est pas revenue au niveau 1.`);
+    await page.locator("[data-change-mode]").click();
+    await page.locator("#mode-dialog:not([hidden])").waitFor();
+    assert((await page.locator("#continue-current-mode").innerText()).trim() === "Continuer la partie", `${label} : sans changement de niveau, le bouton doit proposer de continuer.`);
+  } finally {
+    await page.close();
+  }
+}
+
 (async () => {
   fs.mkdirSync(CAPTURES, { recursive: true });
   const server = await startServer();
@@ -809,6 +1146,13 @@ async function auditPetitEcranAutomatique(browser, base, errors) {
     await auditGrandEcran(browser, base, { width: 1280, height: 720 }, errors);
     await auditGrandEcran(browser, base, { width: 1440, height: 900 }, errors);
     await auditPetitEcranAutomatique(browser, base, errors);
+    await auditNombreDePaires(browser, base, 1, errors);
+    await auditNombreDePaires(browser, base, 2, errors);
+    await auditVerificationBonus(browser, base, errors);
+    await auditChoixDuNiveau(browser, base, errors);
+    await auditNiveauDeux(browser, base, { width: 1280, height: 720 }, errors);
+    await auditNiveauDeux(browser, base, { width: 390, height: 844 }, errors);
+    await auditNiveauDeux(browser, base, { width: 320, height: 568 }, errors);
     await auditPointJourney(browser, base, .9, "sum", errors);
     await auditPointJourney(browser, base, .2, "difference", errors);
     await auditPointJourney(browser, base, .13, "product", errors);
@@ -855,7 +1199,7 @@ async function auditPetitEcranAutomatique(browser, base, errors) {
     console.log(JSON.stringify({
       ok: true,
       captures: CAPTURES,
-      checks: ["bordures réelles somme/différence duo à 320/390/1366 px", "repère somme pleine largeur", "différence 12−10 et 12−11 : crochet exact, libellé centré et sur une ligne", "produit solo/duo : nombres droits, crochet supérieur pleine largeur et crochet latéral pleine hauteur à 320/390/1366 px", "quotient 36÷6 : barres empilées jusqu’à 520 px", "rectangles à angles droits", "lignes collées", "aria avec équations parlées", "aide sans révélation", "solution demandée", "correction après erreur", "même opération", "aucune clé offerte", "focus/Tab/Échap", "320/390/520/1366", "grand écran 1280×720 et 1440×900 : plateau et cours sans défilement, aide ≥ 900 px, clé gagnée qui attend « Coffre suivant »", "téléphone : passage automatique conservé"]
+      checks: ["bordures réelles somme/différence duo à 320/390/1366 px", "repère somme pleine largeur", "différence 12−10 et 12−11 : crochet exact, libellé centré et sur une ligne", "produit solo/duo : nombres droits, crochet supérieur pleine largeur et crochet latéral pleine hauteur à 320/390/1366 px", "quotient 36÷6 : barres empilées jusqu’à 520 px", "rectangles à angles droits", "lignes collées", "aria avec équations parlées", "aide sans révélation", "solution demandée", "correction après erreur", "même opération", "aucune clé offerte", "focus/Tab/Échap", "320/390/520/1366", "grand écran 1280×720 et 1440×900 : plateau et cours sans défilement, aide ≥ 900 px, clé gagnée qui attend « Coffre suivant »", "téléphone : passage automatique conservé", "tirage : 1 ou 2 paires gagnantes, jamais plus, repère « 1 paire / 2 paires » exact (niveaux 1 et 2)", "grand écran : vérification bonus de l’autre paire sans clé, paire fausse refusée sans correction", "niveau 2 : choix dans la fenêtre Solo / Duo, adresse ?niveau=2, aides et corrections en barres à 320/390/1280 px, cours complet inchangé"]
     }, null, 2));
   } finally {
     await page.close();
