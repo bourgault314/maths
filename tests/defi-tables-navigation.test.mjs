@@ -89,35 +89,59 @@ test("l’écran de résultat annonce la table suivante — et l’accueil ne bo
   assert.doesNotMatch(html, /acc-suite/, "plus rien ne s’insère au-dessus des étapes");
   assert.match(html, /function tableSuivanteApres\(acquise\) \{\s*if \(PARCOURS\.toutesAcquises\(parcours\)\) return null;/, "rien à annoncer quand les neuf sont acquises");
   assert.match(html, /return suivante && suivante !== acquise \? suivante : null;/);
-  assert.match(html, /Bravo !\$\{suivante \? ` On continue avec la table de \$\{suivante\}\.` : ""\}/);
+  assert.match(html, /return suivante \? `On continue avec la table de \$\{suivante\}\.` : "";/, "la suite, en une phrase, après une table acquise (lot R2)");
 });
 
 test("l’écran de résultat ne dit pas deux fois la même chose", () => {
   // La fête annonçait « Table de 2 acquise ! Tu passes Bronze », et le bilan
   // vert redisait « Table de 2 acquise ✓ (20/20…) » puis « Nouveau rang :
   // Bronze ». Un écran, une information, une fois.
-  assert.match(html, /function feteDuResultat\(evenements\) \{/, "une seule lecture des événements, partagée par la fête et le bilan");
-  assert.match(html, /const \{etoile, melange, validation, rangMonte\} = feteDuResultat\(evenements\);/, "la fête ne recalcule plus la sienne dans son coin");
-  assert.match(html, /if \(evenement\.type === "rang" && fete\.rangAffiche\) return "";/, "le rang est déjà sur le badge de la fête");
-  assert.match(html, /if \(evenement === fete\.validation && evenement === fete\.principal\) \{[\s\S]*?return suivante \? `On continue avec la table de \$\{suivante\}\.` : "";/, "il ne reste que ce que la fête ne dit pas : la suite");
-  assert.match(html, /suivi\.evenements\.map\(evenement => messageApresFete\(evenement, fete\)\)/);
+  assert.match(html, /function feteDuResultat\(evenements\) \{/, "une seule lecture des événements, partagée par le verdict et la suite");
+  assert.match(html, /const \{etoile, melange, validation, rangMonte\} = fete;/, "le verdict ne recalcule pas la fête dans son coin");
+  assert.match(html, /verdict\.rang = rangMonte\.rang;/, "le rang est sur le badge du verdict, et nulle part ailleurs");
+  assert.doesNotMatch(html, /Nouveau rang : \$\{evenement\.nom\}/, "plus de ligne « Nouveau rang : … » sous la fête");
+  // Lot R2 (audit, A10) : après une table acquise, le mélange à refaire et la
+  // table suivante tiennent dans UNE phrase, au lieu de deux consignes.
+  assert.match(html, /function suiteApresSerie\(evenements, fete\) \{/);
+  assert.match(html, /if \(trouve\("melange-a-refaire"\)\) return `Refais ton mélange avec la table de \$\{fete\.validation\.table\}\$\{puis\}\.`;/);
+  assert.match(html, /const texte = suiteApresSerie\(suivi\.evenements, feteDuResultat\(suivi\.evenements\)\);/);
+  assert.match(html, /etiquette\.textContent = "Et maintenant :";/);
+  assert.doesNotMatch(html, /function evenementMessage\(/, "les anciens messages par événement n’ont plus d’appelant");
 });
 
 test("quand l’écran fête une nouvelle, il ne garde que l’essentiel", () => {
-  assert.match(html, /\$\("result"\)\.classList\.add\("a-fete"\);/);
-  assert.match(html, /\$\("result"\)\.classList\.remove\("a-fete"\);/, "et il la retire pour les séries qui ne se fêtent pas");
-  assert.match(html, /\.result\.a-fete > \.eyebrow,\s*\.result\.a-fete > \.hero-icon,\s*\.result\.a-fete #result-config,\s*\.result\.a-fete #result-detail \{ display: none; \}/, "« Série terminée », le ✓, le rappel des réglages et le temps mis n’apprennent rien de plus quand on vient d’acquérir une table");
-  assert.match(html, /\.result\.a-fete \.result-parcours \{ text-align: center; \}/);
-  assert.match(html, /<p id="result-config" class="result-config"><\/p>\s*<p id="result-detail"><\/p>/, "les lignes restent dans la page : elles servent aux séries sans fête (entraînement, validation ratée)");
+  // Lot R2 (audit, A3/A6) : le verdict est un seul cadre en tête — la fête
+  // en est la version en grand, l'échec la version rouge, le temps écoulé
+  // la version ambre — et les boutons viennent juste après la suite.
+  assert.match(html, /result\.classList\.remove\("is-fete", "is-rate", "is-temps", "is-neutre"\);/);
+  assert.match(html, /if \(verdict\.classe\) result\.classList\.add\(verdict\.classe\);/);
+  assert.match(html, /verdict\.classe = "is-fete";/);
+  assert.match(html, /verdict\.titre = "Pas encore";/);
+  assert.match(html, /verdict\.titre = "Temps écoulé";/);
+  assert.match(html, /\.result\.is-rate \.result-verdict \{ border-color: #f1c2c2;/);
+  assert.match(html, /\.result\.is-temps \.result-verdict \{ border-color: #efd48a;/);
+  assert.match(html, /\.result\.is-fete \.result-verdict \{ animation: fete-pop \.5s ease-out; \}/);
+  assert.match(html, /<div id="result-verdict" class="result-verdict">\s*<span id="result-icon" class="hero-icon" aria-hidden="true">✓<\/span>\s*<h1 id="result-title" tabindex="-1">Résultat<\/h1>\s*<p id="result-score" class="result-score"><\/p>\s*<p id="result-config" class="result-config"><\/p>\s*<p id="result-detail"><\/p>/);
+  assert.match(html, /<div id="result-parcours" class="result-parcours" hidden><\/div>\s*<div class="result-actions">/, "la suite, puis les boutons — avant les corrections");
+  assert.match(html, /<\/div>\s*<p id="result-message" class="result-message"><\/p>\s*<p id="result-previous" class="previous-score" hidden><\/p>\s*<section id="corrections" class="corrections" aria-live="polite"><\/section>\s*<\/div>/, "les corrections ferment l’écran");
+  assert.doesNotMatch(html, /<p class="eyebrow">Série terminée<\/p>/, "le verdict dit déjà que la série est finie");
+  // Sur un échec, « Rejouer » devient le bouton principal (Gwenaël, 11/09).
+  assert.match(html, /\.result\.is-rate \.result-actions > #retry \{ order: -1; color: #fff; border: 0; background: var\(--blue\);/);
+  assert.match(html, /\.result\.is-rate \.result-actions > #result-accueil \{ color: var\(--blue\); border: 1px solid #c5d9e6; background: #fff;/);
 });
 
 // --------------------------------------------------- 5. Mes calculs
 
 test("une série sans faute ne déroule pas la liste de toutes les bonnes réponses", () => {
-  assert.match(html, /if \(completeReview && !wrongEntries\.length\) \{[\s\S]*?`Tes \$\{rightEntries\.length\} réponses sont justes\.`[\s\S]*?return;/, "une phrase au lieu de vingt pastilles");
-  assert.match(html, /: "Ta réponse est juste\."/, "et le singulier quand il n’y en a qu’une");
-  assert.match(html, /\? \(wrongEntries\.length \? "Bilan de tes réponses" : "Aucune erreur à corriger"\)/);
-  assert.match(html, /if \(completeReview && rightEntries\.length\) \{/, "avec des fautes, le bilan complet garde son sens : l’élève relit la série entière");
+  // Lot R2 : les réponses justes sont repliées derrière un titre dépliable —
+  // « Voir mes 20 réponses » sans faute, « Mes 17 réponses justes » sous les
+  // erreurs — ouvert d'office sur ordinateur seulement.
+  assert.match(html, /if \(completeReview && rightEntries\.length\) \{[\s\S]*?details\.className = "correction-details";[\s\S]*?details\.open = window\.matchMedia\("\(min-width: 1040px\)"\)\.matches;/);
+  assert.match(html, /`Voir mes \$\{rightEntries\.length\} réponses`/);
+  assert.match(html, /`Mes \$\{rightEntries\.length\} réponses justes`/);
+  assert.doesNotMatch(html, /Aucune erreur à corriger/, "plus de cadre vert : le verdict a parlé, et sur une série ratée au temps ce cadre le contredisait (audit, A3)");
+  assert.doesNotMatch(html, /Bilan de tes réponses/);
+  assert.match(html, /title\.textContent = wrongEntries\.length > 1 \? `Mes \$\{wrongEntries\.length\} erreurs` : "Mon erreur";/);
 });
 
 test("« Mes calculs » s’ouvre sur la grille, et le retour reste à l’écran", () => {

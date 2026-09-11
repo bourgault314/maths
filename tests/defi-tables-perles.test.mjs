@@ -359,7 +359,7 @@ test("la bande s’appelle la bande, partout où l’élève lit", async () => {
   assert.match(html, /<strong>Je complète une bande à trous<\/strong>/);
   assert.match(html, /"Voir la bande \(vide\)"/);
   assert.match(html, /"La bande est complète\. Choisis une autre activité quand tu es prêt\."/);
-  assert.match(html, /"Les 11 cases de la bande ont été complétées"/);
+  assert.match(html, /"Les 11 cases de la bande complétées"/);
   assert.match(html, /"Bravo ! On le reverra sans la bande\."/);
   const coreSource = await readFile(new URL("../outils/calcul_mental/defi_tables_core.js", import.meta.url), "utf8");
   assert.match(coreSource, /construct: "je construis la bande"/);

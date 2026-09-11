@@ -528,12 +528,12 @@
     .launch-hint { margin: 0; color: var(--muted); font-size: .9rem; }
     .result-parcours {
       margin: 12px 0 0;
-      padding: 12px 15px;
-      border: 2px solid #9fd3cb;
-      border-radius: 14px;
-      background: #e9f8f5;
+      padding: 11px 13px;
+      border: 1px solid #cfe0f2;
+      border-radius: 13px;
+      background: #eef6ff;
       color: var(--ink);
-      font-weight: 850;
+      font-weight: 800;
       text-align: left;
     }
     /* Quand la fête annonce la nouvelle (table acquise, mélange, étoile),
@@ -541,30 +541,53 @@
        bilan des réponses. Le rappel des réglages et le temps mis n'apprennent
        rien de plus à ce moment-là (Gwenaël, 09/09) — ils restent affichés sur
        les séries qui ne se fêtent pas, où ils disent ce qu'on vient de faire. */
-    .result.a-fete > .eyebrow,
-    .result.a-fete > .hero-icon,
-    .result.a-fete #result-config,
-    .result.a-fete #result-detail { display: none; }
-    .result.a-fete .result-parcours { text-align: center; }
     .result-parcours p { margin: 0; line-height: 1.45; }
     .result-parcours p + p { margin-top: 8px; }
+    .result-parcours p b { color: var(--blue); }
     .result-parcours .primary { min-height: 44px; margin-top: 10px; padding: 8px 14px; }
-    .result-fete {
+    /* Lot R2 (11/09/2026, audit) : le résultat commence par le VERDICT — réussi,
+       pas encore, temps écoulé — dans un seul cadre : icône, titre, score, rappel
+       des réglages. La fête (table acquise, mélange, étoile, couronne) EST ce
+       cadre, en plus grand ; une série ratée le passe au rouge, un temps écoulé
+       à l'ambre. Dessous : la suite en une phrase, les boutons, puis seulement
+       les corrections. Avant, « 17 bonnes réponses sur 20 » s'affichait comme
+       un 20 sur 20, dans un cadre vert, et « Ma table » était à 1 000 px sous
+       le pli. */
+    .result-verdict {
       max-width: 520px;
       margin: 0 auto 14px;
-      padding: 16px 18px;
+      padding: 16px 14px 15px;
       border: 2px solid #9fd3cb;
       border-radius: 18px;
       background: linear-gradient(135deg, #e9f8f5, #eef6ff);
-      animation: fete-pop .5s ease-out;
     }
-    .result-fete-icon { display: block; font-size: 3rem; line-height: 1; }
-    .result-fete strong { display: block; margin-top: 6px; color: var(--teal); font-size: 1.35rem; }
-    .result-fete.is-champion { border-color: #e7c86a; background: linear-gradient(135deg, #fff8e1, #fff); }
-    .result-fete.is-champion strong { color: #b7791f; }
+    .result-verdict .hero-icon { margin: 0; color: var(--teal); font-size: 2.9rem; line-height: 1; }
+    .result-verdict h1 { margin: 8px 0 0; color: var(--teal); font-size: clamp(1.55rem, 5.6vw, 2.1rem); line-height: 1.15; letter-spacing: -.01em; }
+    .result-score { margin: 8px 0 0; color: var(--ink) !important; font-size: 1rem; font-weight: 850; line-height: 1.35; }
+    .result-verdict #result-detail { margin: 4px 0 0; color: var(--muted); font-size: .9rem; font-weight: 700; }
+    .result-verdict #result-detail:empty,
+    .result-verdict .result-config:empty { display: none; }
+    .result.is-fete .result-verdict { animation: fete-pop .5s ease-out; }
+    .result.is-fete .hero-icon { font-size: 3.4rem; }
+    .result.is-rate .result-verdict { border-color: #f1c2c2; background: linear-gradient(135deg, #fff1f1, #fff8f0); }
+    .result.is-rate .result-verdict h1,
+    .result.is-rate .hero-icon { color: var(--red); }
+    .result.is-temps .result-verdict { border-color: #efd48a; background: linear-gradient(135deg, #fff8e1, #fff); }
+    .result.is-temps .result-verdict h1,
+    .result.is-temps .hero-icon { color: #b7791f; }
+    .result.is-neutre .result-verdict { border-color: var(--line); background: #f6f9fb; }
+    .result.is-neutre .result-verdict h1,
+    .result.is-neutre .hero-icon { color: var(--ink); }
+    .result.is-neutre .hero-icon { display: none; }
+    .result-verdict.is-champion { border-color: #e7c86a; background: linear-gradient(135deg, #fff8e1, #fff); }
+    .result-verdict.is-champion h1 { color: #b7791f; }
     /* Lot 3 : le passage d'un rang, sous la fête du moment (ou seul). */
-    .result-fete-rang { display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 10px; color: var(--ink); font-weight: 850; font-size: .95rem; }
+    .result-fete-rang { display: flex; align-items: center; justify-content: center; gap: 8px; margin: 10px 0 0; color: var(--ink); font-weight: 850; font-size: .95rem; }
     .result-fete-rang .rang { font-size: .86rem; padding: 4px 11px 4px 8px; }
+    /* Sur un échec, retenter est le geste naturel : « Rejouer » prend la place
+       du bouton principal, « Ma table » reste à côté (Gwenaël, 11/09). */
+    .result.is-rate .result-actions > #retry { order: -1; color: #fff; border: 0; background: var(--blue); box-shadow: 0 5px 0 #043f8c; }
+    .result.is-rate .result-actions > #result-accueil { color: var(--blue); border: 1px solid #c5d9e6; background: #fff; box-shadow: none; }
     @keyframes fete-pop { 0% { transform: scale(.85); opacity: 0; } 60% { transform: scale(1.04); } 100% { transform: scale(1); opacity: 1; } }
     .result-parcours-actions { display: flex; flex-wrap: wrap; gap: 8px; }
     .result-parcours-actions .secondary { min-height: 44px; margin-top: 10px; padding: 8px 14px; }
@@ -751,13 +774,11 @@
     .count-options .type-button,
     .time-options .type-button { display: grid; place-items: center; text-align: center; }
     .result-config {
-      margin: 13px 0;
-      padding: 9px 12px;
-      border-radius: 12px;
-      color: #31566c !important;
-      background: #eef8ff;
+      margin: 4px 0 0;
+      padding: 0;
+      color: var(--muted) !important;
       font-size: .9rem;
-      font-weight: 900;
+      font-weight: 700;
     }
 
     .start-dock {
@@ -1041,24 +1062,31 @@
        tout tienne sans défiler. */
     .question.show-learn-sequence { --touche-h: clamp(44px, 6.9dvh, 46px); }
     .result-message { padding: 12px 15px; border-radius: 14px; color: #31566c !important; background: #eef8ff; font-weight: 850; }
-    .corrections { margin: 20px 0; padding: 16px; border: 2px solid #efc9c9; border-radius: 18px; background: #fffafa; text-align: left; }
-    .corrections h2 { margin: 0; font-size: 1.3rem; }
+    /* Les corrections viennent APRÈS les boutons : les erreurs seules, en
+       lignes courtes (le calcul avec sa bonne réponse, la réponse donnée barrée
+       à droite) ; les réponses justes sont repliées derrière un titre
+       dépliable — ouvertes d'office sur ordinateur, où la place ne manque pas. */
+    .corrections { margin: 18px 0 0; padding: 0; text-align: left; }
+    .corrections:empty { display: none; }
+    .corrections h2 { margin: 0 0 8px; color: var(--red); font-size: .98rem; }
     .corrections > p { margin: 6px 0 0; color: var(--muted); }
-    .correction-list { display: grid; gap: 9px; margin: 14px 0 0; padding: 0; list-style: none; }
-    .correction-list li { padding: 12px; border: 1px solid #efd5d5; border-radius: 13px; background: #fff; }
-    .correction-list li.is-correct { border-color: #b8dfc8; background: #f7fcf9; }
-    .correction-question { display: flex; align-items: center; gap: 9px; margin-bottom: 8px; }
-    .correction-number { flex: 0 0 auto; padding: 4px 8px; border-radius: 999px; color: #31566c; background: #eaf3f8; font-size: .74rem; font-weight: 950; }
-    .correction-expression { color: var(--ink); font-size: 1.12rem; font-weight: 950; }
-    .correction-list li > div { display: flex; flex-wrap: wrap; gap: 7px; }
-    .correction-list span { padding: 6px 9px; border-radius: 9px; font-weight: 850; }
-    .corrections.is-clean { border-color: #b8dfc8; background: #f7fcf9; }
-    .correction-subtitle { margin: 14px 0 0; color: #31566c; font-size: .95rem; }
+    .correction-list { display: grid; gap: 6px; margin: 0; padding: 0; list-style: none; }
+    .correction-list li { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px 10px; padding: 9px 11px; border: 1px solid #f1c2c2; border-radius: 12px; background: #fff6f6; }
+    .correction-question { display: flex; align-items: center; gap: 8px; }
+    .correction-number { flex: 0 0 auto; padding: 3px 7px; border-radius: 999px; color: #31566c; background: #eaf3f8; font-size: .72rem; font-weight: 950; }
+    .correction-expression { color: var(--ink); font-size: 1.05rem; font-weight: 900; }
+    .correction-expression .expected-answer { color: var(--green); font-weight: 950; }
+    .given-answer { color: var(--red); font-size: .95rem; font-weight: 800; text-decoration: line-through; }
+    /* Un calcul passé n'a pas de réponse à barrer (relecture du lot R2). */
+    .given-answer.is-passe { text-decoration: none; }
+    .correction-details { margin: 8px 0 0; }
+    .correction-details summary { padding: 11px 12px; border: 1px dashed #c5d9e6; border-radius: 12px; color: var(--blue); font-size: .95rem; font-weight: 850; cursor: pointer; list-style: none; }
+    .correction-details summary::-webkit-details-marker { display: none; }
+    .correction-details summary::after { content: " ▾"; }
+    .correction-details[open] summary::after { content: " ▴"; }
     .correction-chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0 0; padding: 0; list-style: none; }
     .correction-chips li { padding: 6px 9px; border-radius: 9px; color: var(--green); background: var(--green-soft); font-size: .92rem; font-weight: 850; }
-    .given-answer { color: var(--red); background: var(--red-soft); }
-    .expected-answer { color: var(--green); background: var(--green-soft); }
-    .result-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-top: 16px; }
+    .result-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-top: 14px; }
     .site-footer {
       width: min(100%, 960px);
       display: flex;
@@ -1157,7 +1185,14 @@
       .type-button small { margin: 0; text-align: right; }
       .question { min-height: 560px; padding: 19px 10px; }
       .expression { min-height: 135px; }
-      .result-actions { flex-direction: column; }
+      /* Téléphone : le bouton principal sur toute la largeur, les deux autres
+         côte à côte dessous — le tout juste sous le verdict, sans défiler. */
+      .result-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; }
+      .result-actions > .primary,
+      .result.is-rate .result-actions > #retry { grid-column: 1 / -1; }
+      .result.is-rate .result-actions > #result-accueil { grid-column: auto; }
+      /* La révision n'a pas de « Rejouer » : le troisième bouton prend la ligne. */
+      .result-actions > #retry[hidden] + #result-open-parcours { grid-column: 1 / -1; }
 
       .challenge-playing { height: 100dvh; overflow: hidden; }
       .challenge-playing .shell { height: 100dvh; display: grid; grid-template-rows: auto minmax(0, 1fr); padding: 0; }
@@ -1808,21 +1843,26 @@
       </div>
 
       <div id="result" class="result" hidden>
-        <div id="result-fete" class="result-fete" hidden></div>
-        <span id="result-icon" class="hero-icon" aria-hidden="true">✓</span>
-        <p class="eyebrow">Série terminée</p>
-        <h1 id="result-title" tabindex="-1">Résultat</h1>
-        <p id="result-config" class="result-config"></p>
-        <p id="result-detail"></p>
-        <p id="result-message" class="result-message"></p>
+        <!-- Lot R2 : le verdict d'abord (un seul cadre, qui devient la fête ou
+             passe au rouge), puis la suite en une phrase, puis les boutons — et
+             les corrections en dernier. -->
+        <div id="result-verdict" class="result-verdict">
+          <span id="result-icon" class="hero-icon" aria-hidden="true">✓</span>
+          <h1 id="result-title" tabindex="-1">Résultat</h1>
+          <p id="result-score" class="result-score"></p>
+          <p id="result-config" class="result-config"></p>
+          <p id="result-detail"></p>
+          <p id="result-rang" class="result-fete-rang" hidden></p>
+        </div>
         <div id="result-parcours" class="result-parcours" hidden></div>
-        <p id="result-previous" class="previous-score" hidden></p>
-        <section id="corrections" class="corrections" aria-live="polite"></section>
         <div class="result-actions">
           <button id="result-accueil" class="primary" type="button">Ma table</button>
           <button id="retry" class="secondary" type="button">Rejouer</button>
           <button id="result-open-parcours" class="secondary" type="button">Voir mon parcours</button>
         </div>
+        <p id="result-message" class="result-message"></p>
+        <p id="result-previous" class="previous-score" hidden></p>
+        <section id="corrections" class="corrections" aria-live="polite"></section>
       </div>
     </section>
   </main>
@@ -3861,6 +3901,7 @@
             retour: Boolean(state.questions[index].retry),
             prompt: state.questions[index].prompt,
             given: response.skipped ? "Pas de réponse" : String(response.value),
+            passe: Boolean(response.skipped),
             expected: String(state.questions[index].answer),
             correct: false
           }];
@@ -3874,12 +3915,20 @@
             number: index + 1,
             prompt: state.questions[index].prompt,
             given: response.skipped ? "Pas de réponse" : String(response.value),
+            passe: Boolean(response.skipped),
             expected: String(state.questions[index].answer),
             correct: response.correct
           }];
         });
       }
 
+      // Lot R2 : les corrections ne portent plus de verdict (il est en haut).
+      // Une erreur = une ligne : « 5 × 4 = 20 », et « 21 » barré à droite. Les
+      // réponses justes d'une validation, d'un mélange ou d'une étoile sont
+      // repliées derrière « Mes 17 réponses justes » — ouvertes d'office sur
+      // ordinateur. Sans erreur, plus de cadre vert « Aucune erreur à
+      // corriger » : le verdict l'a dit, et sur une série ratée au temps ce
+      // cadre contredisait l'échec (audit, A3).
       function renderCorrections() {
         const zone = $("corrections");
         const completeReview = state.configuration.mode === "test" || state.configuration.mode === "validation";
@@ -3887,68 +3936,53 @@
         const wrongEntries = entries.filter(entry => !entry.correct);
         const rightEntries = entries.filter(entry => entry.correct);
         zone.replaceChildren();
-        zone.classList.toggle("is-clean", !wrongEntries.length);
-        const title = document.createElement("h2");
-        title.textContent = completeReview
-          ? (wrongEntries.length ? "Bilan de tes réponses" : "Aucune erreur à corriger")
-          : entries.length ? "Tes corrections" : "Aucune erreur à corriger";
-        zone.append(title);
-        if (!entries.length) {
-          const message = document.createElement("p");
-          message.textContent = completeReview
-            ? "Aucune réponse n’a été validée avant la fin du temps."
-            : "Toutes les réponses que tu as données sont justes.";
-          zone.append(message);
-          return;
-        }
-        // Une série sans faute : dérouler les vingt calculs justes n'apprend
-        // rien à personne, une phrase suffit — comme sur les entraînements
-        // (Gwenaël, 09/09). Avec des fautes, le bilan complet garde son sens :
-        // l'élève relit la série entière autour de ce qu'il a raté.
-        if (completeReview && !wrongEntries.length) {
-          const message = document.createElement("p");
-          message.textContent = rightEntries.length > 1
-            ? `Tes ${rightEntries.length} réponses sont justes.`
-            : "Ta réponse est juste.";
-          zone.append(message);
-          return;
-        }
         if (wrongEntries.length) {
-          const intro = document.createElement("p");
-          intro.textContent = completeReview
-            ? `${wrongEntries.length} calcul${wrongEntries.length > 1 ? "s" : ""} à reprendre.`
-            : "Regarde les calculs à reprendre avant de lancer une nouvelle série.";
-          zone.append(intro);
+          const title = document.createElement("h2");
+          title.textContent = wrongEntries.length > 1 ? `Mes ${wrongEntries.length} erreurs` : "Mon erreur";
+          zone.append(title);
           const list = document.createElement("ol");
           list.className = "correction-list";
           wrongEntries.forEach(entry => {
             const item = document.createElement("li");
             const questionLine = document.createElement("div");
             questionLine.className = "correction-question";
-            const number = document.createElement("span");
-            number.className = "correction-number";
-            number.textContent = entry.retour ? "Il est revenu" : `Question ${entry.number}`;
+            if (entry.retour) {
+              const number = document.createElement("span");
+              number.className = "correction-number";
+              number.textContent = "Il est revenu";
+              questionLine.append(number);
+            }
             const expression = document.createElement("span");
             expression.className = "correction-expression";
-            expression.textContent = entry.prompt;
-            questionLine.append(number, expression);
-            const answers = document.createElement("div");
+            const [avant, apres] = entry.prompt.split("?");
+            const expected = document.createElement("b");
+            expected.className = "expected-answer";
+            expected.textContent = entry.expected;
+            expression.append(document.createTextNode(avant), expected, document.createTextNode(apres ?? ""));
+            questionLine.append(expression);
             const given = document.createElement("span");
             given.className = "given-answer";
-            given.textContent = `Ta réponse : ${entry.given}`;
-            const expected = document.createElement("span");
-            expected.className = "expected-answer";
-            expected.textContent = `Bonne réponse : ${entry.expected}`;
-            answers.append(given, expected);
-            item.append(questionLine, answers);
+            given.setAttribute("aria-label", `Ta réponse : ${entry.given}`);
+            given.textContent = entry.given;
+            // Un calcul passé (« Passer ») n'a pas de réponse à barrer :
+            // « Pas de réponse » reste lisible, sans trait (relecture du lot R2).
+            if (entry.passe) {
+              given.classList.add("is-passe");
+              given.setAttribute("aria-label", "Pas de réponse");
+            }
+            item.append(questionLine, given);
             list.append(item);
           });
           zone.append(list);
         }
         if (completeReview && rightEntries.length) {
-          const subtitle = document.createElement("p");
-          subtitle.className = "correction-subtitle";
-          subtitle.textContent = `${rightEntries.length} réponse${rightEntries.length > 1 ? "s" : ""} juste${rightEntries.length > 1 ? "s" : ""}`;
+          const details = document.createElement("details");
+          details.className = "correction-details";
+          details.open = window.matchMedia("(min-width: 1040px)").matches;
+          const summary = document.createElement("summary");
+          summary.textContent = wrongEntries.length
+            ? (rightEntries.length > 1 ? `Mes ${rightEntries.length} réponses justes` : "Ma réponse juste")
+            : (rightEntries.length > 1 ? `Voir mes ${rightEntries.length} réponses` : "Voir ma réponse");
           const chips = document.createElement("ul");
           chips.className = "correction-chips";
           rightEntries.forEach(entry => {
@@ -3956,7 +3990,8 @@
             chip.textContent = `${entry.prompt.replace("?", entry.expected)} ✓`;
             chips.append(chip);
           });
-          zone.append(subtitle, chips);
+          details.append(summary, chips);
+          zone.append(details);
         }
       }
 
@@ -3992,43 +4027,163 @@
         const scoreKey = configurationKey(state.configuration);
         const previousScore = sessionScores.get(scoreKey);
         if (state.configuration.mode !== "learn") sessionScores.set(scoreKey, state.correct);
-        $("result-title").textContent = state.configuration.mode === "learn"
-          ? `Table de ${state.configuration.tables[0]} terminée !`
-          : `${state.correct} ${state.correct === 1 ? "bonne réponse" : "bonnes réponses"} sur ${TOTAL}`;
-        $("result-config").textContent = configurationLabel(state.configuration);
-        $("result-icon").hidden = state.configuration.mode !== "learn" && state.correct < Math.ceil(TOTAL * .8);
-        const remaining = TOTAL - state.index;
-        if (state.configuration.mode === "learn") {
-          if (activitePerles(state.configuration)) {
-            $("result-detail").textContent = `Les 11 produits de la table ont été construits sur le boulier en ${formatElapsed(elapsed)}.`;
-          } else {
-          const what = state.configuration.learnActivity === "gaps"
-            ? `Les ${TOTAL} cases manquantes ont été complétées`
-            : state.configuration.learnActivity === "construct"
-              ? "Les 11 cases de la bande ont été complétées"
-              : "Les 11 produits ont été retrouvés";
-          $("result-detail").textContent = `${what} en ${state.responses.length} essai${state.responses.length > 1 ? "s" : ""} et ${formatElapsed(elapsed)}.`;
-          }
-        } else if (state.configuration.duration === null) {
-          $("result-detail").textContent = `Tu as terminé les ${TOTAL} questions en ${formatElapsed(elapsed)}.`;
-        } else {
-          $("result-detail").textContent = remaining
-            ? `Le temps est écoulé. ${state.answered} réponse${state.answered === 1 ? "" : "s"} saisie${state.answered === 1 ? "" : "s"}, et ${remaining} calcul${remaining === 1 ? "" : "s"} non parcouru${remaining === 1 ? "" : "s"}.`
-            : `Toute la série a été parcourue en ${formatElapsed(elapsed)}, avant la fin du temps.`;
-        }
-        $("result-message").textContent = scoreMessage(state.correct, state.configuration);
         const suivi = PARCOURS.appliquerSerie(parcours, state.configuration, {correct: state.correct, total: TOTAL});
         parcours = suivi.parcours;
         sauverParcours();
+        renderVerdict(suivi, elapsed);
         renderResultParcours(suivi);
-        const principal = suivi.evenements.find(evenement => typeof evenement.reussi === "boolean");
-        if (principal) $("result-icon").hidden = !principal.reussi;
-        renderResultFete(suivi.evenements);
+        $("result-message").textContent = scoreMessage(state.correct, state.configuration);
         $("result-message").hidden = Boolean(suivi.classement);
         $("result-previous").hidden = state.configuration.mode === "learn" || previousScore === undefined;
         $("result-previous").textContent = previousScore === undefined ? "" : `Série précédente : ${previousScore} / ${TOTAL}.`;
         renderCorrections();
         show("result");
+      }
+
+      // Lot R2 : le verdict, ce que l'élève lit en premier. Un seul cadre en
+      // haut du résultat, et son sens se voit avant de se lire : vert-bleu
+      // pour une réussite (la fête, en plus grand, quand il y a une nouvelle à
+      // fêter), rouge pour « Pas encore », ambre pour « Temps écoulé ». Le
+      // score dit ce qui manquait (« 17 sur 20 — il en faut 18 ») ; le rappel
+      // des réglages passe dessous, en petit. J'apprends n'a ni score ni temps :
+      // on s'entraîne, on ne se chronomètre pas (Gwenaël, 11/09, P3).
+      function seuilDe(evenement) {
+        const regle = {entraine: "entrainement", validation: "validation", preparation: "validation", melange: "melange", etoile: "etoile"}[evenement.type];
+        return regle ? evenement.total - PARCOURS.SEUILS[regle].erreursMax : null;
+      }
+
+      function verdictSerie(suivi, elapsed) {
+        const config = state.configuration;
+        const remaining = TOTAL - state.index;
+        const tempsEcoule = config.duration !== null && remaining > 0;
+        const fete = feteDuResultat(suivi.evenements);
+        const principal = suivi.evenements.find(evenement => typeof evenement.reussi === "boolean");
+        const verdict = {icone: "✓", titre: "", score: "", config: configurationLabel(config), detail: "", classe: "", champion: false, rang: null};
+        const sur = (score, total) => `${score} sur ${total}`;
+        if (config.mode === "learn") {
+          verdict.titre = `Table de ${config.tables[0]} terminée !`;
+          verdict.score = activitePerles(config)
+            ? "Les 11 produits construits sur le boulier"
+            : config.learnActivity === "gaps"
+              ? `Les ${TOTAL} cases manquantes complétées`
+              : config.learnActivity === "construct"
+                ? "Les 11 cases de la bande complétées"
+                : "Les 11 produits retrouvés";
+          const apprends = suivi.evenements.find(evenement => evenement.type === "apprends");
+          if (apprends) verdict.config = `J’apprends · ${apprends.termines} activité${apprends.termines > 1 ? "s" : ""} sur ${PARCOURS.ACTIVITES_APPRENDS.length} faite${apprends.termines > 1 ? "s" : ""}`;
+          return verdict;
+        }
+        if (fete.principal) {
+          const {etoile, melange, validation, rangMonte} = fete;
+          verdict.classe = "is-fete";
+          const score = fete.principal.score;
+          const total = fete.principal.total;
+          if (etoile && etoile.couronne) {
+            verdict.icone = "👑";
+            verdict.titre = "Légende des tables !";
+            verdict.score = `${sur(score, total)} en 1 minute`;
+            verdict.champion = true;
+          } else if (etoile) {
+            verdict.icone = "🌟";
+            verdict.titre = `${PARCOURS.symboleEtoile(etoile.etoile)} obtenue !`;
+            verdict.score = `${sur(score, total)} · ${formatElapsed(elapsed)}`;
+          } else if (validation) {
+            verdict.icone = "🎉";
+            verdict.titre = `Table de ${validation.table} acquise !`;
+            verdict.score = `${sur(score, total)} · ${formatElapsed(elapsed)}`;
+          } else if (melange) {
+            verdict.icone = "🎉";
+            verdict.titre = melange.escalierOuvert ? "Mélange des 9 tables réussi !" : "Mélange réussi !";
+            verdict.score = `${sur(score, total)} · ${formatElapsed(elapsed)}`;
+          } else if (rangMonte) {
+            verdict.icone = "🏅";
+            verdict.titre = "Nouveau rang !";
+            verdict.score = principal ? sur(principal.score, principal.total) : "";
+          }
+          if (rangMonte && !(etoile && etoile.couronne)) {
+            verdict.rang = rangMonte.rang;
+            if (rangMonte.rang >= 5) verdict.champion = true;
+          }
+          // Le titre dit déjà ce qui vient d'être réussi : pas de rappel des
+          // réglages sous le score (Gwenaël, 11/09 : « pourquoi tu réécris
+          // ça ? »). Le mélange garde ses tables, qu'aucun titre ne nomme.
+          verdict.config = melange && !validation && !etoile ? `Tables ${listeTables(melange.tables)}` : "";
+          return verdict;
+        }
+        if (principal && !principal.reussi && tempsEcoule) {
+          verdict.classe = "is-temps";
+          verdict.icone = "⏱";
+          verdict.titre = "Temps écoulé";
+          verdict.score = `${pluriel(state.answered, "réponse")} sur ${TOTAL} en ${CORE.durationLabel(config.duration)} — il en faut ${seuilDe(principal)}`;
+          const fausses = state.answered - state.correct;
+          verdict.detail = [
+            fausses ? `${state.correct} juste${state.correct > 1 ? "s" : ""}, ${pluriel(fausses, "erreur")}` : `${state.correct > 1 ? "Tes " + state.correct + " réponses étaient justes" : state.correct === 1 ? "Ta réponse était juste" : "Aucune réponse"}`,
+            `${pluriel(remaining, "calcul")} non vu${remaining > 1 ? "s" : ""}`
+          ].join(" · ");
+          return verdict;
+        }
+        if (principal && !principal.reussi) {
+          verdict.classe = "is-rate";
+          verdict.icone = "✗";
+          verdict.titre = "Pas encore";
+          verdict.score = `${sur(principal.score, principal.total)} — il en faut ${seuilDe(principal)}`;
+          return verdict;
+        }
+        if (principal) {
+          const symbole = principal.type === "etoile" ? PARCOURS.symboleEtoile(principal.etoile) : "";
+          verdict.titre = principal.type === "entraine" ? "Entraînement réussi !"
+            : principal.type === "validation" && principal.verrouillee ? "Bravo !"
+            : principal.type === "validation" ? `Table de ${principal.table} toujours acquise ✓`
+            : principal.type === "preparation" ? "Bravo !"
+            : principal.type === "etoile" ? `${symbole} réussie encore`
+            : "Réussi !";
+          verdict.score = principal.type === "entraine"
+            ? `${sur(principal.score, principal.total)} · ${principal.reussites} entraînement${principal.reussites > 1 ? "s" : ""} sur 3 réussi${principal.reussites > 1 ? "s" : ""}`
+            : `${sur(principal.score, principal.total)} · ${formatElapsed(elapsed)}`;
+          return verdict;
+        }
+        // Mode site (Réglages libres, évaluation CM1) : rien n'est compté dans
+        // le parcours et rien n'est à valider — le cadre reste NEUTRE (ni vert
+        // ni rouge, ni « Temps écoulé » : en CM1, finir avant le chrono est
+        // l'exception). Le titre est le score, le message-conseil dessous
+        // fait le reste (Gwenaël, 11/09, après le rejeu de Code).
+        verdict.classe = "is-neutre";
+        verdict.titre = `${state.correct} ${state.correct === 1 ? "bonne réponse" : "bonnes réponses"} sur ${TOTAL}`;
+        verdict.score = tempsEcoule
+          ? `en ${CORE.durationLabel(config.duration)} · ${pluriel(remaining, "calcul")} non vu${remaining > 1 ? "s" : ""}`
+          : `Terminé en ${formatElapsed(elapsed)}`;
+        return verdict;
+      }
+
+      // Les nombres et leurs unités ne se coupent pas en bout de ligne : « 1 min
+      // 30 » et « 17 sur 20 » restent entiers (audit, A14). « il en faut 18 »
+      // aussi : sans l'avant-dernière ligne, le téléphone de 390 px coupait
+      // « il en / faut 18 » sous « Temps écoulé » (relecture du lot R2).
+      function soude(texte) {
+        return String(texte)
+          .replace(/(\d) (min|s|minute|minutes|sur|questions?|calculs?|réponses?|erreurs?)\b/g, "$1\u00a0$2")
+          .replace(/\bmin (\d)/g, "min\u00a0$1")
+          .replace(/\bsur (\d)/g, "sur\u00a0$1")
+          .replace(/\bfaut (\d)/g, "faut\u00a0$1")
+          .replace(/\bil en faut\b/g, "il\u00a0en\u00a0faut")
+          .replace(/\bde (\d)/g, "de\u00a0$1");
+      }
+
+      function renderVerdict(suivi, elapsed) {
+        const verdict = verdictSerie(suivi, elapsed);
+        const result = $("result");
+        result.classList.remove("is-fete", "is-rate", "is-temps", "is-neutre");
+        if (verdict.classe) result.classList.add(verdict.classe);
+        $("result-verdict").classList.toggle("is-champion", verdict.champion);
+        $("result-icon").textContent = verdict.icone;
+        $("result-title").textContent = soude(verdict.titre);
+        $("result-score").textContent = soude(verdict.score);
+        $("result-config").textContent = soude(verdict.config);
+        $("result-detail").textContent = soude(verdict.detail);
+        const rang = $("result-rang");
+        rang.replaceChildren();
+        rang.hidden = verdict.rang === null;
+        if (verdict.rang !== null) rang.append(document.createTextNode("Tu passes "), badgeRang(PARCOURS.rang(verdict.rang)));
       }
 
       function updateTimer() {
@@ -4523,17 +4678,25 @@
       }
 
       function finishRevision() {
-        renderResultFete([]);
         const elapsed = Date.now() - state.startAt;
         const table = state.configuration.revisionTable;
         const total = state.revisionPremierTotal;
         const score = state.revisionPremierScore;
-        $("result-title").textContent = `${score} / ${total} au premier essai`;
+        // Le verdict d'une révision : pas de « réussi / raté » (rien ne se
+        // valide ici), le score au premier essai et le temps, c'est tout.
+        $("result").classList.remove("is-fete", "is-rate", "is-temps", "is-neutre");
+        $("result-verdict").classList.remove("is-champion");
+        $("result-icon").textContent = "✓";
+        $("result-title").textContent = "Révision terminée";
+        // Le temps rejoint le score, comme sur les autres verdicts (« 20 sur 20
+        // · 9 s ») : la ligne du dessous, qui redisait que la série était finie
+        // sous « Révision terminée », disparaît (relecture du lot R2).
+        $("result-score").textContent = soude(`${score} sur ${total} au premier essai · ${formatElapsed(elapsed)}`);
         $("result-config").textContent = `Réviser mes calculs${table ? ` · table de ${table}` : ""} · ${total} questions · sans chronomètre`;
-        $("result-icon").hidden = score < Math.ceil(total * .8);
         // La règle (retour unique, une case par jour) n'est plus écrite ici :
         // elle vit dans « Comment ça marche ? » et dans le détail d'une case.
-        $("result-detail").textContent = `Série terminée en ${formatElapsed(elapsed)}.`;
+        $("result-detail").textContent = "";
+        $("result-rang").hidden = true;
         $("result-message").hidden = true;
         $("result-previous").hidden = true;
         $("retry").hidden = true;
@@ -5273,61 +5436,11 @@
         expert.append(expertHead, stars);
       }
 
-      function evenementMessage(evenement) {
-        const table = evenement.table;
-        switch (evenement.type) {
-          case "apprends":
-            return `Table de ${table} : activité « ${PARCOURS.LIBELLES_APPRENDS[evenement.activite]} » terminée (${evenement.termines} / ${PARCOURS.ACTIVITES_APPRENDS.length}).`;
-          case "entraine":
-            if (!evenement.reussi) return `Table de ${table} : ${evenement.score} / ${evenement.total}. Il faut au moins ${evenement.total - PARCOURS.SEUILS.entrainement.erreursMax} / ${evenement.total} pour remplir le rond. Réessaie !`;
-            if (evenement.pret) return `Table de ${table} : les trois entraînements sont réussis. Tu es prêt à valider ta table !`;
-            return `Table de ${table} : entraînement « ${PARCOURS.LIBELLES_ENTRAINEMENTS[evenement.entrainement]} » réussi (${evenement.reussites} / 3).`;
-          case "validation":
-            if (!evenement.reussi) return `Table de ${table} : ${evenement.score} / ${evenement.total}. Pour valider, il faut au moins ${evenement.total - PARCOURS.SEUILS.validation.erreursMax} / ${evenement.total} en 1 min 30.`;
-            if (evenement.verrouillee) return `Table de ${table} : ${evenement.score} / ${evenement.total} en 1 min 30, bravo — réussis d’abord ton mélange, puis reviens la valider.`;
-            // Quand la fête du haut l'annonce déjà, messageApresFete ne garde
-            // que la fin de cette phrase : la table qui prend la place.
-            if (evenement.nouvelle) {
-              const suivante = tableSuivanteApres(evenement.table);
-              return `Table de ${table} acquise ✓ (${evenement.score} / ${evenement.total} en 1 min 30). Bravo !${suivante ? ` On continue avec la table de ${suivante}.` : ""}`;
-            }
-            return `Table de ${table} : toujours acquise ✓ (${evenement.score} / ${evenement.total}).`;
-          case "preparation":
-            return evenement.reussi
-              ? `Bravo, ${evenement.score} / ${evenement.total} en ${CORE.durationLabel(evenement.duree)} ! Maintenant, essaie en 1 min 30 pour valider ta table.`
-              : `${evenement.score} / ${evenement.total} en ${CORE.durationLabel(evenement.duree)}. Continue à t’entraîner, puis vise 18 / 20 en 1 min 30.`;
-          case "melange-debloque":
-            return "Deux tables acquises : réussis maintenant ton mélange avant de valider une nouvelle table.";
-          case "melange-a-refaire":
-            return `Nouvelle table : refais ton mélange avec la table de ${table} avant d’en valider une autre.`;
-          case "toutes-acquises":
-            return "Toutes tes tables sont acquises ! Réussis le mélange des 9 pour ouvrir l’escalier des étoiles.";
-          case "melange":
-            if (!evenement.reussi) return `Mélange : ${evenement.score} / ${evenement.total}. Il faut au moins ${evenement.total - PARCOURS.SEUILS.melange.erreursMax} / ${evenement.total} en 1 min 30.`;
-            if (evenement.escalierOuvert) return `Mélange de tes 9 tables réussi ✓ (${evenement.score} / ${evenement.total}) : l’escalier des étoiles est ouvert !`;
-            return `Mélange de tes tables (${evenement.tables.join(", ")}) à jour ✓ (${evenement.score} / ${evenement.total}) : tu peux valider une nouvelle table.`;
-          case "etoile": {
-            const symbole = PARCOURS.symboleEtoile(evenement.etoile);
-            const duree = PARCOURS.libelleDuree(PARCOURS.dureeEtoile(evenement.etoile));
-            if (!evenement.reussi) return `${symbole} en ${duree} : ${evenement.score} / ${evenement.total}. Il faut au moins ${evenement.total - PARCOURS.SEUILS.etoile.erreursMax} / ${evenement.total}.`;
-            if (evenement.couronne) return `👑 Légende des tables ! Toutes les tables en 1 minute (${evenement.score} / ${evenement.total}).`;
-            if (evenement.nouveau) return `${symbole} obtenue (${evenement.score} / ${evenement.total} en ${duree}) !`;
-            return `${symbole} réussie encore (${evenement.score} / ${evenement.total} en ${duree}), déjà obtenue.`;
-          }
-          case "rang":
-            return `Nouveau rang : ${evenement.nom}.`;
-          default:
-            return "";
-        }
-      }
-
-      // Écran de fête sur les grands moments (lot 3) : 🎉 pour chaque table et
-      // chaque mélange réussis, 🌟 pour chaque étoile, un écran de rang à
-      // chaque passage, 👑 au sommet. Sobres, sans son ; l'animation respecte
-      // prefers-reduced-motion (règle plus haut, comme avant).
-      // Ce que la fête du haut va annoncer. Lue AUSSI par le bilan vert, pour
-      // qu'il ne redise pas la même chose trois lignes plus bas (Gwenaël,
-      // 09/09 : « certaines infos apparaissent deux fois »).
+      // La fête (lot 3) vit maintenant dans le cadre du verdict (lot R2) :
+      // 🎉 pour chaque table et chaque mélange réussis, 🌟 pour chaque étoile,
+      // 🏅 pour un rang seul, 👑 au sommet. Une seule lecture des événements,
+      // partagée par le verdict et par la phrase de suite, pour qu'ils ne
+      // disent jamais deux fois la même chose (Gwenaël, 09/09).
       function feteDuResultat(evenements) {
         const liste = evenements || [];
         const etoile = liste.find(evenement => evenement.type === "etoile" && evenement.reussi && evenement.nouveau);
@@ -5338,81 +5451,49 @@
         return {etoile, melange, validation, rangMonte, principal, rangAffiche: Boolean(rangMonte)};
       }
 
-      function renderResultFete(evenements) {
-        const zone = $("result-fete");
-        zone.replaceChildren();
-        zone.hidden = true;
-        zone.classList.remove("is-champion");
-        $("result").classList.remove("a-fete");
-        const {etoile, melange, validation, rangMonte} = feteDuResultat(evenements);
-        let icone = null;
-        let texte = null;
-        if (etoile && etoile.couronne) {
-          icone = "👑";
-          texte = "Légende des tables !";
-          zone.classList.add("is-champion");
-        } else if (etoile) {
-          icone = "🌟";
-          texte = `${PARCOURS.symboleEtoile(etoile.etoile)} obtenue !`;
-        } else if (validation) {
-          icone = "🎉";
-          texte = `Table de ${validation.table} acquise !`;
-        } else if (melange) {
-          icone = "🎉";
-          texte = melange.escalierOuvert ? "Mélange des 9 tables réussi !" : "Mélange réussi !";
-        } else if (rangMonte) {
-          icone = "🏅";
-          texte = "Nouveau rang !";
-        }
-        if (!texte) return;
-        const iconeZone = document.createElement("span");
-        iconeZone.className = "result-fete-icon";
-        iconeZone.setAttribute("aria-hidden", "true");
-        iconeZone.textContent = icone;
-        const titre = document.createElement("strong");
-        titre.textContent = texte;
-        zone.append(iconeZone, titre);
-        // La fête dit la nouvelle : le reste de l'écran s'allège (voir le CSS
-        // de .result.a-fete). Il ne reste que le score, la suite et le bilan.
-        $("result").classList.add("a-fete");
-        // Le passage d'un rang : sous la fête du moment, avec son badge — sauf
-        // la Légende, que la couronne dit déjà.
-        if (rangMonte && !(etoile && etoile.couronne)) {
-          const ligneRang = document.createElement("span");
-          ligneRang.className = "result-fete-rang";
-          ligneRang.append(document.createTextNode("Tu passes "), badgeRang(PARCOURS.rang(rangMonte.rang)));
-          zone.append(ligneRang);
-          if (rangMonte.rang >= 5) zone.classList.add("is-champion");
-        }
-        zone.hidden = false;
-        $("result-icon").hidden = true;
-      }
-
-      // La fête annonce la nouvelle et le rang gagné : le bilan ne garde alors
-      // que ce qu'elle ne dit pas — la suite du parcours. Un écran, une
-      // information, une fois.
-      function messageApresFete(evenement, fete) {
-        if (evenement.type === "rang" && fete.rangAffiche) return "";
-        if (evenement === fete.validation && evenement === fete.principal) {
-          const suivante = tableSuivanteApres(evenement.table);
+      // La suite, en UNE phrase (« Et maintenant : … »). Le verdict a déjà dit
+      // le score, le réussi ou raté et le rang : il ne reste que ce que l'élève
+      // fait ensuite. Après une table acquise, le mélange à refaire et la table
+      // suivante tiennent dans la même phrase — avant, deux consignes se
+      // suivaient (audit, A10).
+      function suiteApresSerie(evenements, fete) {
+        const liste = evenements || [];
+        const trouve = type => liste.find(evenement => evenement.type === type);
+        if (fete.validation) {
+          const suivante = tableSuivanteApres(fete.validation.table);
+          const puis = suivante ? `, puis la table de ${suivante}` : "";
+          if (trouve("toutes-acquises")) return "Toutes tes tables sont acquises ! Réussis le mélange des 9 pour ouvrir l’escalier des étoiles.";
+          if (trouve("melange-a-refaire")) return `Refais ton mélange avec la table de ${fete.validation.table}${puis}.`;
+          if (trouve("melange-debloque")) return `Deux tables acquises : réussis ton mélange${puis}.`;
           return suivante ? `On continue avec la table de ${suivante}.` : "";
         }
-        return evenementMessage(evenement);
+        if (fete.melange) return fete.melange.escalierOuvert ? "L’escalier des étoiles est ouvert !" : "Tu peux valider une nouvelle table.";
+        if (fete.etoile) return fete.etoile.couronne ? "" : `Tente ${PARCOURS.symboleEtoile(fete.etoile.etoile + 1)} en ${PARCOURS.libelleDuree(PARCOURS.dureeEtoile(fete.etoile.etoile + 1))}.`;
+        const validation = trouve("validation");
+        if (validation && validation.reussi && validation.verrouillee) return "Réussis d’abord ton mélange, puis reviens valider ta table.";
+        const preparation = trouve("preparation");
+        if (preparation) return preparation.reussi
+          ? "Maintenant, essaie en 1 min 30 pour valider ta table."
+          : "Continue à t’entraîner, puis vise 18 sur 20 en 1 min 30.";
+        const entraine = trouve("entraine");
+        if (entraine && entraine.reussi && entraine.pret) return "Tes trois entraînements sont réussis : tu peux valider ta table !";
+        return "";
       }
 
       function renderResultParcours(suivi) {
         const zone = $("result-parcours");
         zone.replaceChildren();
-        zone.hidden = !suivi.classement;
+        zone.hidden = true;
         if (!suivi.classement) return;
-        const fete = feteDuResultat(suivi.evenements);
-        suivi.evenements.map(evenement => messageApresFete(evenement, fete)).filter(Boolean).forEach(text => {
-          const line = document.createElement("p");
-          line.textContent = text;
-          zone.append(line);
-        });
-        // La suite n'est plus annoncée ici : le bouton « Ma table » ramène à
-        // l'accueil, qui la surligne, état mis à jour.
+        const texte = suiteApresSerie(suivi.evenements, feteDuResultat(suivi.evenements));
+        if (!texte) return;
+        const line = document.createElement("p");
+        const etiquette = document.createElement("b");
+        etiquette.textContent = "Et maintenant :";
+        line.append(etiquette, document.createTextNode(` ${soude(texte)}`));
+        zone.append(line);
+        zone.hidden = false;
+        // Le bouton « Ma table » ramène à l'accueil, qui surligne l'étape.
       }
 
       // source : le parcours à imprimer. Par défaut celui de l'appareil ; la vue

@@ -331,7 +331,9 @@ test("seule la première réponse compte pour la grille, et un raté ne revient 
   assert.match(html, /if \(!question\.retry\) alimenterMesCalculs\(question, correct && !skip\);/, "les calculs qui reviennent n’alimentent pas la grille");
   assert.match(html, /const willRetry = !correct && !question\.retry;/, "un calcul raté revient une seule fois par série de révision");
   assert.doesNotMatch(html, /repartira dans la prochaine révision/, "la règle n’est plus écrite sur l’écran de résultat (lot 2)");
-  assert.match(html, /\$\("result-detail"\)\.textContent = `Série terminée en \$\{formatElapsed\(elapsed\)\}\.`;/);
+  // Relecture du lot R2 : le temps de la révision est passé sur la ligne du
+  // score ; la ligne du dessous reste vide (ni la règle, ni « Série terminée »).
+  assert.match(html, /\$\("result-detail"\)\.textContent = "";/);
 });
 
 test("la révision : jusqu’à 10 questions sans chrono, retour des ratés, Encore une révision", () => {
@@ -342,15 +344,15 @@ test("la révision : jusqu’à 10 questions sans chrono, retour des ratés, Enc
   assert.match(html, /reviser\.classList\.toggle\("is-vide", !questionsRevision\(resume\)\)/, "et le bouton le montre");
   assert.match(html, /au vert/);
   assert.match(html, /au premier essai/);
-  assert.match(html, /entry\.retour \? "Il est revenu" : `Question \$\{entry\.number\}`/, "un calcul qui revient n’est plus numéroté Question 11, 12…");
+  assert.match(html, /if \(entry\.retour\) \{[\s\S]*?number\.textContent = "Il est revenu";/, "un calcul qui revient n’est pas numéroté Question 11, 12… — il est marqué « Il est revenu » (lot R2 : les autres n’ont plus de numéro)");
   assert.match(html, /Rien à revoir pour l’instant : \$\{pluriel\(questions, "question"\)\} pour entretenir ta grille\./);
   assert.match(html, /Tout est su ! 10 questions pour entretenir ta grille\./);
   assert.match(html, /Ta grille est vide : elle se remplit dans Je m’entraîne et les validations\./);
   assert.doesNotMatch(html, /on découvre les 10 premiers calculs/, "plus de découverte de calculs par la révision (lot 3)");
   assert.doesNotMatch(html, /L’étoile valide toutes tes tables d’un coup/, "lot 3 : plus de raccourci « ★ valide les 9 tables »");
-  assert.match(html, /id="result-fete"/);
-  assert.match(html, /renderResultFete\(suivi\.evenements\)/);
-  assert.match(html, /texte = "Légende des tables !";/, "écran de fête 👑");
+  assert.match(html, /id="result-verdict"/, "lot R2 : la fête est le cadre du verdict");
+  assert.match(html, /renderVerdict\(suivi, elapsed\)/);
+  assert.match(html, /verdict\.titre = "Légende des tables !";/, "écran de fête 👑");
   assert.match(html, /Table de \$\{validation\.table\} acquise !/, "écran de fête 🎉 à chaque table validée");
   assert.match(html, /animation: none !important/, "la fête respecte prefers-reduced-motion");
 });
