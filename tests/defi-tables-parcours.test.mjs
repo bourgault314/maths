@@ -5,7 +5,8 @@ import test from "node:test";
 
 const require = createRequire(import.meta.url);
 const core = require("../outils/calcul_mental/defi_tables_core.js");
-const html = await readFile(new URL("../outils/calcul_mental/defi_tables.html", import.meta.url), "utf8");
+const { ACTIVITES_APPRENDS } = require("../outils/calcul_mental/defi_tables_mon_parcours.js");
+const html =await readFile(new URL("../outils/calcul_mental/defi_tables.html", import.meta.url), "utf8");
 const revisionPdf = await readFile(new URL("../outils/calcul_mental/fiche_tables_multiplication.pdf", import.meta.url));
 const editableSource = await readFile(new URL("../_sources/defi-tables/fiche_tables_multiplication.docx", import.meta.url));
 
@@ -308,4 +309,21 @@ test("le pavé numérique a la taille de l’écran et Valider sa propre rangée
   assert.doesNotMatch(html, /\.challenge-playing \.keypad button \{ min-height: 44px; height: 44px; \}/);
   assert.doesNotMatch(html, /\.challenge-playing \.keypad \{ width: min\(100%, 330px\)/);
   assert.doesNotMatch(html, /\.actions button \{ min-width: 140px; \}/);
+});
+
+test("la grille de Mon parcours a une colonne par activité de J’apprends (correctif A1, 11/09/2026)", () => {
+  // Le lot 4b (#709) a porté J’apprends à 5 activités, la grille était restée à 4 colonnes :
+  // le 5ᵉ rond et le 3ᵉ de Je m’entraîne tombaient dans les respirations (5 à 8 px de large)
+  // et la case Acquise passait seule à la ligne. Les gabarits suivent le moteur.
+  const n = ACTIVITES_APPRENDS.length;
+  // [^}]* : chaque motif reste dans sa règle, il ne va pas chercher la valeur plus loin.
+  const gabarits = [...html.matchAll(/\.parcours-cells \{[^}]*grid-template-columns: ([^;}]*);/g)].map(m => m[1]);
+  assert.equal(gabarits.length, 2, "le gabarit général et celui du téléphone (max-width: 480px)");
+  gabarits.forEach(gabarit => assert.ok(gabarit.startsWith(`repeat(${n}, minmax(0, 1fr))`), gabarit));
+  // Les étiquettes suivent : J’APPRENDS sur n colonnes, JE M’ENTRAÎNE après la respiration.
+  assert.match(html, new RegExp(`\\.parcours-group-label \\{ grid-column: span ${n};`));
+  assert.match(html, new RegExp(`\\.parcours-group-label\\.is-entraine \\{ grid-column: ${n + 2} / span 3; \\}`));
+  // Acquise : n ronds, une respiration, 3 entraînements, une respiration, puis sa colonne (= 11).
+  const acquise = html.match(/\.parcours-group-label\.is-acquise \{ grid-column: (\d+); \}/);
+  assert.equal(Number(acquise?.[1]), n + 6);
 });
