@@ -1577,6 +1577,17 @@
       .difference-marker-label { font-size: .64rem; }
     }
 
+    /* Écrans peu hauts (petits téléphones) : la fenêtre Solo / Duo se resserre pour que « Continuer la partie » reste visible. */
+    @media (max-height: 640px) {
+      .mode-dialog-card { padding: 16px 14px; }
+      .mode-dialog-card .dialog-icon { font-size: 2rem; }
+      .mode-dialog-card h2 { margin: 2px 0 6px; font-size: 1.4rem; }
+      .mode-options { gap: 8px; margin-top: 12px; }
+      .mode-choice { min-height: 0; padding: 9px 12px; }
+      .level-row { margin-top: 10px; padding: 8px 10px; }
+      .mode-continue { margin-top: 8px; }
+    }
+
     @media (prefers-reduced-motion: reduce) {
       *,
       *::before,
