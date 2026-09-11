@@ -234,10 +234,14 @@ test("J’apprends garde la bande pour construire et la propose en aide temporai
   assert.match(html, /\$\("validate"\)\.style\.visibility = "";[\s\S]*setAnswerControlsEnabled\(true\)/);
   assert.match(html, /\}, 800\);/);
   assert.match(html, /\.question\.stick-trace \.learn-sequence \{[\s\S]*display: grid;[\s\S]*justify-items: center;[\s\S]*margin: 0 0 8px;/);
-  assert.match(html, /\.question\.stick-trace \.number-stick-cell \{[\s\S]*min-height: 42px;[\s\S]*grid-template-rows: 14px minmax\(28px, 1fr\);/);
-  assert.match(html, /\.question\.stick-trace \.number-stick-value \{[\s\S]*min-height: 28px;[\s\S]*font-size: clamp\(\.66rem, 2\.2vw, \.9rem\);/);
+  // Lot R1 (audit du 11/09, A8) : les étiquettes de la bande à 11 px au moins,
+  // dans l'activité (9,4 px avant) comme dans l'aide « Voir la bande » (7,7 px).
+  assert.match(html, /\.question\.stick-trace \.number-stick-cell \{[\s\S]*min-height: 45px;[\s\S]*grid-template-rows: 15px minmax\(30px, 1fr\);/);
+  assert.match(html, /\.question\.stick-trace \.number-stick-multiplier \{ font-size: clamp\(\.6875rem, 1\.5vw, \.8rem\); \}/);
+  assert.match(html, /\.question\.stick-trace \.number-stick-value \{[\s\S]*min-height: 30px;[\s\S]*font-size: clamp\(\.8rem, 2\.2vw, \.95rem\);/);
   assert.match(html, /\.challenge-playing \.number-stick-cell \{ min-height: 54px; grid-template-rows: 16px minmax\(38px, 1fr\); \}/);
-  assert.match(html, /\.challenge-playing \.number-stick-value \{ min-height: 38px; font-size: clamp\(\.68rem, 3vw, \.9rem\); \}/);
+  assert.match(html, /\.challenge-playing \.number-stick-multiplier \{ font-size: \.6875rem; \}/);
+  assert.match(html, /\.challenge-playing \.number-stick-value \{ min-height: 38px; font-size: clamp\(\.8rem, 3\.4vw, \.95rem\); \}/);
   assert.doesNotMatch(html, /results\.join\(" → "\)/);
   assert.match(html, /state\.configuration\.mode === "train"\) \{[\s\S]*showAnswerFeedback/);
   assert.match(html, /state\.configuration\.mode === "train"\) \{[\s\S]*showAnswerFeedback\(question, correct, skip \? null : value\);[\s\S]*if \(correct\) \{[\s\S]*\$\("validate"\)\.style\.visibility = "hidden";[\s\S]*scheduleAutoAdvance\(\);/);
