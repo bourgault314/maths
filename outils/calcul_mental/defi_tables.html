@@ -471,15 +471,20 @@
     .parcours-badge.is-pending { color: var(--muted); background: #eef3f7; }
     .parcours-badge:empty { display: none; }
     .parcours-badge { white-space: nowrap; }
+    /* Une colonne par activité de J'apprends (5 depuis le lot 4b « les perles
+       comptent »), trois pour Je m'entraîne, une pour Acquise : 11 pistes,
+       les deux de 8 px étant les respirations entre les groupes. Le nombre
+       de colonnes suit ACTIVITES_APPRENDS du moteur — si une activité s'ajoute
+       un jour, ces trois règles sont à monter avec elle. */
     .parcours-cells {
       display: grid;
-      grid-template-columns: repeat(4, minmax(0, 1fr)) 8px repeat(3, minmax(0, 1fr)) 8px minmax(56px, 1.35fr);
+      grid-template-columns: repeat(5, minmax(0, 1fr)) 8px repeat(3, minmax(0, 1fr)) 8px minmax(56px, 1.35fr);
       gap: 4px;
       align-items: center;
     }
-    .parcours-group-label { grid-column: span 4; overflow: hidden; color: var(--muted); font-size: .68rem; font-weight: 900; letter-spacing: .04em; text-align: center; text-transform: uppercase; white-space: nowrap; }
-    .parcours-group-label.is-entraine { grid-column: 6 / span 3; }
-    .parcours-group-label.is-acquise { grid-column: 10; }
+    .parcours-group-label { grid-column: span 5; overflow: hidden; color: var(--muted); font-size: .68rem; font-weight: 900; letter-spacing: .04em; text-align: center; text-transform: uppercase; white-space: nowrap; }
+    .parcours-group-label.is-entraine { grid-column: 7 / span 3; }
+    .parcours-group-label.is-acquise { grid-column: 11; }
     .cell {
       min-height: 44px;
       display: grid;
@@ -1259,7 +1264,10 @@
     @media (max-width: 480px) {
       .parcours-toolbar { padding: 0 50px; }
       .parcours-row { padding: 9px 8px 10px; }
-      .parcours-cells { gap: 3px; grid-template-columns: repeat(4, minmax(0, 1fr)) 5px repeat(3, minmax(0, 1fr)) 5px minmax(48px, 1.4fr); }
+      /* Acquise : 48 px au moins, pour que « ACQUISE » tienne aussi dans une
+         police plus large que celle de nos PC (41 px en Segoe UI Black, 48 en
+         Verdana ; celle de l'iPhone ne se mesure pas ici). */
+      .parcours-cells { gap: 3px; grid-template-columns: repeat(5, minmax(0, 1fr)) 5px repeat(3, minmax(0, 1fr)) 5px minmax(48px, 1fr); }
       .parcours-group-label { font-size: .58rem; letter-spacing: .01em; }
       .parcours-row-head { flex-wrap: wrap; gap: 4px 8px; }
       .cell { border-radius: 9px; }
