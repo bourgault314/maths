@@ -184,6 +184,13 @@
       text-underline-offset: 3px;
     }
 
+    .solo-score {
+      display: grid;
+      justify-items: center;
+      gap: 3px;
+      flex: none;
+    }
+
     .solo-stats {
       padding: 9px 13px;
       border-radius: 999px;
@@ -193,6 +200,27 @@
       font-weight: 950;
       white-space: nowrap;
     }
+
+    /* Repère discret : combien de paires voisines ouvrent ce coffre (1 ou 2), sans dire lesquelles. */
+    .pair-hint {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      color: #557083;
+      font-size: .72rem;
+      font-weight: 850;
+      white-space: nowrap;
+    }
+
+    .pair-hint::before {
+      content: "";
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #c9d8e3;
+    }
+
+    .pair-hint.two::before { background: var(--gold); }
 
     .status-line {
       width: min(100%, 560px);
@@ -266,6 +294,7 @@
     .rune:focus-visible { outline: 4px solid var(--blue); outline-offset: -3px; }
     .rune.selected { border-color: #f0a800; background: #ffdd72; transform: scale(.94); }
     .rune.success { border-color: #087a55; background: #bff0d8; }
+    .rune.success.selected { border-color: #f0a800; transform: scale(.94); }
     .rune.failure { border-color: #b83a3a; background: #ffd4cf; }
 
     @media (hover: hover) and (pointer: fine) {
@@ -411,6 +440,58 @@
     .mode-choice-duo .mode-choice-icon { background: #e78b18; }
     .mode-choice strong { display: block; font-size: 1.02rem; line-height: 1.15; }
     .mode-choice small { display: block; margin-top: 4px; color: #4f6b7d; font-size: .76rem; font-weight: 800; line-height: 1.3; }
+
+    /* Niveau des nombres : une seule ligne sous les deux modes. */
+    .level-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      margin-top: 14px;
+      padding: 10px 12px;
+      border: 2px solid #d7e4ec;
+      border-radius: 14px;
+      background: #f8fcff;
+    }
+
+    .level-row-label {
+      color: #41677f;
+      font-size: .78rem;
+      font-weight: 950;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+    }
+
+    .level-choice {
+      min-height: 44px;
+      display: grid;
+      justify-items: center;
+      gap: 2px;
+      padding: 6px 14px;
+      border: 2px solid #cadde8;
+      border-radius: 999px;
+      color: #31546e;
+      background: #fff;
+      font-size: .92rem;
+      font-weight: 950;
+      line-height: 1.1;
+    }
+
+    .level-choice small {
+      color: #557083;
+      font-size: .68rem;
+      font-weight: 800;
+    }
+
+    .level-choice[aria-pressed="true"] {
+      border-color: #0755b8;
+      color: #fff;
+      background: linear-gradient(145deg, #087c75, #0755b8);
+      box-shadow: 0 5px 13px rgba(7, 85, 184, .2);
+    }
+
+    .level-choice[aria-pressed="true"] small { color: rgba(255, 255, 255, .85); }
 
     .mode-continue {
       min-height: 38px;
@@ -788,7 +869,8 @@
     }
 
     .array-dimension-model .dot-array,
-    .array-dimension-model .demo-dot-grid {
+    .array-dimension-model .demo-dot-grid,
+    .array-dimension-model .area-model {
       grid-column: 2;
       grid-row: 2;
     }
@@ -858,6 +940,147 @@
       background: #087a71;
       box-shadow: inset 0 -1px 0 rgba(0, 0, 0, .18);
     }
+
+    /* Niveau 2 : les aides et corrections remplacent les points par des barres
+       proportionnelles, avec les nombres écrits dedans. */
+    .bar-model,
+    .packet-model {
+      width: min(100%, 370px);
+      display: grid;
+      gap: 0;
+    }
+
+    .bar-row {
+      min-width: 0;
+      min-height: 40px;
+      display: flex;
+      overflow: hidden;
+      border: 2px solid #54758a;
+      border-radius: 0;
+      background: #fff;
+    }
+
+    .bar-row + .bar-row { border-top: 0; }
+    .bar-row.bar-total { background: #ecfaf6; }
+
+    .bar-part {
+      min-width: 0;
+      flex: var(--bar-value) 1 0;
+      display: grid;
+      place-items: center;
+      padding-inline: 2px;
+      color: #075f52;
+      font-size: 1.05rem;
+      font-weight: 950;
+      line-height: 1;
+      overflow: hidden;
+    }
+
+    .bar-part + .bar-part { border-left: 2px solid #54758a; }
+    .bar-first { color: #0b4f8f; background: #e4f2ff; }
+    .bar-second { color: #a3401f; background: #fff0ea; }
+
+    .bar-gap {
+      color: #765000;
+      background: repeating-linear-gradient(135deg, #fff7dd 0 6px, #fff 6px 12px);
+      border-left-style: dashed;
+    }
+
+    .bar-part.bar-slim { font-size: .8rem; }
+
+    .bar-marker-row {
+      position: relative;
+      min-height: 34px;
+      display: flex;
+      padding-inline: 2px;
+    }
+
+    /* Mêmes retraits que les parties de la barre, pour que le repère tombe exactement sous la partie manquante. */
+    .bar-marker-space,
+    .bar-marker-cell {
+      min-width: 0;
+      flex: var(--bar-value) 1 0;
+      padding-inline: 2px;
+    }
+
+    .bar-marker-cell {
+      display: grid;
+      align-content: start;
+      border-left: 2px solid transparent;
+    }
+
+    .bar-marker-label {
+      position: absolute;
+      top: 15px;
+      left: var(--label-center, 50%);
+      width: max-content;
+      transform: translateX(-50%);
+      color: #765000;
+      font-size: .8rem;
+      font-weight: 950;
+      line-height: 1.2;
+      white-space: nowrap;
+    }
+
+    .bar-marker-label.edge { left: auto; right: 0; transform: none; }
+
+    .area-model {
+      --area-unit: 12px;
+      position: relative;
+      width: calc(var(--area-columns) * var(--area-unit));
+      height: calc(var(--area-rows) * var(--area-unit));
+      display: grid;
+      place-items: center;
+      box-sizing: content-box;
+      border: 2px solid #6d3ac7;
+      border-radius: 0;
+      background-color: #f8f2ff;
+      background-image:
+        linear-gradient(to right, #ddd0f3 1px, transparent 1px),
+        linear-gradient(to bottom, #ddd0f3 1px, transparent 1px);
+      background-size: var(--area-unit) var(--area-unit);
+      background-position: -1px -1px;
+    }
+
+    .area-total {
+      padding: 4px 10px;
+      border: 2px solid #d8c7f2;
+      border-radius: 999px;
+      color: #4b2694;
+      background: rgba(255, 255, 255, .96);
+      font-size: 1.15rem;
+      font-weight: 950;
+      line-height: 1;
+    }
+
+    .packet-bar {
+      width: 100%;
+      min-height: 40px;
+      display: flex;
+      overflow: hidden;
+      border: 2px solid #39766f;
+      border-radius: 0;
+      background: #fff;
+    }
+
+    .packet {
+      --packet-share: .25;
+      min-width: 0;
+      flex: 1 1 0;
+      display: grid;
+      place-items: center;
+      padding-inline: 1px;
+      color: #143451;
+      background: #e9faf6;
+      font-size: clamp(.62rem, calc(8rem * var(--packet-share)), 1.05rem);
+      font-weight: 950;
+      line-height: 1;
+      overflow: hidden;
+    }
+
+    .packet:nth-child(even) { background: #e6f3ff; }
+    /* Séparation dessinée sans bordure : tous les paquets gardent exactement la même largeur. */
+    .packet + .packet { box-shadow: inset 3px 0 0 #39766f; }
 
     .help-card,
     .correction-card { width: min(620px, 100%); }
@@ -1068,6 +1291,9 @@
       .solo-heading p:last-child { font-size: 1rem; }
       .mode-switch-button { font-size: .82rem; }
       .solo-stats { padding: 10px 18px; font-size: 1.3rem; }
+      .solo-score { justify-items: start; gap: 5px; }
+      .pair-hint { font-size: .88rem; }
+      .pair-hint::before { width: 9px; height: 9px; }
 
       .status-line {
         grid-column: 1;
@@ -1238,6 +1464,39 @@
       .correction-card .demo-dot-grid { gap: 7px; padding: 12px 14px; }
       .correction-card .demo-interpretations { gap: 14px; }
       .correction-card .demo-interpretation { padding: 12px; }
+
+      /* Niveau 2 : les barres grandissent comme les schémas à points. */
+      .bar-model,
+      .packet-model { width: min(100%, 520px); }
+      .bar-row,
+      .packet-bar { min-height: 50px; }
+      .bar-part { font-size: 1.25rem; }
+      .bar-part.bar-slim { font-size: .95rem; }
+      .bar-marker-row { min-height: 40px; }
+      .bar-marker-label { top: 17px; font-size: .92rem; }
+      .area-model { --area-unit: 16px; }
+      .area-total { font-size: 1.35rem; }
+      .packet { font-size: clamp(.72rem, calc(9rem * var(--packet-share)), 1.2rem); }
+      .help-card .bar-model,
+      .help-card .packet-model,
+      .correction-card .bar-model,
+      .correction-card .packet-model { width: min(100%, 640px); }
+      .help-card .bar-row,
+      .help-card .packet-bar,
+      .correction-card .bar-row,
+      .correction-card .packet-bar { min-height: 58px; }
+      .help-card .bar-part,
+      .correction-card .bar-part { font-size: 1.4rem; }
+      .help-card .bar-part.bar-slim,
+      .correction-card .bar-part.bar-slim { font-size: 1.05rem; }
+      .help-card .bar-marker-label,
+      .correction-card .bar-marker-label { font-size: 1.02rem; }
+      .help-card .area-model,
+      .correction-card .area-model { --area-unit: 20px; }
+      .help-card .area-total,
+      .correction-card .area-total { font-size: 1.5rem; }
+      .help-card .packet,
+      .correction-card .packet { font-size: clamp(.8rem, calc(10rem * var(--packet-share)), 1.35rem); }
     }
 
     /* Grand écran peu haut (vidéoprojecteur 1280 × 720) : sous Windows, Segoe UI a des lignes plus hautes
@@ -1263,6 +1522,10 @@
       .solo-heading p:last-child { font-size: .8rem; }
       .mode-switch-button { font-size: .69rem; }
       .solo-stats { padding: 8px 10px; font-size: .92rem; }
+      .pair-hint { font-size: .66rem; }
+      .level-row { gap: 6px 8px; padding: 9px 10px; }
+      .level-row-label { flex-basis: 100%; text-align: center; }
+      .level-choice { flex: 1 1 0; padding-inline: 8px; font-size: .86rem; }
       .status-line { min-height: 42px; margin-top: 10px; font-size: .78rem; }
       .challenge { min-height: 62px; }
       .rune-board { gap: 6px; padding: 8px; }
@@ -1314,6 +1577,17 @@
       .difference-marker-label { font-size: .64rem; }
     }
 
+    /* Écrans peu hauts (petits téléphones) : la fenêtre Solo / Duo se resserre pour que « Continuer la partie » reste visible. */
+    @media (max-height: 640px) {
+      .mode-dialog-card { padding: 16px 14px; }
+      .mode-dialog-card .dialog-icon { font-size: 2rem; }
+      .mode-dialog-card h2 { margin: 2px 0 6px; font-size: 1.4rem; }
+      .mode-options { gap: 8px; margin-top: 12px; }
+      .mode-choice { min-height: 0; padding: 9px 12px; }
+      .level-row { margin-top: 10px; padding: 8px 10px; }
+      .mode-continue { margin-top: 8px; }
+    }
+
     @media (prefers-reduced-motion: reduce) {
       *,
       *::before,
@@ -1339,9 +1613,12 @@
       <div>
         <p class="eyebrow">Calcul mental</p>
         <h1>Coffres magiques</h1>
-        <p class="solo-subline"><span>Solo · trouve 10 clés</span><button class="mode-switch-button" type="button" data-change-mode>Changer de mode</button></p>
+        <p class="solo-subline"><span>Solo · <span id="level-label">niveau 1</span> · trouve 10 clés</span><button class="mode-switch-button" type="button" data-change-mode>Changer de mode</button></p>
       </div>
-      <strong id="key-count" class="solo-stats">0 / 10 clés</strong>
+      <div class="solo-score">
+        <strong id="key-count" class="solo-stats">0 / 10 clés</strong>
+        <span id="pair-count" class="pair-hint" hidden></span>
+      </div>
     </section>
 
     <div id="status" class="status-line" aria-live="polite">Lis d’abord le petit mémo.</div>
@@ -1368,6 +1645,11 @@
           <span class="mode-choice-icon" aria-hidden="true">2</span>
           <span><strong>Duo — Se défier</strong><small>2 joueurs · 20 s par tour · premier à 5 clés</small></span>
         </button>
+      </div>
+      <div class="level-row" role="group" aria-label="Niveau des nombres en solo">
+        <span class="level-row-label">Niveau</span>
+        <button class="level-choice" type="button" data-level="1" aria-pressed="true">Niveau 1<small>nombres de 1 à 12</small></button>
+        <button class="level-choice" type="button" data-level="2" aria-pressed="false">Niveau 2<small>nombres jusqu’à 20</small></button>
       </div>
       <button id="continue-current-mode" class="mode-continue" type="button" hidden>Continuer la partie</button>
     </div>
@@ -1551,6 +1833,10 @@
       const correctionSolution = document.querySelector("#correction-solution");
       const correctionVisual = document.querySelector("#correction-visual");
       const nextButton = document.querySelector("#next-button");
+      const pairHint = document.querySelector("#pair-count");
+      const levelLabel = document.querySelector("#level-label");
+      const levelButtons = [...document.querySelectorAll(".level-choice")];
+      const continueButton = document.querySelector("#continue-current-mode");
       const result = document.querySelector("#result");
       // Grand écran (ordinateur, projection) : après une clé gagnée, l'égalité reste affichée
       // et c'est le bouton « Coffre suivant » qui fait avancer. Petit écran : passage automatique.
@@ -1569,6 +1855,15 @@
       let modeDialogMandatory = false;
       let gameStarted = false;
       let lastResolvedPosition = null;
+      // Niveau des nombres : 1 (cases de 1 à 12, tirages historiques) ou 2 (cases de 1 à 20, aides en barres).
+      // Il se choisit dans la fenêtre Solo / Duo et se transmet par l'adresse (?niveau=2).
+      let level = readLevel();
+      let gameLevel = level;
+      // Nombre de paires voisines qui ouvrent le coffre en cours (1 ou 2, jamais plus).
+      let solutionCount = 1;
+      // Grand écran : pendant que « Coffre suivant » attend, le plateau reste cliquable pour vérifier l'autre paire.
+      let bonusOpen = false;
+      let wonMessage = "";
 
       function createModalController() {
         const focusableSelector = [
@@ -1671,6 +1966,10 @@
         return Object.prototype.hasOwnProperty.call(ORIGINS, candidate) ? candidate : DEFAULT_ORIGIN;
       }
 
+      function readLevel() {
+        return new URLSearchParams(window.location.search).get("niveau") === "2" ? 2 : 1;
+      }
+
       function syncOriginLinks() {
         const config = ORIGINS[origin];
         document.querySelectorAll("[data-origin-link]").forEach(link => {
@@ -1687,12 +1986,48 @@
         const path = nextMode === "solo"
           ? "../calcul_mental/coffres_magiques_solo.html"
           : "../club_maths/coffres_magiques.html";
-        return `${path}?mode=${nextMode}&from=${origin}`;
+        return `${path}?mode=${nextMode}&from=${origin}${level === 2 ? "&niveau=2" : ""}`;
+      }
+
+      // Le niveau choisi se lit dans l'adresse (?niveau=2) : un favori ou un QR code peut l'imposer.
+      function syncLevelUrl() {
+        const url = new URL(window.location.href);
+        if (level === 2) url.searchParams.set("niveau", "2");
+        else url.searchParams.delete("niveau");
+        if (url.href !== window.location.href) window.history.replaceState(window.history.state, "", url.href);
+      }
+
+      function syncLevelUi() {
+        levelLabel.textContent = `niveau ${gameLevel}`;
+        levelButtons.forEach(button => button.setAttribute("aria-pressed", String(Number(button.dataset.level) === level)));
+        const restart = gameStarted && level !== gameLevel;
+        continueButton.textContent = restart ? `Nouvelle partie au niveau ${level}` : "Continuer la partie";
+      }
+
+      function setLevel(nextLevel) {
+        level = nextLevel === 2 ? 2 : 1;
+        syncLevelUrl();
+        syncLevelUi();
+      }
+
+      // Applique le niveau choisi à la partie : nouvelle série de coffres si le niveau a changé en cours de partie.
+      function applyLevel() {
+        if (!gameStarted || level === gameLevel) {
+          gameLevel = level;
+          syncLevelUi();
+          return false;
+        }
+        gameLevel = level;
+        start();
+        return true;
       }
 
       function openModeDialog({ mandatory = false } = {}) {
         modeDialogMandatory = mandatory;
-        document.querySelector("#continue-current-mode").hidden = mandatory;
+        level = gameStarted ? gameLevel : level;
+        syncLevelUrl();
+        syncLevelUi();
+        continueButton.hidden = mandatory;
         dialogs.open(modeDialog, {
           trigger: mandatory ? null : document.activeElement,
           initialFocus: `#choose-${CURRENT_MODE}`,
@@ -1705,7 +2040,15 @@
       function closeModeDialog({ force = false, ...dialogOptions } = {}) {
         if (modeDialogMandatory && !force) return;
         modeDialogMandatory = false;
+        // Fermer sans confirmer (Échap) abandonne un changement de niveau en cours de partie.
+        if (gameStarted && level !== gameLevel) setLevel(gameLevel);
         dialogs.close(modeDialog, dialogOptions);
+      }
+
+      function continueCurrentGame() {
+        const restarted = applyLevel();
+        closeModeDialog({ restoreFocus: !restarted });
+        if (restarted) focusAfterReset(null);
       }
 
       function chooseMode(nextMode) {
@@ -1714,8 +2057,10 @@
           return;
         }
         const mustIntroduce = !gameStarted && values.length === 0;
-        closeModeDialog({ force: true, restoreFocus: !mustIntroduce });
+        const restarted = applyLevel();
+        closeModeDialog({ force: true, restoreFocus: !mustIntroduce && !restarted });
         if (mustIntroduce) openLesson();
+        else if (restarted) focusAfterReset(null);
       }
 
       function setupFullscreen() {
@@ -1843,16 +2188,139 @@
         return null;
       }
 
-      function pairFor(nextMode) {
-        if (nextMode === "sum" || nextMode === "product") return [randomInteger(2, 9), randomInteger(2, 9)];
-        if (nextMode === "difference") {
-          const difference = randomInteger(2, 8);
-          const low = randomInteger(1, 12 - difference);
-          return [low + difference, low];
+      function isSolution(nextMode, first, second, nextTarget) {
+        const high = Math.max(first, second);
+        const low = Math.min(first, second);
+        if (nextMode === "quotient" && high % low !== 0) return false;
+        return calculate(nextMode, first, second) === nextTarget;
+      }
+
+      // Toutes les paires voisines du plateau qui ouvrent le coffre (1 ou 2 par construction).
+      function boardSolutions(nextMode, nextTarget, nextValues = values) {
+        return neighborPairs().filter(positions => isSolution(nextMode, nextValues[positions[0]], nextValues[positions[1]], nextTarget));
+      }
+
+      // Bornes de chaque niveau. Le niveau 1 conserve exactement les tirages historiques (pairFor) ;
+      // le niveau 2 monte les cases jusqu'à 20 (sommes ≤ 40, différences ≤ 19, produits comme 12 × 15, quotients comme 60 ÷ 15).
+      function levelRules(nextLevel) {
+        if (nextLevel === 2) {
+          return { fill: [1, 20], sum: [6, 20], difference: { high: [10, 20], gap: 3 }, product: { big: [11, 20], small: [3, 15] }, quotient: { divisor: [6, 20], quotient: [2, 9] } };
         }
-        const divisor = randomInteger(2, 6);
-        const quotient = randomInteger(2, 6);
+        return { fill: [1, 12], sum: [2, 9], difference: { high: [3, 12], gap: 2, gapMax: 8 }, product: { big: [2, 9], small: [2, 9] }, quotient: { divisor: [2, 6], quotient: [2, 6] } };
+      }
+
+      function pairFor(nextMode, nextLevel = level) {
+        const rules = levelRules(nextLevel);
+        if (nextLevel !== 2) {
+          if (nextMode === "sum" || nextMode === "product") return [randomInteger(2, 9), randomInteger(2, 9)];
+          if (nextMode === "difference") {
+            const difference = randomInteger(2, 8);
+            const low = randomInteger(1, 12 - difference);
+            return [low + difference, low];
+          }
+          const divisor = randomInteger(2, 6);
+          const quotient = randomInteger(2, 6);
+          return [divisor * quotient, divisor];
+        }
+        if (nextMode === "sum") return [randomInteger(rules.sum[0], rules.sum[1]), randomInteger(rules.sum[0], rules.sum[1])];
+        if (nextMode === "difference") {
+          const high = randomInteger(rules.difference.high[0], rules.difference.high[1]);
+          const low = randomInteger(1, high - rules.difference.gap);
+          return [high, low];
+        }
+        if (nextMode === "product") {
+          const pair = [randomInteger(rules.product.big[0], rules.product.big[1]), randomInteger(rules.product.small[0], rules.product.small[1])];
+          return randomInteger(0, 1) ? pair : [pair[1], pair[0]];
+        }
+        const divisor = randomInteger(rules.quotient.divisor[0], rules.quotient.divisor[1]);
+        const quotient = randomInteger(rules.quotient.quotient[0], rules.quotient.quotient[1]);
         return [divisor * quotient, divisor];
+      }
+
+      // Toutes les paires (dans les bornes du niveau) qui donnent la cible : sert à planter une deuxième paire.
+      function matchingPairs(nextMode, nextTarget, nextLevel = level) {
+        const rules = levelRules(nextLevel);
+        const found = [];
+        const between = (value, bounds) => value >= bounds[0] && value <= bounds[1];
+        if (nextMode === "sum") {
+          for (let first = rules.sum[0]; first <= rules.sum[1]; first += 1) {
+            const second = nextTarget - first;
+            if (second >= first && between(second, rules.sum)) found.push([first, second]);
+          }
+        } else if (nextMode === "difference") {
+          const gapMax = rules.difference.gapMax || Number.POSITIVE_INFINITY;
+          if (nextTarget < rules.difference.gap || nextTarget > gapMax) return found;
+          for (let high = rules.difference.high[0]; high <= rules.difference.high[1]; high += 1) {
+            const low = high - nextTarget;
+            if (low >= 1) found.push([high, low]);
+          }
+        } else if (nextMode === "product") {
+          for (let first = 1; first * first <= nextTarget; first += 1) {
+            if (nextTarget % first !== 0) continue;
+            const second = nextTarget / first;
+            const fits = (between(first, rules.product.big) && between(second, rules.product.small))
+              || (between(second, rules.product.big) && between(first, rules.product.small));
+            if (fits) found.push([first, second]);
+          }
+        } else {
+          if (!between(nextTarget, rules.quotient.quotient)) return found;
+          for (let divisor = rules.quotient.divisor[0]; divisor <= rules.quotient.divisor[1]; divisor += 1) {
+            found.push([divisor * nextTarget, divisor]);
+          }
+        }
+        return found;
+      }
+
+      function sameValues(first, second) {
+        return Math.min(...first) === Math.min(...second) && Math.max(...first) === Math.max(...second);
+      }
+
+      // Construit un plateau qui a exactement 1 ou 2 paires voisines gagnantes, jamais plus :
+      // les paires plantées ne se touchent pas, et chaque autre case est corrigée pour n'ouvrir le coffre avec aucun voisin.
+      // Aucune boucle de retirage : le tirage reste déterministe si Math.random est figé (tests).
+      function generateBoard(nextMode, nextLevel = level, wantTwo = false) {
+        const rules = levelRules(nextLevel);
+        const pairs = neighborPairs();
+        const cells = Array.from({ length: SIZE * SIZE }, () => randomInteger(rules.fill[0], rules.fill[1]));
+        const firstSlot = pairs[randomInteger(0, pairs.length - 1)];
+        const solution = pairFor(nextMode, nextLevel);
+        const nextTarget = calculate(nextMode, solution[0], solution[1]);
+        cells[firstSlot[0]] = solution[0];
+        cells[firstSlot[1]] = solution[1];
+        const planted = new Set(firstSlot);
+
+        if (wantTwo) {
+          const farSlots = pairs.filter(slot => slot.every(position => firstSlot.every(taken => taken !== position && !adjacent(taken, position))));
+          const options = matchingPairs(nextMode, nextTarget, nextLevel);
+          const different = options.filter(option => !sameValues(option, solution));
+          const choices = different.length ? different : options;
+          if (farSlots.length && choices.length) {
+            const slot = farSlots[randomInteger(0, farSlots.length - 1)];
+            const chosen = choices[randomInteger(0, choices.length - 1)];
+            const oriented = randomInteger(0, 1) ? chosen : [chosen[1], chosen[0]];
+            cells[slot[0]] = oriented[0];
+            cells[slot[1]] = oriented[1];
+            slot.forEach(position => planted.add(position));
+          }
+        }
+
+        const span = rules.fill[1] - rules.fill[0] + 1;
+        const offset = randomInteger(0, span - 1);
+        for (let position = 0; position < cells.length; position += 1) {
+          if (planted.has(position)) continue;
+          const neighbours = pairs.filter(pair => pair.includes(position)).map(pair => pair[0] === position ? pair[1] : pair[0]);
+          const opens = candidate => neighbours.some(neighbour => isSolution(nextMode, candidate, cells[neighbour], nextTarget));
+          if (!opens(cells[position])) continue;
+          for (let step = 0; step < span; step += 1) {
+            const candidate = rules.fill[0] + ((offset + step) % span);
+            if (!opens(candidate)) {
+              cells[position] = candidate;
+              break;
+            }
+          }
+        }
+
+        return { values: cells, target: nextTarget, solutions: boardSolutions(nextMode, nextTarget, cells).length };
       }
 
       const operationTitles = { sum: "La somme", difference: "La différence", product: "Le produit", quotient: "Le quotient" };
@@ -1981,10 +2449,127 @@
         return view;
       }
 
-      function createOperationVisual(nextMode, first, second) {
+      // Niveau 2 : barres proportionnelles avec les nombres écrits dedans.
+      function createBarPart(value, className = "", total = value) {
+        const part = makeElement("span", `bar-part${className ? ` ${className}` : ""}`, String(value));
+        part.style.setProperty("--bar-value", String(value));
+        if (value / total < .12) part.classList.add("bar-slim");
+        return part;
+      }
+
+      function createBarRow(parts, className = "") {
+        const row = makeElement("div", `bar-row${className ? ` ${className}` : ""}`);
+        row.append(...parts);
+        return row;
+      }
+
+      function createSumBars(model) {
+        const diagram = makeElement("div", "bar-model");
+        diagram.setAttribute("aria-hidden", "true");
+        const markerRow = makeElement("div", "sum-marker-row");
+        const marker = makeElement("span", "sum-marker");
+        marker.append(makeElement("span", "", `somme = ${model.total}`));
+        markerRow.append(marker);
+        diagram.append(
+          markerRow,
+          createBarRow([createBarPart(model.total)], "bar-total"),
+          createBarRow([createBarPart(model.first, "bar-first", model.total), createBarPart(model.second, "bar-second", model.total)])
+        );
+        return diagram;
+      }
+
+      function createDifferenceBars(model) {
+        const diagram = makeElement("div", "bar-model");
+        diagram.setAttribute("aria-hidden", "true");
+        const markerRow = makeElement("div", "bar-marker-row");
+        const space = makeElement("span", "bar-marker-space");
+        space.style.setProperty("--bar-value", String(model.low));
+        const cell = makeElement("span", "bar-marker-cell");
+        cell.style.setProperty("--bar-value", String(model.difference));
+        cell.append(makeElement("span", "difference-marker"));
+        const label = makeElement("span", "bar-marker-label", `différence = ${model.difference}`);
+        if (model.difference / model.high < .3) label.classList.add("edge");
+        else label.style.setProperty("--label-center", `${((model.low + model.difference / 2) / model.high) * 100}%`);
+        markerRow.append(space, cell, label);
+        diagram.append(
+          createBarRow([createBarPart(model.high)], "bar-total"),
+          createBarRow([createBarPart(model.low, "bar-first", model.high), createBarPart(model.difference, "bar-gap", model.high)]),
+          markerRow
+        );
+        return diagram;
+      }
+
+      function createProductArea(model) {
+        const wrapper = makeElement("div", "array-dimension-model");
+        wrapper.setAttribute("aria-hidden", "true");
+        const columnsMarker = makeElement("span", "dimension-columns");
+        const rowsMarker = makeElement("span", "dimension-rows");
+        columnsMarker.append(makeElement("span", "", String(model.columns)));
+        rowsMarker.append(makeElement("span", "", String(model.rows)));
+        const area = makeElement("span", "area-model");
+        area.style.setProperty("--area-columns", String(model.columns));
+        area.style.setProperty("--area-rows", String(model.rows));
+        area.append(makeElement("span", "area-total", String(model.total)));
+        wrapper.append(columnsMarker, rowsMarker, area);
+        return wrapper;
+      }
+
+      function createPacketBar(groupCount, groupSize) {
+        const model = makeElement("div", "packet-model");
+        model.setAttribute("aria-hidden", "true");
+        const markerRow = makeElement("div", "sum-marker-row");
+        const marker = makeElement("span", "sum-marker");
+        marker.append(makeElement("span", "", String(groupCount * groupSize)));
+        markerRow.append(marker);
+        const bar = makeElement("div", "packet-bar");
+        bar.dataset.groupCount = String(groupCount);
+        bar.dataset.groupSize = String(groupSize);
+        bar.dataset.totalUnits = String(groupCount * groupSize);
+        for (let index = 0; index < groupCount; index += 1) {
+          const packet = makeElement("span", "packet", String(groupSize));
+          packet.style.setProperty("--packet-share", String(1 / groupCount));
+          bar.append(packet);
+        }
+        model.append(markerRow, bar);
+        return model;
+      }
+
+      function describeBars(nextMode, model) {
+        if (nextMode === "sum") return `Un repère aligné au-dessus de toute la largeur indique : somme égale ${model.total}. La barre du haut porte le nombre ${model.total}. Juste en dessous, deux barres jointives de longueurs proportionnelles portent ${model.first} puis ${model.second}. Les deux lignes ont exactement la même longueur. ${model.first} plus ${model.second} égale ${model.total}.`;
+        if (nextMode === "difference") return `La barre du haut porte le nombre ${model.high}. Juste en dessous, une barre alignée à gauche porte ${model.low} ; l’espace qui reste à droite, hachuré, porte ${model.difference}. Un repère orienté vers le haut, placé sous cet espace, indique : différence égale ${model.difference}. ${model.high} moins ${model.low} égale ${model.difference}.`;
+        if (nextMode === "product") return `Un rectangle quadrillé de ${model.rows} rangées et ${model.columns} colonnes porte le nombre ${model.total} en son centre. Le repère supérieur indique ${model.columns} colonnes et le repère latéral indique ${model.rows} rangées. ${model.rows} fois ${model.columns} égale ${model.total}.`;
+        return `${model.total} divisé par ${model.groupSize} vaut ${model.groupCount}. Une première barre de ${model.total} est découpée en ${model.groupCount} paquets qui portent chacun le nombre ${model.groupSize}. Combien de paquets de ${model.groupSize} dans ${model.total} ? ${model.groupCount}. Une seconde barre de ${model.total} est découpée en ${model.shareGroups} paquets qui portent chacun le nombre ${model.each}. Partager ${model.total} en ${model.shareGroups} paquets : ${model.each} dans chacun.`;
+      }
+
+      function createBarDiagram(nextMode, model) {
+        if (nextMode === "sum") return createSumBars(model);
+        if (nextMode === "difference") return createDifferenceBars(model);
+        if (nextMode === "product") return createProductArea(model);
+        const views = makeElement("div", "demo-interpretations");
+        views.append(
+          makeInterpretation(`Grouper : ${model.groupCount} paquets de ${model.groupSize}`, createPacketBar(model.groupCount, model.groupSize)),
+          makeInterpretation(`Partager : ${model.shareGroups} paquets de ${model.each}`, createPacketBar(model.shareGroups, model.each))
+        );
+        return views;
+      }
+
+      function visualCaption(nextMode, model) {
+        if (nextMode === "sum") return `${model.first} + ${model.second} = ${model.total} : les deux quantités réunies donnent le total.`;
+        if (nextMode === "difference") return `${model.high} − ${model.low} = ${model.difference}.`;
+        if (nextMode === "product") return `${model.rows} rangées de ${model.columns} : ${model.rows} × ${model.columns} = ${model.total}.`;
+        return `${model.total} ÷ ${model.groupSize} = ${model.groupCount}.`;
+      }
+
+      function createOperationVisual(nextMode, first, second, visualLevel = gameLevel) {
         const model = operationModel(nextMode, first, second);
         const demo = makeElement("div", "learning-demo");
         demo.setAttribute("role", "img");
+
+        if (visualLevel === 2) {
+          demo.setAttribute("aria-label", describeBars(nextMode, model));
+          demo.append(createBarDiagram(nextMode, model), makeElement("span", "demo-caption", visualCaption(nextMode, model)));
+          return demo;
+        }
 
         if (nextMode === "sum") {
           demo.setAttribute("aria-label", `Un repère aligné au-dessus de toute la largeur indique : somme égale ${model.total}. Le rectangle du haut contient ${pointLabel(model.total)}. Juste en dessous, deux rectangles jointifs contiennent ${pointLabel(model.first)} puis ${pointLabel(model.second)}. Les deux lignes ont exactement la même longueur. ${model.first} plus ${model.second} égale ${model.total}.`);
@@ -2021,10 +2606,42 @@
         );
       }
 
+      // Niveau 2 : l'aide reprend la carte du cours (titre, phrases, définition) avec des exemples
+      // de la taille du niveau, dessinés en barres. Le cours complet, lui, garde ses points.
+      const levelTwoExamples = { sum: [13, 8], difference: [17, 9], product: [12, 15], quotient: [60, 15] };
+
+      function levelTwoSentences(nextMode, model) {
+        if (nextMode === "sum") return { example: `La somme de ${model.first} et de ${model.second} est ${model.total}.`, equation: `${model.first} + ${model.second} = ${model.total}` };
+        if (nextMode === "difference") return { example: `La différence entre ${model.high} et ${model.low} est ${model.difference}.`, equation: `${model.high} − ${model.low} = ${model.difference}` };
+        if (nextMode === "product") return { example: `Le produit de ${model.rows} par ${model.columns} est ${model.total}.`, equation: `${model.rows} × ${model.columns} = ${model.total} ; ${model.columns} × ${model.rows} = ${model.total} aussi` };
+        return { example: `Le quotient de ${model.total} par ${model.groupSize} est ${model.groupCount}.`, equation: `${model.total} ÷ ${model.groupSize} = ${model.groupCount}` };
+      }
+
+      function createLevelTwoCard(nextMode, sourceCard) {
+        const [first, second] = levelTwoExamples[nextMode];
+        const model = operationModel(nextMode, first, second);
+        const sentences = levelTwoSentences(nextMode, model);
+        const card = makeElement("article");
+        card.dataset.operation = nextMode;
+        card.dataset.level = "2";
+        const picture = makeElement("div", "operation-picture");
+        picture.setAttribute("role", "img");
+        picture.setAttribute("aria-label", describeBars(nextMode, model));
+        picture.append(createBarDiagram(nextMode, model));
+        card.append(
+          sourceCard.querySelector("h3").cloneNode(true),
+          makeElement("p", "operation-example", sentences.example),
+          picture,
+          makeElement("strong", "", sentences.equation),
+          sourceCard.querySelector(".operation-definition").cloneNode(true)
+        );
+        return card;
+      }
+
       function renderHelpCard(nextMode) {
         const sourceCard = lesson.querySelector(`article[data-operation="${nextMode}"]`);
         if (!sourceCard) return;
-        const content = [sourceCard.cloneNode(true)];
+        const content = [gameLevel === 2 ? createLevelTwoCard(nextMode, sourceCard) : sourceCard.cloneNode(true)];
         if (nextMode === "difference" || nextMode === "quotient") {
           const conventions = makeElement("aside", "operation-conventions");
           conventions.setAttribute("aria-label", "Ordre des nombres dans le jeu");
@@ -2055,27 +2672,43 @@
         counter.textContent = `${keys} / ${GOAL} clés`;
       }
 
+      function updatePairHint() {
+        pairHint.hidden = !values.length;
+        pairHint.textContent = solutionCount === 1 ? "1 paire" : `${solutionCount} paires`;
+        pairHint.classList.toggle("two", solutionCount > 1);
+        pairHint.setAttribute("aria-label", solutionCount === 1
+          ? "Une seule paire voisine ouvre ce coffre."
+          : `${solutionCount} paires voisines ouvrent ce coffre.`);
+        pairHint.title = "Nombre de paires voisines qui ouvrent ce coffre";
+      }
+
       function makeChallenge(nextMode = modes[keys]) {
         clearSelection();
         mode = nextMode;
-        values = Array.from({ length: SIZE * SIZE }, () => randomInteger(1, 12));
-        const pairs = neighborPairs();
-        const pair = pairs[randomInteger(0, pairs.length - 1)];
-        const solution = pairFor(mode);
-        values[pair[0]] = solution[0];
-        values[pair[1]] = solution[1];
-        target = calculate(mode, solution[0], solution[1]);
+        // Environ un coffre sur trois propose deux paires gagnantes.
+        const generated = generateBoard(mode, gameLevel, randomInteger(1, 3) === 1);
+        values = generated.values;
+        target = generated.target;
+        solutionCount = generated.solutions;
         boardId += 1;
         locked = false;
+        bonusOpen = false;
         hideNextButton();
         challenge.innerHTML = `${operationArticles[mode]} <b>${operationLabels[mode]}</b> de <strong>${target}</strong>`;
         status.className = "status-line";
         status.textContent = "Choisis deux cases qui se touchent par un côté.";
         renderBoard();
+        updatePairHint();
       }
 
       function clearSelection() {
         board.querySelectorAll(".selected,.success,.failure").forEach(node => node.classList.remove("selected", "success", "failure"));
+        firstSelection = null;
+      }
+
+      // Pendant la vérification bonus, la paire gagnante reste verte : on n'efface que l'essai en cours.
+      function clearBonusSelection() {
+        board.querySelectorAll(".selected,.failure").forEach(node => node.classList.remove("selected", "failure"));
         firstSelection = null;
       }
 
@@ -2146,6 +2779,7 @@
       function advance() {
         if (pendingTimer) window.clearTimeout(pendingTimer);
         pendingTimer = null;
+        bonusOpen = false;
         hideNextButton();
         if (keys === GOAL) {
           complete();
@@ -2178,6 +2812,7 @@
         const exactQuotient = mode !== "quotient" || high % low === 0;
         const correct = exactQuotient && calculate(mode, firstValue, secondValue) === target;
         locked = true;
+        firstButton.classList.remove("selected");
         firstButton.classList.add(correct ? "success" : "failure");
         secondButton.classList.add(correct ? "success" : "failure");
         status.textContent = correct
@@ -2189,14 +2824,69 @@
           keys += 1;
           updateCounter();
           lastResolvedPosition = secondPosition;
-          if (largeScreen.matches) showNextButton();
-          else pendingTimer = window.setTimeout(advance, 750);
+          firstSelection = null;
+          if (largeScreen.matches) {
+            // Grand écran : le plateau reste ouvert pour vérifier l'autre paire pendant que le bouton attend.
+            wonMessage = status.textContent;
+            bonusOpen = true;
+            showNextButton();
+          } else {
+            pendingTimer = window.setTimeout(advance, 750);
+          }
         } else {
           openCorrection({ chosenPair: [firstValue, secondValue], trigger: secondButton });
         }
       }
 
+      // Vérification bonus (grand écran) : l'autre paire est confirmée sans clé supplémentaire,
+      // une paire fausse dit simplement non, sans ouvrir la correction.
+      function resolveBonus(secondPosition) {
+        const firstButton = board.querySelector(`[data-index="${firstSelection}"]`);
+        const secondButton = board.querySelector(`[data-index="${secondPosition}"]`);
+        const firstValue = values[firstSelection];
+        const secondValue = values[secondPosition];
+        firstSelection = null;
+        firstButton.classList.remove("selected");
+        if (firstButton.classList.contains("success") && secondButton.classList.contains("success")) {
+          status.className = "status-line good";
+          status.textContent = "Cette paire est déjà trouvée.";
+          return;
+        }
+        const correct = isSolution(mode, firstValue, secondValue, target);
+        firstButton.classList.add(correct ? "success" : "failure");
+        secondButton.classList.add(correct ? "success" : "failure");
+        status.className = `status-line ${correct ? "good" : "wrong"}`;
+        status.textContent = correct
+          ? `${expression(mode, firstValue, secondValue)} aussi !`
+          : `${expression(mode, firstValue, secondValue)} : non, pas celle-là.`;
+      }
+
+      function selectBonus(position) {
+        if (firstSelection === position) {
+          clearBonusSelection();
+          status.className = "status-line good";
+          status.textContent = wonMessage;
+          return;
+        }
+        if (firstSelection === null || !adjacent(firstSelection, position)) {
+          const restart = firstSelection !== null;
+          clearBonusSelection();
+          firstSelection = position;
+          board.querySelector(`[data-index="${position}"]`).classList.add("selected");
+          status.className = restart ? "status-line wrong" : "status-line";
+          status.textContent = restart
+            ? "Les cases doivent se toucher par un côté. Cette case devient la première."
+            : "Choisis maintenant une case voisine.";
+          return;
+        }
+        resolveBonus(position);
+      }
+
       function select(position) {
+        if (bonusOpen) {
+          selectBonus(position);
+          return;
+        }
         if (locked) return;
 
         if (firstSelection === position) {
@@ -2246,6 +2936,8 @@
         modes = shuffle(["sum", "sum", "sum", "difference", "difference", "product", "product", "product", "quotient", "quotient"]);
         keys = 0;
         locked = false;
+        gameLevel = level;
+        syncLevelUi();
         updateCounter();
         makeChallenge();
         if (moveFocus) focusAfterReset(focusTarget);
@@ -2264,7 +2956,10 @@
       });
       document.querySelector("#choose-solo").addEventListener("click", () => chooseMode("solo"));
       document.querySelector("#choose-duo").addEventListener("click", () => chooseMode("duo"));
-      document.querySelector("#continue-current-mode").addEventListener("click", () => closeModeDialog());
+      continueButton.addEventListener("click", continueCurrentGame);
+      levelButtons.forEach(button => {
+        button.addEventListener("click", () => setLevel(Number(button.dataset.level)));
+      });
       document.querySelectorAll("[data-change-mode]").forEach(button => {
         button.addEventListener("click", () => openModeDialog());
       });
@@ -2289,12 +2984,17 @@
         expression,
         operationModel,
         findSolutionPair,
+        boardSolutions,
+        matchingPairs,
+        levelRules,
+        generateBoard,
         createOperationVisual,
         start,
-        getState: () => ({ values: values.slice(), modes: modes.slice(), mode, target, keys, locked, boardId })
+        getState: () => ({ values: values.slice(), modes: modes.slice(), mode, target, keys, locked, boardId, level: gameLevel, solutions: solutionCount, bonusOpen })
       };
       setupFullscreen();
       syncOriginLinks();
+      syncLevelUi();
       updateCounter();
       if (requestedMode === CURRENT_MODE) {
         openLesson();
