@@ -50,10 +50,10 @@ test("« J’apprends » et « Je m’entraîne » se déplient sur l’accueil 
 });
 
 test("l’ordre des activités est conseillé, jamais imposé", () => {
-  // Lot 4a : la liste est précédée d'une activité en essai (« Je pousse les
-  // perles », visible seulement avec #essai=perles) — les quatre du moteur
-  // restent lançables, chacune la sienne.
-  assert.match(html, /\.\.\.ligne\.apprends\.map\(item => \(\{[\s\S]*?libelle: majuscule\(PARCOURS\.LIBELLES_APPRENDS\[item\.activite\]\)[\s\S]*?lancer: \(\) => launchFromParcours\(PARCOURS\.configApprends\(table, item\.activite\), "menu"\)/, "les QUATRE activités sont lançables, chacune la sienne");
+  // Lot 4b : les cinq activités du moteur (les perles en tête) sont
+  // lançables, chacune la sienne — plus d'activité « en essai » devant la liste.
+  assert.match(html, /items: ligne\.apprends\.map\(item => \(\{[\s\S]*?libelle: majuscule\(PARCOURS\.LIBELLES_APPRENDS\[item\.activite\]\)[\s\S]*?lancer: \(\) => launchFromParcours\(PARCOURS\.configApprends\(table, item\.activite\), "menu"\)/, "les CINQ activités sont lançables, chacune la sienne");
+  assert.doesNotMatch(html, /ESSAI_PERLES/, "le garde d’essai du lot 4a est parti : l’activité est ouverte à tous");
   assert.match(html, /conseillee: Boolean\(prochaineActivite\) && item\.activite === prochaineActivite\.activite/, "la conseillée est la première non faite, et rien de plus");
   assert.match(html, /conseillee: Boolean\(prochainEntrainement\) && item\.entrainement === prochainEntrainement\.entrainement/);
   assert.match(html, /tag\.textContent = "conseillé";/);

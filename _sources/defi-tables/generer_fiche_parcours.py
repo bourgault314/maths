@@ -7,9 +7,17 @@ Sorties :
     fiche imprimée depuis l'appli, qui reproduit la même mise en page en HTML)
 
 La fiche reprend la charte de la fiche de révision (titre bleu, cartes claires,
-QR code à droite, logo en bas à gauche, licence en pied). Les règles écrites en
-bas de page sont celles du moteur `defi_tables_mon_parcours.js` : si un seuil
-change là-bas, il doit changer ici.
+QR code à droite, logo en haut à gauche, signature « mathsgo.re · CC BY-NC-SA
+4.0 » centrée en pied). Les règles écrites en bas de page sont celles du moteur
+`defi_tables_mon_parcours.js` : si un seuil change là-bas, il doit changer ici.
+La mise en page est la même que la fiche imprimée depuis l'appli
+(`defi_tables.html`, section `.fiche`) : les deux disent la même chose.
+
+Lot 3 de Défi tables v2 (08/09/2026) : mélange obligatoire dès 2 tables
+(20 questions en 1 min 30), escalier de cinq marches (★ … ♛ Légende des
+tables), rang qui ne redescend jamais. Lot 4b (10/09/2026) : cinq activités
+dans J'apprends — « perles » (le rekenrek) en tête, et le bâton s'appelle la
+bande.
 
 Usage : python3 _sources/defi-tables/generer_fiche_parcours.py
 """
@@ -32,13 +40,17 @@ SUBTITLE = "Feuille à colorier à la main. Dans l’application, elle se rempli
 APP_URL = "https://mathsgo.re/outils/calcul_mental/defi_tables.html#parcours"
 FOOTER_TEXT = "mathsgo.re  ·  CC BY-NC-SA 4.0"
 TABLES = range(2, 11)
-APPRENDS = ["bâton", "à trous", "ordre", "désordre"]
+APPRENDS = ["perles", "bande", "à trous", "ordre", "désordre"]
 ENTRAINE = ["produits", "trous", "les deux"]
+# Les cinq marches de l'escalier : la durée de chacune, et la couronne pour la
+# dernière (DejaVu n'a pas l'emoji 👑 : ♛ la remplace sur le papier).
+MARCHES = ["★  2 min", "★★  1 min 45", "★★★  1 min 30", "★★★★  1 min 15", "♛  1 min"]
 RULES = [
     "J’apprends : un rond par activité terminée. On découvre la table, il n’y a rien à réussir.",
     "Je m’entraîne : 10 questions sans chronomètre, 1 erreur au maximum. Trois entraînements différents.",
     "Acquise ✓ : 20 questions (produits et nombres manquants) en 1 min 30, 2 erreurs au maximum.",
-    "Mélange : 25 produits des tables acquises en 2 min.   Expert : tables 2 à 10 mélangées, ★ produits · ★★ + trous · ★★★ + divisions.",
+    "Mon mélange : même règle, sur mes tables acquises — à réussir avant de valider une nouvelle table.",
+    "Mon rang : Bronze dès ma première table, puis Argent, Or, Platine, Diamant, Légende. On ne redescend jamais.",
 ]
 
 # Page 2 : « Mes calculs » — carré de Pythagore 2→9, sens confondus (moitié miroir grisée).
@@ -133,22 +145,23 @@ def draw_sheet(pdf: canvas.Canvas) -> None:
     pdf.setFont("SheetSans", 9)
     pdf.drawString(margin, y - 6.5 * mm, SUBTITLE)
 
-    # Tableau des tables
+    # Tableau des tables : 5 ronds J'apprends, 3 ronds Je m'entraîne, la case
+    # Acquise — neuf colonnes après le nom de la table, au pas de 12,5 mm.
     table_top = y - 12 * mm
-    row_h = 16.2 * mm
+    row_h = 15.6 * mm
     col_table = margin
-    col_apprends = margin + 42 * mm
-    col_entraine = margin + 103 * mm
-    col_acquise = margin + 156 * mm
+    col_apprends = margin + 40 * mm
+    col_entraine = margin + 106 * mm
+    col_acquise = margin + 150 * mm
     inner_w = width - 2 * margin
-    step_apprends = 13.5 * mm
-    step_entraine = 13.5 * mm
+    step_apprends = 12.5 * mm
+    step_entraine = 12.5 * mm
     radius = 4 * mm
 
     # En-têtes de colonnes
     pdf.setFillColor(MUTED)
     pdf.setFont("SheetSans-Bold", 8)
-    pdf.drawCentredString(col_apprends + 1.5 * step_apprends, table_top + 1.5 * mm, "J’APPRENDS")
+    pdf.drawCentredString(col_apprends + 2 * step_apprends, table_top + 1.5 * mm, "J’APPRENDS")
     pdf.drawCentredString(col_entraine + step_entraine, table_top + 1.5 * mm, "JE M’ENTRAÎNE")
     pdf.drawCentredString(col_acquise + 8 * mm, table_top + 1.5 * mm, "ACQUISE")
     pdf.setFont("SheetSans", 6.3)
@@ -165,8 +178,8 @@ def draw_sheet(pdf: canvas.Canvas) -> None:
         pdf.setFillColor(INK)
         pdf.setFont("SheetSans-Bold", 12.5)
         pdf.drawString(col_table + 4 * mm, cy - 1.6 * mm, f"Table de {table}")
-        circle_row(pdf, col_apprends, cy, 4, step_apprends, radius)
-        circle_row(pdf, col_entraine, cy, 3, step_entraine, radius)
+        circle_row(pdf, col_apprends, cy, len(APPRENDS), step_apprends, radius)
+        circle_row(pdf, col_entraine, cy, len(ENTRAINE), step_entraine, radius)
         # case Acquise
         box = 8.4 * mm
         pdf.setStrokeColor(HexColor("#7EA1B8"))
@@ -177,17 +190,18 @@ def draw_sheet(pdf: canvas.Canvas) -> None:
         pdf.setFont("SheetSans-Bold", 11)
         pdf.drawCentredString(col_acquise + 8 * mm, cy - 1.9 * mm, "✓")
 
-    # Mélange + Expert
+    # Mon mélange + Je deviens expert (mêmes textes que la fiche de l'appli)
     y -= 5 * mm
     block_h = 17 * mm
     y -= block_h
     rounded_box(pdf, margin, y, inner_w, block_h, PALE_TEAL, HexColor("#A9E4DC"))
     pdf.setFillColor(INK)
     pdf.setFont("SheetSans-Bold", 11)
-    pdf.drawString(margin + 4 * mm, y + block_h - 5.5 * mm, "Mélange de mes tables acquises")
+    pdf.drawString(margin + 4 * mm, y + block_h - 5.5 * mm, "Mon mélange : mes tables acquises")
     pdf.setFillColor(MUTED)
     pdf.setFont("SheetSans", 8)
-    pdf.drawString(margin + 4 * mm, y + 3.5 * mm, "Dès 2 tables acquises. À refaire à chaque nouvelle table : note la date de chaque mélange réussi.")
+    pdf.drawString(margin + 4 * mm, y + 3.5 * mm,
+                   "Dès 2 tables acquises, à réussir avant de valider une nouvelle table (20 questions en 1 min 30). À refaire à chaque table.")
     pdf.setFillColor(MUTED)
     pdf.setFont("SheetSans", 7.5)
     pdf.drawString(margin + 96 * mm, y + block_h - 5.5 * mm, "dates :")
@@ -197,18 +211,26 @@ def draw_sheet(pdf: canvas.Canvas) -> None:
         x0 = margin + 109 * mm + index * 18 * mm
         pdf.line(x0, y + block_h - 6.5 * mm, x0 + 15 * mm, y + block_h - 6.5 * mm)
 
-    y -= 3 * mm + block_h
-    rounded_box(pdf, margin, y, inner_w, block_h, HexColor("#FFF8E1"), HexColor("#E7C86A"))
+    # L'escalier : le titre, la phrase, puis les cinq marches sur leur ligne,
+    # réparties sur la largeur, à cocher au fur et à mesure.
+    expert_h = 22 * mm
+    y -= 3 * mm + expert_h
+    rounded_box(pdf, margin, y, inner_w, expert_h, HexColor("#FFF8E1"), HexColor("#E7C86A"))
     pdf.setFillColor(INK)
     pdf.setFont("SheetSans-Bold", 11)
-    pdf.drawString(margin + 4 * mm, y + block_h - 5.5 * mm, "Expert : toutes les tables de 2 à 10 mélangées")
+    pdf.drawString(margin + 4 * mm, y + expert_h - 5.5 * mm, "Je deviens expert : toutes les tables, de plus en plus vite")
     pdf.setFillColor(MUTED)
     pdf.setFont("SheetSans", 8)
-    pdf.drawString(margin + 4 * mm, y + 3.5 * mm, "★ produits   ★★ + trous   ★★★ + divisions.   Trois étoiles = Champion des tables !")
-    pdf.setFont("SheetSans-Bold", 16)
-    pdf.setFillColor(HexColor("#C9D6DF"))
-    for index in range(3):
-        pdf.drawCentredString(margin + 124 * mm + index * 16 * mm, y + 5 * mm, "★")
+    pdf.drawString(margin + 4 * mm, y + expert_h - 10 * mm,
+                   "Quand mes 9 tables sont acquises et le mélange réussi : 25 questions avec des divisions, 2 erreurs au maximum.")
+    pdf.setFont("SheetSans-Bold", 9)
+    pdf.setFillColor(GOLD)
+    pas = (inner_w - 8 * mm) / len(MARCHES)
+    for index, marche in enumerate(MARCHES):
+        pdf.drawCentredString(margin + 4 * mm + pas * (index + 0.5), y + 3.8 * mm, marche)
+    pdf.setFont("SheetSans", 6.5)
+    pdf.setFillColor(MUTED)
+    pdf.drawCentredString(margin + 4 * mm + pas * 4.5, y + 1.2 * mm, "Légende des tables")
 
     # Règles
     y -= 10 * mm

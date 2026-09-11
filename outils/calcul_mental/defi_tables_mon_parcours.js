@@ -7,7 +7,7 @@
 
   // Moteur de « Mon parcours » (logique pure, sans DOM) pour Défi tables.
   // Règles décidées le 29/08/2026 :
-  //  - par table (2 à 10) : J'apprends (4 activités), Je m'entraîne (3 entraînements
+  //  - par table (2 à 10) : J'apprends (4 activités, 5 depuis le lot 4b), Je m'entraîne (3 entraînements
   //    différents), Acquise (validation 20 questions, 1 min 30, 2 erreurs max) ;
   //  - Mélange des tables acquises (dès 2 tables) : un ✓ « à jour » qui repasse
   //    « à refaire » à chaque nouvelle table acquise.
@@ -35,7 +35,20 @@
   //  - les parcours d'avant sont migrés une seule fois (version 2) : les tables
   //    acquises restent acquises, l'ancienne ★★★ (divisions en 2 min) devient
   //    la nouvelle ★, les anciennes ★ et ★★ ne valent rien, le mélange est remis
-  //    « à faire », et un avis unique attend la première ouverture.
+  //    « à faire ».
+  // Lot 4b « les perles comptent » (10/09/2026) :
+  //  - J'apprends a CINQ activités : « je pousse les perles » (le rekenrek du
+  //    lot 4a) en première position, puis la bande (ex-bâton), la bande à
+  //    trous, l'ordre, le désordre. Les activités sont rangées PAR NOM, jamais
+  //    par rang : un parcours d'avant garde ses cases telles quelles, et la
+  //    perle qui lui manque vaut simplement 0 — rien ne glisse d'un cran ;
+  //  - l'étape conseillée d'une table (le rond bleu) : J'apprends tant que les
+  //    cinq activités ne sont pas toutes terminées ET qu'aucun entraînement
+  //    n'est réussi ; dès que l'un des deux est vrai, Je m'entraîne. « Finir un
+  //    J'apprends ne veut pas dire qu'il connaît » ;
+  //  - l'avis « le parcours a changé » du lot 3 est retiré : il n'y avait pas
+  //    d'élèves avant le 8/09, il n'a servi à personne. La migration des
+  //    données (★★★ → ★, mélange remis à faire) reste.
   // Lot 4 « Mes calculs » (29/08/2026, idée de Claire) :
   //  - grille des 36 faits 2×2 à 9×9, sens confondus (7×8 et 8×7 = un seul fait) ;
   //  - 3 cases par fait : +1 par bonne réponse, −1 par erreur ou question passée,
@@ -51,11 +64,16 @@
   // 2 = lot 3 (mélange obligatoire, escalier des étoiles, rang, jours). Un
   // parcours d'une version plus basse est migré par normaliserParcours — donc
   // à la lecture de la case, à la fusion, à la sauvegarde — et jamais deux fois.
+  // Le lot 4b n'a pas changé de version : il ajoute une activité (une clé de
+  // plus dans « apprends »), et une clé absente vaut 0 — c'est déjà la règle.
   const VERSION = 2;
   const CLE_STOCKAGE = "mathsgo-defi-tables-parcours";
   const TABLES = Object.freeze(Array.from({length: 9}, (_, index) => index + 2));
   const ORDRE_CONSEIL = Object.freeze([2, 10, 5, 3, 4, 6, 7, 8, 9]);
-  const ACTIVITES_APPRENDS = Object.freeze(["construct", "gaps", "ordered", "random"]);
+  // Les activités de J'apprends, dans l'ordre où elles se proposent : les
+  // perles (le rekenrek) d'abord, la bande ensuite. Ce sont des CLÉS, pas des
+  // rangs : chaque case du parcours est rangée sous son nom.
+  const ACTIVITES_APPRENDS = Object.freeze(["beads", "construct", "gaps", "ordered", "random"]);
   const ENTRAINEMENTS = Object.freeze(["desordre", "trous", "mixte"]);
   const PRENOM_MAX = 20;
 
@@ -119,10 +137,20 @@
   });
 
   const LIBELLES_APPRENDS = Object.freeze({
-    construct: "je construis le bâton",
-    gaps: "je complète un bâton à trous",
+    beads: "je pousse les perles",
+    construct: "je construis la bande",
+    gaps: "je complète une bande à trous",
     ordered: "je réponds dans l’ordre",
     random: "je réponds dans le désordre"
+  });
+
+  // La même chose à l'impératif, pour « Table de 3 : pousse les perles ».
+  const CONSIGNES_APPRENDS = Object.freeze({
+    beads: "pousse les perles",
+    construct: "construis la bande",
+    gaps: "complète une bande à trous",
+    ordered: "réponds dans l’ordre",
+    random: "réponds dans le désordre"
   });
 
   function cloner(valeur) {
@@ -131,7 +159,7 @@
 
   function tableVide() {
     return {
-      apprends: {construct: 0, gaps: 0, ordered: 0, random: 0},
+      apprends: Object.fromEntries(ACTIVITES_APPRENDS.map(activite => [activite, 0])),
       entraine: {desordre: 0, trous: 0, mixte: 0, dernier: null},
       acquise: null
     };
@@ -155,12 +183,6 @@
       rang: 0,
       // Les jours travaillés (jour local, « AAAA-MM-JJ »), les 14 derniers.
       jours: [],
-      // L'avis « le parcours a changé » : avis = version des règles à annoncer
-      // (0 = rien), avisVu = version dont l'avis a été lu. L'avis attend tant
-      // que avis > avisVu. Les deux montent, jamais ne redescendent : un autre
-      // appareil resté sur l'ancienne version ne fait pas revenir l'avis.
-      avis: 0,
-      avisVu: 0,
       calculs: {}
     };
   }
@@ -246,8 +268,6 @@
     if (!ancienne) {
       parcours.rang = entier(brut.rang, 0, RANGS.length - 1);
       parcours.jours = normaliserJours(brut.jours);
-      parcours.avis = entier(brut.avis, 0, 1000);
-      parcours.avisVu = entier(brut.avisVu, 0, 1000);
     }
     if (brut.calculs && typeof brut.calculs === "object") {
       FAITS.forEach(cle => {
@@ -279,22 +299,20 @@
   // moment où un parcours d'avant est lu. Les tables acquises restent acquises
   // et la grille ne bouge pas ; l'ancien mélange (25 produits en 2 min) ne vaut
   // pas le nouveau : il est remis « à faire » pour qui a au moins 2 tables ; les
-  // étoiles ont été converties plus haut (★★★ → ★). Un parcours qui a déjà du
-  // travail reçoit un avis à lire une fois ; un parcours vide n'a rien à
-  // annoncer. Un appareil resté sur l'ancienne appli renvoie un parcours de
-  // version 1 : il repasse ici, et la fusion (maximum de chaque compteur) fait
-  // que rien de ce qui a été gagné sous les nouvelles règles ne se perd.
+  // étoiles ont été converties plus haut (★★★ → ★). Un appareil resté sur
+  // l'ancienne appli renvoie un parcours de version 1 : il repasse ici, et la
+  // fusion (maximum de chaque compteur) fait que rien de ce qui a été gagné
+  // sous les nouvelles règles ne se perd. (L'avis « le parcours a changé »
+  // qui accompagnait cette migration a été retiré au lot 4b.)
   function migrerVersion2(parcours) {
     parcours.version = VERSION;
     parcours.expert.couronne = null;
     parcours.rang = 0;
     parcours.jours = [];
-    parcours.avisVu = 0;
     if (parcours.melange.tables.length >= SEUILS.melange.tablesMin) {
       parcours.melange.aJour = false;
       parcours.melange.aRefaireAvec = null;
     }
-    parcours.avis = estVide(parcours) ? 0 : VERSION;
   }
 
   // Le rang que l'état du parcours donne, sans mémoire : le rang enregistré
@@ -325,17 +343,6 @@
   // que le dernier mélange (avec les 9) est réussi.
   function escalierOuvert(parcours) {
     return toutesAcquises(parcours) && parcours.melange.aJour;
-  }
-
-  // L'avis « le parcours a changé » est-il à afficher ?
-  function avisEnAttente(parcours) {
-    return parcours.avis > parcours.avisVu;
-  }
-
-  function marquerAvisVu(parcours) {
-    const copie = cloner(parcours);
-    copie.avisVu = Math.max(copie.avisVu, copie.avis);
-    return copie;
   }
 
   // Note un jour travaillé (au plus SEUILS.jours.garder jours gardés).
@@ -796,16 +803,33 @@
     return {mode: "revision", table: TABLES.includes(Number(table)) ? Number(table) : null};
   }
 
+  // L'étape conseillée d'une table — le rond bleu de l'accueil. Règle de
+  // Gwenaël (10/09/2026) : J'apprends tant que les cinq activités ne sont pas
+  // TOUTES terminées ET qu'aucun entraînement n'est réussi ; dès que l'un des
+  // deux est vrai, Je m'entraîne ; les trois entraînements réussis, la
+  // validation. « Finir un J'apprends ne veut pas dire qu'il connaît » — et
+  // celui qui réussit un entraînement de lui-même n'a plus à découvrir la
+  // table. Jusqu'au lot 4a, J'apprends n'était conseillé qu'à une table jamais
+  // touchée : la première activité commencée envoyait déjà s'entraîner.
+  function conseilTable(ligne) {
+    if (ligne.acquise) return "valide";
+    const reussites = ENTRAINEMENTS.filter(entrainement => ligne.entraine[entrainement] === 2).length;
+    if (reussites === ENTRAINEMENTS.length) return "valide";
+    const toutesTerminees = ACTIVITES_APPRENDS.every(activite => ligne.apprends[activite] === 2);
+    return !toutesTerminees && !reussites ? "apprends" : "entraine";
+  }
+
   function etapeTable(parcours, table) {
     const ligne = parcours.tables[table];
     if (ligne.acquise) return null;
-    const reussites = ENTRAINEMENTS.filter(entrainement => ligne.entraine[entrainement] === 2).length;
-    if (reussites === ENTRAINEMENTS.length) {
+    const conseil = conseilTable(ligne);
+    if (conseil === "valide") {
       return {type: "validation", table, libelle: `Table de ${table} : valide ta table (20 questions en 1 min 30)`, config: configValidation(table)};
     }
-    const commence = ACTIVITES_APPRENDS.some(activite => ligne.apprends[activite] > 0) || ENTRAINEMENTS.some(entrainement => ligne.entraine[entrainement] > 0);
-    if (!commence) {
-      return {type: "apprends", table, activite: "construct", libelle: `Table de ${table} : construis le bâton`, config: configApprends(table, "construct")};
+    if (conseil === "apprends") {
+      // La première activité qui n'est pas terminée, dans l'ordre : les perles d'abord.
+      const activite = ACTIVITES_APPRENDS.find(candidat => ligne.apprends[candidat] !== 2);
+      return {type: "apprends", table, activite, libelle: `Table de ${table} : ${CONSIGNES_APPRENDS[activite]}`, config: configApprends(table, activite)};
     }
     const entrainement = ENTRAINEMENTS.find(candidat => ligne.entraine[candidat] !== 2);
     return {
@@ -895,7 +919,9 @@
         entraine: ENTRAINEMENTS.map(entrainement => ({entrainement, etat: ligne.entraine[entrainement], libelle: LIBELLES_ENTRAINEMENTS[entrainement]})),
         dernierEntrainement: ligne.entraine.dernier,
         acquise: ligne.acquise,
-        aRevoir: aRevoir.includes(table)
+        aRevoir: aRevoir.includes(table),
+        // L'étape conseillée de la table : « apprends », « entraine », « valide ».
+        conseil: conseilTable(ligne)
       };
     });
     const visible = acquises.length >= SEUILS.melange.tablesMin;
@@ -924,7 +950,6 @@
       expert: {niveau: etoiles, etoiles: marches.map(marche => marche.gagnee), ouvert, marches, suivante: ouvert && etoiles < ETOILES_MAX ? marches[etoiles] : null, couronne: parcours.expert.couronne},
       rang: rang(parcours.rang),
       jours: bilanJours(parcours),
-      avis: avisEnAttente(parcours) ? parcours.avis : 0,
       calculs: resumeCalculs(parcours),
       prochaine: prochaineEtape(parcours)
     };
@@ -1469,15 +1494,12 @@
     }
 
     // Les étoiles prennent le meilleur des deux, la couronne sa première date ;
-    // le rang ne redescend jamais ; les jours travaillés se réunissent ; l'avis
-    // et sa lecture ne reviennent jamais en arrière.
+    // le rang ne redescend jamais ; les jours travaillés se réunissent.
     fusion.expert.etoiles = Math.max(a.expert.etoiles, b.expert.etoiles);
     fusion.expert.dernier = dateLaPlusRecente(a.expert.dernier, b.expert.dernier);
     fusion.expert.couronne = dateLaPlusAncienne(a.expert.couronne, b.expert.couronne);
     fusion.rang = Math.max(a.rang, b.rang);
     fusion.jours = normaliserJours([...a.jours, ...b.jours]);
-    fusion.avis = Math.max(a.avis, b.avis);
-    fusion.avisVu = Math.max(a.avisVu, b.avisVu);
 
     FAITS.forEach(cle => {
       const faitA = a.calculs[cle];
@@ -1559,6 +1581,7 @@
     RANGS,
     LIBELLES_ENTRAINEMENTS,
     LIBELLES_APPRENDS,
+    CONSIGNES_APPRENDS,
     PRENOM_MAX,
     creerParcours,
     normaliserParcours,
@@ -1585,8 +1608,6 @@
     jourLocal,
     lundiDe,
     bilanJours,
-    avisEnAttente,
-    marquerAvisVu,
     FAITS,
     cleFait,
     facteursFait,
@@ -1601,6 +1622,7 @@
     tablesARevoir,
     planRevision,
     configRevision,
+    conseilTable,
     prochaineEtape,
     etatAffichage,
     CLE_SEL,

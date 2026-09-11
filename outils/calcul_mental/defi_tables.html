@@ -301,7 +301,7 @@
     .etape.verrou strong { color: #6b7f90; }
     .etape.verrou small { color: #7a5a00; }
     .etape.verrou .cadenas { font-size: 1.15rem; line-height: 1; }
-    /* Le choix déplié sous une étape (09/09/2026) : l'élève voit les quatre
+    /* Le choix déplié sous une étape (09/09/2026) : l'élève voit les cinq
        activités, leur état et celle qu'on lui conseille — il choisit, et il
        peut en refaire une plus tard. Rien n'est verrouillé, rien n'impose
        l'ordre : l'appli conseille, l'élève décide. */
@@ -334,10 +334,6 @@
     /* Les jours : « N jours cette semaine · N cases t'attendent demain ». */
     .jours { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 6px 10px; margin: -4px 4px 0; color: #4c6274; font-size: .84rem; font-weight: 800; text-align: center; }
     .jours .k { display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px; border-radius: 999px; background: #eef7f5; color: #1b4d44; }
-    /* L'avis unique « le parcours a changé » (migration vers les règles du lot 3). */
-    .avis { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 10px; padding: 10px 12px 10px 14px; border-radius: 14px; background: #e9f0ff; color: #2a4c93; font-weight: 800; font-size: .86rem; line-height: 1.35; text-align: left; }
-    .avis p { margin: 0; }
-    .avis button { min-height: 40px; padding: 0 14px; border: 0; border-radius: 999px; background: var(--blue); color: #fff; font: inherit; font-weight: 950; cursor: pointer; }
     /* Je deviens expert : le bloc principal quand les 9 tables sont acquises. */
     .expert { padding: 14px 14px 14px; border: 2px solid #f0dc8c; border-radius: 22px; background: linear-gradient(180deg, #fffdf3, #fff); }
     .expert .eyebrow { margin: 0; color: #7a5a00; font-size: .74rem; letter-spacing: .06em; }
@@ -1035,7 +1031,7 @@
     .actions { width: min(100%, var(--pave-largeur)); display: grid; grid-template-columns: 2fr 1fr; gap: var(--touche-gap); margin: var(--valider-gap) auto 0; }
     .actions button { min-width: 0; min-height: 44px; height: var(--touche-h); padding: 0 10px; font-size: var(--valider-police); }
     .question.no-skip .actions { grid-template-columns: 1fr; }
-    /* Dans J'apprends, le bâton prend sa place au-dessus du pavé : les touches
+    /* Dans J'apprends, la bande prend sa place au-dessus du pavé : les touches
        redescendent un peu (46 px sur téléphone, jamais moins de 44) pour que
        tout tienne sans défiler. */
     .question.show-learn-sequence { --touche-h: clamp(44px, 6.9dvh, 46px); }
@@ -1188,7 +1184,7 @@
       .challenge-playing .question.stick-trace .expression { min-height: 68px; }
       .challenge-playing .stick-help-button { min-height: 32px; padding: 4px 12px; }
       .challenge-playing .question.stick-trace .learn-sequence { gap: 4px; }
-      /* Dans « Je construis le bâton » et « bâton à trous », l'en-tête n'est
+      /* Dans « Je construis la bande » et « bande à trous », l'en-tête n'est
          que le titre « Table de 7 » : pas besoin de la hauteur d'une question
          à trou, et ces 20 px font tenir le pavé agrandi sur un iPhone. */
       .challenge-playing .question.stick-main .expression { min-height: 56px; }
@@ -1302,10 +1298,11 @@
     .fiche-table td:first-child { padding-left: 4mm; border-left: .3mm solid #cfe2ed; border-radius: 3mm 0 0 3mm; color: #143451; font-size: 12.5pt; font-weight: 700; text-align: left; }
     .fiche-table td:last-child { border-right: .3mm solid #cfe2ed; border-radius: 0 3mm 3mm 0; }
     .fiche-table td.fiche-gap { width: 6mm; background: transparent; border: 0; }
-    /* Trois groupes, trois blocs : un trait sépare J'apprends, Je m'entraîne et
-       Acquise, sinon les huit ronds se lisent comme une seule file. */
+    /* Trois groupes, trois blocs : un trait sépare J'apprends (5 ronds depuis
+       le lot 4b), Je m'entraîne (3) et Acquise, sinon les neuf ronds se lisent
+       comme une seule file. */
     .fiche-table th:nth-child(3), .fiche-table th:nth-child(4),
-    .fiche-table td:nth-child(6), .fiche-table td:nth-child(9) { border-left: .5mm solid #b9d4e6; }
+    .fiche-table td:nth-child(7), .fiche-table td:nth-child(10) { border-left: .5mm solid #b9d4e6; }
     .fiche-table tr.is-acquise td { background: #f2fbf5; }
     .fiche-dot { display: inline-block; width: 7.6mm; height: 7.6mm; border: .35mm solid #7ea1b8; border-radius: 50%; background: #fff; vertical-align: middle; }
     .fiche-dot.is-started { border-color: #087f75; background: linear-gradient(90deg, #087f75 50%, #fff 50%); }
@@ -1379,7 +1376,15 @@
        même taille, pour que rien ne bouge sous le boulier. */
     .perles-consigne.est-refus { color: var(--red); animation: perles-refus .28s ease-out; }
     @keyframes perles-refus { 0%, 100% { transform: translateX(0); } 30% { transform: translateX(-5px); } 70% { transform: translateX(5px); } }
-    .perles-scene { flex: 1 1 auto; min-height: 132px; width: 100%; display: grid; place-items: center; padding-bottom: clamp(10px, 1.6vh, 18px); }
+    /* La scène tient le boulier, la bande et l'addition ensemble, centrés
+       dans la hauteur qui reste sous la consigne (lot 4b, retour de Gwenaël
+       sur la capture : le boulier flottait seul au milieu, la bande et
+       l'addition collées en bas — « la gestion des espaces est à
+       améliorer »). Les trois respirent à égalité : l'espace libre se
+       répartit en parts égales au-dessus du boulier, entre le boulier et la
+       bande, entre la bande et l'addition, et en dessous — « il faut quand
+       même un peu d'espace entre chacun », jamais un bloc collé sous un vide. */
+    .perles-scene { flex: 1 1 auto; min-height: 132px; width: 100%; display: grid; grid-auto-rows: max-content; align-content: space-evenly; justify-content: center; justify-items: center; row-gap: clamp(8px, 1.4vh, 16px); }
     .question.perles-main .number-stick { max-width: 100%; }
     .perles-cadre {
       position: relative;
@@ -1412,7 +1417,7 @@
        fige en vert quand la case de la bande se remplit. */
     .perles-addition {
       min-height: 1.3em;
-      margin: 6px 0 4px;
+      margin: 0;
       color: var(--ink);
       font-size: clamp(1.3rem, 5.4vw, 2.1rem);
       font-weight: 950;
@@ -1561,7 +1566,6 @@
           <div class="acc">
             <!-- Pas de ligne « Bonjour » (Gwenaël, 08/09) : le bandeau de suivi
                  dit déjà qui est là, l'accueil commence par le bloc Ma table. -->
-            <div id="acc-avis" class="avis" role="status" hidden><p id="acc-avis-texte"></p><button id="acc-avis-ok" type="button">OK</button></div>
             <section id="acc-expert" class="expert" aria-labelledby="acc-expert-titre" hidden>
               <p class="eyebrow">Je deviens expert</p>
               <h2 id="acc-expert-titre">Toutes les tables, de plus en plus vite</h2>
@@ -1631,8 +1635,8 @@
           <fieldset id="learn-activity-settings" class="setting-group" hidden>
             <legend class="setting-title">Choisis une activité</legend>
             <div class="type-options learn-activity-options">
-              <button class="type-button is-selected" type="button" data-learn-activity="construct" aria-pressed="true"><strong>Je construis le bâton</strong></button>
-              <button class="type-button" type="button" data-learn-activity="gaps" aria-pressed="false"><strong>Je complète un bâton à trous</strong></button>
+              <button class="type-button is-selected" type="button" data-learn-activity="construct" aria-pressed="true"><strong>Je construis la bande</strong></button>
+              <button class="type-button" type="button" data-learn-activity="gaps" aria-pressed="false"><strong>Je complète une bande à trous</strong></button>
               <button class="type-button" type="button" data-learn-activity="ordered" aria-pressed="false"><strong>Je réponds dans l’ordre</strong></button>
               <button class="type-button" type="button" data-learn-activity="random" aria-pressed="false"><strong>Je réponds dans le désordre</strong></button>
             </div>
@@ -1825,7 +1829,7 @@
     <p class="fiche-subtitle" id="fiche-subtitle">Colorie les ronds au fur et à mesure, comme dans l’application.</p>
     <table class="fiche-table">
       <thead>
-        <tr><th></th><th colspan="4">J’apprends<small>bâton · à trous · ordre · désordre</small></th><th colspan="3">Je m’entraîne<small>produits · trous · les deux</small></th><th>Acquise</th></tr>
+        <tr><th></th><th colspan="5">J’apprends<small>perles · bande · à trous · ordre · désordre</small></th><th colspan="3">Je m’entraîne<small>produits · trous · les deux</small></th><th>Acquise</th></tr>
       </thead>
       <tbody id="fiche-rows"></tbody>
     </table>
@@ -1885,8 +1889,8 @@
     <span data-mathsgo-confidentialite>Sans cookie ni traceur</span>
   </footer>
 
-  <script src="./defi_tables_core.js?v=20260909-1"></script>
-  <script src="./defi_tables_mon_parcours.js?v=20260908-13"></script>
+  <script src="./defi_tables_core.js?v=20260910-1"></script>
+  <script src="./defi_tables_mon_parcours.js?v=20260910-1"></script>
   <script>
     (() => {
       "use strict";
@@ -1943,24 +1947,6 @@
         return {billet: parametres.get("b") || "", vue: parametres.get("vue") || "", ouvrir: parametres.get("ouvrir") || ""};
       }
       const ENTREE = lireEntree();
-
-      // Lot 4a (09/09/2026) : l'activité « Je pousse les perles » n'apparaît
-      // dans « J'apprends » qu'en ouvrant la page avec #essai=perles, le temps
-      // qu'elle soit essayée en vrai sur un TNI et sur un téléphone. Rien ne
-      // change pour les élèves, et rien n'est enregistré : le moteur du parcours
-      // ne connaît pas cette activité (classerSerie renvoie null pour elle),
-      // donc elle ne coche aucune case et ne compte dans aucun « sur 4 ».
-      // Le lot 4b l'ouvrira à tous — c'est lui qui touche au moteur.
-      // « ?essai=perles » (avant le #) est accepté aussi : sur un téléphone, le
-      // « # » saute facilement (adresse proposée par Safari, lien envoyé à soi).
-      const ESSAI_PERLES = (() => {
-        try {
-          const lit = adresse => new URLSearchParams(String(adresse || "").replace(/^[#?]/, "")).get("essai") === "perles";
-          return lit(window.location.hash) || lit(window.location.search);
-        } catch (erreur) {
-          return false;
-        }
-      })();
 
       // Le code actif : celui de l'onglet, et rien d'autre. Décidé AVANT de
       // charger le parcours : c'est ce qui fait qu'on ne montre jamais la case
@@ -3242,7 +3228,7 @@
         }
         if (stickOnly) $("answer-feedback").before(zone);
         else $("expression").before(zone);
-        // Dans l’ordre et dans le désordre, le bâton d’aide ne montre que les cases déjà répondues :
+        // Dans l’ordre et dans le désordre, la bande d’aide ne montre que les cases déjà répondues :
         // il sert à raisonner (« j’ajoute 7 »), pas à lire la réponse.
         const stick = createNumberStick(table, state.revealedLearnResults, {
           activeMultiplier: question?.multiplier,
@@ -3256,7 +3242,7 @@
           helpButton.className = "stick-help-button";
           helpButton.dataset.stickHelpToggle = "";
           const revealedCount = state.revealedLearnResults.size;
-          helpButton.textContent = state.learnStickHelpVisible ? "Masquer" : revealedCount ? `Voir le bâton (${revealedCount} / 11)` : "Voir le bâton (vide)";
+          helpButton.textContent = state.learnStickHelpVisible ? "Masquer" : revealedCount ? `Voir la bande (${revealedCount} / 11)` : "Voir la bande (vide)";
           helpButton.setAttribute("aria-expanded", String(state.learnStickHelpVisible));
           helpButton.addEventListener("click", toggleLearnStickHelp);
           zone.replaceChildren(...(state.learnStickHelpVisible ? [helpButton, stick] : [helpButton]));
@@ -3326,10 +3312,19 @@
          2 perles » veut dire deux, pas huit : le 4a acceptait le paquet et
          remplissait quatre cases d'un coup. Puis le geste est FORCÉ : un seul
          geste est accepté à chaque instant — le bon nombre, d'un coup, sur la
-         rangée en cours (gesteAttendu) ; tout autre groupe revient à droite et
-         la consigne dit, en rouge, ce qu'on attendait. Sans ça, « il y en a
-         qui vont faire plus un, plus un, plus un » : compter de un en un est
-         exactement ce que le boulier doit leur faire quitter.
+         rangée en cours (gesteAttendu) ; tout autre groupe revient à droite.
+         Sans ça, « il y en a qui vont faire plus un, plus un, plus un » :
+         compter de un en un est exactement ce que le boulier doit leur faire
+         quitter.
+
+         Lot 4b (10/09/2026, deuxième essai au doigt) : la consigne SUIT
+         l'étape et les refus ne donnent plus la réponse. « Pousse 8 perles. »
+         quand la rangée en cours peut tout prendre ; « Pousse 8 perles en deux
+         coups. » quand il faudra d'abord la finir ; après le premier coup, la
+         question qui reste : « 2 + ? = 8 » — jamais le 6, c'est à l'élève de le
+         trouver. Les refus ne disent que la direction : « Trop de perles ! »,
+         « Pas assez de perles ! », « Finis la rangée d'abord ! ». (« Pousse
+         6 perles ensemble » disait la décomposition 2 + 6 à sa place.)
          --------------------------------------------------------------- */
       const PERLES = Object.freeze({
         rangees: 10, parRangee: 10,
@@ -3373,7 +3368,7 @@
         bloc.className = "perles-zone";
         const consigne = document.createElement("p");
         consigne.className = "learn-instruction perles-consigne";
-        consigne.textContent = `Pousse ${table} perle${table > 1 ? "s" : ""}.`;
+        consigne.textContent = consigneDeBase();
         const scene = document.createElement("div");
         scene.className = "perles-scene";
         const cadre = document.createElement("div");
@@ -3408,7 +3403,6 @@
           rangees.push({element: rangee, perles: liste});
         }
         cadre.append(montants[0], montants[1], interieur);
-        scene.append(cadre);
         const addition = document.createElement("p");
         addition.className = "perles-addition";
         addition.setAttribute("role", "status");
@@ -3421,7 +3415,8 @@
         terminer.className = "primary perles-terminer";
         terminer.textContent = "Terminer";
         terminer.addEventListener("click", () => { if (state.running) finish(); });
-        bloc.append(consigne, scene, bande, addition, tableFinale, terminer);
+        scene.append(cadre, bande, addition);
+        bloc.append(consigne, scene, tableFinale, terminer);
         zone.replaceChildren(bloc);
 
         boulier.dom = {zone, bloc, scene, cadre, interieur, montants, rangees, addition, bande, tableFinale, terminer};
@@ -3441,7 +3436,10 @@
         const dom = boulier.dom;
         if (!dom) return;
         const largeur = dom.scene.clientWidth || dom.zone.clientWidth || 320;
-        let hauteur = dom.scene.clientHeight;
+        // La hauteur laissée au boulier : la scène moins la bande, l'addition
+        // et les deux interlignes — les trois vivent dans la même grille.
+        const interligne = parseFloat(getComputedStyle(dom.scene).rowGap) || 0;
+        let hauteur = dom.scene.clientHeight - dom.bande.offsetHeight - dom.addition.offsetHeight - interligne * 2;
         if (!(hauteur > 120)) hauteur = Math.round(window.innerHeight * .45);
         const taille = Math.max(PERLES.mini, Math.floor(Math.min(
           largeur / PERLES.largeurCadre,
@@ -3561,8 +3559,8 @@
         return {rangee, nombre: Math.max(0, Math.min(manque, PERLES.parRangee - etats[rangee]))};
       }
 
-      // null si le geste est le bon, sinon le motif du refus et le nombre
-      // attendu, pour le dire à l'élève.
+      // null si le geste est le bon, sinon le motif du refus (et le nombre
+      // attendu — pour les tests et le filet, jamais pour l'élève).
       function verifierGeste(etats, etape, table, rangee, ecart) {
         if (ecart <= 0) return null;
         const attendu = gesteAttendu(etats, etape, table);
@@ -3572,15 +3570,27 @@
         return null;
       }
 
+      // Le refus ne dit que la direction, jamais le nombre : « Pousse-en 6 »
+      // donnait la décomposition 2 + 6 que l'élève doit trouver lui-même.
       function messageRefus(refus) {
-        const perles = `${refus.nombre} perle${refus.nombre > 1 ? "s" : ""}`;
         if (refus.motif === "rangee") return "Finis la rangée d’abord !";
-        if (refus.motif === "trop") return `Trop de perles ! Pousse-en ${refus.nombre}, pas plus.`;
-        return `D’un seul coup ! Pousse ${perles} ensemble.`;
+        if (refus.motif === "trop") return "Trop de perles !";
+        return "Pas assez de perles !";
       }
 
+      // La consigne suit l'étape. Tant que rien n'est poussé pour la case en
+      // cours : « Pousse 8 perles. », ou « Pousse 8 perles en deux coups. » si
+      // la rangée en cours ne peut pas toutes les prendre (l'élève sait qu'il
+      // devra la finir d'abord). Après le premier coup, la question qui reste :
+      // « 2 + ? = 8 » — le nombre manquant n'est jamais écrit.
       function consigneDeBase() {
-        return `Pousse ${boulier.table} perle${boulier.table > 1 ? "s" : ""}.`;
+        if (boulier.etape >= PERLES.parRangee) return "";
+        const table = boulier.table;
+        const dejaPoussees = totalPerles() - boulier.etape * table;
+        if (dejaPoussees > 0 && dejaPoussees < table) return `${dejaPoussees} + ? = ${table}`;
+        const attendu = gesteAttendu(boulier.etats, boulier.etape, table);
+        const perles = `${table} perle${table > 1 ? "s" : ""}`;
+        return attendu.nombre < table ? `Pousse ${perles} en deux coups.` : `Pousse ${perles}.`;
       }
 
       function refuserGeste(refus) {
@@ -3704,6 +3714,10 @@
       function majBoulier() {
         const dom = boulier.dom;
         if (!dom) return;
+        // La consigne se recalcule après chaque geste accepté — sauf pendant un
+        // refus, où c'est leverRefus qui la remettra.
+        const consigne = dom.bloc.querySelector(".perles-consigne");
+        if (consigne && !consigne.classList.contains("est-refus")) consigne.textContent = consigneDeBase();
         dom.addition.textContent = boulier.figee
           ? boulier.phrase
           : phraseAddition(boulier.etape * boulier.table, boulier.morceaux);
@@ -3773,7 +3787,7 @@
         feedback.className = `answer-feedback ${correct ? "is-correct" : "is-wrong"}`;
         if (correct) {
           renderInlineAnswer("is-correct");
-          feedback.textContent = assisted ? "Bravo ! On le reverra sans le bâton." : "Bravo !";
+          feedback.textContent = assisted ? "Bravo ! On le reverra sans la bande." : "Bravo !";
         } else {
           state.answer = String(question.answer);
           renderInlineAnswer("is-corrected");
@@ -3931,7 +3945,7 @@
       function scoreMessage(score, config) {
         if (config.mode === "learn") {
           if (config.learnActivity === "beads") return "Tu as fabriqué la table entière, perle par perle. Essaie maintenant de l’écrire sans le boulier.";
-          if (["construct", "gaps"].includes(config.learnActivity)) return "Le bâton est complet. Choisis une autre activité quand tu es prêt.";
+          if (["construct", "gaps"].includes(config.learnActivity)) return "La bande est complète. Choisis une autre activité quand tu es prêt.";
           return config.learnActivity === "ordered"
             ? "Tu peux maintenant essayer les calculs dans le désordre."
             : "Tu as retrouvé les onze produits. Tu peux maintenant passer à l’entraînement.";
@@ -3973,7 +3987,7 @@
           const what = state.configuration.learnActivity === "gaps"
             ? `Les ${TOTAL} cases manquantes ont été complétées`
             : state.configuration.learnActivity === "construct"
-              ? "Les 11 cases du bâton ont été complétées"
+              ? "Les 11 cases de la bande ont été complétées"
               : "Les 11 produits ont été retrouvés";
           $("result-detail").textContent = `${what} en ${state.responses.length} essai${state.responses.length > 1 ? "s" : ""} et ${formatElapsed(elapsed)}.`;
           }
@@ -4024,8 +4038,8 @@
         if (config.mode === "learn") {
           const activityLabels = {
             beads: "je pousse les perles",
-            construct: "je construis le bâton",
-            gaps: "je complète un bâton à trous",
+            construct: "je construis la bande",
+            gaps: "je complète une bande à trous",
             ordered: "je réponds dans l’ordre",
             random: "je réponds dans le désordre"
           };
@@ -4584,12 +4598,12 @@
       // (etapeTable, dans defi_tables_mon_parcours.js) : validation quand les
       // trois entraînements sont réussis, J'apprends tant que rien n'est
       // commencé, sinon le premier entraînement qui n'est pas réussi.
+      // L'étape conseillée de la table : c'est le moteur qui la donne
+      // (conseilTable, règle du 10/09/2026 : J'apprends tant que les cinq
+      // activités ne sont pas toutes terminées et qu'aucun entraînement n'est
+      // réussi), pour que l'accueil et « Ma prochaine étape » disent la même chose.
       function etapeConseillee(ligne) {
-        const reussis = ligne.entraine.filter(item => item.etat === 2).length;
-        if (ligne.acquise) return "valide";
-        if (reussis === ligne.entraine.length) return "valide";
-        const commence = ligne.apprends.some(item => item.etat > 0) || ligne.entraine.some(item => item.etat > 0);
-        return commence ? "entraine" : "apprends";
+        return ligne.conseil;
       }
 
       const NOMS_ENTRAINEMENTS = Object.freeze({desordre: "le désordre", trous: "les trous", mixte: "les deux"});
@@ -4719,24 +4733,6 @@
         return melange.aJour ? `${tables} · ${etat}` : `${tables} · ${etat} · 20\u00a0questions · 1\u00a0min\u00a030`;
       }
 
-      // L'avis unique « le parcours a changé » (migration des parcours d'avant
-      // le lot 3), adapté à l'état : rien de « il te reste le mélange » pour
-      // un élève à 0 ou 1 table.
-      function texteAvis(etat) {
-        const nombre = etat.acquises.length;
-        if (nombre >= PARCOURS_TABLES.length) {
-          return `Le parcours a changé : réussis le mélange de tes 9 tables pour ouvrir l’escalier des étoiles${etat.expert.niveau ? " — ta ★★★ d’avant est devenue la première étoile" : ""}.`;
-        }
-        if (nombre >= 2) return `Le parcours a changé : réussis ton mélange (tables ${listeTables(etat.acquises)}) avant de valider une nouvelle table.`;
-        return "Le parcours a changé : dès 2 tables acquises, tu réussis le mélange de tes tables avant d’en valider une nouvelle.";
-      }
-
-      function renderAvis(etat) {
-        const zone = $("acc-avis");
-        zone.hidden = !etat.avis;
-        if (etat.avis) $("acc-avis-texte").textContent = texteAvis(etat);
-      }
-
       // Le bloc « Je deviens expert » : l'escalier des étoiles (gagnées dorées,
       // la suivante cerclée, les autres grises) et un seul bouton — « Tenter ★★ »
       // quand l'escalier est ouvert, « Mon mélange » tant que le mélange des
@@ -4805,7 +4801,6 @@
         const toutes = nombre === PARCOURS_TABLES.length;
         $("acc-acquises").textContent = `${nombre} table${nombre > 1 ? "s" : ""} acquise${nombre > 1 ? "s" : ""} sur ${PARCOURS_TABLES.length}`;
         badgeRang(etat.rang, $("acc-rang"));
-        renderAvis(etat);
 
         // L'étape surlignée : celle que le moteur conseille (révision dès 5
         // calculs à revoir, puis le mélange dû, puis la table, puis l'escalier)
@@ -4868,10 +4863,10 @@
             classe: "apprends",
             num: "1",
             titre: "J’apprends",
-            sousTitre: terminees ? `facultatif · ${terminees} activité${terminees > 1 ? "s" : ""} sur 4` : "facultatif · 4 activités",
+            sousTitre: terminees ? `facultatif · ${terminees} activité${terminees > 1 ? "s" : ""} sur ${ligne.apprends.length}` : `facultatif · ${ligne.apprends.length} activités`,
             points: ligne.apprends.map(item => etoile(item.etat)),
             conseille: conseil === "apprends",
-            aria: `J’apprends la table de ${table}, facultatif : ${terminees} activité${terminees > 1 ? "s" : ""} sur 4.`,
+            aria: `J’apprends la table de ${table}, facultatif : ${terminees} activité${terminees > 1 ? "s" : ""} sur ${ligne.apprends.length}.`,
             deplie: apprendsOuvert,
             controle: "acc-choix-apprends",
             action: () => basculerEtape("apprends")
@@ -4880,23 +4875,15 @@
             etapes.append(panneauChoix({
               id: "acc-choix-apprends",
               legende: "Choisis ton activité",
-              items: [
-                // En essai : elle se place en tête, là où elle vivra au lot 4b.
-                ...(ESSAI_PERLES ? [{
-                  libelle: "Je pousse les perles",
-                  fait: false,
-                  commence: false,
-                  conseillee: false,
-                  lancer: () => launchFromParcours({mode: "learn", tables: [table], learnActivity: "beads"}, "menu")
-                }] : []),
-                ...ligne.apprends.map(item => ({
-                  libelle: majuscule(PARCOURS.LIBELLES_APPRENDS[item.activite]),
-                  fait: item.etat === 2,
-                  commence: item.etat === 1,
-                  conseillee: Boolean(prochaineActivite) && item.activite === prochaineActivite.activite,
-                  lancer: () => launchFromParcours(PARCOURS.configApprends(table, item.activite), "menu")
-                }))
-              ]
+              // Les cinq activités du moteur, dans son ordre : les perles en tête
+              // (lot 4b), la conseillée = la première qui n'est pas terminée.
+              items: ligne.apprends.map(item => ({
+                libelle: majuscule(PARCOURS.LIBELLES_APPRENDS[item.activite]),
+                fait: item.etat === 2,
+                commence: item.etat === 1,
+                conseillee: Boolean(prochaineActivite) && item.activite === prochaineActivite.activite,
+                lancer: () => launchFromParcours(PARCOURS.configApprends(table, item.activite), "menu")
+              }))
             }));
           }
 
@@ -5272,7 +5259,7 @@
         const table = evenement.table;
         switch (evenement.type) {
           case "apprends":
-            return `Table de ${table} : activité « ${PARCOURS.LIBELLES_APPRENDS[evenement.activite]} » terminée (${evenement.termines} / 4).`;
+            return `Table de ${table} : activité « ${PARCOURS.LIBELLES_APPRENDS[evenement.activite]} » terminée (${evenement.termines} / ${PARCOURS.ACTIVITES_APPRENDS.length}).`;
           case "entraine":
             if (!evenement.reussi) return `Table de ${table} : ${evenement.score} / ${evenement.total}. Il faut au moins ${evenement.total - PARCOURS.SEUILS.entrainement.erreursMax} / ${evenement.total} pour remplir le rond. Réessaie !`;
             if (evenement.pret) return `Table de ${table} : les trois entraînements sont réussis. Tu es prêt à valider ta table !`;
@@ -5558,12 +5545,6 @@
         state.choixTableOuvert = !state.choixTableOuvert;
         renderAccueil();
         if (state.choixTableOuvert) $("acc-choix").querySelector("button")?.focus?.({preventScroll: true});
-      });
-      $("acc-avis-ok").addEventListener("click", () => {
-        parcours = PARCOURS.marquerAvisVu(parcours);
-        sauverParcours();
-        renderAccueil();
-        $("acc-table-titre").focus?.({preventScroll: true});
       });
       $("acc-notice-bouton").addEventListener("click", () => basculerNotice("acc-notice-bouton", "acc-notice"));
       $("parcours-notice-bouton").addEventListener("click", () => basculerNotice("parcours-notice-bouton", "parcours-notice"));

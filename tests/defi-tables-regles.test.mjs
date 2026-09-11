@@ -315,9 +315,7 @@ test("migration des parcours d’avant : tables gardées, ★/★★ → rien, �
   assert.equal(migre.melange.dernier, "2026-09-02", "la date du dernier reste, pour mémoire");
   assert.ok(P.melangeDu(migre));
   assert.equal(migre.rang, 2, "et il reçoit son rang : 3 tables = Argent");
-  assert.equal(migre.avis, 2);
-  assert.equal(migre.avisVu, 0);
-  assert.ok(P.avisEnAttente(migre));
+  assert.ok(!("avis" in migre) && !("avisVu" in migre), "lot 4b : la migration ne pose plus d’avis à lire");
 
   // Champion d'avant (★★★ : divisions en 2 min) → la nouvelle ★, escalier fermé.
   const champion = P.normaliserParcours({version: 1, tables: Object.fromEntries(P.TABLES.map(t => [t, {acquise: "2026-09-01"}])), melange: {aJour: false}, expert: {niveau: 3, champion: "2026-09-02", dernier: "2026-09-02"}});
@@ -328,12 +326,10 @@ test("migration des parcours d’avant : tables gardées, ★/★★ → rien, �
   assert.equal(P.prochaineEtape(champion).type, "melange");
   assert.equal(P.etatAffichage(champion).expert.niveau, 1);
 
-  // Sans version : c'est un parcours d'avant aussi. Un parcours vide : rien à annoncer.
+  // Sans version : c'est un parcours d'avant aussi.
   assert.equal(P.normaliserParcours({tables: {7: {acquise: "2026-09-01"}}}).version, 2);
-  assert.equal(P.normaliserParcours({tables: {7: {acquise: "2026-09-01"}}}).avis, 2);
-  assert.equal(P.normaliserParcours({version: 1}).avis, 0, "un parcours vide n’a rien à annoncer");
-  assert.equal(P.normaliserParcours({}).avis, 0);
-  assert.equal(P.creerParcours().avis, 0);
+  // Un parcours qui porte encore les anciens compteurs d'avis les perd en silence.
+  assert.ok(!("avis" in P.normaliserParcours({version: 2, avis: 2, avisVu: 0})));
 
   // Une seule fois : relu (version 2), plus rien ne bouge — même si l'élève a
   // refait son mélange entre-temps.
@@ -352,7 +348,6 @@ test("migration robuste à un appareil resté sur l’ancienne version : ce qu�
   let telephone = P.normaliserParcours({version: 1, tables: {2: {acquise: "2026-08-30"}, 10: {acquise: "2026-08-31"}}, melange: {aJour: true}});
   telephone = jouer(telephone, P.configMelange(telephone), 20, 20).parcours;
   telephone = jouer(telephone, P.configValidation(5), 20, 20).parcours;
-  telephone = P.marquerAvisVu(telephone);
   assert.deepEqual(P.tablesAcquises(telephone), [2, 5, 10]);
   // L'ordinateur du collège, encore sur l'ancienne appli, renvoie un parcours de
   // version 1 : deux tables, un mélange « à jour » à l'ancienne (25 produits
@@ -363,7 +358,6 @@ test("migration robuste à un appareil resté sur l’ancienne version : ce qu�
     assert.equal(fusion.expert.etoiles, 0, "l’ancienne ★★ ne vaut rien");
     assert.equal(fusion.melange.aJour, false, "le mélange à l’ancienne ne compte pas, et la table de 5 le remet de toute façon");
     assert.equal(fusion.version, 2);
-    assert.equal(fusion.avisVu, 2, "l’avis lu sur le téléphone ne revient pas");
     assert.equal(fusion.rang, 2);
   });
   // Et si l'ancien appareil renvoie plus (un parcours avancé sous les vieilles
@@ -375,22 +369,17 @@ test("migration robuste à un appareil resté sur l’ancienne version : ce qu�
   assert.equal(P.escalierOuvert(fusion), false);
 });
 
-test("l’avis « le parcours a changé » : une fois, adapté à l’état, et lu pour de bon", () => {
+test("l’avis « le parcours a changé » n’existe plus : ni dans le moteur, ni dans la page, ni au serveur", () => {
+  // Lot 4b (décision de Gwenaël, 10/09/2026) : le message avait été ajouté
+  // pour des élèves qui n'existaient pas (personne avant le 8/09). La
+  // migration des données reste, le message et ses deux compteurs partent.
   const migre = P.normaliserParcours({version: 1, tables: {2: {acquise: "2026-08-30"}}});
-  assert.equal(P.etatAffichage(migre).avis, 2);
-  const lu = P.marquerAvisVu(migre);
-  assert.equal(lu.avisVu, 2);
-  assert.equal(P.etatAffichage(lu).avis, 0);
-  assert.equal(P.avisEnAttente(P.normaliserParcours(JSON.parse(JSON.stringify(lu)))), false, "survit à la sauvegarde");
-  assert.equal(P.avisEnAttente(P.fusionner(lu, migre)), false, "et à la fusion avec un appareil qui ne l’a pas lu");
-  assert.equal(P.avisEnAttente(P.remettreAZero(migre)), false, "recommencer à zéro : plus rien à annoncer");
-  // Les trois textes de la page, selon l'état.
-  assert.match(html, /dès 2 tables acquises, tu réussis le mélange de tes tables avant d’en valider une nouvelle/, "0 ou 1 table");
-  assert.match(html, /réussis ton mélange \(tables \$\{listeTables\(etat\.acquises\)\}\) avant de valider une nouvelle table/, "2 à 8 tables");
-  assert.match(html, /réussis le mélange de tes 9 tables pour ouvrir l’escalier des étoiles/, "9 tables");
-  assert.match(html, /ta ★★★ d’avant est devenue la première étoile/);
-  assert.match(html, /id="acc-avis-ok"/);
-  assert.match(html, /parcours = PARCOURS\.marquerAvisVu\(parcours\);\s*sauverParcours\(\);/, "OK marque l’avis lu et l’enregistre (donc l’envoie)");
+  assert.ok(!("avis" in P.etatAffichage(migre)));
+  assert.equal(typeof P.avisEnAttente, "undefined");
+  assert.equal(typeof P.marquerAvisVu, "undefined");
+  assert.doesNotMatch(html, /Le parcours a changé/);
+  assert.doesNotMatch(html, /acc-avis|marquerAvisVu|texteAvis|renderAvis|class="avis"/);
+  assert.doesNotMatch(applis, /'avis'|'avisVu'/, "le serveur ne les déclare plus : un vieil appareil qui les envoie encore les voit simplement filtrés");
 });
 
 // -------------------------------------------------------------- la page
@@ -459,8 +448,8 @@ test("le lancement : le mélange se joue en 1 min 30, comme la validation d’un
 });
 
 test("les scripts modifiés ont un nouveau numéro de cache, et la copie serveur du moteur est identique", async () => {
-  assert.match(html, /defi_tables_core\.js\?v=20260909-1/);
-  assert.match(html, /defi_tables_mon_parcours\.js\?v=20260908-13/);
+  assert.match(html, /defi_tables_core\.js\?v=20260910-1/);
+  assert.match(html, /defi_tables_mon_parcours\.js\?v=20260910-1/);
   const moteur = await readFile(new URL("../outils/calcul_mental/defi_tables_mon_parcours.js", import.meta.url));
   const copie = await readFile(new URL("../_serveur/public/prof/defi_tables_mon_parcours.js", import.meta.url));
   assert.ok(moteur.equals(copie), "_serveur/public/prof/defi_tables_mon_parcours.js doit être la copie octet pour octet du moteur");
@@ -470,7 +459,7 @@ test("les scripts modifiés ont un nouveau numéro de cache, et la copie serveur
 
 test("le serveur accepte les nouveaux champs (sinon filtrer_progression les jette à la synchro), et la page Confidentialité les nomme", () => {
   const cles = applis.match(/'cles' => \[([\s\S]*?)\]/)[1];
-  ["etoiles", "couronne", "rang", "jours", "avis", "avisVu"].forEach(cle => {
+  ["etoiles", "couronne", "rang", "jours", "beads"].forEach(cle => {
     assert.match(cles, new RegExp(`'${cle}'`), `« ${cle} » déclaré dans _serveur/public/lib/applis.php`);
   });
   assert.match(cles, /'niveau'/, "l’ancien « niveau » reste accepté : un appareil d’avant l’envoie encore");
@@ -480,7 +469,7 @@ test("le serveur accepte les nouveaux champs (sinon filtrer_progression les jett
   assert.equal(reference.expert.etoiles, 5);
   assert.equal(reference.rang, 6);
   assert.ok(Array.isArray(reference.jours) && reference.jours.length > 0);
-  assert.equal(reference.avisVu, 2);
+  assert.equal(reference.tables[2].apprends.beads, 2, "lot 4b : la cinquième activité est dans le parcours de référence");
   assert.match(confidentialite, /le rang atteint et les jours de travail des deux dernières semaines \(des dates, sans heure\)/);
 });
 
@@ -496,10 +485,8 @@ test("un parcours migré fait l’aller-retour du paquet envoyé au serveur sans
   assert.equal(paquet.parcours.expert.etoiles, 1);
   assert.equal(paquet.parcours.rang, 2);
   assert.deepEqual(paquet.parcours.jours, [DATE]);
-  assert.equal(paquet.parcours.avis, 2);
   // Ce que le serveur renvoie (après son filtre, qui ne garde que les clés
   // déclarées) est relu tel quel : rien ne manque, rien ne migre une 2e fois.
   const relu = P.normaliserParcours(paquet.parcours);
   assert.deepEqual(relu, P.definirPrenom(migre, ""));
-  assert.equal(P.avisEnAttente(relu), true);
 });

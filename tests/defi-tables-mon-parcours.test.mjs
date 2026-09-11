@@ -293,20 +293,39 @@ test("le verrou : tant que le mélange est dû, une nouvelle table ne se valide 
   assert.ok(parcours.melangeDu(resultat.parcours), "et la nouvelle table le remet");
 });
 
-test("la prochaine étape suit le parcours d’une table : bâton → entraînements → validation", () => {
+test("la prochaine étape suit le parcours d’une table : perles → entraînements → validation", () => {
   let etat = parcours.creerParcours();
   let etape = parcours.prochaineEtape(etat);
   assert.equal(etape.type, "apprends");
   assert.equal(etape.table, 2);
-  assert.equal(etape.config.learnActivity, "construct");
+  assert.equal(etape.config.learnActivity, "beads", "lot 4b : les perles d’abord");
+  assert.equal(etape.libelle, "Table de 2 : pousse les perles");
 
-  etat = parcours.demarrerSerie(etat, normaliser(parcours.configApprends(2, "construct")));
+  // Règle du 10/09 : J'apprends reste conseillé tant que les cinq activités
+  // ne sont pas terminées — commencer les perles ne suffit pas.
+  etat = parcours.demarrerSerie(etat, normaliser(parcours.configApprends(2, "beads")));
+  etape = parcours.prochaineEtape(etat);
+  assert.equal(etape.type, "apprends");
+  assert.equal(etape.activite, "beads", "l’activité commencée reste la conseillée");
+  etat = jouer(etat, parcours.configApprends(2, "beads"), 11, 11).parcours;
+  etape = parcours.prochaineEtape(etat);
+  assert.equal(etape.activite, "construct", "perles terminées : la bande");
+  assert.equal(etape.libelle, "Table de 2 : construis la bande");
+  // Un entraînement réussi de lui-même : plus besoin de conseiller J'apprends.
+  etat = jouer(etat, parcours.configEntraine(2, "desordre"), 10, 10).parcours;
   etape = parcours.prochaineEtape(etat);
   assert.equal(etape.type, "entraine");
-  assert.equal(etape.entrainement, "desordre");
+  assert.equal(etape.entrainement, "trous");
+  // Et l'autre porte : les cinq activités terminées, sans entraînement.
+  let studieux = parcours.creerParcours();
+  parcours.ACTIVITES_APPRENDS.forEach(activite => { studieux = jouer(studieux, parcours.configApprends(2, activite), 11, 11).parcours; });
+  assert.equal(parcours.prochaineEtape(studieux).type, "entraine", "les cinq terminées → Je m’entraîne");
+  assert.equal(parcours.prochaineEtape(studieux).entrainement, "desordre");
 
+  etat = parcours.creerParcours();
   etat = jouer(etat, parcours.configEntraine(2, "desordre"), 10, 10).parcours;
   assert.equal(parcours.prochaineEtape(etat).entrainement, "trous");
+
   etat = jouer(etat, parcours.configEntraine(2, "trous"), 10, 10).parcours;
   etat = jouer(etat, parcours.configEntraine(2, "mixte"), 10, 10).parcours;
   etape = parcours.prochaineEtape(etat);
@@ -559,7 +578,6 @@ test("appliquerSerie ne modifie jamais l’objet reçu", () => {
   jouer(etat, parcours.configValidation(7), 20, 20);
   jouer(etat, parcours.configEtoile(3), 25, 25);
   parcours.appliquerReponse(etat, "7-8", {correcte: true, date: DATE});
-  parcours.marquerAvisVu(etat);
   parcours.demarrerSerie(etat, normaliser(parcours.configApprends(7, "gaps")));
   assert.equal(JSON.stringify(etat), copie);
 });
@@ -706,15 +724,15 @@ test("fusion : le mélange redevient à refaire si l’autre appareil a plus de 
 });
 
 test("fusion : les étoiles prennent le meilleur des deux, la couronne sa première date, le rang ne redescend pas, les jours se réunissent", () => {
-  const a = parcours.normaliserParcours({version: 2, expert: {etoiles: 1, dernier: "2026-09-01", couronne: null}, rang: 5, jours: ["2026-09-01", "2026-09-02"], avis: 2, avisVu: 2});
-  const b = parcours.normaliserParcours({version: 2, expert: {etoiles: 5, dernier: "2026-10-01", couronne: "2026-10-01"}, rang: 6, jours: ["2026-09-02", "2026-09-03"], avis: 2, avisVu: 0});
+  const a = parcours.normaliserParcours({version: 2, expert: {etoiles: 1, dernier: "2026-09-01", couronne: null}, rang: 5, jours: ["2026-09-01", "2026-09-02"]});
+  const b = parcours.normaliserParcours({version: 2, expert: {etoiles: 5, dernier: "2026-10-01", couronne: "2026-10-01"}, rang: 6, jours: ["2026-09-02", "2026-09-03"]});
   const fusion = parcours.fusionner(a, b);
   assert.equal(fusion.expert.etoiles, 5);
   assert.equal(fusion.expert.dernier, "2026-10-01");
   assert.equal(fusion.expert.couronne, "2026-10-01");
   assert.equal(fusion.rang, 6);
   assert.deepEqual(fusion.jours, ["2026-09-01", "2026-09-02", "2026-09-03"]);
-  assert.equal(fusion.avisVu, 2, "l’avis lu d’un côté ne revient pas de l’autre");
+  assert.ok(!("avis" in fusion) && !("avisVu" in fusion), "l’avis de migration n’existe plus (lot 4b)");
   assert.deepEqual(parcours.fusionner(b, a), fusion);
 });
 
