@@ -320,6 +320,8 @@ test("la grille de Mon parcours a une colonne par activité de J’apprends (cor
   const gabarits = [...html.matchAll(/\.parcours-cells \{[^}]*grid-template-columns: ([^;}]*);/g)].map(m => m[1]);
   assert.equal(gabarits.length, 2, "le gabarit général et celui du téléphone (max-width: 480px)");
   gabarits.forEach(gabarit => assert.ok(gabarit.startsWith(`repeat(${n}, minmax(0, 1fr))`), gabarit));
+  // Téléphone : la colonne Acquise garde 48 px, sinon « ACQUISE » se coupe dans une police plus large (Verdana : 48 px).
+  assert.ok(gabarits[1].endsWith("minmax(48px, 1fr)"), gabarits[1]);
   // Les étiquettes suivent : J’APPRENDS sur n colonnes, JE M’ENTRAÎNE après la respiration.
   assert.match(html, new RegExp(`\\.parcours-group-label \\{ grid-column: span ${n};`));
   assert.match(html, new RegExp(`\\.parcours-group-label\\.is-entraine \\{ grid-column: ${n + 2} / span 3; \\}`));

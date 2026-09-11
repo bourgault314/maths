@@ -1264,7 +1264,10 @@
     @media (max-width: 480px) {
       .parcours-toolbar { padding: 0 50px; }
       .parcours-row { padding: 9px 8px 10px; }
-      .parcours-cells { gap: 3px; grid-template-columns: repeat(5, minmax(0, 1fr)) 5px repeat(3, minmax(0, 1fr)) 5px minmax(44px, 1fr); }
+      /* Acquise : 48 px au moins, pour que « ACQUISE » tienne aussi dans une
+         police plus large que celle de nos PC (41 px en Segoe UI Black, 48 en
+         Verdana ; celle de l'iPhone ne se mesure pas ici). */
+      .parcours-cells { gap: 3px; grid-template-columns: repeat(5, minmax(0, 1fr)) 5px repeat(3, minmax(0, 1fr)) 5px minmax(48px, 1fr); }
       .parcours-group-label { font-size: .58rem; letter-spacing: .01em; }
       .parcours-row-head { flex-wrap: wrap; gap: 4px 8px; }
       .cell { border-radius: 9px; }
