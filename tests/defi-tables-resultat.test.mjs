@@ -73,6 +73,17 @@ test("téléphone : le bouton principal sur toute la largeur, Rejouer devant sur
   assert.match(html, /<button id="result-accueil" class="primary" type="button">Ma table<\/button>\s*<button id="retry" class="secondary" type="button">Rejouer<\/button>/);
 });
 
+test("le mode site (Réglages libres, éval CM1) reste neutre : ni vert, ni rouge, ni « Temps écoulé »", () => {
+  // 11/09, après le rejeu de Code : un 15/25 en CM1 affichait ✗ rouge au-dessus
+  // d'un message-conseil positif, et le chrono écoulé — la règle en CM1 —
+  // titrait « Temps écoulé ». Rien n'est à valider en mode site.
+  assert.match(html, /verdict\.classe = "is-neutre";/);
+  assert.match(html, /\.result\.is-neutre \.result-verdict \{ border-color: var\(--line\); background: #f6f9fb; \}/);
+  assert.match(html, /\.result\.is-neutre \.hero-icon \{ display: none; \}/);
+  assert.match(html, /result\.classList\.remove\("is-fete", "is-rate", "is-temps", "is-neutre"\);/);
+  assert.doesNotMatch(html, /const reussi = state\.correct >= Math\.ceil\(TOTAL \* \.8\);/, "plus de seuil à 80 % en mode site");
+});
+
 test("la révision garde son bilan et ses deux boutons, sans verdict réussi / raté", () => {
   assert.match(html, /\$\("result-title"\)\.textContent = "Révision terminée";/);
   // Relecture (Claude Code, 11/09) : le temps rejoint le score, comme sur les

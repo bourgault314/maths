@@ -575,6 +575,10 @@
     .result.is-temps .result-verdict { border-color: #efd48a; background: linear-gradient(135deg, #fff8e1, #fff); }
     .result.is-temps .result-verdict h1,
     .result.is-temps .hero-icon { color: #b7791f; }
+    .result.is-neutre .result-verdict { border-color: var(--line); background: #f6f9fb; }
+    .result.is-neutre .result-verdict h1,
+    .result.is-neutre .hero-icon { color: var(--ink); }
+    .result.is-neutre .hero-icon { display: none; }
     .result-verdict.is-champion { border-color: #e7c86a; background: linear-gradient(135deg, #fff8e1, #fff); }
     .result-verdict.is-champion h1 { color: #b7791f; }
     /* Lot 3 : le passage d'un rang, sous la fête du moment (ou seul). */
@@ -4139,22 +4143,15 @@
           return verdict;
         }
         // Mode site (Réglages libres, évaluation CM1) : rien n'est compté dans
-        // le parcours, le verdict est le score, réussi à 80 %.
-        const reussi = state.correct >= Math.ceil(TOTAL * .8);
+        // le parcours et rien n'est à valider — le cadre reste NEUTRE (ni vert
+        // ni rouge, ni « Temps écoulé » : en CM1, finir avant le chrono est
+        // l'exception). Le titre est le score, le message-conseil dessous
+        // fait le reste (Gwenaël, 11/09, après le rejeu de Code).
+        verdict.classe = "is-neutre";
         verdict.titre = `${state.correct} ${state.correct === 1 ? "bonne réponse" : "bonnes réponses"} sur ${TOTAL}`;
-        if (tempsEcoule) {
-          verdict.classe = "is-temps";
-          verdict.icone = "⏱";
-          verdict.titre = "Temps écoulé";
-          verdict.score = `${pluriel(state.answered, "réponse")} sur ${TOTAL}, ${state.correct} juste${state.correct > 1 ? "s" : ""}`;
-          verdict.detail = `${pluriel(remaining, "calcul")} non vu${remaining > 1 ? "s" : ""}`;
-        } else {
-          verdict.classe = reussi ? "" : "is-rate";
-          verdict.icone = reussi ? "✓" : "✗";
-          verdict.score = config.duration === null
-            ? `Terminé en ${formatElapsed(elapsed)}`
-            : `Terminé en ${formatElapsed(elapsed)}, avant la fin du temps`;
-        }
+        verdict.score = tempsEcoule
+          ? `en ${CORE.durationLabel(config.duration)} · ${pluriel(remaining, "calcul")} non vu${remaining > 1 ? "s" : ""}`
+          : `Terminé en ${formatElapsed(elapsed)}`;
         return verdict;
       }
 
@@ -4175,7 +4172,7 @@
       function renderVerdict(suivi, elapsed) {
         const verdict = verdictSerie(suivi, elapsed);
         const result = $("result");
-        result.classList.remove("is-fete", "is-rate", "is-temps");
+        result.classList.remove("is-fete", "is-rate", "is-temps", "is-neutre");
         if (verdict.classe) result.classList.add(verdict.classe);
         $("result-verdict").classList.toggle("is-champion", verdict.champion);
         $("result-icon").textContent = verdict.icone;
@@ -4687,7 +4684,7 @@
         const score = state.revisionPremierScore;
         // Le verdict d'une révision : pas de « réussi / raté » (rien ne se
         // valide ici), le score au premier essai et le temps, c'est tout.
-        $("result").classList.remove("is-fete", "is-rate", "is-temps");
+        $("result").classList.remove("is-fete", "is-rate", "is-temps", "is-neutre");
         $("result-verdict").classList.remove("is-champion");
         $("result-icon").textContent = "✓";
         $("result-title").textContent = "Révision terminée";

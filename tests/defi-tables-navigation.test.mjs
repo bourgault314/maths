@@ -113,7 +113,7 @@ test("quand l’écran fête une nouvelle, il ne garde que l’essentiel", () =>
   // Lot R2 (audit, A3/A6) : le verdict est un seul cadre en tête — la fête
   // en est la version en grand, l'échec la version rouge, le temps écoulé
   // la version ambre — et les boutons viennent juste après la suite.
-  assert.match(html, /result\.classList\.remove\("is-fete", "is-rate", "is-temps"\);/);
+  assert.match(html, /result\.classList\.remove\("is-fete", "is-rate", "is-temps", "is-neutre"\);/);
   assert.match(html, /if \(verdict\.classe\) result\.classList\.add\(verdict\.classe\);/);
   assert.match(html, /verdict\.classe = "is-fete";/);
   assert.match(html, /verdict\.titre = "Pas encore";/);
