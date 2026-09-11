@@ -425,16 +425,17 @@ test("le parcours : Acquise cadenassée, « Mon mélange » jusqu’aux 9 tables
 });
 
 test("le résultat et les fêtes : 🎉 table et mélange, 🌟 étoile, un écran de rang, 👑 au sommet — sobres, sans son", () => {
-  assert.match(html, /texte = `Table de \$\{validation\.table\} acquise !`;/);
-  assert.match(html, /texte = melange\.escalierOuvert \? "Mélange des 9 tables réussi !" : "Mélange réussi !";/);
-  assert.match(html, /icone = "🌟";\s*texte = `\$\{PARCOURS\.symboleEtoile\(etoile\.etoile\)\} obtenue !`;/);
-  assert.match(html, /icone = "👑";\s*texte = "Légende des tables !";/);
-  assert.match(html, /ligneRang\.append\(document\.createTextNode\("Tu passes "\), badgeRang\(PARCOURS\.rang\(rangMonte\.rang\)\)\);/);
+  // Lot R2 : la fête est le cadre du verdict, en plus grand.
+  assert.match(html, /verdict\.titre = `Table de \$\{validation\.table\} acquise !`;/);
+  assert.match(html, /verdict\.titre = melange\.escalierOuvert \? "Mélange des 9 tables réussi !" : "Mélange réussi !";/);
+  assert.match(html, /verdict\.icone = "🌟";\s*verdict\.titre = `\$\{PARCOURS\.symboleEtoile\(etoile\.etoile\)\} obtenue !`;/);
+  assert.match(html, /verdict\.icone = "👑";\s*verdict\.titre = "Légende des tables !";/);
+  assert.match(html, /rang\.append\(document\.createTextNode\("Tu passes "\), badgeRang\(PARCOURS\.rang\(verdict\.rang\)\)\);/);
   assert.match(html, /animation: none !important/, "prefers-reduced-motion");
   assert.doesNotMatch(html, /new Audio\(|AudioContext/, "sans son");
-  assert.match(html, /réussis d’abord ton mélange, puis reviens la valider/, "une validation verrouillée le dit");
-  assert.match(html, /l’escalier des étoiles est ouvert !/);
-  assert.match(html, /case "rang":\s*return `Nouveau rang : \$\{evenement\.nom\}\.`;/);
+  assert.match(html, /Réussis d’abord ton mélange, puis reviens valider ta table\./, "une validation verrouillée le dit");
+  assert.match(html, /L’escalier des étoiles est ouvert !/);
+  assert.match(html, /verdict\.titre = "Nouveau rang !";/, "un rang gagné sans autre nouvelle a sa fête à lui");
 });
 
 test("le lancement : le mélange se joue en 1 min 30, comme la validation d’une table", () => {

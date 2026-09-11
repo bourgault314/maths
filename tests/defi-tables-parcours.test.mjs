@@ -243,7 +243,7 @@ test("J’apprends garde la bande pour construire et la propose en aide temporai
   assert.match(html, /state\.configuration\.mode === "train"\) \{[\s\S]*showAnswerFeedback\(question, correct, skip \? null : value\);[\s\S]*if \(correct\) \{[\s\S]*\$\("validate"\)\.style\.visibility = "hidden";[\s\S]*scheduleAutoAdvance\(\);/);
   assert.match(html, /textContent = enabled \? "Valider" : "Suivant"/);
   assert.match(html, /completeReview = state\.configuration\.mode === "test"/);
-  assert.match(html, /Bilan de tes réponses/);
+  assert.match(html, /Mes \$\{wrongEntries\.length\} erreurs/, "lot R2 : les erreurs d’abord, sous leur titre");
   assert.match(html, /defi_tables_core\.js\?v=20260910-1/);
   // Le moteur était le seul des deux scripts sans épingle, et le lot A2 est
   // passé au travers : il ajoutait chargerSync / sauverSync / casesDetachees au
@@ -255,11 +255,15 @@ test("J’apprends garde la bande pour construire et la propose en aide temporai
   assert.match(html, /defi_tables_mon_parcours\.js\?v=20260910-1/);
 });
 
-test("le numéro de question est séparé du calcul dans le bilan", () => {
-  assert.match(html, /number\.textContent = entry\.retour \? \"Il est revenu\" : `Question \$\{entry\.number\}`/);
-  assert.match(html, /expression\.textContent = entry\.prompt/);
-  assert.match(html, /item\.append\(questionLine, answers\)/);
-  assert.doesNotMatch(html, /expression\.textContent = `\$\{entry\.number\}\. /);
+test("une erreur = une ligne : le calcul avec sa bonne réponse, la réponse donnée barrée à côté", () => {
+  // Lot R2 : plus de « Question 3 » ni de « Ta réponse : / Bonne réponse : »
+  // sur deux lignes ; le numéro n'apportait rien, l'élève relit le calcul.
+  assert.match(html, /const \[avant, apres\] = entry\.prompt\.split\("\?"\);/);
+  assert.match(html, /expression\.append\(document\.createTextNode\(avant\), expected, document\.createTextNode\(apres \?\? ""\)\);/);
+  assert.match(html, /given\.setAttribute\("aria-label", `Ta réponse : \$\{entry\.given\}`\);/, "le sens reste dit aux lecteurs d’écran");
+  assert.match(html, /item\.append\(questionLine, given\)/);
+  assert.match(html, /\.given-answer \{ color: var\(--red\); font-size: \.95rem; font-weight: 800; text-decoration: line-through; \}/);
+  assert.doesNotMatch(html, /`Question \$\{entry\.number\}`/);
 });
 
 test("les détails mobiles restent alignés et les titres programmatiquement ciblés n’affichent pas de cadre", () => {
