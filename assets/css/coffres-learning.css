@@ -60,8 +60,9 @@
 .correction-card .dialog-actions .primary-button { min-height: 48px; font-size: 1.05rem; }
 .correction-card .area-model { --area-unit: 10px; }
 @media (min-width: 900px) {
-  .operation-grid h3, #lesson-course article h3 { font-size: 1.9rem; }
-  #lesson-course article { grid-template-areas: "title title" "meaning meaning" "example picture" "equation picture" "definition picture"; }
+  .operation-grid h3 { font-size: 1.9rem; }
+  #lesson-course article h3 { font-size: 1.65rem; }
+  #lesson-course article { grid-template-areas: "title picture" "meaning picture" "example picture" "equation picture" "definition picture"; }
   #lesson-course article .operation-meaning { grid-area: meaning; }
   .correction-card { width: min(760px, 100%); padding: 24px 28px; }
   .correction-card > h2 { font-size: 1.8rem; }
