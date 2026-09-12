@@ -79,8 +79,13 @@
   }
   function tick(time) {
     if (!running || paused) return;
-    const dt = previous ? Math.min((time - previous) / 1000, .1) : 0; previous = time;
-    elapsed += dt; model.update(dt); render();
+    // Le temps réel est conservé même si l'écran dessine peu d'images.
+    // Les petits pas de simulation gardent les collisions et les transitions fiables.
+    const dt = previous ? Math.min(Math.max(0, (time - previous) / 1000), games[current].seconds - elapsed) : 0;
+    previous = time; elapsed += dt;
+    let remaining = dt;
+    while (remaining > 0 && !model.done) { const step = Math.min(remaining, 1 / 60); model.update(step); remaining -= step; }
+    render();
     if (model.done || elapsed >= games[current].seconds) finishRound(elapsed >= games[current].seconds ? "time" : "");
     else frame = requestAnimationFrame(tick);
   }
