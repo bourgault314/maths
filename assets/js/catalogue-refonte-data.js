@@ -380,7 +380,7 @@ window.MATHSGO_CATALOGUE = {
       ],
       "shortGame": "dodo",
       "thumbnail": "assets/img/thumbnails/jeux/dodo.svg?v=2",
-      "cardDescription": "Aide le dodo à franchir huit troncs en sautant au bon moment."
+      "cardDescription": "Va le plus loin possible : dose tes sauts, évite les obstacles et tiens 1 min 30 dans une course qui accélère."
     },
     "jeux-cadeaux/galets.html": {
       "primaryNotion": "jeux-courts",
@@ -6748,7 +6748,7 @@ window.MATHSGO_CATALOGUE = {
     {
       "id": "jeux-courts-dodo",
       "title": "Dodo bondissant",
-      "description": "Aide le dodo à franchir huit troncs en sautant au bon moment.",
+      "description": "Va le plus loin possible : dose tes sauts, évite les obstacles et tiens 1 min 30 dans une course qui accélère.",
       "path": "jeux-cadeaux/dodo.html",
       "domains": [
         "jeux-recherches"

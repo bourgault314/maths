@@ -54,25 +54,93 @@
     tap(n) { if (this.done || this.phase !== "answer") return; if (n !== this.path[this.index]) { this.lit = this.path[this.index]; this.finishPath(false); } else if (++this.index === this.path.length) this.finishPath(true); }
     finishPath(ok) { if (ok) this.score++; this.feedback = ok ? "Chemin retrouvé !" : "La luciole passait par la case éclairée. Au prochain chemin !"; this.phase = "feedback"; this.elapsed = 0; }
   }
+  // Course sans fin. Même espace logique et mêmes commandes à toute taille d’écran.
+  const runnerRanks = [
+    { at: 0, name: "Prends ton élan", place: "Sous-bois" },
+    { at: 15, name: "Bien parti !", place: "Sous-bois" },
+    { at: 30, name: "Ça accélère !", place: "Les remparts" },
+    { at: 60, name: "Garde le rythme !", place: "Terres volcaniques" },
+    { at: 90, name: "Dodo expert !", place: "La grande traversée" },
+    { at: 120, name: "Dodo légendaire !", place: "La grande traversée" }
+  ];
   class Runner {
     constructor(level, seed) {
-      this.cfg = config(level); this.rng = random(seed); this.y = 0; this.vy = 0; this.x = 94; this.elapsed = 0; this.spawnIn = 1; this.created = 0; this.resolved = 0; this.score = 0; this.lives = 3; this.obstacles = []; this.done = false; this.hurt = 0;
+      this.level = Object.hasOwn(levels, level) ? level : "malin";
+      this.rng = random(seed); this.x = 94; this.y = 0; this.vy = 0;
+      this.elapsed = 0; this.distance = 0; this.score = 0; this.created = 0;
+      this.obstacles = []; this.done = false; this.collision = "";
+      this.held = false; this.jumpAge = 0; this.buffer = 0; this.nextAt = 300;
+      this.lastPattern = ""; this.lastGroup = 0; this.accumulator = 0;
+      this.speed = this.speedAt(0);
     }
-    jump() { if (!this.done && this.y === 0) { this.vy = 465; return true; } return false; }
-    update(dt) { let left = Math.max(0, dt); while (left > 0 && !this.done) { const step = Math.min(left, 1 / 120); this.step(step); left -= step; } }
+    speedAt(time) {
+      const base = { doux: 210, malin: 240, expert: 270 }[this.level];
+      return base + Math.min(time, 90) * 2.2 + clamp(time - 90, 0, 90) * .2;
+    }
+    get rank() { return runnerRanks.findLast(r => this.elapsed >= r.at); }
+    get metres() { return Math.floor(this.distance / 18); }
+    jump() {
+      if (this.done || this.held) return false;
+      this.held = true;
+      if (this.y === 0 && this.vy === 0) { this.launch(); return true; }
+      // Une pression juste avant de retoucher terre est mémorisée 90 ms.
+      // Maintenir le bouton ne déclenche jamais une suite de sauts automatiques.
+      this.buffer = .09; return false;
+    }
+    launch() { this.vy = 590; this.jumpAge = 0; this.buffer = 0; }
+    release() { this.held = false; }
+    update(dt) {
+      if (this.done || !Number.isFinite(dt) || dt <= 0) return;
+      this.accumulator += dt;
+      const step = 1 / 120;
+      while (this.accumulator + 1e-9 >= step && !this.done) {
+        this.step(step); this.accumulator -= step;
+      }
+    }
+    spawn() {
+      const t = this.elapsed;
+      let pool = ["tronc", "rocher"];
+      if (t >= 12) pool.push("double");
+      if (t >= 25) pool.push("branche");
+      if (t >= 40) pool.push("passage");
+      if (t >= 60) pool.push("double", "passage", "rocher");
+      if (this.created === 0) pool = ["tronc"];
+      const choices = pool.filter(p => p !== this.lastPattern);
+      const type = (choices.length ? choices : pool)[Math.floor(this.rng() * (choices.length || pool.length))];
+      const group = ++this.lastGroup;
+      const add = (kind, offset, w, h, bottom = 0) => this.obstacles.push({
+        id: ++this.created, group, type: kind, x: 630 + offset, w, h, bottom, counted: false
+      });
+      let width;
+      if (type === "tronc") { width = 26 + this.rng() * 8; add(type, 0, width, 24); }
+      if (type === "rocher") { width = 36 + this.rng() * 10; add(type, 0, width, 60); }
+      if (type === "double") { width = Math.min(112, this.speed * .25); add(type, 0, width, 34); }
+      if (type === "branche") { width = 128; add(type, 0, width, 23, 112); }
+      if (type === "passage") { width = 188; add("branche", 0, width, 23, 112); add("tronc", 76, 27, 24); }
+      this.lastPattern = type;
+      // Le prochain groupe arrive après la queue du précédent. Un grand saut
+      // dure 0,66 s ; cet espace laisse retomber le dodo et lire le groupe suivant.
+      const gapSeconds = .88 - Math.min(t, 90) * .0028 + this.rng() * .22;
+      this.nextAt = this.distance + width + this.speed * gapSeconds;
+    }
     step(dt) {
-      this.elapsed += dt; this.hurt = Math.max(0, this.hurt - dt);
-      this.y = Math.max(0, this.y + this.vy * dt - 550 * dt * dt); this.vy -= 1100 * dt; if (this.y === 0) this.vy = 0;
-      this.spawnIn -= dt;
-      if (this.created < 8 && this.spawnIn <= 0) { this.obstacles.push({ x: 630, w: 30 + this.rng() * 12, h: 32 + this.rng() * 16, hit: false, counted: false }); this.created++; this.spawnIn = 2.1 + this.rng() * .65; }
+      this.elapsed += dt; this.speed = this.speedAt(this.elapsed);
+      const travel = this.speed * dt; this.distance += travel;
+      this.jumpAge += dt;
+      if (!this.held && this.jumpAge >= .065 && this.vy > 235) this.vy = 235;
+      this.y = Math.max(0, this.y + this.vy * dt - 900 * dt * dt);
+      this.vy -= 1800 * dt;
+      if (this.y === 0) { this.vy = 0; if (this.buffer > 0) this.launch(); }
+      this.buffer = Math.max(0, this.buffer - dt);
+      if (this.distance >= this.nextAt) this.spawn();
       for (const o of this.obstacles) {
-        o.x -= this.cfg.speed * dt;
-        const overlaps = o.x < this.x + 43 && o.x + o.w > this.x + 8;
-        if (!o.hit && overlaps && this.y + 8 < o.h) { o.hit = true; this.lives--; this.hurt = .55; }
-        if (!o.counted && o.x + o.w < this.x) { o.counted = true; this.resolved++; if (!o.hit) this.score++; }
+        o.x -= travel;
+        const overlapsX = o.x + 3 < this.x + 42 && o.x + o.w - 3 > this.x + 7;
+        const overlapsY = this.y + 6 < o.bottom + o.h && this.y + 47 > o.bottom;
+        if (overlapsX && overlapsY) { this.done = true; this.collision = o.type; this.release(); break; }
+        if (!o.counted && o.x + o.w < this.x) { o.counted = true; this.score++; }
       }
       this.obstacles = this.obstacles.filter(o => o.x + o.w > -20);
-      if (this.lives <= 0 || this.resolved >= 8) this.done = true;
     }
   }
   // À chaque contact, le centre de masse de toute la pile au-dessus doit
@@ -120,5 +188,5 @@
       else if (this.phase === "feedback" && this.elapsed >= .8) { if (++this.index >= this.signals.length) { this.done = true; this.phase = "done"; } else this.next(); }
     }
   }
-  return { levels, random, memoryPath, giftOptions, giftLedger, stable, Memory, Runner, Stack, Tempo };
+  return { levels, random, memoryPath, giftOptions, giftLedger, stable, runnerRanks, Memory, Runner, Stack, Tempo };
 });
