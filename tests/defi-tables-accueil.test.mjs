@@ -401,5 +401,9 @@ test("lot R3 · les petits textes, le focus et le bandeau des réglages", () => 
   // A20 : après une série lancée depuis les deux portes professeur, un retour.
   assert.match(html, /<button id="result-reglages" class="secondary" type="button" hidden>Réglages<\/button>/);
   assert.equal((html.match(/\$\("result-reglages"\)\.hidden = state\.origin !== "reglages";/g) || []).length, 2,
-    "les deux fins de série : la normale et celle de la révision");
+    "les deux fins de série : la normale et celle de la révision (la seconde n'est qu'une remise à zéro)");
+  // Reste du lot R2, relevé par Code : ce point n'était protégé par aucun test.
+  // « Voir mon parcours » (146,5 px) ne tient dans sa demi-colonne au téléphone
+  // qu'avec 10 px de marge intérieure au lieu des 17 px des autres boutons.
+  assert.match(html, /\.result-actions > button \{ padding-left: 10px; padding-right: 10px; \}/);
 });

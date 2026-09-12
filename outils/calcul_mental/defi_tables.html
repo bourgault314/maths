@@ -4850,6 +4850,11 @@
         actions.append(encore, voir);
         zone.append(actions);
         renderCorrections();
+        // Ici, l'origine n'est JAMAIS « reglages » : une révision part de l'accueil,
+        // de Mes calculs ou de Mon parcours. Cette ligne ne sert donc qu'à REMETTRE
+        // le bouton caché — sans elle, une série jouée depuis Réglages libres le
+        // laisserait visible, et il s'afficherait sur le résultat de la révision
+        // suivante. C'est une remise à zéro, pas un filet pour un cas qui n'existe pas.
         $("result-reglages").hidden = state.origin !== "reglages";
         show("result");
       }
