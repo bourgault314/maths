@@ -31,23 +31,45 @@ function extractFunction(name) {
   throw new Error(`Fin de la fonction ${name} introuvable`);
 }
 
-const context = vm.createContext({});
+let seed = 90210;
+const seededMath = Object.create(Math);
+seededMath.random = () => ((seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0) / 2 ** 32);
+const context = vm.createContext({ Math: seededMath });
 vm.runInContext(`
+  const SIZE = 4;
   const OPERATION_MODES = ["sum", "difference", "product", "quotient"];
   let selectedOperations = OPERATION_MODES.slice();
+  let selectedLevel = 1;
   let mode = "sum";
   let challengeNumber = 0;
   let operationCycle = [];
+  let values = [], target = 0, locked = false;
+  const challengeLabels = { sum: "somme", difference: "différence", product: "produit", quotient: "quotient" };
+  const challengeNode = {};
+  const clearRuneStates = () => {}, renderBoard = () => {};
   ${extractFunction("randomInteger")}
   ${extractFunction("shuffle")}
+  ${extractFunction("row")}
+  ${extractFunction("column")}
+  ${extractFunction("neighborPairs")}
   ${extractFunction("calculate")}
   ${extractFunction("operation")}
+  ${extractFunction("levelRules")}
   ${extractFunction("pairFor")}
   ${extractFunction("nextBalancedMode")}
+  ${extractFunction("makeChallenge")}
   globalThis.duelCore = {
     calculate,
     operationFor(nextMode, first, second) { mode = nextMode; return operation(first, second); },
     pairFor,
+    challenge(level, operation) {
+      selectedLevel = level;
+      selectedOperations = [operation];
+      challengeNumber = 0;
+      operationCycle = [];
+      makeChallenge();
+      return { values: values.slice(), target, mode, neighbors: neighborPairs() };
+    },
     balancedSequence(length = 8, operations = OPERATION_MODES) {
       selectedOperations = operations;
       operationCycle = [];
@@ -95,6 +117,40 @@ test("un bloc de huit défis sert chaque opération une fois à chacun", () => {
     for (let index = 0; index < sequence.length; index += 2) assert.equal(sequence[index], sequence[index + 1]);
     assert.deepEqual([...new Set(sequence.filter((_, index) => index % 2 === 0))].sort(), ["difference", "product", "quotient", "sum"]);
     assert.deepEqual([...new Set(sequence.filter((_, index) => index % 2 === 1))].sort(), ["difference", "product", "quotient", "sum"]);
+  }
+});
+
+test("le niveau 2 du Duo utilise des calculs plus grands et des divisions exactes", () => {
+  for (const mode of ["sum", "difference", "product", "quotient"]) {
+    for (let attempt = 0; attempt < 500; attempt += 1) {
+      const [first, second] = core.pairFor(mode, 2);
+      const high = Math.max(first, second), low = Math.min(first, second);
+      if (mode === "sum") assert.ok(low >= 6 && high <= 20);
+      if (mode === "difference") assert.ok(high >= 10 && high <= 20 && low >= 1 && high - low >= 3);
+      if (mode === "product") assert.ok(high >= 11 && high <= 20 && low >= 3 && low <= 15);
+      if (mode === "quotient") {
+        assert.ok(low >= 6 && low <= 20);
+        assert.equal(high % low, 0);
+        assert.ok(high / low >= 2 && high / low <= 9);
+      }
+      assert.ok(Number.isInteger(core.calculate(mode, first, second)));
+    }
+  }
+});
+
+test("chaque plateau Duo respecte le niveau choisi et possède une solution voisine", () => {
+  for (const level of [1, 2]) {
+    const fillMax = level === 1 ? 12 : 20;
+    for (const operation of ["sum", "difference", "product", "quotient"]) {
+      for (let attempt = 0; attempt < 100; attempt += 1) {
+        const board = core.challenge(level, operation);
+        assert.equal(board.mode, operation);
+        assert.equal(board.values.length, 16);
+        assert.ok(board.values.every(value => Number.isInteger(value) && value > 0));
+        assert.ok(board.values.filter(value => value > fillMax).length <= (operation === "quotient" ? 1 : 0));
+        assert.ok(board.neighbors.some(([first, second]) => core.operationFor(operation, board.values[first], board.values[second]) === board.target));
+      }
+    }
   }
 });
 

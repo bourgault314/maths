@@ -35,7 +35,6 @@
     const modeButtons = [...dialog.querySelectorAll("[data-game-mode]")];
     const levelButtons = [...dialog.querySelectorAll("[data-level]")];
     const checkboxes = [...dialog.querySelectorAll("[name=operation]")];
-    const levelRow = dialog.querySelector(".level-row");
     const continueButton = dialog.querySelector("#continue-current-mode");
     const hint = dialog.querySelector("#operations-hint");
     let selectedMode = currentMode;
@@ -53,8 +52,7 @@
     function sync() {
       modeButtons.forEach(button => button.setAttribute("aria-pressed", String(button.dataset.gameMode === selectedMode)));
       levelButtons.forEach(button => button.setAttribute("aria-pressed", String(Number(button.dataset.level) === selectedLevel)));
-      levelRow.hidden = selectedMode !== "solo";
-      const changed = !sameOperations(read().operations, initialOperations) || (selectedMode === "solo" && selectedLevel !== initialLevel);
+      const changed = !sameOperations(read().operations, initialOperations) || selectedLevel !== initialLevel;
       continueButton.textContent = started && selectedMode === currentMode && changed ? "Nouvelle partie" : "Continuer";
     }
 

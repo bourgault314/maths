@@ -1,22 +1,18 @@
 /* Même présentation du vocabulaire et des réglages en Solo et en Duo. */
-.mode-dialog-card { width: min(100%, 480px); padding: 22px; }
-.mode-dialog-card h2 { margin: 0 0 16px; font-size: 1.6rem; }
-.mode-dialog-card .mode-options { grid-template-columns: 1fr 1fr; gap: 10px; margin: 0; }
-.mode-dialog-card .mode-choice {
-  min-height: 76px; display: grid; grid-template-columns: 1fr; gap: 4px;
-  justify-items: center; padding: 10px 6px; text-align: center;
-  border: 2px solid #cadde8; background: #f8fcff; box-shadow: none;
-}
-.mode-dialog-card .mode-choice[aria-pressed="true"] { border-color: #0755b8; background: #eaf3ff; box-shadow: inset 0 0 0 1px #0755b8; }
-.mode-dialog-card .mode-choice strong { font-size: 1.1rem; }
-.mode-dialog-card .mode-choice small { margin: 0; font-size: .76rem; line-height: 1.3; }
-.mode-dialog-card .level-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 14px 0 0; padding: 0; border: 0; background: none; }
-.mode-dialog-card .level-row[hidden] { display: none; }
-.mode-dialog-card .level-row-label { grid-column: 1 / -1; font-size: .9rem; font-weight: 850; letter-spacing: 0; text-transform: none; color: #31546e; }
-.mode-dialog-card .level-choice { min-height: 48px; display: grid; justify-items: center; gap: 2px; padding: 6px; border: 2px solid #cadde8; border-radius: 12px; background: #fff; color: #31546e; font-size: .92rem; font-weight: 900; line-height: 1.2; }
-.mode-dialog-card .level-choice small { font-size: .7rem; font-weight: 750; }
-.mode-dialog-card .level-choice[aria-pressed="true"] { color: #0755b8; border-color: #0755b8; background: #eaf3ff; box-shadow: none; }
-.mode-dialog-card .level-choice[aria-pressed="true"] small { color: #31546e; }
+/* Les cartes Solo / Duo conservent leurs couleurs, pictogrammes et disposition d'origine. */
+.mode-dialog-card { display: flex; flex-direction: column; overflow: hidden; }
+.mode-heading, .mode-dialog-card .mode-continue { flex-shrink: 0; }
+.mode-settings-scroll { min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 2px 3px 3px; }
+.mode-dialog-card .mode-introduction { max-width: 390px; margin: 8px auto; color: #49677b; line-height: 1.42; }
+.mode-choice-solo[aria-pressed="true"] { border-color: #087c75; box-shadow: inset 0 0 0 1px #087c75, 0 5px 13px rgba(28, 69, 101, .08); }
+.mode-choice-duo[aria-pressed="true"] { border-color: #c67a12; box-shadow: inset 0 0 0 1px #c67a12, 0 5px 13px rgba(28, 69, 101, .08); }
+/* Les niveaux gardent les boutons arrondis du Solo, désormais disponibles en Duo. */
+.level-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 8px; margin-top: 14px; padding: 10px 12px; border: 2px solid #d7e4ec; border-radius: 14px; background: #f8fcff; }
+.level-row-label { color: #41677f; font-size: .78rem; font-weight: 950; letter-spacing: .06em; text-transform: uppercase; }
+.level-choice { min-height: 44px; display: grid; justify-items: center; gap: 2px; padding: 6px 14px; border: 2px solid #cadde8; border-radius: 999px; color: #31546e; background: #fff; font-size: .92rem; font-weight: 950; line-height: 1.1; }
+.level-choice small { color: #557083; font-size: .68rem; font-weight: 800; }
+.level-choice[aria-pressed="true"] { border-color: #0755b8; color: #fff; background: linear-gradient(145deg, #087c75, #0755b8); box-shadow: 0 5px 13px rgba(7, 85, 184, .2); }
+.level-choice[aria-pressed="true"] small { color: rgba(255, 255, 255, .85); }
 .operation-choices { margin: 16px 0 0; padding: 0; border: 0; min-width: 0; }
 .operation-choices legend { width: 100%; margin-bottom: 9px; padding: 0; color: #143e62; font-size: 1.05rem; font-weight: 900; }
 .operation-options { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
@@ -70,6 +66,9 @@
   .correction-card .correction-label, .correction-card .demo-caption { font-size: 1rem; }
 }
 @media (max-width: 520px) {
+  .level-row { gap: 6px 8px; padding: 9px 10px; }
+  .level-row-label { flex-basis: 100%; text-align: center; }
+  .level-choice { flex: 1 1 0; padding-inline: 8px; font-size: .86rem; }
   .correction-card { padding: 16px; gap: 8px; }
   .correction-card > h2 { font-size: 1.28rem; margin: 0; }
   .correction-content { gap: 8px; }
@@ -80,14 +79,22 @@
 }
 @media (max-width: 380px) {
   /* Les noms complets restent lisibles dans les deux colonnes du petit téléphone. */
-  .operation-option .operation-symbol { display: none; }
+  .operation-options { gap: 6px; }
+  .operation-option { gap: 4px; padding-inline: 4px; font-size: .8rem; }
+  .operation-option .operation-symbol { font-size: 1.2rem; }
+}
+@media (max-width: 350px) {
+  .operation-options { grid-template-columns: 1fr; }
+  .operation-option { font-size: .86rem; }
 }
 @media (max-height: 640px) {
-  .mode-dialog-card { padding: 14px; }
-  .mode-dialog-card h2 { margin-bottom: 10px; font-size: 1.35rem; }
-  .mode-dialog-card .mode-choice { min-height: 64px; padding: 7px 4px; }
-  .mode-dialog-card .level-row, .operation-choices { margin-top: 10px; }
-  .mode-dialog-card .level-row { gap: 5px; }
+  .mode-dialog-card { padding: 16px 14px; }
+  .mode-dialog-card .dialog-icon { font-size: 2rem; }
+  .mode-dialog-card h2 { margin: 2px 0 6px; font-size: 1.4rem; }
+  .mode-dialog-card .mode-options { gap: 8px; margin-top: 12px; }
+  .mode-dialog-card .mode-choice { min-height: 0; padding: 9px 12px; }
+  .level-row { margin-top: 10px; padding: 8px 10px; }
+  .operation-choices { margin-top: 10px; }
   .operation-choices legend { margin-bottom: 6px; }
   .correction-card { padding: 12px; gap: 7px; }
   .correction-card .correction-choice, .correction-card .correction-solution { padding-block: 6px; }
