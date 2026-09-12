@@ -4,6 +4,9 @@
     <loc>https://mathsgo.re/</loc>
   </url>
   <url>
+    <loc>https://mathsgo.re/jeux-cadeaux/</loc>
+  </url>
+  <url>
     <loc>https://mathsgo.re/auto/</loc>
   </url>
   <url>
@@ -239,9 +242,6 @@
   </url>
   <url>
     <loc>https://mathsgo.re/outils/chat/</loc>
-  </url>
-  <url>
-    <loc>https://mathsgo.re/jeux-cadeaux/</loc>
   </url>
   <url>
     <loc>https://mathsgo.re/outils/club_maths/</loc>
