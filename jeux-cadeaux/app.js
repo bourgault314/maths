@@ -10,6 +10,14 @@
     tempo: { title: "Tempo volcan", skill: "Attention · maîtrise du geste", intro: "Sur TOUCHE ✓, touche le cercle. Sur STOP ✕ et ATTENDS, retiens ton geste. Douze signaux pour trouver le bon tempo.", hint: "Touche le cercle · Clavier : Espace", goal: 12, seconds: 45, engine: core.Tempo }
   };
   const options = core.giftOptions(location.search, location.origin);
+  const embedded = new URLSearchParams(location.search).get("integre") === "1" && window.parent !== window;
+  if (!options.enabled && !embedded) {
+    const destination = new URL("/outils/?domain=jeux-recherches&notion=jeux-courts", location.origin);
+    if (Object.hasOwn(games, options.game)) destination.searchParams.set("jeu", options.game);
+    location.replace(destination.href);
+    return;
+  }
+  if (embedded) document.documentElement.classList.add("embedded");
   let storage;
   try { storage = window.sessionStorage; } catch { storage = { getItem: () => null, setItem() {} }; }
   const ledger = core.giftLedger(storage, "mathsgo:jeux-cadeaux:v2:" + options.ticket, options.limit);
@@ -18,13 +26,14 @@
   const dialog = $("pause-dialog");
   function setText(id, value) { if ($(id).textContent !== value) $(id).textContent = value; }
   function show(name) { ["home", "play", "result"].forEach(id => $(id).hidden = id !== name); window.scrollTo({ top: 0, behavior: "instant" }); }
-  function focus(id) { $(id).focus({ preventScroll: true }); }
+  function focus(id) { if (!(embedded && id === "game-title")) $(id).focus({ preventScroll: true }); }
   function stop() { running = false; paused = false; cancelAnimationFrame(frame); $("pause").disabled = true; $("stage").onclick = null; if (dialog.open) dialog.close(); }
   function button(label, callback) {
     const b = document.createElement("button"); b.type = "button"; b.className = "primary"; b.textContent = label; b.addEventListener("click", callback); $("controls").append(b); return b;
   }
   function home() {
     stop(); model = null;
+    if (embedded) { window.parent.postMessage({ type: "mathsgo-short-game:return" }, location.origin); return; }
     if (options.enabled && ledger.remaining === 0) { exhausted(); return; }
     if (options.enabled) {
       setText("mode-pill", "Ton coffre · " + ledger.remaining + " partie" + (ledger.remaining > 1 ? "s" : "") + " disponible" + (ledger.remaining > 1 ? "s" : ""));
@@ -36,6 +45,11 @@
     stop();
     if (options.enabled && ledger.remaining === 0) { exhausted(); return; }
     current = Object.hasOwn(games, name) ? name : "luciole"; model = null;
+    if (embedded) {
+      const difficulty = document.querySelector(".difficulty");
+      $("play").insertBefore(difficulty, $("stage"));
+      difficulty.hidden = false;
+    }
     const game = games[current];
     setText("game-title", game.title); setText("game-skill", game.skill); setText("instructions", "Prends le temps de lire. Le jeu démarre quand tu es prêt.");
     setText("progress-label", "Objectif : " + game.goal + (current === "luciole" ? " chemins" : current === "dodo" ? " troncs" : current === "galets" ? " galets" : " signaux"));
@@ -48,6 +62,7 @@
     if (running || !current) return;
     if (options.enabled && !ledger.take()) { exhausted(); return; }
     const difficulty = document.querySelector('input[name="level"]:checked').value;
+    if (embedded) document.querySelector(".difficulty").hidden = true;
     const seed = window.crypto?.getRandomValues ? window.crypto.getRandomValues(new Uint32Array(1))[0] : Math.floor(Math.random() * 4294967296);
     model = new games[current].engine(difficulty, seed); elapsed = 0; running = true; paused = false; previous = 0; memoryPhase = "";
     $("pause").disabled = false; $("controls").replaceChildren(); actionButton = null;
@@ -173,6 +188,18 @@
   $("next-round").addEventListener("click", () => prepare(current));
   $("finish").addEventListener("click", () => options.enabled && options.back ? location.assign(options.back) : home());
   document.addEventListener("visibilitychange", () => { if (document.hidden) pause(); });
+  if (embedded && window.ResizeObserver) {
+    let lastHeight = 0;
+    const observer = new ResizeObserver(() => {
+      const height = Math.ceil(document.querySelector("main").getBoundingClientRect().height) + 4;
+      if (height !== lastHeight) {
+        lastHeight = height;
+        window.parent.postMessage({ type: "mathsgo-short-game:height", height }, location.origin);
+      }
+    });
+    observer.observe(document.querySelector("main"));
+    window.addEventListener("pagehide", () => observer.disconnect(), { once: true });
+  }
   window.addEventListener("keydown", event => {
     if (!running || paused || event.repeat) return;
     if (event.key === "Escape") { event.preventDefault(); pause(); return; }

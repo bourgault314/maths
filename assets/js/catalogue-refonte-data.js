@@ -352,14 +352,65 @@ window.MATHSGO_CATALOGUE = {
       "thumbnail": "assets/img/thumbnails/jeux/yavalath.svg?v=2",
       "cardDescription": "Aligner quatre pions sur le plateau hexagonal sans perdre en formant d’abord une ligne de trois."
     },
-    "jeux-cadeaux/index.html": {
+    "jeux-cadeaux/luciole.html": {
       "primaryNotion": "jeux-courts",
       "primaryGroup": "jeux",
       "collections": [],
-      "tags": ["jeu", "court", "memoire", "attention", "reflexes", "precision", "telephone", "tablette"],
-      "thumbnail": "assets/img/thumbnails/jeux/jeux-courts.svg?v=1",
-      "cardTitle": "La boîte à jeux courts",
-      "cardDescription": "Quatre défis rapides de mémoire, d’attention, de précision et de réflexes, utilisables seuls ou comme récompenses."
+      "tags": [
+        "jeu",
+        "jeu-court",
+        "luciole",
+        "Mémoire",
+        "observation"
+      ],
+      "shortGame": "luciole",
+      "thumbnail": "assets/img/thumbnails/jeux/luciole.svg?v=1",
+      "cardDescription": "Observe puis retrouve les chemins de lumière, dans le bon ordre."
+    },
+    "jeux-cadeaux/dodo.html": {
+      "primaryNotion": "jeux-courts",
+      "primaryGroup": "jeux",
+      "collections": [],
+      "tags": [
+        "jeu",
+        "jeu-court",
+        "dodo",
+        "Adresse",
+        "anticipation"
+      ],
+      "shortGame": "dodo",
+      "thumbnail": "assets/img/thumbnails/jeux/dodo.svg?v=1",
+      "cardDescription": "Aide le dodo à franchir huit troncs en sautant au bon moment."
+    },
+    "jeux-cadeaux/galets.html": {
+      "primaryNotion": "jeux-courts",
+      "primaryGroup": "jeux",
+      "collections": [],
+      "tags": [
+        "jeu",
+        "jeu-court",
+        "galets",
+        "Précision",
+        "équilibre"
+      ],
+      "shortGame": "galets",
+      "thumbnail": "assets/img/thumbnails/jeux/galets.svg?v=1",
+      "cardDescription": "Lâche chaque galet au bon moment et garde toute la pile en équilibre."
+    },
+    "jeux-cadeaux/tempo.html": {
+      "primaryNotion": "jeux-courts",
+      "primaryGroup": "jeux",
+      "collections": [],
+      "tags": [
+        "jeu",
+        "jeu-court",
+        "tempo",
+        "Attention",
+        "maîtrise du geste"
+      ],
+      "shortGame": "tempo",
+      "thumbnail": "assets/img/thumbnails/jeux/tempo.svg?v=1",
+      "cardDescription": "Touche au bon signal et retiens ton geste quand le volcan demande d’attendre."
     },
     "outils/club_maths/carres_gloutons.html": {
       "primaryNotion": "strategie",
@@ -6666,16 +6717,116 @@ window.MATHSGO_CATALOGUE = {
       "recent": false
     },
     {
-      "id": "jeux-cadeaux-index-html",
-      "title": "La boîte à jeux courts",
-      "description": "Quatre défis rapides de mémoire, d’attention, de précision et de réflexes, utilisables seuls ou comme récompenses.",
-      "path": "jeux-cadeaux/index.html",
-      "domains": ["jeux-recherches"],
-      "notions": ["jeux-courts"],
-      "uses": ["manipuler"],
-      "types": ["plateau"],
+      "id": "jeux-courts-luciole",
+      "title": "La Luciole",
+      "description": "Observe puis retrouve les chemins de lumière, dans le bon ordre.",
+      "path": "jeux-cadeaux/luciole.html",
+      "domains": [
+        "jeux-recherches"
+      ],
+      "notions": [
+        "jeux-courts"
+      ],
+      "uses": [
+        "manipuler"
+      ],
+      "types": [
+        "plateau"
+      ],
       "filters": [],
-      "keywords": ["jeu court", "mémoire visuelle", "inhibition", "dodo", "galets"],
+      "keywords": [
+        "jeu court",
+        "luciole",
+        "Mémoire",
+        "observation"
+      ],
+      "kind": "tool",
+      "status": "published",
+      "featured": false,
+      "recent": true
+    },
+    {
+      "id": "jeux-courts-dodo",
+      "title": "Dodo bondissant",
+      "description": "Aide le dodo à franchir huit troncs en sautant au bon moment.",
+      "path": "jeux-cadeaux/dodo.html",
+      "domains": [
+        "jeux-recherches"
+      ],
+      "notions": [
+        "jeux-courts"
+      ],
+      "uses": [
+        "manipuler"
+      ],
+      "types": [
+        "plateau"
+      ],
+      "filters": [],
+      "keywords": [
+        "jeu court",
+        "dodo",
+        "Adresse",
+        "anticipation"
+      ],
+      "kind": "tool",
+      "status": "published",
+      "featured": false,
+      "recent": true
+    },
+    {
+      "id": "jeux-courts-galets",
+      "title": "La pile de galets",
+      "description": "Lâche chaque galet au bon moment et garde toute la pile en équilibre.",
+      "path": "jeux-cadeaux/galets.html",
+      "domains": [
+        "jeux-recherches"
+      ],
+      "notions": [
+        "jeux-courts"
+      ],
+      "uses": [
+        "manipuler"
+      ],
+      "types": [
+        "plateau"
+      ],
+      "filters": [],
+      "keywords": [
+        "jeu court",
+        "galets",
+        "Précision",
+        "équilibre"
+      ],
+      "kind": "tool",
+      "status": "published",
+      "featured": false,
+      "recent": true
+    },
+    {
+      "id": "jeux-courts-tempo",
+      "title": "Tempo volcan",
+      "description": "Touche au bon signal et retiens ton geste quand le volcan demande d’attendre.",
+      "path": "jeux-cadeaux/tempo.html",
+      "domains": [
+        "jeux-recherches"
+      ],
+      "notions": [
+        "jeux-courts"
+      ],
+      "uses": [
+        "manipuler"
+      ],
+      "types": [
+        "plateau"
+      ],
+      "filters": [],
+      "keywords": [
+        "jeu court",
+        "tempo",
+        "Attention",
+        "maîtrise du geste"
+      ],
       "kind": "tool",
       "status": "published",
       "featured": false,

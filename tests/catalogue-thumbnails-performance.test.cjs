@@ -102,8 +102,8 @@ test("le premier rang est eager selon le nombre de colonnes", () => {
   }
 });
 
-test("les quatre rendus d’image passent par le même chargement progressif", () => {
-  assert.equal((catalogueScript.match(/thumbnailMarkup\(/g) || []).length, 5);
+test("les cinq rendus d’image passent par le même chargement progressif", () => {
+  assert.equal((catalogueScript.match(/thumbnailMarkup\(/g) || []).length, 6);
   assert.match(catalogueScript, /<picture class="catalogue-thumbnail-picture"><source srcset=/);
   assert.match(catalogueScript, /const image = `<img\$\{priorityAttribute\} src="\$\{escapeHtml\(source\)\}" alt="" loading="\$\{priority\.loading\}" data-catalogue-thumbnail>`/);
   assert.doesNotMatch(catalogueScript, /data-thumbnail-src/);
@@ -121,5 +121,5 @@ test("les URL partent immédiatement sans ordonnanceur de mise en page", () => {
 
 test("les versions de cache publient ensemble le JavaScript et le CSS", () => {
   assert.match(catalogueHtml, /catalogue-refonte\.css\?v=breadcrumb-align-20260829-1/);
-  assert.match(catalogueHtml, /catalogue-refonte\.js\?v=multiplication-posee-20260905-1/);
+  assert.match(catalogueHtml, /catalogue-refonte\.js\?v=jeux-courts-integres-20260912/);
 });

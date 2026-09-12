@@ -1,0 +1,33 @@
+/* Seule l’aire de jeu est intégrée : le site parent assure la navigation. */
+html.embedded {
+  background: transparent;
+  font-family: "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  --ink: #10294a;
+  --muted: #5c6c82;
+  --green: #063f86;
+}
+.embedded body { min-height: 0; background: transparent; }
+.embedded .topbar, .embedded #home, .embedded #back { display: none; }
+.embedded main { width: 100%; padding: 0 5px 12px; }
+.embedded #play { display: block; }
+.embedded .play-head { display: flex; min-height: 44px; justify-content: space-between; margin: 0; }
+.embedded .play-head h1 { display: none; }
+.embedded .play-head small { font-size: .75rem; }
+.embedded .instructions { min-height: 0; margin: 5px 0 10px; }
+.embedded .difficulty { margin: 0 auto 12px; }
+.embedded .difficulty span { padding-inline: 16px; }
+.embedded .stage { height: clamp(270px, 45vw, 360px); }
+.embedded .memory-grid { width: min(90%, 325px); }
+.embedded .status-row { padding: 7px 0; }
+.embedded .controls { padding-top: 12px; }
+.embedded .result { margin: 8px 0; }
+.embedded .result h1 { font-family: inherit; }
+.embedded .intro { padding: 14px; gap: 9px; }
+.embedded .intro > svg { width: 120px; height: 90px; }
+.embedded .intro h2 { font-size: 1.15rem; }
+.embedded .intro p { font-size: .92rem; }
+@media (max-width: 400px) {
+  .embedded .memory-grid { width: min(90%, 245px); }
+  .embedded .intro p { font-size: .84rem; }
+  .embedded .play-head small { font-size: .65rem; }
+}
