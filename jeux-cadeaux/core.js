@@ -15,11 +15,6 @@
     let state = Number(seed) >>> 0;
     return () => { state += 0x6D2B79F5; let t = state; t = Math.imul(t ^ t >>> 15, t | 1); t ^= t + Math.imul(t ^ t >>> 7, t | 61); return ((t ^ t >>> 14) >>> 0) / 4294967296; };
   }
-  function shuffled(values, rng) {
-    const result = [...values];
-    for (let i = result.length - 1; i > 0; i--) { const j = Math.floor(rng() * (i + 1)); [result[i], result[j]] = [result[j], result[i]]; }
-    return result;
-  }
   function config(name) { return levels[name] || levels.malin; }
   // Chemins de lumière : le hasard évite les cadeaux (trois cases régulièrement
   // alignées), les reprises trop rapprochées et les cases sur-utilisées, pour que
@@ -223,18 +218,82 @@
       } else if (this.phase === "tumble") { this.tumble += dt; if (this.tumble >= .9) this.done = true; }
     }
   }
+  // Tempo volcan : suite de signaux sans fin, UN SEUL jeu qui monte (plus de
+  // doux/malin/expert). La règle regarde le DESSIN (braise ou pierre) ; à partir
+  // d'une certaine vague le mot écrit dessus contredit le dessin, puis la
+  // consigne s'inverse. Trois vies, et la fenêtre de réponse se resserre à
+  // chaque vague de six signaux.
+  const tempoCourbe = { depart: 1.45, pas: .075, plancher: .58, gap: .72, gapPas: .05, menteur: 3, inverse: 5, dernier: 12 };
+  const TEMPO_VAGUE = 6, TEMPO_MAX = 200, TEMPO_BON = .18, TEMPO_FAUTE = .42, TEMPO_BASCULE = 1.25;
+  const tempoMessages = {
+    bon: "Bien vu !", attendu: "Bien retenu !", tard: "Trop tard, la lave est passée.",
+    pierre: "C’était une pierre.", mot: "Le mot mentait : regarde le dessin.",
+    envers: "À l’envers : c’était l’autre !", tot: "Trop tôt, attends le signal."
+  };
+  function tempoPalier(n) {
+    const vague = Math.floor(n / TEMPO_VAGUE);
+    return {
+      vague,
+      fenetre: Math.max(tempoCourbe.plancher, tempoCourbe.depart - vague * tempoCourbe.pas),
+      gap: Math.max(.32, tempoCourbe.gap - vague * tempoCourbe.gapPas),
+      cibles: vague < 2 ? .6 : .8,
+      menteur: vague >= tempoCourbe.menteur,
+      inverse: vague >= tempoCourbe.inverse,
+      // Passé le plancher de la fenêtre, plus rien ne se resserrerait : les
+      // pièges prennent le relais pour que la partie finisse toujours par tomber.
+      part: vague >= tempoCourbe.dernier ? .7 : .55,
+      bascule: vague >= tempoCourbe.dernier ? .45 : .3
+    };
+  }
   class Tempo {
-    constructor(level, seed) { this.cfg = config(level); this.rng = random(seed); this.signals = shuffled([...Array(8).fill("go"), ...Array(4).fill("stop")], this.rng); this.index = 0; this.score = 0; this.done = false; this.phase = "wait"; this.elapsed = 0; this.delay = .7; this.feedback = ""; }
-    next() { this.phase = "wait"; this.elapsed = 0; this.delay = .5 + this.rng() * .65; }
-    resolve(ok, feedback) { this.score += ok ? 1 : 0; this.feedback = feedback; this.phase = "feedback"; this.elapsed = 0; }
-    tap() { if (this.done || this.phase === "feedback") return; if (this.phase === "go") this.resolve(true, "Bien joué !"); else this.resolve(false, this.phase === "stop" ? "Sur STOP, garde les mains tranquilles." : "Attends le signal TOUCHE."); }
+    // Un seul jeu qui monte : le niveau reçu par les autres jeux n'est pas utilisé ici.
+    constructor(_niveau, seed) {
+      this.rng = random(seed);
+      this.index = 0; this.score = 0; this.lives = 3; this.temps = 0; this.elapsed = 0;
+      this.done = false; this.inverse = false; this.repondu = true; this.compte = false;
+      this.feedback = ""; this.faute = ""; this.signal = null;
+      this.palier = tempoPalier(0); this.phase = "wait"; this.attente = this.palier.gap + .5;
+    }
+    get vies() { return this.lives; }
+    montrer() {
+      const lave = this.rng() < this.palier.cibles;
+      // Le mot est écrit dès le premier signal, juste : l'élève prend l'habitude
+      // de le lire. C'est plus tard seulement qu'il se met à mentir.
+      const menteur = this.palier.menteur && this.rng() < this.palier.part;
+      const mot = menteur ? (lave ? "PIERRE" : "LAVE") : (lave ? "LAVE" : "PIERRE");
+      this.signal = { lave, mot, conflit: menteur, toucher: lave !== this.inverse };
+      this.phase = "signal"; this.elapsed = 0; this.repondu = false;
+    }
+    resoudre(ok, cause) {
+      this.compte = this.phase === "signal";
+      if (ok) this.score++; else { this.lives--; this.faute = cause; }
+      this.feedback = tempoMessages[cause]; this.attente = ok ? TEMPO_BON : TEMPO_FAUTE;
+      this.phase = "flash"; this.elapsed = 0;
+      if (this.lives <= 0) { this.done = true; this.phase = "done"; }
+    }
+    suivant() {
+      if (this.compte) this.index++;
+      if (this.index >= TEMPO_MAX) { this.done = true; this.phase = "done"; return; }
+      this.palier = tempoPalier(this.index); this.elapsed = 0;
+      if (this.palier.inverse && this.index % 3 === 0 && this.rng() < this.palier.bascule) { this.inverse = !this.inverse; this.phase = "bascule"; return; }
+      this.phase = "wait"; this.attente = this.palier.gap;
+    }
+    tap() {
+      if (this.done || this.phase === "flash" || this.phase === "bascule") return;
+      if (this.phase === "wait") { this.resoudre(false, "tot"); return; }
+      if (this.repondu) return;
+      this.repondu = true;
+      if (this.signal.toucher) this.resoudre(true, "bon");
+      else this.resoudre(false, this.inverse ? "envers" : this.signal.conflit ? "mot" : "pierre");
+    }
     update(dt) {
       if (this.done) return;
-      this.elapsed += dt;
-      if (this.phase === "wait" && this.elapsed >= this.delay) { this.phase = this.signals[this.index]; this.elapsed = 0; }
-      else if ((this.phase === "go" || this.phase === "stop") && this.elapsed >= this.cfg.cue) this.resolve(this.phase === "stop", this.phase === "stop" ? "Bien attendu !" : "Le signal est passé. Le prochain arrive !");
-      else if (this.phase === "feedback" && this.elapsed >= .8) { if (++this.index >= this.signals.length) { this.done = true; this.phase = "done"; } else this.next(); }
+      this.temps += dt; this.elapsed += dt;
+      if (this.phase === "wait" && this.elapsed >= this.attente) this.montrer();
+      else if (this.phase === "signal" && this.elapsed >= this.palier.fenetre) this.resoudre(!this.signal.toucher, this.signal.toucher ? "tard" : "attendu");
+      else if (this.phase === "flash" && this.elapsed >= this.attente) this.suivant();
+      else if (this.phase === "bascule" && this.elapsed >= TEMPO_BASCULE) { this.phase = "wait"; this.elapsed = 0; this.attente = this.palier.gap; }
     }
   }
-  return { levels, random, memoryPath, nextMemoryCell, giftOptions, giftLedger, stable, runnerRanks, Memory, Runner, Stack, Tempo };
+  return { levels, random, memoryPath, nextMemoryCell, giftOptions, giftLedger, stable, runnerRanks, tempoPalier, tempoCourbe, Memory, Runner, Stack, Tempo };
 });

@@ -50,3 +50,24 @@
 @media(max-width:650px){.controls .runner-jump{width:100%;min-height:68px}.runner-journey{font-size:.7rem;gap:6px}.runner-play .keyboard-hint{font-size:.7rem;line-height:1.5}.runner-play .instructions{min-height:34px}}
 .runner-play .stage:not(.runner-stage){height:auto;min-height:270px}
 @media(max-height:500px) and (min-width:651px){.runner-play .runner-journey{grid-column:1}}
+/* Tempo volcan : signaux sans fin, le mot écrit peut contredire le dessin. */
+.tempo-orb.signal{gap:4px;padding:14px}
+.tempo-orb.signal .signal-icon{display:grid;place-items:center;width:clamp(78px,21vw,114px);height:clamp(78px,21vw,114px);font-size:0}
+.tempo-orb .signal-icon svg{width:100%;height:100%;display:block}
+.tempo-orb.lave{background:linear-gradient(#e2673a,#c9402a);color:#fff8ef;border-color:#ffd9c199}
+.tempo-orb.pierre{background:linear-gradient(#8a979d,#6a787f);color:#f7fafa;border-color:#e8eff099}
+.tempo-orb .signal-text{font-size:clamp(1.25rem,4.4vw,1.75rem);letter-spacing:.04em;line-height:1.1}
+.tempo-orb.envers{background:linear-gradient(#6a5aa3,#4e4184);color:#fdfaff;font-size:1rem;gap:8px}
+.tempo-orb.envers .signal-text{font-size:clamp(1.1rem,3.6vw,1.4rem)}
+.tempo-orb.envers .signal-note{font-size:.82rem;font-weight:normal;opacity:.92;max-width:80%;line-height:1.35}
+.tempo-orb.juste{background:#287968;color:#fff;border-color:#bde6d699}
+.tempo-orb.rate{background:#ac5045;color:#fff;border-color:#f3c9c199}
+.tempo-orb.juste .signal-icon,.tempo-orb.rate .signal-icon{font-size:2.6rem;width:auto;height:auto}
+.tempo-orb.rate .signal-text{font-size:.95rem;font-weight:normal;line-height:1.35;max-width:86%}
+#play.tempo-play .status-row{font-variant-numeric:tabular-nums}
+#play.tempo-play #progress-label{font-size:.86rem}
+.tempo-rule{width:min(100%,760px);margin:0 auto 10px;padding:7px 14px;border:1px solid var(--line);border-radius:14px;background:#fffdf4;font-size:.8rem;text-align:center;color:var(--muted);line-height:1.4}
+.tempo-rule strong{color:var(--ink)}
+.tempo-rule.envers{background:#f1edfb;border-color:#c9bde9;color:#463a72}
+@media(max-width:650px){.tempo-rule{font-size:.74rem;padding:6px 10px}}
+@media(prefers-reduced-motion:no-preference){.tempo-orb.signal{animation:tempo-pop .14s ease-out}@keyframes tempo-pop{from{transform:scale(.93)}to{transform:scale(1)}}}

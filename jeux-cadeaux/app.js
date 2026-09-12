@@ -3,11 +3,15 @@
   const $ = id => document.getElementById(id);
   const core = window.ShortGames;
   const art = name => '<svg viewBox="0 0 160 120" aria-hidden="true">' + window.ShortGameArt[name] + '</svg>';
+  const tempoArt = {
+    lave: '<svg viewBox="0 0 48 48" aria-hidden="true"><path d="M22.6 1.6c2.6 6.4-1.2 10.6-4.9 15C14.2 20.9 10.6 25.3 10.6 31 10.6 39.4 16.6 46 24.5 46S38.4 39.4 38.4 31c0-5-2.6-8.6-5.7-12.1-1.4 3.5-4 5.1-5.7 4.2-2.1-1.2-1.9-4.9-.7-8.2-1.2-5.1-3.1-9.3-3.7-13.3Z" fill="#ffd8a2"/><path d="M24.3 20.2c1.7 3.5 4.2 5.7 5.6 8.5 1.2 2.3 1.4 4.3.7 6.4-1.2 3.5-3.9 5.2-7 5.2-3.9 0-7-2.9-7-7.1 0-2.9 1.7-5.2 3.5-7.4 1.7-2.1 3.3-3.7 4.2-5.6Z" fill="#fff7ea"/></svg>',
+    pierre: '<svg viewBox="0 0 48 48" aria-hidden="true"><path d="M4 30.4c0-4.8 3.1-10 7.9-13.5C16.2 13.7 21.2 11.2 25.8 11.2c5.8 0 11.8 3.1 14.1 8.5 2.1 5-1 11-4.7 14.5-3.5 3.3-9.3 5-15.3 5C12 39.2 4 36.5 4 30.4Z" fill="#f3f8f9"/><path d="M11.6 21.8c3.8-3.4 8.6-5.6 13.1-5.4 3 .1 5.8 1.1 8 2.9-4.8.2-9.4 1.7-12.9 4.1-3.5 2.4-6.1 5.8-7.3 9.3-2-3.4-2.3-8-.9-10.9Z" fill="#ffffff"/><path d="M17.4 34.6c5.5.4 10.8-1.4 14.4-4.6" stroke="#a9b9be" stroke-width="2.6" stroke-linecap="round" fill="none"/><circle cx="33.4" cy="22.8" r="1.9" fill="#c9d6da"/></svg>'
+  };
   const games = {
     luciole: { title: "La Luciole", skill: "Mémoire · observation", intro: "Observe les cases qui s’éclairent, puis retouche-les dans le même ordre. À chaque réussite, le chemin s’allonge d’une lumière. La partie s’arrête à la première erreur.", hint: "Touche les cases · Au clavier : flèches puis Entrée", goal: 0, seconds: 0, engine: core.Memory },
     dodo: { title: "Dodo bondissant", skill: "Adresse · anticipation", intro: "Va le plus loin possible ! Appui bref : petit saut. Maintiens : grand saut. Franchis les troncs et les rochers, reste bas sous les branches. Ça accélère, et une collision termine la course. Cap expert : 1 min 30 !", hint: "Espace ou ↑ · Bouton ou paysage : appui bref = petit saut, maintenu = grand saut", goal: 90, seconds: Infinity, engine: core.Runner },
     galets: { title: "La pile de galets", skill: "Précision · équilibre", intro: "Le galet se déplace tout seul. Lâche-le au bon moment pour en empiler sept. Garde toute la pile près du centre !", hint: "Touche le paysage ou le bouton · Clavier : Espace", goal: 7, seconds: 60, engine: core.Stack },
-    tempo: { title: "Tempo volcan", skill: "Attention · maîtrise du geste", intro: "Sur TOUCHE ✓, touche le cercle. Sur STOP ✕ et ATTENDS, retiens ton geste. Douze signaux pour trouver le bon tempo.", hint: "Touche le cercle · Clavier : Espace", goal: 12, seconds: 45, engine: core.Tempo }
+    tempo: { title: "Tempo volcan", skill: "Attention · inhibition", intro: "Touche la LAVE, laisse passer la PIERRE. Sur chaque signal un mot est écrit : au début il dit la vérité, plus loin il mentira — c’est toujours le dessin qui commande. Plus loin encore, la consigne s’inverse, et un écran te prévient. Trois erreurs et la partie s’arrête.", hint: "Touche le cercle · Clavier : Espace", goal: 0, seconds: Infinity, engine: core.Tempo }
   };
   const options = core.giftOptions(location.search, location.origin);
   const embedded = new URLSearchParams(location.search).get("integre") === "1" && window.parent !== window;
@@ -96,17 +100,18 @@
     if (embedded) {
       const difficulty = document.querySelector(".difficulty");
       $("play").insertBefore(difficulty, $("stage"));
-      difficulty.hidden = false;
+      difficulty.hidden = current === "tempo";
     }
     const game = games[current];
     $("play").classList.toggle("runner-play", current === "dodo");
+    $("play").classList.toggle("tempo-play", current === "tempo");
     $("stage").classList.remove("runner-stage");
-    $("runner-journey")?.remove(); $("runner-result-detail")?.remove();
+    $("runner-journey")?.remove(); $("runner-result-detail")?.remove(); $("tempo-rule")?.remove();
     runnerDraw = null;
     setText("game-title", game.title); setText("game-skill", game.skill); setText("instructions", "Prends le temps de lire. Le jeu démarre quand tu es prêt.");
-    setText("progress-label", current === "luciole" ? "Le chemin s’allonge à chaque réussite" : current === "dodo" ? "Cap expert : 1 min 30" : "Objectif : " + game.goal + (current === "galets" ? " galets" : " signaux"));
+    setText("progress-label", current === "luciole" ? "Le chemin s’allonge à chaque réussite" : current === "dodo" ? "Cap expert : 1 min 30" : current === "tempo" ? "Trois vies · jusqu’à la troisième erreur" : "Objectif : " + game.goal + " galets");
     setText("round-label", options.enabled ? "Cadeau · " + (ledger.used + 1) + " / " + options.limit : "Jeu libre");
-    setText("time-label", current === "luciole" ? "1 à 2 min" : current === "dodo" ? "Sans fin" : "≤ " + game.seconds + " s"); setText("keyboard-hint", game.hint);
+    setText("time-label", current === "luciole" ? "1 à 2 min" : current === "dodo" || current === "tempo" ? "Sans fin" : "≤ " + game.seconds + " s"); setText("keyboard-hint", game.hint);
     $("sound").hidden = current !== "luciole"; paintSound();
     $("stage").innerHTML = '<div class="intro">' + art(current) + '<h2>Comment jouer ?</h2><p>' + game.intro + '</p><small>À toi de jouer quand tu veux.</small></div>';
     $("controls").replaceChildren(); button("Commencer", begin); show("play"); focus("game-title");
@@ -143,7 +148,9 @@
         grid.append(b);
       }
     } else if (current === "tempo") {
-      $("stage").innerHTML = '<div class="tempo-wrap"><svg class="tempo-landscape" viewBox="0 0 160 120" aria-hidden="true">' + window.ShortGameArt.tempo + '</svg><button type="button" class="tempo-orb" aria-label="Répondre au signal"><span class="signal-icon" aria-hidden="true"></span><span class="signal-text"></span></button></div>';
+      const regle = document.createElement("p"); regle.id = "tempo-rule"; regle.className = "tempo-rule";
+      $("stage").before(regle);
+      $("stage").innerHTML = '<div class="tempo-wrap"><svg class="tempo-landscape" viewBox="0 0 160 120" aria-hidden="true">' + window.ShortGameArt.tempo + '</svg><button type="button" class="tempo-orb" aria-label="Répondre au signal"><span class="signal-icon" aria-hidden="true"></span><span class="signal-text"></span><span class="signal-note"></span></button></div>';
       $("stage").querySelector(".tempo-orb").addEventListener("click", action);
     } else if (current === "dodo") {
       $("stage").classList.add("runner-stage");
@@ -190,7 +197,7 @@
     const rawDt = previous ? Math.max(0, (time - previous) / 1000) : 0;
     // Une suspension brutale de l’écran ne doit pas faire défiler des obstacles
     // invisibles ni gonfler le record. Reprendre redonne la main au joueur.
-    if (current === "dodo" && rawDt > .25) { pause(); return; }
+    if ((current === "dodo" || current === "tempo") && rawDt > .25) { pause(); return; }
     const cap = games[current].seconds || Infinity;
     const dt = previous ? Math.min(rawDt, cap - elapsed, 2) : 0;
     previous = time; elapsed += dt;
@@ -252,23 +259,43 @@
         '<g' + (model.phase === "tumble" ? ' transform="translate(' + ((model.x < 300 ? -1 : 1) * model.tumble * 120).toFixed(2) + ' ' + (model.tumble * model.tumble * 150).toFixed(2) + ') rotate(' + ((model.x < 300 ? -1 : 1) * model.tumble * 40).toFixed(2) + ' 300 283)"' : "") + '>' +
         model.stones.map(stone).join("") + (model.score < 7 ? stone({ x: model.x, w: model.w, y: model.y }, model.score) : "") + '</g>';
     } else {
-      setText("time-label", Math.max(0, Math.ceil(games[current].seconds - elapsed)) + " s");
-      setText("progress-label", "Signal " + Math.min(12, model.index + 1) + " / 12 · " + model.score + " réussi" + (model.score > 1 ? "s" : ""));
-      const orb = $("stage").querySelector(".tempo-orb");
-      orb.className = "tempo-orb " + model.phase;
-      const labels = { wait: ["…", "ATTENDS"], go: ["✓", "TOUCHE"], stop: ["✕", "STOP"], feedback: ["•", model.feedback], done: ["✓", "TERMINÉ"] };
-      const label = labels[model.phase];
-      orb.setAttribute("aria-label", label[1]);
-      const icon = orb.querySelector(".signal-icon"), caption = orb.querySelector(".signal-text");
-      if (icon.textContent !== label[0]) icon.textContent = label[0];
-      if (caption.textContent !== label[1]) caption.textContent = label[1];
-      setText("instructions", model.phase === "feedback" ? model.feedback : "Touche sur ✓ TOUCHE. Sur ✕ STOP ou ATTENDS, garde les mains tranquilles.");
+      const orb = $("stage").querySelector(".tempo-orb"), regle = $("tempo-rule");
+      setText("time-label", duration(model.temps));
+      setText("progress-label", model.score + " réussi" + (model.score > 1 ? "s" : "") + " · " + model.lives + " vie" + (model.lives > 1 ? "s" : ""));
+      if (regle) {
+        regle.classList.toggle("envers", model.inverse);
+        regle.innerHTML = model.inverse
+          ? 'À l’envers : touche la <strong>PIERRE</strong>, laisse passer la <strong>LAVE</strong>.'
+          : 'Touche la <strong>LAVE</strong>, laisse passer la <strong>PIERRE</strong>. Le mot écrit peut mentir : c’est le dessin qui commande.';
+      }
+      // Le dessin décide, le mot est l'intrus : les deux sont doublés par la couleur
+      // et par la forme, jamais par la couleur seule.
+      let etat = "", dessin = "…", mot = "ATTENDS", complement = "";
+      if (model.phase === "signal") {
+        etat = "signal " + (model.signal.lave ? "lave" : "pierre");
+        dessin = model.signal.lave ? tempoArt.lave : tempoArt.pierre;
+        mot = model.signal.mot;
+      } else if (model.phase === "bascule") {
+        etat = "envers"; dessin = "⇄"; mot = model.inverse ? "À L’ENVERS" : "COMME AVANT";
+        complement = model.inverse ? "touche les PIERRES, laisse la LAVE" : "touche la LAVE, laisse les PIERRES";
+      } else if (model.phase === "flash" || model.phase === "done") {
+        const gagne = model.feedback === "Bien vu !" || model.feedback === "Bien retenu !";
+        etat = gagne ? "juste" : "rate"; dessin = gagne ? "✓" : "✕"; mot = model.feedback;
+      }
+      orb.className = "tempo-orb " + etat;
+      orb.setAttribute("aria-label", model.phase === "signal" ? (model.signal.lave ? "Lave" : "Pierre") + ", mot écrit : " + mot : mot);
+      const icon = orb.querySelector(".signal-icon"), caption = orb.querySelector(".signal-text"), note = orb.querySelector(".signal-note");
+      if (icon.innerHTML !== dessin) icon.innerHTML = dessin;
+      if (caption.textContent !== mot) caption.textContent = mot;
+      if (note.textContent !== complement) note.textContent = complement;
+      setText("instructions", model.phase === "signal" ? "Le mot peut mentir : regarde le dessin." : model.phase === "bascule" ? "La consigne change !" : model.feedback || "Attends le signal.");
     }
   }
   function finishRound(reason) {
     if (!model || !running) return;
     const game = games[current], score = model.score;
     if (current === "dodo") { finishRunner(reason); return; }
+    if (current === "tempo") { finishTempo(reason); return; }
     stop();
     $("result-art").innerHTML = art(current);
     const opening = reason === "quit" ? "Tu as choisi de terminer cette partie. " : reason === "time" ? "Le temps de cette petite partie est écoulé. " : "";
@@ -302,6 +329,20 @@
     $("result-score").after(detail);
     const tip = model.collision === "branche" ? "Sous une branche, garde le dodo au sol. S’il y a un petit tronc dessous, fais un appui bref." : model.collision === "rocher" || model.collision === "double" ? "Pour les rochers et les doubles troncs, maintiens l’appui pour un grand saut." : "Attends que le tronc approche, puis dose ton saut. Regarde déjà l’obstacle suivant.";
     setText("result-text", reason === "quit" ? "Course arrêtée. Ton record est conservé." : time >= 120 ? "Deux minutes : une performance exceptionnelle ! Peux-tu aller encore plus loin ?" : tip + (time < 90 ? " Le cap expert : 1 min 30." : " Prochain cap : deux minutes !"));
+    resultActions(); show("result"); focus("result-title");
+  }
+  function finishTempo(reason) {
+    const conseils = {
+      tard: "La lave est passée trop vite : garde le doigt prêt juste au-dessus du cercle.",
+      pierre: "Une pierre ne se touche pas. Regarde le dessin avant de partir.",
+      mot: "Le mot t’a piégé : c’est le dessin qui commande, jamais le mot.",
+      envers: "Quand la consigne est à l’envers, redis-toi la règle avant le signal.",
+      tot: "Tu es parti avant le signal : attends de voir le dessin."
+    };
+    stop(); $("result-art").innerHTML = art("tempo");
+    setText("result-title", "Partie terminée");
+    setText("result-score", model.score + (model.score > 1 ? " signaux" : " signal") + " réussi" + (model.score > 1 ? "s" : "") + " · " + duration(model.temps));
+    setText("result-text", reason === "quit" ? "Partie arrêtée avant la fin." : conseils[model.faute] || "Encore une partie ?");
     resultActions(); show("result"); focus("result-title");
   }
   function resultActions() {

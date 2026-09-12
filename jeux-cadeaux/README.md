@@ -14,13 +14,13 @@ Les Carrés gloutons restent à leur adresse `/outils/club_maths/carres_gloutons
 | La Luciole | Un seul chemin, qui s’allonge d’une lumière à chaque réussite ; la première erreur termine la partie ; pas de plafond de durée | Départ à 2, 3 ou 4 lumières, éclairage plus ou moins lent |
 | Dodo bondissant | Course sans fin, une collision termine la partie ; cap expert 1 min 30, légendaire 2 min | Vitesse de départ et record distincts : Tranquille, Défi, Expert |
 | La pile de galets | Sept galets ; fin si la pile tombe ou après 60 s | Largeur des galets et vitesse du déplacement |
-| Tempo volcan | Douze signaux : huit actions et quatre arrêts ; 45 s maximum | Temps pour répondre : 1,6 / 1,15 / 0,85 s |
+| Tempo volcan | Suite sans fin de signaux, trois vies ; le mot écrit finit par contredire le dessin, puis la consigne s'inverse | Un seul jeu : la fenêtre passe de 1,45 s à 0,58 s |
 | Les Carrés gloutons | Deux manches de neuf carrés contre Gloubi | Jeu existant, sans choix de niveau |
 
 Les illustrations sont des SVG originaux dans `art.js`. Les jeux ne chargent aucune dépendance externe.
 La Luciole a une note par case (gamme pentatonique, `AudioContext` créé au premier départ) et un bouton pour couper le son ; le réglage tient dans `sessionStorage`.
 Son plateau prend toute la place disponible : le catalogue lui transmet la hauteur de la fenêtre du site par `postMessage` (`mathsgo-short-game:fenetre`), reçue dans la variable CSS `--hauteur-site`.
-Les couleurs de Tempo sont doublées par des mots et des symboles. La touche Espace ne doit pas déclencher deux actions.
+Dans Tempo, le dessin et la couleur disent la même chose ; le mot écrit, lui, est l'intrus à ignorer. La touche Espace ne doit pas déclencher deux actions.
 La préférence de mouvement réduit supprime les effets décoratifs, sans supprimer les déplacements nécessaires aux jeux.
 
 Ce sont des pauses ludiques, sans classement, compte, publicité ni promesse de transfert cognitif ou scolaire.
