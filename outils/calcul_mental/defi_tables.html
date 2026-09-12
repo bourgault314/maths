@@ -279,6 +279,18 @@
     .matable-head h1 { display: block; margin: 0; font-size: 1.55rem; font-weight: 900; color: var(--ink); line-height: 1.1; }
     .matable-head h1:focus { outline: none; }
     .matable-changer { min-height: 44px; padding: 0 6px; border: 0; background: none; color: var(--blue); font-size: .84rem; font-weight: 850; text-decoration: underline; text-underline-offset: 3px; white-space: nowrap; cursor: pointer; }
+    /* Lot R3 bis : au doigt, choisir sa table est une décision SEULE à l'écran.
+       Tant que le choix est ouvert, le reste de l'accueil s'efface — le titre
+       « La table de N » reste, pour savoir d'où l'on part. Sur ordinateur
+       (au-delà de 1039 px) le panneau s'insère comme avant : la place ne
+       manque pas, et un écran presque vide n'apporterait rien. */
+    .choix-legende { margin: 0 0 8px; color: #5b7286; font-size: .78rem; font-weight: 950; text-transform: uppercase; letter-spacing: .05em; }
+    .acc:not(.choix-ouvert) .choix-legende { display: none; }
+    @media (max-width: 1039px) {
+      .acc.choix-ouvert > :not(.matable),
+      .acc.choix-ouvert #acc-etapes { display: none; }
+      .acc.choix-ouvert .matable-choix { margin-bottom: 0; }
+    }
     /* Lot R3 (P1) : les neuf tables sont centrées, et non plus alignées à
        gauche avec un vide à droite. Sur téléphone, trois rangées de trois. */
     .matable-choix { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; margin: 0 0 12px; padding: 10px; border: 1px solid #c9dbe6; border-radius: 15px; background: #f3f9fc; }
@@ -1725,7 +1737,8 @@
                   <span id="acc-rang" class="rang"></span>
                 </div>
               </div>
-              <div id="acc-choix" class="matable-choix" role="group" aria-label="Choisir ma table" hidden></div>
+              <p id="acc-choix-legende" class="choix-legende">Choisis ta table</p>
+              <div id="acc-choix" class="matable-choix" role="group" aria-labelledby="acc-choix-legende" hidden></div>
               <div id="acc-etapes" class="etapes"></div>
             </section>
             <button id="acc-reviser" class="reviser" type="button"><span><strong id="acc-reviser-titre">Réviser mes calculs</strong><small id="acc-reviser-note">10 questions sans chrono</small></span><span class="go">Réviser&nbsp;→</span></button>
@@ -5162,7 +5175,13 @@
         } else {
           titre.textContent = `La table de ${table}`;
         }
-        $("acc-changer").textContent = replie ? "M’entraîner sur une table" : toutes ? "Mes tables" : "Changer de table";
+        // Le choix ouvert : le lien ne dit plus « Changer de table » (on y est
+        // déjà) mais comment repartir sans rien changer.
+        $("acc-changer").textContent = state.choixTableOuvert && !replie && !toutes
+          ? `Je garde la table de ${table}`
+          : replie ? "M’entraîner sur une table" : toutes ? "Mes tables" : "Changer de table";
+        document.querySelector(".acc").classList.toggle("choix-ouvert", Boolean(state.choixTableOuvert));
+        $("acc-choix-legende").hidden = !state.choixTableOuvert;
 
         // Le choix de la table : neuf cases, les acquises cochées.
         const choix = $("acc-choix");
