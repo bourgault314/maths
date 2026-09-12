@@ -8,7 +8,7 @@ const [page,script,styles]=await Promise.all([
   readFile(new URL("../jeux-cadeaux/styles.css",import.meta.url),"utf8")
 ]);
 
-test("la banque est publiable dans le catalogue",()=>assert.match(page,/index,follow/));
+test("la banque est publiable dans le catalogue",()=>assert.match(page,/index, follow/));
 test("les quatre jeux du lot 1 sont proposés",()=>{
   for(const id of ["luciole","dodo","galets","tempo"]){
     assert.match(page,new RegExp(`data-game="${id}"`));
