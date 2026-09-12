@@ -170,9 +170,9 @@ test("l’aide sépare l’indice de la révélation et la correction impose un 
   assert.match(html, /const retryMode = mode;[\s\S]*makeChallenge\(retryMode\)/);
   assert.match(html, /const operationTitles = \{ sum: "La somme", difference: "La différence", product: "Le produit", quotient: "Le quotient" \}/);
   assert.doesNotMatch(html, /id="correction-copy"|learningNotes\[mode\]\.correction/);
-  assert.match(html, /Ton calcul : \$\{expression\(mode, chosenPair\[0\], chosenPair\[1\]\)\}\. Il fallait obtenir \$\{target\}\./);
-  assert.match(html, /Voici une paire voisine du plateau\./);
-  assert.match(html, /\$\{solutionFirst\} et \$\{solutionSecond\} conviennent : \$\{expression\(mode, solutionFirst, solutionSecond\)\}\./);
+  assert.match(html, /renderCorrectionCalculation\(correctionChoice, "Ton essai", chosenPair\[0\], chosenPair\[1\]\)/);
+  assert.match(html, /correctionChoice.hidden = !chosenPair/);
+  assert.match(html, /renderCorrectionCalculation\(correctionSolution, "Une solution", solutionFirst, solutionSecond\)/);
   assert.match(html, /onEscape: retryAfterLearning/);
 });
 
@@ -201,7 +201,7 @@ test("le cours complet n’apparaît qu’au lancement et chaque dialogue repart
 
 test("la série garde exactement dix clés et la distribution validée", () => {
   assert.match(html, /const GOAL = 10;/);
-  assert.match(html, /shuffle\(\["sum", "sum", "sum", "difference", "difference", "product", "product", "product", "quotient", "quotient"\]\)/);
+  assert.match(html, /shuffle\(settingsCore.soloSeries\(selectedOperations\)\)/);
   assert.doesNotMatch(html, /id="(?:timer|chronometer|countdown)"/i);
 });
 
@@ -296,17 +296,17 @@ test("le tirage reste déterministe quand Math.random est figé (scénarios de t
 
 test("le repère de paires, le niveau et la vérification bonus sont câblés", () => {
   assert.match(html, /<span id="pair-count" class="pair-hint" hidden><\/span>/);
-  assert.match(html, /Solo · <span id="level-label">niveau 1<\/span> · trouve 10 clés/);
+  assert.match(html, /Solo · <span id="level-label">niveau 1<\/span><\/span>/);
   assert.match(html, /class="level-choice" type="button" data-level="1" aria-pressed="true">Niveau 1<small>nombres de 1 à 12<\/small>/);
   assert.match(html, /class="level-choice" type="button" data-level="2" aria-pressed="false">Niveau 2<small>nombres jusqu’à 20<\/small>/);
   assert.match(html, /function readLevel\(\) \{[\s\S]*?get\("niveau"\) === "2" \? 2 : 1/);
-  assert.match(html, /\$\{level === 2 \? "&niveau=2" : ""\}/);
+  assert.match(html, /if \(nextLevel === 2\) params.set\("niveau", "2"\)/);
   assert.match(html, /generateBoard\(mode, gameLevel, randomInteger\(1, 3\) === 1\)/);
   assert.match(html, /pairHint\.textContent = solutionCount === 1 \? "1 paire" : `\$\{solutionCount\} paires`/);
   assert.match(html, /if \(largeScreen\.matches\) \{[\s\S]*?bonusOpen = true;[\s\S]*?showNextButton\(\);[\s\S]*?\} else \{[\s\S]*?pendingTimer = window\.setTimeout\(advance, 750\);/);
   assert.match(html, /\? `\$\{expression\(mode, firstValue, secondValue\)\} aussi !`/);
   assert.match(html, /: `\$\{expression\(mode, firstValue, secondValue\)\} : non, pas celle-là\.`/);
-  assert.match(html, /function select\(position\) \{\s*if \(bonusOpen\) \{\s*selectBonus\(position\);\s*return;\s*\}\s*if \(locked\) return;/);
+  assert.match(html, /function select\(position\) \{\s*if \(!modeDialog.hidden \|\| !lesson.hidden\) return;\s*if \(bonusOpen\) \{\s*selectBonus\(position\);\s*return;\s*\}\s*if \(locked\) return;/);
   assert.match(html, /const content = \[gameLevel === 2 \? createLevelTwoCard\(nextMode, sourceCard\) : sourceCard\.cloneNode\(true\)\]/);
   assert.match(html, /levelTwoExamples = \{ sum: \[13, 8\], difference: \[17, 9\], product: \[12, 15\], quotient: \[60, 15\] \}/);
   assert.match(html, /if \(visualLevel === 2\) \{[\s\S]*?createBarDiagram\(nextMode, model\)/);

@@ -1598,6 +1598,7 @@
       }
     }
   </style>
+  <link rel="stylesheet" href="../../assets/css/coffres-learning.css?v=1">
 </head>
 <body>
   <header class="topbar">
@@ -1613,10 +1614,13 @@
       <div>
         <p class="eyebrow">Calcul mental</p>
         <h1>Coffres magiques</h1>
-        <p class="solo-subline"><span>Solo · <span id="level-label">niveau 1</span> · trouve 10 clés</span><button class="mode-switch-button" type="button" data-change-mode>Changer de mode</button></p>
+        <p class="solo-subline"><span>Solo · <span id="level-label">niveau 1</span></span><button class="mode-switch-button" type="button" data-change-mode>Réglages</button></p>
       </div>
       <div class="solo-score">
-        <strong id="key-count" class="solo-stats">0 / 10 clés</strong>
+        <strong id="key-count" class="solo-stats key-progress" role="img" aria-label="0 clé sur 10">
+          <svg class="progress-key" viewBox="-1 -1 37 25" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="3.2"><path d="M15.325 8H34v6h-5v5h-6v-5h-7.675a7 7 0 1 1 0-6Z"/></svg>
+          <span id="key-number" aria-hidden="true">0 / 10</span>
+        </strong>
         <span id="pair-count" class="pair-hint" hidden></span>
       </div>
     </section>
@@ -1633,17 +1637,13 @@
 
   <section id="mode-dialog" class="overlay" hidden role="dialog" aria-modal="true" aria-labelledby="mode-title">
     <div class="dialog-card mode-dialog-card">
-      <div class="dialog-icon" aria-hidden="true">🔐</div>
       <h2 id="mode-title" tabindex="-1">Choisis ton mode</h2>
-      <p>Les mêmes coffres, selon que tu veux t’entraîner ou défier quelqu’un.</p>
-      <div class="mode-options">
-        <button id="choose-solo" class="mode-choice mode-choice-solo" type="button">
-          <span class="mode-choice-icon" aria-hidden="true">1</span>
-          <span><strong>Solo — S’entraîner</strong><small>1 joueur · 10 clés · sans chrono · aides et corrections</small></span>
+      <div class="mode-options" role="group" aria-label="Mode de jeu">
+        <button id="choose-solo" class="mode-choice mode-choice-solo" type="button" data-game-mode="solo" aria-pressed="true">
+          <strong>Solo</strong><small>1 joueur · 10 clés<br>Sans chrono · avec aide</small>
         </button>
-        <button id="choose-duo" class="mode-choice mode-choice-duo" type="button">
-          <span class="mode-choice-icon" aria-hidden="true">2</span>
-          <span><strong>Duo — Se défier</strong><small>2 joueurs · 20 s par tour · premier à 5 clés</small></span>
+        <button id="choose-duo" class="mode-choice mode-choice-duo" type="button" data-game-mode="duo" aria-pressed="false">
+          <strong>Duo</strong><small>2 joueurs · 5 clés<br>20 secondes par tour</small>
         </button>
       </div>
       <div class="level-row" role="group" aria-label="Niveau des nombres en solo">
@@ -1651,7 +1651,17 @@
         <button class="level-choice" type="button" data-level="1" aria-pressed="true">Niveau 1<small>nombres de 1 à 12</small></button>
         <button class="level-choice" type="button" data-level="2" aria-pressed="false">Niveau 2<small>nombres jusqu’à 20</small></button>
       </div>
-      <button id="continue-current-mode" class="mode-continue" type="button" hidden>Continuer la partie</button>
+      <fieldset class="operation-choices">
+        <legend>Choisis tes opérations</legend>
+        <div class="operation-options">
+          <label class="operation-option"><input type="checkbox" name="operation" value="sum" checked><span class="operation-symbol" aria-hidden="true">+</span>Addition</label>
+          <label class="operation-option"><input type="checkbox" name="operation" value="difference" checked><span class="operation-symbol" aria-hidden="true">−</span>Soustraction</label>
+          <label class="operation-option"><input type="checkbox" name="operation" value="product" checked><span class="operation-symbol" aria-hidden="true">×</span>Multiplication</label>
+          <label class="operation-option"><input type="checkbox" name="operation" value="quotient" checked><span class="operation-symbol" aria-hidden="true">÷</span>Division</label>
+        </div>
+        <p id="operations-hint" class="operations-hint" aria-live="polite"></p>
+      </fieldset>
+      <button id="continue-current-mode" class="mode-continue" type="button">Continuer</button>
     </div>
   </section>
 
@@ -1662,7 +1672,8 @@
       <p>À chaque coffre, choisis deux cases qui se touchent par un côté.</p>
       <div id="lesson-course" class="operation-grid" role="region" aria-label="Cours complet sur les quatre opérations" tabindex="0">
         <article data-operation="sum">
-          <h3>Somme : réunir deux quantités</h3>
+          <h3>Somme</h3>
+          <p class="operation-meaning">Réunir deux quantités</p>
           <p class="operation-example">La somme de 3 et de 2 est 5.</p>
           <div class="operation-picture" role="img" aria-label="Un repère aligné au-dessus de toute la largeur indique : somme égale 5. Le rectangle du haut contient 5 points. Juste en dessous, deux rectangles jointifs contiennent 3 points puis 2 points. Les deux lignes ont exactement la même longueur. 3 plus 2 égale 5.">
             <div class="quantity-model" aria-hidden="true">
@@ -1674,13 +1685,15 @@
                 <span class="quantity-segment quantity-first" style="--quantity-value:3"><span class="quantity-dots" style="--dot-count:3"><i class="quantity-dot"></i><i class="quantity-dot"></i><i class="quantity-dot"></i></span></span>
                 <span class="quantity-segment quantity-second" style="--quantity-value:2"><span class="quantity-dots" style="--dot-count:2"><i class="quantity-dot"></i><i class="quantity-dot"></i></span></span>
               </div>
+              <div class="sum-parts-markers" aria-hidden="true"><span class="sum-part-marker" style="--quantity-value:3">3</span><span class="sum-part-marker" style="--quantity-value:2">2</span></div>
             </div>
           </div>
           <strong>3 + 2 = 5</strong>
           <p class="operation-definition">La somme est le résultat d’une addition.</p>
         </article>
         <article data-operation="difference">
-          <h3>Différence : l’écart entre deux quantités</h3>
+          <h3>Différence</h3>
+          <p class="operation-meaning">L’écart entre deux quantités</p>
           <p class="operation-example">La différence entre 5 et 2 est 3.</p>
           <div class="operation-picture" role="img" aria-label="La différence est l’écart entre les deux quantités. Dans l’espace vide de la ligne inférieure, un repère orienté vers le haut est placé exactement sous les 3 points non appariés et indique : différence égale 3. Le rectangle du haut contient 5 points alignés. Le rectangle du bas, collé dessous et aligné à gauche, contient 2 points sous les deux premiers. Les 3 points restants du haut sont mis en évidence et n’ont pas de point apparié dessous. 5 moins 2 égale 3.">
             <div class="comparison-model" style="--unit-count:5" aria-hidden="true">
@@ -1698,7 +1711,8 @@
           <p class="operation-definition">La différence est le résultat d’une soustraction.</p>
         </article>
         <article data-operation="product">
-          <h3>Produit : former des rangées égales</h3>
+          <h3>Produit</h3>
+          <p class="operation-meaning">Former des rangées égales</p>
           <p class="operation-example">Le produit de 3 par 4 est 12.</p>
           <div class="operation-picture" role="group" aria-label="Deux rectangles orientés montrent que trois fois quatre et quatre fois trois donnent tous les deux douze">
             <div class="dual-learning-views">
@@ -1716,7 +1730,8 @@
           <p class="operation-definition">Le produit est le résultat d’une multiplication.</p>
         </article>
         <article data-operation="quotient">
-          <h3>Quotient : grouper ou partager</h3>
+          <h3>Quotient</h3>
+          <p class="operation-meaning">Grouper ou partager</p>
           <p class="operation-example">Le quotient de 8 par 2 est 4.</p>
           <div class="operation-picture" role="group" aria-label="Deux barres rectangulaires montrent deux façons de comprendre huit divisé par deux">
             <div class="quotient-interpretations">
@@ -1763,13 +1778,14 @@
 
   <section id="correction-dialog" class="overlay" hidden role="dialog" aria-modal="true" aria-labelledby="correction-title">
     <div class="dialog-card correction-card">
-      <div class="dialog-icon" aria-hidden="true">✓</div>
-      <h2 id="correction-title" tabindex="-1">Regardons une solution</h2>
-      <p id="correction-choice" class="correction-choice"></p>
-      <p id="correction-solution" class="correction-solution"></p>
-      <div id="correction-visual" class="learning-panel"></div>
+      <h2 id="correction-title" tabindex="-1">Une solution</h2>
+      <div class="correction-content" role="region" aria-label="Calculs et schéma de correction" tabindex="0">
+        <div id="correction-choice" class="correction-choice"></div>
+        <div id="correction-solution" class="correction-solution"></div>
+        <div id="correction-visual" class="learning-panel"></div>
+      </div>
       <div class="dialog-actions">
-        <button id="close-correction" class="primary-button" type="button">Réessayer sur un nouveau plateau</button>
+        <button id="close-correction" class="primary-button" type="button">Nouveau plateau</button>
       </div>
     </div>
   </section>
@@ -1778,7 +1794,7 @@
     <div class="dialog-card">
       <div class="dialog-icon" aria-hidden="true">★</div>
       <h2 id="result-title" tabindex="-1">Trésor ouvert !</h2>
-      <p>Tu as utilisé les quatre opérations.</p>
+      <p>Tu as ouvert les dix coffres.</p>
       <p id="result-score" class="result-score"></p>
       <div class="result-actions">
         <button id="play-again" class="primary-button" type="button">Rejouer avec de nouveaux coffres</button>
@@ -1796,6 +1812,7 @@
     <span data-mathsgo-confidentialite>Sans cookie ni traceur</span>
   </footer>
 
+  <script src="../../assets/js/coffres-settings.js?v=1"></script>
   <script>
     (() => {
       "use strict";
@@ -1835,14 +1852,14 @@
       const nextButton = document.querySelector("#next-button");
       const pairHint = document.querySelector("#pair-count");
       const levelLabel = document.querySelector("#level-label");
-      const levelButtons = [...document.querySelectorAll(".level-choice")];
-      const continueButton = document.querySelector("#continue-current-mode");
       const result = document.querySelector("#result");
       // Grand écran (ordinateur, projection) : après une clé gagnée, l'égalité reste affichée
       // et c'est le bouton « Coffre suivant » qui fait avancer. Petit écran : passage automatique.
       const largeScreen = window.matchMedia("(min-width: 900px)");
       const requestedMode = new URLSearchParams(window.location.search).get("mode");
       const origin = resolveOrigin();
+      const settingsCore = window.MATHSGO_COFFRES_SETTINGS;
+      let selectedOperations = settingsCore.readOperations(window.location.search);
       let values = [];
       let modes = [];
       let mode = "sum";
@@ -1892,7 +1909,7 @@
         };
 
         const resetScroll = dialog => {
-          [dialog, ...dialog.querySelectorAll(".dialog-card,.operation-grid")].forEach(node => {
+          [dialog, ...dialog.querySelectorAll(".dialog-card,.operation-grid,.correction-content")].forEach(node => {
             node.scrollTop = 0;
             node.scrollLeft = 0;
           });
@@ -1960,6 +1977,7 @@
       }
 
       const dialogs = createModalController();
+      const settingsChoices = settingsCore.createChoices(modeDialog, CURRENT_MODE, confirmSettings);
 
       function resolveOrigin() {
         const candidate = new URLSearchParams(window.location.search).get("from");
@@ -1982,52 +2000,33 @@
         });
       }
 
-      function modeUrl(nextMode) {
+      function modeUrl(nextMode, operations = selectedOperations, nextLevel = level) {
         const path = nextMode === "solo"
           ? "../calcul_mental/coffres_magiques_solo.html"
           : "../club_maths/coffres_magiques.html";
-        return `${path}?mode=${nextMode}&from=${origin}${level === 2 ? "&niveau=2" : ""}`;
+        const params = new URLSearchParams({ mode: nextMode, from: origin });
+        if (nextLevel === 2) params.set("niveau", "2");
+        settingsCore.writeOperations(params, operations);
+        return `${path}?${params}`;
       }
 
-      // Le niveau choisi se lit dans l'adresse (?niveau=2) : un favori ou un QR code peut l'imposer.
-      function syncLevelUrl() {
+      function syncSettingsUrl() {
         const url = new URL(window.location.href);
         if (level === 2) url.searchParams.set("niveau", "2");
         else url.searchParams.delete("niveau");
+        settingsCore.writeOperations(url.searchParams, selectedOperations);
         if (url.href !== window.location.href) window.history.replaceState(window.history.state, "", url.href);
       }
 
       function syncLevelUi() {
         levelLabel.textContent = `niveau ${gameLevel}`;
-        levelButtons.forEach(button => button.setAttribute("aria-pressed", String(Number(button.dataset.level) === level)));
-        const restart = gameStarted && level !== gameLevel;
-        continueButton.textContent = restart ? `Nouvelle partie au niveau ${level}` : "Continuer la partie";
-      }
-
-      function setLevel(nextLevel) {
-        level = nextLevel === 2 ? 2 : 1;
-        syncLevelUrl();
-        syncLevelUi();
-      }
-
-      // Applique le niveau choisi à la partie : nouvelle série de coffres si le niveau a changé en cours de partie.
-      function applyLevel() {
-        if (!gameStarted || level === gameLevel) {
-          gameLevel = level;
-          syncLevelUi();
-          return false;
-        }
-        gameLevel = level;
-        start();
-        return true;
       }
 
       function openModeDialog({ mandatory = false } = {}) {
+        // Le délai de correction et celui d'une réussite se terminent avant les réglages.
+        if (!mandatory && locked && !bonusOpen) return;
         modeDialogMandatory = mandatory;
-        level = gameStarted ? gameLevel : level;
-        syncLevelUrl();
-        syncLevelUi();
-        continueButton.hidden = mandatory;
+        settingsChoices.reset(selectedOperations, gameLevel, gameStarted);
         dialogs.open(modeDialog, {
           trigger: mandatory ? null : document.activeElement,
           initialFocus: `#choose-${CURRENT_MODE}`,
@@ -2040,27 +2039,21 @@
       function closeModeDialog({ force = false, ...dialogOptions } = {}) {
         if (modeDialogMandatory && !force) return;
         modeDialogMandatory = false;
-        // Fermer sans confirmer (Échap) abandonne un changement de niveau en cours de partie.
-        if (gameStarted && level !== gameLevel) setLevel(gameLevel);
         dialogs.close(modeDialog, dialogOptions);
       }
 
-      function continueCurrentGame() {
-        const restarted = applyLevel();
-        closeModeDialog({ restoreFocus: !restarted });
-        if (restarted) focusAfterReset(null);
-      }
-
-      function chooseMode(nextMode) {
-        if (nextMode !== CURRENT_MODE) {
-          window.location.replace(modeUrl(nextMode));
+      function confirmSettings(config) {
+        if (config.mode !== CURRENT_MODE) {
+          window.location.replace(modeUrl(config.mode, config.operations, config.level));
           return;
         }
-        const mustIntroduce = !gameStarted && values.length === 0;
-        const restarted = applyLevel();
-        closeModeDialog({ force: true, restoreFocus: !mustIntroduce && !restarted });
-        if (mustIntroduce) openLesson();
-        else if (restarted) focusAfterReset(null);
+        const changed = config.level !== gameLevel || !settingsCore.sameOperations(config.operations, selectedOperations);
+        level = gameLevel = config.level;
+        selectedOperations = config.operations;
+        syncSettingsUrl();
+        syncLevelUi();
+        closeModeDialog({ force: true, restoreFocus: gameStarted && !changed });
+        if (!gameStarted || changed) openLesson();
       }
 
       function setupFullscreen() {
@@ -2370,7 +2363,13 @@
           makeQuantitySegment(model.first, "quantity-first"),
           makeQuantitySegment(model.second, "quantity-second")
         );
-        diagram.append(markerRow, totalRow, partsRow);
+        const partsMarkers = makeElement("div", "sum-parts-markers");
+        for (const value of [model.first, model.second]) {
+          const partMarker = makeElement("span", "sum-part-marker", String(value));
+          partMarker.style.setProperty("--quantity-value", String(value));
+          partsMarkers.append(partMarker);
+        }
+        diagram.append(markerRow, totalRow, partsRow, partsMarkers);
         return diagram;
       }
 
@@ -2600,10 +2599,16 @@
       }
 
       function renderLearningPanel(panel, nextMode, first, second) {
-        panel.replaceChildren(
-          makeElement("h3", "", operationTitles[nextMode]),
-          createOperationVisual(nextMode, first, second)
-        );
+        const visual = createOperationVisual(nextMode, first, second);
+        // Le calcul est déjà affiché dans « Une solution ». Seuls les repères utiles restent.
+        const caption = [...visual.children].find(node => node.classList.contains("demo-caption"));
+        if (caption) {
+          if (nextMode === "product") {
+            const model = operationModel(nextMode, first, second);
+            caption.textContent = `${model.rows} rangées de ${model.columns}`;
+          } else caption.remove();
+        }
+        panel.replaceChildren(visual);
       }
 
       // Niveau 2 : l'aide reprend la carte du cours (titre, phrases, définition) avec des exemples
@@ -2630,6 +2635,7 @@
         picture.append(createBarDiagram(nextMode, model));
         card.append(
           sourceCard.querySelector("h3").cloneNode(true),
+          sourceCard.querySelector(".operation-meaning").cloneNode(true),
           makeElement("p", "operation-example", sentences.example),
           picture,
           makeElement("strong", "", sentences.equation),
@@ -2669,7 +2675,8 @@
       }
 
       function updateCounter() {
-        counter.textContent = `${keys} / ${GOAL} clés`;
+        document.querySelector("#key-number").textContent = `${keys} / ${GOAL}`;
+        counter.setAttribute("aria-label", `${keys} clé${keys === 1 ? "" : "s"} sur ${GOAL}`);
       }
 
       function updatePairHint() {
@@ -2739,6 +2746,24 @@
         focusAfterReset(trigger);
       }
 
+      function renderCorrectionCalculation(container, label, first, second) {
+        const high = Math.max(first, second);
+        const low = Math.min(first, second);
+        const ordered = mode === "difference" || mode === "quotient";
+        const left = ordered ? high : first;
+        const right = ordered ? low : second;
+        const exact = mode !== "quotient" || high % low === 0;
+        const equation = makeElement("div", "correction-equation", `${left} ${symbols[mode]} ${right}`);
+        if (exact) {
+          equation.append(document.createTextNode(" = "), makeElement("span", "correction-answer", String(calculate(mode, first, second))));
+        }
+        container.replaceChildren(makeElement("span", "correction-label", label), equation);
+        if (!exact) {
+          const groups = Math.floor(high / low);
+          container.append(makeElement("span", "correction-remainder", `${groups} paquet${groups === 1 ? "" : "s"} de ${low}, il reste ${high % low}.`));
+        }
+      }
+
       function openCorrection({ chosenPair = null, trigger = document.activeElement } = {}) {
         const found = findSolutionPair(mode, target);
         if (!found) {
@@ -2747,10 +2772,13 @@
           return;
         }
         const [solutionFirst, solutionSecond] = found.pair;
-        correctionChoice.textContent = chosenPair
-          ? `Ton calcul : ${expression(mode, chosenPair[0], chosenPair[1])}. Il fallait obtenir ${target}.`
-          : "Voici une paire voisine du plateau.";
-        correctionSolution.textContent = `${solutionFirst} et ${solutionSecond} conviennent : ${expression(mode, solutionFirst, solutionSecond)}.`;
+        const label = operationLabels[mode];
+        const agreement = mode === "sum" || mode === "difference" ? "demandée" : "demandé";
+        document.querySelector("#correction-title").textContent = `${label[0].toUpperCase()}${label.slice(1)} ${agreement} : ${target}`;
+        correctionChoice.hidden = !chosenPair;
+        correctionChoice.replaceChildren();
+        if (chosenPair) renderCorrectionCalculation(correctionChoice, "Ton essai", chosenPair[0], chosenPair[1]);
+        renderCorrectionCalculation(correctionSolution, "Une solution", solutionFirst, solutionSecond);
         renderLearningPanel(correctionVisual, mode, solutionFirst, solutionSecond);
         locked = true;
         dialogs.open(correctionDialog, {
@@ -2817,7 +2845,8 @@
         secondButton.classList.add(correct ? "success" : "failure");
         status.textContent = correct
           ? `${expression(mode, firstValue, secondValue)} : une clé gagnée !`
-          : `${expression(mode, firstValue, secondValue)} : essaie une autre paire.`;
+          : exactQuotient ? `Tu obtiens ${calculate(mode, firstValue, secondValue)}. On cherche ${target}.`
+          : `Il reste ${high % low}. La division doit tomber juste.`;
         status.className = `status-line ${correct ? "good" : "wrong"}`;
 
         if (correct) {
@@ -2834,7 +2863,12 @@
             pendingTimer = window.setTimeout(advance, 750);
           }
         } else {
-          openCorrection({ chosenPair: [firstValue, secondValue], trigger: secondButton });
+          const resolvedBoard = boardId;
+          pendingTimer = window.setTimeout(() => {
+            pendingTimer = null;
+            if (boardId !== resolvedBoard) return;
+            openCorrection({ chosenPair: [firstValue, secondValue], trigger: secondButton });
+          }, 1150);
         }
       }
 
@@ -2883,6 +2917,7 @@
       }
 
       function select(position) {
+        if (!modeDialog.hidden || !lesson.hidden) return;
         if (bonusOpen) {
           selectBonus(position);
           return;
@@ -2933,7 +2968,7 @@
         dialogs.close(lesson, { restoreFocus: false });
         dialogs.close(helpDialog, { restoreFocus: false });
         dialogs.close(correctionDialog, { restoreFocus: false });
-        modes = shuffle(["sum", "sum", "sum", "difference", "difference", "product", "product", "product", "quotient", "quotient"]);
+        modes = shuffle(settingsCore.soloSeries(selectedOperations));
         keys = 0;
         locked = false;
         gameLevel = level;
@@ -2944,6 +2979,15 @@
       }
 
       function openLesson() {
+        const count = selectedOperations.length;
+        const titles = { 1: "Un mot à connaître", 2: "Deux mots à connaître", 3: "Trois mots à connaître", 4: "Quatre mots à connaître" };
+        document.querySelector("#lesson-title").textContent = titles[count];
+        const course = document.querySelector("#lesson-course");
+        course.dataset.operationCount = String(count);
+        course.setAttribute("aria-label", "Cours des opérations choisies");
+        lesson.querySelector(".dialog-icon").textContent = selectedOperations.map(operation => symbols[operation]).join(" ");
+        course.querySelectorAll("[data-operation]").forEach(node => { node.hidden = !selectedOperations.includes(node.dataset.operation); });
+        course.querySelector(".operation-conventions").hidden = !selectedOperations.some(operation => operation === "difference" || operation === "quotient");
         dialogs.open(lesson, {
           trigger: null,
           initialFocus: "#start-game"
@@ -2953,12 +2997,6 @@
       board.addEventListener("click", event => {
         const button = event.target.closest(".rune");
         if (button) select(Number(button.dataset.index));
-      });
-      document.querySelector("#choose-solo").addEventListener("click", () => chooseMode("solo"));
-      document.querySelector("#choose-duo").addEventListener("click", () => chooseMode("duo"));
-      continueButton.addEventListener("click", continueCurrentGame);
-      levelButtons.forEach(button => {
-        button.addEventListener("click", () => setLevel(Number(button.dataset.level)));
       });
       document.querySelectorAll("[data-change-mode]").forEach(button => {
         button.addEventListener("click", () => openModeDialog());
@@ -2990,7 +3028,7 @@
         generateBoard,
         createOperationVisual,
         start,
-        getState: () => ({ values: values.slice(), modes: modes.slice(), mode, target, keys, locked, boardId, level: gameLevel, solutions: solutionCount, bonusOpen })
+        getState: () => ({ values: values.slice(), modes: modes.slice(), mode, target, keys, locked, boardId, level: gameLevel, solutions: solutionCount, bonusOpen, selectedOperations: selectedOperations.slice() })
       };
       setupFullscreen();
       syncOriginLinks();

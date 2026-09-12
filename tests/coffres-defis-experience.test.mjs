@@ -35,14 +35,14 @@ test("Coffres à deux explique visuellement les quatre opérations réellement j
   assert.match(html, /sum-bar-model[^>]+Cinq points dans la barre du haut[^>]+trois points et deux points dans deux rectangles jointifs/i);
   assert.match(html, /class="measure-marker sum-marker">somme = 5[\s\S]*class="bar-segment units-5 whole-part"/);
   assert.match(html, /class="bar-segment units-5 whole-part">[\s\S]*?--points:5[\s\S]*?class="bar-segment units-3 blue-part">[\s\S]*?--points:3[\s\S]*?class="bar-segment units-2 coral-part">[\s\S]*?--points:2/);
-  assert.match(html, /Somme : réunir deux quantités[\s\S]*La somme de 3 et de 2 est 5\.[\s\S]*3 \+ 2 = 5[\s\S]*La somme est le résultat d’une addition\./);
+  assert.match(html, /Somme<\/h3>[\s\S]*Réunir deux quantités[\s\S]*La somme de 3 et de 2 est 5\.[\s\S]*3 \+ 2 = 5[\s\S]*La somme est le résultat d’une addition\./);
   assert.match(html, /3 \+ 2 = 5/);
   assert.match(html, /difference-bar-model[^>]+Cinq points sont alignés au-dessus de deux points[^>]+trois autres, surlignés[^>]+Sous ces trois derniers points[^>]+crochet tourné vers eux/i);
   assert.match(html, /bar-dot unmatched[\s\S]*class="difference-known"[\s\S]*class="difference-marker">différence = 3/);
   assert.match(html, /\.difference-marker::before\s*\{[^}]*top:\s*0[^}]*border-bottom:\s*2px solid #bd7900/);
   assert.match(html, /bar-dot matched[\s\S]*bar-dot matched[\s\S]*bar-dot unmatched[\s\S]*bar-dot unmatched[\s\S]*bar-dot unmatched/);
   assert.match(html, /class="difference-known">[\s\S]*?--points:2/);
-  assert.match(html, /Différence : l’écart entre deux quantités[\s\S]*La différence entre 5 et 2 est 3\.[\s\S]*5 − 2 = 3[\s\S]*La différence est le résultat d’une soustraction\./);
+  assert.match(html, /Différence<\/h3>[\s\S]*L’écart entre deux quantités[\s\S]*La différence entre 5 et 2 est 3\.[\s\S]*5 − 2 = 3[\s\S]*La différence est le résultat d’une soustraction\./);
   assert.match(html, /5 − 2 = 3/);
   assert.match(html, /\.bar-diagram\s*\{[^}]*gap:\s*0/);
   assert.match(html, /\.bar-row\s*\{[^}]*border:\s*2px solid #54758a[^}]*border-radius:\s*0/);
@@ -56,10 +56,10 @@ test("Coffres à deux explique visuellement les quatre opérations réellement j
   assert.match(html, /<span>3 rangées de 4<\/span>[\s\S]*?<span>4 rangées de 3<\/span>/);
   assert.match(html, /\.dot-array\s*\{[\s\S]*?border-radius:\s*0/);
   assert.match(html, /3 × 4 = 12 ; 4 × 3 = 12 aussi/);
-  assert.match(html, /Produit : former des rangées égales[\s\S]*Le produit de 3 par 4 est 12\.[\s\S]*Le produit est le résultat d’une multiplication/);
+  assert.match(html, /Produit<\/h3>[\s\S]*Former des rangées égales[\s\S]*Le produit de 3 par 4 est 12\.[\s\S]*Le produit est le résultat d’une multiplication/);
   assert.match(html, /Grouper : <strong>4 paquets de 2<\/strong>/);
   assert.match(html, /Partager : <strong>2 paquets de 4<\/strong>/);
-  const quotientMemo = html.match(/<article class="operation-visual-card">\s*<h3>Quotient[\s\S]*?<\/article>/)?.[0] || "";
+  const quotientMemo = html.match(/<article class="operation-visual-card" data-operation="quotient">\s*<h3>Quotient[\s\S]*?<\/article>/)?.[0] || "";
   assert.equal([...quotientMemo.matchAll(/--package-size:2/g)].length, 4);
   assert.equal([...quotientMemo.matchAll(/--package-size:4/g)].length, 2);
   assert.match(quotientMemo, /quotient-bar groups-of-two[\s\S]*quotient-bar groups-of-four/);
@@ -142,13 +142,13 @@ test("les deux Coffres proposent Solo ou Duo sans surcharger la barre de navigat
 
   for (const [path, html] of [["duo", duel], ["solo", solo]]) {
     assert.match(html, /id="mode-dialog"[^>]*role="dialog"[^>]*aria-modal="true"[^>]*aria-labelledby="mode-title"/, path);
-    assert.match(html, /id="choose-solo"[\s\S]*Solo — S’entraîner[\s\S]*10 clés[\s\S]*sans chrono/, path);
-    assert.match(html, /id="choose-duo"[\s\S]*Duo — Se défier[\s\S]*20 s par tour[\s\S]*premier à 5 clés/, path);
-    assert.match(html, /window\.location\.replace\(modeUrl\(nextMode\)\)/, path);
-    assert.match(html, /<button class="mode-switch-button"[^>]*data-change-mode>Changer de mode<\/button>/, path);
+    assert.match(html, /id="choose-solo"[\s\S]*<strong>Solo<\/strong>[\s\S]*10 clés[\s\S]*Sans chrono/, path);
+    assert.match(html, /id="choose-duo"[\s\S]*<strong>Duo<\/strong>[\s\S]*5 clés[\s\S]*20 secondes par tour/, path);
+    assert.match(html, /window\.location\.replace\(modeUrl\(config.mode, config.operations, config.level\)\)/, path);
+    assert.match(html, /<button class="mode-switch-button"[^>]*data-change-mode>Réglages<\/button>/, path);
     assert.match(html, /\.mode-switch-button\s*\{[^}]*min-height:\s*40px/, path);
     const topbar = html.match(/<header class="topbar">[\s\S]*?<\/header>/)?.[0] || "";
-    assert.doesNotMatch(topbar, /Changer de mode|data-change-mode/, path);
+    assert.doesNotMatch(topbar, /Réglages|data-change-mode/, path);
   }
 });
 

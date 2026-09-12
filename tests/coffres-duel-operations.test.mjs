@@ -34,6 +34,7 @@ function extractFunction(name) {
 const context = vm.createContext({});
 vm.runInContext(`
   const OPERATION_MODES = ["sum", "difference", "product", "quotient"];
+  let selectedOperations = OPERATION_MODES.slice();
   let mode = "sum";
   let challengeNumber = 0;
   let operationCycle = [];
@@ -47,7 +48,8 @@ vm.runInContext(`
     calculate,
     operationFor(nextMode, first, second) { mode = nextMode; return operation(first, second); },
     pairFor,
-    balancedSequence(length = 8) {
+    balancedSequence(length = 8, operations = OPERATION_MODES) {
+      selectedOperations = operations;
       operationCycle = [];
       const sequence = [];
       for (challengeNumber = 1; challengeNumber <= length; challengeNumber += 1) sequence.push(nextBalancedMode());
@@ -93,5 +95,19 @@ test("un bloc de huit défis sert chaque opération une fois à chacun", () => {
     for (let index = 0; index < sequence.length; index += 2) assert.equal(sequence[index], sequence[index + 1]);
     assert.deepEqual([...new Set(sequence.filter((_, index) => index % 2 === 0))].sort(), ["difference", "product", "quotient", "sum"]);
     assert.deepEqual([...new Set(sequence.filter((_, index) => index % 2 === 1))].sort(), ["difference", "product", "quotient", "sum"]);
+  }
+});
+
+
+test("un choix d’opérations limité reste équilibré entre les deux joueurs", () => {
+  for (const operations of [["sum"], ["difference", "quotient"], ["sum", "product", "quotient"]]) {
+    const sequence = Array.from(core.balancedSequence(operations.length * 4, operations));
+    assert.ok(sequence.every(operation => operations.includes(operation)));
+    for (let start = 0; start < sequence.length; start += operations.length * 2) {
+      const block = sequence.slice(start, start + operations.length * 2);
+      for (let player = 0; player < 2; player += 1) {
+        assert.deepEqual(block.filter((_, index) => index % 2 === player).sort(), [...operations].sort());
+      }
+    }
   }
 });
