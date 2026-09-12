@@ -7,26 +7,46 @@ const advance = (game, until, max = 100) => {
   assert.ok(until(game), "L’état attendu doit être atteint dans le temps imparti");
 };
 for (const difficulty of Object.keys(core.levels)) {
-  test(difficulty + " : trois chemins de mémoire se terminent avec un résultat exact", () => {
-    const g = new Memory(difficulty, 314);
-    for (let round = 0; round < 3; round++) {
-      advance(g, m => m.phase === "answer");
+  test(difficulty + " : le chemin de mémoire s’allonge d’une lumière à chaque réussite", () => {
+    const g = new Memory(difficulty, 314), start = core.levels[difficulty].memory;
+    let previous = [];
+    for (let round = 0; round < 5; round++) {
+      advance(g, m => m.phase === "answer", 120);
       const path = [...g.path];
+      assert.equal(path.length, start + round);
+      if (round) assert.deepEqual(path.slice(0, -1), previous, "Le chemin déjà retenu est conservé");
+      assert.ok(g.answerTime >= 8 && g.answerTime >= path.length * 2.5);
       path.forEach(n => g.tap(n));
-      assert.equal(g.score, round + 1);
-      advance(g, m => m.phase !== "feedback");
-    }
-    assert.equal(g.done, true); assert.equal(g.score, 3);
-  });
-  test(difficulty + " : les erreurs de mémoire n’ouvrent pas de parties supplémentaires", () => {
-    const g = new Memory(difficulty, 21);
-    for (let round = 0; round < 3; round++) {
-      advance(g, m => m.phase === "answer"); g.tap((g.path[0] + 1) % 16);
+      assert.equal(g.score, path.length);
       assert.equal(g.phase, "feedback");
-      for (let i = 0; i < 10; i++) g.tap(g.path[0]);
-      advance(g, m => m.phase !== "feedback");
+      previous = path;
+      advance(g, m => m.phase !== "feedback", 5);
+      assert.equal(g.done, false);
     }
-    assert.equal(g.done, true); assert.equal(g.score, 0);
+  });
+  test(difficulty + " : une seule erreur termine la partie et montre la bonne case", () => {
+    const g = new Memory(difficulty, 21);
+    advance(g, m => m.phase === "answer", 120);
+    const path = [...g.path];
+    path.slice(0, -1).forEach(n => g.tap(n));
+    const faux = [...Array(16).keys()].find(n => n !== path.at(-1));
+    g.tap(faux);
+    assert.equal(g.phase, "reveal"); assert.equal(g.missed, faux); assert.equal(g.lit, path.at(-1));
+    assert.match(g.feedback, /case \d+\./);
+    for (let i = 0; i < 10; i++) g.tap(path.at(-1));
+    assert.equal(g.score, 0, "Aucun chemin n’a été retrouvé en entier");
+    advance(g, m => m.done, 5);
+    assert.equal(g.phase, "done"); assert.equal(g.won, false);
+  });
+  test(difficulty + " : le temps d’un chemin s’écoule et termine aussi la partie", () => {
+    const g = new Memory(difficulty, 7);
+    advance(g, m => m.phase === "answer", 120);
+    const limite = g.answerTime;
+    for (let t = 0; t < limite - .2; t += 1 / 60) g.update(1 / 60);
+    assert.equal(g.phase, "answer"); assert.ok(g.remaining > 0);
+    advance(g, m => m.phase === "reveal", 3);
+    assert.equal(g.missed, -1); assert.match(g.feedback, /temps/);
+    advance(g, m => m.done, 3);
   });
   test(difficulty + " : le dodo peut franchir huit troncs pour 30 parcours distincts", () => {
     for (let seed = 1; seed <= 30; seed++) {
@@ -73,6 +93,43 @@ test("La génération des chemins est reproductible, bornée, sans répétition 
     const p = core.memoryPath(6, a); assert.deepEqual(p, core.memoryPath(6, b));
     p.forEach((n, index) => { assert.ok(n >= 0 && n < 16); if (index) assert.notEqual(n, p[index - 1]); });
   }
+});
+test("Le hasard des chemins évite les cadeaux, les reprises proches et les cases sur-utilisées", () => {
+  const ligne = i => Math.floor(i / 4), colonne = i => i % 4;
+  const usage = new Array(16).fill(0);
+  for (let seed = 0; seed < 600; seed++) {
+    const path = core.memoryPath(14, random(seed));
+    path.forEach((n, i) => {
+      usage[n]++;
+      if (i >= 1) assert.notEqual(n, path[i - 1], "seed " + seed);
+      if (i >= 1) assert.ok(!path.slice(Math.max(0, i - 3), i).includes(n), "reprise trop proche, seed " + seed);
+      if (i >= 2) {
+        const aligne = ligne(path[i - 1]) - ligne(path[i - 2]) === ligne(n) - ligne(path[i - 1])
+          && colonne(path[i - 1]) - colonne(path[i - 2]) === colonne(n) - colonne(path[i - 1]);
+        assert.equal(aligne, false, "trois cases régulièrement alignées, seed " + seed);
+      }
+      assert.ok(path.slice(0, i + 1).filter(v => v === n).length <= Math.max(2, Math.ceil((i + 1) / 5)), "case sur-utilisée");
+    });
+  }
+  const attendu = 600 * 14 / 16;
+  usage.forEach((total, cell) => assert.ok(Math.abs(total - attendu) < attendu * .25, "case " + (cell + 1) + " tirée " + total + " fois"));
+});
+test("Une lumière de plus prolonge le chemin sans le réécrire, jusqu’au plafond du jeu", () => {
+  const rng = random(5);
+  let path = core.memoryPath(3, rng);
+  for (let i = 0; i < 25; i++) {
+    const suivant = core.nextMemoryCell(path, rng);
+    assert.ok(suivant >= 0 && suivant < 16);
+    path = [...path, suivant];
+  }
+  const g = new Memory("expert", 99);
+  for (let tour = 0; tour < 40 && !g.done; tour++) {
+    advance(g, m => m.phase === "answer" || m.done, 200);
+    if (g.done) break;
+    [...g.path].forEach(n => g.tap(n));
+    advance(g, m => m.phase !== "feedback", 5);
+  }
+  assert.equal(g.done, true); assert.equal(g.won, true); assert.equal(g.score, 20);
 });
 test("Un saut ne peut pas être renouvelé en l’air et la trajectoire revient au sol", () => {
   const r = new Runner("malin", 1); assert.equal(r.jump(), true); r.update(.15);

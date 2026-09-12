@@ -21,9 +21,30 @@
     return result;
   }
   function config(name) { return levels[name] || levels.malin; }
+  // Chemins de lumière : le hasard évite les cadeaux (trois cases régulièrement
+  // alignées), les reprises trop rapprochées et les cases sur-utilisées, pour que
+  // deux parties de même longueur demandent le même effort de mémoire.
+  const CELLS = 16, COLUMNS = 4;
+  const row = i => Math.floor(i / COLUMNS), column = i => i % COLUMNS;
+  function alignedRun(path, n) {
+    if (path.length < 2) return false;
+    const a = path.at(-2), b = path.at(-1);
+    return row(b) - row(a) === row(n) - row(b) && column(b) - column(a) === column(n) - column(b);
+  }
+  function nextMemoryCell(path, rng) {
+    const cap = Math.max(2, Math.ceil((path.length + 1) / 5));
+    // De la règle la plus confortable à la plus indispensable : on relâche par la gauche.
+    const rules = [n => !alignedRun(path, n), n => path.filter(v => v === n).length < cap, n => !path.slice(-3).includes(n)];
+    let pool = [];
+    for (let relax = 0; relax <= rules.length && !pool.length; relax++) {
+      const active = rules.slice(relax);
+      pool = [...Array(CELLS).keys()].filter(n => n !== path.at(-1) && active.every(rule => rule(n)));
+    }
+    return pool[Math.floor(rng() * pool.length)];
+  }
   function memoryPath(length, rng) {
     const path = [];
-    while (path.length < length) { const n = Math.floor(rng() * 16); if (n !== path.at(-1)) path.push(n); }
+    while (path.length < length) path.push(nextMemoryCell(path, rng));
     return path;
   }
   function giftOptions(search, origin) {
@@ -38,9 +59,21 @@
     try { const n = Number(storage.getItem(key)); used = Number.isInteger(n) && n >= 0 ? n : 0; } catch { /* Navigation privée : compteur en mémoire. */ }
     return { get used() { return used; }, get remaining() { return Math.max(0, limit - used); }, take() { if (used >= limit) return false; used++; try { storage.setItem(key, String(used)); } catch { /* Compteur conservé pour cette page. */ } return true; } };
   }
+  // Un seul chemin par partie : il s'allonge d'une lumière à chaque réussite et
+  // la partie s'arrête à la première erreur. Le temps de réponse suit la longueur.
+  const MEMORY_CEILING = 20;
   class Memory {
-    constructor(level, seed) { this.cfg = config(level); this.rng = random(seed); this.round = 0; this.score = 0; this.done = false; this.startPath(); }
-    startPath() { this.path = memoryPath(this.cfg.memory + this.round, this.rng); this.index = 0; this.elapsed = 0; this.phase = "show"; this.lit = -1; this.feedback = ""; }
+    constructor(level, seed) {
+      this.cfg = config(level); this.rng = random(seed);
+      this.path = memoryPath(this.cfg.memory, this.rng);
+      this.round = 0; this.score = 0; this.done = false; this.won = false;
+      this.startPath();
+    }
+    get length() { return this.path.length; }
+    get answerTime() { return Math.max(8, this.path.length * 2.5); }
+    get remaining() { return this.phase === "answer" ? Math.max(0, this.answerTime - this.elapsed) : 0; }
+    startPath() { this.index = 0; this.elapsed = 0; this.phase = "show"; this.lit = -1; this.missed = -1; this.feedback = ""; }
+    grow() { this.path = [...this.path, nextMemoryCell(this.path, this.rng)]; this.startPath(); }
     update(dt) {
       if (this.done) return;
       this.elapsed += dt;
@@ -48,11 +81,26 @@
         const t = this.elapsed - .6, step = this.cfg.flash + .2, i = Math.floor(t / step);
         this.lit = t >= 0 && i < this.path.length && t % step < this.cfg.flash ? this.path[i] : -1;
         if (t >= this.path.length * step) { this.phase = "answer"; this.elapsed = 0; this.lit = -1; }
-      } else if (this.phase === "answer" && this.elapsed >= 20) this.finishPath(false);
-      else if (this.phase === "feedback" && this.elapsed >= 1.25) { if (++this.round >= 3) { this.done = true; this.phase = "done"; } else this.startPath(); }
+      } else if (this.phase === "answer" && this.elapsed >= this.answerTime) this.fail(-1);
+      else if (this.phase === "feedback" && this.elapsed >= 1.1) {
+        if (this.path.length >= MEMORY_CEILING) { this.done = true; this.won = true; this.phase = "done"; }
+        else this.grow();
+      } else if (this.phase === "reveal" && this.elapsed >= 1.2) { this.done = true; this.phase = "done"; }
     }
-    tap(n) { if (this.done || this.phase !== "answer") return; if (n !== this.path[this.index]) { this.lit = this.path[this.index]; this.finishPath(false); } else if (++this.index === this.path.length) this.finishPath(true); }
-    finishPath(ok) { if (ok) this.score++; this.feedback = ok ? "Chemin retrouvé !" : "La luciole passait par la case éclairée. Au prochain chemin !"; this.phase = "feedback"; this.elapsed = 0; }
+    tap(n) {
+      if (this.done || this.phase !== "answer") return;
+      if (n !== this.path[this.index]) { this.fail(n); return; }
+      if (++this.index === this.path.length) {
+        this.score = this.path.length; this.round++;
+        this.feedback = "Chemin retrouvé ! Une lumière de plus…";
+        this.phase = "feedback"; this.elapsed = 0; this.lit = -1;
+      }
+    }
+    fail(n) {
+      this.missed = n; this.lit = this.path[this.index];
+      this.feedback = n < 0 ? "Le temps de ce chemin est passé." : "La luciole passait par la case " + (this.lit + 1) + ".";
+      this.phase = "reveal"; this.elapsed = 0;
+    }
   }
   class Runner {
     constructor(level, seed) {
@@ -120,5 +168,5 @@
       else if (this.phase === "feedback" && this.elapsed >= .8) { if (++this.index >= this.signals.length) { this.done = true; this.phase = "done"; } else this.next(); }
     }
   }
-  return { levels, random, memoryPath, giftOptions, giftLedger, stable, Memory, Runner, Stack, Tempo };
+  return { levels, random, memoryPath, nextMemoryCell, giftOptions, giftLedger, stable, Memory, Runner, Stack, Tempo };
 });

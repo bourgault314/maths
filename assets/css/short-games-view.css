@@ -6,7 +6,8 @@
 .short-game-frame {
   display: block;
   width: 100%;
-  height: 640px;
+  height: 700px;
+  min-height: 260px;
   border: 0;
   background: transparent;
 }

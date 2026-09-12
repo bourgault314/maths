@@ -40,9 +40,12 @@ function create(query = "?jeu=luciole&integre=1", saved = new Map()) {
 }
 let checks = 0;
 function run(name, fn) { fn(); checks++; console.log("OK · " + name); }
-run("Luciole : trois chemins reconstruits depuis les cases réellement affichées", () => {
+run("Luciole : le chemin s’allonge, puis une erreur termine la partie", () => {
   const d = create(); d.prepare("luciole");
+  assert.equal(d.q("#sound").hidden, false, "Le réglage du son accompagne la Luciole");
+  assert.equal(d.q(".stage").classList.contains("stage-memory"), true);
   let path = [], previous = null, answered = false;
+  const longueurs = [], barres = [];
   d.until(() => !d.q("#result").hidden, () => {
     const cell = d.q(".memory-cell.lit");
     const next = cell?.dataset.cell ?? null;
@@ -50,14 +53,28 @@ run("Luciole : trois chemins reconstruits depuis les cases réellement affichée
     previous = next;
     const playable = d.q(".memory-cell") && !d.q(".memory-cell").disabled;
     if (playable && !answered) {
-      d.key("ArrowDown"); assert.equal(d.doc.activeElement.dataset.cell, "4");
-      d.key("ArrowRight"); assert.equal(d.doc.activeElement.dataset.cell, "5");
-      path.forEach(n => d.click('[data-cell="' + n + '"]'));
+      longueurs.push(path.length);
+      if (longueurs.length < 4) {
+        d.key("ArrowDown"); assert.equal(d.doc.activeElement.dataset.cell, "4");
+        d.key("ArrowRight"); assert.equal(d.doc.activeElement.dataset.cell, "5");
+        barres.push(d.q(".memory-timer").hidden);
+        path.forEach(n => d.click('[data-cell="' + n + '"]'));
+        assert.equal(d.q(".memory-timer").hidden, true, "La barre disparaît entre deux chemins");
+      } else {
+        const faux = [...Array(16).keys()].map(String).find(c => c !== path[0]);
+        d.click('[data-cell="' + faux + '"]');
+        assert.equal(d.q('[data-cell="' + faux + '"]').classList.contains("wrong"), true);
+        assert.match(d.q("#instructions").textContent, /case \d+/);
+      }
       answered = true; path = [];
     }
     if (!playable) answered = false;
   });
-  assert.match(d.q("#result-score").textContent, /^3 \/ 3/); d.dom.window.close();
+  assert.deepEqual(longueurs, [3, 4, 5, 6], "Trois réussites allongent le chemin une fois chacune");
+  assert.deepEqual(barres, [false, false, false], "La barre de temps accompagne la saisie");
+  assert.match(d.q("#result-score").textContent, /^5 lumières retenues$/);
+  assert.match(d.q("#result-title").textContent, /Bien joué/);
+  assert.equal(d.q("#next-round").hidden, false); d.dom.window.close();
 });
 run("Dodo : sauts au clavier et fin gagnante", () => {
   const d = create("?jeu=dodo&integre=1"); d.prepare("dodo");
