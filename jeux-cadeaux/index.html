@@ -8,45 +8,55 @@
   <link rel="canonical" href="https://mathsgo.re/jeux-cadeaux/">
   <title>La boîte à jeux courts | maths&amp;go</title>
   <link rel="icon" href="/favicon.ico" sizes="48x48">
-  <link rel="stylesheet" href="styles.css?v=1">
-  <script defer src="app.js?v=1"></script>
+  <link rel="stylesheet" href="styles.css?v=2">
+  <script defer src="core.js?v=2"></script>
+  <script defer src="art.js?v=2"></script>
+  <script defer src="app.js?v=2"></script>
 </head>
 <body>
   <header class="topbar">
-    <a href="/" aria-label="Accueil maths et go"><img src="/assets/img/mathsgo-logo.png" alt="maths&amp;go"></a>
-    <div class="top-actions"><span class="mode-pill" id="mode-pill">Atelier d’essai</span><a class="back-site" href="../index.html?domain=jeux-recherches&amp;notion=jeux-courts">← Jeux courts</a></div>
+    <a class="brand" href="/" aria-label="Accueil maths et go"><img src="/assets/img/mathsgo-logo-390.png" width="116" height="46" alt="maths&amp;go"></a>
+    <a class="back-site" href="/outils/?domain=jeux-recherches&amp;notion=jeux-courts">← Jeux courts</a>
   </header>
   <main>
     <section id="home" class="screen">
       <div class="hero">
-        <p class="eyebrow">Petites parties · grands défis</p>
-        <h1>La boîte à jeux</h1>
-        <p>Quatre jeux très courts pour exercer mémoire, attention, précision et réflexes.</p>
+        <p class="eyebrow" id="mode-pill">La petite pause qui fait jouer</p>
+        <h1>La boîte à <span>jeux courts</span></h1>
+        <p id="home-description">Un chemin à retenir, un saut à tenter, une pile à construire…<br>Choisis ton petit défi. Une partie dure environ une minute.</p>
       </div>
+      <fieldset class="difficulty"><legend>À ton rythme</legend>
+        <label><input type="radio" name="level" value="doux"><span>Tranquille</span></label>
+        <label><input type="radio" name="level" value="malin" checked><span>Défi</span></label>
+        <label><input type="radio" name="level" value="expert"><span>Expert</span></label>
+      </fieldset>
       <nav class="game-grid" aria-label="Choisir un jeu">
-        <button class="game-card luciole" data-game="luciole"><span class="art">✦</span><span><small>Mémoire visuelle</small><strong>La Luciole</strong><em>Retrouve son chemin lumineux.</em></span></button>
-        <button class="game-card dodo" data-game="dodo"><span class="art">🦤</span><span><small>Réflexes</small><strong>Dodo bondissant</strong><em>Saute au bon moment.</em></span></button>
-        <button class="game-card galets" data-game="galets"><span class="art">●</span><span><small>Précision</small><strong>La pile de galets</strong><em>Construis sans tout renverser.</em></span></button>
-        <button class="game-card tempo" data-game="tempo"><span class="art">◉</span><span><small>Attention et inhibition</small><strong>Tempo volcan</strong><em>Agis… ou retiens ton geste.</em></span></button>
+        <button type="button" class="game-card luciole" data-game="luciole"><span class="card-picture"><span class="card-art" data-art="luciole"></span><span class="duration">40–75 s</span></span><span class="card-copy"><small>Mémoire · observation</small><strong>La Luciole</strong><span>Retrouve les chemins de lumière.</span><span class="card-go">Suivre la luciole <b aria-hidden="true">↗</b></span></span></button>
+        <button type="button" class="game-card dodo" data-game="dodo"><span class="card-picture"><span class="card-art" data-art="dodo"></span><span class="duration">20–30 s</span></span><span class="card-copy"><small>Adresse · anticipation</small><strong>Dodo bondissant</strong><span>Un petit dodo, huit grands sauts.</span><span class="card-go">Prendre son élan <b aria-hidden="true">↗</b></span></span></button>
+        <button type="button" class="game-card galets" data-game="galets"><span class="card-picture"><span class="card-art" data-art="galets"></span><span class="duration">30–60 s</span></span><span class="card-copy"><small>Précision · équilibre</small><strong>La pile de galets</strong><span>Jusqu’où tiendra ta construction ?</span><span class="card-go">Trouver l’équilibre <b aria-hidden="true">↗</b></span></span></button>
+        <button type="button" class="game-card tempo" data-game="tempo"><span class="card-picture"><span class="card-art" data-art="tempo"></span><span class="duration">25–45 s</span></span><span class="card-copy"><small>Attention · maîtrise du geste</small><strong>Tempo volcan</strong><span>Savoir agir… et savoir attendre.</span><span class="card-go">Trouver le tempo <b aria-hidden="true">↗</b></span></span></button>
       </nav>
-      <p class="privacy">Aucune donnée n’est envoyée. Les parties restent sur cet appareil.</p>
+      <details class="adult-note"><summary>Pour les adultes : des pauses ludiques</summary><p>Quatre jeux pour le plaisir d’observer, de se souvenir ou de viser juste. Ils ne sont ni des tests cognitifs ni une promesse de progrès scolaire. Le niveau Tranquille laisse davantage de temps.</p><p>Pour les coffres, une ou deux parties peuvent former une petite pause, sans classement ni récompense aléatoire. Le raccordement aux parcours sera une étape distincte.</p></details>
+      <p class="privacy">Sans publicité, sans compte et sans classement.</p>
     </section>
-
     <section id="play" class="screen" hidden>
-      <div class="play-head"><button id="back" class="quiet">← Jeux</button><div><small id="game-skill"></small><h1 id="game-title"></h1></div><strong id="round-label"></strong></div>
-      <div id="instructions" class="instructions"></div>
-      <div id="stage" class="stage" aria-live="polite"></div>
+      <div class="play-head"><button id="back" class="quiet" type="button">← Jeux</button><div><small id="game-skill"></small><h1 id="game-title" tabindex="-1"></h1></div><button id="pause" class="quiet" type="button" disabled>Pause</button></div>
+      <p id="instructions" class="instructions" role="status"></p>
+      <div class="status-row"><span id="progress-label"></span><span id="round-label"></span><span id="time-label"></span></div>
+      <div id="stage" class="stage"></div>
       <div id="controls" class="controls"></div>
+      <p id="keyboard-hint" class="keyboard-hint"></p>
     </section>
-
     <section id="result" class="screen result" hidden>
-      <div id="result-icon" class="result-icon">★</div>
-      <p class="eyebrow">Petite mission terminée</p>
-      <h1 id="result-title">Bravo !</h1>
-      <p id="result-text"></p>
-      <div class="result-actions"><button id="next-round" class="primary">Deuxième partie</button><button id="finish" class="quiet">Terminer</button></div>
-      <p id="auto-return" class="auto-return" hidden></p>
+      <div id="result-art" class="result-art" aria-hidden="true"></div>
+      <p class="eyebrow">Une petite pause bien jouée</p>
+      <h1 id="result-title" tabindex="-1">Partie terminée</h1>
+      <p id="result-score" class="result-score"></p><p id="result-text"></p>
+      <div class="result-actions"><button id="next-round" class="primary" type="button">Rejouer</button><button id="finish" class="quiet" type="button">Choisir un autre jeu</button></div>
+      <p id="gift-end" class="gift-end" hidden>Cette pause est terminée. Tu pourras rejouer au prochain coffre.</p>
     </section>
   </main>
+  <dialog id="pause-dialog"><p class="eyebrow">On reprend quand tu veux</p><h2>Petite pause</h2><p>Le jeu et le temps sont arrêtés.</p><div class="result-actions"><button id="resume" class="primary" type="button">Reprendre</button><button id="quit" class="quiet" type="button">Terminer cette partie</button></div></dialog>
+  <noscript><p>Active JavaScript dans ton navigateur pour jouer.</p></noscript>
 </body>
 </html>

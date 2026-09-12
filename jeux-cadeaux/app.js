@@ -1,57 +1,192 @@
-(function(){
+(function () {
   "use strict";
-  const $=id=>document.getElementById(id);
-  const params=new URLSearchParams(location.search);
-  const giftMode=params.get("mode")==="cadeau";
-  const maxRounds=Math.max(1,Math.min(2,Number(params.get("parties"))||1));
-  const returnUrl=params.get("retour")||"";
-  const forced=params.get("jeu");
-  const games={
-    luciole:{title:"La Luciole",skill:"Mémoire visuelle",instruction:"Regarde le chemin lumineux, puis touche les cases dans le même ordre.",icon:"✦"},
-    dodo:{title:"Dodo bondissant",skill:"Réflexes",instruction:"Touche le plateau ou appuie sur espace pour franchir cinq troncs.",icon:"🦤"},
-    galets:{title:"La pile de galets",skill:"Précision",instruction:"Déplace le guide, puis lâche cinq galets au-dessus de la pile sans la déséquilibrer.",icon:"●"},
-    tempo:{title:"Tempo volcan",skill:"Attention et inhibition",instruction:"Touche seulement quand le cercle vert brille. Sur le rouge, retiens ton geste.",icon:"◉"}
+  const $ = id => document.getElementById(id);
+  const core = window.ShortGames;
+  const art = name => '<svg viewBox="0 0 160 120" aria-hidden="true">' + window.ShortGameArt[name] + '</svg>';
+  const games = {
+    luciole: { title: "La Luciole", skill: "Mémoire · observation", intro: "Observe les cases qui s’éclairent. Retouche-les dans le même ordre. Trois chemins, de plus en plus longs.", hint: "Touche les cases · Au clavier : flèches puis Entrée", goal: 3, seconds: 75, engine: core.Memory },
+    dodo: { title: "Dodo bondissant", skill: "Adresse · anticipation", intro: "Franchis huit troncs en sautant au bon moment. Tu as trois vies. Attends d’être au sol pour sauter à nouveau.", hint: "Touche le paysage ou le bouton · Clavier : Espace ou ↑", goal: 8, seconds: 35, engine: core.Runner },
+    galets: { title: "La pile de galets", skill: "Précision · équilibre", intro: "Le galet se déplace tout seul. Lâche-le au bon moment pour en empiler sept. Garde toute la pile près du centre !", hint: "Touche le paysage ou le bouton · Clavier : Espace", goal: 7, seconds: 60, engine: core.Stack },
+    tempo: { title: "Tempo volcan", skill: "Attention · maîtrise du geste", intro: "Sur TOUCHE ✓, touche le cercle. Sur STOP ✕ et ATTENDS, retiens ton geste. Douze signaux pour trouver le bon tempo.", hint: "Touche le cercle · Clavier : Espace", goal: 12, seconds: 45, engine: core.Tempo }
   };
-  let current=null,round=1,cleanups=[];
-  const later=(fn,ms)=>{const id=setTimeout(fn,ms);cleanups.push(()=>clearTimeout(id));return id};
-  const every=(fn,ms)=>{const id=setInterval(fn,ms);cleanups.push(()=>clearInterval(id));return id};
-  function clear(){cleanups.splice(0).forEach(fn=>fn());$("stage").replaceChildren();$("controls").replaceChildren()}
-  function show(id){["home","play","result"].forEach(name=>$(name).hidden=name!==id)}
-  function button(label,fn){const b=document.createElement("button");b.type="button";b.textContent=label;b.addEventListener("click",fn);$("controls").append(b);return b}
-  function start(name){if(!games[name])name="luciole";clear();current=name;const game=games[name];$("game-title").textContent=game.title;$("game-skill").textContent=game.skill;$("instructions").textContent=game.instruction;$("round-label").textContent=`Partie ${round} / ${maxRounds}`;show("play");({luciole,dodo,galets,tempo}[name])()}
-  function complete(text){clear();const game=games[current];$("result-icon").textContent=game.icon;$("result-title").textContent=round<maxRounds?"Première mission réussie !":"Cadeau terminé !";$("result-text").textContent=text;$("next-round").hidden=round>=maxRounds;$("finish").textContent=giftMode?"Reprendre le parcours":"Choisir un autre jeu";$("auto-return").hidden=true;show("result");if(giftMode&&round>=maxRounds&&returnUrl){let n=4;$("auto-return").hidden=false;$("auto-return").textContent=`Retour au parcours dans ${n}…`;every(()=>{$("auto-return").textContent=`Retour au parcours dans ${--n}…`;if(n===0)location.assign(returnUrl)},1000)}}
-  function fail(message,restart){clear();$("instructions").textContent=message;button("Réessayer",()=>start(current));if(restart)later(()=>start(current),900)}
-  function luciole(){
-    const grid=document.createElement("div");grid.className="memory-grid";$("stage").append(grid);const cells=[];
-    for(let i=0;i<16;i++){const b=document.createElement("button");b.className="memory-cell";b.type="button";b.setAttribute("aria-label",`Case ${i+1}`);grid.append(b);cells.push(b)}
-    let level=0,sequence=[],answer=[],locked=true;
-    function next(){answer=[];sequence=[];locked=true;const length=3+level;while(sequence.length<length){const value=Math.floor(Math.random()*16);if(value!==sequence.at(-1))sequence.push(value)};$("instructions").textContent=`Manche ${level+1} sur 3 · Regarde bien…`;sequence.forEach((value,i)=>later(()=>{cells[value].classList.add("on");later(()=>cells[value].classList.remove("on"),360)},i*520));later(()=>{locked=false;$("instructions").textContent="À toi : refais le chemin."},length*520+180)}
-    cells.forEach((cell,index)=>cell.addEventListener("click",()=>{if(locked)return;const expected=sequence[answer.length];if(index!==expected){cell.classList.add("miss");locked=true;later(()=>fail("La luciole s’est cachée. Observe encore son chemin.",true),420);return}cell.classList.add("hit");later(()=>cell.classList.remove("hit"),180);answer.push(index);if(answer.length===sequence.length){locked=true;level++;if(level===3)later(()=>complete("Tu as mémorisé trois chemins de plus en plus longs."),350);else later(next,550)}}));next()
+  const options = core.giftOptions(location.search, location.origin);
+  let storage;
+  try { storage = window.sessionStorage; } catch { storage = { getItem: () => null, setItem() {} }; }
+  const ledger = core.giftLedger(storage, "mathsgo:jeux-cadeaux:v2:" + options.ticket, options.limit);
+  const forced = Object.hasOwn(games, options.game) ? options.game : "";
+  let current = "", model = null, running = false, paused = false, elapsed = 0, frame = 0, previous = 0, memoryPhase = "", actionButton = null;
+  const dialog = $("pause-dialog");
+  function setText(id, value) { if ($(id).textContent !== value) $(id).textContent = value; }
+  function show(name) { ["home", "play", "result"].forEach(id => $(id).hidden = id !== name); window.scrollTo({ top: 0, behavior: "instant" }); }
+  function focus(id) { $(id).focus({ preventScroll: true }); }
+  function stop() { running = false; paused = false; cancelAnimationFrame(frame); $("pause").disabled = true; $("stage").onclick = null; if (dialog.open) dialog.close(); }
+  function button(label, callback) {
+    const b = document.createElement("button"); b.type = "button"; b.className = "primary"; b.textContent = label; b.addEventListener("click", callback); $("controls").append(b); return b;
   }
-  function dodo(){
-    const runner=document.createElement("div");runner.className="runner";runner.innerHTML='<div class="runner-score">Troncs franchis : <span>0</span> / 5</div><div class="runner-dodo">🦤</div>';$("stage").append(runner);const bird=runner.querySelector(".runner-dodo"),score=runner.querySelector("span");let jumping=false,passed=0,ended=false;
-    function jump(){if(jumping||ended)return;jumping=true;bird.classList.add("jump");later(()=>{bird.classList.remove("jump");jumping=false},670)}
-    runner.addEventListener("pointerdown",jump);const key=e=>{if(e.code==="Space"||e.key==="ArrowUp"){e.preventDefault();jump()}};addEventListener("keydown",key);cleanups.push(()=>removeEventListener("keydown",key));button("Faire sauter le dodo",jump);
-    function spawn(){if(ended)return;const obstacle=document.createElement("div");obstacle.className="obstacle";obstacle.style.left="104%";runner.append(obstacle);let x=104;const move=every(()=>{x-=1.45;obstacle.style.left=x+"%";if(x<22&&x>13&&!jumping){ended=true;fail("Aïe, le tronc ! Le prochain saut sera le bon.",true)}if(x<5){clearInterval(move);obstacle.remove();if(++passed===5){ended=true;complete("Cinq troncs franchis : ton dodo a gagné la clairière.")}else{score.textContent=passed;later(spawn,500)} }},22)}later(spawn,700)
+  function home() {
+    stop(); model = null;
+    if (options.enabled && ledger.remaining === 0) { exhausted(); return; }
+    if (options.enabled) {
+      setText("mode-pill", "Ton coffre · " + ledger.remaining + " partie" + (ledger.remaining > 1 ? "s" : "") + " disponible" + (ledger.remaining > 1 ? "s" : ""));
+      setText("home-description", "Choisis ton défi. Chaque partie commencée compte, même si tu ne vas pas jusqu’au bout.");
+    }
+    show("home");
   }
-  function galets(){
-    const scene=document.createElement("div");scene.className="stack-scene";scene.innerHTML='<div class="stack-label">Galets posés : <span>0</span> / 5</div><div class="stack-base"></div><div class="aim-line"></div>';$("stage").append(scene);const aim=scene.querySelector(".aim-line"),count=scene.querySelector("span");let x=50,direction=1,placed=[],busy=false;
-    const move=every(()=>{if(busy)return;x+=direction*.55;if(x>85||x<15)direction*=-1;aim.style.left=`calc(${x}% - 2px)`},16);
-    function drop(){if(busy)return;busy=true;const width=86-placed.length*7;const stone=document.createElement("div");stone.className="stone";stone.style.width=width+"px";stone.style.left=`calc(${x}% - ${width/2}px)`;stone.style.top="25px";scene.append(stone);const stageH=scene.clientHeight;const y=stageH*.84-22-placed.length*28;requestAnimationFrame(()=>stone.style.top=y+"px");later(()=>{const previous=placed.at(-1);const tolerance=previous?Math.min(width,previous.width)*.46:72;const previousX=previous?previous.x:50;if(Math.abs(x-previousX)>tolerance/scene.clientWidth*100){stone.style.transform=`translate(${x>previousX?120:-120}px,130px) rotate(${x>previousX?70:-70}deg)`;later(()=>fail("La pile a perdu l’équilibre. Rapproche le prochain galet du centre.",true),550);return}placed.push({x,width});count.textContent=placed.length;busy=false;if(placed.length===5)complete("Cinq galets tiennent ensemble. Belle précision !")},390)}
-    scene.addEventListener("pointerdown",drop);button("Lâcher le galet",drop);cleanups.push(()=>clearInterval(move))
+  function prepare(name) {
+    stop();
+    if (options.enabled && ledger.remaining === 0) { exhausted(); return; }
+    current = Object.hasOwn(games, name) ? name : "luciole"; model = null;
+    const game = games[current];
+    setText("game-title", game.title); setText("game-skill", game.skill); setText("instructions", "Prends le temps de lire. Le jeu démarre quand tu es prêt.");
+    setText("progress-label", "Objectif : " + game.goal + (current === "luciole" ? " chemins" : current === "dodo" ? " troncs" : current === "galets" ? " galets" : " signaux"));
+    setText("round-label", options.enabled ? "Cadeau · " + (ledger.used + 1) + " / " + options.limit : "Jeu libre");
+    setText("time-label", "≤ " + game.seconds + " s"); setText("keyboard-hint", game.hint);
+    $("stage").innerHTML = '<div class="intro">' + art(current) + '<h2>Comment jouer ?</h2><p>' + game.intro + '</p><small>À toi de jouer quand tu veux.</small></div>';
+    $("controls").replaceChildren(); button("Commencer", begin); show("play"); focus("game-title");
   }
-  function tempo(){
-    const wrap=document.createElement("div");wrap.className="tempo-stage";wrap.innerHTML='<div class="tempo-score">Bons gestes : <span>0</span> / 8 · Erreurs : <b>0</b> / 3</div><button class="tempo-orb" type="button">ATTENDS</button>';$("stage").append(wrap);const orb=wrap.querySelector(".tempo-orb"),goodEl=wrap.querySelector("span"),badEl=wrap.querySelector("b");let good=0,bad=0,state="wait",active=true,timeout;
-    function cue(){if(!active)return;state=Math.random()<.68?"go":"stop";orb.className="tempo-orb "+(state==="go"?"go":"danger");orb.textContent=state==="go"?"MAINTENANT":"STOP";timeout=later(()=>{if(state==="go")mistake();else next()},720)}
-    function next(){state="wait";orb.className="tempo-orb";orb.textContent="ATTENDS";later(cue,500+Math.random()*1100)}
-    function mistake(){bad++;badEl.textContent=bad;state="wait";orb.className="tempo-orb danger";orb.textContent="TROP TARD";if(bad>=3){active=false;later(()=>fail("Le volcan t’a surpris. Essaie d’attendre le signal vert.",true),500)}else next()}
-    function tap(){if(!active)return;clearTimeout(timeout);if(state==="go"){good++;goodEl.textContent=good;state="wait";orb.className="tempo-orb go";orb.textContent="OUI !";if(good===8){active=false;later(()=>complete("Tu as agi sur les bons signaux et retenu les gestes pièges."),400)}else next()}else if(state==="stop"||state==="wait")mistake()}
-    orb.addEventListener("click",tap);const key=e=>{if(e.code==="Space"){e.preventDefault();tap()}};addEventListener("keydown",key);cleanups.push(()=>removeEventListener("keydown",key));next()
+  function begin() {
+    if (running || !current) return;
+    if (options.enabled && !ledger.take()) { exhausted(); return; }
+    const difficulty = document.querySelector('input[name="level"]:checked').value;
+    const seed = window.crypto?.getRandomValues ? window.crypto.getRandomValues(new Uint32Array(1))[0] : Math.floor(Math.random() * 4294967296);
+    model = new games[current].engine(difficulty, seed); elapsed = 0; running = true; paused = false; previous = 0; memoryPhase = "";
+    $("pause").disabled = false; $("controls").replaceChildren(); actionButton = null;
+    buildStage(); render(); frame = requestAnimationFrame(tick);
   }
-  document.querySelectorAll("[data-game]").forEach(b=>b.addEventListener("click",()=>start(b.dataset.game)));
-  $("back").addEventListener("click",()=>{clear();show("home")});
-  $("next-round").addEventListener("click",()=>{round++;start(current)});
-  $("finish").addEventListener("click",()=>{clear();if(giftMode&&returnUrl)location.assign(returnUrl);else{round=1;show("home")}});
-  if(giftMode){$("mode-pill").textContent=`Cadeau · ${maxRounds} partie${maxRounds>1?"s":""}`;document.querySelector(".hero p:last-child").textContent="Ton coffre contient une petite partie. Choisis ton défi."}
-  if(forced&&games[forced])start(forced);else show("home");
+  function buildStage() {
+    if (current === "luciole") {
+      $("stage").innerHTML = '<div class="memory-wrap"><div class="memory-grid" role="group" aria-label="Les seize cases du chemin"></div></div>';
+      const grid = $("stage").querySelector(".memory-grid");
+      for (let i = 0; i < 16; i++) {
+        const b = document.createElement("button"); b.type = "button"; b.className = "memory-cell"; b.setAttribute("aria-label", "Case " + (i + 1)); b.dataset.cell = i;
+        b.innerHTML = '<span class="number">' + (i + 1) + '</span><span class="spark" aria-hidden="true">✦</span>';
+        b.addEventListener("click", () => { if (running && !paused) { model.tap(i); render(); } }); grid.append(b);
+      }
+    } else if (current === "tempo") {
+      $("stage").innerHTML = '<div class="tempo-wrap"><svg class="tempo-landscape" viewBox="0 0 160 120" aria-hidden="true">' + window.ShortGameArt.tempo + '</svg><button type="button" class="tempo-orb" aria-label="Répondre au signal"><span class="signal-icon" aria-hidden="true"></span><span class="signal-text"></span></button></div>';
+      $("stage").querySelector(".tempo-orb").addEventListener("click", action);
+    } else {
+      $("stage").innerHTML = '<svg class="game-scene" viewBox="0 0 600 330" role="img" aria-label="' + (current === "dodo" ? "Le dodo avance vers les troncs" : "Un galet se déplace au-dessus de la pile") + '"></svg>';
+      $("stage").onclick = action; actionButton = button(current === "dodo" ? "Sauter ↑" : "Lâcher le galet ↓", action);
+    }
+  }
+  function action() {
+    if (!running || paused || !model) return;
+    if (current === "dodo") model.jump();
+    if (current === "galets") model.drop();
+    if (current === "tempo") model.tap();
+    render();
+  }
+  function tick(time) {
+    if (!running || paused) return;
+    const dt = previous ? Math.min((time - previous) / 1000, .1) : 0; previous = time;
+    elapsed += dt; model.update(dt); render();
+    if (model.done || elapsed >= games[current].seconds) finishRound(elapsed >= games[current].seconds ? "time" : "");
+    else frame = requestAnimationFrame(tick);
+  }
+  function render() {
+    if (!model) return;
+    setText("time-label", Math.max(0, Math.ceil(games[current].seconds - elapsed)) + " s");
+    if (current === "luciole") {
+      setText("progress-label", "Chemin " + Math.min(3, model.round + 1) + " / 3 · " + model.score + " retrouvé" + (model.score > 1 ? "s" : ""));
+      const message = model.phase === "show" ? "Observe le chemin : " + model.path.length + " lumières à retenir." : model.phase === "answer" ? "À toi ! " + model.index + " / " + model.path.length + " cases retrouvées." : model.feedback;
+      setText("instructions", message);
+      const cells = [...$("stage").querySelectorAll(".memory-cell")];
+      cells.forEach((b, i) => { b.classList.toggle("lit", model.lit === i); b.disabled = model.phase !== "answer"; });
+      if (model.phase === "answer" && memoryPhase !== "answer") cells[0].focus({ preventScroll: true });
+      memoryPhase = model.phase;
+    } else if (current === "dodo") {
+      setText("progress-label", model.score + " / 8 troncs · " + model.lives + " vie" + (model.lives > 1 ? "s" : ""));
+      setText("instructions", model.hurt > 0 ? "Un tronc touché. Le dodo continue !" : "Saute juste avant le tronc. Le dodo doit retomber pour repartir.");
+      $("stage").querySelector("svg").innerHTML = '<rect width="600" height="330" fill="#e7f0df"/><path d="M0 203 Q90 65 205 192 Q350 90 448 181 Q527 126 600 173 V270 H0" fill="#c0d7b5"/><path d="M0 249 Q158 185 306 237 T600 219 V290 H0" fill="#9bbda0"/><g fill="#fffdf1"><ellipse cx="117" cy="54" rx="44" ry="11"/><ellipse cx="448" cy="76" rx="61" ry="12"/></g><rect y="270" width="600" height="60" fill="#dfcda3"/><path d="M0 271 H600" stroke="#87a47a" stroke-width="7"/><path d="M25 306 h40 m78-14 h27 m84 23 h36 m91-20 h48 m58 13 h39" stroke="#c2ad84" stroke-width="3" stroke-linecap="round"/>' +
+        model.obstacles.map(o => '<g opacity="' + (o.hit ? ".5" : "1") + '"><rect x="' + o.x.toFixed(2) + '" y="' + (270 - o.h).toFixed(2) + '" width="' + o.w.toFixed(2) + '" height="' + o.h.toFixed(2) + '" rx="6" fill="#8f644b"/><path d="M' + (o.x + 9).toFixed(2) + ' ' + (276 - o.h).toFixed(2) + ' v' + (o.h - 12).toFixed(2) + '" stroke="#b58a62" stroke-width="4" stroke-linecap="round"/></g>').join("") +
+        '<g transform="translate(' + (model.x - 18) + ' ' + (202 - model.y).toFixed(2) + ') scale(.65)" opacity="' + (model.hurt > 0 ? ".65" : "1") + '">' + window.ShortGameArt.dodo + '</g>';
+    } else if (current === "galets") {
+      setText("progress-label", model.score + " / 7 galets");
+      setText("instructions", model.phase === "fall" ? "Le galet descend…" : model.phase === "tumble" ? "La pile a basculé !" : "Vise le centre de la pile, puis lâche le galet.");
+      if (actionButton) actionButton.disabled = model.phase !== "aim";
+      const colors = ["#71758c", "#8d97a9", "#a7b3b5", "#c1c4bc", "#bdadba", "#b7a3be", "#dfc6ae"];
+      const stone = (s, i) => '<g><rect x="' + (s.x - s.w / 2).toFixed(2) + '" y="' + s.y.toFixed(2) + '" width="' + s.w + '" height="24" rx="12" fill="' + colors[i % colors.length] + '"/><path d="M' + (s.x - s.w / 2 + 13).toFixed(2) + ' ' + (s.y + 6).toFixed(2) + ' h' + (s.w * .48).toFixed(2) + '" stroke="#ffffff55" stroke-width="3" stroke-linecap="round"/></g>';
+      $("stage").querySelector("svg").innerHTML = '<rect width="600" height="330" fill="#eeedf2"/><circle cx="465" cy="83" r="39" fill="#e4dfdf"/><path d="M0 248 Q170 173 292 229 T600 222 V330 H0" fill="#d3d9d5"/><path d="M0 285 Q320 260 600 289 V330 H0" fill="#c1cbbb"/><rect x="195" y="283" width="210" height="21" rx="10" fill="#737b72"/><path d="M300 18 V279" stroke="#829790" stroke-width="2" stroke-dasharray="4 6" opacity=".5"/>' +
+        '<g' + (model.phase === "tumble" ? ' transform="translate(' + ((model.x < 300 ? -1 : 1) * model.tumble * 120).toFixed(2) + ' ' + (model.tumble * model.tumble * 150).toFixed(2) + ') rotate(' + ((model.x < 300 ? -1 : 1) * model.tumble * 40).toFixed(2) + ' 300 283)"' : "") + '>' +
+        model.stones.map(stone).join("") + (model.score < 7 ? stone({ x: model.x, w: model.w, y: model.y }, model.score) : "") + '</g>';
+    } else {
+      setText("progress-label", "Signal " + Math.min(12, model.index + 1) + " / 12 · " + model.score + " réussi" + (model.score > 1 ? "s" : ""));
+      const orb = $("stage").querySelector(".tempo-orb");
+      orb.className = "tempo-orb " + model.phase;
+      const labels = { wait: ["…", "ATTENDS"], go: ["✓", "TOUCHE"], stop: ["✕", "STOP"], feedback: ["•", model.feedback], done: ["✓", "TERMINÉ"] };
+      const label = labels[model.phase];
+      orb.setAttribute("aria-label", label[1]);
+      const icon = orb.querySelector(".signal-icon"), caption = orb.querySelector(".signal-text");
+      if (icon.textContent !== label[0]) icon.textContent = label[0];
+      if (caption.textContent !== label[1]) caption.textContent = label[1];
+      setText("instructions", model.phase === "feedback" ? model.feedback : "Touche sur ✓ TOUCHE. Sur ✕ STOP ou ATTENDS, garde les mains tranquilles.");
+    }
+  }
+  function finishRound(reason) {
+    if (!model || !running) return;
+    const game = games[current], score = model.score, success = score === game.goal;
+    stop();
+    $("result-art").innerHTML = art(current);
+    setText("result-title", success ? "Défi relevé !" : "Partie terminée");
+    const unit = current === "luciole" ? "chemins retrouvés" : current === "dodo" ? "troncs franchis" : current === "galets" ? "galets empilés" : "signaux réussis";
+    setText("result-score", score + " / " + game.goal + " " + unit);
+    const tips = { luciole: "Astuce : raconte-toi le chemin avec les numéros des cases.", dodo: "Astuce : regarde le tronc qui arrive, puis fais un seul saut.", galets: "Astuce : les petits décalages s’additionnent. Pense à toute la pile.", tempo: "Astuce : laisse ton doigt tranquille jusqu’au mot TOUCHE." };
+    setText("result-text", success ? "Tu es allé au bout de ce petit défi. Bien joué !" : (reason === "quit" ? "Tu as choisi de terminer cette partie. " : reason === "time" ? "Le temps de cette petite partie est écoulé. " : "") + tips[current]);
+    resultActions(); show("result"); focus("result-title");
+  }
+  function resultActions() {
+    const ended = options.enabled && ledger.remaining === 0;
+    $("next-round").hidden = ended;
+    setText("next-round", options.enabled ? "Jouer la deuxième partie" : "Rejouer");
+    $("finish").hidden = ended && !options.back;
+    setText("finish", options.enabled && options.back ? "Reprendre le parcours" : "Choisir un autre jeu");
+    $("gift-end").hidden = !ended;
+  }
+  function exhausted() {
+    stop(); $("result-art").innerHTML = art("luciole"); setText("result-title", "Cadeau terminé");
+    setText("result-score", options.limit + " partie" + (options.limit > 1 ? "s" : "") + " utilisée" + (options.limit > 1 ? "s" : ""));
+    setText("result-text", "La petite pause de ce coffre est déjà terminée."); resultActions(); show("result"); focus("result-title");
+  }
+  function pause() {
+    if (!running || paused) return;
+    paused = true; cancelAnimationFrame(frame); dialog.showModal(); focus("resume");
+  }
+  function resume() {
+    if (!running || !paused) return;
+    if (dialog.open) dialog.close(); paused = false; previous = 0; frame = requestAnimationFrame(tick);
+  }
+  document.querySelectorAll("[data-art]").forEach(node => node.innerHTML = art(node.dataset.art));
+  document.querySelectorAll("[data-game]").forEach(b => {
+    if (options.enabled && forced && b.dataset.game !== forced) b.hidden = true;
+    b.addEventListener("click", () => prepare(b.dataset.game));
+  });
+  $("back").addEventListener("click", () => running ? pause() : home());
+  $("pause").addEventListener("click", pause); $("resume").addEventListener("click", resume);
+  $("quit").addEventListener("click", () => finishRound("quit"));
+  dialog.addEventListener("cancel", event => { event.preventDefault(); resume(); });
+  $("next-round").addEventListener("click", () => prepare(current));
+  $("finish").addEventListener("click", () => options.enabled && options.back ? location.assign(options.back) : home());
+  document.addEventListener("visibilitychange", () => { if (document.hidden) pause(); });
+  window.addEventListener("keydown", event => {
+    if (!running || paused || event.repeat) return;
+    if (event.key === "Escape") { event.preventDefault(); pause(); return; }
+    if (current === "luciole") {
+      const selected = document.activeElement;
+      if (!selected?.matches(".memory-cell")) return;
+      let i = Number(selected.dataset.cell), next = i;
+      if (event.key === "ArrowRight") next = i % 4 < 3 ? i + 1 : i;
+      if (event.key === "ArrowLeft") next = i % 4 > 0 ? i - 1 : i;
+      if (event.key === "ArrowDown") next = i < 12 ? i + 4 : i;
+      if (event.key === "ArrowUp") next = i >= 4 ? i - 4 : i;
+      if (event.key.startsWith("Arrow")) { event.preventDefault(); $("stage").querySelector('[data-cell="' + next + '"]').focus(); }
+    } else if (event.code === "Space" || (current === "dodo" && event.key === "ArrowUp")) {
+      // Les commandes de navigation gardent leur activation native.
+      if (["pause", "back"].includes(document.activeElement?.id)) return;
+      event.preventDefault(); action();
+    }
+  });
+  if (options.enabled && ledger.remaining === 0) exhausted();
+  else if (forced) prepare(forced);
+  else home();
 })();
