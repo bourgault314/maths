@@ -1,11 +1,21 @@
 /* Même présentation du vocabulaire et des réglages en Solo et en Duo. */
-/* Les cartes Solo / Duo conservent leurs couleurs, pictogrammes et disposition d'origine. */
+/* Le fond plein et la coche indiquent le choix sans changer les dimensions des cartes. */
 .mode-dialog-card { display: flex; flex-direction: column; overflow: hidden; }
 .mode-heading, .mode-dialog-card .mode-continue { flex-shrink: 0; }
 .mode-settings-scroll { min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 2px 3px 3px; }
+#mode-title:focus { outline: none; }
+.mode-choice { border-color: #cadde8; background: #fff; box-shadow: none; }
+.mode-choice-solo { --mode-accent: #087c75; }
+.mode-choice-duo { --mode-accent: #96590a; }
+.mode-choice[aria-pressed="true"] { border-color: var(--mode-accent); color: #fff; background: var(--mode-accent); }
+.mode-choice[aria-pressed="true"] small { color: #fff; }
+.mode-choice-icon { position: relative; }
 .mode-choice-icon svg { display: block; width: 30px; height: 30px; fill: currentColor; }
-.mode-choice-solo[aria-pressed="true"] { border-color: #087c75; box-shadow: inset 0 0 0 1px #087c75, 0 5px 13px rgba(28, 69, 101, .08); }
-.mode-choice-duo[aria-pressed="true"] { border-color: #c67a12; box-shadow: inset 0 0 0 1px #c67a12, 0 5px 13px rgba(28, 69, 101, .08); }
+.mode-choice[aria-pressed="true"] .mode-choice-icon { background: rgba(255, 255, 255, .18); }
+.mode-choice[aria-pressed="true"] .mode-choice-icon::after { content: "✓"; position: absolute; top: -4px; right: -4px; display: grid; place-items: center; width: 20px; height: 20px; border: 2px solid var(--mode-accent); border-radius: 50%; color: var(--mode-accent); background: #fff; font-size: 14px; font-weight: 950; line-height: 1; }
+/* Le repère clavier reste visible à l'intérieur des cartes, sans être coupé. */
+.mode-choice:focus-visible { outline: 3px solid #153451; outline-offset: -6px; }
+.mode-choice[aria-pressed="true"]:focus-visible { outline-color: #fff; }
 /* Les niveaux gardent les boutons arrondis du Solo, désormais disponibles en Duo. */
 .level-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 8px; margin-top: 14px; padding: 10px 12px; border: 2px solid #d7e4ec; border-radius: 14px; background: #f8fcff; }
 .level-row-label { color: #41677f; font-size: .78rem; font-weight: 950; letter-spacing: .06em; text-transform: uppercase; }
