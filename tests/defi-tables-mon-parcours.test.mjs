@@ -44,7 +44,7 @@ test("le parcours couvre les tables 2 à 10 et conseille les faciles d’abord",
   assert.deepEqual([...parcours.TABLES], [2, 3, 4, 5, 6, 7, 8, 9, 10]);
   assert.deepEqual([...parcours.ORDRE_CONSEIL], [2, 10, 5, 3, 4, 6, 7, 8, 9]);
   const vide = parcours.creerParcours();
-  assert.equal(vide.version, 2, "lot 3 : version 2 du parcours (mélange obligatoire, escalier, rang, jours)");
+  assert.equal(vide.version, 3, "lot mémoire : version 3 du parcours (cinq boîtes et une échéance par calcul ; 2 = lot 3)");
   assert.equal(vide.prenom, "");
   assert.deepEqual(Object.keys(vide.tables).map(Number), [...parcours.TABLES]);
   assert.ok(parcours.estVide(vide));
@@ -649,22 +649,28 @@ test("fusion : par calcul, le jour le plus récent gagne en bloc — une erreur 
     "9-9": {cases: 0, vu: "2026-09-11", erreur: "2026-09-11", gagne: null}
   }});
   const fusion = parcours.fusionner(a, b);
-  assert.equal(fusion.calculs["3-8"].cases, 1, "l'erreur du 12 (1 case) l'emporte sur les 3 cases du 10 : le jour le plus récent gagne");
+  assert.equal(fusion.calculs["3-8"].boite, 2, "l'erreur du 12 (boîte 2, l’ancienne « 1 case ») l'emporte sur la boîte 4 du 10 : le jour le plus récent gagne");
   assert.equal(fusion.calculs["3-8"].vu, "2026-09-12");
   assert.equal(fusion.calculs["3-8"].erreur, "2026-09-12");
   assert.equal(fusion.calculs["3-8"].gagne, null, "et rien du 10 ne revient");
   assert.deepEqual(parcours.fusionner(b, a).calculs["3-8"], fusion.calculs["3-8"], "dans les deux sens");
-  assert.equal(fusion.calculs["6-7"].cases, 1, "un calcul connu d'un seul côté est repris tel quel");
-  assert.equal(fusion.calculs["9-9"].cases, 0);
+  assert.equal(fusion.calculs["6-7"].boite, 2, "un calcul connu d'un seul côté est repris tel quel");
+  assert.equal(fusion.calculs["9-9"].boite, 1);
   assert.equal(Object.keys(fusion.calculs).length, 3);
 
   // Même jour des deux côtés : impossible d'ordonner (on n'enregistre pas
-  // l'heure) — limite connue et acceptée : le plus avancé gagne, l'erreur et
-  // le gain les plus récents sont conservés, le gain du jour n'est pas rouvert.
-  const matin = parcours.normaliserParcours({calculs: {"3-8": {cases: 3, vu: "2026-09-12", erreur: null, gagne: "2026-09-12"}}});
-  const apresMidi = parcours.normaliserParcours({calculs: {"3-8": {cases: 2, vu: "2026-09-12", erreur: "2026-09-12", gagne: null}}});
+  // l'heure) — limite connue et acceptée : le plus avancé gagne (et son
+  // échéance), l'erreur et le gain les plus récents sont conservés, le gain
+  // du jour n'est pas rouvert.
+  const matin = parcours.normaliserParcours({calculs: {"3-8": {boite: 4, vu: "2026-09-12", erreur: null, gagne: "2026-09-12", echeance: "2026-09-19"}}});
+  const apresMidi = parcours.normaliserParcours({calculs: {"3-8": {boite: 3, vu: "2026-09-12", erreur: "2026-09-12", gagne: null, echeance: "2026-09-12"}}});
   const memeJour = parcours.fusionner(matin, apresMidi).calculs["3-8"];
-  assert.deepEqual(memeJour, {cases: 3, vu: "2026-09-12", erreur: "2026-09-12", gagne: "2026-09-12"});
+  assert.deepEqual(memeJour, {boite: 4, cases: 3, vu: "2026-09-12", erreur: "2026-09-12", gagne: "2026-09-12", echeance: "2026-09-19"});
+  // À boîte égale, l'échéance la plus proche : plutôt trop tôt que trop tard.
+  const egal = parcours.fusionner(
+    parcours.normaliserParcours({calculs: {"3-8": {boite: 3, vu: "2026-09-12", erreur: null, gagne: "2026-09-12", echeance: "2026-09-15"}}}),
+    parcours.normaliserParcours({calculs: {"3-8": {boite: 3, vu: "2026-09-12", erreur: null, gagne: "2026-09-10", echeance: "2026-09-13"}}}));
+  assert.equal(egal.calculs["3-8"].echeance, "2026-09-13");
 });
 
 test("fusion : une remise à zéro (époque plus haute) gagne entièrement, elle ne ressuscite pas", () => {
@@ -705,7 +711,7 @@ test("les dates ne sont gardées que sous la forme AAAA-MM-JJ", () => {
   assert.equal(abime.expert.couronne, null);
   assert.deepEqual(abime.jours, ["2026-09-03"], "les jours : des dates, sans doublon");
   assert.equal(abime.calculs["3-8"], undefined, "un calcul sans jour valide n'existe pas");
-  assert.deepEqual(abime.calculs["6-7"], {cases: 1, vu: "2026-09-03", erreur: null, gagne: "2026-09-03"});
+  assert.deepEqual(abime.calculs["6-7"], {boite: 2, cases: 1, vu: "2026-09-03", erreur: null, gagne: "2026-09-03", echeance: "2026-09-04"}, "version 2 : cases 1 → boîte 2, échéance recalculée depuis le dernier gain (+1 jour)");
 });
 
 test("fusion : le mélange redevient à refaire si l’autre appareil a plus de tables", () => {

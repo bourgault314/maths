@@ -31,7 +31,7 @@ test("l’accueil : Ma table et ses trois étapes, Réviser, Mon parcours, Mes c
   assert.match(html, /id="acc-acquises"/);
   assert.ok(html.indexOf('id="acc-changer"') < html.indexOf('id="acc-acquises"'), "« 2 tables acquises sur 9 » sous « Changer de table » (complément du 08/09)");
   assert.match(html, /id="acc-etapes" class="etapes"/);
-  assert.match(html, /id="acc-reviser" class="reviser"[\s\S]*Réviser&nbsp;→/);
+  assert.match(html, /id="acc-reviser" class="reviser etape" type="button" hidden>[\s\S]*Réviser&nbsp;→/, "lot mémoire : le bloc du jour est une ligne d’étape, cachée tant que rien n’est dû");
   // Lot R3 (12/09) : « Expert » avec sa majuscule se lisait comme un nom propre ;
   // le sous-titre reprend le titre du panneau, « je deviens expert ».
   assert.match(html, /id="open-parcours" class="acc-lien"[\s\S]*<svg class="ico"[\s\S]*Mon parcours<small>toutes mes tables, le mélange, je deviens expert<\/small>/);
@@ -87,10 +87,9 @@ test("le menu ⋯ du parcours garde ses quatre options, dans cet ordre", () => {
 
 test("les trois mots d’état : à revoir (rouge) · en route (bleu) · su (vert), partout", () => {
   assert.match(html, /"a-travailler": "à revoir",\s*"en-cours": "en route",\s*"su": "su"/);
-  assert.match(html, /`\$\{resume\.sus\} su\$\{resume\.sus > 1 \? "s" : ""\}`, `\$\{resume\.enCours\} en route`, `\$\{resume\.aTravailler\} à revoir`/);
   assert.match(html, /is-a-travailler"><span class="mc-cases">[\s\S]*?<\/span><\/span> à revoir<\/span>/, "légende de la grille");
   assert.match(html, /is-en-cours"><span class="mc-cases">[\s\S]*?<\/span><\/span> en route<\/span>/);
-  assert.match(html, /rouge : à revoir · bleu : en route · vert : su/, "fiche imprimable, page 2");
+  assert.match(html, /rouge : à revoir \(boîte 1\) · bleu : en route \(boîtes 2 et 3\) · vert : su \(boîtes 4 et 5\)/, "fiche imprimable, page 2");
   assert.match(html, /\.mc-cell\.is-a-travailler \{ border-color: #efb4b4; color: var\(--red\); background: var\(--red-soft\); \}/, "« à revoir » est rouge");
   assert.match(html, /\.fiche-carre td\.a-travailler \{ background: #ffebeb; color: #a93030; \}/);
   // Plus aucun « à travailler » ni « en cours » (au sens de la grille) sur les écrans de l'élève.
@@ -101,9 +100,11 @@ test("les trois mots d’état : à revoir (rouge) · en route (bleu) · su (ver
 });
 
 test("le détail d’une case dit la règle du jour, et seulement là", () => {
-  assert.match(html, /if \(fait && fait\.erreur === jourDuJour\(\)\) note = "Tu t’es trompé aujourd’hui : entraîne-toi, et reviens demain pour regagner ta case\.";/);
-  assert.match(html, /else if \(fait && fait\.gagne === jourDuJour\(\)\) note = "Une case par jour : reviens demain\.";/);
-  assert.match(html, /else if \(fait && fait\.erreur\) note = `Dernière erreur : \$\{formaterJour\(fait\.erreur\)\}\.`;/);
+  // Lot mémoire : raté aujourd'hui, dû, ou le jour du retour — rien d'autre.
+  assert.match(html, /if \(fait && fait\.erreur === aujourdhui\) note = "Raté aujourd’hui : il revient tout de suite, et tu pourras le faire monter demain\.";/);
+  assert.match(html, /else if \(fait && PARCOURS\.faitDu\(fait, aujourdhui\)\) note = boite >= 5\s*\? "À faire aujourd’hui : réussis-le pour le garder 14 jours de plus\."\s*: "À faire aujourd’hui : réussis-le pour monter d’une boîte\.";/);
+  assert.match(html, /else if \(fait && fait\.echeance\) note = `Revient \$\{libelleDans\(PARCOURS\.ecartJours\(aujourdhui, fait\.echeance\)\)\}\.`;/);
+  assert.doesNotMatch(html, /function formaterJour/, "« Vu il y a 3 jours » n’est plus écrit : la date qui compte est celle du retour");
 });
 
 test("Ctrl+P remplit la fiche : l’écouteur beforeprint ne passe pas l’événement à renderFiche", () => {
@@ -132,8 +133,9 @@ test("la notice « Comment ça marche ? » : les règles, écrites une fois, clo
   assert.equal((texte.match(/<p>/g) || []).length, 6, "six phrases (lot 3 : le mélange, les étoiles, mon rang)");
   assert.match(texte, /<b>Une table\.<\/b> Je l’apprends si je veux, je m’entraîne 3 fois — dans le désordre, avec des trous, puis les deux — et je la valide : 20 questions en 1 min 30, 2 erreurs au maximum\./);
   assert.match(texte, /<b>Le mélange\.<\/b> Dès que j’ai 2 tables, je dois réussir le mélange de mes tables avant d’en valider une nouvelle\. Même règle : 20 questions en 1 min 30, 2 erreurs au maximum\. Chaque nouvelle table le remet à faire\./);
-  assert.match(texte, /<b>Mes calculs\.<\/b> Chaque calcul a 3 cases\. Une bonne réponse = 1 case, mais une seule par jour : un calcul est su quand je l’ai réussi trois jours différents\. Une erreur enlève une case, et ce jour-là je ne peux pas la regagner\./);
-  assert.match(texte, /<b>Réviser\.<\/b> Jusqu’à 10 questions sans chrono sur ce que je sais le moins — jamais un calcul que je n’ai pas encore rencontré\./);
+  assert.match(texte, /<b>Mes calculs\.<\/b> Chaque calcul a 5 boîtes\. Un calcul monte d’une boîte quand je le réussis le jour où il revient : le lendemain, puis 3 jours, 7 jours, 14 jours après\. Il est su à partir de la boîte 4\. Une erreur le fait redescendre d’une boîte, et il revient tout de suite\./);
+  assert.match(texte, /<b>Mes calculs du jour\.<\/b> Les calculs qui reviennent aujourd’hui, 10 à la fois, sans chrono — même ceux que je sais déjà, pour ne pas les oublier\. Jamais un calcul que je n’ai pas encore rencontré\./);
+
   assert.match(texte, /<b>Les étoiles\.<\/b> Quand mes 9 tables sont acquises et le dernier mélange réussi, je deviens expert : 25 questions avec des divisions, toutes les tables, de plus en plus vite — ★ 2 min, ★★ 1 min 45, ★★★ 1 min 30, ★★★★ 1 min 15\. À 1 minute, je suis une Légende des tables 👑\./);
   assert.match(texte, /<b>Mon rang\.<\/b> Bronze dès ma première table, puis Argent \(3 tables\), Or \(6\), Platine \(9 tables et le mélange\), Diamant \(★★★★\), Légende \(👑\)\. On ne redescend jamais\./);
   // Plus rien de l'ancien système : ni mélange à 25 en 2 min, ni Champion.
@@ -151,9 +153,9 @@ function chargerLogiqueAccueil(codeSuivi, session = fauxStockage()) {
   const fin = "const NOMS_ENTRAINEMENTS";
   const source = html.slice(debut, html.indexOf(fin));
   const util = html.slice(html.indexOf("function pluriel(nombre, mot)"), html.indexOf("const LIBELLES_ETATS_CALCULS"))
-    + html.slice(html.indexOf("function phraseReviser(resume)"), html.indexOf("function renderCalculsDetail()"));
+    + html.slice(html.indexOf("function phraseReviser(agenda, resume)"), html.indexOf("function renderCalculsDetail()"));
   return new Function("PARCOURS", "PARCOURS_TABLES", "codeSuivi", "stockageSession", `${util}\n${source}
-    return {lireTableChoisie, ecrireTableChoisie, tableEnCours, etapeConseillee, phraseReviser, resumeCalculsTexte};`)(
+    return {lireTableChoisie, ecrireTableChoisie, tableEnCours, etapeConseillee, phraseReviser, questionsRevision, libelleDans};`)(
     PARCOURS, [...PARCOURS.TABLES], codeSuivi, () => session
   );
 }
@@ -226,17 +228,22 @@ test("l’étape conseillée d’une table suit la même lecture que le moteur",
   assert.equal(PARCOURS.prochaineEtape(lea()).table, 5);
 });
 
-test("le bouton Réviser reprend les phrases existantes quand il n’y a rien à revoir", () => {
+test("la phrase de Mes calculs : les dus du jour, 10 par 10 ; sinon quand ça revient ; une grille vide ne lance rien", () => {
   const logique = chargerLogiqueAccueil("");
-  // Lot 3 (08/09) : la révision ne propose jamais un calcul jamais vu — la
-  // phrase compte les questions possibles, et une grille vide ne lance rien.
-  assert.equal(logique.phraseReviser({aTravailler: 4, enCours: 0, sus: 6, jamaisVus: 26, total: 36}), "10 questions sans chrono, sur ce que tu sais le moins.");
-  assert.equal(logique.phraseReviser({aTravailler: 3, enCours: 1, sus: 0, jamaisVus: 32, total: 36}), "4 questions sans chrono, sur ce que tu sais le moins.");
-  assert.equal(logique.phraseReviser({aTravailler: 0, enCours: 0, sus: 8, jamaisVus: 28, total: 36}), "Rien à revoir pour l’instant : 8 questions pour entretenir ta grille.");
-  assert.equal(logique.phraseReviser({aTravailler: 0, enCours: 0, sus: 36, jamaisVus: 0, total: 36}), "Tout est su ! 10 questions pour entretenir ta grille.");
-  assert.equal(logique.phraseReviser({aTravailler: 0, enCours: 0, sus: 0, jamaisVus: 36, total: 36}), "Ta grille est vide : elle se remplit dans Je m’entraîne et les validations.");
-  assert.equal(logique.resumeCalculsTexte({sus: 24, enCours: 8, aTravailler: 4, jamaisVus: 0, total: 36}), "24 sus · 8 en route · 4 à revoir");
-  assert.equal(logique.resumeCalculsTexte({sus: 1, enCours: 0, aTravailler: 0, jamaisVus: 35, total: 36}), "1 su · 0 en route · 0 à revoir · 35 pas encore vus");
+  const vide = {aTravailler: 0, enCours: 0, sus: 0, jamaisVus: 36, total: 36};
+  const pleine = {aTravailler: 4, enCours: 6, sus: 6, jamaisVus: 20, total: 36};
+  assert.equal(logique.phraseReviser({dus: 4, demain: 4, prochain: null}, pleine), "4 calculs t’attendent · sans chrono.");
+  assert.equal(logique.phraseReviser({dus: 1, demain: 1, prochain: null}, pleine), "1 calcul t’attend · sans chrono.");
+  assert.equal(logique.phraseReviser({dus: 21, demain: 21, prochain: null}, pleine), "21 calculs t’attendent · 10 par 10, sans chrono.");
+  assert.equal(logique.phraseReviser({dus: 0, demain: 8, prochain: {jour: "2026-09-13", dans: 1, calculs: 8}}, pleine), "Rien aujourd’hui. Reviens demain : 8 calculs t’attendront.");
+  assert.equal(logique.phraseReviser({dus: 0, demain: 0, prochain: {jour: "2026-09-15", dans: 3, calculs: 1}}, pleine), "Rien aujourd’hui. Reviens dans 3 jours : 1 calcul t’attendra.");
+  assert.equal(logique.phraseReviser({dus: 0, demain: 0, prochain: null}, pleine), "Rien aujourd’hui. Rien ne t’attend pour l’instant.");
+  assert.equal(logique.phraseReviser({dus: 0, demain: 0, prochain: null}, vide), "Ta grille est vide : elle se remplit dans Je m’entraîne et les validations.");
+  assert.equal(logique.questionsRevision({dus: 21}), 10);
+  assert.equal(logique.questionsRevision({dus: 0}), 0);
+  assert.equal(logique.libelleDans(0), "aujourd’hui");
+  assert.equal(logique.libelleDans(1), "demain");
+  assert.equal(logique.libelleDans(14), "dans 14 jours");
 });
 
 // -------------------------------------------------------- le mode élève (exécuté)
@@ -382,9 +389,11 @@ test("lot R3 · « Changer de table » est centré, et Réviser lisible", () => 
   assert.match(regle(".matable-choix"), /justify-content: center/);
   // Au téléphone, trois rangées de trois (sa demande P1), pas 5 + 4.
   assert.match(html, /\.matable-choix \{ display: grid; grid-template-columns: repeat\(3, minmax\(0, 1fr\)\); \}/);
-  // A7 : blanc sur #e0771a = 3,07:1 ; sur #b85608 = 4,8:1 (il faut 4,5).
-  assert.match(html, /\.reviser \.go \{[^}]*background: #b85608;/);
+  // A7 (R3) : blanc sur #e0771a faisait 3,07:1. Lot mémoire : le bouton du
+  // bloc du jour est bleu (var(--blue) = #0755b8, 6,9:1) — un bouton principal.
+  assert.match(html, /\.reviser \.go \{[^}]*background: var\(--blue\);/);
   assert.doesNotMatch(html, /\.reviser \.go \{[^}]*background: #e0771a;/);
+  assert.match(html, /\.reviser \{ order: -1; \}/, "en tête de l’accueil");
 });
 
 test("lot R3 · les petits textes, le focus et le bandeau des réglages", () => {

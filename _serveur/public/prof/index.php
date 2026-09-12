@@ -339,6 +339,7 @@ $versionMoteur = is_file($moteur) ? substr(md5_file($moteur), 0, 10) : '0';
         <option value="prenom">Prénom</option>
         <option value="acquises">Tables acquises</option>
         <option value="travailler">Calculs à travailler</option>
+        <option value="retard">Calculs en retard</option>
         <option value="date">Dernière activité</option>
       </select>
       <button type="button" class="danger espace" id="supprimer-classe">Supprimer la classe</button>
@@ -369,6 +370,7 @@ $versionMoteur = is_file($moteur) ? substr(md5_file($moteur), 0, 10) : '0';
             <th>Code</th>
             <th><button type="button" data-tri="acquises">Tables acquises</button></th>
             <th><button type="button" data-tri="travailler">À travailler</button></th>
+            <th><button type="button" data-tri="retard">En retard</button></th>
             <th>Mélange</th>
             <th>Expert</th>
             <th><button type="button" data-tri="date">Dernière activité</button></th>
@@ -784,7 +786,7 @@ $versionMoteur = is_file($moteur) ? substr(md5_file($moteur), 0, 10) : '0';
 
   function lireProgression(brut) {
     const vide = {acquises: [], melange: "—", etoiles: 0, couronne: null, rang: null,
-                  semaine: 0, travailler: null, parcours: null, lisible: Boolean(PARCOURS)};
+                  semaine: 0, travailler: null, retard: null, parcours: null, lisible: Boolean(PARCOURS)};
     if (!PARCOURS || !brut) return vide;
     try {
       const parcours = PARCOURS.normaliserParcours(brut);
@@ -805,6 +807,9 @@ $versionMoteur = is_file($moteur) ? substr(md5_file($moteur), 0, 10) : '0';
         // heure de La Réunion) : le seul chiffre de temps de la page.
         semaine: etat.jours ? etat.jours.semaine : 0,
         travailler: PARCOURS.calculsATravailler ? PARCOURS.calculsATravailler(parcours) : null,
+        // Lot mémoire (12/09/2026) : les calculs dus avant aujourd'hui et pas
+        // encore refaits — l'élève n'a pas fait ses « calculs du jour ».
+        retard: PARCOURS.calculsEnRetard ? PARCOURS.calculsEnRetard(parcours) : null,
         parcours,
         lisible: true
       };
@@ -840,6 +845,7 @@ $versionMoteur = is_file($moteur) ? substr(md5_file($moteur), 0, 10) : '0';
     const clef = eleve => {
       if (tri.colonne === "acquises") return eleve.lu.acquises.length;
       if (tri.colonne === "travailler") return eleve.lu.travailler ? eleve.lu.travailler.length : -1;
+      if (tri.colonne === "retard") return eleve.lu.retard ? eleve.lu.retard.length : -1;
       if (tri.colonne === "date") return eleve.maj_le || "";
       return (eleve.prenom || "￿").toLocaleLowerCase("fr");
     };
@@ -925,6 +931,15 @@ $versionMoteur = is_file($moteur) ? substr(md5_file($moteur), 0, 10) : '0';
         if (combien) cTravailler.title = eleve.lu.travailler.map(cle => PARCOURS.libelleFait(cle)).join(" · ");
       }
 
+      const cRetard = document.createElement("td");
+      const retard = eleve.lu.retard ? eleve.lu.retard.length : null;
+      if (retard === null) {
+        cRetard.innerHTML = '<span class="pastille p-gris">—</span>';
+      } else {
+        cRetard.innerHTML = `<span class="pastille ${retard ? "p-orange" : "p-vert"}">${retard}</span>`;
+        if (retard) cRetard.title = eleve.lu.retard.map(cle => PARCOURS.libelleFait(cle)).join(" · ");
+      }
+
       const cMelange = document.createElement("td");
       const m = eleve.lu.melange;
       cMelange.innerHTML = m === "—"
@@ -987,13 +1002,14 @@ $versionMoteur = is_file($moteur) ? substr(md5_file($moteur), 0, 10) : '0';
       cCode.dataset.libelle = "Code";
       cAcquises.dataset.libelle = "Acquises";
       cTravailler.dataset.libelle = "À travailler";
+      cRetard.dataset.libelle = "En retard";
       cMelange.dataset.libelle = "Mélange";
       cExpert.dataset.libelle = "Expert";
       cDate.dataset.libelle = "Activité";
       cActions.dataset.libelle = "";
       cActions.className = "actions-eleve";
 
-      ligne.append(cNom, cCode, cAcquises, cTravailler, cMelange, cExpert, cDate, cActions);
+      ligne.append(cNom, cCode, cAcquises, cTravailler, cRetard, cMelange, cExpert, cDate, cActions);
       corps.appendChild(ligne);
     });
 

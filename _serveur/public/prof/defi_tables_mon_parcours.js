@@ -59,14 +59,40 @@
   //  - révision personnalisée : 10 questions sans chrono, priorité aux faits à
   //    0 case ratés récemment, puis 1, puis 2, puis les jamais vus des tables
   //    acquises, puis l'entretien, puis les jamais vus restants.
+  // Lot MÉMOIRE « Mes calculs du jour » (décisions des 11 et 12/09/2026, après
+  // la formation neurosciences de Gwenaël) : les trois cases deviennent CINQ
+  // BOÎTES, et chaque calcul porte le jour où il REVIENT.
+  //  - boîte 1 = à revoir (rouge), 2 et 3 = en route (bleu), 4 et 5 = su (vert)
+  //    — les trois couleurs et les trois mots ne changent pas ;
+  //  - un calcul monte d'une boîte quand il est DÛ (son jour de retour est
+  //    arrivé) et réussi du premier coup, dans n'importe quelle série du
+  //    parcours (entraînements, validations, mélanges, étoiles, révision) ;
+  //    pas dû, une bonne réponse ne change rien. Cette règle remplace « au plus
+  //    une case par jour » : « un calcul monte quand tu le réussis le jour où
+  //    il revient » ;
+  //  - à la montée, le calcul revient après 0 · 1 · 3 · 7 · 14 jours selon sa
+  //    nouvelle boîte ; la boîte 5 est renouvelée à chaque réussite : c'est
+  //    l'entretien de toute l'année, un calcul su ne disparaît plus jamais ;
+  //  - une erreur = une boîte de moins (jamais de retour direct en boîte 1) et
+  //    le calcul est dû aujourd'hui ; pas de regain le jour d'une erreur ;
+  //    seule la première réponse d'une série compte ;
+  //  - la révision = LES CALCULS DUS AUJOURD'HUI, pris dans toutes les boîtes
+  //    à tour de rôle (les plus en retard d'abord dans chaque boîte) pour que
+  //    chaque série mêle du dur et du facile — verts compris, 10 à la fois ;
+  //    rien de dû = « Encore 10 calculs » si l'élève veut s'entraîner (les
+  //    prochains à revenir), et rien ne monte : pas de triche ;
+  //  - migration des grilles d'avant (version 2) : cases 0/1/2/3 → boîtes
+  //    1/2/3/4 (rien de vert ne redevient bleu), échéance recalculée depuis la
+  //    dernière date connue du calcul — dû aujourd'hui si elle manque.
 
   // Version du parcours enregistré. 1 = jusqu'au lot 2 de Défi tables v2 ;
-  // 2 = lot 3 (mélange obligatoire, escalier des étoiles, rang, jours). Un
-  // parcours d'une version plus basse est migré par normaliserParcours — donc
-  // à la lecture de la case, à la fusion, à la sauvegarde — et jamais deux fois.
+  // 2 = lot 3 (mélange obligatoire, escalier des étoiles, rang, jours) ;
+  // 3 = lot mémoire (cinq boîtes et une échéance par calcul). Un parcours
+  // d'une version plus basse est migré par normaliserParcours — donc à la
+  // lecture de la case, à la fusion, à la sauvegarde — et jamais deux fois.
   // Le lot 4b n'a pas changé de version : il ajoute une activité (une clé de
   // plus dans « apprends »), et une clé absente vaut 0 — c'est déjà la règle.
-  const VERSION = 2;
+  const VERSION = 3;
   const CLE_STOCKAGE = "mathsgo-defi-tables-parcours";
   const TABLES = Object.freeze(Array.from({length: 9}, (_, index) => index + 2));
   const ORDRE_CONSEIL = Object.freeze([2, 10, 5, 3, 4, 6, 7, 8, 9]);
@@ -93,7 +119,11 @@
     // L'escalier des étoiles : 25 questions, toutes les tables, produits +
     // trous + divisions, 2 erreurs max ; une durée par marche, en secondes.
     etoile: Object.freeze({total: 25, erreursMax: 2, durees: Object.freeze([120, 105, 90, 75, 60])}),
-    revision: Object.freeze({total: 10, casesMax: 3, conseil: 5, aRevoirMin: 2}),
+    // La révision : 10 calculs à la fois ; cinq boîtes par calcul, et le
+    // nombre de jours avant qu'un calcul revienne, par boîte (boîte 1 : le
+    // jour même). « aRevoirMin » : dès 2 calculs rouges, une table acquise
+    // porte le repère « à revoir ».
+    revision: Object.freeze({total: 10, boites: 5, delais: Object.freeze([0, 1, 3, 7, 14]), aRevoirMin: 2}),
     // Les jours travaillés gardés dans le parcours (dates, sans heure).
     jours: Object.freeze({garder: 14})
   });
@@ -220,12 +250,48 @@
     return [...jours].sort().slice(-SEUILS.jours.garder);
   }
 
+  // « AAAA-MM-JJ » + n jours, en jours locaux (midi, pour ignorer les
+  // changements d'heure).
+  function ajouterJours(jour, nombre) {
+    const d = new Date(`${jour}T12:00:00`);
+    if (Number.isNaN(d.getTime())) return jour;
+    d.setDate(d.getDate() + nombre);
+    return jourLocal(d);
+  }
+
+  // Le nombre de jours entre deux jours « AAAA-MM-JJ » (second − premier).
+  function ecartJours(premier, second) {
+    const a = new Date(`${premier}T12:00:00`);
+    const b = new Date(`${second}T12:00:00`);
+    if (Number.isNaN(a.getTime()) || Number.isNaN(b.getTime())) return 0;
+    return Math.round((b - a) / 86400000);
+  }
+
+  // Le jour où un calcul revient quand il vient d'entrer dans une boîte.
+  function echeanceDeBoite(boite, jour) {
+    const rang = entier(boite, 1, SEUILS.revision.boites, 1);
+    return ajouterJours(jour, SEUILS.revision.delais[rang - 1]);
+  }
+
+  // Le miroir « cases » (0 à 3) d'une boîte (1 à 5), gardé dans chaque calcul
+  // POUR LES APPAREILS RESTÉS SUR L'APPLI D'AVANT : un onglet ouvert depuis
+  // vendredi lit encore « cases » — sans ce miroir il verrait 36 calculs à
+  // zéro, jouerait, et renverrait cette grille vide au serveur, où la fusion
+  // (le jour le plus récent gagne) l'emporterait sur la vraie. Avec lui, il
+  // lit la bonne couleur ; ce qu'il renvoie est migré comme un parcours de
+  // version 2 (boîte 5 → 4 au pire). À retirer quand plus aucun appareil ne
+  // parle la version 2.
+  function casesDeBoite(boite) {
+    return Math.min(boite - 1, 3);
+  }
+
   function normaliserParcours(brut) {
     const parcours = creerParcours();
     if (!brut || typeof brut !== "object") return parcours;
     // Un parcours sans version, ou de version 1, vient d'avant le lot 3 : ce
     // qu'il porte est lu à l'ancienne, puis migré une seule fois (plus bas).
-    const ancienne = entier(brut.version, 1, 1000, 1) < VERSION;
+    const versionLue = entier(brut.version, 1, 1000, 1);
+    const ancienne = versionLue < 2;
     parcours.epoque = entier(brut.epoque, 0, 1000000);
     parcours.prenom = nettoyerPrenom(brut.prenom);
     TABLES.forEach(table => {
@@ -275,12 +341,21 @@
         if (!source || typeof source !== "object") return;
         const vu = dateOuNull(source.vu);
         if (!vu) return;
-        parcours.calculs[cle] = {
-          cases: entier(source.cases, 0, SEUILS.revision.casesMax),
-          vu,
-          erreur: dateOuNull(source.erreur),
-          gagne: dateOuNull(source.gagne)
-        };
+        const erreur = dateOuNull(source.erreur);
+        const gagne = dateOuNull(source.gagne);
+        // La boîte (lot mémoire). Un parcours de version 2 — ou renvoyé par un
+        // appareil resté sur l'appli d'avant — n'a que « cases » (0 à 3) :
+        // cases 0/1/2/3 → boîtes 1/2/3/4, rien de vert ne redevient bleu.
+        let boite = entier(source.boite, 1, SEUILS.revision.boites, 0);
+        if (!boite) boite = entier(source.cases, 0, 3) + 1;
+        // Le jour du retour. S'il manque (migration, ou champ jeté par un
+        // vieil appareil), il est recalculé depuis la dernière date connue du
+        // calcul : un rouge est dû tout de suite, les autres reviennent
+        // « délai de leur boîte » après leur dernier gain (ou leur dernier
+        // passage) — souvent déjà passé, donc dus aujourd'hui.
+        const echeance = dateOuNull(source.echeance)
+          || (boite === 1 ? vu : echeanceDeBoite(boite, gagne || vu));
+        parcours.calculs[cle] = {boite, cases: casesDeBoite(boite), vu, erreur, gagne, echeance};
       });
     }
     parcours.melange.tables = tablesAcquises(parcours);
@@ -362,15 +437,14 @@
   }
 
   // « N jours cette semaine » : les jours travaillés depuis le lundi, aujourd'hui
-  // compris ; « N cases t'attendent demain » : les calculs qui ont gagné une
-  // case aujourd'hui et qui n'en sont pas encore à trois — ils pourront en
-  // gagner une autre demain. Rien de punitif, jamais de série à ne pas casser.
+  // compris ; « dus » : les calculs du jour ; « demain » : ce qui attendra
+  // demain si rien d'autre n'est joué (les dus d'aujourd'hui restés dus, plus
+  // ceux qui reviennent demain). Rien de punitif, jamais de série à ne pas casser.
   function bilanJours(parcours, aujourdhui = jourLocal()) {
     const lundi = lundiDe(aujourdhui);
     const semaine = parcours.jours.filter(jour => jour >= lundi && jour <= aujourdhui).length;
-    const casesDemain = Object.values(parcours.calculs)
-      .filter(fait => fait.gagne === aujourdhui && fait.cases < SEUILS.revision.casesMax).length;
-    return {semaine, casesDemain, aujourdhui: parcours.jours.includes(aujourdhui)};
+    const agenda = agendaCalculs(parcours, aujourdhui);
+    return {semaine, dus: agenda.dus, demain: agenda.demain, aujourdhui: parcours.jours.includes(aujourdhui)};
   }
 
   function nettoyerPrenom(valeur) {
@@ -655,11 +729,24 @@
     return FAITS.filter(cle => facteursFait(cle).includes(Number(table)));
   }
 
+  // Les trois couleurs ne bougent pas avec les cinq boîtes : rouge « à revoir »
+  // = boîte 1, bleu « en route » = boîtes 2 et 3, vert « su » = boîtes 4 et 5.
+  const BOITE_SU = 4;
+
   function etatFait(fait) {
     if (!fait) return "jamais-vu";
-    if (fait.cases >= SEUILS.revision.casesMax) return "su";
-    if (fait.cases === 0) return "a-travailler";
+    if (fait.boite >= BOITE_SU) return "su";
+    if (fait.boite <= 1) return "a-travailler";
     return "en-cours";
+  }
+
+  // Un calcul est dû quand son jour de retour est arrivé (ou passé) — sauf
+  // s'il a été raté ce jour-là : il est déjà revenu une fois en fin de série
+  // (règle du 09/09), il ne peut plus monter aujourd'hui (pas de regain le
+  // jour d'une erreur), le reproposer ne servirait qu'à tourner en rond.
+  // Il sera dû demain.
+  function faitDu(fait, aujourdhui = jourLocal()) {
+    return Boolean(fait) && (!fait.echeance || fait.echeance <= aujourdhui) && fait.erreur !== aujourdhui;
   }
 
   // La grille Mes calculs appartient à Mon parcours : elle se remplit dans les
@@ -673,11 +760,13 @@
   }
 
   // Applique UNE réponse à la grille. reponse = {correcte, date}.
-  // Au plus UNE case gagnée par calcul et par jour (idée de Claire) : savoir,
-  // c'est retrouver le calcul un autre jour, pas le répéter dans l'heure. Être
-  // « su » demande donc trois jours différents. Les erreurs, elles, comptent
-  // toujours, sans limite : une réussite juste après la correction prouve peu,
-  // une erreur prouve beaucoup.
+  // Lot mémoire : un calcul monte d'une boîte quand il est DÛ et réussi ; pas
+  // dû, une bonne réponse ne change rien (savoir, c'est retrouver le calcul le
+  // jour où il revient, pas le répéter dans l'heure). Une erreur = une boîte de
+  // moins, et le calcul revient aujourd'hui ; ce jour-là, pas de regain sur ce
+  // calcul : le raté « revient dans un nouveau défi » (Claire), un autre jour.
+  // Les erreurs comptent toujours, sans limite : une réussite juste après la
+  // correction prouve peu, une erreur prouve beaucoup.
   function appliquerReponse(parcours, cleBrute, reponse = {}) {
     const cle = cleFait(cleBrute);
     if (!cle) return {parcours, fait: null};
@@ -686,39 +775,62 @@
     // Un jour compte dès qu'une série de la grille est jouée (Je m'entraîne,
     // validations, mélanges, étoiles, révisions) — jamais J'apprends.
     noterJour(copie, date);
-    const avant = copie.calculs[cle] || {cases: 0, vu: null, erreur: null, gagne: null};
-    const fait = {...avant, vu: date};
+    const avant = copie.calculs[cle] || null;
+    // Un calcul jamais vu part de la boîte 1, dû : sa première réponse compte.
+    const du = !avant || faitDu(avant, date);
+    const fait = {
+      boite: avant ? avant.boite : 1,
+      cases: 0,
+      vu: date,
+      erreur: avant ? avant.erreur : null,
+      gagne: avant ? avant.gagne : null,
+      echeance: avant ? avant.echeance : date
+    };
+    let monte = false;
+    let descend = false;
     if (reponse.correcte) {
-      // Pas de gain le jour d'une erreur sur ce calcul : le raté « revient dans
-      // un nouveau défi » (Claire), c'est-à-dire un autre jour — pas dans l'heure
-      // qui suit la correction.
-      if (avant.gagne !== date && avant.erreur !== date && avant.cases < SEUILS.revision.casesMax) {
-        fait.cases = avant.cases + 1;
+      if (du && fait.erreur !== date) {
+        if (fait.boite < SEUILS.revision.boites) {
+          fait.boite += 1;
+          monte = true;
+        }
+        // Boîte 5 : la réussite renouvelle l'échéance — l'entretien.
         fait.gagne = date;
+        fait.echeance = echeanceDeBoite(fait.boite, date);
       }
     } else {
-      fait.cases = Math.max(0, avant.cases - 1);
+      descend = fait.boite > 1;
+      fait.boite = Math.max(1, fait.boite - 1);
       fait.erreur = date;
+      fait.echeance = date;
     }
+    fait.cases = casesDeBoite(fait.boite);
     copie.calculs[cle] = fait;
-    return {parcours: copie, fait: {cle, cases: fait.cases, etat: etatFait(fait)}};
+    return {parcours: copie, fait: {cle, boite: fait.boite, etat: etatFait(fait), du, monte, descend, echeance: fait.echeance}};
   }
 
-  function resumeCalculs(parcours) {
-    const resume = {sus: 0, enCours: 0, aTravailler: 0, jamaisVus: 0, total: FAITS.length};
+  // Le résumé de la grille : par couleur, par boîte, et le nombre de calculs
+  // dus aujourd'hui.
+  function resumeCalculs(parcours, aujourdhui = jourLocal()) {
+    const resume = {sus: 0, enCours: 0, aTravailler: 0, jamaisVus: 0, dus: 0, total: FAITS.length, boites: new Array(SEUILS.revision.boites).fill(0)};
     FAITS.forEach(cle => {
-      const etat = etatFait(parcours.calculs[cle]);
+      const fait = parcours.calculs[cle];
+      const etat = etatFait(fait);
       if (etat === "su") resume.sus += 1;
       else if (etat === "en-cours") resume.enCours += 1;
       else if (etat === "a-travailler") resume.aTravailler += 1;
       else resume.jamaisVus += 1;
+      if (fait) {
+        resume.boites[fait.boite - 1] += 1;
+        if (faitDu(fait, aujourdhui)) resume.dus += 1;
+      }
     });
     return resume;
   }
 
   // La grille 8×8 prête à afficher : lignes 2 à 9, colonnes 2 à 9. La moitié
   // haute (ligne ≤ colonne) est active, l'autre est le miroir grisé du même fait.
-  function grilleCalculs(parcours) {
+  function grilleCalculs(parcours, aujourdhui = jourLocal()) {
     const facteurs = Array.from({length: FAIT_MAX - FAIT_MIN + 1}, (_, index) => index + FAIT_MIN);
     const lignes = facteurs.map(ligne => ({
       ligne,
@@ -730,22 +842,95 @@
           colonne,
           cle,
           active: ligne <= colonne,
-          cases: fait ? fait.cases : 0,
+          boite: fait ? fait.boite : 0,
           etat: etatFait(fait),
+          du: faitDu(fait, aujourdhui),
+          echeance: fait ? fait.echeance : null,
           vu: fait ? fait.vu : null,
           erreur: fait ? fait.erreur : null
         };
       })
     }));
-    return {lignes, resume: resumeCalculs(parcours)};
+    return {lignes, resume: resumeCalculs(parcours, aujourdhui)};
+  }
+
+  // Les calculs d'une boîte (1 à 5), dans l'ordre de la grille.
+  function calculsDeLaBoite(parcours, boite) {
+    const rang = entier(boite, 1, SEUILS.revision.boites, 0);
+    return FAITS.filter(cle => parcours.calculs[cle] && parcours.calculs[cle].boite === rang);
+  }
+
+  function trierParEcheance(entrees) {
+    return entrees.slice().sort((premier, second) =>
+      String(premier[1].echeance || "").localeCompare(String(second[1].echeance || ""))
+      || String(premier[1].vu || "").localeCompare(String(second[1].vu || "")));
+  }
+
+  // Les calculs dus aujourd'hui, dans l'ordre de la révision : les boîtes à
+  // TOUR DE RÔLE (un rouge, un boîte 2, un boîte 3, un boîte 4, un boîte 5, un
+  // rouge…), les plus en retard d'abord dans chaque boîte. Décision de Gwenaël
+  // (12/09) : avec « les rouges d'abord », un élève revenu après une semaine
+  // ouvrait sur dix calculs durs d'affilée ; à tour de rôle, chaque série de
+  // 10 mêle du dur et du facile, et tout est couvert à la fin — bleus et verts
+  // compris, c'est l'entretien. Jamais un calcul jamais rencontré.
+  function calculsDus(parcours, {aujourdhui = jourLocal(), table = null} = {}) {
+    const dansLaTable = cle => table === null || facteursFait(cle).includes(Number(table));
+    const dus = Object.entries(parcours.calculs).filter(([cle, fait]) => dansLaTable(cle) && faitDu(fait, aujourdhui));
+    return tourDeRole(dus.map(([cle, fait]) => [cle, fait]));
+  }
+
+  // Entrelace des entrées [cle, fait] boîte par boîte, chaque boîte triée par
+  // échéance (le plus en retard, ou le plus proche, d'abord).
+  function tourDeRole(entrees) {
+    const files = Array.from({length: SEUILS.revision.boites}, (_, index) =>
+      trierParEcheance(entrees.filter(([, fait]) => fait.boite === index + 1)).map(([cle]) => cle));
+    const ordre = [];
+    while (files.some(file => file.length)) {
+      files.forEach(file => { if (file.length) ordre.push(file.shift()); });
+    }
+    return ordre;
+  }
+
+  // « Encore 10 calculs » quand plus rien n'est dû : les calculs connus qui
+  // reviennent le plus tôt, boîtes à tour de rôle — pour s'entraîner. Rien ne
+  // monte (rien n'est dû), une erreur descend : la même règle que partout.
+  function calculsAVenir(parcours, {aujourdhui = jourLocal(), table = null} = {}) {
+    const dansLaTable = cle => table === null || facteursFait(cle).includes(Number(table));
+    const aVenir = Object.entries(parcours.calculs).filter(([cle, fait]) => dansLaTable(cle) && !faitDu(fait, aujourdhui));
+    return tourDeRole(aVenir);
+  }
+
+  // Les calculs en retard : dus AVANT aujourd'hui et pas encore refaits. C'est
+  // le compteur de la page du professeur — rien d'autre n'y est ajouté.
+  function calculsEnRetard(parcours, aujourdhui = jourLocal()) {
+    return Object.entries(parcours.calculs)
+      .filter(([, fait]) => fait.echeance && fait.echeance < aujourdhui)
+      .map(([cle]) => cle);
+  }
+
+  // L'agenda de la grille : combien de calculs sont dus aujourd'hui, combien
+  // attendront demain si rien d'autre n'est joué, et le prochain jour où
+  // quelque chose revient (avec son nombre) — pour « Reviens demain : N
+  // calculs t'attendront ».
+  function agendaCalculs(parcours, aujourdhui = jourLocal()) {
+    const faits = Object.values(parcours.calculs);
+    const demainJour = ajouterJours(aujourdhui, 1);
+    const dus = faits.filter(fait => faitDu(fait, aujourdhui)).length;
+    const demain = faits.filter(fait => faitDu(fait, demainJour)).length;
+    const aVenir = faits.map(fait => fait.echeance).filter(jour => jour && jour > aujourdhui).sort();
+    // Le prochain jour (après aujourd'hui) où un calcul revient, et tout ce qui
+    // sera dû ce jour-là — les dus d'aujourd'hui restés dus compris.
+    let prochain = null;
+    if (demain) prochain = {jour: demainJour, dans: 1, calculs: demain};
+    else if (aVenir.length) {
+      const jour = aVenir[0];
+      prochain = {jour, dans: ecartJours(aujourdhui, jour), calculs: faits.filter(fait => faitDu(fait, jour)).length};
+    }
+    return {dus, demain, prochain};
   }
 
   function trierParErreurRecente(entrees) {
     return entrees.slice().sort((premier, second) => String(second[1].erreur || "").localeCompare(String(premier[1].erreur || "")));
-  }
-
-  function trierParVuAncien(entrees) {
-    return entrees.slice().sort((premier, second) => String(premier[1].vu || "").localeCompare(String(second[1].vu || "")));
   }
 
   function calculsATravailler(parcours, table = null) {
@@ -761,35 +946,28 @@
     return tablesAcquises(parcours).filter(table => calculsATravailler(parcours, table).length >= SEUILS.revision.aRevoirMin);
   }
 
-  // Le plan de révision : priorité 0 case (ratés récemment d'abord), puis
-  // 1 case, puis 2, puis l'entretien des faits sus les plus anciens — et RIEN
-  // d'autre. La révision ne propose JAMAIS un calcul jamais vu (décision de
-  // Gwenaël, spécification du 29/08/2026 rappelée le 08/09) : elle répare ce
-  // que la grille connaît, et la grille se remplit dans les entraînements, les
-  // validations, les mélanges et les étoiles. Jamais deux fois le même fait ;
-  // s'il y a moins de 10 calculs déjà vus, la série est plus courte ; une
-  // grille vide ne donne aucune question.
-  function planRevision(parcours, {table = null, random = Math.random} = {}) {
-    const dansLaTable = cle => table === null || facteursFait(cle).includes(Number(table));
-    const enregistres = Object.entries(parcours.calculs).filter(([cle]) => dansLaTable(cle));
-    const groupe = cases => enregistres.filter(([, fait]) => fait.cases === cases);
-    const ordre = [
-      ...trierParErreurRecente(groupe(0)),
-      ...trierParVuAncien(groupe(1)),
-      ...trierParVuAncien(groupe(2)),
-      ...trierParVuAncien(groupe(SEUILS.revision.casesMax))
-    ].map(([cle]) => cle);
-    const selection = ordre.slice(0, SEUILS.revision.total);
-    // Les divisions n'entrent en révision qu'une fois rencontrées dans
-    // l'escalier (elles y sont dès la première étoile).
-    const divisionsPermises = parcours.expert.etoiles >= 1;
-    const categories = melanger(selection.map((_, index) => {
-      if (divisionsPermises && index % 3 === 2) return "division";
-      return index % 2 ? "missing" : "direct";
-    }), random);
+  // Le plan de révision (lot mémoire) : LES CALCULS DUS AUJOURD'HUI, dans
+  // l'ordre de calculsDus — rouges d'abord, puis par ancienneté d'échéance,
+  // verts compris — et RIEN d'autre, 10 à la fois ; s'il en reste, la série
+  // suivante prend les suivants. La révision ne propose JAMAIS un calcul
+  // jamais vu (décision de Gwenaël, spécification du 29/08/2026 rappelée le
+  // 08/09) : elle répare et entretient ce que la grille connaît, et la grille
+  // se remplit dans les entraînements, les validations, les mélanges et les
+  // étoiles. Rien de dû (ou grille vide) = aucune question.
+  // « libre » (Encore 10 calculs) : plus rien n'est dû, on prend les prochains
+  // à revenir. L'ordre de passage est mélangé dans les deux cas.
+  function planRevision(parcours, {table = null, random = Math.random, aujourdhui = jourLocal(), libre = false} = {}) {
+    const source = libre ? calculsAVenir(parcours, {aujourdhui, table}) : calculsDus(parcours, {aujourdhui, table});
+    const selection = melanger(source.slice(0, SEUILS.revision.total), random);
+    // La forme suit ce que l'élève a déjà rencontré (décision de Gwenaël,
+    // 12/09) : produit toujours ; trou seulement si l'une des deux tables du
+    // calcul a passé l'entraînement « trous » ou est acquise (la validation en
+    // contient) ; division dès la première étoile (elles y sont). Les formes
+    // permises alternent d'une question à l'autre.
     return selection.map((cle, index) => {
       const [premier, second] = melanger(facteursFait(cle), random);
-      const categorie = categories[index];
+      const permises = formesPermises(parcours, cle);
+      const categorie = permises[index % permises.length];
       const type = categorie === "direct"
         ? "direct"
         : categorie === "division"
@@ -797,6 +975,20 @@
           : FORMES_TROU[Math.floor(random() * FORMES_TROU.length)];
       return {cle, type, first: premier, second};
     });
+  }
+
+  // Les formes qu'un calcul peut prendre en révision, dans l'ordre où elles
+  // alternent : « direct » toujours ; « missing » si une de ses tables a réussi
+  // l'entraînement « trous » ou est acquise ; « division » dès une étoile.
+  function formesPermises(parcours, cle) {
+    const formes = ["direct"];
+    const trous = facteursFait(cle).some(table => {
+      const ligne = parcours.tables[table];
+      return Boolean(ligne) && (ligne.entraine.trous === 2 || Boolean(ligne.acquise));
+    });
+    if (trous) formes.push("missing");
+    if (parcours.expert.etoiles >= 1) formes.push("division");
+    return formes;
   }
 
   function configRevision(table = null) {
@@ -841,12 +1033,16 @@
     };
   }
 
-  function prochaineEtape(parcours) {
-    const aTravailler = calculsATravailler(parcours);
-    if (aTravailler.length >= SEUILS.revision.conseil) {
+  function prochaineEtape(parcours, aujourdhui = jourLocal()) {
+    // Des calculs sont dus : « Mes calculs du jour » passe devant tout — un
+    // conseil (le rond bleu), jamais un verrou. Plus rien de dû, le bloc
+    // s'efface et la table reprend le conseil.
+    const dus = calculsDus(parcours, {aujourdhui}).length;
+    if (dus) {
       return {
         type: "revision",
-        libelle: `Révise tes calculs : ${aTravailler.length} calculs à travailler (10 questions, sans chrono)`,
+        dus,
+        libelle: `Mes calculs du jour : ${dus} calcul${dus > 1 ? "s" : ""} à réviser (sans chrono)`,
         config: configRevision()
       };
     }
@@ -874,16 +1070,17 @@
     }
     // Légende des tables — mais les étoiles valident par échantillon
     // (25 questions) : le parcours ne dit « fini » que quand chacun des 36
-    // calculs de la grille est vert — c'est elle, la preuve complète. La
-    // révision ne reprend que les calculs déjà vus ; ceux qui n'ont jamais été
-    // rencontrés le seront en rejouant une marche.
-    const resume = resumeCalculs(parcours);
+    // calculs de la grille est vert — c'est elle, la preuve complète. Rien
+    // n'est dû aujourd'hui (sinon on ne serait pas ici) : les calculs pas
+    // encore verts reviendront d'eux-mêmes dans « Mes calculs du jour » ;
+    // ceux qui n'ont jamais été rencontrés le seront en rejouant une marche.
+    const resume = resumeCalculs(parcours, aujourdhui);
     const aReprendre = resume.aTravailler + resume.enCours;
     if (aReprendre) {
       return {
-        type: "revision",
-        libelle: `Légende des tables ! Pour une grille parfaite, il reste ${aReprendre} calcul${aReprendre > 1 ? "s" : ""} à passer au vert dans Mes calculs`,
-        config: configRevision()
+        type: "legende",
+        libelle: `Légende des tables ! Il reste ${aReprendre} calcul${aReprendre > 1 ? "s" : ""} à faire monter jusqu’au vert : ils reviendront dans Mes calculs du jour`,
+        config: null
       };
     }
     if (resume.jamaisVus) {
@@ -908,7 +1105,7 @@
   }
 
   // Résumé prêt à afficher (sans DOM) : symboles par ligne.
-  function etatAffichage(parcours) {
+  function etatAffichage(parcours, aujourdhui = jourLocal()) {
     const acquises = tablesAcquises(parcours);
     const aRevoir = tablesARevoir(parcours);
     const lignes = TABLES.map(table => {
@@ -949,9 +1146,11 @@
       // « niveau » reste le nombre d'étoiles, pour la page du professeur.
       expert: {niveau: etoiles, etoiles: marches.map(marche => marche.gagnee), ouvert, marches, suivante: ouvert && etoiles < ETOILES_MAX ? marches[etoiles] : null, couronne: parcours.expert.couronne},
       rang: rang(parcours.rang),
-      jours: bilanJours(parcours),
-      calculs: resumeCalculs(parcours),
-      prochaine: prochaineEtape(parcours)
+      jours: bilanJours(parcours, aujourdhui),
+      calculs: resumeCalculs(parcours, aujourdhui),
+      // L'agenda des calculs : dus aujourd'hui, demain, et le prochain retour.
+      agenda: agendaCalculs(parcours, aujourdhui),
+      prochaine: prochaineEtape(parcours, aujourdhui)
     };
   }
 
@@ -1520,13 +1719,21 @@
         fusion.calculs[cle] = cloner(faitA.vu > faitB.vu ? faitA : faitB);
         return;
       }
+      // Même jour : la boîte la plus haute, et l'échéance qui va avec (à boîte
+      // égale, la plus proche — le calcul revient plutôt trop tôt que trop tard).
+      const boite = Math.max(faitA.boite, faitB.boite);
+      const echeance = faitA.boite !== faitB.boite
+        ? (faitA.boite > faitB.boite ? faitA : faitB).echeance
+        : dateLaPlusAncienne(faitA.echeance, faitB.echeance);
       fusion.calculs[cle] = {
-        cases: Math.max(faitA.cases, faitB.cases),
+        boite,
+        cases: casesDeBoite(boite),
         vu: faitA.vu,
         // Erreur et gain les plus récents : la fusion ne rouvre jamais le droit
-        // de gagner une case le jour même.
+        // de monter le jour d'une erreur.
         erreur: dateLaPlusRecente(faitA.erreur, faitB.erreur),
-        gagne: dateLaPlusRecente(faitA.gagne, faitB.gagne)
+        gagne: dateLaPlusRecente(faitA.gagne, faitB.gagne),
+        echeance
       };
     });
 
@@ -1607,6 +1814,8 @@
     rangDeLEtat,
     jourLocal,
     lundiDe,
+    ajouterJours,
+    ecartJours,
     bilanJours,
     FAITS,
     cleFait,
@@ -1614,10 +1823,18 @@
     libelleFait,
     faitsDeLaTable,
     etatFait,
+    faitDu,
+    echeanceDeBoite,
     serieAlimenteGrille,
     appliquerReponse,
     resumeCalculs,
     grilleCalculs,
+    calculsDeLaBoite,
+    calculsDus,
+    calculsAVenir,
+    calculsEnRetard,
+    formesPermises,
+    agendaCalculs,
     calculsATravailler,
     tablesARevoir,
     planRevision,
