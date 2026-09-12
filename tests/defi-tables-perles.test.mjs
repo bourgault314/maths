@@ -67,7 +67,7 @@ test("le cadre fait 20 perles de large — 15 sur un téléphone — et la coupu
   // donnait des perles de 17 px et des rangées de 25 — trop petit pour un
   // doigt. Sous 22 px de perle, le vide passe de 10 à 5 perles : 23 px,
   // rangées de 34. Tablette et ordinateur gardent le cadre de 20.
-  assert.match(html, /let taille = taillePour\(PERLES\.largeurCadre\);[\s\S]*?if \(taille < PERLES\.perleAuDoigt\) \{\s*ecart = PERLES\.ecartSerre;\s*taille = taillePour\(PERLES\.largeurCadre - PERLES\.ecart \+ PERLES\.ecartSerre\);/);
+  assert.match(html, /let taille = taillePour\(PERLES\.largeurCadre\);[\s\S]*?const tailleSerree = taillePour\(PERLES\.largeurCadre - PERLES\.ecart \+ PERLES\.ecartSerre\);\s*if \(taille < PERLES\.perleAuDoigt && tailleSerree > taille\) \{\s*ecart = PERLES\.ecartSerre;\s*taille = tailleSerree;/);
   assert.match(html, /if \(taille === boulier\.taille && ecart === boulier\.ecart\) return;/);
   assert.match(html, /const interieur = taille \* \(PERLES\.parRangee \+ boulier\.ecart\);/, "l'intérieur du cadre suit le vide choisi");
   const source = html.slice(html.indexOf("      function positionPerle("), html.indexOf("\n      }", html.indexOf("      function positionPerle(")) + 8);
@@ -93,6 +93,15 @@ test("le cadre fait 20 perles de large — 15 sur un téléphone — et la coupu
   assert.equal(Math.floor(372 / 20.9), 17);
   assert.equal(Math.floor(372 / 15.9), 23);
   assert.ok(Math.round(23 * 1.49) >= 32, "la rangée se prend au doigt : 32 px au moins");
+  // Relecture du 12/09 : on ne resserre que si la perle y GAGNE. Sur un
+  // portable (fenêtre 1536 × 730 : 716 px de large, 326 de haut pour le
+  // boulier) ou un vidéoprojecteur, c'est la hauteur qui limite — resserrer
+  // ne ferait que rétrécir le cadre, et la bande avec lui, dont les
+  // étiquettes « 10×8 » se marcheraient dessus.
+  const perlePour = (largeur, hauteur, cadre) => Math.max(14, Math.floor(Math.min(largeur / cadre, hauteur / 14.9, 55)));
+  assert.equal(perlePour(716, 326, 20.9), 21);
+  assert.equal(perlePour(716, 326, 15.9), 21, "portable : le cadre de 15 ne donne pas une perle plus grosse, on garde le cadre de 20");
+  assert.ok(perlePour(372, 421, 15.9) > perlePour(372, 421, 20.9), "iPhone de 402 px : là, le cadre de 15 fait bien grandir la perle (17 → 23)");
 });
 
 test("la bande et l'addition au-dessus, le boulier en bas, dans la même scène", () => {
@@ -111,8 +120,15 @@ test("la bande et l'addition au-dessus, le boulier en bas, dans la même scène"
 test("lot R1 : ce qui se lit sur un téléphone — barre d'état sur une ligne, table finale en grand", () => {
   // A15 : « Ma / table » et « À ton / rythme » se coupaient en deux.
   assert.match(html, /\.challenge-playing \.game-menu \{ padding: 4px 9px; white-space: nowrap; \}/);
-  assert.match(html, /\.challenge-playing #question-count \{ font-size: \.92rem; white-space: nowrap; \}/);
-  assert.match(html, /\.challenge-playing \.status strong \{ min-width: 0; white-space: nowrap; \}/);
+  // Relecture du 12/09 : les deux pastilles ne se coupent plus, mais le
+  // compteur du milieu peut passer à la ligne — sinon son texte passait SOUS
+  // la pastille du temps (« cases complét » à 375 et 360 px, et à 402 px
+  // quand le bouton dit « Mon parcours »).
+  assert.match(html, /\.challenge-playing #question-count \{ font-size: \.92rem; line-height: 1\.15; \}/);
+  assert.doesNotMatch(html, /\.challenge-playing #question-count \{[^}]*white-space: nowrap/);
+  // La pastille du temps garde ses 78 px (règle du dessus) : le chrono ne
+  // change plus de largeur à chaque seconde.
+  assert.match(html, /\.challenge-playing \.status strong \{ flex-shrink: 0; white-space: nowrap; \}/);
   assert.match(html, /\.challenge-playing \.status strong\.no-timer \{ padding: 4px 9px; font-size: \.84rem; \}/);
   // P2 : la table construite en grand sur toute la page (18 px avant).
   assert.match(html, /\.perles-table \{[\s\S]*?font-size: clamp\(1\.1rem, min\(8vw, 4\.2dvh\), 3rem\);\s*font-weight: 900;\s*line-height: 1\.3;/);

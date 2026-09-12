@@ -1221,13 +1221,19 @@
       .challenge-playing .expression { min-height: clamp(68px, 12dvh, 92px); margin: 3px 0 6px; padding: 7px; font-size: clamp(2rem, min(12.4vw, 8dvh), 3.4rem); }
       .challenge-playing .learn-sequence { margin-top: 6px; }
       /* Lot R1 : la barre d'état tient sur UNE ligne (« Ma / table » et
-         « À ton / rythme » se coupaient en deux, audit A15) — rien ne se
-         replie, les deux pastilles perdent un peu de marge. */
+         « À ton / rythme » se coupaient en deux, audit A15) — les deux
+         pastilles ne se coupent plus et perdent un peu de marge. Seul le
+         compteur du milieu passe à la ligne quand la place manque (petit
+         téléphone, ou bouton « Mon parcours » plus long) : sans cela son
+         texte passait SOUS la pastille du temps et « cases complétées » se
+         lisait « cases complét » (relecture du 12/09). La pastille du temps
+         garde ses 78 px : le chrono ne change plus de largeur à chaque
+         seconde. */
       .challenge-playing .status { gap: 8px; }
       .challenge-playing .status-left { min-width: 0; gap: 8px; }
       .challenge-playing .game-menu { padding: 4px 9px; white-space: nowrap; }
-      .challenge-playing #question-count { font-size: .92rem; white-space: nowrap; }
-      .challenge-playing .status strong { min-width: 0; white-space: nowrap; }
+      .challenge-playing #question-count { font-size: .92rem; line-height: 1.15; }
+      .challenge-playing .status strong { flex-shrink: 0; white-space: nowrap; }
       .challenge-playing .status strong.no-timer { padding: 4px 9px; font-size: .84rem; }
       .challenge-playing .number-stick { padding: 2px; border-width: 2px; border-radius: 8px; }
       .challenge-playing .number-stick-cell { min-height: 54px; grid-template-rows: 16px minmax(38px, 1fr); }
@@ -3553,10 +3559,15 @@
         let ecart = PERLES.ecart;
         let taille = taillePour(PERLES.largeurCadre);
         // Une rangée doit se prendre au doigt : sous 22 px de perle, le vide
-        // se resserre à 5 perles et la perle reprend la place.
-        if (taille < PERLES.perleAuDoigt) {
+        // se resserre à 5 perles et la perle reprend la place — mais seulement
+        // si elle y gagne. Sur un portable ou un vidéoprojecteur, c'est la
+        // HAUTEUR qui limite la perle : resserrer ne ferait que rétrécir le
+        // cadre et la bande, dont les étiquettes se marcheraient dessus
+        // (relecture du 12/09, fenêtres 1536 x 730, 1366 x 650, 1280 x 590).
+        const tailleSerree = taillePour(PERLES.largeurCadre - PERLES.ecart + PERLES.ecartSerre);
+        if (taille < PERLES.perleAuDoigt && tailleSerree > taille) {
           ecart = PERLES.ecartSerre;
-          taille = taillePour(PERLES.largeurCadre - PERLES.ecart + PERLES.ecartSerre);
+          taille = tailleSerree;
         }
         if (taille === boulier.taille && ecart === boulier.ecart) return;
         boulier.taille = taille;
