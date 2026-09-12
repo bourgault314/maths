@@ -10,7 +10,7 @@
 /* Les niveaux gardent les boutons arrondis du Solo, désormais disponibles en Duo. */
 .level-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 8px; margin-top: 14px; padding: 10px 12px; border: 2px solid #d7e4ec; border-radius: 14px; background: #f8fcff; }
 .level-row-label { color: #41677f; font-size: .78rem; font-weight: 950; letter-spacing: .06em; text-transform: uppercase; }
-.level-choice { min-height: 44px; display: grid; justify-items: center; gap: 2px; padding: 6px 14px; border: 2px solid #cadde8; border-radius: 999px; color: #31546e; background: #fff; font-size: .92rem; font-weight: 950; line-height: 1.1; }
+.level-choice { min-width: 0; min-height: 52px; flex: 1 1 0; display: grid; justify-items: center; align-content: center; gap: 3px; padding: 6px 8px; border: 2px solid #cadde8; border-radius: 18px; color: #31546e; background: #fff; font-size: .9rem; font-weight: 950; line-height: 1.1; }
 .level-choice small { color: #557083; font-size: .68rem; font-weight: 800; }
 .level-choice[aria-pressed="true"] { border-color: #0755b8; color: #fff; background: linear-gradient(145deg, #087c75, #0755b8); box-shadow: 0 5px 13px rgba(7, 85, 184, .2); }
 .level-choice[aria-pressed="true"] small { color: rgba(255, 255, 255, .85); }
@@ -69,7 +69,8 @@
 @media (max-width: 520px) {
   .level-row { gap: 6px 8px; padding: 9px 10px; }
   .level-row-label { flex-basis: 100%; text-align: center; }
-  .level-choice { flex: 1 1 0; padding-inline: 8px; font-size: .86rem; }
+  .level-choice { padding-inline: 5px; font-size: .82rem; }
+  .level-choice small { font-size: .62rem; }
   .correction-card { padding: 16px; gap: 8px; }
   .correction-card > h2 { font-size: 1.28rem; margin: 0; }
   .correction-content { gap: 8px; }

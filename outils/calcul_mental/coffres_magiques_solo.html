@@ -464,13 +464,15 @@
     }
 
     .level-choice {
+      min-width: 0;
       min-height: 44px;
+      flex: 1 1 0;
       display: grid;
       justify-items: center;
       gap: 2px;
-      padding: 6px 14px;
+      padding: 6px 8px;
       border: 2px solid #cadde8;
-      border-radius: 999px;
+      border-radius: 18px;
       color: #31546e;
       background: #fff;
       font-size: .92rem;
@@ -1601,7 +1603,7 @@
       }
     }
   </style>
-  <link rel="stylesheet" href="../../assets/css/coffres-learning.css?v=3">
+  <link rel="stylesheet" href="../../assets/css/coffres-learning.css?v=4">
 </head>
 <body>
   <header class="topbar">
@@ -1657,8 +1659,9 @@
         </button>
       </div>
       <div class="level-row" role="group" aria-label="Niveau des nombres">
-        <button class="level-choice" type="button" data-level="1" aria-pressed="true">Niveau 1<small>nombres de 1 à 12</small></button>
-        <button class="level-choice" type="button" data-level="2" aria-pressed="false">Niveau 2<small>nombres jusqu’à 20</small></button>
+        <button class="level-choice" type="button" data-level="1" aria-pressed="true">Niveau 1<small>Petits calculs</small></button>
+        <button class="level-choice" type="button" data-level="2" aria-pressed="false">Niveau 2<small>Calculs intermédiaires</small></button>
+        <button class="level-choice" type="button" data-level="3" aria-pressed="false">Niveau 3<small>Calculs plus avancés</small></button>
       </div>
       <fieldset class="operation-choices">
         <legend>Choisis tes opérations</legend>
@@ -1822,7 +1825,7 @@
     <span data-mathsgo-confidentialite>Sans cookie ni traceur</span>
   </footer>
 
-  <script src="../../assets/js/coffres-settings.js?v=2"></script>
+  <script src="../../assets/js/coffres-settings.js?v=3"></script>
   <script>
     (() => {
       "use strict";
@@ -1995,7 +1998,7 @@
       }
 
       function readLevel() {
-        return new URLSearchParams(window.location.search).get("niveau") === "2" ? 2 : 1;
+        return settingsCore.normalizeLevel(new URLSearchParams(window.location.search).get("niveau"));
       }
 
       function syncOriginLinks() {
@@ -2015,14 +2018,14 @@
           ? "../calcul_mental/coffres_magiques_solo.html"
           : "../club_maths/coffres_magiques.html";
         const params = new URLSearchParams({ mode: nextMode, from: origin });
-        if (nextLevel === 2) params.set("niveau", "2");
+        if (nextLevel > 1) params.set("niveau", String(nextLevel));
         settingsCore.writeOperations(params, operations);
         return `${path}?${params}`;
       }
 
       function syncSettingsUrl() {
         const url = new URL(window.location.href);
-        if (level === 2) url.searchParams.set("niveau", "2");
+        if (level > 1) url.searchParams.set("niveau", String(level));
         else url.searchParams.delete("niveau");
         settingsCore.writeOperations(url.searchParams, selectedOperations);
         if (url.href !== window.location.href) window.history.replaceState(window.history.state, "", url.href);
@@ -2203,75 +2206,129 @@
         return neighborPairs().filter(positions => isSolution(nextMode, nextValues[positions[0]], nextValues[positions[1]], nextTarget));
       }
 
-      // Bornes de chaque niveau. Le niveau 1 conserve exactement les tirages historiques (pairFor) ;
-      // le niveau 2 monte les cases jusqu'à 20 (sommes ≤ 40, différences ≤ 19, produits comme 12 × 15, quotients comme 60 ÷ 15).
+      // Les bornes dépendent de l'opération : une même difficulté numérique n'a pas
+      // le même sens pour une addition, une table ou une division.
       function levelRules(nextLevel) {
-        if (nextLevel === 2) {
-          return { fill: [1, 20], sum: [6, 20], difference: { high: [10, 20], gap: 3 }, product: { big: [11, 20], small: [3, 15] }, quotient: { divisor: [6, 20], quotient: [2, 9] } };
+        if (nextLevel === 3) {
+          return { fill: { sum: [1, 100], difference: [1, 100], product: [1, 50], quotient: [1, 50] } };
         }
-        return { fill: [1, 12], sum: [2, 9], difference: { high: [3, 12], gap: 2, gapMax: 8 }, product: { big: [2, 9], small: [2, 9] }, quotient: { divisor: [2, 6], quotient: [2, 6] } };
+        if (nextLevel === 2) {
+          return { fill: { sum: [1, 50], difference: [1, 50], product: [1, 20], quotient: [1, 20] } };
+        }
+        return { fill: { sum: [1, 12], difference: [1, 12], product: [1, 12], quotient: [1, 12] } };
+      }
+
+      function fillBounds(nextMode, nextLevel = level) {
+        return levelRules(nextLevel).fill[nextMode];
+      }
+
+      function multiplicationPair(nextLevel = level) {
+        let pair;
+        if (nextLevel === 3) {
+          if (randomInteger(0, 1)) pair = [randomInteger(11, 20), randomInteger(6, 10)];
+          else {
+            const large = randomInteger(21, 50);
+            pair = [large, randomInteger(2, Math.min(10, Math.floor(200 / large)))];
+          }
+        } else if (nextLevel === 2) {
+          pair = randomInteger(0, 1)
+            ? [randomInteger(2, 10), randomInteger(2, 10)]
+            : [randomInteger(11, 20), randomInteger(2, 5)];
+        } else {
+          pair = [randomInteger(2, 9), randomInteger(2, 9)];
+        }
+        return randomInteger(0, 1) ? pair : [pair[1], pair[0]];
+      }
+
+      function allowedProductPair(first, second, nextLevel = level) {
+        const high = Math.max(first, second);
+        const low = Math.min(first, second);
+        if (nextLevel === 3) {
+          return (high >= 11 && high <= 20 && low >= 6 && low <= 10)
+            || (high >= 21 && high <= 50 && low >= 2 && low <= 10 && high * low <= 200);
+        }
+        if (nextLevel === 2) {
+          return (high <= 10 && low >= 2) || (high >= 11 && high <= 20 && low >= 2 && low <= 5);
+        }
+        return high <= 9 && low >= 2;
       }
 
       function pairFor(nextMode, nextLevel = level) {
-        const rules = levelRules(nextLevel);
-        if (nextLevel !== 2) {
-          if (nextMode === "sum" || nextMode === "product") return [randomInteger(2, 9), randomInteger(2, 9)];
-          if (nextMode === "difference") {
-            const difference = randomInteger(2, 8);
-            const low = randomInteger(1, 12 - difference);
-            return [low + difference, low];
+        if (nextMode === "sum") {
+          if (nextLevel === 3) {
+            const target = randomInteger(51, 100);
+            const first = randomInteger(10, target - 10);
+            return [first, target - first];
           }
-          const divisor = randomInteger(2, 6);
-          const quotient = randomInteger(2, 6);
-          return [divisor * quotient, divisor];
+          if (nextLevel === 2) {
+            const target = randomInteger(20, 50);
+            const first = randomInteger(2, target - 2);
+            return [first, target - first];
+          }
+          return [randomInteger(2, 9), randomInteger(2, 9)];
         }
-        if (nextMode === "sum") return [randomInteger(rules.sum[0], rules.sum[1]), randomInteger(rules.sum[0], rules.sum[1])];
         if (nextMode === "difference") {
-          const high = randomInteger(rules.difference.high[0], rules.difference.high[1]);
-          const low = randomInteger(1, high - rules.difference.gap);
-          return [high, low];
+          if (nextLevel === 3) {
+            const high = randomInteger(51, 100);
+            return [high, randomInteger(1, high - 1)];
+          }
+          if (nextLevel === 2) {
+            const high = randomInteger(20, 50);
+            return [high, randomInteger(1, high - 1)];
+          }
+          const difference = randomInteger(2, 8);
+          const low = randomInteger(1, 12 - difference);
+          return [low + difference, low];
         }
-        if (nextMode === "product") {
-          const pair = [randomInteger(rules.product.big[0], rules.product.big[1]), randomInteger(rules.product.small[0], rules.product.small[1])];
-          return randomInteger(0, 1) ? pair : [pair[1], pair[0]];
-        }
-        const divisor = randomInteger(rules.quotient.divisor[0], rules.quotient.divisor[1]);
-        const quotient = randomInteger(rules.quotient.quotient[0], rules.quotient.quotient[1]);
-        return [divisor * quotient, divisor];
+        const factors = multiplicationPair(nextLevel);
+        if (nextMode === "product") return factors;
+        return [factors[0] * factors[1], randomInteger(0, 1) ? factors[0] : factors[1]];
       }
 
-      // Toutes les paires (dans les bornes du niveau) qui donnent la cible : sert à planter une deuxième paire.
+      // Toutes les paires admises par le niveau qui donnent la cible : sert uniquement
+      // à planter la seconde solution annoncée, sans filtrer les tirages ordinaires.
       function matchingPairs(nextMode, nextTarget, nextLevel = level) {
-        const rules = levelRules(nextLevel);
         const found = [];
-        const between = (value, bounds) => value >= bounds[0] && value <= bounds[1];
         if (nextMode === "sum") {
-          for (let first = rules.sum[0]; first <= rules.sum[1]; first += 1) {
+          const minimum = nextLevel === 3 ? 10 : 2;
+          for (let first = minimum; first <= Math.floor(nextTarget / 2); first += 1) {
             const second = nextTarget - first;
-            if (second >= first && between(second, rules.sum)) found.push([first, second]);
+            const allowed = nextLevel === 1
+              ? second <= 9
+              : nextLevel === 2 ? nextTarget >= 20 && nextTarget <= 50 : nextTarget >= 51 && nextTarget <= 100;
+            if (allowed) found.push([first, second]);
           }
         } else if (nextMode === "difference") {
-          const gapMax = rules.difference.gapMax || Number.POSITIVE_INFINITY;
-          if (nextTarget < rules.difference.gap || nextTarget > gapMax) return found;
-          for (let high = rules.difference.high[0]; high <= rules.difference.high[1]; high += 1) {
+          const minimumHigh = nextLevel === 3 ? 51 : nextLevel === 2 ? 20 : 3;
+          const maximumHigh = nextLevel === 3 ? 100 : nextLevel === 2 ? 50 : 12;
+          if (nextLevel === 1 && (nextTarget < 2 || nextTarget > 8)) return found;
+          for (let high = minimumHigh; high <= maximumHigh; high += 1) {
             const low = high - nextTarget;
             if (low >= 1) found.push([high, low]);
           }
         } else if (nextMode === "product") {
-          for (let first = 1; first * first <= nextTarget; first += 1) {
+          for (let first = 2; first * first <= nextTarget; first += 1) {
             if (nextTarget % first !== 0) continue;
             const second = nextTarget / first;
-            const fits = (between(first, rules.product.big) && between(second, rules.product.small))
-              || (between(second, rules.product.big) && between(first, rules.product.small));
-            if (fits) found.push([first, second]);
+            if (allowedProductPair(first, second, nextLevel)) found.push([first, second]);
           }
         } else {
-          if (!between(nextTarget, rules.quotient.quotient)) return found;
-          for (let divisor = rules.quotient.divisor[0]; divisor <= rules.quotient.divisor[1]; divisor += 1) {
-            found.push([divisor * nextTarget, divisor]);
+          for (let divisor = 2; divisor <= 50; divisor += 1) {
+            if (allowedProductPair(divisor, nextTarget, nextLevel)) found.push([divisor * nextTarget, divisor]);
           }
         }
         return found;
+      }
+
+      function divisionDecoys(nextLevel = level) {
+        const maximum = fillBounds("quotient", nextLevel)[1];
+        const products = new Set();
+        for (let first = 2; first <= 50; first += 1) {
+          for (let second = 2; second <= 50; second += 1) {
+            if (allowedProductPair(first, second, nextLevel) && first * second > maximum) products.add(first * second);
+          }
+        }
+        return [...products];
       }
 
       function sameValues(first, second) {
@@ -2282,9 +2339,9 @@
       // les paires plantées ne se touchent pas, et chaque autre case est corrigée pour n'ouvrir le coffre avec aucun voisin.
       // Aucune boucle de retirage : le tirage reste déterministe si Math.random est figé (tests).
       function generateBoard(nextMode, nextLevel = level, wantTwo = false) {
-        const rules = levelRules(nextLevel);
         const pairs = neighborPairs();
-        const cells = Array.from({ length: SIZE * SIZE }, () => randomInteger(rules.fill[0], rules.fill[1]));
+        const bounds = fillBounds(nextMode, nextLevel);
+        const cells = Array.from({ length: SIZE * SIZE }, () => randomInteger(bounds[0], bounds[1]));
         const firstSlot = pairs[randomInteger(0, pairs.length - 1)];
         const solution = pairFor(nextMode, nextLevel);
         const nextTarget = calculate(nextMode, solution[0], solution[1]);
@@ -2307,18 +2364,46 @@
           }
         }
 
-        const span = rules.fill[1] - rules.fill[0] + 1;
-        const offset = randomInteger(0, span - 1);
+        const decoyPositions = new Set();
+        const decoys = nextMode === "quotient" ? divisionDecoys(nextLevel) : [];
+        if (decoys.length) {
+          const available = shuffle(cells.map((_, position) => position).filter(position => !planted.has(position)));
+          available.slice(0, 4).forEach(position => {
+            cells[position] = decoys[randomInteger(0, decoys.length - 1)];
+            decoyPositions.add(position);
+          });
+        }
+
+        const ordinary = Array.from({ length: bounds[1] - bounds[0] + 1 }, (_, index) => bounds[0] + index);
+        const candidatesFor = position => {
+          const candidates = decoyPositions.has(position) ? decoys.concat(ordinary) : ordinary;
+          const offset = randomInteger(0, candidates.length - 1);
+          return candidates.map((_, index) => candidates[(offset + index) % candidates.length]);
+        };
         for (let position = 0; position < cells.length; position += 1) {
           if (planted.has(position)) continue;
           const neighbours = pairs.filter(pair => pair.includes(position)).map(pair => pair[0] === position ? pair[1] : pair[0]);
           const opens = candidate => neighbours.some(neighbour => isSolution(nextMode, candidate, cells[neighbour], nextTarget));
           if (!opens(cells[position])) continue;
-          for (let step = 0; step < span; step += 1) {
-            const candidate = rules.fill[0] + ((offset + step) % span);
+          for (const candidate of candidatesFor(position)) {
             if (!opens(candidate)) {
               cells[position] = candidate;
               break;
+            }
+          }
+        }
+
+        // La correction des solutions accidentelles peut exceptionnellement remplacer
+        // un grand nombre. On complète alors le camouflage sans créer de nouvelle solution.
+        if (nextMode === "quotient") {
+          let largeCount = cells.filter(value => value > bounds[1]).length;
+          for (let position = 0; position < cells.length && largeCount < 4; position += 1) {
+            if (planted.has(position) || cells[position] > bounds[1]) continue;
+            const neighbours = pairs.filter(pair => pair.includes(position)).map(pair => pair[0] === position ? pair[1] : pair[0]);
+            const candidate = decoys.find(value => neighbours.every(neighbour => !isSolution(nextMode, value, cells[neighbour], nextTarget)));
+            if (candidate !== undefined) {
+              cells[position] = candidate;
+              largeCount += 1;
             }
           }
         }
@@ -2458,7 +2543,7 @@
         return view;
       }
 
-      // Niveau 2 : barres proportionnelles avec les nombres écrits dedans.
+      // Niveaux 2 et 3 : barres proportionnelles avec les nombres écrits dedans.
       function createBarPart(value, className = "", total = value) {
         const part = makeElement("span", `bar-part${className ? ` ${className}` : ""}`, String(value));
         part.style.setProperty("--bar-value", String(value));
@@ -2574,7 +2659,7 @@
         const demo = makeElement("div", "learning-demo");
         demo.setAttribute("role", "img");
 
-        if (visualLevel === 2) {
+        if (visualLevel >= 2 || (nextMode === "quotient" && model.total > 36)) {
           demo.setAttribute("aria-label", describeBars(nextMode, model));
           demo.append(createBarDiagram(nextMode, model), makeElement("span", "demo-caption", visualCaption(nextMode, model)));
           return demo;
@@ -2621,9 +2706,12 @@
         panel.replaceChildren(visual);
       }
 
-      // Niveau 2 : l'aide reprend la carte du cours (titre, phrases, définition) avec des exemples
-      // de la taille du niveau, dessinés en barres. Le cours complet, lui, garde ses points.
-      const levelTwoExamples = { sum: [13, 8], difference: [17, 9], product: [12, 15], quotient: [60, 15] };
+      // Aux niveaux 2 et 3, l'aide reprend la carte du cours avec un exemple adapté
+      // et un dessin compact. Le cours d'ouverture, lui, reste identique pour tous.
+      const levelExamples = {
+        2: { sum: [27, 18], difference: [43, 27], product: [18, 4], quotient: [72, 4] },
+        3: { sum: [46, 27], difference: [72, 38], product: [24, 7], quotient: [168, 7] }
+      };
 
       function levelTwoSentences(nextMode, model) {
         if (nextMode === "sum") return { example: `La somme de ${model.first} et de ${model.second} est ${model.total}.`, equation: `${model.first} + ${model.second} = ${model.total}` };
@@ -2632,13 +2720,13 @@
         return { example: `Le quotient de ${model.total} par ${model.groupSize} est ${model.groupCount}.`, equation: `${model.total} ÷ ${model.groupSize} = ${model.groupCount}` };
       }
 
-      function createLevelTwoCard(nextMode, sourceCard) {
-        const [first, second] = levelTwoExamples[nextMode];
+      function createLevelCard(nextMode, sourceCard, nextLevel = gameLevel) {
+        const [first, second] = levelExamples[nextLevel][nextMode];
         const model = operationModel(nextMode, first, second);
         const sentences = levelTwoSentences(nextMode, model);
         const card = makeElement("article");
         card.dataset.operation = nextMode;
-        card.dataset.level = "2";
+        card.dataset.level = String(nextLevel);
         const picture = makeElement("div", "operation-picture");
         picture.setAttribute("role", "img");
         picture.setAttribute("aria-label", describeBars(nextMode, model));
@@ -2657,7 +2745,7 @@
       function renderHelpCard(nextMode) {
         const sourceCard = lesson.querySelector(`article[data-operation="${nextMode}"]`);
         if (!sourceCard) return;
-        const content = [gameLevel === 2 ? createLevelTwoCard(nextMode, sourceCard) : sourceCard.cloneNode(true)];
+        const content = [gameLevel >= 2 ? createLevelCard(nextMode, sourceCard, gameLevel) : sourceCard.cloneNode(true)];
         if (nextMode === "difference" || nextMode === "quotient") {
           const conventions = makeElement("aside", "operation-conventions");
           conventions.setAttribute("aria-label", "Ordre des nombres dans le jeu");

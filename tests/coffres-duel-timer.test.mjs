@@ -62,7 +62,7 @@ test("les quatre opérations sont servies équitablement aux deux joueurs", () =
 test("la différence et le quotient suivent les mêmes conventions que le solo", () => {
   assert.match(html, /if \(nextMode === "difference"\) return high - low;/);
   assert.match(html, /if \(mode === "quotient" && high % low !== 0\) return Number\.NaN;/);
-  assert.match(html, /const divisor = randomInteger\(2, 6\);[\s\S]*const quotient = randomInteger\(2, 6\);[\s\S]*return \[divisor \* quotient, divisor\];/);
+  assert.match(html, /const factors = multiplicationPair\(nextLevel\);[\s\S]*return \[factors\[0\] \* factors\[1\], randomInteger\(0, 1\) \? factors\[0\] : factors\[1\]\];/);
   assert.match(html, /mode === "difference" \|\| mode === "quotient" \? high : first/);
   assert.match(html, /n’est pas divisible par/);
 });

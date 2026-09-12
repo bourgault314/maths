@@ -30,6 +30,11 @@
     return normalizeOperations(first).join(",") === normalizeOperations(second).join(",");
   }
 
+  function normalizeLevel(value) {
+    const level = Number(value);
+    return level === 2 || level === 3 ? level : 1;
+  }
+
   // Les choix restent provisoires jusqu'à Continuer ; Échap peut les abandonner.
   function createChoices(dialog, currentMode, onConfirm) {
     const modeButtons = [...dialog.querySelectorAll("[data-game-mode]")];
@@ -61,7 +66,7 @@
       sync();
     }));
     levelButtons.forEach(button => button.addEventListener("click", () => {
-      selectedLevel = Number(button.dataset.level) === 2 ? 2 : 1;
+      selectedLevel = normalizeLevel(button.dataset.level);
       sync();
     }));
     checkboxes.forEach(input => input.addEventListener("change", () => {
@@ -77,7 +82,7 @@
       read,
       reset(operations, level, gameStarted = false) {
         selectedMode = currentMode;
-        selectedLevel = initialLevel = level;
+        selectedLevel = initialLevel = normalizeLevel(level);
         initialOperations = normalizeOperations(operations);
         started = gameStarted;
         checkboxes.forEach(input => { input.checked = initialOperations.includes(input.value); });
@@ -88,7 +93,7 @@
     };
   }
 
-  const api = { OPERATIONS, normalizeOperations, readOperations, writeOperations, soloSeries, sameOperations, createChoices };
+  const api = { OPERATIONS, normalizeOperations, readOperations, writeOperations, soloSeries, sameOperations, normalizeLevel, createChoices };
   if (typeof module === "object" && module.exports) module.exports = api;
   else root.MATHSGO_COFFRES_SETTINGS = api;
 })(typeof window === "object" ? window : this);
