@@ -24,7 +24,7 @@ function create(query = "", saved = new Map()) {
   scripts.forEach(script => w.eval(script));
   const q = selector => doc.querySelector(selector);
   const click = selector => { const target = q(selector); assert.ok(target, selector); assert.equal(target.hidden, false); target.click(); };
-  function step() { now += 50; const callbacks = [...frames.values()]; frames.clear(); callbacks.forEach(cb => cb(now)); }
+  function step(delta = 50) { now += delta; const callbacks = [...frames.values()]; frames.clear(); callbacks.forEach(cb => cb(now)); }
   function until(check, interact = () => {}, seconds = 85) { for (let t = 0; t < seconds * 20 && !check(); t++) { interact(); step(); } assert.ok(check(), "État final attendu"); assert.deepEqual(errors, []); }
   const key = (key, code = key) => w.dispatchEvent(new w.KeyboardEvent("keydown", { key, code, bubbles: true, cancelable: true }));
   const prepare = game => { click('[data-game="' + game + '"]'); assert.equal(q("#play").hidden, false); assert.match(q("#instructions").textContent, /Prends le temps/); click("#controls button"); };
@@ -97,5 +97,11 @@ run("Cadeau : abandon, recharge et seconde partie consomment exactement deux par
 run("Inactivité : les galets se terminent au plafond annoncé", () => {
   const d = create(); d.prepare("galets"); d.until(() => !d.q("#result").hidden, () => {}, 62);
   assert.match(d.q("#result-text").textContent, /temps.*écoulé/); assert.equal(d.frames.size, 0); d.dom.window.close();
+});
+run("Un écran lent ne prolonge pas la durée de la partie", () => {
+  const d = create(); d.prepare("galets"); d.step(); d.step(1000);
+  assert.equal(d.q("#time-label").textContent, "59 s");
+  for (let i = 0; i < 59; i++) d.step(1000);
+  assert.equal(d.q("#result").hidden, false); assert.equal(d.frames.size, 0); d.dom.window.close();
 });
 console.log(checks + " scénarios d’interface validés (DOM simulé, sans validation visuelle).");
