@@ -51,14 +51,14 @@ class Element {
   text() { return this.textContent + this.children.map(child => child.text()).join(""); }
 }
 
-function choiceFixture() {
+function choiceFixture(currentMode = "solo") {
   const inputs = settings.OPERATIONS.map(value => Object.assign(new Element(), { value, checked: true }));
   const modes = ["solo", "duo"].map(gameMode => Object.assign(new Element(), { dataset: { gameMode } }));
   const levels = [1, 2].map(level => Object.assign(new Element(), { dataset: { level: String(level) } }));
   const elements = Object.fromEntries([".level-row", "#continue-current-mode", "#operations-hint", "#mode-title"].map(selector => [selector, new Element()]));
   const dialog = { querySelector: selector => elements[selector], querySelectorAll: selector => ({ "[data-game-mode]": modes, "[data-level]": levels, "[name=operation]": inputs })[selector] };
   const confirmed = [];
-  const choices = settings.createChoices(dialog, "solo", config => confirmed.push(config));
+  const choices = settings.createChoices(dialog, currentMode, config => confirmed.push(config));
   choices.reset(settings.OPERATIONS, 1);
   return { inputs, modes, levels, elements, choices, confirmed };
 }
@@ -67,14 +67,33 @@ test("choisir Solo ou Duo ne lance rien avant Continuer et une opération reste 
   const f = choiceFixture();
   f.modes[1].handlers.click();
   assert.equal(f.confirmed.length, 0);
-  assert.equal(f.elements[".level-row"].hidden, true);
+  assert.equal(f.elements[".level-row"].hidden, false);
+  f.levels[1].handlers.click();
   f.inputs.slice(1).forEach(input => { input.checked = false; input.handlers.change(); });
   f.inputs[0].checked = false;
   f.inputs[0].handlers.change();
   assert.equal(f.inputs[0].checked, true);
   assert.equal(f.elements["#operations-hint"].textContent, "Garde au moins une opération.");
   f.elements["#continue-current-mode"].handlers.click();
-  assert.deepEqual(f.confirmed, [{ mode: "duo", operations: ["sum"], level: 1 }]);
+  assert.deepEqual(f.confirmed, [{ mode: "duo", operations: ["sum"], level: 2 }]);
+});
+
+test("le niveau peut être changé en Solo comme en Duo et annonce une nouvelle partie", () => {
+  for (const mode of ["solo", "duo"]) {
+    const f = choiceFixture(mode);
+    f.choices.reset(["sum", "product"], 1, true);
+    f.levels[1].handlers.click();
+    assert.equal(f.elements["#continue-current-mode"].textContent, "Nouvelle partie");
+    assert.equal(f.levels[1].attributes["aria-pressed"], "true");
+    assert.equal(f.confirmed.length, 0);
+    f.elements["#continue-current-mode"].handlers.click();
+    assert.deepEqual(f.confirmed, [{ mode, operations: ["sum", "product"], level: 2 }]);
+    f.choices.reset(["sum", "product"], 2, true);
+    assert.equal(f.elements["#continue-current-mode"].textContent, "Continuer");
+    f.levels[0].handlers.click();
+    assert.equal(f.choices.read().level, 1);
+    assert.equal(f.elements["#continue-current-mode"].textContent, "Nouvelle partie");
+  }
 });
 
 test("les réglages provisoires peuvent être abandonnés sans changer la partie", () => {

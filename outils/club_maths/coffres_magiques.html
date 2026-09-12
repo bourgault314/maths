@@ -1163,7 +1163,7 @@
       }
     }
   </style>
-  <link rel="stylesheet" href="../../assets/css/coffres-learning.css?v=1">
+  <link rel="stylesheet" href="../../assets/css/coffres-learning.css?v=2">
 </head>
 <body>
   <header class="topbar">
@@ -1185,7 +1185,7 @@
       <header class="game-heading">
         <div>
           <h1>Coffres magiques</h1>
-          <p class="game-subline"><span>Duo · 20 secondes par tour</span><button class="mode-switch-button" type="button" data-change-mode>Réglages</button></p>
+          <p class="game-subline"><span>Duo · <span id="duo-level-label">niveau 1</span> · 20 s</span><button class="mode-switch-button" type="button" data-change-mode>Réglages</button></p>
         </div>
         <button id="rules-button" class="rules-button" type="button">Règle</button>
       </header>
@@ -1219,16 +1219,23 @@
 
   <section id="mode-dialog" class="overlay" hidden role="dialog" aria-modal="true" aria-labelledby="mode-title">
     <div class="dialog-card mode-dialog-card">
-      <h2 id="mode-title" tabindex="-1">Choisis ton mode</h2>
+      <div class="mode-heading">
+        <div class="dialog-icon" aria-hidden="true">🔐</div>
+        <h2 id="mode-title" tabindex="-1">Choisis ton mode</h2>
+      </div>
+      <div class="mode-settings-scroll" role="region" aria-label="Mode, niveau et opérations" tabindex="0">
+      <p class="mode-introduction">Les mêmes coffres, selon que tu veux t’entraîner ou défier quelqu’un.</p>
       <div class="mode-options" role="group" aria-label="Mode de jeu">
         <button id="choose-solo" class="mode-choice mode-choice-solo" type="button" data-game-mode="solo" aria-pressed="true">
-          <strong>Solo</strong><small>1 joueur · 10 clés<br>Sans chrono · avec aide</small>
+          <span class="mode-choice-icon" aria-hidden="true">1</span>
+          <span><strong>Solo — S’entraîner</strong><small>1 joueur · 10 clés · sans chrono · aides et corrections</small></span>
         </button>
         <button id="choose-duo" class="mode-choice mode-choice-duo" type="button" data-game-mode="duo" aria-pressed="false">
-          <strong>Duo</strong><small>2 joueurs · 5 clés<br>20 secondes par tour</small>
+          <span class="mode-choice-icon" aria-hidden="true">2</span>
+          <span><strong>Duo — Se défier</strong><small>2 joueurs · 20 s par tour · premier à 5 clés</small></span>
         </button>
       </div>
-      <div class="level-row" role="group" aria-label="Niveau des nombres en solo">
+      <div class="level-row" role="group" aria-label="Niveau des nombres">
         <span class="level-row-label">Niveau</span>
         <button class="level-choice" type="button" data-level="1" aria-pressed="true">Niveau 1<small>nombres de 1 à 12</small></button>
         <button class="level-choice" type="button" data-level="2" aria-pressed="false">Niveau 2<small>nombres jusqu’à 20</small></button>
@@ -1243,6 +1250,7 @@
         </div>
         <p id="operations-hint" class="operations-hint" aria-live="polite"></p>
       </fieldset>
+      </div>
       <button id="continue-current-mode" class="mode-continue" type="button">Continuer</button>
     </div>
   </section>
@@ -1392,7 +1400,7 @@
     <span data-mathsgo-confidentialite>Sans cookie ni traceur</span>
   </footer>
 
-  <script src="../../assets/js/coffres-settings.js?v=1"></script>
+  <script src="../../assets/js/coffres-settings.js?v=2"></script>
   <script>
     (() => {
       "use strict";
@@ -1511,6 +1519,11 @@
           activeTrigger = trigger instanceof HTMLElement && trigger !== document.body && !dialog.contains(trigger) ? trigger : null;
           activeEscapeAction = onEscape;
           dialog.hidden = false;
+          const settingsScroll = dialog.querySelector(".mode-settings-scroll");
+          if (settingsScroll) {
+            settingsScroll.scrollTop = 0;
+            settingsScroll.scrollLeft = 0;
+          }
           window.requestAnimationFrame(() => {
             if (activeDialog !== dialog) return;
             const target = resolveNode(dialog, initialFocus) || focusableNodes(dialog)[0] || dialog;
@@ -1606,7 +1619,7 @@
           window.location.replace(modeUrl(config.mode, config.operations, config.level));
           return;
         }
-        const changed = !settingsCore.sameOperations(selectedOperations, config.operations);
+        const changed = selectedLevel !== config.level || !settingsCore.sameOperations(selectedOperations, config.operations);
         selectedOperations = config.operations;
         selectedLevel = config.level;
         const url = new URL(window.location.href);
@@ -1819,15 +1832,38 @@
         return pairs;
       }
 
-      function pairFor(nextMode) {
-        if (nextMode === "sum" || nextMode === "product") return [randomInteger(2, 9), randomInteger(2, 9)];
-        if (nextMode === "difference") {
-          const difference = randomInteger(2, 8);
-          const low = randomInteger(1, 12 - difference);
-          return [low + difference, low];
+      function levelRules(nextLevel) {
+        if (nextLevel === 2) {
+          return { fill: [1, 20], sum: [6, 20], difference: { high: [10, 20], gap: 3 }, product: { big: [11, 20], small: [3, 15] }, quotient: { divisor: [6, 20], quotient: [2, 9] } };
         }
-        const divisor = randomInteger(2, 6);
-        const quotient = randomInteger(2, 6);
+        return { fill: [1, 12], sum: [2, 9], difference: { high: [3, 12], gap: 2, gapMax: 8 }, product: { big: [2, 9], small: [2, 9] }, quotient: { divisor: [2, 6], quotient: [2, 6] } };
+      }
+
+      function pairFor(nextMode, nextLevel = selectedLevel) {
+        const rules = levelRules(nextLevel);
+        if (nextLevel !== 2) {
+          if (nextMode === "sum" || nextMode === "product") return [randomInteger(2, 9), randomInteger(2, 9)];
+          if (nextMode === "difference") {
+            const difference = randomInteger(2, 8);
+            const low = randomInteger(1, 12 - difference);
+            return [low + difference, low];
+          }
+          const divisor = randomInteger(2, 6);
+          const quotient = randomInteger(2, 6);
+          return [divisor * quotient, divisor];
+        }
+        if (nextMode === "sum") return [randomInteger(rules.sum[0], rules.sum[1]), randomInteger(rules.sum[0], rules.sum[1])];
+        if (nextMode === "difference") {
+          const high = randomInteger(rules.difference.high[0], rules.difference.high[1]);
+          const low = randomInteger(1, high - rules.difference.gap);
+          return [high, low];
+        }
+        if (nextMode === "product") {
+          const pair = [randomInteger(rules.product.big[0], rules.product.big[1]), randomInteger(rules.product.small[0], rules.product.small[1])];
+          return randomInteger(0, 1) ? pair : [pair[1], pair[0]];
+        }
+        const divisor = randomInteger(rules.quotient.divisor[0], rules.quotient.divisor[1]);
+        const quotient = randomInteger(rules.quotient.quotient[0], rules.quotient.quotient[1]);
         return [divisor * quotient, divisor];
       }
 
@@ -1848,7 +1884,8 @@
         clearRuneStates();
         challengeNumber += 1;
         mode = nextBalancedMode();
-        values = Array.from({ length: SIZE * SIZE }, () => randomInteger(1, 12));
+        const bounds = levelRules(selectedLevel).fill;
+        values = Array.from({ length: SIZE * SIZE }, () => randomInteger(bounds[0], bounds[1]));
         const pairs = neighborPairs();
         const [firstPosition, secondPosition] = pairs[randomInteger(0, pairs.length - 1)];
         const [firstValue, secondValue] = pairFor(mode);
@@ -2017,6 +2054,7 @@
 
       function start({ moveFocus = false, focusTarget = null, showRules = false } = {}) {
         gameStarted = true;
+        document.querySelector("#duo-level-label").textContent = `niveau ${selectedLevel}`;
         endTurnClock();
         turnClockPauseReasons.delete("mode");
         if (pendingTimer) window.clearTimeout(pendingTimer);
@@ -2090,6 +2128,7 @@
           challengeNumber,
           operationCycle: [...operationCycle],
           selectedOperations: selectedOperations.slice(),
+          level: selectedLevel,
           locked,
           timerActive: turnClockActive,
           timerPaused: turnClockPauseReasons.size > 0,

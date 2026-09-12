@@ -142,8 +142,8 @@ test("les deux Coffres proposent Solo ou Duo sans surcharger la barre de navigat
 
   for (const [path, html] of [["duo", duel], ["solo", solo]]) {
     assert.match(html, /id="mode-dialog"[^>]*role="dialog"[^>]*aria-modal="true"[^>]*aria-labelledby="mode-title"/, path);
-    assert.match(html, /id="choose-solo"[\s\S]*<strong>Solo<\/strong>[\s\S]*10 clés[\s\S]*Sans chrono/, path);
-    assert.match(html, /id="choose-duo"[\s\S]*<strong>Duo<\/strong>[\s\S]*5 clés[\s\S]*20 secondes par tour/, path);
+    assert.match(html, /id="choose-solo"[\s\S]*<strong>Solo — S’entraîner<\/strong>[\s\S]*10 clés[\s\S]*sans chrono/, path);
+    assert.match(html, /id="choose-duo"[\s\S]*<strong>Duo — Se défier<\/strong>[\s\S]*20 s par tour[\s\S]*5 clés/, path);
     assert.match(html, /window\.location\.replace\(modeUrl\(config.mode, config.operations, config.level\)\)/, path);
     assert.match(html, /<button class="mode-switch-button"[^>]*data-change-mode>Réglages<\/button>/, path);
     assert.match(html, /\.mode-switch-button\s*\{[^}]*min-height:\s*40px/, path);

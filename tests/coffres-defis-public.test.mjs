@@ -111,8 +111,8 @@ test("les deux portes Coffres donnent accès aux modes solo et duo", () => {
   for (const path of coffresPaths) {
     const html = pages[path];
     assert.match(html, /id="mode-dialog"[^>]*role="dialog"[^>]*aria-modal="true"[^>]*aria-labelledby="mode-title"/, path);
-    assert.match(html, /id="choose-solo"[\s\S]*<strong>Solo<\/strong>/, path);
-    assert.match(html, /id="choose-duo"[\s\S]*<strong>Duo<\/strong>/, path);
+    assert.match(html, /id="choose-solo"[\s\S]*<strong>Solo — S’entraîner<\/strong>/, path);
+    assert.match(html, /id="choose-duo"[\s\S]*<strong>Duo — Se défier<\/strong>/, path);
     assert.match(html, /data-change-mode>Réglages/, path);
     assert.match(html, /function modeUrl\(nextMode,[\s\S]*coffres_magiques_solo\.html[\s\S]*coffres_magiques\.html[\s\S]*new URLSearchParams\(\{ mode: nextMode, from: origin \}\)/, path);
     assert.match(html, /settingsCore.createChoices\(modeDialog, CURRENT_MODE, confirmSettings\)/, path);
