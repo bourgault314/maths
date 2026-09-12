@@ -13,6 +13,10 @@ function sourceFunction(name) {
 }
 
 test("les choix d’opérations sont validés, dédoublonnés et transmis dans l’adresse", () => {
+  assert.equal(settings.normalizeLevel("1"), 1);
+  assert.equal(settings.normalizeLevel("2"), 2);
+  assert.equal(settings.normalizeLevel("3"), 3);
+  assert.equal(settings.normalizeLevel("99"), 1);
   assert.deepEqual(settings.readOperations(""), settings.OPERATIONS);
   assert.deepEqual(settings.readOperations("?operations=inconnu"), settings.OPERATIONS);
   assert.deepEqual(settings.readOperations("?operations=quotient,sum,sum,inconnu"), ["sum", "quotient"]);
@@ -54,7 +58,7 @@ class Element {
 function choiceFixture(currentMode = "solo") {
   const inputs = settings.OPERATIONS.map(value => Object.assign(new Element(), { value, checked: true }));
   const modes = ["solo", "duo"].map(gameMode => Object.assign(new Element(), { dataset: { gameMode } }));
-  const levels = [1, 2].map(level => Object.assign(new Element(), { dataset: { level: String(level) } }));
+  const levels = [1, 2, 3].map(level => Object.assign(new Element(), { dataset: { level: String(level) } }));
   const elements = Object.fromEntries([".level-row", "#continue-current-mode", "#operations-hint", "#mode-title"].map(selector => [selector, new Element()]));
   const dialog = { querySelector: selector => elements[selector], querySelectorAll: selector => ({ "[data-game-mode]": modes, "[data-level]": levels, "[name=operation]": inputs })[selector] };
   const confirmed = [];
@@ -82,13 +86,13 @@ test("le niveau peut être changé en Solo comme en Duo et annonce une nouvelle 
   for (const mode of ["solo", "duo"]) {
     const f = choiceFixture(mode);
     f.choices.reset(["sum", "product"], 1, true);
-    f.levels[1].handlers.click();
+    f.levels[2].handlers.click();
     assert.equal(f.elements["#continue-current-mode"].textContent, "Nouvelle partie");
-    assert.equal(f.levels[1].attributes["aria-pressed"], "true");
+    assert.equal(f.levels[2].attributes["aria-pressed"], "true");
     assert.equal(f.confirmed.length, 0);
     f.elements["#continue-current-mode"].handlers.click();
-    assert.deepEqual(f.confirmed, [{ mode, operations: ["sum", "product"], level: 2 }]);
-    f.choices.reset(["sum", "product"], 2, true);
+    assert.deepEqual(f.confirmed, [{ mode, operations: ["sum", "product"], level: 3 }]);
+    f.choices.reset(["sum", "product"], 3, true);
     assert.equal(f.elements["#continue-current-mode"].textContent, "Continuer");
     f.levels[0].handlers.click();
     assert.equal(f.choices.read().level, 1);
