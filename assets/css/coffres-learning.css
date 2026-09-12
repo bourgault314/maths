@@ -77,6 +77,10 @@
   .correction-card .quantity-row { min-height: 32px; }
   .correction-card .area-model { --area-unit: 9px; }
 }
+@media (max-width: 380px) {
+  /* Les noms complets restent lisibles dans les deux colonnes du petit téléphone. */
+  .operation-option .operation-symbol { display: none; }
+}
 @media (max-height: 640px) {
   .mode-dialog-card { padding: 14px; }
   .mode-dialog-card h2 { margin-bottom: 10px; font-size: 1.35rem; }
