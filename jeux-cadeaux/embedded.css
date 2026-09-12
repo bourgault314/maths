@@ -14,7 +14,8 @@ html.embedded {
 .embedded .play-head h1 { display: none; }
 .embedded .play-head small { font-size: .75rem; }
 .embedded .instructions { min-height: 0; margin: 5px 0 10px; }
-.embedded .difficulty { margin: 0 auto 12px; }
+.embedded .difficulty { margin: 0 auto 12px; max-width: 100%; min-inline-size: 0; }
+.embedded .difficulty label { min-width: 0; flex: 1; }
 .embedded .difficulty span { padding-inline: 16px; }
 .embedded .stage { height: clamp(270px, 45vw, 360px); }
 .embedded .memory-grid { width: min(90%, 325px); }
@@ -27,6 +28,7 @@ html.embedded {
 .embedded .intro h2 { font-size: 1.15rem; }
 .embedded .intro p { font-size: .92rem; }
 @media (max-width: 400px) {
+  .embedded .difficulty span { padding-inline: 8px; }
   .embedded .memory-grid { width: min(90%, 245px); }
   .embedded .intro p { font-size: .84rem; }
   .embedded .play-head small { font-size: .65rem; }

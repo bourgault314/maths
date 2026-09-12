@@ -13,7 +13,7 @@
     const frame = document.createElement("iframe");
     frame.className = "short-game-frame";
     frame.title = games[game] + " — aire de jeu";
-    frame.src = "/jeux-cadeaux/index.html?jeu=" + game + "&integre=1";
+    frame.src = "/jeux-cadeaux/index.html?jeu=" + game + "&integre=1&v=2";
     function receive(event) {
       if (event.origin !== location.origin || event.source !== frame.contentWindow) return;
       if (event.data?.type === "mathsgo-short-game:return") onReturn();

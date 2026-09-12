@@ -44,7 +44,7 @@ function create(query = "?domain=jeux-recherches") {
     assert.equal(d.q(".site-shell"), shell);
     assert.equal(d.q("#resource-grid").hidden, true);
     const frame = d.q("#short-game-view iframe");
-    assert.ok(frame.src.endsWith("?jeu=" + id + "&integre=1"));
+    assert.ok(frame.src.endsWith("?jeu=" + id + "&integre=1&v=2"));
     d.send(frame, { type: "mathsgo-short-game:height", height: 570 }, "https://mathsgo.re");
     assert.equal(frame.style.height, "570px");
     d.send(frame, { type: "mathsgo-short-game:return" }, "https://example.com");
