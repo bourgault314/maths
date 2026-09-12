@@ -1263,7 +1263,8 @@
        le défi et les commandes se placent à sa gauche, les fenêtres pédagogiques s'élargissent
        et leurs schémas grandissent réellement (points, rangées, repères, légendes). */
     @media (min-width: 900px) {
-      .topbar { width: min(100%, 1180px); }
+      .topbar { width: min(1180px, calc(100% - 32px)); }
+      body.fullscreen-active .fullscreen-toggle { position: static; }
 
       .solo-page {
         --board-size: min(calc(100svh - 150px), 640px, calc(100vw - 520px));
@@ -1291,7 +1292,7 @@
       .solo-heading p:last-child { font-size: 1rem; }
       .mode-switch-button { font-size: .82rem; }
       .solo-stats { padding: 10px 18px; font-size: 1.3rem; }
-      .solo-score { justify-items: start; gap: 5px; }
+      .solo-score { align-self: center; justify-items: center; gap: 5px; }
       .pair-hint { font-size: .88rem; }
       .pair-hint::before { width: 9px; height: 9px; }
 
@@ -1308,12 +1309,13 @@
         grid-column: 1;
         grid-row: 3;
         width: 100%;
-        min-height: 96px;
+        min-height: 124px;
         margin: 0;
-        font-size: 1.3rem;
+        font-size: 1.4rem;
       }
 
-      .challenge strong { font-size: 2.2rem; }
+      .challenge #challenge-text { font-size: clamp(1.7rem, 2.4vw, 2rem); line-height: 1.2; }
+      .challenge strong { font-size: 1.5em; }
       .status-line.good { font-size: 1.15rem; }
       /* La ligne du bouton garde sa hauteur même vide : rien ne bouge quand « Coffre suivant » apparaît. */
       .next-row { grid-column: 1; grid-row: 4; min-height: 62px; align-content: center; }
