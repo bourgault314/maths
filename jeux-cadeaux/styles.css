@@ -30,3 +30,23 @@
 @media(max-height:700px) and (max-width:650px){.stage{height:275px}.memory-grid{width:min(90%,245px)}.topbar{height:50px}.instructions{min-height:38px;margin-block:3px}.play-head{margin-bottom:4px}.controls{padding-top:9px}.keyboard-hint{margin-top:6px}}
 @media(max-height:500px) and (min-width:651px){.topbar{height:45px}.brand img{width:95px;height:36px}main{padding-top:0}#play{display:grid;grid-template-columns:220px minmax(0,1fr);column-gap:16px}.play-head{grid-column:1/-1;min-height:48px;margin:0 0 8px}.play-head h1{font-size:1.2rem}.stage{grid-column:2;grid-row:2/7;height:260px}.instructions,.status-row,.controls,.keyboard-hint{grid-column:1}.instructions{font-size:.8rem;min-height:0}.status-row{flex-wrap:wrap;justify-content:center;font-size:.7rem;padding:4px}.controls{padding-top:4px}.keyboard-hint{font-size:.65rem;margin:6px 0}.memory-grid{width:min(90%,235px)}.tempo-orb{width:205px}.intro{padding:12px}.intro>svg{width:96px;height:72px}.intro p{font-size:.8rem}.intro h2{font-size:1rem}}
 @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important}.game-card:hover{transform:none}}
+
+/* Course du dodo : horizon identique sur téléphone et ordinateur. */
+.stage.runner-stage,.embedded .stage.runner-stage{width:min(100%,760px);height:auto;aspect-ratio:20/11;margin-inline:auto;background:#e6efdb;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
+.runner-scene{touch-action:none}
+.runner-controls{flex-wrap:wrap}
+.controls .runner-jump{min-height:64px;width:min(100%,380px);font-size:1.1rem;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
+.runner-jump small{display:block;font-size:.7rem;font-weight:normal;margin-top:4px}
+.runner-jump.is-held{transform:translateY(3px);box-shadow:0 1px 0 #1f5a4f;filter:brightness(1.12)}
+.runner-journey{display:grid;grid-template-columns:1fr auto;align-items:center;gap:6px 14px;width:min(100%,760px);margin:0 auto 10px;font-size:.76rem;color:var(--muted)}
+.runner-journey strong{color:var(--ink)}
+.runner-journey progress{grid-column:1/-1;appearance:none;width:100%;height:6px;border:0;border-radius:5px;overflow:hidden;background:#dce4dc}
+.runner-journey progress::-webkit-progress-bar{background:#dce4dc}
+.runner-journey progress::-webkit-progress-value{background:#318979;border-radius:5px}
+.runner-journey progress::-moz-progress-bar{background:#318979}
+.runner-result-detail{font-size:.86rem;line-height:1.6;color:var(--muted);margin:12px 0}
+#play.runner-play .status-row{font-variant-numeric:tabular-nums;flex-wrap:wrap;justify-content:space-between}
+#play.runner-play #time-label{font-size:1.08rem;color:var(--green)}
+@media(max-width:650px){.controls .runner-jump{width:100%;min-height:68px}.runner-journey{font-size:.7rem;gap:6px}.runner-play .keyboard-hint{font-size:.7rem;line-height:1.5}.runner-play .instructions{min-height:34px}}
+.runner-play .stage:not(.runner-stage){height:auto;min-height:270px}
+@media(max-height:500px) and (min-width:651px){.runner-play .runner-journey{grid-column:1}}
