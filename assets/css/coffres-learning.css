@@ -4,6 +4,7 @@
 .mode-heading, .mode-dialog-card .mode-continue { flex-shrink: 0; }
 .mode-settings-scroll { min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 2px 3px 3px; }
 .mode-dialog-card .mode-introduction { max-width: 390px; margin: 8px auto; color: #49677b; line-height: 1.42; }
+.mode-choice-icon svg { display: block; width: 30px; height: 30px; fill: currentColor; }
 .mode-choice-solo[aria-pressed="true"] { border-color: #087c75; box-shadow: inset 0 0 0 1px #087c75, 0 5px 13px rgba(28, 69, 101, .08); }
 .mode-choice-duo[aria-pressed="true"] { border-color: #c67a12; box-shadow: inset 0 0 0 1px #c67a12, 0 5px 13px rgba(28, 69, 101, .08); }
 /* Les niveaux gardent les boutons arrondis du Solo, désormais disponibles en Duo. */
