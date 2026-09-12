@@ -137,12 +137,48 @@ run("Galets : lâchers au centre et sept poses visibles", () => {
   }, 65);
   assert.match(d.q("#result-score").textContent, /^7 \/ 7/); d.dom.window.close();
 });
-run("Tempo : douze signaux réussis et doubles touches ignorées", () => {
+run("Tempo : le dessin commande, l’inversion est annoncée, trois erreurs arrêtent la partie", () => {
   const d = create("?jeu=tempo&integre=1"); d.prepare("tempo");
-  d.until(() => !d.q("#result").hidden, () => {
-    if (d.q(".signal-text")?.textContent === "TOUCHE") { d.click(".tempo-orb"); d.click(".tempo-orb"); }
-  }, 45);
-  assert.match(d.q("#result-score").textContent, /^12 \/ 12/); d.dom.window.close();
+  assert.equal(d.q(".difficulty").hidden, true, "Un seul jeu qui monte : pas de choix de niveau");
+  assert.equal(d.q("#play").classList.contains("tempo-play"), true);
+  assert.equal(d.q("#time-label").textContent, "0:00", "Le chrono compte, il ne décompte plus");
+  assert.match(d.q("#tempo-rule").textContent, /Touche la LAVE, laisse passer la PIERRE/);
+  assert.equal(d.q("#tempo-rule").classList.contains("envers"), false);
+  const inverse = () => d.q("#tempo-rule").classList.contains("envers");
+  const reussis = () => Number(d.q("#progress-label").textContent.match(/^\d+/)[0]);
+  let repondu = false, menteurs = 0, doubles = 0, annonces = 0, dessins = 0, annonce = "";
+  // Le joueur obéit au dessin et double chaque touche : il ne doit rien perdre.
+  d.until(() => annonces > 0 && menteurs > 0 && doubles > 6, () => {
+    const orb = d.q(".tempo-orb");
+    if (orb.classList.contains("envers")) {
+      // L’inversion passe par un écran d’annonce, jamais par surprise.
+      if (!annonce) { annonces++; annonce = d.q(".signal-text").textContent + " / " + d.q(".signal-note").textContent + " / " + d.q("#tempo-rule").textContent.trim(); }
+      return;
+    }
+    annonce = "";
+    if (!orb.classList.contains("signal")) { repondu = false; return; }
+    if (repondu) return;
+    repondu = true;
+    const lave = orb.classList.contains("lave"), mot = d.q(".signal-text").textContent;
+    assert.ok(mot === "LAVE" || mot === "PIERRE", "Un mot est toujours écrit : " + mot);
+    if (d.q(".signal-icon svg")) dessins++;
+    if ((mot === "LAVE") !== lave) menteurs++;
+    if (lave !== inverse()) {
+      const avant = reussis();
+      d.click(".tempo-orb"); d.click(".tempo-orb"); doubles++;
+      assert.equal(reussis(), avant + 1, "Une touche doublée ne compte qu’une fois");
+    }
+    assert.match(d.q("#progress-label").textContent, /\u00b7 3 vies$/, "Obéir au dessin ne coûte aucune vie");
+  }, 85);
+  assert.ok(dessins > 6, "Le signal montre un dessin, pas un symbole");
+  assert.equal(annonce, "À L’ENVERS / touche les PIERRES, laisse la LAVE / À l’envers : touche la PIERRE, laisse passer la LAVE.");
+  assert.equal(inverse(), true, "Le bandeau change de couleur en même temps que la consigne");
+  // Plus personne ne joue : trois erreurs suffisent à terminer la partie.
+  d.until(() => !d.q("#result").hidden, () => {}, 30);
+  assert.equal(d.q("#result-title").textContent, "Partie terminée");
+  assert.match(d.q("#result-score").textContent, /^\d+ signaux réussis · \d+:\d\d$/);
+  assert.match(d.q("#result-text").textContent, /doigt|pierre|dessin|règle|signal/);
+  assert.equal(d.frames.size, 0, "La boucle s’arrête avec la partie"); d.dom.window.close();
 });
 run("Pause et reprise : horloge gelée, une seule boucle après un double clic", () => {
   const d = create("?jeu=dodo&integre=1"); d.prepare("dodo"); for (let i = 0; i < 30; i++) d.step();
