@@ -3,6 +3,7 @@ import test from "node:test";
 import { readFileSync } from "node:fs";
 import vm from "node:vm";
 import settings from "../assets/js/coffres-settings.js";
+import engine from "../assets/js/coffres-moteur.js";
 
 const solo = readFileSync(new URL("../outils/calcul_mental/coffres_magiques_solo.html", import.meta.url), "utf8");
 function sourceFunction(name) {
@@ -34,7 +35,8 @@ test("les choix d’opérations sont validés, dédoublonnés et transmis dans l
     const counts = selected.map(operation => series.filter(item => item === operation).length);
     assert.ok(Math.max(...counts) - Math.min(...counts) <= 1);
   }
-  assert.deepEqual(settings.soloSeries(settings.OPERATIONS), ["sum", "sum", "sum", "difference", "difference", "product", "product", "product", "quotient", "quotient"]);
+  // Avec les quatre opérations : 3 additions, 3 soustractions, 2 multiplications, 2 divisions.
+  assert.deepEqual(settings.soloSeries(settings.OPERATIONS), ["sum", "sum", "sum", "difference", "difference", "difference", "product", "product", "quotient", "quotient"]);
 });
 
 class Element {
@@ -120,7 +122,7 @@ function gameFixture() {
   const nodes = Array.from({ length: 16 }, () => new Element());
   const board = { querySelector: selector => nodes[Number(selector.match(/data-index="(\d+)"/)[1])], querySelectorAll: () => nodes };
   const context = vm.createContext({
-    Element, board, settingsCore: settings,
+    Element, board, settingsCore: settings, engine,
     document: { createTextNode: text => new Element(text) },
     window: {
       setTimeout(callback, delay) { const id = ++timerId; timers.set(id, { at: now + delay, callback }); return id; },
@@ -137,8 +139,9 @@ function gameFixture() {
     const dialogs = { close() {}, trigger() { return null; } };
     let mode = "sum", target = 11, keys = 3, boardId = 1;
     let values = [7, 9, 2, 8, 3, 4, 5, 6, 1, 2, 3, 4, 5, 6, 7, 8];
-    let selectedOperations = ["sum"], modes = [], gameStarted = true, gameLevel = 2, level = 2;
+    let selectedOperations = ["sum"], modes = [], familyPlan = [], gameStarted = true, gameLevel = 2, level = 2, solutionCount = 1;
     let firstSelection = null, locked = false, bonusOpen = false, pendingTimer = null, lastResolvedPosition = null, wonMessage = "";
+    const { row, column, adjacent, calculate } = engine;
     const opened = [];
     const openCorrection = options => opened.push(options);
     const makeElement = (tag, className, text = "") => new Element(text);
@@ -146,11 +149,12 @@ function gameFixture() {
     const advance = () => {};
     const selectBonus = () => {};
     const shuffle = array => array.slice();
-    const makeChallenge = nextMode => { mode = nextMode || modes[keys]; boardId += 1; locked = false; values = Array(16).fill(2); };
-    ${["row", "column", "adjacent", "calculate", "expression", "clearSelection", "resolve", "select", "start", "retryAfterLearning", "renderCorrectionCalculation"].map(sourceFunction).join("\n")}
+    let replayed = null;
+    const makeChallenge = (nextMode, { target: replayTarget = null } = {}) => { mode = nextMode || modes[keys]; replayed = replayTarget; boardId += 1; locked = false; values = Array(16).fill(2); };
+    ${["expression", "clearSelection", "resolve", "select", "start", "retryAfterLearning", "renderCorrectionCalculation"].map(sourceFunction).join("\n")}
     this.api = {
       select, start, retryAfterLearning,
-      state: () => ({ keys, mode, gameLevel, boardId, locked, opened: opened.length, selected: firstSelection, message: status.textContent }),
+      state: () => ({ keys, mode, gameLevel, boardId, locked, opened: opened.length, selected: firstSelection, message: status.textContent, replayed }),
       format(operation, first, second) { mode = operation; const container = new Element(); renderCorrectionCalculation(container, "Ton essai", first, second); return container; }
     };
   `, context);
@@ -172,7 +176,7 @@ test("une mauvaise paire reste rouge avant la correction et les clics sont bloqu
   f.tick(1); assert.equal(f.api.state().opened, 1);
 });
 
-test("recommencer annule la correction en attente et Nouveau plateau conserve les clés et le niveau", () => {
+test("recommencer annule la correction en attente et Nouveau plateau rejoue le même calcul sans toucher aux clés", () => {
   const f = gameFixture();
   f.api.select(0); f.api.select(1); f.api.start(); f.tick(1200);
   assert.equal(f.api.state().opened, 0);
@@ -181,6 +185,7 @@ test("recommencer annule la correction en attente et Nouveau plateau conserve le
   retry.api.select(0); retry.api.select(1); retry.tick(1150);
   retry.api.retryAfterLearning();
   assert.equal(retry.api.state().mode, "sum");
+  assert.equal(retry.api.state().replayed, 11, "le même nombre revient sur le nouveau plateau");
   assert.equal(retry.api.state().keys, 3);
   assert.equal(retry.api.state().gameLevel, 2);
   assert.equal(retry.api.state().boardId, 2);

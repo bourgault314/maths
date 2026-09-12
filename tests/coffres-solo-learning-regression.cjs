@@ -241,6 +241,7 @@ async function assertPointVisual(page, selector, mode, label) {
         aria: node.getAttribute("aria-label"),
         viewportWidth: innerWidth,
         layoutColumns: getComputedStyle(node.querySelector(".demo-interpretations")).gridTemplateColumns.split(/\s+/).filter(Boolean).length,
+        insideCorrection: Boolean(node.closest("#correction-visual")),
         views: [...node.querySelectorAll(".demo-interpretation")].map(view => {
           const bar = view.querySelector(".quotient-bar");
           return {
@@ -266,7 +267,8 @@ async function assertPointVisual(page, selector, mode, label) {
     });
     const labels = data.views.map(view => view.label);
     assert(labels.length === 2, `${label} : les deux interprétations du quotient manquent.`);
-    assert(data.layoutColumns === (data.viewportWidth <= 520 ? 1 : 2), `${label} : les interprétations du quotient n’ont pas la disposition attendue à ${data.viewportWidth} px.`);
+    // La correction empile toujours les deux interprétations (coffres-learning.css) ; l'aide et le cours passent à deux colonnes au-dessus de 520 px.
+    assert(data.layoutColumns === (data.viewportWidth <= 520 || data.insideCorrection ? 1 : 2), `${label} : les interprétations du quotient n’ont pas la disposition attendue à ${data.viewportWidth} px.`);
     const grouping = labels[0].match(/^Grouper : (\d+) paquets de (\d+)$/);
     const sharing = labels[1].match(/^Partager : (\d+) paquets de (\d+)$/);
     assert(grouping, `${label} : le groupement en paquets n’est pas explicite.`);
@@ -536,7 +538,7 @@ async function auditDuoBarModels(browser, base, width, errors) {
       const differenceKnown = document.querySelector(".difference-known");
       const differenceMarker = document.querySelector(".difference-marker");
       const sumMarker = document.querySelector(".sum-marker");
-      const divider = document.querySelector(".sum-bar-model .bar-row:last-child .bar-segment:first-child");
+      const divider = [...document.querySelectorAll(".sum-bar-model .bar-row")].at(-1).querySelector(".bar-segment:first-child");
       const conventions = document.querySelector("#rules .operation-conventions");
       const pseudo = (element, selector) => {
         const style = getComputedStyle(element, selector);
@@ -704,6 +706,7 @@ async function auditPetitEcranAutomatique(browser, base, errors) {
     await page.waitForFunction(previous => window.MATHSGO_COFFRES_SOLO.getState().boardId > previous, before.boardId);
     assert(await page.locator("#next-button").isHidden(), "automatique 390 : le bouton « Coffre suivant » apparaît sur téléphone.");
     assert((await state(page)).keys === before.keys + 1, "automatique 390 : la clé gagnée n’est pas conservée.");
+    assert(!(await page.locator("#status").innerText()).includes("autre"), "automatique 390 : le repère de la seconde paire s'affiche sur téléphone.");
   } finally {
     await page.close();
   }
@@ -726,15 +729,28 @@ async function restartUntil(page, predicate, label, tries = 400) {
   throw new Error(`${label} : aucun plateau ne remplit la condition après ${tries} parties.`);
 }
 
-// Le tirage garantit 1 ou 2 paires voisines gagnantes, jamais plus, et le repère le dit.
+// Le tirage garantit 1 ou 2 paires voisines gagnantes, jamais plus ; les cibles suivent la table
+// des règles du niveau ; aucun repère de paires n'est affiché avant la recherche.
+const TARGET_RANGES = {
+  1: { sum: [4, 18], difference: [2, 9], product: [4, 100], quotient: [2, 9] },
+  2: { sum: [12, 98], difference: [11, 97], product: [22, 200], quotient: [11, 20] },
+  3: { sum: [20, 178], difference: [10, 89], product: [36, 297], quotient: [12, 49] }
+};
+const CELL_RANGES = {
+  1: { sum: [2, 9], difference: [2, 18], product: [2, 10], quotient: [2, 81] },
+  2: { sum: [2, 89], difference: [2, 99], product: [2, 20], quotient: [2, 200] },
+  3: { sum: [10, 89], difference: [10, 99], product: [3, 49], quotient: [3, 300] }
+};
+
 async function auditNombreDePaires(browser, base, level, errors) {
   const page = await browser.newPage({ viewport: { width: 1366, height: 768 } });
   const label = `paires niveau ${level}`;
   page.on("pageerror", error => errors.push(`${label} : ${error.message}`));
   try {
-    await page.goto(`${base}/outils/calcul_mental/coffres_magiques_solo.html?mode=solo${level === 2 ? "&niveau=2" : ""}`, { waitUntil: "load" });
+    await page.goto(`${base}/outils/calcul_mental/coffres_magiques_solo.html?mode=solo${level > 1 ? `&niveau=${level}` : ""}`, { waitUntil: "load" });
     await page.locator("#start-game").click();
     await page.locator("#lesson").waitFor({ state: "hidden" });
+    assert((await page.locator("#pair-count").count()) === 0, `${label} : le repère « 1 paire / 2 paires » est encore dans la page.`);
     const seen = { 1: 0, 2: 0 };
     const modesSeen = new Set();
     for (let board = 0; board < 120; board += 1) {
@@ -743,24 +759,13 @@ async function auditNombreDePaires(browser, base, level, errors) {
       const found = allSolutions(current);
       assert(found.length === 1 || found.length === 2, `${label} : ${found.length} paires gagnantes pour ${current.mode} = ${current.target} (${current.values.join(" ")}).`);
       assert(found.length === current.solutions, `${label} : l'appli annonce ${current.solutions} paire(s) au lieu de ${found.length}.`);
-      const hint = await page.locator("#pair-count").innerText();
-      assert(hint.trim() === (found.length === 1 ? "1 paire" : "2 paires"), `${label} : le repère dit « ${hint} » pour ${found.length} paire(s).`);
-      assert(await page.locator("#pair-count").isVisible(), `${label} : le repère de paires n'est pas visible.`);
-      const fillMax = level === 2 ? 20 : 12;
-      current.values.forEach((value, position) => {
-        const inSolution = found.some(pair => pair.includes(position));
-        if (current.mode === "quotient" && inSolution) return;
-        assert(value >= 1 && value <= fillMax, `${label} : la case ${value} sort de 1 à ${fillMax} (${current.mode}).`);
+      assert(!(await page.locator("#status").innerText()).includes("autre"), `${label} : la seconde paire est annoncée avant la recherche.`);
+      const [cellMinimum, cellMaximum] = CELL_RANGES[level][current.mode];
+      current.values.forEach(value => {
+        assert(value >= cellMinimum && value <= cellMaximum, `${label} : la case ${value} sort de ${cellMinimum} à ${cellMaximum} (${current.mode}).`);
       });
-      if (level === 2) {
-        const ranges = { sum: [12, 40], difference: [3, 19], product: [33, 300], quotient: [2, 9] };
-        const [minimum, maximum] = ranges[current.mode];
-        assert(current.target >= minimum && current.target <= maximum, `${label} : cible ${current.target} hors bornes pour ${current.mode}.`);
-      } else {
-        const ranges = { sum: [4, 18], difference: [2, 8], product: [4, 81], quotient: [2, 6] };
-        const [minimum, maximum] = ranges[current.mode];
-        assert(current.target >= minimum && current.target <= maximum, `${label} : cible ${current.target} hors des tirages historiques pour ${current.mode}.`);
-      }
+      const [minimum, maximum] = TARGET_RANGES[level][current.mode];
+      assert(current.target >= minimum && current.target <= maximum, `${label} : cible ${current.target} hors des règles du niveau pour ${current.mode}.`);
       if (found.length === 2) {
         const cells = found.flat();
         assert(new Set(cells).size === 4, `${label} : les deux paires partagent une case.`);
@@ -772,6 +777,133 @@ async function auditNombreDePaires(browser, base, level, errors) {
     }
     assert(seen[1] > 10 && seen[2] > 10, `${label} : répartition suspecte des paires (${seen[1]} simples, ${seen[2]} doubles).`);
     assert(modesSeen.size === 4, `${label} : les quatre opérations n'ont pas toutes été tirées.`);
+  } finally {
+    await page.close();
+  }
+}
+
+// La série de dix clés : 3 additions, 3 soustractions, 2 multiplications, 2 divisions, dont au moins
+// deux clés tirées parmi les familles de faits (compléments, doubles, moitiés, × 10, ÷ 10).
+async function auditSerieEtFamilles(browser, base, errors) {
+  const page = await browser.newPage({ viewport: { width: 1366, height: 768 } });
+  const label = "série et familles";
+  page.on("pageerror", error => errors.push(`${label} : ${error.message}`));
+  try {
+    for (const level of [1, 2, 3]) {
+      await page.goto(`${base}/outils/calcul_mental/coffres_magiques_solo.html?mode=solo${level > 1 ? `&niveau=${level}` : ""}`, { waitUntil: "load" });
+      await page.locator("#start-game").click();
+      await page.locator("#lesson").waitFor({ state: "hidden" });
+      for (let game = 0; game < 20; game += 1) {
+        const current = await state(page);
+        const counts = Object.fromEntries(["sum", "difference", "product", "quotient"].map(mode => [mode, current.modes.filter(item => item === mode).length]));
+        assert(counts.sum === 3 && counts.difference === 3 && counts.product === 2 && counts.quotient === 2, `${label} niveau ${level} : série ${JSON.stringify(counts)}.`);
+        assert(current.familyPlan.filter(Boolean).length === 2, `${label} niveau ${level} : ${current.familyPlan.filter(Boolean).length} familles planifiées.`);
+        await page.evaluate(() => window.MATHSGO_COFFRES_SOLO.start());
+      }
+      // La clé planifiée en famille est bien servie : on joue jusqu'à elle.
+      const played = await page.evaluate(() => {
+        const api = window.MATHSGO_COFFRES_SOLO;
+        api.start();
+        const plan = api.getState().familyPlan;
+        const families = [];
+        for (let key = 0; key < 10; key += 1) {
+          const current = api.getState();
+          if (plan[key]) families.push(current.family);
+          const pair = api.findSolutionPair(current.mode, current.target, current.values);
+          document.querySelector(`.rune[data-index="${pair.positions[0]}"]`).click();
+          document.querySelector(`.rune[data-index="${pair.positions[1]}"]`).click();
+          const next = document.querySelector("#next-button");
+          if (!next.hidden) next.click();
+        }
+        return { families, keys: api.getState().keys };
+      });
+      assert(played.keys === 10, `${label} niveau ${level} : la partie jouée n'a pas atteint dix clés.`);
+      assert(played.families.length === 2 && played.families.every(Boolean), `${label} niveau ${level} : familles servies ${JSON.stringify(played.families)}.`);
+    }
+  } finally {
+    await page.close();
+  }
+}
+
+// Après une erreur (ou « Montrer une solution »), le même nombre et la même opération reviennent
+// sur un nouveau plateau, sans toucher au compteur de clés.
+async function auditRejouerLeCalcul(browser, base, errors) {
+  const page = await browser.newPage({ viewport: { width: 1280, height: 720 } });
+  const label = "rejouer le calcul";
+  page.on("pageerror", error => errors.push(`${label} : ${error.message}`));
+  await page.addInitScript(() => {
+    const nativeTimeout = window.setTimeout.bind(window);
+    window.setTimeout = (callback, delay, ...args) => nativeTimeout(callback, Math.min(delay, 25), ...args);
+  });
+  try {
+    for (const level of [1, 2, 3]) {
+      await page.goto(`${base}/outils/calcul_mental/coffres_magiques_solo.html?mode=solo${level > 1 ? `&niveau=${level}` : ""}`, { waitUntil: "load" });
+      await page.locator("#start-game").click();
+      await page.locator("#lesson").waitFor({ state: "hidden" });
+      for (const mode of ["sum", "difference", "product", "quotient"]) {
+        const before = await restartUntil(page, candidate => candidate.mode === mode, `${label} ${mode}`);
+        const [wrongFirst, wrongSecond] = wrongPairFor(before);
+        await page.locator(`.rune[data-index="${wrongFirst}"]`).click();
+        await page.locator(`.rune[data-index="${wrongSecond}"]`).click();
+        await page.waitForFunction(() => document.activeElement.id === "correction-title");
+        assert((await page.locator("#close-correction").innerText()).trim() === "Nouveau plateau", `${label} : le bouton de la correction a changé.`);
+        await page.locator("#close-correction").click();
+        await page.locator("#correction-dialog").waitFor({ state: "hidden" });
+        const after = await state(page);
+        assert(after.boardId > before.boardId, `${label} niveau ${level} ${mode} : le plateau n'a pas changé.`);
+        assert(after.mode === mode && after.target === before.target, `${label} niveau ${level} ${mode} : on attendait ${mode} = ${before.target}, on a ${after.mode} = ${after.target}.`);
+        assert(after.keys === before.keys, `${label} niveau ${level} ${mode} : le compteur de clés a bougé.`);
+        assert(JSON.stringify(after.values) !== JSON.stringify(before.values), `${label} niveau ${level} ${mode} : le plateau est identique.`);
+        assert(allSolutions(after).length === after.solutions && after.solutions >= 1, `${label} niveau ${level} ${mode} : le plateau rejoué n'a pas sa solution.`);
+        const challenge = (await page.locator("#challenge-text").innerText()).trim();
+        assert(challenge.endsWith(String(before.target)), `${label} niveau ${level} ${mode} : le défi affiché est « ${challenge} ».`);
+
+        await page.locator("#help-button").click();
+        await page.waitForFunction(() => document.activeElement.id === "help-title");
+        await page.locator("#show-solution").click();
+        await page.waitForFunction(() => document.activeElement.id === "correction-title");
+        await page.locator("#close-correction").click();
+        await page.locator("#correction-dialog").waitFor({ state: "hidden" });
+        const shown = await state(page);
+        assert(shown.mode === mode && shown.target === before.target && shown.keys === before.keys, `${label} niveau ${level} ${mode} : après « Montrer une solution », le calcul a changé.`);
+      }
+    }
+  } finally {
+    await page.close();
+  }
+}
+
+// Grand écran : le repère de la seconde paire n'apparaît qu'après la première réussite, et
+// seulement s'il reste une paire ; téléphone : rien, l'enchaînement reste automatique.
+async function auditRepereSecondePaire(browser, base, errors) {
+  const page = await browser.newPage({ viewport: { width: 1280, height: 720 } });
+  const label = "repère seconde paire 1280 × 720";
+  page.on("pageerror", error => errors.push(`${label} : ${error.message}`));
+  try {
+    await page.goto(`${base}/outils/calcul_mental/coffres_magiques_solo.html?mode=solo`, { waitUntil: "load" });
+    await page.locator("#start-game").click();
+    await page.locator("#lesson").waitFor({ state: "hidden" });
+    for (const expected of [2, 1]) {
+      const before = await restartUntil(page, current => allSolutions(current).length === expected, `${label} (${expected} paire${expected > 1 ? "s" : ""})`);
+      assert(!(await page.locator("#status").innerText()).includes("autre"), `${label} : le repère est affiché avant la réussite.`);
+      const [first] = allSolutions(before);
+      await page.locator(`.rune[data-index="${first[0]}"]`).click();
+      await page.locator(`.rune[data-index="${first[1]}"]`).click();
+      await page.waitForFunction(() => document.activeElement.id === "next-button");
+      const status = (await page.locator("#status").innerText()).trim();
+      if (expected === 2) {
+        assert(status.includes("clé gagnée") && status.endsWith("Bien joué — il y en a une autre !"), `${label} : après la première paire, le message est « ${status} ».`);
+        await page.screenshot({ path: path.join(CAPTURES, "repere-seconde-paire-1280x720.png") });
+        const [, second] = allSolutions(before);
+        await page.locator(`.rune[data-index="${second[0]}"]`).click();
+        await page.locator(`.rune[data-index="${second[1]}"]`).click();
+        assert((await page.locator("#status").innerText()).trim().endsWith("aussi !"), `${label} : la seconde paire n'est pas confirmée.`);
+      } else {
+        assert(status.includes("clé gagnée") && !status.includes("autre"), `${label} : avec une seule paire, le message est « ${status} ».`);
+      }
+      await page.locator("#next-button").click();
+      await page.waitForFunction(previous => window.MATHSGO_COFFRES_SOLO.getState().boardId > previous, before.boardId);
+    }
   } finally {
     await page.close();
   }
@@ -844,7 +976,11 @@ async function assertBarVisual(page, selector, mode, label) {
     const data = await visual.evaluate((node, isSum) => {
       const box = element => { const r = element.getBoundingClientRect(); return { left: r.left, right: r.right, top: r.top, bottom: r.bottom, width: r.width, height: r.height }; };
       const rows = [...node.querySelectorAll(".bar-row")];
-      const parts = [...rows[1].querySelectorAll(":scope > .bar-part")].map(part => ({ ...box(part), text: part.textContent.trim(), gap: part.classList.contains("bar-gap") }));
+      const parts = [...rows[1].querySelectorAll(":scope > .bar-part")].map(part => {
+        const style = getComputedStyle(part);
+        const padding = parseFloat(style.paddingLeft) + parseFloat(style.paddingRight) + parseFloat(style.borderLeftWidth);
+        return { ...box(part), inner: part.getBoundingClientRect().width - padding, text: part.textContent.trim(), gap: part.classList.contains("bar-gap") };
+      });
       const marker = isSum ? node.querySelector(".sum-marker") : node.querySelector(".bar-marker-label");
       const cell = isSum ? null : node.querySelector(".bar-marker-cell");
       return {
@@ -863,7 +999,8 @@ async function assertBarVisual(page, selector, mode, label) {
     assert(data.rows.every(row => row.radius === "0px"), `${label} : les barres n'ont pas des angles droits.`);
     assert(Math.abs(data.rows[0].bottom - data.rows[1].top) <= 1 && Math.abs(data.rows[0].width - data.rows[1].width) <= 1, `${label} : les deux lignes ne sont pas collées et alignées.`);
     assert(total === first + second, `${label} : ${first} et ${second} n'écrivent pas ${total}.`);
-    assert(Math.abs(data.parts[0].width / data.parts[1].width - first / second) <= .1 * Math.max(1, first / second), `${label} : les largeurs ne sont pas proportionnelles (${first} : ${second}).`);
+    // Les largeurs utiles (hors marge intérieure et bordure, qui gardent le petit nombre lisible : 58 + 2) sont proportionnelles.
+    assert(Math.abs(data.parts[0].inner / data.parts[1].inner - first / second) <= .1 * Math.max(1, first / second), `${label} : les largeurs ne sont pas proportionnelles (${first} : ${second}).`);
     if (mode === "sum") {
       assert(data.marker.text === `somme = ${total}`, `${label} : le repère de somme est inexact.`);
       assert(Math.abs(data.marker.left - data.rows[0].left) <= 1 && Math.abs(data.marker.width - data.rows[0].width) <= 1 && data.marker.bottom <= data.rows[0].top, `${label} : le repère de somme n'est pas au-dessus de toute la barre.`);
@@ -892,7 +1029,8 @@ async function assertBarVisual(page, selector, mode, label) {
     assert(Number(data.total) === data.area.columns * data.area.rows, `${label} : le total ${data.total} n'est pas ${data.area.rows} × ${data.area.columns}.`);
     assert(data.columnsMarker.text === String(data.area.columns) && data.rowsMarker.text === String(data.area.rows), `${label} : les dimensions écrites ne correspondent pas au rectangle.`);
     assert(Math.abs((data.area.width - 4) / (data.area.height - 4) - data.area.columns / data.area.rows) <= .06, `${label} : le rectangle n'est pas proportionnel (${data.area.width} × ${data.area.height} pour ${data.area.columns} × ${data.area.rows}).`);
-    assert(data.area.unit >= 10, `${label} : le quadrillage est trop serré (${data.area.unit}px).`);
+    // coffres-learning.css réduit l'unité de la correction à 10 / 9 / 7 px selon l'écran pour que 20 × 10 tienne.
+    assert(data.area.unit >= 7, `${label} : le quadrillage est trop serré (${data.area.unit}px).`);
     assert(Math.abs(data.columnsMarker.left - data.area.left) <= 1 && Math.abs(data.columnsMarker.width - data.area.width) <= 1 && data.columnsMarker.bottom <= data.area.top, `${label} : le repère des colonnes n'est pas aligné sur le rectangle.`);
     assert(data.rowsMarker.right <= data.area.left && Math.abs(data.rowsMarker.top - data.area.top) <= 1 && Math.abs(data.rowsMarker.height - data.area.height) <= 1, `${label} : le repère des rangées n'est pas aligné sur le côté.`);
     assert(data.area.right <= data.viewportWidth, `${label} : le rectangle sort de l'écran.`);
@@ -904,6 +1042,7 @@ async function assertBarVisual(page, selector, mode, label) {
         aria: node.closest("[aria-label]").getAttribute("aria-label"),
         viewportWidth: innerWidth,
         layoutColumns: getComputedStyle(node.querySelector(".demo-interpretations")).gridTemplateColumns.split(/\s+/).filter(Boolean).length,
+        insideCorrection: Boolean(node.closest("#correction-visual")),
         views: [...node.querySelectorAll(".demo-interpretation")].map(view => {
           const bar = view.querySelector(".packet-bar");
           return {
@@ -916,7 +1055,7 @@ async function assertBarVisual(page, selector, mode, label) {
       };
     });
     assert(data.views.length === 2, `${label} : les deux interprétations du quotient manquent.`);
-    assert(data.layoutColumns === (data.viewportWidth <= 520 ? 1 : 2), `${label} : les interprétations n'ont pas la disposition attendue à ${data.viewportWidth} px.`);
+    assert(data.layoutColumns === (data.viewportWidth <= 520 || data.insideCorrection ? 1 : 2), `${label} : les interprétations n'ont pas la disposition attendue à ${data.viewportWidth} px.`);
     const grouping = data.views[0].label.match(/^Grouper : (\d+) paquets de (\d+)$/);
     const sharing = data.views[1].label.match(/^Partager : (\d+) paquets de (\d+)$/);
     assert(grouping && sharing, `${label} : les légendes grouper / partager manquent.`);
@@ -945,10 +1084,10 @@ async function auditNiveauDeux(browser, base, { width, height }, errors) {
     window.setTimeout = (callback, delay, ...args) => nativeTimeout(callback, Math.min(delay, 25), ...args);
   });
   const courseSentences = {
-    sum: "La somme de 13 et de 8 est 21.",
-    difference: "La différence entre 17 et 9 est 8.",
-    product: "Le produit de 12 par 15 est 180.",
-    quotient: "Le quotient de 60 par 15 est 4."
+    sum: "La somme de 28 et de 7 est 35.",
+    difference: "La différence entre 52 et 7 est 45.",
+    product: "Le produit de 18 par 4 est 72.",
+    quotient: "Le quotient de 72 par 4 est 18."
   };
   try {
     await page.goto(`${base}/outils/calcul_mental/coffres_magiques_solo.html?mode=solo&niveau=2`, { waitUntil: "load" });
@@ -1004,7 +1143,7 @@ async function auditChoixDuNiveau(browser, base, errors) {
     await page.goto(`${base}/outils/calcul_mental/coffres_magiques_solo.html`, { waitUntil: "load" });
     await page.locator("#mode-dialog:not([hidden])").waitFor();
     const pills = page.locator(".level-choice");
-    assert(await pills.count() === 2, `${label} : la fenêtre ne propose pas exactement deux niveaux.`);
+    assert(await pills.count() === 3, `${label} : la fenêtre ne propose pas exactement trois niveaux.`);
     assert(await pills.nth(0).getAttribute("aria-pressed") === "true", `${label} : le niveau 1 n'est pas sélectionné par défaut.`);
     await page.screenshot({ path: path.join(CAPTURES, "fenetre-mode-niveaux-1280.png") });
     await pills.nth(1).click();
@@ -1160,6 +1299,10 @@ async function auditChoixDuNiveau(browser, base, errors) {
     await auditPetitEcranAutomatique(browser, base, errors);
     await auditNombreDePaires(browser, base, 1, errors);
     await auditNombreDePaires(browser, base, 2, errors);
+    await auditNombreDePaires(browser, base, 3, errors);
+    await auditSerieEtFamilles(browser, base, errors);
+    await auditRejouerLeCalcul(browser, base, errors);
+    await auditRepereSecondePaire(browser, base, errors);
     await auditVerificationBonus(browser, base, errors);
     await auditChoixDuNiveau(browser, base, errors);
     await auditNiveauDeux(browser, base, { width: 1280, height: 720 }, errors);
@@ -1211,7 +1354,7 @@ async function auditChoixDuNiveau(browser, base, errors) {
     console.log(JSON.stringify({
       ok: true,
       captures: CAPTURES,
-      checks: ["bordures réelles somme/différence duo à 320/390/1366 px", "repère somme pleine largeur", "différence 12−10 et 12−11 : crochet exact, libellé centré et sur une ligne", "produit solo/duo : nombres droits, crochet supérieur pleine largeur et crochet latéral pleine hauteur à 320/390/1366 px", "quotient 36÷6 : barres empilées jusqu’à 520 px", "rectangles à angles droits", "lignes collées", "aria avec équations parlées", "aide sans révélation", "solution demandée", "correction après erreur", "même opération", "aucune clé offerte", "focus/Tab/Échap", "320/390/520/1366", "grand écran 1280×720 et 1440×900 : plateau et cours sans défilement, aide ≥ 900 px, clé gagnée qui attend « Coffre suivant »", "téléphone : passage automatique conservé", "tirage : 1 ou 2 paires gagnantes, jamais plus, repère « 1 paire / 2 paires » exact (niveaux 1 et 2)", "grand écran : vérification bonus de l’autre paire sans clé, paire fausse refusée sans correction", "niveau 2 : choix dans la fenêtre Solo / Duo, adresse ?niveau=2, aides et corrections en barres à 320/390/1280 px, cours complet inchangé"]
+      checks: ["bordures réelles somme/différence duo à 320/390/1366 px", "repère somme pleine largeur", "différence 12−10 et 12−11 : crochet exact, libellé centré et sur une ligne", "produit solo/duo : nombres droits, crochet supérieur pleine largeur et crochet latéral pleine hauteur à 320/390/1366 px", "quotient 36÷6 : barres empilées jusqu’à 520 px", "rectangles à angles droits", "lignes collées", "aria avec équations parlées", "aide sans révélation", "solution demandée", "correction après erreur", "même opération", "aucune clé offerte", "focus/Tab/Échap", "320/390/520/1366", "grand écran 1280×720 et 1440×900 : plateau et cours sans défilement, aide ≥ 900 px, clé gagnée qui attend « Coffre suivant »", "téléphone : passage automatique conservé", "tirage : 1 ou 2 paires gagnantes, jamais plus, cibles et cases dans la table des règles (niveaux 1, 2 et 3), aucun repère avant la recherche", "série 3/3/2/2 avec deux clés de familles de faits servies", "après une erreur ou « Montrer une solution » : même nombre, même opération, nouveau plateau, clés inchangées", "grand écran : « Bien joué — il y en a une autre ! » après la première réussite seulement s'il reste une paire ; téléphone : rien", "grand écran : vérification bonus de l’autre paire sans clé, paire fausse refusée sans correction", "niveau 2 : choix dans la fenêtre Solo / Duo, adresse ?niveau=2, aides et corrections en barres à 320/390/1280 px, cours complet inchangé"]
     }, null, 2));
   } finally {
     await page.close();

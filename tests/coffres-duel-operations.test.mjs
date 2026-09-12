@@ -1,8 +1,12 @@
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
+import { createRequire } from "node:module";
 import test from "node:test";
 import vm from "node:vm";
 
+// Depuis le lot « moteur », le duo tire ses plateaux dans le moteur partagé avec le solo.
+const require = createRequire(import.meta.url);
+const engine = require("../assets/js/coffres-moteur.js");
 const html = await readFile(new URL("../outils/club_maths/coffres_magiques.html", import.meta.url), "utf8");
 const script = [...html.matchAll(/<script(?![^>]+\bsrc=)[^>]*>([\s\S]*?)<\/script>/gi)].at(-1)?.[1] || "";
 
@@ -34,47 +38,33 @@ function extractFunction(name) {
 let seed = 90210;
 const seededMath = Object.create(Math);
 seededMath.random = () => ((seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0) / 2 ** 32);
-const context = vm.createContext({ Math: seededMath });
+const context = vm.createContext({ Math: seededMath, engine });
 vm.runInContext(`
-  const SIZE = 4;
-  const OPERATION_MODES = ["sum", "difference", "product", "quotient"];
-  let selectedOperations = OPERATION_MODES.slice();
+  const { calculate, neighborPairs, randomInteger, shuffle } = engine;
+  let selectedOperations = engine.OPERATIONS.slice();
   let selectedLevel = 1;
   let mode = "sum";
   let challengeNumber = 0;
   let operationCycle = [];
-  let values = [], target = 0, locked = false;
+  let values = [], target = 0, locked = false, solutionCount = 1;
   const challengeLabels = { sum: "somme", difference: "différence", product: "produit", quotient: "quotient" };
   const challengeNode = {};
   const clearRuneStates = () => {}, renderBoard = () => {};
-  ${extractFunction("randomInteger")}
-  ${extractFunction("shuffle")}
-  ${extractFunction("row")}
-  ${extractFunction("column")}
-  ${extractFunction("neighborPairs")}
-  ${extractFunction("calculate")}
   ${extractFunction("operation")}
-  ${extractFunction("levelRules")}
-  ${extractFunction("fillBounds")}
-  ${extractFunction("multiplicationPair")}
-  ${extractFunction("allowedProductPair")}
-  ${extractFunction("pairFor")}
-  ${extractFunction("divisionDecoys")}
   ${extractFunction("nextBalancedMode")}
   ${extractFunction("makeChallenge")}
   globalThis.duelCore = {
     calculate,
     operationFor(nextMode, first, second) { mode = nextMode; return operation(first, second); },
-    pairFor, fillBounds, allowedProductPair, divisionDecoys,
     challenge(level, operation) {
       selectedLevel = level;
       selectedOperations = [operation];
       challengeNumber = 0;
       operationCycle = [];
       makeChallenge();
-      return { values: values.slice(), target, mode, neighbors: neighborPairs() };
+      return { values: values.slice(), target, mode, solutions: solutionCount, neighbors: neighborPairs() };
     },
-    balancedSequence(length = 8, operations = OPERATION_MODES) {
+    balancedSequence(length = 8, operations = engine.OPERATIONS) {
       selectedOperations = operations;
       operationCycle = [];
       const sequence = [];
@@ -97,22 +87,19 @@ test("le quotient divise le plus grand nombre par le plus petit et refuse une di
   assert.ok(Number.isNaN(core.operationFor("quotient", 12, 5)));
 });
 
-test("chaque paire construite respecte les bornes et garantit le calcul demandé", () => {
-  for (const mode of ["sum", "difference", "product", "quotient"]) {
-    for (let attempt = 0; attempt < 500; attempt += 1) {
-      const [first, second] = core.pairFor(mode);
-      const high = Math.max(first, second);
-      const low = Math.min(first, second);
-      assert.ok(first > 0 && second > 0, `${mode}: valeurs positives`);
-      if (mode === "difference") {
-        assert.ok(high <= 12 && high - low >= 2 && high - low <= 8, `${high} − ${low}`);
-      }
-      if (mode === "quotient") {
-        assert.equal(high % low, 0, `${high} ÷ ${low}`);
-        assert.ok(high / low >= 2 && high / low <= 9, `${high} ÷ ${low}`);
-      }
+test("chaque paire construite vient de la table des règles du moteur partagé", () => {
+  for (const level of [1, 2, 3]) for (const mode of engine.OPERATIONS) {
+    const admitted = new Set(engine.solutionPairs(mode, level).map(entry => entry.pair.join(" ")));
+    for (let attempt = 0; attempt < 300; attempt += 1) {
+      const drawn = engine.drawPair(mode, level);
+      assert.ok(admitted.has(drawn.pair.join(" ")), `${mode} niveau ${level} : ${drawn.pair.join(" et ")}`);
+      if (mode === "quotient") assert.equal(drawn.pair[0] % drawn.pair[1], 0);
     }
   }
+  const has = (mode, level, first, second) => engine.solutionPairs(mode, level).some(entry => entry.pair[0] === first && entry.pair[1] === second);
+  assert.ok(has("difference", 1, 18, 9) && !has("difference", 1, 12, 1));
+  assert.ok(has("product", 2, 14, 6) && !has("product", 2, 9, 7));
+  assert.ok(has("quotient", 3, 168, 7) && !has("quotient", 3, 82, 2));
 });
 
 test("un bloc de huit défis sert chaque opération une fois à chacun", () => {
@@ -124,46 +111,23 @@ test("un bloc de huit défis sert chaque opération une fois à chacun", () => {
   }
 });
 
-test("les niveaux 2 et 3 du Duo suivent les bornes propres à chaque opération", () => {
-  const targetBounds = { 2: { sum: [20, 50], difference: [1, 49], product: [4, 100], quotient: [2, 20] }, 3: { sum: [51, 100], difference: [1, 99], product: [42, 200], quotient: [2, 50] } };
-  for (const level of [2, 3]) {
-    for (const mode of ["sum", "difference", "product", "quotient"]) {
-      for (let attempt = 0; attempt < 500; attempt += 1) {
-        const [first, second] = core.pairFor(mode, level);
-        const high = Math.max(first, second), low = Math.min(first, second);
-        const target = core.calculate(mode, first, second);
-        assert.ok(target >= targetBounds[level][mode][0] && target <= targetBounds[level][mode][1]);
-        if (mode === "sum" && level === 3) assert.ok(low >= 10);
-        if (mode === "difference") assert.ok(high >= (level === 3 ? 51 : 20));
-        if (mode === "product") assert.ok(core.allowedProductPair(first, second, level));
-        if (mode === "quotient") {
-          assert.equal(high % low, 0);
-          assert.ok(core.allowedProductPair(low, target, level));
-        }
-        assert.ok(Number.isInteger(target));
-      }
-    }
-  }
-});
-
-test("chaque plateau Duo respecte le niveau choisi et possède une solution voisine", () => {
+test("chaque plateau Duo respecte le niveau choisi et possède exactement 1 ou 2 paires voisines gagnantes", () => {
+  const seen = { 1: 0, 2: 0 };
   for (const level of [1, 2, 3]) {
     for (const operation of ["sum", "difference", "product", "quotient"]) {
-      for (let attempt = 0; attempt < 100; attempt += 1) {
+      for (let attempt = 0; attempt < 150; attempt += 1) {
         const board = core.challenge(level, operation);
-        const fillMax = core.fillBounds(operation, level)[1];
         assert.equal(board.mode, operation);
         assert.equal(board.values.length, 16);
-        assert.ok(board.values.every(value => Number.isInteger(value) && value > 0));
-        if (operation === "quotient") {
-          const decoys = new Set(core.divisionDecoys(level));
-          assert.ok(board.values.filter(value => value > fillMax).length >= 4);
-          assert.ok(board.values.every(value => value <= fillMax || decoys.has(value)));
-        } else assert.ok(board.values.every(value => value <= fillMax));
-        assert.ok(board.neighbors.some(([first, second]) => core.operationFor(operation, board.values[first], board.values[second]) === board.target));
+        assert.ok(board.values.every(value => Number.isInteger(value) && value >= 2));
+        const found = Array.from(board.neighbors).filter(([first, second]) => core.operationFor(operation, board.values[first], board.values[second]) === board.target).length;
+        assert.ok(found === 1 || found === 2, `${operation} niveau ${level} : ${found} paires gagnantes`);
+        assert.equal(board.solutions, found);
+        seen[found] += 1;
       }
     }
   }
+  assert.ok(seen[2] > 300 && seen[1] > 900, `répartition suspecte des paires (${seen[1]} simples, ${seen[2]} doubles)`);
 });
 
 

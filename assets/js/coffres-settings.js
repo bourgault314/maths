@@ -2,7 +2,8 @@
 (function (root) {
   "use strict";
   const OPERATIONS = ["sum", "difference", "product", "quotient"];
-  const DEFAULT_SERIES = ["sum", "sum", "sum", "difference", "difference", "product", "product", "product", "quotient", "quotient"];
+  // Avec les quatre opérations : 3 additions, 3 soustractions, 2 multiplications, 2 divisions.
+  const DEFAULT_SERIES = ["sum", "sum", "sum", "difference", "difference", "difference", "product", "product", "quotient", "quotient"];
 
   function normalizeOperations(value) {
     const requested = Array.isArray(value) ? value : String(value || "").split(",");

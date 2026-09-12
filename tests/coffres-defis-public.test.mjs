@@ -39,6 +39,7 @@ const pages = Object.fromEntries(await Promise.all(pageDefinitions.map(async def
   definition.path,
   await readFile(new URL(`../${definition.path}`, import.meta.url), "utf8")
 ])));
+const engineSource = await readFile(new URL("../assets/js/coffres-moteur.js", import.meta.url), "utf8");
 const catalogueSource = await readFile(new URL("../assets/js/catalogue-refonte-data.js", import.meta.url), "utf8");
 const catalogueUi = await readFile(new URL("../assets/js/catalogue-refonte.js", import.meta.url), "utf8");
 const clubHub = await readFile(new URL("../outils/club_maths/index.html", import.meta.url), "utf8");
@@ -75,7 +76,9 @@ test("les cinq adaptations sont publiques, autonomes et reliées à leur vrai pa
 test("les règles et durées approuvées restent explicites", () => {
   const duel = pages["outils/club_maths/coffres_magiques.html"];
   assert.match(duel, /const KEYS_TO_WIN = 5;/);
-  assert.match(duel, /const OPERATION_MODES = \["sum", "difference", "product", "quotient"\];/);
+  // Les quatre opérations vivent désormais dans le moteur partagé par le solo et le duo.
+  assert.match(duel, /const engine = window\.MATHSGO_COFFRES_MOTEUR;/);
+  assert.match(engineSource, /const OPERATIONS = \["sum", "difference", "product", "quotient"\];/);
   assert.match(duel, /positionInBlock = \(challengeNumber - 1\) % \(selectedOperations\.length \* 2\)/);
   assert.match(duel, /operationCycle\[Math\.floor\(positionInBlock \/ 2\)\]/);
 
