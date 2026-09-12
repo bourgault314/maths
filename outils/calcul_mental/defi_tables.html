@@ -3449,9 +3449,15 @@
         }
         const instruction = document.createElement("p");
         instruction.className = "learn-instruction";
+        // Lot R4 : « Ajoute 4 » ne veut rien dire quand la case d'avant est
+        // restée vide (un calcul raté qui revient, ou la case juste après) :
+        // on demande alors de compléter la case bleue, comme dans la bande à
+        // trous.
+        const suitUnePleine = question?.multiplier > 0 && state.revealedLearnResults.has(question.multiplier - 1);
         instruction.textContent = state.configuration.learnActivity === "gaps"
           ? "Complète la case bleue."
-          : question?.multiplier === 0 ? "Commence à 0." : `Ajoute ${table}.`;
+          : question?.multiplier === 0 ? "Commence à 0."
+            : suitUnePleine ? `Ajoute ${table}.` : "Complète la case bleue.";
         zone.replaceChildren(instruction, stick);
       }
 
@@ -3539,6 +3545,14 @@
         maxi: 55, mini: 14,
         ecart: 10, ecartSerre: 5, perleAuDoigt: 22
       });
+      // La bande : 3 px de marge intérieure et 3 px de bord de chaque côté
+      // (.number-stick), donc 12 px qui ne sont pas des cases.
+      const BANDE_BORDURES = 12;
+      // Les onze cases de la bande : 0 × table jusqu'à 10 × table.
+      const CASES_BANDE = 11;
+      // L'air qu'on laisse au-dessus du cadre du détail quand on le ramène
+      // dans l'écran : de quoi voir qu'il n'est pas collé sous la barre.
+      const MARGE_DETAIL = 8;
       const boulier = {
         table: 0, taille: 0, ecart: PERLES.ecart, etats: [], etape: 0, morceaux: [], pile: [],
         phrase: "", figee: false, finie: false, drag: null, dom: null, observer: null, refus: 0
@@ -3678,6 +3692,25 @@
         dessinerBoulier(false);
       }
 
+      // La largeur de la bande : celle du boulier, sauf si ses étiquettes y
+      // sont rognées. On mesure l'étiquette la plus large telle qu'elle est
+      // écrite (scrollWidth donne le texte entier, même coupé) : tant qu'elle
+      // tient, rien ne bouge ; sinon la bande s'élargit juste ce qu'il faut,
+      // sans dépasser la scène.
+      function largeurBande(largeurBoulier) {
+        const dom = boulier.dom;
+        const etiquettes = dom ? [...dom.bande.querySelectorAll(".number-stick-multiplier")] : [];
+        if (!etiquettes.length) return largeurBoulier;
+        const bordures = BANDE_BORDURES;
+        // Une case porte un bord de 1 px à droite : l'étiquette est rognée dès
+        // que son texte dépasse la case moins ce bord.
+        const besoin = Math.max(...etiquettes.map(etiquette => etiquette.scrollWidth + 1));
+        const caseActuelle = (largeurBoulier - bordures) / etiquettes.length;
+        if (besoin <= caseActuelle) return largeurBoulier;
+        const dispo = dom.scene.clientWidth || largeurBoulier;
+        return Math.min(dispo, Math.ceil(besoin * etiquettes.length) + bordures);
+      }
+
       function dessinerBoulier(animer) {
         const dom = boulier.dom;
         if (!dom || !boulier.taille) return;
@@ -3693,7 +3726,13 @@
         dom.montants.forEach(element => { element.style.width = `${montant}px`; });
         // La bande prend EXACTEMENT la largeur du boulier et se pose dessous :
         // les deux ne font qu'un objet, l'un montre ce que l'autre écrit.
-        dom.bande.style.width = `${interieur + montant * 2}px`;
+        // Lot R4 : sauf quand le boulier devient trop étroit pour elle. Sur un
+        // vidéoprojecteur (1280 x 590, 1366 x 650) c'est la HAUTEUR qui limite
+        // la perle : le cadre tombe à 292 px, ses onze étiquettes « 10×10 »
+        // n'y tiennent plus et se marchent dessus (défaut relevé par Code au
+        // lot R1). La bande garde alors la largeur qu'il lui faut, dans la
+        // place disponible — le boulier, lui, ne change pas.
+        dom.bande.style.width = `${largeurBande(interieur + montant * 2)}px`;
         dom.rangees.forEach((rangee, r) => {
           rangee.element.style.height = `${hauteurRangee}px`;
           rangee.perles.forEach((perle, i) => {
@@ -3962,7 +4001,7 @@
       function renderLearnProgress() {
         const stickActivity = ["beads", "construct", "gaps"].includes(state.configuration.learnActivity);
         const completed = stickActivity ? state.revealedLearnResults.size : state.mastered.size;
-        const total = stickActivity ? 11 : TOTAL;
+        const total = stickActivity ? CASES_BANDE : TOTAL;
         const label = stickActivity ? "cases complétées" : "calculs maîtrisés";
         $("question-count").textContent = `${completed} / ${total} ${label}`;
         $("progress").style.width = `${completed / total * 100}%`;
@@ -4224,6 +4263,17 @@
         return regle ? evenement.total - PARCOURS.SEUILS[regle].erreursMax : null;
       }
 
+      // Combien de cases de la bande ont demandé plus d'un essai : une case
+      // ratée compte une fois, même si le calcul est revenu deux fois.
+      function casesRatees() {
+        const ratees = new Set();
+        state.questions.forEach((question, index) => {
+          const reponse = state.responses[index];
+          if (reponse && !reponse.correct) ratees.add(question.multiplier);
+        });
+        return ratees.size;
+      }
+
       function verdictSerie(suivi, elapsed) {
         const config = state.configuration;
         const remaining = TOTAL - state.index;
@@ -4234,12 +4284,17 @@
         const sur = (score, total) => `${score} sur ${total}`;
         if (config.mode === "learn") {
           verdict.titre = `Table de ${config.tables[0]} terminée !`;
+          // Lot R4 : quand la bande a coûté des erreurs, l'écran le dit —
+          // « ✓ Les 11 cases complétées » au-dessus d'une erreur barrée se
+          // contredisait. Sans erreur, la phrase ne change pas.
+          const casesBande = config.learnActivity === "gaps" ? TOTAL : CASES_BANDE;
+          const ratees = casesRatees();
           verdict.score = activitePerles(config)
             ? "Les 11 produits construits sur le boulier"
             : config.learnActivity === "gaps"
-              ? `Les ${TOTAL} cases manquantes complétées`
+              ? (ratees ? `${casesBande - ratees} cases sur ${casesBande} complétées du premier coup` : `Les ${TOTAL} cases manquantes complétées`)
               : config.learnActivity === "construct"
-                ? "Les 11 cases de la bande complétées"
+                ? (ratees ? `${casesBande - ratees} cases sur ${casesBande} trouvées du premier coup` : "Les 11 cases de la bande complétées")
                 : "Les 11 produits retrouvés";
           const apprends = suivi.evenements.find(evenement => evenement.type === "apprends");
           if (apprends) verdict.config = `J’apprends · ${apprends.termines} activité${apprends.termines > 1 ? "s" : ""} sur ${PARCOURS.ACTIVITES_APPRENDS.length} faite${apprends.termines > 1 ? "s" : ""}`;
@@ -4546,7 +4601,14 @@
         state.index += 1;
         const memoryActivity = state.configuration.mode === "learn"
           && ["ordered", "random"].includes(state.configuration.learnActivity);
+        // La bande est finie quand ses onze cases sont remplies — pas quand la
+        // file de questions est vide : depuis le lot R4 une case ratée y
+        // remet son calcul, et c'est lui qui doit finir la série.
+        const bandeFinie = state.configuration.mode === "learn"
+          && ["construct", "gaps"].includes(state.configuration.learnActivity)
+          && state.revealedLearnResults.size >= CASES_BANDE;
         if (memoryActivity && state.mastered.size >= TOTAL) finish();
+        else if (bandeFinie) finish();
         else if (state.index >= state.questions.length) finish();
         else renderQuestion();
       }
@@ -4602,14 +4664,23 @@
         if (state.configuration.mode === "learn") {
           const stickActivity = ["construct", "gaps"].includes(state.configuration.learnActivity);
           const assisted = !stickActivity && state.learnStickHelpUsed;
-          const shouldRetry = !stickActivity && (!correct || assisted);
+          // Lot R4 (P4, décision Q5 du 11/09) : dans « Je construis la bande »
+          // et « bande à trous », une mauvaise réponse s'écrivait quand même
+          // dans la case — l'erreur se corrigeait toute seule, le calcul ne
+          // revenait pas, et le résultat ne signalait rien. La case reste
+          // maintenant VIDE et le calcul revient en fin de bande jusqu'à être
+          // trouvé, comme dans « dans l'ordre » et « désordre ».
+          const shouldRetry = !correct || assisted;
           if (correct && !assisted) state.mastered.add(question.factKey);
           if (shouldRetry) {
             const alreadyWaiting = state.questions.slice(state.index + 1).some(candidate => candidate.factKey === question.factKey);
             if (!alreadyWaiting) state.questions.push({...question, retry: true});
           }
-          state.revealedLearnResults.add(question.multiplier);
-          state.lastRevealedLearnMultiplier = question.multiplier;
+          if (!stickActivity || correct) state.revealedLearnResults.add(question.multiplier);
+          // Rien ne s'allume en vert sur une case qui vient d'être ratée — et
+          // dans l'ordre / le désordre, où la bande n'est qu'une aide cachée,
+          // la règle ne change pas.
+          state.lastRevealedLearnMultiplier = !stickActivity || correct ? question.multiplier : null;
           renderLearnProgress();
           renderLearnSequence();
           showAnswerFeedback(question, correct, skip ? null : value, shouldRetry, assisted);
@@ -4729,6 +4800,30 @@
         return `dans ${jours} jours`;
       }
 
+      // Lot R4 (A2) : la grille est ouverte sur elle-même, donc le cadre du
+      // détail — qui est au-dessus — passe sous la barre collée : l'élève
+      // touchait une case et ne lisait ni le calcul ni sa boîte. On ramène le
+      // cadre dans l'écran, du plus petit mouvement possible (« nearest ») et
+      // sous la barre (scroll-margin-top) : quand il est déjà visible, la page
+      // ne bouge pas d'un pixel, et la grille reste visible en entier.
+      function montrerDetail() {
+        const zone = $("calculs-detail");
+        const barre = document.querySelector("#calculs .settings-toolbar");
+        // Le bas de la barre collée, mesuré : c'est la vraie ligne de
+        // flottaison de cet écran, et elle change avec la largeur.
+        const plafond = (barre ? barre.getBoundingClientRect().bottom : 0) + MARGE_DETAIL;
+        const cadre = zone.getBoundingClientRect();
+        let delta = 0;
+        if (cadre.top < plafond) delta = cadre.top - plafond;
+        else if (cadre.bottom > window.innerHeight) delta = Math.min(cadre.bottom - window.innerHeight + MARGE_DETAIL, cadre.top - plafond);
+        if (!delta) return;
+        window.scrollBy?.({top: delta, behavior: sansAnimation() ? "auto" : "smooth"});
+      }
+
+      function sansAnimation() {
+        return window.matchMedia?.("(prefers-reduced-motion: reduce)").matches === true;
+      }
+
       function renderCalculsDetail() {
         const zone = $("calculs-detail");
         if (!calculsSelection) {
@@ -4806,6 +4901,7 @@
           bouton.addEventListener("click", () => {
             calculsSelection = choisie ? null : {boite};
             renderCalculs();
+            montrerDetail();
           });
           zone.append(bouton);
         });
@@ -4869,6 +4965,7 @@
             bouton.addEventListener("click", () => {
               calculsSelection = {ligne: cellule.ligne, colonne: cellule.colonne, cle: cellule.cle};
               renderCalculs();
+              montrerDetail();
             });
             zone.append(bouton);
           });
