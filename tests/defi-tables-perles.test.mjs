@@ -105,7 +105,10 @@ test("le cadre fait 20 perles de large — 15 sur un téléphone — et la coupu
 });
 
 test("la bande et l'addition au-dessus, le boulier en bas, dans la même scène", () => {
-  assert.match(html, /dom\.bande\.style\.width = `\$\{interieur \+ montant \* 2\}px`;/, "la bande prend exactement la largeur du boulier");
+  // Lot R4 : la bande prend la largeur du boulier tant que ses étiquettes y
+  // tiennent (largeurBande), et pas plus large qu'il ne faut — la règle est
+  // détaillée dans defi-tables-bande-et-calculs.test.mjs.
+  assert.match(html, /dom\.bande\.style\.width = `\$\{largeurBande\(interieur \+ montant \* 2\)\}px`;/, "la bande part de la largeur du boulier");
   // Lot R1 : décidé par Gwenaël sur son iPhone (11/09) — « le boulier
   // au-dessus fait qu'on ne regarde pas les résultats » : de haut en bas,
   // la bande, l'addition, puis le boulier, là où le pouce travaille. Le même

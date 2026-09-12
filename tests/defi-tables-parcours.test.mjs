@@ -224,12 +224,15 @@ test("J’apprends garde la bande pour construire et la propose en aide temporai
   assert.match(html, /\}, 6000\);/);
   assert.match(html, /state\.learnStickHelpVisible = false;[\s\S]*state\.learnStickHelpUsed = false;[\s\S]*renderExpression\(question\)/);
   assert.match(html, /const assisted = !stickActivity && state\.learnStickHelpUsed/);
-  assert.match(html, /const shouldRetry = !stickActivity && \(!correct \|\| assisted\)/);
+  // Lot R4 (P4, décision Q5) : construire la bande suit la même règle que
+  // « dans l'ordre » et « désordre » — une mauvaise réponse renvoie le calcul
+  // en fin de série. Le détail est dans defi-tables-bande-et-calculs.test.mjs.
+  assert.match(html, /const shouldRetry = !correct \|\| assisted;/);
   assert.match(html, /if \(correct && !assisted\) state\.mastered\.add\(question\.factKey\)/);
   assert.match(html, /showAnswerFeedback\(question, correct, skip \? null : value, shouldRetry, assisted\)/);
   assert.match(html, /assisted \? "Bravo ! On le reverra sans la bande\." : "Bravo !"/);
   assert.match(html, /const label = stickActivity \? "cases complétées" : "calculs maîtrisés"/);
-  assert.match(html, /question\?\.multiplier === 0 \? "Commence à 0\." : `Ajoute \$\{table\}\.\`/);
+  assert.match(html, /question\?\.multiplier === 0 \? "Commence à 0\."\s*: suitUnePleine \? `Ajoute \$\{table\}\.` : "Complète la case bleue\.";/);
   assert.match(html, /if \(correct\) \{[\s\S]*\$\("validate"\)\.style\.visibility = "hidden";[\s\S]*scheduleAutoAdvance\(\);/);
   assert.match(html, /\$\("validate"\)\.style\.visibility = "";[\s\S]*setAnswerControlsEnabled\(true\)/);
   assert.match(html, /\}, 800\);/);
