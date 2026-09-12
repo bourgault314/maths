@@ -1603,7 +1603,7 @@
       }
     }
   </style>
-  <link rel="stylesheet" href="../../assets/css/coffres-learning.css?v=5">
+  <link rel="stylesheet" href="../../assets/css/coffres-learning.css?v=6">
 </head>
 <body>
   <header class="topbar">
@@ -2041,7 +2041,7 @@
         settingsChoices.reset(selectedOperations, gameLevel, gameStarted);
         dialogs.open(modeDialog, {
           trigger: mandatory ? null : document.activeElement,
-          initialFocus: `#choose-${CURRENT_MODE}`,
+          initialFocus: "#mode-title",
           onEscape: () => {
             if (!modeDialogMandatory) closeModeDialog();
           }
