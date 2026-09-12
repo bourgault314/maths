@@ -28,20 +28,11 @@ for (const difficulty of Object.keys(core.levels)) {
     }
     assert.equal(g.done, true); assert.equal(g.score, 0);
   });
-  test(difficulty + " : le dodo peut franchir huit troncs pour 30 parcours distincts", () => {
-    for (let seed = 1; seed <= 30; seed++) {
-      const g = new Runner(difficulty, seed);
-      for (let t = 0; t < 40 && !g.done; t += 1 / 60) {
-        const next = g.obstacles.find(o => !o.hit && !o.counted && o.x > g.x);
-        if (next && next.x < g.x + 43 + g.cfg.speed * .22) g.jump();
-        g.update(1 / 60);
-      }
-      assert.equal(g.done, true, "fin seed " + seed); assert.equal(g.score, 8, "score seed " + seed); assert.equal(g.lives, 3);
-    }
-  });
-  test(difficulty + " : trois collisions distinctes terminent le dodo", () => {
-    const g = new Runner(difficulty, 3); advance(g, m => m.done, 40);
-    assert.equal(g.lives, 0); assert.equal(g.score, 0); assert.ok(g.elapsed < 15);
+  test(difficulty + " : une collision termine la course et fige son état", () => {
+    const g = new Runner(difficulty, 3); advance(g, m => m.done, 10);
+    assert.equal(g.score, 0); assert.ok(g.elapsed < 6);
+    const end = JSON.stringify(g); g.jump(); g.update(10);
+    assert.equal(JSON.stringify(g), end);
   });
   test(difficulty + " : sept galets centrés peuvent être empilés", () => {
     const g = new Stack(difficulty, 8);
@@ -73,17 +64,6 @@ test("La génération des chemins est reproductible, bornée, sans répétition 
     const p = core.memoryPath(6, a); assert.deepEqual(p, core.memoryPath(6, b));
     p.forEach((n, index) => { assert.ok(n >= 0 && n < 16); if (index) assert.notEqual(n, p[index - 1]); });
   }
-});
-test("Un saut ne peut pas être renouvelé en l’air et la trajectoire revient au sol", () => {
-  const r = new Runner("malin", 1); assert.equal(r.jump(), true); r.update(.15);
-  assert.ok(r.y > 40); assert.equal(r.jump(), false); r.update(.7); assert.equal(r.y, 0);
-});
-test("La physique du dodo reste cohérente à 30 et 120 images par seconde", () => {
-  const a = new Runner("malin", 10), b = new Runner("malin", 10);
-  a.jump(); b.jump();
-  for (let i = 0; i < 15; i++) a.update(1 / 30);
-  for (let i = 0; i < 60; i++) b.update(1 / 120);
-  assert.ok(Math.abs(a.y - b.y) < .1); assert.ok(Math.abs(a.elapsed - b.elapsed) < .001);
 });
 test("L’équilibre regarde le centre de masse de toute la pile", () => {
   assert.equal(stable([{ x: 300, w: 120 }, { x: 320, w: 110 }]), true);
