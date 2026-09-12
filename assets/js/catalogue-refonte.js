@@ -312,7 +312,7 @@
     "jeux-courts": {
       description: "Jouer quelques minutes avec sa mémoire, son attention et sa précision.",
       keywords: "jeu court mémoire attention inhibition réflexe précision dodo galets",
-      icon: "strategy"
+      thumbnail: "assets/img/thumbnails/jeux/jeux-courts.svg?v=1"
     },
     "rentree-cohesion": {
       description: "Faire connaissance, créer du lien et bien démarrer l'année.",
@@ -388,7 +388,8 @@
     domain: new URLSearchParams(window.location.search).get("domain") || "",
     query: "",
     notion: new URLSearchParams(window.location.search).get("notion") || "",
-    collection: new URLSearchParams(window.location.search).get("collection") || ""
+    collection: new URLSearchParams(window.location.search).get("collection") || "",
+    game: ""
   };
   let pendingBreadcrumbFocusLevel = "";
   let pendingBreadcrumbFocusCard = "";
@@ -406,6 +407,9 @@
   const clearButton = document.getElementById("search-clear");
   const siteShell = document.querySelector(".site-shell");
   const mainPanel = document.querySelector(".main-panel");
+  const gameView = document.getElementById("short-game-view");
+  const shortGames = window.MathsGoShortGames;
+  let disposeGame = null;
 
   function escapeHtml(value) {
     return String(value ?? "")
@@ -460,6 +464,14 @@
     state.domain = params.get("domain") || "";
     state.notion = params.get("notion") || "";
     state.collection = params.get("collection") || "";
+    const requestedGame = params.get("jeu") || "";
+    state.game = shortGames && Object.hasOwn(shortGames.games, requestedGame) ? requestedGame : "";
+    if (requestedGame && !state.game) urlWasSanitised = true;
+    if (state.game) {
+      state.domain = "jeux-recherches";
+      state.notion = "jeux-courts";
+      state.collection = "";
+    }
     state.query = "";
 
     if (state.notion && !notionMap.has(state.notion)) {
@@ -494,6 +506,7 @@
   }
 
   function viewLevel() {
+    if (state.game) return "game";
     if (state.collection) return "collection";
     if (state.notion) return "notion";
     if (state.domain) return "domain";
@@ -505,6 +518,7 @@
     if (state.domain) params.set("domain", state.domain);
     if (state.notion) params.set("notion", state.notion);
     if (state.collection) params.set("collection", state.collection);
+    if (state.game) params.set("jeu", state.game);
     const query = params.toString();
     return `${window.location.pathname}${query ? `?${query}` : ""}`;
   }
@@ -607,6 +621,9 @@
     }
 
     const parentNotion = selectedNotion?.parent ? notionMap.get(selectedNotion.parent) : null;
+    if (level === "game") {
+      parts.push('<button type="button" class="breadcrumb-parent" data-breadcrumb-target="short-games">Jeux courts</button>');
+    }
     if (parentNotion) {
       parts.push(`<button type="button" class="breadcrumb-parent" data-breadcrumb-target="notion-parent" data-notion-parent="${escapeHtml(parentNotion.id)}" title="Revenir à ${escapeHtml(parentNotion.title)}">${escapeHtml(parentNotion.title)}</button>`);
     }
@@ -1025,7 +1042,7 @@
         : `data-notion-card="${escapeHtml(notion.id)}" data-notion-disabled="true" aria-disabled="true"`;
       return `<${tag} class="notion-card${count ? "" : " notion-card-disabled"}" ${attributes} style="${domainStyle(notion.domain)}">
         <span class="notion-top">
-          <span class="notion-icon">${icon(design.icon)}</span>
+          <span class="notion-icon">${design.thumbnail ? thumbnailMarkup(design.thumbnail) : icon(design.icon)}</span>
           <h3>${escapeHtml(notion.title)}</h3>
         </span>
         <p>${escapeHtml(design.description || "Découvrir les outils de ce thème.")}</p>
@@ -1152,7 +1169,9 @@
     if (isExternalResourcePath(resource.path)) {
       return `href="${escapeHtml(resource.path)}" target="_blank" rel="noopener noreferrer"`;
     }
-    return `href="${escapeHtml(rootPrefix + resource.path)}"`;
+    const game = resourceClassification(resource).shortGame;
+    const gameAttribute = shortGames && Object.hasOwn(shortGames.games, game) ? ` data-short-game="${escapeHtml(game)}"` : "";
+    return `href="${escapeHtml(rootPrefix + resource.path)}"${gameAttribute}`;
   }
 
   function resourceCard(resource) {
@@ -1270,6 +1289,9 @@
 
   function render() {
     beginThumbnailRender();
+    if (disposeGame) { disposeGame(); disposeGame = null; }
+    if (gameView) gameView.hidden = !state.game;
+    mainPanel.classList.toggle("catalogue-game-view", Boolean(state.game));
     clearButton.hidden = !state.query;
 
     const selectedNotion = notionMap.get(state.notion);
@@ -1277,7 +1299,7 @@
     const selectedDomain = domainMap.get(state.domain);
     const showResources = Boolean(state.notion || state.collection || state.query);
     const level = viewLevel();
-    const enteringDeepView = level === "domain" || level === "notion" || level === "collection";
+    const enteringDeepView = level === "domain" || level === "notion" || level === "collection" || level === "game";
 
     if (
       enteringDeepView &&
@@ -1296,6 +1318,16 @@
     document.body.classList.toggle("catalogue-is-search", level === "search");
     mainPanel.dataset.catalogueView = level;
     renderBreadcrumb(level, selectedDomain, selectedNotion, selectedCollection);
+
+    if (state.game && gameView) {
+      domainGrid.hidden = true;
+      notionGrid.hidden = true;
+      resourceGrid.hidden = true;
+      pageTitle.textContent = shortGames.games[state.game];
+      heroLead.textContent = "";
+      disposeGame = shortGames.mount(gameView, state.game, returnToShortGames);
+      return;
+    }
 
     if (!state.domain && !state.notion && !state.query) {
       renderDomains();
@@ -1393,6 +1425,7 @@
     const fromLevel = viewLevel();
     rememberCurrentScroll();
     state.domain = button.dataset.domainCard || "";
+    state.game = "";
     state.notion = "";
     state.collection = "";
     state.query = "";
@@ -1414,6 +1447,7 @@
     const fromLevel = viewLevel();
     rememberCurrentScroll();
     state.domain = collection?.domain || notion.domain;
+    state.game = "";
     state.notion = notion?.id || "";
     state.collection = collection?.id || "";
     state.query = "";
@@ -1426,7 +1460,42 @@
   notionGrid.addEventListener("click", openNotionOrCollection);
   resourceGrid.addEventListener("click", openNotionOrCollection);
 
+  resourceGrid.addEventListener("click", (event) => {
+    const link = event.target.closest("[data-short-game]");
+    if (!link || !gameView || !shortGames || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+    if (!Object.hasOwn(shortGames.games, link.dataset.shortGame)) return;
+    event.preventDefault();
+    const fromLevel = viewLevel();
+    rememberCurrentScroll();
+    state.game = link.dataset.shortGame;
+    state.domain = "jeux-recherches";
+    state.notion = "jeux-courts";
+    state.collection = "";
+    state.query = "";
+    searchInput.value = "";
+    writeHistory("push", fromLevel);
+    render();
+    moveToTopAndFocus();
+  });
+
+  function returnToShortGames() {
+    if (history.state?.fromLevel === "notion" && state.game) {
+      pendingBreadcrumbFocusLevel = "notion";
+      pendingBreadcrumbFocusCard = "";
+      history.back();
+      return;
+    }
+    state.game = "";
+    state.domain = "jeux-recherches";
+    state.notion = "jeux-courts";
+    state.collection = "";
+    writeHistory("replace");
+    render();
+    moveToTopAndFocus();
+  }
+
   searchInput.addEventListener("input", () => {
+    state.game = "";
     state.query = searchInput.value;
     state.notion = "";
     state.collection = "";
@@ -1444,6 +1513,8 @@
     const control = event.target.closest("[data-breadcrumb-target]");
     if (!control) return;
     const target = control.dataset.breadcrumbTarget;
+    if (target === "short-games") { returnToShortGames(); return; }
+    state.game = "";
 
     if (target === "notion-parent") {
       const parentId = control.dataset.notionParent || notionMap.get(state.notion)?.parent || "";

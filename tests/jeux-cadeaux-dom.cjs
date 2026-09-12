@@ -8,11 +8,12 @@ const { JSDOM, VirtualConsole } = require("jsdom");
 const root = path.resolve(__dirname, "..");
 const html = fs.readFileSync(path.join(root, "jeux-cadeaux/index.html"), "utf8");
 const scripts = ["core.js", "art.js", "app.js"].map(file => fs.readFileSync(path.join(root, "jeux-cadeaux", file), "utf8"));
-function create(query = "", saved = new Map()) {
+function create(query = "?jeu=luciole&integre=1", saved = new Map()) {
   const errors = [], console = new VirtualConsole();
   console.on("jsdomError", error => errors.push(error.message));
   const dom = new JSDOM(html, { url: "https://mathsgo.re/jeux-cadeaux/" + query, runScripts: "outside-only", pretendToBeVisual: true, virtualConsole: console });
   const w = dom.window, doc = w.document, frames = new Map();
+  if (query.includes("integre=1")) Object.defineProperty(w, "parent", { value: { postMessage() {} } });
   let frameId = 0, now = 100;
   w.scrollTo = () => {};
   w.requestAnimationFrame = cb => { frames.set(++frameId, cb); return frameId; };
@@ -27,7 +28,14 @@ function create(query = "", saved = new Map()) {
   function step(delta = 50) { now += delta; const callbacks = [...frames.values()]; frames.clear(); callbacks.forEach(cb => cb(now)); }
   function until(check, interact = () => {}, seconds = 85) { for (let t = 0; t < seconds * 20 && !check(); t++) { interact(); step(); } assert.ok(check(), "État final attendu"); assert.deepEqual(errors, []); }
   const key = (key, code = key) => w.dispatchEvent(new w.KeyboardEvent("keydown", { key, code, bubbles: true, cancelable: true }));
-  const prepare = game => { click('[data-game="' + game + '"]'); assert.equal(q("#play").hidden, false); assert.match(q("#instructions").textContent, /Prends le temps/); click("#controls button"); };
+  const prepare = game => {
+    if (query.includes("integre=1")) assert.equal(new URLSearchParams(query).get("jeu"), game);
+    else click('[data-game="' + game + '"]');
+    assert.equal(q("#play").hidden, false);
+    assert.match(q("#instructions").textContent, /Prends le temps/);
+    if (query.includes("integre=1")) assert.equal(q(".difficulty").parentElement.id, "play");
+    click("#controls button");
+  };
   return { dom, w, doc, q, click, step, until, key, prepare, frames, saved, errors };
 }
 let checks = 0;
@@ -52,7 +60,7 @@ run("Luciole : trois chemins reconstruits depuis les cases réellement affichée
   assert.match(d.q("#result-score").textContent, /^3 \/ 3/); d.dom.window.close();
 });
 run("Dodo : sauts au clavier et fin gagnante", () => {
-  const d = create(); d.prepare("dodo");
+  const d = create("?jeu=dodo&integre=1"); d.prepare("dodo");
   d.until(() => !d.q("#result").hidden, () => {
     const next = [...d.doc.querySelectorAll('.game-scene rect[rx="6"]')].find(el => +el.getAttribute("x") > 94);
     if (next && +next.getAttribute("x") < 177) d.key(" ", "Space");
@@ -60,7 +68,7 @@ run("Dodo : sauts au clavier et fin gagnante", () => {
   assert.match(d.q("#result-score").textContent, /^8 \/ 8/); d.dom.window.close();
 });
 run("Galets : lâchers au centre et sept poses visibles", () => {
-  const d = create(); d.prepare("galets");
+  const d = create("?jeu=galets&integre=1"); d.prepare("galets");
   d.until(() => !d.q("#result").hidden, () => {
     const stones = [...d.doc.querySelectorAll('.game-scene rect[rx="12"]')], stone = stones.at(-1);
     const center = stone ? +stone.getAttribute("x") + +stone.getAttribute("width") / 2 : 0;
@@ -69,14 +77,14 @@ run("Galets : lâchers au centre et sept poses visibles", () => {
   assert.match(d.q("#result-score").textContent, /^7 \/ 7/); d.dom.window.close();
 });
 run("Tempo : douze signaux réussis et doubles touches ignorées", () => {
-  const d = create(); d.prepare("tempo");
+  const d = create("?jeu=tempo&integre=1"); d.prepare("tempo");
   d.until(() => !d.q("#result").hidden, () => {
     if (d.q(".signal-text")?.textContent === "TOUCHE") { d.click(".tempo-orb"); d.click(".tempo-orb"); }
   }, 45);
   assert.match(d.q("#result-score").textContent, /^12 \/ 12/); d.dom.window.close();
 });
 run("Pause et reprise : horloge gelée, une seule boucle après un double clic", () => {
-  const d = create(); d.prepare("dodo"); for (let i = 0; i < 30; i++) d.step();
+  const d = create("?jeu=dodo&integre=1"); d.prepare("dodo"); for (let i = 0; i < 30; i++) d.step();
   d.click("#pause"); assert.ok(d.q("#pause-dialog").open);
   const scene = d.q("#stage").innerHTML, time = d.q("#time-label").textContent;
   for (let i = 0; i < 60; i++) d.step();
@@ -95,11 +103,11 @@ run("Cadeau : abandon, recharge et seconde partie consomment exactement deux par
   d = create(query, saved); assert.equal(d.q("#result").hidden, false); assert.equal(d.q("#home").hidden, true); assert.equal(d.frames.size, 0); d.dom.window.close();
 });
 run("Inactivité : les galets se terminent au plafond annoncé", () => {
-  const d = create(); d.prepare("galets"); d.until(() => !d.q("#result").hidden, () => {}, 62);
+  const d = create("?jeu=galets&integre=1"); d.prepare("galets"); d.until(() => !d.q("#result").hidden, () => {}, 62);
   assert.match(d.q("#result-text").textContent, /temps.*écoulé/); assert.equal(d.frames.size, 0); d.dom.window.close();
 });
 run("Un écran lent ne prolonge pas la durée de la partie", () => {
-  const d = create(); d.prepare("galets"); d.step(); d.step(1000);
+  const d = create("?jeu=galets&integre=1"); d.prepare("galets"); d.step(); d.step(1000);
   assert.equal(d.q("#time-label").textContent, "59 s");
   for (let i = 0; i < 59; i++) d.step(1000);
   assert.equal(d.q("#result").hidden, false); assert.equal(d.frames.size, 0); d.dom.window.close();

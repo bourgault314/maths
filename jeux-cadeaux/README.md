@@ -1,7 +1,9 @@
-# La boîte à jeux courts
+# Jeux courts
 
-Entrée publique : **Jeux & recherches → Jeux courts → La boîte à jeux courts**.
-Adresse : `/jeux-cadeaux/`. Les quatre jeux sont regroupés sur cette page.
+Entrée publique : **Jeux & recherches → Jeux courts → le jeu choisi**.
+Adresse : `/outils/?domain=jeux-recherches&notion=jeux-courts`. Le catalogue montre directement les quatre cartes et ouvre le jeu dans son panneau central, sans changer de page. Les illustrations proviennent de `art.js`.
+
+Chaque jeu possède aussi un lien direct (`luciole.html`, `dodo.html`, `galets.html`, `tempo.html`) avec le même en-tête, fil d’Ariane et pied de page. L’ancien lien `/jeux-cadeaux/` rejoint le catalogue en mode libre. Le mode cadeau conserve son entrée dédiée.
 
 ## Jeux
 
@@ -39,6 +41,8 @@ Aucun parcours existant et aucun coffre n’est modifié dans ce lot. Il n’y a
 
 - `core.js` : quatre moteurs indépendants du DOM, hasard reproductible, calcul d’équilibre et compteur cadeau.
 - `app.js` : affichage, commandes, horloge unique, pause, navigation et résultats.
+- `assets/js/short-games-view.js` : intégration partagée dans le catalogue et les liens directs ; messages de hauteur et de retour limités au document de jeu du même site.
+- `embedded.css` : habillage dans le catalogue ; difficulté avant Commencer, sans menu intermédiaire. Le retrait du cadre de jeu arrête toute la partie.
 - `tests/jeux-cadeaux.test.mjs` : tests de vrais parcours gagnants et perdants, collisions, équilibre global, doubles touches, déterminisme et quota.
 - `tests/jeux-cadeaux-dom.cjs` : scénarios d’interface avec DOM simulé (`jsdom@26.1.0` en dépendance de développement facultative ; aucune dépendance pour le site).
 - `tests/jeux-cadeaux-apercu.html` : banc d’essai visuel aux tailles téléphone, tablette, ordinateur et paysage. Cette page technique n’est pas indexée.
