@@ -582,7 +582,7 @@ window.MATHSGO_CATALOGUE = {
       "primaryGroup": "entrainer",
       "collections": [],
       "tags": ["calcul-mental", "quatre-operations", "coffres", "aide", "correction-visuelle", "entrainement"],
-      "thumbnail": "assets/img/thumbnails/calcul-mental/coffres-magiques-solo.svg?v=2",
+      "thumbnail": "assets/img/thumbnails/calcul-mental/coffres-magiques-solo.svg?v=3",
       "cardTitle": "Coffres magiques — solo ou duo",
       "cardDescription": "Choisir l’entraînement solo guidé (10 coffres) ou le duel à deux de 20 secondes par tour."
     },
