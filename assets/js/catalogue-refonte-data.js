@@ -406,11 +406,11 @@ window.MATHSGO_CATALOGUE = {
         "jeu-court",
         "tempo",
         "Attention",
-        "maîtrise du geste"
+        "inhibition"
       ],
       "shortGame": "tempo",
       "thumbnail": "assets/img/thumbnails/jeux/tempo.svg?v=2",
-      "cardDescription": "Touche au bon signal et retiens ton geste quand le volcan demande d’attendre."
+      "cardDescription": "Touche la lave, laisse passer la pierre : le mot écrit finit par mentir, et la consigne s’inverse."
     },
     "outils/club_maths/carres_gloutons.html": {
       "primaryGroup": "jeux",
@@ -6806,7 +6806,7 @@ window.MATHSGO_CATALOGUE = {
     {
       "id": "jeux-courts-tempo",
       "title": "Tempo volcan",
-      "description": "Touche au bon signal et retiens ton geste quand le volcan demande d’attendre.",
+      "description": "Touche la lave, laisse passer la pierre : le mot écrit finit par mentir, et la consigne s’inverse.",
       "path": "jeux-cadeaux/tempo.html",
       "domains": [
         "jeux-recherches"
@@ -6825,7 +6825,7 @@ window.MATHSGO_CATALOGUE = {
         "jeu court",
         "tempo",
         "Attention",
-        "maîtrise du geste"
+        "inhibition"
       ],
       "kind": "tool",
       "status": "published",
