@@ -49,7 +49,7 @@ const expectedVisibleCardCounts = {
   imprimer: 23,
   activites: 12,
   cours: 9,
-  jeux: 9
+  jeux: 10
 };
 
 function resolvedPrimaryGroup(resource) {
