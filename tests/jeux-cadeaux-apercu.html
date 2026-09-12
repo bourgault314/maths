@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="robots" content="noindex, follow">
+  <title>Banc d’essai des jeux courts</title>
+  <link rel="icon" href="/favicon.ico">
+  <style>
+    *{box-sizing:border-box}body{font:15px system-ui;margin:0;padding:16px;background:#e8ece8;color:#263f43}header{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:12px}h1{font-size:17px;margin:0}label{display:flex;gap:6px;align-items:center}select,button,a{font:inherit;min-height:44px;padding:8px;border:1px solid #9cad9f;border-radius:8px;background:white;color:inherit}p{margin:8px 0;font-size:13px}iframe{display:block;background:white;border:0;box-shadow:0 0 0 1px #9cad9f;max-width:none}#area{overflow:auto;max-width:100%;padding:4px}
+  </style>
+</head>
+<body>
+  <header><h1>Banc d’essai · Jeux courts</h1>
+    <label>Écran <select id="size"><option value="390,844">Téléphone · 390 × 844</option><option value="320,568">Petit téléphone · 320 × 568</option><option value="820,1180">Tablette · 820 × 1180</option><option value="1366,768">Ordinateur · 1366 × 768</option><option value="844,390">Paysage · 844 × 390</option></select></label>
+    <label>Partie <select id="mode"><option value="">Libre</option><option value="?mode=cadeau&amp;parties=1&amp;ticket=qa-un">Cadeau · 1 partie</option><option value="?mode=cadeau&amp;parties=2&amp;ticket=qa-deux">Cadeau · 2 parties</option></select></label>
+    <button id="reload" type="button">Recharger</button><a href="../jeux-cadeaux/">Ouvrir la banque</a>
+  </header>
+  <p>Essai de mise en page dans une fenêtre aux dimensions fixes. Cela ne reproduit pas Safari ni un appareil tactile réel.</p>
+  <p id="measure" role="status">Chargement…</p>
+  <div id="area"><iframe id="game" title="La boîte à jeux courts" src="../jeux-cadeaux/" width="390" height="844"></iframe></div>
+  <script>
+    const frame = document.getElementById("game");
+    function resize() { const [w,h] = document.getElementById("size").value.split(","); frame.width=w; frame.height=h; }
+    function reload() { frame.src = "../jeux-cadeaux/" + document.getElementById("mode").value; }
+    document.getElementById("size").addEventListener("change", resize);
+    document.getElementById("mode").addEventListener("change", reload);
+    document.getElementById("reload").addEventListener("click", reload);
+    setInterval(() => {
+      try {
+        const doc=frame.contentDocument, w=frame.contentWindow.innerWidth;
+        if (!doc || !doc.body) return;
+        document.getElementById("measure").textContent="Largeur : "+w+" px · Contenu : "+doc.documentElement.scrollWidth+" px · "+(doc.documentElement.scrollWidth>w?"Débordement horizontal":"Aucun débordement horizontal");
+      } catch { document.getElementById("measure").textContent="La page doit être ouverte depuis le même site."; }
+    }, 500);
+    resize();
+  </script>
+</body>
+</html>

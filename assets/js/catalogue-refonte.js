@@ -309,6 +309,11 @@
       icon: "gears",
       hub: "club_maths/index.html"
     },
+    "jeux-courts": {
+      description: "Jouer quelques minutes avec sa mémoire, son attention et sa précision.",
+      keywords: "jeu court mémoire attention inhibition réflexe précision dodo galets",
+      icon: "strategy"
+    },
     "rentree-cohesion": {
       description: "Faire connaissance, créer du lien et bien démarrer l'année.",
       keywords: "rentrée accueil cohésion groupe faire connaissance communication écoute",

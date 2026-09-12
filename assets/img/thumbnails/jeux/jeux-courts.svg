@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500" role="img" aria-labelledby="title desc">
+  <title id="title">La boîte à jeux courts</title><desc id="desc">Une luciole, un dodo et une pile de galets dans quatre cartes colorées.</desc>
+  <defs><linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#e4f7f3"/><stop offset="1" stop-color="#fff0d8"/></linearGradient><filter id="s"><feDropShadow dy="8" stdDeviation="8" flood-opacity=".16"/></filter></defs>
+  <rect width="800" height="500" rx="42" fill="url(#bg)"/>
+  <g filter="url(#s)"><rect x="95" y="88" width="270" height="145" rx="28" fill="#0755b8"/><rect x="435" y="88" width="270" height="145" rx="28" fill="#ee654d"/><rect x="95" y="267" width="270" height="145" rx="28" fill="#8261b7"/><rect x="435" y="267" width="270" height="145" rx="28" fill="#d98600"/></g>
+  <g fill="#fff" text-anchor="middle" font-family="Arial Rounded MT Bold,Arial,sans-serif"><text x="230" y="183" font-size="86">✦</text><text x="570" y="183" font-size="78">🦤</text><g transform="translate(230 336)"><ellipse cy="43" rx="72" ry="24"/><ellipse cy="4" rx="54" ry="20"/><ellipse cy="-27" rx="38" ry="16"/></g><circle cx="570" cy="338" r="57" fill="none" stroke="#fff" stroke-width="18"/><circle cx="570" cy="338" r="15"/></g>
+</svg>
