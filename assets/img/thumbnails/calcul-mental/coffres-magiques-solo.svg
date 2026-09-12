@@ -43,11 +43,11 @@
       </g>
       <text x="51" y="29" fill="#0755b8" font-size="17" font-weight="900">6 / 10 clés</text>
     </g>
-    <g transform="translate(40 286)" fill="#078a82" font-size="15" font-weight="900">
-      <text x="0" y="0">+</text>
-      <text x="34" y="0">−</text>
-      <text x="66" y="0">×</text>
-      <text x="99" y="0">÷</text>
+    <g transform="translate(39 301)" fill="#078a82" font-size="26" font-weight="900" text-anchor="middle">
+      <text x="22" y="0">+</text>
+      <text x="62" y="0">−</text>
+      <text x="102" y="0">×</text>
+      <text x="142" y="0">÷</text>
     </g>
   </g>
 
