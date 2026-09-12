@@ -1,0 +1,92 @@
+/* Même présentation du vocabulaire et des réglages en Solo et en Duo. */
+.mode-dialog-card { width: min(100%, 480px); padding: 22px; }
+.mode-dialog-card h2 { margin: 0 0 16px; font-size: 1.6rem; }
+.mode-dialog-card .mode-options { grid-template-columns: 1fr 1fr; gap: 10px; margin: 0; }
+.mode-dialog-card .mode-choice {
+  min-height: 76px; display: grid; grid-template-columns: 1fr; gap: 4px;
+  justify-items: center; padding: 10px 6px; text-align: center;
+  border: 2px solid #cadde8; background: #f8fcff; box-shadow: none;
+}
+.mode-dialog-card .mode-choice[aria-pressed="true"] { border-color: #0755b8; background: #eaf3ff; box-shadow: inset 0 0 0 1px #0755b8; }
+.mode-dialog-card .mode-choice strong { font-size: 1.1rem; }
+.mode-dialog-card .mode-choice small { margin: 0; font-size: .76rem; line-height: 1.3; }
+.mode-dialog-card .level-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 14px 0 0; padding: 0; border: 0; background: none; }
+.mode-dialog-card .level-row[hidden] { display: none; }
+.mode-dialog-card .level-row-label { grid-column: 1 / -1; font-size: .9rem; font-weight: 850; letter-spacing: 0; text-transform: none; color: #31546e; }
+.mode-dialog-card .level-choice { min-height: 48px; display: grid; justify-items: center; gap: 2px; padding: 6px; border: 2px solid #cadde8; border-radius: 12px; background: #fff; color: #31546e; font-size: .92rem; font-weight: 900; line-height: 1.2; }
+.mode-dialog-card .level-choice small { font-size: .7rem; font-weight: 750; }
+.mode-dialog-card .level-choice[aria-pressed="true"] { color: #0755b8; border-color: #0755b8; background: #eaf3ff; box-shadow: none; }
+.mode-dialog-card .level-choice[aria-pressed="true"] small { color: #31546e; }
+.operation-choices { margin: 16px 0 0; padding: 0; border: 0; min-width: 0; }
+.operation-choices legend { width: 100%; margin-bottom: 9px; padding: 0; color: #143e62; font-size: 1.05rem; font-weight: 900; }
+.operation-options { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.operation-option { min-height: 48px; display: flex; align-items: center; justify-content: center; gap: 7px; padding: 6px; border: 2px solid #cadde8; border-radius: 12px; color: #31546e; background: #f8fcff; font-size: .86rem; font-weight: 850; cursor: pointer; }
+.operation-option:has(input:checked) { border-color: #0755b8; color: #0755b8; background: #eaf3ff; }
+.operation-option:has(input:focus-visible) { outline: 3px solid #b27b00; outline-offset: 2px; }
+.operation-option input { width: 17px; height: 17px; margin: 0; accent-color: #0755b8; flex-shrink: 0; }
+.operation-option .operation-symbol { font-size: 1.45rem; line-height: 1; }
+.operations-hint { min-height: 17px; margin: 5px 0 0; color: #a3332b; font-size: .76rem; line-height: 1.2; }
+.mode-dialog-card .mode-continue { width: 100%; min-height: 48px; margin-top: 8px; padding: 8px 14px; border: 0; border-radius: 14px; color: #fff; background: linear-gradient(145deg, #087c75, #0755b8); font-size: 1rem; font-weight: 950; text-decoration: none; }
+
+.operation-grid article[hidden], .operation-visuals article[hidden], .operation-conventions [hidden], .operation-conventions[hidden] { display: none; }
+.operation-grid h3, #lesson-course article h3, .operation-visual-card h3 { color: #0755b8; font-size: 1.65rem; font-weight: 950; line-height: 1.15; text-align: center; }
+.operation-grid .operation-meaning, #lesson-course .operation-meaning, .operation-visual-card .operation-meaning { margin: 0 0 5px; color: #49677b; font-size: .94rem; font-weight: 750; line-height: 1.3; text-align: center; }
+.operation-grid[data-operation-count="1"] { grid-template-columns: 1fr; }
+.sum-parts-markers { display: flex; width: 100%; gap: 0; padding: 5px 2px 0; }
+.sum-part-marker { flex: var(--quantity-value) 1 0; min-width: 0; padding-top: 6px; position: relative; color: #0755b8; font-size: .9rem; font-weight: 900; line-height: 1.1; text-align: center; }
+.sum-part-marker + .sum-part-marker { color: #a3401f; }
+.sum-part-marker::before { content: ""; position: absolute; top: 0; left: 1px; right: 1px; height: 5px; border: 2px solid currentColor; border-top: 0; }
+.key-progress { display: inline-flex; align-items: center; justify-content: center; gap: 8px; white-space: nowrap; }
+.progress-key { width: 32px; height: 24px; flex: 0 0 32px; color: #0755b8; }
+
+/* La correction compare deux essais, puis montre une seule notion. Le bouton reste accessible. */
+.correction-card { display: flex; flex-direction: column; gap: 10px; width: min(620px, 100%); padding: 20px; overflow: hidden; }
+.correction-card > h2 { flex-shrink: 0; margin: 0 0 3px; color: #0755b8; font-size: 1.4rem; line-height: 1.2; text-align: center; }
+.correction-content { min-height: 0; overflow-y: auto; overscroll-behavior: contain; display: grid; gap: 10px; }
+.correction-card .correction-choice, .correction-card .correction-solution { display: grid; justify-items: center; justify-self: stretch; gap: 3px; margin: 0; padding: 9px 8px; border: 1px solid #efc9c3; border-radius: 12px; color: #193b59 !important; background: #fff4f1; }
+.correction-card .correction-choice[hidden] { display: none; }
+.correction-card .correction-solution { border-color: #acd5c7; background: #eefaf4; }
+.correction-label { font-size: .86rem; font-weight: 850; line-height: 1.2; }
+.correction-equation { font-size: clamp(1.6rem, 6.7vw, 2.1rem); font-weight: 950; line-height: 1.2; font-variant-numeric: tabular-nums; }
+.correction-choice .correction-answer, .correction-remainder { color: #a3332b; }
+.correction-solution .correction-answer { color: #076147; }
+.correction-remainder { font-size: .85rem; font-weight: 850; line-height: 1.25; }
+.correction-card .learning-panel { margin: 0; padding: 8px; gap: 0; }
+.correction-card .learning-demo { min-height: 0; padding: 5px; gap: 6px; }
+.correction-card .demo-caption { font-size: .85rem; }
+.correction-card .demo-interpretations { grid-template-columns: 1fr; gap: 8px; }
+.correction-card .demo-interpretation { gap: 5px; padding: 0; border: 0; }
+.correction-card .dialog-actions { flex-shrink: 0; margin: 0; }
+.correction-card .dialog-actions .primary-button { min-height: 48px; font-size: 1.05rem; }
+.correction-card .area-model { --area-unit: 10px; }
+@media (min-width: 900px) {
+  .operation-grid h3, #lesson-course article h3 { font-size: 1.9rem; }
+  #lesson-course article { grid-template-areas: "title title" "meaning meaning" "example picture" "equation picture" "definition picture"; }
+  #lesson-course article .operation-meaning { grid-area: meaning; }
+  .correction-card { width: min(760px, 100%); padding: 24px 28px; }
+  .correction-card > h2 { font-size: 1.8rem; }
+  .correction-card .correction-equation { font-size: 2.3rem; }
+  .correction-card .correction-label, .correction-card .demo-caption { font-size: 1rem; }
+}
+@media (max-width: 520px) {
+  .correction-card { padding: 16px; gap: 8px; }
+  .correction-card > h2 { font-size: 1.28rem; margin: 0; }
+  .correction-content { gap: 8px; }
+  .correction-card .learning-panel { padding: 6px; }
+  .correction-card .quantity-dot { width: 8px; height: 8px; }
+  .correction-card .quantity-row { min-height: 32px; }
+  .correction-card .area-model { --area-unit: 9px; }
+}
+@media (max-height: 640px) {
+  .mode-dialog-card { padding: 14px; }
+  .mode-dialog-card h2 { margin-bottom: 10px; font-size: 1.35rem; }
+  .mode-dialog-card .mode-choice { min-height: 64px; padding: 7px 4px; }
+  .mode-dialog-card .level-row, .operation-choices { margin-top: 10px; }
+  .mode-dialog-card .level-row { gap: 5px; }
+  .operation-choices legend { margin-bottom: 6px; }
+  .correction-card { padding: 12px; gap: 7px; }
+  .correction-card .correction-choice, .correction-card .correction-solution { padding-block: 6px; }
+  .correction-card .learning-demo { --demo-dot: 8px; }
+  .correction-card .demo-dot-grid { gap: 3px; padding: 5px; }
+  .correction-card .area-model { --area-unit: 7px; }
+}

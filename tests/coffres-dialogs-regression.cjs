@@ -135,6 +135,7 @@ async function auditModeSelector(browser, base, errors, scenario) {
     await page.keyboard.press("Escape");
     assert(await page.locator("#mode-dialog").isVisible(), `${scenario.label} : Échap contourne le choix de mode initial.`);
     await page.locator(`#choose-${scenario.targetMode}`).click();
+    await page.locator("#continue-current-mode").click();
     await page.waitForURL(url => (
       url.pathname === scenario.targetPath
       && url.searchParams.get("mode") === scenario.targetMode

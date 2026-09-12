@@ -53,8 +53,8 @@ test("le focus clavier est remappé après réponse ou expiration sans suivre la
 
 test("les quatre opérations sont servies équitablement aux deux joueurs", () => {
   assert.match(html, /const OPERATION_MODES = \["sum", "difference", "product", "quotient"\];/);
-  assert.match(html, /const positionInBlock = \(challengeNumber - 1\) % \(OPERATION_MODES\.length \* 2\);/);
-  assert.match(html, /if \(positionInBlock === 0\) operationCycle = shuffle\(OPERATION_MODES\);/);
+  assert.match(html, /const positionInBlock = \(challengeNumber - 1\) % \(selectedOperations\.length \* 2\);/);
+  assert.match(html, /if \(positionInBlock === 0\) operationCycle = shuffle\(selectedOperations\);/);
   assert.match(html, /return operationCycle\[Math\.floor\(positionInBlock \/ 2\)\];/);
   assert.match(html, /mode = nextBalancedMode\(\);/);
 });

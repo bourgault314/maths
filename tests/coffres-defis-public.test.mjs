@@ -76,12 +76,12 @@ test("les règles et durées approuvées restent explicites", () => {
   const duel = pages["outils/club_maths/coffres_magiques.html"];
   assert.match(duel, /const KEYS_TO_WIN = 5;/);
   assert.match(duel, /const OPERATION_MODES = \["sum", "difference", "product", "quotient"\];/);
-  assert.match(duel, /positionInBlock = \(challengeNumber - 1\) % \(OPERATION_MODES\.length \* 2\)/);
+  assert.match(duel, /positionInBlock = \(challengeNumber - 1\) % \(selectedOperations\.length \* 2\)/);
   assert.match(duel, /operationCycle\[Math\.floor\(positionInBlock \/ 2\)\]/);
 
   const solo = pages["outils/calcul_mental/coffres_magiques_solo.html"];
   assert.match(solo, /const GOAL = 10;/);
-  assert.match(solo, /\["sum", "sum", "sum", "difference", "difference", "product", "product", "product", "quotient", "quotient"\]/);
+  assert.match(solo, /modes = shuffle\(settingsCore.soloSeries\(selectedOperations\)\)/);
 
   assert.deepEqual(tablesCore.PRESETS.learn, {
     total: 11,
@@ -111,12 +111,12 @@ test("les deux portes Coffres donnent accès aux modes solo et duo", () => {
   for (const path of coffresPaths) {
     const html = pages[path];
     assert.match(html, /id="mode-dialog"[^>]*role="dialog"[^>]*aria-modal="true"[^>]*aria-labelledby="mode-title"/, path);
-    assert.match(html, /id="choose-solo"[\s\S]*Solo — S’entraîner/, path);
-    assert.match(html, /id="choose-duo"[\s\S]*Duo — Se défier/, path);
-    assert.match(html, /data-change-mode>Changer de mode/, path);
-    assert.match(html, /function modeUrl\(nextMode\)[\s\S]*coffres_magiques_solo\.html[\s\S]*coffres_magiques\.html[\s\S]*\?mode=\$\{nextMode\}&from=\$\{origin\}/, path);
-    assert.match(html, /#choose-solo"\)\.addEventListener\("click", \(\) => chooseMode\("solo"\)\)/, path);
-    assert.match(html, /#choose-duo"\)\.addEventListener\("click", \(\) => chooseMode\("duo"\)\)/, path);
+    assert.match(html, /id="choose-solo"[\s\S]*<strong>Solo<\/strong>/, path);
+    assert.match(html, /id="choose-duo"[\s\S]*<strong>Duo<\/strong>/, path);
+    assert.match(html, /data-change-mode>Réglages/, path);
+    assert.match(html, /function modeUrl\(nextMode,[\s\S]*coffres_magiques_solo\.html[\s\S]*coffres_magiques\.html[\s\S]*new URLSearchParams\(\{ mode: nextMode, from: origin \}\)/, path);
+    assert.match(html, /settingsCore.createChoices\(modeDialog, CURRENT_MODE, confirmSettings\)/, path);
+    assert.match(html, /window\.location\.replace\(modeUrl\(config.mode, config.operations, config.level\)\)/, path);
   }
 
   for (const path of coffresPaths) {

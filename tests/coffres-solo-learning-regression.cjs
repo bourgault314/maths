@@ -52,6 +52,14 @@ function wrongPairFor(state) {
   return pair;
 }
 
+function equationFor(mode, first, second) {
+  const ordered = mode === "difference" || mode === "quotient";
+  const left = ordered ? Math.max(first, second) : first;
+  const right = ordered ? Math.min(first, second) : second;
+  const symbol = { sum: "+", difference: "−", product: "×", quotient: "÷" }[mode];
+  return `${left} ${symbol} ${right} = ${valueFor(mode, first, second)}`;
+}
+
 async function state(page) {
   return page.evaluate(() => window.MATHSGO_COFFRES_SOLO.getState());
 }
@@ -390,7 +398,7 @@ async function auditPointJourney(browser, base, randomValue, expectedMode, error
     const boardDuringSolution = await state(page);
     assert(boardDuringSolution.boardId === boardBeforeSolution.boardId && boardDuringSolution.target === boardBeforeSolution.target && JSON.stringify(boardDuringSolution.values) === JSON.stringify(boardBeforeSolution.values), `Solution demandée ${expectedMode} : le plateau a changé avant l’affichage de la paire.`);
     const correctionSentence = await page.locator("#correction-solution").innerText();
-    assert(correctionSentence.includes(`${expectedSolution.pair[0]} et ${expectedSolution.pair[1]} conviennent`), `Solution demandée ${expectedMode} : la correction ne reprend pas une paire réelle du plateau courant.`);
+    assert(correctionSentence.includes(equationFor(expectedMode, ...expectedSolution.pair)), `Solution demandée ${expectedMode} : la correction ne reprend pas une paire réelle du plateau courant.`);
     await assertPointVisual(page, "#correction-visual .learning-demo", expectedMode, `Solution demandée ${expectedMode}`);
     await page.locator("#close-correction").click();
     await page.locator("#correction-dialog").waitFor({ state: "hidden" });
@@ -401,7 +409,7 @@ async function auditPointJourney(browser, base, randomValue, expectedMode, error
     await page.locator(`.rune[data-index="${wrongFirst}"]`).click();
     await page.locator(`.rune[data-index="${wrongSecond}"]`).click();
     await page.waitForFunction(() => document.activeElement.id === "correction-title");
-    assert((await page.locator("#correction-choice").innerText()).startsWith("Ton calcul"), `La correction d’erreur ${expectedMode} n’annonce pas le calcul.`);
+    assert((await page.locator("#correction-choice").innerText()).startsWith("Ton essai"), `La correction d’erreur ${expectedMode} n’annonce pas le calcul.`);
     await assertPointVisual(page, "#correction-visual .learning-demo", expectedMode, `Correction après erreur ${expectedMode}`);
     await assertNoHorizontalOverflow(page, `Correction ${expectedMode} à 320 px`);
     await page.screenshot({ path: path.join(CAPTURES, `correction-${expectedMode}-320.png`) });
@@ -975,7 +983,7 @@ async function auditNiveauDeux(browser, base, { width, height }, errors) {
       await page.waitForFunction(() => document.activeElement.id === "correction-title");
       const solution = (await page.locator("#correction-solution").innerText()).trim();
       const expected = allSolutions(current);
-      assert(expected.some(pair => solution.includes(`${current.values[pair[0]]} et ${current.values[pair[1]]} conviennent`)), `${label} : la correction ${mode} ne reprend pas une paire réelle du plateau.`);
+      assert(expected.some(pair => solution.includes(equationFor(mode, current.values[pair[0]], current.values[pair[1]]))), `${label} : la correction ${mode} ne reprend pas une paire réelle du plateau.`);
       await assertBarVisual(page, "#correction-visual .learning-demo", mode, `Correction niveau 2 ${mode} à ${width} px`);
       await assertNoHorizontalOverflow(page, `${label} : correction ${mode}`);
       await page.screenshot({ path: path.join(CAPTURES, `correction-niveau2-${mode}-${width}.png`) });
@@ -1001,8 +1009,9 @@ async function auditChoixDuNiveau(browser, base, errors) {
     await page.screenshot({ path: path.join(CAPTURES, "fenetre-mode-niveaux-1280.png") });
     await pills.nth(1).click();
     assert(await pills.nth(1).getAttribute("aria-pressed") === "true" && await pills.nth(0).getAttribute("aria-pressed") === "false", `${label} : le clic sur Niveau 2 ne le sélectionne pas.`);
-    assert(new URL(page.url()).searchParams.get("niveau") === "2", `${label} : l'adresse ne mémorise pas ?niveau=2.`);
+    assert(new URL(page.url()).searchParams.get("niveau") === null, `${label} : un choix provisoire ne doit pas changer l’adresse.`);
     await page.locator("#choose-solo").click();
+    await page.locator("#continue-current-mode").click();
     await page.waitForFunction(() => document.activeElement.id === "start-game");
     await page.locator("#start-game").click();
     await page.locator("#lesson").waitFor({ state: "hidden" });
@@ -1015,7 +1024,7 @@ async function auditChoixDuNiveau(browser, base, errors) {
     await page.locator("[data-change-mode]").click();
     await page.locator("#mode-dialog:not([hidden])").waitFor();
     await pills.nth(0).click();
-    assert((await page.locator("#continue-current-mode").innerText()).trim() === "Nouvelle partie au niveau 1", `${label} : le bouton de reprise n'annonce pas la nouvelle partie.`);
+    assert((await page.locator("#continue-current-mode").innerText()).trim() === "Nouvelle partie", `${label} : le bouton de reprise n'annonce pas la nouvelle partie.`);
     await page.keyboard.press("Escape");
     await page.locator("#mode-dialog").waitFor({ state: "hidden" });
     const kept = await state(page);
@@ -1026,13 +1035,14 @@ async function auditChoixDuNiveau(browser, base, errors) {
     await pills.nth(0).click();
     await page.locator("#continue-current-mode").click();
     await page.locator("#mode-dialog").waitFor({ state: "hidden" });
+    await page.locator("#start-game").click();
     const restarted = await state(page);
     assert(restarted.level === 1 && restarted.keys === 0 && restarted.boardId > running.boardId, `${label} : la nouvelle partie au niveau 1 n'a pas démarré.`);
     assert(new URL(page.url()).searchParams.get("niveau") === null, `${label} : l'adresse garde ?niveau=2 après retour au niveau 1.`);
     assert((await page.locator("#level-label").innerText()).trim() === "niveau 1", `${label} : la ligne de titre n'est pas revenue au niveau 1.`);
     await page.locator("[data-change-mode]").click();
     await page.locator("#mode-dialog:not([hidden])").waitFor();
-    assert((await page.locator("#continue-current-mode").innerText()).trim() === "Continuer la partie", `${label} : sans changement de niveau, le bouton doit proposer de continuer.`);
+    assert((await page.locator("#continue-current-mode").innerText()).trim() === "Continuer", `${label} : sans changement de niveau, le bouton doit proposer de continuer.`);
   } finally {
     await page.close();
   }
@@ -1107,12 +1117,14 @@ async function auditChoixDuNiveau(browser, base, errors) {
     assert(duringReveal.mode === beforeHelp.mode, "La révélation change d’opération avant l’explication.");
     assert(duringReveal.boardId === beforeHelp.boardId, "La révélation change le plateau avant de montrer sa solution.");
     assert(duringReveal.keys === beforeHelp.keys, "La révélation offre une clé.");
-    assert((await page.locator("#correction-choice").innerText()).includes("paire voisine"), "La solution ne désigne pas une paire voisine.");
+    assert(await page.locator("#correction-choice").isHidden(), "Une solution demandée ne doit pas inventer un essai.");
     assert(await page.locator("#correction-visual .learning-demo[role=img]").isVisible(), "La correction visuelle est absente.");
+    await page.keyboard.press("Tab");
+    assert(await page.evaluate(() => document.activeElement.classList.contains("correction-content")), "Tab ne rejoint pas le contenu défilable de la correction.");
     await page.keyboard.press("Tab");
     assert(await page.evaluate(() => document.activeElement.id === "close-correction"), "Tab ne rejoint pas l’action de la correction.");
     await page.keyboard.press("Tab");
-    assert(await page.evaluate(() => document.activeElement.id === "close-correction"), "Tab sort du dialogue de correction.");
+    assert(await page.evaluate(() => document.activeElement.classList.contains("correction-content")), "Tab sort du dialogue de correction.");
     await page.screenshot({ path: path.join(CAPTURES, "solution-mobile-390.png") });
     await page.locator("#close-correction").click();
     await page.waitForFunction(previous => window.MATHSGO_COFFRES_SOLO.getState().boardId > previous, beforeHelp.boardId);
@@ -1126,7 +1138,7 @@ async function auditChoixDuNiveau(browser, base, errors) {
     await page.locator(`.rune[data-index="${wrongFirst}"]`).click();
     await page.locator(`.rune[data-index="${wrongSecond}"]`).click();
     await page.waitForFunction(() => document.activeElement.id === "correction-title");
-    assert((await page.locator("#correction-choice").innerText()).startsWith("Ton calcul"), "Le calcul choisi n’est pas annoncé.");
+    assert((await page.locator("#correction-choice").innerText()).startsWith("Ton essai"), "Le calcul choisi n’est pas annoncé.");
     assert((await state(page)).keys === beforeMistake.keys, "Une paire fausse offre une clé.");
     await page.screenshot({ path: path.join(CAPTURES, "correction-erreur-mobile-390.png") });
     await page.keyboard.press("Escape");

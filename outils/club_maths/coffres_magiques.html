@@ -1163,6 +1163,7 @@
       }
     }
   </style>
+  <link rel="stylesheet" href="../../assets/css/coffres-learning.css?v=1">
 </head>
 <body>
   <header class="topbar">
@@ -1184,7 +1185,7 @@
       <header class="game-heading">
         <div>
           <h1>Coffres magiques</h1>
-          <p class="game-subline"><span>Duo · 20 secondes par tour</span><button class="mode-switch-button" type="button" data-change-mode>Changer de mode</button></p>
+          <p class="game-subline"><span>Duo · 20 secondes par tour</span><button class="mode-switch-button" type="button" data-change-mode>Réglages</button></p>
         </div>
         <button id="rules-button" class="rules-button" type="button">Règle</button>
       </header>
@@ -1218,20 +1219,31 @@
 
   <section id="mode-dialog" class="overlay" hidden role="dialog" aria-modal="true" aria-labelledby="mode-title">
     <div class="dialog-card mode-dialog-card">
-      <div class="dialog-icon" aria-hidden="true">🔐</div>
       <h2 id="mode-title" tabindex="-1">Choisis ton mode</h2>
-      <p>Les mêmes coffres, selon que tu veux t’entraîner ou défier quelqu’un.</p>
-      <div class="mode-options">
-        <button id="choose-solo" class="mode-choice mode-choice-solo" type="button">
-          <span class="mode-choice-icon" aria-hidden="true">1</span>
-          <span><strong>Solo — S’entraîner</strong><small>1 joueur · 10 clés · sans chrono · aides et corrections</small></span>
+      <div class="mode-options" role="group" aria-label="Mode de jeu">
+        <button id="choose-solo" class="mode-choice mode-choice-solo" type="button" data-game-mode="solo" aria-pressed="true">
+          <strong>Solo</strong><small>1 joueur · 10 clés<br>Sans chrono · avec aide</small>
         </button>
-        <button id="choose-duo" class="mode-choice mode-choice-duo" type="button">
-          <span class="mode-choice-icon" aria-hidden="true">2</span>
-          <span><strong>Duo — Se défier</strong><small>2 joueurs · 20 s par tour · premier à 5 clés</small></span>
+        <button id="choose-duo" class="mode-choice mode-choice-duo" type="button" data-game-mode="duo" aria-pressed="false">
+          <strong>Duo</strong><small>2 joueurs · 5 clés<br>20 secondes par tour</small>
         </button>
       </div>
-      <button id="continue-current-mode" class="mode-continue" type="button" hidden>Continuer la partie</button>
+      <div class="level-row" role="group" aria-label="Niveau des nombres en solo">
+        <span class="level-row-label">Niveau</span>
+        <button class="level-choice" type="button" data-level="1" aria-pressed="true">Niveau 1<small>nombres de 1 à 12</small></button>
+        <button class="level-choice" type="button" data-level="2" aria-pressed="false">Niveau 2<small>nombres jusqu’à 20</small></button>
+      </div>
+      <fieldset class="operation-choices">
+        <legend>Choisis tes opérations</legend>
+        <div class="operation-options">
+          <label class="operation-option"><input type="checkbox" name="operation" value="sum" checked><span class="operation-symbol" aria-hidden="true">+</span>Addition</label>
+          <label class="operation-option"><input type="checkbox" name="operation" value="difference" checked><span class="operation-symbol" aria-hidden="true">−</span>Soustraction</label>
+          <label class="operation-option"><input type="checkbox" name="operation" value="product" checked><span class="operation-symbol" aria-hidden="true">×</span>Multiplication</label>
+          <label class="operation-option"><input type="checkbox" name="operation" value="quotient" checked><span class="operation-symbol" aria-hidden="true">÷</span>Division</label>
+        </div>
+        <p id="operations-hint" class="operations-hint" aria-live="polite"></p>
+      </fieldset>
+      <button id="continue-current-mode" class="mode-continue" type="button">Continuer</button>
     </div>
   </section>
 
@@ -1241,8 +1253,9 @@
         <div class="dialog-icon" aria-hidden="true">+ − × ÷</div>
         <h2 id="rules-title" tabindex="-1">Gagne cinq clés</h2>
         <div class="operation-visuals">
-          <article class="operation-visual-card">
-            <h3>Somme : réunir deux quantités</h3>
+          <article class="operation-visual-card" data-operation="sum">
+            <h3>Somme</h3>
+          <p class="operation-meaning">Réunir deux quantités</p>
             <p class="operation-example">La somme de 3 et de 2 est 5.</p>
             <div class="bar-model sum-bar-model" role="img" aria-label="Un crochet placé au-dessus des cinq colonnes indique somme égale cinq. Cinq points dans la barre du haut sont alignés avec trois points et deux points dans deux rectangles jointifs en dessous. Les groupes de trois et de deux réunis forment cinq. Trois plus deux égale cinq.">
               <div class="bar-diagram" aria-hidden="true">
@@ -1262,13 +1275,15 @@
                     <span class="bar-points" style="--points:2"><i class="bar-dot"></i><i class="bar-dot"></i></span>
                   </span>
                 </div>
+                <div class="sum-parts-markers" aria-hidden="true"><span class="sum-part-marker" style="--quantity-value:3">3</span><span class="sum-part-marker" style="--quantity-value:2">2</span></div>
               </div>
             </div>
             <div class="operation-equation">3 + 2 = 5</div>
             <p>La somme est le résultat d’une addition.</p>
           </article>
-          <article class="operation-visual-card">
-            <h3>Différence : l’écart entre deux quantités</h3>
+          <article class="operation-visual-card" data-operation="difference">
+            <h3>Différence</h3>
+          <p class="operation-meaning">L’écart entre deux quantités</p>
             <p class="operation-example">La différence entre 5 et 2 est 3.</p>
             <div class="bar-model difference-bar-model" role="img" aria-label="La différence est l’écart entre les deux quantités. Cinq points sont alignés au-dessus de deux points. Les deux premiers sont appariés. Les trois autres, surlignés, ne sont pas appariés. Sous ces trois derniers points, dans l’espace vide de la ligne inférieure, un crochet tourné vers eux indique différence égale trois. Cinq moins deux égale trois.">
               <div class="bar-diagram" aria-hidden="true">
@@ -1288,8 +1303,9 @@
             <div class="operation-equation">5 − 2 = 3</div>
             <p>La différence est le résultat d’une soustraction.</p>
           </article>
-          <article class="operation-visual-card">
-            <h3>Produit : former des rangées égales</h3>
+          <article class="operation-visual-card" data-operation="product">
+            <h3>Produit</h3>
+          <p class="operation-meaning">Former des rangées égales</p>
             <p class="operation-example">Le produit de 3 par 4 est 12.</p>
             <div class="operation-picture" role="group" aria-label="Deux rectangles orientés montrent que trois fois quatre et quatre fois trois donnent tous les deux douze">
               <div class="dual-operation-views">
@@ -1314,8 +1330,9 @@
             <div class="operation-equation">3 × 4 = 12 ; 4 × 3 = 12 aussi</div>
             <p>Le produit est le résultat d’une multiplication.</p>
           </article>
-          <article class="operation-visual-card">
-            <h3>Quotient : grouper ou partager</h3>
+          <article class="operation-visual-card" data-operation="quotient">
+            <h3>Quotient</h3>
+          <p class="operation-meaning">Grouper ou partager</p>
             <p class="operation-example">Le quotient de 8 par 2 est 4.</p>
             <div class="operation-picture" role="group" aria-label="Deux façons de comprendre huit divisé par deux">
               <div class="dual-operation-views">
@@ -1343,7 +1360,7 @@
           </aside>
         </div>
         <ol class="rule-steps">
-          <li>Le coffre demande une <strong>somme</strong>, une <strong>différence</strong>, un <strong>produit</strong> ou un <strong>quotient</strong>.</li>
+          <li id="chosen-operations-rule">Le coffre demande une somme, une différence, un produit ou un quotient.</li>
           <li>Choisis deux runes qui se touchent par un côté.</li>
           <li>Tu as <strong>20 secondes</strong>. Si le temps est écoulé, tu ne gagnes pas de clé et le tour passe.</li>
           <li>Bonne réponse : tu gagnes une clé, puis le tour passe. Réponse fausse : aucune clé et le tour passe aussi.</li>
@@ -1375,6 +1392,7 @@
     <span data-mathsgo-confidentialite>Sans cookie ni traceur</span>
   </footer>
 
+  <script src="../../assets/js/coffres-settings.js?v=1"></script>
   <script>
     (() => {
       "use strict";
@@ -1422,6 +1440,9 @@
       const result = document.querySelector("#result");
       const requestedMode = new URLSearchParams(window.location.search).get("mode");
       const origin = resolveOrigin();
+      const settingsCore = window.MATHSGO_COFFRES_SETTINGS;
+      let selectedOperations = settingsCore.readOperations(window.location.search);
+      let selectedLevel = new URLSearchParams(window.location.search).get("niveau") === "2" ? 2 : 1;
       let values = [];
       let mode = "sum";
       let target = 0;
@@ -1530,6 +1551,7 @@
       }
 
       const dialogs = createModalController();
+      const settingsChoices = settingsCore.createChoices(modeDialog, CURRENT_MODE, confirmSettings);
 
       function resolveOrigin() {
         const candidate = new URLSearchParams(window.location.search).get("from");
@@ -1548,17 +1570,20 @@
         });
       }
 
-      function modeUrl(nextMode) {
+      function modeUrl(nextMode, operations = selectedOperations, level = selectedLevel) {
         const path = nextMode === "solo"
           ? "../calcul_mental/coffres_magiques_solo.html"
           : "../club_maths/coffres_magiques.html";
-        return `${path}?mode=${nextMode}&from=${origin}`;
+        const params = new URLSearchParams({ mode: nextMode, from: origin });
+        if (level === 2) params.set("niveau", "2");
+        settingsCore.writeOperations(params, operations);
+        return `${path}?${params}`;
       }
 
       function openModeDialog({ mandatory = false } = {}) {
         if (!mandatory && (locked || finished)) return;
         modeDialogMandatory = mandatory;
-        document.querySelector("#continue-current-mode").hidden = mandatory;
+        settingsChoices.reset(selectedOperations, selectedLevel, gameStarted);
         if (gameStarted) pauseTurnClock("mode");
         dialogs.open(modeDialog, {
           trigger: mandatory ? null : document.activeElement,
@@ -1576,12 +1601,20 @@
         if (gameStarted) resumeTurnClock("mode");
       }
 
-      function chooseMode(nextMode) {
-        if (nextMode !== CURRENT_MODE) {
-          window.location.replace(modeUrl(nextMode));
+      function confirmSettings(config) {
+        if (config.mode !== CURRENT_MODE) {
+          window.location.replace(modeUrl(config.mode, config.operations, config.level));
           return;
         }
-        const mustStart = !gameStarted;
+        const changed = !settingsCore.sameOperations(selectedOperations, config.operations);
+        selectedOperations = config.operations;
+        selectedLevel = config.level;
+        const url = new URL(window.location.href);
+        settingsCore.writeOperations(url.searchParams, selectedOperations);
+        if (selectedLevel === 2) url.searchParams.set("niveau", "2");
+        else url.searchParams.delete("niveau");
+        if (url.href !== window.location.href) window.history.replaceState(window.history.state, "", url.href);
+        const mustStart = !gameStarted || changed;
         closeModeDialog({ force: true, restoreFocus: !mustStart });
         if (mustStart) start({ showRules: true });
       }
@@ -1799,8 +1832,8 @@
       }
 
       function nextBalancedMode() {
-        const positionInBlock = (challengeNumber - 1) % (OPERATION_MODES.length * 2);
-        if (positionInBlock === 0) operationCycle = shuffle(OPERATION_MODES);
+        const positionInBlock = (challengeNumber - 1) % (selectedOperations.length * 2);
+        if (positionInBlock === 0) operationCycle = shuffle(selectedOperations);
         return operationCycle[Math.floor(positionInBlock / 2)];
       }
 
@@ -1952,6 +1985,10 @@
       }
 
       function openRules({ mandatory = false } = {}) {
+        rules.querySelectorAll("[data-operation]").forEach(node => { node.hidden = !selectedOperations.includes(node.dataset.operation); });
+        rules.querySelector(".operation-conventions").hidden = !selectedOperations.some(operation => operation === "difference" || operation === "quotient");
+        rules.querySelector(".dialog-icon").textContent = selectedOperations.map(operation => symbols[operation]).join(" ");
+        document.querySelector("#chosen-operations-rule").textContent = `Le coffre demande ${selectedOperations.map(operation => challengeLabels[operation]).join(" ou ")}.`;
         rulesMandatory = mandatory;
         pauseTurnClock("rules");
         dialogs.open(rules, {
@@ -2012,9 +2049,6 @@
         }
       }, true);
       document.addEventListener("pointerdown", () => { lastInteractionWasKeyboard = false; }, true);
-      document.querySelector("#choose-solo").addEventListener("click", () => chooseMode("solo"));
-      document.querySelector("#choose-duo").addEventListener("click", () => chooseMode("duo"));
-      document.querySelector("#continue-current-mode").addEventListener("click", () => closeModeDialog());
       document.querySelectorAll("[data-change-mode]").forEach(button => {
         button.addEventListener("click", () => openModeDialog());
       });
@@ -2055,6 +2089,7 @@
           scores: [...scores],
           challengeNumber,
           operationCycle: [...operationCycle],
+          selectedOperations: selectedOperations.slice(),
           locked,
           timerActive: turnClockActive,
           timerPaused: turnClockPauseReasons.size > 0,
