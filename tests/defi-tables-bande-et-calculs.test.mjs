@@ -187,8 +187,20 @@ test("la bande suit le boulier, sauf quand ses étiquettes n’y tiennent plus",
   // iPhone de 402 px, table de 10 : les étiquettes font 31 px dans des cases
   // de 32 — ça tient, la bande ne bouge pas d'un pixel.
   assert.equal(largeurDeLaBande({largeurBoulier: 365, texte: 31, scene: 372}), 365);
+  // La MÊME étiquette mesurée sous Windows fait 32 px (Segoe UI) dans une case
+  // de 32,09 : elle n'est pas rognée pour autant, et la bande ne doit pas
+  // bouger. Sans l'arrondi de la case au pixel entier, elle prenait 372 px et
+  // quittait l'aplomb du boulier sur l'iPhone de Gwenaël (mesuré le 12/09).
+  assert.equal(largeurDeLaBande({largeurBoulier: 365, texte: 32, scene: 372}), 365,
+    "un pixel de plus que la case ne rogne rien : la bande reste sur le boulier");
   // 1366 × 768 : 43 px d'étiquette dans des cases de 44,5 — rien ne change.
   assert.equal(largeurDeLaBande({largeurBoulier: 502, texte: 43, scene: 716}), 502);
+  // Et 44 px sous Windows, dans la même case de 44,5 : toujours rien.
+  assert.equal(largeurDeLaBande({largeurBoulier: 502, texte: 44, scene: 716}), 502);
+  // Deux pixels de trop, en revanche, rognent : la bande s'élargit.
+  assert.notEqual(largeurDeLaBande({largeurBoulier: 365, texte: 34, scene: 372}), 365);
+  assert.match(html, /if \(besoin <= Math\.floor\(caseActuelle\) \+ 1\) return largeurBoulier;/,
+    "la case est comparée au pixel entier");
   // Vidéoprojecteur 1280 × 590 : le boulier tombe à 292 px, les étiquettes en
   // demandent 43 + 2 — la bande prend 11 × 45 + 12, et le boulier ne change pas.
   assert.equal(largeurDeLaBande({largeurBoulier: 292, texte: 43, scene: 716}), 44 * 11 + 12);

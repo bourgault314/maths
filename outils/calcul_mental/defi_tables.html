@@ -3706,7 +3706,14 @@
         // que son texte dépasse la case moins ce bord.
         const besoin = Math.max(...etiquettes.map(etiquette => etiquette.scrollWidth + 1));
         const caseActuelle = (largeurBoulier - bordures) / etiquettes.length;
-        if (besoin <= caseActuelle) return largeurBoulier;
+        // La case est comparée au pixel ENTIER : le texte, lui, n'est mesuré
+        // qu'en pixels entiers, et sa largeur change d'une machine à l'autre
+        // (« 10×10 » fait 31 px sous Linux, 32 sous Windows). Sans cet
+        // arrondi, une case de 32,09 px refusait une étiquette de 32 : sur
+        // l'iPhone de 402 px la bande gagnait 7 px et quittait l'aplomb du
+        // boulier alors qu'AUCUNE étiquette n'y était rognée (mesuré sous
+        // Windows le 12/09 : 365 → 372 px, et 502 → 507 px en 1366 × 768).
+        if (besoin <= Math.floor(caseActuelle) + 1) return largeurBoulier;
         const dispo = dom.scene.clientWidth || largeurBoulier;
         return Math.min(dispo, Math.ceil(besoin * etiquettes.length) + bordures);
       }
