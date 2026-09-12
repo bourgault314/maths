@@ -407,3 +407,26 @@ test("lot R3 · les petits textes, le focus et le bandeau des réglages", () => 
   // qu'avec 10 px de marge intérieure au lieu des 17 px des autres boutons.
   assert.match(html, /\.result-actions > button \{ padding-left: 10px; padding-right: 10px; \}/);
 });
+
+// ------------------------------------------ lot R3 bis : « Changer de table »
+// Idée de Gwenaël (12/09) : au doigt, choisir sa table est une décision seule à
+// l'écran. Tant que le choix est ouvert, le reste de l'accueil s'efface ; à la
+// sélection, tout revient avec la nouvelle table.
+
+test("lot R3 bis · le choix des tables occupe l’écran seul, au doigt", () => {
+  // Le reste de l'accueil s'efface jusqu'à 1039 px (téléphone et tablette).
+  assert.match(html, /@media \(max-width: 1039px\) \{\s*\.acc\.choix-ouvert > :not\(\.matable\),\s*\.acc\.choix-ouvert #acc-etapes \{ display: none; \}/);
+  // Au-delà, rien ne change : le panneau s'insère comme avant.
+  assert.doesNotMatch(html, /\.acc\.choix-ouvert > :not\(\.matable\) \{ display: none; \}\s*$/m,
+    "la règle vit dans sa media query, pas en dehors");
+  // La classe suit l'état, dans les deux sens.
+  assert.match(html, /document\.querySelector\("\.acc"\)\.classList\.toggle\("choix-ouvert", Boolean\(state\.choixTableOuvert\)\)/);
+  // Le titre du choix : même façon de faire que « Choisis ton activité ».
+  assert.match(html, /<p id="acc-choix-legende" class="choix-legende">Choisis ta table<\/p>/);
+  assert.match(html, /<div id="acc-choix" class="matable-choix" role="group" aria-labelledby="acc-choix-legende" hidden>/);
+  assert.match(html, /\$\("acc-choix-legende"\)\.hidden = !state\.choixTableOuvert;/);
+  // Le lien du haut dit comment repartir sans rien changer (choix de Gwenaël, 12/09).
+  assert.match(html, /\$\("acc-changer"\)\.textContent = state\.choixTableOuvert && !replie && !toutes\s*\?\s*`Je garde la table de \$\{table\}`/);
+  // Choisir une table referme : la ligne existait déjà, on la garde.
+  assert.match(html, /state\.choixTableOuvert = false;\s*renderAccueil\(\);\s*\$\("acc-table-titre"\)\.focus/);
+});
