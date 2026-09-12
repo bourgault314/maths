@@ -84,11 +84,14 @@ test("le mode site (Réglages libres, éval CM1) reste neutre : ni vert, ni roug
   assert.doesNotMatch(html, /const reussi = state\.correct >= Math\.ceil\(TOTAL \* \.8\);/, "plus de seuil à 80 % en mode site");
 });
 
-test("la révision garde son bilan et ses deux boutons, sans verdict réussi / raté", () => {
+test("la révision garde son bilan et ses boutons, sans verdict réussi / raté", () => {
   assert.match(html, /\$\("result-title"\)\.textContent = "Révision terminée";/);
   // Relecture (Claude Code, 11/09) : le temps rejoint le score, comme sur les
   // autres verdicts — plus de « Série terminée en 13 s. » sous « Révision terminée ».
   assert.match(html, /\$\("result-score"\)\.textContent = soude\(`\$\{score\} sur \$\{total\} au premier essai · \$\{formatElapsed\(elapsed\)\}`\);/);
   assert.doesNotMatch(html, /Série terminée/);
-  assert.match(html, /encore\.textContent = "Encore une révision";/);
+  // Lot mémoire : « Continuer → » tant qu'il reste des calculs du jour, puis
+  // « Reviens demain : N calculs t'attendront » — plus de « Encore une révision ».
+  assert.match(html, /encore\.textContent = "Continuer\u00a0→";/);
+  assert.doesNotMatch(html, /Encore une révision/);
 });

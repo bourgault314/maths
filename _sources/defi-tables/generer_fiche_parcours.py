@@ -2,7 +2,7 @@
 
 Sorties :
   - outils/calcul_mental/fiche_parcours_tables.pdf   (fiche vide à photocopier :
-    page 1 = parcours par table, page 2 = carré de Pythagore 2→9, 3 cases par calcul)
+    page 1 = parcours par table, page 2 = carré de Pythagore 2→9, 5 boîtes par calcul)
   - assets/img/qr-defi-tables-parcours.svg           (QR utilisé aussi par la
     fiche imprimée depuis l'appli, qui reproduit la même mise en page en HTML)
 
@@ -17,7 +17,10 @@ Lot 3 de Défi tables v2 (08/09/2026) : mélange obligatoire dès 2 tables
 (20 questions en 1 min 30), escalier de cinq marches (★ … ♛ Légende des
 tables), rang qui ne redescend jamais. Lot 4b (10/09/2026) : cinq activités
 dans J'apprends — « perles » (le rekenrek) en tête, et le bâton s'appelle la
-bande.
+bande. Lot mémoire (12/09/2026) : cinq boîtes par calcul au lieu de trois
+cases — un calcul monte quand on le réussit le jour où il revient (le
+lendemain, puis 3, 7, 14 jours après), su dès la boîte 4, une erreur = une
+boîte de moins.
 
 Usage : python3 _sources/defi-tables/generer_fiche_parcours.py
 """
@@ -55,13 +58,14 @@ RULES = [
 
 # Page 2 : « Mes calculs » — carré de Pythagore 2→9, sens confondus (moitié miroir grisée).
 CALC_TITLE = "MES CALCULS"
-CALC_SUBTITLE = "Trois cases par calcul : une bonne réponse en coche une (au plus une par jour),"
-CALC_SUBTITLE_2 = "une erreur en efface une. Trois cases cochées = calcul su."
+CALC_SUBTITLE = "Cinq boîtes par calcul : une bonne réponse le jour où le calcul revient le fait monter d’une boîte,"
+CALC_SUBTITLE_2 = "une erreur le fait redescendre. À partir de la boîte 4, le calcul est su."
+BOITES = 5
 FACTS = [(a, b) for a in range(2, 10) for b in range(a, 10)]
 CALC_RULES = [
     "7 × 8 = 8 × 7 : c’est le même calcul à mémoriser, il n’occupe qu’une case du tableau. C’est pourquoi une moitié est grisée.",
-    "Une case par jour au maximum. Un calcul est su quand il a été retrouvé trois jours différents — pas trois fois",
-    "dans la même minute. Une erreur efface une case, sans limite.",
+    "Un calcul monte quand on le réussit le jour où il revient : le lendemain, puis 3 jours, 7 jours et 14 jours après —",
+    "pas trois fois dans la même minute. Une erreur le fait redescendre d’une boîte, sans limite, et il revient tout de suite.",
     "Les tables de 1 et de 10 n’y sont pas : elles se retrouvent sans les apprendre par cœur.",
     "La grille se remplit dans les entraînements, les validations et les révisions — jamais dans J’apprends.",
 ]
@@ -265,7 +269,7 @@ def draw_calc_sheet(pdf: canvas.Canvas) -> None:
     pdf.drawCentredString(width / 2, top - 19.5 * mm, CALC_SUBTITLE_2)
 
     # Carré de Pythagore, 2 à 9 (décidé le 30/08/2026) : la moitié haute porte
-    # les trois cases à cocher, la moitié miroir est grisée — 7 × 8 et 8 × 7
+    # les cinq boîtes à cocher, la moitié miroir est grisée — 7 × 8 et 8 × 7
     # sont le même calcul, on ne le remplit qu'une fois. Même disposition que
     # l'écran « Mes calculs » de l'appli et que la fiche remplie.
     facteurs = list(range(2, 10))
@@ -273,7 +277,8 @@ def draw_calc_sheet(pdf: canvas.Canvas) -> None:
     entete_w = 14 * mm
     cell_w = (width - 2 * margin - entete_w) / len(facteurs)
     cell_h = 15 * mm
-    box = 4.2 * mm
+    box = 2.7 * mm
+    ecart = 0.8 * mm
 
     # En-tête de colonnes
     pdf.setFont("SheetSans-Bold", 11)
@@ -298,14 +303,14 @@ def draw_calc_sheet(pdf: canvas.Canvas) -> None:
             if miroir:
                 continue
             cy = y + cell_h / 2
-            largeur_cases = 3 * box + 2 * (1.2 * mm)
+            largeur_cases = BOITES * box + (BOITES - 1) * ecart
             depart = x + (cell_w - largeur_cases) / 2
             pdf.setStrokeColor(HexColor("#7EA1B8"))
-            pdf.setLineWidth(1.0)
+            pdf.setLineWidth(0.8)
             pdf.setFillColor(WHITE)
-            for case in range(3):
-                bx = depart + case * (box + 1.2 * mm)
-                pdf.roundRect(bx, cy - box / 2, box, box, 1 * mm, stroke=1, fill=1)
+            for case in range(BOITES):
+                bx = depart + case * (box + ecart)
+                pdf.roundRect(bx, cy - box / 2, box, box, 0.7 * mm, stroke=1, fill=1)
 
     pdf.setFillColor(MUTED)
     pdf.setFont("SheetSans", 8)

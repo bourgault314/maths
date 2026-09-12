@@ -27,11 +27,15 @@ const CATALOGUE_APPLIS = [
         // (« je pousse les perles ») ; « avis » et « avisVu » (l'avis unique de
         // migration du lot 3, retiré) ne sont plus déclarés — un vieil appareil
         // qui les envoie encore les voit simplement filtrés.
+        // Lot mémoire (12/09/2026) : « boite » (1 à 5) et « echeance » (le jour
+        // où le calcul revient, « AAAA-MM-JJ ») par calcul ; « cases » reste
+        // accepté — l'appli l'écrit encore en miroir pour les appareils restés
+        // sur l'appli d'avant, et c'est elle qui migre.
         'cles' => ['version', 'epoque', 'tables', 'apprends', 'beads', 'construct', 'gaps', 'ordered', 'random',
             'entraine', 'desordre', 'trous', 'mixte', 'dernier', 'entrainement', 'score', 'total',
             'acquise', 'melange', 'aJour', 'aRefaireAvec', 'expert', 'niveau', 'champion',
             'etoiles', 'couronne', 'rang', 'jours',
-            'calculs', 'cases', 'vu', 'erreur', 'gagne'],
+            'calculs', 'boite', 'cases', 'vu', 'erreur', 'gagne', 'echeance'],
         'mots' => ['desordre', 'trous', 'mixte'],
         'motifs' => ['/^(?:[2-9]|10)$/', '/^\d{1,2}-\d{1,2}$/'],
         // Lot serveur A (06/09/2026) : la SEULE chose que le serveur compte

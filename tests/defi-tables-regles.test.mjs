@@ -268,7 +268,7 @@ test("les jours travaillés : un jour compte dès qu’une série de la grille e
   assert.equal(P.fusionner(etat, autre).jours.length, 14);
 });
 
-test("« N jours cette semaine » compte depuis lundi, aujourd’hui compris — rien à casser ; « N cases t’attendent demain » = gagnées aujourd’hui, pas encore sues", () => {
+test("« N jours cette semaine » compte depuis lundi, aujourd’hui compris — rien à casser ; « N calculs demain » = ce qui sera dû demain", () => {
   assert.equal(P.lundiDe("2026-09-08"), "2026-09-07", "mardi 8 → lundi 7");
   assert.equal(P.lundiDe("2026-09-07"), "2026-09-07", "un lundi reste lundi");
   assert.equal(P.lundiDe("2026-09-13"), "2026-09-07", "dimanche 13 → lundi 7");
@@ -277,16 +277,18 @@ test("« N jours cette semaine » compte depuis lundi, aujourd’hui compris —
   [["2026-09-03", "2-3"], ["2026-09-05", "2-4"], ["2026-09-07", "2-6"], ["2026-09-08", "2-7"], ["2026-09-08", "2-8"]].forEach(([jour, cle]) => {
     etat = P.appliquerReponse(etat, cle, {correcte: true, date: jour}).parcours;
   });
-  assert.deepEqual(P.bilanJours(etat, "2026-09-08"), {semaine: 2, casesDemain: 2, aujourdhui: true}, "lundi 7 et mardi 8 ; 2-7 et 2-8 ont gagné une case aujourd'hui");
+  // Lot mémoire : chaque calcul réussi (jamais vu) entre en boîte 2, retour le lendemain.
+  assert.deepEqual(P.bilanJours(etat, "2026-09-08"), {semaine: 2, dus: 3, demain: 5, aujourdhui: true}, "lundi 7 et mardi 8 ; 2-3, 2-4 et 2-6 sont dus (revenus le 4, le 6, le 8) ; demain, les 5");
   assert.equal(P.bilanJours(etat, "2026-09-09").semaine, 2, "mercredi sans travail : toujours 2, rien ne se casse");
-  assert.equal(P.bilanJours(etat, "2026-09-09").casesDemain, 0);
+  assert.equal(P.bilanJours(etat, "2026-09-09").dus, 5);
   assert.equal(P.bilanJours(etat, "2026-09-14").semaine, 0, "lundi suivant : on repart de zéro, sans message");
   assert.equal(P.bilanJours(etat, "2026-09-06").semaine, 2, "la semaine du 31/08 au 06/09 : jeudi 3 et samedi 5");
-  // Un calcul passé à 3 cases aujourd'hui n'attend plus rien demain.
+  // Un calcul monté en boîte 4 aujourd'hui revient dans 7 jours : rien demain.
   let su = P.creerParcours();
-  ["2026-09-06", "2026-09-07", "2026-09-08"].forEach(jour => { su = P.appliquerReponse(su, "7-8", {correcte: true, date: jour}).parcours; });
-  assert.equal(su.calculs["7-8"].cases, 3);
-  assert.equal(P.bilanJours(su, "2026-09-08").casesDemain, 0);
+  ["2026-09-01", "2026-09-02", "2026-09-05"].forEach(jour => { su = P.appliquerReponse(su, "7-8", {correcte: true, date: jour}).parcours; });
+  assert.equal(su.calculs["7-8"].boite, 4);
+  assert.deepEqual(P.bilanJours(su, "2026-09-05"), {semaine: 3, dus: 0, demain: 0, aujourdhui: true}, "mardi 1er, mercredi 2, samedi 5 : trois jours");
+  assert.equal(P.bilanJours(su, "2026-09-12").dus, 1);
   assert.equal(P.etatAffichage(su).jours.semaine >= 0, true);
 });
 
@@ -303,11 +305,11 @@ test("migration des parcours d’avant : tables gardées, ★/★★ → rien, �
     calculs: {"2-5": {cases: 2, vu: "2026-09-01", erreur: null, gagne: "2026-09-01"}}
   };
   const migre = P.normaliserParcours(ancien);
-  assert.equal(migre.version, 2);
+  assert.equal(migre.version, 3);
   assert.equal(migre.epoque, 2, "l’époque ne bouge pas");
   assert.deepEqual(P.tablesAcquises(migre), [2, 5, 10], "les tables acquises restent acquises");
   assert.equal(migre.tables[2].acquise, "2026-08-30", "à leur date");
-  assert.deepEqual(migre.calculs["2-5"], ancien.calculs["2-5"], "la grille ne bouge pas");
+  assert.deepEqual(migre.calculs["2-5"], {boite: 3, cases: 2, vu: "2026-09-01", erreur: null, gagne: "2026-09-01", echeance: "2026-09-04"}, "la grille ne bouge pas : 2 cases → boîte 3 (bleu), échéance recalculée (lot mémoire)");
   assert.equal(migre.expert.etoiles, 0, "★★ d’avant ne vaut rien");
   assert.equal(migre.expert.couronne, null);
   assert.equal(migre.melange.aJour, false, "le mélange est remis à faire");
@@ -327,7 +329,7 @@ test("migration des parcours d’avant : tables gardées, ★/★★ → rien, �
   assert.equal(P.etatAffichage(champion).expert.niveau, 1);
 
   // Sans version : c'est un parcours d'avant aussi.
-  assert.equal(P.normaliserParcours({tables: {7: {acquise: "2026-09-01"}}}).version, 2);
+  assert.equal(P.normaliserParcours({tables: {7: {acquise: "2026-09-01"}}}).version, 3);
   // Un parcours qui porte encore les anciens compteurs d'avis les perd en silence.
   assert.ok(!("avis" in P.normaliserParcours({version: 2, avis: 2, avisVu: 0})));
 
@@ -337,7 +339,7 @@ test("migration des parcours d’avant : tables gardées, ★/★★ → rien, �
   assert.equal(refait.melange.aJour, true);
   const relu = P.normaliserParcours(JSON.parse(JSON.stringify(refait)));
   assert.equal(relu.melange.aJour, true, "pas de seconde migration");
-  assert.equal(relu.version, 2);
+  assert.equal(relu.version, 3);
   // Les anciens champs (niveau, champion) n'existent plus dans un parcours à jour.
   assert.equal("niveau" in relu.expert, false);
   assert.equal("champion" in relu.expert, false);
@@ -357,7 +359,7 @@ test("migration robuste à un appareil resté sur l’ancienne version : ce qu�
     assert.deepEqual(P.tablesAcquises(fusion), [2, 5, 10], "rien ne se perd");
     assert.equal(fusion.expert.etoiles, 0, "l’ancienne ★★ ne vaut rien");
     assert.equal(fusion.melange.aJour, false, "le mélange à l’ancienne ne compte pas, et la table de 5 le remet de toute façon");
-    assert.equal(fusion.version, 2);
+    assert.equal(fusion.version, 3);
     assert.equal(fusion.rang, 2);
   });
   // Et si l'ancien appareil renvoie plus (un parcours avancé sous les vieilles
@@ -402,9 +404,10 @@ test("l’accueil : « Mon mélange » surligné, le cadenas sur Je valide, l’
   assert.equal((html.match(/badgeRang\(/g) || []).length, 3, "le badge : l’accueil, la fête de rang, et sa définition — nulle part ailleurs");
   assert.match(html, /<div id="acc-jours" class="jours" hidden><\/div>/);
   assert.match(html, /cette semaine`/);
-  // Lot R3 (12/09) : « case » parlait d'une grille que l'élève n'a pas forcément ouverte.
-  assert.match(html, /\$\{pluriel\(jours\.casesDemain, "calcul"\)\} à regagner demain/);
-  assert.doesNotMatch(html, /t’attend(ent)? demain/);
+  // Lot R3 (12/09) : « case » parlait d'une grille que l'élève n'a pas forcément
+  // ouverte. Lot mémoire : « N calculs demain », d'après les échéances.
+  assert.match(html, /\$\{pluriel\(jours\.demain, "calcul"\)\} demain/);
+  assert.doesNotMatch(html, /à regagner demain/);
   assert.doesNotMatch(html.replace(/\/\/[^\n]*/g, ""), /jours de suite|d’affilée/, "pas de compteur d’affilée (décision du 08/09 : version b)");
   // Ce qui a disparu.
   const visible = html.replace(/\/\/[^\n]*/g, "").replace(/\/\*[\s\S]*?\*\//g, "").replace(/<!--[\s\S]*?-->/g, "");
@@ -451,8 +454,8 @@ test("le lancement : le mélange se joue en 1 min 30, comme la validation d’un
 });
 
 test("les scripts modifiés ont un nouveau numéro de cache, et la copie serveur du moteur est identique", async () => {
-  assert.match(html, /defi_tables_core\.js\?v=20260910-1/);
-  assert.match(html, /defi_tables_mon_parcours\.js\?v=20260910-1/);
+  assert.match(html, /defi_tables_core\.js\?v=20260912-1/);
+  assert.match(html, /defi_tables_mon_parcours\.js\?v=20260912-1/);
   const moteur = await readFile(new URL("../outils/calcul_mental/defi_tables_mon_parcours.js", import.meta.url));
   const copie = await readFile(new URL("../_serveur/public/prof/defi_tables_mon_parcours.js", import.meta.url));
   assert.ok(moteur.equals(copie), "_serveur/public/prof/defi_tables_mon_parcours.js doit être la copie octet pour octet du moteur");
@@ -462,14 +465,15 @@ test("les scripts modifiés ont un nouveau numéro de cache, et la copie serveur
 
 test("le serveur accepte les nouveaux champs (sinon filtrer_progression les jette à la synchro), et la page Confidentialité les nomme", () => {
   const cles = applis.match(/'cles' => \[([\s\S]*?)\]/)[1];
-  ["etoiles", "couronne", "rang", "jours", "beads"].forEach(cle => {
+  ["etoiles", "couronne", "rang", "jours", "beads", "boite", "echeance", "cases"].forEach(cle => {
     assert.match(cles, new RegExp(`'${cle}'`), `« ${cle} » déclaré dans _serveur/public/lib/applis.php`);
   });
   assert.match(cles, /'niveau'/, "l’ancien « niveau » reste accepté : un appareil d’avant l’envoie encore");
   // Le parcours de référence figé pour le test PHP porte bien les nouveaux champs.
   const reference = JSON.parse(require("node:fs").readFileSync(new URL("../_serveur/tests/parcours-reference.json", import.meta.url), "utf8"));
-  assert.equal(reference.version, 2);
+  assert.equal(reference.version, 3);
   assert.equal(reference.expert.etoiles, 5);
+  assert.deepEqual(reference.calculs["2-2"], {boite: 1, cases: 0, vu: "2026-09-23", erreur: null, gagne: null, echeance: "2026-09-24"}, "lot mémoire : boîte et échéance dans le parcours de référence");
   assert.equal(reference.rang, 6);
   assert.ok(Array.isArray(reference.jours) && reference.jours.length > 0);
   assert.equal(reference.tables[2].apprends.beads, 2, "lot 4b : la cinquième activité est dans le parcours de référence");
@@ -484,8 +488,9 @@ test("un parcours migré fait l’aller-retour du paquet envoyé au serveur sans
   migre = P.appliquerReponse(migre, "2-5", {correcte: true, date: DATE}).parcours;
   const paquet = JSON.parse(paquetParcours("ABC234", migre, 4));
   assert.equal(paquet.parcours.prenom, "");
-  assert.equal(paquet.parcours.version, 2);
+  assert.equal(paquet.parcours.version, 3);
   assert.equal(paquet.parcours.expert.etoiles, 1);
+  assert.deepEqual(paquet.parcours.calculs["2-5"], {boite: 2, cases: 1, vu: DATE, erreur: null, gagne: DATE, echeance: P.ajouterJours(DATE, 1)});
   assert.equal(paquet.parcours.rang, 2);
   assert.deepEqual(paquet.parcours.jours, [DATE]);
   // Ce que le serveur renvoie (après son filtre, qui ne garde que les clés
