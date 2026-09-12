@@ -1,0 +1,31 @@
+/* Habillage réservé à l’ouverture dans Jeux courts. */
+html.carres-integres,
+.carres-integres body { min-height: 0; background: transparent; }
+.carres-integres .shell { width: 100%; padding: 0 4px 8px; }
+.carres-integres .shell > .site-header,
+.carres-integres .shell > .site-footer,
+.carres-integres .title-row h1,
+.carres-integres .title-row .eyebrow { display: none; }
+.carres-integres .game:not(.is-fullscreen) {
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+.carres-integres .game:not(.is-fullscreen) .board-wrap { width: min(100%, 520px); }
+.carres-integres .game:not(.is-fullscreen) #board { height: auto; max-height: none; }
+.carres-integres button { min-height: 44px; min-width: 44px; }
+.carres-integres #round-label { white-space: normal; }
+.carres-integres .status { height: auto; min-height: 64px; }
+.carres-integres .overlay { position: absolute; padding: 12px; }
+.carres-integres .intro { max-height: none; }
+@media (max-width: 560px) {
+  .carres-integres .title-row { display: grid; gap: 10px; }
+  .carres-integres .dashboard { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 5px; }
+  .carres-integres .dashboard span { font-size: .62rem; letter-spacing: .025em; }
+  .carres-integres .intro { padding: 16px; }
+  .carres-integres .intro h2 { font-size: 1.8rem; }
+  .carres-integres .rule { padding: 10px; grid-template-columns: 62px minmax(0, 1fr); }
+  .carres-integres .rule svg { width: 56px; }
+}

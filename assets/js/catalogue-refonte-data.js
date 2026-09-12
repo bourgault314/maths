@@ -364,7 +364,7 @@ window.MATHSGO_CATALOGUE = {
         "observation"
       ],
       "shortGame": "luciole",
-      "thumbnail": "assets/img/thumbnails/jeux/luciole.svg?v=1",
+      "thumbnail": "assets/img/thumbnails/jeux/luciole.svg?v=2",
       "cardDescription": "Observe puis retrouve les chemins de lumière, dans le bon ordre."
     },
     "jeux-cadeaux/dodo.html": {
@@ -379,7 +379,7 @@ window.MATHSGO_CATALOGUE = {
         "anticipation"
       ],
       "shortGame": "dodo",
-      "thumbnail": "assets/img/thumbnails/jeux/dodo.svg?v=1",
+      "thumbnail": "assets/img/thumbnails/jeux/dodo.svg?v=2",
       "cardDescription": "Aide le dodo à franchir huit troncs en sautant au bon moment."
     },
     "jeux-cadeaux/galets.html": {
@@ -394,7 +394,7 @@ window.MATHSGO_CATALOGUE = {
         "équilibre"
       ],
       "shortGame": "galets",
-      "thumbnail": "assets/img/thumbnails/jeux/galets.svg?v=1",
+      "thumbnail": "assets/img/thumbnails/jeux/galets.svg?v=2",
       "cardDescription": "Lâche chaque galet au bon moment et garde toute la pile en équilibre."
     },
     "jeux-cadeaux/tempo.html": {
@@ -409,14 +409,14 @@ window.MATHSGO_CATALOGUE = {
         "maîtrise du geste"
       ],
       "shortGame": "tempo",
-      "thumbnail": "assets/img/thumbnails/jeux/tempo.svg?v=1",
+      "thumbnail": "assets/img/thumbnails/jeux/tempo.svg?v=2",
       "cardDescription": "Touche au bon signal et retiens ton geste quand le volcan demande d’attendre."
     },
     "outils/club_maths/carres_gloutons.html": {
-      "primaryNotion": "strategie",
       "primaryGroup": "jeux",
       "collections": [],
       "tags": ["jeu", "strategie", "anticipation", "points-et-carres", "ordinateur"],
+      "shortGame": "carres-gloutons",
       "thumbnail": "assets/img/thumbnails/jeux/carres-gloutons.svg?v=5",
       "cardDescription": "Fermer plus de carrés que Gloubi, anticiper les chaînes et éviter de lui offrir les derniers segments."
     },
@@ -6841,7 +6841,8 @@ window.MATHSGO_CATALOGUE = {
         "jeux-recherches"
       ],
       "notions": [
-        "strategie"
+        "strategie",
+        "jeux-courts"
       ],
       "uses": [
         "manipuler"

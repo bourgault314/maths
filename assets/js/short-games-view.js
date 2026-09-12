@@ -5,7 +5,8 @@
     luciole: "La Luciole",
     dodo: "Dodo bondissant",
     galets: "La pile de galets",
-    tempo: "Tempo volcan"
+    tempo: "Tempo volcan",
+    "carres-gloutons": "Les Carrés gloutons"
   });
   const cataloguePath = "/outils/?domain=jeux-recherches&notion=jeux-courts";
   function mount(container, game, onReturn) {
@@ -13,7 +14,12 @@
     const frame = document.createElement("iframe");
     frame.className = "short-game-frame";
     frame.title = games[game] + " — aire de jeu";
-    frame.src = "/jeux-cadeaux/index.html?jeu=" + game + "&integre=1&v=2";
+    if (game === "carres-gloutons") {
+      frame.src = "/outils/club_maths/carres_gloutons.html?integre=1&v=1";
+      frame.allowFullscreen = true;
+    } else {
+      frame.src = "/jeux-cadeaux/index.html?jeu=" + game + "&integre=1&v=2";
+    }
     function receive(event) {
       if (event.origin !== location.origin || event.source !== frame.contentWindow) return;
       if (event.data?.type === "mathsgo-short-game:return") onReturn();
