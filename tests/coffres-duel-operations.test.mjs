@@ -55,13 +55,17 @@ vm.runInContext(`
   ${extractFunction("calculate")}
   ${extractFunction("operation")}
   ${extractFunction("levelRules")}
+  ${extractFunction("fillBounds")}
+  ${extractFunction("multiplicationPair")}
+  ${extractFunction("allowedProductPair")}
   ${extractFunction("pairFor")}
+  ${extractFunction("divisionDecoys")}
   ${extractFunction("nextBalancedMode")}
   ${extractFunction("makeChallenge")}
   globalThis.duelCore = {
     calculate,
     operationFor(nextMode, first, second) { mode = nextMode; return operation(first, second); },
-    pairFor,
+    pairFor, fillBounds, allowedProductPair, divisionDecoys,
     challenge(level, operation) {
       selectedLevel = level;
       selectedOperations = [operation];
@@ -105,7 +109,7 @@ test("chaque paire construite respecte les bornes et garantit le calcul demandé
       }
       if (mode === "quotient") {
         assert.equal(high % low, 0, `${high} ÷ ${low}`);
-        assert.ok(high / low >= 2 && high / low <= 6, `${high} ÷ ${low}`);
+        assert.ok(high / low >= 2 && high / low <= 9, `${high} ÷ ${low}`);
       }
     }
   }
@@ -120,34 +124,42 @@ test("un bloc de huit défis sert chaque opération une fois à chacun", () => {
   }
 });
 
-test("le niveau 2 du Duo utilise des calculs plus grands et des divisions exactes", () => {
-  for (const mode of ["sum", "difference", "product", "quotient"]) {
-    for (let attempt = 0; attempt < 500; attempt += 1) {
-      const [first, second] = core.pairFor(mode, 2);
-      const high = Math.max(first, second), low = Math.min(first, second);
-      if (mode === "sum") assert.ok(low >= 6 && high <= 20);
-      if (mode === "difference") assert.ok(high >= 10 && high <= 20 && low >= 1 && high - low >= 3);
-      if (mode === "product") assert.ok(high >= 11 && high <= 20 && low >= 3 && low <= 15);
-      if (mode === "quotient") {
-        assert.ok(low >= 6 && low <= 20);
-        assert.equal(high % low, 0);
-        assert.ok(high / low >= 2 && high / low <= 9);
+test("les niveaux 2 et 3 du Duo suivent les bornes propres à chaque opération", () => {
+  const targetBounds = { 2: { sum: [20, 50], difference: [1, 49], product: [4, 100], quotient: [2, 20] }, 3: { sum: [51, 100], difference: [1, 99], product: [42, 200], quotient: [2, 50] } };
+  for (const level of [2, 3]) {
+    for (const mode of ["sum", "difference", "product", "quotient"]) {
+      for (let attempt = 0; attempt < 500; attempt += 1) {
+        const [first, second] = core.pairFor(mode, level);
+        const high = Math.max(first, second), low = Math.min(first, second);
+        const target = core.calculate(mode, first, second);
+        assert.ok(target >= targetBounds[level][mode][0] && target <= targetBounds[level][mode][1]);
+        if (mode === "sum" && level === 3) assert.ok(low >= 10);
+        if (mode === "difference") assert.ok(high >= (level === 3 ? 51 : 20));
+        if (mode === "product") assert.ok(core.allowedProductPair(first, second, level));
+        if (mode === "quotient") {
+          assert.equal(high % low, 0);
+          assert.ok(core.allowedProductPair(low, target, level));
+        }
+        assert.ok(Number.isInteger(target));
       }
-      assert.ok(Number.isInteger(core.calculate(mode, first, second)));
     }
   }
 });
 
 test("chaque plateau Duo respecte le niveau choisi et possède une solution voisine", () => {
-  for (const level of [1, 2]) {
-    const fillMax = level === 1 ? 12 : 20;
+  for (const level of [1, 2, 3]) {
     for (const operation of ["sum", "difference", "product", "quotient"]) {
       for (let attempt = 0; attempt < 100; attempt += 1) {
         const board = core.challenge(level, operation);
+        const fillMax = core.fillBounds(operation, level)[1];
         assert.equal(board.mode, operation);
         assert.equal(board.values.length, 16);
         assert.ok(board.values.every(value => Number.isInteger(value) && value > 0));
-        assert.ok(board.values.filter(value => value > fillMax).length <= (operation === "quotient" ? 1 : 0));
+        if (operation === "quotient") {
+          const decoys = new Set(core.divisionDecoys(level));
+          assert.ok(board.values.filter(value => value > fillMax).length >= 4);
+          assert.ok(board.values.every(value => value <= fillMax || decoys.has(value)));
+        } else assert.ok(board.values.every(value => value <= fillMax));
         assert.ok(board.neighbors.some(([first, second]) => core.operationFor(operation, board.values[first], board.values[second]) === board.target));
       }
     }
