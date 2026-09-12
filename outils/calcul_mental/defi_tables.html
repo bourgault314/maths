@@ -119,9 +119,12 @@
     a,
     input { font: inherit; touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
 
+    /* Lot R3 (A19) : le contour du clavier était à 1,6:1 sur blanc — il
+       fallait 3:1 pour un repère non textuel, et au vidéoprojecteur il ne se
+       voyait pas. Le même bleu, plein : 4,6:1. */
     button:focus-visible,
     a:focus-visible {
-      outline: 3px solid rgba(15, 108, 249, .3);
+      outline: 3px solid #0f6cf9;
       outline-offset: 3px;
     }
 
@@ -140,7 +143,7 @@
        écrans — l'élève doit savoir en permanence que son travail part chez son
        professeur. Il occupe une ligne entière sous le logo et les boutons. */
     .suivi-repere { flex: 1 0 100%; display: flex; align-items: center; justify-content: center; gap: 8px;
-                    flex-wrap: wrap; margin: -4px 0 8px; padding: 6px 12px; border-radius: 12px;
+                    flex-wrap: wrap; min-height: 44px; margin: -4px 0 8px; padding: 0 12px; border-radius: 12px;
                     background: #eef6f6; color: #0b5f5c; font-weight: 800; font-size: .9rem; }
     .suivi-repere .puce { width: 9px; height: 9px; border-radius: 50%; background: #08aaa5; flex: 0 0 auto; }
     .suivi-repere.hors-ligne { background: #fdf0e3; color: #8a4c0a; }
@@ -150,9 +153,13 @@
     /* La sortie vit sur le repère lui-même : ce qui dit « tu es Léa » doit
        permettre de dire « ce n'est pas moi ». Un menu que personne n'ouvre ne
        remplace pas une porte. */
-    .suivi-repere .sortie { border: 0; background: none; padding: 0; margin: 0;
+    /* Lot R3 (A11) : sur tablette, cette sortie est la SEULE (la pilule de
+       l'en-tête n'existe qu'au téléphone) et elle ne faisait que 28 px de
+       haut. Elle passe à 44 px, et c'est elle qui donne sa hauteur au
+       bandeau — qui n'a donc plus besoin de ses 6 px de marge intérieure. */
+    .suivi-repere .sortie { border: 0; background: none; padding: 0 2px; margin: 0;
                             font: inherit; color: inherit; text-decoration: underline;
-                            cursor: pointer; opacity: .85; min-height: 28px; }
+                            cursor: pointer; opacity: .85; min-height: 44px; }
     .suivi-repere .sortie:hover, .suivi-repere .sortie:focus-visible { opacity: 1; }
     body.mode-fiche .suivi-repere { display: none; }
     /* Les deux classes, pas seulement `.suivi-sortie` : `.catalogue-link` est
@@ -271,8 +278,10 @@
     .matable-head .eyebrow { margin: 0; font-size: .74rem; letter-spacing: .06em; }
     .matable-head h1 { display: block; margin: 0; font-size: 1.55rem; font-weight: 900; color: var(--ink); line-height: 1.1; }
     .matable-head h1:focus { outline: none; }
-    .matable-changer { min-height: 36px; padding: 0 4px; border: 0; background: none; color: var(--blue); font-size: .84rem; font-weight: 850; text-decoration: underline; text-underline-offset: 3px; white-space: nowrap; cursor: pointer; }
-    .matable-choix { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 12px; padding: 10px; border: 1px solid #c9dbe6; border-radius: 15px; background: #f3f9fc; }
+    .matable-changer { min-height: 44px; padding: 0 6px; border: 0; background: none; color: var(--blue); font-size: .84rem; font-weight: 850; text-decoration: underline; text-underline-offset: 3px; white-space: nowrap; cursor: pointer; }
+    /* Lot R3 (P1) : les neuf tables sont centrées, et non plus alignées à
+       gauche avec un vide à droite. Sur téléphone, trois rangées de trois. */
+    .matable-choix { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; margin: 0 0 12px; padding: 10px; border: 1px solid #c9dbe6; border-radius: 15px; background: #f3f9fc; }
     .matable-choix button { min-height: 44px; min-width: 52px; padding: 6px 8px; border: 2px solid #bed3e0; border-radius: 12px; background: #fff; color: var(--ink); font-weight: 950; cursor: pointer; }
     .matable-choix button.is-acquise { color: var(--green); border-color: #b8dfc8; background: var(--green-soft); }
     .matable-choix button.is-selected { border-color: var(--blue); box-shadow: inset 0 0 0 1px var(--blue); color: var(--blue); background: #eef6ff; }
@@ -289,7 +298,11 @@
     .etape .dots i.is-check.off { color: #9db4c4; }
     .etape.is-next { border-color: var(--blue); box-shadow: 0 0 0 2px rgba(7, 85, 184, .18), 0 2px 0 #b7cfe8; background: #fff; }
     .etape.is-next .num { background: var(--blue); color: #fff; }
-    .etape.valide strong { color: var(--blue); }
+    /* Lot R3 (Q2, 12/09/2026) : « Je valide ma table » n'est plus écrit en
+       bleu. Le bleu ne dit plus qu'une chose sur cet écran — l'étape que
+       l'appli conseille (.etape.is-next) — et l'élève de 6e ne prend plus la
+       3e étape pour celle à faire. Les deux autres étapes gardent déjà la
+       couleur d'encre : la troisième fait pareil. */
     .etape.melange .num { background: #fff3cd; color: #7a5a00; }
     .etape.melange.is-next .num { background: #e0a800; color: #fff; }
     /* Lot 3 : le mélange dû est surligné en jaune, « Je valide » d'une table
@@ -301,6 +314,18 @@
     .etape.verrou strong { color: #6b7f90; }
     .etape.verrou small { color: #7a5a00; }
     .etape.verrou .cadenas { font-size: 1.15rem; line-height: 1; }
+    /* Lot R3 (A5, Q4) : toucher le cadenas ne faisait RIEN de visible. L'écran
+       descend maintenant jusqu'à « Mon mélange », qui s'illumine une seconde —
+       aucun texte nouveau, la ligne dit déjà « Réussis d'abord ton mélange ».
+       Le halo est une ombre, pas une animation : il reste visible pour qui a
+       demandé « moins d'animations » à son téléphone. */
+    .etape.est-montree { box-shadow: 0 0 0 4px rgba(224, 168, 0, .55), 0 2px 0 #e9cf86; }
+    .etape.est-montree { animation: etape-montree 1s ease-out 1; }
+    @keyframes etape-montree {
+      0% { box-shadow: 0 0 0 0 rgba(224, 168, 0, .8), 0 2px 0 #e9cf86; }
+      35% { box-shadow: 0 0 0 7px rgba(224, 168, 0, .55), 0 2px 0 #e9cf86; }
+      100% { box-shadow: 0 0 0 4px rgba(224, 168, 0, .45), 0 2px 0 #e9cf86; }
+    }
     /* Le choix déplié sous une étape (09/09/2026) : l'élève voit les cinq
        activités, leur état et celle qu'on lui conseille — il choisit, et il
        peut en refaire une plus tard. Rien n'est verrouillé, rien n'impose
@@ -313,7 +338,7 @@
     .choix-activite .etat { color: var(--green); font-style: normal; font-weight: 950; font-size: 1.05rem; line-height: 1; text-align: center; }
     .choix-activite .etat.off { color: #9db4c4; }
     .choix-activite .etat.neutre { color: #5b7286; font-size: .95rem; }
-    .choix-activite .tag { padding: 3px 9px; border-radius: 999px; background: #e7f0fb; color: var(--blue); font-size: .68rem; font-weight: 950; white-space: nowrap; }
+    .choix-activite .tag { padding: 3px 9px; border-radius: 999px; background: #e7f0fb; color: var(--blue); font-size: .75rem; font-weight: 950; white-space: nowrap; }
     .choix-activite.is-next { border-color: var(--blue); box-shadow: 0 0 0 2px rgba(7, 85, 184, .16); }
     .choix-activite.is-plus { border-style: dashed; background: #fbfdff; }
     /* « Mes calculs » s'ouvre sur la grille : la barre du haut reste collée,
@@ -331,7 +356,7 @@
     .rang.diamant { background: #e9f0ff; color: #2a4c93; border-color: #c2d3f7; } .rang.diamant i { background: linear-gradient(135deg, #b9d3ff, #4f7fd6); border-radius: 3px; transform: rotate(45deg) scale(.85); }
     .rang.legende { background: linear-gradient(135deg, #fff1c2, #ffe08a); color: #6b4a00; border-color: #e6c25a; }
     .matable-droite .rang { margin-top: 3px; }
-    /* Les jours : « N jours cette semaine · N cases t'attendent demain ». */
+    /* Les jours : « N jours cette semaine · N calculs à regagner demain ». */
     .jours { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 6px 10px; margin: -4px 4px 0; color: #4c6274; font-size: .84rem; font-weight: 800; text-align: center; }
     .jours .k { display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px; border-radius: 999px; background: #eef7f5; color: #1b4d44; }
     /* Je deviens expert : le bloc principal quand les 9 tables sont acquises. */
@@ -362,7 +387,9 @@
     .reviser { width: 100%; min-height: 56px; display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 10px; padding: 8px 14px 8px 16px; border: 0; border-radius: 16px; background: #fff3e0; color: #7a3d00; font: inherit; text-align: left; cursor: pointer; box-shadow: 0 2px 0 #f0c98f; }
     .reviser strong { display: block; font-size: 1.02rem; line-height: 1.15; }
     .reviser small { display: block; color: #9a5a13; font-size: .78rem; font-weight: 800; line-height: 1.25; }
-    .reviser .go { padding: 9px 14px; border-radius: 999px; background: #e0771a; color: #fff; font-weight: 950; white-space: nowrap; }
+    /* Lot R3 (A7) : le même orange, un ton plus profond — blanc sur #b85608
+       fait 4,8:1, là où #e0771a n'en faisait que 3,07 (il en faut 4,5). */
+    .reviser .go { padding: 9px 14px; border-radius: 999px; background: #b85608; color: #fff; font-weight: 950; white-space: nowrap; }
     .reviser.is-next { box-shadow: 0 0 0 2px rgba(224, 119, 26, .35), 0 2px 0 #f0c98f; }
     .reviser.is-vide { box-shadow: none; cursor: default; }
     .reviser.is-vide .go { background: #d9c2a6; }
@@ -373,7 +400,7 @@
     .acc-lien span { display: grid; gap: 2px; }
     .acc-lien small { color: #5b7286; font-weight: 800; font-size: .74rem; line-height: 1.25; }
     .acc-bas { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px 18px; margin-top: 2px; }
-    .acc-bas button { min-height: 40px; padding: 0 2px; border: 0; background: none; color: #5b7286; font: inherit; font-size: .82rem; font-weight: 800; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+    .acc-bas button { min-height: 44px; padding: 0 4px; border: 0; background: none; color: #5b7286; font: inherit; font-size: .82rem; font-weight: 800; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
     /* Sous un code (ou venu de son espace), l'élève ne voit ni Réglages
        libres ni l'évaluation CM1 : le même signal que le lien du haut
        (majLienRetour) pose la classe sur <body>. */
@@ -482,7 +509,9 @@
       gap: 4px;
       align-items: center;
     }
-    .parcours-group-label { grid-column: span 5; overflow: hidden; color: var(--muted); font-size: .68rem; font-weight: 900; letter-spacing: .04em; text-align: center; text-transform: uppercase; white-space: nowrap; }
+    /* Lot R3 (A8) : 11 px au moins, partout — ces trois étiquettes étaient
+       le plus petit texte de l'écran (9,3 px au téléphone). */
+    .parcours-group-label { grid-column: span 5; overflow: hidden; color: var(--muted); font-size: .6875rem; font-weight: 900; letter-spacing: .04em; text-align: center; text-transform: uppercase; line-height: 1.1; }
     .parcours-group-label.is-entraine { grid-column: 7 / span 3; }
     .parcours-group-label.is-acquise { grid-column: 11; }
     .cell {
@@ -781,13 +810,22 @@
       font-weight: 700;
     }
 
+    /* Lot R3 (A16) : le bandeau « Commencer » reste collé en bas — c'est ce
+       qui le rend toujours atteignable — mais il ne laisse plus voir les
+       options DERRIÈRE lui. Il flottait 8 px au-dessus du bas de l'écran, et
+       son fond ne devenait opaque qu'au tiers de sa hauteur : les boutons
+       « Sans chrono / 1 min » apparaissaient en transparence au-dessus et
+       dépassaient en dessous, comme s'ils étaient coupés. Fond blanc plein,
+       collé au bas, et l'ombre portée du haut dit qu'il y a une suite —
+       le même trait que la barre de Mes calculs. */
     .start-dock {
       position: sticky;
       z-index: 10;
-      bottom: max(8px, env(safe-area-inset-bottom));
+      bottom: 0;
       margin-top: 10px;
-      padding: 8px 0;
-      background: linear-gradient(transparent, rgba(255, 255, 255, .98) 28%);
+      padding: 9px 0 max(9px, env(safe-area-inset-bottom));
+      background: #fff;
+      box-shadow: 0 -9px 10px -9px rgba(18, 50, 74, .45);
       text-align: center;
     }
     .start-dock .primary { width: min(100%, 430px); }
@@ -905,7 +943,10 @@
       margin: 0 0 8px;
     }
     .stick-help-button {
-      min-height: 36px;
+      /* Lot R3 (A11) : 44 px, c'est un bouton que le doigt cherche en pleine
+         activité. Sur un téléphone en train de jouer, la place manque en
+         hauteur : la règle de .challenge-playing le ramène à 36 px. */
+      min-height: 44px;
       justify-self: center;
       padding: 6px 13px;
       border: 1px solid #9fc2d6;
@@ -1051,7 +1092,7 @@
     .keypad button:active::before { background: #d6e3ec; box-shadow: none; }
     .keypad button:disabled { opacity: .45; cursor: default; }
     .keypad button:focus-visible { outline: none; }
-    .keypad button:focus-visible::before { outline: 3px solid rgba(15, 108, 249, .3); outline-offset: 1px; }
+    .keypad button:focus-visible::before { outline: 3px solid #0f6cf9; outline-offset: 1px; }
 
     .launch-screen { min-height: 520px; display: grid; place-content: center; justify-items: center; gap: 14px; text-align: center; }
     .launch-heading { max-width: 620px; margin: 0; color: var(--blue); font-size: clamp(1.8rem, 6vw, 3.2rem); }
@@ -1195,7 +1236,11 @@
       .expression { min-height: 135px; }
       /* Téléphone : le bouton principal sur toute la largeur, les deux autres
          côte à côte dessous — le tout juste sous le verdict, sans défiler. */
+      /* Lot R3 : à 390 px, « Voir mon parcours » (146,5 px) débordait de sa
+         demi-colonne avec 17 px de marge intérieure de chaque côté et passait
+         sur deux lignes. 10 px suffisent. */
       .result-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; }
+      .result-actions > button { padding-left: 10px; padding-right: 10px; }
       .result-actions > .primary,
       .result.is-rate .result-actions > #retry { grid-column: 1 / -1; }
       .result.is-rate .result-actions > #result-accueil { grid-column: auto; }
@@ -1247,7 +1292,7 @@
       .challenge-playing .keypad { margin: auto auto 0; }
       .challenge-playing .actions { margin-bottom: 0; }
       .challenge-playing .question.stick-trace .expression { min-height: 68px; }
-      .challenge-playing .stick-help-button { min-height: 32px; padding: 4px 12px; }
+      .challenge-playing .stick-help-button { min-height: 36px; padding: 5px 12px; }
       .challenge-playing .question.stick-trace .learn-sequence { gap: 4px; }
       /* Dans « Je construis la bande » et « bande à trous », l'en-tête n'est
          que le titre « Table de 7 » : pas besoin de la hauteur d'une question
@@ -1319,20 +1364,28 @@
       .parcours-row { padding: 7px 10px 8px; border-radius: 13px; }
       .parcours-row-head { margin-bottom: 4px; }
       .parcours-row-head strong { font-size: .98rem; }
-      .parcours-group-label { font-size: .64rem; }
+      .parcours-group-label { font-size: .6875rem; }
       .parcours-cells .cell { min-height: 34px; border-radius: 9px; font-size: .95rem; }
       .parcours-cells .cell .dot { width: 13px; height: 13px; }
       .parcours-extra { margin-top: 8px; }
     }
 
     @media (max-width: 480px) {
+      /* Lot R3 (P1) : au téléphone, les neuf tables en trois rangées de trois —
+         un pavé, comme sur un clavier. Chaque bouton y gagne le double de
+         largeur (52 → 105 px) sans rien prendre à la hauteur. */
+      .matable-choix { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
       .parcours-toolbar { padding: 0 50px; }
       .parcours-row { padding: 9px 8px 10px; }
       /* Acquise : 48 px au moins, pour que « ACQUISE » tienne aussi dans une
          police plus large que celle de nos PC (41 px en Segoe UI Black, 48 en
          Verdana ; celle de l'iPhone ne se mesure pas ici). */
-      .parcours-cells { gap: 3px; grid-template-columns: repeat(5, minmax(0, 1fr)) 5px repeat(3, minmax(0, 1fr)) 5px minmax(48px, 1fr); }
-      .parcours-group-label { font-size: .58rem; letter-spacing: .01em; }
+      /* « ACQUISE » à 11 px demande 49 px dans une police large (48,7 mesurés
+         en Arial Black au lot R0) : la colonne passe de 48 à 56 px. Les neuf
+         ronds y perdent 0,9 px chacun (33,8 → 32,9) et restent bien au-dessus
+         des 44 px de haut du doigt. */
+      .parcours-cells { gap: 3px; grid-template-columns: repeat(5, minmax(0, 1fr)) 5px repeat(3, minmax(0, 1fr)) 5px minmax(56px, 1fr); }
+      .parcours-group-label { letter-spacing: .01em; }
       .parcours-row-head { flex-wrap: wrap; gap: 4px 8px; }
       .cell { border-radius: 9px; }
       .settings-toolbar { padding: 0 50px; }
@@ -1678,7 +1731,7 @@
             <button id="acc-reviser" class="reviser" type="button"><span><strong id="acc-reviser-titre">Réviser mes calculs</strong><small id="acc-reviser-note">10 questions sans chrono</small></span><span class="go">Réviser&nbsp;→</span></button>
             <div id="acc-jours" class="jours" hidden></div>
             <div class="acc-liens">
-              <button id="open-parcours" class="acc-lien" type="button" aria-controls="parcours"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6.5 9 4l6 2.5 6-2.5v13l-6 2.5-6-2.5-6 2.5z" fill="#e7f8f5" stroke="#087a71" stroke-width="1.8" stroke-linejoin="round"/><path d="M9 4v13M15 6.5v13" stroke="#087a71" stroke-width="1.8"/><circle cx="12" cy="10" r="1.8" fill="#e0771a"/></svg><span>Mon parcours<small>toutes mes tables, le mélange, Expert</small></span></button>
+              <button id="open-parcours" class="acc-lien" type="button" aria-controls="parcours"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6.5 9 4l6 2.5 6-2.5v13l-6 2.5-6-2.5-6 2.5z" fill="#e7f8f5" stroke="#087a71" stroke-width="1.8" stroke-linejoin="round"/><path d="M9 4v13M15 6.5v13" stroke="#087a71" stroke-width="1.8"/><circle cx="12" cy="10" r="1.8" fill="#e0771a"/></svg><span>Mon parcours<small>toutes mes tables, le mélange, je deviens expert</small></span></button>
               <button id="open-calculs" class="acc-lien" type="button" aria-controls="calculs"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="3" fill="#fff" stroke="#0755b8" stroke-width="1.8"/><path d="M3 9h18M3 15h18M9 3v18M15 3v18" stroke="#0755b8" stroke-width="1.5"/><rect x="9.8" y="9.8" width="4.4" height="4.4" fill="#147447"/><rect x="15.8" y="3.8" width="4.4" height="4.4" fill="#a93030"/><rect x="3.8" y="15.8" width="4.4" height="4.4" fill="#0755b8"/></svg><span>Mes calculs<small>la grille des 36 calculs</small></span></button>
             </div>
             <div class="acc-bas">
@@ -1897,6 +1950,10 @@
           <button id="result-accueil" class="primary" type="button">Ma table</button>
           <button id="retry" class="secondary" type="button">Rejouer</button>
           <button id="result-open-parcours" class="secondary" type="button">Voir mon parcours</button>
+          <!-- Lot R3 (A20) : seulement pour une série lancée depuis « Réglages
+               libres » ou « Évaluation CM1 » (les deux portes professeur). Un
+               élève sous un code ne voit jamais ce bouton. -->
+          <button id="result-reglages" class="secondary" type="button" hidden>Réglages</button>
         </div>
         <p id="result-message" class="result-message"></p>
         <p id="result-previous" class="previous-score" hidden></p>
@@ -4103,6 +4160,7 @@
         $("result-previous").hidden = state.configuration.mode === "learn" || previousScore === undefined;
         $("result-previous").textContent = previousScore === undefined ? "" : `Série précédente : ${previousScore} / ${TOTAL}.`;
         renderCorrections();
+        $("result-reglages").hidden = state.origin !== "reglages";
         show("result");
       }
 
@@ -4792,6 +4850,12 @@
         actions.append(encore, voir);
         zone.append(actions);
         renderCorrections();
+        // Ici, l'origine n'est JAMAIS « reglages » : une révision part de l'accueil,
+        // de Mes calculs ou de Mon parcours. Cette ligne ne sert donc qu'à REMETTRE
+        // le bouton caché — sans elle, une série jouée depuis Réglages libres le
+        // laisserait visible, et il s'afficherait sur le résultat de la révision
+        // suivante. C'est une remise à zéro, pas un filet pour un cas qui n'existe pas.
+        $("result-reglages").hidden = state.origin !== "reglages";
         show("result");
       }
 
@@ -4900,18 +4964,24 @@
       // Le panneau déplié sous une étape : une ligne par activité, son état,
       // et la mention « conseillé » sur celle que l'appli propose. L'ordre est
       // conseillé, jamais imposé (décision du 09/09/2026).
-      function panneauChoix({id, legende, items}) {
+      // `marquerConseil` : l'étiquette bleue « conseillé » ne s'écrit dans ce
+      // panneau que si l'étape elle-même est celle que l'appli conseille. Lot
+      // R3 (A4) : quand le mélange est dû, Mon mélange est surligné en jaune —
+      // une deuxième marque bleue, deux lignes plus haut, désignait une autre
+      // « chose à faire ». Une seule à la fois : celle du haut. Le rond ✓ / ◔ / ○
+      // et l'ordre des activités disent toujours par où l'élève en est.
+      function panneauChoix({id, legende, items, marquerConseil = true}) {
         const zone = document.createElement("div");
         zone.className = "etape-choix";
         zone.id = id;
         const titre = document.createElement("p");
         titre.textContent = legende;
         zone.append(titre);
-        items.forEach(item => zone.append(boutonChoix(item)));
+        items.forEach(item => zone.append(boutonChoix({...item, marquerConseil})));
         return zone;
       }
 
-      function boutonChoix({libelle, detail = "", fait = false, commence = false, conseillee = false, marqueur = "", extraClasse = "", lancer}) {
+      function boutonChoix({libelle, detail = "", fait = false, commence = false, conseillee = false, marquerConseil = true, marqueur = "", extraClasse = "", lancer}) {
         const bouton = document.createElement("button");
         bouton.type = "button";
         bouton.className = `choix-activite${conseillee ? " is-next" : ""}${extraClasse ? ` ${extraClasse}` : ""}`;
@@ -4929,7 +4999,7 @@
           texte.append(petit);
         }
         bouton.append(etat, texte);
-        if (conseillee) {
+        if (conseillee && marquerConseil) {
           const tag = document.createElement("span");
           tag.className = "tag";
           tag.textContent = "conseillé";
@@ -4937,7 +5007,7 @@
         }
         bouton.setAttribute("aria-label", marqueur
           ? `${libelle}${detail ? `, ${detail}` : ""}. Lancer.`
-          : `${libelle}${detail ? `, ${detail}` : ""} : ${fait ? "déjà réussi" : commence ? "commencé" : "pas encore fait"}.${conseillee ? " Conseillé." : ""} Lancer.`);
+          : `${libelle}${detail ? `, ${detail}` : ""} : ${fait ? "déjà réussi" : commence ? "commencé" : "pas encore fait"}.${conseillee && marquerConseil ? " Conseillé." : ""} Lancer.`);
         bouton.addEventListener("click", lancer);
         return bouton;
       }
@@ -4953,6 +5023,23 @@
           ? document.querySelector(".etape-choix .choix-activite")
           : document.querySelector(`.etape.${nom}`);
         cible?.focus?.({preventScroll: true});
+      }
+
+      // Lot R3 (A5, décision Q4 du 11/09) : le cadenas de « Je valide ma table »
+      // mène à « Mon mélange ». Il ne suffit pas d'y poser le focus : au doigt,
+      // l'écran ne bougeait pas d'un pixel et rien ne disait où regarder. On
+      // fait donc défiler jusqu'à la ligne, et on l'illumine une seconde.
+      let montrerMelangeMinuteur = null;
+      function montrerMelange() {
+        const cible = document.querySelector(".etape.melange") || $("acc-expert");
+        if (!cible) return;
+        cible.scrollIntoView({block: "center", behavior: "smooth"});
+        clearTimeout(montrerMelangeMinuteur);
+        cible.classList.remove("est-montree");
+        void cible.offsetWidth; // redémarre l'animation si on retouche le cadenas
+        cible.classList.add("est-montree");
+        cible.focus?.({preventScroll: true});
+        montrerMelangeMinuteur = setTimeout(() => cible.classList.remove("est-montree"), 1000);
       }
 
       // Le badge du rang (Bronze… Légende des tables) : un point de métal et le
@@ -5122,6 +5209,7 @@
             etapes.append(panneauChoix({
               id: "acc-choix-apprends",
               legende: "Choisis ton activité",
+              marquerConseil: conseil === "apprends",
               // Les cinq activités du moteur, dans son ordre : les perles en tête
               // (lot 4b), la conseillée = la première qui n'est pas terminée.
               items: ligne.apprends.map(item => ({
@@ -5179,6 +5267,7 @@
             etapes.append(panneauChoix({
               id: "acc-choix-entraine",
               legende: "Choisis ton entraînement",
+              marquerConseil: conseil === "entraine",
               items: choixEntraine
             }));
           }
@@ -5201,7 +5290,7 @@
               points: [cadenas],
               conseille: false,
               aria: `Je valide la table de ${table} : verrouillé, réussis d’abord ton mélange.`,
-              action: () => (document.querySelector(".etape.melange") || $("acc-expert")).focus?.({preventScroll: false})
+              action: montrerMelange
             });
             ligneVerrou.setAttribute("aria-label", `Je valide la table de ${table} : verrouillé. Réussis d’abord ton mélange.`);
             ligneVerrou.setAttribute("aria-disabled", "true");
@@ -5253,7 +5342,7 @@
         reviser.setAttribute("aria-label", `${$("acc-reviser-titre").textContent} : ${$("acc-reviser-note").textContent}${conseil === "reviser" ? " Étape conseillée." : ""} Réviser.`);
 
         // Les jours : « N jours cette semaine » (depuis lundi, rien à casser)
-        // et « N cases t'attendent demain » (gagnées aujourd'hui, pas encore à
+        // et « N calculs à regagner demain » (gagnés aujourd'hui, pas encore à
         // trois). Rien du tout tant qu'il n'y a rien à dire.
         renderJours(etat.jours);
       }
@@ -5271,7 +5360,10 @@
         }
         if (jours.casesDemain) {
           const attente = document.createElement("span");
-          attente.textContent = `${pluriel(jours.casesDemain, "case")} t’attend${jours.casesDemain > 1 ? "ent" : ""} demain`;
+          // Lot R3 (12/09) : « 1 case t'attend demain » parlait d'une grille
+          // que l'élève n'a pas forcément ouverte. « calcul » se comprend sans
+          // rien avoir vu (choix de Gwenaël).
+          attente.textContent = `${pluriel(jours.casesDemain, "calcul")} à regagner demain`;
           zone.append(attente);
         }
       }
@@ -5691,6 +5783,16 @@
       $("open-parcours").addEventListener("click", openParcours);
       $("result-open-parcours").addEventListener("click", openParcours);
       $("result-accueil").addEventListener("click", backToModes);
+      // Le même chemin que la flèche « Modifier » en cours de série : l'écran
+      // des réglages garde le mode posé, donc « intro » y revient tel quel.
+      $("result-reglages").addEventListener("click", () => {
+        state.launchReady = false;
+        state.running = false;
+        stopTimer();
+        show("intro");
+        window.scrollTo({top: 0, behavior: "auto"});
+        $("settings-title").focus?.({preventScroll: true});
+      });
       $("parcours-back").addEventListener("click", backToModes);
       $("open-calculs").addEventListener("click", openCalculs);
       $("calculs-back").addEventListener("click", backToModes);

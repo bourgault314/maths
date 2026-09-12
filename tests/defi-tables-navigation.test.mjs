@@ -42,7 +42,7 @@ test("« J’apprends » et « Je m’entraîne » se déplient sur l’accueil 
   assert.match(html, /controle: "acc-choix-apprends"/);
   assert.match(html, /controle: "acc-choix-entraine"/);
   assert.match(html, /bouton\.setAttribute\("aria-expanded", String\(Boolean\(deplie\)\)\)/, "la tuile annonce son état aux lecteurs d’écran");
-  assert.match(html, /function panneauChoix\(\{id, legende, items\}\)/);
+  assert.match(html, /function panneauChoix\(\{id, legende, items, marquerConseil = true\}\)/);
   assert.match(html, /legende: "Choisis ton activité"/);
   assert.match(html, /legende: "Choisis ton entraînement"/);
   assert.match(html, /state\.etapeOuverte = state\.etapeOuverte === nom \? null : nom;/, "un deuxième appui referme");

@@ -402,7 +402,9 @@ test("l’accueil : « Mon mélange » surligné, le cadenas sur Je valide, l’
   assert.equal((html.match(/badgeRang\(/g) || []).length, 3, "le badge : l’accueil, la fête de rang, et sa définition — nulle part ailleurs");
   assert.match(html, /<div id="acc-jours" class="jours" hidden><\/div>/);
   assert.match(html, /cette semaine`/);
-  assert.match(html, /t’attend\$\{jours\.casesDemain > 1 \? "ent" : ""\} demain/);
+  // Lot R3 (12/09) : « case » parlait d'une grille que l'élève n'a pas forcément ouverte.
+  assert.match(html, /\$\{pluriel\(jours\.casesDemain, "calcul"\)\} à regagner demain/);
+  assert.doesNotMatch(html, /t’attend(ent)? demain/);
   assert.doesNotMatch(html.replace(/\/\/[^\n]*/g, ""), /jours de suite|d’affilée/, "pas de compteur d’affilée (décision du 08/09 : version b)");
   // Ce qui a disparu.
   const visible = html.replace(/\/\/[^\n]*/g, "").replace(/\/\*[\s\S]*?\*\//g, "").replace(/<!--[\s\S]*?-->/g, "");
