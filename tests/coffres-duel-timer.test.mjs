@@ -3,11 +3,17 @@ import { readFile } from "node:fs/promises";
 import test from "node:test";
 
 const html = await readFile(new URL("../outils/club_maths/coffres_magiques.html", import.meta.url), "utf8");
+const engineSource = await readFile(new URL("../assets/js/coffres-moteur.js", import.meta.url), "utf8");
 
-test("Coffres à deux donne exactement 20 secondes à chaque tour", () => {
-  assert.match(html, /const TURN_DURATION_MS = 20_000;/);
+test("Coffres à deux donne 20, 30 ou 45 secondes par tour selon le niveau", () => {
+  assert.doesNotMatch(html, /TURN_DURATION_MS/);
+  assert.match(html, /<script src="\.\.\/\.\.\/assets\/js\/coffres-moteur\.js\?v=1"><\/script>/);
   assert.match(html, /id="turn-timer"[^>]*role="timer"[^>]*Temps restant : 20 secondes/);
-  assert.match(html, /function beginTurnClock\(\)[\s\S]*turnClockRemainingMs = TURN_DURATION_MS/);
+  assert.match(html, /function beginTurnClock\(\)[\s\S]*turnClockRemainingMs = engine\.turnDuration\(selectedLevel\)/);
+  assert.match(html, /Duo · <span id="duo-level-label">niveau 1<\/span> · <span id="duo-seconds-label">20 s<\/span>/);
+  assert.match(html, /Tu as <strong id="turn-seconds-rule">20 secondes<\/strong>/);
+  assert.match(html, /function syncTurnDurationLabels\(\)[\s\S]*#duo-seconds-label[\s\S]*`\$\{turnSeconds\(\)\} s`[\s\S]*#turn-seconds-rule[\s\S]*`\$\{turnSeconds\(\)\} secondes`/);
+  assert.match(html, /20 à 45 s par tour selon le niveau/);
   assert.match(html, /function nextTurn\(\)[\s\S]*beginTurnClock\(\)/);
   assert.match(html, /performance\.now\(\)/);
 });
@@ -52,7 +58,6 @@ test("le focus clavier est remappé après réponse ou expiration sans suivre la
 });
 
 test("les quatre opérations sont servies équitablement aux deux joueurs", () => {
-  assert.match(html, /const OPERATION_MODES = \["sum", "difference", "product", "quotient"\];/);
   assert.match(html, /const positionInBlock = \(challengeNumber - 1\) % \(selectedOperations\.length \* 2\);/);
   assert.match(html, /if \(positionInBlock === 0\) operationCycle = shuffle\(selectedOperations\);/);
   assert.match(html, /return operationCycle\[Math\.floor\(positionInBlock \/ 2\)\];/);
@@ -60,9 +65,9 @@ test("les quatre opérations sont servies équitablement aux deux joueurs", () =
 });
 
 test("la différence et le quotient suivent les mêmes conventions que le solo", () => {
-  assert.match(html, /if \(nextMode === "difference"\) return high - low;/);
+  assert.match(engineSource, /if \(mode === "difference"\) return high - low;/);
   assert.match(html, /if \(mode === "quotient" && high % low !== 0\) return Number\.NaN;/);
-  assert.match(html, /const factors = multiplicationPair\(nextLevel\);[\s\S]*return \[factors\[0\] \* factors\[1\], randomInteger\(0, 1\) \? factors\[0\] : factors\[1\]\];/);
+  assert.match(html, /const generated = engine\.generateBoard\(mode, selectedLevel, randomInteger\(1, 3\) === 1\);/);
   assert.match(html, /mode === "difference" \|\| mode === "quotient" \? high : first/);
   assert.match(html, /n’est pas divisible par/);
 });

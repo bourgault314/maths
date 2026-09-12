@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Coffres magiques — solo | maths&amp;go</title>
-  <meta name="description" content="Un entraînement guidé de dix coffres sur les quatre opérations, avec la possibilité de passer au duel à deux de 20 secondes par tour.">
+  <meta name="description" content="Un entraînement guidé de dix coffres sur les quatre opérations, avec la possibilité de passer au duel à deux de 20 à 45 secondes par tour selon le niveau.">
   <link rel="canonical" href="https://mathsgo.re/outils/calcul_mental/coffres_magiques_solo.html">
   <meta name="robots" content="index, follow, max-image-preview:large">
   <link rel="icon" href="/favicon.ico" sizes="48x48">
@@ -200,27 +200,6 @@
       font-weight: 950;
       white-space: nowrap;
     }
-
-    /* Repère discret : combien de paires voisines ouvrent ce coffre (1 ou 2), sans dire lesquelles. */
-    .pair-hint {
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-      color: #557083;
-      font-size: .72rem;
-      font-weight: 850;
-      white-space: nowrap;
-    }
-
-    .pair-hint::before {
-      content: "";
-      width: 7px;
-      height: 7px;
-      border-radius: 50%;
-      background: #c9d8e3;
-    }
-
-    .pair-hint.two::before { background: var(--gold); }
 
     .status-line {
       width: min(100%, 560px);
@@ -1296,8 +1275,6 @@
       .mode-switch-button { font-size: .82rem; }
       .solo-stats { padding: 10px 18px; font-size: 1.3rem; }
       .solo-score { align-self: center; justify-items: center; gap: 5px; }
-      .pair-hint { font-size: .88rem; }
-      .pair-hint::before { width: 9px; height: 9px; }
 
       .status-line {
         grid-column: 1;
@@ -1527,7 +1504,6 @@
       .solo-heading p:last-child { font-size: .8rem; }
       .mode-switch-button { font-size: .69rem; }
       .solo-stats { padding: 8px 10px; font-size: .92rem; }
-      .pair-hint { font-size: .66rem; }
       .level-row { gap: 6px 8px; padding: 9px 10px; }
       .level-row-label { flex-basis: 100%; text-align: center; }
       .level-choice { flex: 1 1 0; padding-inline: 8px; font-size: .86rem; }
@@ -1626,7 +1602,6 @@
           <svg class="progress-key" viewBox="-1 -1 37 25" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="3.2"><path d="M15.325 8H34v6h-5v5h-6v-5h-7.675a7 7 0 1 1 0-6Z"/></svg>
           <span id="key-number" aria-hidden="true">0 / 10</span>
         </strong>
-        <span id="pair-count" class="pair-hint" hidden></span>
       </div>
     </section>
 
@@ -1654,7 +1629,7 @@
         </button>
         <button id="choose-duo" class="mode-choice mode-choice-duo" type="button" data-game-mode="duo" aria-pressed="false">
           <span class="mode-choice-icon" aria-hidden="true"><svg viewBox="0 0 32 32" focusable="false"><circle cx="8" cy="9" r="4"/><circle cx="24" cy="9" r="4"/><path d="M2 27v-6a6 6 0 0 1 12 0v6ZM18 27v-6a6 6 0 0 1 12 0v6Z"/></svg></span>
-          <span><strong>Duo — Se défier</strong><small>2 joueurs · 20 s par tour · premier à 5 clés</small></span>
+          <span><strong>Duo — Se défier</strong><small>2 joueurs · 20 à 45 s par tour selon le niveau · premier à 5 clés</small></span>
         </button>
       </div>
       <div class="level-row" role="group" aria-label="Niveau des nombres">
@@ -1824,12 +1799,12 @@
     <span data-mathsgo-confidentialite>Sans cookie ni traceur</span>
   </footer>
 
-  <script src="../../assets/js/coffres-settings.js?v=3"></script>
+  <script src="../../assets/js/coffres-settings.js?v=4"></script>
+  <script src="../../assets/js/coffres-moteur.js?v=1"></script>
   <script>
     (() => {
       "use strict";
 
-      const SIZE = 4;
       const GOAL = 10;
       const CURRENT_MODE = "solo";
       const DEFAULT_ORIGIN = "calcul-mental";
@@ -1862,7 +1837,6 @@
       const correctionSolution = document.querySelector("#correction-solution");
       const correctionVisual = document.querySelector("#correction-visual");
       const nextButton = document.querySelector("#next-button");
-      const pairHint = document.querySelector("#pair-count");
       const levelLabel = document.querySelector("#level-label");
       const result = document.querySelector("#result");
       // Grand écran (ordinateur, projection) : après une clé gagnée, l'égalité reste affichée
@@ -1871,6 +1845,9 @@
       const requestedMode = new URLSearchParams(window.location.search).get("mode");
       const origin = resolveOrigin();
       const settingsCore = window.MATHSGO_COFFRES_SETTINGS;
+      // Le moteur partagé avec le duo : règles par niveau, tirage, garantie 1 ou 2 paires.
+      const engine = window.MATHSGO_COFFRES_MOTEUR;
+      const { row, column, adjacent, calculate, isSolution, boardSolutions, findSolutionPair, randomInteger, shuffle } = engine;
       let selectedOperations = settingsCore.readOperations(window.location.search);
       let values = [];
       let modes = [];
@@ -1884,12 +1861,15 @@
       let modeDialogMandatory = false;
       let gameStarted = false;
       let lastResolvedPosition = null;
-      // Niveau des nombres : 1 (cases de 1 à 12, tirages historiques) ou 2 (cases de 1 à 20, aides en barres).
+      // Niveau des nombres (1, 2 ou 3) : la nature du calcul change, pas la taille du résultat.
       // Il se choisit dans la fenêtre Solo / Duo et se transmet par l'adresse (?niveau=2).
       let level = readLevel();
       let gameLevel = level;
       // Nombre de paires voisines qui ouvrent le coffre en cours (1 ou 2, jamais plus).
       let solutionCount = 1;
+      // Clés de la série tirées parmi les familles de faits (au moins 2 sur 10 quand c'est possible).
+      let familyPlan = [];
+      let currentFamily = null;
       // Grand écran : pendant que « Coffre suivant » attend, le plateau reste cliquable pour vérifier l'autre paire.
       let bonusOpen = false;
       let wonMessage = "";
@@ -2120,19 +2100,6 @@
         syncFullscreenControl();
       }
 
-      function row(position) { return Math.floor(position / SIZE); }
-      function column(position) { return position % SIZE; }
-      function adjacent(first, second) { return Math.abs(row(first) - row(second)) + Math.abs(column(first) - column(second)) === 1; }
-
-      function calculate(nextMode, first, second) {
-        const high = Math.max(first, second);
-        const low = Math.min(first, second);
-        if (nextMode === "sum") return first + second;
-        if (nextMode === "difference") return high - low;
-        if (nextMode === "product") return first * second;
-        return high / low;
-      }
-
       function expression(nextMode, first, second) {
         const high = Math.max(first, second);
         const low = Math.min(first, second);
@@ -2155,259 +2122,6 @@
           shareGroups: low,
           each: high / low
         };
-      }
-
-      function randomInteger(minimum, maximum) {
-        return minimum + Math.floor(Math.random() * (maximum - minimum + 1));
-      }
-
-      function shuffle(items) {
-        const copy = items.slice();
-        for (let index = copy.length - 1; index > 0; index -= 1) {
-          const swap = randomInteger(0, index);
-          [copy[index], copy[swap]] = [copy[swap], copy[index]];
-        }
-        return copy;
-      }
-
-      function neighborPairs() {
-        const pairs = [];
-        for (let position = 0; position < SIZE * SIZE; position += 1) {
-          if (column(position) < SIZE - 1) pairs.push([position, position + 1]);
-          if (row(position) < SIZE - 1) pairs.push([position, position + SIZE]);
-        }
-        return pairs;
-      }
-
-      function findSolutionPair(nextMode, nextTarget, nextValues = values) {
-        for (const positions of neighborPairs()) {
-          const first = nextValues[positions[0]];
-          const second = nextValues[positions[1]];
-          const high = Math.max(first, second);
-          const low = Math.min(first, second);
-          const exact = nextMode !== "quotient" || high % low === 0;
-          if (exact && calculate(nextMode, first, second) === nextTarget) {
-            return { positions, pair: [first, second] };
-          }
-        }
-        return null;
-      }
-
-      function isSolution(nextMode, first, second, nextTarget) {
-        const high = Math.max(first, second);
-        const low = Math.min(first, second);
-        if (nextMode === "quotient" && high % low !== 0) return false;
-        return calculate(nextMode, first, second) === nextTarget;
-      }
-
-      // Toutes les paires voisines du plateau qui ouvrent le coffre (1 ou 2 par construction).
-      function boardSolutions(nextMode, nextTarget, nextValues = values) {
-        return neighborPairs().filter(positions => isSolution(nextMode, nextValues[positions[0]], nextValues[positions[1]], nextTarget));
-      }
-
-      // Les bornes dépendent de l'opération : une même difficulté numérique n'a pas
-      // le même sens pour une addition, une table ou une division.
-      function levelRules(nextLevel) {
-        if (nextLevel === 3) {
-          return { fill: { sum: [1, 100], difference: [1, 100], product: [1, 50], quotient: [1, 50] } };
-        }
-        if (nextLevel === 2) {
-          return { fill: { sum: [1, 50], difference: [1, 50], product: [1, 20], quotient: [1, 20] } };
-        }
-        return { fill: { sum: [1, 12], difference: [1, 12], product: [1, 12], quotient: [1, 12] } };
-      }
-
-      function fillBounds(nextMode, nextLevel = level) {
-        return levelRules(nextLevel).fill[nextMode];
-      }
-
-      function multiplicationPair(nextLevel = level) {
-        let pair;
-        if (nextLevel === 3) {
-          if (randomInteger(0, 1)) pair = [randomInteger(11, 20), randomInteger(6, 10)];
-          else {
-            const large = randomInteger(21, 50);
-            pair = [large, randomInteger(2, Math.min(10, Math.floor(200 / large)))];
-          }
-        } else if (nextLevel === 2) {
-          pair = randomInteger(0, 1)
-            ? [randomInteger(2, 10), randomInteger(2, 10)]
-            : [randomInteger(11, 20), randomInteger(2, 5)];
-        } else {
-          pair = [randomInteger(2, 9), randomInteger(2, 9)];
-        }
-        return randomInteger(0, 1) ? pair : [pair[1], pair[0]];
-      }
-
-      function allowedProductPair(first, second, nextLevel = level) {
-        const high = Math.max(first, second);
-        const low = Math.min(first, second);
-        if (nextLevel === 3) {
-          return (high >= 11 && high <= 20 && low >= 6 && low <= 10)
-            || (high >= 21 && high <= 50 && low >= 2 && low <= 10 && high * low <= 200);
-        }
-        if (nextLevel === 2) {
-          return (high <= 10 && low >= 2) || (high >= 11 && high <= 20 && low >= 2 && low <= 5);
-        }
-        return high <= 9 && low >= 2;
-      }
-
-      function pairFor(nextMode, nextLevel = level) {
-        if (nextMode === "sum") {
-          if (nextLevel === 3) {
-            const target = randomInteger(51, 100);
-            const first = randomInteger(10, target - 10);
-            return [first, target - first];
-          }
-          if (nextLevel === 2) {
-            const target = randomInteger(20, 50);
-            const first = randomInteger(2, target - 2);
-            return [first, target - first];
-          }
-          return [randomInteger(2, 9), randomInteger(2, 9)];
-        }
-        if (nextMode === "difference") {
-          if (nextLevel === 3) {
-            const high = randomInteger(51, 100);
-            return [high, randomInteger(1, high - 1)];
-          }
-          if (nextLevel === 2) {
-            const high = randomInteger(20, 50);
-            return [high, randomInteger(1, high - 1)];
-          }
-          const difference = randomInteger(2, 8);
-          const low = randomInteger(1, 12 - difference);
-          return [low + difference, low];
-        }
-        const factors = multiplicationPair(nextLevel);
-        if (nextMode === "product") return factors;
-        return [factors[0] * factors[1], randomInteger(0, 1) ? factors[0] : factors[1]];
-      }
-
-      // Toutes les paires admises par le niveau qui donnent la cible : sert uniquement
-      // à planter la seconde solution annoncée, sans filtrer les tirages ordinaires.
-      function matchingPairs(nextMode, nextTarget, nextLevel = level) {
-        const found = [];
-        if (nextMode === "sum") {
-          const minimum = nextLevel === 3 ? 10 : 2;
-          for (let first = minimum; first <= Math.floor(nextTarget / 2); first += 1) {
-            const second = nextTarget - first;
-            const allowed = nextLevel === 1
-              ? second <= 9
-              : nextLevel === 2 ? nextTarget >= 20 && nextTarget <= 50 : nextTarget >= 51 && nextTarget <= 100;
-            if (allowed) found.push([first, second]);
-          }
-        } else if (nextMode === "difference") {
-          const minimumHigh = nextLevel === 3 ? 51 : nextLevel === 2 ? 20 : 3;
-          const maximumHigh = nextLevel === 3 ? 100 : nextLevel === 2 ? 50 : 12;
-          if (nextLevel === 1 && (nextTarget < 2 || nextTarget > 8)) return found;
-          for (let high = minimumHigh; high <= maximumHigh; high += 1) {
-            const low = high - nextTarget;
-            if (low >= 1) found.push([high, low]);
-          }
-        } else if (nextMode === "product") {
-          for (let first = 2; first * first <= nextTarget; first += 1) {
-            if (nextTarget % first !== 0) continue;
-            const second = nextTarget / first;
-            if (allowedProductPair(first, second, nextLevel)) found.push([first, second]);
-          }
-        } else {
-          for (let divisor = 2; divisor <= 50; divisor += 1) {
-            if (allowedProductPair(divisor, nextTarget, nextLevel)) found.push([divisor * nextTarget, divisor]);
-          }
-        }
-        return found;
-      }
-
-      function divisionDecoys(nextLevel = level) {
-        const maximum = fillBounds("quotient", nextLevel)[1];
-        const products = new Set();
-        for (let first = 2; first <= 50; first += 1) {
-          for (let second = 2; second <= 50; second += 1) {
-            if (allowedProductPair(first, second, nextLevel) && first * second > maximum) products.add(first * second);
-          }
-        }
-        return [...products];
-      }
-
-      function sameValues(first, second) {
-        return Math.min(...first) === Math.min(...second) && Math.max(...first) === Math.max(...second);
-      }
-
-      // Construit un plateau qui a exactement 1 ou 2 paires voisines gagnantes, jamais plus :
-      // les paires plantées ne se touchent pas, et chaque autre case est corrigée pour n'ouvrir le coffre avec aucun voisin.
-      // Aucune boucle de retirage : le tirage reste déterministe si Math.random est figé (tests).
-      function generateBoard(nextMode, nextLevel = level, wantTwo = false) {
-        const pairs = neighborPairs();
-        const bounds = fillBounds(nextMode, nextLevel);
-        const cells = Array.from({ length: SIZE * SIZE }, () => randomInteger(bounds[0], bounds[1]));
-        const firstSlot = pairs[randomInteger(0, pairs.length - 1)];
-        const solution = pairFor(nextMode, nextLevel);
-        const nextTarget = calculate(nextMode, solution[0], solution[1]);
-        cells[firstSlot[0]] = solution[0];
-        cells[firstSlot[1]] = solution[1];
-        const planted = new Set(firstSlot);
-
-        if (wantTwo) {
-          const farSlots = pairs.filter(slot => slot.every(position => firstSlot.every(taken => taken !== position && !adjacent(taken, position))));
-          const options = matchingPairs(nextMode, nextTarget, nextLevel);
-          const different = options.filter(option => !sameValues(option, solution));
-          const choices = different.length ? different : options;
-          if (farSlots.length && choices.length) {
-            const slot = farSlots[randomInteger(0, farSlots.length - 1)];
-            const chosen = choices[randomInteger(0, choices.length - 1)];
-            const oriented = randomInteger(0, 1) ? chosen : [chosen[1], chosen[0]];
-            cells[slot[0]] = oriented[0];
-            cells[slot[1]] = oriented[1];
-            slot.forEach(position => planted.add(position));
-          }
-        }
-
-        const decoyPositions = new Set();
-        const decoys = nextMode === "quotient" ? divisionDecoys(nextLevel) : [];
-        if (decoys.length) {
-          const available = shuffle(cells.map((_, position) => position).filter(position => !planted.has(position)));
-          available.slice(0, 4).forEach(position => {
-            cells[position] = decoys[randomInteger(0, decoys.length - 1)];
-            decoyPositions.add(position);
-          });
-        }
-
-        const ordinary = Array.from({ length: bounds[1] - bounds[0] + 1 }, (_, index) => bounds[0] + index);
-        const candidatesFor = position => {
-          const candidates = decoyPositions.has(position) ? decoys.concat(ordinary) : ordinary;
-          const offset = randomInteger(0, candidates.length - 1);
-          return candidates.map((_, index) => candidates[(offset + index) % candidates.length]);
-        };
-        for (let position = 0; position < cells.length; position += 1) {
-          if (planted.has(position)) continue;
-          const neighbours = pairs.filter(pair => pair.includes(position)).map(pair => pair[0] === position ? pair[1] : pair[0]);
-          const opens = candidate => neighbours.some(neighbour => isSolution(nextMode, candidate, cells[neighbour], nextTarget));
-          if (!opens(cells[position])) continue;
-          for (const candidate of candidatesFor(position)) {
-            if (!opens(candidate)) {
-              cells[position] = candidate;
-              break;
-            }
-          }
-        }
-
-        // La correction des solutions accidentelles peut exceptionnellement remplacer
-        // un grand nombre. On complète alors le camouflage sans créer de nouvelle solution.
-        if (nextMode === "quotient") {
-          let largeCount = cells.filter(value => value > bounds[1]).length;
-          for (let position = 0; position < cells.length && largeCount < 4; position += 1) {
-            if (planted.has(position) || cells[position] > bounds[1]) continue;
-            const neighbours = pairs.filter(pair => pair.includes(position)).map(pair => pair[0] === position ? pair[1] : pair[0]);
-            const candidate = decoys.find(value => neighbours.every(neighbour => !isSolution(nextMode, value, cells[neighbour], nextTarget)));
-            if (candidate !== undefined) {
-              cells[position] = candidate;
-              largeCount += 1;
-            }
-          }
-        }
-
-        return { values: cells, target: nextTarget, solutions: boardSolutions(nextMode, nextTarget, cells).length };
       }
 
       const operationTitles = { sum: "La somme", difference: "La différence", product: "Le produit", quotient: "Le quotient" };
@@ -2708,7 +2422,7 @@
       // Aux niveaux 2 et 3, l'aide reprend la carte du cours avec un exemple adapté
       // et un dessin compact. Le cours d'ouverture, lui, reste identique pour tous.
       const levelExamples = {
-        2: { sum: [27, 18], difference: [43, 27], product: [18, 4], quotient: [72, 4] },
+        2: { sum: [28, 7], difference: [52, 7], product: [18, 4], quotient: [72, 4] },
         3: { sum: [46, 27], difference: [72, 38], product: [24, 7], quotient: [168, 7] }
       };
 
@@ -2776,24 +2490,19 @@
         counter.setAttribute("aria-label", `${keys} clé${keys === 1 ? "" : "s"} sur ${GOAL}`);
       }
 
-      function updatePairHint() {
-        pairHint.hidden = !values.length;
-        pairHint.textContent = solutionCount === 1 ? "1 paire" : `${solutionCount} paires`;
-        pairHint.classList.toggle("two", solutionCount > 1);
-        pairHint.setAttribute("aria-label", solutionCount === 1
-          ? "Une seule paire voisine ouvre ce coffre."
-          : `${solutionCount} paires voisines ouvrent ce coffre.`);
-        pairHint.title = "Nombre de paires voisines qui ouvrent ce coffre";
-      }
-
-      function makeChallenge(nextMode = modes[keys]) {
+      // Un coffre sur trois propose deux paires gagnantes (le repère n'apparaît qu'après la
+      // première réussite). Après une erreur, le même nombre revient sur un nouveau plateau.
+      function makeChallenge(nextMode = modes[keys], { target: replayTarget = null } = {}) {
         clearSelection();
         mode = nextMode;
-        // Environ un coffre sur trois propose deux paires gagnantes.
-        const generated = generateBoard(mode, gameLevel, randomInteger(1, 3) === 1);
+        const generated = engine.generateBoard(mode, gameLevel, randomInteger(1, 3) === 1, {
+          family: replayTarget === null && Boolean(familyPlan[keys]),
+          target: replayTarget
+        });
         values = generated.values;
         target = generated.target;
         solutionCount = generated.solutions;
+        currentFamily = generated.family;
         boardId += 1;
         locked = false;
         bonusOpen = false;
@@ -2802,7 +2511,6 @@
         status.className = "status-line";
         status.textContent = "Choisis deux cases qui se touchent par un côté.";
         renderBoard();
-        updatePairHint();
       }
 
       function clearSelection() {
@@ -2835,11 +2543,13 @@
         });
       }
 
+      // Après la correction, on refait le même calcul : même nombre, même opération, nouveau plateau.
       function retryAfterLearning() {
         const retryMode = mode;
+        const retryTarget = target;
         const trigger = dialogs.trigger(correctionDialog);
         dialogs.close(correctionDialog, { restoreFocus: false });
-        makeChallenge(retryMode);
+        makeChallenge(retryMode, { target: retryTarget });
         focusAfterReset(trigger);
       }
 
@@ -2862,9 +2572,9 @@
       }
 
       function openCorrection({ chosenPair = null, trigger = document.activeElement } = {}) {
-        const found = findSolutionPair(mode, target);
+        const found = findSolutionPair(mode, target, values);
         if (!found) {
-          makeChallenge(mode);
+          makeChallenge(mode, { target });
           focusAfterReset(trigger);
           return;
         }
@@ -2952,7 +2662,9 @@
           lastResolvedPosition = secondPosition;
           firstSelection = null;
           if (largeScreen.matches) {
-            // Grand écran : le plateau reste ouvert pour vérifier l'autre paire pendant que le bouton attend.
+            // Grand écran : le plateau reste ouvert pour vérifier l'autre paire pendant que le bouton attend,
+            // et c'est seulement maintenant que le repère de la seconde paire s'affiche.
+            if (solutionCount > 1) status.textContent += " Bien joué — il y en a une autre !";
             wonMessage = status.textContent;
             bonusOpen = true;
             showNextButton();
@@ -3066,6 +2778,7 @@
         dialogs.close(helpDialog, { restoreFocus: false });
         dialogs.close(correctionDialog, { restoreFocus: false });
         modes = shuffle(settingsCore.soloSeries(selectedOperations));
+        familyPlan = engine.planFamilies(modes, level);
         keys = 0;
         locked = false;
         gameLevel = level;
@@ -3120,12 +2833,13 @@
         operationModel,
         findSolutionPair,
         boardSolutions,
-        matchingPairs,
-        levelRules,
-        generateBoard,
+        matchingPairs: engine.matchingPairs,
+        levelRules: engine.levelRules,
+        generateBoard: engine.generateBoard,
+        searchMetrics: engine.searchMetrics,
         createOperationVisual,
         start,
-        getState: () => ({ values: values.slice(), modes: modes.slice(), mode, target, keys, locked, boardId, level: gameLevel, solutions: solutionCount, bonusOpen, selectedOperations: selectedOperations.slice() })
+        getState: () => ({ values: values.slice(), modes: modes.slice(), familyPlan: familyPlan.slice(), family: currentFamily, mode, target, keys, locked, boardId, level: gameLevel, solutions: solutionCount, bonusOpen, selectedOperations: selectedOperations.slice() })
       };
       setupFullscreen();
       syncOriginLinks();

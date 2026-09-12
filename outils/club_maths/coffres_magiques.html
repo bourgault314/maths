@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Coffres magiques — à deux | maths&amp;go</title>
-  <meta name="description" content="Un jeu de calcul mental en duo — 20 secondes par tour, premier à cinq clés — avec aussi un mode solo guidé sur les quatre opérations.">
+  <meta name="description" content="Un jeu de calcul mental en duo — 20 à 45 secondes par tour selon le niveau, premier à cinq clés — avec aussi un mode solo guidé sur les quatre opérations.">
   <link rel="canonical" href="https://mathsgo.re/outils/club_maths/coffres_magiques.html">
   <meta name="robots" content="index, follow, max-image-preview:large">
   <link rel="icon" href="/favicon.ico" sizes="48x48">
@@ -1185,7 +1185,7 @@
       <header class="game-heading">
         <div>
           <h1>Coffres magiques</h1>
-          <p class="game-subline"><span>Duo · <span id="duo-level-label">niveau 1</span> · 20 s</span><button class="mode-switch-button" type="button" data-change-mode>Réglages</button></p>
+          <p class="game-subline"><span>Duo · <span id="duo-level-label">niveau 1</span> · <span id="duo-seconds-label">20 s</span></span><button class="mode-switch-button" type="button" data-change-mode>Réglages</button></p>
         </div>
         <button id="rules-button" class="rules-button" type="button">Règle</button>
       </header>
@@ -1231,7 +1231,7 @@
         </button>
         <button id="choose-duo" class="mode-choice mode-choice-duo" type="button" data-game-mode="duo" aria-pressed="false">
           <span class="mode-choice-icon" aria-hidden="true"><svg viewBox="0 0 32 32" focusable="false"><circle cx="8" cy="9" r="4"/><circle cx="24" cy="9" r="4"/><path d="M2 27v-6a6 6 0 0 1 12 0v6ZM18 27v-6a6 6 0 0 1 12 0v6Z"/></svg></span>
-          <span><strong>Duo — Se défier</strong><small>2 joueurs · 20 s par tour · premier à 5 clés</small></span>
+          <span><strong>Duo — Se défier</strong><small>2 joueurs · 20 à 45 s par tour selon le niveau · premier à 5 clés</small></span>
         </button>
       </div>
       <div class="level-row" role="group" aria-label="Niveau des nombres">
@@ -1369,7 +1369,7 @@
         <ol class="rule-steps">
           <li id="chosen-operations-rule">Le coffre demande une somme, une différence, un produit ou un quotient.</li>
           <li>Choisis deux runes qui se touchent par un côté.</li>
-          <li>Tu as <strong>20 secondes</strong>. Si le temps est écoulé, tu ne gagnes pas de clé et le tour passe.</li>
+          <li>Tu as <strong id="turn-seconds-rule">20 secondes</strong>. Si le temps est écoulé, tu ne gagnes pas de clé et le tour passe.</li>
           <li>Bonne réponse : tu gagnes une clé, puis le tour passe. Réponse fausse : aucune clé et le tour passe aussi.</li>
         </ol>
         <p class="timer-rule-note"><strong>Le chrono est en pause pendant que cette règle est ouverte.</strong></p>
@@ -1399,18 +1399,17 @@
     <span data-mathsgo-confidentialite>Sans cookie ni traceur</span>
   </footer>
 
-  <script src="../../assets/js/coffres-settings.js?v=3"></script>
+  <script src="../../assets/js/coffres-settings.js?v=4"></script>
+  <script src="../../assets/js/coffres-moteur.js?v=1"></script>
   <script>
     (() => {
       "use strict";
 
-      const SIZE = 4;
       const KEYS_TO_WIN = 5;
-      const TURN_DURATION_MS = 20_000;
+      // Le chronomètre suit le niveau : 20 s au niveau 1, 30 s au niveau 2, 45 s au niveau 3.
       const TIMER_WARNING_SECONDS = 5;
       const players = ["blue", "coral"];
       const labels = { blue: "bleu", coral: "corail" };
-      const OPERATION_MODES = ["sum", "difference", "product", "quotient"];
       const CURRENT_MODE = "duo";
       const DEFAULT_ORIGIN = "strategie";
       const ORIGINS = {
@@ -1448,9 +1447,13 @@
       const requestedMode = new URLSearchParams(window.location.search).get("mode");
       const origin = resolveOrigin();
       const settingsCore = window.MATHSGO_COFFRES_SETTINGS;
+      // Le moteur partagé avec le solo : mêmes règles par niveau, même garantie de 1 ou 2 paires.
+      const engine = window.MATHSGO_COFFRES_MOTEUR;
+      const { row, column, adjacent, calculate, randomInteger, shuffle } = engine;
       let selectedOperations = settingsCore.readOperations(window.location.search);
       let selectedLevel = settingsCore.normalizeLevel(new URLSearchParams(window.location.search).get("niveau"));
       let values = [];
+      let solutionCount = 1;
       let mode = "sum";
       let target = 0;
       let turn = 0;
@@ -1463,7 +1466,7 @@
       let pendingTimer = null;
       let turnClockHandle = null;
       let turnClockDeadline = 0;
-      let turnClockRemainingMs = TURN_DURATION_MS;
+      let turnClockRemainingMs = engine.turnDuration(selectedLevel);
       let turnClockActive = false;
       let timerWarningAnnounced = false;
       let rulesMandatory = false;
@@ -1683,6 +1686,15 @@
         syncFullscreenControl();
       }
 
+      function turnSeconds() {
+        return Math.round(engine.turnDuration(selectedLevel) / 1000);
+      }
+
+      function syncTurnDurationLabels() {
+        document.querySelector("#duo-seconds-label").textContent = `${turnSeconds()} s`;
+        document.querySelector("#turn-seconds-rule").textContent = `${turnSeconds()} secondes`;
+      }
+
       function nextPlayerLabel() {
         return labels[players[1 - turn]];
       }
@@ -1754,7 +1766,7 @@
 
       function beginTurnClock() {
         clearTurnClock({ captureRemaining: false });
-        turnClockRemainingMs = TURN_DURATION_MS;
+        turnClockRemainingMs = engine.turnDuration(selectedLevel);
         turnClockActive = true;
         timerWarningAnnounced = false;
         timerAnnouncementNode.textContent = "";
@@ -1780,32 +1792,6 @@
         else renderTurnClock();
       }
 
-      function randomInteger(minimum, maximum) {
-        return minimum + Math.floor(Math.random() * (maximum - minimum + 1));
-      }
-
-      function shuffle(items) {
-        const copy = items.slice();
-        for (let index = copy.length - 1; index > 0; index -= 1) {
-          const swap = randomInteger(0, index);
-          [copy[index], copy[swap]] = [copy[swap], copy[index]];
-        }
-        return copy;
-      }
-
-      function row(position) { return Math.floor(position / SIZE); }
-      function column(position) { return position % SIZE; }
-      function adjacent(first, second) { return Math.abs(row(first) - row(second)) + Math.abs(column(first) - column(second)) === 1; }
-
-      function calculate(nextMode, first, second) {
-        const high = Math.max(first, second);
-        const low = Math.min(first, second);
-        if (nextMode === "sum") return first + second;
-        if (nextMode === "difference") return high - low;
-        if (nextMode === "product") return first * second;
-        return high / low;
-      }
-
       function operation(first, second) {
         const high = Math.max(first, second);
         const low = Math.min(first, second);
@@ -1822,103 +1808,6 @@
         return `${left} ${symbols[mode]} ${right} = ${calculate(mode, first, second)}`;
       }
 
-      function neighborPairs() {
-        const pairs = [];
-        for (let position = 0; position < SIZE * SIZE; position += 1) {
-          if (column(position) < SIZE - 1) pairs.push([position, position + 1]);
-          if (row(position) < SIZE - 1) pairs.push([position, position + SIZE]);
-        }
-        return pairs;
-      }
-
-      function levelRules(nextLevel) {
-        if (nextLevel === 3) {
-          return { fill: { sum: [1, 100], difference: [1, 100], product: [1, 50], quotient: [1, 50] } };
-        }
-        if (nextLevel === 2) {
-          return { fill: { sum: [1, 50], difference: [1, 50], product: [1, 20], quotient: [1, 20] } };
-        }
-        return { fill: { sum: [1, 12], difference: [1, 12], product: [1, 12], quotient: [1, 12] } };
-      }
-
-      function fillBounds(nextMode, nextLevel = selectedLevel) {
-        return levelRules(nextLevel).fill[nextMode];
-      }
-
-      function multiplicationPair(nextLevel = selectedLevel) {
-        let pair;
-        if (nextLevel === 3) {
-          if (randomInteger(0, 1)) pair = [randomInteger(11, 20), randomInteger(6, 10)];
-          else {
-            const large = randomInteger(21, 50);
-            pair = [large, randomInteger(2, Math.min(10, Math.floor(200 / large)))];
-          }
-        } else if (nextLevel === 2) {
-          pair = randomInteger(0, 1)
-            ? [randomInteger(2, 10), randomInteger(2, 10)]
-            : [randomInteger(11, 20), randomInteger(2, 5)];
-        } else {
-          pair = [randomInteger(2, 9), randomInteger(2, 9)];
-        }
-        return randomInteger(0, 1) ? pair : [pair[1], pair[0]];
-      }
-
-      function allowedProductPair(first, second, nextLevel = selectedLevel) {
-        const high = Math.max(first, second);
-        const low = Math.min(first, second);
-        if (nextLevel === 3) {
-          return (high >= 11 && high <= 20 && low >= 6 && low <= 10)
-            || (high >= 21 && high <= 50 && low >= 2 && low <= 10 && high * low <= 200);
-        }
-        if (nextLevel === 2) {
-          return (high <= 10 && low >= 2) || (high >= 11 && high <= 20 && low >= 2 && low <= 5);
-        }
-        return high <= 9 && low >= 2;
-      }
-
-      function pairFor(nextMode, nextLevel = selectedLevel) {
-        if (nextMode === "sum") {
-          if (nextLevel === 3) {
-            const target = randomInteger(51, 100);
-            const first = randomInteger(10, target - 10);
-            return [first, target - first];
-          }
-          if (nextLevel === 2) {
-            const target = randomInteger(20, 50);
-            const first = randomInteger(2, target - 2);
-            return [first, target - first];
-          }
-          return [randomInteger(2, 9), randomInteger(2, 9)];
-        }
-        if (nextMode === "difference") {
-          if (nextLevel === 3) {
-            const high = randomInteger(51, 100);
-            return [high, randomInteger(1, high - 1)];
-          }
-          if (nextLevel === 2) {
-            const high = randomInteger(20, 50);
-            return [high, randomInteger(1, high - 1)];
-          }
-          const difference = randomInteger(2, 8);
-          const low = randomInteger(1, 12 - difference);
-          return [low + difference, low];
-        }
-        const factors = multiplicationPair(nextLevel);
-        if (nextMode === "product") return factors;
-        return [factors[0] * factors[1], randomInteger(0, 1) ? factors[0] : factors[1]];
-      }
-
-      function divisionDecoys(nextLevel = selectedLevel) {
-        const maximum = fillBounds("quotient", nextLevel)[1];
-        const products = new Set();
-        for (let first = 2; first <= 50; first += 1) {
-          for (let second = 2; second <= 50; second += 1) {
-            if (allowedProductPair(first, second, nextLevel) && first * second > maximum) products.add(first * second);
-          }
-        }
-        return [...products];
-      }
-
       function nextBalancedMode() {
         const positionInBlock = (challengeNumber - 1) % (selectedOperations.length * 2);
         if (positionInBlock === 0) operationCycle = shuffle(selectedOperations);
@@ -1932,25 +1821,15 @@
         firstSelection = null;
       }
 
+      // Même tirage que le solo : exactement 1 ou 2 paires voisines gagnantes (2 une fois sur trois).
       function makeChallenge() {
         clearRuneStates();
         challengeNumber += 1;
         mode = nextBalancedMode();
-        const bounds = fillBounds(mode, selectedLevel);
-        values = Array.from({ length: SIZE * SIZE }, () => randomInteger(bounds[0], bounds[1]));
-        const pairs = neighborPairs();
-        const [firstPosition, secondPosition] = pairs[randomInteger(0, pairs.length - 1)];
-        const [firstValue, secondValue] = pairFor(mode);
-        values[firstPosition] = firstValue;
-        values[secondPosition] = secondValue;
-        if (mode === "quotient") {
-          const decoys = divisionDecoys(selectedLevel);
-          const available = shuffle(values.map((_, position) => position).filter(position => position !== firstPosition && position !== secondPosition));
-          available.slice(0, 4).forEach(position => {
-            values[position] = decoys[randomInteger(0, decoys.length - 1)];
-          });
-        }
-        target = calculate(mode, firstValue, secondValue);
+        const generated = engine.generateBoard(mode, selectedLevel, randomInteger(1, 3) === 1);
+        values = generated.values;
+        target = generated.target;
+        solutionCount = generated.solutions;
         locked = false;
         challengeNode.textContent = `${challengeLabels[mode]} de ${target}`;
         renderBoard();
@@ -2114,6 +1993,7 @@
       function start({ moveFocus = false, focusTarget = null, showRules = false } = {}) {
         gameStarted = true;
         document.querySelector("#duo-level-label").textContent = `niveau ${selectedLevel}`;
+        syncTurnDurationLabels();
         endTurnClock();
         turnClockPauseReasons.delete("mode");
         if (pendingTimer) window.clearTimeout(pendingTimer);
@@ -2177,6 +2057,8 @@
         adjacent,
         calculate,
         operation,
+        generateBoard: engine.generateBoard,
+        boardSolutions: engine.boardSolutions,
         start,
         getState: () => ({
           values: [...values],
@@ -2188,6 +2070,8 @@
           operationCycle: [...operationCycle],
           selectedOperations: selectedOperations.slice(),
           level: selectedLevel,
+          solutions: solutionCount,
+          turnDurationMs: engine.turnDuration(selectedLevel),
           locked,
           timerActive: turnClockActive,
           timerPaused: turnClockPauseReasons.size > 0,
@@ -2198,6 +2082,7 @@
 
       setupFullscreen();
       syncOriginLinks();
+      syncTurnDurationLabels();
       if (requestedMode === CURRENT_MODE) {
         start({ showRules: true });
       } else if (requestedMode === "solo") {

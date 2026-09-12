@@ -126,7 +126,7 @@ async function auditModeSelector(browser, base, errors, scenario) {
   try {
     await page.goto(`${base}${scenario.entryPath}`, { waitUntil: "networkidle" });
     await page.locator("#mode-dialog:not([hidden])").waitFor();
-    await page.waitForFunction(mode => document.activeElement.id === `choose-${mode}`, scenario.currentMode);
+    await page.waitForFunction(() => document.activeElement.id === "mode-title");
     assert(await page.locator("#choose-solo").isVisible(), `${scenario.label} : le choix Solo n’est pas visible.`);
     assert(await page.locator("#choose-duo").isVisible(), `${scenario.label} : le choix Duo n’est pas visible.`);
     assert((await activeElement(page)).insideModal, `${scenario.label} : le focus initial n’est pas dans le sélecteur.`);
@@ -315,6 +315,46 @@ async function auditSolo(browser, base, errors) {
   await page.close();
 }
 
+// Lot « moteur » : le duo tire ses plateaux dans le moteur partagé (exactement 1 ou 2 paires,
+// jamais plus) et son chronomètre suit le niveau : 20 s, 30 s, 45 s.
+async function auditDuelMoteur(browser, base, errors) {
+  const page = await browser.newPage({ viewport: { width: 1280, height: 720 } });
+  page.on("pageerror", error => errors.push(`duo moteur : ${error.message}`));
+  try {
+    for (const [level, seconds] of [[1, 20], [2, 30], [3, 45]]) {
+      await page.goto(`${base}/outils/club_maths/coffres_magiques.html?mode=duo${level > 1 ? `&niveau=${level}` : ""}`, { waitUntil: "load" });
+      await page.locator("#rules:not([hidden])").waitFor();
+      assert((await page.locator("#turn-seconds-rule").innerText()).trim() === `${seconds} secondes`, `duo niveau ${level} : la règle n’annonce pas ${seconds} secondes.`);
+      await page.locator(".close-rules").click();
+      assert((await page.locator("#duo-seconds-label").innerText()).trim() === `${seconds} s`, `duo niveau ${level} : la ligne de titre n’annonce pas ${seconds} s.`);
+      assert((await page.locator("#turn-seconds").innerText()).trim() === String(seconds), `duo niveau ${level} : le chronomètre ne part pas de ${seconds}.`);
+      const seen = { 1: 0, 2: 0 };
+      for (let turn = 0; turn < 60; turn += 1) {
+        const state = await page.evaluate(() => window.MATHSGO_COFFRES_DUEL.getState());
+        assert(state.level === level && state.turnDurationMs === seconds * 1000, `duo niveau ${level} : durée de tour ${state.turnDurationMs} ms.`);
+        assert(state.timerRemainingMs <= seconds * 1000 && state.timerRemainingMs > (seconds - 2) * 1000, `duo niveau ${level} : chrono à ${state.timerRemainingMs} ms au début du tour.`);
+        let found = 0;
+        for (let first = 0; first < 16; first += 1) {
+          for (const second of [first + 1, first + 4]) {
+            if (second >= 16 || (second === first + 1 && Math.floor(first / 4) !== Math.floor(second / 4))) continue;
+            const high = Math.max(state.values[first], state.values[second]);
+            const low = Math.min(state.values[first], state.values[second]);
+            const result = state.mode === "sum" ? high + low : state.mode === "difference" ? high - low : state.mode === "product" ? high * low : high % low === 0 ? high / low : NaN;
+            if (result === state.target) found += 1;
+          }
+        }
+        assert(found === 1 || found === 2, `duo niveau ${level} : ${found} paires gagnantes pour ${state.mode} = ${state.target} (${state.values.join(" ")}).`);
+        assert(found === state.solutions, `duo niveau ${level} : l’appli annonce ${state.solutions} paire(s) au lieu de ${found}.`);
+        seen[found] += 1;
+        await page.evaluate(() => window.MATHSGO_COFFRES_DUEL.start());
+      }
+      assert(seen[2] >= 6 && seen[1] >= 20, `duo niveau ${level} : répartition suspecte (${seen[1]} simples, ${seen[2]} doubles).`);
+    }
+  } finally {
+    await page.close();
+  }
+}
+
 (async () => {
   const server = await startServer();
   const base = `http://127.0.0.1:${server.address().port}`;
@@ -358,9 +398,10 @@ async function auditSolo(browser, base, errors) {
     });
     await auditTouchTurn(browser, base, errors);
     await auditDuel(browser, base, errors);
+    await auditDuelMoteur(browser, base, errors);
     await auditSolo(browser, base, errors);
     assert(errors.length === 0, `Erreurs JavaScript :\n${errors.join("\n")}`);
-    console.log(JSON.stringify({ ok: true, pages: ["coffres_magiques", "coffres_magiques_solo"], checks: ["sélecteur solo/duo", "origine conservée", "tactile sans contour résiduel", "focus initial", "Tab", "Maj+Tab", "Échap", "restauration", "gagnant et scores"] }, null, 2));
+    console.log(JSON.stringify({ ok: true, pages: ["coffres_magiques", "coffres_magiques_solo"], checks: ["sélecteur solo/duo", "origine conservée", "tactile sans contour résiduel", "focus initial", "Tab", "Maj+Tab", "Échap", "restauration", "gagnant et scores", "duo : 1 ou 2 paires gagnantes exactement aux trois niveaux, chrono 20 / 30 / 45 s"] }, null, 2));
   } finally {
     await browser.close();
     await new Promise(resolve => server.close(resolve));

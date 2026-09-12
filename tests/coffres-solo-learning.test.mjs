@@ -1,8 +1,13 @@
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
+import { createRequire } from "node:module";
 import test from "node:test";
 import vm from "node:vm";
 
+const require = createRequire(import.meta.url);
+// Le générateur vit dans le moteur partagé (assets/js/coffres-moteur.js, testé à part) ;
+// la page ne garde que l'affichage, le cours, l'aide et la correction.
+const engine = require("../assets/js/coffres-moteur.js");
 const html = await readFile(new URL("../outils/calcul_mental/coffres_magiques_solo.html", import.meta.url), "utf8");
 const script = [...html.matchAll(/<script(?![^>]+\bsrc=)[^>]*>([\s\S]*?)<\/script>/gi)].at(-1)?.[1] || "";
 
@@ -33,17 +38,11 @@ function extractFunction(name) {
 
 const context = vm.createContext({});
 vm.runInContext(`
-  const SIZE = 4;
-  let values = [];
-  ${extractFunction("row")}
-  ${extractFunction("column")}
-  ${extractFunction("calculate")}
   ${extractFunction("operationModel")}
-  ${extractFunction("neighborPairs")}
-  ${extractFunction("findSolutionPair")}
-  globalThis.learningCore = { operationModel, findSolutionPair };
+  globalThis.learningCore = { operationModel };
 `, context);
-const { operationModel, findSolutionPair } = context.learningCore;
+const { operationModel } = context.learningCore;
+const { findSolutionPair } = engine;
 
 test("le mémo distingue réellement les deux orientations du produit", () => {
   assert.match(html, /aria-label="Un réseau de 3 rangées et 4 colonnes contient 12 points[^\"]+4 colonnes[^\"]+3 rangées/);
@@ -168,7 +167,7 @@ test("l’aide sépare l’indice de la révélation et la correction impose un 
   assert.doesNotMatch(html, /id="help-copy"/);
   assert.match(html, /id="correction-dialog"[^>]*role="dialog"[^>]*aria-modal="true"/);
   assert.match(html, /openCorrection\(\{ chosenPair: \[firstValue, secondValue\], trigger: secondButton \}\)/);
-  assert.match(html, /const retryMode = mode;[\s\S]*makeChallenge\(retryMode\)/);
+  assert.match(html, /const retryMode = mode;\s*const retryTarget = target;[\s\S]*makeChallenge\(retryMode, \{ target: retryTarget \}\)/);
   assert.match(html, /const operationTitles = \{ sum: "La somme", difference: "La différence", product: "Le produit", quotient: "Le quotient" \}/);
   assert.doesNotMatch(html, /id="correction-copy"|learningNotes\[mode\]\.correction/);
   assert.match(html, /renderCorrectionCalculation\(correctionChoice, "Ton essai", chosenPair\[0\], chosenPair\[1\]\)/);
@@ -206,125 +205,47 @@ test("la série garde exactement dix clés et la distribution validée", () => {
   assert.doesNotMatch(html, /id="(?:timer|chronometer|countdown)"/i);
 });
 
-// Lot 2 : tirage à 1 ou 2 paires, niveau 2, réglage et aides en barres.
-const generatorContext = vm.createContext({});
-vm.runInContext(`
-  const SIZE = 4;
-  let values = [];
-  let level = 1;
-  ${extractFunction("row")}
-  ${extractFunction("column")}
-  ${extractFunction("adjacent")}
-  ${extractFunction("calculate")}
-  ${extractFunction("randomInteger")}
-  ${extractFunction("shuffle")}
-  ${extractFunction("neighborPairs")}
-  ${extractFunction("isSolution")}
-  ${extractFunction("boardSolutions")}
-  ${extractFunction("levelRules")}
-  ${extractFunction("fillBounds")}
-  ${extractFunction("multiplicationPair")}
-  ${extractFunction("allowedProductPair")}
-  ${extractFunction("pairFor")}
-  ${extractFunction("matchingPairs")}
-  ${extractFunction("divisionDecoys")}
-  ${extractFunction("sameValues")}
-  ${extractFunction("generateBoard")}
-  globalThis.nativeRandom = Math.random;
-  globalThis.generator = { generateBoard, boardSolutions, matchingPairs, levelRules, fillBounds, allowedProductPair, divisionDecoys, pairFor, adjacent };
-`, generatorContext);
-const generator = generatorContext.generator;
-const MODES = ["sum", "difference", "product", "quotient"];
+// Lot 2 puis lot « moteur » : la page s'appuie sur le moteur partagé pour le tirage.
+const MODES = engine.OPERATIONS;
 
-function touching(first, second) {
-  return first.some(a => second.some(b => a === b || generator.adjacent(a, b)));
-}
-
-test("le tirage produit exactement 1 ou 2 paires voisines gagnantes, jamais plus", () => {
-  for (const level of [1, 2, 3]) {
-    for (const mode of MODES) {
-      for (let attempt = 0; attempt < 300; attempt += 1) {
-        const wantTwo = attempt % 2 === 0;
-        const board = generator.generateBoard(mode, level, wantTwo);
-        const found = generator.boardSolutions(mode, board.target, board.values);
-        assert.equal(found.length, wantTwo ? 2 : 1, `${mode} niveau ${level} (${board.values.join(" ")}, cible ${board.target}) : ${found.length} paire(s) au lieu de ${wantTwo ? 2 : 1}`);
-        assert.equal(board.solutions, found.length);
-        if (found.length === 2) assert.ok(!touching(found[0], found[1]), `${mode} niveau ${level} : les deux paires se touchent`);
-        const fillMax = generator.fillBounds(mode, level)[1];
-        const decoys = new Set(generator.divisionDecoys(level));
-        board.values.forEach(value => {
-          const allowedLarge = mode === "quotient" && decoys.has(value);
-          assert.ok(value >= 1 && (value <= fillMax || allowedLarge), `${mode} niveau ${level} : case ${value} hors des valeurs prévues`);
-        });
-        if (mode === "quotient") assert.ok(board.values.filter(value => value > fillMax).length >= 4, `quotient niveau ${level} : moins de quatre grands nombres camouflage`);
-      }
-    }
-  }
+test("la page charge le moteur partagé et ne garde aucun générateur local", () => {
+  assert.match(html, /<script src="\.\.\/\.\.\/assets\/js\/coffres-settings\.js\?v=4"><\/script>\s*<script src="\.\.\/\.\.\/assets\/js\/coffres-moteur\.js\?v=1"><\/script>/);
+  assert.match(html, /const engine = window\.MATHSGO_COFFRES_MOTEUR;/);
+  assert.match(html, /const \{ row, column, adjacent, calculate, isSolution, boardSolutions, findSolutionPair, randomInteger, shuffle \} = engine;/);
+  assert.doesNotMatch(html, /function (?:generateBoard|pairFor|levelRules|fillBounds|multiplicationPair|allowedProductPair|divisionDecoys|matchingPairs|randomInteger)\(/);
+  assert.match(html, /engine\.generateBoard\(mode, gameLevel, randomInteger\(1, 3\) === 1, \{\s*family: replayTarget === null && Boolean\(familyPlan\[keys\]\),\s*target: replayTarget\s*\}\)/);
+  assert.match(html, /familyPlan = engine\.planFamilies\(modes, level\)/);
+  assert.match(html, /generateBoard: engine\.generateBoard,[\s\S]*searchMetrics: engine\.searchMetrics/);
 });
 
-test("les trois niveaux adaptent les nombres à chaque opération", () => {
-  const fillMax = { 1: { sum: 12, difference: 12, product: 12, quotient: 12 }, 2: { sum: 50, difference: 50, product: 20, quotient: 20 }, 3: { sum: 100, difference: 100, product: 50, quotient: 50 } };
-  const bounds = { 1: { sum: [4, 18], difference: [2, 8], product: [4, 81], quotient: [2, 9] }, 2: { sum: [20, 50], difference: [1, 49], product: [4, 100], quotient: [2, 20] }, 3: { sum: [51, 100], difference: [1, 99], product: [42, 200], quotient: [2, 50] } };
-  for (const level of [1, 2, 3]) {
-    for (const mode of MODES) {
-      assert.equal(generator.fillBounds(mode, level)[1], fillMax[level][mode]);
-      for (let attempt = 0; attempt < 500; attempt += 1) {
-        const [first, second] = generator.pairFor(mode, level);
-        const target = mode === "difference" ? Math.abs(first - second) : mode === "quotient" ? Math.max(first, second) / Math.min(first, second) : mode === "sum" ? first + second : first * second;
-        const [minimum, maximum] = bounds[level][mode];
-        assert.ok(target >= minimum && target <= maximum, `${mode} niveau ${level} : ${first} et ${second} donnent ${target}`);
-        if (mode === "sum") {
-          assert.ok(level !== 3 || Math.min(first, second) >= 10, `somme niveau 3 sans deux termes à deux chiffres : ${first} + ${second}`);
-        } else if (mode === "difference") {
-          assert.ok(Math.max(first, second) >= (level === 3 ? 51 : level === 2 ? 20 : 3));
-        } else if (mode === "product") {
-          assert.ok(generator.allowedProductPair(first, second, level), `produit niveau ${level} hors programme : ${first} × ${second}`);
-        } else {
-          assert.equal(Math.max(first, second) % Math.min(first, second), 0);
-          assert.ok(generator.allowedProductPair(Math.min(first, second), target, level), `quotient niveau ${level} non issu des multiplications : ${first} ÷ ${second}`);
-        }
-      }
-    }
-  }
+test("les paires candidates du moteur donnent bien la cible demandée", () => {
   const plain = pairs => JSON.parse(JSON.stringify(pairs));
-  assert.deepEqual(plain(generator.matchingPairs("sum", 11, 1)), [[2, 9], [3, 8], [4, 7], [5, 6]]);
-  assert.deepEqual(plain(generator.matchingPairs("quotient", 4, 2)).slice(0, 2), [[8, 2], [12, 3]]);
-  assert.deepEqual(plain(generator.matchingPairs("product", 49, 1)), [[7, 7]]);
-  assert.deepEqual(plain(generator.matchingPairs("difference", 49, 2)), [[50, 1]]);
-});
-
-test("le tirage reste déterministe quand Math.random est figé (scénarios de test)", () => {
-  try {
-    for (const fixed of [0, .1, .13, .2, .5, .9, .999]) {
-      vm.runInContext(`Math.random = () => ${fixed};`, generatorContext);
-      for (const level of [1, 2, 3]) {
-        for (const mode of MODES) {
-          const board = generator.generateBoard(mode, level, true);
-          assert.equal(board.solutions, 2, `${mode} niveau ${level} avec Math.random = ${fixed} : ${board.solutions} paires`);
-        }
-      }
-    }
-  } finally {
-    vm.runInContext("Math.random = globalThis.nativeRandom;", generatorContext);
+  assert.deepEqual(plain(engine.matchingPairs("sum", 11, 1)), [[9, 2], [8, 3], [7, 4], [6, 5]]);
+  assert.deepEqual(plain(engine.matchingPairs("quotient", 4, 1)), [[16, 4], [20, 5], [24, 6], [28, 7], [32, 8], [36, 9]]);
+  assert.deepEqual(plain(engine.matchingPairs("quotient", 4, 2)), []);
+  assert.deepEqual(plain(engine.matchingPairs("product", 49, 1)), [[7, 7]]);
+  assert.deepEqual(plain(engine.matchingPairs("difference", 49, 2)), [[51, 2], [52, 3], [53, 4], [54, 5], [55, 6], [56, 7], [57, 8], [58, 9]]);
+  for (const level of [1, 2, 3]) for (const mode of MODES) {
+    const board = engine.generateBoard(mode, level, true);
+    assert.equal(engine.boardSolutions(mode, board.target, board.values).length, 2, `${mode} niveau ${level}`);
   }
 });
 
-test("le repère de paires, le niveau et la vérification bonus sont câblés", () => {
-  assert.match(html, /<span id="pair-count" class="pair-hint" hidden><\/span>/);
+test("le repère de la seconde paire n’apparaît qu’après la réussite ; niveau et vérification bonus sont câblés", () => {
+  assert.doesNotMatch(html, /pair-count|pair-hint|updatePairHint|1 paire/);
+  assert.match(html, /if \(solutionCount > 1\) status\.textContent \+= " Bien joué — il y en a une autre !";\s*wonMessage = status\.textContent;/);
   assert.match(html, /Solo · <span id="level-label">niveau 1<\/span><\/span>/);
   assert.match(html, /data-level="1"[^>]*>Niveau 1<small>Petits calculs<\/small>/);
   assert.match(html, /data-level="2"[^>]*>Niveau 2<small>Calculs intermédiaires<\/small>/);
   assert.match(html, /data-level="3"[^>]*>Niveau 3<small>Calculs plus avancés<\/small>/);
   assert.match(html, /function readLevel\(\) \{[\s\S]*?settingsCore\.normalizeLevel/);
   assert.match(html, /if \(nextLevel > 1\) params\.set\("niveau", String\(nextLevel\)\)/);
-  assert.match(html, /generateBoard\(mode, gameLevel, randomInteger\(1, 3\) === 1\)/);
-  assert.match(html, /pairHint\.textContent = solutionCount === 1 \? "1 paire" : `\$\{solutionCount\} paires`/);
   assert.match(html, /if \(largeScreen\.matches\) \{[\s\S]*?bonusOpen = true;[\s\S]*?showNextButton\(\);[\s\S]*?\} else \{[\s\S]*?pendingTimer = window\.setTimeout\(advance, 750\);/);
   assert.match(html, /\? `\$\{expression\(mode, firstValue, secondValue\)\} aussi !`/);
   assert.match(html, /: `\$\{expression\(mode, firstValue, secondValue\)\} : non, pas celle-là\.`/);
   assert.match(html, /function select\(position\) \{\s*if \(!modeDialog.hidden \|\| !lesson.hidden\) return;\s*if \(bonusOpen\) \{\s*selectBonus\(position\);\s*return;\s*\}\s*if \(locked\) return;/);
   assert.match(html, /const content = \[gameLevel >= 2 \? createLevelCard\(nextMode, sourceCard, gameLevel\) : sourceCard\.cloneNode\(true\)\]/);
-  assert.match(html, /2: \{ sum: \[27, 18\], difference: \[43, 27\], product: \[18, 4\], quotient: \[72, 4\] \}/);
+  assert.match(html, /2: \{ sum: \[28, 7\], difference: \[52, 7\], product: \[18, 4\], quotient: \[72, 4\] \}/);
   assert.match(html, /3: \{ sum: \[46, 27\], difference: \[72, 38\], product: \[24, 7\], quotient: \[168, 7\] \}/);
   assert.match(html, /visualLevel >= 2 \|\| \(nextMode === "quotient" && model\.total > 36\)/);
   assert.doesNotMatch(html, /localStorage|sessionStorage/);

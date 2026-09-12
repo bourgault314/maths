@@ -644,7 +644,7 @@ window.MATHSGO_CATALOGUE = {
       "tags": ["calcul-mental", "quatre-operations", "coffres", "aide", "correction-visuelle", "entrainement"],
       "thumbnail": "assets/img/thumbnails/calcul-mental/coffres-magiques-solo.svg?v=3",
       "cardTitle": "Coffres magiques — solo ou duo",
-      "cardDescription": "Choisir l’entraînement solo guidé (10 coffres) ou le duel à deux de 20 secondes par tour."
+      "cardDescription": "Choisir l’entraînement solo guidé (10 coffres) ou le duel à deux de 20 à 45 secondes par tour selon le niveau."
     },
     "outils/calcul_mental/defi_tables.html": {
       "primaryNotion": "calcul-mental",
@@ -6864,7 +6864,7 @@ window.MATHSGO_CATALOGUE = {
     {
       "id": "outils-club-maths-coffres-magiques-html",
       "title": "Coffres magiques — à deux",
-      "description": "Un jeu de calcul mental en duo — 20 secondes par tour, premier à cinq clés — avec aussi un mode solo guidé sur les quatre opérations.",
+      "description": "Un jeu de calcul mental en duo — 20 à 45 secondes par tour selon le niveau, premier à cinq clés — avec aussi un mode solo guidé sur les quatre opérations.",
       "path": "outils/club_maths/coffres_magiques.html",
       "domains": [
         "jeux-recherches"
@@ -6893,7 +6893,7 @@ window.MATHSGO_CATALOGUE = {
     {
       "id": "outils-calcul-mental-coffres-magiques-solo-html",
       "title": "Coffres magiques — solo",
-      "description": "Un entraînement guidé de dix coffres sur les quatre opérations, avec la possibilité de passer au duel à deux de 20 secondes par tour.",
+      "description": "Un entraînement guidé de dix coffres sur les quatre opérations, avec la possibilité de passer au duel à deux de 20 à 45 secondes par tour selon le niveau.",
       "path": "outils/calcul_mental/coffres_magiques_solo.html",
       "domains": [
         "nombres-calculs"
