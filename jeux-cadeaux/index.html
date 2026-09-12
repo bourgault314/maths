@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+  <meta name="robots" content="index,follow">
+  <meta name="description" content="Quatre jeux courts pour exercer mémoire visuelle, attention, précision et réflexes sur ordinateur, tablette ou téléphone.">
+  <title>La boîte à jeux | maths&amp;go</title>
+  <link rel="icon" href="/favicon.ico" sizes="48x48">
+  <link rel="stylesheet" href="styles.css?v=1">
+  <script defer src="app.js?v=1"></script>
+</head>
+<body>
+  <header class="topbar">
+    <a href="/" aria-label="Accueil maths et go"><img src="/assets/img/mathsgo-logo.png" alt="maths&amp;go"></a>
+    <span class="mode-pill" id="mode-pill">Atelier d’essai</span>
+  </header>
+  <main>
+    <section id="home" class="screen">
+      <div class="hero">
+        <p class="eyebrow">Petites parties · grands défis</p>
+        <h1>La boîte à jeux</h1>
+        <p>Quatre jeux très courts pour exercer mémoire, attention, précision et réflexes.</p>
+      </div>
+      <nav class="game-grid" aria-label="Choisir un jeu">
+        <button class="game-card luciole" data-game="luciole"><span class="art">✦</span><span><small>Mémoire visuelle</small><strong>La Luciole</strong><em>Retrouve son chemin lumineux.</em></span></button>
+        <button class="game-card dodo" data-game="dodo"><span class="art">🦤</span><span><small>Réflexes</small><strong>Dodo bondissant</strong><em>Saute au bon moment.</em></span></button>
+        <button class="game-card galets" data-game="galets"><span class="art">●</span><span><small>Précision</small><strong>La pile de galets</strong><em>Construis sans tout renverser.</em></span></button>
+        <button class="game-card tempo" data-game="tempo"><span class="art">◉</span><span><small>Attention et inhibition</small><strong>Tempo volcan</strong><em>Agis… ou retiens ton geste.</em></span></button>
+      </nav>
+      <p class="privacy">Aucune donnée n’est envoyée. Les parties restent sur cet appareil.</p>
+    </section>
+
+    <section id="play" class="screen" hidden>
+      <div class="play-head"><button id="back" class="quiet">← Jeux</button><div><small id="game-skill"></small><h1 id="game-title"></h1></div><strong id="round-label"></strong></div>
+      <div id="instructions" class="instructions"></div>
+      <div id="stage" class="stage" aria-live="polite"></div>
+      <div id="controls" class="controls"></div>
+    </section>
+
+    <section id="result" class="screen result" hidden>
+      <div id="result-icon" class="result-icon">★</div>
+      <p class="eyebrow">Petite mission terminée</p>
+      <h1 id="result-title">Bravo !</h1>
+      <p id="result-text"></p>
+      <div class="result-actions"><button id="next-round" class="primary">Deuxième partie</button><button id="finish" class="quiet">Terminer</button></div>
+      <p id="auto-return" class="auto-return" hidden></p>
+    </section>
+  </main>
+</body>
+</html>
