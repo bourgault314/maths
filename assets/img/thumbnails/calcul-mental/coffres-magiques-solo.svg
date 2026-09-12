@@ -38,9 +38,8 @@
 
     <g transform="translate(39 230)">
       <rect width="164" height="45" rx="22.5" fill="#e9f4ff"/>
-      <g transform="translate(15 11)" fill="none" stroke="#0755b8" stroke-linecap="round" stroke-linejoin="round" stroke-width="3.2">
-        <circle cx="9" cy="11" r="7"/>
-        <path d="M16 11h18v6h-5v5h-6v-5h-7"/>
+      <g transform="translate(10 11)" fill="none" stroke="#0755b8" stroke-linecap="round" stroke-linejoin="round" stroke-width="3.2">
+        <path d="M15.325 8H34v6h-5v5h-6v-5h-7.675a7 7 0 1 1 0-6Z"/>
       </g>
       <text x="51" y="29" fill="#0755b8" font-size="17" font-weight="900">6 / 10 clés</text>
     </g>
