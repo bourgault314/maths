@@ -58,36 +58,84 @@ function fonction(nom, dependances = []) {
 
 // --------------------------------------------------------- la géométrie
 
-test("le cadre fait 20 perles de large : la coupure tombe au milieu, sur tous les écrans", () => {
-  assert.match(html, /const PERLES = Object\.freeze\(\{[\s\S]*?montant: \.45,\s*hauteurRangee: 1\.49,\s*largeurCadre: 20\.9,\s*hauteurCadre: 14\.9,\s*maxi: 55, mini: 14/,
+test("le cadre fait 20 perles de large — 15 sur un téléphone — et la coupure reste nette", () => {
+  assert.match(html, /const PERLES = Object\.freeze\(\{[\s\S]*?montant: \.45,\s*hauteurRangee: 1\.49,\s*largeurCadre: 20\.9,\s*hauteurCadre: 14\.9,\s*maxi: 55, mini: 14,\s*ecart: 10, ecartSerre: 5, perleAuDoigt: 22/,
     "les mesures relevées dans son propre rekenrek : cadre de 1 240 px pour des perles de 55, montants de 40, rangées de 82");
-  assert.match(html, /largeur \/ PERLES\.largeurCadre,\s*hauteur \/ PERLES\.hauteurCadre,\s*PERLES\.maxi/,
+  assert.match(html, /const taillePour = largeurCadre => Math\.max\(PERLES\.mini, Math\.floor\(Math\.min\(\s*largeur \/ largeurCadre,\s*hauteur \/ PERLES\.hauteurCadre,\s*PERLES\.maxi/,
     "la perle est recalculée pour chaque écran (jamais un zoom de la géométrie du TNI)");
-  assert.match(html, /Math\.max\(PERLES\.mini, Math\.floor\(Math\.min\(/);
-  // 10 perles poussées, 10 au repos, dans 20 perles de large : le vide entre
-  // les deux groupes fait toujours 10 perles, seule sa position bouge.
-  const positionPerle = new Function(`const boulier = {taille: 10};
-    const PERLES = {parRangee: 10};
-    ${html.slice(html.indexOf("      function positionPerle("), html.indexOf("\n      }", html.indexOf("      function positionPerle(")) + 8)}
-    return positionPerle;`)();
-  assert.equal(positionPerle(0, true), 0);
-  assert.equal(positionPerle(9, true), 90);
-  assert.equal(positionPerle(0, false), 100);
-  assert.equal(positionPerle(9, false), 190);
-  for (let poussees = 0; poussees <= 10; poussees += 1) {
-    const finDuGroupeGauche = poussees ? positionPerle(poussees - 1, true) + 10 : 0;
-    const debutDuGroupeDroit = poussees < 10 ? positionPerle(poussees, false) : 200;
-    assert.equal(debutDuGroupeDroit - finDuGroupeGauche, 100, `avec ${poussees} perles poussées, le vide vaut toujours dix perles`);
+  // Lot R1 (audit du 11/09, A9) : sur un téléphone de 402 px le cadre de 20
+  // donnait des perles de 17 px et des rangées de 25 — trop petit pour un
+  // doigt. Sous 22 px de perle, le vide passe de 10 à 5 perles : 23 px,
+  // rangées de 34. Tablette et ordinateur gardent le cadre de 20.
+  assert.match(html, /let taille = taillePour\(PERLES\.largeurCadre\);[\s\S]*?const tailleSerree = taillePour\(PERLES\.largeurCadre - PERLES\.ecart \+ PERLES\.ecartSerre\);\s*if \(taille < PERLES\.perleAuDoigt && tailleSerree > taille\) \{\s*ecart = PERLES\.ecartSerre;\s*taille = tailleSerree;/);
+  assert.match(html, /if \(taille === boulier\.taille && ecart === boulier\.ecart\) return;/);
+  assert.match(html, /const interieur = taille \* \(PERLES\.parRangee \+ boulier\.ecart\);/, "l'intérieur du cadre suit le vide choisi");
+  const source = html.slice(html.indexOf("      function positionPerle("), html.indexOf("\n      }", html.indexOf("      function positionPerle(")) + 8);
+  for (const ecart of [10, 5]) {
+    // 10 perles poussées, 10 au repos : le vide entre les deux groupes garde
+    // toujours la même largeur (10 perles, ou 5), seule sa position bouge.
+    const positionPerle = new Function(`const boulier = {taille: 10, ecart: ${ecart}};
+      const PERLES = {parRangee: 10};
+      ${source}
+      return positionPerle;`)();
+    assert.equal(positionPerle(0, true), 0);
+    assert.equal(positionPerle(9, true), 90);
+    assert.equal(positionPerle(0, false), ecart * 10);
+    assert.equal(positionPerle(9, false), ecart * 10 + 90);
+    for (let poussees = 0; poussees <= 10; poussees += 1) {
+      const finDuGroupeGauche = poussees ? positionPerle(poussees - 1, true) + 10 : 0;
+      const debutDuGroupeDroit = poussees < 10 ? positionPerle(poussees, false) : (ecart + 10) * 10;
+      assert.equal(debutDuGroupeDroit - finDuGroupeGauche, ecart * 10, `avec ${poussees} perles poussées, le vide vaut toujours ${ecart} perles`);
+    }
   }
+  // La géométrie de la page tient la promesse : 402 px de large (iPhone),
+  // 372 px pour la scène → 17 px avec le cadre de 20, 23 px avec le cadre de 15.
+  assert.equal(Math.floor(372 / 20.9), 17);
+  assert.equal(Math.floor(372 / 15.9), 23);
+  assert.ok(Math.round(23 * 1.49) >= 32, "la rangée se prend au doigt : 32 px au moins");
+  // Relecture du 12/09 : on ne resserre que si la perle y GAGNE. Sur un
+  // portable (fenêtre 1536 × 730 : 716 px de large, 326 de haut pour le
+  // boulier) ou un vidéoprojecteur, c'est la hauteur qui limite — resserrer
+  // ne ferait que rétrécir le cadre, et la bande avec lui, dont les
+  // étiquettes « 10×8 » se marcheraient dessus.
+  const perlePour = (largeur, hauteur, cadre) => Math.max(14, Math.floor(Math.min(largeur / cadre, hauteur / 14.9, 55)));
+  assert.equal(perlePour(716, 326, 20.9), 21);
+  assert.equal(perlePour(716, 326, 15.9), 21, "portable : le cadre de 15 ne donne pas une perle plus grosse, on garde le cadre de 20");
+  assert.ok(perlePour(372, 421, 15.9) > perlePour(372, 421, 20.9), "iPhone de 402 px : là, le cadre de 15 fait bien grandir la perle (17 → 23)");
 });
 
-test("la bande prend la largeur du boulier et se pose dessous", () => {
-  assert.match(html, /dom\.bande\.style\.width = `\$\{interieur \+ montant \* 2\}px`;/);
-  assert.match(html, /scene\.append\(cadre, bande, addition\);\s*bloc\.append\(consigne, scene, tableFinale, terminer\);/,
-    "boulier, bande, addition vivent dans la même scène, centrés ensemble sous la consigne (lot 4b : l'espace libre ne se glisse plus entre eux)");
+test("la bande et l'addition au-dessus, le boulier en bas, dans la même scène", () => {
+  assert.match(html, /dom\.bande\.style\.width = `\$\{interieur \+ montant \* 2\}px`;/, "la bande prend exactement la largeur du boulier");
+  // Lot R1 : décidé par Gwenaël sur son iPhone (11/09) — « le boulier
+  // au-dessus fait qu'on ne regarde pas les résultats » : de haut en bas,
+  // la bande, l'addition, puis le boulier, là où le pouce travaille. Le même
+  // ordre sur tablette et ordinateur.
+  assert.match(html, /scene\.append\(bande, addition, cadre\);\s*bloc\.append\(consigne, scene, tableFinale, terminer\);/,
+    "bande, addition, boulier vivent dans la même scène, centrés ensemble sous la consigne (lot 4b : l'espace libre ne se glisse plus entre eux)");
   assert.match(html, /\.perles-scene \{[^}]*grid-auto-rows: max-content; align-content: space-evenly;/, "l'espace libre se partage à égalité autour et entre les trois");
   assert.match(html, /let hauteur = dom\.scene\.clientHeight - dom\.bande\.offsetHeight - dom\.addition\.offsetHeight - interligne \* 2;/,
     "la mesure du boulier retire la bande et l'addition de la hauteur disponible");
+});
+
+test("lot R1 : ce qui se lit sur un téléphone — barre d'état sur une ligne, table finale en grand", () => {
+  // A15 : « Ma / table » et « À ton / rythme » se coupaient en deux.
+  assert.match(html, /\.challenge-playing \.game-menu \{ padding: 4px 9px; white-space: nowrap; \}/);
+  // Relecture du 12/09 : les deux pastilles ne se coupent plus, mais le
+  // compteur du milieu peut passer à la ligne — sinon son texte passait SOUS
+  // la pastille du temps (« cases complét » à 375 et 360 px, et à 402 px
+  // quand le bouton dit « Mon parcours »).
+  assert.match(html, /\.challenge-playing #question-count \{ font-size: \.92rem; line-height: 1\.15; \}/);
+  assert.doesNotMatch(html, /\.challenge-playing #question-count \{[^}]*white-space: nowrap/);
+  // La pastille du temps garde ses 78 px (règle du dessus) : le chrono ne
+  // change plus de largeur à chaque seconde.
+  assert.match(html, /\.challenge-playing \.status strong \{ flex-shrink: 0; white-space: nowrap; \}/);
+  assert.match(html, /\.challenge-playing \.status strong\.no-timer \{ padding: 4px 9px; font-size: \.84rem; \}/);
+  // P2 : la table construite en grand sur toute la page (18 px avant).
+  assert.match(html, /\.perles-table \{[\s\S]*?font-size: clamp\(1\.1rem, min\(8vw, 4\.2dvh\), 3rem\);\s*font-weight: 900;\s*line-height: 1\.3;/);
+  assert.match(html, /\.question\.perles-main\.est-finie \.expression \{ margin: 0 0 8px; font-size: clamp\(1\.45rem, 7vw, 2\.6rem\); \}/);
+  // G6 : sur l'écran de la bande, le titre n'est plus 50 px (32 px, la bande centrée dessous).
+  assert.match(html, /\.question\.stick-main \.expression,\s*\.challenge-playing \.question\.stick-main \.expression \{ min-height: 0; margin: 4px 0 6px; padding: 6px 14px; font-size: clamp\(1\.6rem, 8vw, 2rem\); \}/);
+  assert.match(html, /\.challenge-playing \.question\.stick-main \.learn-sequence \{ margin: auto 0; \}/);
 });
 
 // ------------------------------------------------------------- la prise

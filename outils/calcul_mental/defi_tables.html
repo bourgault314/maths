@@ -925,13 +925,15 @@
       box-shadow: 0 2px 5px rgba(43, 67, 84, .1);
     }
     .question.stick-trace .number-stick-cell {
-      min-height: 42px;
-      grid-template-rows: 14px minmax(28px, 1fr);
+      min-height: 45px;
+      grid-template-rows: 15px minmax(30px, 1fr);
     }
-    .question.stick-trace .number-stick-multiplier { font-size: clamp(.48rem, 1.5vw, .64rem); }
+    /* Lot R1 : 11 px au moins pour les étiquettes de l'aide « Voir la bande »
+       (7,7 px sur un téléphone, audit A8). */
+    .question.stick-trace .number-stick-multiplier { font-size: clamp(.6875rem, 1.5vw, .8rem); }
     .question.stick-trace .number-stick-value {
-      min-height: 28px;
-      font-size: clamp(.66rem, 2.2vw, .9rem);
+      min-height: 30px;
+      font-size: clamp(.8rem, 2.2vw, .95rem);
     }
     .number-stick {
       width: min(100%, 680px);
@@ -989,6 +991,12 @@
     .number-stick-cell.is-empty .number-stick-value::after { content: ""; width: 42%; height: 2px; border-radius: 99px; background: #c7d7e0; }
     .number-stick-cell.has-draft .number-stick-value::after { display: none; }
     .expression.is-stick-activity { font-size: clamp(1.8rem, 6vw, 2.8rem); }
+    /* Lot R1 : dans « Je construis la bande » et « bande à trous », le titre
+       « Table de 5 » n'est qu'une étiquette (40 px sur un téléphone, 64 sur
+       PC, pendant que la bande — l'objet de l'activité — s'écrivait en
+       9 px, audit A8/G6) : c'est lui qui rend la place. */
+    .question.stick-main .expression,
+    .challenge-playing .question.stick-main .expression { min-height: 0; margin: 4px 0 6px; padding: 6px 14px; font-size: clamp(1.6rem, 8vw, 2rem); }
     @keyframes stick-pop { 0% { transform: scale(.72); } 70% { transform: scale(1.12); } 100% { transform: scale(1); } }
     /* Le pavé numérique (lot 1 « clavier », 07/09/2026) : les mêmes touches
        partout, mais à la taille de l'écran. Les mesures vivent sur #play pour
@@ -1212,10 +1220,27 @@
          libre reste entre le calcul et le pavé, comme au-dessus d'un clavier. */
       .challenge-playing .expression { min-height: clamp(68px, 12dvh, 92px); margin: 3px 0 6px; padding: 7px; font-size: clamp(2rem, min(12.4vw, 8dvh), 3.4rem); }
       .challenge-playing .learn-sequence { margin-top: 6px; }
+      /* Lot R1 : la barre d'état tient sur UNE ligne (« Ma / table » et
+         « À ton / rythme » se coupaient en deux, audit A15) — les deux
+         pastilles ne se coupent plus et perdent un peu de marge. Seul le
+         compteur du milieu passe à la ligne quand la place manque (petit
+         téléphone, ou bouton « Mon parcours » plus long) : sans cela son
+         texte passait SOUS la pastille du temps et « cases complétées » se
+         lisait « cases complét » (relecture du 12/09). La pastille du temps
+         garde ses 78 px : le chrono ne change plus de largeur à chaque
+         seconde. */
+      .challenge-playing .status { gap: 8px; }
+      .challenge-playing .status-left { min-width: 0; gap: 8px; }
+      .challenge-playing .game-menu { padding: 4px 9px; white-space: nowrap; }
+      .challenge-playing #question-count { font-size: .92rem; line-height: 1.15; }
+      .challenge-playing .status strong { flex-shrink: 0; white-space: nowrap; }
+      .challenge-playing .status strong.no-timer { padding: 4px 9px; font-size: .84rem; }
       .challenge-playing .number-stick { padding: 2px; border-width: 2px; border-radius: 8px; }
       .challenge-playing .number-stick-cell { min-height: 54px; grid-template-rows: 16px minmax(38px, 1fr); }
-      .challenge-playing .number-stick-multiplier { font-size: clamp(.5rem, 2.4vw, .64rem); }
-      .challenge-playing .number-stick-value { min-height: 38px; font-size: clamp(.68rem, 3vw, .9rem); }
+      /* Lot R1 : les étiquettes de la bande à 11 px au moins (9,4 px avant,
+         audit A8) et les nombres un peu plus grands — c'est la bande qu'on lit. */
+      .challenge-playing .number-stick-multiplier { font-size: .6875rem; }
+      .challenge-playing .number-stick-value { min-height: 38px; font-size: clamp(.8rem, 3.4vw, .95rem); }
       .challenge-playing .answer-feedback { min-height: 36px; margin-top: 2px; padding: 5px 10px; font-size: .95rem; }
       /* Sur téléphone le pavé se cale en bas de la carte, là où le pouce est
          à l'aise ; le calcul et la correction restent en haut. */
@@ -1228,6 +1253,10 @@
          que le titre « Table de 7 » : pas besoin de la hauteur d'une question
          à trou, et ces 20 px font tenir le pavé agrandi sur un iPhone. */
       .challenge-playing .question.stick-main .expression { min-height: 56px; }
+      /* Lot R1 : le titre réduit libérait un trou entre la bande et le pavé ;
+         la bande (et sa consigne) se centre dans la place qui reste, le pavé
+         garde le bas. */
+      .challenge-playing .question.stick-main .learn-sequence { margin: auto 0; }
       .challenge-playing .question.stick-trace .learn-sequence { margin-bottom: 4px; }
       .challenge-playing footer { display: none; }
     }
@@ -1410,7 +1439,9 @@
        appli : cadre de 1 240 px pour des perles de 55). Les tailles sont
        calculées en JS (mesurerBoulier), pas zoomées : montants 0,45 perle,
        rangée 1,49 perle, perle = min(largeur / 20,9 ; hauteur / 14,9 ; 55 px),
-       jamais moins de 14. */
+       jamais moins de 14. Lot R1 : quand cette perle ferait moins de 22 px
+       (téléphone), le vide entre les deux groupes se resserre à 5 perles
+       (largeur / 15,9) — voir PERLES.ecartSerre. */
     .question.perles-main { display: flex; flex-direction: column; align-items: center; }
     .question.perles-main .keypad,
     .question.perles-main .actions,
@@ -1426,14 +1457,17 @@
        même taille, pour que rien ne bouge sous le boulier. */
     .perles-consigne.est-refus { color: var(--red); animation: perles-refus .28s ease-out; }
     @keyframes perles-refus { 0%, 100% { transform: translateX(0); } 30% { transform: translateX(-5px); } 70% { transform: translateX(5px); } }
-    /* La scène tient le boulier, la bande et l'addition ensemble, centrés
+    /* La scène tient la bande, l'addition et le boulier ensemble, centrés
        dans la hauteur qui reste sous la consigne (lot 4b, retour de Gwenaël
        sur la capture : le boulier flottait seul au milieu, la bande et
        l'addition collées en bas — « la gestion des espaces est à
        améliorer »). Les trois respirent à égalité : l'espace libre se
-       répartit en parts égales au-dessus du boulier, entre le boulier et la
-       bande, entre la bande et l'addition, et en dessous — « il faut quand
-       même un peu d'espace entre chacun », jamais un bloc collé sous un vide. */
+       répartit en parts égales au-dessus de la bande, entre la bande et
+       l'addition, entre l'addition et le boulier, et en dessous — « il faut
+       quand même un peu d'espace entre chacun », jamais un bloc collé sous
+       un vide. Depuis le lot R1 le boulier est EN BAS (« le boulier au-dessus
+       fait qu'on ne regarde pas les résultats ») : la bande et l'addition
+       restent sous les yeux, le boulier sous le pouce. */
     .perles-scene { flex: 1 1 auto; min-height: 132px; width: 100%; display: grid; grid-auto-rows: max-content; align-content: space-evenly; justify-content: center; justify-items: center; row-gap: clamp(8px, 1.4vh, 16px); }
     .question.perles-main .number-stick { max-width: 100%; }
     .perles-cadre {
@@ -1483,7 +1517,7 @@
        seules le motif des unités (5-0-5-0 pour la table de 5). */
     /* L'écran de fin est une affiche : le titre, la table, le bouton, groupés
        et centrés dans la carte — pas une liste posée en haut d'un grand vide. */
-    .question.perles-main.est-finie .expression { margin: 0 0 8px; font-size: clamp(1.45rem, 5.6vw, 2.2rem); }
+    .question.perles-main.est-finie .expression { margin: 0 0 8px; font-size: clamp(1.45rem, 7vw, 2.6rem); }
     .question.perles-main.est-finie .learn-sequence,
     .question.perles-main.est-finie .perles-zone { flex: 0 1 auto; }
     .question.perles-main.est-finie .perles-table { margin: 0; }
@@ -1500,15 +1534,19 @@
       display: grid;
       grid-template-columns: auto auto auto;
       justify-content: center;
-      column-gap: .4em;
+      column-gap: .45em;
       margin: 0;
       padding: 0;
       overflow: auto;
       list-style: none;
       color: var(--ink);
-      font-size: clamp(1.1rem, 4.6vw, 1.7rem);
+      /* Lot R1 (P2) : la table que l'élève vient de construire prend toute
+         la page — 8 % de la largeur ou 4,2 % de la hauteur, la plus petite
+         des deux, pour que les onze lignes tiennent sans défiler (32 px sur
+         un iPhone, 18 px avant, avec 114 à 315 px de vide dessous). */
+      font-size: clamp(1.1rem, min(8vw, 4.2dvh), 3rem);
       font-weight: 900;
-      line-height: 1.5;
+      line-height: 1.3;
       font-variant-numeric: tabular-nums;
     }
     /* Les trois colonnes forment UNE grille : le bloc entier se centre sous le
@@ -1529,7 +1567,7 @@
       .number-stick-value { min-height: 50px; font-size: 1.4rem; }
       .question.stick-trace .number-stick { width: min(100%, 760px); }
       .question.stick-trace .number-stick-cell { min-height: 52px; grid-template-rows: 17px minmax(35px, 1fr); }
-      .question.stick-trace .number-stick-multiplier { font-size: .64rem; }
+      .question.stick-trace .number-stick-multiplier { font-size: .78rem; }
       .question.stick-trace .number-stick-value { min-height: 35px; font-size: 1.02rem; }
     }
     @media (min-width: 1040px) {
@@ -3384,13 +3422,22 @@
          « Pas assez de perles ! », « Finis la rangée d'abord ! ». (« Pousse
          6 perles ensemble » disait la décomposition 2 + 6 à sa place.)
          --------------------------------------------------------------- */
+      /* Lot R1 (audit du 11/09) : sur un téléphone, le cadre de 20 perles de
+         large donnait des perles de 17 px et des rangées de 25 — trop petit
+         pour un doigt. Quand la largeur ne laisse pas une rangée d'au moins
+         32 px (perle < 22), le vide entre les deux groupes passe de 10 à
+         5 perles (cadre de 15,9 perles) : la perle grandit d'un tiers
+         (23 px, rangée de 34 sur un iPhone de 402 px) et la coupure entre
+         perles poussées et perles au repos reste nette — cinq perles de vide
+         se voient de loin. Tablette et ordinateur gardent le cadre de 20. */
       const PERLES = Object.freeze({
         rangees: 10, parRangee: 10,
         montant: .45, hauteurRangee: 1.49, largeurCadre: 20.9, hauteurCadre: 14.9,
-        maxi: 55, mini: 14
+        maxi: 55, mini: 14,
+        ecart: 10, ecartSerre: 5, perleAuDoigt: 22
       });
       const boulier = {
-        table: 0, taille: 0, etats: [], etape: 0, morceaux: [], pile: [],
+        table: 0, taille: 0, ecart: PERLES.ecart, etats: [], etape: 0, morceaux: [], pile: [],
         phrase: "", figee: false, finie: false, drag: null, dom: null, observer: null, refus: 0
       };
 
@@ -3407,10 +3454,11 @@
       }
 
       // Où se trouve la perle d'indice i : poussée à gauche, ou au repos à
-      // droite. L'intérieur du cadre fait 20 perles de large, donc le vide entre
-      // les deux groupes fait toujours 10 perles — seule sa position bouge.
+      // droite. L'intérieur du cadre fait 10 perles plus le vide (10 perles,
+      // ou 5 sur un téléphone), donc le vide entre les deux groupes garde
+      // toujours la même largeur — seule sa position bouge.
       function positionPerle(index, poussee) {
-        return (poussee ? index : PERLES.parRangee + index) * boulier.taille;
+        return (poussee ? index : boulier.ecart + index) * boulier.taille;
       }
 
       function construireBoulier(table) {
@@ -3473,7 +3521,11 @@
         terminer.className = "primary perles-terminer";
         terminer.textContent = "Terminer";
         terminer.addEventListener("click", () => { if (state.running) finish(); });
-        scene.append(cadre, bande, addition);
+        // De haut en bas : la bande, l'addition, le boulier. Le boulier prend
+        // le bas de l'écran, là où le pouce travaille ; ce qui s'écrit reste
+        // au-dessus, sous les yeux (retour de Gwenaël sur son iPhone, 11/09 :
+        // « le boulier au-dessus fait qu'on ne regarde pas les résultats »).
+        scene.append(bande, addition, cadre);
         bloc.append(consigne, scene, tableFinale, terminer);
         zone.replaceChildren(bloc);
 
@@ -3499,13 +3551,27 @@
         const interligne = parseFloat(getComputedStyle(dom.scene).rowGap) || 0;
         let hauteur = dom.scene.clientHeight - dom.bande.offsetHeight - dom.addition.offsetHeight - interligne * 2;
         if (!(hauteur > 120)) hauteur = Math.round(window.innerHeight * .45);
-        const taille = Math.max(PERLES.mini, Math.floor(Math.min(
-          largeur / PERLES.largeurCadre,
+        const taillePour = largeurCadre => Math.max(PERLES.mini, Math.floor(Math.min(
+          largeur / largeurCadre,
           hauteur / PERLES.hauteurCadre,
           PERLES.maxi
         )));
-        if (taille === boulier.taille) return;
+        let ecart = PERLES.ecart;
+        let taille = taillePour(PERLES.largeurCadre);
+        // Une rangée doit se prendre au doigt : sous 22 px de perle, le vide
+        // se resserre à 5 perles et la perle reprend la place — mais seulement
+        // si elle y gagne. Sur un portable ou un vidéoprojecteur, c'est la
+        // HAUTEUR qui limite la perle : resserrer ne ferait que rétrécir le
+        // cadre et la bande, dont les étiquettes se marcheraient dessus
+        // (relecture du 12/09, fenêtres 1536 x 730, 1366 x 650, 1280 x 590).
+        const tailleSerree = taillePour(PERLES.largeurCadre - PERLES.ecart + PERLES.ecartSerre);
+        if (taille < PERLES.perleAuDoigt && tailleSerree > taille) {
+          ecart = PERLES.ecartSerre;
+          taille = tailleSerree;
+        }
+        if (taille === boulier.taille && ecart === boulier.ecart) return;
         boulier.taille = taille;
+        boulier.ecart = ecart;
         dessinerBoulier(false);
       }
 
@@ -3515,7 +3581,7 @@
         const taille = boulier.taille;
         const montant = Math.max(4, Math.round(taille * PERLES.montant));
         const hauteurRangee = Math.round(taille * PERLES.hauteurRangee);
-        const interieur = taille * PERLES.parRangee * 2;
+        const interieur = taille * (PERLES.parRangee + boulier.ecart);
         dom.cadre.style.width = `${interieur + montant * 2}px`;
         dom.cadre.style.height = `${hauteurRangee * PERLES.rangees}px`;
         dom.interieur.style.width = `${interieur}px`;
