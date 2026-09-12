@@ -144,11 +144,13 @@ test("le catalogue publie les cinq cartes dans les groupes validés", () => {
     const classification = catalogue.resourceClassifications[path];
     assert.equal(resource?.status, "published", path);
     assert.ok(resource?.domains.includes(domain), path);
-    assert.equal(classification?.primaryNotion, notion, path);
+    assert.equal(classification?.primaryNotion || resource.notions[0], notion, path);
     assert.equal(classification?.primaryGroup, group, path);
     assert.ok(classification?.thumbnail, path);
   }
   assert.equal(catalogue.resourceClassifications["outils/club_maths/carres_gloutons.html"].thumbnail, "assets/img/thumbnails/jeux/carres-gloutons.svg?v=5");
+  assert.deepEqual(Array.from(catalogue.resources.find(item => item.path === "outils/club_maths/carres_gloutons.html").notions), ["strategie", "jeux-courts"]);
+  assert.equal(catalogue.resourceClassifications["outils/club_maths/carres_gloutons.html"].primaryNotion, undefined, "Les deux rubriques doivent rester accessibles");
   const duelCoffres = catalogue.resourceClassifications["outils/club_maths/coffres_magiques.html"];
   assert.equal(duelCoffres.thumbnail, "assets/img/thumbnails/jeux/coffres-magiques.svg?v=2");
   for (const tag of ["quatre-operations", "somme", "difference", "produit", "quotient"]) {

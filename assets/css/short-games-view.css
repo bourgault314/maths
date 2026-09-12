@@ -1,4 +1,8 @@
 /* Le jeu reste dans le panneau blanc et sous l’en-tête du catalogue. */
+.resource-card[data-short-game] .resource-thumbnail {
+  height: auto;
+  aspect-ratio: 9 / 4;
+}
 .short-game-frame {
   display: block;
   width: 100%;

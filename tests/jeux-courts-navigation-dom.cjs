@@ -34,9 +34,9 @@ function create(query = "?domain=jeux-recherches") {
   const header = d.q(".site-header"), shell = d.q(".site-shell");
   assert.ok(d.q('[data-notion-card="jeux-courts"] img').src.includes("jeux-courts.svg"));
   d.click('[data-notion-card="jeux-courts"]');
-  assert.equal(d.doc.querySelectorAll("[data-short-game]").length, 4);
+  assert.equal(d.doc.querySelectorAll("[data-short-game]").length, 5);
   assert.ok(!d.q('#resource-grid a[href$="jeux-cadeaux/index.html"]'));
-  for (const id of ["luciole", "dodo", "galets", "tempo"]) {
+  for (const id of ["luciole", "dodo", "galets", "tempo", "carres-gloutons"]) {
     d.click('[data-short-game="' + id + '"]');
     assert.equal(d.w.location.pathname, "/outils/");
     assert.equal(new URL(d.w.location.href).searchParams.get("jeu"), id);
@@ -44,7 +44,12 @@ function create(query = "?domain=jeux-recherches") {
     assert.equal(d.q(".site-shell"), shell);
     assert.equal(d.q("#resource-grid").hidden, true);
     const frame = d.q("#short-game-view iframe");
-    assert.ok(frame.src.endsWith("?jeu=" + id + "&integre=1&v=2"));
+    if (id === "carres-gloutons") {
+      assert.equal(frame.src, "https://mathsgo.re/outils/club_maths/carres_gloutons.html?integre=1&v=1");
+      assert.equal(frame.allowFullscreen, true);
+    } else {
+      assert.ok(frame.src.endsWith("?jeu=" + id + "&integre=1&v=2"));
+    }
     d.send(frame, { type: "mathsgo-short-game:height", height: 570 }, "https://mathsgo.re");
     assert.equal(frame.style.height, "570px");
     d.send(frame, { type: "mathsgo-short-game:return" }, "https://example.com");
@@ -65,18 +70,26 @@ function create(query = "?domain=jeux-recherches") {
   assert.equal(d.q("#resource-grid").hidden, false);
   assert.deepEqual(d.errors, []);
   d.dom.window.close();
-  console.log("OK · Les quatre jeux s’ouvrent dans le catalogue, retours et historique compris.");
+  console.log("OK · Les cinq jeux s’ouvrent dans le catalogue, retours et historique compris.");
 
   const direct = create("?jeu=galets");
   assert.equal(direct.q("#page-title").textContent, "La pile de galets");
   direct.click('[data-breadcrumb-target="short-games"]');
   assert.equal(direct.q("#resource-grid").hidden, false);
-  assert.equal(direct.doc.querySelectorAll("[data-short-game]").length, 4);
+  assert.equal(direct.doc.querySelectorAll("[data-short-game]").length, 5);
   assert.deepEqual(direct.errors, []); direct.dom.window.close();
   const invalid = create("?domain=jeux-recherches&notion=jeux-courts&jeu=inconnu");
   assert.equal(invalid.q("iframe"), null);
-  assert.equal(invalid.doc.querySelectorAll("[data-short-game]").length, 4);
+  assert.equal(invalid.doc.querySelectorAll("[data-short-game]").length, 5);
   assert.equal(new URL(invalid.w.location.href).searchParams.get("jeu"), null);
   assert.deepEqual(invalid.errors, []); invalid.dom.window.close();
   console.log("OK · Liens directs et paramètre inconnu rejoignent le bon niveau du catalogue.");
+
+  const strategy = create("?domain=jeux-recherches&notion=strategie");
+  const squares = strategy.q('#resource-grid a[href$="carres_gloutons.html"]');
+  assert.ok(squares, "Les Carrés gloutons restent aussi dans Jeux de stratégie");
+  assert.equal(squares.hasAttribute("data-short-game"), false, "Le lien de stratégie conserve son ouverture habituelle");
+  assert.equal(strategy.w.MATHSGO_CATALOGUE.resources.filter(r => r.path === "outils/club_maths/carres_gloutons.html").length, 1);
+  assert.deepEqual(strategy.errors, []); strategy.dom.window.close();
+  console.log("OK · Une seule ressource Carrés gloutons, accessible dans les deux rubriques.");
 })().catch(error => { console.error(error); process.exitCode = 1; });

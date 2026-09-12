@@ -1170,7 +1170,8 @@
       return `href="${escapeHtml(resource.path)}" target="_blank" rel="noopener noreferrer"`;
     }
     const game = resourceClassification(resource).shortGame;
-    const gameAttribute = shortGames && Object.hasOwn(shortGames.games, game) ? ` data-short-game="${escapeHtml(game)}"` : "";
+    const openInCatalogue = game !== "carres-gloutons" || state.notion === "jeux-courts";
+    const gameAttribute = openInCatalogue && shortGames && Object.hasOwn(shortGames.games, game) ? ` data-short-game="${escapeHtml(game)}"` : "";
     return `href="${escapeHtml(rootPrefix + resource.path)}"${gameAttribute}`;
   }
 
