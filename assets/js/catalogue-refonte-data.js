@@ -352,6 +352,15 @@ window.MATHSGO_CATALOGUE = {
       "thumbnail": "assets/img/thumbnails/jeux/yavalath.svg?v=2",
       "cardDescription": "Aligner quatre pions sur le plateau hexagonal sans perdre en formant d’abord une ligne de trois."
     },
+    "jeux-cadeaux/index.html": {
+      "primaryNotion": "jeux-courts",
+      "primaryGroup": "jeux",
+      "collections": [],
+      "tags": ["jeu", "court", "memoire", "attention", "reflexes", "precision", "telephone", "tablette"],
+      "thumbnail": "assets/img/thumbnails/jeux/jeux-courts.svg?v=1",
+      "cardTitle": "La boîte à jeux courts",
+      "cardDescription": "Quatre défis rapides de mémoire, d’attention, de précision et de réflexes, utilisables seuls ou comme récompenses."
+    },
     "outils/club_maths/carres_gloutons.html": {
       "primaryNotion": "strategie",
       "primaryGroup": "jeux",
@@ -1860,6 +1869,11 @@ window.MATHSGO_CATALOGUE = {
     {
       "id": "explorations",
       "title": "Explorations mathématiques",
+      "domain": "jeux-recherches"
+    },
+    {
+      "id": "jeux-courts",
+      "title": "Jeux courts",
       "domain": "jeux-recherches"
     },
     {
@@ -6650,6 +6664,22 @@ window.MATHSGO_CATALOGUE = {
       "status": "published",
       "featured": false,
       "recent": false
+    },
+    {
+      "id": "jeux-cadeaux-index-html",
+      "title": "La boîte à jeux courts",
+      "description": "Quatre défis rapides de mémoire, d’attention, de précision et de réflexes, utilisables seuls ou comme récompenses.",
+      "path": "jeux-cadeaux/index.html",
+      "domains": ["jeux-recherches"],
+      "notions": ["jeux-courts"],
+      "uses": ["manipuler"],
+      "types": ["plateau"],
+      "filters": [],
+      "keywords": ["jeu court", "mémoire visuelle", "inhibition", "dodo", "galets"],
+      "kind": "tool",
+      "status": "published",
+      "featured": false,
+      "recent": true
     },
     {
       "id": "outils-club-maths-carres-gloutons-html",
