@@ -164,7 +164,12 @@ test("le résultat de la bande compte les cases trouvées du premier coup", () =
   assert.equal(compter([...onze, {multiplier: 4}, {multiplier: 7}], [...deux, {correct: true}, {correct: true}]), 2);
   // Les phrases : celle sans erreur ne change pas, celle avec erreur compte.
   assert.match(html, /\(ratees \? `\$\{casesBande - ratees\} cases sur \$\{casesBande\} trouvées du premier coup` : "Les 11 cases de la bande complétées"\)/);
-  assert.match(html, /\(ratees \? `\$\{casesBande - ratees\} cases sur \$\{casesBande\} complétées du premier coup` : `Les \$\{TOTAL\} cases manquantes complétées`\)/);
+  // La bande à trous compte ses cases MANQUANTES, pas ses cases : pendant le
+  // jeu le compteur annonce « x / 11 cases complétées » (les trois cases
+  // données comprises), et deux dénombrements sous le même mot se
+  // contredisaient. C'est le mot de la phrase voisine, celle sans erreur
+  // (« Les 8 cases manquantes complétées ») : décision du 12/09.
+  assert.match(html, /\(ratees \? `\$\{casesBande - ratees\} cases manquantes sur \$\{casesBande\} complétées du premier coup` : `Les \$\{TOTAL\} cases manquantes complétées`\)/);
   assert.match(html, /const casesBande = config\.learnActivity === "gaps" \? TOTAL : CASES_BANDE;/);
 });
 

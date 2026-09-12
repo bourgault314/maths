@@ -4299,7 +4299,7 @@
           verdict.score = activitePerles(config)
             ? "Les 11 produits construits sur le boulier"
             : config.learnActivity === "gaps"
-              ? (ratees ? `${casesBande - ratees} cases sur ${casesBande} complétées du premier coup` : `Les ${TOTAL} cases manquantes complétées`)
+              ? (ratees ? `${casesBande - ratees} cases manquantes sur ${casesBande} complétées du premier coup` : `Les ${TOTAL} cases manquantes complétées`)
               : config.learnActivity === "construct"
                 ? (ratees ? `${casesBande - ratees} cases sur ${casesBande} trouvées du premier coup` : "Les 11 cases de la bande complétées")
                 : "Les 11 produits retrouvés";
