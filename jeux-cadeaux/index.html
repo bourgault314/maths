@@ -8,12 +8,12 @@
   <link rel="canonical" href="https://mathsgo.re/jeux-cadeaux/">
   <title>La boîte à jeux courts | maths&amp;go</title>
   <link rel="icon" href="/favicon.ico" sizes="48x48">
-  <link rel="stylesheet" href="styles.css?v=dodo-3">
-  <link rel="stylesheet" href="embedded.css?v=2">
-  <script defer src="core.js?v=dodo-3"></script>
+  <link rel="stylesheet" href="styles.css?v=luciole-4">
+  <link rel="stylesheet" href="embedded.css?v=3">
+  <script defer src="core.js?v=luciole-4"></script>
   <script defer src="art.js?v=2"></script>
   <script defer src="runner-view.js?v=1"></script>
-  <script defer src="app.js?v=dodo-3"></script>
+  <script defer src="app.js?v=luciole-4"></script>
 </head>
 <body>
   <header class="topbar">
@@ -33,7 +33,7 @@
         <label><input type="radio" name="level" value="expert"><span>Expert</span></label>
       </fieldset>
       <nav class="game-grid" aria-label="Choisir un jeu">
-        <button type="button" class="game-card luciole" data-game="luciole"><span class="card-picture"><span class="card-art" data-art="luciole"></span><span class="duration">40–75 s</span></span><span class="card-copy"><small>Mémoire · observation</small><strong>La Luciole</strong><span>Retrouve les chemins de lumière.</span><span class="card-go">Suivre la luciole <b aria-hidden="true">↗</b></span></span></button>
+        <button type="button" class="game-card luciole" data-game="luciole"><span class="card-picture"><span class="card-art" data-art="luciole"></span><span class="duration">1–2 min</span></span><span class="card-copy"><small>Mémoire · observation</small><strong>La Luciole</strong><span>Le chemin de lumière s’allonge à chaque réussite.</span><span class="card-go">Suivre la luciole <b aria-hidden="true">↗</b></span></span></button>
         <button type="button" class="game-card dodo" data-game="dodo"><span class="card-picture"><span class="card-art" data-art="dodo"></span><span class="duration">Sans fin</span></span><span class="card-copy"><small>Adresse · anticipation</small><strong>Dodo bondissant</strong><span>Ça accélère ! Tiendras-tu 1 min 30 ?</span><span class="card-go">Prendre son élan <b aria-hidden="true">↗</b></span></span></button>
         <button type="button" class="game-card galets" data-game="galets"><span class="card-picture"><span class="card-art" data-art="galets"></span><span class="duration">30–60 s</span></span><span class="card-copy"><small>Précision · équilibre</small><strong>La pile de galets</strong><span>Jusqu’où tiendra ta construction ?</span><span class="card-go">Trouver l’équilibre <b aria-hidden="true">↗</b></span></span></button>
         <button type="button" class="game-card tempo" data-game="tempo"><span class="card-picture"><span class="card-art" data-art="tempo"></span><span class="duration">25–45 s</span></span><span class="card-copy"><small>Attention · maîtrise du geste</small><strong>Tempo volcan</strong><span>Savoir agir… et savoir attendre.</span><span class="card-go">Trouver le tempo <b aria-hidden="true">↗</b></span></span></button>
@@ -42,7 +42,7 @@
       <p class="privacy">Sans publicité, sans compte et sans classement.</p>
     </section>
     <section id="play" class="screen" hidden>
-      <div class="play-head"><button id="back" class="quiet" type="button">← Jeux</button><div><small id="game-skill"></small><h1 id="game-title" tabindex="-1"></h1></div><button id="pause" class="quiet" type="button" disabled>Pause</button></div>
+      <div class="play-head"><button id="back" class="quiet" type="button">← Jeux</button><div><small id="game-skill"></small><h1 id="game-title" tabindex="-1"></h1></div><div class="head-tools"><button id="sound" class="quiet sound-toggle" type="button" aria-pressed="true" aria-label="Couper le son des lumières" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path class="horn" d="M4 9h3l4-4v14l-4-4H4Z" fill="currentColor"/><path class="waves" d="M15 9.2a4 4 0 0 1 0 5.6M18 6.8a7.4 7.4 0 0 1 0 10.4" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/><path class="slash" d="M15.5 8.5 21 15" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/></svg></button><button id="pause" class="quiet" type="button" disabled>Pause</button></div></div>
       <p id="instructions" class="instructions" role="status"></p>
       <div class="status-row"><span id="progress-label"></span><span id="round-label"></span><span id="time-label"></span></div>
       <div id="stage" class="stage"></div>

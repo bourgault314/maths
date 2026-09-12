@@ -4,7 +4,7 @@
   const core = window.ShortGames;
   const art = name => '<svg viewBox="0 0 160 120" aria-hidden="true">' + window.ShortGameArt[name] + '</svg>';
   const games = {
-    luciole: { title: "La Luciole", skill: "Mémoire · observation", intro: "Observe les cases qui s’éclairent. Retouche-les dans le même ordre. Trois chemins, de plus en plus longs.", hint: "Touche les cases · Au clavier : flèches puis Entrée", goal: 3, seconds: 75, engine: core.Memory },
+    luciole: { title: "La Luciole", skill: "Mémoire · observation", intro: "Observe les cases qui s’éclairent, puis retouche-les dans le même ordre. À chaque réussite, le chemin s’allonge d’une lumière. La partie s’arrête à la première erreur.", hint: "Touche les cases · Au clavier : flèches puis Entrée", goal: 0, seconds: 0, engine: core.Memory },
     dodo: { title: "Dodo bondissant", skill: "Adresse · anticipation", intro: "Va le plus loin possible ! Appui bref : petit saut. Maintiens : grand saut. Franchis les troncs et les rochers, reste bas sous les branches. Ça accélère, et une collision termine la course. Cap expert : 1 min 30 !", hint: "Espace ou ↑ · Bouton ou paysage : appui bref = petit saut, maintenu = grand saut", goal: 90, seconds: Infinity, engine: core.Runner },
     galets: { title: "La pile de galets", skill: "Précision · équilibre", intro: "Le galet se déplace tout seul. Lâche-le au bon moment pour en empiler sept. Garde toute la pile près du centre !", hint: "Touche le paysage ou le bouton · Clavier : Espace", goal: 7, seconds: 60, engine: core.Stack },
     tempo: { title: "Tempo volcan", skill: "Attention · maîtrise du geste", intro: "Sur TOUCHE ✓, touche le cercle. Sur STOP ✕ et ATTENDS, retiens ton geste. Douze signaux pour trouver le bon tempo.", hint: "Touche le cercle · Clavier : Espace", goal: 12, seconds: 45, engine: core.Tempo }
@@ -22,6 +22,37 @@
   try { storage = window.sessionStorage; } catch { storage = { getItem: () => null, setItem() {} }; }
   const ledger = core.giftLedger(storage, "mathsgo:jeux-cadeaux:v2:" + options.ticket, options.limit);
   const forced = Object.hasOwn(games, options.game) ? options.game : "";
+  // Une note par case : l'oreille aide la mémoire quand l'œil sature.
+  const SOUND_KEY = "mathsgo:jeux-cadeaux:son";
+  const SCALE = [0, 2, 4, 7, 9];
+  let audio = null, soundOn = true, lastLit = -1;
+  try { soundOn = storage.getItem(SOUND_KEY) !== "0"; } catch { /* Réglage de cette page seulement. */ }
+  function context() {
+    if (audio === false) return null;
+    if (!audio) { try { audio = new (window.AudioContext || window.webkitAudioContext)(); } catch { audio = false; return null; } }
+    if (audio.state === "suspended") audio.resume().catch(() => {});
+    return audio;
+  }
+  function sound(frequency, delay, duration, shape, volume) {
+    const ctx = context();
+    if (!ctx || !soundOn) return;
+    const start = ctx.currentTime + delay, oscillator = ctx.createOscillator(), gain = ctx.createGain();
+    oscillator.type = shape; oscillator.frequency.value = frequency;
+    gain.gain.setValueAtTime(0, start);
+    gain.gain.linearRampToValueAtTime(volume, start + .012);
+    gain.gain.exponentialRampToValueAtTime(.0001, start + duration);
+    oscillator.connect(gain).connect(ctx.destination);
+    oscillator.start(start); oscillator.stop(start + duration + .02);
+  }
+  const cellFrequency = cell => 130.81 * Math.pow(2, (12 * Math.floor(cell / SCALE.length) + SCALE[cell % SCALE.length]) / 12);
+  const note = (cell, duration = .34) => sound(cellFrequency(cell), 0, duration, "triangle", .16);
+  function chime() { [0, .09, .18].forEach((delay, i) => sound(523.25 * Math.pow(2, i * 4 / 12), delay, .3, "triangle", .13)); }
+  function buzz() { sound(146.83, 0, .34, "sawtooth", .1); sound(110, .05, .4, "sawtooth", .08); }
+  function paintSound() {
+    $("sound").setAttribute("aria-pressed", String(soundOn));
+    $("sound").setAttribute("aria-label", soundOn ? "Couper le son des lumières" : "Remettre le son des lumières");
+    $("sound").classList.toggle("is-mute", !soundOn);
+  }
   let current = "", model = null, running = false, paused = false, elapsed = 0, frame = 0, previous = 0, memoryPhase = "", actionButton = null;
   const dialog = $("pause-dialog");
   let runnerDraw = null, runnerLevel = "malin", runnerBest = 0, runnerInput = "", runnerPointer = null, runnerAnnouncement = -1, runnerEvents = null;
@@ -73,9 +104,10 @@
     $("runner-journey")?.remove(); $("runner-result-detail")?.remove();
     runnerDraw = null;
     setText("game-title", game.title); setText("game-skill", game.skill); setText("instructions", "Prends le temps de lire. Le jeu démarre quand tu es prêt.");
-    setText("progress-label", current === "dodo" ? "Cap expert : 1 min 30" : "Objectif : " + game.goal + (current === "luciole" ? " chemins" : current === "galets" ? " galets" : " signaux"));
+    setText("progress-label", current === "luciole" ? "Le chemin s’allonge à chaque réussite" : current === "dodo" ? "Cap expert : 1 min 30" : "Objectif : " + game.goal + (current === "galets" ? " galets" : " signaux"));
     setText("round-label", options.enabled ? "Cadeau · " + (ledger.used + 1) + " / " + options.limit : "Jeu libre");
-    setText("time-label", current === "dodo" ? "Sans fin" : "≤ " + game.seconds + " s"); setText("keyboard-hint", game.hint);
+    setText("time-label", current === "luciole" ? "1 à 2 min" : current === "dodo" ? "Sans fin" : "≤ " + game.seconds + " s"); setText("keyboard-hint", game.hint);
+    $("sound").hidden = current !== "luciole"; paintSound();
     $("stage").innerHTML = '<div class="intro">' + art(current) + '<h2>Comment jouer ?</h2><p>' + game.intro + '</p><small>À toi de jouer quand tu veux.</small></div>';
     $("controls").replaceChildren(); button("Commencer", begin); show("play"); focus("game-title");
   }
@@ -86,19 +118,29 @@
     if (embedded) document.querySelector(".difficulty").hidden = true;
     const seed = window.crypto?.getRandomValues ? window.crypto.getRandomValues(new Uint32Array(1))[0] : Math.floor(Math.random() * 4294967296);
     runnerLevel = difficulty; runnerBest = readRecord(difficulty); runnerAnnouncement = -1; releaseRunner();
-    model = new games[current].engine(difficulty, seed); elapsed = 0; running = true; paused = false; previous = 0; memoryPhase = "";
+    model = new games[current].engine(difficulty, seed); elapsed = 0; running = true; paused = false; previous = 0; memoryPhase = ""; lastLit = -1;
+    if (current === "luciole" && soundOn) context();
     $("pause").disabled = false; $("controls").replaceChildren(); actionButton = null;
     buildStage(); render(); if (current === "dodo") actionButton.focus({ preventScroll: true }); frame = requestAnimationFrame(tick);
   }
   function buildStage() {
+    $("stage").classList.toggle("stage-memory", current === "luciole");
+    $("play").classList.toggle("play-memory", current === "luciole");
     $("controls").classList.toggle("runner-controls", current === "dodo");
     if (current === "luciole") {
-      $("stage").innerHTML = '<div class="memory-wrap"><div class="memory-grid" role="group" aria-label="Les seize cases du chemin"></div></div>';
+      $("stage").innerHTML = '<div class="memory-wrap"><div class="memory-grid" role="group" aria-label="Les seize cases du chemin"></div><div class="memory-timer" aria-hidden="true"><i></i></div></div>';
       const grid = $("stage").querySelector(".memory-grid");
       for (let i = 0; i < 16; i++) {
         const b = document.createElement("button"); b.type = "button"; b.className = "memory-cell"; b.setAttribute("aria-label", "Case " + (i + 1)); b.dataset.cell = i;
         b.innerHTML = '<span class="number">' + (i + 1) + '</span><span class="spark" aria-hidden="true">✦</span>';
-        b.addEventListener("click", () => { if (running && !paused) { model.tap(i); render(); } }); grid.append(b);
+        b.addEventListener("click", () => {
+          if (!running || paused || model.phase !== "answer") return;
+          const before = model.index;
+          model.tap(i);
+          if (model.index > before) { pulse(b, "ok"); note(i, .22); } else buzz();
+          render();
+        });
+        grid.append(b);
       }
     } else if (current === "tempo") {
       $("stage").innerHTML = '<div class="tempo-wrap"><svg class="tempo-landscape" viewBox="0 0 160 120" aria-hidden="true">' + window.ShortGameArt.tempo + '</svg><button type="button" class="tempo-orb" aria-label="Répondre au signal"><span class="signal-icon" aria-hidden="true"></span><span class="signal-text"></span></button></div>';
@@ -133,6 +175,7 @@
       $("stage").onclick = action; actionButton = button("Lâcher le galet ↓", action);
     }
   }
+  function pulse(node, name) { node.classList.add(name); setTimeout(() => node.classList.remove(name), 260); }
   function action() {
     if (!running || paused || !model) return;
     if (current === "dodo") { pressRunner("assistive"); releaseRunner(); }
@@ -148,27 +191,44 @@
     // Une suspension brutale de l’écran ne doit pas faire défiler des obstacles
     // invisibles ni gonfler le record. Reprendre redonne la main au joueur.
     if (current === "dodo" && rawDt > .25) { pause(); return; }
-    const dt = previous ? Math.min(Math.max(0, (time - previous) / 1000), games[current].seconds - elapsed) : 0;
+    const cap = games[current].seconds || Infinity;
+    const dt = previous ? Math.min(rawDt, cap - elapsed, 2) : 0;
     previous = time; elapsed += dt;
     let remaining = dt;
     while (remaining > 0 && !model.done) { const step = Math.min(remaining, 1 / 60); model.update(step); remaining -= step; }
     if (current === "dodo") elapsed = model.elapsed;
     render();
-    if (model.done || elapsed >= games[current].seconds) finishRound(elapsed >= games[current].seconds ? "time" : "");
+    if (model.done || elapsed >= cap) finishRound(elapsed >= cap ? "time" : "");
     else frame = requestAnimationFrame(tick);
   }
   function render() {
     if (!model) return;
-    setText("time-label", current === "dodo" ? duration(model.elapsed) : Math.max(0, Math.ceil(games[current].seconds - elapsed)) + " s");
     if (current === "luciole") {
-      setText("progress-label", "Chemin " + Math.min(3, model.round + 1) + " / 3 · " + model.score + " retrouvé" + (model.score > 1 ? "s" : ""));
-      const message = model.phase === "show" ? "Observe le chemin : " + model.path.length + " lumières à retenir." : model.phase === "answer" ? "À toi ! " + model.index + " / " + model.path.length + " cases retrouvées." : model.feedback;
+      setText("time-label", model.phase === "answer" ? Math.ceil(model.remaining) + " s" : model.phase === "show" ? "Observe…" : "");
+      setText("progress-label", "Chemin de " + model.length + " lumières");
+      const message = model.phase === "show" ? "Observe bien : " + model.length + " lumières à retenir." : model.phase === "answer" ? "À toi ! " + model.index + " / " + model.length + " cases retrouvées." : model.feedback;
       setText("instructions", message);
       const cells = [...$("stage").querySelectorAll(".memory-cell")];
-      cells.forEach((b, i) => { b.classList.toggle("lit", model.lit === i); b.disabled = model.phase !== "answer"; });
+      const trail = model.phase === "feedback";
+      cells.forEach((b, i) => {
+        b.classList.toggle("lit", model.lit === i);
+        b.classList.toggle("wrong", model.missed === i);
+        b.classList.toggle("trail", trail && model.path.includes(i));
+        b.disabled = model.phase !== "answer";
+      });
+      if (model.lit !== lastLit) {
+        if (model.lit >= 0) note(model.lit, model.phase === "reveal" ? .5 : .3);
+        lastLit = model.lit;
+      }
+      if (model.phase !== memoryPhase && model.phase === "feedback") chime();
+      const bar = $("stage").querySelector(".memory-timer");
+      bar.hidden = model.phase !== "answer";
+      bar.firstElementChild.style.width = (model.phase === "answer" ? Math.max(0, model.remaining / model.answerTime) * 100 : 100) + "%";
+      bar.classList.toggle("urgent", model.phase === "answer" && model.remaining < model.answerTime * .3);
       if (model.phase === "answer" && memoryPhase !== "answer") cells[0].focus({ preventScroll: true });
       memoryPhase = model.phase;
     } else if (current === "dodo") {
+      setText("time-label", duration(model.elapsed));
       setText("progress-label", model.metres + " m · " + model.score + " obstacle" + (model.score > 1 ? "s" : ""));
       setText("round-label", levelNames[runnerLevel] + " · " + model.rank.place);
       if (model.rank.at !== runnerAnnouncement) {
@@ -182,6 +242,7 @@
       $("runner-progress").max = target || 120; $("runner-progress").value = model.elapsed;
       runnerDraw(model);
     } else if (current === "galets") {
+      setText("time-label", Math.max(0, Math.ceil(games[current].seconds - elapsed)) + " s");
       setText("progress-label", model.score + " / 7 galets");
       setText("instructions", model.phase === "fall" ? "Le galet descend…" : model.phase === "tumble" ? "La pile a basculé !" : "Vise le centre de la pile, puis lâche le galet.");
       if (actionButton) actionButton.disabled = model.phase !== "aim";
@@ -191,6 +252,7 @@
         '<g' + (model.phase === "tumble" ? ' transform="translate(' + ((model.x < 300 ? -1 : 1) * model.tumble * 120).toFixed(2) + ' ' + (model.tumble * model.tumble * 150).toFixed(2) + ') rotate(' + ((model.x < 300 ? -1 : 1) * model.tumble * 40).toFixed(2) + ' 300 283)"' : "") + '>' +
         model.stones.map(stone).join("") + (model.score < 7 ? stone({ x: model.x, w: model.w, y: model.y }, model.score) : "") + '</g>';
     } else {
+      setText("time-label", Math.max(0, Math.ceil(games[current].seconds - elapsed)) + " s");
       setText("progress-label", "Signal " + Math.min(12, model.index + 1) + " / 12 · " + model.score + " réussi" + (model.score > 1 ? "s" : ""));
       const orb = $("stage").querySelector(".tempo-orb");
       orb.className = "tempo-orb " + model.phase;
@@ -205,15 +267,24 @@
   }
   function finishRound(reason) {
     if (!model || !running) return;
-    const game = games[current], score = model.score, success = score === game.goal;
+    const game = games[current], score = model.score;
     if (current === "dodo") { finishRunner(reason); return; }
     stop();
     $("result-art").innerHTML = art(current);
-    setText("result-title", success ? "Défi relevé !" : "Partie terminée");
-    const unit = current === "luciole" ? "chemins retrouvés" : current === "dodo" ? "troncs franchis" : current === "galets" ? "galets empilés" : "signaux réussis";
-    setText("result-score", score + " / " + game.goal + " " + unit);
-    const tips = { luciole: "Astuce : raconte-toi le chemin avec les numéros des cases.", dodo: "Astuce : regarde le tronc qui arrive, puis fais un seul saut.", galets: "Astuce : les petits décalages s’additionnent. Pense à toute la pile.", tempo: "Astuce : laisse ton doigt tranquille jusqu’au mot TOUCHE." };
-    setText("result-text", success ? "Tu es allé au bout de ce petit défi. Bien joué !" : (reason === "quit" ? "Tu as choisi de terminer cette partie. " : reason === "time" ? "Le temps de cette petite partie est écoulé. " : "") + tips[current]);
+    const opening = reason === "quit" ? "Tu as choisi de terminer cette partie. " : reason === "time" ? "Le temps de cette petite partie est écoulé. " : "";
+    if (current === "luciole") {
+      setText("result-title", model.won ? "Championne des lucioles !" : score >= 10 ? "Mémoire de luciole !" : score >= 7 ? "Beau chemin !" : score >= 4 ? "Bien joué !" : "Partie terminée");
+      setText("result-score", score > 0 ? score + " lumières retenues" : "Aucun chemin retrouvé cette fois");
+      const tip = score >= 6 ? "Astuce : retiens les lumières par petits paquets de trois." : "Astuce : dis les numéros des cases dans ta tête pendant qu’elles s’allument.";
+      setText("result-text", opening + (reason || !model.feedback ? "" : model.feedback + " ") + tip);
+    } else {
+      const success = score === game.goal;
+      setText("result-title", success ? "Défi relevé !" : "Partie terminée");
+      const unit = current === "dodo" ? "troncs franchis" : current === "galets" ? "galets empilés" : "signaux réussis";
+      setText("result-score", score + " / " + game.goal + " " + unit);
+      const tips = { dodo: "Astuce : regarde le tronc qui arrive, puis fais un seul saut.", galets: "Astuce : les petits décalages s’additionnent. Pense à toute la pile.", tempo: "Astuce : laisse ton doigt tranquille jusqu’au mot TOUCHE." };
+      setText("result-text", success ? "Tu es allé au bout de ce petit défi. Bien joué !" : opening + tips[current]);
+    }
     resultActions(); show("result"); focus("result-title");
   }
   function finishRunner(reason) {
@@ -261,11 +332,21 @@
   });
   $("back").addEventListener("click", () => running ? pause() : home());
   $("pause").addEventListener("click", pause); $("resume").addEventListener("click", resume);
+  $("sound").addEventListener("click", () => {
+    soundOn = !soundOn; paintSound();
+    try { storage.setItem(SOUND_KEY, soundOn ? "1" : "0"); } catch { /* Réglage de cette page seulement. */ }
+    if (soundOn) note(7, .2);
+  });
   $("quit").addEventListener("click", () => finishRound("quit"));
   dialog.addEventListener("cancel", event => { event.preventDefault(); resume(); });
   $("next-round").addEventListener("click", () => { prepare(current); if (current === "dodo") begin(); });
   $("finish").addEventListener("click", () => options.enabled && options.back ? location.assign(options.back) : home());
   document.addEventListener("visibilitychange", () => { if (document.hidden) pause(); });
+  if (embedded) window.addEventListener("message", event => {
+    if (event.origin !== location.origin || event.data?.type !== "mathsgo-short-game:fenetre") return;
+    const height = Number(event.data.height);
+    if (Number.isFinite(height) && height > 0) document.documentElement.style.setProperty("--hauteur-site", Math.round(height) + "px");
+  });
   if (embedded && window.ResizeObserver) {
     let lastHeight = 0;
     const observer = new ResizeObserver(() => {

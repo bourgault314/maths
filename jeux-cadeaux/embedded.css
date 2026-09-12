@@ -18,7 +18,10 @@ html.embedded {
 .embedded .difficulty label { min-width: 0; flex: 1; }
 .embedded .difficulty span { padding-inline: 16px; }
 .embedded .stage { height: clamp(270px, 45vw, 360px); }
-.embedded .memory-grid { width: min(90%, 325px); }
+/* Le plateau de la Luciole suit la hauteur de la fenêtre du site, transmise par le catalogue. */
+.embedded #play.play-memory {
+  --grid-max: min(92vw, max(240px, calc(var(--hauteur-site, 900px) - 330px)), 530px);
+}
 .embedded .status-row { padding: 7px 0; }
 .embedded .controls { padding-top: 12px; }
 .embedded .result { margin: 8px 0; }
@@ -29,7 +32,6 @@ html.embedded {
 .embedded .intro p { font-size: .92rem; }
 @media (max-width: 400px) {
   .embedded .difficulty span { padding-inline: 8px; }
-  .embedded .memory-grid { width: min(90%, 245px); }
   .embedded .intro p { font-size: .84rem; }
   .embedded .play-head small { font-size: .65rem; }
 }
