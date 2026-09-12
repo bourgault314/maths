@@ -328,12 +328,29 @@ test("la grille de Mon parcours a une colonne par activité de J’apprends (cor
   const gabarits = [...html.matchAll(/\.parcours-cells \{[^}]*grid-template-columns: ([^;}]*);/g)].map(m => m[1]);
   assert.equal(gabarits.length, 2, "le gabarit général et celui du téléphone (max-width: 480px)");
   gabarits.forEach(gabarit => assert.ok(gabarit.startsWith(`repeat(${n}, minmax(0, 1fr))`), gabarit));
-  // Téléphone : la colonne Acquise garde 48 px, sinon « ACQUISE » se coupe dans une police plus large (Verdana : 48 px).
-  assert.ok(gabarits[1].endsWith("minmax(48px, 1fr)"), gabarits[1]);
+  // Téléphone : la colonne Acquise passe à 56 px au lot R3 — l'étiquette de groupe
+  // y est montée à 11 px (audit A8) et « ACQUISE » y demande 49 px dans une police
+  // large (48,7 mesurés en Arial Black au lot R0).
+  assert.ok(gabarits[1].endsWith("minmax(56px, 1fr)"), gabarits[1]);
   // Les étiquettes suivent : J’APPRENDS sur n colonnes, JE M’ENTRAÎNE après la respiration.
   assert.match(html, new RegExp(`\\.parcours-group-label \\{ grid-column: span ${n};`));
   assert.match(html, new RegExp(`\\.parcours-group-label\\.is-entraine \\{ grid-column: ${n + 2} / span 3; \\}`));
   // Acquise : n ronds, une respiration, 3 entraînements, une respiration, puis sa colonne (= 11).
   const acquise = html.match(/\.parcours-group-label\.is-acquise \{ grid-column: (\d+); \}/);
   assert.equal(Number(acquise?.[1]), n + 6);
+});
+
+test("lot R3 · les étiquettes de groupe de Mon parcours font 11 px partout", () => {
+  // Audit A8 : 9,3 px au téléphone, 10,2 sur ordinateur, 10,9 sur tablette —
+  // c'était le plus petit texte de l'écran où l'élève lit tout son travail.
+  const tailles = [...html.matchAll(/\.parcours-group-label(?:\.is-\w+)? \{([^}]*)\}/g)]
+    .map(m => (m[1].match(/font-size: ([^;]+);/) || [])[1])
+    .filter(Boolean);
+  assert.ok(tailles.length >= 2, "le gabarit général et celui de l'ordinateur");
+  tailles.forEach(t => assert.equal(t, ".6875rem", "11 px : jamais moins"));
+  // Le téléphone ne redescend plus : sa règle ne garde que l'interlettrage.
+  assert.match(html, /\.parcours-group-label \{ letter-spacing: \.01em; \}/);
+  // Sur un écran de 320 px, « JE M'ENTRAÎNE » ne tient plus sur une ligne à 11 px :
+  // il passe sur deux lignes au lieu d'être coupé au milieu d'un mot.
+  assert.doesNotMatch(html, /\.parcours-group-label \{[^}]*white-space: nowrap/);
 });

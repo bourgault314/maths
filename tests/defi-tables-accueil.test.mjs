@@ -32,7 +32,9 @@ test("l’accueil : Ma table et ses trois étapes, Réviser, Mon parcours, Mes c
   assert.ok(html.indexOf('id="acc-changer"') < html.indexOf('id="acc-acquises"'), "« 2 tables acquises sur 9 » sous « Changer de table » (complément du 08/09)");
   assert.match(html, /id="acc-etapes" class="etapes"/);
   assert.match(html, /id="acc-reviser" class="reviser"[\s\S]*Réviser&nbsp;→/);
-  assert.match(html, /id="open-parcours" class="acc-lien"[\s\S]*<svg class="ico"[\s\S]*Mon parcours<small>toutes mes tables, le mélange, Expert<\/small>/);
+  // Lot R3 (12/09) : « Expert » avec sa majuscule se lisait comme un nom propre ;
+  // le sous-titre reprend le titre du panneau, « je deviens expert ».
+  assert.match(html, /id="open-parcours" class="acc-lien"[\s\S]*<svg class="ico"[\s\S]*Mon parcours<small>toutes mes tables, le mélange, je deviens expert<\/small>/);
   assert.match(html, /id="open-calculs" class="acc-lien"[\s\S]*<svg class="ico"[\s\S]*Mes calculs<small>la grille des 36 calculs<\/small>/);
   assert.match(html, /id="acc-print"[^>]*>Imprimer ma fiche</);
   assert.match(html, /id="acc-notice-bouton"[^>]*aria-controls="acc-notice">Comment ça marche&nbsp;\?</);
@@ -318,4 +320,86 @@ test("sur téléphone, le repère de suivi tient sur une ligne sous le logo et �
 test("la page Confidentialité nomme les deux clés de session de l’accueil", () => {
   assert.match(confidentialite, /<code>mathsgo-defi-tables-prenom<\/code>, <code>mathsgo-defi-tables-table<\/code>/);
   assert.match(confidentialite, /table choisie sur l’accueil de Défi tables/);
+});
+
+// ---------------------------------------------- lot R3 : l'accueil et le parcours
+// Retouches de l'audit du 11/09/2026, décidées avec Gwenaël le 11 et le 12 :
+// le bleu ne dit plus qu'une chose, le cadenas répond, les cibles au doigt
+// passent à 44 px, les petits textes à 11 px, le focus se voit, et les deux
+// portes professeur sont utilisables jusqu'au bout.
+
+const regle = nom => {
+  const m = html.match(new RegExp(`(?:^|\\n)\\s*${nom.replace(/[.*+?^${}()|[\\]\\\\]/g, "\\\\$&")} \\{([^}]*)\\}`));
+  assert.ok(m, `règle CSS introuvable : ${nom}`);
+  return m[1];
+};
+
+test("lot R3 · le bleu ne désigne plus que l’étape conseillée", () => {
+  // A4 : « Je valide ma table » était écrit en bleu quelle que soit l'étape
+  // conseillée — l'élève de 6e y lisait « c'est là qu'il faut aller ».
+  assert.doesNotMatch(html, /\.etape\.valide strong \{ color: var\(--blue\); \}/);
+  // Ce qui reste bleu : l'étape conseillée, et elle seule (is-next).
+  assert.match(html, /\.etape\.is-next \{ border-color: var\(--blue\);/);
+  assert.match(html, /\.expert \.etape\.is-next strong \{ color: var\(--blue\); \}/);
+  // Un seul « conseillé » à la fois : l'étiquette du panneau déplié ne
+  // s'écrit que si l'étape elle-même est celle que l'appli conseille.
+  assert.match(html, /function panneauChoix\(\{id, legende, items, marquerConseil = true\}\)/);
+  assert.match(html, /items\.forEach\(item => zone\.append\(boutonChoix\(\{\.\.\.item, marquerConseil\}\)\)\);/);
+  assert.match(html, /if \(conseillee && marquerConseil\) \{/);
+  assert.match(html, /marquerConseil: conseil === "apprends",/);
+  assert.match(html, /marquerConseil: conseil === "entraine",/);
+  // Le lecteur d'écran entend la même chose que l'œil voit.
+  assert.match(html, /\$\{conseillee && marquerConseil \? " Conseillé\." : ""\}/);
+});
+
+test("lot R3 · toucher le cadenas descend jusqu’à « Mon mélange » et l’illumine", () => {
+  // A5, décision Q4 : aucun texte nouveau, un geste qui répond.
+  assert.match(html, /action: montrerMelange/);
+  const corps = html.slice(html.indexOf("function montrerMelange()"), html.indexOf("function badgeRang"));
+  assert.match(corps, /document\.querySelector\("\.etape\.melange"\) \|\| \$\("acc-expert"\)/);
+  assert.match(corps, /cible\.scrollIntoView\(\{block: "center", behavior: "smooth"\}\)/);
+  assert.match(corps, /cible\.classList\.add\("est-montree"\)/);
+  assert.match(corps, /setTimeout\(\(\) => cible\.classList\.remove\("est-montree"\), 1000\)/);
+  assert.match(html, /\.etape\.est-montree \{ box-shadow:/, "le halo est une ombre : il reste visible sans animation");
+  // Rien n'a été ajouté sur l'écran de l'élève : pas de phrase de plus.
+  assert.doesNotMatch(html.replace(/<!--[\s\S]*?-->/g, ""), /Fais d’abord ton mélange pour/);
+});
+
+test("lot R3 · les cibles du doigt font 44 px", () => {
+  // A11 : « Se déconnecter » est la SEULE sortie sur tablette (la pilule de
+  // l'en-tête n'existe qu'au téléphone) et ne faisait que 28 px.
+  assert.match(regle(".suivi-repere .sortie"), /min-height: 44px/);
+  assert.match(regle(".suivi-repere"), /min-height: 44px/);
+  assert.match(html, /\.matable-changer \{ min-height: 44px;/);
+  assert.match(html, /\.acc-bas button \{ min-height: 44px;/);
+  assert.match(regle(".stick-help-button"), /min-height: 44px/);
+  // En pleine activité sur téléphone, la hauteur manque : 36 px, pas 32.
+  assert.match(html, /\.challenge-playing \.stick-help-button \{ min-height: 36px;/);
+});
+
+test("lot R3 · « Changer de table » est centré, et Réviser lisible", () => {
+  // P1 : neuf boutons alignés à gauche, 100 px de vide à droite.
+  assert.match(regle(".matable-choix"), /justify-content: center/);
+  // Au téléphone, trois rangées de trois (sa demande P1), pas 5 + 4.
+  assert.match(html, /\.matable-choix \{ display: grid; grid-template-columns: repeat\(3, minmax\(0, 1fr\)\); \}/);
+  // A7 : blanc sur #e0771a = 3,07:1 ; sur #b85608 = 4,8:1 (il faut 4,5).
+  assert.match(html, /\.reviser \.go \{[^}]*background: #b85608;/);
+  assert.doesNotMatch(html, /\.reviser \.go \{[^}]*background: #e0771a;/);
+});
+
+test("lot R3 · les petits textes, le focus et le bandeau des réglages", () => {
+  // A8 : « conseillé » à 10,9 px → 12 px.
+  assert.match(regle(".choix-activite .tag"), /font-size: \.75rem/);
+  // A19 : le contour du clavier était à 1,6:1 (rgba .3) ; plein, il fait 4,6:1.
+  assert.doesNotMatch(html, /outline: 3px solid rgba\(15, 108, 249, \.3\)/);
+  assert.equal((html.match(/outline: 3px solid #0f6cf9/g) || []).length, 2, "le focus général et celui du pavé");
+  // A16 : le bandeau « Commencer » ne laisse plus voir les options derrière lui.
+  const dock = regle(".start-dock");
+  assert.match(dock, /bottom: 0;/, "collé au bas : rien ne dépasse dessous");
+  assert.match(dock, /background: #fff;/, "fond plein, plus de dégradé transparent");
+  assert.match(dock, /box-shadow: 0 -9px 10px -9px/, "l'ombre dit qu'il y a une suite");
+  // A20 : après une série lancée depuis les deux portes professeur, un retour.
+  assert.match(html, /<button id="result-reglages" class="secondary" type="button" hidden>Réglages<\/button>/);
+  assert.equal((html.match(/\$\("result-reglages"\)\.hidden = state\.origin !== "reglages";/g) || []).length, 2,
+    "les deux fins de série : la normale et celle de la révision");
 });
