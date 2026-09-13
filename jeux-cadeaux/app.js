@@ -10,7 +10,8 @@
   const games = {
     luciole: { title: "La Luciole", skill: "Mémoire · observation", intro: "Observe les cases qui s’éclairent, puis retouche-les dans le même ordre. À chaque réussite, le chemin s’allonge d’une lumière. La partie s’arrête à la première erreur.", hint: "Touche les cases · Au clavier : flèches puis Entrée", goal: 0, seconds: 0, engine: core.Memory },
     dodo: { title: "Dodo bondissant", skill: "Adresse · anticipation", intro: "Cours le plus loin possible ! Appui bref : petit saut. Maintiens l’appui : grand saut. Saute les cailloux, les troncs et les rochers, et reste au sol sous les branches. Ça accélère sans arrêt. Tu as deux vies — jusqu’où iras-tu ?", hint: "Espace ou ↑ · Bouton ou paysage : appui bref = petit saut, maintenu = grand saut", goal: 60, seconds: Infinity, engine: core.Runner },
-    galets: { title: "La pile de galets", skill: "Précision · équilibre", intro: "Le galet se déplace tout seul. Lâche-le au bon moment pour en empiler sept. Garde toute la pile près du centre !", hint: "Touche le paysage ou le bouton · Clavier : Espace", goal: 7, seconds: 60, engine: core.Stack },
+    // Jeu sans fin : pas d'objectif, le score est la hauteur ; les 90 s sont un garde-fou invisible.
+    galets: { title: "La pile de galets", skill: "Précision · équilibre", intro: "Le galet va et vient au-dessus de la pile. Lâche-le au bon moment. La pile penche du côté le plus lourd : rattrape-la en posant le galet suivant de l’autre côté. Jusqu’où iras-tu ?", hint: "Touche le paysage ou le bouton · Clavier : Espace", goal: 0, seconds: 90, engine: core.Stack },
     tempo: { title: "Tempo volcan", skill: "Attention · inhibition", intro: "Touche la LAVE, laisse passer la PIERRE. Sur chaque signal un mot est écrit : au début il dit la vérité, plus loin il mentira — c’est toujours le dessin qui commande. Plus loin encore, la consigne s’inverse, et un écran te prévient. Trois erreurs et la partie s’arrête.", hint: "Touche le cercle · Clavier : Espace", goal: 0, seconds: Infinity, engine: core.Tempo }
   };
   const options = core.giftOptions(location.search, location.origin);
@@ -58,6 +59,9 @@
     $("sound").classList.toggle("is-mute", !soundOn);
   }
   let current = "", model = null, running = false, paused = false, elapsed = 0, frame = 0, previous = 0, memoryPhase = "", actionButton = null;
+  const recordKey = "mathsgo:jeux-cadeaux:galets:record";
+  function record() { try { const n = Number(storage.getItem(recordKey)); return Number.isInteger(n) && n > 0 ? n : 0; } catch { return 0; } }
+  const calm = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   const dialog = $("pause-dialog");
   let runnerDraw = null, runnerBest = 0, runnerInput = "", runnerPointer = null, runnerAnnouncement = -1, runnerEvents = null;
   let runnerRecord = 0, runnerFlashTimer = 0, runnerHideTimer = 0;
@@ -112,8 +116,8 @@
     current = Object.hasOwn(games, name) ? name : "luciole"; model = null;
     const difficulty = document.querySelector(".difficulty");
     if (embedded) $("play").insertBefore(difficulty, $("stage"));
-    // Ni le dodo ni le tempo n'ont de niveau : un seul jeu pour tout le monde, qui monte seul.
-    difficulty.hidden = current === "dodo" || current === "tempo";
+    // Ni le dodo, ni le tempo, ni les galets n'ont de niveau : un seul jeu pour tout le monde, qui monte seul.
+    difficulty.hidden = current === "dodo" || current === "tempo" || current === "galets";
     const game = games[current];
     $("play").classList.toggle("runner-play", current === "dodo");
     $("play").classList.toggle("tempo-play", current === "tempo");
@@ -122,9 +126,9 @@
     $("instructions").hidden = false;
     runnerDraw = null;
     setText("game-title", game.title); setText("game-skill", game.skill); setText("instructions", "Prends le temps de lire. Le jeu démarre quand tu es prêt.");
-    setText("progress-label", current === "luciole" ? "Le chemin s’allonge à chaque réussite" : current === "dodo" ? "0 m" : current === "tempo" ? "Trois vies · jusqu’à la troisième erreur" : "Objectif : " + game.goal + " galets");
+    setText("progress-label", current === "luciole" ? "Le chemin s’allonge à chaque réussite" : current === "dodo" ? "0 m" : current === "tempo" ? "Trois vies · jusqu’à la troisième erreur" : "0 galet");
     setText("round-label", options.enabled ? "Cadeau · " + (ledger.used + 1) + " / " + options.limit : "Jeu libre");
-    setText("time-label", current === "luciole" ? "1 à 2 min" : current === "dodo" || current === "tempo" ? "Sans fin" : "≤ " + game.seconds + " s"); setText("keyboard-hint", game.hint);
+    setText("time-label", current === "luciole" ? "1 à 2 min" : current === "dodo" || current === "tempo" ? "Sans fin" : current === "galets" ? "Record : " + (record() || "—") : "≤ " + game.seconds + " s"); setText("keyboard-hint", game.hint);
     $("sound").hidden = current !== "luciole"; paintSound();
     $("stage").innerHTML = '<div class="intro">' + art(current) + '<h2>Comment jouer ?</h2><p>' + game.intro + '</p><small>À toi de jouer quand tu veux.</small></div>';
     $("controls").replaceChildren(); button("Commencer", begin); show("play"); focus("game-title");
@@ -139,7 +143,7 @@
     if (current === "dodo") $("instructions").hidden = true;
     model = new games[current].engine(difficulty, seed); elapsed = 0; running = true; paused = false; previous = 0; memoryPhase = ""; lastLit = -1;
     if (current === "luciole" && soundOn) context();
-    $("pause").disabled = false; $("controls").replaceChildren(); actionButton = null;
+    $("pause").disabled = false; $("controls").replaceChildren(); actionButton = null; shapes.clear();
     buildStage(); render(); if (current === "dodo") actionButton.focus({ preventScroll: true }); frame = requestAnimationFrame(tick);
   }
   function buildStage() {
@@ -256,15 +260,16 @@
       else if (model.rank.at !== runnerAnnouncement) { runnerAnnouncement = model.rank.at; if (model.rank.at > 0) flash(model.rank.name); }
       runnerDraw(model);
     } else if (current === "galets") {
-      setText("time-label", Math.max(0, Math.ceil(games[current].seconds - elapsed)) + " s");
-      setText("progress-label", model.score + " / 7 galets");
-      setText("instructions", model.phase === "fall" ? "Le galet descend…" : model.phase === "tumble" ? "La pile a basculé !" : "Vise le centre de la pile, puis lâche le galet.");
+      setText("progress-label", model.score + " galet" + (model.score > 1 ? "s" : "") + (model.tier ? " · " + model.tier : ""));
+      setText("instructions", model.phase === "fall" ? "Le galet descend…" : model.phase === "tumble" || model.phase === "done" ? "La pile a basculé !" : model.notice || "Lâche le galet au bon endroit.");
       if (actionButton) actionButton.disabled = model.phase !== "aim";
-      const colors = ["#71758c", "#8d97a9", "#a7b3b5", "#c1c4bc", "#bdadba", "#b7a3be", "#dfc6ae"];
-      const stone = (s, i) => '<g><rect x="' + (s.x - s.w / 2).toFixed(2) + '" y="' + s.y.toFixed(2) + '" width="' + s.w + '" height="24" rx="12" fill="' + colors[i % colors.length] + '"/><path d="M' + (s.x - s.w / 2 + 13).toFixed(2) + ' ' + (s.y + 6).toFixed(2) + ' h' + (s.w * .48).toFixed(2) + '" stroke="#ffffff55" stroke-width="3" stroke-linecap="round"/></g>';
-      $("stage").querySelector("svg").innerHTML = '<rect width="600" height="330" fill="#eeedf2"/><circle cx="465" cy="83" r="39" fill="#e4dfdf"/><path d="M0 248 Q170 173 292 229 T600 222 V330 H0" fill="#d3d9d5"/><path d="M0 285 Q320 260 600 289 V330 H0" fill="#c1cbbb"/><rect x="195" y="283" width="210" height="21" rx="10" fill="#737b72"/><path d="M300 18 V279" stroke="#829790" stroke-width="2" stroke-dasharray="4 6" opacity=".5"/>' +
-        '<g' + (model.phase === "tumble" ? ' transform="translate(' + ((model.x < 300 ? -1 : 1) * model.tumble * 120).toFixed(2) + ' ' + (model.tumble * model.tumble * 150).toFixed(2) + ') rotate(' + ((model.x < 300 ? -1 : 1) * model.tumble * 40).toFixed(2) + ' 300 283)"' : "") + '>' +
-        model.stones.map(stone).join("") + (model.score < 7 ? stone({ x: model.x, w: model.w, y: model.y }, model.score) : "") + '</g>';
+      // Le cadre suit la forme de l'aire de jeu : le jeu reste dans 600 × 330, le décor remplit le reste.
+      const svg = $("stage").querySelector("svg"), sw = $("stage").clientWidth || 600, sh = $("stage").clientHeight || 330, scale = Math.min(sw / 600, sh / 330);
+      // Le socle reste près du bord bas ; la place en plus va au ciel, où la pile grandit.
+      const view = { x: 300 - sw / scale / 2, y: Math.min(0, 320 - sh / scale), w: sw / scale, h: sh / scale };
+      const box = [view.x, view.y, view.w, view.h].map(v => v.toFixed(1)).join(" ");
+      if (svg.getAttribute("viewBox") !== box) svg.setAttribute("viewBox", box);
+      model.frameTop = view.y; svg.innerHTML = drawStack(model, view);
     } else {
       const orb = $("stage").querySelector(".tempo-orb"), regle = $("tempo-rule");
       setText("time-label", duration(model.temps));
@@ -298,6 +303,73 @@
       setText("instructions", model.phase === "signal" ? "Le mot peut mentir : regarde le dessin." : model.phase === "bascule" ? "La consigne change !" : model.feedback || "Attends le signal.");
     }
   }
+  // La scène des galets : décor, socle, pile inclinée, fil à plomb, galet en vol.
+  // Tout est dessiné dans le repère du moteur (600 × 330, socle en y = 283) ;
+  // la caméra fait glisser le monde vers le bas quand la pile grandit.
+  const shapes = new Map();
+  function pebblePath(stone) {
+    const key = stone.seed + ":" + stone.dw + ":" + stone.h + ":" + stone.dx;
+    if (!shapes.has(key)) shapes.set(key, window.ShortGameArt.pebble(stone.dw, stone.h, stone.seed, [-stone.dx - stone.w / 2, -stone.dx + stone.w / 2]));
+    return shapes.get(key);
+  }
+  function drawStone(stone, x, y, extra) {
+    return '<g transform="translate(' + (x + stone.dx).toFixed(2) + ' ' + (y + stone.h / 2).toFixed(2) + ')' + (extra || "") + '"><path d="' + pebblePath(stone) + '" fill="' + window.ShortGameArt.shade(stone.seed) + '"/><ellipse cx="' + (-stone.dw * .18).toFixed(1) + '" cy="' + (-stone.h * .2).toFixed(1) + '" rx="' + (stone.dw * .22).toFixed(1) + '" ry="' + (stone.h * .16).toFixed(1) + '" fill="#fff" opacity=".13"/></g>';
+  }
+  function drawStack(m, view = { x: 0, y: 0, w: 600, h: 330 }) {
+    const f = n => n.toFixed(2), base = m.base, report = m.report, cam = f(m.camera);
+    // Quand la pile a grandi, le socle sort du cadre : sa zone d'appui est
+    // rappelée au bord bas, et le fil à plomb descend jusqu'à elle.
+    const floor = view.y + view.h, hidden = 283 + m.camera > floor - 24, foot = hidden ? floor - 22 - m.camera : 283;
+    const shake = calm ? 0 : m.shake * Math.sin(m.elapsed * 45);
+    const tint = report.risk < .5 ? "#43b85f" : "#f09a3a";
+    let html = '<defs><linearGradient id="ciel" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#b6d6e6"/><stop offset=".55" stop-color="#e6ddd2"/><stop offset="1" stop-color="#f6e0bf"/></linearGradient><linearGradient id="mer" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#6c98a4"/><stop offset="1" stop-color="#8fb2b3"/></linearGradient><linearGradient id="sable" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e2cda9"/><stop offset="1" stop-color="#cbb289"/></linearGradient></defs>';
+    html += '<rect x="-600" y="-900" width="1800" height="1230" fill="url(#ciel)"/><circle cx="486" cy="62" r="26" fill="#ffd79a" opacity=".85"/>';
+    html += '<g transform="translate(0 ' + f(m.camera * .35) + ')"><defs><g id="monts"><path d="M0 206 L92 150 L146 176 L214 118 L306 190 L372 160 L452 204 L600 168 V232 H0Z" fill="#8aa3b0" opacity=".7"/><path d="M214 118 L262 155 L306 190Z" fill="#7b93a2" opacity=".8"/></g></defs><use href="#monts"/><use href="#monts" x="-600"/><use href="#monts" x="600"/></g>';
+    html += '<g transform="translate(0 ' + cam + ')">';
+    html += '<rect x="-600" y="224" width="1800" height="48" fill="url(#mer)"/><path d="M12 234 h56 m30 6 h44 m54-4 h64 m40 10 h52 m50-8 h60 M-588 238 h60 m48 8 h50 m70-6 h60 m40 4 h70 m48 -8 h60 m70 6 h50 M612 238 h60 m48 8 h50 m70-6 h60 m40 4 h70 m48 -8 h60 m70 6 h50" stroke="#fff" stroke-width="2" opacity=".3" stroke-linecap="round"/>';
+    html += '<rect x="-600" y="268" width="1800" height="400" fill="url(#sable)"/><path d="M-600 270 Q-450 262 -300 268 T0 264 T300 268 T600 264 T900 268 T1200 264 V300 H-600Z" fill="#e2cda9"/><ellipse cx="110" cy="302" rx="24" ry="6" fill="#bda57e" opacity=".7"/><ellipse cx="505" cy="310" rx="32" ry="7" fill="#bda57e" opacity=".7"/><ellipse cx="-160" cy="296" rx="28" ry="6" fill="#bda57e" opacity=".7"/><ellipse cx="760" cy="304" rx="26" ry="6" fill="#bda57e" opacity=".7"/>';
+    // Quand le socle rétrécit, la marée monte autour de lui.
+    if (base.w < 210) html += '<rect x="-600" y="279" width="1800" height="400" fill="url(#mer)" opacity=".75"/>';
+    html += '<ellipse cx="300" cy="289" rx="' + f(base.w / 2 + 12) + '" ry="10" fill="#00000022"/><rect x="' + f(base.x - base.w / 2) + '" y="283" width="' + f(base.w) + '" height="18" rx="7" fill="#454239"/>';
+    // Zone d'appui du premier galet : vert au milieu, orange sur les bords.
+    const zl = m.support.left, zr = m.support.right, zw = zr - zl;
+    html += '<rect x="' + f(zl) + '" y="283" width="' + f(zw) + '" height="7" rx="3" fill="#f09a3a" opacity=".8"/><rect x="' + f(zl + zw / 4) + '" y="283" width="' + f(zw / 2) + '" height="7" rx="3" fill="#43b85f" opacity=".9"/>';
+    // La pile, inclinée selon le centre de masse, qui tremble quand la chute approche.
+    html += '<g transform="translate(' + f(shake) + ' 0) rotate(' + f(m.lean) + ' 300 283)">';
+    const fall = m.phase === "tumble" || m.phase === "done" ? m.fall : null;
+    let pivot = null;
+    if (fall) { const first = m.stones[fall.level - 1]; pivot = { x: fall.side > 0 ? report.right : report.left, y: first.y + first.h }; }
+    m.stones.forEach((stone, i) => {
+      let extra = "";
+      if (fall && i >= fall.level - 1) {
+        const t = Math.min(1.4, m.tumble), local = { x: pivot.x - (stone.x + stone.dx), y: pivot.y - (stone.y + stone.h / 2) };
+        extra = ' translate(' + f(fall.side * t * 150) + ' ' + f(t * t * 230) + ') rotate(' + f(fall.side * t * 70) + ' ' + f(local.x) + ' ' + f(local.y) + ')';
+      }
+      html += drawStone(stone, stone.x, stone.y, extra);
+    });
+    html += '</g>';
+    if (fall) {
+      // Le fil à plomb clignote une demi-seconde à l'endroit fautif, puis reste.
+      const above = m.stones.slice(fall.level - 1), mass = above.reduce((s, p) => s + p.w, 0), cy = above.reduce((s, p) => s + p.cy * p.w, 0) / mass;
+      const shown = m.tumble >= .5 || Math.floor(m.tumble * 8) % 2 === 0;
+      if (shown) html += '<rect x="' + f(report.left) + '" y="' + f(pivot.y - 3) + '" width="' + f(Math.max(4, report.right - report.left)) + '" height="6" rx="3" fill="#e0483a"/><line x1="' + f(report.center) + '" y1="' + f(cy) + '" x2="' + f(report.center) + '" y2="' + f(foot) + '" stroke="#e0483a" stroke-width="4" stroke-linecap="round"/><circle cx="' + f(report.center) + '" cy="' + f(cy) + '" r="7" fill="#e0483a" stroke="#fff" stroke-width="2"/>';
+    } else if (m.stones.length) {
+      // Fil à plomb : du centre de masse de toute la pile jusqu'au socle.
+      const cx = report.cm.x, cy = report.cm.y;
+      if (hidden) html += '<rect x="' + f(view.x) + '" y="' + f(foot - 12 + 0) + '" width="' + f(view.w) + '" height="34" fill="#1d2b33" opacity=".22"/><rect x="' + f(zl) + '" y="' + f(foot) + '" width="' + f(zw) + '" height="7" rx="3" fill="#f09a3a" opacity=".8"/><rect x="' + f(zl + zw / 4) + '" y="' + f(foot) + '" width="' + f(zw / 2) + '" height="7" rx="3" fill="#43b85f" opacity=".9"/>';
+      html += '<line x1="' + f(cx) + '" y1="' + f(cy) + '" x2="' + f(cx) + '" y2="' + f(foot) + '" stroke="#fff" stroke-width="4.5" opacity=".55"/><line x1="' + f(cx) + '" y1="' + f(cy) + '" x2="' + f(cx) + '" y2="' + f(foot) + '" stroke="' + tint + '" stroke-width="2.5" stroke-dasharray="6 5"/><circle cx="' + f(cx) + '" cy="' + f(cy) + '" r="5.5" fill="' + tint + '" stroke="#fff" stroke-width="2"/><path d="M' + f(cx - 7) + ' ' + f(foot - 5) + ' L' + f(cx + 7) + ' ' + f(foot - 5) + ' L' + f(cx) + ' ' + f(foot + 9) + 'Z" fill="' + tint + '" stroke="#fff" stroke-width="1.5"/>';
+    }
+    if (m.phase === "aim" || m.phase === "fall") {
+      // L'ombre marque la zone d'appui du galet, là où il va se poser.
+      html += '<ellipse cx="' + f(m.x) + '" cy="' + f(m.top) + '" rx="' + f(m.stone.w / 2) + '" ry="4" fill="#000" opacity="' + (m.phase === "fall" ? ".28" : ".18") + '"/>';
+      if (m.wind) {
+        const dir = Math.sign(m.wind), y = m.hover - 18;
+        for (let i = 0; i < 3; i++) { const x = (((m.elapsed * m.wind * 1.6 + i * 200) % 600) + 600) % 600; html += '<path d="M' + f(x) + ' ' + f(y + i * 9) + ' h' + f(dir * 46) + ' q' + f(dir * 9) + ' 0 ' + f(dir * 7) + ' -7" stroke="#fff" stroke-width="3" fill="none" stroke-linecap="round" opacity=".85"/>'; }
+      }
+      html += drawStone(m.stone, m.x, m.y);
+    }
+    return html + '</g>';
+  }
   function finishRound(reason) {
     if (!model || !running) return;
     const game = games[current], score = model.score;
@@ -311,13 +383,20 @@
       setText("result-score", score > 0 ? score + " lumières retenues" : "Aucun chemin retrouvé cette fois");
       const tip = score >= 6 ? "Astuce : retiens les lumières par petits paquets de trois." : "Astuce : dis les numéros des cases dans ta tête pendant qu’elles s’allument.";
       setText("result-text", opening + (reason || !model.feedback ? "" : model.feedback + " ") + tip);
+    } else if (current === "galets") {
+      // Hauteur atteinte, palier, explication de la chute et record de la séance.
+      const tier = model.tier, best = record(), fall = model.fall;
+      setText("result-title", tier ? tier[0].toUpperCase() + tier.slice(1) + " !" : "Partie terminée");
+      setText("result-score", score + " galet" + (score > 1 ? "s" : "") + (tier ? " · " + tier : ""));
+      const ordinal = fall ? (fall.k === 1 ? "1er" : fall.k + "e") : "", side = fall ? (fall.side < 0 ? "gauche" : "droite") : "";
+      const chute = fall ? (fall.top ? "La pile a basculé au " + ordinal + " galet, posé trop à " + side + ". " : "La pile a basculé au " + ordinal + " galet : tout penchait trop à " + side + ". ") : "";
+      if (score > best) { try { storage.setItem(recordKey, String(score)); } catch { /* Record gardé pour cette page. */ } }
+      setText("result-text", opening + chute + (score > best && score > 0 ? "Nouveau record de la séance : " + score + " !" : "Record de la séance : " + (best || "—") + "."));
     } else {
       const success = score === game.goal;
       setText("result-title", success ? "Défi relevé !" : "Partie terminée");
-      const unit = current === "galets" ? "galets empilés" : "signaux réussis";
-      setText("result-score", score + " / " + game.goal + " " + unit);
-      const tips = { galets: "Astuce : les petits décalages s’additionnent. Pense à toute la pile.", tempo: "Astuce : laisse ton doigt tranquille jusqu’au mot TOUCHE." };
-      setText("result-text", success ? "Tu es allé au bout de ce petit défi. Bien joué !" : opening + tips[current]);
+      setText("result-score", score + " / " + game.goal + " signaux réussis");
+      setText("result-text", success ? "Tu es allé au bout de ce petit défi. Bien joué !" : opening + "Astuce : laisse ton doigt tranquille jusqu’au mot TOUCHE.");
     }
     resultActions(); show("result"); focus("result-title");
   }

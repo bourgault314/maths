@@ -238,36 +238,110 @@
       this.obstacles = this.obstacles.filter(o => o.x + o.w > -20);
     }
   }
+  // ----- La pile de galets -----
+  // Un galet est décrit par son appui (x, w : centre et largeur de la zone de
+  // contact, qui portent toute la physique) et par son dessin (dx, dw :
+  // décalage et largeur du galet tel qu'on le voit, h : hauteur, seed : forme).
+  const BASE = Object.freeze({ x: 300, w: 210, top: 283 });
+  const TIERS = [[20, "personne n’a jamais vu ça"], [16, "pile de légende"], [13, "pile du Piton"], [10, "pile du volcan"], [7, "pile du sentier"], [5, "petite pile"], [3, "premier caillou"]];
+  function tier(height) { const found = TIERS.find(([n]) => height >= n); return found ? found[1] : ""; }
+  // Ce qui change pour le k-ième galet (k ≥ 1) : largeur d'appui, vitesse du
+  // balancier, vent pendant la chute, forme irrégulière et largeur du socle.
+  // Chaque palier ajoute une règle sans retirer la précédente.
+  function stackStep(k) {
+    k = Math.max(1, Math.floor(k));
+    const w = k <= 4 ? 172 - 4 * (k - 1) : k <= 7 ? 144 - 10 * (k - 5) : k <= 10 ? 116 - 6 * (k - 8) : k <= 13 ? 96 - 6 * (k - 11) : k <= 16 ? 76 - 8 * (k - 14) : Math.max(48, 56 - 4 * (k - 17));
+    const speed = k <= 4 ? [105, 125, 140, 155][k - 1] : k <= 7 ? 165 + 15 * (k - 5) : k <= 10 ? 215 + 15 * (k - 8) : k <= 13 ? 270 + 20 * (k - 11) : k <= 16 ? 350 + 40 * (k - 14) : Math.min(560, 460 + 25 * (k - 17));
+    const wind = k >= 8 ? Math.min(130, 40 + 8 * (k - 8)) : 0;
+    const base = k <= 13 ? 210 : k <= 16 ? 210 - 30 * (k - 13) : Math.max(90, 120 - 12 * (k - 16));
+    const notice = k === 1 ? "" : k === 5 ? "Les galets sont plus petits et plus rapides." : k === 8 ? "Le vent souffle : lâche un peu avant." : k === 11 ? "Ce galet est irrégulier : vise avec sa base plate." : k === 14 ? "Le socle rétrécit : recentre la pile." : k === 17 ? "Tout à la fois, et de plus en plus vite !" : "";
+    return { k, w, speed, wind, irregular: k >= 11, base, notice };
+  }
   // À chaque contact, le centre de masse de toute la pile au-dessus doit
-  // rester dans la zone où les deux galets se recouvrent.
-  function stable(stones) {
-    const all = [{ x: 300, w: 210 }, ...stones];
+  // rester dans la zone où les deux galets se recouvrent. Le compte rendu dit
+  // où ça casse (level : rang du contact fautif, 1 = sur le socle, side : côté
+  // du débordement) et à quel point la pile est proche de la chute (risk de
+  // 0 à 1). cm est le centre de masse de toute la pile ; center, left et
+  // right décrivent le contact du socle tant que tout tient.
+  function balance(stones, base = BASE) {
+    const all = [{ x: base.x, w: base.w }, ...stones];
+    let risk = 0, mass = 0, mx = 0, my = 0;
+    for (const s of stones) { mass += s.w; mx += s.x * s.w; my += (s.cy ?? s.y ?? base.top) * s.w; }
+    const cm = mass ? { x: mx / mass, y: my / mass } : { x: base.x, y: base.top };
+    let first = null;
     for (let i = 1; i < all.length; i++) {
-      const top = all.slice(i); const mass = top.reduce((s, p) => s + p.w, 0);
-      const center = top.reduce((s, p) => s + p.x * p.w, 0) / mass;
+      const top = all.slice(i); const m = top.reduce((s, p) => s + p.w, 0);
+      const center = top.reduce((s, p) => s + p.x * p.w, 0) / m;
       const left = Math.max(all[i - 1].x - all[i - 1].w / 2, all[i].x - all[i].w / 2);
       const right = Math.min(all[i - 1].x + all[i - 1].w / 2, all[i].x + all[i].w / 2);
-      if (right - left < 8 || center < left + 3 || center > right - 3) return false;
+      const mid = (left + right) / 2, half = Math.max(1, (right - left) / 2 - 3);
+      if (right - left < 8 || center < left + 3 || center > right - 3) return { ok: false, level: i, center, left, right, side: center < mid ? -1 : 1, risk: 1, cm };
+      risk = Math.max(risk, Math.abs(center - mid) / half);
+      if (!first) first = { center, left, right };
     }
-    return true;
+    return { ok: true, level: 0, center: first ? first.center : cm.x, left: first ? first.left : base.x - base.w / 2, right: first ? first.right : base.x + base.w / 2, side: 0, risk, cm };
   }
+  function stable(stones, base) { return balance(stones, base).ok; }
+  // Jeu sans fin : on empile jusqu'à la chute, le score est la hauteur.
+  // Le galet part de 130 points au-dessus de la pile ; la caméra (camera)
+  // fait descendre le monde pour garder le galet en vue, à 40 points sous le
+  // haut du cadre (frameTop, que l'affichage peut relever sur un écran haut) ;
+  // lean est l'inclinaison visible en degrés (9° au bord de l'appui) et
+  // shake l'amplitude du tremblement quand la chute approche.
   class Stack {
-    constructor(level, seed) { this.cfg = config(level); this.rng = random(seed); this.stones = []; this.phase = "aim"; this.x = 125; this.direction = 1; this.y = 38; this.vy = 0; this.score = 0; this.done = false; this.w = this.cfg.stone; this.feedback = ""; }
+    constructor(level, seed) {
+      this.rng = random(seed); this.stones = []; this.score = 0; this.done = false; this.feedback = "";
+      this.base = { x: BASE.x, w: BASE.w, top: BASE.top }; this.top = BASE.top;
+      this.elapsed = 0; this.lean = 0; this.camera = 0; this.frameTop = 0; this.wind = 0; this.fall = null; this.tumble = 0; this.settle = 0;
+      this.report = balance([], this.base); this.support = { left: this.report.left, right: this.report.right }; this.next();
+    }
+    get tier() { return tier(this.score); }
+    get risk() { return this.report.risk; }
+    get shake() { const r = this.report.risk; return r > .5 && this.phase !== "tumble" && this.phase !== "done" ? ((r - .5) / .5) ** 1.5 * 6 : 0; }
+    next() {
+      const step = stackStep(this.stones.length + 1), shape = this.rng(), side = this.rng() < .5 ? -1 : 1;
+      this.step = step; this.notice = step.notice;
+      // Le socle ne rétrécit que si la pile tient encore dessus : la marée attend.
+      const previous = this.base.w; this.base.w = step.base;
+      if (!balance(this.stones, this.base).ok) this.base.w = previous;
+      this.report = balance(this.stones, this.base); this.support = { left: this.report.left, right: this.report.right };
+      this.stone = { k: step.k, x: 0, y: 0, cy: 0, w: step.w, dw: step.irregular ? Math.round(step.w * 1.35) : step.w, dx: step.irregular ? Math.round(side * step.w * .2) : 0, h: 20 + Math.round(shape * 6), seed: Math.floor(shape * 1e6) };
+      this.wind = step.wind ? (this.rng() < .5 ? -1 : 1) * step.wind : 0;
+      this.speed = step.speed; this.direction = this.rng() < .5 ? 1 : -1; this.x = this.direction === 1 ? 90 : 510;
+      this.hover = this.top - 130; this.y = this.hover; this.vy = 0; this.phase = "aim"; this.settle = 0;
+    }
     drop() { if (this.phase !== "aim" || this.done) return false; this.phase = "fall"; this.vy = 0; return true; }
+    land() {
+      const stone = { ...this.stone, x: this.x, y: this.y, cy: this.y + this.stone.h / 2 };
+      this.stones.push(stone); this.report = balance(this.stones, this.base);
+      if (!this.report.ok) {
+        this.phase = "tumble"; this.tumble = 0;
+        this.fall = { k: stone.k, level: this.report.level, side: this.report.side, top: this.report.level === this.stones.length };
+        this.feedback = "La pile a basculé."; return;
+      }
+      this.support = { left: this.report.left, right: this.report.right };
+      this.score++; this.top = stone.y; this.phase = "set"; this.settle = 0; this.feedback = "Bien posé !";
+    }
     update(dt) {
       if (this.done) return;
+      this.elapsed += dt;
       if (this.phase === "aim") {
-        this.x += this.direction * (this.cfg.swing + this.score * 9) * dt;
+        this.x += this.direction * this.speed * dt;
         if (this.x > 510) { this.x = 510; this.direction = -1; } if (this.x < 90) { this.x = 90; this.direction = 1; }
       } else if (this.phase === "fall") {
-        this.y += this.vy * dt + 650 * dt * dt; this.vy += 1300 * dt;
-        const target = 283 - (this.stones.length + 1) * 24;
-        if (this.y >= target) {
-          this.y = target; const stone = { x: this.x, w: this.w, y: target };
-          if (!stable([...this.stones, stone])) { this.phase = "tumble"; this.feedback = "La pile a basculé."; this.tumble = 0; }
-          else { this.stones.push(stone); this.score++; this.feedback = "Bien posé !"; if (this.score === 7) { this.done = true; this.phase = "done"; } else { this.w = this.cfg.stone - this.score * 8; this.x = this.rng() < .5 ? 90 : 510; this.direction = this.x === 90 ? 1 : -1; this.y = 38; this.phase = "aim"; } }
-        }
-      } else if (this.phase === "tumble") { this.tumble += dt; if (this.tumble >= .9) this.done = true; }
+        this.y += this.vy * dt + 650 * dt * dt; this.vy += 1300 * dt; this.x += this.wind * dt;
+        const target = this.top - this.stone.h;
+        if (this.y >= target) { this.y = target; this.land(); }
+      } else if (this.phase === "set") { this.settle += dt; if (this.settle >= .3) this.next(); }
+      else if (this.phase === "tumble") { this.tumble += dt; if (this.tumble >= 1.4) { this.done = true; this.phase = "done"; } }
+      if (this.phase !== "tumble" && this.phase !== "done") {
+        // Inclinaison : 9° quand le centre de masse atteint le bord de l'appui.
+        const half = Math.max(1, (this.support.right - this.support.left) / 2 - 3);
+        const aim = clamp((this.report.cm.x - (this.support.left + this.support.right) / 2) / half, -1, 1) * 9;
+        this.lean += (aim - this.lean) * Math.min(1, dt * 8);
+      }
+      const want = Math.max(0, this.frameTop + 40 - (this.top - 130));
+      this.camera += (want - this.camera) * Math.min(1, dt * 5);
     }
   }
   // Tempo volcan : suite de signaux sans fin, UN SEUL jeu qui monte (plus de
@@ -347,5 +421,5 @@
       else if (this.phase === "bascule" && this.elapsed >= TEMPO_BASCULE) { this.phase = "wait"; this.elapsed = 0; this.attente = this.palier.gap; }
     }
   }
-  return { levels, random, memoryPath, nextMemoryCell, giftOptions, giftLedger, stable, runnerRanks, runnerSteps, RUNNER, tempoPalier, tempoCourbe, Memory, Runner, Stack, Tempo };
+  return { levels, random, memoryPath, nextMemoryCell, giftOptions, giftLedger, stable, balance, stackStep, tier, BASE, runnerRanks, runnerSteps, RUNNER, tempoPalier, tempoCourbe, Memory, Runner, Stack, Tempo };
 });

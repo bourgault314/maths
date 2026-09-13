@@ -12,11 +12,11 @@
 </head>
 <body>
   <header><h1>Banc d’essai · Jeux courts</h1>
-    <label>Écran <select id="size"><option value="390,844">Téléphone · 390 × 844</option><option value="320,568">Petit téléphone · 320 × 568</option><option value="820,1180">Tablette · 820 × 1180</option><option value="1366,768">Ordinateur · 1366 × 768</option><option value="844,390">Paysage · 844 × 390</option></select></label>
-    <label>Partie <select id="mode"><option value="">Libre</option><option value="?mode=cadeau&amp;parties=1&amp;ticket=qa-un">Cadeau · 1 partie</option><option value="?mode=cadeau&amp;parties=2&amp;ticket=qa-deux">Cadeau · 2 parties</option></select></label>
+    <label>Écran <select id="size"><option value="390,844">Téléphone · 390 × 844</option><option value="320,568">Petit téléphone · 320 × 568</option><option value="820,1180">Tablette · 820 × 1180</option><option value="1366,768">Ordinateur · 1366 × 768</option><option value="1280,600">Vidéoprojecteur bas · 1280 × 600</option><option value="844,390">Paysage · 844 × 390</option></select></label>
+    <label>Partie <select id="mode"><option value="">Libre</option><option value="?mode=cadeau&amp;parties=1&amp;ticket=qa-un">Cadeau · 1 partie</option><option value="?mode=cadeau&amp;parties=2&amp;ticket=qa-deux">Cadeau · 2 parties</option><option value="?jeu=galets&amp;integre=1">Galets · intégré au catalogue</option><option value="?mode=cadeau&amp;parties=2&amp;jeu=galets&amp;ticket=qa-galets">Galets · cadeau, 2 parties</option></select></label>
     <button id="reload" type="button">Recharger</button><a href="../jeux-cadeaux/">Ouvrir la banque</a>
   </header>
-  <p>Essai de mise en page dans une fenêtre aux dimensions fixes. Cela ne reproduit pas Safari ni un appareil tactile réel.</p>
+  <p>Essai de mise en page dans une fenêtre aux dimensions fixes. Cela ne reproduit pas Safari ni un appareil tactile réel.<br>Pour la pile de galets : le décor doit remplir l’aire de jeu à chaque taille, le socle rester visible tant que la pile est basse, puis sa zone verte et orange se rappeler au bord bas quand la caméra monte.</p>
   <p id="measure" role="status">Chargement…</p>
   <div id="area"><iframe id="game" title="La boîte à jeux courts" src="../jeux-cadeaux/" width="390" height="844"></iframe></div>
   <script>

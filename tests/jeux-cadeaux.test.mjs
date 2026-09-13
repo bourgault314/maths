@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import core from "../jeux-cadeaux/core.js";
-const { Memory, Runner, Stack, Tempo, tempoPalier, tempoCourbe, stable, random, giftOptions, giftLedger } = core;
+const { Memory, Runner, Stack, Tempo, tempoPalier, tempoCourbe, stable, balance, stackStep, tier, random, giftOptions, giftLedger } = core;
 const advance = (game, until, max = 100) => {
   for (let t = 0; t < max && !until(game); t += 1 / 60) game.update(1 / 60);
   assert.ok(until(game), "L’état attendu doit être atteint dans le temps imparti");
@@ -54,17 +54,6 @@ for (const difficulty of Object.keys(core.levels)) {
     const end = JSON.stringify(g); g.jump(); g.update(10);
     assert.equal(JSON.stringify(g), end);
   });
-  test(difficulty + " : sept galets centrés peuvent être empilés", () => {
-    const g = new Stack(difficulty, 8);
-    for (let i = 0; i < 7; i++) {
-      advance(g, m => Math.abs(m.x - 300) < 3, 10);
-      assert.equal(g.drop(), true); const x = g.x;
-      assert.equal(g.drop(), false);
-      advance(g, m => m.phase !== "fall", 3);
-      assert.equal(g.stones.at(-1).x, x); assert.equal(g.score, i + 1);
-    }
-    assert.equal(g.done, true); assert.equal(g.phase, "done");
-  });
 }
 test("La génération des chemins est reproductible, bornée, sans répétition immédiate", () => {
   const a = random(88), b = random(88);
@@ -110,6 +99,67 @@ test("Une lumière de plus prolonge le chemin sans le réécrire, jusqu’au pla
   }
   assert.equal(g.done, true); assert.equal(g.won, true); assert.equal(g.score, 20);
 });
+// ----- La pile de galets -----
+// Joueur simulé : vise le point qui recentre la pile, compense le vent et la
+// forme du galet, avec un retard de réaction gaussien de ± sigma millisecondes.
+function gauss(rng) { let u = 0, v = 0; while (!u) u = rng(); while (!v) v = rng(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v); }
+function playStack(seed, sigmaMs, rng, perfect = false) {
+  const g = new Stack("malin", seed); let planned = null;
+  while (!g.done && g.elapsed < 240) {
+    if (g.phase === "aim") {
+      if (!planned) {
+        const top = g.stones.at(-1) || { x: g.base.x, w: g.base.w };
+        const mass = g.stones.reduce((s, p) => s + p.w, 0), mx = g.stones.reduce((s, p) => s + p.x * p.w, 0);
+        let ideal = (g.base.x * (mass + g.stone.w) - mx) / g.stone.w;
+        ideal = top.x + Math.max(-.25 * top.w, Math.min(.25 * top.w, ideal - top.x));
+        ideal -= g.wind * Math.sqrt(2 * 130 / 1300) * (perfect ? 1 : Math.max(0, Math.min(1, .7 + .25 * gauss(rng))));
+        if (!perfect) ideal += 6 * gauss(rng) + (g.step.irregular ? 8 * gauss(rng) + g.stone.dx * (1 - Math.max(0, Math.min(1, .7 + .3 * gauss(rng)))) : 0);
+        planned = { x: ideal, tau: perfect ? 0 : sigmaMs / 1000 * gauss(rng) };
+      }
+      const target = planned.x - g.direction * g.speed * planned.tau, nextX = g.x + g.direction * g.speed / 60;
+      if ((g.x - target) * (nextX - target) <= 0 && nextX > 90 && nextX < 510) { g.drop(); planned = null; }
+    }
+    g.update(1 / 60);
+  }
+  return g;
+}
+// Pose le galet courant pour que son appui arrive en x, vent compris.
+function placeAt(g, x) { g.x = x - g.wind * Math.sqrt(2 * 130 / 1300); g.direction = 1; g.drop(); advance(g, m => m.phase !== "fall", 3); advance(g, m => m.phase === "aim" || m.done, 2); }
+test("Les paliers nommés sont ceux validés et le score les franchit dans l’ordre", () => {
+  assert.equal(tier(0), ""); assert.equal(tier(2), ""); assert.equal(tier(3), "premier caillou"); assert.equal(tier(4), "premier caillou");
+  assert.equal(tier(5), "petite pile"); assert.equal(tier(7), "pile du sentier"); assert.equal(tier(10), "pile du volcan");
+  assert.equal(tier(13), "pile du Piton"); assert.equal(tier(16), "pile de légende"); assert.equal(tier(20), "personne n’a jamais vu ça"); assert.equal(tier(40), "personne n’a jamais vu ça");
+});
+test("La montée en difficulté ajoute une règle à chaque palier sans retirer la précédente", () => {
+  for (let k = 2; k <= 30; k++) {
+    const before = stackStep(k - 1), now = stackStep(k);
+    assert.ok(now.w <= before.w, "largeur au galet " + k); assert.ok(now.speed >= before.speed, "vitesse au galet " + k);
+    assert.ok(now.wind >= before.wind); assert.ok(now.base <= before.base); assert.ok(!before.irregular || now.irregular);
+  }
+  assert.equal(stackStep(4).wind, 0); assert.equal(stackStep(7).wind, 0); assert.ok(stackStep(8).wind > 0);
+  assert.equal(stackStep(10).irregular, false); assert.equal(stackStep(11).irregular, true);
+  assert.equal(stackStep(13).base, 210); assert.ok(stackStep(14).base < 210); assert.ok(stackStep(30).base >= 90);
+  assert.ok(stackStep(1).w > stackStep(5).w && stackStep(5).w > stackStep(8).w && stackStep(8).w > stackStep(11).w && stackStep(11).w > stackStep(14).w && stackStep(14).w > stackStep(17).w);
+  assert.ok(stackStep(1).speed < stackStep(5).speed && stackStep(17).speed > stackStep(16).speed && stackStep(40).speed <= 560);
+  assert.equal(stackStep(30).w, stackStep(60).w, "la largeur ne descend plus sous son plancher");
+  assert.equal(stackStep(8).notice, "Le vent souffle : lâche un peu avant."); assert.equal(stackStep(9).notice, "");
+  assert.ok(stackStep(11).notice.includes("irrégulier") && stackStep(14).notice.includes("socle") && stackStep(17).notice.length > 0);
+});
+test("Le compte rendu d’équilibre dit où la pile casse, de quel côté et à quel point elle est proche de tomber", () => {
+  const centered = balance([{ x: 300, w: 120, cy: 271 }]);
+  assert.equal(centered.ok, true); assert.equal(centered.level, 0); assert.equal(centered.risk, 0); assert.deepEqual(centered.cm, { x: 300, y: 271 });
+  assert.deepEqual([centered.left, centered.right], [240, 360], "le contact du socle est le recouvrement socle ∩ premier galet");
+  assert.equal(balance([{ x: 340, w: 120 }]).risk, 0, "un galet seul, entièrement sur le socle, est d’aplomb");
+  const leaning = balance([{ x: 300, w: 120 }, { x: 340, w: 110 }]);
+  assert.equal(leaning.ok, true); assert.ok(leaning.risk > .4 && leaning.risk < .7, "risque " + leaning.risk);
+  const slip = balance([{ x: 300, w: 120 }, { x: 380, w: 110 }]);
+  assert.equal(slip.ok, false); assert.equal(slip.level, 2, "le deuxième galet glisse de son support"); assert.equal(slip.side, 1);
+  const topple = balance([{ x: 350, w: 160 }, { x: 385, w: 152 }, { x: 417, w: 144 }, { x: 445, w: 136 }, { x: 469, w: 128 }]);
+  assert.equal(topple.ok, false); assert.equal(topple.level, 1, "chaque paire se recouvre mais tout le poids déborde du socle"); assert.equal(topple.side, 1);
+  assert.equal(balance([{ x: 260, w: 120 }, { x: 180, w: 110 }]).side, -1);
+  assert.equal(balance([{ x: 300, w: 120 }], { x: 300, w: 100, top: 283 }).right, 350, "un socle plus étroit resserre le contact");
+  assert.equal(balance([{ x: 355, w: 120 }], { x: 300, w: 100, top: 283 }).ok, false, "et fait tomber ce qu’il ne porte plus");
+});
 test("L’équilibre regarde le centre de masse de toute la pile", () => {
   assert.equal(stable([{ x: 300, w: 120 }, { x: 320, w: 110 }]), true);
   assert.equal(stable([{ x: 300, w: 120 }, { x: 405, w: 110 }]), false);
@@ -117,9 +167,90 @@ test("L’équilibre regarde le centre de masse de toute la pile", () => {
   assert.equal(stable(pile.slice(0, 2)), true);
   assert.equal(stable(pile), false, "Chaque paire se recouvre mais la pile supérieure dépasse son premier support");
 });
-test("Un galet lâché loin du socle tombe et termine la partie sans relance", () => {
-  const s = new Stack("malin", 2); s.drop(); advance(s, g => g.done, 3);
-  assert.equal(s.score, 0); assert.equal(s.phase, "tumble"); assert.equal(s.drop(), false);
+test("Un galet lâché loin du socle tombe, roule pendant la chute et termine la partie sans relance", () => {
+  const s = new Stack("malin", 2); assert.equal(s.phase, "aim"); s.drop(); assert.equal(s.drop(), false);
+  advance(s, g => g.phase === "tumble", 3);
+  assert.equal(s.score, 0); assert.equal(s.stones.length, 1, "le galet tombé reste dessiné pour rouler");
+  assert.deepEqual(s.fall, { k: 1, level: 1, side: s.stones[0].x < 300 ? -1 : 1, top: true });
+  assert.equal(s.report.risk, 1); assert.ok(s.tumble < .1);
+  s.update(.5); assert.ok(s.tumble >= .5 && !s.done, "la chute dure plus d’une demi-seconde, le temps du clignotement");
+  advance(s, g => g.done, 3); assert.equal(s.phase, "done"); assert.equal(s.drop(), false);
+  const t = s.tumble; s.update(1); assert.equal(s.tumble, t, "plus rien ne bouge après la fin");
+});
+test("Le jeu est le même pour tous : le niveau choisi ne change rien à la pile", () => {
+  const a = playStack(5, 0, random(1), true), b = new Stack("expert", 5), c = new Stack("doux", 5);
+  assert.equal(a.stone.w, undefined || a.stone.w); assert.deepEqual([b.stone, b.speed, b.wind], [c.stone, c.speed, c.wind]);
+  assert.deepEqual(stackStep(1), { k: 1, w: 172, speed: 105, wind: 0, irregular: false, base: 210, notice: "" });
+});
+test("Un joueur parfait peut dépasser la pile de légende ; la partie est reproductible et va bien au-delà de sept", () => {
+  const a = playStack(77, 0, random(1), true), b = playStack(77, 0, random(2), true);
+  assert.ok(a.score >= 16, "score parfait " + a.score);
+  assert.deepEqual(a.stones.map(s => [s.x, s.w, s.h, s.seed]), b.stones.map(s => [s.x, s.w, s.h, s.seed]));
+  assert.ok(a.stones.every((s, i) => !i || s.y < a.stones[i - 1].y), "chaque galet est posé plus haut que le précédent");
+});
+test("Un joueur ordinaire fait des parties de 20 à 30 s, hautes de 7 à 13 galets, rarement au-delà de 16 et jamais au-delà de 25", () => {
+  const rng = random(4242), games = [];
+  for (let seed = 1; seed <= 120; seed++) games.push(playStack(seed, 100, rng));
+  const mean = games.reduce((s, g) => s + g.score, 0) / games.length, time = games.reduce((s, g) => s + g.elapsed, 0) / games.length;
+  assert.ok(games.every(g => g.done && g.fall), "toute partie finit par une chute");
+  assert.ok(mean >= 7 && mean <= 13, "hauteur moyenne " + mean.toFixed(1));
+  assert.ok(time >= 15 && time <= 35, "durée moyenne " + time.toFixed(1) + " s");
+  assert.ok(games.filter(g => g.score >= 16).length / games.length < .1, "pile de légende trop fréquente");
+  assert.ok(Math.max(...games.map(g => g.score)) <= 25, "personne ne dépasse 25 galets");
+});
+test("La pile penche du côté du centre de masse, tremble près de la chute, et se rattrape en posant de l’autre côté", () => {
+  const g = new Stack("malin", 9);
+  const place = x => placeAt(g, x);
+  place(300); assert.ok(Math.abs(g.lean) < .01); assert.equal(g.shake, 0);
+  place(360); g.update(1); assert.ok(g.lean > 2.5, "penche à droite : " + g.lean); assert.ok(g.report.cm.x > 300);
+  const leaned = g.lean, risk = g.report.risk;
+  place(315); g.update(1); assert.ok(g.lean < leaned, "se redresse en posant à gauche"); assert.ok(g.report.risk < risk);
+  // Près du bord : le tremblement apparaît avant la chute.
+  place(370); place(385); g.update(1);
+  assert.ok(!g.done, "la pile tient encore"); assert.ok(g.report.risk > .6, "risque " + g.report.risk); assert.ok(g.shake > .5, "tremblement " + g.shake);
+  place(440); assert.ok(g.phase === "tumble" || g.done); assert.equal(g.shake, 0); assert.equal(g.fall.side, 1);
+});
+test("Le vent ne souffle qu’à partir du huitième galet et ne dévie le galet que pendant sa chute", () => {
+  const g = playStack(3, 0, random(1), true);
+  assert.ok(g.score >= 9);
+  const calm = new Stack("malin", 3); assert.equal(calm.wind, 0);
+  calm.x = 300; calm.direction = 1; calm.drop(); advance(calm, m => m.phase !== "fall", 3); assert.equal(calm.stones[0].x, 300);
+  let windy = null;
+  for (let seed = 1; seed < 40 && !windy; seed++) { const s = playStack(seed, 0, random(1), true); if (s.score >= 8) windy = s; }
+  const eighth = windy.stones[7]; assert.ok(stackStep(8).wind > 0);
+  assert.ok(Math.abs(eighth.x - 300) < 60);
+  const w = new Stack("malin", 3); for (let i = 0; i < 7; i++) { w.x = 300; w.direction = 1; w.drop(); advance(w, m => m.phase === "aim" || m.done, 3); }
+  assert.ok(Math.abs(w.wind) >= 40, "vent au 8e galet"); const x0 = 300; w.x = x0; w.direction = 1; w.drop(); advance(w, m => m.phase !== "fall", 3);
+  assert.ok(Math.abs(w.stones[7].x - x0) > 10, "le galet a dérivé pendant sa chute");
+  assert.ok(Math.sign(w.stones[7].x - x0) === Math.sign(w.wind));
+});
+test("À partir du onzième galet, l’appui n’est plus au milieu du dessin ; à partir du quatorzième, le socle ne rétrécit que si la pile tient encore", () => {
+  const g = new Stack("malin", 12);
+  for (let i = 0; i < 10; i++) { assert.equal(g.stone.dx, 0); assert.equal(g.stone.dw, g.stone.w); placeAt(g, 300); }
+  assert.equal(g.score, 10); assert.equal(g.stone.k, 11); assert.notEqual(g.stone.dx, 0); assert.ok(g.stone.dw > g.stone.w); assert.equal(g.base.w, 210);
+  for (let i = 0; i < 3; i++) placeAt(g, 300);
+  assert.equal(g.score, 13); assert.ok(g.base.w < 210, "socle rétréci au 14e galet"); assert.ok(g.base.w >= 90);
+  // Une pile décalée de 60 tient sur le grand socle ; à 120 de large il ne la porterait plus : il attend.
+  const h = new Stack("malin", 12);
+  for (let i = 0; i < 15; i++) placeAt(h, 360);
+  assert.equal(h.score, 15, "la pile décalée tient"); assert.equal(h.stone.k, 16);
+  assert.equal(h.base.w, stackStep(15).base, "le socle est resté à " + stackStep(15).base + " au lieu de " + stackStep(16).base);
+  assert.equal(h.report.ok, true); assert.ok(h.report.cm.x > 350);
+  placeAt(h, 360); assert.equal(h.score, 16); assert.equal(h.base.w, stackStep(15).base, "et il attend encore au 17e");
+});
+test("La caméra suit la pile vers le haut et respecte le haut du cadre demandé par l’affichage", () => {
+  const g = playStack(21, 0, random(1), true);
+  assert.ok(g.score >= 10); assert.ok(g.camera > 0, "la caméra est descendue"); assert.ok(g.top < 40);
+  const tall = new Stack("malin", 21); tall.frameTop = -250;
+  for (let i = 0; i < 8; i++) { tall.x = 300; tall.direction = 1; tall.drop(); advance(tall, m => m.phase === "aim" || m.done, 3); }
+  tall.update(2); assert.equal(tall.camera, 0, "sur un écran haut, huit galets tiennent sans bouger la caméra");
+});
+test("La physique des galets reste cohérente à 30 et 120 images par seconde", () => {
+  const a = new Stack("malin", 10), b = new Stack("malin", 10);
+  for (let i = 0; i < 30; i++) a.update(1 / 30); for (let i = 0; i < 120; i++) b.update(1 / 120);
+  assert.ok(Math.abs(a.x - b.x) < 2); a.drop(); b.drop();
+  for (let i = 0; i < 30; i++) a.update(1 / 30); for (let i = 0; i < 120; i++) b.update(1 / 120);
+  assert.equal(a.score, b.score); assert.ok(Math.abs(a.stones[0].x - b.stones[0].x) < 3);
 });
 test("Sans action, les jeux de mémoire et de signaux se terminent", () => {
   for (const Engine of [Memory, Tempo]) {
