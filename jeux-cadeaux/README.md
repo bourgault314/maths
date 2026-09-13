@@ -12,10 +12,20 @@ Les Carrés gloutons restent à leur adresse `/outils/club_maths/carres_gloutons
 | Jeu | Partie | Niveaux |
 | --- | --- | --- |
 | La Luciole | Un seul chemin, qui s’allonge d’une lumière à chaque réussite ; la première erreur termine la partie ; pas de plafond de durée | Départ à 2, 3 ou 4 lumières, éclairage plus ou moins lent |
-| Dodo bondissant | Course sans fin, une collision termine la partie ; cap expert 1 min 30, légendaire 2 min | Vitesse de départ et record distincts : Tranquille, Défi, Expert |
+| Dodo bondissant | Course sans fin, deux vies ; elle s’arrête à la deuxième touche | Aucun : un seul jeu pour tout le monde |
 | La pile de galets | Sept galets ; fin si la pile tombe ou après 60 s | Largeur des galets et vitesse du déplacement |
 | Tempo volcan | Suite sans fin de signaux, trois vies ; le mot écrit finit par contredire le dessin, puis la consigne s'inverse | Un seul jeu : la fenêtre passe de 1,45 s à 0,58 s |
 | Les Carrés gloutons | Deux manches de neuf carrés contre Gloubi | Jeu existant, sans choix de niveau |
+
+La course du dodo n’a pas de réglage de difficulté : elle monte toute seule.
+La vitesse, l’écart entre deux obstacles et la fenêtre d’appui visée sont trois
+courbes du temps de course (constantes `RUNNER` dans `core.js`), et la largeur de
+chaque obstacle est calculée à partir de la fenêtre visée. C’est ce calcul qui
+empêche le jeu de devenir plus facile quand il accélère : à vitesse constante et
+largeur fixe, un obstacle rapide passe sous le dodo plus vite, donc plus
+facilement. Les obstacles arrivent dans l’ordre d’apprentissage (caillou, tronc,
+rocher, double tronc, branche, passage) et chacun est annoncé une seule fois par
+une phrase affichée dans le paysage.
 
 Les illustrations sont des SVG originaux dans `art.js`. Les jeux ne chargent aucune dépendance externe.
 La Luciole a une note par case (gamme pentatonique, `AudioContext` créé au premier départ) et un bouton pour couper le son ; le réglage tient dans `sessionStorage`.
@@ -24,7 +34,7 @@ Dans Tempo, le dessin et la couleur disent la même chose ; le mot écrit, lui, 
 La préférence de mouvement réduit supprime les effets décoratifs, sans supprimer les déplacements nécessaires aux jeux.
 
 Ce sont des pauses ludiques, sans classement, compte, publicité ni promesse de transfert cognitif ou scolaire.
-Pour les galets, la durée annoncée est un plafond de jeu actif ; lire les règles et mettre en pause ne consomme pas ce temps. La Luciole n’a pas de plafond : elle s’arrête à la première erreur ou quand le temps d’un chemin s’écoule (2,5 s par lumière, 8 s au minimum). Le dodo et Tempo affichent le temps écoulé sans limite — le dodo jusqu’à la collision, Tempo jusqu’à la troisième erreur : lire les règles, mettre en pause ou quitter la fenêtre ne fait pas avancer le chrono. Les Carrés gloutons ne sont pas chronométrés.
+Pour les galets, la durée annoncée est un plafond de jeu actif ; lire les règles et mettre en pause ne consomme pas ce temps. La Luciole n’a pas de plafond : elle s’arrête à la première erreur ou quand le temps d’un chemin s’écoule (2,5 s par lumière, 8 s au minimum). Le dodo et Tempo affichent le temps écoulé sans limite — le dodo jusqu’à la deuxième touche, Tempo jusqu’à la troisième erreur : lire les règles, mettre en pause ou quitter la fenêtre ne fait pas avancer le chrono. Les Carrés gloutons ne sont pas chronométrés.
 
 ## Mode cadeau, prêt pour un raccordement ultérieur
 
@@ -67,13 +77,13 @@ Avant la mise en ligne : exécuter les contrôles sur une copie complète, puis 
 Après déploiement : ouvrir la banque et son entrée de catalogue, jouer une partie de chaque jeu, vérifier l’absence de débordement et les commandes au clavier.
 Les essais à taille réduite dans Chrome ne remplacent pas un essai sur un véritable iPhone ou iPad.
 
-## Dodo — course sans fin (12 septembre 2026)
+## Dodo — course sans fin (13 septembre 2026)
 
 - Appuyer déclenche immédiatement le saut (Espace, flèche haut, souris, bouton tactile ou paysage). Relâcher tôt donne un petit saut ; maintenir donne un grand saut. Un minimum de 65 ms d’impulsion rend les taps très courts utilisables. Un nouvel appui dans les 90 ms avant l’atterrissage peut préparer le saut suivant ; aucun rebond automatique sur maintien.
-- Troncs et rochers dès le début ; doubles troncs après 12 s, branches après 25 s, petit tronc sous une branche après 40 s. Les groupes restent espacés pour laisser retomber le dodo. Le hasard évite deux groupes identiques consécutifs et ne crée aucun obstacle à l’intérieur de l’écran.
-- La vitesse augmente jusqu’à 90 s, puis plus doucement jusqu’à 180 s, où elle se stabilise. Les obstacles continuent indéfiniment, y compris après deux minutes. La fenêtre d’anticipation est identique à toutes les tailles d’écran.
-- Décor qui évolue à 30, 60 et 90 s ; caps à 30, 60, 90 et 120 s. Une collision termine la course ; temps actif, distance indicative et obstacles franchis s’affichent. Rejouer relance directement ; les règles restent disponibles à la première ouverture du jeu.
-- Record de temps par niveau dans `localStorage` (`mathsgo:dodo:v3:…`), sans compte ni envoi au serveur. Repli en mémoire si le stockage est refusé. Les quotas cadeau restent inchangés : un clic sur Rejouer consomme la prochaine partie si elle est disponible.
+- Les obstacles arrivent dans l’ordre d’apprentissage (`runnerSteps` dans `core.js`) : caillou dès 0 s, tronc à 12 s, rocher à 26 s, double tronc à 42 s, branche à 58 s, passage à 76 s. Chacun est annoncé une seule fois par une phrase affichée 2,6 s dans le paysage. Pendant les douze premières secondes, le caillou est seul en piste : un appui bref suffit. Les groupes restent espacés pour laisser retomber le dodo ; le hasard évite deux groupes identiques consécutifs et ne crée aucun obstacle à l’intérieur de l’écran.
+- La difficulté ne plafonne jamais. La largeur de chaque obstacle est calculée à son apparition pour que la **fenêtre d’appui** — le temps pendant lequel un appui franchit l’obstacle — vaille ce qu’on veut : 440 ms au départ, 115 ms à l’infini. Sans ce calcul, une largeur fixe rendrait le jeu plus *facile* en accélérant, l’obstacle passant sous le dodo plus vite. La vitesse (300 px/s, +0,9 par seconde) et l’écart entre obstacles (1,70 s vers 0,45 s) montent de même sans borne. La fenêtre d’anticipation est identique à toutes les tailles d’écran.
+- Décor qui évolue à 30, 60 et 90 s. Le dodo a **deux vies** : la première touche coûte un cœur et le rend invincible 0,9 s (il clignote), la seconde arrête la course ; un obstacle touché ne compte pas comme franchi. Le nom de la zone et le record tiennent dans la ligne d’état ; il n’y a plus de ligne de consigne ni de barre Cap/Record. Temps actif, distance indicative et obstacles franchis s’affichent à la fin. Rejouer relance directement ; les règles restent disponibles à la première ouverture du jeu.
+- Record de temps unique dans `localStorage` (`mathsgo:dodo:v4`), sans niveau, sans compte ni envoi au serveur. Repli en mémoire si le stockage est refusé. Les quotas cadeau restent inchangés : un clic sur Rejouer consomme la prochaine partie si elle est disponible.
 - Une interruption d’image de plus de 250 ms, une perte de visibilité ou de focus met le dodo en pause. Le geste est relâché, et la reprise redonne le focus au saut. Les animations de décor et des pattes sont supprimées avec la préférence de mouvement réduit.
 
-L’objectif « expert à 1 min 30 » est un calibrage de jeu, pas une mesure validée auprès d’élèves. Les simulations vérifient la possibilité des parcours et l’échec des appuis permanents/répétitifs ; elles ne remplacent pas les retours de joueurs réels.
+Les trois courbes sont un calibrage de jeu, pas une mesure validée auprès d’élèves : elles se règlent en trois nombres dans la constante `RUNNER`. Les simulations vérifient la possibilité des parcours et l’échec des appuis permanents/répétitifs ; elles ne remplacent pas les retours de joueurs réels.

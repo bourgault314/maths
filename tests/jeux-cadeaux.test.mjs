@@ -255,3 +255,126 @@ test("La même graine rejoue exactement la même suite de signaux", () => {
   assert.equal(suite(99), suite(99));
   assert.notEqual(suite(99), suite(100));
 });
+
+/* ===== Course du dodo : un seul jeu, une difficulté qui monte ===== */
+
+const { runnerSteps, RUNNER } = core;
+const courir = (game, seconds) => { for (let t = 0; t < seconds && !game.done; t += 1 / 60) game.update(1 / 60); };
+
+test("La course ne dépend plus du niveau choisi", () => {
+  const a = new Runner("doux", 4242), b = new Runner("expert", 4242);
+  courir(a, 20); courir(b, 20);
+  assert.equal(a.distance.toFixed(4), b.distance.toFixed(4), "Deux niveaux, la même course");
+  assert.equal(a.obstacles.length, b.obstacles.length);
+});
+
+test("La vitesse et le resserrement montent sans jamais plafonner", () => {
+  const g = new Runner("", 1);
+  for (const [before, after] of [[0, 60], [60, 120], [120, 240], [240, 480]]) {
+    assert.ok(g.speedAt(after) > g.speedAt(before) + 20, "la vitesse monte encore entre " + before + " et " + after + " s");
+    assert.ok(g.windowAt(after) < g.windowAt(before), "la fenêtre visée se referme encore après " + before + " s");
+  }
+  assert.ok(g.windowAt(0) > .4 && g.windowAt(300) < .16);
+  assert.ok(g.gapAt(0) > 1.5 && g.gapAt(300) < .55);
+});
+
+test("La fenêtre d’appui se resserre au lieu de s’élargir", () => {
+  const g = new Runner("", 1);
+  const fenetre = (type, time) => {
+    g.elapsed = time; g.speed = g.speedAt(time);
+    const vol = { caillou: .633, tronc: .592, double: .550, rocher: .500 }[type];
+    return vol - (29 + g.widthFor(type)) / g.speed;
+  };
+  for (const type of ["rocher", "double"]) {
+    let previous = Infinity;
+    for (const time of [30, 60, 90, 150, 240]) {
+      const w = fenetre(type, time);
+      assert.ok(w < previous, type + " : la fenêtre doit se resserrer, " + Math.round(w * 1000) + " ms à " + time + " s");
+      previous = w;
+    }
+    assert.ok(previous < .2, type + " : au bout de 4 minutes il reste moins de 200 ms");
+  }
+});
+
+test("Les obstacles arrivent dans l’ordre d’apprentissage, et le début n’est plus une alternance figée", () => {
+  const suites = [];
+  for (let seed = 0; seed < 60; seed++) {
+    const g = new Runner("", seed * 977 + 1); const vus = [];
+    let previous = "", lastGroup = 0;
+    while (g.elapsed < 100) {
+      g.done = false; g.update(1 / 60);
+      if (g.lastGroup !== lastGroup) {
+        lastGroup = g.lastGroup;
+        const type = g.lastPattern, choix = new Set(g.pool()).size;
+        if (choix > 1) assert.notEqual(type, previous, "deux groupes identiques de suite alors que le tirage avait le choix, seed " + seed);
+        vus.push({ type, at: g.elapsed });
+        previous = type;
+      }
+    }
+    for (const { type, at } of vus) {
+      const step = runnerSteps.find(s => s.type === type);
+      assert.ok(at >= step.at, type + " apparu à " + at.toFixed(1) + " s, avant son palier de " + step.at + " s");
+    }
+    assert.equal(vus[0].type, "caillou", "la partie commence toujours par un caillou");
+    suites.push(vus.filter(v => v.at >= 30 && v.at < 70).map(v => v.type).join(","));
+  }
+  assert.ok(new Set(suites).size > 40, "les parties doivent différer entre elles : " + new Set(suites).size + " suites distinctes sur 60");
+});
+
+test("Un joueur parfait tient plus d’une minute et finit quand même par tomber", () => {
+  const g = new Runner("", 11);
+  // Saut maintenu déclenché dès qu’un obstacle au sol approche, jamais sous une branche.
+  for (let t = 0; t < 200 && !g.done; t += 1 / 120) {
+    const cible = g.obstacles.filter(o => o.bottom === 0 && o.x > g.x).sort((a, b) => a.x - b.x)[0];
+    const branche = g.obstacles.some(o => o.bottom > 0 && o.x < g.x + 210 && o.x + o.w > g.x);
+    if (cible && !branche && cible.x - g.x < g.speed * .22 && g.y === 0) g.jump(); else g.release();
+    g.update(1 / 120);
+  }
+  assert.ok(g.elapsed > 40, "un jeu propre dépasse 40 s, obtenu " + g.elapsed.toFixed(1) + " s");
+  assert.ok(g.elapsed < 200, "la course finit toujours par s’arrêter");
+});
+
+test("Le conseil d’un nouvel obstacle n’est donné qu’une fois", () => {
+  const g = new Runner("", 7); const donnes = [];
+  for (let t = 0; t < 120; t += 1 / 60) {
+    g.done = false; g.update(1 / 60);
+    if (g.tip) { donnes.push(g.tip); g.tip = ""; }
+  }
+  assert.equal(new Set(donnes).size, donnes.length, "aucun conseil répété");
+  assert.ok(donnes.length >= 4, "au moins quatre conseils en deux minutes");
+  assert.ok(runnerSteps.every(s => s.tip && s.tip.length < 60));
+});
+
+test("Deux vies : la première touche ne termine pas la course, la seconde si", () => {
+  // Un dodo qui n'appuie jamais percute tout ce qui se présente.
+  const g = new Runner("", 7);
+  const touches = [];
+  for (let t = 0; t < 120 && !g.done; t += 1 / 120) {
+    const avant = g.lives;
+    g.update(1 / 120);
+    if (g.lives < avant) touches.push({ a: +g.elapsed.toFixed(2), restant: g.lives, done: g.done });
+  }
+  assert.equal(touches.length, 2, "il faut exactement deux touches pour finir la course");
+  assert.deepEqual({ restant: touches[0].restant, done: touches[0].done }, { restant: 1, done: false },
+    "la première touche laisse une vie et la course continue");
+  assert.deepEqual({ restant: touches[1].restant, done: touches[1].done }, { restant: 0, done: true },
+    "la seconde touche arrête la course");
+  assert.ok(touches[1].a > touches[0].a, "les deux touches sont distinctes dans le temps");
+});
+
+test("Après une touche, le dodo est invincible un court instant et l’obstacle ne compte pas", () => {
+  const g = new Runner("", 7);
+  while (!g.done && g.lives === RUNNER.vies) g.update(1 / 120);
+  assert.equal(g.lives, RUNNER.vies - 1, "une vie vient d’être perdue");
+  assert.equal(+g.hurt.toFixed(3), RUNNER.invincible, "l’invincibilité démarre à sa pleine valeur");
+  // Tant qu'elle dure, aucune autre vie ne peut partir.
+  const vies = g.lives;
+  for (let t = 0; t < RUNNER.invincible && !g.done; t += 1 / 120) {
+    g.update(1 / 120);
+    assert.equal(g.lives, vies, "pas de seconde perte pendant l’invincibilité");
+  }
+  assert.ok(g.hurt < RUNNER.invincible, "l’invincibilité s’épuise avec le temps");
+  // Un obstacle touché n'est jamais crédité comme franchi.
+  const touche = g.obstacles.find(o => o.hit && o.counted);
+  assert.equal(touche, undefined, "aucun obstacle touché puis compté comme franchi");
+});
