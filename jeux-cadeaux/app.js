@@ -22,8 +22,15 @@
     destination.searchParams.delete("jeu");
     location[replace ? "replace" : "assign"](destination.href);
   }
+  function openTecTec(replace = false) {
+    const destination = new URL("/jeux-cadeaux/tec-tec/index.html", location.origin);
+    destination.search = location.search;
+    destination.searchParams.delete("jeu");
+    location[replace ? "replace" : "assign"](destination.href);
+  }
   // Les anciens favoris intégrés et les coffres rejoignent aussi le nouveau jeu.
   if (options.game === "galets" && (embedded || options.enabled)) { openGalets(true); return; }
+  if (options.game === "dodo" && (embedded || options.enabled)) { openTecTec(true); return; }
   if (!options.enabled && !embedded) {
     const destination = new URL("/outils/?domain=jeux-recherches&notion=jeux-courts", location.origin);
     if (Object.hasOwn(games, options.game)) destination.searchParams.set("jeu", options.game);
@@ -119,6 +126,7 @@
   function prepare(name) {
     stop();
     if (name === "galets") { openGalets(); return; }
+    if (name === "dodo") { openTecTec(); return; }
     if (options.enabled && ledger.remaining === 0) { exhausted(); return; }
     current = Object.hasOwn(games, name) ? name : "luciole"; model = null;
     const game = games[current];

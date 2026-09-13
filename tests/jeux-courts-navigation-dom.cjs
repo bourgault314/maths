@@ -49,6 +49,9 @@ function create(query = "?domain=jeux-recherches") {
       assert.equal(frame.allowFullscreen, true);
     } else if (id === "galets") {
       assert.equal(frame.src, "https://mathsgo.re/jeux-cadeaux/galets-riviere/index.html?integre=1&v=1");
+    } else if (id === "dodo") {
+      assert.equal(frame.src, "https://mathsgo.re/jeux-cadeaux/tec-tec/index.html?integre=1&v=1");
+      assert.equal(d.q("#page-title").textContent, "Tec-tec bondissant");
     } else {
       assert.ok(frame.src.endsWith("?jeu=" + id + "&integre=1&v=6"));
     }
@@ -67,7 +70,7 @@ function create(query = "?domain=jeux-recherches") {
   await d.historyAction(() => d.w.history.back());
   assert.equal(oldFrame.isConnected, false);
   await d.historyAction(() => d.w.history.forward());
-  assert.ok(d.q("#short-game-view iframe").src.includes("jeu=dodo"));
+  assert.ok(d.q("#short-game-view iframe").src.includes("/tec-tec/index.html"));
   await d.historyAction(() => d.send(d.q("iframe"), { type: "mathsgo-short-game:return" }, "https://mathsgo.re"));
   assert.equal(d.q("#resource-grid").hidden, false);
   assert.deepEqual(d.errors, []);

@@ -375,12 +375,14 @@ window.MATHSGO_CATALOGUE = {
         "jeu",
         "jeu-court",
         "dodo",
+        "tec-tec",
+        "La Réunion",
         "Adresse",
         "anticipation"
       ],
       "shortGame": "dodo",
-      "thumbnail": "assets/img/thumbnails/jeux/dodo.svg?v=2",
-      "cardDescription": "Va le plus loin possible : dose tes sauts, évite les obstacles et tiens 1 min 30 dans une course qui accélère."
+      "thumbnail": "assets/img/thumbnails/jeux/dodo.svg?v=tec-tec-1",
+      "cardDescription": "Un parcours de 2 min 30 à travers La Réunion : dose tes sauts, enchaîne les rebonds et vole entre les obstacles. Une seule vie."
     },
     "jeux-cadeaux/galets.html": {
       "primaryNotion": "jeux-courts",
@@ -6755,8 +6757,8 @@ window.MATHSGO_CATALOGUE = {
     },
     {
       "id": "jeux-courts-dodo",
-      "title": "Dodo bondissant",
-      "description": "Va le plus loin possible : dose tes sauts, évite les obstacles et tiens 1 min 30 dans une course qui accélère.",
+      "title": "Tec-tec bondissant",
+      "description": "Un parcours de 2 min 30 à travers La Réunion : dose tes sauts, enchaîne les rebonds et vole entre les obstacles. Une seule vie.",
       "path": "jeux-cadeaux/dodo.html",
       "domains": [
         "jeux-recherches"
@@ -6774,6 +6776,8 @@ window.MATHSGO_CATALOGUE = {
       "keywords": [
         "jeu court",
         "dodo",
+        "tec-tec",
+        "La Réunion",
         "Adresse",
         "anticipation"
       ],
