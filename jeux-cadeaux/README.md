@@ -13,7 +13,7 @@ Les Carrés gloutons restent à leur adresse `/outils/club_maths/carres_gloutons
 | --- | --- | --- |
 | La Luciole | Un seul chemin, qui s’allonge d’une lumière à chaque réussite ; la première erreur termine la partie ; pas de plafond de durée | Départ à 2, 3 ou 4 lumières, éclairage plus ou moins lent |
 | Dodo bondissant | Course sans fin, deux vies ; elle s’arrête à la deuxième touche | Aucun : un seul jeu pour tout le monde |
-| La pile de galets | Sans fin : on empile jusqu’à la chute, le score est la hauteur ; 20 à 30 s en pratique, garde-fou invisible à 90 s | Un seul jeu pour tous : la montée en difficulté est dans la partie (voir ci-dessous) |
+| La pile de galets | Deux à cinq galets imposés à placer et retourner ; anticipation du poids, contrepoids et ponts ; aucun vent ni temps limite | Douze défis accessibles, répartis en quatre étapes |
 | Tempo volcan | Suite sans fin de signaux, trois vies ; le mot écrit finit par contredire le dessin, puis la consigne s'inverse | Un seul jeu : la fenêtre passe de 1,45 s à 0,58 s |
 | Les Carrés gloutons | Deux manches de neuf carrés contre Gloubi | Jeu existant, sans choix de niveau |
 
@@ -34,7 +34,7 @@ Dans Tempo, le dessin et la couleur disent la même chose ; le mot écrit, lui, 
 La préférence de mouvement réduit supprime les effets décoratifs, sans supprimer les déplacements nécessaires aux jeux.
 
 Ce sont des pauses ludiques, sans classement, compte, publicité ni promesse de transfert cognitif ou scolaire.
-La pile de galets s’arrête à la chute (un garde-fou invisible de 90 s de jeu actif termine une partie laissée en plan). La Luciole n’a pas de plafond : elle s’arrête à la première erreur ou quand le temps d’un chemin s’écoule (2,5 s par lumière, 8 s au minimum). Le dodo et Tempo affichent le temps écoulé sans limite — le dodo jusqu’à la deuxième touche, Tempo jusqu’à la troisième erreur : lire les règles, mettre en pause ou quitter la fenêtre ne fait pas avancer le chrono. Les Carrés gloutons ne sont pas chronométrés.
+La pile de galets propose douze défis sans temps limite : après une chute, on peut reprendre le défi. La Luciole n’a pas de plafond : elle s’arrête à la première erreur ou quand le temps d’un chemin s’écoule (2,5 s par lumière, 8 s au minimum). Le dodo et Tempo affichent le temps écoulé sans limite — le dodo jusqu’à la deuxième touche, Tempo jusqu’à la troisième erreur : lire les règles, mettre en pause ou quitter la fenêtre ne fait pas avancer le chrono. Les Carrés gloutons ne sont pas chronométrés.
 
 ## Mode cadeau, prêt pour un raccordement ultérieur
 
@@ -88,7 +88,7 @@ Les essais à taille réduite dans Chrome ne remplacent pas un essai sur un vér
 
 Les trois courbes sont un calibrage de jeu, pas une mesure validée auprès d’élèves : elles se règlent en trois nombres dans la constante `RUNNER`. Les simulations vérifient la possibilité des parcours et l’échec des appuis permanents/répétitifs ; elles ne remplacent pas les retours de joueurs réels.
 
-## La pile de galets — moteur sans fin (12 septembre 2026)
+## Archive — ancien moteur des galets (remplacé le 13 septembre 2026)
 
 - La pile **penche** du côté de son centre de masse et **tremble** quand la chute approche. Un **fil à plomb** descend du centre de masse jusqu’au socle : vert au milieu de la zone d’appui, orange sur ses bords. Poser le galet suivant du côté opposé rattrape la pile.
 - Règle de chute inchangée (`balance`, ex-`stable`) : à chaque contact, le centre de masse de tout ce qui est au-dessus doit rester dans la zone de recouvrement. Le compte rendu dit où ça casse ; à la chute, les galets roulent et le fil à plomb rouge clignote une demi-seconde à l’endroit fautif, puis l’écran de fin explique (« basculé au 9e galet, posé trop à droite »).
@@ -96,3 +96,16 @@ Les trois courbes sont un calibrage de jeu, pas une mesure validée auprès d’
 - Paliers affichés : 3 premier caillou · 5 petite pile · 7 pile du sentier · 10 pile du volcan · 13 pile du Piton · 16 pile de légende · 20 personne n’a jamais vu ça. Le meilleur score de la séance est gardé dans `sessionStorage` (`mathsgo:jeux-cadeaux:galets:record`), sans cookie.
 - Mesuré sur le moteur avec des joueurs simulés (retard de réaction de ± 50 à ± 140 ms) : parties de 20 à 27 s, hauteur moyenne de 8 à 13 galets, moins de 15 % de parties à 16 galets ou plus même pour un très bon joueur, jamais plus de 25. `tests/jeux-cadeaux.test.mjs` rejoue cette mesure. Ce sont des simulations, pas des observations d’élèves.
 - Affichage : la scène garde le repère 600 × 330 du moteur, le cadre SVG s’étend pour remplir l’aire de jeu (le décor déborde), la caméra descend quand la pile monte et la zone d’appui est rappelée au bord bas quand le socle sort du cadre. Les formes des galets (`ShortGameArt.pebble`) sont reproductibles à partir de la graine de la partie. La préférence de mouvement réduit supprime le tremblement, pas l’inclinaison ni le fil à plomb.
+
+
+## La pile de galets — Au fil de l’eau (13 septembre 2026)
+
+La version essayée et approuvée par Gwenaël remplace l’ancien jeu d’adresse. Le lien `galets.html` et le catalogue utilisent `galets-riviere/index.html`, avec le bandeau du site conservé. Les anciens liens intégrés et les liens de coffre sont redirigés ; un défi commencé compte comme une partie du coffre et conserve le compteur commun en session.
+
+Les six fichiers de la rivière sont du HTML, CSS et des modules JavaScript natifs, sans compilation ni dépendance externe. `engine.mjs` et `levels.mjs` portent les règles, `game.mjs` le dessin et les commandes, `site.mjs` l’adaptation au catalogue. La silhouette réelle détermine la collision et la masse ; seuls les appuis horizontaux sont stables. La chute est une animation explicative. Le décor évoque une rivière réunionnaise. Le jeu conserve les douze défis ouverts, le bouton d’indice et le son facultatif de l’essai.
+
+La progression utilise `mathsgo:galets:essai-riviere:v1` dans le stockage local, afin de conserver aussi les essais faits sur cette origine. L’ancien record de hauteur n’est ni supprimé ni converti en défis réussis.
+
+Vérification : 31 tests du moteur, 990 variantes de solutions, tests des liens, du quota des coffres et de la hauteur du cadre. Les contrôles DOM de navigation couvrent 320, 390, 680, 681, 1024 et 1440 px. `tests/galets-riviere-dom.cjs` rejoue les douze défis et les commandes avec jsdom 26.1.0 et @napi-rs/canvas 1.0.9, dépendances de test uniquement. Ces contrôles ne mesurent pas la mise en page CSS dans Safari.
+
+L’état antérieur est conservé dans l’historique Git, avant la PR de remplacement (base : `a7e2b38dc6ebc3d6d5d1b00dea0823685835ebeb`). Revenir sur le commit de cette PR restaure les anciens branchements sans toucher aux autres jeux. Les fonctions `Stack` historiques restent dans le moteur commun afin de ne pas élargir le remplacement aux autres jeux ; elles ne servent plus aux liens publics des galets.

@@ -390,12 +390,12 @@ window.MATHSGO_CATALOGUE = {
         "jeu",
         "jeu-court",
         "galets",
-        "Précision",
+        "anticipation",
         "équilibre"
       ],
       "shortGame": "galets",
       "thumbnail": "assets/img/thumbnails/jeux/galets.svg?v=2",
-      "cardDescription": "Lâche chaque galet au bon moment et garde toute la pile en équilibre."
+      "cardDescription": "Prépare les appuis, place les galets et résous douze défis d’équilibre dans une rivière réunionnaise."
     },
     "jeux-cadeaux/tempo.html": {
       "primaryNotion": "jeux-courts",
@@ -6785,7 +6785,7 @@ window.MATHSGO_CATALOGUE = {
     {
       "id": "jeux-courts-galets",
       "title": "La pile de galets",
-      "description": "Lâche chaque galet au bon moment et garde toute la pile en équilibre.",
+      "description": "Prépare les appuis, place les galets et résous douze défis d’équilibre dans une rivière réunionnaise.",
       "path": "jeux-cadeaux/galets.html",
       "domains": [
         "jeux-recherches"
@@ -6803,7 +6803,7 @@ window.MATHSGO_CATALOGUE = {
       "keywords": [
         "jeu court",
         "galets",
-        "Précision",
+        "anticipation",
         "équilibre"
       ],
       "kind": "tool",

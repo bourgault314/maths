@@ -1,0 +1,382 @@
+[
+  {
+    "id": 1,
+    "title": "La première pile",
+    "setup": true,
+    "solutions": [
+      [
+        {
+          "x": 360,
+          "flip": false
+        },
+        {
+          "x": 360,
+          "flip": false
+        },
+        {
+          "x": 360,
+          "flip": false
+        }
+      ]
+    ],
+    "nodes": 3,
+    "exhausted": false,
+    "centered": true,
+    "robust": {
+      "ok": true,
+      "passed": 8,
+      "tried": 8
+    },
+    "ms": 11
+  },
+  {
+    "id": 2,
+    "title": "Le contrepoids",
+    "setup": true,
+    "solutions": [
+      [
+        {
+          "x": 366,
+          "flip": false
+        },
+        {
+          "x": 360,
+          "flip": false
+        }
+      ]
+    ],
+    "nodes": 4,
+    "exhausted": false,
+    "centered": false,
+    "robust": {
+      "ok": true,
+      "passed": 4,
+      "tried": 4
+    },
+    "ms": 4
+  },
+  {
+    "id": 3,
+    "title": "L’autre face",
+    "setup": true,
+    "solutions": [
+      [
+        {
+          "x": 360,
+          "flip": false
+        },
+        {
+          "x": 390,
+          "flip": false
+        }
+      ]
+    ],
+    "nodes": 12,
+    "exhausted": false,
+    "centered": false,
+    "robust": {
+      "ok": true,
+      "passed": 4,
+      "tried": 4
+    },
+    "ms": 4
+  },
+  {
+    "id": 4,
+    "title": "Un coup d’avance",
+    "setup": true,
+    "solutions": [
+      [
+        {
+          "x": 360,
+          "flip": false
+        },
+        {
+          "x": 360,
+          "flip": false
+        },
+        {
+          "x": 390,
+          "flip": false
+        }
+      ]
+    ],
+    "nodes": 13,
+    "exhausted": false,
+    "centered": false,
+    "robust": {
+      "ok": true,
+      "passed": 8,
+      "tried": 8
+    },
+    "ms": 4
+  },
+  {
+    "id": 5,
+    "title": "D’une rive à l’autre",
+    "setup": true,
+    "solutions": [
+      [
+        {
+          "x": 294,
+          "flip": false
+        },
+        {
+          "x": 426,
+          "flip": false
+        },
+        {
+          "x": 360,
+          "flip": false
+        }
+      ]
+    ],
+    "nodes": 6,
+    "exhausted": false,
+    "centered": false,
+    "robust": {
+      "ok": true,
+      "passed": 8,
+      "tried": 8
+    },
+    "ms": 5
+  },
+  {
+    "id": 6,
+    "title": "La marche",
+    "setup": true,
+    "solutions": [
+      [
+        {
+          "x": 300,
+          "flip": false
+        },
+        {
+          "x": 360,
+          "flip": false
+        },
+        {
+          "x": 360,
+          "flip": false
+        }
+      ]
+    ],
+    "nodes": 8,
+    "exhausted": false,
+    "centered": false,
+    "robust": {
+      "ok": true,
+      "passed": 8,
+      "tried": 8
+    },
+    "ms": 10
+  },
+  {
+    "id": 7,
+    "title": "L’épaule du rocher",
+    "setup": true,
+    "solutions": [
+      [
+        {
+          "x": 360,
+          "flip": false
+        },
+        {
+          "x": 390,
+          "flip": false
+        },
+        {
+          "x": 390,
+          "flip": false
+        }
+      ]
+    ],
+    "nodes": 23,
+    "exhausted": false,
+    "centered": false,
+    "robust": {
+      "ok": true,
+      "passed": 8,
+      "tried": 8
+    },
+    "ms": 9
+  },
+  {
+    "id": 8,
+    "title": "Le retour du poids",
+    "setup": true,
+    "solutions": [
+      [
+        {
+          "x": 360,
+          "flip": false
+        },
+        {
+          "x": 360,
+          "flip": false
+        },
+        {
+          "x": 390,
+          "flip": false
+        }
+      ]
+    ],
+    "nodes": 13,
+    "exhausted": false,
+    "centered": false,
+    "robust": {
+      "ok": true,
+      "passed": 8,
+      "tried": 8
+    },
+    "ms": 6
+  },
+  {
+    "id": 9,
+    "title": "Les deux épaules",
+    "setup": true,
+    "solutions": [
+      [
+        {
+          "x": 264,
+          "flip": false
+        },
+        {
+          "x": 414,
+          "flip": false
+        },
+        {
+          "x": 402,
+          "flip": false
+        },
+        {
+          "x": 294,
+          "flip": false
+        },
+        {
+          "x": 360,
+          "flip": false
+        }
+      ]
+    ],
+    "nodes": 28,
+    "exhausted": false,
+    "centered": false,
+    "robust": {
+      "ok": true,
+      "passed": 32,
+      "tried": 32
+    },
+    "ms": 48
+  },
+  {
+    "id": 10,
+    "title": "Le dernier mot",
+    "setup": true,
+    "solutions": [
+      [
+        {
+          "x": 360,
+          "flip": false
+        },
+        {
+          "x": 372,
+          "flip": false
+        },
+        {
+          "x": 360,
+          "flip": false
+        },
+        {
+          "x": 390,
+          "flip": false
+        }
+      ]
+    ],
+    "nodes": 18,
+    "exhausted": false,
+    "centered": false,
+    "robust": {
+      "ok": true,
+      "passed": 16,
+      "tried": 16
+    },
+    "ms": 15
+  },
+  {
+    "id": 11,
+    "title": "La couronne",
+    "setup": true,
+    "solutions": [
+      [
+        {
+          "x": 360,
+          "flip": false
+        },
+        {
+          "x": 378,
+          "flip": false
+        },
+        {
+          "x": 390,
+          "flip": false
+        },
+        {
+          "x": 390,
+          "flip": false
+        },
+        {
+          "x": 384,
+          "flip": false
+        }
+      ]
+    ],
+    "nodes": 39,
+    "exhausted": false,
+    "centered": false,
+    "robust": {
+      "ok": true,
+      "passed": 32,
+      "tried": 32
+    },
+    "ms": 102
+  },
+  {
+    "id": 12,
+    "title": "L’équilibre des rives",
+    "setup": true,
+    "solutions": [
+      [
+        {
+          "x": 300,
+          "flip": false
+        },
+        {
+          "x": 408,
+          "flip": false
+        },
+        {
+          "x": 288,
+          "flip": false
+        },
+        {
+          "x": 360,
+          "flip": false
+        },
+        {
+          "x": 360,
+          "flip": false
+        }
+      ]
+    ],
+    "nodes": 30,
+    "exhausted": false,
+    "centered": false,
+    "robust": {
+      "ok": true,
+      "passed": 32,
+      "tried": 32
+    },
+    "ms": 28
+  }
+]

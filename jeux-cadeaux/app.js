@@ -16,6 +16,14 @@
   };
   const options = core.giftOptions(location.search, location.origin);
   const embedded = new URLSearchParams(location.search).get("integre") === "1" && window.parent !== window;
+  function openGalets(replace = false) {
+    const destination = new URL("/jeux-cadeaux/galets-riviere/index.html", location.origin);
+    destination.search = location.search;
+    destination.searchParams.delete("jeu");
+    location[replace ? "replace" : "assign"](destination.href);
+  }
+  // Les anciens favoris intégrés et les coffres rejoignent aussi le nouveau jeu.
+  if (options.game === "galets" && (embedded || options.enabled)) { openGalets(true); return; }
   if (!options.enabled && !embedded) {
     const destination = new URL("/outils/?domain=jeux-recherches&notion=jeux-courts", location.origin);
     if (Object.hasOwn(games, options.game)) destination.searchParams.set("jeu", options.game);
@@ -110,6 +118,7 @@
   }
   function prepare(name) {
     stop();
+    if (name === "galets") { openGalets(); return; }
     if (options.enabled && ledger.remaining === 0) { exhausted(); return; }
     current = Object.hasOwn(games, name) ? name : "luciole"; model = null;
     const game = games[current];

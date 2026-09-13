@@ -17,6 +17,8 @@
     if (game === "carres-gloutons") {
       frame.src = "/outils/club_maths/carres_gloutons.html?integre=1&v=1";
       frame.allowFullscreen = true;
+    } else if (game === "galets") {
+      frame.src = "/jeux-cadeaux/galets-riviere/index.html?integre=1&v=1";
     } else {
       frame.src = "/jeux-cadeaux/index.html?jeu=" + game + "&integre=1&v=6";
     }

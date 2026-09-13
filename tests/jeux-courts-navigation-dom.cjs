@@ -47,6 +47,8 @@ function create(query = "?domain=jeux-recherches") {
     if (id === "carres-gloutons") {
       assert.equal(frame.src, "https://mathsgo.re/outils/club_maths/carres_gloutons.html?integre=1&v=1");
       assert.equal(frame.allowFullscreen, true);
+    } else if (id === "galets") {
+      assert.equal(frame.src, "https://mathsgo.re/jeux-cadeaux/galets-riviere/index.html?integre=1&v=1");
     } else {
       assert.ok(frame.src.endsWith("?jeu=" + id + "&integre=1&v=6"));
     }
