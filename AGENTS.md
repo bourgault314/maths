@@ -33,6 +33,30 @@ Automatismes V2, lire dans cet ordre :
   plus les mesures de temps, que les pull requests ne jouent jamais.
 - Vérifier les cas limites mathématiques et le déterminisme des générations.
 
+## Navigation du site — règle commune
+
+- Avant de modifier un menu, un niveau du catalogue ou un en-tête, lire le
+  bandeau existant et ses styles dans `assets/css/catalogue-refonte.css`, ainsi
+  que `renderBreadcrumb` dans `assets/js/catalogue-refonte.js`. Réutiliser ce
+  fonctionnement, y compris pour les pages accessibles par un lien direct.
+- À 680 px de largeur et moins : un seul retour visible, vers le parent
+  immédiat dans le site. Les ancêtres sont masqués, sans seconde flèche ni
+  seconde ligne. Exemple : jeu → Jeux courts → Jeux, recherches et explorations
+  → Tous les domaines ; Pythagore ou Thalès → Triangles → Espace et géométrie.
+- Au-dessus de 680 px : conserver le fil complet ; les liens sont côte à côte
+  lorsque la largeur le permet. Le logo reste un lien vers l'accueil.
+- Ne pas remplacer le retour au parent par un retour aveugle dans l'historique
+  du navigateur : un lien direct doit lui aussi remonter au bon niveau.
+- Après un changement de niveau, exécuter le contrôle du bandeau
+  `node tests/catalogue-navigation-css-dom.cjs` (jsdom 26.1.0, comme les autres
+  contrôles DOM du dépôt) et `node tests/jeux-courts-navigation-dom.cjs` pour les
+  jeux. Le premier vérifie les liens visibles, les styles et les destinations
+  à 320, 390, 680, 681, 1024 et 1440 px ; il ne mesure pas la mise en page.
+- Compléter par un contrôle visuel téléphone/ordinateur lorsque le navigateur
+  le permet ; signaler toute taille non observée, sans présenter un test DOM
+  comme une vérification visuelle. Actualiser la version de la feuille commune
+  dans les pages concernées pour que la correction soit chargée sans vider le cache.
+
 ## Automatismes V2
 
 - **Périmètre immédiat : exclusivement le DNB.** La liste officielle des
