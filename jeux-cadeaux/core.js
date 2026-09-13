@@ -97,29 +97,56 @@
       this.phase = "reveal"; this.elapsed = 0;
     }
   }
-  // Course sans fin. Même espace logique et mêmes commandes à toute taille d’écran.
+  // Course sans fin, un seul jeu pour tout le monde. Trois réglages suivent le
+  // temps de course : la vitesse (qui ne plafonne jamais), la FENÊTRE D'APPUI
+  // visée et l'écart entre deux groupes d'obstacles.
+  //
+  // La largeur d'un obstacle est CALCULÉE à partir de la fenêtre visée. Sans ce
+  // calcul, plus la course va vite, moins l'obstacle reste sous le dodo et plus
+  // le jeu devient FACILE : c'est le défaut que ce moteur corrige. Le saut, lui,
+  // ne change pas (0,66 s en l'air, 97 px au sommet en appui maintenu, 47 px en
+  // appui bref) ; le tableau ci-dessous donne le temps passé au-dessus d'une
+  // hauteur pendant un saut maintenu, mesuré sur ce moteur.
+  const RUNNER = {
+    vitesse: 300, vitesseParSeconde: .9,
+    fenetre: .44, fenetreFinale: .115, fenetreDemiVie: 110,
+    ecart: 1.7, ecartFinal: .45, ecartDemiVie: 70, ecartHasard: .16,
+    vies: 2, invincible: .9
+  };
+  const RUNNER_VOL = { caillou: .633, tronc: .592, double: .550, rocher: .500 };
   const runnerRanks = [
-    { at: 0, name: "Prends ton élan", place: "Sous-bois" },
-    { at: 15, name: "Bien parti !", place: "Sous-bois" },
+    { at: 0, name: "Prends ton élan !", place: "Forêt de tamarins" },
+    { at: 15, name: "Bien parti !", place: "Forêt de tamarins" },
     { at: 30, name: "Ça accélère !", place: "Les remparts" },
-    { at: 60, name: "Garde le rythme !", place: "Terres volcaniques" },
-    { at: 90, name: "Dodo expert !", place: "La grande traversée" },
-    { at: 120, name: "Dodo légendaire !", place: "La grande traversée" }
+    { at: 60, name: "Garde le rythme !", place: "Plaine des Sables" },
+    { at: 90, name: "Dodo expert !", place: "Le littoral" },
+    { at: 120, name: "Dodo légendaire !", place: "Le littoral" }
+  ];
+  // L'ordre d'arrivée des obstacles est aussi l'ordre d'apprentissage :
+  // appui bref, puis appui maintenu, puis ne pas sauter, puis viser petit.
+  const runnerSteps = [
+    { at: 0, type: "caillou", tip: "Des cailloux : un appui bref suffit." },
+    { at: 12, type: "tronc", tip: "Un tronc : appui bref, juste avant d'arriver." },
+    { at: 26, type: "rocher", tip: "Un rocher ! Maintiens l'appui pour un grand saut." },
+    { at: 42, type: "double", tip: "Deux troncs d'un coup : grand saut aussi." },
+    { at: 58, type: "branche", tip: "Une branche : ne saute pas, passe dessous." },
+    { at: 76, type: "passage", tip: "Branche ET tronc : un tout petit saut, pas plus." }
   ];
   class Runner {
     constructor(level, seed) {
-      this.level = Object.hasOwn(levels, level) ? level : "malin";
       this.rng = random(seed); this.x = 94; this.y = 0; this.vy = 0;
       this.elapsed = 0; this.distance = 0; this.score = 0; this.created = 0;
       this.obstacles = []; this.done = false; this.collision = "";
-      this.held = false; this.jumpAge = 0; this.buffer = 0; this.nextAt = 300;
+      this.lives = RUNNER.vies; this.hurt = 0; this.tip = ""; this.seen = new Set();
+      this.held = false; this.jumpAge = 0; this.buffer = 0; this.nextAt = 330;
       this.lastPattern = ""; this.lastGroup = 0; this.accumulator = 0;
       this.speed = this.speedAt(0);
     }
-    speedAt(time) {
-      const base = { doux: 210, malin: 240, expert: 270 }[this.level];
-      return base + Math.min(time, 90) * 2.2 + clamp(time - 90, 0, 90) * .2;
-    }
+    speedAt(time) { return RUNNER.vitesse + RUNNER.vitesseParSeconde * Math.max(0, time); }
+    // Fenêtre d'appui visée : large au départ, elle se referme sans jamais
+    // s'arrêter de descendre. C'est elle qui fait monter la difficulté.
+    windowAt(time) { return RUNNER.fenetreFinale + (RUNNER.fenetre - RUNNER.fenetreFinale) * Math.exp(-Math.max(0, time) / RUNNER.fenetreDemiVie); }
+    gapAt(time) { return RUNNER.ecartFinal + (RUNNER.ecart - RUNNER.ecartFinal) * Math.exp(-Math.max(0, time) / RUNNER.ecartDemiVie); }
     get rank() { return runnerRanks.findLast(r => this.elapsed >= r.at); }
     get metres() { return Math.floor(this.distance / 18); }
     jump() {
@@ -140,34 +167,54 @@
         this.step(step); this.accumulator -= step;
       }
     }
+    // Largeur telle que l'obstacle traverse le dodo en (vol − fenêtre visée).
+    // Les bornes gardent à chaque obstacle une silhouette reconnaissable.
+    widthFor(type) {
+      const speed = this.speed, aim = this.windowAt(this.elapsed);
+      const useful = (fly, min, max) => clamp(speed * (fly - aim) - 29, min, max);
+      if (type === "caillou") return useful(RUNNER_VOL.caillou, 20, 44);
+      if (type === "tronc") return useful(RUNNER_VOL.tronc, 22, 52);
+      if (type === "rocher") return useful(RUNNER_VOL.rocher, 24, 165);
+      if (type === "double") return useful(RUNNER_VOL.double, 40, 175);
+      // Branche et passage se mesurent en temps passé à garder le dodo bas.
+      if (type === "branche") return clamp(speed * .36 - 29, 52, 150);
+      return clamp(speed * .58 - 29, 92, 230);
+    }
+    pool() {
+      const list = runnerSteps.filter(s => this.elapsed >= s.at).map(s => s.type);
+      // Passé une minute, les obstacles exigeants reviennent plus souvent.
+      if (this.elapsed >= 70) list.push("rocher", "double");
+      if (this.elapsed >= 95) list.push("rocher", "branche", "passage");
+      return list;
+    }
     spawn() {
-      const t = this.elapsed;
-      let pool = ["tronc", "rocher"];
-      if (t >= 12) pool.push("double");
-      if (t >= 25) pool.push("branche");
-      if (t >= 40) pool.push("passage");
-      if (t >= 60) pool.push("double", "passage", "rocher");
-      if (this.created === 0) pool = ["tronc"];
+      const pool = this.created === 0 ? ["caillou"] : this.pool();
       const choices = pool.filter(p => p !== this.lastPattern);
       const type = (choices.length ? choices : pool)[Math.floor(this.rng() * (choices.length || pool.length))];
       const group = ++this.lastGroup;
       const add = (kind, offset, w, h, bottom = 0) => this.obstacles.push({
-        id: ++this.created, group, type: kind, x: 630 + offset, w, h, bottom, counted: false
+        id: ++this.created, group, type: kind, x: 630 + offset, w, h, bottom, hit: false, counted: false
       });
-      let width;
-      if (type === "tronc") { width = 26 + this.rng() * 8; add(type, 0, width, 24); }
-      if (type === "rocher") { width = 36 + this.rng() * 10; add(type, 0, width, 60); }
-      if (type === "double") { width = Math.min(112, this.speed * .25); add(type, 0, width, 34); }
-      if (type === "branche") { width = 128; add(type, 0, width, 23, 112); }
-      if (type === "passage") { width = 188; add("branche", 0, width, 23, 112); add("tronc", 76, 27, 24); }
+      const width = this.widthFor(type);
+      if (type === "caillou") add(type, 0, width, 12);
+      if (type === "tronc") add(type, 0, width, 24);
+      if (type === "rocher") add(type, 0, width, 46);
+      if (type === "double") add(type, 0, width, 34);
+      if (type === "branche") add(type, 0, width, 23, 112);
+      if (type === "passage") { add("branche", 0, width, 23, 112); add("tronc", width * .42, 26, 24); }
+      if (!this.seen.has(type)) {
+        this.seen.add(type);
+        const step = runnerSteps.find(s => s.type === type);
+        if (step) this.tip = step.tip;
+      }
       this.lastPattern = type;
       // Le prochain groupe arrive après la queue du précédent. Un grand saut
-      // dure 0,66 s ; cet espace laisse retomber le dodo et lire le groupe suivant.
-      const gapSeconds = .88 - Math.min(t, 90) * .0028 + this.rng() * .22;
-      this.nextAt = this.distance + width + this.speed * gapSeconds;
+      // dure 0,66 s ; cet écart laisse retomber le dodo et lire ce qui suit.
+      this.nextAt = this.distance + width + this.speed * (this.gapAt(this.elapsed) + this.rng() * RUNNER.ecartHasard);
     }
     step(dt) {
       this.elapsed += dt; this.speed = this.speedAt(this.elapsed);
+      this.hurt = Math.max(0, this.hurt - dt);
       const travel = this.speed * dt; this.distance += travel;
       this.jumpAge += dt;
       if (!this.held && this.jumpAge >= .065 && this.vy > 235) this.vy = 235;
@@ -180,8 +227,13 @@
         o.x -= travel;
         const overlapsX = o.x + 3 < this.x + 42 && o.x + o.w - 3 > this.x + 7;
         const overlapsY = this.y + 6 < o.bottom + o.h && this.y + 47 > o.bottom;
-        if (overlapsX && overlapsY) { this.done = true; this.collision = o.type; this.release(); break; }
-        if (!o.counted && o.x + o.w < this.x) { o.counted = true; this.score++; }
+        if (overlapsX && overlapsY && !o.hit && this.hurt <= 0) {
+          o.hit = true; this.collision = o.type;
+          // La dernière vie arrête la course ; les autres laissent repartir.
+          if (--this.lives <= 0) { this.done = true; this.release(); break; }
+          this.hurt = RUNNER.invincible;
+        }
+        if (!o.counted && o.x + o.w < this.x) { o.counted = true; if (!o.hit) this.score++; }
       }
       this.obstacles = this.obstacles.filter(o => o.x + o.w > -20);
     }
@@ -295,5 +347,5 @@
       else if (this.phase === "bascule" && this.elapsed >= TEMPO_BASCULE) { this.phase = "wait"; this.elapsed = 0; this.attente = this.palier.gap; }
     }
   }
-  return { levels, random, memoryPath, nextMemoryCell, giftOptions, giftLedger, stable, runnerRanks, tempoPalier, tempoCourbe, Memory, Runner, Stack, Tempo };
+  return { levels, random, memoryPath, nextMemoryCell, giftOptions, giftLedger, stable, runnerRanks, runnerSteps, RUNNER, tempoPalier, tempoCourbe, Memory, Runner, Stack, Tempo };
 });

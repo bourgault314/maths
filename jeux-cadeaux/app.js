@@ -9,7 +9,7 @@
   };
   const games = {
     luciole: { title: "La Luciole", skill: "Mémoire · observation", intro: "Observe les cases qui s’éclairent, puis retouche-les dans le même ordre. À chaque réussite, le chemin s’allonge d’une lumière. La partie s’arrête à la première erreur.", hint: "Touche les cases · Au clavier : flèches puis Entrée", goal: 0, seconds: 0, engine: core.Memory },
-    dodo: { title: "Dodo bondissant", skill: "Adresse · anticipation", intro: "Va le plus loin possible ! Appui bref : petit saut. Maintiens : grand saut. Franchis les troncs et les rochers, reste bas sous les branches. Ça accélère, et une collision termine la course. Cap expert : 1 min 30 !", hint: "Espace ou ↑ · Bouton ou paysage : appui bref = petit saut, maintenu = grand saut", goal: 90, seconds: Infinity, engine: core.Runner },
+    dodo: { title: "Dodo bondissant", skill: "Adresse · anticipation", intro: "Cours le plus loin possible ! Appui bref : petit saut. Maintiens l’appui : grand saut. Saute les cailloux, les troncs et les rochers, et reste au sol sous les branches. Ça accélère sans arrêt. Tu as deux vies — jusqu’où iras-tu ?", hint: "Espace ou ↑ · Bouton ou paysage : appui bref = petit saut, maintenu = grand saut", goal: 60, seconds: Infinity, engine: core.Runner },
     galets: { title: "La pile de galets", skill: "Précision · équilibre", intro: "Le galet se déplace tout seul. Lâche-le au bon moment pour en empiler sept. Garde toute la pile près du centre !", hint: "Touche le paysage ou le bouton · Clavier : Espace", goal: 7, seconds: 60, engine: core.Stack },
     tempo: { title: "Tempo volcan", skill: "Attention · inhibition", intro: "Touche la LAVE, laisse passer la PIERRE. Sur chaque signal un mot est écrit : au début il dit la vérité, plus loin il mentira — c’est toujours le dessin qui commande. Plus loin encore, la consigne s’inverse, et un écran te prévient. Trois erreurs et la partie s’arrête.", hint: "Touche le cercle · Clavier : Espace", goal: 0, seconds: Infinity, engine: core.Tempo }
   };
@@ -59,13 +59,25 @@
   }
   let current = "", model = null, running = false, paused = false, elapsed = 0, frame = 0, previous = 0, memoryPhase = "", actionButton = null;
   const dialog = $("pause-dialog");
-  let runnerDraw = null, runnerLevel = "malin", runnerBest = 0, runnerInput = "", runnerPointer = null, runnerAnnouncement = -1, runnerEvents = null;
-  const runnerRecords = {};
-  const levelNames = { doux: "Tranquille", malin: "Défi", expert: "Expert" };
+  let runnerDraw = null, runnerBest = 0, runnerInput = "", runnerPointer = null, runnerAnnouncement = -1, runnerEvents = null;
+  let runnerRecord = 0, runnerFlashTimer = 0, runnerHideTimer = 0;
+  const RECORD_KEY = "mathsgo:dodo:v4";
   const duration = seconds => { const n = Math.floor(Math.max(0, seconds)); return Math.floor(n / 60) + ":" + String(n % 60).padStart(2, "0"); };
-  function readRecord(level) {
-    try { const value = Number(window.localStorage.getItem("mathsgo:dodo:v3:" + level)); if (Number.isFinite(value) && value >= 0) runnerRecords[level] = Math.max(runnerRecords[level] || 0, value); } catch { /* Record en mémoire si le stockage est refusé. */ }
-    return runnerRecords[level] || 0;
+  function readRecord() {
+    try { const value = Number(window.localStorage.getItem(RECORD_KEY)); if (Number.isFinite(value) && value >= 0) runnerRecord = Math.max(runnerRecord, value); } catch { /* Record en mémoire si le stockage est refusé. */ }
+    return runnerRecord;
+  }
+  // Le conseil d'un nouvel obstacle s'affiche dans le paysage, puis s'efface.
+  function flash(text) {
+    const box = $("runner-flash");
+    if (!box || !text) return;
+    clearTimeout(runnerFlashTimer); clearTimeout(runnerHideTimer);
+    box.textContent = text; box.hidden = false;
+    requestAnimationFrame(() => box.classList.add("is-on"));
+    runnerFlashTimer = setTimeout(() => {
+      box.classList.remove("is-on");
+      runnerHideTimer = setTimeout(() => { box.hidden = true; }, 280);
+    }, 2600);
   }
   function releaseRunner() {
     runnerInput = ""; runnerPointer = null;
@@ -79,7 +91,7 @@
   function setText(id, value) { if ($(id).textContent !== value) $(id).textContent = value; }
   function show(name) { ["home", "play", "result"].forEach(id => $(id).hidden = id !== name); window.scrollTo({ top: 0, behavior: "instant" }); }
   function focus(id) { if (!(embedded && id === "game-title")) $(id).focus({ preventScroll: true }); }
-  function stop() { runnerEvents?.abort(); runnerEvents = null; releaseRunner(); running = false; paused = false; cancelAnimationFrame(frame); $("pause").disabled = true; $("stage").onclick = null; $("stage").onpointerdown = null; $("stage").onlostpointercapture = null; if (dialog.open) dialog.close(); }
+  function stop() { runnerEvents?.abort(); runnerEvents = null; releaseRunner(); clearTimeout(runnerFlashTimer); clearTimeout(runnerHideTimer); running = false; paused = false; cancelAnimationFrame(frame); $("pause").disabled = true; $("stage").onclick = null; $("stage").onpointerdown = null; $("stage").onlostpointercapture = null; if (dialog.open) dialog.close(); }
   function button(label, callback) {
     const b = document.createElement("button"); b.type = "button"; b.className = "primary"; b.textContent = label; b.addEventListener("click", callback); $("controls").append(b); return b;
   }
@@ -91,25 +103,26 @@
       setText("mode-pill", "Ton coffre · " + ledger.remaining + " partie" + (ledger.remaining > 1 ? "s" : "") + " disponible" + (ledger.remaining > 1 ? "s" : ""));
       setText("home-description", "Choisis ton défi. Chaque partie commencée compte, même si tu ne vas pas jusqu’au bout.");
     }
+    document.querySelector(".difficulty").hidden = false;
     show("home");
   }
   function prepare(name) {
     stop();
     if (options.enabled && ledger.remaining === 0) { exhausted(); return; }
     current = Object.hasOwn(games, name) ? name : "luciole"; model = null;
-    if (embedded) {
-      const difficulty = document.querySelector(".difficulty");
-      $("play").insertBefore(difficulty, $("stage"));
-      difficulty.hidden = current === "tempo";
-    }
+    const difficulty = document.querySelector(".difficulty");
+    if (embedded) $("play").insertBefore(difficulty, $("stage"));
+    // Ni le dodo ni le tempo n'ont de niveau : un seul jeu pour tout le monde, qui monte seul.
+    difficulty.hidden = current === "dodo" || current === "tempo";
     const game = games[current];
     $("play").classList.toggle("runner-play", current === "dodo");
     $("play").classList.toggle("tempo-play", current === "tempo");
     $("stage").classList.remove("runner-stage");
-    $("runner-journey")?.remove(); $("runner-result-detail")?.remove(); $("tempo-rule")?.remove();
+    $("runner-result-detail")?.remove(); $("tempo-rule")?.remove();
+    $("instructions").hidden = false;
     runnerDraw = null;
     setText("game-title", game.title); setText("game-skill", game.skill); setText("instructions", "Prends le temps de lire. Le jeu démarre quand tu es prêt.");
-    setText("progress-label", current === "luciole" ? "Le chemin s’allonge à chaque réussite" : current === "dodo" ? "Cap expert : 1 min 30" : current === "tempo" ? "Trois vies · jusqu’à la troisième erreur" : "Objectif : " + game.goal + " galets");
+    setText("progress-label", current === "luciole" ? "Le chemin s’allonge à chaque réussite" : current === "dodo" ? "0 m" : current === "tempo" ? "Trois vies · jusqu’à la troisième erreur" : "Objectif : " + game.goal + " galets");
     setText("round-label", options.enabled ? "Cadeau · " + (ledger.used + 1) + " / " + options.limit : "Jeu libre");
     setText("time-label", current === "luciole" ? "1 à 2 min" : current === "dodo" || current === "tempo" ? "Sans fin" : "≤ " + game.seconds + " s"); setText("keyboard-hint", game.hint);
     $("sound").hidden = current !== "luciole"; paintSound();
@@ -122,7 +135,8 @@
     const difficulty = document.querySelector('input[name="level"]:checked').value;
     if (embedded) document.querySelector(".difficulty").hidden = true;
     const seed = window.crypto?.getRandomValues ? window.crypto.getRandomValues(new Uint32Array(1))[0] : Math.floor(Math.random() * 4294967296);
-    runnerLevel = difficulty; runnerBest = readRecord(difficulty); runnerAnnouncement = -1; releaseRunner();
+    runnerBest = readRecord(); runnerAnnouncement = -1; releaseRunner();
+    if (current === "dodo") $("instructions").hidden = true;
     model = new games[current].engine(difficulty, seed); elapsed = 0; running = true; paused = false; previous = 0; memoryPhase = ""; lastLit = -1;
     if (current === "luciole" && soundOn) context();
     $("pause").disabled = false; $("controls").replaceChildren(); actionButton = null;
@@ -155,9 +169,8 @@
     } else if (current === "dodo") {
       $("stage").classList.add("runner-stage");
       runnerDraw = window.ShortGameRunnerView($("stage"));
-      const journey = document.createElement("div"); journey.id = "runner-journey"; journey.className = "runner-journey";
-      journey.innerHTML = '<strong id="runner-target">Cap : 30 s</strong><span id="runner-record"></span><progress id="runner-progress" max="30" value="0" aria-label="Temps vers le prochain cap"></progress>';
-      $("stage").before(journey);
+      const tip = document.createElement("p"); tip.id = "runner-flash"; tip.className = "runner-flash"; tip.setAttribute("role", "status"); tip.hidden = true;
+      $("stage").append(tip);
       actionButton = button("", event => {
         // Activation par une aide technique / Entrée. Le clic après un appui
         // tactile ou Espace est déjà traité et ne doit jamais provoquer un 2e saut.
@@ -237,16 +250,10 @@
     } else if (current === "dodo") {
       setText("time-label", duration(model.elapsed));
       setText("progress-label", model.metres + " m · " + model.score + " obstacle" + (model.score > 1 ? "s" : ""));
-      setText("round-label", levelNames[runnerLevel] + " · " + model.rank.place);
-      if (model.rank.at !== runnerAnnouncement) {
-        runnerAnnouncement = model.rank.at;
-        const advice = model.elapsed < 15 ? "Appui bref : petit saut. Maintiens : grand saut." : model.elapsed < 30 ? "Les rochers et doubles troncs demandent un grand saut." : model.elapsed < 60 ? "Sous les branches, reste au sol ou fais un petit saut." : "Anticipe le prochain obstacle et dose tes sauts.";
-        setText("instructions", model.rank.name + " " + advice);
-      }
-      const target = [30, 60, 90, 120].find(t => t > model.elapsed);
-      setText("runner-target", target ? "Cap : " + duration(target) + (target === 90 ? " · Dodo expert" : target === 120 ? " · Légendaire" : "") : "Légendaire · Jusqu’où iras-tu ?");
-      setText("runner-record", "Record : " + duration(Math.max(runnerBest, model.elapsed)));
-      $("runner-progress").max = target || 120; $("runner-progress").value = model.elapsed;
+      setText("round-label", model.rank.place + (runnerBest > 0 ? " · record " + duration(runnerBest) : ""));
+      // Un conseil quand un obstacle nouveau arrive, sinon le nom du palier.
+      if (model.tip) { flash(model.tip); model.tip = ""; runnerAnnouncement = model.rank.at; }
+      else if (model.rank.at !== runnerAnnouncement) { runnerAnnouncement = model.rank.at; if (model.rank.at > 0) flash(model.rank.name); }
       runnerDraw(model);
     } else if (current === "galets") {
       setText("time-label", Math.max(0, Math.ceil(games[current].seconds - elapsed)) + " s");
@@ -307,28 +314,36 @@
     } else {
       const success = score === game.goal;
       setText("result-title", success ? "Défi relevé !" : "Partie terminée");
-      const unit = current === "dodo" ? "troncs franchis" : current === "galets" ? "galets empilés" : "signaux réussis";
+      const unit = current === "galets" ? "galets empilés" : "signaux réussis";
       setText("result-score", score + " / " + game.goal + " " + unit);
-      const tips = { dodo: "Astuce : regarde le tronc qui arrive, puis fais un seul saut.", galets: "Astuce : les petits décalages s’additionnent. Pense à toute la pile.", tempo: "Astuce : laisse ton doigt tranquille jusqu’au mot TOUCHE." };
+      const tips = { galets: "Astuce : les petits décalages s’additionnent. Pense à toute la pile.", tempo: "Astuce : laisse ton doigt tranquille jusqu’au mot TOUCHE." };
       setText("result-text", success ? "Tu es allé au bout de ce petit défi. Bien joué !" : opening + tips[current]);
     }
     resultActions(); show("result"); focus("result-title");
   }
   function finishRunner(reason) {
-    const time = model.elapsed, best = readRecord(runnerLevel), record = time > best;
+    const time = model.elapsed, best = readRecord(), record = time > best;
     if (record) {
-      runnerRecords[runnerLevel] = time;
-      try { window.localStorage.setItem("mathsgo:dodo:v3:" + runnerLevel, String(time)); } catch { /* Record conservé pour cette page. */ }
+      runnerRecord = time;
+      try { window.localStorage.setItem(RECORD_KEY, String(time)); } catch { /* Record conservé pour cette page. */ }
     }
     stop(); $("result-art").innerHTML = art("dodo");
-    const title = time >= 120 ? "Dodo légendaire !" : time >= 90 ? "Dodo expert !" : time >= 60 ? "Une minute, bien joué !" : time >= 30 ? "Belle course !" : "À un saut du record…";
+    const title = time >= 150 ? "Dodo légendaire !" : time >= 120 ? "Deux minutes, chapeau !" : time >= 90 ? "Dodo expert !" : time >= 60 ? "Une minute, bravo !" : time >= 30 ? "Belle course !" : time >= 12 ? "Ça vient !" : "Premier envol";
     setText("result-title", title);
     setText("result-score", duration(time) + " · " + model.metres + " m");
     const detail = document.createElement("p"); detail.id = "runner-result-detail"; detail.className = "runner-result-detail";
-    detail.textContent = (record ? "Nouveau record" : "Ton record : " + duration(best)) + " · " + levelNames[runnerLevel] + " · " + model.score + " obstacle" + (model.score > 1 ? "s" : "") + " franchi" + (model.score > 1 ? "s" : "");
+    detail.textContent = (record && best > 0 ? "Nouveau record ! L’ancien était " + duration(best)
+      : record && time >= 15 ? "Premier record : " + duration(time)
+      : record ? "C’était ton premier essai"
+      : "Ton record : " + duration(best))
+      + " · " + model.score + " obstacle" + (model.score > 1 ? "s" : "") + " franchi" + (model.score > 1 ? "s" : "");
     $("result-score").after(detail);
-    const tip = model.collision === "branche" ? "Sous une branche, garde le dodo au sol. S’il y a un petit tronc dessous, fais un appui bref." : model.collision === "rocher" || model.collision === "double" ? "Pour les rochers et les doubles troncs, maintiens l’appui pour un grand saut." : "Attends que le tronc approche, puis dose ton saut. Regarde déjà l’obstacle suivant.";
-    setText("result-text", reason === "quit" ? "Course arrêtée. Ton record est conservé." : time >= 120 ? "Deux minutes : une performance exceptionnelle ! Peux-tu aller encore plus loin ?" : tip + (time < 90 ? " Le cap expert : 1 min 30." : " Prochain cap : deux minutes !"));
+    const tip = model.collision === "branche" ? "Sous une branche, garde le dodo au sol. S’il y a un tronc dessous, fais un appui très bref."
+      : model.collision === "rocher" || model.collision === "double" ? "Pour les rochers et les doubles troncs, maintiens l’appui : le petit saut ne monte pas assez haut."
+      : "Attends que l’obstacle approche, puis dose ton saut. Regarde déjà celui d’après.";
+    setText("result-text", reason === "quit" ? "Course arrêtée. Ton record est conservé."
+      : time >= 120 ? "Deux minutes de course, c’est très rare. Jusqu’où peux-tu aller ?"
+      : tip + (time < 60 ? " Prochain cap : une minute." : " Prochain cap : 1 min 30."));
     resultActions(); show("result"); focus("result-title");
   }
   function finishTempo(reason) {
