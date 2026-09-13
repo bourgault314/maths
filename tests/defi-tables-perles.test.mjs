@@ -295,9 +295,9 @@ test("à la fin, le boulier s’efface et la table entière reste", () => {
 // ---------------------------------------------------------- la bande
 
 test("les étiquettes de la bande portent la multiplication entière, collée", () => {
-  assert.match(html, /multiplierLabel\.textContent = `\$\{multiplier\}×\$\{table\}`;/,
+  assert.match(html, /texte\.append\(String\(multiplier\), fois, String\(table\)\);/,
     "« 0×3 … 10×3 » : « ×3 » se lisait « fois trois », à l’envers du sens n × table");
-  assert.doesNotMatch(html, /multiplierLabel\.textContent = `×\$\{multiplier\}`/);
+  assert.doesNotMatch(html, /texte\.append\(fois, String\(multiplier\)\)/);
   assert.match(html, /@media \(min-width: 621px\) \{\s*\.number-stick \{ width: min\(100%, 760px\); padding: 4px; \}/,
     "la bande grandit dès la tablette : il y a la place");
   assert.match(html, /@media \(min-width: 1040px\) \{\s*\.number-stick \{ width: min\(100%, 860px\); \}\s*\.number-stick-cell \{ min-height: 86px;/);

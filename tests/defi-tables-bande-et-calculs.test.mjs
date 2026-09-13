@@ -90,7 +90,8 @@ test("toucher une case ou une boîte de Mes calculs ramène le détail dans l’
   // La barre reste collée et la grille garde son ancre : l'ouverture de
   // l'écran ne change pas.
   assert.match(html, /\.calculs-screen \.settings-toolbar \{ position: sticky; top: 0;/);
-  assert.match(html, /#calculs-grille \{ scroll-margin-top: 58px; \}/);
+  // R4 bis : la barre a pris 8 px en haut et 10 en bas (le rond flotte) — l'ancre suit.
+  assert.match(html, /#calculs-grille \{ scroll-margin-top: 66px; \}/);
   assert.match(html, /\$\("calculs-grille"\)\.scrollIntoView\?\.\(\{block: "start", behavior: "auto"\}\)/);
   // Le mouvement est doux, sauf pour qui demande moins d'animations.
   assert.match(html, /behavior: sansAnimation\(\) \? "auto" : "smooth"/);
@@ -176,9 +177,10 @@ test("le résultat de la bande compte les cases trouvées du premier coup", () =
 // ------------------------------ 3. les étiquettes de la bande au projecteur
 
 // Un faux écran : la scène, et onze étiquettes dont on connaît la largeur du
-// texte (scrollWidth) — celle que le navigateur donne même quand il la coupe.
+// texte — R4 bis : celle du span du texte (getBoundingClientRect), au dixième
+// de pixel, et non plus scrollWidth de l'étiquette (qui rendait la case).
 function largeurDeLaBande({largeurBoulier, texte, scene}) {
-  const etiquettes = Array.from({length: 11}, () => ({scrollWidth: texte}));
+  const etiquettes = Array.from({length: 11}, () => ({firstElementChild: {getBoundingClientRect: () => ({width: texte})}, scrollWidth: 0}));
   const jouer = new Function("ARG", `
     const BANDE_BORDURES = 12;
     const boulier = {dom: {bande: {querySelectorAll: () => ARG.etiquettes}, scene: {clientWidth: ARG.scene}}};
@@ -189,35 +191,33 @@ function largeurDeLaBande({largeurBoulier, texte, scene}) {
 }
 
 test("la bande suit le boulier, sauf quand ses étiquettes n’y tiennent plus", () => {
-  // iPhone de 402 px, table de 10 : les étiquettes font 31 px dans des cases
-  // de 32 — ça tient, la bande ne bouge pas d'un pixel.
-  assert.equal(largeurDeLaBande({largeurBoulier: 365, texte: 31, scene: 372}), 365);
-  // La MÊME étiquette mesurée sous Windows fait 32 px (Segoe UI) dans une case
-  // de 32,09 : elle n'est pas rognée pour autant, et la bande ne doit pas
-  // bouger. Sans l'arrondi de la case au pixel entier, elle prenait 372 px et
-  // quittait l'aplomb du boulier sur l'iPhone de Gwenaël (mesuré le 12/09).
-  assert.equal(largeurDeLaBande({largeurBoulier: 365, texte: 32, scene: 372}), 365,
-    "un pixel de plus que la case ne rogne rien : la bande reste sur le boulier");
-  // 1366 × 768 : 43 px d'étiquette dans des cases de 44,5 — rien ne change.
-  assert.equal(largeurDeLaBande({largeurBoulier: 502, texte: 43, scene: 716}), 502);
-  // Et 44 px sous Windows, dans la même case de 44,5 : toujours rien.
+  // iPhone de 402 px, table de 10 : cases de (365 − 12) / 11 = 32,09 px.
+  // « 10×10 » à 11 px fait 28,1 px sous Linux (Chromium, DejaVu) et 32 px au
+  // plus sous Windows (Segoe UI) : ça tient, la bande ne bouge pas d'un pixel.
+  assert.equal(largeurDeLaBande({largeurBoulier: 365, texte: 28.1, scene: 372}), 365);
+  assert.equal(largeurDeLaBande({largeurBoulier: 365, texte: 32, scene: 372}), 365);
+  // Sur l'iPhone (SF Rounded, plus large), le même texte dépasse la case —
+  // c'est ce que Gwenaël a vu le 13/09 : la bande s'élargit juste ce qu'il
+  // faut (32,3 × 11 + 12 = 368), et reste dans la scène (372).
+  assert.equal(largeurDeLaBande({largeurBoulier: 365, texte: 32.3, scene: 372}), Math.ceil(32.3 * 11) + 12);
+  // 1366 × 768 : 38,8 px (Linux) ou 44 px (Windows) dans des cases de 44,5 — rien ne change.
+  assert.equal(largeurDeLaBande({largeurBoulier: 502, texte: 38.8, scene: 716}), 502);
   assert.equal(largeurDeLaBande({largeurBoulier: 502, texte: 44, scene: 716}), 502);
-  // Deux pixels de trop, en revanche, rognent : la bande s'élargit.
-  assert.notEqual(largeurDeLaBande({largeurBoulier: 365, texte: 34, scene: 372}), 365);
-  assert.match(html, /if \(besoin <= Math\.floor\(caseActuelle\) \+ 1\) return largeurBoulier;/,
-    "la case est comparée au pixel entier");
-  // Vidéoprojecteur 1280 × 590 : le boulier tombe à 292 px, les étiquettes en
-  // demandent 43 + 2 — la bande prend 11 × 45 + 12, et le boulier ne change pas.
-  assert.equal(largeurDeLaBande({largeurBoulier: 292, texte: 43, scene: 716}), 44 * 11 + 12);
+  // Un dixième de pixel de trop, en revanche, élargit : le texte est centré,
+  // au-delà de la case il mord sur les bords des deux côtés.
+  assert.notEqual(largeurDeLaBande({largeurBoulier: 502, texte: 44.6, scene: 716}), 502);
+  assert.match(html, /if \(besoin <= caseActuelle\) return largeurBoulier;/, "le texte tient dans la case, ou pas");
+  assert.match(html, /return texte \? texte\.getBoundingClientRect\(\)\.width : etiquette\.scrollWidth;/, "la largeur du span du texte, pas celle de l'étiquette");
+  // Vidéoprojecteur 1280 × 590 : le boulier tombe à 292 px, les étiquettes
+  // demandent 38,8 px — la bande prend 11 × 38,8 + 12, arrondi, et le boulier
+  // ne change pas.
+  assert.equal(largeurDeLaBande({largeurBoulier: 292, texte: 38.8, scene: 716}), Math.ceil(38.8 * 11) + 12);
   // 1366 × 650 : même cause, même effet.
-  assert.equal(largeurDeLaBande({largeurBoulier: 334, texte: 43, scene: 716}), 44 * 11 + 12);
+  assert.equal(largeurDeLaBande({largeurBoulier: 334, texte: 38.8, scene: 716}), Math.ceil(38.8 * 11) + 12);
   // Jamais plus large que la scène : sur un téléphone de 320 px la bande prend
   // toute la place et s'arrête là (les étiquettes de la table de 10 y restent
   // un peu justes — écran hors des tailles de référence).
-  assert.equal(largeurDeLaBande({largeurBoulier: 271, texte: 31, scene: 290}), 290);
-  // Et la marge qu’on garde, c’est le bord de la case : 1 px, pas plus — sinon
-  // la bande s’élargirait sur un iPhone où tout tient déjà.
-  assert.match(html, /etiquette\.scrollWidth \+ 1/);
+  assert.equal(largeurDeLaBande({largeurBoulier: 271, texte: 28.1, scene: 290}), 290);
   // Une bande pas encore dessinée (aucune étiquette) garde la largeur du boulier.
   const jouer = new Function(`
     const BANDE_BORDURES = 12;
