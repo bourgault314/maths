@@ -80,7 +80,7 @@ test("le mode site (Réglages libres, éval CM1) reste neutre : ni vert, ni roug
   assert.match(html, /verdict\.classe = "is-neutre";/);
   assert.match(html, /\.result\.is-neutre \.result-verdict \{ border-color: var\(--line\); background: #f6f9fb; \}/);
   assert.match(html, /\.result\.is-neutre \.hero-icon \{ display: none; \}/);
-  assert.match(html, /result\.classList\.remove\("is-fete", "is-rate", "is-temps", "is-neutre"\);/);
+  assert.match(html, /result\.classList\.remove\("is-fete", "is-rate", "is-temps", "is-neutre", "is-revision"\);/);
   assert.doesNotMatch(html, /const reussi = state\.correct >= Math\.ceil\(TOTAL \* \.8\);/, "plus de seuil à 80 % en mode site");
 });
 

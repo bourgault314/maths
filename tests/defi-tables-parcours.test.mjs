@@ -206,7 +206,8 @@ test("J’apprends garde la bande pour construire et la propose en aide temporai
   // collée (« 0×3 … 10×3 ») au lieu de « ×0, ×1 », qui se lit « fois zéro »,
   // à l'envers du sens n × table retenu avec Claire. Collée partout : à onze
   // cases sur un téléphone, « 10 × 3 » ne tient pas dans la case.
-  assert.match(html, /multiplierLabel\.textContent = `\$\{multiplier\}×\$\{table\}`/);
+  // R4 bis : le texte « n×t » est dans un span (multiplier, « × », table).
+  assert.match(html, /texte\.append\(String\(multiplier\), fois, String\(table\)\);/);
   assert.match(html, /multiplierLabel\.setAttribute\("aria-hidden", "true"\)/);
   assert.match(html, /cell\.append\(multiplierLabel, value\)/);
   assert.match(html, /const visible = state\.configuration\?\.mode === "learn"/);

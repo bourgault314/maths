@@ -113,7 +113,7 @@ test("quand l’écran fête une nouvelle, il ne garde que l’essentiel", () =>
   // Lot R2 (audit, A3/A6) : le verdict est un seul cadre en tête — la fête
   // en est la version en grand, l'échec la version rouge, le temps écoulé
   // la version ambre — et les boutons viennent juste après la suite.
-  assert.match(html, /result\.classList\.remove\("is-fete", "is-rate", "is-temps", "is-neutre"\);/);
+  assert.match(html, /result\.classList\.remove\("is-fete", "is-rate", "is-temps", "is-neutre", "is-revision"\);/);
   assert.match(html, /if \(verdict\.classe\) result\.classList\.add\(verdict\.classe\);/);
   assert.match(html, /verdict\.classe = "is-fete";/);
   assert.match(html, /verdict\.titre = "Pas encore";/);
@@ -147,5 +147,5 @@ test("une série sans faute ne déroule pas la liste de toutes les bonnes répon
 test("« Mes calculs » s’ouvre sur la grille, et le retour reste à l’écran", () => {
   assert.match(html, /show\("calculs"\);[\s\S]{0,300}\$\("calculs-grille"\)\.scrollIntoView\?\.\(\{block: "start", behavior: "auto"\}\)/);
   assert.match(html, /\.calculs-screen \.settings-toolbar \{ position: sticky; top: 0;/, "sinon « ← Ma table » sortirait de l’écran en défilant");
-  assert.match(html, /#calculs-grille \{ scroll-margin-top: 58px; \}/, "la grille s’arrête sous la barre, pas dessous");
+  assert.match(html, /#calculs-grille \{ scroll-margin-top: 66px; \}/, "la grille s’arrête sous la barre, pas dessous (R4 bis : barre de 62 px)");
 });

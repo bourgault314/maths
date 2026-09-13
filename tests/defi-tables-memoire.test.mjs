@@ -196,7 +196,8 @@ test("la page : le bloc du jour en tête et conseillé, l’unique rond bleu, le
   assert.match(html, /calculsSelection = choisie \? null : \{boite\};/, "toucher une tuile liste ses calculs");
   assert.match(html, /PARCOURS\.calculsDeLaBoite\(parcours, boite\)/);
   assert.doesNotMatch(html, /calculs-resume|resumeCalculsTexte/, "la ligne « 14 sus · 8 en route · 4 à revoir » a laissé la place aux tuiles colorées");
-  assert.match(html, /\$\("calculs-hint"\)\.hidden = Boolean\(agenda\.dus\);/, "la phrase sous le bouton seulement quand il n’y a rien à faire");
+  // R4 bis : la phrase revient aussi au-delà d'une série (« 36 à faire aujourd’hui »).
+  assert.match(html, /\$\("calculs-hint"\)\.hidden = Boolean\(agenda\.dus\) && !enPlusieurs;/, "la phrase sous le bouton quand il n’y a rien à faire, ou plus d’une série");
   assert.match(html, /for \(let index = 0; index < PARCOURS\.SEUILS\.revision\.boites; index \+= 1\) \{\s*const caseFait = document\.createElement\("span"\);\s*caseFait\.className = `mc-case\$\{index < cellule\.boite \? " is-pleine" : ""\}`;/, "cinq petites cases par cellule de la grille");
   assert.equal((html.match(/<span class="mc-cell[^"]*"><span class="mc-cases">(?:<span class="mc-case(?: is-pleine)?"><\/span>){5}<\/span><\/span>/g) || []).length, 4, "la légende : quatre états à cinq cases");
   assert.match(html, /@media \(max-width: 479px\) \{\s*\.mc-cases \{ gap: 1\.5px; \}\s*\.mc-case \{ width: 5px; height: 5px;/, "au téléphone, 5 × 5 px + 4 × 1,5 px tiennent dans une cellule de ~33 px");
@@ -204,7 +205,8 @@ test("la page : le bloc du jour en tête et conseillé, l’unique rond bleu, le
   assert.match(html, /<b>Mes calculs du jour\.<\/b>/);
   assert.doesNotMatch(html, /une seule par jour|trois jours différents|Une case par jour/, "plus une trace de « une case par jour »");
   // « Encore 10 calculs » à zéro (décision du 12/09) : sur le résultat et dans Mes calculs, en secondaire.
-  assert.match(html, /if \(!restants && PARCOURS\.calculsAVenir\(parcours, \{table\}\)\.length\) \{\s*const encore = document\.createElement\("button"\);\s*encore\.type = "button";\s*encore\.className = "secondary";/, "sur le résultat, quand plus rien n’est dû");
+  // R4 bis : la branche « à zéro » du cadre (« Ma table » principal, puis « Encore N calculs »).
+  assert.match(html, /\} else \{\s*actions\.append\(maTable\);[\s\S]{0,200}if \(PARCOURS\.calculsAVenir\(parcours, \{table\}\)\.length\) \{\s*const encore = document\.createElement\("button"\);\s*encore\.type = "button";\s*encore\.className = "secondary";/, "sur le résultat, quand plus rien n’est dû");
   assert.match(html, /const libre = !agenda\.dus && PARCOURS\.calculsAVenir\(parcours\)\.length > 0;/, "dans Mes calculs, le bouton devient « Encore N calculs »");
   assert.match(html, /bouton\.classList\.toggle\("secondary", !agenda\.dus\);/, "en secondaire : ce n’est plus l’étape du jour");
   assert.match(html, /"Rien ne monte : ces calculs n’étaient pas encore à revoir"/);

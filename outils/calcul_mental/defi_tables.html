@@ -167,6 +167,11 @@
        s'afficherait aussi sur PC et tablette, en double avec la sortie du
        repère. Même raison dans la media query « téléphone ». */
     .catalogue-link.suivi-sortie { display: none; }
+    /* R4 bis (13/09/2026) : le lien du site « ← Calcul mental » ne s'affiche
+       que sur l'accueil de l'appli. Sur Mes calculs, Mon parcours, une série
+       ou un résultat, la seule flèche à l'écran est celle de l'appli — Gwenaël
+       touchait celle du haut et sortait de l'appli au lieu de revenir au menu. */
+    body.ecran-interne #lien-retour { display: none; }
     .suivi-garde { position: fixed; inset: 0; z-index: 50; display: flex; align-items: center; justify-content: center;
       padding: 16px; background: rgba(20, 52, 81, .55); }
     .suivi-garde[hidden] { display: none; }
@@ -355,8 +360,13 @@
     .choix-activite.is-plus { border-style: dashed; background: #fbfdff; }
     /* « Mes calculs » s'ouvre sur la grille : la barre du haut reste collée,
        donc le retour « Ma table » ne disparaît jamais de l'écran. */
-    .calculs-screen .settings-toolbar { position: sticky; top: 0; z-index: 5; padding: 4px 0 6px; background: #fff; box-shadow: 0 8px 10px -9px rgba(18, 50, 74, .45); }
-    #calculs-grille { scroll-margin-top: 58px; }
+    /* R4 bis (13/09/2026) : le rond « ← » semblait posé sur un trait (retour
+       iPhone de Gwenaël). Cause : la barre ne mesurait que 44 px — son bouton
+       est en position absolue et ne compte pas dans sa hauteur — et le rond de
+       44 px, centré sur le contenu, touchait l'ombre du bas. La barre fait
+       maintenant 62 px : 8 px au-dessus du rond, 10 en dessous. */
+    .calculs-screen .settings-toolbar { position: sticky; top: 0; z-index: 5; min-height: 62px; padding: 8px 0 10px; background: #fff; box-shadow: 0 8px 10px -9px rgba(18, 50, 74, .45); }
+    #calculs-grille { scroll-margin-top: 66px; }
     /* Le rang : un badge sous « N tables acquises sur 9 », nulle part ailleurs. */
     .rang { display: inline-flex; align-items: center; gap: 5px; padding: 3px 9px 3px 6px; border-radius: 999px; font-size: .74rem; font-weight: 950; border: 1px solid transparent; white-space: nowrap; }
     .rang:empty { display: none; }
@@ -647,6 +657,13 @@
     @keyframes fete-pop { 0% { transform: scale(.85); opacity: 0; } 60% { transform: scale(1.04); } 100% { transform: scale(1); opacity: 1; } }
     .result-parcours-actions { display: flex; flex-wrap: wrap; gap: 8px; }
     .result-parcours-actions .secondary { min-height: 44px; margin-top: 10px; padding: 8px 14px; }
+    /* R4 bis (13/09/2026) : la fin d'une révision n'a pas de « Rejouer », donc
+       « Ma table » restait seul dans sa demi-colonne, à gauche, sous un cadre
+       aligné à gauche — quatre boutons pour deux actions. Le cadre se centre
+       et porte tous les boutons ; la rangée du dessous ne sert plus ici. */
+    .result.is-revision .result-parcours { text-align: center; }
+    .result.is-revision .result-parcours-actions { justify-content: center; }
+    .result.is-revision .result-actions { display: none; }
 
     /* ---- Mes calculs ---- */
     .parcours-head-etat { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 4px 6px; }
@@ -715,6 +732,11 @@
     .mc-cell.is-en-cours { border-color: #a9c8e8; color: var(--blue); background: #eef6ff; }
     .mc-cell.is-su { border-color: #9ed4b4; color: var(--green); background: var(--green-soft); }
     .mc-cell.is-miroir { opacity: .35; }
+    /* R4 bis : une boîte touchée s'allume dans la grille — ses calculs gardent
+       leur couleur, les autres s'estompent. Aucun contour ajouté (Gwenaël a
+       trouvé les anneaux « bizarres » sur la maquette du 13/09). */
+    .calculs-grille.is-filtre .mc-cell:not(.is-dans-boite) { opacity: .28; }
+    .calculs-grille.is-filtre .mc-cell.is-miroir { opacity: .12; }
     .mc-cell.is-choisie { outline: 3px solid var(--blue); outline-offset: 1px; }
     .mc-cell:focus-visible { outline: 3px solid var(--blue); outline-offset: 1px; }
     /* Cinq petites cases par calcul (lot mémoire) : une par boîte. Sur un
@@ -731,8 +753,12 @@
       .mc-cases { gap: 1px; }
       .mc-case { width: 4px; height: 4px; }
     }
-    .calculs-legende { display: flex; flex-wrap: wrap; justify-content: center; gap: 5px 12px; margin: 10px 0 0; color: var(--muted); font-size: .8rem; font-weight: 850; }
-    .calculs-legende .mc-cell { min-height: 22px; min-width: 26px; pointer-events: none; }
+    .calculs-legende { display: flex; flex-wrap: wrap; justify-content: center; gap: 5px 14px; margin: 10px 0 0; color: var(--muted); font-size: .8rem; font-weight: 850; }
+    /* R4 bis : chaque carré s'étirait à la largeur de son mot (« pas encore
+       vu » = carré large, « su » = carré étroit, mot collé à gauche). Quatre
+       carrés de 44 px, le mot centré dessous. */
+    .calculs-legende > span { display: inline-flex; flex-direction: column; align-items: center; gap: 4px; }
+    .calculs-legende .mc-cell { width: 44px; min-height: 22px; min-width: 0; pointer-events: none; }
     .calculs-action { margin: 14px 0 0; text-align: center; }
     .calculs-action .primary, .calculs-action .secondary { width: min(100%, 340px); }
     .calculs-hint { margin: 8px 0 0; color: var(--muted); font-size: .85rem; text-align: center; }
@@ -880,7 +906,11 @@
       cursor: pointer;
     }
 
-    .primary { color: #fff; border: 0; background: var(--blue); box-shadow: 0 5px 0 #043f8c; }
+    /* R4 bis : le relief de 5 px sous le bouton fait paraître le texte 2 px
+       trop haut (Gwenaël, sur « Réviser mes 36 calculs du jour ») — le texte
+       était centré au pixel dans la boîte, pas dans la forme visible. Deux
+       pixels de marge passent du bas vers le haut, la hauteur ne change pas. */
+    .primary { color: #fff; border: 0; background: var(--blue); box-shadow: 0 5px 0 #043f8c; padding-top: 12px; padding-bottom: 8px; }
     .primary:disabled { color: #718493; background: #dbe5eb; box-shadow: 0 3px 0 #bdcbd4; cursor: not-allowed; }
     .secondary { color: var(--blue); border: 1px solid #c5d9e6; background: #fff; }
     #play,
@@ -1048,7 +1078,15 @@
       font-size: clamp(.52rem, 1.8vw, .72rem);
       font-weight: 900;
       line-height: 1;
+      /* R4 bis : sur l'iPhone de Gwenaël, « 10×10 » (11 px) débordait de sa
+         case de 32 px d'un pixel — la police du téléphone est plus large que
+         celles de Linux (31 px) et de Windows (32 px). Lettres un rien plus
+         serrées et « × » un peu plus petit : 2 à 3 px de gagnés par étiquette,
+         la taille de police ne bouge pas (règle du lot R1 : 11 px au moins). */
+      letter-spacing: -.03em;
+      white-space: nowrap;
     }
+    .number-stick-multiplier .fois { font-size: .82em; }
     .number-stick-value {
       min-width: 0;
       min-height: 42px;
@@ -1283,6 +1321,12 @@
       .result.is-rate .result-actions > #result-accueil { grid-column: auto; }
       /* La révision n'a pas de « Rejouer » : le troisième bouton prend la ligne. */
       .result-actions > #retry[hidden] + #result-open-parcours { grid-column: 1 / -1; }
+      /* R4 bis : les boutons de la fin de révision, dans le cadre — le
+         principal sur toute la ligne, les secondaires côte à côte. */
+      .result.is-revision .result-parcours-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; margin-top: 10px; }
+      .result.is-revision .result-parcours-actions > button { margin-top: 0; padding-left: 10px; padding-right: 10px; }
+      .result.is-revision .result-parcours-actions > .primary,
+      .result.is-revision .result-parcours-actions > .primary + .secondary:last-child { grid-column: 1 / -1; }
 
       .challenge-playing { height: 100dvh; overflow: hidden; }
       .challenge-playing .shell { height: 100dvh; display: grid; grid-template-rows: auto minmax(0, 1fr); padding: 0; }
@@ -3187,6 +3231,8 @@
         if (name === "parcours") renderParcours();
         if (name === "calculs") renderCalculs();
         document.body.classList.toggle("challenge-playing", name === "play" || name === "launch");
+        // R4 bis : hors de l'accueil, le lien du site « ← Calcul mental » s'efface.
+        document.body.classList.toggle("ecran-interne", name !== "intro");
         if (name === "intro") syncControls();
         document.body.classList.toggle("settings-open", name === "intro" && Boolean(configuration.mode));
         window.scrollTo({top: 0, behavior: "auto"});
@@ -3379,7 +3425,17 @@
           // « 0×3 … 10×3 » et non « ×0, ×1 » : le sens retenu est n × table,
           // et « ×3 » se lit « fois trois », à l'envers. Collé sur tous les
           // écrans : à onze cases sur un téléphone, « 10 × 3 » ne tient pas.
-          multiplierLabel.textContent = `${multiplier}×${table}`;
+          // R4 bis : le texte dans UN span (l'étiquette est une grille — trois
+          // nœuds y feraient trois lignes), avec le « × » un peu plus petit.
+          // Le texte lu reste « 10×10 », et ce span est aussi ce que
+          // largeurBande() mesure : la vraie largeur du texte, pas la case.
+          const texte = document.createElement("span");
+          texte.className = "texte";
+          const fois = document.createElement("span");
+          fois.className = "fois";
+          fois.textContent = "×";
+          texte.append(String(multiplier), fois, String(table));
+          multiplierLabel.replaceChildren(texte);
           multiplierLabel.setAttribute("aria-hidden", "true");
           value.className = "number-stick-value";
           const hasDraft = !filled && multiplier === draftMultiplier && Boolean(draftValue);
@@ -3702,18 +3758,22 @@
         const etiquettes = dom ? [...dom.bande.querySelectorAll(".number-stick-multiplier")] : [];
         if (!etiquettes.length) return largeurBoulier;
         const bordures = BANDE_BORDURES;
-        // Une case porte un bord de 1 px à droite : l'étiquette est rognée dès
-        // que son texte dépasse la case moins ce bord.
-        const besoin = Math.max(...etiquettes.map(etiquette => etiquette.scrollWidth + 1));
+        // R4 bis : la largeur du TEXTE, mesurée sur son span (au dixième de
+        // pixel, la même sur toutes les machines pour une police donnée). Le
+        // lot R4 lisait scrollWidth sur l'étiquette elle-même, qui est
+        // étirée à la largeur de la case : il rendait la case, pas le texte
+        // (« 31 px sous Linux, 32 sous Windows » étaient des largeurs de
+        // case), et un texte centré qui déborde des deux côtés n'était vu
+        // qu'à moitié — d'où le « 10×10 » sorti de sa case sur l'iPhone.
+        const largeurTexte = etiquette => {
+          const texte = etiquette.firstElementChild;
+          return texte ? texte.getBoundingClientRect().width : etiquette.scrollWidth;
+        };
+        const besoin = Math.max(...etiquettes.map(largeurTexte));
         const caseActuelle = (largeurBoulier - bordures) / etiquettes.length;
-        // La case est comparée au pixel ENTIER : le texte, lui, n'est mesuré
-        // qu'en pixels entiers, et sa largeur change d'une machine à l'autre
-        // (« 10×10 » fait 31 px sous Linux, 32 sous Windows). Sans cet
-        // arrondi, une case de 32,09 px refusait une étiquette de 32 : sur
-        // l'iPhone de 402 px la bande gagnait 7 px et quittait l'aplomb du
-        // boulier alors qu'AUCUNE étiquette n'y était rognée (mesuré sous
-        // Windows le 12/09 : 365 → 372 px, et 502 → 507 px en 1366 × 768).
-        if (besoin <= Math.floor(caseActuelle) + 1) return largeurBoulier;
+        // Le texte est centré dans sa case : tant qu'il n'est pas plus large
+        // qu'elle, rien ne se voit (au pire un demi-pixel sur chaque bord).
+        if (besoin <= caseActuelle) return largeurBoulier;
         const dispo = dom.scene.clientWidth || largeurBoulier;
         return Math.min(dispo, Math.ceil(besoin * etiquettes.length) + bordures);
       }
@@ -4406,7 +4466,7 @@
       function renderVerdict(suivi, elapsed) {
         const verdict = verdictSerie(suivi, elapsed);
         const result = $("result");
-        result.classList.remove("is-fete", "is-rate", "is-temps", "is-neutre");
+        result.classList.remove("is-fete", "is-rate", "is-temps", "is-neutre", "is-revision");
         if (verdict.classe) result.classList.add(verdict.classe);
         $("result-verdict").classList.toggle("is-champion", verdict.champion);
         $("result-icon").textContent = verdict.icone;
@@ -4846,7 +4906,12 @@
           zone.className = `calculs-detail is-${etat}`;
           zone.replaceChildren();
           zone.appendChild(ligneDetail("mc-detail-calcul", `Boîte ${boite} · ${pluriel(cles.length, "calcul")}`));
-          zone.appendChild(ligneDetail("mc-detail-etat", `${majuscule(LIBELLES_ETATS_CALCULS[etat])} · revient ${boite === 1 ? "le lendemain" : libelleDans(PARCOURS.SEUILS.revision.delais[boite - 1])}`));
+          // R4 bis : une phrase en français au lieu de « En route · revient
+          // demain » (le nom de la couleur et le délai, collés — Gwenaël ne
+          // l'avait pas comprise). La couleur se lit sur le cadre lui-même.
+          zone.appendChild(ligneDetail("mc-detail-etat", boite === 1
+            ? "Ratés : ils reviennent demain"
+            : `Ils reviennent ${libelleDans(PARCOURS.SEUILS.revision.delais[boite - 1])}`));
           zone.appendChild(ligneDetail("mc-detail-liste", cles.length ? cles.map(PARCOURS.libelleFait).join(" · ") : "Aucun calcul pour l’instant."));
           return;
         }
@@ -4920,14 +4985,20 @@
         // La ligne « 14 sus · 14 en route · 8 à revoir » a laissé la place aux
         // tuiles colorées ; la phrase sous le bouton n'apparaît que quand il
         // n'y a rien à réviser (le bouton dit déjà « mes 17 calculs du jour »).
-        $("calculs-hint").textContent = agenda.dus ? "" : phraseReviser(agenda, grille.resume);
-        $("calculs-hint").hidden = Boolean(agenda.dus);
+        // R4 bis : au-delà d'une série, le bouton dit ce qu'il lance (« Réviser
+        // 10 calculs ») et la ligne dessous le total du jour (« 36 à faire
+        // aujourd’hui ») — « Réviser mes 36 calculs du jour » faisait peur
+        // (Gwenaël, 13/09) alors que la révision en prend 10 à la fois.
+        const parSerie = PARCOURS.SEUILS.revision.total;
+        const enPlusieurs = agenda.dus > parSerie;
+        $("calculs-hint").textContent = enPlusieurs ? `${agenda.dus} à faire aujourd’hui` : agenda.dus ? "" : phraseReviser(agenda, grille.resume);
+        $("calculs-hint").hidden = Boolean(agenda.dus) && !enPlusieurs;
         // Rien de dû mais des calculs connus : le bouton devient « Encore 10
         // calculs » (secondaire — ce n'est plus l'étape du jour) ; grille vide :
         // il explique et ne lance rien.
         const libre = !agenda.dus && PARCOURS.calculsAVenir(parcours).length > 0;
         const bouton = $("calculs-reviser");
-        bouton.textContent = agenda.dus ? `Réviser mes ${pluriel(agenda.dus, "calcul")} du jour` : libre ? libelleEncoreLibre() : "Réviser mes calculs du jour";
+        bouton.textContent = enPlusieurs ? `Réviser ${parSerie} calculs` : agenda.dus ? `Réviser mes ${pluriel(agenda.dus, "calcul")} du jour` : libre ? libelleEncoreLibre() : "Réviser mes calculs du jour";
         bouton.classList.toggle("primary", Boolean(agenda.dus));
         bouton.classList.toggle("secondary", !agenda.dus);
         bouton.dataset.libre = String(libre);
@@ -4936,6 +5007,10 @@
         renderBoites(grille.resume);
         const zone = $("calculs-grille");
         zone.replaceChildren();
+        // R4 bis : une boîte touchée s'allume dans la grille (ses calculs
+        // gardent leur couleur, les autres s'estompent) — en plus de la liste.
+        const boiteChoisie = calculsSelection && calculsSelection.boite ? calculsSelection.boite : 0;
+        zone.classList.toggle("is-filtre", Boolean(boiteChoisie));
         const coin = document.createElement("span");
         coin.className = "calculs-entete";
         coin.textContent = "×";
@@ -4958,7 +5033,8 @@
             const bouton = document.createElement("button");
             bouton.type = "button";
             const choisie = calculsSelection && calculsSelection.ligne === cellule.ligne && calculsSelection.colonne === cellule.colonne;
-            bouton.className = `mc-cell is-${cellule.etat}${cellule.active ? "" : " is-miroir"}${choisie ? " is-choisie" : ""}`;
+            const dansBoite = Boolean(boiteChoisie) && cellule.active && cellule.boite === boiteChoisie;
+            bouton.className = `mc-cell is-${cellule.etat}${cellule.active ? "" : " is-miroir"}${choisie ? " is-choisie" : ""}${dansBoite ? " is-dans-boite" : ""}`;
             const casesZone = document.createElement("span");
             casesZone.className = "mc-cases";
             for (let index = 0; index < PARCOURS.SEUILS.revision.boites; index += 1) {
@@ -5033,6 +5109,8 @@
         // Le verdict d'une révision : pas de « réussi / raté » (rien ne se
         // valide ici), le score au premier essai et le temps, c'est tout.
         $("result").classList.remove("is-fete", "is-rate", "is-temps", "is-neutre");
+        // R4 bis : la classe qui centre le cadre et cache la rangée du bas.
+        $("result").classList.add("is-revision");
         $("result-verdict").classList.remove("is-champion");
         $("result-icon").textContent = "✓";
         $("result-title").textContent = "Révision terminée";
@@ -5078,35 +5156,43 @@
         zone.append(suite);
         const actions = document.createElement("div");
         actions.className = "result-parcours-actions";
-        // Tant qu'il reste des calculs du jour, « Continuer » est le bouton
-        // principal et « Ma table » passe en secondaire : un seul bouton bleu
-        // plein à l'écran. finish() remet « Ma table » en principal.
-        $("result-accueil").classList.toggle("primary", !restants);
-        $("result-accueil").classList.toggle("secondary", Boolean(restants));
+        // R4 bis (13/09/2026, décision de Gwenaël) : deux boutons tant qu'il
+        // reste des calculs du jour — « Continuer → » (principal) et « Ma
+        // table » ; à zéro, « Ma table » devient le principal, avec « Encore N
+        // calculs » et « Voir mes calculs » à côté. « Voir mon parcours » n'est
+        // plus sur cet écran (on y va depuis Ma table), et la rangée du bas
+        // (#result-accueil, #result-open-parcours) reste cachée par CSS.
+        const maTable = document.createElement("button");
+        maTable.type = "button";
+        maTable.className = restants ? "secondary" : "primary";
+        maTable.textContent = "Ma table";
+        maTable.addEventListener("click", backToModes);
         if (restants) {
           const encore = document.createElement("button");
           encore.type = "button";
           encore.className = "primary";
           encore.textContent = "Continuer →";
           encore.addEventListener("click", () => startRevision(table, state.origin));
-          actions.append(encore);
+          actions.append(encore, maTable);
+        } else {
+          actions.append(maTable);
+          // Plus rien de dû : « Encore 10 calculs » pour qui veut s'entraîner
+          // (décision de Gwenaël, 12/09) — les prochains à revenir, rien ne monte.
+          if (PARCOURS.calculsAVenir(parcours, {table}).length) {
+            const encore = document.createElement("button");
+            encore.type = "button";
+            encore.className = "secondary";
+            encore.textContent = libelleEncoreLibre(table);
+            encore.addEventListener("click", () => startRevision(table, state.origin, true));
+            actions.append(encore);
+          }
+          const voir = document.createElement("button");
+          voir.type = "button";
+          voir.className = "secondary";
+          voir.textContent = "Voir mes calculs";
+          voir.addEventListener("click", openCalculs);
+          actions.append(voir);
         }
-        // Plus rien de dû : « Encore 10 calculs » pour qui veut s'entraîner
-        // (décision de Gwenaël, 12/09) — les prochains à revenir, rien ne monte.
-        if (!restants && PARCOURS.calculsAVenir(parcours, {table}).length) {
-          const encore = document.createElement("button");
-          encore.type = "button";
-          encore.className = "secondary";
-          encore.textContent = libelleEncoreLibre(table);
-          encore.addEventListener("click", () => startRevision(table, state.origin, true));
-          actions.append(encore);
-        }
-        const voir = document.createElement("button");
-        voir.type = "button";
-        voir.className = "secondary";
-        voir.textContent = "Voir mes calculs";
-        voir.addEventListener("click", openCalculs);
-        actions.append(voir);
         zone.append(actions);
         renderCorrections();
         // Ici, l'origine n'est JAMAIS « reglages » : une révision part de l'accueil,
