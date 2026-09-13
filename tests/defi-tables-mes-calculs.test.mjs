@@ -384,7 +384,7 @@ const html = await (await import("node:fs/promises")).readFile(new URL("../outil
 const confidentialite = await (await import("node:fs/promises")).readFile(new URL("../confidentialite.html", import.meta.url), "utf8");
 
 test("la page a l’écran Mes calculs : entrée depuis l’accueil, grille, détail, révision", () => {
-  assert.match(html, /\["intro", "launch", "play", "result", "parcours", "calculs"\]/);
+  assert.match(html, /\["intro", "launch", "play", "result", "parcours", "calculs", "lire", "fiche"\]/);
   assert.match(html, /id="open-calculs" class="acc-lien"[\s\S]*Mes calculs/, "l’entrée est la carte de l’accueil (lot 2)");
   assert.doesNotMatch(html, /id="parcours-calculs"/, "plus de bouton-carte dans le parcours");
   assert.match(html, /id="calculs"[^>]*class="calculs-screen"/);

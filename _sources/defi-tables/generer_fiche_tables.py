@@ -23,7 +23,8 @@ from reportlab.graphics.shapes import Drawing
 TITLE_LINE_1 = "MES TABLES"
 TITLE_LINE_2 = "DE MULTIPLICATION"
 GUIDE_TITLE = "POUR COMMENCER SUR L’APPLICATION"
-GUIDE_TEXT = "Suis le parcours : J’apprends  →  Je m’entraîne  →  Je deviens expert."
+GUIDE_TEXT = ("Suis le parcours : J’apprends  →  Je m’entraîne  →  Je valide ma table. "
+              "Puis, chaque jour, fais Mes calculs du jour : les calculs qui reviennent.")
 APP_URL = "https://mathsgo.re/outils/calcul_mental/defi_tables.html"
 FOOTER_TEXT = "mathsgo.re  ·  CC BY-NC-SA 4.0"
 TABLES = range(2, 11)

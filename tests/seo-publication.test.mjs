@@ -87,7 +87,8 @@ test("l’annuaire range les bouliers en Numération et réserve Calcul mental a
     "outils/calcul_mental/defi_calcul.html",
     "outils/calcul_mental/defi_tables.html",
     "outils/calcul_mental/fiche_tables_multiplication.pdf",
-    "outils/calcul_mental/fiche_parcours_tables.pdf"
+    "outils/calcul_mental/fiche_parcours_tables.pdf",
+    "outils/calcul_mental/cartes_tables.pdf"
   ];
 
   assert.equal((calculMental.match(/<li>/g) || []).length, expected.length);

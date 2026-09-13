@@ -283,7 +283,9 @@ test("les détails mobiles restent alignés et les titres programmatiquement cib
 test("la fiche PDF est publique mais sa source modifiable n’est pas proposée aux élèves", () => {
   assert.equal(revisionPdf.subarray(0, 4).toString(), "%PDF");
   assert.equal(editableSource.subarray(0, 2).toString(), "PK");
-  assert.match(html, /href="\.\/fiche_tables_multiplication\.pdf" target="_blank" rel="noopener">Fiche de révision/);
+  // R5 : la feuille des tables est un papier de professeur (catalogue, page
+  // prof) ; l'élève lit sa table à l'écran (« Lire la table de 7 »).
+  assert.doesNotMatch(html, /fiche_tables_multiplication\.pdf/);
   assert.doesNotMatch(html, /\.pdf"[^>]*\sdownload/);
   assert.doesNotMatch(html, /fiche_tables_multiplication\.docx/);
 });

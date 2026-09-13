@@ -174,7 +174,8 @@ test("Calcul mental expose exactement les six ressources autonomes validées", (
     "outils/calcul_mental/defi_calcul.html",
     "outils/calcul_mental/defi_tables.html",
     "outils/calcul_mental/fiche_tables_multiplication.pdf",
-    "outils/calcul_mental/fiche_parcours_tables.pdf"
+    "outils/calcul_mental/fiche_parcours_tables.pdf",
+    "outils/calcul_mental/cartes_tables.pdf"
   ].sort();
 
   const visiblePaths = catalogue.resources.filter(resource => {
