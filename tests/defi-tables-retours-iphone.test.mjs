@@ -164,7 +164,7 @@ test("« ← Calcul mental » seulement sur l’accueil : body.ecran-interne par
   // Le lien lui-même ne bouge pas : la page prof, le suivi (billets) le
   // repointent toujours vers l'espace élève.
   assert.match(html, /<a id="lien-retour" class="catalogue-link"/);
-  const {document, $} = fauxDocument(["intro", "launch", "play", "result", "parcours", "calculs", "settings-title", "acc-table-titre", "launch-summary", "result-title", "parcours-title", "calculs-title"]);
+  const {document, $} = fauxDocument(["intro", "launch", "play", "result", "parcours", "calculs", "lire", "fiche", "settings-title", "acc-table-titre", "launch-summary", "result-title", "parcours-title", "calculs-title"]);
   const avant = `const document = ARG.document; const $ = ARG.$; const window = {scrollTo: () => {}};
     const renderAccueil = () => {}; const renderParcours = () => {}; const renderCalculs = () => {}; const syncControls = () => {};
     const configuration = {mode: null};`;

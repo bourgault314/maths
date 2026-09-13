@@ -50,6 +50,12 @@ $versionMoteur = is_file($moteur) ? substr(md5_file($moteur), 0, 10) : '0';
   p.sous { margin: 0 0 18px; color: var(--muted); }
   .carte { background: var(--paper); border: 1px solid var(--line); border-radius: 14px;
            padding: 16px; box-shadow: 0 10px 26px rgba(22,47,82,.06); }
+  .carte.imprimer { max-width: 720px; margin-top: 18px; }
+  .carte.imprimer .sous { margin: 4px 0 10px; }
+  .liens-imprimer { margin: 0; padding-left: 20px; }
+  .liens-imprimer li { margin: 6px 0; line-height: 1.5; }
+  .cartes-tables { display: inline-flex; flex-wrap: wrap; gap: 4px 10px; margin-left: 4px; }
+  .cartes-tables a { white-space: nowrap; }
   label { display: block; margin: 12px 0 6px; font-weight: 700; font-size: .93rem; }
   input[type=text], input[type=password], input[type=number], select {
     width: 100%; min-height: 44px; padding: 8px 12px; font: inherit; color: var(--ink);
@@ -384,6 +390,22 @@ $versionMoteur = is_file($moteur) ? substr(md5_file($moteur), 0, 10) : '0';
     <p class="sous note-tableau">Ce tableau est un <strong>indicateur pédagogique, pas une preuve
     d’évaluation</strong> : la progression vient de l’appareil de l’élève, et quiconque connaît son code
     peut la modifier.</p>
+
+    <!-- Ce qu'on imprime pour la classe (lot R5 de Défi tables, 13/09/2026) :
+         les papiers de l'élève vivent sur mathsgo.re, pas ici. La fiche vierge
+         et la feuille des tables ne sont plus proposées dans l'appli élève
+         (décision Q6) : c'est le professeur qui les distribue. -->
+    <div class="carte imprimer" id="bloc-imprimer">
+      <strong>À imprimer pour la classe</strong>
+      <p class="sous">Les papiers de Défi tables, sur mathsgo.re (nouvel onglet). La fiche de suivi
+      d’un élève, remplie, s’imprime depuis sa ligne du tableau.</p>
+      <ul class="liens-imprimer">
+        <li><a href="https://mathsgo.re/outils/calcul_mental/fiche_parcours_tables.pdf" target="_blank" rel="noopener">Fiche « Mon parcours des tables » vierge</a> — à remplir à la main, 2 pages.</li>
+        <li><a href="https://mathsgo.re/outils/calcul_mental/fiche_tables_multiplication.pdf" target="_blank" rel="noopener">Les tables de 2 à 10 sur une page</a> — à coller dans le cahier.</li>
+        <li>Cartes recto verso à découper, une table par PDF :
+          <span class="cartes-tables"><?php foreach (range(2, 10) as $table): ?><a href="https://mathsgo.re/outils/calcul_mental/cartes_table_<?= $table ?>.pdf" target="_blank" rel="noopener">table de <?= $table ?></a><?php endforeach; ?><a href="https://mathsgo.re/outils/calcul_mental/cartes_tables.pdf" target="_blank" rel="noopener">toutes les tables</a></span></li>
+      </ul>
+    </div>
 
     <!-- Partage : visible seulement pour le propriétaire de la classe. -->
     <div id="bloc-partage" hidden>

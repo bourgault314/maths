@@ -670,6 +670,14 @@ window.MATHSGO_CATALOGUE = {
       "thumbnail": "assets/img/thumbnails/calcul-mental/fiche-parcours-tables.png?v=1",
       "cardDescription": "La fiche de suivi vide : carte des tables et grille des 36 calculs, à photocopier et à remplir à la main."
     },
+    "outils/calcul_mental/cartes_tables.pdf": {
+      "primaryNotion": "calcul-mental",
+      "primaryGroup": "imprimer",
+      "collections": [],
+      "tags": ["calcul-mental", "tables", "multiplication", "cartes", "memorisation", "imprimable"],
+      "thumbnail": "assets/img/thumbnails/calcul-mental/cartes-tables.png?v=1",
+      "cardDescription": "Les cartes recto verso des tables de 2 à 10 : le calcul devant, la réponse derrière, à découper."
+    },
     "outils/calcul_mental/defi_calcul.html": {
       "primaryNotion": "calcul-mental",
       "primaryGroup": "entrainer",
@@ -7009,6 +7017,39 @@ window.MATHSGO_CATALOGUE = {
         "fiche à remplir",
         "grille des calculs",
         "tables acquises"
+      ],
+      "kind": "document",
+      "status": "published",
+      "featured": false,
+      "recent": true
+    },
+    {
+      "id": "outils-calcul-mental-cartes-tables-pdf",
+      "title": "Cartes des tables de multiplication — recto verso à découper",
+      "description": "Onze cartes par table, de 2 à 10 : le calcul devant, la réponse derrière. À imprimer en recto verso, à découper, et à retourner pour se tester — un PDF par table dans Défi tables, toutes les tables ici.",
+      "path": "outils/calcul_mental/cartes_tables.pdf",
+      "domains": [
+        "nombres-calculs"
+      ],
+      "notions": [
+        "calcul-mental"
+      ],
+      "uses": [
+        "imprimer",
+        "entrainer"
+      ],
+      "types": [
+        "imprimable"
+      ],
+      "filters": [
+        "materiel-imprimer"
+      ],
+      "keywords": [
+        "cartes des tables",
+        "tables de multiplication",
+        "cartes recto verso",
+        "réactivation",
+        "à découper"
       ],
       "kind": "document",
       "status": "published",

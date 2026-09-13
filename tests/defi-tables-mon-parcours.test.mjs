@@ -798,7 +798,7 @@ test("la page charge le moteur du parcours et propose la carte Mon parcours", ()
   assert.match(html, /id="parcours-expert"/);
   assert.doesNotMatch(html, /id="parcours-next"/, "« Prochaine étape » a quitté le parcours (lot 2) : l’accueil dit quoi faire");
   assert.doesNotMatch(html, /C’est parti<\/button>|"C’est parti"/, "et son bouton avec");
-  assert.match(html, /\["intro", "launch", "play", "result", "parcours", "calculs"\]/);
+  assert.match(html, /\["intro", "launch", "play", "result", "parcours", "calculs", "lire", "fiche"\]/);
 });
 
 test("prénom local, remise à zéro confirmée dans la page, résultat relié au parcours", () => {
@@ -859,11 +859,15 @@ test("la fiche « Mon parcours des tables » s’imprime depuis l’appli et exi
   assert.match(html, /id="fiche-print" class="fiche-print" aria-hidden="true"/);
   assert.match(html, /body > \*:not\(#fiche-print\) \{ display: none !important; \}/);
   assert.match(html, /@page \{ size: A4 portrait; margin: 12mm; \}/);
-  assert.match(html, /id="parcours-print"[\s\S]*Imprimer ma fiche/);
+  // R5 (Q7) : l'impression ne part plus du bas de Mon parcours mais de
+  // l'écran « Voir ma fiche » (tests/defi-tables-fiche.test.mjs).
+  assert.doesNotMatch(html, /id="parcours-print"/);
+  assert.match(html, /id="fiche-imprimer" class="primary" type="button">Imprimer ma fiche</);
   // La fonction est appelée, pas passée en écouteur : elle recevrait l'objet
   // Event pour parcours (tests/defi-tables-accueil.test.mjs le détaille).
   assert.match(html, /window\.addEventListener\("beforeprint", \(\) => renderFiche\(\)\)/);
-  assert.match(html, /href="\.\/fiche_parcours_tables\.pdf" target="_blank" rel="noopener">Fiche vierge à remplir/);
+  // R5 (Q6) : la fiche vierge n'est plus proposée à l'élève (catalogue et page prof).
+  assert.doesNotMatch(html, /fiche_parcours_tables\.pdf/);
   assert.match(html, /src="\.\.\/\.\.\/assets\/img\/qr-defi-tables-parcours\.svg"/);
   assert.match(html, /mathsgo\.re · CC BY-NC-SA 4\.0/);
   const pdf = await fs.readFile(new URL("../outils/calcul_mental/fiche_parcours_tables.pdf", import.meta.url));
@@ -1146,7 +1150,8 @@ test("hors suivi, le pied du site garde ses quatre liens", () => {
 // fausse page, et vérifie que la réduction reste enfermée dans @media screen :
 // le papier ne doit jamais être réduit.
 test("la fiche d’un élève se met à l’échelle de l’écran, jamais du papier", () => {
-  const ecran = /@media screen \{\s*\n\s*body\.mode-fiche #fiche-print \{ zoom: var\(--fiche-zoom, 1\); \}\s*\n\s*\}/;
+  // R5 : la même règle vaut pour l'écran « Voir ma fiche » de l'élève (body.voir-fiche).
+  const ecran = /@media screen \{\s*\n\s*body\.mode-fiche #fiche-print, body\.voir-fiche #fiche-print \{ zoom: var\(--fiche-zoom, 1\); \}/;
   assert.match(html, ecran, "la réduction doit être enfermée dans @media screen");
   assert.match(html, /renderFiche\(distant\);\s*\n\s*ajusterFiche\(\);/);
   assert.match(html, /window\.addEventListener\("resize", ajusterFiche\);/, "recalculée si l’écran tourne");

@@ -36,7 +36,9 @@ test("l’accueil : Ma table et ses trois étapes, Réviser, Mon parcours, Mes c
   // le sous-titre reprend le titre du panneau, « je deviens expert ».
   assert.match(html, /id="open-parcours" class="acc-lien"[\s\S]*<svg class="ico"[\s\S]*Mon parcours<small>toutes mes tables, le mélange, je deviens expert<\/small>/);
   assert.match(html, /id="open-calculs" class="acc-lien"[\s\S]*<svg class="ico"[\s\S]*Mes calculs<small>la grille des 36 calculs<\/small>/);
-  assert.match(html, /id="acc-print"[^>]*>Imprimer ma fiche</);
+  // R5 (13/09, Q7) : « Voir ma fiche » ouvre l'écran de la fiche — le seul chemin.
+  assert.match(html, /id="acc-fiche"[^>]*aria-controls="fiche">Voir ma fiche</);
+  assert.equal((html.match(/Imprimer ma fiche</g) || []).length, 1, "un seul « Imprimer ma fiche », celui de l'écran de la fiche");
   assert.match(html, /id="acc-notice-bouton"[^>]*aria-controls="acc-notice">Comment ça marche&nbsp;\?</);
   assert.match(html, /id="acc-notice" class="notice" data-notice hidden/);
   // Les trois étapes sont construites par renderAccueil, numérotées 1-2-3 ; la
@@ -74,8 +76,9 @@ test("« Prochaine étape » a disparu du parcours et du résultat ; le résulta
   assert.match(html, /<button id="result-accueil" class="primary" type="button">Ma table<\/button>\s*<button id="retry" class="secondary" type="button">Rejouer<\/button>\s*<button id="result-open-parcours" class="secondary" type="button">Voir mon parcours<\/button>/);
 });
 
-test("le menu ⋯ du parcours garde ses quatre options, dans cet ordre", () => {
-  assert.match(html, /id="parcours-rename"[\s\S]*Modifier mon prénom[\s\S]*id="parcours-reset"[\s\S]*Recommencer à zéro[\s\S]*id="parcours-print-option"[\s\S]*Imprimer ma fiche[\s\S]*id="parcours-notice-option"[\s\S]*Comment ça marche/);
+test("le menu ⋯ du parcours garde ses trois options, dans cet ordre (R5 : plus d'impression ici)", () => {
+  assert.match(html, /id="parcours-rename"[\s\S]*Modifier mon prénom[\s\S]*id="parcours-reset"[\s\S]*Recommencer à zéro[\s\S]*id="parcours-notice-option"[\s\S]*Comment ça marche/);
+  assert.doesNotMatch(html, /parcours-print-option/);
   assert.match(html, /id="parcours-notice-bouton"[^>]*aria-controls="parcours-notice"/);
   assert.match(html, /id="parcours-notice" class="notice" data-notice hidden/);
   assert.match(html, /\$\("parcours-back"\)\.addEventListener\("click", backToModes\)/);

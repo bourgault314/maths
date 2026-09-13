@@ -283,6 +283,23 @@
     .matable-head .eyebrow { margin: 0; font-size: .74rem; letter-spacing: .06em; }
     .matable-head h1 { display: block; margin: 0; font-size: 1.55rem; font-weight: 900; color: var(--ink); line-height: 1.1; }
     .matable-head h1:focus { outline: none; }
+    /* R5 : « Lire la table de 7 », sous les trois étapes — l'écran qui montre
+       la table entière, et d'où l'on prend ses cartes à imprimer. */
+    .matable-lire { display: flex; align-items: center; justify-content: center; gap: 6px; width: 100%; min-height: 44px; margin: 4px 0 -4px; padding: 0 4px; border: 0; background: none; color: #5b7286; font: inherit; font-size: .82rem; font-weight: 800; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+    .matable-lire svg { flex: none; }
+    .matable.is-toutes .matable-lire { display: none; }
+    /* L'écran « La table de 7 » : onze lignes en grand, à lire ; les cartes en bas. */
+    .lire-screen { max-width: 520px; margin: 0 auto; }
+    .lire-liste { display: grid; gap: 6px; margin: 14px 0 0; padding: 0; list-style: none; }
+    .lire-liste li { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; column-gap: 10px; min-height: 48px; padding: 6px 16px; border: 2px solid #d4e3ed; border-radius: 14px; background: #fff; color: var(--ink); font-size: 1.35rem; font-weight: 900; font-variant-numeric: tabular-nums; }
+    .lire-liste li:nth-child(even) { background: #f3f9fd; }
+    .lire-liste .calcul { text-align: right; }
+    .lire-liste .egal { color: var(--muted); font-weight: 800; }
+    .lire-liste .produit { color: var(--teal); text-align: left; }
+    .lire-cartes { display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 48px; margin: 18px auto 0; padding: 8px 16px; width: fit-content; border: 1px solid #c5d9e6; border-radius: 13px; background: #fff; color: var(--blue); font-size: .95rem; font-weight: 950; text-decoration: none; }
+    .lire-cartes svg { flex: none; }
+    .lire-note { margin: 10px 0 0; color: var(--muted); font-size: .85rem; text-align: center; }
+    @media (max-width: 620px) { .lire-liste li { font-size: 1.25rem; padding: 6px 12px; } }
     .matable-changer { min-height: 44px; padding: 0 6px; border: 0; background: none; color: var(--blue); font-size: .84rem; font-weight: 850; text-decoration: underline; text-underline-offset: 3px; white-space: nowrap; cursor: pointer; }
     /* Lot R3 bis : au doigt, choisir sa table est une décision SEULE à l'écran.
        Tant que le choix est ouvert, le reste de l'accueil s'efface — le titre
@@ -391,6 +408,9 @@
     .marche:nth-child(1) .bloc { height: 40px; } .marche:nth-child(2) .bloc { height: 52px; } .marche:nth-child(3) .bloc { height: 64px; } .marche:nth-child(4) .bloc { height: 76px; } .marche:nth-child(5) .bloc { height: 88px; font-size: 1.3rem; letter-spacing: 0; }
     .marche.is-gagnee .bloc { background: linear-gradient(180deg, #ffe89a, #f2c230); border-color: #d9a300; color: #7a5a00; }
     .marche.is-suivante .bloc { background: #fff; border-color: var(--blue); color: var(--blue); box-shadow: 0 0 0 3px rgba(7, 85, 184, .16); }
+    /* R5 (A18) : la couronne est un dessin en currentColor, pas l'emoji 👑 —
+       elle se grise donc dans une marche non gagnée, exactement comme ★. */
+    .couronne { width: 1.2em; height: 1em; vertical-align: -.08em; fill: currentColor; }
     .marche small { font-size: .72rem; font-weight: 900; color: #5b7286; white-space: nowrap; }
     .marche.is-gagnee small { color: #7a5a00; } .marche.is-suivante small { color: var(--blue); }
     .expert .etape { min-height: 60px; }
@@ -505,8 +525,20 @@
     .fiche-ecran-barre p { margin: 0; color: var(--muted); font-weight: 700; }
     .fiche-ecran-barre strong { display: block; color: var(--ink); font-size: 1.1rem; }
     body.mode-fiche > *:not(#fiche-print):not(#fiche-ecran) { display: none !important; }
-    body.mode-fiche #fiche-print { display: block; background: #fff; padding: 18px; margin: 0 auto 24px;
+    /* R5 (13/09/2026) : l'élève a son écran « Voir ma fiche » (body.voir-fiche,
+       la barre est dans #fiche, sous l'en-tête de l'appli) ; le professeur garde
+       sa vue « fiche d'un élève » (body.mode-fiche). Les deux montrent la même
+       feuille, #fiche-print, celle qui sort de l'imprimante. */
+    body.mode-fiche #fiche-print, body.voir-fiche #fiche-print { display: block; background: #fff; padding: 18px; margin: 0 auto 24px;
                                    max-width: 900px; border: 1px solid var(--line); border-radius: 14px; }
+    /* Sur l'écran de l'élève, la feuille prolonge le panneau de l'appli : même
+       largeur, pas de vide (le panneau perd sa hauteur minimale), un seul cadre. */
+    body.voir-fiche .shell { padding-bottom: 0; }
+    body.voir-fiche .panel { min-height: 0; padding-bottom: 6px; border-bottom: 0; border-radius: 22px 22px 0 0; }
+    body.voir-fiche #fiche-print { width: min(850px, calc(100% - 28px)); box-sizing: border-box; margin: 0 auto 30px;
+                                   border-top: 0; border-radius: 0 0 22px 22px; }
+    .fiche-action { margin: 12px 0 8px; text-align: center; }
+    .fiche-action .primary { width: min(100%, 340px); }
     /* La fiche est dessinée en millimètres, pour une feuille A4 : sur un
        téléphone elle dépassait par la droite (518 px de contenu pour 390 px de
        page). À l'écran seulement, on la réduit pour qu'elle tienne dans la
@@ -514,7 +546,13 @@
        donc rien ne se retrouve sous la fiche. Le papier n'est pas concerné :
        la règle est enfermée dans @media screen. */
     @media screen {
-      body.mode-fiche #fiche-print { zoom: var(--fiche-zoom, 1); }
+      body.mode-fiche #fiche-print, body.voir-fiche #fiche-print { zoom: var(--fiche-zoom, 1); }
+      /* À l'écran, la deuxième feuille se voit : un trait, comme un saut de page. */
+      body.mode-fiche .fiche-page2, body.voir-fiche .fiche-page2 { margin-top: 8mm; padding-top: 6mm; border-top: 1.5px dashed #b9d4e6; }
+    }
+    @media (max-width: 620px) {
+      body.voir-fiche .panel { border-radius: 20px 20px 0 0; }
+      body.voir-fiche #fiche-print { width: 100%; border-right: 0; border-left: 0; border-radius: 0 0 20px 20px; }
     }
     .parcours-confirm p { margin: 0 0 10px; color: var(--ink); font-weight: 900; }
     .parcours-confirm .danger { color: #fff; border: 0; background: var(--red); box-shadow: 0 4px 0 #7a1f1f; }
@@ -769,21 +807,6 @@
     .calculs-action { margin: 14px 0 0; text-align: center; }
     .calculs-action .primary, .calculs-action .secondary { width: min(100%, 340px); }
     .calculs-hint { margin: 8px 0 0; color: var(--muted); font-size: .85rem; text-align: center; }
-
-    .parcours-print-action { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 6px 12px; margin-top: 10px; }
-    .parcours-print-action .secondary { min-height: 44px; }
-    .revision-sheet-link {
-      min-height: 40px;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      padding: 7px 13px;
-      border-radius: 999px;
-      color: var(--teal);
-      font-size: .8rem;
-      font-weight: 900;
-      text-underline-offset: 3px;
-    }
 
     .settings-panel {
       margin: 12px 0 0;
@@ -1532,12 +1555,15 @@
     .fiche-block { position: relative; margin: 3mm 0 0; padding: 3mm 4mm; border: .3mm solid #a9e4dc; border-radius: 3mm; background: #e7f7f4; break-inside: avoid; }
     .fiche-expert { border-color: #e7c86a; background: #fff8e1; }
     .fiche-block strong { display: block; font-size: 11pt; }
+    .fiche-melange strong { padding-right: 58mm; }
+    .fiche-expert strong { padding-right: 58mm; }
     .fiche-block p { margin: 1.5mm 0 0; color: #506b7d; font-size: 8pt; }
     .fiche-state { position: absolute; top: 3mm; right: 4mm; padding: .8mm 2.5mm; border-radius: 3mm; background: #fff; color: #147447; font-size: 8pt; font-weight: 700; }
     .fiche-state:empty { display: none; }
     .fiche-stars { position: absolute; top: 2mm; right: 4mm; color: #c9d6df; font-size: 11pt; letter-spacing: -.5pt; white-space: nowrap; }
     .fiche-stars b, .fiche-stars span { margin-left: 2.5mm; }
     .fiche-stars b { color: #b7791f; font-weight: 400; }
+    .fiche-stars .couronne { width: 4.6mm; height: 3.8mm; vertical-align: -.3mm; }
     .fiche-rules { margin-top: 5mm; color: #506b7d; font-size: 8.3pt; }
     .fiche-rules strong { display: block; margin-bottom: 1mm; color: #143451; font-size: 9pt; }
     .fiche-rules p { margin: 0 0 1mm; }
@@ -1816,6 +1842,7 @@
               <p id="acc-choix-legende" class="choix-legende">Choisis ta table</p>
               <div id="acc-choix" class="matable-choix" role="group" aria-labelledby="acc-choix-legende" hidden></div>
               <div id="acc-etapes" class="etapes"></div>
+              <button id="acc-lire" class="matable-lire" type="button" aria-controls="lire"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M3 5.5h7a2 2 0 0 1 2 2V20a2 2 0 0 0-2-1.5H3zM21 5.5h-7a2 2 0 0 0-2 2V20a2 2 0 0 1 2-1.5h7z" fill="#fff" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg><span>Lire la table de 2</span></button>
             </section>
             <!-- Lot mémoire (12/09/2026) : « Mes calculs du jour ». Quand des
                  calculs sont dus, ce bloc passe EN TÊTE de l'accueil (order: -1)
@@ -1828,7 +1855,7 @@
               <button id="open-calculs" class="acc-lien" type="button" aria-controls="calculs"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="3" fill="#fff" stroke="#0755b8" stroke-width="1.8"/><path d="M3 9h18M3 15h18M9 3v18M15 3v18" stroke="#0755b8" stroke-width="1.5"/><rect x="9.8" y="9.8" width="4.4" height="4.4" fill="#147447"/><rect x="15.8" y="3.8" width="4.4" height="4.4" fill="#a93030"/><rect x="3.8" y="15.8" width="4.4" height="4.4" fill="#0755b8"/></svg><span>Mes calculs<small>la grille des 36 calculs</small></span></button>
             </div>
             <div class="acc-bas">
-              <button id="acc-print" type="button">Imprimer ma fiche</button>
+              <button id="acc-fiche" type="button" aria-controls="fiche">Voir ma fiche</button>
               <button id="acc-notice-bouton" type="button" aria-expanded="false" aria-controls="acc-notice">Comment ça marche&nbsp;?</button>
               <!-- Sans code (mathsgo.re) seulement : deux portes pour les
                    professeurs. Avec un code élève, body.mode-eleve les retire. -->
@@ -1937,7 +1964,6 @@
         <div id="parcours-options" class="parcours-options" hidden>
           <button id="parcours-rename" class="secondary" type="button">Modifier mon prénom</button>
           <button id="parcours-reset" class="secondary" type="button">Recommencer à zéro</button>
-          <button id="parcours-print-option" class="secondary" type="button">Imprimer ma fiche</button>
           <button id="parcours-notice-option" class="secondary" type="button">Comment ça marche&nbsp;?</button>
         </div>
         <form id="parcours-name" class="parcours-name" hidden>
@@ -1968,11 +1994,6 @@
           <button id="parcours-notice-bouton" type="button" aria-expanded="false" aria-controls="parcours-notice">Comment ça marche&nbsp;?</button>
         </div>
         <div id="parcours-notice" class="notice" data-notice hidden></div>
-        <div class="parcours-print-action">
-          <button id="parcours-print" class="secondary" type="button">🖨 Imprimer ma fiche</button>
-          <a class="revision-sheet-link" href="./fiche_parcours_tables.pdf" target="_blank" rel="noopener">Fiche vierge à remplir</a>
-          <a class="revision-sheet-link" href="./fiche_tables_multiplication.pdf" target="_blank" rel="noopener">Fiche de révision</a>
-        </div>
       </div>
 
       <div id="calculs" class="calculs-screen" hidden>
@@ -2054,6 +2075,34 @@
         <p id="result-message" class="result-message"></p>
         <p id="result-previous" class="previous-score" hidden></p>
         <section id="corrections" class="corrections" aria-live="polite"></section>
+      </div>
+
+      <!-- R5 (13/09/2026, décision Q7) : « Voir ma fiche », le seul chemin de
+           l'élève vers sa fiche. La feuille elle-même est #fiche-print, plus
+           bas dans la page (hors de <main>, pour l'impression) : cet écran n'en
+           est que la barre. « Imprimer » imprime cette même feuille. -->
+      <!-- R5 (13/09/2026, idée de Gwenaël) : la table entière à lire à l'écran —
+           ce que donnait la fiche papier des tables, réservée aux professeurs
+           depuis ce lot. Les cartes recto verso de la table (un PDF) se
+           prennent ici. -->
+      <div id="lire" class="lire-screen" hidden>
+        <div class="settings-toolbar">
+          <button id="lire-back" class="settings-back" type="button" aria-label="Retour à Ma table"><span class="back-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="20" height="20"><path d="M19 12H5M11 6l-6 6 6 6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="settings-back-label">Ma table</span></button>
+          <h1 id="lire-title" class="settings-heading" tabindex="-1">La table de 2</h1>
+        </div>
+        <ol id="lire-liste" class="lire-liste"></ol>
+        <a id="lire-cartes" class="lire-cartes" href="./cartes_table_2.pdf" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><rect x="3" y="5" width="13" height="16" rx="2" fill="#fff" stroke="currentColor" stroke-width="1.8"/><path d="M8 3h13v16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M6.5 11h6M6.5 15h6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg><span>Cartes de la table de 2 à imprimer</span></a>
+        <p class="lire-note">Onze cartes à découper : le calcul devant, la réponse derrière.</p>
+      </div>
+
+      <div id="fiche" class="fiche-screen" hidden>
+        <div class="settings-toolbar">
+          <button id="fiche-back" class="settings-back" type="button" aria-label="Retour à Ma table"><span class="back-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="20" height="20"><path d="M19 12H5M11 6l-6 6 6 6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="settings-back-label">Ma table</span></button>
+          <h1 id="fiche-title" class="settings-heading" tabindex="-1">Ma fiche</h1>
+        </div>
+        <div class="fiche-action">
+          <button id="fiche-imprimer" class="primary" type="button">Imprimer ma fiche</button>
+        </div>
       </div>
     </section>
   </main>
@@ -3077,7 +3126,7 @@
       // voit entière d'un coup d'œil, et l'impression sort inchangée.
       function ajusterFiche() {
         const bloc = document.getElementById("fiche-print");
-        if (!bloc || !document.body.classList.contains("mode-fiche")) return;
+        if (!bloc || !(document.body.classList.contains("mode-fiche") || document.body.classList.contains("voir-fiche"))) return;
         bloc.style.removeProperty("--fiche-zoom");
         // On mesure ce dont la fiche a réellement besoin, pas la largeur qu'elle
         // occupe : sur un écran large elle s'étire, et « scrollWidth » seul
@@ -3233,10 +3282,19 @@
       }
 
       function show(name) {
-        ["intro", "launch", "play", "result", "parcours", "calculs"].forEach(id => { $(id).hidden = id !== name; });
+        ["intro", "launch", "play", "result", "parcours", "calculs", "lire", "fiche"].forEach(id => { $(id).hidden = id !== name; });
         if (name === "intro") renderAccueil();
         if (name === "parcours") renderParcours();
         if (name === "calculs") renderCalculs();
+        // R5 : la feuille (#fiche-print, hors de <main>) ne s'affiche à l'écran
+        // que sur cet écran ; elle est remplie à l'ouverture, puis réduite à
+        // la largeur du téléphone comme dans la vue du professeur.
+        document.body.classList.toggle("voir-fiche", name === "fiche");
+        if (name === "fiche") {
+          $("fiche-title").textContent = prenomAffiche() ? `La fiche de ${prenomAffiche()}` : "Ma fiche";
+          renderFiche();
+          ajusterFiche();
+        }
         document.body.classList.toggle("challenge-playing", name === "play" || name === "launch");
         // R4 bis : hors de l'accueil, le lien du site « ← Calcul mental » s'efface.
         document.body.classList.toggle("ecran-interne", name !== "intro");
@@ -3248,6 +3306,8 @@
         if (name === "result") $("result-title").focus?.({preventScroll: true});
         if (name === "parcours") $("parcours-title").focus?.({preventScroll: true});
         if (name === "calculs") $("calculs-title").focus?.({preventScroll: true});
+        if (name === "fiche") $("fiche-title").focus?.({preventScroll: true});
+        if (name === "lire") $("lire-title").focus?.({preventScroll: true});
       }
 
       const MODE_COPY = Object.freeze({
@@ -5438,7 +5498,7 @@
           item.className = `marche${marche.gagnee ? " is-gagnee" : ""}${marche.suivante ? " is-suivante" : ""}`;
           const bloc = document.createElement("div");
           bloc.className = "bloc";
-          bloc.textContent = marche.symbole;
+          bloc.append(symboleMarche(marche));
           const duree = document.createElement("small");
           duree.textContent = marche.libelleDuree;
           item.append(bloc, duree);
@@ -5547,6 +5607,12 @@
           });
           choix.append(bouton);
         });
+
+        // R5 : « Lire la table de 7 » suit la table affichée (caché quand le
+        // bloc est replié sur « 9 sur 9 acquises »).
+        const lire = $("acc-lire");
+        lire.hidden = replie;
+        if (!replie) lire.querySelector("span").textContent = `Lire la table de ${table}`;
 
         const etapes = $("acc-etapes");
         etapes.replaceChildren();
@@ -5775,6 +5841,22 @@
         start();
       }
 
+      // R5 (A18) : le symbole d'une marche prêt à poser dans la page — les
+      // étoiles en texte, la couronne en SVG (fill: currentColor), pour qu'elle
+      // prenne la couleur de sa case : grise tant que la marche n'est pas
+      // gagnée, dorée ensuite. L'emoji 👑, lui, était toujours en couleur.
+      function symboleMarche(marche) {
+        if (marche.symbole !== "👑") return document.createTextNode(marche.symbole);
+        const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+        svg.setAttribute("class", "couronne");
+        svg.setAttribute("viewBox", "0 0 24 20");
+        svg.setAttribute("aria-hidden", "true");
+        const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+        path.setAttribute("d", "M2 6.5 7.2 11 12 3l4.8 8L22 6.5 19.6 17H4.4Z M4.4 18.5h15.2v1.5H4.4Z");
+        svg.append(path);
+        return svg;
+      }
+
       function makeCell({kind, etat, label, config, extraClass = "", texte = null, action = null}) {
         const cell = document.createElement("button");
         cell.type = "button";
@@ -5784,7 +5866,7 @@
           dot.className = "dot";
           cell.append(dot);
         } else {
-          cell.textContent = texte !== null ? texte : kind === "check" ? "✓" : kind === "lock" ? "🔒" : "★";
+          cell.replaceChildren(texte !== null ? texte : document.createTextNode(kind === "check" ? "✓" : kind === "lock" ? "🔒" : "★"));
         }
         // Le cadenas dit déjà « verrouillé » dans son label : ne pas le répéter.
         const stateLabel = kind === "lock" ? "" : etat === 2 ? "réussi" : etat === 1 ? "commencé" : "pas encore fait";
@@ -5946,7 +6028,7 @@
             label: `${marche.symbole} : toutes les tables, produits, trous et divisions, 25 questions en ${marche.libelleDuree}${etat.expert.ouvert ? "" : " — après le mélange des 9 tables"}`,
             config: etat.expert.ouvert ? marche.config : null,
             extraClass: `n${marche.etoile}${etat.expert.ouvert ? "" : " is-fermee"}`,
-            texte: marche.symbole,
+            texte: symboleMarche(marche),
             action: etat.expert.ouvert ? null : () => $("parcours-melange").querySelector(".cell")?.focus?.()
           }));
           const duree = document.createElement("small");
@@ -6059,14 +6141,16 @@
           tr.append(acquise);
           rows.append(tr);
         });
+        // R5 (A17) : « À refaire » seulement s'il a déjà été réussi une fois ;
+        // un mélange jamais fait est « À faire » — la règle de Mon parcours.
         $("fiche-melange-state").textContent = etat.melange.visible
-          ? (etat.melange.aJour ? `À jour ✓ (${etat.melange.tables.join(", ")})` : `À refaire (${etat.melange.tables.join(", ")})`)
+          ? `${etat.melange.aJour ? "À jour ✓" : etat.melange.aRefaireAvec ? "À refaire" : "À faire"} (${etat.melange.tables.join(", ")})`
           : "";
         const stars = $("fiche-stars");
         stars.replaceChildren();
         etat.expert.marches.forEach(marche => {
           const star = document.createElement(marche.gagnee ? "b" : "span");
-          star.textContent = marche.symbole;
+          star.append(symboleMarche(marche));
           stars.append(star);
         });
         $("fiche-calculs-subtitle").textContent = Object.keys(fiche.calculs).length
@@ -6130,6 +6214,47 @@
       // Event pour parcours, et la fiche sortait vide.
       window.addEventListener("beforeprint", () => renderFiche());
 
+      // R5 : « La table de 7 » — les onze lignes de la table affichée sur
+      // l'accueil, et ses cartes recto verso (un PDF par table).
+      function openLire() {
+        const etat = PARCOURS.etatAffichage(parcours);
+        const table = tableEnCours(etat);
+        $("lire-title").textContent = `La table de ${table}`;
+        const liste = $("lire-liste");
+        liste.replaceChildren();
+        for (let k = 0; k <= 10; k += 1) {
+          const li = document.createElement("li");
+          const calcul = document.createElement("span");
+          calcul.className = "calcul";
+          calcul.textContent = `${table} × ${k}`;
+          const egal = document.createElement("span");
+          egal.className = "egal";
+          egal.textContent = "=";
+          const produit = document.createElement("span");
+          produit.className = "produit";
+          produit.textContent = String(table * k);
+          li.append(calcul, egal, produit);
+          liste.append(li);
+        }
+        const cartes = $("lire-cartes");
+        cartes.href = `./cartes_table_${table}.pdf`;
+        cartes.querySelector("span").textContent = `Cartes de la table de ${table} à imprimer`;
+        configuration.mode = null;
+        configuration.tables = new Set();
+        state.running = false;
+        stopTimer();
+        show("lire");
+      }
+
+      // R5 (Q7) : « Voir ma fiche » depuis le bas de l'accueil — le seul chemin.
+      function openFiche() {
+        configuration.mode = null;
+        configuration.tables = new Set();
+        state.running = false;
+        stopTimer();
+        show("fiche");
+      }
+
       function openParcours() {
         state.origin = "parcours";
         state.parcoursOptionsOpen = false;
@@ -6161,7 +6286,11 @@
       $("calculs-back").addEventListener("click", backToModes);
       $("calculs-reviser").addEventListener("click", () => startRevision(null, "calculs", $("calculs-reviser").dataset.libre === "true"));
       $("acc-reviser").addEventListener("click", () => startRevision(null, "menu"));
-      $("acc-print").addEventListener("click", printFiche);
+      $("acc-fiche").addEventListener("click", openFiche);
+      $("acc-lire").addEventListener("click", openLire);
+      $("lire-back").addEventListener("click", backToModes);
+      $("fiche-back").addEventListener("click", backToModes);
+      $("fiche-imprimer").addEventListener("click", printFiche);
       $("acc-changer").addEventListener("click", () => {
         // Les 9 tables acquises et une table choisie : « Mes tables » replie le
         // bloc (le choix est oublié) au lieu d'ouvrir le choix.
@@ -6182,12 +6311,6 @@
         state.parcoursOptionsOpen = false;
         renderParcours();
         basculerNotice("parcours-notice-bouton", "parcours-notice", true);
-      });
-      $("parcours-print").addEventListener("click", printFiche);
-      $("parcours-print-option").addEventListener("click", () => {
-        state.parcoursOptionsOpen = false;
-        renderParcours();
-        printFiche();
       });
       $("parcours-more").addEventListener("click", () => {
         state.parcoursOptionsOpen = !state.parcoursOptionsOpen;

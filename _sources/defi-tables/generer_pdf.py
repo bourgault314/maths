@@ -18,7 +18,10 @@ from reportlab.pdfgen import canvas
 TITLE_LINE_1 = "MES TABLES"
 TITLE_LINE_2 = "DE MULTIPLICATION"
 GUIDE_TITLE = "POUR COMMENCER SUR L’APPLICATION"
-GUIDE_TEXT = "Suis le parcours : J’apprends  →  Je m’entraîne  →  Je deviens expert."
+GUIDE_TEXT = "Suis le parcours : J’apprends  →  Je m’entraîne  →  Je valide ma table."
+# R5 (13/09/2026) : la révision du jour, qui n'existait pas quand la fiche a été
+# dessinée — deuxième ligne de l'encadré (A21 de l'audit).
+GUIDE_TEXT_2 = "Puis, chaque jour, fais Mes calculs du jour : les calculs qui reviennent."
 APP_URL = "https://mathsgo.re/outils/calcul_mental/defi_tables.html"
 SITE_URL = "https://mathsgo.re"
 FOOTER_TEXT = "mathsgo.re  ·  CC BY-NC-SA 4.0"
@@ -60,7 +63,8 @@ def make_overlay(width: float, height: float) -> PdfReader:
     page.drawString(37.0, 735.2, GUIDE_TITLE)
     page.setFillColor(NAVY)
     page.setFont("SheetSans", 9.3)
-    page.drawString(37.0, 715.8, GUIDE_TEXT)
+    page.drawString(37.0, 721.0, GUIDE_TEXT)
+    page.drawString(37.0, 709.5, GUIDE_TEXT_2)
 
     page.setFillColor("#526C80")
     page.setFont("SheetSans", 7.2)
