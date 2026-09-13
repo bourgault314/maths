@@ -139,18 +139,28 @@ test("les familles de faits existent là où le niveau le permet et sont servies
       else assert.equal(board.family, null);
     }
   }
-  const sample = (mode, level, family) => {
-    const pairs = new Set();
+  // Les paires que le moteur range dans une famille donnée. On les lit dans le
+  // catalogue au lieu d’espérer qu’un tirage les sorte : au niveau 3 le vivier
+  // des familles compte 119 paires, si bien qu’une paire précise manquait dans
+  // 3,4 % des passages — assez pour faire rougir la CI d’une PR sur trente.
+  const famille = (mode, level, family) =>
+    new Set(engine.solutionPairs(mode, level).filter(entry => entry.family === family).map(entry => entry.pair.join(" ")));
+  for (const [mode, level, family, paire] of [
+    ["sum", 1, "complement10", "8 2"], ["sum", 1, "double", "7 7"], ["sum", 3, "complement100", "63 37"],
+    ["product", 1, "times10", "10 6"], ["quotient", 1, "half", "18 2"], ["quotient", 2, "divide10", "130 10"]
+  ]) assert.ok(famille(mode, level, family).has(paire), `${mode} niveau ${level} : ${paire} n’est pas servie comme ${family}`);
+  // Et le tirage sur demande ne sort jamais d'une famille, ni ne se trompe de nom.
+  for (const [mode, level] of [["sum", 1], ["sum", 3], ["product", 1], ["quotient", 1], ["quotient", 2]]) {
+    const vues = new Set();
     for (let attempt = 0; attempt < 400; attempt += 1) {
       const drawn = engine.drawPair(mode, level, { family: true });
-      if (drawn.family === family) pairs.add(drawn.pair.join(" "));
+      assert.ok(drawn.family, `${mode} niveau ${level} : ${drawn.pair.join(" ")} est servie sans famille`);
+      assert.ok(famille(mode, level, drawn.family).has(drawn.pair.join(" ")),
+        `${mode} niveau ${level} : ${drawn.pair.join(" ")} annoncée « ${drawn.family} »`);
+      vues.add(drawn.family);
     }
-    return pairs;
-  };
-  assert.ok(sample("sum", 1, "complement10").has("8 2") && sample("sum", 1, "double").has("7 7"));
-  assert.ok(sample("sum", 3, "complement100").has("63 37"));
-  assert.ok(sample("product", 1, "times10").has("10 6") && sample("quotient", 1, "half").has("18 2"));
-  assert.ok(sample("quotient", 2, "divide10").has("130 10"));
+    assert.deepEqual([...vues].sort(), engine.levelRules(level)[mode].families.slice().sort(), `${mode} niveau ${level} : familles servies`);
+  }
   assert.ok(engine.familyLabel("complementTen") === "complément à la dizaine" && engine.familyLabel("half") === "moitié");
 });
 
