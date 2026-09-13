@@ -106,17 +106,12 @@
       setText("mode-pill", "Ton coffre · " + ledger.remaining + " partie" + (ledger.remaining > 1 ? "s" : "") + " disponible" + (ledger.remaining > 1 ? "s" : ""));
       setText("home-description", "Choisis ton défi. Chaque partie commencée compte, même si tu ne vas pas jusqu’au bout.");
     }
-    document.querySelector(".difficulty").hidden = false;
     show("home");
   }
   function prepare(name) {
     stop();
     if (options.enabled && ledger.remaining === 0) { exhausted(); return; }
     current = Object.hasOwn(games, name) ? name : "luciole"; model = null;
-    const difficulty = document.querySelector(".difficulty");
-    if (embedded) $("play").insertBefore(difficulty, $("stage"));
-    // Plus aucun jeu court n'a de niveau : un seul jeu pour tout le monde, qui monte seul.
-    difficulty.hidden = current !== "carres-gloutons";
     const game = games[current];
     $("play").classList.toggle("runner-play", current === "dodo");
     $("play").classList.toggle("tempo-play", current === "tempo");
@@ -140,13 +135,12 @@
   function begin() {
     if (running || !current) return;
     if (options.enabled && !ledger.take()) { exhausted(); return; }
-    const difficulty = document.querySelector('input[name="level"]:checked').value;
-    if (embedded) document.querySelector(".difficulty").hidden = true;
     $("play").classList.remove("intro-memory");
     const seed = window.crypto?.getRandomValues ? window.crypto.getRandomValues(new Uint32Array(1))[0] : Math.floor(Math.random() * 4294967296);
     runnerBest = readRecord(); runnerAnnouncement = -1; releaseRunner();
     if (current === "dodo") $("instructions").hidden = true;
-    model = new games[current].engine(difficulty, seed); elapsed = 0; running = true; paused = false; previous = 0; memoryPhase = ""; lastLit = -1;
+    // Plus aucun jeu court n'a de niveau : les quatre moteurs ignorent ce premier réglage.
+    model = new games[current].engine(null, seed); elapsed = 0; running = true; paused = false; previous = 0; memoryPhase = ""; lastLit = -1;
     if (current === "luciole" && soundOn) context();
     $("pause").disabled = false; $("controls").replaceChildren(); actionButton = null; shapes.clear();
     buildStage(); render(); if (current === "dodo") actionButton.focus({ preventScroll: true }); frame = requestAnimationFrame(tick);
@@ -487,6 +481,9 @@
     if (event.origin !== location.origin || event.data?.type !== "mathsgo-short-game:fenetre") return;
     const height = Number(event.data.height);
     if (Number.isFinite(height) && height > 0) document.documentElement.style.setProperty("--hauteur-site", Math.round(height) + "px");
+    // Place qui reste vraiment au cadre dans la page du site, en-tête et pied déduits.
+    const dispo = Number(event.data.dispo);
+    if (Number.isFinite(dispo) && dispo > 0) document.documentElement.style.setProperty("--hauteur-dispo", Math.round(dispo) + "px");
   });
   if (embedded && window.ResizeObserver) {
     let lastHeight = 0;

@@ -32,7 +32,7 @@ function create(query = "?domain=jeux-recherches") {
 (async () => {
   const d = create();
   const header = d.q(".site-header"), shell = d.q(".site-shell");
-  assert.ok(d.q('[data-notion-card="jeux-courts"] img').src.includes("jeux-courts.svg"));
+  assert.ok(d.q('[data-notion-card="jeux-courts"] .notion-icon svg'), "La rubrique Jeux courts porte une icône, comme les deux autres");
   d.click('[data-notion-card="jeux-courts"]');
   assert.equal(d.doc.querySelectorAll("[data-short-game]").length, 5);
   assert.ok(!d.q('#resource-grid a[href$="jeux-cadeaux/index.html"]'));
@@ -48,7 +48,7 @@ function create(query = "?domain=jeux-recherches") {
       assert.equal(frame.src, "https://mathsgo.re/outils/club_maths/carres_gloutons.html?integre=1&v=1");
       assert.equal(frame.allowFullscreen, true);
     } else {
-      assert.ok(frame.src.endsWith("?jeu=" + id + "&integre=1&v=4"));
+      assert.ok(frame.src.endsWith("?jeu=" + id + "&integre=1&v=6"));
     }
     d.send(frame, { type: "mathsgo-short-game:height", height: 570 }, "https://mathsgo.re");
     assert.equal(frame.style.height, "570px");
