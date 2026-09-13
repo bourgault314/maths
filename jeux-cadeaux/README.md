@@ -13,7 +13,7 @@ Les Carrés gloutons restent à leur adresse `/outils/club_maths/carres_gloutons
 | --- | --- | --- |
 | La Luciole | Un seul chemin, qui s’allonge d’une lumière à chaque réussite ; la première erreur termine la partie ; pas de plafond de durée | Départ à 2, 3 ou 4 lumières, éclairage plus ou moins lent |
 | Dodo bondissant | Course sans fin, deux vies ; elle s’arrête à la deuxième touche | Aucun : un seul jeu pour tout le monde |
-| La pile de galets | Sept galets ; fin si la pile tombe ou après 60 s | Largeur des galets et vitesse du déplacement |
+| La pile de galets | Sans fin : on empile jusqu’à la chute, le score est la hauteur ; 20 à 30 s en pratique, garde-fou invisible à 90 s | Un seul jeu pour tous : la montée en difficulté est dans la partie (voir ci-dessous) |
 | Tempo volcan | Suite sans fin de signaux, trois vies ; le mot écrit finit par contredire le dessin, puis la consigne s'inverse | Un seul jeu : la fenêtre passe de 1,45 s à 0,58 s |
 | Les Carrés gloutons | Deux manches de neuf carrés contre Gloubi | Jeu existant, sans choix de niveau |
 
@@ -34,7 +34,7 @@ Dans Tempo, le dessin et la couleur disent la même chose ; le mot écrit, lui, 
 La préférence de mouvement réduit supprime les effets décoratifs, sans supprimer les déplacements nécessaires aux jeux.
 
 Ce sont des pauses ludiques, sans classement, compte, publicité ni promesse de transfert cognitif ou scolaire.
-Pour les galets, la durée annoncée est un plafond de jeu actif ; lire les règles et mettre en pause ne consomme pas ce temps. La Luciole n’a pas de plafond : elle s’arrête à la première erreur ou quand le temps d’un chemin s’écoule (2,5 s par lumière, 8 s au minimum). Le dodo et Tempo affichent le temps écoulé sans limite — le dodo jusqu’à la deuxième touche, Tempo jusqu’à la troisième erreur : lire les règles, mettre en pause ou quitter la fenêtre ne fait pas avancer le chrono. Les Carrés gloutons ne sont pas chronométrés.
+La pile de galets s’arrête à la chute (un garde-fou invisible de 90 s de jeu actif termine une partie laissée en plan). La Luciole n’a pas de plafond : elle s’arrête à la première erreur ou quand le temps d’un chemin s’écoule (2,5 s par lumière, 8 s au minimum). Le dodo et Tempo affichent le temps écoulé sans limite — le dodo jusqu’à la deuxième touche, Tempo jusqu’à la troisième erreur : lire les règles, mettre en pause ou quitter la fenêtre ne fait pas avancer le chrono. Les Carrés gloutons ne sont pas chronométrés.
 
 ## Mode cadeau, prêt pour un raccordement ultérieur
 
@@ -56,14 +56,14 @@ Aucun parcours existant et aucun coffre n’est modifié dans ce lot. Il n’y a
 
 ## Architecture et vérifications
 
-- `core.js` : quatre moteurs indépendants du DOM, hasard reproductible, calcul d’équilibre et compteur cadeau. Le tirage des chemins écarte trois cases régulièrement alignées, les reprises à moins de quatre pas et les cases sur-utilisées, pour que deux chemins de même longueur demandent le même effort.
+- `core.js` : quatre moteurs indépendants du DOM, hasard reproductible, calcul d’équilibre (`balance`, `stable`, `stackStep`, `tier`) et compteur cadeau. Le tirage des chemins écarte trois cases régulièrement alignées, les reprises à moins de quatre pas et les cases sur-utilisées, pour que deux chemins de même longueur demandent le même effort.
 - `app.js` : affichage, commandes, horloge unique, pause, navigation et résultats.
 - `runner-view.js` : décor et rendu SVG du dodo, mis à jour sans reconstruire la scène à chaque image.
 - `tests/dodo-course.test.mjs` : 180 courses de trois minutes jouées par les commandes normales, accélération, obstacles, collisions, hauteur variable et physique indépendante de la fréquence d’affichage.
 - `assets/js/short-games-view.js` : intégration partagée dans le catalogue et les liens directs ; messages de hauteur et de retour limités au document de jeu du même site.
 - `assets/js/carres-gloutons-embed.js` et `assets/css/carres-gloutons-embed.css` : cadre des Carrés gloutons activé uniquement dans le catalogue, avec ajustement de hauteur et retour à Jeux courts.
 - `embedded.css` : habillage dans le catalogue ; difficulté avant Commencer, sans menu intermédiaire. Le retrait du cadre de jeu arrête toute la partie.
-- `tests/jeux-cadeaux.test.mjs` : tests de vrais parcours gagnants et perdants, collisions, équilibre global, doubles touches, déterminisme et quota.
+- `tests/jeux-cadeaux.test.mjs` : tests de vrais parcours gagnants et perdants, collisions, équilibre global, montée en difficulté et joueurs simulés des galets, doubles touches, déterminisme et quota.
 - `tests/jeux-cadeaux-dom.cjs` : scénarios d’interface avec DOM simulé (`jsdom@26.1.0` en dépendance de développement facultative ; aucune dépendance pour le site).
 - `tests/jeux-cadeaux-apercu.html` : banc d’essai visuel aux tailles téléphone, tablette, ordinateur et paysage. Cette page technique n’est pas indexée.
 
@@ -87,3 +87,12 @@ Les essais à taille réduite dans Chrome ne remplacent pas un essai sur un vér
 - Une interruption d’image de plus de 250 ms, une perte de visibilité ou de focus met le dodo en pause. Le geste est relâché, et la reprise redonne le focus au saut. Les animations de décor et des pattes sont supprimées avec la préférence de mouvement réduit.
 
 Les trois courbes sont un calibrage de jeu, pas une mesure validée auprès d’élèves : elles se règlent en trois nombres dans la constante `RUNNER`. Les simulations vérifient la possibilité des parcours et l’échec des appuis permanents/répétitifs ; elles ne remplacent pas les retours de joueurs réels.
+
+## La pile de galets — moteur sans fin (12 septembre 2026)
+
+- La pile **penche** du côté de son centre de masse et **tremble** quand la chute approche. Un **fil à plomb** descend du centre de masse jusqu’au socle : vert au milieu de la zone d’appui, orange sur ses bords. Poser le galet suivant du côté opposé rattrape la pile.
+- Règle de chute inchangée (`balance`, ex-`stable`) : à chaque contact, le centre de masse de tout ce qui est au-dessus doit rester dans la zone de recouvrement. Le compte rendu dit où ça casse ; à la chute, les galets roulent et le fil à plomb rouge clignote une demi-seconde à l’endroit fautif, puis l’écran de fin explique (« basculé au 9e galet, posé trop à droite »).
+- Montée en difficulté (`stackStep`) : galets 1 à 4 larges et lents ; 5 à 7 plus étroits et plus rapides ; 8 à 10 le vent dévie le galet pendant sa chute ; 11 à 13 galets irréguliers (l’appui n’est pas au milieu du dessin, l’ombre montre l’appui) ; 14 à 16 le socle rétrécit et la marée monte (le socle attend si la pile ne tiendrait plus dessus) ; 17 et plus tout ensemble, de plus en plus vite. Une consigne d’une phrase annonce chaque nouveauté. Le choix de niveau n’est pas proposé pour ce jeu.
+- Paliers affichés : 3 premier caillou · 5 petite pile · 7 pile du sentier · 10 pile du volcan · 13 pile du Piton · 16 pile de légende · 20 personne n’a jamais vu ça. Le meilleur score de la séance est gardé dans `sessionStorage` (`mathsgo:jeux-cadeaux:galets:record`), sans cookie.
+- Mesuré sur le moteur avec des joueurs simulés (retard de réaction de ± 50 à ± 140 ms) : parties de 20 à 27 s, hauteur moyenne de 8 à 13 galets, moins de 15 % de parties à 16 galets ou plus même pour un très bon joueur, jamais plus de 25. `tests/jeux-cadeaux.test.mjs` rejoue cette mesure. Ce sont des simulations, pas des observations d’élèves.
+- Affichage : la scène garde le repère 600 × 330 du moteur, le cadre SVG s’étend pour remplir l’aire de jeu (le décor déborde), la caméra descend quand la pile monte et la zone d’appui est rappelée au bord bas quand le socle sort du cadre. Les formes des galets (`ShortGameArt.pebble`) sont reproductibles à partir de la graine de la partie. La préférence de mouvement réduit supprime le tremblement, pas l’inclinaison ni le fil à plomb.

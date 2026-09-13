@@ -18,7 +18,7 @@
       frame.src = "/outils/club_maths/carres_gloutons.html?integre=1&v=1";
       frame.allowFullscreen = true;
     } else {
-      frame.src = "/jeux-cadeaux/index.html?jeu=" + game + "&integre=1&v=4";
+      frame.src = "/jeux-cadeaux/index.html?jeu=" + game + "&integre=1&v=5";
     }
     // La page de jeu ne voit pas la fenêtre du site : on lui donne sa hauteur
     // pour qu'elle dimensionne son plateau sans la deviner.
