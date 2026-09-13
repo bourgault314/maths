@@ -43,7 +43,9 @@
 @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important}.game-card:hover{transform:none}}
 
 /* Course du dodo : un seul jeu, même paysage sur téléphone et ordinateur. */
-.stage.runner-stage,.embedded .stage.runner-stage{width:min(100%,980px);height:auto;aspect-ratio:20/11;margin-inline:auto;background:#e6efdb;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
+/* Téléphone tenu en paysage : la hauteur de la fenêtre du site (--hauteur-site,
+   transmise par le cadre) borne le paysage pour qu'il tienne à l'écran. */
+.stage.runner-stage,.embedded .stage.runner-stage{width:min(100%,980px,calc((var(--hauteur-site,100vh) - 140px)*20/11));height:auto;aspect-ratio:20/11;margin-inline:auto;background:#e6efdb;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
 .runner-scene{touch-action:none}
 .runner-controls{flex-wrap:wrap}
 .controls .runner-jump{min-height:64px;width:min(100%,380px);font-size:1.1rem;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
