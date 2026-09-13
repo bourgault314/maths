@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import core from "../jeux-cadeaux/core.js";
-const { Memory, Runner, Stack, Tempo, stable, random, giftOptions, giftLedger } = core;
+const { Memory, Runner, Stack, Tempo, tempoPalier, tempoCourbe, stable, random, giftOptions, giftLedger } = core;
 const advance = (game, until, max = 100) => {
   for (let t = 0; t < max && !until(game); t += 1 / 60) game.update(1 / 60);
   assert.ok(until(game), "L’état attendu doit être atteint dans le temps imparti");
@@ -65,18 +65,6 @@ for (const difficulty of Object.keys(core.levels)) {
     }
     assert.equal(g.done, true); assert.equal(g.phase, "done");
   });
-  test(difficulty + " : Tempo contient toujours huit actions et quatre arrêts", () => {
-    for (let seed = 0; seed < 50; seed++) {
-      const g = new Tempo(difficulty, seed);
-      assert.equal(g.signals.filter(s => s === "go").length, 8);
-      assert.equal(g.signals.filter(s => s === "stop").length, 4);
-      for (let t = 0; t < 45 && !g.done; t += 1 / 60) {
-        if (g.phase === "go") { g.tap(); g.tap(); g.tap(); }
-        g.update(1 / 60);
-      }
-      assert.equal(g.done, true); assert.equal(g.score, 12);
-    }
-  });
 }
 test("La génération des chemins est reproductible, bornée, sans répétition immédiate", () => {
   const a = random(88), b = random(88);
@@ -133,15 +121,6 @@ test("Un galet lâché loin du socle tombe et termine la partie sans relance", (
   const s = new Stack("malin", 2); s.drop(); advance(s, g => g.done, 3);
   assert.equal(s.score, 0); assert.equal(s.phase, "tumble"); assert.equal(s.drop(), false);
 });
-test("Tempo ignore les doubles touches pendant le retour et finit même sans bonnes réponses", () => {
-  const g = new Tempo("malin", 4);
-  for (let i = 0; i < 12; i++) {
-    assert.equal(g.phase, "wait"); g.tap();
-    for (let j = 0; j < 20; j++) g.tap();
-    advance(g, m => m.phase !== "feedback", 2);
-  }
-  assert.equal(g.done, true); assert.equal(g.score, 0); assert.equal(g.index, 12);
-});
 test("Sans action, les jeux de mémoire et de signaux se terminent", () => {
   for (const Engine of [Memory, Tempo]) {
     const g = new Engine("expert", 1); advance(g, m => m.done, 85); assert.ok(g.done);
@@ -165,4 +144,114 @@ test("Une partie cadeau est consommée au départ, persiste au rechargement et n
 test("Le mode cadeau reste utilisable quand le stockage est refusé", () => {
   const ledger = giftLedger({ getItem() { throw Error(); }, setItem() { throw Error(); } }, "x", 1);
   assert.equal(ledger.take(), true); assert.equal(ledger.take(), false);
+});
+// Les deux constantes du moteur, épinglées ici exprès : les changer doit faire
+// réfléchir (la vague de six signaux et le plafond technique de la partie).
+const TEMPO_VAGUE = 6, TEMPO_MAX = 200;
+const avancer = (jeu, jusqua, max = 400) => {
+  for (let t = 0; t < max && !jusqua(jeu); t += 1 / 60) jeu.update(1 / 60);
+  assert.ok(jusqua(jeu), "L’état attendu doit être atteint dans le temps imparti");
+};
+test("Celui qui obéit au dessin garde ses trois vies jusqu’au plafond", () => {
+  const g = new Tempo("", 7);
+  for (let t = 0; t < 400 && !g.done; t += 1 / 60) {
+    if (g.phase === "signal" && !g.repondu && g.signal.toucher) g.tap();
+    g.update(1 / 60);
+  }
+  assert.equal(g.done, true, "La partie se termine toujours");
+  assert.equal(g.lives, 3, "Aucune vie perdue");
+  assert.equal(g.index, TEMPO_MAX);
+  assert.equal(g.score, TEMPO_MAX);
+});
+test("Trois erreurs terminent la partie, et rien ne bouge après", () => {
+  const g = new Tempo("", 12);
+  avancer(g, m => m.done);
+  assert.equal(g.lives, 0);
+  assert.ok(g.index < TEMPO_MAX);
+  const fin = JSON.stringify({ i: g.index, s: g.score, v: g.lives, p: g.phase });
+  g.tap(); g.update(10);
+  assert.equal(JSON.stringify({ i: g.index, s: g.score, v: g.lives, p: g.phase }), fin);
+});
+test("Toucher pendant l’attente coûte une vie sans consommer de signal", () => {
+  const g = new Tempo("", 3);
+  assert.equal(g.phase, "wait");
+  g.tap();
+  assert.equal(g.lives, 2); assert.equal(g.index, 0); assert.equal(g.faute, "tot");
+  for (let i = 0; i < 10; i++) g.tap();
+  assert.equal(g.lives, 2, "Le martèlement ne retire qu’une vie par phase");
+});
+test("Une seule réponse est prise en compte par signal", () => {
+  const g = new Tempo("", 5);
+  avancer(g, m => m.phase === "signal");
+  const cible = g.signal.toucher;
+  g.tap(); const vies = g.lives, score = g.score;
+  for (let i = 0; i < 15; i++) g.tap();
+  assert.equal(g.lives, vies); assert.equal(g.score, score);
+  assert.equal(cible ? score : vies, cible ? 1 : 2);
+});
+test("Sans aucune action, la partie s’arrête d’elle-même en moins d’une demi-minute", () => {
+  for (let seed = 1; seed < 30; seed++) {
+    const g = new Tempo("", seed);
+    avancer(g, m => m.done, 60);
+    assert.equal(g.lives, 0);
+    assert.ok(g.temps < 30, "Trois laves ratées suffisent à finir la partie");
+  }
+});
+test("Le mot ne mentira qu’à sa vague, et la fenêtre ne passe jamais sous son plancher", () => {
+  let precedente = Infinity;
+  for (let n = 0; n < 400; n++) {
+    const p = tempoPalier(n);
+    assert.ok(p.fenetre >= tempoCourbe.plancher - 1e-9, "La fenêtre reste jouable");
+    assert.ok(p.fenetre <= precedente + 1e-9, "La fenêtre ne s’élargit jamais");
+    assert.ok(p.gap >= .32 - 1e-9, "Le temps entre deux signaux reste tenable");
+    assert.equal(p.menteur, Math.floor(n / TEMPO_VAGUE) >= tempoCourbe.menteur);
+    assert.equal(p.inverse, Math.floor(n / TEMPO_VAGUE) >= tempoCourbe.inverse);
+    precedente = p.fenetre;
+  }
+  assert.equal(tempoPalier(0).fenetre, tempoCourbe.depart);
+  assert.equal(tempoPalier(0).menteur, false, "Le premier mot dit la vérité");
+  assert.equal(tempoPalier(0).part, .55); assert.equal(tempoPalier(72).part, .7, "Passé le plancher, les pièges prennent le relais");
+  assert.ok(tempoPalier(72).bascule > tempoPalier(36).bascule);
+});
+test("Le mot est toujours écrit, juste avant sa vague, menteur une fois sur deux après", () => {
+  let avant = 0, apres = 0, menteurs = 0;
+  for (let seed = 0; seed < 120; seed++) {
+    const g = new Tempo("", seed);
+    for (let t = 0; t < 400 && !g.done; t += 1 / 60) {
+      if (g.phase === "signal" && !g.repondu) {
+        assert.ok(g.signal.mot === "LAVE" || g.signal.mot === "PIERRE", "Un mot est toujours écrit");
+        if (g.palier.menteur) { apres++; if (g.signal.conflit) menteurs++; }
+        else { avant++; assert.equal(g.signal.conflit, false, "Avant sa vague, le mot dit la vérité"); }
+        if (g.signal.toucher) g.tap();
+      }
+      g.update(1 / 60);
+    }
+  }
+  assert.ok(avant > 300 && apres > 300, "Les deux régimes sont bien visités");
+  const part = menteurs / apres;
+  assert.ok(part > .45 && part < .72, "Entre 45 % et 72 % des mots contredisent le dessin, mesuré : " + part.toFixed(3));
+});
+test("La consigne inversée est toujours annoncée avant d’être appliquée", () => {
+  for (let seed = 0; seed < 60; seed++) {
+    const g = new Tempo("", seed); let etat = g.inverse, annonces = 0, phase = "";
+    for (let t = 0; t < 400 && !g.done; t += 1 / 60) {
+      if (g.phase !== phase) {
+        phase = g.phase;
+        if (phase === "bascule") { annonces++; assert.notEqual(g.inverse, etat); etat = g.inverse; }
+        if (phase === "signal") assert.equal(g.signal.toucher, g.signal.lave !== etat);
+      }
+      if (g.phase === "signal" && !g.repondu && g.signal.toucher) g.tap();
+      g.update(1 / 60);
+    }
+    assert.ok(annonces > 0, "Une partie menée au plafond contient au moins une inversion");
+  }
+});
+test("La même graine rejoue exactement la même suite de signaux", () => {
+  const suite = seed => { const g = new Tempo("", seed), vus = [];
+    for (let t = 0; t < 400 && !g.done; t += 1 / 60) {
+      if (g.phase === "signal" && !g.repondu) { vus.push((g.signal.lave ? "L" : "P") + g.signal.mot + (g.inverse ? "!" : "")); if (g.signal.toucher) g.tap(); }
+      g.update(1 / 60);
+    } return vus.join(" "); };
+  assert.equal(suite(99), suite(99));
+  assert.notEqual(suite(99), suite(100));
 });
