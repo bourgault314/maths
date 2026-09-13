@@ -76,65 +76,6 @@ run("Luciole : le chemin s’allonge, puis une erreur termine la partie", () => 
   assert.match(d.q("#result-title").textContent, /Bien joué/);
   assert.equal(d.q("#next-round").hidden, false); d.dom.window.close();
 });
-run("Dodo : clavier, appui court/long, maintien sans rebond et clic tactile unique", () => {
-  const d = create("?jeu=dodo&integre=1"); d.prepare("dodo"); d.step(10);
-  const height=()=>Number(d.q(".runner-dodo").dataset.height);
-  d.key(" ","Space"); d.key(" ","Space","keyup");
-  let small=0;for(let i=0;i<50;i++){d.step(10);small=Math.max(small,height());}
-  assert.ok(small>45 && small<55);
-  d.key(" ","Space"); let large=0;
-  for(let i=0;i<100;i++){ d.key(" ","Space","keydown",true);d.step(10);large=Math.max(large,height()); }
-  assert.ok(large>95);assert.equal(height(),0);d.key(" ","Space","keyup");
-  const pointer=(type,id=1)=>{const e=new d.w.MouseEvent(type,{bubbles:true,cancelable:true,button:0,detail:1});Object.defineProperty(e,"pointerId",{value:id});d.q(".runner-jump").dispatchEvent(e);};
-  pointer("pointerdown"); assert.ok(d.q(".runner-jump").classList.contains("is-held"));
-  d.step(80);pointer("pointerup");
-  d.q(".runner-jump").dispatchEvent(new d.w.MouseEvent("click",{bubbles:true,detail:1}));
-  for(let i=0;i<70;i++)d.step(10);assert.equal(height(),0);
-  assert.deepEqual(d.errors,[]);d.dom.window.close();
-});
-run("Dodo : collision, record local sous une clé unique et reprise directe", () => {
-  const d = create("?jeu=dodo&integre=1"); d.prepare("dodo");
-  d.until(()=>!d.q("#result").hidden,()=>{},8);
-  assert.match(d.q("#result-score").textContent,/^0:0\d · \d+ m$/);
-  // Deux vies : une première partie n'a pas de record à battre.
-  assert.match(d.q("#runner-result-detail").textContent,/premier essai/);
-  // Le record n'est plus rangé par niveau : le jeu est le même pour tous.
-  assert.equal(d.w.localStorage.getItem("mathsgo:dodo:v3:malin"), null);
-  assert.ok(Number(d.w.localStorage.getItem("mathsgo:dodo:v4"))>3);
-  assert.equal(d.frames.size,0);d.click("#next-round");
-  assert.equal(d.q("#play").hidden,false);assert.ok(d.q(".runner-jump"));assert.equal(d.frames.size,1);
-  // La barre Cap/Record a disparu : le record tient dans la ligne d'état.
-  assert.equal(d.q("#runner-record"), null);
-  assert.match(d.q("#round-label").textContent,/record 0:0\d/);
-  d.dom.window.close();
-});
-run("Dodo : une vraie course via le clavier dépasse deux minutes dans l’interface", () => {
-  const d=create("?jeu=dodo&integre=1");d.prepare("dodo");d.step(10);
-  let held=false,heldFor=0;
-  for(let i=0;i<120*60+20 && d.q("#result").hidden;i++){
-    // Nouvelle courbe : 300 px/s au départ, +0,9 par seconde, sans plafond.
-    const t=i/60,speed=300+t*.9;
-    if(held){heldFor+=1/60;if(heldFor>=.23){d.key(" ","Space","keyup");held=false;}}
-    const next=[...d.doc.querySelectorAll("[data-obstacle]")].map(n=>({type:n.dataset.obstacle,x:Number(n.getAttribute("transform").match(/translate\(([-.\d]+)/)[1])})).find(o=>o.type!=="branche" && o.x>94);
-    if(next && Number(d.q(".runner-dodo").dataset.height)===0){
-      const lead=next.type==="rocher"?.18:next.type==="double"?.15:.085;
-      if(next.x+3<=136+speed*lead){d.key(" ","Space");held=true;heldFor=0;if(next.type==="tronc"||next.type==="caillou"){d.key(" ","Space","keyup");held=false;}}
-    }
-    d.step(1000/60);
-  }
-  assert.equal(d.q("#result").hidden,true);assert.match(d.q("#time-label").textContent,/^2:00/);
-  assert.equal(d.q("#runner-target"), null, "plus de barre de cap à l'écran");
-  assert.match(d.q("#round-label").textContent,/littoral/);assert.deepEqual(d.errors,[]);
-  d.click("#pause");d.click("#quit");assert.match(d.q("#result-title").textContent,/Deux minutes/);d.dom.window.close();
-});
-run("Dodo : interruption d’écran = pause sans perte de temps ni saut bloqué", () => {
-  const d = create("?jeu=dodo&integre=1");d.prepare("dodo");d.step();d.key(" ","Space");d.step(50);
-  const time=d.q("#time-label").textContent;d.step(2000);
-  assert.ok(d.q("#pause-dialog").open);assert.equal(d.q("#time-label").textContent,time);
-  assert.ok(!d.q(".runner-jump").classList.contains("is-held"));
-  d.click("#resume");assert.equal(d.doc.activeElement,d.q(".runner-jump"));assert.equal(d.frames.size,1);
-  d.w.dispatchEvent(new d.w.Event("blur"));assert.ok(d.q("#pause-dialog").open);d.dom.window.close();
-});
 run("Luciole : plus de niveau à choisir, et le plateau de nuit ne suit pas à l’accueil", () => {
   const d = create("?jeu=luciole&integre=1");
   assert.equal(d.q(".difficulty"), null, "Un seul jeu pour tout le monde : pas de choix de niveau");
@@ -211,7 +152,7 @@ run("Tempo : le dessin commande, l’inversion est annoncée, trois erreurs arr�
   assert.equal(d.frames.size, 0, "La boucle s’arrête avec la partie"); d.dom.window.close();
 });
 run("Pause et reprise : horloge gelée, une seule boucle après un double clic", () => {
-  const d = create("?jeu=dodo&integre=1"); d.prepare("dodo"); for (let i = 0; i < 30; i++) d.step();
+  const d = create("?jeu=luciole&integre=1"); d.prepare("luciole"); for (let i = 0; i < 30; i++) d.step();
   d.click("#pause"); assert.ok(d.q("#pause-dialog").open);
   const scene = d.q("#stage").innerHTML, time = d.q("#time-label").textContent;
   for (let i = 0; i < 60; i++) d.step();
@@ -223,9 +164,9 @@ run("Pause et reprise : horloge gelée, une seule boucle après un double clic",
 });
 run("Cadeau : abandon, recharge et seconde partie consomment exactement deux parties", () => {
   const query = "?mode=cadeau&parties=2&ticket=test-deux", saved = new Map();
-  let d = create(query, saved); d.click('[data-game="dodo"]'); d.click("#back"); assert.equal(saved.size, 0);
-  d.prepare("dodo"); d.click("#pause"); d.click("#quit"); assert.equal(d.q("#next-round").hidden, false); d.dom.window.close();
-  d = create(query, saved); d.prepare("dodo"); d.click("#pause"); d.click("#quit");
+  let d = create(query, saved); d.click('[data-game="luciole"]'); d.click("#back"); assert.equal(saved.size, 0);
+  d.prepare("luciole"); d.click("#pause"); d.click("#quit"); assert.equal(d.q("#next-round").hidden, false); d.dom.window.close();
+  d = create(query, saved); d.prepare("luciole"); d.click("#pause"); d.click("#quit");
   assert.equal(d.q("#next-round").hidden, true); assert.equal(d.q("#finish").hidden, true); assert.equal(d.q("#gift-end").hidden, false); d.dom.window.close();
   d = create(query, saved); assert.equal(d.q("#result").hidden, false); assert.equal(d.q("#home").hidden, true); assert.equal(d.frames.size, 0); d.dom.window.close();
 });

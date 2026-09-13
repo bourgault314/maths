@@ -3,7 +3,7 @@
   "use strict";
   const games = Object.freeze({
     luciole: "La Luciole",
-    dodo: "Dodo bondissant",
+    dodo: "Tec-tec bondissant",
     galets: "La pile de galets",
     tempo: "Tempo volcan",
     "carres-gloutons": "Les Carrés gloutons"
@@ -19,6 +19,8 @@
       frame.allowFullscreen = true;
     } else if (game === "galets") {
       frame.src = "/jeux-cadeaux/galets-riviere/index.html?integre=1&v=1";
+    } else if (game === "dodo") {
+      frame.src = "/jeux-cadeaux/tec-tec/index.html?integre=1&v=1";
     } else {
       frame.src = "/jeux-cadeaux/index.html?jeu=" + game + "&integre=1&v=6";
     }
