@@ -5,7 +5,7 @@
     luciole: "La Luciole",
     dodo: "Tec-tec bondissant",
     galets: "La pile de galets",
-    tempo: "Tempo volcan",
+    cases: "Touche la case qui…",
     "carres-gloutons": "Les Carrés gloutons"
   });
   const cataloguePath = "/outils/?domain=jeux-recherches&notion=jeux-courts";
@@ -23,7 +23,7 @@
     } else if (game === "dodo") {
       frame.src = "/jeux-cadeaux/tec-tec/index.html?integre=1&v=2";
     } else {
-      frame.src = "/jeux-cadeaux/index.html?jeu=" + game + "&integre=1&v=6";
+      frame.src = "/jeux-cadeaux/index.html?jeu=" + game + "&integre=1&v=7";
     }
     // La page de jeu ne voit ni la fenêtre du site, ni ce qui l'entoure. On lui
     // donne les deux : la hauteur de la fenêtre, et la place qui lui reste

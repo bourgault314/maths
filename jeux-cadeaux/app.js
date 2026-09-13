@@ -3,16 +3,12 @@
   const $ = id => document.getElementById(id);
   const core = window.ShortGames;
   const art = name => '<svg viewBox="0 0 160 120" aria-hidden="true">' + window.ShortGameArt[name] + '</svg>';
-  const tempoArt = {
-    lave: '<svg viewBox="0 0 48 48" aria-hidden="true"><path d="M22.6 1.6c2.6 6.4-1.2 10.6-4.9 15C14.2 20.9 10.6 25.3 10.6 31 10.6 39.4 16.6 46 24.5 46S38.4 39.4 38.4 31c0-5-2.6-8.6-5.7-12.1-1.4 3.5-4 5.1-5.7 4.2-2.1-1.2-1.9-4.9-.7-8.2-1.2-5.1-3.1-9.3-3.7-13.3Z" fill="#ffd8a2"/><path d="M24.3 20.2c1.7 3.5 4.2 5.7 5.6 8.5 1.2 2.3 1.4 4.3.7 6.4-1.2 3.5-3.9 5.2-7 5.2-3.9 0-7-2.9-7-7.1 0-2.9 1.7-5.2 3.5-7.4 1.7-2.1 3.3-3.7 4.2-5.6Z" fill="#fff7ea"/></svg>',
-    pierre: '<svg viewBox="0 0 48 48" aria-hidden="true"><path d="M4 30.4c0-4.8 3.1-10 7.9-13.5C16.2 13.7 21.2 11.2 25.8 11.2c5.8 0 11.8 3.1 14.1 8.5 2.1 5-1 11-4.7 14.5-3.5 3.3-9.3 5-15.3 5C12 39.2 4 36.5 4 30.4Z" fill="#f3f8f9"/><path d="M11.6 21.8c3.8-3.4 8.6-5.6 13.1-5.4 3 .1 5.8 1.1 8 2.9-4.8.2-9.4 1.7-12.9 4.1-3.5 2.4-6.1 5.8-7.3 9.3-2-3.4-2.3-8-.9-10.9Z" fill="#ffffff"/><path d="M17.4 34.6c5.5.4 10.8-1.4 14.4-4.6" stroke="#a9b9be" stroke-width="2.6" stroke-linecap="round" fill="none"/><circle cx="33.4" cy="22.8" r="1.9" fill="#c9d6da"/></svg>'
-  };
   const games = {
     luciole: { title: "La Luciole", skill: "Mémoire · observation", intro: "Observe le chemin, refais-le. À chaque réussite, il s’allonge d’une lumière.", hint: "Touche les cases · Au clavier : flèches puis Entrée", goal: 0, seconds: 0, engine: core.Memory },
     dodo: { title: "Dodo bondissant", skill: "Adresse · anticipation", intro: "Cours le plus loin possible ! Appui bref : petit saut. Maintiens l’appui : grand saut. Saute les cailloux, les troncs et les rochers, et reste au sol sous les branches. Ça accélère sans arrêt. Tu as deux vies — jusqu’où iras-tu ?", hint: "Espace ou ↑ · Bouton ou paysage : appui bref = petit saut, maintenu = grand saut", goal: 60, seconds: Infinity, engine: core.Runner },
     // Jeu sans fin : pas d'objectif, le score est la hauteur ; les 90 s sont un garde-fou invisible.
     galets: { title: "La pile de galets", skill: "Précision · équilibre", intro: "Le galet va et vient au-dessus de la pile. Lâche-le au bon moment. La pile penche du côté le plus lourd : rattrape-la en posant le galet suivant de l’autre côté. Jusqu’où iras-tu ?", hint: "Touche le paysage ou le bouton · Clavier : Espace", goal: 0, seconds: 90, engine: core.Stack },
-    tempo: { title: "Tempo volcan", skill: "Attention · inhibition", intro: "Touche la LAVE, laisse passer la PIERRE. Sur chaque signal un mot est écrit : au début il dit la vérité, plus loin il mentira — c’est toujours le dessin qui commande. Plus loin encore, la consigne s’inverse, et un écran te prévient. Trois erreurs et la partie s’arrête.", hint: "Touche le cercle · Clavier : Espace", goal: 0, seconds: Infinity, engine: core.Tempo }
+    cases: { title: "Touche la case qui…", skill: "Attention · inhibition", intro: "Toutes les règles sont la même phrase : « touche la case qui… ». Seule la fin change. La règle s’affiche en grand, puis elle disparaît : à toi de la garder en tête. Elle tient trois niveaux — le temps que ça devienne un réflexe — et là, elle s’inverse. Trois vies, et ça va de plus en plus vite.", hint: "Touche une case · Clavier : les chiffres 1 à 4, ou les flèches", goal: 0, seconds: Infinity, engine: core.Cases }
   };
   const options = core.giftOptions(location.search, location.origin);
   const embedded = new URLSearchParams(location.search).get("integre") === "1" && window.parent !== window;
@@ -131,18 +127,18 @@
     current = Object.hasOwn(games, name) ? name : "luciole"; model = null;
     const game = games[current];
     $("play").classList.toggle("runner-play", current === "dodo");
-    $("play").classList.toggle("tempo-play", current === "tempo");
+    $("play").classList.toggle("cases-play", current === "cases");
     // L'écran d'avant-partie de la Luciole ne garde que le dessin, une phrase et le bouton.
     $("play").classList.toggle("intro-memory", current === "luciole");
     $("play").classList.remove("play-memory", "reussite");
     $("stage").classList.remove("runner-stage", "stage-memory");
-    $("runner-result-detail")?.remove(); $("tempo-rule")?.remove();
+    $("runner-result-detail")?.remove();
     $("instructions").hidden = false;
     runnerDraw = null;
     setText("game-title", game.title); setText("game-skill", game.skill); setText("instructions", "Prends le temps de lire. Le jeu démarre quand tu es prêt.");
-    setText("progress-label", current === "luciole" ? "Le chemin s’allonge à chaque réussite" : current === "dodo" ? "0 m" : current === "tempo" ? "Trois vies · jusqu’à la troisième erreur" : "0 galet");
+    setText("progress-label", current === "luciole" ? "Le chemin s’allonge à chaque réussite" : current === "dodo" ? "0 m" : current === "cases" ? "Trois vies · la règle s’inverse toute seule" : "0 galet");
     setText("round-label", options.enabled ? "Cadeau · " + (ledger.used + 1) + " / " + options.limit : "Jeu libre");
-    setText("time-label", current === "luciole" ? "1 à 2 min" : current === "dodo" || current === "tempo" ? "Sans fin" : current === "galets" ? "Record : " + (record() || "—") : "≤ " + game.seconds + " s"); setText("keyboard-hint", game.hint);
+    setText("time-label", current === "luciole" ? "1 à 2 min" : current === "dodo" || current === "cases" ? "Sans fin" : current === "galets" ? "Record : " + (record() || "—") : "≤ " + game.seconds + " s"); setText("keyboard-hint", game.hint);
     $("sound").hidden = current !== "luciole"; paintSound();
     $("stage").innerHTML = current === "luciole"
       ? '<div class="intro intro-luciole">' + art(current) + '<p>' + game.intro + '</p></div>'
@@ -181,11 +177,12 @@
         });
         grid.append(b);
       }
-    } else if (current === "tempo") {
-      const regle = document.createElement("p"); regle.id = "tempo-rule"; regle.className = "tempo-rule";
-      $("stage").before(regle);
-      $("stage").innerHTML = '<div class="tempo-wrap"><svg class="tempo-landscape" viewBox="0 0 160 120" aria-hidden="true">' + window.ShortGameArt.tempo + '</svg><button type="button" class="tempo-orb" aria-label="Répondre au signal"><span class="signal-icon" aria-hidden="true"></span><span class="signal-text"></span><span class="signal-note"></span></button></div>';
-      $("stage").querySelector(".tempo-orb").addEventListener("click", action);
+    } else if (current === "cases") {
+      $("stage").innerHTML = '<div class="cases-wrap"><div class="cases-lives" aria-hidden="true"></div>'
+        + '<div class="cases-board" role="group" aria-label="Les cases à toucher"></div>'
+        + '<p class="cases-banner" hidden></p><div class="cases-flash" hidden></div><div class="cases-card" hidden></div></div>';
+      casesCount = 0; casesShown = null; casesWidth = 0;
+      casesBoard(model.n);
     } else if (current === "dodo") {
       $("stage").classList.add("runner-stage");
       runnerDraw = window.ShortGameRunnerView($("stage"));
@@ -220,7 +217,7 @@
     if (!running || paused || !model) return;
     if (current === "dodo") { pressRunner("assistive"); releaseRunner(); }
     if (current === "galets") model.drop();
-    if (current === "tempo") model.tap();
+    if (current === "cases" && model.phase === "carte") model.demarrer();
     render();
   }
   function tick(time) {
@@ -230,7 +227,7 @@
     const rawDt = previous ? Math.max(0, (time - previous) / 1000) : 0;
     // Une suspension brutale de l’écran ne doit pas faire défiler des obstacles
     // invisibles ni gonfler le record. Reprendre redonne la main au joueur.
-    if ((current === "dodo" || current === "tempo") && rawDt > .25) { pause(); return; }
+    if ((current === "dodo" || current === "cases") && rawDt > .25) { pause(); return; }
     const cap = games[current].seconds || Infinity;
     const dt = previous ? Math.min(rawDt, cap - elapsed, 2) : 0;
     previous = time; elapsed += dt;
@@ -288,38 +285,152 @@
       if (svg.getAttribute("viewBox") !== box) svg.setAttribute("viewBox", box);
       model.frameTop = view.y; svg.innerHTML = drawStack(model, view);
     } else {
-      const orb = $("stage").querySelector(".tempo-orb"), regle = $("tempo-rule");
-      setText("time-label", duration(model.temps));
-      setText("progress-label", model.score + " réussi" + (model.score > 1 ? "s" : "") + " · " + model.lives + " vie" + (model.lives > 1 ? "s" : ""));
-      if (regle) {
-        regle.classList.toggle("envers", model.inverse);
-        regle.innerHTML = model.inverse
-          ? 'À l’envers : touche la <strong>PIERRE</strong>, laisse passer la <strong>LAVE</strong>.'
-          : 'Touche la <strong>LAVE</strong>, laisse passer la <strong>PIERRE</strong>. Le mot écrit peut mentir : c’est le dessin qui commande.';
-      }
-      // Le dessin décide, le mot est l'intrus : les deux sont doublés par la couleur
-      // et par la forme, jamais par la couleur seule.
-      let etat = "", dessin = "…", mot = "ATTENDS", complement = "";
-      if (model.phase === "signal") {
-        etat = "signal " + (model.signal.lave ? "lave" : "pierre");
-        dessin = model.signal.lave ? tempoArt.lave : tempoArt.pierre;
-        mot = model.signal.mot;
-      } else if (model.phase === "bascule") {
-        etat = "envers"; dessin = "⇄"; mot = model.inverse ? "À L’ENVERS" : "COMME AVANT";
-        complement = model.inverse ? "touche les PIERRES, laisse la LAVE" : "touche la LAVE, laisse les PIERRES";
-      } else if (model.phase === "flash" || model.phase === "done") {
-        const gagne = model.feedback === "Bien vu !" || model.feedback === "Bien retenu !";
-        etat = gagne ? "juste" : "rate"; dessin = gagne ? "✓" : "✕"; mot = model.feedback;
-      }
-      orb.className = "tempo-orb " + etat;
-      orb.setAttribute("aria-label", model.phase === "signal" ? (model.signal.lave ? "Lave" : "Pierre") + ", mot écrit : " + mot : mot);
-      const icon = orb.querySelector(".signal-icon"), caption = orb.querySelector(".signal-text"), note = orb.querySelector(".signal-note");
-      if (icon.innerHTML !== dessin) icon.innerHTML = dessin;
-      if (caption.textContent !== mot) caption.textContent = mot;
-      if (note.textContent !== complement) note.textContent = complement;
-      setText("instructions", model.phase === "signal" ? "Le mot peut mentir : regarde le dessin." : model.phase === "bascule" ? "La consigne change !" : model.feedback || "Attends le signal.");
+      casesPaint();
     }
   }
+  // « Touche la case qui… » : un plateau de 2, 3 puis 4 cases. Le plateau n'est
+  // reconstruit que lorsque leur nombre change ; le contenu n'est redessiné
+  // qu'à la manche suivante ou quand la case change de taille, jamais à chaque
+  // image. Les pierres sont dessinées à la taille réelle de la case : aucun
+  // trait ne s'étire.
+  const casesRecordKey = "mathsgo:jeux-cadeaux:cases:record";
+  let casesCount = 0, casesShown = null, casesWidth = 0;
+  function casesRecord() { try { const n = Number(storage.getItem(casesRecordKey)); return Number.isInteger(n) && n > 0 ? n : 0; } catch { return 0; } }
+  function casesTap(i) { if (!running || paused || !model || current !== "cases") return; model.tap(i); render(); }
+  function casesBoard(n) {
+    const board = $("stage").querySelector(".cases-board");
+    if (!board) return;
+    board.replaceChildren();
+    for (let i = 0; i < n; i++) {
+      const cell = document.createElement("button");
+      cell.type = "button"; cell.className = "cases-cell"; cell.dataset.cell = i;
+      cell.setAttribute("aria-label", "Case " + (i + 1));
+      cell.innerHTML = '<span class="cases-content" aria-hidden="true"></span><span class="cases-halo" aria-hidden="true"></span>';
+      // Le doigt compte dès qu'il touche : attendre le clic coûterait 100 ms.
+      cell.addEventListener("pointerdown", event => { event.preventDefault(); casesTap(i); });
+      cell.addEventListener("click", event => { if (event.detail === 0) casesTap(i); });
+      board.append(cell);
+    }
+    casesCount = n; casesShown = null; casesWidth = 0;
+    casesLayout();
+  }
+  function casesLayout() {
+    const board = $("stage").querySelector(".cases-board");
+    if (!board || !casesCount) return;
+    const columns = casesCount >= 4 ? 2 : casesCount, rows = Math.ceil(casesCount / columns), gap = 10, pad = 14;
+    const free = Math.max(140, $("stage").clientWidth - pad * 2), high = Math.max(140, $("stage").clientHeight - pad * 2);
+    // Une case trop large redevient une bande : l'œil n'aurait plus rien à balayer.
+    const width = Math.min((free - gap * (columns - 1)) / columns, (high - gap * (rows - 1)) / rows * 1.15, 232);
+    const height = Math.min((high - gap * (rows - 1)) / rows, width * 1.9);
+    board.style.gridTemplateColumns = "repeat(" + columns + ",1fr)";
+    board.style.width = Math.round(width * columns + gap * (columns - 1)) + "px";
+    board.style.height = Math.round(height * rows + gap * (rows - 1)) + "px";
+    board.style.setProperty("--cases-word", Math.round(Math.min(width * .2, height * .13, 30)) + "px");
+    if (Math.abs(width - casesWidth) > .5) { casesWidth = width; casesShown = null; }
+  }
+  const casesSay = c => !c ? "vide" : c.nombre ? c.nombre + " pierres" : (c.forme === "lave" ? "lave" : "galet") + (c.mot ? ", mot " + c.mot : "");
+  function casesDraw(c, w, h) {
+    if (!c) return "";
+    const artwork = window.ShortGameArt;
+    let inside;
+    if (c.nombre) inside = artwork.tas(c.nombre, w / 2, h / 2, Math.min(w, h));
+    else {
+      // La pierre garde sa forme : on la dessine dans une boîte centrée dont
+      // les proportions restent naturelles, jamais dans toute la case.
+      const bw = Math.min(w, h * 1.05) * .98, bh = Math.min(h, w * 1.25) * .98;
+      inside = artwork.pierre(c.forme, (w - bw) / 2, (h - bh) / 2, bw, bh);
+    }
+    return '<svg viewBox="0 0 ' + w.toFixed(0) + ' ' + h.toFixed(0) + '" aria-hidden="true">' + inside + "</svg>"
+      + (c.mot ? '<span class="cases-word ' + c.forme + '">' + c.mot + "</span>" : "");
+  }
+  function casesFill(tirage) {
+    const board = $("stage").querySelector(".cases-board");
+    if (!board || !board.children.length) return;
+    // Sans moteur de rendu (tests), la case n'a pas de boîte : on dessine quand
+    // même, à une taille nominale, pour que le contenu existe et soit annoncé.
+    const box = board.children[0].getBoundingClientRect(), w = box.width || 120, h = box.height || 160;
+    for (let i = 0; i < board.children.length; i++) {
+      const c = tirage.c[i], cell = board.children[i];
+      cell.querySelector(".cases-content").innerHTML = casesDraw(c, w, h);
+      cell.setAttribute("aria-label", "Case " + (i + 1) + " : " + casesSay(c));
+    }
+    casesShown = tirage;
+  }
+  // L'aperçu de la carte : une vraie manche tirée au sort, dessinée en petit,
+  // avec la bonne case entourée. Montrer vaut mieux qu'expliquer.
+  function casesPreview(tirage, n) {
+    const artwork = window.ShortGameArt, w = n >= 4 ? 62 : 76, h = Math.round(w * 1.25), gap = 11;
+    let s = '<svg viewBox="0 0 ' + (n * w + (n - 1) * gap) + ' ' + (h + 22) + '" role="img" aria-label="Un exemple : la bonne case est entourée">';
+    for (let i = 0; i < n; i++) {
+      const x = i * (w + gap), good = i === tirage.bon, c = tirage.c[i];
+      s += '<rect x="' + x + '" y="2" width="' + w + '" height="' + h + '" rx="10" fill="#fdfbf7" stroke="' + (good ? "#187666" : "#c2cfd4") + '" stroke-width="' + (good ? 3.5 : 2) + '"/>';
+      if (c && c.nombre) s += artwork.tas(c.nombre, x + w / 2, 2 + h / 2, w * .88);
+      else if (c) {
+        const tall = Math.min(h - 14, w * 1.2);
+        s += artwork.pierre(c.forme, x + 7, 2 + (h - tall) / 2, w - 14, tall);
+        if (c.mot) s += '<text x="' + (x + w / 2) + '" y="' + (2 + h / 2 + 4) + '" text-anchor="middle" font-size="' + (n >= 4 ? 9 : 11) + '" font-weight="700" letter-spacing="-.3" fill="' + (c.forme === "lave" ? "#4a1704" : "#2d323b") + '">' + c.mot + "</text>";
+      }
+      if (good) s += '<text x="' + (x + w / 2) + '" y="' + (h + 19) + '" text-anchor="middle" font-size="15" fill="#187666">✓</text>';
+    }
+    return s + "</svg>";
+  }
+  function casesCard() {
+    const card = model.carte;
+    const rang = card.inverse ? "Niveau " + model.niveau + " · ça s’inverse"
+      : card.cases ? "Niveau " + model.niveau + " · " + model.n + " cases"
+      : card.debut ? "Niveau 1 · la première règle"
+      : "Niveau " + model.niveau + " · nouvelle règle";
+    return '<p class="cases-rank' + (card.inverse ? " is-reverse" : "") + '">' + rang + "</p>"
+      + '<p class="cases-lead">touche la case qui…</p>'
+      + '<p class="cases-rule">' + model.famille.fins[model.sens] + "</p>"
+      + '<div class="cases-preview">' + casesPreview(model.apercu, model.n) + "</div>"
+      + '<button type="button" class="primary cases-go">C’est parti !</button>'
+      + '<p class="cases-tip">Prends le temps de lire : la règle disparaît ensuite.</p>';
+  }
+  function casesHearts(lives) {
+    let s = "";
+    for (let i = 0; i < 3; i++) s += '<svg class="cases-heart' + (i < lives ? "" : " is-lost") + '" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21S3.4 14.6 3.4 8.9A4.9 4.9 0 0 1 12 5.7 4.9 4.9 0 0 1 20.6 8.9C20.6 14.6 12 21 12 21Z" fill="#d8556f" stroke="#7a1e34" stroke-width="1.7" stroke-linejoin="round"/></svg>';
+    return s;
+  }
+  function casesPaint() {
+    const wrap = $("stage").querySelector(".cases-wrap");
+    if (!wrap) return;
+    if (model.n !== casesCount) casesBoard(model.n);
+    casesLayout();
+    const board = wrap.querySelector(".cases-board"), tirage = model.t || model.apercu;
+    if (tirage && tirage !== casesShown) casesFill(tirage);
+    setText("progress-label", "Niveau " + model.niveau + " · " + model.score + " réussite" + (model.score > 1 ? "s" : ""));
+    setText("time-label", duration(model.temps));
+    setText("instructions", model.message || (model.phase === "carte" ? "Lis la règle : elle va disparaître." : "Garde la règle en tête."));
+    const hearts = casesHearts(model.lives), lives = wrap.querySelector(".cases-lives");
+    if (lives.dataset.lives !== String(model.lives)) { lives.dataset.lives = String(model.lives); lives.innerHTML = hearts; }
+    const back = model.phase === "retour", montre = model.phase === "manche" || back;
+    board.classList.toggle("is-open", montre);
+    for (let i = 0; i < board.children.length; i++) {
+      const cell = board.children[i];
+      cell.classList.toggle("is-right", back && model.issue === "juste" && i === model.touchee);
+      cell.classList.toggle("is-wrong", back && model.issue === "faux" && i === model.touchee);
+      cell.classList.toggle("is-target", back && (model.issue === "faux" || model.issue === "lent") && !!model.t && i === model.t.bon);
+    }
+    const card = wrap.querySelector(".cases-card");
+    if (model.phase === "carte") {
+      if (card.hidden) {
+        card.innerHTML = casesCard(); card.hidden = false;
+        card.querySelector(".cases-go").addEventListener("click", () => { model.demarrer(); render(); });
+        card.querySelector(".cases-go").focus({ preventScroll: true });
+      }
+    } else if (!card.hidden) { card.hidden = true; card.replaceChildren(); }
+    const flash = wrap.querySelector(".cases-flash");
+    if (model.phase === "eclair") {
+      const html = '<p class="cases-rank is-reverse">' + (model.retour ? "la règle revient" : "ça s’inverse") + '</p><p class="cases-rule">' + model.famille.fins[model.sens] + "</p>";
+      if (flash.innerHTML !== html) flash.innerHTML = html;
+      flash.hidden = false;
+    } else if (!flash.hidden) flash.hidden = true;
+    const banner = wrap.querySelector(".cases-banner");
+    if (model.phase === "annonce") { setTextNode(banner, "Niveau " + model.niveau + " · plus vite"); banner.hidden = false; }
+    else if (!banner.hidden) banner.hidden = true;
+  }
+  function setTextNode(node, value) { if (node.textContent !== value) node.textContent = value; }
   // La scène des galets : décor, socle, pile inclinée, fil à plomb, galet en vol.
   // Tout est dessiné dans le repère du moteur (600 × 330, socle en y = 283) ;
   // la caméra fait glisser le monde vers le bas quand la pile grandit.
@@ -391,7 +502,7 @@
     if (!model || !running) return;
     const game = games[current], score = model.score;
     if (current === "dodo") { finishRunner(reason); return; }
-    if (current === "tempo") { finishTempo(reason); return; }
+    if (current === "cases") { finishCases(reason); return; }
     stop();
     $("result-art").innerHTML = art(current);
     const opening = reason === "quit" ? "Tu as choisi de terminer cette partie. " : reason === "time" ? "Le temps de cette petite partie est écoulé. " : "";
@@ -442,18 +553,23 @@
       : tip + (time < 60 ? " Prochain cap : une minute." : " Prochain cap : 1 min 30."));
     resultActions(); show("result"); focus("result-title");
   }
-  function finishTempo(reason) {
+  function finishCases(reason) {
+    const best = casesRecord(), level = model.niveau;
+    if (level > best) { try { storage.setItem(casesRecordKey, String(level)); } catch { /* Record gardé pour cette page. */ } }
+    stop(); $("result-art").innerHTML = art("cases");
     const conseils = {
-      tard: "La lave est passée trop vite : garde le doigt prêt juste au-dessus du cercle.",
-      pierre: "Une pierre ne se touche pas. Regarde le dessin avant de partir.",
-      mot: "Le mot t’a piégé : c’est le dessin qui commande, jamais le mot.",
-      envers: "Quand la consigne est à l’envers, redis-toi la règle avant le signal.",
-      tot: "Tu es parti avant le signal : attends de voir le dessin."
+      faux: "Redis-toi la fin de la phrase avant que les pierres jaillissent : c’est elle qui a changé, pas le dessin.",
+      lent: "Ne cherche pas la bonne case : laisse-la te sauter aux yeux. Ça vient au bout de quelques manches.",
+      avance: "Attends que les pierres jaillissent. Partir avant, c’est une vie perdue pour rien."
     };
-    stop(); $("result-art").innerHTML = art("tempo");
-    setText("result-title", "Partie terminée");
-    setText("result-score", model.score + (model.score > 1 ? " signaux" : " signal") + " réussi" + (model.score > 1 ? "s" : "") + " · " + duration(model.temps));
-    setText("result-text", reason === "quit" ? "Partie arrêtée avant la fin." : conseils[model.faute] || "Encore une partie ?");
+    setText("result-title", level >= 20 ? "Tête de lave !" : level >= 15 ? "Quatre cases, rien que ça !" : level >= 11 ? "Très solide !"
+      : level >= 8 ? "Beau niveau !" : level >= 5 ? "Ça monte !" : "Partie terminée");
+    setText("result-score", "Niveau " + level + " · " + model.score + " réussite" + (model.score > 1 ? "s" : ""));
+    setText("result-text", reason === "quit" ? "Partie arrêtée. Ton record de la séance est conservé."
+      : (model.cause === "plafond" ? "Tu es allé au bout de l’échelle : personne n’était censé arriver là. "
+        : (conseils[model.faute] || "") + " ")
+        + (level > best && best > 0 ? "Nouveau record de la séance : niveau " + level + " !"
+          : "Record de la séance : niveau " + Math.max(level, best) + "."));
     resultActions(); show("result"); focus("result-title");
   }
   function resultActions() {
@@ -530,6 +646,15 @@
       if (event.key === "ArrowDown") next = i < 12 ? i + 4 : i;
       if (event.key === "ArrowUp") next = i >= 4 ? i - 4 : i;
       if (event.key.startsWith("Arrow")) { event.preventDefault(); $("stage").querySelector('[data-cell="' + next + '"]').focus(); }
+    } else if (current === "cases") {
+      // Le doigt reste la commande principale ; le clavier suit l'ordre de lecture.
+      const n = model.n, digit = Number(event.key);
+      let cell = Number.isInteger(digit) && digit >= 1 && digit <= n ? digit - 1
+        : event.key === "ArrowLeft" ? 0
+        : event.key === "ArrowRight" ? n - 1
+        : (event.key === "ArrowDown" || event.key === "ArrowUp") && n === 3 ? 1 : -1;
+      if (cell >= 0) { event.preventDefault(); casesTap(cell); return; }
+      if (event.code === "Space" && !["pause", "back"].includes(document.activeElement?.id)) { event.preventDefault(); action(); }
     } else if (event.code === "Space" || (current === "dodo" && event.key === "ArrowUp")) {
       // Les commandes de navigation gardent leur activation native.
       if (["pause", "back"].includes(document.activeElement?.id)) return;

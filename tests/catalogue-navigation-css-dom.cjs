@@ -13,7 +13,7 @@ const cases = [
   { file: 'outils/index.html', query: '', labels: [], target: null },
   { file: 'outils/index.html', query: '?domain=jeux-recherches', labels: ['Tous les domaines'], target: 'entry' },
   { file: 'outils/index.html', query: '?domain=jeux-recherches&notion=jeux-courts', labels: ['Tous les domaines', domain], target: 'domain' },
-  ...['dodo', 'luciole', 'galets', 'tempo', 'carres-gloutons'].map(game => ({
+  ...['dodo', 'luciole', 'galets', 'cases', 'carres-gloutons'].map(game => ({
     file: 'outils/index.html', query: '?jeu=' + game, labels: ['Tous les domaines', domain, 'Jeux courts'], target: 'short-games'
   })),
   { file: 'outils/index.html', query: '?domain=geometrie&notion=triangles', labels: ['Tous les domaines', 'Espace et géométrie'], target: 'domain' },
@@ -21,8 +21,8 @@ const cases = [
     file: 'outils/index.html', query: '?domain=geometrie&notion=' + notion,
     labels: ['Tous les domaines', 'Espace et géométrie', 'Triangles'], target: 'notion-parent'
   })),
-  ...['dodo', 'luciole', 'galets', 'tempo'].map(game => ({
-    file: 'jeux-cadeaux/' + game + '.html', labels: ['Tous les domaines', domain, 'Jeux courts'],
+  ...['dodo', 'luciole', 'galets', 'touche-la-case'].map(page => ({
+    file: 'jeux-cadeaux/' + page + '.html', labels: ['Tous les domaines', domain, 'Jeux courts'],
     href: '/outils/?domain=jeux-recherches&notion=jeux-courts'
   })),
   ...['addition', 'soustraction', 'multiplication', 'division'].map(operation => ({

@@ -36,7 +36,7 @@ function create(query = "?domain=jeux-recherches") {
   d.click('[data-notion-card="jeux-courts"]');
   assert.equal(d.doc.querySelectorAll("[data-short-game]").length, 5);
   assert.ok(!d.q('#resource-grid a[href$="jeux-cadeaux/index.html"]'));
-  for (const id of ["luciole", "dodo", "galets", "tempo", "carres-gloutons"]) {
+  for (const id of ["luciole", "dodo", "galets", "cases", "carres-gloutons"]) {
     d.click('[data-short-game="' + id + '"]');
     assert.equal(d.w.location.pathname, "/outils/");
     assert.equal(new URL(d.w.location.href).searchParams.get("jeu"), id);
@@ -53,7 +53,7 @@ function create(query = "?domain=jeux-recherches") {
       assert.equal(frame.src, "https://mathsgo.re/jeux-cadeaux/tec-tec/index.html?integre=1&v=2");
       assert.equal(d.q("#page-title").textContent, "Tec-tec bondissant");
     } else {
-      assert.ok(frame.src.endsWith("?jeu=" + id + "&integre=1&v=6"));
+      assert.ok(frame.src.endsWith("?jeu=" + id + "&integre=1&v=7"));
     }
     d.send(frame, { type: "mathsgo-short-game:height", height: 570 }, "https://mathsgo.re");
     assert.equal(frame.style.height, "570px");

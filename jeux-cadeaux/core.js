@@ -348,82 +348,163 @@
       this.camera += (want - this.camera) * Math.min(1, dt * 5);
     }
   }
-  // Tempo volcan : suite de signaux sans fin, UN SEUL jeu qui monte (plus de
-  // doux/malin/expert). La règle regarde le DESSIN (braise ou pierre) ; à partir
-  // d'une certaine vague le mot écrit dessus contredit le dessin, puis la
-  // consigne s'inverse. Trois vies, et la fenêtre de réponse se resserre à
-  // chaque vague de six signaux.
-  const tempoCourbe = { depart: 1.45, pas: .075, plancher: .58, gap: .72, gapPas: .05, menteur: 3, inverse: 5, dernier: 12 };
-  const TEMPO_VAGUE = 6, TEMPO_MAX = 200, TEMPO_BON = .18, TEMPO_FAUTE = .42, TEMPO_BASCULE = 1.25;
-  const tempoMessages = {
-    bon: "Bien vu !", attendu: "Bien retenu !", tard: "Trop tard, la lave est passée.",
-    pierre: "C’était une pierre.", mot: "Le mot mentait : regarde le dessin.",
-    envers: "À l’envers : c’était l’autre !", tot: "Trop tôt, attends le signal."
+  // « Touche la case qui… » : toutes les règles sont la MÊME phrase, seule la
+  // fin change. La règle s'affiche en grand, puis elle disparaît : on joue de
+  // mémoire. Elle tient trois niveaux — le temps que le geste devienne un
+  // réflexe — puis elle devient son contraire exact. Le niveau, lui, n'est
+  // qu'un cran de vitesse : il monte sans fin, comme les lignes d'un Tetris.
+  const CASES_VIES = 3, CASES_MANCHES = 5, CASES_BLOC = 3, CASES_PLAFOND = 40;
+  const casesCourbe = {
+    depart: 1.8, fin: .2, tau: 5.5,          // fenêtre de réponse, en secondes
+    gap: .24, gapVar: .16,                   // délai avant que les pierres jaillissent
+    juste: .13, faux: .42, eclair: .7, annonce: .9,
+    bascule: 10, basculeP: .35               // renversement en cours de niveau
   };
-  function tempoPalier(n) {
-    const vague = Math.floor(n / TEMPO_VAGUE);
-    return {
-      vague,
-      fenetre: Math.max(tempoCourbe.plancher, tempoCourbe.depart - vague * tempoCourbe.pas),
-      gap: Math.max(.32, tempoCourbe.gap - vague * tempoCourbe.gapPas),
-      cibles: vague < 2 ? .6 : .8,
-      menteur: vague >= tempoCourbe.menteur,
-      inverse: vague >= tempoCourbe.inverse,
-      // Passé le plancher de la fenêtre, plus rien ne se resserrerait : les
-      // pièges prennent le relais pour que la partie finisse toujours par tomber.
-      part: vague >= tempoCourbe.dernier ? .7 : .55,
-      bascule: vague >= tempoCourbe.dernier ? .45 : .3
-    };
+  const casesMessages = {
+    faux: "Ce n’était pas celle-là.", lent: "Trop lent !",
+    avance: "Trop tôt : attends que les pierres jaillissent."
+  };
+  const casesPile = rng => rng() < .5 ? "lave" : "galet";
+  const casesTire = (rng, n) => Math.floor(rng() * n);
+  function casesMelange(liste, rng) {
+    for (let i = liste.length - 1; i > 0; i--) { const j = casesTire(rng, i + 1); [liste[i], liste[j]] = [liste[j], liste[i]]; }
+    return liste;
   }
-  class Tempo {
+  // Cinq familles, chacune avec son contraire exact. Le tirage garantit qu'UNE
+  // SEULE case répond à la règle, quel que soit le nombre de cases. « piege »
+  // marque les manches où le dessin contredit la bonne réponse : c'est là que
+  // se mesure l'inhibition, et nulle part ailleurs.
+  const CASES_FAMILLES = [
+    { cle: "plein", coef: .8, fins: ["est VIDE", "est PLEINE"],
+      tirer(sens, n, rng) {
+        const c = [];
+        for (let i = 0; i < n; i++) c.push(sens === 0 ? { forme: casesPile(rng) } : null);
+        const bon = casesTire(rng, n);
+        c[bon] = sens === 0 ? null : { forme: casesPile(rng) };
+        return { c, bon, piege: null };
+      } },
+    { cle: "forme", coef: .9, fins: ["a la LAVE", "a le GALET"],
+      tirer(sens, n, rng) {
+        const cible = sens === 0 ? "lave" : "galet", autre = sens === 0 ? "galet" : "lave", c = [];
+        for (let i = 0; i < n; i++) c.push({ forme: autre });
+        const bon = casesTire(rng, n);
+        c[bon] = { forme: cible };
+        return { c, bon, piege: null };
+      } },
+    { cle: "mot", coef: 1.25, fins: ["porte le mot « LAVE »", "porte le mot « GALET »"],
+      tirer(sens, n, rng) {
+        const cible = sens === 0 ? "LAVE" : "GALET", autre = sens === 0 ? "GALET" : "LAVE", c = [];
+        for (let i = 0; i < n; i++) c.push({ forme: casesPile(rng), mot: autre });
+        const bon = casesTire(rng, n);
+        c[bon] = { forme: casesPile(rng), mot: cible };
+        // Piège : sur la bonne case, le dessin dit le contraire de son mot.
+        return { c, bon, piege: (c[bon].forme === "lave") !== (cible === "LAVE") };
+      } },
+    { cle: "verite", coef: 1.55, fins: ["DIT LA VÉRITÉ", "MENT"],
+      tirer(sens, n, rng) {
+        const accord = (forme, vrai) => vrai === (forme === "lave") ? "LAVE" : "GALET";
+        const c = [];
+        for (let i = 0; i < n; i++) { const forme = casesPile(rng); c.push({ forme, mot: accord(forme, sens !== 0) }); }
+        const bon = casesTire(rng, n), forme = casesPile(rng);
+        c[bon] = { forme, mot: accord(forme, sens === 0) };
+        return { c, bon, piege: null };
+      } },
+    { cle: "nombre", coef: 1.15, fins: ["a le PLUS de pierres", "a le MOINS de pierres"],
+      tirer(sens, n, rng) {
+        const choix = casesMelange([2, 3, 4, 5, 6, 7], rng).slice(0, n);
+        const extreme = sens === 0 ? Math.max(...choix) : Math.min(...choix);
+        // Piège : le tas le plus nombreux est fait des plus petites pierres.
+        return { c: choix.map(nombre => ({ nombre })), bon: choix.indexOf(extreme), piege: sens === 0 };
+      } }
+  ];
+  const casesGrille = niveau => niveau >= 15 ? 4 : niveau >= 9 ? 3 : 2;
+  // Chaque case en plus coûte au cerveau : la fenêtre s'allonge d'autant, sinon
+  // passer à trois cases reviendrait à sauter deux niveaux d'un coup.
+  const casesHick = n => n === 2 ? 1 : n === 3 ? 1.2 : 1.38;
+  function casesPalier(niveau) {
+    const bloc = Math.ceil(niveau / CASES_BLOC), n = casesGrille(niveau);
+    const famille = CASES_FAMILLES[Math.floor((bloc - 1) / 2) % CASES_FAMILLES.length];
+    const vitesse = casesCourbe.fin + (casesCourbe.depart - casesCourbe.fin) * Math.exp(-(niveau - 1) / casesCourbe.tau);
+    return { niveau, n, bloc, famille, sens: (bloc - 1) % 2, premier: (niveau - 1) % CASES_BLOC === 0,
+             limite: vitesse * famille.coef * casesHick(n) };
+  }
+  class Cases {
     // Un seul jeu qui monte : le niveau reçu par les autres jeux n'est pas utilisé ici.
     constructor(_niveau, seed) {
       this.rng = random(seed);
-      this.index = 0; this.score = 0; this.lives = 3; this.temps = 0; this.elapsed = 0;
-      this.done = false; this.inverse = false; this.repondu = true; this.compte = false;
-      this.feedback = ""; this.faute = ""; this.signal = null;
-      this.palier = tempoPalier(0); this.phase = "wait"; this.attente = this.palier.gap + .5;
+      this.niveau = 0; this.manche = 0; this.score = 0; this.lives = CASES_VIES;
+      this.temps = 0; this.elapsed = 0; this.attente = 0; this.done = false;
+      this.journal = []; this.t = null; this.apercu = null; this.carte = null;
+      this.phase = "carte"; this.faute = ""; this.cause = ""; this.message = "";
+      this.touchee = -1; this.issue = ""; this.bascule = false; this.retour = false;
+      this.n = 2; this.famille = CASES_FAMILLES[0]; this.sens = 0; this.palier = casesPalier(1);
+      this.niveauSuivant();
     }
     get vies() { return this.lives; }
-    montrer() {
-      const lave = this.rng() < this.palier.cibles;
-      // Le mot est écrit dès le premier signal, juste : l'élève prend l'habitude
-      // de le lire. C'est plus tard seulement qu'il se met à mentir.
-      const menteur = this.palier.menteur && this.rng() < this.palier.part;
-      const mot = menteur ? (lave ? "PIERRE" : "LAVE") : (lave ? "LAVE" : "PIERRE");
-      this.signal = { lave, mot, conflit: menteur, toucher: lave !== this.inverse };
-      this.phase = "signal"; this.elapsed = 0; this.repondu = false;
+    get regle() { return "touche la case qui " + this.famille.fins[this.sens]; }
+    niveauSuivant() {
+      this.niveau += 1;
+      if (this.niveau > CASES_PLAFOND) { this.cause = "plafond"; this.done = true; this.phase = "done"; return; }
+      // Un renversement en cours de niveau ne vaut que pour ce niveau-là : au
+      // suivant, la règle du bloc revient. Ce retour doit être annoncé comme le
+      // renversement l'a été, sinon le joueur change de règle sans le savoir.
+      const renverse = this.bascule, sensAvant = this.sens;
+      this.manche = 0; this.bascule = false; this.message = "";
+      const palier = casesPalier(this.niveau), changeCases = palier.n !== this.n;
+      this.palier = palier; this.n = palier.n; this.famille = palier.famille; this.sens = palier.sens;
+      this.retour = renverse && palier.sens !== sensAvant;
+      if (!palier.premier && !changeCases) {
+        this.carte = null; this.elapsed = 0;
+        // Même règle, même plateau : un simple cran de vitesse, annoncé au vol.
+        this.phase = this.retour ? "eclair" : "annonce";
+        this.attente = this.retour ? casesCourbe.eclair : casesCourbe.annonce;
+        return;
+      }
+      this.carte = { debut: this.niveau === 1, inverse: palier.premier && palier.sens === 1, cases: changeCases, regle: palier.premier };
+      this.apercu = this.famille.tirer(this.sens, this.n, this.rng);
+      this.phase = "carte"; this.t = null; this.elapsed = 0;
     }
-    resoudre(ok, cause) {
-      this.compte = this.phase === "signal";
-      if (ok) this.score++; else { this.lives--; this.faute = cause; }
-      this.feedback = tempoMessages[cause]; this.attente = ok ? TEMPO_BON : TEMPO_FAUTE;
-      this.phase = "flash"; this.elapsed = 0;
-      if (this.lives <= 0) { this.done = true; this.phase = "done"; }
+    // La carte de règle attend le joueur : tant qu'il lit, rien ne tourne.
+    demarrer() {
+      if (this.phase !== "carte") return;
+      this.carte = null; this.apercu = null; this.prochaine();
     }
-    suivant() {
-      if (this.compte) this.index++;
-      if (this.index >= TEMPO_MAX) { this.done = true; this.phase = "done"; return; }
-      this.palier = tempoPalier(this.index); this.elapsed = 0;
-      if (this.palier.inverse && this.index % 3 === 0 && this.rng() < this.palier.bascule) { this.inverse = !this.inverse; this.phase = "bascule"; return; }
-      this.phase = "wait"; this.attente = this.palier.gap;
+    prochaine() {
+      if (this.manche >= CASES_MANCHES) { this.niveauSuivant(); return; }
+      if (this.niveau >= casesCourbe.bascule && this.manche === 2 && !this.bascule && this.rng() < casesCourbe.basculeP) {
+        this.bascule = true; this.retour = false; this.sens = 1 - this.sens;
+        this.phase = "eclair"; this.attente = casesCourbe.eclair; this.elapsed = 0; return;
+      }
+      this.t = this.famille.tirer(this.sens, this.n, this.rng);
+      this.touchee = -1; this.issue = ""; this.message = "";
+      this.phase = "attente"; this.attente = casesCourbe.gap + this.rng() * casesCourbe.gapVar; this.elapsed = 0;
     }
-    tap() {
-      if (this.done || this.phase === "flash" || this.phase === "bascule") return;
-      if (this.phase === "wait") { this.resoudre(false, "tot"); return; }
-      if (this.repondu) return;
-      this.repondu = true;
-      if (this.signal.toucher) this.resoudre(true, "bon");
-      else this.resoudre(false, this.inverse ? "envers" : this.signal.conflit ? "mot" : "pierre");
+    conclure(i, issue, rt) {
+      this.touchee = i; this.issue = issue;
+      this.journal.push({ regle: this.famille.cle, sens: this.sens, niveau: this.niveau, piege: this.t ? this.t.piege : null, issue, rt });
+      if (issue === "juste") this.score += 1;
+      else { this.lives -= 1; this.faute = issue; this.message = casesMessages[issue]; }
+      this.manche += 1;
+      this.phase = "retour"; this.attente = issue === "juste" ? casesCourbe.juste : casesCourbe.faux; this.elapsed = 0;
+    }
+    tap(i) {
+      if (this.done) return;
+      if (this.phase === "carte") { this.demarrer(); return; }
+      if (this.phase === "attente") { this.conclure(i, "avance", null); return; }
+      if (this.phase !== "manche" || !this.t) return;
+      this.conclure(i, i === this.t.bon ? "juste" : "faux", this.elapsed);
     }
     update(dt) {
-      if (this.done) return;
+      if (this.done || this.phase === "carte") return;
       this.temps += dt; this.elapsed += dt;
-      if (this.phase === "wait" && this.elapsed >= this.attente) this.montrer();
-      else if (this.phase === "signal" && this.elapsed >= this.palier.fenetre) this.resoudre(!this.signal.toucher, this.signal.toucher ? "tard" : "attendu");
-      else if (this.phase === "flash" && this.elapsed >= this.attente) this.suivant();
-      else if (this.phase === "bascule" && this.elapsed >= TEMPO_BASCULE) { this.phase = "wait"; this.elapsed = 0; this.attente = this.palier.gap; }
+      if (this.phase === "attente" && this.elapsed >= this.attente) { this.phase = "manche"; this.elapsed = 0; }
+      else if (this.phase === "manche" && this.elapsed >= this.palier.limite) this.conclure(-1, "lent", null);
+      else if (this.phase === "retour" && this.elapsed >= this.attente) {
+        if (this.lives <= 0) { this.cause = "vies"; this.done = true; this.phase = "done"; }
+        else this.prochaine();
+      }
+      else if ((this.phase === "eclair" || this.phase === "annonce") && this.elapsed >= this.attente) this.prochaine();
     }
   }
-  return { levels, random, memoryPath, nextMemoryCell, giftOptions, giftLedger, stable, balance, stackStep, tier, BASE, runnerRanks, runnerSteps, RUNNER, tempoPalier, tempoCourbe, Memory, Runner, Stack, Tempo };
+  return { levels, random, memoryPath, nextMemoryCell, giftOptions, giftLedger, stable, balance, stackStep, tier, BASE, runnerRanks, runnerSteps, RUNNER, casesPalier, casesCourbe, CASES_FAMILLES, CASES_MANCHES, CASES_BLOC, CASES_VIES, CASES_PLAFOND, Memory, Runner, Stack, Cases };
 });
