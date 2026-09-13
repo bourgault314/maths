@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="robots" content="noindex, follow">
+  <meta name="description" content="Douze défis d’équilibre : prépare les appuis et fais tenir tous les galets.">
+  <link rel="icon" href="/favicon.ico" sizes="48x48">
+  <link rel="canonical" href="https://mathsgo.re/jeux-cadeaux/galets.html">
+  <title>La pile de galets — Au fil de l’eau | maths&amp;go</title>
+  <link rel="stylesheet" href="styles.css?v=1">
+  <style>html{background:transparent}body{margin:0;padding:0 0 5px}</style>
+  <script src="../core.js?v=luciole-7"></script>
+  <script type="module" src="game.mjs?v=1"></script>
+</head>
+<body>
+<main id="galets-app" aria-label="La pile de galets">
+  <header class="g-topbar">
+    <button class="g-brand" type="button" data-action="home" aria-label="La pile de galets, accueil"><span class="g-brand-mark" aria-hidden="true">◒</span><span>La pile de galets<small>Au fil de l’eau</small></span></button>
+    <div class="g-top-actions"><button class="g-quiet" id="g-map-button" type="button" data-action="map">Défis</button><button class="g-icon" id="g-sound" type="button" data-action="sound" aria-label="Activer le son" aria-pressed="false">♪</button></div>
+  </header>
+  <section id="g-play-info" class="g-play-info" hidden>
+    <div class="g-kicker"><span id="g-chapter"></span><span id="g-counter"></span></div>
+    <div class="g-title-row"><h1 id="g-level-title"></h1><button class="g-icon" type="button" data-action="restart" aria-label="Recommencer ce défi">↺</button></div>
+    <p id="g-goal"></p>
+  </section>
+  <div id="g-scene-wrap" class="g-scene-wrap">
+    <canvas id="g-canvas" role="img" aria-label="Une construction de galets dans le lit d’une rivière réunionnaise" aria-describedby="g-goal g-status"></canvas>
+    <div id="g-home" class="g-home">
+      <div class="g-home-copy"><p class="g-eyebrow">UNE RIVIÈRE · DOUZE DÉFIS</p><h1>Tout se joue<br>au dernier galet.</h1><p>Observe. Prépare la suite.<br>Fais tenir l’impossible.</p><button class="g-primary g-start" type="button" data-action="begin">Entrer dans la rivière <span aria-hidden="true">→</span></button><p class="g-home-note">À ton rythme · Au doigt, à la souris ou au clavier</p></div>
+    </div>
+    <div id="g-scene-badge" class="g-scene-badge" hidden>REGARDE AUSSI LES SUIVANTS</div>
+    <div id="g-outcome" class="g-outcome" hidden role="dialog" aria-modal="true" aria-labelledby="g-outcome-title">
+      <div class="g-outcome-card"><div id="g-outcome-symbol" class="g-outcome-symbol" aria-hidden="true"></div><p id="g-outcome-kicker" class="g-eyebrow"></p><h2 id="g-outcome-title"></h2><p id="g-outcome-text"></p><button id="g-outcome-main" class="g-primary" type="button"></button><button id="g-outcome-secondary" class="g-quiet" type="button"></button></div>
+    </div>
+  </div>
+  <section id="g-controls" class="g-controls" hidden aria-label="Commandes du jeu">
+    <div class="g-tray-head"><span>TES GALETS, DANS L’ORDRE</span><span id="g-placed-count"></span></div>
+    <div id="g-tray" class="g-tray" aria-label="Les galets à placer"></div>
+    <div class="g-status-row"><p id="g-status" role="status" aria-live="polite"></p><button id="g-clue-button" class="g-clue-button" type="button" data-action="clue">Un indice</button></div>
+    <label class="g-sr-only" for="g-position">Position horizontale du galet</label>
+    <input id="g-position" class="g-position" type="range" min="156" max="564" value="360" step="6" aria-describedby="g-position-help"/>
+    <span id="g-position-help" class="g-sr-only">Flèches gauche et droite pour déplacer, R pour retourner, Espace pour poser.</span>
+    <div class="g-action-row"><div class="g-nudge"><button class="g-icon" type="button" data-action="left" aria-label="Déplacer légèrement à gauche">←</button><button class="g-icon" type="button" data-action="right" aria-label="Déplacer légèrement à droite">→</button></div><button id="g-flip" class="g-secondary" type="button" data-action="flip"><span aria-hidden="true">⇄</span> Retourner</button><button id="g-place" class="g-primary" type="button" data-action="place">Poser <span aria-hidden="true">↓</span></button></div>
+    <p class="g-keyboard-help">← → déplacer <span>R retourner</span><span>Espace poser</span></p>
+  </section>
+  <section id="g-level-map" class="g-level-map" hidden aria-label="Les douze défis">
+    <div class="g-map-heading"><div><p class="g-eyebrow">AU FIL DE L’EAU</p><h1>Chaque pile a son secret.</h1></div><button class="g-quiet" type="button" data-action="close-map">Retour</button></div>
+    <p class="g-map-copy">Douze défis d’équilibre. Avance dans l’ordre, ou explore.</p>
+    <div id="g-level-grid"></div>
+    <p id="g-map-progress" class="g-map-progress"></p>
+  </section>
+  <div id="g-clue-panel" class="g-clue-panel" hidden role="dialog" aria-modal="true" aria-labelledby="g-clue-title"><div><p class="g-eyebrow">UN PETIT COUP DE POUCE</p><h2 id="g-clue-title">Regarde les appuis.</h2><p id="g-clue-text"></p><button class="g-primary" type="button" data-action="close-clue">Je réessaie</button></div></div>
+</main>
+<noscript><p>Active JavaScript pour jouer. <a href="/jeux-cadeaux/galets.html">Revenir à la page du jeu</a>.</p></noscript>
+</body>
+</html>

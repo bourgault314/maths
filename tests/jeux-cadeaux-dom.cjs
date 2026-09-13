@@ -135,56 +135,6 @@ run("Dodo : interruption d’écran = pause sans perte de temps ni saut bloqué"
   d.click("#resume");assert.equal(d.doc.activeElement,d.q(".runner-jump"));assert.equal(d.frames.size,1);
   d.w.dispatchEvent(new d.w.Event("blur"));assert.ok(d.q("#pause-dialog").open);d.dom.window.close();
 });
-// Joueur des galets : lâche quand l'ombre d'appui passe au centre, en
-// anticipant le vent que montrent les traits blancs.
-function stackPlayer(d, count = { n: 0 }) {
-  return () => {
-    const shadow = d.q('.game-scene ellipse[ry="4"]'), button = d.q("#controls button");
-    if (!shadow || !button || button.disabled) return;
-    const streak = d.q('.game-scene path[stroke-width="3"][opacity=".85"]');
-    const wind = streak ? (streak.getAttribute("d").includes("h-") ? -1 : 1) * Math.min(130, 40 + 8 * (count.n + 1 - 8)) : 0;
-    if (Math.abs(+shadow.getAttribute("cx") - (300 - wind * Math.sqrt(2 * 130 / 1300))) < 5) { button.click(); count.n++; }
-  };
-}
-run("Galets : pas de niveau à choisir, record de séance, paliers, chute expliquée et rejeu", () => {
-  const d = create("?jeu=galets&integre=1");
-  assert.equal(d.q(".difficulty"), null, "un seul jeu pour tous");
-  assert.equal(d.q("#time-label").textContent, "Record\u00a0: —"); assert.equal(d.q("#progress-label").textContent, "0 galet");
-  assert.match(d.q("#stage").textContent, /rattrape-la en posant le galet suivant de l’autre côté/);
-  d.prepare("galets");
-  const seen = new Set(), notices = new Set();
-  d.until(() => !d.q("#result").hidden, () => { stackPlayer(d)(); seen.add(d.q("#progress-label").textContent); notices.add(d.q("#instructions").textContent); }, 90);
-  assert.ok(d.q(".game-scene").getAttribute("viewBox"), "le cadre suit l’aire de jeu");
-  assert.ok([...seen].some(t => /^3 galets · premier caillou$/.test(t)), "palier 3 affiché : " + [...seen].join(" | "));
-  assert.ok([...seen].some(t => /^5 galets · petite pile$/.test(t)), "palier 5 affiché");
-  assert.ok(notices.has("Lâche le galet au bon endroit.") && notices.has("Le galet descend…") && notices.has("La pile a basculé !"));
-  assert.ok(notices.has("Les galets sont plus petits et plus rapides."), "consigne du palier 5");
-  const score = Number(d.q("#result-score").textContent.match(/^(\d+) galets?/)[1]);
-  assert.ok(score >= 5, "score " + score); assert.match(d.q("#result-title").textContent, /^(Petite pile|Pile du sentier|Pile du volcan|Pile du Piton|Pile de légende) !$/);
-  assert.match(d.q("#result-text").textContent, /^La pile a basculé au \d+e galet(, posé trop à (gauche|droite)| : tout penchait trop à (gauche|droite))\. Nouveau record de la séance\u00a0: \d+\u00a0!$/);
-  assert.equal(d.saved.get("mathsgo:jeux-cadeaux:galets:record"), String(score));
-  // Rejeu : le record de la séance s'affiche, une partie plus courte ne l'efface pas.
-  d.click("#next-round"); assert.equal(d.q("#time-label").textContent, "Record\u00a0: " + score); assert.equal(d.q("#progress-label").textContent, "0 galet");
-  d.click("#controls button"); d.click("#controls button"); d.until(() => !d.q("#result").hidden, () => {}, 5);
-  assert.match(d.q("#result-score").textContent, /^0 galet$/); assert.equal(d.q("#result-title").textContent, "Partie terminée");
-  assert.match(d.q("#result-text").textContent, /^La pile a basculé au 1er galet, posé trop à (gauche|droite)\. Record de la séance\u00a0: \d+\.$/);
-  assert.equal(d.saved.get("mathsgo:jeux-cadeaux:galets:record"), String(score)); d.dom.window.close();
-});
-run("Galets : la pile tombée roule et le fil à plomb rouge marque l’endroit fautif", () => {
-  const d = create("?jeu=galets&integre=1"); d.prepare("galets");
-  const player = stackPlayer(d);
-  d.until(() => /^2 galets/.test(d.q("#progress-label").textContent), player, 20);
-  d.until(() => !d.q("#controls button").disabled, () => {}, 2);
-  // Troisième galet lâché au bord : il glisse.
-  d.until(() => { const s = d.q('.game-scene ellipse[ry="4"]'); return s && Math.abs(+s.getAttribute("cx") - 430) < 6; }, () => {}, 10);
-  d.click("#controls button");
-  d.until(() => d.q("#instructions").textContent === "La pile a basculé !", () => {}, 3);
-  for (let i = 0; i < 12; i++) d.step();
-  const scene = d.q(".game-scene").innerHTML;
-  assert.match(scene, /stroke="#e0483a"/, "fil à plomb rouge"); assert.match(scene, /rotate\(\d+\.\d+ /, "les galets roulent");
-  d.until(() => !d.q("#result").hidden, () => {}, 3);
-  assert.match(d.q("#result-text").textContent, /basculé au 3e galet, posé trop à droite/); d.dom.window.close();
-});
 run("Luciole : plus de niveau à choisir, et le plateau de nuit ne suit pas à l’accueil", () => {
   const d = create("?jeu=luciole&integre=1");
   assert.equal(d.q(".difficulty"), null, "Un seul jeu pour tout le monde : pas de choix de niveau");
@@ -275,20 +225,8 @@ run("Cadeau : abandon, recharge et seconde partie consomment exactement deux par
   const query = "?mode=cadeau&parties=2&ticket=test-deux", saved = new Map();
   let d = create(query, saved); d.click('[data-game="dodo"]'); d.click("#back"); assert.equal(saved.size, 0);
   d.prepare("dodo"); d.click("#pause"); d.click("#quit"); assert.equal(d.q("#next-round").hidden, false); d.dom.window.close();
-  d = create(query, saved); d.prepare("galets"); d.click("#controls button"); d.until(() => !d.q("#result").hidden, () => {}, 5);
+  d = create(query, saved); d.prepare("dodo"); d.click("#pause"); d.click("#quit");
   assert.equal(d.q("#next-round").hidden, true); assert.equal(d.q("#finish").hidden, true); assert.equal(d.q("#gift-end").hidden, false); d.dom.window.close();
   d = create(query, saved); assert.equal(d.q("#result").hidden, false); assert.equal(d.q("#home").hidden, true); assert.equal(d.frames.size, 0); d.dom.window.close();
-});
-run("Inactivité : les galets se terminent au garde-fou de 90 s, sans chrono visible", () => {
-  const d = create("?jeu=galets&integre=1"); d.prepare("galets");
-  d.until(() => !d.q("#result").hidden, () => { assert.equal(d.q("#time-label").textContent, "Record\u00a0: —"); }, 92);
-  assert.match(d.q("#result-text").textContent, /temps.*écoulé/); assert.equal(d.frames.size, 0); d.dom.window.close();
-});
-run("Un écran lent ne prolonge pas la durée de la partie", () => {
-  const d = create("?jeu=galets&integre=1"); d.prepare("galets"); d.step(); d.step(1000);
-  assert.equal(d.q("#result").hidden, true);
-  for (let i = 0; i < 88; i++) d.step(1000);
-  assert.equal(d.q("#result").hidden, true, "89 s : la partie continue");
-  d.step(1000); assert.equal(d.q("#result").hidden, false); assert.equal(d.frames.size, 0); d.dom.window.close();
 });
 console.log(checks + " scénarios d’interface validés (DOM simulé, sans validation visuelle).");
