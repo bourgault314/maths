@@ -1,28 +1,32 @@
-/* L'en-tête, le fil d'Ariane et le pied de page appartiennent au site parent. */
+/* Le cadre commun reste visible avant le départ et après la sortie du plein écran. */
 html.tec-site,.tec-site body{min-height:0;background:transparent}
-.tec-site .app{width:100%;max-width:900px;margin:auto;padding:0 4px 8px}
+.tec-site .app{width:100%;max-width:none;margin:auto;padding:0 4px 8px}
 .tec-site main{display:block}
-.tec-site .game{width:min(100%,max(320px,calc((var(--hauteur-dispo,760px) - 165px)*1.7142857)));height:auto;min-height:0;aspect-ratio:12/7;margin-inline:auto}
-.tec-site .control-deck{padding:18px 6px 16px;display:flex;flex-direction:row;align-items:center;gap:18px}
-.tec-site .instructions{text-align:left}
-.tec-site .footnote{display:flex;padding-top:10px}
-.tec-site .gift-status{margin:0 0 10px;text-align:center;font-size:12px;color:#617466}
+.tec-site .game{width:100%;height:auto;min-height:0;max-height:none;aspect-ratio:12/7;margin-inline:auto}
+.tec-site .control-deck{display:flex;flex-direction:row;align-items:center;justify-content:flex-end;padding:12px 4px;gap:0}
+.tec-site .jump{min-height:56px;padding:9px 20px}
+.tec-site .footnote{display:flex;padding-top:8px}
+.tec-site .gift-status{margin:0 0 8px;text-align:center;font-size:12px;color:#617466}
+.tec-site .sr-only{top:0;left:0;margin:0}
+.screen-toggle{position:absolute;top:16px;right:16px;z-index:25;min-width:44px;min-height:44px;padding:9px 12px;display:flex;align-items:center;justify-content:center;gap:8px;border:1px solid #eaf0d3;background:#f5f4e8e8;border-radius:10px;color:#284a43;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;box-shadow:0 2px 8px #17352b20}
+.screen-toggle svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.screen-toggle:focus-visible{outline:3px solid #f3c969;outline-offset:3px}
+.playing .screen-toggle span{display:none}
+.tec-site .hud{right:78px}
+.tec-site.screen-full,.tec-site.screen-full body{height:100%;overflow:hidden;background:#edf0df}
+.tec-site.screen-full .app{position:fixed;inset:0;width:100%;height:100dvh;max-width:none;padding:max(8px,env(safe-area-inset-top)) max(8px,env(safe-area-inset-right)) max(8px,env(safe-area-inset-bottom)) max(8px,env(safe-area-inset-left));background:#edf0df;overflow:hidden}
+.tec-site.screen-full main{height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px}
+.tec-site.screen-full .game{width:var(--screen-width);height:var(--screen-height);min-height:0;max-height:none;aspect-ratio:auto;margin:0;flex:none;border-radius:14px}
+.tec-site.screen-full .control-deck{width:var(--screen-width);height:64px;margin:0;padding:0;justify-content:flex-end;flex:none}
+.tec-site.screen-full .jump{height:56px;min-height:56px;min-width:160px;width:auto;margin:0;padding:8px 20px}
+.tec-site.screen-full .footnote{display:none}
+.tec-site.screen-full .gift-status{margin:0;line-height:16px;flex:none}
 @media(max-width:680px){
  .tec-site .app{padding-inline:0}
- .tec-site .game{width:100%;aspect-ratio:1.16}
- .tec-site .control-deck{flex-direction:column;align-items:stretch;padding:18px 2px 15px}
- .tec-site .instructions{text-align:center}
+ .tec-site .game{aspect-ratio:1.16}
+ .tec-site .control-deck{padding-inline:0}
+ .tec-site .jump,.tec-site.screen-full .jump{width:100%}
+ .screen-toggle{top:10px;right:10px}
+ .tec-site .hud{right:68px}
 }
-.tec-site.site-compact main{display:grid;grid-template-columns:minmax(0,1fr) 150px;gap:14px;align-items:center}
-.tec-site.site-compact .game{width:min(100%,calc(max(160px,var(--hauteur-dispo,300px) - 24px)*1.7142857));aspect-ratio:12/7}
-.tec-site.site-compact .control-deck{flex-direction:column;align-items:stretch;padding:8px 0;gap:14px}
-.tec-site.site-compact .instructions{text-align:center}
-.tec-site.site-compact .instructions strong{font-size:12px;line-height:1.4}
-.tec-site.site-compact .instructions>span{font-size:10px;line-height:1.5}
-.tec-site.site-compact .instructions small,.tec-site.site-compact .footnote{display:none}
-.tec-site.site-compact .jump{width:100%;min-width:0;min-height:64px}
-.tec-site.site-compact .jump small{display:none}
-.tec-site.site-compact .gift-status{grid-column:1/-1;margin:0}
-
-/* Le texte vocal ne doit pas agrandir le document sous le cadre. */
-.tec-site .sr-only{top:0;left:0;margin:0}
+@media(max-height:550px) and (orientation:landscape){.tec-site .game{aspect-ratio:12/7}.tec-site .control-deck{flex-direction:row}.tec-site .jump small{display:block}}

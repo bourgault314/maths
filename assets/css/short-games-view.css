@@ -34,3 +34,6 @@
 @media (max-width: 600px) {
   .catalogue-game-view.main-panel { padding-inline: 12px; }
 }
+
+/* Le Tec-tec utilise toute la largeur du panneau disponible. */
+.short-game-view:has(.tec-tec-frame){max-width:1200px}

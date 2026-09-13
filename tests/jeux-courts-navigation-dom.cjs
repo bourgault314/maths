@@ -50,7 +50,7 @@ function create(query = "?domain=jeux-recherches") {
     } else if (id === "galets") {
       assert.equal(frame.src, "https://mathsgo.re/jeux-cadeaux/galets-riviere/index.html?integre=1&v=1");
     } else if (id === "dodo") {
-      assert.equal(frame.src, "https://mathsgo.re/jeux-cadeaux/tec-tec/index.html?integre=1&v=1");
+      assert.equal(frame.src, "https://mathsgo.re/jeux-cadeaux/tec-tec/index.html?integre=1&v=2");
       assert.equal(d.q("#page-title").textContent, "Tec-tec bondissant");
     } else {
       assert.ok(frame.src.endsWith("?jeu=" + id + "&integre=1&v=6"));
@@ -89,6 +89,24 @@ function create(query = "?domain=jeux-recherches") {
   assert.equal(new URL(invalid.w.location.href).searchParams.get("jeu"), null);
   assert.deepEqual(invalid.errors, []); invalid.dom.window.close();
   console.log("OK · Liens directs et paramètre inconnu rejoignent le bon niveau du catalogue.");
+
+  const large = create("?jeu=dodo"), frame = large.q("iframe"), original = frame.style.cssText, originalWindow = frame.contentWindow;
+  assert.equal(frame.allowFullscreen, true);
+  const expansion = { type: "mathsgo-short-game:expand", expanded: true };
+  large.w.dispatchEvent(new large.w.MessageEvent("message", {origin:"https://intrus.invalid",source:frame.contentWindow,data:expansion}));
+  large.w.dispatchEvent(new large.w.MessageEvent("message", {origin:large.w.location.origin,source:large.w,data:expansion}));
+  assert.equal(frame.style.cssText, original);
+  large.w.dispatchEvent(new large.w.MessageEvent("message", {origin:large.w.location.origin,source:frame.contentWindow,data:expansion}));
+  assert.equal(frame.style.position,"fixed");assert.equal(frame.style.height,"100dvh");assert.equal(large.doc.body.style.overflow,"hidden");
+  assert.equal(frame.contentWindow, originalWindow,"Aucun déplacement/rechargement du jeu pour agrandir le cadre");
+  large.w.dispatchEvent(new large.w.MessageEvent("message", {origin:large.w.location.origin,source:frame.contentWindow,data:{type:"mathsgo-short-game:height",height:400}}));
+  assert.equal(frame.style.height,"100dvh");
+  large.w.dispatchEvent(new large.w.MessageEvent("message", {origin:large.w.location.origin,source:frame.contentWindow,data:{...expansion,expanded:false}}));
+  assert.equal(frame.style.cssText,original);assert.equal(large.doc.body.style.overflow,"");
+  large.w.dispatchEvent(new large.w.MessageEvent("message", {origin:large.w.location.origin,source:frame.contentWindow,data:expansion}));
+  large.click('[data-breadcrumb-target="short-games"]');assert.equal(large.doc.body.style.overflow,"");assert.equal(large.q("iframe"),null);
+  assert.deepEqual(large.errors,[]);large.dom.window.close();
+  console.log("OK · Grand écran de secours : origine, cadre conservé, taille et retour restaurés.");
 
   const strategy = create("?domain=jeux-recherches&notion=strategie");
   const squares = strategy.q('#resource-grid a[href$="carres_gloutons.html"]');

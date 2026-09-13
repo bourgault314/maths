@@ -14,13 +14,14 @@
     const frame = document.createElement("iframe");
     frame.className = "short-game-frame";
     frame.title = games[game] + " — aire de jeu";
+    if (game === "dodo") { frame.allowFullscreen = true; frame.classList.add("tec-tec-frame"); }
     if (game === "carres-gloutons") {
       frame.src = "/outils/club_maths/carres_gloutons.html?integre=1&v=1";
       frame.allowFullscreen = true;
     } else if (game === "galets") {
       frame.src = "/jeux-cadeaux/galets-riviere/index.html?integre=1&v=1";
     } else if (game === "dodo") {
-      frame.src = "/jeux-cadeaux/tec-tec/index.html?integre=1&v=1";
+      frame.src = "/jeux-cadeaux/tec-tec/index.html?integre=1&v=2";
     } else {
       frame.src = "/jeux-cadeaux/index.html?jeu=" + game + "&integre=1&v=6";
     }
@@ -39,14 +40,28 @@
       }
       return autour;
     }
+    let expanded = false, savedFrameStyle = "", savedOverflow = "";
+    function expand(value) {
+      if (game !== "dodo") return;
+      if (value === expanded) { frame.contentWindow?.postMessage({ type: "mathsgo-short-game:expanded", expanded }, location.origin); return; }
+      if (value) {
+        savedFrameStyle = frame.style.cssText; savedOverflow = document.body.style.overflow;
+        frame.style.cssText = "position:fixed;inset:0;width:100vw;height:100dvh;max-width:none;max-height:none;min-height:0;z-index:2147483647;border:0;background:#edf0df";
+        document.body.style.overflow = "hidden";
+      } else { frame.style.cssText = savedFrameStyle; document.body.style.overflow = savedOverflow; }
+      expanded = value;
+      frame.contentWindow?.postMessage({ type: "mathsgo-short-game:expanded", expanded }, location.origin);
+      if (!expanded) tell();
+    }
     function tell() {
       const dispo = Math.max(260, window.innerHeight - autourDuCadre());
       try { frame.contentWindow?.postMessage({ type: "mathsgo-short-game:fenetre", height: window.innerHeight, dispo }, location.origin); } catch { /* Cadre pas encore prêt. */ }
     }
     function receive(event) {
       if (event.origin !== location.origin || event.source !== frame.contentWindow) return;
+      if (event.data?.type === "mathsgo-short-game:expand" && typeof event.data.expanded === "boolean") expand(event.data.expanded);
       if (event.data?.type === "mathsgo-short-game:return") onReturn();
-      if (event.data?.type === "mathsgo-short-game:height" && Number.isFinite(event.data.height)) {
+      if (!expanded && event.data?.type === "mathsgo-short-game:height" && Number.isFinite(event.data.height)) {
         frame.style.height = Math.max(250, Math.min(1400, event.data.height)) + "px";
         tell();
       }
@@ -56,6 +71,7 @@
     frame.addEventListener("load", tell);
     container.replaceChildren(frame);
     return () => {
+      if (expanded) expand(false);
       window.removeEventListener("message", receive);
       window.removeEventListener("resize", tell);
       frame.remove(); // Détruit aussi l’horloge et les commandes de la partie.
