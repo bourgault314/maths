@@ -57,14 +57,18 @@
   // Un seul chemin par partie : il s'allonge d'une lumière à chaque réussite et
   // la partie s'arrête à la première erreur. Le temps de réponse suit la longueur.
   const MEMORY_CEILING = 20;
+  // Un seul jeu pour tout le monde : départ à trois lumières, et l'éclairage se
+  // resserre à mesure que le chemin s'allonge (0,58 s à 3 lumières, 0,40 s à 10).
+  const MEMORY_START = 3, MEMORY_FLASH = .58, MEMORY_FLASH_MIN = .4, MEMORY_FLASH_STEP = .025;
   class Memory {
     constructor(level, seed) {
-      this.cfg = config(level); this.rng = random(seed);
-      this.path = memoryPath(this.cfg.memory, this.rng);
+      this.rng = random(seed);
+      this.path = memoryPath(MEMORY_START, this.rng);
       this.round = 0; this.score = 0; this.done = false; this.won = false;
       this.startPath();
     }
     get length() { return this.path.length; }
+    get flash() { return Math.max(MEMORY_FLASH_MIN, MEMORY_FLASH - (this.path.length - MEMORY_START) * MEMORY_FLASH_STEP); }
     get answerTime() { return Math.max(8, this.path.length * 2.5); }
     get remaining() { return this.phase === "answer" ? Math.max(0, this.answerTime - this.elapsed) : 0; }
     startPath() { this.index = 0; this.elapsed = 0; this.phase = "show"; this.lit = -1; this.missed = -1; this.feedback = ""; }
@@ -73,8 +77,8 @@
       if (this.done) return;
       this.elapsed += dt;
       if (this.phase === "show") {
-        const t = this.elapsed - .6, step = this.cfg.flash + .2, i = Math.floor(t / step);
-        this.lit = t >= 0 && i < this.path.length && t % step < this.cfg.flash ? this.path[i] : -1;
+        const t = this.elapsed - .6, flash = this.flash, step = flash + .2, i = Math.floor(t / step);
+        this.lit = t >= 0 && i < this.path.length && t % step < flash ? this.path[i] : -1;
         if (t >= this.path.length * step) { this.phase = "answer"; this.elapsed = 0; this.lit = -1; }
       } else if (this.phase === "answer" && this.elapsed >= this.answerTime) this.fail(-1);
       else if (this.phase === "feedback" && this.elapsed >= 1.1) {

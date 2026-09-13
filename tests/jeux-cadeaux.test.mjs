@@ -8,7 +8,7 @@ const advance = (game, until, max = 100) => {
 };
 for (const difficulty of Object.keys(core.levels)) {
   test(difficulty + " : le chemin de mémoire s’allonge d’une lumière à chaque réussite", () => {
-    const g = new Memory(difficulty, 314), start = core.levels[difficulty].memory;
+    const g = new Memory(difficulty, 314), start = 3;
     let previous = [];
     for (let round = 0; round < 5; round++) {
       advance(g, m => m.phase === "answer", 120);
@@ -55,6 +55,26 @@ for (const difficulty of Object.keys(core.levels)) {
     assert.equal(JSON.stringify(g), end);
   });
 }
+test("La Luciole ignore les niveaux : un seul jeu, qui accélère tout seul", () => {
+  const parties = Object.keys(core.levels).map(niveau => new Memory(niveau, 555));
+  const [reference] = parties;
+  for (const g of parties) {
+    assert.deepEqual(g.path, reference.path, "Même chemin de départ quel que soit le niveau reçu");
+    assert.equal(g.length, 3, "Tout le monde commence à trois lumières");
+    assert.equal(g.flash, reference.flash);
+  }
+  const eclairage = [];
+  const g = new Memory("doux", 555);
+  for (let tour = 0; tour < 10; tour++) {
+    advance(g, m => m.phase === "answer", 120);
+    eclairage.push(Math.round(g.flash * 1000) / 1000);
+    [...g.path].forEach(n => g.tap(n));
+    advance(g, m => m.phase !== "feedback", 5);
+  }
+  assert.deepEqual(eclairage, [.58, .555, .53, .505, .48, .455, .43, .405, .4, .4]);
+  eclairage.forEach((v, i) => { if (i) assert.ok(v <= eclairage[i - 1], "L'éclairage ne ralentit jamais"); });
+  assert.ok(eclairage.at(-1) >= .4, "Plancher à 0,4 s : le chemin reste lisible");
+});
 test("La génération des chemins est reproductible, bornée, sans répétition immédiate", () => {
   const a = random(88), b = random(88);
   for (let i = 0; i < 30; i++) {

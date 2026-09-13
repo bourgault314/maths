@@ -8,7 +8,7 @@
     pierre: '<svg viewBox="0 0 48 48" aria-hidden="true"><path d="M4 30.4c0-4.8 3.1-10 7.9-13.5C16.2 13.7 21.2 11.2 25.8 11.2c5.8 0 11.8 3.1 14.1 8.5 2.1 5-1 11-4.7 14.5-3.5 3.3-9.3 5-15.3 5C12 39.2 4 36.5 4 30.4Z" fill="#f3f8f9"/><path d="M11.6 21.8c3.8-3.4 8.6-5.6 13.1-5.4 3 .1 5.8 1.1 8 2.9-4.8.2-9.4 1.7-12.9 4.1-3.5 2.4-6.1 5.8-7.3 9.3-2-3.4-2.3-8-.9-10.9Z" fill="#ffffff"/><path d="M17.4 34.6c5.5.4 10.8-1.4 14.4-4.6" stroke="#a9b9be" stroke-width="2.6" stroke-linecap="round" fill="none"/><circle cx="33.4" cy="22.8" r="1.9" fill="#c9d6da"/></svg>'
   };
   const games = {
-    luciole: { title: "La Luciole", skill: "Mémoire · observation", intro: "Observe les cases qui s’éclairent, puis retouche-les dans le même ordre. À chaque réussite, le chemin s’allonge d’une lumière. La partie s’arrête à la première erreur.", hint: "Touche les cases · Au clavier : flèches puis Entrée", goal: 0, seconds: 0, engine: core.Memory },
+    luciole: { title: "La Luciole", skill: "Mémoire · observation", intro: "Observe le chemin, refais-le. À chaque réussite, il s’allonge d’une lumière.", hint: "Touche les cases · Au clavier : flèches puis Entrée", goal: 0, seconds: 0, engine: core.Memory },
     dodo: { title: "Dodo bondissant", skill: "Adresse · anticipation", intro: "Cours le plus loin possible ! Appui bref : petit saut. Maintiens l’appui : grand saut. Saute les cailloux, les troncs et les rochers, et reste au sol sous les branches. Ça accélère sans arrêt. Tu as deux vies — jusqu’où iras-tu ?", hint: "Espace ou ↑ · Bouton ou paysage : appui bref = petit saut, maintenu = grand saut", goal: 60, seconds: Infinity, engine: core.Runner },
     // Jeu sans fin : pas d'objectif, le score est la hauteur ; les 90 s sont un garde-fou invisible.
     galets: { title: "La pile de galets", skill: "Précision · équilibre", intro: "Le galet va et vient au-dessus de la pile. Lâche-le au bon moment. La pile penche du côté le plus lourd : rattrape-la en posant le galet suivant de l’autre côté. Jusqu’où iras-tu ?", hint: "Touche le paysage ou le bouton · Clavier : Espace", goal: 0, seconds: 90, engine: core.Stack },
@@ -51,7 +51,6 @@
   }
   const cellFrequency = cell => 130.81 * Math.pow(2, (12 * Math.floor(cell / SCALE.length) + SCALE[cell % SCALE.length]) / 12);
   const note = (cell, duration = .34) => sound(cellFrequency(cell), 0, duration, "triangle", .16);
-  function chime() { [0, .09, .18].forEach((delay, i) => sound(523.25 * Math.pow(2, i * 4 / 12), delay, .3, "triangle", .13)); }
   function buzz() { sound(146.83, 0, .34, "sawtooth", .1); sound(110, .05, .4, "sawtooth", .08); }
   function paintSound() {
     $("sound").setAttribute("aria-pressed", String(soundOn));
@@ -116,12 +115,15 @@
     current = Object.hasOwn(games, name) ? name : "luciole"; model = null;
     const difficulty = document.querySelector(".difficulty");
     if (embedded) $("play").insertBefore(difficulty, $("stage"));
-    // Ni le dodo, ni le tempo, ni les galets n'ont de niveau : un seul jeu pour tout le monde, qui monte seul.
-    difficulty.hidden = current === "dodo" || current === "tempo" || current === "galets";
+    // Plus aucun jeu court n'a de niveau : un seul jeu pour tout le monde, qui monte seul.
+    difficulty.hidden = current !== "carres-gloutons";
     const game = games[current];
     $("play").classList.toggle("runner-play", current === "dodo");
     $("play").classList.toggle("tempo-play", current === "tempo");
-    $("stage").classList.remove("runner-stage");
+    // L'écran d'avant-partie de la Luciole ne garde que le dessin, une phrase et le bouton.
+    $("play").classList.toggle("intro-memory", current === "luciole");
+    $("play").classList.remove("play-memory", "reussite");
+    $("stage").classList.remove("runner-stage", "stage-memory");
     $("runner-result-detail")?.remove(); $("tempo-rule")?.remove();
     $("instructions").hidden = false;
     runnerDraw = null;
@@ -130,7 +132,9 @@
     setText("round-label", options.enabled ? "Cadeau · " + (ledger.used + 1) + " / " + options.limit : "Jeu libre");
     setText("time-label", current === "luciole" ? "1 à 2 min" : current === "dodo" || current === "tempo" ? "Sans fin" : current === "galets" ? "Record : " + (record() || "—") : "≤ " + game.seconds + " s"); setText("keyboard-hint", game.hint);
     $("sound").hidden = current !== "luciole"; paintSound();
-    $("stage").innerHTML = '<div class="intro">' + art(current) + '<h2>Comment jouer ?</h2><p>' + game.intro + '</p><small>À toi de jouer quand tu veux.</small></div>';
+    $("stage").innerHTML = current === "luciole"
+      ? '<div class="intro intro-luciole">' + art(current) + '<p>' + game.intro + '</p></div>'
+      : '<div class="intro">' + art(current) + '<h2>Comment jouer ?</h2><p>' + game.intro + '</p><small>À toi de jouer quand tu veux.</small></div>';
     $("controls").replaceChildren(); button("Commencer", begin); show("play"); focus("game-title");
   }
   function begin() {
@@ -138,6 +142,7 @@
     if (options.enabled && !ledger.take()) { exhausted(); return; }
     const difficulty = document.querySelector('input[name="level"]:checked').value;
     if (embedded) document.querySelector(".difficulty").hidden = true;
+    $("play").classList.remove("intro-memory");
     const seed = window.crypto?.getRandomValues ? window.crypto.getRandomValues(new Uint32Array(1))[0] : Math.floor(Math.random() * 4294967296);
     runnerBest = readRecord(); runnerAnnouncement = -1; releaseRunner();
     if (current === "dodo") $("instructions").hidden = true;
@@ -234,17 +239,18 @@
       setText("instructions", message);
       const cells = [...$("stage").querySelectorAll(".memory-cell")];
       const trail = model.phase === "feedback";
+      $("play").classList.toggle("reussite", trail);
       cells.forEach((b, i) => {
         b.classList.toggle("lit", model.lit === i);
         b.classList.toggle("wrong", model.missed === i);
         b.classList.toggle("trail", trail && model.path.includes(i));
+        if (trail) b.style.setProperty("--rang", Math.max(0, model.path.indexOf(i)));
         b.disabled = model.phase !== "answer";
       });
       if (model.lit !== lastLit) {
         if (model.lit >= 0) note(model.lit, model.phase === "reveal" ? .5 : .3);
         lastLit = model.lit;
       }
-      if (model.phase !== memoryPhase && model.phase === "feedback") chime();
       const bar = $("stage").querySelector(".memory-timer");
       bar.hidden = model.phase !== "answer";
       bar.firstElementChild.style.width = (model.phase === "answer" ? Math.max(0, model.remaining / model.answerTime) * 100 : 100) + "%";
