@@ -399,20 +399,20 @@ window.MATHSGO_CATALOGUE = {
       "thumbnail": "assets/img/thumbnails/jeux/galets.svg?v=2",
       "cardDescription": "Prépare les appuis, place les galets et résous douze défis d’équilibre dans une rivière réunionnaise."
     },
-    "jeux-cadeaux/tempo.html": {
+    "jeux-cadeaux/touche-la-case.html": {
       "primaryNotion": "jeux-courts",
       "primaryGroup": "jeux",
       "collections": [],
       "tags": [
         "jeu",
         "jeu-court",
-        "tempo",
+        "inhibition",
         "Attention",
-        "inhibition"
+        "règle"
       ],
-      "shortGame": "tempo",
-      "thumbnail": "assets/img/thumbnails/jeux/tempo.svg?v=2",
-      "cardDescription": "Touche la lave, laisse passer la pierre : le mot écrit finit par mentir, et la consigne s’inverse."
+      "shortGame": "cases",
+      "thumbnail": "assets/img/thumbnails/jeux/touche-la-case.svg?v=1",
+      "cardDescription": "Une règle s’affiche en grand, puis elle disparaît : il faut la garder en tête. Elle tient trois niveaux, puis elle s’inverse."
     },
     "outils/club_maths/carres_gloutons.html": {
       "primaryGroup": "jeux",
@@ -6816,10 +6816,10 @@ window.MATHSGO_CATALOGUE = {
       "recent": true
     },
     {
-      "id": "jeux-courts-tempo",
-      "title": "Tempo volcan",
-      "description": "Touche la lave, laisse passer la pierre : le mot écrit finit par mentir, et la consigne s’inverse.",
-      "path": "jeux-cadeaux/tempo.html",
+      "id": "jeux-courts-touche-la-case",
+      "title": "Touche la case qui…",
+      "description": "Une règle s’affiche en grand, puis elle disparaît : il faut la garder en tête. Elle tient trois niveaux, puis elle s’inverse.",
+      "path": "jeux-cadeaux/touche-la-case.html",
       "domains": [
         "jeux-recherches"
       ],
@@ -6835,9 +6835,9 @@ window.MATHSGO_CATALOGUE = {
       "filters": [],
       "keywords": [
         "jeu court",
-        "tempo",
+        "inhibition",
         "Attention",
-        "inhibition"
+        "règle"
       ],
       "kind": "tool",
       "status": "published",

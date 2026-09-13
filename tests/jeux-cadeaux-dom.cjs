@@ -108,48 +108,72 @@ run("Boîte à jeux : l’ancien choix de niveau ne revient pas sur l’écran d
   assert.deepEqual(d.errors, []);
   d.dom.window.close();
 });
-run("Tempo : le dessin commande, l’inversion est annoncée, trois erreurs arrêtent la partie", () => {
-  const d = create("?jeu=tempo&integre=1"); d.prepare("tempo");
+run("Touche la case qui… : la règle affichée est bien celle qui gagne, et elle finit par s’inverser", () => {
+  const d = create("?jeu=cases&integre=1"); d.prepare("cases");
   assert.equal(d.q(".difficulty"), null, "Un seul jeu qui monte : pas de choix de niveau");
-  assert.equal(d.q("#play").classList.contains("tempo-play"), true);
+  assert.equal(d.q("#play").classList.contains("cases-play"), true);
   assert.equal(d.q("#time-label").textContent, "0:00", "Le chrono compte, il ne décompte plus");
-  assert.match(d.q("#tempo-rule").textContent, /Touche la LAVE, laisse passer la PIERRE/);
-  assert.equal(d.q("#tempo-rule").classList.contains("envers"), false);
-  const inverse = () => d.q("#tempo-rule").classList.contains("envers");
-  const reussis = () => Number(d.q("#progress-label").textContent.match(/^\d+/)[0]);
-  let repondu = false, menteurs = 0, doubles = 0, annonces = 0, dessins = 0, annonce = "";
-  // Le joueur obéit au dessin et double chaque touche : il ne doit rien perdre.
-  d.until(() => annonces > 0 && menteurs > 0 && doubles > 6, () => {
-    const orb = d.q(".tempo-orb");
-    if (orb.classList.contains("envers")) {
-      // L’inversion passe par un écran d’annonce, jamais par surprise.
-      if (!annonce) { annonces++; annonce = d.q(".signal-text").textContent + " / " + d.q(".signal-note").textContent + " / " + d.q("#tempo-rule").textContent.trim(); }
-      return;
-    }
-    annonce = "";
-    if (!orb.classList.contains("signal")) { repondu = false; return; }
+  assert.equal(d.q(".cases-card").hidden, false, "Le jeu s’ouvre sur la règle, en grand");
+  assert.equal(d.q(".cases-rule").textContent, "est VIDE", "La première règle est toujours la même");
+  assert.ok(d.q(".cases-preview svg"), "La carte montre un exemple dessiné");
+  assert.equal(d.q(".cases-board").children.length, 2, "On commence à deux cases");
+  // Le joueur lit la règle affichée, puis répond d’après ce que les cases
+  // annoncent. Si le jeu triche, il perd une vie : rien d’autre à vérifier.
+  const contenu = () => [...d.q(".cases-board").children].map(c => c.getAttribute("aria-label").replace(/^Case \d+ : /, ""));
+  const nombres = tous => tous.map(t => Number((t.match(/^(\d+) pierres$/) || [0, 0])[1]));
+  const gagnante = regle => {
+    const tous = contenu(), vrai = t => (t.startsWith("lave")) === /mot LAVE/.test(t);
+    const test = {
+      "est VIDE": t => t === "vide", "est PLEINE": t => t !== "vide",
+      "a la LAVE": t => t === "lave", "a le GALET": t => t === "galet",
+      "porte le mot « LAVE »": t => /mot LAVE/.test(t), "porte le mot « GALET »": t => /mot GALET/.test(t),
+      "DIT LA VÉRITÉ": vrai, "MENT": t => !vrai(t),
+      "a le PLUS de pierres": (t, i) => nombres(tous)[i] === Math.max(...nombres(tous)),
+      "a le MOINS de pierres": (t, i) => nombres(tous)[i] === Math.min(...nombres(tous))
+    }[regle];
+    assert.ok(test, "Règle inconnue : " + regle);
+    const bonnes = tous.map((t, i) => test(t, i) ? i : -1).filter(i => i >= 0);
+    assert.equal(bonnes.length, 1, "Une seule case répond à « " + regle + " » : " + tous.join(" | "));
+    return bonnes[0];
+  };
+  const niveau = () => Number(d.q("#progress-label").textContent.match(/Niveau (\d+)/)[1]);
+  const vies = () => d.q(".cases-lives").querySelectorAll(".cases-heart:not(.is-lost)").length;
+  let regle = d.q(".cases-rule").textContent, cartes = 0, eclairs = 0, manches = 0, repondu = true, cases = 2;
+  d.until(() => niveau() >= 7, () => {
+    if (!d.q(".cases-card").hidden) { regle = d.q(".cases-rule").textContent; cartes++; d.click(".cases-go"); return; }
+    if (!d.q(".cases-flash").hidden) { regle = d.q(".cases-flash .cases-rule").textContent; eclairs++; return; }
+    const plateau = d.q(".cases-board");
+    cases = Math.max(cases, plateau.children.length);
+    if (!plateau.classList.contains("is-open")) { repondu = false; return; }
     if (repondu) return;
-    repondu = true;
-    const lave = orb.classList.contains("lave"), mot = d.q(".signal-text").textContent;
-    assert.ok(mot === "LAVE" || mot === "PIERRE", "Un mot est toujours écrit : " + mot);
-    if (d.q(".signal-icon svg")) dessins++;
-    if ((mot === "LAVE") !== lave) menteurs++;
-    if (lave !== inverse()) {
-      const avant = reussis();
-      d.click(".tempo-orb"); d.click(".tempo-orb"); doubles++;
-      assert.equal(reussis(), avant + 1, "Une touche doublée ne compte qu’une fois");
-    }
-    assert.match(d.q("#progress-label").textContent, /\u00b7 3 vies$/, "Obéir au dessin ne coûte aucune vie");
-  }, 85);
-  assert.ok(dessins > 6, "Le signal montre un dessin, pas un symbole");
-  assert.equal(annonce, "À L’ENVERS / touche les PIERRES, laisse la LAVE / À l’envers : touche la PIERRE, laisse passer la LAVE.");
-  assert.equal(inverse(), true, "Le bandeau change de couleur en même temps que la consigne");
-  // Plus personne ne joue : trois erreurs suffisent à terminer la partie.
-  d.until(() => !d.q("#result").hidden, () => {}, 30);
-  assert.equal(d.q("#result-title").textContent, "Partie terminée");
-  assert.match(d.q("#result-score").textContent, /^\d+ signaux réussis · \d+:\d\d$/);
-  assert.match(d.q("#result-text").textContent, /doigt|pierre|dessin|règle|signal/);
+    repondu = true; manches++;
+    plateau.children[gagnante(regle)].dispatchEvent(new d.w.MouseEvent("pointerdown", { bubbles: true, cancelable: true }));
+    assert.equal(vies(), 3, "Suivre la règle affichée ne coûte jamais de vie");
+  }, 120);
+  assert.ok(manches >= 30, "Six niveaux valent au moins trente manches, jouées : " + manches);
+  assert.ok(cartes >= 2, "La règle change au moins une fois en six niveaux");
+  assert.equal(regle !== "est VIDE" || cartes < 2, true, "La règle affichée a bien changé");
+  // Une fois la règle installée, son contraire arrive : c’est le « boum ».
+  assert.equal(d.q(".cases-rule, .cases-board") !== null, true);
+  // Plus personne ne joue : trois manches ratées suffisent à finir la partie.
+  d.until(() => !d.q("#result").hidden, () => { if (!d.q(".cases-card").hidden) d.click(".cases-go"); }, 60);
+  assert.match(d.q("#result-score").textContent, /^Niveau \d+ · \d+ réussites?$/);
+  assert.match(d.q("#result-text").textContent, /Record de la séance : niveau \d+\./);
   assert.equal(d.frames.size, 0, "La boucle s’arrête avec la partie"); d.dom.window.close();
+});
+run("Touche la case qui… : une erreur coûte une vie, et la bonne case est montrée", () => {
+  const d = create("?jeu=cases&integre=1"); d.prepare("cases");
+  d.click(".cases-go");
+  d.until(() => d.q(".cases-board").classList.contains("is-open"), () => {}, 10);
+  const plateau = d.q(".cases-board");
+  const juste = [...plateau.children].findIndex(c => /vide/.test(c.getAttribute("aria-label")));
+  const faux = (juste + 1) % plateau.children.length;
+  plateau.children[faux].dispatchEvent(new d.w.MouseEvent("pointerdown", { bubbles: true, cancelable: true }));
+  assert.equal(d.q(".cases-lives").querySelectorAll(".cases-heart:not(.is-lost)").length, 2, "Une erreur coûte une vie");
+  assert.equal(plateau.children[faux].classList.contains("is-wrong"), true);
+  assert.equal(plateau.children[juste].classList.contains("is-target"), true, "La bonne case est montrée après coup");
+  assert.deepEqual(d.errors, []);
+  d.dom.window.close();
 });
 run("Pause et reprise : horloge gelée, une seule boucle après un double clic", () => {
   const d = create("?jeu=luciole&integre=1"); d.prepare("luciole"); for (let i = 0; i < 30; i++) d.step();
