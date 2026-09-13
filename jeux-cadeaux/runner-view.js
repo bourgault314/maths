@@ -80,9 +80,13 @@
         `<path class="runner-cascade" d="M262 164V232" stroke="#eef5f8" stroke-width="5" stroke-linecap="round" opacity=".9"/><path class="runner-cascade-fil" d="M262 164V232" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-dasharray="6 14" opacity=".9"/><ellipse cx="262" cy="234" rx="16" ry="6" fill="#ffffff" opacity=".7"/>`,
         // Les rebords sont piquetés de végétation.
         `<g fill="#4f7060"><ellipse cx="84" cy="152" rx="9" ry="3"/><ellipse cx="192" cy="150" rx="9" ry="3"/><ellipse cx="362" cy="156" rx="9" ry="3"/><ellipse cx="482" cy="158" rx="9" ry="3"/><ellipse cx="124" cy="180" rx="12" ry="3"/><ellipse cx="410" cy="182" rx="12" ry="3"/><ellipse cx="530" cy="185" rx="12" ry="3"/><ellipse cx="228" cy="182" rx="10" ry="3"/></g>`,
-        `<path d="M0 238C60 222 120 242 180 230C240 218 300 246 360 232C420 218 480 244 540 230C570 224 590 232 600 238V290H0Z" fill="#6d8877"/>`],
-      // Des écharpes de nuages accrochées aux parois.
-      voile: `<g fill="#ffffff" opacity=".42"><ellipse cx="150" cy="152" rx="46" ry="4"/><ellipse cx="136" cy="148" rx="22" ry="3"/><ellipse cx="420" cy="160" rx="54" ry="4"/><ellipse cx="440" cy="156" rx="26" ry="3"/><ellipse cx="560" cy="150" rx="34" ry="3.5"/></g>`,
+        `<path d="M0 238C60 222 120 242 180 230C240 218 300 246 360 232C420 218 480 244 540 230C570 224 590 232 600 238V290H0Z" fill="#6d8877"/>`,
+        // Des écharpes de nuages accrochées aux parois. Elles tiennent dans les
+        // 600 du motif (à la différence de la brume ou de la mer, plus larges
+        // que l'écran) : elles appartiennent donc au motif, qui les recopie.
+        // Posées à part, elles sortaient de l'écran avant le rebouclage du plan
+        // et y revenaient d'un coup, deux fois par passage dans les remparts.
+        `<g fill="#ffffff" opacity=".42"><ellipse cx="150" cy="152" rx="46" ry="4"/><ellipse cx="136" cy="148" rx="22" ry="3"/><ellipse cx="420" cy="160" rx="54" ry="4"/><ellipse cx="440" cy="156" rx="26" ry="3"/><ellipse cx="560" cy="150" rx="34" ry="3.5"/></g>`],
       pres: [`<path d="M0 258C40 246 70 262 110 252C150 242 180 262 230 254C280 246 310 264 360 256C410 248 440 266 490 256C540 246 570 262 600 258V290H0Z" fill="#587a68"/>`,
         `<path d="M40 262C48 240 76 240 84 262Z" fill="#737e88"/><path d="M52 262C54 250 70 248 76 262Z" fill="#8a949c"/>`,
         `<path d="M300 264C306 236 350 236 356 264Z" fill="#6b7680"/><path d="M318 264C320 248 344 246 348 264Z" fill="#828d96"/>`,
