@@ -495,8 +495,10 @@
     .parcours-options { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; margin: 10px 0 0; }
     .parcours-options button,
     .parcours-name button,
+    .fiche-prenom-form button,
     .parcours-confirm button { min-height: 44px; }
     .parcours-name,
+    .fiche-prenom-form,
     .parcours-confirm {
       margin: 14px 0 0;
       padding: 14px;
@@ -505,9 +507,11 @@
       background: #f8fcff;
       text-align: center;
     }
-    .parcours-name label { display: block; margin-bottom: 8px; color: var(--ink); font-weight: 950; }
+    .parcours-name label,
+    .fiche-prenom-form label { display: block; margin-bottom: 8px; color: var(--ink); font-weight: 950; }
     .parcours-name-row { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
-    .parcours-name input {
+    .parcours-name input,
+    .fiche-prenom-form input {
       min-height: 44px;
       width: min(100%, 240px);
       padding: 8px 12px;
@@ -518,7 +522,12 @@
       font-weight: 850;
       text-align: center;
     }
-    .parcours-name small { display: block; margin-top: 8px; color: var(--muted); }
+    .parcours-name small,
+    .fiche-prenom-form small { display: block; margin-top: 8px; color: var(--muted); }
+    /* R6 (13/09/2026) : le formulaire du prénom de l'écran « Voir ma fiche ».
+       Il reprend le cadre de celui de Mon parcours, centré à la largeur du
+       bouton « Imprimer ma fiche » qu'il remplace le temps de la question. */
+    .fiche-prenom-form { max-width: 340px; margin: 12px auto 4px; }
     .fiche-ecran { max-width: 900px; margin: 0 auto; padding: 12px 4px 24px; }
     .fiche-ecran-barre { display: flex; align-items: center; justify-content: space-between;
                          gap: 12px; flex-wrap: wrap; margin-bottom: 14px; }
@@ -2100,7 +2109,19 @@
           <button id="fiche-back" class="settings-back" type="button" aria-label="Retour à Ma table"><span class="back-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="20" height="20"><path d="M19 12H5M11 6l-6 6 6 6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="settings-back-label">Ma table</span></button>
           <h1 id="fiche-title" class="settings-heading" tabindex="-1">Ma fiche</h1>
         </div>
-        <div class="fiche-action">
+        <!-- R6 (13/09/2026) : le prénom demandé au moment d'imprimer, pour
+             l'élève qui n'en a jamais donné. Caché par défaut ; sous un code de
+             suivi, il ne s'ouvre jamais (le professeur l'a déjà saisi). -->
+        <form id="fiche-prenom-form" class="fiche-prenom-form" hidden>
+          <label for="fiche-prenom-input">Comment t’appelles-tu&nbsp;? <span class="sr-only">(facultatif)</span></label>
+          <div class="parcours-name-row">
+            <input id="fiche-prenom-input" type="text" maxlength="20" autocomplete="off" autocapitalize="words" enterkeyhint="done">
+            <button class="primary" type="submit">OK</button>
+            <button id="fiche-prenom-plus-tard" class="secondary" type="button">Plus tard</button>
+          </div>
+          <small>Ton prénom s’écrira sur ta fiche. Il reste ici, il n’est pas envoyé.</small>
+        </form>
+        <div id="fiche-action" class="fiche-action">
           <button id="fiche-imprimer" class="primary" type="button">Imprimer ma fiche</button>
         </div>
       </div>
@@ -2172,9 +2193,9 @@
        pour les validations et les mélanges, pas pour les étoiles. -->
   <template id="notice-regles">
     <p><b>Une table.</b> Je l’apprends si je veux, je m’entraîne 3 fois — dans le désordre, avec des trous, puis les deux — et je la valide : 20 questions en 1 min 30, 2 erreurs au maximum.</p>
-    <p><b>Le mélange.</b> Dès que j’ai 2 tables, je dois réussir le mélange de mes tables avant d’en valider une nouvelle. Même règle : 20 questions en 1 min 30, 2 erreurs au maximum. Chaque nouvelle table le remet à faire.</p>
-    <p><b>Mes calculs.</b> Chaque calcul a 5 boîtes. Un calcul monte d’une boîte quand je le réussis le jour où il revient : le lendemain, puis 3 jours, 7 jours, 14 jours après. Il est su à partir de la boîte 4. Une erreur le fait redescendre d’une boîte, et il revient tout de suite.</p>
-    <p><b>Mes calculs du jour.</b> Les calculs qui reviennent aujourd’hui, 10 à la fois, sans chrono — même ceux que je sais déjà, pour ne pas les oublier. Jamais un calcul que je n’ai pas encore rencontré.</p>
+    <p><b>Mon mélange.</b> Dès que j’ai 2 tables, je dois réussir le mélange de mes tables avant d’en valider une nouvelle. Même règle : 20 questions en 1 min 30, 2 erreurs au maximum. Chaque nouvelle table le remet à faire.</p>
+    <p><b>Mes calculs.</b> Chaque calcul a 5 boîtes. Un calcul monte d’une boîte quand je le réussis le jour où il revient : le lendemain, puis 3 jours, 7 jours, 14 jours après. Il est su à partir de la boîte 4. Une erreur le fait redescendre d’une boîte : il repasse à la fin de la série, et il revient demain.</p>
+    <p><b>Mes calculs du jour.</b> Les calculs qui reviennent aujourd’hui, sans chrono — même ceux que je sais déjà, pour ne pas les oublier. L’appli en prend un peu dans chaque boîte, à tour de rôle : du facile et du difficile mêlés, 10 à la fois. Jamais un calcul que je n’ai pas encore rencontré. Quand plus rien ne revient, « Encore 10 calculs » propose les suivants : rien ne monte, c’est pour s’entraîner.</p>
     <p><b>Les étoiles.</b> Quand mes 9 tables sont acquises et le dernier mélange réussi, je deviens expert : 25 questions avec des divisions, toutes les tables, de plus en plus vite — ★ 2 min, ★★ 1 min 45, ★★★ 1 min 30, ★★★★ 1 min 15. À 1 minute, je suis une Légende des tables 👑.</p>
     <p><b>Mon rang.</b> Bronze dès ma première table, puis Argent (3 tables), Or (6), Platine (9 tables et le mélange), Diamant (★★★★), Légende (👑). On ne redescend jamais.</p>
   </template>
@@ -6104,7 +6125,16 @@
       function renderFiche(source) {
         const fiche = source || parcours;
         const etat = PARCOURS.etatAffichage(fiche);
-        $("fiche-prenom").textContent = fiche.prenom;
+        // R6 (13/09/2026) : sous un code de suivi, le moteur retire le prénom de
+        // la case durable de l'appareil (il ne vit que dans l'onglet) — la
+        // feuille sortait donc avec « Prénom : » et « Classe : » vides alors que
+        // l'écran disait « La fiche de Léa ». Sur SA fiche, l'élève reprend le
+        // prénom et la classe saisis par le professeur ; rien n'est enregistré
+        // sur l'appareil, ils ne sont écrits que sur la feuille. La vue du
+        // professeur (mode-fiche, ou une source donnée) n'est pas touchée.
+        const ficheDeLAppareil = !source && !document.body.classList.contains("mode-fiche");
+        $("fiche-prenom").textContent = ficheDeLAppareil ? prenomAffiche() : fiche.prenom;
+        if (ficheDeLAppareil) $("fiche-classe").textContent = suiviActif() && suiviIdentite ? (suiviIdentite.classe || "") : "";
         $("fiche-date").textContent = PARCOURS.estVide(fiche) ? "" : new Date().toLocaleDateString("fr-FR");
         // Depuis le suivi, c'est l'application qui tient le carnet : une fiche
         // remplie est une photo de l'instant, pas une feuille à continuer.
@@ -6204,9 +6234,41 @@
         });
       }
 
+      // R6 (13/09/2026) : l'élève qui n'a jamais donné son prénom. Le
+      // formulaire de Mon parcours ne s'ouvre tout seul que sur un parcours
+      // VIDE : celui qui a commencé à travailler sans se nommer imprimait une
+      // feuille « Prénom : ____ » sans savoir où le corriger (il fallait le
+      // menu ⋯ de Mon parcours). On le lui demande ici, au moment où ça sert.
+      // Jamais sous un code de suivi : le professeur a déjà saisi le prénom.
+      // Une fois la question posée, on ne la repose plus de la séance, et
+      // « Plus tard » imprime quand même — l'élève qui a touché « Imprimer »
+      // obtient sa feuille, avec une ligne vide à remplir au stylo.
       function printFiche() {
+        if (!suiviActif() && !parcours.prenom && !state.fichePrenomDemande) {
+          ouvrirPrenomFiche();
+          return;
+        }
+        imprimerLaFiche();
+      }
+
+      function imprimerLaFiche() {
         renderFiche();
         window.setTimeout(() => window.print(), 50);
+      }
+
+      // Le bouton « Imprimer ma fiche » laisse la place au formulaire tant que
+      // la question est posée : un seul chemin à l'écran (décision du 13/09).
+      function ouvrirPrenomFiche() {
+        state.fichePrenomDemande = true;
+        $("fiche-prenom-form").hidden = false;
+        $("fiche-action").hidden = true;
+        $("fiche-prenom-input").value = "";
+        $("fiche-prenom-input").focus?.({preventScroll: true});
+      }
+
+      function fermerPrenomFiche() {
+        $("fiche-prenom-form").hidden = true;
+        $("fiche-action").hidden = false;
       }
       // Ctrl+P et le menu du navigateur : c'est beforeprint, et lui seul, qui
       // remplit la fiche. Un écouteur reçoit l'événement en premier argument :
@@ -6252,6 +6314,7 @@
         configuration.tables = new Set();
         state.running = false;
         stopTimer();
+        fermerPrenomFiche();
         show("fiche");
       }
 
@@ -6291,6 +6354,18 @@
       $("lire-back").addEventListener("click", backToModes);
       $("fiche-back").addEventListener("click", backToModes);
       $("fiche-imprimer").addEventListener("click", printFiche);
+      $("fiche-prenom-form").addEventListener("submit", event => {
+        event.preventDefault();
+        parcours = PARCOURS.definirPrenom(parcours, $("fiche-prenom-input").value);
+        sauverParcours();
+        fermerPrenomFiche();
+        $("fiche-title").textContent = prenomAffiche() ? `La fiche de ${prenomAffiche()}` : "Ma fiche";
+        imprimerLaFiche();
+      });
+      $("fiche-prenom-plus-tard").addEventListener("click", () => {
+        fermerPrenomFiche();
+        imprimerLaFiche();
+      });
       $("acc-changer").addEventListener("click", () => {
         // Les 9 tables acquises et une table choisie : « Mes tables » replie le
         // bloc (le choix est oublié) au lieu d'ouvrir le choix.
