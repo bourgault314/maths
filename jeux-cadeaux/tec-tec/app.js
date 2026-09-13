@@ -35,8 +35,6 @@
     clearInput();run.start();renderer.particles=[];renderer.flash=0;accumulator=0;previous=null;lastHud=-1;mode='play';paused=false;
     $('intro').hidden=true;$('veil').hidden=true;$('pause-veil').hidden=true;$('hud').hidden=false;$('jump').disabled=false;
     $('app').classList.add('playing');$('app').classList.remove('paused','flying');$('pause').disabled=false;
-    $('control-title').textContent='Ton prochain bond compte.';
-    $('control-subtitle').textContent='Appui court : petit saut. Maintiens pour enchaîner les bonds.';
     $('game').focus({preventScroll:true});
     announce('Le parcours commence. Une seule vie.');
   }
@@ -70,7 +68,6 @@
     $('app').classList.toggle('flying',!!run.flight);
     $('jump-label').textContent=run.flight?'VOLER':'SAUTER';
     $('jump-help').textContent=run.flight?'MAINTENIR POUR MONTER':'MAINTENIR POUR REBONDIR';
-    $('control-subtitle').textContent=run.flight?'Maintiens pour monter. Relâche pour redescendre.':'Appui court : petit saut. Maintiens pour enchaîner les bonds.';
     const cue=course.cues.find(c=>run.time>=c.t&&run.time<c.t+(c.duration||1.85));
     const showZone=zone>0&&run.time>=z.t+.1&&run.time<z.t+2.65;
     $('cue').hidden=!cue||showZone;if(cue)$('cue').textContent=cue.text;

@@ -147,3 +147,30 @@ NODE_PATH=/chemin/vers/node_modules node tests/catalogue-navigation-css-dom.cjs
 
 Retour arrière : annuler la PR de remplacement rétablit les anciens branchements
 sans effacer les records ni modifier les moteurs des autres jeux.
+
+### Tec-tec : plein écran et consignes (13 septembre 2026)
+
+Le cadre utilise toute la largeur du panneau. Le clic sur « Prendre son élan »
+agrandit le jeu avant de démarrer l’horloge ou de consommer une partie du coffre.
+`tec-tec/screen.js` demande le plein écran natif ; si ce navigateur ne le propose
+pas, le cadre occupe la fenêtre du site, sans déplacer/recharger le document.
+Le bouton de sortie et Échap rétablissent l’affichage. Un changement de vue par
+le bouton pendant la partie met celle-ci en pause. Le bouton Sauter reste sous
+le paysage ; toucher le paysage fonctionne toujours.
+
+Les consignes permanentes sous le jeu (« Ton prochain bond compte », explication
+des appuis et touches) sont retirées à la demande de Gwenaël. Le bouton conserve
+son indication de maintien, adaptée au vol. Les brèves indications du parcours
+restent dans la version validée.
+
+Le moteur, le parcours, le rendu et les gestionnaires souris/tactile/clavier sont
+inchangés. Gwenaël confirme réussir les petits sauts à la souris et sur téléphone,
+et soupçonne que sa barre Espace reste enfoncée plus longtemps. Aucun recalibrage
+n’est appliqué sur cette hypothèse. Les tests de mêmes durées vérifient l’égalité
+des trajectoires ; ils ne mesurent pas son clavier physique.
+
+Les tests DOM couvrent le départ automatique, le refus de plein écran natif,
+la sortie, la pause, le quota et le double clic pendant la transition. Le test
+pur de dimensionnement couvre portrait/paysage, ordinateur et zones sûres ; les
+contrôles de cadre vérifient l’origine des messages et la restauration du site.
+La disposition sur un véritable iPhone reste à vérifier par un utilisateur.

@@ -31,7 +31,7 @@ test('les anciens favoris et les coffres Dodo rejoignent le Tec-tec sans consomm
 });
 test('le catalogue et le lien historique utilisent le même Tec-tec',()=>{
  assert.match(read('assets/js/short-games-view.js'),/dodo: "Tec-tec bondissant"/);
- assert.match(read('assets/js/short-games-view.js'),/\/jeux-cadeaux\/tec-tec\/index\.html\?integre=1&v=1/);
+ assert.match(read('assets/js/short-games-view.js'),/\/jeux-cadeaux\/tec-tec\/index\.html\?integre=1&v=2/);
  const wrapper=read('jeux-cadeaux/dodo.html');assert.match(wrapper,/<h1[^>]*>Tec-tec bondissant<\/h1>/);
  const html=read('jeux-cadeaux/tec-tec/index.html');for(const [,src]of html.matchAll(/(?:src|href)="([^"?]+)(?:\?[^" ]*)?"/g))if(!src.startsWith('http')&&!src.startsWith('/'))assert.ok(fs.existsSync(path.join(root,'jeux-cadeaux/tec-tec',src)),src);
  assert.ok(!read('jeux-cadeaux/tec-tec/app.js').includes('__TEC_QA__'));
@@ -40,4 +40,14 @@ test('le catalogue et le lien historique utilisent le même Tec-tec',()=>{
 test('le moteur et le parcours restent exactement ceux de la V2 approuvée',()=>{
  assert.equal(crypto.createHash('sha256').update(fs.readFileSync(path.join(root,'jeux-cadeaux/tec-tec/engine.js'))).digest('hex'),'6ba00a8f9160310d94ff12f11f9dc68f3afb9f4f2957ea7a409741bb42066356');
  assert.equal(crypto.createHash('sha256').update(fs.readFileSync(path.join(root,'jeux-cadeaux/tec-tec/course.js'))).digest('hex'),'8834ce45ae6814a7d8c6a63de08f7607a96ea0d6963dc880bb43bd18ac6b9a94');
+});
+
+test('le grand écran garde tout le parcours visible et réserve la place du bouton et des zones sûres',()=>{
+ const {fit}=require('../jeux-cadeaux/tec-tec/screen.js');
+ for(const [width,height]of [[320,568],[390,844],[844,390],[1024,768],[1366,768],[1920,1080]])for(const gift of [false,true]){
+  const insets={top:44,bottom:21,left:8,right:8},size=fit(width,height,gift,insets);
+  assert.ok(size.width>0&&size.height>0);assert.ok(size.width<=width-16);assert.ok(size.height+72+(gift?24:0)<=height-65);
+  if(width>680||width>height)assert.ok(Math.abs(size.width-size.height*12/7)<2,'les plafonds du parcours restent visibles');
+  else assert.equal(size.width,width-16,'toute la largeur en portrait');
+ }
 });
