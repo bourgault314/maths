@@ -50,7 +50,7 @@ function create(query = "?domain=jeux-recherches") {
     } else if (id === "galets") {
       assert.equal(frame.src, "https://mathsgo.re/jeux-cadeaux/galets-riviere/index.html?integre=1&v=1");
     } else if (id === "dodo") {
-      assert.equal(frame.src, "https://mathsgo.re/jeux-cadeaux/tec-tec/index.html?integre=1&v=2");
+      assert.equal(frame.src, "https://mathsgo.re/jeux-cadeaux/tec-tec/index.html?integre=1&v=3");
       assert.equal(d.q("#page-title").textContent, "Tec-tec bondissant");
     } else {
       assert.ok(frame.src.endsWith("?jeu=" + id + "&integre=1&v=7"));
