@@ -186,8 +186,20 @@ run("Galets : la pile tombée roule et le fil à plomb rouge marque l’endroit 
   d.until(() => !d.q("#result").hidden, () => {}, 3);
   assert.match(d.q("#result-text").textContent, /basculé au 3e galet, posé trop à droite/); d.dom.window.close();
 });
-run("Luciole : le choix de niveau reste proposé au jeu qui en a un", () => {
-  const d = create("?jeu=luciole&integre=1"); assert.equal(d.q(".difficulty").hidden, false); assert.equal(d.q(".difficulty").parentElement.id, "play"); d.dom.window.close();
+run("Luciole : plus de niveau à choisir, et le plateau de nuit ne suit pas à l’accueil", () => {
+  const d = create("?jeu=luciole&integre=1");
+  assert.equal(d.q(".difficulty").hidden, true, "Un seul jeu pour tout le monde : pas de choix de niveau");
+  assert.equal(d.q(".difficulty").parentElement.id, "play"); d.dom.window.close();
+  // Le fond de nuit restait collé à l'écran d'avant-partie dès la 2e visite.
+  const e = create(); e.prepare("luciole");
+  assert.equal(e.q(".stage").classList.contains("stage-memory"), true, "Plateau de nuit pendant la partie");
+  e.click("#back"); e.click("#quit"); e.click("#finish");
+  e.click('[data-game="luciole"]');
+  assert.equal(e.q(".stage").classList.contains("stage-memory"), false, "L’écran d’avant-partie reste clair, même après une partie");
+  assert.equal(e.q("#play").classList.contains("intro-memory"), true, "Écran d’avant-partie allégé");
+  assert.equal(e.q(".intro").classList.contains("intro-luciole"), true);
+  assert.equal(e.q(".intro").querySelector("h2"), null, "Ni titre « Comment jouer ? », ni « À toi de jouer quand tu veux »");
+  e.dom.window.close();
 });
 run("Tempo : le dessin commande, l’inversion est annoncée, trois erreurs arrêtent la partie", () => {
   const d = create("?jeu=tempo&integre=1"); d.prepare("tempo");
