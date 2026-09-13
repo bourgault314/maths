@@ -1458,6 +1458,11 @@ select { cursor: pointer; }
   body.catalogue-is-deep .site-header > .catalogue-breadcrumb:has(.breadcrumb-parent) .breadcrumb-back {
     display: none;
   }
+  /* Sur téléphone, seul le parent immédiat reste visible, même si le
+     parcours ajoute plusieurs niveaux. Le fil complet reste sur ordinateur. */
+  body.catalogue-is-deep .site-header > .catalogue-breadcrumb > .breadcrumb-parent:has(~ .breadcrumb-parent) {
+    display: none;
+  }
   body.catalogue-is-deep .breadcrumb-back {
     min-height: 44px;
     padding: 5px 9px;
