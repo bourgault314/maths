@@ -150,8 +150,12 @@ sans effacer les records ni modifier les moteurs des autres jeux.
 
 ### Tec-tec : plein écran et consignes (13 septembre 2026)
 
-Le cadre utilise toute la largeur du panneau. Le clic sur « Prendre son élan »
-agrandit le jeu avant de démarrer l’horloge ou de consommer une partie du coffre.
+Le cadre utilise toute la largeur du panneau. Le clic sur « Ouvrir en plein écran »
+agrandit le jeu et laisse le parcours en attente, sans limite de temps et sans
+consommer une partie du coffre. Un second appui sur « Démarrer » lance la partie.
+Le jeu conserve le grand écran entre les tentatives ; « Repartir du début » lance
+alors directement le nouvel essai. Si le joueur a quitté le grand écran, le
+premier appui rétablit l’affichage et attend de nouveau un appui explicite.
 `tec-tec/screen.js` demande le plein écran natif ; si ce navigateur ne le propose
 pas, le cadre occupe la fenêtre du site, sans déplacer/recharger le document.
 Le bouton de sortie et Échap rétablissent l’affichage. Un changement de vue par
@@ -169,8 +173,8 @@ et soupçonne que sa barre Espace reste enfoncée plus longtemps. Aucun recalibr
 n’est appliqué sur cette hypothèse. Les tests de mêmes durées vérifient l’égalité
 des trajectoires ; ils ne mesurent pas son clavier physique.
 
-Les tests DOM couvrent le départ automatique, le refus de plein écran natif,
-la sortie, la pause, le quota et le double clic pendant la transition. Le test
+Les tests DOM couvrent l’attente avant le départ explicite, le refus de plein écran
+natif, la sortie, la pause, le quota et le double clic pendant la transition. Le test
 pur de dimensionnement couvre portrait/paysage, ordinateur et zones sûres ; les
 contrôles de cadre vérifient l’origine des messages et la restauration du site.
 La disposition sur un véritable iPhone reste à vérifier par un utilisateur.

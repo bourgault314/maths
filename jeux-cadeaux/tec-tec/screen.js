@@ -14,13 +14,15 @@
   }
   function connect(win,root,button){
     const doc=root.ownerDocument,html=doc.documentElement,label=button.querySelector('span');
-    let fallback=false,pending=null,launching=false,launchReady=false,acknowledge=null;
+    const start=doc.getElementById('start'),starters=[start,doc.getElementById('retry')];
+    let fallback=false,pending=null,opening=false,acknowledge=null;
     const native=()=>doc.fullscreenElement===root;
     const expanded=()=>native()||fallback;
     function update(){
       const active=expanded();html.classList.toggle('screen-full',active);
       button.setAttribute('aria-pressed',String(active));button.title=active?'Quitter le plein écran':'Plein écran';
       button.setAttribute('aria-label',button.title);label.textContent=button.title;
+      if(!start.disabled&&!doc.getElementById('intro').hidden)start.innerHTML=(active?'Démarrer':'Ouvrir en plein écran')+' <span aria-hidden="true">↗</span>';
       if(active){const style=win.getComputedStyle(root),insets={top:parseFloat(style.paddingTop)||8,right:parseFloat(style.paddingRight)||8,bottom:parseFloat(style.paddingBottom)||8,left:parseFloat(style.paddingLeft)||8};
         const size=fit(win.innerWidth,win.innerHeight,!doc.getElementById('gift-status').hidden,insets);
         root.style.setProperty('--screen-width',size.width+'px');root.style.setProperty('--screen-height',size.height+'px');
@@ -55,20 +57,21 @@
     const resizePause=()=>{const pause=doc.getElementById('pause');if(root.classList.contains('playing')&&!root.classList.contains('paused')&&!pause.disabled)pause.click();};
     const changeView=()=>{resizePause();void toggle();};
     const buttonKey=e=>{if(e.code==='Space'||e.code==='Enter')e.stopPropagation();};
+    const starterKey=e=>{if(e.repeat&&(e.code==='Space'||e.code==='Enter'))e.preventDefault();};
     async function launch(e){
-      if(launchReady){launchReady=false;return;}
-      if(launching){e.preventDefault();e.stopImmediatePropagation();return;}
+      if(opening||pending||e.detail>1){e.preventDefault();e.stopImmediatePropagation();return;}
       if(expanded())return;
-      e.preventDefault();e.stopImmediatePropagation();launching=true;
+      e.preventDefault();e.stopImmediatePropagation();opening=true;
+      const trigger=e.currentTarget;trigger.disabled=true;
       await toggle();
-      // Laisse le navigateur terminer la transition avant de démarrer l'horloge.
-      win.requestAnimationFrame(()=>win.requestAnimationFrame(()=>{launching=false;launchReady=true;e.target.closest('button').click();}));
+      // Agrandir ne lance jamais une partie : un nouvel appui est obligatoire.
+      win.requestAnimationFrame(()=>win.requestAnimationFrame(()=>{opening=false;trigger.disabled=false;update();trigger.focus({preventScroll:true});}));
     }
-    const starters=[doc.getElementById('start'),doc.getElementById('retry')];
-    starters.forEach(b=>b.addEventListener('click',launch,true));
+    starters.forEach(b=>{b.addEventListener('click',launch,true);b.addEventListener('keydown',starterKey);});
+    start.addEventListener('tec-ready',update);
     button.addEventListener('click',changeView);button.addEventListener('keydown',buttonKey);doc.addEventListener('fullscreenchange',update);
     win.addEventListener('message',receive);win.addEventListener('resize',update);win.addEventListener('keydown',escape,true);
-    const disconnect=()=>{starters.forEach(b=>b.removeEventListener('click',launch,true));button.removeEventListener('click',changeView);button.removeEventListener('keydown',buttonKey);doc.removeEventListener('fullscreenchange',update);win.removeEventListener('message',receive);win.removeEventListener('resize',update);win.removeEventListener('keydown',escape,true);};
+    const disconnect=()=>{starters.forEach(b=>{b.removeEventListener('click',launch,true);b.removeEventListener('keydown',starterKey);});start.removeEventListener('tec-ready',update);button.removeEventListener('click',changeView);button.removeEventListener('keydown',buttonKey);doc.removeEventListener('fullscreenchange',update);win.removeEventListener('message',receive);win.removeEventListener('resize',update);win.removeEventListener('keydown',escape,true);};
     win.addEventListener('pagehide',disconnect,{once:true});update();return {disconnect,toggle};
   }
   return {fit,connect};
