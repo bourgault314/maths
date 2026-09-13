@@ -18,12 +18,26 @@
       frame.src = "/outils/club_maths/carres_gloutons.html?integre=1&v=1";
       frame.allowFullscreen = true;
     } else {
-      frame.src = "/jeux-cadeaux/index.html?jeu=" + game + "&integre=1&v=5";
+      frame.src = "/jeux-cadeaux/index.html?jeu=" + game + "&integre=1&v=6";
     }
-    // La page de jeu ne voit pas la fenêtre du site : on lui donne sa hauteur
-    // pour qu'elle dimensionne son plateau sans la deviner.
+    // La page de jeu ne voit ni la fenêtre du site, ni ce qui l'entoure. On lui
+    // donne les deux : la hauteur de la fenêtre, et la place qui lui reste
+    // vraiment une fois l'en-tête, le titre et le pied de page déduits.
+    function autourDuCadre() {
+      const cadre = frame.getBoundingClientRect();
+      // Au-dessus : en-tête, fil d'Ariane, titre de la page.
+      let autour = cadre.top + window.scrollY;
+      // En dessous : ce qui reste sous le cadre dans chaque bloc qui le contient
+      // (marges, puis le pied de page). On s'arrête avant <body>, dont la hauteur
+      // minimale est celle de la fenêtre et ne mesurerait donc plus rien.
+      for (let bloc = frame; bloc.parentElement && bloc.parentElement !== document.body; bloc = bloc.parentElement) {
+        autour += Math.max(0, bloc.parentElement.getBoundingClientRect().bottom - bloc.getBoundingClientRect().bottom);
+      }
+      return autour;
+    }
     function tell() {
-      try { frame.contentWindow?.postMessage({ type: "mathsgo-short-game:fenetre", height: window.innerHeight }, location.origin); } catch { /* Cadre pas encore prêt. */ }
+      const dispo = Math.max(260, window.innerHeight - autourDuCadre());
+      try { frame.contentWindow?.postMessage({ type: "mathsgo-short-game:fenetre", height: window.innerHeight, dispo }, location.origin); } catch { /* Cadre pas encore prêt. */ }
     }
     function receive(event) {
       if (event.origin !== location.origin || event.source !== frame.contentWindow) return;

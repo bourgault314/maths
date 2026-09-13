@@ -33,7 +33,7 @@ function create(query = "?jeu=luciole&integre=1", saved = new Map()) {
     else click('[data-game="' + game + '"]');
     assert.equal(q("#play").hidden, false);
     assert.match(q("#instructions").textContent, /Prends le temps/);
-    if (query.includes("integre=1")) assert.equal(q(".difficulty").parentElement.id, "play");
+    assert.equal(q(".difficulty"), null, "Plus de choix de niveau nulle part");
     click("#controls button");
   };
   return { dom, w, doc, q, click, step, until, key, prepare, frames, saved, errors };
@@ -148,11 +148,10 @@ function stackPlayer(d, count = { n: 0 }) {
 }
 run("Galets : pas de niveau à choisir, record de séance, paliers, chute expliquée et rejeu", () => {
   const d = create("?jeu=galets&integre=1");
-  assert.equal(d.q(".difficulty").hidden, true, "un seul jeu pour tous");
+  assert.equal(d.q(".difficulty"), null, "un seul jeu pour tous");
   assert.equal(d.q("#time-label").textContent, "Record\u00a0: —"); assert.equal(d.q("#progress-label").textContent, "0 galet");
   assert.match(d.q("#stage").textContent, /rattrape-la en posant le galet suivant de l’autre côté/);
   d.prepare("galets");
-  assert.equal(d.q(".difficulty").hidden, true);
   const seen = new Set(), notices = new Set();
   d.until(() => !d.q("#result").hidden, () => { stackPlayer(d)(); seen.add(d.q("#progress-label").textContent); notices.add(d.q("#instructions").textContent); }, 90);
   assert.ok(d.q(".game-scene").getAttribute("viewBox"), "le cadre suit l’aire de jeu");
@@ -188,8 +187,13 @@ run("Galets : la pile tombée roule et le fil à plomb rouge marque l’endroit 
 });
 run("Luciole : plus de niveau à choisir, et le plateau de nuit ne suit pas à l’accueil", () => {
   const d = create("?jeu=luciole&integre=1");
-  assert.equal(d.q(".difficulty").hidden, true, "Un seul jeu pour tout le monde : pas de choix de niveau");
-  assert.equal(d.q(".difficulty").parentElement.id, "play"); d.dom.window.close();
+  assert.equal(d.q(".difficulty"), null, "Un seul jeu pour tout le monde : pas de choix de niveau");
+  assert.equal(d.q('input[name="level"]'), null, "Ni le sélecteur, ni ses boutons radio");
+  // Le cadre reçoit du site la place qui lui reste vraiment, en plus de la hauteur de la fenêtre.
+  d.w.dispatchEvent(new d.w.MessageEvent("message", { origin: "https://mathsgo.re", data: { type: "mathsgo-short-game:fenetre", height: 825, dispo: 593 } }));
+  assert.equal(d.doc.documentElement.style.getPropertyValue("--hauteur-site"), "825px");
+  assert.equal(d.doc.documentElement.style.getPropertyValue("--hauteur-dispo"), "593px", "Le plateau se règle sur la place réelle, pas sur la fenêtre");
+  d.dom.window.close();
   // Le fond de nuit restait collé à l'écran d'avant-partie dès la 2e visite.
   const e = create(); e.prepare("luciole");
   assert.equal(e.q(".stage").classList.contains("stage-memory"), true, "Plateau de nuit pendant la partie");
@@ -201,9 +205,21 @@ run("Luciole : plus de niveau à choisir, et le plateau de nuit ne suit pas à l
   assert.equal(e.q(".intro").querySelector("h2"), null, "Ni titre « Comment jouer ? », ni « À toi de jouer quand tu veux »");
   e.dom.window.close();
 });
+run("Boîte à jeux : l’ancien choix de niveau ne revient pas sur l’écran d’accueil", () => {
+  // Il réapparaissait à chaque retour à la boîte à jeux, puis disparaissait dès qu’on entrait dans un jeu.
+  const d = create("?mode=cadeau&parties=2&ticket=maison");
+  assert.equal(d.q("#home").hidden, false, "La boîte à jeux s’ouvre sur son écran d’accueil");
+  assert.equal(d.q(".difficulty"), null, "Le sélecteur « À ton rythme » n’existe plus dans la page");
+  d.prepare("luciole");
+  d.click("#back"); d.click("#quit"); d.click("#finish");
+  assert.equal(d.q("#home").hidden, false, "Retour à la boîte à jeux");
+  assert.equal(d.q(".difficulty"), null, "L’accueil ne le ressuscite pas");
+  assert.deepEqual(d.errors, []);
+  d.dom.window.close();
+});
 run("Tempo : le dessin commande, l’inversion est annoncée, trois erreurs arrêtent la partie", () => {
   const d = create("?jeu=tempo&integre=1"); d.prepare("tempo");
-  assert.equal(d.q(".difficulty").hidden, true, "Un seul jeu qui monte : pas de choix de niveau");
+  assert.equal(d.q(".difficulty"), null, "Un seul jeu qui monte : pas de choix de niveau");
   assert.equal(d.q("#play").classList.contains("tempo-play"), true);
   assert.equal(d.q("#time-label").textContent, "0:00", "Le chrono compte, il ne décompte plus");
   assert.match(d.q("#tempo-rule").textContent, /Touche la LAVE, laisse passer la PIERRE/);
