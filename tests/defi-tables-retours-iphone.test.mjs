@@ -191,4 +191,11 @@ test("les étiquettes de la bande : le texte dans un span (« 10×10 » inchang�
 
 test("les boutons bleus : 12 px en haut, 8 en bas — le texte se centre dans la forme visible, la hauteur ne change pas", () => {
   assert.match(html, /\.primary \{ color: #fff; border: 0; background: var\(--blue\); box-shadow: 0 5px 0 #043f8c; padding-top: 12px; padding-bottom: 8px; \}/);
+  // Les boutons du cadre du résultat ont leur propre padding, PLUS PRÉCIS que
+  // « .primary » : sans les deux pixels ici aussi, le « Ma table » principal de
+  // la fin d'une révision gardait son texte 2,5 px trop haut (mesuré au
+  // navigateur le 13/09) — le défaut même que ce lot corrige ailleurs.
+  assert.match(html, /\.result-parcours \.primary \{ min-height: 44px; margin-top: 10px; padding: 10px 14px 6px; \}/,
+    "le relief compensé atteint aussi les boutons bleus du cadre (44 px : 10 en haut, 6 en bas)");
+  assert.doesNotMatch(html, /\.result-parcours \.primary \{ min-height: 44px; margin-top: 10px; padding: 8px 14px; \}/);
 });

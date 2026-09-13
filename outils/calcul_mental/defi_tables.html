@@ -610,7 +610,14 @@
     .result-parcours p { margin: 0; line-height: 1.45; }
     .result-parcours p + p { margin-top: 8px; }
     .result-parcours p b { color: var(--blue); }
-    .result-parcours .primary { min-height: 44px; margin-top: 10px; padding: 8px 14px; }
+    /* Le relief compensé du lot R4 bis, ici aussi : `.result-parcours .primary`
+       est plus précis que `.primary` et gagnait la cascade, donc les boutons
+       bleus du cadre — dont le « Ma table » principal de la fin d'une révision,
+       créé par ce même lot — gardaient 8 px en haut comme en bas et leur texte
+       restait 2,5 px au-dessus du centre de la forme visible (mesuré au
+       navigateur). Deux pixels passent du bas vers le haut : même règle pour
+       tous les boutons bleus de la page, hauteur inchangée (44 px). */
+    .result-parcours .primary { min-height: 44px; margin-top: 10px; padding: 10px 14px 6px; }
     /* Lot R2 (11/09/2026, audit) : le résultat commence par le VERDICT — réussi,
        pas encore, temps écoulé — dans un seul cadre : icône, titre, score, rappel
        des réglages. La fête (table acquise, mélange, étoile, couronne) EST ce
