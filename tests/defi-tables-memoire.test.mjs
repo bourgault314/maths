@@ -210,7 +210,7 @@ test("la page : le bloc du jour en tête et conseillé, l’unique rond bleu, le
   assert.match(html, /const libre = !agenda\.dus && PARCOURS\.calculsAVenir\(parcours\)\.length > 0;/, "dans Mes calculs, le bouton devient « Encore N calculs »");
   assert.match(html, /bouton\.classList\.toggle\("secondary", !agenda\.dus\);/, "en secondaire : ce n’est plus l’étape du jour");
   assert.match(html, /"Rien ne monte : ces calculs n’étaient pas encore à revoir"/);
-  assert.match(html, /defi_tables_core\.js\?v=20260912-1/);
+  assert.match(html, /defi_tables_core\.js\?v=20260914-1/);
   assert.match(html, /defi_tables_mon_parcours\.js\?v=20260912-1/);
 });
 

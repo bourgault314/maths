@@ -11,9 +11,10 @@ ordre recto/verso) : c'est celui du catalogue, pour imprimer tout un jeu.
 
 Décision du 11/09/2026 (formation neurosciences) : des cartes à retourner, une
 table à la fois, pour la réactivation active à la maison ou en classe. Le sens
-d'écriture (7 × 3 : la table d'abord) est celui de la fiche « Mes tables de
-multiplication » et de l'application ; le point 4 bis avec Claire pourra le
-changer ici en une constante.
+d'écriture — 3 × 7, le multiplicateur d'abord — se lit « 3 fois 7 », trois
+paquets de 7 : c'est ce que montrent la bande et les perles de l'application, et
+c'est ce que dit maintenant l'écran « La table de N » (décision du 14/09/2026).
+Il tient dans la seule fonction libelle() ci-dessous.
 
 Règles du site : logo maths&go en bas à gauche (une seule fois par document,
 page 1 : ces feuilles n'ont pas d'en-tête), signature « mathsgo.re · CC BY-NC-SA
@@ -42,7 +43,7 @@ SOUS_TITRE_VERSO = "mathsgo.re"
 # Le calcul tel qu'il est écrit sur le recto : la table d'abord (7 × 3), comme
 # sur la fiche des tables et dans l'application.
 def libelle(table: int, k: int) -> str:
-    return f"{table} × {k}"
+    return f"{k} × {table}"
 
 ROOT = Path(__file__).resolve().parents[2]
 OUT_DIR = ROOT / "outils" / "calcul_mental"

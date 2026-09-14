@@ -2208,7 +2208,7 @@
     <span data-mathsgo-confidentialite>Sans cookie ni traceur</span>
   </footer>
 
-  <script src="./defi_tables_core.js?v=20260912-1"></script>
+  <script src="./defi_tables_core.js?v=20260914-1"></script>
   <script src="./defi_tables_mon_parcours.js?v=20260912-1"></script>
   <script>
     (() => {
@@ -3535,12 +3535,12 @@
           if (filled) {
             const result = table * multiplier;
             value.textContent = String(result);
-            cell.setAttribute("aria-label", `${table} fois ${multiplier}, ${result}`);
+            cell.setAttribute("aria-label", `${multiplier} fois ${table}, ${result}`);
           } else if (hasDraft) {
             value.textContent = draftValue;
-            cell.setAttribute("aria-label", `${table} fois ${multiplier}, réponse saisie ${draftValue}`);
+            cell.setAttribute("aria-label", `${multiplier} fois ${table}, réponse saisie ${draftValue}`);
           } else {
-            cell.setAttribute("aria-label", `${table} fois ${multiplier}, pas encore rempli`);
+            cell.setAttribute("aria-label", `${multiplier} fois ${table}, pas encore rempli`);
           }
           cell.append(multiplierLabel, value);
           stick.append(cell);
@@ -6288,7 +6288,7 @@
           const li = document.createElement("li");
           const calcul = document.createElement("span");
           calcul.className = "calcul";
-          calcul.textContent = `${table} × ${k}`;
+          calcul.textContent = `${k} × ${table}`;
           const egal = document.createElement("span");
           egal.className = "egal";
           egal.textContent = "=";
