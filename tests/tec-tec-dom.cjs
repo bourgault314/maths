@@ -3,10 +3,11 @@ const test=require('node:test'),assert=require('node:assert/strict'),fs=require(
 const {JSDOM,VirtualConsole}=require('jsdom');
 const fixture=require('./fixtures/tec-tec/winning-replay.json').inputs;
 const source=fs.readFileSync(path.join(__dirname,'../jeux-cadeaux/tec-tec/index.html'),'utf8');
-async function setup({blockedStorage=false,width=1024,query="",saved=new Map(),fullscreen="native"}={}){
+async function setup({blockedStorage=false,width=1024,height=768,query="",saved=new Map(),fullscreen="native"}={}){
   const errors=[],virtualConsole=new VirtualConsole();virtualConsole.on('jsdomError',e=>errors.push(e.message));
   const dom=new JSDOM(source,{runScripts:'outside-only',url:'https://mathsgo.re/jeux-cadeaux/tec-tec/index.html'+query,pretendToBeVisual:true,virtualConsole});
   const w=dom.window,d=w.document;let clock=0,observedRun=null;const frames=new Map();let frameId=0,fullscreenElement=null;
+  Object.defineProperties(w,{innerWidth:{value:width,writable:true},innerHeight:{value:height,writable:true}});
   w.requestAnimationFrame=cb=>{frames.set(++frameId,cb);return frameId;};
   Object.defineProperty(d,"fullscreenElement",{get:()=>fullscreenElement});
   if(fullscreen!=="none")d.getElementById("app").requestFullscreen=()=>{if(fullscreen==="reject")return Promise.reject(new Error("Refused"));fullscreenElement=d.getElementById("app");d.dispatchEvent(new w.Event("fullscreenchange"));return Promise.resolve();};
@@ -28,8 +29,8 @@ async function setup({blockedStorage=false,width=1024,query="",saved=new Map(),f
   const key=(type,code='Space',repeat=false)=>(d.activeElement||d.body).dispatchEvent(new w.KeyboardEvent(type,{code,key:code==='Space'?' ':'ArrowUp',bubbles:true,cancelable:true,repeat}));
   const pointer=(type,element,id=1)=>{const e=new w.Event(type,{bubbles:true,cancelable:true});Object.assign(e,{pointerId:id,button:0});element.dispatchEvent(e);};
   const settle=async()=>{for(let i=0;i<10;i++){await Promise.resolve();tick(0);}};
-  const open=async()=>{d.getElementById('start').focus();d.getElementById('start').click();await settle();};
-  const start=async()=>{await open();if(observedRun.status==='ready'&&!d.getElementById('start').disabled){d.getElementById('start').click();await settle();}};
+  const open=async()=>{d.getElementById('screen-toggle').focus();d.getElementById('screen-toggle').click();await settle();};
+  const start=async()=>{d.getElementById('start').focus();d.getElementById('start').click();await settle();};
   return {w,d,dom,tick,advance,key,pointer,start,open,settle,errors,saved,get run(){return observedRun;}};
 }
 test('la page du site démarre avec des fichiers locaux et sans commande de test',async()=>{const c=await setup();assert.equal(c.d.getElementById('start').disabled,false);for(const n of c.d.querySelectorAll('script[src],link[href]'))assert.ok(!/^https?:/.test(n.getAttribute('src')||n.getAttribute('href'))||n.rel==='canonical');assert.ok(!fs.readFileSync(path.join(__dirname,'../jeux-cadeaux/tec-tec/app.js'),'utf8').includes('__TEC_QA__'));assert.deepEqual(c.errors,[]);c.dom.window.close();});
@@ -109,9 +110,9 @@ test('le grand écran attend un départ explicite sans chrono ni consommation, m
  for(const fullscreen of ['native','none','reject']){
   const c=await setup({fullscreen,query:'?mode=cadeau&parties=1&ticket=grand'});
   assert.equal(c.d.documentElement.classList.contains('screen-full'),false);
-  assert.match(c.d.getElementById('start').textContent,/Ouvrir en plein écran/);
+  assert.match(c.d.getElementById('start').textContent,/Démarrer/);
   await c.open();assert.equal(c.d.documentElement.classList.contains('screen-full'),true);
-  assert.match(c.d.getElementById('start').textContent,/Démarrer/);assert.equal(c.d.activeElement,c.d.getElementById('start'));
+  assert.match(c.d.getElementById('start').textContent,/Démarrer/);assert.equal(c.d.activeElement,c.d.getElementById('screen-toggle'));
   c.advance(30);c.pointer('pointerdown',c.d.getElementById('game'));c.pointer('pointerup',c.d.getElementById('game'));
   assert.equal(c.saved.size,0);assert.equal(c.run.status,'ready');assert.equal(c.run.tick,0);assert.equal(c.run.jumpCount,0);
   assert.equal(c.d.getElementById('intro').hidden,false);assert.equal(c.d.getElementById('veil').hidden,true);
@@ -122,13 +123,13 @@ test('le grand écran attend un départ explicite sans chrono ni consommation, m
 });
 test('changer de vue suspend la tentative sans saut ni nouvelle consommation',async()=>{
  const c=await setup({query:'?mode=cadeau&parties=2&ticket=vue'});await c.start();c.advance(.4);const tick=c.run.tick;
- c.d.getElementById('screen-toggle').click();for(let i=0;i<4;i++)await Promise.resolve();
- assert.equal(c.d.documentElement.classList.contains('screen-full'),false);assert.equal(c.d.getElementById('pause-veil').hidden,false);
+ c.d.getElementById('screen-toggle').click();await c.settle();
+ assert.equal(c.d.documentElement.classList.contains('screen-full'),true);assert.equal(c.d.getElementById('pause-veil').hidden,false);
  c.advance(2);assert.equal(c.run.tick,tick);assert.equal(c.run.jumpCount,0);assert.equal(c.saved.get('mathsgo:jeux-cadeaux:v2:vue'),'1');
  c.d.getElementById('resume').click();c.tick(0);c.advance(.1);assert.ok(c.run.tick>tick);c.dom.window.close();
 });
 test('Échap quitte le grand écran sans démarrer un saut',async()=>{
- const c=await setup({fullscreen:'none'});await c.start();c.key('keydown','Escape');for(let i=0;i<4;i++)await Promise.resolve();
+ const c=await setup({fullscreen:'none'});await c.open();await c.start();c.key('keydown','Escape');for(let i=0;i<4;i++)await Promise.resolve();
  assert.equal(c.d.documentElement.classList.contains('screen-full'),false);assert.equal(c.run.jumpCount,0);c.dom.window.close();
 });
 test('les consignes permanentes ont disparu ; le bouton garde sa commande selon la phase',async()=>{
@@ -136,10 +137,10 @@ test('les consignes permanentes ont disparu ; le bouton garde sa commande selon 
  assert.equal(c.d.getElementById('jump-label').textContent,'SAUTER');assert.equal(c.d.getElementById('jump-help').textContent,'MAINTENIR POUR REBONDIR');c.dom.window.close();
 });
 
-test('un double clic et une touche répétée ne franchissent pas les deux étapes du départ',async()=>{
+test('un départ pendant l’agrandissement est ignoré, sans départ différé',async()=>{
  const c=await setup({query:'?mode=cadeau&parties=2&ticket=double'}),start=c.d.getElementById('start');
  let complete;const enter=c.d.getElementById('app').requestFullscreen;c.d.getElementById('app').requestFullscreen=()=>new Promise(resolve=>complete=()=>enter().then(resolve));
- start.click();start.click();assert.equal(c.saved.size,0);assert.equal(c.run.status,'ready');complete();
+ c.d.getElementById('screen-toggle').click();start.click();start.click();assert.equal(c.saved.size,0);assert.equal(c.run.status,'ready');complete();
  await c.settle();c.advance(2);
  start.dispatchEvent(new c.w.MouseEvent('click',{bubbles:true,cancelable:true,detail:2}));
  for(const code of ['Enter','Space'])assert.equal(start.dispatchEvent(new c.w.KeyboardEvent('keydown',{code,repeat:true,bubbles:true,cancelable:true})),false);
@@ -152,17 +153,47 @@ test('ouvrir et quitter le grand écran avant de jouer ne lance rien',async()=>{
  c.d.getElementById('screen-toggle').click();await c.settle();c.advance(5);
  assert.match(c.d.getElementById('start').textContent,/Démarrer/);assert.equal(c.run.status,'ready');assert.equal(c.saved.size,0);
  c.d.getElementById('screen-toggle').click();await c.settle();
- assert.match(c.d.getElementById('start').textContent,/Ouvrir en plein écran/);assert.equal(c.run.tick,0);
+ assert.match(c.d.getElementById('start').textContent,/Démarrer/);assert.equal(c.run.tick,0);
  await c.start();assert.equal(c.saved.get('mathsgo:jeux-cadeaux:v2:attente'),'1');c.dom.window.close();
 });
 
-test('le grand écran reste après une défaite ; le rétablir après une sortie attend un nouvel appui',async()=>{
- const c=await setup({query:'?mode=cadeau&parties=2&ticket=rejouer'});await c.start();c.advance(4);
- assert.equal(c.d.documentElement.classList.contains('screen-full'),true);
- c.d.getElementById('screen-toggle').click();await c.settle();assert.equal(c.d.documentElement.classList.contains('screen-full'),false);
- c.d.getElementById('retry').click();await c.settle();const tick=c.run.tick;c.advance(10);
- assert.equal(c.d.documentElement.classList.contains('screen-full'),true);assert.equal(c.run.tick,tick);
- assert.equal(c.d.getElementById('veil').hidden,false);assert.equal(c.saved.get('mathsgo:jeux-cadeaux:v2:rejouer'),'1');
- c.d.getElementById('retry').click();c.tick(0);assert.equal(c.run.tick,0);assert.equal(c.run.status,'running');
- assert.equal(c.saved.get('mathsgo:jeux-cadeaux:v2:rejouer'),'2');c.dom.window.close();
+test('rejouer conserve la vue choisie et ne rouvre jamais le grand écran automatiquement',async()=>{
+ for(const expanded of [false,true]){
+  const c=await setup({query:'?mode=cadeau&parties=2&ticket=rejouer'});if(expanded)await c.open();await c.start();c.advance(4);
+  assert.equal(c.d.documentElement.classList.contains('screen-full'),expanded);
+  c.d.getElementById('retry').click();c.tick(0);assert.equal(c.run.tick,0);assert.equal(c.run.status,'running');
+  assert.equal(c.d.documentElement.classList.contains('screen-full'),expanded);
+  assert.equal(c.saved.get('mathsgo:jeux-cadeaux:v2:rejouer'),'2');c.dom.window.close();
+ }
+});
+
+test('Démarrer lance la partie dans la page sans demander le plein écran',async()=>{
+ const c=await setup();let requests=0;c.d.getElementById('app').requestFullscreen=()=>{requests++;return Promise.reject(new Error('Pas attendu'));};
+ await c.start();assert.equal(c.run.status,'running');assert.equal(c.run.tick,0);assert.equal(requests,0);
+ assert.equal(c.d.documentElement.classList.contains('screen-full'),false);c.dom.window.close();
+});
+
+test('les commandes restent hors du paysage ; le téléphone horizontal utilise la colonne latérale',async()=>{
+ for(const [width,height,side]of [[390,844,false],[844,390,true],[1024,768,false]]){
+  const c=await setup({width,height});await c.open();
+  assert.equal(c.d.getElementById('game').contains(c.d.getElementById('screen-toggle')),false);
+  assert.equal(c.d.getElementById('game').contains(c.d.getElementById('jump')),false);
+  assert.equal(c.d.documentElement.classList.contains('screen-side'),side);
+  const stageHeight=parseInt(c.d.getElementById('app').style.getPropertyValue('--screen-height'));
+  if(!side&&width<680)assert.ok(stageHeight<height/2,'pas de ciel étiré sur toute la hauteur');
+  c.dom.window.close();
+ }
+});
+
+test('l’essai autonome adapte aussi sa vue normale après rotation du téléphone',async()=>{
+ const c=await setup({width:390,height:844}),root=c.d.getElementById('app');
+ assert.equal(c.d.documentElement.classList.contains('screen-side'),false);
+ const before=parseInt(root.style.getPropertyValue('--screen-width'));
+ c.w.innerWidth=844;c.w.innerHeight=390;c.w.dispatchEvent(new c.w.Event('resize'));
+ assert.equal(c.d.documentElement.classList.contains('screen-side'),true);
+ assert.ok(parseInt(root.style.getPropertyValue('--screen-width'))>before);
+ c.w.innerWidth=390;c.w.innerHeight=844;c.w.dispatchEvent(new c.w.Event('resize'));
+ assert.equal(c.d.documentElement.classList.contains('screen-side'),false);
+ assert.equal(parseInt(root.style.getPropertyValue('--screen-width')),before);
+ assert.equal(c.run.status,'ready');c.dom.window.close();
 });

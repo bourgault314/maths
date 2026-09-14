@@ -10,13 +10,13 @@
 <link rel="icon" href="/favicon.ico" sizes="48x48">
 <link rel="canonical" href="https://mathsgo.re/jeux-cadeaux/dodo.html">
 <link rel="stylesheet" href="style.css?v=1">
-<link rel="stylesheet" href="site.css?v=3">
+<link rel="stylesheet" href="site.css?v=4">
 </head>
 <body>
 <div class="app" id="app">
   <main>
+    <div class="play-area">
     <div class="game" id="game" tabindex="-1">
-      <button id="screen-toggle" class="screen-toggle" type="button" aria-label="Plein écran" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 3H3v6m12-6h6v6M3 15v6h6m12-6v6h-6"/></svg><span>Plein écran</span></button>
       <canvas id="scene" width="1440" height="840" aria-label="Tec-tec bondissant : enchaîne les sauts sur les escaliers, relâche sous les plafonds, puis vole entre les obstacles.">Ton navigateur doit prendre en charge Canvas pour jouer.</canvas>
       <div class="hud" id="hud" hidden>
         <div class="chapter"><span class="chapter-number" id="chapter-number">01</span><span id="chapter-name">Forêt des Hauts</span></div>
@@ -42,7 +42,9 @@
       <div class="veil pause-veil" id="pause-veil" hidden><section class="result"><p class="eyebrow">ON REPREND SON SOUFFLE</p><h2>Pause.</h2><p class="result-detail">Le parcours t’attend.</p><button class="primary" id="resume">Continuer <span aria-hidden="true">→</span></button></section></div>
     </div>
     <div class="control-deck">
+      <button id="screen-toggle" class="screen-toggle" type="button" aria-label="Agrandir" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 3H3v6m12-6h6v6M3 15v6h6m12-6v6h-6"/></svg><span>Agrandir</span></button>
       <button class="jump" id="jump" disabled><span class="jump-symbol" aria-hidden="true">↗</span><span id="jump-label">SAUTER</span><small id="jump-help">MAINTENIR POUR REBONDIR</small></button>
+    </div>
     </div>
     <p id="gift-status" class="gift-status" hidden></p>
     <footer class="footnote"><span>Tec-tec bondissant <b>·</b> La Réunion</span><span id="footer-record">Un seul parcours, à apprivoiser.</span></footer>
@@ -52,10 +54,10 @@
 <script defer src="engine.js?v=1"></script>
 <script defer src="course.js?v=1"></script>
 <script defer src="landscapes.js?v=1"></script>
-<script defer src="renderer.js?v=1"></script>
+<script defer src="renderer.js?v=2"></script>
 <script defer src="../core.js?v=luciole-7"></script>
 <script defer src="site.js?v=1"></script>
-<script defer src="app.js?v=3"></script>
-<script defer src="screen.js?v=2"></script>
+<script defer src="app.js?v=4"></script>
+<script defer src="screen.js?v=3"></script>
 </body>
 </html>
