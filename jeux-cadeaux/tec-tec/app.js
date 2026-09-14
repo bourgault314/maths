@@ -114,7 +114,7 @@
   window.addEventListener('blur',()=>{if(mode==='play')pause();else clearInput(true);});
   document.addEventListener('visibilitychange',()=>{if(document.hidden&&mode==='play')pause();});
   new ResizeObserver(()=>{renderer.resize();previous=null;}).observe($('game'));
-  function ready(){if(gift.enabled&&gift.remaining===0){exhausted();return;}$('start').disabled=false;$('start').innerHTML='Ouvrir en plein écran <span aria-hidden="true">↗</span>';$('start').dispatchEvent(new Event('tec-ready'));}
+  function ready(){if(gift.enabled&&gift.remaining===0){exhausted();return;}$('start').disabled=false;$('start').innerHTML='Démarrer <span aria-hidden="true">↗</span>';}
   renderer.load().then(ready).catch(ready);
   requestAnimationFrame(frame);
 })();

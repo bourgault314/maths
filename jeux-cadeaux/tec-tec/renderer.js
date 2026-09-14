@@ -8,7 +8,8 @@
     {sky:['#fae3cc','#edc8b0'],top:'#e5ae80',edge:'#b27857',rock:'#704d48',deep:'#3d363a',dust:'#efb688'},
     {sky:['#d8f0f2','#bce1dd'],top:'#f2e4bb',edge:'#c8b78b',rock:'#405e62',deep:'#244249',dust:'#eee0b7'}
   ];
-  function path(c,d,fill,stroke,width=1){const p=new Path2D(d);if(fill){c.fillStyle=fill;c.fill(p);}if(stroke){c.strokeStyle=stroke;c.lineWidth=width;c.stroke(p);}}
+  const paths=new Map();
+  function path(c,d,fill,stroke,width=1){let p=paths.get(d);if(!p){if(paths.size>=64)paths.clear();p=new Path2D(d);paths.set(d,p);}if(fill){c.fillStyle=fill;c.fill(p);}if(stroke){c.strokeStyle=stroke;c.lineWidth=width;c.stroke(p);}}
   function ellipse(c,x,y,rx,ry,color){c.fillStyle=color;c.beginPath();c.ellipse(x,y,rx,ry,0,0,Math.PI*2);c.fill();}
   const noise=n=>{const v=Math.sin(n*127.13+311.7)*43758.5453;return v-Math.floor(v);};
   function bird(c,x,y,scale=1,t=0,pose='idle',vy=0,land=0){
@@ -43,7 +44,12 @@
   function makeImage(contents){return new Promise((resolve,reject)=>{const im=new Image();im.onload=()=>resolve(im);im.onerror=reject;im.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="2400" height="660" viewBox="0 0 1200 330">'+contents+'</svg>');});}
   class Renderer{
     constructor(canvas,course){this.canvas=canvas;this.c=canvas.getContext('2d',{alpha:false});this.course=course;this.assets=[];this.particles=[];this.flash=0;this.lastZone=0;this.loaded=false;this.reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;this.resize();}
-    resize(){const b=this.canvas.getBoundingClientRect(),dpr=Math.min(window.devicePixelRatio||1,2);this.canvas.width=Math.round(b.width*dpr);this.canvas.height=Math.round(b.height*dpr);this.sx=this.canvas.width/W;this.sy=this.sx;this.logicalHeight=this.canvas.height/this.sx;}
+    resize(){const b=this.canvas.getBoundingClientRect();if(b.width<=0||b.height<=0)return;
+      const dpr=Math.min(window.devicePixelRatio||1,2,1920/b.width),width=Math.max(1,Math.round(b.width*dpr)),height=Math.max(1,Math.round(b.height*dpr));
+      if(this.canvas.width!==width)this.canvas.width=width;
+      if(this.canvas.height!==height)this.canvas.height=height;
+      this.sx=width/W;this.sy=this.sx;this.logicalHeight=height/this.sx;
+    }
     async load(){
       this.assets=await Promise.all(window.TecLandscapes.map(async z=>{
         const repeat=items=>[].concat(items).map(s=>s+'<g transform="translate(600 0)">'+s+'</g>').join('');

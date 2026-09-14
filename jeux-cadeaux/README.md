@@ -178,3 +178,36 @@ natif, la sortie, la pause, le quota et le double clic pendant la transition. Le
 pur de dimensionnement couvre portrait/paysage, ordinateur et zones sûres ; les
 contrôles de cadre vérifient l’origine des messages et la restauration du site.
 La disposition sur un véritable iPhone reste à vérifier par un utilisateur.
+
+### Tec-tec : cadrage proportionné en essai (14 septembre 2026)
+
+« Démarrer » lance désormais le jeu directement dans la page. « Agrandir » est
+facultatif et reste hors du paysage, à côté de Sauter. Le mode agrandi conserve
+les proportions de la scène : 1,16 en portrait, 12/7 ailleurs. Sur un écran
+horizontal peu haut, les commandes passent dans une colonne latérale pour
+laisser plus de hauteur à la scène. Le téléphone reste utilisable en portrait ;
+le vrai gain de taille de l’oiseau et des obstacles se fait à l’horizontale.
+Le jeu montre toujours les mêmes 720 unités de parcours devant la caméra.
+
+Dans la page, la scène s’adapte à la place disponible, avec une taille minimale
+lisible : une petite fenêtre peut défiler plutôt que réduire le jeu à une
+miniature. Le mode agrandi respecte les zones sûres du téléphone et les
+dimensions de la fenêtre. Agrandir ne lance aucune partie ; en cours de jeu,
+le changement de vue met en pause comme précédemment. Rejouer garde la vue.
+
+Pour alléger le dessin, la résolution du canvas est plafonnée à 1920 pixels de
+large, ses dimensions ne sont plus réaffectées à taille identique, et les
+contours vectoriels de l’oiseau sont réutilisés. Les décors, la physique, la
+vitesse, le parcours, les commandes de saut, les records et le quota cadeau
+sont conservés. Les mesures de taille et les tests de rendu ne prouvent pas
+un nombre d’images par seconde sur un appareil réel.
+
+Le replay complet passe par les événements clavier et pointeur. Une comparaison
+de 21 images de scène (trois tailles, sauts et vols compris) avec le renderer
+précédent produit les mêmes pixels à résolution égale. Ce contrôle utilise un
+canvas natif hors navigateur ; il ne remplace pas l’essai tactile ni la mesure
+de fluidité sur téléphone.
+
+`node scripts/tec-tec-export.cjs /chemin/Tec-tec_affichage_essai.html` produit un
+essai autonome de cette même page, sans accès réseau ni publication du site.
+Son stockage appartient à l’origine depuis laquelle on ouvre cet essai.
