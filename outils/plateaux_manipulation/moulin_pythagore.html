@@ -1032,7 +1032,8 @@
       const previous=vertices[vertices.length-1];
       if(!previous || Math.hypot(p.x-previous.x,p.y-previous.y)>epsilon) vertices.push(p);
     }
-    if(vertices.length>1 && Math.hypot(vertices[0].x-vertices.at(-1).x,vertices[0].y-vertices.at(-1).y)<=epsilon) vertices.pop();
+    const first=vertices[0], last=vertices[vertices.length-1];
+    if(vertices.length>1 && Math.hypot(first.x-last.x,first.y-last.y)<=epsilon) vertices.pop();
     // Des sommets intermédiaires alignés ne doivent pas bloquer une oreille.
     let changed=true;
     while(changed && vertices.length>3){
