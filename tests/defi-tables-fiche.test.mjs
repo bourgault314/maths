@@ -108,7 +108,7 @@ test("la couronne est un dessin en currentColor, partout où une marche s'affich
 test("« Lire la table de 7 » : un écran avec les onze lignes de la table affichée, et ses cartes recto verso", () => {
   assert.match(html, /<button id="acc-lire" class="matable-lire" type="button" aria-controls="lire">[\s\S]*<span>Lire la table de 2<\/span><\/button>/);
   assert.match(html, /<div id="lire" class="lire-screen" hidden>[\s\S]*id="lire-back" class="settings-back"[\s\S]*<h1 id="lire-title" class="settings-heading" tabindex="-1">La table de 2<\/h1>[\s\S]*<ol id="lire-liste" class="lire-liste"><\/ol>[\s\S]*<a id="lire-cartes" class="lire-cartes" href="\.\/cartes_table_2\.pdf" target="_blank" rel="noopener">/);
-  assert.match(html, /function openLire\(\) \{[\s\S]*for \(let k = 0; k <= 10; k \+= 1\) \{[\s\S]*calcul\.textContent = `\$\{table\} × \$\{k\}`;[\s\S]*produit\.textContent = String\(table \* k\);[\s\S]*cartes\.href = `\.\/cartes_table_\$\{table\}\.pdf`;[\s\S]*show\("lire"\);/);
+  assert.match(html, /function openLire\(\) \{[\s\S]*for \(let k = 0; k <= 10; k \+= 1\) \{[\s\S]*calcul\.textContent = `\$\{k\} × \$\{table\}`;[\s\S]*produit\.textContent = String\(table \* k\);[\s\S]*cartes\.href = `\.\/cartes_table_\$\{table\}\.pdf`;[\s\S]*show\("lire"\);/);
   // Le lien suit la table affichée et s'efface quand le bloc est replié (9 sur 9).
   assert.match(html, /const lire = \$\("acc-lire"\);\s*\n\s*lire\.hidden = replie;\s*\n\s*if \(!replie\) lire\.querySelector\("span"\)\.textContent = `Lire la table de \$\{table\}`;/);
   assert.match(html, /\.matable\.is-toutes \.matable-lire \{ display: none; \}/);

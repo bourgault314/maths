@@ -1,7 +1,7 @@
 """Génère les cartes recto verso des tables de multiplication (lot R5, 13/09/2026).
 
 Pour chaque table de 2 à 10 : un PDF de deux pages A4 —
-    page 1 (recto) = 12 cartes : les 11 calculs « 7 × 0 » … « 7 × 10 » et une
+    page 1 (recto) = 12 cartes : les 11 calculs « 0 × 7 » … « 10 × 7 » et une
                      carte-titre « Table de 7 » ;
     page 2 (verso) = les réponses, disposées EN MIROIR (colonnes inversées) pour
                      qu'une impression recto verso « retourner sur le bord long »
@@ -11,9 +11,10 @@ ordre recto/verso) : c'est celui du catalogue, pour imprimer tout un jeu.
 
 Décision du 11/09/2026 (formation neurosciences) : des cartes à retourner, une
 table à la fois, pour la réactivation active à la maison ou en classe. Le sens
-d'écriture (7 × 3 : la table d'abord) est celui de la fiche « Mes tables de
-multiplication » et de l'application ; le point 4 bis avec Claire pourra le
-changer ici en une constante.
+d'écriture — 3 × 7, le multiplicateur d'abord — se lit « 3 fois 7 », trois
+paquets de 7 : c'est ce que montrent la bande et les perles de l'application, et
+c'est ce que dit maintenant l'écran « La table de N » (décision du 14/09/2026).
+Il tient dans la seule fonction libelle() ci-dessous.
 
 Règles du site : logo maths&go en bas à gauche (une seule fois par document,
 page 1 : ces feuilles n'ont pas d'en-tête), signature « mathsgo.re · CC BY-NC-SA
@@ -39,10 +40,10 @@ CONSIGNE_RECTO = "Imprime en recto verso (retourner sur le bord long), puis déc
 CONSIGNE_VERSO = "Verso : les réponses, au dos de chaque calcul."
 TITRE_VERSO = "Défi tables"
 SOUS_TITRE_VERSO = "mathsgo.re"
-# Le calcul tel qu'il est écrit sur le recto : la table d'abord (7 × 3), comme
-# sur la fiche des tables et dans l'application.
+# Le calcul tel qu'il est écrit sur le recto : le multiplicateur d'abord
+# (3 × 7), comme la bande et l'écran « La table de N » de l'application.
 def libelle(table: int, k: int) -> str:
-    return f"{table} × {k}"
+    return f"{k} × {table}"
 
 ROOT = Path(__file__).resolve().parents[2]
 OUT_DIR = ROOT / "outils" / "calcul_mental"

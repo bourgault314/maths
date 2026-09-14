@@ -162,7 +162,13 @@
       ? shuffle(LEARN_MULTIPLIERS.filter(multiplier => ![0, 5, 10].includes(multiplier)), random)
       : normalized.learnActivity === "random" ? shuffle(LEARN_MULTIPLIERS, random) : [...LEARN_MULTIPLIERS];
     return multipliers.map(multiplier => ({
-      ...tableQuestion("direct", table, multiplier),
+      // Le sens de la BANDE qu'on est en train de construire : « 3 × 7 », trois
+      // paquets de 7, ce que l'élève voit ligne par ligne juste au-dessus. La
+      // question et la case qu'elle remplit disent enfin la même chose
+      // (décision du 14/09/2026). Les entraînements, les validations, le
+      // mélange et l'escalier gardent LEURS deux sens équilibrés : c'est
+      // « connaître sa table dans tous les sens », et ça ne change pas.
+      ...tableQuestion("direct", multiplier, table),
       focusTable: table,
       multiplier,
       learnActivity: normalized.learnActivity
