@@ -1,7 +1,7 @@
 """Génère les cartes recto verso des tables de multiplication (lot R5, 13/09/2026).
 
 Pour chaque table de 2 à 10 : un PDF de deux pages A4 —
-    page 1 (recto) = 12 cartes : les 11 calculs « 7 × 0 » … « 7 × 10 » et une
+    page 1 (recto) = 12 cartes : les 11 calculs « 0 × 7 » … « 10 × 7 » et une
                      carte-titre « Table de 7 » ;
     page 2 (verso) = les réponses, disposées EN MIROIR (colonnes inversées) pour
                      qu'une impression recto verso « retourner sur le bord long »
@@ -40,8 +40,8 @@ CONSIGNE_RECTO = "Imprime en recto verso (retourner sur le bord long), puis déc
 CONSIGNE_VERSO = "Verso : les réponses, au dos de chaque calcul."
 TITRE_VERSO = "Défi tables"
 SOUS_TITRE_VERSO = "mathsgo.re"
-# Le calcul tel qu'il est écrit sur le recto : la table d'abord (7 × 3), comme
-# sur la fiche des tables et dans l'application.
+# Le calcul tel qu'il est écrit sur le recto : le multiplicateur d'abord
+# (3 × 7), comme la bande et l'écran « La table de N » de l'application.
 def libelle(table: int, k: int) -> str:
     return f"{k} × {table}"
 
