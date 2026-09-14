@@ -926,11 +926,15 @@
   }
 
 
-  function clearCelebration(rearm=false){
+  function cancelCompletionCheck(){
     if(state.completionTimer){
       clearTimeout(state.completionTimer);
       state.completionTimer=null;
     }
+  }
+
+  function clearCelebration(rearm=false){
+    cancelCompletionCheck();
     if(state.celebrationTimer){
       clearTimeout(state.celebrationTimer);
       state.celebrationTimer=null;
@@ -1016,11 +1020,68 @@
     return output;
   }
 
+  // Le masque de clipConvexPolygon doit être convexe. Les pièces en creux
+  // des quadrillages sont donc décomposées en triangles avant intersection.
+  // Les triangles ne se recouvrent pas : leurs aires d'intersection s'ajoutent.
+  function triangulateSimplePolygon(points){
+    const epsilon=1e-7;
+    if(points.length<3 || points.some(p=>!Number.isFinite(p.x) || !Number.isFinite(p.y))) return null;
+    const cross=(a,b,c)=>(b.x-a.x)*(c.y-a.y)-(b.y-a.y)*(c.x-a.x);
+    const vertices=[];
+    for(const p of points){
+      const previous=vertices[vertices.length-1];
+      if(!previous || Math.hypot(p.x-previous.x,p.y-previous.y)>epsilon) vertices.push(p);
+    }
+    if(vertices.length>1 && Math.hypot(vertices[0].x-vertices.at(-1).x,vertices[0].y-vertices.at(-1).y)<=epsilon) vertices.pop();
+    // Des sommets intermédiaires alignés ne doivent pas bloquer une oreille.
+    let changed=true;
+    while(changed && vertices.length>3){
+      changed=false;
+      for(let i=0;i<vertices.length;i++){
+        const a=vertices[(i+vertices.length-1)%vertices.length], b=vertices[i], c=vertices[(i+1)%vertices.length];
+        if(Math.abs(cross(a,b,c))<=epsilon){
+          vertices.splice(i,1); changed=true; break;
+        }
+      }
+    }
+    const area=polygonArea(vertices), orientation=Math.sign(signedPolygonArea(vertices));
+    if(vertices.length<3 || area<=epsilon) return null;
+    const triangles=[];
+    while(vertices.length>3){
+      let ear=-1;
+      for(let i=0;i<vertices.length;i++){
+        const previous=(i+vertices.length-1)%vertices.length, next=(i+1)%vertices.length;
+        const a=vertices[previous], b=vertices[i], c=vertices[next];
+        if(orientation*cross(a,b,c)<=epsilon) continue;
+        const containsVertex=vertices.some((p,j)=>j!==previous && j!==i && j!==next &&
+          orientation*cross(a,b,p)>=-epsilon && orientation*cross(b,c,p)>=-epsilon && orientation*cross(c,a,p)>=-epsilon);
+        if(!containsVertex){triangles.push([a,b,c]);ear=i;break;}
+      }
+      // Ne jamais transformer un échec géométrique en « zéro chevauchement ».
+      if(ear<0) return null;
+      vertices.splice(ear,1);
+    }
+    triangles.push([...vertices]);
+    const total=triangles.reduce((sum,triangle)=>sum+polygonArea(triangle),0);
+    return Math.abs(total-area)<=Math.max(epsilon,area*1e-9) ? triangles : null;
+  }
+
   function checkPuzzleSolution({quiet=false,celebrate=false}={}){
+    if(state.dragging){
+      if(!quiet) setPuzzleStatus("Relâche la pièce avant de vérifier.");
+      return false;
+    }
     const targetMoulin=activePuzzleMoulin();
     if(!targetMoulin || !state.pieces.size) return false;
     const target=targetMoulin.mold.corners;
     const pieces=[...state.pieces.values()].map(piece=>({piece,points:pieceWorldVertices(piece)}));
+    for(const item of pieces){
+      item.triangles=triangulateSimplePolygon(item.points);
+      if(!item.triangles){
+        if(!quiet) setPuzzleStatus("La position d’une pièce ne peut pas être vérifiée.","error");
+        return false;
+      }
+    }
     const targetArea=polygonArea(target);
     const totalArea=pieces.reduce((sum,item)=>sum+polygonArea(item.points),0);
     if(Math.abs(totalArea-targetArea)>Math.max(20,targetArea*0.002)){
@@ -1033,7 +1094,12 @@
     }
     for(let i=0;i<pieces.length;i++){
       for(let j=i+1;j<pieces.length;j++){
-        const overlap=polygonArea(clipConvexPolygon(pieces[i].points,pieces[j].points));
+        let overlap=0;
+        for(const first of pieces[i].triangles){
+          for(const second of pieces[j].triangles){
+            overlap+=polygonArea(clipConvexPolygon(first,second));
+          }
+        }
         if(overlap>Math.max(12,targetArea*0.0002)){
           if(!quiet) setPuzzleStatus("Les pièces se chevauchent encore.","error");
           return false;
@@ -1050,10 +1116,11 @@
   }
 
   function queueCompletionCheck(){
-    if(state.mode!=="eleves" || state.celebrated) return;
-    if(state.completionTimer) clearTimeout(state.completionTimer);
+    cancelCompletionCheck();
+    if(state.mode!=="eleves" || state.celebrated || state.dragging) return;
     state.completionTimer=setTimeout(()=>{
       state.completionTimer=null;
+      if(state.mode!=="eleves" || state.dragging) return;
       checkPuzzleSolution({quiet:true,celebrate:true});
     },80);
   }
@@ -2216,6 +2283,7 @@
     evt.preventDefault();
     evt.stopPropagation();
     dismissPuzzleStatus();
+    cancelCompletionCheck();
     const id=evt.currentTarget.closest("g").getAttribute("data-id");
 
     if(state.dragging){
@@ -2241,6 +2309,7 @@
     evt.preventDefault();
     evt.stopPropagation();
     if(state.dragging) return;
+    cancelCompletionCheck();
     const id=evt.currentTarget.getAttribute("data-id");
     const p0=clientToWorld(evt);
     const piece=state.pieces.get(id);
@@ -2394,6 +2463,7 @@
     if(drag.type==="move" || drag.type==="transform"){
       const pointer=drag.pointers.get(evt.pointerId);
       if(!pointer) return;
+      if(evt.type==="pointercancel") drag.cancelled=true;
       try{ if(pointer.captureEl.hasPointerCapture(evt.pointerId)) pointer.captureEl.releasePointerCapture(evt.pointerId); }catch(_err){}
       drag.pointers.delete(evt.pointerId);
 
@@ -2407,11 +2477,17 @@
       }
     } else if(drag.type==="rotate"){
       if(evt.pointerId!==drag.pointerId) return;
+      if(evt.type==="pointercancel") drag.cancelled=true;
       try{ if(drag.captureEl.hasPointerCapture(evt.pointerId)) drag.captureEl.releasePointerCapture(evt.pointerId); }catch(_err){}
     }
 
     state.dragging=null;
     stage.classList.remove("isDragging");
+    if(drag.cancelled){
+      if(piece) piece.placed=false;
+      cancelCompletionCheck();
+      return;
+    }
     snapPieceAfterDrop(piece);
     queueCompletionCheck();
   }
