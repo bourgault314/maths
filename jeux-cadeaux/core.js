@@ -91,7 +91,9 @@
       if (n !== this.path[this.index]) { this.fail(n); return; }
       if (++this.index === this.path.length) {
         this.score = this.path.length; this.round++;
-        this.feedback = "Chemin retrouvé ! Une lumière de plus…";
+        // Phrase courte exprès : en vert et en gras, une phrase longue passe à deux
+        // lignes sur un téléphone et pousse le plateau vers le bas à chaque tour.
+        this.feedback = "Bravo ! Une lumière de plus…";
         this.phase = "feedback"; this.elapsed = 0; this.lit = -1;
       }
     }

@@ -53,7 +53,7 @@ function create(query = "?domain=jeux-recherches") {
       assert.equal(frame.src, "https://mathsgo.re/jeux-cadeaux/tec-tec/index.html?integre=1&v=4");
       assert.equal(d.q("#page-title").textContent, "Tec-tec bondissant");
     } else {
-      assert.ok(frame.src.endsWith("?jeu=" + id + "&integre=1&v=7"));
+      assert.ok(frame.src.endsWith("?jeu=" + id + "&integre=1&v=8"));
     }
     d.send(frame, { type: "mathsgo-short-game:height", height: 570 }, "https://mathsgo.re");
     assert.equal(frame.style.height, "570px");

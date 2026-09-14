@@ -241,9 +241,13 @@
   function render() {
     if (!model) return;
     if (current === "luciole") {
-      setText("time-label", model.phase === "answer" ? Math.ceil(model.remaining) + " s" : model.phase === "show" ? "Observe…" : "");
-      setText("progress-label", "Chemin de " + model.length + " lumières");
-      const message = model.phase === "show" ? "Observe bien : " + model.length + " lumières à retenir." : model.phase === "answer" ? "À toi ! " + model.index + " / " + model.length + " cases retrouvées." : model.feedback;
+      // Une seule ligne pendant la partie : elle porte la consigne, le compte des
+      // cases et le temps qui reste. L'espace chiffre devant les secondes garde la
+      // phrase à la même largeur quand le compte à rebours passe de 10 à 9.
+      const secondes = String(Math.ceil(model.remaining));
+      const message = model.phase === "show" ? "Observe bien : " + model.length + " lumières à retenir."
+        : model.phase === "answer" ? "À toi ! " + model.index + " / " + model.length + " · " + (secondes.length < 2 ? "\u2007" : "") + secondes + " s"
+        : model.feedback;
       setText("instructions", message);
       const cells = [...$("stage").querySelectorAll(".memory-cell")];
       const trail = model.phase === "feedback";
@@ -260,7 +264,8 @@
         lastLit = model.lit;
       }
       const bar = $("stage").querySelector(".memory-timer");
-      bar.hidden = model.phase !== "answer";
+      // Invisible hors de la réponse, mais toujours présente : sinon le plateau saute.
+      bar.classList.toggle("en-attente", model.phase !== "answer");
       bar.firstElementChild.style.width = (model.phase === "answer" ? Math.max(0, model.remaining / model.answerTime) * 100 : 100) + "%";
       bar.classList.toggle("urgent", model.phase === "answer" && model.remaining < model.answerTime * .3);
       if (model.phase === "answer" && memoryPhase !== "answer") cells[0].focus({ preventScroll: true });

@@ -57,9 +57,13 @@ run("Luciole : le chemin s’allonge, puis une erreur termine la partie", () => 
       if (longueurs.length < 4) {
         d.key("ArrowDown"); assert.equal(d.doc.activeElement.dataset.cell, "4");
         d.key("ArrowRight"); assert.equal(d.doc.activeElement.dataset.cell, "5");
-        barres.push(d.q(".memory-timer").hidden);
+        barres.push(d.q(".memory-timer").classList.contains("en-attente"));
+        // Une seule ligne pendant la partie : elle porte le compte des cases ET le temps.
+        assert.match(d.q("#instructions").textContent, /^À toi ! \d+ \/ \d+ · \s*\d+ s$/, "La phrase porte le compte et le chrono");
         path.forEach(n => d.click('[data-cell="' + n + '"]'));
-        assert.equal(d.q(".memory-timer").hidden, true, "La barre disparaît entre deux chemins");
+        // Elle s'efface entre deux chemins, mais garde sa place : sinon le plateau saute.
+        assert.equal(d.q(".memory-timer").classList.contains("en-attente"), true, "La barre s'efface entre deux chemins");
+        assert.equal(d.q(".memory-timer").hidden, false, "…sans quitter la mise en page, sinon le plateau remonte");
       } else {
         const faux = [...Array(16).keys()].map(String).find(c => c !== path[0]);
         d.click('[data-cell="' + faux + '"]');

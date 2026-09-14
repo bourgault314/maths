@@ -13,15 +13,20 @@ html.embedded {
 .embedded .play-head { display: flex; min-height: 44px; justify-content: space-between; margin: 0; }
 .embedded .play-head h1 { display: none; }
 .embedded .play-head small { font-size: .75rem; }
-.embedded .instructions { min-height: 0; margin: 5px 0 10px; }
+/* La marge horizontale reste « auto » : sinon la consigne se colle à gauche
+   pendant que le plateau, lui, reste centré. */
+.embedded .instructions { min-height: 0; margin: 5px auto 10px; }
 .embedded .stage { height: clamp(270px, 45vw, 360px); }
 /* Le plateau de la Luciole suit la place que la page du site lui laisse vraiment
-   (--hauteur-dispo, en-tête, titre et pied déduits), moins les 220 px de ses propres
-   bandeaux : titre du jeu, consigne, ligne d’état, bouton et aide clavier.
+   (--hauteur-dispo, en-tête, titre et pied déduits), moins les 176 px de ses propres
+   bandeaux : titre du jeu, consigne, bouton et aide clavier.
    Plancher à 300 px pour que les cases restent touchables sur une fenêtre trop basse. */
 .embedded #play.play-memory {
-  --grid-max: min(92vw, max(300px, calc(var(--hauteur-dispo, var(--hauteur-site, 900px)) - 220px)), 530px);
+  --grid-max: min(92vw, max(300px, calc(var(--hauteur-dispo, var(--hauteur-site, 900px)) - 176px)), 530px);
 }
+/* La consigne garde la hauteur de sa plus grande ligne (celle de la réussite, en
+   gras) : sans ça le plateau descend de quelques pixels à chaque chemin trouvé. */
+.embedded #play.play-memory .instructions { min-height: 1.4rem; }
 .embedded .status-row { padding: 7px 0; }
 .embedded .controls { padding-top: 12px; }
 .embedded .result { margin: 8px 0; }
