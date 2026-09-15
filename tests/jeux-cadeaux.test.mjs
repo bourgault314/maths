@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import { readFileSync } from "node:fs";
 import core from "../jeux-cadeaux/core.js";
 const { Memory, Runner, Stack, Cases, casesPalier, CASES_FAMILLES, CASES_MANCHES, CASES_BLOC, CASES_VIES, CASES_PLAFOND, stable, balance, stackStep, tier, random, giftOptions, giftLedger } = core;
 const advance = (game, until, max = 100) => {
@@ -559,4 +560,14 @@ test("Après une touche, le dodo est invincible un court instant et l’obstacle
   // Un obstacle touché n'est jamais crédité comme franchi.
   const touche = g.obstacles.find(o => o.hit && o.counted);
   assert.equal(touche, undefined, "aucun obstacle touché puis compté comme franchi");
+});
+
+test("La case allumée ne grandit pas, et son halo suit la taille du plateau", () => {
+  // Un halo en pixels fixes avalait une case de 65 px sur téléphone alors qu'il
+  // restait discret sur une case de 98 px d'ordinateur : d'où « les cases
+  // grandissent, mais seulement sur le téléphone ».
+  const css = readFileSync(new URL("../jeux-cadeaux/styles.css", import.meta.url), "utf8");
+  const regle = css.match(/\.stage-memory \.memory-cell\.lit\{[^}]*\}/)[0];
+  assert.ok(!/transform:\s*scale/.test(regle), "La case allumée ne doit pas déborder sur le trou entre les cases");
+  assert.equal((regle.match(/var\(--grid-max\)/g) || []).length, 3, "Liseré et halo proportionnels au plateau");
 });

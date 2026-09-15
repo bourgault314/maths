@@ -23,7 +23,7 @@
     } else if (game === "dodo") {
       frame.src = "/jeux-cadeaux/tec-tec/index.html?integre=1&v=4";
     } else {
-      frame.src = "/jeux-cadeaux/index.html?jeu=" + game + "&integre=1&v=8";
+      frame.src = "/jeux-cadeaux/index.html?jeu=" + game + "&integre=1&v=9";
     }
     // La page de jeu ne voit ni la fenêtre du site, ni ce qui l'entoure. On lui
     // donne les deux : la hauteur de la fenêtre, et la place qui lui reste

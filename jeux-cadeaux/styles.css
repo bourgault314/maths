@@ -22,7 +22,10 @@
 .stage-memory .memory-cell{border-color:#68998a;border-radius:clamp(11px,calc(var(--grid-max)*.034),22px);background:linear-gradient(#3c7064,#2f5c52);color:#eaf6ea;font-size:clamp(.72rem,calc(var(--grid-max)*.044),1.5rem);font-weight:bold;transition:background .1s,transform .1s}
 .stage-memory .memory-cell .spark,.stage-memory .memory-cell.lit .spark{display:none}
 .stage-memory .memory-cell.lit .number{display:inline}
-.stage-memory .memory-cell.lit{background:radial-gradient(circle at 50% 40%,#fffbdc,#f7d75f 62%,#eec03c);border-color:#fff8d2;color:#5b4a10;box-shadow:0 0 0 3px #fbe79355,0 0 30px 8px #f7d96a5c;transform:scale(1.04)}
+/* La case allumée ne grandit pas et son halo suit la taille du plateau : en pixels
+   fixes, un halo de 30 px avalait une case de 65 px sur téléphone alors qu’il
+   restait discret sur une case de 98 px d’ordinateur. */
+.stage-memory .memory-cell.lit{background:radial-gradient(circle at 50% 40%,#fffbdc,#f7d75f 62%,#eec03c);border-color:#fff8d2;color:#5b4a10;box-shadow:0 0 0 calc(var(--grid-max)*.008) #fbe79355,0 0 calc(var(--grid-max)*.07) calc(var(--grid-max)*.02) #f7d96a5c}
 .stage-memory .memory-cell.trail,.stage-memory .memory-cell.ok{background:linear-gradient(#93d3ab,#5fae88);border-color:#d5f0e0;color:#16362b}
 .stage-memory .memory-cell.wrong{background:linear-gradient(#dd9084,#c76a5d);border-color:#f6cec6;color:#fff}
 .stage-memory .memory-timer{width:min(62%,var(--grid-max));height:8px;border-radius:99px;background:#ffffff24;overflow:hidden}
