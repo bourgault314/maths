@@ -571,3 +571,15 @@ test("La case allumée ne grandit pas, et son halo suit la taille du plateau", (
   assert.ok(!/transform:\s*scale/.test(regle), "La case allumée ne doit pas déborder sur le trou entre les cases");
   assert.equal((regle.match(/var\(--grid-max\)/g) || []).length, 3, "Liseré et halo proportionnels au plateau");
 });
+
+test("Aucune case du plateau ne change de taille ni de place, à aucun moment", () => {
+  // Une grille de mémoire est un repère : une case qui grandit pendant la vague de
+  // réussite, ou qui s'enfonce sous le doigt, abîme ce qu'on demande à l'élève de
+  // retenir — et sur un téléphone elle touche ses voisines.
+  const css = readFileSync(new URL("../jeux-cadeaux/styles.css", import.meta.url), "utf8");
+  const vague = css.match(/@keyframes luciole-trace\{(?:[^{}]*\{[^{}]*\})*[^{}]*\}/)[0];
+  assert.ok(!/transform/.test(vague), "La vague de réussite éclaire le chemin, elle ne le fait pas grossir");
+  assert.equal((vague.match(/var\(--grid-max\)/g) || []).length, 2, "Le halo de la vague suit la taille du plateau");
+  assert.match(css, /\.memory-cell:active:not\(:disabled\)\{transform:none\}/,
+    "Une case de plateau ne s'enfonce pas comme un bouton de commande");
+});
