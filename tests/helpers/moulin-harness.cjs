@@ -23,7 +23,7 @@ function createAudit(){
   document:{getElementById:element,createElement:()=>element('node-'+Math.random()),addEventListener(){},createElementNS:()=>element('svg-'+Math.random())},
   localStorage:{getItem(){return null},setItem(){}},setTimeout(fn,delay){const id=++timerId;timers.set(id,{fn,delay});return id},clearTimeout(id){timers.delete(id)}};
  let code=html.match(/<script>([\s\S]*?)<\/script>/)[1];
- code=code.slice(0,code.indexOf('  // ---------- init ----------'))+`window.AUDIT={state,PUZZLES,buildMoulin,polygonCentroid,prepareSolutionPoses,pieceWorldVertices,checkPuzzleSolution,clipConvexPolygon,triangulateSimplePolygon,poseForTargetPolygon,polygonArea,pointInConvexPolygon,onPiecePointerDown,onHandlePointerDown,finishPointerInteraction,cancelCompletionCheck,queueCompletionCheck,flipPiece,fitWorldToViewport,buildScene,snapPieceAfterDrop,snapMobilePiece,applyPieceTransform};})();`;
+ code=code.slice(0,code.indexOf('  // ---------- init ----------'))+`window.AUDIT={state,PUZZLES,ENONCES,buildEnonceHTML,buildEmptyDoubleSVG,buildSingleSkeletonSVG,buildMoulin,polygonCentroid,prepareSolutionPoses,pieceWorldVertices,checkPuzzleSolution,clipConvexPolygon,triangulateSimplePolygon,poseForTargetPolygon,polygonArea,pointInConvexPolygon,onPiecePointerDown,onHandlePointerDown,finishPointerInteraction,cancelCompletionCheck,queueCompletionCheck,flipPiece,fitWorldToViewport,buildScene,snapPieceAfterDrop,snapMobilePiece,applyPieceTransform};})();`;
  vm.runInNewContext(code,sandbox,{filename:'unmodified-inline-with-audit-exports.js'});
  const api=sandbox.window.AUDIT;
  function setup(puzzle){
