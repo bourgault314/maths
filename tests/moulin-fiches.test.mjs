@@ -22,8 +22,8 @@ test("chaque découpage du plateau a sa fiche PDF publiée", () => {
   }
 });
 
-test("la page des fiches propose les onze découpages, dans l’ordre du plateau", () => {
-  const liens = [...page.matchAll(/href="fiches_moulin\/moulin-pythagore-([^."]+)\.pdf"/g)].map((trouve) => trouve[1]);
+test("la page des fiches propose les quatorze découpages, dans l’ordre du plateau", () => {
+  const liens = [...page.matchAll(/href="fiches_moulin\/moulin-pythagore-([^."]+)\.pdf(?:\?[^"]*)?"/g)].map((trouve) => trouve[1]);
   assert.deepEqual(liens, decoupages, "l’ordre des cartes doit suivre le menu du plateau");
 });
 

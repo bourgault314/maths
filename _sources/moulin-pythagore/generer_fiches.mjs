@@ -30,6 +30,7 @@
  */
 
 import { chromium } from "playwright";
+import assert from "node:assert/strict";
 import fs from "node:fs/promises";
 import http from "node:http";
 import path from "node:path";
@@ -148,6 +149,7 @@ const decoupages = await sommaire.evaluate(() =>
 await sommaire.close();
 console.log(`${decoupages.length} découpages trouvés dans le plateau.`);
 
+let pagesCoursCommunes = null;
 for (const { cle, libelle } of decoupages) {
   const plateau = await navigateur.newPage({ viewport: { width: 1280, height: 820 } });
   await plateau.goto(`${base}${PLATEAU}?puzzle=${encodeURIComponent(cle)}&mode=eleves`);
@@ -197,6 +199,12 @@ for (const { cle, libelle } of decoupages) {
     return document.fonts.check('400 16px FichePoppins') && document.fonts.check('700 16px FichePoppins');
   });
   if (!policeOk) throw new Error("La police de la fiche ne s'est pas chargée : le PDF sortirait dans une autre police selon la machine.");
+  // Vérifier le contenu réellement rendu : seule la première page peut varier.
+  const pages = await fiche.locator(".page").evaluateAll(elements => elements.map(el => el.innerHTML));
+  assert.equal(pages.length, 5, `La fiche ${cle} doit contenir cinq pages.`);
+  if (pagesCoursCommunes === null) pagesCoursCommunes = pages.slice(1);
+  else assert.deepEqual(pages.slice(1), pagesCoursCommunes, `Les pages de cours de ${cle} doivent être communes à toutes les fiches.`);
+
   const cheminPdf = path.join(DOSSIER_PDF, `moulin-pythagore-${cle}.pdf`);
   await fiche.pdf({
     path: cheminPdf,

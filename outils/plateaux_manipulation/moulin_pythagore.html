@@ -316,10 +316,10 @@
     <div class="group">
       <a id="backMenu" href="../index.html?domain=geometrie&amp;notion=pythagore" aria-label="Retour au menu Pythagore" title="Retour au menu Pythagore">← Menu</a>
       <select id="puzzleSelect">
-      <option value="moulinIsocele" selected>1. Moulin isocèle (4 pièces)</option>
-      <option value="sixEquilibre">2. Découpage 3 + 3 (6 pièces)</option>
-      <option value="bhaskara">3. Bhaskara (4 triangles + 1 carré)</option>
-      <option value="quatreIdentiques">4. Découpage croisé (4 pièces + 1 carré)</option>
+      <option value="quatreIdentiques" selected>1. Découpage croisé (4 pièces + 1 carré)</option>
+      <option value="moulinIsocele">2. Moulin isocèle (4 pièces)</option>
+      <option value="sixEquilibre">3. Découpage 3 + 3 (6 pièces)</option>
+      <option value="bhaskara">4. Bhaskara (4 triangles + 1 carré)</option>
       <option value="perigal">5. Périgal (5 pièces)</option>
       <option value="quadrillageQuatre">6. Quadrillage 3-4-5 (4 pièces)</option>
       <option value="quadrillageCinq">7. Quadrillage 3-4-5 (5 pièces)</option>
@@ -465,7 +465,7 @@
   const state = {
     mode: "eleves",
     layoutCompact: null,
-    puzzle: "moulinIsocele",
+    puzzle: "quatreIdentiques",
     snapEnabled: true,
     angleSnapEnabled: true,
     lettersEnabled: false,
@@ -1624,7 +1624,7 @@
       `
     },
     bhaskara: {
-      title: "Puzzle 3 — Bhāskara",
+      title: "Puzzle 4 — Bhāskara",
       html: `
         <p><strong>Objectif :</strong> placer <strong>4 triangles</strong> et le <strong>carré</strong> pour reconstruire <em>c²</em>.</p>
         <p class="muted">Indice : les 4 triangles forment une sorte de cadre ; le petit carré comble le trou central.</p>
@@ -1638,7 +1638,7 @@
       `
     },
     sixEquilibre: {
-      title: "Puzzle 2 — Découpage 3 + 3",
+      title: "Puzzle 3 — Découpage 3 + 3",
       html: `
         <p><strong>Objectif :</strong> reconstituer <em>c²</em> avec les <strong>6 triangles</strong> provenant de deux carrés égaux.</p>
         <p class="muted">Le triangle du moulin est rectangle isocèle : les deux carrés de départ ont donc la même aire.</p>
@@ -1659,7 +1659,7 @@
       `
     },
     moulinIsocele: {
-      title: "Puzzle 1 — Moulin isocèle",
+      title: "Puzzle 2 — Moulin isocèle",
       html: `
         <p><strong>Objectif :</strong> réunir les <strong>4 triangles rectangles isocèles</strong> dans <em>c²</em>.</p>
         <p class="muted">Les quatre angles droits se rejoignent au centre et dessinent les ailes d’un moulin.</p>
@@ -1689,7 +1689,7 @@
     }
 ,
     quatreIdentiques: {
-      title: "Puzzle 4 — Découpage croisé + 1 carré",
+      title: "Puzzle 1 — Découpage croisé + 1 carré",
       html: `
         <p>Le <strong>petit carré</strong> reste <strong>entier</strong>. L’autre carré est découpé en <strong>4 quadrilatères</strong> par deux droites perpendiculaires.</p>
         <p>Objectif : déplacer ces <strong>5 pièces</strong> pour reconstituer le carré incliné <em>c²</em>.</p>
@@ -2649,15 +2649,13 @@
     });
   }
 
-  // Énoncé (impression) — reprise fidèle de l’énoncé d’origine, mais adaptable au puzzle sélectionné
+  // Impression : seule la page 1 dépend du puzzle ; les pages 2 à 5 sont communes.
   function buildEnonceHTML() {
   const puzzleLabel = PUZZLES[state.puzzle]?.name || "Puzzle";
   const puzzleHint = state.puzzle === "liuHuiSept"
     ? `<p class="hint"><b>Repère :</b> le triangle rectangle est non isocèle, dans le rapport 3:5. Les 2 pièces rouges viennent de <i>a²</i> et les 5 bleues de <i>b²</i>. Cette figure est une reconstruction moderne possible de la méthode décrite par Liu Hui.</p>`
     : `<p class="hint">Conseil : commence par placer les plus grandes pièces, puis complète avec les plus petites.</p>`;
-  const bilanQuestion = state.puzzle === "liuHuiSept"
-    ? `D’où viennent les pièces rouges et les pièces bleues ? Explique pourquoi leur réunion montre que l’aire de <i>c²</i> est égale à la somme des aires de <i>a²</i> et de <i>b²</i>.`
-    : `Quels liens y a-t-il entre l'aire du petit carré, du moyen carré et du grand carré ? Explique avec tes mots.`;
+  const bilanQuestion = "Quels liens y a-t-il entre les aires des trois carrés ? Explique avec tes mots.";
   const svgPage1 = buildPage1SVG();
   const svgEmptyDouble = buildEmptyDoubleSVG();
   const svgApplication = buildApplicationMoulinSVG(5, 12);
@@ -2779,7 +2777,7 @@
 
   <!-- PAGE 2 -->
   <section class="page">
-    ${head(`<h2>Bilan – ${escapeHTML(puzzleLabel)}</h2>
+    ${head(`<h2>Bilan – Moulin de Pythagore</h2>
       <p><b>Question :</b> ${bilanQuestion}</p>`)}
     <div class="pageMain"><div class="bilanBox"></div></div>
     ${foot}
@@ -2908,6 +2906,24 @@
 }
 
   // ----- SVG : squelettes vides -----
+  // Les supports de cours gardent les proportions non isocèles du découpage
+  // croisé (1:2), indépendamment du puzzle et de la taille du plateau à l'écran.
+  function buildCourseMoulins(){
+    const a = 210, b = 420, gap = 170, margin = 60;
+    const skeleton = (Ax) => {
+      const A = { x: Ax, y: margin + b };
+      const B = { x: Ax + b, y: A.y };
+      const C = { x: Ax, y: A.y + a };
+      const Bw = { x: B.x + a, y: B.y + b };
+      const Cw = { x: C.x + a, y: C.y + b };
+      return { A, B, C, Bw, Cw, mold: { a, b, c: Math.hypot(a, b), corners: [B, C, Cw, Bw] } };
+    };
+    return {
+      L: skeleton(margin + a),
+      R: skeleton(margin + a + b + 2 * a + gap)
+    };
+  }
+
   function drawMoulinSkeleton(m){
     const a = m.mold.a, b = m.mold.b;
     const B = m.B, C = m.C, Bw = m.Bw, Cw = m.Cw;
@@ -2945,9 +2961,7 @@
   }
 
   function buildEmptyDoubleSVG() {
-  const L = state.moulins?.L;
-  const R = state.moulins?.R;
-  if (!L || !R) return `<svg viewBox="0 0 10 10" xmlns="http://www.w3.org/2000/svg"></svg>`;
+  const { L, R } = buildCourseMoulins();
 
   const pts = [];
   for (const m of [L, R]) {
@@ -3040,8 +3054,7 @@ function buildApplicationMoulinSVG(AB_cm = 5, AC_cm = 12) {
 
 
   function buildSingleSkeletonSVG(){
-    const m = state.moulins?.L;
-    if(!m) return `<svg viewBox="0 0 10 10"></svg>`;
+    const m = buildCourseMoulins().L;
 
     const pts = [];
     const a = m.mold.a, b = m.mold.b;
@@ -3060,8 +3073,7 @@ function buildApplicationMoulinSVG(AB_cm = 5, AC_cm = 12) {
   }
 
   function buildMiniSkeletonSheetHTML(count = 12) {
-  // Mini moulins vides : EXACTEMENT le même dessin que le moulin principal, simplement réduit via CSS.
-  // (Ainsi, c’est une vraie réduction, pas un autre moulin “reconstruit” avec des dimensions différentes.)
+  // Mini-moulins : le modèle commun du cours, réduit sans changer ses proportions.
   const baseSVG = buildSingleSkeletonSVG();
   const cells = Array.from({ length: count }, () => `<div class="miniCell">${baseSVG}</div>`).join("");
   return `<div class="miniGrid">${cells}</div>`;

@@ -1,0 +1,54 @@
+# Préparation ponctuelle des PDF sur la branche de correction ; retirée avant fusion.
+name: Préparer les fiches communes du Moulin
+on:
+  push:
+    branches: [codex/moulin-cours-communs-20260915]
+    paths:
+      - 'outils/plateaux_manipulation/moulin_pythagore.html'
+      - '_sources/moulin-pythagore/**'
+      - 'tests/moulin-cours.test.cjs'
+      - 'tests/helpers/moulin-harness.cjs'
+      - '.github/workflows/moulin-cours-preparation.yml'
+permissions:
+  contents: write
+concurrency:
+  group: moulin-cours-preparation
+  cancel-in-progress: true
+jobs:
+  fiches:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: 22
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.12'
+      - name: Contrôler les fiches et les puzzles
+        run: npm run verifier
+      - name: Installer les outils de rendu
+        run: |
+          npm install --no-save --package-lock=false playwright@1.55.0
+          npx playwright install --with-deps chromium
+          python -m pip install --disable-pip-version-check PyMuPDF opencv-python-headless
+      - name: Régénérer les quatorze fiches
+        run: node _sources/moulin-pythagore/generer_fiches.mjs
+      - name: Comparer les PDF et leurs QR
+        run: python _sources/moulin-pythagore/_controle_fiches.py
+      - name: Contrôler le navigateur
+        run: |
+          python -m http.server 8124 --bind 127.0.0.1 >/tmp/moulin-cours-http.log 2>&1 &
+          serveur_pid=$!
+          trap 'kill "$serveur_pid"' EXIT
+          node _sources/moulin-pythagore/_controle_navigateur.mjs
+      - name: Enregistrer les PDF sur la branche de correction
+        run: |
+          test "$(git branch --show-current)" = "codex/moulin-cours-communs-20260915"
+          git restore --source=c4dbf178fbe4540b380b19a6084d2cc4553a8f08 -- 'assets/img/thumbnails/pythagore/moulin-fiche-*.png' 'assets/img/thumbnails/pythagore/moulin-fiche-*.webp'
+          git add outils/plateaux_manipulation/fiches_moulin assets/img/thumbnails/pythagore/moulin-fiches-catalogue.png assets/img/thumbnails/pythagore/moulin-fiches-catalogue.webp _sources/moulin-pythagore/_controle
+          git -c user.name='github-actions[bot]' -c user.email='41898282+github-actions[bot]@users.noreply.github.com' commit -m 'Régénérer les 14 fiches avec leurs pages de cours communes'
+          git push origin HEAD:codex/moulin-cours-communs-20260915

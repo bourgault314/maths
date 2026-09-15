@@ -8,6 +8,13 @@ enregistre la fenêtre d'impression en PDF.
 
 C'est volontaire : la fiche n'existe qu'à un seul endroit, dans le plateau.
 
+Seule la page 1 (puzzle, titre et QR code) dépend du découpage choisi.
+Les pages 2 à 5 sont identiques dans les quatorze fiches : bilan commun,
+application 5–12–13, deux moulins vides et huit mini-moulins. Les supports
+vides gardent les proportions non isocèles 1:2 du découpage croisé pour
+servir à plusieurs exemples de cours. Ils ne reprennent jamais la géométrie
+du puzzle sélectionné. Le générateur contrôle cette identité avant impression.
+
 La fiche embarque aussi **sa propre police** (`assets/fonts/Poppins-*.woff2`).
 C'est indispensable : sinon chaque machine imprimerait dans la police de son
 système, et relancer ce script depuis un autre poste changerait les quatorze
