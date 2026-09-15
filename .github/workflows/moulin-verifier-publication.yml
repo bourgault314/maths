@@ -1,0 +1,44 @@
+name: Vérifier la publication du Moulin
+on:
+  push:
+    branches: [codex/moulin-controle-public-20260915]
+    paths: ['.github/workflows/moulin-verifier-publication.yml']
+permissions:
+  contents: read
+jobs:
+  public:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.12'
+      - name: Comparer le plateau, le catalogue et les quatorze PDF publics
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          from urllib.request import Request, urlopen
+          from concurrent.futures import ThreadPoolExecutor
+          import hashlib
+          files = [
+              Path("outils/plateaux_manipulation/moulin_pythagore.html"),
+              Path("outils/plateaux_manipulation/moulin_pythagore_fiches.html"),
+              *sorted(Path("outils/plateaux_manipulation/fiches_moulin").glob("moulin-pythagore-*.pdf")),
+          ]
+          assert len(files) == 16
+          def check(path):
+              url = "https://mathsgo.re/" + path.as_posix() + "?v=cours-communs-20260915"
+              request = Request(url, headers={"Cache-Control": "no-cache", "User-Agent": "mathsgo-publication-check"})
+              with urlopen(request, timeout=40) as response:
+                  assert response.status == 200, (path, response.status)
+                  received = response.read()
+                  expected_type = "application/pdf" if path.suffix == ".pdf" else "text/html"
+                  assert expected_type in response.headers.get("Content-Type", ""), (path, response.headers.get("Content-Type"))
+              assert hashlib.sha256(received).digest() == hashlib.sha256(path.read_bytes()).digest(), (path, "fichier public différent")
+              return str(path)
+          with ThreadPoolExecutor(max_workers=4) as pool:
+              for path in pool.map(check, files):
+                  print("OK public", path)
+          print("16 fichiers publics identiques octet pour octet à la version vérifiée.")
+          PY
