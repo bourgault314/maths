@@ -38,4 +38,10 @@ html.embedded {
 @media (max-width: 400px) {
   .embedded .intro p { font-size: .84rem; }
   .embedded .play-head small { font-size: .65rem; }
+  /* L’écran de fin tenait 562 px de haut sur un téléphone : le bouton « Choisir un
+     autre jeu » finissait sous le bord de l’écran. Dessin plus petit et marges
+     resserrées, sans rien retirer de ce qui est écrit. */
+  .embedded .result-art { width: 120px; height: 90px; }
+  .embedded #result-text { margin: 10px 0; }
+  .embedded .result-actions { margin-top: 14px; }
 }
