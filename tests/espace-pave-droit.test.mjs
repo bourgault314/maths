@@ -1,5 +1,5 @@
-/* « Le pavé droit dans l'espace » — ce que les deux outils ne doivent plus
-   laisser passer : une miniature au mauvais format, et deux étiquettes collées.
+/* « Le pavé droit dans l'espace » — ce que l'outil ne doit plus laisser
+   passer : une miniature au mauvais format, et deux étiquettes collées.
    Le second contrôle balaie des pavés et des réglages volontairement ingrats
    (fuyante très courte, cote longue) ; c'est là que « 3 cm » venait toucher
    « B ». */
@@ -12,12 +12,9 @@ const require = createRequire(import.meta.url);
 const M = require("../assets/js/pave-espace-moteur.js");
 const lire = (chemin) => fs.readFileSync(new URL(`../${chemin}`, import.meta.url), "utf8");
 
-const MINIATURES = [
-  "assets/img/thumbnails/espace/pave-droit-espace.svg",
-  "assets/img/thumbnails/espace/generateur-pave-droit.svg"
-];
+const MINIATURES = ["assets/img/thumbnails/espace/pave-droit-espace.svg"];
 
-test("les miniatures du pavé droit sont au format 720 × 320 du catalogue", () => {
+test("la miniature du pavé droit est au format 720 × 320 du catalogue", () => {
   // La carte du catalogue affiche l'image en `object-fit: contain` dans une
   // boîte de ce rapport : toute autre proportion laisse des bandes claires.
   for (const chemin of MINIATURES) {
@@ -27,7 +24,6 @@ test("les miniatures du pavé droit sont au format 720 × 320 du catalogue", () 
   }
   const catalogue = lire("assets/js/catalogue-refonte-data.js");
   assert.match(catalogue, /espace\/pave-droit-espace\.svg\?v=2/);
-  assert.match(catalogue, /espace\/generateur-pave-droit\.svg\?v=2/);
 });
 
 // Même mesure que le moteur : largeur au prorata du corps, hauteur d'une ligne.
@@ -105,14 +101,57 @@ test("en classe, l'échelle du solide ne change pas quand on affiche les dimensi
   }
 });
 
-test("les deux outils chargent le moteur avec un cache-buster", () => {
+test("l'outil charge le moteur avec un cache-buster", () => {
   // Sans `?v=`, un visiteur qui a déjà ouvert l'outil garde l'ancien moteur en
   // cache : il ne verra jamais une correction du placement des étiquettes.
-  for (const page of ["outils/espace/pave_droit.html", "outils/espace/generateur_pave_droit.html"]) {
-    assert.match(
-      lire(page),
-      /assets\/js\/pave-espace-moteur\.js\?v=20260916-1/,
-      `${page} : le moteur doit être appelé avec le ?v= du lot`
-    );
+  assert.match(
+    lire("outils/espace/pave_droit.html"),
+    /assets\/js\/pave-espace-moteur\.js\?v=20260916-2/,
+    "le moteur doit être appelé avec le ?v= du lot"
+  );
+});
+
+test("la page du générateur a bien disparu du dépôt et du catalogue", () => {
+  // Deux pages pour le même pavé, c'était une carte de trop au catalogue et un
+  // aller-retour de plus pour la classe. `generate-seo.mjs --check` refuse une
+  // page publiée absente du catalogue : le fichier ET l'entrée s'en vont ensemble.
+  assert.equal(fs.existsSync(new URL("../outils/espace/generateur_pave_droit.html", import.meta.url)), false);
+  assert.equal(fs.existsSync(new URL("../assets/img/thumbnails/espace/generateur-pave-droit.svg", import.meta.url)), false);
+  for (const chemin of ["assets/js/catalogue-refonte-data.js", "sitemap.xml", "outils/toutes-les-ressources.html"]) {
+    assert.doesNotMatch(lire(chemin), /generateur_pave_droit|generateur-pave-droit/, chemin);
   }
+  assert.doesNotMatch(lire("outils/espace/pave_droit.html"), /generateur_pave_droit/);
+});
+
+test("les lettres des sommets et les segments libres passent par le moteur", () => {
+  // Deux promesses de l'outil fusionné : renommer les sommets, et tracer un
+  // segment entre deux sommets quelconques à la place des deux anciens menus
+  // « diagonale de la base » et « grande diagonale ».
+  const rendu = M.dessiner({
+    solide: M.creerPave(5, 3, 6),
+    projection: M.matriceCavaliere(0.5, 45),
+    largeur: 420, hauteur: 328, marge: 46, cadrage: "juste",
+    lettres: "IJKLMNOP",
+    segments: [{ a: "A", b: "G", nom: true }],
+    corpsSommet: 21, corpsCote: 18
+  });
+  const textes = etiquettes(rendu.svg).map((e) => e.texte);
+  assert.deepEqual(textes.filter((t) => t.length === 1).sort(), [..."IJKLMNOP"].sort());
+  assert.ok(textes.includes("IO"), `le segment doit s'appeler IO, reçu : ${textes.join(" ")}`);
+  // Il traverse l'intérieur du pavé : pointillés, jamais trait plein.
+  const trait = rendu.svg.match(/<line[^>]*stroke="#F28C28"[^>]*\/>/);
+  assert.ok(trait && /stroke-dasharray/.test(trait[0]), "le segment intérieur se dessine en pointillés");
+});
+
+test("un segment posé sur une arête vue reste en trait plein", () => {
+  // Règle du dessin : on ne met en pointillés que ce qu'on ne voit pas.
+  const rendu = M.dessiner({
+    solide: M.creerPave(5, 3, 6),
+    projection: M.matriceCavaliere(0.5, 45),
+    largeur: 420, hauteur: 328, marge: 46, cadrage: "juste",
+    segments: [{ a: "A", b: "B" }],
+    corpsSommet: 21, corpsCote: 18
+  });
+  const trait = rendu.svg.match(/<line[^>]*stroke="#F28C28"[^>]*\/>/);
+  assert.ok(trait && !/stroke-dasharray/.test(trait[0]), "une arête vue ne se dessine pas en pointillés");
 });
