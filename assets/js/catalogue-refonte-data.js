@@ -1111,6 +1111,34 @@ window.MATHSGO_CATALOGUE = {
       "thumbnail": "assets/img/thumbnails/schemas-barres/generateur-problemes.png?v=1",
       "cardDescription": "Générer et résoudre pas à pas des problèmes avec schéma en barres, équation et fiche imprimable."
     },
+    "outils/espace/pave_droit.html": {
+      "primaryNotion": "espace-constructions",
+      "primaryGroup": "manipuler",
+      "collections": [],
+      "tags": [
+        "pave-droit",
+        "perspective",
+        "espace",
+        "pythagore",
+        "solides"
+      ],
+      "thumbnail": "assets/img/thumbnails/espace/pave-droit-espace.svg?v=1",
+      "cardDescription": "Faire tourner le pav\u00e9, le voir de dessus, et sortir le triangle rectangle cach\u00e9 dans le solide pour le voir en vraie forme."
+    },
+    "outils/espace/generateur_pave_droit.html": {
+      "primaryNotion": "espace-constructions",
+      "primaryGroup": "generer",
+      "collections": [],
+      "tags": [
+        "pave-droit",
+        "perspective",
+        "figure",
+        "generateur",
+        "pythagore"
+      ],
+      "thumbnail": "assets/img/thumbnails/espace/generateur-pave-droit.svg?v=1",
+      "cardDescription": "Trois dimensions, et la figure sort pr\u00eate \u00e0 coller dans une fiche, cotes et ar\u00eates cach\u00e9es comprises."
+    },
     "outils/plateaux_manipulation/moulin_pythagore.html": {
       "primaryNotion": "pythagore",
       "primaryGroup": "manipuler",
@@ -4788,6 +4816,75 @@ window.MATHSGO_CATALOGUE = {
       "status": "hidden",
       "featured": false,
       "recent": false
+    },
+    {
+      "id": "outils-espace-pave-droit-html",
+      "title": "Le pav\u00e9 droit dans l\u2019espace",
+      "description": "Faire tourner un pav\u00e9 droit, passer du dessin en perspective \u00e0 la vue r\u00e9elle, surligner un triangle et le rabattre en vraie forme pour voir o\u00f9 est l\u2019angle droit.",
+      "path": "outils/espace/pave_droit.html",
+      "domains": [
+        "geometrie"
+      ],
+      "notions": [
+        "espace-constructions",
+        "pythagore"
+      ],
+      "uses": [
+        "projeter",
+        "manipuler"
+      ],
+      "types": [
+        "plateau"
+      ],
+      "filters": [],
+      "keywords": [
+        "pav\u00e9 droit",
+        "perspective cavali\u00e8re",
+        "vue de dessus",
+        "ar\u00eates cach\u00e9es",
+        "triangle rectangle dans un solide",
+        "grande diagonale",
+        "Pythagore dans l\u2019espace",
+        "rabattement"
+      ],
+      "kind": "tool",
+      "status": "published",
+      "featured": false,
+      "recent": true
+    },
+    {
+      "id": "outils-espace-generateur-pave-droit-html",
+      "title": "G\u00e9n\u00e9rateur de sch\u00e9mas de pav\u00e9s droits",
+      "description": "Donner trois dimensions et obtenir le pav\u00e9 droit en perspective cavali\u00e8re, sommets nomm\u00e9s, ar\u00eates cach\u00e9es en pointill\u00e9s et cotes plac\u00e9es, \u00e0 t\u00e9l\u00e9charger en SVG ou en PNG.",
+      "path": "outils/espace/generateur_pave_droit.html",
+      "domains": [
+        "geometrie"
+      ],
+      "notions": [
+        "espace-constructions",
+        "pythagore"
+      ],
+      "uses": [
+        "imprimer"
+      ],
+      "types": [
+        "generateur"
+      ],
+      "filters": [],
+      "keywords": [
+        "sch\u00e9ma de pav\u00e9 droit",
+        "figure pour une fiche",
+        "perspective cavali\u00e8re",
+        "coefficient de fuite",
+        "cotes",
+        "diagonale d\u2019une face",
+        "grande diagonale",
+        "export SVG"
+      ],
+      "kind": "tool",
+      "status": "published",
+      "featured": false,
+      "recent": true
     },
     {
       "id": "outils-plateaux-manipulation-moulin-pythagore-html",
