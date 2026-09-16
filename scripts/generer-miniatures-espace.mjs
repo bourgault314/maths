@@ -73,7 +73,7 @@ const puce = (x, mot) => `
 const panneau =
   `<line x1="470" y1="34" x2="470" y2="286" stroke="#e3e9f0" stroke-width="1.6"/>` +
   `<text x="490" y="60" font-size="16" font-weight="bold" fill="${P.trait}">Les trois dimensions</text>` +
-  champ(76, "Longueur", "5 cm") +
+  champ(76, "Largeur", "5 cm") +
   champ(126, "Profondeur", "3 cm") +
   champ(176, "Hauteur", "6 cm") +
   puce(490, "SVG") + puce(592, "PNG");
