@@ -1122,7 +1122,7 @@ window.MATHSGO_CATALOGUE = {
         "pythagore",
         "solides"
       ],
-      "thumbnail": "assets/img/thumbnails/espace/pave-droit-espace.svg?v=1",
+      "thumbnail": "assets/img/thumbnails/espace/pave-droit-espace.svg?v=2",
       "cardDescription": "Faire tourner le pav\u00e9, le voir de dessus, et sortir le triangle rectangle cach\u00e9 dans le solide pour le voir en vraie forme."
     },
     "outils/espace/generateur_pave_droit.html": {
@@ -1136,7 +1136,7 @@ window.MATHSGO_CATALOGUE = {
         "generateur",
         "pythagore"
       ],
-      "thumbnail": "assets/img/thumbnails/espace/generateur-pave-droit.svg?v=1",
+      "thumbnail": "assets/img/thumbnails/espace/generateur-pave-droit.svg?v=2",
       "cardDescription": "Trois dimensions, et la figure sort pr\u00eate \u00e0 coller dans une fiche, cotes et ar\u00eates cach\u00e9es comprises."
     },
     "outils/plateaux_manipulation/moulin_pythagore.html": {

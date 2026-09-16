@@ -197,57 +197,89 @@
     return { l: String(texte).length * corps * 0.58 + 2, h: corps * 1.02 };
   }
 
-  function chevauchement(a, b) {
-    const dx = Math.abs(a.x - b.x) - (a.l + b.l) / 2;
-    const dy = Math.abs(a.y - b.y) - (a.h + b.h) / 2;
+  // `marge` = le blanc qu'on veut voir rester entre deux étiquettes. Sans lui,
+  // deux textes séparés de zéro pixel sont « sans recouvrement » et paraissent
+  // pourtant collés : c'est ce qui faisait toucher « 3 cm » et « B ».
+  function chevauchement(a, b, marge) {
+    const m = marge || 0;
+    const dx = Math.abs(a.x - b.x) - (a.l + b.l) / 2 - m;
+    const dy = Math.abs(a.y - b.y) - (a.h + b.h) / 2 - m;
     if (dx >= 0 || dy >= 0) return 0;
     return Math.min(-dx, -dy);
   }
 
-  function separer(posees, cadre, largeur, hauteur) {
+  function separer(posees, cadre, largeur, hauteur, marge) {
     // On repousse doucement les étiquettes qui se recouvrent, sans les faire
     // sauter : la position reste une fonction continue de l'orientation.
-    for (let tour = 0; tour < 14; tour++) {
+    // Le partage n'est pas égal : une lettre de sommet est accrochée à un point
+    // précis, elle cède moins de terrain qu'une cote, qui peut glisser.
+    // Petits pas, plus de tours : on converge vers la même place au lieu de
+    // la dépasser. En classe, ce qui compte est que le dessin ne sursaute pas
+    // d'une image à l'autre pendant qu'on tourne le solide.
+    for (let tour = 0; tour < 40; tour++) {
       let bouge = false;
       for (let i = 0; i < posees.length; i++) {
         for (let j = i + 1; j < posees.length; j++) {
           const a = posees[i], b = posees[j];
-          const r = chevauchement(a, b);
+          const r = chevauchement(a, b, marge);
           if (r <= 0) continue;
           let dx = b.x - a.x, dy = b.y - a.y;
           const n = Math.hypot(dx, dy);
           if (n < 0.01) { dx = 0; dy = 1; } else { dx /= n; dy /= n; }
-          const d = (r + 1.2) / 2;
-          a.x -= dx * d; a.y -= dy * d;
-          b.x += dx * d; b.y += dy * d;
+          const ma = a.mobilite == null ? 1 : a.mobilite;
+          const mb = b.mobilite == null ? 1 : b.mobilite;
+          const somme = ma + mb > 0.01 ? ma + mb : 1;
+          const d = (r + 1.2) * 0.5;
+          a.x -= dx * d * (ma / somme); a.y -= dy * d * (ma / somme);
+          b.x += dx * d * (mb / somme); b.y += dy * d * (mb / somme);
           bouge = true;
         }
       }
-      if (!bouge) break;
-    }
-    if (cadre) {
+      // Une étiquette ne s'éloigne jamais de ce qu'elle nomme : sans cette
+      // laisse, un « B » repoussé finirait par désigner le vide.
       posees.forEach(function (e) {
-        e.x = Math.max(e.l / 2 + 1, Math.min(largeur - e.l / 2 - 1, e.x));
-        e.y = Math.max(e.h / 2 + 1, Math.min(hauteur - e.h / 2 - 1, e.y));
+        if (!e.attache || !(e.laisse > 0)) return;
+        const ex = e.x - e.attache[0], ey = e.y - e.attache[1];
+        const d = Math.hypot(ex, ey);
+        if (d > e.laisse) {
+          e.x = e.attache[0] + (ex / d) * e.laisse;
+          e.y = e.attache[1] + (ey / d) * e.laisse;
+        }
       });
+      if (cadre) {
+        posees.forEach(function (e) {
+          e.x = Math.max(e.l / 2 + 1, Math.min(largeur - e.l / 2 - 1, e.x));
+          e.y = Math.max(e.h / 2 + 1, Math.min(hauteur - e.h / 2 - 1, e.y));
+        });
+      }
+      if (!bouge) break;
     }
   }
 
   function placerEtiquettes(demandes, segments, options) {
     const opt = options || {};
     const ecart = opt.ecart || 13;
+    const respiration = opt.marge == null ? 4 : opt.marge;
+    // Jusqu'où une étiquette accepte de s'écarter du point ou de l'arête qu'elle nomme.
+    const laisseDe = function (d, rayon) { return rayon * (d.style === "sommet" ? 1.35 : 2.4); };
     const posees = [];
 
     if (opt.fluide) {
       demandes.forEach(function (d) {
         const t = tailleTexte(d.texte, d.corps);
+        // Pas d'écart supplémentaire ici : en classe le solide tourne, et une
+        // étiquette posée plus loin fait un saut plus large quand elle change
+        // de côté. La place se gagne par la marge de respiration.
         const r = ecart + Math.max(t.l, t.h) / 2 - d.corps * 0.25;
         posees.push({
           x: d.ancre[0] + d.dir[0] * r, y: d.ancre[1] + d.dir[1] * r,
-          l: t.l, h: t.h, texte: d.texte, corps: d.corps, style: d.style
+          l: t.l, h: t.h, texte: d.texte, corps: d.corps, style: d.style,
+          mobilite: d.mobilite, attache: d.ancre, laisse: laisseDe(d, r)
         });
       });
-      separer(posees, true, opt.largeur, opt.hauteur);
+      // Respiration réduite pendant la rotation : juste de quoi décoller les
+      // étiquettes, sans les faire voyager à chaque image.
+      separer(posees, true, opt.largeur, opt.hauteur, respiration * 0.45);
       return posees;
     }
 
@@ -259,7 +291,7 @@
 
     ordre.forEach(function (d) {
       const t = tailleTexte(d.texte, d.corps);
-      const rayon = ecart + Math.max(t.l, t.h) / 2 - d.corps * 0.25;
+      const rayon = ecart + (d.ecartSup || 0) + Math.max(t.l, t.h) / 2 - d.corps * 0.25;
       const ancres = d.ancres || [d.ancre];
       const prefere = Math.atan2(d.dir[1], d.dir[0]);
       let meilleur = null;
@@ -269,7 +301,10 @@
           const angle = prefere + ((i % 2 ? 1 : -1) * Math.ceil(i / 2) * Math.PI) / 12;
           const x = ancre[0] + Math.cos(angle) * rayon;
           const y = ancre[1] + Math.sin(angle) * rayon;
-          const cadre = { x: x, y: y, l: t.l, h: t.h, texte: d.texte, corps: d.corps, style: d.style };
+          const cadre = {
+            x: x, y: y, l: t.l, h: t.h, texte: d.texte, corps: d.corps, style: d.style,
+            mobilite: d.mobilite, attache: ancre, laisse: laisseDe(d, rayon)
+          };
 
           let proche = Infinity;
           for (let k = 0; k < segments.length; k++) {
@@ -277,7 +312,7 @@
             proche = Math.min(proche, distancePointSegment(x, y, sg[0], sg[1], sg[2], sg[3]));
           }
           let collision = 0;
-          for (let k = 0; k < posees.length; k++) collision += chevauchement(cadre, posees[k]);
+          for (let k = 0; k < posees.length; k++) collision += chevauchement(cadre, posees[k], respiration);
 
           const ecartAngle = Math.abs(((angle - prefere + Math.PI) % (2 * Math.PI)) - Math.PI);
           const marge = Math.max(t.l, t.h) / 2;
@@ -291,7 +326,7 @@
       posees.push(meilleur.cadre);
     });
 
-    separer(posees, true, opt.largeur, opt.hauteur);
+    separer(posees, true, opt.largeur, opt.hauteur, respiration);
     return posees;
   }
 
@@ -365,9 +400,30 @@
     const solide = o.solide;
     const boite = { x: o.marge, y: o.marge, largeur: o.largeur - 2 * o.marge, hauteur: o.hauteur - 2 * o.marge };
     // Quand un triangle est rabattu, le solide laisse la place à droite.
-    const placeSolide = o.rabattement > 0
+    let placeSolide = o.rabattement > 0
       ? { x: boite.x, y: boite.y, largeur: boite.largeur * (1 - 0.34 * o.rabattement), hauteur: boite.hauteur }
       : boite;
+
+    // Les cotes s'écrivent en dehors du solide. Quand la plus large ne tient pas
+    // dans la marge, on rétrécit un peu le dessin plutôt que de l'écraser contre
+    // le bord. Cadrage de fiche seulement : en classe, l'échelle ne doit pas
+    // changer quand on affiche les dimensions.
+    if (o.cadrage !== "stable" && o.cotes) {
+      let large = 0;
+      ["L", "P", "H"].forEach(function (k) {
+        if (o.cotes[k]) large = Math.max(large, tailleTexte(o.cotes[k], o.corpsCote).l);
+      });
+      const recul = Math.max(0, Math.min(
+        Math.max(11, o.corpsSommet * 0.85) + large - o.marge,
+        Math.min(o.largeur, o.hauteur) * 0.09
+      ));
+      if (recul > 0) {
+        placeSolide = {
+          x: placeSolide.x + recul, y: placeSolide.y + recul,
+          largeur: placeSolide.largeur - 2 * recul, hauteur: placeSolide.hauteur - 2 * recul
+        };
+      }
+    }
 
     const vue = o.cadrage === "stable"
       ? cadrerStable(solide, placeSolide, o.projection)
@@ -469,7 +525,7 @@
       NOMS.forEach(function (nom) {
         demandes.push({
           ancre: pts[nom], dir: versDehors(pts[nom]), texte: nom,
-          corps: o.corpsSommet, style: "sommet", priorite: 3
+          corps: o.corpsSommet, style: "sommet", priorite: 3, mobilite: 0.32
         });
       });
     }
@@ -483,9 +539,15 @@
         const vueEnBout = Math.hypot(pts[p[2]][0] - pts[p[1]][0], pts[p[2]][1] - pts[p[1]][1]);
         if (vueEnBout < o.corpsCote * 2.2) return;
         const ancres = leLong(pts[p[1]], pts[p[2]], [0.5, 0.36, 0.64, 0.26, 0.74]);
+        // Sur une arête courte — la fuyante d'un pavé peu profond — la cote n'a
+        // pas la place de se glisser entre les deux lettres des extrémités.
+        // On l'écarte alors davantage du solide plutôt que de la coincer contre
+        // un sommet ; l'écart varie continûment, le dessin ne saute pas.
+        const place = tailleTexte(texte, o.corpsCote).l + o.corpsSommet * 1.9;
+        const ecartSup = Math.max(0, Math.min((place - vueEnBout) * 0.26, o.corpsCote * 1.5));
         demandes.push({
           ancre: ancres[0], ancres: ancres, dir: versDehors(ancres[0]),
-          texte: texte, corps: o.corpsCote, style: "cote", priorite: 2
+          texte: texte, corps: o.corpsCote, style: "cote", priorite: 2, ecartSup: ecartSup
         });
       });
     }
@@ -541,6 +603,7 @@
 
     placerEtiquettes(demandes, segments, {
       ecart: Math.max(11, o.corpsSommet * 0.85),
+      marge: Math.max(3, o.corpsCote * 0.42),
       fluide: o.etiquettesFluides,
       largeur: o.largeur, hauteur: o.hauteur
     }).forEach(function (e) {
