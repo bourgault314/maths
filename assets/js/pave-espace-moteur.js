@@ -1,6 +1,7 @@
 /* maths&go — moteur des schémas de pavés droits en perspective
-   Partagé par outils/espace/generateur_pave_droit.html (fiches papier)
-   et outils/espace/pave_droit.html (appli de classe). Aucune dépendance.
+   Utilisé par outils/espace/pave_droit.html : la même figure sert au tableau
+   (vue « stable », le solide tourne) et à la fiche papier (vue « juste »,
+   export SVG ou PNG). Aucune dépendance.
 
    Repère : x vers la droite (largeur), y vers le fond (profondeur), z vers le haut (hauteur).
    Sommets : A avant-gauche-bas, B avant-droit-bas, C arrière-droit-bas, D arrière-gauche-bas,
@@ -361,10 +362,39 @@
       " " + n2(b[0]) + "," + n2(b[1]) + '" fill="none" stroke="' + couleur + '" stroke-width="1.6"/>';
   }
 
-  const DIAGONALES = {
-    base: ["A", "C"],
-    grande: ["A", "G"]
-  };
+  /* Les lettres affichées. On accepte "IJKLMNOP", ["I","J",…] ou {A:"I",…} ;
+     tout ce qui manque garde la lettre d'origine, pour que la figure reste
+     lisible pendant qu'on tape. */
+  function lireLettres(demande) {
+    const table = {};
+    const liste = typeof demande === "string" ? Array.from(demande.trim()) : demande;
+    NOMS.forEach(function (n, i) {
+      let v = null;
+      if (Array.isArray(liste)) v = liste[i];
+      else if (liste && typeof liste === "object") v = liste[n];
+      v = (v === undefined || v === null) ? "" : String(v).trim();
+      table[n] = v || n;
+    });
+    return table;
+  }
+
+  // Un segment entre deux sommets : arête du solide, diagonale d'une face, ou
+  // traversée de l'intérieur. C'est ce qui décide du trait plein ou pointillé.
+  function placerSegment(solide, proj, a, b) {
+    const arete = solide.aretes.find(function (ar) {
+      return (ar.a === a && ar.b === b) || (ar.a === b && ar.b === a);
+    });
+    if (arete) {
+      return { arete: true, cache: arete.faces.every(function (id) { return !proj.facesVues[id]; }) };
+    }
+    const face = solide.faces.find(function (f) {
+      return f.sommets.indexOf(a) >= 0 && f.sommets.indexOf(b) >= 0;
+    });
+    if (face) return { arete: false, cache: !proj.facesVues[face.id] };
+    // Ni arête ni diagonale de face : le segment traverse le pavé, on ne le
+    // voit jamais — la règle des pointillés vaut aussi pour lui.
+    return { arete: false, cache: true };
+  }
 
   /* Construit le dessin complet. Renvoie { corps, svg } :
      `corps` = le contenu, `svg` = un document SVG autonome. */
@@ -380,7 +410,9 @@
       cadrage: "juste",          // "juste" (fiche) ou "stable" (classe)
       faces: true,
       nomsSommets: true,
+      lettres: null,             // 8 lettres affichées à la place de A…H
       cotes: null,               // { L:"5 cm", P:"3 cm", H:"6 cm" } ou null
+      segments: null,            // [{ a:"A", b:"G", nom:true, couleur:"accent" }]
       diagonaleBase: false,
       diagonaleGrande: false,
       nomDiagonales: false,        // raccourci : nomme les deux
@@ -398,6 +430,25 @@
 
     const pal = o.palette;
     const solide = o.solide;
+    // Les lettres des sommets sont libres : la géométrie garde ses noms A…H,
+    // seul l'affichage change. Une lettre manquante reprend celle d'origine.
+    const lettres = lireLettres(o.lettres);
+
+    // Un segment se trace entre deux sommets quelconques. Les deux anciennes
+    // options « diagonale de la base » et « grande diagonale » sont désormais
+    // deux segments comme les autres.
+    const traits = [];
+    if (o.diagonaleBase) {
+      traits.push({ a: "A", b: "C", nom: !!(o.nomDiagonales || o.nomDiagonaleBase), couleur: "cache" });
+    }
+    if (o.diagonaleGrande) {
+      traits.push({ a: "A", b: "G", nom: !!(o.nomDiagonales || o.nomDiagonaleGrande), couleur: "accent" });
+    }
+    (o.segments || []).forEach(function (t) {
+      if (!t || !t.a || !t.b || t.a === t.b) return;
+      if (NOMS.indexOf(t.a) < 0 || NOMS.indexOf(t.b) < 0) return;
+      traits.push({ a: t.a, b: t.b, nom: !!t.nom, couleur: t.couleur || "accent" });
+    });
     const boite = { x: o.marge, y: o.marge, largeur: o.largeur - 2 * o.marge, hauteur: o.hauteur - 2 * o.marge };
     // Quand un triangle est rabattu, le solide laisse la place à droite.
     let placeSolide = o.rabattement > 0
@@ -450,22 +501,25 @@
       if (ar.cachee) out.push(ligneSVG(pts[ar.a], pts[ar.b], pal.cache, 1.3, "4 3"));
     });
 
-    if (o.diagonaleBase) {
-      const d = DIAGONALES.base;
-      const cachee = !proj.facesVues.bas;
-      out.push(ligneSVG(pts[d[0]], pts[d[1]], pal.cache, 1.8, cachee ? "5 3" : ""));
-    }
+    // Les segments discrets passent sous les arêtes vues, les segments mis en
+    // avant passent par-dessus : c'est ce qu'on veut regarder.
+    traits.forEach(function (t) {
+      if (t.couleur === "accent") return;
+      t.pose = placerSegment(solide, proj, t.a, t.b);
+      out.push(ligneSVG(pts[t.a], pts[t.b], pal.cache, 1.8, t.pose.cache ? "5 3" : ""));
+    });
 
     proj.aretes.forEach(function (ar) {
       if (!ar.cachee) out.push(ligneSVG(pts[ar.a], pts[ar.b], pal.trait, 2));
     });
 
-    if (o.diagonaleGrande) {
-      // La grande diagonale traverse l'intérieur du pavé : on ne la voit pas,
-      // elle se dessine donc en pointillés comme toute ligne cachée.
-      const d = DIAGONALES.grande;
-      out.push(ligneSVG(pts[d[0]], pts[d[1]], pal.accent, 2.6, "7 4"));
-    }
+    traits.forEach(function (t) {
+      if (t.couleur !== "accent") return;
+      // Un segment qui traverse l'intérieur du pavé ne se voit pas : il se
+      // dessine en pointillés, comme toute ligne cachée.
+      t.pose = placerSegment(solide, proj, t.a, t.b);
+      out.push(ligneSVG(pts[t.a], pts[t.b], pal.accent, 2.6, t.pose.cache ? "7 4" : ""));
+    });
 
     /* triangle mis en avant, puis rabattu */
     let sommetsRabattus = null;
@@ -501,8 +555,9 @@
     proj.aretes.forEach(function (ar) {
       segments.push([pts[ar.a][0], pts[ar.a][1], pts[ar.b][0], pts[ar.b][1]]);
     });
-    if (o.diagonaleBase) segments.push([pts.A[0], pts.A[1], pts.C[0], pts.C[1]]);
-    if (o.diagonaleGrande) segments.push([pts.A[0], pts.A[1], pts.G[0], pts.G[1]]);
+    traits.forEach(function (t) {
+      segments.push([pts[t.a][0], pts[t.a][1], pts[t.b][0], pts[t.b][1]]);
+    });
 
     const centreEcran = [
       (pts.A[0] + pts.G[0] + pts.B[0] + pts.H[0]) / 4,
@@ -524,7 +579,7 @@
     if (o.nomsSommets) {
       NOMS.forEach(function (nom) {
         demandes.push({
-          ancre: pts[nom], dir: versDehors(pts[nom]), texte: nom,
+          ancre: pts[nom], dir: versDehors(pts[nom]), texte: lettres[nom],
           corps: o.corpsSommet, style: "sommet", priorite: 3, mobilite: 0.32
         });
       });
@@ -551,14 +606,17 @@
         });
       });
     }
-    if ((o.nomDiagonales || o.nomDiagonaleBase) && o.diagonaleBase) {
-      const an = leLong(pts.A, pts.C, [0.5, 0.38, 0.62, 0.3]);
-      demandes.push({ ancre: an[0], ancres: an, dir: versDehors(an[0]), texte: "AC", corps: o.corpsCote, style: "diag", priorite: 1 });
-    }
-    if ((o.nomDiagonales || o.nomDiagonaleGrande) && o.diagonaleGrande) {
-      const an = leLong(pts.A, pts.G, [0.5, 0.4, 0.6, 0.32]);
-      demandes.push({ ancre: an[0], ancres: an, dir: versDehors(an[0]), texte: "AG", corps: o.corpsCote + 1, style: "accent", priorite: 1 });
-    }
+    traits.forEach(function (t) {
+      if (!t.nom) return;
+      const vif = t.couleur === "accent";
+      const an = leLong(pts[t.a], pts[t.b], vif ? [0.5, 0.4, 0.6, 0.32] : [0.5, 0.38, 0.62, 0.3]);
+      demandes.push({
+        ancre: an[0], ancres: an, dir: versDehors(an[0]),
+        texte: lettres[t.a] + lettres[t.b],
+        corps: vif ? o.corpsCote + 1 : o.corpsCote,
+        style: vif ? "accent" : "diag", priorite: 1
+      });
+    });
     if (o.angleDroitBase && proj.facesVues.bas) {
       out.push(angleDroitSVG(pts.B, pts.A, pts.C, 12, pal.trait));
     }
@@ -596,7 +654,7 @@
       r.noms.forEach(function (nom, i) {
         const d = horsTri(r.pts[i]);
         const rr = o.corpsSommet * 0.95;
-        out.push(texteSVG(r.pts[i][0] + d[0] * rr, r.pts[i][1] + d[1] * rr, nom, o.corpsSommet, pal.surligne, true, true));
+        out.push(texteSVG(r.pts[i][0] + d[0] * rr, r.pts[i][1] + d[1] * rr, lettres[nom] || nom, o.corpsSommet, pal.surligne, true, true));
       });
       out.push("</g>");
     }
@@ -688,6 +746,7 @@
     POLICE_FICHE: POLICE_FICHE,
     NOMS: NOMS,
     creerPave: creerPave,
+    lireLettres: lireLettres,
     matriceCavaliere: matriceCavaliere,
     matriceReelle: matriceReelle,
     melanger: melanger,

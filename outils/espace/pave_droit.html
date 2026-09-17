@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Le pavé droit dans l’espace | maths&amp;go</title>
-<meta name="description" content="Faire tourner un pavé droit, passer du dessin en perspective à la vue réelle, surligner un triangle et le rabattre en vraie forme pour voir où est l’angle droit.">
+<meta name="description" content="Faire tourner un pavé droit, comparer le dessin en perspective et l’objet réel, surligner un triangle et le rabattre en vraie forme, puis récupérer la figure en SVG ou en PNG pour une fiche.">
 <link rel="canonical" href="https://mathsgo.re/outils/espace/pave_droit.html">
 <meta name="robots" content="index, follow, max-image-preview:large">
 <link rel="icon" href="/favicon.ico" sizes="48x48">
@@ -22,7 +22,7 @@
        font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
        display:flex;flex-direction:column;-webkit-user-select:none;user-select:none}
   .bandeau{background:#fff;border-bottom:2.5px solid var(--vert);padding:8px 14px;
-           display:flex;align-items:center;gap:12px;flex:0 0 auto;flex-wrap:wrap}
+           display:flex;align-items:center;gap:10px;flex:0 0 auto;flex-wrap:wrap}
   .bandeau h1{font-size:17px;margin:0;font-weight:700;flex:1 1 auto}
   .scene{flex:1 1 auto;position:relative;min-height:0;touch-action:none;cursor:grab;
          display:flex;align-items:center;justify-content:center;background:#fff}
@@ -32,31 +32,65 @@
   .rangee{max-width:1000px;margin:0 auto;display:flex;align-items:center;gap:12px;flex-wrap:wrap;
           justify-content:center}
   .rangee + .rangee{margin-top:10px}
-  .curseur{flex:1 1 320px;display:flex;align-items:center;gap:12px;min-width:0}
-  .curseur span{font-size:14px;font-weight:600;color:var(--muted);white-space:nowrap}
-  .curseur span.actif{color:var(--ink)}
-  input[type=range]{flex:1 1 auto;min-width:120px;height:44px;accent-color:var(--vert)}
   button{font:inherit;font-size:15px;min-height:44px;padding:0 14px;border-radius:10px;
          border:1px solid #cfd8e0;background:#fff;color:var(--ink);cursor:pointer}
   button:hover{background:#f2f6f8}
   button.on{background:var(--vert);border-color:var(--vert);color:#fff;font-weight:600}
-  button.tri.on{background:var(--vert);border-color:var(--vert)}
+  button.vedette{background:var(--vert);border-color:var(--vert);color:#fff;font-weight:600}
+  button.vedette:hover{background:#079b9b}
+  button#btnReel{min-width:172px}
   button[disabled]{opacity:.42;cursor:default}
   button[disabled]:hover{background:#fff}
   .groupe{display:flex;gap:6px;flex-wrap:wrap;justify-content:center}
   .sep{width:1px;align-self:stretch;background:var(--ligne);margin:0 2px}
+  .court{display:none}
+
   dialog{border:none;border-radius:14px;padding:18px;box-shadow:0 18px 50px rgba(23,50,77,.24);
-         color:var(--ink);font:inherit;max-width:340px;width:calc(100% - 32px)}
+         color:var(--ink);font:inherit;max-width:340px;width:calc(100% - 32px);
+         max-height:calc(100vh - 28px);overflow:auto}
   dialog::backdrop{background:rgba(23,50,77,.35)}
   dialog h2{margin:0 0 12px;font-size:16px}
+  dialog.large{max-width:760px}
   .trio{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px}
   .trio label{display:block;font-size:13px;color:var(--muted);margin-bottom:3px}
-  dialog input{width:100%;padding:8px;font:inherit;font-size:16px;border:1px solid #cfd8e0;
-               border-radius:8px;min-height:42px}
-  .pied{display:flex;gap:8px;justify-content:space-between;align-items:center;margin-top:14px}
-  .lien{color:var(--vert);font-weight:600;text-decoration:none;font-size:14px}
+  dialog input[type=number],dialog input[type=text],dialog select{
+    width:100%;padding:8px;font:inherit;font-size:16px;border:1px solid #cfd8e0;
+    border-radius:8px;min-height:42px;background:#fff;color:var(--ink)}
+  .ligne{display:flex;align-items:center;gap:10px;margin:9px 0}
+  .ligne > label{font-size:13px;color:var(--muted);margin:0;flex:0 0 auto}
+  .ligne .pousse{flex:1 1 auto}
+  .val{font-variant-numeric:tabular-nums;font-weight:600}
+  .puce{min-height:34px;font-size:13px;padding:0 12px;border-radius:999px}
+  .coche{display:flex;align-items:center;gap:9px;margin:9px 0;font-size:14px;cursor:pointer}
+  .coche input{width:20px;height:20px;accent-color:var(--vert);flex:0 0 auto}
+  .coche.eteinte{opacity:.45}
+  input[type=range]{width:100%;min-height:36px;accent-color:var(--vert)}
+  .pied{display:flex;gap:8px;justify-content:flex-end;align-items:center;margin-top:14px}
+
+  .deux{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:16px;align-items:stretch}
+  .apercu{display:flex;align-items:center;justify-content:center;min-height:230px;
+          border:1px solid var(--ligne);border-radius:10px;padding:8px;background:#fff}
+  .apercu svg{max-width:100%;height:auto}
+  .boutons{display:grid;gap:8px;margin-top:14px}
+  .boutons button.principal{background:var(--vert);border-color:var(--vert);color:#fff;font-weight:600}
+  .boutons button.principal:hover{background:#079b9b}
+  .deuxi{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .message{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:var(--ink);
+     color:#fff;padding:9px 16px;border-radius:999px;font-size:14px;opacity:0;pointer-events:none;
+     transition:opacity .18s;z-index:9}
+  .message.vu{opacity:1}
   .mention{max-width:1000px;margin:8px auto 0;text-align:center;font-size:11.5px;color:#8b98a5}
   .mention a{color:#8b98a5}
+
+  /* Sur un écran large, le panneau du pavé se range à gauche : on tape les
+     lettres en regardant le solide les prendre, ce qui serait impossible si la
+     boîte se posait au milieu de la figure. */
+  @media (min-width:861px){
+    #dlgPave{margin:auto auto auto 24px}
+  }
+  @media (max-width:860px){
+    .deux{grid-template-columns:minmax(0,1fr)}
+  }
   @media (max-width:640px){
     .bandeau{flex-wrap:nowrap;padding:6px 10px;gap:8px}
     .bandeau h1{font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -66,42 +100,40 @@
     .rangee + .rangee{margin-top:8px}
     .groupe{gap:5px}
     button{font-size:13px;padding:0 9px;min-height:44px}
+    button#btnReel{min-width:140px}
     .sep{display:none}
-    .curseur{flex-basis:100%}
-    .curseur span{font-size:13px}
+    .long{display:none}
+    .court{display:inline}
+    dialog{padding:14px}
   }
   @media (max-width:420px){
     button{font-size:12.5px;padding:0 7px}
+    button#btnReel{min-width:0}
   }
 </style>
 </head>
 <body data-mathsgo-parent-href="outils/index.html?domaine=geometrie&amp;notion=espace-constructions"
-      data-mathsgo-parent-label="Espace, solides et patrons">
+      data-mathsgo-parent-label="Espace et solides">
 
 <div class="bandeau">
   <h1>Le pavé droit dans l’espace</h1>
-  <button type="button" id="btnDim">Dimensions</button>
+  <button type="button" id="btnPave">Le pavé</button>
+  <button type="button" id="btnFigure"><span class="long">Récupérer la figure</span><span class="court">La figure</span></button>
 </div>
 
 <div class="scene" id="scene"></div>
 
 <div class="commandes">
   <div class="rangee">
-    <div class="curseur">
-      <span id="etiqDessin">Le dessin</span>
-      <input type="range" id="morph" min="0" max="1" step="0.001" value="0"
-             aria-label="Du dessin en perspective à la vue réelle">
-      <span id="etiqVrai">En vrai</span>
-    </div>
-  </div>
-  <div class="rangee">
+    <button type="button" id="btnReel" class="vedette">Voir l’objet réel</button>
+    <div class="sep"></div>
     <div class="groupe">
-      <button type="button" id="vPerspective" class="on">Perspective</button>
       <button type="button" id="vFace">De face</button>
       <button type="button" id="vDessus">De dessus</button>
       <button type="button" id="vACG">Plan ACG</button>
     </div>
-    <div class="sep"></div>
+  </div>
+  <div class="rangee">
     <div class="groupe">
       <button type="button" id="tABC" class="tri">Triangle ABC</button>
       <button type="button" id="tACG" class="tri">Triangle ACG</button>
@@ -113,24 +145,71 @@
     mathsgo.re · CC BY-NC-SA 4.0</p>
 </div>
 
-<dialog id="dlgDim">
-  <h2>Les dimensions du pavé</h2>
+<dialog id="dlgPave">
+  <h2>Le pavé</h2>
   <div class="trio">
     <div><label for="dl">Largeur</label><input type="number" id="dl" min="0.1" step="0.1" inputmode="decimal"></div>
     <div><label for="dp">Profondeur</label><input type="number" id="dp" min="0.1" step="0.1" inputmode="decimal"></div>
     <div><label for="dh">Hauteur</label><input type="number" id="dh" min="0.1" step="0.1" inputmode="decimal"></div>
   </div>
-  <div style="display:flex;align-items:center;gap:10px">
-    <label for="du" style="font-size:13px;color:var(--muted)">Unité</label>
+  <div class="ligne">
+    <label for="du">Unité</label>
     <input type="text" id="du" maxlength="4" style="width:80px">
+    <span class="pousse"></span>
+    <button type="button" class="puce" id="faireCube">Cube</button>
+  </div>
+  <div class="ligne">
+    <label for="dsommets">Sommets</label>
+    <input type="text" id="dsommets" maxlength="8" spellcheck="false" autocapitalize="characters"
+           placeholder="ABCDEFGH" style="letter-spacing:.14em">
   </div>
   <div class="pied">
-    <a class="lien" id="versGenerateur" href="generateur_pave_droit.html">Faire la fiche →</a>
-    <button type="button" id="dimOk" class="on">Fermer</button>
+    <button type="button" id="paveOk" class="on">Fermer</button>
   </div>
 </dialog>
 
-<script src="../../assets/js/pave-espace-moteur.js?v=20260916-1"></script>
+<dialog id="dlgFigure" class="large">
+  <h2>Récupérer la figure</h2>
+  <div class="deux">
+    <div class="apercu" id="apercu"></div>
+    <div>
+      <div class="ligne">
+        <label for="fAngle">Fuyantes</label>
+        <select id="fAngle" style="width:88px">
+          <option value="30">30°</option>
+          <option value="45" selected>45°</option>
+          <option value="60">60°</option>
+        </select>
+        <span class="pousse"></span>
+        <span class="val">×&nbsp;<span id="fCoefVal">0,5</span></span>
+      </div>
+      <input type="range" id="fCoef" min="0.25" max="0.85" step="0.05" value="0.5" aria-label="Coefficient de fuite">
+      <label class="coche"><input type="checkbox" id="fCotes" checked> Les cotes</label>
+      <label class="coche"><input type="checkbox" id="fLettres" checked> Les lettres des sommets</label>
+      <label class="coche" id="lblDroit"><input type="checkbox" id="fDroit"> <span>L’angle droit en <span id="fDroitNom">B</span></span></label>
+      <div class="ligne">
+        <label for="fSeg1">Segment</label>
+        <select id="fSeg1" style="width:74px"></select>
+        <select id="fSeg2" style="width:74px"></select>
+      </div>
+      <label class="coche eteinte" id="lblSegNom"><input type="checkbox" id="fSegNom" disabled> <span id="fSegNomTexte">écrire son nom</span></label>
+      <div class="boutons">
+        <button type="button" class="principal" id="dlSvg">Télécharger le SVG</button>
+        <div class="deuxi">
+          <button type="button" id="dlPng">PNG</button>
+          <button type="button" id="copier">Copier</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="pied">
+    <button type="button" id="figureOk">Fermer</button>
+  </div>
+</dialog>
+
+<div class="message" id="message"></div>
+
+<script src="../../assets/js/pave-espace-moteur.js?v=20260916-2"></script>
 <script defer src="../../assets/js/tool-parent-navigation.js"></script>
 <script defer src="../../assets/js/mention-confidentialite.js"></script>
 <script>
@@ -140,15 +219,30 @@
   var $ = function(id){ return document.getElementById(id); };
   var scene = $("scene");
 
+  /* La pose où le mensonge du dessin saute aux yeux. Mesurée sur le pavé
+     5 × 3 × 6 : l'angle ABC lu à l'écran passe de 135° à 105°, et la
+     profondeur BC de 0,30 à 0,57 de la largeur AB — elle double presque.
+     Depuis la pose de départ (−35° / 20°), elle ne bougeait que de 0,30 à
+     0,39 : personne ne voyait rien. */
+  var POSE_REELLE = { azimut: -40, elevation: 45 };
+
   var etat = {
     L: 5, P: 3, H: 6, unite: "cm",
-    t: 0,                    // 0 = le dessin en perspective, 1 = la vue réelle
-    azimut: -35, elevation: 20,
+    lettres: "ABCDEFGH",
+    t: 0,                    // 0 = le dessin en perspective, 1 = l'objet réel
+    azimut: POSE_REELLE.azimut, elevation: POSE_REELLE.elevation,
     triangle: null,          // null | "ABC" | "ACG"
     rabattement: 0
   };
   var solide = M.creerPave(etat.L, etat.P, etat.H);
   var cavaliere = M.matriceCavaliere(0.5, 45);
+
+  // Les lettres affichées, sommet par sommet : « A » reste le nom interne.
+  function lettres(){ return M.lireLettres(etat.lettres); }
+  function mot(cles){
+    var t = lettres();
+    return cles.split("").map(function(c){ return t[c]; }).join("");
+  }
 
   /* ------------------------------------------------------------- animations */
   var animations = [];
@@ -182,6 +276,8 @@
   }
 
   /* ------------------------------------------------------------------ tracé */
+  function joli(v){ return (Math.round(v*100)/100).toString().replace(".", ","); }
+
   function dessiner(){
     var l = Math.max(240, scene.clientWidth);
     var h = Math.max(200, scene.clientHeight);
@@ -189,9 +285,8 @@
 
     var projection = M.melanger(cavaliere, M.matriceReelle(etat.azimut, etat.elevation), etat.t);
     var suffixe = etat.unite ? " " + etat.unite : "";
-    var joli = function(v){ return (Math.round(v*100)/100).toString().replace(".", ","); };
 
-    var svg = M.dessiner({
+    scene.innerHTML = M.dessiner({
       solide: solide,
       projection: projection,
       largeur: l,
@@ -199,6 +294,7 @@
       marge: Math.round(base * 0.10),
       cadrage: "stable",
       etiquettesFluides: true,
+      lettres: etat.lettres,
       cotes: { L: joli(etat.L) + suffixe, P: joli(etat.P) + suffixe, H: joli(etat.H) + suffixe },
       diagonaleBase: etat.triangle === "ABC" || etat.triangle === "ACG",
       triangle: etat.triangle ? etat.triangle.split("") : null,
@@ -208,24 +304,26 @@
       corpsCote: Math.round(base * 0.040)
     }).svg;
 
-    scene.innerHTML = svg;
+    var reel = etat.t >= 0.5;
+    $("btnReel").textContent = reel ? "Revenir au dessin" : "Voir l’objet réel";
+    $("btnReel").classList.toggle("vedette", !reel);
+  }
 
-    $("etiqDessin").classList.toggle("actif", etat.t < 0.5);
-    $("etiqVrai").classList.toggle("actif", etat.t >= 0.5);
-    if (!animations.some(function(a){ return a.champ === "t"; })) $("morph").value = etat.t;
+  /* ------------------------------------------------- les mots qui suivent les lettres */
+  function renommer(){
+    $("tABC").textContent = "Triangle " + mot("ABC");
+    $("tACG").textContent = "Triangle " + mot("ACG");
+    $("vACG").textContent = "Plan " + mot("ACG");
+    $("fDroitNom").textContent = mot("B");
+    remplirSommets();
   }
 
   /* ------------------------------------------------------------- commandes */
   function versVue(azimut, elevation, bouton){
-    ["vPerspective","vFace","vDessus","vACG"].forEach(function(id){
+    ["vFace","vDessus","vACG"].forEach(function(id){
       $(id).classList.toggle("on", id === bouton);
     });
-    if (bouton === "vPerspective") {
-      animer("t", 0, 620);
-      return;
-    }
-    // On choisit le tour le plus court, sinon le pavé fait un demi-tour inutile.
-    var cible = azimut;
+    var cible = azimut;   // le tour le plus court, sinon le pavé fait un demi-tour inutile
     while (cible - etat.azimut > 180) cible -= 360;
     while (cible - etat.azimut < -180) cible += 360;
     animer("azimut", cible, 620);
@@ -233,7 +331,6 @@
     animer("t", 1, 620);
   }
 
-  $("vPerspective").addEventListener("click", function(){ versVue(0,0,"vPerspective"); });
   $("vFace").addEventListener("click", function(){ versVue(0, 0, "vFace"); });
   // Vue de dessus remise d'aplomb : la base doit se lire comme un rectangle.
   $("vDessus").addEventListener("click", function(){ versVue(0, 90, "vDessus"); });
@@ -243,9 +340,20 @@
   });
 
   function marquerVueLibre(){
-    ["vPerspective","vFace","vDessus","vACG"].forEach(function(id){ $(id).classList.remove("on"); });
-    if (etat.t < 0.02) $("vPerspective").classList.add("on");
+    ["vFace","vDessus","vACG"].forEach(function(id){ $(id).classList.remove("on"); });
   }
+
+  // Le bouton du dessin à l'objet : on pose d'abord la caméra à l'angle qui
+  // montre quelque chose — tant qu'on est sur le dessin, elle ne se voit pas —
+  // puis l'animation se joue d'un seul coup.
+  $("btnReel").addEventListener("click", function(){
+    if (etat.t >= 0.5) { animer("t", 0, 760); return; }
+    marquerVueLibre();
+    animations = animations.filter(function(a){ return a.champ === "t"; });
+    etat.azimut = POSE_REELLE.azimut;
+    etat.elevation = POSE_REELLE.elevation;
+    animer("t", 1, 900);
+  });
 
   function choisirTriangle(nom){
     if (etat.triangle === nom) {
@@ -259,6 +367,7 @@
     $("tACG").classList.toggle("on", etat.triangle === "ACG");
     $("btnRabattre").disabled = !etat.triangle;
     $("btnRabattre").classList.remove("on");
+    $("btnRabattre").textContent = "Rabattre";
     dessiner();
   }
   $("tABC").addEventListener("click", function(){ choisirTriangle("ABC"); });
@@ -269,13 +378,6 @@
     animer("rabattement", plie ? 0 : 1, 900);
     this.classList.toggle("on", !plie);
     this.textContent = plie ? "Rabattre" : "Remettre";
-  });
-
-  $("morph").addEventListener("input", function(){
-    animations = animations.filter(function(a){ return a.champ !== "t"; });
-    etat.t = parseFloat(this.value);
-    marquerVueLibre();
-    dessiner();
   });
 
   /* ------------------------------------------------- rotation au doigt/souris */
@@ -299,28 +401,150 @@
     scene.addEventListener(t, function(){ prise = null; scene.classList.remove("attrape"); });
   });
 
-  /* ------------------------------------------------------------- dimensions */
-  var dlg = $("dlgDim");
-  function ouvrirDim(){
-    $("dl").value = etat.L; $("dp").value = etat.P; $("dh").value = etat.H; $("du").value = etat.unite;
-    if (dlg.showModal) dlg.showModal(); else dlg.setAttribute("open","");
-  }
-  function lireDim(){
+  /* ------------------------------------------------------------- le pavé */
+  var dlgPave = $("dlgPave");
+  function ouvrir(dlg){ if (dlg.showModal) dlg.showModal(); else dlg.setAttribute("open",""); }
+  function fermer(dlg){ if (dlg.close) dlg.close(); else dlg.removeAttribute("open"); }
+
+  $("btnPave").addEventListener("click", function(){
+    $("dl").value = etat.L; $("dp").value = etat.P; $("dh").value = etat.H;
+    $("du").value = etat.unite; $("dsommets").value = etat.lettres;
+    ouvrir(dlgPave);
+  });
+  $("paveOk").addEventListener("click", function(){ fermer(dlgPave); });
+
+  function lirePave(){
     var lire = function(id, def){
       var v = parseFloat(String($(id).value).replace(",", "."));
       return (isFinite(v) && v > 0) ? v : def;
     };
     etat.L = lire("dl", etat.L); etat.P = lire("dp", etat.P); etat.H = lire("dh", etat.H);
     etat.unite = ($("du").value || "").trim();
+    var tapees = ($("dsommets").value || "").toUpperCase();
+    $("dsommets").value = tapees;
+    etat.lettres = tapees;
     solide = M.creerPave(etat.L, etat.P, etat.H);
-    $("versGenerateur").href = "generateur_pave_droit.html?l=" + etat.L + "&p=" + etat.P +
-      "&h=" + etat.H + (etat.unite ? "&u=" + encodeURIComponent(etat.unite) : "");
+    renommer();
     dessiner();
+    if (dlgFigure.open) figure();
   }
-  $("btnDim").addEventListener("click", ouvrirDim);
-  ["dl","dp","dh","du"].forEach(function(id){ $(id).addEventListener("input", lireDim); });
-  $("dimOk").addEventListener("click", function(){
-    if (dlg.close) dlg.close(); else dlg.removeAttribute("open");
+  ["dl","dp","dh","du","dsommets"].forEach(function(id){
+    $(id).addEventListener("input", lirePave);
+  });
+  $("faireCube").addEventListener("click", function(){
+    var c = parseFloat(String($("dl").value).replace(",", ".")) || etat.L;
+    $("dp").value = c; $("dh").value = c;
+    lirePave();
+  });
+
+  /* --------------------------------------------------------- la figure */
+  var dlgFigure = $("dlgFigure");
+  var dernierSvg = "";
+  var LARGEUR_FIGURE = 420, HAUTEUR_FIGURE = 328;
+
+  function remplirSommets(){
+    var t = lettres();
+    [$("fSeg1"), $("fSeg2")].forEach(function(sel){
+      var choisi = sel.value;
+      sel.innerHTML = '<option value="">—</option>' + M.NOMS.map(function(n){
+        return '<option value="' + n + '">' + t[n] + "</option>";
+      }).join("");
+      sel.value = choisi;
+    });
+    nommerSegment();
+  }
+  function nommerSegment(){
+    var a = $("fSeg1").value, b = $("fSeg2").value;
+    var complet = a && b && a !== b;
+    $("fSegNom").disabled = !complet;
+    $("lblSegNom").classList.toggle("eteinte", !complet);
+    $("fSegNomTexte").textContent = complet ? "écrire " + mot(a + b) : "écrire son nom";
+  }
+
+  function figure(){
+    var coef = parseFloat($("fCoef").value);
+    $("fCoefVal").textContent = joli(coef);
+    var unite = etat.unite ? " " + etat.unite : "";
+    var a = $("fSeg1").value, b = $("fSeg2").value;
+
+    dernierSvg = M.dessiner({
+      solide: solide,
+      projection: M.matriceCavaliere(coef, parseFloat($("fAngle").value)),
+      largeur: LARGEUR_FIGURE, hauteur: HAUTEUR_FIGURE,
+      marge: Math.round(LARGEUR_FIGURE * 0.11),
+      cadrage: "juste",
+      lettres: etat.lettres,
+      nomsSommets: $("fLettres").checked,
+      cotes: $("fCotes").checked
+        ? { L: joli(etat.L) + unite, P: joli(etat.P) + unite, H: joli(etat.H) + unite }
+        : null,
+      segments: (a && b && a !== b) ? [{ a: a, b: b, nom: $("fSegNom").checked }] : null,
+      angleDroitBase: $("fDroit").checked,
+      corpsSommet: Math.max(10, Math.round(LARGEUR_FIGURE * 0.049)),
+      corpsCote: Math.max(9, Math.round(LARGEUR_FIGURE * 0.042))
+    }).svg;
+    $("apercu").innerHTML = dernierSvg;
+  }
+
+  $("btnFigure").addEventListener("click", function(){ figure(); ouvrir(dlgFigure); });
+  $("figureOk").addEventListener("click", function(){ fermer(dlgFigure); });
+  ["fAngle","fCoef","fCotes","fLettres","fDroit","fSegNom"].forEach(function(id){
+    $(id).addEventListener("input", figure);
+    $(id).addEventListener("change", figure);
+  });
+  [$("fSeg1"), $("fSeg2")].forEach(function(sel){
+    sel.addEventListener("change", function(){ nommerSegment(); figure(); });
+  });
+
+  function annoncer(t){
+    var m = $("message");
+    m.textContent = t; m.classList.add("vu");
+    clearTimeout(annoncer.t);
+    annoncer.t = setTimeout(function(){ m.classList.remove("vu"); }, 1900);
+  }
+  function nomFichier(ext){
+    return "pave_" + etat.L + "x" + etat.P + "x" + etat.H + "." + ext;
+  }
+  function telecharger(blob, nom){
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement("a");
+    a.href = url; a.download = nom;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function(){ URL.revokeObjectURL(url); }, 1000);
+  }
+
+  $("dlSvg").addEventListener("click", function(){
+    telecharger(new Blob([dernierSvg], { type: "image/svg+xml;charset=utf-8" }), nomFichier("svg"));
+  });
+  $("copier").addEventListener("click", function(){
+    var fini = function(){ annoncer("Code SVG copié"); };
+    var secours = function(){
+      var z = document.createElement("textarea");
+      z.value = dernierSvg; z.style.position = "fixed"; z.style.opacity = "0";
+      document.body.appendChild(z); z.select();
+      try { document.execCommand("copy"); fini(); }
+      catch(e){ annoncer("Copie refusée par le navigateur"); }
+      z.remove();
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(dernierSvg).then(fini, secours);
+    } else { secours(); }
+  });
+  $("dlPng").addEventListener("click", function(){
+    var vue = /viewBox="0 0 ([\d.]+) ([\d.]+)"/.exec(dernierSvg);
+    var l = vue ? parseFloat(vue[1]) : LARGEUR_FIGURE, h = vue ? parseFloat(vue[2]) : HAUTEUR_FIGURE;
+    var echelle = 3;
+    var img = new Image();
+    img.onload = function(){
+      var c = document.createElement("canvas");
+      c.width = Math.round(l * echelle); c.height = Math.round(h * echelle);
+      var ctx = c.getContext("2d");
+      ctx.fillStyle = "#ffffff"; ctx.fillRect(0, 0, c.width, c.height);
+      ctx.drawImage(img, 0, 0, c.width, c.height);
+      c.toBlob(function(b){ telecharger(b, nomFichier("png")); }, "image/png");
+    };
+    img.onerror = function(){ annoncer("Le PNG n’a pas pu être fabriqué"); };
+    img.src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(dernierSvg);
   });
 
   /* -------------------------------------------------------------- démarrage */
@@ -333,10 +557,10 @@
   etat.P = depuisAdresse("p", etat.P);
   etat.H = depuisAdresse("h", etat.H);
   if (p.get("u") !== null) etat.unite = p.get("u");
+  if (p.get("s")) etat.lettres = p.get("s").toUpperCase();
   solide = M.creerPave(etat.L, etat.P, etat.H);
-  $("versGenerateur").href = "generateur_pave_droit.html?l=" + etat.L + "&p=" + etat.P +
-    "&h=" + etat.H + (etat.unite ? "&u=" + encodeURIComponent(etat.unite) : "");
 
+  renommer();
   window.addEventListener("resize", dessiner);
   dessiner();
 })();
