@@ -484,6 +484,32 @@
     .total-badge.eleve-ok .eleve-input { background: transparent; color: #15803d; }
     .total-badge.eleve-ko { animation: eleveShake .3s; }
     .total-badge.eleve-ko .eleve-input { background: #fee2e2; color: #b91c1c; }
+
+    /* ===== Appareil tactile : le pavé de chiffres de la page =====
+       Toucher une case ouvrait le clavier du système : la zone visible tombait
+       de moitié et iOS faisait défiler la page vers la case touchée, donc le
+       plateau sautait d'une case à l'autre. Le pavé dessiné dans la page
+       (assets/js/mathsgo-pave-chiffres.js, style de Défi tables) le remplace,
+       et la carte se dessine dans la place qui reste au-dessus de lui.
+       Rien de ce bloc ne s'applique sur ordinateur : la classe eleve-pave
+       n'est posée que si (pointer: coarse) est vrai. */
+    body.eleve-pave { height: 100dvh; }
+    /* la place du pavé est rendue par la page, pour que rien ne passe dessous —
+       ni le bouton Valider de la carte, ni le pied du menu */
+    body.eleve-pave #mainArea { padding-bottom: calc(var(--pave-h, 0px) + 10px); }
+    body.eleve-pave aside { padding-bottom: var(--pave-h, 0px); }
+    /* le doigt touche la case, jamais le champ : aucun focus, donc aucun
+       clavier système et aucun défilement imposé */
+    body.eleve-pave .eleve-input { pointer-events: none; }
+    body.eleve-pave .eleve-case { cursor: default; touch-action: manipulation; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+    body.eleve-pave .eleve-case.mg-pave-case-active { outline: 4px solid var(--accent); outline-offset: -4px; box-shadow: inset 0 0 0 999px rgba(37, 99, 235, .08); }
+    body.eleve-pave .total-badge.eleve-case.mg-pave-case-active { outline-width: 3px; outline-offset: -3px; }
+    /* Place serrée (téléphone) : les marges déjà retenues pour les écrans
+       courts, afin que le plateau garde de la hauteur au-dessus du pavé. */
+    body.eleve-pave-serre.eleve-lien #mainArea { padding-top: 10px; }
+    body.eleve-pave-serre .eleve-scene { padding: 10px 12px 12px; }
+    body.eleve-pave-serre .eleve-consigne { margin: 2px 0 6px; }
+
     .menuConsent { margin: 14px 2px 4px; text-align: center; }
   .menuConsent a {
     display: inline-block; padding: 4px 6px;
@@ -495,6 +521,7 @@
   </style>
 <script defer src="../assets/js/mention-confidentialite.js"></script>
 <script defer src="../assets/js/tool-parent-navigation.js?v=1"></script>
+<script defer src="../assets/js/mathsgo-pave-chiffres.js?v=20260917-1"></script>
 </head>
 <body>
 
@@ -2060,7 +2087,8 @@ function renderPages() {
   const main = document.getElementById('mainArea');
   if (isEleve) { renderEleve(main); return; }
   const isCorr = document.getElementById('showCorr').checked;
-  main.innerHTML = ''; 
+  main.innerHTML = '';
+  elevePaveSynchroniser(); /* fiche ou interactif : plus rien à saisir, le pavé s'efface */
   const [cols, rows] = document.getElementById('gridSize').value.split('x').map(Number);
   const itemsPerPage = cols * rows;
 
@@ -2296,8 +2324,121 @@ function elevePastillesHtml() {
     return `<span class="eleve-pastilles" role="img" aria-label="${faites} carte${faites > 1 ? 's' : ''} faite${faites > 1 ? 's' : ''} sur ${eleveSerie.length}">${out}</span>`;
 }
 
+/* ===== Pavé de chiffres : téléphone et tablette =====
+   Sur un appareil tactile, toucher une case ouvrait le clavier du système :
+   la zone visible tombait de moitié et iOS faisait défiler la page vers la
+   case touchée — le plateau sautait à chaque case. Le pavé dessiné dans la
+   page (assets/js/mathsgo-pave-chiffres.js) le remplace : les champs n'ouvrent
+   plus rien, la case active est tenue par le script, et la carte est dessinée
+   dans la place qui reste au-dessus du pavé. Sur ordinateur (pointer: fine),
+   aucune de ces fonctions ne fait quoi que ce soit. */
+let elevePave = null, elevePaveZone = 0, elevePaveLargeur = 0, elevePaveSerre = false;
+/* Le plateau rend les pixels qui manquent pour que la carte tienne, mais
+   jamais au point qu'on ne puisse plus y poser un jeton. Une ligne de message
+   est tenue en réserve : elle apparaît après une validation fausse, et le
+   bouton « Voir la réponse » doit rester au-dessus du pavé. */
+const ELEVE_PLATEAU_MIN = 150, ELEVE_MSG_RESERVE = 24, ELEVE_PAVE_JEU = 10;
+
+function elevePaveObtenir() {
+    if (elevePave) return elevePave;
+    if (!window.MathsGoPaveChiffres || !window.MathsGoPaveChiffres.estTactile()) return null;
+    elevePave = window.MathsGoPaveChiffres.creer({
+        surValider: () => { eleveValider(document.getElementById('mainArea')); elevePaveSynchroniser(); }
+    });
+    if (!elevePave) return null;
+    /* une action de la carte (Valider, Voir la réponse, Carte suivante) peut
+       éteindre ou rallumer la saisie : le pavé se remet à jour après le clic,
+       quand les gestionnaires de la carte ont fini leur travail */
+    const main = document.getElementById('mainArea');
+    if (main) main.addEventListener('click', () => elevePaveSynchroniser());
+    /* Appareil tourné seulement. Une variation de HAUTEUR (barre d'adresse
+       d'un navigateur mobile) ne refait pas la place : la carte ne doit pas
+       bouger sous les doigts de l'élève. */
+    window.addEventListener('resize', () => {
+        if (!elevePave || !elevePave.visible()) return;
+        if (Math.abs((window.innerWidth || 0) - elevePaveLargeur) < 1) return;
+        elevePaveMesurer();
+        const scene = document.querySelector('.eleve-scene');
+        if (!scene) return;
+        elevePaveCalerCarte(scene);
+        /* enchaînés explicitement : tous deux se calent sur la taille du plateau */
+        if (eleveItemCourant && eleveItemCourant.mode === 'construct') eleveElargirScene(scene);
+        eleveCalerBadge(scene);
+    });
+    return elevePave;
+}
+
+/* La place au-dessus du pavé : hauteur de la fenêtre visible moins hauteur du
+   pavé, calculée UNE FOIS — à l'ouverture, puis seulement si la largeur change. */
+function elevePaveMesurer() {
+    if (!elevePave) return;
+    if (elevePaveZone > 0 && Math.abs((window.innerWidth || 0) - elevePaveLargeur) < 1) return;
+    const hauteur = elevePave.hauteur();
+    document.body.style.setProperty('--pave-h', hauteur + 'px');
+    elevePaveZone = Math.max(0, (window.innerHeight || 0) - hauteur);
+    elevePaveLargeur = window.innerWidth || 0;
+    elevePaveSerre = elevePaveZone > 0 && elevePaveZone < 700;
+}
+
+/* La carte tient dans cette place : si elle est trop haute, le plateau rend
+   les pixels qui manquent. Mesuré une seule fois par carte, avant que l'élève
+   touche quoi que ce soit ; tout ce qui grandit ensuite (message, bouton
+   « Voir la réponse ») est SOUS le plateau, qui ne bouge donc plus. */
+function elevePaveCalerCarte(scene) {
+    const part = scene && scene.querySelector('.part-splat');
+    const main = document.getElementById('mainArea');
+    if (!part || !main || !elevePaveZone) return;
+    part.style.flexBasis = '';
+    part.style.minHeight = '';
+    const dispo = elevePaveZone - main.getBoundingClientRect().top
+        - (parseFloat(getComputedStyle(main).paddingTop) || 0) - ELEVE_PAVE_JEU;
+    const plateau = part.getBoundingClientRect().height;
+    const besoin = scene.getBoundingClientRect().height + ELEVE_MSG_RESERVE;
+    if (!plateau || besoin <= dispo) return;
+    const cible = Math.max(ELEVE_PLATEAU_MIN, Math.round(plateau - (besoin - dispo)));
+    if (cible >= plateau) return;
+    part.style.flexBasis = cible + 'px';
+    part.style.minHeight = cible + 'px'; /* le CSS en impose 200 */
+}
+
+/* Le pavé n'est là que s'il y a une case à remplir : il s'efface dès que la
+   correction s'affiche, à la fin de la série et hors du parcours élève. La
+   PLACE qu'il occupe reste réservée tant qu'une carte est à l'écran — sans
+   quoi la carte remonterait au moment de la correction. */
+function elevePaveSynchroniser() {
+    if (!elevePave) return;
+    const carte = !!document.querySelector('.eleve-scene .eleve-input');
+    const bouton = document.getElementById('eleveValider');
+    if (carte && bouton && !bouton.disabled) elevePave.afficher();
+    else elevePave.masquer();
+    /* Les deux classes vont ensemble et suivent la PLACE, pas l'affichage du
+       pavé : les marges d'une carte ne doivent pas changer au moment où le
+       pavé s'efface, sinon la carte remonterait sous les yeux de l'élève. */
+    const place = !!(isEleve && carte);
+    document.body.classList.toggle('eleve-pave', place);
+    document.body.classList.toggle('eleve-pave-serre', place && elevePaveSerre);
+}
+
+/* Appelé à chaque carte : branche les cases, affiche le pavé, cale la carte et
+   rend active la première case vide — sans jamais donner le focus à un champ. */
+function elevePaveActiver(scene) {
+    const pave = elevePaveObtenir();
+    if (!pave || !isEleve || !scene) return null;
+    const champs = scene.querySelectorAll('.eleve-input');
+    if (!champs.length) return null;
+    document.body.classList.add('eleve-pave');
+    pave.brancher(champs, { zone: champ => champ.closest('.eleve-case') });
+    pave.afficher();
+    elevePaveMesurer();
+    document.body.classList.toggle('eleve-pave-serre', elevePaveSerre);
+    elevePaveCalerCarte(scene); /* les marges serrées d'abord, la mesure ensuite */
+    pave.activerPremierVide();
+    return pave;
+}
+
 function renderEleve(main) {
     main.innerHTML = '';
+    elevePaveSynchroniser(); /* plus de carte à l'écran : le pavé s'efface, puis revient avec elle */
     if (getProblemType() !== 'classic') {
         main.innerHTML = '<div class="eleve-scene"><p class="eleve-consigne">Le parcours élève n\u2019existe pas encore pour les enquêtes et relations.<br>Choisis « Petit Splat classique » pour y jouer dès maintenant.</p></div>';
         return;
@@ -2393,8 +2534,12 @@ function renderEleve(main) {
     main.appendChild(scene);
 
     if (estConstruct) eleveBrancherDessin(scene, item);
+    const pave = elevePaveActiver(scene);
     const premierChamp = scene.querySelector('.eleve-input');
-    if (premierChamp) premierChamp.focus();
+    /* Clavier physique : le premier champ prend le focus, comme avant. Au pavé,
+       c'est la première case vide qui devient active — un focus rouvrirait le
+       clavier du système et ferait défiler la page. */
+    if (!pave && premierChamp) premierChamp.focus();
     scene.querySelectorAll('.eleve-input').forEach(inp => {
         inp.addEventListener('keydown', ev => { if (ev.key === 'Enter') eleveValider(main); });
         inp.addEventListener('input', () => {
