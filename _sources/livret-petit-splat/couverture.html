@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8"><title>Livret Petit SPLAT! — couverture</title>
+<link rel="stylesheet" href="commun.css">
+<style>
+/* ---------- bandeau de titre, bord inférieur en coulure ---------- */
+.tete{position:relative;height:88mm;flex:0 0 auto}
+.tete .fond{position:absolute;inset:0;width:210mm;height:88mm;display:block}
+.tete .logos{position:absolute;top:6mm;right:11mm;display:flex;align-items:center;gap:5mm}
+.tete .logos img.irem{height:14mm}
+.tete .logos img.mg{height:12mm}
+.tete .bloc{position:absolute;left:12mm;top:14mm;width:104mm}
+.tete .sur{font-size:13px;font-weight:700;color:#8a4600;text-transform:uppercase;letter-spacing:3px}
+.tete h1{margin:1mm 0 0;font-size:46px;line-height:0.98;font-weight:700;color:#063b7a;letter-spacing:-1.5px}
+.tete h1 span{display:block;font-size:60px;letter-spacing:-2.5px}
+.tete .accroche{margin:4mm 0 0;font-size:14.5px;font-weight:700;color:#7a3b00;line-height:1.3}
+.tete .hero{position:absolute;right:13mm;top:20mm;width:60mm;height:60mm}
+/* ---------- corps ---------- */
+.corps{padding:0 14mm;justify-content:space-between}
+.chip{display:inline-block;font-size:12px;font-weight:700;color:#7a3b00;background:#ffe9b8;border:1px solid #f0c97a;border-radius:999px;padding:1.4mm 4mm;text-transform:uppercase;letter-spacing:1.4px}
+.expl{border:1.4px solid #cbd5e1;border-radius:8px;padding:5mm 6mm 6mm}
+.expl .intro{font-size:15.5px;font-weight:700;color:#1e3a5f;line-height:1.35;margin:3.5mm 0 4.5mm}
+.expl .intro span{display:block;font-weight:400;color:#475569;font-size:12.5px;margin-top:1.2mm}
+.demo{display:flex;align-items:center;gap:7mm}
+.carte{position:relative;flex:0 0 74mm;border:1.6px solid #0f172a;border-radius:4px;padding:2mm;background:#fff}
+.carte .tot{position:absolute;top:3mm;right:3mm;border:1.8px solid #0f172a;border-radius:3px;padding:0.4mm 2.6mm;font-size:18px;font-weight:700;background:#fff}
+.carte svg{width:100%;height:auto;display:block}
+.fleche{flex:0 0 auto;color:#b45309;font-size:22px;font-weight:700}
+.sch{flex:1}
+.sch .lg{font-size:11.5px;font-weight:700;color:#334155;text-align:center;margin-bottom:1.4mm}
+.sch .barre-h{border:1.6px solid #0f172a;height:13mm;display:flex;align-items:center;justify-content:center;font-size:21px;font-weight:700}
+.sch .barre-b{display:flex}
+.sch .barre-b div{border:1.6px solid #0f172a;border-top:none;height:13mm;display:flex;align-items:center;justify-content:center;font-size:21px;font-weight:700}
+.sch .barre-b .vis{flex:11;color:#2563eb;background:#fff}
+.sch .barre-b .cac{flex:8;border-left:none;background:#e2e8f0;color:#111827;position:relative}
+.sch .barre-b .cac .mini{position:absolute;left:1.6mm;top:1.4mm;width:8mm;height:5.4mm;opacity:.8}
+.sch .pieds{display:flex;margin-top:1.4mm}
+.sch .pieds span{font-size:11px;font-weight:700;color:#334155;text-align:center;line-height:1.25;padding:0 1mm}
+.sch .pieds .a{flex:11}.sch .pieds .b{flex:8}
+/* ---------- identité ---------- */
+.ident{display:flex;gap:6mm}
+.ident .champ{flex:1;border:1.4px solid #5b6574;border-radius:6px;padding:4mm 4mm 11mm}
+.ident .champ span{font-size:12.5px;font-weight:700;color:#334155}
+.ident .champ.classe{flex:0 0 52mm}
+/* ---------- sommaire ---------- */
+.som ol{list-style:none;margin:3.5mm 0 0;padding:0;display:grid;grid-template-columns:1fr 1fr;gap:4mm 9mm}
+.som li{display:flex;align-items:center;gap:3.5mm;font-size:14.5px;font-weight:700;color:#0f172a}
+.som .badge{position:relative;flex:0 0 11mm;height:11mm}
+.som .badge svg{position:absolute;inset:0;width:11mm;height:11mm}
+.som .badge b{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#fff;font-size:14px}
+/* ---------- bas de page ---------- */
+.bas{display:flex;align-items:flex-end;justify-content:space-between;gap:8mm;padding-bottom:3mm}
+.bas .qr{display:flex;align-items:center;gap:3.5mm}
+.bas .qr img{width:23mm;height:23mm;display:block}
+.bas .qr .lib{font-size:11.5px;font-weight:700;color:#0f172a;line-height:1.35;max-width:44mm}
+.bas .qr .lib em{display:block;font-style:normal;font-weight:400;color:#475569;font-size:10.5px;margin-top:0.8mm}
+.bas .note{font-size:11px;color:#475569;text-align:right;line-height:1.45;max-width:58mm}
+</style></head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs><g id="tacheBadge"><path d="M 96.4 55 C 98.7 57.2 102 60.1 102.8 62.6 C 103.7 65.1 102.7 67.9 101.4 70.1 C 100 72.2 97 73.8 94.9 75.3 C 92.7 76.9 90.7 78.2 88.5 79.3 C 86.3 80.4 84.1 81.4 81.9 81.9 C 79.6 82.4 76.9 81.9 75 82.5 C 73.1 83.2 71.8 83.6 70.6 85.6 C 69.4 87.6 69.1 91.5 67.8 94.4 C 66.5 97.2 64.7 101.3 62.6 102.8 C 60.4 104.4 57.4 104.4 55 103.8 C 52.6 103.2 50.1 100.8 48 99.2 C 45.9 97.6 43.9 96.1 42.2 94.4 C 40.5 92.7 38.9 90.9 37.7 88.9 C 36.5 86.9 36.2 84.1 35 82.5 C 33.8 80.9 33 79.8 30.7 79.3 C 28.5 78.8 24.7 79.7 21.5 79.3 C 18.4 79 14 78.5 11.8 77 C 9.7 75.4 8.8 72.6 8.6 70.1 C 8.5 67.6 10 64.5 10.8 62 C 11.6 59.5 12.5 57.2 13.6 55 C 14.7 52.8 15.9 50.8 17.4 49 C 18.9 47.3 21.5 46.1 22.6 44.5 C 23.8 42.9 24.6 41.7 24.4 39.4 C 24.2 37.1 22.1 33.8 21.5 30.7 C 20.9 27.6 19.9 23.3 20.7 20.7 C 21.6 18.2 24 16.5 26.3 15.6 C 28.7 14.6 32 15.1 34.7 15.1 C 37.3 15.1 39.8 15.2 42.2 15.6 C 44.6 16 46.9 16.5 49 17.4 C 51.2 18.3 53.1 20.4 55 21 C 56.9 21.6 58.2 22 60.4 21.1 C 62.5 20.2 65 17.2 67.8 15.6 C 70.6 14.1 74.3 11.8 77 11.8 C 79.6 11.8 82.1 13.6 83.7 15.6 C 85.3 17.5 85.8 20.8 86.7 23.3 C 87.5 25.9 88.1 28.3 88.5 30.7 C 88.9 33.1 89.1 35.4 88.9 37.7 C 88.7 40 87.4 42.5 87.4 44.5 C 87.4 46.5 87.4 47.9 88.9 49.6 C 90.4 51.4 94.1 52.8 96.4 55 Z"/></g></defs></svg>
+
+<header class="tete">
+  <svg class="fond" viewBox="0 0 210 88" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <defs><linearGradient id="deg" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#ff9815"/><stop offset=".58" stop-color="#ffc46d"/><stop offset="1" stop-color="#fff4dc"/>
+    </linearGradient></defs>
+    <path fill="url(#deg)" d="M0,0 H210 V68 C206,76 202,83 196,81 C190,79 188,69 180,69 C172,69 170,75 163,74 C156,73 154,67 145,68 C136,69 133,85 122,82 C111,79 110,68 100,69 C92,70 90,76 82,75 C74,74 72,67 62,68 C53,69 51,81 41,79 C33,77 31,68 22,69 C14,70 8,74 0,70 Z"/>
+    <ellipse cx="127.5" cy="86.4" rx="2.1" ry="1.7" fill="url(#deg)"/>
+    <ellipse cx="45" cy="83.2" rx="1.5" ry="1.2" fill="url(#deg)"/>
+    <ellipse cx="197" cy="85.3" rx="1.2" ry="1" fill="url(#deg)"/>
+  </svg>
+
+  <div class="logos">
+    <img class="irem" src="/assets/img/logos/irem/logo-print.png" alt="IREM La Réunion">
+    <img class="mg" src="/assets/img/logos/mathsgo/logo-print.png" alt="maths&amp;go">
+  </div>
+
+  <div class="bloc">
+    <div class="sur">Mon livret · Monde 1</div>
+    <h1>Petit <span>SPLAT!</span></h1>
+    <p class="accroche">Le tout, les parties…<br>et les premières taches&nbsp;!</p>
+  </div>
+
+  <svg class="hero" viewBox="-7 -7 134 134" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Un splat noir entouré de jetons bleus">
+    <g fill="#2563eb" stroke="#1e40af" stroke-width="0.4">
+      <circle cx="6" cy="28" r="4.6"/><circle cx="3" cy="64" r="4.6"/><circle cx="16" cy="97" r="4.6"/>
+      <circle cx="97" cy="98" r="4.6"/><circle cx="114" cy="62" r="4.6"/><circle cx="110" cy="27" r="4.6"/>
+    </g>
+    <g transform="translate(6,6) scale(0.9)"><use href="#tacheBadge" fill="#000"/></g>
+    <text x="56" y="74" text-anchor="middle" fill="#fff" font-family="Poppins, 'Segoe UI', sans-serif" font-size="46" font-weight="700">?</text>
+  </svg>
+</header>
+
+<div class="corps">
+  <section class="expl">
+    <span class="chip">Comment ça marche&nbsp;?</span>
+    <div class="intro">Au total, il y a 19 jetons&nbsp;: la tache en cache une partie.
+      <span>Ici la tache est transparente&nbsp;: on voit les 8 jetons qu'elle cache. Le schéma en barres met tout ça en ordre.</span></div>
+    <div class="demo">
+      <div class="carte">
+        <span class="tot">19</span>
+        <svg viewBox="0 0 300 205" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Une tache noire posée sur des jetons bleus">
+          <g fill="#2563eb" stroke="#1e40af" stroke-width="0.5">
+            <circle cx="20" cy="45" r="8"/><circle cx="16" cy="110" r="8"/><circle cx="32" cy="168" r="8"/>
+            <circle cx="78" cy="192" r="8"/><circle cx="128" cy="192" r="8"/><circle cx="178" cy="192" r="8"/>
+            <circle cx="232" cy="186" r="8"/><circle cx="268" cy="140" r="8"/><circle cx="240" cy="100" r="8"/>
+            <circle cx="95" cy="18" r="8"/><circle cx="50" cy="15" r="8"/>
+          </g>
+          <g class="caches" fill="#2563eb" stroke="#1e40af" stroke-width="0.5">
+            <circle cx="160" cy="75" r="8"/><circle cx="188" cy="72" r="8"/><circle cx="200" cy="108" r="8"/>
+            <circle cx="176" cy="140" r="8"/><circle cx="136" cy="146" r="8"/><circle cx="102" cy="116" r="8"/>
+            <circle cx="120" cy="95" r="8"/><circle cx="148" cy="102" r="8"/>
+          </g>
+          <path d="M140,60 C180,20 230,50 220,100 C210,160 160,170 120,150 C70,130 80,70 140,60 Z" fill="#111827" opacity="0.18"/>
+        </svg>
+      </div>
+      <div class="fleche">➜</div>
+      <div class="sch">
+        <div class="lg">Le nombre de jetons <b>en tout</b></div>
+        <div class="barre-h">19</div>
+        <div class="barre-b"><div class="vis">11</div><div class="cac"><svg class="mini" viewBox="40 10 220 180" aria-hidden="true"><path d="M130,50 Q170,20 200,60 Q230,80 210,130 Q180,170 130,160 Q80,150 70,100 Q80,40 130,50 Z" fill="#111827"/></svg>8</div></div>
+        <div class="pieds"><span class="a">les jetons <b>visibles</b></span><span class="b">les jetons <b>cachés</b></span></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="ident">
+    <div class="champ"><span>Prénom</span></div>
+    <div class="champ classe"><span>Classe</span></div>
+  </section>
+
+  <section class="som">
+    <span class="chip">Dans ce livret</span>
+    <ol>
+      <li><span class="badge"><svg viewBox="2 5 106 105" fill="#063b7a"><use href="#tacheBadge"/></svg><b>1</b></span>Complète le schéma</li>
+      <li><span class="badge"><svg viewBox="2 5 106 105" fill="#063b7a"><use href="#tacheBadge"/></svg><b>4</b></span>Deux taches</li>
+      <li><span class="badge"><svg viewBox="2 5 106 105" fill="#063b7a"><use href="#tacheBadge"/></svg><b>2</b></span>Dessine les jetons</li>
+      <li><span class="badge"><svg viewBox="2 5 106 105" fill="#063b7a"><use href="#tacheBadge"/></svg><b>5</b></span>Plein de taches&nbsp;!</li>
+      <li><span class="badge"><svg viewBox="2 5 106 105" fill="#063b7a"><use href="#tacheBadge"/></svg><b>3</b></span>Mélange&nbsp;!</li>
+      <li><span class="badge"><svg viewBox="2 5 106 105" fill="#063b7a"><use href="#tacheBadge"/></svg><b>6</b></span>Dessine en expert</li>
+    </ol>
+  </section>
+
+</div>
+
+<footer class="pied">mathsgo.re/splat/petit · CC BY-NC-SA 4.0</footer>
+</body></html>

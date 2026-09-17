@@ -776,6 +776,15 @@ window.MATHSGO_CATALOGUE = {
       "thumbnail": "assets/img/thumbnails/splat/splat-equations.png?v=6",
       "cardDescription": "Générer des cartes d’équations où les deux côtés contiennent des jetons et des quantités cachées."
     },
+    "outils/livret_petit_splat.pdf": {
+      "primaryNotion": "calcul-litteral",
+      "primaryGroup": "imprimer",
+      "cardTitle": "Livret Petit Splat!",
+      "collections": ["splat"],
+      "tags": ["splat", "livret", "schema-barres", "inconnue", "imprimer"],
+      "thumbnail": "assets/img/thumbnails/splat/livret-petit-splat.png?v=1",
+      "cardDescription": "Les six fiches du monde 1 réunies en un livret à plier, avec un QR code par fiche vers le jeu en ligne."
+    },
     "outils/tuiles_algebriques/generateur_exercices_calcul_litteral.html": {
       "primaryNotion": "calcul-litteral",
       "primaryGroup": "generer",
@@ -6437,6 +6446,40 @@ window.MATHSGO_CATALOGUE = {
         "inconnue",
         "relation",
         "calcul littéral"
+      ],
+      "kind": "tool",
+      "status": "published",
+      "featured": false,
+      "recent": false
+    },
+    {
+      "id": "outils-livret-petit-splat-pdf",
+      "title": "Livret Petit Splat! — les 6 fiches à plier",
+      "description": "Les six fiches du monde 1 de l’univers SPLAT! réunies en un livret de 8 pages : couverture avec l’exemple expliqué, les six fiches dans l’ordre de la progression, 4e de couverture. Chaque fiche porte un QR code vers le jeu en ligne avec les mêmes cartes. À imprimer sur deux feuilles A3 recto-verso, à plier et agrafer.",
+      "path": "outils/livret_petit_splat.pdf",
+      "domains": [
+        "algebre"
+      ],
+      "notions": [
+        "calcul-litteral",
+        "equations",
+        "schemas-barres"
+      ],
+      "uses": [
+        "imprimer",
+        "entrainer"
+      ],
+      "types": [
+        "imprimable"
+      ],
+      "filters": [],
+      "keywords": [
+        "splat",
+        "livret",
+        "schéma en barres",
+        "inconnue",
+        "cycle 3",
+        "QR code"
       ],
       "kind": "tool",
       "status": "published",
