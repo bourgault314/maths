@@ -58,16 +58,16 @@ header .modeOpt:not(.actif):hover{color:var(--ink)}
 .totalBar .lbl{display:flex;justify-content:space-between;font-size:13px;font-weight:700;color:var(--muted);margin-bottom:5px}
 .totalBar .rail{height:14px;border-radius:9px;background:#e6ecf4;border:1px solid var(--line);overflow:hidden}
 .totalBar .fill{height:100%;width:0;border-radius:9px;
-  background:linear-gradient(90deg,var(--teal),var(--blue) 55%,var(--orange));transition:width .5s}
+  background:linear-gradient(90deg,var(--orange),var(--blue) 55%,var(--teal));transition:width .5s}
 
 /* ---------- mondes ---------- */
 main{max-width:980px;margin:0 auto;padding:10px 14px 60px}
 .monde{background:var(--paper);border:1px solid var(--line);border-radius:22px;
   box-shadow:var(--shadow);margin-top:26px;overflow:hidden}
 .monde>.head{display:flex;align-items:center;gap:14px;padding:16px 18px;color:#fff}
-.monde.m1>.head{background:var(--teal)}
+.monde.m1>.head{background:var(--orange)}
 .monde.m2>.head{background:var(--blue)}
-.monde.m3>.head{background:var(--orange)}
+.monde.m3>.head{background:var(--teal)}
 .monde.m4>.head{background:var(--violet)}
 .monde .head svg.blob{width:46px;height:46px;flex:0 0 auto}
 .monde .head .t{flex:1;min-width:0}
@@ -99,9 +99,9 @@ main{max-width:980px;margin:0 auto;padding:10px 14px 60px}
 .actions a{display:inline-flex;align-items:center;gap:7px;text-decoration:none;font-weight:750;
   font-size:14px;border-radius:12px;padding:9px 14px;min-height:44px;border:1px solid var(--line)}
 .actions a.jouer{color:#fff;border:none}
-.m1 .actions a.jouer{background:var(--teal)}
+.m1 .actions a.jouer{background:var(--orange)}
 .m2 .actions a.jouer{background:var(--blue)}
-.m3 .actions a.jouer{background:var(--orange)}
+.m3 .actions a.jouer{background:var(--teal)}
 .m4 .actions a.jouer{background:var(--violet)}
 .actions a.fiche{background:var(--paper);color:var(--ink)}
 .actions a:hover{filter:brightness(1.06)}
@@ -114,13 +114,13 @@ main{max-width:980px;margin:0 auto;padding:10px 14px 60px}
    teinte claire tant que l'étape n'est pas réussie, pleine couleur + étoile une fois gagnée */
 .badge svg.tache{filter:drop-shadow(2px 2.5px 2px rgba(16,41,74,.22))}
 .badge use.fond{stroke:rgba(0,0,0,.14);stroke-width:2;transition:fill .25s}
-.m1 .badge use.fond{fill:#9cdddb}
+.m1 .badge use.fond{fill:#fbcda6}
 .m2 .badge use.fond{fill:#9dc2e0}
-.m3 .badge use.fond{fill:#fbcda6}
+.m3 .badge use.fond{fill:#9cdddb}
 .m4 .badge use.fond{fill:#dcc8f0}
-.m1 .etape.done .badge use.fond{fill:var(--teal)}
+.m1 .etape.done .badge use.fond{fill:var(--orange)}
 .m2 .etape.done .badge use.fond{fill:var(--blue)}
-.m3 .etape.done .badge use.fond{fill:var(--orange)}
+.m3 .etape.done .badge use.fond{fill:var(--teal)}
 .m4 .etape.done .badge use.fond{fill:var(--violet)}
 .badge .star use{fill:var(--gold);stroke:#b8860b;stroke-width:1}
 /* légère rotation alternée pour que les taches vivent un peu */
@@ -142,9 +142,9 @@ main{max-width:980px;margin:0 auto;padding:10px 14px 60px}
 .noteProf{margin:2px 0 8px;font-size:13.5px;line-height:1.45;color:#365a83;background:#eef4fb;border-left:3px solid var(--blue);border-radius:0 8px 8px 0;padding:7px 10px}
 .desc.descProf{color:#365a83;background:#eef4fb;border-left:3px solid var(--blue);border-radius:0 8px 8px 0;padding:8px 12px;margin:10px 18px 0}
 .eqListeProf{font-size:13.5px;line-height:1.7;color:#365a83;background:#f4f0fb;border-left:3px solid var(--violet);border-radius:0 8px 8px 0;padding:7px 10px;margin:8px 0 0;font-variant-numeric:tabular-nums}
-.m1 .eqListeProf{background:#e9f7f6;border-color:var(--teal)}
+.m1 .eqListeProf{background:#fff3e8;border-color:var(--orange)}
 .m2 .eqListeProf{background:#eef4fb;border-color:var(--blue)}
-.m3 .eqListeProf{background:#fff3e8;border-color:var(--orange)}
+.m3 .eqListeProf{background:#e9f7f6;border-color:var(--teal)}
 .eqListeProf small{display:block;font-size:12px;color:#5b7a9d;margin-top:2px}
 footer{max-width:980px;margin:0 auto;padding:0 16px 40px;text-align:center;color:var(--muted);font-size:13px}
 footer a{color:var(--blue)}
