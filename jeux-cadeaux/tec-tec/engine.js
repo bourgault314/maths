@@ -6,7 +6,10 @@
 })(typeof window === 'undefined' ? {} : window, function () {
   'use strict';
   const DT = 1 / 120;
-  const P = Object.freeze({ width: 24, height: 42, jump: 520, gravity: 1550, cut: 215, minHold: .05, buffer: .075, coyote: .05 });
+  // cut/minHold (lot 1, 17/09/2026) : la coupure de montée s'applique dès 30 ms
+  // et ramène la vitesse à 150 px/s, donc le sommet suit la durée de l'appui
+  // (65 px pour un appui de 30 ms, 108 px pour 150 ms, 127 px pour 250 ms).
+  const P = Object.freeze({ width: 24, height: 42, jump: 520, gravity: 1550, cut: 150, minHold: .03, buffer: .075, coyote: .05 });
   const FLIGHT = Object.freeze({ lift: 720, gravity: 590, drag: 2.65, launch: 245 });
   const clamp = (v,a,b) => Math.max(a,Math.min(b,v));
   // The timeline is authored in seconds; speed is integrated, never sampled
@@ -50,6 +53,9 @@
       this.status='ready'; this.held=false; this.buffer=0; this.air=0; this.sinceJump=1;
       this.grounded=true; this.jumpCount=0; this.death=null; this.lastEvent=null; this.land=0;
       this.flight=null; this.preserveArc=false; this.inputCount=0; this.lastJumpAutomatic=false;
+      // Plateformes qui se dérobent : id -> instant de l'atterrissage. Objet
+      // remplacé, jamais muté, pour que les instantanés de tests restent valides.
+      this.crumbs={};
     }
     start() { this.reset(); this.status='running'; }
     input(held) {
@@ -66,6 +72,8 @@
     floorAt(x) {
       return !this.course.holes.some(h=>x>h.x+2 && x<h.x+h.w-2);
     }
+    // A crumbling platform stays solid for `crumble` seconds after the landing.
+    solidAt(s) { return !s.crumble || this.crumbs[s.id]===undefined || this.time<this.crumbs[s.id]+s.crumble; }
     step() {
       if(this.status!=='running') return;
       this.lastEvent=null;
@@ -96,14 +104,16 @@
       this.grounded=false;
       let surface=-Infinity;
       if(this.floorAt(this.x) && oldY>=-.05 && this.y<=0 && this.vy<=0) surface=0;
-      const solids=this.course.solids.filter(o=>o.x<Math.max(oldX,this.x)+40 && o.x+o.w>Math.min(oldX,this.x)-40);
+      const solids=this.course.solids.filter(o=>o.x<Math.max(oldX,this.x)+40 && o.x+o.w>Math.min(oldX,this.x)-40 && this.solidAt(o));
+      let landedOn=null;
       for(const s of solids) {
-        if(this.x+P.width/2>s.x+1 && this.x-P.width/2<s.x+s.w-1 && oldY>=s.y-.5 && this.y<=s.y && this.vy<=0) surface=Math.max(surface,s.y);
+        if(this.x+P.width/2>s.x+1 && this.x-P.width/2<s.x+s.w-1 && oldY>=s.y-.5 && this.y<=s.y && this.vy<=0 && s.y>=surface) {surface=s.y;landedOn=s;}
       }
       if(surface>-Infinity) {
         this.y=surface; this.vy=0; this.grounded=true; this.air=0;
         this.preserveArc=false;
         if(!wasGrounded) {this.land=.12; this.lastEvent='land';}
+        if(landedOn?.crumble && this.crumbs[landedOn.id]===undefined) {this.crumbs={...this.crumbs,[landedOn.id]:this.time};this.lastEvent='crack';}
       }
       // At 120 Hz maximum movement is < 3.1 px. Collision substeps also make
       // thin spikes reliable; polygon collision matches the drawn silhouette.

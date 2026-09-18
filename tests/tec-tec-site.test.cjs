@@ -37,9 +37,9 @@ test('le catalogue et le lien historique utilisent le même Tec-tec',()=>{
  assert.ok(!read('jeux-cadeaux/tec-tec/app.js').includes('__TEC_QA__'));
 });
 
-test('le moteur et le parcours restent exactement ceux de la V2 approuvée',()=>{
- assert.equal(crypto.createHash('sha256').update(fs.readFileSync(path.join(root,'jeux-cadeaux/tec-tec/engine.js'))).digest('hex'),'6ba00a8f9160310d94ff12f11f9dc68f3afb9f4f2957ea7a409741bb42066356');
- assert.equal(crypto.createHash('sha256').update(fs.readFileSync(path.join(root,'jeux-cadeaux/tec-tec/course.js'))).digest('hex'),'8834ce45ae6814a7d8c6a63de08f7607a96ea0d6963dc880bb43bd18ac6b9a94');
+test('le moteur et le parcours restent exactement ceux de la V3 approuvée (lot 1, 17/09/2026)',()=>{
+ assert.equal(crypto.createHash('sha256').update(fs.readFileSync(path.join(root,'jeux-cadeaux/tec-tec/engine.js'))).digest('hex'),'89870e9bed56387f077a164438398c367ced41c0a348b7242a0e601656699cf0');
+ assert.equal(crypto.createHash('sha256').update(fs.readFileSync(path.join(root,'jeux-cadeaux/tec-tec/course.js'))).digest('hex'),'c02c624ece4e71be7cf19be7d60ab21018f6ca5b454ac3300931c73838bdf5db');
 });
 
 test('le grand écran garde tout le parcours visible et réserve la place du bouton et des zones sûres',()=>{

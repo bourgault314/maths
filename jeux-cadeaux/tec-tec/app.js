@@ -8,6 +8,8 @@
   const recordKey='mathsgo:tec-tec:essai:reunion-150-v2';
   let best=0;try{const n=Number(localStorage.getItem(recordKey));if(Number.isFinite(n))best=Math.max(0,Math.min(100,n));}catch{}
   let mode='intro',paused=false,accumulator=0,previous=null,realTime=0,endedAt=0,lastHud=-1;
+  // Position du pas précédent : l'affichage est interpolé entre deux pas de physique (lot 1).
+  let before={x:0,y:0},view={x:0,y:0};
   const pointers=new Set(),keys=new Set();
   const fmt=n=>(Math.floor(n*10)/10).toLocaleString('fr-FR',{maximumFractionDigits:1});
   function announce(text){$('announcement').textContent=text;}
@@ -32,7 +34,7 @@
   function start(){
     if(mode==='play'||mode==='ending')return;
     if(!gift.begin()){exhausted();return;}giftStatus();
-    clearInput();run.start();renderer.particles=[];renderer.flash=0;accumulator=0;previous=null;lastHud=-1;mode='play';paused=false;
+    clearInput();run.start();renderer.particles=[];renderer.flash=0;accumulator=0;previous=null;lastHud=-1;mode='play';paused=false;before={x:run.x,y:run.y};
     $('intro').hidden=true;$('veil').hidden=true;$('pause-veil').hidden=true;$('hud').hidden=false;$('jump').disabled=false;
     $('app').classList.add('playing');$('app').classList.remove('paused','flying');$('pause').disabled=false;
     $('game').focus({preventScroll:true});
@@ -85,12 +87,18 @@
         while(accumulator+1e-9>=DT&&run.status==='running'&&steps<30){
           // Test pages inject only held/released inputs; no state, collision or
           // clock override is available in the delivered game.
+          before.x=run.x;before.y=run.y;
           run.step();if(run.lastEvent)renderer.emit(run.lastEvent,run);accumulator-=DT;steps++;
         }
         hud();if(run.status==='dead'||run.status==='won')end();
       }
     }
-    renderer.draw(run,realTime,paused?0:delta,mode==='intro'?'intro':'play');
+    // La physique avance par pas fixes de 1/120 s ; l'image tombe entre deux pas. On dessine
+    // la position interpolée avec le reste de l'accumulateur, sinon le décor avance par à-coups
+    // de 3, 6 ou 9 px selon que l'image a consommé 1, 2 ou 3 pas — très visible en grand.
+    const alpha=run.status==='running'?Math.min(1,accumulator/DT):1;
+    view.x=before.x+(run.x-before.x)*alpha;view.y=before.y+(run.y-before.y)*alpha;
+    renderer.draw(run,realTime,paused?0:delta,mode==='intro'?'intro':'play',mode==='play'||mode==='ending'?view:run);
     if(mode==='ending'&&realTime-endedAt>.38){mode='result';$('veil').hidden=false;(!$('retry').hidden?$('retry'):!$('gift-finish').hidden?$('gift-finish'):$('result-title')).focus({preventScroll:true});}
     requestAnimationFrame(frame);
   }
