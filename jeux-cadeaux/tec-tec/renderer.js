@@ -1,4 +1,6 @@
-/* Dessin original du Tec-tec ; paysages vectoriels du lot 2, PR 746. */
+/* Dessin original du Tec-tec ; paysages vectoriels du lot 2, PR 746.
+ * Lot 1 (17/09/2026) : tec-tec compact, plafonds en pente, plateformes qui se dérobent,
+ * position interpolée entre deux pas de physique. */
 (function(){
   'use strict';
   const W=720,ANCHOR=132; let H=420,G=344;
@@ -12,33 +14,41 @@
   function path(c,d,fill,stroke,width=1){let p=paths.get(d);if(!p){if(paths.size>=64)paths.clear();p=new Path2D(d);paths.set(d,p);}if(fill){c.fillStyle=fill;c.fill(p);}if(stroke){c.strokeStyle=stroke;c.lineWidth=width;c.stroke(p);}}
   function ellipse(c,x,y,rx,ry,color){c.fillStyle=color;c.beginPath();c.ellipse(x,y,rx,ry,0,0,Math.PI*2);c.fill();}
   const noise=n=>{const v=Math.sin(n*127.13+311.7)*43758.5453;return v-Math.floor(v);};
+  // Tec-tec compact (lot 1, 17/09/2026) : le dessin coïncide avec la boîte du moteur
+  // (24 px de large, de +3 à +42 px au-dessus des pattes) — queue et bec courts, comme
+  // le vrai tec-tec de La Réunion. Aucun trait ne dépasse la boîte de plus de 4 px.
   function bird(c,x,y,scale=1,t=0,pose='idle',vy=0,land=0){
     c.save();c.translate(x,y);
     const flying=pose==='fly',airborne=pose==='air'||flying,dead=pose==='dead';
     const bob=pose==='run'?Math.sin(t*35)*1.15:pose==='idle'?Math.sin(t*2)*1.1:0;
     c.scale(scale,scale);c.translate(0,bob);
-    c.rotate(dead?-.4:airborne?Math.max(-.22,Math.min(.15,-vy*.0004)):0);
+    c.rotate(dead?-.4:airborne?Math.max(-.14,Math.min(.12,-vy*.0003)):0);
     const squash=land>0?Math.sin(land/.12*Math.PI)*.12:0;c.scale(1+squash,1-squash);
-    // Short black tail, buff breast, white eyebrow and wing patch: Tec-tec.
-    path(c,'M-11-22Q-22-25-30-34L-28-21Q-22-17-13-15Z','#26383b');
-    path(c,'M-23-28L-18-21M-27-30L-22-22',null,'#52676b',1.3);
-    if(flying){c.save();c.translate(-1,-30);c.rotate(-.5+Math.sin(t*17)*.7);path(c,'M0 0Q-16-30-37-24Q-34-9-9 4Z','#304c50');path(c,'M-8-9L-28-21M-12-5L-32-16',null,'#edf0d4',2);c.restore();}
-    const leg=pose==='run'?Math.sin(t*35)*5:airborne?-4:0;
-    c.strokeStyle='#544a38';c.lineWidth=2.2;c.lineCap='round';
-    c.beginPath();c.moveTo(-6,-9);c.lineTo(-6+leg,-2);c.lineTo(-1+leg,-1);c.moveTo(5,-9);c.lineTo(5-leg,-2);c.lineTo(11-leg,-1);c.stroke();
-    const body=c.createLinearGradient(-12,-40,12,-7);body.addColorStop(0,'#eaba83');body.addColorStop(.55,'#d9935a');body.addColorStop(1,'#f0cd96');
-    ellipse(c,0,-23,16,18,body);
-    path(c,'M-11-16Q-1-6 10-16Q7-6-1-6Q-8-6-11-16Z','#f4e0b5');
-    ellipse(c,8,-37,13.5,13,'#243b40');
-    path(c,'M-1-41Q6-47 18-40L16-36Q6-40 1-36Z','#f7efda');
-    path(c,'M18-38L27-35 18-33Z','#273d42');
-    ellipse(c,13,-39,2.6,2.9,'#142c32');ellipse(c,13.8,-40,1,1,'#fffdf0');
-    path(c,'M5-28Q15-27 18-33L14-27 11-25Z','#f5dfb4');
-    c.save();c.translate(-7,-28);if(airborne)c.rotate(flying?.4+Math.sin(t*17)*.6:-.22-Math.sin(t*13)*.1);
-    path(c,'M-7-5Q8-7 11 7Q3 11-6 5Q-12 1-7-5Z','#334b4f');
-    path(c,'M-7-4Q0-4 6 1L5 4Q-2 2-8 1Z','#f3edd9');
-    path(c,'M-5 5L3 9M0 4L7 8',null,'#728580',.8);c.restore();
-    if(dead){c.strokeStyle='#f6eee0';c.lineWidth=1.5;c.beginPath();c.moveTo(11,-41);c.lineTo(15,-37);c.moveTo(15,-41);c.lineTo(11,-37);c.stroke();}
+    // Queue courte et noire, relevée.
+    path(c,'M-7-19Q-13-21-15-26L-14-16Q-11-13-7-13Z','#26383b');
+    path(c,'M-12-22L-10-17',null,'#52676b',1);
+    // Aile en vol : battement au-dessus du dos, jamais plus loin que la queue.
+    if(flying){c.save();c.translate(-2,-27);c.rotate(-.5+Math.sin(t*17)*.6);path(c,'M0 0Q-4-13-10-10Q-10-3-3 2Z','#304c50');path(c,'M-3-4L-8-7M-5-1L-9-4',null,'#edf0d4',1.4);c.restore();}
+    // Pattes : un peu plus épaisses, elles remplissent le bas de la boîte.
+    const leg=pose==='run'?Math.sin(t*35)*4:airborne?-3:0;
+    c.strokeStyle='#544a38';c.lineWidth=2.6;c.lineCap='round';
+    c.beginPath();c.moveTo(-4,-7);c.lineTo(-4+leg,-2);c.lineTo(0+leg,-1);c.moveTo(4,-7);c.lineTo(4-leg,-2);c.lineTo(8-leg,-1);c.stroke();
+    // Corps fauve, descendu jusqu'à 4 px des pattes.
+    const body=c.createLinearGradient(-9,-33,9,-5);body.addColorStop(0,'#eaba83');body.addColorStop(.55,'#d9935a');body.addColorStop(1,'#f0cd96');
+    ellipse(c,0,-19,11,15,body);
+    path(c,'M-8-14Q-1-6 7-14Q5-7-1-7Q-6-7-8-14Z','#f4e0b5');
+    // Tête noire, sourcil blanc, bec court, œil.
+    ellipse(c,4,-31,8.2,7.8,'#243b40');
+    path(c,'M-2-34Q3-38 10-33.5L9-31Q3-33.5 0-31Z','#f7efda');
+    path(c,'M11-31.5L15.5-30 11-28.5Z','#273d42');
+    ellipse(c,7.5,-32,1.9,2.1,'#142c32');ellipse(c,8.1,-32.8,.7,.7,'#fffdf0');
+    path(c,'M2-25Q8-24 10-28L7-24 5-22.5Z','#f5dfb4');
+    // Aile repliée (au sol / en saut).
+    c.save();c.translate(-4,-24);if(airborne)c.rotate(flying?.4+Math.sin(t*17)*.5:-.22-Math.sin(t*13)*.1);
+    path(c,'M-5-4Q5-5 7 4Q2 7-4 3Q-8 1-5-4Z','#334b4f');
+    path(c,'M-5-3Q0-3 4 0L3 2Q-1 1-5 0Z','#f3edd9');
+    path(c,'M-3 3L2 5M0 2L4 4',null,'#728580',.7);c.restore();
+    if(dead){c.strokeStyle='#f6eee0';c.lineWidth=1.3;c.beginPath();c.moveTo(6,-33.5);c.lineTo(9,-30.5);c.moveTo(9,-33.5);c.lineTo(6,-30.5);c.stroke();}
     c.restore();
   }
   function makeImage(contents){return new Promise((resolve,reject)=>{const im=new Image();im.onload=()=>resolve(im);im.onerror=reject;im.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="2400" height="660" viewBox="0 0 1200 330">'+contents+'</svg>');});}
@@ -58,7 +68,7 @@
     }
     zone(t){let k=0;for(let i=1;i<4;i++)if(t>=this.course.zones[i].t)k=i;return k;}
     emit(event,run){
-      const count=event==='death'?22:event==='land'?7:event==='jump'?5:event==='win'?45:0;
+      const count=event==='death'?22:event==='land'?7:event==='crack'?12:event==='jump'?5:event==='win'?45:0;
       for(let i=0;i<count;i++)this.particles.push({x:ANCHOR+(noise(i+run.tick)-.5)*18,y:G-run.y-4,vx:(noise(i*9+run.tick)-.5)*(event==='death'?155:80),vy:-25-noise(i*7+run.tick)*95,life:1,max:event==='win'?2: .35+noise(i*5)*.35,size:1.5+noise(i*31)*3,color:event==='death'?'#edbba1':palette[this.zone(run.time)].dust});
       if(event==='death'&&!this.reduced)this.flash=.16;
     }
@@ -87,19 +97,33 @@
       // A pale, flat landing surface; angular red tips always mean danger.
       c.strokeStyle='rgba(255,255,225,.42)';c.lineWidth=1;c.beginPath();c.moveTo(x+4,top+.5);c.lineTo(x+w-4,top+.5);c.stroke();
     }
-    terrain(run,zone){
-      const c=this.c,p=palette[zone],camera=run.x-ANCHOR,min=camera-30,max=camera+W+30;
+    terrain(run,zone,view=run){
+      const c=this.c,p=palette[zone],camera=view.x-ANCHOR,min=camera-30,max=camera+W+30;
       c.fillStyle=p.deep;c.fillRect(0,G+24,W,H-G);const mist=c.createLinearGradient(0,G-5,0,H);mist.addColorStop(0,'rgba(16,38,45,0)');mist.addColorStop(1,'rgba(12,31,38,.28)');c.fillStyle=mist;c.fillRect(0,G-5,W,H-G+5);
       let cursor=min;
       const holes=this.course.holes.filter(h=>h.x+h.w>min&&h.x<max).sort((a,b)=>a.x-b.x);
       for(const h of holes){if(h.x>cursor)this.ledge(cursor-camera,h.x-cursor,0,p,cursor);cursor=Math.max(cursor,h.x+h.w);}
       if(cursor<max)this.ledge(cursor-camera,max-cursor,0,p,cursor);
-      for(const s of this.course.solids){if(s.x+s.w<min||s.x>max)continue;this.ledge(s.x-camera,s.w,s.y,p,s.x);}
+      for(const s of this.course.solids){
+        if(s.x+s.w<min||s.x>max)continue;
+        if(!s.crumble){this.ledge(s.x-camera,s.w,s.y,p,s.x);continue;}
+        // Plateforme qui se dérobe : fissurée d'avance ; après l'atterrissage elle tremble, puis tombe.
+        const since=run.crumbs&&run.crumbs[s.id]!==undefined?run.time-run.crumbs[s.id]:-1,fall=since>s.crumble?since-s.crumble:0;
+        if(fall>1.2)continue;
+        const shake=since>=0&&!fall?Math.sin(since*90)*1.5:0,drop=fall*fall*420;
+        c.save();c.translate(shake,drop);if(fall)c.globalAlpha=Math.max(0,1-fall/1.2);
+        this.ledge(s.x-camera,s.w,s.y,p,s.x);
+        const x=s.x-camera,top=G-s.y;c.strokeStyle='rgba(20,30,32,.55)';c.lineWidth=1.2;c.lineJoin='round';
+        for(let k=0;k<Math.max(2,Math.round(s.w/22));k++){const a=x+6+k*(s.w-12)/Math.max(1,Math.round(s.w/22)-1||1);c.beginPath();c.moveTo(a,top+2);c.lineTo(a+3,top+9);c.lineTo(a-2,top+15);c.lineTo(a+2,top+24);c.stroke();}
+        c.restore();
+      }
       for(const h of this.course.hazards){
         if(h.x+h.w<min||h.x>max)continue;
         if(h.kind==='plafond'){
-          const x=h.x-camera,top=G-(h.top||190),bottom=G-h.y;
-          c.fillStyle=p.deep;c.beginPath();c.moveTo(x,top+15);c.quadraticCurveTo(x+h.w*.45,top-12,x+h.w,top+10);c.lineTo(x+h.w,bottom-12);c.lineTo(x,bottom-12);c.closePath();c.fill();
+          // Le bas du corps suit polys[0] : plat, ou en pente quand le plafond descend.
+          const x=h.x-camera,top=G-(h.top||190),body=h.polys[0],bl=G-body[0][1],br=G-body[1][1];
+          c.fillStyle=p.deep;c.beginPath();c.moveTo(x,top+15);c.quadraticCurveTo(x+h.w*.45,top-12,x+h.w,top+10);c.lineTo(x+h.w,br);c.lineTo(x,bl);c.closePath();c.fill();
+          const bottom=Math.max(bl,br)+12;
           c.fillStyle=p.edge;c.fillRect(x,top+14,h.w,3);
           c.strokeStyle='rgba(220,236,207,.2)';c.lineWidth=1.5;for(let i=Math.max(18,Math.floor((-x-40)/27)*27);i<Math.min(h.w,W-x+40);i+=27){c.beginPath();c.moveTo(x+i,top+27);c.lineTo(x+i+7,top+47);c.lineTo(x+i+4,bottom-21);c.stroke();}
           // Only the hanging teeth are highlighted; the solid crown stays rock.
@@ -129,18 +153,19 @@
       c.strokeStyle='#f6c99c';c.lineWidth=1.1;c.lineJoin='round';c.beginPath();c.moveTo(poly[0][0]-camera,G-poly[0][1]);c.lineTo(poly[1][0]-camera,G-poly[1][1]);c.stroke();
       c.strokeStyle='rgba(31,40,42,.7)';c.beginPath();c.moveTo(poly[1][0]-camera,G-poly[1][1]);c.lineTo(poly[2][0]-camera,G-poly[2][1]);c.stroke();
     }
-    draw(run,realTime,delta=0,mode='play'){
+    draw(run,realTime,delta=0,mode='play',view=run){
       H=this.logicalHeight;G=H-76;const c=this.c;c.setTransform(this.sx,0,0,this.sy,0,0);c.clearRect(0,0,W,H);
       const k=this.zone(run.time),z=this.course.zones[k];
-      if(k>0&&run.time<z.t+2){this.backdrop(k-1,run.x,realTime);this.backdrop(k,run.x,realTime,(run.time-z.t)/2);}else this.backdrop(k,run.x,realTime);
+      // Le paysage suit lui aussi la position interpolée : sinon ses deux plans avancent encore par à-coups.
+      if(k>0&&run.time<z.t+2){this.backdrop(k-1,view.x,realTime);this.backdrop(k,view.x,realTime,(run.time-z.t)/2);}else this.backdrop(k,view.x,realTime);
       if(mode==='intro'){
         this.ledge(0,W,0,palette[0],0);
         ellipse(c,536,G+2,75,9,'rgba(27,57,51,.15)');bird(c,536,G,4.2,realTime,'idle');
         // A few fronds frame the portrait without obscuring the playable lane.
         c.save();c.translate(672,G+15);c.strokeStyle='#487865';c.lineWidth=3;c.lineCap='round';for(let i=0;i<7;i++){c.beginPath();c.moveTo(0,0);c.quadraticCurveTo(-20+i*8,-40,-58+i*18,-65-(i%3)*18);c.stroke();}c.restore();
       }else{
-        this.terrain(run,k);
-        if(run.y>-110){const sh=Math.max(.2,1-run.y/180);ellipse(c,ANCHOR,G+2,16*sh,3*sh,'rgba(9,32,36,.2)');bird(c,ANCHOR,G-run.y,1.05,realTime,run.status==='dead'?'dead':run.flight?'fly':run.grounded?'run':'air',run.vy,run.land);}
+        this.terrain(run,k,view);
+        if(view.y>-110){const sh=Math.max(.2,1-view.y/180);ellipse(c,ANCHOR,G+2,16*sh,3*sh,'rgba(9,32,36,.2)');bird(c,ANCHOR,G-view.y,1.05,realTime,run.status==='dead'?'dead':run.flight?'fly':run.grounded?'run':'air',run.vy,run.land);}
       }
       if(!this.reduced){
         for(const p of this.particles){p.life-=delta/p.max;p.x+=p.vx*delta;p.y+=p.vy*delta;p.vy+=180*delta;c.globalAlpha=Math.max(0,p.life)*.75;ellipse(c,p.x,p.y,p.size,p.size*.65,p.color);}this.particles=this.particles.filter(p=>p.life>0);c.globalAlpha=1;
