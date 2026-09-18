@@ -736,7 +736,12 @@
   .eleveCase.ko{animation:eleveShake .3s}
   .eleveCase.ko input.eleveChamp{background:#fee2e2;color:#b91c1c}
   @keyframes eleveShake{0%,100%{transform:translateX(0)}25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
-  .eleveMiniTache{position:absolute;left:6px;top:5px;width:22px;height:16px;opacity:.8;pointer-events:none}
+  /* La mini-tache se serre dans le coin haut-gauche, au-dessus de la ligne des
+     chiffres (règle de Petit Splat, PR #772) : dans une case tache étroite
+     (téléphone, tablette, petite fenêtre) elle mordait sur le nombre. Les
+     chiffres, eux, restent centrés. L'écran d'ordinateur garde sa taille,
+     plus bas : ses cases de 66 px n'avaient pas ce défaut. */
+  .eleveMiniTache{position:absolute;left:2px;top:2px;width:14px;height:10px;opacity:.8;pointer-events:none}
   .eleveActions{display:flex;justify-content:center;gap:10px;margin-top:14px}
   .eleveActions button{font:inherit;font-weight:900;border:none;border-radius:12px;padding:12px 24px;min-height:48px;cursor:pointer;background:#2563eb;color:#fff}
   .eleveActions button:disabled{opacity:.45;cursor:default}
@@ -746,6 +751,7 @@
   @media (min-width:1000px) and (min-height:700px){
     body.eleve-mode #svgWrap{height:min(46vh,520px)}
     body.eleve-mode .eleveCase{min-height:66px;font-size:32px}
+    body.eleve-mode .eleveMiniTache{left:6px;top:5px;width:22px;height:16px}
     body.eleve-mode .eleveConsigne{font-size:17px;margin:2px 0 10px}
     body.eleve-mode .eleveTete{font-size:21px;gap:10px} /* les pastilles ne touchent plus le compteur */
     body.eleve-mode .eleveTete a.eleveMondes{font-size:15px;padding:5px 11px}
@@ -7854,10 +7860,13 @@ function eleveEnregistrerReussite(sansFaute, total){
   }catch(_e){ /* stockage indisponible : le jeu reste jouable */ }
 }
 
+/* Le total et les jetons visibles se remplissent dans une case VIDE, comme sur
+   les fiches imprimées ; seule la case d'une tache garde son « ? » : c'est
+   l'inconnue, ce que cache la tache (décision du 19/09/2026). */
 function eleveCaseHtml(classe, attendu, largeur, avecTache){
   return `<div class="eleveCase ${classe}" style="flex:${largeur} 1 0" data-attendu="${attendu}">` +
     (avecTache ? ELEVE_TACHE_MINI : "") +
-    `<input class="eleveChamp" type="text" inputmode="numeric" maxlength="3" autocomplete="off" placeholder="?"></div>`;
+    `<input class="eleveChamp" type="text" inputmode="numeric" maxlength="3" autocomplete="off"${avecTache ? ' placeholder="?"' : ""}></div>`;
 }
 
 /* Une pastille par carte de la série : verte = réussie du premier coup,
