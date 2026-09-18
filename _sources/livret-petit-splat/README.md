@@ -116,8 +116,12 @@ pypdf pour l'imposition.
 ## Conventions
 
 - Logos IREM + maths&go dans le bandeau des pages 1 et 8 ; rien dans le pied,
-  hormis la signature `mathsgo.re/splat/petit · CC BY-NC-SA 4.0` (les 6 fiches
-  portent déjà cette signature, produite par l'outil lui-même).
+  hormis la signature `mathsgo.re/splat · CC BY-NC-SA 4.0` sur les 8 pages.
+  **Attention** : l'outil écrit `mathsgo.re/splat/petit` au pied des fiches — c'est la
+  bonne adresse pour une fiche imprimée depuis le générateur, mais pas pour un livret,
+  qui est lu par des adultes cherchant l'ensemble des ressources. `render.py` repointe
+  donc le pied des six fiches vers `/splat` (la collection SPLAT du catalogue) au
+  moment du rendu, comme il injecte les QR (décision du 18/09/2026).
 - Tout reste lisible imprimé en **noir et blanc** : aucun texte en couleur claire,
   aucune page en aplat teinté.
 - Vocabulaire : « jetons » (jamais « billes », réservées au monde 4).

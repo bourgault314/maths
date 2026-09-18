@@ -138,6 +138,20 @@ JS_QR = """(qr) => {
 # des cartes jusqu'à en trouver une au profil demandé, puis on récupère son SVG
 # (getSplatSvg avec les jetons cachés). L'exemple d'un livret ressemble donc
 # exactement aux cartes de ses fiches — plusieurs taches comprises.
+# Le pied des 6 fiches est écrit par l'outil ("mathsgo.re/splat/petit"), qui est la
+# bonne adresse pour une fiche imprimée depuis le générateur — mais pas pour un livret :
+# /splat/petit ouvre le générateur, alors que /splat ouvre la collection SPLAT du
+# catalogue, où se trouvent les livrets, l'univers et tous les autres Splat. On repointe
+# donc le pied des 8 pages du livret vers /splat (décision du 18/09/2026).
+PIED_LIVRET = "mathsgo.re/splat · CC BY-NC-SA 4.0"
+
+JS_PIED = """(texte) => {
+  const f = document.querySelector('.activity-footer');
+  if (!f) return 'pas de pied de page';
+  f.innerText = texte;
+  return 'ok';
+}"""
+
 JS_EXEMPLE = """([target, splatMode, visMin, visMax, hpMin, hpMax, totMin]) => {
   for (let essai = 0; essai < 8000; essai++) {
     currentRand = mulberry32(hashSeed('exemple-' + target + '-' + essai));
@@ -260,6 +274,9 @@ async def pages(niv, tmp):
                 r = await pg.evaluate(JS_QR, injecter)
                 if r != "ok":
                     raise SystemExit(f"injection du QR impossible sur {url} : {r}")
+                r = await pg.evaluate(JS_PIED, PIED_LIVRET)
+                if r != "ok":
+                    raise SystemExit(f"pied de page : {r}")
                 await pg.wait_for_timeout(400)
             if couv is not None:
                 r = await pg.evaluate(JS_COUV, couv)
