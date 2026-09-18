@@ -7860,7 +7860,10 @@ function renderEleveSplat(){
   const premier = panneau.querySelector(".eleveChamp");
   if(premier) premier.focus();
   panneau.querySelectorAll(".eleveChamp").forEach(inp => {
-    inp.addEventListener("keydown", ev => { if(ev.key === "Enter") eleveValiderSplat(); });
+    /* Entrée valide, et l'appui s'arrête là : une carte juste donne le focus à
+       « Carte suivante ▶ », que le même appui cliquait aussitôt — l'élève ne
+       voyait ni le Bravo ni la tache dévoilée. Le 2e appui passe à la suite. */
+    inp.addEventListener("keydown", ev => { if(ev.key === "Enter"){ ev.preventDefault(); eleveValiderSplat(); } });
     inp.addEventListener("input", () => {
       const c = inp.closest(".eleveCase");
       if(c) c.classList.remove("ko");

@@ -2576,7 +2576,10 @@ function renderEleve(main) {
        clavier du système et ferait défiler la page. */
     if (!pave && premierChamp) premierChamp.focus();
     scene.querySelectorAll('.eleve-input').forEach(inp => {
-        inp.addEventListener('keydown', ev => { if (ev.key === 'Enter') eleveValider(main); });
+        /* Entrée valide, et l'appui s'arrête là : une carte juste donne le focus à
+           « Carte suivante ▶ », que le même appui cliquait aussitôt — l'élève ne
+           voyait ni le Bravo ni la tache dévoilée. Le 2e appui passe à la suite. */
+        inp.addEventListener('keydown', ev => { if (ev.key === 'Enter') { ev.preventDefault(); eleveValider(main); } });
         inp.addEventListener('input', () => {
             const c = inp.closest('.eleve-case');
             if (c) c.classList.remove('eleve-ko');
