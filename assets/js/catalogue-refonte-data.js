@@ -776,20 +776,14 @@ window.MATHSGO_CATALOGUE = {
       "thumbnail": "assets/img/thumbnails/splat/splat-equations.png?v=6",
       "cardDescription": "Générer des cartes d’équations où les deux côtés contiennent des jetons et des quantités cachées."
     },
-    "outils/livret_petit_splat.pdf": {
+    "outils/livrets_petit_splat.html": {
       "primaryNotion": "calcul-litteral",
       "primaryGroup": "imprimer",
-      "cardTitle": "Livret Petit Splat!",
+      "cardTitle": "Livrets Petit Splat!",
       "collections": ["splat"],
       "tags": ["splat", "livret", "schema-barres", "inconnue", "imprimer"],
-      "thumbnail": "assets/img/thumbnails/splat/livret-petit-splat.png?v=1",
-      "cardDescription": "Les six fiches du monde 1 réunies en un livret à plier, avec un QR code par fiche vers le jeu en ligne."
-    },
-    "outils/livret_petit_splat_a3.pdf": {
-      "primaryNotion": "calcul-litteral",
-      "primaryGroup": "imprimer",
-      "collections": ["splat"],
-      "tags": ["splat", "livret", "a3", "schema-barres", "inconnue", "imprimer"]
+      "thumbnail": "assets/img/thumbnails/splat/livret-petit-splat.png?v=2",
+      "cardDescription": "Les six fiches du monde 1 réunies en un livret à plier, en trois niveaux : jusqu’à 20, de 21 à 50, de 51 à 100 jetons."
     },
     "outils/tuiles_algebriques/generateur_exercices_calcul_litteral.html": {
       "primaryNotion": "calcul-litteral",
@@ -1726,22 +1720,6 @@ window.MATHSGO_CATALOGUE = {
         "outils/gabarits_enquetes_additive.pdf",
         "outils/gabarits_enquetes_multiplicative.pdf",
         "outils/gabarits_partage_equitable_2_3_4_5.pdf"
-      ]
-    },
-    {
-      "id": "livret-petit-splat",
-      "title": "Livret Petit Splat!",
-      "description": "Choisir le format du livret : 8 pages A4, ou deux feuilles A3 prêtes à plier.",
-      "cardDescription": "Les six fiches du monde 1 réunies en un livret à plier, avec un QR code par fiche vers le jeu en ligne.",
-      "thumbnail": "assets/img/thumbnails/splat/livret-petit-splat.png?v=1",
-      "group": "imprimer",
-      "labels": {
-        "outils/livret_petit_splat.pdf": "Livret de 8 pages (A4)",
-        "outils/livret_petit_splat_a3.pdf": "Version A3 prête à plier"
-      },
-      "paths": [
-        "outils/livret_petit_splat.pdf",
-        "outils/livret_petit_splat_a3.pdf"
       ]
     }
   ],
@@ -6475,10 +6453,10 @@ window.MATHSGO_CATALOGUE = {
       "recent": false
     },
     {
-      "id": "outils-livret-petit-splat-pdf",
-      "title": "Livret Petit Splat! — les 6 fiches à plier",
-      "description": "Les six fiches du monde 1 de l’univers SPLAT! réunies en un livret de 8 pages : couverture avec l’exemple expliqué, les six fiches dans l’ordre de la progression, 4e de couverture. Chaque fiche porte un QR code vers le jeu en ligne avec les mêmes cartes. À imprimer sur deux feuilles A3 recto-verso, à plier et agrafer.",
-      "path": "outils/livret_petit_splat.pdf",
+      "id": "outils-livrets-petit-splat",
+      "title": "Livrets Petit Splat! — les 6 fiches à plier, en trois niveaux",
+      "description": "Les six fiches du monde 1 de l’univers SPLAT! réunies en un livret de 8 pages : couverture avec l’exemple expliqué, les six fiches dans l’ordre de la progression, 4e de couverture. Trois niveaux, même progression : jusqu’à 20 jetons, de 21 à 50, de 51 à 100. Chaque fiche porte un QR code vers le jeu en ligne avec les mêmes cartes. À imprimer sur deux feuilles A3 recto-verso, à plier et agrafer — ou en A4 dans l’ordre de lecture.",
+      "path": "outils/livrets_petit_splat.html",
       "domains": [
         "algebre"
       ],
@@ -6498,44 +6476,13 @@ window.MATHSGO_CATALOGUE = {
       "keywords": [
         "splat",
         "livret",
+        "livrets",
         "schéma en barres",
         "inconnue",
         "cycle 3",
-        "QR code"
-      ],
-      "kind": "tool",
-      "status": "published",
-      "featured": false,
-      "recent": false
-    },
-    {
-      "id": "outils-livret-petit-splat-a3-pdf",
-      "title": "Livret Petit Splat! — deux feuilles A3 à plier",
-      "description": "Le livret Petit Splat! déjà mis en page sur deux feuilles A3 : imprimer en recto-verso avec retournement sur le bord court, plier, agrafer au milieu, et les 8 pages se suivent dans l’ordre.",
-      "path": "outils/livret_petit_splat_a3.pdf",
-      "domains": [
-        "algebre"
-      ],
-      "notions": [
-        "calcul-litteral",
-        "equations",
-        "schemas-barres"
-      ],
-      "uses": [
-        "imprimer",
-        "entrainer"
-      ],
-      "types": [
-        "imprimable"
-      ],
-      "filters": [],
-      "keywords": [
-        "splat",
-        "livret",
+        "QR code",
         "A3",
-        "recto-verso",
-        "schéma en barres",
-        "cycle 3"
+        "à plier"
       ],
       "kind": "tool",
       "status": "published",
