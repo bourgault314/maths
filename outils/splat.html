@@ -1905,6 +1905,10 @@ function applyShareControl(params, name, el){
   else setNumberFromShare(params, name, el);
 }
 
+/* Les réglages qu'une adresse partagée peut porter. Liste commune : elle sert
+   aussi à l'empreinte de la série élève (eleveSignatureSerie). */
+const sharedNames = ["mode", "seed", "cards", "equation", "tasksMin", "tasksMax", "visibleMin", "visibleMax", "hidden", "hiddenMax", "totalMin", "totalMax", "splats", "clues", "structure", "mul", "div", "add", "sub", "deltaMax", "operation", "beadMax", "opposites", "colors", "unknown", "print", "duplex", "layout", "title", "eleve", "parcours", "imprimer", "suite"];
+
 function loadSharedConfiguration(){
   const params = new URLSearchParams(window.location.search);
   eleveActif = params.get("eleve") === "1";
@@ -1923,7 +1927,6 @@ function loadSharedConfiguration(){
     eleveSuite = String(params.get("suite") || "")
       .split(";").map(part => part.trim()).filter(Boolean).slice(0, 5);
   }
-  const sharedNames = ["mode", "seed", "cards", "equation", "tasksMin", "tasksMax", "visibleMin", "visibleMax", "hidden", "hiddenMax", "totalMin", "totalMax", "splats", "clues", "structure", "mul", "div", "add", "sub", "deltaMax", "operation", "beadMax", "opposites", "colors", "unknown", "print", "duplex", "layout", "title", "eleve", "parcours", "imprimer", "suite"];
   if(!sharedNames.some(name => params.has(name))) return false;
   appliquerConfiguration(params);
   return true;
@@ -8069,7 +8072,11 @@ function renderEleveSplat(){
       eleveRepriseFaite = true;
       try{
         const entree = (JSON.parse(localStorage.getItem(ELEVE_STORE_KEY) || "{}"))[parcoursId];
-        if(entree && entree.enCours && Number.isInteger(entree.enCours.idx) &&
+        /* la reprise ne vaut que pour la série qui l'a écrite : même adresse
+           ?parcours=, mais des cartes différentes d'un livret à l'autre ; une
+           sauvegarde d'avant l'empreinte n'est pas reprise (l'étoile, elle, reste) */
+        if(entree && entree.enCours && entree.enCours.sig === eleveSignatureSerie() &&
+           Number.isInteger(entree.enCours.idx) &&
            entree.enCours.idx > 0 && entree.enCours.idx < eleveSerie.length){
           eleveIdx = entree.enCours.idx;
           eleveEtoiles = Number(entree.enCours.etoiles) || 0;
@@ -8213,13 +8220,29 @@ function eleveLienMondesHtml(classe, libelle){
     (libelle || '\u25c0 <span class="txt">Carte des mondes</span>') + `</a>`;
 }
 
-/* Sauvegarde « en cours » : l'indice de la prochaine carte + le détail des pastilles. */
+/* Empreinte de la série affichée : les réglages de l'adresse qui déterminent
+   les cartes, graine et « suite » (étape composée) compris — clés triées,
+   valeurs telles quelles. Deux livrets peuvent partager le même ?parcours=
+   (la même étoile sur la carte des mondes) tout en portant des cartes
+   différentes, comme les trois livrets du monde 1 : sans cette empreinte, la
+   reprise de l'un s'appliquait à l'autre et l'élève atterrissait au milieu
+   d'une série jamais commencée (Petit Splat, PR #773). Ce qui ne change pas
+   les cartes n'y entre pas : le mode élève, l'étape, l'impression, le titre. */
+const ELEVE_HORS_EMPREINTE = ["eleve", "parcours", "print", "duplex", "layout", "title", "imprimer"];
+function eleveSignatureSerie(){
+  const params = new URLSearchParams(window.location.search);
+  return sharedNames.filter(nom => !ELEVE_HORS_EMPREINTE.includes(nom) && params.has(nom))
+    .sort().map(nom => nom + "=" + params.get(nom)).join("|");
+}
+
+/* Sauvegarde « en cours » : l'empreinte de la série, l'indice de la prochaine
+   carte + le détail des pastilles. */
 function eleveSauverEnCours(){
   if(!parcoursId || eleveRejeu) return;
   if(eleveIdx + 1 >= eleveSerie.length) return; /* la fin de série gère l'enregistrement */
   try{
     const tout = JSON.parse(localStorage.getItem(ELEVE_STORE_KEY) || "{}");
-    tout[parcoursId] = Object.assign({}, tout[parcoursId] || {}, { enCours: { idx: eleveIdx + 1, etoiles: eleveEtoiles, res: eleveResultats.slice(0, eleveIdx + 1) } });
+    tout[parcoursId] = Object.assign({}, tout[parcoursId] || {}, { enCours: { sig: eleveSignatureSerie(), idx: eleveIdx + 1, etoiles: eleveEtoiles, res: eleveResultats.slice(0, eleveIdx + 1) } });
     localStorage.setItem(ELEVE_STORE_KEY, JSON.stringify(tout));
   }catch(_e){ /* stockage indisponible */ }
 }
