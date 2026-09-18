@@ -6455,7 +6455,7 @@ window.MATHSGO_CATALOGUE = {
     {
       "id": "outils-livrets-petit-splat",
       "title": "Livrets Petit Splat! — les 6 fiches à plier, en trois niveaux",
-      "description": "Les six fiches du monde 1 de l’univers SPLAT! réunies en un livret de 8 pages : couverture avec l’exemple expliqué, les six fiches dans l’ordre de la progression, 4e de couverture. Trois niveaux, même progression : jusqu’à 20 jetons, de 21 à 50, de 51 à 100. Chaque fiche porte un QR code vers le jeu en ligne avec les mêmes cartes. À imprimer sur deux feuilles A3 recto-verso, à plier et agrafer — ou en A4 dans l’ordre de lecture.",
+      "description": "Les six fiches du monde 1 de l’univers SPLAT! réunies en un livret de 8 pages : couverture avec l’exemple expliqué, les six fiches dans l’ordre de la progression, 4e de couverture. Trois niveaux, même progression : jusqu’à 20 jetons, de 21 à 50, de 51 à 100. Chaque fiche porte un QR code vers le jeu en ligne avec les mêmes cartes. À imprimer en recto-verso sur deux feuilles A3, ou A4 pour un plus petit livret, à plier et agrafer — ou en A4 dans l’ordre de lecture.",
       "path": "outils/livrets_petit_splat.html",
       "domains": [
         "algebre"
