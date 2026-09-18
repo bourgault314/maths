@@ -17,11 +17,13 @@ Les Carrés gloutons restent à leur adresse `/outils/club_maths/carres_gloutons
 | Tempo volcan | Suite sans fin de signaux, trois vies ; le mot écrit finit par contredire le dessin, puis la consigne s'inverse | Un seul jeu : la fenêtre passe de 1,45 s à 0,58 s |
 | Les Carrés gloutons | Deux manches de neuf carrés contre Gloubi | Jeu existant, sans choix de niveau |
 
-Le Tec-tec utilise le parcours de l’essai V2 approuvé : petits et grands sauts,
-rebonds sur maintien, escaliers, trous, plafonds, variations de vitesse et deux
-passages en vol. Le moteur et le parcours sont conservés octet pour octet ; la
-publication ajoute le raccord au site et les arbres demandés. La difficulté ne
-repose plus sur le calcul de largeur de l’ancien Dodo.
+Le Tec-tec utilise le parcours V3 du lot 1 (18 septembre 2026, voir plus bas) :
+petits et grands sauts, rebonds sur maintien, escaliers, trous, plafonds bas ou
+en pente, plateformes qui se dérobent, variations de vitesse et trois passages
+en vol. Il reste volontairement très dur, sans point de reprise ni vie de plus :
+on y échoue par imprécision ou méconnaissance du parcours, plus par hasard. La
+publication du 13 septembre a ajouté le raccord au site et les arbres demandés.
+La difficulté ne repose plus sur le calcul de largeur de l’ancien Dodo.
 
 Les illustrations sont des SVG originaux dans `art.js`. Les jeux ne chargent aucune dépendance externe.
 La Luciole a une note par case (gamme pentatonique, `AudioContext` créé au premier départ) et un bouton pour couper le son ; le réglage tient dans `sessionStorage`.
@@ -128,16 +130,19 @@ ChatGPT peut utiliser une autre origine : son stockage n’est pas transférable
 automatiquement au site.
 
 `tests/tec-tec-course.test.cjs` rejoue les 150 secondes par les commandes normales,
-avec 122 appuis et 121 sauts au sol, et vérifie les échecs de gestes inadaptés.
-`tests/tec-tec-site.test.cjs` protège les empreintes du moteur et du parcours V2,
+avec 141 appuis et 134 sauts au sol depuis le lot 1 (122 et 121 avant), et vérifie
+les échecs de gestes inadaptés.
+`tests/tec-tec-site.test.cjs` protège les empreintes du moteur et du parcours V3,
 les anciennes adresses, le quota partagé et les messages du cadre.
 `tests/tec-tec-dom.cjs` vérifie les parcours gagnants clavier/pointeur, les durées
 d’appui, le focus, la pause, le stockage et la fin du coffre avec jsdom 26.1.0.
 Ces contrôles ne reproduisent pas un clavier physique dans l’aperçu ChatGPT et
-ne valident pas le rendu CSS d’un téléphone. Le contrôle de focus de la V3 est
-conservé ; aucune difficulté n’a été changée pour compenser le signalement Espace.
+ne valident pas le rendu CSS d’un téléphone. Le contrôle de focus de l’essai V3
+est conservé. À la publication, aucune difficulté n’a été changée pour compenser
+le signalement Espace ; le lot 1 a depuis élargi l’appui court (voir plus bas).
 
 ```sh
+node scripts/tec-tec-replay.mjs --verifier
 node --test tests/tec-tec-course.test.cjs tests/tec-tec-site.test.cjs
 NODE_PATH=/chemin/vers/node_modules node tests/tec-tec-dom.cjs
 NODE_PATH=/chemin/vers/node_modules node tests/jeux-cadeaux-dom.cjs
@@ -211,3 +216,83 @@ de fluidité sur téléphone.
 `node scripts/tec-tec-export.cjs /chemin/Tec-tec_affichage_essai.html` produit un
 essai autonome de cette même page, sans accès réseau ni publication du site.
 Son stockage appartient à l’origine depuis laquelle on ouvre cet essai.
+
+### Tec-tec, lot 1 : juste sans être facile (18 septembre 2026)
+
+Décisions de Gwenaël (17 septembre), valables pour les lots suivants : le jeu
+reste très dur, dans l’esprit de Geometry Dash ; une seule vie, sans point de
+reprise ni mode entraînement ; 150 secondes d’un bloc, dont le pourcentage à la
+mort sert de score ; l’oiseau est redessiné plus compact au lieu d’agrandir sa
+boîte. Le lot retire le hasard, pas la difficulté : un geste juste ne doit plus
+tuer. Le décor (`landscapes.js`) n’est pas modifié : il relève d’un lot séparé.
+
+Moteur (`engine.js`) : la coupure de montée s’applique dès 30 ms d’appui et ramène
+la vitesse à 150 px/s (`cut` 215 → 150, `minHold` 0,05 → 0,03 s). Le sommet du
+saut suit la durée de l’appui : 65 px pour 30 ms, 92 px pour 100 ms, 108 px pour
+150 ms, 127 px au-delà de 250 ms (le grand saut, inchangé). Les plafonds bas sont
+à 112, 114 ou 116 px selon le niveau : un appui jusqu’à 162 ms y passe. Avant le
+lot, il ne devait pas dépasser 94 ms, moins qu’un clic ordinaire ; cela peut
+expliquer le signalement Espace du 13 septembre, sans qu’un clavier ait été
+mesuré. Une plateforme peut porter `crumble` : elle reste solide 0,10 s après
+l’atterrissage, puis disparaît (état `run.crumbs`, remis à zéro au départ,
+événement `crack`). Le pas fixe de 1/120 s et le déterminisme sont conservés.
+
+Parcours V3 (`course.js`, identifiant `tec-tec-reunion-150-v3`) : 50 figures tirées
+de 16 modèles, les 10 d’avant et 6 pièges neufs choisis le 17 septembre : languette
+(double trou, un seul appui), quinconce, rythme cassé, grand puis petit saut,
+plafond en pente et plateforme qui se dérobe. Chaque figure a un niveau de 0 à 4
+qui fixe la fenêtre d’appui visée (300, 230, 175, 150 et 142 ms) ; sa géométrie en
+est déduite à la vitesse du moment. Sur le replay de référence, aucune fenêtre
+n’est sous 142 ms (médiane 167 ms). Sous un plafond bas, l’obstacle est un trou
+étroit, jamais des piques. Aux niveaux 3 et 4, une dent basse (60 px) juste avant
+le trou fixe l’instant du petit saut ; au niveau 4, un plafond à 130 px au-dessus
+des piques interdit le grand saut complet. Trois vols : 45-53 s, puis le second
+vol coupé en deux (126-134 s et 139,5-147,5 s) ; dans chaque vol, la première
+porte est la plus étroite et les suivantes s’élargissent. La vitesse va de 250 à
+365 px/s, avec un coup d’accélérateur à 65 s, sous le titre de zone « Change de
+tempo ». Les onze textes d’aide sont les mêmes, sans ajout ; trois ont seulement
+changé d’instant.
+
+Dessin (`renderer.js`) : le tec-tec compact coïncide avec sa boîte de collision,
+queue et bec courts comme le vrai tec-tec (mesure du lot : 7,4 % du dessin hors de
+la boîte au sol, contre 45 % avant ; rien ne dépasse de plus de 4 px). Les plafonds
+en pente suivent leur polygone ; les plateformes qui se dérobent sont dessinées
+fissurées, tremblent après l’atterrissage puis tombent en s’effaçant. La préférence
+de mouvement réduit coupe toujours les particules, l’éclair et les animations du
+décor ; le tremblement et la chute des plateformes restent affichés.
+
+Affichage (`app.js`, `renderer.js`) : la physique avance toujours par pas fixes de
+1/120 s, mais chaque image dessine la position interpolée entre les deux derniers
+pas (`alpha = accumulateur / DT`) : sol, obstacles, oiseau et les deux plans du
+paysage. Sans cela, la scène avançait par à-coups de 3, 6 ou 9 px selon que
+l’image consommait 1, 2 ou 3 pas, très visibles en grand.
+
+Le record local garde sa clé `mathsgo:tec-tec:essai:reunion-150-v2` : les records
+faits sur l’ancien parcours sont conservés. Pour repartir de zéro, il suffit de
+changer cette clé dans `tec-tec/app.js`.
+
+Mesures sur le moteur, 3 000 parties simulées par profil de joueur, avec le script
+d’étalonnage du lot, conservé hors du dépôt. Ce sont des simulations, pas des
+observations d’élèves.
+
+| Mesure | Avant | Après | Objectif |
+| --- | --- | --- | --- |
+| Appui maximal sous les plafonds bas | 94 ms | 162 ms | ≥ 150 ms |
+| Le joueur parfait (± 15 ms) finit | 26,9 % | 100 % | 100 % |
+| Le très entraîné (± 30 ms) finit | 0,5 % | 24,7 % | 5 à 25 % |
+| Durée médiane, élève ordinaire (± 80 ms) | 4,2 s | 11,3 s | 8 à 15 s |
+
+`tests/tec-tec-course.test.cjs` garde ses seize tests, mis à jour pour la V3, et
+en ajoute six : hauteur du saut selon l’appui, aucun plafond franchi en sautant
+sous 112 px, plateforme qui se dérobe puis revient au départ suivant, rebond avant
+l’effondrement, plafond en pente, variété réelle des figures. Le replay gagnant est
+régénéré par `scripts/tec-tec-replay.mjs`, qui part de l’esquisse d’appuis de
+`course.js` et recentre chaque appui au sol dans sa fenêtre ; `--verifier` contrôle
+sans rien écrire, `--fenetres` affiche la fenêtre de chaque appui. Aucun test du
+dépôt n’appelle `draw()` : le dessin a été vérifié hors dépôt sur les 150 secondes,
+à 50, 60 et 144 images par seconde, sans erreur.
+
+Ces mesures ne couvrent ni la fluidité sur un appareil réel, ni le tap tactile
+sous les plafonds bas, ni la compréhension, sans texte, des dents basses et des
+plateformes fissurées. Le message « Sous ce plafond, il fallait un petit saut. »
+sert aussi pour les dents basses et les plafonds à 130 px (texte inchangé).
