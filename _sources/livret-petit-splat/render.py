@@ -199,8 +199,9 @@ JS_COUV = """(d) => {
   const flexH = Math.max(e.hp, e.total * 0.05, 1);
   const mini = '<svg class="mini" viewBox="40 10 220 180" aria-hidden="true"><path d="M130,50 Q170,20 200,60 Q230,80 210,130 Q180,170 130,160 Q80,150 70,100 Q80,40 130,50 Z" fill="#111827"/></svg>';
   let bas = '<div class="vis" style="flex:' + flexV + '">' + e.visible + '</div>';
+  /* la mini-tache va dans CHAQUE case cachée : une case = une tache */
   for (let i = 0; i < e.n; i++)
-      bas += '<div class="cac" style="flex:' + flexH + '">' + (i === 0 ? mini : '') + e.hp + '</div>';
+      bas += '<div class="cac" style="flex:' + flexH + '">' + mini + e.hp + '</div>';
   set('.sch .barre-b', bas);
   set('.sch .pieds',
       '<span class="a" style="flex:' + flexV + '">les jetons <b>visibles</b></span>' +
