@@ -156,7 +156,8 @@
     draw(run,realTime,delta=0,mode='play',view=run){
       H=this.logicalHeight;G=H-76;const c=this.c;c.setTransform(this.sx,0,0,this.sy,0,0);c.clearRect(0,0,W,H);
       const k=this.zone(run.time),z=this.course.zones[k];
-      if(k>0&&run.time<z.t+2){this.backdrop(k-1,run.x,realTime);this.backdrop(k,run.x,realTime,(run.time-z.t)/2);}else this.backdrop(k,run.x,realTime);
+      // Le paysage suit lui aussi la position interpolée : sinon ses deux plans avancent encore par à-coups.
+      if(k>0&&run.time<z.t+2){this.backdrop(k-1,view.x,realTime);this.backdrop(k,view.x,realTime,(run.time-z.t)/2);}else this.backdrop(k,view.x,realTime);
       if(mode==='intro'){
         this.ledge(0,W,0,palette[0],0);
         ellipse(c,536,G+2,75,9,'rgba(27,57,51,.15)');bird(c,536,G,4.2,realTime,'idle');
