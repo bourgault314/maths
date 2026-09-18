@@ -2490,7 +2490,10 @@ function renderEleve(main) {
                     localStorage.setItem(ELEVE_STORE_KEY, JSON.stringify(tout));
                 }
                 const entree = (JSON.parse(localStorage.getItem(ELEVE_STORE_KEY) || '{}'))[parcoursId];
-                if (entree && entree.enCours && Number.isInteger(entree.enCours.idx) &&
+                /* la reprise ne vaut que pour la série qui l'a écrite : même adresse
+                   ?parcours=, mais des cartes différentes d'un livret à l'autre */
+                if (entree && entree.enCours && entree.enCours.sig === eleveSignatureSerie() &&
+                    Number.isInteger(entree.enCours.idx) &&
                     entree.enCours.idx > 0 && entree.enCours.idx < eleveSerie.length) {
                     eleveIdx = entree.enCours.idx;
                     eleveEtoiles = Number(entree.enCours.etoiles) || 0;
@@ -2689,13 +2692,23 @@ function eleveLienMondesHtml(classe, libelle) {
         (libelle || '\u25c0 <span class="txt">Carte des mondes</span>') + `</a>`;
 }
 
+/* Empreinte de la série en cours : ce qui détermine les cartes tirées.
+   Deux fiches peuvent partager le même ?parcours= (les trois livrets Petit SPLAT!
+   valident la même étoile du monde 1) tout en portant des cartes différentes : sans
+   cette empreinte, la reprise de l'une s'appliquait à l'autre et sautait des cartes. */
+function eleveSignatureSerie() {
+    const val = id => { const e = document.getElementById(id); return e ? e.value : ''; };
+    return [activeSeed, getProblemType(), val('targetVal'), val('splatMode'),
+            val('gameMode'), val('gridSize')].join('|');
+}
+
 /* Sauvegarde « en cours » : l'indice de la prochaine carte + le détail des pastilles. */
 function eleveSauverEnCours() {
     if (!parcoursId || eleveRejeu) return;
     if (eleveIdx + 1 >= eleveSerie.length) return; /* la fin de série gère l'enregistrement */
     try {
         const tout = JSON.parse(localStorage.getItem(ELEVE_STORE_KEY) || '{}');
-        tout[parcoursId] = Object.assign({}, tout[parcoursId] || {}, { enCours: { idx: eleveIdx + 1, etoiles: eleveEtoiles, res: eleveResultats.slice(0, eleveIdx + 1) } });
+        tout[parcoursId] = Object.assign({}, tout[parcoursId] || {}, { enCours: { sig: eleveSignatureSerie(), idx: eleveIdx + 1, etoiles: eleveEtoiles, res: eleveResultats.slice(0, eleveIdx + 1) } });
         localStorage.setItem(ELEVE_STORE_KEY, JSON.stringify(tout));
     } catch (e) { /* stockage indisponible */ }
 }
