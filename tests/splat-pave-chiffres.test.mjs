@@ -101,7 +101,13 @@ function monter(options = {}) {
   const validations = [];
   const pave = PAVE.creer({ document: doc, fenetre, surValider: () => validations.push(true) });
   const cases = [faireCase(doc, "", "14"), faireCase(doc, "", "10"), faireCase(doc, "", "4")];
-  pave.brancher(cases.map((c) => c.champ), { zone: (champ) => champ.closest(".eleve-case") });
+  // Comme la page : une saisie retire le rouge de la case (splat_tache_barre.html,
+  // écouteur « input » posé par renderEleve).
+  cases.forEach((c) => c.champ.addEventListener("input", () => c.boite.classList.remove("eleve-ko")));
+  pave.brancher(cases.map((c) => c.champ), {
+    zone: (champ) => champ.closest(".eleve-case"),
+    aRemplacer: (champ) => champ.closest(".eleve-case").classList.contains("eleve-ko")
+  });
   pave.afficher();
   const touches = pave.element.enfants[0].enfants;
   const touche = (libelle) => {
@@ -185,6 +191,55 @@ test("« Effacer » retire le dernier chiffre, et la longueur reste celle du cha
   b.touche("Effacer");
   b.touche("Effacer");
   assert.equal(b.cases[0].champ.value, "", "effacer une case déjà vide ne casse rien");
+});
+
+test("case normale + chiffre : le chiffre s'ajoute derrière", () => {
+  const b = monter();
+  b.cases[0].champ.value = "1";
+  b.toucherCase(0);
+  b.touche("4");
+  assert.equal(b.cases[0].champ.value, "14");
+});
+
+test("case rouge + chiffre : le premier chiffre remplace le nombre faux, les suivants s'ajoutent", () => {
+  const b = monter();
+  b.cases[0].champ.value = "9";
+  b.cases[0].boite.classList.add("eleve-ko"); // la validation l'a marquée fausse
+  b.toucherCase(0);
+  b.touche("4");
+  assert.equal(b.cases[0].champ.value, "4", "4 donne 4, pas 94");
+  assert.equal(b.cases[0].boite.classList.contains("eleve-ko"), false, "la case redevient normale dès le premier chiffre");
+  b.touche("5");
+  assert.equal(b.cases[0].champ.value, "45", "la suite s'ajoute, comme dans une case normale");
+});
+
+test("case rouge + Effacer : Effacer garde son comportement (un chiffre à la fois)", () => {
+  const b = monter();
+  b.cases[1].champ.value = "12";
+  b.cases[1].boite.classList.add("eleve-ko");
+  b.toucherCase(1);
+  b.touche("Effacer");
+  assert.equal(b.cases[1].champ.value, "1");
+});
+
+test("une case rouge pleine (trois chiffres) accepte quand même le chiffre qui la remplace", () => {
+  const b = monter();
+  b.cases[2].champ.value = "999";
+  b.cases[2].boite.classList.add("eleve-ko");
+  b.toucherCase(2);
+  b.touche("7");
+  assert.equal(b.cases[2].champ.value, "7");
+});
+
+test("sans règle de remplacement fournie par la page, le pavé ajoute toujours", () => {
+  const { doc, fenetre } = fauxNavigateur();
+  const pave = PAVE.creer({ document: doc, fenetre });
+  const c = faireCase(doc, "9");
+  c.boite.classList.add("eleve-ko");
+  pave.brancher([c.champ], { zone: (champ) => champ.closest(".eleve-case") });
+  pave.activer(c.champ);
+  pave.element.enfants[0].enfants.find((t) => t.textContent === "4").dispatchEvent({ type: "click", preventDefault() {} });
+  assert.equal(c.champ.value, "94");
 });
 
 test("« Valider » appelle la validation de la page, comme le bouton de la carte", () => {
@@ -330,8 +385,51 @@ test("la page réserve la place du pavé, pour la carte comme pour le pied du me
 });
 
 test("le plateau rend des pixels quand la carte est trop haute, jamais en dessous du minimum", () => {
-  assert.match(petit, /const ELEVE_PLATEAU_MIN = 150, ELEVE_MSG_RESERVE = 24, ELEVE_PAVE_JEU = 10;/);
+  // 26 px de réserve : une seconde ligne de message (24) ou « Voir la réponse »,
+  // qui prend la place du Valider caché (48 px, dont 22 absorbés par la marge
+  // basse de la carte et le jeu) — entier au-dessus du pavé, mesuré à 390 × 664.
+  assert.match(petit, /const ELEVE_PLATEAU_MIN = 150, ELEVE_RESERVE = 26, ELEVE_PAVE_JEU = 10;/);
+  assert.match(petit, /const besoin = scene\.getBoundingClientRect\(\)\.height \+ ELEVE_RESERVE;/);
   assert.match(petit, /const cible = Math\.max\(ELEVE_PLATEAU_MIN, Math\.round\(plateau - \(besoin - dispo\)\)\);/);
+});
+
+test("au tactile, un seul Valider : celui de la carte est caché, celui du pavé agit", () => {
+  // La cascade a été mesurée au navigateur : display none sur les six formats
+  // tactiles, block sur ordinateur (1280 × 800). Ici, la règle et ses garde-fous.
+  assert.match(petit, /body\.eleve-pave #eleveValider \{ display: none; \}/);
+  // caché, pas retiré : la validation lit toujours le bouton (disabled ou non)
+  assert.match(petit, /<button class="eleve-valider" id="eleveValider" type="button">Valider<\/button>/);
+  assert.match(petit, /function eleveValider\(main\) \{\s*const bouton = document\.getElementById\('eleveValider'\);\s*if \(!bouton \|\| bouton\.disabled\) return;/);
+  // par son identifiant : « Rejouer la série » (écran de fin) porte la même classe
+  assert.doesNotMatch(petit, /body\.eleve-pave \.eleve-valider/);
+  assert.match(petit, /class="eleve-valider" id="eleveRejouer"/);
+});
+
+test("sur ordinateur, le bouton Valider de la carte reste : aucune règle hors du mode pavé ne le cache", () => {
+  const feuille = petit.slice(petit.indexOf("<style>"), petit.indexOf("</style>")).replace(/\/\*[\s\S]*?\*\//g, "");
+  const regles = [...feuille.matchAll(/([^{}]*)\{([^{}]*)\}/g)]
+    .map((m) => m[1].trim())
+    .filter((selecteur) => /eleveValider|\.eleve-valider/.test(selecteur));
+  // les deux règles de couleur d'origine, et la seule règle neuve, sous body.eleve-pave
+  assert.deepEqual(regles, [".eleve-valider", ".eleve-valider:disabled", "body.eleve-pave #eleveValider"]);
+  assert.match(petit, /if \(!window\.MathsGoPaveChiffres \|\| !window\.MathsGoPaveChiffres\.estTactile\(\)\) return null;/);
+});
+
+test("case rouge : la page dit au pavé de remplacer le nombre faux", () => {
+  assert.match(petit, /aRemplacer: champ => \{ const c = champ\.closest\('\.eleve-case'\); return !!\(c && c\.classList\.contains\('eleve-ko'\)\); \}/);
+  // et c'est la saisie qui retire le rouge : le remplacement ne vaut que pour le premier chiffre
+  assert.match(petit, /inp\.addEventListener\('input', \(\) => \{\s*const c = inp\.closest\('\.eleve-case'\);\s*if \(c\) c\.classList\.remove\('eleve-ko'\);/);
+});
+
+test("« Pose les jetons » : consigne courte sur téléphone au pavé seulement, texte complet ailleurs", () => {
+  const bloc = petit.slice(petit.indexOf("function eleveConsigneJetons"), petit.indexOf("function elevePaveObtenir"));
+  assert.match(bloc, /window\.MathsGoPaveChiffres\.estTactile\(\)\s*&& window\.matchMedia && window\.matchMedia\('\(max-width: 599px\)'\)\.matches/);
+  assert.match(bloc, /\? 'Pose les jetons, complète le schéma, puis Valider\.'\s*: 'Pose les jetons sur la carte \(touche pour poser, retouche pour enlever\), complète le schéma, puis Valider\.';/);
+  assert.match(petit, /const consigne = estConstruct\s*\? eleveConsigneJetons\(\)/);
+  // aucune autre consigne ne change
+  assert.match(petit, /: 'Observe la carte et complète le schéma en barres, puis Valider\.';/);
+  // un téléphone couché dépasse 600 px : la consigne complète revient à la rotation
+  assert.match(petit, /if \(consigne && eleveItemCourant && eleveItemCourant\.mode === 'construct'\) consigne\.textContent = eleveConsigneJetons\(\);/);
 });
 
 test("le pavé s'efface quand il n'y a plus rien à saisir, mais la place reste tant qu'une carte est là", () => {

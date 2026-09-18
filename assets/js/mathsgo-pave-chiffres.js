@@ -22,7 +22,10 @@
      if (MathsGoPaveChiffres.estTactile()) {
        const pave = MathsGoPaveChiffres.creer({ surValider: () => valider() });
        pave.brancher(scene.querySelectorAll('.champ'), {
-         zone: champ => champ.closest('.case')   // ce que le doigt touche
+         zone: champ => champ.closest('.case'),  // ce que le doigt touche
+         // facultatif : vrai si la case est marquée fausse — le premier
+         // chiffre tapé y remplace alors le nombre au lieu de s'y ajouter
+         aRemplacer: champ => champ.closest('.case').classList.contains('fausse')
        });
        pave.activerPremierVide();
      }
@@ -149,6 +152,8 @@
     const branches = [];
     let champActif = null;
     let detruit = false;
+    /* fourni par la page à brancher() : vrai si la case est marquée fausse */
+    let predicatRemplacer = null;
 
     function ajouterTouche(texte, sorte, valeur, classe, etiquette) {
       const bouton = doc.createElement("button");
@@ -211,11 +216,23 @@
       if (typeof reglages.surSaisie === "function") reglages.surSaisie(champ);
     }
 
+    function aRemplacer(champ) {
+      try {
+        return !!(predicatRemplacer && predicatRemplacer(champ));
+      } catch (_erreur) {
+        return false;
+      }
+    }
+
+    /* Une case marquée fausse : le premier chiffre REMPLACE le nombre faux au
+       lieu de s'ajouter derrière (« 9 » faux puis « 4 » donne 4, pas 94). La
+       page retire la marque dès la saisie (événement input) : les chiffres
+       suivants s'ajoutent de nouveau, comme dans une case normale. */
     function ecrire(chiffre) {
       const champ = saisissable(champActif) ? champActif : premierVide();
       if (!champ) return;
       if (champ !== champActif) activer(champ);
-      const valeur = valeurDe(champ);
+      const valeur = aRemplacer(champ) ? "" : valeurDe(champ);
       if (valeur.length >= longueurMax(champ)) return;
       champ.value = valeur + chiffre;
       signaler(champ);
@@ -267,6 +284,7 @@
         }
       }
       champActif = null;
+      predicatRemplacer = null;
     }
 
     /* Le doigt touche la ZONE (la case), jamais le champ : c'est ce qui évite
@@ -276,6 +294,7 @@
     function brancher(champs, options2) {
       const reglages2 = options2 || {};
       detacher();
+      predicatRemplacer = typeof reglages2.aRemplacer === "function" ? reglages2.aRemplacer : null;
       const liste = Array.prototype.slice.call(champs || []);
       liste.forEach(function (champ) {
         if (!champ) return;

@@ -504,6 +504,12 @@
     body.eleve-pave .eleve-case { cursor: default; touch-action: manipulation; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
     body.eleve-pave .eleve-case.mg-pave-case-active { outline: 4px solid var(--accent); outline-offset: -4px; box-shadow: inset 0 0 0 999px rgba(37, 99, 235, .08); }
     body.eleve-pave .total-badge.eleve-case.mg-pave-case-active { outline-width: 3px; outline-offset: -3px; }
+    /* Un seul Valider : celui du pavé fait exactement la même action. Deux
+       boutons identiques faisaient hésiter l'élève, et le second coûtait sa
+       hauteur au plateau. Le bouton reste dans la page (la validation le lit),
+       seulement caché ; « Voir la réponse » et « Carte suivante » prennent sa
+       place quand ils apparaissent. */
+    body.eleve-pave #eleveValider { display: none; }
     /* Place serrée (téléphone) : les marges déjà retenues pour les écrans
        courts, afin que le plateau garde de la hauteur au-dessus du pavé. */
     body.eleve-pave-serre.eleve-lien #mainArea { padding-top: 10px; }
@@ -521,7 +527,7 @@
   </style>
 <script defer src="../assets/js/mention-confidentialite.js"></script>
 <script defer src="../assets/js/tool-parent-navigation.js?v=1"></script>
-<script defer src="../assets/js/mathsgo-pave-chiffres.js?v=20260917-1"></script>
+<script defer src="../assets/js/mathsgo-pave-chiffres.js?v=20260918-1"></script>
 </head>
 <body>
 
@@ -2334,10 +2340,24 @@ function elevePastillesHtml() {
    aucune de ces fonctions ne fait quoi que ce soit. */
 let elevePave = null, elevePaveZone = 0, elevePaveLargeur = 0, elevePaveSerre = false;
 /* Le plateau rend les pixels qui manquent pour que la carte tienne, mais
-   jamais au point qu'on ne puisse plus y poser un jeton. Une ligne de message
-   est tenue en réserve : elle apparaît après une validation fausse, et le
-   bouton « Voir la réponse » doit rester au-dessus du pavé. */
-const ELEVE_PLATEAU_MIN = 150, ELEVE_MSG_RESERVE = 24, ELEVE_PAVE_JEU = 10;
+   jamais au point qu'on ne puisse plus y poser un jeton. Une réserve reste
+   libre sous la carte : c'est là que viennent une seconde ligne de message
+   (après une validation fausse) ou, à la 3e erreur, le bouton « Voir la
+   réponse », à la place du Valider caché — il doit rester au-dessus du pavé. */
+const ELEVE_PLATEAU_MIN = 150, ELEVE_RESERVE = 26, ELEVE_PAVE_JEU = 10;
+
+/* Téléphone au pavé (tactile ET moins de 600 px de large) : la consigne de
+   « Pose les jetons » tient en deux lignes au lieu de trois — mesuré de 360 à
+   430 px en Segoe UI, Arial et Verdana — et la ligne gagnée revient au
+   plateau, là où l'élève pose ses jetons. Tablette et ordinateur gardent le
+   texte complet ; aucune autre consigne ne change. */
+function eleveConsigneJetons() {
+    const telephone = !!(window.MathsGoPaveChiffres && window.MathsGoPaveChiffres.estTactile()
+        && window.matchMedia && window.matchMedia('(max-width: 599px)').matches);
+    return telephone
+        ? 'Pose les jetons, complète le schéma, puis Valider.'
+        : 'Pose les jetons sur la carte (touche pour poser, retouche pour enlever), complète le schéma, puis Valider.';
+}
 
 function elevePaveObtenir() {
     if (elevePave) return elevePave;
@@ -2360,6 +2380,9 @@ function elevePaveObtenir() {
         elevePaveMesurer();
         const scene = document.querySelector('.eleve-scene');
         if (!scene) return;
+        /* un téléphone couché dépasse 600 px : la consigne complète revient */
+        const consigne = scene.querySelector('.eleve-consigne');
+        if (consigne && eleveItemCourant && eleveItemCourant.mode === 'construct') consigne.textContent = eleveConsigneJetons();
         elevePaveCalerCarte(scene);
         /* enchaînés explicitement : tous deux se calent sur la taille du plateau */
         if (eleveItemCourant && eleveItemCourant.mode === 'construct') eleveElargirScene(scene);
@@ -2393,7 +2416,7 @@ function elevePaveCalerCarte(scene) {
     const dispo = elevePaveZone - main.getBoundingClientRect().top
         - (parseFloat(getComputedStyle(main).paddingTop) || 0) - ELEVE_PAVE_JEU;
     const plateau = part.getBoundingClientRect().height;
-    const besoin = scene.getBoundingClientRect().height + ELEVE_MSG_RESERVE;
+    const besoin = scene.getBoundingClientRect().height + ELEVE_RESERVE;
     if (!plateau || besoin <= dispo) return;
     const cible = Math.max(ELEVE_PLATEAU_MIN, Math.round(plateau - (besoin - dispo)));
     if (cible >= plateau) return;
@@ -2427,7 +2450,12 @@ function elevePaveActiver(scene) {
     const champs = scene.querySelectorAll('.eleve-input');
     if (!champs.length) return null;
     document.body.classList.add('eleve-pave');
-    pave.brancher(champs, { zone: champ => champ.closest('.eleve-case') });
+    pave.brancher(champs, {
+        zone: champ => champ.closest('.eleve-case'),
+        /* case rouge (validation fausse) : le premier chiffre remplace le nombre
+           faux ; la page retire le rouge à la saisie, la suite s'ajoute */
+        aRemplacer: champ => { const c = champ.closest('.eleve-case'); return !!(c && c.classList.contains('eleve-ko')); }
+    });
     pave.afficher();
     elevePaveMesurer();
     document.body.classList.toggle('eleve-pave-serre', elevePaveSerre);
@@ -2487,7 +2515,7 @@ function renderEleve(main) {
     eleveItemCourant = item;
     eleveJetonsPoses = [];
     const consigne = estConstruct
-        ? 'Pose les jetons sur la carte (touche pour poser, retouche pour enlever), complète le schéma, puis Valider.'
+        ? eleveConsigneJetons() /* texte complet sauf sur un téléphone au pavé */
         : 'Observe la carte et complète le schéma en barres, puis Valider.';
     html += `<div class="eleve-consigne">${consigne}</div>`;
 
