@@ -5130,6 +5130,14 @@ function drawBarModelPartsInGroup(g, cx, topY, total, parts, api){
 
   const minPad = (api && api.minCellPad != null) ? api.minCellPad : 22;
 
+  // Bornes facultatives (projection en deux colonnes). Sans elles, le tableau reste
+  // centré sur cx. Avec minX, il ne passe jamais à gauche de minX : il glisse vers
+  // la droite au lieu de mordre sur le plateau. Avec maxX, s'il dépasse encore, ses
+  // cases rétrécissent : police des cases réduite de 2 en 2 jusqu'à 44, puis, à
+  // défaut, la place est reprise sur ce qui dépasse la largeur minimale des cases.
+  const minX = (api && Number.isFinite(api.minX)) ? api.minX : null;
+  const maxX = (api && Number.isFinite(api.maxX)) ? api.maxX : null;
+
   const mkRect = api.rect;
   const mkLine = api.line;
   const mkText = api.text;
@@ -5141,15 +5149,47 @@ function drawBarModelPartsInGroup(g, cx, topY, total, parts, api){
   let denom = values.reduce((a,b)=>a+b, 0);
   if(!(denom > 0)) denom = (Number(total) || 1);
 
-  const widths = values.map(v => {
-    const prop = baseW * (v / denom);
-    const minW = minCellWidthForNumber(v, fontBottom, minPad);
-    return Math.max(prop, minW);
-  });
+  let cellFontSize = fontBottom;
+  let widths, w, x0, tableCx;
+  const layoutCells = () => {
+    widths = values.map(v => {
+      const prop = baseW * (v / denom);
+      const minW = minCellWidthForNumber(v, cellFontSize, minPad);
+      return Math.max(prop, minW);
+    });
+    w = Math.max(baseW, widths.reduce((a,b)=>a+b, 0));
+    x0 = cx - w/2;
+    tableCx = cx;
+    if(minX != null && x0 < minX){
+      x0 = minX;
+      tableCx = x0 + w/2;
+    }
+  };
+  layoutCells();
+  if(maxX != null){
+    while(x0 + w > maxX && cellFontSize > 44){
+      cellFontSize = Math.max(44, cellFontSize - 2);
+      layoutCells();
+    }
+    if(x0 + w > maxX){
+      const fitW = Math.max(0, maxX - x0);
+      const floors = values.map(v => minCellWidthForNumber(v, cellFontSize, minPad));
+      const floorSum = floors.reduce((a,b)=>a+b, 0);
+      const cellsW = widths.reduce((a,b)=>a+b, 0);
+      const slack = cellsW - floorSum;
+      const excess = cellsW - fitW;
+      widths = (slack >= excess && slack > 0)
+        ? widths.map((cw, i) => floors[i] + (cw - floors[i]) * (1 - excess / slack))
+        : floors.map(f => floorSum > 0 ? f * fitW / floorSum : fitW / floors.length);
+      w = fitW;
+      tableCx = x0 + w/2;
+    }
+  }
+  // Le tableau réellement dessiné, pour caler dessus ce qui l'accompagne.
+  if(api && typeof api.onLayout === "function"){
+    api.onLayout({ x:x0, width:w, centerX:tableCx, cellFontSize });
+  }
 
-  const w = Math.max(baseW, widths.reduce((a,b)=>a+b, 0));
-
-  const x0 = cx - w/2;
   const y0 = topY;
   const ySplit = y0 + hTop;
 
@@ -5158,7 +5198,7 @@ function drawBarModelPartsInGroup(g, cx, topY, total, parts, api){
 
   const totalText = (api && Object.prototype.hasOwnProperty.call(api, "totalTextOverride")) ? api.totalTextOverride : String(total);
   g.appendChild(mkRect({x:x0, y:y0, width:w, height:hTop, fill:"rgba(255,255,255,0)"}));
-  g.appendChild(mkText(cx, y0 + hTop/2, totalText, {
+  g.appendChild(mkText(tableCx, y0 + hTop/2, totalText, {
     "text-anchor":"middle",
     "dominant-baseline":"middle",
     "alignment-baseline":"middle",
@@ -5186,7 +5226,7 @@ function drawBarModelPartsInGroup(g, cx, topY, total, parts, api){
       const fillCol = flagsHidden[i] ? (api.hiddenTextColor || ink) : (api.visibleTextColor || ink);
       
       const isX = textToDisplay === "x" || textToDisplay === "𝑥";
-      const baseFs = Number(fontBottom) || 72;
+      const baseFs = Number(cellFontSize) || 72;
       const xTargetFs = baseFs * 1.2;
       const xMaxFs = Math.max(18, segW * 0.72);
       const fs = String(isX ? Math.min(xTargetFs, xMaxFs) : baseFs);
@@ -5337,6 +5377,12 @@ function renderCard(card, revealState){
   // sembler colle au plateau, et les equations longues (notamment avec ?)
   // ne doivent jamais revenir au-dessus de la situation Splat.
   const abBarCenterX = 1240;
+  // Avec beaucoup de cases (5 taches, un jeton à deux chiffres), le tableau centré
+  // sur abBarCenterX repassait sur le plateau : il reste entre le bord droit réel du
+  // plateau (+ 30) et le bord de la scène.
+  const abTrayRightX = abTrayTranslateX + abTrayScale * (trayCfg.x + trayCfg.w);
+  const abBarMinX = abTrayRightX + 30;
+  const abBarMaxX = 1570;
   const abBarTopY = 260;
   const abEquationCenterX = 1300;
   const abEquationStartY = 525;
@@ -5568,6 +5614,14 @@ function renderCard(card, revealState){
 
   if(isABProjectionLayout && revealState > 0){
     const emptyGroup = el("g", {id:"bottomBarModelAB"});
+    // Quand le tableau a glissé vers la droite, le bouton Résoudre et les lignes
+    // écrites dessous le suivent du même décalage.
+    let abBarShiftX = 0;
+    const abBarBounds = isABTwoColumnLayout ? {
+      minX: abBarMinX,
+      maxX: abBarMaxX,
+      onLayout: bar => { abBarShiftX = bar.centerX - abBarCenterX; }
+    } : {};
     if(card.family === "U"){
       const vis = sumArray(card.visible);
       const unit = card._unit || {};
@@ -5597,10 +5651,11 @@ function renderCard(card, revealState){
         stroke:"#000", strokeWidth:4, greyFill:"rgba(0,0,0,0.10)",
         ink:"var(--ink)", visibleTextColor:"var(--ink)", hiddenTextColor:"var(--ink)", totalTextColor: totalColor,
         textDy:"0.10em", fontTop:70, fontBottom:70,
-        totalTextOverride: revealState === 1 ? "" : String(card.total)
+        totalTextOverride: revealState === 1 ? "" : String(card.total),
+        ...abBarBounds
       });
       if(revealState === 2){
-        drawABEquabarSolveButton(emptyGroup, card, isABTwoColumnLayout ? abSolveButtonX : (800 - barWForSolve/2 - 132), isABTwoColumnLayout ? abSolveButtonY : (bottomAidTyAB + 8));
+        drawABEquabarSolveButton(emptyGroup, card, isABTwoColumnLayout ? abSolveButtonX + abBarShiftX : (800 - barWForSolve/2 - 132), isABTwoColumnLayout ? abSolveButtonY : (bottomAidTyAB + 8));
       }
     }else if(card.family === "N"){
       const visSum = sumArray(card.visible);
@@ -5629,10 +5684,11 @@ function renderCard(card, revealState){
         textDy:"0.10em", fontTop:70, fontBottom:70,
         xTextShiftForX: 0,
         xTextDyForX:"-0.05em",
-        totalTextOverride: revealState === 1 ? "" : String(card.total)
+        totalTextOverride: revealState === 1 ? "" : String(card.total),
+        ...abBarBounds
       });
       if(revealState === 2){
-        drawABEquabarSolveButton(emptyGroup, card, isABTwoColumnLayout ? abSolveButtonX : (800 - barWForSolve/2 - 132), isABTwoColumnLayout ? abSolveButtonY : (bottomAidTyAB + 8));
+        drawABEquabarSolveButton(emptyGroup, card, isABTwoColumnLayout ? abSolveButtonX + abBarShiftX : (800 - barWForSolve/2 - 132), isABTwoColumnLayout ? abSolveButtonY : (bottomAidTyAB + 8));
       }
     }
 
@@ -5658,7 +5714,7 @@ function renderCard(card, revealState){
         if(vis > 0) calcLines++;
         if(tasks > 1) calcLines++;
         let calcY = (isABTwoColumnLayout ? abEquationStartY : (bottomAidTyAB + 30)) - ((calcLines - 1) * 35);
-        const centerX = isABTwoColumnLayout ? abEquationCenterX : (800 + 190 + 240);
+        const centerX = isABTwoColumnLayout ? abEquationCenterX + abBarShiftX : (800 + 190 + 240);
         if (vis > 0) {
           emptyGroup.appendChild(text(centerX - 30, calcY, `${card.total} − ${vis}`, { "text-anchor":"end", "font-size":"42", "fill":"var(--ink)", "font-weight":"700", "dominant-baseline":"middle" }));
           emptyGroup.appendChild(text(centerX, calcY, `=`, { "text-anchor":"middle", "font-size":"42", "fill":"var(--ink)", "font-weight":"700", "dominant-baseline":"middle" }));
@@ -5688,12 +5744,16 @@ function renderCard(card, revealState){
         const resolutionLineCount =
           (visSum > 0 && tasks > 1 ? 1 : 0) +
           (tasks > 1 || (tasks === 1 && visSum > 0) ? 1 : 0);
-        // On reserve des la premiere equation la hauteur de toutes les lignes
-        // de resolution. Les lignes suivantes s'ajoutent dessous sans faire
-        // remonter la premiere au clic suivant.
+        // Les lignes suivantes s'ajoutent dessous sans faire remonter la première
+        // au clic suivant. En deux colonnes, la première ligne reste à
+        // abEquationStartY quel que soit le nombre de lignes : le bloc grandit vers
+        // le bas, où il y a la place. Sinon, on réserve dès la première équation la
+        // hauteur de toutes les lignes de résolution, centrées.
         const finalCalcLines = 1 + resolutionLineCount;
-        let calcY = (isABTwoColumnLayout ? abEquationStartY : (bottomAidTyAB + 30)) - ((finalCalcLines - 1) * (calcGap / 2));
-        const centerX = isABTwoColumnLayout ? abEquationCenterX : (800 + 190 + 240);
+        let calcY = isABTwoColumnLayout
+          ? abEquationStartY
+          : (bottomAidTyAB + 30) - ((finalCalcLines - 1) * (calcGap / 2));
+        const centerX = isABTwoColumnLayout ? abEquationCenterX + abBarShiftX : (800 + 190 + 240);
         const eqGap = 22;
         const unknownTerm = formatCoeffUnknownTerm(tasks, varChar);
         const eqLeft1 = visSum > 0 ? `${visSum} + ${unknownTerm}` : unknownTerm;
