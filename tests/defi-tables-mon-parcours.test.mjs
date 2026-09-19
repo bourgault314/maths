@@ -865,7 +865,7 @@ test("la fiche « Mon parcours des tables » s’imprime depuis l’appli et exi
   assert.match(html, /id="fiche-imprimer" class="primary" type="button">Imprimer ma fiche</);
   // La fonction est appelée, pas passée en écouteur : elle recevrait l'objet
   // Event pour parcours (tests/defi-tables-accueil.test.mjs le détaille).
-  assert.match(html, /window\.addEventListener\("beforeprint", \(\) => renderFiche\(\)\)/);
+  assert.match(html, /window\.addEventListener\("beforeprint", \(\) => renderFiche\(ficheAffichee\)\)/);
   // R5 (Q6) : la fiche vierge n'est plus proposée à l'élève (catalogue et page prof).
   assert.doesNotMatch(html, /fiche_parcours_tables\.pdf/);
   assert.match(html, /src="\.\.\/\.\.\/assets\/img\/qr-defi-tables-parcours\.svg"/);

@@ -115,9 +115,14 @@ test("Ctrl+P remplit la fiche : l’écouteur beforeprint ne passe pas l’évé
   // addEventListener, elle recevait l’objet Event : etatAffichage() lisait alors
   // parcours.tables[2] sur un tables absent et levait une TypeError — la fiche
   // sortait vide pour qui imprimait par Ctrl+P au lieu du bouton.
-  assert.match(html, /addEventListener\("beforeprint", \(\) => renderFiche\(\)\)/,
+  assert.match(html, /addEventListener\("beforeprint", \(\) => renderFiche\(ficheAffichee\)\)/,
     "Ctrl+P remplit la fiche : l'écouteur ne passe pas l'événement à renderFiche");
   assert.doesNotMatch(html, /"beforeprint", renderFiche\)/);
+  // … et il réimprime la fiche AFFICHÉE : dans la vue du professeur
+  // (…#fiche=CODE), un renderFiche() sans source remplissait la feuille avec
+  // le parcours de l'appareil du professeur, pas celui de l'élève ouvert.
+  assert.match(html, /let ficheAffichee = null;/);
+  assert.match(html, /function renderFiche\(source\) \{\s*\n\s*ficheAffichee = source \|\| null;/);
 });
 
 test("plus aucun texte de règle sur les écrans de l’élève en dehors de la notice", () => {

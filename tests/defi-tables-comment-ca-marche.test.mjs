@@ -101,7 +101,7 @@ test("on ne demande le prénom que quand il sert : pas sous un code, pas s'il ex
   // Rouvrir l'écran referme la question restée ouverte.
   assert.match(html, /function openFiche\(\) \{[\s\S]*?fermerPrenomFiche\(\);\s*\n\s*show\("fiche"\);/);
   // Ctrl+P n'a pas changé : c'est beforeprint qui remplit, sans rien demander.
-  assert.match(html, /window\.addEventListener\("beforeprint", \(\) => renderFiche\(\)\);/);
+  assert.match(html, /window\.addEventListener\("beforeprint", \(\) => renderFiche\(ficheAffichee\)\);/);
 });
 
 test("la fiche d'un élève sous code porte son prénom et sa classe, la vue du professeur est intacte", () => {
