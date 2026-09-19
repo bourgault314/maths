@@ -135,6 +135,27 @@ test("Splat affiche Petit Splat, Splat classique, puis Splat équations", () => 
   assert.equal(collectionCardRank("", "outils/splat.html"), Infinity, "l’ordre spécial reste limité à la collection Splat.");
 });
 
+// « Prêts à imprimer » de la collection Splat, trié comme à l’écran : la clé de cardSortKey
+// (rang propre à la collection, sinon celui de la classification) passée au vrai comparateur.
+test("dans la collection Splat, le livret du monde 1 passe avant celui du monde 2", () => {
+  const imprimer = Array.from(catalogue.resources)
+    .filter((resource) => resource.status === "published")
+    .filter((resource) => {
+      const classification = classifications[resource.path] || {};
+      return (classification.collections || []).includes("splat") && classification.primaryGroup === "imprimer";
+    })
+    .map((resource) => {
+      const rang = collectionCardRank("splat", resource.path);
+      return { path: resource.path, title: resource.title, rang: Number.isFinite(rang) ? rang : classifications[resource.path].rang };
+    })
+    .sort(compareCards)
+    .map((carte) => carte.path);
+  assert.deepEqual(imprimer, [
+    "outils/livrets_petit_splat.html",
+    "outils/livrets_splat_classique.html"
+  ], "L’alphabet mettrait « Livret Splat! classique » (monde 2) devant « Livrets Petit Splat! » (monde 1).");
+});
+
 test("les niveaux numérotés se rangent dans l’ordre des nombres", () => {
   const cartes = [
     { title: "Générateur Rekenrek — doubles, niveau 10" },
