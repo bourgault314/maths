@@ -508,7 +508,7 @@
     .sheet{
       page-break-after:always;
       height:calc(297mm - 16mm);
-      padding:4mm 5mm 2mm;
+      padding:4mm 5mm 0.5mm;
       box-sizing:border-box;
       display:flex;
       flex-direction:column;
@@ -516,12 +516,19 @@
     }
     .sheet:last-child{page-break-after:auto;break-after:auto;}
     .grid{flex:1 1 auto;min-height:0;display:grid;grid-template-columns:repeat(2, 1fr);gap:5mm}
-    .pCard{border:1px solid #ddd;border-radius:6mm;padding:2mm;box-sizing:border-box;min-height:0;overflow:hidden}
+    /* Contour de case gris foncé : le gris clair d'avant disparaissait à la photocopie. */
+    .pCard{border:1.5px solid #334155;border-radius:6mm;padding:2mm;box-sizing:border-box;min-height:0;overflow:hidden}
     .pCard svg{width:100%;height:100%;display:block;margin:0 auto}
     .pCard.empty{border:none;background:transparent;padding:0;min-height:0}
 
     /* 4/page : format habituel en portrait, 2 x 2. */
     .printArea.print-4up .grid{grid-template-columns:repeat(2, 1fr);grid-template-rows:repeat(2,minmax(0,1fr));gap:5mm}
+
+    /* 6/page : énoncé seul, 2 x 3. La carte ne dessine que le plateau (viewBox 1600×1000),
+       à 80 % de la largeur de la case et centrée ; le bas de la case reste blanc pour
+       que l'élève y dessine son tableau et écrive son opération. */
+    .printArea.print-6up .grid{grid-template-columns:repeat(2, 1fr);grid-template-rows:repeat(3,minmax(0,1fr));gap:4mm}
+    .printArea.print-6up .pCard svg{width:80%;height:auto;margin:0 auto}
 
     /* 1/page : format portrait, une grande carte par page. */
     .printArea.print-1up .grid{grid-template-columns:1fr;grid-template-rows:minmax(0,1fr);gap:0;align-items:stretch}
@@ -540,7 +547,7 @@
     }
 
     /* 2/page : format paysage, deux grandes cartes côte à côte. */
-    .printArea.print-2up .sheet{height:calc(210mm - 16mm);padding:3mm 4mm 2mm}
+    .printArea.print-2up .sheet{height:calc(210mm - 16mm);padding:3mm 4mm 0.5mm}
     .printArea.print-2up .grid{
       grid-template-columns:repeat(2, minmax(0, 1fr));
       grid-template-rows:minmax(0,1fr);
@@ -570,15 +577,16 @@
       margin-bottom:2mm;
       padding:2mm 4mm;
       box-sizing:border-box;
-      background:linear-gradient(90deg,#ff9815 0%,#ffc46d 58%,#fff4dc 100%);
+      /* Bleu du monde 2 (carte des mondes) ; titre blanc, lisible aussi en noir et blanc. */
+      background:linear-gradient(90deg,#0b67b2 0%,#3d8fd1 45%,#e6f1fb 100%);
       overflow:hidden;
       -webkit-print-color-adjust:exact;
       print-color-adjust:exact;
       pointer-events:none;
     }
     .print-page-title-block{min-width:0;display:flex;align-items:center;gap:4mm;line-height:1}
-    .print-page-title{font-size:17pt;font-weight:950;color:#063b7a;white-space:nowrap}
-    .print-page-subtitle{font-size:11pt;font-weight:850;color:#111827;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .print-page-title{font-size:17pt;font-weight:950;color:#fff;white-space:nowrap}
+    .print-page-subtitle{font-size:11pt;font-weight:850;color:#fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
     .print-page-logos{display:flex;align-items:center;justify-content:flex-end;gap:3mm;height:100%;flex:0 0 auto}
     .print-page-logo-irem{
       height:12mm;
@@ -601,7 +609,8 @@
     }
     .print-page-instruction strong{font-weight:900}
     .print-page-instruction-note{margin-left:2mm;color:#475467;font-size:8.7pt;font-weight:700}
-    .print-page-footer{flex:0 0 3.5mm;margin-top:1.2mm;text-align:center;color:#98a2b3;font-size:6pt;font-weight:650;line-height:1}
+    /* Pied : gris moyen et 7 pt pour rester lisible en photocopie, 3 mm sous les cartes. */
+    .print-page-footer{flex:0 0 3.5mm;margin-top:3mm;text-align:center;color:#64748b;font-size:7pt;font-weight:650;line-height:1}
     .printArea.print-2up .print-page-header{flex-basis:14mm;margin-bottom:1.5mm;padding:1.5mm 3mm}
     .printArea.print-2up .print-page-title{font-size:15pt}
     .printArea.print-2up .print-page-subtitle{font-size:9.5pt}
@@ -1263,7 +1272,8 @@
       <div class="row printGoRow" style="flex-wrap:nowrap; gap:8px; align-items:flex-end;">
         <div style="flex:0 0 104px; min-width:0">
           <label for="printCardsPerPage">Pages</label>
-          <select id="printCardsPerPage" title="Nombre de cartes par page">
+          <select id="printCardsPerPage" title="Nombre de cartes par page (6/page : énoncé seul, le plateau et de la place pour chercher)">
+            <option value="6">6/page</option>
             <option value="4" selected>4/page</option>
             <option value="2">2/page</option>
             <option value="1">1/page</option>
@@ -1772,7 +1782,9 @@ function syncPrintSummary(){
   const perPageEl = printCardsPerPageEl || document.getElementById("printCardsPerPage");
   if(!out || !sel) return;
   const plan = getPrintPlan();
-  const perPage = perPageEl ? perPageEl.value : "4";
+  /* le nombre réellement imprimé : « 6/page » ne vaut que pour l'énoncé seul */
+  const perPage = String(getPrintCardsPerPage());
+  const sixRefuse = perPageEl && perPageEl.value === "6" && perPage !== "6";
   const kind = classicWorksheetKind(activityEl ? activityEl.value : "");
   const nom = { statement:"l’énoncé", worksheet: kind === "aid" ? "l’aide" : "le tableau à remplir", correction:"la correction" };
   let msg;
@@ -1785,7 +1797,8 @@ function syncPrintSummary(){
   }else{
     msg = "La correction seule, rien au dos.";
   }
-  out.textContent = msg + " " + perPage + " carte" + (perPage === "1" ? "" : "s") + " par page.";
+  out.textContent = msg + " " + perPage + " carte" + (perPage === "1" ? "" : "s") + " par page."
+    + (sixRefuse ? " (6/page vaut pour l’énoncé seul.)" : "");
 }
 
 function getSeedForCurrentMode(){
@@ -2572,7 +2585,9 @@ function getTrayConfig(mode){
 
 function getPrintTrayConfig(mode){
   const tray = getTrayConfig(mode);
-  const offsetY = tray.isHigh ? 35 : 0;
+  /* À l'impression, le grand plateau descend pour laisser du blanc sous la case
+     TOTAL (à 35 elle touchait le cadre du plateau, devenu foncé le 19/09). */
+  const offsetY = tray.isHigh ? 60 : 0;
   return {...tray, y:tray.y + offsetY, offsetY};
 }
 
@@ -6858,9 +6873,11 @@ function renderCardIntoSvg(targetSvg, card, printMode){
   const trayY = printTray.y;
   const trayH = printTray.h;
 
+  // Plateau imprimé : fond blanc, contour gris foncé (le gris clair disparaissait
+  // en noir et blanc). L'écran garde son plateau translucide.
   targetSvg.appendChild(tEl("rect",{
     x:printTray.x, y:trayY, width:printTray.w, height:trayH,
-    rx:30, fill:"rgba(0,0,0,0.02)", stroke:"rgba(0,0,0,0.15)", "stroke-width":"6"
+    rx:30, fill:"#fff", stroke:"#334155", "stroke-width":"8"
   }));
 
   let tx = 800, ty = 92;
@@ -6966,7 +6983,9 @@ function renderCardIntoSvg(targetSvg, card, printMode){
         targetSvg.appendChild(tEl("circle",{cx, cy, r:beadR, fill:c.fill, stroke:c.stroke,"stroke-width":String(strokeWidth)}));
         targetSvg.appendChild(tText(cx, cy, value > 0 ? "+1" : "−1", {"text-anchor":"middle","dominant-baseline":"middle","font-size":String(Math.round(beadR*0.86)),"fill":"#000","font-weight":"900"}));
       }else{
-        targetSvg.appendChild(tEl("circle",{cx, cy, r:beadR, fill:hidden ? "rgba(0,0,0,0.05)" : "rgba(106,167,255,0.20)", stroke:hidden ? "rgba(0,0,0,0.18)" : "rgba(106,167,255,0.55)","stroke-width":String(strokeWidth)}));
+        // Jetons visibles imprimés en bleu franc, comme Petit SPLAT! (lisibles en
+        // noir et blanc) ; les jetons cachés de la correction restent gris.
+        targetSvg.appendChild(tEl("circle",{cx, cy, r:beadR, fill:hidden ? "rgba(0,0,0,0.05)" : "#2563eb", stroke:hidden ? "rgba(0,0,0,0.18)" : "#1e40af","stroke-width":String(strokeWidth)}));
       }
     };
     for(let i=0;i<card.hidden.length;i++){
@@ -7021,7 +7040,7 @@ function renderCardIntoSvg(targetSvg, card, printMode){
         drawBarModelPartsInGroup(gBM, 800, currentY, card.total, partsBlank, {
           rect:(a)=>tEl("rect", a), line:(a)=>tEl("line", a), text:(x,y,t,a)=>tText(x,y,t,a),
           w: fullW, hTop: 100, hBottom: 100, stroke:"#000", strokeWidth:5, greyFill:"rgba(0,0,0,0.10)", ink:"#000",
-          visibleTextColor:"rgb(106,167,255)", hiddenTextColor:"#000", totalTextColor: totalColor, fontTop:90, fontBottom:90, minCellPad: 24,
+          visibleTextColor:"#2563eb", hiddenTextColor:"#000", totalTextColor: totalColor, fontTop:90, fontBottom:90, minCellPad: 24,
           totalTextOverride: ""
         });
       } else {
@@ -7031,7 +7050,7 @@ function renderCardIntoSvg(targetSvg, card, printMode){
         drawBarModelPartsInGroup(gBM, 800, currentY, card.total, parts1, {
           rect:(a)=>tEl("rect", a), line:(a)=>tEl("line", a), text:(x,y,t,a)=>tText(x,y,t,a),
           w: fullW, hTop: 100, hBottom: 100, stroke:"#000", strokeWidth:5, greyFill:"rgba(0,0,0,0.10)", ink:"#000",
-          visibleTextColor:"rgb(106,167,255)", hiddenTextColor:"#000", totalTextColor: totalColor, fontTop:90, fontBottom:90, minCellPad: 24
+          visibleTextColor:"#2563eb", hiddenTextColor:"#000", totalTextColor: totalColor, fontTop:90, fontBottom:90, minCellPad: 24
         });
         currentY += 260;
 
@@ -7046,7 +7065,7 @@ function renderCardIntoSvg(targetSvg, card, printMode){
                 drawBarModelPartsInGroup(gBM, cxHid, currentY, totalHid, parts2, {
                   rect:(a)=>tEl("rect", a), line:(a)=>tEl("line", a), text:(x,y,t,a)=>tText(x,y,t,a),
                   w: hidW, hTop: 100, hBottom: 100, stroke:"#000", strokeWidth:5, greyFill:"rgba(0,0,0,0.10)", ink:"#000",
-                  visibleTextColor:"rgb(106,167,255)", hiddenTextColor:"#000", totalTextColor: totalColor, fontTop:90, fontBottom:90, minCellPad: 24
+                  visibleTextColor:"#2563eb", hiddenTextColor:"#000", totalTextColor: totalColor, fontTop:90, fontBottom:90, minCellPad: 24
                 });
                 currentY += 260;
             }
@@ -7064,7 +7083,7 @@ function renderCardIntoSvg(targetSvg, card, printMode){
             drawBarModelPartsInGroup(gBM, cxUnit, currentY, hiddenSums[0], parts3, {
               rect:(a)=>tEl("rect", a), line:(a)=>tEl("line", a), text:(x,y,t,a)=>tText(x,y,t,a),
               w: unitW, hTop: 100, hBottom: 100, stroke:"#000", strokeWidth:5, greyFill:"rgba(0,0,0,0.10)", ink:"#000",
-              visibleTextColor:"rgb(106,167,255)", hiddenTextColor:"#000", totalTextColor: totalColor, fontTop:90, fontBottom:90, minCellPad: 24
+              visibleTextColor:"#2563eb", hiddenTextColor:"#000", totalTextColor: totalColor, fontTop:90, fontBottom:90, minCellPad: 24
             });
             currentY += 260;
         } else if (tasks === 1 && vis > 0) {
@@ -7074,7 +7093,7 @@ function renderCardIntoSvg(targetSvg, card, printMode){
             drawBarModelPartsInGroup(gBM, cxUnit, currentY, hiddenSums[0], parts3, {
               rect:(a)=>tEl("rect", a), line:(a)=>tEl("line", a), text:(x,y,t,a)=>tText(x,y,t,a),
               w: hidW, hTop: 100, hBottom: 100, stroke:"#000", strokeWidth:5, greyFill:"rgba(0,0,0,0.10)", ink:"#000",
-              visibleTextColor:"rgb(106,167,255)", hiddenTextColor:"#000", totalTextColor: totalColor, fontTop:90, fontBottom:90, minCellPad: 24
+              visibleTextColor:"#2563eb", hiddenTextColor:"#000", totalTextColor: totalColor, fontTop:90, fontBottom:90, minCellPad: 24
             });
             currentY += 260;
         }
@@ -7086,7 +7105,7 @@ function renderCardIntoSvg(targetSvg, card, printMode){
         drawBarModelPartsInGroup(gBM, 800, currentY, card.total, partsFinal, {
           rect:(a)=>tEl("rect", a), line:(a)=>tEl("line", a), text:(x,y,t,a)=>tText(x,y,t,a),
           w: fullW, hTop: 100, hBottom: 100, stroke:"#000", strokeWidth:5, greyFill:"rgba(0,0,0,0.10)", ink:"#000",
-          visibleTextColor:"rgb(106,167,255)", hiddenTextColor:"#000", totalTextColor: totalColor, fontTop:90, fontBottom:90, minCellPad: 24
+          visibleTextColor:"#2563eb", hiddenTextColor:"#000", totalTextColor: totalColor, fontTop:90, fontBottom:90, minCellPad: 24
         });
       }
 
@@ -7109,13 +7128,19 @@ function renderCardIntoSvg(targetSvg, card, printMode){
       
       let f = "rgba(0,0,0,0.06)";
       let s = "rgba(0,0,0,0.22)";
+      let sw = "5";
       if(useTokens){
+          // B± : le jeton caché dévoilé suit la même règle imprimée que les visibles —
+          // fond blanc, anneau vert/rouge opaque (décision du 19/09).
           const c = beadColorForValue(card.hidden[i]);
-          f = c.fill; s = c.stroke;
+          f = "#fff"; s = String(c.stroke).replace(/,\s*[\d.]+\)$/, ", 1)"); sw = "7";
       }
       
-      targetSvg.appendChild(tEl("circle",{cx, cy, r:beadR, fill:f, stroke:s,"stroke-width":"5"}));
-      targetSvg.appendChild(tText(cx, cy, String(card.hidden[i]), {"text-anchor":"middle","dominant-baseline":"middle","alignment-baseline":"middle","dy":"0.06em","font-size":String(font),"fill":"#000","font-weight":"900"}));
+      // Au-delà de 2 chiffres, le nombre garde sa taille d'avant (0,9 × le rayon) :
+      // à 1,02 × le rayon, un nombre comme « 446 » touchait l'anneau.
+      const fontH = (useTokens && String(Math.abs(card.hidden[i])).length <= 2) ? Math.round(beadR*1.02) : font;
+      targetSvg.appendChild(tEl("circle",{cx, cy, r:beadR, fill:f, stroke:s,"stroke-width":sw}));
+      targetSvg.appendChild(tText(cx, cy, String(card.hidden[i]), {"text-anchor":"middle","dominant-baseline":"middle","alignment-baseline":"middle","dy":"0.06em","font-size":String(fontH),"fill":"#000","font-weight":"900"}));
     }
 
     const splats = card._splats || [{cx:820, cy:610, r:220}];
@@ -7169,9 +7194,17 @@ function renderCardIntoSvg(targetSvg, card, printMode){
       );
       const {cx, cy} = tokenPos;
 
+      // Jetons numérotés imprimés (B et B±) : fond blanc, anneau de la couleur du jeton
+      // (opaque) et chiffre à 100 % du rayon, pour que le nombre reste noir sur blanc en
+      // photocopie tout en gardant le code couleur — vert/rouge du signe compris — en
+      // couleur (décision du 19/09). Le rayon ne change pas ; l'écran ne change pas.
       const colV = beadColorForValue(card.visible[i]);
-      targetSvg.appendChild(tEl("circle",{cx, cy, r:beadR, fill:colV.fill, stroke:colV.stroke,"stroke-width":"5"}));
-      targetSvg.appendChild(tText(cx, cy, String(card.visible[i]), {"text-anchor":"middle","dominant-baseline":"middle","alignment-baseline":"middle","dy":"0.06em","font-size":String(font),"fill":"#000","font-weight":"900"}));
+      const ringV = String(colV.stroke).replace(/,\s*[\d.]+\)$/, ", 1)");
+      // Au-delà de 2 chiffres (réglages avancés, totaux au-delà de 100), le nombre garde
+      // sa taille d'avant (0,9 × le rayon) : à 1,02 × le rayon, « 446 » touchait l'anneau.
+      const fontV = String(Math.abs(card.visible[i])).length > 2 ? font : Math.round(beadR*1.02);
+      targetSvg.appendChild(tEl("circle",{cx, cy, r:beadR, fill:"#fff", stroke:ringV,"stroke-width":"7"}));
+      targetSvg.appendChild(tText(cx, cy, String(card.visible[i]), {"text-anchor":"middle","dominant-baseline":"middle","alignment-baseline":"middle","dy":"0.06em","font-size":String(fontV),"fill":"#000","font-weight":"900"}));
     }
 
     if(card.family === "NPM" && (printMode === "worksheet" || printMode === "correction")){
@@ -7459,6 +7492,12 @@ function getPrintCardsPerPage(){
   const v = el ? String(el.value || "4") : "4";
   if(v === "1") return 1;
   if(v === "2") return 2;
+  if(v === "6"){
+    /* 6/page n'imprime que le plateau : dès qu'il y a un tableau ou une correction
+       (au recto ou au verso), la carte haute reprend ses 4 par page. */
+    const plan = getPrintPlan();
+    return (plan.recto === "statement" && !plan.verso) ? 6 : 4;
+  }
   return 4;
 }
 
@@ -7491,10 +7530,12 @@ function printSheet(){
   const plan = getPrintPlan();
   const printArea = document.getElementById("printArea");
   const perSheet = getPrintCardsPerPage();
-  const layoutClass = perSheet === 1 ? "print-1up" : (perSheet === 2 ? "print-2up" : "print-4up");
+  const layoutClass = perSheet === 1 ? "print-1up" : (perSheet === 2 ? "print-2up" : (perSheet === 6 ? "print-6up" : "print-4up"));
+  /* 6/page : le plateau seul (1600×1000) ; sinon la carte haute avec la place du tableau. */
+  const cardViewBox = perSheet === 6 ? "0 0 1600 1000" : "0 0 1600 2200";
 
   syncDynamicPrintPageStyle(perSheet);
-  printArea.classList.remove("print-1up", "print-2up", "print-4up");
+  printArea.classList.remove("print-1up", "print-2up", "print-4up", "print-6up");
   printArea.classList.add(layoutClass);
   printArea.innerHTML = "";
 
@@ -7514,8 +7555,8 @@ function printSheet(){
       const card = slotCards[i] || null;
       if(card){
         const sv = document.createElementNS("http://www.w3.org/2000/svg","svg");
-        sv.setAttribute("viewBox","0 0 1600 2200");
-        sv.style.width = "100%";
+        sv.setAttribute("viewBox", cardViewBox);
+        sv.style.width = perSheet === 6 ? "80%" : "100%";
         renderCardIntoSvg(sv, card, mode);
         holder.appendChild(sv);
       } else {

@@ -244,7 +244,9 @@ const PS="/outils/splat_tache_barre.html", SC="/splat/classique/", SE="/splat/eq
 const M2A1="mode=U&equation=X_PLUS_A_EQ_B&tasksMin=1&tasksMax=1&visibleMax=15&hiddenMax=10&totalMin=1&totalMax=25&cards=4&seed=974&unknown=question";
 const M2A2="mode=U&equation=AX_EQ_B&tasksMin=2&tasksMax=5&hiddenMax=10&totalMin=5&totalMax=25&cards=4&seed=477&unknown=question";
 const M2A3="mode=U&equation=AX_PLUS_C_EQ_B&tasksMin=2&tasksMax=5&visibleMax=15&hiddenMax=10&totalMin=5&totalMax=25&cards=4&seed=478&unknown=question";
-const FICHE="&print=statement&layout=4&imprimer=1&title=";
+/* Fiches du monde 2 : énoncé seul, 6 cartes par page (le plateau et, dessous, de la
+   place pour dessiner le tableau et écrire l'opération). */
+const FICHE="&print=statement&layout=6&imprimer=1&title=";
 const MONDES=[
  {cls:"m1",actif:true,nom:"Petit SPLAT!",desc:"Le tout, les parties… et les premières taches ! Complète les schémas en barres : ici, c'est toi qui réponds et la page vérifie.",
   etapes:[
@@ -295,13 +297,13 @@ const MONDES=[
     eqs:["𝑥 + 15 = 33", "𝑥 + 6 = 49", "𝑥 + 9 = 44", "𝑥 + 24 = 48", "𝑥 + 13 = 33", "𝑥 + 11 = 37", "𝑥 + 38 = 40", "𝑥 + 30 = 43", "𝑥 + 13 = 40", "𝑥 + 10 = 33"],
     j:SC+"?mode=N&equation=X_PLUS_A_EQ_B&cards=10&seed=347&unknown=question&eleve=1&parcours=m2e4",
     jp:SC+"?mode=N&equation=X_PLUS_A_EQ_B&cards=10&seed=347&unknown=question",
-    f:SC+"?mode=N&equation=X_PLUS_A_EQ_B&cards=10&seed=347&unknown=question&print=worksheet&imprimer=1"},
+    f:SC+"?mode=N&equation=X_PLUS_A_EQ_B&cards=10&seed=347&unknown=question&print=statement&layout=6&imprimer=1"},
    {t:"Paquets : le défi",fo:"a × x + c = b",o:"Paquets, taches et jetons : le grand mélange du monde 2.",
     p:"m2e5",
     eqs:["3𝑥 + 27 = 36", "5𝑥 + 28 = 38", "5𝑥 + 22 = 32", "2𝑥 + 14 = 42", "3𝑥 + 15 = 27", "4𝑥 + 4 = 36", "3𝑥 + 9 = 21", "4𝑥 + 17 = 41", "3𝑥 + 31 = 43", "3𝑥 + 37 = 40"],
     j:SC+"?mode=N&equation=AX_PLUS_C_EQ_B&tasksMax=5&cards=10&seed=18&unknown=question&eleve=1&parcours=m2e5",
     jp:SC+"?mode=N&equation=AX_PLUS_C_EQ_B&tasksMax=5&cards=10&seed=18&unknown=question",
-    f:SC+"?mode=N&equation=AX_PLUS_C_EQ_B&tasksMax=5&cards=10&seed=18&unknown=question&print=worksheet&imprimer=1"}]},
+    f:SC+"?mode=N&equation=AX_PLUS_C_EQ_B&tasksMax=5&cards=10&seed=18&unknown=question&print=statement&layout=6&imprimer=1"}]},
  {cls:"m3",actif:true,nom:"SPLAT! Équations",desc:"Le grand jeu : l'équation s'affiche, et c'est toi qui résous sur le plateau d'ÉquaSplat — enlève, fusionne, partage, jusqu'à trouver la valeur cachée.",
   etapes:[
    {t:"Les deux plateaux",fo:"a × x + b = c",o:"Retrouve dans le tableau ce que contient chaque plateau.",
