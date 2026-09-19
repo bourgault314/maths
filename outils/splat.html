@@ -736,7 +736,12 @@
   .eleveCase.ko{animation:eleveShake .3s}
   .eleveCase.ko input.eleveChamp{background:#fee2e2;color:#b91c1c}
   @keyframes eleveShake{0%,100%{transform:translateX(0)}25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
-  .eleveMiniTache{position:absolute;left:6px;top:5px;width:22px;height:16px;opacity:.8;pointer-events:none}
+  /* La mini-tache se serre dans le coin haut-gauche, au-dessus de la ligne des
+     chiffres (règle de Petit Splat, PR #772) : dans une case tache étroite
+     (téléphone, tablette, petite fenêtre) elle mordait sur le nombre. Les
+     chiffres, eux, restent centrés. L'écran d'ordinateur garde sa taille,
+     plus bas : ses cases de 66 px n'avaient pas ce défaut. */
+  .eleveMiniTache{position:absolute;left:2px;top:2px;width:14px;height:10px;opacity:.8;pointer-events:none}
   .eleveActions{display:flex;justify-content:center;gap:10px;margin-top:14px}
   .eleveActions button{font:inherit;font-weight:900;border:none;border-radius:12px;padding:12px 24px;min-height:48px;cursor:pointer;background:#2563eb;color:#fff}
   .eleveActions button:disabled{opacity:.45;cursor:default}
@@ -746,6 +751,7 @@
   @media (min-width:1000px) and (min-height:700px){
     body.eleve-mode #svgWrap{height:min(46vh,520px)}
     body.eleve-mode .eleveCase{min-height:66px;font-size:32px}
+    body.eleve-mode .eleveMiniTache{left:6px;top:5px;width:22px;height:16px}
     body.eleve-mode .eleveConsigne{font-size:17px;margin:2px 0 10px}
     body.eleve-mode .eleveTete{font-size:21px;gap:10px} /* les pastilles ne touchent plus le compteur */
     body.eleve-mode .eleveTete a.eleveMondes{font-size:15px;padding:5px 11px}
@@ -767,8 +773,47 @@
   .eleveFin .finAction button{font:inherit;font-weight:900;font-size:19px;border:none;border-radius:14px;padding:15px 30px;min-height:54px;cursor:pointer;background:#16a34a;color:#fff;box-shadow:0 4px 0 #15803d}
   .eleveFin .finSorties{display:flex;justify-content:center;gap:22px;flex-wrap:wrap}
   .eleveFin .finSorties button, .eleveFin .finSorties a{font:inherit;font-weight:700;font-size:14px;color:#64748b;background:none;border:none;padding:6px 4px;cursor:pointer;text-decoration:underline;text-underline-offset:3px}
+
+  /* ===== Appareil tactile : le pavé de chiffres de la page (?eleve=1) =====
+     Toucher une case ouvrait le clavier du système : la zone visible tombait
+     de moitié et iOS faisait défiler la page vers la case touchée, donc le
+     plateau sautait d'une case à l'autre. Le pavé dessiné dans la page
+     (assets/js/mathsgo-pave-chiffres.js, le même que Petit Splat) le remplace,
+     et la carte se dessine dans la place qui reste au-dessus de lui.
+     Rien de ce bloc ne s'applique sur ordinateur : la classe eleve-pave
+     n'est posée que si (pointer: coarse) est vrai. */
+  /* la place du pavé est rendue par la page, pour que rien ne passe dessous */
+  body.eleve-pave .wrap{padding-bottom:calc(var(--pave-h, 0px) + 10px)}
+  /* le doigt touche la case, jamais le champ : aucun focus, donc aucun
+     clavier système et aucun défilement imposé */
+  body.eleve-pave input.eleveChamp{pointer-events:none}
+  body.eleve-pave .eleveCase{cursor:default;touch-action:manipulation;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+  body.eleve-pave .eleveCase.mg-pave-case-active{outline:4px solid #2563eb;outline-offset:-4px;box-shadow:inset 0 0 0 999px rgba(37,99,235,.08)}
+  /* Un seul Valider : celui du pavé fait exactement la même action. Le bouton
+     reste dans la page (la validation le lit), seulement caché ; « Voir la
+     réponse » et « Carte suivante » prennent sa place quand ils apparaissent. */
+  body.eleve-pave #eleveValider{display:none}
+  /* La règle « * » de cette page (police système sur chaque élément) prenait
+     la grille du pavé, et les touches en héritaient : le pavé reprend la
+     police arrondie qu'il a dans Petit Splat et Défi tables. */
+  body.eleve-pave .mg-pave__grille{font-family:inherit}
+  /* La mention « Sans cookie ni traceur » (assets/js/mention-confidentialite.js)
+     se pose sous la page, au-dessus de tout : elle se dessinait par-dessus la
+     rangée Effacer / Valider du pavé. Elle attend la fin de la série, comme dans
+     la vue élève de Petit Splat, qui ne la montre pas. */
+  body.eleve-pave .mg-mention-slot{display:none}
+  /* Place serrée (téléphone : moins de 700 px au-dessus du pavé) : les blancs
+     du HAUT de la carte maigrissent, et les pixels gagnés reviennent au
+     plateau. Ceux du bas restent : c'est là que viennent le message et
+     « Voir la réponse ». */
+  body.eleve-pave-serre .cardbox{padding-top:6px}
+  body.eleve-pave-serre #eleveTeteHaut{margin-top:2px}
+  body.eleve-pave-serre .eleveConsigne{margin-bottom:6px}
 </style>
 <script defer src="../assets/js/mention-confidentialite.js"></script>
+<!-- Sans « defer » : la page dessine sa première carte pendant le chargement,
+     le pavé doit déjà exister à ce moment-là. -->
+<script src="../assets/js/mathsgo-pave-chiffres.js?v=20260918-1"></script>
 </head>
 
 <body class="light">
@@ -1860,6 +1905,10 @@ function applyShareControl(params, name, el){
   else setNumberFromShare(params, name, el);
 }
 
+/* Les réglages qu'une adresse partagée peut porter. Liste commune : elle sert
+   aussi à l'empreinte de la série élève (eleveSignatureSerie). */
+const sharedNames = ["mode", "seed", "cards", "equation", "tasksMin", "tasksMax", "visibleMin", "visibleMax", "hidden", "hiddenMax", "totalMin", "totalMax", "splats", "clues", "structure", "mul", "div", "add", "sub", "deltaMax", "operation", "beadMax", "opposites", "colors", "unknown", "print", "duplex", "layout", "title", "eleve", "parcours", "imprimer", "suite"];
+
 function loadSharedConfiguration(){
   const params = new URLSearchParams(window.location.search);
   eleveActif = params.get("eleve") === "1";
@@ -1878,7 +1927,6 @@ function loadSharedConfiguration(){
     eleveSuite = String(params.get("suite") || "")
       .split(";").map(part => part.trim()).filter(Boolean).slice(0, 5);
   }
-  const sharedNames = ["mode", "seed", "cards", "equation", "tasksMin", "tasksMax", "visibleMin", "visibleMax", "hidden", "hiddenMax", "totalMin", "totalMax", "splats", "clues", "structure", "mul", "div", "add", "sub", "deltaMax", "operation", "beadMax", "opposites", "colors", "unknown", "print", "duplex", "layout", "title", "eleve", "parcours", "imprimer", "suite"];
   if(!sharedNames.some(name => params.has(name))) return false;
   appliquerConfiguration(params);
   return true;
@@ -7815,10 +7863,13 @@ function eleveEnregistrerReussite(sansFaute, total){
   }catch(_e){ /* stockage indisponible : le jeu reste jouable */ }
 }
 
+/* Le total et les jetons visibles se remplissent dans une case VIDE, comme sur
+   les fiches imprimées ; seule la case d'une tache garde son « ? » : c'est
+   l'inconnue, ce que cache la tache (décision du 19/09/2026). */
 function eleveCaseHtml(classe, attendu, largeur, avecTache){
   return `<div class="eleveCase ${classe}" style="flex:${largeur} 1 0" data-attendu="${attendu}">` +
     (avecTache ? ELEVE_TACHE_MINI : "") +
-    `<input class="eleveChamp" type="text" inputmode="numeric" maxlength="3" autocomplete="off" placeholder="?"></div>`;
+    `<input class="eleveChamp" type="text" inputmode="numeric" maxlength="3" autocomplete="off"${avecTache ? ' placeholder="?"' : ""}></div>`;
 }
 
 /* Une pastille par carte de la série : verte = réussie du premier coup,
@@ -7838,6 +7889,151 @@ function elevePastillesHtml(){
   }
   const faites = Math.min(eleveResultats.length, eleveSerie.length);
   return `<span class="elevePastilles" role="img" aria-label="${faites} carte${faites > 1 ? "s" : ""} faite${faites > 1 ? "s" : ""} sur ${eleveSerie.length}">${out}</span>`;
+}
+
+/* ===== Pavé de chiffres : téléphone et tablette =====
+   Sur un appareil tactile, toucher une case ouvrait le clavier du système :
+   la zone visible tombait de moitié et iOS faisait défiler la page vers la
+   case touchée — le plateau sautait à chaque case. Le pavé dessiné dans la
+   page (assets/js/mathsgo-pave-chiffres.js, le même que Petit Splat) le
+   remplace : les champs n'ouvrent plus rien, la case active est tenue par le
+   script, et le plateau est réglé pour que la carte tienne au-dessus du pavé.
+   Sur ordinateur (pointer: fine), aucune de ces fonctions ne fait quoi que ce
+   soit. */
+let elevePave = null, elevePaveZone = 0, elevePaveLargeur = 0, elevePaveSerre = false;
+/* Le plateau rend les pixels qui manquent pour que la carte tienne, mais
+   jamais au point qu'on ne puisse plus y lire les jetons. Une réserve reste
+   libre sous la carte : c'est là que viennent une seconde ligne de message
+   (« Pas encore… » en prend deux sur un téléphone) et, à la 3e erreur, le
+   bouton « Voir la réponse », à la place du Valider caché. Pour qu'il reste
+   entier au-dessus du pavé : 18 px (seconde ligne) + 48 px (bouton), moins
+   les 25 px du bas de la carte et les 10 px de jeu, soit 31 px au moins —
+   mesuré à 390 × 664 (Safari d'iPhone). */
+const ELEVE_PLATEAU_MIN = 150, ELEVE_RESERVE = 32, ELEVE_PAVE_JEU = 10;
+
+/* Téléphone au pavé (tactile ET moins de 600 px de large) : la consigne tient
+   en une ligne au lieu de trois, et les lignes gagnées reviennent au plateau.
+   Tablette et ordinateur gardent le texte complet. */
+function eleveConsigneSchema(){
+  const telephone = !!(window.MathsGoPaveChiffres && window.MathsGoPaveChiffres.estTactile()
+    && window.matchMedia && window.matchMedia("(max-width: 599px)").matches);
+  return telephone
+    ? "Complète le schéma, puis Valider."
+    : "Complète le schéma en barres : le total, les jetons visibles, et ce que cache chaque tache. Puis Valider.";
+}
+
+function elevePaveObtenir(){
+  if(elevePave) return elevePave;
+  if(!window.MathsGoPaveChiffres || !window.MathsGoPaveChiffres.estTactile()) return null;
+  elevePave = window.MathsGoPaveChiffres.creer({
+    surValider: () => { eleveValiderSplat(); elevePaveSynchroniser(); }
+  });
+  if(!elevePave) return null;
+  /* une action de la carte (Voir la réponse, Carte suivante) peut éteindre ou
+     rallumer la saisie : le pavé se remet à jour après le clic, quand les
+     gestionnaires de la carte ont fini leur travail */
+  const panneau = document.getElementById("elevePanel");
+  if(panneau) panneau.addEventListener("click", () => elevePaveSynchroniser());
+  /* Appareil tourné seulement. Une variation de HAUTEUR (barre d'adresse
+     d'un navigateur mobile) ne refait pas la place : le plateau ne doit pas
+     bouger sous les doigts de l'élève. */
+  window.addEventListener("resize", () => {
+    if(!elevePave || !elevePave.visible()) return;
+    if(Math.abs((window.innerWidth || 0) - elevePaveLargeur) < 1) return;
+    elevePaveMesurer();
+    /* un téléphone couché dépasse 600 px : la consigne complète revient */
+    const consigne = document.querySelector("#elevePanel .eleveConsigne");
+    if(consigne && document.querySelector("#elevePanel .eleveChamp")) consigne.textContent = eleveConsigneSchema();
+    document.body.classList.toggle("eleve-pave-serre", elevePaveSerre);
+    elevePaveCalerCarte();
+    const pn = document.getElementById("elevePanel");
+    if(pn) eleveCalerLargeur(pn);
+  });
+  return elevePave;
+}
+
+/* La place au-dessus du pavé : hauteur de la fenêtre visible moins hauteur du
+   pavé, calculée UNE FOIS — à l'ouverture, puis seulement si la largeur change. */
+function elevePaveMesurer(){
+  if(!elevePave) return;
+  if(elevePaveZone > 0 && Math.abs((window.innerWidth || 0) - elevePaveLargeur) < 1) return;
+  const hauteur = elevePave.hauteur();
+  document.body.style.setProperty("--pave-h", hauteur + "px");
+  elevePaveZone = Math.max(0, (window.innerHeight || 0) - hauteur);
+  elevePaveLargeur = window.innerWidth || 0;
+  elevePaveSerre = elevePaveZone > 0 && elevePaveZone < 700;
+}
+
+/* La carte tient dans cette place : si elle est trop haute, le plateau rend
+   les pixels qui manquent. Mesuré une seule fois par carte, avant que l'élève
+   touche quoi que ce soit ; tout ce qui grandit ensuite (message, bouton
+   « Voir la réponse ») est SOUS le plateau, qui ne bouge donc plus. La page
+   défile (le pavé, lui, est fixe) : on mesure depuis le haut du document. */
+function elevePaveCalerCarte(){
+  const plateau = document.getElementById("svgWrap");
+  const boite = document.querySelector("#fsHost .cardbox");
+  if(!plateau || !boite || !elevePaveZone) return;
+  plateau.style.height = "";
+  plateau.style.minHeight = "";
+  const dispo = elevePaveZone - ELEVE_PAVE_JEU;
+  const hauteur = plateau.getBoundingClientRect().height;
+  const besoin = boite.getBoundingClientRect().bottom + (window.scrollY || 0) + ELEVE_RESERVE;
+  if(!hauteur || besoin <= dispo) return;
+  const cible = Math.max(ELEVE_PLATEAU_MIN, Math.round(hauteur - (besoin - dispo)));
+  if(cible >= hauteur) return;
+  plateau.style.height = cible + "px";
+  plateau.style.minHeight = cible + "px"; /* le CSS en impose 280 */
+}
+
+/* Le pavé n'est là que s'il y a une case à remplir : il s'efface dès que la
+   correction s'affiche, à la fin de la série et hors du parcours élève. La
+   PLACE qu'il occupe reste réservée tant qu'une carte est à l'écran — sans
+   quoi la carte remonterait au moment de la correction. */
+function elevePaveSynchroniser(){
+  if(!elevePave) return;
+  const carte = !!document.querySelector("#elevePanel .eleveChamp");
+  const bouton = document.getElementById("eleveValider");
+  if(carte && bouton && !bouton.disabled) elevePave.afficher();
+  else elevePave.masquer();
+  /* Les deux classes vont ensemble et suivent la PLACE, pas l'affichage du
+     pavé : les marges d'une carte ne doivent pas changer au moment où le
+     pavé s'efface, sinon la carte remonterait sous les yeux de l'élève. */
+  const place = !!(eleveActif && carte);
+  document.body.classList.toggle("eleve-pave", place);
+  document.body.classList.toggle("eleve-pave-serre", place && elevePaveSerre);
+}
+
+/* Le dessin d'une carte se calcule sur le plateau tel quel : renderCard mesure
+   ses textes (getBBox) pour tracer la boîte du total, et la scène est cadrée
+   de la même façon. Le plateau retrouve donc sa taille d'origine avant chaque
+   dessin — chaque carte est dessinée exactement comme sans pavé — et le pavé
+   ne le réduit qu'ensuite. L'écran de fin, sans pavé, le garde ainsi. */
+function elevePaveRendrePlateau(){
+  const plateau = document.getElementById("svgWrap");
+  if(plateau){ plateau.style.height = ""; plateau.style.minHeight = ""; }
+}
+
+/* Appelé à chaque carte : branche les cases, affiche le pavé, cale le plateau
+   et rend active la première case vide — sans jamais donner le focus à un champ. */
+function elevePaveActiver(panneau){
+  const pave = elevePaveObtenir();
+  if(!pave || !eleveActif || !panneau) return null;
+  const champs = panneau.querySelectorAll(".eleveChamp");
+  if(!champs.length) return null;
+  document.body.classList.add("eleve-pave");
+  pave.brancher(champs, {
+    zone: champ => champ.closest(".eleveCase"),
+    /* case rouge (validation fausse) : le premier chiffre remplace le nombre
+       faux ; la page retire le rouge à la saisie, la suite s'ajoute */
+    aRemplacer: champ => { const c = champ.closest(".eleveCase"); return !!(c && c.classList.contains("ko")); }
+  });
+  pave.afficher();
+  elevePaveMesurer();
+  document.body.classList.toggle("eleve-pave-serre", elevePaveSerre);
+  elevePaveCalerCarte(); /* les marges serrées d'abord, la mesure ensuite */
+  eleveCalerLargeur(panneau); /* tablette couchée : le tableau suit le plateau réglé */
+  pave.activerPremierVide();
+  return pave;
 }
 
 function renderEleveSplat(){
@@ -7860,7 +8056,8 @@ function renderEleveSplat(){
     if(svgWrap && svgWrap.parentNode) svgWrap.parentNode.insertBefore(tete, svgWrap);
     else cardbox.insertBefore(tete, cardbox.firstChild);
   }
-  if(!cards.length){ tete.style.display = "none"; panneau.innerHTML = ""; renderEmpty(); return; }
+  elevePaveRendrePlateau(); /* chaque dessin sur le plateau d'origine ; le pavé le réduit ensuite */
+  if(!cards.length){ tete.style.display = "none"; panneau.innerHTML = ""; renderEmpty(); elevePaveSynchroniser(); return; }
   if(eleveSerie.length === 0){
     /* La « tache vide » (elle cache 0) est un bon cas sur fiche, mais dans le
        tableau du jeu une case de largeur nulle casse les proportions : on
@@ -7875,7 +8072,11 @@ function renderEleveSplat(){
       eleveRepriseFaite = true;
       try{
         const entree = (JSON.parse(localStorage.getItem(ELEVE_STORE_KEY) || "{}"))[parcoursId];
-        if(entree && entree.enCours && Number.isInteger(entree.enCours.idx) &&
+        /* la reprise ne vaut que pour la série qui l'a écrite : même adresse
+           ?parcours=, mais des cartes différentes d'un livret à l'autre ; une
+           sauvegarde d'avant l'empreinte n'est pas reprise (l'étoile, elle, reste) */
+        if(entree && entree.enCours && entree.enCours.sig === eleveSignatureSerie() &&
+           Number.isInteger(entree.enCours.idx) &&
            entree.enCours.idx > 0 && entree.enCours.idx < eleveSerie.length){
           eleveIdx = entree.enCours.idx;
           eleveEtoiles = Number(entree.enCours.etoiles) || 0;
@@ -7886,7 +8087,8 @@ function renderEleveSplat(){
       }catch(_e){ /* stockage indisponible */ }
     }
   }
-  if(eleveIdx >= eleveSerie.length){ renderEleveFinSplat(panneau); return; }
+  /* fin de série : plus rien à saisir, le pavé s'efface (il revient avec une carte) */
+  if(eleveIdx >= eleveSerie.length){ renderEleveFinSplat(panneau); elevePaveSynchroniser(); return; }
 
   const card = eleveSerie[eleveIdx];
   const infos = eleveInfosCarte(card);
@@ -7896,6 +8098,7 @@ function renderEleveSplat(){
   if(!infos){
     tete.style.display = "none";
     panneau.innerHTML = `<p class="eleveConsigne">Le parcours élève n'existe pas encore pour ce mode.</p>`;
+    elevePaveSynchroniser();
     return;
   }
   tete.style.display = "";
@@ -7911,14 +8114,18 @@ function renderEleveSplat(){
   for(let i = 0; i < infos.tasks; i++) bas += eleveCaseHtml("grise", infos.H, flexHid, true);
 
   panneau.innerHTML =
-    `<p class="eleveConsigne">Complète le schéma en barres : le total, les jetons visibles, et ce que cache chaque tache. Puis Valider.</p>` +
+    `<p class="eleveConsigne">${eleveConsigneSchema()}</p>` + /* texte complet sauf sur un téléphone au pavé */
     `<div class="eleveDiag"><div class="ligneHaut">${eleveCaseHtml("haut blanche", card.total, 1, false)}</div>` +
     `<div class="ligneBas">${bas}</div></div>` +
     `<div class="eleveMsg" id="eleveMsg"></div>` +
     `<div class="eleveActions"><button id="eleveValider" type="button">Valider</button></div>`;
 
+  const pave = elevePaveActiver(panneau);
   const premier = panneau.querySelector(".eleveChamp");
-  if(premier) premier.focus();
+  /* Clavier physique : le premier champ prend le focus, comme avant. Au pavé,
+     c'est la première case vide qui devient active — un focus rouvrirait le
+     clavier du système et ferait défiler la page. */
+  if(!pave && premier) premier.focus();
   panneau.querySelectorAll(".eleveChamp").forEach(inp => {
     /* Entrée valide, et l'appui s'arrête là : une carte juste donne le focus à
        « Carte suivante ▶ », que le même appui cliquait aussitôt — l'élève ne
@@ -8013,13 +8220,29 @@ function eleveLienMondesHtml(classe, libelle){
     (libelle || '\u25c0 <span class="txt">Carte des mondes</span>') + `</a>`;
 }
 
-/* Sauvegarde « en cours » : l'indice de la prochaine carte + le détail des pastilles. */
+/* Empreinte de la série affichée : les réglages de l'adresse qui déterminent
+   les cartes, graine et « suite » (étape composée) compris — clés triées,
+   valeurs telles quelles. Deux livrets peuvent partager le même ?parcours=
+   (la même étoile sur la carte des mondes) tout en portant des cartes
+   différentes, comme les trois livrets du monde 1 : sans cette empreinte, la
+   reprise de l'un s'appliquait à l'autre et l'élève atterrissait au milieu
+   d'une série jamais commencée (Petit Splat, PR #773). Ce qui ne change pas
+   les cartes n'y entre pas : le mode élève, l'étape, l'impression, le titre. */
+const ELEVE_HORS_EMPREINTE = ["eleve", "parcours", "print", "duplex", "layout", "title", "imprimer"];
+function eleveSignatureSerie(){
+  const params = new URLSearchParams(window.location.search);
+  return sharedNames.filter(nom => !ELEVE_HORS_EMPREINTE.includes(nom) && params.has(nom))
+    .sort().map(nom => nom + "=" + params.get(nom)).join("|");
+}
+
+/* Sauvegarde « en cours » : l'empreinte de la série, l'indice de la prochaine
+   carte + le détail des pastilles. */
 function eleveSauverEnCours(){
   if(!parcoursId || eleveRejeu) return;
   if(eleveIdx + 1 >= eleveSerie.length) return; /* la fin de série gère l'enregistrement */
   try{
     const tout = JSON.parse(localStorage.getItem(ELEVE_STORE_KEY) || "{}");
-    tout[parcoursId] = Object.assign({}, tout[parcoursId] || {}, { enCours: { idx: eleveIdx + 1, etoiles: eleveEtoiles, res: eleveResultats.slice(0, eleveIdx + 1) } });
+    tout[parcoursId] = Object.assign({}, tout[parcoursId] || {}, { enCours: { sig: eleveSignatureSerie(), idx: eleveIdx + 1, etoiles: eleveEtoiles, res: eleveResultats.slice(0, eleveIdx + 1) } });
     localStorage.setItem(ELEVE_STORE_KEY, JSON.stringify(tout));
   }catch(_e){ /* stockage indisponible */ }
 }
