@@ -358,15 +358,17 @@
     }
     .activity-print-page .grid { width: 100%; }
     .activity-print-page .diagram-container { flex-basis: 64px; }
+    /* Pied : gris moyen et 10 px, lisible en photocopie, 3 mm sous les cartes
+       (décision du 19/09/2026, même pied pour les deux familles de livrets). */
     .activity-footer {
         position: absolute;
-        bottom: -4.5mm;
+        bottom: -6.2mm;
         left: 0;
         right: 0;
         text-align: center;
-        font-size: 8.5px;
+        font-size: 10px;
         font-weight: 700;
-        color: #94a3b8;
+        color: #64748b;
     }
 
     @media print { 

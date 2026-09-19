@@ -36,7 +36,7 @@ const expectedGroupCounts = {
   manipuler: 43,
   entrainer: 30,
   generer: 33,
-  imprimer: 28,
+  imprimer: 29,
   activites: 14,
   cours: 15,
   jeux: 13
@@ -46,7 +46,7 @@ const expectedVisibleCardCounts = {
   manipuler: 39,
   entrainer: 28,
   generer: 33,
-  imprimer: 25,
+  imprimer: 26,
   activites: 12,
   cours: 9,
   jeux: 13
@@ -64,10 +64,10 @@ function assertPathsInGroup(group, paths) {
   }
 }
 
-test("le catalogue conserve 184 entrées dont 176 publiées", () => {
+test("le catalogue conserve 185 entrées dont 177 publiées", () => {
   assert.equal(catalogue.schemaVersion, 5);
-  assert.equal(resources.length, 184);
-  assert.equal(published.length, 176);
+  assert.equal(resources.length, 185);
+  assert.equal(published.length, 177);
   assert.equal(new Set(resources.map((resource) => resource.path)).size, resources.length, "Chaque chemin doit être unique.");
 });
 
@@ -142,7 +142,7 @@ test("aucune carte publiée ne conserve la description générique", () => {
   assert.deepEqual(offenders, []);
 });
 
-test("la répartition arbitrée des 176 ressources reste stable", () => {
+test("la répartition arbitrée des 177 ressources reste stable", () => {
   const actual = Object.fromEntries([...allowedGroups].map((group) => [group, 0]));
   for (const resource of published) actual[resolvedPrimaryGroup(resource)] += 1;
   assert.deepEqual(actual, expectedGroupCounts);
@@ -426,6 +426,6 @@ test("les familles regroupent toutes leurs variantes sans perte ni chevauchement
   for (const family of families) visibleCardsByGroup[family.group] += 1;
 
   assert.equal(representedResourceCount, published.length, "Aucune variante publiée ne doit disparaître du catalogue.");
-  assert.equal(visibleCardCount, 159, "Les 176 ressources doivent être représentées par 159 cartes après regroupement.");
+  assert.equal(visibleCardCount, 160, "Les 177 ressources doivent être représentées par 160 cartes après regroupement.");
   assert.deepEqual(visibleCardsByGroup, expectedVisibleCardCounts);
 });

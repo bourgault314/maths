@@ -11,5 +11,6 @@ body{width:210mm;height:297mm;overflow:hidden;font-family:Poppins,'Segoe UI',sys
 .bande .logos img.irem{height:15mm}
 .bande .logos img.mg{height:13mm}
 .corps{flex:1 1 auto;padding:0 14mm;display:flex;flex-direction:column}
-.pied{flex:0 0 auto;text-align:center;font-size:9px;font-weight:700;color:#94a3b8;padding-bottom:6mm}
+/* Pied : gris moyen et 10 px, lisible en photocopie (décision du 19/09/2026, les deux familles de livrets). */
+.pied{flex:0 0 auto;text-align:center;font-size:10px;font-weight:700;color:#64748b;padding-bottom:6mm}
 .cadre{border:1.4px solid #5b6574;border-radius:6px;background:#fff}

@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Livret SPLAT! classique — je rejoue en ligne | maths&amp;go</title>
+  <meta name="robots" content="noindex, follow">
+  <link rel="canonical" href="https://mathsgo.re/outils/splat_univers.html">
+  <link rel="icon" href="/favicon.ico" sizes="48x48">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="icon" type="image/png" sizes="32x32" href="/assets/img/favicon-32.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="/assets/img/favicon-192.png">
+  <link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png">
+  <script>
+    /* Adresse courte des QR codes du livret « SPLAT! classique » (monde 2) :
+       /splat/classique/livret/?f=7  →  la série en ligne de la fiche 7, etc.
+       Chaque cible est EXACTEMENT le lien « Le jeu de l'élève » de la carte des mondes
+       (outils/splat_univers.html, MONDES[1]) : même étape (parcours=m2eN), mêmes cartes,
+       donc la même empreinte de reprise. La fiche 7 enchaîne les trois activités de
+       Claire (paramètre « suite ») : son adresse complète dépasse 500 caractères, trop
+       pour un QR lisible de 17 mm — d'où cette page. Un test épingle ces trois cibles
+       sur les constantes de la carte des mondes ; si une graine change là-bas, la
+       changer ici aussi (et régénérer les QR : _sources/livret-splat-classique/render.py --qr). */
+    var M2A1 = "mode=U&equation=X_PLUS_A_EQ_B&tasksMin=1&tasksMax=1&visibleMax=15&hiddenMax=10&totalMin=1&totalMax=25&cards=4&seed=974&unknown=question";
+    var M2A2 = "mode=U&equation=AX_EQ_B&tasksMin=2&tasksMax=5&hiddenMax=10&totalMin=5&totalMax=25&cards=4&seed=477&unknown=question";
+    var M2A3 = "mode=U&equation=AX_PLUS_C_EQ_B&tasksMin=2&tasksMax=5&visibleMax=15&hiddenMax=10&totalMin=5&totalMax=25&cards=4&seed=478&unknown=question";
+    var FICHES = {
+      "7": "/splat/classique/?" + M2A1 + "&eleve=1&parcours=m2e1&suite=" + encodeURIComponent(M2A2) + ";" + encodeURIComponent(M2A3),
+      "8": "/splat/classique/?mode=N&equation=X_PLUS_A_EQ_B&cards=12&seed=347&unknown=question&eleve=1&parcours=m2e4",
+      "9": "/splat/classique/?mode=N&equation=AX_PLUS_C_EQ_B&tasksMax=5&cards=12&seed=18&unknown=question&eleve=1&parcours=m2e5"
+    };
+    var f = new URLSearchParams(window.location.search).get("f");
+    var cible = Object.prototype.hasOwnProperty.call(FICHES, f) ? FICHES[f] : "/outils/splat_univers.html";
+    window.location.replace(new URL(cible, window.location.origin).toString());
+  </script>
+</head>
+<body>
+  <p>Livret SPLAT! classique — la série en ligne de chaque fiche&nbsp;:</p>
+  <ul>
+    <li><a href="/splat/classique/?mode=U&amp;equation=X_PLUS_A_EQ_B&amp;tasksMin=1&amp;tasksMax=1&amp;visibleMax=15&amp;hiddenMax=10&amp;totalMin=1&amp;totalMax=25&amp;cards=4&amp;seed=974&amp;unknown=question&amp;eleve=1&amp;parcours=m2e1&amp;suite=mode%3DU%26equation%3DAX_EQ_B%26tasksMin%3D2%26tasksMax%3D5%26hiddenMax%3D10%26totalMin%3D5%26totalMax%3D25%26cards%3D4%26seed%3D477%26unknown%3Dquestion;mode%3DU%26equation%3DAX_PLUS_C_EQ_B%26tasksMin%3D2%26tasksMax%3D5%26visibleMax%3D15%26hiddenMax%3D10%26totalMin%3D5%26totalMax%3D25%26cards%3D4%26seed%3D478%26unknown%3Dquestion">Fiche 7 — Le même jeu, un nouveau plateau</a></li>
+    <li><a href="/splat/classique/?mode=N&amp;equation=X_PLUS_A_EQ_B&amp;cards=12&amp;seed=347&amp;unknown=question&amp;eleve=1&amp;parcours=m2e4">Fiche 8 — Les paquets de jetons</a></li>
+    <li><a href="/splat/classique/?mode=N&amp;equation=AX_PLUS_C_EQ_B&amp;tasksMax=5&amp;cards=12&amp;seed=18&amp;unknown=question&amp;eleve=1&amp;parcours=m2e5">Fiche 9 — Paquets : le défi</a></li>
+    <li><a href="/outils/splat_univers.html">La carte des mondes</a></li>
+  </ul>
+</body>
+</html>

@@ -83,6 +83,11 @@ main{max-width:980px;margin:0 auto;padding:10px 14px 60px}
 .monde .introLien.livret:hover{background:#ffe9b8}
 .monde .introLien.livret.a3{background:#fff;font-weight:700;padding:7px 12px}
 .monde .introLien.livret.a3:hover{background:#fff8ea}
+/* pastilles du livret du monde 2 : la couleur du monde (bleu) */
+.monde.m2 .introLien.livret{color:#0b4f8a;background:#e6f1fb;border-color:#a9cdeb}
+.monde.m2 .introLien.livret:hover{background:#d3e6f8}
+.monde.m2 .introLien.livret.a3{background:#fff}
+.monde.m2 .introLien.livret.a3:hover{background:#f1f7fd}
 .monde .introNote{flex:1 0 100%;margin:0;font-size:13px;line-height:1.4;color:var(--muted)}
 
 /* ---------- étapes ---------- */
@@ -294,16 +299,16 @@ const MONDES=[
     ]},
    {t:"Les paquets de jetons",fo:"x + a = b",o:"Les jetons arrivent en paquets : on compte plus vite.",
     p:"m2e4",
-    eqs:["𝑥 + 15 = 33", "𝑥 + 6 = 49", "𝑥 + 9 = 44", "𝑥 + 24 = 48", "𝑥 + 13 = 33", "𝑥 + 11 = 37", "𝑥 + 38 = 40", "𝑥 + 30 = 43", "𝑥 + 13 = 40", "𝑥 + 10 = 33"],
-    j:SC+"?mode=N&equation=X_PLUS_A_EQ_B&cards=10&seed=347&unknown=question&eleve=1&parcours=m2e4",
-    jp:SC+"?mode=N&equation=X_PLUS_A_EQ_B&cards=10&seed=347&unknown=question",
-    f:SC+"?mode=N&equation=X_PLUS_A_EQ_B&cards=10&seed=347&unknown=question&print=statement&layout=6&imprimer=1"},
+    eqs:["𝑥 + 15 = 33", "𝑥 + 6 = 49", "𝑥 + 9 = 44", "𝑥 + 24 = 48", "𝑥 + 13 = 33", "𝑥 + 11 = 37", "𝑥 + 38 = 40", "𝑥 + 30 = 43", "𝑥 + 13 = 40", "𝑥 + 10 = 33", "𝑥 + 31 = 46", "𝑥 + 29 = 44"],
+    j:SC+"?mode=N&equation=X_PLUS_A_EQ_B&cards=12&seed=347&unknown=question&eleve=1&parcours=m2e4",
+    jp:SC+"?mode=N&equation=X_PLUS_A_EQ_B&cards=12&seed=347&unknown=question",
+    f:SC+"?mode=N&equation=X_PLUS_A_EQ_B&cards=12&seed=347&unknown=question&print=statement&layout=6&imprimer=1"},
    {t:"Paquets : le défi",fo:"a × x + c = b",o:"Paquets, taches et jetons : le grand mélange du monde 2.",
     p:"m2e5",
-    eqs:["3𝑥 + 27 = 36", "5𝑥 + 28 = 38", "5𝑥 + 22 = 32", "2𝑥 + 14 = 42", "3𝑥 + 15 = 27", "4𝑥 + 4 = 36", "3𝑥 + 9 = 21", "4𝑥 + 17 = 41", "3𝑥 + 31 = 43", "3𝑥 + 37 = 40"],
-    j:SC+"?mode=N&equation=AX_PLUS_C_EQ_B&tasksMax=5&cards=10&seed=18&unknown=question&eleve=1&parcours=m2e5",
-    jp:SC+"?mode=N&equation=AX_PLUS_C_EQ_B&tasksMax=5&cards=10&seed=18&unknown=question",
-    f:SC+"?mode=N&equation=AX_PLUS_C_EQ_B&tasksMax=5&cards=10&seed=18&unknown=question&print=statement&layout=6&imprimer=1"}]},
+    eqs:["3𝑥 + 27 = 36", "5𝑥 + 28 = 38", "5𝑥 + 22 = 32", "2𝑥 + 14 = 42", "3𝑥 + 15 = 27", "4𝑥 + 4 = 36", "3𝑥 + 9 = 21", "4𝑥 + 17 = 41", "3𝑥 + 31 = 43", "3𝑥 + 37 = 40", "4𝑥 + 6 = 30", "5𝑥 + 20 = 30"],
+    j:SC+"?mode=N&equation=AX_PLUS_C_EQ_B&tasksMax=5&cards=12&seed=18&unknown=question&eleve=1&parcours=m2e5",
+    jp:SC+"?mode=N&equation=AX_PLUS_C_EQ_B&tasksMax=5&cards=12&seed=18&unknown=question",
+    f:SC+"?mode=N&equation=AX_PLUS_C_EQ_B&tasksMax=5&cards=12&seed=18&unknown=question&print=statement&layout=6&imprimer=1"}]},
  {cls:"m3",actif:true,nom:"SPLAT! Équations",desc:"Le grand jeu : l'équation s'affiche, et c'est toi qui résous sur le plateau d'ÉquaSplat — enlève, fusionne, partage, jusqu'à trouver la valeur cachée.",
   etapes:[
    {t:"Les deux plateaux",fo:"a × x + b = c",o:"Retrouve dans le tableau ce que contient chaque plateau.",
@@ -416,6 +421,12 @@ MONDES.forEach((m,mi)=>{
        +'<a class="introLien livret a3" href="/outils/livret_petit_splat_expert_a3.pdf" target="_blank" rel="noopener">\ud83d\udda8\ufe0f Expert \u00e0 plier</a>'
        +'<span class="introNote">Livrets \u00e0 plier\u00a0: sur A3, ou sur A4 pour un plus petit livret\u00a0; recto-verso, retournement sur le <b>bord court</b>, puis plier et agrafer au milieu.</span>'
       :'<a class="introLien" href="/outils/splat_intro.html?suite='+encodeURIComponent(m.etapes[0].j)+'">\ud83c\udfac Comment on joue ?</a>')+'</p>':'')+
+   /* monde 2, vue prof : le livret SPLAT! classique (les fiches 7, 8 et 9 à plier), comme les livrets du monde 1 */
+   (mi===1&&PROF?'<p class="intro">'
+       +'<a class="introLien livret" href="/outils/livret_splat_classique.pdf" target="_blank" rel="noopener">\ud83d\udcd8 Livret Monde 2 (PDF)</a>'
+       +'<a class="introLien livret a3" href="/outils/livret_splat_classique_a3.pdf" target="_blank" rel="noopener">\ud83d\udda8\ufe0f Monde 2 \u00e0 plier</a>'
+       +'<span class="introNote">Les fiches 7, 8 et 9 en un livret \u00e0 plier (A3 ou A4, recto-verso, retournement sur le <b>bord court</b>)\u00a0; sous chaque carte, la place pour dessiner le tableau ou \u00e9crire l\u2019\u00e9quation. <a href="/outils/livrets_splat_classique.html">Voir la page du livret</a></span>'
+     +'</p>':'')+
    '<ol class="etapes">'+m.etapes.map((e,ei)=>{
      compteur++;
      const badgeAttrs = (m.actif && !e.p) ? ' title="Marquer comme réussie" data-id="'+ids[ei]+'"' : ' disabled';
