@@ -785,6 +785,15 @@ window.MATHSGO_CATALOGUE = {
       "thumbnail": "assets/img/thumbnails/splat/livret-petit-splat.png?v=2",
       "cardDescription": "Les six fiches du monde 1 réunies en un livret à plier, en trois niveaux : jusqu’à 20, de 21 à 50, de 51 à 100 jetons."
     },
+    "outils/livrets_splat_classique.html": {
+      "primaryNotion": "calcul-litteral",
+      "primaryGroup": "imprimer",
+      "cardTitle": "Livret Splat! classique",
+      "collections": ["splat"],
+      "tags": ["splat", "livret", "equation", "inconnue", "imprimer"],
+      "thumbnail": "assets/img/thumbnails/splat/livret-splat-classique.png?v=1",
+      "cardDescription": "Les trois fiches du monde 2 réunies en un livret à plier : le tableau, l’équation et les paquets de jetons, avec la place pour écrire sous chaque carte."
+    },
     "outils/tuiles_algebriques/generateur_exercices_calcul_litteral.html": {
       "primaryNotion": "calcul-litteral",
       "primaryGroup": "generer",
@@ -6478,6 +6487,44 @@ window.MATHSGO_CATALOGUE = {
         "livret",
         "livrets",
         "schéma en barres",
+        "inconnue",
+        "cycle 3",
+        "QR code",
+        "A3",
+        "à plier"
+      ],
+      "kind": "tool",
+      "status": "published",
+      "featured": false,
+      "recent": false
+    },
+    {
+      "id": "outils-livrets-splat-classique",
+      "title": "Livret Splat! classique — les 3 fiches du monde 2 à plier",
+      "description": "Les trois fiches du monde 2 de l’univers SPLAT! réunies en un livret de 8 pages : couverture avec l’exemple expliqué (la carte, le tableau, l’équation), les douze cartes de Claire puis les deux fiches à paquets de jetons, 4e de couverture. Sous chaque carte, la place pour dessiner le tableau ou écrire l’équation. Chaque fiche porte un QR code vers le jeu en ligne avec les mêmes cartes. À imprimer en recto-verso sur deux feuilles A3, ou A4 pour un plus petit livret, à plier et agrafer — ou en A4 dans l’ordre de lecture.",
+      "path": "outils/livrets_splat_classique.html",
+      "domains": [
+        "algebre"
+      ],
+      "notions": [
+        "calcul-litteral",
+        "equations",
+        "schemas-barres"
+      ],
+      "uses": [
+        "imprimer",
+        "entrainer"
+      ],
+      "types": [
+        "imprimable"
+      ],
+      "filters": [],
+      "keywords": [
+        "splat",
+        "livret",
+        "livrets",
+        "équation",
+        "paquets de jetons",
         "inconnue",
         "cycle 3",
         "QR code",

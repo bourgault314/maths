@@ -121,5 +121,5 @@ test("les URL partent immédiatement sans ordonnanceur de mise en page", () => {
 
 test("les versions de cache publient ensemble le JavaScript et le CSS", () => {
   assert.match(catalogueHtml, /catalogue-refonte\.css\?v=breadcrumb-parent-20260913-1/);
-  assert.match(catalogueHtml, /catalogue-refonte\.js\?v=icone-jeux-courts-20260913-1/);
+  assert.match(catalogueHtml, /catalogue-refonte\.js\?v=ordre-livrets-splat-20260919-1/);
 });

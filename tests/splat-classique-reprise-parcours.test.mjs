@@ -44,7 +44,7 @@ function empreinte(recherche) {
 const constante = (nom) => univers.match(new RegExp(`const ${nom}="([^"]+)";`))[1];
 const [M2A1, M2A2, M2A3] = ["M2A1", "M2A2", "M2A3"].map(constante);
 const ETAPE7 = `?${M2A1}&eleve=1&parcours=m2e1&suite=${encodeURIComponent(M2A2)};${encodeURIComponent(M2A3)}`;
-const ETAPE8 = "?mode=N&equation=X_PLUS_A_EQ_B&cards=10&seed=347&unknown=question&eleve=1&parcours=m2e4";
+const ETAPE8 = "?mode=N&equation=X_PLUS_A_EQ_B&cards=12&seed=347&unknown=question&eleve=1&parcours=m2e4";
 
 // Un faux localStorage, pré-rempli.
 function stockage(contenu) {
@@ -72,7 +72,7 @@ test("l'empreinte de l'étape 7 : les réglages des cartes, graine et « suite �
     "cards=4|equation=X_PLUS_A_EQ_B|hiddenMax=10|mode=U|seed=974|" +
     `suite=${M2A2};${M2A3}|` +
     "tasksMax=1|tasksMin=1|totalMax=25|totalMin=1|unknown=question|visibleMax=15");
-  assert.equal(empreinte(ETAPE8), "cards=10|equation=X_PLUS_A_EQ_B|mode=N|seed=347|unknown=question");
+  assert.equal(empreinte(ETAPE8), "cards=12|equation=X_PLUS_A_EQ_B|mode=N|seed=347|unknown=question");
 });
 
 test("ce qui ne change pas les cartes n'entre pas dans l'empreinte : élève, étape, impression, titre", () => {
