@@ -2591,7 +2591,17 @@ function getPrintTrayConfig(mode){
   return {...tray, y:tray.y + offsetY, offsetY};
 }
 
-function getUnitSplats(taskCount){
+/* Places des taches.
+   Deux tables par mode : la table « de tirage » (getUnitSplatsLegacy / getNumberedSplatsLegacy)
+   est l'ancienne, gardée telle quelle parce que le tirage au sort des places des jetons
+   consomme la même suite de nombres au hasard que les valeurs des cartes : la changer
+   décalerait les nombres de toutes les cartes suivantes d'une série. La table « de dessin »
+   (getUnitSplats / getNumberedSplats) est celle qui s'affiche et s'imprime ; elle ne diffère
+   qu'à 4 et 5 taches, qui se touchaient (une tache dessinée déborde son rayon de 10 % vers
+   le bas et de 6 % sur les côtés). Les jetons sont d'abord placés avec la table de tirage,
+   puis reportés sur la table de dessin sans aucun tirage supplémentaire (voir
+   relocateTokensToFinalSplats). */
+function getUnitSplatsLegacy(taskCount){
   const tray = getTrayConfig("U");
   const cyMid = tray.y + tray.h/2; 
   const anchors = {
@@ -2606,7 +2616,18 @@ function getUnitSplats(taskCount){
   return base.map(p => ({...p, r}));
 }
 
-function getNumberedSplats(taskCount, mode){
+function getUnitSplats(taskCount){
+  if(taskCount !== 4 && taskCount !== 5) return getUnitSplatsLegacy(taskCount);
+  /* 4 et 5 taches : mêmes rayons, rangées écartées pour que les taches ne se touchent plus. */
+  const anchors = {
+    4:[{cx:610, cy:395},{cx:1030, cy:395},{cx:610, cy:685},{cx:1030, cy:685}],
+    5:[{cx:820, cy:355},{cx:560, cy:530},{cx:1080, cy:530},{cx:560, cy:735},{cx:1080, cy:735}],
+  };
+  const r = taskCount === 4 ? 125 : 95;
+  return anchors[taskCount].map(p => ({...p, r}));
+}
+
+function getNumberedSplatsLegacy(taskCount, mode){
   const tray = getTrayConfig(mode);
   const cyMid = tray.y + tray.h/2; 
   const anchors = {
@@ -2620,6 +2641,53 @@ function getNumberedSplats(taskCount, mode){
   let base = anchors[taskCount] || anchors[2];
   let r = (taskCount<=1) ? 220 : (taskCount===2 ? 180 : (taskCount===3 ? 145 : (taskCount===4 ? 130 : (taskCount===5 ? 120 : 110))));
   return base.map(p => ({...p, r}));
+}
+
+function getNumberedSplats(taskCount, mode){
+  const tray = getTrayConfig(mode);
+  /* Seul le grand plateau (B, B±) change ; l'Enquête et le mode D gardent leurs places. */
+  if(!tray.isHigh || (taskCount !== 4 && taskCount !== 5)) return getNumberedSplatsLegacy(taskCount, mode);
+  /* 4 et 5 taches : taches un peu plus grandes (les jetons numérotés, qui doivent tenir
+     dessous, grandissent avec elles) et rangées écartées pour qu'elles ne se touchent plus. */
+  const anchors = {
+    4:[{cx:610, cy:390},{cx:1030, cy:390},{cx:610, cy:690},{cx:1030, cy:690}],
+    5:[{cx:520, cy:415},{cx:820, cy:415},{cx:1120, cy:415},{cx:670, cy:690},{cx:970, cy:690}],
+  };
+  const r = taskCount === 4 ? 140 : 130;
+  return anchors[taskCount].map(p => ({...p, r}));
+}
+
+function sameSplats(a, b){
+  return a.length === b.length && a.every((s, i) => s.cx === b[i].cx && s.cy === b[i].cy && s.r === b[i].r);
+}
+
+/* Rayon des jetons numérotés pour une table de taches donnée. */
+function numberedBeadRadius(splats, family){
+  const minSplatR = Math.min(...splats.map(s=>s.r));
+  let beadR = Math.floor((minSplatR - 28) / 2);
+  // Patch 8 : en B / B±, on agrandit vraiment les jetons.
+  // Les autres familles numériques (C, D, F, G) gardent leurs tailles validées.
+  if(family === "N" || family === "NPM"){
+    beadR = clamp(beadR, 38, 68);
+  }else{
+    beadR = clamp(beadR, 34, 60);
+  }
+  return beadR;
+}
+
+/* Décale un jeton, SANS tirage au sort, vers la place libre la plus proche : spirale de
+   pas 10 (12 directions par tour, 16 tours). Si rien ne convient, il reste où il est. */
+function nudgeTokenFree(cx, cy, ok){
+  if(ok(cx, cy)) return {cx, cy};
+  for(let k=1; k<=16; k++){
+    for(let a=0; a<360; a+=30){
+      const rad = a * Math.PI / 180;
+      const x = cx + Math.cos(rad) * k * 10;
+      const y = cy + Math.sin(rad) * k * 10;
+      if(ok(x, y)) return {cx:x, cy:y};
+    }
+  }
+  return {cx, cy};
 }
 
 function randomComposition(rng, sum, parts){
@@ -2706,21 +2774,17 @@ function assignPositionsNumbered(card, rng){
   const margin = 14;
 
   const meta = card._num;
-  const splats = getNumberedSplats(meta.tasks, card.family);
+  /* Tirage au sort avec la table de tirage (voir getNumberedSplatsLegacy) ; la table de
+     dessin est appliquée à la fin, sans tirage supplémentaire. */
+  const splats = getNumberedSplatsLegacy(meta.tasks, card.family);
+  const splatsFinal = getNumberedSplats(meta.tasks, card.family);
   card._splats = splats;
 
-  const minSplatR = Math.min(...splats.map(s=>s.r));
-  let beadR = Math.floor((minSplatR - 28) / 2); 
-  // Patch 8 : en B / B±, on agrandit vraiment les jetons.
-  // Les autres familles numériques (C, D, F, G) gardent leurs tailles validées.
-  if(card.family === "N" || card.family === "NPM"){
-    beadR = clamp(beadR, 38, 68);
-  }else{
-    beadR = clamp(beadR, 34, 60);
-  }
+  const beadR = numberedBeadRadius(splats, card.family);
   card._beadR = beadR;
 
   const posH = [];
+  const hiddenPlan = [];
   for(let t=0; t<meta.tasks; t++){
     const s = splats[t];
     const arr = meta.hiddenByTask[t] || [];
@@ -2732,6 +2796,7 @@ function assignPositionsNumbered(card, rng){
       const a = rFloat(rng, 0, Math.PI*2);
       const d = rFloat(rng, 0, Math.min(10, maxD));
       posH.push({cx: s.cx + Math.cos(a)*d, cy: s.cy + Math.sin(a)*d});
+      hiddenPlan.push({t, ux:Math.cos(a), uy:Math.sin(a), d, pair:false});
     }else{
       const maxD = Math.max(0, s.r - beadR - 22);
       const d = Math.min(beadR, maxD);
@@ -2740,6 +2805,7 @@ function assignPositionsNumbered(card, rng){
       const vy = Math.sin(a)*d;
       posH.push({cx: s.cx + vx, cy: s.cy + vy});
       posH.push({cx: s.cx - vx, cy: s.cy - vy});
+      hiddenPlan.push({t, ux:Math.cos(a), uy:Math.sin(a), d, pair:true});
     }
   }
   card._posH = posH;
@@ -2782,6 +2848,52 @@ function assignPositionsNumbered(card, rng){
   }
 
   card._posV = card.visible.map(()=> pickVisible());
+
+  relocateNumberedTokensToFinalSplats(card, tray, margin, splatsFinal, hiddenPlan);
+}
+
+/* Report des jetons de la table de tirage vers la table de dessin (B, B± à 4 et 5 taches).
+   Rien n'est tiré au sort ici : les jetons cachés gardent leur direction sous leur tache,
+   les jetons visibles ne bougent que s'ils gênent, et vers la place libre la plus proche.
+   Quand les deux tables sont identiques (1, 2, 3, 6 taches, Enquête, mode D), la carte
+   reste exactement celle d'avant. */
+function relocateNumberedTokensToFinalSplats(card, tray, margin, splatsFinal, hiddenPlan){
+  if(sameSplats(card._splats, splatsFinal)) return;
+  const beadR = numberedBeadRadius(splatsFinal, card.family);
+  const posH = [];
+  for(const h of hiddenPlan){
+    const s = splatsFinal[h.t];
+    if(!h.pair){
+      posH.push({cx: s.cx + h.ux*h.d, cy: s.cy + h.uy*h.d});
+    }else{
+      const d = Math.min(beadR, Math.max(0, s.r - beadR - 22));
+      posH.push({cx: s.cx + h.ux*d, cy: s.cy + h.uy*d});
+      posH.push({cx: s.cx - h.ux*d, cy: s.cy - h.uy*d});
+    }
+  }
+  const placed = [];
+  function ok(cx, cy){
+    if(cx < tray.x + beadR + margin) return false;
+    if(cx > tray.x + tray.w - beadR - margin) return false;
+    if(cy < tray.y + beadR + margin) return false;
+    if(cy > tray.y + tray.h - beadR - margin) return false;
+    for(const s of splatsFinal){
+      if(Math.hypot(cx - s.cx, cy - s.cy) < s.r + beadR + 14) return false;
+    }
+    for(const p of placed){
+      if(Math.hypot(cx - p.cx, cy - p.cy) < beadR*2 + 12) return false;
+    }
+    return true;
+  }
+  const posV = (card._posV || []).map(p => {
+    const q = nudgeTokenFree(p.cx, p.cy, ok);
+    placed.push(q);
+    return q;
+  });
+  card._splats = splatsFinal;
+  card._beadR = beadR;
+  card._posH = posH;
+  card._posV = posV;
 }
 
 function assignPositions(card, rng){
@@ -3715,7 +3827,10 @@ function assignPositionsUnits(card, rng){
   const isSignedUnitMode = (card.family === "UPM");
   const hiddenByTaskRaw = card._unit?.hiddenByTask ?? Array.from({length: tasks}, ()=>0);
   const hiddenByTask = hiddenByTaskRaw.map(v => Array.isArray(v) ? v.length : Number(v) || 0);
-  const splats = getUnitSplats(tasks);
+  /* Tirage au sort avec la table de tirage (voir getUnitSplatsLegacy) ; la table de dessin
+     est appliquée à la fin, sans tirage supplémentaire. */
+  const splats = getUnitSplatsLegacy(tasks);
+  const splatsFinal = getUnitSplats(tasks);
   card._splats = splats;
   const ctx = (function(){
     if(assignPositionsUnits._hitCtx) return assignPositionsUnits._hitCtx;
@@ -3865,6 +3980,42 @@ function assignPositionsUnits(card, rng){
   card._beadR = beadR;
   card._posV = placedRes.posV;
   card._posH = placedRes.posH;
+
+  /* Report sur la table de dessin (A, A± à 4 et 5 taches) : les jetons cachés suivent leur
+     tache (même forme, simplement déplacée), les jetons visibles ne bougent que s'ils gênent,
+     vers la place libre la plus proche, sans tirage au sort. Tables identiques : rien ne bouge. */
+  if(!sameSplats(splats, splatsFinal)){
+    const finalObjs = splatsFinal.map(s=>{
+      const d = blobPath(s.cx, s.cy, s.r);
+      return { ...s, d, path: (canPath2D ? new Path2D(d) : null) };
+    });
+    const posH = [];
+    let k = 0;
+    for(let t=0; t<tasks; t++){
+      const dx = splatsFinal[t].cx - splats[t].cx, dy = splatsFinal[t].cy - splats[t].cy;
+      for(let j=0; j<(hiddenByTask[t] ?? 0); j++){
+        const p = placedRes.posH[k++];
+        if(p) posH.push({cx:p.cx + dx, cy:p.cy + dy});
+      }
+    }
+    const fixed = posH.slice();
+    function okFinal(cx, cy){
+      if(!insideTray(cx, cy)) return false;
+      for(const o of finalObjs){
+        if(Math.hypot(cx-o.cx, cy-o.cy) < (o.r + beadR + 18)) return false;
+        if(pointInSplat(o, cx, cy)) return false;
+      }
+      return noOverlap(cx, cy, fixed);
+    }
+    const posV = placedRes.posV.map(p => {
+      const q = nudgeTokenFree(p.cx, p.cy, okFinal);
+      fixed.push(q);
+      return q;
+    });
+    card._splats = splatsFinal;
+    card._posH = posH;
+    card._posV = posV;
+  }
 }
 
 function shouldGenerateEmptyTaskCase(rng){
