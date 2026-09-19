@@ -412,11 +412,18 @@
     /* Convention des fiches : le total et ce qui est caché en noir, les jetons visibles en bleu */
     .eleve-case.eleve-vis .eleve-input { color: #1d4ed8; }
     .eleve-case { cursor: text; }
-    .eleve-case:focus-within { outline: 3px solid #60a5fa; outline-offset: -3px; }
+    /* Cadre de la case active dans la case (box-shadow inset) : le trait qui sépare deux
+       cases reste visible des deux côtés, le cadre est centré. */
+    .eleve-case:focus-within { box-shadow: inset 0 0 0 3px #60a5fa; }
     .row-top.eleve-ok, .part-box.eleve-ok { background: #dcfce7 !important; }
     .row-top.eleve-ok .eleve-input, .part-box.eleve-ok .eleve-input { background: transparent; color: #15803d; }
     .row-top.eleve-ko, .part-box.eleve-ko { animation: eleveShake .3s; }
     .row-top.eleve-ko .eleve-input, .part-box.eleve-ko .eleve-input { background: #fee2e2; color: #b91c1c; }
+    /* Case rouge ET active : le rouge est peint par le champ, qui remplit toute la case et
+       recouvrirait l'ombre intérieure (le cadre disparaissait). Il passe dans l'ombre, sous
+       le cadre : même rouge, cadre visible. Vaut aussi pour la case du total (.total-badge). */
+    .eleve-case.eleve-ko:focus-within { box-shadow: inset 0 0 0 3px #60a5fa, inset 0 0 0 999px #fee2e2; }
+    .eleve-case.eleve-ko:focus-within .eleve-input { background: transparent; }
     @keyframes eleveShake { 0%,100% { transform: translateX(0); } 25% { transform: translateX(-4px); } 75% { transform: translateX(4px); } }
     .eleve-actions { display: flex; justify-content: center; gap: 10px; margin-top: 12px; }
     .eleve-actions button { font: inherit; font-weight: 900; border: none; border-radius: 12px; padding: 12px 22px; min-height: 48px; cursor: pointer; }
@@ -503,8 +510,12 @@
        clavier système et aucun défilement imposé */
     body.eleve-pave .eleve-input { pointer-events: none; }
     body.eleve-pave .eleve-case { cursor: default; touch-action: manipulation; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
-    body.eleve-pave .eleve-case.mg-pave-case-active { outline: 4px solid var(--accent); outline-offset: -4px; box-shadow: inset 0 0 0 999px rgba(37, 99, 235, .08); }
-    body.eleve-pave .total-badge.eleve-case.mg-pave-case-active { outline-width: 3px; outline-offset: -3px; }
+    body.eleve-pave .eleve-case.mg-pave-case-active { box-shadow: inset 0 0 0 4px var(--accent), inset 0 0 0 999px rgba(37, 99, 235, .08); }
+    body.eleve-pave .total-badge.eleve-case.mg-pave-case-active { box-shadow: inset 0 0 0 3px var(--accent), inset 0 0 0 999px rgba(37, 99, 235, .08); }
+    /* case rouge ET active : même principe que .eleve-case.eleve-ko:focus-within plus haut */
+    body.eleve-pave .eleve-case.eleve-ko.mg-pave-case-active { box-shadow: inset 0 0 0 4px var(--accent), inset 0 0 0 999px #fee2e2; }
+    body.eleve-pave .total-badge.eleve-case.eleve-ko.mg-pave-case-active { box-shadow: inset 0 0 0 3px var(--accent), inset 0 0 0 999px #fee2e2; }
+    body.eleve-pave .eleve-case.eleve-ko.mg-pave-case-active .eleve-input { background: transparent; }
     /* Un seul Valider : celui du pavé fait exactement la même action. Deux
        boutons identiques faisaient hésiter l'élève, et le second coûtait sa
        hauteur au plateau. Le bouton reste dans la page (la validation le lit),

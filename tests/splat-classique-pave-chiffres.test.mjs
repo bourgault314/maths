@@ -441,7 +441,7 @@ test("la page charge le composant, à la même version que Petit Splat, SANS def
 
 test("au pavé, le doigt touche la case, jamais le champ", () => {
   assert.match(page, /body\.eleve-pave input\.eleveChamp\{pointer-events:none\}/);
-  assert.match(page, /body\.eleve-pave \.eleveCase\.mg-pave-case-active\{outline:4px solid #2563eb;/, "la case active se voit, comme dans Petit Splat");
+  assert.match(page, /body\.eleve-pave \.eleveCase\.mg-pave-case-active\{box-shadow:inset 0 0 0 4px #2563eb, inset 0 0 0 999px rgba\(37,99,235,\.08\)\}/, "la case active se voit, comme dans Petit Splat, par un cadre dans la case (centré entre les traits)");
   assert.match(page, /if\(!pave && premier\) premier\.focus\(\);/);
   assert.match(source("elevePaveActiver"), /zone: champ => champ\.closest\("\.eleveCase"\)/);
   assert.match(source("elevePaveActiver"), /aRemplacer: champ => \{ const c = champ\.closest\("\.eleveCase"\); return !!\(c && c\.classList\.contains\("ko"\)\); \}/);
