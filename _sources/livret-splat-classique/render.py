@@ -196,7 +196,10 @@ async def pages(niv, tmp):
     base = f"http://127.0.0.1:{PORT}"
     qrweb = f"{BASE_WEB}/{niv['qr']}"
     async with async_playwright() as p:
-        nav = await p.chromium.launch()
+        # Le vrai Chromium (channel="chromium") et non le « headless shell » : celui-ci
+        # espace les lettres d'environ 5 % (vu le 19/09/2026 sur les couvertures), le
+        # navigateur complet rend le texte comme Chrome sur un poste de travail.
+        nav = await p.chromium.launch(channel="chromium")
 
         async def page_outil(query):
             pg = await nav.new_page(viewport={"width": 794, "height": 1123})

@@ -187,7 +187,7 @@ test("le pied des fiches Petit SPLAT! et des livrets est gris moyen, 10 px (lisi
   const pied = petit.match(/\.activity-footer \{[\s\S]*?\}/)[0];
   assert.match(pied, /font-size: 10px;/);
   assert.match(pied, /color: #64748b;/);
-  assert.match(pied, /bottom: -6\.2mm;/);
+  assert.match(pied, /bottom: -4\.5mm;/); // pas plus bas : 3,5 mm du bord du papier, comme avant
   for (const css of ["_sources/livret-petit-splat/commun.css", "_sources/livret-splat-classique/commun.css"]) {
     assert.match(lire(css), /\.pied\{[^}]*font-size:10px;[^}]*color:#64748b;/, css);
   }
