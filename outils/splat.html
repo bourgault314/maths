@@ -2794,7 +2794,11 @@ function assignPositionsNumbered(card, rng){
     if(arr.length === 1){
       const maxD = Math.max(0, s.r - beadR - 30);
       const a = rFloat(rng, 0, Math.PI*2);
-      const d = rFloat(rng, 0, Math.min(10, maxD));
+      const dTire = rFloat(rng, 0, Math.min(10, maxD));
+      /* B, B± : le jeton caché est dessiné au centre de sa tache. Le petit décalage reste
+         tiré (la suite du hasard, donc les nombres des séries, ne bouge pas) mais n'est plus
+         appliqué. L'Enquête, D et les Opérations gardent leur décalage. */
+      const d = (card.family === "N" || card.family === "NPM") ? 0 : dTire;
       posH.push({cx: s.cx + Math.cos(a)*d, cy: s.cy + Math.sin(a)*d});
       hiddenPlan.push({t, ux:Math.cos(a), uy:Math.sin(a), d, pair:false});
     }else{
@@ -2860,8 +2864,9 @@ function assignPositionsNumbered(card, rng){
    Les autres familles (Enquête, D) gardent leur rayon. Dessin seulement : le tirage
    au sort n'en dépend pas.
    En B±, une tache marquée « opposé » porte ce mot au-dessus de son jeton une fois
-   dévoilée ; le rayon de base est le plus grand qui lui laisse sa place dans le creux du
-   haut de la tache : une carte qui a une tache « opposé » garde donc le rayon de base. */
+   dévoilée. Jeton au centre et mot baissé de OPPOSE_MOT_BAISSE, le rayon de base laisse
+   au moins 2,5 unités entre le mot et le jeton ; un jeton plus gros le ferait mordre : une
+   carte qui a une tache « opposé » garde donc le rayon de base. */
 function numberedBeadRadiusDrawn(splats, family, hiddenByTask, opposedTasks){
   const base = numberedBeadRadius(splats, family);
   if(family !== "N" && family !== "NPM") return base;
@@ -2871,6 +2876,11 @@ function numberedBeadRadiusDrawn(splats, family, hiddenByTask, opposedTasks){
   const minSplatR = Math.min(...splats.map(s=>s.r));
   return Math.max(base, clamp(Math.floor((minSplatR - 28) * 0.6), 38, 68));
 }
+
+/* Mot « opposé » d'une tache dévoilée (écran et correction imprimée) : à 0,65 r au-dessus
+   du centre, ses lettres passaient sur le trait du haut de la tache ; 7 plus bas, elles
+   sont dans la tache, et le jeton, au centre, reste au moins 2,5 unités sous le mot. */
+const OPPOSE_MOT_BAISSE = 7;
 
 /* Report des jetons de la table de tirage vers la table de dessin (B, B± à 4 et 5 taches),
    au rayon dessiné (voir numberedBeadRadiusDrawn).
@@ -6258,7 +6268,7 @@ function renderCard(card, revealState){
 
       if(card.family === "NPM" && card._num && Array.isArray(card._num.opposedTasks) && card._num.opposedTasks[idx]){
         const fs = clamp(Math.round(s.r*0.34), 28, 64);
-        const y = visualRevealState === 2 ? (s.cy - s.r*0.65) : (s.cy);
+        const y = visualRevealState === 2 ? (s.cy - s.r*0.65 + OPPOSE_MOT_BAISSE) : (s.cy);
         layer.appendChild(text(s.cx, y, "opposé", {
           "text-anchor":"middle",
           "dominant-baseline":"middle",
@@ -6272,7 +6282,7 @@ function renderCard(card, revealState){
       }
       if(opp && opp.flags[idx]){
         const fs = clamp(Math.round(s.r*0.34), 28, 64);
-        const y = visualRevealState === 2 ? (s.cy - s.r*0.65) : (s.cy);
+        const y = visualRevealState === 2 ? (s.cy - s.r*0.65 + OPPOSE_MOT_BAISSE) : (s.cy);
         layer.appendChild(text(s.cx, y, "opposé", {
           "text-anchor":"middle",
           "dominant-baseline":"middle",
@@ -7357,7 +7367,7 @@ function renderCardIntoSvg(targetSvg, card, printMode){
       targetSvg.appendChild(tEl("path",{d: blobPath(s.cx, s.cy + printOffsetY, s.r), fill:f, stroke:"rgba(0,0,0,0.18)","stroke-width":"5"}));
       if(card.family === "NPM" && card._num && Array.isArray(card._num.opposedTasks) && card._num.opposedTasks[idx]){
         const fs = clamp(Math.round(s.r*0.34), 28, 64);
-        const y = revealAnswers ? (s.cy + printOffsetY - s.r*0.65) : (s.cy + printOffsetY);
+        const y = revealAnswers ? (s.cy + printOffsetY - s.r*0.65 + OPPOSE_MOT_BAISSE) : (s.cy + printOffsetY);
         targetSvg.appendChild(tText(s.cx, y, "opposé", {
           "text-anchor":"middle",
           "dominant-baseline":"middle",
@@ -7371,7 +7381,7 @@ function renderCardIntoSvg(targetSvg, card, printMode){
       }
       if(oppP && oppP.flags[idx]){
         const fs = clamp(Math.round(s.r*0.34), 28, 64);
-        const y = revealAnswers ? (s.cy + printOffsetY - s.r*0.65) : (s.cy + printOffsetY);
+        const y = revealAnswers ? (s.cy + printOffsetY - s.r*0.65 + OPPOSE_MOT_BAISSE) : (s.cy + printOffsetY);
         targetSvg.appendChild(tText(s.cx, y, "opposé", {
           "text-anchor":"middle",
           "dominant-baseline":"middle",
