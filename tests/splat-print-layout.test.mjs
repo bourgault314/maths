@@ -25,7 +25,7 @@ test("l'impression descend seulement le grand plateau sans toucher au plateau in
   const printTrayConfig = functionSource("getPrintTrayConfig", "getUnitSplats");
 
   assert.match(printTrayConfig, /const tray = getTrayConfig\(mode\)/);
-  assert.match(printTrayConfig, /const offsetY = tray\.isHigh \? 35 : 0/);
+  assert.match(printTrayConfig, /const offsetY = tray\.isHigh \? 60 : 0/);
   assert.match(printTrayConfig, /return \{\.\.\.tray, y:tray\.y \+ offsetY, offsetY\}/);
 });
 
