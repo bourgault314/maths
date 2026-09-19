@@ -29,7 +29,8 @@ Deux PDF :
 - `dos.html` — page 8 : « Encore des cartes ! » (4 QR, séries de 12 cartes tirées au
   hasard), « La suite du voyage » vers l'univers (monde 3), « Pour se souvenir »
   (total, jeton et paquet, tache et « ? », et surtout : *sous chaque carte, c'est à toi
-  de dessiner le tableau ou d'écrire l'équation*), grille « Mes fiches », crédits, licence.
+  de dessiner le tableau ou d'écrire l'équation* — sans réécrire l'équation : l'exemple,
+  écrit par l'outil, est sur la couverture), grille « Mes fiches », crédits, licence.
 - `commun.css` — la charte des deux pages (Poppins, bleu `#0b67b2` du monde 2 — le
   même dégradé que le bandeau imprimé des fiches depuis le lot B).
 - `qr/` — les QR codes, en PNG noir et blanc : `fiche7/8/9.png`, `univers.png`,

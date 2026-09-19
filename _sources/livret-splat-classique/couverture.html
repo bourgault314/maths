@@ -52,9 +52,11 @@
       <stop offset="0" stop-color="#0b67b2"/><stop offset=".45" stop-color="#3d8fd1"/><stop offset="1" stop-color="#e6f1fb"/>
     </linearGradient></defs>
     <path fill="url(#deg)" d="M0,0 H210 V68 C206,76 202,83 196,81 C190,79 188,69 180,69 C172,69 170,75 163,74 C156,73 154,67 145,68 C136,69 133,85 122,82 C111,79 110,68 100,69 C92,70 90,76 82,75 C74,74 72,67 62,68 C53,69 51,81 41,79 C33,77 31,68 22,69 C14,70 8,74 0,70 Z"/>
-    <ellipse cx="127.5" cy="86.4" rx="2.1" ry="1.7" fill="url(#deg)"/>
-    <ellipse cx="45" cy="83.2" rx="1.5" ry="1.2" fill="url(#deg)"/>
-    <ellipse cx="197" cy="85.3" rx="1.2" ry="1" fill="url(#deg)"/>
+    <!-- les gouttes, debout (tournées de 90°, le dégradé tourne avec elles) ; celle du milieu
+         est remontée de 0,8 mm pour ne pas être coupée par le bas du bandeau (88 mm) -->
+    <ellipse cx="127.5" cy="85.6" rx="2.1" ry="1.7" fill="url(#deg)" transform="rotate(90 127.5 85.6)"/>
+    <ellipse cx="45" cy="83.2" rx="1.5" ry="1.2" fill="url(#deg)" transform="rotate(90 45 83.2)"/>
+    <ellipse cx="197" cy="85.3" rx="1.2" ry="1" fill="url(#deg)" transform="rotate(90 197 85.3)"/>
   </svg>
 
   <div class="logos">
