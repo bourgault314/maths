@@ -110,7 +110,7 @@ test("J’apprends : ◐ quand on commence, ● quand l’activité est terminé
   assert.equal(commence.tables[7].apprends.construct, 0);
   const {parcours: fini, evenements} = parcours.appliquerSerie(commence, config, {correct: 8, total: 11, date: DATE});
   assert.equal(fini.tables[7].apprends.random, 2);
-  assert.deepEqual(evenements, [{type: "apprends", table: 7, activite: "random", termines: 1}]);
+  assert.deepEqual(evenements, [{type: "apprends", table: 7, activite: "random", termines: 1, fois: 1}]);
 });
 
 test("Je m’entraîne : trois entraînements différents, 1 erreur max sur 10, un raté ne consomme rien", () => {
@@ -328,6 +328,14 @@ test("la prochaine étape suit le parcours d’une table : perles → entraînem
 
   etat = jouer(etat, parcours.configEntraine(2, "trous"), 10, 10).parcours;
   etat = jouer(etat, parcours.configEntraine(2, "mixte"), 10, 10).parcours;
+  // Lot « dosage + validation » (19/09/2026) : les trois réussis, la
+  // validation n'est conseillée que quand les 8 calculs de la table sont en
+  // boîte 3. Ici la grille est vide (jouer() ne répond à aucun calcul) : le
+  // rond reste sur Je m'entraîne, sur l'entraînement refait le moins souvent.
+  etape = parcours.prochaineEtape(etat);
+  assert.equal(etape.type, "entraine", "3 sur 3 mais la grille pas prête → Je m’entraîne");
+  assert.equal(etape.entrainement, "desordre", "les trois à 1 fois → le premier");
+  parcours.faitsDeLaTable(2).forEach(cle => { etat.calculs[cle] = {boite: 3, cases: 2, vu: DATE, erreur: null, gagne: DATE, echeance: "2099-01-01"}; });
   etape = parcours.prochaineEtape(etat);
   assert.equal(etape.type, "validation");
   assert.deepEqual(etape.config, {mode: "validation", tables: [2], total: 20, duration: 90});

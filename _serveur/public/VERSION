@@ -1,10 +1,10 @@
 # Manifeste du serveur de suivi maths&go — produit par outils/generer-version.php.
 # Ne pas modifier à la main : un test du dépôt refait ce calcul à chaque passage.
 # verifier.php relit ce fichier en ligne et compare chaque empreinte.
-lot defi-tables-R5
-genere_le 2026-09-13
+lot defi-tables-dosage-validation
+genere_le 2026-09-19
 fichiers 28
-manifeste 0d659f8223baf99f1d561d38c5640ee7a96f88fcb9826eb10bcfa004e22da183
+manifeste 5a8d7c20b104493a38cbf4bccd60391d5277862491f2b24be0a9f0f705c17323
 61b230d36219b3c4515e56c1ff59afb1a85ffa12343956bd73b16ba04867cdca  .htaccess
 d1cdf00b3e672130b90da1f1aa9333949036fc3d5ad866d539cd11aef7fd8204  api/eleve.php
 dc938db0cb546fdfc4121ddeebdf558ca62259f20d6aecb398c84e2382697675  api/parcours.php
@@ -15,7 +15,7 @@ b901e292ec96dadfd1a9415bc315027c93b635d0f4254a6da8ff7afd92c6520e  favicon.svg
 e111e03d4df8ad99633ff69c50963b65ef41c7089b96ca16bd1d7587dff74ca0  index.php
 014a992fe48e48144dcaa218601a11ec8745fe1fe7a7d30f3323ec9e213159d5  infos.php
 fa28d421a28ed9b6f4b997d5119c2b8adbacff6e2dd119a179b71230f9664934  lib/.htaccess
-a0b3e9e1588ba6c18f8b0ef7bd3a70f40b7e6d11014281d222cdabf513e5b7aa  lib/applis.php
+e9c4c52dc18dd177afbbc0d74e2642c3691707be812bfee9f8c37e4c37e53a00  lib/applis.php
 e082ac8fa5282bb3b7b78ec75e1e9d3c726c44d8f8e8a9e3e4f4e776b4645270  lib/archives.php
 817e5e7501933e4bf2ca5b6bce94ba921e652d056540b864fdcad427823f8ac8  lib/auth.php
 e37d31d8793760bcc94e06112ba335a350c83a441eda960ebaf2f30eed91c96d  lib/bd.php
@@ -30,6 +30,6 @@ a71c9980e7aa65eee108c8f26f84dca8812d4b246ec9f9e25958ca2417d6fbf5  lib/reponse.ph
 b476cc832c9b7497eed6194afecee863a686469e9162ad1832bd7e7732ccc304  mathsgo-logo-print.png
 2a442b4a4ae2452f649f77224a0aae91e6fe0ac83566253d65d1dc1807cdb6a2  mathsgo-logo.png
 4cc15b863e2b7d4afaa761685a411b7309fe133ecff7625420ff1dedfa365502  menage.php
-b41cef9a4cdd9bfd765d3695481e0cbc9965b7758a8db86f2e12f4296b26b608  prof/defi_tables_mon_parcours.js
+16982df61de55617979e6332c1e3318389c84a83060e2ec71aaba811a89c7b51  prof/defi_tables_mon_parcours.js
 54744e002a5e3ecd6353787bdd8629c47de29c69f3d3237b6e74f45d4c2df033  prof/index.php
 bd509f1f05320588a65c6256a121c478a2a0c6f01adc37f15e83ca44038f00bc  verifier.php

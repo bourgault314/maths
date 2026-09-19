@@ -76,7 +76,10 @@ test("« Je valide ma table » se joue en 1 min 30, sans choix de durée", () =>
 test("la même épreuve avec plus de temps devient un entraînement de l’étape 2", () => {
   assert.match(html, /libelle: "Comme la validation, en 2 min"/);
   assert.match(html, /lancer: \(\) => launchFromParcours\(PARCOURS\.configValidation\(table, 120\), "menu"\)/, "le moteur la classe déjà en « préparation » : elle ne valide pas la table");
-  assert.match(html, /if \(!ligne\.acquise\) \{\s*choixEntraine\.push\(/, "inutile sur une table déjà acquise");
+  // Lot dosage + validation (19/09/2026) : proposée AUSSI sur une table
+  // acquise — se remettre en jambes sur une table validée est un vrai usage.
+  assert.doesNotMatch(html, /if \(!ligne\.acquise\) \{\s*choixEntraine\.push\(/, "plus de condition « pas acquise » sur l’option 2 min");
+  assert.match(html, /\{\s*choixEntraine\.push\(\{\s*libelle: "Comme la validation, en 2 min"/);
   assert.match(html, /marqueur: "⏱"/, "ce n’est pas un des trois entraînements comptés : pas de rond d’état");
 });
 

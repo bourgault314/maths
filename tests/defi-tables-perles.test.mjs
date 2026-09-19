@@ -330,7 +330,7 @@ test("le moteur du parcours compte l’activité : commencée, terminée, « 1 a
   assert.equal(etat.tables[3].apprends.beads, 0, "sans toucher à l’objet reçu");
   const apres = parcours.appliquerSerie(commence, config, {correct: 11, total: 11});
   assert.equal(apres.parcours.tables[3].apprends.beads, 2);
-  assert.deepEqual(apres.evenements, [{type: "apprends", table: 3, activite: "beads", termines: 1}]);
+  assert.deepEqual(apres.evenements, [{type: "apprends", table: 3, activite: "beads", termines: 1, fois: 1}]);
   assert.deepEqual(parcours.etatAffichage(apres.parcours).lignes[1].apprends.map(item => item.activite), ["beads", "construct", "gaps", "ordered", "random"]);
   assert.ok(!parcours.serieAlimenteGrille(config), "J’apprends n’alimente jamais la grille des 36 calculs");
 });
@@ -381,8 +381,13 @@ test("le rond bleu : J’apprends tant que les cinq ne sont pas terminées et qu
   assert.equal(ligne({beads: 2, construct: 2, gaps: 2, ordered: 2, random: 2}).conseil, "entraine", "5 sur 5 → Je m’entraîne");
   assert.equal(ligne({}, {desordre: 2}).conseil, "entraine", "un entraînement réussi avec 0 activité → Je m’entraîne");
   assert.equal(ligne({}, {desordre: 1}).conseil, "apprends", "un entraînement seulement tenté (1) ne compte pas");
-  assert.equal(ligne({}, {desordre: 2, trous: 2, mixte: 2}).conseil, "valide", "les trois réussis → Je valide");
-  assert.equal(ligne({beads: 2}, {desordre: 2, trous: 2, mixte: 2, acquise: null}).conseil, "valide");
+  // Lot « dosage + validation » (19/09/2026) : les trois réussis ne
+  // suffisent plus sans les 8 calculs en boîte 3 — conseilTable seule (sans
+  // le point sur la grille) garde la lecture d'avant, la ligne de
+  // etatAffichage lit la grille.
+  assert.equal(parcours.conseilTable(parcours.normaliserParcours({version: 2, tables: {6: {entraine: {desordre: 2, trous: 2, mixte: 2}}}}).tables[6]), "valide", "sans la grille : la règle d’avant");
+  assert.equal(ligne({}, {desordre: 2, trous: 2, mixte: 2}).conseil, "entraine", "les trois réussis, grille vide → toujours Je m’entraîne");
+  assert.equal(ligne({beads: 2}, {desordre: 2, trous: 2, mixte: 2, acquise: null}).conseil, "entraine");
   // prochaineEtape suit la même règle, et nomme l'activité conseillée.
   const p = parcours.normaliserParcours({version: 2, tables: {2: {apprends: {beads: 2, construct: 2}}}});
   assert.deepEqual(parcours.prochaineEtape(p), {type: "apprends", table: 2, activite: "gaps", libelle: "Table de 2 : complète une bande à trous", config: {mode: "learn", tables: [2], learnActivity: "gaps"}});
@@ -393,7 +398,7 @@ test("le rond bleu : J’apprends tant que les cinq ne sont pas terminées et qu
 });
 
 test("le moteur épinglé a changé : nouveau numéro, copie serveur identique, serveur qui accepte « beads »", async () => {
-  assert.match(html, /defi_tables_mon_parcours\.js\?v=20260912-1/, "le moteur a changé : son numéro monte (et un dépôt FTP suit)");
+  assert.match(html, /defi_tables_mon_parcours\.js\?v=20260919-1/, "le moteur a changé : son numéro monte (et un dépôt FTP suit)");
   assert.match(html, /defi_tables_core\.js\?v=20260914-1/, "le noyau aussi (« la bande » dans ses libellés)");
   const moteur = await readFile(new URL("../outils/calcul_mental/defi_tables_mon_parcours.js", import.meta.url));
   const copie = await readFile(new URL("../_serveur/public/prof/defi_tables_mon_parcours.js", import.meta.url));

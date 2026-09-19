@@ -112,7 +112,11 @@
 
   const SEUILS = Object.freeze({
     entrainement: Object.freeze({total: 10, erreursMax: 1}),
-    validation: Object.freeze({total: 20, dureeMax: 90, erreursMax: 2}),
+    // « boiteMin » (19/09/2026, décision de Gwenaël) : la validation n'est
+    // CONSEILLÉE que quand les 8 calculs de la table sont en boîte 3 ou plus
+    // — deux rendez-vous réussis, donc au plus tôt le lendemain des
+    // entraînements. Un conseil, jamais un verrou : « Je valide » reste libre.
+    validation: Object.freeze({total: 20, dureeMax: 90, erreursMax: 2, boiteMin: 3}),
     // Le mélange a le format de la validation : 20 questions (14 produits +
     // 6 trous) en 1 min 30, 2 erreurs max — dès 2 tables acquises.
     melange: Object.freeze({total: 20, dureeMax: 90, erreursMax: 2, tablesMin: 2}),
@@ -187,10 +191,25 @@
     return JSON.parse(JSON.stringify(valeur));
   }
 
+  // Les clés du compteur « fois » : les cinq activités de J'apprends et les
+  // trois entraînements (noms distincts, un seul objet plat par table).
+  const CLES_FOIS = Object.freeze([...ACTIVITES_APPRENDS, ...ENTRAINEMENTS]);
+
+  function foisVides() {
+    return Object.fromEntries(CLES_FOIS.map(cle => [cle, 0]));
+  }
+
   function tableVide() {
     return {
       apprends: Object.fromEntries(ACTIVITES_APPRENDS.map(activite => [activite, 0])),
       entraine: {desordre: 0, trous: 0, mixte: 0, dernier: null},
+      // Lot « dosage + validation » (19/09/2026) : combien de fois chaque
+      // activité et chaque entraînement ont été FAITS jusqu'au bout (réussi
+      // ou non). Un état 0/1/2 dit « fait ? » et cette question a une fin ;
+      // un nombre dit « combien de fois ? » et n'en a pas — c'est lui que
+      // l'accueil montre, pour qu'un élève ne lise jamais « terminé » et
+      // refasse le rekenrek autant qu'il veut. Une clé absente vaut 0.
+      fois: foisVides(),
       acquise: null
     };
   }
@@ -216,6 +235,10 @@
       calculs: {}
     };
   }
+
+  // Plafond du compteur « fois » (un élève qui refait une activité mille fois
+  // ne casse rien ; au-delà, le nombre ne monte plus).
+  const FOIS_MAX = 9999;
 
   function entier(valeur, minimum, maximum, defaut = 0) {
     const nombre = Number(valeur);
@@ -312,6 +335,11 @@
           total: entier(dernier.total, 1, 20, 10)
         };
       }
+      CLES_FOIS.forEach(cle => {
+        // Au-delà du plafond, on garde le plafond (pas zéro : un compteur ne
+        // se perd pas parce qu'il est grand).
+        cible.fois[cle] = Math.min(FOIS_MAX, entier(source.fois && source.fois[cle], 0, Number.MAX_SAFE_INTEGER));
+      });
       cible.acquise = dateOuNull(source.acquise);
     });
     if (brut.melange && typeof brut.melange === "object") {
@@ -591,8 +619,9 @@
     if (classement.type === "apprends") {
       const ligne = copie.tables[classement.table];
       ligne.apprends[classement.activite] = 2;
+      ligne.fois[classement.activite] = Math.min(FOIS_MAX, ligne.fois[classement.activite] + 1);
       const termines = ACTIVITES_APPRENDS.filter(activite => ligne.apprends[activite] === 2).length;
-      evenements.push({type: "apprends", table: classement.table, activite: classement.activite, termines});
+      evenements.push({type: "apprends", table: classement.table, activite: classement.activite, termines, fois: ligne.fois[classement.activite]});
     } else if (classement.type === "entraine") {
       const ligne = copie.tables[classement.table];
       const reussi = erreurs <= SEUILS.entrainement.erreursMax;
@@ -600,6 +629,10 @@
       if (reussi) ligne.entraine[classement.entrainement] = 2;
       else if (ligne.entraine[classement.entrainement] === 0) ligne.entraine[classement.entrainement] = 1;
       ligne.entraine.dernier = {entrainement: classement.entrainement, score: correct, total};
+      // Un entraînement terminé compte, réussi ou non : c'est le nombre de
+      // fois où l'élève s'est entraîné, pas le nombre de réussites (les
+      // ronds disent déjà « réussi »).
+      ligne.fois[classement.entrainement] = Math.min(FOIS_MAX, ligne.fois[classement.entrainement] + 1);
       const reussites = ENTRAINEMENTS.filter(entrainement => ligne.entraine[entrainement] === 2).length;
       evenements.push({
         type: "entraine",
@@ -610,7 +643,11 @@
         score: correct,
         total,
         reussites,
-        pret: reussites === ENTRAINEMENTS.length
+        pret: reussites === ENTRAINEMENTS.length,
+        fois: ligne.fois[classement.entrainement],
+        // Les trois réussis ET les 8 calculs en boîte 3 : « tu peux valider » ;
+        // sinon l'écran de résultat annonce le rendez-vous (validationTable).
+        validation: validationTable(copie, classement.table, date)
       });
     } else if (classement.type === "validation") {
       const reussi = erreurs <= SEUILS.validation.erreursMax;
@@ -995,6 +1032,32 @@
     return {mode: "revision", table: TABLES.includes(Number(table)) ? Number(table) : null};
   }
 
+  // Le point sur la validation d'une table (lot « dosage + validation »,
+  // 19/09/2026) : ses 8 calculs (pour la table de 7 : 2-7, 3-7, 4-7, 5-7,
+  // 6-7, 7-7, 7-8, 7-9 — ni ×0, ni ×1, ni ×10, clé « min-max ») et où ils
+  // en sont. « prets » : en boîte 3 ou plus. Les autres : jamais rencontrés
+  // (« inconnus »), dus aujourd'hui (« dus »), ou attendus plus tard
+  // (« prochain » = le premier jour où l'un d'eux revient, et dans combien
+  // de jours). C'est ce que l'accueil lit pour dire « tes 8 calculs ont
+  // rendez-vous demain ».
+  function validationTable(parcours, table, aujourdhui = jourLocal()) {
+    const faits = faitsDeLaTable(table);
+    let prets = 0, inconnus = 0, dus = 0;
+    const aVenir = [];
+    faits.forEach(cle => {
+      const fait = parcours.calculs[cle];
+      if (!fait) { inconnus += 1; return; }
+      if (fait.boite >= SEUILS.validation.boiteMin) { prets += 1; return; }
+      if (faitDu(fait, aujourdhui)) { dus += 1; return; }
+      // Pas dû aujourd'hui : soit son jour de retour est à venir, soit il a
+      // été raté aujourd'hui (il revient demain).
+      aVenir.push(fait.echeance && fait.echeance > aujourdhui ? fait.echeance : ajouterJours(aujourdhui, 1));
+    });
+    aVenir.sort();
+    const prochain = aVenir.length ? {jour: aVenir[0], dans: ecartJours(aujourdhui, aVenir[0])} : null;
+    return {total: faits.length, prets, inconnus, dus, aVenir: aVenir.length, prochain, prete: prets === faits.length};
+  }
+
   // L'étape conseillée d'une table — le rond bleu de l'accueil. Règle de
   // Gwenaël (10/09/2026) : J'apprends tant que les cinq activités ne sont pas
   // TOUTES terminées ET qu'aucun entraînement n'est réussi ; dès que l'un des
@@ -1003,18 +1066,23 @@
   // celui qui réussit un entraînement de lui-même n'a plus à découvrir la
   // table. Jusqu'au lot 4a, J'apprends n'était conseillé qu'à une table jamais
   // touchée : la première activité commencée envoyait déjà s'entraîner.
-  function conseilTable(ligne) {
+  // Depuis le 19/09/2026 : les trois entraînements réussis ne suffisent plus,
+  // il faut AUSSI les 8 calculs de la table en boîte 3 (validationTable) —
+  // sinon le rond reste sur Je m'entraîne et l'accueil explique le
+  // rendez-vous. Sans grille (ancien appel avec la ligne seule), la règle
+  // d'avant s'applique.
+  function conseilTable(ligne, validation = null) {
     if (ligne.acquise) return "valide";
     const reussites = ENTRAINEMENTS.filter(entrainement => ligne.entraine[entrainement] === 2).length;
-    if (reussites === ENTRAINEMENTS.length) return "valide";
+    if (reussites === ENTRAINEMENTS.length && (!validation || validation.prete)) return "valide";
     const toutesTerminees = ACTIVITES_APPRENDS.every(activite => ligne.apprends[activite] === 2);
     return !toutesTerminees && !reussites ? "apprends" : "entraine";
   }
 
-  function etapeTable(parcours, table) {
+  function etapeTable(parcours, table, aujourdhui = jourLocal()) {
     const ligne = parcours.tables[table];
     if (ligne.acquise) return null;
-    const conseil = conseilTable(ligne);
+    const conseil = conseilTable(ligne, validationTable(parcours, table, aujourdhui));
     if (conseil === "valide") {
       return {type: "validation", table, libelle: `Table de ${table} : valide ta table (20 questions en 1 min 30)`, config: configValidation(table)};
     }
@@ -1023,7 +1091,10 @@
       const activite = ACTIVITES_APPRENDS.find(candidat => ligne.apprends[candidat] !== 2);
       return {type: "apprends", table, activite, libelle: `Table de ${table} : ${CONSIGNES_APPRENDS[activite]}`, config: configApprends(table, activite)};
     }
-    const entrainement = ENTRAINEMENTS.find(candidat => ligne.entraine[candidat] !== 2);
+    // Les trois déjà réussis (on attend la boîte 3) : celui refait le moins
+    // souvent, le premier en cas d'égalité.
+    const entrainement = ENTRAINEMENTS.find(candidat => ligne.entraine[candidat] !== 2)
+      || ENTRAINEMENTS.reduce((moins, candidat) => (ligne.fois[candidat] < ligne.fois[moins] ? candidat : moins), ENTRAINEMENTS[0]);
     return {
       type: "entraine",
       table,
@@ -1061,7 +1132,7 @@
       };
     }
     for (const table of ORDRE_CONSEIL) {
-      const etape = etapeTable(parcours, table);
+      const etape = etapeTable(parcours, table, aujourdhui);
       if (etape) return etape;
     }
     if (parcours.expert.etoiles < ETOILES_MAX) {
@@ -1110,15 +1181,18 @@
     const aRevoir = tablesARevoir(parcours);
     const lignes = TABLES.map(table => {
       const ligne = parcours.tables[table];
+      const validation = validationTable(parcours, table, aujourdhui);
       return {
         table,
-        apprends: ACTIVITES_APPRENDS.map(activite => ({activite, etat: ligne.apprends[activite], libelle: LIBELLES_APPRENDS[activite]})),
-        entraine: ENTRAINEMENTS.map(entrainement => ({entrainement, etat: ligne.entraine[entrainement], libelle: LIBELLES_ENTRAINEMENTS[entrainement]})),
+        apprends: ACTIVITES_APPRENDS.map(activite => ({activite, etat: ligne.apprends[activite], fois: ligne.fois[activite], libelle: LIBELLES_APPRENDS[activite]})),
+        entraine: ENTRAINEMENTS.map(entrainement => ({entrainement, etat: ligne.entraine[entrainement], fois: ligne.fois[entrainement], libelle: LIBELLES_ENTRAINEMENTS[entrainement]})),
         dernierEntrainement: ligne.entraine.dernier,
         acquise: ligne.acquise,
         aRevoir: aRevoir.includes(table),
+        // Le point sur ses 8 calculs (prets, dus, prochain retour).
+        validation,
         // L'étape conseillée de la table : « apprends », « entraine », « valide ».
-        conseil: conseilTable(ligne)
+        conseil: conseilTable(ligne, validation)
       };
     });
     const visible = acquises.length >= SEUILS.melange.tablesMin;
@@ -1672,6 +1746,11 @@
         cible.entraine[entrainement] = Math.max(ligneA.entraine[entrainement], ligneB.entraine[entrainement]);
       });
       cible.entraine.dernier = meilleurEntrainement(ligneA.entraine.dernier, ligneB.entraine.dernier);
+      // Le compteur « fois » prend le plus grand des deux : deux appareils
+      // portent le même parcours, pas deux moitiés à additionner.
+      CLES_FOIS.forEach(cle => {
+        cible.fois[cle] = Math.max(ligneA.fois[cle], ligneB.fois[cle]);
+      });
       // Une table acquise le reste, à la date de la première validation.
       cible.acquise = dateLaPlusAncienne(ligneA.acquise, ligneB.acquise);
     });
@@ -1822,6 +1901,9 @@
     facteursFait,
     libelleFait,
     faitsDeLaTable,
+    validationTable,
+    CLES_FOIS,
+    FOIS_MAX,
     etatFait,
     faitDu,
     echeanceDeBoite,
@@ -1841,6 +1923,7 @@
     configRevision,
     conseilTable,
     prochaineEtape,
+    etapeTable,
     etatAffichage,
     CLE_SEL,
     ITERATIONS_EMPREINTE,

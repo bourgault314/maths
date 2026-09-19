@@ -330,6 +330,14 @@
     .etape .dots i.on { background: var(--teal); }
     .etape .dots i.is-check { width: auto; height: auto; border: 0; border-radius: 0; background: none; color: var(--green); font-style: normal; font-weight: 950; font-size: 1.15rem; line-height: 1; }
     .etape .dots i.is-check.off { color: #9db4c4; }
+    /* Lot « dosage + validation » (19/09/2026) : la pastille « N fois » de
+       J'apprends — un nombre qui ne fait que monter, à la place des cinq ronds
+       qui se lisaient comme un niveau terminé. Rien tant que c'est 0. */
+    .etape .fois { display: inline-flex; align-items: center; justify-content: center; height: 24px; padding: 0 8px; border-radius: 12px; background: var(--teal); color: #fff; font-weight: 900; font-size: .78rem; line-height: 1; white-space: nowrap; }
+    .choix-activite .fois-petit { color: var(--teal); font-weight: 900; font-size: .74rem; white-space: nowrap; }
+    /* Le rendez-vous des 8 calculs, sous les trois étapes : pourquoi le rond
+       bleu reste sur Je m'entraîne quand les trois sont réussis. */
+    .matable .rdv { margin: 10px 0 2px; padding: 10px 12px; border: 1px solid #b9d4e6; border-radius: 12px; background: #eef6fc; color: #1a4b8c; font-weight: 800; font-size: .86rem; line-height: 1.3; }
     .etape.is-next { border-color: var(--blue); box-shadow: 0 0 0 2px rgba(7, 85, 184, .18), 0 2px 0 #b7cfe8; background: #fff; }
     .etape.is-next .num { background: var(--blue); color: #fff; }
     /* Lot R3 (Q2, 12/09/2026) : « Je valide ma table » n'est plus écrit en
@@ -2218,7 +2226,7 @@
   </footer>
 
   <script src="./defi_tables_core.js?v=20260914-1"></script>
-  <script src="./defi_tables_mon_parcours.js?v=20260912-1"></script>
+  <script src="./defi_tables_mon_parcours.js?v=20260919-1"></script>
   <script>
     (() => {
       "use strict";
@@ -5310,21 +5318,30 @@
       // de l'ordre conseillé (2, 10, 5, 3, 4, 6, 7, 8, 9).
       const CLE_TABLE_CHOISIE = "mathsgo-defi-tables-table";
 
-      function lireTableChoisie() {
+      function lireChoixTable() {
         try {
           const onglet = stockageSession();
           const lu = onglet ? JSON.parse(onglet.getItem(CLE_TABLE_CHOISIE) || "null") : null;
           if (!lu || lu.code !== codeSuivi) return null;
           const table = Number(lu.table);
-          return PARCOURS_TABLES.includes(table) ? table : null;
+          return PARCOURS_TABLES.includes(table) ? {table, acquise: Boolean(lu.acquise)} : null;
         } catch (_) { return null; }
       }
 
-      function ecrireTableChoisie(table) {
+      function lireTableChoisie() {
+        const choix = lireChoixTable();
+        return choix ? choix.table : null;
+      }
+
+      // « acquise » (lot dosage + validation, le point de Jackie) : la table
+      // était-elle déjà acquise quand l'élève l'a choisie ? Alors sa carte
+      // s'affiche telle quelle (trois étapes cochées). Choisie AVANT d'être
+      // validée, elle cède la place à la suivante une fois acquise, comme avant.
+      function ecrireTableChoisie(table, {acquise = false} = {}) {
         try {
           const onglet = stockageSession();
           if (!onglet) return;
-          if (table) onglet.setItem(CLE_TABLE_CHOISIE, JSON.stringify({code: codeSuivi, table}));
+          if (table) onglet.setItem(CLE_TABLE_CHOISIE, JSON.stringify({code: codeSuivi, table, acquise: Boolean(acquise)}));
           else onglet.removeItem(CLE_TABLE_CHOISIE);
         } catch (_) {}
       }
@@ -5339,10 +5356,13 @@
       }
 
       function tableEnCours(etat) {
-        const choisie = lireTableChoisie();
-        // Une table acquise n'est plus « ma table »… sauf quand les 9 le sont :
-        // « M'entraîner sur une table » (lot 3) choisit alors n'importe laquelle.
-        if (choisie && (!etat.acquises.includes(choisie) || etat.acquises.length === PARCOURS_TABLES.length)) return choisie;
+        const choix = lireChoixTable();
+        const choisie = choix ? choix.table : null;
+        // Une table acquise n'est plus « ma table »… sauf quand les 9 le sont
+        // (« M'entraîner sur une table », lot 3), ou quand l'élève l'a choisie
+        // ALORS QU'ELLE ÉTAIT DÉJÀ acquise (le point de Jackie, 19/09/2026 :
+        // toucher sa table cochée affichait la table de 2 sans un mot).
+        if (choisie && (!etat.acquises.includes(choisie) || choix.acquise || etat.acquises.length === PARCOURS_TABLES.length)) return choisie;
         const ordre = PARCOURS.ORDRE_CONSEIL;
         return ordre.find(table => !etat.acquises.includes(table)) || ordre[ordre.length - 1];
       }
@@ -5370,6 +5390,38 @@
         const i = document.createElement("i");
         i.className = `${on === 2 ? "on" : on === 1 ? "is-started" : ""} ${extra}`.trim();
         return i;
+      }
+
+      // La pastille « N fois » de J'apprends (lot dosage + validation).
+      function pastilleFois(fois) {
+        const pastille = document.createElement("span");
+        pastille.className = "fois";
+        pastille.textContent = `${fois}\u00a0fois`;
+        return pastille;
+      }
+
+      // « 13 septembre » depuis « AAAA-MM-JJ » (jour local, sans fuseau).
+      function dateEnLettres(jour) {
+        const [annee, mois, date] = String(jour).split("-").map(Number);
+        if (!annee || !mois || !date) return "";
+        return new Date(annee, mois - 1, date, 12).toLocaleDateString("fr-FR", {day: "numeric", month: "long"});
+      }
+
+      // Le rendez-vous des 8 calculs d'une table (validationTable du moteur),
+      // quand les trois entraînements sont réussis mais que la validation
+      // n'est pas encore conseillée. Même phrase sur l'accueil et sur
+      // l'écran de résultat.
+      function phraseRendezVous(validation, table) {
+        const manquants = validation.total - validation.prets;
+        if (validation.dus) {
+          return `${pluriel(validation.dus, "calcul")} de la table de ${table} t’attend${validation.dus > 1 ? "ent" : ""} dans Mes calculs du jour : c’est en les revoyant qu’ils rentrent. Tu valideras ta table après.`;
+        }
+        if (validation.inconnus) {
+          return `Il te reste ${pluriel(validation.inconnus, "calcul")} de la table de ${table} à rencontrer : refais un entraînement, puis tu valideras ta table.`;
+        }
+        const quand = !validation.prochain || validation.prochain.dans <= 1 ? "demain" : `dans ${validation.prochain.dans} jours`;
+        const sujet = manquants === validation.total ? `Tes ${validation.total} calculs ont` : `Encore ${pluriel(manquants, "calcul")} : ils ont`;
+        return `${sujet} rendez-vous ${quand}. C’est en les revoyant qu’ils rentrent : tu valideras ta table après.`;
       }
 
       function ligneEtape({classe, num, titre, sousTitre, points, conseille, aria, action, deplie = null, controle = null}) {
@@ -5423,7 +5475,9 @@
         return zone;
       }
 
-      function boutonChoix({libelle, detail = "", fait = false, commence = false, conseillee = false, marquerConseil = true, marqueur = "", extraClasse = "", lancer}) {
+      // « fois » (lot dosage + validation) : combien de fois l'activité a été
+      // faite jusqu'au bout — écrit sous le libellé, après le détail s'il y en a.
+      function boutonChoix({libelle, detail = "", fait = false, commence = false, conseillee = false, marquerConseil = true, marqueur = "", extraClasse = "", fois = 0, lancer}) {
         const bouton = document.createElement("button");
         bouton.type = "button";
         bouton.className = `choix-activite${conseillee ? " is-next" : ""}${extraClasse ? ` ${extraClasse}` : ""}`;
@@ -5435,9 +5489,15 @@
         const fort = document.createElement("strong");
         fort.textContent = libelle;
         texte.append(fort);
-        if (detail) {
+        if (detail || fois) {
           const petit = document.createElement("small");
           petit.textContent = detail;
+          if (fois) {
+            const compte = document.createElement("span");
+            compte.className = "fois-petit";
+            compte.textContent = `${detail ? " · " : ""}fait ${fois}\u00a0fois`;
+            petit.append(compte);
+          }
           texte.append(petit);
         }
         bouton.append(etat, texte);
@@ -5449,7 +5509,7 @@
         }
         bouton.setAttribute("aria-label", marqueur
           ? `${libelle}${detail ? `, ${detail}` : ""}. Lancer.`
-          : `${libelle}${detail ? `, ${detail}` : ""} : ${fait ? "déjà réussi" : commence ? "commencé" : "pas encore fait"}.${conseillee && marquerConseil ? " Conseillé." : ""} Lancer.`);
+          : `${libelle}${detail ? `, ${detail}` : ""} : ${fait ? "déjà réussi" : commence ? "commencé" : "pas encore fait"}${fois ? `, fait ${fois} fois` : ""}.${conseillee && marquerConseil ? " Conseillé." : ""} Lancer.`);
         bouton.addEventListener("click", lancer);
         return bouton;
       }
@@ -5630,7 +5690,7 @@
           bouton.setAttribute("aria-pressed", String(selectionnee));
           bouton.setAttribute("aria-label", `Table de ${candidate}${acquise ? ", acquise" : ""}`);
           bouton.addEventListener("click", () => {
-            ecrireTableChoisie(candidate);
+            ecrireTableChoisie(candidate, {acquise});
             state.choixTableOuvert = false;
             renderAccueil();
             $("acc-table-titre").focus?.({preventScroll: true});
@@ -5647,17 +5707,26 @@
         const etapes = $("acc-etapes");
         etapes.replaceChildren();
         if (!replie) {
+          // Une table acquise n'a plus d'étape conseillée : ses trois étapes
+          // sont cochées, l'élève y revient pour refaire ce qu'il veut.
+          const conseilCarte = ligne.acquise ? null : conseil;
           const terminees = ligne.apprends.filter(item => item.etat === 2).length;
           const prochaineActivite = ligne.apprends.find(item => item.etat !== 2);
           const apprendsOuvert = state.etapeOuverte === "apprends";
+          // Lot « dosage + validation » (19/09/2026) : plus de ronds pour
+          // J'apprends — cinq ronds pleins se lisaient « niveau terminé » alors
+          // qu'ils ne mesurent rien de la mémoire (J'apprends ne remplit aucune
+          // case de la grille). À la place, « N fois » : le nombre d'activités
+          // faites jusqu'au bout, qui ne fait que monter. Rien tant que c'est 0.
+          const foisApprends = ligne.apprends.reduce((somme, item) => somme + item.fois, 0);
           etapes.append(ligneEtape({
             classe: "apprends",
             num: "1",
             titre: "J’apprends",
-            sousTitre: terminees ? `facultatif · ${terminees} activité${terminees > 1 ? "s" : ""} sur ${ligne.apprends.length}` : `facultatif · ${ligne.apprends.length} activités`,
-            points: ligne.apprends.map(item => etoile(item.etat)),
-            conseille: conseil === "apprends",
-            aria: `J’apprends la table de ${table}, facultatif : ${terminees} activité${terminees > 1 ? "s" : ""} sur ${ligne.apprends.length}.`,
+            sousTitre: `facultatif · ${ligne.apprends.length} activités`,
+            points: foisApprends ? [pastilleFois(foisApprends)] : [],
+            conseille: conseilCarte === "apprends",
+            aria: `J’apprends la table de ${table}, facultatif, ${ligne.apprends.length} activités${foisApprends ? `, faites ${foisApprends} fois` : ""}${terminees ? ` (${terminees} sur ${ligne.apprends.length} déjà vues)` : ""}.`,
             deplie: apprendsOuvert,
             controle: "acc-choix-apprends",
             action: () => basculerEtape("apprends")
@@ -5666,13 +5735,14 @@
             etapes.append(panneauChoix({
               id: "acc-choix-apprends",
               legende: "Choisis ton activité",
-              marquerConseil: conseil === "apprends",
+              marquerConseil: conseilCarte === "apprends",
               // Les cinq activités du moteur, dans son ordre : les perles en tête
               // (lot 4b), la conseillée = la première qui n'est pas terminée.
               items: ligne.apprends.map(item => ({
                 libelle: majuscule(PARCOURS.LIBELLES_APPRENDS[item.activite]),
                 fait: item.etat === 2,
                 commence: item.etat === 1,
+                fois: item.fois,
                 conseillee: Boolean(prochaineActivite) && item.activite === prochaineActivite.activite,
                 lancer: () => launchFromParcours(PARCOURS.configApprends(table, item.activite), "menu")
               }))
@@ -5682,18 +5752,24 @@
           const reussis = ligne.entraine.filter(item => item.etat === 2).length;
           const prochainEntrainement = ligne.entraine.find(item => item.etat !== 2);
           const entraineOuvert = state.etapeOuverte === "entraine";
+          // Les trois ronds restent (chacun dit « cet entraînement est réussi »,
+          // et il y en a trois différents) ; le sous-titre ne répète plus ce
+          // qu'ils montrent : « prochain : les trous », puis, les trois
+          // réussis, « réussi ✓ · fait N fois » — le compte de ce lot, qui dit
+          // qu'on peut continuer. Une ligne à 402 px comme à 320 px.
+          const foisEntraine = ligne.entraine.reduce((somme, item) => somme + item.fois, 0);
           etapes.append(ligneEtape({
             classe: "entraine",
             num: "2",
             titre: "Je m’entraîne",
             sousTitre: reussis === 3
-              ? "3 réussis sur 3 ✓"
+              ? `réussi ✓ · fait ${foisEntraine}\u00a0fois`
               : reussis
-                ? `${reussis} réussi${reussis > 1 ? "s" : ""} sur 3 · prochain : ${NOMS_ENTRAINEMENTS[prochainEntrainement.entrainement]}`
-                : `3 entraînements · d’abord : ${NOMS_ENTRAINEMENTS[prochainEntrainement.entrainement]}`,
+                ? `prochain : ${NOMS_ENTRAINEMENTS[prochainEntrainement.entrainement]}`
+                : `d’abord : ${NOMS_ENTRAINEMENTS[prochainEntrainement.entrainement]}`,
             points: ligne.entraine.map(item => etoile(item.etat)),
-            conseille: conseil === "entraine",
-            aria: `Je m’entraîne sur la table de ${table} : ${reussis} réussi${reussis > 1 ? "s" : ""} sur 3.`,
+            conseille: conseilCarte === "entraine",
+            aria: `Je m’entraîne sur la table de ${table} : ${reussis} réussi${reussis > 1 ? "s" : ""} sur 3${foisEntraine ? `, fait ${foisEntraine} fois` : ""}.`,
             deplie: entraineOuvert,
             controle: "acc-choix-entraine",
             action: () => basculerEtape("entraine")
@@ -5704,6 +5780,7 @@
               detail: "10 questions, sans chrono",
               fait: item.etat === 2,
               commence: item.etat === 1,
+              fois: item.fois,
               conseillee: Boolean(prochainEntrainement) && item.entrainement === prochainEntrainement.entrainement,
               lancer: () => launchFromParcours(PARCOURS.configEntraine(table, item.entrainement), "menu")
             }));
@@ -5711,8 +5788,11 @@
             // ENTRAÎNEMENT, donc elle vit ici et plus sur l'écran de
             // lancement de l'étape 3 (décision du 09/09/2026). Le moteur la
             // reconnaît déjà comme une « préparation » : elle ne valide pas
-            // la table, et elle le dit à la fin.
-            if (!ligne.acquise) {
+            // la table, et elle le dit à la fin. Elle reste proposée sur une
+            // table acquise (19/09/2026) : se remettre en jambes sur une table
+            // validée est un vrai usage, et rien ne la rendait indisponible
+            // sinon un « if » de la page.
+            {
               choixEntraine.push({
                 libelle: "Comme la validation, en 2 min",
                 detail: "20 questions — pour s’entraîner avant de valider",
@@ -5724,7 +5804,7 @@
             etapes.append(panneauChoix({
               id: "acc-choix-entraine",
               legende: "Choisis ton entraînement",
-              marquerConseil: conseil === "entraine",
+              marquerConseil: conseilCarte === "entraine",
               items: choixEntraine
             }));
           }
@@ -5756,16 +5836,32 @@
             const coche = document.createElement("i");
             coche.className = `is-check${ligne.acquise ? "" : " off"}`;
             coche.textContent = ligne.acquise ? "✓" : "○";
+            // Une table acquise le dit en titre (« Ma table est acquise ·
+            // validée le 13 septembre ») ; toucher la ligne rejoue la
+            // validation, comme avant.
             etapes.append(ligneEtape({
               classe: "valide",
               num: "3",
-              titre: "Je valide ma table",
-              sousTitre: ligne.acquise ? "acquise ✓ · 20 questions · 1 min 30" : "20 questions · 1 min 30",
+              titre: ligne.acquise ? "Ma table est acquise" : "Je valide ma table",
+              sousTitre: ligne.acquise ? `validée le ${dateEnLettres(ligne.acquise)}` : "20 questions · 1 min 30",
               points: [coche],
-              conseille: conseil === "valide",
-              aria: `Je valide la table de ${table}, 20 questions en 1 min 30 : ${ligne.acquise ? "acquise" : "pas encore"}.`,
+              conseille: conseilCarte === "valide",
+              aria: ligne.acquise
+                ? `Ma table de ${table} est acquise, validée le ${dateEnLettres(ligne.acquise)}. Toucher pour la revalider (20 questions en 1 min 30).`
+                : `Je valide la table de ${table}, 20 questions en 1 min 30 : pas encore.`,
               action: () => launchFromParcours(PARCOURS.configValidation(table), "menu")
             }));
+          }
+          // Les trois entraînements réussis, mais les 8 calculs de la table
+          // pas encore tous en boîte 3 : le rond bleu est resté sur
+          // Je m'entraîne, et cet encadré dit pourquoi — le rendez-vous des
+          // calculs (décision du 19/09/2026 ; « Je valide » reste libre).
+          if (!ligne.acquise && reussis === 3 && !ligne.validation.prete) {
+            const rdv = document.createElement("p");
+            rdv.className = "rdv";
+            rdv.id = "acc-rdv";
+            rdv.textContent = soude(phraseRendezVous(ligne.validation, table));
+            etapes.append(rdv);
           }
         }
 
@@ -6109,7 +6205,12 @@
           ? "Maintenant, essaie en 1 min 30 pour valider ta table."
           : "Continue à t’entraîner, puis vise 18 sur 20 en 1 min 30.";
         const entraine = trouve("entraine");
-        if (entraine && entraine.reussi && entraine.pret) return "Tes trois entraînements sont réussis : tu peux valider ta table !";
+        if (entraine && entraine.reussi && entraine.pret) {
+          // Les trois réussis : « tu peux valider » seulement si les 8 calculs
+          // sont en boîte 3 ; sinon la même phrase que l'accueil (le rendez-vous).
+          if (!entraine.validation || entraine.validation.prete) return "Tes trois entraînements sont réussis : tu peux valider ta table !";
+          return `Tes trois entraînements sont réussis ! ${phraseRendezVous(entraine.validation, entraine.table)}`;
+        }
         return "";
       }
 
