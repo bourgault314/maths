@@ -8,7 +8,7 @@ agrafées au milieu → 8 pages A4.
 
 | Livret | Fiches | PDF produits |
 |---|---|---|
-| `normal` — Monde 2 | 7 (12 cartes de Claire), 8 et 9 (12 cartes à paquets chacune) | `outils/livret_splat_classique.pdf` · `…_a3.pdf` |
+| `normal` — Monde 2 | 7 (12 cartes de Claire), 8 et 9 (12 cartes à paquets chacune) | `outils/livret_splat_classique.pdf` · `…_a_plier.pdf` |
 
 Le lot D (niveaux Avancé / Expert du monde 2) ajoutera ses niveaux dans `NIVEAUX`,
 avec ses propres graines et ses propres QR, comme pour le monde 1.
@@ -17,7 +17,7 @@ Deux PDF :
 
 - `…​.pdf` — 8 pages A4 dans l'ordre de lecture
   (pour lire à l'écran, ou pour le mode « Cahier/Livret » d'un photocopieur) ;
-- `…_a3.pdf` — 4 pages A3 paysage **déjà imposées** (8|1 · 2|7 · 6|3 · 4|5) :
+- `…_a_plier.pdf` — 4 pages A3 paysage **déjà imposées** (8|1 · 2|7 · 6|3 · 4|5) :
   impression recto-verso, retournement sur le bord court, on plie, on agrafe.
 
 ## Fichiers

@@ -9,11 +9,11 @@ Régénère les livrets « Petit SPLAT! » (8 pages) à partir du site lui-même
 
 Produit, à la racine du dépôt :
     outils/livret_petit_splat.pdf             8 pages A4, ordre de lecture   (Monde 1, jusqu'à 20)
-    outils/livret_petit_splat_a3.pdf          4 pages A3 paysage, imposées
+    outils/livret_petit_splat_a_plier.pdf     4 pages A3 paysage, imposées
     outils/livret_petit_splat_avance.pdf      idem, niveau Avancé (21 à 50)
-    outils/livret_petit_splat_avance_a3.pdf
+    outils/livret_petit_splat_avance_a_plier.pdf
     outils/livret_petit_splat_expert.pdf      idem, niveau Expert (51 à 100)
-    outils/livret_petit_splat_expert_a3.pdf
+    outils/livret_petit_splat_expert_a_plier.pdf
 
 Les 6 fiches ne sont PAS redessinées ici : elles sont rendues par l'outil du site
 (outils/splat_tache_barre.html, mode support=print) avec des graines fixes. Le QR
@@ -337,7 +337,7 @@ def assemble(niv, tmp):
         for idx, tx in ((g, 0.0), (d, A4W)):
             pikepdf.Page(feuille).add_overlay(pages[idx - 1],
                                               pikepdf.Rectangle(tx, 0, tx + A4W, A4H))
-    a3.save(str(RACINE / "outils" / f"{niv['sortie']}_a3.pdf"))
+    a3.save(str(RACINE / "outils" / f"{niv['sortie']}_a_plier.pdf"))
     for s in src:
         s.close()
 
@@ -372,9 +372,9 @@ def main():
                 tmp = Path(d)
                 asyncio.run(pages(niv, tmp))
                 assemble(niv, tmp)
-            for suffixe in ("", "_a3"):
+            for suffixe in ("", "_a_plier"):
                 compresse(RACINE / "outils" / f"{niv['sortie']}{suffixe}.pdf")
-            print(f"   Fait : outils/{niv['sortie']}.pdf et outils/{niv['sortie']}_a3.pdf")
+            print(f"   Fait : outils/{niv['sortie']}.pdf et outils/{niv['sortie']}_a_plier.pdf")
     finally:
         srv.shutdown()
 
