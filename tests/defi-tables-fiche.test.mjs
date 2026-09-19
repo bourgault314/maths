@@ -160,3 +160,28 @@ test("à l'écran, la ligne des étoiles et l'état du mélange ne chevauchent p
   assert.match(html, /\.fiche-melange strong \{ padding-right: 58mm; \}\s*\n\s*\.fiche-expert strong \{ padding-right: 58mm; \}/);
   assert.match(html, /body\.mode-fiche \.fiche-page2, body\.voir-fiche \.fiche-page2 \{ margin-top: 8mm; padding-top: 6mm; border-top: 1\.5px dashed #b9d4e6; \}/);
 });
+
+// La fiche imprimée tient en 2 pages : 273 mm pour la feuille 1 (lot du 10/09).
+// Le cadre de la feuille à l'écran — bordure, 18 px de marge intérieure,
+// largeur réduite — s'imprimait aussi, dans « Voir ma fiche » comme dans la
+// vue du professeur : la feuille 1 débordait, son pied partait seul sur une
+// page blanche, et la fiche sortait en 3 pages (constaté le 19/09/2026). Le
+// bloc @media print doit retirer ce cadre, pour les deux vues.
+test("sur le papier, la feuille perd son cadre d'écran : pas de page blanche entre les deux feuilles", () => {
+  const css = [...html.matchAll(/<style>([\s\S]*?)<\/style>/g)]
+    .map(trouve => trouve[1]).join("\n").replace(/\/\*[\s\S]*?\*\//g, "");
+  const debut = css.indexOf("@media print {");
+  assert.ok(debut > 0, "le bloc @media print doit exister");
+  let profondeur = 0;
+  let fin = -1;
+  for (let i = css.indexOf("{", debut); i < css.length; i += 1) {
+    if (css[i] === "{") profondeur += 1;
+    else if (css[i] === "}" && (profondeur -= 1) === 0) { fin = i; break; }
+  }
+  assert.ok(fin > debut, "le bloc @media print doit se refermer");
+  const regle = /body\.mode-fiche #fiche-print, body\.voir-fiche #fiche-print \{([^}]*)\}/.exec(css.slice(debut, fin + 1));
+  assert.ok(regle, "le bloc @media print doit retirer le cadre des deux vues");
+  for (const declaration of ["width: auto;", "max-width: none;", "margin: 0;", "padding: 0;", "border: 0;", "border-radius: 0;"]) {
+    assert.ok(regle[1].includes(declaration), `sur le papier : ${declaration}`);
+  }
+});

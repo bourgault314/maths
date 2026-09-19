@@ -1773,6 +1773,15 @@
       body > *:not(#fiche-print) { display: none !important; }
       #fiche-print { display: block !important; }
       .fiche-page2 { break-before: page; page-break-before: always; }
+      /* Le cadre de la feuille à l'écran (« Voir ma fiche » de l'élève, fiche
+         d'un élève chez le professeur) ne va pas sur le papier. Sa bordure, ses
+         18 px de marge intérieure et sa largeur réduite faisaient dépasser la
+         feuille 1 de ses 273 mm : le pied partait seul sur une page blanche, et
+         la fiche sortait en 3 pages (constaté le 19/09/2026). Sans ce cadre, la
+         feuille reprend toute la largeur utile et garde 9 mm de reste. */
+      body.mode-fiche #fiche-print, body.voir-fiche #fiche-print {
+        width: auto; max-width: none; margin: 0; padding: 0; border: 0; border-radius: 0;
+      }
     }
 
     @media (prefers-reduced-motion: reduce) {
