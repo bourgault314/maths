@@ -36,7 +36,10 @@ test("la fête est le cadre du verdict, et le rang s’y affiche une fois", () =
 test("la suite tient en une phrase, et les nombres ne se coupent pas", () => {
   assert.match(html, /function suiteApresSerie\(evenements, fete\) \{/);
   assert.match(html, /if \(trouve\("melange-a-refaire"\)\) return `Refais ton mélange avec la table de \$\{fete\.validation\.table\}\$\{puis\}\.`;/, "mélange à refaire + table suivante = une phrase");
-  assert.match(html, /if \(entraine && entraine\.reussi && entraine\.pret\) return "Tes trois entraînements sont réussis : tu peux valider ta table !";/);
+  // Lot dosage + validation : « tu peux valider » seulement quand les 8
+  // calculs sont en boîte 3 ; sinon la phrase du rendez-vous, la même que l’accueil.
+  assert.match(html, /if \(!entraine\.validation \|\| entraine\.validation\.prete\) return "Tes trois entraînements sont réussis : tu peux valider ta table !";/);
+  assert.match(html, /return `Tes trois entraînements sont réussis ! \$\{phraseRendezVous\(entraine\.validation, entraine\.table\)\}`;/);
   assert.match(html, /return fete\.etoile\.couronne \? "" : `Tente \$\{PARCOURS\.symboleEtoile\(fete\.etoile\.etoile \+ 1\)\}/);
   assert.match(html, /function soude\(texte\) \{/);
   assert.match(html, /\.replace\(\/\\bmin \(\\d\)\/g, "min\\u00a0\$1"\)/, "« 1 min 30 » reste sur une ligne (audit, A14)");

@@ -45,10 +45,10 @@ test("l’accueil : Ma table et ses trois étapes, Réviser, Mon parcours, Mes c
   // 4e ligne ★ n'existe qu'à partir de 2 tables acquises.
   assert.match(html, /num: "1",\s*titre: "J’apprends"/);
   assert.match(html, /num: "2",\s*titre: "Je m’entraîne"/);
-  assert.match(html, /num: "3",\s*titre: "Je valide ma table"/);
+  assert.match(html, /num: "3",\s*titre: ligne\.acquise \? "Ma table est acquise" : "Je valide ma table"/, "lot dosage + validation : une table acquise le dit en titre");
   assert.match(html, /num: "★",\s*titre: "Mon mélange"/, "lot 3 : la ligne ★ s’appelle « Mon mélange »");
   assert.match(html, /if \(etat\.melange\.visible && !toutes\) \{/, "la ligne ★ suit la règle du moteur : dès 2 tables acquises ; avec les 9, elle vit dans le bloc Je deviens expert");
-  assert.match(html, /sousTitre: ligne\.acquise \? "acquise ✓ · 20 questions · 1 min 30" : "20 questions · 1 min 30"/, "la seule règle écrite sur l’accueil");
+  assert.match(html, /sousTitre: ligne\.acquise \? `validée le \$\{dateEnLettres\(ligne\.acquise\)\}` : "20 questions · 1 min 30"/, "la seule règle écrite sur l’accueil");
 });
 
 test("l’appli ne choisit rien : les trois étapes restent des boutons, elle surligne seulement la conseillée", () => {
@@ -218,7 +218,12 @@ test("l’étape conseillée d’une table suit la même lecture que le moteur",
   assert.equal(logique.etapeConseillee(ligneDe(lea(), 2)), "valide", "acquise → Je valide (déjà ✓)");
   const prete = lea();
   prete.tables[5].entraine.trous = 2;
-  assert.equal(logique.etapeConseillee(ligneDe(prete, 5)), "valide", "3 sur 3 → Je valide ma table");
+  // Lot « dosage + validation » (19/09/2026) : les trois réussis ne suffisent
+  // plus, il faut les 8 calculs de la table en boîte 3 — d'ici là, le rond
+  // reste sur Je m'entraîne.
+  assert.equal(logique.etapeConseillee(ligneDe(prete, 5)), "entraine", "3 sur 3 mais la grille pas prête → toujours Je m’entraîne");
+  PARCOURS.faitsDeLaTable(5).forEach(cle => { prete.calculs[cle] = {boite: 3, cases: 2, vu: "2026-09-01", erreur: null, gagne: "2026-09-02", echeance: "2026-09-05"}; });
+  assert.equal(logique.etapeConseillee(ligneDe(prete, 5)), "valide", "3 sur 3 et les 8 calculs en boîte 3 → Je valide ma table");
   // Lot 4b, règle du 10/09 : J'apprends tant que les cinq activités ne sont
   // pas toutes terminées ET qu'aucun entraînement n'est réussi — la page lit
   // le conseil que le moteur calcule (ligne.conseil), une seule règle.
@@ -361,8 +366,11 @@ test("lot R3 · le bleu ne désigne plus que l’étape conseillée", () => {
   assert.match(html, /function panneauChoix\(\{id, legende, items, marquerConseil = true\}\)/);
   assert.match(html, /items\.forEach\(item => zone\.append\(boutonChoix\(\{\.\.\.item, marquerConseil\}\)\)\);/);
   assert.match(html, /if \(conseillee && marquerConseil\) \{/);
-  assert.match(html, /marquerConseil: conseil === "apprends",/);
-  assert.match(html, /marquerConseil: conseil === "entraine",/);
+  // Lot dosage + validation : « conseilCarte » = le conseil, sauf sur une
+  // table acquise (aucune étape conseillée sur une carte cochée).
+  assert.match(html, /marquerConseil: conseilCarte === "apprends",/);
+  assert.match(html, /marquerConseil: conseilCarte === "entraine",/);
+  assert.match(html, /const conseilCarte = ligne\.acquise \? null : conseil;/);
   // Le lecteur d'écran entend la même chose que l'œil voit.
   assert.match(html, /\$\{conseillee && marquerConseil \? " Conseillé\." : ""\}/);
 });

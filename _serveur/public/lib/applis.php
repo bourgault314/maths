@@ -31,8 +31,12 @@ const CATALOGUE_APPLIS = [
         // où le calcul revient, « AAAA-MM-JJ ») par calcul ; « cases » reste
         // accepté — l'appli l'écrit encore en miroir pour les appareils restés
         // sur l'appli d'avant, et c'est elle qui migre.
+        // Lot « dosage + validation » (19/09/2026) : « fois », par table, le
+        // nombre de fois où chaque activité de J'apprends et chaque
+        // entraînement ont été faits (ses sous-clés sont les noms déjà
+        // déclarés : beads … random, desordre, trous, mixte).
         'cles' => ['version', 'epoque', 'tables', 'apprends', 'beads', 'construct', 'gaps', 'ordered', 'random',
-            'entraine', 'desordre', 'trous', 'mixte', 'dernier', 'entrainement', 'score', 'total',
+            'entraine', 'desordre', 'trous', 'mixte', 'dernier', 'entrainement', 'score', 'total', 'fois',
             'acquise', 'melange', 'aJour', 'aRefaireAvec', 'expert', 'niveau', 'champion',
             'etoiles', 'couronne', 'rang', 'jours',
             'calculs', 'boite', 'cases', 'vu', 'erreur', 'gagne', 'echeance'],
