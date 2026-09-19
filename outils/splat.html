@@ -2804,7 +2804,11 @@ function assignPositionsNumbered(card, rng){
     if(arr.length === 1){
       const maxD = Math.max(0, s.r - beadR - 30);
       const a = rFloat(rng, 0, Math.PI*2);
-      const d = rFloat(rng, 0, Math.min(10, maxD));
+      const dTire = rFloat(rng, 0, Math.min(10, maxD));
+      /* B, B± : le jeton caché est dessiné au centre de sa tache. Le petit décalage reste
+         tiré (la suite du hasard, donc les nombres des séries, ne bouge pas) mais n'est plus
+         appliqué. L'Enquête, D et les Opérations gardent leur décalage. */
+      const d = (card.family === "N" || card.family === "NPM") ? 0 : dTire;
       posH.push({cx: s.cx + Math.cos(a)*d, cy: s.cy + Math.sin(a)*d});
       hiddenPlan.push({t, ux:Math.cos(a), uy:Math.sin(a), d, pair:false});
     }else{
@@ -2862,48 +2866,105 @@ function assignPositionsNumbered(card, rng){
   relocateNumberedTokensToFinalSplats(card, tray, margin, splatsFinal, hiddenPlan);
 }
 
-/* Report des jetons de la table de tirage vers la table de dessin (B, B± à 4 et 5 taches).
+/* Rayon DESSINÉ des jetons numérotés (B, B±). La règle de tirage (numberedBeadRadius,
+   la moitié de la tache moins une marge) est faite pour que deux paquets tiennent côte à
+   côte sous une même tache. Quand aucune tache de la carte n'en cache deux — le cas
+   courant — le jeton peut prendre 60 % de la tache : à 3, 4, 5 et 6 taches il grossit
+   (58 → 68, 56 → 67, 51 → 61, 41 → 49) ; à 1 et 2 taches il est déjà au plafond de 68.
+   Les autres familles (Enquête, D) gardent leur rayon. Dessin seulement : le tirage
+   au sort n'en dépend pas.
+   En B±, une tache marquée « opposé » porte ce mot au-dessus de son jeton une fois
+   dévoilée. Jeton au centre et mot baissé de OPPOSE_MOT_BAISSE, le rayon de base laisse
+   au moins 2,5 unités entre le mot et le jeton ; un jeton plus gros le ferait mordre : une
+   carte qui a une tache « opposé » garde donc le rayon de base. */
+function numberedBeadRadiusDrawn(splats, family, hiddenByTask, opposedTasks){
+  const base = numberedBeadRadius(splats, family);
+  if(family !== "N" && family !== "NPM") return base;
+  if(Array.isArray(opposedTasks) && opposedTasks.some(Boolean)) return base;
+  const maxPerTask = Math.max(0, ...(hiddenByTask || []).map(a => Array.isArray(a) ? a.length : (a ? 1 : 0)));
+  if(maxPerTask > 1) return base;
+  const minSplatR = Math.min(...splats.map(s=>s.r));
+  return Math.max(base, clamp(Math.floor((minSplatR - 28) * 0.6), 38, 68));
+}
+
+/* Mot « opposé » d'une tache dévoilée (écran et correction imprimée) : à 0,65 r au-dessus
+   du centre, ses lettres passaient sur le trait du haut de la tache ; 7 plus bas, elles
+   sont dans la tache, et le jeton, au centre, reste au moins 2,5 unités sous le mot. */
+const OPPOSE_MOT_BAISSE = 7;
+
+/* Report des jetons de la table de tirage vers la table de dessin (B, B± à 4 et 5 taches),
+   au rayon dessiné (voir numberedBeadRadiusDrawn).
    Rien n'est tiré au sort ici : les jetons cachés gardent leur direction sous leur tache,
    les jetons visibles ne bougent que s'ils gênent, et vers la place libre la plus proche.
-   Quand les deux tables sont identiques (1, 2, 3, 6 taches, Enquête, mode D), la carte
-   reste exactement celle d'avant. */
+   Quand la table ET le rayon sont ceux du tirage (1 et 2 taches, une tache qui cache deux
+   paquets à 3 ou 6 taches, Enquête, mode D), la carte reste exactement celle d'avant. */
 function relocateNumberedTokensToFinalSplats(card, tray, margin, splatsFinal, hiddenPlan){
-  if(sameSplats(card._splats, splatsFinal)) return;
-  const beadR = numberedBeadRadius(splatsFinal, card.family);
-  const posH = [];
-  for(const h of hiddenPlan){
-    const s = splatsFinal[h.t];
-    if(!h.pair){
-      posH.push({cx: s.cx + h.ux*h.d, cy: s.cy + h.uy*h.d});
-    }else{
-      const d = Math.min(beadR, Math.max(0, s.r - beadR - 22));
-      posH.push({cx: s.cx + h.ux*d, cy: s.cy + h.uy*d});
-      posH.push({cx: s.cx - h.ux*d, cy: s.cy - h.uy*d});
+  const beadRDrawn = numberedBeadRadiusDrawn(splatsFinal, card.family, card._num && card._num.hiddenByTask, card._num && card._num.opposedTasks);
+  const beadRBase = numberedBeadRadius(splatsFinal, card.family);
+  if(sameSplats(card._splats, splatsFinal) && beadRDrawn === card._beadR) return;
+
+  /* Tente le report avec un rayon donné ; rend null si un jeton visible ne trouve pas
+     de place libre (carte chargée) : on retombe alors sur le rayon de base. */
+  function attempt(beadR){
+    const posH = [];
+    for(const h of hiddenPlan){
+      const s = splatsFinal[h.t];
+      if(!h.pair){
+        posH.push({cx: s.cx + h.ux*h.d, cy: s.cy + h.uy*h.d});
+      }else{
+        const d = Math.min(beadR, Math.max(0, s.r - beadR - 22));
+        posH.push({cx: s.cx + h.ux*d, cy: s.cy + h.uy*d});
+        posH.push({cx: s.cx - h.ux*d, cy: s.cy - h.uy*d});
+      }
     }
+    const placed = [];
+    function ok(cx, cy){
+      if(cx < tray.x + beadR + margin) return false;
+      if(cx > tray.x + tray.w - beadR - margin) return false;
+      if(cy < tray.y + beadR + margin) return false;
+      if(cy > tray.y + tray.h - beadR - margin) return false;
+      for(const s of splatsFinal){
+        if(Math.hypot(cx - s.cx, cy - s.cy) < s.r + beadR + 14) return false;
+      }
+      for(const p of placed){
+        if(Math.hypot(cx - p.cx, cy - p.cy) < beadR*2 + 12) return false;
+      }
+      return true;
+    }
+    const posV = [];
+    for(const p of (card._posV || [])){
+      const q = nudgeTokenFree(p.cx, p.cy, ok);
+      if(!ok(q.cx, q.cy)) return null;
+      placed.push(q);
+      posV.push(q);
+    }
+    return { beadR, posH, posV };
   }
-  const placed = [];
-  function ok(cx, cy){
-    if(cx < tray.x + beadR + margin) return false;
-    if(cx > tray.x + tray.w - beadR - margin) return false;
-    if(cy < tray.y + beadR + margin) return false;
-    if(cy > tray.y + tray.h - beadR - margin) return false;
-    for(const s of splatsFinal){
-      if(Math.hypot(cx - s.cx, cy - s.cy) < s.r + beadR + 14) return false;
-    }
-    for(const p of placed){
-      if(Math.hypot(cx - p.cx, cy - p.cy) < beadR*2 + 12) return false;
-    }
-    return true;
+
+  let done = attempt(beadRDrawn);
+  if(!done && beadRDrawn !== beadRBase) done = attempt(beadRBase);
+  if(!done){
+    /* Même le rayon de base ne passe pas (jamais vu sur 576 cartes) : on garde les
+       places tirées, avec le rayon de base, comme le faisait la table de tirage. */
+    done = { beadR: beadRBase, posH: attemptHiddenOnly(beadRBase), posV: (card._posV || []).slice() };
   }
-  const posV = (card._posV || []).map(p => {
-    const q = nudgeTokenFree(p.cx, p.cy, ok);
-    placed.push(q);
-    return q;
-  });
+  function attemptHiddenOnly(beadR){
+    const posH = [];
+    for(const h of hiddenPlan){
+      const s = splatsFinal[h.t];
+      if(!h.pair){ posH.push({cx: s.cx + h.ux*h.d, cy: s.cy + h.uy*h.d}); }
+      else{
+        const d = Math.min(beadR, Math.max(0, s.r - beadR - 22));
+        posH.push({cx: s.cx + h.ux*d, cy: s.cy + h.uy*d});
+        posH.push({cx: s.cx - h.ux*d, cy: s.cy - h.uy*d});
+      }
+    }
+    return posH;
+  }
   card._splats = splatsFinal;
-  card._beadR = beadR;
-  card._posH = posH;
-  card._posV = posV;
+  card._beadR = done.beadR;
+  card._posH = done.posH;
+  card._posV = done.posV;
 }
 
 function assignPositions(card, rng){
@@ -6217,7 +6278,7 @@ function renderCard(card, revealState){
 
       if(card.family === "NPM" && card._num && Array.isArray(card._num.opposedTasks) && card._num.opposedTasks[idx]){
         const fs = clamp(Math.round(s.r*0.34), 28, 64);
-        const y = visualRevealState === 2 ? (s.cy - s.r*0.65) : (s.cy);
+        const y = visualRevealState === 2 ? (s.cy - s.r*0.65 + OPPOSE_MOT_BAISSE) : (s.cy);
         layer.appendChild(text(s.cx, y, "opposé", {
           "text-anchor":"middle",
           "dominant-baseline":"middle",
@@ -6231,7 +6292,7 @@ function renderCard(card, revealState){
       }
       if(opp && opp.flags[idx]){
         const fs = clamp(Math.round(s.r*0.34), 28, 64);
-        const y = visualRevealState === 2 ? (s.cy - s.r*0.65) : (s.cy);
+        const y = visualRevealState === 2 ? (s.cy - s.r*0.65 + OPPOSE_MOT_BAISSE) : (s.cy);
         layer.appendChild(text(s.cx, y, "opposé", {
           "text-anchor":"middle",
           "dominant-baseline":"middle",
@@ -7316,7 +7377,7 @@ function renderCardIntoSvg(targetSvg, card, printMode){
       targetSvg.appendChild(tEl("path",{d: blobPath(s.cx, s.cy + printOffsetY, s.r), fill:f, stroke:"rgba(0,0,0,0.18)","stroke-width":"5"}));
       if(card.family === "NPM" && card._num && Array.isArray(card._num.opposedTasks) && card._num.opposedTasks[idx]){
         const fs = clamp(Math.round(s.r*0.34), 28, 64);
-        const y = revealAnswers ? (s.cy + printOffsetY - s.r*0.65) : (s.cy + printOffsetY);
+        const y = revealAnswers ? (s.cy + printOffsetY - s.r*0.65 + OPPOSE_MOT_BAISSE) : (s.cy + printOffsetY);
         targetSvg.appendChild(tText(s.cx, y, "opposé", {
           "text-anchor":"middle",
           "dominant-baseline":"middle",
@@ -7330,7 +7391,7 @@ function renderCardIntoSvg(targetSvg, card, printMode){
       }
       if(oppP && oppP.flags[idx]){
         const fs = clamp(Math.round(s.r*0.34), 28, 64);
-        const y = revealAnswers ? (s.cy + printOffsetY - s.r*0.65) : (s.cy + printOffsetY);
+        const y = revealAnswers ? (s.cy + printOffsetY - s.r*0.65 + OPPOSE_MOT_BAISSE) : (s.cy + printOffsetY);
         targetSvg.appendChild(tText(s.cx, y, "opposé", {
           "text-anchor":"middle",
           "dominant-baseline":"middle",

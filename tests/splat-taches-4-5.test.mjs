@@ -110,9 +110,9 @@ test("le décalage d'un jeton est sans hasard et va à la place libre la plus pr
   assert.deepEqual(geo.nudgeTokenFree(10, 10, () => false), {cx:10, cy:10});
 });
 
-test("le report sur la table de dessin ne fait aucun tirage et ne touche pas les cartes aux tables identiques", () => {
+test("le report sur la table de dessin ne fait aucun tirage et ne touche pas les cartes aux tables et rayons identiques", () => {
   const relocate = functionSource("relocateNumberedTokensToFinalSplats", "assignPositions");
-  assert.match(relocate, /if\(sameSplats\(card\._splats, splatsFinal\)\) return;/);
+  assert.match(relocate, /if\(sameSplats\(card\._splats, splatsFinal\) && beadRDrawn === card\._beadR\) return;/);
   assert.doesNotMatch(relocate, /rng|Math\.random|rFloat/);
   const units = functionSource("assignPositionsUnits", "shouldGenerateEmptyTaskCase");
   const tail = units.slice(units.indexOf("if(!sameSplats(splats, splatsFinal))"));
@@ -121,4 +121,104 @@ test("le report sur la table de dessin ne fait aucun tirage et ne touche pas les
   // l'écran et l'impression dessinent card._splats : la table de dessin est bien celle posée à la fin
   assert.match(relocate, /card\._splats = splatsFinal;/);
   assert.match(tail, /card\._splats = splatsFinal;/);
+});
+
+/* Lot B3 : rayon DESSINÉ des jetons numérotés à 60 % de la tache quand aucune tache ne
+   cache deux paquets ; le tirage (numberedBeadRadius) ne change pas. */
+test("B3 : le rayon dessiné des jetons numérotés grossit à 3, 4, 5 et 6 taches, sans toucher au tirage", () => {
+  const geo3 = Function(`
+    const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+    ${functionSource("getTrayConfig", "getPrintTrayConfig")}
+    ${functionSource("getNumberedSplatsLegacy", "getNumberedSplats")}
+    ${functionSource("getNumberedSplats", "sameSplats")}
+    ${functionSource("numberedBeadRadius", "nudgeTokenFree")}
+    ${functionSource("numberedBeadRadiusDrawn", "relocateNumberedTokensToFinalSplats")}
+    return { getNumberedSplats, numberedBeadRadius, numberedBeadRadiusDrawn };
+  `)();
+  const un = (n) => Array.from({length:n}, () => [5]);      // un paquet sous chaque tache
+  const deux = (n) => [[5, 5]].concat(Array.from({length:n-1}, () => [5]));
+  for(const [n, base, drawn] of [[1, 68, 68], [2, 68, 68], [3, 58, 68], [4, 56, 67], [5, 51, 61], [6, 41, 49]]){
+    const sp = geo3.getNumberedSplats(n, "N");
+    assert.equal(geo3.numberedBeadRadius(sp, "N"), base, `tirage à ${n} taches`);
+    assert.equal(geo3.numberedBeadRadiusDrawn(sp, "N", un(n)), drawn, `dessin à ${n} taches`);
+    assert.equal(geo3.numberedBeadRadiusDrawn(sp, "N", deux(n)), base, `deux paquets sous une tache à ${n}`);
+    // le jeton dessiné tient sous la tache, à son endroit le plus étroit (0,70 r), avec son décalage de 10 au plus
+    assert.ok(drawn + 10 <= 0.70 * sp[0].r, `sous la tache à ${n} taches`);
+  }
+  // l'Enquête et le mode D gardent leur rayon
+  const spC = geo3.getNumberedSplats(3, "C");
+  assert.equal(geo3.numberedBeadRadiusDrawn(spC, "C", un(3)), geo3.numberedBeadRadius(spC, "C"));
+  // le report tente le rayon dessiné puis retombe sur le rayon de base si un jeton visible ne trouve pas de place
+  const relocate = functionSource("relocateNumberedTokensToFinalSplats", "assignPositions");
+  assert.match(relocate, /let done = attempt\(beadRDrawn\);/);
+  assert.match(relocate, /if\(!done && beadRDrawn !== beadRBase\) done = attempt\(beadRBase\);/);
+  assert.match(relocate, /if\(sameSplats\(card\._splats, splatsFinal\) && beadRDrawn === card\._beadR\) return;/);
+  assert.doesNotMatch(relocate, /rng|Math\.random|rFloat/);
+  // le tirage passe toujours par le rayon de base
+  assert.match(functionSource("assignPositionsNumbered", "numberedBeadRadiusDrawn"), /const beadR = numberedBeadRadius\(splats, card\.family\)/);
+});
+
+/* Lot B3 : en B±, le mot « opposé » d'une tache dévoilée est posé au-dessus du jeton. À
+   0,65 r du centre, ses lettres passaient sur le trait du haut de la tache : il descend de
+   7, ce que permet le jeton posé au centre (test suivant). Un jeton plus gros que le rayon
+   de base le ferait alors mordre : une carte qui a une tache « opposé » garde ce rayon. */
+test("B3 : une carte B± qui a une tache « opposé » garde le rayon de base, et le mot baissé reste dans la tache", () => {
+  const geo4 = Function(`
+    const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+    ${functionSource("getTrayConfig", "getPrintTrayConfig")}
+    ${functionSource("getNumberedSplatsLegacy", "getNumberedSplats")}
+    ${functionSource("getNumberedSplats", "sameSplats")}
+    ${functionSource("numberedBeadRadius", "nudgeTokenFree")}
+    ${functionSource("numberedBeadRadiusDrawn", "relocateNumberedTokensToFinalSplats")}
+    return { getNumberedSplats, numberedBeadRadiusDrawn };
+  `)();
+  for(const [n, base, drawn] of [[1, 68, 68], [2, 68, 68], [3, 58, 68], [4, 56, 67], [5, 51, 61], [6, 41, 49]]){
+    const sp = geo4.getNumberedSplats(n, "NPM");
+    const un = Array.from({length: n}, () => [5]);
+    const uneOpposee = Array.from({length: n}, (_, i) => i === n - 1);
+    const aucune = Array.from({length: n}, () => false);
+    assert.equal(geo4.numberedBeadRadiusDrawn(sp, "NPM", un, uneOpposee), base, `une tache « opposé » à ${n} taches`);
+    assert.equal(geo4.numberedBeadRadiusDrawn(sp, "NPM", un, aucune), drawn, `aucune tache « opposé » à ${n} taches`);
+  }
+  // le report transmet bien les taches « opposé » de la carte
+  const relocate = functionSource("relocateNumberedTokensToFinalSplats", "assignPositions");
+  assert.match(relocate, /numberedBeadRadiusDrawn\(splatsFinal, card\.family, card\._num && card\._num\.hiddenByTask, card\._num && card\._num\.opposedTasks\)/);
+  // le mot dévoilé descend de 7 sous sa place d'avant (0,65 du rayon au-dessus du centre), à l'écran (2) et à l'impression (2)
+  assert.match(html, /const OPPOSE_MOT_BAISSE = 7;/);
+  assert.equal((html.match(/s\.r\*0\.65 \+ OPPOSE_MOT_BAISSE\) : \(s\.cy/g) || []).length, 4);
+  assert.doesNotMatch(html, /s\.r\*0\.65\) : \(s\.cy/);
+});
+
+/* Lot B3 : en B et B±, le jeton caché sous une tache est dessiné exactement au centre. Le
+   petit décalage (10 au plus) est toujours tiré, pour que la suite du hasard et donc les
+   nombres des séries ne bougent pas, mais il n'est plus appliqué. L'Enquête le garde. */
+test("B3 : en B et B±, le jeton caché est au centre de sa tache, et le hasard est consommé comme avant", () => {
+  const geo5 = Function(`
+    const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+    const rFloat = (rng, a, b) => a + rng() * (b - a);
+    ${functionSource("getTrayConfig", "getPrintTrayConfig")}
+    ${functionSource("getNumberedSplatsLegacy", "getNumberedSplats")}
+    ${functionSource("getNumberedSplats", "sameSplats")}
+    ${functionSource("sameSplats", "numberedBeadRadius")}
+    ${functionSource("numberedBeadRadius", "nudgeTokenFree")}
+    ${functionSource("nudgeTokenFree", "randomComposition")}
+    ${functionSource("assignPositionsNumbered", "numberedBeadRadiusDrawn")}
+    ${functionSource("numberedBeadRadiusDrawn", "relocateNumberedTokensToFinalSplats")}
+    ${functionSource("relocateNumberedTokensToFinalSplats", "assignPositions")}
+    return { assignPositionsNumbered, getNumberedSplats };
+  `)();
+  const hasardCompte = () => { let n = 0; const f = () => { n++; return 0.5; }; f.tirages = () => n; return f; };
+  for(const family of ["N", "NPM"]){
+    for(const n of [1, 2, 3, 4, 5, 6]){
+      const card = { family, visible: [], hidden: Array(n).fill(4), _num: { tasks: n, hiddenByTask: Array.from({length: n}, () => [4]) } };
+      const rng = hasardCompte();
+      geo5.assignPositionsNumbered(card, rng);
+      assert.equal(rng.tirages(), 2 * n, `${family}, ${n} taches : direction et décalage toujours tirés`);
+      assert.deepEqual(card._posH.map(p => [p.cx, p.cy]), geo5.getNumberedSplats(n, family).map(s => [s.cx, s.cy]), `${family}, ${n} taches : jetons au centre`);
+    }
+  }
+  const enquete = { family: "C", visible: [], hidden: [4, 4, 4], _num: { tasks: 3, hiddenByTask: [[4], [4], [4]] } };
+  geo5.assignPositionsNumbered(enquete, hasardCompte());
+  const centres = geo5.getNumberedSplats(3, "C");
+  assert.ok(enquete._posH.every((p, i) => Math.hypot(p.cx - centres[i].cx, p.cy - centres[i].cy) > 1), "l'Enquête garde son décalage");
 });
