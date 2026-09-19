@@ -6122,7 +6122,13 @@
 
       // source : le parcours à imprimer. Par défaut celui de l'appareil ; la vue
       // « fiche d'un élève » lui passe celui qu'elle a lu sur le serveur.
+      // La fiche actuellement affichée : null = celle de l'appareil, sinon le
+      // parcours d'un élève ouvert par le professeur (…#fiche=CODE). On la
+      // retient pour que beforeprint réimprime CELLE-LÀ (voir plus bas).
+      let ficheAffichee = null;
+
       function renderFiche(source) {
+        ficheAffichee = source || null;
         const fiche = source || parcours;
         const etat = PARCOURS.etatAffichage(fiche);
         // R6 (13/09/2026) : sous un code de suivi, le moteur retire le prénom de
@@ -6274,7 +6280,11 @@
       // remplit la fiche. Un écouteur reçoit l'événement en premier argument :
       // le passer directement à renderFiche(source) revenait à lui donner un
       // Event pour parcours, et la fiche sortait vide.
-      window.addEventListener("beforeprint", () => renderFiche());
+      // Correction : on réimprime la fiche AFFICHÉE. Sans ça, dans la vue du
+      // professeur (…#fiche=CODE), Ctrl+P rappelait renderFiche() sans source
+      // et remplissait la feuille avec le parcours de l'appareil DU PROFESSEUR
+      // à la place de celui de l'élève ouvert à l'écran.
+      window.addEventListener("beforeprint", () => renderFiche(ficheAffichee));
 
       // R5 : « La table de 7 » — les onze lignes de la table affichée sur
       // l'accueil, et ses cartes recto verso (un PDF par table).

@@ -38,7 +38,7 @@ test("« Voir ma fiche » : un seul chemin, en bas de l'accueil, vers un écran 
   assert.match(html, /\$\("acc-fiche"\)\.addEventListener\("click", openFiche\);[\s\S]{0,200}\$\("fiche-back"\)\.addEventListener\("click", backToModes\);\s*\n\s*\$\("fiche-imprimer"\)\.addEventListener\("click", printFiche\);/);
   // L'impression, elle, n'a pas bougé : la feuille seule, en A4, remplie sur beforeprint.
   assert.match(html, /body > \*:not\(#fiche-print\) \{ display: none !important; \}/);
-  assert.match(html, /window\.addEventListener\("beforeprint", \(\) => renderFiche\(\)\)/);
+  assert.match(html, /window\.addEventListener\("beforeprint", \(\) => renderFiche\(ficheAffichee\)\)/);
 });
 
 test("la vue « fiche d'un élève » du professeur est intacte (mode-fiche, #fiche-ecran)", () => {
