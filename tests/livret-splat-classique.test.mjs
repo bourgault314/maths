@@ -140,7 +140,7 @@ function nombreDePages(p) {
 
 test("les deux PDF publiés : 8 pages A4 dans l'ordre, 4 feuilles A3 imposées", () => {
   assert.equal(nombreDePages("outils/livret_splat_classique.pdf"), 8);
-  assert.equal(nombreDePages("outils/livret_splat_classique_a3.pdf"), 4);
+  assert.equal(nombreDePages("outils/livret_splat_classique_a_plier.pdf"), 4);
   assert.ok(taille("outils/livret_splat_classique.pdf") < 3_000_000, "le PDF reste léger (qpdf)");
 });
 
@@ -148,7 +148,7 @@ test("les deux PDF publiés : 8 pages A4 dans l'ordre, 4 feuilles A3 imposées",
 test("la page des livrets du monde 2 mène aux deux PDF et renvoie vers le monde 1 (et inversement)", () => {
   assert.match(page, /<link rel="canonical" href="https:\/\/mathsgo\.re\/outils\/livrets_splat_classique\.html">/);
   assert.match(page, /href="\/outils\/livret_splat_classique\.pdf"/);
-  assert.match(page, /href="\/outils\/livret_splat_classique_a3\.pdf"/);
+  assert.match(page, /href="\/outils\/livret_splat_classique_a_plier\.pdf"/);
   assert.match(page, /href="\/outils\/livrets_petit_splat\.html"/);
   assert.match(pageMonde1, /href="\/outils\/livrets_splat_classique\.html"/);
   assert.doesNotMatch(page, /noindex/);
@@ -173,7 +173,7 @@ test("vue prof du monde 2 : les deux pastilles du livret, à côté des étapes 
   const bloc = univers.match(/\(mi===1&&PROF\?'<p class="intro">'[\s\S]*?<\/p>':''\)\+/);
   assert.ok(bloc, "bloc des pastilles du monde 2 introuvable");
   assert.match(bloc[0], /href="\/outils\/livret_splat_classique\.pdf"/);
-  assert.match(bloc[0], /href="\/outils\/livret_splat_classique_a3\.pdf"/);
+  assert.match(bloc[0], /href="\/outils\/livret_splat_classique_a_plier\.pdf"/);
   assert.match(bloc[0], /href="\/outils\/livrets_splat_classique\.html"/);
   // la couleur du monde 2 pour ces pastilles
   assert.match(univers, /\.monde\.m2 \.introLien\.livret\{color:#0b4f8a;background:#e6f1fb;border-color:#a9cdeb\}/);
@@ -190,5 +190,23 @@ test("le pied des fiches Petit SPLAT! et des livrets est gris moyen, 10 px (lisi
   assert.match(pied, /bottom: -4\.5mm;/); // pas plus bas : 3,5 mm du bord du papier, comme avant
   for (const css of ["_sources/livret-petit-splat/commun.css", "_sources/livret-splat-classique/commun.css"]) {
     assert.match(lire(css), /\.pied\{[^}]*font-size:10px;[^}]*color:#64748b;/, css);
+  }
+});
+
+// ------------------------------------------ noms des fichiers : « à plier », pas « A3 »
+// Le livret à plier s'imprime sur A3 ou sur A4 : un fichier nommé « …_a3.pdf » laissait
+// croire qu'il fallait de l'A3 (décision du 19/09/2026, les deux familles de livrets).
+test("les livrets à plier s'appellent « …_a_plier.pdf » : plus aucun fichier ni lien en « _a3 »", () => {
+  for (const n of ["livret_petit_splat", "livret_petit_splat_avance", "livret_petit_splat_expert", "livret_splat_classique"]) {
+    assert.ok(existe(`outils/${n}_a_plier.pdf`), `outils/${n}_a_plier.pdf`);
+    assert.ok(!existe(`outils/${n}_a3.pdf`), `outils/${n}_a3.pdf ne doit plus exister`);
+  }
+  for (const p of ["outils/livrets_petit_splat.html", "outils/livrets_splat_classique.html", "outils/splat_univers.html",
+                   "_sources/livret-petit-splat/render.py", "_sources/livret-splat-classique/render.py"]) {
+    assert.doesNotMatch(lire(p), /_a3\.pdf|"_a3"/, p);
+  }
+  // les deux générateurs écrivent le nouveau nom : un livret refait ne ramènera pas l'ancien
+  for (const py of ["_sources/livret-petit-splat/render.py", "_sources/livret-splat-classique/render.py"]) {
+    assert.match(lire(py), /f"\{niv\['sortie'\]\}_a_plier\.pdf"/, py);
   }
 });

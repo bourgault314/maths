@@ -8,9 +8,9 @@ Il en existe **trois**, même progression, trois tranches de nombres :
 
 | Niveau | Cartes | PDF produits |
 |---|---|---|
-| `normal` — Monde 1 | jusqu'à 20 jetons | `outils/livret_petit_splat.pdf` · `…_a3.pdf` |
-| `avance` — Avancé  | **21 à 50** jetons | `outils/livret_petit_splat_avance.pdf` · `…_avance_a3.pdf` |
-| `expert` — Expert  | **51 à 100** jetons | `outils/livret_petit_splat_expert.pdf` · `…_expert_a3.pdf` |
+| `normal` — Monde 1 | jusqu'à 20 jetons | `outils/livret_petit_splat.pdf` · `…_a_plier.pdf` |
+| `avance` — Avancé  | **21 à 50** jetons | `outils/livret_petit_splat_avance.pdf` · `…_avance_a_plier.pdf` |
+| `expert` — Expert  | **51 à 100** jetons | `outils/livret_petit_splat_expert.pdf` · `…_expert_a_plier.pdf` |
 
 Les trois gardent `parcours=m1eN` : valider une fiche plus dure gagne l'étoile du
 monde 1 (décision du 17/09/2026 — « s'ils valident un truc plus dur, c'est mieux »).
@@ -19,7 +19,7 @@ Pour chaque niveau, deux PDF :
 
 - `…​.pdf` — 8 pages A4 dans l'ordre de lecture
   (pour lire à l'écran, ou pour le mode « Cahier/Livret » d'un photocopieur) ;
-- `…_a3.pdf` — 4 pages A3 paysage **déjà imposées**
+- `…_a_plier.pdf` — 4 pages A3 paysage **déjà imposées**
   (8|1 · 2|7 · 6|3 · 4|5) : impression recto-verso, retournement sur le bord court,
   on plie, on agrafe.
 
