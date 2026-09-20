@@ -71,10 +71,10 @@ NIVEAUX = {
         # cache rien (8 % des tirages avec les réglages de l'activité 1), et la série n'avait
         # pas toujours ses 12 cartes (vu par Code le 19/09/2026 ; totaux 10 à 19, comme les
         # cartes de l'activité 1 : 5, 11, 13, 15).
-        dos=[("Une tache",         "Comme l'activité 1 de la fiche 7.",              serie_url("mode=U&equation=X_PLUS_A_EQ_B&tasksMin=1&tasksMax=1&visibleMax=9&hiddenMax=10&totalMin=10&totalMax=25"), "serie-1.png"),
-             ("Plusieurs taches",  "Des taches et des jetons, comme l'activité 3 de la fiche 7.",  serie_url("mode=U&equation=AX_PLUS_C_EQ_B&tasksMin=2&tasksMax=5&visibleMax=15&hiddenMax=10&totalMin=5&totalMax=25"), "serie-2.png"),
-             ("Des paquets",       "Une tache et des paquets, comme la fiche 8.",   serie_url("mode=N&equation=X_PLUS_A_EQ_B"), "serie-3.png"),
-             ("Paquets et taches", "Le grand mélange, comme la fiche 9.",           serie_url("mode=N&equation=AX_PLUS_C_EQ_B&tasksMax=5"), "serie-4.png")],
+        dos=[("Une tache",         "Comme l'activité 1 de la fiche&nbsp;7.",              serie_url("mode=U&equation=X_PLUS_A_EQ_B&tasksMin=1&tasksMax=1&visibleMax=9&hiddenMax=10&totalMin=10&totalMax=25"), "serie-1.png"),
+             ("Plusieurs taches",  "Des taches et des jetons, comme l'activité 3 de la fiche&nbsp;7.",  serie_url("mode=U&equation=AX_PLUS_C_EQ_B&tasksMin=2&tasksMax=5&visibleMax=15&hiddenMax=10&totalMin=5&totalMax=25"), "serie-2.png"),
+             ("Des paquets",       "Une tache et des paquets, comme la fiche&nbsp;8.",   serie_url("mode=N&equation=X_PLUS_A_EQ_B"), "serie-3.png"),
+             ("Paquets et taches", "Le grand mélange, comme la fiche&nbsp;9.",           serie_url("mode=N&equation=AX_PLUS_C_EQ_B&tasksMax=5"), "serie-4.png")],
     ),
 }
 
