@@ -387,20 +387,28 @@ test("la règle des plusieurs taches est écrite MOT POUR MOT pareil sur les fic
   assert.ok(dos1.includes(phrase), "dos du monde 1");
 });
 
-test("le vocabulaire du dessin : « point bleu » pour un jeton, « cercle » pour un paquet, partout, README compris", () => {
-  assert.ok(dos2.includes("Un point bleu, c'est <b>un jeton</b>. Un <b>cercle avec un nombre</b>, c'est un <b>paquet de jetons</b>"),
-    "point bleu / cercle avec un nombre au dos du monde 2");
+test("le vocabulaire du dessin : « point bleu » pour un jeton, « un jeton avec un nombre » pour un paquet, jamais un nom de forme", () => {
+  assert.ok(dos2.includes("Un point bleu, c'est <b>un jeton</b>. Un jeton <b>avec un nombre</b>, c'est un <b>paquet de jetons</b>"),
+    "point bleu / un jeton avec un nombre au dos du monde 2");
   assert.ok(dos1.includes("Les points bleus, ce sont les <b>jetons visibles</b>"), "points bleus au dos du monde 1");
-  // Le mot doit être le même PARTOUT, README compris : c'est par là qu'« un disque avec
-  // un nombre » s'était glissé à côté d'un dos qui dit « cercle ».
-  const readme2 = lire("_sources/livret-splat-classique/README.md");
-  const readme1 = lire("_sources/livret-petit-splat/README.md");
-  assert.match(readme2.replace(/\s+/g, " "), /« paquet de jetons » \(un cercle avec un nombre\)/,
-    "le README du monde 2 glose le paquet par « un cercle avec un nombre »");
+  // Le paquet n'est pas un autre objet que le jeton : c'est le même rond, laissé blanc à
+  // l'intérieur pour que le nombre se lise. On nomme donc l'objet, jamais la forme.
   for (const [nom, t] of [["couverture monde 2", couv2], ["dos monde 2", dos2],
-                          ["couverture monde 1", couv1], ["dos monde 1", dos1],
-                          ["README monde 2", readme2], ["README monde 1", readme1]]) {
-    assert.doesNotMatch(t, /\brond/i, `${nom} : plus aucun « rond »`);
-    assert.doesNotMatch(t, /\bdisque/i, `${nom} : plus aucun « disque » (le paquet est dessiné comme un cercle)`);
+                          ["couverture monde 1", couv1], ["dos monde 1", dos1]]) {
+    assert.doesNotMatch(t, /\brond/i, `${nom} : aucun « rond »`);
+    assert.doesNotMatch(t, /\bdisque/i, `${nom} : aucun « disque »`);
+    assert.doesNotMatch(t, /\bcercle/i, `${nom} : aucun « cercle » (le paquet n'a pas de nom de forme)`);
   }
+  // Les README aussi : c'est par là qu'une glose contraire au dos s'était déjà glissée.
+  // Mais la ligne du monde 2 EXPLIQUE pourquoi ces trois mots sont écartés, donc elle les
+  // cite — l'assertion porte sur la glose elle-même, pas sur le fichier entier.
+  const readme2 = lire("_sources/livret-splat-classique/README.md").replace(/\s+/g, " ");
+  const readme1 = lire("_sources/livret-petit-splat/README.md").replace(/\s+/g, " ");
+  const glose = readme2.match(/« paquet de jetons » \(([^)]*)\)/);
+  assert.ok(glose, "le README du monde 2 glose « paquet de jetons »");
+  assert.equal(glose[1], "un jeton avec un nombre",
+    "la glose du README du monde 2 nomme l'objet, pas la forme");
+  // le monde 1 n'a pas de paquet : aucun nom de forme n'a de raison d'y apparaître
+  for (const [mot, motif] of [["rond", /\brond/i], ["disque", /\bdisque/i], ["cercle", /\bcercle/i]])
+    assert.doesNotMatch(readme1, motif, `README monde 1 : aucun « ${mot} »`);
 });
