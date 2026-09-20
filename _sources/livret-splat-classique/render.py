@@ -18,7 +18,7 @@ activités de Claire (4 + 4 + 4 cartes) sur deux pages pleines ; les fiches 8 et
 12 cartes elles aussi (décision du 19/09/2026 : 6 + 6, pas de page à moitié vide), exactement comme la
 série en ligne les enchaîne (paramètre « suite »). Le QR code est ajouté dans le bandeau
 de chaque page juste avant l'impression. Couverture et dos sont les deux HTML de ce
-dossier ; l'exemple de la couverture (carte, tableau et équation) est dessiné par
+dossier ; l'exemple de la couverture (carte, schéma en barres et équation) est dessiné par
 l'outil lui-même, en mode correction, sur une carte qui n'est PAS dans le livret.
 
 Le même script pourra rendre des niveaux supplémentaires (lot D : Avancé, Expert) :
@@ -49,8 +49,8 @@ E9   = "mode=N&equation=AX_PLUS_C_EQ_B&tasksMax=5&cards=12&seed=18&unknown=quest
 
 FICHES = [
     dict(n=7, t="Le même jeu, un nouveau plateau", parties=[M2A1, M2A2, M2A3], parcours="m2e1", pages=2),
-    dict(n=8, t="Les paquets de jetons",           parties=[E8],               parcours="m2e4", pages=2),
-    dict(n=9, t="Paquets : le défi",               parties=[E9],               parcours="m2e5", pages=2),
+    dict(n=8, t="Avec des paquets de jetons",      parties=[E8],               parcours="m2e4", pages=2),
+    dict(n=9, t="Le défi",                         parties=[E9],               parcours="m2e5", pages=2),
 ]
 
 def serie_url(query):
@@ -106,7 +106,7 @@ JS_QR = """(qr) => {
   if (!heads.length) return 'pas de bandeau imprimé';
   heads.forEach(h => {
     const box = document.createElement('div'); box.className = 'qr-livret';
-    box.innerHTML = '<div class="lib">Fiche finie ?<em>je rejoue en ligne</em></div><img src="' + qr + '" alt="">';
+    box.innerHTML = '<div class="lib">J\\'ai terminé<br>ma fiche,<em>je rejoue en ligne</em></div><img src="' + qr + '" alt="">';
     const logos = h.querySelector('.print-page-logos');
     h.insertBefore(box, logos || null);
   });
@@ -141,7 +141,17 @@ JS_FICHE = """(parties) => {
           parPage: getPrintCardsPerPage()};
 }"""
 
-# L'exemple de couverture : la correction (carte + tableau + équation) de la carte 1 de
+# Une fiche du monde 2 tient sur DEUX pages : la première garde « Fiche N — … », la
+# seconde devient « Fiche N bis — … », pour qu'un élève sache de quelle feuille il parle.
+# Le titre est le sous-titre du bandeau, posé par l'outil depuis le paramètre « title ».
+JS_BIS = """(titre) => {
+  const st = document.querySelectorAll('.printArea .sheet .print-page-subtitle');
+  if (st.length < 2) return 'une seule page imprimée';
+  st[1].textContent = titre;
+  return 'ok';
+}"""
+
+# L'exemple de couverture : la correction (carte + schéma en barres + équation) de la carte 1 de
 # l'adresse NIVEAUX[…]["exemple"], dessinée par renderCardIntoSvg, en deux fenêtres.
 JS_EXEMPLE = """() => {
   const sv = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
@@ -240,6 +250,10 @@ async def pages(niv, tmp):
             titre = quote(f"Fiche {f['n']} — {f['t']}")
             pg = await page_outil(f"{f['parties'][0]}&print=statement&layout=6&title={titre}")
             etat = await pg.evaluate(JS_FICHE, f["parties"][1:])
+            if f["pages"] > 1:
+                r = await pg.evaluate(JS_BIS, f"Fiche {f['n']} bis — {f['t']}")
+                if r != "ok":
+                    raise SystemExit(f"fiche {f['n']}, titre « bis » : {r}")
             if etat["parPage"] != 6:
                 raise SystemExit(f"fiche {f['n']} : {etat['parPage']} cartes par page au lieu de 6")
             if etat["feuilles"] != f["pages"]:

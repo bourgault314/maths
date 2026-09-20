@@ -30,7 +30,7 @@
 .x{font-family:'Times New Roman','DejaVu Serif',Georgia,serif;font-style:italic;font-weight:700;font-size:1.12em;padding:0 0.06em}
 .lex .atoi{background:#e6f1fb;border:1px solid #a9cdeb;border-radius:6px;padding:2mm 3mm 2mm 0}
 .lex .atoi b{color:#0b4f8a}
-/* mini tableau + équation de l'exemple de couverture, en rappel */
+/* mini schéma en barres + équation de l'exemple de couverture, en rappel */
 .mini-sch{display:flex;flex-direction:column;width:26mm}
 .mini-sch .h{border:1.4px solid #0f172a;height:6mm;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;background:#fff}
 .mini-sch .b{display:flex}
@@ -49,7 +49,7 @@
 .prog .etoile{width:8mm;height:8mm;flex:0 0 auto}
 .prog .da{font-size:10px;color:#475569;display:flex;align-items:flex-end;gap:1.2mm;flex:0 0 auto}
 .prog .da i{display:inline-block;font-style:normal;border-bottom:1px solid #94a3b8;width:6mm;height:5mm}
-.credits{font-size:10.5px;line-height:1.55;color:#475569;border-top:1px solid #e2e8f0;padding-top:3.5mm;padding-bottom:3mm}
+.credits{text-align:center;font-size:10.5px;line-height:1.55;color:#475569;border-top:1px solid #e2e8f0;padding-top:3.5mm;padding-bottom:3mm}
 .credits b{color:#0f172a}
 .credits .steve{color:#0b4f8a;font-weight:700}
 </style></head>
@@ -68,7 +68,7 @@
       C34,38 30,47 21,46 C13,45 7,40 0,35 Z"/>
   </svg>
   <div class="logos">
-    <img class="irem" src="/assets/img/logos/irem/logo-print.png" alt="IREM La Réunion">
+    <img class="irem" src="/assets/img/logos/irem/logo-print.png" alt="IREMI La Réunion">
     <img class="mg" src="/assets/img/logos/mathsgo/logo-print.png" alt="maths&amp;go">
   </div>
   <div class="bloc">
@@ -93,16 +93,16 @@
 
   <div class="suite">
     <img src="qr/univers.png" alt="">
-    <div><h3>La suite du voyage</h3><p>Après le tableau, l'équation toute seule&nbsp;: va voir le monde 3, <b>SPLAT! Équations</b>, puis le monde 4 de l'univers SPLAT!</p></div>
+    <div><h3>La suite du voyage</h3><p>Pour apprendre à résoudre des équations sans utiliser les schémas en barres&nbsp;! Va voir le monde 3, <b>SPLAT! Équations</b>, puis le monde 4 de l'univers SPLAT!</p></div>
   </div>
 
   <div class="lex">
     <span class="chip">Pour se souvenir</span>
     <ul>
       <li><span class="ic"><span class="boite">37</span></span><span>Le nombre encadré, c'est le <b>total</b>&nbsp;: tous les jetons, ceux qu'on voit et ceux qui sont cachés.</span></li>
-      <li><span class="ic"><svg width="74" height="26" viewBox="0 0 74 26"><circle cx="13" cy="13" r="9" fill="#2563eb" stroke="#1e40af" stroke-width="0.6"/><circle cx="36" cy="13" r="9" fill="#2563eb" stroke="#1e40af" stroke-width="0.6"/><circle cx="61" cy="13" r="11" fill="#fff" stroke="#2563eb" stroke-width="2.4"/><text x="61" y="17.5" text-anchor="middle" font-family="Poppins, sans-serif" font-size="12.5" font-weight="700" fill="#0f172a">6</text></svg></span><span>Un rond bleu, c'est <b>un jeton</b>. Un jeton <b>avec un nombre</b>, c'est un <b>paquet</b>&nbsp;: il vaut ce nombre de jetons (fiches 8 et 9).</span></li>
-      <li><span class="ic"><svg width="30" height="30" viewBox="2 5 106 105" aria-hidden="true"><use href="#tacheBadge" fill="#000"/></svg></span><span>La tache cache des jetons&nbsp;: c'est le <b>?</b>, <b>ce qu'il faut trouver</b>. Plusieurs taches cachent toutes le même nombre.</span></li>
-      <li class="atoi"><span class="ic"><span class="mini-sch"><span class="h">37</span><span class="b"><div class="v">16</div><div class="c">?</div></span></span></span><span><b>Sous chaque carte, c'est à toi</b>&nbsp;: dessine le tableau ou écris l'équation, puis trouve ce que cache la tache — comme l'exemple de la couverture.</span></li>
+      <li><span class="ic"><svg width="74" height="26" viewBox="0 0 74 26"><circle cx="13" cy="13" r="9" fill="#2563eb" stroke="#1e40af" stroke-width="0.6"/><circle cx="36" cy="13" r="9" fill="#2563eb" stroke="#1e40af" stroke-width="0.6"/><circle cx="61" cy="13" r="11" fill="#fff" stroke="#2563eb" stroke-width="2.4"/><text x="61" y="17.5" text-anchor="middle" font-family="Poppins, sans-serif" font-size="12.5" font-weight="700" fill="#0f172a">6</text></svg></span><span>Un point bleu, c'est <b>un jeton</b>. Un <b>cercle avec un nombre</b>, c'est un <b>paquet de jetons</b>&nbsp;: il vaut ce nombre de jetons.</span></li>
+      <li><span class="ic"><svg width="30" height="30" viewBox="2 5 106 105" aria-hidden="true"><use href="#tacheBadge" fill="#000"/></svg></span><span>La tache cache un certain nombre de jetons&nbsp;: c'est notre <b>inconnue</b>, le <b>?</b>, <b>ce qu'il faut trouver</b>&nbsp;! Lorsque plusieurs taches apparaissent, elles cachent le même nombre de jetons.</span></li>
+      <li class="atoi"><span class="ic"><span class="mini-sch"><span class="h">37</span><span class="b"><div class="v">16</div><div class="c">?</div></span></span></span><span><b>Sous chaque carte, c'est à toi</b>&nbsp;: dessine le schéma en barres ou écris l'équation, puis trouve ce que cache la tache — comme l'exemple de la couverture.</span></li>
     </ul>
   </div>
 
@@ -110,14 +110,14 @@
     <span class="chip">Mes fiches — je colorie l'étoile quand c'est fini</span>
     <div class="g">
       <div class="c"><span class="badge"><svg viewBox="2 5 106 105" fill="#063b7a"><use href="#tacheBadge"/></svg><b>7</b></span><span class="ti">Le même jeu, un nouveau plateau</span><svg class="etoile" viewBox="0 0 24 24"><path d="M12 2.6l2.9 5.9 6.5.9-4.7 4.6 1.1 6.5L12 17.4 6.2 20.5l1.1-6.5L2.6 9.4l6.5-.9z" fill="none" stroke="#063b7a" stroke-width="1.4" stroke-linejoin="round"/></svg><span class="da">le <i></i> / <i></i></span></div>
-      <div class="c"><span class="badge"><svg viewBox="2 5 106 105" fill="#063b7a"><use href="#tacheBadge"/></svg><b>8</b></span><span class="ti">Les paquets de jetons</span><svg class="etoile" viewBox="0 0 24 24"><path d="M12 2.6l2.9 5.9 6.5.9-4.7 4.6 1.1 6.5L12 17.4 6.2 20.5l1.1-6.5L2.6 9.4l6.5-.9z" fill="none" stroke="#063b7a" stroke-width="1.4" stroke-linejoin="round"/></svg><span class="da">le <i></i> / <i></i></span></div>
-      <div class="c"><span class="badge"><svg viewBox="2 5 106 105" fill="#063b7a"><use href="#tacheBadge"/></svg><b>9</b></span><span class="ti">Paquets&nbsp;: le défi</span><svg class="etoile" viewBox="0 0 24 24"><path d="M12 2.6l2.9 5.9 6.5.9-4.7 4.6 1.1 6.5L12 17.4 6.2 20.5l1.1-6.5L2.6 9.4l6.5-.9z" fill="none" stroke="#063b7a" stroke-width="1.4" stroke-linejoin="round"/></svg><span class="da">le <i></i> / <i></i></span></div>
+      <div class="c"><span class="badge"><svg viewBox="2 5 106 105" fill="#063b7a"><use href="#tacheBadge"/></svg><b>8</b></span><span class="ti">Avec des paquets de jetons</span><svg class="etoile" viewBox="0 0 24 24"><path d="M12 2.6l2.9 5.9 6.5.9-4.7 4.6 1.1 6.5L12 17.4 6.2 20.5l1.1-6.5L2.6 9.4l6.5-.9z" fill="none" stroke="#063b7a" stroke-width="1.4" stroke-linejoin="round"/></svg><span class="da">le <i></i> / <i></i></span></div>
+      <div class="c"><span class="badge"><svg viewBox="2 5 106 105" fill="#063b7a"><use href="#tacheBadge"/></svg><b>9</b></span><span class="ti">Le défi</span><svg class="etoile" viewBox="0 0 24 24"><path d="M12 2.6l2.9 5.9 6.5.9-4.7 4.6 1.1 6.5L12 17.4 6.2 20.5l1.1-6.5L2.6 9.4l6.5-.9z" fill="none" stroke="#063b7a" stroke-width="1.4" stroke-linejoin="round"/></svg><span class="da">le <i></i> / <i></i></span></div>
     </div>
   </div>
 
   <div class="credits">
     Jeu <b>SPLAT!</b> créé par <span class="steve">Steve Wyborney</span> (stevewyborney.com) — merci Steve&nbsp;!<br>
-    Progression «&nbsp;SPLAT! cycle 3&nbsp;» de Claire · outil <b>SPLAT! classique</b> de maths&amp;go, avec l'IREM de La Réunion.<br>
+    Progression «&nbsp;SPLAT! cycle 3&nbsp;» de Claire · outil <b>SPLAT! classique</b> de maths&amp;go, avec l'IREMI de La Réunion.<br>
     Libre d'être imprimé, partagé et adapté — sans usage commercial, et sous la même licence.
   </div>
 </div>

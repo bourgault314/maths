@@ -155,7 +155,7 @@ test("la page des livrets du monde 2 mène aux deux PDF et renvoie vers le monde
 });
 
 test("la miniature du livret existe en PNG et en WebP, au format du catalogue", () => {
-  assert.match(page, /assets\/img\/thumbnails\/splat\/livret-splat-classique\.png\?v=1/);
+  assert.match(page, /assets\/img\/thumbnails\/splat\/livret-splat-classique\.png\?v=2/);
   assert.ok(existe("assets/img/thumbnails/splat/livret-splat-classique.png"));
   assert.ok(existe("assets/img/thumbnails/splat/livret-splat-classique.webp"));
   assert.ok(taille("assets/img/thumbnails/splat/livret-splat-classique.webp") < taille("assets/img/thumbnails/splat/livret-splat-classique.png"));
@@ -166,7 +166,7 @@ test("le catalogue déclare la page des livrets du monde 2 dans la collection Sp
   assert.ok(m, "carte du catalogue introuvable");
   assert.match(m[0], /"collections": \["splat"\]/);
   assert.match(m[0], /"primaryGroup": "imprimer"/);
-  assert.match(m[0], /livret-splat-classique\.png\?v=1/);
+  assert.match(m[0], /livret-splat-classique\.png\?v=2/);
 });
 
 test("vue prof du monde 2 : les deux pastilles du livret, à côté des étapes 7, 8 et 9", () => {
@@ -208,5 +208,199 @@ test("les livrets à plier s'appellent « …_a_plier.pdf » : plus aucun fichie
   // les deux générateurs écrivent le nouveau nom : un livret refait ne ramènera pas l'ancien
   for (const py of ["_sources/livret-petit-splat/render.py", "_sources/livret-splat-classique/render.py"]) {
     assert.match(lire(py), /f"\{niv\['sortie'\]\}_a_plier\.pdf"/, py);
+  }
+});
+
+// ============================================================ lot T — les textes de Claire
+// (20/09/2026) Claire a relu le livret du monde 2 : « schéma en barres » remplace
+// « tableau » partout où quelqu'un lit, les fiches 8 et 9 changent de titre, la boîte du
+// QR dit « J'ai terminé ma fiche, », chaque 2e page porte « Fiche N bis — … », et
+// l'institut s'écrit IREMI. Ces tests épinglent les textes entre eux : le livret, la
+// carte des mondes, la page courte des QR, les pages du site et le PDF publié.
+
+const T8 = "Avec des paquets de jetons";
+const T9 = "Le défi";
+const couv2 = lire("_sources/livret-splat-classique/couverture.html");
+const dos2 = lire("_sources/livret-splat-classique/dos.html");
+const couv1 = lire("_sources/livret-petit-splat/couverture.html");
+const dos1 = lire("_sources/livret-petit-splat/dos.html");
+const render1 = lire("_sources/livret-petit-splat/render.py");
+
+test("les titres des fiches 8 et 9 sont les mêmes partout (livret, page courte, carte des mondes)", () => {
+  assert.match(render, new RegExp(`dict\\(n=8, t="${T8}"`), "render.py");
+  assert.match(render, new RegExp(`dict\\(n=9, t="${T9}"`), "render.py");
+  assert.ok(couv2.includes(`<span>${T8}<em>`), "sommaire de la couverture, fiche 8");
+  assert.ok(couv2.includes(`<span>${T9}<em>`), "sommaire de la couverture, fiche 9");
+  assert.ok(dos2.includes(`<span class="ti">${T8}</span>`), "« Mes fiches » du dos, fiche 8");
+  assert.ok(dos2.includes(`<span class="ti">${T9}</span>`), "« Mes fiches » du dos, fiche 9");
+  assert.ok(courte.includes(`Fiche 8 — ${T8}`), "page courte des QR, fiche 8");
+  assert.ok(courte.includes(`Fiche 9 — ${T9}`), "page courte des QR, fiche 9");
+  assert.ok(univers.includes(`{t:"${T8}",fo:"x + a = b"`), "étape 8 de la carte des mondes");
+  assert.ok(univers.includes(`{t:"${T9}",fo:"a × x + c = b"`), "étape 9 de la carte des mondes");
+  // les « bis » ne sont pas listés : le sommaire et « Mes fiches » ne parlent que de 7, 8, 9
+  assert.doesNotMatch(couv2, /bis/);
+  assert.doesNotMatch(dos2, /\bbis\b/);
+});
+
+test("la boîte du QR dit « J'ai terminé ma fiche, / je rejoue en ligne » dans les deux familles", () => {
+  for (const [nom, py] of [["monde 2", render], ["monde 1", render1]]) {
+    assert.ok(py.includes("ai terminé<br>ma fiche,<em>je rejoue en ligne</em>"), nom);
+    assert.doesNotMatch(py, /Fiche finie \?/, nom);
+  }
+  // le QR garde sa taille : 17 mm au monde 2, 20 mm au monde 1
+  assert.match(render, /\.qr-livret img\{width:17mm;height:17mm/);
+  assert.match(render1, /\.qr-livret img\{width:20mm;height:20mm/);
+});
+
+test("render.py pose « Fiche N bis — … » sur la seconde page des fiches à deux pages", () => {
+  assert.match(render, /JS_BIS = """\(titre\) => \{[\s\S]*?\.print-page-subtitle'\);[\s\S]*?st\[1\]\.textContent = titre;/);
+  assert.match(render, /if f\["pages"\] > 1:\s*\n\s*r = await pg\.evaluate\(JS_BIS, f"Fiche \{f\['n'\]\} bis — \{f\['t'\]\}"\)/);
+});
+
+// ------------------------------------------------- le texte réellement écrit dans le PDF
+/* Chromium dessine un glyphe par « <code> Tj », avec des polices sous-ensemblées : on
+   reconstitue le texte en suivant l'ordre du flux et en choisissant, pour chaque passage
+   de police (/Fn … Tf), la table ToUnicode qui décode le plus de codes. Un flux de texte
+   par page, dans l'ordre des pages. */
+function texteDesPages(p) {
+  const b = readFileSync(new URL(`../${p}`, import.meta.url));
+  const flux = [];
+  let i = 0;
+  while ((i = b.indexOf("stream", i)) >= 0) {
+    let s = i + 6;
+    if (b[s] === 13) s++;
+    if (b[s] === 10) s++;
+    const e = b.indexOf("endstream", s);
+    if (e < 0) break;
+    try { flux.push(inflateSync(b.subarray(s, e)).toString("latin1")); } catch { /* non compressé */ }
+    i = e + 9;
+  }
+  const tables = [];
+  for (const f of flux) {
+    if (!f.includes("begincmap")) continue;
+    const t = new Map();
+    for (const bloc of f.match(/beginbfchar([\s\S]*?)endbfchar/g) || [])
+      for (const m of bloc.matchAll(/<([0-9a-fA-F]+)>\s*<([0-9a-fA-F]+)>/g))
+        t.set(m[1].toLowerCase(), String.fromCodePoint(...(m[2].match(/.{4}/g) || []).map((h) => parseInt(h, 16))));
+    for (const bloc of f.match(/beginbfrange([\s\S]*?)endbfrange/g) || [])
+      for (const m of bloc.matchAll(/<([0-9a-fA-F]+)>\s*<([0-9a-fA-F]+)>\s*<([0-9a-fA-F]+)>/g)) {
+        const a = parseInt(m[1], 16), z = parseInt(m[2], 16), c = parseInt(m[3], 16);
+        for (let k = a; k <= z && k - a < 1024; k++) t.set(k.toString(16).padStart(4, "0"), String.fromCodePoint(c + (k - a)));
+      }
+    if (t.size) tables.push(t);
+  }
+  const pages = [];
+  for (const s of flux) {
+    if (!s.includes(" Tj")) continue;
+    const bornes = [...s.matchAll(/\/F\d+\s+[\d.]+\s+Tf/g)].map((m) => m.index);
+    bornes.push(s.length);
+    let texte = "";
+    for (let k = 0; k < bornes.length - 1; k++) {
+      const codes = [...s.slice(bornes[k], bornes[k + 1]).matchAll(/<([0-9a-fA-F]{4})>\s*Tj/g)].map((m) => m[1].toLowerCase());
+      if (!codes.length) continue;
+      let meilleure = null, score = 0;
+      for (const t of tables) {
+        const n = codes.filter((c) => t.has(c)).length;
+        if (n > score) { score = n; meilleure = t; }
+      }
+      if (meilleure) texte += codes.map((c) => meilleure.get(c) ?? "").join("");
+    }
+    pages.push(texte);
+  }
+  return pages;
+}
+
+test("dans le PDF publié : la 2e page de chaque fiche porte « Fiche N bis — … »", () => {
+  const pages = texteDesPages("outils/livret_splat_classique.pdf");
+  assert.equal(pages.length, 8, "huit pages de texte");
+  const titres = [[1, 2, "Fiche 7 —", "Fiche 7 bis —"], [3, 4, "Fiche 8 —", "Fiche 8 bis —"], [5, 6, "Fiche 9 —", "Fiche 9 bis —"]];
+  for (const [recto, verso, normal, bis] of titres) {
+    assert.ok(pages[recto].startsWith(normal), `page ${recto + 1} commence par « ${normal} » (lu : ${pages[recto].slice(0, 40)})`);
+    assert.ok(pages[verso].startsWith(bis), `page ${verso + 1} commence par « ${bis} » (lu : ${pages[verso].slice(0, 40)})`);
+  }
+  // les titres de Claire, tels qu'ils s'impriment
+  assert.match(pages[3], /Fiche 8 — Avec des\s*paquets de jetons/);
+  assert.match(pages[5], /Fiche 9 — Le dé/);
+  // la couverture : le texte de Claire et « Nom, prénom »
+  assert.match(pages[0], /Sur cette carte, il y a 37 jetons au total/);
+  assert.match(pages[0], /Le schéma en barres et l'équation/);
+  assert.match(pages[0], /Nom, prénom/);
+  assert.doesNotMatch(pages[0], /Prénom(?!.*Nom)/);
+});
+
+test("« tableau » a disparu des quatre sources de livrets et des deux pages de livrets", () => {
+  for (const [nom, t] of [["couverture monde 2", couv2], ["dos monde 2", dos2],
+                          ["couverture monde 1", couv1], ["dos monde 1", dos1],
+                          ["page des livrets monde 2", page], ["page des livrets monde 1", pageMonde1],
+                          ["page courte des QR", courte]])
+    assert.doesNotMatch(t, /tableau/i, nom);
+  // les libellés d'impression des deux outils (courts, pour ne pas allonger la liste)
+  for (const outil of ["outils/splat.html", "outils/splat_equations.html"]) {
+    const t = lire(outil);
+    assert.match(t, /<option value="worksheet">Énoncé \+ schéma à remplir<\/option>/, outil);
+    assert.match(t, /<option value="duplex-worksheet">Énoncé, schéma au dos<\/option>/, outil);
+    assert.doesNotMatch(t, /<option[^>]*>[^<]*tableau/i, outil);
+  }
+});
+
+test("l'institut s'écrit IREMI dans les textes lus ; les chemins des logos ne bougent pas", () => {
+  const lus = {
+    "_sources/livret-splat-classique/couverture.html": [/alt="IREMI La Réunion"/],
+    "_sources/livret-splat-classique/dos.html": [/alt="IREMI La Réunion"/, /avec l'IREMI de La Réunion\./],
+    "_sources/livret-petit-splat/couverture.html": [/alt="IREMI La Réunion"/],
+    "_sources/livret-petit-splat/dos.html": [/alt="IREMI La Réunion"/, /avec l'IREMI de La Réunion\./],
+    "outils/splat.html": [/iremLogo\.alt = "IREMI de La Réunion";/],
+    "outils/splat_equations.html": [/iremLogo\.alt = "IREMI de La Réunion";/],
+    "outils/splat_tache_barre.html": [/alt="IREMI La Réunion"/],
+    "outils/livrets_splat_classique.html": [/avec l'IREMI de La Réunion\./],
+    "outils/livrets_petit_splat.html": [/avec l'IREMI de La Réunion\./],
+  };
+  for (const [f, motifs] of Object.entries(lus)) {
+    const t = lire(f);
+    for (const m of motifs) assert.match(t, m, f);
+    assert.doesNotMatch(t, /IREM(?!I)[ ’']*(?:de )?La Réunion/, `${f} : plus aucun « IREM La Réunion »`);
+  }
+  // les chemins et la constante ne changent pas (le fichier du logo s'appelle toujours irem)
+  for (const f of ["_sources/livret-splat-classique/couverture.html", "outils/splat.html"])
+    assert.match(lire(f), /assets\/img\/logos\/irem\/logo-print\.png|IREM_PRINT_LOGO_URL/, f);
+});
+
+test("le champ d'identité : « Nom, prénom » au monde 2 (des plus grands), « Prénom » au monde 1", () => {
+  assert.ok(couv2.includes('<div class="champ"><span>Nom, prénom</span></div>'), "couverture du monde 2");
+  assert.ok(couv2.includes('<div class="champ classe"><span>Classe</span></div>'), "la case Classe ne bouge pas");
+  assert.ok(couv1.includes("<span>Prénom</span>"), "la couverture du monde 1 garde « Prénom »");
+  assert.doesNotMatch(couv1, /Nom, prénom/, "le monde 1 ne prend pas « Nom, prénom »");
+});
+
+test("le dos des deux familles : crédits centrés, comme la signature et comme le pied du site", () => {
+  for (const [nom, t] of [["dos monde 2", dos2], ["dos monde 1", dos1]])
+    assert.match(t, /\.credits\{text-align:center;/, nom);
+});
+
+test("la règle des plusieurs taches est écrite MOT POUR MOT pareil sur les fiches et sur les deux dos", () => {
+  const phrase = "Lorsque plusieurs taches apparaissent, elles cachent le même nombre de jetons.";
+  // la consigne imprimée en haut de chaque fiche, dans les deux outils
+  assert.ok(lire("outils/splat.html").includes(phrase), "consigne de Splat classique");
+  assert.ok(lire("outils/splat_tache_barre.html").includes(phrase), "consigne de Petit SPLAT!");
+  // le rappel « Pour se souvenir » au dos des deux familles de livrets
+  assert.ok(dos2.includes(phrase), "dos du monde 2");
+  assert.ok(dos1.includes(phrase), "dos du monde 1");
+});
+
+test("le vocabulaire du dessin : « point bleu » pour un jeton, « cercle » pour un paquet, partout, README compris", () => {
+  assert.ok(dos2.includes("Un point bleu, c'est <b>un jeton</b>. Un <b>cercle avec un nombre</b>, c'est un <b>paquet de jetons</b>"),
+    "point bleu / cercle avec un nombre au dos du monde 2");
+  assert.ok(dos1.includes("Les points bleus, ce sont les <b>jetons visibles</b>"), "points bleus au dos du monde 1");
+  // Le mot doit être le même PARTOUT, README compris : c'est par là qu'« un disque avec
+  // un nombre » s'était glissé à côté d'un dos qui dit « cercle ».
+  const readme2 = lire("_sources/livret-splat-classique/README.md");
+  const readme1 = lire("_sources/livret-petit-splat/README.md");
+  assert.match(readme2.replace(/\s+/g, " "), /« paquet de jetons » \(un cercle avec un nombre\)/,
+    "le README du monde 2 glose le paquet par « un cercle avec un nombre »");
+  for (const [nom, t] of [["couverture monde 2", couv2], ["dos monde 2", dos2],
+                          ["couverture monde 1", couv1], ["dos monde 1", dos1],
+                          ["README monde 2", readme2], ["README monde 1", readme1]]) {
+    assert.doesNotMatch(t, /\brond/i, `${nom} : plus aucun « rond »`);
+    assert.doesNotMatch(t, /\bdisque/i, `${nom} : plus aucun « disque » (le paquet est dessiné comme un cercle)`);
   }
 });

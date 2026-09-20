@@ -23,13 +23,13 @@ Deux PDF :
 ## Fichiers
 
 - `couverture.html` — page 1 : bandeau bleu du monde 2 à coulure, la tache « ? »,
-  l'exemple expliqué, Prénom + Classe et le sommaire des trois fiches.
+  l'exemple expliqué, « Nom, prénom » + Classe et le sommaire des trois fiches.
   **L'exemple est dessiné par l'outil lui-même** (voir plus bas) ; le SVG écrit dans
   le fichier n'est qu'un aperçu, remplacé au rendu.
 - `dos.html` — page 8 : « Encore des cartes ! » (4 QR, séries de 12 cartes tirées au
   hasard), « La suite du voyage » vers l'univers (monde 3), « Pour se souvenir »
   (total, jeton et paquet, tache et « ? », et surtout : *sous chaque carte, c'est à toi
-  de dessiner le tableau ou d'écrire l'équation* — sans réécrire l'équation : l'exemple,
+  de dessiner le schéma en barres ou d'écrire l'équation* — sans réécrire l'équation : l'exemple,
   écrit par l'outil, est sur la couverture), grille « Mes fiches », crédits, licence.
 - `commun.css` — la charte des deux pages (Poppins, bleu `#0b67b2` du monde 2 — le
   même dégradé que le bandeau imprimé des fiches depuis le lot B).
@@ -51,7 +51,7 @@ Rien n'est trié ici : les cartes sont **exactement** celles que l'élève joue 
 - fiche 7 = les trois activités de Claire (`M2A1`, `M2A2`, `M2A3` : graines 974, 477,
   478, 4 cartes chacune) mises bout à bout, comme la série en ligne les enchaîne avec le
   paramètre `suite` ;
-- fiche 8 = étape « Les paquets de jetons » (graine 347), fiche 9 = « Paquets : le défi »
+- fiche 8 = étape « Avec des paquets de jetons » (graine 347), fiche 9 = « Le défi »
   (graine 18). Ces deux étapes sont passées de 10 à **12 cartes** le 19/09/2026 (les 10
   premières cartes n'ont pas changé, deux se sont ajoutées à la fin) pour remplir les
   deux pages de chaque fiche (6 + 6) au lieu de laisser deux cases vides.
@@ -77,8 +77,8 @@ Il n'est pas dessiné à la main et n'est **pas une carte du livret** : `render.
 l'outil sur `NIVEAUX[…]["exemple"]["query"]` (mode N — paquets de jetons —, une tache,
 graine fixe 5264 choisie le 19/09/2026 : total 37, paquets 10 et 6, la tache cache 21),
 demande la **correction** de la carte (`renderCardIntoSvg(…, 'correction')` : la carte
-avec la tache transparente, le tableau et l'équation résolue avec ses flèches « − 16 »)
-et la place en deux fenêtres sur la couverture : la carte à gauche, le tableau et
+avec la tache transparente, le schéma en barres et l'équation résolue avec ses flèches « − 16 »)
+et la place en deux fenêtres sur la couverture : la carte à gauche, le schéma en barres et
 l'équation à droite. L'exemple est donc écrit exactement comme la correction que le
 professeur projette. L'inconnue y est le « ? » de l'outil élève (cycle 3) ; une version
 « avec la lettre » (`unknown=letter`) pour le cycle 4 est envisagée, pas faite.
@@ -97,7 +97,7 @@ l'outil (`@page` 8 mm, `prefer_css_page_size`), la couverture et le dos sans mar
 
 ## Conventions
 
-- Logos IREM + maths&go dans le bandeau des 8 pages ; rien dans le pied, hormis la
+- Logos IREMI + maths&go dans le bandeau des 8 pages ; rien dans le pied, hormis la
   signature `mathsgo.re/splat · CC BY-NC-SA 4.0` (gris moyen `#64748b`, 10 px sur la
   couverture et le dos, 7 pt sur les fiches — lisible en photocopie). L'outil écrit
   `mathsgo.re/splat/classique` au pied des fiches ; `render.py` le repointe vers
@@ -107,6 +107,8 @@ l'outil (`@page` 8 mm, `prefer_css_page_size`), la couverture et le dos sans mar
 - Le QR dans le bandeau coûte 3 mm de hauteur par rangée de cartes : 31,5 mm de blanc
   sous chaque plateau (mesuré sur le PDF) au lieu de 34,6 mm sur la fiche imprimée
   depuis la carte des mondes.
-- Vocabulaire : « jetons », « paquet » (un jeton avec un nombre), « tache », « ? ».
+- Vocabulaire (textes de Claire, 20/09/2026) : « jetons », « paquet de jetons » (un cercle
+  avec un nombre), « tache », « ? », « schéma en barres » — jamais « tableau ».
+- Chaque fiche tient sur deux pages : la seconde porte « Fiche N bis — … » (`JS_BIS`).
 - L'imposition A3 passe par **pikepdf** et `add_overlay` (voir le README du monde 1 :
   avec pypdf, les dégradés ne suivent pas).

@@ -128,7 +128,7 @@ JS_QR = """(qr) => {
   while(ins.firstChild) txt.appendChild(ins.firstChild);
   ins.appendChild(txt);
   const box=document.createElement('div'); box.className='qr-livret';
-  box.innerHTML='<div class="lib">Fiche finie ?<em>je rejoue en ligne</em></div><img src="'+qr+'" alt="">';
+  box.innerHTML='<div class="lib">J\\'ai terminé<br>ma fiche,<em>je rejoue en ligne</em></div><img src="'+qr+'" alt="">';
   ins.appendChild(box);
   return 'ok';
 }"""

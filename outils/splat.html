@@ -849,9 +849,9 @@
 
       <p><strong>Les modes.</strong> Un clic sur ▶ fait avancer la carte d'une étape.</p>
       <ul>
-        <li><strong>A — Jetons</strong> : des jetons de 1. Un clic montre le tableau en barres vide, le suivant le remplit (avec le bouton Résoudre), le dernier écrit les calculs.</li>
+        <li><strong>A — Jetons</strong> : des jetons de 1. Un clic montre le schéma en barres vide, le suivant le remplit (avec le bouton Résoudre), le dernier écrit les calculs.</li>
         <li><strong>A± — Jetons relatifs</strong> : des jetons +1 et −1 ; l'équation s'écrit, puis se résout ligne par ligne.</li>
-        <li><strong>B — Paquets de jetons</strong> : des jetons qui valent plusieurs unités ; tableau vide, tableau rempli avec l'équation, puis la résolution ligne par ligne.</li>
+        <li><strong>B — Paquets de jetons</strong> : des jetons qui valent plusieurs unités ; schéma en barres vide, schéma rempli avec l'équation, puis la résolution ligne par ligne.</li>
         <li><strong>B± — Paquets relatifs</strong> : la même chose avec des valeurs positives et négatives.</li>
         <li><strong>C — Enquête</strong> : deux ou trois taches de couleurs reliées par des indices ; le schéma se construit étape par étape (vide, rempli, regroupé, ordonné) jusqu'à la résolution.</li>
         <li><strong>C direct — Substitution</strong> : la même enquête, en remplaçant d'abord chaque tache par ce qu'elle vaut.</li>
@@ -865,10 +865,10 @@
         <li><strong>◀ ▶</strong> : étape précédente / suivante, puis carte précédente / suivante.</li>
         <li><strong>⏮ ⏭</strong> : sauter directement à la carte précédente / suivante.</li>
         <li><strong>Plein écran</strong> : pour projeter ; les boutons restent affichés en grand sur le plateau.</li>
-        <li><strong>Résoudre</strong> (en vert, près du tableau) : ouvre la même situation dans ÉquaBarre pour la manipuler.</li>
+        <li><strong>Résoudre</strong> (en vert, près du schéma) : ouvre la même situation dans ÉquaBarre pour la manipuler.</li>
       </ul>
 
-      <p><strong>Impression.</strong> Une seule liste, « Ce que j'imprime », dit ce qui partira à l'imprimante : <strong>Énoncé seul</strong>, <strong>Énoncé + tableau à remplir</strong>, <strong>Correction</strong>, ou l'un des deux recto-verso — <strong>Énoncé, tableau au dos</strong> et <strong>Énoncé, correction au dos</strong>. Ces deux-là impriment l'énoncé au recto et le reste au verso, dans le même ordre : les élèves cherchent d'un côté, retournent la feuille et vérifient de l'autre. La phrase sous la liste redit en clair ce que vous allez obtenir.</p>
+      <p><strong>Impression.</strong> Une seule liste, « Ce que j'imprime », dit ce qui partira à l'imprimante : <strong>Énoncé seul</strong>, <strong>Énoncé + schéma à remplir</strong>, <strong>Correction</strong>, ou l'un des deux recto-verso — <strong>Énoncé, schéma au dos</strong> et <strong>Énoncé, correction au dos</strong>. Ces deux-là impriment l'énoncé au recto et le reste au verso, dans le même ordre : les élèves cherchent d'un côté, retournent la feuille et vérifient de l'autre. La phrase sous la liste redit en clair ce que vous allez obtenir.</p>
 
       <p><strong>Raccourcis clavier.</strong></p>
       <ul>
@@ -1273,10 +1273,10 @@
       <label for="printMode">Ce que j’imprime</label>
       <select id="printMode" title="Choisir ce qui partira à l’imprimante">
         <option value="statement">Énoncé seul</option>
-        <option value="worksheet">Énoncé + tableau à remplir</option>
+        <option value="worksheet">Énoncé + schéma à remplir</option>
         <option value="correction">Correction</option>
         <option disabled>─────── recto-verso ───────</option>
-        <option value="duplex-worksheet">Énoncé, tableau au dos</option>
+        <option value="duplex-worksheet">Énoncé, schéma au dos</option>
         <option value="duplex-correction">Énoncé, correction au dos</option>
       </select>
       <div class="row printGoRow" style="flex-wrap:nowrap; gap:8px; align-items:flex-end;">
@@ -1739,7 +1739,7 @@ const lastNumberedTotalBounds = { N: null, NPM: null };
 let lastActivityForSigned = activityEl.value;
 const lastSignedModeSettings = { NPM: null };
 
-/* Ce que « Énoncé + tableau à remplir » veut dire selon le mode : un tableau en
+/* Ce que « Énoncé + schéma à remplir » veut dire selon le mode : un schéma en
    barres vide sous l'énoncé (A, B), une aide — la première ligne de l'équation —
    (B±), ou rien du tout : les autres modes n'impriment que l'énoncé, la ligne
    est alors grisée. À compléter le jour où l'Enquête et le Système auront leur
@@ -1758,11 +1758,11 @@ function syncPrintModeUI(){
   const worksheetOpt = sel.querySelector('option[value="worksheet"]');
   const duplexWorksheetOpt = sel.querySelector('option[value="duplex-worksheet"]');
   if(worksheetOpt){
-    worksheetOpt.textContent = kind === "aid" ? "Énoncé + aide" : "Énoncé + tableau à remplir";
+    worksheetOpt.textContent = kind === "aid" ? "Énoncé + aide" : "Énoncé + schéma à remplir";
     worksheetOpt.disabled = !kind;
   }
   if(duplexWorksheetOpt){
-    duplexWorksheetOpt.textContent = kind === "aid" ? "Énoncé, aide au dos" : "Énoncé, tableau au dos";
+    duplexWorksheetOpt.textContent = kind === "aid" ? "Énoncé, aide au dos" : "Énoncé, schéma au dos";
     duplexWorksheetOpt.disabled = !kind;
   }
   // un choix devenu sans objet retombe sur le choix voisin
@@ -1796,14 +1796,14 @@ function syncPrintSummary(){
   const perPage = String(getPrintCardsPerPage());
   const sixRefuse = perPageEl && perPageEl.value === "6" && perPage !== "6";
   const kind = classicWorksheetKind(activityEl ? activityEl.value : "");
-  const nom = { statement:"l’énoncé", worksheet: kind === "aid" ? "l’aide" : "le tableau à remplir", correction:"la correction" };
+  const nom = { statement:"l’énoncé", worksheet: kind === "aid" ? "l’aide" : "le schéma à remplir", correction:"la correction" };
   let msg;
   if(plan.verso){
     msg = "Une seule feuille : l’élève cherche au recto, retourne et trouve " + nom[plan.verso] + " au verso.";
   }else if(plan.recto === "statement"){
     msg = "Les énoncés seuls, rien au dos.";
   }else if(plan.recto === "worksheet"){
-    msg = "L’énoncé avec " + (kind === "aid" ? "son aide" : "son tableau à remplir") + ", rien au dos.";
+    msg = "L’énoncé avec " + (kind === "aid" ? "son aide" : "son schéma à remplir") + ", rien au dos.";
   }else{
     msg = "La correction seule, rien au dos.";
   }
@@ -7673,7 +7673,7 @@ function createClassicPrintHeader(mode){
   logos.className = "print-page-logos";
   const iremLogo = document.createElement("img");
   iremLogo.className = "print-page-logo-irem";
-  iremLogo.alt = "IREM de La Réunion";
+  iremLogo.alt = "IREMI de La Réunion";
   iremLogo.src = IREM_PRINT_LOGO_URL;
   logos.appendChild(iremLogo);
   const mathsLogo = document.createElement("img");
