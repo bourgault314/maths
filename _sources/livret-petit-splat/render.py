@@ -269,11 +269,6 @@ JS_COUV = """(d) => {
   const flexV = Math.max(e.visible, e.total * 0.05, 1);
   const flexH = Math.max(e.hp, e.total * 0.05, 1);
   const mini = '<svg class="mini" viewBox="40 10 220 180" aria-hidden="true"><path d="M130,50 Q170,20 200,60 Q230,80 210,130 Q180,170 130,160 Q80,150 70,100 Q80,40 130,50 Z" fill="#111827"/></svg>';
-  /* La mini-tache reste TOUJOURS dans le coin haut-gauche. À partir de 4 cases, la case
-     du schéma tombe à ~48 px de large : la tache de 8 x 5,4 mm descendrait sur la ligne
-     du nombre. Elle est alors réduite, comme elle l'est dans le jeu de l'élève
-     (.eleve-case .miniTache), pour tenir dans le coin au-dessus de la ligne des chiffres.
-     À 1, 2 ou 3 cases — Monde 1 et Avancé — rien ne change. Lot K1-bis, 20/09/2026. */
   let bas = '<div class="vis" style="flex:' + flexV + '">' + e.visible + '</div>';
   /* la mini-tache va dans CHAQUE case cachée : une case = une tache */
   for (let i = 0; i < e.n; i++)
