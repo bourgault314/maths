@@ -250,7 +250,7 @@ const M2A1="mode=U&equation=X_PLUS_A_EQ_B&tasksMin=1&tasksMax=1&visibleMax=15&hi
 const M2A2="mode=U&equation=AX_EQ_B&tasksMin=2&tasksMax=5&hiddenMax=10&totalMin=5&totalMax=25&cards=4&seed=477&unknown=question";
 const M2A3="mode=U&equation=AX_PLUS_C_EQ_B&tasksMin=2&tasksMax=5&visibleMax=15&hiddenMax=10&totalMin=5&totalMax=25&cards=4&seed=478&unknown=question";
 /* Fiches du monde 2 : énoncé seul, 6 cartes par page (le plateau et, dessous, de la
-   place pour dessiner le tableau et écrire l'opération). */
+   place pour dessiner le schéma en barres et écrire l'opération). */
 const FICHE="&print=statement&layout=6&imprimer=1&title=";
 const MONDES=[
  {cls:"m1",actif:true,nom:"Petit SPLAT!",desc:"Le tout, les parties… et les premières taches ! Complète les schémas en barres : ici, c'est toi qui réponds et la page vérifie.",
@@ -297,13 +297,13 @@ const MONDES=[
       {nom:"Activité 2",jp:SC+"?"+M2A2,f:SC+"?"+M2A2+FICHE+encodeURIComponent("Activité 2")},
       {nom:"Activité 3",jp:SC+"?"+M2A3,f:SC+"?"+M2A3+FICHE+encodeURIComponent("Activité 3")}
     ]},
-   {t:"Les paquets de jetons",fo:"x + a = b",o:"Les jetons arrivent en paquets : on compte plus vite.",
+   {t:"Avec des paquets de jetons",fo:"x + a = b",o:"Les jetons arrivent en paquets : on compte plus vite.",
     p:"m2e4",
     eqs:["𝑥 + 15 = 33", "𝑥 + 6 = 49", "𝑥 + 9 = 44", "𝑥 + 24 = 48", "𝑥 + 13 = 33", "𝑥 + 11 = 37", "𝑥 + 38 = 40", "𝑥 + 30 = 43", "𝑥 + 13 = 40", "𝑥 + 10 = 33", "𝑥 + 31 = 46", "𝑥 + 29 = 44"],
     j:SC+"?mode=N&equation=X_PLUS_A_EQ_B&cards=12&seed=347&unknown=question&eleve=1&parcours=m2e4",
     jp:SC+"?mode=N&equation=X_PLUS_A_EQ_B&cards=12&seed=347&unknown=question",
     f:SC+"?mode=N&equation=X_PLUS_A_EQ_B&cards=12&seed=347&unknown=question&print=statement&layout=6&imprimer=1"},
-   {t:"Paquets : le défi",fo:"a × x + c = b",o:"Paquets, taches et jetons : le grand mélange du monde 2.",
+   {t:"Le défi",fo:"a × x + c = b",o:"Paquets, taches et jetons : le grand mélange du monde 2.",
     p:"m2e5",
     eqs:["3𝑥 + 27 = 36", "5𝑥 + 28 = 38", "5𝑥 + 22 = 32", "2𝑥 + 14 = 42", "3𝑥 + 15 = 27", "4𝑥 + 4 = 36", "3𝑥 + 9 = 21", "4𝑥 + 17 = 41", "3𝑥 + 31 = 43", "3𝑥 + 37 = 40", "4𝑥 + 6 = 30", "5𝑥 + 20 = 30"],
     j:SC+"?mode=N&equation=AX_PLUS_C_EQ_B&tasksMax=5&cards=12&seed=18&unknown=question&eleve=1&parcours=m2e5",
@@ -311,7 +311,7 @@ const MONDES=[
     f:SC+"?mode=N&equation=AX_PLUS_C_EQ_B&tasksMax=5&cards=12&seed=18&unknown=question&print=statement&layout=6&imprimer=1"}]},
  {cls:"m3",actif:true,nom:"SPLAT! Équations",desc:"Le grand jeu : l'équation s'affiche, et c'est toi qui résous sur le plateau d'ÉquaSplat — enlève, fusionne, partage, jusqu'à trouver la valeur cachée.",
   etapes:[
-   {t:"Les deux plateaux",fo:"a × x + b = c",o:"Retrouve dans le tableau ce que contient chaque plateau.",
+   {t:"Les deux plateaux",fo:"a × x + b = c",o:"Retrouve dans le schéma en barres ce que contient chaque plateau.",
     p:"m3e1",
     eqs:["7 = 2𝑏 + 3", "8 = 2𝑎 + 2", "9 = 5𝑚 + 4", "9 = 5𝑚 + 4", "3𝑏 + 6 = 9", "4𝑛 + 2 = 6", "5𝑎 + 1 = 6", "2𝑛 + 6 = 10", "8 = 5𝑛 + 3", "9 = 2𝑐 + 3"],
     j:"/outils/equasplat.html?eleve=1&parcours=m3e1#data=eyJzb3VyY2UiOiJ1bml2ZXJzX3NwbGF0IiwicGFyY291cnMiOiJtM2UxIiwic2VyaWUiOlt7InNvdXJjZSI6InNwbGF0X2VxdWF0aW9ucyIsInZhcmlhYmxlIjoi8J2RjyIsInVua25vd25EaXNwbGF5IjoibGV0dGVyIiwidW5pdmVyc2UiOiJwb3NpdGl2ZSIsIm51bWJlck1vZGUiOiJ1bml0Iiwic2lnbmVkV3JpdGluZ01vZGUiOiJzaW1wbGlmaWVkIiwieCI6MiwibGVmdCI6WzddLCJyaWdodCI6WyJ4IiwieCIsM119LHsic291cmNlIjoic3BsYXRfZXF1YXRpb25zIiwidmFyaWFibGUiOiLwnZGOIiwidW5rbm93bkRpc3BsYXkiOiJsZXR0ZXIiLCJ1bml2ZXJzZSI6InBvc2l0aXZlIiwibnVtYmVyTW9kZSI6InVuaXQiLCJzaWduZWRXcml0aW5nTW9kZSI6InNpbXBsaWZpZWQiLCJ4IjozLCJsZWZ0IjpbOF0sInJpZ2h0IjpbIngiLCJ4IiwyXX0seyJzb3VyY2UiOiJzcGxhdF9lcXVhdGlvbnMiLCJ2YXJpYWJsZSI6IvCdkZoiLCJ1bmtub3duRGlzcGxheSI6ImxldHRlciIsInVuaXZlcnNlIjoicG9zaXRpdmUiLCJudW1iZXJNb2RlIjoidW5pdCIsInNpZ25lZFdyaXRpbmdNb2RlIjoic2ltcGxpZmllZCIsIngiOjEsImxlZnQiOls5XSwicmlnaHQiOlsieCIsIngiLCJ4IiwieCIsIngiLDRdfSx7InNvdXJjZSI6InNwbGF0X2VxdWF0aW9ucyIsInZhcmlhYmxlIjoi8J2RmiIsInVua25vd25EaXNwbGF5IjoibGV0dGVyIiwidW5pdmVyc2UiOiJwb3NpdGl2ZSIsIm51bWJlck1vZGUiOiJ1bml0Iiwic2lnbmVkV3JpdGluZ01vZGUiOiJzaW1wbGlmaWVkIiwieCI6MSwibGVmdCI6WzldLCJyaWdodCI6WyJ4IiwieCIsIngiLCJ4IiwieCIsNF19LHsic291cmNlIjoic3BsYXRfZXF1YXRpb25zIiwidmFyaWFibGUiOiLwnZGPIiwidW5rbm93bkRpc3BsYXkiOiJsZXR0ZXIiLCJ1bml2ZXJzZSI6InBvc2l0aXZlIiwibnVtYmVyTW9kZSI6InVuaXQiLCJzaWduZWRXcml0aW5nTW9kZSI6InNpbXBsaWZpZWQiLCJ4IjoxLCJsZWZ0IjpbIngiLCJ4IiwieCIsNl0sInJpZ2h0IjpbOV19LHsic291cmNlIjoic3BsYXRfZXF1YXRpb25zIiwidmFyaWFibGUiOiLwnZGbIiwidW5rbm93bkRpc3BsYXkiOiJsZXR0ZXIiLCJ1bml2ZXJzZSI6InBvc2l0aXZlIiwibnVtYmVyTW9kZSI6InVuaXQiLCJzaWduZWRXcml0aW5nTW9kZSI6InNpbXBsaWZpZWQiLCJ4IjoxLCJsZWZ0IjpbIngiLCJ4IiwieCIsIngiLDJdLCJyaWdodCI6WzZdfSx7InNvdXJjZSI6InNwbGF0X2VxdWF0aW9ucyIsInZhcmlhYmxlIjoi8J2RjiIsInVua25vd25EaXNwbGF5IjoibGV0dGVyIiwidW5pdmVyc2UiOiJwb3NpdGl2ZSIsIm51bWJlck1vZGUiOiJ1bml0Iiwic2lnbmVkV3JpdGluZ01vZGUiOiJzaW1wbGlmaWVkIiwieCI6MSwibGVmdCI6WyJ4IiwieCIsIngiLCJ4IiwieCIsMV0sInJpZ2h0IjpbNl19LHsic291cmNlIjoic3BsYXRfZXF1YXRpb25zIiwidmFyaWFibGUiOiLwnZGbIiwidW5rbm93bkRpc3BsYXkiOiJsZXR0ZXIiLCJ1bml2ZXJzZSI6InBvc2l0aXZlIiwibnVtYmVyTW9kZSI6InVuaXQiLCJzaWduZWRXcml0aW5nTW9kZSI6InNpbXBsaWZpZWQiLCJ4IjoyLCJsZWZ0IjpbIngiLCJ4Iiw2XSwicmlnaHQiOlsxMF19LHsic291cmNlIjoic3BsYXRfZXF1YXRpb25zIiwidmFyaWFibGUiOiLwnZGbIiwidW5rbm93bkRpc3BsYXkiOiJsZXR0ZXIiLCJ1bml2ZXJzZSI6InBvc2l0aXZlIiwibnVtYmVyTW9kZSI6InVuaXQiLCJzaWduZWRXcml0aW5nTW9kZSI6InNpbXBsaWZpZWQiLCJ4IjoxLCJsZWZ0IjpbOF0sInJpZ2h0IjpbIngiLCJ4IiwieCIsIngiLCJ4IiwzXX0seyJzb3VyY2UiOiJzcGxhdF9lcXVhdGlvbnMiLCJ2YXJpYWJsZSI6IvCdkZAiLCJ1bmtub3duRGlzcGxheSI6ImxldHRlciIsInVuaXZlcnNlIjoicG9zaXRpdmUiLCJudW1iZXJNb2RlIjoidW5pdCIsInNpZ25lZFdyaXRpbmdNb2RlIjoic2ltcGxpZmllZCIsIngiOjMsImxlZnQiOls5XSwicmlnaHQiOlsieCIsIngiLDNdfV19",
@@ -425,7 +425,7 @@ MONDES.forEach((m,mi)=>{
    (mi===1&&PROF?'<p class="intro">'
        +'<a class="introLien livret" href="/outils/livret_splat_classique.pdf" target="_blank" rel="noopener">\ud83d\udcd8 Livret Monde 2 (PDF)</a>'
        +'<a class="introLien livret a3" href="/outils/livret_splat_classique_a_plier.pdf" target="_blank" rel="noopener">\ud83d\udda8\ufe0f Monde 2 \u00e0 plier</a>'
-       +'<span class="introNote">Les fiches 7, 8 et 9 en un livret \u00e0 plier (A3 ou A4, recto-verso, retournement sur le <b>bord court</b>)\u00a0; sous chaque carte, la place pour dessiner le tableau ou \u00e9crire l\u2019\u00e9quation. <a href="/outils/livrets_splat_classique.html">Voir la page du livret</a></span>'
+       +'<span class="introNote">Les fiches 7, 8 et 9 en un livret \u00e0 plier (A3 ou A4, recto-verso, retournement sur le <b>bord court</b>)\u00a0; sous chaque carte, la place pour dessiner le sch\u00e9ma en barres ou \u00e9crire l\u2019\u00e9quation. <a href="/outils/livrets_splat_classique.html">Voir la page du livret</a></span>'
      +'</p>':'')+
    '<ol class="etapes">'+m.etapes.map((e,ei)=>{
      compteur++;

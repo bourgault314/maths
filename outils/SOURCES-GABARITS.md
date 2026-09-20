@@ -7,10 +7,10 @@ Ce document est l'inventaire technique des 54 PDF publics de maths&go.
 - Logo maître : `assets/img/mathsgo-logo.png`
 - Copie optimisée pour les surimpressions PDF :
   `assets/img/mathsgo-logo-print.png`
-- Logo de l'IREM de La Réunion : `assets/img/logos/irem/logo-print.png`
+- Logo de l'IREMI de La Réunion : `assets/img/logos/irem/logo-print.png` (le nom du fichier garde `irem`)
 - Adresse imprimée : `mathsgo.re`
 - Gabarit sans en-tête : logo en bas à gauche et adresse centrée en pied.
-- Gabarit plastifiable conçu dans le cadre de l'IREM : logo IREM à gauche,
+- Gabarit plastifiable conçu dans le cadre de l'IREMI : logo IREMI à gauche,
   logo maths&go à droite, avec des dimensions adaptées au pied de page.
 - Fiche avec en-tête : logo en haut à droite et adresse seule en pied.
 - Anciennes variantes avec la baseline « Manipuler • Comprendre • Progresser » :
@@ -24,7 +24,7 @@ d'addition décimale : il est régénéré lui aussi pour préserver les anciens
 liens, mais ne constitue pas un 25e gabarit. Les deux outils HTML de construction
 de gabarits d'angles ne font pas partie de ce lot.
 
-Le logo IREM est réservé aux 21 gabarits effectivement conçus dans ce cadre.
+Le logo IREMI est réservé aux 21 gabarits effectivement conçus dans ce cadre.
 Les gabarits d'enquêtes additive et multiplicative ainsi que le document de
 partage équitable restent plastifiables, mais portent uniquement le logo
 maths&go.

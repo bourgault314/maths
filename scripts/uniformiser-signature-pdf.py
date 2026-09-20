@@ -10,7 +10,7 @@ prévus correspondent aux trois familles de documents actuellement publiées :
 - adresse-liseré : le bon logo est déjà dans l'en-tête, seule l'adresse change ;
 - partage : masque l'ancien logo à baseline sans effacer la consigne centrale.
 
-L'option ``--with-irem`` ajoute le logo de l'IREM de La Réunion à gauche du
+L'option ``--with-irem`` ajoute le logo de l'IREMI de La Réunion à gauche du
 logo maths&go. Elle est réservée aux gabarits plastifiables conçus dans ce
 cadre ; les autres imprimables conservent leur signature actuelle.
 
@@ -43,7 +43,7 @@ OBSOLETE_ADDRESS = b"aca.re/maths/mathsgo"
 
 
 def draw_logo(overlay: canvas.Canvas, logo: Path) -> None:
-    """Dessine le logo maths&go seul, pour les imprimables hors IREM."""
+    """Dessine le logo maths&go seul, pour les imprimables hors IREMI."""
 
     image = ImageReader(str(logo))
     pixel_width, pixel_height = image.getSize()
@@ -252,7 +252,7 @@ def main() -> None:
     parser.add_argument(
         "--with-irem",
         action="store_true",
-        help="Ajoute le logo IREM à gauche du logo maths&go.",
+        help="Ajoute le logo IREMI à gauche du logo maths&go.",
     )
     parser.add_argument(
         "--mode",

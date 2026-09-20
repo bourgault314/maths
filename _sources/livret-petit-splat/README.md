@@ -115,7 +115,7 @@ pypdf pour l'imposition.
 
 ## Conventions
 
-- Logos IREM + maths&go dans le bandeau des pages 1 et 8 ; rien dans le pied,
+- Logos IREMI + maths&go dans le bandeau des pages 1 et 8 ; rien dans le pied,
   hormis la signature `mathsgo.re/splat · CC BY-NC-SA 4.0` sur les 8 pages.
   **Attention** : l'outil écrit `mathsgo.re/splat/petit` au pied des fiches — c'est la
   bonne adresse pour une fiche imprimée depuis le générateur, mais pas pour un livret,

@@ -720,7 +720,7 @@
         <li><strong>Résoudre</strong> (en vert, près de l'équation) : ouvre la même équation dans ÉquaSplat ou ÉquaBarre pour la manipuler.</li>
       </ul>
 
-      <p><strong>Impression.</strong> Une seule liste, « Ce que j'imprime », dit ce qui partira à l'imprimante : <strong>Énoncé seul</strong>, <strong>Énoncé + tableau à remplir</strong>, <strong>Correction</strong>, ou l'un des deux recto-verso — <strong>Énoncé, tableau au dos</strong> et <strong>Énoncé, correction au dos</strong>. Ces deux-là impriment l'énoncé au recto et le reste au verso, dans le même ordre : les élèves cherchent d'un côté, retournent la feuille et vérifient de l'autre. La phrase sous la liste redit en clair ce que vous allez obtenir.</p>
+      <p><strong>Impression.</strong> Une seule liste, « Ce que j'imprime », dit ce qui partira à l'imprimante : <strong>Énoncé seul</strong>, <strong>Énoncé + schéma à remplir</strong>, <strong>Correction</strong>, ou l'un des deux recto-verso — <strong>Énoncé, schéma au dos</strong> et <strong>Énoncé, correction au dos</strong>. Ces deux-là impriment l'énoncé au recto et le reste au verso, dans le même ordre : les élèves cherchent d'un côté, retournent la feuille et vérifient de l'autre. La phrase sous la liste redit en clair ce que vous allez obtenir.</p>
 
       <p><strong>Raccourcis clavier.</strong></p>
       <ul>
@@ -912,10 +912,10 @@
       <label for="printMode">Ce que j’imprime</label>
       <select id="printMode" title="Choisir ce qui partira à l’imprimante">
         <option value="statement">Énoncé seul</option>
-        <option value="worksheet">Énoncé + tableau à remplir</option>
+        <option value="worksheet">Énoncé + schéma à remplir</option>
         <option value="correction">Correction</option>
         <option disabled>─────── recto-verso ───────</option>
-        <option value="duplex-worksheet">Énoncé, tableau au dos</option>
+        <option value="duplex-worksheet">Énoncé, schéma au dos</option>
         <option value="duplex-correction">Énoncé, correction au dos</option>
       </select>
       <div class="row printGoRow" style="flex-wrap:nowrap; gap:8px; align-items:flex-end;">
@@ -1357,16 +1357,16 @@ const lastNumberedTotalBounds = { N: null, NPM: null };
 let lastActivityForSigned = activityEl.value;
 const lastSignedModeSettings = { NPM: null, EQPM: null };
 
-/* En entiers relatifs, la fiche « tableau à remplir » est une aide écrite et non un
-   tableau : les deux lignes qui la proposent changent de nom ensemble. */
+/* En entiers relatifs, la fiche « schéma à remplir » est une aide écrite et non un
+   schéma : les deux lignes qui la proposent changent de nom ensemble. */
 function syncPrintModeUI(){
   const sel = printModeSelectEl || document.getElementById("printMode");
   if(!sel) return;
   const aide = !!(activityEl && isSignedEquationModeValue(activityEl.value));
   const opt1 = sel.querySelector('option[value="worksheet"]');
   const opt2 = sel.querySelector('option[value="duplex-worksheet"]');
-  if(opt1) opt1.textContent = aide ? "Énoncé + aide" : "Énoncé + tableau à remplir";
-  if(opt2) opt2.textContent = aide ? "Énoncé, aide au dos" : "Énoncé, tableau au dos";
+  if(opt1) opt1.textContent = aide ? "Énoncé + aide" : "Énoncé + schéma à remplir";
+  if(opt2) opt2.textContent = aide ? "Énoncé, aide au dos" : "Énoncé, schéma au dos";
   sel.title = "Choisir ce qui partira à l’imprimante";
   syncPrintSummary();
 }
@@ -1395,14 +1395,14 @@ function syncPrintSummary(){
   const plan = getPrintPlan();
   const perPage = perPageEl ? perPageEl.value : "2";
   const aide = !!(activityEl && isSignedEquationModeValue(activityEl.value));
-  const nom = { statement:"l’énoncé", worksheet: aide ? "l’aide" : "le tableau à remplir", correction:"la correction" };
+  const nom = { statement:"l’énoncé", worksheet: aide ? "l’aide" : "le schéma à remplir", correction:"la correction" };
   let msg;
   if(plan.verso){
     msg = "Une seule feuille : l’élève cherche au recto, retourne et trouve " + nom[plan.verso] + " au verso.";
   }else if(plan.recto === "statement"){
     msg = "Les énoncés seuls, rien au dos.";
   }else if(plan.recto === "worksheet"){
-    msg = "L’énoncé avec " + (aide ? "son aide" : "son tableau à remplir") + ", rien au dos.";
+    msg = "L’énoncé avec " + (aide ? "son aide" : "son schéma à remplir") + ", rien au dos.";
   }else{
     msg = "La correction seule, rien au dos.";
   }
@@ -8823,7 +8823,7 @@ function createEquationPrintHeader(mode){
   logos.className = "print-page-logos";
   const iremLogo = document.createElement("img");
   iremLogo.className = "print-page-logo-irem";
-  iremLogo.alt = "IREM de La Réunion";
+  iremLogo.alt = "IREMI de La Réunion";
   iremLogo.src = IREM_PRINT_LOGO_URL;
   logos.appendChild(iremLogo);
   const mathsLogo = document.createElement("img");

@@ -211,7 +211,7 @@ window.MATHSGO_CATALOGUE = {
       "collections": ["bouliers", "gerbert"],
       "tags": ["abaque", "jetons", "irem"],
       "rang": 2,
-      "cardDescription": "Article de l’IREM de La Réunion sur l’abaque à jetons, par Alain Busser."
+      "cardDescription": "Article de l’IREMI de La Réunion sur l’abaque à jetons, par Alain Busser."
     },
     "https://www.univ-irem.fr/chapitre-2-de-l-abaque-a-jetons-au-calcul-pose": {
       "primaryNotion": "numeration",
@@ -791,8 +791,8 @@ window.MATHSGO_CATALOGUE = {
       "cardTitle": "Livret Splat! classique",
       "collections": ["splat"],
       "tags": ["splat", "livret", "equation", "inconnue", "imprimer"],
-      "thumbnail": "assets/img/thumbnails/splat/livret-splat-classique.png?v=1",
-      "cardDescription": "Les trois fiches du monde 2 réunies en un livret à plier : le tableau, l’équation et les paquets de jetons, avec la place pour écrire sous chaque carte."
+      "thumbnail": "assets/img/thumbnails/splat/livret-splat-classique.png?v=2",
+      "cardDescription": "Les trois fiches du monde 2 réunies en un livret à plier : le schéma en barres, l’équation et les paquets de jetons, avec la place pour écrire sous chaque carte."
     },
     "outils/tuiles_algebriques/generateur_exercices_calcul_litteral.html": {
       "primaryNotion": "calcul-litteral",
@@ -2005,7 +2005,7 @@ window.MATHSGO_CATALOGUE = {
     {
       "id": "reference-abaque-busser",
       "title": "L’abaque de Gerbert, par Alain Busser",
-      "description": "Article de l’IREM de La Réunion sur l’abaque à jetons et son usage en classe.",
+      "description": "Article de l’IREMI de La Réunion sur l’abaque à jetons et son usage en classe.",
       "path": "https://iremi.univ-reunion.fr/?p=617",
       "domains": ["nombres-calculs"],
       "notions": ["numeration"],
@@ -6501,7 +6501,7 @@ window.MATHSGO_CATALOGUE = {
     {
       "id": "outils-livrets-splat-classique",
       "title": "Livret Splat! classique — les 3 fiches du monde 2 à plier",
-      "description": "Les trois fiches du monde 2 de l’univers SPLAT! réunies en un livret de 8 pages : couverture avec l’exemple expliqué (la carte, le tableau, l’équation), les douze cartes de Claire puis les deux fiches à paquets de jetons, 4e de couverture. Sous chaque carte, la place pour dessiner le tableau ou écrire l’équation. Chaque fiche porte un QR code vers le jeu en ligne avec les mêmes cartes. À imprimer en recto-verso sur deux feuilles A3, ou A4 pour un plus petit livret, à plier et agrafer — ou en A4 dans l’ordre de lecture.",
+      "description": "Les trois fiches du monde 2 de l’univers SPLAT! réunies en un livret de 8 pages : couverture avec l’exemple expliqué (la carte, le schéma en barres, l’équation), les douze cartes de Claire puis les deux fiches à paquets de jetons, 4e de couverture. Sous chaque carte, la place pour dessiner le schéma en barres ou écrire l’équation. Chaque fiche porte un QR code vers le jeu en ligne avec les mêmes cartes. À imprimer en recto-verso sur deux feuilles A3, ou A4 pour un plus petit livret, à plier et agrafer — ou en A4 dans l’ordre de lecture.",
       "path": "outils/livrets_splat_classique.html",
       "domains": [
         "algebre"
