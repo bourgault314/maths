@@ -484,8 +484,11 @@ function texteExact(p) {
         t.set(x[1].toLowerCase(), String.fromCodePoint(...(x[2].match(/.{4}/g) || []).map((h) => parseInt(h, 16))));
     for (const bloc of f.match(/beginbfrange([\s\S]*?)endbfrange/g) || [])
       for (const x of bloc.matchAll(/<([0-9a-fA-F]+)>\s*<([0-9a-fA-F]+)>\s*<([0-9a-fA-F]+)>/g)) {
-        const a = parseInt(x[1], 16), z = parseInt(x[2], 16), c = parseInt(x[3], 16), l = x[1].length;
-        for (let k = a; k <= z; k++) t.set(k.toString(16).padStart(l, "0"), String.fromCodePoint(c + (k - a)));
+        // la destination est en UTF-16 : une lettre hors du plan de base (𝑥, 𝑎… des schémas
+        // en lettre, lot K2) s'écrit en deux unités ; seule la dernière avance dans la plage
+        const a = parseInt(x[1], 16), z = parseInt(x[2], 16), l = x[1].length;
+        const u = (x[3].match(/.{4}/g) || []).map((h) => parseInt(h, 16));
+        for (let k = a; k <= z; k++) t.set(k.toString(16).padStart(l, "0"), String.fromCharCode(...u.slice(0, -1), u[u.length - 1] + (k - a)));
       }
     cmaps.set(ref, t); return t;
   }
@@ -596,4 +599,113 @@ test("K1 : la page des livrets du monde 1 mène aux six PDF de correction, sous 
     assert.match(c, /class="lien-prof"[^>]*>🧑‍🏫 Correction \(prof\)<\/a>/, `${s} : libellé du lien`);
     assert.match(c, /class="lien-prof plier"[^>]*>à plier<\/a>/, `${s} : libellé « à plier »`);
   });
+});
+
+// ================================================ lot K2 — les livrets de correction du monde 2
+// (20/09/2026) Quatre livrets de correction pour le monde 2 : { équation, schéma } × { « ? »,
+// lettre }. Mêmes 8 pages, même pliage, mêmes cartes à la même place que le livret de l'élève ;
+// les fiches sont imprimées par l'outil lui-même (corrections courtes 6/page).
+const CORRECTIONS_M2 = [
+  ["livret_splat_classique_correction_equation", "corrigé par l'équation · inconnue «\u00a0?\u00a0»"],
+  ["livret_splat_classique_correction_equation_lettre", "corrigé par l'équation · inconnue en lettre"],
+  ["livret_splat_classique_correction_schema", "corrigé par le schéma en barres · inconnue «\u00a0?\u00a0»"],
+  ["livret_splat_classique_correction_schema_lettre", "corrigé par le schéma en barres · inconnue en lettre"],
+];
+const TITRES_M2 = ["Fiche 7 — Le même jeu,un nouveau plateau —Correction", "Fiche 7 bis — Le mêmejeu, un nouveau plateau— Correction",
+                   "Fiche 8 — Avec despaquets de jetons —Correction", "Fiche 8 bis — Avec despaquets de jetons —Correction",
+                   "Fiche 9 — Le déﬁ —Correction", "Fiche 9 bis — Le déﬁ —Correction"];
+
+test("K2 : les quatre livrets de correction du monde 2 existent — 8 pages A4, 4 feuilles A3 imposées", () => {
+  for (const [s] of CORRECTIONS_M2) {
+    for (const [f, n] of [[`outils/${s}.pdf`, 8], [`outils/${s}_a_plier.pdf`, 4]]) {
+      assert.ok(existe(f), f);
+      assert.equal(nombreDePages(f), n, `${f} : ${n} pages`);
+      assert.ok(taille(f) < 3_000_000, `${f} reste léger (qpdf)`);
+    }
+  }
+});
+
+test("K2 : pages 2 à 7 = la correction des fiches, même consigne que l'élève ; couverture du prof ; dos inchangé", () => {
+  const eleve = texteExact("outils/livret_splat_classique.pdf");
+  const consigne = (x) => x.slice(x.indexOf("Pour chaque carte"), x.indexOf("TOTAL"));
+  for (const [s, dit] of CORRECTIONS_M2) {
+    const corr = texteExact(`outils/${s}.pdf`);
+    assert.equal(corr.length, 8, `${s} : huit pages`);
+    for (let p = 1; p <= 6; p++) {
+      const t = corr[p];
+      assert.ok(t.startsWith(`Splat!${TITRES_M2[p - 1]}`), `${s} p.${p + 1} : ${TITRES_M2[p - 1]} (lu : ${t.slice(0, 60)})`);
+      assert.match(t, /Les mêmescartes en ligne\(le QR de l'élève\)/, `${s} p.${p + 1} : la boîte du QR parle au prof`);
+      assert.doesNotMatch(t, /terminé/, `${s} p.${p + 1} : plus la phrase de l'élève`);
+      assert.ok(t.endsWith("mathsgo.re/splat · CC BY-NC-SA 4.0 · correction"), `${s} p.${p + 1} : pied « · correction »`);
+      assert.equal(consigne(t), consigne(eleve[p]), `${s} p.${p + 1} : même cadre de consigne que la fiche de l'élève`);
+      assert.equal((t.match(/TOTAL/g) || []).length, 6, `${s} p.${p + 1} : six cartes`);
+    }
+    // couverture : bandeau, « Livret du professeur — <la correction> », le reste comme l'élève
+    assert.ok(corr[0].startsWith("CORRECTION — POUR LE PROFESSEUR"), `${s} : bandeau`);
+    assert.ok(corr[0].includes(`Livret du professeur— ${dit}`), `${s} : « ${dit} »`);
+    assert.doesNotMatch(corr[0], /Nom, prénom|Classe/, `${s} : plus de ligne Nom, prénom / Classe`);
+    assert.equal(corr[0].replace("CORRECTION — POUR LE PROFESSEUR", "").replace(`Livret du professeur— ${dit}`, ""),
+                 eleve[0].replace("Nom, prénomClasse", ""), `${s} : le reste de la couverture ne change pas`);
+    assert.equal(corr[7], eleve[7], `${s} : le dos est identique`);
+    const a3 = texteExact(`outils/${s}_a_plier.pdf`);
+    [[8, 1], [2, 7], [6, 3], [4, 5]].forEach(([g, d], k) =>
+      assert.equal(a3[k], corr[g - 1] + corr[d - 1], `${s} : feuille ${k + 1} = pages ${g} | ${d}`));
+  }
+});
+
+test("K2 : l'équation ou le schéma, en « ? » ou en lettre — une lettre par carte, fiche 7 comprise", () => {
+  const eq = texteExact("outils/livret_splat_classique_correction_equation.pdf");
+  const eqL = texteExact("outils/livret_splat_classique_correction_equation_lettre.pdf");
+  const sc = texteExact("outils/livret_splat_classique_correction_schema.pdf");
+  const scL = texteExact("outils/livret_splat_classique_correction_schema_lettre.pdf");
+  // équation : fiche 7, carte 1 (7 jetons visibles, total 13) — l'équation que l'outil n'écrivait pas en mode A
+  assert.ok(eq[1].includes("TOTAL137 + ?=13?=6− 7− 7"), eq[1].slice(0, 400));
+  // fiche 9, carte 1 : 27 + 3 × ? = 36 → 3 × ? = 9 → ? = 3, flèches − 27 et ÷ 3
+  assert.ok(eq[5].includes("27 + 3 × ?=363 × ?=9?=3− 27− 27÷ 3÷ 3"), eq[5].slice(0, 400));
+  // en lettre : la même carte avec sa lettre ; la fiche 7 a une lettre par carte (x, a, b, c…)
+  assert.ok(eqL[5].includes("27 + 3n=363n=9n=3"), eqL[5].slice(0, 400));
+  const lettres7 = [...eqL[1].matchAll(/\+ ([a-z])=/g)].map((m) => m[1]);
+  assert.deepEqual(lettres7, ["x", "a", "b", "c"], "fiche 7 : une lettre par carte, dans l'ordre de l'outil");
+  assert.doesNotMatch(eqL[1] + eqL[2], /\?/, "plus de « ? » sur la fiche 7 en lettre");
+  // schéma : les calculs, pas d'équation
+  assert.ok(sc[5].includes("36 − 27 = 9") && sc[5].includes("9 ÷ 3 = 3"), sc[5].slice(0, 400));
+  assert.doesNotMatch(sc[5], /3 × \?/, "le livret « schéma » n'écrit pas l'équation");
+  assert.doesNotMatch(eq[5], /36 − 27 = 9/, "le livret « équation » n'écrit pas les calculs du schéma");
+  assert.ok(scL[1].includes("13 − 7 = 6"), scL[1].slice(0, 300));
+  assert.doesNotMatch(scL[1] + scL[2], /\?/, "schéma en lettre : plus de « ? » sur la fiche 7");
+});
+
+test("K2 : render.py fabrique les quatre corrections avec l'outil (print=correction-…), le livret de l'élève inchangé", () => {
+  for (const [suffixe, imprime, lettre] of [["_correction_equation", "correction-equation", "False"], ["_correction_equation_lettre", "correction-equation", "True"],
+                                             ["_correction_schema", "correction-schema", "False"], ["_correction_schema_lettre", "correction-schema", "True"]]) {
+    assert.match(render, new RegExp(`dict\\(suffixe="${suffixe}",\\s+imprime="${imprime}",\\s+lettre=${lettre},`), suffixe);
+  }
+  assert.match(render, /imprime = corr\["imprime"\] if corr else "statement"/);
+  assert.match(render, /pg = await page_outil\(f"\{parties\[0\]\}&print=\{imprime\}&layout=6&title=\{titre\}"\)/);
+  assert.match(render, /q\.replace\("unknown=question", "unknown=letter"\)/);
+  // une lettre par carte à jetons, sans rien tirer (les nombres ne bougent pas)
+  assert.match(render, /c\.varChar = variableChars\[i % variableChars\.length\]/);
+  assert.doesNotMatch(render.slice(render.indexOf("JS_LETTRES"), render.indexOf("PROF = dict")), /generate\(|Math\.random|makeRng/);
+  assert.ok(render.includes(`QR_PROF = "Les mêmes<br>cartes en ligne<em>(le QR de l'élève)</em>"`));
+  assert.match(render, /pg\.evaluate\(JS_QR, \[f"\{qrweb\}\/fiche\{f\['n'\]\}\.png", QR_PROF if corr else QR_ELEVE\]\)/);
+  assert.match(render, /PIED_CORRECTION = PIED_LIVRET \+ " · correction"/);
+  assert.match(render, /\.bandeau-prof\{[^}]*\n?[^}]*background:#b91c1c;color:#fff;/);
+  assert.match(render, /versions = \[None\] \+ CORRECTIONS/);
+  assert.ok(!existe("_sources/livret-splat-classique/couverture-correction.html"), "pas de couverture dupliquée");
+});
+
+test("K2 : la page des livrets du monde 2 mène aux huit PDF de correction, repliés sous les liens de l'élève", () => {
+  const carte = page.split('<article class="liv">')[1];
+  const plierEleve = carte.indexOf('href="/outils/livret_splat_classique_a_plier.pdf"');
+  const bloc = carte.slice(carte.indexOf('<details class="prof">'), carte.indexOf("</details>"));
+  assert.ok(carte.indexOf('<details class="prof">') > plierEleve, "sous les deux liens de l'élève");
+  assert.match(bloc, /<summary>🧑‍🏫 Corrections \(prof\) · 4 livrets<\/summary>/);
+  let avant = -1;
+  for (const [s] of CORRECTIONS_M2) {
+    const pdf = bloc.indexOf(`href="/outils/${s}.pdf"`), plier = bloc.indexOf(`href="/outils/${s}_a_plier.pdf"`);
+    assert.ok(pdf > avant && plier > pdf, `${s} : PDF puis « à plier », dans l'ordre`);
+    avant = plier;
+  }
+  assert.equal((bloc.match(/class="lien-prof"/g) || []).length, 8, "huit liens");
+  assert.match(page, /\.liv \.lien-prof\{[^}]*min-height:44px/, "boutons de 44 px de haut");
 });
