@@ -9,6 +9,7 @@ agrafées au milieu → 8 pages A4.
 | Livret | Fiches | PDF produits |
 |---|---|---|
 | `normal` — Monde 2 | 7 (12 cartes de Claire), 8 et 9 (12 cartes à paquets chacune) | `outils/livret_splat_classique.pdf` · `…_a_plier.pdf` |
+| + ses 4 livrets de correction (lot K2) | les mêmes | `outils/livret_splat_classique_correction_equation.pdf`, `…_equation_lettre`, `…_schema`, `…_schema_lettre` (et chacun son `…_a_plier.pdf`) |
 
 Le lot D (niveaux Avancé / Expert du monde 2) ajoutera ses niveaux dans `NIVEAUX`,
 avec ses propres graines et ses propres QR, comme pour le monde 1.
@@ -80,14 +81,43 @@ demande la **correction** de la carte (`renderCardIntoSvg(…, 'correction')` : 
 avec la tache transparente, le schéma en barres et l'équation résolue avec ses flèches « − 16 »)
 et la place en deux fenêtres sur la couverture : la carte à gauche, le schéma en barres et
 l'équation à droite. L'exemple est donc écrit exactement comme la correction que le
-professeur projette. L'inconnue y est le « ? » de l'outil élève (cycle 3) ; une version
-« avec la lettre » (`unknown=letter`) pour le cycle 4 est envisagée, pas faite.
+professeur projette. L'inconnue y est le « ? » de l'outil élève (cycle 3) ; les livrets de
+correction existent aussi « avec la lettre » (voir plus bas), le livret de l'élève non.
+
+## Les livrets de correction du professeur (lot K2, 20/09/2026)
+
+Quatre livrets, pour le professeur : { **équation**, **schéma** } × { **« ? »**, **lettre** }
+(le « ? » pour le cycle 3, la lettre pour le cycle 4). Chacun a **les mêmes 8 pages, le même
+pliage et les mêmes cartes à la même place** que le livret de l'élève (0 nombre déplacé
+de plus de 0,1 pt sur les fiches) ; ce n'est pas un recto-verso élève/correction.
+
+- **Les fiches** : c'est l'outil qui les imprime, avec ses deux « corrections courtes »
+  6/page (`print=correction-equation` ou `print=correction-schema`, les mêmes que dans
+  le menu Impression de la vue prof) : même bandeau (« Fiche N — … — Correction »), même
+  cadre de consigne, même plateau (tache transparente, comme la correction de l'outil).
+  Sous le plateau : **l'équation** résolue et ses flèches (− v, ÷ n), dessinée comme la
+  correction imprimée du mode B, fiche 7 comprise ; ou **les schémas en barres** de
+  l'outil jusqu'à la tache seule (« ? » sous sa valeur), compacts à gauche, avec les
+  calculs à droite, en face du schéma qui sert au calcul.
+- **En lettre** : les mêmes graines avec `unknown=letter` (les nombres ne bougent pas) ;
+  chaque carte de la fiche 8 ou 9 a sa lettre, tirée par l'outil avec la carte. Les cartes
+  à jetons de la fiche 7 (mode A) n'en ont pas dans l'outil : `JS_LETTRES` leur en donne
+  une, dans l'ordre de `variableChars` (x, a, b, c, m, n, t…), **sans rien tirer**.
+- **La boîte du QR** : même boîte, même QR, même place, « Les mêmes / cartes en ligne
+  (le QR de l'élève) » (`QR_PROF`, comme les livrets de correction Petit SPLAT!).
+- **La couverture** : celle de l'élève, avec le bandeau rouge sombre du professeur (14 mm,
+  `CSS_PROF`) et, à la place de « Nom, prénom / Classe », une seule ligne « Livret du
+  professeur — corrigé par … » qui dit de quel livret il s'agit. Le sommaire et le pied
+  restent exactement à leur place.
+- **Le pied** des fiches finit par « · correction » ; **le dos** ne change pas.
 
 ## Régénérer
 
 ```bash
 cd _sources/livret-splat-classique
-python3 render.py                 # le livret
+python3 render.py                 # le livret de l'élève ET ses quatre livrets de correction
+python3 render.py --eleve         # seulement le livret de l'élève
+python3 render.py --correction    # seulement les quatre livrets de correction
 python3 render.py --qr normal     # en refabriquant d'abord ses QR codes
 ```
 

@@ -56,6 +56,14 @@ test("6/page vaut pour l'énoncé seul ; tableau ou correction, recto ou verso, 
   assert.equal(cardsPerPage("", "statement"), 4);
 });
 
+test("lot K2 : les deux corrections courtes s'impriment toujours en 6/page, quel que soit « Pages »", () => {
+  for(const v of ["correction-equation", "correction-schema"]){
+    for(const l of ["6", "4", "2", "1", ""]) assert.equal(cardsPerPage(l, v), 6, `${v}, Pages ${l || "(vide)"}`);
+  }
+  // et la correction complète garde sa règle : 6/page retombe sur 4
+  assert.equal(cardsPerPage("6", "correction"), 4);
+});
+
 test("en 6/page, la feuille est en 2 × 3 et chaque carte ne dessine que le plateau (1600 × 1000)", () => {
   const printSheet = functionSource("printSheet", "waitForPrintAssets");
   assert.match(printSheet, /perSheet === 6 \? "print-6up" : "print-4up"/);

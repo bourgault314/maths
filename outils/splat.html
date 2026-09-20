@@ -1275,6 +1275,9 @@
         <option value="statement">Énoncé seul</option>
         <option value="worksheet">Énoncé + schéma à remplir</option>
         <option value="correction">Correction</option>
+        <option disabled>── correction courte, 6/page ──</option>
+        <option value="correction-equation">Correction : l’équation (6/page)</option>
+        <option value="correction-schema">Correction : le schéma (6/page)</option>
         <option disabled>─────── recto-verso ───────</option>
         <option value="duplex-worksheet">Énoncé, schéma au dos</option>
         <option value="duplex-correction">Énoncé, correction au dos</option>
@@ -1757,6 +1760,9 @@ function syncPrintModeUI(){
   const kind = classicWorksheetKind(act);
   const worksheetOpt = sel.querySelector('option[value="worksheet"]');
   const duplexWorksheetOpt = sel.querySelector('option[value="duplex-worksheet"]');
+  // les corrections courtes 6/page : modes A et B seulement (schéma en barres + équation)
+  sel.querySelectorAll('option[value="correction-equation"], option[value="correction-schema"]').forEach(opt => { opt.disabled = kind !== "table"; });
+  if(kind !== "table" && sixCorrectionPart(sel.value)) sel.value = "correction";
   if(worksheetOpt){
     worksheetOpt.textContent = kind === "aid" ? "Énoncé + aide" : "Énoncé + schéma à remplir";
     worksheetOpt.disabled = !kind;
@@ -1781,7 +1787,7 @@ function getPrintPlan(){
     const verso = v.slice(7);
     return { recto: "statement", verso: (verso === "worksheet" || verso === "correction") ? verso : "correction" };
   }
-  return { recto: ["statement","worksheet","correction"].includes(v) ? v : "statement", verso: null };
+  return { recto: ["statement","worksheet","correction","correction-equation","correction-schema"].includes(v) ? v : "statement", verso: null };
 }
 
 /* Phrase de contrôle sous le réglage : le nom du choix dit déjà le résultat, elle
@@ -1791,6 +1797,7 @@ function syncPrintSummary(){
   const sel = printModeSelectEl || document.getElementById("printMode");
   const perPageEl = printCardsPerPageEl || document.getElementById("printCardsPerPage");
   if(!out || !sel) return;
+  syncSixCorrectionPagesUI();
   const plan = getPrintPlan();
   /* le nombre réellement imprimé : « 6/page » ne vaut que pour l'énoncé seul */
   const perPage = String(getPrintCardsPerPage());
@@ -1798,6 +1805,13 @@ function syncPrintSummary(){
   const kind = classicWorksheetKind(activityEl ? activityEl.value : "");
   const nom = { statement:"l’énoncé", worksheet: kind === "aid" ? "l’aide" : "le schéma à remplir", correction:"la correction" };
   let msg;
+  if(sixCorrectionPart(plan.recto)){
+    out.textContent = (plan.recto === "correction-equation"
+      ? "Sous chaque carte, l’équation résolue et ses flèches, rien au dos."
+      : "Sous chaque carte, le schéma en barres et ses calculs, rien au dos.")
+      + " 6 cartes par page, à la même place que sur l’énoncé 6/page.";
+    return;
+  }
   if(plan.verso){
     msg = "Une seule feuille : l’élève cherche au recto, retourne et trouve " + nom[plan.verso] + " au verso.";
   }else if(plan.recto === "statement"){
@@ -1807,8 +1821,15 @@ function syncPrintSummary(){
   }else{
     msg = "La correction seule, rien au dos.";
   }
+  if(sixRefuse && kind === "table" && plan.recto === "correction" && !plan.verso){
+    /* 6/page + « Correction » en modes A et B : la correction complète part en 4/page, et
+       on montre les deux corrections qui, elles, tiennent en 6/page */
+    out.textContent = "La correction complète ne tient qu’en 4 par page : elle partira en 4/page. "
+      + "En 6/page, choisissez « Correction : l’équation » ou « Correction : le schéma ».";
+    return;
+  }
   out.textContent = msg + " " + perPage + " carte" + (perPage === "1" ? "" : "s") + " par page."
-    + (sixRefuse ? " (6/page vaut pour l’énoncé seul.)" : "");
+    + (sixRefuse ? " (6/page vaut pour l’énoncé seul et les deux corrections courtes.)" : "");
 }
 
 function getSeedForCurrentMode(){
@@ -7710,6 +7731,9 @@ function createClassicPrintFooter(){
 }
 
 function getPrintCardsPerPage(){
+  /* les corrections courtes n'existent qu'en 6/page */
+  const recto = getPrintPlan().recto;
+  if(recto === "correction-equation" || recto === "correction-schema") return 6;
   const el = printCardsPerPageEl || document.getElementById("printCardsPerPage");
   const v = el ? String(el.value || "4") : "4";
   if(v === "1") return 1;
@@ -7766,7 +7790,10 @@ function printSheet(){
   function appendSheet(slotCards, mode){
     const sheet = document.createElement("div");
     sheet.className = `sheet sheet-${perSheet}up`;
-    sheet.appendChild(createClassicPrintHeader(mode));
+    /* correction courte : bandeau « … — Correction », et le cadre de consigne de l'énoncé
+       est gardé, pour que chaque carte tombe à la même place que sur l'énoncé 6/page */
+    const sixPart = sixCorrectionPart(mode);
+    sheet.appendChild(createClassicPrintHeader(sixPart ? "correction" : mode));
     if(mode !== "correction") sheet.appendChild(createClassicPrintInstruction(slotCards));
     const grid = document.createElement("div");
     grid.className = "grid";
@@ -7777,9 +7804,13 @@ function printSheet(){
       const card = slotCards[i] || null;
       if(card){
         const sv = document.createElementNS("http://www.w3.org/2000/svg","svg");
-        sv.setAttribute("viewBox", cardViewBox);
-        sv.style.width = perSheet === 6 ? "80%" : "100%";
-        renderCardIntoSvg(sv, card, mode);
+        if(sixPart){
+          renderSixCorrectionIntoSvg(sv, card, sixPart);
+        }else{
+          sv.setAttribute("viewBox", cardViewBox);
+          sv.style.width = perSheet === 6 ? "80%" : "100%";
+          renderCardIntoSvg(sv, card, mode);
+        }
         holder.appendChild(sv);
       } else {
         holder.classList.add("empty");
@@ -7839,6 +7870,206 @@ function waitForPrintAssets(root){
       requestAnimationFrame(resolve);
     });
   }));
+}
+
+/* ===== Corrections courtes en 6 par page (lot K2, 20/09/2026) =====
+   « Correction : l’équation (6/page) » et « Correction : le schéma (6/page) », pour les
+   modes A et B seulement. La feuille est celle de l'énoncé 6/page (même bandeau, même
+   cadre de consigne) : chaque carte tombe à la même place, le plateau garde sa taille
+   (58 mm). Sous le plateau, une seule partie de la correction de l'outil :
+   – l'équation résolue et ses flèches (comme la correction imprimée du mode B ; en mode A,
+     v = le nombre de jetons visibles), 4 mm sous le plateau, 25 % plus grande que dans la
+     correction de l'outil (il y a la place : 3 lignes au plus) ;
+   – les schémas en barres de l'outil jusqu'à la tache seule (« ? » sous sa valeur), sans le
+     schéma final, compacts à gauche, et les calculs à droite, à la hauteur du schéma qui
+     sert au calcul (décisions du 20/09/2026, sur maquettes).
+   Le SVG garde la taille et la place de celui de l'énoncé 6/page (80 % de la case, centré,
+   1600 de large) : le plateau tombe exactement au même endroit, au pixel près. Il déborde
+   seulement à gauche et à droite (overflow visible) pour que la correction profite de
+   toute la largeur de la case, de −200 à 1800. 1 600 de haut : la carte la plus haute des
+   livrets (3 schémas) tient avec 2 mm de blanc. */
+const SIX_CORRECTION_VIEWBOX = "0 0 1600 1600";
+const SIX_CORRECTION_LEFT = -120, SIX_CORRECTION_RIGHT = 1720;
+/* L'équation est écrite en Times italique : la lettre y est une lettre simple (𝑎 → a). */
+const SIX_CORRECTION_PLAIN_LETTER = {"𝑥":"x","𝑎":"a","𝑏":"b","𝑐":"c","𝑚":"m","𝑛":"n","𝑡":"t"};
+
+function sixCorrectionPart(printMode){
+  if(printMode === "correction-equation") return "equation";
+  if(printMode === "correction-schema") return "schema";
+  return null;
+}
+
+/* Les nombres de la carte, calculés comme la correction imprimée de l'outil. */
+function sixCorrectionData(card){
+  const vis = sumArray(card.visible);
+  const total = Number(card.total) || 0;
+  const totalHid = sumArray(card.hidden);
+  let tasks, hiddenSums;
+  if(card.family === "U"){
+    const unit = card._unit || {};
+    const fromSplats = (Array.isArray(card._splats) && card._splats.length) ? card._splats.length : 0;
+    tasks = Math.max(1, fromSplats || Number(unit.tasks) || 1);
+    if(totalHid === 0){
+      hiddenSums = [0];
+    }else if(Array.isArray(unit.hiddenByTask) && unit.hiddenByTask.length === tasks){
+      hiddenSums = unit.hiddenByTask.map(v => Array.isArray(v) ? sumArray(v) : Number(v));
+    }else{
+      const base = Math.floor(totalHid / tasks);
+      const rem = totalHid - base * tasks;
+      hiddenSums = Array.from({length: tasks}, (_, i) => base + (i < rem ? 1 : 0));
+    }
+  }else{
+    const num = card._num || {};
+    tasks = Math.max(1, Number(num.tasks) || (Array.isArray(card._splats) ? card._splats.length : 1));
+    if(Array.isArray(num.hiddenByTask) && num.hiddenByTask.length){
+      hiddenSums = num.hiddenByTask.map(arr => sumArray(arr));
+    }else{
+      const each = Math.round(totalHid / tasks);
+      hiddenSums = Array.from({length: tasks}, () => each);
+    }
+  }
+  hiddenSums = hiddenSums.map(v => (Number.isFinite(v) ? v : 0));
+  const tray = getPrintTrayConfig(card.family);
+  return { family: card.family, total, vis, totalHid, tasks, h: hiddenSums[0], trayBottom: tray.y + tray.h + 4 };
+}
+
+function drawSixCorrectionEquation(g, card, varChar, mk){
+  const d = sixCorrectionData(card);
+  const unknown = SIX_CORRECTION_PLAIN_LETTER[varChar] || varChar;
+  const unknownTerm = formatCoeffUnknownTerm(d.tasks, unknown);
+  const eqLeft1 = d.vis > 0 ? `${d.vis} + ${unknownTerm}` : unknownTerm;
+  const planned = [[eqLeft1, String(d.total)]];
+  if(d.vis > 0 && d.tasks > 1) planned.push([formatCoeffUnknownTerm(d.tasks, unknown), String(d.totalHid)]);
+  if(d.tasks > 1 || (d.tasks === 1 && d.vis > 0)) planned.push([unknown, String(d.h)]);
+  const lines = planned.map(([l, r]) => `${l} = ${r}`);
+  const ops = lines.length > 1 ? numberedResolutionOps(d.vis, d.tasks) : [];
+  // Taille 100 (80 dans la correction de l'outil), réduite seulement si la ligne la plus
+  // longue et ses flèches ne tiennent pas dans la largeur de la case (de −200 à 1800).
+  const eqGapFor = (fs) => Math.round(fs * 0.625);   // l'écart du « = » suit la taille (50 à 80)
+  const font = fitPrintEquationFontForArrows(lines, ops, 100, { eqGap: eqGapFor(100), margin: 62, centerX: 1000, width: 2000 });
+  const eqGap = eqGapFor(font);
+  const gap = Math.round(font * 1.4);
+  // Times italique pour de vrai : la règle générale « * { font-family } » de la page
+  // l'emporte sur l'attribut font-family, pas sur le style en ligne. Les flèches sont
+  // placées d'après la largeur du texte en Times (measureEquationTextWidth).
+  const mathFont = "'Times New Roman', Times, serif";
+  const member = {"font-size":String(font), "fill":"#000", "font-weight":"normal", "font-family":mathFont, "font-style":"italic", "style":`font-family:${mathFont}`};
+  const startY = d.trayBottom + 94 + Math.round(font * 0.7);   // 94 = 4 mm sous le plateau
+  planned.forEach(([l, r], i) => {
+    const y = startY + i * gap;
+    g.appendChild(mk.text(800 - eqGap, y, l, {"text-anchor":"end", ...member}));
+    g.appendChild(mk.text(800, y, "=", {"text-anchor":"middle", "font-size":String(font), "fill":"#000", "font-weight":"700"}));
+    g.appendChild(mk.text(800 + eqGap, y, r, {"text-anchor":"start", ...member}));
+  });
+  if(lines.length > 1){
+    drawOperationArrowsForLines(g, {el: mk.el, text: mk.text}, lines, ops, {
+      centerX: 800, startY, gap, fontSize: font, eqGap, middleBaseline: false, margin: 62, hug: true, minX: -176, maxX: 1776
+    });
+  }
+}
+
+/* Largeurs réelles des cases d'un schéma (même règle que drawBarModelPartsInGroup) :
+   le schéma suivant se pose exactement sous la partie cachée du précédent. */
+function sixCorrectionCells(values, baseW, font, pad){
+  const denom = values.reduce((a, b) => a + b, 0) || 1;
+  const widths = values.map(v => Math.max(baseW * (v / denom), minCellWidthForNumber(v, font, pad)));
+  const w = Math.max(baseW, widths.reduce((a, b) => a + b, 0));
+  return { widths, w };
+}
+
+function drawSixCorrectionSchema(g, card, varChar, mk){
+  const d = sixCorrectionData(card);
+  const isU = d.family === "U";
+  // Schémas compacts (85 + 85 de haut, chiffres de 80) ; cases un peu plus larges que dans
+  // l'outil pour que « ? » et les lettres ne touchent pas le trait.
+  const FONT = 80, HT = 85, HB = 85, SH = HT + HB, GAP = 40, PAD = 44, W1 = 1150;
+  const bm = (w) => ({ rect: mk.rect, line: mk.line, text: mk.text, w, hTop: HT, hBottom: HB,
+    stroke: "#000", strokeWidth: 5, greyFill: "rgba(0,0,0,0.10)", ink: "#000",
+    visibleTextColor: isU ? "#2563eb" : "#000", hiddenTextColor: "#000", totalTextColor: "#000",
+    fontTop: FONT, fontBottom: FONT, minCellPad: PAD });
+  const values = [];
+  if(d.vis > 0) values.push(d.vis);
+  for(let i = 0; i < d.tasks; i++) values.push(d.h);
+  const cells = sixCorrectionCells(values, W1, FONT, PAD);
+  const x0 = SIX_CORRECTION_LEFT;
+  const visW = d.vis > 0 ? cells.widths[0] : 0;
+  const hidW = cells.w - visW;
+  const hid = (n) => Array.from({length: n}, () => ({ value: d.h, hidden: true, text: varChar }));
+  const parts1 = [];
+  if(d.vis > 0) parts1.push({ value: d.vis, hidden: false });
+  parts1.push(...hid(d.tasks));
+  // [total, cases, bord gauche, largeur] de chaque schéma, et le calcul écrit à sa droite
+  const steps = [[d.total, parts1, x0, cells.w]];
+  const calcs = [];
+  if(d.vis > 0 && d.tasks > 1){
+    calcs.push(`${d.total} − ${d.vis} = ${d.totalHid}`);
+    steps.push([d.totalHid, hid(d.tasks), x0 + visW, hidW]);
+  }
+  if(d.tasks > 1){
+    calcs.push(`${d.totalHid} ÷ ${d.tasks} = ${d.h}`);
+    steps.push([d.h, hid(1), x0 + visW, hidW / d.tasks]);
+  }else if(d.vis > 0){
+    calcs.push(`${d.total} − ${d.vis} = ${d.totalHid}`);
+    steps.push([d.h, hid(1), x0 + visW, hidW]);
+  }
+  let top = d.trayBottom + GAP;
+  const tops = [];
+  steps.forEach(([tot, parts, x, w], i) => {
+    // le 1er schéma se dessine sur sa largeur de base : ses petites cases l'élargissent
+    // exactement jusqu'à cells.w ; les suivants ont déjà leur largeur réelle
+    drawBarModelPartsInGroup(g, x + w / 2, top, tot, parts, bm(i === 0 ? W1 : w));
+    tops.push(top);
+    top += SH + GAP;
+  });
+  const colX = Math.max(...steps.map(([, , x, w]) => x + w)) + 70;
+  const labelFont = (fs) => `700 ${fs}px system-ui, -apple-system, "Segoe UI", Roboto, Arial`;
+  const longest = calcs.reduce((a, b) => measureTextWidth(b, labelFont(72)) > measureTextWidth(a, labelFont(72)) ? b : a, "");
+  let F = 72;
+  while(F > 56 && colX + measureTextWidth(longest, labelFont(F)) > SIX_CORRECTION_RIGHT) F -= 2;
+  calcs.forEach((c, i) => {
+    const y = tops[i] + SH / 2 + Math.round(F * 0.36);
+    g.appendChild(mk.text(colX, y, c, {"text-anchor":"start", "font-size":String(F), "fill":"#000", "font-weight":"700"}));
+  });
+}
+
+/* Une carte de correction courte : le plateau de la correction de l'outil (taches levées),
+   puis la partie demandée à la place de la correction complète. */
+function renderSixCorrectionIntoSvg(targetSvg, card, part){
+  renderCardIntoSvg(targetSvg, card, "correction");
+  targetSvg.querySelectorAll("#barModelPrintSteps, #barModelPrintStepsN").forEach(el => el.remove());
+  targetSvg.setAttribute("viewBox", SIX_CORRECTION_VIEWBOX);
+  targetSvg.style.width = "80%";
+  targetSvg.style.overflow = "visible";
+  const NS = "http://www.w3.org/2000/svg";
+  const mk = {
+    el: (name, attrs = {}) => { const n = document.createElementNS(NS, name); for(const k in attrs) n.setAttribute(k, attrs[k]); return n; }
+  };
+  mk.rect = (a) => mk.el("rect", a);
+  mk.line = (a) => mk.el("line", a);
+  mk.text = (x, y, t, a = {}) => { const n = mk.el("text", {x, y, ...a}); n.textContent = t; return n; };
+  const g = mk.el("g", { id: "sixCorrection" });
+  const varChar = getNumberedDisplayVarChar(card);
+  if(part === "equation") drawSixCorrectionEquation(g, card, varChar, mk);
+  else drawSixCorrectionSchema(g, card, varChar, mk);
+  targetSvg.appendChild(g);
+}
+
+/* Avec une correction courte, « Pages » passe à 6/page et se grise ; il retrouve sa valeur
+   d'avant quand on revient à un autre choix. */
+var pagesAvantCorrectionCourte = null;   // var : la fonction peut servir avant cette ligne
+function syncSixCorrectionPagesUI(){
+  const pp = printCardsPerPageEl || document.getElementById("printCardsPerPage");
+  if(!pp) return;
+  const court = !!sixCorrectionPart(getPrintPlan().recto);
+  if(court){
+    if(!pp.disabled) pagesAvantCorrectionCourte = pp.value;
+    pp.value = "6";
+    pp.disabled = true;
+  }else if(pp.disabled){
+    pp.disabled = false;
+    if(pagesAvantCorrectionCourte != null) pp.value = pagesAvantCorrectionCourte;
+    pagesAvantCorrectionCourte = null;
+  }
 }
 
 let cards = [];

@@ -3,13 +3,22 @@
 """
 Régénère le livret « SPLAT! classique » (monde 2, 8 pages) à partir du site lui-même.
 
-    python3 render.py                 (tous les livrets — un seul aujourd'hui)
-    python3 render.py normal          (un seul)
+    python3 render.py                 (le livret de l'élève ET ses quatre livrets de correction)
+    python3 render.py normal          (un seul niveau — un seul aujourd'hui)
     python3 render.py --qr normal     (en refabriquant d'abord ses QR codes)
+    python3 render.py --correction    (seulement les quatre livrets de correction du professeur)
+    python3 render.py --eleve         (seulement le livret de l'élève)
 
 Produit, à la racine du dépôt :
     outils/livret_splat_classique.pdf         8 pages A4, ordre de lecture   (Monde 2)
     outils/livret_splat_classique_a_plier.pdf 4 pages A3 paysage, imposées
+et les quatre livrets de correction du professeur (lot K2, 20/09/2026), mêmes 8 pages,
+même pliage, mêmes cartes à la même place :
+    outils/livret_splat_classique_correction_equation.pdf         l'équation, inconnue « ? »
+    outils/livret_splat_classique_correction_equation_lettre.pdf  l'équation, inconnue en lettre
+    outils/livret_splat_classique_correction_schema.pdf           le schéma en barres, « ? »
+    outils/livret_splat_classique_correction_schema_lettre.pdf    le schéma en barres, en lettre
+    (et chacun son …_a_plier.pdf)
 
 Les 3 fiches (7, 8, 9) ne sont PAS redessinées ici : elles sont rendues par l'outil du
 site (outils/splat.html, réglage « Énoncé seul, 6/page » du lot B) avec les graines de la
@@ -20,6 +29,17 @@ série en ligne les enchaîne (paramètre « suite »). Le QR code est ajouté d
 de chaque page juste avant l'impression. Couverture et dos sont les deux HTML de ce
 dossier ; l'exemple de la couverture (carte, schéma en barres et équation) est dessiné par
 l'outil lui-même, en mode correction, sur une carte qui n'est PAS dans le livret.
+
+LIVRETS DE CORRECTION (lot K2, 20/09/2026) — l'outil imprime lui-même les fiches de
+correction avec ses deux « corrections courtes » 6/page (print=correction-equation ou
+correction-schema) : même bandeau, même cadre de consigne, chaque carte à la même place que
+sur la fiche de l'élève ; sous le plateau, l'équation résolue et ses flèches, ou les schémas
+en barres et leurs calculs. En lettre (unknown=letter), chaque carte a sa lettre (celle que
+l'outil tire avec la carte) ; les cartes à jetons de la fiche 7 (mode A) n'en ont pas dans
+l'outil : le livret leur en donne une, dans l'ordre x, a, b, c, m, n, t…, sans rien tirer
+(les nombres ne bougent pas). La couverture reçoit le bandeau du professeur (comme le
+livret de correction Petit SPLAT!, lot K1) et dit de quelle correction il s'agit ; la boîte
+du QR dit « Les mêmes cartes en ligne » (le même QR) ; le dos ne change pas.
 
 Le même script pourra rendre des niveaux supplémentaires (lot D : Avancé, Expert) :
 un niveau de plus dans NIVEAUX, avec ses propres graines et ses QR.
@@ -101,12 +121,17 @@ CSS_QR = """
 .qr-livret .lib em{display:block;font-style:normal;font-weight:400;font-size:10px;color:#475569;margin-top:0.5mm}
 """
 
-JS_QR = """(qr) => {
+# Ce que dit la boîte du QR : sur les livrets de correction, même boîte, même QR, même
+# place, autre texte (comme le livret de correction Petit SPLAT!, décision du 20/09/2026).
+QR_ELEVE = "J'ai terminé<br>ma fiche,<em>je rejoue en ligne</em>"
+QR_PROF = "Les mêmes<br>cartes en ligne<em>(le QR de l'élève)</em>"
+
+JS_QR = """([qr, lib]) => {
   const heads = document.querySelectorAll('.printArea .print-page-header');
   if (!heads.length) return 'pas de bandeau imprimé';
   heads.forEach(h => {
     const box = document.createElement('div'); box.className = 'qr-livret';
-    box.innerHTML = '<div class="lib">J\\'ai terminé<br>ma fiche,<em>je rejoue en ligne</em></div><img src="' + qr + '" alt="">';
+    box.innerHTML = '<div class="lib">' + lib + '</div><img src="' + qr + '" alt="">';
     const logos = h.querySelector('.print-page-logos');
     h.insertBefore(box, logos || null);
   });
@@ -118,6 +143,7 @@ JS_QR = """(qr) => {
 # ouvre la collection SPLAT du catalogue, où se trouvent les livrets, l'univers et tous
 # les autres Splat (même décision que le livret du monde 1, 18/09/2026).
 PIED_LIVRET = "mathsgo.re/splat · CC BY-NC-SA 4.0"
+PIED_CORRECTION = PIED_LIVRET + " · correction"
 
 JS_PIED = """(texte) => {
   const f = document.querySelectorAll('.printArea .print-page-footer');
@@ -151,6 +177,46 @@ JS_BIS = """(titre) => {
   return 'ok';
 }"""
 
+# ---------------------------------------------------------------------------
+# LES QUATRE LIVRETS DE CORRECTION (lot K2) : { équation, schéma } × { « ? », lettre }.
+CORRECTIONS = [
+    dict(suffixe="_correction_equation",        imprime="correction-equation", lettre=False,
+         dit="corrigé par l'équation · inconnue «&nbsp;?&nbsp;»"),
+    dict(suffixe="_correction_equation_lettre", imprime="correction-equation", lettre=True,
+         dit="corrigé par l'équation · inconnue en lettre"),
+    dict(suffixe="_correction_schema",          imprime="correction-schema",   lettre=False,
+         dit="corrigé par le schéma en barres · inconnue «&nbsp;?&nbsp;»"),
+    dict(suffixe="_correction_schema_lettre",   imprime="correction-schema",   lettre=True,
+         dit="corrigé par le schéma en barres · inconnue en lettre"),
+]
+
+# En lettre, les cartes à jetons (mode A, fiche 7) n'ont pas de lettre dans l'outil : on
+# leur en donne une, dans l'ordre de la liste de l'outil, sans rien tirer (décision du
+# 20/09/2026, « une lettre par carte, livret seulement »), puis on réimprime la feuille.
+JS_LETTRES = """() => {
+  let n = 0;
+  cards.forEach((c, i) => {
+    if (!(typeof c.varChar === 'string' && c.varChar.trim())) { c.varChar = variableChars[i % variableChars.length]; n++; }
+  });
+  printSheet();
+  return n;
+}"""
+
+# La couverture du livret de correction : le bandeau rouge sombre et « Livret du
+# professeur » du livret de correction Petit SPLAT! (lot K1), avec, sur la même ligne, la
+# correction dont il s'agit (décision du 20/09/2026). La couverture du monde 2 est pleine :
+# le bandeau de 14 mm est repris sur la hauteur du cadre « Nom, prénom / Classe », qui
+# devient une seule ligne ; le sommaire et le pied restent exactement à leur place.
+PROF = dict(bandeau="Correction — pour le professeur", ligne="Livret du professeur")
+CSS_PROF = """
+.bandeau-prof{flex:0 0 14mm;box-sizing:border-box;padding-top:4mm;display:flex;align-items:center;justify-content:center;
+  background:#b91c1c;color:#fff;font-size:16px;font-weight:700;text-transform:uppercase;letter-spacing:3px}
+.ident .champ.prof{flex:1;padding:1.2mm 4mm;text-align:center;line-height:1.2}
+.ident .champ.prof span{font-size:17px;color:#063b7a}
+.ident .champ.prof small{font-size:12.5px;font-weight:700;color:#475569;margin-left:2.5mm}
+.ident .champ.prof small::before{content:"— "}
+"""
+
 # L'exemple de couverture : la correction (carte + schéma en barres + équation) de la carte 1 de
 # l'adresse NIVEAUX[…]["exemple"], dessinée par renderCardIntoSvg, en deux fenêtres.
 JS_EXEMPLE = """() => {
@@ -167,6 +233,12 @@ JS_COUV = """(d) => {
   const a = document.querySelector('svg.ex-carte'), b = document.querySelector('svg.ex-corr');
   if (!a || !b) return 'pas de place pour l\\'exemple';
   a.innerHTML = d.svg; b.innerHTML = d.svg;
+  if (d.prof) {
+    const id = document.querySelector('.ident');
+    if (!id) return 'pas de ligne Nom, prénom / Classe';
+    document.body.insertAdjacentHTML('afterbegin', '<div class="bandeau-prof">' + d.prof.bandeau + '</div>');
+    id.innerHTML = '<div class="champ prof"><span>' + d.prof.ligne + '</span><small>' + d.prof.dit + '</small></div>';
+  }
   return 'ok';
 }"""
 
@@ -206,7 +278,8 @@ def serveur():
     threading.Thread(target=srv.serve_forever, daemon=True).start()
     return srv
 
-async def pages(niv, tmp):
+async def pages(niv, tmp, corr=None):
+    """corr : None pour le livret de l'élève, sinon un élément de CORRECTIONS."""
     from playwright.async_api import async_playwright
     base = f"http://127.0.0.1:{PORT}"
     qrweb = f"{BASE_WEB}/{niv['qr']}"
@@ -233,6 +306,8 @@ async def pages(niv, tmp):
             pg = await nav.new_page(viewport={"width": 794, "height": 1123})
             await pg.goto(url, wait_until="networkidle")
             await pg.wait_for_timeout(1200)
+            if couv is not None and couv.get("prof"):
+                await pg.add_style_tag(content=CSS_PROF)
             if couv is not None:
                 r = await pg.evaluate(JS_COUV, couv)
                 if r != "ok":
@@ -248,21 +323,31 @@ async def pages(niv, tmp):
 
         async def pdf_fiche(f, sortie):
             titre = quote(f"Fiche {f['n']} — {f['t']}")
-            pg = await page_outil(f"{f['parties'][0]}&print=statement&layout=6&title={titre}")
-            etat = await pg.evaluate(JS_FICHE, f["parties"][1:])
+            # livret de correction : l'outil imprime lui-même sa correction courte 6/page ;
+            # en lettre, les mêmes graines avec unknown=letter (les nombres ne changent pas)
+            parties = f["parties"]
+            if corr and corr["lettre"]:
+                parties = [q.replace("unknown=question", "unknown=letter") for q in parties]
+            imprime = corr["imprime"] if corr else "statement"
+            pg = await page_outil(f"{parties[0]}&print={imprime}&layout=6&title={titre}")
+            etat = await pg.evaluate(JS_FICHE, parties[1:])
+            if corr and corr["lettre"]:
+                await pg.evaluate(JS_LETTRES)
             if f["pages"] > 1:
                 r = await pg.evaluate(JS_BIS, f"Fiche {f['n']} bis — {f['t']}")
                 if r != "ok":
                     raise SystemExit(f"fiche {f['n']}, titre « bis » : {r}")
+                if corr:
+                    await pg.evaluate(JS_BIS, f"Fiche {f['n']} bis — {f['t']} — Correction")
             if etat["parPage"] != 6:
                 raise SystemExit(f"fiche {f['n']} : {etat['parPage']} cartes par page au lieu de 6")
             if etat["feuilles"] != f["pages"]:
                 raise SystemExit(f"fiche {f['n']} : {etat['feuilles']} feuilles au lieu de {f['pages']}")
             await pg.add_style_tag(content=CSS_QR)
-            r = await pg.evaluate(JS_QR, f"{qrweb}/fiche{f['n']}.png")
+            r = await pg.evaluate(JS_QR, [f"{qrweb}/fiche{f['n']}.png", QR_PROF if corr else QR_ELEVE])
             if r != "ok":
                 raise SystemExit(f"fiche {f['n']}, QR : {r}")
-            r = await pg.evaluate(JS_PIED, PIED_LIVRET)
+            r = await pg.evaluate(JS_PIED, PIED_CORRECTION if corr else PIED_LIVRET)
             if r != "ok":
                 raise SystemExit(f"fiche {f['n']}, pied : {r}")
             await pg.wait_for_timeout(600)
@@ -272,7 +357,8 @@ async def pages(niv, tmp):
             await pg.close()
             print(f"   fiche {f['n']} : {etat['cartes']} cartes sur {etat['feuilles']} pages")
 
-        await pdf_html(f"{base}{BASE_WEB}/couverture.html", tmp / "p1.pdf", couv=exemple)
+        couv = dict(exemple, prof=dict(PROF, dit=corr["dit"]) if corr else None)
+        await pdf_html(f"{base}{BASE_WEB}/couverture.html", tmp / "p1.pdf", couv=couv)
         for f in FICHES:
             await pdf_fiche(f, tmp / f"fiche{f['n']}.pdf")
         dos = dict(niveaux=[[nom, desc, f"{qrweb}/{img}"] for nom, desc, _, img in niv["dos"]],
@@ -339,6 +425,15 @@ def main():
     inconnu = [a for a in demandes if a not in NIVEAUX]
     if inconnu:
         raise SystemExit(f"niveau inconnu : {', '.join(inconnu)} (au choix : {', '.join(NIVEAUX)})")
+    # Sans option, on refait le livret de l'élève ET ses quatre livrets de correction : ils
+    # restent ainsi toujours rendus avec les mêmes graines et la même version de l'outil.
+    if "--eleve" in sys.argv and "--correction" in sys.argv:
+        raise SystemExit("--eleve et --correction s'excluent (sans option : tous)")
+    versions = [None] + CORRECTIONS
+    if "--eleve" in sys.argv:
+        versions = [None]
+    if "--correction" in sys.argv:
+        versions = CORRECTIONS
     srv = serveur()
     try:
         for nom in demandes:
@@ -346,13 +441,15 @@ def main():
             print(f"— livret « {nom} »")
             if "--qr" in sys.argv:
                 fabrique_qr(niv); print("   QR codes régénérés.")
-            with tempfile.TemporaryDirectory() as d:
-                tmp = Path(d)
-                asyncio.run(pages(niv, tmp))
-                assemble(niv, tmp)
-            for suffixe in ("", "_a_plier"):
-                compresse(RACINE / "outils" / f"{niv['sortie']}{suffixe}.pdf")
-            print(f"   Fait : outils/{niv['sortie']}.pdf et outils/{niv['sortie']}_a_plier.pdf")
+            for corr in versions:
+                cible = dict(niv, sortie=niv["sortie"] + corr["suffixe"]) if corr else niv
+                with tempfile.TemporaryDirectory() as d:
+                    tmp = Path(d)
+                    asyncio.run(pages(niv, tmp, corr))
+                    assemble(cible, tmp)
+                for suffixe in ("", "_a_plier"):
+                    compresse(RACINE / "outils" / f"{cible['sortie']}{suffixe}.pdf")
+                print(f"   Fait : outils/{cible['sortie']}.pdf et outils/{cible['sortie']}_a_plier.pdf")
     finally:
         srv.shutdown()
 
