@@ -804,9 +804,8 @@
     if (path === "outils/splat_equations.html") return 2;
     if (path === "outils/equasplat.html") return 3;
     if (path === "outils/equascribe.html") return 4;
-    // Prêts à imprimer : le livret du monde 1 avant celui du monde 2 (l'alphabet les inversait).
-    if (path === "outils/livrets_petit_splat.html") return 5;
-    if (path === "outils/livrets_splat_classique.html") return 6;
+    // Prêts à imprimer : la page des livrets, après les outils (lot L, 20/09/2026).
+    if (path === "outils/livrets_splat.html") return 5;
     return Infinity;
   }
 

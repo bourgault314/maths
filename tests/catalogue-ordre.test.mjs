@@ -137,7 +137,7 @@ test("Splat affiche Petit Splat, Splat classique, puis Splat équations", () => 
 
 // « Prêts à imprimer » de la collection Splat, trié comme à l’écran : la clé de cardSortKey
 // (rang propre à la collection, sinon celui de la classification) passée au vrai comparateur.
-test("dans la collection Splat, le livret du monde 1 passe avant celui du monde 2", () => {
+test("dans la collection Splat, les livrets tiennent en une seule carte", () => {
   const imprimer = Array.from(catalogue.resources)
     .filter((resource) => resource.status === "published")
     .filter((resource) => {
@@ -151,9 +151,8 @@ test("dans la collection Splat, le livret du monde 1 passe avant celui du monde 
     .sort(compareCards)
     .map((carte) => carte.path);
   assert.deepEqual(imprimer, [
-    "outils/livrets_petit_splat.html",
-    "outils/livrets_splat_classique.html"
-  ], "L’alphabet mettrait « Livret Splat! classique » (monde 2) devant « Livrets Petit Splat! » (monde 1).");
+    "outils/livrets_splat.html"
+  ], "Une seule carte « Les livrets SPLAT! » depuis le lot L : elle mène aux livrets de tous les mondes.");
 });
 
 test("les niveaux numérotés se rangent dans l’ordre des nombres", () => {
