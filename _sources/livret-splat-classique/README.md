@@ -107,8 +107,11 @@ l'outil (`@page` 8 mm, `prefer_css_page_size`), la couverture et le dos sans mar
 - Le QR dans le bandeau coûte 3 mm de hauteur par rangée de cartes : 31,5 mm de blanc
   sous chaque plateau (mesuré sur le PDF) au lieu de 34,6 mm sur la fiche imprimée
   depuis la carte des mondes.
-- Vocabulaire (textes de Claire, 20/09/2026) : « jetons », « paquet de jetons » (un cercle
-  avec un nombre), « tache », « ? », « schéma en barres » — jamais « tableau ».
+- Vocabulaire (textes de Claire, 20/09/2026) : « jetons », « paquet de jetons » (un jeton
+  avec un nombre). On ne nomme PAS la forme du paquet : il est dessiné comme un rond laissé
+  blanc à l'intérieur, pour que le nombre se lise — ni « disque » (il n'est pas plein), ni
+  « cercle » (ce n'est pas un autre objet que le jeton), ni « rond ».
+  Puis « tache », « ? », « schéma en barres » — jamais « tableau ».
 - Chaque fiche tient sur deux pages : la seconde porte « Fiche N bis — … » (`JS_BIS`).
 - L'imposition A3 passe par **pikepdf** et `add_overlay` (voir le README du monde 1 :
   avec pypdf, les dégradés ne suivent pas).
