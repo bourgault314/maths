@@ -95,7 +95,10 @@ NIVEAUX = {
         graines={1:"510115", 2:"715819", 3:"716087", 4:"109324", 5:"868655", 6:"849499"},
         sur="Mon livret · Monde 1 · Avancé",
         accroche="Le tout, les parties…<br>et jusqu'à 50 jetons&nbsp;!",
-        exemple=dict(splats="2", vis=(10, 14), hp=(14, 16), total=42),
+        # lot K1-bis (20/09/2026) : 40 = 20 + 2 x 10 — on compte les jetons cachés
+        # (10 par tache au lieu de 15), et c'est le plus gros total possible dans la
+        # tranche en gardant les jetons cachés séparés.
+        exemple=dict(splats="2", vis=(20, 20), hp=(10, 10), total=40),
         dos=[("Une tache",        "Une seule tache, jusqu'à 50 jetons — comme les fiches 1 à 3.", niveau_url(50, "1"),   "niveau-1.png"),
              ("Plein de taches",  "De 2 à 6 taches, jusqu'à 50 jetons — comme les fiches 4 à 6.", niveau_url(50, "mix"), "niveau-2.png"),
              ("Expert · 1 tache", "Une seule tache, jusqu'à 100 jetons.",                         niveau_url(100,"1"),   "niveau-3.png"),
@@ -109,7 +112,11 @@ NIVEAUX = {
         graines={1:"892863", 2:"662792", 3:"520986", 4:"948274", 5:"830408", 6:"354581"},
         sur="Mon livret · Monde 1 · Expert",
         accroche="Le tout, les parties…<br>et jusqu'à 100 jetons&nbsp;!",
-        exemple=dict(splats="2", vis=(10, 14), hp=(30, 36), total=76),
+        # lot K1-bis (20/09/2026) : 60 = 20 + 4 x 10 — on compte les jetons cachés (10 par
+        # tache au lieu de 34). Il faut 4 taches pour rester au-dessus de 51 avec 10 cachés :
+        # les cases du schéma tombent alors à 48 px et la mini-tache (36 px avec sa marge)
+        # n'a plus de place à gauche du nombre — voir la règle des 4 cases dans JS_COUV.
+        exemple=dict(splats="4", vis=(20, 20), hp=(10, 10), total=60),
         dos=[("Une tache",         "Une seule tache, jusqu'à 100 jetons — comme les fiches 1 à 3.", niveau_url(100,"1"),   "niveau-1.png"),
              ("Plein de taches",   "De 2 à 6 taches, jusqu'à 100 jetons — comme les fiches 4 à 6.", niveau_url(100,"mix"), "niveau-2.png"),
              ("Réviser · 1 tache", "Une seule tache, jusqu'à 50 jetons.",                           niveau_url(50, "1"),   "niveau-3.png"),
@@ -241,7 +248,7 @@ JS_COUV = """(d) => {
       'Au total, il y a ' + e.total + ' jetons&nbsp;: ' + mot + '.' +
       '<span>Ici les taches sont transparentes&nbsp;: on voit les jetons cachés. ' +
       (e.n > 1 ? 'Chaque tache en cache le <b>même nombre</b>. ' : '') +
-      'Le schéma en barres met tout ça en ordre.</span>');
+      'Le schéma en barres représente la situation.</span>');
   set('.carte .tot', e.total);
   const carte = document.querySelector('.carte');
   const vieux = carte.querySelector('svg'); if (vieux) vieux.remove();
@@ -267,6 +274,27 @@ JS_COUV = """(d) => {
   for (let i = 0; i < e.n; i++)
       bas += '<div class="cac" style="flex:' + flexH + '">' + mini + e.hp + '</div>';
   set('.sch .barre-b', bas);
+  /* La mini-tache reste TOUJOURS dans le coin haut-gauche, et le nombre reste centré.
+     Les cases du schéma sont proportionnelles aux quantités : avec 10 jetons cachés au
+     lieu de 34, ou avec quatre cases, elles rétrécissent et la tache de 8 x 5,4 mm vient
+     buter sur le nombre. On la réduit alors — petite dans le coin, exactement comme dans
+     le jeu de l'élève (.eleve-case .miniTache de outils/splat_tache_barre.html). La place
+     est MESURÉE sur la page, pas supposée : une case large (Monde 1, et toute couverture
+     future) garde la tache telle quelle. Lot K1-bis, 20/09/2026. */
+  document.querySelectorAll('.sch .barre-b .cac').forEach(c => {
+    const m = c.querySelector('.mini'); if (!m) return;
+    const r = c.getBoundingClientRect(), st = getComputedStyle(c);
+    const mesure = document.createElement('span');
+    mesure.style.cssText = 'position:absolute;visibility:hidden;white-space:pre;font:' + st.font;
+    mesure.textContent = (c.textContent || '').trim();
+    document.body.appendChild(mesure);
+    const nombre = r.left + (r.width - mesure.getBoundingClientRect().width) / 2;
+    mesure.remove();
+    if (m.getBoundingClientRect().right > nombre - 4) {
+      m.style.left = '1.1mm'; m.style.top = '0.9mm';
+      m.style.width = '4.4mm'; m.style.height = '3mm';
+    }
+  });
   set('.sch .pieds',
       '<span class="a" style="flex:' + flexV + '">les jetons <b>visibles</b></span>' +
       '<span class="b" style="flex:' + (flexH * e.n) + '">les jetons <b>cachés</b>' +

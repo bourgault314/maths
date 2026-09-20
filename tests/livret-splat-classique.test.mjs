@@ -709,3 +709,29 @@ test("K2 : la page des livrets du monde 2 mène aux huit PDF de correction, repl
   assert.equal((bloc.match(/class="lien-prof"/g) || []).length, 8, "huit liens");
   assert.match(page, /\.liv \.lien-prof\{[^}]*min-height:44px/, "boutons de 44 px de haut");
 });
+
+/* ------------------------------------------------------------------ lot K1-bis
+   La phrase de la couverture (20/09/2026). Elle est écrite à deux endroits : dans
+   couverture.html pour le Monde 1, et dans JS_COUV (render.py) pour les couvertures
+   Avancé et Expert, qui sont composées au rendu. Rien ne l'épinglait. */
+const PHRASE_K1BIS = "Le schéma en barres représente la situation.";
+const PHRASE_AVANT = "met tout ça en ordre";
+
+test("K1-bis : la couverture dit « représente la situation » dans les deux sources du monde 1", () => {
+  assert.ok(couv1.includes(PHRASE_K1BIS), "couverture.html : la nouvelle phrase");
+  assert.ok(render1.includes(PHRASE_K1BIS), "render.py (JS_COUV) : la nouvelle phrase");
+  for (const [nom, src] of [["couverture.html", couv1], ["render.py", render1]])
+    assert.ok(!src.includes(PHRASE_AVANT), `${nom} : l'ancienne phrase a disparu`);
+});
+
+test("K1-bis : la phrase est sur la couverture des six PDF du monde 1 (élève et correction)", () => {
+  /* Le texte d'un PDF n'a pas d'espaces aux retours à la ligne (« représente la » +
+     « situation. ») : on compare sans aucune espace. */
+  const serre = (x) => x.replace(/\s+/g, "");
+  for (const s of SORTIES_M1)
+    for (const f of [`outils/${s}.pdf`, `outils/${s}_correction.pdf`]) {
+      const couverture = serre(texteExact(f)[0]);
+      assert.ok(couverture.includes(serre(PHRASE_K1BIS)), `${f} : la nouvelle phrase en page 1`);
+      assert.ok(!couverture.includes(serre(PHRASE_AVANT)), `${f} : plus l'ancienne phrase`);
+    }
+});
