@@ -782,7 +782,7 @@ window.MATHSGO_CATALOGUE = {
       "cardTitle": "Livrets Petit Splat!",
       "collections": ["splat"],
       "tags": ["splat", "livret", "schema-barres", "inconnue", "imprimer"],
-      "thumbnail": "assets/img/thumbnails/splat/livret-petit-splat.png?v=2",
+      "thumbnail": "assets/img/thumbnails/splat/livret-petit-splat.png?v=3",
       "cardDescription": "Les six fiches du monde 1 réunies en un livret à plier, en trois niveaux : jusqu’à 20, de 21 à 50, de 51 à 100 jetons."
     },
     "outils/livrets_splat_classique.html": {
