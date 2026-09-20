@@ -412,3 +412,188 @@ test("le vocabulaire du dessin : « point bleu » pour un jeton, « un jeton ave
   for (const [mot, motif] of [["rond", /\brond/i], ["disque", /\bdisque/i], ["cercle", /\bcercle/i]])
     assert.doesNotMatch(readme1, motif, `README monde 1 : aucun « ${mot} »`);
 });
+
+// ================================================ lot K1 — le livret de correction du prof
+// (20/09/2026) Chaque livret Petit SPLAT! a son livret de correction : mêmes 8 pages, même
+// pliage, mêmes cartes à la même place, les six fiches montrent la correction. render.py
+// le fabrique à partir de l'outil (correction=1&rv=0), sans dupliquer couverture ni dos.
+const SORTIES_M1 = ["livret_petit_splat", "livret_petit_splat_avance", "livret_petit_splat_expert"];
+
+/* Lecteur de texte PDF « exact » : suit, page par page, les polices réellement posées
+   (/Fn … Tf) jusqu'à leur table ToUnicode, y compris dans les Form XObjects (l'imposition
+   par pikepdf place chaque page dans un XObject). Sans dépendance, pour les PDF de Chromium
+   passés par qpdf (flux d'objets compressés). */
+function texteExact(p) {
+  const b = readFileSync(new URL(`../${p}`, import.meta.url));
+  const raw = b.toString("latin1");
+  // --- mini-analyseur d'objets PDF
+  function valeur(s, i) {
+    const ws = () => { while (i < s.length) { if (/\s/.test(s[i])) i++; else if (s[i] === "%") { while (i < s.length && s[i] !== "\n" && s[i] !== "\r") i++; } else break; } };
+    function un() {
+      ws();
+      if (s.startsWith("<<", i)) { i += 2; const d = {}; for (;;) { ws(); if (s.startsWith(">>", i)) { i += 2; return d; } const k = un(); d[k.nom] = un(); } }
+      if (s[i] === "[") { i++; const a = []; for (;;) { ws(); if (s[i] === "]") { i++; return a; } a.push(un()); } }
+      if (s[i] === "/") { let j = i + 1; while (j < s.length && !/[\s\/<>\[\]()%{}]/.test(s[j])) j++; const n = s.slice(i + 1, j); i = j; return { nom: n }; }
+      if (s[i] === "(") { let prof = 0, j = i; for (; j < s.length; j++) { if (s[j] === "\\") { j++; continue; } if (s[j] === "(") prof++; else if (s[j] === ")" && --prof === 0) break; } const t = s.slice(i + 1, j); i = j + 1; return { chaine: t }; }
+      if (s[i] === "<") { const j = s.indexOf(">", i); const t = s.slice(i + 1, j); i = j + 1; return { hex: t }; }
+      const m = /^[+-]?(\d+\.?\d*|\.\d+)/.exec(s.slice(i, i + 40));
+      if (m) {
+        i += m[0].length;
+        const r = /^\s+(\d+)\s+R\b/.exec(s.slice(i, i + 30));
+        if (r && /^\d+$/.test(m[0])) { i += r[0].length; return { ref: +m[0] }; }
+        return +m[0];
+      }
+      const w = /^[a-zA-Z]+/.exec(s.slice(i, i + 10)); i += w ? w[0].length : 1; return w ? w[0] : null;
+    }
+    const v = un(); return [v, i];
+  }
+  const objs = new Map();
+  const re = /(\d+)\s+0\s+obj\b/g;
+  let m;
+  while ((m = re.exec(raw))) {
+    const debut = m.index + m[0].length;
+    const [d, apres] = valeur(raw, debut);
+    let flux = null;
+    const k = raw.indexOf("stream", apres);
+    if (k >= 0 && raw.slice(apres, k).trim() === "") {
+      let s0 = k + 6; if (raw[s0] === "\r") s0++; if (raw[s0] === "\n") s0++;
+      const lg = typeof d.Length === "number" ? d.Length : null;
+      const fin = lg !== null ? s0 + lg : raw.indexOf("endstream", s0);
+      flux = b.subarray(s0, fin);
+      try { flux = inflateSync(flux); } catch { /* flux non compressé */ }
+      re.lastIndex = fin;
+    }
+    objs.set(+m[1], { d, flux });
+  }
+  for (const { d, flux } of [...objs.values()]) {
+    if (d?.Type?.nom !== "ObjStm") continue;
+    const s = flux.toString("latin1");
+    const tete = s.slice(0, d.First).trim().split(/\s+/).map(Number);
+    for (let n = 0; n < d.N; n++) objs.set(tete[2 * n], { d: valeur(s, d.First + tete[2 * n + 1])[0], flux: null });
+  }
+  const res = (v) => (v && v.ref !== undefined ? res(objs.get(v.ref)?.d) : v);
+  const fluxDe = (v) => (v && v.ref !== undefined ? objs.get(v.ref)?.flux : null);
+  // --- tables ToUnicode
+  const cmaps = new Map();
+  function cmap(ref) {
+    if (cmaps.has(ref)) return cmaps.get(ref);
+    const f = objs.get(ref)?.flux?.toString("latin1") || "";
+    const t = new Map();
+    for (const bloc of f.match(/beginbfchar([\s\S]*?)endbfchar/g) || [])
+      for (const x of bloc.matchAll(/<([0-9a-fA-F]+)>\s*<([0-9a-fA-F]+)>/g))
+        t.set(x[1].toLowerCase(), String.fromCodePoint(...(x[2].match(/.{4}/g) || []).map((h) => parseInt(h, 16))));
+    for (const bloc of f.match(/beginbfrange([\s\S]*?)endbfrange/g) || [])
+      for (const x of bloc.matchAll(/<([0-9a-fA-F]+)>\s*<([0-9a-fA-F]+)>\s*<([0-9a-fA-F]+)>/g)) {
+        const a = parseInt(x[1], 16), z = parseInt(x[2], 16), c = parseInt(x[3], 16), l = x[1].length;
+        for (let k = a; k <= z; k++) t.set(k.toString(16).padStart(l, "0"), String.fromCodePoint(c + (k - a)));
+      }
+    cmaps.set(ref, t); return t;
+  }
+  // --- le texte d'un flux de contenu, avec ses ressources
+  function texte(contenu, ressources) {
+    const r = res(ressources) || {};
+    const polices = res(r.Font) || {}, xo = res(r.XObject) || {};
+    let t = "", table = null, larg = 4;
+    const ops = /\/([^\s\/<>\[\]()]+)\s+[\d.]+\s+Tf|<([0-9a-fA-F]*)>\s*Tj|\[([^\]]*)\]\s*TJ|\/([^\s\/<>\[\]()]+)\s+Do\b/g;
+    for (const o of contenu.matchAll(ops)) {
+      if (o[1] !== undefined) {
+        const p = res(polices[o[1]]);
+        table = p?.ToUnicode ? cmap(p.ToUnicode.ref) : null;
+        larg = p?.Subtype?.nom === "Type0" ? 4 : 2;
+      } else if (o[2] !== undefined || o[3] !== undefined) {
+        const hexes = o[2] !== undefined ? [o[2]] : [...o[3].matchAll(/<([0-9a-fA-F]*)>/g)].map((x) => x[1]);
+        for (const h of hexes) for (const c of h.match(new RegExp(`.{${larg}}`, "g")) || []) t += table?.get(c.toLowerCase()) ?? "";
+      } else if (o[4] !== undefined) {
+        const x = xo[o[4]];
+        const d = res(x);
+        if (d?.Subtype?.nom === "Form") t += texte(fluxDe(x).toString("latin1"), d.Resources);
+      }
+    }
+    return t;
+  }
+  // --- les pages, dans l'ordre de l'arbre
+  const racine = [...objs.values()].find((o) => o.d?.Type?.nom === "Pages" && !o.d.Parent).d;
+  const pages = [];
+  (function feuilles(n) { for (const k of n.Kids) { const e = res(k); if (e.Type.nom === "Pages") feuilles(e); else pages.push(e); } })(racine);
+  return pages.map((p) => {
+    const c = Array.isArray(p.Contents) ? p.Contents : [p.Contents];
+    return texte(c.map((x) => fluxDe(x).toString("latin1")).join("\n"), p.Resources);
+  });
+}
+
+test("K1 : les trois livrets de correction existent — 8 pages A4, 4 feuilles A3 imposées", () => {
+  for (const s of SORTIES_M1) {
+    assert.ok(existe(`outils/${s}_correction.pdf`), `outils/${s}_correction.pdf`);
+    assert.ok(existe(`outils/${s}_correction_a_plier.pdf`), `outils/${s}_correction_a_plier.pdf`);
+    assert.equal(nombreDePages(`outils/${s}_correction.pdf`), 8, `${s}_correction.pdf : 8 pages`);
+    assert.equal(nombreDePages(`outils/${s}_correction_a_plier.pdf`), 4, `${s}_correction_a_plier.pdf : 4 feuilles`);
+    assert.ok(taille(`outils/${s}_correction.pdf`) < 3_000_000, `${s}_correction.pdf reste léger (qpdf)`);
+  }
+});
+
+test("K1 : dans les PDF de correction, les pages 2 à 7 sont des corrections, la couverture est celle du prof, le dos ne change pas", () => {
+  for (const s of SORTIES_M1) {
+    const corr = texteExact(`outils/${s}_correction.pdf`);
+    const eleve = texteExact(`outils/${s}.pdf`);
+    assert.equal(corr.length, 8, `${s} : huit pages de texte`);
+    for (let p = 1; p <= 6; p++) {
+      const t = corr[p];
+      assert.ok(t.startsWith(`PETIT SPLAT!Fiche ${p} — `), `${s} p.${p + 1} : la fiche ${p}, dans l'ordre (lu : ${t.slice(0, 40)})`);
+      assert.match(t, /— Correction/, `${s} p.${p + 1} : « — Correction » dans le bandeau`);
+      assert.ok(t.includes("mathsgo.re/splat · CC BY-NC-SA 4.0 · correction"), `${s} p.${p + 1} : le pied se termine par « · correction »`);
+      assert.match(t, /Les mêmescartes en ligne\(le QR de l'élève\)/, `${s} p.${p + 1} : la boîte du QR parle au prof`);
+      assert.doesNotMatch(t, /terminé/, `${s} p.${p + 1} : plus la phrase de l'élève`);
+      // la même consigne que la fiche de l'élève (le cadre est remis à l'identique)
+      const consigne = (x) => x.slice(x.indexOf("Pour chaque carte"), x.search(/J'ai terminé|Les mêmes/));
+      assert.equal(consigne(t), consigne(eleve[p]), `${s} p.${p + 1} : même cadre de consigne que l'élève`);
+    }
+    // la couverture du prof : le bandeau, « Livret du professeur » à la place de Prénom / Classe
+    assert.ok(corr[0].startsWith("CORRECTION — POUR LE PROFESSEUR"), `${s} : bandeau en haut de la couverture`);
+    assert.match(corr[0], /Livret du professeur/, `${s} : « Livret du professeur »`);
+    assert.doesNotMatch(corr[0], /Prénom|Classe/, `${s} : plus de ligne Prénom / Classe`);
+    // le reste de la couverture est celui de l'élève
+    assert.equal(corr[0].replace("CORRECTION — POUR LE PROFESSEUR", "").replace("Livret du professeur", ""),
+                 eleve[0].replace("PrénomClasse", ""), `${s} : le reste de la couverture ne change pas`);
+    // le dos est celui du livret de l'élève, mot pour mot
+    assert.equal(corr[7], eleve[7], `${s} : le dos est identique`);
+    // l'imposition du livret à plier : 8|1 · 2|7 · 6|3 · 4|5
+    const a3 = texteExact(`outils/${s}_correction_a_plier.pdf`);
+    [[8, 1], [2, 7], [6, 3], [4, 5]].forEach(([g, d], k) =>
+      assert.equal(a3[k], corr[g - 1] + corr[d - 1], `${s} : feuille ${k + 1} = pages ${g} | ${d}`));
+  }
+});
+
+test("K1 : render.py fabrique la correction depuis l'outil (correction=1&rv=0), cadre de consigne remis, même QR", () => {
+  // l'outil rend l'énoncé puis sa correction : on remet le cadre de consigne sur la
+  // correction (les cartes restent à la même place) et on retire l'énoncé
+  assert.match(render1, /\+ \("&correction=1&rv=0" if correction else ""\)/);
+  assert.match(render1, /JS_CORRIGE = """\(\) => \{[\s\S]*?grille\.before\(ins\);\s*\n\s*enonce\.remove\(\);/);
+  // même boîte, même QR, autre texte (option B du 20/09/2026)
+  assert.ok(render1.includes(`QR_PROF = "Les mêmes<br>cartes en ligne<em>(le QR de l'élève)</em>"`), "texte de la boîte du prof");
+  assert.match(render1, /pg\.evaluate\(JS_QR, \[injecter, QR_PROF if correction else QR_ELEVE\]\)/);
+  // le pied garde la signature et ajoute « · correction »
+  assert.match(render1, /PIED_CORRECTION = PIED_LIVRET \+ " · correction"/);
+  // la couverture : injection, pas de copie de couverture.html ; bandeau rouge sombre
+  assert.ok(render1.includes(`PROF = dict(bandeau="Correction — pour le professeur", ligne="Livret du professeur")`), "textes de la couverture du prof");
+  assert.match(render1, /\.bandeau-prof\{[^}]*\n?[^}]*background:#b91c1c;color:#fff;/);
+  assert.ok(!existe("_sources/livret-petit-splat/couverture-correction.html"), "pas de couverture dupliquée");
+  // les noms de sortie, et les deux livrets refaits ensemble par défaut
+  assert.match(render1, /dict\(niv, sortie=niv\["sortie"\] \+ "_correction"\) if correction else niv/);
+  assert.match(render1, /versions = \[False, True\]/);
+});
+
+test("K1 : la page des livrets du monde 1 mène aux six PDF de correction, sous les liens de chaque livret", () => {
+  const cartes = pageMonde1.split('<article class="liv">').slice(1);
+  assert.equal(cartes.length, 3, "trois cartes");
+  cartes.forEach((c, i) => {
+    const s = SORTIES_M1[i];
+    assert.ok(c.includes(`href="/outils/${s}.pdf"`), `${s} : le PDF de l'élève est bien sur cette carte`);
+    const corr = c.indexOf(`href="/outils/${s}_correction.pdf"`);
+    const plier = c.indexOf(`href="/outils/${s}_correction_a_plier.pdf"`);
+    assert.ok(corr > 0, `${s} : lien vers la correction`);
+    assert.ok(plier > corr, `${s} : lien « à plier » de la correction, à côté`);
+    assert.ok(corr > c.indexOf(`href="/outils/${s}_a_plier.pdf"`), `${s} : sous les deux liens de l'élève`);
+    assert.match(c, /class="lien-prof"[^>]*>🧑‍🏫 Correction \(prof\)<\/a>/, `${s} : libellé du lien`);
+    assert.match(c, /class="lien-prof plier"[^>]*>à plier<\/a>/, `${s} : libellé « à plier »`);
+  });
+});

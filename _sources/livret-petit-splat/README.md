@@ -23,6 +23,50 @@ Pour chaque niveau, deux PDF :
   (8|1 · 2|7 · 6|3 · 4|5) : impression recto-verso, retournement sur le bord court,
   on plie, on agrafe.
 
+## Les livrets de correction du professeur (lot K1, 20/09/2026)
+
+Chaque livret a son **livret de correction**, pour le professeur : mêmes 8 pages, même
+pliage, **mêmes cartes à la même place**, mais les six pages de fiches montrent la
+correction (les schémas en barres remplis ; sur les fiches « Dessine », les jetons
+visibles dessinés).
+
+| Niveau | PDF de correction |
+|---|---|
+| Monde 1 | `outils/livret_petit_splat_correction.pdf` · `…_correction_a_plier.pdf` |
+| Avancé  | `outils/livret_petit_splat_avance_correction.pdf` · `…_avance_correction_a_plier.pdf` |
+| Expert  | `outils/livret_petit_splat_expert_correction.pdf` · `…_expert_correction_a_plier.pdf` |
+
+Comment ils sont faits (tout est dans `render.py`, aucune source n'est dupliquée) :
+
+- **Fiches** : l'outil est appelé avec `correction=1&rv=0` ; il rend l'énoncé **puis**
+  sa correction. La page de correction de l'outil n'a **pas de cadre de consigne** (ses
+  cartes démarreraient 29,5 mm plus haut et seraient 7 mm plus grandes) : `JS_CORRIGE`
+  y remet le cadre de l'énoncé, puis retire l'énoncé. Chaque carte tombe ainsi
+  **exactement à la même place** que sur la fiche de l'élève : on corrige en posant les
+  deux livrets côte à côte.
+- **La boîte du QR** garde sa place, sa taille et son QR (le même que sur la fiche de
+  l'élève) ; seul son texte change : « Les mêmes / cartes en ligne (le QR de l'élève) »
+  (`QR_PROF`) au lieu de « J'ai terminé ma fiche, je rejoue en ligne » (`QR_ELEVE`).
+  Coupé ainsi, il garde presque la largeur de la boîte de l'élève : la consigne passe à
+  la ligne exactement aux mêmes endroits que sur la fiche de l'élève.
+- **La tache reste noire**, comme dans la correction que l'outil imprime : la réponse
+  est dans le schéma. (Dévoiler les jetons cachés a été essayé : lisible au Monde 1,
+  mais sur l'Expert 40 jetons sous une tache ne se comptent plus.)
+- **Le pied** des fiches : `mathsgo.re/splat · CC BY-NC-SA 4.0 · correction`.
+- **La couverture** reçoit, par injection (`PROF`, `CSS_PROF`, clé `prof` de `JS_COUV`) :
+  un bandeau **rouge sombre `#b91c1c`** de 14 mm en haut, « CORRECTION — POUR LE
+  PROFESSEUR » en blanc, centré sur les 10 mm qui s'impriment (les 4 premiers sont hors
+  de la zone imprimable de la plupart des imprimantes) ; et « Livret du professeur » à la
+  place de la ligne Prénom / Classe. En noir et blanc, le rouge devient gris foncé et le
+  texte blanc reste lisible. Le sommaire ne bouge pas d'un millimètre.
+- **Le dos** est identique au dos du livret de l'élève.
+
+La page `outils/livrets_petit_splat.html` donne, sous les deux liens de chaque livret,
+une ligne plus discrète « 🧑‍🏫 Correction (prof) » · « à plier » (sans fond, bordure en
+pointillés) — le même style servira au livret du monde 2 (lot K2). Pas de carte en plus
+au catalogue, pas de pastille en plus dans la vue prof de la carte des mondes (décision du
+20/09/2026).
+
 ## Fichiers
 
 - `couverture.html` — page 1 : bandeau à coulure, le splat étoilé de l'univers,
@@ -91,10 +135,15 @@ Le refaire depuis ces règles prend une vingtaine de minutes.
 
 ```bash
 cd _sources/livret-petit-splat
-python3 render.py                 # les trois livrets
-python3 render.py avance          # un seul
+python3 render.py                 # les trois livrets ET leurs trois livrets de correction
+python3 render.py avance          # un seul (et sa correction)
 python3 render.py --qr expert     # en refabriquant d'abord ses QR codes
+python3 render.py --correction    # seulement les livrets de correction
+python3 render.py --eleve         # seulement les livrets de l'élève
 ```
+
+Sans option, le livret de l'élève et son livret de correction sont refaits **ensemble** :
+ils restent ainsi rendus avec les mêmes graines et la même version de l'outil.
 
 Dépendances : `playwright` (+ chromium), `pikepdf`, `qrcode[pil]`. `qpdf`, s'il est
 présent, divise le poids des PDF par deux.
