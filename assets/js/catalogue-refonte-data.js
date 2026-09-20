@@ -776,23 +776,14 @@ window.MATHSGO_CATALOGUE = {
       "thumbnail": "assets/img/thumbnails/splat/splat-equations.png?v=6",
       "cardDescription": "Générer des cartes d’équations où les deux côtés contiennent des jetons et des quantités cachées."
     },
-    "outils/livrets_petit_splat.html": {
+    "outils/livrets_splat.html": {
       "primaryNotion": "calcul-litteral",
       "primaryGroup": "imprimer",
-      "cardTitle": "Livrets Petit Splat!",
+      "cardTitle": "Les livrets SPLAT!",
       "collections": ["splat"],
-      "tags": ["splat", "livret", "schema-barres", "inconnue", "imprimer"],
-      "thumbnail": "assets/img/thumbnails/splat/livret-petit-splat.png?v=3",
-      "cardDescription": "Les six fiches du monde 1 réunies en un livret à plier, en trois niveaux : jusqu’à 20, de 21 à 50, de 51 à 100 jetons."
-    },
-    "outils/livrets_splat_classique.html": {
-      "primaryNotion": "calcul-litteral",
-      "primaryGroup": "imprimer",
-      "cardTitle": "Livret Splat! classique",
-      "collections": ["splat"],
-      "tags": ["splat", "livret", "equation", "inconnue", "imprimer"],
-      "thumbnail": "assets/img/thumbnails/splat/livret-splat-classique.png?v=2",
-      "cardDescription": "Les trois fiches du monde 2 réunies en un livret à plier : le schéma en barres, l’équation et les paquets de jetons, avec la place pour écrire sous chaque carte."
+      "tags": ["splat", "livret", "schema-barres", "equation", "inconnue", "imprimer"],
+      "thumbnail": "assets/img/thumbnails/splat/livrets-splat.png?v=1",
+      "cardDescription": "Tous les livrets de l’univers SPLAT! à plier, un onglet par monde : le monde 1 en trois niveaux, le monde 2, et les livrets de correction du professeur."
     },
     "outils/tuiles_algebriques/generateur_exercices_calcul_litteral.html": {
       "primaryNotion": "calcul-litteral",
@@ -6462,10 +6453,10 @@ window.MATHSGO_CATALOGUE = {
       "recent": false
     },
     {
-      "id": "outils-livrets-petit-splat",
-      "title": "Livrets Petit Splat! — les 6 fiches à plier, en trois niveaux",
-      "description": "Les six fiches du monde 1 de l’univers SPLAT! réunies en un livret de 8 pages : couverture avec l’exemple expliqué, les six fiches dans l’ordre de la progression, 4e de couverture. Trois niveaux, même progression : jusqu’à 20 jetons, de 21 à 50, de 51 à 100. Chaque fiche porte un QR code vers le jeu en ligne avec les mêmes cartes. À imprimer en recto-verso sur deux feuilles A3, ou A4 pour un plus petit livret, à plier et agrafer — ou en A4 dans l’ordre de lecture.",
-      "path": "outils/livrets_petit_splat.html",
+      "id": "outils-livrets-splat",
+      "title": "Les livrets SPLAT! — les fiches de chaque monde à plier",
+      "description": "Tous les livrets de l’univers SPLAT! sur une seule page, un onglet par monde : les six fiches du monde 1 (Petit SPLAT!) en trois niveaux — jusqu’à 20 jetons, de 21 à 50, de 51 à 100 — et les trois fiches du monde 2 (SPLAT! classique). Pour chaque livret : le PDF de 8 pages, le livret à plier, et le livret de correction du professeur. Chaque fiche porte un QR code vers le jeu en ligne avec les mêmes cartes. À imprimer en recto-verso sur A3, ou sur A4 pour un plus petit livret, à plier et agrafer.",
+      "path": "outils/livrets_splat.html",
       "domains": [
         "algebre"
       ],
@@ -6487,45 +6478,10 @@ window.MATHSGO_CATALOGUE = {
         "livret",
         "livrets",
         "schéma en barres",
-        "inconnue",
-        "cycle 3",
-        "QR code",
-        "A3",
-        "à plier"
-      ],
-      "kind": "tool",
-      "status": "published",
-      "featured": false,
-      "recent": false
-    },
-    {
-      "id": "outils-livrets-splat-classique",
-      "title": "Livret Splat! classique — les 3 fiches du monde 2 à plier",
-      "description": "Les trois fiches du monde 2 de l’univers SPLAT! réunies en un livret de 8 pages : couverture avec l’exemple expliqué (la carte, le schéma en barres, l’équation), les douze cartes de Claire puis les deux fiches à paquets de jetons, 4e de couverture. Sous chaque carte, la place pour dessiner le schéma en barres ou écrire l’équation. Chaque fiche porte un QR code vers le jeu en ligne avec les mêmes cartes. À imprimer en recto-verso sur deux feuilles A3, ou A4 pour un plus petit livret, à plier et agrafer — ou en A4 dans l’ordre de lecture.",
-      "path": "outils/livrets_splat_classique.html",
-      "domains": [
-        "algebre"
-      ],
-      "notions": [
-        "calcul-litteral",
-        "equations",
-        "schemas-barres"
-      ],
-      "uses": [
-        "imprimer",
-        "entrainer"
-      ],
-      "types": [
-        "imprimable"
-      ],
-      "filters": [],
-      "keywords": [
-        "splat",
-        "livret",
-        "livrets",
         "équation",
         "paquets de jetons",
         "inconnue",
+        "correction",
         "cycle 3",
         "QR code",
         "A3",

@@ -19,8 +19,19 @@ const taille = (p) => statSync(new URL(`../${p}`, import.meta.url)).size;
 const univers = lire("outils/splat_univers.html");
 const courte = lire("splat/classique/livret/index.html");
 const render = lire("_sources/livret-splat-classique/render.py");
-const page = lire("outils/livrets_splat_classique.html");
-const pageMonde1 = lire("outils/livrets_petit_splat.html");
+/* Lot L (20/09/2026) : les livrets de tous les mondes tiennent sur UNE page à onglets,
+   outils/livrets_splat.html ; les deux anciennes adresses ne sont plus que des renvois. */
+const page = lire("outils/livrets_splat.html");
+const pageMonde1 = page;
+const RENVOIS = { "outils/livrets_petit_splat.html": "monde-1", "outils/livrets_splat_classique.html": "monde-2" };
+// le panneau d'un monde dans la page à onglets (du <section> du monde au suivant)
+function panneau(n) {
+  const debut = page.indexOf(`id="monde-${n}"`);
+  assert.ok(debut > 0, `panneau du monde ${n} introuvable`);
+  const suivant = page.indexOf('<section class="panneau"', debut);
+  const fin = suivant > 0 ? suivant : page.indexOf('<section class="note"', debut);
+  return page.slice(debut, fin > 0 ? fin : page.length);
+}
 const catalogue = lire("assets/js/catalogue-refonte-data.js");
 
 // ---------------------------------------------------------------- la carte des mondes
@@ -145,13 +156,25 @@ test("les deux PDF publiés : 8 pages A4 dans l'ordre, 4 feuilles A3 imposées",
 });
 
 // --------------------------------------------------------- page, catalogue, vue prof
-test("la page des livrets du monde 2 mène aux deux PDF et renvoie vers le monde 1 (et inversement)", () => {
-  assert.match(page, /<link rel="canonical" href="https:\/\/mathsgo\.re\/outils\/livrets_splat_classique\.html">/);
+test("la page des livrets mène aux PDF des deux mondes, un onglet par monde", () => {
+  assert.match(page, /<link rel="canonical" href="https:\/\/mathsgo\.re\/outils\/livrets_splat\.html">/);
   assert.match(page, /href="\/outils\/livret_splat_classique\.pdf"/);
   assert.match(page, /href="\/outils\/livret_splat_classique_a_plier\.pdf"/);
-  assert.match(page, /href="\/outils\/livrets_petit_splat\.html"/);
-  assert.match(pageMonde1, /href="\/outils\/livrets_splat_classique\.html"/);
+  assert.match(page, /href="\/outils\/livret_petit_splat\.pdf"/);
+  assert.match(page, /href="#monde-1" data-m="1"[^>]*role="tab"/);
+  assert.match(page, /href="#monde-2" data-m="2"[^>]*role="tab"/);
   assert.doesNotMatch(page, /noindex/);
+  assert.doesNotMatch(page, /Voir aussi/, "les onglets remplacent les lignes « Voir aussi »");
+});
+
+test("L : les deux anciennes adresses renvoient vers le bon onglet, et sortent de l'index", () => {
+  for (const [f, ancre] of Object.entries(RENVOIS)) {
+    const renvoi = lire(f);
+    assert.match(renvoi, /<meta name="robots" content="noindex, follow">/, f);
+    assert.match(renvoi, /<link rel="canonical" href="https:\/\/mathsgo\.re\/outils\/livrets_splat\.html">/, f);
+    assert.match(renvoi, /http-equiv="refresh"/, f);
+    assert.ok(renvoi.includes(`/outils/livrets_splat.html#${ancre}`), `${f} : lien vers #${ancre}`);
+  }
 });
 
 test("la miniature du livret existe en PNG et en WebP, au format du catalogue", () => {
@@ -159,14 +182,23 @@ test("la miniature du livret existe en PNG et en WebP, au format du catalogue", 
   assert.ok(existe("assets/img/thumbnails/splat/livret-splat-classique.png"));
   assert.ok(existe("assets/img/thumbnails/splat/livret-splat-classique.webp"));
   assert.ok(taille("assets/img/thumbnails/splat/livret-splat-classique.webp") < taille("assets/img/thumbnails/splat/livret-splat-classique.png"));
+  // lot L : la miniature de la carte du catalogue, les deux couvertures côte à côte
+  assert.ok(existe("assets/img/thumbnails/splat/livrets-splat.png"));
+  assert.ok(existe("assets/img/thumbnails/splat/livrets-splat.webp"));
+  assert.ok(taille("assets/img/thumbnails/splat/livrets-splat.webp") < taille("assets/img/thumbnails/splat/livrets-splat.png"));
 });
 
-test("le catalogue déclare la page des livrets du monde 2 dans la collection Splat", () => {
-  const m = catalogue.match(/"outils\/livrets_splat_classique\.html": \{[\s\S]*?\n    \}/);
+test("le catalogue déclare UNE carte « Les livrets SPLAT! » dans la collection Splat", () => {
+  const m = catalogue.match(/"outils\/livrets_splat\.html": \{[\s\S]*?\n    \}/);
   assert.ok(m, "carte du catalogue introuvable");
   assert.match(m[0], /"collections": \["splat"\]/);
   assert.match(m[0], /"primaryGroup": "imprimer"/);
-  assert.match(m[0], /livret-splat-classique\.png\?v=2/);
+  assert.match(m[0], /"cardTitle": "Les livrets SPLAT!"/);
+  assert.match(m[0], /livrets-splat\.png\?v=1/);
+  // les deux anciennes cartes ont disparu du catalogue
+  assert.ok(!catalogue.includes('"outils/livrets_petit_splat.html"'), "plus de carte monde 1");
+  assert.ok(!catalogue.includes('"outils/livrets_splat_classique.html"'), "plus de carte monde 2");
+  assert.match(lire("assets/js/catalogue-refonte.js"), /path === "outils\/livrets_splat\.html"\) return 5;/);
 });
 
 test("vue prof du monde 2 : les deux pastilles du livret, à côté des étapes 7, 8 et 9", () => {
@@ -174,7 +206,7 @@ test("vue prof du monde 2 : les deux pastilles du livret, à côté des étapes 
   assert.ok(bloc, "bloc des pastilles du monde 2 introuvable");
   assert.match(bloc[0], /href="\/outils\/livret_splat_classique\.pdf"/);
   assert.match(bloc[0], /href="\/outils\/livret_splat_classique_a_plier\.pdf"/);
-  assert.match(bloc[0], /href="\/outils\/livrets_splat_classique\.html"/);
+  assert.match(bloc[0], /href="\/outils\/livrets_splat\.html#monde-2"/);
   // la couleur du monde 2 pour ces pastilles
   assert.match(univers, /\.monde\.m2 \.introLien\.livret\{color:#0b4f8a;background:#e6f1fb;border-color:#a9cdeb\}/);
   // les pastilles du monde 1 n'ont pas bougé
@@ -201,7 +233,7 @@ test("les livrets à plier s'appellent « …_a_plier.pdf » : plus aucun fichie
     assert.ok(existe(`outils/${n}_a_plier.pdf`), `outils/${n}_a_plier.pdf`);
     assert.ok(!existe(`outils/${n}_a3.pdf`), `outils/${n}_a3.pdf ne doit plus exister`);
   }
-  for (const p of ["outils/livrets_petit_splat.html", "outils/livrets_splat_classique.html", "outils/splat_univers.html",
+  for (const p of ["outils/livrets_splat.html", "outils/splat_univers.html",
                    "_sources/livret-petit-splat/render.py", "_sources/livret-splat-classique/render.py"]) {
     assert.doesNotMatch(lire(p), /_a3\.pdf|"_a3"/, p);
   }
@@ -352,8 +384,7 @@ test("l'institut s'écrit IREMI dans les textes lus ; les chemins des logos ne b
     "outils/splat.html": [/iremLogo\.alt = "IREMI de La Réunion";/],
     "outils/splat_equations.html": [/iremLogo\.alt = "IREMI de La Réunion";/],
     "outils/splat_tache_barre.html": [/alt="IREMI La Réunion"/],
-    "outils/livrets_splat_classique.html": [/avec l'IREMI de La Réunion\./],
-    "outils/livrets_petit_splat.html": [/avec l'IREMI de La Réunion\./],
+    "outils/livrets_splat.html": [/avec l'IREMI de La Réunion\./],
   };
   for (const [f, motifs] of Object.entries(lus)) {
     const t = lire(f);
@@ -586,7 +617,7 @@ test("K1 : render.py fabrique la correction depuis l'outil (correction=1&rv=0), 
 });
 
 test("K1 : la page des livrets du monde 1 mène aux six PDF de correction, sous les liens de chaque livret", () => {
-  const cartes = pageMonde1.split('<article class="liv">').slice(1);
+  const cartes = panneau(1).split('<article class="liv">').slice(1);
   assert.equal(cartes.length, 3, "trois cartes");
   cartes.forEach((c, i) => {
     const s = SORTIES_M1[i];
@@ -596,8 +627,10 @@ test("K1 : la page des livrets du monde 1 mène aux six PDF de correction, sous 
     assert.ok(corr > 0, `${s} : lien vers la correction`);
     assert.ok(plier > corr, `${s} : lien « à plier » de la correction, à côté`);
     assert.ok(corr > c.indexOf(`href="/outils/${s}_a_plier.pdf"`), `${s} : sous les deux liens de l'élève`);
-    assert.match(c, /class="lien-prof"[^>]*>🧑‍🏫 Correction \(prof\)<\/a>/, `${s} : libellé du lien`);
-    assert.match(c, /class="lien-prof plier"[^>]*>à plier<\/a>/, `${s} : libellé « à plier »`);
+    // lot L : le même bouton replié que le monde 2, une seule ligne ici
+    assert.match(c, /<summary>🧑‍🏫 Correction \(prof\)<\/summary>/, `${s} : bouton replié`);
+    assert.match(c, /class="lien-prof"[^>]*>PDF<\/a>/, `${s} : libellé « PDF »`);
+    assert.match(c, /class="lien-prof"[^>]*>à plier<\/a>/, `${s} : libellé « à plier »`);
   });
 });
 
@@ -695,7 +728,7 @@ test("K2 : render.py fabrique les quatre corrections avec l'outil (print=correct
 });
 
 test("K2 : la page des livrets du monde 2 mène aux huit PDF de correction, repliés sous les liens de l'élève", () => {
-  const carte = page.split('<article class="liv">')[1];
+  const carte = panneau(2).split('<article class="liv">')[1];
   const plierEleve = carte.indexOf('href="/outils/livret_splat_classique_a_plier.pdf"');
   const bloc = carte.slice(carte.indexOf('<details class="prof">'), carte.indexOf("</details>"));
   assert.ok(carte.indexOf('<details class="prof">') > plierEleve, "sous les deux liens de l'élève");
@@ -734,4 +767,32 @@ test("K1-bis : la phrase est sur la couverture des six PDF du monde 1 (élève e
       assert.ok(couverture.includes(serre(PHRASE_K1BIS)), `${f} : la nouvelle phrase en page 1`);
       assert.ok(!couverture.includes(serre(PHRASE_AVANT)), `${f} : plus l'ancienne phrase`);
     }
+});
+
+/* ------------------------------------------------------------------ lot L
+   Une seule carte au catalogue et une seule page pour les livrets de tous les mondes
+   (20/09/2026) : un onglet par monde, les corrections du professeur repliées partout,
+   la note « Pour imprimer » une seule fois en bas. */
+test("L : un onglet et un panneau par monde, le prof replié partout, la note une seule fois", () => {
+  assert.equal((page.match(/role="tab"/g) || []).length, 2, "deux onglets");
+  assert.equal((page.match(/role="tabpanel"/g) || []).length, 2, "deux panneaux");
+  assert.equal((page.match(/<section class="note"/g) || []).length, 1, "une seule note « Pour imprimer »");
+  assert.equal((page.match(/<details class="prof">/g) || []).length, 4, "les quatre cartes replient la correction");
+  assert.match(page, /sur A3 \(meilleur rendu\)/, "le conseil de Claire sur le A3");
+  /* Sans JavaScript, aucun monde n'est caché. Le panneau porte l'attribut « hidden »,
+     que le navigateur masque d'office : il FAUT donc les deux règles, dans cet ordre —
+     celle qui annule le masquage, puis celle qui le rétablit sous html.js. Une seule
+     des deux laisserait les livrets du monde 2 sans aucun lien pour les atteindre. */
+  assert.match(page, /\.panneau\[hidden\]\{display:block\}\nhtml\.js \.panneau\[hidden\]\{display:none\}/);
+  // et la classe « js » est posée avant la feuille de style, pour qu'aucun monde ne clignote
+  assert.ok(page.indexOf('document.documentElement.className += " js"') < page.indexOf("<style>"),
+    "le script qui pose la classe js doit précéder le <style>");
+  // les onglets mènent aux ancres, et les panneaux les portent
+  for (const n of [1, 2]) {
+    assert.ok(page.includes(`href="#monde-${n}"`), `onglet du monde ${n}`);
+    assert.ok(page.includes(`id="monde-${n}"`), `panneau du monde ${n}`);
+  }
+  // sur téléphone, l'onglet se réduit à « Monde N » : les cinq mondes tiendront à l'écran
+  assert.match(page, /@media \(max-width:640px\)\{\n  \.onglets a \.etiq\{display:none\}/);
+  assert.equal((page.match(/<span class="court">Monde \d<\/span>/g) || []).length, 2);
 });
