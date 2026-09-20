@@ -779,8 +779,14 @@ test("L : un onglet et un panneau par monde, le prof replié partout, la note un
   assert.equal((page.match(/<section class="note"/g) || []).length, 1, "une seule note « Pour imprimer »");
   assert.equal((page.match(/<details class="prof">/g) || []).length, 4, "les quatre cartes replient la correction");
   assert.match(page, /sur A3 \(meilleur rendu\)/, "le conseil de Claire sur le A3");
-  // sans JavaScript, aucun monde n'est caché : la règle qui masque est sous html.js
-  assert.match(page, /html\.js \.panneau\[hidden\]\{display:none\}/);
+  /* Sans JavaScript, aucun monde n'est caché. Le panneau porte l'attribut « hidden »,
+     que le navigateur masque d'office : il FAUT donc les deux règles, dans cet ordre —
+     celle qui annule le masquage, puis celle qui le rétablit sous html.js. Une seule
+     des deux laisserait les livrets du monde 2 sans aucun lien pour les atteindre. */
+  assert.match(page, /\.panneau\[hidden\]\{display:block\}\nhtml\.js \.panneau\[hidden\]\{display:none\}/);
+  // et la classe « js » est posée avant la feuille de style, pour qu'aucun monde ne clignote
+  assert.ok(page.indexOf('document.documentElement.className += " js"') < page.indexOf("<style>"),
+    "le script qui pose la classe js doit précéder le <style>");
   // les onglets mènent aux ancres, et les panneaux les portent
   for (const n of [1, 2]) {
     assert.ok(page.includes(`href="#monde-${n}"`), `onglet du monde ${n}`);

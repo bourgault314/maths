@@ -62,7 +62,10 @@ main{max-width:980px;margin:0 auto;padding:18px 14px 40px}
 
 .panneau[data-m="1"]{--c:#f58220;--c-fonce:#7a4a00;--c-clair:#fff3d6;--c-bord:#f0c97a;--c-clair2:#ffe9b8}
 .panneau[data-m="2"]{--c:#0b67b2;--c-fonce:#0b4f8a;--c-clair:#e6f1fb;--c-bord:#a9cdeb;--c-clair2:#d3e6f8}
-/* sans JavaScript, tous les mondes restent visibles à la suite */
+/* Sans JavaScript, tous les mondes restent visibles à la suite : la première règle
+   annule le masquage que le navigateur applique d'office à l'attribut « hidden »,
+   la seconde le rétablit dès que le script d'en-tête a posé la classe « js ». */
+.panneau[hidden]{display:block}
 html.js .panneau[hidden]{display:none}
 .monde-nom{margin:16px 0 0;font-size:21px;line-height:1.2;color:var(--c-fonce)}
 .chapo{margin:6px 0 0;font-size:15px;line-height:1.45;color:var(--ink);font-weight:600;
