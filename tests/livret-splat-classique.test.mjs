@@ -387,12 +387,19 @@ test("la règle des plusieurs taches est écrite MOT POUR MOT pareil sur les fic
   assert.ok(dos1.includes(phrase), "dos du monde 1");
 });
 
-test("le vocabulaire du dessin : « point bleu » pour un jeton, « cercle » pour un paquet, jamais « rond »", () => {
+test("le vocabulaire du dessin : « point bleu » pour un jeton, « cercle » pour un paquet, partout, README compris", () => {
   assert.ok(dos2.includes("Un point bleu, c'est <b>un jeton</b>. Un <b>cercle avec un nombre</b>, c'est un <b>paquet de jetons</b>"),
     "point bleu / cercle avec un nombre au dos du monde 2");
   assert.ok(dos1.includes("Les points bleus, ce sont les <b>jetons visibles</b>"), "points bleus au dos du monde 1");
+  // Le mot doit être le même PARTOUT, README compris : c'est par là qu'« un disque avec
+  // un nombre » s'était glissé à côté d'un dos qui dit « cercle ».
+  const readme2 = lire("_sources/livret-splat-classique/README.md");
+  const readme1 = lire("_sources/livret-petit-splat/README.md");
+  assert.match(readme2.replace(/\s+/g, " "), /« paquet de jetons » \(un cercle avec un nombre\)/,
+    "le README du monde 2 glose le paquet par « un cercle avec un nombre »");
   for (const [nom, t] of [["couverture monde 2", couv2], ["dos monde 2", dos2],
-                          ["couverture monde 1", couv1], ["dos monde 1", dos1]]) {
+                          ["couverture monde 1", couv1], ["dos monde 1", dos1],
+                          ["README monde 2", readme2], ["README monde 1", readme1]]) {
     assert.doesNotMatch(t, /\brond/i, `${nom} : plus aucun « rond »`);
     assert.doesNotMatch(t, /\bdisque/i, `${nom} : plus aucun « disque » (le paquet est dessiné comme un cercle)`);
   }
