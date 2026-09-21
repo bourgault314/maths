@@ -38,7 +38,9 @@ test("les plateaux mobiles sont plus hauts et occupent le SVG disponible", () =>
 
 test("les taches naissent en haut et les jetons dans le tiers bas au téléphone", () => {
   assert.match(html, /function tokenPlacementAreaForTray\(tray\)[\s\S]*y:tray\.y\+tray\.h\*\.62[\s\S]*h:tray\.h\*\.32/);
-  assert.match(html, /const splatArea = isPhoneLayout\(\)[\s\S]*y:tray\.y\+54[\s\S]*h:tray\.h\*\.55/);
+  // La zone des taches a été sortie dans splatAreaFor (lot « taches qui ne se touchent plus »,
+  // 21/09/2026) ; ses valeurs au téléphone n'ont pas changé.
+  assert.match(functionSource("splatAreaFor"), /isPhoneLayout\(\)[\s\S]*y:tray\.y\+54[\s\S]*h:tray\.h\*\.55/);
   assert.match(html, /if\(!isPhoneLayout\(\)\) return \[3, n-3\];[\s\S]*return \[3,3,n-6\];/);
   assert.match(html, /function randomTokenPositionInTray\(tray, sideName, visible, placed, token\)\{\s*const area = tokenPlacementAreaForTray\(tray\);/);
   assert.match(html, /function clampTokenPosition\(tray, cx, cy, r=40, avoid=true, side=null\)\{\s*const area = tokenAreaForTray\(tray\);/);
@@ -85,10 +87,17 @@ test("chaque réécriture visible conserve l’équation précédente", () => {
 
 test("les deux membres utilisent toujours la même taille de tache", () => {
   const commonRadius = functionSource("commonSplatRadius");
+  const commonLayout = functionSource("commonSplatLayoutRadius");
   const positions = functionSource("splatPositionsForItems");
 
   assert.match(commonRadius, /Math\.max\(1, countForSide\("left"\), countForSide\("right"\)\)/);
-  assert.match(positions, /const radius = commonSplatRadius\(\);/);
+  // Depuis le lot « taches qui ne se touchent plus » (21/09/2026), la taille peut être
+  // réduite quand il y en a beaucoup : on garde alors la PLUS PETITE des deux, pour que les
+  // deux membres restent à la même taille même avec 3 taches d'un côté et 9 de l'autre.
+  assert.match(commonLayout, /Math\.min\(/);
+  assert.match(commonLayout, /countForSide\("left"\)/);
+  assert.match(commonLayout, /countForSide\("right"\)/);
+  assert.match(positions, /const radius = commonSplatLayoutRadius\(splatArea\);/);
   assert.doesNotMatch(positions, /splatRadius\(xs\.length\)/);
 });
 
