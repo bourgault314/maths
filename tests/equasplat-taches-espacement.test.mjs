@@ -143,6 +143,57 @@ test("à partir de 7, les rangées sont équilibrées et la tache rétrécit", (
   }
 });
 
+/* Relecture du 21/09/2026 : une tache enlevée puis MASQUÉE (réception : toujours ; ailleurs :
+   « masquer ce que l'on enlève ») garde sa case, pour que les autres ne bougent pas
+   (layoutItems). La taille doit donc tenir dans la grille de TOUTES les taches du membre : comptée
+   sur les seules taches restantes, elle les faisait regrossir sur place, et après « enlever 4n
+   des deux côtés » sur 9n + 3 = 4n + 28, les cinq qui restaient se chevauchaient.
+   Ici on exécute la vraie chaîne : splatPositionsForItems → commonSplatLayoutRadius. */
+function moteurAvecEtat(vue, etat, masquer){
+  return Function("etat", "masquer", `
+    const isPhoneLayout = () => ${vue === "telephone"};
+    const isMobileImportLayout = () => ${vue === "receptionMobile"};
+    const state = etat;
+    const renderPiecesForSide = side => masquer ? state[side].filter(p => !p.removed) : state[side];
+    ${html.match(/^  const SPLAT_ESPACE = [^\n]*;/m)[0]}
+    ${[...AIDES, "commonSplatRadius", "commonSplatLayoutRadius"].map(extraire).join("\n")}
+    return { splatPositionsForItems };
+  `)(etat, masquer);
+}
+
+test("après « enlever des taches des deux côtés », les taches qui restent ne se touchent pas non plus", () => {
+  const taches = (cote, n, enlevees) => Array.from({length: n}, (_, i) => ({
+    id: `${cote}${i}`, type: "x", removed: enlevees(i, n)
+  }));
+  const facons = {
+    "les premières": (k) => (i) => i < k,
+    "les dernières": (k) => (i, n) => i >= n - k,
+    "une sur deux": (k) => (i) => i % 2 === 0 && i / 2 < k,
+  };
+  for(const [nom, {vue, tray}] of Object.entries(PLATEAUX)){
+    for(const masquer of [true, false]){
+      for(let n = 2; n <= 16; n++){
+        for(let k = 1; k < n; k++){
+          for(const [facon, choix] of Object.entries(facons)){
+            const etat = {left: taches("g", n, choix(k)), right: taches("d", Math.min(k, 16 - n), () => true)};
+            const moteur = moteurAvecEtat(vue, etat, masquer);
+            const pos = moteur.splatPositionsForItems(tray, etat.left);
+            const enlevees = etat.left.filter(p => p.removed).length;
+            const vues = etat.left.filter(p => masquer ? !p.removed : true).map(p => pos.get(p.id));
+            for(let i = 0; i < vues.length; i++){
+              for(let j = i + 1; j < vues.length; j++){
+                const d = Math.hypot(vues[i].cx - vues[j].cx, vues[i].cy - vues[j].cy);
+                assert.ok(d >= 2 * K_MAX * vues[i].r,
+                  `${nom}, ${n} taches dont ${enlevees} enlevées (${facon}, ${masquer ? "masquées" : "hachurées"}) : deux taches à ${d.toFixed(0)}, il en faut ${(2 * K_MAX * vues[i].r).toFixed(0)}`);
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+});
+
 test("la lettre suit la tache : l'échelle est posée au dessin, et la feuille de style l'applique", () => {
   // Comportement, pas décor : le groupe reçoit le rapport taille réelle / taille d'avant,
   // et les deux tailles de lettre (vue normale et plein écran) le multiplient.

@@ -5032,7 +5032,10 @@
   function commonSplatLayoutRadius(area){
     const rmax = commonSplatRadius();
     if(!state) return rmax;
-    const countForSide = side => renderPiecesForSide(side).filter(piece => piece.type === "x").length;
+    // Toutes les taches du membre, enlevées comprises : masquée, une tache enlevée garde sa case
+    // (layoutItems), la taille doit donc tenir dans la grille de TOUTES. Comptées sur les seules
+    // taches restantes, celles-ci regrossissaient sur place et se chevauchaient (relecture 21/09).
+    const countForSide = side => state[side].filter(piece => piece.type === "x").length;
     return Math.min(
       splatLayoutFor(Math.max(1, countForSide("left")), area, rmax).r,
       splatLayoutFor(Math.max(1, countForSide("right")), area, rmax).r
