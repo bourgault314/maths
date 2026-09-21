@@ -783,7 +783,7 @@ window.MATHSGO_CATALOGUE = {
       "collections": ["splat"],
       "tags": ["splat", "livret", "schema-barres", "equation", "inconnue", "imprimer"],
       "thumbnail": "assets/img/thumbnails/splat/livrets-splat.png?v=1",
-      "cardDescription": "Tous les livrets de l’univers SPLAT! à plier, un onglet par monde : le monde 1 en trois niveaux, le monde 2, et les livrets de correction du professeur."
+      "cardDescription": "Tous les livrets de l’univers SPLAT! à plier, un onglet par monde : le monde 1 en trois niveaux, le monde 2 en deux, et les livrets de correction du professeur."
     },
     "outils/tuiles_algebriques/generateur_exercices_calcul_litteral.html": {
       "primaryNotion": "calcul-litteral",

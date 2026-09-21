@@ -109,7 +109,7 @@ test("render.py rend les fiches avec les graines de la carte des mondes", () => 
   assert.match(render, /dict\(n=8, [^\n]*parties=\[E8\],[^\n]*parcours="m2e4", pages=2\)/);
   assert.match(render, /dict\(n=9, [^\n]*parties=\[E9\],[^\n]*parcours="m2e5", pages=2\)/);
   // le QR passe par la page courte, et le pied des 8 pages mène à la collection SPLAT
-  assert.match(render, /return f"\{SITE\}\{SC\}livret\/\?f=\{f\['n'\]\}"/);
+  assert.match(render, /return f"\{SITE\}\{SC\}livret\/\?f=\{f\.get\('qr', f\['n'\]\)\}"/);
   assert.match(render, /PIED_LIVRET = "mathsgo\.re\/splat · CC BY-NC-SA 4\.0"/);
 });
 
@@ -720,7 +720,7 @@ test("K2 : render.py fabrique les quatre corrections avec l'outil (print=correct
   assert.match(render, /c\.varChar = variableChars\[i % variableChars\.length\]/);
   assert.doesNotMatch(render.slice(render.indexOf("JS_LETTRES"), render.indexOf("PROF = dict")), /generate\(|Math\.random|makeRng/);
   assert.ok(render.includes(`QR_PROF = "Les mêmes<br>cartes en ligne<em>(le QR de l'élève)</em>"`));
-  assert.match(render, /pg\.evaluate\(JS_QR, \[f"\{qrweb\}\/fiche\{f\['n'\]\}\.png", QR_PROF if corr else QR_ELEVE\]\)/);
+  assert.match(render, /pg\.evaluate\(JS_QR, \[f"\{qrweb\}\/fiche\{f\.get\('qr', f\['n'\]\)\}\.png", QR_PROF if corr else QR_ELEVE\]\)/);
   assert.match(render, /PIED_CORRECTION = PIED_LIVRET \+ " · correction"/);
   assert.match(render, /\.bandeau-prof\{[^}]*\n?[^}]*background:#b91c1c;color:#fff;/);
   assert.match(render, /versions = \[None\] \+ CORRECTIONS/);
@@ -777,7 +777,7 @@ test("L : un onglet et un panneau par monde, le prof replié partout, la note un
   assert.equal((page.match(/role="tab"/g) || []).length, 2, "deux onglets");
   assert.equal((page.match(/role="tabpanel"/g) || []).length, 2, "deux panneaux");
   assert.equal((page.match(/<section class="note"/g) || []).length, 1, "une seule note « Pour imprimer »");
-  assert.equal((page.match(/<details class="prof">/g) || []).length, 4, "les quatre cartes replient la correction");
+  assert.equal((page.match(/<details class="prof">/g) || []).length, 5, "les cinq cartes replient la correction");
   assert.match(page, /sur A3 \(meilleur rendu\)/, "le conseil de Claire sur le A3");
   /* Sans JavaScript, aucun monde n'est caché. Le panneau porte l'attribut « hidden »,
      que le navigateur masque d'office : il FAUT donc les deux règles, dans cet ordre —
@@ -795,4 +795,164 @@ test("L : un onglet et un panneau par monde, le prof replié partout, la note un
   // sur téléphone, l'onglet se réduit à « Monde N » : les cinq mondes tiendront à l'écran
   assert.match(page, /@media \(max-width:640px\)\{\n  \.onglets a \.etiq\{display:none\}/);
   assert.equal((page.match(/<span class="court">Monde \d<\/span>/g) || []).length, 2);
+});
+
+/* ===================================================================== lot D (21/09/2026)
+   Le livret « Le défi » : les mêmes trois étapes du monde 2, des cartes plus dures (totaux
+   50 à 100, 2 ou 3 paquets numérotés, 2 à 6 taches, quotient non évident). Chaque fiche est
+   bâtie comme la fiche 7 — TROIS séries de 4 cartes enchaînées par « suite » — parce que le
+   générateur ne sort pas douze cartes à ce calibre d'une seule graine (mesuré sur 300 000
+   tirages : une carte sur sept y répond). Ces tests épinglent render.py et la page courte
+   l'un sur l'autre, puis MESURENT ce qui est écrit dans les PDF publiés. */
+const DEFI = {
+  "7d": { parcours: "m2e1", blocs: [[2, 2, 211017], [3, 3, 116475], [4, 4, 231266]] },
+  "8d": { parcours: "m2e4", blocs: [[4, 4, 204080], [5, 5, 241600], [6, 6, 87925]] },
+  "9d": { parcours: "m2e5", blocs: [[2, 6, 51887], [2, 6, 142961], [2, 6, 227216]] },
+};
+const partieDefi = ([t1, t2, g]) =>
+  `mode=N&equation=AX_PLUS_C_EQ_B&tasksMin=${t1}&tasksMax=${t2}&visibleMin=2&visibleMax=3` +
+  `&totalMin=50&totalMax=100&cards=4&seed=${g}&unknown=question`;
+for (const [cle, d] of Object.entries(DEFI)) {
+  const p = d.blocs.map(partieDefi);
+  attendus[cle] = SC + "?" + p[0] + "&eleve=1&parcours=" + d.parcours +
+    "&suite=" + p.slice(1).map(encodeURIComponent).join(";");
+}
+const PDF_DEFI = ["livret_splat_classique_defi", "livret_splat_classique_defi_correction_equation",
+  "livret_splat_classique_defi_correction_equation_lettre", "livret_splat_classique_defi_correction_schema",
+  "livret_splat_classique_defi_correction_schema_lettre"];
+
+test("D : render.py porte les neuf graines du livret « Le défi », trois par fiche", () => {
+  for (const [cle, d] of Object.entries(DEFI)) {
+    const n = cle[0];
+    const bloc = render.match(new RegExp(`dict\\(n=${n}, t="([^"]+)",\\s+qr="${cle}", parcours="${d.parcours}", pages=2,[\\s\\S]*?parties=\\[([^\\]]+)\\]`));
+    assert.ok(bloc, `FICHES_DEFI : fiche ${cle} introuvable`);
+    const graines = [...bloc[2].matchAll(/_defi\(\s*(\d+),\s*(\d+),\s*(\d+)\)/g)].map((m) => [+m[1], +m[2], +m[3]]);
+    assert.deepEqual(graines, d.blocs, `fiche ${cle} : trois séries de 4 cartes, mêmes graines qu'en ligne`);
+  }
+  // les neuf graines sont différentes : aucune série n'est jouée deux fois dans le livret
+  const toutes = Object.values(DEFI).flatMap((d) => d.blocs.map((b) => b[2]));
+  assert.equal(new Set(toutes).size, 9, "neuf graines distinctes");
+  // le réglage décidé le 20/09 : paquets numérotés, totaux 50 à 100, 2 ou 3 paquets, 2 à 6 taches
+  assert.match(render, /f"&tasksMin=\{t1\}&tasksMax=\{t2\}&visibleMin=2&visibleMax=3"\s*\n\s*f"&totalMin=50&totalMax=100&cards=4&seed=\{graine\}&unknown=question"/);
+  for (const [t1, t2] of Object.values(DEFI).flatMap((d) => d.blocs)) {
+    assert.ok(t1 >= 2 && t2 <= 6 && t1 <= t2, `taches entre 2 et 6 (lu : ${t1}–${t2})`);
+  }
+});
+
+test("D : ?f=7d, 8d et 9d mènent au jeu de l'élève, avec le parcours du monde 2", () => {
+  const script = courte.match(/<script>([\s\S]*?)<\/script>/)[1];
+  for (const cle of Object.keys(DEFI)) {
+    let cible = null;
+    const window = { location: { search: `?f=${cle}`, origin: "https://mathsgo.re", replace: (u) => { cible = u; } } };
+    new Function("window", "URLSearchParams", "URL", "encodeURIComponent", script)(window, URLSearchParams, URL, encodeURIComponent);
+    assert.equal(cible, "https://mathsgo.re" + attendus[cle], `f=${cle}`);
+    // l'étoile du monde 2 se gagne aussi avec le livret dur
+    assert.match(cible, new RegExp(`parcours=${DEFI[cle].parcours}(&|$)`));
+    assert.ok(courte.includes(`href="${attendus[cle].replace(/&/g, "&amp;")}"`), `lien sans script de ${cle}`);
+  }
+});
+
+test("D : les QR du livret « Le défi » — trois fiches, l'univers, deux séries seulement", () => {
+  for (const n of ["fiche7d", "fiche8d", "fiche9d", "univers", "serie-1", "serie-2"]) {
+    assert.ok(existe(`_sources/livret-splat-classique/qr/defi/${n}.png`), n);
+  }
+  for (const n of ["serie-3", "serie-4"]) {
+    assert.ok(!existe(`_sources/livret-splat-classique/qr/defi/${n}.png`), `${n} : deux séries au dos, pas quatre`);
+  }
+  // les deux séries sont le même jeu que le livret, seule la tranche de totaux change
+  // la plus large d'abord, la plus dure ensuite — comme les quatre autres dos de livrets
+  assert.match(render, /serie_defi\(2, 6, 20, 100\), "serie-1\.png"/);
+  assert.match(render, /serie_defi\(2, 6, 50, 100\), "serie-2\.png"/);
+  // et le QR passe de 21 à 32 mm : l'adresse est longue, il faut des modules lisibles
+  assert.match(render, /CSS_DOS_DEFI = """[\s\S]*?\.niv img\{width:32mm;height:32mm\}/);
+});
+
+test("D : les dix PDF du livret « Le défi » — 8 pages A4, 4 feuilles A3 imposées", () => {
+  for (const s of PDF_DEFI) {
+    assert.ok(existe(`outils/${s}.pdf`), `${s}.pdf`);
+    assert.ok(existe(`outils/${s}_a_plier.pdf`), `${s}_a_plier.pdf`);
+    assert.equal(texteDesPages(`outils/${s}.pdf`).length, 8, `${s} : huit pages`);
+    assert.ok(taille(`outils/${s}.pdf`) < 3_000_000, `${s} reste léger (qpdf)`);
+  }
+});
+
+test("D : dans le PDF publié — la couverture du défi, et « Fiche N bis » sur la seconde page", () => {
+  const pages = texteDesPages("outils/livret_splat_classique_defi.pdf");
+  // la couverture : l'accroche, l'exemple écrit à partir de la carte rendue, le sommaire
+  assert.match(pages[0], /et des totaux jusqu'à 100/);
+  assert.match(pages[0], /Sur cette carte, il y a 77 jetons au total/);
+  assert.match(pages[0], /on additionne les paquets \(17 \+ 18 =\s*35\), on soustrait \(77 − 35 = 42\), puis on divise \(42 ÷ 3 = 14\)/);
+  assert.match(pages[0], /Nom, prénom/);
+  // Chromium écrit un glyphe à la fois : un retour à la ligne y perd son espace.
+  const sansBlancs = (t) => t.replace(/\s+/g, "");
+  for (const t of ["Des paquets, et plusieurs taches", "Encore plus de taches", "Le grand défi"]) {
+    assert.ok(sansBlancs(pages[0]).includes(sansBlancs(t)), `sommaire : ${t}`);
+  }
+  // les trois fiches, deux pages chacune
+  for (const [recto, verso, n] of [[1, 2, 7], [3, 4, 8], [5, 6, 9]]) {
+    assert.ok(pages[recto].startsWith(`Fiche ${n} —`), `page ${recto + 1} (lu : ${pages[recto].slice(0, 40)})`);
+    assert.ok(pages[verso].startsWith(`Fiche ${n} bis —`), `page ${verso + 1} (lu : ${pages[verso].slice(0, 40)})`);
+  }
+  // le dos : les deux séries, et « Mes fiches » avec les titres du livret dur
+  assert.match(pages[7].replace(/\s+/g, ""), /Lesdeuxlivretsréunis/);
+  assert.match(pages[7].replace(/\s+/g, ""), /Commecelivret/);
+});
+
+test("D : les 36 cartes du livret sont 36 équations différentes (mesuré sur la correction)", () => {
+  const pages = texteDesPages("outils/livret_splat_classique_defi_correction_equation.pdf");
+  /* Chromium écrit les glyphes bout à bout : « 84 + 2 × ?=92 » est suivi sans séparateur
+     de « 2 × ?=8 ». On lève l'ambiguïté avec les flèches, qui répètent c et a : le motif
+     ne peut se refermer que sur les vrais nombres de la carte. */
+  const equations = [];
+  for (const p of pages.slice(1, 7)) {
+    for (const m of p.matchAll(/(\d+) \+ (\d+) × \?=(\d+?)\2 × \?=(\d+?)\?=(\d+?)− \1− \1÷ \2÷ \2/g)) {
+      equations.push(`${m[2]}x+${m[1]}=${m[3]}`);
+      assert.equal(Number(m[4]), Number(m[3]) - Number(m[1]), "la soustraction écrite est juste");
+      assert.equal(Number(m[5]) * Number(m[2]), Number(m[4]), "la division écrite est juste");
+    }
+  }
+  assert.equal(equations.length, 36, "36 équations lues dans le livret de correction");
+  assert.equal(new Set(equations).size, 36, "aucune équation en double");
+  for (const e of equations) {
+    const [, a, c, b] = e.match(/^(\d+)x\+(\d+)=(\d+)$/).map(Number);
+    assert.ok(b >= 50 && b <= 100, `total entre 50 et 100 (lu : ${b})`);
+    assert.ok(a >= 2 && a <= 6, `de 2 à 6 taches (lu : ${a})`);
+    assert.equal((b - c) % a, 0, `${e} : la division tombe juste`);
+    const x = (b - c) / a;
+    assert.ok(x >= 4 && x <= 15 && x % 5 !== 0, `${e} : quotient ni évident ni démesuré (lu : ${x})`);
+  }
+});
+
+test("D : la page des livrets donne deux livrets dans l'onglet du monde 2", () => {
+  const m2 = panneau(2);
+  assert.match(m2, /<div class="grille n2">/, "deux cartes côte à côte");
+  assert.equal((m2.match(/<article class="liv">/g) || []).length, 2, "deux livrets au monde 2");
+  for (const s of PDF_DEFI) {
+    assert.ok(m2.includes(`href="/outils/${s}.pdf"`), `${s}.pdf`);
+    assert.ok(m2.includes(`href="/outils/${s}_a_plier.pdf"`), `${s}_a_plier.pdf`);
+  }
+  assert.match(m2, /<h3>Le défi<\/h3><span class="plage">totaux de 50 à 100<\/span>/);
+  // le monde 1 n'a pas bougé
+  assert.equal((panneau(1).match(/<article class="liv">/g) || []).length, 3);
+});
+
+test("D : la miniature du livret « Le défi », et les pastilles de la vue prof", () => {
+  assert.match(page, /assets\/img\/thumbnails\/splat\/livret-splat-classique-defi\.png\?v=1/);
+  assert.ok(existe("assets/img/thumbnails/splat/livret-splat-classique-defi.png"));
+  assert.ok(existe("assets/img/thumbnails/splat/livret-splat-classique-defi.webp"));
+  assert.ok(taille("assets/img/thumbnails/splat/livret-splat-classique-defi.webp")
+    < taille("assets/img/thumbnails/splat/livret-splat-classique-defi.png"));
+  const bloc = univers.match(/\(mi===1&&PROF\?'<p class="intro">'[\s\S]*?<\/p>':''\)\+/)[0];
+  assert.match(bloc, /href="\/outils\/livret_splat_classique_defi\.pdf"/);
+  assert.match(bloc, /href="\/outils\/livret_splat_classique_defi_a_plier\.pdf"/);
+});
+
+test("D : l'exemple de couverture du défi n'est aucune carte du livret", () => {
+  const m = render.match(/exemple=dict\(query="mode=N&equation=AX_PLUS_C_EQ_B[^"]*"\s*\n\s*"([^"]*)"\s*\n\s*"([^"]*)"/);
+  assert.ok(m, "exemple du défi introuvable");
+  const graine = (m[1] + m[2]).match(/seed=(\d+)/)[1];
+  const graines = Object.values(DEFI).flatMap((d) => d.blocs.map((b) => String(b[2])));
+  assert.ok(!graines.includes(graine), "la graine de l'exemple n'est celle d'aucune série du livret");
+  // et il montre les trois gestes : une équation ax + c = b, pas x + a = b
+  assert.match(render, /exemple=dict\(query="mode=N&equation=AX_PLUS_C_EQ_B/);
 });

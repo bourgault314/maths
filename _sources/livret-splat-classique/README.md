@@ -6,13 +6,16 @@ monde 1), et une 4e de couverture. Même fabrication que les livrets Petit SPLAT
 monde 1 (`_sources/livret-petit-splat/`) : **2 feuilles A3 recto-verso**, pliées et
 agrafées au milieu → 8 pages A4.
 
+Il en existe **deux**, mêmes trois étapes, deux calibres de cartes :
+
 | Livret | Fiches | PDF produits |
 |---|---|---|
 | `normal` — Monde 2 | 7 (12 cartes de Claire), 8 et 9 (12 cartes à paquets chacune) | `outils/livret_splat_classique.pdf` · `…_a_plier.pdf` |
-| + ses 4 livrets de correction (lot K2) | les mêmes | `outils/livret_splat_classique_correction_equation.pdf`, `…_equation_lettre`, `…_schema`, `…_schema_lettre` (et chacun son `…_a_plier.pdf`) |
+| `defi` — Le défi | 7, 8, 9 — 12 cartes à paquets chacune, **totaux 50 à 100, 2 à 6 taches** | `outils/livret_splat_classique_defi.pdf` · `…_defi_a_plier.pdf` |
+| + leurs 4 livrets de correction chacun (lots K2 et D) | les mêmes | `…_correction_equation.pdf`, `…_equation_lettre`, `…_schema`, `…_schema_lettre` (et chacun son `…_a_plier.pdf`) |
 
-Le lot D (niveaux Avancé / Expert du monde 2) ajoutera ses niveaux dans `NIVEAUX`,
-avec ses propres graines et ses propres QR, comme pour le monde 1.
+Les deux gardent `parcours=m2eN` : valider une fiche plus dure gagne l'étoile du monde 2
+(même décision qu'au monde 1 le 17/09/2026).
 
 Deux PDF :
 
@@ -61,6 +64,74 @@ Rien n'est trié ici : les cartes sont **exactement** celles que l'élève joue 
 cibles de la page courte des QR sur celles de la carte des mondes : **si une graine
 change** dans `splat_univers.html`, le test le dit ; reporter la graine ici et dans
 `splat/classique/livret/index.html`, puis relancer `python3 render.py --qr`.
+
+## Le livret « Le défi » (lot D, 21/09/2026)
+
+Le même monde, des cartes plus dures. Réglages décidés par Gwenaël le 20/09 :
+
+- **totaux de 50 à 100** ;
+- **2 ou 3 paquets visibles** : il faut ADDITIONNER avant de soustraire ;
+- **valeurs de paquets non rondes** (17, 23, 31 — jamais 10, 20, 30) ;
+- **quotient final non évident** (`6x = 78 → 13`) ;
+- **2 à 6 taches** (le mode paquets le permet déjà : rien à coder dans le moteur) ;
+- **paquets numérotés seulement** — les jetons comptés un par un restent l'entrée du monde,
+  à la fiche 7 du livret normal.
+
+Les trois fiches, et leur QR (`?f=7d`, `8d`, `9d` sur la page courte) :
+
+| Fiche | Titre | Taches | Étape |
+|---|---|---|---|
+| 7 | Des paquets, et plusieurs taches | 2, puis 3, puis 4 | `m2e1` |
+| 8 | Encore plus de taches | 4, puis 5, puis 6 | `m2e4` |
+| 9 | Le grand défi | de 2 à 6, mélangées | `m2e5` |
+
+### Pourquoi TROIS séries de 4 cartes par fiche
+
+Comme la fiche 7 du livret normal, chaque fiche dure met **trois séries de 4 cartes** bout à
+bout (paramètre `suite`). Ce n'est pas un choix esthétique : **mesuré le 21/09/2026 sur
+300 000 tirages par réglage, une carte sur sept seulement** respecte toutes les règles
+ci-dessus à la fois (le générateur tire le quotient au hasard, puis découpe le reste en
+paquets au hasard : un « paquet » de 1 jeton ou un quotient de 2 sortent souvent). Douze
+cartes d'affilée, c'est une graine sur plusieurs millions — hors d'atteinte. À quatre cartes,
+c'est une graine sur quelques centaines à quelques milliers : le tri tourne en trois minutes,
+et l'on choisit en prime le nombre de taches de chaque série.
+
+### Le choix des graines du livret « Le défi »
+
+Retenues automatiquement, en ne gardant que les séries dont **les quatre cartes** passent :
+
+1. `4 ≤ ? ≤ 15` et `?` non multiple de 5 — le quotient ne se devine pas, et la correction
+   reste lisible ;
+2. chaque paquet entre **6 et 49**, **aucun multiple de 10** — un paquet de 1 n'est pas un
+   paquet, 20 ou 30 se soustrait de tête ;
+3. somme des paquets ≥ 20 — l'addition vaut la peine d'être posée.
+
+Puis, à qualité égale, les séries qui varient le plus (totaux étalés, `?` variés, des cartes
+à 2 ET à 3 paquets, aucun paquet à un seul chiffre quand c'est possible), et l'assemblage des
+trois fiches est choisi pour que **les 36 cartes soient 36 équations différentes** — vérifié
+par un test qui les relit dans le PDF de correction publié, pas dans le code.
+
+**Ne pas changer une graine sans refaire le tri.** Le script de tri n'est pas dans le dépôt :
+il lance l'outil dans un chromium sans affichage et rejoue `genNumberedEquationPreset` avec
+des centaines de milliers de graines (il commence par vérifier qu'il reproduit exactement ce
+que donne `generate()`).
+
+### Sa couverture et son dos
+
+- La couverture dit `Mon livret · Monde 2 · Le défi`, et son exemple montre **les trois
+  gestes** : `17 + 18 = 35`, `77 − 35 = 42`, `42 ÷ 3 = 14` (graine 168, une carte qui n'est
+  pas dans le livret). Les textes qui parlent de l'exemple (`texte_exemple`) sont **écrits à
+  partir de la carte rendue** : ils ne peuvent pas se décaler si la graine change.
+  `CSS_DEFI` resserre la mise en page de cette seule couverture — l'équation de trois lignes
+  fait 13 mm de plus que celle du livret normal, et le pied sortait de la feuille.
+  **Attention** : dans le mode paquets, la tache transparente **écrit** le nombre caché (un
+  jeton numéroté) ; il n'y a rien à compter. La leçon du lot K1-bis (« choisir une valeur
+  cachée petite ») ne vaut qu'au monde 1, où les jetons cachés sont dessinés un par un.
+- Le dos ne porte que **deux** séries, et leurs QR passent de 21 à **32 mm** (`CSS_DOS_DEFI`).
+  À quatre par rangée, l'adresse de 173 caractères tombait à 0,37 mm par module — court pour
+  un téléphone, pire photocopié ; à deux, on est à 0,56 mm. Les deux séries sont le même jeu
+  que le livret (2 à 6 taches, paquets numérotés) et ne diffèrent que par la tranche de
+  totaux : 50 à 100, ou 20 à 100 (les deux livrets réunis).
 
 ## Le QR de chaque fiche passe par une page courte
 
@@ -115,10 +186,11 @@ de plus de 0,1 pt sur les fiches) ; ce n'est pas un recto-verso élève/correcti
 
 ```bash
 cd _sources/livret-splat-classique
-python3 render.py                 # le livret de l'élève ET ses quatre livrets de correction
-python3 render.py --eleve         # seulement le livret de l'élève
-python3 render.py --correction    # seulement les quatre livrets de correction
-python3 render.py --qr normal     # en refabriquant d'abord ses QR codes
+python3 render.py                 # les DEUX livrets, élève et correction
+python3 render.py defi            # un seul niveau (normal | defi), et ses corrections
+python3 render.py --eleve         # seulement les livrets de l'élève
+python3 render.py --correction    # seulement les livrets de correction
+python3 render.py --qr defi       # en refabriquant d'abord ses QR codes
 ```
 
 Dépendances : `playwright` (+ chromium), `pikepdf`, `qrcode[pil]`. `qpdf`, s'il est

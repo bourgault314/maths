@@ -3,9 +3,9 @@
 """
 Régénère le livret « SPLAT! classique » (monde 2, 8 pages) à partir du site lui-même.
 
-    python3 render.py                 (le livret de l'élève ET ses quatre livrets de correction)
-    python3 render.py normal          (un seul niveau — un seul aujourd'hui)
-    python3 render.py --qr normal     (en refabriquant d'abord ses QR codes)
+    python3 render.py                 (les DEUX livrets, élève et correction)
+    python3 render.py defi            (un seul niveau : normal | defi)
+    python3 render.py --qr defi       (en refabriquant d'abord ses QR codes)
     python3 render.py --correction    (seulement les quatre livrets de correction du professeur)
     python3 render.py --eleve         (seulement le livret de l'élève)
 
@@ -41,8 +41,11 @@ l'outil : le livret leur en donne une, dans l'ordre x, a, b, c, m, n, t…, sans
 livret de correction Petit SPLAT!, lot K1) et dit de quelle correction il s'agit ; la boîte
 du QR dit « Les mêmes cartes en ligne » (le même QR) ; le dos ne change pas.
 
-Le même script pourra rendre des niveaux supplémentaires (lot D : Avancé, Expert) :
-un niveau de plus dans NIVEAUX, avec ses propres graines et ses QR.
+LIVRET « LE DÉFI » (lot D, 21/09/2026) — le même monde, des cartes plus dures : totaux 50 à
+100, 2 ou 3 paquets numérotés non ronds, 2 à 6 taches, quotient non évident. Chaque fiche est
+bâtie comme la fiche 7, trois séries de 4 cartes enchaînées par « suite » — le générateur ne
+sort pas douze cartes à ce calibre d'une seule graine (voir le README). Il produit :
+    outils/livret_splat_classique_defi.pdf         (et …_a_plier, et ses quatre corrections)
 
 Dépendances : playwright (chromium), pikepdf, qrcode[pil]. qpdf si disponible.
 """
@@ -73,16 +76,80 @@ FICHES = [
     dict(n=9, t="Le défi",                         parties=[E9],               parcours="m2e5", pages=2),
 ]
 
+# --------------------------------------------------------------------- LOT D (21/09/2026)
+# Le livret « Le défi » : les mêmes trois étapes du monde 2, en plus dur. Réglages décidés
+# par Gwenaël le 20/09 : totaux 50 à 100, 2 ou 3 paquets visibles (il faut ADDITIONNER avant
+# de soustraire), valeurs de paquets non rondes, quotient final non évident, 2 à 6 taches,
+# paquets numérotés seulement (les jetons comptés un par un restent l'entrée du monde).
+#
+# POURQUOI TROIS SÉRIES DE 4 CARTES PAR FICHE, et non une graine unique : mesuré le
+# 21/09/2026 sur 300 000 tirages par réglage, une carte sur sept seulement respecte toutes
+# ces règles à la fois ; douze d'affilée, c'est une graine sur plusieurs millions. Une fiche
+# est donc bâtie comme la fiche 7 du livret normal — trois séries mises bout à bout par le
+# paramètre « suite ». Les graines ci-dessous ont été retenues automatiquement : voir le
+# README, § « Le choix des graines du livret Le défi ». NE PAS en changer une sans refaire
+# le tri (les 36 cartes sont toutes différentes, et leurs 36 équations aussi).
+def _defi(t1, t2, graine):
+    return ("mode=N&equation=AX_PLUS_C_EQ_B"
+            f"&tasksMin={t1}&tasksMax={t2}&visibleMin=2&visibleMax=3"
+            f"&totalMin=50&totalMax=100&cards=4&seed={graine}&unknown=question")
+
+FICHES_DEFI = [
+    dict(n=7, t="Des paquets, et plusieurs taches", qr="7d", parcours="m2e1", pages=2,
+         resume="Deux taches, puis trois, puis quatre.",
+         parties=[_defi(2, 2, 211017), _defi(3, 3, 116475), _defi(4, 4, 231266)]),
+    dict(n=8, t="Encore plus de taches",            qr="8d", parcours="m2e4", pages=2,
+         resume="Quatre taches, puis cinq, puis six.",
+         parties=[_defi(4, 4, 204080), _defi(5, 5, 241600), _defi(6, 6,  87925)]),
+    dict(n=9, t="Le grand défi",                    qr="9d", parcours="m2e5", pages=2,
+         resume="De 2 à 6 taches, tout mélangé.",
+         parties=[_defi(2, 6,  51887), _defi(2, 6, 142961), _defi(2, 6, 227216)]),
+]
+
 def serie_url(query):
     """Une série de 12 cartes tirées au hasard (pas de graine), jouée en mode élève sans
     étape : rien n'est enregistré, l'élève s'entraîne."""
     return f"{SITE}{SC}?{query}&cards=12&unknown=question&eleve=1"
+
+# La couverture du livret « Le défi » (lot D) : l'exemple y montre les TROIS gestes, donc une
+# équation de trois lignes sous un schéma en barres de trois étages. La fenêtre de droite passe
+# de 55 à 68 mm de haut ; mesuré le 21/09/2026, le pied et la dernière ligne du sommaire
+# sortaient de la feuille de 12 mm. Ce style, injecté pour ce seul niveau, les fait rentrer
+# (pied à 287 mm, comme sur le livret normal) sans toucher d'un pixel à la couverture du
+# livret normal. Toute retouche de ces valeurs se revérifie sur le PDF, pas à l'œil.
+CSS_DEFI = """
+.expl{padding:5mm 6mm 4.5mm}
+.expl .intro{font-size:14.5px;margin:3mm 0 3mm}
+.expl .intro span{font-size:12px}
+.expl .atoi{margin:3.5mm 0 0;font-size:12.5px}
+.carte.corr{flex:0 0 70mm}
+.ident .champ{padding:3.5mm 4mm 9mm}
+.som ol{margin-top:2.5mm;gap:3mm 6mm}
+.som li{font-size:12.5px}
+.som li em{font-size:10.5px}
+"""
+
+# Le dos du livret « Le défi » : deux séries au lieu de quatre, donc deux cases plus larges
+# et des QR de 32 mm (21 mm à quatre). La rangée grandit de 11 mm : mesuré le 21/09/2026, le
+# dos avait la place. Injecté pour ce seul niveau — le dos du livret normal ne bouge pas.
+CSS_DOS_DEFI = """
+.niveaux{gap:6mm}
+.niv{padding:3.5mm 4mm 3mm;gap:2mm}
+.niv img{width:32mm;height:32mm}
+"""
+
+def serie_defi(t1, t2, tmin=50, tmax=100):
+    """Une série sans graine, aux réglages du livret « Le défi » : l'élève s'entraîne."""
+    return serie_url("mode=N&equation=AX_PLUS_C_EQ_B"
+                     f"&tasksMin={t1}&tasksMax={t2}&visibleMin=2&visibleMax=3"
+                     f"&totalMin={tmin}&totalMax={tmax}")
 
 NIVEAUX = {
     # --------------------------------------------------------------- Monde 2
     "normal": dict(
         sortie="livret_splat_classique",
         qr="qr",
+        fiches=FICHES,
         # l'exemple de couverture : une carte à paquets qui n'est pas dans le livret
         # (mode N, une tache, deux paquets visibles) — choisie le 19/09/2026
         exemple=dict(query="mode=N&equation=X_PLUS_A_EQ_B&cards=1&seed=5264&unknown=question"),
@@ -96,6 +163,40 @@ NIVEAUX = {
              ("Des paquets",       "Une tache et des paquets, comme la fiche&nbsp;8.",   serie_url("mode=N&equation=X_PLUS_A_EQ_B"), "serie-3.png"),
              ("Paquets et taches", "Le grand mélange, comme la fiche&nbsp;9.",           serie_url("mode=N&equation=AX_PLUS_C_EQ_B&tasksMax=5"), "serie-4.png")],
     ),
+    # ------------------------------------------------- Monde 2 · Le défi (lot D, 21/09/2026)
+    "defi": dict(
+        sortie="livret_splat_classique_defi",
+        qr="qr/defi",
+        fiches=FICHES_DEFI,
+        # L'exemple de couverture : trois taches, deux paquets, 17 + 18 = 35, 77 − 35 = 42,
+        # 42 ÷ 3 = 14 — les trois gestes du livret sur une seule carte (graine 168, choisie le
+        # 21/09/2026 ; la graine 47 donnait un total de 69, écarté par Gwenaël). Ce n'est PAS
+        # une carte du livret, et aucune carte du livret ne fait 77 avec trois taches. Dans le
+        # mode paquets, la tache
+        # transparente ÉCRIT le nombre caché (un jeton numéroté) : rien à compter, la leçon
+        # du lot K1-bis (« valeur cachée petite ») ne vaut qu'au monde 1.
+        exemple=dict(query="mode=N&equation=AX_PLUS_C_EQ_B&tasksMin=3&tasksMax=3"
+                           "&visibleMin=2&visibleMax=2&totalMin=50&totalMax=90"
+                           "&cards=1&seed=168&unknown=question",
+                     vb_carte="100 10 1400 940", vb_corr="140 1010 1180 1145"),
+        couv=dict(sur="Mon livret · Monde 2 · Le défi",
+                  accroche="Des paquets, des taches…<br>et des totaux jusqu'à 100&nbsp;!",
+                  css=CSS_DEFI),
+        # DEUX séries seulement, et des QR deux fois plus gros (décision du 21/09/2026).
+        # « 2 taches / 4 taches / 6 taches » était le même exercice avec un bouton tourné :
+        # ça ne valait pas trois QR, et à quatre par rangée l'adresse de 173 caractères tombe
+        # à 0,37 mm par module — court pour un téléphone, pire photocopié. À deux, le QR passe
+        # à 32 mm, soit 0,56 mm par module (mesuré sur le PDF).
+        # Les deux séries sont LE MÊME JEU que le livret — de 2 à 6 taches, des paquets
+        # numérotés — et ne diffèrent que par la tranche des totaux (décision du 21/09/2026).
+        # La plus large d'abord, la plus dure ensuite : les quatre dos des deux familles de
+        # livrets rangent déjà leurs séries de la plus facile à la plus dure.
+        dos=[("Les deux livrets réunis", "De 2 à 6 taches, des totaux de 20 à 100&nbsp;: celles du livret normal et celles-ci, mélangées.",
+              serie_defi(2, 6, 20, 100), "serie-1.png"),
+             ("Comme ce livret",        "De 2 à 6 taches, des totaux de 50 à 100&nbsp;: le calibre des fiches.",
+              serie_defi(2, 6, 50, 100), "serie-2.png")],
+        css_dos=CSS_DOS_DEFI,
+    ),
 }
 
 def lien_jeu(f):
@@ -105,7 +206,7 @@ def lien_jeu(f):
     plus à 17 mm. On passe donc par la page courte splat/classique/livret/?f=N, qui
     renvoie vers l'adresse complète (la même que la carte des mondes, donc la même
     empreinte de reprise)."""
-    return f"{SITE}{SC}livret/?f={f['n']}"
+    return f"{SITE}{SC}livret/?f={f.get('qr', f['n'])}"
 
 LIEN_UNIVERS = f"{SITE}/outils/splat_univers.html"
 
@@ -226,13 +327,27 @@ JS_EXEMPLE = """() => {
   const fond = sv.querySelector('rect');
   if (fond && fond.getAttribute('width') === '1600') fond.remove();
   const c = cards[0];
-  return {svg: sv.innerHTML, total: c.total, visibles: c.visible, cachees: c.hidden};
+  return {svg: sv.innerHTML, total: c.total, visibles: c.visible, cachees: c.hidden,
+          taches: c._num.tasks, parTache: c._num.H};
 }"""
 
 JS_COUV = """(d) => {
   const a = document.querySelector('svg.ex-carte'), b = document.querySelector('svg.ex-corr');
   if (!a || !b) return 'pas de place pour l\\'exemple';
   a.innerHTML = d.svg; b.innerHTML = d.svg;
+  if (d.vbCarte) a.setAttribute('viewBox', d.vbCarte);
+  if (d.vbCorr) b.setAttribute('viewBox', d.vbCorr);
+  if (d.sur){ const e = document.querySelector('.tete .sur'); if(!e) return 'pas de sur-titre'; e.textContent = d.sur; }
+  if (d.accroche){ const e = document.querySelector('.tete .accroche'); if(!e) return 'pas d\\'accroche'; e.innerHTML = d.accroche; }
+  if (d.intro){ const e = document.querySelector('.expl .intro'); if(!e) return 'pas de texte d\\'exemple'; e.innerHTML = d.intro; }
+  if (d.sommaire){
+    const li = document.querySelectorAll('.som ol li');
+    if (li.length !== d.sommaire.length) return 'sommaire : ' + li.length + ' lignes';
+    d.sommaire.forEach((t, i) => {
+      li[i].querySelector('.badge b').textContent = t[0];
+      li[i].querySelectorAll('span')[1].innerHTML = t[1] + '<em>' + t[2] + '</em>';
+    });
+  }
   if (d.prof) {
     const id = document.querySelector('.ident');
     if (!id) return 'pas de ligne Nom, prénom / Classe';
@@ -250,8 +365,39 @@ JS_DOS = """(d) => {
      '</span><span class="d">' + n[1] + '</span></div>').join('');
   const u = document.querySelector('.suite img');
   if (u) u.setAttribute('src', d.univers);
+  if (d.fiches){
+    const c = document.querySelectorAll('.prog .g .c');
+    if (c.length !== d.fiches.length) return 'Mes fiches : ' + c.length + ' cases';
+    d.fiches.forEach((t, i) => {
+      c[i].querySelector('.badge b').textContent = t[0];
+      c[i].querySelector('.ti').textContent = t[1];
+    });
+  }
   return 'ok';
 }"""
+
+MOTS = {1: "une", 2: "deux", 3: "trois", 4: "quatre", 5: "cinq", 6: "six"}
+
+def texte_exemple(ex):
+    """Le texte « Comment ça marche ? » de la couverture, écrit à partir de la carte que
+    l'outil vient de dessiner : il ne peut donc pas mentir sur les nombres de l'exemple."""
+    v = list(ex["visibles"])
+    n, t, x = ex["taches"], ex["total"], ex["parTache"]
+    c = sum(v)
+    paquets = " et ".join(str(k) for k in v[:-1]) + f" et {v[-1]}" if len(v) > 2 else f"{v[0]} et {v[1]}"
+    taches = (f"la tache cache un paquet de jetons" if n == 1 else
+              f"les {MOTS[n]} taches cachent chacune le même nombre de jetons")
+    somme = " + ".join(str(k) for k in v)
+    return (f"Sur cette carte, il y a {t} jetons au total&nbsp;: il y a {MOTS[len(v)]} paquets "
+            f"visibles, qui contiennent {paquets} jetons&nbsp;; {taches}."
+            "\n      <span>On a représenté la situation de deux manières&nbsp;: avec un "
+            "<b>schéma en barres</b>, et avec une <b>équation</b>. Il faut trouver le nombre de "
+            "jetons derrière une tache, on l'a symbolisé par un «&nbsp;<b>?</b>&nbsp;». Ici, les "
+            f"taches sont transparentes&nbsp;: on voit les {x} jetons que chacune cache. "
+            f"Trois gestes&nbsp;: on <b>additionne</b> les paquets ({somme} = {c}), on "
+            f"<b>soustrait</b> ({t} − {c} = {t - c}), puis on <b>divise</b> "
+            f"({t - c} ÷ {n} = {x}).</span>")
+
 
 def fabrique_qr(niv):
     """(Re)fabrique les QR codes du niveau. À relancer si une graine change."""
@@ -263,8 +409,8 @@ def fabrique_qr(niv):
         q = qrcode.QRCode(error_correction=ERROR_CORRECT_M, box_size=12, border=2)
         q.add_data(url); q.make(fit=True)
         q.make_image(fill_color="black", back_color="white").save(dossier / nom)
-    for f in FICHES:
-        ecrire(lien_jeu(f), f"fiche{f['n']}.png")
+    for f in niv["fiches"]:
+        ecrire(lien_jeu(f), f"fiche{f.get('qr', f['n'])}.png")
     ecrire(LIEN_UNIVERS, "univers.png")
     for _, _, url, nom in niv["dos"]:
         ecrire(url, nom)
@@ -306,6 +452,8 @@ async def pages(niv, tmp, corr=None):
             pg = await nav.new_page(viewport={"width": 794, "height": 1123})
             await pg.goto(url, wait_until="networkidle")
             await pg.wait_for_timeout(1200)
+            if couv is not None and couv.get("css"):
+                await pg.add_style_tag(content=couv["css"])
             if couv is not None and couv.get("prof"):
                 await pg.add_style_tag(content=CSS_PROF)
             if couv is not None:
@@ -313,6 +461,8 @@ async def pages(niv, tmp, corr=None):
                 if r != "ok":
                     raise SystemExit(f"couverture : {r}")
             if dos is not None:
+                if dos.get("css"):
+                    await pg.add_style_tag(content=dos["css"])
                 r = await pg.evaluate(JS_DOS, dos)
                 if r != "ok":
                     raise SystemExit(f"dos : {r}")
@@ -344,7 +494,7 @@ async def pages(niv, tmp, corr=None):
             if etat["feuilles"] != f["pages"]:
                 raise SystemExit(f"fiche {f['n']} : {etat['feuilles']} feuilles au lieu de {f['pages']}")
             await pg.add_style_tag(content=CSS_QR)
-            r = await pg.evaluate(JS_QR, [f"{qrweb}/fiche{f['n']}.png", QR_PROF if corr else QR_ELEVE])
+            r = await pg.evaluate(JS_QR, [f"{qrweb}/fiche{f.get('qr', f['n'])}.png", QR_PROF if corr else QR_ELEVE])
             if r != "ok":
                 raise SystemExit(f"fiche {f['n']}, QR : {r}")
             r = await pg.evaluate(JS_PIED, PIED_CORRECTION if corr else PIED_LIVRET)
@@ -357,12 +507,26 @@ async def pages(niv, tmp, corr=None):
             await pg.close()
             print(f"   fiche {f['n']} : {etat['cartes']} cartes sur {etat['feuilles']} pages")
 
-        couv = dict(exemple, prof=dict(PROF, dit=corr["dit"]) if corr else None)
+        couv = dict(exemple, prof=dict(PROF, dit=corr["dit"]) if corr else None,
+                    vbCarte=niv["exemple"].get("vb_carte"), vbCorr=niv["exemple"].get("vb_corr"))
+        if niv.get("couv"):
+            # Les textes qui parlent de l'exemple sont ÉCRITS À PARTIR DE LA CARTE rendue :
+            # ils ne peuvent pas se décaler si la graine de l'exemple change un jour.
+            v = exemple["visibles"]
+            couv.update(
+                sur=niv["couv"]["sur"],
+                accroche=niv["couv"]["accroche"],
+                intro=texte_exemple(exemple),
+                sommaire=[[f["n"], f["t"], f["resume"]] for f in niv["fiches"]],
+                css=niv["couv"].get("css"),
+            )
         await pdf_html(f"{base}{BASE_WEB}/couverture.html", tmp / "p1.pdf", couv=couv)
-        for f in FICHES:
+        for f in niv["fiches"]:
             await pdf_fiche(f, tmp / f"fiche{f['n']}.pdf")
         dos = dict(niveaux=[[nom, desc, f"{qrweb}/{img}"] for nom, desc, _, img in niv["dos"]],
-                   univers=f"{qrweb}/univers.png")
+                   univers=f"{qrweb}/univers.png",
+                   fiches=[[f["n"], f["t"]] for f in niv["fiches"]] if niv.get("couv") else None,
+                   css=niv.get("css_dos"))
         await pdf_html(f"{base}{BASE_WEB}/dos.html", tmp / "p8.pdf", dos=dos)
         await nav.close()
 
@@ -378,7 +542,7 @@ def assemble(niv, tmp):
 
     src = [pikepdf.open(str(tmp / "p1.pdf"))]
     pages = [src[0].pages[0]]
-    for f in FICHES:
+    for f in niv["fiches"]:
         d = pikepdf.open(str(tmp / f"fiche{f['n']}.pdf"))
         src.append(d)
         if len(d.pages) != f["pages"]:
