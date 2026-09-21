@@ -44,6 +44,7 @@ const moteur = Function(`
   ${constante("SIX_CORRECTION_VIEWBOX")}
   ${html.match(/^const SIX_CORRECTION_LEFT = [^\n]*;/m)[0]}
   ${constante("SIX_CORRECTION_PLAIN_LETTER")}
+  ${constante("SIX_CORRECTION_LETTER_INK")}
   ${AIDES.map(extraire).join("\n")}
   return { sixCorrectionPart, sixCorrectionData, drawSixCorrectionEquation, drawSixCorrectionSchema,
            SIX_CORRECTION_VIEWBOX, SIX_CORRECTION_LEFT, SIX_CORRECTION_RIGHT };
@@ -169,9 +170,10 @@ test("le schéma : les trois étapes de l'outil jusqu'au « ? » seul, compactes
     const { g, mk } = faux();
     moteur.drawSixCorrectionSchema(g, carte, lettre, mk);
     const cadres = g.enfants.filter(e => e.nom === "rect" && e.a.fill === "none");
+    const grises = g.enfants.filter(e => e.nom === "rect" && e.a.fill === "rgba(0,0,0,0.10)");
     const calculs = g.enfants.filter(e => e.nom === "text" && e.a["text-anchor"] === "start");
-    const cases = g.enfants.filter(e => e.nom === "text" && e.a["text-anchor"] === "middle").map(e => e.t);
-    return { cadres, calculs, cases };
+    const noeuds = g.enfants.filter(e => e.nom === "text" && e.a["text-anchor"] === "middle");
+    return { cadres, grises, calculs, noeuds, cases: noeuds.map(e => e.t) };
   };
   const cas = [
     ["a5taches", 3, ["20 − 15 = 5", "5 ÷ 5 = 1"], 1],
@@ -207,6 +209,58 @@ test("le schéma : les trois étapes de l'outil jusqu'au « ? » seul, compactes
   const lignes = (k) => cadres[k];
   assert.ok(Math.abs((lignes(0).a.x + lignes(0).a.width) - (lignes(1).a.x + lignes(1).a.width)) < 1e-6, "bords droits alignés");
   assert.ok(Math.abs(lignes(1).a.x - lignes(2).a.x) < 1e-6, "la tache seule sous la première case cachée");
-  // en lettre : les cases cachées portent la lettre de la carte
-  assert.ok(dessiner(cartes.b3taches, "𝑛").cases.filter(t => t === "𝑛").length >= 7);
+  /* En lettre (lot X, 21/09/2026) : les cases cachées portent la lettre de la carte écrite
+     comme celle de l'équation — la lettre SIMPLE (𝑛 → n) et le Times italique donné en
+     STYLE EN LIGNE. L'attribut font-family seul est battu par la règle « * » de la page :
+     les lettres mathématiques U+1D400… repartaient alors sur la police de secours de la
+     machine, et sous Linux « 𝑥 » n'y tombait pas sur la même que « 𝑎 » — d'où la lettre
+     droite au milieu des lettres rondes dans le PDF du livret. */
+  /* Les hauteurs d'encre de chaque lettre en Times italique, telles qu'elles ont été mesurées
+     dans Chromium (dominant-baseline="middle", dy=0) : [au-dessus, au-dessous] du centre, en em.
+     Épinglées ici pour qu'on ne les change pas dans la page sans refaire la mesure. */
+  const ENCRE = {x:[0.210,0.250], a:[0.220,0.260], b:[0.445,0.260], c:[0.2225,0.260],
+                 m:[0.2225,0.250], n:[0.2225,0.250], t:[0.315,0.260]};
+  const tableSource = JSON.parse(constante("SIX_CORRECTION_LETTER_INK").replace(/^const [^=]+= /, "").replace(/;$/, ""));
+  for(const [l, v] of Object.entries(ENCRE)) assert.deepEqual(tableSource[l], v, `encre du « ${l} »`);
+  assert.deepEqual(tableSource[""], ENCRE.b, "repli : une lettre inconnue est traitée comme la plus haute");
+  for(const [lettre, simple, nom] of [["𝑥", "x", "a1tache"], ["𝑏", "b", "a1tache"], ["𝑡", "t", "a0visible"],
+                                      ["𝑛", "n", "b3taches"], ["𝑚", "m", "a5taches"]]){
+    const { grises, noeuds } = dessiner(cartes[nom], lettre);
+    const lettres = noeuds.filter(e => e.t === simple);
+    assert.ok(lettres.length >= grises.length, `${simple} : toutes les cases cachées portent la lettre`);
+    assert.equal(noeuds.filter(e => e.t === lettre).length, 0, `${simple} : plus aucune lettre mathématique`);
+    const tailles = new Set();
+    for(const e of lettres){
+      assert.match(String(e.a.style || ""), /font-family:'Times New Roman', Times, serif/,
+        `${simple} : Times demandé en style en ligne`);
+      assert.equal(e.a["font-style"], "italic", `${simple} : italique`);
+      assert.equal(e.a["font-weight"], "normal", `${simple} : même graisse que l'équation`);
+      tailles.add(String(e.a["font-size"]));
+    }
+    assert.equal(tailles.size, 1, `${simple} : une seule taille de lettre dans la carte`);
+    const taille = Number([...tailles][0]);
+    assert.ok(taille >= 80 && taille <= 96, `${simple} : taille ${taille} (des nombres à 1,2 ×)`);
+    // aucune lettre contre le trait, SUR LES CÔTÉS : le « m » italique (0,72 em, la plus
+    // large) dans la case grise la plus étroite, au moins 0,3 mm de blanc (1 u = 0,0427 mm)
+    const blanc = (Math.min(...grises.map(r => r.a.width)) - taille * 0.72) / 2 * 0.0427;
+    assert.ok(blanc >= 0.3, `${simple} : ${blanc.toFixed(2)} mm entre la lettre et le trait`);
+    /* … et AU-DESSUS comme AU-DESSOUS. C'est ce contrôle-là qui manquait : « dominant-baseline
+       middle » centre la hauteur d'un « x », pas le dessin, et le « b » agrandi traversait le
+       trait du haut. La lettre est donc redescendue de la moitié de son débord (dy) et sa
+       taille est bornée par la hauteur libre : 40 unités du centre au bord intérieur du trait
+       (case de 85, trait de 5). */
+    const dyEm = Number(String(lettres[0].a.dy).replace("em", ""));
+    const [encreHaut, encreBas] = ENCRE[simple];
+    // 5e-4 : le dy est écrit avec 4 décimales dans l'attribut
+    assert.ok(Math.abs(dyEm - (encreHaut - encreBas) / 2) < 5e-4, `${simple} : lettre centrée sur son encre`);
+    const hautMm = (40 - (encreHaut - dyEm) * taille) * 0.0427;
+    const basMm = (40 - (encreBas + dyEm) * taille) * 0.0427;
+    // 0,39 dans le calcul = 0,30 mm mesuré et plus sur le PDF (le rendu en rogne environ 0,07)
+    assert.ok(hautMm >= 0.39, `${simple} : ${hautMm.toFixed(2)} mm au-dessus de la lettre`);
+    assert.ok(basMm >= 0.39, `${simple} : ${basMm.toFixed(2)} mm au-dessous de la lettre`);
+  }
+  // avec « ? » (les livrets du cycle 3), rien ne change : aucun style en ligne ajouté
+  const pointsInterro = dessiner(cartes.b3taches, "?").noeuds.filter(e => e.t === "?");
+  assert.ok(pointsInterro.length >= 7, "« ? » dans toutes les cases cachées");
+  for(const e of pointsInterro) assert.equal(e.a.style, undefined, "« ? » : aucun style en ligne");
 });

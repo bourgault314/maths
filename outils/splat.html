@@ -7892,6 +7892,13 @@ const SIX_CORRECTION_VIEWBOX = "0 0 1600 1600";
 const SIX_CORRECTION_LEFT = -120, SIX_CORRECTION_RIGHT = 1720;
 /* L'équation est écrite en Times italique : la lettre y est une lettre simple (𝑎 → a). */
 const SIX_CORRECTION_PLAIN_LETTER = {"𝑥":"x","𝑎":"a","𝑏":"b","𝑐":"c","𝑚":"m","𝑛":"n","𝑡":"t"};
+/* Encre réelle de chaque lettre en Times italique — [au-dessus, au-dessous] du centre, en em —
+   mesurée dans le Chromium qui fabrique les PDF, avec dominant-baseline="middle" et dy=0.
+   « middle » centre la hauteur d'un « x », pas le dessin de la lettre : la hampe du « b » monte
+   à 0,445 em quand le « x » monte à 0,21. Sans ces mesures, un « b » agrandi traverse le trait
+   du haut de sa case (défaut trouvé par Claude Code le 21/09/2026). La clé "" est le repli :
+   une lettre inconnue est traitée comme la plus haute. */
+const SIX_CORRECTION_LETTER_INK = {"x":[0.210,0.250],"a":[0.220,0.260],"b":[0.445,0.260],"c":[0.2225,0.260],"m":[0.2225,0.250],"n":[0.2225,0.250],"t":[0.315,0.260],"":[0.445,0.260]};
 
 function sixCorrectionPart(printMode){
   if(printMode === "correction-equation") return "equation";
@@ -7983,7 +7990,35 @@ function drawSixCorrectionSchema(g, card, varChar, mk){
   // Schémas compacts (85 + 85 de haut, chiffres de 80) ; cases un peu plus larges que dans
   // l'outil pour que « ? » et les lettres ne touchent pas le trait.
   const FONT = 80, HT = 85, HB = 85, SH = HT + HB, GAP = 40, PAD = 44, W1 = 1150;
-  const bm = (w) => ({ rect: mk.rect, line: mk.line, text: mk.text, w, hTop: HT, hBottom: HB,
+  /* La lettre des cases cachées s'écrit comme celle de l'équation (drawSixCorrectionEquation) :
+     lettre simple (𝑚 → m) et Times italique donné en STYLE EN LIGNE, car l'attribut
+     font-family seul est battu par la règle « * » de la page. Sans cela les lettres
+     mathématiques U+1D400… partent sur la police de secours de la machine : sous Linux,
+     « 𝑥 » n'y tombait pas sur la même que « 𝑎 » et sortait droite dans le PDF du livret.
+     Une seule police pour toutes les lettres, donc, et la taille que drawBarModelPartsInGroup
+     réserve au « x » — 1,2 × celle des nombres — bornée par la case la plus étroite du dessin
+     ET par la hauteur libre (voir plus bas) : la hampe du « b » demande un peu moins.
+     Avec « ? » (inconnue du cycle 3), « plain » vaut undefined et rien ne change. */
+  const plain = SIX_CORRECTION_PLAIN_LETTER[varChar];
+  const unknown = plain || varChar;
+  const mathFont = "'Times New Roman', Times, serif";
+  /* La lettre est recentrée sur SON encre (on la redescend de la moitié de son débord vers le
+     haut), et sa taille est bornée par la hauteur libre autant que par la largeur de la case :
+     même exigence de 0,3 mm de blanc dans les quatre directions. */
+  const ink = SIX_CORRECTION_LETTER_INK[unknown] || SIX_CORRECTION_LETTER_INK[""];
+  const letterDy = (ink[0] - ink[1]) / 2;            // em, positif = vers le bas
+  const HALF_IN = (HB - 5) / 2;                      // 40 : du centre au bord intérieur du trait
+  /* 9,3 unités = 0,40 mm dans le calcul, pour que la MESURE sur le PDF donne 0,30 mm : le
+     rendu et la mesure de l'encre en rognent environ 0,10 (vérifié sur les 179 lettres). */
+  const MIN_BLANC = 9.3;
+  let letterFont = Math.min(FONT * 1.2, (HALF_IN - MIN_BLANC) / ((ink[0] + ink[1]) / 2));
+  function cellText(x, y, t, a = {}){
+    if(!plain || t !== unknown) return mk.text(x, y, t, a);
+    return mk.text(x, y, t, { ...a, "font-size": String(letterFont), "font-family": mathFont,
+      "font-style": "italic", "font-weight": "normal", "dy": letterDy.toFixed(4) + "em",
+      "style": `font-family:${mathFont}` });
+  }
+  const bm = (w) => ({ rect: mk.rect, line: mk.line, text: cellText, w, hTop: HT, hBottom: HB,
     stroke: "#000", strokeWidth: 5, greyFill: "rgba(0,0,0,0.10)", ink: "#000",
     visibleTextColor: isU ? "#2563eb" : "#000", hiddenTextColor: "#000", totalTextColor: "#000",
     fontTop: FONT, fontBottom: FONT, minCellPad: PAD });
@@ -7994,7 +8029,7 @@ function drawSixCorrectionSchema(g, card, varChar, mk){
   const x0 = SIX_CORRECTION_LEFT;
   const visW = d.vis > 0 ? cells.widths[0] : 0;
   const hidW = cells.w - visW;
-  const hid = (n) => Array.from({length: n}, () => ({ value: d.h, hidden: true, text: varChar }));
+  const hid = (n) => Array.from({length: n}, () => ({ value: d.h, hidden: true, text: unknown }));
   const parts1 = [];
   if(d.vis > 0) parts1.push({ value: d.vis, hidden: false });
   parts1.push(...hid(d.tasks));
@@ -8012,6 +8047,12 @@ function drawSixCorrectionSchema(g, card, varChar, mk){
     calcs.push(`${d.total} − ${d.vis} = ${d.totalHid}`);
     steps.push([d.h, hid(1), x0 + visW, hidW]);
   }
+  // La case à lettre la plus étroite de tous les schémas borne la taille des lettres.
+  // sixCorrectionCells applique la même règle de largeur que drawBarModelPartsInGroup.
+  const letterWidths = steps.reduce((acc, [, parts, , w], i) => acc.concat(
+    sixCorrectionCells(parts.map(p => p.value), i === 0 ? W1 : w, FONT, PAD)
+      .widths.filter((_, k) => parts[k].hidden)), []);
+  if(letterWidths.length) letterFont = Math.min(letterFont, Math.max(FONT, Math.min(...letterWidths) * 0.72));
   let top = d.trayBottom + GAP;
   const tops = [];
   steps.forEach(([tot, parts, x, w], i) => {
