@@ -435,7 +435,9 @@
 
   .splatText{
     fill:#ffffff;
-    font-size:38px;
+    /* La lettre suit la tache : --splatEchelle vaut 1 tant que la tache garde sa taille,
+       et descend avec elle à partir de 7 taches (PATCH TACHES 2026-09-21). */
+    font-size:calc(38px * var(--splatEchelle, 1));
     font-weight:950;
     font-family:Georgia,'Times New Roman',serif;
     font-style:italic;
@@ -2673,7 +2675,7 @@
     }
 
     main.activeMode .splatText{
-      font-size:48px;
+      font-size:calc(48px * var(--splatEchelle, 1));
     }
 
     main.activeMode .stage:not(:fullscreen) .toolBar{
@@ -5024,6 +5026,19 @@
     return splatRadius(Math.max(1, countForSide("left"), countForSide("right")));
   }
 
+  /* La taille des taches reste COMMUNE aux deux membres, y compris après le rétrécissement :
+     on garde la plus petite des deux, pour que 3 taches à gauche et 9 à droite se dessinent
+     à la même taille. */
+  function commonSplatLayoutRadius(area){
+    const rmax = commonSplatRadius();
+    if(!state) return rmax;
+    const countForSide = side => renderPiecesForSide(side).filter(piece => piece.type === "x").length;
+    return Math.min(
+      splatLayoutFor(Math.max(1, countForSide("left")), area, rmax).r,
+      splatLayoutFor(Math.max(1, countForSide("right")), area, rmax).r
+    );
+  }
+
   let state = null;
   let initialState = null;
   let history = [];
@@ -7145,15 +7160,45 @@
     return [3,3,n-6];
   }
 
-  function splatPositionsForItems(tray, items){
-    const xs = items.filter(p => p.type === "x");
-    const out = new Map();
-    // PATCH 0.7.2 : taches légèrement plus grandes et mieux espacées.
-    // Elles doivent pouvoir cacher visuellement un jeton numéroté,
-    // sans se toucher lorsque plusieurs inconnues sont présentes.
-    // Réception au téléphone : taches plus grandes, zone élargie (page import).
+  /* Répartition des taches et taille commune (PATCH TACHES 2026-09-21).
+     Jusqu'à 6 taches : rien ne change, mêmes rangées et même taille qu'avant.
+     À partir de 7, deux choses n'allaient pas. Les rangées restaient « 3 en haut, tout le
+     reste en bas » (à 8 : 3 + 5), et surtout la taille ne regardait pas combien il y en
+     avait dans une rangée : cinq taches de la taille de trois se chevauchaient. On essaie
+     donc les répartitions en 2, 3 ou 4 rangées et on garde celle qui laisse la plus grosse
+     tache, sans jamais dépasser la taille d'avant. Cela vaut d'où que viennent les taches :
+     l'équation du professeur, une carte importée, ou « ajouter une tache » cliqué plusieurs
+     fois. 2,20 = deux dessins de tache côte à côte (le dessin monte à 1,076 fois le rayon,
+     soit 2,152) plus une marge. La taille n'est jamais augmentée, seulement réduite quand
+     la place manque : sur un écran ordinaire, de 1 à 6 taches, elle ne bouge pas d'un pixel.
+     Elle ne se réduit en dessous de 7 que dans un cadre très plat (plein écran avec
+     l'équation au-dessus), où les deux rangées se touchaient déjà. */
+  const SPLAT_ESPACE = 2.20;
+  function repartirEnRangees(n, lignes){
+    const base = Math.floor(n / lignes), reste = n % lignes;
+    return Array.from({length: lignes}, (_, i) => base + (i < reste ? 1 : 0));
+  }
+  function splatLayoutFor(n, area, rmax){
+    const tenir = (rows) => {
+      const cols = Math.max(1, ...rows);
+      return Math.min(rmax, area.w / cols / SPLAT_ESPACE, area.h / rows.length / SPLAT_ESPACE);
+    };
+    if(n <= 6){
+      const rows = rowsForSplats(n);
+      return { rows, r: tenir(rows) };
+    }
+    let best = null;
+    for(let lignes = 2; lignes <= 4; lignes++){
+      const rows = repartirEnRangees(n, lignes);
+      const r = tenir(rows);
+      if(!best || r > best.r) best = { rows, r };
+    }
+    return best;
+  }
+
+  function splatAreaFor(tray){
     const mobileLayout = isMobileImportLayout();
-    const splatArea = isPhoneLayout()
+    return isPhoneLayout()
       ? {x:tray.x+70, y:tray.y+54, w:tray.w-140, h:tray.h*.55}
       : {
           x:tray.x+(mobileLayout ? 45 : 70),
@@ -7163,8 +7208,19 @@
           // proportionnel quand le cadre est plus plat (PATCH ESPACE 2026-08-22).
           h:mobileLayout ? Math.min(760, tray.h * .58) : Math.min(400, tray.h * .62)
         };
-    const rows = rowsForSplats(xs.length);
-    const radius = commonSplatRadius();
+  }
+
+  function splatPositionsForItems(tray, items){
+    const xs = items.filter(p => p.type === "x");
+    const out = new Map();
+    // PATCH 0.7.2 : taches légèrement plus grandes et mieux espacées.
+    // Elles doivent pouvoir cacher visuellement un jeton numéroté,
+    // sans se toucher lorsque plusieurs inconnues sont présentes.
+    // Réception au téléphone : taches plus grandes, zone élargie (page import).
+    const splatArea = splatAreaFor(tray);
+    const rmax = commonSplatRadius();
+    const rows = splatLayoutFor(xs.length, splatArea, rmax).rows;
+    const radius = commonSplatLayoutRadius(splatArea);
     let k = 0;
     for(let r=0;r<rows.length;r++){
       const cols = rows[r];
@@ -7172,7 +7228,8 @@
       const cy = splatArea.y + splatArea.h*((r+.5)/rows.length);
       for(let c=0;c<cols && k<xs.length;c++){
         const cx = splatArea.x + cellW*(c+.5);
-        out.set(xs[k].id, {cx,cy,r:mobileLayout ? 108 : radius});
+        // rRef : la taille qu'aurait la tache sans le rétrécissement — la lettre s'y accroche
+        out.set(xs[k].id, {cx,cy,r:radius,rRef:rmax});
         k++;
       }
     }
@@ -7646,6 +7703,8 @@
       const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
       path.setAttribute("d", blobPath(pos.cx, pos.cy, pos.r));
       path.setAttribute("class", xSign(item) < 0 ? "splatShape oppositeX" : "splatShape");
+      // La lettre rétrécit avec sa tache, jamais toute seule.
+      if(pos.rRef) g.style.setProperty("--splatEchelle", (pos.r / pos.rRef).toFixed(3));
       g.appendChild(path);
       drawText(pos.cx, pos.cy + 5, xPieceLabel(item), "splatText", g);
       if(item.removed){

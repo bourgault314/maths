@@ -267,7 +267,10 @@ test("le plateau mobile utilise tout son cadre avec des plateaux rectangulaires"
   assert.match(html, /return isMobileImportLayout\(\) \? Math\.round\(radius \* 1\.36\) : radius/);
   assert.match(html, /x:tray\.x\+\(mobileLayout \? 45 : 70\)/);
   assert.match(html, /w:tray\.w-\(mobileLayout \? 90 : 140\)/);
-  assert.match(html, /r:mobileLayout \? 108 : radius/);
+  // La taille vient maintenant de commonSplatLayoutRadius : 108 en réception mobile tant
+  // que la place le permet, réduite seulement au-delà de 6 taches (21/09/2026).
+  assert.match(html, /if\(isMobileImportLayout\(\)\) return 108;/);
+  assert.match(html, /out\.set\(xs\[k\]\.id, \{cx,cy,r:radius,rRef:rmax\}\);/);
   assert.ok((760 - 90) / 3 > 2 * 108, "trois splats agrandis doivent rester séparés sur une ligne");
   assert.match(html, /@media \(max-width:760px\) and \(max-height:720px\)/);
   assert.match(html, /\.board\{\s*height:250px;\s*min-height:250px;\s*max-height:250px;/);
