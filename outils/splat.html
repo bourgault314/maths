@@ -763,6 +763,37 @@
      chiffres, eux, restent centrés. L'écran d'ordinateur garde sa taille,
      plus bas : ses cases de 66 px n'avaient pas ce défaut. */
   .eleveMiniTache{position:absolute;left:2px;top:2px;width:14px;height:10px;opacity:.8;pointer-events:none}
+  /* ===== Enquête (lot E2) : une case par tache, de largeur égale =====
+     Dans le coin haut-gauche de chaque case : la mini-tache À SA COULEUR et le nom de
+     la couleur (à 14 px, noire, violette et bleue se ressemblent ; un élève daltonien
+     n'a que le mot). Les chiffres restent centrés, comme au monde 2. Le total et les
+     jetons visibles sont des cases DONNÉES (pas de champ) : l'Enquête ne demande que
+     ce que cachent les taches. */
+  .eleveTacheNom{position:absolute;left:3px;top:2px;display:inline-flex;align-items:center;gap:3px;font-size:11px;font-weight:800;line-height:1;color:#475569;pointer-events:none;white-space:nowrap}
+  .eleveTacheCouleur{width:14px;height:10px;flex:none}
+  .eleveCase.donnee{cursor:default}
+  /* Dans le tableau de l'Enquête, l'étiquette de chaque case (TOTAL, visibles, la
+     mini-tache et son nom) s'écrit AU-DESSUS du nombre, les deux centrés — comme le
+     cartouche TOTAL du plateau (décision du 22/09 : à gauche, elle décentrait le nombre). */
+  #elevePanel.enquete .eleveCase{flex-direction:column;justify-content:center;gap:1px;line-height:1.05;padding:4px 0}
+  /* c'est le MOT qui est centré sur le nombre ; la mini-tache pend à sa gauche, hors
+     du centrage (sinon le mot, décalé par la tache, paraît décentré) */
+  #elevePanel.enquete .eleveTacheNom{position:relative;margin:0;left:0;top:0} /* left/top : la règle de base décale l'étiquette de 3 px et 2 px, ce qui compte dès qu'elle n'est plus static */
+  #elevePanel.enquete .eleveTacheCouleur{position:absolute;right:100%;margin-right:3px;top:50%;transform:translateY(-50%)}
+  #elevePanel.enquete input.eleveChamp{height:auto;flex:0 0 auto;line-height:1.1}
+  /* case fausse : le champ ne remplit plus la case, c'est la case qui rougit */
+  /* après validation : glissement vers les vraies largeurs, minimum pour lire le nom */
+  #elevePanel.enquete .ligneBas .eleveCase{transition:flex-grow .6s ease}
+  #elevePanel.enquete .eleveDiag.vraies .ligneBas .eleveCase{min-width:72px}
+  #elevePanel.enquete .eleveCase.ko{background:#fee2e2}
+  #elevePanel.enquete .eleveCase.ko input.eleveChamp{background:transparent}
+  .eleveCase.haut.donnee{color:#111}
+  .eleveCase.blanche.donnee .eleveTacheNom{color:#1d4ed8} /* « visibles » en bleu, comme leur nombre */
+  .eleveCase.haut.donnee .eleveTacheNom{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#475569}
+  #elevePanel.enquete .eleveActions{flex-wrap:wrap}
+  /* Téléphone, schéma agrandi : le plateau se fait glisser de gauche à droite. */
+  body.eleve-mode #svgWrap.eleveSchemaZoom{display:block;place-items:start;overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;touch-action:pan-x pan-y} /* place-items : sans quoi le dessin large est centré et sa gauche perdue */
+  body.eleve-mode #svgWrap.eleveSchemaZoom #mainSvg{display:block;max-width:none}
   .eleveActions{display:flex;justify-content:center;gap:10px;margin-top:14px}
   .eleveActions button{font:inherit;font-weight:900;border:none;border-radius:12px;padding:12px 24px;min-height:48px;cursor:pointer;background:#2563eb;color:#fff}
   .eleveActions button:disabled{opacity:.45;cursor:default}
@@ -773,6 +804,10 @@
     body.eleve-mode #svgWrap{height:min(46vh,520px)}
     body.eleve-mode .eleveCase{min-height:66px;font-size:32px}
     body.eleve-mode .eleveMiniTache{left:6px;top:5px;width:22px;height:16px}
+    body.eleve-mode .eleveTacheNom{gap:4px;font-size:13px}
+    body.eleve-mode .eleveTacheCouleur{width:20px;height:14px}
+    body.eleve-mode .eleveCase.haut.donnee .eleveTacheNom{font-size:13px}
+    body.eleve-mode #elevePanel.enquete .eleveDiag.vraies .ligneBas .eleveCase{min-width:96px}
     body.eleve-mode .eleveConsigne{font-size:17px;margin:2px 0 10px}
     body.eleve-mode .eleveTete{font-size:21px;gap:10px} /* les pastilles ne touchent plus le compteur */
     body.eleve-mode .eleveTete a.eleveMondes{font-size:15px;padding:5px 11px}
@@ -2959,6 +2994,9 @@ function numberedBeadRadiusDrawn(splats, family, hiddenByTask, opposedTasks){
    du centre, ses lettres passaient sur le trait du haut de la tache ; 7 plus bas, elles
    sont dans la tache, et le jeton, au centre, reste au moins 2,5 unités sous le mot. */
 const OPPOSE_MOT_BAISSE = 7;
+/* Enquête, tache dévoilée : blanc entre le bas des lettres du nom de la couleur et le haut
+   du jeton (unités du dessin ; la tache fait 170 à 220 de rayon, le jeton 58). */
+const ENQUETE_NOM_ECART = 14;
 
 /* Report des jetons de la table de tirage vers la table de dessin (B, B± à 4 et 5 taches),
    au rayon dessiné (voir numberedBeadRadiusDrawn).
@@ -4538,9 +4576,12 @@ function drawInvestigateSplatName(target, s, idx, card, revealed, api = {}){
   const mkText = api.mkText || text;
   const word = investigateColorWord(investigateColorInfo(card, idx));
   const fs = clamp(Math.round(s.r * 0.30), 26, 60);
-  // Tache dévoilée : le mot à la même hauteur que « opposé » en B± (0,65 × rayon,
-  // baissé de OPPOSE_MOT_BAISSE), juste au-dessus du jeton du centre.
-  const y = revealed ? (s.cy - s.r * 0.65 + OPPOSE_MOT_BAISSE) : s.cy;
+  // Tache dévoilée : le mot se pose juste au-dessus du jeton du centre, à
+  // ENQUETE_NOM_ECART du bord du jeton (retouche du 22/09 : à la hauteur du mot
+  // « opposé » de B±, il flottait trop haut dans la tache). Écran et impression
+  // passent ici : le même écart partout.
+  const beadR = Number(card && card._beadR) || 58;
+  const y = revealed ? (s.cy - beadR - ENQUETE_NOM_ECART - fs * 0.34) : s.cy;
   target.appendChild(mkText(s.cx, y, word, {
     "text-anchor":"middle",
     "dominant-baseline":"middle",
@@ -6561,7 +6602,13 @@ function renderCard(card, revealState){
   }
 
   const layer = trayLayer;
-  const visualRevealState = (card.family === "C") ? (revealState >= 5 ? 2 : 0) : (isABProjectionLayout ? abRevealPhase : revealState);
+  /* Parcours élève de l'Enquête : une fois la carte validée, les taches restent
+     dévoilées à toutes les étapes du schéma (le drapeau est posé par
+     eleveDevoilerTache ; les bancs d'essai des tests dessinent sans lui). */
+  const eleveDevoileC = (card.family === "C") && typeof eleveEnqueteDevoile !== "undefined" && !!eleveEnqueteDevoile;
+  const visualRevealState = (card.family === "C") ? ((revealState >= 5 || eleveDevoileC) ? 2 : 0) : (isABProjectionLayout ? abRevealPhase : revealState);
+  /* le fondu de la couverture ne se joue qu'au moment du dévoilement, pas à chaque étape du schéma */
+  const fonduCouverture = !(eleveDevoileC && revealState > 0);
 
   if(card.family === "U" || card.family === "UPM"){
     const beadR = card._beadR ?? (card.family === "UPM" ? 34 : 32);
@@ -6681,7 +6728,7 @@ function renderCard(card, revealState){
         }));
       }
 
-      if(visualRevealState === 2){
+      if(visualRevealState === 2 && fonduCouverture){
         const pCov = el("path",{
           d: blobPath(s.cx, s.cy, s.r),
           fill: coverCol,
@@ -8535,6 +8582,11 @@ let idx = 0;
 let revealState = 0; // États selon le mode (A/B: 0→3, B±: 0→2, autres: 0/2)
 /* Parcours élève : aucun réglage visible, activé uniquement par ?eleve=1 dans l'adresse. */
 let eleveActif = false, parcoursId = "", impressionAuto = false;
+/* Enquête (mode C) en parcours élève : taches dévoilées après validation (renderCard
+   le lit), et étape du schéma en cours (0 = plateau et indice, 1 à 5 = les étapes
+   de la projection : schéma vide, rempli, regroupé, ordonné, résolution). */
+let eleveEnqueteDevoile = false, eleveSchemaEtape = 0;
+const ELEVE_SCHEMA_ETAPES = 5;
 let eleveIdx = 0, eleveEtoiles = 0, eleveSerie = [], eleveResultats = [], eleveCarteFautee = false, eleveRepriseFaite = false;
 /* parties supplémentaires d'une étape composée (voir « suite » dans l'adresse) */
 let eleveSuite = [];
@@ -8806,6 +8858,41 @@ function eleveInfosCarte(card){
   return null;
 }
 
+/* ===== Enquête (mode C) : chaque tache cache SA valeur, l'élève les saisit toutes
+   (lot E2, 22/09/2026). `valeurs[i]` = ce que cache la tache i ; `ordre` = les
+   taches de gauche à droite sur le plateau, l'ordre des cases du tableau. ===== */
+function eleveInfosEnquete(card){
+  if(!card || card.family !== "C" || !card._rel || card._directSubstitution) return null;
+  const valeurs = Array.isArray(card.hidden) ? card.hidden.map(v => Number(v)) : [];
+  if(!valeurs.length || valeurs.some(v => !(v > 0))) return null;
+  const visibleSum = (card.visible || []).reduce((s, v) => s + v, 0);
+  const cx = i => (card._splats && card._splats[i] && Number(card._splats[i].cx)) || 0;
+  const ordre = valeurs.map((_, i) => i).sort((a, b) => cx(a) - cx(b));
+  return { tasks: valeurs.length, valeurs, visibleSum, ordre };
+}
+
+/* La mini-tache de la case prend la couleur de sa tache, et son nom s'écrit à côté
+   (« noire », « verte »…) : à 14 px, noire, violette et bleue se ressemblent, et un
+   élève daltonien n'a que le mot. */
+function eleveTacheCouleurHtml(info){
+  return `<span class="eleveTacheNom">` +
+    ELEVE_TACHE_MINI.replace('class="eleveMiniTache"', 'class="eleveTacheCouleur"').replace('fill="#111827"', `fill="${info.screen}"`) +
+    `<span>${investigateColorWord(info)}</span></span>`;
+}
+/* Case donnée, pas à remplir (le total, les jetons visibles) : la question de
+   l'Enquête porte sur les taches seulement. Sans champ : la validation l'ignore. */
+function eleveCaseDonneeHtml(classe, libelle, valeur){
+  return `<div class="eleveCase ${classe} donnee" style="flex:1 1 0">` +
+    `<span class="eleveTacheNom"><span>${libelle}</span></span><span class="eleveDonneeVal">${valeur}</span></div>`;
+}
+function eleveCasesEnqueteHtml(card, enquete){
+  let bas = "";
+  if(enquete.visibleSum > 0) bas += eleveCaseDonneeHtml("blanche", "visibles", enquete.visibleSum);
+  /* cases de largeur égale : des largeurs proportionnelles donneraient la réponse */
+  enquete.ordre.forEach(i => { bas += eleveCaseHtml("grise", enquete.valeurs[i], 1, true, eleveTacheCouleurHtml(investigateColorInfo(card, i))); });
+  return bas;
+}
+
 function eleveEnregistrerReussite(sansFaute, total){
   if(!parcoursId) return;
   try{
@@ -8818,9 +8905,9 @@ function eleveEnregistrerReussite(sansFaute, total){
 /* Le total et les jetons visibles se remplissent dans une case VIDE, comme sur
    les fiches imprimées ; seule la case d'une tache garde son « ? » : c'est
    l'inconnue, ce que cache la tache (décision du 19/09/2026). */
-function eleveCaseHtml(classe, attendu, largeur, avecTache){
+function eleveCaseHtml(classe, attendu, largeur, avecTache, tacheHtml){
   return `<div class="eleveCase ${classe}" style="flex:${largeur} 1 0" data-attendu="${attendu}">` +
-    (avecTache ? ELEVE_TACHE_MINI : "") +
+    (avecTache ? (tacheHtml || ELEVE_TACHE_MINI) : "") + /* Enquête : la mini-tache colorée et son nom */
     `<input class="eleveChamp" type="text" inputmode="numeric" maxlength="3" autocomplete="off"${avecTache ? ' placeholder="?"' : ""}></div>`;
 }
 
@@ -8867,6 +8954,9 @@ const ELEVE_PLATEAU_MIN = 150, ELEVE_RESERVE = 32, ELEVE_PAVE_JEU = 10;
    en une ligne au lieu de trois, et les lignes gagnées reviennent au plateau.
    Tablette et ordinateur gardent le texte complet. */
 function eleveConsigneSchema(){
+  /* Enquête : la question de la fiche, courte partout (le panneau porte la classe) */
+  const panneau = document.getElementById("elevePanel");
+  if(panneau && panneau.classList.contains("enquete")) return "Combien de jetons sous chaque tache ?";
   const telephone = !!(window.MathsGoPaveChiffres && window.MathsGoPaveChiffres.estTactile()
     && window.matchMedia && window.matchMedia("(max-width: 599px)").matches);
   return telephone
@@ -9009,6 +9099,7 @@ function renderEleveSplat(){
     else cardbox.insertBefore(tete, cardbox.firstChild);
   }
   elevePaveRendrePlateau(); /* chaque dessin sur le plateau d'origine ; le pavé le réduit ensuite */
+  eleveSchemaReinitialiser(); /* Enquête : le schéma de la carte d'avant a pu élargir le dessin */
   if(!cards.length){ tete.style.display = "none"; panneau.innerHTML = ""; renderEmpty(); elevePaveSynchroniser(); return; }
   if(eleveSerie.length === 0){
     /* La « tache vide » (elle cache 0) est un bon cas sur fiche, mais dans le
@@ -9044,10 +9135,12 @@ function renderEleveSplat(){
 
   const card = eleveSerie[eleveIdx];
   const infos = eleveInfosCarte(card);
+  const enquete = infos ? null : eleveInfosEnquete(card);
+  eleveEnqueteDevoile = false; eleveSchemaEtape = 0; /* nouvelle carte : taches couvertes, plateau sans schéma */
   renderCard(card, 0);
   eleveCadrerScene();
   eleveCalerLargeur(panneau);
-  if(!infos){
+  if(!infos && !enquete){
     tete.style.display = "none";
     panneau.innerHTML = `<p class="eleveConsigne">Le parcours élève n'existe pas encore pour ce mode.</p>`;
     elevePaveSynchroniser();
@@ -9058,16 +9151,24 @@ function renderEleveSplat(){
     elevePastillesHtml();
   eleveCarteFautee = false;
   eleveEchecs = 0;
+  panneau.classList.toggle("enquete", !!enquete); /* avant la consigne, qui le lit */
 
-  const flexVis = Math.max(infos.visibleSum, card.total * 0.05, 1);
-  const flexHid = Math.max(infos.H, card.total * 0.05, 1);
-  let bas = "";
-  if(infos.visibleSum > 0) bas += eleveCaseHtml("blanche", infos.visibleSum, flexVis, false);
-  for(let i = 0; i < infos.tasks; i++) bas += eleveCaseHtml("grise", infos.H, flexHid, true);
+  let bas = "", haut;
+  if(enquete){
+    /* Enquête : total donné, une case par tache (largeurs égales), voir eleveCasesEnqueteHtml */
+    bas = eleveCasesEnqueteHtml(card, enquete);
+    haut = eleveCaseDonneeHtml("haut blanche", "Total", card.total);
+  }else{
+    const flexVis = Math.max(infos.visibleSum, card.total * 0.05, 1);
+    const flexHid = Math.max(infos.H, card.total * 0.05, 1);
+    if(infos.visibleSum > 0) bas += eleveCaseHtml("blanche", infos.visibleSum, flexVis, false);
+    for(let i = 0; i < infos.tasks; i++) bas += eleveCaseHtml("grise", infos.H, flexHid, true);
+    haut = eleveCaseHtml("haut blanche", card.total, 1, false);
+  }
 
   panneau.innerHTML =
     `<p class="eleveConsigne">${eleveConsigneSchema()}</p>` + /* texte complet sauf sur un téléphone au pavé */
-    `<div class="eleveDiag"><div class="ligneHaut">${eleveCaseHtml("haut blanche", card.total, 1, false)}</div>` +
+    `<div class="eleveDiag"><div class="ligneHaut">${haut}</div>` +
     `<div class="ligneBas">${bas}</div></div>` +
     `<div class="eleveMsg" id="eleveMsg"></div>` +
     `<div class="eleveActions"><button id="eleveValider" type="button">Valider</button></div>`;
@@ -9100,6 +9201,7 @@ function eleveValiderSplat(){
   casesE.forEach(c => {
     const attendu = parseInt(c.getAttribute("data-attendu"), 10);
     const inp = c.querySelector(".eleveChamp");
+    if(!inp) return; /* case donnée (Enquête : total, jetons visibles) : rien à vérifier */
     const repondu = parseInt(String(inp.value).trim(), 10);
     const juste = Number.isFinite(repondu) && repondu === attendu;
     c.classList.toggle("ko", !juste);
@@ -9112,11 +9214,13 @@ function eleveValiderSplat(){
     if(!eleveCarteFautee && !etaitRouge) eleveEtoiles++;
     eleveResultats[eleveIdx] = !eleveCarteFautee && !etaitRouge;
     bouton.disabled = true;
-    msg.textContent = eleveCarteFautee ? "Juste ! Regarde sous la tache\u2026" : "Bravo, du premier coup ! Regarde sous la tache\u2026";
+    msg.textContent = eleveMessageJuste(eleveCarteFautee);
     msg.className = "eleveMsg bravo";
     casesE.forEach(c => { const i = c.querySelector(".eleveChamp"); if(i) i.readOnly = true; });
     eleveSauverEnCours();
     eleveDevoilerTache();
+    eleveProposerSchema(bouton); /* Enquête seulement : « Voir le schéma » avant « Carte suivante » */
+    eleveEnqueteLargeursVraies(); /* Enquête : les cases prennent leur vraie largeur */
     /* comme aux mondes 3-4 : l'élève regarde sous la tache et enchaîne quand il veut (Entrée suffit) */
     const suivant = document.createElement("button");
     suivant.type = "button"; suivant.className = "suivant";
@@ -9163,6 +9267,127 @@ function eleveDevoilerTache(){
   document.querySelectorAll("#mainSvg path").forEach(p => {
     if((p.getAttribute("fill") || "") === "var(--splat-cover)") p.classList.add("eleveDevoile");
   });
+  /* Enquête : chaque tache a sa couleur (pas « --splat-cover ») et son nom doit
+     monter au-dessus du jeton — c'est le dévoilement de la projection, redessiné
+     avec le fondu de la couverture (voir eleveDevoileC dans renderCard). */
+  const card = eleveSerie[eleveIdx];
+  if(card && eleveInfosEnquete(card)){
+    eleveEnqueteDevoile = true;
+    renderCard(card, eleveSchemaEtape);
+    eleveCadrerScene();
+  }
+}
+
+/* « Bravo… Regarde sous la tache… » ; l'Enquête a plusieurs taches à regarder. */
+function eleveMessageJuste(apresErreur){
+  const enquete = !!document.querySelector("#elevePanel.enquete");
+  return (apresErreur ? "Juste ! " : "Bravo, du premier coup ! ") + (enquete ? "Regarde sous les taches…" : "Regarde sous la tache…");
+}
+
+/* ===== Enquête : « Voir le schéma » (lot E2) =====
+   Après la validation — juste, ou réponse montrée —, le bouton jaune rejoue sur le
+   plateau les cinq étapes de la projection (schéma vide, rempli, regroupé, ordonné,
+   résolution), une par appui ; à la dernière il s'efface et il reste « Carte
+   suivante ». Les taches restent dévoilées d'une étape à l'autre. */
+function eleveProposerSchema(bouton){
+  const card = eleveSerie[eleveIdx];
+  if(!bouton || !card || !eleveInfosEnquete(card) || document.getElementById("eleveSchema")) return;
+  /* trois boutons ne tiennent pas sur une ligne : le Valider, éteint, s'efface ; il
+     reste « Voir le schéma » et « Carte suivante », comme sur la maquette */
+  bouton.hidden = true;
+  const voir = document.createElement("button");
+  voir.type = "button"; voir.id = "eleveSchema"; voir.className = "secondaire";
+  voir.textContent = "Voir le schéma";
+  voir.onclick = eleveVoirSchema;
+  bouton.parentNode.appendChild(voir);
+}
+/* Une fois la carte validée (juste, ou réponse montrée), les cases prennent leur
+   VRAIE largeur, proportionnelle aux valeurs — le tableau devient le schéma en barres
+   de la carte (décision du 22/09). Pendant la recherche elles restent égales : des
+   largeurs proportionnelles donneraient la réponse. Un minimum (CSS) garde le nom
+   de la couleur et le nombre lisibles ; le glissement est une transition CSS. */
+function eleveEnqueteLargeursVraies(){
+  const panneau = document.getElementById("elevePanel");
+  if(!panneau || !panneau.classList.contains("enquete")) return;
+  const card = eleveSerie[eleveIdx];
+  const infos = card ? eleveInfosEnquete(card) : null;
+  if(!infos) return;
+  const diag = panneau.querySelector(".eleveDiag");
+  if(diag) diag.classList.add("vraies");
+  panneau.querySelectorAll(".ligneBas .eleveCase").forEach(c => {
+    const v = c.classList.contains("donnee") ? infos.visibleSum : parseInt(c.getAttribute("data-attendu"), 10);
+    if(Number.isFinite(v) && v > 0) c.style.flexGrow = String(v);
+  });
+}
+function eleveVoirSchema(){
+  const card = eleveSerie[eleveIdx];
+  if(!card || eleveSchemaEtape >= ELEVE_SCHEMA_ETAPES) return;
+  eleveSchemaEtape++;
+  eleveDessinerSchema(card);
+  const voir = document.getElementById("eleveSchema");
+  if(!voir) return;
+  if(eleveSchemaEtape >= ELEVE_SCHEMA_ETAPES){
+    voir.remove();
+    const suivant = document.querySelector("#elevePanel .eleveActions .suivant");
+    if(suivant) suivant.focus(); /* Entrée enchaîne sur la carte suivante */
+  }else{
+    voir.textContent = "Étape suivante ▶";
+  }
+}
+/* Le schéma se dessine dans le plateau, cadré sur son contenu. Il est plus large
+   que haut (1600 × ~1100) : sur un téléphone, le plateau réduit pour le pavé (150 à
+   170 px) le rendrait minuscule ; il regagne la hauteur qui met le dessin à pleine
+   largeur, jusqu'à la place libre sous le bouton : tout ce qui est au-dessus et
+   au-dessous du plateau dans la carte (compteur, tableau, message, boutons) reste à
+   l'écran avec 16 px de jeu, et « Étape suivante » puis « Carte suivante » restent
+   entiers sans défiler (à 62 % de la fenêtre, un PC de 730 px de haut les poussait
+   sous le bord). Il ne rétrécit jamais.
+   Téléphone (moins de 600 px de large) : même à pleine largeur, les textes du schéma
+   font 7 px, et la scène entière (plateau + schéma) pousserait le bouton « Étape
+   suivante » sous le bord de l'écran. Le plateau ne montre alors QUE le cadre du
+   schéma (les taches dévoilées restent lisibles dans le tableau du dessous), dessiné
+   ELEVE_SCHEMA_ZOOM_TEL fois plus large que l'écran : il se fait glisser du doigt de
+   gauche à droite (le bord coupé le montre), et sa hauteur reste petite. */
+const ELEVE_SCHEMA_ZOOM_TEL = 1.5;
+const ELEVE_SCHEMA_CADRES = ["relationSituationSchema", "relationGroupedSchema", "relationGroupedSchemaSolved", "relationOrderedSchema", "relationOrderedSchemaSolved"];
+function eleveDessinerSchema(card){
+  renderCard(card, eleveSchemaEtape);
+  eleveCadrerScene();
+  const plateau = document.getElementById("svgWrap");
+  if(!plateau) return;
+  try{
+    const r = plateau.getBoundingClientRect();
+    const telephone = !!(window.matchMedia && window.matchMedia("(max-width: 599px)").matches);
+    plateau.classList.toggle("eleveSchemaZoom", telephone);
+    if(telephone){
+      const cadre = ELEVE_SCHEMA_CADRES.map(id => document.getElementById(id)).find(Boolean);
+      const bb = cadre ? cadre.getBBox() : null;
+      if(bb && bb.width > 0) svg.setAttribute("viewBox", `${bb.x - 12} ${bb.y - 12} ${bb.width + 24} ${bb.height + 24}`);
+      const vbTel = svg.viewBox.baseVal;
+      const largeur = Math.round(r.width * ELEVE_SCHEMA_ZOOM_TEL);
+      const hauteur = Math.round(largeur * vbTel.height / vbTel.width);
+      svg.style.width = largeur + "px"; svg.style.height = hauteur + "px";
+      plateau.style.height = hauteur + "px"; plateau.style.minHeight = hauteur + "px";
+      plateau.scrollLeft = 0;
+      return;
+    }
+    const vb = svg.viewBox.baseVal;
+    const voulu = Math.round(r.width * vb.height / vb.width);
+    /* la place réellement libre : la fenêtre, moins tout ce qui est au-dessus et
+       au-dessous du plateau dans la carte, moins 16 px de jeu */
+    const carte = document.querySelector("#fsHost .cardbox");
+    const autres = carte ? carte.getBoundingClientRect().height - r.height : 0;
+    const hauteurFenetre = window.innerHeight || 0;
+    const plafond = hauteurFenetre > 0 ? Math.round(hauteurFenetre - autres - 16) : voulu;
+    const cible = Math.max(ELEVE_PLATEAU_MIN, Math.min(voulu, plafond));
+    if(cible > r.height){ plateau.style.height = cible + "px"; plateau.style.minHeight = cible + "px"; }
+  }catch(_e){ /* le cadrage d'origine suffit */ }
+}
+/* Nouvelle carte : le plateau retrouve sa taille et son cadrage d'avant le schéma. */
+function eleveSchemaReinitialiser(){
+  const plateau = document.getElementById("svgWrap");
+  if(plateau){ plateau.classList.remove("eleveSchemaZoom"); plateau.scrollLeft = 0; }
+  if(svg && svg.style){ svg.style.width = ""; svg.style.height = ""; }
 }
 
 /* Lien vers la carte des mondes (seulement quand on vient du parcours). */
@@ -9219,7 +9444,8 @@ function eleveMontrerReponse(){
   if(!bouton) return;
   document.querySelectorAll("#elevePanel .eleveCase").forEach(c => {
     const inp = c.querySelector(".eleveChamp");
-    if(inp){ inp.value = c.getAttribute("data-attendu"); inp.readOnly = true; }
+    if(!inp) return; /* case donnée (Enquête) */
+    inp.value = c.getAttribute("data-attendu"); inp.readOnly = true;
     c.classList.remove("ko", "ok");
     c.classList.add("montre");
   });
@@ -9230,6 +9456,8 @@ function eleveMontrerReponse(){
   eleveDevoilerTache();
   bouton.disabled = true;
   if(voir) voir.remove();
+  eleveProposerSchema(bouton); /* Enquête : le schéma aussi après la réponse montrée */
+  eleveEnqueteLargeursVraies();
   const suivant = document.createElement("button");
   suivant.type = "button"; suivant.className = "suivant";
   suivant.textContent = "Carte suivante \u25b6";
@@ -9247,6 +9475,7 @@ function renderEleveFinSplat(panneau){
   const rouges = [];
   for(let i = 0; i < total; i++) if(eleveResultats[i] === "ko") rouges.push(i);
   eleveEtoiles = eleveResultats.filter(r => r === true).length;
+  eleveEnqueteDevoile = false; eleveSchemaEtape = 0; /* l'écran de fin montre la dernière carte couverte, comme au monde 2 */
   renderCard(eleveSerie[total - 1], 0);
   if(rouges.length){
     /* des cartes rouges : pas d'étoile, on propose de les rejouer */
