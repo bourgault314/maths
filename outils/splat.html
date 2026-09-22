@@ -783,12 +783,14 @@
      la pastille des DEUX côtés (le mot reste centré sur le nombre) et se centre par marges
      automatiques. Dans une case trop étroite, ces marges tombent à 0 : l'étiquette se cale
      à gauche au lieu de déborder des deux côtés, la pastille reste entière et le mot glisse
-     à droite de ce qui manque. Réserve = pastille + écart de 3 px : 14 + 3 ici, 20 + 3 sur
-     ordinateur (media query plus bas). TOTAL et « visibles » n'ont pas de pastille : .grise
-     ne vise que les cases de taches. */
-  #elevePanel.enquete .eleveCase.grise{--reserve-tache:17px}
+     à droite de ce qui manque. La pastille s'accroche à 3 px du mot ; réserve = bord +
+     pastille + écart. Téléphone : 2 + 14 + 3 = 19 px — les 2 px de bord gardent entier le
+     cadre bleu de la case active (ombre intérieure de 4 px ; le dessin de la pastille
+     commence 2,6 px après sa boîte). Ordinateur : 20 + 3 = 23 px (media query plus bas).
+     TOTAL et « visibles » n'ont pas de pastille : .grise ne vise que les cases de taches. */
+  #elevePanel.enquete .eleveCase.grise{--reserve-tache:19px}
   #elevePanel.enquete .eleveCase.grise .eleveTacheNom{margin:0 auto;padding:0 var(--reserve-tache)}
-  #elevePanel.enquete .eleveTacheCouleur{position:absolute;left:0;top:50%;transform:translateY(-50%)}
+  #elevePanel.enquete .eleveTacheCouleur{position:absolute;right:calc(100% - var(--reserve-tache) + 3px);top:50%;transform:translateY(-50%)}
   #elevePanel.enquete input.eleveChamp{height:auto;flex:0 0 auto;line-height:1.1}
   /* case fausse : le champ ne remplit plus la case, c'est la case qui rougit */
   /* après validation : glissement vers les vraies largeurs, minimum pour lire le nom */
