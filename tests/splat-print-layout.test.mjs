@@ -91,8 +91,9 @@ test("la correction C agrandit seulement ses blocs imprimes", () => {
   const profileSource = functionSource("getRelationCorrectionPrintProfile", "renderCardIntoSvg");
   const getProfile = Function(`return (${profileSource})`)();
 
-  assert.deepEqual(getProfile({_directSubstitution:false}), {verticalScale:1.20, fontScale:1.25, barShiftX:30});
-  assert.deepEqual(getProfile({_directSubstitution:true}), {verticalScale:1.40, fontScale:1.30});
+  // ownerLabels (lot E1, 21/09/2026) : la correction imprimée nomme la couleur de ses pastilles.
+  assert.deepEqual(getProfile({_directSubstitution:false}), {verticalScale:1.20, fontScale:1.25, barShiftX:30, ownerLabels:true});
+  assert.deepEqual(getProfile({_directSubstitution:true}), {verticalScale:1.40, fontScale:1.30, ownerLabels:true});
 
   const screenRenderer = functionSource("renderCard", "approxTextWidthForLabel");
   const printRenderer = functionSource("renderCardIntoSvg", "printSheet");
