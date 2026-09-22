@@ -109,7 +109,7 @@ test("l'équation du schéma regroupé suit le tableau et condense les x par tac
   assert.match(groupedSource, /const fitOps = solved \? plan\.ops : \[\]/);
 });
 
-test("la correction C conserve exactement ses trois blocs (plus la reformulation, seulement quand un indice est à retourner)", () => {
+test("la correction C compte quatre blocs : le cadre « Reformulation » ou « Tache de référence » (toujours dessiné), puis les trois schémas", () => {
   const printSource = functionSource("renderCardIntoSvg", "printSheet");
   const normalCorrection = printSource.match(/if\(card\._directSubstitution\)\{[\s\S]*?\}else\{([\s\S]*?)\n    \}/);
   assert.ok(normalCorrection, "la branche de correction C doit exister");
