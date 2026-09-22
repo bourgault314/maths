@@ -8,7 +8,7 @@
      À SUPPRIMER quand la page entrera dans le dépôt (liens relatifs). -->
 
 <title>L’univers SPLAT! — le parcours des élèves | maths&amp;go</title>
-  <meta name="description" content="Quatre mondes à jouer en ligne, du cycle 3 (progression SPLAT!) au cycle 4 (relatifs), avec validation en ligne et étoiles au mérite.">
+  <meta name="description" content="Cinq mondes à jouer en ligne, du cycle 3 (progression SPLAT!) au cycle 4 (relatifs), avec validation en ligne et étoiles au mérite.">
   <link rel="canonical" href="https://mathsgo.re/outils/splat_univers.html">
 <link rel="icon" href="/favicon.ico" sizes="48x48">
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
@@ -19,6 +19,7 @@
 :root{
   --page:#f6f8fb; --paper:#ffffff; --ink:#10294a; --muted:#5c6c82; --line:#d9e2ec;
   --teal:#08aaa5; --blue:#0b67b2; --orange:#f58220; --gold:#f9bf3b; --violet:#7b42b4;
+  --framboise:#be185d; /* SPLAT! Enquête : ni une couleur de monde, ni une couleur de tache */
   --shadow:0 10px 26px rgba(22,47,82,.10);
 }
 *{box-sizing:border-box}
@@ -67,6 +68,7 @@ main{max-width:980px;margin:0 auto;padding:10px 14px 60px}
 .monde>.head{display:flex;align-items:center;gap:14px;padding:16px 18px;color:#fff}
 .monde.m1>.head{background:var(--orange)}
 .monde.m2>.head{background:var(--blue)}
+.monde.menq>.head{background:var(--framboise)}
 .monde.m3>.head{background:var(--teal)}
 .monde.m4>.head{background:var(--violet)}
 .monde .head svg.blob{width:46px;height:46px;flex:0 0 auto}
@@ -94,6 +96,10 @@ main{max-width:980px;margin:0 auto;padding:10px 14px 60px}
 .etapes{list-style:none;margin:0;padding:10px 14px 20px;position:relative}
 .etape{position:relative;display:flex;gap:12px;align-items:flex-start;padding:12px 4px 12px 2px}
 .etape+.etape{border-top:1px dashed var(--line)}
+/* intertitre à l'intérieur de la liste des étapes (SPLAT! Enquête : additif / multiplicatif) */
+.etapes .groupeTitre{margin:0;padding:14px 6px 2px;font-size:13px;font-weight:800;letter-spacing:.7px;
+  text-transform:uppercase;color:var(--muted)}
+.etape+.groupeTitre{margin-top:6px;padding-top:18px;border-top:1px dashed var(--line)}
 .badge{position:relative;width:58px;height:58px;flex:0 0 auto;cursor:pointer;border:none;background:none;padding:0}
 .badge svg{width:100%;height:100%;display:block}
 .badge .n{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
@@ -111,6 +117,7 @@ main{max-width:980px;margin:0 auto;padding:10px 14px 60px}
 .actions a.jouer{color:#fff;border:none}
 .m1 .actions a.jouer{background:var(--orange)}
 .m2 .actions a.jouer{background:var(--blue)}
+.menq .actions a.jouer{background:var(--framboise)}
 .m3 .actions a.jouer{background:var(--teal)}
 .m4 .actions a.jouer{background:var(--violet)}
 .actions a.fiche{background:var(--paper);color:var(--ink)}
@@ -126,10 +133,12 @@ main{max-width:980px;margin:0 auto;padding:10px 14px 60px}
 .badge use.fond{stroke:rgba(0,0,0,.14);stroke-width:2;transition:fill .25s}
 .m1 .badge use.fond{fill:#fbcda6}
 .m2 .badge use.fond{fill:#9dc2e0}
+.menq .badge use.fond{fill:#f2c4d6}
 .m3 .badge use.fond{fill:#9cdddb}
 .m4 .badge use.fond{fill:#dcc8f0}
 .m1 .etape.done .badge use.fond{fill:var(--orange)}
 .m2 .etape.done .badge use.fond{fill:var(--blue)}
+.menq .etape.done .badge use.fond{fill:var(--framboise)}
 .m3 .etape.done .badge use.fond{fill:var(--teal)}
 .m4 .etape.done .badge use.fond{fill:var(--violet)}
 .badge .star use{fill:var(--gold);stroke:#b8860b;stroke-width:1}
@@ -137,9 +146,14 @@ main{max-width:980px;margin:0 auto;padding:10px 14px 60px}
 .etape:nth-child(3n+1) .badge svg.tache{transform:rotate(-9deg)}
 .etape:nth-child(3n+2) .badge svg.tache{transform:rotate(14deg)}
 .etape:nth-child(3n) .badge svg.tache{transform:rotate(4deg)}
-/* chiffre : blanc sur pleine couleur, encre sur teinte claire ;
-   décalé d'un poil pour tomber au centre visuel de la tache */
-.badge .n{color:var(--ink);transform:translate(-0.5px,1.5px)}
+/* chiffre : blanc sur pleine couleur, encre sur teinte claire.
+   Remontée de 2,2 px pour tomber sur le centre VISUEL de la tache : la forme a
+   sa masse en haut (son centre de gravité est 2,6 unités au-dessus du centre de
+   la boîte de 110, soit 1,4 px ici) et le chiffre, centré sur sa boîte de ligne,
+   tombe encore 0,8 px plus bas parce que cette boîte réserve la place des
+   jambages (p, g, y) qu'un chiffre n'a pas. La rotation des taches ne change
+   rien : leur centre de gravité ne bouge que de ±0,3 px. */
+.badge .n{color:var(--ink);transform:translateY(-2.2px)}
 .etape.done .badge .n{color:#fff}
 
 .monde.enprepa .head{filter:saturate(.35);opacity:.85}
@@ -224,12 +238,12 @@ footer a{color:var(--blue)}
   <svg class="heroBlob b4" viewBox="0 0 110 110"><use href="#tacheEtoile" fill="#f9bf3b" opacity=".22" width="110" height="110"/></svg>
   <svg class="heroBlob b6" viewBox="0 0 110 110"><use href="#tacheEtoile" fill="#08aaa5" opacity=".13" width="110" height="110"/></svg>
   <h1>L'univers <span class="splat">SPLAT!</span></h1>
-  <p class="sub">Des jetons se cachent sous les taches… Traverse les quatre mondes, étape par étape,
+  <p class="sub">Des jetons se cachent sous les taches… Traverse les cinq mondes, étape par étape,
   et deviens un champion des équations !</p>
 </div>
 
 <div class="totalBar" id="totalBar">
-  <div class="lbl"><span>Ta progression</span><span id="totalTxt">0 / 15 étoiles</span></div>
+  <div class="lbl"><span>Ta progression</span><span id="totalTxt">0 / 30 étoiles</span></div>
   <div class="rail"><div class="fill" id="totalFill"></div></div>
 </div>
 
@@ -237,7 +251,7 @@ footer a{color:var(--blue)}
 
 <footer>
   Outils : <a href="/outils/?domain=algebre&collection=splat">la famille Splat! de maths&amp;go</a> ·
-  progression cycle 3 en trois séquences · monde 4 : prolongement relatifs (cycle 4).<br>
+  progression cycle 3 en quatre séquences · monde 5 : prolongement relatifs (cycle 4).<br>
   <span>Professeurs : <a href="?prof=1">vue professeur</a> — fiches à imprimer et outils à projeter, pour chaque étape.</span>
 </footer>
 
@@ -252,8 +266,62 @@ const M2A3="mode=U&equation=AX_PLUS_C_EQ_B&tasksMin=2&tasksMax=5&visibleMax=15&h
 /* Fiches du monde 2 : énoncé seul, 6 cartes par page (le plateau et, dessous, de la
    place pour dessiner le schéma en barres et écrire l'opération). */
 const FICHE="&print=statement&layout=6&imprimer=1&title=";
+/* ---- SPLAT! Enquête (lot E0, 22/09/2026) : les 10 fiches du monde --------- 
+   Réglages figés, seule la graine change ; les 20 adresses (énoncé / correction)
+   sont exactement celles de splat-enquete-lot-E0-adresses.md. Le jeu de l'élève
+   reprend les MÊMES réglages sans layout/note/title, plus &eleve=1&parcours=enqN.
+   Ne jamais changer une graine sans refaire les PDF des livrets : la graine fige
+   la série carte par carte (tests/splat-enquete-carte-mondes.test.mjs les épingle). */
+const EQ="/splat/classique/?";
+const ENQ_COMMUN="&cards=4&unknown=question";
+const ENQ_NOTE="Reformule l\u2019indice avant de dessiner ton schéma.";
+const ENQ_ADD="Les enquêtes additives", ENQ_MUL="Les enquêtes multiplicatives et mélangées";
+const ENQ_FICHES=[
+ {t:"De plus que",g:ENQ_ADD,
+  o:"Deux taches, et un indice : l\u2019une en cache quelques-uns de plus que l\u2019autre.",
+  q:"mode=C&splats=2&clues=SENTENCE&mul=0&div=0&add=1&sub=0&deltaMax=10&visibleMin=0&visibleMax=0&totalMin=10&totalMax=30&seed=339"},
+ {t:"De moins que",note:true,
+  o:"Le même jeu à l\u2019envers : l\u2019indice dit « de moins que ». Relis-le avant de dessiner.",
+  q:"mode=C&splats=2&clues=SENTENCE&mul=0&div=0&add=0&sub=1&deltaMax=10&visibleMin=0&visibleMax=0&totalMin=10&totalMax=30&seed=1071"},
+ {t:"Plus ou moins",
+  o:"Tantôt « de plus », tantôt « de moins » : lis bien l\u2019indice à chaque carte.",
+  q:"mode=C&splats=2&clues=SENTENCE&mul=0&div=0&add=1&sub=1&deltaMax=15&visibleMin=0&visibleMax=0&totalMin=15&totalMax=50&seed=918"},
+ {t:"Trois taches en chaîne",
+  o:"Trois taches et deux indices qui s\u2019enchaînent : de la première à la troisième.",
+  q:"mode=C&splats=3&structure=CHAIN&clues=SENTENCE&mul=0&div=0&add=1&sub=1&deltaMax=15&visibleMin=0&visibleMax=0&totalMin=20&totalMax=60&seed=290"},
+ {t:"Le défi additif",
+  o:"Trois taches, et des jetons visibles en plus : le grand mélange de l\u2019addition.",
+  q:"mode=C&splats=3&structure=MIX&clues=SENTENCE&mul=0&div=0&add=1&sub=1&deltaMax=15&visibleMin=1&visibleMax=3&totalMin=20&totalMax=60&seed=950"},
+ {t:"Fois plus",g:ENQ_MUL,
+  o:"L\u2019indice multiplie : une tache en cache deux fois plus, ou trois fois plus.",
+  q:"mode=C&splats=2&clues=SENTENCE&mul=1&div=0&add=0&sub=0&deltaMax=10&visibleMin=0&visibleMax=0&totalMin=10&totalMax=40&seed=1372"},
+ {t:"Fois moins",note:true,
+  o:"L\u2019indice partage : « deux fois moins ». Reformule-le avant de dessiner.",
+  q:"mode=C&splats=2&clues=SENTENCE&mul=0&div=1&add=0&sub=0&deltaMax=10&visibleMin=0&visibleMax=0&totalMin=10&totalMax=40&seed=1343"},
+ {t:"Les quatre opérations",
+  o:"Plus, moins, fois, divisé : l\u2019indice peut être de n\u2019importe quelle sorte.",
+  q:"mode=C&splats=2&clues=SENTENCE&mul=1&div=1&add=1&sub=1&deltaMax=15&visibleMin=0&visibleMax=0&totalMin=15&totalMax=50&seed=405"},
+ {t:"Trois taches, 4 opérations",
+  o:"Trois taches en chaîne, et les quatre opérations dans les indices.",
+  q:"mode=C&splats=3&structure=CHAIN&clues=SENTENCE&mul=1&div=1&add=1&sub=1&deltaMax=15&visibleMin=0&visibleMax=0&totalMin=20&totalMax=60&seed=1313"},
+ {t:"Le grand défi",
+  o:"Trois taches, des jetons visibles, toutes les opérations : l\u2019enquête finale.",
+  q:"mode=C&splats=3&structure=MIX&clues=SENTENCE&mul=1&div=1&add=1&sub=1&deltaMax=15&visibleMin=1&visibleMax=3&totalMin=20&totalMax=60&seed=537"}
+];
+function enqJeu(i,n){return EQ+ENQ_FICHES[i].q+ENQ_COMMUN+"&eleve=1&parcours=enq"+n;}
+function enqImprimer(i,n,quoi){const f=ENQ_FICHES[i];
+  return EQ+f.q+ENQ_COMMUN+"&layout=4"+(f.note?"&note="+encodeURIComponent(ENQ_NOTE):"")+
+         "&title="+encodeURIComponent("Fiche "+n+" \u2014 "+f.t)+"&print="+quoi;}
+const MONDE_ENQUETE={cls:"menq",idp:"enq",actif:true,nom:"SPLAT! Enquête",
+  desc:"Cette fois, les taches ne parlent plus toutes seules : un indice les relie. À toi de mener l\u2019enquête pour trouver ce que chacune cache.",
+  etapes:ENQ_FICHES.map(f=>({t:f.t,o:f.o,g:f.g}))};
+
+/* « cls » et « idp » sont des noms INTERNES, figés une fois pour toutes : ils ne
+   suivent pas le numéro affiché du monde (calculé, lui, à partir du rang dans
+   MONDES). Changer un « idp », c'est déplacer toutes les étoiles cochées à la
+   main que les élèves ont déjà dans leur navigateur. */
 const MONDES=[
- {cls:"m1",actif:true,nom:"Petit SPLAT!",desc:"Le tout, les parties… et les premières taches ! Complète les schémas en barres : ici, c'est toi qui réponds et la page vérifie.",
+ {cls:"m1",idp:"e0",actif:true,nom:"Petit SPLAT!",desc:"Le tout, les parties… et les premières taches ! Complète les schémas en barres : ici, c'est toi qui réponds et la page vérifie.",
   etapes:[
    {t:"Complète le schéma",o:"Un tout, deux parties : écris les nombres qui manquent.",p:"m1e1",
     eqs:["𝑥 + 10 = 14", "𝑥 + 4 = 19", "𝑥 + 3 = 15", "𝑥 + 4 = 13", "𝑥 + 1 = 18", "𝑥 + 1 = 11", "𝑥 + 8 = 17", "𝑥 + 12 = 17", "𝑥 + 5 = 18", "𝑥 + 5 = 14", "𝑥 + 8 = 9", "𝑥 + 4 = 12"],
@@ -279,7 +347,7 @@ const MONDES=[
     eqs:["3𝑥 + 14 = 20", "6𝑥 + 10 = 16", "3𝑥 + 3 = 18", "6𝑥 + 2 = 14", "2𝑥 + 14 = 16", "6𝑥 = 12", "3𝑥 + 1 = 16", "3𝑥 = 6", "5𝑥 + 5 = 10", "2𝑥 = 20", "4𝑥 + 1 = 17", "2𝑥 = 12"],
     j:PS+"?support=eleve&problem=classic&target=20&splats=mix&exercise=construct&seed=514457&parcours=m1e6",
     f:PS+"?support=print&problem=classic&target=20&splats=mix&exercise=construct&seed=514457"}]},
- {cls:"m2",actif:true,nom:"SPLAT! classique",desc:"Le schéma en barres devient une équation : complète-le et trouve ce que cache la tache — la page vérifie.",
+ {cls:"m2",idp:"e1",actif:true,nom:"SPLAT! classique",desc:"Le schéma en barres devient une équation : complète-le et trouve ce que cache la tache — la page vérifie.",
   etapes:[
    /* Étape regroupée : les TROIS fiches de 4 cartes de Claire (séquence 2) jouées
       d'affilée, soit 12 cartes. C'est un rappel du Petit Splat dans la nouvelle
@@ -309,7 +377,8 @@ const MONDES=[
     j:SC+"?mode=N&equation=AX_PLUS_C_EQ_B&tasksMax=5&cards=12&seed=18&unknown=question&eleve=1&parcours=m2e5",
     jp:SC+"?mode=N&equation=AX_PLUS_C_EQ_B&tasksMax=5&cards=12&seed=18&unknown=question",
     f:SC+"?mode=N&equation=AX_PLUS_C_EQ_B&tasksMax=5&cards=12&seed=18&unknown=question&print=statement&layout=6&imprimer=1"}]},
- {cls:"m3",actif:true,nom:"SPLAT! Équations",desc:"Le grand jeu : l'équation s'affiche, et c'est toi qui résous sur le plateau d'ÉquaSplat — enlève, fusionne, partage, jusqu'à trouver la valeur cachée.",
+ MONDE_ENQUETE,
+ {cls:"m3",idp:"e2",actif:true,nom:"SPLAT! Équations",desc:"Le grand jeu : l'équation s'affiche, et c'est toi qui résous sur le plateau d'ÉquaSplat — enlève, fusionne, partage, jusqu'à trouver la valeur cachée.",
   etapes:[
    {t:"Les deux plateaux",fo:"a × x + b = c",o:"Retrouve dans le schéma en barres ce que contient chaque plateau.",
     p:"m3e1",
@@ -335,7 +404,7 @@ const MONDES=[
     j:"/outils/equasplat.html?eleve=1&parcours=m3e4#data=eyJzb3VyY2UiOiJ1bml2ZXJzX3NwbGF0IiwicGFyY291cnMiOiJtM2U0Iiwic2VyaWUiOlt7InNvdXJjZSI6InNwbGF0X2VxdWF0aW9ucyIsInZhcmlhYmxlIjoi8J2RoSIsInVua25vd25EaXNwbGF5IjoibGV0dGVyIiwidW5pdmVyc2UiOiJwb3NpdGl2ZSIsIm51bWJlck1vZGUiOiJncm91cGVkIiwic2lnbmVkV3JpdGluZ01vZGUiOiJzaW1wbGlmaWVkIiwieCI6MywibGVmdCI6WyJ4IiwieCIsIngiLCJ4IiwxMV0sInJpZ2h0IjpbIngiLCJ4IiwieCIsIngiLCJ4Iiw4XX0seyJzb3VyY2UiOiJzcGxhdF9lcXVhdGlvbnMiLCJ2YXJpYWJsZSI6IvCdkZsiLCJ1bmtub3duRGlzcGxheSI6ImxldHRlciIsInVuaXZlcnNlIjoicG9zaXRpdmUiLCJudW1iZXJNb2RlIjoiZ3JvdXBlZCIsInNpZ25lZFdyaXRpbmdNb2RlIjoic2ltcGxpZmllZCIsIngiOjQsImxlZnQiOlsieCIsIngiLCJ4IiwzNl0sInJpZ2h0IjpbIngiLCJ4IiwieCIsIngiLDMyXX0seyJzb3VyY2UiOiJzcGxhdF9lcXVhdGlvbnMiLCJ2YXJpYWJsZSI6IvCdkZAiLCJ1bmtub3duRGlzcGxheSI6ImxldHRlciIsInVuaXZlcnNlIjoicG9zaXRpdmUiLCJudW1iZXJNb2RlIjoiZ3JvdXBlZCIsInNpZ25lZFdyaXRpbmdNb2RlIjoic2ltcGxpZmllZCIsIngiOjgsImxlZnQiOlsieCIsIngiLCJ4IiwxNl0sInJpZ2h0IjpbIngiLDMyXX0seyJzb3VyY2UiOiJzcGxhdF9lcXVhdGlvbnMiLCJ2YXJpYWJsZSI6IvCdkaEiLCJ1bmtub3duRGlzcGxheSI6ImxldHRlciIsInVuaXZlcnNlIjoicG9zaXRpdmUiLCJudW1iZXJNb2RlIjoiZ3JvdXBlZCIsInNpZ25lZFdyaXRpbmdNb2RlIjoic2ltcGxpZmllZCIsIngiOjcsImxlZnQiOlsieCIsMzhdLCJyaWdodCI6WyJ4IiwieCIsIngiLCJ4IiwxN119LHsic291cmNlIjoic3BsYXRfZXF1YXRpb25zIiwidmFyaWFibGUiOiLwnZGlIiwidW5rbm93bkRpc3BsYXkiOiJsZXR0ZXIiLCJ1bml2ZXJzZSI6InBvc2l0aXZlIiwibnVtYmVyTW9kZSI6Imdyb3VwZWQiLCJzaWduZWRXcml0aW5nTW9kZSI6InNpbXBsaWZpZWQiLCJ4IjozLCJsZWZ0IjpbIngiLCJ4IiwieCIsIngiLCJ4IiwieCIsMTVdLCJyaWdodCI6WyJ4IiwieCIsMjddfSx7InNvdXJjZSI6InNwbGF0X2VxdWF0aW9ucyIsInZhcmlhYmxlIjoi8J2RjiIsInVua25vd25EaXNwbGF5IjoibGV0dGVyIiwidW5pdmVyc2UiOiJwb3NpdGl2ZSIsIm51bWJlck1vZGUiOiJncm91cGVkIiwic2lnbmVkV3JpdGluZ01vZGUiOiJzaW1wbGlmaWVkIiwieCI6MTEsImxlZnQiOlsieCIsMjFdLCJyaWdodCI6WyJ4IiwieCIsMTBdfSx7InNvdXJjZSI6InNwbGF0X2VxdWF0aW9ucyIsInZhcmlhYmxlIjoi8J2RmyIsInVua25vd25EaXNwbGF5IjoibGV0dGVyIiwidW5pdmVyc2UiOiJwb3NpdGl2ZSIsIm51bWJlck1vZGUiOiJncm91cGVkIiwic2lnbmVkV3JpdGluZ01vZGUiOiJzaW1wbGlmaWVkIiwieCI6MTIsImxlZnQiOlsieCIsIngiLCJ4IiwieCIsMl0sInJpZ2h0IjpbIngiLDM4XX0seyJzb3VyY2UiOiJzcGxhdF9lcXVhdGlvbnMiLCJ2YXJpYWJsZSI6IvCdkZsiLCJ1bmtub3duRGlzcGxheSI6ImxldHRlciIsInVuaXZlcnNlIjoicG9zaXRpdmUiLCJudW1iZXJNb2RlIjoiZ3JvdXBlZCIsInNpZ25lZFdyaXRpbmdNb2RlIjoic2ltcGxpZmllZCIsIngiOjQsImxlZnQiOlsieCIsMzNdLCJyaWdodCI6WyJ4IiwieCIsIngiLCJ4IiwieCIsMTddfSx7InNvdXJjZSI6InNwbGF0X2VxdWF0aW9ucyIsInZhcmlhYmxlIjoi8J2RpSIsInVua25vd25EaXNwbGF5IjoibGV0dGVyIiwidW5pdmVyc2UiOiJwb3NpdGl2ZSIsIm51bWJlck1vZGUiOiJncm91cGVkIiwic2lnbmVkV3JpdGluZ01vZGUiOiJzaW1wbGlmaWVkIiwieCI6NSwibGVmdCI6WyJ4IiwieCIsIngiLCJ4IiwxNl0sInJpZ2h0IjpbIngiLCJ4IiwieCIsIngiLCJ4IiwieCIsNl19LHsic291cmNlIjoic3BsYXRfZXF1YXRpb25zIiwidmFyaWFibGUiOiLwnZGOIiwidW5rbm93bkRpc3BsYXkiOiJsZXR0ZXIiLCJ1bml2ZXJzZSI6InBvc2l0aXZlIiwibnVtYmVyTW9kZSI6Imdyb3VwZWQiLCJzaWduZWRXcml0aW5nTW9kZSI6InNpbXBsaWZpZWQiLCJ4IjoyLCJsZWZ0IjpbIngiLCJ4IiwieCIsIngiLCJ4IiwzMF0sInJpZ2h0IjpbIngiLDM4XX1dfQ",
     jp:SE+"?mode=EQSTEP&form=BOTH&view=equation&cards=10&seed=25",
     f:SE+"?mode=EQSTEP&form=BOTH&view=equation&cards=10&seed=25&print=statement&layout=4&imprimer=1"}]},
- {cls:"m4",actif:true,nom:"SPLAT! relatifs",desc:"Prolongement vers le cycle 4 : les mêmes plateaux, mais avec les nombres relatifs — billes rouges, jetons numérotés, opposés qui s'annulent, solutions sous zéro.",
+ {cls:"m4",idp:"e3",actif:true,nom:"SPLAT! relatifs",desc:"Prolongement vers le cycle 4 : les mêmes plateaux, mais avec les nombres relatifs — billes rouges, jetons numérotés, opposés qui s'annulent, solutions sous zéro.",
   etapes:[
    {t:"Les billes rouges arrivent",eqs:["2 = 𝑚 + 3", "𝑡 − 3 = − 2", "𝑥 + 2 = 3", "− 1 = 𝑚 − 2", "− 3 = 𝑚 − 2", "1 = 𝑥 + 2", "𝑏 − 1 = 0", "𝑚 + 1 = 0"],fo:"𝑥 + b = c",o:"Des jetons −1 apparaissent : mêmes gestes, nouvelles billes.",p:"m4e1",
     j:"/outils/equasplat.html?eleve=1&parcours=m4e1#data=eyJzb3VyY2UiOiJ1bml2ZXJzX3NwbGF0IiwicGFyY291cnMiOiJtNGUxIiwic2VyaWUiOlt7InNvdXJjZSI6InNwbGF0X2VxdWF0aW9ucyIsInZhcmlhYmxlIjoi8J2RmiIsInVua25vd25EaXNwbGF5IjoibGV0dGVyIiwidW5pdmVyc2UiOiJyZWxhdGl2ZSIsIm51bWJlck1vZGUiOiJncm91cGVkIiwic2lnbmVkV3JpdGluZ01vZGUiOiJzaW1wbGlmaWVkIiwieCI6LTEsImxlZnQiOlt7InR5cGUiOiJudW1iZXIiLCJ2YWx1ZSI6MX0seyJ0eXBlIjoibnVtYmVyIiwidmFsdWUiOjF9XSwicmlnaHQiOlt7InR5cGUiOiJ4Iiwic2lnbiI6MX0seyJ0eXBlIjoibnVtYmVyIiwidmFsdWUiOjF9LHsidHlwZSI6Im51bWJlciIsInZhbHVlIjoxfSx7InR5cGUiOiJudW1iZXIiLCJ2YWx1ZSI6MX1dfSx7InNvdXJjZSI6InNwbGF0X2VxdWF0aW9ucyIsInZhcmlhYmxlIjoi8J2RoSIsInVua25vd25EaXNwbGF5IjoibGV0dGVyIiwidW5pdmVyc2UiOiJyZWxhdGl2ZSIsIm51bWJlck1vZGUiOiJncm91cGVkIiwic2lnbmVkV3JpdGluZ01vZGUiOiJzaW1wbGlmaWVkIiwieCI6MSwibGVmdCI6W3sidHlwZSI6IngiLCJzaWduIjoxfSx7InR5cGUiOiJudW1iZXIiLCJ2YWx1ZSI6LTF9LHsidHlwZSI6Im51bWJlciIsInZhbHVlIjotMX0seyJ0eXBlIjoibnVtYmVyIiwidmFsdWUiOi0xfV0sInJpZ2h0IjpbeyJ0eXBlIjoibnVtYmVyIiwidmFsdWUiOi0xfSx7InR5cGUiOiJudW1iZXIiLCJ2YWx1ZSI6LTF9XX0seyJzb3VyY2UiOiJzcGxhdF9lcXVhdGlvbnMiLCJ2YXJpYWJsZSI6IvCdkaUiLCJ1bmtub3duRGlzcGxheSI6ImxldHRlciIsInVuaXZlcnNlIjoicmVsYXRpdmUiLCJudW1iZXJNb2RlIjoiZ3JvdXBlZCIsInNpZ25lZFdyaXRpbmdNb2RlIjoic2ltcGxpZmllZCIsIngiOjEsImxlZnQiOlt7InR5cGUiOiJ4Iiwic2lnbiI6MX0seyJ0eXBlIjoibnVtYmVyIiwidmFsdWUiOjF9LHsidHlwZSI6Im51bWJlciIsInZhbHVlIjoxfV0sInJpZ2h0IjpbeyJ0eXBlIjoibnVtYmVyIiwidmFsdWUiOjF9LHsidHlwZSI6Im51bWJlciIsInZhbHVlIjoxfSx7InR5cGUiOiJudW1iZXIiLCJ2YWx1ZSI6MX1dfSx7InNvdXJjZSI6InNwbGF0X2VxdWF0aW9ucyIsInZhcmlhYmxlIjoi8J2RmiIsInVua25vd25EaXNwbGF5IjoibGV0dGVyIiwidW5pdmVyc2UiOiJyZWxhdGl2ZSIsIm51bWJlck1vZGUiOiJncm91cGVkIiwic2lnbmVkV3JpdGluZ01vZGUiOiJzaW1wbGlmaWVkIiwieCI6MSwibGVmdCI6W3sidHlwZSI6Im51bWJlciIsInZhbHVlIjotMX0seyJ0eXBlIjoibnVtYmVyIiwidmFsdWUiOjF9LHsidHlwZSI6Im51bWJlciIsInZhbHVlIjotMX1dLCJyaWdodCI6W3sidHlwZSI6IngiLCJzaWduIjoxfSx7InR5cGUiOiJudW1iZXIiLCJ2YWx1ZSI6LTF9LHsidHlwZSI6Im51bWJlciIsInZhbHVlIjotMX1dfSx7InNvdXJjZSI6InNwbGF0X2VxdWF0aW9ucyIsInZhcmlhYmxlIjoi8J2RmiIsInVua25vd25EaXNwbGF5IjoibGV0dGVyIiwidW5pdmVyc2UiOiJyZWxhdGl2ZSIsIm51bWJlck1vZGUiOiJncm91cGVkIiwic2lnbmVkV3JpdGluZ01vZGUiOiJzaW1wbGlmaWVkIiwieCI6LTEsImxlZnQiOlt7InR5cGUiOiJudW1iZXIiLCJ2YWx1ZSI6LTF9LHsidHlwZSI6Im51bWJlciIsInZhbHVlIjotMX0seyJ0eXBlIjoibnVtYmVyIiwidmFsdWUiOi0xfV0sInJpZ2h0IjpbeyJ0eXBlIjoieCIsInNpZ24iOjF9LHsidHlwZSI6Im51bWJlciIsInZhbHVlIjotMX0seyJ0eXBlIjoibnVtYmVyIiwidmFsdWUiOi0xfV19LHsic291cmNlIjoic3BsYXRfZXF1YXRpb25zIiwidmFyaWFibGUiOiLwnZGlIiwidW5rbm93bkRpc3BsYXkiOiJsZXR0ZXIiLCJ1bml2ZXJzZSI6InJlbGF0aXZlIiwibnVtYmVyTW9kZSI6Imdyb3VwZWQiLCJzaWduZWRXcml0aW5nTW9kZSI6InNpbXBsaWZpZWQiLCJ4IjotMSwibGVmdCI6W3sidHlwZSI6Im51bWJlciIsInZhbHVlIjoxfSx7InR5cGUiOiJudW1iZXIiLCJ2YWx1ZSI6MX0seyJ0eXBlIjoibnVtYmVyIiwidmFsdWUiOi0xfV0sInJpZ2h0IjpbeyJ0eXBlIjoieCIsInNpZ24iOjF9LHsidHlwZSI6Im51bWJlciIsInZhbHVlIjoxfSx7InR5cGUiOiJudW1iZXIiLCJ2YWx1ZSI6MX1dfSx7InNvdXJjZSI6InNwbGF0X2VxdWF0aW9ucyIsInZhcmlhYmxlIjoi8J2RjyIsInVua25vd25EaXNwbGF5IjoibGV0dGVyIiwidW5pdmVyc2UiOiJyZWxhdGl2ZSIsIm51bWJlck1vZGUiOiJncm91cGVkIiwic2lnbmVkV3JpdGluZ01vZGUiOiJzaW1wbGlmaWVkIiwieCI6MSwibGVmdCI6W3sidHlwZSI6IngiLCJzaWduIjoxfSx7InR5cGUiOiJudW1iZXIiLCJ2YWx1ZSI6MX0seyJ0eXBlIjoibnVtYmVyIiwidmFsdWUiOi0xfSx7InR5cGUiOiJudW1iZXIiLCJ2YWx1ZSI6LTF9XSwicmlnaHQiOlt7InR5cGUiOiJudW1iZXIiLCJ2YWx1ZSI6LTF9LHsidHlwZSI6Im51bWJlciIsInZhbHVlIjoxfV19LHsic291cmNlIjoic3BsYXRfZXF1YXRpb25zIiwidmFyaWFibGUiOiLwnZGaIiwidW5rbm93bkRpc3BsYXkiOiJsZXR0ZXIiLCJ1bml2ZXJzZSI6InJlbGF0aXZlIiwibnVtYmVyTW9kZSI6Imdyb3VwZWQiLCJzaWduZWRXcml0aW5nTW9kZSI6InNpbXBsaWZpZWQiLCJ4IjotMSwibGVmdCI6W3sidHlwZSI6IngiLCJzaWduIjoxfSx7InR5cGUiOiJudW1iZXIiLCJ2YWx1ZSI6LTF9LHsidHlwZSI6Im51bWJlciIsInZhbHVlIjoxfSx7InR5cGUiOiJudW1iZXIiLCJ2YWx1ZSI6MX1dLCJyaWdodCI6W3sidHlwZSI6Im51bWJlciIsInZhbHVlIjotMX0seyJ0eXBlIjoibnVtYmVyIiwidmFsdWUiOjF9XX1dfQ"
@@ -357,6 +426,19 @@ const MONDES=[
     j:"/outils/equasplat.html?eleve=1&parcours=m4e7#data=eyJzb3VyY2UiOiJ1bml2ZXJzX3NwbGF0IiwicGFyY291cnMiOiJtNGU3Iiwic2VyaWUiOlt7InNvdXJjZSI6InNwbGF0X2VxdWF0aW9ucyIsInZhcmlhYmxlIjoi8J2RpSIsInVua25vd25EaXNwbGF5IjoibGV0dGVyIiwidW5pdmVyc2UiOiJyZWxhdGl2ZSIsIm51bWJlck1vZGUiOiJncm91cGVkIiwic2lnbmVkV3JpdGluZ01vZGUiOiJzaW1wbGlmaWVkIiwieCI6MTUsImxlZnQiOlsieCIsIngiLC03XSwicmlnaHQiOlsieCIsOF19LHsic291cmNlIjoic3BsYXRfZXF1YXRpb25zIiwidmFyaWFibGUiOiLwnZGlIiwidW5rbm93bkRpc3BsYXkiOiJsZXR0ZXIiLCJ1bml2ZXJzZSI6InJlbGF0aXZlIiwibnVtYmVyTW9kZSI6Imdyb3VwZWQiLCJzaWduZWRXcml0aW5nTW9kZSI6InNpbXBsaWZpZWQiLCJ4IjotMTUsImxlZnQiOlsieCIsIngiLCJ4IiwyMF0sInJpZ2h0IjpbIngiLC0xMF19LHsic291cmNlIjoic3BsYXRfZXF1YXRpb25zIiwidmFyaWFibGUiOiLwnZGlIiwidW5rbm93bkRpc3BsYXkiOiJsZXR0ZXIiLCJ1bml2ZXJzZSI6InJlbGF0aXZlIiwibnVtYmVyTW9kZSI6Imdyb3VwZWQiLCJzaWduZWRXcml0aW5nTW9kZSI6InNpbXBsaWZpZWQiLCJ4IjozLCJsZWZ0IjpbIi14Iiw5XSwicmlnaHQiOlsieCIsIngiXX0seyJzb3VyY2UiOiJzcGxhdF9lcXVhdGlvbnMiLCJ2YXJpYWJsZSI6IvCdkaUiLCJ1bmtub3duRGlzcGxheSI6ImxldHRlciIsInVuaXZlcnNlIjoicmVsYXRpdmUiLCJudW1iZXJNb2RlIjoiZ3JvdXBlZCIsInNpZ25lZFdyaXRpbmdNb2RlIjoic2ltcGxpZmllZCIsIngiOjExLCJsZWZ0IjpbIngiLDUsLTVdLCJyaWdodCI6WyIteCIsMjJdfSx7InNvdXJjZSI6InNwbGF0X2VxdWF0aW9ucyIsInZhcmlhYmxlIjoi8J2RpSIsInVua25vd25EaXNwbGF5IjoibGV0dGVyIiwidW5pdmVyc2UiOiJyZWxhdGl2ZSIsIm51bWJlck1vZGUiOiJncm91cGVkIiwic2lnbmVkV3JpdGluZ01vZGUiOiJzaW1wbGlmaWVkIiwieCI6LTEyLCJsZWZ0IjpbIi14IiwiLXgiLDEzXSwicmlnaHQiOlsiLXgiLDI1XX0seyJzb3VyY2UiOiJzcGxhdF9lcXVhdGlvbnMiLCJ2YXJpYWJsZSI6IvCdkaUiLCJ1bmtub3duRGlzcGxheSI6ImxldHRlciIsInVuaXZlcnNlIjoicmVsYXRpdmUiLCJudW1iZXJNb2RlIjoiZ3JvdXBlZCIsInNpZ25lZFdyaXRpbmdNb2RlIjoic2ltcGxpZmllZCIsIngiOjEwLCJsZWZ0IjpbIngiLCJ4IiwieCIsLTE1XSwicmlnaHQiOlsiLXgiLCIteCIsMzVdfSx7InNvdXJjZSI6InNwbGF0X2VxdWF0aW9ucyIsInZhcmlhYmxlIjoi8J2RpSIsInVua25vd25EaXNwbGF5IjoibGV0dGVyIiwidW5pdmVyc2UiOiJyZWxhdGl2ZSIsIm51bWJlck1vZGUiOiJncm91cGVkIiwic2lnbmVkV3JpdGluZ01vZGUiOiJzaW1wbGlmaWVkIiwieCI6LTYsImxlZnQiOlsiLXgiLCIteCIsIi14IiwtOF0sInJpZ2h0IjpbIngiLDE2XX0seyJzb3VyY2UiOiJzcGxhdF9lcXVhdGlvbnMiLCJ2YXJpYWJsZSI6IvCdkaUiLCJ1bmtub3duRGlzcGxheSI6ImxldHRlciIsInVuaXZlcnNlIjoicmVsYXRpdmUiLCJudW1iZXJNb2RlIjoiZ3JvdXBlZCIsInNpZ25lZFdyaXRpbmdNb2RlIjoic2ltcGxpZmllZCIsIngiOjEwLCJsZWZ0IjpbIi14IiwiLXgiLDMwXSwicmlnaHQiOlsieCIsIngiLC0xMF19XX0"}]}
 ];
 
+/* Le numéro affiché d'une étape est continu dans tout l'univers (monde 1 : 1 à 6,
+   monde 2 : 7 à 9) et c'est LUI qui nomme les fiches des livrets — « Fiche 7 » du
+   livret SPLAT! classique, c'est l'étape 7. Les fiches de l'Enquête sont donc les
+   fiches 10 à 19 : on les numérote ici, une fois les mondes connus, pour qu'une
+   étape ajoutée à un monde précédent renumérote tout sans rien laisser en arrière. */
+const ENQ_DEPART=MONDES.slice(0,MONDES.indexOf(MONDE_ENQUETE))
+  .reduce((n,m)=>n+m.etapes.length,0)+1;
+MONDE_ENQUETE.etapes.forEach((e,i)=>{
+  const n=ENQ_DEPART+i;
+  e.n=n; e.p="enq"+n; e.j=enqJeu(i,n);
+  e.f=enqImprimer(i,n,"statement"); e.c=enqImprimer(i,n,"correction");
+});
+
 /* ============ mémorisation locale (best-effort) ============ */
 const PROF = new URLSearchParams(window.location.search).get("prof") === "1";
 if (PROF) document.body.classList.add("prof");
@@ -373,8 +455,9 @@ let faits=lireFaits();
 const NOTES_MONDE = [
  "Découverte de la situation SPLAT : modéliser un problème simple par un schéma en barres (un tout, des parties). Chaque fiche a sa graine : « Générer » en note une nouvelle pour créer d'autres fiches, et la difficulté s'ajuste par les paramètres (cible max, jetons visibles).",
  "Le schéma en barres devient équation. À savoir : le mode lecture montre les étapes de résolution, le bouton « Résoudre » ouvre la situation dans ÉquaBarre pour la manipuler, et les « paquets de jetons » permettent de grandes quantités.",
+ "Le total est donné, mais aucune tache ne dit ce qu'elle cache : c'est un indice qui les relie entre elles. L'élève trace lui-même son schéma en barres, puis déduit. La partie additive (fiches 10 à 14) précède la multiplicative (15 à 19) ; les fiches 11 et 16 portent une consigne en gras — reformuler l'indice avant de dessiner —, parce que l'obstacle est là. À savoir : chaque fiche a sa graine, la série est donc la même sur le papier et à l'écran, et le QR du livret ouvre exactement celle de la fiche.",
  "Deux plateaux, même quantité en haut et en bas. Présentation verticale : chaque plateau correspond à une barre du schéma ; horizontale : chaque plateau correspond à un membre de l'équation. Le « ? » est recommandé au cycle 3 — la lettre arrive en 5e.",
- "Prolongement maths&go vers le cycle 4, hors progression d'origine : une nouveauté par étape, et les dernières séries montent en difficulté À L'INTÉRIEUR de la série (escalier interne). À réserver aux élèves qui ont terminé le monde 3."
+ "Prolongement maths&go vers le cycle 4, hors progression d'origine : une nouveauté par étape, et les dernières séries montent en difficulté À L'INTÉRIEUR de la série (escalier interne). À réserver aux élèves qui ont terminé le monde 4."
 ];
 const NOTES_PROF = [
  ["Lire et compléter un schéma en barres tout/parties déjà tracé : on consolide la lecture de cette représentation fondamentale.",
@@ -386,6 +469,16 @@ const NOTES_PROF = [
  ["Séquence 2 de Claire, ses trois fiches de 4 cartes enchaînées (12 cartes) : x + a = b, puis a × x = b (2 ≤ a ≤ 5), puis a × x + c = b. C'est le Petit Splat retrouvé sur le grand plateau — l'élève trace lui-même son schéma en barres. Les trois fiches restent imprimables séparément ci-dessous.",
   "Retour à x + a = b, mais en paquets de jetons : des nombres plus grands sans surcharge visuelle.",
   "a × x + c = b avec les paquets : la représentation compacte permet de complexifier sans brouiller."],
+ ["Deux taches, indice additif direct (« de plus que ») : entrée dans la situation, le schéma se dessine sans reformulation.",
+  "Même structure, indice inversé (« de moins que ») : la reformulation est l\u2019obstacle — d\u2019où la consigne en gras dans l\u2019énoncé.",
+  "Les deux formulations mélangées carte par carte : il faut relire l\u2019indice à chaque fois, pas appliquer une recette.",
+  "Trois taches en chaîne : deux indices à composer, la première tache ne se trouve qu\u2019en remontant la chaîne.",
+  "Trois taches ET des jetons visibles : le total ne se partage plus tout seul, il faut d\u2019abord retirer le visible.",
+  "Passage au multiplicatif (« fois plus ») : la barre de référence se répète au lieu de s\u2019allonger d\u2019un écart.",
+  "Division (« fois moins ») : reformulation à nouveau nécessaire — consigne en gras dans l\u2019énoncé.",
+  "Les quatre opérations mélangées sur deux taches : identifier le type d\u2019indice devient le premier geste.",
+  "Trois taches en chaîne avec les quatre opérations : composer des indices de natures différentes.",
+  "Tout à la fois — trois taches, jetons visibles, structure tirée au sort : la fiche bilan du monde."],
  ["Découverte des deux plateaux en présentation verticale (a × x + b = c) : relier chaque plateau au contenu d'une barre du schéma.",
   "Toujours en vertical, avec les paquets de jetons pour gérer les grandes quantités.",
   "Passage à l'horizontale : les plateaux côte à côte explicitent le lien avec les deux membres de l'équation.",
@@ -393,7 +486,7 @@ const NOTES_PROF = [
  ["Entrée en douceur : x + b = c uniquement avec des billes +1 et −1 — la seule nouveauté, ce sont les rouges.",
   "a × x = c : le partage peut donner un nombre négatif — la tache cache un négatif.",
   "a × x + b = c, comme 2x − 3 = 5 : résolution complète en relatifs, réponses des deux signes.",
-  "a × x + b = c × x + d SANS tache opposée, toujours avec les billes : le geste du monde 3, transposé aux relatifs.",
+  "a × x + b = c × x + d SANS tache opposée, toujours avec les billes : le geste du monde 4, transposé aux relatifs.",
   "Série sur mesure suivant la gradation : x + b = c (signes de b et c variés), a x = c (c des deux signes), a x + b = c, et une marche finale à deux côtés — coefficients de x positifs, réponses des deux signes.",
   "Série sur mesure : la même gradation recommencée avec l'opposé — −m = c (c des deux signes), −a m = c, −a m + b = c, puis l'opposée des deux côtés.",
   "Le boss, en escalier : billes, jetons numérotés, opposés des deux côtés, et des paires +5 −5 ou +7 −7 posées sur le plateau, à simplifier soi-même."]
@@ -403,7 +496,7 @@ let compteur=0;
 MONDES.forEach((m,mi)=>{
   const sec=document.createElement("section");
   sec.className="monde "+m.cls+((m.actif||PROF)?"":" enprepa");
-  const ids=m.etapes.map((_,ei)=>"e"+mi+"-"+ei);
+  const ids=m.etapes.map((_,ei)=>m.idp+"-"+ei);
   sec.innerHTML=
    '<div class="head">'+
      '<svg class="blob" viewBox="0 0 110 110"><use href="#tacheEtoile" width="110" height="110" fill="rgba(255,255,255,.92)"/></svg>'+
@@ -432,7 +525,8 @@ MONDES.forEach((m,mi)=>{
    '<ol class="etapes">'+m.etapes.map((e,ei)=>{
      compteur++;
      const badgeAttrs = (m.actif && !e.p) ? ' title="Marquer comme réussie" data-id="'+ids[ei]+'"' : ' disabled';
-     return '<li class="etape" id="'+ids[ei]+'">'+
+     return (e.g?'<li class="groupeTitre">'+e.g+'</li>':'')+
+       '<li class="etape" id="'+ids[ei]+'">'+
        '<button class="badge" type="button"'+badgeAttrs+'>'+
          '<svg class="tache" viewBox="0 0 110 110"><use class="fond" href="#tacheEtoile" width="110" height="110"/></svg>'+
          '<span class="n">'+compteur+'</span>'+
@@ -449,7 +543,8 @@ MONDES.forEach((m,mi)=>{
                    '<a class="jouer" href="'+pa.jp+'">\ud83d\udcbb Projeter</a>'+
                    '<a class="fiche" href="'+pa.f+'" title="Ouvre l\u2019outil pr\u00eat \u00e0 imprimer la fiche">\ud83d\udcc4 Fiche</a></span>').join("")
                : (e.jp||!m.actif?'<a class="jouer" href="'+(e.jp||e.j)+'">\ud83d\udcbb Projeter l\u2019outil</a>':'')+(m.actif?'<a class="jouer" href="'+e.j+'">\ud83c\udfae Le jeu de l\u2019\u00e9l\u00e8ve</a>':'')+
-                 (e.f?'<a class="fiche" href="'+e.f+'" title="Ouvre l\u2019outil pr\u00eat \u00e0 imprimer la fiche">\ud83d\udcc4 Fiche</a>':''))+
+                 (e.f?'<a class="fiche" href="'+e.f+'" title="Ouvre l\u2019outil pr\u00eat \u00e0 imprimer la fiche">\ud83d\udcc4 Fiche</a>':'')+
+                 (e.c?'<a class="fiche" href="'+e.c+'" title="Ouvre l\u2019outil pr\u00eat \u00e0 imprimer la correction">\u2705 Correction</a>':''))+
              '</div>'
            : m.actif
            ? '<div class="actions">'+
@@ -471,7 +566,7 @@ function majAffichage(){
     let f=0;
     m.etapes.forEach((e,ei)=>{
       total++;
-      const id="e"+mi+"-"+ei, li=document.getElementById(id);
+      const id=m.idp+"-"+ei, li=document.getElementById(id);
       /* l'étoile s'allume si l'élève a réussi la série dans l'outil (validation en ligne),
          ou si elle a été cochée à la main (travail sur fiche) */
       const ok=!!faits[id]||!!(e.p&&parcours[e.p]&&parcours[e.p].fait);
@@ -497,7 +592,7 @@ if (PROF) {
   const oe=document.getElementById('optEleve'); if(oe){ oe.classList.remove('actif'); oe.href=window.location.pathname; }
   const op=document.getElementById('optProf'); if(op){ op.classList.add('actif'); op.removeAttribute('href'); }
   const tb=document.getElementById('totalBar'); if(tb) tb.style.display='none';
-  const fp=document.querySelector('footer span'); if(fp) fp.innerHTML='Vue professeur — mondes 1 \u00e0 3 d\u2019apr\u00e8s la progression \u00ab SPLAT! cycle 3 \u00bb de Claire (monde 4 : prolongement maths&go, cycle 4) : '+
+  const fp=document.querySelector('footer span'); if(fp) fp.innerHTML='Vue professeur — mondes 1 \u00e0 4 d\u2019apr\u00e8s la progression \u00ab SPLAT! cycle 3 \u00bb de Claire (monde 5 : prolongement maths&go, cycle 4) : '+
     '<a href="https://digipad.app/p/1754235/397f3f517445b" target="_blank" rel="noopener">sa progression d\u2019origine (Digipad)</a> \u00b7 '+
     '<a href="'+window.location.pathname+'">revenir \u00e0 la vue \u00e9l\u00e8ve</a>.';
 }
