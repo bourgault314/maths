@@ -772,10 +772,18 @@
   .eleveTacheNom{position:absolute;left:3px;top:2px;display:inline-flex;align-items:center;gap:3px;font-size:11px;font-weight:800;line-height:1;color:#475569;pointer-events:none;white-space:nowrap}
   .eleveTacheCouleur{width:14px;height:10px;flex:none}
   .eleveCase.donnee{cursor:default}
-  /* le mot TOTAL au-dessus du nombre, comme le cartouche du plateau (décision du 22/09) */
-  .eleveCase.haut.donnee{color:#111;flex-direction:column;justify-content:center;gap:1px;line-height:1.05;padding:5px 0}
+  /* Dans le tableau de l'Enquête, l'étiquette de chaque case (TOTAL, visibles, la
+     mini-tache et son nom) s'écrit AU-DESSUS du nombre, les deux centrés — comme le
+     cartouche TOTAL du plateau (décision du 22/09 : à gauche, elle décentrait le nombre). */
+  #elevePanel.enquete .eleveCase{flex-direction:column;justify-content:center;gap:1px;line-height:1.05;padding:4px 0}
+  #elevePanel.enquete .eleveTacheNom{position:static;margin:0}
+  #elevePanel.enquete input.eleveChamp{height:auto;flex:0 0 auto;line-height:1.1}
+  /* case fausse : le champ ne remplit plus la case, c'est la case qui rougit */
+  #elevePanel.enquete .eleveCase.ko{background:#fee2e2}
+  #elevePanel.enquete .eleveCase.ko input.eleveChamp{background:transparent}
+  .eleveCase.haut.donnee{color:#111}
   .eleveCase.blanche.donnee .eleveTacheNom{color:#1d4ed8} /* « visibles » en bleu, comme leur nombre */
-  .eleveCase.haut.donnee .eleveTacheNom{position:static;margin:0;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#475569}
+  .eleveCase.haut.donnee .eleveTacheNom{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#475569}
   #elevePanel.enquete .eleveActions{flex-wrap:wrap}
   /* Téléphone, schéma agrandi : le plateau se fait glisser de gauche à droite. */
   body.eleve-mode #svgWrap.eleveSchemaZoom{display:block;place-items:start;overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;touch-action:pan-x pan-y} /* place-items : sans quoi le dessin large est centré et sa gauche perdue */
@@ -790,7 +798,7 @@
     body.eleve-mode #svgWrap{height:min(46vh,520px)}
     body.eleve-mode .eleveCase{min-height:66px;font-size:32px}
     body.eleve-mode .eleveMiniTache{left:6px;top:5px;width:22px;height:16px}
-    body.eleve-mode .eleveTacheNom{left:6px;top:4px;gap:4px;font-size:13px}
+    body.eleve-mode .eleveTacheNom{gap:4px;font-size:13px}
     body.eleve-mode .eleveTacheCouleur{width:20px;height:14px}
     body.eleve-mode .eleveCase.haut.donnee .eleveTacheNom{font-size:13px}
     body.eleve-mode .eleveConsigne{font-size:17px;margin:2px 0 10px}
