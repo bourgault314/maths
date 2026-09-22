@@ -776,7 +776,10 @@
      mini-tache et son nom) s'écrit AU-DESSUS du nombre, les deux centrés — comme le
      cartouche TOTAL du plateau (décision du 22/09 : à gauche, elle décentrait le nombre). */
   #elevePanel.enquete .eleveCase{flex-direction:column;justify-content:center;gap:1px;line-height:1.05;padding:4px 0}
-  #elevePanel.enquete .eleveTacheNom{position:static;margin:0}
+  /* c'est le MOT qui est centré sur le nombre ; la mini-tache pend à sa gauche, hors
+     du centrage (sinon le mot, décalé par la tache, paraît décentré) */
+  #elevePanel.enquete .eleveTacheNom{position:relative;margin:0}
+  #elevePanel.enquete .eleveTacheCouleur{position:absolute;right:100%;margin-right:3px;top:50%;transform:translateY(-50%)}
   #elevePanel.enquete input.eleveChamp{height:auto;flex:0 0 auto;line-height:1.1}
   /* case fausse : le champ ne remplit plus la case, c'est la case qui rougit */
   #elevePanel.enquete .eleveCase.ko{background:#fee2e2}
