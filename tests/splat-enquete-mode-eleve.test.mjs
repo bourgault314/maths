@@ -332,10 +332,33 @@ test("le Valider éteint s'efface pour laisser « Voir le schéma » et « Carte
   assert.match(fn("eleveProposerSchema"), /bouton\.hidden = true;/, "par le script, pas par une règle CSS : sur ordinateur, rien ne cache le Valider d'une carte à remplir");
   assert.match(decl("#elevePanel.enquete .eleveCase"), /^flex-direction:column;justify-content:center;/, "l'étiquette au-dessus du nombre, les deux centrés");
   assert.equal(decl("#elevePanel.enquete .eleveTacheNom"), "position:relative;margin:0;left:0;top:0", "rien ne pousse le nombre de côté, et le décalage de la règle de base (left:3px;top:2px) est annulé : le mot reste centré");
-  assert.match(decl("#elevePanel.enquete .eleveTacheCouleur"), /^position:absolute;right:100%;/, "la mini-tache pend à gauche du mot : c'est le mot qui est centré sur le nombre");
+  assert.match(decl("#elevePanel.enquete .eleveTacheCouleur"), /^position:absolute;left:0;/, "la mini-tache se loge dans la réserve, à gauche du mot : c'est le mot qui est centré sur le nombre");
   assert.match(decl("#elevePanel.enquete input.eleveChamp"), /^height:auto;flex:0 0 auto;/, "le champ ne prend plus toute la hauteur de la case");
   assert.equal(decl("#elevePanel.enquete .eleveCase.ko"), "background:#fee2e2", "case fausse : toute la case rougit, pas seulement le champ");
   assert.equal(decl(".eleveCase.haut.donnee"), "color:#111", "le total en noir, comme sur les fiches");
   assert.match(decl(".eleveCase.blanche.donnee .eleveTacheNom"), /#1d4ed8/, "« visibles » en bleu");
   assert.deepEqual(r.filter((x) => /eleveTacheNom|eleveTacheCouleur|donnee/.test(x.sel) && /padding-(top|left)|text-indent/.test(x.decl)), [], "rien ne décale les chiffres");
+});
+
+test("centrage sûr : l'étiquette d'une case de tache réserve la place de la pastille des deux côtés (17 px, 23 px sur ordinateur)", () => {
+  const r = regles(feuille);
+  const rang = (sel) => r.findIndex((x) => x.sel === sel);
+  const decl = (sel) => (r[rang(sel)] || {}).decl || "";
+  // la paire de règles, dans l'ordre : l'étiquette réserve sa place et se centre par marges
+  // automatiques (dans une case trop étroite, elle se cale à gauche au lieu de déborder des
+  // deux côtés) ; puis la pastille se loge dans la réserve de gauche
+  const iNom = rang("#elevePanel.enquete .eleveCase.grise .eleveTacheNom");
+  assert.ok(iNom > 0, "la règle de l'étiquette des cases de taches");
+  assert.equal(rang("#elevePanel.enquete .eleveTacheCouleur"), iNom + 1, "la règle de la pastille vient juste après");
+  assert.equal(decl("#elevePanel.enquete .eleveCase.grise .eleveTacheNom"), "margin:0 auto;padding:0 var(--reserve-tache)");
+  assert.equal(decl("#elevePanel.enquete .eleveTacheCouleur"), "position:absolute;left:0;top:50%;transform:translateY(-50%)");
+  // les deux réserves = pastille + écart de 3 px
+  assert.equal(decl("#elevePanel.enquete .eleveCase.grise"), "--reserve-tache:17px", "téléphone et tablette : pastille de 14 px + 3");
+  const ordi = feuille.slice(feuille.indexOf("@media (min-width:1000px) and (min-height:700px){"));
+  const blocOrdi = ordi.slice(0, ordi.indexOf("\n  }"));
+  assert.match(blocOrdi, /body\.eleve-mode \.eleveTacheCouleur\{width:20px;/, "sur ordinateur la pastille passe à 20 px…");
+  assert.match(blocOrdi, /body\.eleve-mode #elevePanel\.enquete \.eleveCase\.grise\{--reserve-tache:23px\}/, "… et la réserve à 20 + 3, dans le même bloc");
+  // TOTAL et « visibles » n'ont pas de pastille : ni réserve ni marges automatiques
+  assert.equal(decl("#elevePanel.enquete .eleveTacheNom"), "position:relative;margin:0;left:0;top:0");
+  assert.doesNotMatch(fn("eleveCaseDonneeHtml"), /grise/, "les cases données ne sont jamais .grise");
 });
