@@ -295,7 +295,7 @@ test("le Valider éteint s'efface pour laisser « Voir le schéma » et « Carte
   assert.equal(decl("#elevePanel.enquete .eleveActions"), "flex-wrap:wrap");
   assert.match(fn("eleveProposerSchema"), /bouton\.hidden = true;/, "par le script, pas par une règle CSS : sur ordinateur, rien ne cache le Valider d'une carte à remplir");
   assert.match(decl("#elevePanel.enquete .eleveCase"), /^flex-direction:column;justify-content:center;/, "l'étiquette au-dessus du nombre, les deux centrés");
-  assert.equal(decl("#elevePanel.enquete .eleveTacheNom"), "position:relative;margin:0", "rien ne pousse le nombre de côté");
+  assert.equal(decl("#elevePanel.enquete .eleveTacheNom"), "position:relative;margin:0;left:0;top:0", "rien ne pousse le nombre de côté, et le décalage de la règle de base (left:3px;top:2px) est annulé : le mot reste centré");
   assert.match(decl("#elevePanel.enquete .eleveTacheCouleur"), /^position:absolute;right:100%;/, "la mini-tache pend à gauche du mot : c'est le mot qui est centré sur le nombre");
   assert.match(decl("#elevePanel.enquete input.eleveChamp"), /^height:auto;flex:0 0 auto;/, "le champ ne prend plus toute la hauteur de la case");
   assert.equal(decl("#elevePanel.enquete .eleveCase.ko"), "background:#fee2e2", "case fausse : toute la case rougit, pas seulement le champ");
