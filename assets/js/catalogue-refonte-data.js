@@ -747,7 +747,7 @@ window.MATHSGO_CATALOGUE = {
       "collections": ["splat"],
       "tags": ["splat", "cycle-3", "parcours", "jeu", "schema-barres"],
       "thumbnail": "assets/img/thumbnails/splat/univers-splat.svg?v=1",
-      "cardDescription": "Le parcours des \u00e9l\u00e8ves : quatre mondes \u00e0 jouer en ligne, du cycle 3 (progression SPLAT!) au cycle 4 (relatifs), une \u00e9toile par s\u00e9rie r\u00e9ussie."
+      "cardDescription": "Le parcours des \u00e9l\u00e8ves : cinq mondes \u00e0 jouer en ligne, du cycle 3 (progression SPLAT!) au cycle 4 (relatifs), une \u00e9toile par s\u00e9rie r\u00e9ussie."
     },
     "outils/splat.html": {
       "primaryNotion": "calcul-litteral",
@@ -6316,7 +6316,7 @@ window.MATHSGO_CATALOGUE = {
     {
       "id": "outils-splat-univers-html",
       "title": "L\u2019univers SPLAT! \u2014 le parcours des \u00e9l\u00e8ves",
-      "description": "Quatre mondes \u00e0 jouer en ligne, du cycle 3 (progression SPLAT!) au cycle 4 (relatifs), avec validation en ligne et \u00e9toiles au m\u00e9rite.",
+      "description": "Cinq mondes \u00e0 jouer en ligne, du cycle 3 (progression SPLAT!) au cycle 4 (relatifs), avec validation en ligne et \u00e9toiles au m\u00e9rite.",
       "path": "outils/splat_univers.html",
       "domains": [
         "algebre"

@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Livret SPLAT! Enquête — je rejoue en ligne | maths&amp;go</title>
+  <meta name="robots" content="noindex, follow">
+  <link rel="canonical" href="https://mathsgo.re/outils/splat_univers.html">
+  <link rel="icon" href="/favicon.ico" sizes="48x48">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="icon" type="image/png" sizes="32x32" href="/assets/img/favicon-32.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="/assets/img/favicon-192.png">
+  <link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png">
+  <script>
+    /* Adresse courte des QR codes des deux livrets « SPLAT! Enquête » (monde 3) :
+       /splat/enquete/livret/?f=12  →  la série en ligne de la fiche 12, etc.
+       Les fiches de l'Enquête sont les étapes 10 à 19 de l'univers : dans SPLAT!,
+       le numéro de fiche EST le numéro d'étape (« Fiche 7 » du livret classique).
+       Chaque cible est EXACTEMENT le lien « Le jeu de l'élève » de la carte des
+       mondes (outils/splat_univers.html, MONDE_ENQUETE) : mêmes réglages, même
+       graine, donc les mêmes cartes que sur le papier, et le même parcours
+       (parcours=enqN) donc la même étoile. Un test épingle ces dix cibles sur les
+       constantes de la carte des mondes ; si une graine change là-bas, la changer
+       ici aussi et régénérer les QR des livrets (lot E4). */
+    var ENQ_DEPART = 10;
+    var ENQ = [
+      "mode=C&splats=2&clues=SENTENCE&mul=0&div=0&add=1&sub=0&deltaMax=10&visibleMin=0&visibleMax=0&totalMin=10&totalMax=30&seed=339",
+      "mode=C&splats=2&clues=SENTENCE&mul=0&div=0&add=0&sub=1&deltaMax=10&visibleMin=0&visibleMax=0&totalMin=10&totalMax=30&seed=1071",
+      "mode=C&splats=2&clues=SENTENCE&mul=0&div=0&add=1&sub=1&deltaMax=15&visibleMin=0&visibleMax=0&totalMin=15&totalMax=50&seed=918",
+      "mode=C&splats=3&structure=CHAIN&clues=SENTENCE&mul=0&div=0&add=1&sub=1&deltaMax=15&visibleMin=0&visibleMax=0&totalMin=20&totalMax=60&seed=290",
+      "mode=C&splats=3&structure=MIX&clues=SENTENCE&mul=0&div=0&add=1&sub=1&deltaMax=15&visibleMin=1&visibleMax=3&totalMin=20&totalMax=60&seed=950",
+      "mode=C&splats=2&clues=SENTENCE&mul=1&div=0&add=0&sub=0&deltaMax=10&visibleMin=0&visibleMax=0&totalMin=10&totalMax=40&seed=1372",
+      "mode=C&splats=2&clues=SENTENCE&mul=0&div=1&add=0&sub=0&deltaMax=10&visibleMin=0&visibleMax=0&totalMin=10&totalMax=40&seed=1343",
+      "mode=C&splats=2&clues=SENTENCE&mul=1&div=1&add=1&sub=1&deltaMax=15&visibleMin=0&visibleMax=0&totalMin=15&totalMax=50&seed=405",
+      "mode=C&splats=3&structure=CHAIN&clues=SENTENCE&mul=1&div=1&add=1&sub=1&deltaMax=15&visibleMin=0&visibleMax=0&totalMin=20&totalMax=60&seed=1313",
+      "mode=C&splats=3&structure=MIX&clues=SENTENCE&mul=1&div=1&add=1&sub=1&deltaMax=15&visibleMin=1&visibleMax=3&totalMin=20&totalMax=60&seed=537"
+    ];
+    var f = new URLSearchParams(window.location.search).get("f");
+    var n = parseInt(f, 10);
+    var i = n - ENQ_DEPART;
+    var cible = (String(n) === String(f) && i >= 0 && i < ENQ.length)
+      ? "/splat/classique/?" + ENQ[i] + "&cards=4&unknown=question&eleve=1&parcours=enq" + n
+      : "/outils/splat_univers.html";
+    window.location.replace(new URL(cible, window.location.origin).toString());
+  </script>
+</head>
+<body>
+  <p>Livret SPLAT! Enquête — la série en ligne de chaque fiche&nbsp;:</p>
+  <ul>
+    <li><a href="/splat/classique/?mode=C&amp;splats=2&amp;clues=SENTENCE&amp;mul=0&amp;div=0&amp;add=1&amp;sub=0&amp;deltaMax=10&amp;visibleMin=0&amp;visibleMax=0&amp;totalMin=10&amp;totalMax=30&amp;seed=339&amp;cards=4&amp;unknown=question&amp;eleve=1&amp;parcours=enq10">Fiche 10 — De plus que</a></li>
+    <li><a href="/splat/classique/?mode=C&amp;splats=2&amp;clues=SENTENCE&amp;mul=0&amp;div=0&amp;add=0&amp;sub=1&amp;deltaMax=10&amp;visibleMin=0&amp;visibleMax=0&amp;totalMin=10&amp;totalMax=30&amp;seed=1071&amp;cards=4&amp;unknown=question&amp;eleve=1&amp;parcours=enq11">Fiche 11 — De moins que</a></li>
+    <li><a href="/splat/classique/?mode=C&amp;splats=2&amp;clues=SENTENCE&amp;mul=0&amp;div=0&amp;add=1&amp;sub=1&amp;deltaMax=15&amp;visibleMin=0&amp;visibleMax=0&amp;totalMin=15&amp;totalMax=50&amp;seed=918&amp;cards=4&amp;unknown=question&amp;eleve=1&amp;parcours=enq12">Fiche 12 — Plus ou moins</a></li>
+    <li><a href="/splat/classique/?mode=C&amp;splats=3&amp;structure=CHAIN&amp;clues=SENTENCE&amp;mul=0&amp;div=0&amp;add=1&amp;sub=1&amp;deltaMax=15&amp;visibleMin=0&amp;visibleMax=0&amp;totalMin=20&amp;totalMax=60&amp;seed=290&amp;cards=4&amp;unknown=question&amp;eleve=1&amp;parcours=enq13">Fiche 13 — Trois taches en chaîne</a></li>
+    <li><a href="/splat/classique/?mode=C&amp;splats=3&amp;structure=MIX&amp;clues=SENTENCE&amp;mul=0&amp;div=0&amp;add=1&amp;sub=1&amp;deltaMax=15&amp;visibleMin=1&amp;visibleMax=3&amp;totalMin=20&amp;totalMax=60&amp;seed=950&amp;cards=4&amp;unknown=question&amp;eleve=1&amp;parcours=enq14">Fiche 14 — Le défi additif</a></li>
+    <li><a href="/splat/classique/?mode=C&amp;splats=2&amp;clues=SENTENCE&amp;mul=1&amp;div=0&amp;add=0&amp;sub=0&amp;deltaMax=10&amp;visibleMin=0&amp;visibleMax=0&amp;totalMin=10&amp;totalMax=40&amp;seed=1372&amp;cards=4&amp;unknown=question&amp;eleve=1&amp;parcours=enq15">Fiche 15 — Fois plus</a></li>
+    <li><a href="/splat/classique/?mode=C&amp;splats=2&amp;clues=SENTENCE&amp;mul=0&amp;div=1&amp;add=0&amp;sub=0&amp;deltaMax=10&amp;visibleMin=0&amp;visibleMax=0&amp;totalMin=10&amp;totalMax=40&amp;seed=1343&amp;cards=4&amp;unknown=question&amp;eleve=1&amp;parcours=enq16">Fiche 16 — Fois moins</a></li>
+    <li><a href="/splat/classique/?mode=C&amp;splats=2&amp;clues=SENTENCE&amp;mul=1&amp;div=1&amp;add=1&amp;sub=1&amp;deltaMax=15&amp;visibleMin=0&amp;visibleMax=0&amp;totalMin=15&amp;totalMax=50&amp;seed=405&amp;cards=4&amp;unknown=question&amp;eleve=1&amp;parcours=enq17">Fiche 17 — Les quatre opérations</a></li>
+    <li><a href="/splat/classique/?mode=C&amp;splats=3&amp;structure=CHAIN&amp;clues=SENTENCE&amp;mul=1&amp;div=1&amp;add=1&amp;sub=1&amp;deltaMax=15&amp;visibleMin=0&amp;visibleMax=0&amp;totalMin=20&amp;totalMax=60&amp;seed=1313&amp;cards=4&amp;unknown=question&amp;eleve=1&amp;parcours=enq18">Fiche 18 — Trois taches, 4 opérations</a></li>
+    <li><a href="/splat/classique/?mode=C&amp;splats=3&amp;structure=MIX&amp;clues=SENTENCE&amp;mul=1&amp;div=1&amp;add=1&amp;sub=1&amp;deltaMax=15&amp;visibleMin=1&amp;visibleMax=3&amp;totalMin=20&amp;totalMax=60&amp;seed=537&amp;cards=4&amp;unknown=question&amp;eleve=1&amp;parcours=enq19">Fiche 19 — Le grand défi</a></li>
+    <li><a href="/outils/splat_univers.html">La carte des mondes</a></li>
+  </ul>
+</body>
+</html>
