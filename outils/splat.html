@@ -772,9 +772,10 @@
   .eleveTacheNom{position:absolute;left:3px;top:2px;display:inline-flex;align-items:center;gap:3px;font-size:11px;font-weight:800;line-height:1;color:#475569;pointer-events:none;white-space:nowrap}
   .eleveTacheCouleur{width:14px;height:10px;flex:none}
   .eleveCase.donnee{cursor:default}
-  .eleveCase.haut.donnee{color:#111}
+  /* le mot TOTAL au-dessus du nombre, comme le cartouche du plateau (décision du 22/09) */
+  .eleveCase.haut.donnee{color:#111;flex-direction:column;justify-content:center;gap:1px;line-height:1.05;padding:5px 0}
   .eleveCase.blanche.donnee .eleveTacheNom{color:#1d4ed8} /* « visibles » en bleu, comme leur nombre */
-  .eleveCase.haut.donnee .eleveTacheNom{position:static;margin-right:8px;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:#475569}
+  .eleveCase.haut.donnee .eleveTacheNom{position:static;margin:0;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#475569}
   #elevePanel.enquete .eleveActions{flex-wrap:wrap}
   /* Téléphone, schéma agrandi : le plateau se fait glisser de gauche à droite. */
   body.eleve-mode #svgWrap.eleveSchemaZoom{display:block;place-items:start;overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;touch-action:pan-x pan-y} /* place-items : sans quoi le dessin large est centré et sa gauche perdue */
@@ -791,7 +792,7 @@
     body.eleve-mode .eleveMiniTache{left:6px;top:5px;width:22px;height:16px}
     body.eleve-mode .eleveTacheNom{left:6px;top:4px;gap:4px;font-size:13px}
     body.eleve-mode .eleveTacheCouleur{width:20px;height:14px}
-    body.eleve-mode .eleveCase.haut.donnee .eleveTacheNom{font-size:14px}
+    body.eleve-mode .eleveCase.haut.donnee .eleveTacheNom{font-size:13px}
     body.eleve-mode .eleveConsigne{font-size:17px;margin:2px 0 10px}
     body.eleve-mode .eleveTete{font-size:21px;gap:10px} /* les pastilles ne touchent plus le compteur */
     body.eleve-mode .eleveTete a.eleveMondes{font-size:15px;padding:5px 11px}

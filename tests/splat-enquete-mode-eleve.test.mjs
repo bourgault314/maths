@@ -295,7 +295,8 @@ test("le Valider éteint s'efface pour laisser « Voir le schéma » et « Carte
   assert.equal(decl("#elevePanel.enquete .eleveActions"), "flex-wrap:wrap");
   assert.match(fn("eleveProposerSchema"), /bouton\.hidden = true;/, "par le script, pas par une règle CSS : sur ordinateur, rien ne cache le Valider d'une carte à remplir");
   assert.match(decl(".eleveTacheNom"), /^position:absolute;left:3px;top:2px;/, "le nom dans le coin, les chiffres restent centrés");
-  assert.equal(decl(".eleveCase.haut.donnee"), "color:#111", "le total en noir, comme sur les fiches");
+  assert.match(decl(".eleveCase.haut.donnee"), /^color:#111;flex-direction:column;justify-content:center;/, "le total en noir, le mot TOTAL au-dessus du nombre, les deux centrés");
+  assert.match(decl(".eleveCase.haut.donnee .eleveTacheNom"), /^position:static;margin:0;/, "rien ne pousse le nombre de côté");
   assert.match(decl(".eleveCase.blanche.donnee .eleveTacheNom"), /#1d4ed8/, "« visibles » en bleu");
   assert.deepEqual(r.filter((x) => /eleveTacheNom|eleveTacheCouleur|donnee/.test(x.sel) && /padding-(top|left)|text-indent/.test(x.decl)), [], "rien ne décale les chiffres");
 });
