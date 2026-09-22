@@ -9302,7 +9302,11 @@ function eleveVoirSchema(){
 /* Le schéma se dessine dans le plateau, cadré sur son contenu. Il est plus large
    que haut (1600 × ~1100) : sur un téléphone, le plateau réduit pour le pavé (150 à
    170 px) le rendrait minuscule ; il regagne la hauteur qui met le dessin à pleine
-   largeur (le pavé est parti, la page défile). Il ne rétrécit jamais.
+   largeur, jusqu'à la place libre sous le bouton : tout ce qui est au-dessus et
+   au-dessous du plateau dans la carte (compteur, tableau, message, boutons) reste à
+   l'écran avec 16 px de jeu, et « Étape suivante » puis « Carte suivante » restent
+   entiers sans défiler (à 62 % de la fenêtre, un PC de 730 px de haut les poussait
+   sous le bord). Il ne rétrécit jamais.
    Téléphone (moins de 600 px de large) : même à pleine largeur, les textes du schéma
    font 7 px, et la scène entière (plateau + schéma) pousserait le bouton « Étape
    suivante » sous le bord de l'écran. Le plateau ne montre alors QUE le cadre du
@@ -9334,7 +9338,12 @@ function eleveDessinerSchema(card){
     }
     const vb = svg.viewBox.baseVal;
     const voulu = Math.round(r.width * vb.height / vb.width);
-    const plafond = Math.round((window.innerHeight || 0) * 0.62) || voulu;
+    /* la place réellement libre : la fenêtre, moins tout ce qui est au-dessus et
+       au-dessous du plateau dans la carte, moins 16 px de jeu */
+    const carte = document.querySelector("#fsHost .cardbox");
+    const autres = carte ? carte.getBoundingClientRect().height - r.height : 0;
+    const hauteurFenetre = window.innerHeight || 0;
+    const plafond = hauteurFenetre > 0 ? Math.round(hauteurFenetre - autres - 16) : voulu;
     const cible = Math.max(ELEVE_PLATEAU_MIN, Math.min(voulu, plafond));
     if(cible > r.height){ plateau.style.height = cible + "px"; plateau.style.minHeight = cible + "px"; }
   }catch(_e){ /* le cadrage d'origine suffit */ }

@@ -223,6 +223,31 @@ test("les étapes sont celles de la projection, et la nouvelle carte repart du p
   const decl = (sel) => (r.find((x) => x.sel === sel) || {}).decl || "";
   assert.match(decl("body.eleve-mode #svgWrap.eleveSchemaZoom"), /display:block;place-items:start;overflow-x:auto/);
   assert.match(decl("body.eleve-mode #svgWrap.eleveSchemaZoom #mainSvg"), /max-width:none/);
+  // ordinateur : le plateau ne grandit que de la place libre (fenêtre − reste de la carte − 16),
+  // pour que « Étape suivante » puis « Carte suivante » restent entiers à l'écran
+  const plateauPC = (fenetre, plateauH, carteH) => {
+    const plateau = { getBoundingClientRect: () => ({ width: 1498, height: plateauH }), classList: { toggle(){} }, style: {} };
+    new Function("document", "window", `
+      function renderCard(){}
+      function eleveCadrerScene(){}
+      const svg = { viewBox: { baseVal: { width: 1600, height: 1100 } }, style: {}, setAttribute(){} };
+      let eleveSchemaEtape = 1;
+      ${constLine("const ELEVE_PLATEAU_MIN = ")}
+      ${constLine("const ELEVE_SCHEMA_ZOOM_TEL = ")}
+      ${constLine("const ELEVE_SCHEMA_CADRES = ")}
+      ${fn("eleveDessinerSchema")}
+      eleveDessinerSchema({});
+    `)(
+      { getElementById: (id) => (id === "svgWrap" ? plateau : null),
+        querySelector: (sel) => (sel === "#fsHost .cardbox" ? { getBoundingClientRect: () => ({ height: carteH }) } : null) },
+      { innerHeight: fenetre, matchMedia: () => ({ matches: false }) });
+    return plateau.style.height;
+  };
+  assert.equal(plateauPC(730, 336, 688), "362px", "PC 1536 × 730 : 730 − (688 − 336) − 16");
+  assert.equal(plateauPC(950, 437, 789), "582px", "PC 1920 × 950 : 950 − (789 − 437) − 16");
+  assert.equal(plateauPC(590, 280, 587), undefined, "pas de place libre : le plateau ne rétrécit pas");
+  assert.equal(plateauPC(2000, 437, 789), "1030px", "grande fenêtre : le dessin à pleine largeur (1498 × 1100 / 1600)");
+  assert.doesNotMatch(fn("eleveDessinerSchema"), /0\.62/, "plus de plafond à 62 % de la fenêtre");
 });
 
 // --- le dévoilement et le nom sur la tache ---------------------------------------------------
