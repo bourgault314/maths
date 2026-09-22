@@ -109,12 +109,14 @@ test("l'équation du schéma regroupé suit le tableau et condense les x par tac
   assert.match(groupedSource, /const fitOps = solved \? plan\.ops : \[\]/);
 });
 
-test("la correction C conserve exactement ses trois blocs", () => {
+test("la correction C conserve exactement ses trois blocs (plus la reformulation, seulement quand un indice est à retourner)", () => {
   const printSource = functionSource("renderCardIntoSvg", "printSheet");
   const normalCorrection = printSource.match(/if\(card\._directSubstitution\)\{[\s\S]*?\}else\{([\s\S]*?)\n    \}/);
   assert.ok(normalCorrection, "la branche de correction C doit exister");
   const blocks = normalCorrection[1].match(/placeStep\(/g) || [];
-  assert.equal(blocks.length, 3);
+  // lot E1 (22/09/2026) : un quatrième placeStep, le cadre « Reformulation », sous condition
+  assert.equal(blocks.length, 4);
+  assert.match(normalCorrection[1], /if\(reformulation\)\{\s*placeStep\(layer => drawRelationReformulationBox/);
   assert.match(normalCorrection[1], /drawRelationSituationSchema/);
   assert.match(normalCorrection[1], /drawRelationGroupedSchema/);
   assert.match(normalCorrection[1], /drawRelationOrderedSchema/);

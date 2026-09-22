@@ -609,6 +609,11 @@
     }
     .print-page-instruction strong{font-weight:900}
     .print-page-instruction-note{margin-left:2mm;color:#475467;font-size:8.7pt;font-weight:700}
+    /* « note= » : la consigne propre à la fiche, en gras, sous la phrase habituelle. */
+    .print-page-instruction-extra{margin-top:0.9mm;font-weight:900;color:#111827}
+    /* SPLAT! Enquête : bandeau framboise #be185d (monde 1 orange, monde 2 bleu, teal
+       Équations, violet relatifs) ; titre blanc, gris moyen-foncé en photocopie. */
+    .print-page-header--enquete{background:linear-gradient(90deg,#be185d 0%,#d23f7c 45%,#fbe3ee 100%)}
     /* Pied : gris moyen et 7 pt pour rester lisible en photocopie, 3 mm sous les cartes. */
     .print-page-footer{flex:0 0 3.5mm;margin-top:3mm;text-align:center;color:#64748b;font-size:7pt;font-weight:650;line-height:1}
     .printArea.print-2up .print-page-header{flex-basis:14mm;margin-bottom:1.5mm;padding:1.5mm 3mm}
@@ -902,7 +907,7 @@
       <option value="UPM">A± — Jetons relatifs</option>
       <option value="N">B — Paquets de jetons</option>
       <option value="NPM">B± — Paquets de jetons relatifs</option>
-      <option value="C">C — Enquête (relations, 3 couleurs)</option>
+      <option value="C">C — Enquête (relations, 6 couleurs)</option>
       <option value="D">D — Système (sommes, 3 couleurs)</option>
       <option value="C9">F — Opérations en 9 (9 → 99)</option>
       <option value="C8">G — Opérations en 8 (8 → 98)</option>
@@ -1355,6 +1360,35 @@ const INVESTIGATE_CLASSIC_COLOR_KEYS = ["black", "purple", "orange"];
 function investigateColorByKey(key){
   return INVESTIGATE_COLOR_PALETTE.find(c => c.key === key) || INVESTIGATE_COLOR_PALETTE[0];
 }
+/* Le mot écrit sous/sur la tache (« noire », « violette »…) et son initiale pour les
+   petites pastilles (« Vi » / « Ve » : violette et verte partagent la lettre V). */
+function investigateColorWord(info){
+  return String(info && info.sentence || "").replace(/^la tache\s+/, "") || "tache";
+}
+const INVESTIGATE_COLOR_INITIALS = { black:"N", purple:"Vi", orange:"O", blue:"B", green:"Ve", red:"R" };
+function investigateColorInitial(info){
+  return INVESTIGATE_COLOR_INITIALS[info && info.key] || investigateColorWord(info).slice(0, 1).toUpperCase();
+}
+/* Correction imprimée de l'Enquête, là où il n'y avait que des pastilles (indices en
+   symboles en haut de la carte, pastilles sous le schéma regroupé) : « word » écrit le
+   nom de la couleur à côté de la pastille, « initial » son initiale dans la pastille. */
+const INVESTIGATE_PRINT_LABEL_MODE = "word";
+/* Palette restreinte par l'adresse (« palette=noire,orange,bleue » ou « black,orange,blue »).
+   null = les six couleurs, comme toujours. Le tirage des couleurs consomme exactement les
+   mêmes nombres au hasard qu'avant (les six clés sont mélangées comme avant) : la palette
+   ne fait que choisir, parmi l'ordre tiré, les couleurs autorisées d'abord — les valeurs,
+   les indices et la structure de chaque carte ne bougent pas, seules les couleurs changent. */
+let investigatePaletteKeys = null;
+let printInstructionNote = "";
+function parseInvestigatePalette(raw){
+  const parts = String(raw == null ? "" : raw).toLowerCase().split(/[\s,;+|]+/).filter(Boolean);
+  const keys = [];
+  parts.forEach(part => {
+    const info = INVESTIGATE_COLOR_PALETTE.find(c => c.key === part || investigateColorWord(c) === part || c.short.toLowerCase() === part);
+    if(info && !keys.includes(info.key)) keys.push(info.key);
+  });
+  return keys.length ? keys : null;
+}
 function buildInvestigateColorMap(rng, taskCount, varied){
   const n = Math.max(1, Math.min(3, Number(taskCount) || 1));
   if(!varied){
@@ -1362,6 +1396,11 @@ function buildInvestigateColorMap(rng, taskCount, varied){
   }
   const keys = INVESTIGATE_COLOR_PALETTE.map(c => c.key);
   shuffleInPlace(keys, rng);
+  if(Array.isArray(investigatePaletteKeys) && investigatePaletteKeys.length){
+    const allowed = keys.filter(k => investigatePaletteKeys.includes(k));
+    const others = keys.filter(k => !investigatePaletteKeys.includes(k));
+    return allowed.concat(others).slice(0, n);
+  }
   return keys.slice(0, n);
 }
 function investigateColorInfo(card, idx){
@@ -1951,7 +1990,7 @@ function applyShareControl(params, name, el){
 
 /* Les réglages qu'une adresse partagée peut porter. Liste commune : elle sert
    aussi à l'empreinte de la série élève (eleveSignatureSerie). */
-const sharedNames = ["mode", "seed", "cards", "equation", "tasksMin", "tasksMax", "visibleMin", "visibleMax", "hidden", "hiddenMax", "totalMin", "totalMax", "splats", "clues", "structure", "mul", "div", "add", "sub", "deltaMax", "operation", "beadMax", "opposites", "colors", "unknown", "print", "duplex", "layout", "title", "eleve", "parcours", "imprimer", "suite"];
+const sharedNames = ["mode", "seed", "cards", "equation", "tasksMin", "tasksMax", "visibleMin", "visibleMax", "hidden", "hiddenMax", "totalMin", "totalMax", "splats", "clues", "structure", "mul", "div", "add", "sub", "deltaMax", "operation", "beadMax", "opposites", "colors", "palette", "unknown", "print", "duplex", "layout", "title", "note", "eleve", "parcours", "imprimer", "suite"];
 
 function loadSharedConfiguration(){
   const params = new URLSearchParams(window.location.search);
@@ -2009,6 +2048,12 @@ function appliquerConfiguration(params){
   }
   setSelectFromShare(params, "layout", printCardsPerPageEl);
   if(printActivityTitleEl && params.has("title")) printActivityTitleEl.value = params.get("title").slice(0, 160);
+  /* « note= » : une consigne courte, en gras, sous la phrase habituelle de la boîte de
+     consigne imprimée (fiches 2 et 7 de l'Enquête : « Reformule l'indice avant de
+     dessiner ton schéma. »). Absente : rien ne change. Elle ne change pas les cartes. */
+  if(params.has("note")) printInstructionNote = String(params.get("note") || "").trim().slice(0, 200);
+  /* « palette= » (Enquête) : couleurs de taches autorisées ; absente = les six. */
+  if(params.has("palette")) investigatePaletteKeys = parseInvestigatePalette(params.get("palette"));
 
   const seedRaw = params.get("seed");
   const seedNumber = seedRaw === null || String(seedRaw).trim() === "" ? NaN : Number(seedRaw);
@@ -2050,6 +2095,8 @@ function buildShareUrl(){
   addShareControl(params, "layout", printCardsPerPageEl);
   const printTitle = printActivityTitleEl ? printActivityTitleEl.value.trim() : "";
   if(printTitle) params.set("title", printTitle.slice(0, 160));
+  if(printInstructionNote) params.set("note", printInstructionNote);
+  if((act === "C" || act === "CD") && Array.isArray(investigatePaletteKeys) && investigatePaletteKeys.length) params.set("palette", investigatePaletteKeys.join(","));
 
   url.search = params.toString();
   return url.toString();
@@ -3043,12 +3090,12 @@ function genInvestigate(rng){
     if(op === 'ADD'){
       return (clueType === "SYMBOL") ?
         [{type:'splat', id:tIdx}, {type:'text', val:` = `}, {type:'splat', id:sIdx}, {type:'text', val:` + ${k}`}] :
-        `Sous ${names[tIdx]}, il y a ${k} jetons de plus que sous ${names[sIdx]}.`;
+        `Sous ${names[tIdx]}, il y a ${k} ${k > 1 ? "jetons" : "jeton"} de plus que sous ${names[sIdx]}.`;
     }
     if(op === 'SUB'){
       return (clueType === "SYMBOL") ?
         [{type:'splat', id:tIdx}, {type:'text', val:` = `}, {type:'splat', id:sIdx}, {type:'text', val:` − ${k}`}] :
-        `Sous ${names[tIdx]}, il y a ${k} jetons de moins que sous ${names[sIdx]}.`;
+        `Sous ${names[tIdx]}, il y a ${k} ${k > 1 ? "jetons" : "jeton"} de moins que sous ${names[sIdx]}.`;
     }
     return "";
   }
@@ -4480,6 +4527,32 @@ function formatRelationNumber(n){
   if(Math.abs(v - Math.round(v)) < 1e-9) return String(Math.round(v));
   return String(Math.round(v * 100) / 100).replace('.', ',');
 }
+/* Enquête : le nom de la couleur écrit SUR chaque tache (« noire », « violette »…),
+   à l'écran comme à l'impression — c'est lui qui rend la carte lisible en noir et
+   blanc, pas la nuance de gris (décision du 21/09/2026 ; « sous la tache », il n'y a
+   pas la place à 3 taches). Blanc à fin liseré noir sur la tache couverte, comme
+   « opposé » en B± ; une fois la tache dévoilée, le mot monte en haut de la tache et
+   passe en noir, le nombre restant au centre. Dessin seulement : aucun tirage. */
+function drawInvestigateSplatName(target, s, idx, card, revealed, api = {}){
+  const mkEl = api.mkEl || el;
+  const mkText = api.mkText || text;
+  const word = investigateColorWord(investigateColorInfo(card, idx));
+  const fs = clamp(Math.round(s.r * 0.30), 26, 60);
+  // Tache dévoilée : le mot à la même hauteur que « opposé » en B± (0,65 × rayon,
+  // baissé de OPPOSE_MOT_BAISSE), juste au-dessus du jeton du centre.
+  const y = revealed ? (s.cy - s.r * 0.65 + OPPOSE_MOT_BAISSE) : s.cy;
+  target.appendChild(mkText(s.cx, y, word, {
+    "text-anchor":"middle",
+    "dominant-baseline":"middle",
+    "font-size":String(fs),
+    "font-weight":"900",
+    "fill":(revealed ? "rgba(0,0,0,0.92)" : "#ffffff"),
+    "stroke":(revealed ? "rgba(255,255,255,0.85)" : "rgba(0,0,0,0.80)"),
+    "stroke-width":(revealed ? "5" : String(Math.max(2, Math.round(fs * 0.09)))),
+    "paint-order":"stroke fill",
+    "aria-hidden":"true"
+  }));
+}
 function taskShortName(idx, card){
   if(card && card.family === "C") return investigateColorInfo(card, idx).short;
   return ["Noire", "Violette", "Orange"][idx] || `Tache ${idx+1}`;
@@ -4530,10 +4603,14 @@ function drawRelationGraphicClues(targetGroup, card, opts = {}){
   const lineH = opts.lineH ?? 58;
 
   const g = mkEl("g", { id:"relationGraphicClues" });
+  // Correction imprimée : le nom de chaque couleur accompagne sa pastille ; la ligne
+  // reste entre la case TOTAL (bord droit 940) et le bord de la carte (1580), réduite
+  // d'un même facteur si elle est trop large. L'écran ne change pas.
+  const clueOpts = isPrint ? { labels:true, left:964, maxW:1580 - 964 } : {};
   rels.forEach((rel, i) => {
     const seq = relationGraphicClueParts(rel);
     if(seq.length){
-      renderMixedClue(g, cx, cy + i*lineH, seq, mkEl, mkText, isPrint, false, card);
+      renderMixedClue(g, cx, cy + i*lineH, seq, mkEl, mkText, isPrint, false, card, clueOpts);
     }
   });
   targetGroup.appendChild(g);
@@ -4634,6 +4711,37 @@ function positiveBarItemsForRelation(card){
     if(d > 0) parts.push({kind:"diff", label:formatRelationNumber(d), weight:Math.max(0.35, d / unit)});
     return { coef:1, diff:d, parts };
   });
+}
+/* La tache de référence des schémas : celle qui vaut 𝑥 (la plus petite — la même
+   que positiveBarItemsForRelation). Dans les trois cadres (schéma rempli, regroupé,
+   résolution) elle passe TOUJOURS en premier, quelle que soit sa couleur (demande de
+   Claire, 21/09/2026) ; les autres taches suivent dans leur ordre interne. Dessin
+   seulement : aucun tirage. */
+/* Un mot à côté d'une pastille (« bleue », « Noire »…) : avec dominant-baseline
+   middle, c'est le corps entier de la police (ascendantes + descendantes) qui est centré
+   sur la pastille, et les lettres basses paraissent en exposant. On descend le texte de
+   0,14 × la police pour centrer la zone des lettres (mesuré le 22/09 : ≈ 4 unités sur
+   une police de 24, le texte était 3 à 4 unités trop haut). */
+function pastilleTextDy(fontSize){
+  return Math.round(Number(fontSize) * 0.14);
+}
+function relationReferenceIndex(card){
+  const items = positiveBarItemsForRelation(card);
+  const byShape = items.findIndex(it => it && Math.round(Number(it.coef)) === 1 && !(Number(it.diff) > 0));
+  if(byShape >= 0) return byShape;
+  const rel = card && card._rel;
+  const values = (rel && Array.isArray(rel.hiddenValues) ? rel.hiddenValues : (card && card.hidden) || []).map(v => Number(v));
+  const finite = values.filter(v => Number.isFinite(v) && v > 0);
+  return finite.length ? values.indexOf(Math.min(...finite)) : 0;
+}
+function relationDisplayOrder(card){
+  const rel = card && card._rel;
+  const n = Math.max(1, Number(rel && rel.taskCount) || (Array.isArray(card && card.hidden) ? card.hidden.length : 1));
+  const ref = relationReferenceIndex(card);
+  const order = [];
+  if(ref >= 0 && ref < n) order.push(ref);
+  for(let i=0;i<n;i++) if(i !== ref) order.push(i);
+  return order;
 }
 function relationTotalsForBarModel(card){
   const items = positiveBarItemsForRelation(card);
@@ -4770,7 +4878,11 @@ function drawRelationSituationSchema(targetGroup, card, opts = {}){
   const visibleRow = hasVisibleRow
     ? { coef:0, diff:visibleSum, parts:[{kind:"visible", label:formatRelationNumber(visibleSum), weight:Math.max(0.35, visibleSum / unitValue)}] }
     : null;
-  const rows = hasVisibleRow ? baseRows.concat([visibleRow]) : baseRows;
+  // La tache de référence (𝑥) en première ligne, les autres en dessous, les visibles en dernier.
+  const rowOrder = relationDisplayOrder(card).filter(i => i < baseRows.length);
+  for(let i=0;i<baseRows.length;i++) if(!rowOrder.includes(i)) rowOrder.push(i);
+  const orderedRows = rowOrder.map(i => baseRows[i]);
+  const rows = hasVisibleRow ? orderedRows.concat([visibleRow]) : orderedRows;
 
   const g = el("g", { id:"relationSituationSchema" });
   g.appendChild(el("rect",{
@@ -4783,9 +4895,10 @@ function drawRelationSituationSchema(targetGroup, card, opts = {}){
 
   const rowsTop = boxY + titleH;
   let maxRowEnd = barX;
-  for(let i=0;i<rows.length;i++){
-    const y = rowsTop + i*(rowH+gap);
-    const isVisible = hasVisibleRow && i === rows.length - 1;
+  for(let r=0;r<rows.length;r++){
+    const y = rowsTop + r*(rowH+gap);
+    const isVisible = hasVisibleRow && r === rows.length - 1;
+    const i = isVisible ? r : rowOrder[r]; // i : l'indice de la tache (couleur, nom)
 
     if(isVisible){
       g.appendChild(el("circle",{cx:boxX+30, cy:y+rowH/2, r:f(10), fill:"rgba(249,115,22,0.35)", stroke:"rgba(0,0,0,.22)", "stroke-width":2}));
@@ -4800,13 +4913,13 @@ function drawRelationSituationSchema(targetGroup, card, opts = {}){
         "stroke-width":2,
         "aria-hidden":"true"
       }));
-      g.appendChild(text(boxX+54, y+rowH/2+1, taskShortName(i, card),{
+      g.appendChild(text(boxX+54, y+rowH/2+1+pastilleTextDy(f(21)), taskShortName(i, card),{
         "dominant-baseline":"middle", "font-size":f(21), "font-weight":950, fill:"var(--ink)"
       }));
     }
 
     let x = barX;
-    for(const part of rows[i].parts){
+    for(const part of rows[r].parts){
       const w = Math.max(part.kind === "diff" || part.kind === "visible" ? 52 : 52, unitW * Math.max(0.35, Number(part.weight)||1));
       // Pour le schéma vide, les barres existent mais les valeurs ne sont pas encore écrites.
       drawBarCell(g, x, y, w, rowH, part, filled, {fontSize:f(displayRowCount >= 4 ? 23 : 28)});
@@ -4840,7 +4953,36 @@ function drawRelationOwnerBrace(g, x1, x2, y, label, opts = {}){
     "stroke-linecap":"round", "stroke-linejoin":"round"
   }));
   const ownerSplatColor = opts.ownerSplatColor || "";
-  if(ownerSplatColor){
+  // Correction imprimée : la pastille seule devient un point gris en photocopie. On
+  // écrit alors le nom de la couleur (« noire ») à la place de la pastille quand il
+  // tient sous ses cases — sinon son initiale dans la pastille (« Vi », « Ve »).
+  const ownerWord = opts.ownerLabels && ownerSplatColor ? String(opts.ownerWord || label || "").toLowerCase() : "";
+  const ownerInitial = opts.ownerLabels && ownerSplatColor ? String(opts.ownerInitial || "") : "";
+  const wordFont = f(19);
+  const wordW = ownerWord ? measureTextWidth(ownerWord, `900 ${wordFont}px system-ui, -apple-system, "Segoe UI", Roboto, Arial`) : 0;
+  // Place disponible : les cases du groupe, plus ce qui est libre à côté (la colonne des
+  // noms à gauche pour le premier groupe, le bord du cadre à droite pour le dernier) —
+  // la tache de référence, en tête, n'a souvent qu'une case « ? » de 56 px.
+  const freeLeft = Math.max(0, Number(opts.freeLeft) || 0);
+  const freeRight = Math.max(0, Number(opts.freeRight) || 0);
+  const room = w + freeLeft + freeRight;
+  if(ownerWord && INVESTIGATE_PRINT_LABEL_MODE === "word" && Number.isFinite(wordW) && wordW + 8 <= room){
+    // Avec sa petite pastille devant quand la place le permet, le mot seul sinon ;
+    // centré sur ses cases, poussé dans la place libre s'il faut.
+    const dotR = f(10);
+    const withDot = wordW + dotR * 2 + 6 + 8 <= room;
+    const total = withDot ? wordW + dotR * 2 + 6 : wordW;
+    let left = mid - total / 2;
+    left = Math.max(x1 - freeLeft + 2, Math.min(left, x2 + freeRight - 2 - total));
+    if(withDot){
+      g.appendChild(el("path",{ d:blobPath(left + dotR, y+v(33), dotR), fill:ownerSplatColor, stroke:"rgba(0,0,0,.20)", "stroke-width":1.5, "aria-hidden":"true" }));
+    }
+    g.appendChild(text(withDot ? left + dotR * 2 + 6 : left, y+v(33)+pastilleTextDy(wordFont), ownerWord, {
+      "text-anchor":"start", "dominant-baseline":"middle",
+      "font-size":wordFont, "font-weight":900, fill:"#111827",
+      role:"img", "aria-label":label
+    }));
+  }else if(ownerSplatColor){
     g.appendChild(el("path",{
       d:blobPath(mid, y+v(33), f(15)),
       fill:ownerSplatColor,
@@ -4849,6 +4991,13 @@ function drawRelationOwnerBrace(g, x1, x2, y, label, opts = {}){
       role:"img",
       "aria-label":label
     }));
+    if(ownerInitial){
+      g.appendChild(text(mid, y+v(33), ownerInitial, {
+        "text-anchor":"middle", "dominant-baseline":"middle",
+        "font-size":f(ownerInitial.length > 1 ? 13 : 16), "font-weight":900, fill:"#fff",
+        stroke:"rgba(0,0,0,0.85)", "stroke-width":2.2, "paint-order":"stroke fill", "aria-hidden":"true"
+      }));
+    }
   }else{
     g.appendChild(text(mid, y+v(33), label, {
       "text-anchor":"middle", "dominant-baseline":"middle",
@@ -4862,7 +5011,10 @@ function getRelationGroupedDisplayGroups(card){
   const unitValue = relationUnitValue(card);
   const groups = [];
 
-  for(let i=0;i<totals.items.length;i++){
+  // Même ordre que le schéma rempli : la tache de référence (𝑥) d'abord.
+  const order = relationDisplayOrder(card).filter(i => i < totals.items.length);
+  for(let i=0;i<totals.items.length;i++) if(!order.includes(i)) order.push(i);
+  for(const i of order){
     const item = totals.items[i];
     groups.push({ label: taskShortName(i, card), splatIndex:i, parts: item.parts.map(p => ({...p})) });
   }
@@ -5213,8 +5365,8 @@ function relationEquationFit(lines, ops, layout, opts = {}){
   const roomFor = (fs) => {
     let lhsW = 0, rhsW = 0;
     (lines || []).forEach(line => {
-      lhsW = Math.max(lhsW, measureEquationTextWidth(line.left, fs));
-      rhsW = Math.max(rhsW, measureEquationTextWidth(line.right, fs));
+      lhsW = Math.max(lhsW, measureRelationEquationTextWidth(line.left, fs));
+      rhsW = Math.max(rhsW, measureRelationEquationTextWidth(line.right, fs));
     });
     const labelFs = Math.round(fs * 0.62);
     const labelW = hasArrows ? Math.max(0, ...ops.filter(Boolean).map(op => measureArrowLabelWidth(op, labelFs))) : 0;
@@ -5229,6 +5381,92 @@ function relationEquationFit(lines, ops, layout, opts = {}){
   // même à 22 rien ne tient : bloc contre le tableau, la droite déborde un peu
   const need = roomFor(22);
   return { fontSize: 22, margin, eqCenter: colLeft + need.needL };
+}
+
+/* La ligne finale de la résolution : « ⬤ noire = 22   ⬤ verte = 27   ⬤ bleue = 11 »,
+   la tache de référence d'abord. Le nom écrit rend la ligne lisible en photocopie ;
+   la police descend (24 → 16) pour que la ligne tienne dans la largeur du tableau. */
+function drawRelationAnswerLine(g, card, barX, barW, y, m){
+  const f = m.f, v = m.v;
+  const rel = card._rel;
+  const values = rel.hiddenValues;
+  const order = relationDisplayOrder(card).filter(i => i < values.length);
+  const uiFont = 'system-ui, -apple-system, "Segoe UI", Roboto, Arial';
+  const entries = order.map(i => ({ i, txt:`${investigateColorWord(investigateColorInfo(card, i))} = ${formatRelationNumber(values[i])}` }));
+  let fs = f(24);
+  const minFs = f(16);
+  const gapBetween = () => Math.round(fs * 1.1);
+  const dotR = () => Math.max(6, Math.round(fs * 0.5));
+  const widthAt = () => entries.reduce((acc, e) => {
+    const w = measureTextWidth(e.txt, `900 ${fs}px ${uiFont}`);
+    e.w = (Number.isFinite(w) && w > 0) ? w : e.txt.length * fs * 0.6;
+    return acc + dotR() * 2 + 8 + e.w;
+  }, 0) + gapBetween() * (entries.length - 1);
+  let total = widthAt();
+  while(total > barW && fs > minFs){ fs -= 1; total = widthAt(); }
+  let x = barX + Math.max(0, (barW - total) / 2);
+  const line = el("g", { id:"relationAnswerLine" });
+  entries.forEach(e => {
+    const r = dotR();
+    line.appendChild(el("path", { d:blobPath(x + r, y, r), fill:taskSplatColor(e.i, card), stroke:"rgba(0,0,0,.20)", "stroke-width":1.5, "aria-hidden":"true" }));
+    line.appendChild(text(x + r * 2 + 8, y + pastilleTextDy(fs), e.txt, {
+      "text-anchor":"start", "dominant-baseline":"middle", "font-size":fs, "font-weight":900, fill:"var(--ink)"
+    }));
+    x += r * 2 + 8 + e.w + gapBetween();
+  });
+  g.appendChild(line);
+}
+
+/* Correction imprimée de l'Enquête (demande de Claire, 22/09/2026) : un cadre au-dessus
+   des schémas nomme TOUJOURS la tache de référence (la plus petite) et, quand un indice
+   est « de moins » ou « fois moins », le réécrit d'abord dans le sens de la référence
+   (« Sous la tache noire, il y a 12 jetons de plus que sous la tache verte. »). Titre
+   « Reformulation » s'il y a un indice à retourner, « Tache de référence » sinon
+   (décision de Gwenaël du 22/09 : le cadre est toujours là). Renvoie la hauteur du cadre. */
+function relationReformulationLines(card){
+  const rel = card && card._rel;
+  if(!rel || !Array.isArray(rel.relations) || !Array.isArray(rel.names)) return [];
+  const names = rel.names;
+  const lines = [];
+  rel.relations.forEach(r => {
+    const k = formatRelationNumber(r.k);
+    if(r.op === "SUB") lines.push(`Sous ${names[r.source]}, il y a ${k} ${Number(r.k) > 1 ? "jetons" : "jeton"} de plus que sous ${names[r.target]}.`);
+    if(r.op === "DIV") lines.push(`Sous ${names[r.source]}, il y a ${k} fois plus de jetons que sous ${names[r.target]}.`);
+  });
+  const ref = relationReferenceIndex(card);
+  const refWord = investigateColorWord(investigateColorInfo(card, ref));
+  lines.push(`Tache de référence : la ${refWord}, la plus petite.`);
+  return lines;
+}
+function relationHasInvertedClue(card){
+  const rel = card && card._rel;
+  return !!(rel && Array.isArray(rel.relations) && rel.relations.some(r => r.op === "SUB" || r.op === "DIV"));
+}
+function drawRelationReformulationBox(targetGroup, card, opts = {}){
+  const lines = relationReformulationLines(card);
+  if(!lines.length) return 0;
+  const metrics = getRelationDrawingMetrics(opts);
+  const v = metrics.y;
+  const f = metrics.font;
+  const layout = getRelationSchemaLayout(opts);
+  const boxX = layout.boxX, boxW = layout.boxW, boxY = 620;
+  const fs = f(opts.compact ? 23 : 26);
+  const lineH = Math.round(fs * 1.28);
+  const wrapped = lines.flatMap(t => wrapTextToWidth(t, fs, boxW - 60));
+  const titleH = v(46);
+  const boxH = titleH + wrapped.length * lineH + v(18);
+  const g = el("g", { id:"relationReformulationBox" });
+  g.appendChild(el("rect",{x:boxX, y:boxY, width:boxW, height:boxH, rx:22, fill:"rgba(255,255,255,0.95)", stroke:"#000", "stroke-width":3}));
+  g.appendChild(text(boxX+boxW/2, boxY+v(32), relationHasInvertedClue(card) ? "Reformulation" : "Tache de référence", {"text-anchor":"middle", "font-size":f(27), "font-weight":950, fill:"var(--ink)"}));
+  let y = boxY + titleH + Math.round(fs * 0.9);
+  const last = wrapped.length - 1;
+  wrapped.forEach((line, i) => {
+    const isRef = i === last;
+    g.appendChild(text(boxX + 30, y, line, {"text-anchor":"start", "font-size":fs, "font-weight":isRef ? 800 : 700, fill:isRef ? "#334155" : "var(--ink)"}));
+    y += lineH;
+  });
+  targetGroup.appendChild(g);
+  return boxH;
 }
 
 function drawRelationOrderedSchema(targetGroup, card, opts = {}){
@@ -5286,6 +5524,14 @@ function drawRelationOrderedSchema(targetGroup, card, opts = {}){
     const w = isLast ? (barX + barW - x) : cellWidths[i];
     drawBarCell(g, x, yTop+topH, w, botH, part, true, {fontSize:f(30)});
     x += w;
+  }
+
+  // La réponse à la question posée : la valeur de chaque tache, sous le tableau
+  // (« noire = 22   verte = 27   bleue = 11 »), référence d'abord — la résolution
+  // s'arrêtait à « ? = 11 ». Enquête seulement (C direct compris) ; pas en mode élève.
+  if(solved && card && card.family === "C" && card._rel && Array.isArray(card._rel.hiddenValues)){
+    // Sur toute la largeur libre sous le tableau : colonne des noms comprise.
+    drawRelationAnswerLine(g, card, boxX + 16, barX + barW - (boxX + 16), yTop + topH + botH + v(36), { f, v });
   }
 
   // Lignes de la résolution, leurs opérations, police et position du signe égal :
@@ -5383,9 +5629,16 @@ function drawRelationGroupedSchema(targetGroup, card, opts = {}){
   const braceY = yTop + topH + botH + v(8);
   for(const span of groupSpans){
     if(span.x2 - span.x1 <= 10) continue;
+    const ownerInfo = span.splatIndex == null ? null : investigateColorInfo(card, span.splatIndex);
+    const isFirst = span === groupSpans[0];
+    const isLast = span === groupSpans[groupSpans.length - 1];
     const ownerOpts = span.splatIndex == null
       ? opts
-      : {...opts, ownerSplatColor:taskSplatColor(span.splatIndex, card)};
+      : {...opts, ownerSplatColor:taskSplatColor(span.splatIndex, card),
+         ownerWord: card && card.family === "C" ? investigateColorWord(ownerInfo) : "",
+         ownerInitial: card && card.family === "C" ? investigateColorInitial(ownerInfo) : "",
+         freeLeft: isFirst ? Math.max(0, span.x1 - (boxX + 24)) : 0,
+         freeRight: isLast ? Math.max(0, (boxX + boxW - 12) - span.x2) : 0};
     drawRelationOwnerBrace(g, span.x1, span.x2, braceY, span.label, ownerOpts);
   }
 
@@ -5410,7 +5663,9 @@ function drawRelationGroupedSchema(targetGroup, card, opts = {}){
   }
   // L'équation décrit les groupes dans l'ordre exact du tableau ; seuls les x
   // répétés à l'intérieur d'une même tache sont condensés en kx.
-  const shownLines = solved ? plan.lines : [groupedEquation];
+  // opts.hideGroupedEquation (correction imprimée, inconnue « ? ») : le cadre s'arrête au
+  // tableau ; en lettre, « x + x + 3 + x + 15 = 60 » reste (décision du 22/09).
+  const shownLines = solved ? plan.lines : (opts.hideGroupedEquation ? [] : [groupedEquation]);
   shownLines.forEach(line => eqLine(line.left, line.right));
 
   targetGroup.appendChild(g);
@@ -5572,27 +5827,107 @@ function drawBarModelPartsInGroup(g, cx, topY, total, parts, api){
   return w;
 }
 
-function renderMixedClue(targetGroup, cx, cy, seq, mkEl, mkText, isPrint, revealed, card=null) {
-  const fontSize = isPrint ? 42 : 45;
-  const charW = isPrint ? 22 : 24;
-  const spaceW = isPrint ? 14 : 12;
-  const splatW = isPrint ? 70 : 60;
-  const splatR = isPrint ? 26 : 22;
-  const yOffset = isPrint ? 18 : 15;
-
-  const metrics = seq.map(item => {
-      if(item.type === 'splat') {
-          return { ...item, w: splatW };
-      } else {
-          let w = 0;
-          for(let i=0;i<item.val.length;i++){
-              w += (item.val[i]===' ' ? spaceW : charW);
-          }
-          return { ...item, w };
-      }
-  });
+/* La phrase d'indice de l'Enquête (« Sous la tache violette, il y a 9 jetons de moins
+   que sous la tache verte. ») est plus large que la carte dès qu'elle dépasse ~70
+   caractères : sur l'énoncé imprimé 4 par page, le « S » était coupé à gauche et la fin
+   sortait à droite (jusqu'à 6,4 mm de chaque côté, mesuré le 21/09/2026). On mesure
+   la phrase dans la police réellement dessinée et, si elle ne tient pas dans maxW :
+   à l'impression, on la coupe en deux lignes à la virgule (la carte a la place) ;
+   à l'écran (deux indices doivent tenir sous le plateau), on réduit la police.
+   Renvoie { lines, fontSize }. */
+function layoutClueSentence(txt, fontSize, maxW, wrap){
+  const str = String(txt == null ? "" : txt);
+  const font = (fs) => `700 ${fs}px system-ui, -apple-system, "Segoe UI", Roboto, Arial`;
+  const width = (t, fs) => {
+    const w = measureTextWidth(t, font(fs));
+    return (Number.isFinite(w) && w > 0) ? w : t.length * fs * 0.56;
+  };
+  const fits = (parts, fs) => parts.every(t => width(t, fs) <= maxW);
+  let lines = [str];
+  if(fits(lines, fontSize)) return { lines, fontSize };
+  if(wrap){
+    const k = str.indexOf(", ");
+    if(k > 0){
+      lines = [str.slice(0, k + 1), str.slice(k + 2)];
+      if(fits(lines, fontSize)) return { lines, fontSize };
+    }
+  }
+  let fs = fontSize;
+  const minFs = Math.round(fontSize * 0.66);
+  while(fs > minFs && !fits(lines, fs)) fs -= 1;
+  return { lines, fontSize: fs };
+}
+/* Coupe un texte en lignes qui tiennent dans maxW (par mots, mesure dans la police
+   dessinée ; secours 0,56 × police par caractère). */
+function wrapTextToWidth(str, fontSize, maxW, weight = 700){
+  const font = `${weight} ${fontSize}px system-ui, -apple-system, "Segoe UI", Roboto, Arial`;
+  const width = (t) => { const w = measureTextWidth(t, font); return (Number.isFinite(w) && w > 0) ? w : t.length * fontSize * 0.56; };
+  const words = String(str == null ? "" : str).split(/\s+/).filter(Boolean);
+  const lines = [];
+  let cur = "";
+  for(const word of words){
+    const essai = cur ? `${cur} ${word}` : word;
+    if(cur && width(essai) > maxW){ lines.push(cur); cur = word; }
+    else cur = essai;
+  }
+  if(cur) lines.push(cur);
+  return lines;
+}
+/* Énoncé imprimé de l'Enquête (demande de Claire, 22/09/2026) : la case TOTAL passe à
+   gauche et les phrases d'indice s'écrivent à sa droite, dans le bandeau du haut, au
+   lieu de sous le plateau — le blanc où l'élève cherche s'agrandit d'autant. On prend
+   la plus grande police (42 → 30) pour laquelle toutes les phrases, coupées par mots
+   dans la largeur disponible, tiennent dans la hauteur du bandeau. */
+const ENQUETE_PRINT_CLUES_BAND = { x:440, right:1570, top:22, height:210 };
+function layoutEnqueteClueBand(sentences, band){
+  const maxW = band.right - band.x;
+  for(let fs = 42; fs >= 30; fs--){
+    const lineH = Math.round(fs * 1.12);
+    const gap = Math.round(fs * 0.45);
+    const blocks = sentences.map(t => wrapTextToWidth(t, fs, maxW));
+    const total = blocks.reduce((acc, b) => acc + b.length * lineH, 0) + gap * (blocks.length - 1);
+    if(total <= band.height || fs === 30) return { fontSize: fs, lineH, gap, blocks, total };
+  }
+  return null;
+}
+function renderMixedClue(targetGroup, cx, cy, seq, mkEl, mkText, isPrint, revealed, card=null, opts={}) {
+  // opts.labels (impression, Enquête) : chaque pastille porte le nom de sa couleur
+  // (« word » : le mot à côté ; « initial » : l'initiale dedans), pour la photocopie.
+  // opts.maxW : largeur disponible ; si la ligne est plus large, tout est réduit
+  // d'un même facteur. opts.left : bord gauche minimal de la ligne.
+  const labels = !!opts.labels && !!card && card.family === "C";
+  const wordMode = labels && INVESTIGATE_PRINT_LABEL_MODE === "word";
+  let scale = 1;
+  const baseFont = isPrint ? 42 : 45;
+  const wordFontOf = (fs) => Math.round(fs * 0.86);
+  const wordWidth = (id, fs) => {
+    const word = investigateColorWord(investigateColorInfo(card, id));
+    const w = measureTextWidth(word, `700 ${wordFontOf(fs)}px system-ui, -apple-system, "Segoe UI", Roboto, Arial`);
+    return Number.isFinite(w) && w > 0 ? w : word.length * wordFontOf(fs) * 0.58;
+  };
+  const measureAll = (k) => {
+    const fs = baseFont * k;
+    const cW = (isPrint ? 22 : 24) * k, sW = (isPrint ? 14 : 12) * k, spW = (isPrint ? 70 : 60) * k;
+    return seq.map(item => {
+      if(item.type === 'splat') return { ...item, w: spW + (wordMode ? wordWidth(item.id, fs) + 16 * k : 0) };
+      let w = 0;
+      for(let i=0;i<item.val.length;i++) w += (item.val[i]===' ' ? sW : cW);
+      return { ...item, w };
+    });
+  };
+  let metrics = measureAll(1);
   let totalW = metrics.reduce((sum, m) => sum + m.w, 0);
+  if(Number.isFinite(opts.maxW) && opts.maxW > 0 && totalW > opts.maxW){
+    scale = Math.max(0.6, opts.maxW / totalW);
+    metrics = measureAll(scale);
+    totalW = metrics.reduce((sum, m) => sum + m.w, 0);
+  }
+  const fontSize = baseFont * scale;
+  const splatW = (isPrint ? 70 : 60) * scale;
+  const splatR = (isPrint ? 26 : 22) * scale;
+  const yOffset = (isPrint ? 18 : 15) * scale;
   let x = cx - totalW / 2;
+  if(Number.isFinite(opts.left) && x < opts.left) x = opts.left;
 
   const strokeCol = isPrint ? "rgba(0,0,0,0.18)" : "var(--splat-stroke)";
 
@@ -5601,18 +5936,35 @@ function renderMixedClue(targetGroup, cx, cy, seq, mkEl, mkText, isPrint, reveal
           const coverCol = taskSplatColor(item.id, card, isPrint);
           const revealCol = taskSplatRevealColor(item.id, card, isPrint);
           const fillCol = (revealed === 2 || revealed === true) ? revealCol : coverCol;
+          const bx = x + splatW/2;
 
           const p = mkEl("path", {
-              d: blobPath(x + item.w/2, cy - yOffset, splatR),
+              d: blobPath(bx, cy - yOffset, splatR),
               fill: fillCol,
               stroke: strokeCol,
               "stroke-width": "3"
           });
           targetGroup.appendChild(p);
+          if(labels){
+            const info = investigateColorInfo(card, item.id);
+            if(wordMode){
+              targetGroup.appendChild(mkText(x + splatW, cy, investigateColorWord(info), {
+                "text-anchor": "start", "font-size": String(wordFontOf(fontSize)),
+                "fill": isPrint ? "#000" : "var(--ink)", "font-weight": "700"
+              }));
+            }else{
+              const ini = investigateColorInitial(info);
+              targetGroup.appendChild(mkText(bx, cy - yOffset, ini, {
+                "text-anchor": "middle", "dominant-baseline": "middle",
+                "font-size": String(Math.round(splatR * (ini.length > 1 ? 0.8 : 1.0))), "font-weight": "900",
+                "fill": "#fff", "stroke": "rgba(0,0,0,0.85)", "stroke-width": "2.5", "paint-order": "stroke fill", "aria-hidden": "true"
+              }));
+            }
+          }
 
           if (!isPrint && (revealed === 2 || revealed === true)) {
               const pCover = mkEl("path", {
-                  d: blobPath(x + item.w/2, cy - yOffset, splatR),
+                  d: blobPath(bx, cy - yOffset, splatR),
                   fill: coverCol,
                   stroke: "none",
                   "class": "anim-fade-out"
@@ -5624,7 +5976,7 @@ function renderMixedClue(targetGroup, cx, cy, seq, mkEl, mkText, isPrint, reveal
       } else {
           targetGroup.appendChild(mkText(x + item.w/2, cy, item.val, {
               "text-anchor": "middle",
-              "font-size": fontSize.toString(),
+              "font-size": String(Math.round(fontSize)),
               "fill": isPrint ? "#000" : "var(--ink)",
               "font-weight": "700"
           }));
@@ -6127,9 +6479,11 @@ function renderCard(card, revealState){
     indices.forEach((txt, i) => {
       const cyLine = startY + i*lineH;
       if (typeof txt === 'string') {
-        gInd.appendChild(text(800, cyLine, txt, {
+        // Une phrase trop large pour la scène (1600) est réduite, jamais coupée.
+        const fit = layoutClueSentence(txt, 45, 1600 - 2*24, false);
+        gInd.appendChild(text(800, cyLine, fit.lines[0], {
           "text-anchor":"middle",
-          "font-size":"45",
+          "font-size":String(fit.fontSize),
           "fill":"var(--ink)",
           "font-weight":"700"
         }));
@@ -6296,6 +6650,7 @@ function renderCard(card, revealState){
         "stroke-width":"5"
       });
       layer.appendChild(p);
+      if(card.family === "C") drawInvestigateSplatName(layer, s, idx, card, visualRevealState === 2, { mkEl:el, mkText:text });
 
       if(card.family === "NPM" && card._num && Array.isArray(card._num.opposedTasks) && card._num.opposedTasks[idx]){
         const fs = clamp(Math.round(s.r*0.34), 28, 64);
@@ -6501,6 +6856,16 @@ const EQUATION_MATH_FONT = "'Times New Roman', Times, serif";
 function measureEquationTextWidth(str, fontSize){
   const w = measureTextWidth(str, `italic ${fontSize}px ${EQUATION_MATH_FONT}`);
   return (Number.isFinite(w) && w > 0) ? w : estimatePrintMathTextWidth(str, fontSize);
+}
+/* Les lignes d'équation des schémas de l'Enquête (drawProjectionEquationLine) portent
+   l'attribut font-family Times, mais la règle générale « * { font-family } » de la page
+   l'emporte : elles s'affichent et s'impriment dans la police de l'interface, plus
+   large d'environ 20 %. Leur place se mesure donc dans cette police-là — sinon, sur la
+   correction imprimée, « ? + 3 + ? + 15 + ? = 60 » commençait sur la dernière case. */
+const RELATION_EQUATION_DRAWN_FONT = 'system-ui, -apple-system, "Segoe UI", Roboto, Arial';
+function measureRelationEquationTextWidth(str, fontSize){
+  const w = measureTextWidth(str, `italic ${fontSize}px ${RELATION_EQUATION_DRAWN_FONT}`);
+  return (Number.isFinite(w) && w > 0) ? w : Math.round(estimatePrintMathTextWidth(str, fontSize) * 1.2);
 }
 function measureArrowLabelWidth(str, fontSize){
   const w = measureTextWidth(str, `800 ${fontSize}px system-ui, -apple-system, "Segoe UI", Roboto, Arial`);
@@ -7076,9 +7441,11 @@ function getRelationCorrectionPrintProfile(card){
   // disponible. Les largeurs restent identiques et les équations continuent
   // de réduire automatiquement leur police si une ligne est longue. La police
   // suit davantage l'agrandissement des cadres pour éviter un rendu trop vide.
+  // ownerLabels : sous le schéma regroupé imprimé, les pastilles portent le nom
+  // (ou l'initiale) de leur couleur — lisible en photocopie.
   return card && card._directSubstitution
-    ? { verticalScale:1.40, fontScale:1.30 }
-    : { verticalScale:1.20, fontScale:1.25, barShiftX:30 };
+    ? { verticalScale:1.40, fontScale:1.30, ownerLabels:true }
+    : { verticalScale:1.20, fontScale:1.25, barShiftX:30, ownerLabels:true };
 }
 
 function renderCardIntoSvg(targetSvg, card, printMode){
@@ -7123,7 +7490,12 @@ function renderCardIntoSvg(targetSvg, card, printMode){
     rx:30, fill:"#fff", stroke:"#334155", "stroke-width":"8"
   }));
 
+  // Énoncé imprimé de l'Enquête en phrases : TOTAL à gauche, aligné sur le plateau,
+  // indices à sa droite (voir layoutEnqueteClueBand).
+  const enqueteClueBand = (card.family === "C" && !revealAnswers && card._inv && Array.isArray(card._inv.indices)
+    && card._inv.indices.length > 0 && card._inv.indices.every(t => typeof t === "string"));
   let tx = 800, ty = 92;
+  if(enqueteClueBand) tx = 260;
   const printOffsetY = printTray.offsetY;
 
   let totalColor = "#000";
@@ -7161,17 +7533,38 @@ function renderCardIntoSvg(targetSvg, card, printMode){
   const printRevealState = (card.family === "C") ? (revealAnswers ? (card._directSubstitution ? 3 : 5) : 0) : revealState;
 
   /* Indices impression Mode C/D */
-  if(isModeC_or_D && card._inv && card._inv.indices && !(card.family === "C" && printRevealState > 0)){
+  if(enqueteClueBand && printRevealState === 0){
+    const band = ENQUETE_PRINT_CLUES_BAND;
+    const plan = layoutEnqueteClueBand(card._inv.indices, band);
+    // bloc centré verticalement dans le bandeau, texte aligné à gauche
+    let y = band.top + Math.max(0, (band.height - plan.total) / 2) + Math.round(plan.fontSize * 0.85);
+    plan.blocks.forEach((lines, i) => {
+      lines.forEach(line => {
+        targetSvg.appendChild(tText(band.x, y, line, {"text-anchor":"start","font-size":String(plan.fontSize),"fill":"#000","font-weight":"700"}));
+        y += plan.lineH;
+      });
+      y += plan.gap;
+    });
+  }else if(isModeC_or_D && card._inv && card._inv.indices && !(card.family === "C" && printRevealState > 0)){
     const indices = card._inv.indices;
     const lineH = 84;
     const startY = trayY + trayH + 80;
 
+    // Une phrase trop large pour la carte (1600, marge 40 de chaque côté) se coupe en
+    // deux lignes à la virgule ; l'interligne des indices s'ouvre alors (84 → 118).
+    const fits = indices.map(txt => typeof txt === 'string' ? layoutClueSentence(txt, 42, W - 2*40, true) : null);
+    const wrapped = fits.some(fit => fit && fit.lines.length > 1);
+    const stepY = wrapped ? 118 : lineH;
     indices.forEach((txt, i) => {
-      const cyLine = startY + i*lineH;
+      const cyLine = startY + i*stepY;
       if (typeof txt === 'string') {
-        targetSvg.appendChild(tText(800, cyLine, txt, {
-          "text-anchor":"middle","font-size":"42","fill":"#000","font-weight":"700"
-        }));
+        const fit = fits[i];
+        const sub = Math.round(fit.fontSize * 1.15);
+        fit.lines.forEach((line, j) => {
+          targetSvg.appendChild(tText(800, cyLine + j*sub, line, {
+            "text-anchor":"middle","font-size":String(fit.fontSize),"fill":"#000","font-weight":"700"
+          }));
+        });
       } else if (Array.isArray(txt)) {
         renderMixedClue(targetSvg, 800, cyLine, txt, tEl, tText, true, revealAnswers, card);
       }
@@ -7203,8 +7596,22 @@ function renderCardIntoSvg(targetSvg, card, printMode){
       placeStep(layer => drawRelationSubstitutionStep(layer, card, printProfile));
       placeStep(layer => drawRelationOrderedSchema(layer, card, { solved:true, direct:true, ...printProfile }));
     }else{
+      // Le cadre « Reformulation » / « Tache de référence » d'abord, toujours ; le pas
+      // entre les cadres se resserre (40 → 28) pour rester dans la carte. Avec une ligne
+      // « visibles » en plus (jetons visibles), tout se resserre encore : au pire
+      // (3 taches, deux indices à retourner, jetons visibles) il reste ≈ 40 px.
+      const reformulation = relationReformulationLines(card).length > 0;
+      const serre = reformulation && Number(card._rel.visibleSum) > 0;
+      const gap = reformulation ? (serre ? 14 : 28) : stepGap;
+      if(reformulation){
+        placeStep(layer => drawRelationReformulationBox(layer, card, { ...printProfile, compact: serre }));
+        stepTop += gap - stepGap;
+      }
       placeStep(layer => drawRelationSituationSchema(layer, card, { filled:true, ...printProfile }));
-      placeStep(layer => drawRelationGroupedSchema(layer, card, printProfile));
+      if(reformulation) stepTop += gap - stepGap;
+      const questionMark = getNumberedDisplayVarChar(card) === "?";
+      placeStep(layer => drawRelationGroupedSchema(layer, card, { ...printProfile, hideGroupedEquation: questionMark }));
+      if(reformulation) stepTop += gap - stepGap;
       placeStep(layer => drawRelationOrderedSchema(layer, card, { solved:true, ...printProfile }));
     }
   }
@@ -7396,6 +7803,7 @@ function renderCardIntoSvg(targetSvg, card, printMode){
         f = revealAnswers ? revealCol : cover;
       }
       targetSvg.appendChild(tEl("path",{d: blobPath(s.cx, s.cy + printOffsetY, s.r), fill:f, stroke:"rgba(0,0,0,0.18)","stroke-width":"5"}));
+      if(card.family === "C") drawInvestigateSplatName(targetSvg, {...s, cy:s.cy + printOffsetY}, idx, card, revealAnswers, { mkEl:tEl, mkText:tText, isPrint:true });
       if(card.family === "NPM" && card._num && Array.isArray(card._num.opposedTasks) && card._num.opposedTasks[idx]){
         const fs = clamp(Math.round(s.r*0.34), 28, 64);
         const y = revealAnswers ? (s.cy + printOffsetY - s.r*0.65 + OPPOSE_MOT_BAISSE) : (s.cy + printOffsetY);
@@ -7671,6 +8079,9 @@ function getClassicPrintInstruction(slotCards){
 function createClassicPrintHeader(mode){
   const header = document.createElement("div");
   header.className = "print-page-header";
+  /* SPLAT! Enquête : bandeau framboise (le bleu est celui du monde 2). */
+  const actNow = activityEl ? activityEl.value : "";
+  if(actNow === "C" || actNow === "CD") header.classList.add("print-page-header--enquete");
 
   const titleBlock = document.createElement("div");
   titleBlock.className = "print-page-title-block";
@@ -7719,6 +8130,12 @@ function createClassicPrintInstruction(slotCards){
     note.className = "print-page-instruction-note";
     note.textContent = copy.note;
     box.appendChild(note);
+  }
+  if(printInstructionNote){
+    const extra = document.createElement("div");
+    extra.className = "print-page-instruction-extra";
+    extra.textContent = printInstructionNote;
+    box.appendChild(extra);
   }
   return box;
 }
@@ -8763,7 +9180,7 @@ function eleveLienMondesHtml(classe, libelle){
    reprise de l'un s'appliquait à l'autre et l'élève atterrissait au milieu
    d'une série jamais commencée (Petit Splat, PR #773). Ce qui ne change pas
    les cartes n'y entre pas : le mode élève, l'étape, l'impression, le titre. */
-const ELEVE_HORS_EMPREINTE = ["eleve", "parcours", "print", "duplex", "layout", "title", "imprimer"];
+const ELEVE_HORS_EMPREINTE = ["eleve", "parcours", "print", "duplex", "layout", "title", "imprimer", "note"];
 function eleveSignatureSerie(){
   const params = new URLSearchParams(window.location.search);
   return sharedNames.filter(nom => !ELEVE_HORS_EMPREINTE.includes(nom) && params.has(nom))
