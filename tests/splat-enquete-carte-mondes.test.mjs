@@ -162,7 +162,7 @@ test("le chiffre du badge tombe sur le centre visuel de la tache", () => {
   /* La tache a sa masse en haut (centre de gravité 2,6 unités au-dessus du
      centre de sa boîte de 110) et le chiffre, centré sur sa boîte de ligne,
      tombe encore plus bas : la boîte réserve la place des jambages. */
-  assert.match(univers, /\.badge \.n\{color:var\(--ink\);transform:translateY\(-2\.2px\)\}/);
+  assert.match(univers, /\.badge \.n\{color:var\(--ink\);transform:translateY\(-1\.3px\)\}/);
   assert.doesNotMatch(univers, /transform:translate\(-0\.5px,1\.5px\)/);
 });
 

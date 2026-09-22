@@ -147,13 +147,16 @@ main{max-width:980px;margin:0 auto;padding:10px 14px 60px}
 .etape:nth-child(3n+2) .badge svg.tache{transform:rotate(14deg)}
 .etape:nth-child(3n) .badge svg.tache{transform:rotate(4deg)}
 /* chiffre : blanc sur pleine couleur, encre sur teinte claire.
-   Remontée de 2,2 px pour tomber sur le centre VISUEL de la tache : la forme a
-   sa masse en haut (son centre de gravité est 2,6 unités au-dessus du centre de
-   la boîte de 110, soit 1,4 px ici) et le chiffre, centré sur sa boîte de ligne,
-   tombe encore 0,8 px plus bas parce que cette boîte réserve la place des
-   jambages (p, g, y) qu'un chiffre n'a pas. La rotation des taches ne change
-   rien : leur centre de gravité ne bouge que de ±0,3 px. */
-.badge .n{color:var(--ink);transform:translateY(-2.2px)}
+   Remontée de 1,3 px pour tomber sur le centre VISUEL de la tache, qui n'est pas
+   le centre de sa boîte : la forme a sa masse en haut (centre de gravité 2,6
+   unités au-dessus du centre de la boîte de 110, soit 1,4 px ici). Attention en
+   retouchant : le chiffre est en Arial et non dans la police de la page, parce
+   que .badge est un <button> et qu'un bouton n'hérite pas de la police du
+   document — d'où un décalage de police différent de partout ailleurs. La
+   rotation des taches ne change rien : leur centre de gravité ne bouge que de
+   ±0,3 px. Mesuré sur le PC de Gwenaël : 2,8 px sous le centre avant, moins
+   d'un demi-pixel après. */
+.badge .n{color:var(--ink);transform:translateY(-1.3px)}
 .etape.done .badge .n{color:#fff}
 
 .monde.enprepa .head{filter:saturate(.35);opacity:.85}
@@ -266,7 +269,7 @@ const M2A3="mode=U&equation=AX_PLUS_C_EQ_B&tasksMin=2&tasksMax=5&visibleMax=15&h
 /* Fiches du monde 2 : énoncé seul, 6 cartes par page (le plateau et, dessous, de la
    place pour dessiner le schéma en barres et écrire l'opération). */
 const FICHE="&print=statement&layout=6&imprimer=1&title=";
-/* ---- SPLAT! Enquête (lot E0, 22/09/2026) : les 10 fiches du monde --------- 
+/* ---- SPLAT! Enquête (lot E0, 22/09/2026) : les 10 fiches du monde ----------
    Réglages figés, seule la graine change ; les 20 adresses (énoncé / correction)
    sont exactement celles de splat-enquete-lot-E0-adresses.md. Le jeu de l'élève
    reprend les MÊMES réglages sans layout/note/title, plus &eleve=1&parcours=enqN.
