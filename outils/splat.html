@@ -782,6 +782,9 @@
   #elevePanel.enquete .eleveTacheCouleur{position:absolute;right:100%;margin-right:3px;top:50%;transform:translateY(-50%)}
   #elevePanel.enquete input.eleveChamp{height:auto;flex:0 0 auto;line-height:1.1}
   /* case fausse : le champ ne remplit plus la case, c'est la case qui rougit */
+  /* après validation : glissement vers les vraies largeurs, minimum pour lire le nom */
+  #elevePanel.enquete .ligneBas .eleveCase{transition:flex-grow .6s ease}
+  #elevePanel.enquete .eleveDiag.vraies .ligneBas .eleveCase{min-width:72px}
   #elevePanel.enquete .eleveCase.ko{background:#fee2e2}
   #elevePanel.enquete .eleveCase.ko input.eleveChamp{background:transparent}
   .eleveCase.haut.donnee{color:#111}
@@ -804,6 +807,7 @@
     body.eleve-mode .eleveTacheNom{gap:4px;font-size:13px}
     body.eleve-mode .eleveTacheCouleur{width:20px;height:14px}
     body.eleve-mode .eleveCase.haut.donnee .eleveTacheNom{font-size:13px}
+    body.eleve-mode #elevePanel.enquete .eleveDiag.vraies .ligneBas .eleveCase{min-width:96px}
     body.eleve-mode .eleveConsigne{font-size:17px;margin:2px 0 10px}
     body.eleve-mode .eleveTete{font-size:21px;gap:10px} /* les pastilles ne touchent plus le compteur */
     body.eleve-mode .eleveTete a.eleveMondes{font-size:15px;padding:5px 11px}
@@ -9216,6 +9220,7 @@ function eleveValiderSplat(){
     eleveSauverEnCours();
     eleveDevoilerTache();
     eleveProposerSchema(bouton); /* Enquête seulement : « Voir le schéma » avant « Carte suivante » */
+    eleveEnqueteLargeursVraies(); /* Enquête : les cases prennent leur vraie largeur */
     /* comme aux mondes 3-4 : l'élève regarde sous la tache et enchaîne quand il veut (Entrée suffit) */
     const suivant = document.createElement("button");
     suivant.type = "button"; suivant.className = "suivant";
@@ -9295,6 +9300,24 @@ function eleveProposerSchema(bouton){
   voir.textContent = "Voir le schéma";
   voir.onclick = eleveVoirSchema;
   bouton.parentNode.appendChild(voir);
+}
+/* Une fois la carte validée (juste, ou réponse montrée), les cases prennent leur
+   VRAIE largeur, proportionnelle aux valeurs — le tableau devient le schéma en barres
+   de la carte (décision du 22/09). Pendant la recherche elles restent égales : des
+   largeurs proportionnelles donneraient la réponse. Un minimum (CSS) garde le nom
+   de la couleur et le nombre lisibles ; le glissement est une transition CSS. */
+function eleveEnqueteLargeursVraies(){
+  const panneau = document.getElementById("elevePanel");
+  if(!panneau || !panneau.classList.contains("enquete")) return;
+  const card = eleveSerie[eleveIdx];
+  const infos = card ? eleveInfosEnquete(card) : null;
+  if(!infos) return;
+  const diag = panneau.querySelector(".eleveDiag");
+  if(diag) diag.classList.add("vraies");
+  panneau.querySelectorAll(".ligneBas .eleveCase").forEach(c => {
+    const v = c.classList.contains("donnee") ? infos.visibleSum : parseInt(c.getAttribute("data-attendu"), 10);
+    if(Number.isFinite(v) && v > 0) c.style.flexGrow = String(v);
+  });
 }
 function eleveVoirSchema(){
   const card = eleveSerie[eleveIdx];
@@ -9434,6 +9457,7 @@ function eleveMontrerReponse(){
   bouton.disabled = true;
   if(voir) voir.remove();
   eleveProposerSchema(bouton); /* Enquête : le schéma aussi après la réponse montrée */
+  eleveEnqueteLargeursVraies();
   const suivant = document.createElement("button");
   suivant.type = "button"; suivant.className = "suivant";
   suivant.textContent = "Carte suivante \u25b6";

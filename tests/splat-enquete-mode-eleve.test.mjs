@@ -250,6 +250,42 @@ test("les étapes sont celles de la projection, et la nouvelle carte repart du p
   assert.doesNotMatch(fn("eleveDessinerSchema"), /0\.62/, "plus de plafond à 62 % de la fenêtre");
 });
 
+// --- les vraies largeurs après validation ------------------------------------------------------
+test("après validation, les cases prennent leur vraie largeur ; pendant la recherche elles restent égales", () => {
+  const casesBas = [
+    { classes: ["eleveCase", "blanche", "donnee"], attendu: null, style: {} },
+    { classes: ["eleveCase", "grise"], attendu: "9", style: {} },
+    { classes: ["eleveCase", "grise"], attendu: "5", style: {} },
+    { classes: ["eleveCase", "grise"], attendu: "17", style: {} }
+  ].map((c) => ({ ...c, classList: { contains: (k) => c.classes.includes(k) }, getAttribute: () => c.attendu }));
+  const diag = { classes: [], classList: { add(k){ diag.classes.push(k); } } };
+  const panneau = (enquete) => ({
+    classList: { contains: (k) => k === "enquete" && enquete },
+    querySelector: (sel) => (sel === ".eleveDiag" ? diag : null),
+    querySelectorAll: (sel) => (sel === ".ligneBas .eleveCase" ? casesBas : [])
+  });
+  const lancer = (enquete) => new Function("document", `
+    let eleveIdx = 0;
+    const eleveSerie = [{ family: "C" }];
+    function eleveInfosEnquete(card){ return card && card.family === "C" ? { visibleSum: 7 } : null; }
+    ${fn("eleveEnqueteLargeursVraies")}
+    eleveEnqueteLargeursVraies();
+  `)({ getElementById: (id) => (id === "elevePanel" ? panneau(enquete) : null) });
+  lancer(false);
+  assert.deepEqual(casesBas.map((c) => c.style.flexGrow), [undefined, undefined, undefined, undefined], "hors Enquête, rien");
+  lancer(true);
+  assert.deepEqual(casesBas.map((c) => c.style.flexGrow), ["7", "9", "5", "17"], "visibles puis chaque tache, à sa valeur");
+  assert.deepEqual(diag.classes, ["vraies"], "le tableau porte la classe qui pose le minimum de largeur");
+  // appelée après la réussite ET après « Voir la réponse », jamais avant
+  assert.match(fn("eleveValiderSplat"), /eleveProposerSchema\(bouton\);[^\n]*\n    eleveEnqueteLargeursVraies\(\);/);
+  assert.match(fn("eleveMontrerReponse"), /eleveProposerSchema\(bouton\);[^\n]*\n  eleveEnqueteLargeursVraies\(\);/);
+  assert.doesNotMatch(fn("renderEleveSplat"), /eleveEnqueteLargeursVraies/, "à l'ouverture de la carte, largeurs égales");
+  const r = regles(feuille);
+  const decl = (sel) => (r.find((x) => x.sel === sel) || {}).decl || "";
+  assert.equal(decl("#elevePanel.enquete .ligneBas .eleveCase"), "transition:flex-grow .6s ease");
+  assert.equal(decl("#elevePanel.enquete .eleveDiag.vraies .ligneBas .eleveCase"), "min-width:72px", "un minimum pour lire le nom et le nombre");
+});
+
 // --- le dévoilement et le nom sur la tache ---------------------------------------------------
 test("Enquête : le dévoilement redessine la carte (chaque tache a sa couleur), le monde 2 garde son geste", () => {
   const src = fn("eleveDevoilerTache");
