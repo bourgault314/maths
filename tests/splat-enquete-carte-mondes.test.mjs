@@ -189,9 +189,15 @@ test("les deux moitiés du monde sont annoncées dans la liste des étapes", () 
 
 test("la correction n'est offerte qu'en vue professeur", () => {
   /* e.c n'apparaît que dans la branche PROF du gabarit : l'élève ne voit
-     que « Je joue ». */
+     que « Je joue ». La branche élève commence au bloc d'actions qui porte
+     « Je joue » ; on vérifie qu'on l'a trouvée avant de la lire (le gabarit
+     écrit l'emoji en clair : le chercher sous sa forme échappée ne trouvait
+     rien, et la vérification ne portait plus que sur le dernier caractère). */
   const gabarit = univers.slice(univers.indexOf("'<ol class=\"etapes\">'"), univers.indexOf("main.appendChild(sec)"));
-  const eleve = gabarit.slice(gabarit.indexOf("\\ud83c\\udfae Je joue"));
+  const jeJoue = gabarit.indexOf(" Je joue</a>");
+  assert.ok(jeJoue > 0, "le lien « Je joue » de la vue élève est introuvable dans le gabarit");
+  const eleve = gabarit.slice(gabarit.lastIndexOf("'<div class=\"actions\">'", jeJoue));
+  assert.ok(eleve.includes("faitBtn"), "la branche élève du gabarit n'a pas été isolée");
   assert.ok(gabarit.includes("e.c?'<a class=\"fiche\""), "le lien Correction manque en vue prof");
   assert.ok(!eleve.includes("e.c"), "la correction ne doit pas être offerte à l'élève");
   ENQUETE.etapes.forEach((e, i) => assert.ok(e.c, `correction de la fiche ${i + 1}`));

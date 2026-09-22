@@ -173,4 +173,4 @@ pypdf pour l'imposition.
   moment du rendu, comme il injecte les QR (décision du 18/09/2026).
 - Tout reste lisible imprimé en **noir et blanc** : aucun texte en couleur claire,
   aucune page en aplat teinté.
-- Vocabulaire : « jetons » (jamais « billes », réservées au monde 4).
+- Vocabulaire : « jetons » (jamais « billes », réservées aux mondes 4 et 5).
