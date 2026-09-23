@@ -31,7 +31,7 @@ Deux PDF :
   **L'exemple est dessiné par l'outil lui-même** (voir plus bas) ; le SVG écrit dans
   le fichier n'est qu'un aperçu, remplacé au rendu.
 - `dos.html` — page 8 : « Encore des cartes ! » (4 QR, séries de 12 cartes tirées au
-  hasard), « La suite du voyage » vers l'univers (monde 3), « Pour se souvenir »
+  hasard), « La suite du voyage » vers l'univers (mondes 3 à 5), « Pour se souvenir »
   (total, jeton et paquet, tache et « ? », et surtout : *sous chaque carte, c'est à toi
   de dessiner le schéma en barres ou d'écrire l'équation* — sans réécrire l'équation : l'exemple,
   écrit par l'outil, est sur la couverture), grille « Mes fiches », crédits, licence.
@@ -155,9 +155,9 @@ l'équation à droite. L'exemple est donc écrit exactement comme la correction 
 professeur projette. L'inconnue y est le « ? » de l'outil élève (cycle 3) ; les livrets de
 correction existent aussi « avec la lettre » (voir plus bas), le livret de l'élève non.
 
-## Les livrets de correction du professeur (lot K2, 20/09/2026)
+## Les livrets corrigés (lot K2, 20/09/2026)
 
-Quatre livrets, pour le professeur : { **équation**, **schéma** } × { **« ? »**, **lettre** }
+Quatre livrets corrigés : { **équation**, **schéma** } × { **« ? »**, **lettre** }
 (le « ? » pour le cycle 3, la lettre pour le cycle 4). Chacun a **les mêmes 8 pages, le même
 pliage et les mêmes cartes à la même place** que le livret de l'élève (0 nombre déplacé
 de plus de 0,1 pt sur les fiches) ; ce n'est pas un recto-verso élève/correction.
@@ -174,13 +174,17 @@ de plus de 0,1 pt sur les fiches) ; ce n'est pas un recto-verso élève/correcti
   chaque carte de la fiche 8 ou 9 a sa lettre, tirée par l'outil avec la carte. Les cartes
   à jetons de la fiche 7 (mode A) n'en ont pas dans l'outil : `JS_LETTRES` leur en donne
   une, dans l'ordre de `variableChars` (x, a, b, c, m, n, t…), **sans rien tirer**.
-- **La boîte du QR** : même boîte, même QR, même place, « Les mêmes / cartes en ligne
-  (le QR de l'élève) » (`QR_PROF`, comme les livrets de correction Petit SPLAT!).
-- **La couverture** : celle de l'élève, avec le bandeau rouge sombre du professeur (14 mm,
-  `CSS_PROF`) et, à la place de « Nom, prénom / Classe », une seule ligne « Livret du
-  professeur — corrigé par … » qui dit de quel livret il s'agit. Le sommaire et le pied
+- **La boîte du QR** : même boîte, même QR, même place, « Je rejoue / ces cartes / en
+  ligne » (`QR_PROF`, comme les livrets corrigés Petit SPLAT! et ceux de l'Enquête).
+- **La couverture** : celle de l'élève, avec le bandeau rouge sombre « Correction » (14 mm,
+  `CSS_PROF`) et, à la place de « Nom, prénom / Classe », une seule ligne « Livret
+  corrigé — par l'équation (ou le schéma en barres) · inconnue … » qui dit de quel livret
+  il s'agit. Le sommaire et le pied
   restent exactement à leur place.
 - **Le pied** des fiches finit par « · correction » ; **le dos** ne change pas.
+
+**Pour tous (23/09/2026).** Le corrigé peut être donné aux élèves (Claire, comme les
+livrets de l'Enquête) : il ne dit plus « professeur » nulle part.
 
 ## Régénérer
 

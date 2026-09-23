@@ -6,13 +6,13 @@ Régénère le livret « SPLAT! classique » (monde 2, 8 pages) à partir du sit
     python3 render.py                 (les DEUX livrets, élève et correction)
     python3 render.py defi            (un seul niveau : normal | defi)
     python3 render.py --qr defi       (en refabriquant d'abord ses QR codes)
-    python3 render.py --correction    (seulement les quatre livrets de correction du professeur)
+    python3 render.py --correction    (seulement les quatre livrets corrigés)
     python3 render.py --eleve         (seulement le livret de l'élève)
 
 Produit, à la racine du dépôt :
     outils/livret_splat_classique.pdf         8 pages A4, ordre de lecture   (Monde 2)
     outils/livret_splat_classique_a_plier.pdf 4 pages A3 paysage, imposées
-et les quatre livrets de correction du professeur (lot K2, 20/09/2026), mêmes 8 pages,
+et les quatre livrets corrigés (lot K2, 20/09/2026 ; « pour tous » depuis le 23/09/2026), mêmes 8 pages,
 même pliage, mêmes cartes à la même place :
     outils/livret_splat_classique_correction_equation.pdf         l'équation, inconnue « ? »
     outils/livret_splat_classique_correction_equation_lettre.pdf  l'équation, inconnue en lettre
@@ -37,9 +37,10 @@ sur la fiche de l'élève ; sous le plateau, l'équation résolue et ses flèche
 en barres et leurs calculs. En lettre (unknown=letter), chaque carte a sa lettre (celle que
 l'outil tire avec la carte) ; les cartes à jetons de la fiche 7 (mode A) n'en ont pas dans
 l'outil : le livret leur en donne une, dans l'ordre x, a, b, c, m, n, t…, sans rien tirer
-(les nombres ne bougent pas). La couverture reçoit le bandeau du professeur (comme le
-livret de correction Petit SPLAT!, lot K1) et dit de quelle correction il s'agit ; la boîte
-du QR dit « Les mêmes cartes en ligne » (le même QR) ; le dos ne change pas.
+(les nombres ne bougent pas). La couverture reçoit le bandeau « Correction » (comme le
+livret corrigé Petit SPLAT!, lot K1) et dit de quelle correction il s'agit ; la boîte du QR
+dit « Je rejoue ces cartes en ligne » (le même QR) ; le dos ne change pas. Le corrigé peut
+être donné aux élèves (Claire, 23/09/2026) : il ne dit « professeur » nulle part.
 
 LIVRET « LE DÉFI » (lot D, 21/09/2026) — le même monde, des cartes plus dures : totaux 50 à
 100, 2 ou 3 paquets numérotés non ronds, 2 à 6 taches, quotient non évident. Chaque fiche est
@@ -222,17 +223,37 @@ CSS_QR = """
 .qr-livret .lib em{display:block;font-style:normal;font-weight:400;font-size:10px;color:#475569;margin-top:0.5mm}
 """
 
-# Ce que dit la boîte du QR : sur les livrets de correction, même boîte, même QR, même
-# place, autre texte (comme le livret de correction Petit SPLAT!, décision du 20/09/2026).
+# Ce que dit la boîte du QR : sur les livrets corrigés, même boîte, même QR, même place,
+# autre texte (comme le livret corrigé Petit SPLAT!, décision du 20/09/2026). Depuis le
+# 23/09/2026 le corrigé est « pour tous » : « Je rejoue ces cartes en ligne », comme l'Enquête.
 QR_ELEVE = "J'ai terminé<br>ma fiche,<em>je rejoue en ligne</em>"
-QR_PROF = "Les mêmes<br>cartes en ligne<em>(le QR de l'élève)</em>"
+QR_PROF = "Je rejoue<br>ces cartes<em>en ligne</em>"
 
-JS_QR = """([qr, lib]) => {
+# Sur le livret corrigé, la boîte garde EXACTEMENT la largeur de celle de l'élève
+# (23/09/2026) : son texte « Je rejoue / ces cartes / en ligne » est plus étroit, et une
+# boîte plus étroite faisait passer la consigne (monde 1, fiches 4 à 6) ou le titre du
+# bandeau (monde 2) à la ligne ailleurs que sur la fiche de l'élève. JS_QR pose donc
+# d'abord le texte de l'élève (le gabarit), mesure sa largeur, puis écrit le texte du
+# corrigé avec cette largeur minimale (aligné à droite, contre le QR, comme l'élève).
+JS_QR = """([qr, lib, gabarit]) => {
   const heads = document.querySelectorAll('.printArea .print-page-header');
   if (!heads.length) return 'pas de bandeau imprimé';
+  // la zone d'impression est cachée à l'écran : la largeur du texte de l'élève se mesure
+  // sur une boîte témoin posée dans la page, hors champ, puis retirée
+  let w = 0;
+  if (gabarit) {
+    const t = document.createElement('div'); t.className = 'qr-livret';
+    t.style.cssText = 'position:absolute;left:-9999px;top:0';
+    t.innerHTML = '<div class="lib">' + gabarit + '</div>';
+    document.body.appendChild(t);
+    w = t.querySelector('.lib').getBoundingClientRect().width;
+    t.remove();
+    if (!(w > 0)) return 'largeur du texte de l\\'élève introuvable';
+  }
   heads.forEach(h => {
     const box = document.createElement('div'); box.className = 'qr-livret';
     box.innerHTML = '<div class="lib">' + lib + '</div><img src="' + qr + '" alt="">';
+    if (gabarit) box.querySelector('.lib').style.minWidth = w + 'px';
     const logos = h.querySelector('.print-page-logos');
     h.insertBefore(box, logos || null);
   });
@@ -282,13 +303,13 @@ JS_BIS = """(titre) => {
 # LES QUATRE LIVRETS DE CORRECTION (lot K2) : { équation, schéma } × { « ? », lettre }.
 CORRECTIONS = [
     dict(suffixe="_correction_equation",        imprime="correction-equation", lettre=False,
-         dit="corrigé par l'équation · inconnue «&nbsp;?&nbsp;»"),
+         dit="par l'équation · inconnue «&nbsp;?&nbsp;»"),
     dict(suffixe="_correction_equation_lettre", imprime="correction-equation", lettre=True,
-         dit="corrigé par l'équation · inconnue en lettre"),
+         dit="par l'équation · inconnue en lettre"),
     dict(suffixe="_correction_schema",          imprime="correction-schema",   lettre=False,
-         dit="corrigé par le schéma en barres · inconnue «&nbsp;?&nbsp;»"),
+         dit="par le schéma en barres · inconnue «&nbsp;?&nbsp;»"),
     dict(suffixe="_correction_schema_lettre",   imprime="correction-schema",   lettre=True,
-         dit="corrigé par le schéma en barres · inconnue en lettre"),
+         dit="par le schéma en barres · inconnue en lettre"),
 ]
 
 # En lettre, les cartes à jetons (mode A, fiche 7) n'ont pas de lettre dans l'outil : on
@@ -303,12 +324,14 @@ JS_LETTRES = """() => {
   return n;
 }"""
 
-# La couverture du livret de correction : le bandeau rouge sombre et « Livret du
-# professeur » du livret de correction Petit SPLAT! (lot K1), avec, sur la même ligne, la
-# correction dont il s'agit (décision du 20/09/2026). La couverture du monde 2 est pleine :
+# La couverture du livret corrigé : le bandeau rouge sombre « Correction » et « Livret
+# corrigé » du livret corrigé Petit SPLAT! (lot K1), avec, sur la même ligne, la correction
+# dont il s'agit (décision du 20/09/2026 ; textes « pour tous » du 23/09/2026 — plus de
+# « professeur », et « Livret corrigé — par l'équation … », sans répéter « corrigé »).
+# La couverture du monde 2 est pleine :
 # le bandeau de 14 mm est repris sur la hauteur du cadre « Nom, prénom / Classe », qui
 # devient une seule ligne ; le sommaire et le pied restent exactement à leur place.
-PROF = dict(bandeau="Correction — pour le professeur", ligne="Livret du professeur")
+PROF = dict(bandeau="Correction", ligne="Livret corrigé")
 CSS_PROF = """
 .bandeau-prof{flex:0 0 14mm;box-sizing:border-box;padding-top:4mm;display:flex;align-items:center;justify-content:center;
   background:#b91c1c;color:#fff;font-size:16px;font-weight:700;text-transform:uppercase;letter-spacing:3px}
@@ -494,7 +517,7 @@ async def pages(niv, tmp, corr=None):
             if etat["feuilles"] != f["pages"]:
                 raise SystemExit(f"fiche {f['n']} : {etat['feuilles']} feuilles au lieu de {f['pages']}")
             await pg.add_style_tag(content=CSS_QR)
-            r = await pg.evaluate(JS_QR, [f"{qrweb}/fiche{f.get('qr', f['n'])}.png", QR_PROF if corr else QR_ELEVE])
+            r = await pg.evaluate(JS_QR, [f"{qrweb}/fiche{f.get('qr', f['n'])}.png"] + ([QR_PROF, QR_ELEVE] if corr else [QR_ELEVE, None]))
             if r != "ok":
                 raise SystemExit(f"fiche {f['n']}, QR : {r}")
             r = await pg.evaluate(JS_PIED, PIED_CORRECTION if corr else PIED_LIVRET)
