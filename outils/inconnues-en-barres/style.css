@@ -111,6 +111,8 @@ mark.m-Q{background:var(--q-fond);color:var(--q-texte)}
 .aide .rr{font-size:clamp(19px,1.9vw,32px);font-weight:800;line-height:1.3}
 .aide .voir{color:var(--bleu);font-weight:700;font-size:clamp(14px,1.1vw,18px);margin-top:auto}
 .aide.ouverte{border-color:#9dbde0;background:#f7fbff}
+.aides.quatre{grid-template-columns:repeat(2,minmax(0,1fr))}
+.aides.quatre .aide{min-height:0}
 
 /* réponse, vérification */
 .reponses{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;width:min(1300px,100%)}
@@ -137,6 +139,7 @@ mark.m-Q{background:var(--q-fond);color:var(--q-texte)}
 /* ---------- téléphone et petits écrans */
 @media (max-width:900px){
   .aides{grid-template-columns:1fr}
+  .aides.quatre{grid-template-columns:1fr}
   .aide{min-height:0}
   .reponses{grid-template-columns:1fr}
   .verif{grid-template-columns:1fr}
