@@ -98,9 +98,9 @@
   % mesures (cases de couleur)
   \tikzset{mes/.style={rounded corners=3pt,line width=0.9pt,minimum width=1.4cm,minimum height=0.72cm,
      font=\bfseries\color{brandNavy},inner sep=1pt}}
-  \node[mes,draw=angBleu,fill=angBleu!13] at (2.05,0.50) {\ifexemple 35°\else\phantom{0}\fi};
-  \node[mes,draw=angOrange,fill=angOrange!13] at (5.25,0.52) {\ifexemple 80°\else\phantom{0}\fi};
-  \node[mes,draw=angVert,fill=angVert!13] at (5.02,2.45) {\large ?};
+  \node[mes,draw=angBleu,fill=angBleu!13] at (1.78,0.40) {\ifexemple 35°\else\phantom{0}\fi};
+  \node[mes,draw=angOrange,fill=angOrange!13] at (5.30,0.48) {\ifexemple 80°\else\phantom{0}\fi};
+  \node[mes,draw=angVert,fill=angVert!13] at (5.05,2.75) {\large ?};
 \end{tikzpicture}}
 
 % ---------- Barres ----------
@@ -155,7 +155,7 @@
 \Parts
 \begin{tikzpicture}
   \def\h{1.22}
-  \def\ex{14.55}   % abscisse du signe =
+  \def\ex{14.7}   % abscisse du signe =
   % ligne 1 : 180
   \draw[tot] (0,3*\h) rectangle (7.8,4*\h);
   \node[txt] at (3.9,3.5*\h) {180°};
@@ -194,12 +194,19 @@
   \node[d] at (\ex+0.3,2.5*\h) {\textbf{180°}};
   \node[g] at (\ex-0.3,1.5*\h) {\PB{\R{35°}{0.95}} \,+\, \PO{\R{80°}{0.95}} \,+\, \PV{\NomAngle{P}}};
   \node[d] at (\ex+0.3,1.5*\h) {\textbf{180°}};
-  \node[g] at (\ex-0.3,0.5*\h) {\PVi{\R{115°}{1.05}} \,+\, \PV{\NomAngle{P}}};
-  \node[d] at (\ex+0.3,0.5*\h) {\textbf{180°}};
+  \node[g] (L3) at (\ex-0.3,0.5*\h) {\PVi{\R{115°}{1.05}} \,+\, \PV{\NomAngle{P}}};
+  \node[d] (R3) at (\ex+0.3,0.5*\h) {\textbf{180°}};
   \node[g] at (\ex-0.3,-0.5*\h) {\PV{\NomAngle{P}}};
-  \node[d] at (\ex+0.3,-0.5*\h) {\textbf{180°} $-$ \PVi{\R{115°}{1.05}}};
+  \node[d] (R4) at (\ex+0.3,-0.5*\h) {\textbf{180°} $-$ \PVi{\R{115°}{1.05}}};
   \node[g] at (\ex-0.3,-1.5*\h) {\PV{\NomAngle{P}}};
   \node[d] at (\ex+0.3,-1.5*\h) {\PV{\R{65°}{0.9}}};
+  % flèches « j'enlève la même quantité de chaque côté » entre les lignes 3 et 4
+  \draw[-{Latex[length=2.2mm]},line width=1pt,angViolet]
+    ($(L3.west)+(-0.08,0)$) to[out=215,in=145,looseness=1.9] ($(L3.west)+(-0.08,-\h)$);
+  \node[anchor=east,font=\fontsize{12.5}{13}\selectfont\color{brandNavy}] at ($(L3.west)+(-0.78,-0.5*\h)$)
+    {$-$\,\Pastille{angViolet}{1.2cm}{\R{115°}{0.85}}};
+  \draw[-{Latex[length=2.2mm]},line width=1pt,angViolet]
+    ($(R3.east)+(0.08,0)$) to[out=0,in=90,looseness=1.1] ($(R4.east)+(-0.62,0.46)$);
 \end{tikzpicture}}
 
 
