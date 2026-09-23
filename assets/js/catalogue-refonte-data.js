@@ -195,6 +195,14 @@ window.MATHSGO_CATALOGUE = {
     }
   ],
   "resourceClassifications": {
+    "outils/inconnues-en-barres/index.html": {
+      "primaryNotion": "schemas-barres",
+      "primaryGroup": "generer",
+      "thumbnail": "assets/img/thumbnails/schemas-barres/inconnues.png?v=1",
+      "collections": [],
+      "tags": ["schema-barres", "inconnues", "substitution", "modele-en-barres", "resolution-problemes"],
+      "cardDescription": "Deux quantités inconnues en schémas en barres : remplacer, retirer, partager, puis vérifier. Pour la projection en classe."
+    },
     "https://www.youtube.com/watch?v=_ubBAAgLiok": {
       "primaryNotion": "numeration",
       "primaryGroup": "cours",
@@ -1985,6 +1993,22 @@ window.MATHSGO_CATALOGUE = {
     }
   ],
   "resources": [
+    {
+      "id": "inconnues-en-barres",
+      "title": "Inconnues en barres",
+      "description": "Résolvez pas à pas des problèmes à deux quantités inconnues avec des schémas en barres (modèle de Singapour) : remplacer, retirer, partager, puis vérifier.",
+      "path": "outils/inconnues-en-barres/index.html",
+      "domains": ["algebre"],
+      "notions": ["schemas-barres"],
+      "uses": ["projeter"],
+      "types": ["generateur"],
+      "filters": ["generateur-exercices"],
+      "keywords": ["inconnue", "deux inconnues", "substitution", "remplacer", "schémas en barres", "modèle en barres", "méthode de Singapour", "préalgèbre", "cycle 3", "cycle 4"],
+      "kind": "tool",
+      "status": "published",
+      "featured": false,
+      "recent": true
+    },
     {
       "id": "reference-gerbert-video-origine",
       "title": "L’abaque de Gerbert — origine, histoire, utilisation",
