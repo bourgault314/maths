@@ -1,7 +1,7 @@
 // Inconnues en barres — affichage. Un seul moteur de dessin : drawSchema().
 // Règle d'or : sur un écran, TOUS les schémas partagent la même largeur de part (u),
 // calculée pour que la rangée la plus large tienne dans la largeur disponible.
-import * as M from "./moteur.mjs?v=lot1c-20260923"; // même ?v= que index.html
+import * as M from "./moteur.mjs?v=lot2-20260924"; // même ?v= que index.html
 
 const $ = (id) => document.getElementById(id);
 const SVGNS = "http://www.w3.org/2000/svg";
@@ -15,6 +15,7 @@ const TEXT = { A: "#8a3a0a", B: "#1c4f93", D: "#5c4a00", T: "#1c6337", V: "#1c63
 const state = {
   settings: { family: "fois", k: "2", variety: "guided", context: "fruits", relation: "endroit" },
   sens: "AtoB", ecritures: "aucune",
+  graine: null, cartes: M.SERIE_DEFAUT, serie: [], carte: 0,
   problem: null, steps: null, step: 0, t: 0, aides: new Set(), scale: 1,
 };
 
@@ -307,7 +308,16 @@ function checksNode(b) {
   const box = h("div", "verifs");
   for (const l of b.lines) {
     const v = h("div", "verif");
-    const c = h("div", "calc"); c.append(document.createTextNode(l.c + " "), h("span", "ok", "✓"));
+    // La ligne de calcul ne se coupe qu'après un « = », jamais au milieu d'un membre.
+    const c = h("div", "calc");
+    const membres = l.c.split(" = ");
+    membres.forEach((m, i) => {
+      const last = i === membres.length - 1;
+      const sp = h("span", "membre", last ? m + "\u00a0" : m + " =");
+      if (last) sp.append(h("span", "ok", "✓"));
+      c.append(sp);
+      if (!last) c.append(document.createTextNode(" "));
+    });
     v.append(hr("div", "phrase", l.s), c);
     box.append(v);
   }
@@ -423,11 +433,41 @@ function prev() {
 }
 
 function rebuildPlan() { state.steps = M.plan(state.problem, { sens: effectiveSens() }); }
-function newProblem(seed) {
-  state.problem = M.generate(state.settings, seed ?? Math.floor(Math.random() * 2147483647));
+
+// ------------------------------------------------------------ série (lot 2)
+// Une graine + les réglages donnent la série ; changer un réglage garde la graine
+// (la même graine redonne toujours les mêmes cartes pour les mêmes réglages).
+function newSeries(graine, carte = 0) {
+  state.graine = graine ?? M.tirerGraine();
+  state.serie = M.generateSeries(state.settings, state.graine, state.cartes);
+  showCard(Math.min(carte, state.serie.length - 1));
+}
+function showCard(i) {
+  state.carte = Math.max(0, Math.min(state.serie.length - 1, i));
+  state.problem = state.serie[state.carte];
   rebuildPlan();
   syncMenu();
   go(0, 0);
+  majAdresse();
+}
+function lienSerie(avecCarte) {
+  return M.adresseSerie({ ...state.settings, sens: state.sens, ecritures: state.ecritures, cartes: state.cartes, graine: state.graine, carte: avecCarte ? state.carte + 1 : 1 });
+}
+// La barre d'adresse suit la série (recharger la page redonne la même carte).
+function majAdresse() {
+  try { history.replaceState(null, "", location.pathname + lienSerie(true) + location.hash); } catch { /* adresse figée : sans conséquence */ }
+}
+async function copierLien() {
+  const url = location.origin + location.pathname + lienSerie(false);
+  const champ = $("lienSerie");
+  try {
+    await navigator.clipboard.writeText(url);
+    champ.hidden = true;
+    $("aideSerie").textContent = "Lien copié : il redonne exactement ces " + state.serie.length + " cartes.";
+  } catch {
+    champ.hidden = false; champ.value = url; champ.focus(); champ.select();
+    $("aideSerie").textContent = "Copie impossible ici : sélectionne le lien ci-dessous et copie-le.";
+  }
 }
 
 // ------------------------------------------------------------ réglages
@@ -437,6 +477,16 @@ const VARIETY_HELP = {
 };
 function syncMenu() {
   const s = state.settings, p = state.problem;
+  $("numCarte").textContent = String(state.carte + 1);
+  $("nbCartes").textContent = String(state.serie.length);
+  $("btnCartePrec").disabled = state.carte === 0;
+  $("btnCarteSuiv").disabled = state.carte === state.serie.length - 1;
+  $("graine").textContent = String(state.graine);
+  for (const r of document.querySelectorAll('input[name="cartes"]')) r.checked = r.value === String(state.cartes);
+  $("lienSerie").hidden = true;
+  $("aideSerie").textContent = state.serie.length < state.cartes
+    ? "Avec ces réglages, il n’existe que " + state.serie.length + " problèmes différents : la série en compte " + state.serie.length + "."
+    : "Le lien redonne exactement les mêmes " + state.serie.length + " cartes.";
   $("famille").value = s.family; $("k").value = s.k; $("variete").value = s.variety; $("contexte").value = s.context;
   $("relation").value = s.relation;
   $("champRelation").hidden = s.family === "partielle";
@@ -459,25 +509,27 @@ function openMenu(open) {
 
 function init() {
   for (const [key, c] of Object.entries(M.CONTEXTS)) { const o = document.createElement("option"); o.value = key; o.textContent = c.label; $("contexte").append(o); }
-  // réglages de départ lisibles dans l'adresse (utile pour préparer une séance et pour les essais)
-  const qs = new URLSearchParams(location.search);
-  if (qs.get("famille")) state.settings.family = qs.get("famille");
-  if (qs.get("k")) state.settings.k = qs.get("k");
-  if (qs.get("variete")) state.settings.variety = qs.get("variete");
-  if (qs.get("contexte")) state.settings.context = qs.get("contexte");
-  if (qs.get("relation") === "envers") state.settings.relation = "envers";
-  if (qs.get("sens")) state.sens = qs.get("sens");
-  if (qs.get("ecritures")) state.ecritures = qs.get("ecritures");
-  const seed = qs.get("graine") ? Number(qs.get("graine")) : undefined;
+  // réglages de départ lisibles dans l'adresse (préparer une séance, retrouver une série)
+  const a = M.lireAdresse(location.search);
+  Object.assign(state.settings, { family: a.family, k: a.k, variety: a.variety, context: a.context, relation: a.relation });
+  state.sens = a.sens; state.ecritures = a.ecritures; state.cartes = a.cartes;
+  montrerAlertes(a.alertes);
 
-  const onSetting = (key, id) => $(id).addEventListener("change", () => { state.settings[key] = $(id).value; newProblem(); });
+  const onSetting = (key, id) => $(id).addEventListener("change", () => { state.settings[key] = $(id).value; newSeries(state.graine); });
   onSetting("family", "famille"); onSetting("k", "k"); onSetting("variety", "variete"); onSetting("context", "contexte");
   // Retourner la relation garde le même problème (mêmes nombres) : seules les phrases changent.
-  $("relation").addEventListener("change", () => { state.settings.relation = $("relation").value; newProblem(state.problem.seed); });
-  $("sens").addEventListener("change", () => { state.sens = $("sens").value; rebuildPlan(); go(Math.min(state.step, 2), 0); });
-  $("ecritures").addEventListener("change", () => { state.ecritures = $("ecritures").value; render(); });
+  $("relation").addEventListener("change", () => { state.settings.relation = $("relation").value; newSeries(state.graine, state.carte); });
+  // Une série plus longue prolonge la plus courte : la carte en cours ne change pas.
+  $("cartes").addEventListener("change", (e) => { state.cartes = Number(e.target.value); newSeries(state.graine, state.carte); });
+  $("btnCopier").addEventListener("click", copierLien);
+  $("btnCartePrec").addEventListener("click", () => showCard(state.carte - 1));
+  $("btnCarteSuiv").addEventListener("click", () => showCard(state.carte + 1));
+  $("alerteFermer").addEventListener("click", () => { $("alerte").hidden = true; render(); });
+  $("alerteReglages").addEventListener("click", () => openMenu(true));
+  $("sens").addEventListener("change", () => { state.sens = $("sens").value; rebuildPlan(); go(Math.min(state.step, 2), 0); majAdresse(); });
+  $("ecritures").addEventListener("change", () => { state.ecritures = $("ecritures").value; render(); majAdresse(); });
   $("btnRecommencer").addEventListener("click", () => { openMenu(false); go(0, 0); });
-  $("btnNouveau").addEventListener("click", () => newProblem());
+  $("btnNouveau").addEventListener("click", () => newSeries());
   $("btnSuiv").addEventListener("click", next);
   $("btnPrec").addEventListener("click", prev);
   $("btnReglages").addEventListener("click", () => openMenu($("reglages").hidden));
@@ -496,8 +548,24 @@ function init() {
   const relayout = () => { cancelAnimationFrame(raf); raf = requestAnimationFrame(render); };
   window.addEventListener("resize", relayout);
   document.addEventListener("fullscreenchange", relayout);
-  newProblem(seed);
-  if (qs.get("etape")) go(Number(qs.get("etape")) - 1, Number(qs.get("temps") || 1) - 1);
+  newSeries(a.graine ?? undefined, a.carte - 1);
+  if (a.etape) go(a.etape - 1, (a.temps || 1) - 1);
+}
+
+// Bandeau : chaque réglage inconnu de l'adresse est dit, avec ce qui a été pris à la place.
+function montrerAlertes(alertes) {
+  if (!alertes.length) return;
+  const optionLabel = (id, v) => { const o = [...($(id).options || [])].find((x) => x.value === String(v)); return o ? o.textContent : String(v); };
+  const ID = { family: "famille", k: "k", variety: "variete", context: "contexte", relation: "relation", sens: "sens", ecritures: "ecritures", cartes: "cartes" };
+  const morceaux = alertes.map((x) => {
+    const lu = x.nom + "=" + x.valeur;
+    if (!x.remplace) return lu + " (ignoré)";
+    if (x.remplace === "graine") return lu + " (nouvelle série tirée au hasard)";
+    if (["carte", "etape", "temps"].includes(x.remplace)) return lu + " (on part du début)";
+    return lu + " → « " + optionLabel(ID[x.remplace], M.DEFAUTS[x.remplace]) + " » à la place";
+  });
+  $("alerteTexte").textContent = "⚠ Ce lien contient " + (alertes.length > 1 ? "des réglages inconnus : " : "un réglage inconnu : ") + morceaux.join(" ; ") + ".";
+  $("alerte").hidden = false;
 }
 
 async function toggleFullscreen() {

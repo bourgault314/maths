@@ -37,6 +37,17 @@ body.projection #app{position:fixed;inset:0;z-index:50}
 .bouton svg{width:22px;height:22px;flex:0 0 auto}
 .bouton.primaire{background:var(--bleu);border-color:var(--bleu);color:#fff}
 .bouton.primaire:hover{background:#0c51ad}
+/* série (lot 2) : ‹ Carte 3 / 8 › dans l'en-tête */
+.serie{display:inline-flex;align-items:center;min-height:44px;border:1px solid #c3d3e1;border-radius:12px;background:#fff;padding:0 2px}
+.serie .fleche{display:inline-flex;align-items:center;justify-content:center;min-width:40px;min-height:42px;border:0;background:none;border-radius:10px;color:var(--bleu)}
+.serie .fleche:hover{background:var(--bleu-clair)}
+.serie .fleche:disabled{color:#b6c3cf;cursor:default;background:none}
+.serie .fleche svg{width:20px;height:20px}
+.compteur{font-weight:800;font-size:17px;white-space:nowrap;padding:0 2px}
+/* lien avec un réglage inconnu (lot 2) */
+.alerte{display:flex;align-items:center;gap:10px;flex:0 0 auto;padding:8px 10px 8px 14px;border-radius:12px;background:#fff7e0;border:2px solid #b45309;color:#5c3300;font-weight:700;font-size:16px}
+.alerte-texte{flex:1 1 auto;min-width:0}
+.alerte .bouton{flex:0 0 auto}
 .bouton:focus-visible,.onglet:focus-visible,select:focus-visible,.aide:focus-visible,.retour:focus-visible{outline:3px solid #e7903f;outline-offset:2px}
 
 /* ---------- scène */
@@ -122,18 +133,62 @@ mark.m-Q{background:var(--q-fond);color:var(--q-texte)}
 .verif{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:4px 18px;align-items:center;font-size:clamp(17px,1.55vw,27px)}
 .verif .phrase{font-weight:700;color:#334155}
 .verif .calc{font-weight:850}
+.verif .calc .membre{white-space:nowrap}
 .verif .ok{color:#1c7a3d;font-weight:900;white-space:nowrap}
 
 /* ---------- réglages (volet repliable) */
 .voile{position:fixed;inset:0;background:rgba(15,23,42,.25);z-index:60}
-.reglages{position:fixed;top:0;left:0;bottom:0;width:min(380px,100%);background:#fff;z-index:70;box-shadow:0 20px 50px rgba(15,23,42,.25);padding:16px 18px 24px;overflow-y:auto;display:flex;flex-direction:column;gap:12px}
+/* Tout doit se voir d'un coup, sans faire défiler : deux colonnes dès qu'il y a la place */
+.reglages{position:fixed;top:0;left:0;bottom:0;width:min(760px,100%);background:#fff;z-index:70;box-shadow:0 20px 50px rgba(15,23,42,.25);padding:12px 18px 14px;overflow-y:auto;display:flex;flex-direction:column;gap:10px}
 .reglages-tete{display:flex;align-items:center;justify-content:space-between}
 .reglages h2{margin:0;font-size:22px}
 .reglages label{display:block;font-weight:800;font-size:14px;color:#334155;margin-bottom:5px}
 .reglages select{width:100%;min-height:44px;border:1px solid #bfcedb;border-radius:10px;padding:8px 10px;background:#fff;font-size:16px}
 .reglages .aide-reglage{margin:4px 0 0;color:var(--doux);font-size:13px}
-.reglages details{border-top:1px solid var(--ligne);padding-top:10px}
 .reglages summary{font-weight:800;cursor:pointer;min-height:44px;display:flex;align-items:center}
+.champs{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px 18px;align-items:start}
+.pied-reglages{display:flex;flex-wrap:wrap;align-items:center;gap:4px 18px;border-top:1px solid var(--ligne);padding-top:10px}
+.pied-reglages details{flex:1 1 auto}
+.pied-reglages details[open]{flex-basis:100%}
+.pied-reglages summary::before{content:"▸";margin-right:6px;color:var(--doux)}
+.pied-reglages details[open] summary::before{content:"▾"}
+/* série (lot 2) : graine, 4 / 8 / 12 cartes et lien, sur une ligne */
+.bloc-serie{border:1px solid #bcd3ee;border-radius:14px;padding:8px 10px 8px 14px;background:#f3f8ff;display:grid;gap:4px}
+.serie-ligne{display:flex;align-items:center;flex-wrap:wrap;gap:8px 14px}
+.bloc-serie .graine{margin:0;font-size:15px;color:#334155;white-space:nowrap}
+.titre-serie{font-weight:800;color:var(--encre)}
+.titre-serie::after{content:"·";margin:0 6px;font-weight:400;color:var(--doux)}
+.bloc-serie .graine b{font-size:20px;letter-spacing:.04em;color:var(--encre)}
+.choix-cartes{display:inline-flex;align-items:center;gap:2px;padding:2px;border:1px solid #c3d3e1;border-radius:12px;background:#fff}
+.choix-titre{font-weight:700;font-size:14px;color:#334155;padding:0 6px 0 8px}
+.reglages .choix-cartes label{display:block;margin:0;position:relative}
+.choix-cartes input{position:absolute;opacity:0;width:1px;height:1px;margin:0}
+.choix-cartes label span{display:flex;align-items:center;justify-content:center;min-width:42px;min-height:38px;border-radius:9px;font-weight:800;font-size:16px;color:var(--encre);cursor:pointer}
+.choix-cartes label span:hover{background:var(--bleu-clair)}
+.choix-cartes input:checked + span{background:var(--bleu);color:#fff}
+.choix-cartes input:focus-visible + span{outline:3px solid #e7903f;outline-offset:1px}
+#btnCopier{margin-left:auto;padding:0 12px;gap:6px;font-size:15px}
+#btnCopier svg{width:20px;height:20px}
+.bloc-serie .aide-reglage{margin:0}
+.lien-serie{width:100%;min-height:40px;border:1px solid #bfcedb;border-radius:10px;padding:6px 8px;font-size:13px}
+/* volet étroit (téléphone) : les réglages aux choix courts vont par deux, ceux qui ont
+   une aide ensemble (même hauteur), et la série tient sur une ligne */
+@media (max-width:699px){
+  .reglages{padding:8px 12px;gap:8px}
+  .champs{gap:8px 10px;grid-auto-flow:row dense}
+  .champs > .large{grid-column:1 / -1}
+  #champK{order:1} #champEcritures{order:2} #champRelation{order:3} #champVariete{order:4} .champs > .large:not(:first-child){order:5}
+  .reglages label{margin-bottom:3px}
+  .reglages select{font-size:15px;padding:8px 6px}
+  .choix-titre,.suite-lien{display:none}
+  .bloc-serie{padding:6px 8px 6px 12px}
+  .serie-ligne{flex-wrap:nowrap;gap:8px}
+}
+@media (max-width:430px){
+  .titre-serie,.texte-lien,.suite-reperes,.suite-ecritures{display:none}
+  .mot-graine{text-transform:capitalize}
+  #btnCopier{padding:0;width:44px}
+}
 .reperes{margin:6px 0 0;padding-left:18px;font-size:15px;line-height:1.5}
 
 /* ---------- téléphone et petits écrans */
@@ -151,6 +206,10 @@ mark.m-Q{background:var(--q-fond);color:var(--q-texte)}
   .actions{gap:6px}
   .bouton .etiquette{display:none}
   .bouton{padding:0 10px}
+  .mot-carte{display:none}
+  .serie .fleche{min-width:30px}
+  .alerte{font-size:14px;gap:6px;padding:6px 6px 6px 10px}
+  .alerte #alerteReglages{display:none}
   #scene{padding:8px 10px;gap:8px}
   .enonce{padding:10px 12px;border-radius:12px}
   .splat-total{padding:2px 8px}
@@ -161,4 +220,10 @@ mark.m-Q{background:var(--q-fond);color:var(--q-texte)}
   .nav.suivant{padding:0 10px}
   .rangee{gap:8px}
   .bloc{padding:6px}
+}
+/* téléphone (lot 2) : avec le compteur de cartes, le titre n'a plus la place d'être lisible ;
+   il reste lu par les lecteurs d'écran */
+@media (max-width:430px){
+  .entete h1{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+  .actions{margin-left:auto}
 }
