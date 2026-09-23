@@ -9928,9 +9928,9 @@ let elevePave = null, elevePaveZone = 0, elevePaveLargeur = 0, elevePaveSerre = 
    entier au-dessus du pavé : 18 px (seconde ligne) + 48 px (bouton), moins
    les 25 px du bas de la carte et les 10 px de jeu, soit 31 px au moins —
    mesuré à 390 × 664 (Safari d'iPhone). À 32, le bouton restait à 5 px du pavé
-   et semblait le toucher (remarque de Gwenaël, 23/09/2026) : 44 lui laisse 17 px
-   sur les téléphones de 375 à 430 px de large ; le plateau perd 12 px. */
-const ELEVE_PLATEAU_MIN = 150, ELEVE_RESERVE = 44, ELEVE_PAVE_JEU = 10;
+   et semblait le toucher (remarque de Gwenaël, 23/09/2026) : 48 lui laisse 17 px
+   (mesuré en Segoe UI, 360 à 430 px de large) ; le plateau perd 16 px. */
+const ELEVE_PLATEAU_MIN = 150, ELEVE_RESERVE = 48, ELEVE_PAVE_JEU = 10;
 
 /* Téléphone au pavé (tactile ET moins de 600 px de large) : la consigne tient
    en une ligne au lieu de trois, et les lignes gagnées reviennent au plateau.

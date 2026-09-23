@@ -320,14 +320,15 @@ test("ordinateur : aucune règle hors du mode pavé ne cache le Valider de la ca
 // 3. Le plateau : réglé une fois par carte, puis immobile.
 // ---------------------------------------------------------------------------
 test("le plateau rend les pixels qui manquent pour que la carte tienne au-dessus du pavé, jamais sous 150 px", () => {
-  // 390 × 664 (Safari d'iPhone) : place = 664 − 187 = 477 ; plateau 292 → 156
-  // (réserve de 44 px sous la carte depuis le 23/09/2026 : message sur deux lignes et
-  // « Voir la réponse » gardent 17 px au-dessus du pavé ; ils le touchaient avec 32)
+  // 390 × 664 (Safari d'iPhone) : place = 664 − 187 = 477 ; plateau 292 → 152
+  // (réserve de 48 px sous la carte depuis le 23/09/2026 : message sur deux lignes et
+  // « Voir la réponse » gardent 17 px au-dessus du pavé, même en Segoe UI ; ils le
+  // touchaient avec 32)
   const b = monter();
   b.ouvrir();
   assert.equal(b.etat().zone, 477);
-  assert.equal(b.plateau.style.height, "156px");
-  assert.equal(b.plateau.style.minHeight, "156px", "le CSS en impose 280 au mode élève");
+  assert.equal(b.plateau.style.height, "152px");
+  assert.equal(b.plateau.style.minHeight, "152px", "le CSS en impose 280 au mode élève");
   assert.equal(b.doc.body.style["--pave-h"], "187px");
   assert.ok(b.doc.body.classList.contains("eleve-pave-serre"), "moins de 700 px au-dessus du pavé : marges serrées");
   // iPhone SE dans Safari (375 × 548, écran de 667) : touches de 48 px, plateau au plancher
@@ -340,7 +341,7 @@ test("le plateau rend les pixels qui manquent pour que la carte tienne au-dessus
   ipad.ouvrir();
   assert.equal(ipad.plateau.style.height, "");
   assert.equal(ipad.doc.body.classList.contains("eleve-pave-serre"), false);
-  assert.match(page, /const ELEVE_PLATEAU_MIN = 150, ELEVE_RESERVE = 44, ELEVE_PAVE_JEU = 10;/);
+  assert.match(page, /const ELEVE_PLATEAU_MIN = 150, ELEVE_RESERVE = 48, ELEVE_PAVE_JEU = 10;/);
 });
 
 test("le plateau ne bouge plus : ni en touchant une case ou une touche, ni quand le message ou « Voir la réponse » apparaît", () => {
@@ -363,7 +364,7 @@ test("chaque carte est dessinée sur le plateau d'origine, le pavé ne le rédui
   // fait sur le plateau réduit de la carte précédente n'était pas celui d'avant le lot
   const b = monter();
   b.ouvrir();
-  assert.equal(b.plateau.style.height, "156px");
+  assert.equal(b.plateau.style.height, "152px");
   b.contexte.elevePaveRendrePlateau();
   assert.equal(b.plateau.style.height, "");
   assert.equal(b.plateau.style.minHeight, "");
@@ -380,16 +381,16 @@ test("une variation de hauteur (barre d'adresse) ne refait pas la place ; une ro
   b.ouvrir();
   b.redimensionner(390, 745); // la barre d'adresse de Safari se replie
   assert.equal(b.etat().zone, 477, "même place qu'à l'ouverture");
-  assert.equal(b.plateau.style.height, "156px");
+  assert.equal(b.plateau.style.height, "152px");
   b.ouvrir(); // carte suivante, barre toujours repliée : la place ne change pas non plus
   assert.equal(b.etat().zone, 477);
-  assert.equal(b.plateau.style.height, "156px");
+  assert.equal(b.plateau.style.height, "152px");
   b.redimensionner(844, 340); // téléphone couché
   assert.equal(b.etat().zone, 153);
   assert.equal(b.plateau.style.height, "150px");
   assert.match(b.consigne.textContent, /^Complète le schéma en barres/, "plus de 600 px de large : la consigne complète revient");
   b.redimensionner(390, 664); // redressé
-  assert.equal(b.plateau.style.height, "156px");
+  assert.equal(b.plateau.style.height, "152px");
   assert.equal(b.consigne.textContent, "Complète le schéma, puis Valider.");
 });
 
