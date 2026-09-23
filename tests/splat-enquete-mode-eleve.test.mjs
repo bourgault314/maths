@@ -118,7 +118,8 @@ test("seules les cartes d'Enquête ont ce tableau ; une carte du monde 2 ou une 
   assert.match(rendu, /const enquete = infos \? null : eleveInfosEnquete\(card\);/);
   assert.match(rendu, /if\(!infos && !enquete\)\{\n    tete\.style\.display = "none";\n    panneau\.innerHTML = `<p class="eleveConsigne">Le parcours élève n'existe pas encore pour ce mode\.<\/p>`;/);
   assert.match(rendu, /panneau\.classList\.toggle\("enquete", !!enquete\);/);
-  assert.match(rendu, /bas = eleveCasesEnqueteHtml\(card, enquete\);\n    haut = eleveCaseDonneeHtml\("haut blanche", "Total", card\.total\);/);
+  // (lot E-sans-total : une carte « sans total » montre « ? » dans la même case donnée)
+  assert.match(rendu, /bas = eleveCasesEnqueteHtml\(card, enquete\);\n    \/\*[^\n]*\*\/\n    haut = eleveCaseDonneeHtml\("haut blanche", "Total", \(card\._rel && card\._rel\.sansTotal\) \? "\?" : card\.total\);/);
 });
 
 // --- consigne et message ------------------------------------------------------------------
@@ -293,7 +294,8 @@ test("Enquête : le dévoilement redessine la carte (chaque tache a sa couleur),
   assert.match(src, /if\(card && eleveInfosEnquete\(card\)\)\{\n    eleveEnqueteDevoile = true;\n    renderCard\(card, eleveSchemaEtape\);\n    eleveCadrerScene\(\);/);
   const rendu = fn("renderCard");
   assert.match(rendu, /const eleveDevoileC = \(card\.family === "C"\) && typeof eleveEnqueteDevoile !== "undefined" && !!eleveEnqueteDevoile;/);
-  assert.match(rendu, /const visualRevealState = \(card\.family === "C"\) \? \(\(revealState >= 5 \|\| eleveDevoileC\) \? 2 : 0\)/);
+  // taches dévoilées au 5e clic ; au 4e pour une carte « sans total » (lot E-sans-total : le 5e y est la vérification)
+  assert.match(rendu, /const visualRevealState = \(card\.family === "C"\) \? \(\(revealState >= \(card\._rel && card\._rel\.sansTotal \? 4 : 5\) \|\| eleveDevoileC\) \? 2 : 0\)/);
   assert.match(rendu, /const fonduCouverture = !\(eleveDevoileC && revealState > 0\);/, "le fondu de la couverture ne rejoue pas à chaque étape du schéma");
   assert.match(rendu, /if\(visualRevealState === 2 && fonduCouverture\)\{/);
 });
