@@ -1080,6 +1080,14 @@ window.MATHSGO_CATALOGUE = {
       "thumbnail": "assets/img/thumbnails/angles/anglebarre.png?v=1",
       "cardDescription": "Résoudre pas à pas des problèmes sur la somme des angles d’un triangle à l’aide d’un schéma en barres."
     },
+    "outils/angles/gabarit_somme_angles_triangle.pdf": {
+      "primaryNotion": "triangles-proprietes",
+      "primaryGroup": "imprimer",
+      "collections": [],
+      "tags": ["angles", "triangle", "somme-des-angles", "schema-barres", "gabarit", "plastifier", "imprimable"],
+      "thumbnail": "assets/img/thumbnails/angles/gabarit-somme-angles-triangle.png?v=1",
+      "cardDescription": "Un gabarit à plastifier pour écrire l’égalité avec les lettres, remplacer par les nombres, calculer l’angle cherché et rédiger la conclusion."
+    },
     "outils/angles/bandes_magnetiques.html": {
       "primaryNotion": "construction-geometrique",
       "primaryGroup": "manipuler",
@@ -3346,6 +3354,47 @@ window.MATHSGO_CATALOGUE = {
         "somme des angles",
         "triangle rectangle",
         "triangle isocèle"
+      ],
+      "kind": "document",
+      "status": "published",
+      "featured": false,
+      "recent": true
+    },
+    {
+      "id": "outils-angles-gabarit-somme-angles-triangle-pdf",
+      "title": "Gabarit — somme des angles d’un triangle",
+      "description": "Un gabarit plastifiable pour calculer un angle inconnu avec un schéma en barres et rédiger proprement, avec un exemple entièrement rédigé au verso.",
+      "path": "outils/angles/gabarit_somme_angles_triangle.pdf",
+      "domains": [
+        "geometrie"
+      ],
+      "notions": [
+        "angles",
+        "triangles",
+        "triangles-proprietes"
+      ],
+      "uses": [
+        "imprimer",
+        "entrainer"
+      ],
+      "types": [
+        "imprimable"
+      ],
+      "filters": [
+        "materiel-imprimer"
+      ],
+      "keywords": [
+        "gabarit",
+        "gabarits",
+        "plastifier",
+        "plastifiable",
+        "somme des angles",
+        "angles d’un triangle",
+        "180°",
+        "angle inconnu",
+        "schéma en barres",
+        "AngleBarre",
+        "rédaction"
       ],
       "kind": "document",
       "status": "published",

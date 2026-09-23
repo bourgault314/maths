@@ -1,6 +1,6 @@
 # Sources et signature des PDF imprimables
 
-Ce document est l'inventaire technique des 54 PDF publics de maths&go.
+Ce document est l'inventaire technique des 55 PDF publics de maths&go.
 
 ## Référence graphique
 
@@ -18,24 +18,25 @@ Ce document est l'inventaire technique des 54 PDF publics de maths&go.
 
 ## Périmètre des gabarits plastifiables
 
-Le catalogue publie 24 gabarits PDF plastifiables. Le fichier historique
+Le catalogue publie 25 gabarits PDF plastifiables. Le fichier historique
 `addition-posee/gabarit-addition-posee.pdf` est une copie technique du gabarit
 d'addition décimale : il est régénéré lui aussi pour préserver les anciens
-liens, mais ne constitue pas un 25e gabarit. Les deux outils HTML de construction
+liens, mais ne constitue pas un 26e gabarit. Les deux outils HTML de construction
 de gabarits d'angles ne font pas partie de ce lot.
 
-Le logo IREMI est réservé aux 21 gabarits effectivement conçus dans ce cadre.
+Le logo IREMI est réservé aux 22 gabarits effectivement conçus dans ce cadre.
 Les gabarits d'enquêtes additive et multiplicative ainsi que le document de
 partage équitable restent plastifiables, mais portent uniquement le logo
 maths&go.
 
 ## PDF possédant une source LaTeX
 
-Ces 17 documents sont entièrement modifiables et recompilables :
+Ces 18 documents sont entièrement modifiables et recompilables :
 
 | PDF public | Source |
 |---|---|
 | `angles/fiche_angles_triangles.pdf` | `angles/_fiche_angles_triangles.tex` |
+| `angles/gabarit_somme_angles_triangle.pdf` | `angles/_gabarit_somme_angles_triangle.tex` |
 | `fiche_reciproque_thales.pdf` | `_fiche_reciproque_thales.tex` |
 | `fiche_thales_criteres_a_verifier.pdf` | `_fiche_thales_criteres_a_verifier.tex` |
 | `fiche_thales_direct_a_verifier.pdf` | `_fiche_thales_direct_a_verifier.tex` |
