@@ -1,0 +1,247 @@
+% Gabarit plastifiable « Somme des angles d'un triangle » — maths&go / IREMI
+% Recto : gabarit vierge à compléter au feutre effaçable.
+% Verso : le même gabarit rempli sur un exemple entièrement rédigé.
+% Même démarche que l'outil AngleBarre (outils/angles/anglebarre.html) :
+% propriété -> égalité avec les lettres -> on remplace -> on regroupe -> on enlève -> on conclut.
+% Compilation (depuis ce dossier) : pdflatex _gabarit_somme_angles_triangle.tex
+%   puis renommer le PDF en gabarit_somme_angles_triangle.pdf
+\documentclass[a4paper,11pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[provide=*,french]{babel}
+\usepackage{lmodern}
+\usepackage[left=0.62cm,right=0.62cm,top=0.55cm,bottom=1.10cm]{geometry}
+\usepackage{tikz}
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage{eso-pic}
+\usepackage{amssymb}
+\usepackage{array}
+\usetikzlibrary{calc,angles,quotes,arrows.meta}
+\pagestyle{empty}
+\renewcommand{\familydefault}{\sfdefault}
+\setlength{\parindent}{0pt}
+
+% ---------- Couleurs maths&go ----------
+\definecolor{brandNavy}{RGB}{11,53,112}
+\definecolor{brandTeal}{RGB}{29,174,174}
+\definecolor{softTeal}{RGB}{219,247,246}
+\definecolor{softGray}{RGB}{245,247,250}
+% ---------- Couleurs des angles, reprises d'AngleBarre ----------
+\definecolor{angBleu}{RGB}{37,99,235}    % premier angle connu
+\definecolor{angOrange}{RGB}{234,88,12}  % deuxième angle connu
+\definecolor{angVert}{RGB}{22,150,70}    % angle cherché
+\definecolor{angViolet}{RGB}{124,58,237} % les deux angles connus regroupés
+
+% ---------- Pied de page des gabarits IREMI (identique aux autres gabarits) ----------
+\newcommand{\LogoFile}{../../assets/img/mathsgo-logo-print.png}
+\newcommand{\MathsGoFooter}{%
+\begin{tikzpicture}[remember picture,overlay]
+  \node[anchor=west,inner sep=0pt]
+    at ([xshift=0.48cm,yshift=1.01cm]current page.south west)
+    {\includegraphics[height=1.36cm]{../../assets/img/logos/irem/logo-print.png}};
+  \node[anchor=west,inner sep=0pt]
+    at ([xshift=2.45cm,yshift=1.01cm]current page.south west)
+    {\IfFileExists{\LogoFile}{\includegraphics[width=2.45cm]{\LogoFile}}{}};
+  \node[anchor=south,text=brandNavy!70,font=\sffamily\bfseries\fontsize{7}{7}\selectfont]
+    at ([yshift=0.32cm]current page.south) {mathsgo.re \textperiodcentered\ CC BY-NC-SA 4.0};
+  \node[anchor=south east,text=brandNavy!70,font=\sffamily\fontsize{6.8}{6.8}\selectfont]
+    at ([xshift=-0.48cm,yshift=0.32cm]current page.south east) {Gabarit plastifiable};
+\end{tikzpicture}%
+}
+\AddToShipoutPictureFG{\MathsGoFooter}
+
+% ---------- Recto / verso ----------
+\newif\ifexemple
+% \R{texte de l'exemple}{largeur du pointillé en cm}
+\newcommand{\R}[2]{\ifexemple#1\else\LowDotted{#2}\fi}
+\newcommand{\LowDotted}[1]{%
+\tikz[baseline=-0.78ex]{\draw[densely dotted,line width=0.95pt,line cap=round] (0,-0.22) -- (#1,-0.22);}}
+% emplacement d'un nom d'angle : pointillé surmonté d'un chapeau
+\newcommand{\HatSlot}{%
+\tikz[baseline=-0.78ex]{\draw[densely dotted,line width=0.95pt,line cap=round] (0,-0.22) -- (0.62,-0.22);
+  \draw[sharp corners,line width=1.1pt,line cap=butt,line join=miter,miter limit=10] (0.15,0.24) -- (0.31,0.50) -- (0.47,0.24);}}
+\newcommand{\NomAngle}[1]{\ifexemple$\widehat{\mathsf{#1}}$\else\HatSlot\fi}
+
+% pastille colorée (même esprit que les cases de Pythagore), lisible en noir et blanc
+\newcommand{\Pastille}[3]{\tikz[baseline=-0.72ex]{\node[rounded corners=4pt,draw=#1,fill=#1!13,line width=0.9pt,
+  inner xsep=4pt,inner ysep=3pt,minimum width=#2,minimum height=0.86cm,
+  font=\bfseries\fontsize{12.5}{13}\selectfont\color{brandNavy}]{#3};}}
+\newcommand{\PB}[1]{\Pastille{angBleu}{1.35cm}{#1}}
+\newcommand{\PO}[1]{\Pastille{angOrange}{1.35cm}{#1}}
+\newcommand{\PV}[1]{\Pastille{angVert}{1.15cm}{#1}}
+\newcommand{\PVi}[1]{\Pastille{angViolet}{1.35cm}{#1}}
+
+\newcommand{\StepBadge}[1]{\tikz[baseline=-0.62ex]{\node[circle,fill=brandNavy,text=white,font=\bfseries,minimum size=0.62cm,inner sep=0pt]{#1};}}
+\newcommand{\StepHead}[2]{\StepBadge{#1}\hspace{0.22cm}{\bfseries\color{brandNavy}\fontsize{14}{15}\selectfont #2}}
+\newcommand{\Filet}{\par\vfill\textcolor{brandTeal!35}{\rule{19.7cm}{0.5pt}}\par\vfill}
+
+% ---------- Données de l'exemple du verso ----------
+% Triangle MNP : M = 35°, N = 80°, P cherché (65°). Somme connue : 115°.
+
+% ---------- Le triangle ----------
+\newcommand{\Triangle}{%
+\begin{tikzpicture}[scale=1.25,line join=round]
+  \coordinate (M) at (0,0);
+  \coordinate (N) at (6.4,0);
+  \coordinate (P) at (5.62,3.95);
+  \pic[draw=angBleu,fill=angBleu!22,line width=1pt,angle radius=0.72cm] {angle=N--M--P};
+  \pic[draw=angOrange,fill=angOrange!22,line width=1pt,angle radius=0.62cm] {angle=P--N--M};
+  \pic[draw=angVert,fill=angVert!22,line width=1pt,angle radius=0.62cm] {angle=M--P--N};
+  \draw[brandNavy,line width=1.5pt] (M) -- (N) -- (P) -- cycle;
+  % noms des sommets (cases blanches)
+  \tikzset{nom/.style={draw=brandNavy!60,dashed,rounded corners=3pt,fill=white,minimum width=0.85cm,minimum height=0.75cm,
+     font=\bfseries\large\color{brandNavy},inner sep=1pt}}
+  \node[nom] at (-0.55,-0.32) {\ifexemple M\fi};
+  \node[nom] at (6.95,-0.32) {\ifexemple N\fi};
+  \node[nom] at (5.95,4.52) {\ifexemple P\fi};
+  % mesures (cases de couleur)
+  \tikzset{mes/.style={rounded corners=3pt,line width=0.9pt,minimum width=1.4cm,minimum height=0.72cm,
+     font=\bfseries\color{brandNavy},inner sep=1pt}}
+  \node[mes,draw=angBleu,fill=angBleu!13] at (1.78,0.40) {\ifexemple 35°\else\phantom{0}\fi};
+  \node[mes,draw=angOrange,fill=angOrange!13] at (5.30,0.48) {\ifexemple 80°\else\phantom{0}\fi};
+  \node[mes,draw=angVert,fill=angVert!13] at (5.05,2.75) {\large ?};
+\end{tikzpicture}}
+
+% ---------- Barres ----------
+% largeurs des trois parts : égales au recto, proportionnelles au verso (35, 80, 65)
+\newcommand{\Parts}{\ifexemple\def\wa{1.517}\def\wb{3.467}\def\wc{2.817}\else\def\wa{2.6}\def\wb{2.6}\def\wc{2.6}\fi}
+\tikzset{
+  tot/.style={draw=brandNavy,line width=1pt,fill=softGray},
+  bl/.style={draw=brandNavy,line width=1pt,fill=angBleu!16},
+  or/.style={draw=brandNavy,line width=1pt,fill=angOrange!16},
+  ve/.style={draw=brandNavy,line width=1pt,fill=angVert!16},
+  vi/.style={draw=brandNavy,line width=1pt,fill=angViolet!16},
+  txt/.style={font=\bfseries\fontsize{13}{14}\selectfont\color{brandNavy}}
+}
+\newcommand{\BarreLettres}{%
+\Parts
+\begin{tikzpicture}
+  \def\h{1.2}
+  \draw[tot] (0,\h) rectangle (7.8,2*\h);
+  \node[txt] at (3.9,1.5*\h) {180°};
+  \draw[bl] (0,0) rectangle (\wa,\h);
+  \draw[or] (\wa,0) rectangle (\wa+\wb,\h);
+  \draw[ve] (\wa+\wb,0) rectangle (7.8,\h);
+  \node[txt] at (\wa/2,\h/2) {\NomAngle{M}};
+  \node[txt] at (\wa+\wb/2,\h/2) {\NomAngle{N}};
+  \node[txt] at (7.8-\wc/2,\h/2) {\NomAngle{P}};
+\end{tikzpicture}}
+
+\newcommand{\BarreNombres}{%
+\Parts
+\begin{tikzpicture}
+  \def\h{1.2}
+  \draw[tot] (0,2*\h) rectangle (7.8,3*\h);
+  \node[txt] at (3.9,2.5*\h) {180°};
+  \draw[bl] (0,\h) rectangle (\wa,2*\h);
+  \draw[or] (\wa,\h) rectangle (\wa+\wb,2*\h);
+  \draw[ve] (\wa+\wb,\h) rectangle (7.8,2*\h);
+  \node[txt] at (\wa/2,1.5*\h) {\R{35°}{1.0}};
+  \node[txt] at (\wa+\wb/2,1.5*\h) {\R{80°}{1.0}};
+  \node[txt] at (7.8-\wc/2,1.5*\h) {\NomAngle{P}};
+  \draw[vi] (0,0) rectangle (\wa+\wb,\h);
+  \draw[ve] (\wa+\wb,0) rectangle (7.8,\h);
+  \node[txt] at ({(\wa+\wb)/2},\h/2) {\R{115°}{1.3}};
+  \node[txt] at (7.8-\wc/2,\h/2) {\NomAngle{P}};
+  % accolade « je regroupe »
+  \draw[decorate,decoration={brace,amplitude=5pt,mirror},line width=0.9pt,angViolet]
+    (-0.12,2*\h-0.05) -- (-0.12,0.05);
+  \node[font=\bfseries\footnotesize\color{angViolet},rotate=90] at (-0.62,\h) {je regroupe};
+\end{tikzpicture}}
+\usetikzlibrary{decorations.pathreplacing}
+% ---------- Étape 2 : barre à 4 lignes + égalités alignées ligne à ligne ----------
+\newcommand{\EgaliteEtBarre}{%
+\Parts
+\begin{tikzpicture}
+  \def\h{1.22}
+  \def\ex{14.55}   % abscisse du signe =
+  % ligne 1 : 180
+  \draw[tot] (0,3*\h) rectangle (7.8,4*\h);
+  \node[txt] at (3.9,3.5*\h) {180°};
+  % ligne 2 : les noms des angles
+  \draw[bl] (0,2*\h) rectangle (\wa,3*\h);
+  \draw[or] (\wa,2*\h) rectangle (\wa+\wb,3*\h);
+  \draw[ve] (\wa+\wb,2*\h) rectangle (7.8,3*\h);
+  \node[txt] at (\wa/2,2.5*\h) {\NomAngle{M}};
+  \node[txt] at (\wa+\wb/2,2.5*\h) {\NomAngle{N}};
+  \node[txt] at (7.8-\wc/2,2.5*\h) {\NomAngle{P}};
+  % ligne 3 : les valeurs
+  \draw[bl] (0,\h) rectangle (\wa,2*\h);
+  \draw[or] (\wa,\h) rectangle (\wa+\wb,2*\h);
+  \draw[ve] (\wa+\wb,\h) rectangle (7.8,2*\h);
+  \node[txt] at (\wa/2,1.5*\h) {\R{35°}{1.0}};
+  \node[txt] at (\wa+\wb/2,1.5*\h) {\R{80°}{1.0}};
+  \node[txt] at (7.8-\wc/2,1.5*\h) {\NomAngle{P}};
+  % ligne 4 : les deux angles connus regroupés
+  \draw[vi] (0,0) rectangle (\wa+\wb,\h);
+  \draw[ve] (\wa+\wb,0) rectangle (7.8,\h);
+  \node[txt] at ({(\wa+\wb)/2},\h/2) {\R{115°}{1.3}};
+  \node[txt] at (7.8-\wc/2,\h/2) {\NomAngle{P}};
+  % accolade « je regroupe » sur les lignes 3 et 4
+  \draw[decorate,decoration={brace,amplitude=5pt,mirror},line width=0.9pt,angViolet]
+    (-0.12,2*\h-0.05) -- (-0.12,0.05);
+  \node[font=\bfseries\footnotesize\color{angViolet},rotate=90] at (-0.62,\h) {je regroupe};
+  % phrase de départ, en face de la ligne 180
+  \node[anchor=west,text width=8.9cm,font=\fontsize{12.5}{16}\selectfont\color{brandNavy}] at (8.9,3.5*\h)
+    {Dans le triangle \R{\textbf{MNP}}{1.6}, la somme des trois angles est égale à 180°.};
+  % égalités, chacune en face de sa ligne de barre
+  \tikzset{g/.style={anchor=east,font=\fontsize{12.5}{13}\selectfont\color{brandNavy}},
+           d/.style={anchor=west,font=\fontsize{12.5}{13}\selectfont\color{brandNavy}},
+           eg/.style={font=\fontsize{12.5}{13}\selectfont\color{brandNavy}}}
+  \foreach \y in {2.5,1.5,0.5,-0.5,-1.5} {\node[eg] at (\ex,\y*\h) {$=$};}
+  \node[g] at (\ex-0.3,2.5*\h) {\PB{\NomAngle{M}} \,+\, \PO{\NomAngle{N}} \,+\, \PV{\NomAngle{P}}};
+  \node[d] at (\ex+0.3,2.5*\h) {\textbf{180°}};
+  \node[g] at (\ex-0.3,1.5*\h) {\PB{\R{35°}{0.95}} \,+\, \PO{\R{80°}{0.95}} \,+\, \PV{\NomAngle{P}}};
+  \node[d] at (\ex+0.3,1.5*\h) {\textbf{180°}};
+  \node[g] (L3) at (\ex-0.3,0.5*\h) {\PVi{\R{115°}{1.05}} \,+\, \PV{\NomAngle{P}}};
+  \node[d] (R3) at (\ex+0.3,0.5*\h) {\textbf{180°}};
+  \node[g] at (\ex-0.3,-0.5*\h) {\PV{\NomAngle{P}}};
+  \node[d] (R4) at (\ex+0.3,-0.5*\h) {\textbf{180°} $-$ \PVi{\R{115°}{1.05}}};
+  \node[g] at (\ex-0.3,-1.5*\h) {\PV{\NomAngle{P}}};
+  \node[d] at (\ex+0.3,-1.5*\h) {\PV{\R{65°}{0.9}}};
+\end{tikzpicture}}
+
+
+% =====================================================================
+\newcommand{\Page}{%
+\begin{center}
+  {\bfseries\color{brandNavy}\fontsize{25}{28}\selectfont Somme des angles d'un triangle}\\[0.12cm]
+  {\color{brandTeal!80!black}\bfseries\fontsize{11.5}{13}\selectfont
+   \ifexemple Exemple entièrement rédigé\else Objectif : calculer un angle quand on connaît les deux autres\fi}
+\end{center}
+\vspace{0.05cm}
+\begin{center}
+\tikz{\node[draw=brandTeal,line width=1.1pt,fill=softTeal,rounded corners=6pt,inner xsep=12pt,inner ysep=8pt,text width=17.6cm,align=center]
+{\fontsize{13}{16}\selectfont{\bfseries\color{brandNavy}Propriété} \quad Dans un triangle, la somme des mesures des trois angles est égale à \textbf{180°}.};}
+\end{center}
+\vspace{0.05cm}
+% ---- 1 ----
+\StepHead{1}{Je repère les angles sur la figure}\par\vspace{0.1cm}
+\begin{center}\Triangle\end{center}
+\Filet
+% ---- 2 ----
+\StepHead{2}{J'écris l'égalité et je remplace}\par\vspace{0.3cm}
+\hspace*{0.75cm}\EgaliteEtBarre
+\Filet
+% ---- 4 ----
+\StepHead{3}{Je conclus}\par\vspace{0.3cm}
+{\fontsize{13}{16}\selectfont\color{brandNavy}\hspace*{0.8cm}%
+Dans le triangle \R{\textbf{MNP}}{1.6}, l'angle \NomAngle{P} mesure \R{\textbf{65°}}{1.2}.}\par
+\vspace{0.4cm}
+\begin{center}
+\tikz{\node[draw=angVert,line width=1pt,fill=angVert!7,rounded corners=6pt,inner xsep=12pt,inner ysep=8pt]
+{\fontsize{12.5}{14}\selectfont\color{brandNavy}\textbf{Je vérifie :}\quad
+ \PB{\R{35°}{0.95}} \,+\, \PO{\R{80°}{0.95}} \,+\, \PV{\R{65°}{0.9}} \;=\; \R{\textbf{180°}}{1.2}
+ \qquad \ifexemple$\boxtimes$\else$\Box$\fi\ je trouve bien 180°};}
+\end{center}
+\vfill
+}
+
+\begin{document}
+\exemplefalse
+\Page
+\newpage
+\exempletrue
+\Page
+\end{document}
