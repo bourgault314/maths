@@ -1085,7 +1085,7 @@ window.MATHSGO_CATALOGUE = {
       "primaryGroup": "imprimer",
       "collections": [],
       "tags": ["angles", "triangle", "somme-des-angles", "schema-barres", "gabarit", "plastifier", "imprimable"],
-      "thumbnail": "assets/img/thumbnails/angles/gabarit-somme-angles-triangle.png?v=1",
+      "thumbnail": "assets/img/thumbnails/angles/gabarit-somme-angles-triangle.png?v=2",
       "cardDescription": "Un gabarit à plastifier pour écrire l’égalité avec les lettres, remplacer par les nombres, calculer l’angle cherché et rédiger la conclusion."
     },
     "outils/angles/bandes_magnetiques.html": {
