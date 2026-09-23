@@ -63,7 +63,9 @@ main{max-width:980px;margin:0 auto;padding:18px 14px 40px}
 .onglets a .num{position:relative;flex:0 0 auto;display:flex;align-items:center;justify-content:center;width:46px;height:46px}
 .onglets a .num svg{position:absolute;inset:0;width:100%;height:100%}
 .onglets a .num use{fill:var(--c-plein)}
-.onglets a .num b{position:relative;margin:-3px 0 0 3px;color:#fff;font-size:19px;font-weight:900}
+/* le chiffre au centre du splat : ni décalage, ni marge — mesuré au pixel, il tombe à ±0,5 px du
+   point le plus éloigné des bords de la tache (50 % en largeur, 47,5 % en hauteur) */
+.onglets a .num b{position:relative;line-height:1;margin:0;color:#fff;font-size:19px;font-weight:900}
 .onglets a .txt{display:flex;flex-direction:column;min-width:0;line-height:1.15}
 .onglets a .etiq{font-size:16px;font-weight:800;color:var(--ink);display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden}
 .onglets a .fiches{margin-top:4px;font-size:12.5px;font-weight:700;color:var(--muted)}
