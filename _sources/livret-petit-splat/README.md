@@ -23,9 +23,9 @@ Pour chaque niveau, deux PDF :
   (8|1 · 2|7 · 6|3 · 4|5) : impression recto-verso, retournement sur le bord court,
   on plie, on agrafe.
 
-## Les livrets de correction du professeur (lot K1, 20/09/2026)
+## Les livrets corrigés (lot K1, 20/09/2026)
 
-Chaque livret a son **livret de correction**, pour le professeur : mêmes 8 pages, même
+Chaque livret a son **livret corrigé** : mêmes 8 pages, même
 pliage, **mêmes cartes à la même place**, mais les six pages de fiches montrent la
 correction (les schémas en barres remplis ; sur les fiches « Dessine », les jetons
 visibles dessinés).
@@ -45,21 +45,25 @@ Comment ils sont faits (tout est dans `render.py`, aucune source n'est dupliqué
   **exactement à la même place** que sur la fiche de l'élève : on corrige en posant les
   deux livrets côte à côte.
 - **La boîte du QR** garde sa place, sa taille et son QR (le même que sur la fiche de
-  l'élève) ; seul son texte change : « Les mêmes / cartes en ligne (le QR de l'élève) »
-  (`QR_PROF`) au lieu de « J'ai terminé ma fiche, je rejoue en ligne » (`QR_ELEVE`).
-  Coupé ainsi, il garde presque la largeur de la boîte de l'élève : la consigne passe à
-  la ligne exactement aux mêmes endroits que sur la fiche de l'élève.
+  l'élève) ; seul son texte change : « Je rejoue / ces cartes / en ligne » (`QR_PROF`,
+  comme les livrets de l'Enquête) au lieu de « J'ai terminé ma fiche, je rejoue en
+  ligne » (`QR_ELEVE`). La boîte reste moins large que celle de l'élève : la consigne
+  passe à la ligne exactement aux mêmes endroits que sur la fiche de l'élève.
 - **La tache reste noire**, comme dans la correction que l'outil imprime : la réponse
   est dans le schéma. (Dévoiler les jetons cachés a été essayé : lisible au Monde 1,
   mais sur l'Expert 40 jetons sous une tache ne se comptent plus.)
 - **Le pied** des fiches : `mathsgo.re/splat · CC BY-NC-SA 4.0 · correction`.
 - **La couverture** reçoit, par injection (`PROF`, `CSS_PROF`, clé `prof` de `JS_COUV`) :
-  un bandeau **rouge sombre `#b91c1c`** de 14 mm en haut, « CORRECTION — POUR LE
-  PROFESSEUR » en blanc, centré sur les 10 mm qui s'impriment (les 4 premiers sont hors
-  de la zone imprimable de la plupart des imprimantes) ; et « Livret du professeur » à la
-  place de la ligne Prénom / Classe. En noir et blanc, le rouge devient gris foncé et le
+  un bandeau **rouge sombre `#b91c1c`** de 14 mm en haut, « CORRECTION » en blanc,
+  centré sur les 10 mm qui s'impriment (les 4 premiers sont hors de la zone imprimable
+  de la plupart des imprimantes) ; et « Livret corrigé » à la place de la ligne
+  Prénom / Classe. En noir et blanc, le rouge devient gris foncé et le
   texte blanc reste lisible. Le sommaire ne bouge pas d'un millimètre.
 - **Le dos** est identique au dos du livret de l'élève.
+
+**Pour tous (23/09/2026).** Le corrigé peut être donné aux élèves (Claire, comme les
+livrets de l'Enquête) : il ne dit plus « professeur » nulle part — bandeau « Correction »,
+ligne « Livret corrigé », boîte du QR « Je rejoue ces cartes en ligne ».
 
 La page `outils/livrets_petit_splat.html` donne, sous les deux liens de chaque livret,
 une ligne plus discrète « 🧑‍🏫 Correction (prof) » · « à plier » (sans fond, bordure en
@@ -173,4 +177,4 @@ pypdf pour l'imposition.
   moment du rendu, comme il injecte les QR (décision du 18/09/2026).
 - Tout reste lisible imprimé en **noir et blanc** : aucun texte en couleur claire,
   aucune page en aplat teinté.
-- Vocabulaire : « jetons » (jamais « billes », réservées aux mondes 4 et 5).
+- Vocabulaire : « jetons » (jamais « billes », réservées aux mondes 5 et 6, Équations et relatifs).

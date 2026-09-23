@@ -444,7 +444,7 @@ test("le vocabulaire du dessin : « point bleu » pour un jeton, « un jeton ave
     assert.doesNotMatch(readme1, motif, `README monde 1 : aucun « ${mot} »`);
 });
 
-// ================================================ lot K1 — le livret de correction du prof
+// ================================================ lot K1 — le livret corrigé (« pour tous » depuis le 23/09/2026)
 // (20/09/2026) Chaque livret Petit SPLAT! a son livret de correction : mêmes 8 pages, même
 // pliage, mêmes cartes à la même place, les six fiches montrent la correction. render.py
 // le fabrique à partir de l'outil (correction=1&rv=0), sans dupliquer couverture ni dos.
@@ -565,7 +565,7 @@ test("K1 : les trois livrets de correction existent — 8 pages A4, 4 feuilles A
   }
 });
 
-test("K1 : dans les PDF de correction, les pages 2 à 7 sont des corrections, la couverture est celle du prof, le dos ne change pas", () => {
+test("K1 : dans les PDF de correction, les pages 2 à 7 sont des corrections, la couverture dit « Livret corrigé », le dos ne change pas", () => {
   for (const s of SORTIES_M1) {
     const corr = texteExact(`outils/${s}_correction.pdf`);
     const eleve = texteExact(`outils/${s}.pdf`);
@@ -575,18 +575,18 @@ test("K1 : dans les PDF de correction, les pages 2 à 7 sont des corrections, la
       assert.ok(t.startsWith(`PETIT SPLAT!Fiche ${p} — `), `${s} p.${p + 1} : la fiche ${p}, dans l'ordre (lu : ${t.slice(0, 40)})`);
       assert.match(t, /— Correction/, `${s} p.${p + 1} : « — Correction » dans le bandeau`);
       assert.ok(t.includes("mathsgo.re/splat · CC BY-NC-SA 4.0 · correction"), `${s} p.${p + 1} : le pied se termine par « · correction »`);
-      assert.match(t, /Les mêmescartes en ligne\(le QR de l'élève\)/, `${s} p.${p + 1} : la boîte du QR parle au prof`);
+      assert.match(t, /Je rejoueces cartesen ligne/, `${s} p.${p + 1} : la boîte du QR du corrigé`);
       assert.doesNotMatch(t, /terminé/, `${s} p.${p + 1} : plus la phrase de l'élève`);
       // la même consigne que la fiche de l'élève (le cadre est remis à l'identique)
-      const consigne = (x) => x.slice(x.indexOf("Pour chaque carte"), x.search(/J'ai terminé|Les mêmes/));
+      const consigne = (x) => x.slice(x.indexOf("Pour chaque carte"), x.search(/J'ai terminé|Je rejoue/));
       assert.equal(consigne(t), consigne(eleve[p]), `${s} p.${p + 1} : même cadre de consigne que l'élève`);
     }
-    // la couverture du prof : le bandeau, « Livret du professeur » à la place de Prénom / Classe
-    assert.ok(corr[0].startsWith("CORRECTION — POUR LE PROFESSEUR"), `${s} : bandeau en haut de la couverture`);
-    assert.match(corr[0], /Livret du professeur/, `${s} : « Livret du professeur »`);
+    // la couverture du corrigé : le bandeau, « Livret corrigé » à la place de Prénom / Classe
+    assert.ok(corr[0].startsWith("CORRECTION"), `${s} : bandeau en haut de la couverture`);
+    assert.match(corr[0], /Livret corrigé/, `${s} : « Livret corrigé »`);
     assert.doesNotMatch(corr[0], /Prénom|Classe/, `${s} : plus de ligne Prénom / Classe`);
     // le reste de la couverture est celui de l'élève
-    assert.equal(corr[0].replace("CORRECTION — POUR LE PROFESSEUR", "").replace("Livret du professeur", ""),
+    assert.equal(corr[0].replace("CORRECTION", "").replace("Livret corrigé", ""),
                  eleve[0].replace("PrénomClasse", ""), `${s} : le reste de la couverture ne change pas`);
     // le dos est celui du livret de l'élève, mot pour mot
     assert.equal(corr[7], eleve[7], `${s} : le dos est identique`);
@@ -603,12 +603,12 @@ test("K1 : render.py fabrique la correction depuis l'outil (correction=1&rv=0), 
   assert.match(render1, /\+ \("&correction=1&rv=0" if correction else ""\)/);
   assert.match(render1, /JS_CORRIGE = """\(\) => \{[\s\S]*?grille\.before\(ins\);\s*\n\s*enonce\.remove\(\);/);
   // même boîte, même QR, autre texte (option B du 20/09/2026)
-  assert.ok(render1.includes(`QR_PROF = "Les mêmes<br>cartes en ligne<em>(le QR de l'élève)</em>"`), "texte de la boîte du prof");
-  assert.match(render1, /pg\.evaluate\(JS_QR, \[injecter, QR_PROF if correction else QR_ELEVE\]\)/);
+  assert.ok(render1.includes(`QR_PROF = "Je rejoue<br>ces cartes<em>en ligne</em>"`), "texte de la boîte du corrigé");
+  assert.ok(render1.includes("pg.evaluate(JS_QR, [injecter, QR_PROF, QR_ELEVE] if correction else [injecter, QR_ELEVE, None])"), "la boîte du corrigé a la largeur de celle de l'élève");
   // le pied garde la signature et ajoute « · correction »
   assert.match(render1, /PIED_CORRECTION = PIED_LIVRET \+ " · correction"/);
   // la couverture : injection, pas de copie de couverture.html ; bandeau rouge sombre
-  assert.ok(render1.includes(`PROF = dict(bandeau="Correction — pour le professeur", ligne="Livret du professeur")`), "textes de la couverture du prof");
+  assert.ok(render1.includes(`PROF = dict(bandeau="Correction", ligne="Livret corrigé")`), "textes de la couverture du corrigé");
   assert.match(render1, /\.bandeau-prof\{[^}]*\n?[^}]*background:#b91c1c;color:#fff;/);
   assert.ok(!existe("_sources/livret-petit-splat/couverture-correction.html"), "pas de couverture dupliquée");
   // les noms de sortie, et les deux livrets refaits ensemble par défaut
@@ -639,10 +639,10 @@ test("K1 : la page des livrets du monde 1 mène aux six PDF de correction, sous 
 // lettre }. Mêmes 8 pages, même pliage, mêmes cartes à la même place que le livret de l'élève ;
 // les fiches sont imprimées par l'outil lui-même (corrections courtes 6/page).
 const CORRECTIONS_M2 = [
-  ["livret_splat_classique_correction_equation", "corrigé par l'équation · inconnue «\u00a0?\u00a0»"],
-  ["livret_splat_classique_correction_equation_lettre", "corrigé par l'équation · inconnue en lettre"],
-  ["livret_splat_classique_correction_schema", "corrigé par le schéma en barres · inconnue «\u00a0?\u00a0»"],
-  ["livret_splat_classique_correction_schema_lettre", "corrigé par le schéma en barres · inconnue en lettre"],
+  ["livret_splat_classique_correction_equation", "par l'équation · inconnue «\u00a0?\u00a0»"],
+  ["livret_splat_classique_correction_equation_lettre", "par l'équation · inconnue en lettre"],
+  ["livret_splat_classique_correction_schema", "par le schéma en barres · inconnue «\u00a0?\u00a0»"],
+  ["livret_splat_classique_correction_schema_lettre", "par le schéma en barres · inconnue en lettre"],
 ];
 const TITRES_M2 = ["Fiche 7 — Le même jeu,un nouveau plateau —Correction", "Fiche 7 bis — Le mêmejeu, un nouveau plateau— Correction",
                    "Fiche 8 — Avec despaquets de jetons —Correction", "Fiche 8 bis — Avec despaquets de jetons —Correction",
@@ -658,7 +658,7 @@ test("K2 : les quatre livrets de correction du monde 2 existent — 8 pages A4, 
   }
 });
 
-test("K2 : pages 2 à 7 = la correction des fiches, même consigne que l'élève ; couverture du prof ; dos inchangé", () => {
+test("K2 : pages 2 à 7 = la correction des fiches, même consigne que l'élève ; couverture « Livret corrigé » ; dos inchangé", () => {
   const eleve = texteExact("outils/livret_splat_classique.pdf");
   const consigne = (x) => x.slice(x.indexOf("Pour chaque carte"), x.indexOf("TOTAL"));
   for (const [s, dit] of CORRECTIONS_M2) {
@@ -667,17 +667,17 @@ test("K2 : pages 2 à 7 = la correction des fiches, même consigne que l'élève
     for (let p = 1; p <= 6; p++) {
       const t = corr[p];
       assert.ok(t.startsWith(`Splat!${TITRES_M2[p - 1]}`), `${s} p.${p + 1} : ${TITRES_M2[p - 1]} (lu : ${t.slice(0, 60)})`);
-      assert.match(t, /Les mêmescartes en ligne\(le QR de l'élève\)/, `${s} p.${p + 1} : la boîte du QR parle au prof`);
+      assert.match(t, /Je rejoueces cartesen ligne/, `${s} p.${p + 1} : la boîte du QR du corrigé`);
       assert.doesNotMatch(t, /terminé/, `${s} p.${p + 1} : plus la phrase de l'élève`);
       assert.ok(t.endsWith("mathsgo.re/splat · CC BY-NC-SA 4.0 · correction"), `${s} p.${p + 1} : pied « · correction »`);
       assert.equal(consigne(t), consigne(eleve[p]), `${s} p.${p + 1} : même cadre de consigne que la fiche de l'élève`);
       assert.equal((t.match(/TOTAL/g) || []).length, 6, `${s} p.${p + 1} : six cartes`);
     }
-    // couverture : bandeau, « Livret du professeur — <la correction> », le reste comme l'élève
-    assert.ok(corr[0].startsWith("CORRECTION — POUR LE PROFESSEUR"), `${s} : bandeau`);
-    assert.ok(corr[0].includes(`Livret du professeur— ${dit}`), `${s} : « ${dit} »`);
+    // couverture : bandeau, « Livret corrigé — <la correction> », le reste comme l'élève
+    assert.ok(corr[0].startsWith("CORRECTION"), `${s} : bandeau`);
+    assert.ok(corr[0].includes(`Livret corrigé— ${dit}`), `${s} : « ${dit} »`);
     assert.doesNotMatch(corr[0], /Nom, prénom|Classe/, `${s} : plus de ligne Nom, prénom / Classe`);
-    assert.equal(corr[0].replace("CORRECTION — POUR LE PROFESSEUR", "").replace(`Livret du professeur— ${dit}`, ""),
+    assert.equal(corr[0].replace("CORRECTION", "").replace(`Livret corrigé— ${dit}`, ""),
                  eleve[0].replace("Nom, prénomClasse", ""), `${s} : le reste de la couverture ne change pas`);
     assert.equal(corr[7], eleve[7], `${s} : le dos est identique`);
     const a3 = texteExact(`outils/${s}_a_plier.pdf`);
@@ -719,8 +719,8 @@ test("K2 : render.py fabrique les quatre corrections avec l'outil (print=correct
   // une lettre par carte à jetons, sans rien tirer (les nombres ne bougent pas)
   assert.match(render, /c\.varChar = variableChars\[i % variableChars\.length\]/);
   assert.doesNotMatch(render.slice(render.indexOf("JS_LETTRES"), render.indexOf("PROF = dict")), /generate\(|Math\.random|makeRng/);
-  assert.ok(render.includes(`QR_PROF = "Les mêmes<br>cartes en ligne<em>(le QR de l'élève)</em>"`));
-  assert.match(render, /pg\.evaluate\(JS_QR, \[f"\{qrweb\}\/fiche\{f\.get\('qr', f\['n'\]\)\}\.png", QR_PROF if corr else QR_ELEVE\]\)/);
+  assert.ok(render.includes(`QR_PROF = "Je rejoue<br>ces cartes<em>en ligne</em>"`));
+  assert.ok(render.includes(`pg.evaluate(JS_QR, [f"{qrweb}/fiche{f.get('qr', f['n'])}.png"] + ([QR_PROF, QR_ELEVE] if corr else [QR_ELEVE, None]))`), "la boîte du corrigé a la largeur de celle de l'élève");
   assert.match(render, /PIED_CORRECTION = PIED_LIVRET \+ " · correction"/);
   assert.match(render, /\.bandeau-prof\{[^}]*\n?[^}]*background:#b91c1c;color:#fff;/);
   assert.match(render, /versions = \[None\] \+ CORRECTIONS/);
@@ -955,4 +955,49 @@ test("D : l'exemple de couverture du défi n'est aucune carte du livret", () => 
   assert.ok(!graines.includes(graine), "la graine de l'exemple n'est celle d'aucune série du livret");
   // et il montre les trois gestes : une équation ax + c = b, pas x + a = b
   assert.match(render, /exemple=dict\(query="mode=N&equation=AX_PLUS_C_EQ_B/);
+});
+
+/* -------------------------------------------------- corrigés « pour tous » et numéros de mondes
+   (23/09/2026) Claire : le corrigé peut être donné aux élèves, comme ceux de l'Enquête — plus un
+   seul « professeur » dans les livrets corrigés des mondes 1 et 2. Et l'Enquête est devenue deux
+   mondes (3 et 4) : Équations passe au monde 5, relatifs au monde 6 — le dos des livrets le dit. */
+const CORRIGES_1_2 = [...SORTIES_M1.map((s) => `${s}_correction`),
+  ...["livret_splat_classique", "livret_splat_classique_defi"].flatMap((b) =>
+    ["_correction_equation", "_correction_equation_lettre", "_correction_schema", "_correction_schema_lettre"].map((x) => b + x))];
+
+test("corrigés pour tous : aucun « professeur » dans les 11 livrets corrigés des mondes 1 et 2 (22 PDF, à plier compris)", () => {
+  assert.equal(CORRIGES_1_2.length, 11, "3 corrigés au monde 1, 8 au monde 2");
+  for (const s of CORRIGES_1_2)
+    for (const f of [`outils/${s}.pdf`, `outils/${s}_a_plier.pdf`])
+      texteExact(f).forEach((t, k) => assert.doesNotMatch(t, /professeur|QR de l'élève/i, `${f}, page ${k + 1}`));
+  for (const [nom, py] of [["monde 1", render1], ["monde 2", render]]) {
+    assert.ok(py.includes(`PROF = dict(bandeau="Correction", ligne="Livret corrigé")`), nom);
+    assert.doesNotMatch(py, /pour le professeur|Livret du professeur|corrigé par l/, nom);
+  }
+});
+
+test("corrigés pour tous : la boîte du QR du corrigé garde la largeur de celle de l'élève (même consigne, même titre, mêmes retours à la ligne)", () => {
+  for (const [nom, py] of [["monde 1", render1], ["monde 2", render]]) {
+    const js = py.slice(py.indexOf('JS_QR = """'), py.indexOf('}"""', py.indexOf('JS_QR = """')));
+    assert.match(js, /\(\[qr, lib, gabarit\]\) =>/, nom);
+    assert.match(js, /'<div class="lib">' ?\+ ?\(?gabarit/, `${nom} : le texte de l'élève sert de gabarit`);
+    assert.match(js, /largeur du texte de l\\\\'élève introuvable/, `${nom} : une largeur nulle arrête le rendu`);
+    assert.match(js, /style\.minWidth ?= ?w ?\+ ?'px'/, `${nom} : largeur minimale = celle de l'élève`);
+  }
+});
+
+test("le dos des livrets des mondes 1 et 2 donne les bons numéros de mondes (six mondes)", () => {
+  assert.ok(dos1.includes("va voir les mondes 2 à 6 de l'univers SPLAT!"), "dos du monde 1");
+  assert.ok(dos2.includes("Va voir les mondes&nbsp;3 et&nbsp;4, <b>SPLAT! Enquête</b> et <b>Grande enquête</b>, où un indice relie les taches entre elles, puis le monde&nbsp;5, <b>SPLAT! Équations</b>, pour résoudre sans schéma en barres&nbsp;!"), "dos du monde 2");
+  assert.doesNotMatch(dos1, /mondes 2, 3, 4 et 5/);
+  assert.doesNotMatch(dos2, /monde&nbsp;4, <b>SPLAT! Équations/);
+  // dans les PDF publiés : la page 8 des 5 livrets de l'élève et des 11 corrigés
+  for (const s of SORTIES_M1) for (const v of ["", "_correction"])
+    assert.ok(texteExact(`outils/${s}${v}.pdf`)[7].includes("mondes 2 à 6"), `${s}${v} : dos`);
+  for (const b of ["livret_splat_classique", "livret_splat_classique_defi"])
+    for (const v of ["", "_correction_equation", "_correction_equation_lettre", "_correction_schema", "_correction_schema_lettre"]) {
+      const d = texteExact(`outils/${b}${v}.pdf`)[7];
+      assert.ok(d.includes("Grande enquête") && d.includes("SPLAT! Équations"), `${b}${v} : dos`);
+      assert.doesNotMatch(d, /monde\s4, SPLAT! Équations/, `${b}${v} : l'ancien numéro`);
+    }
 });

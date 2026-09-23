@@ -6,7 +6,7 @@ Régénère les livrets « Petit SPLAT! » (8 pages) à partir du site lui-même
     python3 render.py                 (les trois livrets, et leurs trois livrets de correction)
     python3 render.py avance          (un seul, et sa correction)
     python3 render.py --qr expert     (en refabriquant d'abord ses QR codes)
-    python3 render.py --correction    (seulement les livrets de correction du professeur)
+    python3 render.py --correction    (seulement les livrets corrigés)
     python3 render.py --eleve         (seulement les livrets de l'élève)
 
 Produit, à la racine du dépôt :
@@ -16,7 +16,7 @@ Produit, à la racine du dépôt :
     outils/livret_petit_splat_avance_a_plier.pdf
     outils/livret_petit_splat_expert.pdf      idem, niveau Expert (51 à 100)
     outils/livret_petit_splat_expert_a_plier.pdf
-et, pour chacun, le livret de correction du professeur (lot K1, 20/09/2026) :
+et, pour chacun, son livret corrigé (lot K1, 20/09/2026 ; « pour tous » depuis le 23/09/2026) :
     outils/livret_petit_splat_correction.pdf            8 pages A4, ordre de lecture
     outils/livret_petit_splat_correction_a_plier.pdf    4 pages A3 paysage, imposées
     (idem …_avance_correction… et …_expert_correction…)
@@ -31,9 +31,10 @@ LIVRET DE CORRECTION (lot K1, 20/09/2026) — le même livret, mêmes 8 pages, m
 pliage, mêmes cartes : l'outil est appelé avec correction=1&rv=0 (il rend l'énoncé
 PUIS sa correction), on remet sur la page de correction le cadre de consigne de
 l'énoncé (les cartes tombent exactement à la même place que sur la fiche de l'élève),
-on retire l'énoncé, et la boîte du QR dit « Les mêmes cartes en ligne ». La
-couverture reçoit un bandeau rouge sombre et « Livret du professeur » à la place de
-Prénom / Classe ; le dos ne change pas.
+on retire l'énoncé, et la boîte du QR dit « Je rejoue ces cartes en ligne ». La
+couverture reçoit un bandeau rouge sombre « Correction » et « Livret corrigé » à la place
+de Prénom / Classe ; le dos ne change pas. Le corrigé peut être donné aux élèves (Claire,
+23/09/2026, comme les livrets de l'Enquête) : il ne dit « professeur » nulle part.
 
 CHOIX DES GRAINES (17/09/2026) — ne pas en changer sans refaire le tri.
 Les graines de Monde 1 sont celles de la progression de Claire. Celles des niveaux
@@ -142,23 +143,36 @@ CSS_QR = """
 .qr-livret .lib em{display:block;font-style:normal;font-weight:400;font-size:10.5px;color:#475569;margin-top:0.6mm}
 """
 
-# Ce que dit la boîte du QR. Sur le livret de correction, la phrase de l'élève n'a pas
-# de sens : même boîte, même QR, même place, autre texte (option B, décision du 20/09/2026).
-# Coupé « Les mêmes / cartes en ligne » et non « Les mêmes cartes / en ligne » : la boîte
-# garde ainsi presque la largeur de celle de l'élève (25,5 mm contre 24,1), et la consigne
-# de la fiche 3 ne passe pas à la ligne en plein milieu (« en / barres »).
+# Ce que dit la boîte du QR. Sur le livret corrigé, la phrase de l'élève n'a pas de
+# sens : même boîte, même QR, même place, autre texte (option B, décision du 20/09/2026).
+# 23/09/2026 : le corrigé est « pour tous » (il peut être donné aux élèves) — la boîte
+# dit « Je rejoue / ces cartes / en ligne », comme les livrets de l'Enquête, et plus
+# « (le QR de l'élève) ». Trois lignes courtes : la boîte reste moins large que celle de
+# l'élève, la consigne passe à la ligne aux mêmes endroits.
 QR_ELEVE = "J'ai terminé<br>ma fiche,<em>je rejoue en ligne</em>"
-QR_PROF = "Les mêmes<br>cartes en ligne<em>(le QR de l'élève)</em>"
+QR_PROF = "Je rejoue<br>ces cartes<em>en ligne</em>"
 
-JS_QR = """([qr, lib]) => {
+# Sur le livret corrigé, la boîte garde EXACTEMENT la largeur de celle de l'élève
+# (23/09/2026) : son texte « Je rejoue / ces cartes / en ligne » est plus étroit, et une
+# boîte plus étroite faisait passer la consigne (monde 1, fiches 4 à 6) ou le titre du
+# bandeau (monde 2) à la ligne ailleurs que sur la fiche de l'élève. JS_QR pose donc
+# d'abord le texte de l'élève (le gabarit), mesure sa largeur, puis écrit le texte du
+# corrigé avec cette largeur minimale (aligné à droite, contre le QR, comme l'élève).
+JS_QR = """([qr, lib, gabarit]) => {
   const ins=document.querySelector('.activity-instruction');
   if(!ins) return 'pas de bandeau de consigne';
   const txt=document.createElement('div'); txt.className='txt';
   while(ins.firstChild) txt.appendChild(ins.firstChild);
   ins.appendChild(txt);
   const box=document.createElement('div'); box.className='qr-livret';
-  box.innerHTML='<div class="lib">'+lib+'</div><img src="'+qr+'" alt="">';
+  box.innerHTML='<div class="lib">'+(gabarit||lib)+'</div><img src="'+qr+'" alt="">';
   ins.appendChild(box);
+  if(gabarit){
+    const l=box.querySelector('.lib');
+    const w=l.getBoundingClientRect().width;
+    if(!(w>0)) return 'largeur du texte de l\\'élève introuvable';
+    l.innerHTML=lib; l.style.minWidth=w+'px';
+  }
   return 'ok';
 }"""
 
@@ -184,12 +198,13 @@ JS_CORRIGE = """() => {
   return 'ok';
 }"""
 
-# La couverture du livret de correction : un bandeau en haut, et « Livret du
-# professeur » à la place de la ligne Prénom / Classe (décision du 20/09/2026, rouge
-# sombre). Le bandeau fait 14 mm : les 4 premiers ne s'impriment pas sur la plupart
+# La couverture du livret corrigé : un bandeau « Correction » en haut, et « Livret
+# corrigé » à la place de la ligne Prénom / Classe (décision du 20/09/2026, rouge sombre ;
+# textes « pour tous » du 23/09/2026 — plus de « professeur »).
+# Le bandeau fait 14 mm : les 4 premiers ne s'impriment pas sur la plupart
 # des imprimantes, le texte est donc centré sur les 10 mm qui s'impriment. En noir et
 # blanc, le rouge devient gris foncé et le texte blanc reste lisible.
-PROF = dict(bandeau="Correction — pour le professeur", ligne="Livret du professeur")
+PROF = dict(bandeau="Correction", ligne="Livret corrigé")
 CSS_PROF = """
 .bandeau-prof{flex:0 0 14mm;box-sizing:border-box;padding-top:4mm;display:flex;align-items:center;justify-content:center;
   background:#b91c1c;color:#fff;font-size:16px;font-weight:700;text-transform:uppercase;letter-spacing:3px}
@@ -371,7 +386,7 @@ async def pages(niv, tmp, correction=False):
                     if r != "ok":
                         raise SystemExit(f"page de correction de {url} : {r}")
                 await pg.add_style_tag(content=CSS_QR)
-                r = await pg.evaluate(JS_QR, [injecter, QR_PROF if correction else QR_ELEVE])
+                r = await pg.evaluate(JS_QR, [injecter, QR_PROF, QR_ELEVE] if correction else [injecter, QR_ELEVE, None])
                 if r != "ok":
                     raise SystemExit(f"injection du QR impossible sur {url} : {r}")
                 r = await pg.evaluate(JS_PIED, PIED_CORRECTION if correction else PIED_LIVRET)
