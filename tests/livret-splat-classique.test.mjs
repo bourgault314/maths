@@ -822,8 +822,11 @@ test("cartes des mondes : numéro, nom et fiches, dans l'ordre, toujours des ong
   // imposée (sinon <use> ne peut pas prendre la couleur du monde)
   assert.match(page, /<svg class="tache" viewBox="2 5 106 105" fill="#063b7a" aria-hidden="true"><path id="forme-tache" d="M /);
   assert.match(page, /\.onglets a \.num use\{fill:var\(--c-plein\)\}/);
-  // le chiffre est centré dans le splat sans décalage (mesuré au pixel le 23/09 : ±0,5 px)
-  assert.match(page, /\.onglets a \.num b\{position:relative;line-height:1;margin:0;/);
+  // le chiffre est centré dans le splat sans décalage, quelle que soit la police : sa boîte est
+  // rognée au dessin du chiffre (text-box) et c'est la tache qui descend de 3 % pour amener son
+  // centre visuel au milieu (mesuré au pixel le 23/09 avec quatre polices : moins de 0,8 px)
+  assert.match(page, /\.onglets a \.num b\{position:relative;line-height:1;margin:0;[^}]*text-box:trim-both cap alphabetic[;}]/);
+  assert.match(page, /\.onglets a \.num svg\{position:absolute;left:0;top:3%;width:100%;height:100%\}/);
   assert.doesNotMatch(page, /\.num b\{[^}]*(transform|margin:-)/, "aucun décalage du chiffre");
   // toutes les cartes de la même taille, le nom sur deux lignes au plus
   assert.match(page, /\.onglets\{display:grid;grid-template-columns:repeat\(4,minmax\(0,1fr\)\);grid-auto-rows:1fr;/);
