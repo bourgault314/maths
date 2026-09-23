@@ -240,6 +240,9 @@
   .c-ops{display:grid;grid-template-columns:repeat(4, minmax(0, 1fr));gap:6px;margin-top:2px}
   .c-ops .checkInline{justify-content:center;height:38px;padding:0 6px;border-radius:10px;gap:6px;min-width:0;white-space:nowrap;margin:0}
   .c-ops .checkInline span{font-size:13px;font-weight:700}
+  /* Enquête « Sans total » : une case sur deux colonnes ; les réglages qu'elle remplace sont grisés */
+  .c-ops .checkInline.large{grid-column:span 2}
+  #investigateSettings select:disabled, #investigateSettings input:disabled{opacity:.45;cursor:not-allowed}
   .seedShareRow{
     display:grid;
     grid-template-columns:auto minmax(100px,1fr) auto;
@@ -1207,6 +1210,9 @@
         <label class="checkInline" title="Addition (Ex: 5 de plus)"><input type="checkbox" id="invOpAdd" checked> <span>+k</span></label>
         <label class="checkInline" title="Soustraction (Ex: 5 de moins)"><input type="checkbox" id="invOpSub" checked> <span>−k</span></label>
       </div>
+      <div class="c-ops" id="invNoTotalRow">
+        <label class="checkInline large" title="Pas de total : deux indices sur les deux mêmes taches, un « fois plus / fois moins » et un « de plus / de moins ». Toujours 2 taches, sans jetons visibles."><input type="checkbox" id="invNoTotal"> <span>Sans total</span></label>
+      </div>
 
       <div class="row" style="align-items:flex-end">
         <div style="flex:1.25 1 0">
@@ -1612,6 +1618,8 @@ const invVisibleMinEl = document.getElementById("invVisibleMin");
 const invVisibleMaxEl = document.getElementById("invVisibleMax");
 const invTotalMinEl = document.getElementById("invTotalMin");
 const invTotalMaxEl = document.getElementById("invTotalMax");
+/* « Sans total » (lot E-sans-total, 23/09/2026) : éteinte par défaut, l'Enquête ne change pas. */
+const invNoTotalEl = document.getElementById("invNoTotal");
 const seedEEl = document.getElementById("seedE");
 
 const systemSettingsEl = document.getElementById("systemSettings");
@@ -2085,7 +2093,7 @@ function applyShareControl(params, name, el){
 
 /* Les réglages qu'une adresse partagée peut porter. Liste commune : elle sert
    aussi à l'empreinte de la série élève (eleveSignatureSerie). */
-const sharedNames = ["mode", "seed", "cards", "equation", "tasksMin", "tasksMax", "visibleMin", "visibleMax", "hidden", "hiddenMax", "totalMin", "totalMax", "splats", "clues", "structure", "geste", "gestes", "coefMax", "mul", "div", "add", "sub", "deltaMax", "operation", "beadMax", "opposites", "colors", "palette", "unknown", "print", "duplex", "layout", "title", "note", "eleve", "parcours", "imprimer", "suite"];
+const sharedNames = ["mode", "seed", "cards", "equation", "tasksMin", "tasksMax", "visibleMin", "visibleMax", "hidden", "hiddenMax", "totalMin", "totalMax", "splats", "clues", "structure", "geste", "gestes", "coefMax", "noTotal", "mul", "div", "add", "sub", "deltaMax", "operation", "beadMax", "opposites", "colors", "palette", "unknown", "print", "duplex", "layout", "title", "note", "eleve", "parcours", "imprimer", "suite"];
 
 function loadSharedConfiguration(){
   const params = new URLSearchParams(window.location.search);
@@ -2151,6 +2159,9 @@ function appliquerConfiguration(params){
   if(params.has("note")) printInstructionNote = String(params.get("note") || "").trim().slice(0, 200);
   /* « palette= » (Enquête) : couleurs de taches autorisées ; absente = les six. */
   if(params.has("palette")) investigatePaletteKeys = parseInvestigatePalette(params.get("palette"));
+  /* « noTotal=1 » (Enquête sans total) : absente = éteinte, y compris pour chaque partie
+     d'une étape composée (une partie « sans total » ne déteint pas sur la suivante). */
+  if((act === "C" || act === "CD") && invNoTotalEl) invNoTotalEl.checked = readBooleanFromShare(params, "noTotal") === true;
 
   const seedRaw = params.get("seed");
   const seedNumber = seedRaw === null || String(seedRaw).trim() === "" ? NaN : Number(seedRaw);
@@ -2195,6 +2206,8 @@ function buildShareUrl(){
   if(printTitle) params.set("title", printTitle.slice(0, 160));
   if(printInstructionNote) params.set("note", printInstructionNote);
   if((act === "C" || act === "CD" || act === "D") && Array.isArray(investigatePaletteKeys) && investigatePaletteKeys.length) params.set("palette", investigatePaletteKeys.join(","));
+  /* écrite seulement quand elle est cochée : les adresses de l'Enquête ne changent pas */
+  if((act === "C" || act === "CD") && invNoTotalEl && invNoTotalEl.checked) params.set("noTotal", "1");
 
   url.search = params.toString();
   return url.toString();
@@ -2561,6 +2574,10 @@ function syncSettingsUI(){
 
   if(isInvestigate){
     if(invTaskCountEl.value === "3"){ invStructureRow.style.display = "flex"; } else { invStructureRow.style.display = "none"; }
+    /* Sans total : toujours 2 taches et aucun jeton visible — ces réglages sont grisés
+       (ils gardent leur valeur, qui revient dès qu'on décoche). */
+    const sansTotal = !!(invNoTotalEl && invNoTotalEl.checked);
+    [invTaskCountEl, invStructure3El, invVisibleMinEl, invVisibleMaxEl].forEach(c => { if(c) c.disabled = sansTotal; });
   }
 
   if(isNumbered) syncNumberedEquationUI();
@@ -2683,6 +2700,7 @@ activityEl.addEventListener("change", ()=>{
   refocusMainSvgFromControl(activityEl);
 });
 invTaskCountEl.addEventListener("change", ()=>{ syncSettingsUI(); scheduleAutoGenerate(); });
+if(invNoTotalEl) invNoTotalEl.addEventListener("change", ()=>{ syncSettingsUI(); });
 if(sysGesteEl) sysGesteEl.addEventListener("change", ()=>{ syncSettingsUI(); });
 [unitEquationTypeEl, numberedEquationTypeEl].forEach(el=>{
   if(!el) return;
@@ -2696,7 +2714,7 @@ if(sysGesteEl) sysGesteEl.addEventListener("change", ()=>{ syncSettingsUI(); });
   numberedEquationTypeEl, numTasksMinEl, numTasksEl, numVisibleMinEl, numVisibleMaxEl, numHiddenCountEl, numTotalMinEl, numTotalMaxEl, numBeadAbsMaxEl, numOpposeModeEl, numColorModeEl, seedNEl,
   nineOpEl, nineTasksEl, nineVisibleMaxEl, nineTotalMinEl, nineTotalMaxEl, seedCEl,
   eightOpEl, eightTasksEl, eightVisibleMaxEl, eightTotalMinEl, eightTotalMaxEl, seedDEl,
-  invTaskCountEl, invClueTypeEl, invStructure3El, invOpMulEl, invOpDivEl, invOpAddEl, invOpSubEl, invMaxAddEl, invVisibleMinEl, invVisibleMaxEl, invTotalMinEl, invTotalMaxEl, seedEEl,
+  invTaskCountEl, invClueTypeEl, invStructure3El, invOpMulEl, invOpDivEl, invOpAddEl, invOpSubEl, invMaxAddEl, invVisibleMinEl, invVisibleMaxEl, invTotalMinEl, invTotalMaxEl, invNoTotalEl, seedEEl,
   sysGesteEl, sysCoefMaxEl, sysClueTypeEl, sysVisibleMinEl, sysVisibleMaxEl, sysTotalMinEl, sysTotalMaxEl, seedSysEl,
   ...SYS_GESTES.map(g => document.getElementById("sysMix" + g))
 ].forEach(el=>{
@@ -3152,7 +3170,12 @@ function assignPositions(card, rng){
 
 /* --- GÉNÉRATION ENQUÊTE (Mode C) --- */
 function genInvestigate(rng){
-  const taskCount = parseInt(invTaskCountEl.value); 
+  /* « Sans total » (lot E-sans-total, 23/09/2026) : deux indices sur les deux mêmes taches,
+     un rapport et un écart (rouge = 3 × bleue ET rouge = bleue + 24), pas de total, deux
+     taches, aucun jeton visible. Case décochée (le défaut), rien ne change : même lecture
+     des réglages, même hasard consommé, mêmes cartes. */
+  const sansTotal = typeof invNoTotalEl !== "undefined" && !!(invNoTotalEl && invNoTotalEl.checked);
+  const taskCount = sansTotal ? 2 : parseInt(invTaskCountEl.value); 
   const clueType = invClueTypeEl.value; 
   const structureMode = invStructure3El.value; 
 
@@ -3163,6 +3186,7 @@ function genInvestigate(rng){
   let visMin = clamp(numberOr(invVisibleMinEl.value, 0), 0, 10);
   let visMax = clamp(numberOr(invVisibleMaxEl.value, 3), 0, 10);
   if(visMax < visMin) [visMin, visMax] = [visMax, visMin];
+  if(sansTotal){ visMin = 0; visMax = 0; } // sans total, des jetons visibles n'auraient pas de sens
 
   const minTotal = Math.max(1, Math.min(userMin, userMax));
   const maxTotal = Math.max(1, Math.max(userMin, userMax));
@@ -3173,6 +3197,12 @@ function genInvestigate(rng){
   if(invOpMulEl.checked) ops.push('MUL');
   if(invOpDivEl.checked) ops.push('DIV');
   if(ops.length === 0) ops.push('ADD');
+  // Sans total : un indice « rapport » (× ou ÷) et un indice « écart » (+ ou −) parmi les
+  // opérations cochées — « fois plus » / « de plus » si aucune de la famille ne l'est.
+  const opsRapport = ops.filter(op => op === 'MUL' || op === 'DIV');
+  const opsEcart = ops.filter(op => op === 'ADD' || op === 'SUB');
+  if(!opsRapport.length) opsRapport.push('MUL');
+  if(!opsEcart.length) opsEcart.push('ADD');
 
   const variedCColors = (activityEl && (activityEl.value === "C" || activityEl.value === "CD"));
   const colorMap = buildInvestigateColorMap(rng, taskCount, variedCColors);
@@ -3272,7 +3302,7 @@ function genInvestigate(rng){
     return null;
   }
 
-  function buildRelationModel({ taskCount, hiddenVals, relations, structure, visibleSum }){
+  function buildRelationModel({ taskCount, hiddenVals, relations, structure, visibleSum, sansTotal }){
     const normalized = relations.map(normalizeRelationForSchema);
     const refIndex = relations.length ? relations[0].source : 0;
     const affineItems = buildAffineItems(taskCount, relations, refIndex);
@@ -3310,7 +3340,9 @@ function genInvestigate(rng){
       })),
       normalizedRelations: normalized,
       affineItems,
-      equation: affineItems ? { sumCoef, sumDiff, unitValue } : null
+      equation: affineItems ? { sumCoef, sumDiff, unitValue } : null,
+      // posé seulement sur une carte « sans total » : les autres cartes restent identiques
+      ...(sansTotal ? { sansTotal: true } : {})
     };
   }
 
@@ -3375,7 +3407,34 @@ function genInvestigate(rng){
     const indices = [];
     const relations = [];
 
-    if(taskCount === 2){
+    // Sans total, réglages impossibles (écart max 1, total min trop haut…) : après 4 000
+    // essais, on oublie les bornes plutôt que de répéter une carte de secours (𝑥 de 2 à 12).
+    const passeLibre = sansTotal && tries >= 4000;
+    if(sansTotal){
+      // La petite tache (𝑥) et la grande ; k fois plus ET d de plus, donc d = (k − 1) × 𝑥 :
+      // 𝑥 est tiré pour que l'écart ne dépasse pas « Ajout / retrait max ».
+      const ecartMax = passeLibre ? 36 : maxAddVal;
+      const petite = rInt(rng, 0, 1);
+      const grande = 1 - petite;
+      const opR = opsRapport[rInt(rng, 0, opsRapport.length - 1)];
+      const opE = opsEcart[rInt(rng, 0, opsEcart.length - 1)];
+      const k = rInt(rng, 2, 4);
+      const small = rInt(rng, 2, Math.max(2, Math.floor(ecartMax / (k - 1))));
+      const large = k * small;
+      const d = large - small;
+      if(d > ecartMax) continue;
+      if([small, large, d, small + large].some(sysNombreSousEntendu)) continue;
+      hiddenVals[petite] = small;
+      hiddenVals[grande] = large;
+      // le rapport d'abord, puis l'écart ; chacun dans le sens tiré (« fois moins », « de moins »
+      // se lisent depuis la petite tache)
+      const relR = (opR === 'MUL') ? { op:'MUL', k, target:grande, source:petite } : { op:'DIV', k, target:petite, source:grande };
+      const relE = (opE === 'ADD') ? { op:'ADD', k:d, target:grande, source:petite } : { op:'SUB', k:d, target:petite, source:grande };
+      [relR, relE].forEach(r => {
+        indices.push(relationTextParts(r.op, r.k, r.target, r.source));
+        relations.push(r);
+      });
+    } else if(taskCount === 2){
       const dir = rInt(rng, 0, 1);
       const source = dir; 
       const target = 1 - dir;
@@ -3429,7 +3488,7 @@ function genInvestigate(rng){
     }
     const total = hiddenSum + visSum;
 
-    if(total >= minTotal && total <= maxTotal){
+    if((total >= minTotal && total <= maxTotal) || passeLibre){
       return {
         family: "C",
         total,
@@ -3438,9 +3497,27 @@ function genInvestigate(rng){
         _num: { tasks: taskCount, hiddenByTask: hiddenVals.map(v=>[v]), hiddenBeadsPerTask:1 },
         _inv: { indices },
         _colorMap: colorMap.slice(0, taskCount),
-        _rel: buildRelationModel({ taskCount, hiddenVals, relations, structure: taskCount === 2 ? "PAIR" : structureMode, visibleSum: visSum })
+        _rel: buildRelationModel({ taskCount, hiddenVals, relations, structure: sansTotal ? "SANS_TOTAL" : (taskCount === 2 ? "PAIR" : structureMode), visibleSum: visSum, sansTotal })
       };
     }
+  }
+  if(sansTotal){
+    // Dernier recours (la passe libre n'a rien donné, ce qui n'arrive pas en pratique) : une
+    // carte juste plutôt qu'une carte « Erreur » — « 2 fois plus » et « de plus ».
+    let small = Math.max(2, Math.min(maxAddVal, Math.floor(maxTotal / 3)));
+    while(small > 2 && [small, 2 * small, 3 * small].some(sysNombreSousEntendu)) small--;
+    const hiddenVals = [small, 2 * small];
+    const relations = [{ op:'MUL', k:2, target:1, source:0 }, { op:'ADD', k:small, target:1, source:0 }];
+    return {
+      family: "C",
+      total: 3 * small,
+      visible: [],
+      hidden: hiddenVals,
+      _num: { tasks: 2, hiddenByTask: hiddenVals.map(v=>[v]), hiddenBeadsPerTask:1 },
+      _inv: { indices: relations.map(r => relationTextParts(r.op, r.k, r.target, r.source)) },
+      _colorMap: colorMap.slice(0, 2),
+      _rel: buildRelationModel({ taskCount: 2, hiddenVals, relations, structure: "SANS_TOTAL", visibleSum: 0, sansTotal })
+    };
   }
   return {
     family: "C",
@@ -6027,6 +6104,11 @@ function relationReformulationLines(card){
   const ref = relationReferenceIndex(card);
   const refWord = investigateColorWord(investigateColorInfo(card, ref));
   lines.push(`Tache de référence : la ${refWord}, la plus petite.`);
+  // Enquête sans total : le fil de la correction, en une phrase (maquette S0 §7).
+  if(rel.sansTotal){
+    const autre = ref === 0 ? 1 : 0;
+    lines.push(`Pas de total : on compare les deux écritures de la ${investigateColorWord(investigateColorInfo(card, autre))}.`);
+  }
   return lines;
 }
 function relationHasInvertedClue(card){
@@ -6043,19 +6125,199 @@ function drawRelationReformulationBox(targetGroup, card, opts = {}){
   const boxX = layout.boxX, boxW = layout.boxW, boxY = 620;
   const fs = f(opts.compact ? 23 : 26);
   const lineH = Math.round(fs * 1.28);
-  const wrapped = lines.flatMap(t => wrapTextToWidth(t, fs, boxW - 60));
+  // les dernières phrases (la tache de référence ; « Pas de total… » sans total) en gris ardoise
+  const refCount = (card && card._rel && card._rel.sansTotal) ? 2 : 1;
+  const wrapped = lines.flatMap((t, j) => wrapTextToWidth(t, fs, boxW - 60).map((w, n, all) => ({ w, isRef: j >= lines.length - refCount && (refCount > 1 || n === all.length - 1) })));
   const titleH = v(46);
   const boxH = titleH + wrapped.length * lineH + v(18);
   const g = el("g", { id:"relationReformulationBox" });
   g.appendChild(el("rect",{x:boxX, y:boxY, width:boxW, height:boxH, rx:22, fill:"rgba(255,255,255,0.95)", stroke:"#000", "stroke-width":3}));
   g.appendChild(text(boxX+boxW/2, boxY+v(32), relationHasInvertedClue(card) ? "Reformulation" : "Tache de référence", {"text-anchor":"middle", "font-size":f(27), "font-weight":950, fill:"var(--ink)"}));
   let y = boxY + titleH + Math.round(fs * 0.9);
-  const last = wrapped.length - 1;
-  wrapped.forEach((line, i) => {
-    const isRef = i === last;
+  wrapped.forEach(({ w: line, isRef }) => {
     g.appendChild(text(boxX + 30, y, line, {"text-anchor":"start", "font-size":fs, "font-weight":isRef ? 800 : 700, fill:isRef ? "#334155" : "var(--ink)"}));
     y += lineH;
   });
+  targetGroup.appendChild(g);
+  return boxH;
+}
+
+/* ===== Enquête « sans total » (lot E-sans-total, 23/09/2026 ; conception S0 §7) =====
+   Deux indices sur les deux mêmes taches : un rapport et un écart (rouge = 3 × bleue ET
+   rouge = bleue + 24). Pas de total, donc pas de schéma regroupé : on écrit la grande
+   tache de deux façons, les deux barres alignées, et ce qui dépasse de la partie commune
+   (encadré en pointillé brun cannelle, la case « ce qui reste » du Système) donne
+   2 × ? = 24 — le même geste « comparer deux barres » que le Système, c'est voulu.
+   Correction : 1. schéma de la situation (une ligne par écriture) · 2. « La rouge, écrite
+   deux fois : ce qui dépasse » · 3. vérification. Dessin seulement : aucun tirage. */
+const ENQUETE_DEPASSE_TRAIT = "#92400e";
+const ENQUETE_DEPASSE_FOND = "rgba(146,64,14,0.10)";
+const ENQUETE_ECRITURE_FOND = "rgba(22,163,74,0.14)";
+const ENQUETE_ECRITURE_ENCRE = "#14532d";
+function enqueteSansTotal(card){
+  return !!(card && card.family === "C" && card._rel && card._rel.sansTotal);
+}
+/* Ce que disent les deux indices, ramené à la petite tache (𝑥) : la grande vaut k × 𝑥
+   ET 𝑥 + d, donc (k − 1) × 𝑥 = d. */
+function enqueteSansTotalModele(card){
+  const rel = card && card._rel;
+  const rels = rel && Array.isArray(rel.relations) ? rel.relations : [];
+  const rR = rels.find(r => r.op === "MUL" || r.op === "DIV");
+  const rE = rels.find(r => r.op === "ADD" || r.op === "SUB");
+  if(!rR || !rE || !Array.isArray(rel.hiddenValues)) return null;
+  const petite = rR.op === "MUL" ? rR.source : rR.target;
+  const grande = rR.op === "MUL" ? rR.target : rR.source;
+  const k = Number(rR.k), d = Number(rE.k);
+  return { petite, grande, k, d, small: Number(rel.hiddenValues[petite]), large: Number(rel.hiddenValues[grande]), relations: [rR, rE] };
+}
+/* La largeur d'une case 𝑥 : la barre la plus longue (k cases) tient dans la place du
+   tableau, sans dépasser 118 (au-delà les cases paraissent vides). */
+function enqueteSansTotalCase(layout, k){
+  return Math.min(118, Math.floor(layout.barW / Math.max(1, k)));
+}
+function enqueteSansTotalLigne(g, x, y, u, rowH, cells, filled, fs){
+  cells.forEach(part => {
+    const w = part.kind === "diff" ? u * part.weight : u;
+    drawBarCell(g, x, y, w, rowH, part, filled, { fontSize: fs });
+    x += w;
+  });
+  return x;
+}
+function drawEnqueteSansTotalSituation(targetGroup, card, opts = {}){
+  const m = enqueteSansTotalModele(card);
+  if(!m) return 0;
+  const filled = !!opts.filled;
+  const metrics = getRelationDrawingMetrics(opts);
+  const v = metrics.y, f = metrics.font;
+  const layout = getRelationSchemaLayout(opts);
+  const boxX = layout.boxX, boxW = layout.boxW, boxY = 620, barX = layout.barX;
+  const rowH = v(60), gap = v(12), titleH = v(56);
+  const boxH = titleH + 3 * rowH + 2 * gap + v(24);
+  const u = enqueteSansTotalCase(layout, m.k);
+  const varChar = getNumberedDisplayVarChar(card);
+  const x1 = { kind:"x", label:varChar, weight:1 };
+  // la petite (𝑥) d'abord, puis la grande écrite par le rapport, puis par l'écart
+  const rows = [
+    { i:m.petite, cells:[x1] },
+    { i:m.grande, cells:Array.from({ length:m.k }, () => x1) },
+    { i:m.grande, cells:[x1, { kind:"diff", label:formatRelationNumber(m.d), weight:m.k - 1 }] }
+  ];
+  const g = el("g", { id:"relationSituationSchema" });
+  g.appendChild(el("rect",{ x:boxX, y:boxY, width:boxW, height:boxH, rx:22, fill:"rgba(255,255,255,0.94)", stroke:"#000", "stroke-width":3 }));
+  g.appendChild(text(boxX+boxW/2, boxY+v(29), filled ? "Schéma rempli de la situation" : "Schéma vide de la situation", {
+    "text-anchor":"middle", "font-size":f(25), "font-weight":950, fill:"var(--ink)"
+  }));
+  rows.forEach((row, r) => {
+    const y = boxY + titleH + r * (rowH + gap);
+    g.appendChild(el("path",{ d:blobPath(boxX+30, y+rowH/2, f(13)), fill:taskSplatColor(row.i, card), stroke:"rgba(0,0,0,.20)", "stroke-width":2, "aria-hidden":"true" }));
+    g.appendChild(text(boxX+54, y+rowH/2+1+pastilleTextDy(f(21)), taskShortName(row.i, card), {
+      "dominant-baseline":"middle", "font-size":f(21), "font-weight":950, fill:"var(--ink)"
+    }));
+    enqueteSansTotalLigne(g, barX, y, u, rowH, row.cells, filled, f(28));
+  });
+  targetGroup.appendChild(g);
+  return boxH;
+}
+/* « La rouge, écrite deux fois : ce qui dépasse » : la barre de la grande tache (vert pâle,
+   comme la barre du total d'Inconnues en barres et du Système), ses deux écritures dessous,
+   alignées à gauche ; au-delà de la première case 𝑥, commune aux deux, ce qui dépasse est
+   encadré en pointillé. solved : les calculs à droite. */
+function drawEnqueteDeuxEcritures(targetGroup, card, opts = {}){
+  const m = enqueteSansTotalModele(card);
+  if(!m) return 0;
+  const solved = !!opts.solved;
+  const metrics = getRelationDrawingMetrics(opts);
+  const v = metrics.y, f = metrics.font;
+  const layout = getRelationSchemaLayout(opts);
+  const boxX = layout.boxX, boxW = layout.boxW, boxY = 620, barX = layout.barX;
+  const u = enqueteSansTotalCase(layout, m.k);
+  const barLen = m.k * u;
+  const topH = v(58), rowH = v(64), titleH = v(64);
+  const boxH = titleH + topH + 2 * rowH + v(30);
+  const varChar = getNumberedDisplayVarChar(card);
+  const word = investigateColorWord(investigateColorInfo(card, m.grande));
+  const g = el("g", { id: solved ? "enqueteDeuxEcrituresSolved" : "enqueteDeuxEcritures" });
+  g.appendChild(el("rect",{ x:boxX, y:boxY, width:boxW, height:boxH, rx:22, fill:"rgba(255,255,255,0.95)", stroke:"#000", "stroke-width":3 }));
+  g.appendChild(text(boxX+boxW/2, boxY+v(32), `La ${word}, écrite deux fois : ce qui dépasse`, {
+    "text-anchor":"middle", "font-size":f(27), "font-weight":950, fill:"var(--ink)"
+  }));
+  const yTop = boxY + titleH;
+  // la barre de la grande tache, avec son nom (et sa pastille, pour la couleur)
+  g.appendChild(el("rect",{ x:barX, y:yTop, width:barLen, height:topH, fill:ENQUETE_ECRITURE_FOND, stroke:"#000", "stroke-width":3 }));
+  const nomFs = f(26);
+  const dotR = f(11);
+  const nomW = measureTextWidth(word, `950 ${nomFs}px system-ui, -apple-system, "Segoe UI", Roboto, Arial`);
+  const blocW = dotR * 2 + 8 + (Number.isFinite(nomW) && nomW > 0 ? nomW : word.length * nomFs * 0.6);
+  const blocX = barX + (barLen - blocW) / 2;
+  g.appendChild(el("path",{ d:blobPath(blocX + dotR, yTop + topH/2, dotR), fill:taskSplatColor(m.grande, card), stroke:"rgba(0,0,0,.20)", "stroke-width":1.5, "aria-hidden":"true" }));
+  g.appendChild(text(blocX + dotR * 2 + 8, yTop + topH/2 + pastilleTextDy(nomFs), word, {
+    "text-anchor":"start", "dominant-baseline":"middle", "font-size":nomFs, "font-weight":950, fill:ENQUETE_ECRITURE_ENCRE
+  }));
+  // ses deux écritures : k × 𝑥, puis 𝑥 + d
+  const x1 = { kind:"x", label:varChar, weight:1 };
+  const y1 = yTop + topH, y2 = y1 + rowH;
+  enqueteSansTotalLigne(g, barX, y1, u, rowH, Array.from({ length:m.k }, () => x1), true, f(30));
+  enqueteSansTotalLigne(g, barX, y2, u, rowH, [x1, { kind:"diff", label:formatRelationNumber(m.d), weight:m.k - 1 }], true, f(30));
+  // ce qui dépasse de la case commune : le même morceau dans les deux écritures
+  [y1, y2].forEach(y => {
+    g.appendChild(el("rect",{ x:barX + u + 5, y:y + 5, width:barLen - u - 10, height:rowH - 10, rx:6,
+      fill:ENQUETE_DEPASSE_FOND, stroke:ENQUETE_DEPASSE_TRAIT, "stroke-width":3.5, "stroke-dasharray":"10 7" }));
+  });
+  if(solved){
+    // (k − 1) × 𝑥 = d, puis 𝑥, puis la grande tache ; « ? = 24 » directement quand k = 2
+    const lines = [];
+    if(m.k > 2){
+      lines.push(`${formatCoeffUnknownTerm(m.k - 1, varChar)} = ${formatRelationNumber(m.d)}`);
+      lines.push(`${varChar} = ${formatRelationNumber(m.d)} ÷ ${m.k - 1} = ${formatRelationNumber(m.small)}`); // la division écrite (choix du 23/09)
+    }else{
+      lines.push(`${varChar} = ${formatRelationNumber(m.d)}`);
+    }
+    lines.push(`${word} = ${m.k} × ${formatRelationNumber(m.small)} = ${formatRelationNumber(m.large)}`);
+    const colX = barX + barLen + 60;
+    const maxW = boxX + boxW - 24 - colX;
+    let fs = f(32);
+    const largeur = t => measureRelationEquationTextWidth(t, fs);
+    while(fs > 20 && Math.max(...lines.map(largeur)) > maxW) fs -= 1;
+    const pas = Math.round(fs * 1.45);
+    let y = y1 + (2 * rowH - (lines.length - 1) * pas) / 2;
+    lines.forEach(t => {
+      g.appendChild(text(colX, y, t, { "text-anchor":"start", "dominant-baseline":"middle", "font-size":fs, "font-weight":800, "font-style":"italic", fill:"var(--ink)" }));
+      y += pas;
+    });
+  }
+  targetGroup.appendChild(g);
+  return boxH;
+}
+/* Vérification : chaque indice relu tel qu'il est écrit sur la carte (« 36 = 3 × 12 ✓ »,
+   « 12 = 36 − 24 ✓ »), puis la réponse, avec le nom des couleurs. */
+function drawEnqueteVerification(targetGroup, card, opts = {}){
+  const m = enqueteSansTotalModele(card);
+  if(!m) return 0;
+  const metrics = getRelationDrawingMetrics(opts);
+  const v = metrics.y, f = metrics.font;
+  const layout = getRelationSchemaLayout(opts);
+  const boxX = layout.boxX, boxW = layout.boxW, boxY = 620;
+  const vals = card._rel.hiddenValues.map(Number);
+  const n = formatRelationNumber;
+  const lines = m.relations.map(r => {
+    const a = n(vals[r.target]), b = n(vals[r.source]), k = n(r.k);
+    if(r.op === "MUL") return `${a} = ${k} × ${b} ✓`;
+    if(r.op === "DIV") return `${a} = ${b} ÷ ${k} ✓`;
+    if(r.op === "ADD") return `${a} = ${b} + ${k} ✓`;
+    return `${a} = ${b} − ${k} ✓`;
+  });
+  const titleH = v(58), pas = v(44);
+  const boxH = titleH + lines.length * pas + v(18);
+  const g = el("g", { id:"enqueteVerification" });
+  g.appendChild(el("rect",{ x:boxX, y:boxY, width:boxW, height:boxH, rx:22, fill:"rgba(255,255,255,0.95)", stroke:"#000", "stroke-width":3 }));
+  g.appendChild(text(boxX+boxW/2, boxY+v(32), "Vérification", { "text-anchor":"middle", "font-size":f(27), "font-weight":950, fill:"var(--ink)" }));
+  const milieu = boxX + boxW / 2;
+  let y = boxY + titleH + pas / 2;
+  lines.forEach(t => {
+    g.appendChild(text(boxX + 40, y, t, { "text-anchor":"start", "dominant-baseline":"middle", "font-size":f(30), "font-weight":800, "font-style":"italic", fill:"var(--ink)" }));
+    y += pas;
+  });
+  drawRelationAnswerLine(g, card, milieu, boxX + boxW - 30 - milieu, boxY + titleH + lines.length * pas / 2, { f, v });
   targetGroup.appendChild(g);
   return boxH;
 }
@@ -6835,9 +7097,11 @@ function renderCard(card, revealState){
       "text-anchor":"middle","font-size": totalLabelFs,
       "fill":totalLabelColor,"font-weight":"800","letter-spacing":"2"
     });
-    const tNum = text(tx, ty + totalNumDy, String(card.total), {
+    // Enquête sans total : « TOTAL ? », le point d'interrogation en gris ardoise
+    const sansTotalAffiche = card.family === "C" && card._rel && card._rel.sansTotal;
+    const tNum = text(tx, ty + totalNumDy, sansTotalAffiche ? "?" : String(card.total), {
       "text-anchor":"middle","font-size": totalNumFs,
-      "fill":totalColor,"font-weight":"900"
+      "fill":sansTotalAffiche ? "#64748b" : totalColor,"font-weight":"900"
     });
     gTotal.appendChild(tLabel);
     gTotal.appendChild(tNum);
@@ -7100,6 +7364,12 @@ function renderCard(card, revealState){
     if(revealState === 3){
       drawRelationOrderedSchema(svg, card, { solved:true, direct:true });
     }
+  }else if(card.family === "C" && card._rel && card._rel.sansTotal){
+    // Sans total : schéma vide, rempli, les deux écritures, les calculs (taches dévoilées),
+    // la vérification — cinq clics, comme l'Enquête.
+    if(revealState === 1 || revealState === 2) drawEnqueteSansTotalSituation(svg, card, { filled: revealState === 2 });
+    if(revealState === 3 || revealState === 4) drawEnqueteDeuxEcritures(svg, card, { solved: revealState === 4 });
+    if(revealState === 5) drawEnqueteVerification(svg, card);
   }else{
     if(card.family === "C" && card._rel && (revealState === 1 || revealState === 2)){
       drawRelationSituationSchema(svg, card, { filled: revealState === 2 });
@@ -7156,7 +7426,8 @@ function renderCard(card, revealState){
      dévoilées à toutes les étapes du schéma (le drapeau est posé par
      eleveDevoilerTache ; les bancs d'essai des tests dessinent sans lui). */
   const eleveDevoileC = (card.family === "C") && typeof eleveEnqueteDevoile !== "undefined" && !!eleveEnqueteDevoile;
-  const visualRevealState = (card.family === "C") ? ((revealState >= 5 || eleveDevoileC) ? 2 : 0) : (isABProjectionLayout ? abRevealPhase : revealState);
+  // taches dévoilées à la résolution : 5e clic, 4e sans total (le 5e y est la vérification)
+  const visualRevealState = (card.family === "C") ? ((revealState >= (card._rel && card._rel.sansTotal ? 4 : 5) || eleveDevoileC) ? 2 : 0) : (isABProjectionLayout ? abRevealPhase : revealState);
   /* le fondu de la couverture ne se joue qu'au moment du dévoilement, pas à chaque étape du schéma */
   const fonduCouverture = !(eleveDevoileC && revealState > 0);
 
@@ -8111,7 +8382,8 @@ function renderCardIntoSvg(targetSvg, card, printMode){
   const totalNumberSize = 96;
   const totalNumberDy = 83;
   const lbl = tText(tx, ty, "TOTAL", {"text-anchor":"middle","font-size":String(totalLabelSize),"fill":totalLabelColor,"font-weight":"900","letter-spacing":"2"});
-  const num = tText(tx, ty+totalNumberDy, String(card.total), {"text-anchor":"middle","font-size":String(totalNumberSize),"fill":totalColor,"font-weight":"900"});
+  const sansTotalImprime = card.family === "C" && card._rel && card._rel.sansTotal;
+  const num = tText(tx, ty+totalNumberDy, sansTotalImprime ? "?" : String(card.total), {"text-anchor":"middle","font-size":String(totalNumberSize),"fill":sansTotalImprime ? "#64748b" : totalColor,"font-weight":"900"});
   g.appendChild(lbl); g.appendChild(num);
   targetSvg.appendChild(g);
 
@@ -8192,6 +8464,17 @@ function renderCardIntoSvg(targetSvg, card, printMode){
     if(card._directSubstitution){
       placeStep(layer => drawRelationSubstitutionStep(layer, card, printProfile));
       placeStep(layer => drawRelationOrderedSchema(layer, card, { solved:true, direct:true, ...printProfile }));
+    }else if(card._rel.sansTotal){
+      // Sans total : tache de référence (et reformulation), schéma rempli, les deux écritures
+      // avec les calculs, vérification.
+      const gap = 28;
+      placeStep(layer => drawRelationReformulationBox(layer, card, printProfile));
+      stepTop += gap - stepGap;
+      placeStep(layer => drawEnqueteSansTotalSituation(layer, card, { filled:true, ...printProfile }));
+      stepTop += gap - stepGap;
+      placeStep(layer => drawEnqueteDeuxEcritures(layer, card, { solved:true, ...printProfile }));
+      stepTop += gap - stepGap;
+      placeStep(layer => drawEnqueteVerification(layer, card, printProfile));
     }else{
       // Le cadre « Reformulation » / « Tache de référence » d'abord, toujours ; le pas
       // entre les cadres se resserre (40 → 28) pour rester dans la carte. Avec une ligne
@@ -9707,7 +9990,8 @@ function renderEleveSplat(){
   if(enquete){
     /* Enquête : total donné, une case par tache (largeurs égales), voir eleveCasesEnqueteHtml */
     bas = eleveCasesEnqueteHtml(card, enquete);
-    haut = eleveCaseDonneeHtml("haut blanche", "Total", card.total);
+    /* sans total : la case reste, avec « ? », donnée comme sur le plateau (choix du 23/09) */
+    haut = eleveCaseDonneeHtml("haut blanche", "Total", (card._rel && card._rel.sansTotal) ? "?" : card.total);
   }else{
     const flexVis = Math.max(infos.visibleSum, card.total * 0.05, 1);
     const flexHid = Math.max(infos.H, card.total * 0.05, 1);
@@ -9899,7 +10183,7 @@ function eleveVoirSchema(){
    ELEVE_SCHEMA_ZOOM_TEL fois plus large que l'écran : il se fait glisser du doigt de
    gauche à droite (le bord coupé le montre), et sa hauteur reste petite. */
 const ELEVE_SCHEMA_ZOOM_TEL = 1.5;
-const ELEVE_SCHEMA_CADRES = ["relationSituationSchema", "relationGroupedSchema", "relationGroupedSchemaSolved", "relationOrderedSchema", "relationOrderedSchemaSolved"];
+const ELEVE_SCHEMA_CADRES = ["relationSituationSchema", "relationGroupedSchema", "relationGroupedSchemaSolved", "relationOrderedSchema", "relationOrderedSchemaSolved", "enqueteDeuxEcritures", "enqueteDeuxEcrituresSolved", "enqueteVerification"];
 function eleveDessinerSchema(card){
   renderCard(card, eleveSchemaEtape);
   eleveCadrerScene();
