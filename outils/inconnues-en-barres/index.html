@@ -35,14 +35,19 @@
   <aside id="reglages" class="reglages" aria-label="Réglages" hidden>
     <div class="reglages-tete"><h2>Réglages</h2><button id="btnFermer" class="bouton" aria-label="Fermer les réglages">✕</button></div>
     <div class="bloc-serie">
-      <h3>Série</h3>
-      <p class="graine">Graine : <b id="graine">—</b></p>
-      <div><label for="cartes">Nombre de cartes</label><select id="cartes"><option value="4">4</option><option value="8">8</option><option value="12">12</option></select></div>
-      <button id="btnCopier" class="bouton primaire">Copier le lien de la série</button>
+      <div class="serie-ligne">
+        <p class="graine"><span class="titre-serie">Série</span><span class="mot-graine">graine</span> <b id="graine">—</b></p>
+        <div id="cartes" class="choix-cartes" role="radiogroup" aria-label="Nombre de cartes">
+          <span class="choix-titre" aria-hidden="true">Cartes</span>
+          <label><input type="radio" name="cartes" value="4"><span>4</span></label><label><input type="radio" name="cartes" value="8"><span>8</span></label><label><input type="radio" name="cartes" value="12"><span>12</span></label>
+        </div>
+        <button id="btnCopier" class="bouton" aria-label="Copier le lien de la série" title="Copier le lien de la série"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 14a4.5 4.5 0 0 0 6.4 0l3-3a4.5 4.5 0 0 0-6.4-6.4l-1 1"/><path d="M14 10a4.5 4.5 0 0 0-6.4 0l-3 3a4.5 4.5 0 0 0 6.4 6.4l1-1"/></svg><span class="texte-lien">Copier le lien<span class="suite-lien"> de la série</span></span></button>
+      </div>
       <p class="aide-reglage" id="aideSerie" aria-live="polite"></p>
       <input id="lienSerie" class="lien-serie" type="text" readonly hidden aria-label="Lien de la série">
     </div>
-    <div><label for="famille">Type de problème</label><select id="famille">
+    <div class="champs">
+    <div class="large"><label for="famille">Type de problème</label><select id="famille">
       <option value="fois">Un objet vaut plusieurs fois l’autre</option>
       <option value="partielle">Donnée partielle + situation complète</option>
       <option value="ecart">Un objet vaut l’autre plus un écart</option>
@@ -56,15 +61,18 @@
     <div id="champVariete"><label for="variete">Variété</label><select id="variete">
       <option value="guided">Très guidé</option><option value="simple">Situation simple</option><option value="rich">Situation riche</option>
     </select><p class="aide-reglage" id="aideVariete"></p></div>
-    <div><label for="contexte">Contexte</label><select id="contexte"></select></div>
-    <div id="champSens"><label for="sens">Sens du remplacement</label><select id="sens">
+    <div class="large"><label for="contexte">Contexte</label><select id="contexte"></select></div>
+    <div id="champSens" class="large"><label for="sens">Sens du remplacement</label><select id="sens">
       <option value="AtoB">Remplacer le grand par les petits</option><option value="BtoA">Remplacer les petits par le grand</option>
     </select><p class="aide-reglage" id="aideSens"></p></div>
-    <div><label for="ecritures">Écritures sous les schémas</label><select id="ecritures">
+    <div id="champEcritures"><label for="ecritures">Écritures<span class="suite-ecritures"> sous les schémas</span></label><select id="ecritures">
       <option value="aucune">Schémas seuls</option><option value="objets">Schémas + objets</option><option value="lettres">Schémas + lettres</option><option value="tout">Tout afficher</option>
     </select></div>
-    <button id="btnRecommencer" class="bouton">Recommencer cette carte</button>
-    <details id="prof"><summary>Repères pour l’enseignant</summary><ul class="reperes" id="reperes"></ul></details>
+    </div>
+    <div class="pied-reglages">
+      <button id="btnRecommencer" class="bouton">Recommencer cette carte</button>
+      <details id="prof"><summary>Repères<span class="suite-reperes">&nbsp;pour l’enseignant</span></summary><ul class="reperes" id="reperes"></ul></details>
+    </div>
   </aside>
 
   <main id="scene">

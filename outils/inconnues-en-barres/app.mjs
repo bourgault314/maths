@@ -482,7 +482,7 @@ function syncMenu() {
   $("btnCartePrec").disabled = state.carte === 0;
   $("btnCarteSuiv").disabled = state.carte === state.serie.length - 1;
   $("graine").textContent = String(state.graine);
-  $("cartes").value = String(state.cartes);
+  for (const r of document.querySelectorAll('input[name="cartes"]')) r.checked = r.value === String(state.cartes);
   $("lienSerie").hidden = true;
   $("aideSerie").textContent = state.serie.length < state.cartes
     ? "Avec ces réglages, il n’existe que " + state.serie.length + " problèmes différents : la série en compte " + state.serie.length + "."
@@ -520,7 +520,7 @@ function init() {
   // Retourner la relation garde le même problème (mêmes nombres) : seules les phrases changent.
   $("relation").addEventListener("change", () => { state.settings.relation = $("relation").value; newSeries(state.graine, state.carte); });
   // Une série plus longue prolonge la plus courte : la carte en cours ne change pas.
-  $("cartes").addEventListener("change", () => { state.cartes = Number($("cartes").value); newSeries(state.graine, state.carte); });
+  $("cartes").addEventListener("change", (e) => { state.cartes = Number(e.target.value); newSeries(state.graine, state.carte); });
   $("btnCopier").addEventListener("click", copierLien);
   $("btnCartePrec").addEventListener("click", () => showCard(state.carte - 1));
   $("btnCarteSuiv").addEventListener("click", () => showCard(state.carte + 1));
@@ -555,7 +555,7 @@ function init() {
 // Bandeau : chaque réglage inconnu de l'adresse est dit, avec ce qui a été pris à la place.
 function montrerAlertes(alertes) {
   if (!alertes.length) return;
-  const optionLabel = (id, v) => { const o = [...$(id).options].find((x) => x.value === String(v)); return o ? o.textContent : String(v); };
+  const optionLabel = (id, v) => { const o = [...($(id).options || [])].find((x) => x.value === String(v)); return o ? o.textContent : String(v); };
   const ID = { family: "famille", k: "k", variety: "variete", context: "contexte", relation: "relation", sens: "sens", ecritures: "ecritures", cartes: "cartes" };
   const morceaux = alertes.map((x) => {
     const lu = x.nom + "=" + x.valeur;
