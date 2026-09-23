@@ -12,12 +12,14 @@
   <link rel="icon" type="image/png" sizes="192x192" href="/assets/img/favicon-192.png">
   <link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png">
   <script>
-    /* Adresse courte des QR codes des deux livrets « SPLAT! Enquête » (monde 3) :
-       /splat/enquete/livret/?f=12  →  la série en ligne de la fiche 12, etc.
+    /* Adresse courte des QR codes des deux livrets de l'Enquête — « SPLAT! Enquête »
+       (monde 3, fiches 10 à 14) et « SPLAT! Grande enquête » (monde 4, 15 à 19, lot E5) :
+       /splat/enquete/livret/?f=12  →  la série en ligne de la fiche 12, etc. ;
+       /splat/enquete/livret/?s=2   →  la série n° 2 du dos des livrets (lot E4).
        Les fiches de l'Enquête sont les étapes 10 à 19 de l'univers : dans SPLAT!,
        le numéro de fiche EST le numéro d'étape (« Fiche 7 » du livret classique).
        Chaque cible est EXACTEMENT le lien « Le jeu de l'élève » de la carte des
-       mondes (outils/splat_univers.html, MONDE_ENQUETE) : mêmes réglages, même
+       mondes (outils/splat_univers.html, ENQ_FICHES) : mêmes réglages, même
        graine, donc les mêmes cartes que sur le papier, et le même parcours
        (parcours=enqN) donc la même étoile. Un test épingle ces dix cibles sur les
        constantes de la carte des mondes ; si une graine change là-bas, la changer
@@ -35,11 +37,30 @@
       "mode=C&splats=3&structure=CHAIN&clues=SENTENCE&mul=1&div=1&add=1&sub=1&deltaMax=15&visibleMin=0&visibleMax=0&totalMin=20&totalMax=60&seed=1313",
       "mode=C&splats=3&structure=MIX&clues=SENTENCE&mul=1&div=1&add=1&sub=1&deltaMax=15&visibleMin=1&visibleMax=3&totalMin=20&totalMax=60&seed=537"
     ];
+    /* Les séries infinies du dos des livrets (?s=1…6, lot E4) : les réglages des fiches,
+       sans graine — huit cartes nouvelles à chaque ouverture, en mode élève sans étape
+       (rien n'est enregistré). Le QR ne porte que « ?s=N » : il reste lisible photocopié,
+       et une série peut être retouchée ici sans réimprimer un livret. Les mêmes six
+       réglages sont dans _sources/livret-splat-enquete/render.py (SERIES) ; un test les
+       épingle. */
+    var ENQ_SERIES = {
+      "1": "mode=C&splats=2&clues=SENTENCE&mul=0&div=0&add=1&sub=1&deltaMax=10&visibleMin=0&visibleMax=0&totalMin=10&totalMax=30",
+      "2": "mode=C&splats=3&structure=CHAIN&clues=SENTENCE&mul=0&div=0&add=1&sub=1&deltaMax=15&visibleMin=0&visibleMax=0&totalMin=20&totalMax=60",
+      "3": "mode=C&splats=3&structure=MIX&clues=SENTENCE&mul=0&div=0&add=1&sub=1&deltaMax=15&visibleMin=1&visibleMax=3&totalMin=20&totalMax=60",
+      "4": "mode=C&splats=2&clues=SENTENCE&mul=1&div=1&add=0&sub=0&deltaMax=10&visibleMin=0&visibleMax=0&totalMin=10&totalMax=40",
+      "5": "mode=C&splats=2&clues=SENTENCE&mul=1&div=1&add=1&sub=1&deltaMax=15&visibleMin=0&visibleMax=0&totalMin=15&totalMax=50",
+      "6": "mode=C&splats=3&structure=MIX&clues=SENTENCE&mul=1&div=1&add=1&sub=1&deltaMax=15&visibleMin=1&visibleMax=3&totalMin=20&totalMax=60"
+    };
+    var ENQ_SERIE_CARTES = 8;
     var f = new URLSearchParams(window.location.search).get("f");
+    var sr = new URLSearchParams(window.location.search).get("s");
     var n = parseInt(f, 10);
     var i = n - ENQ_DEPART;
+    var serie = (sr !== null && Object.prototype.hasOwnProperty.call(ENQ_SERIES, sr)) ? ENQ_SERIES[sr] : null;
     var cible = (String(n) === String(f) && i >= 0 && i < ENQ.length)
       ? "/splat/classique/?" + ENQ[i] + "&cards=4&unknown=question&eleve=1&parcours=enq" + n
+      : serie
+      ? "/splat/classique/?" + serie + "&cards=" + ENQ_SERIE_CARTES + "&unknown=question&eleve=1"
       : "/outils/splat_univers.html";
     window.location.replace(new URL(cible, window.location.origin).toString());
   </script>
@@ -58,6 +79,15 @@
     <li><a href="/splat/classique/?mode=C&amp;splats=3&amp;structure=CHAIN&amp;clues=SENTENCE&amp;mul=1&amp;div=1&amp;add=1&amp;sub=1&amp;deltaMax=15&amp;visibleMin=0&amp;visibleMax=0&amp;totalMin=20&amp;totalMax=60&amp;seed=1313&amp;cards=4&amp;unknown=question&amp;eleve=1&amp;parcours=enq18">Fiche 18 — Trois taches, 4 opérations</a></li>
     <li><a href="/splat/classique/?mode=C&amp;splats=3&amp;structure=MIX&amp;clues=SENTENCE&amp;mul=1&amp;div=1&amp;add=1&amp;sub=1&amp;deltaMax=15&amp;visibleMin=1&amp;visibleMax=3&amp;totalMin=20&amp;totalMax=60&amp;seed=537&amp;cards=4&amp;unknown=question&amp;eleve=1&amp;parcours=enq19">Fiche 19 — Le grand défi</a></li>
     <li><a href="/outils/splat_univers.html">La carte des mondes</a></li>
+  </ul>
+  <p>Encore des cartes — les séries du dos des livrets&nbsp;:</p>
+  <ul>
+    <li><a href="/splat/classique/?mode=C&amp;splats=2&amp;clues=SENTENCE&amp;mul=0&amp;div=0&amp;add=1&amp;sub=1&amp;deltaMax=10&amp;visibleMin=0&amp;visibleMax=0&amp;totalMin=10&amp;totalMax=30&amp;cards=8&amp;unknown=question&amp;eleve=1">Série 1 — Deux taches (livret 1)</a></li>
+    <li><a href="/splat/classique/?mode=C&amp;splats=3&amp;structure=CHAIN&amp;clues=SENTENCE&amp;mul=0&amp;div=0&amp;add=1&amp;sub=1&amp;deltaMax=15&amp;visibleMin=0&amp;visibleMax=0&amp;totalMin=20&amp;totalMax=60&amp;cards=8&amp;unknown=question&amp;eleve=1">Série 2 — Trois taches (livret 1)</a></li>
+    <li><a href="/splat/classique/?mode=C&amp;splats=3&amp;structure=MIX&amp;clues=SENTENCE&amp;mul=0&amp;div=0&amp;add=1&amp;sub=1&amp;deltaMax=15&amp;visibleMin=1&amp;visibleMax=3&amp;totalMin=20&amp;totalMax=60&amp;cards=8&amp;unknown=question&amp;eleve=1">Série 3 — Le défi additif (livret 1)</a></li>
+    <li><a href="/splat/classique/?mode=C&amp;splats=2&amp;clues=SENTENCE&amp;mul=1&amp;div=1&amp;add=0&amp;sub=0&amp;deltaMax=10&amp;visibleMin=0&amp;visibleMax=0&amp;totalMin=10&amp;totalMax=40&amp;cards=8&amp;unknown=question&amp;eleve=1">Série 4 — Fois plus, fois moins (livret 2)</a></li>
+    <li><a href="/splat/classique/?mode=C&amp;splats=2&amp;clues=SENTENCE&amp;mul=1&amp;div=1&amp;add=1&amp;sub=1&amp;deltaMax=15&amp;visibleMin=0&amp;visibleMax=0&amp;totalMin=15&amp;totalMax=50&amp;cards=8&amp;unknown=question&amp;eleve=1">Série 5 — Les quatre opérations (livret 2)</a></li>
+    <li><a href="/splat/classique/?mode=C&amp;splats=3&amp;structure=MIX&amp;clues=SENTENCE&amp;mul=1&amp;div=1&amp;add=1&amp;sub=1&amp;deltaMax=15&amp;visibleMin=1&amp;visibleMax=3&amp;totalMin=20&amp;totalMax=60&amp;cards=8&amp;unknown=question&amp;eleve=1">Série 6 — Le grand défi (livret 2)</a></li>
   </ul>
 </body>
 </html>
