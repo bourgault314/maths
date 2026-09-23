@@ -353,7 +353,11 @@
     display:flex;
     gap:8px;
     align-items:center;
+    /* La bande couvre toute la largeur : seuls ses boutons captent les clics,
+       sinon le sommet du triangle (placé en haut) ne se clique plus. */
+    pointer-events:none;
   }
+  .stageQuickActions > *{pointer-events:auto}
 
   .quickBtn{
     min-width:44px;
