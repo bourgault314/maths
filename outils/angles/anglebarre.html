@@ -353,7 +353,11 @@
     display:flex;
     gap:8px;
     align-items:center;
+    /* La bande couvre toute la largeur : seuls ses boutons captent les clics,
+       sinon le sommet du triangle (placé en haut) ne se clique plus. */
+    pointer-events:none;
   }
+  .stageQuickActions > *{pointer-events:auto}
 
   .quickBtn{
     min-width:44px;
@@ -667,7 +671,9 @@
   .barPiece:last-child{border-right:0}
   .barLine.relationDraft .barPiece{min-width:120px}
   .barPiece.result{background:linear-gradient(180deg,var(--green-soft),#f0fdf4)}
-  .barPiece.knownGroup{background:linear-gradient(180deg,#eef2ff,#ffffff)}
+  /* Couleurs reprises du gabarit « somme des angles » : 180° gris clair, regroupement violet. */
+  .barPiece.total{background:#f5f7fa}
+  .barPiece.knownGroup{background:linear-gradient(180deg,rgba(124,58,237,.16),#f5f0ff)}
   .barPiece.removed{
     opacity:.42;
     color:#64748b;
@@ -694,9 +700,9 @@
     background:#eff6ff;
     box-shadow:inset 0 0 0 4px rgba(37,99,235,.42);
   }
-  .barAngleA{background:linear-gradient(180deg,rgba(59,130,246,.17),#eff6ff)}
-  .barAngleB{background:linear-gradient(180deg,rgba(249,115,22,.17),#fff7ed)}
-  .barAngleC{background:linear-gradient(180deg,rgba(22,163,74,.17),#f0fdf4)}
+  .barAngleA{background:linear-gradient(180deg,rgba(37,99,235,.16),#eff5ff)}
+  .barAngleB{background:linear-gradient(180deg,rgba(234,88,12,.16),#fff4ec)}
+  .barAngleC{background:linear-gradient(180deg,rgba(22,150,70,.16),#effaf3)}
   .pieceMain{font-size:clamp(27px,3.3vw,42px);font-weight:950;letter-spacing:-.035em;line-height:1;white-space:nowrap;text-align:center}
 
   .solution:empty{display:none}
@@ -787,9 +793,18 @@
     color:#64748b;
     margin-bottom:-3px;
   }
-  .barPiece.result.barAngleA{background:linear-gradient(180deg,rgba(59,130,246,.17),#eff6ff)}
-  .barPiece.result.barAngleB{background:linear-gradient(180deg,rgba(249,115,22,.17),#fff7ed)}
-  .barPiece.result.barAngleC{background:linear-gradient(180deg,rgba(22,163,74,.17),#f0fdf4)}
+  .barPiece.result.barAngleA{background:linear-gradient(180deg,rgba(37,99,235,.16),#eff5ff)}
+  .barPiece.result.barAngleB{background:linear-gradient(180deg,rgba(234,88,12,.16),#fff4ec)}
+  .barPiece.result.barAngleC{background:linear-gradient(180deg,rgba(22,150,70,.16),#effaf3)}
+  /* Barre à quatre lignes : des lignes moins hautes pour que tout tienne. */
+  .barTable.rowsMany .barLine,
+  .barTable.rowsMany .barPiece{min-height:80px}
+  /* Accolade « je regroupe » à gauche des lignes 3 et 4, comme sur le gabarit. */
+  .barTable.withBrace{padding-left:44px;box-sizing:border-box;width:min(1024px,100%)}
+  .groupRows{position:relative;display:flex;flex-direction:column}
+  .regroupBrace{position:absolute;left:-44px;top:4px;bottom:4px;width:40px;pointer-events:none;color:#7c3aed}
+  .regroupBrace svg{position:absolute;right:2px;top:0;width:12px;height:100%;overflow:visible}
+  .regroupBrace span{position:absolute;left:0;top:50%;transform:translate(-50%,-50%) rotate(-90deg);transform-origin:center;margin-left:12px;white-space:nowrap;font-size:14px;font-weight:950;letter-spacing:.02em}
 
   .hideEquations .topbar{display:none}
   .hideBars .barBoard{display:none}
@@ -943,6 +958,8 @@
     .barPiece{min-width:0;min-height:68px}
     .barLine.relationDraft .barPiece{min-width:0}
     .pieceMain{font-size:clamp(20px,6vw,28px)}
+    .barTable.rowsMany .barLine,
+    .barTable.rowsMany .barPiece{min-height:58px}
     .barChoiceZone{width:100%;min-height:0;margin-top:6px;gap:6px;align-content:center}
     .choiceHint{font-size:12px;margin-bottom:0;padding:0 4px}
     .choiceBtn{min-width:calc(50% - 6px);min-height:42px;padding:7px 8px;border-radius:11px;font-size:18px}
@@ -1024,11 +1041,11 @@
   }
 
   /* Deux séparations verticales toujours visibles dans la ligne des trois angles. */
-  .barLine.relationDraft.top{
+  .barLine.relationDraft.angleRow{
     position:relative;
   }
-  .barLine.relationDraft.top::before,
-  .barLine.relationDraft.top::after{
+  .barLine.relationDraft.angleRow::before,
+  .barLine.relationDraft.angleRow::after{
     content:"";
     position:absolute;
     top:0;
@@ -1039,13 +1056,76 @@
     z-index:5;
     transform:translateX(-1px);
   }
-  .barLine.relationDraft.top::before{left:33.333333%}
-  .barLine.relationDraft.top::after{left:66.666667%}
+  .barLine.relationDraft.angleRow::before{left:33.333333%}
+  .barLine.relationDraft.angleRow::after{left:66.666667%}
 
   @media (max-width:760px){
     .relationDraftTable{margin-top:8px}
   }
 
+
+  /* DISPOSITION DU GABARIT — triangle en bande en haut, puis la barre à gauche et
+     les égalités à droite, chacune en face de sa ligne de barre. Les lignes des deux
+     colonnes ont la même hauteur fixe (--row-h) : c'est ce qui les garde alignées. */
+  .topbar{display:none}
+  /* La zone de travail prend la hauteur de son contenu : quand la barre et ses six
+     égalités ne tiennent pas, fitStage réduit l'ensemble au lieu de rogner. */
+  .workArea{flex:1 0 auto;display:flex;flex-direction:column;gap:10px;grid-template-columns:none;overflow:visible}
+  .workArea .visualCard{flex:0 0 clamp(160px,24vh,260px);width:min(640px,58%);align-self:center;padding:4px 14px}
+  .workArea .visualCard svg.triangleSvg{min-height:0;height:100%;width:100%}
+  .workArea .barBoard{flex:1 0 auto;min-height:0;justify-content:flex-start;padding:14px 14px 12px}
+  .workArea .barWrap{flex:0 0 auto}
+  .hideBars .barBoard{display:flex}
+  .hideBars .solveBar{visibility:hidden}
+  .hideBars .solveBar .barChoiceZone,
+  .hideBars .solveBar .anglePalette{visibility:visible}
+  .workArea .boardChoices{display:none}
+  .solveBar .barChoiceZone{width:100%;margin-top:12px;padding-left:44px;box-sizing:border-box}
+  .solveBar .anglePalette{margin:12px 0 0;padding-left:44px}
+  /* Écran peu haut (portable, vidéoprojecteur 1280 × 720) : lignes plus basses. */
+  @media (max-height:820px){
+    .workArea .solveLayout{--row-h:50px}
+    .workArea .visualCard{flex-basis:clamp(130px,20vh,190px)}
+    .workArea .solveEqs{font-size:clamp(18px,1.9vw,26px)}
+    .workArea .solveLayout .pieceMain{font-size:clamp(22px,2.3vw,30px)}
+  }
+  /* L'œil masque les égalités, pas la propriété écrite en face de 180°. */
+  .hideEquations .solveEqs > :not(.eqProp){visibility:hidden}
+  .solveLayout{--row-h:60px;width:min(1180px,100%);display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:34px;align-items:start}
+  .solveBar{display:flex;flex-direction:column;align-items:stretch;min-width:0}
+  /* Place de l'accolade réservée dès le départ : la barre ne se décale pas quand elle apparaît. */
+  .solveLayout .barTable,
+  .solveLayout .barTable.withBrace{width:100%;box-sizing:border-box;padding-left:44px}
+  .solveLayout .barTable .barLine{height:var(--row-h);min-height:0}
+  .solveLayout .barTable .barPiece{min-height:0;min-width:0}
+  .solveLayout .barTable{--cell-min:64px}
+  .solveLayout .pieceMain{font-size:clamp(24px,2.6vw,36px)}
+  .solveEqs{display:grid;grid-template-columns:auto auto auto;grid-auto-rows:var(--row-h);justify-content:start;align-items:center;font-size:clamp(20px,2.1vw,30px);font-weight:950;line-height:1.1;min-width:0}
+  .solveEqs .eqCell{white-space:nowrap;padding:0 6px}
+  .solveEqs .lhs{text-align:right}
+  .solveEqs .eq{text-align:center;padding:0 12px;color:#64748b}
+  .solveEqs .rhs{text-align:left}
+  .solveEqs .historyStep{color:#64748b;opacity:.82}
+  .solveEqs .currentStep{color:#0f172a}
+  .solveEqs .eq.currentStep{color:#3b82f6}
+  .solveEqs .finalConclusion{color:#dc2626}
+  .solveEqs .eqWide{grid-column:1 / -1;display:flex;align-items:center;min-width:0}
+  .solveEqs .eqProp{font-size:clamp(15px,1.45vw,21px);font-weight:850;color:#1e3a8a;line-height:1.25;white-space:normal;max-width:34ch}
+  .solveEqs .relationEditor{justify-content:flex-start;gap:8px;flex-wrap:nowrap;font-size:clamp(20px,2.1vw,30px)}
+  .solveEqs .slotBtn{min-width:78px;min-height:50px;padding:6px 10px}
+
+  @media (max-width:760px){
+    .workArea .visualCard{flex:0 0 auto;width:100%}
+    .workArea .visualCard svg.triangleSvg{height:min(30dvh,240px);min-height:190px}
+    .workArea .barBoard{padding-top:8px}
+    .solveLayout{--row-h:54px;grid-template-columns:1fr;gap:10px}
+    .solveEqs{grid-auto-rows:minmax(40px,auto);justify-content:center;font-size:clamp(17px,5vw,22px)}
+    .solveEqs .eqEmpty{display:none}
+    .solveEqs .eqProp{max-width:none;justify-content:center;text-align:center;font-size:15px}
+    .solveEqs .relationEditor{flex-wrap:nowrap;width:100%;justify-content:center}
+    .solveEqs .slotBtn{min-width:0;min-height:44px}
+    .barWrap{min-height:0}
+  }
 </style>
 <script defer src="../../assets/js/mention-confidentialite.js"></script>
 </head>
@@ -1271,9 +1351,9 @@
   ];
 
   const angleColors = {
-    0:{stroke:"#3b82f6", soft:"barAngleA"},
-    1:{stroke:"#f97316", soft:"barAngleB"},
-    2:{stroke:"#16a34a", soft:"barAngleC"}
+    0:{stroke:"#2563eb", soft:"barAngleA"},
+    1:{stroke:"#ea580c", soft:"barAngleB"},
+    2:{stroke:"#169646", soft:"barAngleC"}
   };
 
   function normalizeName(raw){
@@ -1362,33 +1442,14 @@
     return null;
   }
 
-  function parseDecomposeAnswer(text, knownSum, expected){
-    const direct = parseNumberLike(text);
-    if(direct !== null){
-      if(approxEqual(direct, expected)) return expected;
-      if(approxEqual(direct, 180)) return expected;
-    }
-    let raw = String(text ?? "").trim().replace(/,/g,".").replace(/°/g,"").replace(/−/g,"-").replace(/\s+/g,"");
-    if(!raw) return null;
-    const sides = raw.split("=");
-    const exprs = sides.length === 2 ? sides : [raw];
-    for(const expr of exprs){
-      const nums = expr.split("+").map(v => Number(v)).filter(Number.isFinite);
-      if(nums.length === 2){
-        const hasKnown = nums.some(n => approxEqual(n, knownSum));
-        const hasExpected = nums.some(n => approxEqual(n, expected));
-        if(hasKnown && hasExpected) return expected;
-      }
-    }
-    return null;
-  }
-
   function approxEqual(a,b){ return Math.abs(a-b) < 1e-9; }
   function fmt(n){
     if(!Number.isFinite(n)) return "";
     if(Math.abs(n - Math.round(n)) < 1e-10) return String(Math.round(n));
     return String(Math.round(n * 100) / 100).replace(".", ",");
   }
+  // Mesure écrite dans une case de la barre, avec le degré comme sur le gabarit.
+  function barNum(n){ return `${fmt(n)}°`; }
   function angleSymbolText(letter){ return `${letter}̂`; }
   function angleSymbol(letter){ return `<span class="angleHat">${letter}</span>`; }
   function choiceLabel(value){
@@ -1620,7 +1681,6 @@
       moved:false,
       grouped:false,
       groupSelection:[],
-      decomposed:false,
       removed:false,
       concluded:false,
       choiceMode:null,
@@ -1654,6 +1714,7 @@
     };
   }
 
+  // Égalités des triangles isocèle et équilatéral (le cas général passe par equationSlots).
   function relationRows(){
     const rows = [];
     if(!work.property) return rows;
@@ -1678,35 +1739,6 @@
       }
       return rows;
     }
-    if(!work.relationComplete) return rows;
-    const u = model.unknown;
-    const order = relationAngleOrder();
-    rows.push({lhs:order.map(l => angleSymbol(l)).join(" + "), rhs:"180°"});
-    if(hasReplacementProgress() || work.replaced){
-      rows.push({lhs:order.map(l => model.angles[l].unknown ? angleSymbol(l) : (isReplaced(l) || work.replaced ? `${fmt(model.angles[l].value)}°` : angleSymbol(l))).join(" + "), rhs:"180°"});
-    }
-    if(work.moved){
-      rows.push({lhs:effectiveAngleOrder().map(l => model.angles[l].unknown ? angleSymbol(l) : `${fmt(model.angles[l].value)}°`).join(" + "), rhs:"180°"});
-    }
-    const unknownFirst = unknownComesFirstAfterGrouping();
-    const known = `${fmt(model.knownSum)}°`;
-    const unknown = angleSymbol(u);
-    const result = `${fmt(work.result)}°`;
-    if(work.grouped){
-      rows.push({lhs:unknownFirst ? `${unknown} + ${known}` : `${known} + ${unknown}`, rhs:"180°"});
-    }
-    if(work.decomposed){
-      rows.push({
-        lhs:unknownFirst ? `${unknown} + ${known}` : `${known} + ${unknown}`,
-        rhs:unknownFirst ? `${result} + ${known}` : `${known} + ${result}`
-      });
-    }
-    if(work.removed && !work.concluded){
-      rows.push({lhs:unknown, rhs:result});
-    }
-    if(work.concluded){
-      rows.push({lhs:unknown, rhs:result});
-    }
     return rows;
   }
 
@@ -1714,7 +1746,7 @@
     if(model.family === "equilateral"){
       if(!work.property) return "Commence par citer la propriété du triangle équilatéral.";
       if(!work.replaced) return "Déduis la mesure commune de ses trois angles.";
-      if(!work.concluded) return "Conclue pour les trois angles.";
+      if(!work.concluded) return "Conclus pour les trois angles.";
       return "";
     }
     if(model.family === "isosceles"){
@@ -1724,7 +1756,7 @@
       if(!work.grouped) return model.isoCase === "base"
         ? "Retire l’angle du sommet puis partage le reste en deux parts égales."
         : "Utilise deux fois la mesure d’un angle à la base.";
-      if(!work.concluded) return "Conclue par la mesure de chaque angle cherché.";
+      if(!work.concluded) return "Conclus par la mesure de chaque angle cherché.";
       return "";
     }
     if(!work.property) return "Commence par citer la propriété utilisée.";
@@ -1750,9 +1782,8 @@
       }
       return "Regroupe les angles connus.";
     }
-    if(!work.decomposed) return "Décompose 180° avec la partie déjà connue.";
-    if(!work.removed) return "Enlève la même partie dans chaque membre.";
-    if(!work.concluded) return "Conclue par la mesure de l’angle cherché.";
+    if(!work.removed) return `Pour trouver ${angleSymbol(model.unknown)}, enlève ${fmt(model.knownSum)}° de 180°.`;
+    if(!work.concluded) return `Calcule 180° − ${fmt(model.knownSum)}° et conclus.`;
     return "";
   }
 
@@ -1765,7 +1796,9 @@
     workArea.classList.toggle("onlyBars", !display.triangle && display.bars);
     syncEyeButton();
     renderEquations();
-    instructionZone.innerHTML = currentInstruction();
+    // Une seule boîte de texte : la zone est en flex, sinon l'espace autour d'un angle disparaît.
+    const instruction = currentInstruction();
+    instructionZone.innerHTML = instruction ? `<span>${instruction}</span>` : "";
     renderAnglePalette();
     renderTriangle();
     renderBars();
@@ -1778,7 +1811,6 @@
       : "";
     actionZone.innerHTML = message ? `<div class="note${message.includes("pas") || message.includes("manque") || message.includes("déjà") ? " errorNote" : ""}">${message}</div>` : "";
     fitStage();
-    setTimeout(() => equationHistory.scrollTop = equationHistory.scrollHeight, 0);
   }
 
   // Sur une rangee qui defile, l'etape en cours doit rester sous les yeux.
@@ -1810,26 +1842,61 @@
   window.addEventListener("resize", () => { if(model && work) fitStage(); });
   document.addEventListener("fullscreenchange", () => { if(model && work) fitStage(); });
 
+  // Les égalités s'écrivent désormais à droite de la barre (voir solveLayoutHtml) :
+  // le bandeau du haut reste vide.
   function renderEquations(){
-    if(model.family === "general" && work.property && !work.relationComplete){
-      equationHistory.innerHTML = relationEditorHtml();
-      bindRelationSlotButtons(equationHistory);
-      return;
+    equationHistory.innerHTML = "";
+  }
+
+  // Une égalité par ligne de barre, dans l'ordre des lignes de haut en bas, puis
+  // celles qui suivent la barre (comme sur le gabarit). null = ligne sans égalité.
+  function equationSlots(){
+    if(model.family !== "general"){
+      return [null, ...relationRows()];
     }
-    const rows = relationRows();
-    if(!rows.length){
-      equationHistory.innerHTML = "";
-      return;
+    const slots = [null];
+    if(!work.relationComplete){
+      slots.push({editor:true});
+      return slots;
     }
-    let html = `<table class="equationTable" aria-label="Historique d'équations"><tbody>`;
-    rows.forEach((row,i) => {
-      const isLast = i === rows.length - 1;
-      const classes = [isLast ? "currentStep" : "historyStep"];
-      if(work.concluded && isLast) classes.push("finalConclusion");
-      html += `<tr class="${classes.join(" ")}"><td class="lhs">${row.lhs}</td><td class="eq">=</td><td class="rhs">${row.rhs}</td></tr>`;
+    const u = model.unknown;
+    const order = effectiveAngleOrder();
+    const known = `${fmt(model.knownSum)}°`;
+    const unknown = angleSymbol(u);
+    slots.push({lhs:order.map(angleSymbol).join(" + "), rhs:"180°"});
+    const showValues = hasReplacementProgress() || work.replaced;
+    slots.push(showValues
+      ? {lhs:order.map(l => model.angles[l].unknown || !isReplaced(l) ? angleSymbol(l) : `${fmt(model.angles[l].value)}°`).join(" + "), rhs:"180°"}
+      : null);
+    if(work.grouped) slots.push({lhs:unknownComesFirstAfterGrouping() ? `${unknown} + ${known}` : `${known} + ${unknown}`, rhs:"180°"});
+    if(work.removed) slots.push({lhs:unknown, rhs:`180° − ${known}`});
+    if(work.concluded) slots.push({lhs:unknown, rhs:`${fmt(work.result)}°`});
+    return slots;
+  }
+
+  function equationColumnHtml(){
+    const slots = equationSlots();
+    let last = -1;
+    slots.forEach((slot, i) => { if(slot && !slot.editor) last = i; });
+    let html = `<div class="solveEqs" aria-label="Égalités">`;
+    html += display.property
+      ? `<div class="eqWide eqProp">${propertyText()}</div>`
+      : `<div class="eqWide eqEmpty"></div>`;
+    slots.slice(1).forEach((slot, k) => {
+      const i = k + 1;
+      if(!slot){ html += `<div class="eqWide eqEmpty"></div>`; return; }
+      if(slot.editor){ html += `<div class="eqWide">${relationEditorHtml()}</div>`; return; }
+      const cls = [i === last ? "currentStep" : "historyStep"];
+      if(work.concluded && i === last) cls.push("finalConclusion");
+      const c = cls.join(" ");
+      html += `<div class="eqCell lhs ${c}">${slot.lhs}</div><div class="eqCell eq ${c}">=</div><div class="eqCell rhs ${c}">${slot.rhs}</div>`;
     });
-    html += `</tbody></table>`;
-    equationHistory.innerHTML = html;
+    return html + `</div>`;
+  }
+
+  // La barre à gauche, les égalités à droite ; les propositions restent sous la barre.
+  function solveLayoutHtml(tableHtml){
+    return `<div class="solveLayout"><div class="solveBar">${tableHtml}</div>${equationColumnHtml()}</div>`;
   }
 
   function relationEditorHtml(){
@@ -1948,7 +2015,10 @@
 
   function renderBars(){
     boardChoices.querySelectorAll(".barChoiceZone").forEach(el => el.remove());
-    if(!display.bars){ barWrap.innerHTML = ""; return; }
+    // La palette des angles est un élément fixe de la page : on la remet à l'abri
+    // avant de réécrire la barre, sinon innerHTML la détruirait.
+    boardChoices.appendChild(anglePalette);
+    // Barre masquée : elle garde sa place (invisible) pour que les égalités restent en face de leurs lignes.
     barWrap.innerHTML = barDiagramHtml();
     bindRelationSlotButtons(barWrap);
     barWrap.querySelectorAll("[data-replace-cell]").forEach(el => el.addEventListener("click", () => selectReplaceCell(el.dataset.replaceCell)));
@@ -1956,11 +2026,17 @@
     barWrap.querySelectorAll("[data-group-cell]").forEach(el => el.addEventListener("click", () => toggleGroupCell(el.dataset.groupCell)));
     barWrap.querySelectorAll("[data-group-choice]").forEach(btn => btn.addEventListener("click", () => applyGroupChoice(btn.dataset.groupChoice)));
     barWrap.querySelectorAll("[data-move-cells]").forEach(btn => btn.addEventListener("click", applyMoveCells));
-    barWrap.querySelectorAll("[data-decompose-choice]").forEach(btn => btn.addEventListener("click", () => applyDecomposeChoice(btn.dataset.decomposeChoice)));
     // Les propositions rejoignent la consigne sous le tableau : un seul endroit ou
     // regarder, quelle que soit l'etape. Les ecouteurs survivent au deplacement.
     // Sorties de barWrap, elles ne sont plus effacees par son innerHTML : on s'en
     // charge en entree de fonction, sinon elles s'empilent a chaque rendu.
+    // Disposition du gabarit : propositions et palette se placent juste sous la
+    // barre, dans la place laissée libre en face des dernières égalités.
+    const solveBar = barWrap.querySelector(".solveBar");
+    if(solveBar){
+      solveBar.appendChild(anglePalette);
+      return;
+    }
     const choiceZone = barWrap.querySelector(".barChoiceZone");
     if(choiceZone) boardChoices.appendChild(choiceZone);
   }
@@ -1971,10 +2047,6 @@
     return "La somme des trois angles d’un triangle fait 180°.";
   }
 
-  function propertyBoardHtml(compact=false){
-    return `<div class="whiteBoard${compact ? " compact" : ""}">${propertyText()}</div>`;
-  }
-
   function barDiagramHtml(){
     if(!work.property){
       return display.property ? `<div class="whiteBoard waiting">Propriété utilisée ?</div>` : "";
@@ -1982,53 +2054,53 @@
     if(model.family !== "general") return familyBarDiagramHtml();
     if(!work.relationComplete){
       const s = work.relationSlots;
-      const top = [
+      const total = [{slot:"total", value:s.total, main:s.total ? "180°" : "…°", weight:180}];
+      const angles = [
         {slot:"a", letter:s.a, main:s.a ? angleSymbol(s.a) : "…", weight:60},
         {slot:"b", letter:s.b, main:s.b ? angleSymbol(s.b) : "…", weight:60},
         {slot:"c", letter:s.c, main:s.c ? angleSymbol(s.c) : "…", weight:60}
       ];
-      const bottom = [{slot:"total", value:s.total, main:s.total ? "180" : "…", weight:180, kind:"knownGroup"}];
-      return (display.property ? propertyBoardHtml(true) : "") + renderBarTable(top, bottom, true, "relationDraftTable");
+      return solveLayoutHtml(renderBarTable([{pieces:total}, {pieces:angles, cls:"angleRow"}], true, "relationDraftTable"));
     }
 
-    if(work.decomposed || work.removed || work.concluded){
-      const isRemoved = work.removed || work.concluded;
-      const unknownPiece = {kind:"unknown", letter:model.unknown, main:angleSymbol(model.unknown), weight:model.result, solved:work.concluded, colorClass:angleColors[model.letters.indexOf(model.unknown)].soft};
-      const knownPiece = {kind:isRemoved ? "removed" : "knownGroup", main:fmt(model.knownSum), weight:model.knownSum};
-      const resultPiece = {kind:"result", letter:model.unknown, main:fmt(work.result), weight:model.result};
-      const bottomKnownPiece = {kind:isRemoved ? "removed" : "knownGroup", main:fmt(model.knownSum), weight:model.knownSum};
-      const top = unknownComesFirstAfterGrouping() ? [unknownPiece, knownPiece] : [knownPiece, unknownPiece];
-      const bottom = unknownComesFirstAfterGrouping() ? [resultPiece, bottomKnownPiece] : [bottomKnownPiece, resultPiece];
-      return renderBarTable(top, bottom, false);
+    // Barre du gabarit, de haut en bas : 180° / noms des angles / mesures / regroupement.
+    const u = model.unknown;
+    const unknownColor = angleColors[model.letters.indexOf(u)].soft;
+    const order = effectiveAngleOrder();
+    const rows = [{pieces:[{kind:"total", main:barNum(180), weight:180}]}];
+
+    rows.push({cls:"nameRow", pieces:order.map(letter => {
+      const unknown = model.angles[letter].unknown;
+      return {kind:unknown ? "unknown" : "known", letter, main:angleSymbol(letter), weight:unknown ? model.result : model.angles[letter].value, colorClass:colorClassForLetter(letter)};
+    })});
+
+    const showValues = work.choiceMode === "replace" || hasReplacementProgress() || work.replaced;
+    if(showValues){
+      rows.push({cls:"valueRow", pieces:order.map(letter => {
+        const a = model.angles[letter];
+        if(a.unknown) return {kind:"unknown", letter, main:angleSymbol(letter), weight:model.result, colorClass:colorClassForLetter(letter)};
+        return {
+          kind:"known",
+          letter,
+          main:isReplaced(letter) ? barNum(a.value) : angleSymbol(letter),
+          weight:a.value,
+          colorClass:colorClassForLetter(letter),
+          replaceable:work.choiceMode === "replace" && !isReplaced(letter),
+          replaceSelected:selectedReplace === letter,
+          groupSelectable:work.choiceMode === "group",
+          groupSelected:(work.groupSelection || []).includes(letter)
+        };
+      })});
     }
 
     if(work.grouped){
-      const unknownPiece = {kind:"unknown", letter:model.unknown, main:angleSymbol(model.unknown), weight:model.result, colorClass:angleColors[model.letters.indexOf(model.unknown)].soft};
-      const knownPiece = {kind:"knownGroup", main:fmt(model.knownSum), weight:model.knownSum};
-      const top = unknownComesFirstAfterGrouping() ? [unknownPiece, knownPiece] : [knownPiece, unknownPiece];
-      const bottom = [{kind:"knownGroup", main:"180", weight:180}];
-      return renderBarTable(top, bottom, false);
+      // Enlever : la partie connue se hachure (on la retire de 180°). Conclure : la mesure s'écrit dans la dernière ligne.
+      const groupPiece = {kind:work.removed ? "knownGroup removed" : "knownGroup", main:barNum(model.knownSum), weight:model.knownSum};
+      const unknownPiece = {kind:"unknown", letter:u, main:work.concluded ? barNum(model.result) : angleSymbol(u), weight:model.result, solved:work.concluded, colorClass:unknownColor};
+      rows[2].braceStart = true;
+      rows.push({cls:"groupRow", pieces:unknownComesFirstAfterGrouping() ? [unknownPiece, groupPiece] : [groupPiece, unknownPiece]});
     }
-
-    const top = effectiveAngleOrder().map(letter => {
-      const i = model.letters.indexOf(letter);
-      const a = model.angles[letter];
-      const isUnknown = a.unknown;
-      const main = isUnknown ? angleSymbol(letter) : replacementMain(letter);
-      return {
-        kind:isUnknown ? "unknown" : "known",
-        letter,
-        main,
-        weight:isUnknown ? model.result : a.value,
-        colorClass:angleColors[i].soft,
-        replaceable:work.choiceMode === "replace" && !isUnknown && !isReplaced(letter),
-        replaceSelected:selectedReplace === letter,
-        groupSelectable:work.choiceMode === "group" && !isUnknown,
-        groupSelected:(work.groupSelection || []).includes(letter)
-      };
-    });
-    const bottom = [{kind:"knownGroup", main:"180", weight:180}];
-    return renderBarTable(top, bottom, false);
+    return solveLayoutHtml(renderBarTable(rows, false, rows.length > 3 ? "rowsMany" : ""));
   }
 
   function familyBarDiagramHtml(){
@@ -2036,8 +2108,8 @@
       const a = model.angles[letter];
       const solved = work.concluded;
       const main = solved
-        ? fmt(model.solutions[letter])
-        : (a.unknown ? angleLabel(letter) : fmt(a.value));
+        ? barNum(model.solutions[letter])
+        : (a.unknown ? angleLabel(letter) : barNum(a.value));
       return {
         kind:a.unknown ? "unknown" : "known",
         letter,
@@ -2047,13 +2119,20 @@
         colorClass:angleColors[index].soft
       };
     });
-    const bottom = [{kind:"knownGroup", main:"180", weight:180}];
-    return (display.property ? propertyBoardHtml(true) : "") + renderBarTable(pieces, bottom, false);
+    const total = [{kind:"total", main:barNum(180), weight:180}];
+    return solveLayoutHtml(renderBarTable([{pieces:total}, {pieces}], false));
   }
 
-  function renderBarTable(topPieces, bottomPieces, relationSlots=false, extraClass=""){
+  // rows : lignes de la barre de haut en bas, chacune {pieces, cls}.
+  function renderBarTable(rows, relationSlots=false, extraClass=""){
     const cls = `barTable${extraClass ? " " + extraClass : ""}`;
-    return `<div class="${cls}">${renderBarLine(topPieces,"top",relationSlots)}${renderBarLine(bottomPieces,"bottom",relationSlots)}</div>${choiceZoneHtml()}`;
+    const line = (row, i) => renderBarLine(row.pieces, i === 0 ? "top" : "bottom", relationSlots, row.cls || "");
+    const braceFrom = rows.findIndex(row => row.braceStart);
+    if(braceFrom < 0) return `<div class="${cls}">${rows.map(line).join("")}</div>${choiceZoneHtml()}`;
+    const before = rows.slice(0, braceFrom).map(line).join("");
+    const grouped = rows.slice(braceFrom).map((row, i) => line(row, braceFrom + i)).join("");
+    const brace = `<div class="regroupBrace" aria-hidden="true"><svg viewBox="0 0 12 100" preserveAspectRatio="none"><path d="M11 1 C5 1 6 4 6 12 L6 42 C6 48 4 50 1 50 C4 50 6 52 6 58 L6 88 C6 96 5 99 11 99" fill="none" stroke="currentColor" stroke-width="2.6" vector-effect="non-scaling-stroke" stroke-linecap="round"/></svg><span>je regroupe</span></div>`;
+    return `<div class="${cls} withBrace">${before}<div class="groupRows">${brace}${grouped}</div></div>${choiceZoneHtml()}`;
   }
 
   function choiceZoneHtml(){
@@ -2078,10 +2157,6 @@
       const choices = groupChoices();
       return `<div class="barChoiceZone" aria-label="Choisir la somme des angles connus">${choices.map(v => `<button type="button" class="choiceBtn" data-group-choice="${v}">${fmt(v)}</button>`).join("")}</div>`;
     }
-    if(work.choiceMode === "decompose"){
-      const choices = decomposeChoices();
-      return `<div class="barChoiceZone" aria-label="Choisir la décomposition de 180">${choices.map(c => `<button type="button" class="choiceBtn" data-decompose-choice="${c.key}">${c.label}</button>`).join("")}</div>`;
-    }
     return `<div class="barChoiceZone empty" aria-hidden="true"></div>`;
   }
 
@@ -2093,30 +2168,6 @@
     const candidates = [correct, Math.max(1, correct - 10), Math.min(179, correct + 10), Math.max(1, Math.abs(a - b)), Math.min(179, correct + 20)];
     return uniqueNumbers(candidates).slice(0,4).sort((x,y) => x-y);
   }
-
-  function decomposeChoices(){
-    const k = model.knownSum;
-    const r = model.result;
-    const d = r > 20 ? 10 : 5;
-    const candidates = [
-      [k, r],
-      [r, k],
-      [k, clampAngle(r - d)],
-      [clampAngle(k - d), clampAngle(r + d)]
-    ];
-    const seen = new Set();
-    const out = [];
-    for(const [a,b] of candidates){
-      const label = `${fmt(a)} + ${fmt(b)}`;
-      if(!seen.has(label)){
-        seen.add(label);
-        out.push({label, key:`${fmt(a)}+${fmt(b)}`});
-      }
-    }
-    return out;
-  }
-
-  function clampAngle(n){ return Math.max(1, Math.min(179, Math.round(n))); }
 
   function uniqueNumbers(values){
     const out = [];
@@ -2132,11 +2183,11 @@
     return out;
   }
 
-  function renderBarLine(pieces, position="top", relationSlots=false){
+  function renderBarLine(pieces, position="top", relationSlots=false, rowClass=""){
     const minCell = relationSlots ? 120 : 92;
     const cols = pieces.map(p => `minmax(var(--cell-min, ${minCell}px), ${Math.max(0.55, Number(p.weight) || 1)}fr)`).join(" ");
     const draftClass = relationSlots ? " relationDraft" : "";
-    let html = `<div class="barLine ${position}${draftClass}" style="--cols:${cols}">`;
+    let html = `<div class="barLine ${position}${draftClass}${rowClass ? " " + rowClass : ""}" style="--cols:${cols}">`;
     pieces.forEach(p => {
       if(relationSlots && p.slot){
         const classes = ["barPiece","barSlot"];
@@ -2187,8 +2238,7 @@
       actions.push({label:"Relation", done:true, disabled:true});
       actions.push({label:"Remplacer", done:work.replaced, disabled:work.replaced, fn:askReplace});
       actions.push({label:"Regrouper", done:work.grouped, disabled:!work.replaced || work.grouped, fn:askRegroup});
-      actions.push({label:"Décomposer 180°", done:work.decomposed, disabled:!work.grouped || work.decomposed, fn:askDecompose});
-      actions.push({label:"Enlever", done:work.removed, disabled:!work.decomposed || work.removed, fn:() => mutate(() => { work.removed = true; work.choiceMode = null; message = ""; })});
+      actions.push({label:"Enlever", done:work.removed, disabled:!work.grouped || work.removed, fn:() => mutate(() => { work.removed = true; work.choiceMode = null; message = ""; })});
       actions.push({label:"Conclure", done:work.concluded, disabled:!work.removed || work.concluded, fn:() => mutate(() => { work.concluded = true; work.choiceMode = null; message = ""; })});
     }
     actions.forEach(a => {
@@ -2308,11 +2358,6 @@
     });
   }
 
-  function askDecompose(){
-    if(!work.grouped || work.decomposed) return;
-    mutate(() => { work.choiceMode = "decompose"; message = ""; });
-  }
-
   function toggleGroupCell(letter){
     if(work.choiceMode !== "group" || model.angles[letter].unknown) return;
     mutate(() => {
@@ -2370,18 +2415,8 @@
     mutate(() => { work.grouped = true; work.groupSelection = []; work.choiceMode = null; message = ""; });
   }
 
-  function applyDecomposeChoice(key){
-    const correct = `${fmt(model.knownSum)}+${fmt(model.result)}`;
-    if(key !== correct){
-      message = "Cette décomposition ne garde pas la partie connue dans le bon ordre.";
-      render();
-      return;
-    }
-    mutate(() => { work.result = model.result; work.decomposed = true; work.choiceMode = null; message = ""; });
-  }
-
-  function openNumberDialog({title,text,expected,error,onValid,mode="number"}){
-    pendingDialog = {expected,error,onValid,mode};
+  function openNumberDialog({title,text,expected,error,onValid}){
+    pendingDialog = {expected,error,onValid};
     calcDialogTitle.innerHTML = title;
     calcDialogText.innerHTML = text;
     calcInput.value = "";
@@ -2393,9 +2428,7 @@
 
   function validateDialog(){
     if(!pendingDialog) return;
-    const answer = pendingDialog.mode === "decompose"
-      ? parseDecomposeAnswer(calcInput.value, model.knownSum, pendingDialog.expected)
-      : parseNumberLike(calcInput.value);
+    const answer = parseNumberLike(calcInput.value);
     if(answer === null || !approxEqual(answer, pendingDialog.expected)){
       calcError.textContent = pendingDialog.error;
       calcError.classList.add("show");
@@ -2443,6 +2476,22 @@
     });
 
     triangleSvg.innerHTML = html;
+    // Le triangle est dans une bande basse : on recadre la vue sur le dessin
+    // (lettres et mesures comprises) pour qu'il occupe toute la hauteur disponible.
+    // Cadre calculé sur le triangle et les noms des sommets seulement : il ne bouge
+    // donc pas quand une mesure apparaît en cours d'exercice.
+    try{
+      let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+      triangleSvg.querySelectorAll(".triangleShape, .vertexText").forEach(el => {
+        const b = el.getBBox();
+        x0 = Math.min(x0, b.x); y0 = Math.min(y0, b.y);
+        x1 = Math.max(x1, b.x + b.width); y1 = Math.max(y1, b.y + b.height);
+      });
+      if(x1 > x0 && y1 > y0){
+        const m = 22;
+        triangleSvg.setAttribute("viewBox", `${x0 - m} ${y0 - m} ${x1 - x0 + 2*m} ${y1 - y0 + 2*m}`);
+      }
+    }catch(e){ /* SVG pas encore affiché : on garde la vue par défaut */ }
     triangleSvg.querySelectorAll("[data-angle-hit]").forEach(el => el.addEventListener("click", () => chooseAngleForSlot(el.dataset.angleHit)));
   }
 
@@ -2617,7 +2666,6 @@
       work.replacements = Object.fromEntries(knownAngleLetters().map(l => [l, true]));
       if(groupMoveNeeded()) work.moved = true;
       work.grouped = true;
-      work.decomposed = true;
       work.removed = true;
       work.concluded = true;
       work.result = model.result;
