@@ -178,7 +178,7 @@ test("L : les deux anciennes adresses renvoient vers le bon onglet, et sortent d
 });
 
 test("la miniature du livret existe en PNG et en WebP, au format du catalogue", () => {
-  assert.match(page, /assets\/img\/thumbnails\/splat\/livret-splat-classique\.png\?v=2/);
+  assert.match(page, /assets\/img\/thumbnails\/splat\/livret-splat-classique\.png\?v=3/); // refaite le 23/09 (paquets de la couverture, lot E3)
   assert.ok(existe("assets/img/thumbnails/splat/livret-splat-classique.png"));
   assert.ok(existe("assets/img/thumbnails/splat/livret-splat-classique.webp"));
   assert.ok(taille("assets/img/thumbnails/splat/livret-splat-classique.webp") < taille("assets/img/thumbnails/splat/livret-splat-classique.png"));
@@ -627,8 +627,8 @@ test("K1 : la page des livrets du monde 1 mène aux six PDF de correction, sous 
     assert.ok(corr > 0, `${s} : lien vers la correction`);
     assert.ok(plier > corr, `${s} : lien « à plier » de la correction, à côté`);
     assert.ok(corr > c.indexOf(`href="/outils/${s}_a_plier.pdf"`), `${s} : sous les deux liens de l'élève`);
-    // lot L : le même bouton replié que le monde 2, une seule ligne ici
-    assert.match(c, /<summary>🧑‍🏫 Correction \(prof\)<\/summary>/, `${s} : bouton replié`);
+    // lot L : le même bouton replié que le monde 2, une seule ligne ici ; « pour tous » depuis le 23/09
+    assert.match(c, /<summary>✅ Le corrigé<\/summary>/, `${s} : bouton replié`);
     assert.match(c, /class="lien-prof"[^>]*>PDF<\/a>/, `${s} : libellé « PDF »`);
     assert.match(c, /class="lien-prof"[^>]*>à plier<\/a>/, `${s} : libellé « à plier »`);
   });
@@ -732,7 +732,7 @@ test("K2 : la page des livrets du monde 2 mène aux huit PDF de correction, repl
   const plierEleve = carte.indexOf('href="/outils/livret_splat_classique_a_plier.pdf"');
   const bloc = carte.slice(carte.indexOf('<details class="prof">'), carte.indexOf("</details>"));
   assert.ok(carte.indexOf('<details class="prof">') > plierEleve, "sous les deux liens de l'élève");
-  assert.match(bloc, /<summary>🧑‍🏫 Corrections \(prof\) · 4 livrets<\/summary>/);
+  assert.match(bloc, /<summary>✅ Les corrigés · 4 livrets<\/summary>/);
   let avant = -1;
   for (const [s] of CORRECTIONS_M2) {
     const pdf = bloc.indexOf(`href="/outils/${s}.pdf"`), plier = bloc.indexOf(`href="/outils/${s}_a_plier.pdf"`);
@@ -774,10 +774,10 @@ test("K1-bis : la phrase est sur la couverture des six PDF du monde 1 (élève e
    (20/09/2026) : un onglet par monde, les corrections du professeur repliées partout,
    la note « Pour imprimer » une seule fois en bas. */
 test("L : un onglet et un panneau par monde, le prof replié partout, la note une seule fois", () => {
-  assert.equal((page.match(/role="tab"/g) || []).length, 2, "deux onglets");
-  assert.equal((page.match(/role="tabpanel"/g) || []).length, 2, "deux panneaux");
+  assert.equal((page.match(/role="tab"/g) || []).length, 4, "quatre onglets (mondes 1 à 4)");
+  assert.equal((page.match(/role="tabpanel"/g) || []).length, 4, "quatre panneaux");
   assert.equal((page.match(/<section class="note"/g) || []).length, 1, "une seule note « Pour imprimer »");
-  assert.equal((page.match(/<details class="prof">/g) || []).length, 5, "les cinq cartes replient la correction");
+  assert.equal((page.match(/<details class="prof">/g) || []).length, 7, "les sept cartes replient leurs corrigés");
   assert.match(page, /sur A3 \(meilleur rendu\)/, "le conseil de Claire sur le A3");
   /* Sans JavaScript, aucun monde n'est caché. Le panneau porte l'attribut « hidden »,
      que le navigateur masque d'office : il FAUT donc les deux règles, dans cet ordre —
@@ -788,13 +788,62 @@ test("L : un onglet et un panneau par monde, le prof replié partout, la note un
   assert.ok(page.indexOf('document.documentElement.className += " js"') < page.indexOf("<style>"),
     "le script qui pose la classe js doit précéder le <style>");
   // les onglets mènent aux ancres, et les panneaux les portent
-  for (const n of [1, 2]) {
+  for (const n of [1, 2, 3, 4]) {
     assert.ok(page.includes(`href="#monde-${n}"`), `onglet du monde ${n}`);
     assert.ok(page.includes(`id="monde-${n}"`), `panneau du monde ${n}`);
   }
-  // sur téléphone, l'onglet se réduit à « Monde N » : les six mondes tiendront à l'écran
-  assert.match(page, /@media \(max-width:640px\)\{\n  \.onglets a \.etiq\{display:none\}/);
-  assert.equal((page.match(/<span class="court">Monde \d<\/span>/g) || []).length, 2);
+});
+
+/* ------------------------------------------------------------ les grandes cartes des mondes
+   (23/09/2026) Les petites pastilles pâles deviennent des cartes : le numéro dans une pastille
+   de la couleur du monde (un petit splat), le nom et les fiches, toutes de la même taille. Pas de couverture dans la carte (décision du
+   23/09 sur images : elle faisait doublon avec celle du livret, juste dessous). Toujours des
+   onglets. Une ligne jusqu'à 4 mondes, deux lignes de 3 à 5 ou 6 ; deux par ligne sur téléphone. */
+const CARTES_MONDES = [
+  [1, "Petit SPLAT!", "fiches 1 à 6"],
+  [2, "SPLAT! classique", "fiches 7 à 9"],
+  [3, "SPLAT! Enquête", "fiches 10 à 14"],
+  [4, "SPLAT! Grande enquête", "fiches 15 à 19"],
+];
+test("cartes des mondes : numéro, nom et fiches, dans l'ordre, toujours des onglets, sans couverture", () => {
+  const nav = page.slice(page.indexOf('<nav class="onglets"'), page.indexOf("</nav>"));
+  const cartes = nav.split("<a ").slice(1);
+  assert.equal(cartes.length, 4);
+  // data-n = le nombre de cartes : c'est lui qui passe la barre en deux lignes de 3 à 5 ou 6 mondes
+  assert.match(nav, new RegExp(`<nav class="onglets" id="onglets" data-n="${cartes.length}" role="tablist"`));
+  cartes.forEach((c, i) => {
+    const [n, nom, fiches] = CARTES_MONDES[i];
+    assert.ok(c.startsWith(`href="#monde-${n}" data-m="${n}" id="onglet-${n}" role="tab" aria-controls="monde-${n}"`), `carte ${n}`);
+    assert.match(c, new RegExp(`aria-selected="${n === 1}"`), `carte ${n} : seul le monde 1 est ouvert au départ`);
+    assert.ok(c.includes(`<span class="num" aria-hidden="true"><svg viewBox="2 5 106 105"><use href="#forme-tache"/></svg><b>${n}</b></span><span class="txt"><span class="sr">Monde ${n} · </span><span class="etiq">${nom}</span><span class="fiches">${fiches}</span></span>`), `carte ${n} : textes`);
+    assert.doesNotMatch(c, /<img/, `carte ${n} : pas de couverture dans la carte`);
+  });
+  // le numéro est dans un petit splat : la tache du bandeau, dessinée une seule fois et sans couleur
+  // imposée (sinon <use> ne peut pas prendre la couleur du monde)
+  assert.match(page, /<svg class="tache" viewBox="2 5 106 105" fill="#063b7a" aria-hidden="true"><path id="forme-tache" d="M /);
+  assert.match(page, /\.onglets a \.num use\{fill:var\(--c-plein\)\}/);
+  // toutes les cartes de la même taille, le nom sur deux lignes au plus
+  assert.match(page, /\.onglets\{display:grid;grid-template-columns:repeat\(4,minmax\(0,1fr\)\);grid-auto-rows:1fr;/);
+  assert.match(page, /\.onglets a \.etiq\{[^}]*-webkit-line-clamp:2/);
+  // la carte choisie : pleine, dans la couleur du monde ; l'orange foncé d'un cran pour le texte blanc
+  assert.match(page, /\.onglets a\[aria-selected="true"\]\{background:var\(--c-plein\)/);
+  assert.match(page, /\[data-m="1"\]\{--c:#f58220;--c-plein:#c2410c;/);
+  assert.match(page, /\[data-m="3"\],\[data-m="4"\]\{--c:#be185d;/, "mondes 3 et 4 : le framboise de la carte des mondes");
+  // 5 ou 6 mondes : deux lignes de 3, sans pointe ; téléphone : deux par ligne, sans pointe
+  assert.match(page, /\.onglets\[data-n="5"\],\.onglets\[data-n="6"\]\{grid-template-columns:repeat\(3,minmax\(0,1fr\)\)\}/);
+  assert.match(page, /\.onglets\[data-n="5"\] a::after,\.onglets\[data-n="6"\] a::after\{content:none!important\}/);
+  assert.match(page, /@media \(max-width:820px\)\{\n  \.onglets,\.onglets\[data-n="5"\],\.onglets\[data-n="6"\]\{grid-template-columns:repeat\(2,minmax\(0,1fr\)\)/);
+  assert.match(page, /\.onglets a\[aria-selected="true"\]::after\{content:none\}/);
+  // le script des onglets n'a pas changé : clic, flèches du clavier, adresse #monde-N
+  assert.match(page, /querySelectorAll\("#onglets a"\)/);
+  assert.match(page, /e\.key === "ArrowRight" \? 1 : e\.key === "ArrowLeft" \? -1 : 0/);
+  assert.match(page, /history\.replaceState\(null, "", "#monde-" \+ m\)/);
+});
+
+test("corrigés pour tous, sur la page : plus de « prof » ni de « professeur » dans les boutons et les titres", () => {
+  assert.doesNotMatch(page, /🧑‍🏫|\(prof\)|professeur/);
+  assert.match(page, /<strong>✅ Les corrigés<\/strong>&nbsp;: le même livret, aux mêmes pages, avec les réponses/);
+  assert.match(catalogue, /"cardDescription": "Tous les livrets de l’univers SPLAT! à plier, monde par monde\u00a0: [^"]*Grande enquête \(mondes 3 et 4\), et leurs corrigés\."/);
 });
 
 /* ===================================================================== lot D (21/09/2026)
@@ -937,7 +986,7 @@ test("D : la page des livrets donne deux livrets dans l'onglet du monde 2", () =
 });
 
 test("D : la miniature du livret « Le défi », et les pastilles de la vue prof", () => {
-  assert.match(page, /assets\/img\/thumbnails\/splat\/livret-splat-classique-defi\.png\?v=1/);
+  assert.match(page, /assets\/img\/thumbnails\/splat\/livret-splat-classique-defi\.png\?v=2/); // refaite le 23/09
   assert.ok(existe("assets/img/thumbnails/splat/livret-splat-classique-defi.png"));
   assert.ok(existe("assets/img/thumbnails/splat/livret-splat-classique-defi.webp"));
   assert.ok(taille("assets/img/thumbnails/splat/livret-splat-classique-defi.webp")

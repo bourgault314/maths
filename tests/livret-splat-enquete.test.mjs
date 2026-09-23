@@ -342,6 +342,7 @@ test("E5 : vue prof de la carte des mondes — le livret du monde 3 sous le mond
     assert.ok(b.includes(`href="/outils/${oui}_a_plier.pdf"`), oui + "_a_plier");
     assert.ok(!b.includes(non), `le monde ${n} ne montre que son livret`);
     assert.ok(b.includes(`Livret Monde ${n} (PDF)`) && b.includes(`Monde ${n} \\u00e0 plier`), `pastilles « Monde ${n} »`);
+    assert.ok(b.includes(`<a href="/outils/livrets_splat.html#monde-${n}">Voir la page des livrets</a>`), `monde ${n} : lien vers son onglet`);
   }
   assert.match(univers, /\.monde\.menq \.introLien\.livret\{color:#831843;background:#fce7f3;border-color:#f0abc9\}/);
   // les pastilles des mondes 1 et 2 n'ont pas bougé
@@ -397,4 +398,53 @@ test("E5 : l'exemple de la page 2 n'est aucune carte des fiches — relu dans ca
   }
   assert.deepEqual(cartes.multiplicatif.exemple, [33, [5, 7, 21]]);
   assert.deepEqual(cartes.additif.exemple, [26, [5, 9, 12]]);
+});
+
+/* ----------------------------------------------------- la page des livrets (23/09/2026)
+   Les mondes 3 et 4 ont chacun leur onglet dans outils/livrets_splat.html : le livret de
+   l'élève (PDF, à plier) et ses DEUX corrigés (« ? » et lettre), repliés comme ailleurs —
+   c'est ce qui rend les corrigés de l'Enquête téléchargeables. */
+const pageLivrets = lire("outils/livrets_splat.html");
+function panneauLivrets(n) {
+  const debut = pageLivrets.indexOf(`<section class="panneau" data-m="${n}" id="monde-${n}"`);
+  assert.ok(debut > 0, `panneau du monde ${n} introuvable`);
+  return pageLivrets.slice(debut, pageLivrets.indexOf("</section>", debut));
+}
+test("page des livrets : un onglet par monde de l'Enquête, le livret et ses deux corrigés repliés", () => {
+  SORTIES.forEach((s, i) => {
+    const n = i + 3, p = panneauLivrets(n);
+    assert.ok(p.includes(`role="tabpanel" aria-labelledby="onglet-${n}" hidden>`), `monde ${n} : caché au départ`);
+    assert.match(p, /<div class="grille n1">/, `monde ${n} : une seule carte`);
+    assert.equal((p.match(/<article class="liv">/g) || []).length, 1);
+    const eleve = p.indexOf(`href="/outils/${s}.pdf"`), plier = p.indexOf(`href="/outils/${s}_a_plier.pdf"`);
+    assert.ok(eleve > 0 && plier > eleve, `${s} : PDF puis « à plier »`);
+    const d = p.indexOf('<details class="prof">');
+    assert.ok(d > plier, `monde ${n} : les corrigés sous les deux liens de l'élève`);
+    const corr = p.slice(d, p.indexOf("</details>", d));
+    assert.match(corr, /<summary>✅ Les corrigés · 2 livrets<\/summary>/);
+    let avant = -1;
+    for (const v of ["_correction", "_correction_lettre"]) {
+      const a = corr.indexOf(`href="/outils/${s}${v}.pdf"`), b = corr.indexOf(`href="/outils/${s}${v}_a_plier.pdf"`);
+      assert.ok(a > avant && b > a, `${s}${v} : PDF puis « à plier », dans l'ordre`);
+      assert.ok(existe(`outils/${s}${v}.pdf`) && existe(`outils/${s}${v}_a_plier.pdf`), `${s}${v} : les fichiers existent`);
+      avant = b;
+    }
+    assert.equal((corr.match(/class="lien-prof"/g) || []).length, 4, "quatre liens");
+    assert.match(corr, /Inconnue <small>«&nbsp;\?&nbsp;»<\/small>[\s\S]*Inconnue <small>en lettre<\/small>/);
+  });
+  assert.ok(panneauLivrets(3).includes("<h2 class=\"monde-nom\">Monde 3 · SPLAT! Enquête</h2>"));
+  assert.ok(panneauLivrets(4).includes("<h2 class=\"monde-nom\">Monde 4 · SPLAT! Grande enquête</h2>"));
+  assert.ok(panneauLivrets(3).includes("<span class=\"plage\">fiches 10 à 14</span>"));
+  assert.ok(panneauLivrets(4).includes("<span class=\"plage\">fiches 15 à 19</span>"));
+});
+
+test("page des livrets : la couverture des livrets de l'Enquête, en PNG et en WebP (plus légère), 993 × 1404", () => {
+  for (const nom of ["livret-splat-enquete-additif", "livret-splat-enquete-multiplicatif"]) {
+    const png = `assets/img/thumbnails/splat/${nom}.png`, webp = `assets/img/thumbnails/splat/${nom}.webp`;
+    assert.ok(existe(png) && existe(webp), nom);
+    assert.ok(taille(webp) < taille(png), `${nom} : la WebP est plus légère`);
+    const b = readFileSync(new URL(`../${png}`, import.meta.url));
+    assert.deepEqual([b.readUInt32BE(16), b.readUInt32BE(20)], [993, 1404], `${nom} : page 1 rendue à 120 dpi`);
+    assert.ok(pageLivrets.includes(`src="/assets/img/thumbnails/splat/${nom}.png?v=1"`), `${nom} : sur la page`);
+  }
 });
