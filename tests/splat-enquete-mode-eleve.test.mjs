@@ -8,7 +8,9 @@
    - « Voir le schéma » : cinq étapes, une par appui, puis le bouton s'efface ;
    - le nom de la couleur sur la tache dévoilée se pose juste au-dessus du jeton (écran
      et impression passent par la même fonction) ;
-   - le dévoilement de l'Enquête redessine la carte (les taches ont leur propre couleur). */
+   - le dévoilement de l'Enquête redessine la carte (les taches ont leur propre couleur) ;
+   - téléphone (23/09/2026) : le schéma en portrait, entier ; le bandeau TOTAL + indice à la
+     place du plateau ; la ligne des réponses ; des boutons qui ne bougent plus. */
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
@@ -216,26 +218,21 @@ test("les étapes sont celles de la projection, et la nouvelle carte repart du p
   assert.match(fn("renderEleveSplat"), /eleveEnqueteDevoile = false; eleveSchemaEtape = 0;[^\n]*\n  renderCard\(card, 0\);/);
   assert.match(fn("renderEleveSplat"), /elevePaveRendrePlateau\(\);[^\n]*\n  eleveSchemaReinitialiser\(\);/);
   assert.match(fn("renderEleveFinSplat"), /eleveEnqueteDevoile = false; eleveSchemaEtape = 0;[^\n]*\n  renderCard\(eleveSerie\[total - 1\], 0\);/);
-  // téléphone : seul le cadre du schéma, 1,5 fois plus large que l'écran, à faire glisser
-  assert.match(constLine("const ELEVE_SCHEMA_ZOOM_TEL = "), /= 1\.5;/);
-  assert.match(fn("eleveDessinerSchema"), /window\.matchMedia\("\(max-width: 599px\)"\)\.matches/);
-  assert.match(fn("eleveDessinerSchema"), /plateau\.classList\.toggle\("eleveSchemaZoom", telephone\);/);
-  const r = regles(feuille);
-  const decl = (sel) => (r.find((x) => x.sel === sel) || {}).decl || "";
-  assert.match(decl("body.eleve-mode #svgWrap.eleveSchemaZoom"), /display:block;place-items:start;overflow-x:auto/);
-  assert.match(decl("body.eleve-mode #svgWrap.eleveSchemaZoom #mainSvg"), /max-width:none/);
+  // le cadre 1,5 fois plus large que l'écran, à faire glisser (coupé à droite), a disparu
+  assert.doesNotMatch(html, /ELEVE_SCHEMA_ZOOM_TEL|eleveSchemaZoom/);
+  assert.match(fn("eleveSchemaTelephone"), /window\.matchMedia\("\(max-width: 599px\)"\)\.matches/);
   // ordinateur : le plateau ne grandit que de la place libre (fenêtre − reste de la carte − 16),
   // pour que « Étape suivante » puis « Carte suivante » restent entiers à l'écran
   const plateauPC = (fenetre, plateauH, carteH) => {
-    const plateau = { getBoundingClientRect: () => ({ width: 1498, height: plateauH }), classList: { toggle(){} }, style: {} };
+    const plateau = { getBoundingClientRect: () => ({ width: 1498, height: plateauH }), classList: { contains: () => false }, style: {} };
     new Function("document", "window", `
       function renderCard(){}
       function eleveCadrerScene(){}
+      function eleveSchemaReinitialiser(){ throw new Error("pas de nettoyage hors téléphone"); }
       const svg = { viewBox: { baseVal: { width: 1600, height: 1100 } }, style: {}, setAttribute(){} };
       let eleveSchemaEtape = 1;
       ${constLine("const ELEVE_PLATEAU_MIN = ")}
-      ${constLine("const ELEVE_SCHEMA_ZOOM_TEL = ")}
-      ${constLine("const ELEVE_SCHEMA_CADRES = ")}
+      ${fn("eleveSchemaTelephone")}
       ${fn("eleveDessinerSchema")}
       eleveDessinerSchema({});
     `)(
@@ -249,6 +246,211 @@ test("les étapes sont celles de la projection, et la nouvelle carte repart du p
   assert.equal(plateauPC(590, 280, 587), undefined, "pas de place libre : le plateau ne rétrécit pas");
   assert.equal(plateauPC(2000, 437, 789), "1030px", "grande fenêtre : le dessin à pleine largeur (1498 × 1100 / 1600)");
   assert.doesNotMatch(fn("eleveDessinerSchema"), /0\.62/, "plus de plafond à 62 % de la fenêtre");
+});
+
+// --- téléphone : le schéma en portrait (23/09/2026) ------------------------------------------
+/* Un faux téléphone de 359 px de plateau : la carte a cinq cadres de hauteurs différentes ;
+   « haut des boutons » = ce qu'il y a au-dessus du plateau + le plateau + la ligne des
+   réponses + la marge des boutons (avant le schéma : 448 px, comme sur l'iPhone). */
+function harnaisTelephone({ hauteurs = { 1: 300, 2: 300, 3: 470, 4: 420, 5: 660 }, avant = 448, sansCadre = false } = {}){
+  const classes = () => { const s = new Set(); return { add: (k) => s.add(k), remove: (k) => s.delete(k), contains: (k) => s.has(k), liste: s }; };
+  const plateau = { classList: classes(), style: {}, getBoundingClientRect: () => ({ width: 359, height: 208 }) };
+  const panneau = { classList: classes() };
+  let bandeau = null;
+  plateau.parentNode = { insertBefore: (n, ref) => { assert.equal(ref, plateau, "le bandeau se pose juste avant le plateau"); bandeau = n; } };
+  const actions = { style: {}, getBoundingClientRect: () => ({
+    top: plateau.classList.contains("eleveSchemaTel")
+      ? 100 + parseFloat(plateau.style.height) + 40 + parseFloat(actions.style.marginTop || "14")
+      : avant }) };
+  const cadre = {
+    querySelector: (sel) => (sel === "rect" ? { getAttribute: (a) => ({ x: "60", width: "960" })[a] } : null),
+    getBBox: () => ({ x: 60, y: 620, width: 960, height: hauteurs[ctx.etapeDessinee()] })
+  };
+  const document = {
+    getElementById: (id) => ({ svgWrap: plateau, elevePanel: panneau, eleveRappel: bandeau, relationSituationSchema: sansCadre ? null : cadre })[id] || null,
+    querySelector: (sel) => (sel === "#elevePanel .eleveActions" ? actions : null),
+    createElement: () => ({ remove(){ bandeau = null; } })
+  };
+  const window = { scrollY: 0, matchMedia: () => ({ matches: true }) };
+  const ctx = new Function("document", "window", `
+    let eleveSchemaEtape = 0, eleveIdx = 0, eleveSchemaTel = false;
+    ${constLine("const ELEVE_SCHEMA_ETAPES = ")}
+    ${constLine("const ELEVE_PLATEAU_MIN = ")}
+    ${constLine("const ELEVE_SCHEMA_CADRES = ")}
+    ${constLine("let eleveSchemaTelReserve = ")}
+    const svg = { style: {}, vb: null, setAttribute(k, v){ if(k === "viewBox") this.vb = v; } };
+    const rendus = []; let derniere = 0;
+    function renderCard(card, etape){ rendus.push([etape, eleveSchemaTel]); derniere = etape; }
+    let cadrages = 0;
+    function eleveCadrerScene(){ if(!${sansCadre}) throw new Error("le téléphone ne recadre pas la scène entière"); cadrages++; }
+    ${fn("eleveSchemaTelephone")}
+    ${fn("eleveSchemaTelRendre")}
+    ${fn("eleveDessinerSchema")}
+    ${fn("eleveRappelHtml")}
+    ${fn("eleveRappelAfficher")}
+    ${fn("eleveSchemaReinitialiser")}
+    const carte = { total: 27, _inv: { indices: ["Sous la tache rouge, il y a 9 jetons de moins que sous la tache bleue."] } };
+    return {
+      etape(e){ eleveSchemaEtape = e; eleveDessinerSchema(carte); },
+      carteSuivante(){ eleveIdx++; },
+      reinitialiser: eleveSchemaReinitialiser,
+      etapeDessinee: () => derniere, rendus, svg,
+      reserve: () => eleveSchemaTelReserve, tel: () => eleveSchemaTel, cadrages: () => cadrages
+    };
+  `)(document, window);
+  const px = (h) => Math.round(359 * (h + 12) / (960 + 12));
+  const hautBoutons = () => actions.getBoundingClientRect().top;
+  return { ctx, plateau, panneau, actions, bandeau: () => bandeau, px, hautBoutons, hauteurs };
+}
+
+test("téléphone : chaque étape se dessine en portrait, entière, à la largeur du plateau", () => {
+  const t = harnaisTelephone();
+  t.ctx.etape(1);
+  // la première étape mesure les cinq cadres, puis redessine la sienne — toujours en portrait
+  assert.deepEqual(t.ctx.rendus, [[1, true], [2, true], [3, true], [4, true], [5, true], [1, true]]);
+  assert.equal(t.ctx.tel(), false, "le drapeau portrait ne vaut que pendant le dessin");
+  assert.equal(t.ctx.svg.vb, "54 614 972 312", "cadré sur le cadre, 6 unités de marge : rien de coupé");
+  assert.equal(t.ctx.svg.style.width, "359px", "la largeur du plateau, pas 1,5 fois");
+  assert.equal(t.plateau.style.height, t.px(300) + "px");
+  assert.equal(t.ctx.reserve().h, t.px(660), "la place réservée : la plus haute des cinq étapes");
+  assert.ok(t.plateau.classList.contains("eleveSchemaTel"));
+  assert.ok(t.panneau.classList.contains("schemaTel"), "le panneau passe en « ligne des réponses »");
+  assert.match(t.bandeau().innerHTML, /<span>TOTAL<\/span><b>27<\/b>/);
+  assert.match(t.bandeau().innerHTML, /<p>Sous la tache rouge, il y a 9 jetons de moins que sous la tache bleue\.<\/p>/);
+  // les étapes suivantes : un seul dessin chacune
+  t.ctx.etape(2); t.ctx.etape(3);
+  assert.deepEqual(t.ctx.rendus.slice(6), [[2, true], [3, true]]);
+  assert.equal(t.plateau.style.height, t.px(470) + "px", "le plateau prend la hauteur du cadre de l'étape");
+});
+
+test("téléphone : les boutons ne bougent pas d'une étape à l'autre, et restent là où était « Voir le schéma » quand la carte le permet", () => {
+  const t = harnaisTelephone();
+  const hauts = [1, 2, 3, 4, 5].map((e) => { t.ctx.etape(e); return t.hautBoutons(); });
+  assert.deepEqual(hauts, [448, 448, 448, 448, 448], "carte courte : exactement la place d'avant le schéma");
+  assert.equal(t.actions.style.marginTop, (14 + t.px(660) - t.px(660) + t.ctx.reserve().plus) + "px");
+  // carte haute (trois taches) : ils descendent une fois, puis ne bougent plus
+  const g = harnaisTelephone({ hauteurs: { 1: 420, 2: 420, 3: 560, 4: 520, 5: 900 } });
+  const hautsG = [1, 2, 3, 4, 5].map((e) => { g.ctx.etape(e); return g.hautBoutons(); });
+  assert.equal(new Set(hautsG).size, 1, "même place aux cinq étapes");
+  assert.ok(hautsG[0] > 448, "plus bas qu'avant le schéma, jamais plus haut");
+  assert.equal(g.ctx.reserve().plus, 0);
+});
+
+test("téléphone : nouvelle carte ou appareil tourné, tout revient comme avant le schéma", () => {
+  const t = harnaisTelephone();
+  t.ctx.etape(1); t.ctx.etape(2);
+  t.ctx.reinitialiser();
+  assert.equal(t.plateau.classList.contains("eleveSchemaTel"), false);
+  assert.equal(t.panneau.classList.contains("schemaTel"), false);
+  assert.equal(t.bandeau(), null, "le bandeau est retiré");
+  assert.equal(t.actions.style.marginTop, "");
+  assert.equal(t.ctx.reserve(), null);
+  assert.equal(t.ctx.svg.style.width, "");
+  // la carte suivante remesure ses cinq cadres
+  t.ctx.carteSuivante(); const n = t.ctx.rendus.length; t.ctx.etape(1);
+  assert.equal(t.ctx.rendus.length - n, 6);
+  // nouvelle carte : les boutons du schéma quittent la ligne commune, l'écran de fin reprend
+  // le cadrage de la carte (le schéma resté affiché lui laissait son cadre, TOTAL coupé)
+  assert.match(fn("renderEleveSplat"), /  eleveSchemaReinitialiser\(\);[^\n]*\n  panneau\.classList\.remove\("avecSchema"\);/);
+  assert.match(fn("renderEleveFinSplat"), /renderCard\(eleveSerie\[total - 1\], 0\);\n  eleveCadrerScene\(\);/);
+  // l'appareil tourné (plus de 600 px) : l'étape suivante quitte le portrait
+  assert.match(fn("eleveDessinerSchema"), /if\(plateau && plateau\.classList\.contains\("eleveSchemaTel"\)\) eleveSchemaReinitialiser\(\);\n  renderCard\(card, eleveSchemaEtape\);/);
+});
+
+test("le bandeau : la case TOTAL puis la ou les phrases d'indice, texte échappé", () => {
+  const rappel = new Function(`${fn("eleveRappelHtml")} return eleveRappelHtml;`)();
+  const h = rappel({ total: 38, _inv: { indices: ["Sous la tache noire, il y a 12 jetons de plus que sous la tache bleue.", [{ type: "splat" }], "A < B & C"] } });
+  assert.equal(h, '<div class="eleveRappelTotal"><span>TOTAL</span><b>38</b></div>' +
+    '<div class="eleveRappelIndices"><p>Sous la tache noire, il y a 12 jetons de plus que sous la tache bleue.</p><p>A &lt; B &amp; C</p></div>',
+    "seules les phrases (pas les indices en symboles), dans l'ordre");
+  assert.equal(rappel({ total: 5 }), '<div class="eleveRappelTotal"><span>TOTAL</span><b>5</b></div><div class="eleveRappelIndices"></div>');
+  assert.match(rappel({ total: 48, _rel: { sansTotal: true } }), /<b class="inconnu">\?<\/b>/, "une carte sans total ne donne pas son total");
+  // son « ? » en gris ardoise, dans le bandeau comme dans la case TOTAL du tableau
+  const r = regles(feuille);
+  assert.equal((r.find((x) => x.sel === "#eleveRappel .eleveRappelTotal b.inconnu, #elevePanel.sansTotal .eleveCase.haut.donnee .eleveDonneeVal") || {}).decl, "color:#64748b");
+  assert.match(fn("renderEleveSplat"), /panneau\.classList\.toggle\("sansTotal", !!\(enquete && card\._rel && card\._rel\.sansTotal\)\);/);
+});
+
+test("téléphone : un schéma sans cadre portrait repasse au dessin d'ordinateur, rien ne reste à moitié", () => {
+  const t = harnaisTelephone({ sansCadre: true });
+  t.ctx.etape(1);
+  assert.equal(t.ctx.tel(), false);
+  assert.equal(t.ctx.cadrages(), 1, "la scène entière est recadrée, comme sur ordinateur");
+  assert.equal(t.plateau.classList.contains("eleveSchemaTel"), false);
+  assert.equal(t.panneau.classList.contains("schemaTel"), false, "le tableau complet revient");
+  assert.equal(t.bandeau(), null);
+  assert.equal(t.ctx.reserve(), null);
+  const src = fn("eleveSchemaTelRendre");
+  assert.match(src, /if\(!cadre\) throw new Error\("schéma sans cadre portrait"\);/);
+  assert.match(src, /eleveSchemaTel = true;\n  try\{ renderCard\(card, etape\); \} finally \{ eleveSchemaTel = false; \}/, "le drapeau retombe même si le dessin échoue");
+});
+
+test("téléphone : pendant le schéma, la ligne des réponses reste, les boutons tiennent sur une ligne", () => {
+  const r = regles(feuille);
+  const decl = (sel) => (r.find((x) => x.sel === sel) || {}).decl || "";
+  assert.equal(decl("#elevePanel.schemaTel .eleveConsigne, #elevePanel.schemaTel .eleveDiag .ligneHaut, #elevePanel.schemaTel .eleveMsg"), "display:none",
+    "la question, la ligne TOTAL (déjà dans le bandeau) et le message s'effacent le temps du schéma");
+  assert.equal(decl("#elevePanel.enquete.avecSchema .eleveActions"), "flex-wrap:nowrap");
+  assert.match(feuille, /@media \(max-width:599px\)\{\n    #elevePanel\.enquete\.avecSchema \.eleveActions button\{flex:1 1 0;max-width:240px;padding:12px 4px;white-space:nowrap\}/);
+  assert.match(decl("body.eleve-mode #svgWrap.eleveSchemaTel"), /overflow:hidden/, "plus de défilement de côté");
+  assert.match(fn("eleveProposerSchema"), /panneauS\.classList\.add\("avecSchema"\)/);
+  assert.match(fn("renderEleveSplat"), /panneau\.classList\.remove\("avecSchema"\);/);
+});
+
+// --- le dessin portrait des schémas ------------------------------------------------------------
+test("cadre portrait : étroit, l'équation sous le tableau ; le cadre paysage (ordinateur, impression) ne change pas", () => {
+  const lay = new Function(`${constLine("const RELATION_PORTRAIT = ")} ${fn("getRelationSchemaLayout")} return getRelationSchemaLayout;`)();
+  assert.deepEqual(lay({}), { boxX: 60, boxW: 1480, labelW: 150, equationW: 660, barX: 210, barW: 636, barShiftX: 0, equationCenterX: 1210 });
+  assert.deepEqual(lay({ barShiftX: 30 }).barW, 636, "impression : même tableau");
+  const p = lay({ portrait: true });
+  assert.deepEqual(p, { boxX: 60, boxW: 960, labelW: 230, equationW: 944, barX: 290, barW: 560, barShiftX: 0, equationCenterX: 540, portrait: true });
+  assert.match(constLine("const ELEVE_SCHEMA_TEL_OPTS = "), /\{ portrait:true, fontScale:1\.6, verticalScale:1\.3 \};/);
+  // l'équation se centre dans la largeur du cadre ; en paysage, rien ne bouge
+  const fit = new Function(`
+    function getRelationDrawingMetrics(o){ const k = (o && o.fontScale) || 1; return { font: (x) => Math.round(x * k) }; }
+    function measureRelationEquationTextWidth(t, fs){ return String(t).length * fs * 0.5; }
+    function measureArrowLabelWidth(t, fs){ return String(t).length * fs * 0.5; }
+    ${fn("relationEquationFit")}
+    return relationEquationFit;`)();
+  const lignes = [{ left: "? + ? + 4 + ? + 12 + 7", right: "38" }];
+  const fp = fit(lignes, [], p, { fontScale: 1.6 });
+  const g = 22 + 18, lhs = lignes[0].left.length * fp.fontSize * 0.5, rhs = 2 * fp.fontSize * 0.5, eq = Math.round(fp.fontSize * 0.65);
+  const gauche = fp.eqCenter - eq - lhs, droite = fp.eqCenter + eq + rhs;
+  assert.ok(gauche >= 60 + 26 && droite <= 60 + 960 - 26, "la ligne tient entre les bords du cadre");
+  assert.ok(Math.abs((gauche - 86) - (1020 - 26 - droite)) <= 26, "et elle est centrée (à la réserve des flèches près)");
+  void g;
+  const fl = fit(lignes, [], lay({}), {});
+  assert.ok(fl.eqCenter > 210 + 636, "paysage : toujours à droite du tableau");
+  // les trois cadres savent se dessiner en portrait, et « Résoudre » reste au professeur
+  for (const nom of ["drawRelationSituationSchema", "drawRelationGroupedSchema", "drawRelationOrderedSchema"]) {
+    assert.match(fn(nom), /relationPortraitTete\(boxY, f, v\)/, `${nom} : titre et « Total » ont leur air en portrait`);
+  }
+  // les trois cadres de l'Enquête « sans total » aussi : titre sur deux lignes, calculs sous
+  // les barres, réponse sous la vérification (à droite, elle sortait du cadre étroit)
+  for (const nom of ["drawEnqueteSansTotalSituation", "drawEnqueteDeuxEcritures", "drawEnqueteVerification"]) {
+    assert.match(fn(nom), /relationPortraitTete\(boxY, f, v\)/, `${nom} : portrait`);
+  }
+  assert.match(fn("drawEnqueteDeuxEcritures"), /const titres = portrait \? \[`La \$\{word\}, écrite deux fois :`, "ce qui dépasse"\]/);
+  assert.match(fn("drawEnqueteDeuxEcritures"), /y = y2 \+ rowH \+ v\(30\) \+ Math\.round\(fs \* 0\.5\);/);
+  assert.match(fn("drawEnqueteVerification"), /if\(portrait\) drawRelationAnswerLine\(g, card, boxX \+ 16, boxW - 32,/);
+  assert.match(fn("drawRelationGroupedSchema"), /cadreReg\.setAttribute\("height", boxH\);/);
+  assert.match(fn("drawRelationOrderedSchema"), /cadreOrd\.setAttribute\("height", boxH\);/);
+  assert.match(fn("drawRelationOrderedSchema"), /if\(!solved && !\(typeof eleveActif !== "undefined" && eleveActif\)\)\{\n    drawEquabarSolveButton/);
+});
+
+test("renderCard : portrait au téléphone, et sur ordinateur la phrase d'indice reste sous le plateau (mode élève seulement)", () => {
+  const r = fn("renderCard");
+  assert.match(r, /const relTel = telEleve \? ELEVE_SCHEMA_TEL_OPTS : \{\};/);
+  for (const appel of [
+    "drawRelationSituationSchema(relCible, card, { filled: revealState === 2, ...relTel });",
+    "drawRelationGroupedSchema(relCible, card, { ...relTel });",
+    "drawRelationOrderedSchema(relCible, card, { ...relTel });",
+    "drawRelationOrderedSchema(relCible, card, { solved:true, ...relTel });"
+  ]) assert.ok(r.includes(appel), appel);
+  assert.match(r, /const phrasesEleve = \(typeof eleveActif !== "undefined" && eleveActif && !telEleve && isCRelationLayout/,
+    "la projection ne change pas ; le téléphone a son bandeau");
+  assert.match(r, /const basPlateau = relTrayY \+ relTrayK \* \(trayCfg\.y \+ trayCfg\.h\);/);
+  assert.match(r, /const dy = Math\.max\(0, Math\.round\(derniere \+ 36 - 620\)\);/, "le cadre descend d'autant que les phrases le demandent");
 });
 
 // --- les vraies largeurs après validation ------------------------------------------------------

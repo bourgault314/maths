@@ -65,7 +65,8 @@ test("la nouvelle disposition reste limitee au rendu ecran", () => {
 test("C et C direct gardent leur mise en page normale mais rentrent dans le plein ecran", () => {
   const renderer = functionSource("renderCard", "approxTextWidthForLabel");
 
-  assert.match(renderer, /isFullscreenProjection \? "translate\(210 -32\) scale\(0\.74\)" : "translate\(240 -46\) scale\(0\.70\)"/);
+  assert.match(renderer, /isFullscreenProjection \? "translate\(210 -32\) scale\(0\.74\)" : "translate\(240 -26\) scale\(0\.70\)"/);
+  assert.match(renderer, /const relTrayY = isFullscreenProjection \? -32 : -26, relTrayK = isFullscreenProjection \? 0\.74 : 0\.70;/);
   assert.match(renderer, /isFullscreenProjection \? -38 : -42/);
 
   // En plein écran, le plateau descend avec TOTAL et reste séparé du premier schéma.
@@ -73,4 +74,11 @@ test("C et C direct gardent leur mise en page normale mais rentrent dans le plei
   const trayBottom = trayTop + 0.74 * 550;
   assert.ok(trayTop > 160);
   assert.ok(trayBottom < 620);
+  // Hors plein écran aussi (23/09/2026) : le cartouche TOTAL (bas à ≈ 139,6) touchait le
+  // plateau à -46 (haut à 141) ; à -26 il y a 21 unités d'air, et le plateau finit
+  // toujours avant le premier schéma.
+  const trayTopNormal = -26 + 0.70 * 270;
+  assert.equal(trayTopNormal, 163);
+  assert.ok(trayTopNormal - 3 - 139.6 > 20, "au moins 20 unités entre le TOTAL et le plateau (trait compris)");
+  assert.ok(trayTopNormal + 0.70 * 550 < 620);
 });

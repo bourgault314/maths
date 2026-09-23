@@ -327,7 +327,9 @@ test("le cadre de la tache de référence dit qu'il n'y a pas de total ; les aut
 
 test("écran : cinq clics (vide, rempli, deux écritures, calculs, vérification), taches dévoilées au 4e ; impression : quatre cadres", () => {
   const ecran = html.slice(html.indexOf("\nfunction renderCard("), html.indexOf("\nfunction renderCardIntoSvg("));
-  assert.match(ecran, /\}else if\(card\.family === "C" && card\._rel && card\._rel\.sansTotal\)\{\s*\/\/[^\n]*\n[^\n]*\n\s*if\(revealState === 1 \|\| revealState === 2\) drawEnqueteSansTotalSituation\(svg, card, \{ filled: revealState === 2 \}\);\s*if\(revealState === 3 \|\| revealState === 4\) drawEnqueteDeuxEcritures\(svg, card, \{ solved: revealState === 4 \}\);\s*if\(revealState === 5\) drawEnqueteVerification\(svg, card\);/);
+  assert.match(ecran, /\}else if\(card\.family === "C" && card\._rel && card\._rel\.sansTotal\)\{\s*\/\/[^\n]*\n[^\n]*\n\s*if\(revealState === 1 \|\| revealState === 2\) drawEnqueteSansTotalSituation\(relCible, card, \{ filled: revealState === 2, \.\.\.relTel \}\);\s*if\(revealState === 3 \|\| revealState === 4\) drawEnqueteDeuxEcritures\(relCible, card, \{ solved: revealState === 4, \.\.\.relTel \}\);\s*if\(revealState === 5\) drawEnqueteVerification\(relCible, card, \{ \.\.\.relTel \}\);/);
+  // (lot E6, correction au téléphone : relCible porte les phrases d'indice de l'élève sur
+  // ordinateur, relTel le dessin portrait au téléphone — comme les autres cartes de l'Enquête)
   assert.match(ecran, /revealState >= \(card\._rel && card\._rel\.sansTotal \? 4 : 5\)/);
   // « TOTAL ? » en gris ardoise, à l'écran comme à l'impression
   assert.match(ecran, /sansTotalAffiche \? "\?" : String\(card\.total\)/);

@@ -806,8 +806,31 @@
   .eleveCase.haut.donnee .eleveTacheNom{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#475569}
   #elevePanel.enquete .eleveActions{flex-wrap:wrap}
   /* Téléphone, schéma agrandi : le plateau se fait glisser de gauche à droite. */
-  body.eleve-mode #svgWrap.eleveSchemaZoom{display:block;place-items:start;overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;touch-action:pan-x pan-y} /* place-items : sans quoi le dessin large est centré et sa gauche perdue */
-  body.eleve-mode #svgWrap.eleveSchemaZoom #mainSvg{display:block;max-width:none}
+  /* Téléphone, schéma de l'Enquête : cadre portrait en haut de la place réservée,
+     bandeau TOTAL + indice au-dessus (eleveDessinerSchema). */
+  body.eleve-mode #svgWrap.eleveSchemaTel{display:block;overflow:hidden}
+  body.eleve-mode #svgWrap.eleveSchemaTel #mainSvg{display:block;margin:0 auto}
+  #eleveRappel{display:flex;align-items:center;gap:12px;margin:2px 2px 10px}
+  #eleveRappel .eleveRappelTotal{flex:0 0 auto;border:2.5px solid #000;border-radius:10px;background:var(--totalbox-fill);padding:4px 10px 5px;text-align:center;line-height:1}
+  #eleveRappel .eleveRappelTotal span{display:block;font-size:10px;font-weight:800;letter-spacing:1.5px;color:var(--total-label)}
+  #eleveRappel .eleveRappelTotal b{display:block;font-size:24px;font-weight:900;margin-top:2px}
+  /* Enquête sans total : le « ? » du TOTAL en gris ardoise, comme sur le plateau et à l'impression */
+  #eleveRappel .eleveRappelTotal b.inconnu, #elevePanel.sansTotal .eleveCase.haut.donnee .eleveDonneeVal{color:#64748b}
+  #eleveRappel .eleveRappelIndices{flex:1 1 auto;min-width:0}
+  #eleveRappel .eleveRappelIndices p{margin:0;font-size:13.5px;font-weight:700;line-height:1.28;color:var(--ink)}
+  #eleveRappel .eleveRappelIndices p+p{margin-top:4px}
+  /* les deux boutons de la correction sur une seule ligne, aussi sur téléphone */
+  #elevePanel.enquete.avecSchema .eleveActions{flex-wrap:nowrap}
+  /* téléphone, pendant le schéma : le bandeau porte déjà le TOTAL ; il reste du tableau
+     la ligne des réponses, sans la question ni le message (lus avant le schéma) */
+  #elevePanel.schemaTel .eleveConsigne, #elevePanel.schemaTel .eleveDiag .ligneHaut, #elevePanel.schemaTel .eleveMsg{display:none}
+  @media (max-width:599px){
+    #elevePanel.enquete.avecSchema .eleveActions button{flex:1 1 0;max-width:240px;padding:12px 4px;white-space:nowrap}
+  }
+  @media (max-width:389px){
+    #elevePanel.enquete.avecSchema .eleveActions{gap:8px}
+    #elevePanel.enquete.avecSchema .eleveActions button{font-size:14.5px}
+  }
   .eleveActions{display:flex;justify-content:center;gap:10px;margin-top:14px}
   .eleveActions button{font:inherit;font-weight:900;border:none;border-radius:12px;padding:12px 24px;min-height:48px;cursor:pointer;background:#2563eb;color:#fff}
   .eleveActions button:disabled{opacity:.45;cursor:default}
@@ -5441,6 +5464,18 @@ function drawRightTotalBrace(g, x, y, h, label, opts={}){
     "font-size":fontSize, "font-weight":950, fill:"var(--ink)"
   }));
 }
+/* Cadre « portrait » des schémas de l'Enquête (téléphone, mode élève) : colonne des noms,
+   tableau, place de l'accolade du total à droite ; l'équation dessous (voir
+   getRelationSchemaLayout). Les polices sont agrandies par ELEVE_SCHEMA_TEL_OPTS. */
+const RELATION_PORTRAIT = { labelW: 230, barW: 560, rightW: 170 };
+/* Portrait : avec les polices agrandies, le titre touchait le bord du cadre et le mot
+   « Total » touchait à la fois le titre et le tableau — chacun reçoit son air. */
+function relationPortraitTete(boxY, f, v){
+  const titreY = boxY + v(14) + Math.round(f(27) * 0.74);
+  const totalFs = f(22);
+  const yTop = titreY + v(26) + totalFs + v(8);
+  return { titreY, yTop, totalY: yTop - v(8) - Math.round(totalFs / 2) };
+}
 function getRelationSchemaLayout(opts = {}){
   // Cadre élargi (60 → 1540) et colonne d'équation plus large (620) : les lignes
   // de la résolution reçoivent leurs flèches d'opération à gauche et à droite.
@@ -5449,6 +5484,15 @@ function getRelationSchemaLayout(opts = {}){
   const rawBarShift = Number(opts.barShiftX);
   const barShiftX = Number.isFinite(rawBarShift) ? Math.max(0, Math.min(120, rawBarShift)) : 0;
   const boxX = 60;
+  if(opts.portrait){
+    // Téléphone (mode élève) : cadre étroit, l'équation passe SOUS le tableau au lieu
+    // d'être à sa droite — le cadre se dessine à la largeur de l'écran sans rien couper.
+    const labelW = RELATION_PORTRAIT.labelW + barShiftX;
+    const barW = RELATION_PORTRAIT.barW;
+    const boxW = labelW + barW + RELATION_PORTRAIT.rightW;
+    return { boxX, boxW, labelW, equationW: boxW - 16, barX: boxX + labelW, barW, barShiftX,
+             equationCenterX: boxX + boxW / 2, portrait: true };
+  }
   const boxW = 1480;
   const labelW = 150 + barShiftX;
   const equationW = 660 - barShiftX;
@@ -5532,7 +5576,8 @@ function drawRelationSituationSchema(targetGroup, card, opts = {}){
   const displayRowCount = taskCount + (hasVisibleRow ? 1 : 0);
   const rowH = v(displayRowCount >= 4 ? 52 : (displayRowCount >= 3 ? 60 : 72));
   const gap = v(displayRowCount >= 4 ? 10 : (displayRowCount >= 3 ? 12 : 17));
-  const titleH = v(56); // espace clair sous le titre avant les barres
+  const teteSit = layout.portrait ? relationPortraitTete(boxY, f, v) : null;
+  const titleH = teteSit ? (teteSit.titreY - boxY) + v(26) : v(56); // espace clair sous le titre avant les barres
   const labelW = layout.labelW;
   const barX = layout.barX;
   const barW = layout.barW;
@@ -5557,31 +5602,34 @@ function drawRelationSituationSchema(targetGroup, card, opts = {}){
     x:boxX, y:boxY, width:boxW, height:boxH, rx:22,
     fill:"rgba(255,255,255,0.94)", stroke:"#000", "stroke-width":3
   }));
-  g.appendChild(text(boxX+boxW/2, boxY+v(29), filled ? "Schéma rempli de la situation" : "Schéma vide de la situation", {
+  g.appendChild(text(boxX+boxW/2, teteSit ? teteSit.titreY : boxY+v(29), filled ? "Schéma rempli de la situation" : "Schéma vide de la situation", {
     "text-anchor":"middle", "font-size":f(25), "font-weight":950, fill:"var(--ink)"
   }));
 
   const rowsTop = boxY + titleH;
   let maxRowEnd = barX;
+  // pastille puis nom de la couleur ; en portrait, la pastille agrandie ne touche pas le nom
+  const pastX = teteSit ? boxX + 18 + f(13) : boxX + 30;
+  const nomX = teteSit ? boxX + 18 + 2 * f(13) + 10 : boxX + 54;
   for(let r=0;r<rows.length;r++){
     const y = rowsTop + r*(rowH+gap);
     const isVisible = hasVisibleRow && r === rows.length - 1;
     const i = isVisible ? r : rowOrder[r]; // i : l'indice de la tache (couleur, nom)
 
     if(isVisible){
-      g.appendChild(el("circle",{cx:boxX+30, cy:y+rowH/2, r:f(10), fill:"rgba(249,115,22,0.35)", stroke:"rgba(0,0,0,.22)", "stroke-width":2}));
-      g.appendChild(text(boxX+54, y+rowH/2+1, "visibles",{
+      g.appendChild(el("circle",{cx:pastX, cy:y+rowH/2, r:f(10), fill:"rgba(249,115,22,0.35)", stroke:"rgba(0,0,0,.22)", "stroke-width":2}));
+      g.appendChild(text(nomX, y+rowH/2+1, "visibles",{
         "dominant-baseline":"middle", "font-size":f(20), "font-weight":950, fill:"var(--ink)"
       }));
     } else {
       g.appendChild(el("path",{
-        d:blobPath(boxX+30, y+rowH/2, f(13)),
+        d:blobPath(pastX, y+rowH/2, f(13)),
         fill:taskSplatColor(i, card),
         stroke:"rgba(0,0,0,.20)",
         "stroke-width":2,
         "aria-hidden":"true"
       }));
-      g.appendChild(text(boxX+54, y+rowH/2+1+pastilleTextDy(f(21)), taskShortName(i, card),{
+      g.appendChild(text(nomX, y+rowH/2+1+pastilleTextDy(f(21)), taskShortName(i, card),{
         "dominant-baseline":"middle", "font-size":f(21), "font-weight":950, fill:"var(--ink)"
       }));
     }
@@ -6023,14 +6071,15 @@ function relationResolutionPlan(card, totals, coefficient, constantParts, consta
    réduit la police (34 → 22 au plus) ; le signe égal se place au milieu de la colonne
    quand c'est possible, sinon le bloc est poussé contre le tableau. */
 function relationEquationFit(lines, ops, layout, opts = {}){
-  const colLeft = layout.barX + layout.barW + 34;
-  const colRight = layout.boxX + layout.boxW - 8;
+  const colLeft = layout.portrait ? layout.boxX + 26 : layout.barX + layout.barW + 34;
+  const colRight = layout.boxX + layout.boxW - (layout.portrait ? 26 : 8);
   const colW = Math.max(120, colRight - colLeft);
   const eqGap = 22;
   const margin = 30;
   const maxFont = Math.max(34, getRelationDrawingMetrics(opts).font(34));
   const hasArrows = Array.isArray(ops) && ops.some(Boolean);
   const roomFor = (fs) => {
+    const eqGap = layout.portrait ? Math.round(fs * 0.65) : 22; /* portrait : le = prend l'air de sa police */
     let lhsW = 0, rhsW = 0;
     (lines || []).forEach(line => {
       lhsW = Math.max(lhsW, measureRelationEquationTextWidth(line.left, fs));
@@ -6044,7 +6093,11 @@ function relationEquationFit(lines, ops, layout, opts = {}){
   for(let fs = maxFont; fs >= 22; fs--){
     const need = roomFor(fs);
     if(Math.max(need.needL, need.needR) <= colW / 2) return { fontSize: fs, margin, eqCenter: colLeft + colW / 2 };
-    if(need.needL + need.needR <= colW) return { fontSize: fs, margin, eqCenter: colLeft + need.needL };
+    if(need.needL + need.needR <= colW){
+      // portrait : la ligne entière centrée dans le cadre (colonne sous le tableau)
+      const decale = layout.portrait ? Math.round((colW - need.needL - need.needR) / 2) : 0;
+      return { fontSize: fs, margin, eqCenter: colLeft + decale + need.needL };
+    }
   }
   // même à 22 rien ne tient : bloc contre le tableau, la droite déborde un peu
   const need = roomFor(22);
@@ -6191,8 +6244,12 @@ function drawEnqueteSansTotalSituation(targetGroup, card, opts = {}){
   const v = metrics.y, f = metrics.font;
   const layout = getRelationSchemaLayout(opts);
   const boxX = layout.boxX, boxW = layout.boxW, boxY = 620, barX = layout.barX;
-  const rowH = v(60), gap = v(12), titleH = v(56);
+  // portrait (téléphone) : titre et pastilles comme drawRelationSituationSchema
+  const tete = layout.portrait ? relationPortraitTete(boxY, f, v) : null;
+  const rowH = v(60), gap = v(12), titleH = tete ? (tete.titreY - boxY) + v(26) : v(56);
   const boxH = titleH + 3 * rowH + 2 * gap + v(24);
+  const pastX = tete ? boxX + 18 + f(13) : boxX + 30;
+  const nomX = tete ? boxX + 18 + 2 * f(13) + 10 : boxX + 54;
   const u = enqueteSansTotalCase(layout, m.k);
   const varChar = getNumberedDisplayVarChar(card);
   const x1 = { kind:"x", label:varChar, weight:1 };
@@ -6204,13 +6261,13 @@ function drawEnqueteSansTotalSituation(targetGroup, card, opts = {}){
   ];
   const g = el("g", { id:"relationSituationSchema" });
   g.appendChild(el("rect",{ x:boxX, y:boxY, width:boxW, height:boxH, rx:22, fill:"rgba(255,255,255,0.94)", stroke:"#000", "stroke-width":3 }));
-  g.appendChild(text(boxX+boxW/2, boxY+v(29), filled ? "Schéma rempli de la situation" : "Schéma vide de la situation", {
+  g.appendChild(text(boxX+boxW/2, tete ? tete.titreY : boxY+v(29), filled ? "Schéma rempli de la situation" : "Schéma vide de la situation", {
     "text-anchor":"middle", "font-size":f(25), "font-weight":950, fill:"var(--ink)"
   }));
   rows.forEach((row, r) => {
     const y = boxY + titleH + r * (rowH + gap);
-    g.appendChild(el("path",{ d:blobPath(boxX+30, y+rowH/2, f(13)), fill:taskSplatColor(row.i, card), stroke:"rgba(0,0,0,.20)", "stroke-width":2, "aria-hidden":"true" }));
-    g.appendChild(text(boxX+54, y+rowH/2+1+pastilleTextDy(f(21)), taskShortName(row.i, card), {
+    g.appendChild(el("path",{ d:blobPath(pastX, y+rowH/2, f(13)), fill:taskSplatColor(row.i, card), stroke:"rgba(0,0,0,.20)", "stroke-width":2, "aria-hidden":"true" }));
+    g.appendChild(text(nomX, y+rowH/2+1+pastilleTextDy(f(21)), taskShortName(row.i, card), {
       "dominant-baseline":"middle", "font-size":f(21), "font-weight":950, fill:"var(--ink)"
     }));
     enqueteSansTotalLigne(g, barX, y, u, rowH, row.cells, filled, f(28));
@@ -6232,15 +6289,21 @@ function drawEnqueteDeuxEcritures(targetGroup, card, opts = {}){
   const boxX = layout.boxX, boxW = layout.boxW, boxY = 620, barX = layout.barX;
   const u = enqueteSansTotalCase(layout, m.k);
   const barLen = m.k * u;
-  const topH = v(58), rowH = v(64), titleH = v(64);
-  const boxH = titleH + topH + 2 * rowH + v(30);
+  const portrait = !!layout.portrait;
+  // portrait (téléphone) : le titre, trop long pour le cadre étroit, passe sur deux lignes
+  const tete = portrait ? relationPortraitTete(boxY, f, v) : null;
+  const pasTitre = Math.round(f(27) * 1.2);
+  const topH = v(58), rowH = v(64), titleH = portrait ? (tete.titreY - boxY) + pasTitre + v(26) : v(64);
+  let boxH = titleH + topH + 2 * rowH + v(30);
   const varChar = getNumberedDisplayVarChar(card);
   const word = investigateColorWord(investigateColorInfo(card, m.grande));
   const g = el("g", { id: solved ? "enqueteDeuxEcrituresSolved" : "enqueteDeuxEcritures" });
-  g.appendChild(el("rect",{ x:boxX, y:boxY, width:boxW, height:boxH, rx:22, fill:"rgba(255,255,255,0.95)", stroke:"#000", "stroke-width":3 }));
-  g.appendChild(text(boxX+boxW/2, boxY+v(32), `La ${word}, écrite deux fois : ce qui dépasse`, {
+  const cadre = el("rect",{ x:boxX, y:boxY, width:boxW, height:boxH, rx:22, fill:"rgba(255,255,255,0.95)", stroke:"#000", "stroke-width":3 });
+  g.appendChild(cadre);
+  const titres = portrait ? [`La ${word}, écrite deux fois :`, "ce qui dépasse"] : [`La ${word}, écrite deux fois : ce qui dépasse`];
+  titres.forEach((t, i) => g.appendChild(text(boxX+boxW/2, (portrait ? tete.titreY : boxY+v(32)) + i * pasTitre, t, {
     "text-anchor":"middle", "font-size":f(27), "font-weight":950, fill:"var(--ink)"
-  }));
+  })));
   const yTop = boxY + titleH;
   // la barre de la grande tache, avec son nom (et sa pastille, pour la couleur)
   g.appendChild(el("rect",{ x:barX, y:yTop, width:barLen, height:topH, fill:ENQUETE_ECRITURE_FOND, stroke:"#000", "stroke-width":3 }));
@@ -6273,17 +6336,26 @@ function drawEnqueteDeuxEcritures(targetGroup, card, opts = {}){
       lines.push(`${varChar} = ${formatRelationNumber(m.d)}`);
     }
     lines.push(`${word} = ${m.k} × ${formatRelationNumber(m.small)} = ${formatRelationNumber(m.large)}`);
-    const colX = barX + barLen + 60;
-    const maxW = boxX + boxW - 24 - colX;
+    // paysage : à droite des barres ; portrait : sous les barres, le bloc centré dans le cadre
+    let colX = barX + barLen + 60;
+    const maxW = portrait ? boxW - 48 : boxX + boxW - 24 - colX;
     let fs = f(32);
     const largeur = t => measureRelationEquationTextWidth(t, fs);
     while(fs > 20 && Math.max(...lines.map(largeur)) > maxW) fs -= 1;
     const pas = Math.round(fs * 1.45);
     let y = y1 + (2 * rowH - (lines.length - 1) * pas) / 2;
+    if(portrait){
+      colX = boxX + Math.max(24, Math.round((boxW - Math.max(...lines.map(largeur))) / 2));
+      y = y2 + rowH + v(30) + Math.round(fs * 0.5);
+    }
     lines.forEach(t => {
       g.appendChild(text(colX, y, t, { "text-anchor":"start", "dominant-baseline":"middle", "font-size":fs, "font-weight":800, "font-style":"italic", fill:"var(--ink)" }));
       y += pas;
     });
+    if(portrait){
+      boxH = Math.round(y - pas + fs * 0.5 + v(26) - boxY);
+      cadre.setAttribute("height", boxH);
+    }
   }
   targetGroup.appendChild(g);
   return boxH;
@@ -6306,18 +6378,23 @@ function drawEnqueteVerification(targetGroup, card, opts = {}){
     if(r.op === "ADD") return `${a} = ${b} + ${k} ✓`;
     return `${a} = ${b} − ${k} ✓`;
   });
-  const titleH = v(58), pas = v(44);
-  const boxH = titleH + lines.length * pas + v(18);
+  // portrait (téléphone) : la réponse passe SOUS les deux lignes, sur toute la largeur
+  // (à droite, elle sortait du cadre étroit)
+  const portrait = !!layout.portrait;
+  const tete = portrait ? relationPortraitTete(boxY, f, v) : null;
+  const titleH = portrait ? (tete.titreY - boxY) + v(26) : v(58), pas = v(44);
+  const boxH = titleH + lines.length * pas + (portrait ? v(30) + f(28) + v(18) : v(18));
   const g = el("g", { id:"enqueteVerification" });
   g.appendChild(el("rect",{ x:boxX, y:boxY, width:boxW, height:boxH, rx:22, fill:"rgba(255,255,255,0.95)", stroke:"#000", "stroke-width":3 }));
-  g.appendChild(text(boxX+boxW/2, boxY+v(32), "Vérification", { "text-anchor":"middle", "font-size":f(27), "font-weight":950, fill:"var(--ink)" }));
+  g.appendChild(text(boxX+boxW/2, portrait ? tete.titreY : boxY+v(32), "Vérification", { "text-anchor":"middle", "font-size":f(27), "font-weight":950, fill:"var(--ink)" }));
   const milieu = boxX + boxW / 2;
   let y = boxY + titleH + pas / 2;
   lines.forEach(t => {
     g.appendChild(text(boxX + 40, y, t, { "text-anchor":"start", "dominant-baseline":"middle", "font-size":f(30), "font-weight":800, "font-style":"italic", fill:"var(--ink)" }));
     y += pas;
   });
-  drawRelationAnswerLine(g, card, milieu, boxX + boxW - 30 - milieu, boxY + titleH + lines.length * pas / 2, { f, v });
+  if(portrait) drawRelationAnswerLine(g, card, boxX + 16, boxW - 32, boxY + titleH + lines.length * pas + v(14) + f(14), { f, v });
+  else drawRelationAnswerLine(g, card, milieu, boxX + boxW - 30 - milieu, boxY + titleH + lines.length * pas / 2, { f, v });
   targetGroup.appendChild(g);
   return boxH;
 }
@@ -6338,7 +6415,8 @@ function drawRelationOrderedSchema(targetGroup, card, opts = {}){
   const barW = layout.barW;
   const topH = v(68);
   const botH = v(72);
-  const boxH = v(274);
+  const portrait = !!layout.portrait;
+  let boxH = v(274);
   const g = el("g", { id: solved ? "relationOrderedSchemaSolved" : "relationOrderedSchema" });
 
   const coefficient = Math.max(1, Math.round(Number(totals.sumCoef) || grouped.xParts || 1));
@@ -6347,15 +6425,19 @@ function drawRelationOrderedSchema(targetGroup, card, opts = {}){
   const totalWeight = coefficient + constantParts.reduce((sum, part) => sum + Math.max(0.35, Number(part.weight) || 1), 0);
   const unitW = barW / Math.max(1, totalWeight);
 
-  g.appendChild(el("rect",{x:boxX, y:boxY, width:boxW, height:boxH, rx:22, fill:"rgba(255,255,255,0.95)", stroke:"#000", "stroke-width":3}));
-  g.appendChild(text(boxX+boxW/2, boxY+v(32), solved ? "Résolution" : (opts.direct ? "Schéma en barres" : "Schéma ordonné"), {"text-anchor":"middle", "font-size":f(27), "font-weight":950, fill:"var(--ink)"}));
+  const cadreOrd = el("rect",{x:boxX, y:boxY, width:boxW, height:boxH, rx:22, fill:"rgba(255,255,255,0.95)", stroke:"#000", "stroke-width":3});
+  g.appendChild(cadreOrd);
+  const teteOrd = portrait ? relationPortraitTete(boxY, f, v) : null;
+  g.appendChild(text(boxX+boxW/2, teteOrd ? teteOrd.titreY : boxY+v(32), solved ? "Résolution" : (opts.direct ? "Schéma en barres" : "Schéma ordonné"), {"text-anchor":"middle", "font-size":f(27), "font-weight":950, fill:"var(--ink)"}));
 
-  const yTop = boxY + v(68);
-  if(!solved){
+  const yTop = teteOrd ? teteOrd.yTop : boxY + v(68);
+  // « Résoudre » ouvre ÉquaBarre dans un nouvel onglet : un outil du professeur,
+  // pas une étape du parcours de l'élève.
+  if(!solved && !(typeof eleveActif !== "undefined" && eleveActif)){
     drawEquabarSolveButton(g, card, boxX + 22, yTop + topH - 22);
   }
 
-  g.appendChild(text(barX+barW/2, yTop-v(13), "Total", {"text-anchor":"middle", "dominant-baseline":"middle", "font-size":f(22), "font-weight":950, fill:"#334155"}));
+  g.appendChild(text(barX+barW/2, teteOrd ? teteOrd.totalY : yTop-v(13), "Total", {"text-anchor":"middle", "dominant-baseline":"middle", "font-size":f(22), "font-weight":950, fill:"#334155"}));
   g.appendChild(el("rect",{x:barX, y:yTop, width:barW, height:topH, fill:"#fff", stroke:"#000", "stroke-width":3}));
   g.appendChild(text(barX+barW/2, yTop+topH/2+1, formatRelationNumber(totals.trueTotal), {"text-anchor":"middle", "dominant-baseline":"middle", "font-size":f(34), "font-weight":950, fill:"var(--ink)"}));
 
@@ -6381,8 +6463,10 @@ function drawRelationOrderedSchema(targetGroup, card, opts = {}){
 
   // La réponse à la question posée : la valeur de chaque tache, sous le tableau
   // (« noire = 22   verte = 27   bleue = 11 »), référence d'abord — la résolution
-  // s'arrêtait à « ? = 11 ». Enquête seulement (C direct compris) ; pas en mode élève.
-  if(solved && card && card.family === "C" && card._rel && Array.isArray(card._rel.hiddenValues)){
+  // s'arrêtait à « ? = 11 ». Enquête seulement (C direct compris). En portrait (téléphone),
+  // elle passe sous les calculs, en conclusion (voir plus bas).
+  const avecReponse = solved && card && card.family === "C" && card._rel && Array.isArray(card._rel.hiddenValues);
+  if(avecReponse && !portrait){
     // Sur toute la largeur libre sous le tableau : colonne des noms comprise.
     drawRelationAnswerLine(g, card, boxX + 16, barX + barW - (boxX + 16), yTop + topH + botH + v(36), { f, v });
   }
@@ -6393,14 +6477,17 @@ function drawRelationOrderedSchema(targetGroup, card, opts = {}){
   const plan = relationResolutionPlan(card, totals, coefficient, constantParts, constantTotal, relVarChar);
   const fit = relationEquationFit(plan.lines, plan.ops, layout, opts);
   const eqCenter = fit.eqCenter;
-  const eqStartY = solved ? yTop + v(20) : yTop + v(79);
   const eqFontSize = fit.fontSize;
-  const eqLineGap = v(48);
+  // Portrait : les lignes commencent sous le tableau (centre de la 1re ligne).
+  const eqStartY = portrait ? yTop + topH + botH + v(34) + Math.round(eqFontSize * 0.5)
+    : (solved ? yTop + v(20) : yTop + v(79));
+  const eqLineGap = portrait ? Math.round(eqFontSize * 1.45) : v(48);
+  const eqEcart = portrait ? Math.round(eqFontSize * 0.65) : 22; /* 22 pour 34 : même air autour du = */
   const eqLinesDrawn = [];
   let eqY = eqStartY;
   function eqLine(left, right){
     drawProjectionEquationLine(g, eqCenter, eqY, left, right, {
-      text:(x,y,t,a)=>text(x,y,t,a), fill:"var(--ink)", fontSize:eqFontSize, equalFontSize:eqFontSize, eqGap:22
+      text:(x,y,t,a)=>text(x,y,t,a), fill:"var(--ink)", fontSize:eqFontSize, equalFontSize:eqFontSize, eqGap:eqEcart
     });
     eqLinesDrawn.push(`${left} = ${right}`);
     eqY += eqLineGap;
@@ -6412,9 +6499,21 @@ function drawRelationOrderedSchema(targetGroup, card, opts = {}){
     // Flèches d'opération entre les lignes, à gauche et à droite de la colonne ;
     // les bornes sont le tableau et le bord du cadre.
     drawOperationArrowsForLines(g, {el, text}, eqLinesDrawn, opsBetweenLines(eqLinesDrawn, plan.transitions), {
-      centerX: eqCenter, startY: eqStartY, gap: eqLineGap, fontSize: eqFontSize, eqGap: 22, middleBaseline: true,
-      margin: fit.margin, hug: true, minX: barX + barW + 6, maxX: boxX + boxW - 8
+      centerX: eqCenter, startY: eqStartY, gap: eqLineGap, fontSize: eqFontSize, eqGap: eqEcart, middleBaseline: true,
+      margin: fit.margin, hug: true, minX: portrait ? boxX + 8 : barX + barW + 6, maxX: boxX + boxW - 8
     });
+  }
+
+  if(portrait){
+    // Bas du cadre : sous la dernière ligne écrite ; la réponse, en conclusion, sous les calculs.
+    let basY = eqY - eqLineGap + Math.round(eqFontSize * 0.5);
+    if(avecReponse){
+      const yRep = basY + v(30) + f(14);
+      drawRelationAnswerLine(g, card, boxX + 16, boxW - 32, yRep, { f, v });
+      basY = yRep + f(14);
+    }
+    boxH = Math.round(basY + v(26) - boxY);
+    cadreOrd.setAttribute("height", boxH);
   }
 
   targetGroup.appendChild(g);
@@ -6441,20 +6540,23 @@ function drawRelationGroupedSchema(targetGroup, card, opts = {}){
   const barW = layout.barW;
   const topH = v(68);
   const botH = v(72);
-  const boxH = v(274);
+  const portrait = !!layout.portrait;
+  let boxH = v(274);
   const g = el("g", { id: solved ? "relationGroupedSchemaSolved" : "relationGroupedSchema" });
 
   const totalWeight = Math.max(1, parts.reduce((s,p)=>s + Math.max(0.35, Number(p.weight)||1),0));
   const unitW = barW / totalWeight;
 
-  g.appendChild(el("rect",{x:boxX, y:boxY, width:boxW, height:boxH, rx:22, fill:"rgba(255,255,255,0.95)", stroke:"#000", "stroke-width":3}));
-  g.appendChild(text(boxX+boxW/2, boxY+v(32), solved ? "Résolution" : "Schéma regroupé", {"text-anchor":"middle", "font-size":f(27), "font-weight":950, fill:"var(--ink)"}));
+  const cadreReg = el("rect",{x:boxX, y:boxY, width:boxW, height:boxH, rx:22, fill:"rgba(255,255,255,0.95)", stroke:"#000", "stroke-width":3});
+  g.appendChild(cadreReg);
+  const teteReg = portrait ? relationPortraitTete(boxY, f, v) : null;
+  g.appendChild(text(boxX+boxW/2, teteReg ? teteReg.titreY : boxY+v(32), solved ? "Résolution" : "Schéma regroupé", {"text-anchor":"middle", "font-size":f(27), "font-weight":950, fill:"var(--ink)"}));
 
-  const yTop = boxY + v(68);
+  const yTop = teteReg ? teteReg.yTop : boxY + v(68);
   // Le bouton Résoudre n’apparaît pas ici : cette étape montre encore le regroupement par origine.
   // Il apparaît à l’étape suivante, quand le tableau est ordonné/réduit.
   // Le mot Total est au-dessus du tableau, pas en bas à gauche.
-  g.appendChild(text(barX+barW/2, yTop-v(13), "Total", {"text-anchor":"middle", "dominant-baseline":"middle", "font-size":f(22), "font-weight":950, fill:"#334155"}));
+  g.appendChild(text(barX+barW/2, teteReg ? teteReg.totalY : yTop-v(13), "Total", {"text-anchor":"middle", "dominant-baseline":"middle", "font-size":f(22), "font-weight":950, fill:"#334155"}));
   g.appendChild(el("rect",{x:barX, y:yTop, width:barW, height:topH, fill:"#fff", stroke:"#000", "stroke-width":3}));
   g.appendChild(text(barX+barW/2, yTop+topH/2+1, formatRelationNumber(totals.trueTotal), {"text-anchor":"middle", "dominant-baseline":"middle", "font-size":f(34), "font-weight":950, fill:"var(--ink)"}));
 
@@ -6480,6 +6582,7 @@ function drawRelationGroupedSchema(targetGroup, card, opts = {}){
   // Accolades sous le schéma regroupé : elles identifient les morceaux qui viennent
   // de chaque tache, puis les jetons visibles s'il y en a.
   const braceY = yTop + topH + botH + v(8);
+  const nAvantAccolades = g.children.length;
   for(const span of groupSpans){
     if(span.x2 - span.x1 <= 10) continue;
     const ownerInfo = span.splatIndex == null ? null : investigateColorInfo(card, span.splatIndex);
@@ -6508,11 +6611,21 @@ function drawRelationGroupedSchema(targetGroup, card, opts = {}){
   const fit = relationEquationFit(fitLines, fitOps, layout, opts);
   const eqCenter = fit.eqCenter;
   let eqY = solved ? yTop + v(20) : yTop + v(79);
+  const eqPas = portrait ? Math.round(fit.fontSize * 1.45) : v(48);
+  if(portrait){
+    // Portrait : l'équation passe sous les accolades (et leurs pastilles), mesurées.
+    targetGroup.appendChild(g);
+    let bas = yTop + topH + botH;
+    Array.from(g.children).slice(nAvantAccolades).forEach(k => {
+      try{ const b = k.getBBox(); if(b.height > 0) bas = Math.max(bas, b.y + b.height); }catch(_e){}
+    });
+    eqY = Math.round(bas + v(30) + fit.fontSize * 0.5);
+  }
   function eqLine(left, right){
     drawProjectionEquationLine(g, eqCenter, eqY, left, right, {
-      text:(x,y,t,a)=>text(x,y,t,a), fill:"var(--ink)", fontSize:fit.fontSize, equalFontSize:fit.fontSize, eqGap:22
+      text:(x,y,t,a)=>text(x,y,t,a), fill:"var(--ink)", fontSize:fit.fontSize, equalFontSize:fit.fontSize, eqGap:portrait ? Math.round(fit.fontSize * 0.65) : 22
     });
-    eqY += v(48);
+    eqY += eqPas;
   }
   // L'équation décrit les groupes dans l'ordre exact du tableau ; seuls les x
   // répétés à l'intérieur d'une même tache sont condensés en kx.
@@ -6520,6 +6633,10 @@ function drawRelationGroupedSchema(targetGroup, card, opts = {}){
   // tableau ; en lettre, « x + x + 3 + x + 15 = 60 » reste (décision du 22/09).
   const shownLines = solved ? plan.lines : (opts.hideGroupedEquation ? [] : [groupedEquation]);
   shownLines.forEach(line => eqLine(line.left, line.right));
+  if(portrait){
+    boxH = Math.round(eqY - eqPas + fit.fontSize * 0.5 + v(26) - boxY);
+    cadreReg.setAttribute("height", boxH);
+  }
 
   targetGroup.appendChild(g);
   return boxH;
@@ -6908,8 +7025,11 @@ function renderCard(card, revealState){
   const relationTotalCompact = isCRelationLayout;
   const bottomAidTyAB = isABTwoColumnLayout ? (abBarTopY + 56) : 865;
 
+  // Mode C avec schéma : le plateau réduit descend de 20 unités (-46 → -26, 23/09/2026) —
+  // le cartouche TOTAL le touchait (1 unité d'écart, 21 maintenant, ≈ 22 en plein écran).
+  const relTrayY = isFullscreenProjection ? -32 : -26, relTrayK = isFullscreenProjection ? 0.74 : 0.70;
   const trayTransform = isCRelationLayout
-    ? (isFullscreenProjection ? "translate(210 -32) scale(0.74)" : "translate(240 -46) scale(0.70)")
+    ? (isFullscreenProjection ? "translate(210 -32) scale(0.74)" : "translate(240 -26) scale(0.70)")
     : (isSplatTwoColumnLayout ? abTrayTransform : (introTrayShiftY ? `translate(0 ${introTrayShiftY})` : ""));
   const trayLayer = trayTransform
     ? el("g", { id:isCRelationLayout ? "relationTrayScale" : "introTrayShift", transform:trayTransform })
@@ -7354,6 +7474,30 @@ function renderCard(card, revealState){
     drawRelationGraphicClues(svg, card);
   }
 
+  // Téléphone, mode élève : cadres portrait, polices agrandies (eleveDessinerSchema).
+  const telEleve = typeof eleveSchemaTel !== "undefined" && !!eleveSchemaTel;
+  const relTel = telEleve ? ELEVE_SCHEMA_TEL_OPTS : {};
+  // Ordinateur, mode élève : l'indice écrit reste sous le plateau pendant le schéma
+  // (la projection, elle, ne garde que l'indice en symboles près du TOTAL) ; les cadres
+  // descendent d'autant.
+  let relCible = svg;
+  const phrasesEleve = (typeof eleveActif !== "undefined" && eleveActif && !telEleve && isCRelationLayout && !card._directSubstitution && card._inv && Array.isArray(card._inv.indices))
+    ? card._inv.indices.filter(t => typeof t === "string") : [];
+  if(phrasesEleve.length){
+    const basPlateau = relTrayY + relTrayK * (trayCfg.y + trayCfg.h);
+    const fsP = 32, pasP = 42;
+    const gPh = el("g", { id:"clueGroupEleve" });
+    phrasesEleve.forEach((t, i) => {
+      const fit = layoutClueSentence(t, fsP, 1180, false);
+      gPh.appendChild(text(800, basPlateau + 44 + i * pasP, fit.lines[0], {
+        "text-anchor":"middle", "font-size":String(fit.fontSize), "fill":"var(--ink)", "font-weight":"700"
+      }));
+    });
+    svg.appendChild(gPh);
+    const derniere = basPlateau + 44 + (phrasesEleve.length - 1) * pasP;
+    const dy = Math.max(0, Math.round(derniere + 36 - 620));
+    if(dy > 0){ relCible = el("g", { transform:`translate(0 ${dy})` }); svg.appendChild(relCible); }
+  }
   if(card.family === "C" && card._rel && card._directSubstitution){
     if(revealState === 1){
       drawRelationSubstitutionStep(svg, card);
@@ -7367,21 +7511,21 @@ function renderCard(card, revealState){
   }else if(card.family === "C" && card._rel && card._rel.sansTotal){
     // Sans total : schéma vide, rempli, les deux écritures, les calculs (taches dévoilées),
     // la vérification — cinq clics, comme l'Enquête.
-    if(revealState === 1 || revealState === 2) drawEnqueteSansTotalSituation(svg, card, { filled: revealState === 2 });
-    if(revealState === 3 || revealState === 4) drawEnqueteDeuxEcritures(svg, card, { solved: revealState === 4 });
-    if(revealState === 5) drawEnqueteVerification(svg, card);
+    if(revealState === 1 || revealState === 2) drawEnqueteSansTotalSituation(relCible, card, { filled: revealState === 2, ...relTel });
+    if(revealState === 3 || revealState === 4) drawEnqueteDeuxEcritures(relCible, card, { solved: revealState === 4, ...relTel });
+    if(revealState === 5) drawEnqueteVerification(relCible, card, { ...relTel });
   }else{
     if(card.family === "C" && card._rel && (revealState === 1 || revealState === 2)){
-      drawRelationSituationSchema(svg, card, { filled: revealState === 2 });
+      drawRelationSituationSchema(relCible, card, { filled: revealState === 2, ...relTel });
     }
     if(card.family === "C" && card._rel && revealState === 3){
-      drawRelationGroupedSchema(svg, card);
+      drawRelationGroupedSchema(relCible, card, { ...relTel });
     }
     if(card.family === "C" && card._rel && revealState === 4){
-      drawRelationOrderedSchema(svg, card);
+      drawRelationOrderedSchema(relCible, card, { ...relTel });
     }
     if(card.family === "C" && card._rel && revealState === 5){
-      drawRelationOrderedSchema(svg, card, { solved:true });
+      drawRelationOrderedSchema(relCible, card, { solved:true, ...relTel });
     }
   }
   const taskCount = card._num?.tasks || card._unit?.tasks || (card._splats ? card._splats.length : 1);
@@ -9419,6 +9563,9 @@ let eleveActif = false, parcoursId = "", impressionAuto = false;
    le lit), et étape du schéma en cours (0 = plateau et indice, 1 à 5 = les étapes
    de la projection : schéma vide, rempli, regroupé, ordonné, résolution). */
 let eleveEnqueteDevoile = false, eleveSchemaEtape = 0;
+/* Téléphone : renderCard dessine les schémas de l'Enquête en portrait (eleveDessinerSchema) */
+let eleveSchemaTel = false;
+const ELEVE_SCHEMA_TEL_OPTS = { portrait:true, fontScale:1.6, verticalScale:1.3 };
 const ELEVE_SCHEMA_ETAPES = 5;
 let eleveIdx = 0, eleveEtoiles = 0, eleveSerie = [], eleveResultats = [], eleveCarteFautee = false, eleveRepriseFaite = false;
 /* parties supplémentaires d'une étape composée (voir « suite » dans l'adresse) */
@@ -9780,8 +9927,10 @@ let elevePave = null, elevePaveZone = 0, elevePaveLargeur = 0, elevePaveSerre = 
    bouton « Voir la réponse », à la place du Valider caché. Pour qu'il reste
    entier au-dessus du pavé : 18 px (seconde ligne) + 48 px (bouton), moins
    les 25 px du bas de la carte et les 10 px de jeu, soit 31 px au moins —
-   mesuré à 390 × 664 (Safari d'iPhone). */
-const ELEVE_PLATEAU_MIN = 150, ELEVE_RESERVE = 32, ELEVE_PAVE_JEU = 10;
+   mesuré à 390 × 664 (Safari d'iPhone). À 32, le bouton restait à 5 px du pavé
+   et semblait le toucher (remarque de Gwenaël, 23/09/2026) : 44 lui laisse 17 px
+   sur les téléphones de 375 à 430 px de large ; le plateau perd 12 px. */
+const ELEVE_PLATEAU_MIN = 150, ELEVE_RESERVE = 44, ELEVE_PAVE_JEU = 10;
 
 /* Téléphone au pavé (tactile ET moins de 600 px de large) : la consigne tient
    en une ligne au lieu de trois, et les lignes gagnées reviennent au plateau.
@@ -9933,6 +10082,7 @@ function renderEleveSplat(){
   }
   elevePaveRendrePlateau(); /* chaque dessin sur le plateau d'origine ; le pavé le réduit ensuite */
   eleveSchemaReinitialiser(); /* Enquête : le schéma de la carte d'avant a pu élargir le dessin */
+  panneau.classList.remove("avecSchema"); /* ses deux boutons sur une ligne : pas ceux de l'écran de fin */
   if(!cards.length){ tete.style.display = "none"; panneau.innerHTML = ""; renderEmpty(); elevePaveSynchroniser(); return; }
   if(eleveSerie.length === 0){
     /* La « tache vide » (elle cache 0) est un bon cas sur fiche, mais dans le
@@ -9985,6 +10135,7 @@ function renderEleveSplat(){
   eleveCarteFautee = false;
   eleveEchecs = 0;
   panneau.classList.toggle("enquete", !!enquete); /* avant la consigne, qui le lit */
+  panneau.classList.toggle("sansTotal", !!(enquete && card._rel && card._rel.sansTotal)); /* « ? » gris ardoise, comme sur le plateau */
 
   let bas = "", haut;
   if(enquete){
@@ -10129,6 +10280,8 @@ function eleveProposerSchema(bouton){
   /* trois boutons ne tiennent pas sur une ligne : le Valider, éteint, s'efface ; il
      reste « Voir le schéma » et « Carte suivante », comme sur la maquette */
   bouton.hidden = true;
+  const panneauS = document.getElementById("elevePanel");
+  if(panneauS) panneauS.classList.add("avecSchema");
   const voir = document.createElement("button");
   voir.type = "button"; voir.id = "eleveSchema"; voir.className = "secondaire";
   voir.textContent = "Voir le schéma";
@@ -10176,35 +10329,81 @@ function eleveVoirSchema(){
    l'écran avec 16 px de jeu, et « Étape suivante » puis « Carte suivante » restent
    entiers sans défiler (à 62 % de la fenêtre, un PC de 730 px de haut les poussait
    sous le bord). Il ne rétrécit jamais.
-   Téléphone (moins de 600 px de large) : même à pleine largeur, les textes du schéma
-   font 7 px, et la scène entière (plateau + schéma) pousserait le bouton « Étape
-   suivante » sous le bord de l'écran. Le plateau ne montre alors QUE le cadre du
-   schéma (les taches dévoilées restent lisibles dans le tableau du dessous), dessiné
-   ELEVE_SCHEMA_ZOOM_TEL fois plus large que l'écran : il se fait glisser du doigt de
-   gauche à droite (le bord coupé le montre), et sa hauteur reste petite. */
-const ELEVE_SCHEMA_ZOOM_TEL = 1.5;
+   Téléphone (moins de 600 px de large) : le cadre « paysage » (équation à droite du
+   tableau) écrivait en 7 px, et zoomé à 1,5 fois l'écran il était coupé à droite.
+   Le schéma s'y dessine donc en PORTRAIT (ELEVE_SCHEMA_TEL_OPTS : équation sous le
+   tableau, polices agrandies), à la largeur de l'écran, rien de coupé ; le plateau des
+   taches laisse sa place à un bandeau « TOTAL + indice » (eleveRappelHtml) — les
+   valeurs des taches restent dans le tableau du dessous. La hauteur réservée au
+   schéma est celle de la plus haute des cinq étapes de la carte : d'une étape à
+   l'autre, le tableau et les boutons ne bougent pas sous le doigt. */
 const ELEVE_SCHEMA_CADRES = ["relationSituationSchema", "relationGroupedSchema", "relationGroupedSchemaSolved", "relationOrderedSchema", "relationOrderedSchemaSolved", "enqueteDeuxEcritures", "enqueteDeuxEcrituresSolved", "enqueteVerification"];
+/* { idx, largeur, h, haut0, plus } : pour la carte idx à cette largeur, la hauteur de la
+   plus haute étape, la place des boutons sous le plateau, le décalage qui les y remet */
+let eleveSchemaTelReserve = null;
+function eleveSchemaTelephone(){
+  return !!(window.matchMedia && window.matchMedia("(max-width: 599px)").matches);
+}
+/* Rendu d'une étape en portrait, cadré sur son cadre ; renvoie la hauteur en px à
+   la largeur donnée. */
+function eleveSchemaTelRendre(card, etape, largeur){
+  eleveSchemaTel = true;
+  try{ renderCard(card, etape); } finally { eleveSchemaTel = false; }
+  const cadre = ELEVE_SCHEMA_CADRES.map(id => document.getElementById(id)).find(Boolean);
+  /* un cadre qui ne sait pas se dessiner en portrait : eleveDessinerSchema repasse au
+     dessin d'ordinateur (tout est là, en plus petit) */
+  if(!cadre) throw new Error("schéma sans cadre portrait");
+  const bord = cadre.querySelector("rect");
+  const bb = cadre.getBBox();
+  const x = bord ? Number(bord.getAttribute("x")) : bb.x;
+  const w = bord ? Number(bord.getAttribute("width")) : bb.width;
+  const m = 6;
+  svg.setAttribute("viewBox", `${x - m} ${bb.y - m} ${w + 2 * m} ${bb.height + 2 * m}`);
+  return Math.round(largeur * (bb.height + 2 * m) / (w + 2 * m));
+}
 function eleveDessinerSchema(card){
+  const plateau = document.getElementById("svgWrap");
+  const telephone = eleveSchemaTelephone();
+  if(telephone && plateau){
+    try{
+      const actions = document.querySelector("#elevePanel .eleveActions");
+      const hautDoc = noeud => noeud ? noeud.getBoundingClientRect().top + (window.scrollY || 0) : 0;
+      const largeur = Math.round(plateau.getBoundingClientRect().width);
+      const r = eleveSchemaTelReserve;
+      const nouvelle = !r || r.idx !== eleveIdx || r.largeur !== largeur;
+      /* où étaient les boutons sous le plateau (« Voir le schéma »), mesuré avant le changement */
+      const haut0 = nouvelle ? hautDoc(actions) : r.haut0;
+      eleveRappelAfficher(card);
+      plateau.classList.add("eleveSchemaTel");
+      const panneauT = document.getElementById("elevePanel");
+      if(panneauT) panneauT.classList.add("schemaTel");
+      if(nouvelle){
+        let hMax = 0;
+        for(let e = 1; e <= ELEVE_SCHEMA_ETAPES; e++) hMax = Math.max(hMax, eleveSchemaTelRendre(card, e, largeur));
+        eleveSchemaTelReserve = { idx: eleveIdx, largeur, h: hMax, haut0, plus: null };
+      }
+      const res = eleveSchemaTelReserve;
+      const h = eleveSchemaTelRendre(card, eleveSchemaEtape, largeur);
+      svg.style.width = largeur + "px"; svg.style.height = h + "px";
+      plateau.style.height = h + "px"; plateau.style.minHeight = h + "px";
+      /* Le tableau suit le schéma ; la place qui manque aux étapes courtes passe
+         au-dessus des boutons, qui restent ainsi au même endroit d'une étape à
+         l'autre — et, quand la carte le permet, là où était « Voir le schéma ». */
+      if(actions){
+        actions.style.marginTop = (14 + res.h - h) + "px";
+        if(res.plus === null) res.plus = Math.max(0, Math.round(res.haut0 - hautDoc(actions)));
+        actions.style.marginTop = (14 + res.h - h + res.plus) + "px";
+      }
+      return;
+    }catch(_e){ /* repli : le dessin d'ordinateur ci-dessous */ }
+  }
+  /* téléphone tourné pendant le schéma : on quitte la disposition portrait */
+  if(plateau && plateau.classList.contains("eleveSchemaTel")) eleveSchemaReinitialiser();
   renderCard(card, eleveSchemaEtape);
   eleveCadrerScene();
-  const plateau = document.getElementById("svgWrap");
   if(!plateau) return;
   try{
     const r = plateau.getBoundingClientRect();
-    const telephone = !!(window.matchMedia && window.matchMedia("(max-width: 599px)").matches);
-    plateau.classList.toggle("eleveSchemaZoom", telephone);
-    if(telephone){
-      const cadre = ELEVE_SCHEMA_CADRES.map(id => document.getElementById(id)).find(Boolean);
-      const bb = cadre ? cadre.getBBox() : null;
-      if(bb && bb.width > 0) svg.setAttribute("viewBox", `${bb.x - 12} ${bb.y - 12} ${bb.width + 24} ${bb.height + 24}`);
-      const vbTel = svg.viewBox.baseVal;
-      const largeur = Math.round(r.width * ELEVE_SCHEMA_ZOOM_TEL);
-      const hauteur = Math.round(largeur * vbTel.height / vbTel.width);
-      svg.style.width = largeur + "px"; svg.style.height = hauteur + "px";
-      plateau.style.height = hauteur + "px"; plateau.style.minHeight = hauteur + "px";
-      plateau.scrollLeft = 0;
-      return;
-    }
     const vb = svg.viewBox.baseVal;
     const voulu = Math.round(r.width * vb.height / vb.width);
     /* la place réellement libre : la fenêtre, moins tout ce qui est au-dessus et
@@ -10217,10 +10416,39 @@ function eleveDessinerSchema(card){
     if(cible > r.height){ plateau.style.height = cible + "px"; plateau.style.minHeight = cible + "px"; }
   }catch(_e){ /* le cadrage d'origine suffit */ }
 }
+/* Bandeau du téléphone pendant le schéma : la case TOTAL à gauche, l'indice (ou les
+   deux indices) à sa droite — la disposition de l'énoncé imprimé. */
+function eleveRappelHtml(card){
+  const indices = (card && card._inv && Array.isArray(card._inv.indices) ? card._inv.indices : [])
+    .filter(t => typeof t === "string");
+  const esc = t => String(t).replace(/&/g, "&amp;").replace(/</g, "&lt;");
+  /* une carte « sans total » (lot E-sans-total) garde son « ? » */
+  const sansTotal = !!(card && card._rel && card._rel.sansTotal);
+  return `<div class="eleveRappelTotal"><span>TOTAL</span><b${sansTotal ? ' class="inconnu"' : ""}>${sansTotal ? "?" : esc(card.total)}</b></div>` +
+    `<div class="eleveRappelIndices">${indices.map(t => `<p>${esc(t)}</p>`).join("")}</div>`;
+}
+function eleveRappelAfficher(card){
+  const plateau = document.getElementById("svgWrap");
+  if(!plateau || !plateau.parentNode) return;
+  let bandeau = document.getElementById("eleveRappel");
+  if(!bandeau){
+    bandeau = document.createElement("div");
+    bandeau.id = "eleveRappel";
+    plateau.parentNode.insertBefore(bandeau, plateau);
+  }
+  bandeau.innerHTML = eleveRappelHtml(card);
+}
 /* Nouvelle carte : le plateau retrouve sa taille et son cadrage d'avant le schéma. */
 function eleveSchemaReinitialiser(){
   const plateau = document.getElementById("svgWrap");
-  if(plateau){ plateau.classList.remove("eleveSchemaZoom"); plateau.scrollLeft = 0; }
+  if(plateau) plateau.classList.remove("eleveSchemaTel");
+  const panneauT = document.getElementById("elevePanel");
+  if(panneauT) panneauT.classList.remove("schemaTel");
+  const actions = document.querySelector("#elevePanel .eleveActions");
+  if(actions) actions.style.marginTop = "";
+  const bandeau = document.getElementById("eleveRappel");
+  if(bandeau) bandeau.remove();
+  eleveSchemaTelReserve = null;
   if(svg && svg.style){ svg.style.width = ""; svg.style.height = ""; }
 }
 
@@ -10311,6 +10539,7 @@ function renderEleveFinSplat(panneau){
   eleveEtoiles = eleveResultats.filter(r => r === true).length;
   eleveEnqueteDevoile = false; eleveSchemaEtape = 0; /* l'écran de fin montre la dernière carte couverte, comme au monde 2 */
   renderCard(eleveSerie[total - 1], 0);
+  eleveCadrerScene(); /* le cadrage de la carte, pas celui du schéma resté affiché (Enquête) */
   if(rouges.length){
     /* des cartes rouges : pas d'étoile, on propose de les rejouer */
     try{
