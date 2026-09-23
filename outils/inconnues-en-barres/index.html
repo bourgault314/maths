@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Inconnues en barres | maths&amp;go</title>
+  <meta name="description" content="Résolvez pas à pas des problèmes à deux quantités inconnues avec des schémas en barres (modèle de Singapour) : remplacer, retirer, partager, puis vérifier.">
+  <link rel="canonical" href="https://mathsgo.re/outils/inconnues-en-barres/">
+  <meta name="robots" content="index, follow, max-image-preview:large">
+  <link rel="icon" href="/favicon.ico" sizes="48x48">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="./style.css?v=lot1b-20260923">
+  <script type="module" src="./app.mjs?v=lot1b-20260923"></script>
+  <script defer src="/assets/js/tool-parent-navigation.js"></script>
+</head>
+<body data-mathsgo-parent-href="/outils/index.html?domain=algebre&amp;notion=schemas-barres" data-mathsgo-parent-link="#retour" data-mathsgo-parent-label="Schémas en barres">
+<div id="app">
+  <header class="entete">
+    <a id="retour" class="retour" href="/outils/index.html?domain=algebre&amp;notion=schemas-barres" aria-label="Retour à Schémas en barres" title="Retour à Schémas en barres"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5"/><path d="M11 18l-6-6 6-6"/></svg></a>
+    <a class="marque" href="/" aria-label="Accueil maths&amp;go"><img src="/assets/img/logos/mathsgo/logo-390.png" alt="maths&amp;go" width="195" height="91"></a>
+    <h1>Inconnues en barres</h1>
+    <div class="actions">
+      <button id="btnReglages" class="bouton" aria-expanded="false" aria-controls="reglages" title="Réglages"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg><span class="etiquette">Réglages</span></button>
+      <button id="btnNouveau" class="bouton primaire" title="Nouveau problème"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.3-5.6"/><path d="M20 4v5h-5"/></svg><span class="etiquette">Nouveau problème</span></button>
+      <button id="btnPleinEcran" class="bouton" title="Plein écran" aria-label="Plein écran"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>
+    </div>
+  </header>
+
+  <div id="voile" class="voile" hidden></div>
+  <aside id="reglages" class="reglages" aria-label="Réglages" hidden>
+    <div class="reglages-tete"><h2>Réglages</h2><button id="btnFermer" class="bouton" aria-label="Fermer les réglages">✕</button></div>
+    <div><label for="famille">Type de problème</label><select id="famille">
+      <option value="fois">Un objet vaut plusieurs fois l’autre</option>
+      <option value="partielle">Donnée partielle + situation complète</option>
+      <option value="ecart">Un objet vaut l’autre plus un écart</option>
+    </select></div>
+    <div id="champK"><label for="k">Relation</label><select id="k">
+      <option value="2">vaut 2 fois l’autre</option><option value="3">vaut 3 fois l’autre</option><option value="4">vaut 4 fois l’autre</option><option value="mix">mélange 2 / 3 / 4</option>
+    </select></div>
+    <div id="champVariete"><label for="variete">Variété</label><select id="variete">
+      <option value="guided">Très guidé</option><option value="simple">Situation simple</option><option value="rich">Situation riche</option>
+    </select><p class="aide-reglage" id="aideVariete"></p></div>
+    <div><label for="contexte">Contexte</label><select id="contexte"></select></div>
+    <div id="champSens"><label for="sens">Sens du remplacement</label><select id="sens">
+      <option value="AtoB">Remplacer le grand par les petits</option><option value="BtoA">Remplacer les petits par le grand</option>
+    </select><p class="aide-reglage" id="aideSens"></p></div>
+    <div><label for="ecritures">Écritures sous les schémas</label><select id="ecritures">
+      <option value="aucune">Schémas seuls</option><option value="objets">Schémas + objets</option><option value="lettres">Schémas + lettres</option><option value="tout">Tout afficher</option>
+    </select></div>
+    <button id="btnRecommencer" class="bouton">Recommencer ce problème</button>
+    <details id="prof"><summary>Repères pour l’enseignant</summary><ul class="reperes" id="reperes"></ul></details>
+  </aside>
+
+  <main id="scene">
+    <div id="enonce" class="enonce"></div>
+    <nav class="etapes" aria-label="Étapes">
+      <button id="btnPrec" class="bouton nav" aria-label="Précédent" title="Précédent (flèche gauche)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg></button>
+      <ol id="onglets" class="onglets"></ol>
+      <button id="btnSuiv" class="bouton primaire nav suivant" title="Suivant (flèche droite)"><span class="etiquette">Suivant</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18l6-6-6-6"/></svg></button>
+    </nav>
+    <p id="consigne" class="consigne" aria-live="polite"></p>
+    <div id="tableau"></div>
+    <p id="legende" class="legende" hidden></p>
+  </main>
+</div>
+<noscript>Active JavaScript pour utiliser cette application.</noscript>
+</body>
+</html>
