@@ -66,12 +66,13 @@ mark.m-Q{background:var(--q-fond);color:var(--q-texte)}
 .consigne{margin:0;min-height:1.3em;font-weight:800;color:var(--bleu);text-align:center;font-size:clamp(17px,1.6vw,28px);flex:0 0 auto}
 .consigne:empty::before{content:"\00a0"}
 
-#tableau{flex:1 1 auto;min-height:0;overflow-y:auto;overflow-x:hidden;display:flex;flex-direction:column;align-items:center;gap:var(--gap-rangee,14px);padding:4px 0 8px}
+#tableau{flex:1 1 auto;min-height:0;overflow-y:auto;overflow-x:hidden;display:flex;flex-direction:column;align-items:center;gap:var(--gap-rangee,14px);padding:2px 0 4px}
 .rangee{display:flex;align-items:flex-start;justify-content:center;gap:14px;max-width:100%}
 .rangee.large{width:100%}
 .bloc{background:var(--papier);border:1px solid var(--ligne);border-radius:14px;padding:8px 10px;display:flex;flex-direction:column;align-items:center;gap:6px;min-width:0}
 .bloc .titre{font-size:var(--f-titre,15px);font-weight:800;color:#475569;text-transform:uppercase;letter-spacing:.05em;text-align:center}
 .bloc svg{display:block;overflow:visible}
+.bloc svg.tache-texte,.enonce svg.tache-texte{display:inline-block}
 .bloc.cote{flex-direction:row;align-items:center;gap:14px}
 .bloc.cote .cote-schema{display:flex;flex-direction:column;align-items:center;gap:6px;flex:0 0 auto}
 .bloc.cote .ecritures{flex:1 1 auto;width:auto;min-width:0}
@@ -81,13 +82,26 @@ mark.m-Q{background:var(--q-fond);color:var(--q-texte)}
 .ecritures{display:flex;flex-direction:column;gap:4px;width:100%}
 .ecriture{border-radius:10px;padding:4px 8px;background:#f8fafc}
 .ecriture .tag{font-size:11px;font-weight:900;color:#64748b;text-transform:uppercase;letter-spacing:.06em;text-align:center}
-.egalites{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);column-gap:.3em;font-weight:850;font-size:var(--f-ligne,24px);line-height:1.25}
+.egalites{display:grid;grid-template-columns:max-content auto max-content;justify-content:center;column-gap:.3em;font-weight:850;font-size:var(--f-ligne,24px);line-height:1.25}
 .egalites .g{text-align:right;overflow-wrap:anywhere}
 .egalites .s{color:var(--bleu)}
 .egalites .d{text-align:left;overflow-wrap:anywhere}
 .egalites.flux{display:flex;flex-direction:column;align-items:center;text-align:center;gap:2px}
 .egalites.flux .ligne{max-width:100%}
 .emo{font-family:var(--emoji);font-weight:400}
+.tache-texte{display:inline-block;width:1.05em;height:1.05em;vertical-align:-.16em;margin:0 .04em;overflow:visible}
+/* carte SPLAT! (contexte « taches et jetons ») */
+.enonce.splat{display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 14px}
+.splat-plateaux{display:flex;flex-wrap:wrap;justify-content:center;gap:14px 22px}
+.splat-carte{display:flex;flex-direction:column;align-items:center;gap:4px}
+.splat-total{display:flex;align-items:baseline;justify-content:center;gap:8px;border:2.5px solid #111;border-radius:10px;background:#f4f4f5;padding:3px 12px;line-height:1}
+.splat-total .mot{font-size:clamp(12px,1vw,17px);font-weight:900;letter-spacing:.02em}
+.splat-total .nb{font-size:clamp(22px,2.2vw,38px);font-weight:900}
+.splat-cadre{background:#f5f5f5;border:2px solid #d4d4d4;border-radius:12px;padding:4px 6px;display:flex}
+.splat-plateau{display:block}
+.splat-indice{font-weight:800;text-align:center;font-size:clamp(17px,1.6vw,27px);line-height:1.25}
+.splat-question{font-weight:750;font-size:clamp(15px,1.4vw,24px)}
+.splat-question mark{border-radius:.25em;padding:0 .15em}
 .legende{margin:0;text-align:center;color:#475569;font-weight:700;font-size:clamp(14px,1.1vw,18px);flex:0 0 auto}
 
 /* aides */
@@ -136,6 +150,7 @@ mark.m-Q{background:var(--q-fond);color:var(--q-texte)}
   .bouton{padding:0 10px}
   #scene{padding:8px 10px;gap:8px}
   .enonce{padding:10px 12px;border-radius:12px}
+  .splat-total{padding:2px 8px}
   .onglet .lib{display:none}
   .onglet.actif .lib{display:inline}
   .onglets li:has(.actif){flex:3 1 0}

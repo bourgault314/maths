@@ -1,4 +1,4 @@
-// Inconnues en barres — contrôle automatique de TOUS les cas générés (lot 1).
+// Inconnues en barres — contrôle automatique de TOUS les cas générés (lots 1 et 1b).
 import test from "node:test";
 import assert from "node:assert/strict";
 import * as M from "../outils/inconnues-en-barres/moteur.mjs";
@@ -51,7 +51,7 @@ test("les énoncés sont écrits en bon français", () => {
   for (const { p } of allCases()) {
     const s = M.statementText(p);
     assert.match(s, /^[A-ZÉ0-9]/, "majuscule en début d'énoncé : " + s);
-    assert.ok(!/\b1 [a-zé]/.test(s), "« 1 objet » au lieu de « un objet » : " + s);
+    assert.ok(!/\b1 (?!jeton\b)[a-zé]/.test(s), "« 1 objet » au lieu de « un objet » : " + s);
     assert.ok(!/ananass|jeton bleus|jetons bleu\b|d’ un|prix d’une? [^ ]+ points/.test(s), "faute d'accord : " + s);
     if (p.unit !== "€") assert.ok(!/prix/.test(s), "« prix » pour des " + p.unit + " : " + s);
     assert.ok(!/ciseaux/.test(s), "ciseaux retirés : " + s);
@@ -120,4 +120,33 @@ test("la vérification finale reprend toutes les données de l’énoncé", () =
       assert.ok([p.aValue, p.total, p.known].includes(last), l.c);
     }
   }
+});
+
+test("contexte SPLAT! : plateaux, taches et phrases d'indice cohérents", () => {
+  let n = 0;
+  for (const { p, sens } of allCases()) {
+    if (!p.splat) continue;
+    n++;
+    assert.ok(p.total <= 100, "total SPLAT! au plus 100");
+    assert.notEqual(p.A.tache, p.B.tache, "deux couleurs différentes");
+    const card = M.splatCard(p);
+    const count = (pl, o) => pl.taches.filter((t) => t === o.emoji).length;
+    if (p.family === "partielle") {
+      assert.equal(card.plateaux.length, 2);
+      assert.equal(card.plateaux[0].total, p.known);
+      assert.equal(count(card.plateaux[0], p.A), p.r);
+      assert.equal(card.plateaux[1].total, p.total);
+    } else {
+      assert.equal(card.plateaux.length, 1);
+      assert.equal(card.plateaux[0].total, p.total);
+      assert.match(card.indices[0], /^Sous une tache [a-z]+, il y a /);
+    }
+    const sit = card.plateaux.at(-1);
+    assert.equal(count(sit, p.A), p.m);
+    assert.equal(count(sit, p.B), p.n);
+    // aucune unité collée aux nombres des cases (comme dans SPLAT!)
+    for (const step of M.plan(p, { sens })) for (const tps of step) for (const row of tps.rows) for (const b of row)
+      if (b.type === "schema") for (const c of b.schema.cells) if (c.text) assert.ok(!/jeton|points|€|g$/.test(c.text), c.text);
+  }
+  assert.ok(n > 1000, "contexte SPLAT! contrôlé (" + n + " cas)");
 });

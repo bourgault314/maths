@@ -25,6 +25,26 @@ const OBJ = {
   jeton: { emoji: "🔵", sing: "jeton bleu", plur: "jetons bleus", det: "un" },
 };
 
+// Taches de l'univers SPLAT! : mêmes couleurs que splat.html (INVESTIGATE_COLOR_PALETTE).
+// Dans les textes, chaque tache est notée par un caractère réservé (zone privée Unicode)
+// que l'affichage remplace par une petite tache dessinée.
+export const TACHES = [
+  { key: "black", mot: "noire", mots: "noires", fill: "rgb(20,20,20)", tint: "rgba(40,40,40,0.14)" },
+  { key: "purple", mot: "violette", mots: "violettes", fill: "#9d4edd", tint: "rgba(157,78,221,0.18)" },
+  { key: "orange", mot: "orange", mots: "orange", fill: "#f97316", tint: "rgba(249,115,22,0.18)" },
+  { key: "blue", mot: "bleue", mots: "bleues", fill: "#2563eb", tint: "rgba(37,99,235,0.16)" },
+  { key: "green", mot: "verte", mots: "vertes", fill: "#16a34a", tint: "rgba(22,163,74,0.16)" },
+  { key: "red", mot: "rouge", mots: "rouges", fill: "#dc2626", tint: "rgba(220,38,38,0.15)" },
+];
+export const TACHE_BASE = 0xe100;
+export const tacheChar = (i) => String.fromCharCode(TACHE_BASE + i);
+export const TACHE_RE = /[\ue100-\ue105]/g;
+export function tacheOf(ch) { const i = ch.charCodeAt(0) - TACHE_BASE; return i >= 0 && i < TACHES.length ? TACHES[i] : null; }
+function tacheObj(i) {
+  const t = TACHES[i];
+  return { emoji: tacheChar(i), sing: "tache " + t.mot, plur: "taches " + t.mots, det: "une", tache: t.key };
+}
+
 export const CONTEXTS = {
   fruits: {
     label: "Fruits et masses (g)", unit: "g", grandeur: "masse",
@@ -39,6 +59,13 @@ export const CONTEXTS = {
     fois: { A: "livre", B: "cahier", B_range: [2, 5, 1], A_range: [4, 20] },
     ecart: { A: "cahier", B: "crayon", B_range: [1, 3, 1], d_range: [1, 3, 1] },
     partielle: { A: "livre", B: "crayon", A_range: [6, 15, 1], B_range: [1, 3, 1] },
+  },
+  splat: {
+    label: "SPLAT! : taches et jetons", unit: "jetons", grandeur: "jetons", splat: true,
+    un: "cache", plur: "cachent", maxTotal: 100,
+    fois: { B_range: [2, 12, 1], A_range: [4, 48] },
+    ecart: { B_range: [3, 15, 1], d_range: [1, 9, 1] },
+    partielle: { A_range: [4, 20, 1], B_range: [2, 12, 1] },
   },
   jetons: {
     label: "Jeu et points", unit: "points", grandeur: "points",
@@ -75,6 +102,7 @@ export function generate(settings, seed) {
   const rng = makeRng(seed);
   for (let attempt = 0; attempt < 400; attempt++) {
     const p = tryGenerate(settings, rng);
+    if (p && p.splat && p.total > CONTEXTS.splat.maxTotal) continue;
     if (p && checkProblem(p).length === 0) { p.seed = seed; return p; }
   }
   throw new Error("Aucun problème valide trouvé pour ces réglages");
@@ -99,7 +127,13 @@ function tryGenerate(settings, rng) {
   const ctx = CONTEXTS[ctxKey];
   const family = FAMILIES.includes(settings.family) ? settings.family : "fois";
   const pair = ctx[family];
-  const base = { family, context: ctxKey, unit: ctx.unit, A: OBJ[pair.A], B: OBJ[pair.B] };
+  let A, B;
+  if (ctx.splat) {
+    const ia = Math.floor(rng() * TACHES.length);
+    let ib = Math.floor(rng() * (TACHES.length - 1)); if (ib >= ia) ib++;
+    A = tacheObj(ia); B = tacheObj(ib);
+  } else { A = OBJ[pair.A]; B = OBJ[pair.B]; }
+  const base = { family, context: ctxKey, unit: ctx.unit, splat: !!ctx.splat, A, B };
 
   if (family === "fois") {
     const k = settings.k === "mix" || !settings.k ? pick(rng, [2, 3, 4]) : Number(settings.k);
@@ -179,6 +213,7 @@ export function checkProblem(p) {
     if (p.total - p.partA !== p.rest) errs.push("retrait faux");
     if (p.rest !== p.n * p.bValue) errs.push("partage faux");
   }
+  if (p.splat && p.total > CONTEXTS.splat.maxTotal) errs.push("total trop grand pour SPLAT!");
   const [lo, hi] = ctx.B_range;
   if (p.bValue < lo || p.bValue > hi) errs.push("valeur de B irréaliste");
   return errs;
@@ -190,13 +225,48 @@ export function fmt(n) {
   const s = String(n);
   return n >= 1000 ? s.replace(/\B(?=(\d{3})+(?!\d))/g, "\u202f") : s;
 }
-export const q = (p, n) => fmt(n) + "\u00a0" + p.unit; // quantité avec unité, jamais coupée
+// Quantité avec unité, jamais coupée. Avec les taches, le nombre seul (comme dans SPLAT!).
+export const q = (p, n) => (p.splat ? fmt(n) : fmt(n) + "\u00a0" + p.unit);
+const jetons = (n) => fmt(n) + (n > 1 ? " jetons" : " jeton");
+const qPhrase = (p, n) => (p.splat ? jetons(n) : q(p, n)); // dans une phrase : « 7 jetons », « 30 g »
 const one = (o) => o.det + " " + o.sing;
 const np = (o, c) => (c === 1 ? one(o) : c + " " + o.plur);
 const du = (o) => "d’" + one(o);
 const qu = (o) => "qu’" + one(o);
 
+// Phrases de l'énoncé, reprises telles quelles par la vérification finale.
+function relSentence(p) {
+  const ctx = CONTEXTS[p.context];
+  if (p.splat) {
+    if (p.family === "fois") return "Sous " + one(p.A) + ", il y a " + p.k + " fois plus de jetons que sous " + one(p.B) + ".";
+    return "Sous " + one(p.A) + ", il y a " + jetons(p.d) + " de plus que sous " + one(p.B) + ".";
+  }
+  if (p.family === "fois") return cap(one(p.A)) + " " + ctx.un + " autant que " + np(p.B, p.k) + ".";
+  return cap(one(p.A)) + " " + ctx.un + " " + q(p, p.d) + " de plus " + qu(p.B) + ".";
+}
+function sitSentence(p) {
+  const ctx = CONTEXTS[p.context];
+  return cap(np(p.A, p.m)) + " et " + np(p.B, p.n) + " " + ctx.plur + " " + (p.splat ? jetons(p.total) : q(p, p.total)) + ".";
+}
+function knownSentence(p) {
+  const ctx = CONTEXTS[p.context];
+  return cap(np(p.A, p.r)) + " " + ctx.plur + " " + (p.splat ? jetons(p.known) : q(p, p.known)) + ".";
+}
+
+// Carte SPLAT! : un ou deux plateaux (case TOTAL + taches) et la phrase d'indice.
+export function splatCard(p) {
+  const plateau = (total, groups) => ({ total, taches: groups.flatMap(([o, c]) => Array.from({ length: c }, () => o.emoji)) });
+  // Même ordre que les schémas : la donnée partielle d'abord, puis la situation complète.
+  if (p.family === "partielle") return { plateaux: [plateau(p.known, [[p.A, p.r]]), plateau(p.total, [[p.A, p.m], [p.B, p.n]])], indices: [], question: questionText(p) };
+  return { plateaux: [plateau(p.total, [[p.A, p.m], [p.B, p.n]])], indices: [relSentence(p)], question: questionText(p) };
+}
+
 export function statementParts(p) {
+  if (p.splat) {
+    const c = splatCard(p);
+    const txt = c.plateaux.map((pl) => "Plateau : " + pl.taches.length + " taches, total " + pl.total + ".").join(" ");
+    return [{ t: txt + " " + c.indices.join(" ") + " " + c.question }];
+  }
   const ctx = CONTEXTS[p.context];
   const Q = questionText(p);
   if (p.family === "fois") return [
@@ -220,17 +290,20 @@ export const statementText = (p) => statementParts(p).map((x) => x.t).join("");
 
 export function questionText(p) {
   const g = CONTEXTS[p.context].grandeur;
+  if (p.splat) return "Combien de jetons y a-t-il sous chaque tache ?";
   if (g === "masse") return "Quelle est la masse " + du(p.B) + " ?";
   if (g === "prix") return "Quel est le prix " + du(p.B) + " ?";
   return "Combien de points vaut " + one(p.B) + " ?";
 }
 function grandeurDe(p, o) {
   const g = CONTEXTS[p.context].grandeur;
+  if (p.splat) return "le nombre de jetons sous " + one(o);
   if (g === "masse") return "la masse " + du(o);
   if (g === "prix") return "le prix " + du(o);
   return "la valeur " + du(o);
 }
 export function answerSentence(p, o, v) {
+  if (p.splat) return "Sous " + one(o) + ", il y a " + jetons(v) + ".";
   return cap(one(o)) + " " + CONTEXTS[p.context].un + " " + q(p, v) + ".";
 }
 
@@ -329,8 +402,8 @@ function planFois(p, sens) {
     const shared = schema("On partage en " + parts + " parts égales", 2, parts, [...Array.from({ length: parts }, (_, i) => ({ row: 0, x: i, w: 1, kind: "V", text: q(p, bValue) })), ...Array.from({ length: parts }, (_, i) => bot(cellB(p, i)))]);
     const relVal = schema("Relation", 2, k, [{ row: 0, x: 0, w: k, kind: "A", emoji: A, text: q(p, aValue) }, ...Array.from({ length: k }, (_, i) => bot(cellB(p, i, { text: q(p, bValue) })))]);
     steps.push([
-      { instruction: "On partage " + q(p, total) + " en " + parts + " parts égales.", rows: [[block(schema("Après le remplacement", 2, parts, replaced.cells, { brackets }))]] },
-      { instruction: "On partage " + q(p, total) + " en " + parts + " parts égales.", rows: [[block(shared, { calc: q(p, total) + " ÷ " + parts + " = " + q(p, bValue),
+      { instruction: "On partage " + qPhrase(p, total) + " en " + parts + " parts égales.", rows: [[block(schema("Après le remplacement", 2, parts, replaced.cells, { brackets }))]] },
+      { instruction: "On partage " + qPhrase(p, total) + " en " + parts + " parts égales.", rows: [[block(shared, { calc: q(p, total) + " ÷ " + parts + " = " + q(p, bValue),
         pic: [eq(rep(B, parts), q(p, total)), eq(B, q(p, total) + " ÷ " + parts), eq(B, q(p, bValue))],
         let: [eq(coef(parts, "B"), fmt(total)), eq("B", fmt(total) + " ÷ " + parts), eq("B", fmt(bValue))] })]] },
       { instruction: "On utilise la relation pour trouver " + grandeurDe(p, p.A) + " " + A + ".", rows: [[block(shared, { calc: q(p, total) + " ÷ " + parts + " = " + q(p, bValue) })], [block(relVal, { calc: k + " × " + q(p, bValue) + " = " + q(p, aValue),
@@ -351,11 +424,11 @@ function planFois(p, sens) {
     const shared = schema("On partage en " + big + " parts égales", 2, parts, [...Array.from({ length: big }, (_, j) => ({ row: 0, x: j * k, w: k, kind: "V", text: q(p, aValue) })), ...Array.from({ length: big }, (_, j) => bot(cellA(p, j * k, k)))]);
     const relSplit = schema("On partage " + (p.A.det === "une" ? "une " : "un ") + A + " en " + k + " parts égales", 2, k, [...Array.from({ length: k }, (_, i) => ({ row: 0, x: i, w: 1, kind: "V", text: q(p, bValue) })), ...Array.from({ length: k }, (_, i) => bot(cellB(p, i)))]);
     steps.push([
-      { instruction: "On partage " + q(p, total) + " en " + big + " parts égales.", rows: [[block(replaced)]] },
-      { instruction: "On partage " + q(p, total) + " en " + big + " parts égales.", rows: [[block(shared, { calc: q(p, total) + " ÷ " + big + " = " + q(p, aValue),
+      { instruction: "On partage " + qPhrase(p, total) + " en " + big + " parts égales.", rows: [[block(replaced)]] },
+      { instruction: "On partage " + qPhrase(p, total) + " en " + big + " parts égales.", rows: [[block(shared, { calc: q(p, total) + " ÷ " + big + " = " + q(p, aValue),
         pic: [eq(rep(A, big), q(p, total)), eq(A, q(p, total) + " ÷ " + big), eq(A, q(p, aValue))],
         let: [eq(coef(big, "A"), fmt(total)), eq("A", fmt(total) + " ÷ " + big), eq("A", fmt(aValue))] })]] },
-      { instruction: "On utilise la relation : on partage " + q(p, aValue) + " en " + k + " parts égales.", rows: [[block(shared, { calc: q(p, total) + " ÷ " + big + " = " + q(p, aValue) })], [block(relSplit, { calc: q(p, aValue) + " ÷ " + k + " = " + q(p, bValue),
+      { instruction: "On utilise la relation : on partage " + qPhrase(p, aValue) + " en " + k + " parts égales.", rows: [[block(shared, { calc: q(p, total) + " ÷ " + big + " = " + q(p, aValue) })], [block(relSplit, { calc: q(p, aValue) + " ÷ " + k + " = " + q(p, bValue),
         pic: [eq(rep(B, k), q(p, aValue)), eq(B, q(p, aValue) + " ÷ " + k), eq(B, q(p, bValue))],
         let: [eq(coef(k, "B"), fmt(aValue)), eq("B", fmt(aValue) + " ÷ " + k), eq("B", fmt(bValue))] })]] },
     ]);
@@ -365,8 +438,8 @@ function planFois(p, sens) {
   const sitV = schema("Situation", 2, parts, [top(0, parts, q(p, total)), ...Array.from({ length: m }, (_, j) => bot(cellA(p, j * k, k, { text: q(p, aValue) }))), ...Array.from({ length: n }, (_, i) => bot(cellB(p, m * k + i, { text: q(p, bValue) })))]);
   const ctx = CONTEXTS[p.context];
   steps.push(answerStep(p, [[block(relV), { type: "and" }, block(sitV)]], [
-    { s: cap(one(p.A)) + " " + ctx.un + " autant que " + np(p.B, k) + ".", c: k + " × " + q(p, bValue) + " = " + q(p, aValue) },
-    { s: cap(np(p.A, m)) + " et " + np(p.B, n) + " " + ctx.plur + " " + q(p, total) + ".", c: (m === 1 ? q(p, aValue) : m + " × " + q(p, aValue)) + " + " + (n === 1 ? q(p, bValue) : n + " × " + q(p, bValue)) + " = " + q(p, m * aValue) + " + " + q(p, n * bValue) + " = " + q(p, total) },
+    { s: relSentence(p), c: k + " × " + q(p, bValue) + " = " + q(p, aValue) },
+    { s: sitSentence(p), c: (m === 1 ? q(p, aValue) : m + " × " + q(p, aValue)) + " + " + (n === 1 ? q(p, bValue) : n + " × " + q(p, bValue)) + " = " + q(p, m * aValue) + " + " + q(p, n * bValue) + " = " + q(p, total) },
   ]));
   return steps;
 }
@@ -391,7 +464,7 @@ function planEcart(p) {
   const steps = [];
   steps.push(comprendre(p, [
     ["Que cherche-t-on ?", cap(grandeurDe(p, p.B)) + " " + B],
-    ["Que sait-on déjà ?", cap(one(p.A)) + " " + A + " peut être " + (p.A.det === "une" ? "remplacée" : "remplacé") + " par " + one(p.B) + " " + B + " et " + q(p, d) + "."],
+    ["Que sait-on déjà ?", cap(one(p.A)) + " " + A + " peut être " + (p.A.det === "une" ? "remplacée" : "remplacé") + " par " + one(p.B) + " " + B + " et " + qPhrase(p, d) + "."],
     ["Quelle idée utiliser ?", "Remplacer, retirer " + (m === 1 ? "l’écart" : "les écarts") + ", puis partager."],
   ]));
   steps.push([
@@ -412,7 +485,7 @@ function planEcart(p) {
   const repLet = [eq(sum([...Array.from({ length: m }, () => "(B + " + fmt(d) + ")"), coef(n, "B")]), fmt(total))];
   const grpPic = [eq(rep(B, parts) + " + " + dSum, q(p, total))];
   const grpLet = [eq(coef(parts, "B") + " + " + (m === 1 ? fmt(d) : m + " × " + fmt(d)), fmt(total))];
-  const instr = "On remplace chaque " + A + " par " + B + " et " + q(p, d) + ".";
+  const instr = "On remplace chaque " + A + " par " + B + " et " + qPhrase(p, d) + ".";
   steps.push([
     { instruction: instr, rows: [dataRow(relation, situationHL)] },
     { instruction: instr, rows: [dataRow(relation, situationHL), [block(replaced, { pic: repPic, let: repLet })]] },
@@ -428,7 +501,7 @@ function planEcart(p) {
     { instruction: retire + retCalc + ".", rows: [[block(groupedHL, { pic: grpPic, let: grpLet })], [block(reducedS, { calc: retCalc,
       pic: [eq(rep(B, parts), q(p, total) + " − " + q(p, p.totalD)), eq(rep(B, parts), q(p, p.reduced))],
       let: [eq(coef(parts, "B"), fmt(total) + " − " + fmt(p.totalD)), eq(coef(parts, "B"), fmt(p.reduced))] })]] },
-    { instruction: "On partage " + q(p, p.reduced) + " en " + parts + " parts égales.", rows: [[block(reducedS, { calc: retCalc })], [block(shared, { calc: q(p, p.reduced) + " ÷ " + parts + " = " + q(p, bValue),
+    { instruction: "On partage " + qPhrase(p, p.reduced) + " en " + parts + " parts égales.", rows: [[block(reducedS, { calc: retCalc })], [block(shared, { calc: q(p, p.reduced) + " ÷ " + parts + " = " + q(p, bValue),
       pic: [eq(B, q(p, p.reduced) + " ÷ " + parts), eq(B, q(p, bValue))],
       let: [eq("B", fmt(p.reduced) + " ÷ " + parts), eq("B", fmt(bValue))] })]] },
     { instruction: "On utilise la relation pour trouver " + grandeurDe(p, p.A) + " " + A + ".", rows: [[block(shared, { calc: q(p, p.reduced) + " ÷ " + parts + " = " + q(p, bValue) })], [block(relVal, { calc: q(p, bValue) + " + " + q(p, d) + " = " + q(p, aValue),
@@ -437,8 +510,8 @@ function planEcart(p) {
   ]);
   const sitV = schema("Situation", 2, sitCols, sitCells(false, true));
   steps.push(answerStep(p, [[block(relVal), { type: "and" }, block(sitV)]], [
-    { s: cap(one(p.A)) + " " + ctx.un + " " + q(p, d) + " de plus " + qu(p.B) + ".", c: q(p, bValue) + " + " + q(p, d) + " = " + q(p, aValue) },
-    { s: cap(np(p.A, m)) + " et " + np(p.B, n) + " " + ctx.plur + " " + q(p, total) + ".", c: (m === 1 ? q(p, aValue) : m + " × " + q(p, aValue)) + " + " + (n === 1 ? q(p, bValue) : n + " × " + q(p, bValue)) + " = " + q(p, m * aValue) + " + " + q(p, n * bValue) + " = " + q(p, total) },
+    { s: relSentence(p), c: q(p, bValue) + " + " + q(p, d) + " = " + q(p, aValue) },
+    { s: sitSentence(p), c: (m === 1 ? q(p, aValue) : m + " × " + q(p, aValue)) + " + " + (n === 1 ? q(p, bValue) : n + " × " + q(p, bValue)) + " = " + q(p, m * aValue) + " + " + q(p, n * bValue) + " = " + q(p, total) },
   ]));
   return steps;
 }
@@ -461,8 +534,8 @@ function planPartielle(p) {
   const steps = [];
   steps.push(comprendre(p, [
     ["Que cherche-t-on ?", cap(grandeurDe(p, p.B)) + " " + B],
-    ["Quelle donnée aide d’abord ?", cap(np(p.A, r)) + " " + ctx.plur + " " + q(p, known) + "."],
-    ["Quelle idée utiliser ?", "Trouver " + grandeurDe(p, p.A) + ", la remplacer dans la situation, retirer, puis partager."],
+    ["Quelle donnée aide d’abord ?", knownSentence(p)],
+    ["Quelle idée utiliser ?", "Trouver " + grandeurDe(p, p.A) + ", " + (p.splat ? "le" : "la") + " remplacer dans la situation, retirer, puis partager."],
   ]));
   steps.push([
     { instruction: "Complète les schémas : que met-on dans chaque case ?", rows: [[block(emptied(knownS, "Donnée partielle")), { type: "and" }, block(emptied(situation, "Situation complète"))]] },
@@ -474,10 +547,10 @@ function planPartielle(p) {
   const repPic = [eq(sum([m + " × " + q(p, aValue), rep(B, n)]), q(p, total)), eq(q(p, partA) + " + " + rep(B, n), q(p, total))];
   const repLet = [eq(m + " × " + fmt(aValue) + " + " + coef(n, "B"), fmt(total)), eq(fmt(partA) + " + " + coef(n, "B"), fmt(total))];
   steps.push([
-    { instruction: "On partage " + q(p, known) + " en " + r + " parts égales.", rows: [[block(knownS, { pic: knownPic, let: knownLet })]] },
-    { instruction: "On partage " + q(p, known) + " en " + r + " parts égales.", rows: [[block(knownShared, { calc: kCalc,
+    { instruction: "On partage " + qPhrase(p, known) + " en " + r + " parts égales.", rows: [[block(knownS, { pic: knownPic, let: knownLet })]] },
+    { instruction: "On partage " + qPhrase(p, known) + " en " + r + " parts égales.", rows: [[block(knownShared, { calc: kCalc,
       pic: [eq(A, q(p, known) + " ÷ " + r), eq(A, q(p, aValue))], let: [eq("A", fmt(known) + " ÷ " + r), eq("A", fmt(aValue))] })]] },
-    { instruction: "On remplace chaque " + A + " par " + q(p, aValue) + " dans la situation.", rows: [[block(knownShared, { calc: kCalc })], [block(sitRep, { pic: repPic, let: repLet })]] },
+    { instruction: "On remplace chaque " + A + " par " + qPhrase(p, aValue) + " dans la situation.", rows: [[block(knownShared, { calc: kCalc })], [block(sitRep, { pic: repPic, let: repLet })]] },
   ]);
   const merged = schema("Situation complète", 2, parts, [top(0, parts, q(p, total)), bot({ x: 0, w: m, kind: "V", text: q(p, partA), hl: true }), ...Array.from({ length: n }, (_, i) => bot(cellB(p, m + i)))]);
   const restS = schema("Ce qui reste", 2, parts, [top(m, n, q(p, rest)), ...Array.from({ length: n }, (_, i) => bot(cellB(p, m + i)))], { offset: m });
@@ -486,14 +559,14 @@ function planPartielle(p) {
   steps.push([
     { instruction: "On retire la partie connue : " + rCalc + ".", rows: [[block(merged, { pic: [repPic[1]], let: [repLet[1]] })], [block(restS, { calc: rCalc,
       pic: [eq(rep(B, n), q(p, total) + " − " + q(p, partA)), eq(rep(B, n), q(p, rest))], let: [eq(coef(n, "B"), fmt(total) + " − " + fmt(partA)), eq(coef(n, "B"), fmt(rest))] })]] },
-    { instruction: "On partage " + q(p, rest) + " en " + n + " parts égales.", rows: [[block(restS, { calc: rCalc })], [block(shared, { calc: q(p, rest) + " ÷ " + n + " = " + q(p, bValue),
+    { instruction: "On partage " + qPhrase(p, rest) + " en " + n + " parts égales.", rows: [[block(restS, { calc: rCalc })], [block(shared, { calc: q(p, rest) + " ÷ " + n + " = " + q(p, bValue),
       pic: [eq(B, q(p, rest) + " ÷ " + n), eq(B, q(p, bValue))], let: [eq("B", fmt(rest) + " ÷ " + n), eq("B", fmt(bValue))] })]] },
   ]);
   const knownV = schema("Donnée partielle", 2, r, [top(0, r, q(p, known)), ...Array.from({ length: r }, (_, i) => bot(cellA(p, i, 1, { text: q(p, aValue) })))]);
   const sitV = schema("Situation complète", 2, parts, sitCells({ aVal: true, bVal: true }));
   steps.push(answerStep(p, [[block(knownV), { type: "and" }, block(sitV)]], [
-    { s: cap(np(p.A, r)) + " " + ctx.plur + " " + q(p, known) + ".", c: r + " × " + q(p, aValue) + " = " + q(p, known) },
-    { s: cap(np(p.A, m)) + " et " + np(p.B, n) + " " + ctx.plur + " " + q(p, total) + ".", c: m + " × " + q(p, aValue) + " + " + n + " × " + q(p, bValue) + " = " + q(p, partA) + " + " + q(p, rest) + " = " + q(p, total) },
+    { s: knownSentence(p), c: r + " × " + q(p, aValue) + " = " + q(p, known) },
+    { s: sitSentence(p), c: m + " × " + q(p, aValue) + " + " + n + " × " + q(p, bValue) + " = " + q(p, partA) + " + " + q(p, rest) + " = " + q(p, total) },
   ]));
   return steps;
 }
@@ -517,6 +590,7 @@ export function teacherLines(p, sens) {
 
 export function letterLegend(p) {
   const g = CONTEXTS[p.context].grandeur;
+  if (p.splat) return "A : " + grandeurDe(p, p.A) + " · B : " + grandeurDe(p, p.B);
   const unitTxt = g === "points" ? "en points" : "en " + p.unit;
   return "A : " + grandeurDe(p, p.A) + " (" + unitTxt + ") · B : " + grandeurDe(p, p.B) + " (" + unitTxt + ")";
 }

@@ -18,10 +18,52 @@ const state = {
   problem: null, steps: null, step: 0, t: 0, aides: new Set(), scale: 1,
 };
 
+// ------------------------------------------------------------ taches SPLAT!
+// Même forme que blobPath() de splat.html : cinq lobes arrondis.
+function blobPath(cx, cy, r) {
+  const n = 40, lobes = 5, pts = [];
+  for (let i = 0; i < n; i++) {
+    const a = (Math.PI * 2 * i) / n;
+    const k = 0.90 + 0.16 * Math.sin(lobes * a) + 0.04 * Math.sin(2 * lobes * a);
+    pts.push([cx + Math.cos(a) * r * k, cy + Math.sin(a) * r * k]);
+  }
+  const f = (v) => v.toFixed(2);
+  let d = `M ${f(pts[0][0])} ${f(pts[0][1])}`;
+  for (let i = 0; i < n; i++) {
+    const p0 = pts[(i - 1 + n) % n], p1 = pts[i], p2 = pts[(i + 1) % n], p3 = pts[(i + 2) % n];
+    const c1x = p1[0] + (p2[0] - p0[0]) / 6, c1y = p1[1] + (p2[1] - p0[1]) / 6;
+    const c2x = p2[0] - (p3[0] - p1[0]) / 6, c2y = p2[1] - (p3[1] - p1[1]) / 6;
+    d += ` C ${f(c1x)} ${f(c1y)} ${f(c2x)} ${f(c2y)} ${f(p2[0])} ${f(p2[1])}`;
+  }
+  return d + " Z";
+}
+const isTache = (ch) => !!(ch && M.tacheOf(ch));
+function drawTache(parent, ch, cx, cy, r, cls = "contenu") {
+  const t = M.tacheOf(ch);
+  return el("path", { d: blobPath(cx, cy, r), fill: t.fill, stroke: "rgba(0,0,0,.25)", "stroke-width": Math.max(1, r * 0.06).toFixed(2), class: cls, "data-tache": t.key }, parent);
+}
+// Petite tache dans une ligne de texte (1 em de haut).
+function tacheInline(ch) {
+  const svg = el("svg", { viewBox: "-12 -12 24 24", class: "tache-texte", role: "img", "aria-label": "tache " + M.tacheOf(ch).mot });
+  drawTache(svg, ch, 0, 0, 10.5, "");
+  return svg;
+}
+// Écrit un texte en remplaçant chaque caractère de tache par son dessin.
+function rich(node, str) {
+  const parts = String(str).split(/([\ue100-\ue105])/);
+  for (const part of parts) {
+    if (!part) continue;
+    if (isTache(part)) node.append(tacheInline(part)); else node.append(document.createTextNode(part));
+  }
+  return node;
+}
+function hr(tag, cls, str) { return rich(h(tag, cls), str); }
+
 // ------------------------------------------------------------ mesure du texte
 const ctx2d = document.createElement("canvas").getContext("2d");
 const unitCache = new Map();
 function unitWidth(str, emoji = false) {
+  str = String(str).replace(M.TACHE_RE, "W"); // une petite tache ≈ la largeur d'un W
   const key = (emoji ? "e|" : "t|") + str;
   if (!unitCache.has(key)) {
     ctx2d.font = (emoji ? "400 100px " + EMOJI : "800 100px " + FONT);
@@ -68,14 +110,28 @@ function drawSchema(s, u, h) {
   for (const c of cells) {
     const x = px(c.x), w = px(c.x + c.w) - px(c.x), y = c.row * h;
     const g = el("g", { class: "case", "data-kind": c.kind, "data-w": String(c.w) }, svg);
-    el("rect", { x, y, width: w, height: h, fill: COLORS[c.kind], stroke: "#334155", "stroke-width": 1.5 }, g);
+    const tache = isTache(c.emoji);
+    // Avec les taches, la couleur de la tache suffit : cases claires et neutres, comme dans SPLAT!
+    const fond = tache && (c.kind === "A" || c.kind === "B") ? "#f8fafc" : COLORS[c.kind];
+    el("rect", { x, y, width: w, height: h, fill: fond, stroke: "#334155", "stroke-width": 1.5 }, g);
     const cx = x + w / 2;
     const hasEmoji = !!c.emoji, hasText = c.text != null && c.text !== "";
     if (hasEmoji && !hasText) {
-      el("text", { x: cx, y: y + h / 2, "text-anchor": "middle", "dominant-baseline": "central", "font-family": EMOJI, "font-size": eB.toFixed(1), class: "contenu" }, g).textContent = c.emoji;
+      if (tache) {
+        // Le nom de la couleur sous la tache quand la case le permet (lecture en noir et blanc).
+        const mot = M.tacheOf(c.emoji).mot;
+        const fMot = Math.min(0.2 * h, (w - 8) / unitWidth(mot));
+        if (fMot >= 11) {
+          drawTache(g, c.emoji, cx, y + h * 0.37, Math.min(0.22 * h, 0.3 * u));
+          const t = el("text", { x: cx, y: y + h * 0.8, "text-anchor": "middle", "dominant-baseline": "central", "font-family": FONT, "font-weight": 800, "font-size": fMot.toFixed(1), fill: "#334155", class: "contenu nom-case" }, g);
+          t.textContent = mot;
+        } else drawTache(g, c.emoji, cx, y + h / 2, Math.min(0.3 * h, 0.34 * u));
+      }
+      else el("text", { x: cx, y: y + h / 2, "text-anchor": "middle", "dominant-baseline": "central", "font-family": EMOJI, "font-size": eB.toFixed(1), class: "contenu" }, g).textContent = c.emoji;
     } else if (hasEmoji && hasText) {
       const e = Math.min(0.36 * h, 0.5 * u);
-      el("text", { x: cx, y: y + h * 0.3, "text-anchor": "middle", "dominant-baseline": "central", "font-family": EMOJI, "font-size": e.toFixed(1), class: "contenu" }, g).textContent = c.emoji;
+      if (tache) drawTache(g, c.emoji, cx, y + h * 0.3, Math.min(0.16 * h, 0.26 * u));
+      else el("text", { x: cx, y: y + h * 0.3, "text-anchor": "middle", "dominant-baseline": "central", "font-family": EMOJI, "font-size": e.toFixed(1), class: "contenu" }, g).textContent = c.emoji;
       const fit = fitText(c.text, w - 8, h * 0.46, 0.32 * h);
       addLines(g, fit, cx, y + h * 0.53, h * 0.46, TEXT[c.kind]);
     } else if (hasText) {
@@ -99,7 +155,8 @@ function drawSchema(s, u, h) {
   for (const b of s.brackets || []) {
     const x0 = px(b.x) + 5, x1 = px(b.x + b.w) - 5, y0 = s.rows * h + 4, a = Math.round(h * 0.18);
     el("path", { d: `M${x0} ${y0} v${a} H${x1} v${-a}`, fill: "none", stroke: "#8a3a0a", "stroke-width": 2.2, "stroke-linejoin": "round" }, svg);
-    el("text", { x: (x0 + x1) / 2, y: y0 + a + h * 0.25, "text-anchor": "middle", "dominant-baseline": "central", "font-family": EMOJI, "font-size": Math.min(h * 0.4, u * 0.5).toFixed(1), class: "contenu crochet" }, svg).textContent = b.text;
+    if (isTache(b.text)) drawTache(svg, b.text, (x0 + x1) / 2, y0 + a + h * 0.25, Math.min(h * 0.17, u * 0.22), "contenu crochet");
+    else el("text", { x: (x0 + x1) / 2, y: y0 + a + h * 0.25, "text-anchor": "middle", "dominant-baseline": "central", "font-family": EMOJI, "font-size": Math.min(h * 0.4, u * 0.5).toFixed(1), class: "contenu crochet" }, svg).textContent = b.text;
   }
   return svg;
 }
@@ -120,22 +177,24 @@ function shows() {
 // Lignes alignées sur « = » ; si la place manque (téléphone), chaque ligne passe en texte centré.
 function egalites(lines, innerW) {
   const f = parseFloat(getComputedStyle($("tableau")).getPropertyValue("--f-ligne")) || 24;
-  const side = Math.max(...lines.map(([l, r]) => Math.max(unitWidth(l), unitWidth(r))));
-  const natural = (2 * side + unitWidth(" = ")) * f;
+  const natural = (Math.max(...lines.map(([l]) => unitWidth(l))) + unitWidth(" = ") + Math.max(...lines.map(([, r]) => unitWidth(r)))) * f;
   if (natural > innerW) {
     const box = h("div", "egalites flux");
-    for (const [l, r] of lines) { const d = h("div", "ligne"); d.append(document.createTextNode(l + " "), h("span", "s", "="), document.createTextNode(" " + r)); box.append(d); }
+    for (const [l, r] of lines) { const d = h("div", "ligne"); rich(d, l + " "); d.append(h("span", "s", "=")); rich(d, " " + r); box.append(d); }
     return box;
   }
   const grid = h("div", "egalites");
-  for (const [l, r] of lines) { grid.append(h("span", "g", l), h("span", "s", "="), h("span", "d", r)); }
+  for (const [l, r] of lines) { grid.append(hr("span", "g", l), h("span", "s", "="), hr("span", "d", r)); }
   return grid;
 }
 // Largeur naturelle des écritures d'un bloc (lignes alignées sur « = »).
 function linesNaturalWidth(b, f) {
-  const sh = shows(); let side = 0;
-  for (const lines of [sh.pic && b.pic, sh.let && b.let]) if (lines) for (const [l, r] of lines) side = Math.max(side, unitWidth(l), unitWidth(r));
-  return side ? (2 * side + unitWidth(" = ")) * f + 24 : 0;
+  const sh = shows(); let best = 0;
+  for (const lines of [sh.pic && b.pic, sh.let && b.let]) if (lines) {
+    const w = Math.max(...lines.map(([l]) => unitWidth(l))) + unitWidth(" = ") + Math.max(...lines.map(([, r]) => unitWidth(r)));
+    best = Math.max(best, w);
+  }
+  return best ? best * f + 24 : 0;
 }
 function schemaBlockNode(b, u, hh, width, withLines, sideW = 0) {
   const node = h("div", "bloc" + (sideW ? " cote" : ""));
@@ -189,11 +248,11 @@ function renderScene(tps) {
   const rows = tps.rows.map((row, i) => row.map((b) => (b.type === "schema" ? { ...b, lines: i === lastSchemaRow } : b)));
   const lay = solveLayout(rows, W, isPhone, baseH);
   const u = lay.u;
-  const hh = Math.round(Math.max(40, Math.min(baseH, u * 1.35)));
-  const fLine = Math.max(15, Math.min(30, hh * 0.4, (isPhone ? 20 : 30) * state.scale));
+  const hh = Math.round(Math.max(38, Math.min(baseH, u * 1.35)));
+  const fLine = Math.max(14, Math.min(30, hh * 0.4, (isPhone ? 20 : 30) * state.scale));
   board.style.setProperty("--f-ligne", fLine.toFixed(1) + "px");
   board.style.setProperty("--f-titre", Math.max(12, Math.min(16, hh * 0.24)).toFixed(1) + "px");
-  board.style.setProperty("--gap-rangee", Math.round(Math.max(8, hh * 0.2)) + "px");
+  board.style.setProperty("--gap-rangee", Math.round(Math.max(6, hh * 0.2)) + "px");
   board.dataset.u = String(u);
   board.replaceChildren();
   for (const row of lay.rows) {
@@ -231,7 +290,7 @@ function aidesNode(b) {
     card.type = "button";
     card.setAttribute("aria-expanded", String(open));
     card.append(h("div", "qq", c.q));
-    const rr = h("div", "rr", c.a);
+    const rr = hr("div", "rr", c.a);
     if (!open) rr.style.visibility = "hidden";
     card.append(rr);
     card.addEventListener("click", () => { open ? state.aides.delete(i) : state.aides.add(i); render(); });
@@ -241,7 +300,7 @@ function aidesNode(b) {
 }
 function answerNode(b) {
   const box = h("div", "reponses");
-  for (const l of b.lines) { const c = h("div", "reponse"); c.append(h("span", "emo", l.emoji), h("span", "", l.text)); box.append(c); }
+  for (const l of b.lines) { const c = h("div", "reponse"); c.append(hr("span", "emo", l.emoji), hr("span", "", l.text)); box.append(c); }
   return box;
 }
 function checksNode(b) {
@@ -249,10 +308,46 @@ function checksNode(b) {
   for (const l of b.lines) {
     const v = h("div", "verif");
     const c = h("div", "calc"); c.append(document.createTextNode(l.c + " "), h("span", "ok", "✓"));
-    v.append(h("div", "phrase", l.s), c);
+    v.append(hr("div", "phrase", l.s), c);
     box.append(v);
   }
   return box;
+}
+
+// Carte SPLAT! : case TOTAL, plateau de taches (nom écrit sur chaque tache), phrase d'indice.
+function renderSplatCard(en, p, k = 1) {
+  const card = M.splatCard(p);
+  const W = en.clientWidth || window.innerWidth;
+  const phone = window.innerWidth < 620;
+  const rangee = h("div", "splat-plateaux");
+  const nPlateaux = card.plateaux.length;
+  const H0 = Math.max(36, Math.min(104, window.innerHeight * 0.1) * k);
+  for (const pl of card.plateaux) {
+    const bloc = h("div", "splat-carte");
+    const tot = h("div", "splat-total"); tot.append(h("span", "mot", "TOTAL"), h("span", "nb", M.fmt(pl.total)));
+    const n = pl.taches.length;
+    const dispo = (phone ? W - 40 : (W - 40) / nPlateaux - 40);
+    const r = Math.max(14, Math.min(H0 * 0.4, dispo / (n * 2.25)));
+    const pas = r * 2.25, marge = r * 0.35;
+    const w = n * pas + 2 * marge, hh = r * 2.3;
+    const svg = el("svg", { width: Math.round(w), height: Math.round(hh), viewBox: `0 0 ${w.toFixed(1)} ${hh.toFixed(1)}`, class: "splat-plateau", role: "img", "aria-label": n + " taches" });
+    pl.taches.forEach((ch, i) => {
+      const cx = marge + pas * (i + 0.5), cy = hh / 2;
+      drawTache(svg, ch, cx, cy, r, "");
+      const mot = M.tacheOf(ch).mot;
+      const f = Math.min(r * 0.46, (r * 1.45) / unitWidth(mot));
+      if (f >= 10) {
+        const t = el("text", { x: cx, y: cy, "text-anchor": "middle", "dominant-baseline": "central", "font-family": FONT, "font-weight": 800, "font-size": f.toFixed(1), fill: "#fff", stroke: "#111", "stroke-width": (f * 0.16).toFixed(2), "paint-order": "stroke", class: "nom-tache" }, svg);
+        t.textContent = mot;
+      }
+    });
+    const plateau = h("div", "splat-cadre"); plateau.append(svg);
+    bloc.append(tot, plateau); // le total au-dessus de SON plateau, comme dans SPLAT! et comme dans les schémas
+    rangee.append(bloc);
+  }
+  en.append(rangee);
+  for (const ind of card.indices) en.append(hr("div", "splat-indice", ind));
+  const qq = h("div", "splat-question"); const mk = document.createElement("mark"); mk.className = "m-Q"; mk.textContent = card.question; qq.append(mk); en.append(qq);
 }
 
 // ------------------------------------------------------------ rendu complet
@@ -262,7 +357,9 @@ function render() {
   const p = state.problem;
   // énoncé coloré
   const en = $("enonce"); en.replaceChildren();
-  for (const part of M.statementParts(p)) {
+  en.classList.toggle("splat", p.splat);
+  if (p.splat) renderSplatCard(en, p);
+  else for (const part of M.statementParts(p)) {
     if (part.c) { const mk = document.createElement("mark"); mk.className = "m-" + part.c; mk.textContent = part.t; en.append(mk); }
     else en.append(document.createTextNode(part.t));
   }
@@ -281,7 +378,7 @@ function render() {
     li.append(b); ol.append(li);
   });
   const tps = state.steps[state.step][state.t];
-  $("consigne").textContent = tps.instruction || "";
+  $("consigne").replaceChildren(); rich($("consigne"), tps.instruction || "");
   $("btnPrec").disabled = state.step === 0 && state.t === 0;
   $("btnSuiv").disabled = state.step === state.steps.length - 1 && state.t === state.steps[state.step].length - 1;
   const sh = shows();
@@ -296,12 +393,17 @@ function render() {
   // On garde la plus grande échelle qui tient dans la hauteur (recherche par dichotomie).
   const board = $("tableau");
   const fits = (sc) => { state.scale = sc; renderScene(tps); return board.scrollHeight <= board.clientHeight + 1; };
-  if (!fits(1)) {
-    let lo = 0.55, hi = 1;
-    if (fits(lo)) {
-      for (let i = 0; i < 5; i++) { const mid = (lo + hi) / 2; if (fits(mid)) lo = mid; else hi = mid; }
-      fits(lo);
-    }
+  const fitScene = () => {
+    if (fits(1)) return true;
+    let lo = 0.45, hi = 1;
+    if (!fits(lo)) return false;
+    for (let i = 0; i < 5; i++) { const mid = (lo + hi) / 2; if (fits(mid)) lo = mid; else hi = mid; }
+    fits(lo);
+    return true;
+  };
+  // Avec les taches, si les schémas ne tiennent toujours pas, le plateau de l'énoncé se fait plus petit.
+  if (!fitScene() && p.splat) {
+    for (const k of [0.75, 0.55]) { en.replaceChildren(); renderSplatCard(en, p, k); if (fitScene()) break; }
   }
 }
 
