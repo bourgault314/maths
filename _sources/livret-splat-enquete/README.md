@@ -12,6 +12,8 @@ au milieu → 8 pages A4.
 | `additif` — monde 3, SPLAT! Enquête | 10 De plus que · 11 De moins que · 12 Plus ou moins · 13 Trois taches en chaîne · 14 Le défi additif | `outils/livret_splat_enquete_additif.pdf` · `…_a_plier.pdf` |
 | `multiplicatif` — monde 4, SPLAT! Grande enquête | 15 Fois plus · 16 Fois moins · 17 Les quatre opérations · 18 Trois taches, 4 opérations · 19 Le grand défi | `outils/livret_splat_enquete_multiplicatif.pdf` · `…_a_plier.pdf` |
 | + leurs 2 livrets de correction chacun | les mêmes | `…_correction.pdf` (inconnue « ? »), `…_correction_lettre.pdf` (inconnue en lettre), et chacun son `…_a_plier.pdf` |
+| `additif_defi` — monde 3, **Le défi** | les fiches 10 à 14, totaux de 50 à 100 | `outils/livret_splat_enquete_additif_defi.pdf` · `…_a_plier.pdf` (+ ses 2 corrigés) |
+| `multiplicatif_defi` — monde 4, **Le défi** | les fiches 15 à 19, totaux de 50 à 100 | `outils/livret_splat_enquete_multiplicatif_defi.pdf` · `…_a_plier.pdf` (+ ses 2 corrigés) |
 
 Deux formats pour chacun :
 
@@ -58,7 +60,8 @@ l'énoncé imprimé de `outils/splat.html`).
   partir de la carte rendue** (`textes_exemple`) — ils ne peuvent pas mentir sur ses nombres.
 - `commun.css` — la charte (Poppins, framboise `#be185d`, le même dégradé que le bandeau
   imprimé des fiches `.print-page-header--enquete`).
-- `qr/` — les QR codes en PNG noir et blanc : `fiche10…19.png`, `serie-1…6.png`, `univers.png`.
+- `qr/` — les QR codes en PNG noir et blanc : `fiche10…19.png`, `fiche10d…19d.png` (Le défi),
+  `serie-1…12.png`, `univers.png`.
 - `render.py` — régénère les PDF. Tous les réglages sont en tête de fichier.
 
 Les fiches elles-mêmes ne sont **pas** redessinées ici : `render.py` les demande à l'outil
@@ -128,6 +131,44 @@ Les cinq schémas de la page 2 sont ceux de l'outil (`drawRelationSituationSchem
 correction (`getRelationCorrectionPrintProfile`) : **aucun dessin n'est inventé ici**. Seul
 le bouton « Résoudre » du schéma ordonné (il ouvre ÉquaBarre à l'écran) est retiré.
 
+## Les livrets « Le défi » (23/09/2026)
+
+Le même monde, des cartes plus dures — comme « Le défi » du monde 2 et les niveaux Avancé /
+Expert du monde 1 : **les mêmes fiches** (10 à 14, 15 à 19), les mêmes titres, les mêmes sortes
+de cartes et les mêmes consignes « Reformule » (fiches 11 et 16), avec des **totaux de 50 à 100**.
+Décisions de Gwenaël (23/09/2026, sur les livrets rendus) : ces réglages, les titres de fiche
+identiques (seule la couverture dit « Le défi »), et les deux exemples ci-dessous.
+
+- **Même étoile** : le QR de la fiche 12 du défi ouvre `?f=12d` sur la page courte — les cartes
+  du défi, avec `parcours=enq12`. Réussir la série plus dure allume l'étoile de l'étape 12, comme
+  au monde 2 (`?f=7d`) et au monde 1.
+- **Réglages** (`D10` … `D19` de `render.py`, recopiés dans `ENQ_DEFI` de la page courte ; un
+  test épingle les deux) : ceux de la fiche de la classe, avec `totalMin=50&totalMax=100`,
+  `deltaMax=30` (deux taches) ou `25` (trois taches), et aux fiches 14 et 19
+  `visibleMin=2&visibleMax=3` — deux ou trois paquets de jetons visibles à additionner avant de
+  retirer. Les indices « fois » restent × 2, × 3, × 4 (le générateur n'en connaît pas d'autres).
+- **Les graines sont choisies, pas tirées** : un script de tri (hors dépôt) rejoue exactement
+  `generate()` dans l'outil sur des centaines de milliers de graines et ne garde que les séries
+  dont CHAQUE carte passe les règles écrites en tête de `render.py` — aucun nombre à
+  sous-entendu (même calculé en chemin), jamais deux taches égales, « ? » de 6 au moins et jamais multiple de 5, écarts
+  jamais multiples de 5, 10 « ? » au plus dans le schéma, paquets visibles non triviaux (et jamais égaux à
+  une tache), totaux étalés, couleurs variées, tous les types de la fiche présents, aucune carte
+  déjà vue ailleurs, aucun total répété dans un livret. Rares aux fiches 14 et 19 : une graine
+  sur 10 000 à 30 000.
+- **Les exemples** (couverture et page 2) : la même chaîne noire → bleue → orange que les livrets
+  de la classe, au calibre du défi — monde 3 (graine 49641) : bleue = noire + 13, orange =
+  bleue + 22 → 12, 25, 47, total 84 ; monde 4 (graine 211206) : bleue = noire + 7, orange =
+  2 fois la bleue → 13, 20, 40, total 73.
+- **Couverture** : « Mon livret · Monde 3 · Le défi » (ou 4), accroche « … et des totaux jusqu'à
+  100 ! » ; le sommaire, la page 2 et le dos sont ceux du livret de la classe, écrits à partir
+  de leur carte.
+- **Dos** : trois séries au calibre du défi, `?s=7` à `?s=12` sur la page courte (les réglages
+  des fiches, sans graine).
+- `render.py` vérifie à la fin, sur les quatre livrets de `cartes.json` : aucun exemple n'est une
+  carte, aucune carte du défi ne revient ailleurs, aucun total ne se répète dans un livret du
+  défi. (Les livrets de la classe gardent leurs deux paires « à l'envers » du lot E0 :
+  27 = 9 + 18 aux fiches 10 et 11, 12 = 4 + 8 aux fiches 15 et 16.)
+
 ## Les livrets corrigés (pour tous)
 
 Depuis le 23/09/2026, le corrigé peut aussi être donné aux élèves : il ne dit plus
@@ -155,8 +196,8 @@ rendu : `render.py` s'arrête si une carte diffère entre l'élève, la correcti
 
 ```bash
 cd _sources/livret-splat-enquete
-python3 render.py                 # les DEUX livrets, élève et corrections
-python3 render.py additif         # un seul livret (additif | multiplicatif), et ses corrections
+python3 render.py                 # les QUATRE livrets, élève et corrections
+python3 render.py additif         # un seul livret (additif | multiplicatif | additif_defi | multiplicatif_defi), et ses corrections
 python3 render.py --eleve         # seulement les livrets de l'élève
 python3 render.py --correction    # seulement les livrets de correction
 python3 render.py --qr            # en refabriquant d'abord les QR codes
