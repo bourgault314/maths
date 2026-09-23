@@ -182,7 +182,7 @@ test("la miniature du livret existe en PNG et en WebP, au format du catalogue", 
   assert.ok(existe("assets/img/thumbnails/splat/livret-splat-classique.png"));
   assert.ok(existe("assets/img/thumbnails/splat/livret-splat-classique.webp"));
   assert.ok(taille("assets/img/thumbnails/splat/livret-splat-classique.webp") < taille("assets/img/thumbnails/splat/livret-splat-classique.png"));
-  // lot L : la miniature de la carte du catalogue, les deux couvertures côte à côte
+  // la miniature de la carte du catalogue : les couvertures des quatre mondes en éventail (23/09/2026)
   assert.ok(existe("assets/img/thumbnails/splat/livrets-splat.png"));
   assert.ok(existe("assets/img/thumbnails/splat/livrets-splat.webp"));
   assert.ok(taille("assets/img/thumbnails/splat/livrets-splat.webp") < taille("assets/img/thumbnails/splat/livrets-splat.png"));
@@ -194,7 +194,7 @@ test("le catalogue déclare UNE carte « Les livrets SPLAT! » dans la collectio
   assert.match(m[0], /"collections": \["splat"\]/);
   assert.match(m[0], /"primaryGroup": "imprimer"/);
   assert.match(m[0], /"cardTitle": "Les livrets SPLAT!"/);
-  assert.match(m[0], /livrets-splat\.png\?v=1/);
+  assert.match(m[0], /livrets-splat\.png\?v=2/);
   // les deux anciennes cartes ont disparu du catalogue
   assert.ok(!catalogue.includes('"outils/livrets_petit_splat.html"'), "plus de carte monde 1");
   assert.ok(!catalogue.includes('"outils/livrets_splat_classique.html"'), "plus de carte monde 2");
@@ -822,6 +822,9 @@ test("cartes des mondes : numéro, nom et fiches, dans l'ordre, toujours des ong
   // imposée (sinon <use> ne peut pas prendre la couleur du monde)
   assert.match(page, /<svg class="tache" viewBox="2 5 106 105" fill="#063b7a" aria-hidden="true"><path id="forme-tache" d="M /);
   assert.match(page, /\.onglets a \.num use\{fill:var\(--c-plein\)\}/);
+  // le chiffre est centré dans le splat sans décalage (mesuré au pixel le 23/09 : ±0,5 px)
+  assert.match(page, /\.onglets a \.num b\{position:relative;line-height:1;margin:0;/);
+  assert.doesNotMatch(page, /\.num b\{[^}]*(transform|margin:-)/, "aucun décalage du chiffre");
   // toutes les cartes de la même taille, le nom sur deux lignes au plus
   assert.match(page, /\.onglets\{display:grid;grid-template-columns:repeat\(4,minmax\(0,1fr\)\);grid-auto-rows:1fr;/);
   assert.match(page, /\.onglets a \.etiq\{[^}]*-webkit-line-clamp:2/);
