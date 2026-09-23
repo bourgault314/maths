@@ -56,7 +56,7 @@ export const CONTEXTS = {
   fournitures: {
     label: "Fournitures et prix (€)", unit: "€", grandeur: "prix",
     un: "coûte", plur: "coûtent",
-    fois: { A: "livre", B: "cahier", B_range: [2, 5, 1], A_range: [4, 20] },
+    fois: { A: "livre", B: "cahier", B_range: [2, 9, 1], A_range: [4, 36] }, // lot 2 : cahier de 2 à 9 €, livre jusqu'à 36 €
     ecart: { A: "cahier", B: "crayon", B_range: [2, 4, 1], d_range: [1, 3, 1] }, // cahier de 3 à 7 €
     partielle: { A: "livre", B: "crayon", A_range: [6, 15, 1], B_range: [1, 3, 1] },
   },
@@ -231,6 +231,111 @@ export function checkProblem(p) {
   return errs;
 }
 
+// ---------------------------------------------------------------- séries (lot 2)
+// Une graine + des réglages donnent toujours la même série de cartes.
+// La carte 1 est exactement generate(réglages, graine) : les anciens liens « graine=… »
+// redonnent le même premier problème. Les cartes suivantes sont tirées d'une suite de
+// graines dérivée de la graine, sans doublon. Une série de 12 prolonge celle de 8, qui
+// prolonge celle de 4 : changer le nombre de cartes ne change pas les cartes déjà vues.
+// La relation « à l'envers » ne consomme aucun hasard : mêmes nombres dans les deux sens.
+export const SERIE_TAILLES = [4, 8, 12];
+export const SERIE_DEFAUT = 8;
+export const problemKey = (p) => [p.family, p.aValue, p.bValue, p.m, p.n, p.k, p.r, p.d, p.A.sing, p.B.sing].join("|");
+const valueKey = (p) => p.aValue + "|" + p.bValue;
+
+export function generateSeries(settings, graine, n = SERIE_DEFAUT) {
+  const cards = [generate(settings, graine)];
+  const keys = new Set([problemKey(cards[0])]);
+  const vals = new Set([valueKey(cards[0])]);
+  const rng = makeRng((graine ^ 0x5bd1e995) >>> 0);
+  while (cards.length < n) {
+    const prev = cards[cards.length - 1];
+    let best = null, newValues = null, other = null;
+    for (let t = 0; t < 400 && !best; t++) {
+      const s = 1 + Math.floor(rng() * 2147483646);
+      let p;
+      try { p = generate(settings, s); } catch { continue; }
+      if (keys.has(problemKey(p))) continue;
+      const fresh = !vals.has(valueKey(p));
+      // Varier : d'autres valeurs, et si possible d'autres quantités que la carte précédente.
+      if (fresh && (p.m !== prev.m || p.n !== prev.n || p.r !== prev.r)) best = p;
+      else if (fresh && !newValues) newValues = p;
+      else if (!other) other = p;
+      if (t >= 40 && newValues) best = newValues;
+    }
+    const p = best || newValues || other;
+    if (!p) break; // plus aucun problème différent avec ces réglages : la série s'arrête là
+    cards.push(p); keys.add(problemKey(p)); vals.add(valueKey(p));
+  }
+  cards.forEach((p, i) => { p.carte = i + 1; p.graine = graine; });
+  return cards;
+}
+
+// Nouvelle graine au hasard : 4 chiffres (facile à noter), jamais un nombre à sous-entendu.
+export function tirerGraine(random = Math.random) {
+  for (;;) { const g = 1000 + Math.floor(random() * 9000); if (!isForbiddenNumber(g)) return g; }
+}
+
+// ---------------------------------------------------------------- adresse (lot 2)
+// Lit les réglages d'une adresse. Rien n'est jamais pris « en silence » : chaque valeur
+// inconnue est rendue dans `alertes` (l'appli l'affiche dans un bandeau) et remplacée par
+// la valeur par défaut. Seuls les autres noms connus d'un même réglage sont acceptés sans
+// alerte (contexte=points → le jeu et ses points).
+export const DEFAUTS = { family: "fois", k: "2", variety: "guided", context: "fruits", relation: "endroit", sens: "AtoB", ecritures: "aucune", cartes: SERIE_DEFAUT };
+const ALIAS_CONTEXTE = { points: "jetons", jeu: "jetons" };
+const PARAMS = {
+  famille: { key: "family", ok: FAMILIES },
+  k: { key: "k", ok: ["2", "3", "4", "mix"] },
+  variete: { key: "variety", ok: ["guided", "simple", "rich"] },
+  contexte: { key: "context", ok: Object.keys(CONTEXTS), alias: ALIAS_CONTEXTE },
+  relation: { key: "relation", ok: ["endroit", "envers"] },
+  sens: { key: "sens", ok: ["AtoB", "BtoA"] },
+  ecritures: { key: "ecritures", ok: ["aucune", "objets", "lettres", "tout"] },
+  cartes: { key: "cartes", ok: SERIE_TAILLES.map(String), num: true },
+};
+const IGNORES = /^(utm_\w+|fbclid|gclid)$/;
+const entier = (v) => (/^\d{1,10}$/.test(v) ? Number(v) : NaN);
+
+export function lireAdresse(search) {
+  const qs = new URLSearchParams(search);
+  const r = { ...DEFAUTS, graine: null, carte: 1, etape: null, temps: null, alertes: [] };
+  const alerte = (nom, valeur, remplace) => r.alertes.push({ nom, valeur, remplace });
+  for (const [nom, brut] of qs) {
+    const v = brut.trim();
+    if (PARAMS[nom]) {
+      const d = PARAMS[nom];
+      const val = d.alias && d.alias[v] ? d.alias[v] : v;
+      if (d.ok.includes(val)) r[d.key] = d.num ? Number(val) : val;
+      else alerte(nom, brut, d.key);
+    } else if (nom === "graine") {
+      const g = entier(v);
+      if (g >= 1 && g <= 4294967295) r.graine = g; else alerte(nom, brut, "graine");
+    } else if (nom === "carte" || nom === "etape" || nom === "temps") {
+      const x = entier(v);
+      if (x >= 1) r[nom] = x; else alerte(nom, brut, nom);
+    } else if (!IGNORES.test(nom)) alerte(nom, brut, null);
+  }
+  if (r.carte > r.cartes) { alerte("carte", String(r.carte), "carte"); r.carte = 1; }
+  return r;
+}
+
+// L'adresse d'une série : tous les réglages qui comptent, dans un ordre fixe, puis la graine.
+// `carte` n'y est que si on n'est pas sur la première (lien copié = début de la série).
+export function adresseSerie(o) {
+  const qs = new URLSearchParams();
+  qs.set("famille", o.family);
+  if (o.family === "fois") qs.set("k", o.k);
+  if (o.family !== "partielle") qs.set("variete", o.variety);
+  qs.set("contexte", o.context);
+  if (o.family !== "partielle" && o.relation === "envers") qs.set("relation", "envers");
+  if (o.family === "fois" && o.sens === "BtoA") qs.set("sens", "BtoA");
+  if (o.ecritures && o.ecritures !== "aucune") qs.set("ecritures", o.ecritures);
+  if (o.cartes !== SERIE_DEFAUT) qs.set("cartes", String(o.cartes));
+  qs.set("graine", String(o.graine));
+  if (o.carte > 1) qs.set("carte", String(o.carte));
+  return "?" + qs.toString();
+}
+
 // ---------------------------------------------------------------- français
 export const cap = (s) => s.charAt(0).toUpperCase() + s.slice(1);
 export function fmt(n) {
@@ -302,7 +407,7 @@ export function statementParts(p) {
   if (p.splat) {
     const c = splatCard(p);
     const txt = c.plateaux.map((pl) => "Plateau : " + pl.taches.length + " taches, total " + pl.total + ".").join(" ");
-    return [{ t: txt + " " + c.indices.join(" ") + " " + c.question }];
+    return [{ t: [txt, ...c.indices, c.question].join(" ") }];
   }
   const ctx = CONTEXTS[p.context];
   const Q = questionText(p);

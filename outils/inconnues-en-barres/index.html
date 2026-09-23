@@ -9,8 +9,8 @@
   <meta name="robots" content="index, follow, max-image-preview:large">
   <link rel="icon" href="/favicon.ico" sizes="48x48">
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="./style.css?v=lot1c-20260923">
-  <script type="module" src="./app.mjs?v=lot1c-20260923"></script>
+  <link rel="stylesheet" href="./style.css?v=lot2-20260924">
+  <script type="module" src="./app.mjs?v=lot2-20260924"></script>
   <script defer src="/assets/js/tool-parent-navigation.js"></script>
 </head>
 <body data-mathsgo-parent-href="/outils/index.html?domain=algebre&amp;notion=schemas-barres" data-mathsgo-parent-link="#retour" data-mathsgo-parent-label="Schémas en barres">
@@ -21,7 +21,12 @@
     <h1>Inconnues en barres</h1>
     <div class="actions">
       <button id="btnReglages" class="bouton" aria-expanded="false" aria-controls="reglages" title="Réglages"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg><span class="etiquette">Réglages</span></button>
-      <button id="btnNouveau" class="bouton primaire" title="Nouveau problème"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.3-5.6"/><path d="M20 4v5h-5"/></svg><span class="etiquette">Nouveau problème</span></button>
+      <div class="serie" role="group" aria-label="Cartes de la série">
+        <button id="btnCartePrec" class="fleche" aria-label="Carte précédente" title="Carte précédente"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg></button>
+        <span id="compteur" class="compteur" aria-live="polite"><span class="mot-carte">Carte </span><b id="numCarte">1</b>&nbsp;/&nbsp;<b id="nbCartes">8</b></span>
+        <button id="btnCarteSuiv" class="fleche" aria-label="Carte suivante" title="Carte suivante"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18l6-6-6-6"/></svg></button>
+      </div>
+      <button id="btnNouveau" class="bouton primaire" title="Nouvelle série"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.3-5.6"/><path d="M20 4v5h-5"/></svg><span class="etiquette">Nouvelle série</span></button>
       <button id="btnPleinEcran" class="bouton" title="Plein écran" aria-label="Plein écran"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>
     </div>
   </header>
@@ -29,6 +34,14 @@
   <div id="voile" class="voile" hidden></div>
   <aside id="reglages" class="reglages" aria-label="Réglages" hidden>
     <div class="reglages-tete"><h2>Réglages</h2><button id="btnFermer" class="bouton" aria-label="Fermer les réglages">✕</button></div>
+    <div class="bloc-serie">
+      <h3>Série</h3>
+      <p class="graine">Graine : <b id="graine">—</b></p>
+      <div><label for="cartes">Nombre de cartes</label><select id="cartes"><option value="4">4</option><option value="8">8</option><option value="12">12</option></select></div>
+      <button id="btnCopier" class="bouton primaire">Copier le lien de la série</button>
+      <p class="aide-reglage" id="aideSerie" aria-live="polite"></p>
+      <input id="lienSerie" class="lien-serie" type="text" readonly hidden aria-label="Lien de la série">
+    </div>
     <div><label for="famille">Type de problème</label><select id="famille">
       <option value="fois">Un objet vaut plusieurs fois l’autre</option>
       <option value="partielle">Donnée partielle + situation complète</option>
@@ -50,11 +63,12 @@
     <div><label for="ecritures">Écritures sous les schémas</label><select id="ecritures">
       <option value="aucune">Schémas seuls</option><option value="objets">Schémas + objets</option><option value="lettres">Schémas + lettres</option><option value="tout">Tout afficher</option>
     </select></div>
-    <button id="btnRecommencer" class="bouton">Recommencer ce problème</button>
+    <button id="btnRecommencer" class="bouton">Recommencer cette carte</button>
     <details id="prof"><summary>Repères pour l’enseignant</summary><ul class="reperes" id="reperes"></ul></details>
   </aside>
 
   <main id="scene">
+    <div id="alerte" class="alerte" role="status" hidden><span class="alerte-texte" id="alerteTexte"></span><button id="alerteReglages" class="bouton">Réglages</button><button id="alerteFermer" class="bouton" aria-label="Fermer le message">✕</button></div>
     <div id="enonce" class="enonce"></div>
     <nav class="etapes" aria-label="Étapes">
       <button id="btnPrec" class="bouton nav" aria-label="Précédent" title="Précédent (flèche gauche)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg></button>

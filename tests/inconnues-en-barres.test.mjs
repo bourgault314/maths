@@ -1,4 +1,4 @@
-// Inconnues en barres — contrôle automatique de TOUS les cas générés (lots 1, 1b et 1c).
+// Inconnues en barres — contrôle automatique de TOUS les cas générés (lots 1, 1b, 1c et 2).
 import test from "node:test";
 import assert from "node:assert/strict";
 import * as M from "../outils/inconnues-en-barres/moteur.mjs";
@@ -290,5 +290,110 @@ test("accord du pronom dans l’idée de la donnée partielle (le prix… le rem
     const idee = M.plan(p)[0].at(-1).rows[0][0].cards[2].a;
     const g = M.CONTEXTS[context].grandeur;
     assert.match(idee, g === "prix" || p.splat ? /, le remplacer/ : /, la remplacer/, idee);
+  }
+});
+
+// ---------------------------------------------------------------- lot 2 : séries et graines
+const seriesCombos = combos.map((c) => c); // mêmes réglages que les cas ci-dessus
+const GRAINES = [1, 7, 1234, 4127, 9998];
+
+test("séries : même graine + mêmes réglages = mêmes cartes, et la carte 1 est l’ancien problème de la graine", () => {
+  for (const settings of seriesCombos) for (const g of GRAINES.slice(0, 3)) {
+    const a = M.generateSeries(settings, g, 8), b = M.generateSeries(settings, g, 8);
+    assert.deepEqual(a.map(M.problemKey), b.map(M.problemKey));
+    assert.equal(M.problemKey(a[0]), M.problemKey(M.generate(settings, g)), "carte 1 = generate(graine)");
+    a.forEach((p, i) => { assert.equal(p.carte, i + 1); assert.equal(p.graine, g); });
+  }
+});
+
+test("séries : aucun doublon, tout est juste, et 4 ⊂ 8 ⊂ 12", () => {
+  let n = 0;
+  for (const settings of seriesCombos) for (const g of GRAINES) {
+    const s12 = M.generateSeries(settings, g, 12);
+    const keys = s12.map(M.problemKey);
+    assert.equal(new Set(keys).size, keys.length, "doublon dans " + JSON.stringify(settings) + " graine " + g);
+    for (const p of s12) assert.deepEqual(M.checkProblem(p), [], JSON.stringify(p));
+    assert.deepEqual(M.generateSeries(settings, g, 8).map(M.problemKey), keys.slice(0, 8), "8 = début de 12");
+    assert.deepEqual(M.generateSeries(settings, g, 4).map(M.problemKey), keys.slice(0, 4), "4 = début de 8");
+    n += s12.length;
+  }
+  assert.ok(n > 5000, n + " cartes contrôlées");
+});
+
+test("séries : 8 cartes différentes pour TOUS les réglages ; 12 sauf les réglages très étroits (liste figée)", () => {
+  const courtes = new Set();
+  for (const settings of seriesCombos) for (const g of GRAINES) {
+    assert.equal(M.generateSeries(settings, g, 8).length, 8, "série de 8 incomplète : " + JSON.stringify(settings));
+    if (M.generateSeries(settings, g, 12).length < 12) courtes.add([settings.context, settings.family, settings.k || "", settings.variety || ""].join(" "));
+  }
+  // « Très guidé » avec une relation fixe : un seul objet de chaque sorte, peu de problèmes possibles.
+  assert.deepEqual([...courtes].sort(), [
+    "fournitures ecart  guided", "fournitures fois 2 guided", "fournitures fois 3 guided", "fournitures fois 4 guided",
+    "fruits fois 2 guided", "fruits fois 3 guided", "fruits fois 4 guided",
+  ]);
+});
+
+test("séries : les valeurs varient (pas deux fois le même couple de valeurs quand c’est possible)", () => {
+  for (const settings of seriesCombos) {
+    if (settings.variety === "guided" && settings.k !== "mix") continue;
+    const s = M.generateSeries(settings, 4127, 8);
+    const couples = new Set(s.map((p) => p.aValue + "|" + p.bValue));
+    assert.ok(couples.size >= 6, couples.size + " couples de valeurs sur 8 cartes : " + JSON.stringify(settings));
+  }
+});
+
+test("séries : même graine à l’endroit et à l’envers = mêmes nombres, carte par carte", () => {
+  for (const settings of seriesCombos) {
+    if (settings.relation !== "envers") continue;
+    const a = M.generateSeries({ ...settings, relation: "endroit" }, 4127, 8), b = M.generateSeries(settings, 4127, 8);
+    assert.deepEqual(a.map(M.problemKey), b.map(M.problemKey));
+    assert.ok(b.every((p) => p.envers === (p.family !== "partielle")));
+  }
+});
+
+test("graine tirée au hasard : 4 chiffres, jamais un nombre à sous-entendu", () => {
+  for (let k = 0; k < 2000; k++) {
+    const g = M.tirerGraine();
+    assert.ok(g >= 1000 && g <= 9999 && !M.isForbiddenNumber(g), String(g));
+  }
+  for (const x of [0, 0.4, 0.9999]) { const g = M.tirerGraine(() => x); assert.ok(g >= 1000 && g <= 9999, String(g)); }
+  // 1069 serait tiré par 0.0077 : il est refusé, la graine suivante est prise
+  assert.notEqual(M.tirerGraine((() => { const s = [0.0077, 0.5]; let j = 0; return () => s[j++]; })()), 1069);
+});
+
+test("fournitures : cahier de 2 à 9 €, livre jusqu’à 36 € (lot 2, pour avoir 8 cartes différentes)", () => {
+  const f = M.CONTEXTS.fournitures.fois;
+  assert.deepEqual([f.B_range, f.A_range], [[2, 9, 1], [4, 36]]);
+});
+
+test("adresse : chaque réglage inconnu est signalé, jamais remplacé en silence", () => {
+  const a = M.lireAdresse("?contexte=pomme&famile=ecart&graine=abc&cartes=7&k=5&utm_source=x");
+  assert.deepEqual(a.alertes.map((x) => x.nom).sort(), ["cartes", "contexte", "famile", "graine", "k"]);
+  assert.equal(a.context, "fruits"); assert.equal(a.graine, null); assert.equal(a.cartes, 8);
+  const b = M.lireAdresse("?contexte=points&famille=ecart&variete=rich&relation=envers&graine=4127&cartes=12&carte=5&etape=3&temps=2");
+  assert.deepEqual(b.alertes, [], "contexte=points est un autre nom du jeu, accepté");
+  assert.equal(b.context, "jetons");
+  assert.deepEqual([b.family, b.variety, b.relation, b.graine, b.cartes, b.carte, b.etape, b.temps], ["ecart", "rich", "envers", 4127, 12, 5, 3, 2]);
+  const c = M.lireAdresse("?carte=9&cartes=8");
+  assert.equal(c.carte, 1); assert.equal(c.alertes[0].nom, "carte");
+  assert.deepEqual(M.lireAdresse("?graine=123456789").alertes, [], "les anciens liens à grande graine restent valables");
+});
+
+test("adresse : le lien d’une série se relit à l’identique", () => {
+  for (const settings of seriesCombos) {
+    const o = { ...M.DEFAUTS, ...settings, sens: "AtoB", ecritures: "tout", cartes: 12, graine: 4127, carte: 3 };
+    const r = M.lireAdresse(M.adresseSerie(o));
+    assert.deepEqual(r.alertes, []);
+    for (const k of ["family", "context", "ecritures", "cartes", "graine", "carte"]) assert.equal(r[k], o[k], k);
+    if (settings.family === "fois") assert.equal(r.k, settings.k);
+    if (settings.family !== "partielle") { assert.equal(r.variety, settings.variety); assert.equal(r.relation, settings.relation); }
+  }
+  assert.ok(!M.adresseSerie({ ...M.DEFAUTS, graine: 5, carte: 1 }).includes("carte="), "le lien copié démarre à la carte 1");
+});
+
+test("énoncé SPLAT! en texte : pas de double espace", () => {
+  for (const family of M.FAMILIES) {
+    const p = M.generate({ family, context: "splat", variety: "rich", k: "mix" }, 11);
+    assert.ok(!/  /.test(M.statementText(p)), M.statementText(p));
   }
 });

@@ -37,6 +37,17 @@ body.projection #app{position:fixed;inset:0;z-index:50}
 .bouton svg{width:22px;height:22px;flex:0 0 auto}
 .bouton.primaire{background:var(--bleu);border-color:var(--bleu);color:#fff}
 .bouton.primaire:hover{background:#0c51ad}
+/* série (lot 2) : ‹ Carte 3 / 8 › dans l'en-tête */
+.serie{display:inline-flex;align-items:center;min-height:44px;border:1px solid #c3d3e1;border-radius:12px;background:#fff;padding:0 2px}
+.serie .fleche{display:inline-flex;align-items:center;justify-content:center;min-width:40px;min-height:42px;border:0;background:none;border-radius:10px;color:var(--bleu)}
+.serie .fleche:hover{background:var(--bleu-clair)}
+.serie .fleche:disabled{color:#b6c3cf;cursor:default;background:none}
+.serie .fleche svg{width:20px;height:20px}
+.compteur{font-weight:800;font-size:17px;white-space:nowrap;padding:0 2px}
+/* lien avec un réglage inconnu (lot 2) */
+.alerte{display:flex;align-items:center;gap:10px;flex:0 0 auto;padding:8px 10px 8px 14px;border-radius:12px;background:#fff7e0;border:2px solid #b45309;color:#5c3300;font-weight:700;font-size:16px}
+.alerte-texte{flex:1 1 auto;min-width:0}
+.alerte .bouton{flex:0 0 auto}
 .bouton:focus-visible,.onglet:focus-visible,select:focus-visible,.aide:focus-visible,.retour:focus-visible{outline:3px solid #e7903f;outline-offset:2px}
 
 /* ---------- scène */
@@ -122,6 +133,7 @@ mark.m-Q{background:var(--q-fond);color:var(--q-texte)}
 .verif{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:4px 18px;align-items:center;font-size:clamp(17px,1.55vw,27px)}
 .verif .phrase{font-weight:700;color:#334155}
 .verif .calc{font-weight:850}
+.verif .calc .membre{white-space:nowrap}
 .verif .ok{color:#1c7a3d;font-weight:900;white-space:nowrap}
 
 /* ---------- réglages (volet repliable) */
@@ -134,6 +146,12 @@ mark.m-Q{background:var(--q-fond);color:var(--q-texte)}
 .reglages .aide-reglage{margin:4px 0 0;color:var(--doux);font-size:13px}
 .reglages details{border-top:1px solid var(--ligne);padding-top:10px}
 .reglages summary{font-weight:800;cursor:pointer;min-height:44px;display:flex;align-items:center}
+.bloc-serie{border:2px solid var(--bleu);border-radius:14px;padding:10px 12px;background:#f0f6ff;display:grid;gap:8px}
+.bloc-serie h3{margin:0;font-size:16px}
+.bloc-serie .graine{margin:0;font-size:15px}
+.bloc-serie .graine b{font-size:24px;letter-spacing:.04em}
+.bloc-serie .aide-reglage{margin:0}
+.lien-serie{width:100%;min-height:40px;border:1px solid #bfcedb;border-radius:10px;padding:6px 8px;font-size:13px}
 .reperes{margin:6px 0 0;padding-left:18px;font-size:15px;line-height:1.5}
 
 /* ---------- téléphone et petits écrans */
@@ -151,6 +169,10 @@ mark.m-Q{background:var(--q-fond);color:var(--q-texte)}
   .actions{gap:6px}
   .bouton .etiquette{display:none}
   .bouton{padding:0 10px}
+  .mot-carte{display:none}
+  .serie .fleche{min-width:30px}
+  .alerte{font-size:14px;gap:6px;padding:6px 6px 6px 10px}
+  .alerte #alerteReglages{display:none}
   #scene{padding:8px 10px;gap:8px}
   .enonce{padding:10px 12px;border-radius:12px}
   .splat-total{padding:2px 8px}
@@ -161,4 +183,10 @@ mark.m-Q{background:var(--q-fond);color:var(--q-texte)}
   .nav.suivant{padding:0 10px}
   .rangee{gap:8px}
   .bloc{padding:6px}
+}
+/* téléphone (lot 2) : avec le compteur de cartes, le titre n'a plus la place d'être lisible ;
+   il reste lu par les lecteurs d'écran */
+@media (max-width:430px){
+  .entete h1{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+  .actions{margin-left:auto}
 }
