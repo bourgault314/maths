@@ -68,10 +68,28 @@ test("les tables de dessin ne diffèrent qu'à 4 et 5 taches, sur le grand plate
   for(const n of [4, 5]){
     assert.ok(!geo.sameSplats(geo.getUnitSplats(n), geo.getUnitSplatsLegacy(n)));
     assert.ok(!geo.sameSplats(geo.getNumberedSplats(n, "N"), geo.getNumberedSplatsLegacy(n, "N")));
-    // l'Enquête et le mode D (plateau bas) gardent leurs places
-    assert.ok(geo.sameSplats(geo.getNumberedSplats(n, "C"), geo.getNumberedSplatsLegacy(n, "C")));
-    assert.ok(geo.sameSplats(geo.getNumberedSplats(n, "D"), geo.getNumberedSplatsLegacy(n, "D")));
   }
+  // plateau bas (Enquête, Système en phrases ou en symboles) : seule la table à 4 taches change (lot S2)
+  for(const n of [1, 2, 3, 5, 6]){
+    assert.ok(geo.sameSplats(geo.getNumberedSplats(n, "C"), geo.getNumberedSplatsLegacy(n, "C")), `C à ${n} tache(s)`);
+    assert.ok(geo.sameSplats(geo.getNumberedSplats(n, "D"), geo.getNumberedSplatsLegacy(n, "D")), `D à ${n} tache(s)`);
+  }
+  assert.ok(!geo.sameSplats(geo.getNumberedSplats(4, "C"), geo.getNumberedSplatsLegacy(4, "C")));
+  assert.ok(!geo.sameSplats(geo.getNumberedSplats(4, "D"), geo.getNumberedSplatsLegacy(4, "D")));
+});
+
+test("plateau bas (lot S2) : à 4 taches elles se touchaient ; écartées, même rayon, toutes dans le plateau", () => {
+  const bas = { x:120, y:270, w:1360, h:550 }; // getTrayConfig("D")
+  assert.ok(minGap(geo.getNumberedSplatsLegacy(4, "D")) < 5, "avant : 0,6 unité");
+  const t4 = geo.getNumberedSplats(4, "D");
+  assert.ok(minGap(t4) >= 20, `après : ${minGap(t4)}`);
+  assert.deepEqual(t4.map(s => s.r), [130, 130, 130, 130], "même rayon : les jetons gardent leur taille");
+  assert.equal(geo.numberedBeadRadius(t4, "D"), geo.numberedBeadRadius(geo.getNumberedSplatsLegacy(4, "D"), "D"));
+  for(const s of t4) assert.ok(s.cy - 0.94 * s.r >= bas.y && s.cy + 1.10 * s.r <= bas.y + bas.h && s.cx - 1.06 * s.r >= bas.x && s.cx + 1.06 * s.r <= bas.x + bas.w);
+  // 5 et 6 taches ne se touchaient pas : elles ne bougent pas
+  assert.ok(minGap(geo.getNumberedSplats(5, "D")) >= 30);
+  assert.ok(minGap(geo.getNumberedSplats(6, "D")) >= 45);
+  assert.deepEqual(geo.getNumberedSplats(4, "C"), t4, "l'Enquête (même plateau) aura la même place à 4 taches");
 });
 
 test("avant : à 4 taches (A, B) et 5 taches (A), les taches dessinées se touchaient", () => {

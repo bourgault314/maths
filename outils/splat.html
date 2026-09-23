@@ -617,6 +617,8 @@
     /* SPLAT! Enquête : bandeau framboise #be185d (monde 1 orange, monde 2 bleu, teal
        Équations, violet relatifs) ; titre blanc, gris moyen-foncé en photocopie. */
     .print-page-header--enquete{background:linear-gradient(90deg,#be185d 0%,#d23f7c 45%,#fbe3ee 100%)}
+    /* SPLAT! Système : bandeau brun cannelle #92400e (lot S2) ; titre blanc, gris foncé en photocopie. */
+    .print-page-header--systeme{background:linear-gradient(90deg,#92400e 0%,#b45309 45%,#fbe9dc 100%)}
     /* Pied : gris moyen et 7 pt pour rester lisible en photocopie, 3 mm sous les cartes. */
     .print-page-footer{flex:0 0 3.5mm;margin-top:3mm;text-align:center;color:#64748b;font-size:7pt;font-weight:650;line-height:1}
     .printArea.print-2up .print-page-header{flex-basis:14mm;margin-bottom:1.5mm;padding:1.5mm 3mm}
@@ -2865,8 +2867,17 @@ function getNumberedSplatsLegacy(taskCount, mode){
 
 function getNumberedSplats(taskCount, mode){
   const tray = getTrayConfig(mode);
-  /* Seul le grand plateau (B, B±) change ; l'Enquête et le mode D gardent leurs places. */
-  if(!tray.isHigh || (taskCount !== 4 && taskCount !== 5)) return getNumberedSplatsLegacy(taskCount, mode);
+  /* Plateau bas (Enquête, Système en phrases ou en symboles) : à 4 taches, les deux
+     rangées de l'ancienne table se touchaient (0,6 unité) ; écartées de 270 (au lieu de
+     230), même rayon (les jetons gardent leur taille), 27 unités de blanc entre deux
+     taches, toutes dans le plateau (lot S2). 5 et 6 taches ne se touchent pas (34 et 50).
+     L'Enquête n'a jamais plus de 3 taches : aucune de ses cartes ne change. */
+  if(!tray.isHigh){
+    if(taskCount !== 4) return getNumberedSplatsLegacy(taskCount, mode);
+    return [{cx:610, cy:400},{cx:1030, cy:400},{cx:610, cy:670},{cx:1030, cy:670}].map(p => ({...p, r:130}));
+  }
+  /* Grand plateau (B, B±) : seules 4 et 5 taches changent. */
+  if(taskCount !== 4 && taskCount !== 5) return getNumberedSplatsLegacy(taskCount, mode);
   /* 4 et 5 taches : taches un peu plus grandes (les jetons numérotés, qui doivent tenir
      dessous, grandissent avec elles) et rangées écartées pour qu'elles ne se touchent plus. */
   const anchors = {
@@ -5225,7 +5236,8 @@ function drawInvestigateSplatName(target, s, idx, card, revealed, api = {}){
   const mkEl = api.mkEl || el;
   const mkText = api.mkText || text;
   const word = investigateColorWord(investigateColorInfo(card, idx));
-  const fs = clamp(Math.round(s.r * 0.30), 26, 60);
+  // api.fs : taille imposée (le Système, dont les taches sont plus petites, lot S2)
+  const fs = Number(api.fs) > 0 ? Number(api.fs) : clamp(Math.round(s.r * 0.30), 26, 60);
   // Tache dévoilée : le mot se pose juste au-dessus du jeton du centre, à
   // ENQUETE_NOM_ECART du bord du jeton (retouche du 22/09 : à la hauteur du mot
   // « opposé » de B±, il flottait trop haut dans la tache). Écran et impression
@@ -6865,7 +6877,10 @@ function renderMixedClue(targetGroup, cx, cy, seq, mkEl, mkText, isPrint, reveal
   // (« word » : le mot à côté ; « initial » : l'initiale dedans), pour la photocopie.
   // opts.maxW : largeur disponible ; si la ligne est plus large, tout est réduit
   // d'un même facteur. opts.left : bord gauche minimal de la ligne.
-  const labels = !!opts.labels && !!card && card.family === "C";
+  const labels = !!opts.labels && !!card && (card.family === "C" || (card.family === "D" && !!card._sys));
+  // Le Système (lot S2) : le SVG efface les espaces au bord d'un texte (« = 13 » collait à la
+  // tache d'avant) ; on les garde en espaces insécables. L'Enquête ne change pas.
+  const garderEspaces = !!card && card.family === "D" && !!card._sys;
   const wordMode = labels && INVESTIGATE_PRINT_LABEL_MODE === "word";
   let scale = 1;
   const baseFont = isPrint ? 42 : 45;
@@ -6882,6 +6897,11 @@ function renderMixedClue(targetGroup, cx, cy, seq, mkEl, mkText, isPrint, reveal
       if(item.type === 'splat') return { ...item, w: spW + (wordMode ? wordWidth(item.id, fs) + 16 * k : 0) };
       let w = 0;
       for(let i=0;i<item.val.length;i++) w += (item.val[i]===' ' ? sW : cW);
+      if(garderEspaces){
+        // largeur mesurée dans la police dessinée : le texte remplit sa case, espaces compris
+        const mesure = measureTextWidth(item.val.replace(/ /g, "\u00a0"), `700 ${Math.round(fs)}px system-ui, -apple-system, "Segoe UI", Roboto, Arial`);
+        if(Number.isFinite(mesure) && mesure > 0) w = mesure;
+      }
       return { ...item, w };
     });
   };
@@ -6944,7 +6964,7 @@ function renderMixedClue(targetGroup, cx, cy, seq, mkEl, mkText, isPrint, reveal
           
           x += item.w;
       } else {
-          targetGroup.appendChild(mkText(x + item.w/2, cy, item.val, {
+          targetGroup.appendChild(mkText(x + item.w/2, cy, garderEspaces ? item.val.replace(/^ +| +$/g, m => "\u00a0".repeat(m.length)) : item.val, {
               "text-anchor": "middle",
               "font-size": String(Math.round(fontSize)),
               "fill": isPrint ? "#000" : "var(--ink)",
@@ -6955,9 +6975,236 @@ function renderMixedClue(targetGroup, cx, cy, seq, mkEl, mkText, isPrint, reveal
   });
 }
 
+/* ---------------------------------------------------------------------------------------
+   Le Système (mode D) — l'énoncé en plateaux (lot S2, 23/09/2026 ; conception S0, §3).
+   Un plateau par situation, chacun sous sa boîte TOTAL : le plateau principal (celui des
+   jetons visibles, _sys.boards[0]) puis les indices. 2 plateaux : une rangée ; 3 ou 4 :
+   deux rangées de deux. La même taille de tache sur tous les plateaux de la carte (la plus
+   petite qui convient : « une tache vaut la même chose partout »), et la même grille : une
+   tache a la même place sur tous les plateaux où elle apparaît (voir sysGrille, décidé le
+   23/09) — ce qu'un plateau a en plus se voit d'un coup d'œil. Le nom de la couleur est
+   écrit sur chaque tache (drawInvestigateSplatName, comme l'Enquête : c'est lui qui rend
+   la carte lisible en noir et blanc). Les jetons visibles sont rangés en colonne à droite
+   du plateau principal.
+   Dessin seulement : rien n'est tiré au sort ici. Les places tirées par
+   assignPositionsNumbered ne changent pas (le hasard de la série non plus) ; elles servent
+   au plateau unique des réglages « Phrases » et « Symboles ».
+   TROIS (trois sommes, sans total) : « TOTAL ? » en gris ardoise, comme l'Enquête sans total.
+--------------------------------------------------------------------------------------- */
+/* Zones de dessin : écran (1600 × 1000), carte imprimée 4 par page (1600 × 2200, les
+   plateaux de 60 à 1540, hauteur 440 à une rangée, 400 à deux, le reste blanc pour
+   chercher), carte imprimée 6 par page (plateau seul, 1600 × 1000). */
+const SYS_ZONE_ECRAN = { x:60, w:1480, haut:20, bas:980, ecartX:30, ecartY:30, echelleTotal:0.86, sousTotal:18, hMax:[480, 270], centrer:true, rMax:118 };
+const SYS_ZONE_IMPRIME = { x:60, w:1480, haut:30, bas:2170, ecartX:30, ecartY:30, echelleTotal:1, sousTotal:20, hMax:[440, 400], centrer:false, rMax:118 };
+const SYS_ZONE_IMPRIME_6 = { x:60, w:1480, haut:20, bas:990, ecartX:30, ecartY:26, echelleTotal:1, sousTotal:16, hMax:[440, 400], centrer:false, rMax:118 };
+/* Une tache dessinée (blobPath) déborde son rayon : 1,01 r à gauche, 1,05 r à droite,
+   0,94 r en haut, 1,08 r en bas. Pas d'une tache à la suivante : 2,3 r sur une rangée
+   (0,25 r de blanc entre deux taches), 2,25 r d'une rangée à l'autre (0,36 r de blanc) ;
+   aux réglages par défaut, r va de 68 à 118. Le nom de la couleur est écrit à 0,36 r
+   (0,30 r dans l'Enquête, dont les taches sont une fois et demie plus grandes) :
+   « violette », le mot le plus long, fait 1,56 r, la tache 1,8 r de large en son milieu. */
+const SYS_TACHE = { gauche:1.01, droite:1.05, haut:0.94, bas:1.08, pasX:2.3, pasY:2.25, bordX:18, bordY:20, nom:0.36 };
+
+function sysEnPlateaux(card){
+  return !!(card && card.family === "D" && card._sys && Array.isArray(card._sys.boards)
+    && card._sys.boards.length > 1 && (card._sys.clues || "BOARD") === "BOARD");
+}
+
+function sysTotalCache(card){
+  return !!(card && card.family === "D" && card._sys && Array.isArray(card._sys.boards)
+    && card._sys.boards[0] && card._sys.boards[0].total == null);
+}
+
+/* Rayon d'un jeton sur un plateau (visible, ou caché une fois la tache dévoilée). */
+function sysRayonJeton(r){
+  return Math.round(clamp(r * 0.40, 18, 58));
+}
+
+/* La grille commune à tous les plateaux d'une carte : chaque tache a la même place (rangée,
+   colonne) sur tous les plateaux où elle apparaît. Une seule couleur par tache dans toute la
+   carte (EMBOITE1, TROIS…) : une rangée, une colonne par couleur (« noire | violette |
+   orange »), la tache absente d'un indice laisse sa place vide. Dès qu'une couleur se
+   répète : une rangée par couleur, les taches de la couleur alignées à gauche (« 2 noires
+   + 4 violettes » : deux noires sur la 1re rangée, quatre violettes sur la 2e). */
+function sysGrille(card){
+  const colors = card._sys.colors, boards = card._sys.boards;
+  const presentes = colors.filter(k => boards.some(b => (b.counts[k] || 0) > 0));
+  const repete = boards.some(b => presentes.some(k => (b.counts[k] || 0) > 1));
+  if(!repete){
+    return { lignes:1, colonnes:presentes.length,
+      cases: boards.map(b => presentes.filter(k => b.counts[k]).map(k => ({ couleur:k, ligne:0, colonne:presentes.indexOf(k) }))) };
+  }
+  const colonnes = Math.max(...boards.flatMap(b => presentes.map(k => b.counts[k] || 0)));
+  return { lignes:presentes.length, colonnes,
+    cases: boards.map(b => presentes.flatMap((k, li) => Array.from({ length: b.counts[k] || 0 }, (_, j) => ({ couleur:k, ligne:li, colonne:j })))) };
+}
+
+/* Colonnes des jetons visibles pour un rayon de tache r dans une hauteur h. */
+function sysColonnesVisibles(nv, r, h){
+  if(!nv) return { colonnes:0, parColonne:0, largeur:0, rv:0 };
+  const rv = sysRayonJeton(r), pas = 2 * rv + 12;
+  const parColonne = Math.max(1, Math.floor((h - 2 * SYS_TACHE.bordY + 12) / pas));
+  const colonnes = Math.ceil(nv / parColonne);
+  return { colonnes, parColonne, largeur: colonnes * pas + 6, rv };
+}
+
+/* Le plus grand rayon de tache pour lequel la grille (et la colonne des visibles) tient
+   dans un plateau w × h. */
+function sysRayonMax(lignes, colonnes, nv, w, h, rMax){
+  const T = SYS_TACHE;
+  for(let r = rMax; r > 12; r--){
+    const vis = sysColonnesVisibles(nv, r, h);
+    const largeur = 2 * T.bordX + (colonnes - 1) * T.pasX * r + (T.gauche + T.droite) * r + vis.largeur;
+    const hauteur = 2 * T.bordY + (lignes - 1) * T.pasY * r + (T.haut + T.bas) * r;
+    if(largeur <= w && hauteur <= h) return r;
+  }
+  return 12;
+}
+
+/* La disposition complète d'une carte dans une zone : boîtes TOTAL, plateaux, taches,
+   jetons visibles. La grille (et donc la place de chaque tache) est la même sur tous les
+   plateaux ; la colonne des jetons visibles est réservée partout, pour que les grilles
+   restent l'une sous l'autre. Aucun hasard : même carte, même zone → même dessin. */
+function sysDispositionPlateaux(card, zone){
+  const Z = zone || SYS_ZONE_ECRAN, T = SYS_TACHE;
+  const boards = card._sys.boards;
+  const n = boards.length;
+  const cols = n <= 2 ? n : 2;
+  const rows = Math.ceil(n / cols);
+  const hBoite = 210 * Z.echelleTotal;
+  const place = (Z.bas - Z.haut - rows * (hBoite + Z.sousTotal) - (rows - 1) * Z.ecartY) / rows;
+  const h = Math.floor(Math.min(Z.hMax[rows - 1], place));
+  const w = (Z.w - (cols - 1) * Z.ecartX) / cols;
+  const bloc = rows * (hBoite + Z.sousTotal + h) + (rows - 1) * Z.ecartY;
+  const haut = Z.centrer ? Z.haut + Math.max(0, (Z.bas - Z.haut - bloc) / 2) : Z.haut;
+  const visibles = (card.visible || []).slice();
+  const grille = sysGrille(card);
+  const r = sysRayonMax(grille.lignes, grille.colonnes, visibles.length, w, h, Z.rMax);
+  const vis = sysColonnesVisibles(visibles.length, r, h);
+  const plateaux = boards.map((b, i) => {
+    const x = Math.round(Z.x + (i % cols) * (w + Z.ecartX));
+    const yBoite = Math.round(haut + Math.floor(i / cols) * (hBoite + Z.sousTotal + h + Z.ecartY));
+    const y = Math.round(yBoite + hBoite + Z.sousTotal);
+    // places mesurées depuis le coin du plateau : les mêmes sur tous les plateaux
+    const x0 = (w - vis.largeur) / 2 - (grille.colonnes - 1) * T.pasX * r / 2;
+    const cy0 = h / 2 - ((grille.lignes - 1) * T.pasY * r + (T.bas - T.haut) * r) / 2;
+    const places = grille.cases[i].map(c => ({
+      cx: x + Math.round(x0 + c.colonne * T.pasX * r), cy: y + Math.round(cy0 + c.ligne * T.pasY * r), r, couleur: c.couleur
+    }));
+    const jetons = [];
+    if(i === 0 && vis.colonnes){
+      const pas = 2 * vis.rv + 12;
+      for(let c = 0; c < vis.colonnes; c++){
+        const dansColonne = Math.min(vis.parColonne, visibles.length - c * vis.parColonne);
+        const yc = y + h / 2 - (dansColonne - 1) * pas / 2;
+        for(let j = 0; j < dansColonne; j++){
+          const cx = x + w - T.bordX - vis.rv - 3 - (vis.colonnes - 1 - c) * pas;
+          jetons.push({ cx: Math.round(cx), cy: Math.round(yc + j * pas), r: vis.rv, valeur: visibles[c * vis.parColonne + j] });
+        }
+      }
+    }
+    return { x, y, w, h, total: b.total, totalX: x + w / 2, totalY: yBoite, taches: places, jetons };
+  });
+  return { r, rJeton: sysRayonJeton(r), echelleTotal: Z.echelleTotal, plateaux };
+}
+
+/* Dessine les plateaux d'une carte (écran : mkEl/mkText de la page ; impression : ceux de
+   renderCardIntoSvg). devoile : les taches montrent leur valeur (fin de carte à l'écran,
+   correction imprimée), le nom de la couleur monte au-dessus du jeton, comme l'Enquête. */
+function drawSysPlateaux(target, card, zone, opts = {}){
+  const mkEl = opts.mkEl || el;
+  const mkText = opts.mkText || text;
+  const isPrint = !!opts.isPrint;
+  const devoile = !!opts.devoile;
+  const fondu = !isPrint && devoile && opts.fondu !== false;
+  const plan = sysDispositionPlateaux(card, zone);
+  const g = mkEl("g", { id: isPrint ? "sysPlateauxPrint" : "sysPlateaux" });
+  target.appendChild(g);
+  const rj = plan.rJeton;
+  plan.plateaux.forEach((P, i) => {
+    const gp = mkEl("g", { class: "sysPlateau", "data-plateau": String(i) });
+    g.appendChild(gp);
+    // boîte TOTAL : les métriques de renderCardIntoSvg (280 × 210, « TOTAL » 42 en ligne de
+    // base à 70, nombre 96 à 153), réduites d'un même facteur à l'écran
+    const boite = mkEl("g", { class: "sysTotal", transform: `translate(${Math.round(P.totalX)} ${Math.round(P.totalY)}) scale(${plan.echelleTotal})` });
+    boite.appendChild(mkEl("rect", {
+      x: -140, y: 0, width: 280, height: 210, rx: 22,
+      fill: isPrint ? "rgba(0,0,0,0.02)" : "var(--totalbox-fill)",
+      stroke: isPrint ? "rgba(0,0,0,0.22)" : "#000", "stroke-width": "4"
+    }));
+    boite.appendChild(mkText(0, 70, "TOTAL", {
+      "text-anchor": "middle", "font-size": "42", "font-weight": isPrint ? "900" : "800", "letter-spacing": "2",
+      fill: isPrint ? "rgba(0,0,0,0.92)" : "var(--total-label)"
+    }));
+    const cache = P.total == null;
+    boite.appendChild(mkText(0, 153, cache ? "?" : String(P.total), {
+      "text-anchor": "middle", "font-size": "96", "font-weight": "900",
+      fill: cache ? "#64748b" : (isPrint ? "#000" : "var(--ink)")
+    }));
+    gp.appendChild(boite);
+    // le plateau
+    gp.appendChild(mkEl("rect", {
+      x: Math.round(P.x), y: Math.round(P.y), width: Math.round(P.w), height: Math.round(P.h), rx: 30,
+      fill: isPrint ? "#fff" : "rgba(0,0,0,0.03)",
+      stroke: isPrint ? "#334155" : "rgba(0,0,0,0.15)", "stroke-width": isPrint ? "8" : "6"
+    }));
+    // les taches : jeton caché d'abord (visible sous la tache dévoilée, comme l'Enquête)
+    P.taches.forEach(s => {
+      const info = investigateColorByKey(s.couleur);
+      const nomCarte = { family: "D", _sys: card._sys, _colorMap: [s.couleur], _beadR: rj };
+      if(devoile){
+        const valeur = card._sys.values[s.couleur];
+        gp.appendChild(mkEl("circle", {
+          cx: s.cx, cy: s.cy, r: rj,
+          fill: isPrint ? "rgba(0,0,0,0.06)" : "var(--beadH-fill)",
+          stroke: isPrint ? "rgba(0,0,0,0.22)" : "var(--beadH-stroke)", "stroke-width": String(Math.max(3, Math.round(rj * 0.09)))
+        }));
+        gp.appendChild(mkText(s.cx, s.cy, String(valeur), {
+          "text-anchor": "middle", "dominant-baseline": "middle", "alignment-baseline": "middle", dy: "0.06em",
+          "font-size": String(Math.round(rj * 0.9)), "font-weight": "900", fill: isPrint ? "#000" : "var(--ink)"
+        }));
+      }
+      gp.appendChild(mkEl("path", {
+        d: blobPath(s.cx, s.cy, s.r),
+        fill: devoile ? (isPrint ? info.printReveal : info.reveal) : (isPrint ? info.print : info.screen),
+        stroke: isPrint ? "rgba(0,0,0,0.18)" : "var(--splat-stroke)", "stroke-width": "5"
+      }));
+      drawInvestigateSplatName(gp, s, 0, nomCarte, devoile, { mkEl, mkText, fs: clamp(Math.round(s.r * SYS_TACHE.nom), 26, 60) });
+      if(fondu){
+        gp.appendChild(mkEl("path", { d: blobPath(s.cx, s.cy, s.r), fill: info.screen, stroke: "none", class: "anim-fade-out" }));
+      }
+    });
+    // les jetons visibles (plateau principal)
+    P.jetons.forEach(j => {
+      const col = beadColorForValue(j.valeur);
+      const deuxChiffres = String(Math.abs(j.valeur)).length <= 2;
+      if(isPrint){
+        // imprimé comme les jetons de B et de l'Enquête : fond blanc, anneau opaque
+        const anneau = String(col.stroke).replace(/,\s*[\d.]+\)$/, ", 1)");
+        gp.appendChild(mkEl("circle", { cx: j.cx, cy: j.cy, r: j.r, fill: "#fff", stroke: anneau, "stroke-width": String(Math.max(4, Math.round(j.r * 0.13))) }));
+      }else{
+        gp.appendChild(mkEl("circle", { cx: j.cx, cy: j.cy, r: j.r, fill: col.fill, stroke: col.stroke, "stroke-width": String(Math.max(3, Math.round(j.r * 0.09))) }));
+      }
+      gp.appendChild(mkText(j.cx, j.cy, String(j.valeur), {
+        "text-anchor": "middle", "dominant-baseline": "middle", "alignment-baseline": "middle", dy: "0.06em",
+        "font-size": String(Math.round(j.r * (isPrint && deuxChiffres ? 1.02 : 0.9))), "font-weight": "900",
+        fill: isPrint ? "#000" : "var(--ink)"
+      }));
+    });
+  });
+  return plan;
+}
+
 /* Render écran */
 function renderCard(card, revealState){
   clearSvg();
+
+  /* Système en plateaux (lot S2) : un plateau par situation, chacun sous sa boîte TOTAL ;
+     un seul clic dévoile les taches de tous les plateaux (la correction viendra en S3). */
+  if(sysEnPlateaux(card)){
+    drawSysPlateaux(svg, card, SYS_ZONE_ECRAN, { devoile: revealState >= 2 });
+    return;
+  }
 
   const actEl = document.getElementById("activity");
   const act = actEl ? actEl.value : "";
@@ -7218,7 +7465,7 @@ function renderCard(card, revealState){
       "fill":totalLabelColor,"font-weight":"800","letter-spacing":"2"
     });
     // Enquête sans total : « TOTAL ? », le point d'interrogation en gris ardoise
-    const sansTotalAffiche = card.family === "C" && card._rel && card._rel.sansTotal;
+    const sansTotalAffiche = (card.family === "C" && card._rel && card._rel.sansTotal) || sysTotalCache(card);
     const tNum = text(tx, ty + totalNumDy, sansTotalAffiche ? "?" : String(card.total), {
       "text-anchor":"middle","font-size": totalNumFs,
       "fill":sansTotalAffiche ? "#64748b" : totalColor,"font-weight":"900"
@@ -7663,6 +7910,8 @@ function renderCard(card, revealState){
       });
       layer.appendChild(p);
       if(card.family === "C") drawInvestigateSplatName(layer, s, idx, card, visualRevealState === 2, { mkEl:el, mkText:text });
+      // le Système en phrases ou en symboles (plateau unique) : le nom sur chaque tache aussi (lot S2)
+      if(card.family === "D" && card._sys) drawInvestigateSplatName(layer, s, idx, card, visualRevealState === 2, { mkEl:el, mkText:text });
 
       if(card.family === "NPM" && card._num && Array.isArray(card._num.opposedTasks) && card._num.opposedTasks[idx]){
         const fs = clamp(Math.round(s.r*0.34), 28, 64);
@@ -8486,6 +8735,15 @@ function renderCardIntoSvg(targetSvg, card, printMode){
 
   targetSvg.appendChild(tEl("rect",{x:0,y:0,width:W,height:H,rx:26,fill:"#fff"}));
 
+  /* Système en plateaux (lot S2) : les plateaux en haut de la carte, le reste blanc pour
+     chercher ; en 6 par page (viewBox 1600 × 1000), les mêmes plateaux dans le plateau seul.
+     La correction imprimée montre les taches dévoilées (ses cadres viendront en S3). */
+  if(sysEnPlateaux(card)){
+    const sixParPage = String(targetSvg.getAttribute("viewBox") || "").trim() === "0 0 1600 1000";
+    drawSysPlateaux(targetSvg, card, sixParPage ? SYS_ZONE_IMPRIME_6 : SYS_ZONE_IMPRIME, { mkEl:tEl, mkText:tText, isPrint:true, devoile:revealAnswers });
+    return;
+  }
+
     const varChar = getNumberedDisplayVarChar(card);
   const isModeC_or_D = (card.family === "C" || card.family === "D");
 
@@ -8503,11 +8761,16 @@ function renderCardIntoSvg(targetSvg, card, printMode){
   }));
 
   // Énoncé imprimé de l'Enquête en phrases : TOTAL à gauche, aligné sur le plateau,
-  // indices à sa droite (voir layoutEnqueteClueBand).
-  const enqueteClueBand = (card.family === "C" && !revealAnswers && card._inv && Array.isArray(card._inv.indices)
+  // indices à sa droite (voir layoutEnqueteClueBand). Le Système en phrases (réglage
+  // clues=SENTENCE, lot S2) fait de même.
+  const enqueteClueBand = ((card.family === "C" || (card.family === "D" && !!card._sys)) && !revealAnswers && card._inv && Array.isArray(card._inv.indices)
     && card._inv.indices.length > 0 && card._inv.indices.every(t => typeof t === "string"));
+  // Le Système en symboles (lot S2, décidé le 23/09) : même place que les phrases, en haut à
+  // droite du TOTAL, pour que tout le bas de la carte reste libre pour rédiger.
+  const sysSymbolBand = (card.family === "D" && !!card._sys && !revealAnswers && card._inv && Array.isArray(card._inv.indices)
+    && card._inv.indices.length > 0 && card._inv.indices.every(t => Array.isArray(t)));
   let tx = 800, ty = 92;
-  if(enqueteClueBand) tx = 260;
+  if(enqueteClueBand || sysSymbolBand) tx = 260;
   const printOffsetY = printTray.offsetY;
 
   let totalColor = "#000";
@@ -8526,7 +8789,7 @@ function renderCardIntoSvg(targetSvg, card, printMode){
   const totalNumberSize = 96;
   const totalNumberDy = 83;
   const lbl = tText(tx, ty, "TOTAL", {"text-anchor":"middle","font-size":String(totalLabelSize),"fill":totalLabelColor,"font-weight":"900","letter-spacing":"2"});
-  const sansTotalImprime = card.family === "C" && card._rel && card._rel.sansTotal;
+  const sansTotalImprime = (card.family === "C" && card._rel && card._rel.sansTotal) || sysTotalCache(card);
   const num = tText(tx, ty+totalNumberDy, sansTotalImprime ? "?" : String(card.total), {"text-anchor":"middle","font-size":String(totalNumberSize),"fill":sansTotalImprime ? "#64748b" : totalColor,"font-weight":"900"});
   g.appendChild(lbl); g.appendChild(num);
   targetSvg.appendChild(g);
@@ -8546,7 +8809,7 @@ function renderCardIntoSvg(targetSvg, card, printMode){
   const printRevealState = (card.family === "C") ? (revealAnswers ? (card._directSubstitution ? 3 : 5) : 0) : revealState;
 
   /* Indices impression Mode C/D */
-  if(enqueteClueBand && printRevealState === 0){
+  if(enqueteClueBand && (printRevealState === 0 || card.family === "D")){
     const band = ENQUETE_PRINT_CLUES_BAND;
     const plan = layoutEnqueteClueBand(card._inv.indices, band);
     // bloc centré verticalement dans le bandeau, texte aligné à gauche
@@ -8557,6 +8820,14 @@ function renderCardIntoSvg(targetSvg, card, printMode){
         y += plan.lineH;
       });
       y += plan.gap;
+    });
+  }else if(sysSymbolBand){
+    // une ligne par indice, alignée à gauche du bandeau (x 440), centrée dans sa part de hauteur
+    const band = ENQUETE_PRINT_CLUES_BAND;
+    const pas = band.height / card._inv.indices.length;
+    card._inv.indices.forEach((seq, i) => {
+      renderMixedClue(targetSvg, band.x, Math.round(band.top + (i + 0.5) * pas + 14), seq, tEl, tText, true, false, card,
+        { labels:true, maxW:band.right - band.x, left:band.x });
     });
   }else if(isModeC_or_D && card._inv && card._inv.indices && !(card.family === "C" && printRevealState > 0)){
     const indices = card._inv.indices;
@@ -8579,7 +8850,7 @@ function renderCardIntoSvg(targetSvg, card, printMode){
           }));
         });
       } else if (Array.isArray(txt)) {
-        renderMixedClue(targetSvg, 800, cyLine, txt, tEl, tText, true, revealAnswers, card);
+        renderMixedClue(targetSvg, 800, cyLine, txt, tEl, tText, true, revealAnswers, card, (card.family === "D" && card._sys) ? { labels:true, maxW:W - 80 } : {});
       }
     });
   }
@@ -8828,6 +9099,7 @@ function renderCardIntoSvg(targetSvg, card, printMode){
       }
       targetSvg.appendChild(tEl("path",{d: blobPath(s.cx, s.cy + printOffsetY, s.r), fill:f, stroke:"rgba(0,0,0,0.18)","stroke-width":"5"}));
       if(card.family === "C") drawInvestigateSplatName(targetSvg, {...s, cy:s.cy + printOffsetY}, idx, card, revealAnswers, { mkEl:tEl, mkText:tText, isPrint:true });
+      if(card.family === "D" && card._sys) drawInvestigateSplatName(targetSvg, {...s, cy:s.cy + printOffsetY}, idx, card, revealAnswers, { mkEl:tEl, mkText:tText, isPrint:true });
       if(card.family === "NPM" && card._num && Array.isArray(card._num.opposedTasks) && card._num.opposedTasks[idx]){
         const fs = clamp(Math.round(s.r*0.34), 28, 64);
         const y = revealAnswers ? (s.cy + printOffsetY - s.r*0.65 + OPPOSE_MOT_BAISSE) : (s.cy + printOffsetY);
@@ -9095,7 +9367,8 @@ function getClassicPrintInstruction(slotCards){
     return {main:"Utilise les indices pour déterminer la valeur cachée sous chaque tache.", note:""};
   }
   if(act === "D"){
-    return {main:"Utilise les sommes indiquées pour déterminer la valeur cachée sous chaque tache.", note:""};
+    /* le Système (lot S2, conception S0 §3) : une situation = un plateau et son total */
+    return {main:"Utilise les totaux de chaque situation pour déterminer le nombre de jetons cachés sous chaque tache.", note:""};
   }
   return {main:"Trouve les valeurs cachées et complète les opérations.", note:""};
 }
@@ -9106,6 +9379,8 @@ function createClassicPrintHeader(mode){
   /* SPLAT! Enquête : bandeau framboise (le bleu est celui du monde 2). */
   const actNow = activityEl ? activityEl.value : "";
   if(actNow === "C" || actNow === "CD") header.classList.add("print-page-header--enquete");
+  /* SPLAT! Système : bandeau brun cannelle (lot S2, décidé le 23/09). */
+  if(actNow === "D") header.classList.add("print-page-header--systeme");
 
   const titleBlock = document.createElement("div");
   titleBlock.className = "print-page-title-block";
@@ -9714,8 +9989,10 @@ function goPreviousCardOrStep(){
   if(cards.length===0) return;
 
   // Si la carte actuelle a des étapes internes, on revient d'abord à l'étape précédente.
+  // Système : l'énoncé et les taches dévoilées sont à un clic l'un de l'autre, dans les deux
+  // sens (l'étape 1, identique à l'énoncé, était un clic mort — lot S2).
   if(revealState > 0){
-    revealState--;
+    revealState = (cards[idx] && cards[idx].family === "D") ? 0 : revealState - 1;
     updateUI();
     return;
   }
