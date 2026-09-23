@@ -1,4 +1,5 @@
-/* Les deux livrets « SPLAT! Enquête » (monde 3, lot E4 du 22/09/2026).
+/* Les deux livrets de l'Enquête (lot E4 du 22/09/2026) : « SPLAT! Enquête » (monde 3,
+   fiches 10 à 14) et, depuis le lot E5 (23/09), « SPLAT! Grande enquête » (monde 4, 15 à 19).
 
    Rendus par _sources/livret-splat-enquete/render.py à partir de l'outil du site : leurs
    fiches doivent être EXACTEMENT celles de la carte des mondes (ENQ_FICHES : mêmes
@@ -29,9 +30,10 @@ function bloc(debut, fin) {
   return univers.slice(a, b);
 }
 const ctx = vm.createContext({ encodeURIComponent });
-vm.runInContext(bloc("const PS=", "const PROF =") + ";globalThis.X={MONDES,ENQ_FICHES,MONDE_ENQUETE};",
+vm.runInContext(bloc("const PS=", "const PROF =") + ";globalThis.X={MONDES,ENQ_FICHES,MONDE_ENQUETE,MONDE_GRANDE_ENQUETE};",
   ctx, { filename: "splat_univers.html" });
-const { MONDES, ENQ_FICHES, MONDE_ENQUETE } = JSON.parse(JSON.stringify(ctx.X));
+const { MONDES, ENQ_FICHES, MONDE_ENQUETE, MONDE_GRANDE_ENQUETE } = JSON.parse(JSON.stringify(ctx.X));
+const ETAPES_ENQ = [...MONDE_ENQUETE.etapes, ...MONDE_GRANDE_ENQUETE.etapes];
 
 // ------------------------------------------------ render.py, lu
 const py = (nom) => {
@@ -54,7 +56,10 @@ test("E4 : une fiche = une étape = une étoile — fiches 10 à 14, puis 15 à 
   assert.deepEqual(FICHES_PY.map((f) => f.f), F.map((_, i) => "F" + (10 + i)));
   assert.deepEqual(FICHES_PY.map((f) => f.t), ENQ_FICHES.map((f) => f.t));
   assert.deepEqual(FICHES_PY.map((f) => f.note), ENQ_FICHES.map((f) => !!f.note));
-  assert.deepEqual(MONDE_ENQUETE.etapes.map((e) => e.n), FICHES_PY.map((f) => f.n), "le numéro de fiche est le numéro d'étape");
+  assert.deepEqual(ETAPES_ENQ.map((e) => e.n), FICHES_PY.map((f) => f.n), "le numéro de fiche est le numéro d'étape");
+  // lot E5 : un livret par monde
+  assert.deepEqual(MONDE_ENQUETE.etapes.map((e) => e.n), [10, 11, 12, 13, 14], "livret additif = monde 3");
+  assert.deepEqual(MONDE_GRANDE_ENQUETE.etapes.map((e) => e.n), [15, 16, 17, 18, 19], "livret multiplicatif = monde 4");
   assert.match(render, /"additif": dict\([\s\S]*?fiches=FICHES_ADD,/);
   assert.match(render, /"multiplicatif": dict\([\s\S]*?fiches=FICHES_MUL,/);
   assert.match(render, /titre = f"Fiche \{f\['n'\]\} — \{f\['t'\]\}"/);
@@ -72,7 +77,7 @@ function cibleCourte(search) {
 test("E4 : le QR d'une fiche ouvre sa série et son étoile, par la page courte", () => {
   assert.match(render, /return f"\{SITE\}\{COURTE\}\?f=\{n\}"/);
   assert.equal(py("COURTE"), "/splat/enquete/livret/");
-  MONDE_ENQUETE.etapes.forEach((e) => {
+  ETAPES_ENQ.forEach((e) => {
     assert.equal(cibleCourte(`?f=${e.n}`), e.j, `?f=${e.n}`);
     assert.ok(existe(`${SRC}qr/fiche${e.n}.png`), `qr/fiche${e.n}.png`);
   });
@@ -100,7 +105,8 @@ test("E4 : l'exemple (couverture et page 2) n'est aucune carte du livret, et sa 
   const graines = F.map((q) => new URLSearchParams(q).get("seed"));
   // 23/09 (Claire) : trois taches en chaîne, sinon les schémas regroupé et ordonné sont identiques
   assert.equal(new URLSearchParams(py("EX_ADD")).get("seed"), "4642", "+4 puis +3 : 5, 9, 12, total 26");
-  assert.equal(new URLSearchParams(py("EX_MUL")).get("seed"), "2340", "+2 puis 2 fois plus : 7, 9, 18, total 34");
+  // lot E5 : la graine 2340 (7, 9, 18, total 34) était la carte 4 de la fiche 18 aux couleurs près
+  assert.equal(new URLSearchParams(py("EX_MUL")).get("seed"), "128029", "+2 puis 3 fois plus : 5, 7, 21, total 33");
   assert.match(render, /if op == "MUL" and ops != \["ADD", "MUL"\]:/, "au livret 2, « de plus » AVANT « fois plus »");
   for (const nom of ["EX_ADD", "EX_MUL"]) {
     const q = new URLSearchParams(py(nom));
@@ -227,7 +233,7 @@ test("E4 : dans les PDF de l'élève — la couverture, l'exemple en page 2, les
     const pages = texteDesPages(`outils/${s}.pdf`).map(norm);
     assert.equal(pages.length, 8, `${s} : huit pages de texte`);
     assert.match(pages[0], /Nom, prénom/);
-    assert.match(pages[0], /Sur cette carte, il y a (26|34) jetons au total, tous ?cachés sous trois taches/);
+    assert.match(pages[0], /Sur cette carte, il y a (26|33) jetons au total, tous ?cachés sous trois taches/);
     // couverture (23/09) : le schéma VIDE pour commencer, la consigne, et renvoi à la page 2
     assert.match(pages[0], /Pour commencer/);
     assert.match(pages[0], /Schéma vide de la situation/);
@@ -236,11 +242,11 @@ test("E4 : dans les PDF de l'élève — la couverture, l'exemple en page 2, les
     assert.match(pages[0], /comme l'exemple de la page 2\./);
     assert.match(pages[1], /L'enquête pas à pas/);
     assert.match(pages[1], /Je trace le schéma vide/);
-    assert.match(pages[1], /Je vérifie : \d+ \+ \d+ \+ \d+ = (26|34)\./);
+    assert.match(pages[1], /Je vérifie : \d+ \+ \d+ \+ \d+ = (26|33)\./);
     assert.match(pages[1], /nombres connus de l'autre/, "étape 4, la phrase de Claire");
     // « À toi ! » après la conclusion (l'extracteur de ce test perd certains « t » en gras :
     // on ne cherche que des morceaux sûrs ; pdftotext lit la phrase entière)
-    assert.match(pages[1], /Je vérifie : \d+ \+ \d+ \+ \d+ = (26|34)\.À .{0,4}! Sur les fiches, sous chaque/);
+    assert.match(pages[1], /Je vérifie : \d+ \+ \d+ \+ \d+ = (26|33)\.À .{0,4}! Sur les fiches, sous chaque/);
     assert.match(pages[1], /dessine le schéma en barres pour/);
     for (let k = 0; k < 5; k++) {
       const [num, t] = TITRES[5 * l + k];
@@ -325,15 +331,70 @@ test("E4 : le vocabulaire des livrets — jeton, tache, schéma en barres ; jama
   assert.ok(dos.includes("les taches <b>ne cachent pas le même nombre de jetons</b>"));
 });
 
-test("E4 : vue prof de la carte des mondes — les pastilles des deux livrets, à la couleur du monde", () => {
-  const b = univers.match(/\(m===MONDE_ENQUETE&&PROF\?'<p class="intro">'[\s\S]*?<\/p>':''\)\+/);
-  assert.ok(b, "bloc des pastilles du monde 3 introuvable");
-  for (const s of SORTIES) {
-    assert.ok(b[0].includes(`href="/outils/${s}.pdf"`), s);
-    assert.ok(b[0].includes(`href="/outils/${s}_a_plier.pdf"`), s + "_a_plier");
+test("E5 : vue prof de la carte des mondes — le livret du monde 3 sous le monde 3, celui du monde 4 sous le monde 4", () => {
+  const b3 = univers.match(/\(m===MONDE_ENQUETE&&PROF\?'<p class="intro">'[\s\S]*?<\/p>':''\)\+/);
+  const b4 = univers.match(/\(m===MONDE_GRANDE_ENQUETE&&PROF\?'<p class="intro">'[\s\S]*?<\/p>':''\)\+/);
+  assert.ok(b3, "bloc des pastilles du monde 3 introuvable");
+  assert.ok(b4, "bloc des pastilles du monde 4 introuvable");
+  const [add, mul] = SORTIES;
+  for (const [b, oui, non, n] of [[b3[0], add, mul, 3], [b4[0], mul, add, 4]]) {
+    assert.ok(b.includes(`href="/outils/${oui}.pdf"`), oui);
+    assert.ok(b.includes(`href="/outils/${oui}_a_plier.pdf"`), oui + "_a_plier");
+    assert.ok(!b.includes(non), `le monde ${n} ne montre que son livret`);
+    assert.ok(b.includes(`Livret Monde ${n} (PDF)`) && b.includes(`Monde ${n} \\u00e0 plier`), `pastilles « Monde ${n} »`);
   }
   assert.match(univers, /\.monde\.menq \.introLien\.livret\{color:#831843;background:#fce7f3;border-color:#f0abc9\}/);
   // les pastilles des mondes 1 et 2 n'ont pas bougé
   assert.match(univers, /\(mi===1&&PROF\?'<p class="intro">'/);
   assert.match(univers, /\(mi===0\?'<p class="intro">'\+\(PROF/);
+});
+
+test("E5 : chaque livret porte son monde — « Monde 3 », « Monde 4 · Grande enquête », et la suite du voyage", () => {
+  // render.py : le sur-titre, le titre et la suite du voyage de chaque livret
+  assert.match(render, /couv=dict\(sur="Mon livret · Monde 3", titre="Enquête",/);
+  assert.match(render, /couv=dict\(sur="Mon livret · Monde 4", titre="Grande enquête",/);
+  assert.match(render, /suite="Continue avec le monde&nbsp;4, <b>SPLAT! Grande enquête<\/b>&nbsp;: fois plus, fois moins, et les quatre opérations&nbsp;!"/);
+  assert.match(render, /suite="Va voir le monde&nbsp;5, <b>SPLAT! Équations<\/b>, pour résoudre sans schéma en barres&nbsp;!"/);
+  assert.match(render, /!txt\('\.tete h1 span', d\.titre\)/, "le titre du monde est écrit dans la couverture");
+  assert.doesNotMatch(render + couv + dos, /Livret 1|Livret 2|livret&nbsp;2/);
+  // dans les PDF : plus aucun « Livret 1 / 2 », le bon monde en couverture et au dos
+  SORTIES.forEach((s, l) => {
+    for (const v of ["", "_correction", "_correction_lettre"]) {
+      const pages = texteDesPages(`outils/${s}${v}.pdf`).map(norm);
+      const tout = pages.join(" ");
+      assert.doesNotMatch(tout, /LIVRET [12]\b|Livret [12]\b/, `${s}${v} : plus de « Livret 1 / 2 »`);
+      assert.match(pages[0], l === 0 ? /MONDE 3/i : /MONDE 4/i, `${s}${v} : le monde en couverture`);
+      if (l === 1) assert.match(pages[0], /Grande enquête/, `${s}${v} : le titre du monde 4`);
+      assert.match(pages[7], l === 0 ? /monde 4, SPLAT! Grande enquête/ : /monde 5, SPLAT! Équations/, `${s}${v} : la suite du voyage`);
+      assert.doesNotMatch(pages[7], l === 0 ? /livret 2/i : /monde 4/, `${s}${v} : l'ancienne suite`);
+    }
+  });
+});
+
+test("E5 : l'exemple de la page 2 n'est aucune carte des fiches — relu dans cartes.json et dans le PDF", () => {
+  /* render.py écrit les cartes qu'il vient de rendre (total + valeurs triées) : le contrôle ne
+     dépend plus du seul fait d'avoir lancé le script jusqu'au bout. L'exemple du livret 2 du
+     lot E4 (7, 9, 18, total 34) était la carte 4 de la fiche 18, couleurs mises à part. */
+  const cartes = JSON.parse(lire(SRC + "cartes.json"));
+  assert.deepEqual(Object.keys(cartes), ["additif", "multiplicatif"]);
+  const cle = ([t, v]) => t + ":" + [...v].sort((a, b) => a - b).join(",");
+  const toutes = new Set();
+  for (const [nom, c] of Object.entries(cartes)) {
+    const fiches = Object.keys(c.fiches);
+    assert.deepEqual(fiches, FICHES_PY.filter((f) => (nom === "additif" ? f.n < 15 : f.n >= 15)).map((f) => `Fiche ${f.n} — ${f.t}`), nom);
+    for (const f of fiches) {
+      assert.equal(c.fiches[f].length, 4, f);
+      c.fiches[f].forEach((k) => toutes.add(cle(k)));
+    }
+  }
+  for (const [nom, c] of Object.entries(cartes)) {
+    assert.ok(!toutes.has(cle(c.exemple)), `l'exemple du livret « ${nom} » est une carte des fiches : ${cle(c.exemple)}`);
+    // c'est bien l'exemple imprimé en page 2
+    const p2 = norm(texteDesPages(`outils/${nom === "additif" ? SORTIES[0] : SORTIES[1]}.pdf`)[1]);
+    const m = p2.match(/Je vérifie : (\d+) \+ (\d+) \+ (\d+) = (\d+)\./);
+    assert.ok(m, `${nom} : vérification de la page 2 introuvable`);
+    assert.equal(cle([Number(m[4]), [m[1], m[2], m[3]].map(Number)]), cle(c.exemple), `${nom} : cartes.json et le PDF disent le même exemple`);
+  }
+  assert.deepEqual(cartes.multiplicatif.exemple, [33, [5, 7, 21]]);
+  assert.deepEqual(cartes.additif.exemple, [26, [5, 9, 12]]);
 });

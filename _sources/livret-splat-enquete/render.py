@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Régénère les deux livrets « SPLAT! Enquête » (monde 3, 8 pages chacun) à partir du site lui-même.
+Régénère les deux livrets de l'Enquête (8 pages chacun) à partir du site lui-même : « SPLAT! Enquête »
+(monde 3, fiches 10 à 14) et « SPLAT! Grande enquête » (monde 4, fiches 15 à 19) — un livret par
+monde depuis le lot E5 (23/09/2026).
 
     python3 render.py                    (les DEUX livrets, élève et corrections)
     python3 render.py additif            (un seul livret : additif | multiplicatif)
@@ -114,13 +116,16 @@ SERIE_CARTES = 8
 # n'apprenait rien. Les exemples ont donc TROIS taches en chaîne, la noire en référence :
 #   livret 1 (graine 4642) : bleue = noire + 4, orange = bleue + 3 → 5, 9, 12, total 26 ;
 #     regroupé ? ? 4 ? 7, ordonné ? ? ? 4 7 ;
-#   livret 2 (graine 2340) : bleue = noire + 2, orange = 2 × bleue → 7, 9, 18, total 34 ;
-#     regroupé ? ? 2 ? ? 4, ordonné ? ? ? ? 2 4. Au livret 2, la chaîne COMMENCE par « de
+#   livret 2 (graine 128029, lot E5) : bleue = noire + 2, orange = 3 × bleue → 5, 7, 21,
+#     total 33 ; regroupé ? ? 2 ? ? ? 6, ordonné ? ? ? ? ? 2 6. ATTENTION : la graine 2340 du
+#     lot E4 (bleue = noire + 2, orange = 2 × bleue → 7, 9, 18, total 34) était la carte 4
+#     de la fiche 18 aux couleurs près (violette = rouge + 2, noire = 2 × violette) : écartée
+#     le 23/09 au soir. Au livret 2, la chaîne COMMENCE par « de
 #     plus » : avec « fois plus » d'abord, le seul nombre resterait au bout et l'étape 4
 #     redeviendrait identique à la 3.
 # Anciens exemples à deux taches : graines 116 et 402 (et 83, la carte 3 de la fiche 15).
 EX_ADD = "mode=C&splats=3&structure=CHAIN&clues=SENTENCE&mul=0&div=0&add=1&sub=0&deltaMax=10&visibleMin=0&visibleMax=0&totalMin=15&totalMax=40&cards=1&unknown=question&seed=4642"
-EX_MUL = "mode=C&splats=3&structure=CHAIN&clues=SENTENCE&mul=1&div=0&add=1&sub=0&deltaMax=10&visibleMin=0&visibleMax=0&totalMin=15&totalMax=40&cards=1&unknown=question&seed=2340"
+EX_MUL = "mode=C&splats=3&structure=CHAIN&clues=SENTENCE&mul=1&div=0&add=1&sub=0&deltaMax=10&visibleMin=0&visibleMax=0&totalMin=15&totalMax=40&cards=1&unknown=question&seed=128029"
 
 # La page « exemple résolu » : 2e page du livret (lue avant la fiche 10).
 PLACE_EXEMPLE = 2
@@ -130,13 +135,13 @@ LIVRETS = {
         sortie="livret_splat_enquete_additif",
         fiches=FICHES_ADD,
         exemple=dict(query=EX_ADD, op="ADD"),
-        couv=dict(sur="Mon livret · Monde 3 · Livret 1",
+        couv=dict(sur="Mon livret · Monde 3", titre="Enquête",
                   accroche="Un indice relie les taches…<br>à toi de mener l'enquête&nbsp;!"),
         dos=dict(
             series=[("Deux taches", "De plus ou de moins, comme les fiches&nbsp;10 à&nbsp;12.", 1),
                     ("Trois taches", "En chaîne, comme la fiche&nbsp;13.", 2),
                     ("Le défi additif", "Avec des jetons visibles, comme la fiche&nbsp;14.", 3)],
-            suite="Continue avec le livret&nbsp;2 de <b>SPLAT! Enquête</b>&nbsp;: fois plus, fois moins, et les quatre opérations&nbsp;!",
+            suite="Continue avec le monde&nbsp;4, <b>SPLAT! Grande enquête</b>&nbsp;: fois plus, fois moins, et les quatre opérations&nbsp;!",
             mini=["?"], ecart="4",
             reformule="En haut du schéma, la <b>tache de référence</b>&nbsp;: la plus petite. Quand l'indice dit <q>de moins que</q>, retourne-le&nbsp;: <q>la noire a 4 jetons de moins que la bleue</q>, c'est <q>la bleue a 4 jetons de plus que la noire</q>."),
     ),
@@ -144,13 +149,13 @@ LIVRETS = {
         sortie="livret_splat_enquete_multiplicatif",
         fiches=FICHES_MUL,
         exemple=dict(query=EX_MUL, op="MUL"),
-        couv=dict(sur="Mon livret · Monde 3 · Livret 2",
+        couv=dict(sur="Mon livret · Monde 4", titre="Grande enquête",
                   accroche="Fois plus, fois moins…<br>et les quatre opérations&nbsp;!"),
         dos=dict(
             series=[("Fois plus, fois moins", "Deux taches, comme les fiches&nbsp;15 et&nbsp;16.", 4),
                     ("Les quatre opérations", "Deux taches, comme la fiche&nbsp;17.", 5),
                     ("Le grand défi", "Trois taches et des jetons visibles, comme la fiche&nbsp;19.", 6)],
-            suite="Va voir le monde&nbsp;4, <b>SPLAT! Équations</b>, pour résoudre sans schéma en barres&nbsp;!",
+            suite="Va voir le monde&nbsp;5, <b>SPLAT! Équations</b>, pour résoudre sans schéma en barres&nbsp;!",
             mini=["?", "?", "?"], ecart=None,
             reformule="En haut du schéma, la <b>tache de référence</b>&nbsp;: la plus petite. Quand l'indice dit <q>fois moins</q>, retourne-le&nbsp;: <q>la noire a 3 fois moins de jetons que la bleue</q>, c'est <q>la bleue a 3 fois plus de jetons que la noire</q>."),
     ),
@@ -328,7 +333,12 @@ JS_COUV = """(d) => {
   if (!set('svg.ex-carte', d.carte)) return 'pas de place pour la carte';
   if (!set('svg.ex-vide', d.vide, d.vbVide)) return 'pas de place pour le schéma vide';
   const txt = (sel, html) => { const e = document.querySelector(sel); if (!e) return false; e.innerHTML = html; return true; };
-  if (!txt('.tete .sur', d.sur) || !txt('.tete .accroche', d.accroche) || !txt('.expl .intro', d.intro)) return 'textes de couverture';
+  if (!txt('.tete .sur', d.sur) || !txt('.tete h1 span', d.titre) || !txt('.tete .accroche', d.accroche) || !txt('.expl .intro', d.intro)) return 'textes de couverture';
+  // le titre du monde (« Grande enquête », monde 4) tient sur UNE ligne, à gauche du dessin
+  const h = document.querySelector('.tete h1 span').getBoundingClientRect(), hero = document.querySelector('.tete .hero').getBoundingClientRect();
+  if (h.height > 60) return 'titre sur deux lignes : ' + d.titre;
+  const mots = document.createRange(); mots.selectNodeContents(document.querySelector('.tete h1 span'));
+  if (mots.getBoundingClientRect().right > hero.left - 4) return 'le titre touche le dessin : ' + d.titre;
   const li = document.querySelectorAll('.som ol li');
   if (li.length !== d.sommaire.length) return 'sommaire : ' + li.length + ' lignes';
   d.sommaire.forEach((t, i) => {
@@ -573,7 +583,7 @@ async def rendre(niv, tmp, corr=None):
 
         et = ex["etapes"]
         couv = dict(carte=ex["carte"], vide=et[0]["svg"], vbVide=f"50 612 1500 {et[0]['h']}",
-                    sur=niv["couv"]["sur"], accroche=niv["couv"]["accroche"], intro=textes["intro"],
+                    sur=niv["couv"]["sur"], titre=niv["couv"]["titre"], accroche=niv["couv"]["accroche"], intro=textes["intro"],
                     sommaire=[[f["n"], f["t"], f["resume"]] for f in niv["fiches"]],
                     prof=dict(PROF, dit=corr["dit"]) if corr else None)
         await pdf_html(f"{base}{BASE_WEB}/couverture.html", tmp / "couverture.pdf", JS_COUV, couv,
@@ -642,6 +652,26 @@ def compresse(chemin):
     if r.returncode in (0, 3) and tmp.exists():
         tmp.replace(chemin)
 
+CARTES_JSON = ICI / "cartes.json"
+
+def ecrire_cartes(nom, cle_ex, reference):
+    """cartes.json : pour chaque livret, l'exemple et les 20 cartes des fiches, en « total +
+    valeurs triées » (la même clé que le contrôle ci-dessus)."""
+    tout = json.loads(CARTES_JSON.read_text(encoding="utf-8")) if CARTES_JSON.exists() else {}
+    tout[nom] = {"exemple": [cle_ex[0], json.loads(cle_ex[1])],
+                 "fiches": {t: [[c[0], json.loads(c[1])] for c in v] for t, v in reference.items()}}
+    # une carte par ligne : le fichier se relit à l'œil
+    j = lambda x: json.dumps(x, ensure_ascii=False, separators=(", ", ": "))
+    lignes = ["{"]
+    for i, (n, c) in enumerate(sorted(tout.items())):
+        lignes.append(f' {j(n)}: {{"exemple": {j(c["exemple"])}, "fiches": {{')
+        fs = list(c["fiches"].items())
+        for k, (t, v) in enumerate(fs):
+            lignes.append(f'  {j(t)}: {j(v)}' + ("," if k < len(fs) - 1 else ""))
+        lignes.append(" }}" + ("," if i < len(tout) - 1 else ""))
+    lignes.append("}")
+    CARTES_JSON.write_text("\n".join(lignes) + "\n", encoding="utf-8")
+
 def main():
     import tempfile
     args = [a for a in sys.argv[1:] if not a.startswith("-")]
@@ -687,6 +717,11 @@ def main():
             # laissé passer)
             if any(cle_ex == c[:2] for v in reference.values() for c in v):
                 raise SystemExit(f"l'exemple du livret « {nom} » est une carte du livret")
+            # lot E5 : les cartes rendues sont aussi écrites dans cartes.json, que
+            # tests/livret-splat-enquete.test.mjs relit — le contrôle ne dépend plus du seul
+            # fait d'avoir lancé ce script jusqu'au bout (l'exemple du livret 2 du lot E4,
+            # 7, 9, 18, total 34, était la carte 4 de la fiche 18 et était passé)
+            ecrire_cartes(nom, cle_ex, reference)
     finally:
         srv.shutdown()
 

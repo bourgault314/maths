@@ -1,6 +1,7 @@
-# Livrets « SPLAT! Enquête » (monde 3, 8 pages chacun, à plier)
+# Livrets de l'Enquête — « SPLAT! Enquête » (monde 3) et « SPLAT! Grande enquête » (monde 4), 8 pages chacun, à plier
 
-Le monde 3 de l'univers SPLAT! en deux livrets : les dix fiches de la progression, cinq
+L'Enquête de l'univers SPLAT! en deux livrets, un par monde depuis le lot E5 (23/09/2026 :
+dix étoiles dans un seul monde, c'était trop) : les dix fiches de la progression, cinq
 par livret, avec une couverture, un exemple résolu pas à pas et une 4e de couverture.
 Même fabrication que les livrets des mondes 1 et 2 (`_sources/livret-petit-splat/`,
 `_sources/livret-splat-classique/`) : **2 feuilles A3 recto-verso**, pliées et agrafées
@@ -8,8 +9,8 @@ au milieu → 8 pages A4.
 
 | Livret | Fiches | PDF produits |
 |---|---|---|
-| `additif` — Livret 1 | 10 De plus que · 11 De moins que · 12 Plus ou moins · 13 Trois taches en chaîne · 14 Le défi additif | `outils/livret_splat_enquete_additif.pdf` · `…_a_plier.pdf` |
-| `multiplicatif` — Livret 2 | 15 Fois plus · 16 Fois moins · 17 Les quatre opérations · 18 Trois taches, 4 opérations · 19 Le grand défi | `outils/livret_splat_enquete_multiplicatif.pdf` · `…_a_plier.pdf` |
+| `additif` — monde 3, SPLAT! Enquête | 10 De plus que · 11 De moins que · 12 Plus ou moins · 13 Trois taches en chaîne · 14 Le défi additif | `outils/livret_splat_enquete_additif.pdf` · `…_a_plier.pdf` |
+| `multiplicatif` — monde 4, SPLAT! Grande enquête | 15 Fois plus · 16 Fois moins · 17 Les quatre opérations · 18 Trois taches, 4 opérations · 19 Le grand défi | `outils/livret_splat_enquete_multiplicatif.pdf` · `…_a_plier.pdf` |
 | + leurs 2 livrets de correction chacun | les mêmes | `…_correction.pdf` (inconnue « ? »), `…_correction_lettre.pdf` (inconnue en lettre), et chacun son `…_a_plier.pdf` |
 
 Deux formats pour chacun :
@@ -20,7 +21,9 @@ Deux formats pour chacun :
 
 ## Les 8 pages
 
-1. **Couverture** — bandeau framboise du monde 3, « Comment ça marche ? » : la carte de
+1. **Couverture** — bandeau framboise (le même pour les mondes 3 et 4 : c'est la même enquête),
+   « Mon livret · Monde 3 » + « SPLAT! Enquête » ou « Mon livret · Monde 4 » + « SPLAT! Grande enquête »,
+   « Comment ça marche ? » : la carte de
    l'exemple, son **schéma vide** (« Pour commencer ») et la consigne des fiches
    (« dessine le schéma en barres… comme l'exemple de la page 2 »), « Nom, prénom » +
    Classe, le sommaire des cinq fiches.
@@ -30,7 +33,8 @@ Deux formats pour chacun :
    « À toi ! ». En page 2, elle est en face de la fiche 10 quand le livret est ouvert.
 3. à 7. **Les cinq fiches**, 4 cartes par page, telles que l'outil les imprime.
 8. **Dos** — « Encore des cartes ! » (trois séries infinies, huit cartes à chaque
-   ouverture), « La suite du voyage », « Pour se souvenir », « Mes fiches », crédits.
+   ouverture), « La suite du voyage » (monde 3 → le monde 4, SPLAT! Grande enquête ; monde 4 → le monde 5,
+   SPLAT! Équations), « Pour se souvenir », « Mes fiches », crédits.
 
 Décisions de Gwenaël (22/09/2026) : l'exemple en page 2 ; huit cartes par série du dos ;
 les textes de la couverture, des légendes et du dos tels qu'ils sont.
@@ -99,8 +103,11 @@ la tache noire en référence :
 
 - livret 1 (graine 4642) : la bleue a 4 jetons de plus que la noire, l'orange 3 de plus que la
   bleue — 5, 9, 12, total 26. Regroupé : ? ? 4 ? 7 ; ordonné : ? ? ? 4 7 ;
-- livret 2 (graine 2340) : la bleue a 2 jetons de plus que la noire, l'orange 2 fois plus que
-  la bleue — 7, 9, 18, total 34. Regroupé : ? ? 2 ? ? 4 ; ordonné : ? ? ? ? 2 4.
+- livret 2 (graine 128029, lot E5) : la bleue a 2 jetons de plus que la noire, l'orange 3 fois
+  plus que la bleue — 5, 7, 21, total 33. Regroupé : ? ? 2 ? ? ? 6 ; ordonné : ? ? ? ? ? 2 6.
+  (La graine 2340 du lot E4 — 7, 9, 18, total 34 — était la carte 4 de la fiche 18 aux couleurs
+  près : écartée. `render.py` s'arrête sur un tel exemple et écrit ses cartes dans `cartes.json`,
+  que le test relit.)
 
 **Pourquoi trois taches** (remarque de Claire, 23/09/2026) : avec deux taches, le schéma
 regroupé et le schéma ordonné sont forcément identiques — les « ? » sont déjà d'un côté et le

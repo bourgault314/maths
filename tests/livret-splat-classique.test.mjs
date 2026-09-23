@@ -792,7 +792,7 @@ test("L : un onglet et un panneau par monde, le prof replié partout, la note un
     assert.ok(page.includes(`href="#monde-${n}"`), `onglet du monde ${n}`);
     assert.ok(page.includes(`id="monde-${n}"`), `panneau du monde ${n}`);
   }
-  // sur téléphone, l'onglet se réduit à « Monde N » : les cinq mondes tiendront à l'écran
+  // sur téléphone, l'onglet se réduit à « Monde N » : les six mondes tiendront à l'écran
   assert.match(page, /@media \(max-width:640px\)\{\n  \.onglets a \.etiq\{display:none\}/);
   assert.equal((page.match(/<span class="court">Monde \d<\/span>/g) || []).length, 2);
 });

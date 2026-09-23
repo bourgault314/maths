@@ -178,7 +178,7 @@ test("les 5 liens 📄 Fiche du monde 2 impriment l'énoncé seul à 6 par page"
   assert.match(univers, /const FICHE="&print=statement&layout=6&imprimer=1&title=";/);
   assert.match(univers, /seed=347&unknown=question&print=statement&layout=6&imprimer=1"/);
   assert.match(univers, /seed=18&unknown=question&print=statement&layout=6&imprimer=1"/);
-  // plus aucun tableau fourni sur les fiches du monde 2 ; le monde 4 garde les siens
+  // plus aucun tableau fourni sur les fiches du monde 2 ; le monde 5 (Équations) garde les siens
   const m2 = univers.slice(univers.indexOf('cls:"m2"'), univers.indexOf('cls:"m3"'));
   assert.doesNotMatch(m2, /print=worksheet/);
   assert.equal((m2.match(/layout=6/g) || []).length, 2 + 0); // étapes 8 et 9 ; l'étape 7 passe par FICHE

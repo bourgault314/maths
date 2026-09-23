@@ -53,7 +53,7 @@ test("la carte de fin attend un instant, puis garde son bouton Rejouer", () => {
   assert.match(fin, /id="eleveRejouerRouges"/);
 });
 
-// Monde 4, étape 22 (billes unitaires) : « Faire des paquets » écrit la
+// Monde 5, étape 22 (billes unitaires) : « Faire des paquets » écrit la
 // conclusion (« 2 = 𝑏 ») sans simplifier le plateau — la série doit lire cette
 // dernière ligne, sinon l'équation n'est jamais comptée comme résolue.
 test("avec les billes unitaires, la conclusion des paquets compte comme résolue", () => {
