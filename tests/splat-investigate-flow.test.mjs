@@ -47,7 +47,10 @@ test("C Enquête et l'ancien C direct produisent les mêmes cartes avant afficha
 
 test("les schémas de situation utilisent des splats pour les couleurs", () => {
   const situationSource = functionSource("drawRelationSituationSchema", "drawRelationOwnerBrace");
-  assert.match(situationSource, /d:blobPath\(boxX\+30, y\+rowH\/2, f\(13\)\)/);
+  assert.match(situationSource, /d:blobPath\(pastX, y\+rowH\/2, f\(13\)\)/);
+  // paysage (écran d'ordinateur, impression) : la pastille reste à boxX + 30, le nom à boxX + 54
+  assert.match(situationSource, /const pastX = teteSit \? boxX \+ 18 \+ f\(13\) : boxX \+ 30;/);
+  assert.match(situationSource, /const nomX = teteSit \? boxX \+ 18 \+ 2 \* f\(13\) \+ 10 : boxX \+ 54;/);
   assert.match(situationSource, /fill:taskSplatColor\(i, card\)/);
   assert.equal((situationSource.match(/el\("circle"/g) || []).length, 1, "seule la ligne visibles garde sa pastille");
 });
