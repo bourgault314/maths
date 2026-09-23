@@ -907,9 +907,9 @@
         <li><strong>B± — Paquets relatifs</strong> : la même chose avec des valeurs positives et négatives.</li>
         <li><strong>C — Enquête</strong> : deux ou trois taches de couleurs reliées par des indices ; le schéma se construit étape par étape (vide, rempli, regroupé, ordonné) jusqu'à la résolution.</li>
         <li><strong>C direct — Substitution</strong> : la même enquête, en remplaçant d'abord chaque tache par ce qu'elle vaut.</li>
-        <li><strong>D — Système</strong> : trois taches de couleurs, et des sommes de deux taches données en indices.</li>
+        <li><strong>D — Système</strong> : chaque indice est un autre plateau, avec son propre total ; le menu « Geste » choisit la façon de les comparer (retirer une partie, deux pesées, doubler, miroir, trois sommes sans total). Les taches d'une même couleur cachent le même nombre de jetons.</li>
         <li><strong>F / G — Opérations en 9 et en 8</strong> : un des jetons visibles vaut 9, 19, 29… (ou 8, 18, 28…) ; on cherche ce qui manque par une différence, ou le total par une somme.</li>
-        <li><strong>𝑥</strong> / <strong>?</strong> : dans les modes A, A±, B et C, l'inconnue s'écrit avec une lettre ou avec un point d'interrogation.</li>
+        <li><strong>𝑥</strong> / <strong>?</strong> : dans les modes A, A±, B, C et D, l'inconnue s'écrit avec une lettre ou avec un point d'interrogation.</li>
       </ul>
 
       <p><strong>Les boutons au-dessus du plateau.</strong></p>
@@ -955,7 +955,7 @@
       <option value="N">B — Paquets de jetons</option>
       <option value="NPM">B± — Paquets de jetons relatifs</option>
       <option value="C">C — Enquête (relations, 6 couleurs)</option>
-      <option value="D">D — Système (sommes, 3 couleurs)</option>
+      <option value="D">D — Système (sommes, 6 couleurs)</option>
       <option value="C9">F — Opérations en 9 (9 → 99)</option>
       <option value="C8">G — Opérations en 8 (8 → 98)</option>
     </select>
@@ -1239,10 +1239,40 @@
     <!-- D — Système -->
     <div id="systemSettings" style="display:none">
       <div class="row" style="align-items:flex-end">
+        <div style="flex:1.7 1 0">
+          <label>Geste</label>
+          <select id="sysGeste" title="1 : emboîtées, une tache par couleur · 2a : une partie connue · 2b : deux pesées, une couleur diffère · 3 : doubler l’indice puis comparer · 4a : deux plateaux en miroir, on additionne · 4b : trois sommes, sans total · Mélange : les gestes cochés">
+            <option value="EMBOITE1" selected>1 — Emboîtées</option>
+            <option value="PARTIELLE">2a — Donnée partielle</option>
+            <option value="COEF">2b — Deux pesées</option>
+            <option value="DOUBLE">3 — Doubler</option>
+            <option value="MIROIR">4a — Miroir</option>
+            <option value="TROIS">4b — Trois sommes</option>
+            <option value="MIX">Mélange</option>
+          </select>
+        </div>
+        <div style="flex:1 1 0">
+          <label>Coefficient max</label>
+          <input id="sysCoefMax" type="number" min="1" max="4" value="3" />
+        </div>
+      </div>
+      <div id="sysMixRow" style="display:none">
+        <label>Gestes du mélange</label>
+        <div class="c-ops" style="grid-template-columns:repeat(6, minmax(0, 1fr))">
+          <label class="checkInline" title="1 — Emboîtées, une tache par couleur"><input type="checkbox" id="sysMixEMBOITE1" checked> <span>1</span></label>
+          <label class="checkInline" title="2a — Donnée partielle"><input type="checkbox" id="sysMixPARTIELLE" checked> <span>2a</span></label>
+          <label class="checkInline" title="2b — Deux pesées (coefficients)"><input type="checkbox" id="sysMixCOEF" checked> <span>2b</span></label>
+          <label class="checkInline" title="3 — Doubler puis comparer"><input type="checkbox" id="sysMixDOUBLE"> <span>3</span></label>
+          <label class="checkInline" title="4a — Miroir : additionner"><input type="checkbox" id="sysMixMIROIR"> <span>4a</span></label>
+          <label class="checkInline" title="4b — Trois sommes, sans total"><input type="checkbox" id="sysMixTROIS" checked> <span>4b</span></label>
+        </div>
+      </div>
+      <div class="row" style="align-items:flex-end">
         <div style="flex:1.15 1 0">
           <label>Format Indices</label>
           <select id="sysClueType">
-            <option value="SENTENCE" selected>Phrases</option>
+            <option value="BOARD" selected>Plateaux</option>
+            <option value="SENTENCE">Phrases</option>
             <option value="SYMBOL">Symboles (+)</option>
           </select>
         </div>
@@ -1258,11 +1288,11 @@
       <div class="row" style="align-items:flex-end">
         <div style="flex:1">
           <label>Total (min)</label>
-          <input id="sysTotalMin" type="number" min="1" max="1000" value="30" />
+          <input id="sysTotalMin" type="number" min="1" max="1000" value="20" />
         </div>
         <div style="flex:1">
           <label>Total (max)</label>
-          <input id="sysTotalMax" type="number" min="1" max="1000" value="150" />
+          <input id="sysTotalMax" type="number" min="1" max="1000" value="60" />
         </div>
         <div class="countSlot" style="flex:1"></div>
       </div>
@@ -1270,9 +1300,9 @@
 
     <!-- Réglages d'affichage (𝑥 / ? dans les modes A, A±, B, C ; Jetons Vert/Rouge en B±) -->
     <div class="row" id="displayChoiceRow" style="align-items:center; flex-wrap:nowrap; gap:8px;">
-      <div class="varChoice" id="numberedUnknownChoice" title="Modes A/A±/B/C : choisir l’affichage de l’inconnue" aria-label="Modes A/A±/B/C : choisir l’affichage de l’inconnue">
-        <button class="varChoiceBtn" id="btnNumberedLetter" type="button" aria-label="Modes A/A±/B/C : afficher l’inconnue avec une lettre">𝑥</button>
-        <button class="varChoiceBtn" id="btnNumberedQuestionMark" type="button" aria-label="Modes A/A±/B/C : afficher l’inconnue avec un point d’interrogation">?</button>
+      <div class="varChoice" id="numberedUnknownChoice" title="Modes A/A±/B/C/D : choisir l’affichage de l’inconnue" aria-label="Modes A/A±/B/C/D : choisir l’affichage de l’inconnue">
+        <button class="varChoiceBtn" id="btnNumberedLetter" type="button" aria-label="Modes A/A±/B/C/D : afficher l’inconnue avec une lettre">𝑥</button>
+        <button class="varChoiceBtn" id="btnNumberedQuestionMark" type="button" aria-label="Modes A/A±/B/C/D : afficher l’inconnue avec un point d’interrogation">?</button>
       </div>
       <label class="checkInline" id="numColorModeWrap" title="Positifs en Vert, Négatifs en Rouge" style="display:none; flex:0 1 auto; height:42px; padding:0 8px; overflow:hidden;">
         <input type="checkbox" id="numColorMode" checked style="flex:0 0 auto; margin:0;">
@@ -1452,9 +1482,23 @@ function buildInvestigateColorMap(rng, taskCount, varied){
 }
 function investigateColorInfo(card, idx){
   const classicKey = INVESTIGATE_CLASSIC_COLOR_KEYS[idx % INVESTIGATE_CLASSIC_COLOR_KEYS.length];
-  const keys = card && card._rel && Array.isArray(card._rel.colorMap) ? card._rel.colorMap : null;
+  /* Enquête : _rel.colorMap ; Système (mode D, lot S1) : _colorMap, une couleur par tache. */
+  const keys = card && card._rel && Array.isArray(card._rel.colorMap) ? card._rel.colorMap
+    : (card && card._sys && Array.isArray(card._colorMap) ? card._colorMap : null);
   return investigateColorByKey((keys && keys[idx]) || classicKey);
 }
+
+/* Mode D — le Système (lot S1, 23/09/2026) : voir genSystem. Les six gestes, ceux du
+   mélange par défaut (cycle 3), 6 taches au plus par plateau (2 rangées de 3), les nombres
+   qu'aucune carte ne doit montrer, le pluriel des couleurs (« orange » est invariable), et
+   les plages de nombres de chaque geste (valeur d'une tache, total de chaque indice). */
+const SYS_GESTES = ["EMBOITE1", "PARTIELLE", "COEF", "DOUBLE", "MIROIR", "TROIS"];
+const SYS_GESTES_MIX_DEFAUT = ["EMBOITE1", "PARTIELLE", "COEF", "TROIS"];
+const SYS_MAX_TACHES = 6;
+const SYS_ESSAIS = 5000;
+const SYS_NOMBRES_SOUS_ENTENDUS = ["69", "88", "420", "666", "1488"];
+const SYS_COULEURS_PLURIEL = { black:"noires", purple:"violettes", orange:"orange", blue:"bleues", green:"vertes", red:"rouges" };
+const SYS_PLAGES = { EMBOITE1:{ vMin:5, vMax:30, sousMin:10, sousMax:60 }, PARTIELLE:{ vMin:3, vMax:15, sousMin:9, sousMax:45 }, COEF:{ vMin:3, vMax:12, sousMin:9, sousMax:50 }, DOUBLE:{ vMin:3, vMax:12, sousMin:8, sousMax:40 }, MIROIR:{ vMin:3, vMax:12, sousMin:20, sousMax:60 }, TROIS:{ vMin:3, vMax:15, sousMin:6, sousMax:30 } };
 
 function pickVariableChar(rng){
   return variableChars[rInt(rng, 0, variableChars.length - 1)];
@@ -1572,6 +1616,9 @@ const seedEEl = document.getElementById("seedE");
 
 const systemSettingsEl = document.getElementById("systemSettings");
 const sysClueTypeEl = document.getElementById("sysClueType");
+const sysGesteEl = document.getElementById("sysGeste");
+const sysCoefMaxEl = document.getElementById("sysCoefMax");
+const sysMixRowEl = document.getElementById("sysMixRow");
 const sysVisibleMinEl = document.getElementById("sysVisibleMin");
 const sysVisibleMaxEl = document.getElementById("sysVisibleMax");
 const sysTotalMinEl = document.getElementById("sysTotalMin");
@@ -1678,7 +1725,7 @@ let numberedQuestionMarkMode = activityEl && activityEl.value === "U";
 
 function applyDefaultUnknownDisplayForActivity(){
   if(!activityEl) return;
-  if(activityEl.value === "U" || activityEl.value === "UPM") numberedQuestionMarkMode = true;
+  if(activityEl.value === "U" || activityEl.value === "UPM" || activityEl.value === "D") numberedQuestionMarkMode = true;
   else if(activityEl.value === "N" || activityEl.value === "C" || activityEl.value === "CD") numberedQuestionMarkMode = false;
 }
 
@@ -1701,7 +1748,7 @@ function formatCoeffUnknownTerm(coeff, varChar){
 
 function syncNumberedQuestionMarkButton(){
   if(!numberedUnknownChoiceEl || !activityEl) return;
-  const show = activityEl.value === "U" || activityEl.value === "UPM" || activityEl.value === "N" || activityEl.value === "C" || activityEl.value === "CD";
+  const show = activityEl.value === "U" || activityEl.value === "UPM" || activityEl.value === "N" || activityEl.value === "C" || activityEl.value === "CD" || activityEl.value === "D";
   numberedUnknownChoiceEl.classList.toggle("is-visible", show);
   numberedUnknownChoiceEl.setAttribute("aria-hidden", show ? "false" : "true");
   if(btnNumberedLetterEl){
@@ -1713,8 +1760,8 @@ function syncNumberedQuestionMarkButton(){
     btnNumberedQuestionMarkEl.setAttribute("aria-pressed", numberedQuestionMarkMode ? "true" : "false");
   }
   const label = numberedQuestionMarkMode
-    ? "Modes A/A±/B/C : inconnue affichée avec un point d’interrogation"
-    : "Modes A/A±/B/C : inconnue affichée avec une lettre";
+    ? "Modes A/A±/B/C/D : inconnue affichée avec un point d’interrogation"
+    : "Modes A/A±/B/C/D : inconnue affichée avec une lettre";
   numberedUnknownChoiceEl.title = label;
   numberedUnknownChoiceEl.setAttribute("aria-label", label);
 }
@@ -2014,6 +2061,7 @@ function getClassicShareControls(act){
     ["totalMin", invTotalMinEl], ["totalMax", invTotalMaxEl]
   ];
   if(act === "D") return [
+    ["geste", sysGesteEl], ["coefMax", sysCoefMaxEl],
     ["clues", sysClueTypeEl], ["visibleMin", sysVisibleMinEl], ["visibleMax", sysVisibleMaxEl],
     ["totalMin", sysTotalMinEl], ["totalMax", sysTotalMaxEl]
   ];
@@ -2037,7 +2085,7 @@ function applyShareControl(params, name, el){
 
 /* Les réglages qu'une adresse partagée peut porter. Liste commune : elle sert
    aussi à l'empreinte de la série élève (eleveSignatureSerie). */
-const sharedNames = ["mode", "seed", "cards", "equation", "tasksMin", "tasksMax", "visibleMin", "visibleMax", "hidden", "hiddenMax", "totalMin", "totalMax", "splats", "clues", "structure", "mul", "div", "add", "sub", "deltaMax", "operation", "beadMax", "opposites", "colors", "palette", "unknown", "print", "duplex", "layout", "title", "note", "eleve", "parcours", "imprimer", "suite"];
+const sharedNames = ["mode", "seed", "cards", "equation", "tasksMin", "tasksMax", "visibleMin", "visibleMax", "hidden", "hiddenMax", "totalMin", "totalMax", "splats", "clues", "structure", "geste", "gestes", "coefMax", "mul", "div", "add", "sub", "deltaMax", "operation", "beadMax", "opposites", "colors", "palette", "unknown", "print", "duplex", "layout", "title", "note", "eleve", "parcours", "imprimer", "suite"];
 
 function loadSharedConfiguration(){
   const params = new URLSearchParams(window.location.search);
@@ -2086,6 +2134,8 @@ function appliquerConfiguration(params){
   syncSettingsUI();
 
   getClassicShareControls(act).forEach(([name, el]) => applyShareControl(params, name, el));
+  /* « gestes=COEF,DOUBLE » (Système) : les cases du mélange. */
+  if(act === "D" && params.has("gestes")) sysAppliquerGestesMix(params.get("gestes"));
   setNumberFromShare(params, "cards", countEl);
   setSelectFromShare(params, "print", printModeSelectEl);
   // Les liens d'avant portaient « print=correction&duplex=1 » : on les relit encore.
@@ -2134,8 +2184,9 @@ function buildShareUrl(){
   if(act === "U") params.set("equation", String(unitEquationTypeEl.value));
   if(act === "N" || act === "NPM") params.set("equation", String(numberedEquationTypeEl.value));
   getClassicShareControls(act).forEach(([name, el]) => addShareControl(params, name, el));
+  if(act === "D" && sysGesteEl && sysGesteEl.value === "MIX") params.set("gestes", sysLireGestesMix().join(","));
 
-  if(act === "U" || act === "UPM" || act === "N" || act === "C" || act === "CD"){
+  if(act === "U" || act === "UPM" || act === "N" || act === "C" || act === "CD" || act === "D"){
     params.set("unknown", numberedQuestionMarkMode ? "question" : "letter");
   }
   addShareControl(params, "print", printModeSelectEl);
@@ -2143,7 +2194,7 @@ function buildShareUrl(){
   const printTitle = printActivityTitleEl ? printActivityTitleEl.value.trim() : "";
   if(printTitle) params.set("title", printTitle.slice(0, 160));
   if(printInstructionNote) params.set("note", printInstructionNote);
-  if((act === "C" || act === "CD") && Array.isArray(investigatePaletteKeys) && investigatePaletteKeys.length) params.set("palette", investigatePaletteKeys.join(","));
+  if((act === "C" || act === "CD" || act === "D") && Array.isArray(investigatePaletteKeys) && investigatePaletteKeys.length) params.set("palette", investigatePaletteKeys.join(","));
 
   url.search = params.toString();
   return url.toString();
@@ -2499,6 +2550,7 @@ function syncSettingsUI(){
   eightSettingsEl.style.display = isEight ? "block" : "none";
   investigateSettingsEl.style.display = isInvestigate ? "block" : "none";
   systemSettingsEl.style.display = isSystem ? "block" : "none";
+  if(sysMixRowEl) sysMixRowEl.style.display = (isSystem && sysGesteEl && sysGesteEl.value === "MIX") ? "block" : "none";
   placeCardCountField(act);
   syncSeedShareRows(act);
 
@@ -2631,6 +2683,7 @@ activityEl.addEventListener("change", ()=>{
   refocusMainSvgFromControl(activityEl);
 });
 invTaskCountEl.addEventListener("change", ()=>{ syncSettingsUI(); scheduleAutoGenerate(); });
+if(sysGesteEl) sysGesteEl.addEventListener("change", ()=>{ syncSettingsUI(); });
 [unitEquationTypeEl, numberedEquationTypeEl].forEach(el=>{
   if(!el) return;
   el.addEventListener("change", ()=>refocusMainSvgFromControl(el));
@@ -2644,7 +2697,8 @@ invTaskCountEl.addEventListener("change", ()=>{ syncSettingsUI(); scheduleAutoGe
   nineOpEl, nineTasksEl, nineVisibleMaxEl, nineTotalMinEl, nineTotalMaxEl, seedCEl,
   eightOpEl, eightTasksEl, eightVisibleMaxEl, eightTotalMinEl, eightTotalMaxEl, seedDEl,
   invTaskCountEl, invClueTypeEl, invStructure3El, invOpMulEl, invOpDivEl, invOpAddEl, invOpSubEl, invMaxAddEl, invVisibleMinEl, invVisibleMaxEl, invTotalMinEl, invTotalMaxEl, seedEEl,
-  sysClueTypeEl, sysVisibleMinEl, sysVisibleMaxEl, sysTotalMinEl, sysTotalMaxEl, seedSysEl
+  sysGesteEl, sysCoefMaxEl, sysClueTypeEl, sysVisibleMinEl, sysVisibleMaxEl, sysTotalMinEl, sysTotalMaxEl, seedSysEl,
+  ...SYS_GESTES.map(g => document.getElementById("sysMix" + g))
 ].forEach(el=>{
   if(!el) return;
   el.addEventListener("input", scheduleAutoGenerate);
@@ -3415,83 +3469,567 @@ function genInvestigate(rng){
   };
 }
 
-/* --- GÉNÉRATION SYSTÈME (Mode D) --- */
+/* --- GÉNÉRATION SYSTÈME (Mode D) — lot S1, 23/09/2026 ---
+   Le Système : chaque indice est un deuxième plateau, avec son propre TOTAL (conception S0,
+   splat-systemes-S0-conception.md §2). Six gestes, réglage « geste= » :
+     EMBOITE1  emboîtées, une tache par couleur (le mode D d'avant)
+     PARTIELLE une partie connue (3 noires = 30), puis le tout
+     COEF      deux pesées : une seule couleur diffère d'un plateau à l'autre
+     DOUBLE    on double l'indice, puis on compare au plateau
+     MIROIR    deux plateaux en miroir : on les additionne
+     TROIS     trois paires, sans total
+   genSystem lit les réglages de la page ; genSystemCarte, lui, ne dépend que du hasard, des
+   réglages et de la palette : les tests tirent des milliers de cartes sans navigateur.
+   La carte garde son modèle dans _sys (couleurs, valeurs, plateaux, et le plan de la
+   correction EN DONNÉES : titres, barres, calculs en mots et en lettres) : S2 et S3 le
+   dessineront sans refaire aucun calcul. hidden, _num, _colorMap et _inv sont remplis comme
+   avant, une entrée par tache du plateau principal : l'affichage actuel du mode D les lit.
+   Ce générateur n'est appelé qu'en mode D : le hasard des autres modes n'est pas touché. */
 function genSystem(rng){
-  const taskCount = 3; 
-  const clueType = sysClueTypeEl.value; 
-
-  const userMin = numberOr(sysTotalMinEl.value, 30);
-  const userMax = numberOr(sysTotalMaxEl.value, 150);
-
-  let visMin = clamp(numberOr(sysVisibleMinEl.value, 0), 0, 10);
-  let visMax = clamp(numberOr(sysVisibleMaxEl.value, 3), 0, 10);
-  if(visMax < visMin) [visMin, visMax] = [visMax, visMin];
-
-  const minTotal = Math.max(1, Math.min(userMin, userMax));
-  const maxTotal = Math.max(1, Math.max(userMin, userMax));
-
-  const colorNames = ["Tache noire", "Tache violette", "Tache orange"];
-
-  for(let tries=0; tries<5000; tries++){
-    const vals = [
-        rInt(rng, 5, Math.floor(maxTotal/3)),
-        rInt(rng, 5, Math.floor(maxTotal/3)),
-        rInt(rng, 5, Math.floor(maxTotal/3))
-    ];
-    
-    const visCount = rInt(rng, visMin, visMax);
-    const visBeads = [];
-    let visSum = 0;
-    for(let k=0; k<visCount; k++){
-        const val = rInt(rng, 1, 9);
-        visBeads.push(val);
-        visSum += val;
-    }
-
-    const total = vals[0] + vals[1] + vals[2] + visSum;
-
-    if(total < minTotal || total > maxTotal) continue;
-
-    const pairs = [[0,1], [1,2], [0,2]];
-    shuffleInPlace(pairs, rng);
-    
-    const p1 = pairs[0];
-    const p2 = pairs[1];
-
-    const sum1 = vals[p1[0]] + vals[p1[1]];
-    const sum2 = vals[p2[0]] + vals[p2[1]];
-
-    const indices = [];
-
-    function formatClue(idxA, idxB, s){
-        if(clueType === "SYMBOL"){
-            return [
-              {type:'splat', id:idxA},
-              {type:'text', val:` + `},
-              {type:'splat', id:idxB},
-              {type:'text', val:` = ${s}`}
-            ];
-        } else {
-            return `${colorNames[idxA]} + ${colorNames[idxB]} = ${s}`;
-        }
-    }
-
-    indices.push(formatClue(p1[0], p1[1], sum1));
-    indices.push(formatClue(p2[0], p2[1], sum2));
-
-    return {
-        family: "D",
-        total,
-        visible: visBeads,
-        hidden: vals,
-        _num: { tasks: 3, hiddenByTask: vals.map(v=>[v]), hiddenBeadsPerTask:1 },
-        _inv: { indices } 
-    };
-  }
-
-  return { family: "D", total: 20, visible: [], hidden: [5,5,5], _num: { tasks:3, hiddenByTask:[[5],[5],[5]] }, _inv: { indices: ["Erreur"] } };
+  return genSystemCarte(rng, lireReglagesSysteme());
 }
 
+function lireReglagesSysteme(){
+  return sysNormaliserReglages({
+    geste: sysGesteEl ? sysGesteEl.value : "EMBOITE1",
+    gestes: sysLireGestesMix(),
+    clues: sysClueTypeEl ? sysClueTypeEl.value : "BOARD",
+    coefMax: sysCoefMaxEl ? sysCoefMaxEl.value : 3,
+    visMin: sysVisibleMinEl ? sysVisibleMinEl.value : 0,
+    visMax: sysVisibleMaxEl ? sysVisibleMaxEl.value : 3,
+    totalMin: sysTotalMinEl ? sysTotalMinEl.value : 20,
+    totalMax: sysTotalMaxEl ? sysTotalMaxEl.value : 60
+  });
+}
+
+/* « gestes=COEF,DOUBLE » (adresse) ou les cases cochées : la liste des gestes du mélange. */
+function sysLireGestes(raw){
+  const out = [];
+  String(raw == null ? "" : raw).toUpperCase().split(/[\s,;+|]+/).forEach(g => {
+    if(SYS_GESTES.includes(g) && !out.includes(g)) out.push(g);
+  });
+  return out;
+}
+
+function sysLireGestesMix(){
+  const out = SYS_GESTES.filter(g => {
+    const box = document.getElementById("sysMix" + g);
+    return !!(box && box.checked);
+  });
+  return out.length ? out : SYS_GESTES_MIX_DEFAUT.slice();
+}
+
+function sysAppliquerGestesMix(raw){
+  const gestes = sysLireGestes(raw);
+  if(!gestes.length) return false;
+  SYS_GESTES.forEach(g => {
+    const box = document.getElementById("sysMix" + g);
+    if(box) box.checked = gestes.includes(g);
+  });
+  return true;
+}
+
+function sysNormaliserReglages(opts){
+  const r = opts || {};
+  const entier = (x, d) => Math.round(numberOr(x === "" || x == null ? d : x, d));
+  const geste = (SYS_GESTES.includes(r.geste) || r.geste === "MIX") ? r.geste : "EMBOITE1";
+  const gestes = (Array.isArray(r.gestes) ? r.gestes : []).filter(g => SYS_GESTES.includes(g));
+  let visMin = clamp(entier(r.visMin, 0), 0, 10);
+  let visMax = clamp(entier(r.visMax, 3), 0, 10);
+  if(visMax < visMin) [visMin, visMax] = [visMax, visMin];
+  let totalMin = clamp(entier(r.totalMin, 20), 1, 1000);
+  let totalMax = clamp(entier(r.totalMax, 60), 1, 1000);
+  if(totalMax < totalMin) [totalMin, totalMax] = [totalMax, totalMin];
+  return {
+    geste,
+    gestes: gestes.length ? gestes : SYS_GESTES_MIX_DEFAUT.slice(),
+    clues: ["BOARD", "SENTENCE", "SYMBOL"].includes(r.clues) ? r.clues : "BOARD",
+    coefMax: clamp(entier(r.coefMax, 3), 1, 4),
+    visMin, visMax, totalMin, totalMax
+  };
+}
+
+/* Une carte du Système. Le hasard est consommé ainsi : le geste (si MIX), les trois
+   couleurs (comme l'Enquête, palette= comprise), puis les essais. Premier passage : les
+   plages du geste (§5) ; deuxième : valeurs de 2 à totalMax ÷ 2, sous-totaux libres ; en
+   dernier recours, une carte sûre du geste 1 (jamais de carte « Erreur », jamais de carte
+   fausse). Une carte est rejetée si un total sort des bornes, si deux couleurs ont la même
+   valeur, si un plateau dépasse 6 taches, ou si un nombre (plan de correction compris)
+   contient un nombre à sous-entendu. */
+function genSystemCarte(rng, opts){
+  const o = sysNormaliserReglages(opts);
+  let geste = o.geste;
+  if(geste === "MIX") geste = o.gestes[rInt(rng, 0, o.gestes.length - 1)];
+  const couleurs = buildInvestigateColorMap(rng, 3, true);
+  const p = SYS_PLAGES[geste];
+  const passages = [
+    { vMin: p.vMin, vMax: p.vMax, sousMin: p.sousMin, sousMax: p.sousMax },
+    { vMin: 2, vMax: Math.max(6, Math.ceil(o.totalMax / 2)), sousMin: 1, sousMax: Infinity }
+  ];
+  for(const plage of passages){
+    for(let essai = 0; essai < SYS_ESSAIS; essai++){
+      const sit = sysTirerSituation(rng, geste, couleurs, plage, o);
+      if(!sysSituationValide(sit, plage, o)) continue;
+      const plan = sysPlan(sit);
+      if(sysTexteASousEntendu(JSON.stringify(sit) + JSON.stringify(plan))) continue;
+      return sysAssemblerCarte(sit, plan, o.clues, false);
+    }
+  }
+  const sure = sysSituationSure(couleurs, o);
+  return sysAssemblerCarte(sure, sysPlan(sure), o.clues, true);
+}
+
+/* Les formes possibles d'un geste (nombre de taches de chaque couleur), toutes à 6 taches
+   au plus par plateau. DOUBLE : l'indice doublé (k = 2) plus 1 ou 2 taches ; seul l'indice
+   « 1 + 1 » tient en 6 taches (décidé le 23/09 : 2 + 3 ou 2 + 4) ; k = 3 n'y tient jamais.
+   COEF : coefMax borne chaque nombre de taches ; il en faut au moins 2 pour qu'une couleur
+   diffère, d'où max(2, coefMax). MIROIR : 1-2 ou 2-3, le plateau principal est choisi après
+   le tirage des valeurs (le plus grand total). */
+function sysFormes(geste, coefMax){
+  const out = [];
+  if(geste === "PARTIELLE"){
+    for(let a = 1; a <= 3; a++) for(let b = 1; b <= 3; b++) if(a + b <= SYS_MAX_TACHES) out.push([a, b]);
+  }else if(geste === "COEF"){
+    const cm = Math.max(2, coefMax);
+    for(let c = 1; c <= cm; c++) for(let y = 2; y <= cm; y++) for(let y2 = 1; y2 < y; y2++){
+      if(c + y <= SYS_MAX_TACHES) out.push([c, y, y2]);
+    }
+  }else if(geste === "DOUBLE"){
+    for(let a = 1; a <= 3; a++) for(let b = 1; b <= 3; b++) for(let d = 1; d <= 2; d++){
+      if(2 * a + 2 * b + d <= SYS_MAX_TACHES) out.push([a, b, d]);
+    }
+  }else if(geste === "MIROIR"){
+    out.push([1, 2], [2, 3]);
+  }
+  return out;
+}
+
+function sysSomme(counts, values){
+  return Object.keys(counts).reduce((s, k) => s + counts[k] * values[k], 0);
+}
+
+function sysNombreTaches(board){
+  return Object.keys(board.counts).reduce((s, k) => s + board.counts[k], 0);
+}
+
+function sysPlateau(counts, values, visible){
+  const board = { counts, total: sysSomme(counts, values) };
+  if(visible){
+    board.total += visible.reduce((s, x) => s + x, 0);
+    board.visible = visible;
+  }
+  return board;
+}
+
+function sysTirerSituation(rng, geste, couleurs, plage, o){
+  const valeur = () => rInt(rng, plage.vMin, plage.vMax);
+  const visibles = () => {
+    const n = rInt(rng, o.visMin, o.visMax);
+    const out = [];
+    for(let i = 0; i < n; i++) out.push(rInt(rng, 1, 9));
+    return out;
+  };
+  const forme = () => {
+    const formes = sysFormes(geste, o.coefMax);
+    return formes[rInt(rng, 0, formes.length - 1)];
+  };
+  const [A, B, C] = couleurs;
+  if(geste === "PARTIELLE"){
+    const [a, b] = forme();
+    const values = { [A]: valeur(), [B]: valeur() };
+    const vis = visibles();
+    return { geste, colors: [A, B], values, boards: [
+      sysPlateau({ [A]: a, [B]: b }, values, vis),
+      sysPlateau({ [A]: a }, values)
+    ] };
+  }
+  if(geste === "COEF"){
+    const [c, y, y2] = forme();
+    const values = { [A]: valeur(), [B]: valeur() };
+    const vis = visibles();
+    return { geste, colors: [A, B], values, boards: [
+      sysPlateau({ [A]: c, [B]: y }, values, vis),
+      sysPlateau({ [A]: c, [B]: y2 }, values)
+    ] };
+  }
+  if(geste === "DOUBLE"){
+    const [a, b, d] = forme();
+    const values = { [A]: valeur(), [B]: valeur() };
+    const vis = visibles();
+    return { geste, colors: [A, B], values, boards: [
+      sysPlateau({ [A]: 2 * a, [B]: 2 * b + d }, values, vis),
+      sysPlateau({ [A]: a, [B]: b }, values)
+    ] };
+  }
+  if(geste === "MIROIR"){
+    const [p, q] = forme();
+    const values = { [A]: valeur(), [B]: valeur() };
+    const vis = visibles();
+    const [a, b] = (p * values[A] + q * values[B] >= q * values[A] + p * values[B]) ? [p, q] : [q, p];
+    return { geste, colors: [A, B], values, boards: [
+      sysPlateau({ [A]: a, [B]: b }, values, vis),
+      sysPlateau({ [A]: b, [B]: a }, values)
+    ] };
+  }
+  if(geste === "TROIS"){
+    const values = { [A]: valeur(), [B]: valeur(), [C]: valeur() };
+    return { geste, colors: [A, B, C], values, boards: [
+      { counts: { [A]: 1, [B]: 1, [C]: 1 }, total: null, visible: [] },
+      sysPlateau({ [A]: 1, [B]: 1 }, values),
+      sysPlateau({ [B]: 1, [C]: 1 }, values),
+      sysPlateau({ [A]: 1, [C]: 1 }, values)
+    ] };
+  }
+  /* EMBOITE1 : la tache commune aux deux indices est au milieu (B). */
+  const values = { [A]: valeur(), [B]: valeur(), [C]: valeur() };
+  const vis = visibles();
+  return { geste: "EMBOITE1", colors: [A, B, C], values, boards: [
+    sysPlateau({ [A]: 1, [B]: 1, [C]: 1 }, values, vis),
+    sysPlateau({ [A]: 1, [B]: 1 }, values),
+    sysPlateau({ [B]: 1, [C]: 1 }, values)
+  ] };
+}
+
+function sysSituationValide(sit, plage, o){
+  const vals = sit.colors.map(k => sit.values[k]);
+  if(vals.some(x => !Number.isInteger(x) || x < 2)) return false;
+  if(new Set(vals).size !== vals.length) return false;
+  if(sit.boards.some(b => sysNombreTaches(b) > SYS_MAX_TACHES)) return false;
+  const principal = sit.boards[0];
+  const total = principal.total == null ? sysSomme(principal.counts, sit.values) : principal.total;
+  if(total < o.totalMin || total > o.totalMax) return false;
+  return sit.boards.slice(1).every(b => b.total >= plage.sousMin && b.total <= plage.sousMax);
+}
+
+function sysNombreSousEntendu(n){
+  const s = String(n);
+  return SYS_NOMBRES_SOUS_ENTENDUS.some(x => s.includes(x));
+}
+
+function sysTexteASousEntendu(texte){
+  return (String(texte).match(/\d+/g) || []).some(sysNombreSousEntendu);
+}
+
+/* Dernier recours (plages impossibles) : une carte du geste 1, valeurs voisines et sûres,
+   sans jeton visible, sans aucun tirage. Son total vise le milieu des bornes. */
+function sysSituationSure(couleurs, o){
+  const [A, B, C] = couleurs;
+  let base = Math.max(2, Math.floor(Math.round((o.totalMin + o.totalMax) / 2) / 3) - 1);
+  for(let i = 0; i < 200; i++, base++){
+    const values = { [A]: base, [B]: base + 1, [C]: base + 2 };
+    const sit = { geste: "EMBOITE1", colors: [A, B, C], values, boards: [
+      sysPlateau({ [A]: 1, [B]: 1, [C]: 1 }, values, []),
+      sysPlateau({ [A]: 1, [B]: 1 }, values),
+      sysPlateau({ [B]: 1, [C]: 1 }, values)
+    ] };
+    if(!sysTexteASousEntendu(JSON.stringify(sit) + JSON.stringify(sysPlan(sit)))) return sit;
+  }
+  const values = { [A]: 5, [B]: 7, [C]: 8 };
+  return { geste: "EMBOITE1", colors: [A, B, C], values, boards: [
+    sysPlateau({ [A]: 1, [B]: 1, [C]: 1 }, values, []),
+    sysPlateau({ [A]: 1, [B]: 1 }, values),
+    sysPlateau({ [B]: 1, [C]: 1 }, values)
+  ] };
+}
+
+/* La carte telle que la page la lit : une tache par entrée de hidden / _colorMap, dans
+   l'ordre du plateau principal (couleur par couleur, dans l'ordre de _sys.colors). */
+function sysAssemblerCarte(sit, plan, clues, secours){
+  const principal = sit.boards[0];
+  const colorMap = [];
+  const hidden = [];
+  sit.colors.forEach(k => {
+    for(let i = 0; i < (principal.counts[k] || 0); i++){
+      colorMap.push(k);
+      hidden.push(sit.values[k]);
+    }
+  });
+  const visible = (principal.visible || []).slice();
+  const total = hidden.reduce((s, x) => s + x, 0) + visible.reduce((s, x) => s + x, 0);
+  const sys = {
+    version: 1,
+    geste: sit.geste,
+    clues,
+    colors: sit.colors.slice(),
+    values: Object.assign({}, sit.values),
+    boards: sit.boards.map(b => {
+      const copie = { counts: Object.assign({}, b.counts), total: b.total };
+      if(b.visible) copie.visible = b.visible.slice();
+      return copie;
+    }),
+    plan
+  };
+  if(secours) sys.secours = true;
+  return {
+    family: "D",
+    total,
+    visible,
+    hidden,
+    _num: { tasks: hidden.length, hiddenByTask: hidden.map(v => [v]), hiddenBeadsPerTask: 1 },
+    _inv: { indices: sit.boards.slice(1).map(b => sysIndice(sit, b, clues, colorMap)) },
+    _colorMap: colorMap,
+    _sys: sys
+  };
+}
+
+function sysUneTacheParCouleur(sit){
+  return sit.boards.every(b => Object.keys(b.counts).every(k => b.counts[k] === 1));
+}
+
+/* L'indice écrit (réglage clues=SENTENCE ou SYMBOL ; BOARD garde la phrase, que l'écran
+   actuel affiche en attendant le dessin des plateaux, lot S2). */
+function sysIndice(sit, board, clues, colorMap){
+  if(clues === "SYMBOL"){
+    const parts = [];
+    sit.colors.forEach(k => {
+      const n = board.counts[k] || 0;
+      if(!n) return;
+      if(parts.length) parts.push({ type: "text", val: " + " });
+      if(n > 1) parts.push({ type: "text", val: `${n} × ` });
+      parts.push({ type: "splat", id: colorMap.indexOf(k) });
+    });
+    parts.push({ type: "text", val: ` = ${board.total}` });
+    return parts;
+  }
+  return sysPhraseIndice(sit, board);
+}
+
+/* « Sous 2 taches noires et 1 tache violette, il y a 25 jetons en tout. » (chiffres, même
+   pour 1) ; « Sous la tache noire et la tache violette, … » quand la carte n'a qu'une
+   tache par couleur. */
+function sysPhraseIndice(sit, board){
+  const une = sysUneTacheParCouleur(sit);
+  const morceaux = sit.colors.filter(k => board.counts[k]).map(k => {
+    const n = board.counts[k];
+    const mot = investigateColorWord(investigateColorByKey(k));
+    if(une) return `la tache ${mot}`;
+    return n === 1 ? `1 tache ${mot}` : `${n} taches ${SYS_COULEURS_PLURIEL[k] || mot}`;
+  });
+  const liste = morceaux.length > 1
+    ? morceaux.slice(0, -1).join(", ") + " et " + morceaux[morceaux.length - 1]
+    : morceaux[0];
+  return `Sous ${liste}, il y a ${board.total} jetons en tout.`;
+}
+
+/* Le plan de la correction (conception S0, §4), étape par étape :
+     { role, titre, barres: [{ top, span, offset, cells }], calculs: [...], lettres: [...] }
+   « calculs » écrit les couleurs en mots (inconnue « ? »), « lettres » avec une lettre par
+   couleur (unknown=letter : N, Vi, O, B, Ve, R ; « 2 × Vi », décidé le 23/09).
+   Une barre : « top » est l'étiquette au-dessus, qui couvre les « span » premières cases ;
+   « offset » décale la barre d'autant de cases de tache vers la droite. Une case :
+     { kind:"unknown", color }        une tache encore inconnue (« ? »)
+     { kind:"known", color, value }   une tache déjà trouvée
+     { kind:"visible", value }        un jeton visible (case étroite)
+     { kind:"rest", label, covers }   « ce qui reste », à la largeur des cases qu'il couvre
+   L'étape « verification » porte aussi « reponses » : la valeur de chaque couleur.
+   Aucune arithmétique n'est laissée au dessin : tout nombre écrit est déjà ici. */
+function sysPlan(sit){
+  const v = sit.values;
+  const C = sit.colors;
+  const une = sysUneTacheParCouleur(sit);
+  const mot = k => investigateColorWord(investigateColorByKey(k));
+  const pluriel = k => SYS_COULEURS_PLURIEL[k] || mot(k);
+  const initiale = k => investigateColorInitial(investigateColorByKey(k));
+  const MOTS = { nom: mot, terme: (k, n) => une ? mot(k) : (n === 1 ? `1 ${mot(k)}` : `${n} ${pluriel(k)}`) };
+  const LETTRES = { nom: initiale, terme: (k, n) => n === 1 ? initiale(k) : `${n} × ${initiale(k)}` };
+  const somme = list => list.reduce((s, x) => s + x, 0);
+  const article = k => /^[aeiouyhàâéèêëîïôöûü]/i.test(mot(k)) ? `l’${mot(k)}` : `la ${mot(k)}`;
+  const lesVisibles = vis => vis.length === 0 ? "" : (vis.length === 1 ? "le jeton visible" : "les jetons visibles");
+  const etVisibles = vis => vis.length ? ` et ${lesVisibles(vis)}` : "";
+  const repeter = (n, f) => Array.from({ length: n }, f);
+  const inc = (k, n = 1) => repeter(n, () => ({ kind: "unknown", color: k }));
+  const con = (k, n = 1) => repeter(n, () => ({ kind: "known", color: k, value: v[k] }));
+  const vis = list => list.map(x => ({ kind: "visible", value: x }));
+  const reste = (label, covers) => ({ kind: "rest", label, covers });
+  const barre = (top, cells, offset = 0, span = cells.length) => ({ top: String(top), span, offset, cells });
+  const cases = counts => C.reduce((out, k) => out.concat(inc(k, counts[k] || 0)), []);
+  const expr = (R, counts, V = 0) => C.filter(k => counts[k]).map(k => R.terme(k, counts[k])).join(" + ") + (V ? ` + ${V}` : "");
+  /* « lhs = départ − t1 − t2 » puis « lhs = résultat » (un seul terme : sur une ligne). */
+  const retirer = (lhs, depart, termes, resultat) => {
+    if(!termes.length) return [`${lhs} = ${depart}`];
+    if(termes.length === 1) return [`${lhs} = ${depart} − ${termes[0]} = ${resultat}`];
+    return [`${lhs} = ${depart} − ${termes.join(" − ")}`, `${lhs} = ${resultat}`];
+  };
+  /* n taches de la couleur k, et les jetons visibles, font « montant » : la valeur de k. */
+  const groupe = (R, k, n, montant, visibles) => {
+    const lignes = retirer(n === 1 ? R.nom(k) : R.terme(k, n), montant, visibles, n * v[k]);
+    if(n > 1) lignes.push(`${R.nom(k)} = ${n * v[k]} ÷ ${n} = ${v[k]}`);
+    return lignes;
+  };
+  const etape = (role, titre, barres, lignes, extra) => Object.assign(
+    { role, titre, barres, calculs: lignes(MOTS), lettres: lignes(LETTRES) }, extra || {});
+  const verification = () => {
+    const lignes = sit.boards.filter(b => b.total != null).map(b => {
+      const termes = [];
+      const valeurs = [];
+      let produits = 0;
+      C.forEach(k => {
+        const n = b.counts[k] || 0;
+        if(!n) return;
+        termes.push(n > 1 ? `${n} × ${v[k]}` : `${v[k]}`);
+        valeurs.push(n * v[k]);
+        if(n > 1) produits++;
+      });
+      (b.visible || []).forEach(x => { termes.push(String(x)); valeurs.push(x); });
+      const milieu = produits >= 2 ? ` = ${valeurs.join(" + ")}` : "";
+      return `${termes.join(" + ")}${milieu} = ${b.total} ✓`;
+    });
+    return etape("verification", "Vérification", [], () => lignes.slice(),
+      { reponses: C.map(k => ({ color: k, value: v[k] })) });
+  };
+
+  const P = sit.boards[0];
+  const T = P.total;
+  const visP = P.visible || [];
+  const V = somme(visP);
+
+  if(sit.geste === "PARTIELLE"){
+    const [A, B] = C;
+    const a = P.counts[A], b = P.counts[B];
+    const S = sit.boards[1].total;
+    const R = T - S;
+    return [
+      etape("plateau", "Le plateau entier",
+        [barre(`TOTAL ${T}`, cases(P.counts).concat(vis(visP)))],
+        M => [`${expr(M, P.counts, V)} = ${T}`]),
+      etape("indice", "L’indice : une partie du plateau",
+        [barre(S, inc(A, a).concat([reste("ce qui reste", inc(B, b).concat(vis(visP)))]), 0, a)],
+        () => ["ce qui reste :", `${T} − ${S} = ${R}`]),
+      etape("reste", `Ce qui reste : ${b > 1 ? `les ${pluriel(B)}` : article(B)}${etVisibles(visP)}${b > 1 ? ", on partage" : ""}`,
+        [barre(R, inc(B, b).concat(vis(visP)), a)],
+        M => groupe(M, B, b, R, visP)),
+      etape("indice-seul", `L’indice seul : ${a > 1 ? `les ${pluriel(A)}, on partage` : article(A)}`,
+        [barre(S, inc(A, a))],
+        M => groupe(M, A, a, S, [])),
+      verification()
+    ];
+  }
+
+  if(sit.geste === "COEF"){
+    const [X, Y] = C;
+    const c = P.counts[X], y = P.counts[Y];
+    const I = sit.boards[1];
+    const y2 = I.counts[Y];
+    const d = y - y2;
+    const S = I.total;
+    const R = T - S;
+    return [
+      etape("plateau", "Le plateau entier",
+        [barre(`TOTAL ${T}`, cases(P.counts).concat(vis(visP)))],
+        M => [`${expr(M, P.counts, V)} = ${T}`]),
+      etape("indice", "L’indice : une partie du plateau",
+        [barre(S, inc(X, c).concat(inc(Y, y2), [reste("ce qui reste", inc(Y, d).concat(vis(visP)))]), 0, c + y2)],
+        () => ["ce qui reste :", `${T} − ${S} = ${R}`]),
+      etape("reste", `Ce qui reste : ${d > 1 ? `${d} ${pluriel(Y)}` : `une ${mot(Y)}`}${etVisibles(visP)}${d > 1 ? ", on partage" : ""}`,
+        [barre(R, inc(Y, d).concat(vis(visP)), c + y2)],
+        M => groupe(M, Y, d, R, visP)),
+      etape("indice-retire", `Dans l’indice : on retire ${y2 > 1 ? `les ${pluriel(Y)}` : article(Y)}${c > 1 ? ", on partage" : ""}`,
+        [barre(S, inc(X, c).concat(con(Y, y2)))],
+        M => groupe(M, X, c, S, repeter(y2, () => v[Y]))),
+      verification()
+    ];
+  }
+
+  if(sit.geste === "DOUBLE"){
+    const [A, B] = C;
+    const I = sit.boards[1];
+    const a = I.counts[A], b = I.counts[B];
+    const d = P.counts[B] - 2 * b;
+    const S = I.total;
+    const D = 2 * S;
+    const R = T - D;
+    const double = { [A]: 2 * a, [B]: 2 * b };
+    return [
+      etape("plateau", "Le plateau entier",
+        [barre(`TOTAL ${T}`, cases(P.counts).concat(vis(visP)))],
+        M => [`${expr(M, P.counts, V)} = ${T}`]),
+      etape("double", "L’indice, puis l’indice doublé",
+        [barre(S, cases(I.counts)), barre(`${S} + ${S} = ${D}`, cases(double))],
+        M => [`${expr(M, I.counts)} = ${S}`, "on double :", `${expr(M, double)} = ${D}`]),
+      etape("reste", "On compare au plateau : ce qui reste",
+        [barre(D, cases(double).concat([reste("reste", inc(B, d).concat(vis(visP)))]), 0, 2 * a + 2 * b)],
+        M => ["ce qui reste :", `${T} − ${D} = ${R}`].concat(groupe(M, B, d, R, visP))),
+      etape("indice-retire", `Dans l’indice : on retire ${b > 1 ? `les ${pluriel(B)}` : article(B)}${a > 1 ? ", on partage" : ""}`,
+        [barre(S, inc(A, a).concat(con(B, b)))],
+        M => groupe(M, A, a, S, repeter(b, () => v[B]))),
+      verification()
+    ];
+  }
+
+  if(sit.geste === "MIROIR"){
+    const [A, B] = C;
+    const a = P.counts[A], b = P.counts[B];
+    const O = sit.boards[1];
+    const S = O.total;
+    const n = a + b;
+    const s = v[A] + v[B];
+    const m = Math.min(a, b);
+    const E = a > b ? A : B;
+    const F = E === A ? B : A;
+    const tout = { [A]: n, [B]: n };
+    const paire = { [A]: 1, [B]: 1 };
+    const paires = m === 1 ? "une paire" : (m === 2 ? "deux paires" : `${m} paires`);
+    return [
+      etape("miroir", "Les deux situations « en miroir »",
+        [barre(`TOTAL ${T}`, cases(P.counts).concat(vis(visP))), barre(S, cases(O.counts))],
+        M => [`${expr(M, P.counts, V)} = ${T}`, `${expr(M, O.counts)} = ${S}`]),
+      etape("somme", "On les additionne, puis on partage",
+        [barre(`${T} + ${S} = ${T + S}`, cases(tout).concat(vis(visP)))],
+        M => (V
+          ? [`${expr(M, tout, V)} = ${T + S}`, `${expr(M, tout)} = ${T + S} − ${V} = ${n * s}`]
+          : [`${expr(M, tout)} = ${T + S}`]
+        ).concat([`on partage en ${n} :`, `${expr(M, paire)} = ${s}`])),
+      etape("plateau-paires", `Dans le plateau : ${paires}${V ? `, une ${mot(E)} de plus et ${lesVisibles(visP)}` : `, et une ${mot(E)} de plus`}`,
+        [barre(T, repeter(m, () => inc(A).concat(inc(B))).flat().concat(inc(E), vis(visP)))],
+        M => [`${repeter(m, () => s).join(" + ")} + ${M.nom(E)}${V ? ` + ${V}` : ""} = ${T}`]
+          .concat(retirer(M.nom(E), T, [m * s].concat(V ? [V] : []), v[E]))
+          .concat([`${M.nom(F)} = ${s} − ${v[E]} = ${v[F]}`])),
+      verification()
+    ];
+  }
+
+  if(sit.geste === "TROIS"){
+    const [A, B, D] = C;
+    const [s1, s2, s3] = sit.boards.slice(1).map(b => b.total);
+    const total = v[A] + v[B] + v[D];
+    const sigma = s1 + s2 + s3;
+    return [
+      etape("paires", "Les trois indices : trois paires",
+        [barre(s1, inc(A).concat(inc(B))), barre(s2, inc(B).concat(inc(D)), 1), barre(s3, inc(A).concat(inc(D)), 2)],
+        M => [`${expr(M, { [A]: 1, [B]: 1 })} = ${s1}`, `${expr(M, { [B]: 1, [D]: 1 })} = ${s2}`, `${expr(M, { [A]: 1, [D]: 1 })} = ${s3}`]),
+      etape("somme", "On les additionne : deux fois le plateau",
+        [barre(`${s1} + ${s2} + ${s3} = ${sigma}`, inc(A).concat(inc(B), inc(D), inc(A), inc(B), inc(D)))],
+        M => M === MOTS
+          ? ["chaque tache compte deux fois :", `2 plateaux = ${sigma}`, `TOTAL du plateau = ${sigma} ÷ 2 = ${total}`]
+          : ["chaque tache compte deux fois :", `2 × (${expr(M, P.counts)}) = ${sigma}`, `${expr(M, P.counts)} = ${sigma} ÷ 2 = ${total}`]),
+      etape("total", "Le total trouvé, chaque indice donne une tache",
+        [barre(`TOTAL ${total}`, inc(A).concat(inc(B), [Object.assign(reste(mot(D), inc(D)), { color: D })]))],
+        M => [`${M.nom(D)} = ${total} − ${s1} = ${v[D]}`, `${M.nom(A)} = ${total} − ${s2} = ${v[A]}`, `${M.nom(B)} = ${total} − ${s3} = ${v[B]}`]),
+      verification()
+    ];
+  }
+
+  /* EMBOITE1 */
+  const [A, B, D] = C;
+  const S1 = sit.boards[1].total;
+  const S2 = sit.boards[2].total;
+  const R = T - S1;
+  return [
+    etape("plateau", "Le plateau entier",
+      [barre(`TOTAL ${T}`, cases(P.counts).concat(vis(visP)))],
+      M => [`${expr(M, P.counts, V)} = ${T}`]),
+    etape("indice", "L’indice : une partie du plateau",
+      [barre(S1, inc(A).concat(inc(B), [reste("ce qui reste", inc(D).concat(vis(visP)))]), 0, 2)],
+      () => ["ce qui reste :", `${T} − ${S1} = ${R}`]),
+    etape("reste", `Ce qui reste : ${article(D)}${etVisibles(visP)}`,
+      [barre(R, inc(D).concat(vis(visP)), 2)],
+      M => groupe(M, D, 1, R, visP)),
+    etape("autre-indice", "L’autre indice, puis la dernière tache",
+      [barre(S2, inc(B).concat(con(D)), 1)],
+      M => [`${M.nom(B)} = ${S2} − ${v[D]} = ${v[B]}`, `${M.nom(A)} = ${S1} − ${v[B]} = ${v[A]}`]),
+    verification()
+  ];
+}
 
 /* Existing Gens */
 function genNumbered(rng){
@@ -4607,11 +5145,11 @@ function drawInvestigateSplatName(target, s, idx, card, revealed, api = {}){
   }));
 }
 function taskShortName(idx, card){
-  if(card && card.family === "C") return investigateColorInfo(card, idx).short;
+  if(card && (card.family === "C" || (card.family === "D" && card._sys))) return investigateColorInfo(card, idx).short;
   return ["Noire", "Violette", "Orange"][idx] || `Tache ${idx+1}`;
 }
 function taskSplatColor(idx, card, isPrint=false){
-  if(card && card.family === "C"){
+  if(card && (card.family === "C" || (card.family === "D" && card._sys))){
     const info = investigateColorInfo(card, idx);
     return isPrint ? info.print : info.screen;
   }
@@ -4619,7 +5157,7 @@ function taskSplatColor(idx, card, isPrint=false){
   return colors[idx % 3];
 }
 function taskSplatRevealColor(idx, card, isPrint=false){
-  if(card && card.family === "C"){
+  if(card && (card.family === "C" || (card.family === "D" && card._sys))){
     const info = investigateColorInfo(card, idx);
     return isPrint ? info.printReveal : info.reveal;
   }
