@@ -777,7 +777,8 @@ test("L : un onglet et un panneau par monde, le prof replié partout, la note un
   assert.equal((page.match(/role="tab"/g) || []).length, 4, "quatre onglets (mondes 1 à 4)");
   assert.equal((page.match(/role="tabpanel"/g) || []).length, 4, "quatre panneaux");
   assert.equal((page.match(/<section class="note"/g) || []).length, 1, "une seule note « Pour imprimer »");
-  assert.equal((page.match(/<details class="prof">/g) || []).length, 7, "les sept cartes replient leurs corrigés");
+  // neuf cartes depuis les livrets « Le défi » de l'Enquête (23/09/2026) : 3 + 2 + 2 + 2
+  assert.equal((page.match(/<details class="prof">/g) || []).length, 9, "les neuf cartes replient leurs corrigés");
   assert.match(page, /sur A3 \(meilleur rendu\)/, "le conseil de Claire sur le A3");
   /* Sans JavaScript, aucun monde n'est caché. Le panneau porte l'attribut « hidden »,
      que le navigateur masque d'office : il FAUT donc les deux règles, dans cet ordre —
@@ -849,7 +850,7 @@ test("cartes des mondes : numéro, nom et fiches, dans l'ordre, toujours des ong
 test("corrigés pour tous, sur la page : plus de « prof » ni de « professeur » dans les boutons et les titres", () => {
   assert.doesNotMatch(page, /🧑‍🏫|\(prof\)|professeur/);
   assert.match(page, /<strong>✅ Les corrigés<\/strong>&nbsp;: le même livret, aux mêmes pages, avec les réponses/);
-  assert.match(catalogue, /"cardDescription": "Tous les livrets de l’univers SPLAT! à plier, monde par monde\u00a0: [^"]*Grande enquête \(mondes 3 et 4\), et leurs corrigés\."/);
+  assert.match(catalogue, /"cardDescription": "Tous les livrets de l’univers SPLAT! à plier, monde par monde\u00a0: [^"]*Grande enquête \(mondes 3 et 4\) en deux niveaux, et leurs corrigés\."/);
 });
 
 /* ===================================================================== lot D (21/09/2026)
