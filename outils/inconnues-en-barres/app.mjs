@@ -1,7 +1,7 @@
 // Inconnues en barres — affichage. Un seul moteur de dessin : drawSchema().
 // Règle d'or : sur un écran, TOUS les schémas partagent la même largeur de part (u),
 // calculée pour que la rangée la plus large tienne dans la largeur disponible.
-import * as M from "./moteur.mjs";
+import * as M from "./moteur.mjs?v=lot1c-20260923"; // même ?v= que index.html
 
 const $ = (id) => document.getElementById(id);
 const SVGNS = "http://www.w3.org/2000/svg";
@@ -13,7 +13,7 @@ const COLORS = {
 const TEXT = { A: "#8a3a0a", B: "#1c4f93", D: "#5c4a00", T: "#1c6337", V: "#1c6337", E: "#14283b" };
 
 const state = {
-  settings: { family: "fois", k: "2", variety: "guided", context: "fruits" },
+  settings: { family: "fois", k: "2", variety: "guided", context: "fruits", relation: "endroit" },
   sens: "AtoB", ecritures: "aucune",
   problem: null, steps: null, step: 0, t: 0, aides: new Set(), scale: 1,
 };
@@ -283,7 +283,7 @@ function renderScene(tps) {
 }
 
 function aidesNode(b) {
-  const box = h("div", "aides");
+  const box = h("div", "aides" + (b.cards.length === 4 ? " quatre" : ""));
   b.cards.forEach((c, i) => {
     const open = state.aides.has(i);
     const card = h("button", "aide" + (open ? " ouverte" : ""));
@@ -438,6 +438,8 @@ const VARIETY_HELP = {
 function syncMenu() {
   const s = state.settings, p = state.problem;
   $("famille").value = s.family; $("k").value = s.k; $("variete").value = s.variety; $("contexte").value = s.context;
+  $("relation").value = s.relation;
+  $("champRelation").hidden = s.family === "partielle";
   $("ecritures").value = state.ecritures; $("sens").value = state.sens;
   $("champK").hidden = s.family !== "fois";
   $("champSens").hidden = s.family !== "fois";
@@ -463,12 +465,15 @@ function init() {
   if (qs.get("k")) state.settings.k = qs.get("k");
   if (qs.get("variete")) state.settings.variety = qs.get("variete");
   if (qs.get("contexte")) state.settings.context = qs.get("contexte");
+  if (qs.get("relation") === "envers") state.settings.relation = "envers";
   if (qs.get("sens")) state.sens = qs.get("sens");
   if (qs.get("ecritures")) state.ecritures = qs.get("ecritures");
   const seed = qs.get("graine") ? Number(qs.get("graine")) : undefined;
 
   const onSetting = (key, id) => $(id).addEventListener("change", () => { state.settings[key] = $(id).value; newProblem(); });
   onSetting("family", "famille"); onSetting("k", "k"); onSetting("variety", "variete"); onSetting("context", "contexte");
+  // Retourner la relation garde le même problème (mêmes nombres) : seules les phrases changent.
+  $("relation").addEventListener("change", () => { state.settings.relation = $("relation").value; newProblem(state.problem.seed); });
   $("sens").addEventListener("change", () => { state.sens = $("sens").value; rebuildPlan(); go(Math.min(state.step, 2), 0); });
   $("ecritures").addEventListener("change", () => { state.ecritures = $("ecritures").value; render(); });
   $("btnRecommencer").addEventListener("click", () => { openMenu(false); go(0, 0); });

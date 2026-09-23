@@ -57,7 +57,7 @@ export const CONTEXTS = {
     label: "Fournitures et prix (€)", unit: "€", grandeur: "prix",
     un: "coûte", plur: "coûtent",
     fois: { A: "livre", B: "cahier", B_range: [2, 5, 1], A_range: [4, 20] },
-    ecart: { A: "cahier", B: "crayon", B_range: [1, 3, 1], d_range: [1, 3, 1] },
+    ecart: { A: "cahier", B: "crayon", B_range: [2, 4, 1], d_range: [1, 3, 1] }, // cahier de 3 à 7 €
     partielle: { A: "livre", B: "crayon", A_range: [6, 15, 1], B_range: [1, 3, 1] },
   },
   splat: {
@@ -97,13 +97,20 @@ const pick = (rng, arr) => arr[Math.floor(rng() * arr.length)];
 const rangeVals = ([a, b, s]) => { const out = []; for (let v = a; v <= b; v += s) out.push(v); return out; };
 
 // ---------------------------------------------------------------- génération
-// settings : { family, k: "2"|"3"|"4"|"mix", variety: "guided"|"simple"|"rich", context }
+// settings : { family, k: "2"|"3"|"4"|"mix", variety: "guided"|"simple"|"rich", context,
+//              relation: "endroit"|"envers" }
+// La relation « à l'envers » (« 3 fois moins », « 20 g de moins ») ne change que les phrases :
+// elle ne consomme aucun hasard, donc une graine donne les mêmes nombres dans les deux sens.
 export function generate(settings, seed) {
   const rng = makeRng(seed);
   for (let attempt = 0; attempt < 400; attempt++) {
     const p = tryGenerate(settings, rng);
     if (p && p.splat && p.total > CONTEXTS.splat.maxTotal) continue;
-    if (p && checkProblem(p).length === 0) { p.seed = seed; return p; }
+    if (p && checkProblem(p).length === 0) {
+      p.seed = seed;
+      p.envers = settings.relation === "envers" && p.family !== "partielle";
+      return p;
+    }
   }
   throw new Error("Aucun problème valide trouvé pour ces réglages");
 }
@@ -162,6 +169,9 @@ function tryGenerate(settings, rng) {
   const aValue = pick(rng, rangeVals(pair.A_range));
   const bValue = pick(rng, rangeVals(pair.B_range));
   if (aValue === bValue) return null;
+  // Autant d'objets dans la donnée partielle que dans la situation : elle y est contenue telle
+  // quelle, c'est un autre problème (famille « l'une contenue dans l'autre », lot 4).
+  if (r === a) return null;
   const known = r * aValue;
   const partA = a * aValue;
   const rest = b * bValue;
@@ -212,6 +222,8 @@ export function checkProblem(p) {
     if (p.partA + p.rest !== p.total) errs.push("situation fausse");
     if (p.total - p.partA !== p.rest) errs.push("retrait faux");
     if (p.rest !== p.n * p.bValue) errs.push("partage faux");
+    if (p.r === p.m) errs.push("donnée partielle contenue telle quelle dans la situation");
+    if (p.known === p.total) errs.push("deux plateaux au même total");
   }
   if (p.splat && p.total > CONTEXTS.splat.maxTotal) errs.push("total trop grand pour SPLAT!");
   const [lo, hi] = ctx.B_range;
@@ -234,8 +246,33 @@ const np = (o, c) => (c === 1 ? one(o) : c + " " + o.plur);
 const du = (o) => "d’" + one(o);
 const qu = (o) => "qu’" + one(o);
 
+// « 3 fois moins » / « 3 fois plus » selon la grandeur : « cher » pour un prix,
+// « de points » pour des points, rien pour une masse.
+function foisCompar(p, mot) {
+  const g = CONTEXTS[p.context].grandeur;
+  return p.k + " fois " + mot + (g === "prix" ? " cher" : g === "points" ? " de points" : "");
+}
 // Phrases de l'énoncé, reprises telles quelles par la vérification finale.
+// À l'envers, la relation part du petit objet : « Une orange pèse 3 fois moins qu'un ananas. »
 function relSentence(p) {
+  return p.envers ? relSentenceEnvers(p) : relSentenceEndroit(p);
+}
+function relSentenceEnvers(p) {
+  const ctx = CONTEXTS[p.context];
+  if (p.splat) {
+    if (p.family === "fois") return "Sous " + one(p.B) + ", il y a " + p.k + " fois moins de jetons que sous " + one(p.A) + ".";
+    return "Sous " + one(p.B) + ", il y a " + jetons(p.d) + " de moins que sous " + one(p.A) + ".";
+  }
+  if (p.family === "fois") return cap(one(p.B)) + " " + ctx.un + " " + foisCompar(p, "moins") + " " + qu(p.A) + ".";
+  return cap(one(p.B)) + " " + ctx.un + " " + q(p, p.d) + " de moins " + qu(p.A) + ".";
+}
+// La phrase retournée, dite depuis le grand objet (étape Comprendre, relation à l'envers).
+export function reformulation(p) {
+  const ctx = CONTEXTS[p.context];
+  if (p.family === "fois" && !p.splat) return cap(one(p.A)) + " " + ctx.un + " " + foisCompar(p, "plus") + " " + qu(p.B) + ".";
+  return relSentenceEndroit(p);
+}
+function relSentenceEndroit(p) {
   const ctx = CONTEXTS[p.context];
   if (p.splat) {
     if (p.family === "fois") return "Sous " + one(p.A) + ", il y a " + p.k + " fois plus de jetons que sous " + one(p.B) + ".";
@@ -269,15 +306,22 @@ export function statementParts(p) {
   }
   const ctx = CONTEXTS[p.context];
   const Q = questionText(p);
-  if (p.family === "fois") return [
-    { t: cap(one(p.A)), c: "A" }, { t: " " + ctx.un + " autant que " }, { t: np(p.B, p.k), c: "rel" }, { t: ". " },
+  const sit = [
     { t: cap(np(p.A, p.m)), c: "A" }, { t: " et " }, { t: np(p.B, p.n), c: "B" }, { t: " " + ctx.plur + " " },
     { t: q(p, p.total), c: "T" }, { t: ". " }, { t: Q, c: "Q" },
   ];
+  if (p.envers) return [
+    { t: cap(one(p.B)), c: "B" }, { t: " " + ctx.un + " " },
+    { t: p.family === "fois" ? foisCompar(p, "moins") : q(p, p.d) + " de moins", c: "rel" }, { t: " " + qu(p.A) + ". " },
+    ...sit,
+  ];
+  if (p.family === "fois") return [
+    { t: cap(one(p.A)), c: "A" }, { t: " " + ctx.un + " autant que " }, { t: np(p.B, p.k), c: "rel" }, { t: ". " },
+    ...sit,
+  ];
   if (p.family === "ecart") return [
     { t: cap(one(p.A)), c: "A" }, { t: " " + ctx.un + " " }, { t: q(p, p.d) + " de plus", c: "rel" }, { t: " " + qu(p.B) + ". " },
-    { t: cap(np(p.A, p.m)), c: "A" }, { t: " et " }, { t: np(p.B, p.n), c: "B" }, { t: " " + ctx.plur + " " },
-    { t: q(p, p.total), c: "T" }, { t: ". " }, { t: Q, c: "Q" },
+    ...sit,
   ];
   return [
     { t: cap(np(p.A, p.m)), c: "A" }, { t: " et " }, { t: np(p.B, p.n), c: "B" }, { t: " " + ctx.plur + " " },
@@ -288,12 +332,25 @@ export function statementParts(p) {
 }
 export const statementText = (p) => statementParts(p).map((x) => x.t).join("");
 
+// Les deux objets, dans l'ordre où on les trouve : le petit puis le grand (« fois », « écart »),
+// le grand puis le petit (donnée partielle).
+export function foundOrder(p) { return p.family === "partielle" ? [p.A, p.B] : [p.B, p.A]; }
 export function questionText(p) {
   const g = CONTEXTS[p.context].grandeur;
+  const [X, Y] = foundOrder(p);
   if (p.splat) return "Combien de jetons y a-t-il sous chaque tache ?";
-  if (g === "masse") return "Quelle est la masse " + du(p.B) + " ?";
-  if (g === "prix") return "Quel est le prix " + du(p.B) + " ?";
-  return "Combien de points vaut " + one(p.B) + " ?";
+  if (g === "masse") return "Quelle est la masse " + du(X) + " ? Et celle " + du(Y) + " ?";
+  if (g === "prix") return "Quel est le prix " + du(X) + " ? Et celui " + du(Y) + " ?";
+  return "Combien de points vaut " + one(X) + " ? Et " + one(Y) + " ?";
+}
+// L'aide « Que cherche-t-on ? » dit la même chose que la question, avec les dessins.
+export function soughtText(p) {
+  const g = CONTEXTS[p.context].grandeur;
+  const [X, Y] = foundOrder(p);
+  // espace insécable avant chaque dessin : il ne part jamais seul à la ligne
+  if (p.splat) return "Le nombre de jetons sous " + one(X) + "\u00a0" + X.emoji + " et sous " + one(Y) + "\u00a0" + Y.emoji;
+  const autre = g === "prix" ? "celui " : "celle ";
+  return cap(grandeurDe(p, X)) + "\u00a0" + X.emoji + " et " + autre + du(Y) + "\u00a0" + Y.emoji;
 }
 function grandeurDe(p, o) {
   const g = CONTEXTS[p.context].grandeur;
@@ -326,6 +383,14 @@ const sum = (arr) => arr.filter(Boolean).join(" + ");
 
 // Ligne d'égalité : [gauche, droite] (alignées sur « = » par l'affichage).
 const eq = (l, r) => [l, r];
+// Calcul de vérification d'une situation : « 2 × 450 g + 150 g = 900 g + 150 g = 1 050 g ».
+// Quand il n'y a rien à multiplier, l'étape du milieu répéterait la première : on la saute.
+function sitCheck(p, m, aValue, n, bValue, total) {
+  const term = (c, v) => (c === 1 ? q(p, v) : c + " × " + q(p, v));
+  const left = term(m, aValue) + " + " + term(n, bValue);
+  const mid = q(p, m * aValue) + " + " + q(p, n * bValue);
+  return (mid === left ? left : left + " = " + mid) + " = " + q(p, total);
+}
 
 // ---------------------------------------------------------------- déroulé
 // plan(p, opts) -> étapes ; chaque étape = liste de « temps » ; chaque temps décrit
@@ -340,16 +405,17 @@ export function plan(p, opts = {}) {
 function aides(p, answers) {
   return { type: "aides", cards: answers.map(([qq, a]) => ({ q: qq, a })) };
 }
+// À l'envers, une carte de plus, juste après « Que cherche-t-on ? » : on retourne la phrase.
+export const CARTE_RETOURNER = "Comment retourner la phrase ?";
 function comprendre(p, cards) {
-  return [0, 1, 2, 3].map((open) => ({ instruction: "", rows: [[{ ...aides(p, cards), open }]] }));
+  if (p.envers) cards = [cards[0], [CARTE_RETOURNER, reformulation(p)], ...cards.slice(1)];
+  return Array.from({ length: cards.length + 1 }, (_, open) => ({ instruction: "", rows: [[{ ...aides(p, cards), open }]] }));
 }
 function block(s, extra = {}) { return { type: "schema", schema: s, ...extra }; }
 
 function answerStep(p, verifRows, checks) {
-  const cards = { type: "answer", lines: [
-    { emoji: p.B.emoji, text: answerSentence(p, p.B, p.bValue) },
-    { emoji: p.A.emoji, text: answerSentence(p, p.A, p.aValue) },
-  ] };
+  const val = (o) => (o === p.A ? p.aValue : p.bValue);
+  const cards = { type: "answer", lines: foundOrder(p).map((o) => ({ emoji: o.emoji, text: answerSentence(p, o, val(o)) })) };
   return [
     { instruction: "", rows: [[cards]] },
     { instruction: "On vérifie : on remet les valeurs trouvées dans l’énoncé.", rows: [[cards], ...verifRows, [{ type: "checks", lines: checks }]] },
@@ -379,7 +445,7 @@ function planFois(p, sens) {
 
   const steps = [];
   steps.push(comprendre(p, [
-    ["Que cherche-t-on ?", cap(grandeurDe(p, p.B)) + " " + B],
+    ["Que cherche-t-on ?", soughtText(p)],
     ["Que sait-on déjà ?", cap(one(p.A)) + " " + A + " peut être " + (p.A.det === "une" ? "remplacée" : "remplacé") + " par " + np(p.B, k) + " " + B + "."],
     ["Quelle idée utiliser ?", sens === "AtoB" ? "Remplacer, puis partager la quantité totale." : "Regrouper les " + p.B.plur + " par " + k + " pour les remplacer, puis partager la quantité totale."],
   ]));
@@ -438,8 +504,9 @@ function planFois(p, sens) {
   const sitV = schema("Situation", 2, parts, [top(0, parts, q(p, total)), ...Array.from({ length: m }, (_, j) => bot(cellA(p, j * k, k, { text: q(p, aValue) }))), ...Array.from({ length: n }, (_, i) => bot(cellB(p, m * k + i, { text: q(p, bValue) })))]);
   const ctx = CONTEXTS[p.context];
   steps.push(answerStep(p, [[block(relV), { type: "and" }, block(sitV)]], [
-    { s: relSentence(p), c: k + " × " + q(p, bValue) + " = " + q(p, aValue) },
-    { s: sitSentence(p), c: (m === 1 ? q(p, aValue) : m + " × " + q(p, aValue)) + " + " + (n === 1 ? q(p, bValue) : n + " × " + q(p, bValue)) + " = " + q(p, m * aValue) + " + " + q(p, n * bValue) + " = " + q(p, total) },
+    // à l'envers, la vérification relit la phrase d'origine avec SON calcul
+    { s: relSentence(p), c: p.envers ? q(p, aValue) + " ÷ " + k + " = " + q(p, bValue) : k + " × " + q(p, bValue) + " = " + q(p, aValue) },
+    { s: sitSentence(p), c: sitCheck(p, m, aValue, n, bValue, total) },
   ]));
   return steps;
 }
@@ -463,7 +530,7 @@ function planEcart(p) {
   const dataRow = (rel, sit) => [block(rel, { pic: relPic, let: relLet }), { type: "and" }, block(sit, { pic: sitPic, let: sitLet })];
   const steps = [];
   steps.push(comprendre(p, [
-    ["Que cherche-t-on ?", cap(grandeurDe(p, p.B)) + " " + B],
+    ["Que cherche-t-on ?", soughtText(p)],
     ["Que sait-on déjà ?", cap(one(p.A)) + " " + A + " peut être " + (p.A.det === "une" ? "remplacée" : "remplacé") + " par " + one(p.B) + " " + B + " et " + qPhrase(p, d) + "."],
     ["Quelle idée utiliser ?", "Remplacer, retirer " + (m === 1 ? "l’écart" : "les écarts") + ", puis partager."],
   ]));
@@ -510,8 +577,8 @@ function planEcart(p) {
   ]);
   const sitV = schema("Situation", 2, sitCols, sitCells(false, true));
   steps.push(answerStep(p, [[block(relVal), { type: "and" }, block(sitV)]], [
-    { s: relSentence(p), c: q(p, bValue) + " + " + q(p, d) + " = " + q(p, aValue) },
-    { s: sitSentence(p), c: (m === 1 ? q(p, aValue) : m + " × " + q(p, aValue)) + " + " + (n === 1 ? q(p, bValue) : n + " × " + q(p, bValue)) + " = " + q(p, m * aValue) + " + " + q(p, n * bValue) + " = " + q(p, total) },
+    { s: relSentence(p), c: p.envers ? q(p, aValue) + " − " + q(p, d) + " = " + q(p, bValue) : q(p, bValue) + " + " + q(p, d) + " = " + q(p, aValue) },
+    { s: sitSentence(p), c: sitCheck(p, m, aValue, n, bValue, total) },
   ]));
   return steps;
 }
@@ -533,9 +600,9 @@ function planPartielle(p) {
   const dataRow = () => [block(knownS, { pic: knownPic, let: knownLet }), { type: "and" }, block(situation, { pic: sitPic, let: sitLet })];
   const steps = [];
   steps.push(comprendre(p, [
-    ["Que cherche-t-on ?", cap(grandeurDe(p, p.B)) + " " + B],
+    ["Que cherche-t-on ?", soughtText(p)],
     ["Quelle donnée aide d’abord ?", knownSentence(p)],
-    ["Quelle idée utiliser ?", "Trouver " + grandeurDe(p, p.A) + ", " + (p.splat ? "le" : "la") + " remplacer dans la situation, retirer, puis partager."],
+    ["Quelle idée utiliser ?", "Trouver " + grandeurDe(p, p.A) + ", " + (p.splat || CONTEXTS[p.context].grandeur === "prix" ? "le" : "la") + " remplacer dans la situation, retirer, puis partager."],
   ]));
   steps.push([
     { instruction: "Complète les schémas : que met-on dans chaque case ?", rows: [[block(emptied(knownS, "Donnée partielle")), { type: "and" }, block(emptied(situation, "Situation complète"))]] },
@@ -566,7 +633,7 @@ function planPartielle(p) {
   const sitV = schema("Situation complète", 2, parts, sitCells({ aVal: true, bVal: true }));
   steps.push(answerStep(p, [[block(knownV), { type: "and" }, block(sitV)]], [
     { s: knownSentence(p), c: r + " × " + q(p, aValue) + " = " + q(p, known) },
-    { s: sitSentence(p), c: m + " × " + q(p, aValue) + " + " + n + " × " + q(p, bValue) + " = " + q(p, partA) + " + " + q(p, rest) + " = " + q(p, total) },
+    { s: sitSentence(p), c: sitCheck(p, m, aValue, n, bValue, total) },
   ]));
   return steps;
 }
