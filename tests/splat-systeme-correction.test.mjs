@@ -34,13 +34,13 @@ function constante(nom){
 
 const PALETTE = html.slice(html.indexOf("const INVESTIGATE_COLOR_PALETTE = ["), html.indexOf("];", html.indexOf("const INVESTIGATE_COLOR_PALETTE = [")) + 2);
 const CONSTANTES = ["SYS_GESTES", "SYS_GESTES_MIX_DEFAUT", "SYS_MAX_TACHES", "SYS_ESSAIS", "SYS_NOMBRES_SOUS_ENTENDUS", "SYS_COULEURS_PLURIEL", "SYS_PLAGES",
-  "SYS_ZONE_ECRAN", "SYS_ZONE_IMPRIME", "SYS_ZONE_IMPRIME_6", "SYS_TACHE", "SYS_CORR", "SYS_ZONE_ECRAN_CORRECTION", "SYS_ZONE_IMPRIME_CORRECTION",
+  "SYS_ZONE_ECRAN", "SYS_ZONE_IMPRIME", "SYS_ZONE_IMPRIME_6", "SYS_TACHE", "SYS_CORR", "SYS_CORR_LOUPE_MAX", "SYS_ZONE_ECRAN_CORRECTION", "SYS_ZONE_IMPRIME_CORRECTION",
   "SYS_FIL", "SYS_UNIQUE_ECRAN", "SYS_UNIQUE_IMPRIME", "ENQUETE_DEPASSE_TRAIT", "ENQUETE_DEPASSE_FOND", "ENQUETE_ECRITURE_FOND", "ENQUETE_ECRITURE_ENCRE"].map(constante).join("\n");
 const GENERATEUR = ["sysNormaliserReglages", "genSystemCarte", "sysFormes", "sysSomme", "sysNombreTaches", "sysPlateau",
   "sysTirerSituation", "sysSituationValide", "sysNombreSousEntendu", "sysTexteASousEntendu", "sysSituationSure",
   "sysAssemblerCarte", "sysUneTacheParCouleur", "sysIndice", "sysPhraseIndice", "sysPlan"].map(fn).join("\n");
 const DESSIN = ["sysEnPlateaux", "sysTotalCache", "sysRayonJeton", "sysGrille", "sysColonnesVisibles", "sysRayonMax", "sysDispositionPlateaux",
-  "sysAPlan", "sysCorrPoids", "sysCorrLongueur", "sysCorrUnite", "sysCorrHauteurCadre", "sysCorrMesures", "sysCorrEtiquette",
+  "sysAPlan", "sysCorrPoids", "sysCorrLongueur", "sysCorrUnite", "sysCorrMetriques", "sysCorrHauteurCadre", "sysCorrMesures", "sysCorrEtiquette",
   "sysCorrLargeurCalcul", "sysCorrAjuster", "drawSysCase", "drawSysBarre", "drawSysCadre", "drawSysCorrectionImprimee", "blobPath"].map(fn).join("\n");
 
 const sys = new Function(`
@@ -66,7 +66,7 @@ const sys = new Function(`
   const mkEl = (name, attrs = {}) => ({ name, attrs, children: [], appendChild(c){ this.children.push(c); return c; } });
   const mkText = (x, y, t, attrs = {}) => ({ name: "text", attrs: { x, y, ...attrs }, text: String(t), children: [], appendChild(){} });
   return {
-    C: SYS_CORR, ZE: SYS_ZONE_ECRAN_CORRECTION, ZI: SYS_ZONE_IMPRIME_CORRECTION, UE: SYS_UNIQUE_ECRAN, UI: SYS_UNIQUE_IMPRIME, FIL: SYS_FIL,
+    C: SYS_CORR, LOUPE: SYS_CORR_LOUPE_MAX, metriques: sysCorrMetriques, ZE: SYS_ZONE_ECRAN_CORRECTION, ZI: SYS_ZONE_IMPRIME_CORRECTION, UE: SYS_UNIQUE_ECRAN, UI: SYS_UNIQUE_IMPRIME, FIL: SYS_FIL,
     GESTES: SYS_GESTES, mesures: sysCorrMesures, hauteur: sysCorrHauteurCadre, disposition: sysDispositionPlateaux, enPlateaux: sysEnPlateaux,
     aPlan: sysAPlan, poids: sysCorrPoids, longueur: sysCorrLongueur,
     cadre(card, etape, lettres, isPrint){
@@ -170,7 +170,7 @@ test("les barres : largeur d'une case la même pour toute la carte, barres dans 
   const c = CARTES.find((x) => x._sys.geste === "PARTIELLE" && x.visible.length === 3);
   const indice = c._sys.plan.find((e) => e.role === "indice");
   const reste = indice.barres[0].cells.find((x) => x.kind === "rest");
-  assert.equal(sys.poids(reste), reste.covers.length - 3 + 3 * sys.C.visible);
+  assert.ok(Math.abs(sys.poids(reste) - (reste.covers.length - 3 + 3 * sys.C.visible)) < 1e-9);
   const { g } = sys.cadre(c, indice, false, true);
   const pointilles = elements(g, "rect").filter((r) => r.attrs["stroke-dasharray"]);
   assert.equal(pointilles.length, 1);
@@ -206,7 +206,7 @@ test("dans chaque case : une mini-tache et le mot de la couleur (ou son initiale
   assert.equal(elements(sys.cadre(c, etape, false, true).g, "path").length, nbCases);
 });
 
-test("écran : chaque cadre tient sous les plateaux (y = 1000 − h − 20), les plateaux sur une rangée, à la même taille, TOTAL jamais collé", () => {
+test("écran : chaque cadre tient sous les plateaux (posé juste dessous, 24/09), les plateaux sur une rangée, à la même taille, TOTAL jamais collé", () => {
   let marge = Infinity;
   for(const c of CARTES){
     const m = sys.mesures(c);
@@ -219,9 +219,11 @@ test("écran : chaque cadre tient sous les plateaux (y = 1000 − h − 20), les
       assert.ok(P.y - (P.totalY + 210 * sys.ZE.echelleTotal) >= 14, "TOTAL collé au plateau");
       P.taches.forEach((s) => assert.equal(s.r, d.r));
     });
-    m.hauteurs.forEach((h) => { marge = Math.min(marge, 1000 - h - 20 - bande); });
+    // le cadre se pose à bande + 40 : même le plus haut de la carte finit dans la scène
+    // (le filet « jamais sous la scène » ne sert donc jamais en Plateaux : le cadre ne bouge pas)
+    m.hauteurs.forEach((h) => { marge = Math.min(marge, 1000 - 20 - (bande + 40) - h); });
   }
-  assert.ok(marge >= 60, `un cadre touche les plateaux (marge ${marge})`);
+  assert.ok(marge >= 0, `un cadre sort de la scène (marge ${marge})`);
   // Phrases / Symboles : le plateau unique réduit tient au-dessus du plus haut cadre
   const hMax = Math.max(...CARTES.flatMap((c) => sys.mesures(c).hauteurs));
   assert.ok(sys.UE.y + sys.UE.hauteur * sys.UE.k <= 1000 - hMax - 20 - 10);
@@ -283,8 +285,51 @@ test("écran : le fil des étapes passées à droite, le cadre courant en bas ; 
   assert.match(src, /drawSysPlateaux\(svg, card, SYS_ZONE_ECRAN_CORRECTION, \{ devoile: dernier, nomMin: SYS_ZONE_ECRAN_CORRECTION\.nomMin \}\);/);
   assert.match(src, /const dernier = k >= plan\.length;/);
   assert.match(src, /for\(let i = 0; i < k - 1; i\+\+\)\{\n    wrapTextToWidth\(`\$\{i \+ 1\}\. \$\{plan\[i\]\.titre\}`/);
-  assert.match(src, /drawSysCadre\(svg, card, plan\[k - 1\], 1000 - h - 20, mesures, ctx, k\);/);
+  // 24/09 : le cadre juste sous les plateaux (et sous le fil au dernier clic), haut fixe pour
+  // toute la carte, agrandi par la loupe autant que le plus haut cadre le permet
+  assert.match(src, /const yCadre = Math\.round\(Math\.min\(Math\.max\(basHaut, filBas - SYS_FIL\.pas\) \+ SYS_CORR_ECRAN_ECART, 1000 - 20 - Math\.max\(\.\.\.mesures\.hauteurs\)\)\);/);
+  assert.match(src, /for\(let i = 0; i < plan\.length - 1; i\+\+\) filBas \+=/, "le fil compté jusqu'au dernier clic, pas jusqu'au clic courant");
+  assert.match(src, /if\(yCadre \+ Math\.max\(\.\.\.m\.hauteurs\) <= 1000 - 20\)\{ mesures = m; break; \}/);
+  assert.match(src, /drawSysCadre\(svg, card, plan\[k - 1\], yCadre, mesures, Object\.assign\(\{\}, ctx, \{ C: mesures\.C \}\), k\);/);
+  assert.doesNotMatch(src, /1000 - h - 20/, "le cadre n'est plus posé en bas de la scène");
+  assert.match(html, /\nconst SYS_CORR_ECRAN_ECART = 40;\n/, "40 sous les plateaux : c'est ce que mesure le test de la marge");
   assert.match(src, /renderCard\(sysCarteSansIndices\(card\), dernier \? 2 : 0, \{ sansCorrection:true \}\);/);
   // la lettre (𝑥) ou « ? » : le bouton de la page, comme les autres modes
   assert.match(src, /lettres:!numberedQuestionMarkMode/);
+});
+
+test("la loupe (24/09) : à l'impression, les cadres grandissent autant que la place le permet (au plus ×1,35) ; les largeurs ne bougent pas ; sans loupe, rien ne change", () => {
+  assert.equal(sys.LOUPE, 1.35);
+  assert.equal(sys.metriques(1), sys.C, "facteur 1 : les mesures de S3, telles quelles (l'écran sans loupe)");
+  const M = sys.metriques(1.3);
+  for(const k of ["hHaut", "hCase", "ecartBarres", "titre", "bas", "fsTitre", "fsCalcul", "pasCalcul"]) assert.equal(M[k], Math.round(sys.C[k] * 1.3), k);
+  for(const k of ["x", "w", "barX", "barres", "caseMax", "visible", "ecartCalcul", "ecartCadres", "basImprime", "reponsesX"]) assert.equal(M[k], sys.C[k], `${k} ne change pas`);
+  const loupes = [];
+  for(const c of CARTES){
+    const d = sys.disposition(c, sys.ZI);
+    const haut = Math.max(...d.plateaux.map((P) => P.y + P.h)) + sys.C.ecartEnonce;
+    const { g, bas } = sys.imprimee(c, haut, false);
+    const e = Number(g.attrs["data-loupe"]);
+    assert.ok(e >= 1 && e <= 1.35, `loupe ${e}`);
+    loupes.push(e);
+    assert.ok(bas <= 2130, `dernier cadre à ${bas}`);
+    // le plus grand facteur : un centième de plus, la pile ne tiendrait plus
+    if(e < 1.35){
+      const m = sys.mesures(c, sys.metriques(Math.round(e * 100 + 1) / 100));
+      const pile = m.hauteurs.reduce((s, h) => s + h, 0) + (c._sys.plan.length - 1) * sys.C.ecartCadres;
+      assert.ok(haut + pile > 2130, `la loupe aurait pu aller au-delà de ${e}`);
+    }
+    // les calculs à la loupe (jamais plus grands que 30 × e), la largeur d'une case inchangée
+    const fsCalculs = textes(g).filter((x) => x.attrs["font-style"] === "italic").map((x) => Number(x.attrs["font-size"]));
+    assert.ok(fsCalculs.every((f) => f <= Math.round(30 * e)));
+    assert.equal(sys.mesures(c, sys.metriques(e)).u, sys.mesures(c).u);
+  }
+  loupes.sort((a, b) => a - b);
+  const mediane = loupes[loupes.length >> 1];
+  assert.ok(mediane >= 1.25, `loupe médiane ${mediane}`);
+  // sans loupe (l'écran avant le 24/09, et les tests du lot S3) : polices et hauteurs de S3
+  const c = CARTES[0];
+  const { g, h } = sys.cadre(c, c._sys.plan[0], false, false);
+  assert.equal(h, sys.hauteur(c._sys.plan[0]));
+  textes(g).filter((x) => x.attrs["font-style"] === "italic").forEach((x) => assert.ok(Number(x.attrs["font-size"]) <= 30));
 });

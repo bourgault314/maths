@@ -286,6 +286,7 @@ test("chaque geste a la forme décidée (S0 §2.1 et décision du 23/09 sur « d
       assert.equal(c.length, 2);
       assert.deepEqual(I.counts, { [c[0]]: P.counts[c[0]] }, "l'indice : les mêmes taches, même nombre, une seule couleur");
       assert.ok(P.counts[c[0]] <= 3 && P.counts[c[1]] <= 3);
+      assert.ok(P.counts[c[0]] >= 2, "au moins 2 taches dans l'indice (24/09) : il faut partager");
     }
     if(geste === "COEF"){
       assert.equal(I.counts[c[0]], P.counts[c[0]], "la première couleur ne change pas");
@@ -313,7 +314,7 @@ test("chaque geste a la forme décidée (S0 §2.1 et décision du 23/09 sur « d
   }
   // toutes les formes permises sortent
   const formes = (g) => Object.keys(vues).filter((k) => k.startsWith(g + " ")).length;
-  assert.equal(formes("PARTIELLE"), 9);
+  assert.equal(formes("PARTIELLE"), 6);
   assert.equal(formes("COEF"), 9);
   assert.equal(formes("DOUBLE"), 2);
   assert.equal(formes("MIROIR"), 4);
