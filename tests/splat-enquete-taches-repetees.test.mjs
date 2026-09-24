@@ -97,8 +97,9 @@ const EMPREINTE_MAIN = "de67ae272824270f";
 test("case « Taches répétées » décochée : exactement les mêmes cartes et le même hasard qu'avant le lot", () => {
   const sansCase = JEUX.map(([r, g, n]) => tirer(r, g, n));
   const decochee = JEUX.map(([r, g, n]) => tirer({ ...r, repeat:1 }, g, n));
-  // cochée avec « Sans total » : la case sans total l'emporte, taches répétées ignorées
-  const avecSansTotal = tirer({ noTotal:true, repeat:3 }, 77, 50);
+  // « Sans total » cochée, « Taches répétées » décochée : les cartes sans total d'avant
+  // (les deux cochées = le mélange du lot E-melange, tests/splat-enquete-melange.test.mjs)
+  const avecSansTotal = tirer({ noTotal:true, repeat:1 }, 77, 50);
   assert.equal(empreinte(sansCase), EMPREINTE_MAIN, "page sans la case (ancienne adresse) : cartes de main");
   assert.equal(empreinte(decochee), EMPREINTE_MAIN, "case décochée : cartes de main");
   assert.deepEqual(sansCase.map(x => x.appels), [6220, 14370, 7896, 3345, 13675], "même nombre de tirages au hasard");
@@ -250,15 +251,16 @@ test("adresse : repeat=2 ou 3 lu pour l'Enquête, écrit seulement case cochée,
   const applique = fn("appliquerConfiguration");
   assert.match(applique, /const repetition = lireRepetitionAdresse\(params\.get\("repeat"\)\);\s*invRepeatOnEl\.checked = repetition > 1;/);
   // les adresses de l'Enquête publiées (fiches 10 à 19) ne changent pas : rien n'est écrit case décochée
-  assert.match(fn("buildShareUrl"), /invRepeatOnEl && invRepeatOnEl\.checked && !\(invNoTotalEl && invNoTotalEl\.checked\)\) params\.set\("repeat"/);
+  assert.match(fn("buildShareUrl"), /if\(\(act === "C" \|\| act === "CD"\) && invRepeatOnEl && invRepeatOnEl\.checked\) params\.set\("repeat"/);
   assert.doesNotMatch(fn("getClassicShareControls"), /repeat|invRepeat/);
   assert.match(html, /<input type="checkbox" id="invRepeatOn"> <span>Taches répétées<\/span>/);
   assert.doesNotMatch(html, /id="invRepeatOn" checked/, "éteinte par défaut");
   assert.match(html, /<input id="invRepeat" type="number" min="2" max="3" value="3" \/>/, "jusqu'à 3 fois d'office (choix du 23/09)");
-  // « Sans total » et « Taches répétées » ne vont pas ensemble
+  // « Sans total » et « Taches répétées » cochées ensemble : les cartes se mélangent (lot
+  // E-melange, 24/09/2026) — aucune des deux ne grise plus l'autre
   const sync = fn("syncSettingsUI");
-  assert.match(sync, /if\(invRepeatOnEl\) invRepeatOnEl\.disabled = sansTotal;/);
-  assert.match(sync, /if\(invNoTotalEl\) invNoTotalEl\.disabled = repetees && !sansTotal;/);
+  assert.doesNotMatch(sync, /invRepeatOnEl\.disabled|invNoTotalEl\.disabled/);
+  assert.match(sync, /if\(invRepeatRowEl\) invRepeatRowEl\.style\.display = repetees \? "flex" : "none";/);
 });
 
 // --- la correction ----------------------------------------------------------------------------

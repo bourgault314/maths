@@ -1236,8 +1236,8 @@
         <label class="checkInline" title="Soustraction (Ex: 5 de moins)"><input type="checkbox" id="invOpSub" checked> <span>−k</span></label>
       </div>
       <div class="c-ops" id="invNoTotalRow">
-        <label class="checkInline large" title="Pas de total : deux indices sur les deux mêmes taches, un « fois plus / fois moins » et un « de plus / de moins ». Toujours 2 taches, sans jetons visibles."><input type="checkbox" id="invNoTotal"> <span>Sans total</span></label>
-        <label class="checkInline large" title="Une même couleur peut être plusieurs fois sur le plateau (au moins une l'est, 6 taches au plus) ; les indices parlent d'« une tache rouge »."><input type="checkbox" id="invRepeatOn"> <span>Taches répétées</span></label>
+        <label class="checkInline large" title="Pas de total : deux indices sur les deux mêmes taches, un « fois plus / fois moins » et un « de plus / de moins ». Toujours 2 taches, sans jetons visibles. Cochée avec « Taches répétées » : les deux sortes de cartes se mélangent."><input type="checkbox" id="invNoTotal"> <span>Sans total</span></label>
+        <label class="checkInline large" title="Une même couleur peut être plusieurs fois sur le plateau (au moins une l'est, 6 taches au plus) ; les indices parlent d'« une tache rouge ». Cochée avec « Sans total » : les deux sortes de cartes se mélangent."><input type="checkbox" id="invRepeatOn"> <span>Taches répétées</span></label>
       </div>
       <div class="row" id="invRepeatRow" style="align-items:flex-end; display:none">
         <div style="flex:1.25 1 0">
@@ -2271,8 +2271,9 @@ function buildShareUrl(){
   if((act === "C" || act === "CD" || act === "D") && Array.isArray(investigatePaletteKeys) && investigatePaletteKeys.length) params.set("palette", investigatePaletteKeys.join(","));
   /* écrite seulement quand elle est cochée : les adresses de l'Enquête ne changent pas */
   if((act === "C" || act === "CD") && invNoTotalEl && invNoTotalEl.checked) params.set("noTotal", "1");
-  /* écrite seulement quand la case est cochée : les adresses de l'Enquête ne changent pas */
-  if((act === "C" || act === "CD") && invRepeatOnEl && invRepeatOnEl.checked && !(invNoTotalEl && invNoTotalEl.checked)) params.set("repeat", String(Math.max(2, lireRepetitionAdresse(invRepeatEl && invRepeatEl.value))));
+  /* écrite seulement quand la case est cochée : les adresses de l'Enquête ne changent pas ;
+     avec « noTotal=1 », les deux sortes de cartes se mélangent (lot E-melange) */
+  if((act === "C" || act === "CD") && invRepeatOnEl && invRepeatOnEl.checked) params.set("repeat", String(Math.max(2, lireRepetitionAdresse(invRepeatEl && invRepeatEl.value))));
 
   url.search = params.toString();
   return url.toString();
@@ -2640,15 +2641,14 @@ function syncSettingsUI(){
   if(isInvestigate){
     if(invTaskCountEl.value === "3"){ invStructureRow.style.display = "flex"; } else { invStructureRow.style.display = "none"; }
     /* Sans total : toujours 2 taches et aucun jeton visible — ces réglages sont grisés
-       (ils gardent leur valeur, qui revient dès qu'on décoche). */
+       (ils gardent leur valeur, qui revient dès qu'on décoche). Avec « Taches répétées »
+       aussi, les deux sortes de cartes se mélangent (lot E-melange, 24/09/2026) : ces
+       réglages servent alors aux cartes répétées, ils restent actifs. */
     const sansTotal = !!(invNoTotalEl && invNoTotalEl.checked);
-    [invTaskCountEl, invStructure3El, invVisibleMinEl, invVisibleMaxEl].forEach(c => { if(c) c.disabled = sansTotal; });
-    /* « Taches répétées » (lot E-repet) et « Sans total » ne vont pas ensemble : l'une cochée,
-       l'autre est grisée ; le nombre de fois ne se montre que case cochée. */
     const repetees = !!(invRepeatOnEl && invRepeatOnEl.checked);
-    if(invRepeatOnEl) invRepeatOnEl.disabled = sansTotal;
-    if(invNoTotalEl) invNoTotalEl.disabled = repetees && !sansTotal;
-    if(invRepeatRowEl) invRepeatRowEl.style.display = (repetees && !sansTotal) ? "flex" : "none";
+    [invTaskCountEl, invStructure3El, invVisibleMinEl, invVisibleMaxEl].forEach(c => { if(c) c.disabled = sansTotal && !repetees; });
+    /* le nombre de fois ne se montre que case « Taches répétées » cochée */
+    if(invRepeatRowEl) invRepeatRowEl.style.display = repetees ? "flex" : "none";
   }
 
   if(isNumbered) syncNumberedEquationUI();
@@ -3255,10 +3255,16 @@ function genInvestigate(rng){
      un rapport et un écart (rouge = 3 × bleue ET rouge = bleue + 24), pas de total, deux
      taches, aucun jeton visible. Case décochée (le défaut), rien ne change : même lecture
      des réglages, même hasard consommé, mêmes cartes. */
-  const sansTotal = typeof invNoTotalEl !== "undefined" && !!(invNoTotalEl && invNoTotalEl.checked);
+  const sansTotalCoche = typeof invNoTotalEl !== "undefined" && !!(invNoTotalEl && invNoTotalEl.checked);
+  const repeteesCoche = typeof invRepeatOnEl !== "undefined" && !!(invRepeatOnEl && invRepeatOnEl.checked);
+  /* Les deux cases cochées (lot E-melange, 24/09/2026, fiche 24) : chaque carte tire d'abord
+     sa sorte, une carte « sans total » (2 taches, aucun jeton visible) ou une carte à taches
+     répétées — jamais les deux (sans total, le nombre de taches ne compte plus). Une seule
+     case cochée, ou aucune : AUCUN tirage de plus, mêmes cartes qu'avant. */
+  const sansTotal = (sansTotalCoche && repeteesCoche) ? (rng() < 0.5) : sansTotalCoche;
   /* « Taches répétées max » (lot E-repet, 23/09/2026) : 1 (le défaut) = une tache par
-     couleur, rien ne change — même hasard consommé, mêmes cartes. Sans total : ignoré. */
-  const repeatMax = (sansTotal || typeof invRepeatOnEl === "undefined" || !invRepeatOnEl || !invRepeatOnEl.checked) ? 1
+     couleur, rien ne change — même hasard consommé, mêmes cartes. Carte sans total : ignoré. */
+  const repeatMax = (sansTotal || !repeteesCoche) ? 1
     : clamp(Math.round(numberOr(invRepeatEl && invRepeatEl.value, INVESTIGATE_REPEAT_MAX)), 2, INVESTIGATE_REPEAT_MAX);
   const taskCount = sansTotal ? 2 : parseInt(invTaskCountEl.value); 
   const clueType = invClueTypeEl.value; 
