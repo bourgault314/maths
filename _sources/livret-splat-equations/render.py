@@ -121,7 +121,7 @@ FLECHES = ('<svg width="116" height="46" viewBox="0 0 116 46" aria-hidden="true"
            '<path d="M42 5 Q32 23 42 41"/><path d="M36.5 38 L42 41 L42.6 35"/>'
            '<path d="M74 5 Q84 23 74 41"/><path d="M73.4 35 L74 41 L79.5 38"/></g>'
            '<g fill="#b45309" font-family="Poppins, sans-serif" font-weight="700" font-size="13">'
-           '<text x="31" y="28" text-anchor="end">− 12</text><text x="85" y="28">− 12</text></g>'
+           '<text x="31" y="28" text-anchor="end">– 12</text><text x="85" y="28">– 12</text></g>'
            '<text x="58" y="28" text-anchor="middle" font-family="Poppins, sans-serif" font-weight="700" '
            'font-size="15" fill="#0f172a">=</text></svg>')
 # Le schéma en barres de l'exemple (3𝑥 + 12 = 27) : barre du haut 𝑥 𝑥 𝑥 | 12, barre du bas 27 ;
@@ -403,7 +403,7 @@ def textes_exemple(ex, v):
     regroupe = [f"{(nb + '+' + nb).join(map(str, c['paquets']))}{nb}={nb}{sum(c['paquets'])}" for c in (g, d) if len(c["paquets"]) > 1]
     gestes = ((f"on <b>regroupe</b> les paquets ({', '.join(regroupe)}), " if regroupe else "")
               + f"on <b>enlève</b> {sg} des deux {'plateaux' if v['vue'] == 'schema' else 'côtés'} "
-              + f"({sd}{nb}−{nb}{sg}{nb}={nb}{sd - sg}), "
+              + f"({sd}{nb}–{nb}{sg}{nb}={nb}{sd - sg}), "
               + f"puis on <b>partage</b> en {n} ({sd - sg}{nb}÷{nb}{n}{nb}={nb}{x}).")
     if v["vue"] == "schema":
         outil = "Le <b>schéma en barres</b> met les deux plateaux l'un sous l'autre&nbsp;: "
@@ -552,8 +552,15 @@ async def pages(v, tmp, jeu):
                     lg_corr=v["lg_corr"], atoi=v["atoi_couv"],
                     sommaire=[[f["n"], f["t"], f["resume"]] for f in FICHES])
         await pdf_html("couverture.html", tmp / "p1.pdf", JS_COUV, couv, v["css_couv"])
+        # les rappels du dos écrivent la lettre de l'exemple de couverture (𝑛), et sa valeur :
+        # « comme l'exemple de la couverture » doit se lire avec les mêmes signes.
+        # (Le moins de ces textes est le tiret « – » de Poppins, voir commun.css.)
+        # (les petits dessins sont écrits pour 3𝑥 + 12 = 27, 𝑥 = 5 : on vérifie que c'est bien l'exemple)
+        if (ex["gauche"]["taches"], sum(ex["gauche"]["paquets"]), sum(ex["droite"]["paquets"]), ex["x"]) != (3, 12, 27, 5):
+            raise SystemExit("l'exemple a changé : refaire les petits dessins du dos (MINI_SCH…, « 3𝑥 + 12 = 27 »)")
+        souvenir = [(ic.replace("𝑥", ex["variable"]), txt) for ic, txt in v["souvenir"]]
         dos = dict(niveaux=[[nom, desc, f"{qrweb}/serie-{s}.png"] for nom, desc, s in DOS],
-                   univers=f"{qrweb}/univers.png", souvenir=v["souvenir"],
+                   univers=f"{qrweb}/univers.png", souvenir=souvenir,
                    fiches=[[f["n"], f["t"]] for f in FICHES])
         await pdf_html("dos.html", tmp / "p8.pdf", JS_DOS, dos)
         await nav.close()

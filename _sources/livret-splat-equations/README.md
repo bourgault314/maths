@@ -45,6 +45,11 @@ et ses icônes sont des schémas en barres, la part enlevée hachurée — pas d
 équation montre les flèches de l'outil, du haut vers le bas. La lettre (𝑥, 𝑛…) est partout le
 caractère arrondi de l'appli (police FreeSerif, voir `commun.css`).
 
+Correctif du 24/09/2026 (relevé par Code sur la PR #828) : les petits dessins du dos écrivent la
+**lettre de l'exemple** (𝑛, pas 𝑥 : « comme l'exemple de la couverture ») — `render.py` s'arrête si
+l'exemple change sans eux ; l'équation du dos est en Times italique comme la correction de l'outil ;
+le moins est le tiret « – » de Poppins (son vrai « − » est plus court qu'un tiret et se lit « - »).
+
 ## Fichiers
 
 - `couverture.html`, `dos.html` — les deux pages dessinées ici. Les textes propres à chaque

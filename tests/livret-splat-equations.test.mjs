@@ -315,6 +315,19 @@ test("Q3 : le bandeau des fiches sur deux étages, la lettre arrondie, pas de fl
   assert.ok(couv.includes(">𝑥</text>") && dos.includes(">𝑥</text>"));
 });
 
+test("Q3 (correctif) : le dos écrit la lettre de l'exemple, l'équation comme l'outil, le moins lisible", () => {
+  // relevé par Code sur la PR #828 : le dos disait 3𝑥 + 12 = 27 « comme l'exemple », qui est en 𝑛
+  assert.ok(render.includes('souvenir = [(ic.replace("𝑥", ex["variable"]), txt) for ic, txt in v["souvenir"]]'));
+  assert.ok(render.includes("refaire les petits dessins du dos"), "render.py s'arrête si l'exemple change");
+  // l'équation du dos en Times italique, comme la correction de l'outil sur la couverture
+  assert.match(dos, /\.mini-eq\{font-family:"x-arrondi",'Times New Roman',Times,serif;font-style:italic;/);
+  // le moins : le tiret demi-cadratin de Poppins (son « − » est plus court qu'un tiret)
+  assert.ok(render.includes("({sd}{nb}–{nb}{sg}"), "le moins de l'exemple");
+  assert.doesNotMatch(render, /− 12<\/text>/, "le moins des flèches du dos");
+  const p0 = norm(texteDesPages("outils/livret_splat_equations_equation.pdf")[0]);
+  assert.ok(p0.includes("27 – 12 = 15"), "couverture : 27 – 12 = 15");
+});
+
 test("Q3 : le vocabulaire — schéma en barres, jamais « tableau » ; l'inconnue en lettre", () => {
   const readme = lire(SRC + "README.md");
   for (const [nom, t] of [["couverture", couv], ["dos", dos], ["README", readme], ["render.py", render]]) {
