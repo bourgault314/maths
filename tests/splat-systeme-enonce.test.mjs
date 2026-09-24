@@ -230,7 +230,8 @@ test("TROIS : le plateau principal n'a pas de total (« TOTAL ? » en gris ardoi
 
 test("écran et impression passent par drawSysPlateaux ; aucun tirage au sort dans le dessin", () => {
   const ecran = fn("renderCard");
-  assert.match(ecran, /^function renderCard\(card, revealState\)\{\n  clearSvg\(\);\n[\s\S]{0,300}if\(sysEnPlateaux\(card\)\)\{\n    drawSysPlateaux\(svg, card, SYS_ZONE_ECRAN, \{ devoile: revealState >= 2 \}\);\n    return;\n  \}/);
+  // lot S3 : la signature prend « opts » et la correction passe avant (à partir du 1er clic) ; l'énoncé ne change pas
+  assert.match(ecran, /^function renderCard\(card, revealState, opts = \{\}\)\{\n  clearSvg\(\);\n[\s\S]{0,600}if\(sysEnPlateaux\(card\)\)\{\n    drawSysPlateaux\(svg, card, SYS_ZONE_ECRAN, \{ devoile: revealState >= 2 \}\);\n    return;\n  \}/);
   const imp = fn("renderCardIntoSvg");
   assert.match(imp, /if\(sysEnPlateaux\(card\)\)\{\n    const sixParPage = String\(targetSvg\.getAttribute\("viewBox"\) \|\| ""\)\.trim\(\) === "0 0 1600 1000";\n    drawSysPlateaux\(targetSvg, card, sixParPage \? SYS_ZONE_IMPRIME_6 : SYS_ZONE_IMPRIME, \{ mkEl:tEl, mkText:tText, isPrint:true, devoile:revealAnswers \}\);\n    return;\n  \}/);
   // le bloc avant le tray : la carte en plateaux ne dessine ni le grand plateau ni la boîte TOTAL centrée
@@ -239,7 +240,8 @@ test("écran et impression passent par drawSysPlateaux ; aucun tirage au sort da
   assert.doesNotMatch(bloc, /rng|Math\.random|rInt\(|rFloat\(|shuffleInPlace/);
   // le nom de la couleur sur chaque tache, par la fonction de l'Enquête, à 0,36 r
   const dessin = fn("drawSysPlateaux");
-  assert.match(dessin, /drawInvestigateSplatName\(gp, s, 0, nomCarte, devoile, \{ mkEl, mkText, fs: clamp\(Math\.round\(s\.r \* SYS_TACHE\.nom\), 26, 60\) \}\);/);
+  // lot S3 : les petits plateaux de la correction abaissent le plancher (opts.nomMin) ; l'énoncé garde 26
+  assert.match(dessin, /drawInvestigateSplatName\(gp, s, 0, nomCarte, devoile, \{ mkEl, mkText, fs: clamp\(Math\.round\(s\.r \* SYS_TACHE\.nom\), opts\.nomMin \|\| 26, 60\) \}\);/);
   assert.match(fn("drawInvestigateSplatName"), /const fs = Number\(api\.fs\) > 0 \? Number\(api\.fs\) : clamp\(Math\.round\(s\.r \* 0\.30\), 26, 60\);/);
   // dévoilé : les couleurs pâles de l'Enquête et le jeton gris (contraste mesuré ≥ 10 : 1 à l'écran)
   assert.match(dessin, /fill: devoile \? \(isPrint \? info\.printReveal : info\.reveal\) : \(isPrint \? info\.print : info\.screen\)/);
@@ -274,10 +276,11 @@ test("impression : bandeau brun cannelle et consigne du Système", () => {
   assert.doesNotMatch(html, /Utilise les sommes indiquées/);
 });
 
-test("écran : plus de clic mort — l'énoncé et les taches dévoilées sont à un clic l'un de l'autre, dans les deux sens", () => {
+test("écran : plus de clic mort — depuis le lot S3, D avance et recule d'un cadre de correction à la fois", () => {
   const prec = fn("goPreviousCardOrStep");
-  assert.match(prec, /revealState = \(cards\[idx\] && cards\[idx\]\.family === "D"\) \? 0 : revealState - 1;/);
-  // en avant, D saute déjà de l'énoncé (0) aux taches dévoilées (2)
+  // lot S3 : un clic par cadre (voir splat-systeme-correction.test.mjs) ; le retour direct à l'énoncé est retiré
+  assert.match(prec, /if\(revealState > 0\)\{\n    revealState = revealState - 1;/);
+  // les cartes sans étapes sautent toujours de l'énoncé (0) aux taches dévoilées (2)
   assert.match(fn("goNextCardOrStep"), /\} else if \(revealState === 0\) \{\n      revealState = 2;/);
-  assert.match(fn("getMaxRevealState"), /return 2;\n\}\n?$/);
+  assert.match(fn("getMaxRevealState"), /if\(sysAPlan\(card\)\) return card\._sys\.plan\.length;\n  return 2;\n\}\n?$/);
 });
