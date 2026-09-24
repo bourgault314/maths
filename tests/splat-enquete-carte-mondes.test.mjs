@@ -93,7 +93,9 @@ test("E5 : aucune étoile déjà gagnée ne bouge — mêmes identifiants, même
   assert.match(univers, /const id=idEtape\(m,e,ei\), li=document\.getElementById\(id\);/);
   assert.doesNotMatch(univers, /const ids=m\.etapes\.map\(\(_,ei\)=>m\.idp/, "l'ancien calcul (rang dans le monde) est revenu");
   const tous = MONDES.flatMap((m) => m.etapes.map((e, ei) => idEtape(m, e, ei)));
-  assert.deepEqual(tous, IDS_AVANT_E5);
+  /* lot Q2 (24/09) : « Écris l'équation » (e2-2, parcours m3e3) est retirée du monde 5 ;
+     les autres étapes gardent leur identifiant (tests/splat-equations-monde5-progression.test.mjs) */
+  assert.deepEqual(tous, IDS_AVANT_E5.filter((id) => id !== "e2-2"));
   assert.deepEqual(LES_DEUX.map((e) => e.p), PARCOURS_ENQ_AVANT_E5);
   const parcours = MONDES.flatMap((m) => m.etapes.map((e) => e.p).filter(Boolean));
   assert.equal(new Set(parcours).size, parcours.length, "deux étapes partagent un parcours");
@@ -132,7 +134,8 @@ test("le numéro affiché d'une étape est continu dans tout l'univers", () => {
      le compteur global du gabarit, que l'on refait ici. */
   let compteur = 0;
   const rangs = new Map();
-  MONDES.forEach((m) => m.etapes.forEach((e) => rangs.set(e, ++compteur)));
+  /* lot Q2 : un monde peut réserver des numéros (« premier ») — le monde 5 commence à 35 */
+  MONDES.forEach((m) => { if (m.premier) compteur = Math.max(compteur, m.premier - 1); m.etapes.forEach((e) => rangs.set(e, ++compteur)); });
   assert.match(univers, /const depart=MONDES\.slice\(0,MONDES\.indexOf\(m\)\)/);
   assert.deepEqual(ENQUETE.etapes.map((e) => rangs.get(e)), [10, 11, 12, 13, 14]);
   assert.deepEqual(GRANDE.etapes.map((e) => rangs.get(e)), [15, 16, 17, 18, 19]);
@@ -144,7 +147,7 @@ test("le numéro affiché d'une étape est continu dans tout l'univers", () => {
     assert.equal(decodeURIComponent(new URLSearchParams(e.c.split("?")[1]).get("title")),
       `Fiche ${n} \u2014 ${e.t}`);
   });
-  assert.equal(compteur, 30);
+  assert.equal(compteur, 44);
 });
 
 test("les vingt adresses des fiches sont exactement celles du lot E0", () => {
@@ -237,7 +240,7 @@ test("la correction n'est offerte qu'en vue professeur", () => {
 
 test("les textes qui comptent les mondes suivent l'ajout", () => {
   const total = MONDES.reduce((n, m) => n + m.etapes.length, 0);
-  assert.equal(total, 30);
+  assert.equal(total, 29); // lot Q2 : le monde 5 passe de 4 à 3 étapes
   assert.match(univers, new RegExp(`id="totalTxt">0 / ${total} étoiles<`));
   assert.match(univers, /Traverse les six mondes/);
   assert.match(univers, /monde 6 : prolongement relatifs \(cycle 4\)/);

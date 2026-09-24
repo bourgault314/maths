@@ -248,7 +248,7 @@ test("écarts imprimés (vérification de Code, 24/09) : 26 de blanc entre deux 
   assert.equal(t.EQ_PRINT_BEAD_GAP, 33);
   assert.equal(t.EQ_PRINT_BEAD_SPLAT_GAP, 24);
   assert.equal(t.EQ_PRINT_BEAD_GAP - 7, 26, "anneau de 7 compris : le blanc le plus serré de l'écran avant le lot");
-  // Fiche 21 (seed 89), cartes 1 et 6 en haut/bas : avant, 0,4 mm entre « 13 » et « 31 »,
+  // Fiche 36 (seed 89), cartes 1 et 6 en haut/bas : avant, 0,4 mm entre « 13 » et « 31 »,
   // 0,3 mm entre un jeton et une tache. Places et taches relevées sur la page.
   const haut = { x:60, y:76, w:720, h:424 }, bas = { x:60, y:500, w:720, h:424 };
   const cartes = [
