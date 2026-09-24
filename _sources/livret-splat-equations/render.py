@@ -547,7 +547,12 @@ async def pages(v, tmp, jeu):
                          margin={"top": "0", "bottom": "0", "left": "0", "right": "0"})
             await pg.close()
 
-        couv = dict(svg1=ex["svg1"], vb1=ex["vb1"], svg2=ex["svg2"], vb2=ex["vb2"],
+        # Les flèches de la correction de l'outil écrivent « − 12 » (U+2212) ; dans la couverture,
+        # ce texte prend la police Poppins, dont le « − » est plus court qu'un tiret : on écrit le
+        # tiret « – », comme partout dans le livret (relevé par Code sur la PR #828). Livret
+        # seulement : l'outil n'est pas touché.
+        svg2 = ex["svg2"].replace(">− ", ">– ")
+        couv = dict(svg1=ex["svg1"], vb1=ex["vb1"], svg2=svg2, vb2=ex["vb2"],
                     sur=v["sur"], accroche=v["accroche"], intro=textes_exemple(ex, v),
                     lg_corr=v["lg_corr"], atoi=v["atoi_couv"],
                     sommaire=[[f["n"], f["t"], f["resume"]] for f in FICHES])

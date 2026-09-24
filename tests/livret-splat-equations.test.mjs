@@ -324,6 +324,8 @@ test("Q3 (correctif) : le dos écrit la lettre de l'exemple, l'équation comme l
   // le moins : le tiret demi-cadratin de Poppins (son « − » est plus court qu'un tiret)
   assert.ok(render.includes("({sd}{nb}–{nb}{sg}"), "le moins de l'exemple");
   assert.doesNotMatch(render, /− 12<\/text>/, "le moins des flèches du dos");
+  // et celui des flèches de l'outil, dans la fenêtre « L'équation » de la couverture
+  assert.ok(render.includes('svg2 = ex["svg2"].replace(">− ", ">– ")'), "le moins des flèches de la couverture");
   const p0 = norm(texteDesPages("outils/livret_splat_equations_equation.pdf")[0]);
   assert.ok(p0.includes("27 – 12 = 15"), "couverture : 27 – 12 = 15");
 });
