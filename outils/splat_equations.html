@@ -6201,11 +6201,17 @@ function hashStringToInt(str){
 }
 
 /* opts (impression seulement, lot Q1) : radiusScale grossit le jeton, edge l'éloigne des
-   bords ; sans opts, la disposition de l'écran, inchangée (même clé, même tirage). */
+   bords, gap et hiddenGap écartent les jetons visibles et les jetons cachés (blanc entre
+   deux contours : gap - 2,8), splatGap écarte un jeton visible d'une tache (qui déborde
+   jusqu'à 1,1 × r) ; sans opts, la disposition de l'écran, inchangée (même clé,
+   même tirage). */
 function getEqUnitBeadLayout(card, sideName, side, metaSide, tray, opts = {}){
   if(!card || !side || !metaSide || !tray) return null;
   const radiusScale = Number(opts.radiusScale) > 0 ? Number(opts.radiusScale) : 1;
   const edge = Number(opts.edge) > 0 ? Number(opts.edge) : 20;
+  const gapImp = Number(opts.gap) > 0 ? Number(opts.gap) : 0;
+  const hiddenGapImp = Number(opts.hiddenGap) > 0 ? Number(opts.hiddenGap) : 0;
+  const splatGapImp = Number(opts.splatGap) > 0 ? Number(opts.splatGap) : 0;
 
   const visibleCount = Math.max(0, Math.round((metaSide.visible || []).reduce((a,b)=>a + Math.max(0, Number(b)||0), 0)));
   const hiddenByTask = (metaSide.hiddenByTask || []).map(arr => Array.isArray(arr) ? arr.reduce((a,b)=>a + Math.max(0, Number(b)||0),0) : Math.max(0, Number(arr)||0));
@@ -6219,8 +6225,8 @@ function getEqUnitBeadLayout(card, sideName, side, metaSide, tray, opts = {}){
     visibleCount,
     hiddenByTask
   });
-  const pourImpression = !!(opts.radiusScale || opts.edge);
-  if(pourImpression) key += "|impression|" + radiusScale + "|" + edge;
+  const pourImpression = !!(opts.radiusScale || opts.edge || gapImp || hiddenGapImp || splatGapImp);
+  if(pourImpression) key += "|impression|" + [radiusScale, edge, gapImp, hiddenGapImp, splatGapImp].join("|");
   if(!card._unitEqLayouts) card._unitEqLayouts = {};
   if(card._unitEqLayouts[key]) return card._unitEqLayouts[key];
 
@@ -6253,7 +6259,8 @@ function getEqUnitBeadLayout(card, sideName, side, metaSide, tray, opts = {}){
   }
   function farFromSplats(cx, cy){
     for(const s of splats){
-      if(Math.hypot(cx - s.cx, cy - s.cy) < (Number(s.r)||74) + beadR + 18) return false;
+      const loin = splatGapImp ? 1.1 * (Number(s.r)||74) + beadR + splatGapImp : (Number(s.r)||74) + beadR + 18;
+      if(Math.hypot(cx - s.cx, cy - s.cy) < loin) return false;
     }
     return true;
   }
@@ -6271,7 +6278,7 @@ function getEqUnitBeadLayout(card, sideName, side, metaSide, tray, opts = {}){
 
   function visibleCandidates(){
     const margin = beadR + edge;
-    const step = Math.max(beadR * 2 + 9, 28);
+    const step = gapImp ? beadR * 2 + gapImp : Math.max(beadR * 2 + 9, 28);
     const xMin = tray.x + margin;
     const xMax = tray.x + tray.w - margin;
     const yMin = tray.y + margin;
@@ -6296,7 +6303,7 @@ function getEqUnitBeadLayout(card, sideName, side, metaSide, tray, opts = {}){
   for(const p of vCandidates){
     if(visiblePositions.length >= visibleCount) break;
     if(!farFromSplats(p.cx,p.cy)) continue;
-    if(!noOverlapPoint(p.cx,p.cy,placed,4)) continue;
+    if(!noOverlapPoint(p.cx,p.cy,placed,gapImp || 4)) continue;
     placed.push(p);
     visiblePositions.push(p);
   }
@@ -6308,7 +6315,7 @@ function getEqUnitBeadLayout(card, sideName, side, metaSide, tray, opts = {}){
       if(visiblePositions.length >= visibleCount) break;
       if(!farFromSplats(p.cx,p.cy)) continue;
       if(visiblePositions.some(q=>Math.abs(q.cx-p.cx)<1 && Math.abs(q.cy-p.cy)<1)) continue;
-      if(!noOverlapPoint(p.cx,p.cy,placed,0)) continue;
+      if(!noOverlapPoint(p.cx,p.cy,placed,gapImp || 0)) continue;
       placed.push(p);
       visiblePositions.push(p);
     }
@@ -6316,7 +6323,7 @@ function getEqUnitBeadLayout(card, sideName, side, metaSide, tray, opts = {}){
 
   function hiddenCandidatesInSplat(s, k){
     const R = Math.max(8, (Number(s.r)||74) - beadR - 22);
-    const step = Math.max(beadR*2 + 5, 22);
+    const step = Math.max(beadR*2 + Math.max(5, hiddenGapImp), 22);
     const pts = [];
     for(let y=-R; y<=R; y+=step){
       for(let x=-R; x<=R; x+=step){
@@ -6345,7 +6352,7 @@ function getEqUnitBeadLayout(card, sideName, side, metaSide, tray, opts = {}){
       if(hiddenByTaskPositions[t].length >= k) break;
       const maxR = Math.max(8, (Number(s.r)||74) - beadR - 16);
       if(Math.hypot(p.cx-s.cx,p.cy-s.cy) > maxR) continue;
-      if(!noOverlapPoint(p.cx,p.cy,placed,3)) continue;
+      if(!noOverlapPoint(p.cx,p.cy,placed,hiddenGapImp || 3)) continue;
       placed.push(p);
       hiddenByTaskPositions[t].push(p);
     }
@@ -6356,7 +6363,7 @@ function getEqUnitBeadLayout(card, sideName, side, metaSide, tray, opts = {}){
       const a = rFloat(rng, 0, Math.PI*2);
       const rr = Math.sqrt(rFloat(rng,0,1)) * Math.max(8, (Number(s.r)||74) - beadR - 24);
       const p = {cx:s.cx + Math.cos(a)*rr, cy:s.cy + Math.sin(a)*rr};
-      if(!noOverlapPoint(p.cx,p.cy,placed,1)) continue;
+      if(!noOverlapPoint(p.cx,p.cy,placed,hiddenGapImp || 1)) continue;
       placed.push(p);
       hiddenByTaskPositions[t].push(p);
     }
@@ -6370,7 +6377,10 @@ function getEqUnitBeadLayout(card, sideName, side, metaSide, tray, opts = {}){
       }
       const cols = Math.max(1, Math.ceil(Math.sqrt(k)));
       const rows = Math.ceil(k / cols);
-      const pas = beadR * 2 + 3;
+      // l'écart voulu s'il tient dans la tache, sinon moins, jamais sous 3 (l'écart d'avant)
+      const coin = Math.hypot((cols - 1) / 2, (rows - 1) / 2);
+      const tient = coin > 0 ? ((Number(s.r)||74) - beadR - 2) / coin : Infinity;
+      const pas = Math.max(beadR * 2 + 3, Math.min(beadR * 2 + (hiddenGapImp || 3), tient));
       const paquet = [];
       for(let i=0;i<k;i++){
         const row = Math.floor(i / cols);
@@ -6415,7 +6425,9 @@ function getEqUnitPacketCenter(tray, packetIndex, packetCount, beadR){
   return {cx: c.cx, cy: c.cy};
 }
 
-function getEqUnitPacketPositions(tray, packetIndex, packetCount, beadCount, beadR){
+/* gap (impression seulement, lot Q1) : écart voulu entre deux jetons du paquet, réduit
+   s'il le faut pour que le paquet tienne dans sa case (jamais sous 6, l'écart de l'écran). */
+function getEqUnitPacketPositions(tray, packetIndex, packetCount, beadCount, beadR, gap = 6){
   if(!tray) return [];
   const total = Math.max(0, Math.round(Number(beadCount) || 0));
   if(total <= 0) return [];
@@ -6427,8 +6439,15 @@ function getEqUnitPacketPositions(tray, packetIndex, packetCount, beadCount, bea
   else cols = Math.min(4, Math.ceil(Math.sqrt(total)));
   cols = Math.max(1, cols);
   const rows = Math.ceil(total / cols);
-  const gapX = beadR * 2 + 6;
-  const gapY = beadR * 2 + 6;
+  let ecart = 6;
+  if(gap > 6){
+    const cells = getEqStepGroupCells(tray, packetCount);
+    const cell = cells.centers[clamp(Math.round(Number(packetIndex) || 0), 0, cells.centers.length - 1)];
+    const place = (taille, n) => n > 1 ? (taille - 16 - n * 2 * beadR) / (n - 1) : Infinity;
+    ecart = Math.max(6, Math.min(gap, place(cell.cellW, cols), place(cell.cellH, rows)));
+  }
+  const gapX = beadR * 2 + ecart;
+  const gapY = beadR * 2 + ecart;
   const pts = [];
   for(let i=0;i<total;i++){
     const row = Math.floor(i / cols);
@@ -7273,10 +7292,12 @@ function eqPrintBeadFontSize(val, beadR){
    tache paraît trop petite pour le cacher (remarque de Gwenaël, 23/09) ; sur les plateaux
    gauche/droite (taches de 74), cela donne 34 → 47. On prend le plus grand rayon qui tient :
    aucun jeton ne sort de son plateau ni n'approche la barre du milieu (elle en est le
-   bord), ne touche une tache ou un autre jeton. Chaque jeton grossit autour de sa place ; s'il arrive trop
-   près d'un bord, il rentre juste assez (en haut/bas, les jetons sont posés près de la
-   barre : ils montent un peu). Si même le plus petit agrandissement ne tient pas, on
-   garde le rayon de base et les places d'avant : le dessin d'avant.
+   bord), ne touche une tache ou un autre jeton. Chaque jeton grossit autour de sa place ;
+   s'il arrive trop près d'un bord, il rentre juste assez (en haut/bas, les jetons sont
+   posés près de la barre : ils montent un peu) ; s'il gêne un voisin ou une tache, il
+   glisse de côté dans son plateau (eqPrintBeadSlide ; en haut/bas, il se loge entre les
+   taches). Si même le plus petit agrandissement ne tient pas, on garde le rayon de base
+   et les places d'avant : le dessin d'avant.
    Un seul rayon pour les jetons visibles de la carte. Un jeton caché (sous sa tache,
    dévoilé par la correction) prend ce rayon s'il tient dans le creux de la tache
    (0,64 × r : le contour en étoile rentre jusqu'à 0,70 × r), sinon le plus grand qui y
@@ -7284,8 +7305,13 @@ function eqPrintBeadFontSize(val, beadR){
 const EQ_PRINT_BEAD_SCALE = 1.8;
 const EQ_PRINT_BEAD_SCALE_HAUT_BAS = 1.3;
 const EQ_PRINT_BEAD_EDGE = 30;        // bord du jeton → bord du plateau (barre du milieu : 21 de blanc)
-const EQ_PRINT_BEAD_GAP = 12;         // entre deux jetons
-const EQ_PRINT_BEAD_SPLAT_GAP = 8;    // jeton → tache (une tache déborde jusqu'à 1,1 × r)
+// Écarts en plus des rayons ; l'anneau (7) en mange 3,5 de chaque côté. Il reste 26 de
+// blanc entre deux jetons (le plus serré de l'écran, avant le lot), soit au moins 1,2 mm
+// sur la feuille en 4 comme en 6 par page, et plus de 1,4 mm entre un jeton et une tache
+// (vérification de Code, 24/09 : à 12 et 8, il ne restait que 0,4 et 0,3 mm en haut/bas,
+// les jetons avaient l'air collés).
+const EQ_PRINT_BEAD_GAP = 33;         // entre deux jetons
+const EQ_PRINT_BEAD_SPLAT_GAP = 24;   // jeton → tache (une tache déborde jusqu'à 1,1 × r)
 const EQ_PRINT_BEAD_UNDER_SPLAT = 0.64;
 
 /* la boîte d'un jeton : sa case (étape « groupes » de la correction) ou son plateau */
@@ -7323,12 +7349,89 @@ function eqPrintBeadsFit(vis, pts, splats, R){
   return true;
 }
 
+/* Si, au rayon R, les jetons d'une même boîte (plateau ou case) se gênent ou gênent une
+   tache, on les fait glisser de côté : chacun garde sa hauteur et l'ordre de gauche à
+   droite, et on cherche les places libres (loin des taches, des bords et du voisin) qui
+   les déplacent le moins au total (programmation dynamique, au pas d'une unité ; rien
+   n'est tiré au sort). En haut/bas, les jetons sont en une rangée sous les taches : ils
+   vont se loger entre elles. Si la rangée ne tient pas, les places restent telles quelles
+   et eqPrintBeadsFit refuse ce rayon. */
+function eqPrintBeadSlide(visibles, pts, splats, R){
+  const minD = 2 * R + EQ_PRINT_BEAD_GAP;
+  const boites = new Map();
+  visibles.forEach((it, i) => {
+    const b = it.cell || it.tray;
+    if(!b) return;
+    if(!boites.has(b)) boites.set(b, []);
+    boites.get(b).push(i);
+  });
+  for(const idx of boites.values()){
+    const box = eqPrintBeadBox(visibles[idx[0]]);
+    const lo = Math.ceil(box.x + R + EQ_PRINT_BEAD_EDGE);
+    const hi = Math.floor(box.x + box.w - R - EQ_PRINT_BEAD_EDGE);
+    if(lo > hi) continue;
+    const W = hi - lo + 1;
+    idx.sort((a, c) => pts[a].cx - pts[c].cx || a - c);
+    let cout = null;        // cout[x] : déplacement total minimal, le jeton précédent étant en lo + x
+    const retour = [];      // retour[k][x] : place du jeton k - 1 quand le jeton k est en lo + x
+    for(let k=0;k<idx.length;k++){
+      const p = pts[idx[k]];
+      const libre = new Array(W).fill(true);
+      for(const s of splats){
+        const D = 1.1 * s.r + R + EQ_PRINT_BEAD_SPLAT_GAP;
+        const dy = Math.abs(p.cy - s.cy);
+        if(dy >= D) continue;
+        const w = Math.sqrt(D * D - dy * dy);
+        for(let x = Math.max(0, Math.floor(s.cx - w) - lo); x <= Math.min(W - 1, Math.ceil(s.cx + w) - lo); x++){
+          if(Math.abs(lo + x - s.cx) < w) libre[x] = false;
+        }
+      }
+      let pas = 0;
+      if(k > 0){
+        const dy = Math.abs(p.cy - pts[idx[k - 1]].cy);
+        pas = dy < minD ? Math.ceil(Math.sqrt(minD * minD - dy * dy)) : 0;
+      }
+      let mini = null, arg = null;   // meilleur précédent jusqu'en x
+      if(k > 0){
+        mini = new Array(W); arg = new Array(W);
+        let m = Infinity, a = -1;
+        for(let x=0;x<W;x++){
+          if(cout[x] < m){ m = cout[x]; a = x; }
+          mini[x] = m; arg[x] = a;
+        }
+      }
+      const suivant = new Array(W).fill(Infinity);
+      const d = new Array(W).fill(-1);
+      for(let x=0;x<W;x++){
+        if(!libre[x]) continue;
+        const ici = Math.abs(lo + x - p.cx);
+        if(k === 0){ suivant[x] = ici; continue; }
+        const j = x - pas;
+        if(j < 0 || mini[j] === Infinity) continue;
+        suivant[x] = ici + mini[j];
+        d[x] = arg[j];
+      }
+      cout = suivant;
+      retour.push(d);
+    }
+    let x = -1, m = Infinity;
+    for(let i=0;i<W;i++) if(cout[i] < m){ m = cout[i]; x = i; }
+    if(x < 0) continue;
+    for(let k=idx.length-1;k>=0;k--){
+      pts[idx[k]].cx = lo + x;
+      x = retour[k][x];
+    }
+  }
+  return pts;
+}
+
 /* rend {R, pts} : le rayon des jetons visibles et leurs places dessinées */
 function eqPrintBeadLayout(visibles, splats, baseR, capR, scale = EQ_PRINT_BEAD_SCALE){
   let top = Math.round(baseR * scale);
   if(Number.isFinite(capR)) top = Math.min(top, capR);
   for(let R = Math.floor(top); R > baseR; R--){
-    const pts = visibles.map(it => eqPrintBeadPlace(it, R));
+    let pts = visibles.map(it => eqPrintBeadPlace(it, R));
+    if(!eqPrintBeadsFit(visibles, pts, splats, R)) pts = eqPrintBeadSlide(visibles, pts, splats, R);
     if(eqPrintBeadsFit(visibles, pts, splats, R)) return {R, pts};
   }
   return {R:baseR, pts:visibles.map(it => it.p)};
@@ -7412,6 +7515,18 @@ function drawEqPrintNumberedBead(it, R, mk, mkText, useTokens){
 const EQ_PRINT_UNIT_SCALES = [2, 1.8, 1.65, 1.5, 1.35, 1.2, 1];   // ×2 : choix de Gwenaël (23/09)
 const EQ_PRINT_UNIT_MARGIN = 48;   // centre du jeton → bord du plateau : rayon + 48 (écran : + 20)
 const EQ_PRINT_UNIT_EDGE = 30;     // bord du jeton → bord du plateau, au moins (barre du milieu comprise)
+// Écarts de centre à centre en plus des deux rayons (le contour de 2,8 en mange 2,8) :
+// environ 1 mm de blanc entre deux jetons visibles sur la feuille (vérification de Code,
+// 24/09 : il ne restait parfois que 0,1 mm, une photocopie pouvait les coller) ; les
+// jetons cachés, dévoilés à la correction, se serrent un peu plus dans leur tache (10 si
+// la place le permet, jusqu'à 3 dans une tache pleine).
+const EQ_PRINT_UNIT_GAP = 24;
+const EQ_PRINT_UNIT_HIDDEN_GAP = 10;
+const EQ_PRINT_UNIT_SPLAT_GAP = 20;   // jeton visible → tache (comme les jetons numérotés)
+
+function eqUnitPrintOpts(scale){
+  return {radiusScale:scale, edge:EQ_PRINT_UNIT_MARGIN, gap:EQ_PRINT_UNIT_GAP, hiddenGap:EQ_PRINT_UNIT_HIDDEN_GAP, splatGap:EQ_PRINT_UNIT_SPLAT_GAP};
+}
 
 function eqUnitCounts(metaSide){
   const visibleCount = Math.max(0, Math.round((metaSide.visible || []).reduce((a,b)=>a + Math.max(0, Number(b)||0), 0)));
@@ -7432,7 +7547,10 @@ function eqUnitPrintLayoutOk(layout, tray, splats, metaSide){
   const all = vis.concat(...hid.map(a => a || []));
   for(let i=0;i<all.length;i++){
     for(let j=i+1;j<all.length;j++){
-      if(Math.hypot(all[i].cx - all[j].cx, all[i].cy - all[j].cy) < 2 * R) return false;
+      // deux visibles : EQ_PRINT_UNIT_GAP ; avec un caché : 3 au moins (le paquet d'une
+      // tache pleine se resserre jusque-là, voir getEqUnitBeadLayout)
+      const ecart = (i < vis.length && j < vis.length) ? EQ_PRINT_UNIT_GAP : 3;
+      if(Math.hypot(all[i].cx - all[j].cx, all[i].cy - all[j].cy) < 2 * R + ecart - 0.5) return false;
     }
   }
   // un jeton caché reste dans sa tache (il n'apparaît qu'à la correction)
@@ -7447,7 +7565,7 @@ function eqUnitPrintLayoutOk(layout, tray, splats, metaSide){
     const bord = Math.min(p.cx - tray.x, tray.x + tray.w - p.cx, p.cy - tray.y, tray.y + tray.h - p.cy);
     if(bord - R < EQ_PRINT_UNIT_EDGE) return false;
     for(const s of splats){
-      if(Math.hypot(p.cx - s.cx, p.cy - s.cy) < 1.1 * (Number(s.r) || 74) + R + 4) return false;
+      if(Math.hypot(p.cx - s.cx, p.cy - s.cy) < 1.1 * (Number(s.r) || 74) + R + EQ_PRINT_UNIT_SPLAT_GAP - 0.5) return false;
     }
   }
   return true;
@@ -7462,7 +7580,7 @@ function eqUnitPrintScale(card, trays, pos){
     const ok = ["left", "right"].every(sideName => {
       const side = pos[sideName], metaSide = eq[sideName], tray = trays[sideName];
       if(!side || !metaSide || !tray) return false;
-      const layout = getEqUnitBeadLayout(card, sideName, side, metaSide, tray, {radiusScale:scale, edge:EQ_PRINT_UNIT_MARGIN});
+      const layout = getEqUnitBeadLayout(card, sideName, side, metaSide, tray, eqUnitPrintOpts(scale));
       return eqUnitPrintLayoutOk(layout, tray, side.splats || [], metaSide);
     });
     if(ok) return scale;
@@ -7472,7 +7590,7 @@ function eqUnitPrintScale(card, trays, pos){
 
 function getEqUnitBeadLayoutPrint(card, sideName, side, metaSide, tray, scale){
   if(!scale) return getEqUnitBeadLayout(card, sideName, side, metaSide, tray);
-  return getEqUnitBeadLayout(card, sideName, side, metaSide, tray, {radiusScale:scale, edge:EQ_PRINT_UNIT_MARGIN});
+  return getEqUnitBeadLayout(card, sideName, side, metaSide, tray, eqUnitPrintOpts(scale));
 }
 
 function renderCardEquationStepPrintScene(targetGroup, card, revealState, opts = {}){
@@ -7672,7 +7790,7 @@ function renderCardEquationStepPrintScene(targetGroup, card, revealState, opts =
         alignedParts.slice().sort((a,b)=>Math.round(Number(a.alignWithHiddenIndex)||0)-Math.round(Number(b.alignWithHiddenIndex)||0)).forEach((part, idx)=>{
           const packetIndex = clamp(Math.round(Number(part.alignWithHiddenIndex) || idx), 0, packetCount - 1);
           const n = Math.max(0, Math.round(Number(part.value)||0));
-          const pts = getEqUnitPacketPositions(tray, packetIndex, packetCount, n, unitBeadR);
+          const pts = getEqUnitPacketPositions(tray, packetIndex, packetCount, n, unitBeadR, unitPrintScale ? EQ_PRINT_UNIT_GAP : 6);
           drawEqUnitBeadListPrint(pts, unitBeadR, !!part.removed || (!!opts.keepOnlyOne && packetIndex > 0));
         });
         const regularParts = allParts.filter(p => !Number.isFinite(Number(p.alignWithHiddenIndex)));
