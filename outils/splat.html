@@ -3912,7 +3912,9 @@ function genSystemCarte(rng, opts){
 function sysFormes(geste, coefMax){
   const out = [];
   if(geste === "PARTIELLE"){
-    for(let a = 1; a <= 3; a++) for(let b = 1; b <= 3; b++) if(a + b <= SYS_MAX_TACHES) out.push([a, b]);
+    // au moins 2 taches dans l'indice (décidé le 24/09) : avec une seule, l'indice donnait
+    // directement la réponse, sans partage
+    for(let a = 2; a <= 3; a++) for(let b = 1; b <= 3; b++) if(a + b <= SYS_MAX_TACHES) out.push([a, b]);
   }else if(geste === "COEF"){
     const cm = Math.max(2, coefMax);
     for(let c = 1; c <= cm; c++) for(let y = 2; y <= cm; y++) for(let y2 = 1; y2 < y; y2++){
@@ -7497,12 +7499,25 @@ function drawSysPlateaux(target, card, zone, opts = {}){
 --------------------------------------------------------------------------------------- */
 const SYS_CORR = { x:60, w:1480, barX:110, barres:820, caseMax:128, visible:0.6, hHaut:76, hCase:76, ecartBarres:12,
   titre:64, bas:24, fsTitre:34, fsCalcul:30, pasCalcul:46, ecartCalcul:60, ecartCadres:26, ecartEnonce:40, basImprime:2130, reponsesX:1060 };
+/* Correction imprimée : la « loupe » (24/09, les calculs à 5 points étaient trop petits sur
+   papier). Les cadres de la carte grandissent tous du même facteur — hauteurs, polices, cases
+   — autant que la place sous l'énoncé le permet, jusqu'à SYS_CORR_LOUPE_MAX ; les largeurs
+   (cases, colonne des calculs) ne changent pas. L'écran garde le facteur 1. */
+const SYS_CORR_LOUPE_MAX = 1.35;
+function sysCorrMetriques(e){
+  if(!(e > 1)) return SYS_CORR;
+  const C = Object.assign({}, SYS_CORR);
+  ["hHaut", "hCase", "ecartBarres", "titre", "bas", "fsTitre", "fsCalcul", "pasCalcul"].forEach(k => { C[k] = Math.round(SYS_CORR[k] * e); });
+  C.loupe = e;
+  return C;
+}
 /* Zones des plateaux au-dessus des cadres : écran (une rangée, à gauche du fil) et carte
    imprimée (une rangée, en haut de la carte). */
 const SYS_ZONE_ECRAN_CORRECTION = { x:40, w:1100, haut:14, bas:400, ecartX:20, ecartY:0, echelleTotal:0.6, sousTotal:14, hMax:[260], centrer:false, rMax:90, uneRangee:true, nomMin:12, ajusterHauteur:true };
 const SYS_ZONE_IMPRIME_CORRECTION = { x:60, w:1480, haut:30, bas:500, ecartX:30, ecartY:0, echelleTotal:0.7, sousTotal:16, hMax:[307], centrer:false, rMax:118, uneRangee:true, nomMin:16, ajusterHauteur:true };
 /* Le fil des étapes (écran) : à droite des plateaux. */
 const SYS_FIL = { x:1170, w:390, haut:34, fs:22, pas:28 };
+const SYS_CORR_ECRAN_ECART = 40;
 /* Phrases / Symboles : le haut de l'énoncé d'avant (TOTAL et plateau unique, y de 0 à 830)
    réduit, et les indices en colonne à sa droite (écran : le fil passe sous les indices). */
 const SYS_UNIQUE_ECRAN = { x:40, y:8, k:0.465, hauteur:830, indices:{ x:760, y:24, w:800, h:200, fs:26 } };
@@ -7559,8 +7574,7 @@ function sysCorrUnite(plan){
   return Math.min(SYS_CORR.caseMax, Math.floor(SYS_CORR.barres / L));
 }
 /* Hauteur d'un cadre : titre, puis le plus haut des deux côtés (barres ou calculs). */
-function sysCorrHauteurCadre(etape){
-  const C = SYS_CORR;
+function sysCorrHauteurCadre(etape, C = SYS_CORR){
   const nb = etape.barres.length;
   const hBarres = nb ? nb * (C.hHaut + C.hCase) + (nb - 1) * C.ecartBarres : 0;
   const nl = Math.max(etape.calculs.length, etape.lettres.length, Array.isArray(etape.reponses) ? etape.reponses.length : 0);
@@ -7568,12 +7582,12 @@ function sysCorrHauteurCadre(etape){
 }
 /* Les mesures de toute la correction d'une carte (sans le dessiner) : largeur d'une case,
    colonne des calculs, hauteur de chaque cadre. */
-function sysCorrMesures(card){
+function sysCorrMesures(card, C = SYS_CORR){
   const plan = card._sys.plan;
   const u = sysCorrUnite(plan);
   const L = Math.max(1, ...plan.flatMap(e => e.barres.map(sysCorrLongueur)));
   const calculX = Math.round(SYS_CORR.barX + L * u + SYS_CORR.ecartCalcul);
-  return { u, calculX, hauteurs: plan.map(sysCorrHauteurCadre) };
+  return { u, calculX, hauteurs: plan.map(e => sysCorrHauteurCadre(e, C)), C };
 }
 /* Le texte d'une case : « ? » ou la lettre de la couleur (N, Vi, O…) pour une tache
    inconnue, sa valeur pour une tache connue. */
@@ -7600,15 +7614,16 @@ function sysCorrAjuster(t, fs, largeur, poids, min){
 /* Une case d'une barre de correction. ctx : { mkEl, mkText, isPrint, lettres }. */
 function drawSysCase(g, x, y, w, h, c, ctx){
   const { mkEl, mkText, isPrint, lettres } = ctx;
+  const e = (ctx.C && ctx.C.loupe) || 1;
   const encre = "#0f172a";
   if(c.kind === "rest"){
     g.appendChild(mkEl("rect", { x, y, width:w, height:h, fill:ENQUETE_DEPASSE_FOND, stroke:ENQUETE_DEPASSE_TRAIT, "stroke-width":3.5, "stroke-dasharray":"10 7" }));
     const label = String(c.label || "");
-    const fs = sysCorrAjuster(label, 26, w - 12, 900, 18);
+    const fs = sysCorrAjuster(label, Math.round(26 * e), w - 12, 900, 18);
     const mots = label.split(" ");
     // trop étroite pour une ligne : « ce qui / reste » sur deux lignes
     const lignes = (fs <= 18 && mots.length > 1) ? [mots.slice(0, Math.ceil(mots.length / 2)).join(" "), mots.slice(Math.ceil(mots.length / 2)).join(" ")] : [label];
-    const f2 = lignes.length > 1 ? Math.min(...lignes.map(l => sysCorrAjuster(l, 24, w - 10, 900, 13))) : fs;
+    const f2 = lignes.length > 1 ? Math.min(...lignes.map(l => sysCorrAjuster(l, Math.round(24 * e), w - 10, 900, 13))) : fs;
     lignes.forEach((l, i) => g.appendChild(mkText(x + w / 2, y + h / 2 + (i - (lignes.length - 1) / 2) * f2 * 1.1, l, {
       "text-anchor":"middle", "dominant-baseline":"middle", "font-size":f2, "font-weight":900, fill:ENQUETE_DEPASSE_TRAIT
     })));
@@ -7633,8 +7648,8 @@ function drawSysCase(g, x, y, w, h, c, ctx){
   const mot = investigateColorWord(info);
   const avecMot = !lettres;
   const y1 = avecMot ? y + h * 0.36 : y + h / 2;
-  const rT = Math.max(8, Math.min(13, w * 0.13));
-  const fs1 = sysCorrAjuster(etiquette, 32, w - 2 * rT - 18, 900, 16);
+  const rT = Math.max(8, Math.min(13 * e, w * 0.13));
+  const fs1 = sysCorrAjuster(etiquette, Math.round(32 * e), w - 2 * rT - 18, 900, 16);
   const larg = (() => { const m = measureTextWidth(etiquette, `900 ${fs1}px system-ui, -apple-system, "Segoe UI", Roboto, Arial`); return Number.isFinite(m) && m > 0 ? m : etiquette.length * fs1 * 0.6; })();
   const bloc = 2 * rT + 6 + larg;
   const x0 = x + (w - bloc) / 2;
@@ -7644,8 +7659,8 @@ function drawSysCase(g, x, y, w, h, c, ctx){
   }));
   if(avecMot){
     // le mot, ou son initiale si la case est trop étroite pour le lire (≥ 15)
-    let t = mot, fs2 = sysCorrAjuster(mot, 21, w - 8, 800, 12);
-    if(fs2 < 15){ t = investigateColorInitial(info); fs2 = sysCorrAjuster(t, 21, w - 8, 800, 12); }
+    let t = mot, fs2 = sysCorrAjuster(mot, Math.round(21 * e), w - 8, 800, 12);
+    if(fs2 < 15){ t = investigateColorInitial(info); fs2 = sysCorrAjuster(t, Math.round(21 * e), w - 8, 800, 12); }
     g.appendChild(mkText(x + w / 2, y + h * 0.76, t, {
       "text-anchor":"middle", "dominant-baseline":"middle", "font-size":fs2, "font-weight":800, fill:couleur
     }));
@@ -7655,7 +7670,7 @@ function drawSysCase(g, x, y, w, h, c, ctx){
 /* Une barre du plan : { top, span, offset, cells } — l'étiquette sur les span premières
    cases, en vert pâle ; les cases dessous, à partir de offset largeurs de case. */
 function drawSysBarre(g, barre, x, y, u, ctx){
-  const C = SYS_CORR;
+  const C = ctx.C || SYS_CORR;
   const x0 = x + (Number(barre.offset) || 0) * u;
   const largeurs = barre.cells.map(c => sysCorrPoids(c) * u);
   const span = Math.max(1, Math.min(barre.cells.length, Number(barre.span) || barre.cells.length));
@@ -7664,7 +7679,7 @@ function drawSysBarre(g, barre, x, y, u, ctx){
   const top = String(barre.top);
   g.appendChild(ctx.mkText(x0 + wHaut / 2, y + C.hHaut / 2, top, {
     "text-anchor":"middle", "dominant-baseline":"middle", dy:"0.06em",
-    "font-size":sysCorrAjuster(top, 32, wHaut - 12, 900, 16), "font-weight":900, fill:ENQUETE_ECRITURE_ENCRE
+    "font-size":sysCorrAjuster(top, Math.round(32 * (C.loupe || 1)), wHaut - 12, 900, 16), "font-weight":900, fill:ENQUETE_ECRITURE_ENCRE
   }));
   let cx = x0;
   barre.cells.forEach((c, i) => {
@@ -7676,13 +7691,14 @@ function drawSysBarre(g, barre, x, y, u, ctx){
 /* Un cadre de la correction, coin haut à gauche en (SYS_CORR.x, y). numero : « 3. » devant
    le titre (écran). Renvoie la hauteur du cadre. */
 function drawSysCadre(target, card, etape, y, mesures, ctx, numero){
-  const C = SYS_CORR;
+  const C = ctx.C || SYS_CORR;
   const { mkEl, mkText, lettres } = ctx;
-  const h = sysCorrHauteurCadre(etape);
+  const e = C.loupe || 1;
+  const h = sysCorrHauteurCadre(etape, C);
   const g = mkEl("g", { class:"sysCadre", "data-role":etape.role });
   g.appendChild(mkEl("rect", { x:C.x, y, width:C.w, height:h, rx:22, fill:"#fff", stroke:"#000", "stroke-width":3 }));
   const titre = (numero ? `${numero}. ` : "") + etape.titre;
-  g.appendChild(mkText(C.x + C.w / 2, y + 42, titre, {
+  g.appendChild(mkText(C.x + C.w / 2, y + Math.round(42 * e), titre, {
     "text-anchor":"middle", "font-size":sysCorrAjuster(titre, C.fsTitre, C.w - 60, 900, 24), "font-weight":900, fill:"#0f172a"
   }));
   const haut = y + C.titre;
@@ -7707,8 +7723,8 @@ function drawSysCadre(target, card, etape, y, mesures, ctx, numero){
     etape.reponses.forEach((rep, i) => {
       const info = investigateColorByKey(rep.color);
       const yy = yr + i * C.pasCalcul;
-      g.appendChild(mkEl("path", { d:blobPath(rx + 14, yy, 14), fill:ctx.isPrint ? info.print : info.screen, stroke:"rgba(0,0,0,.25)", "stroke-width":1.5, "aria-hidden":"true" }));
-      g.appendChild(mkText(rx + 38, yy, `${investigateColorWord(info)} = ${rep.value}`, {
+      g.appendChild(mkEl("path", { d:blobPath(rx + 14 * e, yy, 14 * e), fill:ctx.isPrint ? info.print : info.screen, stroke:"rgba(0,0,0,.25)", "stroke-width":1.5, "aria-hidden":"true" }));
+      g.appendChild(mkText(rx + 38 * e, yy, `${investigateColorWord(info)} = ${rep.value}`, {
         "text-anchor":"start", "dominant-baseline":"middle", dy:"0.06em", "font-size":C.fsCalcul, "font-weight":900, fill:"#0f172a"
       }));
     });
@@ -7721,11 +7737,18 @@ function drawSysCadre(target, card, etape, y, mesures, ctx, numero){
    si la pile dépasse la place (jamais sur les réglages de la page, filet de sûreté), elle
    est réduite d'un même facteur, centrée. Renvoie le bas du dernier cadre. */
 function drawSysCorrectionImprimee(target, card, haut, bas, ctx){
-  const mesures = sysCorrMesures(card);
   const plan = card._sys.plan;
-  const pile = mesures.hauteurs.reduce((s, h) => s + h, 0) + (plan.length - 1) * SYS_CORR.ecartCadres;
+  const hauteurPile = m => m.hauteurs.reduce((s, h) => s + h, 0) + (plan.length - 1) * SYS_CORR.ecartCadres;
+  // la loupe : le plus grand facteur (au centième) qui laisse la pile tenir, au plus SYS_CORR_LOUPE_MAX
+  let mesures = sysCorrMesures(card);
+  for(let e = Math.round(SYS_CORR_LOUPE_MAX * 100); e > 100; e--){
+    const m = sysCorrMesures(card, sysCorrMetriques(e / 100));
+    if(haut + hauteurPile(m) <= bas){ mesures = m; break; }
+  }
+  ctx = Object.assign({}, ctx, { C: mesures.C });
+  const pile = hauteurPile(mesures);
   const k = Math.min(1, (bas - haut) / pile);
-  const g = ctx.mkEl("g", { id:"sysCorrectionPrint", transform: k < 1 ? `translate(${Math.round(800 * (1 - k))} ${Math.round(haut * (1 - k))}) scale(${k.toFixed(4)})` : "" });
+  const g = ctx.mkEl("g", { id:"sysCorrectionPrint", "data-loupe":String(mesures.C.loupe || 1), transform: k < 1 ? `translate(${Math.round(800 * (1 - k))} ${Math.round(haut * (1 - k))}) scale(${k.toFixed(4)})` : "" });
   target.appendChild(g);
   let y = haut;
   plan.forEach(etape => { y += drawSysCadre(g, card, etape, y, mesures, ctx) + SYS_CORR.ecartCadres; });
@@ -7739,9 +7762,10 @@ function drawSysCorrectionEcran(card, etat){
   const k = clamp(etat, 1, plan.length);
   const dernier = k >= plan.length;
   const ctx = { mkEl:el, mkText:text, isPrint:false, lettres:!numberedQuestionMarkMode };
-  let filX = SYS_FIL.x, filW = SYS_FIL.w, filHaut = SYS_FIL.haut;
+  let filX = SYS_FIL.x, filW = SYS_FIL.w, filHaut = SYS_FIL.haut, basHaut;
   if(sysEnPlateaux(card)){
-    drawSysPlateaux(svg, card, SYS_ZONE_ECRAN_CORRECTION, { devoile: dernier, nomMin: SYS_ZONE_ECRAN_CORRECTION.nomMin });
+    const d = drawSysPlateaux(svg, card, SYS_ZONE_ECRAN_CORRECTION, { devoile: dernier, nomMin: SYS_ZONE_ECRAN_CORRECTION.nomMin });
+    basHaut = Math.max(...d.plateaux.map(P => P.y + P.h));
   }else{
     // Phrases / Symboles : le plateau unique de l'écran (TOTAL et plateau, sans les indices)
     // réduit en haut à gauche, les indices en colonne à sa droite
@@ -7751,6 +7775,7 @@ function drawSysCorrectionEcran(card, etat){
     svg.appendChild(g);
     const basIndices = drawSysIndicesColonne(svg, card, SYS_UNIQUE_ECRAN.indices, { mkEl:el, mkText:text, isPrint:false });
     filX = SYS_UNIQUE_ECRAN.indices.x; filW = SYS_UNIQUE_ECRAN.indices.w; filHaut = basIndices + 40;
+    basHaut = SYS_UNIQUE_ECRAN.y + SYS_UNIQUE_ECRAN.hauteur * SYS_UNIQUE_ECRAN.k;
   }
   // le fil des étapes déjà passées
   const fil = el("g", { id:"sysFil" });
@@ -7763,10 +7788,20 @@ function drawSysCorrectionEcran(card, etat){
     y += 6;
   }
   svg.appendChild(fil);
-  // le cadre courant, en bas
-  const mesures = sysCorrMesures(card);
-  const h = mesures.hauteurs[k - 1];
-  drawSysCadre(svg, card, plan[k - 1], 1000 - h - 20, mesures, ctx, k);
+  // le cadre courant, juste sous les plateaux (24/09 : il était posé en bas, un grand vide
+  // au-dessus). Son haut ne bouge pas d'un clic à l'autre : il se règle sur le bas des
+  // plateaux et sur le fil au dernier clic ; la loupe l'agrandit autant que le permet le
+  // plus haut cadre de la carte (au plus SYS_CORR_LOUPE_MAX).
+  let filBas = filHaut;
+  for(let i = 0; i < plan.length - 1; i++) filBas += wrapTextToWidth(`${i + 1}. ${plan[i].titre}`, SYS_FIL.fs, filW).length * SYS_FIL.pas + 6;
+  let mesures = sysCorrMesures(card);
+  // filet : jamais sous la scène (le plus haut cadre finit au plus à 1000 − 20)
+  const yCadre = Math.round(Math.min(Math.max(basHaut, filBas - SYS_FIL.pas) + SYS_CORR_ECRAN_ECART, 1000 - 20 - Math.max(...mesures.hauteurs)));
+  for(let e = Math.round(SYS_CORR_LOUPE_MAX * 100); e > 100; e--){
+    const m = sysCorrMesures(card, sysCorrMetriques(e / 100));
+    if(yCadre + Math.max(...m.hauteurs) <= 1000 - 20){ mesures = m; break; }
+  }
+  drawSysCadre(svg, card, plan[k - 1], yCadre, mesures, Object.assign({}, ctx, { C: mesures.C }), k);
 }
 
 /* Render écran */
