@@ -112,7 +112,8 @@ test("toutes les cartes du Système ont un plan : D devient une carte à étapes
   assert.match(prec, /if\(revealState > 0\)\{\n    revealState = revealState - 1;/);
   assert.doesNotMatch(prec, /family === "D"/);
   // l'écran : à partir du 1er clic, la correction ; l'énoncé (état 0) ne change pas
-  assert.match(fn("renderCard"), /^function renderCard\(card, revealState, opts = \{\}\)\{\n  clearSvg\(\);\n\n  \/\* [^\n]+\*\/\n  if\(sysAPlan\(card\) && revealState >= 1 && !opts\.sansCorrection\)\{\n    drawSysCorrectionEcran\(card, revealState\);\n    return;\n  \}/);
+  // (lot « mode élève du Système » : au téléphone, en mode élève, le dessin portrait)
+  assert.match(fn("renderCard"), /^function renderCard\(card, revealState, opts = \{\}\)\{\n  clearSvg\(\);\n\n  \/\* [^\n]+\n[^\n]+\*\/\n  if\(sysAPlan\(card\) && revealState >= 1 && !opts\.sansCorrection\)\{\n    if\(typeof eleveSchemaTel !== "undefined" && eleveSchemaTel\) drawSysCorrectionTelephone\(card, revealState\);\n    else drawSysCorrectionEcran\(card, revealState\);\n    return;\n  \}/);
 });
 
 test("chaque ligne de calcul dessinée est la ligne du plan (mots, et lettres en unknown=letter), titres et étiquettes compris", () => {
@@ -282,7 +283,7 @@ test("titres retouchés le 24/09 : « une tache orange », jamais « une orange 
 
 test("écran : le fil des étapes passées à droite, le cadre courant en bas ; Phrases / Symboles : le plateau unique réduit, indices et fil à droite", () => {
   const src = fn("drawSysCorrectionEcran");
-  assert.match(src, /drawSysPlateaux\(svg, card, SYS_ZONE_ECRAN_CORRECTION, \{ devoile: dernier, nomMin: SYS_ZONE_ECRAN_CORRECTION\.nomMin \}\);/);
+  assert.match(src, /drawSysPlateaux\(svg, card, SYS_ZONE_ECRAN_CORRECTION, \{ devoile: dernier \|\| devoileEleve, fondu: !devoileEleve, nomMin: SYS_ZONE_ECRAN_CORRECTION\.nomMin \}\);/);
   assert.match(src, /const dernier = k >= plan\.length;/);
   assert.match(src, /for\(let i = 0; i < k - 1; i\+\+\)\{\n    wrapTextToWidth\(`\$\{i \+ 1\}\. \$\{plan\[i\]\.titre\}`/);
   // 24/09 : le cadre juste sous les plateaux (et sous le fil au dernier clic), haut fixe pour
@@ -293,7 +294,7 @@ test("écran : le fil des étapes passées à droite, le cadre courant en bas ; 
   assert.match(src, /drawSysCadre\(svg, card, plan\[k - 1\], yCadre, mesures, Object\.assign\(\{\}, ctx, \{ C: mesures\.C \}\), k\);/);
   assert.doesNotMatch(src, /1000 - h - 20/, "le cadre n'est plus posé en bas de la scène");
   assert.match(html, /\nconst SYS_CORR_ECRAN_ECART = 40;\n/, "40 sous les plateaux : c'est ce que mesure le test de la marge");
-  assert.match(src, /renderCard\(sysCarteSansIndices\(card\), dernier \? 2 : 0, \{ sansCorrection:true \}\);/);
+  assert.match(src, /renderCard\(sysCarteSansIndices\(card\), \(dernier \|\| devoileEleve\) \? 2 : 0, \{ sansCorrection:true \}\);/);
   // la lettre (𝑥) ou « ? » : le bouton de la page, comme les autres modes
   assert.match(src, /lettres:!numberedQuestionMarkMode/);
 });

@@ -231,7 +231,7 @@ test("TROIS : le plateau principal n'a pas de total (« TOTAL ? » en gris ardoi
 test("écran et impression passent par drawSysPlateaux ; aucun tirage au sort dans le dessin", () => {
   const ecran = fn("renderCard");
   // lot S3 : la signature prend « opts » et la correction passe avant (à partir du 1er clic) ; l'énoncé ne change pas
-  assert.match(ecran, /^function renderCard\(card, revealState, opts = \{\}\)\{\n  clearSvg\(\);\n[\s\S]{0,600}if\(sysEnPlateaux\(card\)\)\{\n    drawSysPlateaux\(svg, card, SYS_ZONE_ECRAN, \{ devoile: revealState >= 2 \}\);\n    return;\n  \}/);
+  assert.match(ecran, /^function renderCard\(card, revealState, opts = \{\}\)\{\n  clearSvg\(\);\n[\s\S]{0,700}if\(sysEnPlateaux\(card\)\)\{\n    drawSysPlateaux\(svg, card, SYS_ZONE_ECRAN, \{ devoile: revealState >= 2 \|\| sysDevoileEleve\(card\) \}\);\n    return;\n  \}/);
   const imp = fn("renderCardIntoSvg");
   assert.match(imp, /if\(sysEnPlateaux\(card\)\)\{\n    const sixParPage = String\(targetSvg\.getAttribute\("viewBox"\) \|\| ""\)\.trim\(\) === "0 0 1600 1000";\n    drawSysPlateaux\(targetSvg, card, sixParPage \? SYS_ZONE_IMPRIME_6 : SYS_ZONE_IMPRIME, \{ mkEl:tEl, mkText:tText, isPrint:true, devoile:revealAnswers \}\);\n    return;\n  \}/);
   // le bloc avant le tray : la carte en plateaux ne dessine ni le grand plateau ni la boîte TOTAL centrée

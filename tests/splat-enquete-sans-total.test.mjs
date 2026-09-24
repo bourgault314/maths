@@ -346,7 +346,7 @@ test("écran : cinq clics (vide, rempli, deux écritures, calculs, vérification
 
 test("mode élève : la case du haut reste, « TOTAL ? » donné, rien à saisir ; les autres cartes gardent leur total", () => {
   const src = fn("renderEleveSplat");
-  assert.match(src, /haut = eleveCaseDonneeHtml\("haut blanche", "Total", \(card\._rel && card\._rel\.sansTotal\) \? "\?" : card\.total\);/);
+  assert.match(src, /haut = eleveCaseDonneeHtml\("haut blanche", "Total", \(\(card\._rel && card\._rel\.sansTotal\) \|\| sysTotalCache\(card\)\) \? "\?" : card\.total\);/);
   const donnee = new Function(`${fn("eleveCaseDonneeHtml")}\nreturn eleveCaseDonneeHtml;`)();
   const h = donnee("haut blanche", "Total", "?");
   assert.doesNotMatch(h, /<input/, "une case donnée n'a pas de champ : la validation l'ignore");

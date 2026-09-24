@@ -117,11 +117,12 @@ test("seules les cartes d'Enquête ont ce tableau ; une carte du monde 2 ou une 
   assert.equal(cases.infos(null), null);
   // renderEleveSplat : la carte sans parcours garde son message, l'Enquête passe
   const rendu = fn("renderEleveSplat");
-  assert.match(rendu, /const enquete = infos \? null : eleveInfosEnquete\(card\);/);
+  // (lot « mode élève du Système » : eleveInfosTableau = Enquête OU Système ; le message reste pour C9, C8)
+  assert.match(rendu, /const enquete = infos \? null : eleveInfosTableau\(card\);/);
   assert.match(rendu, /if\(!infos && !enquete\)\{\n    tete\.style\.display = "none";\n    panneau\.innerHTML = `<p class="eleveConsigne">Le parcours élève n'existe pas encore pour ce mode\.<\/p>`;/);
   assert.match(rendu, /panneau\.classList\.toggle\("enquete", !!enquete\);/);
   // (lot E-sans-total : une carte « sans total » montre « ? » dans la même case donnée)
-  assert.match(rendu, /bas = eleveCasesEnqueteHtml\(card, enquete\);\n    \/\*[^\n]*\*\/\n    haut = eleveCaseDonneeHtml\("haut blanche", "Total", \(card\._rel && card\._rel\.sansTotal\) \? "\?" : card\.total\);/);
+  assert.match(rendu, /bas = eleveCasesEnqueteHtml\(card, enquete\);\n    \/\*[^\n]*\n[^\n]*\*\/\n    haut = eleveCaseDonneeHtml\("haut blanche", "Total", \(\(card\._rel && card\._rel\.sansTotal\) \|\| sysTotalCache\(card\)\) \? "\?" : card\.total\);/);
 });
 
 // --- consigne et message ------------------------------------------------------------------
@@ -169,6 +170,10 @@ function harnaisSchema(){
     const eleveSerie = [{ family: "C", hidden: [10, 5], _rel: {}, _splats: [{cx:1},{cx:2}] }];
     const dessins = [];
     function eleveInfosEnquete(card){ return card && card.family === "C" ? {} : null; }
+    function sysAPlan(){ return false; }
+    function eleveInfosSysteme(){ return null; }
+    ${fn("eleveInfosTableau")}
+    ${fn("eleveSchemaEtapes")}
     function eleveDessinerSchema(card){ dessins.push(eleveSchemaEtape); }
     ${fn("eleveProposerSchema")}
     ${fn("eleveVoirSchema")}
@@ -215,7 +220,7 @@ test("cinq étapes, une par appui ; à la dernière le bouton s'efface et « Car
 });
 
 test("les étapes sont celles de la projection, et la nouvelle carte repart du plateau couvert", () => {
-  assert.match(fn("eleveDessinerSchema"), /renderCard\(card, eleveSchemaEtape\);\n  eleveCadrerScene\(\);/);
+  assert.match(fn("eleveDessinerSchema"), /renderCard\(card, eleveSchemaEtape\);\n  if\(sysAPlan\(card\)\) eleveCadrerSchemaSys\(card\); else eleveCadrerScene\(\);/);
   assert.match(fn("renderEleveSplat"), /eleveEnqueteDevoile = false; eleveSchemaEtape = 0;[^\n]*\n  eleveIndicesTel = [^\n]*\n  renderCard\(card, 0\);/);
   assert.match(fn("renderEleveSplat"), /elevePaveRendrePlateau\(\);[^\n]*\n  eleveSchemaReinitialiser\(\);/);
   assert.match(fn("renderEleveFinSplat"), /eleveEnqueteDevoile = false; eleveSchemaEtape = 0;[^\n]*\n  eleveIndicesTel = false;[^\n]*\n  renderCard\(eleveSerie\[total - 1\], 0\);/);
@@ -229,6 +234,7 @@ test("les étapes sont celles de la projection, et la nouvelle carte repart du p
     new Function("document", "window", `
       function renderCard(){}
       function eleveCadrerScene(){}
+      function sysAPlan(){ return false; }
       function eleveSchemaReinitialiser(){ throw new Error("pas de nettoyage hors téléphone"); }
       const svg = { viewBox: { baseVal: { width: 1600, height: 1100 } }, style: {}, setAttribute(){} };
       let eleveSchemaEtape = 1;
@@ -284,6 +290,9 @@ function harnaisTelephone({ hauteurs = { 1: 300, 2: 300, 3: 470, 4: 420, 5: 660 
     function renderCard(card, etape){ rendus.push([etape, eleveSchemaTel]); derniere = etape; }
     let cadrages = 0;
     function eleveCadrerScene(){ if(!${sansCadre}) throw new Error("le téléphone ne recadre pas la scène entière"); cadrages++; }
+    function sysAPlan(){ return false; }
+    ${constLine("const ELEVE_SCHEMA_ETAPES = ").replace("const ELEVE_SCHEMA_ETAPES", "const _dup")}
+    ${fn("eleveSchemaEtapes")}
     ${fn("eleveSchemaTelephone")}
     ${fn("eleveSchemaTelRendre")}
     ${fn("eleveDessinerSchema")}
@@ -369,7 +378,7 @@ test("le bandeau : la case TOTAL puis la ou les phrases d'indice, texte échapp�
   // son « ? » en gris ardoise, dans le bandeau comme dans la case TOTAL du tableau
   const r = regles(feuille);
   assert.equal((r.find((x) => x.sel === "#eleveRappel .eleveRappelTotal b.inconnu, #elevePanel.sansTotal .eleveCase.haut.donnee .eleveDonneeVal") || {}).decl, "color:#64748b");
-  assert.match(fn("renderEleveSplat"), /panneau\.classList\.toggle\("sansTotal", !!\(enquete && card\._rel && card\._rel\.sansTotal\)\);/);
+  assert.match(fn("renderEleveSplat"), /panneau\.classList\.toggle\("sansTotal", !!\(enquete && \(\(card\._rel && card\._rel\.sansTotal\) \|\| sysTotalCache\(card\)\)\)\);/);
 });
 
 test("téléphone : un schéma sans cadre portrait repasse au dessin d'ordinateur, rien ne reste à moitié", () => {
@@ -472,6 +481,9 @@ test("après validation, les cases prennent leur vraie largeur ; pendant la rech
     let eleveIdx = 0;
     const eleveSerie = [{ family: "C" }];
     function eleveInfosEnquete(card){ return card && card.family === "C" ? { visibleSum: 7 } : null; }
+    function sysAPlan(){ return false; }
+    function eleveInfosSysteme(){ return null; }
+    ${fn("eleveInfosTableau")}
     ${fn("eleveEnqueteLargeursVraies")}
     eleveEnqueteLargeursVraies();
   `)({ getElementById: (id) => (id === "elevePanel" ? panneau(enquete) : null) });
@@ -494,7 +506,7 @@ test("après validation, les cases prennent leur vraie largeur ; pendant la rech
 test("Enquête : le dévoilement redessine la carte (chaque tache a sa couleur), le monde 2 garde son geste", () => {
   const src = fn("eleveDevoilerTache");
   assert.match(src, /if\(\(p\.getAttribute\("fill"\) \|\| ""\) === "var\(--splat-cover\)"\) p\.classList\.add\("eleveDevoile"\);/, "le geste du monde 2 est intact");
-  assert.match(src, /if\(card && eleveInfosEnquete\(card\)\)\{\n    eleveEnqueteDevoile = true;\n    renderCard\(card, eleveSchemaEtape\);\n    eleveCadrerScene\(\);/);
+  assert.match(src, /if\(card && eleveInfosTableau\(card\)\)\{[^\n]*\n    eleveEnqueteDevoile = true;\n    renderCard\(card, eleveSchemaEtape\);\n    eleveCadrerScene\(\);/);
   const rendu = fn("renderCard");
   assert.match(rendu, /const eleveDevoileC = \(card\.family === "C"\) && typeof eleveEnqueteDevoile !== "undefined" && !!eleveEnqueteDevoile;/);
   // taches dévoilées au 5e clic ; au 4e pour une carte « sans total » (lot E-sans-total : le 5e y est la vérification)
