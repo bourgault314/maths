@@ -1237,6 +1237,14 @@
       </div>
       <div class="c-ops" id="invNoTotalRow">
         <label class="checkInline large" title="Pas de total : deux indices sur les deux mêmes taches, un « fois plus / fois moins » et un « de plus / de moins ». Toujours 2 taches, sans jetons visibles."><input type="checkbox" id="invNoTotal"> <span>Sans total</span></label>
+        <label class="checkInline large" title="Une même couleur peut être plusieurs fois sur le plateau (au moins une l'est, 6 taches au plus) ; les indices parlent d'« une tache rouge »."><input type="checkbox" id="invRepeatOn"> <span>Taches répétées</span></label>
+      </div>
+      <div class="row" id="invRepeatRow" style="align-items:flex-end; display:none">
+        <div style="flex:1.25 1 0">
+          <label>Même couleur : fois max</label>
+          <input id="invRepeat" type="number" min="2" max="3" value="3" />
+        </div>
+        <div style="flex:2 1 0"></div>
       </div>
 
       <div class="row" style="align-items:flex-end">
@@ -1465,6 +1473,11 @@ const INVESTIGATE_COLOR_PALETTE = [
   {key:"red",    short:"Rouge",    sentence:"la tache rouge",    screen:"#dc2626", reveal:"rgba(220,38,38,0.20)", print:"#dc2626", printReveal:"rgba(220,38,38,0.20)"}
 ];
 const INVESTIGATE_CLASSIC_COLOR_KEYS = ["black", "purple", "orange"];
+/* Enquête, « Taches répétées max » (lot E-repet) : chaque couleur au plus 3 fois, 6 taches
+   au plus sur le plateau (la table des places s'arrête à 6). */
+const INVESTIGATE_REPEAT_MAX = 3;
+const INVESTIGATE_REPEAT_TACHES_MAX = 6;
+const ENQUETE_REGLE_REPETEES = "Les taches de même couleur cachent le même nombre de jetons.";
 function investigateColorByKey(key){
   return INVESTIGATE_COLOR_PALETTE.find(c => c.key === key) || INVESTIGATE_COLOR_PALETTE[0];
 }
@@ -1517,6 +1530,12 @@ function investigateColorInfo(card, idx){
   const keys = card && card._rel && Array.isArray(card._rel.colorMap) ? card._rel.colorMap
     : (card && card._sys && Array.isArray(card._colorMap) ? card._colorMap : null);
   return investigateColorByKey((keys && keys[idx]) || classicKey);
+}
+/* Enquête, taches répétées (lot E-repet) : « 3 violettes », « 2 orange » (invariable) ;
+   « violette » pour une seule tache. */
+function enqueteNomCouleurCompte(card, idx, n){
+  const info = investigateColorInfo(card, idx);
+  return n > 1 ? `${n} ${SYS_COULEURS_PLURIEL[info.key] || investigateColorWord(info)}` : investigateColorWord(info);
 }
 
 /* Mode D — le Système (lot S1, 23/09/2026) : voir genSystem. Les six gestes, ceux du
@@ -1645,6 +1664,11 @@ const invTotalMinEl = document.getElementById("invTotalMin");
 const invTotalMaxEl = document.getElementById("invTotalMax");
 /* « Sans total » (lot E-sans-total, 23/09/2026) : éteinte par défaut, l'Enquête ne change pas. */
 const invNoTotalEl = document.getElementById("invNoTotal");
+/* « Taches répétées » (lot E-repet) : décochée par défaut, l'Enquête ne change pas ;
+   cochée, une même couleur revient jusqu'à invRepeatEl fois (2 ou 3). */
+const invRepeatOnEl = document.getElementById("invRepeatOn");
+const invRepeatEl = document.getElementById("invRepeat");
+const invRepeatRowEl = document.getElementById("invRepeatRow");
 const seedEEl = document.getElementById("seedE");
 
 const systemSettingsEl = document.getElementById("systemSettings");
@@ -2116,9 +2140,16 @@ function applyShareControl(params, name, el){
   else setNumberFromShare(params, name, el);
 }
 
+/* « Taches répétées max » lue dans une adresse ou dans la case : un entier de 1 à 3,
+   1 quand c'est absent ou illisible. */
+function lireRepetitionAdresse(raw){
+  const n = Math.round(Number(raw));
+  return Number.isFinite(n) ? clamp(n, 1, INVESTIGATE_REPEAT_MAX) : 1;
+}
+
 /* Les réglages qu'une adresse partagée peut porter. Liste commune : elle sert
    aussi à l'empreinte de la série élève (eleveSignatureSerie). */
-const sharedNames = ["mode", "seed", "cards", "equation", "tasksMin", "tasksMax", "visibleMin", "visibleMax", "hidden", "hiddenMax", "totalMin", "totalMax", "splats", "clues", "structure", "geste", "gestes", "coefMax", "noTotal", "mul", "div", "add", "sub", "deltaMax", "operation", "beadMax", "opposites", "colors", "palette", "unknown", "print", "duplex", "layout", "title", "note", "eleve", "parcours", "imprimer", "suite"];
+const sharedNames = ["mode", "seed", "cards", "equation", "tasksMin", "tasksMax", "visibleMin", "visibleMax", "hidden", "hiddenMax", "totalMin", "totalMax", "splats", "clues", "structure", "geste", "gestes", "coefMax", "noTotal", "repeat", "mul", "div", "add", "sub", "deltaMax", "operation", "beadMax", "opposites", "colors", "palette", "unknown", "print", "duplex", "layout", "title", "note", "eleve", "parcours", "imprimer", "suite"];
 
 function loadSharedConfiguration(){
   const params = new URLSearchParams(window.location.search);
@@ -2187,6 +2218,13 @@ function appliquerConfiguration(params){
   /* « noTotal=1 » (Enquête sans total) : absente = éteinte, y compris pour chaque partie
      d'une étape composée (une partie « sans total » ne déteint pas sur la suivante). */
   if((act === "C" || act === "CD") && invNoTotalEl) invNoTotalEl.checked = readBooleanFromShare(params, "noTotal") === true;
+  /* « repeat=2 » ou « 3 » (Enquête, taches répétées) : absente = case décochée, une tache par
+     couleur — y compris pour chaque partie d'une étape composée. */
+  if((act === "C" || act === "CD") && invRepeatOnEl){
+    const repetition = lireRepetitionAdresse(params.get("repeat"));
+    invRepeatOnEl.checked = repetition > 1;
+    if(repetition > 1 && invRepeatEl) invRepeatEl.value = String(repetition);
+  }
 
   const seedRaw = params.get("seed");
   const seedNumber = seedRaw === null || String(seedRaw).trim() === "" ? NaN : Number(seedRaw);
@@ -2233,6 +2271,8 @@ function buildShareUrl(){
   if((act === "C" || act === "CD" || act === "D") && Array.isArray(investigatePaletteKeys) && investigatePaletteKeys.length) params.set("palette", investigatePaletteKeys.join(","));
   /* écrite seulement quand elle est cochée : les adresses de l'Enquête ne changent pas */
   if((act === "C" || act === "CD") && invNoTotalEl && invNoTotalEl.checked) params.set("noTotal", "1");
+  /* écrite seulement quand la case est cochée : les adresses de l'Enquête ne changent pas */
+  if((act === "C" || act === "CD") && invRepeatOnEl && invRepeatOnEl.checked && !(invNoTotalEl && invNoTotalEl.checked)) params.set("repeat", String(Math.max(2, lireRepetitionAdresse(invRepeatEl && invRepeatEl.value))));
 
   url.search = params.toString();
   return url.toString();
@@ -2603,6 +2643,12 @@ function syncSettingsUI(){
        (ils gardent leur valeur, qui revient dès qu'on décoche). */
     const sansTotal = !!(invNoTotalEl && invNoTotalEl.checked);
     [invTaskCountEl, invStructure3El, invVisibleMinEl, invVisibleMaxEl].forEach(c => { if(c) c.disabled = sansTotal; });
+    /* « Taches répétées » (lot E-repet) et « Sans total » ne vont pas ensemble : l'une cochée,
+       l'autre est grisée ; le nombre de fois ne se montre que case cochée. */
+    const repetees = !!(invRepeatOnEl && invRepeatOnEl.checked);
+    if(invRepeatOnEl) invRepeatOnEl.disabled = sansTotal;
+    if(invNoTotalEl) invNoTotalEl.disabled = repetees && !sansTotal;
+    if(invRepeatRowEl) invRepeatRowEl.style.display = (repetees && !sansTotal) ? "flex" : "none";
   }
 
   if(isNumbered) syncNumberedEquationUI();
@@ -2726,6 +2772,7 @@ activityEl.addEventListener("change", ()=>{
 });
 invTaskCountEl.addEventListener("change", ()=>{ syncSettingsUI(); scheduleAutoGenerate(); });
 if(invNoTotalEl) invNoTotalEl.addEventListener("change", ()=>{ syncSettingsUI(); });
+if(invRepeatOnEl) invRepeatOnEl.addEventListener("change", ()=>{ syncSettingsUI(); });
 if(sysGesteEl) sysGesteEl.addEventListener("change", ()=>{ syncSettingsUI(); });
 [unitEquationTypeEl, numberedEquationTypeEl].forEach(el=>{
   if(!el) return;
@@ -2739,7 +2786,7 @@ if(sysGesteEl) sysGesteEl.addEventListener("change", ()=>{ syncSettingsUI(); });
   numberedEquationTypeEl, numTasksMinEl, numTasksEl, numVisibleMinEl, numVisibleMaxEl, numHiddenCountEl, numTotalMinEl, numTotalMaxEl, numBeadAbsMaxEl, numOpposeModeEl, numColorModeEl, seedNEl,
   nineOpEl, nineTasksEl, nineVisibleMaxEl, nineTotalMinEl, nineTotalMaxEl, seedCEl,
   eightOpEl, eightTasksEl, eightVisibleMaxEl, eightTotalMinEl, eightTotalMaxEl, seedDEl,
-  invTaskCountEl, invClueTypeEl, invStructure3El, invOpMulEl, invOpDivEl, invOpAddEl, invOpSubEl, invMaxAddEl, invVisibleMinEl, invVisibleMaxEl, invTotalMinEl, invTotalMaxEl, invNoTotalEl, seedEEl,
+  invTaskCountEl, invClueTypeEl, invStructure3El, invOpMulEl, invOpDivEl, invOpAddEl, invOpSubEl, invMaxAddEl, invVisibleMinEl, invVisibleMaxEl, invTotalMinEl, invTotalMaxEl, invNoTotalEl, invRepeatOnEl, invRepeatEl, seedEEl,
   sysGesteEl, sysCoefMaxEl, sysClueTypeEl, sysVisibleMinEl, sysVisibleMaxEl, sysTotalMinEl, sysTotalMaxEl, seedSysEl,
   ...SYS_GESTES.map(g => document.getElementById("sysMix" + g))
 ].forEach(el=>{
@@ -3209,6 +3256,10 @@ function genInvestigate(rng){
      taches, aucun jeton visible. Case décochée (le défaut), rien ne change : même lecture
      des réglages, même hasard consommé, mêmes cartes. */
   const sansTotal = typeof invNoTotalEl !== "undefined" && !!(invNoTotalEl && invNoTotalEl.checked);
+  /* « Taches répétées max » (lot E-repet, 23/09/2026) : 1 (le défaut) = une tache par
+     couleur, rien ne change — même hasard consommé, mêmes cartes. Sans total : ignoré. */
+  const repeatMax = (sansTotal || typeof invRepeatOnEl === "undefined" || !invRepeatOnEl || !invRepeatOnEl.checked) ? 1
+    : clamp(Math.round(numberOr(invRepeatEl && invRepeatEl.value, INVESTIGATE_REPEAT_MAX)), 2, INVESTIGATE_REPEAT_MAX);
   const taskCount = sansTotal ? 2 : parseInt(invTaskCountEl.value); 
   const clueType = invClueTypeEl.value; 
   const structureMode = invStructure3El.value; 
@@ -3244,26 +3295,28 @@ function genInvestigate(rng){
   const names = colorInfos.map(c => c.sentence);
 
 
-  function relationTextParts(op, k, tIdx, sIdx){
+  // noms : les noms des taches dans les phrases (taches répétées : « une tache rouge »)
+  function relationTextParts(op, k, tIdx, sIdx, noms){
+    const n = noms || names;
     if(op === 'MUL'){
       return (clueType === "SYMBOL") ?
         [{type:'splat', id:tIdx}, {type:'text', val:` = ${k} × `}, {type:'splat', id:sIdx}] :
-        `Sous ${names[tIdx]}, il y a ${k} fois plus de jetons que sous ${names[sIdx]}.`;
+        `Sous ${n[tIdx]}, il y a ${k} fois plus de jetons que sous ${n[sIdx]}.`;
     }
     if(op === 'DIV'){
       return (clueType === "SYMBOL") ?
         [{type:'splat', id:tIdx}, {type:'text', val:` = `}, {type:'splat', id:sIdx}, {type:'text', val:` ÷ ${k}`}] :
-        `Sous ${names[tIdx]}, il y a ${k} fois moins de jetons que sous ${names[sIdx]}.`;
+        `Sous ${n[tIdx]}, il y a ${k} fois moins de jetons que sous ${n[sIdx]}.`;
     }
     if(op === 'ADD'){
       return (clueType === "SYMBOL") ?
         [{type:'splat', id:tIdx}, {type:'text', val:` = `}, {type:'splat', id:sIdx}, {type:'text', val:` + ${k}`}] :
-        `Sous ${names[tIdx]}, il y a ${k} ${k > 1 ? "jetons" : "jeton"} de plus que sous ${names[sIdx]}.`;
+        `Sous ${n[tIdx]}, il y a ${k} ${k > 1 ? "jetons" : "jeton"} de plus que sous ${n[sIdx]}.`;
     }
     if(op === 'SUB'){
       return (clueType === "SYMBOL") ?
         [{type:'splat', id:tIdx}, {type:'text', val:` = `}, {type:'splat', id:sIdx}, {type:'text', val:` − ${k}`}] :
-        `Sous ${names[tIdx]}, il y a ${k} ${k > 1 ? "jetons" : "jeton"} de moins que sous ${names[sIdx]}.`;
+        `Sous ${n[tIdx]}, il y a ${k} ${k > 1 ? "jetons" : "jeton"} de moins que sous ${n[sIdx]}.`;
     }
     return "";
   }
@@ -3434,6 +3487,166 @@ function genInvestigate(rng){
       asRecord: (target, source) => ({ op, k, target, source })
     };
     return rel;
+  }
+
+  /* ===== Taches répétées (lot E-repet, 23/09/2026 ; conception S0 §7) =====
+     Les indices comparent des COULEURS (« Sous une tache rouge, il y a 4 jetons de plus que
+     sous une tache violette. ») ; chaque couleur est sur le plateau de 1 à repeatMax fois,
+     au moins une est répétée, 6 taches au plus ; toutes les taches d'une couleur cachent le
+     même nombre. Les relations se tirent comme d'habitude, entre couleurs, puis le modèle
+     _rel est écrit TACHE PAR TACHE (repeterModele) : le plateau, les indices, le schéma
+     rempli (une ligne par tache) et la résolution (5 × ? + 8 = 43) le lisent tels quels.
+     N'est appelé que si le réglage est allumé : sinon, aucun hasard n'est consommé ici. */
+  function repeterModele(modele, couleurDe, nombre){
+    const premier = nombre.map((_, c) => couleurDe.indexOf(c)); // la 1re tache de chaque couleur
+    const nomsTaches = couleurDe.map(c => `une tache ${investigateColorWord(colorInfos[c])}`);
+    const parTache = arr => couleurDe.map(c => arr[c]);
+    const relations = modele.relations.map(r => {
+      const source = premier[r.source], target = premier[r.target];
+      return { op: r.op, k: r.k, source, target, clue: relationTextParts(r.op, r.k, target, source, nomsTaches) };
+    });
+    const affineItems = modele.affineItems ? parTache(modele.affineItems).map(it => ({ ...it })) : null;
+    const hiddenValues = parTache(modele.hiddenValues);
+    const hiddenTotal = hiddenValues.reduce((a, b) => a + b, 0);
+    const sumCoef = affineItems ? affineItems.reduce((s, it) => s + it.coef, 0) : null;
+    const sumDiff = affineItems ? affineItems.reduce((s, it) => s + it.diff, 0) : null;
+    return {
+      ...modele,
+      taskCount: couleurDe.length,
+      refIndex: premier[modele.refIndex],
+      names: nomsTaches,
+      colorMap: parTache(modele.colorMap),
+      hiddenValues,
+      hiddenTotal,
+      relations,
+      normalizedRelations: relations.map(normalizeRelationForSchema),
+      affineItems,
+      equation: affineItems ? { sumCoef, sumDiff, unitValue: sumCoef ? (hiddenTotal - sumDiff) / sumCoef : null } : null,
+      repetees: { couleurDe: couleurDe.slice(), nombre: nombre.slice() }
+    };
+  }
+  /* Les places des taches du plateau (celles de la table de dessin du plateau bas,
+     getNumberedSplats, 3 à 6 taches ; un test vérifie qu'elles n'ont pas changé). */
+  const PLACES_PLATEAU = {
+    3: [[820,455],[580,655],[1060,655]],
+    4: [[610,400],[1030,400],[610,670],[1030,670]],
+    5: [[540,420],[820,420],[1100,420],[680,680],[960,680]],
+    6: [[540,420],[820,420],[1100,420],[540,680],[820,680],[1100,680]]
+  };
+  /* Quelle couleur à quelle place (choix du 23/09 : les taches d'une couleur côte à côte,
+     précisé le 24/09 : une couleur sur une seule rangée quand elle y tient). On essaie toutes
+     les façons de ranger les couleurs (90 au plus) et on garde celle qui coupe le moins de
+     couleurs entre deux rangées, puis celle où les taches d'une même couleur sont le plus
+     proches ; à égalité, la première dans l'ordre des couleurs. Aucun tirage au hasard. */
+  function placerCouleurs(nombre){
+    const n = nombre.reduce((a, b) => a + b, 0);
+    const places = PLACES_PLATEAU[n];
+    const suite = [];
+    nombre.forEach((m, c) => { for(let j=0; j<m; j++) suite.push(c); });
+    if(!places) return suite;
+    const rangees = [...new Set(places.map(p => p[1]))];
+    const tailleRangee = Math.max(...rangees.map(y => places.filter(p => p[1] === y).length));
+    let meilleur = suite, score = Infinity;
+    const essai = [], reste = nombre.slice();
+    (function ranger(){
+      if(essai.length === n){
+        let coupees = 0, distance = 0;
+        nombre.forEach((m, c) => {
+          const ici = essai.map((k, i) => k === c ? places[i] : null).filter(Boolean);
+          if(m <= tailleRangee && new Set(ici.map(p => p[1])).size > 1) coupees++;
+          for(let a=0; a<ici.length; a++) for(let b=a+1; b<ici.length; b++) distance += Math.hypot(ici[a][0] - ici[b][0], ici[a][1] - ici[b][1]);
+        });
+        const s = coupees * 100000 + distance;
+        if(s < score - 1e-6){ score = s; meilleur = essai.slice(); }
+        return;
+      }
+      for(let c=0; c<reste.length; c++){
+        if(!reste[c]) continue;
+        reste[c]--; essai.push(c);
+        ranger();
+        essai.pop(); reste[c]++;
+      }
+    })();
+    return meilleur;
+  }
+  function tirerCarteRepetee(){
+    for(let tries=0; tries<5000; tries++){
+      const nombre = colorMap.map(() => rInt(rng, 1, repeatMax));
+      const nTaches = nombre.reduce((a, b) => a + b, 0);
+      if(nTaches > INVESTIGATE_REPEAT_TACHES_MAX || Math.max(...nombre) < 2) continue;
+      const vals = new Array(taskCount).fill(0);
+      const relations = [];
+      const valMax = Math.max(1, Math.floor(maxTotal / nTaches));
+      if(taskCount === 2){
+        const source = rInt(rng, 0, 1), target = 1 - source;
+        const rel = pickRelation();
+        const valSource = rInt(rng, 2, Math.max(2, valMax));
+        if(!rel.check(valSource)) continue;
+        const valTarget = rel.apply(valSource);
+        if(!(valTarget > 0)) continue;
+        vals[source] = valSource; vals[target] = valTarget;
+        relations.push(rel.asRecord(target, source));
+      }else{
+        let mode = structureMode;
+        if(mode === "MIX") mode = (rng() > 0.5) ? "CHAIN" : "PIVOT";
+        const p = [0,1,2];
+        shuffleInPlace(p, rng);
+        const rel1 = pickRelation(), rel2 = pickRelation();
+        const source2 = (mode === "CHAIN") ? p[1] : p[0];
+        const valRoot = rInt(rng, 2, Math.max(2, valMax));
+        if(!rel1.check(valRoot)) continue;
+        const val1 = rel1.apply(valRoot);
+        if(!(val1 > 0)) continue;
+        const valSource2 = (source2 === p[0]) ? valRoot : val1;
+        if(!rel2.check(valSource2)) continue;
+        const val2 = rel2.apply(valSource2);
+        if(!(val2 > 0)) continue;
+        vals[p[0]] = valRoot; vals[p[1]] = val1; vals[p[2]] = val2;
+        relations.push(rel1.asRecord(p[1], p[0]), rel2.asRecord(p[2], source2));
+      }
+      if(!relationValuesFitPositiveSchema(taskCount, vals, relations)) continue;
+      if(Math.min(...vals) < 2) continue; // pas de tache à un seul jeton
+      if(new Set(vals).size < taskCount) continue; // deux couleurs au même nombre : pas de référence claire
+      const visCount = rInt(rng, visMin, visMax);
+      const visBeads = [];
+      for(let k=0; k<visCount; k++) visBeads.push(rInt(rng, 1, 9));
+      const visSum = visBeads.reduce((a, b) => a + b, 0);
+      const hiddenSum = vals.reduce((s, v, c) => s + v * nombre[c], 0);
+      const total = hiddenSum + visSum;
+      if(total < minTotal || total > maxTotal) continue;
+      // sur le plateau : une couleur par rangée quand elle y tient (placerCouleurs)
+      const couleurDe = placerCouleurs(nombre);
+      const rep = repeterModele(
+        buildRelationModel({ taskCount, hiddenVals: vals, relations, structure: taskCount === 2 ? "PAIR" : structureMode, visibleSum: visSum }),
+        couleurDe, nombre);
+      // aucun nombre à sous-entendu, ni sur la carte ni dans la correction (écarts ramenés à
+      // la plus petite tache, leur somme, le total réduit)
+      const mini = Math.min(...vals);
+      const ramenes = rep.affineItems ? (() => {
+        const iMin = rep.hiddenValues.indexOf(mini);
+        const cm = rep.affineItems[iMin].coef, dm = rep.affineItems[iMin].diff;
+        return rep.affineItems.map(it => ({ coef: Math.round(it.coef / cm), diff: Math.round(it.diff - it.coef * dm / cm) }));
+      })() : [];
+      const sommeEcarts = ramenes.reduce((s, it) => s + it.diff, 0);
+      const vus = [...vals, total, hiddenSum, visSum, ...visBeads, ...relations.map(r => r.k), ...ramenes.map(it => it.diff),
+        sommeEcarts, sommeEcarts + visSum, total - sommeEcarts - visSum, total - visSum];
+      if(vus.some(sysNombreSousEntendu)) continue;
+      return {
+        family: "C",
+        total,
+        visible: visBeads,
+        hidden: rep.hiddenValues.slice(),
+        _num: { tasks: nTaches, hiddenByTask: rep.hiddenValues.map(v=>[v]), hiddenBeadsPerTask:1 },
+        _inv: { indices: rep.relations.map(r => r.clue) },
+        _colorMap: rep.colorMap.slice(),
+        _rel: rep
+      };
+    }
+    return null; // réglages impossibles : une carte ordinaire, tirée ci-dessous
+  }
+  if(repeatMax > 1){
+    const carte = tirerCarteRepetee();
+    if(carte) return carte;
   }
 
   for(let tries=0; tries<5000; tries++){
@@ -5444,6 +5657,15 @@ function relationDisplayOrder(card){
   const order = [];
   if(ref >= 0 && ref < n) order.push(ref);
   for(let i=0;i<n;i++) if(i !== ref) order.push(i);
+  /* Taches répétées (lot E-repet) : les taches d'une même couleur se suivent — celles de
+     la référence d'abord, puis couleur après couleur, dans l'ordre de leur première
+     apparition. Une tache par couleur : l'ordre ci-dessus ne change pas. */
+  const couleurDe = rel && rel.repetees && Array.isArray(rel.repetees.couleurDe) ? rel.repetees.couleurDe : null;
+  if(couleurDe){
+    const vues = [];
+    order.forEach(i => { if(!vues.includes(couleurDe[i])) vues.push(couleurDe[i]); });
+    return vues.flatMap(c => order.filter(i => couleurDe[i] === c));
+  }
   return order;
 }
 function relationTotalsForBarModel(card){
@@ -5557,9 +5779,16 @@ function drawBarCell(g, x, y, w, h, part, filled, opts={}){
     fill, stroke:"#000", "stroke-width":3
   }));
   if(filled && part && part.label){
+    let fontSize = opts.fontSize || (isDiff ? 28 : 32);
+    /* Taches répétées (lot E-repet) : une case « 3 × ? » étroite (six taches dans la barre) —
+       la police se réduit jusqu'à ce que le texte tienne dans la case. */
+    if(opts.ajuster){
+      const largeur = fs => measureTextWidth(part.label, `950 ${fs}px system-ui, -apple-system, "Segoe UI", Roboto, Arial`);
+      while(fontSize > 14 && Number.isFinite(largeur(fontSize)) && largeur(fontSize) > w - 10) fontSize -= 1;
+    }
     g.appendChild(text(x+w/2, y+h/2+1, part.label, {
       "text-anchor":"middle", "dominant-baseline":"middle",
-      "font-size": opts.fontSize || (isDiff ? 28 : 32),
+      "font-size": fontSize,
       "font-weight":950, fill:color
     }));
   }
@@ -5586,8 +5815,14 @@ function drawRelationSituationSchema(targetGroup, card, opts = {}){
   const boxY = 620;
   const boxW = layout.boxW;
   const displayRowCount = taskCount + (hasVisibleRow ? 1 : 0);
-  const rowH = v(displayRowCount >= 4 ? 52 : (displayRowCount >= 3 ? 60 : 72));
-  const gap = v(displayRowCount >= 4 ? 10 : (displayRowCount >= 3 ? 12 : 17));
+  /* Taches répétées (lot E-repet) : 5 à 7 lignes. Le cadre doit tenir sous le plateau de la
+     projection (cadre à 620, scène de 1000) et dans la carte imprimée : les lignes
+     s'amincissent, en gardant 9 d'écart entre elles. En portrait (téléphone), le cadre est
+     cadré seul : les lignes y gardent leur hauteur. 4 lignes au plus : rien ne change. */
+  const beaucoup = displayRowCount >= 5 && !layout.portrait;
+  const rowH = beaucoup ? v(Math.min(46, Math.floor((290 - (displayRowCount - 1) * 9) / displayRowCount)))
+    : v(displayRowCount >= 4 ? 52 : (displayRowCount >= 3 ? 60 : 72));
+  const gap = beaucoup ? v(9) : v(displayRowCount >= 4 ? 10 : (displayRowCount >= 3 ? 12 : 17));
   const teteSit = layout.portrait ? relationPortraitTete(boxY, f, v) : null;
   const titleH = teteSit ? (teteSit.titreY - boxY) + v(26) : v(56); // espace clair sous le titre avant les barres
   const labelW = layout.labelW;
@@ -5650,7 +5885,7 @@ function drawRelationSituationSchema(targetGroup, card, opts = {}){
     for(const part of rows[r].parts){
       const w = Math.max(part.kind === "diff" || part.kind === "visible" ? 52 : 52, unitW * Math.max(0.35, Number(part.weight)||1));
       // Pour le schéma vide, les barres existent mais les valeurs ne sont pas encore écrites.
-      drawBarCell(g, x, y, w, rowH, part, filled, {fontSize:f(displayRowCount >= 4 ? 23 : 28)});
+      drawBarCell(g, x, y, w, rowH, part, filled, {fontSize:f(displayRowCount >= 6 && beaucoup ? 21 : (displayRowCount >= 4 ? 23 : 28)), ajuster:!!rel.repetees});
       x += w;
     }
     maxRowEnd = Math.max(maxRowEnd, x);
@@ -5727,8 +5962,15 @@ function drawRelationOwnerBrace(g, x1, x2, y, label, opts = {}){
       }));
     }
   }else{
-    g.appendChild(text(mid, y+v(33), label, {
-      "text-anchor":"middle", "dominant-baseline":"middle",
+    /* Taches répétées (lot E-repet) : « visibles » sous une case étroite débordait sur le
+       nom de l'accolade d'avant (« 2 rouges ») ; il commence alors au début de sa case. */
+    let lx = mid, ancre = "middle";
+    if(Number.isFinite(opts.labelDebutMin)){
+      const lw = measureTextWidth(label, `950 ${f(17)}px system-ui, -apple-system, "Segoe UI", Roboto, Arial`);
+      if(Number.isFinite(lw) && mid - lw / 2 < opts.labelDebutMin){ lx = opts.labelDebutMin; ancre = "start"; }
+    }
+    g.appendChild(text(lx, y+v(33), label, {
+      "text-anchor":ancre, "dominant-baseline":"middle",
       "font-size":f(17), "font-weight":950, fill:"#334155"
     }));
   }
@@ -5742,9 +5984,30 @@ function getRelationGroupedDisplayGroups(card){
   // Même ordre que le schéma rempli : la tache de référence (𝑥) d'abord.
   const order = relationDisplayOrder(card).filter(i => i < totals.items.length);
   for(let i=0;i<totals.items.length;i++) if(!order.includes(i)) order.push(i);
+  const couleurDe = card && card._rel && card._rel.repetees ? card._rel.repetees.couleurDe : null;
+  const regroupe = !!couleurDe && totals.items.reduce((acc, it) => acc + Math.round(Number(it.coef) || 0), 0) > RELATION_MAX_UNIT_CELLS;
   for(const i of order){
     const item = totals.items[i];
-    groups.push({ label: taskShortName(i, card), splatIndex:i, parts: item.parts.map(p => ({...p})) });
+    /* Taches répétées (lot E-repet) : une accolade par COULEUR, sous les cases de toutes
+       ses taches, « 3 violettes » ; une couleur présente une seule fois garde son nom. */
+    const dernier = groups[groups.length - 1];
+    if(couleurDe && dernier && dernier.splatIndex != null && couleurDe[dernier.splatIndex] === couleurDe[i]){
+      const suite = item.parts.map(p => ({...p}));
+      /* Plus de 8 cases 𝑥 : chaque tache n'a qu'une case « k × ? » ; celles d'une même
+         couleur qui se suivent n'en font qu'une (« 9 × ? » pour 3 noires à « 3 × ? »),
+         comme l'équation du cadre — six cases « 3 × ? » ne tenaient pas dans la barre. */
+      const avant = dernier.parts[dernier.parts.length - 1];
+      if(regroupe && avant && avant.kind === "x" && suite[0] && suite[0].kind === "x"){
+        const coef = (Number(avant.coef) || 1) + (Number(suite[0].coef) || 1);
+        dernier.parts[dernier.parts.length - 1] = { ...avant, coef, weight: coef, label: formatCoeffUnknownTerm(coef, getNumberedDisplayVarChar(card)) };
+        suite.shift();
+      }
+      dernier.parts.push(...suite);
+      dernier.count++;
+      dernier.label = enqueteNomCouleurCompte(card, i, dernier.count);
+      continue;
+    }
+    groups.push({ label: taskShortName(i, card), splatIndex:i, parts: item.parts.map(p => ({...p})), count:1 });
   }
 
   if(totals.visibleSum > 0){
@@ -6123,7 +6386,10 @@ function drawRelationAnswerLine(g, card, barX, barW, y, m){
   const f = m.f, v = m.v;
   const rel = card._rel;
   const values = rel.hiddenValues;
-  const order = relationDisplayOrder(card).filter(i => i < values.length);
+  let order = relationDisplayOrder(card).filter(i => i < values.length);
+  // taches répétées (lot E-repet) : une fois par couleur (« violette = 7 », pas trois fois)
+  const couleurDe = rel.repetees && Array.isArray(rel.repetees.couleurDe) ? rel.repetees.couleurDe : null;
+  if(couleurDe) order = order.filter((i, n) => order.findIndex(j => couleurDe[j] === couleurDe[i]) === n);
   const uiFont = 'system-ui, -apple-system, "Segoe UI", Roboto, Arial';
   const entries = order.map(i => ({ i, txt:`${investigateColorWord(investigateColorInfo(card, i))} = ${formatRelationNumber(values[i])}` }));
   let fs = f(24);
@@ -6456,7 +6722,9 @@ function drawRelationOrderedSchema(targetGroup, card, opts = {}){
   let x = barX;
   // Les cases 𝑥 sont celles des taches (une par 𝑥, ou une case « k𝑥 » par tache quand
   // la barre serait trop longue), les plus grandes d'abord, puis les constantes.
-  const xPartsFromItems = (totals.items || []).flatMap(item => (item.parts || []).filter(part => part && part.kind === "x").map(part => ({...part})));
+  // taches répétées (lot E-repet) : les cases 𝑥 du schéma regroupé (« 9 × ? » par couleur quand elles sont regroupées)
+  const sourceX = (card && card._rel && card._rel.repetees) ? grouped.groups : (totals.items || []);
+  const xPartsFromItems = sourceX.flatMap(item => (item.parts || []).filter(part => part && part.kind === "x").map(part => ({...part})));
   const xCellsCount = xPartsFromItems.reduce((acc, part) => acc + Math.max(1, Math.round(Number(part.coef) || 1)), 0);
   const orderedXParts = (xPartsFromItems.length && xCellsCount === coefficient)
     ? xPartsFromItems.sort((a, b) => (Number(b.weight) || 1) - (Number(a.weight) || 1))
@@ -6469,7 +6737,7 @@ function drawRelationOrderedSchema(targetGroup, card, opts = {}){
     const part = orderedParts[i];
     const isLast = i === orderedParts.length - 1;
     const w = isLast ? (barX + barW - x) : cellWidths[i];
-    drawBarCell(g, x, yTop+topH, w, botH, part, true, {fontSize:f(30)});
+    drawBarCell(g, x, yTop+topH, w, botH, part, true, {fontSize:f(30), ajuster:!!(card && card._rel && card._rel.repetees)});
     x += w;
   }
 
@@ -6585,10 +6853,10 @@ function drawRelationGroupedSchema(targetGroup, card, opts = {}){
       const isLastOverall = (x >= barX + barW - 1) || (group === groups[groups.length-1] && j === group.parts.length-1);
       const w0 = cellWidths[cellIndex++];
       const w = isLastOverall ? (barX+barW-x) : w0;
-      drawBarCell(g, x, yTop+topH, w, botH, part, true, {fontSize:f(30)});
+      drawBarCell(g, x, yTop+topH, w, botH, part, true, {fontSize:f(30), ajuster:!!(card && card._rel && card._rel.repetees)});
       x += w;
     }
-    groupSpans.push({x1:groupStart, x2:x, label:group.label, splatIndex:group.splatIndex});
+    groupSpans.push({x1:groupStart, x2:x, label:group.label, splatIndex:group.splatIndex, count:group.count || 1});
   }
 
   // Accolades sous le schéma regroupé : elles identifient les morceaux qui viennent
@@ -6600,10 +6868,13 @@ function drawRelationGroupedSchema(targetGroup, card, opts = {}){
     const ownerInfo = span.splatIndex == null ? null : investigateColorInfo(card, span.splatIndex);
     const isFirst = span === groupSpans[0];
     const isLast = span === groupSpans[groupSpans.length - 1];
+    // taches répétées (lot E-repet) : « 3 violettes » écrit sous l'accolade, à l'écran aussi
+    const plusieurs = span.count > 1;
     const ownerOpts = span.splatIndex == null
-      ? opts
+      ? ((card && card._rel && card._rel.repetees) ? {...opts, labelDebutMin: span.x1 + 4} : opts)
       : {...opts, ownerSplatColor:taskSplatColor(span.splatIndex, card),
-         ownerWord: card && card.family === "C" ? investigateColorWord(ownerInfo) : "",
+         ...(plusieurs ? { ownerLabels:true } : {}),
+         ownerWord: card && card.family === "C" ? (plusieurs ? span.label : investigateColorWord(ownerInfo)) : "",
          ownerInitial: card && card.family === "C" ? investigateColorInitial(ownerInfo) : "",
          freeLeft: isFirst ? Math.max(0, span.x1 - (boxX + 24)) : 0,
          freeRight: isLast ? Math.max(0, (boxX + boxW - 12) - span.x2) : 0};
@@ -7690,12 +7961,22 @@ function renderCard(card, revealState){
     const yMax = 965;
     let lineH = 65;
     let startY = trayBottom + 70;
+    /* Enquête, taches répétées (lot E-repet) : la règle, comme « Sous chaque tache, il y a le
+       même nombre de jetons. » aux modes A et B, en une ligne de plus sous les indices. */
+    const regleRepetees = card.family === "C" && !!(card._rel && card._rel.repetees);
+    const nLignes = indices.length + (regleRepetees ? 1 : 0);
 
-    if(indices.length > 1){
-      const needed = startY + (indices.length - 1) * lineH;
+    if(nLignes > 1){
+      const needed = startY + (nLignes - 1) * lineH;
       if(needed > yMax){
-        lineH = Math.max(48, (yMax - startY) / (indices.length - 1));
+        lineH = Math.max(48, (yMax - startY) / (nLignes - 1));
       }
+    }
+    if(regleRepetees){
+      const fitR = layoutClueSentence(ENQUETE_REGLE_REPETEES, 38, 1600 - 2*24, false);
+      gInd.appendChild(text(800, startY + indices.length * lineH, fitR.lines[0], {
+        "text-anchor":"middle", "font-size":String(fitR.fontSize), "fill":"#334155", "font-weight":"700"
+      }));
     }
 
     indices.forEach((txt, i) => {
@@ -8706,7 +8987,9 @@ function getRelationCorrectionPrintProfile(card){
   // (ou l'initiale) de leur couleur — lisible en photocopie.
   return card && card._directSubstitution
     ? { verticalScale:1.40, fontScale:1.30, ownerLabels:true }
-    : { verticalScale:1.20, fontScale:1.25, barShiftX:30, ownerLabels:true };
+    // taches répétées (lot E-repet) : jusqu'à 7 lignes dans le schéma rempli — les cadres
+    // grandissent un peu moins en hauteur (polices inchangées) pour tenir dans la carte
+    : { verticalScale:(card && card._rel && card._rel.repetees) ? 1.12 : 1.20, fontScale:1.25, barShiftX:30, ownerLabels:true };
 }
 
 function renderCardIntoSvg(targetSvg, card, printMode){
@@ -8896,7 +9179,8 @@ function renderCardIntoSvg(targetSvg, card, printMode){
       // « visibles » en plus (jetons visibles), tout se resserre encore : au pire
       // (3 taches, deux indices à retourner, jetons visibles) il reste ≈ 40 px.
       const reformulation = relationReformulationLines(card).length > 0;
-      const serre = reformulation && Number(card._rel.visibleSum) > 0;
+      // taches répétées (lot E-repet) : à 5 taches et plus, le schéma rempli a 5 à 7 lignes ; on resserre aussi
+      const serre = reformulation && (Number(card._rel.visibleSum) > 0 || (!!card._rel.repetees && Number(card._rel.taskCount) >= 5));
       const gap = reformulation ? (serre ? 14 : 28) : stepGap;
       if(reformulation){
         placeStep(layer => drawRelationReformulationBox(layer, card, { ...printProfile, compact: serre }));
@@ -9364,7 +9648,9 @@ function getClassicPrintInstruction(slotCards){
     };
   }
   if(act === "C" || act === "CD"){
-    return {main:"Utilise les indices pour déterminer la valeur cachée sous chaque tache.", note:""};
+    // taches répétées (lot E-repet) : la règle, une fois par page, comme aux modes A et B
+    const repetees = Array.isArray(slotCards) && slotCards.some(c => c && c._rel && c._rel.repetees);
+    return {main:"Utilise les indices pour déterminer la valeur cachée sous chaque tache.", note:repetees ? ENQUETE_REGLE_REPETEES : ""};
   }
   if(act === "D"){
     /* le Système (lot S2, conception S0 §3) : une situation = un plateau et son total */
@@ -10124,7 +10410,12 @@ function eleveInfosEnquete(card){
   if(!valeurs.length || valeurs.some(v => !(v > 0))) return null;
   const visibleSum = (card.visible || []).reduce((s, v) => s + v, 0);
   const cx = i => (card._splats && card._splats[i] && Number(card._splats[i].cx)) || 0;
-  const ordre = valeurs.map((_, i) => i).sort((a, b) => cx(a) - cx(b));
+  /* Taches répétées (lot E-repet) : une case par COULEUR — la première tache de chaque
+     couleur, dans l'ordre du plateau ; les autres taches de la couleur cachent le même
+     nombre. Une tache par couleur : les taches de gauche à droite, comme avant. */
+  const couleurDe = card._rel.repetees && Array.isArray(card._rel.repetees.couleurDe) ? card._rel.repetees.couleurDe : null;
+  const ordre = couleurDe ? valeurs.map((_, i) => i).filter(i => couleurDe.indexOf(couleurDe[i]) === i)
+    : valeurs.map((_, i) => i).sort((a, b) => cx(a) - cx(b));
   return { tasks: valeurs.length, valeurs, visibleSum, ordre };
 }
 
