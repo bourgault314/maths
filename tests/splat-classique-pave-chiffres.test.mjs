@@ -184,8 +184,11 @@ function monter({ tactile = true, largeur = 390, hauteur = 664, ecran = { width:
     "function eleveValiderSplat(){ validations.push(true); if (reussite) document.getElementById('eleveValider').disabled = true; }",
     "function eleveCalerLargeur(){ calages++; }",
     declaration("let elevePave = null"),
-    declaration("const ELEVE_PLATEAU_MIN"),
-    ...["eleveConsigneSchema", "elevePaveObtenir", "elevePaveMesurer", "elevePaveCalerCarte", "elevePaveSynchroniser", "elevePaveRendrePlateau", "elevePaveActiver"].map(source),
+    declaration("const ELEVE_PLATEAU_MIN "),
+    // lot E7 : la hauteur et la réserve de l'Enquête au téléphone (hors Enquête : sans effet)
+    declaration("let eleveIndicesTel"),
+    declaration("const ELEVE_PLATEAU_MIN_ENQ"),
+    ...["eleveConsigneSchema", "eleveIndicesHauteurPlateau", "elevePaveObtenir", "elevePaveMesurer", "elevePaveCalerCarte", "elevePaveSynchroniser", "elevePaveRendrePlateau", "elevePaveActiver"].map(source),
     // l'ouverture d'une carte, telle que renderEleveSplat l'écrit
     "function ouvrirCarte(panneau){",
     passage("  const pave = elevePaveActiver(panneau);", 'document.getElementById("eleveValider").onclick = eleveValiderSplat;'),
