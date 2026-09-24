@@ -136,8 +136,9 @@ test("la consigne de l'Enquête est la question de la fiche ; celle du monde 2 n
   const consigne = (classes, tactile, largeur) => new Function("document", "window", `${fn("eleveConsigneSchema")} return eleveConsigneSchema();`)(
     docAvecPanneau(classes),
     { MathsGoPaveChiffres: { estTactile: () => tactile }, matchMedia: (q) => ({ matches: q === "(max-width: 599px)" && largeur <= 599 }) });
-  assert.equal(consigne(["enquete"], true, 390), "Combien de jetons sous chaque tache ?");
-  assert.equal(consigne(["enquete"], false, 1280), "Combien de jetons sous chaque tache ?");
+  // espace insécable avant le « ? » (lot E7) : il ne part jamais seul à la ligne
+  assert.equal(consigne(["enquete"], true, 390), "Combien de jetons sous chaque tache\u00a0?");
+  assert.equal(consigne(["enquete"], false, 1280), "Combien de jetons sous chaque tache\u00a0?");
   assert.equal(consigne([], true, 390), "Complète le schéma, puis Valider.");
   assert.equal(consigne([], false, 1280), "Complète le schéma en barres : le total, les jetons visibles, et ce que cache chaque tache. Puis Valider.");
 });
@@ -215,9 +216,9 @@ test("cinq étapes, une par appui ; à la dernière le bouton s'efface et « Car
 
 test("les étapes sont celles de la projection, et la nouvelle carte repart du plateau couvert", () => {
   assert.match(fn("eleveDessinerSchema"), /renderCard\(card, eleveSchemaEtape\);\n  eleveCadrerScene\(\);/);
-  assert.match(fn("renderEleveSplat"), /eleveEnqueteDevoile = false; eleveSchemaEtape = 0;[^\n]*\n  renderCard\(card, 0\);/);
+  assert.match(fn("renderEleveSplat"), /eleveEnqueteDevoile = false; eleveSchemaEtape = 0;[^\n]*\n  eleveIndicesTel = [^\n]*\n  renderCard\(card, 0\);/);
   assert.match(fn("renderEleveSplat"), /elevePaveRendrePlateau\(\);[^\n]*\n  eleveSchemaReinitialiser\(\);/);
-  assert.match(fn("renderEleveFinSplat"), /eleveEnqueteDevoile = false; eleveSchemaEtape = 0;[^\n]*\n  renderCard\(eleveSerie\[total - 1\], 0\);/);
+  assert.match(fn("renderEleveFinSplat"), /eleveEnqueteDevoile = false; eleveSchemaEtape = 0;[^\n]*\n  eleveIndicesTel = false;[^\n]*\n  renderCard\(eleveSerie\[total - 1\], 0\);/);
   // le cadre 1,5 fois plus large que l'écran, à faire glisser (coupé à droite), a disparu
   assert.doesNotMatch(html, /ELEVE_SCHEMA_ZOOM_TEL|eleveSchemaZoom/);
   assert.match(fn("eleveSchemaTelephone"), /window\.matchMedia\("\(max-width: 599px\)"\)\.matches/);
