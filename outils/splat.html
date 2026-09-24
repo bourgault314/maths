@@ -3525,6 +3525,50 @@ function genInvestigate(rng){
       repetees: { couleurDe: couleurDe.slice(), nombre: nombre.slice() }
     };
   }
+  /* Les places des taches du plateau (celles de la table de dessin du plateau bas,
+     getNumberedSplats, 3 à 6 taches ; un test vérifie qu'elles n'ont pas changé). */
+  const PLACES_PLATEAU = {
+    3: [[820,455],[580,655],[1060,655]],
+    4: [[610,400],[1030,400],[610,670],[1030,670]],
+    5: [[540,420],[820,420],[1100,420],[680,680],[960,680]],
+    6: [[540,420],[820,420],[1100,420],[540,680],[820,680],[1100,680]]
+  };
+  /* Quelle couleur à quelle place (choix du 23/09 : les taches d'une couleur côte à côte,
+     précisé le 24/09 : une couleur sur une seule rangée quand elle y tient). On essaie toutes
+     les façons de ranger les couleurs (90 au plus) et on garde celle qui coupe le moins de
+     couleurs entre deux rangées, puis celle où les taches d'une même couleur sont le plus
+     proches ; à égalité, la première dans l'ordre des couleurs. Aucun tirage au hasard. */
+  function placerCouleurs(nombre){
+    const n = nombre.reduce((a, b) => a + b, 0);
+    const places = PLACES_PLATEAU[n];
+    const suite = [];
+    nombre.forEach((m, c) => { for(let j=0; j<m; j++) suite.push(c); });
+    if(!places) return suite;
+    const rangees = [...new Set(places.map(p => p[1]))];
+    const tailleRangee = Math.max(...rangees.map(y => places.filter(p => p[1] === y).length));
+    let meilleur = suite, score = Infinity;
+    const essai = [], reste = nombre.slice();
+    (function ranger(){
+      if(essai.length === n){
+        let coupees = 0, distance = 0;
+        nombre.forEach((m, c) => {
+          const ici = essai.map((k, i) => k === c ? places[i] : null).filter(Boolean);
+          if(m <= tailleRangee && new Set(ici.map(p => p[1])).size > 1) coupees++;
+          for(let a=0; a<ici.length; a++) for(let b=a+1; b<ici.length; b++) distance += Math.hypot(ici[a][0] - ici[b][0], ici[a][1] - ici[b][1]);
+        });
+        const s = coupees * 100000 + distance;
+        if(s < score - 1e-6){ score = s; meilleur = essai.slice(); }
+        return;
+      }
+      for(let c=0; c<reste.length; c++){
+        if(!reste[c]) continue;
+        reste[c]--; essai.push(c);
+        ranger();
+        essai.pop(); reste[c]++;
+      }
+    })();
+    return meilleur;
+  }
   function tirerCarteRepetee(){
     for(let tries=0; tries<5000; tries++){
       const nombre = colorMap.map(() => rInt(rng, 1, repeatMax));
@@ -3570,9 +3614,8 @@ function genInvestigate(rng){
       const hiddenSum = vals.reduce((s, v, c) => s + v * nombre[c], 0);
       const total = hiddenSum + visSum;
       if(total < minTotal || total > maxTotal) continue;
-      // sur le plateau, les taches d'une couleur à la suite, couleur après couleur
-      const couleurDe = [];
-      nombre.forEach((m, c) => { for(let j=0; j<m; j++) couleurDe.push(c); });
+      // sur le plateau : une couleur par rangée quand elle y tient (placerCouleurs)
+      const couleurDe = placerCouleurs(nombre);
       const rep = repeterModele(
         buildRelationModel({ taskCount, hiddenVals: vals, relations, structure: taskCount === 2 ? "PAIR" : structureMode, visibleSum: visSum }),
         couleurDe, nombre);

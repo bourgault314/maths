@@ -70,6 +70,15 @@ const tirer = new Function("invTaskCountEl", "invClueTypeEl", "invStructure3El",
   };`)(null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, { value:"C" }, null);
 
 const empreinte = (x) => createHash("sha256").update(JSON.stringify(x)).digest("hex").slice(0, 16);
+/* Les places des taches du plateau bas, telles que la page les dessine (table de dessin). */
+const PLACES = new Function(`
+  ${fn("getTrayConfig")}
+  ${fn("getNumberedSplatsLegacy")}
+  ${fn("getNumberedSplats")}
+  const out = {};
+  for(const n of [3, 4, 5, 6]) out[n] = getNumberedSplats(n, "C").map(s => [s.cx, s.cy]);
+  return out;
+`)();
 const INTERDITS = ["69", "88", "420", "666", "1488"];
 const sousEntendu = (n) => INTERDITS.some(x => String(n).includes(x));
 
@@ -126,8 +135,22 @@ test("case cochée : couleurs répétées, même nombre sous une même couleur, 
       vusTaches.add(n); vusNombreMax.add(Math.max(...nombre));
       assert.equal(c._num.tasks, n);
       assert.equal(R.taskCount, n, "le modèle est écrit tache par tache");
-      // côte à côte : les taches d'une couleur à la suite, couleur après couleur (choix du 23/09)
-      assert.deepEqual(couleurDe, [...couleurDe].sort((a, b) => a - b));
+      // côte à côte (choix du 23/09), une couleur sur une seule rangée quand elle y tient (24/09) :
+      // seul 2 + 2 + 2 sur 6 places (deux rangées de 3) oblige à couper une couleur — alors
+      // en colonne, l'une au-dessus de l'autre
+      const places = PLACES[n];
+      const taille = n === 3 ? 2 : (n === 4 ? 2 : 3);
+      const coupees = nombre.map((m, k) => {
+        const ys = new Set(couleurDe.map((x, i) => x === k ? places[i][1] : null).filter(y => y !== null));
+        return m <= taille && ys.size > 1 ? k : null;
+      }).filter(k => k !== null);
+      if(nombre.join("+") === "2+2+2"){
+        assert.equal(coupees.length, 1, "2 + 2 + 2 : une seule couleur coupée");
+        const xs = couleurDe.map((x, i) => x === coupees[0] ? places[i][0] : null).filter(v => v !== null);
+        assert.equal(new Set(xs).size, 1, "la couleur coupée est en colonne");
+      }else{
+        assert.deepEqual(coupees, [], `aucune couleur coupée entre deux rangées (${nombre.join("+")} : ${couleurDe.join("")})`);
+      }
       // même couleur = même nombre et même clé de couleur ; deux couleurs = deux nombres
       const valeurCouleur = [], cle = [];
       couleurDe.forEach((k, i) => {
@@ -195,6 +218,13 @@ test("case cochée : couleurs répétées, même nombre sous une même couleur, 
   }
   assert.ok(vusNombreMax.has(2) && vusNombreMax.has(3), "2 et 3 fois la même couleur");
   assert.deepEqual([...vusTaches].sort(), [3, 4, 5, 6], "de 3 à 6 taches");
+});
+
+test("les places connues du générateur sont celles que la page dessine (plateau bas, 3 à 6 taches)", () => {
+  const src = fn("genInvestigate");
+  const bloc = src.slice(src.indexOf("const PLACES_PLATEAU = {"), src.indexOf("};", src.indexOf("const PLACES_PLATEAU = {")) + 2);
+  const lues = new Function(`${bloc}\nreturn PLACES_PLATEAU;`)();
+  assert.deepEqual(lues, PLACES);
 });
 
 test("case cochée, réglages impossibles (total max 8) : des cartes, jamais d'erreur", () => {
