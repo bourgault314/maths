@@ -140,8 +140,10 @@ test("E4 : au dos, le mini-schéma est un vrai schéma en barres — chaque « ?
   // la case TOTAL du dos est dessinée comme celle des cartes (23/09 : « il y a le petit mot total ») ;
   // si l'outil change la sienne, ce test le rappelle
   assert.match(dos, /<svg class="boite-total"[^>]*><rect x="0" y="0" width="280" height="210" rx="22"[^>]*\/><text[^>]*font-size="42"[^>]*>TOTAL<\/text><text[^>]*font-size="96"[^>]*>\d+<\/text><\/svg>/);
+  // (lot P, 24/09/2026 : seule la colonne 6/page des modes A et B passe à 400 ; les cartes de
+  // l'Enquête, que ce dos reproduit, gardent 280)
   const outil = lire("outils/splat.html");
-  for (const s of ["const boxH = 210;", "let boxW = 280;", "const totalLabelSize = 42;", "const totalNumberSize = 96;", "const totalNumberDy = 83;"])
+  for (const s of ["const boxH = 210;", "let boxW = opts.sixColonne ? SIX_COLONNE.colonneW : 280;", "const totalLabelSize = 42;", "const totalNumberSize = 96;", "const totalNumberDy = 83;"])
     assert.ok(outil.includes(s), `outils/splat.html : ${s}`);
   // et render.py mesure les cases rendues : il refuse un mini-schéma faux
   for (const m of ["les cases « ? » n’ont pas toutes la même largeur", "des cases de la barre ne se touchent pas",

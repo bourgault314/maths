@@ -63,7 +63,8 @@ test("le total et les aides restent separes du plateau haut a l'impression", () 
   assert.match(printRenderer, /let tx = 800, ty = 92/);
   assert.match(printRenderer, /const totalNumberSize = 96/);
   assert.match(printRenderer, /const boxH = 210/);
-  assert.match(printRenderer, /let boxW = 280/);
+  // 280 partout, sauf la colonne 6/page des modes A et B (lot P) : 400
+  assert.match(printRenderer, /let boxW = opts\.sixColonne \? SIX_COLONNE\.colonneW : 280/);
   assert.doesNotMatch(printRenderer, /compactPrintTotal/);
   assert.match(printRenderer, /let currentY = trayY \+ trayH \+ 100/g);
   assert.match(printRenderer, /const centerY = \(isHelpOnly \? 1240 : 1285\) \+ printOffsetY/);

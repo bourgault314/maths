@@ -68,6 +68,9 @@ test("en 6/page, la feuille est en 2 × 3 et chaque carte ne dessine que le plat
   const printSheet = functionSource("printSheet", "waitForPrintAssets");
   assert.match(printSheet, /perSheet === 6 \? "print-6up" : "print-4up"/);
   assert.match(printSheet, /const cardViewBox = perSheet === 6 \? "0 0 1600 1000" : "0 0 1600 2200"/);
+  // lot P : les modes A, A±, B et B± passent d'abord par la colonne (voir le test du lot P) ;
+  // l'Enquête et le Système gardent le plateau seul à 80 %
+  assert.match(printSheet, /\}else if\(perSheet === 6 && sixColonneFamille\(card\)\)\{/);
   assert.match(printSheet, /sv\.setAttribute\("viewBox", cardViewBox\)/);
   assert.match(printSheet, /sv\.style\.width = perSheet === 6 \? "80%" : "100%"/);
   assert.match(printSheet, /classList\.remove\("print-1up", "print-2up", "print-4up", "print-6up"\)/);
@@ -124,6 +127,70 @@ test("à l'impression, la case TOTAL ne touche plus le plateau (plateau haut des
   const printRenderer = functionSource("renderCardIntoSvg", "printSheet");
   assert.match(printRenderer, /let tx = 800, ty = 92/);
   assert.match(printRenderer, /const boxY = ty - 70;/);
+});
+
+/* Lot P (24/09/2026) : en 6/page, modes A, A±, B et B±, la case TOTAL passe à droite du
+   plateau et le plateau remonte en haut de la case — 39 mm de blanc dessous au lieu de 29,5. */
+test("lot P : en 6/page (A, A±, B, B±), TOTAL et case réponse dans une colonne à droite, plateau en haut, même taille", () => {
+  const C = Function(`${html.match(/^const SIX_COLONNE = [^\n]*;/m)[0]} return SIX_COLONNE;`)();
+  const vb = Function(`const SIX_COLONNE = ${JSON.stringify(C)}; ${html.match(/^const SIX_COLONNE_VIEWBOX = [^\n]*;/m)[0]} return SIX_COLONNE_VIEWBOX;`)();
+  assert.equal(vb, "0 0 2000 730");
+  // le plateau garde sa taille physique : 1360 sur 2000 à 100 % = 1360 sur 1600 à 80 %
+  assert.ok(Math.abs(1360 / C.largeur - 1360 / 1600 * 0.8) < 1e-12);
+  // colonne de 400 à 60 du plateau, marges gauche et droite égales, plateau en haut (y 40)
+  assert.equal(C.colonneX - (C.plateauX + 1360), 60);
+  assert.equal(C.colonneW, 400);
+  assert.equal(C.plateauX, C.largeur - (C.colonneX + C.colonneW));
+  assert.equal(C.plateauY, 40);
+  assert.equal(C.hauteur, C.plateauY + C.plateauH + 30);
+  assert.equal(C.plateauH, 660);
+  // TOTAL (210) en haut et case réponse en bas de la colonne ne se touchent pas
+  assert.ok(C.plateauH - 210 - C.reponseH >= 200);
+
+  // seules les familles A, A±, B, B± ; l'Enquête (C) et le Système (D) gardent leur 6/page
+  const fam = Function(`${functionSource("sixColonneFamille", "drawSixReponseCase")} return sixColonneFamille;`)();
+  assert.deepEqual(["U", "UPM", "N", "NPM", "C", "D"].map(f => fam({ family:f })), [true, true, true, true, false, false]);
+  const printSheet = functionSource("printSheet", "waitForPrintAssets");
+  assert.match(printSheet, /\}else if\(perSheet === 6 && sixColonneFamille\(card\)\)\{\s*\n[^\n]*\n\s*sv\.setAttribute\("viewBox", SIX_COLONNE_VIEWBOX\);\s*\n\s*sv\.style\.width = "100%";\s*\n\s*renderCardIntoSvg\(sv, card, mode, \{ sixColonne:true \}\);/);
+
+  // le dessin : le plateau et tout ce qu'il porte dans un groupe seulement translaté (taches et
+  // jetons gardent leurs places), le TOTAL dans la colonne, 400 de large, aligné sur le haut du plateau
+  const rend = functionSource("renderCardIntoSvg", "sixColonneFamille");
+  assert.match(rend, /targetSvg = tEl\("g",\{id:"plateauSixPrint", transform:`translate\(\$\{SIX_COLONNE\.plateauX - printTray\.x\} \$\{SIX_COLONNE\.plateauY - trayY\}\)`\}\);/);
+  assert.match(rend, /if\(opts\.sixColonne\)\{ tx = SIX_COLONNE\.colonneX \+ SIX_COLONNE\.colonneW\/2; ty = SIX_COLONNE\.plateauY \+ 70; \}/);
+  assert.match(rend, /let boxW = opts\.sixColonne \? SIX_COLONNE\.colonneW : 280;/);
+  assert.match(rend, /if\(opts\.sixColonne\) drawSixReponseCase\(racine, revealAnswers \? sixCorrectionData\(card\)\.h : null, tEl, tText\);/);
+
+  // la case réponse, exécutée : « tache = ……… » sur une ligne, en bas de la colonne
+  const mini = html.match(/^const ELEVE_TACHE_MINI = [^\n]*;/m)[0];
+  const dessiner = Function("valeur", `${mini}
+    const SIX_COLONNE = ${JSON.stringify(C)};
+    ${functionSource("drawSixReponseCase", "printSheet")}
+    const el = (nom, a = {}) => ({ nom, a, enfants: [], t: "", appendChild(e){ this.enfants.push(e); return e; } });
+    const text = (x, y, t, a = {}) => { const e = el("text", { x, y, ...a }); e.t = t; return e; };
+    const hote = el("svg");
+    drawSixReponseCase(hote, valeur, el, text);
+    return { g: hote.enfants[0], d: (ELEVE_TACHE_MINI.match(/ d="([^"]+)"/) || [])[1] };`);
+  const vide = dessiner(null);
+  assert.equal(vide.g.a.id, "reponseGroupPrint");
+  const [cadre, tache, egal, pointilles] = vide.g.enfants;
+  assert.deepEqual([cadre.a.x, cadre.a.y + cadre.a.height, cadre.a.width], [C.colonneX, C.plateauY + C.plateauH, 400], "calée sur le bas du plateau");
+  assert.equal(tache.nom, "path");
+  assert.ok(vide.d.length > 100 && tache.a.d === vide.d, "la mini-tache du mode élève");
+  assert.equal(tache.a.fill, "#000");
+  assert.deepEqual([egal.nom, egal.t], ["text", "="]);
+  assert.equal(pointilles.nom, "line");
+  assert.equal(pointilles.a["stroke-dasharray"], "0.1 18");
+  // 8 mm de pointillés environ (case de 88 mm pour 2000 unités), sur la ligne du « = »
+  const mm = (pointilles.a.x2 - pointilles.a.x1) * 88 / 2000;
+  assert.ok(mm >= 7 && mm <= 9, `${mm.toFixed(1)} mm de pointillés`);
+  assert.ok(pointilles.a.x2 <= C.colonneX + 400 - 30);
+  assert.equal(vide.g.enfants.filter(e => e.nom === "text").length, 1, "pas de mot, pas de « ? »");
+  // en correction courte (lot K2) : la valeur à la place des pointillés
+  const corr = dessiner(3);
+  assert.deepEqual(corr.g.enfants.map(e => e.nom), ["rect", "path", "text", "text"]);
+  assert.equal(corr.g.enfants[3].t, "3");
+  assert.ok(corr.g.enfants[3].a.x > egal.a.x, "le nombre à côté du signe égal");
 });
 
 test("à l'impression, les cadres sont gris foncé sur fond blanc (cases et plateau)", () => {
