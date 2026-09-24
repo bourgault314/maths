@@ -59,7 +59,7 @@ test("le sélecteur « Pages » propose 6/page, 2/page reste le réglage par dé
   assert.match(html, /<option value="6">6\/page<\/option>\s*<option value="4">4\/page<\/option>\s*<option value="2" selected>2\/page<\/option>/);
   assert.match(html, /setSelectFromShare\(params, "layout", printCardsPerPageEl\)/);
   assert.match(html, /addShareControl\(params, "layout", printCardsPerPageEl\)/);
-  assert.match(html, /const sharedNames = \[[^\]]*"layout"[^\]]*"suite"\]/);
+  assert.match(html, /const sharedNames = \[[^\]]*"layout"[^\]]*"suite", "jouer"\]/);
 });
 
 test("6/page vaut pour l'énoncé seul ; schéma ou correction, recto ou verso, retombent sur 4", () => {

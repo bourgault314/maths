@@ -1446,6 +1446,7 @@ function getSeedForCurrentMode(){
 
 let activeGenerationSeed = "";
 let impressionAuto = false;
+let jeuAuto = false;
 /* Fiche composée (« suite » dans l'adresse) : les parties lues, et si la série affichée
    est encore la série composée (une nouvelle génération la remplace). */
 let serieSuite = [];
@@ -1571,6 +1572,13 @@ function loadSharedConfiguration(){
      on lance l'impression dès que les cartes sont générées, au lieu de
      laisser le professeur chercher le bouton Imprimer. */
   impressionAuto = params.get("imprimer") === "1";
+  /* « jouer=1 » (lot Q3, 24/09/2026) : les QR du dos des livrets du monde 5 arrivent ici.
+     La page tire la série de l'adresse (sans graine : des équations nouvelles à chaque
+     fois), puis l'ouvre aussitôt dans le jeu de l'élève d'ÉquaSplat — la même barre
+     « Équation 1 / N » que la carte des mondes, mais sans parcours : aucune étoile, rien
+     d'enregistré. On masque la page pendant ce court passage. */
+  jeuAuto = params.get("jouer") === "1";
+  if(jeuAuto) document.documentElement.style.visibility = "hidden";
   /* Fiche composée : « suite » porte les réglages des séries SUIVANTES, mises bout à
      bout après celle de l'adresse (la fiche 35 du livret : trois graines de 4 cartes).
      Chaque partie est une adresse encodée, séparée par « ; », comme dans splat.html.
@@ -1581,7 +1589,7 @@ function loadSharedConfiguration(){
       .split(";").map(part => part.trim()).filter(Boolean).slice(0, 5);
     reglagesOuverture = photographierReglages();
   }
-  const sharedNames = ["mode", "seed", "cards", "form", "tasksMax", "visibleMin", "visibleMax", "totalMin", "totalMax", "beadMax", "opposites", "colors", "writing", "unknown", "view", "print", "duplex", "layout", "title", "imprimer", "suite"];
+  const sharedNames = ["mode", "seed", "cards", "form", "tasksMax", "visibleMin", "visibleMax", "totalMin", "totalMax", "beadMax", "opposites", "colors", "writing", "unknown", "view", "print", "duplex", "layout", "title", "imprimer", "suite", "jouer"];
   if(!sharedNames.some(name => params.has(name))) return false;
   appliquerConfiguration(params);
   return true;
@@ -1894,6 +1902,33 @@ function openEquationInEquaSplat(card, revealState = 0){
   }catch(err){
     console.error("Impossible d'ouvrir ÉquaSplat import", err);
   }
+}
+
+/* Une carte, telle que la série du jeu de l'élève la porte (carte des mondes, lot Q2) :
+   les taches en « x », puis la somme des jetons de chaque côté. C'est exactement la
+   conversion qui a fabriqué les séries des fiches 35, 36 et 37 ; un test la rejoue sur
+   ces trois séries et doit retrouver leurs équations à l'octet. */
+function carteDuJeuEquaSplat(card){
+  const p = buildEquationEquaSplatPayload(card, 0);
+  if(!p) return null;
+  const cote = row => {
+    const r = row.filter(t => t.type === "x").map(() => "x");
+    const n = row.filter(t => t.type === "number");
+    if(n.length) r.push(n.reduce((s, t) => s + t.value, 0));
+    return r;
+  };
+  return { source:p.source, variable:p.variable, unknownDisplay:p.unknownDisplay, universe:p.universe,
+           numberMode:p.numberMode, signedWritingMode:p.signedWritingMode, x:p.x,
+           left:cote(p.left), right:cote(p.right) };
+}
+
+/* « jouer=1 » : la série tirée part dans le jeu de l'élève d'ÉquaSplat, sans parcours. */
+const EQUASPLAT_JEU_URL = "/outils/equasplat.html?eleve=1";
+function ouvrirSerieDansEquaSplat(){
+  const serie = cards.map(carteDuJeuEquaSplat).filter(Boolean);
+  if(!serie.length){ document.documentElement.style.visibility = ""; return; }
+  const payload = { source:"univers_splat", serie };
+  window.location.replace(`${EQUASPLAT_JEU_URL}#data=${encodeEquabarPayload(payload)}`);
 }
 
 function drawEquationEquaSplatSolveButton(targetGroup, card, x, y, revealState = 0){
@@ -9730,6 +9765,7 @@ syncPrintSummary();
 if(serieSuite.length) genererSerieComposee();
 else generate();
 if(impressionAuto) printSheet();
+if(jeuAuto) ouvrirSerieDansEquaSplat();
 
 </script>
 </body>

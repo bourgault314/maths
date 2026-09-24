@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8"><title>Livret SPLAT! Équations — couverture</title>
+<link rel="stylesheet" href="commun.css">
+<style>
+/* ---------- bandeau de titre, bord inférieur en coulure (même dessin que les mondes 1 à 4) ---------- */
+.tete{position:relative;height:88mm;flex:0 0 auto}
+.tete .fond{position:absolute;inset:0;width:210mm;height:88mm;display:block}
+.tete .logos{position:absolute;top:6mm;right:11mm;display:flex;align-items:center;gap:5mm}
+.tete .logos img.irem{height:14mm}
+.tete .logos img.mg{height:12mm}
+.tete .bloc{position:absolute;left:12mm;top:14mm;width:118mm}
+.tete .sur{font-size:13px;font-weight:700;color:#e6f7f6;text-transform:uppercase;letter-spacing:3px}
+.tete h1{margin:1mm 0 0;font-size:60px;line-height:0.98;font-weight:700;color:#fff;letter-spacing:-2.5px}
+.tete h1 span{display:block;font-size:34px;letter-spacing:-0.5px;margin-top:1mm}
+.tete .accroche{margin:4mm 0 0;font-size:14.5px;font-weight:700;color:#fff;line-height:1.3}
+.tete .hero{position:absolute;right:13mm;top:20mm;width:60mm;height:60mm}
+/* ---------- corps ---------- */
+.corps{padding:0 14mm 5mm;justify-content:space-between}
+.expl{border:1.4px solid #cbd5e1;border-radius:8px;padding:5mm 6mm 5.5mm;margin-top:2mm}
+.expl .intro{font-size:15px;font-weight:700;color:#134e4a;line-height:1.35;margin:3.5mm 0 4mm}
+.expl .intro > span{display:block;font-weight:400;color:#475569;font-size:12.5px;margin-top:1.2mm}
+.demo{display:flex;align-items:stretch;gap:3mm;height:60mm}
+.carte{position:relative;flex:1 1 0;min-width:0;border:1.6px solid #0f172a;border-radius:4px;padding:1.5mm 2mm 2mm;background:#fff;display:flex;flex-direction:column}
+.carte svg{flex:1 1 auto;min-height:0;width:100%;height:100%;display:block}
+.carte.corr{flex:0 0 70mm}
+.fleche{flex:0 0 auto;color:#115e59;font-size:22px;font-weight:700;align-self:center}
+.lg{font-size:11.5px;font-weight:700;color:#334155;text-align:center;margin-bottom:1.4mm}
+.expl .atoi{margin:4.5mm 0 0;font-size:13px;font-weight:700;color:#0f172a;line-height:1.35;background:#e6f7f6;border:1px solid #9fdcd9;border-radius:6px;padding:2.2mm 3.5mm;display:flex;align-items:center;gap:3mm}
+.expl .atoi svg{flex:0 0 auto;width:7mm;height:7mm}
+.expl .atoi b{color:#115e59}
+/* ---------- identité ---------- */
+.ident{display:flex;gap:6mm}
+.ident .champ{flex:1;border:1.4px solid #5b6574;border-radius:6px;padding:4mm 4mm 11mm}
+.ident .champ span{font-size:12.5px;font-weight:700;color:#334155}
+.ident .champ.classe{flex:0 0 52mm}
+/* ---------- sommaire ---------- */
+.som ol{list-style:none;margin:3.5mm 0 0;padding:0;display:grid;grid-template-columns:1fr 1fr 1fr;gap:4mm 6mm}
+.som li{display:flex;align-items:flex-start;gap:3mm;font-size:13.5px;font-weight:700;color:#0f172a;line-height:1.25}
+.som li em{display:block;font-style:normal;font-weight:400;color:#475569;font-size:11px;line-height:1.3;margin-top:0.8mm}
+.som .badge{position:relative;flex:0 0 11mm;height:11mm}
+.som .badge svg{position:absolute;left:0;top:3%;width:11mm;height:11mm}
+/* le numéro au centre de la tache : sa boîte est rognée au dessin du chiffre (text-box), et
+   c'est la tache qui descend de 3 % pour amener son centre visuel au milieu (page des livrets) ;
+   mesuré sur le PDF, le numéro restait 2 % trop haut : on le descend d'autant */
+.som .badge b{position:absolute;top:1%;bottom:-1%;left:0;right:0;display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px;line-height:1;text-box:trim-both cap alphabetic}
+</style></head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs><g id="tacheBadge"><path d="M 96.4 55 C 98.7 57.2 102 60.1 102.8 62.6 C 103.7 65.1 102.7 67.9 101.4 70.1 C 100 72.2 97 73.8 94.9 75.3 C 92.7 76.9 90.7 78.2 88.5 79.3 C 86.3 80.4 84.1 81.4 81.9 81.9 C 79.6 82.4 76.9 81.9 75 82.5 C 73.1 83.2 71.8 83.6 70.6 85.6 C 69.4 87.6 69.1 91.5 67.8 94.4 C 66.5 97.2 64.7 101.3 62.6 102.8 C 60.4 104.4 57.4 104.4 55 103.8 C 52.6 103.2 50.1 100.8 48 99.2 C 45.9 97.6 43.9 96.1 42.2 94.4 C 40.5 92.7 38.9 90.9 37.7 88.9 C 36.5 86.9 36.2 84.1 35 82.5 C 33.8 80.9 33 79.8 30.7 79.3 C 28.5 78.8 24.7 79.7 21.5 79.3 C 18.4 79 14 78.5 11.8 77 C 9.7 75.4 8.8 72.6 8.6 70.1 C 8.5 67.6 10 64.5 10.8 62 C 11.6 59.5 12.5 57.2 13.6 55 C 14.7 52.8 15.9 50.8 17.4 49 C 18.9 47.3 21.5 46.1 22.6 44.5 C 23.8 42.9 24.6 41.7 24.4 39.4 C 24.2 37.1 22.1 33.8 21.5 30.7 C 20.9 27.6 19.9 23.3 20.7 20.7 C 21.6 18.2 24 16.5 26.3 15.6 C 28.7 14.6 32 15.1 34.7 15.1 C 37.3 15.1 39.8 15.2 42.2 15.6 C 44.6 16 46.9 16.5 49 17.4 C 51.2 18.3 53.1 20.4 55 21 C 56.9 21.6 58.2 22 60.4 21.1 C 62.5 20.2 65 17.2 67.8 15.6 C 70.6 14.1 74.3 11.8 77 11.8 C 79.6 11.8 82.1 13.6 83.7 15.6 C 85.3 17.5 85.8 20.8 86.7 23.3 C 87.5 25.9 88.1 28.3 88.5 30.7 C 88.9 33.1 89.1 35.4 88.9 37.7 C 88.7 40 87.4 42.5 87.4 44.5 C 87.4 46.5 87.4 47.9 88.9 49.6 C 90.4 51.4 94.1 52.8 96.4 55 Z"/></g></defs></svg>
+
+<header class="tete">
+  <svg class="fond" viewBox="0 0 210 88" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <defs><linearGradient id="deg" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#08aaa5"/><stop offset=".45" stop-color="#4cc7c3"/><stop offset="1" stop-color="#e6f7f6"/>
+    </linearGradient></defs>
+    <path fill="url(#deg)" d="M0,0 H210 V68 C206,76 202,83 196,81 C190,79 188,69 180,69 C172,69 170,75 163,74 C156,73 154,67 145,68 C136,69 133,85 122,82 C111,79 110,68 100,69 C92,70 90,76 82,75 C74,74 72,67 62,68 C53,69 51,81 41,79 C33,77 31,68 22,69 C14,70 8,74 0,70 Z"/>
+    <ellipse cx="127.5" cy="85.6" rx="2.1" ry="1.7" fill="url(#deg)" transform="rotate(90 127.5 85.6)"/>
+    <ellipse cx="45" cy="83.2" rx="1.5" ry="1.2" fill="url(#deg)" transform="rotate(90 45 83.2)"/>
+    <ellipse cx="197" cy="85.3" rx="1.2" ry="1" fill="url(#deg)" transform="rotate(90 197 85.3)"/>
+  </svg>
+
+  <div class="logos">
+    <img class="irem" src="/assets/img/logos/irem/logo-print.png" alt="IREMI La Réunion">
+    <img class="mg" src="/assets/img/logos/mathsgo/logo-print.png" alt="maths&amp;go">
+  </div>
+
+  <div class="bloc">
+    <div class="sur">Mon livret · Monde 5 · L'équation</div>
+    <h1>SPLAT! <span>Équations</span></h1>
+    <p class="accroche">Deux plateaux, la même quantité…<br>et l'équation pour trouver la tache&nbsp;!</p>
+  </div>
+
+  <svg class="hero" viewBox="-7 -7 134 134" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Un splat noir marqué d'une lettre, entouré de jetons et de paquets de jetons : 10, 6 et 4">
+    <!-- Le monde 5 en une image : la tache porte une LETTRE (l'inconnue, comme en ligne et sur
+         les fiches), les jetons à gauche, les paquets à droite. Même dessin que les mondes 1 et 2 :
+         fond blanc et nombre foncé, qui tiennent en photocopie. -->
+    <g fill="#2563eb" stroke="#1e40af" stroke-width="0.4">
+      <circle cx="6" cy="28" r="4.6"/><circle cx="3" cy="64" r="4.6"/><circle cx="16" cy="97" r="4.6"/>
+    </g>
+    <g fill="#fff" stroke="#1e40af" stroke-width="0.9">
+      <circle cx="110" cy="27" r="6.2"/><circle cx="114" cy="62" r="6.2"/><circle cx="97" cy="98" r="6.2"/>
+    </g>
+    <g fill="#0b2f66" font-family="Poppins, 'Segoe UI', sans-serif" font-size="7" font-weight="700"
+       text-anchor="middle" dominant-baseline="central">
+      <text x="110" y="27" dy="0.05em">10</text><text x="114" y="62" dy="0.05em">6</text><text x="97" y="98" dy="0.05em">4</text>
+    </g>
+    <g transform="translate(6,6) scale(0.9)"><use href="#tacheBadge" fill="#000"/></g>
+    <text class="lettre" x="55" y="70" text-anchor="middle" fill="#fff" font-family="x-arrondi, serif" font-size="60">𝑥</text>
+  </svg>
+</header>
+
+<div class="corps">
+  <section class="expl">
+    <span class="chip">Comment ça marche&nbsp;?</span>
+    <!-- Les textes de cet encadré sont RÉÉCRITS par render.py à partir de la carte de l'exemple
+         (textes_exemple) : ils ne peuvent pas mentir sur ses nombres. -->
+    <div class="intro">Sur cette carte, il y a la même quantité de jetons à gauche et à droite.
+      <span>Chaque tache cache le même nombre de jetons&nbsp;: c'est l'inconnue.</span></div>
+    <div class="demo">
+      <!-- Les deux images sont dessinées par outils/splat_equations.html sur une carte qui n'est
+           dans AUCUNE fiche du livret : render.py les redemande à l'outil à chaque rendu. -->
+      <div class="carte">
+        <div class="lg">La carte</div>
+        <svg class="ex ex-carte" viewBox="0 0 1600 1000" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="La carte de l'exemple, les taches transparentes"></svg>
+      </div>
+      <div class="fleche">➜</div>
+      <div class="carte corr">
+        <div class="lg lg-corr">L'équation</div>
+        <svg class="ex ex-corr" viewBox="0 0 1600 1000" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="La résolution de l'exemple"></svg>
+      </div>
+    </div>
+    <p class="atoi"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 21l3.5-.8L19 7.7 16.3 5 3.8 17.5 3 21z" fill="#115e59"/><path d="M14.8 6.5l2.7 2.7" stroke="#fff" stroke-width="1.4"/></svg><span class="atoi-txt">Sur les fiches, la place sous chaque carte est pour toi&nbsp;: <b>écris l'équation</b>, puis résous-la pour trouver ce que cache la tache.</span></p>
+  </section>
+
+  <section class="ident">
+    <div class="champ"><span>Nom, prénom</span></div>
+    <div class="champ classe"><span>Classe</span></div>
+  </section>
+
+  <section class="som">
+    <span class="chip">Dans ce livret</span>
+    <ol>
+      <li><span class="badge"><svg viewBox="2 5 106 105" fill="#115e59"><use href="#tacheBadge"/></svg><b>35</b></span><span>Premières équations<em>Les jetons un par un.</em></span></li>
+      <li><span class="badge"><svg viewBox="2 5 106 105" fill="#115e59"><use href="#tacheBadge"/></svg><b>36</b></span><span>Des paquets de jetons<em>Les jetons arrivent en paquets.</em></span></li>
+      <li><span class="badge"><svg viewBox="2 5 106 105" fill="#115e59"><use href="#tacheBadge"/></svg><b>37</b></span><span>Des taches des deux côtés<em>L'inconnue des deux côtés.</em></span></li>
+    </ol>
+  </section>
+
+</div>
+
+<footer class="pied">mathsgo.re/splat · CC BY-NC-SA 4.0</footer>
+</body></html>
