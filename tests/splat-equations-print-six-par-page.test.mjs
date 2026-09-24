@@ -50,8 +50,9 @@ function tableDeDessin(){
     + functionSource("eqPrintBeadLayout", "eqPrintHiddenBeadRadius")
     + functionSource("eqPrintHiddenBeadRadius", "createEqPrintBeadTable");
   return Function(`${src}
-    return { eqPrintOpaqueRing, eqPrintBeadFontSize, eqPrintBeadPlace, eqPrintBeadLayout, eqPrintHiddenBeadRadius,
-             EQ_PRINT_BEAD_SCALE, EQ_PRINT_BEAD_SCALE_HAUT_BAS, EQ_PRINT_BEAD_EDGE, EQ_PRINT_BEAD_GAP };`)();
+    return { eqPrintOpaqueRing, eqPrintBeadFontSize, eqPrintBeadPlace, eqPrintBeadsFit, eqPrintBeadSlide, eqPrintBeadLayout,
+             eqPrintHiddenBeadRadius, EQ_PRINT_BEAD_SCALE, EQ_PRINT_BEAD_SCALE_HAUT_BAS, EQ_PRINT_BEAD_EDGE,
+             EQ_PRINT_BEAD_GAP, EQ_PRINT_BEAD_SPLAT_GAP };`)();
 }
 
 test("le sélecteur « Pages » propose 6/page, 2/page reste le réglage par défaut, layout=6 et suite passent dans l'adresse", () => {
@@ -210,20 +211,26 @@ test("rayon dessiné : ×1,8 quand il y a la place, sinon le plus grand qui tien
   let r = t.eqPrintBeadLayout([jeton(300, 720), jeton(560, 720)], [], 34, Infinity);
   assert.equal(r.R, 61);
   assert.deepEqual(r.pts, [{cx:300, cy:720}, {cx:560, cy:720}]);
-  // deux jetons proches (100) : le plus grand rayon qui laisse 12 entre eux
+  // deux jetons proches (100) : ils glissent de côté juste assez (55 en tout), gardent leur
+  // hauteur et leur ordre, et prennent ×1,8
   r = t.eqPrintBeadLayout([jeton(300, 720), jeton(400, 720)], [], 34, Infinity);
-  assert.equal(r.R, Math.floor((100 - t.EQ_PRINT_BEAD_GAP) / 2));
-  // trop proches (70) : le rayon et les places d'avant
-  r = t.eqPrintBeadLayout([jeton(300, 720), jeton(370, 720)], [], 34, Infinity);
+  assert.equal(r.R, 61);
+  assert.deepEqual(r.pts, [{cx:245, cy:720}, {cx:400, cy:720}]);
+  assert.equal(r.pts[1].cx - r.pts[0].cx, 2 * 61 + t.EQ_PRINT_BEAD_GAP);
+  // plateau trop étroit pour les écarter : le rayon et les places d'avant
+  const etroit = { x:120, y:190, w:220, h:650 };
+  r = t.eqPrintBeadLayout([jeton(200, 720, {tray:etroit}), jeton(270, 720, {tray:etroit})], [], 34, Infinity);
   assert.equal(r.R, 34);
-  assert.deepEqual(r.pts, [{cx:300, cy:720}, {cx:370, cy:720}]);
+  assert.deepEqual(r.pts, [{cx:200, cy:720}, {cx:270, cy:720}]);
   // un jeton près de la barre du milieu (bord droit du plateau gauche, x = 800) rentre juste assez
   r = t.eqPrintBeadLayout([jeton(760, 720)], [], 34, Infinity);
   assert.equal(r.R, 61);
   assert.equal(800 - r.pts[0].cx, 61 + t.EQ_PRINT_BEAD_EDGE);
-  // une tache voisine (qui déborde jusqu'à 1,1 × r) limite le rayon
+  // une tache juste au-dessus (qui déborde jusqu'à 1,1 × r) : le jeton glisse de côté
   r = t.eqPrintBeadLayout([jeton(300, 720)], [{cx:300, cy:560, r:74}], 34, Infinity);
-  assert.ok(160 - 1.1 * 74 - r.R >= 8, "au moins 8 entre le jeton et la tache");
+  assert.equal(r.R, 61);
+  assert.equal(r.pts[0].cy, 720);
+  assert.ok(Math.hypot(r.pts[0].cx - 300, 720 - 560) - 1.1 * 74 - r.R >= t.EQ_PRINT_BEAD_SPLAT_GAP, "l'écart jeton → tache est tenu");
   // une tache « opposé » dévoilée : la carte garde le rayon de base
   r = t.eqPrintBeadLayout([jeton(300, 720), jeton(560, 720)], [], 34, 34);
   assert.equal(r.R, 34);
@@ -234,6 +241,47 @@ test("rayon dessiné : ×1,8 quand il y a la place, sinon le plus grand qui tien
   assert.equal(t.eqPrintHiddenBeadRadius(61, 34, {r:74}), 47);
   assert.equal(t.eqPrintHiddenBeadRadius(40, 34, {r:88}), 40);
   assert.equal(t.eqPrintHiddenBeadRadius(61, 34, {r:30}), 34);
+});
+
+test("écarts imprimés (vérification de Code, 24/09) : 26 de blanc entre deux jetons, 20 entre un jeton et une tache", () => {
+  const t = tableDeDessin();
+  assert.equal(t.EQ_PRINT_BEAD_GAP, 33);
+  assert.equal(t.EQ_PRINT_BEAD_SPLAT_GAP, 24);
+  assert.equal(t.EQ_PRINT_BEAD_GAP - 7, 26, "anneau de 7 compris : le blanc le plus serré de l'écran avant le lot");
+  // Fiche 21 (seed 89), cartes 1 et 6 en haut/bas : avant, 0,4 mm entre « 13 » et « 31 »,
+  // 0,3 mm entre un jeton et une tache. Places et taches relevées sur la page.
+  const haut = { x:60, y:76, w:720, h:424 }, bas = { x:60, y:500, w:720, h:424 };
+  const cartes = [
+    { taches:[[223,605],[416,605],[614,605],[248,746],[404,746],[607,746]],
+      jetons:[[192,444,haut],[374,444,haut],[648,444,haut],[283,868,bas],[374,868,bas]] },
+    { taches:[[233,167],[411,167],[606,167],[248,308],[416,308],[595,308]],
+      jetons:[[283,444,haut],[466,444,haut],[557,444,haut],[283,868,bas],[374,868,bas]] }
+  ];
+  for(const c of cartes){
+    const taches = c.taches.map(([cx, cy]) => ({cx, cy, r:68}));
+    const vis = c.jetons.map(([cx, cy, tray]) => ({ p:{cx, cy}, tray, baseR:30 }));
+    const r = t.eqPrintBeadLayout(vis, taches, 30, Math.floor(68 * 0.64), t.EQ_PRINT_BEAD_SCALE_HAUT_BAS);
+    assert.equal(r.R, 39, "tous les jetons haut/bas à 39");
+    assert.equal(t.eqPrintBeadsFit(vis, r.pts, taches, r.R), true);
+    r.pts.forEach((p, i) => {
+      assert.equal(p.cy, Math.min(vis[i].p.cy, vis[i].tray.y + vis[i].tray.h - 39 - t.EQ_PRINT_BEAD_EDGE), "même hauteur");
+      for(let j=i+1;j<r.pts.length;j++){
+        assert.ok(Math.hypot(p.cx - r.pts[j].cx, p.cy - r.pts[j].cy) - 2 * 39 - 7 >= 26, "26 de blanc entre deux jetons");
+      }
+      for(const s of taches) assert.ok(Math.hypot(p.cx - s.cx, p.cy - s.cy) - 1.1 * s.r - 39 - 3.5 >= 20, "20 de blanc jeton → tache");
+    });
+    // l'ordre de gauche à droite est gardé dans chaque plateau
+    for(const tray of [haut, bas]){
+      const xs = vis.map((v, i) => [v, r.pts[i]]).filter(([v]) => v.tray === tray);
+      for(let k=1;k<xs.length;k++) assert.ok(xs[k][1].cx >= xs[k - 1][1].cx);
+    }
+  }
+  // sans conflit, le glissement ne bouge rien
+  const seul = [{ p:{cx:200, cy:300}, tray:haut, baseR:30 }, { p:{cx:500, cy:300}, tray:haut, baseR:30 }];
+  assert.deepEqual(t.eqPrintBeadSlide(seul, [{cx:200, cy:300}, {cx:500, cy:300}], [], 39), [{cx:200, cy:300}, {cx:500, cy:300}]);
+  // le glissement ne sert que si les places, au rayon essayé, ne tiennent pas
+  assert.match(functionSource("eqPrintBeadLayout", "eqPrintHiddenBeadRadius"),
+    /let pts = visibles\.map\(it => eqPrintBeadPlace\(it, R\)\);\s*if\(!eqPrintBeadsFit\(visibles, pts, splats, R\)\) pts = eqPrintBeadSlide\(visibles, pts, splats, R\);/);
 });
 
 test("un jeton n'est jamais plus gros que ce qu'une tache de la carte peut cacher (remarque de Gwenaël)", () => {
@@ -289,9 +337,17 @@ test("jetons unité imprimés : bleu franc, ×2 si ça tient, loin des bords ; l
   // l'écran : même bleu pâle, même disposition (clé du cache et marge inchangées sans options)
   assert.match(functionSource("drawEqUnitBead", "drawEqUnitBeadList"), /"rgba\(110,176,255,0\.95\)"/);
   const layout = functionSource("getEqUnitBeadLayout", "drawEqUnitBead");
-  assert.match(layout, /const pourImpression = !!\(opts\.radiusScale \|\| opts\.edge\);\s*if\(pourImpression\) key \+= "\|impression\|"/);
+  assert.match(layout, /const pourImpression = !!\(opts\.radiusScale \|\| opts\.edge \|\| gapImp \|\| hiddenGapImp \|\| splatGapImp\);\s*if\(pourImpression\) key \+= "\|impression\|"/);
   assert.match(layout, /const edge = Number\(opts\.edge\) > 0 \? Number\(opts\.edge\) : 20;/);
   assert.match(layout, /const margin = beadR \+ edge;/);
+  // sans options (écran), les écarts d'avant : 4, 0, 3, 1, pas de grille et distance aux taches
+  assert.match(layout, /const step = gapImp \? beadR \* 2 \+ gapImp : Math\.max\(beadR \* 2 \+ 9, 28\);/);
+  assert.match(layout, /noOverlapPoint\(p\.cx,p\.cy,placed,gapImp \|\| 4\)/);
+  assert.match(layout, /noOverlapPoint\(p\.cx,p\.cy,placed,gapImp \|\| 0\)/);
+  assert.match(layout, /noOverlapPoint\(p\.cx,p\.cy,placed,hiddenGapImp \|\| 3\)/);
+  assert.match(layout, /noOverlapPoint\(p\.cx,p\.cy,placed,hiddenGapImp \|\| 1\)/);
+  assert.match(layout, /: \(Number\(s\.r\)\|\|74\) \+ beadR \+ 18;/);
+  assert.match(layout, /const step = Math\.max\(beadR\*2 \+ Math\.max\(5, hiddenGapImp\), 22\);/);
   // le secours en paquet serré ne sert qu'à l'impression
   assert.match(layout, /if\(pourImpression && hiddenByTaskPositions\[t\]\.length < k\)\{/);
   // l'écran n'appelle jamais les fonctions d'impression
@@ -299,8 +355,66 @@ test("jetons unité imprimés : bleu franc, ×2 si ça tient, loin des bords ; l
   assert.doesNotMatch(screen, /EqPrint|eqPrint|getEqUnitBeadLayoutPrint|eqUnitPrintScale/);
 });
 
+/* getEqUnitBeadLayout et ce dont il a besoin, exécutés pour de vrai */
+function dispositionUnites(){
+  const ligne = re => { const m = html.match(re); assert.ok(m); return m[0]; };
+  const src = ligne(/function mulberry32\(a\)\{[^\n]*/) + "\n" + ligne(/function rFloat\(rng,a,b\)\{[^\n]*/) + "\n"
+    + ligne(/function clamp\(n, a, b\)\{[^\n]*/) + "\n"
+    + functionSource("hashStringToInt", "getEqUnitBeadLayout") + functionSource("getEqUnitBeadLayout", "drawEqUnitBead");
+  return Function(`${src}; return getEqUnitBeadLayout;`)();
+}
+
+test("jetons unité imprimés : au moins 24 d'écart entre deux jetons visibles, 20 avec une tache ; l'écran ne bouge pas", () => {
+  assert.equal(constSource("EQ_PRINT_UNIT_GAP"), "const EQ_PRINT_UNIT_GAP = 24;");
+  assert.equal(constSource("EQ_PRINT_UNIT_HIDDEN_GAP"), "const EQ_PRINT_UNIT_HIDDEN_GAP = 10;");
+  assert.equal(constSource("EQ_PRINT_UNIT_SPLAT_GAP"), "const EQ_PRINT_UNIT_SPLAT_GAP = 20;");
+  assert.match(functionSource("eqUnitPrintOpts", "eqUnitCounts"),
+    /return \{radiusScale:scale, edge:EQ_PRINT_UNIT_MARGIN, gap:EQ_PRINT_UNIT_GAP, hiddenGap:EQ_PRINT_UNIT_HIDDEN_GAP, splatGap:EQ_PRINT_UNIT_SPLAT_GAP\};/);
+  const f = dispositionUnites();
+  const cas = () => ({ card:{ _unitLayoutSeed: 987654 }, side:{ splats:[{cx:300, cy:250, r:74}, {cx:520, cy:250, r:74}] },
+    meta:{ visible:[5, 2], hiddenByTask:[[3],[3]] }, tray:{x:60, y:76, w:720, h:424} });
+  // écran : les places relevées sur main #819, au millionième près
+  let c = cas();
+  const ecran = f(c.card, "left", c.side, c.meta, c.tray);
+  const arrondi = q => [+q.cx.toFixed(6), +q.cy.toFixed(6)];
+  assert.equal(ecran.beadR, 13);
+  assert.deepEqual(ecran.visiblePositions.map(arrondi), [[164.200238,431.959495],[235.316351,429.199336],[274.794306,111.504408],
+    [492.170934,392.875343],[565.435881,141.215533],[93.584637,181.080563],[712.754485,182.411155]]);
+  assert.deepEqual(ecran.hiddenByTaskPositions.map(a => a.map(arrondi)), [[[290.890716,271.321077],[324.717716,243.28254],[279.944243,235.558508]],
+    [[543.99545,272.489397],[514.644241,271.29524],[545.809773,241.077881]]]);
+  // impression ×2 : les écarts sont tenus
+  c = cas();
+  const imp = f(c.card, "left", c.side, c.meta, c.tray, {radiusScale:2, edge:48, gap:24, hiddenGap:10, splatGap:20});
+  const R = imp.beadR, v = imp.visiblePositions;
+  assert.equal(R, 26);
+  assert.equal(v.length, 7);
+  for(let i=0;i<v.length;i++){
+    for(let j=i+1;j<v.length;j++) assert.ok(Math.hypot(v[i].cx - v[j].cx, v[i].cy - v[j].cy) >= 2 * R + 24, "24 entre deux visibles");
+    for(const s of c.side.splats) assert.ok(Math.hypot(v[i].cx - s.cx, v[i].cy - s.cy) >= 1.1 * s.r + R + 20, "20 avec une tache");
+  }
+  // la disposition de l'écran, en cache, n'a pas bougé
+  assert.deepEqual(f(c.card, "left", c.side, c.meta, c.tray).visiblePositions.map(arrondi), ecran.visiblePositions.map(arrondi));
+});
+
+test("paquets de jetons unité : l'écart imprimé tient dans la case ; l'écran garde 6", () => {
+  const src = functionSource("getEqStepGroupCells", "drawEqStepGroupZones")
+    + functionSource("getEqUnitPacketCenter", "getEqUnitPacketPositions")
+    + functionSource("getEqUnitPacketPositions", "getEquationSimpleMappedRevealState");
+  const paquet = Function(`function clamp(n, a, b){ return Math.max(a, Math.min(b, n)); } ${src} return getEqUnitPacketPositions;`)();
+  const tray = {x:60, y:76, w:720, h:424};
+  const ecart = pts => Math.round((pts[1].cx - pts[0].cx) * 1000) / 1000;
+  assert.equal(ecart(paquet(tray, 0, 2, 3, 13)), 2 * 13 + 6, "écran : 6");
+  assert.equal(ecart(paquet(tray, 0, 2, 3, 26, 24)), 2 * 26 + 24, "impression : 24 quand la case est large");
+  // 5 cases de 141,6 de large, 3 jetons de 26 par rangée : (141,6 - 16 - 156) / 2 < 6 → 6
+  assert.equal(ecart(paquet(tray, 2, 5, 3, 26, 24)), 2 * 26 + 6, "jamais sous 6");
+  // 3 cases de 236 : (236 - 16 - 156) / 2 = 32 → 24
+  assert.equal(ecart(paquet(tray, 0, 3, 3, 26, 24)), 2 * 26 + 24);
+  const step = functionSource("renderCardEquationStepPrintScene", "renderCardEquationSignedStepPrintScene");
+  assert.match(step, /getEqUnitPacketPositions\(tray, packetIndex, packetCount, n, unitBeadR, unitPrintScale \? EQ_PRINT_UNIT_GAP : 6\)/);
+});
+
 test("contrôle des dispositions de jetons unité imprimées : nombre, chevauchement, bords, taches", () => {
-  const src = [constSource("EQ_PRINT_UNIT_EDGE")].join("\n")
+  const src = [constSource("EQ_PRINT_UNIT_EDGE"), constSource("EQ_PRINT_UNIT_GAP"), constSource("EQ_PRINT_UNIT_SPLAT_GAP")].join("\n")
     + functionSource("eqUnitCounts", "eqUnitPrintLayoutOk")
     + functionSource("eqUnitPrintLayoutOk", "eqUnitPrintScale");
   const ok = Function(`${src} return eqUnitPrintLayoutOk;`)();
@@ -311,6 +425,9 @@ test("contrôle des dispositions de jetons unité imprimées : nombre, chevauche
   assert.equal(ok(bon, tray, splats, meta), true);
   assert.equal(ok({ ...bon, visiblePositions: bon.visiblePositions.slice(0, 2) }, tray, splats, meta), false, "un jeton manque");
   assert.equal(ok({ ...bon, visiblePositions:[{cx:150,cy:150},{cx:190,cy:150},{cx:650,cy:400}] }, tray, splats, meta), false, "deux jetons se chevauchent");
+  assert.equal(ok({ ...bon, visiblePositions:[{cx:150,cy:150},{cx:225,cy:150},{cx:650,cy:400}] }, tray, splats, meta), false, "moins de 24 entre deux visibles");
+  assert.equal(ok({ ...bon, visiblePositions:[{cx:150,cy:150},{cx:250,cy:150},{cx:500,cy:320}] }, tray, splats, meta), false, "moins de 20 avec une tache");
+  assert.equal(ok({ ...bon, hiddenByTaskPositions:[[{cx:370,cy:250},{cx:423,cy:250}]] }, tray, splats, meta), false, "deux cachés se chevauchent");
   assert.equal(ok({ ...bon, visiblePositions:[{cx:150,cy:150},{cx:250,cy:150},{cx:650,cy:470}] }, tray, splats, meta), false, "trop près de la barre du milieu");
   assert.equal(ok({ ...bon, hiddenByTaskPositions:[[{cx:370,cy:250},{cx:460,cy:250}]] }, tray, splats, meta), false, "un jeton caché sort de sa tache");
 });
