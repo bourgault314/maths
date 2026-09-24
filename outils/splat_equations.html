@@ -935,6 +935,8 @@
         <option value="statement">Énoncé seul</option>
         <option value="worksheet">Énoncé + schéma à remplir</option>
         <option value="correction">Correction</option>
+        <option value="correction-equation">Correction : l’équation (6/page)</option>
+        <option value="correction-schema">Correction : le schéma en barres (6/page)</option>
         <option disabled>─────── recto-verso ───────</option>
         <option value="duplex-worksheet">Énoncé, schéma au dos</option>
         <option value="duplex-correction">Énoncé, correction au dos</option>
@@ -1390,6 +1392,7 @@ function syncPrintModeUI(){
   if(opt1) opt1.textContent = aide ? "Énoncé + aide" : "Énoncé + schéma à remplir";
   if(opt2) opt2.textContent = aide ? "Énoncé, aide au dos" : "Énoncé, schéma au dos";
   sel.title = "Choisir ce qui partira à l’imprimante";
+  syncEqSixCorrectionUI();
   syncPrintSummary();
 }
 
@@ -1404,8 +1407,38 @@ function getPrintPlan(){
     const verso = v.slice(7);
     return { recto: "statement", verso: (verso === "worksheet" || verso === "correction") ? verso : "correction" };
   }
-  return { recto: ["statement","worksheet","correction"].includes(v) ? v : "statement", verso: null };
+  return { recto: ["statement","worksheet","correction","correction-equation","correction-schema"].includes(v) ? v : "statement", verso: null };
 }
+
+/* Corrections courtes en 6 par page (lot Q4, 24/09/2026) : « Correction : l’équation »
+   et « Correction : le schéma en barres », pour les trois familles à jetons comptés
+   (EQ, EQSTEP, EQUNITSTEP) ; en entiers relatifs, les deux lignes se grisent. */
+function eqSixCorrectionPart(printMode){
+  if(printMode === "correction-equation") return "equation";
+  if(printMode === "correction-schema") return "schema";
+  return null;
+}
+function syncEqSixCorrectionUI(){
+  const sel = printModeSelectEl || document.getElementById("printMode");
+  if(!sel) return;
+  const signe = !!(activityEl && isSignedEquationModeValue(activityEl.value));
+  sel.querySelectorAll('option[value="correction-equation"], option[value="correction-schema"]').forEach(opt => { opt.disabled = signe; });
+  if(signe && eqSixCorrectionPart(sel.value)) sel.value = "correction";
+  /* avec une correction courte, « Pages » passe à 6/page et se grise ; il retrouve sa
+     valeur d'avant quand on revient à un autre choix */
+  const pp = printCardsPerPageEl || document.getElementById("printCardsPerPage");
+  if(!pp) return;
+  if(eqSixCorrectionPart(sel.value)){
+    if(!pp.disabled) pagesAvantCorrectionCourte = pp.value;
+    pp.value = "6";
+    pp.disabled = true;
+  }else if(pp.disabled){
+    pp.disabled = false;
+    if(pagesAvantCorrectionCourte != null) pp.value = pagesAvantCorrectionCourte;
+    pagesAvantCorrectionCourte = null;
+  }
+}
+var pagesAvantCorrectionCourte = null;   // var : la fonction peut servir avant cette ligne
 
 /* Phrase de contrôle sous le réglage : le nom du choix dit déjà le résultat, elle
    ajoute ce qu'on en fait en classe et le nombre de cartes par page. */
@@ -1427,6 +1460,10 @@ function syncPrintSummary(){
     msg = "Les énoncés seuls, rien au dos.";
   }else if(plan.recto === "worksheet"){
     msg = "L’énoncé avec " + (aide ? "son aide" : "son schéma à remplir") + ", rien au dos.";
+  }else if(plan.recto === "correction-equation"){
+    msg = "La correction courte : la carte dévoilée et l’équation résolue dessous, rien au dos.";
+  }else if(plan.recto === "correction-schema"){
+    msg = "La correction courte : la carte dévoilée et les schémas en barres à droite, rien au dos.";
   }else{
     msg = "La correction seule, rien au dos.";
   }
@@ -2266,7 +2303,7 @@ if(invTaskCountEl) invTaskCountEl.addEventListener("change", ()=>{ syncSettingsU
   });
 });
 [printModeSelectEl, printCardsPerPageEl].forEach(el=>{
-  if(el) el.addEventListener("change", syncPrintSummary);
+  if(el) el.addEventListener("change", ()=>{ syncEqSixCorrectionUI(); syncPrintSummary(); });
 });
 
 if(btnEqUnknownLetterEl){
@@ -8914,13 +8951,40 @@ function renderCardEquationPrint(targetSvg, card, printMode, tEl, tText, useToke
       textColor: "#000"
     });
   } else {
-    const fullW = 1240;
-    const maxTableW = 1240;
-    const minHiddenPrintW = 92;
-    const minVisiblePrintW = 112;
-    const minHiddenPrintWValue1 = 122;
-    const minVisiblePrintWValue1 = 138;
-    const startX = 800 - fullW / 2;
+    drawEquationPrintCorrectionColumn(gEq, eq, card, tEl, tText, EQ_PRINT_CORR_GEOM);
+  }
+
+  targetSvg.appendChild(gEq);
+}
+
+/* La colonne de la correction du mode Équation (les schémas en barres, puis l'équation
+   résolue et ses flèches), dans le repère G : EQ_PRINT_CORR_GEOM pour la correction
+   imprimée (4, 2, 1 par page), un repère réduit pour les corrections courtes en 6 par
+   page (lot Q4, voir EQ_SIX_CORR_GEOM). Le dessin est le même : seules les mesures
+   viennent de G. */
+const EQ_PRINT_CORR_GEOM = {
+  top: EQ_PRINT_TABLE_TOP_Y, centerX: 800, fullW: 1240, maxTableW: 1240,
+  minHiddenW: 92, minVisibleW: 112, minHiddenWValue1: 122, minVisibleWValue1: 138,
+  rowH: EQ_PRINT_CORR_ROW_H, fontSize: EQ_PRINT_CORR_FONT_SIZE, pad: EQ_PRINT_CORR_PAD,
+  variableFontSize: EQ_PRINT_CORR_VAR_FONT_SIZE, stride: EQ_PRINT_CORR_STRIDE,
+  eqTopGap: 40, eqFontSize: 68, eqFontSize4: 58, eqGap: 88, eqGap4: 74, eqEqGap: 36, arrows: true
+};
+
+function drawEquationPrintCorrectionColumn(gEq, eq, card, tEl, tText, G){
+  const varChar = getCardVarChar(card);
+  let currentY = G.top;
+  const visL = eqVisibleSum(eq.left);
+  const visR = eqVisibleSum(eq.right);
+  const vl = visL;
+  const vr = visR;
+  {
+    const fullW = G.fullW;
+    const maxTableW = G.maxTableW;
+    const minHiddenPrintW = G.minHiddenW;
+    const minVisiblePrintW = G.minVisibleW;
+    const minHiddenPrintWValue1 = G.minHiddenWValue1;
+    const minVisiblePrintWValue1 = G.minVisibleWValue1;
+    const startX = G.centerX - fullW / 2;
     const unit = fullW / Math.max(1, Number(eq.total) || 1);
 
     function partsFor(coeff, vis){
@@ -9044,9 +9108,9 @@ function renderCardEquationPrint(targetSvg, card, printMode, tEl, tText, useToke
       baseW: fullW,
       maxW: maxTableW,
       disableLabelInflation: true,
-      rowH: EQ_PRINT_CORR_ROW_H,
-      fontSize: EQ_PRINT_CORR_FONT_SIZE,
-      pad: EQ_PRINT_CORR_PAD,
+      rowH: G.rowH,
+      fontSize: G.fontSize,
+      pad: G.pad,
       stroke: "#000",
       strokeWidth: 5,
       hiddenFill: "rgba(0,0,0,0.10)",
@@ -9057,7 +9121,7 @@ function renderCardEquationPrint(targetSvg, card, printMode, tEl, tText, useToke
       minHiddenCellWValue1: minHiddenPrintWValue1,
       minVisibleCellWValue1: minVisiblePrintWValue1,
       forceCommonHiddenCellW: true,
-      variableFontSize: EQ_PRINT_CORR_VAR_FONT_SIZE,
+      variableFontSize: G.variableFontSize,
       fitLabelToCell: true
     });
     states.push({
@@ -9067,7 +9131,7 @@ function renderCardEquationPrint(targetSvg, card, printMode, tEl, tText, useToke
       row1Widths: initialLayout.rows[0].segments.map(seg => Math.max(1, Number(seg.w) || 1)),
       row2Widths: initialLayout.rows[1].segments.map(seg => Math.max(1, Number(seg.w) || 1))
     });
-    currentY += EQ_PRINT_CORR_STRIDE;
+    currentY += G.stride;
 
     const a = Math.max(0, Number(eq.left?.tasks) || 0);
     const b = Math.max(0, Number(eq.right?.tasks) || 0);
@@ -9102,18 +9166,18 @@ function renderCardEquationPrint(targetSvg, card, printMode, tEl, tText, useToke
         rect:(a)=>tEl("rect", a),
         line:(a)=>tEl("line", a),
         text:(x,y,t,a)=>tText(x,y,t,a),
-        rowH: EQ_PRINT_CORR_ROW_H,
-        fontSize: EQ_PRINT_CORR_FONT_SIZE,
-        pad: EQ_PRINT_CORR_PAD,
+        rowH: G.rowH,
+        fontSize: G.fontSize,
+        pad: G.pad,
         stroke: "#000",
         strokeWidth: 5,
         hiddenFill: "rgba(0,0,0,0.10)",
         visibleFill: "rgba(255,255,255,0)",
         textColor: "#000",
-        variableFontSize: EQ_PRINT_CORR_VAR_FONT_SIZE,
+        variableFontSize: G.variableFontSize,
         fitLabelToCell: true
       });
-      currentY += EQ_PRINT_CORR_STRIDE;
+      currentY += G.stride;
     }
 
     if(commonV > 0){
@@ -9152,18 +9216,18 @@ function renderCardEquationPrint(targetSvg, card, printMode, tEl, tText, useToke
         rect:(a)=>tEl("rect", a),
         line:(a)=>tEl("line", a),
         text:(x,y,t,a)=>tText(x,y,t,a),
-        rowH: EQ_PRINT_CORR_ROW_H,
-        fontSize: EQ_PRINT_CORR_FONT_SIZE,
-        pad: EQ_PRINT_CORR_PAD,
+        rowH: G.rowH,
+        fontSize: G.fontSize,
+        pad: G.pad,
         stroke: "#000",
         strokeWidth: 5,
         hiddenFill: "rgba(0,0,0,0.10)",
         visibleFill: "rgba(255,255,255,0)",
         textColor: "#000",
-        variableFontSize: EQ_PRINT_CORR_VAR_FONT_SIZE,
+        variableFontSize: G.variableFontSize,
         fitLabelToCell: true
       });
-      currentY += EQ_PRINT_CORR_STRIDE;
+      currentY += G.stride;
     }
 
     const alreadySolvedUnit = (a2 === 1 && b2 === 0 && vl2 === 0 && vr2 > 0) ||
@@ -9203,52 +9267,49 @@ function renderCardEquationPrint(targetSvg, card, printMode, tEl, tText, useToke
           rect:(a)=>tEl("rect", a),
           line:(a)=>tEl("line", a),
           text:(x,y,t,a)=>tText(x,y,t,a),
-          rowH: EQ_PRINT_CORR_ROW_H,
-          fontSize: EQ_PRINT_CORR_FONT_SIZE,
-          pad: EQ_PRINT_CORR_PAD,
+          rowH: G.rowH,
+          fontSize: G.fontSize,
+          pad: G.pad,
           stroke: "#000",
           strokeWidth: 5,
           hiddenFill: "rgba(0,0,0,0.10)",
           visibleFill: "rgba(255,255,255,0)",
           textColor: "#000",
-          variableFontSize: EQ_PRINT_CORR_VAR_FONT_SIZE,
+          variableFontSize: G.variableFontSize,
           fitLabelToCell: true
         });
-        currentY += EQ_PRINT_CORR_STRIDE;
+        currentY += G.stride;
       }
     }
 
-    currentY += 40;
+    if(G.sansEquation) return;   // correction courte « schéma en barres » : les schémas seuls
+    currentY += G.eqTopGap;
     const lines = buildEquationSolveLines(eq, varChar);
-    const eqFontSize = (lines.length >= 4) ? 58 : 68;
-    const eqGap = (lines.length >= 4) ? 74 : 88;
-    drawEquationLines(gEq, lines, 800, currentY, {
+    const eqFontSize = (lines.length >= 4) ? G.eqFontSize4 : G.eqFontSize;
+    const eqGap = (lines.length >= 4) ? G.eqGap4 : G.eqGap;
+    drawEquationLines(gEq, lines, G.centerX, currentY, {
       text:(x,y,t,a)=>tText(x,y,t,a),
       fill:"#000",
       fontSize: eqFontSize,
       gap: eqGap,
       anchor:"start",
       alignEquals: true,
-      eqGap: 36,
+      eqGap: G.eqEqGap,
       fontFamily: "'Times New Roman', Times, serif",
       fontStyle: "italic"
     });
     // Flèches d'opération dans les marges de la colonne (− b, − 2, ÷ 3), comme à
     // l'écran du pas à pas : la colonne fait 1240 de large, la place existe.
-    drawOperationArrowsForLines(
+    if(G.arrows) drawOperationArrowsForLines(
       gEq,
       {el:(name, attrs)=>tEl(name, attrs), text:(x,y,t,a)=>tText(x,y,t,a)},
       lines,
       getEquationSolveLineOperations(eq, lines, varChar),
-      {centerX: 800, startY: currentY, gap: eqGap, fontSize: eqFontSize, eqGap: 36}
+      {centerX: G.centerX, startY: currentY, gap: eqGap, fontSize: eqFontSize, eqGap: G.eqEqGap}
     );
   }
-
-  targetSvg.appendChild(gEq);
 }
 
-
-/* Render impression */
 function renderCardIntoSvg(targetSvg, card, printMode, printOpts = {}){
   while(targetSvg.firstChild) targetSvg.removeChild(targetSvg.firstChild);
   printMode = ["statement","worksheet","correction"].includes(printMode) ? printMode : "statement";
@@ -9275,6 +9336,137 @@ function renderCardIntoSvg(targetSvg, card, printMode, printOpts = {}){
 }
 
 
+
+/* ===== Corrections courtes en 6 par page (lot Q4, 24/09/2026) =====
+   « Correction : l’équation (6/page) » et « Correction : le schéma en barres (6/page) ».
+   La feuille est celle de l'énoncé 6/page (même bandeau, même cadre de consigne, même
+   boîte de dessin, même largeur) : chaque carte tombe à la même place, le plateau garde
+   sa taille. La carte est celle de la correction de l'outil : les taches TRANSPARENTES,
+   les jetons qu'elles cachent visibles (l'état « je vérifie » du pas à pas). Puis une
+   seule partie de la correction imprimée du mode Équation, sans aucun nouveau dessin :
+   – l'équation : plateaux côte à côte (gauche/droite, 80 % de la case), l'équation
+     résolue et ses flèches sous le plateau (la police de l'interface, en italique, comme
+     la correction 4/page), 4 mm sous le plateau,
+     taille 100 réduite seulement si la ligne la plus longue et ses flèches ne tiennent
+     pas dans la largeur de la case (−200 → 1800) ;
+   – le schéma en barres : plateaux l'un sur l'autre (haut/bas, pleine largeur, plateau
+     à gauche), les schémas en barres de la correction à droite du plateau, dans une
+     colonne de 720 (EQ_SIX_CORR_GEOM_SCHEMA), de la hauteur du plateau ; sans l'équation.
+   Le SVG garde la taille et la place de celui de l'énoncé 6/page (overflow visible) ;
+   la case (.pCard, overflow hidden) borne le dessin. */
+const EQ_SIX_CORR_EQ_FONT = 100;          // 4,3 mm sur la feuille (80 % de la case)
+const EQ_SIX_CORR_EQ_LEFT = -140, EQ_SIX_CORR_EQ_RIGHT = 1740;   // la case, moins son bord
+/* La colonne des schémas en barres, à droite du plateau haut/bas (x 60 → 780, y 132 → 980) :
+   x 820 → 1540 (2 mm après le plateau, 5 mm avant le bord de la case, comme à gauche),
+   largeurs à 0,58 (720 pour 1240), hauteurs et lettres à 0,9 — quatre schémas (la carte
+   la plus longue : 3 × 209 + 180 = 807) tiennent dans les 848 du plateau. */
+const EQ_SIX_CORR_GEOM_SCHEMA = {
+  top: 132, centerX: 1180, fullW: 720, maxTableW: 720,
+  minHiddenW: 55, minVisibleW: 67, minHiddenWValue1: 73, minVisibleWValue1: 83,
+  rowH: 90, fontSize: 79, pad: 32, variableFontSize: 58, stride: 209,
+  eqTopGap: 0, eqFontSize: 0, eqFontSize4: 0, eqGap: 0, eqGap4: 0, eqEqGap: 0, arrows: false, sansEquation: true
+};
+
+/* Les lignes d'équation portent l'attribut font-family Times, mais la règle générale
+   « * { font-family } » de la page l'emporte : elles s'impriment dans la police de
+   l'interface, en italique — comme la correction 4/page. Leur largeur se MESURE dans
+   cette police-là (canvas) : l'estimation de l'outil, calibrée pour une autre police,
+   posait les flèches sur le premier terme (vu sur les maquettes du 24/09). */
+const EQ_SIX_CORR_DRAWN_FONT = 'system-ui, -apple-system, "Segoe UI", Roboto, Arial';
+let eqSixMeasureCtx = null;
+function eqSixTextWidth(str, cssFont, fallbackFontSize){
+  try{
+    if(!eqSixMeasureCtx) eqSixMeasureCtx = document.createElement("canvas").getContext("2d");
+    eqSixMeasureCtx.font = cssFont;
+    const w = eqSixMeasureCtx.measureText(String(str == null ? "" : str)).width;
+    if(Number.isFinite(w) && w > 0) return w;
+  }catch(e){}
+  return Math.round(estimatePrintMathTextWidth(str, fallbackFontSize) * 1.2);
+}
+
+function drawEqSixCorrectionEquation(g, card, varChar, tEl, tText){
+  const eq = card._eq;
+  const trays = card._eqTrays;
+  const lines = buildEquationSolveLines(eq, varChar);
+  const ops = getEquationSolveLineOperations(eq, lines, varChar);
+  const api = {el:(name, attrs)=>tEl(name, attrs), text:(x,y,t,a)=>tText(x,y,t,a)};
+  const trayBottom = trays.left.y + trays.left.h + 4;
+  const membres = lines.map(line => { const k = line.indexOf("="); return [line.slice(0, k).trim(), line.slice(k + 1).trim()]; });
+  // Taille 100, réduite de 4 en 4 tant que la ligne la plus longue et ses flèches (avec
+  // leurs étiquettes) ne tiennent pas dans la largeur de la case.
+  let font = EQ_SIX_CORR_EQ_FONT, eqGap = 50, margin = 55;
+  for(; font >= 56; font -= 4){
+    eqGap = Math.round(font * 0.5);
+    const labelFs = Math.round(font * 0.62);
+    let reel = 0, estime = 0;
+    membres.forEach(([l, r]) => {
+      reel = Math.max(reel, eqSixTextWidth(l, `italic ${font}px ${EQ_SIX_CORR_DRAWN_FONT}`, font), eqSixTextWidth(r, `italic ${font}px ${EQ_SIX_CORR_DRAWN_FONT}`, font));
+      estime = Math.max(estime, estimatePrintMathTextWidth(l, font), estimatePrintMathTextWidth(r, font));
+    });
+    // drawOperationArrowsForLines part de l'estimation : on lui donne en marge la
+    // différence mesurée, plus 0,55 × la taille (≈ 2,4 mm) de blanc avant la flèche.
+    margin = Math.max(20, Math.round(reel - estime + font * 0.55));
+    const labelW = Math.max(0, ...ops.filter(Boolean).map(op => eqSixTextWidth(op, `800 ${labelFs}px ${EQ_SIX_CORR_DRAWN_FONT}`, labelFs)));
+    const place = eqGap + estime + margin + Math.round(labelFs * 0.9) + 6 + labelW;
+    if(800 - place >= EQ_SIX_CORR_EQ_LEFT && 800 + place <= EQ_SIX_CORR_EQ_RIGHT) break;
+  }
+  font = Math.max(56, font);
+  const gap = Math.round(font * 1.4);
+  const startY = trayBottom + 94 + Math.round(font * 0.7);   // 94 = 4 mm sous le plateau
+  drawEquationLines(g, lines, 800, startY, {
+    text:(x,y,t,a)=>tText(x,y,t,a), fill:"#000", fontSize: font, gap, anchor:"start",
+    alignEquals: true, eqGap, fontFamily: "'Times New Roman', Times, serif", fontStyle: "italic"
+  });
+  drawOperationArrowsForLines(g, api, lines, ops, {centerX: 800, startY, gap, fontSize: font, eqGap, margin});
+}
+
+/* Une carte de correction courte : la carte de l'énoncé 6/page, taches dévoilées, puis
+   la partie demandée (l'équation sous le plateau, ou les schémas à sa droite). */
+function renderEqSixCorrectionIntoSvg(targetSvg, card, part){
+  while(targetSvg.firstChild) targetSvg.removeChild(targetSvg.firstChild);
+  const hautBas = part === "schema";
+  targetSvg.setAttribute("viewBox", hautBas ? EQ_PRINT_6UP_VIEWBOX_HB : EQ_PRINT_6UP_VIEWBOX_GD);
+  if(hautBas) targetSvg.classList.add("carte-haut-bas");
+  targetSvg.style.overflow = "visible";
+  function tEl(name, attrs={}){
+    const n = document.createElementNS("http://www.w3.org/2000/svg", name);
+    for(const k in attrs) n.setAttribute(k, attrs[k]);
+    return n;
+  }
+  function tText(x,y,txt,attrs={}){
+    const t = tEl("text",{x,y,...attrs}); t.textContent=txt; return t;
+  }
+  const eq = card && card._eq;
+  if(!eq || !card._eqTrays || !card._eqPos) return;
+  const prevPrintHatchRoot = __activePrintHatchSvgRoot;
+  __activePrintHatchSvgRoot = targetSvg;
+  try{
+    targetSvg.appendChild(tEl("rect",{x:0,y:0,width:1600,height:2200,rx:26,fill:"#fff"}));
+    ensureHatchDefs(targetSvg);
+    const varChar = hautBas ? getTableVarChar(card) : getCardVarChar(card);
+    const etats = getEquationStepStates(eq, varChar, {includeVerify:true});
+    const g = tEl("g", {id:"eqSixCorrectionCarte"});
+    // la phrase de l'énoncé 6/page, à sa place (la scène ne l'écrit qu'à l'état 0)
+    g.appendChild(tText(hautBas ? 420 : 800, hautBas ? 82 : EQ_PRINT_6UP_PHRASE_Y,
+      hautBas ? "Même quantité en haut et en bas" : "Même quantité à gauche qu'à droite",
+      {"text-anchor":"middle", "font-size":"44", "fill":"rgba(0,0,0,0.92)", "font-weight":"900"}));
+    const gScene = tEl("g", {transform:"translate(0 " + (hautBas ? EQ_PRINT_6UP_SCHEMA_DY : 0) + ")"});
+    renderCardEquationStepPrintScene(gScene, card, etats.length, {
+      layoutMode: hautBas ? "schema" : "equation",
+      showIntroText:false,
+      showAid:false,
+      useTokens:false
+    });
+    g.appendChild(gScene);
+    targetSvg.appendChild(g);
+    const gc = tEl("g", {id:"eqSixCorrection"});
+    if(part === "equation") drawEqSixCorrectionEquation(gc, card, varChar, tEl, tText);
+    else drawEquationPrintCorrectionColumn(gc, eq, card, tEl, tText, EQ_SIX_CORR_GEOM_SCHEMA);
+    targetSvg.appendChild(gc);
+  } finally {
+    __activePrintHatchSvgRoot = prevPrintHatchRoot;
+  }
+}
 
 const MATHSGO_PRINT_LOGO_URL = "/assets/img/logos/mathsgo/logo-print.png?v=20260820-1";
 const IREM_PRINT_LOGO_URL = "/assets/img/logos/irem/logo-print.png?v=20260820-1";
@@ -9364,6 +9556,8 @@ function createEquationPrintFooter(){
 }
 
 function getPrintCardsPerPage(){
+  /* les corrections courtes n'existent qu'en 6/page */
+  if(eqSixCorrectionPart(getPrintPlan().recto)) return 6;
   const el = printCardsPerPageEl || document.getElementById("printCardsPerPage");
   const v = el ? String(el.value || "2") : "2";
   if(v === "1") return 1;
@@ -9433,7 +9627,10 @@ function printSheet(){
   function appendSheet(slotCards, mode){
     const sheet = document.createElement("div");
     sheet.className = `sheet sheet-${perSheet}up`;
-    sheet.appendChild(createEquationPrintHeader(mode));
+    /* correction courte : bandeau « … — Correction » ; le cadre de consigne de l'énoncé
+       est gardé, pour que chaque carte tombe à la même place que sur l'énoncé 6/page */
+    const sixPart = eqSixCorrectionPart(mode);
+    sheet.appendChild(createEquationPrintHeader(sixPart ? "correction" : mode));
     if(mode !== "correction") sheet.appendChild(createEquationPrintInstruction(slotCards));
     const grid = document.createElement("div");
     grid.className = "grid";
@@ -9444,17 +9641,21 @@ function printSheet(){
       const card = slotCards[i] || null;
       if(card){
         const sv = document.createElementNS("http://www.w3.org/2000/svg","svg");
-        if(perSheet === 6){
-          /* 6/page : le plateau seul, haut resserré — gauche/droite à 80 % de la case ;
-             haut/bas pleine largeur, plateau à gauche (voir le CSS). */
-          const hautBas = isEquationSchemaPrintCard(card);
-          sv.setAttribute("viewBox", hautBas ? EQ_PRINT_6UP_VIEWBOX_HB : EQ_PRINT_6UP_VIEWBOX_GD);
-          if(hautBas) sv.classList.add("carte-haut-bas");
+        if(sixPart){
+          renderEqSixCorrectionIntoSvg(sv, card, sixPart);
         }else{
-          sv.setAttribute("viewBox","0 0 1600 2200");
-          sv.style.width = "100%";
+          if(perSheet === 6){
+            /* 6/page : le plateau seul, haut resserré — gauche/droite à 80 % de la case ;
+               haut/bas pleine largeur, plateau à gauche (voir le CSS). */
+            const hautBas = isEquationSchemaPrintCard(card);
+            sv.setAttribute("viewBox", hautBas ? EQ_PRINT_6UP_VIEWBOX_HB : EQ_PRINT_6UP_VIEWBOX_GD);
+            if(hautBas) sv.classList.add("carte-haut-bas");
+          }else{
+            sv.setAttribute("viewBox","0 0 1600 2200");
+            sv.style.width = "100%";
+          }
+          renderCardIntoSvg(sv, card, mode, {sixParPage: perSheet === 6});
         }
-        renderCardIntoSvg(sv, card, mode, {sixParPage: perSheet === 6});
         holder.appendChild(sv);
       } else {
         holder.classList.add("empty");
@@ -9761,6 +9962,7 @@ if(!loadSharedConfiguration()){
   syncSettingsUI();
   syncPrintModeUI();
 }
+syncEqSixCorrectionUI();
 syncPrintSummary();
 if(serieSuite.length) genererSerieComposee();
 else generate();

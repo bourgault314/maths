@@ -64,7 +64,8 @@ test("Q3 : une fiche = une étape = une étoile — fiches 35, 36, 37, titres de
   assert.deepEqual(FICHES_PY.map((f) => f.t), EQUATIONS.etapes.map((e) => e.t));
   assert.deepEqual(FICHES_PY.map((f) => f.parcours), EQUATIONS.etapes.map((e) => e.p));
   // la fiche est imprimée à l'adresse du lien « Fiche » de la carte : 6/page, énoncé seul, titre
-  assert.match(render, /&print=statement&layout=6"\n\s+f"&title=\{quote\('Fiche ' \+ str\(f\['n'\]\) \+ ' — ' \+ f\['t'\], safe=''\)\}"/);
+  assert.match(render, /&print=\{imprime\}&layout=6"\n\s+f"&title=\{quote\('Fiche ' \+ str\(f\['n'\]\) \+ ' — ' \+ f\['t'\], safe=''\)\}"/);
+  assert.match(render, /def adresse_fiche\(f, vue, imprime="statement"\):/, "l'énoncé seul par défaut (lot Q4 : la correction courte pour les corrigés)");
   EQUATIONS.etapes.forEach((e) => {
     assert.match(e.f, /&view=schema[&;]/, `fiche ${e.n} : le lien « Fiche tableau » est en vue schéma`);
     assert.match(e.fe, /&view=equation[&;]/, `fiche ${e.n} : le lien « Fiche équation » est en vue équation`);
@@ -83,7 +84,7 @@ test("Q3 : les 36 cartes des livrets sont celles du jeu en ligne, carte par cart
   });
   // render.py le vérifie à chaque rendu, et les deux livrets ont les mêmes cartes
   assert.ok(render.includes("les cartes ne sont pas celles du jeu en ligne"));
-  assert.ok(render.includes("les deux livrets n'ont pas les mêmes cartes"));
+  assert.ok(render.includes("les livrets n'ont pas tous les mêmes cartes"));
 });
 
 // ------------------------------------------------ la page courte des QR, exécutée
@@ -224,8 +225,12 @@ function texteDesPages(p) {
         t.set(m[1].toLowerCase(), String.fromCodePoint(...(m[2].match(/.{4}/g) || []).map((h) => parseInt(h, 16))));
     for (const b of f.match(/beginbfrange([\s\S]*?)endbfrange/g) || [])
       for (const m of b.matchAll(/<([0-9a-fA-F]+)>\s*<([0-9a-fA-F]+)>\s*<([0-9a-fA-F]+)>/g)) {
-        const a = parseInt(m[1], 16), z = parseInt(m[2], 16), c = parseInt(m[3], 16);
-        for (let k = a; k <= z && k - a < 1024; k++) t.set(k.toString(16).padStart(4, "0"), String.fromCodePoint(c + (k - a)));
+        // la destination peut être une paire de substituts (lettres mathématiques 𝑥, 𝑏… : <d835><dc65>)
+        const a = parseInt(m[1], 16), z = parseInt(m[2], 16), c = (m[3].match(/.{4}/g) || []).map((h) => parseInt(h, 16));
+        for (let k = a; k <= z && k - a < 1024; k++) {
+          const u = c.slice(); u[u.length - 1] += k - a;
+          t.set(k.toString(16).padStart(4, "0"), String.fromCodePoint(...u));
+        }
       }
     if (t.size) tables.push(t);
   }
@@ -304,7 +309,7 @@ test("Q3 : un seul logo maths&go par page, signature et licence au pied, lisible
 
 test("Q3 : le bandeau des fiches sur deux étages, la lettre arrondie, pas de flèche au livret schéma", () => {
   assert.match(render, /^TITRE_BANDEAU = "Splat!<small>Équations<\/small>"$/m);
-  assert.match(render, /await pg\.add_style_tag\(content=CSS_QR \+ CSS_TITRE_OUTIL\)/);
+  assert.match(render, /await pg\.add_style_tag\(content=CSS_QR \+ CSS_TITRE_OUTIL \+ \(CSS_TITRE_CORR if corr else ""\)\)/);
   // plus la vieille règle fausse (« quand il ne reste que des taches, on partage »)
   assert.doesNotMatch(render + dos, /Quand il ne reste que des taches/);
   // le livret schéma n'a pas de flèche : ses icônes sont des schémas en barres
@@ -379,4 +384,104 @@ test("carte des mondes, vue prof : les deux livrets sous le monde 5, et le lien 
   }
   assert.ok(b[0].includes('<a href="/outils/livrets_splat.html#monde-5">Voir la page des livrets</a>'));
   assert.match(univers, /\.monde\.m3 \.introLien\.livret\{color:#115e59;background:#e6f7f6;border-color:#9fdcd9\}/);
+});
+
+/* ------------------------------------------------------------------ lot Q4 (24/09/2026)
+   Les deux livrets CORRIGÉS du monde 5 — une correction par livret : « par le schéma en
+   barres » pour le livret schéma, « par l'équation » pour le livret équation. L'outil
+   imprime lui-même ses fiches corrigées (corrections courtes 6/page, voir
+   tests/splat-equations-correction-courte.test.mjs) : mêmes 8 pages, mêmes cartes aux
+   mêmes places, taches dévoilées. Couverture « Correction » / « Livret corrigé — … »,
+   boîte du QR « Je rejoue ces cartes en ligne », pied « · correction ». */
+const CORRIGES = SORTIES.map((s) => s + "_correction");
+
+test("Q4 : render.py — une correction par livret, la correction courte de l'outil, la lettre seulement", () => {
+  assert.match(render, /"schema":\s+dict\(suffixe="_correction", imprime="correction-schema",\s+dit="par le schéma en barres"\)/);
+  assert.match(render, /"equation": dict\(suffixe="_correction", imprime="correction-equation", dit="par l'équation"\)/);
+  // la fiche corrigée est imprimée à l'adresse du lien « Fiche », avec print=correction-… à la place de statement
+  assert.match(render, /def adresse_fiche\(f, vue, imprime="statement"\):/);
+  assert.match(render, /&print=\{imprime\}&layout=6"/);
+  assert.match(render, /adresse_fiche\(f, v\["vue"\], corr\["imprime"\] if corr else "statement"\)/);
+  // pas de version « ? » (décision du 24/09) : aucune adresse en unknown=question
+  assert.doesNotMatch(render, /unknown=question/);
+  // pied, boîte du QR, couverture
+  assert.match(render, /PIED_CORRECTION = PIED_LIVRET \+ " · correction"/);
+  assert.match(render, /JS_PIED, PIED_CORRECTION if corr else PIED_LIVRET/);
+  assert.match(render, /QR_PROF = "Je rejoue<br>ces cartes<em>en ligne<\/em>"/);
+  assert.match(render, /\[QR_PROF, QR_ELEVE\] if corr else \[QR_ELEVE, None\]/, "la boîte du corrigé prend la largeur du texte de l'élève");
+  assert.match(render, /PROF = dict\(bandeau="Correction", ligne="Livret corrigé"\)/);
+  assert.match(render, /\.bandeau-prof\{flex:0 0 14mm;[^}]*background:#b91c1c;color:#fff;/);
+  assert.match(render, /prof=dict\(PROF, dit=corr\["dit"\]\) if corr else None/);
+  // le titre du corrigé a trois lignes au plus, chacune entière ; le livret de l'élève garde sa règle
+  assert.match(render, /CSS_TITRE_CORR = "\.printArea \.print-page-subtitle\{-webkit-line-clamp:3\}"/);
+  assert.match(render, /CSS_QR \+ CSS_TITRE_OUTIL \+ \(CSS_TITRE_CORR if corr else ""\)/);
+  assert.match(render, /if \(parts\.length === 2\) \{/);
+  // l'outil n'écrit « Correction » que sur la première page : render.py le répète sur la « bis »
+  assert.match(render, /f"Fiche \{f\['n'\]\} bis — \{f\['t'\]\}" \+ \(" — Correction" if corr else ""\)/);
+  // tous les livrets rendus (élève et corrigés) doivent porter les mêmes cartes
+  assert.match(render, /if len\(\{json\.dumps\(r, sort_keys=True\) for r in rendus\.values\(\)\}\) > 1:/);
+});
+
+test("Q4 : les quatre PDF corrigés — 8 pages A4, 4 feuilles A3, légers", () => {
+  for (const s of CORRIGES) {
+    assert.ok(existe(`outils/${s}.pdf`) && existe(`outils/${s}_a_plier.pdf`), s);
+    assert.equal(nombreDePages(`outils/${s}.pdf`), 8, `${s}.pdf`);
+    assert.equal(nombreDePages(`outils/${s}_a_plier.pdf`), 4, `${s}_a_plier.pdf`);
+    assert.ok(taille(`outils/${s}.pdf`) < 3_000_000, `${s}.pdf reste léger (qpdf)`);
+  }
+});
+
+test("Q4 : dans les PDF corrigés — la couverture dit « Correction » et quel corrigé, les fiches disent Correction, le pied aussi", () => {
+  CORRIGES.forEach((s, l) => {
+    const pages = texteDesPages(`outils/${s}.pdf`).map(norm);
+    assert.equal(pages.length, 8, `${s} : huit pages de texte`);
+    assert.match(pages[0], /CORRECTION/);
+    assert.match(pages[0], /Livret corrigé/);
+    assert.match(pages[0], l === 0 ? /par le schéma en barres/ : /par l'équation/, `${s} : la couverture dit quel corrigé`);
+    assert.doesNotMatch(pages[0], /Nom, prénom/, `${s} : plus de cadre Nom / Classe`);
+    assert.doesNotMatch(pages[0], /professeur/i);
+    const titres = ["Fiche 35 —", "Fiche 35 bis —", "Fiche 36 —", "Fiche 36 bis —", "Fiche 37 —", "Fiche 37 bis —"];
+    titres.forEach((t, k) => {
+      assert.ok(pages[1 + k].includes(t), `${s}, page ${2 + k} : « ${t} »`);
+      assert.match(pages[1 + k], /Correction/, `${s}, page ${2 + k} : le titre dit Correction`);
+      assert.match(pages[1 + k], /· correction/, `${s}, page ${2 + k} : le pied finit par « · correction »`);
+      assert.match(pages[1 + k], l === 0 ? /Même quantité en haut et en bas/ : /Même quantité à gauche qu'à droite/);
+    });
+    // le corrigé par l'équation écrit les lignes résolues : on relit une équation de chaque fiche
+    // (fiche 35 : 𝑏 + 4 = 9 ; fiche 36 : 4𝑥 + 2 = 38 ; fiche 37 : 4𝑡 + 11 = 5𝑡 + 8) — les lettres
+    // mathématiques sortent de l'extracteur telles quelles
+    const sans = (t) => t.replace(/ /g, "");
+    if (l === 1) {
+      assert.ok(sans(pages[1]).includes("𝑏+4=9") && sans(pages[1]).includes("𝑏=5"), "fiche 35 : 𝑏 + 4 = 9, 𝑏 = 5");
+      assert.ok(sans(pages[3]).includes("4𝑥+2=38") && sans(pages[3]).includes("𝑥=9"), "fiche 36 : 4𝑥 + 2 = 38, 𝑥 = 9");
+      assert.ok(sans(pages[5]).includes("4𝑡+11=5𝑡+8") && sans(pages[5]).includes("3=𝑡"), "fiche 37 : 4𝑡 + 11 = 5𝑡 + 8, 3 = 𝑡");
+    } else {
+      // le corrigé par le schéma : les nombres des schémas, pas de ligne d'équation
+      assert.ok(sans(pages[3]).includes("38") && sans(pages[3]).includes("36"), "fiche 36 : les schémas 38 puis 36");
+      assert.ok(!sans(pages[3]).includes("4𝑥+2=38"), "fiche 36 : pas d'équation dans le corrigé par le schéma");
+    }
+    assert.match(pages[7], /Et après/);
+  });
+});
+
+test("Q4 : page des livrets — les corrigés du monde 5 repliés sous chaque livret, comme les autres mondes ; le catalogue ne dit plus « mondes 1 à 4 »", () => {
+  const debut = pageLivrets.indexOf('<section class="panneau" data-m="5" id="monde-5"');
+  const p = pageLivrets.slice(debut, pageLivrets.indexOf("</section>", debut));
+  assert.equal((p.match(/<details class="prof">/g) || []).length, 2, "un bouton replié par livret");
+  assert.equal((p.match(/<summary>✅ Le corrigé<\/summary>/g) || []).length, 2);
+  for (const s of CORRIGES) {
+    const a = p.indexOf(`href="/outils/${s}.pdf"`), b = p.indexOf(`href="/outils/${s}_a_plier.pdf"`);
+    assert.ok(a > 0 && b > a, `${s} : PDF puis « à plier »`);
+    // le corrigé est replié sous SON livret (le lien du corrigé vient après celui du livret élève)
+    assert.ok(a > p.indexOf(`href="/outils/${s.replace("_correction", "")}_a_plier.pdf"`), `${s} : sous son livret`);
+  }
+  assert.match(p, /Le livret corrigé <small>par le schéma en barres<\/small>/);
+  assert.match(p, /Le livret corrigé <small>par l’équation<\/small>/);
+  assert.match(p, /Chaque livret a son corrigé, aux mêmes pages/);
+  const catalogue = lire("assets/js/catalogue-refonte-data.js");
+  assert.doesNotMatch(catalogue, /pour les mondes 1 à 4, les livrets corrigés/);
+  assert.match(catalogue, /le livret à plier, et le livret corrigé, à donner aux élèves/);
+  assert.doesNotMatch(pageLivrets, /pour les mondes 1 à 4/);
+  assert.doesNotMatch(lire("outils/toutes-les-ressources.html"), /pour les mondes 1 à 4, les livrets corrigés/);
+  assert.match(lire("outils/index.html"), /catalogue-refonte-data\.js\?v=splat-corriges-equations-20260924-1/, "le cache-buster du catalogue suit");
 });
