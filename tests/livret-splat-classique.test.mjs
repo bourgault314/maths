@@ -789,10 +789,11 @@ test("K1-bis : la phrase est sur la couverture des six PDF du monde 1 (élève e
    (20/09/2026) : un onglet par monde, les corrections du professeur repliées partout,
    la note « Pour imprimer » une seule fois en bas. */
 test("L : un onglet et un panneau par monde, le prof replié partout, la note une seule fois", () => {
-  assert.equal((page.match(/role="tab"/g) || []).length, 4, "quatre onglets (mondes 1 à 4)");
-  assert.equal((page.match(/role="tabpanel"/g) || []).length, 4, "quatre panneaux");
+  assert.equal((page.match(/role="tab"/g) || []).length, 5, "cinq onglets (mondes 1 à 5, lot Q3)");
+  assert.equal((page.match(/role="tabpanel"/g) || []).length, 5, "cinq panneaux");
   assert.equal((page.match(/<section class="note"/g) || []).length, 1, "une seule note « Pour imprimer »");
-  // neuf cartes depuis les livrets « Le défi » de l'Enquête (23/09/2026) : 3 + 2 + 2 + 2
+  // neuf cartes depuis les livrets « Le défi » de l'Enquête (23/09/2026) : 3 + 2 + 2 + 2 ; les deux
+  // livrets du monde 5 (lot Q3) n'ont pas encore de corrigé (lot Q4)
   assert.equal((page.match(/<details class="prof">/g) || []).length, 9, "les neuf cartes replient leurs corrigés");
   assert.match(page, /sur A3 \(meilleur rendu\)/, "le conseil de Claire sur le A3");
   /* Sans JavaScript, aucun monde n'est caché. Le panneau porte l'attribut « hidden »,
@@ -804,7 +805,7 @@ test("L : un onglet et un panneau par monde, le prof replié partout, la note un
   assert.ok(page.indexOf('document.documentElement.className += " js"') < page.indexOf("<style>"),
     "le script qui pose la classe js doit précéder le <style>");
   // les onglets mènent aux ancres, et les panneaux les portent
-  for (const n of [1, 2, 3, 4]) {
+  for (const n of [1, 2, 3, 4, 5]) {
     assert.ok(page.includes(`href="#monde-${n}"`), `onglet du monde ${n}`);
     assert.ok(page.includes(`id="monde-${n}"`), `panneau du monde ${n}`);
   }
@@ -820,11 +821,12 @@ const CARTES_MONDES = [
   [2, "SPLAT! classique", "fiches 7 à 9"],
   [3, "SPLAT! Enquête", "fiches 10 à 14"],
   [4, "SPLAT! Grande enquête", "fiches 15 à 19"],
+  [5, "SPLAT! Équations", "fiches 35 à 37"],     // lot Q3 (24/09/2026) : la carte saute de 19 à 35
 ];
 test("cartes des mondes : numéro, nom et fiches, dans l'ordre, toujours des onglets, sans couverture", () => {
   const nav = page.slice(page.indexOf('<nav class="onglets"'), page.indexOf("</nav>"));
   const cartes = nav.split("<a ").slice(1);
-  assert.equal(cartes.length, 4);
+  assert.equal(cartes.length, CARTES_MONDES.length);
   // data-n = le nombre de cartes : c'est lui qui passe la barre en deux lignes de 3 à 5 ou 6 mondes
   assert.match(nav, new RegExp(`<nav class="onglets" id="onglets" data-n="${cartes.length}" role="tablist"`));
   cartes.forEach((c, i) => {
@@ -865,7 +867,7 @@ test("cartes des mondes : numéro, nom et fiches, dans l'ordre, toujours des ong
 test("corrigés pour tous, sur la page : plus de « prof » ni de « professeur » dans les boutons et les titres", () => {
   assert.doesNotMatch(page, /🧑‍🏫|\(prof\)|professeur/);
   assert.match(page, /<strong>✅ Les corrigés<\/strong>&nbsp;: le même livret, aux mêmes pages, avec les réponses/);
-  assert.match(catalogue, /"cardDescription": "Tous les livrets de l’univers SPLAT! à plier, monde par monde\u00a0: [^"]*Grande enquête \(mondes 3 et 4\) en deux niveaux, et leurs corrigés\."/);
+  assert.match(catalogue, /"cardDescription": "Tous les livrets de l’univers SPLAT! à plier, monde par monde\u00a0: [^"]*Grande enquête \(mondes 3 et 4\) en deux niveaux, et leurs corrigés ; SPLAT! Équations \(monde 5\) en deux livrets, schéma en barres ou équation\."/);
 });
 
 /* ===================================================================== lot D (21/09/2026)

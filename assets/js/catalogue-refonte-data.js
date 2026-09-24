@@ -791,7 +791,7 @@ window.MATHSGO_CATALOGUE = {
       "collections": ["splat"],
       "tags": ["splat", "livret", "schema-barres", "equation", "inconnue", "imprimer"],
       "thumbnail": "assets/img/thumbnails/splat/livrets-splat.png?v=2",
-      "cardDescription": "Tous les livrets de l’univers SPLAT! à plier, monde par monde : le monde 1 en trois niveaux, le monde 2, l’Enquête et la Grande enquête (mondes 3 et 4) en deux niveaux, et leurs corrigés."
+      "cardDescription": "Tous les livrets de l’univers SPLAT! à plier, monde par monde : le monde 1 en trois niveaux, le monde 2, l’Enquête et la Grande enquête (mondes 3 et 4) en deux niveaux, et leurs corrigés ; SPLAT! Équations (monde 5) en deux livrets, schéma en barres ou équation."
     },
     "outils/tuiles_algebriques/generateur_exercices_calcul_litteral.html": {
       "primaryNotion": "calcul-litteral",
@@ -6528,7 +6528,7 @@ window.MATHSGO_CATALOGUE = {
     {
       "id": "outils-livrets-splat",
       "title": "Les livrets SPLAT! — les fiches de chaque monde à plier",
-      "description": "Tous les livrets de l’univers SPLAT! sur une seule page, monde par monde : les six fiches du monde 1 (Petit SPLAT!) en trois niveaux — jusqu’à 20 jetons, de 21 à 50, de 51 à 100 —, les trois fiches du monde 2 (SPLAT! classique) en deux niveaux, puis les fiches 10 à 14 du monde 3 (SPLAT! Enquête) et 15 à 19 du monde 4 (SPLAT! Grande enquête), en deux niveaux chacun. Pour chaque livret : le PDF de 8 pages, le livret à plier, et les livrets corrigés, à donner aux élèves ou à garder pour soi. Chaque fiche porte un QR code vers le jeu en ligne avec les mêmes cartes. À imprimer en recto-verso sur A3, ou sur A4 pour un plus petit livret, à plier et agrafer.",
+      "description": "Tous les livrets de l’univers SPLAT! sur une seule page, monde par monde : les six fiches du monde 1 (Petit SPLAT!) en trois niveaux — jusqu’à 20 jetons, de 21 à 50, de 51 à 100 —, les trois fiches du monde 2 (SPLAT! classique) en deux niveaux, puis les fiches 10 à 14 du monde 3 (SPLAT! Enquête) et 15 à 19 du monde 4 (SPLAT! Grande enquête), en deux niveaux chacun, et les fiches 35 à 37 du monde 5 (SPLAT! Équations) en deux livrets — l’élève y dessine le schéma en barres ou écrit l’équation. Pour chaque livret : le PDF de 8 pages, le livret à plier, et, pour les mondes 1 à 4, les livrets corrigés, à donner aux élèves ou à garder pour soi. Chaque fiche porte un QR code vers le jeu en ligne avec les mêmes cartes. À imprimer en recto-verso sur A3, ou sur A4 pour un plus petit livret, à plier et agrafer.",
       "path": "outils/livrets_splat.html",
       "domains": [
         "algebre"

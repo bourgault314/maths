@@ -1,0 +1,24 @@
+@font-face{font-family:Poppins;src:url('/assets/fonts/Poppins-Regular.woff2') format('woff2');font-weight:400;font-style:normal}
+@font-face{font-family:Poppins;src:url('/assets/fonts/Poppins-Bold.woff2') format('woff2');font-weight:700;font-style:normal}
+@page{size:A4;margin:0}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+body{width:210mm;height:297mm;overflow:hidden;font-family:Poppins,'Segoe UI',system-ui,sans-serif;color:#0f172a;position:relative;display:flex;flex-direction:column}
+/* Charte du monde 5 : le teal de la carte des mondes (#08aaa5), le même dégradé que le bandeau
+   imprimé des fiches (.print-page-header de outils/splat_equations.html, lot Q1).
+   Lisible en noir et blanc : le teal ne sert qu'aux FONDS ; tout texte coloré est en teal
+   foncé (#115e59), jamais en teal clair sur du blanc. */
+.corps{flex:1 1 auto;padding:0 14mm;display:flex;flex-direction:column}
+/* Pied : gris moyen et 10 px, lisible en photocopie (comme les livrets des mondes 1 à 4). */
+.pied{flex:0 0 auto;text-align:center;font-size:10px;font-weight:700;color:#64748b;padding-bottom:6mm}
+.chip{display:inline-block;font-size:12px;font-weight:700;color:#115e59;background:#e6f7f6;border:1px solid #9fdcd9;border-radius:999px;padding:1.4mm 4mm;text-transform:uppercase;letter-spacing:1.4px}
+/* La lettre de l'inconnue : le caractère mathématique (𝑥, 𝑛…) de l'appli, arrondi. Il est
+   dessiné par FreeSerif (le 𝑥 d'un Times italique, celui de Cambria Math sous Windows), pour ce
+   seul bloc de caractères ; déjà penché : pas de fausse italique. size-adjust lui donne la
+   hauteur des autres lettres (mesuré pour FreeSerif, comme les corrigés de l'Enquête). */
+@font-face{font-family:"x-arrondi";src:local("FreeSerif"),local("LatinModernMath-Regular");unicode-range:U+1D400-1D7FF;size-adjust:120%}
+@font-face{font-family:"x-arrondi";font-style:italic;src:local("FreeSerif"),local("LatinModernMath-Regular");unicode-range:U+1D400-1D7FF;size-adjust:120%}
+/* Le signe moins : Poppins dessine le vrai « − » (U+2212) plus court qu'un tiret, on le lit « - ».
+   Les textes écrivent donc le tiret demi-cadratin « – » de Poppins, aussi large que le « + »
+   et à sa hauteur (comparé le 24/09/2026). */
+.x{font-family:"x-arrondi",'Times New Roman',serif;font-style:normal;font-weight:400;padding:0 0.04em}

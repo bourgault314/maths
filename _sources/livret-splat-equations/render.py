@@ -1,0 +1,653 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Régénère les deux livrets « SPLAT! Équations » (monde 5, 8 pages chacun) à partir du site.
+
+    python3 render.py                 (les DEUX livrets)
+    python3 render.py schema          (un seul : schema | equation)
+    python3 render.py --qr            (en refabriquant d'abord les QR codes)
+
+Produit, à la racine du dépôt :
+    outils/livret_splat_equations_schema.pdf          8 pages A4, ordre de lecture
+    outils/livret_splat_equations_schema_a_plier.pdf  4 pages A3 paysage, imposées
+    outils/livret_splat_equations_equation.pdf        (idem, famille « équation »)
+    outils/livret_splat_equations_equation_a_plier.pdf
+
+DEUX LIVRETS, LES MÊMES 36 CARTES (décision du 23/09/2026) :
+  - « schema »   : plateaux l'un au-dessus de l'autre (vue Schéma de l'outil), plateau à
+                   gauche de la case, la place à droite : l'élève dessine le schéma en barres ;
+  - « equation » : plateaux côte à côte (vue Équation), plateau à 80 % de la case, la
+                   place dessous : l'élève écrit l'équation.
+(Le mot « tableau » n'est pas employé : « schéma en barres » partout, demande de Claire.)
+
+Les trois fiches (35, 36, 37) ne sont PAS redessinées ici : elles sont imprimées par l'outil du
+site (outils/splat_equations.html, réglage « Énoncé seul, 6/page » du lot Q1) avec les réglages
+et les graines de la carte des mondes (outils/splat_univers.html, EQ5_*). Le QR est posé dans
+le bandeau juste avant l'impression. Couverture et dos sont les deux HTML de ce dossier ;
+l'exemple de la couverture est dessiné par l'outil lui-même, sur une carte qui n'est dans
+aucune fiche.
+
+CONTRÔLES FAITS À CHAQUE RENDU (le script s'arrête sinon) :
+  - chaque fiche = 12 cartes sur 2 pages de 6 ;
+  - ses cartes sont EXACTEMENT celles du jeu en ligne de la carte des mondes (la série « j »,
+    relue dans splat_univers.html) : le QR rejoue les mêmes équations ;
+  - les deux livrets ont les mêmes 36 cartes ;
+  - l'exemple de couverture n'est aucune de ces 36 cartes.
+
+Dépendances : playwright (chromium complet, pas le headless shell), pikepdf, qrcode[pil],
+la police FreeSerif (apt install fonts-freefont-ttf) pour la lettre de l'exemple. qpdf si disponible.
+"""
+import asyncio, base64, http.server, socketserver, threading, functools, sys, json, re
+from pathlib import Path
+from urllib.parse import quote
+
+ICI = Path(__file__).resolve().parent
+RACINE = ICI.parent.parent                      # racine du dépôt
+BASE_WEB = "/_sources/livret-splat-equations"
+PORT = 8124
+SITE = "https://mathsgo.re"
+COURTE = "/splat/equations/livret/"             # la page courte des QR
+
+# Les réglages des trois fiches, tels que définis dans outils/splat_univers.html (EQ5_S1…S3,
+# EQ5_PAQUETS, EQ5_DEUX_COTES, lot Q2). Si une graine change là-bas, la reporter ici ET dans
+# splat/equations/livret/index.html, puis relancer. Un test épingle les trois fichiers.
+EQ5_S1 = "mode=EQUNITSTEP&form=X_PLUS_B_EQ_C&cards=4&seed=355&unknown=letter"
+EQ5_S2 = "mode=EQUNITSTEP&form=AX_EQ_C&tasksMax=3&cards=4&seed=814&unknown=letter"
+EQ5_S3 = "mode=EQUNITSTEP&form=ONE_SIDE&tasksMax=3&cards=4&seed=19&unknown=letter"
+EQ5_PAQUETS = "mode=EQSTEP&form=ONE_SIDE&cards=12&seed=89&unknown=letter"
+EQ5_DEUX_COTES = "mode=EQSTEP&form=BOTH&cards=12&seed=25&unknown=letter"
+
+FICHES = [
+    dict(n=35, t="Premières équations",       parties=[EQ5_S1, EQ5_S2, EQ5_S3], parcours="m3e1",
+         resume="Les jetons un par un."),
+    dict(n=36, t="Des paquets de jetons",     parties=[EQ5_PAQUETS],            parcours="m3e2",
+         resume="Les jetons arrivent en paquets."),
+    dict(n=37, t="Des taches des deux côtés", parties=[EQ5_DEUX_COTES],         parcours="m3e4",
+         resume="L'inconnue des deux côtés."),
+]
+
+# ------------------------------------------------------------------ le dos : « Encore des cartes ! »
+# Décision du 24/09/2026 : trois séries, une par fiche, de SIX équations tirées au hasard et
+# jouées dans le jeu de l'élève d'ÉquaSplat (la barre « Équation 1 / 6 », les pastilles) —
+# sans parcours : aucune étoile, rien d'enregistré ; un nouveau scan = six nouvelles équations.
+# Le QR ouvre la page courte ?s=N, qui envoie vers l'outil avec « jouer=1 » : l'outil tire la
+# série (réglages de la fiche, sans graine) et l'ouvre aussitôt dans ÉquaSplat.
+# « Un par un » mélange les trois formes de la fiche 35 : 2 + 2 + 2 (paramètre « suite »).
+SERIE_CARTES = 6
+
+def sans_graine(q, cartes):
+    q = re.sub(r"&seed=\d+", "", q)
+    return re.sub(r"cards=\d+", f"cards={cartes}", q)
+
+SERIES = {
+    "1": [sans_graine(EQ5_S1, 2), sans_graine(EQ5_S2, 2), sans_graine(EQ5_S3, 2)],
+    "2": [sans_graine(EQ5_PAQUETS, SERIE_CARTES)],
+    "3": [sans_graine(EQ5_DEUX_COTES, SERIE_CARTES)],
+}
+DOS = [("Un par un",      "Les jetons un par un, comme la fiche&nbsp;35.",  "1"),
+       ("Des paquets",    "Les jetons en paquets, comme la fiche&nbsp;36.", "2"),
+       ("Des deux côtés", "Des taches des deux côtés, comme la fiche&nbsp;37.", "3")]
+
+def cible_serie(s):
+    """Ce que la page courte ouvre pour ?s=N (elle fait le même calcul, un test les compare)."""
+    p = SERIES[s]
+    return ("/outils/splat_equations.html?" + p[0] + "&jouer=1"
+            + ("&suite=" + ";".join(quote(x, safe="") for x in p[1:]) if len(p) > 1 else ""))
+
+def lien_fiche(n):
+    """Le QR d'une fiche : la page courte, qui renvoie vers le lien EXACT « Le jeu de l'élève »
+    de la carte des mondes (ÉquaSplat, parcours=m3eN : la même étoile). La série y est écrite en
+    entier dans l'adresse (plus de 2 000 caractères) : un QR direct ne se lirait plus à 17 mm."""
+    return f"{SITE}{COURTE}?f={n}"
+
+def lien_serie(s):
+    return f"{SITE}{COURTE}?s={s}"
+
+LIEN_UNIVERS = f"{SITE}/outils/splat_univers.html"
+
+# ------------------------------------------------------------------ l'exemple de couverture
+# Une carte « paquets, taches d'un seul côté » qui n'est dans AUCUNE fiche (render.py le
+# vérifie) : 3𝑛 + 12 = 27, 𝑛 = 5 — trois taches et deux paquets (7 et 5) d'un côté, deux
+# paquets (10 et 17) de l'autre : les trois gestes de la fiche 36 (regrouper, enlever,
+# partager) sur une seule carte. Graine 79, choisie le 24/09/2026 : aucun nombre à
+# sous-entendu, pas de paquet « 1 », une solution qui n'est ni 1 ni 2.
+EXEMPLE = "mode=EQSTEP&form=ONE_SIDE&cards=1&seed=79&unknown=letter"
+
+# ------------------------------------------------------------------ les icônes du dos
+# Les flèches de l'équation, dessinées comme celles de la correction imprimée de l'outil : un arc
+# de chaque côté, du haut vers le bas, le geste écrit à l'extérieur, en brun (#b45309).
+FLECHES = ('<svg width="116" height="46" viewBox="0 0 116 46" aria-hidden="true">'
+           '<g fill="none" stroke="#b45309" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">'
+           '<path d="M42 5 Q32 23 42 41"/><path d="M36.5 38 L42 41 L42.6 35"/>'
+           '<path d="M74 5 Q84 23 74 41"/><path d="M73.4 35 L74 41 L79.5 38"/></g>'
+           '<g fill="#b45309" font-family="Poppins, sans-serif" font-weight="700" font-size="13">'
+           '<text x="31" y="28" text-anchor="end">– 12</text><text x="85" y="28">– 12</text></g>'
+           '<text x="58" y="28" text-anchor="middle" font-family="Poppins, sans-serif" font-weight="700" '
+           'font-size="15" fill="#0f172a">=</text></svg>')
+# Le schéma en barres de l'exemple (3𝑥 + 12 = 27) : barre du haut 𝑥 𝑥 𝑥 | 12, barre du bas 27 ;
+# la même part (12) enlevée des deux barres ; puis la tache seule sur sa valeur.
+MINI_SCH = ('<span class="mini-sch"><span class="b"><div class="t">𝑥</div><div class="t">𝑥</div>'
+            '<div class="t">𝑥</div><div style="flex:2.4">12</div></span>'
+            '<span class="b"><div style="flex:5.4">27</div></span></span>')
+MINI_SCH_ENLEVE = ('<span class="mini-sch"><span class="b"><div class="t">𝑥</div><div class="t">𝑥</div>'
+                   '<div class="t">𝑥</div><div class="h" style="flex:2.4">12</div></span>'
+                   '<span class="b"><div style="flex:3">15</div><div class="h" style="flex:2.4">12</div></span></span>')
+MINI_SCH_FIN = ('<span class="mini-sch" style="width:9mm"><span class="b"><div class="t">𝑥</div></span>'
+                '<span class="b"><div style="flex:1">5</div></span></span>')
+
+# ------------------------------------------------------------------ les deux livrets
+VUES = {
+    "schema": dict(
+        sortie="livret_splat_equations_schema",
+        vue="schema",
+        sur="Mon livret · Monde 5 · Le schéma en barres",
+        accroche="Deux plateaux, la même quantité…<br>et le schéma en barres pour trouver la tache&nbsp;!",
+        lg_corr="Le schéma en barres",
+        cotes="en haut et en bas",
+        atoi_couv="Sur les fiches, la place à droite de chaque carte est pour toi&nbsp;: <b>dessine le schéma "
+                  "en barres</b>, puis trouve ce que cache la tache.",
+        # « Pour se souvenir » (décision du 24/09/2026 : une règle juste et générale — la même
+        # opération des deux côtés, et le but). Icônes : les dessins de la correction de l'outil,
+        # ici le schéma en barres (la part enlevée hachurée, pas de flèche).
+        souvenir=[
+            (MINI_SCH_ENLEVE, "On peut faire <b>la même opération sur les deux plateaux</b>, ajouter, enlever "
+                              "ou partager&nbsp;: il reste toujours la même quantité en haut et en bas."),
+            (MINI_SCH_FIN, "<b>Le but</b>&nbsp;: garder une seule tache sur un plateau. L'autre plateau dit ce "
+                           "qu'elle cache."),
+            (MINI_SCH, "<b>À droite de chaque carte, c'est à toi</b>&nbsp;: dessine le schéma en barres, puis "
+                       "trouve ce que cache la tache — comme l'exemple de la couverture."),
+        ],
+        # la carte (plateaux l'un sur l'autre) est haute : fenêtre étroite, le schéma à côté
+        css_couv=".carte.corr{flex:1 1 0}.carte:first-child{flex:0 0 58mm}",
+    ),
+    "equation": dict(
+        sortie="livret_splat_equations_equation",
+        vue="equation",
+        sur="Mon livret · Monde 5 · L'équation",
+        accroche="Deux plateaux, la même quantité…<br>et l'équation pour trouver la tache&nbsp;!",
+        lg_corr="L'équation",
+        cotes="à gauche et à droite",
+        atoi_couv="Sur les fiches, la place sous chaque carte est pour toi&nbsp;: <b>écris l'équation</b>, "
+                  "puis résous-la pour trouver ce que cache la tache.",
+        souvenir=[
+            (FLECHES, "On peut faire <b>la même opération des deux côtés</b>, ajouter, enlever ou "
+                      "partager&nbsp;: il reste toujours la même quantité à gauche et à droite."),
+            ('<span class="mini-eq">𝑥 = 5</span>', "<b>Le but</b>&nbsp;: garder une seule tache d'un côté. "
+                                                   "L'autre côté dit ce qu'elle cache."),
+            ('<span class="mini-eq">3𝑥 + 12 = 27</span>', "<b>Sous chaque carte, c'est à toi</b>&nbsp;: écris "
+                                                          "l'équation, puis résous-la — comme l'exemple de la couverture."),
+        ],
+        css_couv=".carte.corr{flex:0 0 66mm}",
+    ),
+}
+
+# ------------------------------------------------------------------ la page de l'outil
+# Le QR prend place dans le bandeau de chaque fiche, dans une boîte blanche, pour ne rien
+# prendre à la place réservée à l'élève (comme les livrets des mondes 2 à 4).
+CSS_QR = """
+.printArea .print-page-header{flex-basis:21mm !important}
+.printArea .print-page-title-block{flex:1 1 auto;min-width:0;align-items:center}
+.printArea .print-page-subtitle{white-space:normal;overflow:visible;text-overflow:clip;line-height:1.12}
+.qr-livret{display:flex;align-items:center;gap:2.5mm;background:#fff;border-radius:2mm;padding:1mm 1.5mm 1mm 2.5mm;margin-left:auto;margin-right:2mm;flex:0 0 auto}
+.qr-livret img{width:17mm;height:17mm;display:block}
+.qr-livret .lib{text-align:right;font-size:11px;font-weight:900;color:#0f172a;line-height:1.2;white-space:nowrap}
+.qr-livret .lib em{display:block;font-style:normal;font-weight:400;font-size:10px;color:#475569;margin-top:0.5mm}
+"""
+QR_ELEVE = "J'ai terminé<br>ma fiche,<em>je rejoue en ligne</em>"
+
+JS_QR = """([qr, lib]) => {
+  const heads = document.querySelectorAll('.printArea .print-page-header');
+  if (!heads.length) return 'pas de bandeau imprimé';
+  heads.forEach(h => {
+    const box = document.createElement('div'); box.className = 'qr-livret';
+    box.innerHTML = '<div class="lib">' + lib + '</div><img src="' + qr + '" alt="">';
+    const logos = h.querySelector('.print-page-logos');
+    h.insertBefore(box, logos || null);
+  });
+  return 'ok';
+}"""
+
+# Le pied des fiches : /splat ouvre la collection SPLAT du catalogue (livrets, univers…),
+# comme les livrets des mondes 1 à 4.
+PIED_LIVRET = "mathsgo.re/splat · CC BY-NC-SA 4.0"
+JS_PIED = """(texte) => {
+  const f = document.querySelectorAll('.printArea .print-page-footer');
+  if (!f.length) return 'pas de pied de page';
+  f.forEach(e => { e.textContent = texte; });
+  return 'ok';
+}"""
+
+# Une fiche tient sur DEUX pages : la seconde devient « Fiche N bis — … » (décision du 20/09/2026
+# pour tous les livrets : une fiche = deux pages, l'élève sait de quelle feuille il parle).
+JS_BIS = """(titre) => {
+  const st = document.querySelectorAll('.printArea .sheet .print-page-subtitle');
+  if (st.length !== 2) return st.length + ' pages imprimées au lieu de 2';
+  st[1].textContent = titre;
+  return 'ok';
+}"""
+
+# Un titre trop long pour une ligne (la boîte du QR prend de la place) se coupe APRÈS le tiret
+# — « Fiche 37 — » / « Des taches des deux côtés » —, jamais au milieu du titre (même règle que
+# les livrets de l'Enquête).
+JS_TITRE = """() => {
+  const st = document.querySelectorAll('.printArea .print-page-subtitle');
+  if (!st.length) return 'pas de titre';
+  st.forEach(e => {
+    const t = e.textContent, i = t.indexOf(' — ');
+    e.style.whiteSpace = 'nowrap';
+    const bloc = e.parentElement;
+    const trop = bloc.scrollWidth > bloc.clientWidth + 1;
+    e.style.whiteSpace = '';
+    if (trop && i > 0) {
+      e.textContent = ''; e.append(t.slice(0, i) + ' —'); e.appendChild(document.createElement('br')); e.append(t.slice(i + 3));
+      // encore trop long pour deux lignes : la police rétrécit, par pas de 5 %, jusqu'à 80 %
+      const f0 = parseFloat(getComputedStyle(e).fontSize);
+      for (let k = 1; k <= 4 && e.scrollHeight > e.clientHeight + 1; k++) e.style.fontSize = (f0 * (1 - 0.05 * k)) + 'px';
+    }
+  });
+  const coupe = [...st].filter(e => e.scrollHeight > e.clientHeight + 1).map(e => e.textContent);
+  return coupe.length ? 'titre coupé : ' + coupe.join(' | ') : 'ok';
+}"""
+
+# Le nom de l'outil dans le bandeau des fiches : « Splat! » et, dessous, « Équations » (décision du
+# 24/09/2026). Sur une seule ligne, « Splat! Équations » (17 pt) ne laissait que 3 cm au titre de la
+# fiche une fois la boîte du QR posée : « Des taches des deux côtés » ne tenait pas sur deux lignes.
+TITRE_BANDEAU = "Splat!<small>Équations</small>"
+CSS_TITRE_OUTIL = (".printArea .print-page-title{line-height:1.02 !important}"
+                   ".printArea .print-page-title small{display:block;font-size:.62em;letter-spacing:.2px}")
+JS_TITRE_OUTIL = """(t) => {
+  const e = document.querySelectorAll('.printArea .print-page-title');
+  if (!e.length) return 'pas de nom d\\'outil dans le bandeau';
+  e.forEach(x => { x.innerHTML = t; });
+  return 'ok';
+}"""
+
+# La feuille imprimée par l'outil et ses cartes, écrites comme le jeu de l'élève les porte
+# (carteDuJeuEquaSplat, la conversion de l'outil) : c'est ce qu'on compare au jeu en ligne.
+JS_FICHE = """() => ({
+  cartes: cards.map(carteDuJeuEquaSplat),
+  feuilles: document.querySelectorAll('.printArea .sheet').length,
+  parPage: getPrintCardsPerPage(),
+  vides: document.querySelectorAll('.printArea .pCard.empty').length
+})"""
+
+# L'exemple de couverture, dessiné par l'outil en deux fenêtres :
+#  1. « La carte » : les plateaux de la fiche (même vue que le livret), taches TRANSPARENTES —
+#     le dernier état de la résolution pas à pas de l'outil (« je vérifie »), sans texte ;
+#  2. la résolution : la correction imprimée du mode « Équation » de l'outil (plateau, schémas en
+#     barres, équation fléchée), dont on ne garde que les schémas (livret schéma) ou l'équation
+#     (livret équation). Aucun dessin n'est inventé ici : on choisit la fenêtre.
+JS_EXEMPLE = """(vue) => {
+  const NS = 'http://www.w3.org/2000/svg';
+  const c = cards[0];
+  const tEl = (n, a = {}) => { const e = document.createElementNS(NS, n); for (const k in a) e.setAttribute(k, a[k]); return e; };
+  const union = (els) => {
+    let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+    els.forEach(e => { const b = e.getBBox(); if (!b.width && !b.height) return;
+      x0 = Math.min(x0, b.x); y0 = Math.min(y0, b.y); x1 = Math.max(x1, b.x + b.width); y1 = Math.max(y1, b.y + b.height); });
+    return [x0, y0, x1, y1];
+  };
+  const vb = ([x0, y0, x1, y1], m) => [x0 - m, y0 - m, x1 - x0 + 2 * m, y1 - y0 + 2 * m].map(v => Math.round(v)).join(' ');
+  // 1. la carte, taches transparentes
+  const s1 = tEl('svg', {viewBox: '0 0 1600 1200'}); document.body.appendChild(s1);
+  ensureHatchDefs(s1);
+  const etats = getEquationStepStates(c._eq, getCardVarChar(c), {includeVerify: true});
+  const g = tEl('g');
+  renderCardEquationStepPrintScene(g, c, etats.length, {layoutMode: vue, showIntroText: false, showAid: false, useTokens: false});
+  s1.appendChild(g);
+  const vb1 = vb(union([g]), 16);
+  // 2. la correction du mode Équation, sur la même carte
+  const s2 = tEl('svg', {viewBox: '0 0 1600 2200'}); document.body.appendChild(s2);
+  renderCardIntoSvg(s2, Object.assign({}, c, {family: 'EQ'}), 'correction');
+  const gEq = s2.querySelector('#eqPrintSteps');
+  if (!gEq) return {erreur: 'pas de correction #eqPrintSteps'};
+  // les schémas en barres sont des cases (rect) ; l'équation fléchée vient SOUS le dernier schéma
+  const tous = Array.from(gEq.querySelectorAll('rect, line, text, path'));
+  const bas = Math.max(...Array.from(gEq.querySelectorAll('rect')).map(e => { const b = e.getBBox(); return b.y + b.height; }));
+  const schemas = tous.filter(e => { const b = e.getBBox(); return b.y + b.height <= bas + 2; });
+  const equation = tous.filter(e => e.getBBox().y >= bas - 2);
+  if (!schemas.length || !equation.length) return {erreur: 'schémas ou équation introuvables'};
+  const garde = vue === 'schema' ? schemas : equation;
+  const vb2 = vb(union(garde), vue === 'schema' ? 18 : 22);
+  // la fenêtre n'a pas les proportions du morceau gardé : on retire le reste du dessin, sinon il
+  // apparaîtrait au-dessus ou au-dessous (plateau, autres schémas, équation)
+  tous.filter(e => !garde.includes(e)).forEach(e => e.remove());
+  Array.from(s2.children).filter(e => e !== gEq && e.tagName !== 'defs').forEach(e => e.remove());
+  const eq = c._eq;
+  const r = {svg1: s1.innerHTML, vb1, svg2: s2.innerHTML, vb2, variable: c.varChar, x: eq.x,
+             gauche: {taches: eq.left.tasks, paquets: eq.left.visible.slice()},
+             droite: {taches: eq.right.tasks, paquets: eq.right.visible.slice()},
+             carte: carteDuJeuEquaSplat(c)};
+  s1.remove(); s2.remove();
+  return r;
+}"""
+
+JS_COUV = """(d) => {
+  const txt = (sel, html) => { const e = document.querySelector(sel); if (!e) return false; e.innerHTML = html; return true; };
+  const a = document.querySelector('svg.ex-carte'), b = document.querySelector('svg.ex-corr');
+  if (!a || !b) return 'pas de place pour l\\'exemple';
+  a.innerHTML = d.svg1; a.setAttribute('viewBox', d.vb1);
+  b.innerHTML = d.svg2; b.setAttribute('viewBox', d.vb2);
+  if (!txt('.tete .sur', d.sur)) return 'pas de sur-titre';
+  if (!txt('.tete .accroche', d.accroche)) return 'pas d\\'accroche';
+  if (!txt('.expl .intro', d.intro)) return 'pas de texte d\\'exemple';
+  if (!txt('.lg-corr', d.lg_corr)) return 'pas de légende de la résolution';
+  if (!txt('.atoi-txt', d.atoi)) return 'pas de consigne des fiches';
+  const li = document.querySelectorAll('.som ol li');
+  if (li.length !== d.sommaire.length) return 'sommaire : ' + li.length + ' lignes';
+  d.sommaire.forEach((t, i) => {
+    li[i].querySelector('.badge b').textContent = t[0];
+    li[i].querySelectorAll('span')[1].innerHTML = t[1] + '<em>' + t[2] + '</em>';
+  });
+  return 'ok';
+}"""
+
+JS_DOS = """(d) => {
+  const box = document.querySelector('.niveaux');
+  if (!box) return 'pas de bloc niveaux';
+  box.innerHTML = d.niveaux.map(n =>
+     '<div class="niv"><img src="' + n[2] + '" alt=""><span class="n">' + n[0] +
+     '</span><span class="d">' + n[1] + '</span></div>').join('');
+  const u = document.querySelector('.suite img');
+  if (!u) return 'pas de QR de la suite du voyage';
+  u.setAttribute('src', d.univers);
+  const li = document.querySelectorAll('.lex li');
+  if (li.length !== 4) return 'Pour se souvenir : ' + li.length + ' lignes';
+  d.souvenir.forEach(([ic, txt], i) => {
+    li[i + 1].querySelector('.ic').innerHTML = ic;
+    li[i + 1].querySelectorAll(':scope > span')[1].innerHTML = txt;
+  });
+  const f = document.querySelectorAll('.prog .g .c');
+  if (f.length !== d.fiches.length) return 'Mes fiches : ' + f.length + ' cases';
+  d.fiches.forEach((t, i) => { f[i].querySelector('.badge b').textContent = t[0]; f[i].querySelector('.ti').textContent = t[1]; });
+  return 'ok';
+}"""
+
+# La lettre de l'exemple est un caractère mathématique (𝑛, U+1D45B…) : sur la machine de rendu,
+# on nomme sa police (FreeSerif, le 𝑥 arrondi d'un Times italique), pour ce seul bloc de
+# caractères — comme les corrigés en lettre de l'Enquête. Tout le reste garde sa police.
+X_SOURCES = 'local("FreeSerif"), local("LatinModernMath-Regular")'
+CSS_X = (
+    '@font-face{font-family:"x-arrondi";src:' + X_SOURCES + ';unicode-range:U+1D400-1D7FF;size-adjust:120%}\n'
+    '@font-face{font-family:"x-arrondi";font-style:italic;src:' + X_SOURCES + ';unicode-range:U+1D400-1D7FF;size-adjust:120%}\n'
+    'svg text[font-family*="Times"]{font-family:"x-arrondi","Times New Roman",Times,serif !important}\n'
+)
+
+MOTS = {1: "une", 2: "deux", 3: "trois", 4: "quatre", 5: "cinq", 6: "six"}
+
+def decrit(cote):
+    """« trois taches et deux paquets de 7 et 5 jetons »"""
+    morceaux = []
+    t, p = cote["taches"], cote["paquets"]
+    if t:
+        morceaux.append("une tache" if t == 1 else f"{MOTS[t]} taches")
+    if p:
+        if len(p) == 1:
+            morceaux.append(f"un paquet de {p[0]} jetons")
+        else:
+            morceaux.append(f"{MOTS[len(p)]} paquets de " + ", ".join(map(str, p[:-1])) + f" et {p[-1]} jetons")
+    return " et ".join(morceaux)
+
+def textes_exemple(ex, v):
+    """Le texte « Comment ça marche ? », écrit à partir de la carte que l'outil vient de
+    dessiner : il ne peut donc pas mentir sur les nombres de l'exemple."""
+    g, d, x = ex["gauche"], ex["droite"], ex["x"]
+    if d["taches"] or not g["taches"]:
+        raise SystemExit("l'exemple doit avoir ses taches d'un seul côté (à gauche / en haut)")
+    haut, bas = ("En haut", "en bas") if v["vue"] == "schema" else ("À gauche", "à droite")
+    sg, sd, n = sum(g["paquets"]), sum(d["paquets"]), g["taches"]
+    if (sd - sg) != n * x:
+        raise SystemExit("l'exemple ne tombe pas juste")
+    let = f'<span class="x">{ex["variable"]}</span>'          # le caractère de l'appli (𝑛), arrondi
+    nb = "&nbsp;"        # un calcul ne se coupe pas en fin de ligne
+    regroupe = [f"{(nb + '+' + nb).join(map(str, c['paquets']))}{nb}={nb}{sum(c['paquets'])}" for c in (g, d) if len(c["paquets"]) > 1]
+    gestes = ((f"on <b>regroupe</b> les paquets ({', '.join(regroupe)}), " if regroupe else "")
+              + f"on <b>enlève</b> {sg} des deux {'plateaux' if v['vue'] == 'schema' else 'côtés'} "
+              + f"({sd}{nb}–{nb}{sg}{nb}={nb}{sd - sg}), "
+              + f"puis on <b>partage</b> en {n} ({sd - sg}{nb}÷{nb}{n}{nb}={nb}{x}).")
+    if v["vue"] == "schema":
+        outil = "Le <b>schéma en barres</b> met les deux plateaux l'un sous l'autre&nbsp;: "
+    else:
+        outil = (f"L'<b>équation</b> s'écrit {n}{let}{nb}+{nb}{sg}{nb}={nb}{sd}&nbsp;: ")
+    return (f"Sur cette carte, il y a la même quantité de jetons {v['cotes']}. {haut}, {decrit(g)}&nbsp;; "
+            f"{bas}, {decrit(d)}."
+            "\n      <span>Chaque tache cache le même nombre de jetons&nbsp;: c'est l'<b>inconnue</b>, la lettre "
+            f"{let}. Ici, les taches sont transparentes&nbsp;: on voit les {x} jetons que chacune cache. "
+            + outil + gestes + "</span>")
+
+# ------------------------------------------------------------------ le jeu en ligne, relu
+def series_du_jeu():
+    """Les séries « Le jeu de l'élève » du monde 5, relues dans la carte des mondes : { m3eN : [cartes] }."""
+    univers = (RACINE / "outils" / "splat_univers.html").read_text(encoding="utf-8")
+    out = {}
+    for m in re.finditer(r'p:"(m3e\d)",id:"[^"]+",[\s\S]*?j:"([^"]+)"', univers):
+        b64 = m.group(2).split("#data=")[1]
+        b64 += "=" * (-len(b64) % 4)
+        out[m.group(1)] = json.loads(base64.urlsafe_b64decode(b64).decode("utf-8"))["serie"]
+    return out
+
+def cle(carte):
+    """Une équation, sans tenir compte du côté : pour comparer l'exemple aux cartes."""
+    cote = lambda r: (sum(1 for t in r if t == "x"), sum(t for t in r if t != "x"))
+    return tuple(sorted([cote(carte["left"]), cote(carte["right"])]))
+
+# ------------------------------------------------------------------ rendu
+def fabrique_qr():
+    """(Re)fabrique les QR codes. À relancer si une adresse change."""
+    import qrcode
+    from qrcode.constants import ERROR_CORRECT_M
+    dossier = ICI / "qr"
+    dossier.mkdir(parents=True, exist_ok=True)
+    def ecrire(url, nom):
+        q = qrcode.QRCode(error_correction=ERROR_CORRECT_M, box_size=12, border=2)
+        q.add_data(url); q.make(fit=True)
+        q.make_image(fill_color="black", back_color="white").save(dossier / nom)
+    for f in FICHES:
+        ecrire(lien_fiche(f["n"]), f"fiche{f['n']}.png")
+    for s in SERIES:
+        ecrire(lien_serie(s), f"serie-{s}.png")
+    ecrire(LIEN_UNIVERS, "univers.png")
+
+def serveur():
+    class Silencieux(http.server.SimpleHTTPRequestHandler):
+        def log_message(self, *a, **k): pass
+    h = functools.partial(Silencieux, directory=str(RACINE))
+    socketserver.TCPServer.allow_reuse_address = True
+    srv = socketserver.TCPServer(("127.0.0.1", PORT), h)
+    threading.Thread(target=srv.serve_forever, daemon=True).start()
+    return srv
+
+def adresse_fiche(f, vue):
+    """L'adresse du lien « Fiche » de la carte des mondes (eq5Adresse), sans « imprimer »."""
+    v = "&view=" + vue
+    p = f["parties"]
+    suite = ("&suite=" + ";".join(quote(x + v, safe="") for x in p[1:])) if len(p) > 1 else ""
+    return (f"/outils/splat_equations.html?{p[0]}{v}{suite}&print=statement&layout=6"
+            f"&title={quote('Fiche ' + str(f['n']) + ' — ' + f['t'], safe='')}")
+
+async def pages(v, tmp, jeu):
+    from playwright.async_api import async_playwright
+    base = f"http://127.0.0.1:{PORT}"
+    qrweb = f"{BASE_WEB}/qr"
+    cartes_livret = {}
+    async with async_playwright() as p:
+        # Le vrai Chromium (channel="chromium"), pas le « headless shell » : celui-ci espace les
+        # lettres d'environ 5 % (vu le 19/09/2026 sur les couvertures du monde 2).
+        nav = await p.chromium.launch(channel="chromium")
+
+        async def page_outil(url):
+            pg = await nav.new_page(viewport={"width": 794, "height": 1123})
+            await pg.add_init_script("window.print = () => {};")
+            await pg.goto(base + url, wait_until="networkidle")
+            await pg.wait_for_timeout(800)
+            return pg
+
+        # --- l'exemple de couverture, dessiné par l'outil
+        pg = await page_outil(f"/outils/splat_equations.html?{EXEMPLE}&view={v['vue']}")
+        ex = await pg.evaluate(JS_EXEMPLE, v["vue"])
+        await pg.close()
+        if ex.get("erreur"):
+            raise SystemExit("exemple : " + ex["erreur"])
+
+        # --- les trois fiches
+        for f in FICHES:
+            titre = f"Fiche {f['n']} — {f['t']}"
+            pg = await page_outil(adresse_fiche(f, v["vue"]) + "&imprimer=1")
+            etat = await pg.evaluate(JS_FICHE)
+            if etat["parPage"] != 6 or etat["feuilles"] != 2 or etat["vides"] != 0 or len(etat["cartes"]) != 12:
+                raise SystemExit(f"{titre} : {etat['parPage']}/page, {etat['feuilles']} feuilles, "
+                                 f"{len(etat['cartes'])} cartes, {etat['vides']} cases vides")
+            if etat["cartes"] != jeu[f["parcours"]]:
+                raise SystemExit(f"{titre} : les cartes ne sont pas celles du jeu en ligne ({f['parcours']})")
+            cartes_livret[f["n"]] = etat["cartes"]
+            r = await pg.evaluate(JS_BIS, f"Fiche {f['n']} bis — {f['t']}")
+            if r != "ok":
+                raise SystemExit(f"{titre}, page « bis » : {r}")
+            await pg.add_style_tag(content=CSS_QR + CSS_TITRE_OUTIL)
+            r = await pg.evaluate(JS_TITRE_OUTIL, TITRE_BANDEAU)
+            if r != "ok":
+                raise SystemExit(f"{titre}, bandeau : {r}")
+            r = await pg.evaluate(JS_QR, [f"{qrweb}/fiche{f['n']}.png", QR_ELEVE])
+            if r != "ok":
+                raise SystemExit(f"{titre}, QR : {r}")
+            # la mesure du titre se fait à la largeur imprimée (A4 moins les 2 × 8 mm de l'outil)
+            await pg.set_viewport_size({"width": 733, "height": 1062})
+            await pg.emulate_media(media="print")
+            r = await pg.evaluate(JS_TITRE)
+            if r != "ok":
+                raise SystemExit(f"{titre}, titre : {r}")
+            r = await pg.evaluate(JS_PIED, PIED_LIVRET)
+            if r != "ok":
+                raise SystemExit(f"{titre}, pied : {r}")
+            await pg.wait_for_timeout(600)
+            # marges : celles de la feuille de l'outil (@page 8 mm), comme un professeur qui imprime
+            await pg.pdf(path=str(tmp / f"fiche{f['n']}.pdf"), format="A4", print_background=True,
+                         prefer_css_page_size=True)
+            await pg.close()
+            print(f"   {titre} : 12 cartes, 2 pages, celles du jeu en ligne")
+
+        toutes = {cle(c) for l in cartes_livret.values() for c in l}
+        if cle(ex["carte"]) in toutes:
+            raise SystemExit("l'exemple de couverture est une carte du livret")
+
+        async def pdf_html(page, sortie, js, donnees, css=None):
+            pg = await nav.new_page(viewport={"width": 794, "height": 1123})
+            await pg.goto(f"{base}{BASE_WEB}/{page}", wait_until="networkidle")
+            await pg.wait_for_timeout(800)
+            await pg.add_style_tag(content=CSS_X + (css or ""))
+            r = await pg.evaluate(js, donnees)
+            if r != "ok":
+                raise SystemExit(f"{page} : {r}")
+            await pg.wait_for_timeout(500)
+            debord = await pg.evaluate("() => document.body.scrollHeight > document.body.clientHeight + 1")
+            if debord:
+                await pg.screenshot(path=str(ICI / "debord.png"), full_page=True)
+                raise SystemExit(f"{page} : le contenu dépasse la page (capture : debord.png)")
+            await pg.pdf(path=str(sortie), width="210mm", height="297mm", print_background=True,
+                         margin={"top": "0", "bottom": "0", "left": "0", "right": "0"})
+            await pg.close()
+
+        # Les flèches de la correction de l'outil écrivent « − 12 » (U+2212) ; dans la couverture,
+        # ce texte prend la police Poppins, dont le « − » est plus court qu'un tiret : on écrit le
+        # tiret « – », comme partout dans le livret (relevé par Code sur la PR #828). Livret
+        # seulement : l'outil n'est pas touché.
+        svg2 = ex["svg2"].replace(">− ", ">– ")
+        couv = dict(svg1=ex["svg1"], vb1=ex["vb1"], svg2=svg2, vb2=ex["vb2"],
+                    sur=v["sur"], accroche=v["accroche"], intro=textes_exemple(ex, v),
+                    lg_corr=v["lg_corr"], atoi=v["atoi_couv"],
+                    sommaire=[[f["n"], f["t"], f["resume"]] for f in FICHES])
+        await pdf_html("couverture.html", tmp / "p1.pdf", JS_COUV, couv, v["css_couv"])
+        # les rappels du dos écrivent la lettre de l'exemple de couverture (𝑛), et sa valeur :
+        # « comme l'exemple de la couverture » doit se lire avec les mêmes signes.
+        # (Le moins de ces textes est le tiret « – » de Poppins, voir commun.css.)
+        # (les petits dessins sont écrits pour 3𝑥 + 12 = 27, 𝑥 = 5 : on vérifie que c'est bien l'exemple)
+        if (ex["gauche"]["taches"], sum(ex["gauche"]["paquets"]), sum(ex["droite"]["paquets"]), ex["x"]) != (3, 12, 27, 5):
+            raise SystemExit("l'exemple a changé : refaire les petits dessins du dos (MINI_SCH…, « 3𝑥 + 12 = 27 »)")
+        souvenir = [(ic.replace("𝑥", ex["variable"]), txt) for ic, txt in v["souvenir"]]
+        dos = dict(niveaux=[[nom, desc, f"{qrweb}/serie-{s}.png"] for nom, desc, s in DOS],
+                   univers=f"{qrweb}/univers.png", souvenir=souvenir,
+                   fiches=[[f["n"], f["t"]] for f in FICHES])
+        await pdf_html("dos.html", tmp / "p8.pdf", JS_DOS, dos)
+        await nav.close()
+    return ex, cartes_livret
+
+def assemble(sortie, tmp):
+    """Les 8 pages, puis les 2 feuilles A3 imposées (8|1 · 2|7 · 6|3 · 4|5).
+    pikepdf et add_overlay (chaque page en Form XObject) : les dégradés suivent."""
+    import pikepdf
+    A4W, A4H = 595.276, 841.890
+    src, pages_ = [], []
+    for nom in ["p1.pdf"] + [f"fiche{f['n']}.pdf" for f in FICHES] + ["p8.pdf"]:
+        d = pikepdf.open(str(tmp / nom))
+        src.append(d); pages_.extend(d.pages)
+    if len(pages_) != 8:
+        raise SystemExit(f"{len(pages_)} pages au lieu de 8")
+    livret = pikepdf.Pdf.new()
+    for pg in pages_:
+        page = livret.add_blank_page(page_size=(A4W, A4H))
+        pikepdf.Page(page).add_overlay(pg, pikepdf.Rectangle(0, 0, A4W, A4H))
+    livret.save(str(RACINE / "outils" / f"{sortie}.pdf"))
+    a3 = pikepdf.Pdf.new()
+    for g, d in [(8, 1), (2, 7), (6, 3), (4, 5)]:   # imposition d'un cahier de 8 pages
+        feuille = a3.add_blank_page(page_size=(2 * A4W, A4H))
+        for idx, tx in ((g, 0.0), (d, A4W)):
+            pikepdf.Page(feuille).add_overlay(pages_[idx - 1], pikepdf.Rectangle(tx, 0, tx + A4W, A4H))
+    a3.save(str(RACINE / "outils" / f"{sortie}_a_plier.pdf"))
+    for s in src:
+        s.close()
+
+def compresse(chemin):
+    """qpdf, s'il est installé, divise le poids par deux (objets et flux recompressés)."""
+    import shutil, subprocess
+    if not shutil.which("qpdf"):
+        return
+    tmp = chemin.with_suffix(".qpdf.pdf")
+    r = subprocess.run(["qpdf", "--object-streams=generate", "--compress-streams=y",
+                        "--recompress-flate", "--compression-level=9", str(chemin), str(tmp)])
+    if r.returncode in (0, 3) and tmp.exists():
+        tmp.replace(chemin)
+
+def main():
+    import tempfile
+    demandes = [a for a in sys.argv[1:] if not a.startswith("-")] or list(VUES)
+    inconnu = [a for a in demandes if a not in VUES]
+    if inconnu:
+        raise SystemExit(f"livret inconnu : {', '.join(inconnu)} (au choix : {', '.join(VUES)})")
+    if "--qr" in sys.argv:
+        fabrique_qr(); print("QR codes régénérés.")
+    jeu = series_du_jeu()
+    if sorted(jeu) != sorted(f["parcours"] for f in FICHES):
+        raise SystemExit(f"séries du jeu relues dans la carte des mondes : {sorted(jeu)}")
+    srv = serveur()
+    rendus = {}
+    try:
+        for nom in demandes:
+            v = VUES[nom]
+            print(f"— livret « {nom} »")
+            with tempfile.TemporaryDirectory() as d:
+                tmp = Path(d)
+                ex, cartes = asyncio.run(pages(v, tmp, jeu))
+                assemble(v["sortie"], tmp)
+            for suffixe in ("", "_a_plier"):
+                compresse(RACINE / "outils" / f"{v['sortie']}{suffixe}.pdf")
+            rendus[nom] = dict(exemple=ex["carte"], fiches={str(n): c for n, c in cartes.items()})
+            print(f"   Fait : outils/{v['sortie']}.pdf et outils/{v['sortie']}_a_plier.pdf")
+    finally:
+        srv.shutdown()
+    # les deux livrets ont exactement les mêmes cartes (seule la vue change)
+    if len(rendus) == 2 and rendus["schema"] != rendus["equation"]:
+        raise SystemExit("les deux livrets n'ont pas les mêmes cartes")
+    # cartes.json : les 36 cartes et l'exemple, tels que rendus — relus par le test du dépôt
+    if rendus:
+        r = next(iter(rendus.values()))
+        un = lambda c: json.dumps(c, ensure_ascii=False)          # une carte par ligne
+        lignes = ['{', f' "exemple": {un(r["exemple"])},', ' "fiches": {']
+        for i, (n, cartes) in enumerate(r["fiches"].items()):
+            lignes.append(f'  "{n}": [')
+            lignes += [f'   {un(c)}' + ("," if k < len(cartes) - 1 else "") for k, c in enumerate(cartes)]
+            lignes.append('  ]' + ("," if i < len(r["fiches"]) - 1 else ""))
+        lignes += [' }', '}']
+        (ICI / "cartes.json").write_text("\n".join(lignes) + "\n", encoding="utf-8")
+
+if __name__ == "__main__":
+    main()

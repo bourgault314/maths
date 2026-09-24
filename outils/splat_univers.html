@@ -95,6 +95,11 @@ main{max-width:980px;margin:0 auto;padding:10px 14px 60px}
 .monde.menq .introLien.livret:hover{background:#fbd5e8}
 .monde.menq .introLien.livret.a3{background:#fff}
 .monde.menq .introLien.livret.a3:hover{background:#fdf2f8}
+/* monde 5 (SPLAT! Équations) : ses deux livrets (lot Q3), au teal du monde, texte foncé */
+.monde.m3 .introLien.livret{color:#115e59;background:#e6f7f6;border-color:#9fdcd9}
+.monde.m3 .introLien.livret:hover{background:#cdeeed}
+.monde.m3 .introLien.livret.a3{background:#fff}
+.monde.m3 .introLien.livret.a3:hover{background:#f0fbfa}
 .monde .introNote{flex:1 0 100%;margin:0;font-size:13px;line-height:1.4;color:var(--muted)}
 
 /* ---------- étapes ---------- */
@@ -623,6 +628,15 @@ MONDES.forEach((m,mi)=>{
        +'<a class="introLien livret" href="/outils/livret_splat_enquete_multiplicatif_defi.pdf" target="_blank" rel="noopener">\ud83d\udcd9 Livret Le d\u00e9fi, 50 \u00e0 100 (PDF)</a>'
        +'<a class="introLien livret a3" href="/outils/livret_splat_enquete_multiplicatif_defi_a_plier.pdf" target="_blank" rel="noopener">\ud83d\udda8\ufe0f Le d\u00e9fi \u00e0 plier</a>'
        +'<span class="introNote">Les fiches 15 \u00e0 19 en un livret de 8 pages \u00e0 plier, sur le m\u00eame mod\u00e8le que celui du monde 3\u00a0: l\u2019exemple r\u00e9solu de la page 2 m\u00eale \u00ab\u00a0de plus\u00a0\u00bb et \u00ab\u00a0fois plus\u00a0\u00bb. Le livret <b>Le d\u00e9fi</b> reprend les cinq fiches avec des totaux de 50 \u00e0 100 (m\u00eame \u00e9toile). <a href="/outils/livrets_splat.html#monde-4">Voir la page des livrets</a></span>'
+     +'</p>':'')+
+   /* monde 5, vue prof : les deux livrets SPLAT! Équations (lot Q3, 24/09/2026) — les mêmes 36
+      cartes, l'élève dessine le schéma en barres ou écrit l'équation */
+   (m===MONDE_EQUATIONS&&PROF?'<p class="intro">'
+       +'<a class="introLien livret" href="/outils/livret_splat_equations_schema.pdf" target="_blank" rel="noopener">\ud83d\udcd7 Livret sch\u00e9ma en barres (PDF)</a>'
+       +'<a class="introLien livret a3" href="/outils/livret_splat_equations_schema_a_plier.pdf" target="_blank" rel="noopener">\ud83d\udda8\ufe0f Sch\u00e9ma \u00e0 plier</a>'
+       +'<a class="introLien livret" href="/outils/livret_splat_equations_equation.pdf" target="_blank" rel="noopener">\ud83d\udcd8 Livret \u00e9quation (PDF)</a>'
+       +'<a class="introLien livret a3" href="/outils/livret_splat_equations_equation_a_plier.pdf" target="_blank" rel="noopener">\ud83d\udda8\ufe0f \u00c9quation \u00e0 plier</a>'
+       +'<span class="introNote">Les fiches 35, 36 et 37 en un livret de 8 pages \u00e0 plier (A3 ou A4, recto-verso, retournement sur le <b>bord court</b>), en deux versions aux m\u00eames 36 cartes\u00a0: plateaux l\u2019un sur l\u2019autre et la place \u00e0 droite pour dessiner le sch\u00e9ma en barres, ou plateaux c\u00f4te \u00e0 c\u00f4te et la place dessous pour \u00e9crire l\u2019\u00e9quation. Le QR code de chaque fiche rejoue la s\u00e9rie de l\u2019\u00e9toile dans \u00c9quaSplat. <a href="/outils/livrets_splat.html#monde-5">Voir la page des livrets</a></span>'
      +'</p>':'')+
    '<ol class="etapes">'+m.etapes.map((e,ei)=>{
      compteur++;
