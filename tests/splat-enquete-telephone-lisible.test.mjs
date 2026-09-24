@@ -187,7 +187,7 @@ test("3e erreur : « Voir la réponse » né sous le pavé est montré en faisan
   const essai = (tel, basBouton) => {
     const defile = [];
     new Function("window", "tel", "basBouton", `
-      let eleveIndicesTel = tel;
+      let eleveIndicesTel = tel, eleveDefileErreur = 0;
       const elevePave = { visible: () => true, hauteur: () => 180 };
       ${fn("eleveMontrerAuDessusDuPave")}
       eleveMontrerAuDessusDuPave({ getBoundingClientRect: () => ({ bottom: basBouton }) });
@@ -199,6 +199,31 @@ test("3e erreur : « Voir la réponse » né sous le pavé est montré en faisan
   assert.deepEqual(essai(true, 460), [], "déjà visible : la page ne bouge pas");
   assert.deepEqual(essai(false, 520), [], "hors Enquête au téléphone : la page ne bouge pas");
   assert.match(fn("eleveValiderSplat"), /bouton\.parentNode\.appendChild\(voir\);\n\s+eleveMontrerAuDessusDuPave\(voir\);/);
+});
+
+test("carte finie (juste, ou réponse montrée) : la page remonte d'autant qu'elle était descendue, une seule fois", () => {
+  const defile = [];
+  const o = new Function("window", `
+    let eleveIndicesTel = true, eleveDefileErreur = 0;
+    const elevePave = { visible: () => true, hauteur: () => 180 };
+    ${fn("eleveMontrerAuDessusDuPave")}
+    ${fn("eleveRemonterApresErreur")}
+    return { montrer: (bas) => eleveMontrerAuDessusDuPave({ getBoundingClientRect: () => ({ bottom: bas }) }), remonter: eleveRemonterApresErreur };
+  `)({ innerHeight: 664, scrollBy: (x, y) => defile.push(y) });
+  o.montrer(517);
+  o.remonter();
+  assert.deepEqual(defile, [45, -45]);
+  o.remonter();
+  assert.deepEqual(defile, [45, -45], "rien à rendre : la page ne bouge plus");
+  // sans défilement à la 3e erreur, la carte finie ne fait rien bouger
+  o.montrer(400); o.remonter();
+  assert.deepEqual(defile, [45, -45]);
+  // appelée après le focus de « Carte suivante », dans les deux fins de carte ; remise à zéro à chaque carte
+  const valider = fn("eleveValiderSplat");
+  const juste = valider.slice(valider.indexOf("if(toutJuste){"), valider.indexOf("}else{"));
+  assert.match(juste, /suivant\.focus\(\);\n\s+eleveRemonterApresErreur\(\);/);
+  assert.match(fn("eleveMontrerReponse"), /suivant\.focus\(\);\n\s+eleveRemonterApresErreur\(\);/);
+  assert.match(fn("renderEleveSplat"), /eleveSchemaTelephone\(\); eleveDefileErreur = 0;/);
 });
 
 test("une carte juste après la 3e erreur : « Voir la réponse » s'efface", () => {
