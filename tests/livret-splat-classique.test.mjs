@@ -342,17 +342,29 @@ function texteDesPages(p) {
   return pages;
 }
 
+/* Les pages de fiche lues par texteExact commencent par le « Splat! » du bandeau (lot P, 24/09/2026 :
+   texteDesPages, qui devine la table de chaque police, lit « lat!Fiche — » quand le « Splat! » gras
+   est posé dans une police découpée en plusieurs sous-ensembles ; texteExact suit la vraie police et
+   lit le même texte, au caractère près, sur les PDF d'avant et d'après). */
+const titreFiche = (t) => t.replace(/^Splat!/, "");
+
 test("dans le PDF publié : la 2e page de chaque fiche porte « Fiche N bis — … »", () => {
-  const pages = texteDesPages("outils/livret_splat_classique.pdf");
+  const pages = texteExact("outils/livret_splat_classique.pdf");
   assert.equal(pages.length, 8, "huit pages de texte");
   const titres = [[1, 2, "Fiche 7 —", "Fiche 7 bis —"], [3, 4, "Fiche 8 —", "Fiche 8 bis —"], [5, 6, "Fiche 9 —", "Fiche 9 bis —"]];
   for (const [recto, verso, normal, bis] of titres) {
-    assert.ok(pages[recto].startsWith(normal), `page ${recto + 1} commence par « ${normal} » (lu : ${pages[recto].slice(0, 40)})`);
-    assert.ok(pages[verso].startsWith(bis), `page ${verso + 1} commence par « ${bis} » (lu : ${pages[verso].slice(0, 40)})`);
+    assert.ok(titreFiche(pages[recto]).startsWith(normal), `page ${recto + 1} commence par « ${normal} » (lu : ${pages[recto].slice(0, 40)})`);
+    assert.ok(titreFiche(pages[verso]).startsWith(bis), `page ${verso + 1} commence par « ${bis} » (lu : ${pages[verso].slice(0, 40)})`);
   }
   // les titres de Claire, tels qu'ils s'impriment
   assert.match(pages[3], /Fiche 8 — Avec des\s*paquets de jetons/);
   assert.match(pages[5], /Fiche 9 — Le dé/);
+  // lot P : chaque carte a sa case réponse « tache = ……… » à droite du plateau — un « = » par
+  // carte, rien d'écrit après (les pointillés sont un trait), et c'est le seul « = » de la fiche
+  for (let p = 1; p <= 6; p++) {
+    assert.equal((pages[p].match(/TOTAL\d+=/g) || []).length, 6, `page ${p + 1} : six cases réponse, juste après le TOTAL`);
+    assert.equal((pages[p].match(/=/g) || []).length, 6, `page ${p + 1} : aucun nombre écrit dans les cases réponse`);
+  }
   // la couverture : le texte de Claire et « Nom, prénom »
   assert.match(pages[0], /Sur cette carte, il y a 37 jetons au total/);
   assert.match(pages[0], /Le schéma en barres et l'équation/);
@@ -691,8 +703,11 @@ test("K2 : l'équation ou le schéma, en « ? » ou en lettre — une lettre par
   const eqL = texteExact("outils/livret_splat_classique_correction_equation_lettre.pdf");
   const sc = texteExact("outils/livret_splat_classique_correction_schema.pdf");
   const scL = texteExact("outils/livret_splat_classique_correction_schema_lettre.pdf");
-  // équation : fiche 7, carte 1 (7 jetons visibles, total 13) — l'équation que l'outil n'écrivait pas en mode A
-  assert.ok(eq[1].includes("TOTAL137 + ?=13?=6− 7− 7"), eq[1].slice(0, 400));
+  // équation : fiche 7, carte 1 (7 jetons visibles, total 13) — l'équation que l'outil n'écrivait pas en mode A ;
+  // depuis le lot P, la case réponse de la colonne suit le TOTAL : « tache = 6 » (la tache est dessinée, « =6 » est écrit)
+  assert.ok(eq[1].includes("TOTAL13=67 + ?=13?=6− 7− 7"), eq[1].slice(0, 400));
+  assert.ok(eqL[1].includes("TOTAL13=67 + x=13x=6− 7− 7"), eqL[1].slice(0, 400));
+  assert.ok(sc[5].includes("TOTAL36=336"), sc[5].slice(0, 400));
   // fiche 9, carte 1 : 27 + 3 × ? = 36 → 3 × ? = 9 → ? = 3, flèches − 27 et ÷ 3
   assert.ok(eq[5].includes("27 + 3 × ?=363 × ?=9?=3− 27− 27÷ 3÷ 3"), eq[5].slice(0, 400));
   // en lettre : la même carte avec sa lettre ; la fiche 7 a une lettre par carte (x, a, b, c…)
@@ -933,7 +948,7 @@ test("D : les dix PDF du livret « Le défi » — 8 pages A4, 4 feuilles A3 imp
 });
 
 test("D : dans le PDF publié — la couverture du défi, et « Fiche N bis » sur la seconde page", () => {
-  const pages = texteDesPages("outils/livret_splat_classique_defi.pdf");
+  const pages = texteExact("outils/livret_splat_classique_defi.pdf");
   // la couverture : l'accroche, l'exemple écrit à partir de la carte rendue, le sommaire
   assert.match(pages[0], /et des totaux jusqu'à 100/);
   assert.match(pages[0], /Sur cette carte, il y a 77 jetons au total/);
@@ -946,8 +961,8 @@ test("D : dans le PDF publié — la couverture du défi, et « Fiche N bis » s
   }
   // les trois fiches, deux pages chacune
   for (const [recto, verso, n] of [[1, 2, 7], [3, 4, 8], [5, 6, 9]]) {
-    assert.ok(pages[recto].startsWith(`Fiche ${n} —`), `page ${recto + 1} (lu : ${pages[recto].slice(0, 40)})`);
-    assert.ok(pages[verso].startsWith(`Fiche ${n} bis —`), `page ${verso + 1} (lu : ${pages[verso].slice(0, 40)})`);
+    assert.ok(titreFiche(pages[recto]).startsWith(`Fiche ${n} —`), `page ${recto + 1} (lu : ${pages[recto].slice(0, 40)})`);
+    assert.ok(titreFiche(pages[verso]).startsWith(`Fiche ${n} bis —`), `page ${verso + 1} (lu : ${pages[verso].slice(0, 40)})`);
   }
   // le dos : les deux séries, et « Mes fiches » avec les titres du livret dur
   assert.match(pages[7].replace(/\s+/g, ""), /Lesdeuxlivretsréunis/);

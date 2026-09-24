@@ -41,13 +41,15 @@ const moteur = Function(`
   let _textMeasureContext = null;
   ${constante("EQUATION_MATH_FONT")}
   ${constante("EQ_OP_ARROW_COLOR")}
+  ${constante("SIX_COLONNE")}
+  ${html.match(/^const SIX_CORRECTION_DX = [^\n]*;/m)[0]}
   ${constante("SIX_CORRECTION_VIEWBOX")}
   ${html.match(/^const SIX_CORRECTION_LEFT = [^\n]*;/m)[0]}
   ${constante("SIX_CORRECTION_PLAIN_LETTER")}
   ${constante("SIX_CORRECTION_LETTER_INK")}
   ${AIDES.map(extraire).join("\n")}
   return { sixCorrectionPart, sixCorrectionData, drawSixCorrectionEquation, drawSixCorrectionSchema,
-           SIX_CORRECTION_VIEWBOX, SIX_CORRECTION_LEFT, SIX_CORRECTION_RIGHT };
+           SIX_CORRECTION_VIEWBOX, SIX_CORRECTION_LEFT, SIX_CORRECTION_RIGHT, SIX_CORRECTION_DX, SIX_CORRECTION_DY };
 `)();
 
 function faux(){
@@ -65,9 +67,12 @@ const cartes = {
   a1tache:  { family:"U", total:13, visible:Array(7).fill(1), hidden:Array(6).fill(1), _splats:[{}], _unit:{ tasks:1, hiddenByTask:[6] } },
   a0visible:{ family:"U", total:20, visible:[], hidden:Array(20).fill(1), _splats:Array(4).fill({}), _unit:{ tasks:4, hiddenByTask:[5,5,5,5] } },
 };
-const [VX, , VW, VH] = moteur.SIX_CORRECTION_VIEWBOX.split(" ").map(Number);
-// le SVG fait 80 % de la case, centré : la case va donc de −200 à 1800 en unités de la carte
-const CASE_G = VX - VW * 0.125, CASE_D = VX + VW * 1.125;
+const [VX, , VW, VH_SVG] = moteur.SIX_CORRECTION_VIEWBOX.split(" ").map(Number);
+// lot P : le SVG fait toute la case (repère 2000) et la correction se dessine dans le repère
+// d'avant (1600 à 80 % de la case), translaté de (DX, DY). Dans ce repère-là, la case va de
+// −200 à 1800 et le bas de la carte est à VH.
+const CASE_G = VX - moteur.SIX_CORRECTION_DX, CASE_D = VX + VW - moteur.SIX_CORRECTION_DX;
+const VH = VH_SVG - moteur.SIX_CORRECTION_DY;
 
 test("le menu propose les deux corrections courtes, juste après « Correction »", () => {
   const menu = html.slice(html.indexOf('<select id="printMode"'), html.indexOf("</select>", html.indexOf('<select id="printMode"')));
@@ -120,14 +125,20 @@ test("la feuille : bandeau « — Correction », cadre de consigne de l'énoncé
   assert.match(ps, /if\(mode !== "correction"\) sheet\.appendChild\(createClassicPrintInstruction\(slotCards\)\);/);
   assert.match(ps, /if\(sixPart\)\{\s*\n\s*renderSixCorrectionIntoSvg\(sv, card, sixPart\);/);
   const rend = extraire("renderSixCorrectionIntoSvg");
-  assert.match(rend, /renderCardIntoSvg\(targetSvg, card, "correction"\);/);
+  // lot P : même plateau que l'énoncé 6/page des modes A et B — en haut, TOTAL et case réponse
+  // dans la colonne de droite (« tache = 3 ») — donc le plateau tombe exactement au même endroit
+  assert.match(rend, /renderCardIntoSvg\(targetSvg, card, "correction", \{ sixColonne:true \}\);/);
   assert.match(rend, /querySelectorAll\("#barModelPrintSteps, #barModelPrintStepsN"\)\.forEach\(el => el\.remove\(\)\)/);
-  // même SVG que l'énoncé 6/page (80 % de la case, centré, 1600 de large) : le plateau tombe
-  // exactement au même endroit ; la correction déborde à gauche et à droite (overflow visible)
-  assert.match(rend, /targetSvg\.style\.width = "80%";\s*\n\s*targetSvg\.style\.overflow = "visible";/);
-  assert.equal(VX, 0); assert.equal(VW, 1600);
+  assert.match(rend, /targetSvg\.style\.width = "100%";\s*\n\s*targetSvg\.style\.overflow = "visible";/);
+  assert.match(rend, /mk\.el\("g", \{ id: "sixCorrection", transform: `translate\(\$\{SIX_CORRECTION_DX\} \$\{SIX_CORRECTION_DY\}\)` \}\)/);
+  assert.equal(VX, 0); assert.equal(VW, 2000);
+  // la correction monte de 230 avec le plateau (y 270 → 40) ; le bas de la carte, dans son repère, ne bouge pas
+  assert.deepEqual([moteur.SIX_CORRECTION_DX, moteur.SIX_CORRECTION_DY], [200, -230]);
+  assert.equal(VH_SVG, 1370);
   assert.equal(VH, 1600);
   assert.deepEqual([CASE_G, CASE_D], [-200, 1800]);
+  // la place d'avant dans la largeur de la case : de −120 à 1720, soit 80 à 1920 dans le repère 2000
+  assert.deepEqual([moteur.SIX_CORRECTION_LEFT + moteur.SIX_CORRECTION_DX, moteur.SIX_CORRECTION_RIGHT + moteur.SIX_CORRECTION_DX], [80, 1920]);
 });
 
 test("l'équation : les lignes et les flèches de la correction du mode B, 25 % plus grandes, 4 mm sous le plateau, aussi en mode A", () => {
@@ -153,6 +164,8 @@ test("l'équation : les lignes et les flèches de la correction du mode B, 25 % 
   // 25 % plus grande que la correction de l'outil (100 au lieu de 80), l'écart du « = » suit
   assert.equal(Number(b.textes[0].a["font-size"]), 100, "taille de l'équation");
   assert.deepEqual([b.textes[0].a.x, b.textes[2].a.x], [800 - 63, 800 + 63], "écart du signe égal");
+  // lot P : l'équation est centrée sur la CASE (milieu du repère 2000), plus sur le plateau
+  assert.equal(b.textes[1].a.x + moteur.SIX_CORRECTION_DX, VW / 2, "le « = » au milieu de la case");
   // les membres en Times italique POUR DE VRAI (style en ligne : la règle « * » de la page ne l'emporte pas)
   const membre = b.textes[0].a;
   assert.equal(membre["font-style"], "italic");

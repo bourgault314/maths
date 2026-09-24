@@ -529,7 +529,8 @@
 
     /* 6/page : énoncé seul, 2 x 3. La carte ne dessine que le plateau (viewBox 1600×1000),
        à 80 % de la largeur de la case et centrée ; le bas de la case reste blanc pour
-       que l'élève y dessine son tableau et écrive son opération. */
+       que l'élève y dessine son tableau et écrive son opération. Modes A, A±, B et B± (lot P) :
+       SVG en ligne à 100 % de la case (repère 2000 de large), TOTAL à droite (SIX_COLONNE). */
     .printArea.print-6up .grid{grid-template-columns:repeat(2, 1fr);grid-template-rows:repeat(3,minmax(0,1fr));gap:4mm}
     .printArea.print-6up .pCard svg{width:80%;height:auto;margin:0 auto}
 
@@ -9366,7 +9367,7 @@ function renderCardIntoSvg(targetSvg, card, printMode, opts = {}){
     const t = tEl("text",{x,y,...attrs}); t.textContent=txt; return t;
   }
 
-  targetSvg.appendChild(tEl("rect",{x:0,y:0,width:W,height:H,rx:26,fill:"#fff"}));
+  targetSvg.appendChild(tEl("rect",{x:0,y:0,width:opts.sixColonne ? SIX_COLONNE.largeur : W,height:H,rx:26,fill:"#fff"}));
 
   /* Système, la correction imprimée 4 par page (lot S3) : les cadres de la correction. */
   if(revealAnswers && sysAPlan(card) && !opts.sansCorrectionSys && String(targetSvg.getAttribute("viewBox") || "").trim() !== "0 0 1600 1000"){
@@ -9411,6 +9412,16 @@ function renderCardIntoSvg(targetSvg, card, printMode, opts = {}){
   const trayY = printTray.y;
   const trayH = printTray.h;
 
+  /* 6/page des modes A, A±, B et B± (lot P) : le plateau remonte en haut de la case, la case
+     TOTAL passe dans la colonne à sa droite (voir SIX_COLONNE). Le plateau et tout ce qu'il
+     porte se dessinent comme d'habitude, dans un groupe seulement translaté : les taches et
+     les jetons gardent leurs places au pixel près. */
+  const racine = targetSvg;
+  if(opts.sixColonne){
+    targetSvg = tEl("g",{id:"plateauSixPrint", transform:`translate(${SIX_COLONNE.plateauX - printTray.x} ${SIX_COLONNE.plateauY - trayY})`});
+    racine.appendChild(targetSvg);
+  }
+
   // Plateau imprimé : fond blanc, contour gris foncé (le gris clair disparaissait
   // en noir et blanc). L'écran garde son plateau translucide.
   targetSvg.appendChild(tEl("rect",{
@@ -9429,6 +9440,8 @@ function renderCardIntoSvg(targetSvg, card, printMode, opts = {}){
     && card._inv.indices.length > 0 && card._inv.indices.every(t => Array.isArray(t)));
   let tx = 800, ty = 92;
   if(enqueteClueBand || sysSymbolBand) tx = 260;
+  // lot P : la case TOTAL en haut de la colonne, alignée sur le haut du plateau
+  if(opts.sixColonne){ tx = SIX_COLONNE.colonneX + SIX_COLONNE.colonneW/2; ty = SIX_COLONNE.plateauY + 70; }
   const printOffsetY = printTray.offsetY;
 
   let totalColor = "#000";
@@ -9450,17 +9463,21 @@ function renderCardIntoSvg(targetSvg, card, printMode, opts = {}){
   const sansTotalImprime = (card.family === "C" && card._rel && card._rel.sansTotal) || sysTotalCache(card);
   const num = tText(tx, ty+totalNumberDy, sansTotalImprime ? "?" : String(card.total), {"text-anchor":"middle","font-size":String(totalNumberSize),"fill":sansTotalImprime ? "#64748b" : totalColor,"font-weight":"900"});
   g.appendChild(lbl); g.appendChild(num);
-  targetSvg.appendChild(g);
+  const hoteTotal = opts.sixColonne ? racine : targetSvg;
+  hoteTotal.appendChild(g);
 
   const boxH = 210;
   const boxY = ty - 70;
-  let boxW = 280;
+  let boxW = opts.sixColonne ? SIX_COLONNE.colonneW : 280;
   let boxX = tx - boxW/2;
 
-  targetSvg.insertBefore(tEl("rect",{
+  hoteTotal.insertBefore(tEl("rect",{
     x:Math.round(boxX), y:Math.round(boxY), width:Math.round(boxW), height:Math.round(boxH), rx:22,
     fill:boxFill, stroke:boxStroke, "stroke-width":"4"
   }), g);
+
+  // lot P : en bas de la colonne, la case réponse « tache = ……… » (la valeur en correction)
+  if(opts.sixColonne) drawSixReponseCase(racine, revealAnswers ? sixCorrectionData(card).h : null, tEl, tText);
 
   // L'Enquête imprimée : l'énoncé montre les indices, la correction montre la
   // résolution (dernière étape) — quelle que soit l'étape affichée à l'écran.
@@ -10148,6 +10165,45 @@ function mirrorSlotsForDuplex(frontSlots){
   return backSlots;
 }
 
+/* ===== 6/page des modes A, A±, B et B± : le TOTAL à côté du plateau (lot P, 24/09/2026) =====
+   Pour laisser à l'élève plus de place sous le plateau (29,5 → 39,3 mm de blanc), la case TOTAL
+   passe à DROITE du plateau et le plateau remonte en haut de la case (décisions de Gwenaël sur
+   maquettes, disposition « B »). Le SVG prend toute la largeur de la case, dans un repère de
+   2000 de large au lieu de 1600 à 80 % : le plateau garde sa taille (1360/2000 = 1360/1600 × 0,8,
+   58 mm). Colonne de 400 (18 mm) à 60 du plateau (2,7 mm), marges gauche et droite égales (90) ;
+   en haut la case TOTAL (400 × 210), alignée sur le haut du plateau, en bas la case réponse
+   « tache = ……… » (400 × 200), alignée sur son bas. Hauteur : le plateau et 30 de blanc.
+   L'Enquête et le Système gardent leur disposition 6/page (1600 × 1000 à 80 %). */
+const SIX_COLONNE = { largeur:2000, hauteur:730, plateauX:90, plateauY:40, plateauH:660, colonneX:1510, colonneW:400, reponseH:200 };
+const SIX_COLONNE_VIEWBOX = `0 0 ${SIX_COLONNE.largeur} ${SIX_COLONNE.hauteur}`;
+
+function sixColonneFamille(card){
+  return !!card && ["U", "UPM", "N", "NPM"].includes(card.family);
+}
+
+/* La case réponse, sur UNE ligne : la petite tache noire du mode élève (ELEVE_TACHE_MINI), « = »,
+   puis des pointillés (8 mm) où l'élève écrit le nombre caché ; en correction, la valeur à leur
+   place (« tache = 3 »). Pas de mot, pas de « ? ». */
+function drawSixReponseCase(hote, valeur, mkEl, mkText){
+  const C = SIX_COLONNE;
+  const x = C.colonneX, y = C.plateauY + C.plateauH - C.reponseH, milieu = y + C.reponseH/2;
+  const g = mkEl("g",{id:"reponseGroupPrint"});
+  g.appendChild(mkEl("rect",{x, y, width:C.colonneW, height:C.reponseH, rx:22, fill:"#fff", stroke:"rgba(0,0,0,0.22)", "stroke-width":"4"}));
+  const x0 = x + 30;
+  // la mini-tache fait 96 de large autour de (56, 59) : ramenée à un rayon de 42 autour de (x0 + 42, milieu)
+  const r = 42, k = 2*r/96;
+  const d = (ELEVE_TACHE_MINI.match(/ d="([^"]+)"/) || [])[1] || "";
+  g.appendChild(mkEl("path",{d, fill:"#000", transform:`translate(${x0 + r - 56*k} ${milieu - 59*k}) scale(${k})`}));
+  g.appendChild(mkText(x0 + 122, milieu + 24, "=", {"text-anchor":"middle","font-size":"68","font-weight":"900","fill":"#000"}));
+  if(valeur != null){
+    g.appendChild(mkText(x0 + 166, milieu + 30, String(valeur), {"text-anchor":"start","font-size":"88","font-weight":"900","fill":"#000"}));
+  }else{
+    g.appendChild(mkEl("line",{x1:x0 + 166, x2:x + C.colonneW - 30, y1:milieu + 44, y2:milieu + 44,
+      stroke:"#475569", "stroke-width":"7", "stroke-linecap":"round", "stroke-dasharray":"0.1 18"}));
+  }
+  hote.appendChild(g);
+}
+
 function printSheet(){
   if(cards.length===0) return;
   const plan = getPrintPlan();
@@ -10183,6 +10239,11 @@ function printSheet(){
         const sv = document.createElementNS("http://www.w3.org/2000/svg","svg");
         if(sixPart){
           renderSixCorrectionIntoSvg(sv, card, sixPart);
+        }else if(perSheet === 6 && sixColonneFamille(card)){
+          // modes A, A±, B et B± : TOTAL à droite du plateau, SVG sur toute la case (lot P)
+          sv.setAttribute("viewBox", SIX_COLONNE_VIEWBOX);
+          sv.style.width = "100%";
+          renderCardIntoSvg(sv, card, mode, { sixColonne:true });
         }else{
           sv.setAttribute("viewBox", cardViewBox);
           sv.style.width = perSheet === 6 ? "80%" : "100%";
@@ -10260,12 +10321,18 @@ function waitForPrintAssets(root){
    – les schémas en barres de l'outil jusqu'à la tache seule (« ? » sous sa valeur), sans le
      schéma final, compacts à gauche, et les calculs à droite, à la hauteur du schéma qui
      sert au calcul (décisions du 20/09/2026, sur maquettes).
-   Le SVG garde la taille et la place de celui de l'énoncé 6/page (80 % de la case, centré,
-   1600 de large) : le plateau tombe exactement au même endroit, au pixel près. Il déborde
-   seulement à gauche et à droite (overflow visible) pour que la correction profite de
-   toute la largeur de la case, de −200 à 1800. 1 600 de haut : la carte la plus haute des
-   livrets (3 schémas) tient avec 2 mm de blanc. */
-const SIX_CORRECTION_VIEWBOX = "0 0 1600 1600";
+   Le SVG garde la taille et la place de celui de l'énoncé 6/page : le plateau tombe exactement
+   au même endroit, au pixel près. Depuis le lot P (24/09/2026), c'est celui des modes A et B —
+   toute la case, repère de 2000 de large, plateau en haut, TOTAL et case réponse (« tache = 3 »)
+   dans la colonne de droite (SIX_COLONNE). La correction, elle, se dessine toujours dans le
+   repère d'avant (1600 de large à 80 % de la case, plateau à y = 270), qui court de −200 à 1800
+   sur la largeur de la case : le groupe #sixCorrection y est simplement translaté (SIX_CORRECTION_DX,
+   SIX_CORRECTION_DY). Elle garde ainsi sa place d'avant dans la largeur de la case, de −120 à
+   1720 (80 à 1920 dans le repère 2000) — l'équation, centrée sur 800, tombe au milieu de la
+   case et non plus sous le plateau, qui n'y est plus — et monte de 230 avec le plateau.
+   1 370 de haut (1 600 − 230) : la carte la plus haute des livrets (3 schémas) tient. */
+const SIX_CORRECTION_DX = 200, SIX_CORRECTION_DY = SIX_COLONNE.plateauY - 270;
+const SIX_CORRECTION_VIEWBOX = `0 0 ${SIX_COLONNE.largeur} ${1600 + SIX_CORRECTION_DY}`;
 const SIX_CORRECTION_LEFT = -120, SIX_CORRECTION_RIGHT = 1720;
 /* L'équation est écrite en Times italique : la lettre y est une lettre simple (𝑎 → a). */
 const SIX_CORRECTION_PLAIN_LETTER = {"𝑥":"x","𝑎":"a","𝑏":"b","𝑐":"c","𝑚":"m","𝑛":"n","𝑡":"t"};
@@ -10453,10 +10520,10 @@ function drawSixCorrectionSchema(g, card, varChar, mk){
 /* Une carte de correction courte : le plateau de la correction de l'outil (taches levées),
    puis la partie demandée à la place de la correction complète. */
 function renderSixCorrectionIntoSvg(targetSvg, card, part){
-  renderCardIntoSvg(targetSvg, card, "correction");
+  renderCardIntoSvg(targetSvg, card, "correction", { sixColonne:true });
   targetSvg.querySelectorAll("#barModelPrintSteps, #barModelPrintStepsN").forEach(el => el.remove());
   targetSvg.setAttribute("viewBox", SIX_CORRECTION_VIEWBOX);
-  targetSvg.style.width = "80%";
+  targetSvg.style.width = "100%";
   targetSvg.style.overflow = "visible";
   const NS = "http://www.w3.org/2000/svg";
   const mk = {
@@ -10465,7 +10532,7 @@ function renderSixCorrectionIntoSvg(targetSvg, card, part){
   mk.rect = (a) => mk.el("rect", a);
   mk.line = (a) => mk.el("line", a);
   mk.text = (x, y, t, a = {}) => { const n = mk.el("text", {x, y, ...a}); n.textContent = t; return n; };
-  const g = mk.el("g", { id: "sixCorrection" });
+  const g = mk.el("g", { id: "sixCorrection", transform: `translate(${SIX_CORRECTION_DX} ${SIX_CORRECTION_DY})` });
   const varChar = getNumberedDisplayVarChar(card);
   if(part === "equation") drawSixCorrectionEquation(g, card, varChar, mk);
   else drawSixCorrectionSchema(g, card, varChar, mk);
