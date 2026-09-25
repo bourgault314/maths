@@ -301,7 +301,10 @@ test("les textes qui comptent les mondes suivent l'ajout", () => {
   assert.equal(total, 44); // lot « six mondes » : 29 + 5 (3e partie de l'Enquête) + 10 (Système)
   assert.match(univers, new RegExp(`id="totalTxt">0 / ${total} étoiles<`));
   assert.match(univers, /Traverse les six mondes/);
-  assert.match(univers, /monde 4 : le Système \(maths&amp;go\) · monde 6 : prolongement relatifs \(cycle 4\)/);
+  /* le pied de la carte (relecture du monde 1, 25/09/2026) : les crédits de la page des
+     livrets, plus la liste des mondes ni le lien « vue professeur » en double */
+  assert.doesNotMatch(univers, /progression cycle 3 en quatre séquences/);
+  assert.match(univers, /<span class="credits">Jeu <strong>SPLAT!<\/strong> créé par Steve Wyborney/);
   assert.match(univers, /mondes 1, 2, 3 et 5 d\\u2019apr\\u00e8s la progression/);
   assert.match(univers, /\(mondes 4 et 6 : prolongements maths&go/);
   assert.doesNotMatch(univers, /quatre mondes|cinq mondes/i);
