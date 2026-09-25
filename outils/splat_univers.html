@@ -19,7 +19,8 @@
 :root{
   --page:#f6f8fb; --paper:#ffffff; --ink:#10294a; --muted:#5c6c82; --line:#d9e2ec;
   --teal:#08aaa5; --blue:#0b67b2; --orange:#f58220; --gold:#f9bf3b; --violet:#7b42b4;
-  --framboise:#be185d; /* SPLAT! Enquête et Grande enquête (mondes 3 et 4) : ni une autre couleur de monde, ni une couleur de tache */
+  --framboise:#be185d; /* SPLAT! Enquête (monde 3) : ni une autre couleur de monde, ni une couleur de tache */
+  --cannelle:#92400e;  /* SPLAT! Système (monde 4) : le brun cannelle du bandeau de ses fiches (lot S2) */
   --shadow:0 10px 26px rgba(22,47,82,.10);
 }
 *{box-sizing:border-box}
@@ -69,6 +70,7 @@ main{max-width:980px;margin:0 auto;padding:10px 14px 60px}
 .monde.m1>.head{background:var(--orange)}
 .monde.m2>.head{background:var(--blue)}
 .monde.menq>.head{background:var(--framboise)}
+.monde.msys>.head{background:var(--cannelle)}
 .monde.m3>.head{background:var(--teal)}
 .monde.m4>.head{background:var(--violet)}
 .monde .head svg.blob{width:46px;height:46px;flex:0 0 auto}
@@ -77,6 +79,23 @@ main{max-width:980px;margin:0 auto;padding:10px 14px 60px}
 .monde .head h2{margin:1px 0 0;font-size:clamp(19px,4vw,25px);line-height:1.15}
 .monde .head .stars{font-size:15px;font-weight:800;white-space:nowrap;background:rgba(255,255,255,.18);
   border-radius:12px;padding:6px 10px}
+/* Chaque monde se replie sur son bandeau (accordéon, lot « six mondes ») : avec six
+   mondes et 44 étapes, la page dépliée fait 9 000 px sur téléphone. Le bandeau est un
+   bouton ; un chevron dit l'état ; seul le monde en cours est ouvert à l'arrivée. */
+.monde>.head{cursor:pointer;user-select:none}
+.monde>.head .chev{flex:0 0 auto;width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,.2);
+  display:flex;align-items:center;justify-content:center;transition:transform .25s}
+.monde>.head .chev svg{width:18px;height:18px;stroke:#fff;stroke-width:3;fill:none;stroke-linecap:round;stroke-linejoin:round}
+.monde.replie>.head .chev{transform:rotate(-90deg)}
+.monde.replie>.desc,.monde.replie>.intro,.monde.replie>.etapes{display:none}
+.monde.replie{box-shadow:0 4px 12px rgba(22,47,82,.08)}
+.monde.replie+.monde{margin-top:12px}
+/* « Continuer » : la prochaine étoile à gagner, sous la barre de progression */
+.continuer{max-width:560px;margin:14px auto 0;padding:0 16px;text-align:center}
+.continuer a{display:inline-flex;align-items:center;gap:8px;text-decoration:none;font-weight:800;font-size:15px;
+  color:#fff;background:var(--blue);border-radius:999px;padding:10px 18px;box-shadow:var(--shadow)}
+.continuer a small{font-weight:650;opacity:.9}
+.continuer a:hover{filter:brightness(1.06)}
 .monde .desc{padding:12px 18px 0;color:var(--muted);font-size:14px}
 .monde .intro{padding:10px 18px 0;margin:0;display:flex;flex-wrap:wrap;gap:10px}
 .monde .introLien{display:inline-block;font-weight:800;color:#0f5c5c;background:#d9f2f0;border:1px solid #9ad9d3;border-radius:999px;padding:7px 14px;text-decoration:none}
@@ -90,11 +109,16 @@ main{max-width:980px;margin:0 auto;padding:10px 14px 60px}
 .monde.m2 .introLien.livret:hover{background:#d3e6f8}
 .monde.m2 .introLien.livret.a3{background:#fff}
 .monde.m2 .introLien.livret.a3:hover{background:#f1f7fd}
-/* pastilles des livrets des mondes 3 et 4 : la couleur du monde (framboise), texte foncé */
+/* pastilles des livrets du monde 3 : la couleur du monde (framboise), texte foncé */
 .monde.menq .introLien.livret{color:#831843;background:#fce7f3;border-color:#f0abc9}
 .monde.menq .introLien.livret:hover{background:#fbd5e8}
 .monde.menq .introLien.livret.a3{background:#fff}
 .monde.menq .introLien.livret.a3:hover{background:#fdf2f8}
+/* monde 4 (SPLAT! Système) : au cannelle du monde, texte foncé */
+.monde.msys .introLien.livret{color:#7c2d12;background:#fdf0e6;border-color:#f0c4a0}
+.monde.msys .introLien.livret:hover{background:#fbe3d0}
+.monde.msys .introLien.livret.a3{background:#fff}
+.monde.msys .introLien.livret.a3:hover{background:#fef7f0}
 /* monde 5 (SPLAT! Équations) : ses deux livrets (lot Q3), au teal du monde, texte foncé */
 .monde.m3 .introLien.livret{color:#115e59;background:#e6f7f6;border-color:#9fdcd9}
 .monde.m3 .introLien.livret:hover{background:#cdeeed}
@@ -125,6 +149,7 @@ main{max-width:980px;margin:0 auto;padding:10px 14px 60px}
 .m2 .actions a.jouer{background:var(--blue)}
 .menq .actions a.jouer{background:var(--framboise)}
 .m3 .actions a.jouer{background:var(--teal)}
+.msys .actions a.jouer{background:var(--cannelle)}
 .m4 .actions a.jouer{background:var(--violet)}
 .actions a.fiche{background:var(--paper);color:var(--ink)}
 .actions a:hover{filter:brightness(1.06)}
@@ -132,6 +157,39 @@ main{max-width:980px;margin:0 auto;padding:10px 14px 60px}
   color:var(--muted);background:none;border:1px dashed var(--line);border-radius:12px;
   padding:9px 12px;min-height:44px;cursor:pointer}
 .etape.done .faitBtn{color:#b8860b;border-color:var(--gold);background:#fff8e1}
+
+/* ---------- les parties d'un monde (lot « six mondes », 24/09/2026) ----------
+   Un monde peut être coupé en parties — un livret chacune : l'Enquête en trois, le
+   Système en deux. Une partie est un intertitre DANS la liste des étapes (un <li>
+   sans étape), avec ses étoiles à elle ; la numérotation des étapes continue. */
+.volet{list-style:none;margin:14px 0 4px;padding:10px 14px;border-radius:14px;
+  display:flex;align-items:center;gap:12px;flex-wrap:wrap;
+  background:#f3f6fa;border:1px solid var(--line)}
+.etape+.volet{margin-top:10px}
+.volet+.etape{border-top:none}
+.volet .rang{flex:0 0 auto;font-size:11.5px;font-weight:800;letter-spacing:1.2px;text-transform:uppercase;
+  color:#fff;border-radius:999px;padding:5px 10px;white-space:nowrap}
+.volet .t{flex:1;min-width:0}
+.volet h4{margin:0;font-size:16px;line-height:1.2}
+.volet .fiches{font-size:12.5px;font-weight:750;color:var(--muted);margin-left:8px;white-space:nowrap}
+.volet p{margin:2px 0 0;font-size:13.5px;line-height:1.35;color:var(--muted)}
+.volet .stars{flex:0 0 auto;font-size:14px;font-weight:800;white-space:nowrap;
+  background:#fff;border:1px solid var(--line);border-radius:12px;padding:5px 9px}
+.volet .intro{flex:1 0 100%;padding:6px 0 0}
+.menq .volet{background:#fdf2f7;border-color:#f3c6da}
+.menq .volet .rang{background:var(--framboise)}
+.msys .volet{background:#fbf3ec;border-color:#ebcbb3}
+.msys .volet .rang{background:var(--cannelle)}
+/* téléphone : la pastille « Partie N » et les étoiles sur une première ligne, le
+   titre et la phrase en dessous sur toute la largeur (sinon la phrase est en colonne) */
+@media(max-width:480px){
+  .volet{gap:6px 10px;padding:9px 11px}
+  .volet .rang{order:1}
+  .volet .stars{order:2;margin-left:auto;font-size:13px;padding:4px 8px}
+  .volet .t{order:3;flex:1 0 100%}
+  .volet .fiches{margin-left:6px}
+  .volet .intro{order:4}
+}
 
 /* badge : la vraie tache Splat, aux couleurs du monde —
    teinte claire tant que l'étape n'est pas réussie, pleine couleur + étoile une fois gagnée */
@@ -141,17 +199,24 @@ main{max-width:980px;margin:0 auto;padding:10px 14px 60px}
 .m2 .badge use.fond{fill:#9dc2e0}
 .menq .badge use.fond{fill:#f2c4d6}
 .m3 .badge use.fond{fill:#9cdddb}
+.msys .badge use.fond{fill:#edcbb3}
 .m4 .badge use.fond{fill:#dcc8f0}
 .m1 .etape.done .badge use.fond{fill:var(--orange)}
 .m2 .etape.done .badge use.fond{fill:var(--blue)}
 .menq .etape.done .badge use.fond{fill:var(--framboise)}
 .m3 .etape.done .badge use.fond{fill:var(--teal)}
+.msys .etape.done .badge use.fond{fill:var(--cannelle)}
 .m4 .etape.done .badge use.fond{fill:var(--violet)}
 .badge .star use{fill:var(--gold);stroke:#b8860b;stroke-width:1}
 /* légère rotation alternée pour que les taches vivent un peu */
 .etape:nth-child(3n+1) .badge svg.tache{transform:rotate(-9deg)}
 .etape:nth-child(3n+2) .badge svg.tache{transform:rotate(14deg)}
 .etape:nth-child(3n) .badge svg.tache{transform:rotate(4deg)}
+/* la table du professeur du monde 4 (tous les systèmes du collège, S0 § 0) */
+.descProf table{border-collapse:collapse;margin:8px 0 2px;font-size:12.5px;line-height:1.3;width:100%;background:#fff}
+.descProf th,.descProf td{border:1px solid #bcd0e6;padding:4px 7px;text-align:left;vertical-align:top}
+.descProf th{background:#dbe7f5;font-weight:800}
+.descProf td b{color:var(--ink)}
 /* chiffre : blanc sur pleine couleur, encre sur teinte claire.
    Remontée de 1,3 px pour tomber sur le centre VISUEL de la tache, qui n'est pas
    le centre de sa boîte : la forme a sa masse en haut (centre de gravité 2,6
@@ -178,6 +243,7 @@ main{max-width:980px;margin:0 auto;padding:10px 14px 60px}
 .m1 .eqListeProf{background:#fff3e8;border-color:var(--orange)}
 .m2 .eqListeProf{background:#eef4fb;border-color:var(--blue)}
 .m3 .eqListeProf{background:#e9f7f6;border-color:var(--teal)}
+.msys .eqListeProf{background:#fbf3ec;border-color:var(--cannelle)}
 .eqListeProf small{display:block;font-size:12px;color:#5b7a9d;margin-top:2px}
 .eqListeProf a.eqSeule{color:inherit;text-decoration:underline dotted;text-underline-offset:3px;white-space:nowrap}
 .eqListeProf a.eqSeule:hover{color:var(--ink);text-decoration-style:solid}
@@ -194,6 +260,8 @@ footer a{color:var(--blue)}
    côté d'un titre de 44 px. On remonte tout d'un cran, le téléphone ne bouge pas. */
 @media(min-width:1000px){
   .hero,main,footer{max-width:1080px}
+  .continuer{max-width:640px}
+  .continuer a{font-size:16.5px}
   .hero h1{font-size:52px}
   .hero p.sub{font-size:17.5px;max-width:640px}
   .totalBar{max-width:640px}
@@ -211,6 +279,11 @@ footer a{color:var(--blue)}
   .actions .bientot{font-size:14.5px}
   .faitBtn{font-size:14.5px}
   .noteProf,.eqListeProf{font-size:15.5px}
+  .volet h4{font-size:18.5px}
+  .volet p{font-size:15px}
+  .volet .fiches{font-size:14px}
+  .volet .stars{font-size:15.5px}
+  .descProf table{font-size:14px}
   .eqListeProf small{font-size:13.5px}
   footer{font-size:14px}
 }
@@ -254,15 +327,17 @@ footer a{color:var(--blue)}
 </div>
 
 <div class="totalBar" id="totalBar">
-  <div class="lbl"><span>Ta progression</span><span id="totalTxt">0 / 29 étoiles</span></div>
+  <div class="lbl"><span>Ta progression</span><span id="totalTxt">0 / 44 étoiles</span></div>
   <div class="rail"><div class="fill" id="totalFill"></div></div>
 </div>
+
+<div class="continuer" id="continuer" hidden><a id="continuerLien" href="#"></a></div>
 
 <main id="univers"></main>
 
 <footer>
   Outils : <a href="/outils/?domain=algebre&collection=splat">la famille Splat! de maths&amp;go</a> ·
-  progression cycle 3 en quatre séquences · monde 6 : prolongement relatifs (cycle 4).<br>
+  progression cycle 3 en quatre séquences · monde 4 : le Système (maths&amp;go) · monde 6 : prolongement relatifs (cycle 4).<br>
   <span>Professeurs : <a href="?prof=1">vue professeur</a> — fiches à imprimer et outils à projeter, pour chaque étape.</span>
 </footer>
 
@@ -334,30 +409,124 @@ const ENQ_FICHES=[
   q:"mode=C&splats=3&structure=CHAIN&clues=SENTENCE&mul=1&div=1&add=1&sub=1&deltaMax=15&visibleMin=0&visibleMax=0&totalMin=20&totalMax=60&seed=1313"},
  {t:"Le grand défi",
   o:"Trois taches, des jetons visibles, toutes les opérations : l\u2019enquête finale.",
-  q:"mode=C&splats=3&structure=MIX&clues=SENTENCE&mul=1&div=1&add=1&sub=1&deltaMax=15&visibleMin=1&visibleMax=3&totalMin=20&totalMax=60&seed=537"}
+  q:"mode=C&splats=3&structure=MIX&clues=SENTENCE&mul=1&div=1&add=1&sub=1&deltaMax=15&visibleMin=1&visibleMax=3&totalMin=20&totalMax=60&seed=537"},
+ /* ---- 3e partie, « SPLAT! L'enquête rebondit » (fiches 20 à 24 ; lot « fiches 20-34 »
+    du 24/09/2026, lot « six mondes » du 24/09) : les cases « Taches répétées »
+    (repeat=3) et « Sans total » (noTotal=1) de l'outil ; la fiche 24 coche les deux,
+    chaque carte tire sa sorte. Adresses figées : splat-enquete-fiches-20-24-adresses.md.
+    Mêmes règles que les dix premières : ne jamais changer une graine sans refaire
+    les PDF. Étoiles enq-10 … enq-14, parcours enq20 … enq24 (enqEtapes). */
+ {t:"Des taches répétées",
+  o:"Plusieurs taches de la même couleur cachent le même nombre : l’indice parle d’une seule tache.",
+  q:"mode=C&splats=2&repeat=3&clues=SENTENCE&mul=0&div=0&add=1&sub=1&deltaMax=10&visibleMin=0&visibleMax=0&totalMin=20&totalMax=60&seed=172"},
+ {t:"Répétées, fois plus ou moins",
+  o:"Les taches répétées, avec des indices « fois plus » et « fois moins ».",
+  q:"mode=C&splats=2&repeat=3&clues=SENTENCE&mul=1&div=1&add=0&sub=0&deltaMax=10&visibleMin=0&visibleMax=0&totalMin=20&totalMax=60&seed=34"},
+ {t:"Sans total",
+  o:"Plus de total ! Deux indices sur la même paire de taches : ce qui dépasse te guide.",
+  q:"mode=C&splats=2&noTotal=1&clues=SENTENCE&mul=1&div=0&add=1&sub=0&deltaMax=30&visibleMin=0&visibleMax=0&totalMin=15&totalMax=60&seed=3"},
+ {t:"Sans total, à retourner",note:true,
+  o:"Sans total, avec des indices « de moins » et « fois moins » : reformule-les avant de dessiner.",
+  q:"mode=C&splats=2&noTotal=1&clues=SENTENCE&mul=0&div=1&add=0&sub=1&deltaMax=30&visibleMin=0&visibleMax=0&totalMin=15&totalMax=60&seed=9"},
+ {t:"Le défi qui rebondit",
+  o:"Taches répétées ou sans total, jetons visibles : chaque carte est une surprise.",
+  q:"mode=C&splats=3&structure=MIX&repeat=3&clues=SENTENCE&mul=1&div=1&add=1&sub=1&deltaMax=30&visibleMin=1&visibleMax=3&totalMin=20&totalMax=60&noTotal=1&seed=2187"}
 ];
-function enqJeu(i,n){return EQ+ENQ_FICHES[i].q+ENQ_COMMUN+"&eleve=1&parcours=enq"+n;}
-function enqImprimer(i,n,quoi){const f=ENQ_FICHES[i];
-  return EQ+f.q+ENQ_COMMUN+"&layout=4"+(f.note?"&note="+encodeURIComponent(ENQ_NOTE):"")+
-         "&title="+encodeURIComponent("Fiche "+n+" \u2014 "+f.t)+"&print="+quoi;}
-/* L'Enquête en DEUX mondes, un par livret (lot E5, 23/09/2026) : le monde 3
-   « SPLAT! Enquête » (fiches 10 à 14) et le monde 4 « SPLAT! Grande enquête »
-   (fiches 15 à 19), dans le même framboise (cls "menq") — c'est la suite de la
-   même enquête. LES ÉTOILES NE BOUGENT PAS : avant la coupe, les dix étapes
-   s'appelaient enq-0 … enq-9 (rang dans l'ancien monde unique) ; chaque étape
-   garde ce nom, porté ici en toutes lettres (« id », rang de la fiche dans
-   ENQ_FICHES) au lieu d'être recalculé à partir du rang dans son monde — sinon
-   la fiche 15 deviendrait « …-0 ». Les liens du jeu (parcours=enq10…enq19) et
-   donc l'empreinte de reprise des séries ne changent pas non plus
-   (tests/splat-enquete-carte-mondes.test.mjs compare avant/après). */
+/* L'Enquête : UN monde 3 en TROIS parties, une par livret (lot « six mondes »,
+   24/09/2026) — « L'enquête » (fiches 10 à 14), « La grande enquête » (15 à 19)
+   et « L'enquête rebondit » (20 à 24). Du 23 au 24/09, les deux premières
+   parties étaient deux mondes (3 et 4, lot E5) ; on revient à un seul monde, le
+   Système prenant la place de monde 4. LES ÉTOILES NE BOUGENT PAS : chaque étape
+   garde son identifiant en toutes lettres (« id » = enq-0 … enq-14, rang de la
+   fiche dans ENQ_FICHES) et son parcours (enq10 … enq24) ; ni l'un ni l'autre
+   n'est recalculé à partir du rang dans le monde
+   (tests/splat-enquete-carte-mondes.test.mjs compare avant/après).
+   Une partie = un intertitre dans la liste des étapes (« volets » : « de » = rang
+   de sa première étape, exclu « a »), avec ses étoiles à elle, sa phrase, et en
+   vue prof ses livrets. */
 function enqEtapes(de,a){return ENQ_FICHES.slice(de,a).map((f,k)=>({t:f.t,o:f.o,fi:de+k,id:"enq-"+(de+k)}));}
+const LIVRETS_ENQ_1=[
+  ["📕 Livret L’enquête (PDF)","/outils/livret_splat_enquete_additif.pdf"],
+  ["🖨️ à plier","/outils/livret_splat_enquete_additif_a_plier.pdf","a3"],
+  ["📙 Le défi, 50 à 100 (PDF)","/outils/livret_splat_enquete_additif_defi.pdf"],
+  ["🖨️ Le défi à plier","/outils/livret_splat_enquete_additif_defi_a_plier.pdf","a3"]];
+const LIVRETS_ENQ_2=[
+  ["📗 Livret La grande enquête (PDF)","/outils/livret_splat_enquete_multiplicatif.pdf"],
+  ["🖨️ à plier","/outils/livret_splat_enquete_multiplicatif_a_plier.pdf","a3"],
+  ["📙 Le défi, 50 à 100 (PDF)","/outils/livret_splat_enquete_multiplicatif_defi.pdf"],
+  ["🖨️ Le défi à plier","/outils/livret_splat_enquete_multiplicatif_defi_a_plier.pdf","a3"]];
 const MONDE_ENQUETE={cls:"menq",idp:"enq",actif:true,nom:"SPLAT! Enquête",
-  desc:"Cette fois, les taches ne parlent plus toutes seules : un indice les relie. À toi de mener l\u2019enquête pour trouver ce que chacune cache.",
-  etapes:enqEtapes(0,5)};
-const MONDE_GRANDE_ENQUETE={cls:"menq",idp:"enq",actif:true,nom:"SPLAT! Grande enquête",
-  desc:"L\u2019enquête continue : cette fois, les indices multiplient et partagent — fois plus, fois moins —, puis les quatre opérations se mélangent.",
-  etapes:enqEtapes(5,10)};
-const MONDES_ENQUETE=[MONDE_ENQUETE,MONDE_GRANDE_ENQUETE];
+  desc:"Cette fois, les taches ne parlent plus toutes seules : un indice les relie. À toi de mener l’enquête pour trouver ce que chacune cache.",
+  volets:[
+   {de:0,a:5,nom:"L’enquête",o:"Deux ou trois taches, et des indices « de plus que », « de moins que ».",
+    livrets:LIVRETS_ENQ_1,
+    note:"Les fiches 10 à 14 en un livret de 8 pages à plier (A3 ou A4, recto-verso, retournement sur le <b>bord court</b>) ; en page 2, un exemple résolu pas à pas, et sous chaque carte la place pour dessiner le schéma en barres. Le livret <b>Le défi</b> reprend les cinq fiches avec des totaux de 50 à 100 (même étoile). <a href=\"/outils/livrets_splat.html#monde-3\">Voir la page des livrets</a>"},
+   {de:5,a:10,nom:"La grande enquête",o:"Les indices multiplient et partagent — fois plus, fois moins —, puis les quatre opérations se mélangent.",
+    livrets:LIVRETS_ENQ_2,
+    note:"Les fiches 15 à 19 en un livret de 8 pages à plier, sur le même modèle : l’exemple résolu de la page 2 mêle « de plus » et « fois plus ». Le livret <b>Le défi</b> reprend les cinq fiches avec des totaux de 50 à 100 (même étoile). <a href=\"/outils/livrets_splat.html#monde-4\">Voir la page des livrets</a>"},
+   {de:10,a:15,nom:"L’enquête rebondit",o:"Des taches de la même couleur… puis des enquêtes sans total : les indices suffisent.",
+    note:"Les fiches 20 à 24 : les cases « Taches répétées » et « Sans total » de l’outil (la fiche 24 mélange les deux sortes de cartes). Le livret <b>L’enquête rebondit</b> et son <b>Le défi</b> sont en préparation ; en attendant, les fiches et les corrections s’impriment ci-dessous."}],
+  etapes:enqEtapes(0,15)};
+/* ---- SPLAT! Système, monde 4 (lot « six mondes », 24/09/2026) : les fiches 25 à 34 ----
+   Le mode D de l'outil (générateur S1, énoncé S2, correction S3, mode élève) :
+   plusieurs plateaux, un total chacun, les mêmes couleurs partout. Deux parties,
+   une par livret : « On retire » (25 à 29) et « On additionne, on double » (30 à 34).
+   Réglages et graines figés au lot « fiches 20-34 » (splat-systemes-fiches-25-34-adresses.md) :
+   ne jamais changer une graine sans refaire les PDF. Étoiles sys-0 … sys-9 (« id » en
+   toutes lettres, rang dans SYS_FICHES), parcours sys25 … sys34 : figés une fois pour
+   toutes, comme ceux de l'Enquête — c'est sous ces noms que les élèves rangent leurs
+   séries réussies. */
+const SYS_FICHES=[
+ {t:"Une partie du plateau",
+  o:"Le deuxième plateau est une partie du premier : retire-le, et il ne reste qu’une couleur.",
+  q:"mode=D&geste=EMBOITE1&visibleMin=0&visibleMax=0&totalMin=20&totalMax=60&seed=2105"},
+ {t:"Avec des jetons visibles",
+  o:"Le même geste, avec des jetons visibles à retirer aussi.",
+  q:"mode=D&geste=EMBOITE1&visibleMin=1&visibleMax=3&totalMin=20&totalMax=60&seed=9244"},
+ {t:"Une partie connue",
+  o:"L’indice donne le total d’une seule couleur : retire-la, puis partage le reste.",
+  q:"mode=D&geste=PARTIELLE&visibleMin=0&visibleMax=0&totalMin=20&totalMax=60&seed=2828"},
+ {t:"Deux pesées",
+  o:"Deux plateaux presque pareils : une seule couleur change. Compare-les.",
+  q:"mode=D&geste=COEF&coefMax=3&visibleMin=0&visibleMax=0&totalMin=20&totalMax=60&seed=1214"},
+ {t:"Le défi des plateaux",
+  o:"Retirer, partager, comparer : à toi de reconnaître le geste à chaque carte.",
+  q:"mode=D&geste=MIX&gestes=EMBOITE1,PARTIELLE,COEF&visibleMin=1&visibleMax=3&totalMin=20&totalMax=60&seed=7984"},
+ {t:"Trois paires",
+  o:"Trois plateaux à deux taches, sans total : additionne-les, tu as deux fois le tout.",
+  q:"mode=D&geste=TROIS&visibleMin=0&visibleMax=0&totalMin=20&totalMax=60&seed=653"},
+ {t:"Doubler, puis comparer",
+  o:"Double un plateau pour qu’il ressemble à l’autre, puis compare.",
+  q:"mode=D&geste=DOUBLE&visibleMin=0&visibleMax=0&totalMin=20&totalMax=60&seed=175"},
+ {t:"En miroir",
+  o:"Deux plateaux en miroir : additionne-les, puis partage.",
+  q:"mode=D&geste=MIROIR&visibleMin=0&visibleMax=0&totalMin=20&totalMax=60&seed=609"},
+ {t:"Doubler ou miroir ?",
+  o:"Deux gestes qui se ressemblent : à chaque carte, choisis le bon.",
+  q:"mode=D&geste=MIX&gestes=DOUBLE,MIROIR&visibleMin=0&visibleMax=0&totalMin=20&totalMax=60&seed=1287"},
+ {t:"Le grand défi du Système",
+  o:"Tous les gestes du monde 4, avec des jetons visibles : le défi final.",
+  q:"mode=D&geste=MIX&gestes=EMBOITE1,PARTIELLE,COEF,DOUBLE,MIROIR,TROIS&visibleMin=1&visibleMax=3&totalMin=20&totalMax=60&seed=11674"}
+];
+const MONDE_SYSTEME={cls:"msys",idp:"sys",actif:true,nom:"SPLAT! Système",
+  desc:"Plusieurs plateaux, un total pour chacun, et les mêmes couleurs partout : compare les plateaux pour trouver ce que cache chaque couleur.",
+  volets:[
+   {de:0,a:5,nom:"On retire",o:"Un plateau est une partie de l’autre : retire-le, ce qui reste te dit tout.",
+    note:"Les fiches 25 à 29 : le deuxième plateau est contenu dans le premier, on le retire (au cycle 3, la famille d’Inconnues en barres). Le livret <b>SPLAT! Système</b> et son <b>Le défi</b> sont en préparation ; en attendant, les fiches et les corrections s’impriment ci-dessous — la correction existe aussi en 2 par page, en plus gros."},
+   {de:5,a:10,nom:"On additionne, on double",o:"Cette fois, il faut d’abord doubler un plateau, ou additionner les plateaux, avant de comparer.",
+    note:"Les fiches 30 à 34 : avant de comparer, on double un plateau ou on additionne les plateaux (vers le cycle 4). Le livret <b>SPLAT! Système, la suite</b> et son <b>Le défi</b> sont en préparation."}],
+  etapes:SYS_FICHES.map((f,k)=>({t:f.t,o:f.o,fi:k,id:"sys-"+k}))};
+/* Les liens des étapes de l'Enquête et du Système : le jeu de l'élève (mêmes réglages
+   que la fiche, sans rien d'impression, plus eleve=1&parcours=), la fiche et la
+   correction en 4 par page (titre « Fiche N — … »), et pour le Système la projection
+   (l'outil, un cadre par clic) et la correction en 2 par page (choix du 24/09). */
+function ficheJeu(q,idp,n){return EQ+q+ENQ_COMMUN+"&eleve=1&parcours="+idp+n;}
+function ficheImprimer(f,n,quoi,layout){
+  return EQ+f.q+ENQ_COMMUN+"&layout="+(layout||4)+(f.note?"&note="+encodeURIComponent(ENQ_NOTE):"")+
+         "&title="+encodeURIComponent("Fiche "+n+" — "+f.t)+"&print="+quoi;}
+function enqJeu(i,n){return ficheJeu(ENQ_FICHES[i].q,"enq",n);}
+function enqImprimer(i,n,quoi){return ficheImprimer(ENQ_FICHES[i],n,quoi);}
+const MONDES_A_FICHES=[[MONDE_ENQUETE,ENQ_FICHES,"enq"],[MONDE_SYSTEME,SYS_FICHES,"sys"]];
 
 /* « cls » et « idp » sont des noms INTERNES, figés une fois pour toutes : ils ne
    suivent pas le numéro affiché du monde (calculé, lui, à partir du rang dans
@@ -392,7 +561,7 @@ const MONDES=[
     eqs:["3𝑥 + 14 = 20", "6𝑥 + 10 = 16", "3𝑥 + 3 = 18", "6𝑥 + 2 = 14", "2𝑥 + 14 = 16", "6𝑥 = 12", "3𝑥 + 1 = 16", "3𝑥 = 6", "5𝑥 + 5 = 10", "2𝑥 = 20", "4𝑥 + 1 = 17", "2𝑥 = 12"],
     j:PS+"?support=eleve&problem=classic&target=20&splats=mix&exercise=construct&seed=514457&parcours=m1e6",
     f:PS+"?support=print&problem=classic&target=20&splats=mix&exercise=construct&seed=514457"}]},
- {cls:"m2",idp:"e1",actif:true,nom:"SPLAT! classique",desc:"Le schéma en barres devient une équation : complète-le et trouve ce que cache la tache — la page vérifie.",
+ {cls:"m2",idp:"e1",actif:true,nom:"SPLAT! Classique",desc:"Le schéma en barres devient une équation : complète-le et trouve ce que cache la tache — la page vérifie.",
   etapes:[
    /* Étape regroupée : les TROIS fiches de 4 cartes de Claire (séquence 2) jouées
       d'affilée, soit 12 cartes. C'est un rappel du Petit Splat dans la nouvelle
@@ -423,7 +592,7 @@ const MONDES=[
     jp:SC+"?mode=N&equation=AX_PLUS_C_EQ_B&tasksMax=5&cards=12&seed=18&unknown=question",
     f:SC+"?mode=N&equation=AX_PLUS_C_EQ_B&tasksMax=5&cards=12&seed=18&unknown=question&print=statement&layout=6&imprimer=1"}]},
  MONDE_ENQUETE,
- MONDE_GRANDE_ENQUETE,
+ MONDE_SYSTEME,
  /* Monde 5, SPLAT! Équations (lot Q2, 24/09/2026) : trois étapes = trois fiches de 12
     cartes (35, 36, 37). « Écris l'équation » (parcours m3e3) est retirée : mêmes
     réglages que « Résous pas à pas », seule la graine changeait. LES ÉTOILES NE BOUGENT
@@ -452,7 +621,7 @@ const MONDES=[
     eqs:["4𝑡 + 11 = 5𝑡 + 8", "3𝑛 + 36 = 4𝑛 + 32", "3𝑐 + 16 = 𝑐 + 32", "𝑡 + 38 = 4𝑡 + 17", "6𝑥 + 15 = 2𝑥 + 27", "𝑎 + 21 = 2𝑎 + 10", "4𝑛 + 2 = 𝑛 + 38", "𝑛 + 33 = 5𝑛 + 17", "4𝑥 + 16 = 6𝑥 + 6", "5𝑎 + 30 = 𝑎 + 38", "5𝑎 + 19 = 𝑎 + 31", "𝑡 + 26 = 5𝑡 + 2"],
     q:EQ5_DEUX_COTES,vp:"equation",
     j:"/outils/equasplat.html?eleve=1&parcours=m3e4#data=eyJzb3VyY2UiOiJ1bml2ZXJzX3NwbGF0IiwicGFyY291cnMiOiJtM2U0Iiwic2VyaWUiOlt7InNvdXJjZSI6InNwbGF0X2VxdWF0aW9ucyIsInZhcmlhYmxlIjoi8J2RoSIsInVua25vd25EaXNwbGF5IjoibGV0dGVyIiwidW5pdmVyc2UiOiJwb3NpdGl2ZSIsIm51bWJlck1vZGUiOiJncm91cGVkIiwic2lnbmVkV3JpdGluZ01vZGUiOiJzaW1wbGlmaWVkIiwieCI6MywibGVmdCI6WyJ4IiwieCIsIngiLCJ4IiwxMV0sInJpZ2h0IjpbIngiLCJ4IiwieCIsIngiLCJ4Iiw4XX0seyJzb3VyY2UiOiJzcGxhdF9lcXVhdGlvbnMiLCJ2YXJpYWJsZSI6IvCdkZsiLCJ1bmtub3duRGlzcGxheSI6ImxldHRlciIsInVuaXZlcnNlIjoicG9zaXRpdmUiLCJudW1iZXJNb2RlIjoiZ3JvdXBlZCIsInNpZ25lZFdyaXRpbmdNb2RlIjoic2ltcGxpZmllZCIsIngiOjQsImxlZnQiOlsieCIsIngiLCJ4IiwzNl0sInJpZ2h0IjpbIngiLCJ4IiwieCIsIngiLDMyXX0seyJzb3VyY2UiOiJzcGxhdF9lcXVhdGlvbnMiLCJ2YXJpYWJsZSI6IvCdkZAiLCJ1bmtub3duRGlzcGxheSI6ImxldHRlciIsInVuaXZlcnNlIjoicG9zaXRpdmUiLCJudW1iZXJNb2RlIjoiZ3JvdXBlZCIsInNpZ25lZFdyaXRpbmdNb2RlIjoic2ltcGxpZmllZCIsIngiOjgsImxlZnQiOlsieCIsIngiLCJ4IiwxNl0sInJpZ2h0IjpbIngiLDMyXX0seyJzb3VyY2UiOiJzcGxhdF9lcXVhdGlvbnMiLCJ2YXJpYWJsZSI6IvCdkaEiLCJ1bmtub3duRGlzcGxheSI6ImxldHRlciIsInVuaXZlcnNlIjoicG9zaXRpdmUiLCJudW1iZXJNb2RlIjoiZ3JvdXBlZCIsInNpZ25lZFdyaXRpbmdNb2RlIjoic2ltcGxpZmllZCIsIngiOjcsImxlZnQiOlsieCIsMzhdLCJyaWdodCI6WyJ4IiwieCIsIngiLCJ4IiwxN119LHsic291cmNlIjoic3BsYXRfZXF1YXRpb25zIiwidmFyaWFibGUiOiLwnZGlIiwidW5rbm93bkRpc3BsYXkiOiJsZXR0ZXIiLCJ1bml2ZXJzZSI6InBvc2l0aXZlIiwibnVtYmVyTW9kZSI6Imdyb3VwZWQiLCJzaWduZWRXcml0aW5nTW9kZSI6InNpbXBsaWZpZWQiLCJ4IjozLCJsZWZ0IjpbIngiLCJ4IiwieCIsIngiLCJ4IiwieCIsMTVdLCJyaWdodCI6WyJ4IiwieCIsMjddfSx7InNvdXJjZSI6InNwbGF0X2VxdWF0aW9ucyIsInZhcmlhYmxlIjoi8J2RjiIsInVua25vd25EaXNwbGF5IjoibGV0dGVyIiwidW5pdmVyc2UiOiJwb3NpdGl2ZSIsIm51bWJlck1vZGUiOiJncm91cGVkIiwic2lnbmVkV3JpdGluZ01vZGUiOiJzaW1wbGlmaWVkIiwieCI6MTEsImxlZnQiOlsieCIsMjFdLCJyaWdodCI6WyJ4IiwieCIsMTBdfSx7InNvdXJjZSI6InNwbGF0X2VxdWF0aW9ucyIsInZhcmlhYmxlIjoi8J2RmyIsInVua25vd25EaXNwbGF5IjoibGV0dGVyIiwidW5pdmVyc2UiOiJwb3NpdGl2ZSIsIm51bWJlck1vZGUiOiJncm91cGVkIiwic2lnbmVkV3JpdGluZ01vZGUiOiJzaW1wbGlmaWVkIiwieCI6MTIsImxlZnQiOlsieCIsIngiLCJ4IiwieCIsMl0sInJpZ2h0IjpbIngiLDM4XX0seyJzb3VyY2UiOiJzcGxhdF9lcXVhdGlvbnMiLCJ2YXJpYWJsZSI6IvCdkZsiLCJ1bmtub3duRGlzcGxheSI6ImxldHRlciIsInVuaXZlcnNlIjoicG9zaXRpdmUiLCJudW1iZXJNb2RlIjoiZ3JvdXBlZCIsInNpZ25lZFdyaXRpbmdNb2RlIjoic2ltcGxpZmllZCIsIngiOjQsImxlZnQiOlsieCIsMzNdLCJyaWdodCI6WyJ4IiwieCIsIngiLCJ4IiwieCIsMTddfSx7InNvdXJjZSI6InNwbGF0X2VxdWF0aW9ucyIsInZhcmlhYmxlIjoi8J2RpSIsInVua25vd25EaXNwbGF5IjoibGV0dGVyIiwidW5pdmVyc2UiOiJwb3NpdGl2ZSIsIm51bWJlck1vZGUiOiJncm91cGVkIiwic2lnbmVkV3JpdGluZ01vZGUiOiJzaW1wbGlmaWVkIiwieCI6NSwibGVmdCI6WyJ4IiwieCIsIngiLCJ4IiwxNl0sInJpZ2h0IjpbIngiLCJ4IiwieCIsIngiLCJ4IiwieCIsNl19LHsic291cmNlIjoic3BsYXRfZXF1YXRpb25zIiwidmFyaWFibGUiOiLwnZGOIiwidW5rbm93bkRpc3BsYXkiOiJsZXR0ZXIiLCJ1bml2ZXJzZSI6InBvc2l0aXZlIiwibnVtYmVyTW9kZSI6Imdyb3VwZWQiLCJzaWduZWRXcml0aW5nTW9kZSI6InNpbXBsaWZpZWQiLCJ4IjoyLCJsZWZ0IjpbIngiLCJ4IiwieCIsIngiLCJ4IiwzMF0sInJpZ2h0IjpbIngiLDM4XX0seyJzb3VyY2UiOiJzcGxhdF9lcXVhdGlvbnMiLCJ2YXJpYWJsZSI6IvCdkY4iLCJ1bmtub3duRGlzcGxheSI6ImxldHRlciIsInVuaXZlcnNlIjoicG9zaXRpdmUiLCJudW1iZXJNb2RlIjoiZ3JvdXBlZCIsInNpZ25lZFdyaXRpbmdNb2RlIjoic2ltcGxpZmllZCIsIngiOjMsImxlZnQiOlsieCIsIngiLCJ4IiwieCIsIngiLDE5XSwicmlnaHQiOlsieCIsMzFdfSx7InNvdXJjZSI6InNwbGF0X2VxdWF0aW9ucyIsInZhcmlhYmxlIjoi8J2RoSIsInVua25vd25EaXNwbGF5IjoibGV0dGVyIiwidW5pdmVyc2UiOiJwb3NpdGl2ZSIsIm51bWJlck1vZGUiOiJncm91cGVkIiwic2lnbmVkV3JpdGluZ01vZGUiOiJzaW1wbGlmaWVkIiwieCI6NiwibGVmdCI6WyJ4IiwyNl0sInJpZ2h0IjpbIngiLCJ4IiwieCIsIngiLCJ4IiwyXX1dfQ"}]},
- {cls:"m4",idp:"e3",actif:true,nom:"SPLAT! relatifs",desc:"Prolongement vers le cycle 4 : les mêmes plateaux, mais avec les nombres relatifs — billes rouges, jetons numérotés, opposés qui s'annulent, solutions sous zéro.",
+ {cls:"m4",idp:"e3",actif:true,nom:"SPLAT! Relatifs",desc:"Prolongement vers le cycle 4 : les mêmes plateaux, mais avec les nombres relatifs — billes rouges, jetons numérotés, opposés qui s'annulent, solutions sous zéro.",
   etapes:[
    {t:"Les billes rouges arrivent",eqs:["2 = 𝑚 + 3", "𝑡 − 3 = − 2", "𝑥 + 2 = 3", "− 1 = 𝑚 − 2", "− 3 = 𝑚 − 2", "1 = 𝑥 + 2", "𝑏 − 1 = 0", "𝑚 + 1 = 0"],fo:"𝑥 + b = c",o:"Des jetons −1 apparaissent : mêmes gestes, nouvelles billes.",p:"m4e1",
     j:"/outils/equasplat.html?eleve=1&parcours=m4e1#data=eyJzb3VyY2UiOiJ1bml2ZXJzX3NwbGF0IiwicGFyY291cnMiOiJtNGUxIiwic2VyaWUiOlt7InNvdXJjZSI6InNwbGF0X2VxdWF0aW9ucyIsInZhcmlhYmxlIjoi8J2RmiIsInVua25vd25EaXNwbGF5IjoibGV0dGVyIiwidW5pdmVyc2UiOiJyZWxhdGl2ZSIsIm51bWJlck1vZGUiOiJncm91cGVkIiwic2lnbmVkV3JpdGluZ01vZGUiOiJzaW1wbGlmaWVkIiwieCI6LTEsImxlZnQiOlt7InR5cGUiOiJudW1iZXIiLCJ2YWx1ZSI6MX0seyJ0eXBlIjoibnVtYmVyIiwidmFsdWUiOjF9XSwicmlnaHQiOlt7InR5cGUiOiJ4Iiwic2lnbiI6MX0seyJ0eXBlIjoibnVtYmVyIiwidmFsdWUiOjF9LHsidHlwZSI6Im51bWJlciIsInZhbHVlIjoxfSx7InR5cGUiOiJudW1iZXIiLCJ2YWx1ZSI6MX1dfSx7InNvdXJjZSI6InNwbGF0X2VxdWF0aW9ucyIsInZhcmlhYmxlIjoi8J2RoSIsInVua25vd25EaXNwbGF5IjoibGV0dGVyIiwidW5pdmVyc2UiOiJyZWxhdGl2ZSIsIm51bWJlck1vZGUiOiJncm91cGVkIiwic2lnbmVkV3JpdGluZ01vZGUiOiJzaW1wbGlmaWVkIiwieCI6MSwibGVmdCI6W3sidHlwZSI6IngiLCJzaWduIjoxfSx7InR5cGUiOiJudW1iZXIiLCJ2YWx1ZSI6LTF9LHsidHlwZSI6Im51bWJlciIsInZhbHVlIjotMX0seyJ0eXBlIjoibnVtYmVyIiwidmFsdWUiOi0xfV0sInJpZ2h0IjpbeyJ0eXBlIjoibnVtYmVyIiwidmFsdWUiOi0xfSx7InR5cGUiOiJudW1iZXIiLCJ2YWx1ZSI6LTF9XX0seyJzb3VyY2UiOiJzcGxhdF9lcXVhdGlvbnMiLCJ2YXJpYWJsZSI6IvCdkaUiLCJ1bmtub3duRGlzcGxheSI6ImxldHRlciIsInVuaXZlcnNlIjoicmVsYXRpdmUiLCJudW1iZXJNb2RlIjoiZ3JvdXBlZCIsInNpZ25lZFdyaXRpbmdNb2RlIjoic2ltcGxpZmllZCIsIngiOjEsImxlZnQiOlt7InR5cGUiOiJ4Iiwic2lnbiI6MX0seyJ0eXBlIjoibnVtYmVyIiwidmFsdWUiOjF9LHsidHlwZSI6Im51bWJlciIsInZhbHVlIjoxfV0sInJpZ2h0IjpbeyJ0eXBlIjoibnVtYmVyIiwidmFsdWUiOjF9LHsidHlwZSI6Im51bWJlciIsInZhbHVlIjoxfSx7InR5cGUiOiJudW1iZXIiLCJ2YWx1ZSI6MX1dfSx7InNvdXJjZSI6InNwbGF0X2VxdWF0aW9ucyIsInZhcmlhYmxlIjoi8J2RmiIsInVua25vd25EaXNwbGF5IjoibGV0dGVyIiwidW5pdmVyc2UiOiJyZWxhdGl2ZSIsIm51bWJlck1vZGUiOiJncm91cGVkIiwic2lnbmVkV3JpdGluZ01vZGUiOiJzaW1wbGlmaWVkIiwieCI6MSwibGVmdCI6W3sidHlwZSI6Im51bWJlciIsInZhbHVlIjotMX0seyJ0eXBlIjoibnVtYmVyIiwidmFsdWUiOjF9LHsidHlwZSI6Im51bWJlciIsInZhbHVlIjotMX1dLCJyaWdodCI6W3sidHlwZSI6IngiLCJzaWduIjoxfSx7InR5cGUiOiJudW1iZXIiLCJ2YWx1ZSI6LTF9LHsidHlwZSI6Im51bWJlciIsInZhbHVlIjotMX1dfSx7InNvdXJjZSI6InNwbGF0X2VxdWF0aW9ucyIsInZhcmlhYmxlIjoi8J2RmiIsInVua25vd25EaXNwbGF5IjoibGV0dGVyIiwidW5pdmVyc2UiOiJyZWxhdGl2ZSIsIm51bWJlck1vZGUiOiJncm91cGVkIiwic2lnbmVkV3JpdGluZ01vZGUiOiJzaW1wbGlmaWVkIiwieCI6LTEsImxlZnQiOlt7InR5cGUiOiJudW1iZXIiLCJ2YWx1ZSI6LTF9LHsidHlwZSI6Im51bWJlciIsInZhbHVlIjotMX0seyJ0eXBlIjoibnVtYmVyIiwidmFsdWUiOi0xfV0sInJpZ2h0IjpbeyJ0eXBlIjoieCIsInNpZ24iOjF9LHsidHlwZSI6Im51bWJlciIsInZhbHVlIjotMX0seyJ0eXBlIjoibnVtYmVyIiwidmFsdWUiOi0xfV19LHsic291cmNlIjoic3BsYXRfZXF1YXRpb25zIiwidmFyaWFibGUiOiLwnZGlIiwidW5rbm93bkRpc3BsYXkiOiJsZXR0ZXIiLCJ1bml2ZXJzZSI6InJlbGF0aXZlIiwibnVtYmVyTW9kZSI6Imdyb3VwZWQiLCJzaWduZWRXcml0aW5nTW9kZSI6InNpbXBsaWZpZWQiLCJ4IjotMSwibGVmdCI6W3sidHlwZSI6Im51bWJlciIsInZhbHVlIjoxfSx7InR5cGUiOiJudW1iZXIiLCJ2YWx1ZSI6MX0seyJ0eXBlIjoibnVtYmVyIiwidmFsdWUiOi0xfV0sInJpZ2h0IjpbeyJ0eXBlIjoieCIsInNpZ24iOjF9LHsidHlwZSI6Im51bWJlciIsInZhbHVlIjoxfSx7InR5cGUiOiJudW1iZXIiLCJ2YWx1ZSI6MX1dfSx7InNvdXJjZSI6InNwbGF0X2VxdWF0aW9ucyIsInZhcmlhYmxlIjoi8J2RjyIsInVua25vd25EaXNwbGF5IjoibGV0dGVyIiwidW5pdmVyc2UiOiJyZWxhdGl2ZSIsIm51bWJlck1vZGUiOiJncm91cGVkIiwic2lnbmVkV3JpdGluZ01vZGUiOiJzaW1wbGlmaWVkIiwieCI6MSwibGVmdCI6W3sidHlwZSI6IngiLCJzaWduIjoxfSx7InR5cGUiOiJudW1iZXIiLCJ2YWx1ZSI6MX0seyJ0eXBlIjoibnVtYmVyIiwidmFsdWUiOi0xfSx7InR5cGUiOiJudW1iZXIiLCJ2YWx1ZSI6LTF9XSwicmlnaHQiOlt7InR5cGUiOiJudW1iZXIiLCJ2YWx1ZSI6LTF9LHsidHlwZSI6Im51bWJlciIsInZhbHVlIjoxfV19LHsic291cmNlIjoic3BsYXRfZXF1YXRpb25zIiwidmFyaWFibGUiOiLwnZGaIiwidW5rbm93bkRpc3BsYXkiOiJsZXR0ZXIiLCJ1bml2ZXJzZSI6InJlbGF0aXZlIiwibnVtYmVyTW9kZSI6Imdyb3VwZWQiLCJzaWduZWRXcml0aW5nTW9kZSI6InNpbXBsaWZpZWQiLCJ4IjotMSwibGVmdCI6W3sidHlwZSI6IngiLCJzaWduIjoxfSx7InR5cGUiOiJudW1iZXIiLCJ2YWx1ZSI6LTF9LHsidHlwZSI6Im51bWJlciIsInZhbHVlIjoxfSx7InR5cGUiOiJudW1iZXIiLCJ2YWx1ZSI6MX1dLCJyaWdodCI6W3sidHlwZSI6Im51bWJlciIsInZhbHVlIjotMX0seyJ0eXBlIjoibnVtYmVyIiwidmFsdWUiOjF9XX1dfQ"
@@ -476,16 +645,17 @@ const MONDES=[
 
 /* Le numéro affiché d'une étape est continu dans tout l'univers (monde 1 : 1 à 6,
    monde 2 : 7 à 9) et c'est LUI qui nomme les fiches des livrets — « Fiche 7 » du
-   livret SPLAT! classique, c'est l'étape 7. Les fiches de l'Enquête sont donc les
-   fiches 10 à 14 (monde 3) et 15 à 19 (monde 4) : on les numérote ici, une fois
-   les mondes connus, pour qu'une étape ajoutée à un monde précédent renumérote
-   tout sans rien laisser en arrière. */
-MONDES_ENQUETE.forEach(m=>{
+   livret SPLAT! Classique, c'est l'étape 7. Les fiches de l'Enquête sont donc les
+   fiches 10 à 24 (monde 3, trois parties) et celles du Système les fiches 25 à 34
+   (monde 4) : on les numérote ici, une fois les mondes connus, pour qu'une étape
+   ajoutée à un monde précédent renumérote tout sans rien laisser en arrière. */
+MONDES_A_FICHES.forEach(([m,fiches,idp])=>{
   const depart=MONDES.slice(0,MONDES.indexOf(m)).reduce((n,x)=>n+x.etapes.length,0)+1;
   m.etapes.forEach((e,k)=>{
-    const i=e.fi, n=depart+k;
-    e.n=n; e.p="enq"+n; e.j=enqJeu(i,n);
-    e.f=enqImprimer(i,n,"statement"); e.c=enqImprimer(i,n,"correction");
+    const f=fiches[e.fi], n=depart+k;
+    e.n=n; e.p=idp+n; e.j=ficheJeu(f.q,idp,n);
+    e.f=ficheImprimer(f,n,"statement"); e.c=ficheImprimer(f,n,"correction");
+    if(m===MONDE_SYSTEME){ e.jp=EQ+f.q+ENQ_COMMUN; e.c2=ficheImprimer(f,n,"correction",2); }
   });
 });
 /* Monde 5 : numéro de fiche et liens de chaque étape (lot Q2). « Projeter » ouvre la
@@ -536,8 +706,19 @@ let faits=lireFaits();
 const NOTES_MONDE = [
  "Découverte de la situation SPLAT : modéliser un problème simple par un schéma en barres (un tout, des parties). Chaque fiche a sa graine : « Générer » en note une nouvelle pour créer d'autres fiches, et la difficulté s'ajuste par les paramètres (cible max, jetons visibles).",
  "Le schéma en barres devient équation. À savoir : le mode lecture montre les étapes de résolution, le bouton « Résoudre » ouvre la situation dans ÉquaBarre pour la manipuler, et les « paquets de jetons » permettent de grandes quantités.",
- "Le total est donné, mais aucune tache ne dit ce qu'elle cache : c'est un indice qui les relie entre elles. L'élève trace lui-même son schéma en barres, puis déduit. Ici, les indices additifs (fiches 10 à 14) ; la fiche 11 porte une consigne en gras — reformuler l'indice avant de dessiner —, parce que l'obstacle est là. À savoir : chaque fiche a sa graine, la série est donc la même sur le papier et à l'écran, et le QR du livret ouvre exactement celle de la fiche.",
- "La suite de l'Enquête (fiches 15 à 19) : les indices deviennent multiplicatifs, puis les quatre opérations se mélangent — les indices « de plus / de moins » du monde 3 reviennent dès la fiche 17. La fiche 16 porte la consigne en gras : reformuler « fois moins » avant de dessiner. Comme au monde 3, chaque fiche a sa graine et le QR du livret ouvre exactement sa série.",
+ "Le total est donné, mais aucune tache ne dit ce qu'elle cache : c'est un indice qui les relie entre elles. L'élève trace lui-même son schéma en barres, puis déduit. Un monde en trois parties, un livret chacune : les indices additifs (fiches 10 à 14 ; la fiche 11 porte une consigne en gras — reformuler l'indice avant de dessiner —, parce que l'obstacle est là), puis les indices multiplicatifs et les quatre opérations mélangées (15 à 19, consigne en gras à la fiche 16 pour « fois moins »), puis l'enquête qui rebondit (20 à 24) : plusieurs taches de la même couleur, et des cartes sans total, où deux indices sur la même paire suffisent (consigne en gras à la fiche 23). À savoir : chaque fiche a sa graine, la série est donc la même sur le papier et à l'écran, et le QR du livret ouvre exactement celle de la fiche.",
+ "Plusieurs plateaux, un total pour chacun, les mêmes couleurs partout : chaque indice est un plateau de plus, et l'élève compare les plateaux au lieu de remplacer dans une équation. Le critère, pour se repérer entre les mondes 3 et 4 : <b>l'Enquête, c'est un indice qui compare deux taches</b> (« 6 de plus que », « 3 fois plus que ») — un seul plateau ; <b>le Système, c'est un indice qui donne un total partiel</b> — un deuxième plateau. Deux parties, un livret chacune : <b>on retire</b> (fiches 25 à 29 : un plateau contenu dans l'autre, une partie connue, deux pesées) puis <b>on additionne, on double</b> (30 à 34 : trois paires, doubler avant de comparer, plateaux en miroir). La correction à l'écran se déroule un cadre par clic (« Projeter ») ; sur papier, elle existe en 4 par page et en 2 par page, plus grosse. Tous les systèmes du collège, et où ils sont :"+
+ "<table><tr><th>Ce que dit l'énoncé</th><th>Où dans SPLAT!</th><th>Programme</th></tr>"+
+ "<tr><td>A = B + d ou A = k × B, avec un total (partage inégal à 2 ou 3 taches)</td><td>Enquête, fiches 10 à 19</td><td>CM1-6e</td></tr>"+
+ "<tr><td>pareil, plusieurs taches de chaque couleur</td><td>Enquête, fiches 20 et 21</td><td>6e</td></tr>"+
+ "<tr><td>A = k × B <b>et</b> A = B + d, sans total</td><td>Enquête, fiches 22 et 23</td><td>CM2-6e</td></tr>"+
+ "<tr><td>une partie connue (3 noires = 30) et le tout</td><td>Système, fiche 27</td><td>CM2-6e (la famille d'Inconnues en barres)</td></tr>"+
+ "<tr><td>deux pesées, l'une contenue dans l'autre (2N + 1V = 25 ; 2N + 4V = 40)</td><td>Système, fiches 25, 26 et 28</td><td>CM2-6e — l'exemple « ciseaux et crayons » du programme</td></tr>"+
+ "<tr><td>il faut doubler une pesée avant de comparer</td><td>Système, fiche 31</td><td>cycle 4</td></tr>"+
+ "<tr><td>deux pesées en miroir, on additionne</td><td>Système, fiche 32</td><td>cycle 4 (défi)</td></tr>"+
+ "<tr><td>trois sommes de paires, sans total</td><td>Système, fiche 30</td><td>cycle 3 défi / cycle 4</td></tr>"+
+ "<tr><td>l'inconnue des deux côtés (2x + 4 = 3x + 3)</td><td>mondes 5 et 6</td><td>4e-3e</td></tr>"+
+ "<tr><td>systèmes quelconques (3N + 2V ; 2N + 3V)</td><td><b>volontairement hors SPLAT!</b></td><td>lycée</td></tr></table>",
  "Deux plateaux, même quantité en haut et en bas. Présentation verticale : chaque plateau correspond à une barre du schéma ; horizontale : chaque plateau correspond à un membre de l'équation. La progression d'origine recommande le « ? » au cycle 3 ; ici, en ligne comme sur les fiches, l'inconnue est une lettre.",
  "Prolongement maths&go vers le cycle 4, hors progression d'origine : une nouveauté par étape, et les dernières séries montent en difficulté À L'INTÉRIEUR de la série (escalier interne). À réserver aux élèves qui ont terminé le monde 5."
 ];
@@ -552,15 +733,30 @@ const NOTES_PROF = [
   "Retour à x + a = b, mais en paquets de jetons : des nombres plus grands sans surcharge visuelle.",
   "a × x + c = b avec les paquets : la représentation compacte permet de complexifier sans brouiller."],
  ["Deux taches, indice additif direct (« de plus que ») : entrée dans la situation, le schéma se dessine sans reformulation.",
-  "Même structure, indice inversé (« de moins que ») : la reformulation est l\u2019obstacle — d\u2019où la consigne en gras dans l\u2019énoncé.",
-  "Les deux formulations mélangées carte par carte : il faut relire l\u2019indice à chaque fois, pas appliquer une recette.",
-  "Trois taches en chaîne : deux indices à composer, la première tache ne se trouve qu\u2019en remontant la chaîne.",
-  "Trois taches ET des jetons visibles : le total ne se partage plus tout seul, il faut d\u2019abord retirer le visible."],
- ["Passage au multiplicatif (« fois plus ») : la barre de référence se répète au lieu de s\u2019allonger d\u2019un écart.",
-  "Division (« fois moins ») : reformulation à nouveau nécessaire — consigne en gras dans l\u2019énoncé.",
-  "Les quatre opérations mélangées sur deux taches : identifier le type d\u2019indice devient le premier geste.",
+  "Même structure, indice inversé (« de moins que ») : la reformulation est l’obstacle — d’où la consigne en gras dans l’énoncé.",
+  "Les deux formulations mélangées carte par carte : il faut relire l’indice à chaque fois, pas appliquer une recette.",
+  "Trois taches en chaîne : deux indices à composer, la première tache ne se trouve qu’en remontant la chaîne.",
+  "Trois taches ET des jetons visibles : le total ne se partage plus tout seul, il faut d’abord retirer le visible.",
+  "Passage au multiplicatif (« fois plus ») : la barre de référence se répète au lieu de s’allonger d’un écart.",
+  "Division (« fois moins ») : reformulation à nouveau nécessaire — consigne en gras dans l’énoncé.",
+  "Les quatre opérations mélangées sur deux taches : identifier le type d’indice devient le premier geste.",
   "Trois taches en chaîne avec les quatre opérations : composer des indices de natures différentes.",
-  "Tout à la fois — trois taches, jetons visibles, structure tirée au sort : la fiche bilan du monde."],
+  "Tout à la fois — trois taches, jetons visibles, structure tirée au sort : la fiche bilan des deux premières parties.",
+  "Plusieurs taches de la même couleur (jusqu’à trois) cachent le même nombre, et l’indice parle d’UNE tache : dans le schéma, une ligne par tache, une accolade par couleur.",
+  "Les taches répétées avec « fois plus » et « fois moins » : la barre de référence se répète, et il y a plusieurs barres de chaque couleur.",
+  "Plus de total : deux indices sur la même paire (un rapport et un écart). La même tache est écrite deux fois dans le schéma, et c’est ce qui dépasse qui donne la valeur de référence.",
+  "Sans total, avec les deux indices à retourner (« de moins », « fois moins ») : la reformulation est l’obstacle — consigne en gras dans l’énoncé.",
+  "Le bilan de la troisième partie : chaque carte est tantôt à taches répétées (trois couleurs, jetons visibles), tantôt sans total — l’élève reconnaît d’abord la sorte de carte."],
+ ["Un plateau contenu dans l’autre : on retire le petit du grand, il ne reste qu’une couleur, dont on trouve la valeur en partageant. Le premier geste du Système, sans jeton visible.",
+  "Le même geste avec 1 à 3 jetons visibles sur le grand plateau : la seule nouveauté est de les retirer aussi.",
+  "L’indice donne le total d’une seule couleur (2 ou 3 taches) : on le retire du tout, puis on partage ce qui reste entre les taches de l’autre couleur. C’est la « donnée partielle » d’Inconnues en barres.",
+  "Deux pesées presque pareilles : une seule couleur change de nombre de taches. On retire l’une de l’autre, l’écart donne cette couleur, puis on remplace.",
+  "Les trois gestes du livret mélangés, avec des jetons visibles : reconnaître le geste avant de le faire.",
+  "Trois plateaux à deux taches, sans total : la somme des trois plateaux vaut deux fois le tout, d’où le tout, puis chaque couleur en retirant un plateau.",
+  "Il faut d’abord doubler un plateau pour retrouver une couleur de l’autre, puis comparer : c’est le premier pas vers la méthode par combinaison du cycle 4 (correction en lettres : « 2 × Vi »).",
+  "Deux plateaux en miroir (2N + 1V et 1N + 2V) : on les additionne, on partage, puis on compare à l’un des deux.",
+  "Les deux gestes qui se ressemblent le plus, mélangés : à chaque carte, l’élève choisit entre doubler et additionner.",
+  "Tous les gestes du monde, avec des jetons visibles (« Trois paires » reste sans jeton visible) : le bilan du Système."],
  ["Fiche 35 : les jetons un par un, trois séries de 4 cartes — x + b = c, puis a × x = c, puis a × x + b = c (coefficient 2 ou 3). Présentation verticale : chaque plateau correspond à une barre du schéma. Deux fiches : « tableau » (plateaux haut/bas, l'élève dessine le schéma en barres) et « équation » (plateaux côte à côte, il écrit l'équation).",
   "Fiche 36 : a × x + b = c avec les paquets de jetons, pour gérer les grandes quantités sans surcharge visuelle.",
   "Fiche 37 : l'inconnue des deux côtés (a × x + b = c × x + d) — on retranche l'inconnue d'un côté pour réduire pas à pas vers la solution. Les plateaux côte à côte explicitent le lien avec les deux membres de l'équation."],
@@ -587,14 +783,16 @@ MONDES.forEach((m,mi)=>{
   if(m.premier) compteur=Math.max(compteur,m.premier-1);
   const sec=document.createElement("section");
   sec.className="monde "+m.cls+((m.actif||PROF)?"":" enprepa");
+  sec.id="monde-"+(mi+1);
   const ids=m.etapes.map((e,ei)=>idEtape(m,e,ei));
   sec.innerHTML=
-   '<div class="head">'+
+   '<div class="head" role="button" tabindex="0" aria-expanded="true" aria-controls="corps'+mi+'">'+
      '<svg class="blob" viewBox="0 0 110 110"><use href="#tacheEtoile" width="110" height="110" fill="rgba(255,255,255,.92)"/></svg>'+
      '<div class="t"><div class="num">Monde '+(mi+1)+'</div><h2>'+m.nom+'</h2></div>'+
      (PROF?'<div class="stars">'+(m.actif?'jouable en classe':'\ud83d\udea7 jeu \u00e9l\u00e8ve \u00e0 venir')+'</div>':(m.actif?'<div class="stars" id="stars'+mi+'"></div>':'<div class="stars">\ud83d\udea7 en pr\u00e9paration</div>'))+
+     '<span class="chev" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></span>'+
    '</div>'+
-   '<p class="desc">'+m.desc+'</p>'+(PROF?'<p class="desc descProf">\ud83d\udcdd '+NOTES_MONDE[mi]+'</p>':'')+
+   '<p class="desc">'+m.desc+'</p>'+(PROF?'<div class="desc descProf">\ud83d\udcdd '+NOTES_MONDE[mi]+'</div>':'')+
    (mi===0?'<p class="intro">'+(PROF
       ?'<a class="introLien" href="/outils/splat_intro.html?suite='+encodeURIComponent('/outils/splat_univers.html?prof=1')+'">\ud83d\udcfd\ufe0f Pr\u00e9senter le principe (diaporama \u00e0 projeter)</a>'
        +'<a class="introLien livret" href="/outils/livret_petit_splat.pdf" target="_blank" rel="noopener">\ud83d\udcd5 Livret Monde 1 (PDF)</a>'
@@ -605,29 +803,13 @@ MONDES.forEach((m,mi)=>{
        +'<a class="introLien livret a3" href="/outils/livret_petit_splat_expert_a_plier.pdf" target="_blank" rel="noopener">\ud83d\udda8\ufe0f Expert \u00e0 plier</a>'
        +'<span class="introNote">Livrets \u00e0 plier\u00a0: sur A3, ou sur A4 pour un plus petit livret\u00a0; recto-verso, retournement sur le <b>bord court</b>, puis plier et agrafer au milieu.</span>'
       :'<a class="introLien" href="/outils/splat_intro.html?suite='+encodeURIComponent(m.etapes[0].j)+'">\ud83c\udfac Comment on joue ?</a>')+'</p>':'')+
-   /* monde 2, vue prof : le livret SPLAT! classique (les fiches 7, 8 et 9 à plier), comme les livrets du monde 1 */
+   /* monde 2, vue prof : le livret SPLAT! Classique (les fiches 7, 8 et 9 à plier), comme les livrets du monde 1 */
    (mi===1&&PROF?'<p class="intro">'
        +'<a class="introLien livret" href="/outils/livret_splat_classique.pdf" target="_blank" rel="noopener">\ud83d\udcd8 Livret Monde 2 (PDF)</a>'
        +'<a class="introLien livret a3" href="/outils/livret_splat_classique_a_plier.pdf" target="_blank" rel="noopener">\ud83d\udda8\ufe0f Monde 2 \u00e0 plier</a>'
        +'<a class="introLien livret" href="/outils/livret_splat_classique_defi.pdf" target="_blank" rel="noopener">\ud83d\udcd9 Livret Le d\u00e9fi, 50 \u00e0 100 (PDF)</a>'
        +'<a class="introLien livret a3" href="/outils/livret_splat_classique_defi_a_plier.pdf" target="_blank" rel="noopener">\ud83d\udda8\ufe0f Le d\u00e9fi \u00e0 plier</a>'
        +'<span class="introNote">Les fiches 7, 8 et 9 en un livret \u00e0 plier (A3 ou A4, recto-verso, retournement sur le <b>bord court</b>)\u00a0; sous chaque carte, la place pour dessiner le sch\u00e9ma en barres ou \u00e9crire l\u2019\u00e9quation. Le livret <b>Le d\u00e9fi</b> reprend les trois fiches avec des totaux de 50 \u00e0 100 et jusqu\u2019\u00e0 six taches. <a href="/outils/livrets_splat.html#monde-2">Voir la page des livrets</a></span>'
-     +'</p>':'')+
-   /* mondes 3 et 4, vue prof : un livret SPLAT! Enquête chacun (fiches 10 à 14, puis 15 à 19, lots E4-E5),
-      et son livret « Le défi » (mêmes fiches, totaux de 50 à 100, 23/09/2026), comme au monde 2 */
-   (m===MONDE_ENQUETE&&PROF?'<p class="intro">'
-       +'<a class="introLien livret" href="/outils/livret_splat_enquete_additif.pdf" target="_blank" rel="noopener">\ud83d\udcd5 Livret Monde 3 (PDF)</a>'
-       +'<a class="introLien livret a3" href="/outils/livret_splat_enquete_additif_a_plier.pdf" target="_blank" rel="noopener">\ud83d\udda8\ufe0f Monde 3 \u00e0 plier</a>'
-       +'<a class="introLien livret" href="/outils/livret_splat_enquete_additif_defi.pdf" target="_blank" rel="noopener">\ud83d\udcd9 Livret Le d\u00e9fi, 50 \u00e0 100 (PDF)</a>'
-       +'<a class="introLien livret a3" href="/outils/livret_splat_enquete_additif_defi_a_plier.pdf" target="_blank" rel="noopener">\ud83d\udda8\ufe0f Le d\u00e9fi \u00e0 plier</a>'
-       +'<span class="introNote">Les fiches 10 \u00e0 14 en un livret de 8 pages \u00e0 plier (A3 ou A4, recto-verso, retournement sur le <b>bord court</b>)\u00a0; en page 2, un exemple r\u00e9solu pas \u00e0 pas, et sous chaque carte la place pour dessiner le sch\u00e9ma en barres. Le livret <b>Le d\u00e9fi</b> reprend les cinq fiches avec des totaux de 50 \u00e0 100 (m\u00eame \u00e9toile). <a href="/outils/livrets_splat.html#monde-3">Voir la page des livrets</a></span>'
-     +'</p>':'')+
-   (m===MONDE_GRANDE_ENQUETE&&PROF?'<p class="intro">'
-       +'<a class="introLien livret" href="/outils/livret_splat_enquete_multiplicatif.pdf" target="_blank" rel="noopener">\ud83d\udcd7 Livret Monde 4 (PDF)</a>'
-       +'<a class="introLien livret a3" href="/outils/livret_splat_enquete_multiplicatif_a_plier.pdf" target="_blank" rel="noopener">\ud83d\udda8\ufe0f Monde 4 \u00e0 plier</a>'
-       +'<a class="introLien livret" href="/outils/livret_splat_enquete_multiplicatif_defi.pdf" target="_blank" rel="noopener">\ud83d\udcd9 Livret Le d\u00e9fi, 50 \u00e0 100 (PDF)</a>'
-       +'<a class="introLien livret a3" href="/outils/livret_splat_enquete_multiplicatif_defi_a_plier.pdf" target="_blank" rel="noopener">\ud83d\udda8\ufe0f Le d\u00e9fi \u00e0 plier</a>'
-       +'<span class="introNote">Les fiches 15 \u00e0 19 en un livret de 8 pages \u00e0 plier, sur le m\u00eame mod\u00e8le que celui du monde 3\u00a0: l\u2019exemple r\u00e9solu de la page 2 m\u00eale \u00ab\u00a0de plus\u00a0\u00bb et \u00ab\u00a0fois plus\u00a0\u00bb. Le livret <b>Le d\u00e9fi</b> reprend les cinq fiches avec des totaux de 50 \u00e0 100 (m\u00eame \u00e9toile). <a href="/outils/livrets_splat.html#monde-4">Voir la page des livrets</a></span>'
      +'</p>':'')+
    /* monde 5, vue prof : les deux livrets SPLAT! Équations (lot Q3, 24/09/2026) — les mêmes 36
       cartes, l'élève dessine le schéma en barres ou écrit l'équation */
@@ -640,8 +822,19 @@ MONDES.forEach((m,mi)=>{
      +'</p>':'')+
    '<ol class="etapes">'+m.etapes.map((e,ei)=>{
      compteur++;
+     /* la partie qui commence à cette étape (lot « six mondes ») : un intertitre
+        dans la liste, avec ses étoiles, sa phrase et, en vue prof, ses livrets */
+     const v=(m.volets||[]).find(x=>x.de===ei), vi=(m.volets||[]).indexOf(v);
+     const volet=!v?'':'<li class="volet" id="'+m.idp+'-partie-'+(vi+1)+'">'+
+       '<span class="rang">Partie '+(vi+1)+'</span>'+
+       '<div class="t"><h4>'+v.nom+'<span class="fiches">fiches '+compteur+' à '+(compteur+v.a-v.de-1)+'</span></h4><p>'+v.o+'</p></div>'+
+       (PROF?'':'<span class="stars" id="stars'+mi+'-'+vi+'"></span>')+
+       (PROF&&(v.livrets||v.note)?'<p class="intro">'+
+         (v.livrets||[]).map(l=>'<a class="introLien livret'+(l[2]?' '+l[2]:'')+'" href="'+l[1]+'" target="_blank" rel="noopener">'+l[0]+'</a>').join('')+
+         (v.note?'<span class="introNote">'+v.note+'</span>':'')+'</p>':'')+
+       '</li>';
      const badgeAttrs = (m.actif && !e.p) ? ' title="Marquer comme réussie" data-id="'+ids[ei]+'"' : ' disabled';
-     return '<li class="etape" id="'+ids[ei]+'">'+
+     return volet+'<li class="etape" id="'+ids[ei]+'">'+
        '<button class="badge" type="button"'+badgeAttrs+'>'+
          '<svg class="tache" viewBox="0 0 110 110"><use class="fond" href="#tacheEtoile" width="110" height="110"/></svg>'+
          '<span class="n">'+compteur+'</span>'+
@@ -660,7 +853,8 @@ MONDES.forEach((m,mi)=>{
                : (e.jp||!m.actif?'<a class="jouer" href="'+(e.jp||e.j)+'">\ud83d\udcbb Projeter l\u2019outil</a>':'')+(m.actif?'<a class="jouer" href="'+e.j+'">\ud83c\udfae Le jeu de l\u2019\u00e9l\u00e8ve</a>':'')+
                  (e.f?'<a class="fiche" href="'+e.f+'" title="Ouvre l\u2019outil pr\u00eat \u00e0 imprimer la fiche">\ud83d\udcc4 Fiche'+(e.fe?' tableau':'')+'</a>':'')+
                  (e.fe?'<a class="fiche" href="'+e.fe+'" title="Ouvre l\u2019outil pr\u00eat \u00e0 imprimer la fiche, plateaux c\u00f4te \u00e0 c\u00f4te">\ud83d\udcc4 Fiche \u00e9quation</a>':'')+
-                 (e.c?'<a class="fiche" href="'+e.c+'" title="Ouvre l\u2019outil pr\u00eat \u00e0 imprimer la correction">\u2705 Correction</a>':''))+
+                 (e.c?'<a class="fiche" href="'+e.c+'" title="Ouvre l\u2019outil pr\u00eat \u00e0 imprimer la correction">\u2705 Correction</a>':'')+
+                 (e.c2?'<a class="fiche" href="'+e.c2+'" title="La m\u00eame correction, deux cartes par page, calculs plus gros">\u2705 Correction 2 par page</a>':''))+
              '</div>'
            : m.actif
            ? '<div class="actions">'+
@@ -674,8 +868,14 @@ MONDES.forEach((m,mi)=>{
   main.appendChild(sec);
 });
 
+/* l'étoile s'allume si l'élève a réussi la série dans l'outil (validation en ligne),
+   ou si elle a été cochée à la main (travail sur fiche) */
+function etapeFaite(m,e,ei,parcours){
+  const id=idEtape(m,e,ei);
+  return !!faits[id]||!!(e.p&&parcours[e.p]&&parcours[e.p].fait);
+}
 function majAffichage(){
-  let total=0,fait=0;
+  let total=0,fait=0,prochaine=null;
   const parcours=lireParcours();
   MONDES.forEach((m,mi)=>{
     if(!m.actif) return;
@@ -683,18 +883,63 @@ function majAffichage(){
     m.etapes.forEach((e,ei)=>{
       total++;
       const id=idEtape(m,e,ei), li=document.getElementById(id);
-      /* l'étoile s'allume si l'élève a réussi la série dans l'outil (validation en ligne),
-         ou si elle a été cochée à la main (travail sur fiche) */
-      const ok=!!faits[id]||!!(e.p&&parcours[e.p]&&parcours[e.p].fait);
+      const ok=etapeFaite(m,e,ei,parcours);
       li.classList.toggle("done",ok);
       if(ok){f++;fait++;}
+      else if(!prochaine&&e.j) prochaine={m,mi,e,n:li.querySelector(".n").textContent};
     });
     const st=document.getElementById("stars"+mi);
     if(st) st.textContent="⭐ "+f+" / "+m.etapes.length;
+    (m.volets||[]).forEach((v,vi)=>{
+      const sv=document.getElementById("stars"+mi+"-"+vi);
+      if(!sv) return;
+      let fv=0;
+      for(let ei=v.de;ei<v.a;ei++){ if(document.getElementById(idEtape(m,m.etapes[ei],ei)).classList.contains("done")) fv++; }
+      sv.textContent="⭐ "+fv+" / "+(v.a-v.de);
+    });
   });
   document.getElementById("totalTxt").textContent=fait+" / "+total+" étoiles";
   document.getElementById("totalFill").style.width=(total?100*fait/total:0)+"%";
+  /* « Continuer » : la première étoile qui reste à gagner, dans l'ordre de l'univers */
+  const cont=document.getElementById("continuer");
+  if(cont&&!PROF){
+    cont.hidden=!prochaine;
+    if(prochaine){ const a=document.getElementById("continuerLien");
+      a.href=prochaine.e.j; a.innerHTML="\u25b6 Continuer <small>\u00b7 \u00e9tape "+prochaine.n+", "+prochaine.e.t+"</small>"; }
+  }
+  return prochaine;
 }
+/* ============ accordéon : un monde ouvert à la fois ============ */
+/* Six mondes et 44 étapes dépliés, c'est 9 000 px sur téléphone : chaque monde se
+   replie sur son bandeau. À l'arrivée, un seul est ouvert — celui que l'adresse
+   désigne (#monde-4, ou l'identifiant d'une étape), sinon le monde EN COURS : le
+   premier où il reste une étoile à gagner. Rien n'est mémorisé : le choix vaut le
+   temps de la page. */
+function ouvrirMonde(mi){
+  document.querySelectorAll("main>.monde").forEach((sec,i)=>{
+    const ouvert=i===mi;
+    sec.classList.toggle("replie",!ouvert);
+    sec.querySelector(".head").setAttribute("aria-expanded",ouvert?"true":"false");
+  });
+}
+function mondeEnCours(prochaine){
+  const cible=(location.hash||"").slice(1);
+  if(cible){
+    const el=document.getElementById(cible), sec=el&&el.closest("main>.monde");
+    if(sec) return [...document.querySelectorAll("main>.monde")].indexOf(sec);
+  }
+  if(PROF) return 0; /* vue prof : le monde 1, sauf adresse précise */
+  return prochaine?prochaine.mi:MONDES.length-1;
+}
+document.addEventListener("click",ev=>{
+  const head=ev.target.closest("main>.monde>.head");
+  if(!head) return;
+  const sec=head.parentElement, mondes=[...document.querySelectorAll("main>.monde")];
+  ouvrirMonde(sec.classList.contains("replie")?mondes.indexOf(sec):-1);
+});
+document.addEventListener("keydown",ev=>{
+  if((ev.key==="Enter"||ev.key===" ")&&ev.target.matches("main>.monde>.head")){ ev.preventDefault(); ev.target.click(); }
+});
 document.addEventListener("click",ev=>{
   const b=ev.target.closest("[data-id]");
   if(!b)return;
@@ -708,11 +953,25 @@ if (PROF) {
   const oe=document.getElementById('optEleve'); if(oe){ oe.classList.remove('actif'); oe.href=window.location.pathname; }
   const op=document.getElementById('optProf'); if(op){ op.classList.add('actif'); op.removeAttribute('href'); }
   const tb=document.getElementById('totalBar'); if(tb) tb.style.display='none';
-  const fp=document.querySelector('footer span'); if(fp) fp.innerHTML='Vue professeur — mondes 1 \u00e0 5 d\u2019apr\u00e8s la progression \u00ab SPLAT! cycle 3 \u00bb de Claire (monde 6 : prolongement maths&go, cycle 4) : '+
+  const fp=document.querySelector('footer span'); if(fp) fp.innerHTML='Vue professeur — mondes 1, 2, 3 et 5 d\u2019apr\u00e8s la progression \u00ab SPLAT! cycle 3 \u00bb de Claire (mondes 4 et 6 : prolongements maths&go — le Syst\u00e8me, puis les relatifs au cycle 4) : '+
     '<a href="https://digipad.app/p/1754235/397f3f517445b" target="_blank" rel="noopener">sa progression d\u2019origine (Digipad)</a> \u00b7 '+
     '<a href="'+window.location.pathname+'">revenir \u00e0 la vue \u00e9l\u00e8ve</a>.';
 }
-majAffichage();
+/* ?apres=<parcours> (24/09/2026, demande de Gwenaël : des élèves qui finissent une
+   étoile veulent enchaîner sur la suivante au lieu de revenir chercher sur la carte) :
+   la carte renvoie AUSSITÔT au jeu de l'étape qui suit celle-là dans l'univers — sans
+   rien afficher. C'est le lien que les outils pourront mettre sur leur écran de fin
+   (« Étape suivante ▶ » = /outils/splat_univers.html?apres=m1e1), sans avoir à
+   connaître l'adresse du jeu suivant. Dernière étape, ou parcours inconnu : la carte
+   s'affiche normalement, ouverte sur le monde en cours. */
+(function(){
+  const apres=new URLSearchParams(window.location.search).get("apres");
+  if(!apres||PROF) return;
+  const suite=MONDES.flatMap(m=>m.actif?m.etapes:[]);
+  const k=suite.findIndex(e=>e.p===apres);
+  if(k>=0&&k+1<suite.length&&suite[k+1].j) window.location.replace(suite[k+1].j);
+})();
+ouvrirMonde(mondeEnCours(majAffichage()));
 /* au retour d'une partie (autre onglet ou bouton retour), on rallume les étoiles gagnées */
 window.addEventListener("pageshow",majAffichage);
 window.addEventListener("focus",majAffichage);

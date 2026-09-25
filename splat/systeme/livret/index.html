@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Livret SPLAT! Système — je rejoue en ligne | maths&amp;go</title>
+  <meta name="robots" content="noindex, follow">
+  <link rel="canonical" href="https://mathsgo.re/outils/splat_univers.html">
+  <link rel="icon" href="/favicon.ico" sizes="48x48">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="icon" type="image/png" sizes="32x32" href="/assets/img/favicon-32.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="/assets/img/favicon-192.png">
+  <link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png">
+  <script>
+    /* Adresse courte des QR codes des livrets du Système — monde 4 en deux parties
+       (lot « six mondes », 24/09/2026) : « SPLAT! Système » (fiches 25 à 29, on retire)
+       et « SPLAT! Système, la suite » (30 à 34, on additionne, on double) :
+       /splat/systeme/livret/?f=27  →  la série en ligne de la fiche 27, etc.
+       Les fiches du Système sont les étapes 25 à 34 de l'univers : dans SPLAT!, le
+       numéro de fiche EST le numéro d'étape. Chaque cible est EXACTEMENT le lien
+       « Le jeu de l'élève » de la carte des mondes (outils/splat_univers.html,
+       SYS_FICHES) : mêmes réglages, même graine, donc les mêmes cartes que sur le
+       papier, et le même parcours (parcours=sysN) donc la même étoile. Un test épingle
+       ces dix cibles sur les constantes de la carte des mondes ; si une graine change
+       là-bas, la changer ici aussi et régénérer les QR des livrets. Les livrets
+       « Le défi » (?f=25d …) et les séries du dos (?s=N) viendront avec les livrets,
+       sur le modèle de /splat/enquete/livret/. */
+    var SYS_DEPART = 25;
+    var SYS = [
+      "mode=D&geste=EMBOITE1&visibleMin=0&visibleMax=0&totalMin=20&totalMax=60&seed=2105",
+      "mode=D&geste=EMBOITE1&visibleMin=1&visibleMax=3&totalMin=20&totalMax=60&seed=9244",
+      "mode=D&geste=PARTIELLE&visibleMin=0&visibleMax=0&totalMin=20&totalMax=60&seed=2828",
+      "mode=D&geste=COEF&coefMax=3&visibleMin=0&visibleMax=0&totalMin=20&totalMax=60&seed=1214",
+      "mode=D&geste=MIX&gestes=EMBOITE1,PARTIELLE,COEF&visibleMin=1&visibleMax=3&totalMin=20&totalMax=60&seed=7984",
+      "mode=D&geste=TROIS&visibleMin=0&visibleMax=0&totalMin=20&totalMax=60&seed=653",
+      "mode=D&geste=DOUBLE&visibleMin=0&visibleMax=0&totalMin=20&totalMax=60&seed=175",
+      "mode=D&geste=MIROIR&visibleMin=0&visibleMax=0&totalMin=20&totalMax=60&seed=609",
+      "mode=D&geste=MIX&gestes=DOUBLE,MIROIR&visibleMin=0&visibleMax=0&totalMin=20&totalMax=60&seed=1287",
+      "mode=D&geste=MIX&gestes=EMBOITE1,PARTIELLE,COEF,DOUBLE,MIROIR,TROIS&visibleMin=1&visibleMax=3&totalMin=20&totalMax=60&seed=11674"
+    ];
+    var f = new URLSearchParams(window.location.search).get("f");
+    var n = parseInt(f, 10);
+    var i = n - SYS_DEPART;
+    var cible = (String(n) === String(f) && i >= 0 && i < SYS.length)
+      ? "/splat/classique/?" + SYS[i] + "&cards=4&unknown=question&eleve=1&parcours=sys" + n
+      : "/outils/splat_univers.html#monde-4";
+    window.location.replace(new URL(cible, window.location.origin).toString());
+  </script>
+</head>
+<body>
+  <p>Livret SPLAT! Système — la série en ligne de chaque fiche&nbsp;:</p>
+  <ul>
+    <li><a href="/splat/classique/?mode=D&amp;geste=EMBOITE1&amp;visibleMin=0&amp;visibleMax=0&amp;totalMin=20&amp;totalMax=60&amp;seed=2105&amp;cards=4&amp;unknown=question&amp;eleve=1&amp;parcours=sys25">Fiche 25 — Une partie du plateau</a></li>
+    <li><a href="/splat/classique/?mode=D&amp;geste=EMBOITE1&amp;visibleMin=1&amp;visibleMax=3&amp;totalMin=20&amp;totalMax=60&amp;seed=9244&amp;cards=4&amp;unknown=question&amp;eleve=1&amp;parcours=sys26">Fiche 26 — Avec des jetons visibles</a></li>
+    <li><a href="/splat/classique/?mode=D&amp;geste=PARTIELLE&amp;visibleMin=0&amp;visibleMax=0&amp;totalMin=20&amp;totalMax=60&amp;seed=2828&amp;cards=4&amp;unknown=question&amp;eleve=1&amp;parcours=sys27">Fiche 27 — Une partie connue</a></li>
+    <li><a href="/splat/classique/?mode=D&amp;geste=COEF&amp;coefMax=3&amp;visibleMin=0&amp;visibleMax=0&amp;totalMin=20&amp;totalMax=60&amp;seed=1214&amp;cards=4&amp;unknown=question&amp;eleve=1&amp;parcours=sys28">Fiche 28 — Deux pesées</a></li>
+    <li><a href="/splat/classique/?mode=D&amp;geste=MIX&amp;gestes=EMBOITE1,PARTIELLE,COEF&amp;visibleMin=1&amp;visibleMax=3&amp;totalMin=20&amp;totalMax=60&amp;seed=7984&amp;cards=4&amp;unknown=question&amp;eleve=1&amp;parcours=sys29">Fiche 29 — Le défi des plateaux</a></li>
+    <li><a href="/splat/classique/?mode=D&amp;geste=TROIS&amp;visibleMin=0&amp;visibleMax=0&amp;totalMin=20&amp;totalMax=60&amp;seed=653&amp;cards=4&amp;unknown=question&amp;eleve=1&amp;parcours=sys30">Fiche 30 — Trois paires</a></li>
+    <li><a href="/splat/classique/?mode=D&amp;geste=DOUBLE&amp;visibleMin=0&amp;visibleMax=0&amp;totalMin=20&amp;totalMax=60&amp;seed=175&amp;cards=4&amp;unknown=question&amp;eleve=1&amp;parcours=sys31">Fiche 31 — Doubler, puis comparer</a></li>
+    <li><a href="/splat/classique/?mode=D&amp;geste=MIROIR&amp;visibleMin=0&amp;visibleMax=0&amp;totalMin=20&amp;totalMax=60&amp;seed=609&amp;cards=4&amp;unknown=question&amp;eleve=1&amp;parcours=sys32">Fiche 32 — En miroir</a></li>
+    <li><a href="/splat/classique/?mode=D&amp;geste=MIX&amp;gestes=DOUBLE,MIROIR&amp;visibleMin=0&amp;visibleMax=0&amp;totalMin=20&amp;totalMax=60&amp;seed=1287&amp;cards=4&amp;unknown=question&amp;eleve=1&amp;parcours=sys33">Fiche 33 — Doubler ou miroir ?</a></li>
+    <li><a href="/splat/classique/?mode=D&amp;geste=MIX&amp;gestes=EMBOITE1,PARTIELLE,COEF,DOUBLE,MIROIR,TROIS&amp;visibleMin=1&amp;visibleMax=3&amp;totalMin=20&amp;totalMax=60&amp;seed=11674&amp;cards=4&amp;unknown=question&amp;eleve=1&amp;parcours=sys34">Fiche 34 — Le grand défi du Système</a></li>
+    <li><a href="/outils/splat_univers.html#monde-4">La carte des mondes</a></li>
+  </ul>
+</body>
+</html>

@@ -30,10 +30,14 @@ function bloc(debut, fin) {
   return univers.slice(a, b);
 }
 const ctx = vm.createContext({ encodeURIComponent });
-vm.runInContext(bloc("const PS=", "const PROF =") + ";globalThis.X={MONDES,ENQ_FICHES,MONDE_ENQUETE,MONDE_GRANDE_ENQUETE};",
+vm.runInContext(bloc("const PS=", "const PROF =") + ";globalThis.X={MONDES,ENQ_FICHES,MONDE_ENQUETE,LIVRETS_ENQ_1,LIVRETS_ENQ_2};",
   ctx, { filename: "splat_univers.html" });
-const { MONDES, ENQ_FICHES, MONDE_ENQUETE, MONDE_GRANDE_ENQUETE } = JSON.parse(JSON.stringify(ctx.X));
-const ETAPES_ENQ = [...MONDE_ENQUETE.etapes, ...MONDE_GRANDE_ENQUETE.etapes];
+const { MONDES, ENQ_FICHES: ENQ_TOUTES, MONDE_ENQUETE, LIVRETS_ENQ_1, LIVRETS_ENQ_2 } = JSON.parse(JSON.stringify(ctx.X));
+/* Lot « six mondes » (24/09/2026) : l'Enquête est UN monde 3 en trois parties ; ces deux
+   livrets sont les parties 1 et 2 (fiches 10 à 19), la 3e (20 à 24) aura son livret plus tard. */
+const ENQ_FICHES = ENQ_TOUTES.slice(0, 10);
+const ETAPES_ENQ = MONDE_ENQUETE.etapes.slice(0, 10);
+const [VOLET_ADD, VOLET_MUL] = MONDE_ENQUETE.volets;
 
 // ------------------------------------------------ render.py, lu
 const py = (nom) => {
@@ -57,9 +61,9 @@ test("E4 : une fiche = une étape = une étoile — fiches 10 à 14, puis 15 à 
   assert.deepEqual(FICHES_PY.map((f) => f.t), ENQ_FICHES.map((f) => f.t));
   assert.deepEqual(FICHES_PY.map((f) => f.note), ENQ_FICHES.map((f) => !!f.note));
   assert.deepEqual(ETAPES_ENQ.map((e) => e.n), FICHES_PY.map((f) => f.n), "le numéro de fiche est le numéro d'étape");
-  // lot E5 : un livret par monde
-  assert.deepEqual(MONDE_ENQUETE.etapes.map((e) => e.n), [10, 11, 12, 13, 14], "livret additif = monde 3");
-  assert.deepEqual(MONDE_GRANDE_ENQUETE.etapes.map((e) => e.n), [15, 16, 17, 18, 19], "livret multiplicatif = monde 4");
+  // lot E5 : un livret par monde ; lot « six mondes » : un livret par PARTIE du monde 3
+  assert.deepEqual(MONDE_ENQUETE.etapes.slice(VOLET_ADD.de, VOLET_ADD.a).map((e) => e.n), [10, 11, 12, 13, 14], "livret additif = partie 1");
+  assert.deepEqual(MONDE_ENQUETE.etapes.slice(VOLET_MUL.de, VOLET_MUL.a).map((e) => e.n), [15, 16, 17, 18, 19], "livret multiplicatif = partie 2");
   assert.match(render, /"additif": dict\([\s\S]*?fiches=FICHES_ADD,/);
   assert.match(render, /"multiplicatif": dict\([\s\S]*?fiches=FICHES_MUL,/);
   assert.match(render, /titre = f"Fiche \{f\['n'\]\} — \{f\['t'\]\}"/);
@@ -334,19 +338,23 @@ test("E4 : le vocabulaire des livrets — jeton, tache, schéma en barres ; jama
   assert.ok(dos.includes("les taches <b>ne cachent pas le même nombre de jetons</b>"));
 });
 
-test("E5 : vue prof de la carte des mondes — le livret du monde 3 sous le monde 3, celui du monde 4 sous le monde 4", () => {
-  const b3 = univers.match(/\(m===MONDE_ENQUETE&&PROF\?'<p class="intro">'[\s\S]*?<\/p>':''\)\+/);
-  const b4 = univers.match(/\(m===MONDE_GRANDE_ENQUETE&&PROF\?'<p class="intro">'[\s\S]*?<\/p>':''\)\+/);
-  assert.ok(b3, "bloc des pastilles du monde 3 introuvable");
-  assert.ok(b4, "bloc des pastilles du monde 4 introuvable");
+test("six mondes : vue prof de la carte — le livret additif sous la partie 1, le multiplicatif sous la partie 2", () => {
   const [add, mul] = SORTIES;
-  for (const [b, oui, non, n] of [[b3[0], add, mul, 3], [b4[0], mul, add, 4]]) {
-    assert.ok(b.includes(`href="/outils/${oui}.pdf"`), oui);
-    assert.ok(b.includes(`href="/outils/${oui}_a_plier.pdf"`), oui + "_a_plier");
-    assert.ok(!b.includes(non), `le monde ${n} ne montre que son livret`);
-    assert.ok(b.includes(`Livret Monde ${n} (PDF)`) && b.includes(`Monde ${n} \\u00e0 plier`), `pastilles « Monde ${n} »`);
-    assert.ok(b.includes(`<a href="/outils/livrets_splat.html#monde-${n}">Voir la page des livrets</a>`), `monde ${n} : lien vers son onglet`);
+  for (const [liv, oui, non, n] of [[LIVRETS_ENQ_1, add, mul, 1], [LIVRETS_ENQ_2, mul, add, 2]]) {
+    const hrefs = liv.map((l) => l[1]).join(" ");
+    assert.ok(hrefs.includes(`/outils/${oui}.pdf`), oui);
+    assert.ok(hrefs.includes(`/outils/${oui}_a_plier.pdf`), oui + "_a_plier");
+    assert.ok(!hrefs.includes(non), `la partie ${n} ne montre que son livret`);
+    assert.ok(liv[0][0].includes("Livret ") && liv[0][0].includes("(PDF)") && liv[1][0].includes("plier"), `pastilles de la partie ${n}`);
+    assert.equal(liv[1][2], "a3");
   }
+  assert.deepEqual(VOLET_ADD.livrets, LIVRETS_ENQ_1);
+  assert.deepEqual(VOLET_MUL.livrets, LIVRETS_ENQ_2);
+  assert.ok(VOLET_ADD.note.includes('<a href="/outils/livrets_splat.html#monde-3">Voir la page des livrets</a>'));
+  assert.ok(VOLET_MUL.note.includes('<a href="/outils/livrets_splat.html#monde-4">Voir la page des livrets</a>'));
+  /* le gabarit écrit les pastilles d'une partie dans son intertitre, en vue prof seulement */
+  assert.match(univers, /\(PROF&&\(v\.livrets\|\|v\.note\)\?'<p class="intro">'\+/);
+  assert.match(univers, /'<a class="introLien livret'\+\(l\[2\]\?' '\+l\[2\]:''\)\+'" href="'\+l\[1\]\+'" target="_blank" rel="noopener">'\+l\[0\]\+'<\/a>'/);
   assert.match(univers, /\.monde\.menq \.introLien\.livret\{color:#831843;background:#fce7f3;border-color:#f0abc9\}/);
   // les pastilles des mondes 1 et 2 n'ont pas bougé
   assert.match(univers, /\(mi===1&&PROF\?'<p class="intro">'/);
@@ -438,7 +446,7 @@ test("page des livrets : un onglet par monde de l'Enquête, le livret et ses deu
     assert.match(corr, /Inconnue <small>«&nbsp;\?&nbsp;»<\/small>[\s\S]*Inconnue <small>en lettre<\/small>/);
   });
   assert.ok(panneauLivrets(3).includes("<h2 class=\"monde-nom\">Monde 3 · SPLAT! Enquête</h2>"));
-  assert.ok(panneauLivrets(4).includes("<h2 class=\"monde-nom\">Monde 4 · SPLAT! Grande enquête</h2>"));
+  assert.ok(panneauLivrets(4).includes("<h2 class=\"monde-nom\">Monde 3, 2e partie · SPLAT! Grande enquête</h2>"), "lot « six mondes » : la Grande enquête est la 2e partie du monde 3");
   assert.ok(panneauLivrets(3).includes("<span class=\"plage\">fiches 10 à 14</span>"));
   assert.ok(panneauLivrets(4).includes("<span class=\"plage\">fiches 15 à 19</span>"));
 });
@@ -605,13 +613,12 @@ test("page des livrets : « Le défi » à côté du livret de la classe, dans l
   });
 });
 
-test("Le défi : vue prof de la carte des mondes — les pastilles du défi sous chaque monde de l'Enquête", () => {
-  const b3 = univers.match(/\(m===MONDE_ENQUETE&&PROF\?'<p class="intro">'[\s\S]*?<\/p>':''\)\+/)[0];
-  const b4 = univers.match(/\(m===MONDE_GRANDE_ENQUETE&&PROF\?'<p class="intro">'[\s\S]*?<\/p>':''\)\+/)[0];
-  for (const [b, oui, non] of [[b3, SORTIES_DEFI[0], SORTIES_DEFI[1]], [b4, SORTIES_DEFI[1], SORTIES_DEFI[0]]]) {
-    assert.ok(b.includes(`href="/outils/${oui}.pdf"`) && b.includes(`href="/outils/${oui}_a_plier.pdf"`), oui);
-    assert.ok(!b.includes(non), `pas le défi de l'autre monde`);
-    assert.ok(b.indexOf(`${oui}.pdf`) > b.indexOf("_a_plier.pdf"), "après le livret de la classe");
-    assert.ok(b.includes("Livret Le d\\u00e9fi, 50 \\u00e0 100 (PDF)") && b.includes("Le d\\u00e9fi \\u00e0 plier"), "mêmes libellés qu'au monde 2");
+test("Le défi : vue prof de la carte des mondes — les pastilles du défi sous chaque partie de l'Enquête", () => {
+  for (const [liv, oui, non] of [[LIVRETS_ENQ_1, SORTIES_DEFI[0], SORTIES_DEFI[1]], [LIVRETS_ENQ_2, SORTIES_DEFI[1], SORTIES_DEFI[0]]]) {
+    const hrefs = liv.map((l) => l[1]);
+    assert.ok(hrefs.includes(`/outils/${oui}.pdf`) && hrefs.includes(`/outils/${oui}_a_plier.pdf`), oui);
+    assert.ok(!hrefs.join(" ").includes(non), `pas le défi de l'autre partie`);
+    assert.ok(hrefs.indexOf(`/outils/${oui}.pdf`) > hrefs.indexOf(`/outils/${SORTIES[SORTIES_DEFI.indexOf(oui)]}_a_plier.pdf`), "après le livret de la classe");
+    assert.ok(liv[2][0].includes("Le défi, 50 à 100 (PDF)") && liv[3][0].includes("Le défi à plier"), "mêmes libellés qu'au monde 2");
   }
 });

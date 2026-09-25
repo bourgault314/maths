@@ -12,17 +12,18 @@
   <link rel="icon" type="image/png" sizes="192x192" href="/assets/img/favicon-192.png">
   <link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png">
   <script>
-    /* Adresse courte des QR codes des deux livrets de l'Enquête — « SPLAT! Enquête »
-       (monde 3, fiches 10 à 14) et « SPLAT! Grande enquête » (monde 4, 15 à 19, lot E5) :
+    /* Adresse courte des QR codes des livrets de l'Enquête — monde 3 en trois parties
+       (lot « six mondes », 24/09/2026) : « SPLAT! Enquête » (fiches 10 à 14),
+       « SPLAT! Grande enquête » (15 à 19) et « SPLAT! L'enquête rebondit » (20 à 24) :
        /splat/enquete/livret/?f=12  →  la série en ligne de la fiche 12, etc. ;
        /splat/enquete/livret/?s=2   →  la série n° 2 du dos des livrets (lot E4) ;
        /splat/enquete/livret/?f=12d →  la fiche 12 du livret « Le défi » (23/09/2026).
-       Les fiches de l'Enquête sont les étapes 10 à 19 de l'univers : dans SPLAT!,
+       Les fiches de l'Enquête sont les étapes 10 à 24 de l'univers : dans SPLAT!,
        le numéro de fiche EST le numéro d'étape (« Fiche 7 » du livret classique).
        Chaque cible est EXACTEMENT le lien « Le jeu de l'élève » de la carte des
        mondes (outils/splat_univers.html, ENQ_FICHES) : mêmes réglages, même
        graine, donc les mêmes cartes que sur le papier, et le même parcours
-       (parcours=enqN) donc la même étoile. Un test épingle ces dix cibles sur les
+       (parcours=enqN) donc la même étoile. Un test épingle ces quinze cibles sur les
        constantes de la carte des mondes ; si une graine change là-bas, la changer
        ici aussi et régénérer les QR des livrets (lot E4). */
     var ENQ_DEPART = 10;
@@ -36,7 +37,13 @@
       "mode=C&splats=2&clues=SENTENCE&mul=0&div=1&add=0&sub=0&deltaMax=10&visibleMin=0&visibleMax=0&totalMin=10&totalMax=40&seed=1343",
       "mode=C&splats=2&clues=SENTENCE&mul=1&div=1&add=1&sub=1&deltaMax=15&visibleMin=0&visibleMax=0&totalMin=15&totalMax=50&seed=405",
       "mode=C&splats=3&structure=CHAIN&clues=SENTENCE&mul=1&div=1&add=1&sub=1&deltaMax=15&visibleMin=0&visibleMax=0&totalMin=20&totalMax=60&seed=1313",
-      "mode=C&splats=3&structure=MIX&clues=SENTENCE&mul=1&div=1&add=1&sub=1&deltaMax=15&visibleMin=1&visibleMax=3&totalMin=20&totalMax=60&seed=537"
+      "mode=C&splats=3&structure=MIX&clues=SENTENCE&mul=1&div=1&add=1&sub=1&deltaMax=15&visibleMin=1&visibleMax=3&totalMin=20&totalMax=60&seed=537",
+      /* 3e partie, « L'enquête rebondit » (fiches 20 à 24, lot « fiches 20-34 ») */
+      "mode=C&splats=2&repeat=3&clues=SENTENCE&mul=0&div=0&add=1&sub=1&deltaMax=10&visibleMin=0&visibleMax=0&totalMin=20&totalMax=60&seed=172",
+      "mode=C&splats=2&repeat=3&clues=SENTENCE&mul=1&div=1&add=0&sub=0&deltaMax=10&visibleMin=0&visibleMax=0&totalMin=20&totalMax=60&seed=34",
+      "mode=C&splats=2&noTotal=1&clues=SENTENCE&mul=1&div=0&add=1&sub=0&deltaMax=30&visibleMin=0&visibleMax=0&totalMin=15&totalMax=60&seed=3",
+      "mode=C&splats=2&noTotal=1&clues=SENTENCE&mul=0&div=1&add=0&sub=1&deltaMax=30&visibleMin=0&visibleMax=0&totalMin=15&totalMax=60&seed=9",
+      "mode=C&splats=3&structure=MIX&repeat=3&clues=SENTENCE&mul=1&div=1&add=1&sub=1&deltaMax=30&visibleMin=1&visibleMax=3&totalMin=20&totalMax=60&noTotal=1&seed=2187"
     ];
     /* Les livrets « Le défi » (23/09/2026) : ?f=10d … ?f=19d ouvre la série en ligne de la
        fiche du défi — mêmes réglages que la fiche de la classe, totaux de 50 à 100, graine
@@ -106,6 +113,11 @@
     <li><a href="/splat/classique/?mode=C&amp;splats=2&amp;clues=SENTENCE&amp;mul=1&amp;div=1&amp;add=1&amp;sub=1&amp;deltaMax=15&amp;visibleMin=0&amp;visibleMax=0&amp;totalMin=15&amp;totalMax=50&amp;seed=405&amp;cards=4&amp;unknown=question&amp;eleve=1&amp;parcours=enq17">Fiche 17 — Les quatre opérations</a></li>
     <li><a href="/splat/classique/?mode=C&amp;splats=3&amp;structure=CHAIN&amp;clues=SENTENCE&amp;mul=1&amp;div=1&amp;add=1&amp;sub=1&amp;deltaMax=15&amp;visibleMin=0&amp;visibleMax=0&amp;totalMin=20&amp;totalMax=60&amp;seed=1313&amp;cards=4&amp;unknown=question&amp;eleve=1&amp;parcours=enq18">Fiche 18 — Trois taches, 4 opérations</a></li>
     <li><a href="/splat/classique/?mode=C&amp;splats=3&amp;structure=MIX&amp;clues=SENTENCE&amp;mul=1&amp;div=1&amp;add=1&amp;sub=1&amp;deltaMax=15&amp;visibleMin=1&amp;visibleMax=3&amp;totalMin=20&amp;totalMax=60&amp;seed=537&amp;cards=4&amp;unknown=question&amp;eleve=1&amp;parcours=enq19">Fiche 19 — Le grand défi</a></li>
+    <li><a href="/splat/classique/?mode=C&amp;splats=2&amp;repeat=3&amp;clues=SENTENCE&amp;mul=0&amp;div=0&amp;add=1&amp;sub=1&amp;deltaMax=10&amp;visibleMin=0&amp;visibleMax=0&amp;totalMin=20&amp;totalMax=60&amp;seed=172&amp;cards=4&amp;unknown=question&amp;eleve=1&amp;parcours=enq20">Fiche 20 — Des taches répétées</a></li>
+    <li><a href="/splat/classique/?mode=C&amp;splats=2&amp;repeat=3&amp;clues=SENTENCE&amp;mul=1&amp;div=1&amp;add=0&amp;sub=0&amp;deltaMax=10&amp;visibleMin=0&amp;visibleMax=0&amp;totalMin=20&amp;totalMax=60&amp;seed=34&amp;cards=4&amp;unknown=question&amp;eleve=1&amp;parcours=enq21">Fiche 21 — Répétées, fois plus ou moins</a></li>
+    <li><a href="/splat/classique/?mode=C&amp;splats=2&amp;noTotal=1&amp;clues=SENTENCE&amp;mul=1&amp;div=0&amp;add=1&amp;sub=0&amp;deltaMax=30&amp;visibleMin=0&amp;visibleMax=0&amp;totalMin=15&amp;totalMax=60&amp;seed=3&amp;cards=4&amp;unknown=question&amp;eleve=1&amp;parcours=enq22">Fiche 22 — Sans total</a></li>
+    <li><a href="/splat/classique/?mode=C&amp;splats=2&amp;noTotal=1&amp;clues=SENTENCE&amp;mul=0&amp;div=1&amp;add=0&amp;sub=1&amp;deltaMax=30&amp;visibleMin=0&amp;visibleMax=0&amp;totalMin=15&amp;totalMax=60&amp;seed=9&amp;cards=4&amp;unknown=question&amp;eleve=1&amp;parcours=enq23">Fiche 23 — Sans total, à retourner</a></li>
+    <li><a href="/splat/classique/?mode=C&amp;splats=3&amp;structure=MIX&amp;repeat=3&amp;clues=SENTENCE&amp;mul=1&amp;div=1&amp;add=1&amp;sub=1&amp;deltaMax=30&amp;visibleMin=1&amp;visibleMax=3&amp;totalMin=20&amp;totalMax=60&amp;noTotal=1&amp;seed=2187&amp;cards=4&amp;unknown=question&amp;eleve=1&amp;parcours=enq24">Fiche 24 — Le défi qui rebondit</a></li>
     <li><a href="/outils/splat_univers.html">La carte des mondes</a></li>
   </ul>
   <p>Livrets «&nbsp;Le défi&nbsp;» — totaux de 50 à 100&nbsp;:</p>
