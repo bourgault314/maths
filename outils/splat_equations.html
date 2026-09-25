@@ -9358,12 +9358,13 @@ const EQ_SIX_CORR_EQ_FONT = 100;          // 4,3 mm sur la feuille (80 % de la c
 const EQ_SIX_CORR_EQ_LEFT = -140, EQ_SIX_CORR_EQ_RIGHT = 1740;   // la case, moins son bord
 /* La colonne des schémas en barres, à droite du plateau haut/bas (x 60 → 780, y 132 → 980) :
    x 820 → 1540 (2 mm après le plateau, 5 mm avant le bord de la case, comme à gauche),
-   largeurs à 0,58 (720 pour 1240), hauteurs et lettres à 0,9 — quatre schémas (la carte
-   la plus longue : 3 × 209 + 180 = 807) tiennent dans les 848 du plateau. */
+   largeurs à 0,58 (720 pour 1240), hauteurs et lettres à 0,84 — quatre schémas (la carte
+   la plus longue : 3 × 224 + 168 = 840) tiennent dans les 848 du plateau, avec 56 (3 mm)
+   entre deux schémas (demande de Gwenaël du 25/09 : « ils sont tous collés » à 29). */
 const EQ_SIX_CORR_GEOM_SCHEMA = {
   top: 132, centerX: 1180, fullW: 720, maxTableW: 720,
   minHiddenW: 55, minVisibleW: 67, minHiddenWValue1: 73, minVisibleWValue1: 83,
-  rowH: 90, fontSize: 79, pad: 32, variableFontSize: 58, stride: 209,
+  rowH: 84, fontSize: 74, pad: 30, variableFontSize: 54, stride: 224,
   eqTopGap: 0, eqFontSize: 0, eqFontSize4: 0, eqGap: 0, eqGap4: 0, eqEqGap: 0, arrows: false, sansEquation: true
 };
 

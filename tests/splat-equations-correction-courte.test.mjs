@@ -132,15 +132,17 @@ test("l'équation : les lignes et les flèches de la correction de l'outil, tail
 test("le schéma : la colonne de la correction du mode Équation, à droite du plateau haut/bas, sans l'équation", () => {
   const geom = bloc("EQ_SIX_CORR_GEOM_SCHEMA");
   assert.match(geom, /top: 132, centerX: 1180, fullW: 720, maxTableW: 720,/);
-  assert.match(geom, /rowH: 90, fontSize: 79, pad: 32, variableFontSize: 58, stride: 209,/);
+  assert.match(geom, /rowH: 84, fontSize: 74, pad: 30, variableFontSize: 54, stride: 224,/);
   assert.match(geom, /arrows: false, sansEquation: true/);
   // la colonne : la même fonction que la correction 4/page, dans un repère
   const col = extraire("drawEquationPrintCorrectionColumn");
   assert.match(col, /if\(G\.sansEquation\) return;/);
   assert.match(col, /const startX = G\.centerX - fullW \/ 2;/);
   assert.match(col, /if\(G\.arrows\) drawOperationArrowsForLines\(/);
-  // quatre schémas (3 × 209 + 180) tiennent dans la hauteur du plateau haut/bas (132 → 980)
-  assert.ok(3 * 209 + 2 * 90 <= 980 - 132);
+  // quatre schémas (3 × 224 + 168) tiennent dans la hauteur du plateau haut/bas (132 → 980),
+  // avec 56 (3 mm) entre deux schémas (25/09)
+  assert.ok(3 * 224 + 2 * 84 <= 980 - 132);
+  assert.equal(224 - 2 * 84, 56);
 });
 
 test("la correction 4/2/1 par page ne change pas : EQ_PRINT_CORR_GEOM reprend ses constantes d'avant, mot pour mot", () => {
