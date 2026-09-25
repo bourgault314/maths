@@ -10,8 +10,8 @@ Ce document est l'inventaire technique des 55 PDF publics de maths&go.
 - Logo de l'IREMI de La Réunion : `assets/img/logos/irem/logo-print.png` (le nom du fichier garde `irem`)
 - Adresse imprimée : `mathsgo.re`
 - Gabarit sans en-tête : logo en bas à gauche et adresse centrée en pied.
-- Gabarit plastifiable conçu dans le cadre de l'IREMI : logo IREMI à gauche,
-  logo maths&go à droite, avec des dimensions adaptées au pied de page.
+- Gabarits plastifiables publics : petit symbole M (5,5 mm) suivi de `mathsgo.re` en bas à gauche ;
+  licence existante conservée en pied de page.
 - Fiche avec en-tête : logo en haut à droite et adresse seule en pied.
 - Anciennes variantes avec la baseline « Manipuler • Comprendre • Progresser » :
   interdites dans les PDF publics.
@@ -24,10 +24,8 @@ d'addition décimale : il est régénéré lui aussi pour préserver les anciens
 liens, mais ne constitue pas un 26e gabarit. Les deux outils HTML de construction
 de gabarits d'angles ne font pas partie de ce lot.
 
-Le logo IREMI est réservé aux 22 gabarits effectivement conçus dans ce cadre.
-Les gabarits d'enquêtes additive et multiplicative ainsi que le document de
-partage équitable restent plastifiables, mais portent uniquement le logo
-maths&go.
+Depuis le 25 septembre 2026, les 25 gabarits plastifiables portent uniquement
+le petit symbole M suivi de `mathsgo.re`. Les logos des autres ressources ne sont pas modifiés.
 
 ## PDF possédant une source LaTeX
 
@@ -210,3 +208,5 @@ Les PDF sont tous déclarés dans `assets/js/catalogue-refonte-data.js` et dans
 `sitemap.xml`. Leur classement visible se fait par domaine et notion dans le
 catalogue ; leur chemin physique historique n'a pas été déplacé afin de préserver
 les liens publics existants.
+
+Le symbole compact utilise `assets/img/logos/mathsgo/m-print.png`, dérivé de `m.svg`.
