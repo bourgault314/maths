@@ -118,7 +118,13 @@ test("accordéon : un monde ouvert à la fois, le monde en cours à l'arrivée, 
   assert.match(univers, /\.monde\.replie>\.head \.chev\{transform:rotate\(-90deg\)\}/);
   /* ouvrirMonde replie tous les autres ; un clic sur le bandeau ouvert referme tout */
   assert.match(univers, /function ouvrirMonde\(mi\)\{\s*document\.querySelectorAll\("main>\.monde"\)\.forEach\(\(sec,i\)=>\{\s*const ouvert=i===mi;\s*sec\.classList\.toggle\("replie",!ouvert\);/);
-  assert.match(univers, /ouvrirMonde\(sec\.classList\.contains\("replie"\)\?mondes\.indexOf\(sec\):-1\);/);
+  assert.match(univers, /const mi=sec\.classList\.contains\("replie"\)\?mondes\.indexOf\(sec\):-1;\s*ouvrirMonde\(mi\);\s*retenirMonde\(mi\);/);
+  /* relecture du monde 1 (25/09/2026) : le monde ouvert ou lancé est retenu sur l'appareil
+     (une clé élève, une clé prof) et rouvert au retour, avant le monde en cours */
+  assert.match(univers, /const CLE_MONDE_OUVERT="mathsgo-splat-monde-ouvert"\+\(PROF\?"-prof":""\);/);
+  assert.match(univers, /try\{ localStorage\.setItem\(CLE_MONDE_OUVERT,String\(mi\)\); \}catch\(e\)\{\}/);
+  assert.match(univers, /const retenu=mondeRetenu\(\);\s*if\(retenu>=0\) return retenu;\s*if\(PROF\) return 0;/);
+  assert.match(univers, /const sec=a\.closest\("main>\.monde"\);\s*if\(sec\) retenirMonde\(/);
   /* le monde en cours : celui de l'adresse (#monde-N ou un identifiant d'étape), sinon celui
      de la prochaine étoile, sinon le dernier ; en vue prof, le monde 1 */
   assert.match(univers, /const el=document\.getElementById\(cible\), sec=el&&el\.closest\("main>\.monde"\);/);
@@ -137,7 +143,7 @@ test("Continuer : la première étoile à gagner, dans l'ordre de l'univers, abs
   assert.match(univers, /<div class="continuer" id="continuer" hidden><a id="continuerLien" href="#"><\/a><\/div>/);
   assert.match(univers, /else if\(!prochaine&&e\.j\) prochaine=\{m,mi,e,n:li\.querySelector\("\.n"\)\.textContent\};/);
   assert.match(univers, /if\(cont&&!PROF\)\{\s*cont\.hidden=!prochaine;/);
-  assert.match(univers, /a\.href=prochaine\.e\.j; a\.innerHTML="\\u25b6 Continuer <small>\\u00b7 \\u00e9tape "\+prochaine\.n\+", "\+prochaine\.e\.t\+"<\/small>";/);
+  assert.match(univers, /a\.href=prochaine\.e\.j; a\.dataset\.monde=prochaine\.mi; a\.innerHTML="\\u25b6 Continuer <small>\\u00b7 \\u00e9tape "\+prochaine\.n\+", "\+prochaine\.e\.t\+"<\/small>";/);
   /* toutes les étapes actives ont un lien de jeu : « Continuer » ne saute jamais une étape */
   MONDES.filter((m) => m.actif).forEach((m) => m.etapes.forEach((e) => assert.ok(e.j, `${m.nom} : ${e.t}`)));
 });
@@ -145,7 +151,7 @@ test("Continuer : la première étoile à gagner, dans l'ordre de l'univers, abs
 test("?apres=<parcours> : la carte renvoie au jeu de l'étape suivante, sans rien afficher", () => {
   /* le lien que les outils mettront sur leur écran de fin (« Étape suivante ▶ ») */
   assert.match(univers, /const apres=new URLSearchParams\(window\.location\.search\)\.get\("apres"\);\s*if\(!apres\|\|PROF\) return;/);
-  assert.match(univers, /const suite=MONDES\.flatMap\(m=>m\.actif\?m\.etapes:\[\]\);\s*const k=suite\.findIndex\(e=>e\.p===apres\);\s*if\(k>=0&&k\+1<suite\.length&&suite\[k\+1\]\.j\) window\.location\.replace\(suite\[k\+1\]\.j\);/);
+  assert.match(univers, /const suite=MONDES\.flatMap\(m=>m\.actif\?m\.etapes:\[\]\);\s*const k=suite\.findIndex\(e=>e\.p===apres\);\s*if\(k>=0&&k\+1<suite\.length&&suite\[k\+1\]\.j\)\{[\s\S]{0,160}retenirMonde\(MONDES\.findIndex\(m=>m\.actif&&m\.etapes\.includes\(suite\[k\+1\]\)\)\);\s*window\.location\.replace\(suite\[k\+1\]\.j\);/);
   /* on refait le calcul : après la dernière fiche de l'Enquête vient la première du Système */
   const suite = MONDES.flatMap((m) => (m.actif ? m.etapes : []));
   const k = suite.findIndex((e) => e.p === "enq24");

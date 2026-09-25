@@ -310,7 +310,7 @@ footer a{color:var(--blue)}
   <a class="brand" href="/" aria-label="Accueil maths&amp;go"><img src="/assets/img/mathsgo-logo-390.png" alt="maths&amp;go"></a>
   <nav class="modeBar" aria-label="Choix du mode">
     <a class="modeOpt actif" id="optEleve">🎮 Élève</a>
-    <a class="modeOpt" id="optProf" href="?prof=1">👩‍🏫 Professeur</a>
+    <a class="modeOpt" id="optProf" href="?prof=1">Professeur</a>
   </nav>
 </header>
 
@@ -335,10 +335,12 @@ footer a{color:var(--blue)}
 
 <main id="univers"></main>
 
+<!-- Pied (relecture du monde 1, 25/09/2026) : le même que la page des livrets —
+     crédits puis licence. La vue professeur a son bouton en haut, pas de doublon ici. -->
 <footer>
-  Outils : <a href="/outils/?domain=algebre&collection=splat">la famille Splat! de maths&amp;go</a> ·
-  progression cycle 3 en quatre séquences · monde 4 : le Système (maths&amp;go) · monde 6 : prolongement relatifs (cycle 4).<br>
-  <span>Professeurs : <a href="?prof=1">vue professeur</a> — fiches à imprimer et outils à projeter, pour chaque étape.</span>
+  <span class="credits">Jeu <strong>SPLAT!</strong> créé par Steve Wyborney · progression «&nbsp;SPLAT! cycle 3&nbsp;» de Claire ·
+  outils <strong>SPLAT!</strong> de maths&amp;go, avec l'IREMI de La Réunion.</span><br>
+  <a href="/licence.html">mathsgo.re · CC BY-NC-SA 4.0</a> — libre d'être imprimé, partagé et adapté, sans usage commercial.
 </footer>
 
 <script>
@@ -717,7 +719,7 @@ let faits=lireFaits();
 /* Vue professeur : ce que la progression de Claire prévoit pour chaque activité
    (reformulé d'après son document « SPLAT! cycle 3 »). */
 const NOTES_MONDE = [
- "Découverte de la situation SPLAT : modéliser un problème simple par un schéma en barres (un tout, des parties). Chaque fiche a sa graine : « Générer » en note une nouvelle pour créer d'autres fiches, et la difficulté s'ajuste par les paramètres (cible max, jetons visibles).",
+ "Découverte de la situation SPLAT : modéliser un problème simple par un schéma en barres (un tout, des parties). Chaque fiche a sa graine : la série est la même sur le papier et à l'écran, et le QR du livret ouvre exactement celle de la fiche.",
  "Le schéma en barres devient équation. À savoir : le mode lecture montre les étapes de résolution, le bouton « Résoudre » ouvre la situation dans ÉquaBarre pour la manipuler, et les « paquets de jetons » permettent de grandes quantités.",
  "Le total est donné, mais aucune tache ne dit ce qu'elle cache : c'est un indice qui les relie entre elles. L'élève trace lui-même son schéma en barres, puis déduit. Un monde en trois parties, un livret chacune : les indices additifs (fiches 10 à 14 ; la fiche 11 porte une consigne en gras — reformuler l'indice avant de dessiner —, parce que l'obstacle est là), puis les indices multiplicatifs et les quatre opérations mélangées (15 à 19, consigne en gras à la fiche 16 pour « fois moins »), puis l'enquête qui rebondit (20 à 24) : plusieurs taches de la même couleur, et des cartes sans total, où deux indices sur la même paire suffisent (consigne en gras à la fiche 23). À savoir : chaque fiche a sa graine, la série est donc la même sur le papier et à l'écran, et le QR du livret ouvre exactement celle de la fiche.",
  "Plusieurs plateaux, un total pour chacun, les mêmes couleurs partout : chaque indice est un plateau de plus, et l'élève compare les plateaux au lieu de remplacer dans une équation. Le critère, pour se repérer entre les mondes 3 et 4 : <b>l'Enquête, c'est un indice qui compare deux taches</b> (« 6 de plus que », « 3 fois plus que ») — un seul plateau ; <b>le Système, c'est un indice qui donne un total partiel</b> — un deuxième plateau. Deux parties, un livret chacune : <b>on retire</b> (fiches 25 à 29 : un plateau contenu dans l'autre, une partie connue, deux pesées) puis <b>on additionne, on double</b> (30 à 34 : trois paires, doubler avant de comparer, plateaux en miroir). La correction à l'écran se déroule un cadre par clic (« Projeter ») ; sur papier, elle existe en 4 par page et en 2 par page, plus grosse. Tous les systèmes du collège, et où ils sont :"+
@@ -808,13 +810,9 @@ MONDES.forEach((m,mi)=>{
    '<p class="desc">'+m.desc+'</p>'+(PROF?'<div class="desc descProf">\ud83d\udcdd '+NOTES_MONDE[mi]+'</div>':'')+
    (mi===0?'<p class="intro">'+(PROF
       ?'<a class="introLien" href="/outils/splat_intro.html?suite='+encodeURIComponent('/outils/splat_univers.html?prof=1')+'">\ud83d\udcfd\ufe0f Pr\u00e9senter le principe (diaporama \u00e0 projeter)</a>'
-       +'<a class="introLien livret" href="/outils/livret_petit_splat.pdf" target="_blank" rel="noopener">\ud83d\udcd5 Livret Monde 1 (PDF)</a>'
-       +'<a class="introLien livret a3" href="/outils/livret_petit_splat_a_plier.pdf" target="_blank" rel="noopener">\ud83d\udda8\ufe0f Monde 1 \u00e0 plier</a>'
-       +'<a class="introLien livret" href="/outils/livret_petit_splat_avance.pdf" target="_blank" rel="noopener">\ud83d\udcd7 Livret Avanc\u00e9, jusqu\u2019\u00e0 50 (PDF)</a>'
-       +'<a class="introLien livret a3" href="/outils/livret_petit_splat_avance_a_plier.pdf" target="_blank" rel="noopener">\ud83d\udda8\ufe0f Avanc\u00e9 \u00e0 plier</a>'
-       +'<a class="introLien livret" href="/outils/livret_petit_splat_expert.pdf" target="_blank" rel="noopener">\ud83d\udcd8 Livret Expert, jusqu\u2019\u00e0 100 (PDF)</a>'
-       +'<a class="introLien livret a3" href="/outils/livret_petit_splat_expert_a_plier.pdf" target="_blank" rel="noopener">\ud83d\udda8\ufe0f Expert \u00e0 plier</a>'
-       +'<span class="introNote">Livrets \u00e0 plier\u00a0: sur A3, ou sur A4 pour un plus petit livret\u00a0; recto-verso, retournement sur le <b>bord court</b>, puis plier et agrafer au milieu.</span>'
+       /* relecture du monde 1 (25/09/2026) : un seul lien vers la page des livrets,
+          qui montre les trois niveaux, leurs corrigés et comment les imprimer */
+       +'<a class="introLien livret" href="/outils/livrets_splat.html#monde-1">\ud83d\udcda Les livrets du monde 1</a>'
       :'<a class="introLien" href="/outils/splat_intro.html?suite='+encodeURIComponent(m.etapes[0].j)+'">\ud83c\udfac Comment on joue ?</a>')+'</p>':'')+
    /* monde 2, vue prof : le livret SPLAT! Classique (les fiches 7, 8 et 9 à plier), comme les livrets du monde 1 */
    (mi===1&&PROF?'<p class="intro">'
@@ -921,16 +919,33 @@ function majAffichage(){
   if(cont&&!PROF){
     cont.hidden=!prochaine;
     if(prochaine){ const a=document.getElementById("continuerLien");
-      a.href=prochaine.e.j; a.innerHTML="\u25b6 Continuer <small>\u00b7 \u00e9tape "+prochaine.n+", "+prochaine.e.t+"</small>"; }
+      a.href=prochaine.e.j; a.dataset.monde=prochaine.mi; a.innerHTML="\u25b6 Continuer <small>\u00b7 \u00e9tape "+prochaine.n+", "+prochaine.e.t+"</small>"; }
   }
   return prochaine;
 }
 /* ============ accordéon : un monde ouvert à la fois ============ */
 /* Six mondes et 44 étapes dépliés, c'est 9 000 px sur téléphone : chaque monde se
    replie sur son bandeau. À l'arrivée, un seul est ouvert — celui que l'adresse
-   désigne (#monde-4, ou l'identifiant d'une étape), sinon le monde EN COURS : le
-   premier où il reste une étoile à gagner. Rien n'est mémorisé : le choix vaut le
-   temps de la page. */
+   désigne (#monde-4, ou l'identifiant d'une étape), sinon le dernier monde ouvert
+   sur cet appareil, sinon le monde EN COURS : le premier où il reste une étoile à
+   gagner.
+   Relecture du monde 1 (25/09/2026, retour de Gwenaël) : sans mémoire, un élève qui
+   jouait l'Enquête revenait sur Petit SPLAT! (le premier monde pas fini). On retient
+   donc le monde qu'on ouvre ou dont on lance une étape (localStorage, une clé pour
+   l'élève, une pour la vue prof ; si le stockage est refusé, on retombe sur le monde
+   en cours, comme avant). */
+const CLE_MONDE_OUVERT="mathsgo-splat-monde-ouvert"+(PROF?"-prof":"");
+function retenirMonde(mi){
+  if(!(mi>=0)) return;
+  try{ localStorage.setItem(CLE_MONDE_OUVERT,String(mi)); }catch(e){}
+}
+function mondeRetenu(){
+  try{
+    const v=localStorage.getItem(CLE_MONDE_OUVERT);
+    const n=v===null?NaN:parseInt(v,10);
+    return (n>=0&&n<MONDES.length)?n:-1;
+  }catch(e){ return -1; }
+}
 function ouvrirMonde(mi){
   document.querySelectorAll("main>.monde").forEach((sec,i)=>{
     const ouvert=i===mi;
@@ -944,14 +959,26 @@ function mondeEnCours(prochaine){
     const el=document.getElementById(cible), sec=el&&el.closest("main>.monde");
     if(sec) return [...document.querySelectorAll("main>.monde")].indexOf(sec);
   }
-  if(PROF) return 0; /* vue prof : le monde 1, sauf adresse précise */
+  const retenu=mondeRetenu();
+  if(retenu>=0) return retenu;
+  if(PROF) return 0; /* vue prof : le monde 1, sauf adresse précise ou monde retenu */
   return prochaine?prochaine.mi:MONDES.length-1;
 }
 document.addEventListener("click",ev=>{
   const head=ev.target.closest("main>.monde>.head");
   if(!head) return;
   const sec=head.parentElement, mondes=[...document.querySelectorAll("main>.monde")];
-  ouvrirMonde(sec.classList.contains("replie")?mondes.indexOf(sec):-1);
+  const mi=sec.classList.contains("replie")?mondes.indexOf(sec):-1;
+  ouvrirMonde(mi);
+  retenirMonde(mi);
+});
+/* une étape (ou un lien) lancée depuis un monde, ou « Continuer » : on retient ce monde */
+document.addEventListener("click",ev=>{
+  const a=ev.target.closest("a[href]");
+  if(!a) return;
+  if(a.id==="continuerLien"){ retenirMonde(parseInt(a.dataset.monde,10)); return; }
+  const sec=a.closest("main>.monde");
+  if(sec) retenirMonde([...document.querySelectorAll("main>.monde")].indexOf(sec));
 });
 document.addEventListener("keydown",ev=>{
   if((ev.key==="Enter"||ev.key===" ")&&ev.target.matches("main>.monde>.head")){ ev.preventDefault(); ev.target.click(); }
@@ -969,7 +996,7 @@ if (PROF) {
   const oe=document.getElementById('optEleve'); if(oe){ oe.classList.remove('actif'); oe.href=window.location.pathname; }
   const op=document.getElementById('optProf'); if(op){ op.classList.add('actif'); op.removeAttribute('href'); }
   const tb=document.getElementById('totalBar'); if(tb) tb.style.display='none';
-  const fp=document.querySelector('footer span'); if(fp) fp.innerHTML='Vue professeur — mondes 1, 2, 3 et 5 d\u2019apr\u00e8s la progression \u00ab SPLAT! cycle 3 \u00bb de Claire (mondes 4 et 6 : prolongements maths&go — le Syst\u00e8me, puis les relatifs au cycle 4) : '+
+  const fp=document.querySelector('footer span.credits'); if(fp) fp.innerHTML='Jeu <strong>SPLAT!</strong> cr\u00e9\u00e9 par Steve Wyborney \u00b7 outils <strong>SPLAT!</strong> de maths&amp;go, avec l\u2019IREMI de La R\u00e9union.<br>Vue professeur — mondes 1, 2, 3 et 5 d\u2019apr\u00e8s la progression \u00ab SPLAT! cycle 3 \u00bb de Claire (mondes 4 et 6 : prolongements maths&go — le Syst\u00e8me, puis les relatifs au cycle 4) : '+
     '<a href="https://digipad.app/p/1754235/397f3f517445b" target="_blank" rel="noopener">sa progression d\u2019origine (Digipad)</a> \u00b7 '+
     '<a href="'+window.location.pathname+'">revenir \u00e0 la vue \u00e9l\u00e8ve</a>.';
 }
@@ -985,7 +1012,11 @@ if (PROF) {
   if(!apres||PROF) return;
   const suite=MONDES.flatMap(m=>m.actif?m.etapes:[]);
   const k=suite.findIndex(e=>e.p===apres);
-  if(k>=0&&k+1<suite.length&&suite[k+1].j) window.location.replace(suite[k+1].j);
+  if(k>=0&&k+1<suite.length&&suite[k+1].j){
+    /* au retour sur la carte, c'est le monde de l'étape suivante qui s'ouvrira */
+    retenirMonde(MONDES.findIndex(m=>m.actif&&m.etapes.includes(suite[k+1])));
+    window.location.replace(suite[k+1].j);
+  }
 })();
 ouvrirMonde(mondeEnCours(majAffichage()));
 /* au retour d'une partie (autre onglet ou bouton retour), on rallume les étoiles gagnées */

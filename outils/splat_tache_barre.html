@@ -110,7 +110,7 @@
         background: #fff;
     }
     .print-title-control input::placeholder { color: #94a3b8; font-weight: 600; }
-    .actions { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; margin-top: 2px; padding-bottom: 6px; }
+    .actions { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; flex: 0 0 auto; padding: 10px 14px 4px; border-top: 1px solid var(--border); background: var(--panel); }
     .btn { padding: 11px; border: none; border-radius: 8px; font-weight: 700; cursor: pointer; color: white; font-size: 13px; }
     .btn-new { background: var(--accent); }
     .btn-print { background: #10b981; }
@@ -175,6 +175,7 @@
       body { flex-direction: column; height: 100dvh; }
       aside { width: 100%; max-height: 44dvh; border-right: 0; border-bottom: 1px solid var(--border); }
       .sb-scroll { padding: 8px 10px; }
+      .actions { padding: 8px 10px 2px; }
       main { padding: 8px; gap: 10px; }
       .page { width: 100%; height: auto; aspect-ratio: 210 / 297; }
       .actions .btn { min-height: 44px; }
@@ -675,10 +676,14 @@
       <input id="activityLabel" type="text" placeholder="ex. Activité 1" oninput="renderPages()">
     </div>
 
-    <div class="actions">
-      <button class="btn btn-new" onclick="startGen()" data-i18n="btn_mix">GÉNÉRER</button>
-      <button class="btn btn-print" id="printBtn" onclick="window.print()" data-i18n="btn_print">IMPRIMER</button>
-    </div>
+  </div>
+
+  <!-- GÉNÉRER et IMPRIMER hors de la partie qui défile (relecture du monde 1,
+       25/09/2026) : sur un petit écran ou une page zoomée, ils passaient sous le
+       bord du panneau sans que rien ne dise qu'il fallait faire défiler. -->
+  <div class="actions">
+    <button class="btn btn-new" onclick="startGen()" data-i18n="btn_mix">GÉNÉRER</button>
+    <button class="btn btn-print" id="printBtn" onclick="window.print()" data-i18n="btn_print">IMPRIMER</button>
   </div>
 
   <!-- La mention « Sans cookie ni traceur » est écrite ici : la présence de
