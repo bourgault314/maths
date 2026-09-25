@@ -870,7 +870,7 @@ test("cartes des mondes : numéro, nom et fiches, dans l'ordre, toujours des ong
 test("corrigés pour tous, sur la page : plus de « prof » ni de « professeur » dans les boutons et les titres", () => {
   assert.doesNotMatch(page, /🧑‍🏫|\(prof\)|professeur/);
   assert.match(page, /<strong>✅ Les corrigés<\/strong>&nbsp;: le même livret, aux mêmes pages, avec les réponses/);
-  assert.match(catalogue, /"cardDescription": "Tous les livrets de l’univers SPLAT! à plier, monde par monde\u00a0: [^"]*Grande enquête \(monde 3\) en deux niveaux, et leurs corrigés ; SPLAT! Équations \(monde 5\) en deux livrets, schéma en barres ou équation, et son livret « Le défi »\."/);
+  assert.match(catalogue, /"cardDescription": "Tous les livrets de l’univers SPLAT! à plier, monde par monde\u00a0: [^"]*Grande enquête \(monde 3\) en deux niveaux, et leurs corrigés ; SPLAT! Équations \(monde 5\) en trois livrets : schéma en barres, équation, et « Le défi »\."/);
 });
 
 /* ===================================================================== lot D (21/09/2026)

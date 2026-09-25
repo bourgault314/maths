@@ -675,7 +675,7 @@ test("Q5 : la page des livrets et la carte des mondes — « Le défi » au mond
   assert.ok(bloc5.includes("Livret Le d\\u00e9fi, 50 \\u00e0 100 (PDF)"));
   // le catalogue le dit, et son cache-buster suit
   const catalogue = lire("assets/js/catalogue-refonte-data.js");
-  assert.match(catalogue, /schéma en barres ou équation, et son livret « Le défi »\."/);
+  assert.match(catalogue, /SPLAT! Équations \(monde 5\) en trois livrets : schéma en barres, équation, et « Le défi »\."/);
   assert.match(catalogue, /plus un livret « Le défi », des totaux de 50 à 100\./);
   assert.match(lire("outils/index.html"), /catalogue-refonte-data\.js\?v=splat-defi-equations-20260925-1/);
 });

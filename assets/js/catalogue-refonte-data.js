@@ -791,7 +791,7 @@ window.MATHSGO_CATALOGUE = {
       "collections": ["splat"],
       "tags": ["splat", "livret", "schema-barres", "equation", "inconnue", "imprimer"],
       "thumbnail": "assets/img/thumbnails/splat/livrets-splat.png?v=2",
-      "cardDescription": "Tous les livrets de l’univers SPLAT! à plier, monde par monde : le monde 1 en trois niveaux, le monde 2, l’Enquête et la Grande enquête (monde 3) en deux niveaux, et leurs corrigés ; SPLAT! Équations (monde 5) en deux livrets, schéma en barres ou équation, et son livret « Le défi »."
+      "cardDescription": "Tous les livrets de l’univers SPLAT! à plier, monde par monde : le monde 1 en trois niveaux, le monde 2, l’Enquête et la Grande enquête (monde 3) en deux niveaux, et leurs corrigés ; SPLAT! Équations (monde 5) en trois livrets : schéma en barres, équation, et « Le défi »."
     },
     "outils/tuiles_algebriques/generateur_exercices_calcul_litteral.html": {
       "primaryNotion": "calcul-litteral",
