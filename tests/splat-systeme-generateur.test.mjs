@@ -388,6 +388,48 @@ test("jamais de carte « Erreur » : bornes impossibles → carte sûre du geste
   }
 });
 
+/* Lot S-defi (24/09/2026) : au-dessus de 60, les plages du geste s'agrandissent dans la
+   proportion totalMax ÷ 60 (« Trois paires » deux fois plus pour la borne haute) ; à 60 ou
+   moins elles ne bougent pas (le test des 3 000 cartes par geste, plus haut, les vérifie aux
+   réglages par défaut). But : les livrets « Le défi » (50 à 100) ont des séries pleines et
+   variées pour les six gestes — avant le lot, « En miroir » plafonnait à 58. */
+test("S-defi : totaux 50 à 100 — chaque geste couvre toute la plage, cartes justes et variées, plages agrandies", () => {
+  const f = 100 / 60;
+  for(const geste of GESTES){
+    for(const vis of [0, 3]){
+      const r = { geste, totalMin: 50, totalMax: 100, visMin: vis ? 1 : 0, visMax: vis };
+      const cartes = graines(150).flatMap((g) => sys.serie(g, 10, r));
+      const base = sys.SYS_PLAGES[geste];
+      const fHaut = geste === "TROIS" ? 2 * f : f;
+      const plage = { vMin: Math.round(base.vMin * f), vMax: Math.round(base.vMax * fHaut), sousMin: Math.round(base.sousMin * f), sousMax: Math.round(base.sousMax * fHaut) };
+      const totaux = [];
+      for(const carte of cartes){
+        const s = verifierCarte(carte, r);
+        assert.equal(s.geste, geste);
+        assert.ok(!s.secours, `${geste} : jamais de carte de secours à 50-100`);
+        for(const k of s.colors) assert.ok(s.values[k] >= plage.vMin && s.values[k] <= plage.vMax, `${geste} : valeur ${s.values[k]} hors de ${plage.vMin}-${plage.vMax}`);
+        for(const b of s.boards.slice(1)) assert.ok(b.total >= plage.sousMin && b.total <= plage.sousMax, `${geste} : sous-total ${b.total} hors plage`);
+        const t = s.boards[0].total == null ? s.colors.reduce((x, k) => x + s.values[k], 0) : s.boards[0].total;
+        assert.ok(t >= 50 && t <= 100, `${geste} : total ${t}`);
+        totaux.push(t);
+      }
+      // toute la plage : au moins 10 % des cartes au-dessus de 80, et autant au-dessous de 65
+      assert.ok(totaux.filter((t) => t > 80).length >= cartes.length / 10, `${geste} (visibles ${vis}) : trop peu de grands totaux`);
+      assert.ok(totaux.filter((t) => t < 65).length >= cartes.length / 10, `${geste} (visibles ${vis}) : trop peu de petits totaux`);
+      assert.ok(Math.max(...totaux) >= 95, `${geste} : le total max approche 100`);
+      // des séries variées : 80 % de cartes toutes différentes au moins
+      assert.ok(new Set(cartes.map((c) => JSON.stringify([c._sys.colors, c._sys.boards]))).size > cartes.length * 0.8, `${geste} : cartes trop répétées`);
+    }
+  }
+  // juste au-dessus de 60, l'agrandissement est petit ; à 60 pile, les plages de SYS_PLAGES
+  for(const c of sys.serie(7, 20, { geste: "MIROIR", totalMin: 20, totalMax: 60 })){
+    for(const k of c._sys.colors) assert.ok(c._sys.values[k] <= sys.SYS_PLAGES.MIROIR.vMax);
+  }
+  for(const c of sys.serie(7, 20, { geste: "MIROIR", totalMin: 20, totalMax: 66 })){
+    for(const k of c._sys.colors) assert.ok(c._sys.values[k] <= Math.round(sys.SYS_PLAGES.MIROIR.vMax * 1.1));
+  }
+});
+
 test("les indices écrits (réglages Phrases et Symboles) : la tournure décidée, les bonnes taches", () => {
   const coef = sys.serie(61, 1, { geste: "COEF", clues: "SENTENCE" })[0];
   const [P, I] = coef._sys.boards;
