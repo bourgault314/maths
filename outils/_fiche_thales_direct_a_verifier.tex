@@ -28,16 +28,15 @@
 
 \newcommand{\MathsGoFooter}{%
 \begin{tikzpicture}[remember picture,overlay]
-  \node[anchor=south west,inner sep=0pt]
-    at ([xshift=0.55cm,yshift=0.40cm]current page.south west)
+  \node[anchor=base west,inner sep=0pt,text=brandNavy!65,font=\sffamily\fontsize{6.8}{6.8}\selectfont]
+    at ([xshift=0.55cm,yshift=0.60cm]current page.south west) {Gabarit plastifiable};
+  \node[anchor=base,inner sep=0pt,text=brandNavy!65,font=\sffamily\fontsize{6}{6}\selectfont]
+    at ([yshift=0.60cm]current page.south) {CC BY-NC-SA 4.0};
+  \node[anchor=base east,inner sep=0pt,text=brandNavy,font=\sffamily\bfseries\fontsize{7}{7}\selectfont] (signatureadresse)
+    at ([xshift=-0.55cm,yshift=0.60cm]current page.south east) {mathsgo.re};
+  \node[anchor=east,inner sep=0pt]
+    at ([xshift=-0.18cm]signatureadresse.west)
     {\includegraphics[height=0.55cm]{../assets/img/logos/mathsgo/m-print.png}};
-  \node[anchor=west,inner sep=0pt,text=brandNavy,font=\sffamily\bfseries\fontsize{7}{7}\selectfont]
-    at ([xshift=1.28cm,yshift=0.65cm]current page.south west) {mathsgo.re};
-  \node[anchor=south,text=brandNavy!70,font=\sffamily\bfseries\fontsize{7}{7}\selectfont]
-    at ([yshift=0.32cm]current page.south) {CC BY-NC-SA 4.0};
-  \node[anchor=south east,inner sep=0pt,text=brandNavy!70,font=\sffamily\fontsize{6.8}{6.8}\selectfont]
-      at ([xshift=-0.55cm,yshift=0.32cm]current page.south east) {Gabarit plastifiable};
-  \fi
 \end{tikzpicture}%
 }
 \AddToShipoutPictureFG{\MathsGoFooter}

@@ -85,10 +85,13 @@ def title_line(c):
 
 
 def footer(c):
-    c.drawImage(str(MATHSGO_LOGO), 15.6, 11.41, width=15.59, height=15.59, mask="auto")
-    text(c, "mathsgo.re", 36.19, 17, 7, NAVY, "GoSans-Bold")
-    text(c, "CC BY-NC-SA 4.0", PAGE_WIDTH / 2, 12.5, 7, NAVY, "GoSans-Bold", "center")
-    text(c, "Imprimer à 100 % · Gabarit plastifiable", PAGE_WIDTH - 28, 20, 6.8, MUTED, "GoSans", "right")
+    address_width = pdfmetrics.stringWidth("mathsgo.re", "GoSans-Bold", 7)
+    address_x = PAGE_WIDTH - 15.6 - address_width
+    c.drawImage(str(MATHSGO_LOGO), address_x - 20.59, 11.41, width=15.59, height=15.59, mask="auto")
+    text(c, "mathsgo.re", address_x, 17, 7, NAVY, "GoSans-Bold")
+    text(c, "CC BY-NC-SA 4.0", PAGE_WIDTH / 2, 17, 6, MUTED, "GoSans", "center")
+    text(c, "Gabarit plastifiable", 15.6, 17, 6.8, MUTED, "GoSans")
+    text(c, "Imprimer à 100 %", 15.6, 8.5, 5.7, MUTED, "GoSans")
 
 
 def rounded_cell(c, x, y, w, h, fill, stroke):

@@ -74,10 +74,12 @@ def dotted_line(c, x1, y, x2):
 
 
 def footer(c):
-    c.drawImage(str(MATHSGO_LOGO), 15.6, 11.41, width=15.59, height=15.59, mask="auto")
-    text(c, "mathsgo.re", 36.19, 17, 7, NAVY, "GoSans-Bold")
-    text(c, "CC BY-NC-SA 4.0", A4[0] / 2, 12.5, 7, NAVY, "GoSans-Bold", "center")
-    text(c, "Gabarit plastifiable", A4[0] - 28, 24, 6.8, MUTED, "GoSans", "right")
+    address_width = pdfmetrics.stringWidth("mathsgo.re", "GoSans-Bold", 7)
+    address_x = A4[0] - 15.6 - address_width
+    c.drawImage(str(MATHSGO_LOGO), address_x - 20.59, 11.41, width=15.59, height=15.59, mask="auto")
+    text(c, "mathsgo.re", address_x, 17, 7, NAVY, "GoSans-Bold")
+    text(c, "CC BY-NC-SA 4.0", A4[0] / 2, 17, 6, MUTED, "GoSans", "center")
+    text(c, "Gabarit plastifiable", 15.6, 17, 6.8, MUTED, "GoSans")
 
 
 def title_line(c, decimal):

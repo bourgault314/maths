@@ -156,15 +156,19 @@ def make_overlay(
         draw_template_label(overlay, width)
 
     if mark_as_template:
-        # Les gabarits utilisent une signature compacte, sans le grand logo.
+        # Signature des gabarits : usage à gauche, identité à droite.
         overlay.setFillColor(white)
         overlay.rect(0, 0, 190, 46, stroke=0, fill=1)
         overlay.rect(width / 2 - 60, 0, 120, 22, stroke=0, fill=1)
+        overlay.rect(width - 145, 0, 145, 32, stroke=0, fill=1)
         symbol = Path(__file__).resolve().parents[1] / "assets/img/logos/mathsgo/m-print.png"
-        overlay.drawImage(str(symbol), 15.6, 11.41, width=15.59, height=15.59, mask="auto")
         overlay.setFillColor(BRAND_NAVY)
+        overlay.setFont("Helvetica", 6.8)
+        overlay.drawString(15.6, 17, "Gabarit plastifiable")
         overlay.setFont("Helvetica-Bold", 7)
-        overlay.drawString(36.19, 17, "mathsgo.re")
+        address_x = width - 15.6 - overlay.stringWidth("mathsgo.re", "Helvetica-Bold", 7)
+        overlay.drawImage(str(symbol), address_x - 20.59, 11.41, width=15.59, height=15.59, mask="auto")
+        overlay.drawString(address_x, 17, "mathsgo.re")
 
     overlay.save()
     return buffer.getvalue()
