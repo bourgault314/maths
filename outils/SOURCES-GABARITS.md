@@ -9,9 +9,10 @@ Ce document est l'inventaire technique des 55 PDF publics de maths&go.
   `assets/img/mathsgo-logo-print.png`
 - Logo de l'IREMI de La Réunion : `assets/img/logos/irem/logo-print.png` (le nom du fichier garde `irem`)
 - Adresse imprimée : `mathsgo.re`
-- Gabarit sans en-tête : logo en bas à gauche et adresse centrée en pied.
-- Gabarits plastifiables publics : petit symbole M (5,5 mm) suivi de `mathsgo.re` en bas à gauche ;
-  licence existante conservée en pied de page.
+- Gabarit sans en-tête : mention d’usage à gauche, signature compacte à droite.
+- Gabarits plastifiables publics : « Gabarit plastifiable » à gauche ; petit symbole M (5,5 mm)
+  suivi de `mathsgo.re` à droite ;
+  licence existante conservée au centre, plus discrète.
 - Fiche avec en-tête : logo en haut à droite et adresse seule en pied.
 - Anciennes variantes avec la baseline « Manipuler • Comprendre • Progresser » :
   interdites dans les PDF publics.
