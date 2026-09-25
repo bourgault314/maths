@@ -23,8 +23,8 @@
        papier, et le même parcours (parcours=sysN) donc la même étoile. Un test épingle
        ces dix cibles sur les constantes de la carte des mondes ; si une graine change
        là-bas, la changer ici aussi et régénérer les QR des livrets. Les livrets
-       « Le défi » (?f=25d …) et les séries du dos (?s=N) viendront avec les livrets,
-       sur le modèle de /splat/enquete/livret/. */
+       « Le défi » (?f=25d …) viendront avec leurs livrets, sur le modèle de
+       /splat/enquete/livret/. */
     var SYS_DEPART = 25;
     var SYS = [
       "mode=D&geste=EMBOITE1&visibleMin=0&visibleMax=0&totalMin=20&totalMax=60&seed=2105",
@@ -38,11 +38,28 @@
       "mode=D&geste=MIX&gestes=DOUBLE,MIROIR&visibleMin=0&visibleMax=0&totalMin=20&totalMax=60&seed=1287",
       "mode=D&geste=MIX&gestes=EMBOITE1,PARTIELLE,COEF,DOUBLE,MIROIR,TROIS&visibleMin=1&visibleMax=3&totalMin=20&totalMax=60&seed=11674"
     ];
+    /* Les séries infinies du dos des livrets (?s=1…6, 25/09/2026) : les réglages des
+       fiches, sans graine — huit cartes nouvelles à chaque ouverture, en mode élève sans
+       étape (rien n'est enregistré). Les mêmes six réglages sont dans
+       _sources/livret-splat-systeme/render.py (SERIES) ; un test les épingle. */
+    var SYS_SERIES = {
+      "1": "mode=D&geste=EMBOITE1&visibleMin=0&visibleMax=3&totalMin=20&totalMax=60",
+      "2": "mode=D&geste=MIX&gestes=PARTIELLE,COEF&coefMax=3&visibleMin=0&visibleMax=0&totalMin=20&totalMax=60",
+      "3": "mode=D&geste=MIX&gestes=EMBOITE1,PARTIELLE,COEF&visibleMin=1&visibleMax=3&totalMin=20&totalMax=60",
+      "4": "mode=D&geste=TROIS&visibleMin=0&visibleMax=0&totalMin=20&totalMax=60",
+      "5": "mode=D&geste=MIX&gestes=DOUBLE,MIROIR&visibleMin=0&visibleMax=0&totalMin=20&totalMax=60",
+      "6": "mode=D&geste=MIX&gestes=EMBOITE1,PARTIELLE,COEF,DOUBLE,MIROIR,TROIS&visibleMin=1&visibleMax=3&totalMin=20&totalMax=60"
+    };
+    var SYS_SERIE_CARTES = 8;
     var f = new URLSearchParams(window.location.search).get("f");
+    var sr = new URLSearchParams(window.location.search).get("s");
     var n = parseInt(f, 10);
     var i = n - SYS_DEPART;
+    var serie = (sr !== null && Object.prototype.hasOwnProperty.call(SYS_SERIES, sr)) ? SYS_SERIES[sr] : null;
     var cible = (String(n) === String(f) && i >= 0 && i < SYS.length)
       ? "/splat/classique/?" + SYS[i] + "&cards=4&unknown=question&eleve=1&parcours=sys" + n
+      : serie
+      ? "/splat/classique/?" + serie + "&cards=" + SYS_SERIE_CARTES + "&unknown=question&eleve=1"
       : "/outils/splat_univers.html#monde-4";
     window.location.replace(new URL(cible, window.location.origin).toString());
   </script>
@@ -61,6 +78,15 @@
     <li><a href="/splat/classique/?mode=D&amp;geste=MIX&amp;gestes=DOUBLE,MIROIR&amp;visibleMin=0&amp;visibleMax=0&amp;totalMin=20&amp;totalMax=60&amp;seed=1287&amp;cards=4&amp;unknown=question&amp;eleve=1&amp;parcours=sys33">Fiche 33 — Doubler ou miroir ?</a></li>
     <li><a href="/splat/classique/?mode=D&amp;geste=MIX&amp;gestes=EMBOITE1,PARTIELLE,COEF,DOUBLE,MIROIR,TROIS&amp;visibleMin=1&amp;visibleMax=3&amp;totalMin=20&amp;totalMax=60&amp;seed=11674&amp;cards=4&amp;unknown=question&amp;eleve=1&amp;parcours=sys34">Fiche 34 — Le grand défi du Système</a></li>
     <li><a href="/outils/splat_univers.html#monde-4">La carte des mondes</a></li>
+  </ul>
+  <p>Encore des cartes — les séries du dos des livrets&nbsp;:</p>
+  <ul>
+    <li><a href="/splat/classique/?mode=D&amp;geste=EMBOITE1&amp;visibleMin=0&amp;visibleMax=3&amp;totalMin=20&amp;totalMax=60&amp;cards=8&amp;unknown=question&amp;eleve=1">Série 1 — Une partie du plateau</a></li>
+    <li><a href="/splat/classique/?mode=D&amp;geste=MIX&amp;gestes=PARTIELLE,COEF&amp;coefMax=3&amp;visibleMin=0&amp;visibleMax=0&amp;totalMin=20&amp;totalMax=60&amp;cards=8&amp;unknown=question&amp;eleve=1">Série 2 — Partie connue, deux pesées</a></li>
+    <li><a href="/splat/classique/?mode=D&amp;geste=MIX&amp;gestes=EMBOITE1,PARTIELLE,COEF&amp;visibleMin=1&amp;visibleMax=3&amp;totalMin=20&amp;totalMax=60&amp;cards=8&amp;unknown=question&amp;eleve=1">Série 3 — Le défi des plateaux</a></li>
+    <li><a href="/splat/classique/?mode=D&amp;geste=TROIS&amp;visibleMin=0&amp;visibleMax=0&amp;totalMin=20&amp;totalMax=60&amp;cards=8&amp;unknown=question&amp;eleve=1">Série 4 — Trois paires</a></li>
+    <li><a href="/splat/classique/?mode=D&amp;geste=MIX&amp;gestes=DOUBLE,MIROIR&amp;visibleMin=0&amp;visibleMax=0&amp;totalMin=20&amp;totalMax=60&amp;cards=8&amp;unknown=question&amp;eleve=1">Série 5 — Doubler ou miroir</a></li>
+    <li><a href="/splat/classique/?mode=D&amp;geste=MIX&amp;gestes=EMBOITE1,PARTIELLE,COEF,DOUBLE,MIROIR,TROIS&amp;visibleMin=1&amp;visibleMax=3&amp;totalMin=20&amp;totalMax=60&amp;cards=8&amp;unknown=question&amp;eleve=1">Série 6 — Le grand défi du Système</a></li>
   </ul>
 </body>
 </html>

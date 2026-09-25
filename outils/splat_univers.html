@@ -455,6 +455,16 @@ const LIVRETS_ENQ_2=[
   ["🖨️ à plier","/outils/livret_splat_enquete_multiplicatif_a_plier.pdf","a3"],
   ["📙 Le défi, 50 à 100 (PDF)","/outils/livret_splat_enquete_multiplicatif_defi.pdf"],
   ["🖨️ Le défi à plier","/outils/livret_splat_enquete_multiplicatif_defi_a_plier.pdf","a3"]];
+const LIVRETS_ENQ_3=[
+  ["📕 Livret L’enquête rebondit (PDF)","/outils/livret_splat_enquete_rebondit.pdf"],
+  ["🖨️ à plier","/outils/livret_splat_enquete_rebondit_a_plier.pdf","a3"]];
+/* Les deux livrets du Système (25/09/2026) : un par partie. */
+const LIVRETS_SYS_1=[
+  ["📕 Livret SPLAT! Système (PDF)","/outils/livret_splat_systeme.pdf"],
+  ["🖨️ à plier","/outils/livret_splat_systeme_a_plier.pdf","a3"]];
+const LIVRETS_SYS_2=[
+  ["📗 Livret SPLAT! Système, la suite (PDF)","/outils/livret_splat_systeme_suite.pdf"],
+  ["🖨️ à plier","/outils/livret_splat_systeme_suite_a_plier.pdf","a3"]];
 const MONDE_ENQUETE={cls:"menq",idp:"enq",actif:true,nom:"SPLAT! Enquête",
   desc:"Cette fois, les taches ne parlent plus toutes seules : un indice les relie. À toi de mener l’enquête pour trouver ce que chacune cache.",
   volets:[
@@ -463,9 +473,10 @@ const MONDE_ENQUETE={cls:"menq",idp:"enq",actif:true,nom:"SPLAT! Enquête",
     note:"Les fiches 10 à 14 en un livret de 8 pages à plier (A3 ou A4, recto-verso, retournement sur le <b>bord court</b>) ; en page 2, un exemple résolu pas à pas, et sous chaque carte la place pour dessiner le schéma en barres. Le livret <b>Le défi</b> reprend les cinq fiches avec des totaux de 50 à 100 (même étoile). <a href=\"/outils/livrets_splat.html#monde-3\">Voir la page des livrets</a>"},
    {de:5,a:10,nom:"La grande enquête",o:"Les indices multiplient et partagent — fois plus, fois moins —, puis les quatre opérations se mélangent.",
     livrets:LIVRETS_ENQ_2,
-    note:"Les fiches 15 à 19 en un livret de 8 pages à plier, sur le même modèle : l’exemple résolu de la page 2 mêle « de plus » et « fois plus ». Le livret <b>Le défi</b> reprend les cinq fiches avec des totaux de 50 à 100 (même étoile). <a href=\"/outils/livrets_splat.html#monde-4\">Voir la page des livrets</a>"},
+    note:"Les fiches 15 à 19 en un livret de 8 pages à plier, sur le même modèle : l’exemple résolu de la page 2 mêle « de plus » et « fois plus ». Le livret <b>Le défi</b> reprend les cinq fiches avec des totaux de 50 à 100 (même étoile). <a href=\"/outils/livrets_splat.html#monde-3\">Voir la page des livrets</a>"},
    {de:10,a:15,nom:"L’enquête rebondit",o:"Des taches de la même couleur… puis des enquêtes sans total : les indices suffisent.",
-    note:"Les fiches 20 à 24 : les cases « Taches répétées » et « Sans total » de l’outil (la fiche 24 mélange les deux sortes de cartes). Le livret <b>L’enquête rebondit</b> et son <b>Le défi</b> sont en préparation ; en attendant, les fiches et les corrections s’impriment ci-dessous."}],
+    livrets:LIVRETS_ENQ_3,
+    note:"Les fiches 20 à 24 en un livret de 8 pages à plier, sur le même modèle : les cases « Taches répétées » et « Sans total » de l’outil (la fiche 24 mélange les deux sortes de cartes). Son <b>Le défi</b> est en préparation. <a href=\"/outils/livrets_splat.html#monde-3\">Voir la page des livrets</a>"}],
   etapes:enqEtapes(0,15)};
 /* ---- SPLAT! Système, monde 4 (lot « six mondes », 24/09/2026) : les fiches 25 à 34 ----
    Le mode D de l'outil (générateur S1, énoncé S2, correction S3, mode élève) :
@@ -512,9 +523,11 @@ const MONDE_SYSTEME={cls:"msys",idp:"sys",actif:true,nom:"SPLAT! Système",
   desc:"Plusieurs plateaux, un total pour chacun, et les mêmes couleurs partout : compare les plateaux pour trouver ce que cache chaque couleur.",
   volets:[
    {de:0,a:5,nom:"On retire",o:"Un plateau est une partie de l’autre : retire-le, ce qui reste te dit tout.",
-    note:"Les fiches 25 à 29 : le deuxième plateau est contenu dans le premier, on le retire (au cycle 3, la famille d’Inconnues en barres). Le livret <b>SPLAT! Système</b> et son <b>Le défi</b> sont en préparation ; en attendant, les fiches et les corrections s’impriment ci-dessous — la correction existe aussi en 2 par page, en plus gros."},
+    livrets:LIVRETS_SYS_1,
+    note:"Les fiches 25 à 29 en un livret de 8 pages à plier : le deuxième plateau est contenu dans le premier, on le retire (au cycle 3, la famille d’Inconnues en barres). Son <b>Le défi</b> est en préparation. Les fiches et les corrections s’impriment aussi ci-dessous — la correction existe en 2 par page, en plus gros. <a href=\"/outils/livrets_splat.html#monde-4\">Voir la page des livrets</a>"},
    {de:5,a:10,nom:"On additionne, on double",o:"Cette fois, il faut d’abord doubler un plateau, ou additionner les plateaux, avant de comparer.",
-    note:"Les fiches 30 à 34 : avant de comparer, on double un plateau ou on additionne les plateaux (vers le cycle 4). Le livret <b>SPLAT! Système, la suite</b> et son <b>Le défi</b> sont en préparation."}],
+    livrets:LIVRETS_SYS_2,
+    note:"Les fiches 30 à 34 en un livret de 8 pages à plier : avant de comparer, on double un plateau ou on additionne les plateaux (vers le cycle 4). Son <b>Le défi</b> est en préparation. <a href=\"/outils/livrets_splat.html#monde-4\">Voir la page des livrets</a>"}],
   etapes:SYS_FICHES.map((f,k)=>({t:f.t,o:f.o,fi:k,id:"sys-"+k}))};
 /* Les liens des étapes de l'Enquête et du Système : le jeu de l'élève (mêmes réglages
    que la fiche, sans rien d'impression, plus eleve=1&parcours=), la fiche et la

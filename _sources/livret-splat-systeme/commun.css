@@ -1,0 +1,14 @@
+@font-face{font-family:Poppins;src:url('/assets/fonts/Poppins-Regular.woff2') format('woff2');font-weight:400;font-style:normal}
+@font-face{font-family:Poppins;src:url('/assets/fonts/Poppins-Bold.woff2') format('woff2');font-weight:700;font-style:normal}
+@page{size:A4;margin:0}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+body{width:210mm;height:297mm;overflow:hidden;font-family:Poppins,'Segoe UI',system-ui,sans-serif;color:#0f172a;position:relative;display:flex;flex-direction:column}
+/* Charte du monde 4, SPLAT! Système : le brun cannelle des fiches (#92400e), le même dégradé
+   que leur bandeau imprimé (.print-page-header--systeme de outils/splat.html).
+   Lisible en noir et blanc : le cannelle ne sert qu'aux FONDS ; tout texte coloré est brun
+   foncé (#7c2d12), jamais un orange clair sur du blanc. */
+.corps{flex:1 1 auto;padding:0 14mm;display:flex;flex-direction:column}
+/* Pied : gris moyen et 10 px, lisible en photocopie (comme les livrets des autres mondes). */
+.pied{flex:0 0 auto;text-align:center;font-size:10px;font-weight:700;color:#64748b;padding-bottom:6mm}
+.chip{display:inline-block;font-size:12px;font-weight:700;color:#7c2d12;background:#fdf0e6;border:1px solid #efc9a8;border-radius:999px;padding:1.4mm 4mm;text-transform:uppercase;letter-spacing:1.4px}

@@ -46,6 +46,9 @@ const py = (nom) => {
   return m[1];
 };
 const F = Array.from({ length: 10 }, (_, i) => py("F" + (10 + i)));
+// « L'enquête rebondit » (25/09/2026) : les fiches 20 à 24, préfixe R (voir plus bas)
+const FICHES_REB = [...render.matchAll(/fiche\((\d+), "([^"]+)", (R\d\d), "[^"]+"(, note=True)?\)/g)]
+  .map((m) => ({ n: Number(m[1]), t: m[2], r: m[3], note: !!m[4] }));
 const FICHES_PY = [...render.matchAll(/fiche\((\d+), "([^"]+)", (F\d\d), "[^"]+"(, note=True)?\)/g)]
   .map((m) => ({ n: Number(m[1]), t: m[2], f: m[3], note: !!m[4] }));
 
@@ -87,12 +90,13 @@ test("E4 : le QR d'une fiche ouvre sa série et son étoile, par la page courte"
   });
 });
 
-test("E4 : les séries du dos passent par ?s=1…12 — huit cartes sans graine, en mode élève sans étape", () => {
+test("E4 : les séries du dos passent par ?s=1…15 — huit cartes sans graine, en mode élève sans étape", () => {
   const SERIES = Object.fromEntries([...render.matchAll(/^    (\d+): "(mode=C[^"]+)",$/gm)].map((m) => [m[1], m[2]]));
-  // 1 à 6 : les livrets de la classe (lot E4) ; 7 à 12 : les livrets « Le défi » (23/09/2026)
-  assert.deepEqual(Object.keys(SERIES), ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12"]);
+  // 1 à 6 : les livrets de la classe (lot E4) ; 7 à 12 : les livrets « Le défi » (23/09/2026) ;
+  // 13 à 15 : « L'enquête rebondit » (25/09/2026)
+  assert.deepEqual(Object.keys(SERIES), ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15"]);
   assert.match(render, /^SERIE_CARTES = 8$/m);
-  for (const [s, q] of Object.entries(SERIES)) {
+  for (const [s, q] of Object.entries(SERIES).filter(([s]) => Number(s) <= 15)) {
     const cible = cibleCourte(`?s=${s}`);
     assert.equal(cible, `/splat/classique/?${q}&cards=8&unknown=question&eleve=1`, `?s=${s}`);
     const r = new URLSearchParams(cible.split("?")[1]);
@@ -102,7 +106,7 @@ test("E4 : les séries du dos passent par ?s=1…12 — huit cartes sans graine,
     assert.ok(courte.includes(`href="${cible.replace(/&/g, "&amp;")}"`), `lien de repli de la série ${s}`);
   }
   // hors bornes : la carte des mondes
-  for (const s of ["0", "13", "x", "", "07"]) assert.equal(cibleCourte(`?s=${s}`), "/outils/splat_univers.html", `?s=${s}`);
+  for (const s of ["0", "16", "x", "", "07"]) assert.equal(cibleCourte(`?s=${s}`), "/outils/splat_univers.html", `?s=${s}`);
   assert.ok(existe(`${SRC}qr/univers.png`));
 });
 
@@ -351,7 +355,7 @@ test("six mondes : vue prof de la carte — le livret additif sous la partie 1, 
   assert.deepEqual(VOLET_ADD.livrets, LIVRETS_ENQ_1);
   assert.deepEqual(VOLET_MUL.livrets, LIVRETS_ENQ_2);
   assert.ok(VOLET_ADD.note.includes('<a href="/outils/livrets_splat.html#monde-3">Voir la page des livrets</a>'));
-  assert.ok(VOLET_MUL.note.includes('<a href="/outils/livrets_splat.html#monde-4">Voir la page des livrets</a>'));
+  assert.ok(VOLET_MUL.note.includes('<a href="/outils/livrets_splat.html#monde-3">Voir la page des livrets</a>'), "25/09/2026 : les trois parties de l'Enquête sont dans l'onglet du monde 3");
   /* le gabarit écrit les pastilles d'une partie dans son intertitre, en vue prof seulement */
   assert.match(univers, /\(PROF&&\(v\.livrets\|\|v\.note\)\?'<p class="intro">'\+/);
   assert.match(univers, /'<a class="introLien livret'\+\(l\[2\]\?' '\+l\[2\]:''\)\+'" href="'\+l\[1\]\+'" target="_blank" rel="noopener">'\+l\[0\]\+'<\/a>'/);
@@ -388,13 +392,15 @@ test("E5 : l'exemple de la page 2 n'est aucune carte des fiches — relu dans ca
      dépend plus du seul fait d'avoir lancé le script jusqu'au bout. L'exemple du livret 2 du
      lot E4 (7, 9, 18, total 34) était la carte 4 de la fiche 18, couleurs mises à part. */
   const cartes = JSON.parse(lire(SRC + "cartes.json"));
-  // depuis le 23/09/2026 : les deux livrets « Le défi » aussi (mêmes titres de fiches)
-  assert.deepEqual(Object.keys(cartes), ["additif", "additif_defi", "multiplicatif", "multiplicatif_defi"]);
+  // depuis le 23/09/2026 : les deux livrets « Le défi » aussi (mêmes titres de fiches) ; depuis le
+  // 25/09/2026, « L'enquête rebondit » (fiches 20 à 24)
+  assert.deepEqual(Object.keys(cartes), ["additif", "additif_defi", "multiplicatif", "multiplicatif_defi", "rebondit"]);
   const cle = ([t, v]) => t + ":" + [...v].sort((a, b) => a - b).join(",");
   const toutes = new Set();
   for (const [nom, c] of Object.entries(cartes)) {
     const fiches = Object.keys(c.fiches);
-    assert.deepEqual(fiches, FICHES_PY.filter((f) => (nom.startsWith("additif") ? f.n < 15 : f.n >= 15)).map((f) => `Fiche ${f.n} — ${f.t}`), nom);
+    assert.deepEqual(fiches, nom === "rebondit" ? FICHES_REB.map((f) => `Fiche ${f.n} — ${f.t}`)
+      : FICHES_PY.filter((f) => (nom.startsWith("additif") ? f.n < 15 : f.n >= 15)).map((f) => `Fiche ${f.n} — ${f.t}`), nom);
     for (const f of fiches) {
       assert.equal(c.fiches[f].length, 4, f);
       c.fiches[f].forEach((k) => toutes.add(cle(k)));
@@ -410,6 +416,7 @@ test("E5 : l'exemple de la page 2 n'est aucune carte des fiches — relu dans ca
   }
   assert.deepEqual(cartes.multiplicatif.exemple, [33, [5, 7, 21]]);
   assert.deepEqual(cartes.additif.exemple, [26, [5, 9, 12]]);
+  assert.deepEqual(cartes.rebondit.exemple, [38, [8, 15, 15]], "« L'enquête rebondit » : une noire, deux bleues");
 });
 
 /* ----------------------------------------------------- la page des livrets (23/09/2026)
@@ -422,18 +429,27 @@ function panneauLivrets(n) {
   assert.ok(debut > 0, `panneau du monde ${n} introuvable`);
   return pageLivrets.slice(debut, pageLivrets.indexOf("</section>", debut));
 }
-test("page des livrets : un onglet par monde de l'Enquête, le livret et ses deux corrigés repliés", () => {
-  SORTIES.forEach((s, i) => {
-    const n = i + 3, p = panneauLivrets(n);
-    assert.ok(p.includes(`role="tabpanel" aria-labelledby="onglet-${n}" hidden>`), `monde ${n} : caché au départ`);
-    // depuis le 23/09/2026 : deux livrets, celui de la classe puis « Le défi » (comme au monde 2)
-    assert.match(p, /<div class="grille n2">/, `monde ${n} : deux cartes`);
-    assert.equal((p.match(/<article class="liv">/g) || []).length, 2);
-    const eleve = p.indexOf(`href="/outils/${s}.pdf"`), plier = p.indexOf(`href="/outils/${s}_a_plier.pdf"`);
+/* 25/09/2026 : le monde 3 en trois parties (décision du 24/09) — ses cinq livrets dans UN onglet,
+   rangés par partie ; le monde 4 est le Système (tests/livret-splat-systeme.test.mjs). */
+function articles(p) { return p.split('<article class="liv">').slice(1).map((a) => a.slice(0, a.indexOf("</article>"))); }
+test("page des livrets : l'onglet du monde 3 — les trois parties de l'Enquête, chaque livret et ses deux corrigés repliés", () => {
+  const p = panneauLivrets(3);
+  assert.ok(p.includes(`role="tabpanel" aria-labelledby="onglet-3" hidden>`), "monde 3 : caché au départ");
+  assert.ok(p.includes("<h2 class=\"monde-nom\">Monde 3 · SPLAT! Enquête</h2>"));
+  // trois intertitres, dans l'ordre, chacun sur sa rangée de livrets
+  const parties = [...p.matchAll(/<h3 class="partie">Partie (\d) · /g)].map((m) => m[1]);
+  assert.deepEqual(parties, ["1", "2", "3"]);
+  assert.equal((p.match(/<div class="grille n2">/g) || []).length, 3, "une rangée par partie");
+  const art = articles(p);
+  const ordre = [SORTIES[0], SORTIES_DEFI[0], SORTIES[1], SORTIES_DEFI[1], "livret_splat_enquete_rebondit"];
+  assert.equal(art.length, ordre.length, "cinq livrets");
+  ordre.forEach((s, i) => {
+    const d = art[i];
+    const eleve = d.indexOf(`href="/outils/${s}.pdf"`), plier = d.indexOf(`href="/outils/${s}_a_plier.pdf"`);
     assert.ok(eleve > 0 && plier > eleve, `${s} : PDF puis « à plier »`);
-    const d = p.indexOf('<details class="prof">');
-    assert.ok(d > plier, `monde ${n} : les corrigés sous les deux liens de l'élève`);
-    const corr = p.slice(d, p.indexOf("</details>", d));
+    const k = d.indexOf('<details class="prof">');
+    assert.ok(k > plier, `${s} : les corrigés sous les deux liens de l'élève`);
+    const corr = d.slice(k, d.indexOf("</details>", k));
     assert.match(corr, /<summary>✅ Les corrigés · 2 livrets<\/summary>/);
     let avant = -1;
     for (const v of ["_correction", "_correction_lettre"]) {
@@ -445,14 +461,15 @@ test("page des livrets : un onglet par monde de l'Enquête, le livret et ses deu
     assert.equal((corr.match(/class="lien-prof"/g) || []).length, 4, "quatre liens");
     assert.match(corr, /Inconnue <small>«&nbsp;\?&nbsp;»<\/small>[\s\S]*Inconnue <small>en lettre<\/small>/);
   });
-  assert.ok(panneauLivrets(3).includes("<h2 class=\"monde-nom\">Monde 3 · SPLAT! Enquête</h2>"));
-  assert.ok(panneauLivrets(4).includes("<h2 class=\"monde-nom\">Monde 3, 2e partie · SPLAT! Grande enquête</h2>"), "lot « six mondes » : la Grande enquête est la 2e partie du monde 3");
-  assert.ok(panneauLivrets(3).includes("<span class=\"plage\">fiches 10 à 14</span>"));
-  assert.ok(panneauLivrets(4).includes("<span class=\"plage\">fiches 15 à 19</span>"));
+  assert.ok(art[0].includes("<h3>Partie 1</h3><span class=\"plage\">fiches 10 à 14</span>"));
+  assert.ok(art[2].includes("<h3>Partie 2</h3><span class=\"plage\">fiches 15 à 19</span>"));
+  assert.ok(art[4].includes("<h3>Partie 3</h3><span class=\"plage\">fiches 20 à 24</span>"));
+  // le monde 4 n'est plus la Grande enquête
+  assert.ok(!panneauLivrets(4).includes("livret_splat_enquete"), "aucun livret de l'Enquête au monde 4");
 });
 
 test("page des livrets : la couverture des livrets de l'Enquête, en PNG et en WebP (plus légère), 993 × 1404", () => {
-  for (const nom of ["livret-splat-enquete-additif", "livret-splat-enquete-multiplicatif"]) {
+  for (const nom of ["livret-splat-enquete-additif", "livret-splat-enquete-multiplicatif", "livret-splat-enquete-rebondit"]) {
     const png = `assets/img/thumbnails/splat/${nom}.png`, webp = `assets/img/thumbnails/splat/${nom}.webp`;
     assert.ok(existe(png) && existe(webp), nom);
     assert.ok(taille(webp) < taille(png), `${nom} : la WebP est plus légère`);
@@ -515,7 +532,10 @@ test("Le défi : les cartes rendues tiennent les règles du tri (cartes.json)", 
   const cle = ([t, v]) => t + ":" + [...v].sort((a, b) => a - b).join(",");
   const NOIRS = [69, 88, 96];
   const ailleurs = new Map();
-  for (const [nom, c] of Object.entries(cartes))
+  // (25/09/2026) la règle vaut entre les livrets des fiches 10 à 19 : les fiches 20 à 24 de
+  // « L'enquête rebondit » ont leurs graines figées depuis le 24/09, et la fiche 22 (sans total)
+  // a les nombres 13 et 39 d'une carte du défi de la fiche 16 — même paire, autre problème
+  for (const [nom, c] of Object.entries(cartes).filter(([nom]) => nom !== "rebondit"))
     for (const cs of Object.values(c.fiches)) cs.forEach((k) => ailleurs.set(cle(k), [...(ailleurs.get(cle(k)) || []), nom]));
   for (const nom of ["additif_defi", "multiplicatif_defi"]) {
     const toutes = Object.values(cartes[nom].fiches).flat();
@@ -535,6 +555,8 @@ test("Le défi : les cartes rendues tiennent les règles du tri (cartes.json)", 
       assert.deepEqual(ailleurs.get(cle([t, v])), [nom], `${carte} : carte déjà vue ailleurs`);
     }
     for (const c of Object.values(cartes)) assert.ok(!ailleurs.has(cle(c.exemple)), `exemple ${c.exemple} : c'est une carte`);
+    const rebondit = new Set(Object.values(cartes.rebondit.fiches).flat().map(cle));
+    for (const c of Object.values(cartes)) assert.ok(!rebondit.has(cle(c.exemple)), `exemple ${c.exemple} : c'est une carte de « L'enquête rebondit »`);
   }
   // les exemples choisis le 23/09/2026 (graines 49641 et 211206)
   assert.deepEqual(cartes.additif_defi.exemple, [84, [12, 25, 47]]);
@@ -545,6 +567,7 @@ test("Le défi : les cartes rendues tiennent les règles du tri (cartes.json)", 
   assert.match(render, /def controle_global\(\):/);
   assert.match(render, /ecrire_cartes\(nom, cle_ex, reference\)\n        controle_global\(\)\n/, "appelé après le dernier livret");
   assert.match(render, /raise SystemExit\(f"une carte du défi revient/);
+  assert.match(render, /FAMILLE_10_19 = \("additif", "multiplicatif", "additif_defi", "multiplicatif_defi"\)/);
   assert.match(render, /raise SystemExit\(f"livret « \{nom\} » : un total revient"\)/);
   assert.match(render, /raise SystemExit\(f"l'exemple du livret « \{nom\} » est une carte : /);
 });
@@ -585,13 +608,11 @@ test("Le défi : les douze PDF — couverture « Le défi », l'exemple en page 
   });
 });
 
-test("page des livrets : « Le défi » à côté du livret de la classe, dans les onglets 3 et 4", () => {
+test("page des livrets : « Le défi » à côté du livret de la classe, dans les parties 1 et 2 du monde 3", () => {
+  const p = panneauLivrets(3), art = articles(p);
   SORTIES_DEFI.forEach((s, i) => {
-    const n = i + 3, p = panneauLivrets(n);
-    const art = p.split('<article class="liv">').slice(1);
-    assert.equal(art.length, 2);
-    assert.ok(art[0].includes(`href="/outils/${SORTIES[i]}.pdf"`), `monde ${n} : le livret de la classe d'abord`);
-    const d = art[1];
+    assert.ok(art[2 * i].includes(`href="/outils/${SORTIES[i]}.pdf"`), `partie ${i + 1} : le livret de la classe d'abord`);
+    const d = art[2 * i + 1];
     assert.match(d, /<h3>Le défi<\/h3><span class="plage">totaux de 50 à 100<\/span>/);
     const eleve = d.indexOf(`href="/outils/${s}.pdf"`), plier = d.indexOf(`href="/outils/${s}_a_plier.pdf"`);
     assert.ok(eleve > 0 && plier > eleve, `${s} : PDF puis « à plier »`);
@@ -602,7 +623,6 @@ test("page des livrets : « Le défi » à côté du livret de la classe, dans l
       assert.ok(d.includes(`href="/outils/${s}${v}.pdf"`), `${s}${v} : lien`);
       assert.ok(existe(`outils/${s}${v}.pdf`), `${s}${v}.pdf : le fichier existe`);
     }
-    assert.match(p, /En deux niveaux&nbsp;: la progression de la classe, puis «&nbsp;Le défi&nbsp;», les mêmes fiches avec des totaux de 50 à 100\./);
     const nom = `livret-splat-enquete-${i ? "multiplicatif" : "additif"}-defi`;
     const png = `assets/img/thumbnails/splat/${nom}.png`, webp = `assets/img/thumbnails/splat/${nom}.webp`;
     assert.ok(existe(png) && existe(webp), nom);
@@ -611,6 +631,7 @@ test("page des livrets : « Le défi » à côté du livret de la classe, dans l
     assert.deepEqual([b.readUInt32BE(16), b.readUInt32BE(20)], [993, 1404], `${nom} : page 1 rendue à 120 dpi`);
     assert.ok(d.includes(`src="/assets/img/thumbnails/splat/${nom}.png?v=1"`), `${nom} : sur la page`);
   });
+  assert.equal((p.match(/la classe, puis «&nbsp;Le défi&nbsp;» \(totaux de 50 à 100\)/g) || []).length, 2, "les parties 1 et 2 le disent");
 });
 
 test("Le défi : vue prof de la carte des mondes — les pastilles du défi sous chaque partie de l'Enquête", () => {
@@ -621,4 +642,87 @@ test("Le défi : vue prof de la carte des mondes — les pastilles du défi sous
     assert.ok(hrefs.indexOf(`/outils/${oui}.pdf`) > hrefs.indexOf(`/outils/${SORTIES[SORTIES_DEFI.indexOf(oui)]}_a_plier.pdf`), "après le livret de la classe");
     assert.ok(liv[2][0].includes("Le défi, 50 à 100 (PDF)") && liv[3][0].includes("Le défi à plier"), "mêmes libellés qu'au monde 2");
   }
+});
+
+/* ----------------------------------------------------- « L'enquête rebondit » (25/09/2026)
+   Le 3e livret du monde 3 : les fiches 20 à 24 du lot « fiches 20-34 » (24/09/2026), des taches
+   de même couleur puis des enquêtes sans total. Ses fiches sont EXACTEMENT les adresses figées
+   de splat-enquete-fiches-20-24-adresses.md (recopiées ici : si une graine bougeait, le livret ne
+   serait plus celui que Gwenaël a validé). Les QR vont vers la page courte de l'Enquête
+   (?f=20…24, ?s=13…15), que le lot « six mondes » étend : tant qu'elle ne les connaît pas, on
+   vérifie seulement qu'elle retombe sur la carte des mondes, sans erreur. */
+const ADRESSES_20_24 = {
+  20: "mode=C&splats=2&repeat=3&clues=SENTENCE&mul=0&div=0&add=1&sub=1&deltaMax=10&visibleMin=0&visibleMax=0&totalMin=20&totalMax=60&seed=172",
+  21: "mode=C&splats=2&repeat=3&clues=SENTENCE&mul=1&div=1&add=0&sub=0&deltaMax=10&visibleMin=0&visibleMax=0&totalMin=20&totalMax=60&seed=34",
+  22: "mode=C&splats=2&noTotal=1&clues=SENTENCE&mul=1&div=0&add=1&sub=0&deltaMax=30&visibleMin=0&visibleMax=0&totalMin=15&totalMax=60&seed=3",
+  23: "mode=C&splats=2&noTotal=1&clues=SENTENCE&mul=0&div=1&add=0&sub=1&deltaMax=30&visibleMin=0&visibleMax=0&totalMin=15&totalMax=60&seed=9",
+  24: "mode=C&splats=3&structure=MIX&repeat=3&clues=SENTENCE&mul=1&div=1&add=1&sub=1&deltaMax=30&visibleMin=1&visibleMax=3&totalMin=20&totalMax=60&noTotal=1&seed=2187",
+};
+const REGLAGES = (q) => Object.fromEntries([...new URLSearchParams(q)].sort());
+const SORTIE_REB = "livret_splat_enquete_rebondit";
+
+test("L'enquête rebondit : les fiches 20 à 24 sont les adresses figées du 24/09, titres et consigne « Reformule »", () => {
+  assert.deepEqual(FICHES_REB.map((f) => f.n), [20, 21, 22, 23, 24]);
+  assert.deepEqual(FICHES_REB.map((f) => f.t), ["Des taches répétées", "Répétées, fois plus ou moins", "Sans total", "Sans total, à retourner", "Le défi qui rebondit"]);
+  assert.deepEqual(FICHES_REB.map((f) => f.note), [false, false, false, true, false], "« Reformule » à la fiche 23 seulement");
+  FICHES_REB.forEach((f) => assert.deepEqual(REGLAGES(py(f.r)), REGLAGES(ADRESSES_20_24[f.n]), `fiche ${f.n}`));
+  assert.match(render, /"rebondit"\] = dict\(\s*sortie="livret_splat_enquete_rebondit",\s*fiches=FICHES_REB,/);
+  assert.match(render, /couv=dict\(sur="Mon livret · Monde 3 · Partie 3", titre="L'enquête rebondit",/);
+  assert.match(render, /suite="Continue avec le monde&nbsp;4, <b>SPLAT! Système<\/b>/);
+  // les cartes rendues (cartes.json) sont celles de la liste annotée du lot « fiches 20-34 »
+  const cartes = JSON.parse(lire(SRC + "cartes.json")).rebondit.fiches;
+  assert.deepEqual(cartes["Fiche 20 — Des taches répétées"][0], [23, [5, 5, 13]], "fiche 20, carte 1 : verte 13, orange 5 + 5");
+  assert.deepEqual(cartes["Fiche 24 — Le défi qui rebondit"][0], [36, [9, 27]], "fiche 24, carte 1 : sans total, verte 9, rouge 27");
+});
+
+test("L'enquête rebondit : QR des fiches ?f=20…24 et des séries ?s=13…15, sur la page courte de l'Enquête", () => {
+  for (const f of FICHES_REB) assert.ok(existe(`${SRC}qr/fiche${f.n}.png`), `qr/fiche${f.n}.png`);
+  for (const s of [13, 14, 15]) assert.ok(existe(`${SRC}qr/serie-${s}.png`), `qr/serie-${s}.png`);
+  // les séries du dos : les réglages des fiches, sans graine, les quatre opérations
+  const SERIES = Object.fromEntries([...render.matchAll(/^    (\d+): "(mode=C[^"]+)",$/gm)].map((m) => [m[1], m[2]]));
+  for (const s of ["13", "14", "15"]) assert.equal(new URLSearchParams(SERIES[s]).get("seed"), null, `série ${s} sans graine`);
+  assert.equal(new URLSearchParams(SERIES["13"]).get("repeat"), "3");
+  assert.equal(new URLSearchParams(SERIES["14"]).get("noTotal"), "1");
+  assert.deepEqual([new URLSearchParams(SERIES["15"]).get("repeat"), new URLSearchParams(SERIES["15"]).get("noTotal")], ["3", "1"], "la série 15 mélange, comme la fiche 24");
+  // la page courte : servie par le lot « six mondes » ; d'ici là, retour à la carte des mondes
+  for (const f of FICHES_REB) {
+    const cible = cibleCourte(`?f=${f.n}`);
+    if (cible === "/outils/splat_univers.html") continue;
+    const q = new URLSearchParams(cible.split("?")[1]);
+    for (const [k, v] of Object.entries(REGLAGES(ADRESSES_20_24[f.n]))) assert.equal(q.get(k), v, `?f=${f.n} : ${k}`);
+  }
+});
+
+test("L'enquête rebondit : les six PDF — 8 pages, 4 feuilles A3, l'exemple à taches répétées, les fiches 20 à 24, le dos", () => {
+  for (const v of VERSIONS) {
+    assert.equal(nombreDePages(`outils/${SORTIE_REB}${v}.pdf`), 8, `${SORTIE_REB}${v}.pdf`);
+    assert.equal(nombreDePages(`outils/${SORTIE_REB}${v}_a_plier.pdf`), 4, `${SORTIE_REB}${v}_a_plier.pdf`);
+    assert.ok(taille(`outils/${SORTIE_REB}${v}.pdf`) < 3_000_000, `${SORTIE_REB}${v}.pdf reste léger`);
+    const pages = texteDesPages(`outils/${SORTIE_REB}${v}.pdf`).map(norm);
+    assert.equal(pages.length, 8);
+    assert.match(pages[0], /MONDE 3 · PARTIE 3/i);
+    assert.match(pages[0], /L'enquête rebondit/);
+    // (l'extracteur colle les mots d'une fin de ligne : une espace peut manquer)
+    const souple = (t) => new RegExp(t.replace(/[.*+?^${}()|[\]\\]/g, "\\$&").replace(/ /g, " ?"));
+    assert.match(pages[0], souple("Sur cette carte, il y a 38 jetons au total, tous cachés sous trois taches : une tache noire et deux taches bleues"));
+    assert.match(pages[1], souple("Je vérifie : 8 + 15 + 15 = 38."));
+    assert.match(pages[1], souple("La règle : les taches de même couleur cachent le même nombre de jetons."));
+    FICHES_REB.forEach((f, k) => {
+      const p = pages[2 + k].replace(/ /g, " ");
+      assert.ok(p.startsWith(`Fiche ${f.n} —`), `page ${3 + k} : fiche ${f.n} (lu : ${p.slice(0, 40)})`);
+    });
+    assert.match(pages[7], /Et après/);
+    assert.match(pages[7], souple("monde 4, SPLAT! Système"));
+    assert.match(pages[7], souple("Sans total, deux indices parlent des mêmes taches"));
+    if (v) {
+      assert.match(pages[0], /Livret corrigé/);
+      pages.forEach((p, k) => assert.doesNotMatch(p, /professeur/i, `${v}, page ${k + 1}`));
+      for (let k = 2; k < 7; k++) assert.match(pages[k], /Correction/, `${v}, page ${k + 1}`);
+    } else {
+      assert.match(pages[0], /Nom, prénom/);
+    }
+  }
+  // en lettre, le 𝑥 arrondi
+  const polices = policesDuPdf(`outils/${SORTIE_REB}_correction_lettre.pdf`);
+  assert.ok([...polices].some((f) => /^(FreeSerif|LatinModernMath|CambriaMath|STIXTwoMath)/.test(f)), [...polices].join(", "));
 });

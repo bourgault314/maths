@@ -792,8 +792,9 @@ test("L : un onglet et un panneau par monde, le prof replié partout, la note un
   assert.equal((page.match(/role="tab"/g) || []).length, 5, "cinq onglets (mondes 1 à 5, lot Q3)");
   assert.equal((page.match(/role="tabpanel"/g) || []).length, 5, "cinq panneaux");
   assert.equal((page.match(/<section class="note"/g) || []).length, 1, "une seule note « Pour imprimer »");
-  // onze cartes depuis les corrigés du monde 5 (lot Q4, 24/09/2026) : 3 + 2 + 2 + 2 + 2
-  assert.equal((page.match(/<details class="prof">/g) || []).length, 12, "les douze cartes replient leurs corrigés (le défi du monde 5 compris, lot Q5)");
+  // quinze cartes : 3 (monde 1) + 2 (monde 2) + 5 (monde 3 : deux livrets et leurs défis, puis la partie 3)
+  // + 2 (monde 4, le Système, 25/09/2026) + 3 (monde 5 : corrigés du lot Q4, et le défi du lot Q5)
+  assert.equal((page.match(/<details class="prof">/g) || []).length, 15, "les quinze cartes replient leurs corrigés");
   assert.match(page, /sur A3 \(meilleur rendu\)/, "le conseil de Claire sur le A3");
   /* Sans JavaScript, aucun monde n'est caché. Le panneau porte l'attribut « hidden »,
      que le navigateur masque d'office : il FAUT donc les deux règles, dans cet ordre —
@@ -817,13 +818,14 @@ test("L : un onglet et un panneau par monde, le prof replié partout, la note un
    onglets. Une ligne jusqu'à 4 mondes, deux lignes de 3 à 5 ou 6 ; deux par ligne sur téléphone. */
 /* [ancre, nom, fiches, numéro affiché, texte lu par le lecteur d'écran]. Lot « six mondes »
    (24/09/2026) : la Grande enquête est la 2e partie du monde 3 — sa carte garde l'ancre
-   #monde-4 (liens déjà publiés) mais affiche le 3 ; l'onglet du monde 4 (Système) et la
-   3e partie viendront avec leurs livrets. */
+   #monde-4 (liens déjà publiés) mais affiche le 3. Lot des livrets du 25/09/2026 : les trois
+   parties de l'Enquête (fiches 10 à 24) sont réunies dans l'onglet du monde 3, et l'ancre
+   #monde-4 devient le Système (fiches 25 à 34). */
 const CARTES_MONDES = [
   [1, "Petit SPLAT!", "fiches 1 à 6", 1, "Monde 1 · "],
   [2, "SPLAT! Classique", "fiches 7 à 9", 2, "Monde 2 · "],
-  [3, "SPLAT! Enquête", "fiches 10 à 14", 3, "Monde 3 · "],
-  [4, "SPLAT! Grande enquête", "fiches 15 à 19", 3, "Monde 3, 2e partie · "],
+  [3, "SPLAT! Enquête", "fiches 10 à 24", 3, "Monde 3 · "],     // 25/09/2026 : le monde 3 en trois parties
+  [4, "SPLAT! Système", "fiches 25 à 34", 4, "Monde 4 · "],     // 25/09/2026 : le Système, monde 4
   [5, "SPLAT! Équations", "fiches 35 à 37", 5, "Monde 5 · "],     // lot Q3 (24/09/2026) : la carte saute de 19 à 35
 ];
 test("cartes des mondes : numéro, nom et fiches, dans l'ordre, toujours des onglets, sans couverture", () => {
@@ -855,7 +857,8 @@ test("cartes des mondes : numéro, nom et fiches, dans l'ordre, toujours des ong
   // la carte choisie : pleine, dans la couleur du monde ; l'orange foncé d'un cran pour le texte blanc
   assert.match(page, /\.onglets a\[aria-selected="true"\]\{background:var\(--c-plein\)/);
   assert.match(page, /\[data-m="1"\]\{--c:#f58220;--c-plein:#c2410c;/);
-  assert.match(page, /\[data-m="3"\],\[data-m="4"\]\{--c:#be185d;/, "mondes 3 et 4 : le framboise de la carte des mondes");
+  assert.match(page, /\[data-m="3"\]\{--c:#be185d;/, "monde 3 : le framboise de la carte des mondes");
+  assert.match(page, /\[data-m="4"\]\{--c:#92400e;--c-plein:#92400e;/, "monde 4 : le brun cannelle des fiches du Système");
   // 5 ou 6 mondes : deux lignes de 3, sans pointe ; téléphone : deux par ligne, sans pointe
   assert.match(page, /\.onglets\[data-n="5"\],\.onglets\[data-n="6"\]\{grid-template-columns:repeat\(3,minmax\(0,1fr\)\)\}/);
   assert.match(page, /\.onglets\[data-n="5"\] a::after,\.onglets\[data-n="6"\] a::after\{content:none!important\}/);
@@ -870,7 +873,7 @@ test("cartes des mondes : numéro, nom et fiches, dans l'ordre, toujours des ong
 test("corrigés pour tous, sur la page : plus de « prof » ni de « professeur » dans les boutons et les titres", () => {
   assert.doesNotMatch(page, /🧑‍🏫|\(prof\)|professeur/);
   assert.match(page, /<strong>✅ Les corrigés<\/strong>&nbsp;: le même livret, aux mêmes pages, avec les réponses/);
-  assert.match(catalogue, /"cardDescription": "Tous les livrets de l’univers SPLAT! à plier, monde par monde\u00a0: [^"]*Grande enquête \(monde 3\) en deux niveaux, et leurs corrigés ; SPLAT! Équations \(monde 5\) en trois livrets : schéma en barres, équation, et « Le défi »\."/);
+  assert.match(catalogue, /"cardDescription": "Tous les livrets de l’univers SPLAT! à plier, monde par monde\u00a0: [^"]*l’Enquête \(monde 3\) en trois livrets et ses défis, le Système \(monde 4\) en deux livrets, et leurs corrigés ; SPLAT! Équations \(monde 5\) en trois livrets : schéma en barres, équation, et « Le défi »\."/);
 });
 
 /* ===================================================================== lot D (21/09/2026)

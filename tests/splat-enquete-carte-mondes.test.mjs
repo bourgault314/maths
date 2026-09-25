@@ -263,14 +263,19 @@ test("six mondes : les parties sont des intertitres dans la liste, un par livret
   assert.match(univers, /sv\.textContent="\u2b50 "\+fv\+" \/ "\+\(v\.a-v\.de\);/);
   /* le monde ne compte que des parties de 5 fiches : un livret chacune */
   for (const m of [ENQUETE, SYSTEME]) m.volets.forEach((v) => assert.equal(v.a - v.de, 5, `${m.nom} · ${v.nom}`));
-  /* vue prof : les livrets de l'Enquête sous leurs parties (1 et 2), pas sous le monde */
-  assert.deepEqual(ENQUETE.volets.map((v) => (v.livrets || []).length), [4, 4, 0]);
+  /* vue prof : les livrets de l'Enquête sous leurs parties, pas sous le monde (la partie 3
+     depuis ses livrets du 25/09/2026 ; son « Le défi » viendra) */
+  assert.deepEqual(ENQUETE.volets.map((v) => (v.livrets || []).length), [4, 4, 2]);
   assert.deepEqual(LIVRETS_ENQ_1.map((l) => l[1]), ["/outils/livret_splat_enquete_additif.pdf", "/outils/livret_splat_enquete_additif_a_plier.pdf",
     "/outils/livret_splat_enquete_additif_defi.pdf", "/outils/livret_splat_enquete_additif_defi_a_plier.pdf"]);
   assert.deepEqual(LIVRETS_ENQ_2.map((l) => l[1]), ["/outils/livret_splat_enquete_multiplicatif.pdf", "/outils/livret_splat_enquete_multiplicatif_a_plier.pdf",
     "/outils/livret_splat_enquete_multiplicatif_defi.pdf", "/outils/livret_splat_enquete_multiplicatif_defi_a_plier.pdf"]);
   assert.doesNotMatch(univers, /m===MONDE_ENQUETE&&PROF|m===MONDE_GRANDE_ENQUETE&&PROF/);
-  SYSTEME.volets.forEach((v) => { assert.equal(v.livrets, undefined); assert.match(v.note, /en préparation/); });
+  /* le Système : un livret par partie (25/09/2026), leurs « Le défi » en préparation */
+  assert.deepEqual(SYSTEME.volets.map((v) => v.livrets.map((l) => l[1])), [
+    ["/outils/livret_splat_systeme.pdf", "/outils/livret_splat_systeme_a_plier.pdf"],
+    ["/outils/livret_splat_systeme_suite.pdf", "/outils/livret_splat_systeme_suite_a_plier.pdf"]]);
+  SYSTEME.volets.forEach((v) => { assert.match(v.note, /Le défi<\/b> est en préparation/); assert.match(v.note, /livrets_splat\.html#monde-4/); });
 });
 
 test("la correction n'est offerte qu'en vue professeur", () => {
