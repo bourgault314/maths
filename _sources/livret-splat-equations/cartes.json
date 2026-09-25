@@ -43,5 +43,52 @@
    {"source": "splat_equations", "variable": "𝑎", "unknownDisplay": "letter", "universe": "positive", "numberMode": "grouped", "signedWritingMode": "simplified", "x": 3, "left": ["x", "x", "x", "x", "x", 19], "right": ["x", 31]},
    {"source": "splat_equations", "variable": "𝑡", "unknownDisplay": "letter", "universe": "positive", "numberMode": "grouped", "signedWritingMode": "simplified", "x": 6, "left": ["x", 26], "right": ["x", "x", "x", "x", "x", 2]}
   ]
+ },
+ "defi": {
+  "exemple": {"source": "splat_equations", "variable": "𝑎", "unknownDisplay": "letter", "universe": "positive", "numberMode": "grouped", "signedWritingMode": "simplified", "x": 12, "left": ["x", "x", "x", "x", 38], "right": [86]},
+  "fiches": {
+   "35d": [
+    {"source": "splat_equations", "variable": "𝑥", "unknownDisplay": "letter", "universe": "positive", "numberMode": "grouped", "signedWritingMode": "simplified", "x": 8, "left": ["x", "x", 60], "right": [76]},
+    {"source": "splat_equations", "variable": "𝑛", "unknownDisplay": "letter", "universe": "positive", "numberMode": "grouped", "signedWritingMode": "simplified", "x": 27, "left": [80], "right": ["x", "x", 26]},
+    {"source": "splat_equations", "variable": "𝑡", "unknownDisplay": "letter", "universe": "positive", "numberMode": "grouped", "signedWritingMode": "simplified", "x": 21, "left": ["x", "x", 20], "right": [62]},
+    {"source": "splat_equations", "variable": "𝑎", "unknownDisplay": "letter", "universe": "positive", "numberMode": "grouped", "signedWritingMode": "simplified", "x": 29, "left": [95], "right": ["x", "x", 37]},
+    {"source": "splat_equations", "variable": "𝑚", "unknownDisplay": "letter", "universe": "positive", "numberMode": "grouped", "signedWritingMode": "simplified", "x": 8, "left": ["x", "x", "x", 52], "right": [76]},
+    {"source": "splat_equations", "variable": "𝑥", "unknownDisplay": "letter", "universe": "positive", "numberMode": "grouped", "signedWritingMode": "simplified", "x": 13, "left": ["x", "x", "x", 47], "right": [86]},
+    {"source": "splat_equations", "variable": "𝑡", "unknownDisplay": "letter", "universe": "positive", "numberMode": "grouped", "signedWritingMode": "simplified", "x": 26, "left": ["x", "x", "x", 20], "right": [98]},
+    {"source": "splat_equations", "variable": "𝑐", "unknownDisplay": "letter", "universe": "positive", "numberMode": "grouped", "signedWritingMode": "simplified", "x": 12, "left": [98], "right": ["x", "x", "x", 62]},
+    {"source": "splat_equations", "variable": "𝑎", "unknownDisplay": "letter", "universe": "positive", "numberMode": "grouped", "signedWritingMode": "simplified", "x": 22, "left": [87], "right": ["x", "x", 43]},
+    {"source": "splat_equations", "variable": "𝑐", "unknownDisplay": "letter", "universe": "positive", "numberMode": "grouped", "signedWritingMode": "simplified", "x": 19, "left": [97], "right": ["x", "x", "x", "x", 21]},
+    {"source": "splat_equations", "variable": "𝑚", "unknownDisplay": "letter", "universe": "positive", "numberMode": "grouped", "signedWritingMode": "simplified", "x": 11, "left": ["x", "x", 76], "right": [98]},
+    {"source": "splat_equations", "variable": "𝑛", "unknownDisplay": "letter", "universe": "positive", "numberMode": "grouped", "signedWritingMode": "simplified", "x": 13, "left": ["x", "x", "x", "x", 37], "right": [89]}
+   ],
+   "36d": [
+    {"source": "splat_equations", "variable": "𝑐", "unknownDisplay": "letter", "universe": "positive", "numberMode": "grouped", "signedWritingMode": "simplified", "x": 11, "left": ["x", "x", "x", "x", 33], "right": [77]},
+    {"source": "splat_equations", "variable": "𝑡", "unknownDisplay": "letter", "universe": "positive", "numberMode": "grouped", "signedWritingMode": "simplified", "x": 12, "left": [93], "right": ["x", "x", "x", "x", 45]},
+    {"source": "splat_equations", "variable": "𝑥", "unknownDisplay": "letter", "universe": "positive", "numberMode": "grouped", "signedWritingMode": "simplified", "x": 6, "left": ["x", "x", "x", "x", "x", 53], "right": [83]},
+    {"source": "splat_equations", "variable": "𝑎", "unknownDisplay": "letter", "universe": "positive", "numberMode": "grouped", "signedWritingMode": "simplified", "x": 9, "left": ["x", "x", "x", "x", "x", "x", 33], "right": [87]},
+    {"source": "splat_equations", "variable": "𝑡", "unknownDisplay": "letter", "universe": "positive", "numberMode": "grouped", "signedWritingMode": "simplified", "x": 16, "left": [93], "right": ["x", "x", "x", "x", 29]},
+    {"source": "splat_equations", "variable": "𝑎", "unknownDisplay": "letter", "universe": "positive", "numberMode": "grouped", "signedWritingMode": "simplified", "x": 11, "left": ["x", "x", "x", "x", "x", "x", 29], "right": [95]},
+    {"source": "splat_equations", "variable": "𝑚", "unknownDisplay": "letter", "universe": "positive", "numberMode": "grouped", "signedWritingMode": "simplified", "x": 12, "left": ["x", "x", "x", "x", "x", 35], "right": [95]},
+    {"source": "splat_equations", "variable": "𝑏", "unknownDisplay": "letter", "universe": "positive", "numberMode": "grouped", "signedWritingMode": "simplified", "x": 9, "left": [75], "right": ["x", "x", "x", "x", 39]},
+    {"source": "splat_equations", "variable": "𝑛", "unknownDisplay": "letter", "universe": "positive", "numberMode": "grouped", "signedWritingMode": "simplified", "x": 16, "left": ["x", "x", "x", "x", "x", 20], "right": [100]},
+    {"source": "splat_equations", "variable": "𝑐", "unknownDisplay": "letter", "universe": "positive", "numberMode": "grouped", "signedWritingMode": "simplified", "x": 8, "left": ["x", "x", "x", "x", "x", 37], "right": [77]},
+    {"source": "splat_equations", "variable": "𝑏", "unknownDisplay": "letter", "universe": "positive", "numberMode": "grouped", "signedWritingMode": "simplified", "x": 9, "left": [89], "right": ["x", "x", "x", "x", "x", "x", 35]},
+    {"source": "splat_equations", "variable": "𝑥", "unknownDisplay": "letter", "universe": "positive", "numberMode": "grouped", "signedWritingMode": "simplified", "x": 12, "left": [99], "right": ["x", "x", "x", "x", "x", 39]}
+   ],
+   "37d": [
+    {"source": "splat_equations", "variable": "𝑏", "unknownDisplay": "letter", "universe": "positive", "numberMode": "grouped", "signedWritingMode": "simplified", "x": 19, "left": ["x", 75], "right": ["x", "x", "x", 37]},
+    {"source": "splat_equations", "variable": "𝑎", "unknownDisplay": "letter", "universe": "positive", "numberMode": "grouped", "signedWritingMode": "simplified", "x": 7, "left": ["x", 82], "right": ["x", "x", "x", 68]},
+    {"source": "splat_equations", "variable": "𝑡", "unknownDisplay": "letter", "universe": "positive", "numberMode": "grouped", "signedWritingMode": "simplified", "x": 9, "left": ["x", "x", "x", 43], "right": ["x", 61]},
+    {"source": "splat_equations", "variable": "𝑛", "unknownDisplay": "letter", "universe": "positive", "numberMode": "grouped", "signedWritingMode": "simplified", "x": 13, "left": ["x", "x", "x", "x", 48], "right": ["x", "x", 74]},
+    {"source": "splat_equations", "variable": "𝑚", "unknownDisplay": "letter", "universe": "positive", "numberMode": "grouped", "signedWritingMode": "simplified", "x": 22, "left": ["x", 77], "right": ["x", "x", "x", 33]},
+    {"source": "splat_equations", "variable": "𝑥", "unknownDisplay": "letter", "universe": "positive", "numberMode": "grouped", "signedWritingMode": "simplified", "x": 12, "left": ["x", 87], "right": ["x", "x", "x", "x", 51]},
+    {"source": "splat_equations", "variable": "𝑛", "unknownDisplay": "letter", "universe": "positive", "numberMode": "grouped", "signedWritingMode": "simplified", "x": 13, "left": ["x", 84], "right": ["x", "x", "x", "x", "x", "x", 19]},
+    {"source": "splat_equations", "variable": "𝑡", "unknownDisplay": "letter", "universe": "positive", "numberMode": "grouped", "signedWritingMode": "simplified", "x": 9, "left": ["x", "x", "x", 47], "right": ["x", "x", "x", "x", "x", 29]},
+    {"source": "splat_equations", "variable": "𝑏", "unknownDisplay": "letter", "universe": "positive", "numberMode": "grouped", "signedWritingMode": "simplified", "x": 17, "left": ["x", 63], "right": ["x", "x", "x", 29]},
+    {"source": "splat_equations", "variable": "𝑥", "unknownDisplay": "letter", "universe": "positive", "numberMode": "grouped", "signedWritingMode": "simplified", "x": 16, "left": ["x", "x", "x", 46], "right": ["x", 78]},
+    {"source": "splat_equations", "variable": "𝑐", "unknownDisplay": "letter", "universe": "positive", "numberMode": "grouped", "signedWritingMode": "simplified", "x": 7, "left": ["x", "x", "x", "x", "x", "x", 36], "right": ["x", 71]},
+    {"source": "splat_equations", "variable": "𝑎", "unknownDisplay": "letter", "universe": "positive", "numberMode": "grouped", "signedWritingMode": "simplified", "x": 8, "left": ["x", "x", "x", 70], "right": ["x", 86]}
+   ]
+  }
  }
 }

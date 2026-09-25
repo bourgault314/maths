@@ -9159,11 +9159,23 @@
     eleveChargerEquation();
   }
 
+  /* L'empreinte de la série (lot Q5, 25/09/2026) : la même étoile peut se gagner avec deux
+     séries différentes — la fiche 35 du livret et la fiche 35 du livret « Le défi » ont le même
+     parcours (m3e1). La reprise « en cours » ne vaut donc que pour la série qui l'a écrite,
+     comme dans splat.html (monde 2) ; une sauvegarde d'avant l'empreinte n'est pas reprise
+     (l'étoile, elle, reste). FNV-1a 32 bits sur les équations de la série. */
+  function eleveSignatureSerie(){
+    const t = JSON.stringify(eleveEqs);
+    let h = 0x811c9dc5;
+    for(let i = 0; i < t.length; i++){ h ^= t.charCodeAt(i); h = Math.imul(h, 0x01000193) >>> 0; }
+    return eleveEqs.length + ":" + h.toString(16).padStart(8, "0");
+  }
+
   function eleveSauverEnCours(){
     if(eleveRejeu) return;
     const suivante = eleveIdx + 1;
     if(suivante < eleveEqs.length){
-      eleveEcrireEntree({ enCours:{ idx:suivante, resolues:eleveResolues, res:eleveRes.slice(0, suivante) } });
+      eleveEcrireEntree({ enCours:{ sig:eleveSignatureSerie(), idx:suivante, resolues:eleveResolues, res:eleveRes.slice(0, suivante) } });
     }
   }
 
@@ -9183,7 +9195,8 @@
     document.body.classList.add("eleveMode");
     const entree = eleveLireEntree();
     let reprise = "";
-    if(entree && entree.enCours && Number.isInteger(entree.enCours.idx) && entree.enCours.idx > 0 && entree.enCours.idx < eleveEqs.length){
+    if(entree && entree.enCours && entree.enCours.sig === eleveSignatureSerie() &&
+       Number.isInteger(entree.enCours.idx) && entree.enCours.idx > 0 && entree.enCours.idx < eleveEqs.length){
       eleveIdx = entree.enCours.idx;
       eleveResolues = Number(entree.enCours.resolues) || eleveIdx;
       const res = Array.isArray(entree.enCours.res) ? entree.enCours.res : null;

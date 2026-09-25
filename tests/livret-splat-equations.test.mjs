@@ -105,8 +105,8 @@ test("Q3 : le QR d'une fiche ouvre sa série et son étoile (?f=35, 36, 37) — 
     assert.ok(existe(`${SRC}qr/fiche${e.n}.png`), `qr/fiche${e.n}.png`);
     assert.ok(courte.includes(`href="${e.j.replace(/&/g, "&amp;")}"`), `lien de repli de la fiche ${e.n}`);
   });
-  // hors bornes, et le défi (lot Q5) pas encore fait : la carte des mondes
-  for (const q of ["?f=35d", "?f=34", "?f=", "?s=0", "?s=4", "", "?x=1"])
+  // hors bornes : la carte des mondes (?f=35d… : le défi, lot Q5, testé plus bas)
+  for (const q of ["?f=38d", "?f=34", "?f=", "?s=0", "?s=4", "?s=d3", "", "?x=1"])
     assert.equal(cibleCourte(q), "/outils/splat_univers.html", q);
   assert.ok(existe(`${SRC}qr/univers.png`));
 });
@@ -354,8 +354,9 @@ test("page des livrets : l'onglet du monde 5, ses deux livrets, leurs couverture
   const p = pageLivrets.slice(debut, pageLivrets.indexOf("</section>", debut));
   assert.ok(p.includes('role="tabpanel" aria-labelledby="onglet-5" hidden>'));
   assert.ok(p.includes('<h2 class="monde-nom">Monde 5 · SPLAT! Équations</h2>'));
-  assert.match(p, /<div class="grille n2">/);
-  assert.equal((p.match(/<article class="liv">/g) || []).length, 2);
+  // trois cartes depuis le lot Q5 : les deux livrets, puis « Le défi » (grille de trois, comme le monde 1)
+  assert.match(p, /<div class="grille">/);
+  assert.equal((p.match(/<article class="liv">/g) || []).length, 3);
   let avant = -1;
   for (const s of SORTIES) {
     const a = p.indexOf(`href="/outils/${s}.pdf"`), b = p.indexOf(`href="/outils/${s}_a_plier.pdf"`);
@@ -419,7 +420,8 @@ test("Q4 : render.py — une correction par livret, la correction courte de l'ou
   // l'outil n'écrit « Correction » que sur la première page : render.py le répète sur la « bis »
   assert.match(render, /f"Fiche \{f\['n'\]\} bis — \{f\['t'\]\}" \+ \(" — Correction" if corr else ""\)/);
   // tous les livrets rendus (élève et corrigés) doivent porter les mêmes cartes
-  assert.match(render, /if len\(\{json\.dumps\(r, sort_keys=True\) for r in rendus\.values\(\)\}\) > 1:/);
+  // (depuis le lot Q5 : groupe par groupe — les livrets de base entre eux, le défi et son corrigé)
+  assert.match(render, /for groupe, r in rendus\.items\(\):\n\s+if len\(\{json\.dumps\(x, sort_keys=True\) for x in r\.values\(\)\}\) > 1:/);
 });
 
 test("Q4 : les quatre PDF corrigés — 8 pages A4, 4 feuilles A3, légers", () => {
@@ -467,8 +469,8 @@ test("Q4 : dans les PDF corrigés — la couverture dit « Correction » et quel
 test("Q4 : page des livrets — les corrigés du monde 5 repliés sous chaque livret, comme les autres mondes ; le catalogue ne dit plus « mondes 1 à 4 »", () => {
   const debut = pageLivrets.indexOf('<section class="panneau" data-m="5" id="monde-5"');
   const p = pageLivrets.slice(debut, pageLivrets.indexOf("</section>", debut));
-  assert.equal((p.match(/<details class="prof">/g) || []).length, 2, "un bouton replié par livret");
-  assert.equal((p.match(/<summary>✅ Le corrigé<\/summary>/g) || []).length, 2);
+  assert.equal((p.match(/<details class="prof">/g) || []).length, 3, "un bouton replié par livret (le défi compris, lot Q5)");
+  assert.equal((p.match(/<summary>✅ Le corrigé<\/summary>/g) || []).length, 3);
   for (const s of CORRIGES) {
     const a = p.indexOf(`href="/outils/${s}.pdf"`), b = p.indexOf(`href="/outils/${s}_a_plier.pdf"`);
     assert.ok(a > 0 && b > a, `${s} : PDF puis « à plier »`);
@@ -483,5 +485,227 @@ test("Q4 : page des livrets — les corrigés du monde 5 repliés sous chaque li
   assert.match(catalogue, /le livret à plier, et le livret corrigé, à donner aux élèves/);
   assert.doesNotMatch(pageLivrets, /pour les mondes 1 à 4/);
   assert.doesNotMatch(lire("outils/toutes-les-ressources.html"), /pour les mondes 1 à 4, les livrets corrigés/);
-  assert.match(lire("outils/index.html"), /catalogue-refonte-data\.js\?v=splat-six-mondes-20260924-1/, "le cache-buster du catalogue suit");
+  assert.match(lire("outils/index.html"), /catalogue-refonte-data\.js\?v=splat-defi-equations-20260925-1/, "le cache-buster du catalogue suit");
+});
+
+/* ------------------------------------------------------------------ lot Q5 (25/09/2026)
+   Le livret « Le défi » du monde 5 — famille équation seulement, et son corrigé par l'équation.
+   Les mêmes fiches 35, 36, 37, des cartes plus dures : paquets numérotés partout (2 ou 3 par
+   côté), totaux de 50 à 100, jusqu'à six taches ; trois séries de 4 cartes par fiche (le tri est
+   décrit dans render.py et le README). Le QR d'une fiche du défi ouvre ÉquaSplat sur ses 12
+   équations exactes, sous la MÊME étoile que la fiche de base (décision du 25/09) ; ÉquaSplat ne
+   reprend une série interrompue que si c'est la même (empreinte). On exécute la page courte et on
+   relit les PDF publiés. */
+const DEFI_SORTIE = "livret_splat_equations_equation_defi";
+const DEFI = {
+  "35d": { n: 35, parcours: "m3e1", series: [["ONE_SIDE", 2, 893381], ["ONE_SIDE", 3, 653158], ["ONE_SIDE", 4, 18888627]] },
+  "36d": { n: 36, parcours: "m3e2", series: [["ONE_SIDE", 6, 52841384], ["ONE_SIDE", 6, 7120342], ["ONE_SIDE", 6, 13521466]] },
+  "37d": { n: 37, parcours: "m3e4", series: [["BOTH", 4, 13183993], ["BOTH", 6, 907210], ["BOTH", 6, 32560684]] },
+};
+const FICHES_DEFI_PY = [...render.matchAll(/dict\(n=(\d+), t="([^"]+)", qr="(\d+d)", parcours="(m3e\d)",\n\s+resume="[^"]+",\n\s+parties=\[([^\]]+)\]\)/g)]
+  .map((m) => ({ n: Number(m[1]), t: m[2], qr: m[3], parcours: m[4],
+    series: [...m[5].matchAll(/defi\("(\w+)", (\d), (\d+)\)/g)].map((x) => [x[1], Number(x[2]), Number(x[3])]) }));
+
+test("Q5 : render.py — les trois fiches du défi, leurs graines, la même étoile que la fiche de base", () => {
+  assert.deepEqual(FICHES_DEFI_PY.map((f) => f.qr), Object.keys(DEFI));
+  FICHES_DEFI_PY.forEach((f) => {
+    const d = DEFI[f.qr];
+    assert.equal(f.n, d.n, f.qr);
+    assert.deepEqual(f.series, d.series, `${f.qr} : graines et réglages (ne pas en changer une sans refaire le tri)`);
+    assert.equal(f.parcours, d.parcours, `${f.qr} : la même étoile que la fiche ${d.n}`);
+    assert.equal(f.parcours, EQUATIONS.etapes.find((e) => e.n === d.n).p);
+  });
+  assert.deepEqual(FICHES_DEFI_PY.map((f) => f.t), ["De deux à quatre taches", "Jusqu'à six taches", "Le grand défi : des deux côtés"]);
+  // les réglages communs du défi : paquets numérotés, 2 ou 3 par côté, totaux de 50 à 100, la lettre
+  assert.ok(render.includes('return (f"mode=EQSTEP&form={form}&tasksMax={taches_max}&visibleMin=2&visibleMax=3"\n            f"&totalMin=50&totalMax=100&cards=4&seed={graine}&unknown=letter")'));
+  // le livret : famille équation seulement, son corrigé par l'équation
+  assert.match(render, /VUES\["defi"\] = dict\(VUES\["equation"\],\n\s+sortie="livret_splat_equations_equation_defi",\n\s+sur="Mon livret · Monde 5 · Le défi",/);
+  assert.match(render, /"defi":\s+dict\(suffixe="_correction", imprime="correction-equation", dit="par l'équation"\)/);
+  assert.ok(existe(`${SRC}qr/fiche35d.png`) && existe(`${SRC}qr/fiche36d.png`) && existe(`${SRC}qr/fiche37d.png`));
+});
+
+// une équation écrite comme sur la liste annotée (paquets d'un côté additionnés)
+const ecrireEq = (q) => [q.left, q.right].map((r) => {
+  const t = r.filter((x) => x === "x").length, n = r.filter((x) => x !== "x");
+  return [t ? (t > 1 ? t : "") + q.variable : null, ...n].filter((x) => x !== null).join(" + ");
+}).join(" = ");
+
+test("Q5 : les 36 cartes du défi — celles du jeu en ligne, 36 équations différentes, au calibre du défi", () => {
+  const defi = cartes.defi;
+  assert.ok(defi, "cartes.json : le groupe « defi »");
+  assert.deepEqual(Object.keys(defi.fiches), ["35d", "36d", "37d"]);
+  const cleEq = (c) => [c.left, c.right].map((r) => `${r.filter((t) => t === "x").length}x+${r.filter((t) => t !== "x").reduce((a, b) => a + b, 0)}`).sort().join("=");
+  const toutes = Object.values(defi.fiches).flat();
+  assert.equal(toutes.length, 36);
+  assert.equal(new Set(toutes.map(cleEq)).size, 36, "36 équations différentes");
+  const base = new Set(Object.values(cartes.fiches).flat().map(cleEq));
+  toutes.forEach((c) => assert.ok(!base.has(cleEq(c)), `${ecrireEq(c)} : pas une carte du livret de base`));
+  for (const [qr, serie] of Object.entries(defi.fiches)) {
+    assert.equal(cibleCourte(`?f=${qr}`).startsWith(`/outils/equasplat.html?eleve=1&parcours=${DEFI[qr].parcours}#data=`), true, qr);
+    const enLigne = donnees(cibleCourte(`?f=${qr}`));
+    assert.equal(enLigne.parcours, DEFI[qr].parcours, `${qr} : l'étoile de la série`);
+    assert.deepEqual(serie, enLigne.serie, `${qr} : les 12 équations du livret sont celles du QR`);
+    const lettres = serie.map((q) => q.variable);
+    lettres.forEach((l, k) => {
+      assert.ok(lettres.filter((m) => m === l).length <= 2, `${qr} : la lettre ${l} au plus deux fois`);
+      if (k) assert.notEqual(l, lettres[k - 1], `${qr} : jamais la même lettre deux cartes de suite`);
+    });
+    assert.ok(serie[0].left.includes("x"), `${qr} : la première carte commence par la lettre`);
+    serie.forEach((q) => {
+      const t = (r) => r.filter((x) => x === "x").length, v = (r) => r.filter((x) => x !== "x").reduce((a, b) => a + b, 0);
+      const [tg, td, vg, vd] = [t(q.left), t(q.right), v(q.left), v(q.right)];
+      const total = tg * q.x + vg;
+      assert.equal(total, td * q.x + vd, ecrireEq(q));
+      assert.ok(total >= 50 && total <= 100, `${ecrireEq(q)} : total de 50 à 100`);
+      assert.ok(q.x >= 6 && q.x <= 30 && q.x % 5 !== 0, `${ecrireEq(q)} : solution de 6 à 30, pas un multiple de 5`);
+      assert.equal(q.numberMode, "grouped");
+      assert.ok(Math.max(tg, td) <= 6, "six taches au plus");
+      const a = Math.abs(tg - td), nombres = [total, vg, vd, Math.abs(vd - vg), a * q.x, q.x];
+      nombres.forEach((n) => assert.ok(n !== 69 && n !== 88, `${ecrireEq(q)} : aucun nombre à sous-entendu`));
+      if (qr === "37d") assert.ok(tg > 0 && td > 0 && a >= 2, `${ecrireEq(q)} : des taches des deux côtés, un partage à faire`);
+      else {
+        assert.ok(tg === 0 || td === 0, `${ecrireEq(q)} : les taches d'un seul côté`);
+        assert.ok(qr === "35d" ? Math.max(tg, td) <= 4 : Math.max(tg, td) >= 4, `${ecrireEq(q)} : ${qr === "35d" ? "de 2 à 4" : "de 4 à 6"} taches`);
+        assert.ok((tg ? vg : vd) >= 20, `${ecrireEq(q)} : au moins 20 dans les paquets du côté des taches`);
+      }
+    });
+  }
+  // render.py relit ces séries dans la page courte et s'arrête si les fiches imprimées diffèrent
+  assert.ok(render.includes("def series_du_defi():"));
+  assert.ok(render.includes('en_ligne = f.get("qr", f["parcours"])'));
+});
+
+test("Q5 : l'exemple de couverture du défi — 4𝑎 + 38 = 86, dessiné par l'outil, aucune carte des livrets", () => {
+  const q = new URLSearchParams(py("EXEMPLE_DEFI"));
+  assert.deepEqual([q.get("mode"), q.get("form"), q.get("seed"), q.get("cards"), q.get("unknown")], ["EQSTEP", "ONE_SIDE", "250", "1", "letter"]);
+  assert.deepEqual([cartes.defi.exemple.left, cartes.defi.exemple.right, cartes.defi.exemple.x], [["x", "x", "x", "x", 38], [86], 12]);
+  assert.match(render, /fiches=FICHES_DEFI, exemple=EXEMPLE_DEFI, dessins=\(4, 38, 86, 12\), dos=DOS_DEFI,/);
+  const cleEq = (c) => [c.left, c.right].map((r) => `${r.filter((t) => t === "x").length}x+${r.filter((t) => t !== "x").reduce((a, b) => a + b, 0)}`).sort().join("=");
+  const toutes = new Set([...Object.values(cartes.fiches).flat(), ...Object.values(cartes.defi.fiches).flat()].map(cleEq));
+  assert.ok(!toutes.has(cleEq(cartes.defi.exemple)) && !toutes.has(cleEq(cartes.exemple)), "les exemples ne sont aucune carte des livrets");
+  assert.ok(render.includes("toutes = {cle(c) for l in cartes_livret.values() for c in l} | cles_connues()"));
+});
+
+const SERIES_DEFI = {
+  d1: OUTIL + "mode=EQSTEP&form=ONE_SIDE&tasksMax=6&visibleMin=2&visibleMax=3&totalMin=50&totalMax=100&cards=6&unknown=letter&jouer=1",
+  d2: OUTIL + "mode=EQSTEP&form=BOTH&tasksMax=6&visibleMin=2&visibleMax=3&totalMin=50&totalMax=100&cards=6&unknown=letter&jouer=1",
+};
+test("Q5 : le dos du défi — deux QR de 32 mm (?s=d1, d2), six équations au hasard aux réglages du défi, sans étoile", () => {
+  for (const [s, attendue] of Object.entries(SERIES_DEFI)) {
+    assert.equal(cibleCourte(`?s=${s}`), attendue, `?s=${s}`);
+    assert.ok(existe(`${SRC}qr/serie-${s}.png`), `qr/serie-${s}.png`);
+    assert.ok(courte.includes(`href="${attendue.replace(/&/g, "&amp;")}"`), `lien de repli de la série ${s}`);
+  }
+  assert.ok(render.includes('"d1": [sans_graine(defi("ONE_SIDE", 6, 0), SERIE_CARTES)],'));
+  assert.ok(render.includes('"d2": [sans_graine(defi("BOTH", 6, 0), SERIE_CARTES)],'));
+  assert.match(render, /DOS_DEFI = \[\("D'un seul côté", [^\n]+"d1"\),\n\s+\("Des deux côtés", [^\n]+"d2"\)\]/);
+  assert.match(render, /CSS_DOS_DEFI = """\n\.niveaux\{gap:6mm\}\n\.niv\{padding:3\.5mm 4mm 3mm;gap:2mm\}\n\.niv img\{width:32mm;height:32mm\}\n"""/);
+  assert.ok(render.includes('await pdf_html("dos.html", tmp / "p8.pdf", JS_DOS, dos, v.get("css_dos"))'));
+  // les liens de repli des fiches du défi
+  for (const qr of Object.keys(DEFI)) assert.ok(courte.includes(`href="${cibleCourte(`?f=${qr}`).replace(/&/g, "&amp;")}"`), `lien de repli ${qr}`);
+});
+
+test("Q5 : les quatre PDF du défi — 8 pages A4, 4 feuilles A3, légers", () => {
+  for (const s of [DEFI_SORTIE, DEFI_SORTIE + "_correction"]) {
+    assert.equal(nombreDePages(`outils/${s}.pdf`), 8, `${s}.pdf`);
+    assert.equal(nombreDePages(`outils/${s}_a_plier.pdf`), 4, `${s}_a_plier.pdf`);
+    assert.ok(taille(`outils/${s}.pdf`) < 3_000_000, `${s}.pdf reste léger (qpdf)`);
+  }
+});
+
+test("Q5 : dans les PDF du défi — couverture, fiches 35 à 37 et leur « bis », dos ; le corrigé écrit les équations", () => {
+  const sans = (t) => t.replace(/ /g, "");
+  const titres = ["Fiche 35 —", "Fiche 35 bis —", "Fiche 36 —", "Fiche 36 bis —", "Fiche 37 —", "Fiche 37 bis —"];
+  const eleve = texteDesPages(`outils/${DEFI_SORTIE}.pdf`).map(norm);
+  assert.equal(eleve.length, 8);
+  assert.match(eleve[0], /LE DÉFI/i);
+  assert.match(eleve[0], /Nom, prénom/);
+  // (les fins de ligne du PDF ne laissent pas de blanc : on compare sans les blancs)
+  assert.ok(sans(eleve[0]).includes(sans("quatre taches et deux paquets de 11 et 27 jetons")));
+  assert.ok(sans(eleve[0]).includes(sans("deux paquets de 71 et 15 jetons")));
+  assert.match(eleve[0], /on voit les 12 jetons/, "(l'extracteur perd des lettres en fin de phrase)");
+  assert.ok(eleve[0].includes("86 – 38 = 48") && eleve[0].includes("48 ÷ 4 = 12"), "les gestes de l'exemple");
+  titres.forEach((t, k) => {
+    assert.ok(eleve[1 + k].includes(t), `page ${2 + k} : « ${t} »`);
+    assert.match(eleve[1 + k], /Même quantité à gauche qu'à droite/);
+  });
+  assert.ok(eleve[5].includes("Le grand défi"), "fiche 37 : son titre");
+  assert.match(eleve[7], /Et après/);
+  // (l'extracteur perd des lettres des titres en gras : on relit les descriptions des deux séries)
+  assert.ok(sans(eleve[7]).includes(sans("Des paquets et jusqu'à six taches, des totaux de 50 à 100")) &&
+            sans(eleve[7]).includes(sans("Des taches des deux côtés, des totaux de 50 à 100")), "les deux séries du dos");
+  assert.ok(sans(eleve[7]).includes("–38"), "les flèches du dos écrivent le geste de l'exemple (– 38)");
+  const corr = texteDesPages(`outils/${DEFI_SORTIE}_correction.pdf`).map(norm);
+  assert.equal(corr.length, 8);
+  assert.match(corr[0], /CORRECTION/);
+  assert.match(corr[0], /par l'équation/);
+  assert.doesNotMatch(corr[0], /Nom, prénom/);
+  titres.forEach((t, k) => {
+    assert.ok(corr[1 + k].includes(t), `corrigé, page ${2 + k} : « ${t} »`);
+    assert.match(corr[1 + k], /Correction/);
+    assert.match(corr[1 + k], /· correction/);
+  });
+  // une équation de chaque fiche, relue dans le corrigé : la première de chaque fiche
+  const premiere = (qr) => sans(ecrireEq(cartes.defi.fiches[qr][0]));
+  assert.ok(sans(corr[1]).includes(premiere("35d")), "fiche 35 : " + premiere("35d"));
+  assert.ok(sans(corr[3]).includes(premiere("36d")), "fiche 36 : " + premiere("36d"));
+  assert.ok(sans(corr[5]).includes(premiere("37d")), "fiche 37 : " + premiere("37d"));
+});
+
+test("Q5 : la page des livrets et la carte des mondes — « Le défi » au monde 5, son corrigé replié, sa couverture", () => {
+  const debut = pageLivrets.indexOf('<section class="panneau" data-m="5" id="monde-5"');
+  const p = pageLivrets.slice(debut, pageLivrets.indexOf("</section>", debut));
+  const carte = p.split('<article class="liv">')[3];
+  assert.ok(carte, "la troisième carte du monde 5");
+  assert.match(carte, /<h3>Le défi<\/h3><span class="plage">totaux de 50 à 100<\/span>/);
+  const a = carte.indexOf(`href="/outils/${DEFI_SORTIE}.pdf"`), b = carte.indexOf(`href="/outils/${DEFI_SORTIE}_a_plier.pdf"`);
+  const c = carte.indexOf(`href="/outils/${DEFI_SORTIE}_correction.pdf"`), d = carte.indexOf(`href="/outils/${DEFI_SORTIE}_correction_a_plier.pdf"`);
+  assert.ok(a > 0 && b > a && c > b && d > c, "PDF, à plier, puis le corrigé replié dessous");
+  assert.ok(carte.indexOf('<details class="prof">') > b && carte.indexOf('<details class="prof">') < c);
+  assert.match(carte, /Le livret corrigé <small>par l’équation<\/small>/);
+  const png = "assets/img/thumbnails/splat/livret-splat-equations-equation-defi.png", webp = png.replace(".png", ".webp");
+  assert.ok(existe(png) && existe(webp) && taille(webp) < taille(png));
+  const im = readFileSync(new URL(`../${png}`, import.meta.url));
+  assert.deepEqual([im.readUInt32BE(16), im.readUInt32BE(20)], [993, 1404], "page 1 rendue à 120 dpi");
+  assert.ok(carte.includes(`src="/${png}?v=1"`));
+  assert.match(p, /Et un troisième, «&nbsp;Le défi&nbsp;»/);
+  // carte des mondes, vue prof : les pastilles du défi sous le monde 5, comme au monde 2
+  const bloc5 = univers.match(/\(m===MONDE_EQUATIONS&&PROF\?'<p class="intro">'[\s\S]*?<\/p>':''\)\+/)[0];
+  assert.ok(bloc5.includes(`href="/outils/${DEFI_SORTIE}.pdf"`) && bloc5.includes(`href="/outils/${DEFI_SORTIE}_a_plier.pdf"`));
+  assert.ok(bloc5.includes("Livret Le d\\u00e9fi, 50 \\u00e0 100 (PDF)"));
+  // le catalogue le dit, et son cache-buster suit
+  const catalogue = lire("assets/js/catalogue-refonte-data.js");
+  assert.match(catalogue, /schéma en barres ou équation, et son livret « Le défi »\."/);
+  assert.match(catalogue, /plus un livret « Le défi », des totaux de 50 à 100\./);
+  assert.match(lire("outils/index.html"), /catalogue-refonte-data\.js\?v=splat-defi-equations-20260925-1/);
+});
+
+test("Q5 : ÉquaSplat ne reprend une série interrompue que si c'est la même (empreinte)", () => {
+  const eq = lire("outils/equasplat.html");
+  assert.match(eq, /eleveEcrireEntree\(\{ enCours:\{ sig:eleveSignatureSerie\(\), idx:suivante, resolues:eleveResolues, res:eleveRes\.slice\(0, suivante\) \} \}\);/);
+  assert.match(eq, /if\(entree && entree\.enCours && entree\.enCours\.sig === eleveSignatureSerie\(\) &&\n\s+Number\.isInteger\(entree\.enCours\.idx\)/);
+  // l'empreinte, exécutée : deux séries différentes sous la même étoile, deux empreintes
+  const src = eq.slice(eq.indexOf("  function eleveSignatureSerie(){"), eq.indexOf("  function eleveSauverEnCours(){"));
+  const sig = (serie) => { const c = vm.createContext({ eleveEqs: serie }); vm.runInContext(src + ";globalThis.s=eleveSignatureSerie();", c); return c.s; };
+  const base = donnees(EQUATIONS.etapes[0].j).serie, defi = donnees(cibleCourte("?f=35d")).serie;
+  assert.equal(sig(base), sig(JSON.parse(JSON.stringify(base))), "la même série : la même empreinte");
+  assert.notEqual(sig(base), sig(defi), "fiche 35 et fiche 35 du défi : deux empreintes");
+  assert.match(sig(defi), /^12:[0-9a-f]{8}$/);
+});
+
+test("Q5 : « jouer=1 » — une série tirée au hasard sans aucun nombre à sous-entendu (les séries du défi vont jusqu'à 100)", () => {
+  assert.match(outil, /const NOMBRES_ECARTES = \[69, 88\];/);
+  assert.match(outil, /function ouvrirSerieDansEquaSplat\(\)\{\n\s+for\(let essai = 0; essai < 60 && !cards\.every\(carteSansNombreEcarte\); essai\+\+\)\{\n\s+if\(serieSuite\.length\) genererSerieComposee\(\); else generate\(\);/);
+  // exécutée sur des cartes d'essai : le plateau, la somme des paquets, le total, les calculs
+  const src = outil.slice(outil.indexOf("const NOMBRES_ECARTES"), outil.indexOf("function ouvrirSerieDansEquaSplat(){"));
+  const essai = (q, visibles) => {
+    const c = vm.createContext({ carteDuJeuEquaSplat: () => q, visibles });
+    vm.runInContext(src + ";globalThis.r=carteSansNombreEcarte({_eq:{left:{visible:visibles[0]},right:{visible:visibles[1]}}});", c);
+    return c.r;
+  };
+  assert.equal(essai({ x: 12, left: ["x", "x", "x", "x", 38], right: [86] }, [[11, 27], [71, 15]]), true, "4𝑎 + 38 = 86 : rien à écarter");
+  assert.equal(essai({ x: 7, left: ["x", "x", 55], right: [69] }, [[20, 35], [40, 29]]), false, "69 de l'autre côté");
+  assert.equal(essai({ x: 9, left: ["x", 60], right: [69] }, [[30, 30], [69]]), false, "69 sur un paquet");
+  assert.equal(essai({ x: 11, left: ["x", "x", "x", "x", "x", "x", "x", "x", 12], right: [100] }, [[5, 7], [50, 50]]), false, "8𝑥 = 88 dans les calculs");
+  assert.equal(essai({ x: 14, left: ["x", 55], right: [69] }, [[25, 30], [34, 35]]), false, "total 69");
 });

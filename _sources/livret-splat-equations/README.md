@@ -20,7 +20,8 @@ Décisions de Gwenaël (23 et 24/09/2026) : deux livrets aux mêmes cartes ; 6 c
 plateaux imprimés gardés à leur taille (80 % en équation, 100 % en schéma — comparés à 70 et 60 %
 sur planches) ; inconnue en **lettre** seulement ; la phrase « Même quantité… » sur chaque carte ;
 au dos, trois séries de six équations au hasard. Le mot « tableau » n'est pas employé : « schéma
-en barres » partout (demande de Claire). Les corrigés viendront au lot Q4, « Le défi » au lot Q5.
+en barres » partout (demande de Claire). Les corrigés sont venus au lot Q4, « Le défi » au lot Q5
+(voir la fin de ce fichier).
 
 ## Les 8 pages
 
@@ -138,3 +139,58 @@ livrets (page 1 à 120 dpi → 993 × 1404, en PNG et en WebP plus légère) :
 `assets/img/thumbnails/splat/livret-splat-equations-schema.png/.webp` et `…-equation.png/.webp`.
 
 *mathsgo.re · CC BY-NC-SA 4.0 — d'après la progression « SPLAT! cycle 3 » de Claire.*
+
+## Le livret « Le défi » (lot Q5, 25/09/2026)
+
+`python3 render.py defi` → `outils/livret_splat_equations_equation_defi.pdf` (+ `_a_plier`) et son
+corrigé par l'équation `…_equation_defi_correction.pdf` (+ `_a_plier`). **Famille équation
+seulement** (plateaux côte à côte à 80 %, l'élève écrit l'équation), la lettre seulement.
+
+Les mêmes fiches 35, 36, 37, des cartes plus dures : **paquets numérotés partout, 2 ou 3 par
+côté, totaux de 50 à 100**. Fiche 35 « De deux à quatre taches » (un seul côté), 36 « Jusqu'à six
+taches » (un seul côté, 4 à 6), 37 « Le grand défi : des deux côtés ». Liste annotée des 36
+équations validée par Gwenaël le 25/09 (`LISTE-annotee-Q5-36-equations-defi.md`, hors dépôt).
+
+### Le choix des graines
+
+L'outil des Équations n'a qu'un **maximum** de taches, et une carte sur 10 à 15 seulement passe les
+règles du défi. Chaque fiche est donc bâtie en **trois séries de 4 cartes enchaînées par
+`suite`** (comme le défi du monde 2), tirées parmi plus de 300 millions de séries (l'outil rejoué
+dans Chromium : `genEquationStep` + `assignPositionsEquation`, la suite de hasard de `generate()`),
+en ne gardant que celles dont les quatre cartes passent :
+
+1. solution de 6 à 30, jamais un multiple de 5 (le partage ne se devine pas) ;
+2. paquets de 5 à 79, jamais un nombre rond, jamais deux paquets égaux du même côté ;
+3. au moins 20 dans les paquets du côté des taches (fiches 35-36) : l'addition vaut la peine ;
+4. des deux côtés (fiche 37) : au moins deux taches à partager une fois les plus petites retirées ;
+5. aucun nombre à sous-entendu, ni sur la carte ni dans les calculs ;
+6. par série : 4 lettres et 4 solutions différentes, des cartes à 2 et à 3 paquets, la tache
+   tantôt à gauche, tantôt à droite ; par fiche : 12 équations différentes, chaque lettre au plus
+   deux fois, jamais deux fois de suite, la première carte commence par la lettre ; 36 équations
+   différentes, aucune des fiches de base.
+
+**Ne pas changer une graine sans refaire le tri**, la page courte et les PDF.
+
+### Les QR, l'étoile, la reprise
+
+- Fiche : `splat/equations/livret/?f=35d` (36d, 37d) → ÉquaSplat sur les 12 équations exactes de
+  la fiche, **sous la même étoile** que la fiche de base (`m3e1`, `m3e2`, `m3e4`). Ces séries ne
+  sont pas sur la carte des mondes : elles ont été fabriquées par l'outil (`carteDuJeuEquaSplat`,
+  `encodeEquabarPayload`) et `render.py` vérifie à chaque rendu que les fiches imprimées sont
+  exactement celles de la page courte (`series_du_defi`).
+- ÉquaSplat garde une **empreinte** de la série en cours (`eleveSignatureSerie`) : la fiche 35
+  et la fiche 35 du défi ne se mélangent pas à la reprise. Une série commencée avant ce lot
+  repart à l'équation 1 (l'étoile déjà gagnée reste).
+- Dos : **deux** QR de 32 mm (`?s=d1`, `?s=d2`) — six équations au hasard aux réglages du défi,
+  d'un seul côté, puis des deux côtés, sans étoile.
+
+### Couverture et dos
+
+`Mon livret · Monde 5 · Le défi`, « Des paquets, des taches… et des totaux jusqu'à 100 ! ».
+L'exemple (choisi sur planche, « B ») : **4𝑎 + 38 = 86**, 𝑎 = 12 (graine 250, `EXEMPLE_DEFI`) —
+aucune carte des deux groupes de livrets (`cles_connues()`). Les petits dessins de « Pour se
+souvenir » sont ceux du livret équation, écrits avec les nombres de cet exemple
+(`dessins=(4, 38, 86, 12)`, `render.py` s'arrête s'ils ne correspondent plus).
+
+`cartes.json` porte les deux groupes : les 36 cartes de base (`fiches`, `exemple`) et celles du
+défi (`defi`). Un rendu d'un seul groupe garde l'autre tel quel.
