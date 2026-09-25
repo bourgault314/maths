@@ -205,13 +205,14 @@ test("Q2 : la carte saute de la fiche 19 à la fiche 35 ; le trou se referme tou
   /* le compteur du gabarit, refait ici */
   const numeros = (mondes) => { let c = 0; return mondes.map((m) => { if (m.premier) c = Math.max(c, m.premier - 1); return m.etapes.map(() => ++c); }); };
   const n = numeros(MONDES);
-  assert.deepEqual(n[3].slice(-1), [19]);
+  /* lot « six mondes » (24/09) : les quinze étapes sont arrivées (Enquête 20-24, Système 25-34) —
+     le compteur atteint 34 de lui-même et « premier » ne fait plus rien, comme prévu */
+  assert.deepEqual(n[3].slice(-1), [34]);
   assert.deepEqual(n[4], [35, 36, 37]);
   assert.deepEqual(n[5], [38, 39, 40, 41, 42, 43, 44]);
   EQUATIONS.etapes.forEach((e, k) => assert.equal(e.n, n[4][k], "le badge et la fiche disent le même numéro"));
-  /* quinze étapes de plus avant le monde 5 (Enquête 3 + Système) : plus de saut, rien à renuméroter */
-  const avec = [...MONDES.slice(0, 4), { etapes: Array(15).fill({}) }, ...MONDES.slice(4)];
-  assert.deepEqual(numeros(avec)[5], [35, 36, 37]);
+  const sans = MONDES.map((m) => (m === EQUATIONS ? { ...m, premier: undefined } : m));
+  assert.deepEqual(numeros(sans)[4], [35, 36, 37], "sans « premier », mêmes numéros : le trou est refermé");
 });
 
 test("Q2 (demande de Claire) : en vue prof, chaque équation des mondes 5 et 6 ouvre CETTE équation seule, sans parcours ni étoile", () => {

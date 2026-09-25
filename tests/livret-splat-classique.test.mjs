@@ -815,12 +815,16 @@ test("L : un onglet et un panneau par monde, le prof replié partout, la note un
    de la couleur du monde (un petit splat), le nom et les fiches, toutes de la même taille. Pas de couverture dans la carte (décision du
    23/09 sur images : elle faisait doublon avec celle du livret, juste dessous). Toujours des
    onglets. Une ligne jusqu'à 4 mondes, deux lignes de 3 à 5 ou 6 ; deux par ligne sur téléphone. */
+/* [ancre, nom, fiches, numéro affiché, texte lu par le lecteur d'écran]. Lot « six mondes »
+   (24/09/2026) : la Grande enquête est la 2e partie du monde 3 — sa carte garde l'ancre
+   #monde-4 (liens déjà publiés) mais affiche le 3 ; l'onglet du monde 4 (Système) et la
+   3e partie viendront avec leurs livrets. */
 const CARTES_MONDES = [
-  [1, "Petit SPLAT!", "fiches 1 à 6"],
-  [2, "SPLAT! classique", "fiches 7 à 9"],
-  [3, "SPLAT! Enquête", "fiches 10 à 14"],
-  [4, "SPLAT! Grande enquête", "fiches 15 à 19"],
-  [5, "SPLAT! Équations", "fiches 35 à 37"],     // lot Q3 (24/09/2026) : la carte saute de 19 à 35
+  [1, "Petit SPLAT!", "fiches 1 à 6", 1, "Monde 1 · "],
+  [2, "SPLAT! Classique", "fiches 7 à 9", 2, "Monde 2 · "],
+  [3, "SPLAT! Enquête", "fiches 10 à 14", 3, "Monde 3 · "],
+  [4, "SPLAT! Grande enquête", "fiches 15 à 19", 3, "Monde 3, 2e partie · "],
+  [5, "SPLAT! Équations", "fiches 35 à 37", 5, "Monde 5 · "],     // lot Q3 (24/09/2026) : la carte saute de 19 à 35
 ];
 test("cartes des mondes : numéro, nom et fiches, dans l'ordre, toujours des onglets, sans couverture", () => {
   const nav = page.slice(page.indexOf('<nav class="onglets"'), page.indexOf("</nav>"));
@@ -829,10 +833,10 @@ test("cartes des mondes : numéro, nom et fiches, dans l'ordre, toujours des ong
   // data-n = le nombre de cartes : c'est lui qui passe la barre en deux lignes de 3 à 5 ou 6 mondes
   assert.match(nav, new RegExp(`<nav class="onglets" id="onglets" data-n="${cartes.length}" role="tablist"`));
   cartes.forEach((c, i) => {
-    const [n, nom, fiches] = CARTES_MONDES[i];
+    const [n, nom, fiches, num, sr] = CARTES_MONDES[i];
     assert.ok(c.startsWith(`href="#monde-${n}" data-m="${n}" id="onglet-${n}" role="tab" aria-controls="monde-${n}"`), `carte ${n}`);
     assert.match(c, new RegExp(`aria-selected="${n === 1}"`), `carte ${n} : seul le monde 1 est ouvert au départ`);
-    assert.ok(c.includes(`<span class="num" aria-hidden="true"><svg viewBox="2 5 106 105"><use href="#forme-tache"/></svg><b>${n}</b></span><span class="txt"><span class="sr">Monde ${n} · </span><span class="etiq">${nom}</span><span class="fiches">${fiches}</span></span>`), `carte ${n} : textes`);
+    assert.ok(c.includes(`<span class="num" aria-hidden="true"><svg viewBox="2 5 106 105"><use href="#forme-tache"/></svg><b>${num}</b></span><span class="txt"><span class="sr">${sr}</span><span class="etiq">${nom}</span><span class="fiches">${fiches}</span></span>`), `carte ${n} : textes`);
     assert.doesNotMatch(c, /<img/, `carte ${n} : pas de couverture dans la carte`);
   });
   // le numéro est dans un petit splat : la tache du bandeau, dessinée une seule fois et sans couleur
@@ -866,7 +870,7 @@ test("cartes des mondes : numéro, nom et fiches, dans l'ordre, toujours des ong
 test("corrigés pour tous, sur la page : plus de « prof » ni de « professeur » dans les boutons et les titres", () => {
   assert.doesNotMatch(page, /🧑‍🏫|\(prof\)|professeur/);
   assert.match(page, /<strong>✅ Les corrigés<\/strong>&nbsp;: le même livret, aux mêmes pages, avec les réponses/);
-  assert.match(catalogue, /"cardDescription": "Tous les livrets de l’univers SPLAT! à plier, monde par monde\u00a0: [^"]*Grande enquête \(mondes 3 et 4\) en deux niveaux, et leurs corrigés ; SPLAT! Équations \(monde 5\) en deux livrets, schéma en barres ou équation\."/);
+  assert.match(catalogue, /"cardDescription": "Tous les livrets de l’univers SPLAT! à plier, monde par monde\u00a0: [^"]*Grande enquête \(monde 3\) en deux niveaux, et leurs corrigés ; SPLAT! Équations \(monde 5\) en deux livrets, schéma en barres ou équation\."/);
 });
 
 /* ===================================================================== lot D (21/09/2026)

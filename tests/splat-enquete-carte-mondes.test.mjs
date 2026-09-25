@@ -21,15 +21,20 @@ const ctx = vm.createContext({ encodeURIComponent });
 vm.runInContext(
   bloc("const PS=", "const PROF =") +
   bloc("const NOTES_MONDE", "const main=document") +
-  ";globalThis.X={MONDES,NOTES_MONDE,NOTES_PROF,ENQ_FICHES};",
+  ";globalThis.X={MONDES,NOTES_MONDE,NOTES_PROF,ENQ_FICHES,SYS_FICHES,LIVRETS_ENQ_1,LIVRETS_ENQ_2};",
   ctx, { filename: "splat_univers.html" }
 );
 /* Les objets nés dans le bac à sable de vm n'ont pas les mêmes prototypes que
    ceux d'ici : on les recopie pour que deepEqual compare les valeurs. */
-const { MONDES, NOTES_MONDE, NOTES_PROF, ENQ_FICHES } = JSON.parse(JSON.stringify(ctx.X));
-/* Lot E5 (23/09/2026) : l'Enquête est coupée en deux mondes, un par livret. */
-const ENQUETE = MONDES[2], GRANDE = MONDES[3];
-const LES_DEUX = [...ENQUETE.etapes, ...GRANDE.etapes];
+const { MONDES, NOTES_MONDE, NOTES_PROF, ENQ_FICHES, SYS_FICHES, LIVRETS_ENQ_1, LIVRETS_ENQ_2 } = JSON.parse(JSON.stringify(ctx.X));
+/* Lot E5 (23/09/2026) : l'Enquête avait été coupée en deux mondes, un par livret.
+   Lot « six mondes » (24/09/2026) : elle redevient UN monde 3 en trois parties (10-14,
+   15-19, 20-24), le Système prend la place de monde 4. Les dix premières étapes sont
+   celles des lots E0-E5 ; « LES_DEUX » garde son nom pour que les épingles d'avant se
+   relisent telles quelles. */
+const ENQUETE = MONDES[2], SYSTEME = MONDES[3];
+const LES_DEUX = ENQUETE.etapes.slice(0, 10);
+const LA_TROISIEME = ENQUETE.etapes.slice(10);
 
 /* AVANT la coupe (lot E4) : l'identifiant de chaque étape, dans l'ordre de la carte, et
    son parcours. Relevé en exécutant la carte des mondes du lot E4. Une étoile cochée à la
@@ -39,6 +44,16 @@ const IDS_AVANT_E5 = ["e0-0", "e0-1", "e0-2", "e0-3", "e0-4", "e0-5", "e1-0", "e
   "enq-0", "enq-1", "enq-2", "enq-3", "enq-4", "enq-5", "enq-6", "enq-7", "enq-8", "enq-9",
   "e2-0", "e2-1", "e2-2", "e2-3", "e3-0", "e3-1", "e3-2", "e3-3", "e3-4", "e3-5", "e3-6"];
 const PARCOURS_ENQ_AVANT_E5 = ["enq10", "enq11", "enq12", "enq13", "enq14", "enq15", "enq16", "enq17", "enq18", "enq19"];
+/* Lot « six mondes » : les cinq étapes de la 3e partie et les dix du Système s'ajoutent
+   APRÈS les identifiants d'avant, jamais entre — relevé en exécutant la carte du lot. */
+const IDS_SIX_MONDES = ["e0-0", "e0-1", "e0-2", "e0-3", "e0-4", "e0-5", "e1-0", "e1-1", "e1-2",
+  "enq-0", "enq-1", "enq-2", "enq-3", "enq-4", "enq-5", "enq-6", "enq-7", "enq-8", "enq-9", "enq-10", "enq-11", "enq-12", "enq-13", "enq-14",
+  "sys-0", "sys-1", "sys-2", "sys-3", "sys-4", "sys-5", "sys-6", "sys-7", "sys-8", "sys-9",
+  "e2-0", "e2-1", "e2-3", "e3-0", "e3-1", "e3-2", "e3-3", "e3-4", "e3-5", "e3-6"];
+const PARCOURS_SIX_MONDES = ["m1e1", "m1e2", "m1e3", "m1e4", "m1e5", "m1e6", "m2e1", "m2e4", "m2e5",
+  "enq10", "enq11", "enq12", "enq13", "enq14", "enq15", "enq16", "enq17", "enq18", "enq19", "enq20", "enq21", "enq22", "enq23", "enq24",
+  "sys25", "sys26", "sys27", "sys28", "sys29", "sys30", "sys31", "sys32", "sys33", "sys34",
+  "m3e1", "m3e2", "m3e4", "m4e1", "m4e2", "m4e3", "m4e4", "m4e5", "m4e6", "m4e7"];
 /* le gabarit calcule l'identifiant ainsi (idEtape) : on refait le même calcul */
 const idEtape = (m, e, ei) => e.id || (m.idp + "-" + ei);
 
@@ -67,19 +82,30 @@ const ADRESSES_E0 = [
                  "/splat/classique/?mode=C&splats=3&structure=MIX&clues=SENTENCE&mul=1&div=1&add=1&sub=1&deltaMax=15&visibleMin=1&visibleMax=3&totalMin=20&totalMax=60&seed=537&cards=4&unknown=question&layout=4&title=Fiche%2019%20%E2%80%94%20Le%20grand%20d%C3%A9fi&print=correction"
 ];
 
-test("E5 : l'Enquête est coupée en deux mondes — 3 « SPLAT! Enquête », 4 « SPLAT! Grande enquête », cinq étapes chacun", () => {
+test("six mondes : l'Enquête est UN monde 3 en trois parties, le Système le monde 4 en deux parties", () => {
   assert.equal(MONDES.length, 6);
   assert.deepEqual(MONDES.map((m) => m.nom), [
-    "Petit SPLAT!", "SPLAT! classique", "SPLAT! Enquête", "SPLAT! Grande enquête", "SPLAT! Équations", "SPLAT! relatifs"
+    "Petit SPLAT!", "SPLAT! Classique", "SPLAT! Enquête", "SPLAT! Système", "SPLAT! Équations", "SPLAT! Relatifs"
   ]);
-  for (const m of [ENQUETE, GRANDE]) {
-    assert.equal(m.etapes.length, 5, m.nom);
-    assert.equal(m.actif, true, m.nom);
-    assert.equal(m.cls, "menq", `${m.nom} : le même framboise, c'est la même enquête`);
+  assert.equal(ENQUETE.etapes.length, 15);
+  assert.equal(ENQUETE.cls, "menq");
+  assert.deepEqual(ENQUETE.volets.map((v) => [v.de, v.a, v.nom]), [
+    [0, 5, "L\u2019enquête"], [5, 10, "La grande enquête"], [10, 15, "L\u2019enquête rebondit"]
+  ]);
+  assert.deepEqual(ENQUETE.etapes.map((e) => e.t), ENQ_FICHES.map((f) => f.t));
+  assert.equal(SYSTEME.etapes.length, 10);
+  assert.equal(SYSTEME.cls, "msys");
+  assert.equal(SYSTEME.actif, true);
+  assert.deepEqual(SYSTEME.volets.map((v) => [v.de, v.a, v.nom]), [[0, 5, "On retire"], [5, 10, "On additionne, on double"]]);
+  assert.deepEqual(SYSTEME.etapes.map((e) => e.t), SYS_FICHES.map((f) => f.t));
+  /* chaque partie couvre exactement ses étapes, sans trou ni chevauchement */
+  for (const m of [ENQUETE, SYSTEME]) {
+    let d = 0;
+    for (const v of m.volets) { assert.equal(v.de, d, `${m.nom} : partie sans trou`); assert.ok(v.o.length > 20, `${m.nom} : phrase de la partie`); d = v.a; }
+    assert.equal(d, m.etapes.length, `${m.nom} : la dernière partie va jusqu'au bout`);
   }
-  assert.deepEqual(LES_DEUX.map((e) => e.t), ENQ_FICHES.map((f) => f.t));
-  assert.match(GRANDE.desc, /^L\u2019enquête continue : cette fois, les indices multiplient et partagent/);
-  assert.match(univers, /const MONDES_ENQUETE=\[MONDE_ENQUETE,MONDE_GRANDE_ENQUETE\];/);
+  assert.doesNotMatch(univers, /MONDE_GRANDE_ENQUETE|MONDES_ENQUETE\b/);
+  assert.match(univers, /const MONDES_A_FICHES=\[\[MONDE_ENQUETE,ENQ_FICHES,"enq"\],\[MONDE_SYSTEME,SYS_FICHES,"sys"\]\];/);
 });
 
 test("E5 : aucune étoile déjà gagnée ne bouge — mêmes identifiants, mêmes parcours qu'avant la coupe", () => {
@@ -87,7 +113,7 @@ test("E5 : aucune étoile déjà gagnée ne bouge — mêmes identifiants, même
      le rang de l'étape DANS son monde, la fiche 15 deviendrait « …-0 » : les étapes de
      l'Enquête portent donc leur identifiant d'avant la coupe (enq-0 … enq-9), en toutes
      lettres. Et l'identifiant d'un monde ne suit pas son numéro affiché. */
-  assert.deepEqual(MONDES.map((m) => m.idp), ["e0", "e1", "enq", "enq", "e2", "e3"]);
+  assert.deepEqual(MONDES.map((m) => m.idp), ["e0", "e1", "enq", "sys", "e2", "e3"]);
   assert.match(univers, /function idEtape\(m,e,ei\)\{return e\.id\|\|\(m\.idp\+"-"\+ei\);\}/);
   assert.match(univers, /const ids=m\.etapes\.map\(\(e,ei\)=>idEtape\(m,e,ei\)\);/);
   assert.match(univers, /const id=idEtape\(m,e,ei\), li=document\.getElementById\(id\);/);
@@ -95,10 +121,17 @@ test("E5 : aucune étoile déjà gagnée ne bouge — mêmes identifiants, même
   const tous = MONDES.flatMap((m) => m.etapes.map((e, ei) => idEtape(m, e, ei)));
   /* lot Q2 (24/09) : « Écris l'équation » (e2-2, parcours m3e3) est retirée du monde 5 ;
      les autres étapes gardent leur identifiant (tests/splat-equations-monde5-progression.test.mjs) */
-  assert.deepEqual(tous, IDS_AVANT_E5.filter((id) => id !== "e2-2"));
+  /* lot « six mondes » : les anciens identifiants sont tous là, dans le même ordre relatif,
+     et les nouveaux (enq-10 … enq-14, sys-0 … sys-9) s'intercalent sans en déplacer aucun */
+  assert.deepEqual(tous, IDS_SIX_MONDES);
+  assert.deepEqual(tous.filter((id) => IDS_AVANT_E5.includes(id)), IDS_AVANT_E5.filter((id) => id !== "e2-2"));
   assert.deepEqual(LES_DEUX.map((e) => e.p), PARCOURS_ENQ_AVANT_E5);
   const parcours = MONDES.flatMap((m) => m.etapes.map((e) => e.p).filter(Boolean));
+  assert.deepEqual(parcours, PARCOURS_SIX_MONDES);
   assert.equal(new Set(parcours).size, parcours.length, "deux étapes partagent un parcours");
+  /* les identifiants des deux mondes à fiches sont écrits en toutes lettres, jamais recalculés */
+  ENQUETE.etapes.forEach((e, i) => assert.equal(e.id, "enq-" + i));
+  SYSTEME.etapes.forEach((e, i) => assert.equal(e.id, "sys-" + i));
 });
 
 test("E5 : l'empreinte de reprise des séries de l'Enquête ne bouge pas", () => {
@@ -137,9 +170,10 @@ test("le numéro affiché d'une étape est continu dans tout l'univers", () => {
   /* lot Q2 : un monde peut réserver des numéros (« premier ») — le monde 5 commence à 35 */
   MONDES.forEach((m) => { if (m.premier) compteur = Math.max(compteur, m.premier - 1); m.etapes.forEach((e) => rangs.set(e, ++compteur)); });
   assert.match(univers, /const depart=MONDES\.slice\(0,MONDES\.indexOf\(m\)\)/);
-  assert.deepEqual(ENQUETE.etapes.map((e) => rangs.get(e)), [10, 11, 12, 13, 14]);
-  assert.deepEqual(GRANDE.etapes.map((e) => rangs.get(e)), [15, 16, 17, 18, 19]);
-  LES_DEUX.forEach((e) => {
+  assert.deepEqual(ENQUETE.etapes.map((e) => rangs.get(e)), [10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24]);
+  assert.deepEqual(SYSTEME.etapes.map((e) => rangs.get(e)), [25, 26, 27, 28, 29, 30, 31, 32, 33, 34]);
+  assert.deepEqual(MONDES[4].etapes.map((e) => rangs.get(e)), [35, 36, 37], "le monde 5 n'a plus besoin de « premier », le compteur y arrive seul");
+  [...ENQUETE.etapes, ...SYSTEME.etapes].forEach((e) => {
     const n = rangs.get(e);
     assert.equal(e.n, n, "le numéro écrit dans l'étape suit le compteur du gabarit");
     assert.equal(decodeURIComponent(new URLSearchParams(e.f.split("?")[1]).get("title")),
@@ -154,13 +188,13 @@ test("les vingt adresses des fiches sont exactement celles du lot E0", () => {
   const rendues = LES_DEUX.flatMap((e) => [e.f, e.c]);
   assert.deepEqual(rendues, ADRESSES_E0);
   assert.deepEqual(ENQ_FICHES.map((f) => f.q.match(/seed=(\d+)/)[1]),
-    ["339", "1071", "918", "290", "950", "1372", "1343", "405", "1313", "537"]);
-  /* la consigne en gras ne concerne que les fiches 2 et 7 */
-  assert.deepEqual(ENQ_FICHES.map((f, i) => (f.note ? i + 1 : 0)).filter(Boolean), [2, 7]);
+    ["339", "1071", "918", "290", "950", "1372", "1343", "405", "1313", "537", "172", "34", "3", "9", "2187"]);
+  /* la consigne en gras ne concerne que les fiches 11, 16 et 23 (rangs 2, 7 et 14) */
+  assert.deepEqual(ENQ_FICHES.map((f, i) => (f.note ? i + 1 : 0)).filter(Boolean), [2, 7, 14]);
 });
 
 test("le jeu de l'élève reprend les réglages de la fiche, sans rien d'impression", () => {
-  LES_DEUX.forEach((e, i) => {
+  ENQUETE.etapes.forEach((e, i) => {
     const jeu = new URLSearchParams(e.j.split("?")[1]);
     const fiche = new URLSearchParams(e.f.split("?")[1]);
     assert.equal(jeu.get("eleve"), "1");
@@ -187,7 +221,7 @@ test("la page courte des QR vise exactement les liens de la carte des mondes", (
   vm.runInContext(courte.slice(debut, courte.indexOf("var f =")) + ";globalThis.ENQ=ENQ;",
     ctxCourte, { filename: "livret/index.html" });
   assert.deepEqual(JSON.parse(JSON.stringify(ctxCourte.ENQ)), ENQ_FICHES.map((f) => f.q));
-  LES_DEUX.forEach((e, i) => {
+  ENQUETE.etapes.forEach((e, i) => {
     const cible = "/splat/classique/?" + ctxCourte.ENQ[i] + "&cards=4&unknown=question&eleve=1&parcours=enq" + (10 + i);
     assert.equal(cible, e.j, `?f=${10 + i}`);
     assert.ok(courte.includes(e.j.replace(/&/g, "&amp;")), `lien de repli de la fiche ${i + 1}`);
@@ -207,19 +241,36 @@ test("le monde porte le framboise, et cette couleur n'était prise par personne"
   assert.match(univers, /\.monde\.menq>\.head\{background:var\(--framboise\)\}/);
   assert.match(univers, /\.menq \.etape\.done \.badge use\.fond\{fill:var\(--framboise\)\}/);
   assert.match(univers, /\.menq \.actions a\.jouer\{background:var\(--framboise\)\}/);
-  // lot E5 : le monde 4 (Grande enquête) porte le même framboise, par la même classe
-  assert.deepEqual(MONDES.filter((m) => m.cls === "menq").map((m) => m.nom), ["SPLAT! Enquête", "SPLAT! Grande enquête"]);
-  for (const deja of ["#08aaa5", "#0b67b2", "#f58220", "#7b42b4"]) {
+  assert.deepEqual(MONDES.filter((m) => m.cls === "menq").map((m) => m.nom), ["SPLAT! Enquête"]);
+  for (const deja of ["#08aaa5", "#0b67b2", "#f58220", "#7b42b4", "#92400e"]) {
     assert.notEqual(deja, "#be185d");
   }
 });
 
-test("E5 : plus d'intertitre dans la liste des étapes — chaque monde de l'Enquête a son titre et sa phrase", () => {
-  /* Les intertitres « Les enquêtes additives » / « … multiplicatives et mélangées » coupaient
-     les dix étapes du monde unique ; un par monde, ils feraient doublon (décision du 23/09). */
-  MONDES.forEach((m) => m.etapes.forEach((e) => assert.equal(e.g, undefined, `${m.nom} n'a pas d'intertitre`)));
-  assert.doesNotMatch(univers, /groupeTitre/);
-  assert.doesNotMatch(univers, /Les enquêtes additives|Les enquêtes multiplicatives/);
+test("six mondes : les parties sont des intertitres dans la liste, un par livret, avec leurs étoiles", () => {
+  /* Les anciens intertitres (lot E3, e.g / groupeTitre) ne reviennent pas : les parties
+     sont des « volets » du monde, rendus comme un <li class="volet"> devant leur première étape. */
+  MONDES.forEach((m) => m.etapes.forEach((e) => assert.equal(e.g, undefined, `${m.nom} n'a pas d'intertitre d'étape`)));
+  assert.doesNotMatch(univers, /groupeTitre|Les enquêtes additives|Les enquêtes multiplicatives/);
+  assert.match(univers, /const v=\(m\.volets\|\|\[\]\)\.find\(x=>x\.de===ei\), vi=\(m\.volets\|\|\[\]\)\.indexOf\(v\);/);
+  assert.match(univers, /'<li class="volet" id="'\+m\.idp\+'-partie-'\+\(vi\+1\)\+'">'/);
+  assert.match(univers, /'<span class="rang">Partie '\+\(vi\+1\)\+'<\/span>'/);
+  assert.match(univers, /<span class="fiches">fiches '\+compteur\+' à '\+\(compteur\+v\.a-v\.de-1\)\+'<\/span>/);
+  assert.match(univers, /return volet\+'<li class="etape" id="'\+ids\[ei\]\+'">'/);
+  /* les étoiles de la partie : comptées sur ses étapes (de ≤ ei < a), dans majAffichage */
+  assert.match(univers, /\(PROF\?'':'<span class="stars" id="stars'\+mi\+'-'\+vi\+'"><\/span>'\)/);
+  assert.match(univers, /for\(let ei=v\.de;ei<v\.a;ei\+\+\)\{ if\(document\.getElementById\(idEtape\(m,m\.etapes\[ei\],ei\)\)\.classList\.contains\("done"\)\) fv\+\+; \}/);
+  assert.match(univers, /sv\.textContent="\u2b50 "\+fv\+" \/ "\+\(v\.a-v\.de\);/);
+  /* le monde ne compte que des parties de 5 fiches : un livret chacune */
+  for (const m of [ENQUETE, SYSTEME]) m.volets.forEach((v) => assert.equal(v.a - v.de, 5, `${m.nom} · ${v.nom}`));
+  /* vue prof : les livrets de l'Enquête sous leurs parties (1 et 2), pas sous le monde */
+  assert.deepEqual(ENQUETE.volets.map((v) => (v.livrets || []).length), [4, 4, 0]);
+  assert.deepEqual(LIVRETS_ENQ_1.map((l) => l[1]), ["/outils/livret_splat_enquete_additif.pdf", "/outils/livret_splat_enquete_additif_a_plier.pdf",
+    "/outils/livret_splat_enquete_additif_defi.pdf", "/outils/livret_splat_enquete_additif_defi_a_plier.pdf"]);
+  assert.deepEqual(LIVRETS_ENQ_2.map((l) => l[1]), ["/outils/livret_splat_enquete_multiplicatif.pdf", "/outils/livret_splat_enquete_multiplicatif_a_plier.pdf",
+    "/outils/livret_splat_enquete_multiplicatif_defi.pdf", "/outils/livret_splat_enquete_multiplicatif_defi_a_plier.pdf"]);
+  assert.doesNotMatch(univers, /m===MONDE_ENQUETE&&PROF|m===MONDE_GRANDE_ENQUETE&&PROF/);
+  SYSTEME.volets.forEach((v) => { assert.equal(v.livrets, undefined); assert.match(v.note, /en préparation/); });
 });
 
 test("la correction n'est offerte qu'en vue professeur", () => {
@@ -235,17 +286,19 @@ test("la correction n'est offerte qu'en vue professeur", () => {
   assert.ok(eleve.includes("faitBtn"), "la branche élève du gabarit n'a pas été isolée");
   assert.ok(gabarit.includes("e.c?'<a class=\"fiche\""), "le lien Correction manque en vue prof");
   assert.ok(!eleve.includes("e.c"), "la correction ne doit pas être offerte à l'élève");
-  LES_DEUX.forEach((e, i) => assert.ok(e.c, `correction de la fiche ${10 + i}`));
+  [...ENQUETE.etapes, ...SYSTEME.etapes].forEach((e) => assert.ok(e.c, `correction de la fiche ${e.n}`));
+  SYSTEME.etapes.forEach((e) => assert.ok(e.c2, `correction 2 par page de la fiche ${e.n}`));
+  assert.ok(!eleve.includes("e.c2"), "la correction 2 par page ne doit pas être offerte à l'élève");
 });
 
 test("les textes qui comptent les mondes suivent l'ajout", () => {
   const total = MONDES.reduce((n, m) => n + m.etapes.length, 0);
-  assert.equal(total, 29); // lot Q2 : le monde 5 passe de 4 à 3 étapes
+  assert.equal(total, 44); // lot « six mondes » : 29 + 5 (3e partie de l'Enquête) + 10 (Système)
   assert.match(univers, new RegExp(`id="totalTxt">0 / ${total} étoiles<`));
   assert.match(univers, /Traverse les six mondes/);
-  assert.match(univers, /monde 6 : prolongement relatifs \(cycle 4\)/);
-  assert.match(univers, /mondes 1 \\u00e0 5 d\\u2019apr\\u00e8s la progression/);
-  assert.match(univers, /\(monde 6 : prolongement maths&go, cycle 4\)/);
+  assert.match(univers, /monde 4 : le Système \(maths&amp;go\) · monde 6 : prolongement relatifs \(cycle 4\)/);
+  assert.match(univers, /mondes 1, 2, 3 et 5 d\\u2019apr\\u00e8s la progression/);
+  assert.match(univers, /\(mondes 4 et 6 : prolongements maths&go/);
   assert.doesNotMatch(univers, /quatre mondes|cinq mondes/i);
   assert.match(univers, /content="Six mondes à jouer en ligne/);
   // les notes du professeur qui citent un numéro de monde suivent aussi
