@@ -18,6 +18,19 @@ Produit, à la racine du dépôt :
     outils/livret_splat_equations_schema_correction_a_plier.pdf
     outils/livret_splat_equations_equation_correction.pdf     le corrigé par l'équation
     outils/livret_splat_equations_equation_correction_a_plier.pdf
+    outils/livret_splat_equations_equation_defi.pdf              le livret « Le défi » (lot Q5)
+    outils/livret_splat_equations_equation_defi_a_plier.pdf
+    outils/livret_splat_equations_equation_defi_correction.pdf   son corrigé, par l'équation
+    outils/livret_splat_equations_equation_defi_correction_a_plier.pdf
+
+    python3 render.py defi            (seulement le livret « Le défi » et son corrigé)
+
+LE LIVRET « LE DÉFI » (lot Q5, 25/09/2026) — la famille « équation » seulement : les mêmes
+trois fiches 35, 36, 37, avec des paquets numérotés partout (2 ou 3 par côté), des totaux de 50
+à 100 et jusqu'à six taches. Chaque fiche est bâtie en trois séries de 4 cartes enchaînées par
+« suite » (voir FICHES_DEFI). Son QR de fiche ouvre ÉquaSplat sur ces 12 équations exactes, sous
+la même étoile que la fiche du livret de base (page courte ?f=35d, 36d, 37d) ; son corrigé est
+la correction courte « l'équation » de l'outil, comme celui du livret équation.
 
 LES DEUX LIVRETS CORRIGÉS (lot Q4, 24/09/2026) — une correction par livret : l'outil imprime
 lui-même les fiches corrigées avec ses deux « corrections courtes » 6/page
@@ -82,6 +95,37 @@ FICHES = [
          resume="L'inconnue des deux côtés."),
 ]
 
+# ------------------------------------------------------------------ le livret « Le défi » (lot Q5)
+# Décisions du 25/09/2026 (liste annotée LISTE-annotee-Q5-36-equations-defi.md, validée telle
+# quelle) : paquets numérotés partout, 2 ou 3 paquets de chaque côté, totaux de 50 à 100 ; la
+# fiche 35 garde les taches d'un seul côté, de 2 à 4 ; la 36 aussi, de 4 à 6 ; la 37 met des
+# taches des deux côtés. Même étoile que la fiche du livret de base.
+#
+# POURQUOI TROIS SÉRIES DE 4 CARTES PAR FICHE (comme le défi du monde 2) : l'outil des Équations
+# n'a qu'un maximum de taches, et une carte sur 10 à 15 seulement passe les règles du défi —
+# solution de 6 à 30 et jamais multiple de 5 ; paquets de 5 à 79, jamais ronds, jamais deux
+# égaux du même côté ; au moins 20 dans les paquets du côté des taches (fiches 35-36) ; au moins
+# deux taches à partager une fois les plus petites retirées (fiche 37) ; aucun nombre à
+# sous-entendu, calculs compris. Les graines ci-dessous ont été retenues parmi plus de 300
+# millions de séries de 4 (voir le README) ; 36 équations toutes différentes, chaque lettre au
+# plus deux fois par fiche, jamais deux fois de suite. NE PAS en changer une sans refaire le tri,
+# la page courte (splat/equations/livret/, ?f=35d…) et les PDF.
+def defi(form, taches_max, graine):
+    return (f"mode=EQSTEP&form={form}&tasksMax={taches_max}&visibleMin=2&visibleMax=3"
+            f"&totalMin=50&totalMax=100&cards=4&seed={graine}&unknown=letter")
+
+FICHES_DEFI = [
+    dict(n=35, t="De deux à quatre taches", qr="35d", parcours="m3e1",
+         resume="Deux taches, puis trois, puis jusqu'à quatre.",
+         parties=[defi("ONE_SIDE", 2, 893381), defi("ONE_SIDE", 3, 653158), defi("ONE_SIDE", 4, 18888627)]),
+    dict(n=36, t="Jusqu'à six taches", qr="36d", parcours="m3e2",
+         resume="De quatre à six taches.",
+         parties=[defi("ONE_SIDE", 6, 52841384), defi("ONE_SIDE", 6, 7120342), defi("ONE_SIDE", 6, 13521466)]),
+    dict(n=37, t="Le grand défi : des deux côtés", qr="37d", parcours="m3e4",
+         resume="Des taches des deux côtés.",
+         parties=[defi("BOTH", 4, 13183993), defi("BOTH", 6, 907210), defi("BOTH", 6, 32560684)]),
+]
+
 # ------------------------------------------------------------------ le dos : « Encore des cartes ! »
 # Décision du 24/09/2026 : trois séries, une par fiche, de SIX équations tirées au hasard et
 # jouées dans le jeu de l'élève d'ÉquaSplat (la barre « Équation 1 / 6 », les pastilles) —
@@ -99,10 +143,24 @@ SERIES = {
     "1": [sans_graine(EQ5_S1, 2), sans_graine(EQ5_S2, 2), sans_graine(EQ5_S3, 2)],
     "2": [sans_graine(EQ5_PAQUETS, SERIE_CARTES)],
     "3": [sans_graine(EQ5_DEUX_COTES, SERIE_CARTES)],
+    # le dos du livret « Le défi » (décision du 25/09/2026) : deux séries seulement, et des QR de
+    # 32 mm comme le défi du monde 2 — six équations au hasard aux réglages du défi, d'un seul côté
+    # (jusqu'à 6 taches), puis des deux côtés
+    "d1": [sans_graine(defi("ONE_SIDE", 6, 0), SERIE_CARTES)],
+    "d2": [sans_graine(defi("BOTH", 6, 0), SERIE_CARTES)],
 }
 DOS = [("Un par un",      "Les jetons un par un, comme la fiche&nbsp;35.",  "1"),
        ("Des paquets",    "Les jetons en paquets, comme la fiche&nbsp;36.", "2"),
        ("Des deux côtés", "Des taches des deux côtés, comme la fiche&nbsp;37.", "3")]
+DOS_DEFI = [("D'un seul côté", "Des paquets et jusqu'à six taches, des totaux de 50 à 100, comme les fiches&nbsp;35 et&nbsp;36.", "d1"),
+            ("Des deux côtés", "Des taches des deux côtés, des totaux de 50 à 100, comme la fiche&nbsp;37.", "d2")]
+# Le dos du défi : deux séries au lieu de trois, donc deux cases plus larges et des QR de 32 mm
+# (26 mm à trois). Injecté pour ce seul livret : le dos des deux livrets de base ne bouge pas.
+CSS_DOS_DEFI = """
+.niveaux{gap:6mm}
+.niv{padding:3.5mm 4mm 3mm;gap:2mm}
+.niv img{width:32mm;height:32mm}
+"""
 
 def cible_serie(s):
     """Ce que la page courte ouvre pour ?s=N (elle fait le même calcul, un test les compare)."""
@@ -110,7 +168,7 @@ def cible_serie(s):
     return ("/outils/splat_equations.html?" + p[0] + "&jouer=1"
             + ("&suite=" + ";".join(quote(x, safe="") for x in p[1:]) if len(p) > 1 else ""))
 
-def lien_fiche(n):
+def lien_fiche(n):   # n = 35, 36, 37, ou « 35d »… pour le défi
     """Le QR d'une fiche : la page courte, qui renvoie vers le lien EXACT « Le jeu de l'élève »
     de la carte des mondes (ÉquaSplat, parcours=m3eN : la même étoile). La série y est écrite en
     entier dans l'adresse (plus de 2 000 caractères) : un QR direct ne se lirait plus à 17 mm."""
@@ -128,6 +186,10 @@ LIEN_UNIVERS = f"{SITE}/outils/splat_univers.html"
 # partager) sur une seule carte. Graine 79, choisie le 24/09/2026 : aucun nombre à
 # sous-entendu, pas de paquet « 1 », une solution qui n'est ni 1 ni 2.
 EXEMPLE = "mode=EQSTEP&form=ONE_SIDE&cards=1&seed=79&unknown=letter"
+# L'exemple du livret « Le défi » (choisi sur planche le 25/09/2026, « B ») : 4𝑎 + 38 = 86, 𝑎 = 12 —
+# quatre taches et deux paquets (11 et 27) d'un côté, deux paquets (71 et 15) de l'autre. Il n'est
+# dans aucune fiche des deux livrets (render.py le vérifie).
+EXEMPLE_DEFI = "mode=EQSTEP&form=ONE_SIDE&tasksMax=4&visibleMin=2&visibleMax=2&totalMin=50&totalMax=100&cards=1&seed=250&unknown=letter"
 
 # ------------------------------------------------------------------ les icônes du dos
 # Les flèches de l'équation, dessinées comme celles de la correction imprimée de l'outil : un arc
@@ -175,6 +237,7 @@ VUES = {
         ],
         # la carte (plateaux l'un sur l'autre) est haute : fenêtre étroite, le schéma à côté
         css_couv=".carte.corr{flex:1 1 0}.carte:first-child{flex:0 0 58mm}",
+        fiches=FICHES, exemple=EXEMPLE, dessins=(3, 12, 27, 5), dos=DOS,
     ),
     "equation": dict(
         sortie="livret_splat_equations_equation",
@@ -194,8 +257,23 @@ VUES = {
                                                           "l'équation, puis résous-la — comme l'exemple de la couverture."),
         ],
         css_couv=".carte.corr{flex:0 0 66mm}",
+        fiches=FICHES, exemple=EXEMPLE, dessins=(3, 12, 27, 5), dos=DOS,
     ),
 }
+# Le livret « Le défi » (lot Q5) : la famille « équation », ses fiches, son exemple, son dos. Les
+# petits dessins de « Pour se souvenir » sont ceux du livret équation, écrits avec les nombres de
+# l'exemple du défi (4𝑥 + 38 = 86 ; la lettre est remplacée ensuite par celle de l'exemple, 𝑎).
+def _dessins(txt, a, b, c, x):
+    return (txt.replace("– 12", f"– {b}").replace("𝑥 = 5", f"𝑥 = {x}")
+               .replace("3𝑥 + 12 = 27", f"{a}𝑥 + {b} = {c}"))
+VUES["defi"] = dict(VUES["equation"],
+    sortie="livret_splat_equations_equation_defi",
+    sur="Mon livret · Monde 5 · Le défi",
+    accroche="Des paquets, des taches…<br>et des totaux jusqu'à 100&nbsp;!",
+    souvenir=[(_dessins(ic, 4, 38, 86, 12), txt) for ic, txt in VUES["equation"]["souvenir"]],
+    fiches=FICHES_DEFI, exemple=EXEMPLE_DEFI, dessins=(4, 38, 86, 12), dos=DOS_DEFI,
+    css_dos=CSS_DOS_DEFI,
+)
 
 # ------------------------------------------------------------------ les livrets corrigés
 # Une correction par livret (décision du 23/09/2026) : le corrigé du livret « schéma » est la
@@ -205,6 +283,7 @@ VUES = {
 CORRECTIONS = {
     "schema":   dict(suffixe="_correction", imprime="correction-schema",   dit="par le schéma en barres"),
     "equation": dict(suffixe="_correction", imprime="correction-equation", dit="par l'équation"),
+    "defi":     dict(suffixe="_correction", imprime="correction-equation", dit="par l'équation"),
 }
 # La couverture du livret corrigé : le bandeau rouge sombre « Correction » et « Livret
 # corrigé — … » à la place de Nom, prénom / Classe (mêmes textes et mêmes mesures que les
@@ -312,6 +391,13 @@ JS_TITRE = """() => {
     const deborde = () => e.scrollHeight > e.clientHeight + 1 || bloc.scrollWidth > bloc.clientWidth + 1;
     const ecrire = (lignes) => { e.textContent = ''; lignes.forEach((l, k) => { if (k) e.appendChild(document.createElement('br')); e.append(l); }); };
     const essais = [[parts.slice(0, -1).join(' — ') + ' —', parts[parts.length - 1]], parts.map((p, k) => k < parts.length - 1 ? p + ' —' : p)];
+    // (livret « Le défi », lot Q5) un titre à deux-points trop long, « Le grand défi : des deux côtés » :
+    // on coupe aussi après les deux-points — les titres des livrets de base n'en ont pas, rien ne change pour eux
+    const k2 = parts.findIndex(p => p.includes(' : '));
+    if (k2 > 0) {
+      const [av, ap] = [parts[k2].slice(0, parts[k2].indexOf(' : ')), parts[k2].slice(parts[k2].indexOf(' : ') + 3)];
+      essais.push([parts.slice(0, k2).join(' — ') + ' — ' + av + ' :', ap + (k2 < parts.length - 1 ? ' —' : ''), ...parts.slice(k2 + 1).map((p, k) => k2 + 1 + k < parts.length - 1 ? p + ' —' : p)]);
+    }
     for (const lignes of essais) { ecrire(lignes); if (!deborde()) return; }
     for (let k = 1; k <= 4 && deborde(); k++) e.style.fontSize = (f0 * (1 - 0.05 * k)) + 'px';
   });
@@ -502,6 +588,19 @@ def series_du_jeu():
         out[m.group(1)] = json.loads(base64.urlsafe_b64decode(b64).decode("utf-8"))["serie"]
     return out
 
+def series_du_defi():
+    """Les séries du livret « Le défi », relues dans la page courte des QR (?f=35d, 36d, 37d) :
+    { "35d" : [cartes] }. Elles ne sont pas sur la carte des mondes."""
+    courte = (RACINE / "splat" / "equations" / "livret" / "index.html").read_text(encoding="utf-8")
+    out = {}
+    for m in re.finditer(r'"(\d+d)": "(/outils/equasplat\.html\?eleve=1&parcours=(m3e\d)#data=([^"]+))"', courte):
+        b64 = m.group(4) + "=" * (-len(m.group(4)) % 4)
+        d = json.loads(base64.urlsafe_b64decode(b64).decode("utf-8"))
+        if d.get("parcours") != m.group(3):
+            raise SystemExit(f"page courte, ?f={m.group(1)} : l'étoile de l'adresse et celle de la série diffèrent")
+        out[m.group(1)] = d["serie"]
+    return out
+
 def cle(carte):
     """Une équation, sans tenir compte du côté : pour comparer l'exemple aux cartes."""
     cote = lambda r: (sum(1 for t in r if t == "x"), sum(t for t in r if t != "x"))
@@ -518,8 +617,9 @@ def fabrique_qr():
         q = qrcode.QRCode(error_correction=ERROR_CORRECT_M, box_size=12, border=2)
         q.add_data(url); q.make(fit=True)
         q.make_image(fill_color="black", back_color="white").save(dossier / nom)
-    for f in FICHES:
-        ecrire(lien_fiche(f["n"]), f"fiche{f['n']}.png")
+    for f in FICHES + FICHES_DEFI:
+        q = f.get("qr", f["n"])
+        ecrire(lien_fiche(q), f"fiche{q}.png")
     for s in SERIES:
         ecrire(lien_serie(s), f"serie-{s}.png")
     ecrire(LIEN_UNIVERS, "univers.png")
@@ -561,23 +661,25 @@ async def pages(v, tmp, jeu, corr=None):
             return pg
 
         # --- l'exemple de couverture, dessiné par l'outil
-        pg = await page_outil(f"/outils/splat_equations.html?{EXEMPLE}&view={v['vue']}")
+        pg = await page_outil(f"/outils/splat_equations.html?{v['exemple']}&view={v['vue']}")
         ex = await pg.evaluate(JS_EXEMPLE, v["vue"])
         await pg.close()
         if ex.get("erreur"):
             raise SystemExit("exemple : " + ex["erreur"])
 
         # --- les trois fiches
-        for f in FICHES:
+        for f in v["fiches"]:
             titre = f"Fiche {f['n']} — {f['t']}"
             pg = await page_outil(adresse_fiche(f, v["vue"], corr["imprime"] if corr else "statement") + "&imprimer=1")
             etat = await pg.evaluate(JS_FICHE)
             if etat["parPage"] != 6 or etat["feuilles"] != 2 or etat["vides"] != 0 or len(etat["cartes"]) != 12:
                 raise SystemExit(f"{titre} : {etat['parPage']}/page, {etat['feuilles']} feuilles, "
                                  f"{len(etat['cartes'])} cartes, {etat['vides']} cases vides")
-            if etat["cartes"] != jeu[f["parcours"]]:
-                raise SystemExit(f"{titre} : les cartes ne sont pas celles du jeu en ligne ({f['parcours']})")
-            cartes_livret[f["n"]] = etat["cartes"]
+            # le livret de base : la série de la carte des mondes ; le défi : celle de la page courte
+            en_ligne = f.get("qr", f["parcours"])
+            if etat["cartes"] != jeu[en_ligne]:
+                raise SystemExit(f"{titre} : les cartes ne sont pas celles du jeu en ligne ({en_ligne})")
+            cartes_livret[f.get("qr", str(f["n"]))] = etat["cartes"]
             # le corrigé : l'outil écrit lui-même « … — Correction » dans le titre de la fiche
             r = await pg.evaluate(JS_BIS, f"Fiche {f['n']} bis — {f['t']}" + (" — Correction" if corr else ""))
             if r != "ok":
@@ -586,7 +688,7 @@ async def pages(v, tmp, jeu, corr=None):
             r = await pg.evaluate(JS_TITRE_OUTIL, TITRE_BANDEAU)
             if r != "ok":
                 raise SystemExit(f"{titre}, bandeau : {r}")
-            r = await pg.evaluate(JS_QR, [f"{qrweb}/fiche{f['n']}.png"] + ([QR_PROF, QR_ELEVE] if corr else [QR_ELEVE, None]))
+            r = await pg.evaluate(JS_QR, [f"{qrweb}/fiche{f.get('qr', f['n'])}.png"] + ([QR_PROF, QR_ELEVE] if corr else [QR_ELEVE, None]))
             if r != "ok":
                 raise SystemExit(f"{titre}, QR : {r}")
             # la mesure du titre se fait à la largeur imprimée (A4 moins les 2 × 8 mm de l'outil)
@@ -600,12 +702,13 @@ async def pages(v, tmp, jeu, corr=None):
                 raise SystemExit(f"{titre}, pied : {r}")
             await pg.wait_for_timeout(600)
             # marges : celles de la feuille de l'outil (@page 8 mm), comme un professeur qui imprime
-            await pg.pdf(path=str(tmp / f"fiche{f['n']}.pdf"), format="A4", print_background=True,
+            await pg.pdf(path=str(tmp / f"fiche{f.get('qr', f['n'])}.pdf"), format="A4", print_background=True,
                          prefer_css_page_size=True)
             await pg.close()
             print(f"   {titre} : 12 cartes, 2 pages, celles du jeu en ligne")
 
-        toutes = {cle(c) for l in cartes_livret.values() for c in l}
+        # l'exemple n'est aucune carte des livrets — ni de celui-ci, ni des autres (cartes.json)
+        toutes = {cle(c) for l in cartes_livret.values() for c in l} | cles_connues()
         if cle(ex["carte"]) in toutes:
             raise SystemExit("l'exemple de couverture est une carte du livret")
 
@@ -636,30 +739,31 @@ async def pages(v, tmp, jeu, corr=None):
         couv = dict(svg1=ex["svg1"], vb1=ex["vb1"], svg2=svg2, vb2=ex["vb2"],
                     sur=v["sur"], accroche=v["accroche"], intro=textes_exemple(ex, v),
                     lg_corr=v["lg_corr"], atoi=v["atoi_couv"],
-                    sommaire=[[f["n"], f["t"], f["resume"]] for f in FICHES],
+                    sommaire=[[f["n"], f["t"], f["resume"]] for f in v["fiches"]],
                     prof=dict(PROF, dit=corr["dit"]) if corr else None)
         await pdf_html("couverture.html", tmp / "p1.pdf", JS_COUV, couv, v["css_couv"])
         # les rappels du dos écrivent la lettre de l'exemple de couverture (𝑛), et sa valeur :
         # « comme l'exemple de la couverture » doit se lire avec les mêmes signes.
         # (Le moins de ces textes est le tiret « – » de Poppins, voir commun.css.)
-        # (les petits dessins sont écrits pour 3𝑥 + 12 = 27, 𝑥 = 5 : on vérifie que c'est bien l'exemple)
-        if (ex["gauche"]["taches"], sum(ex["gauche"]["paquets"]), sum(ex["droite"]["paquets"]), ex["x"]) != (3, 12, 27, 5):
-            raise SystemExit("l'exemple a changé : refaire les petits dessins du dos (MINI_SCH…, « 3𝑥 + 12 = 27 »)")
+        # (les petits dessins sont écrits pour 3𝑥 + 12 = 27, 𝑥 = 5 — pour 4𝑥 + 38 = 86, 𝑥 = 12 au
+        # livret « Le défi » : v["dessins"] ; on vérifie que c'est bien l'exemple)
+        if (ex["gauche"]["taches"], sum(ex["gauche"]["paquets"]), sum(ex["droite"]["paquets"]), ex["x"]) != v["dessins"]:
+            raise SystemExit("l'exemple a changé : refaire les petits dessins du dos (MINI_SCH…, « 3𝑥 + 12 = 27 », v[\"dessins\"])")
         souvenir = [(ic.replace("𝑥", ex["variable"]), txt) for ic, txt in v["souvenir"]]
-        dos = dict(niveaux=[[nom, desc, f"{qrweb}/serie-{s}.png"] for nom, desc, s in DOS],
+        dos = dict(niveaux=[[nom, desc, f"{qrweb}/serie-{s}.png"] for nom, desc, s in v["dos"]],
                    univers=f"{qrweb}/univers.png", souvenir=souvenir,
-                   fiches=[[f["n"], f["t"]] for f in FICHES])
-        await pdf_html("dos.html", tmp / "p8.pdf", JS_DOS, dos)
+                   fiches=[[f["n"], f["t"]] for f in v["fiches"]])
+        await pdf_html("dos.html", tmp / "p8.pdf", JS_DOS, dos, v.get("css_dos"))
         await nav.close()
     return ex, cartes_livret
 
-def assemble(sortie, tmp):
+def assemble(sortie, tmp, fiches):
     """Les 8 pages, puis les 2 feuilles A3 imposées (8|1 · 2|7 · 6|3 · 4|5).
     pikepdf et add_overlay (chaque page en Form XObject) : les dégradés suivent."""
     import pikepdf
     A4W, A4H = 595.276, 841.890
     src, pages_ = [], []
-    for nom in ["p1.pdf"] + [f"fiche{f['n']}.pdf" for f in FICHES] + ["p8.pdf"]:
+    for nom in ["p1.pdf"] + [f"fiche{f.get('qr', f['n'])}.pdf" for f in fiches] + ["p8.pdf"]:
         d = pikepdf.open(str(tmp / nom))
         src.append(d); pages_.extend(d.pages)
     if len(pages_) != 8:
@@ -707,6 +811,10 @@ def main():
     jeu = series_du_jeu()
     if sorted(jeu) != sorted(f["parcours"] for f in FICHES):
         raise SystemExit(f"séries du jeu relues dans la carte des mondes : {sorted(jeu)}")
+    defi_en_ligne = series_du_defi()
+    if sorted(defi_en_ligne) != sorted(f["qr"] for f in FICHES_DEFI):
+        raise SystemExit(f"séries du défi relues dans la page courte : {sorted(defi_en_ligne)}")
+    jeu.update(defi_en_ligne)
     srv = serveur()
     rendus = {}
     try:
@@ -719,27 +827,53 @@ def main():
                 with tempfile.TemporaryDirectory() as d:
                     tmp = Path(d)
                     ex, cartes = asyncio.run(pages(v, tmp, jeu, corr))
-                    assemble(sortie, tmp)
+                    assemble(sortie, tmp, v["fiches"])
                 for suffixe in ("", "_a_plier"):
                     compresse(RACINE / "outils" / f"{sortie}{suffixe}.pdf")
-                rendus[sortie] = dict(exemple=ex["carte"], fiches={str(n): c for n, c in cartes.items()})
+                groupe = "defi" if nom == "defi" else "base"
+                rendus.setdefault(groupe, {})[sortie] = dict(exemple=ex["carte"], fiches={str(n): c for n, c in cartes.items()})
                 print(f"   Fait : outils/{sortie}.pdf et outils/{sortie}_a_plier.pdf")
     finally:
         srv.shutdown()
-    # tous les livrets rendus ont exactement les mêmes cartes (seule la vue, ou la correction, change)
-    if len({json.dumps(r, sort_keys=True) for r in rendus.values()}) > 1:
-        raise SystemExit("les livrets n'ont pas tous les mêmes cartes")
-    # cartes.json : les 36 cartes et l'exemple, tels que rendus — relus par le test du dépôt
+    # dans un même groupe, tous les livrets rendus ont exactement les mêmes cartes (seule la vue, ou
+    # la correction, change) : les deux livrets de base et leurs corrigés ; le défi et son corrigé
+    for groupe, r in rendus.items():
+        if len({json.dumps(x, sort_keys=True) for x in r.values()}) > 1:
+            raise SystemExit("les livrets n'ont pas tous les mêmes cartes" + (" (défi)" if groupe == "defi" else ""))
+    # cartes.json : les 36 cartes et l'exemple de chaque groupe, tels que rendus — relus par le test du
+    # dépôt ; un groupe qui n'a pas été rendu cette fois garde ce que le fichier disait déjà
     if rendus:
-        r = next(iter(rendus.values()))
-        un = lambda c: json.dumps(c, ensure_ascii=False)          # une carte par ligne
-        lignes = ['{', f' "exemple": {un(r["exemple"])},', ' "fiches": {']
+        ecrire_cartes({g: next(iter(r.values())) for g, r in rendus.items()})
+
+def lire_cartes():
+    f = ICI / "cartes.json"
+    return json.loads(f.read_text(encoding="utf-8")) if f.exists() else {}
+
+def cles_connues():
+    """Les équations de toutes les fiches déjà rendues (les deux groupes), pour l'exemple."""
+    d = lire_cartes()
+    fiches = list(d.get("fiches", {}).values()) + list(d.get("defi", {}).get("fiches", {}).values())
+    return {cle(c) for l in fiches for c in l}
+
+def ecrire_cartes(nouveau):
+    d = lire_cartes()
+    base = nouveau.get("base") or {"exemple": d.get("exemple"), "fiches": d.get("fiches", {})}
+    defi_ = nouveau.get("defi") or d.get("defi")
+    un = lambda c: json.dumps(c, ensure_ascii=False)          # une carte par ligne
+    def bloc(r, ind):
+        lignes = [f'{ind}"exemple": {un(r["exemple"])},', f'{ind}"fiches": {{']
         for i, (n, cartes) in enumerate(r["fiches"].items()):
-            lignes.append(f'  "{n}": [')
-            lignes += [f'   {un(c)}' + ("," if k < len(cartes) - 1 else "") for k, c in enumerate(cartes)]
-            lignes.append('  ]' + ("," if i < len(r["fiches"]) - 1 else ""))
-        lignes += [' }', '}']
-        (ICI / "cartes.json").write_text("\n".join(lignes) + "\n", encoding="utf-8")
+            lignes.append(f'{ind} "{n}": [')
+            lignes += [f'{ind}  {un(c)}' + ("," if k < len(cartes) - 1 else "") for k, c in enumerate(cartes)]
+            lignes.append(f'{ind} ]' + ("," if i < len(r["fiches"]) - 1 else ""))
+        lignes.append(f'{ind}}}')
+        return lignes
+    lignes = ['{'] + bloc(base, " ")
+    if defi_:
+        lignes[-1] += ","
+        lignes += [' "defi": {'] + bloc(defi_, "  ") + [' }']
+    lignes.append('}')
+    (ICI / "cartes.json").write_text("\n".join(lignes) + "\n", encoding="utf-8")
 
 if __name__ == "__main__":
     main()

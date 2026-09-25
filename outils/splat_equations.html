@@ -1961,7 +1961,23 @@ function carteDuJeuEquaSplat(card){
 
 /* « jouer=1 » : la série tirée part dans le jeu de l'élève d'ÉquaSplat, sans parcours. */
 const EQUASPLAT_JEU_URL = "/outils/equasplat.html?eleve=1";
+/* Aucun nombre à sous-entendu dans une série tirée au hasard (lot Q5, 25/09/2026 : les séries du
+   dos du livret « Le défi » vont jusqu'à 100) : ni sur le plateau, ni dans les calculs de la
+   résolution. Une série qui en contient est simplement retirée (sans graine : nouveau hasard). */
+const NOMBRES_ECARTES = [69, 88];
+function carteSansNombreEcarte(card){
+  const q = carteDuJeuEquaSplat(card);
+  if(!q) return true;
+  const t = r => r.filter(v => v === "x").length, v = r => r.reduce((s, x) => s + (x === "x" ? 0 : x), 0);
+  const nombres = [q.x, t(q.left) * q.x + v(q.left), v(q.left), v(q.right), Math.abs(v(q.left) - v(q.right)),
+                   Math.abs(t(q.left) - t(q.right)) * q.x];
+  if(card && card._eq) [card._eq.left, card._eq.right].forEach(c => (c.visible || []).forEach(n => nombres.push(n)));
+  return !nombres.some(n => NOMBRES_ECARTES.includes(Math.abs(n)));
+}
 function ouvrirSerieDansEquaSplat(){
+  for(let essai = 0; essai < 60 && !cards.every(carteSansNombreEcarte); essai++){
+    if(serieSuite.length) genererSerieComposee(); else generate();
+  }
   const serie = cards.map(carteDuJeuEquaSplat).filter(Boolean);
   if(!serie.length){ document.documentElement.style.visibility = ""; return; }
   const payload = { source:"univers_splat", serie };
