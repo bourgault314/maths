@@ -3904,13 +3904,25 @@ function sysNormaliserReglages(opts){
    dernier recours, une carte sûre du geste 1 (jamais de carte « Erreur », jamais de carte
    fausse). Une carte est rejetée si un total sort des bornes, si deux couleurs ont la même
    valeur, si un plateau dépasse 6 taches, ou si un nombre (plan de correction compris)
-   contient un nombre à sous-entendu. */
+   contient un nombre à sous-entendu.
+   Lot S-defi (24/09/2026) : les plages de SYS_PLAGES sont faites pour des totaux de 60 au
+   plus (réglage des fiches 25-34 : 20 à 60). Quand le total maximum demandé dépasse 60
+   (livrets « Le défi » : 50 à 100), elles s'agrandissent dans la même proportion
+   (f = totalMax ÷ 60 : bornes des valeurs et des sous-totaux) — « Trois paires », dont le
+   total n'est que la somme de trois taches, deux fois plus pour la borne haute. À 60 ou
+   moins, rien ne change : mêmes plages, même hasard consommé, mêmes cartes. */
 function genSystemCarte(rng, opts){
   const o = sysNormaliserReglages(opts);
   let geste = o.geste;
   if(geste === "MIX") geste = o.gestes[rInt(rng, 0, o.gestes.length - 1)];
   const couleurs = buildInvestigateColorMap(rng, 3, true);
-  const p = SYS_PLAGES[geste];
+  const base = SYS_PLAGES[geste];
+  const f = o.totalMax > 60 ? o.totalMax / 60 : 1;
+  const fHaut = geste === "TROIS" ? 2 * f : f;
+  const p = f === 1 ? base : {
+    vMin: Math.round(base.vMin * f), vMax: Math.round(base.vMax * fHaut),
+    sousMin: Math.round(base.sousMin * f), sousMax: Math.round(base.sousMax * fHaut)
+  };
   const passages = [
     { vMin: p.vMin, vMax: p.vMax, sousMin: p.sousMin, sousMax: p.sousMax },
     { vMin: 2, vMax: Math.max(6, Math.ceil(o.totalMax / 2)), sousMin: 1, sousMax: Infinity }
