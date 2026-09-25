@@ -56,7 +56,8 @@ test("les formats equations ont une hauteur de page explicite en portrait et pay
 
 test("Splat equations imprime deux cartes par defaut et agrandit les tableaux", () => {
   assert.match(equations, /<option value="2" selected>2\/page<\/option>/);
-  assert.match(equations, /const fullW = 1240/);
+  // la colonne de la correction se dessine dans le repère EQ_PRINT_CORR_GEOM depuis le lot Q4 (24/09/2026)
+  assert.match(equations, /centerX: 800, fullW: 1240, maxTableW: 1240,/);
   assert.match(equations, /baseW: 1240/);
   assert.match(equations, /rowH: 112/);
   assert.match(equations, /fontSize: 98/);

@@ -792,9 +792,8 @@ test("L : un onglet et un panneau par monde, le prof replié partout, la note un
   assert.equal((page.match(/role="tab"/g) || []).length, 5, "cinq onglets (mondes 1 à 5, lot Q3)");
   assert.equal((page.match(/role="tabpanel"/g) || []).length, 5, "cinq panneaux");
   assert.equal((page.match(/<section class="note"/g) || []).length, 1, "une seule note « Pour imprimer »");
-  // neuf cartes depuis les livrets « Le défi » de l'Enquête (23/09/2026) : 3 + 2 + 2 + 2 ; les deux
-  // livrets du monde 5 (lot Q3) n'ont pas encore de corrigé (lot Q4)
-  assert.equal((page.match(/<details class="prof">/g) || []).length, 9, "les neuf cartes replient leurs corrigés");
+  // onze cartes depuis les corrigés du monde 5 (lot Q4, 24/09/2026) : 3 + 2 + 2 + 2 + 2
+  assert.equal((page.match(/<details class="prof">/g) || []).length, 11, "les onze cartes replient leurs corrigés");
   assert.match(page, /sur A3 \(meilleur rendu\)/, "le conseil de Claire sur le A3");
   /* Sans JavaScript, aucun monde n'est caché. Le panneau porte l'attribut « hidden »,
      que le navigateur masque d'office : il FAUT donc les deux règles, dans cet ordre —
