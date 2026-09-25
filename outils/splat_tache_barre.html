@@ -447,6 +447,8 @@
     .eleve-fin p.fin-sous { color: #475569; font-weight: 700; margin: 2px 0 14px; font-size: 15px; }
     .eleve-fin .fin-action { display: flex; justify-content: center; margin: 0 0 12px; }
     .eleve-fin .fin-action button { font: inherit; font-weight: 900; font-size: 19px; border: none; border-radius: 14px; padding: 15px 30px; min-height: 54px; cursor: pointer; background: #16a34a; color: #fff; box-shadow: 0 4px 0 #15803d; }
+    .eleve-fin .fin-action button .finSuiteOu { display: block; font-size: 14px; font-weight: 700; margin-top: 3px; }
+    .eleve-fin .fin-action button:has(.finSuiteOu) { padding: 10px 26px; }
     .eleve-fin .fin-sorties { display: flex; justify-content: center; gap: 22px; flex-wrap: wrap; }
     .eleve-fin .fin-sorties button, .eleve-fin .fin-sorties a { font: inherit; font-weight: 700; font-size: 14px; color: #64748b; background: none; border: none; padding: 6px 4px; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
     .eleve-scene svg.eleve-dessin { cursor: crosshair; touch-action: manipulation; }
@@ -543,6 +545,8 @@
 <script defer src="../assets/js/mention-confidentialite.js"></script>
 <script defer src="../assets/js/tool-parent-navigation.js?v=1"></script>
 <script defer src="../assets/js/mathsgo-pave-chiffres.js?v=20260918-1"></script>
+<!-- Le texte du bouton « Étape suivante ▶ » de l'écran de fin (lot A). -->
+<script src="../assets/js/splat-etapes.js?v=20260925-1"></script>
 </head>
 <body>
 
@@ -2702,6 +2706,15 @@ function eleveDevoilerTache() {
     if (part) part.classList.add('devoile');
 }
 
+/* « Étape suivante ▶ » (lot A, 25/09/2026) : le lien passe par la carte des
+   mondes (?apres=<parcours>), qui renvoie aussitôt au jeu de l'étape suivante ;
+   assets/js/splat-etapes.js écrit sous le bouton où il mène (« Étape 2 · Dessine
+   les jetons », « Nouveau monde : … »). Sans ce fichier : « Étape suivante ▶ » seul. */
+function eleveEtapeSuivante() {
+    if (window.MathsGoSplatEtapes) return window.MathsGoSplatEtapes.bouton(parcoursId, ELEVE_URL_MONDES);
+    return { html: '\u00c9tape suivante \u25b6', href: `${ELEVE_URL_MONDES}?apres=${encodeURIComponent(parcoursId)}`, versCarte: false };
+}
+
 /* Lien vers la carte des mondes (seulement quand on vient du parcours). */
 function eleveLienMondesHtml(classe, libelle) {
     if (!parcoursId) return '';
@@ -2791,11 +2804,11 @@ function renderEleveFin(main) {
         const nbR = rouges.length, plR = nbR > 1 ? 's' : '';
         scene.innerHTML = `<div class="eleve-fin">` +
             (parcoursId ? `<div class="fin-etoile">\u2b50</div>` : ``) +
-            `<h2>Encore ${nbR} carte${plR} !</h2>` +
+            `<h2>Encore ${nbR} carte${plR}\u00a0!</h2>` +
             `<div class="fin-pastilles">${elevePastillesHtml()}</div>` +
             `<p class="fin-sous">Rejoue-l${nbR > 1 ? 'es' : 'a'} ` +
             (parcoursId ? `et ton \u00e9toile s'allume sur la carte des mondes.` : `pour finir la s\u00e9rie.`) + `</p>` +
-            `<div class="fin-action"><button id="eleveRejouerRouges" type="button">Je rejoue mes ${nbR} carte${plR} rouge${plR} \u25b6</button></div>` +
+            `<div class="fin-action"><button id="eleveRejouerRouges" type="button">Je rejoue ${nbR > 1 ? `mes ${nbR} cartes rouges` : `ma carte rouge`} \u25b6</button></div>` +
             `<div class="fin-sorties"><button id="eleveRejouer" type="button">Rejouer toute la s\u00e9rie</button>` +
             `${eleveLienMondesHtml('fin-lien', 'Retour \u00e0 la carte des mondes')}</div>` +
             `</div>`;
@@ -2803,15 +2816,24 @@ function renderEleveFin(main) {
         document.getElementById('eleveRejouerRouges').onclick = () => { eleveRejeu = rouges.slice(); eleveCarteSuivante(main); };
     } else {
         eleveEnregistrerReussite(eleveEtoiles, total);
+        const suite = parcoursId ? eleveEtapeSuivante() : null;
         scene.innerHTML = `<div class="eleve-fin">` +
             `<div class="fin-etoile on">\u2B50</div>` +
-            `<h2>S\u00e9rie termin\u00e9e, bravo !</h2>` +
+            `<h2>S\u00e9rie termin\u00e9e, bravo\u00a0!</h2>` +
             `<div class="fin-pastilles">${elevePastillesHtml()}</div>` +
             `<p>${eleveEtoiles} carte${eleveEtoiles > 1 ? 's' : ''} sur ${total} du premier coup.` +
-            (parcoursId ? ` Ton \u00e9toile est allum\u00e9e sur la carte des mondes !` : ``) + `</p>` +
-            `<div class="eleve-actions"><button class="eleve-valider" id="eleveRejouer" type="button">Rejouer la s\u00e9rie</button>${eleveLienMondesHtml('eleve-lien')}</div>` +
+            (parcoursId ? ` Ton \u00e9toile est allum\u00e9e sur la carte des mondes\u00a0!` : ``) + `</p>` +
+            /* dans le parcours : « Étape suivante ▶ » en gros, rejouer et la carte en liens
+               dessous (comme l'écran des cartes rouges) ; hors parcours, rien ne change */
+            (parcoursId
+                ? `<div class="fin-action"><button id="eleveEtapeSuivante" type="button">${suite.html}</button></div>` +
+                  `<div class="fin-sorties"><button id="eleveRejouer" type="button">Rejouer la s\u00e9rie</button>` +
+                  `${suite.versCarte ? '' : eleveLienMondesHtml('fin-lien', 'Retour \u00e0 la carte des mondes')}</div>`
+                : `<div class="eleve-actions"><button class="eleve-valider" id="eleveRejouer" type="button">Rejouer la s\u00e9rie</button>${eleveLienMondesHtml('eleve-lien')}</div>`) +
             `</div>`;
         main.appendChild(scene);
+        const suivante = document.getElementById('eleveEtapeSuivante');
+        if (suivante) suivante.onclick = () => { window.location.href = suite.href; };
     }
     document.getElementById('eleveRejouer').onclick = () => { eleveIdx = 0; eleveEtoiles = 0; eleveSerie = []; eleveResultats = []; eleveRejeu = null; renderEleve(main); };
 }
