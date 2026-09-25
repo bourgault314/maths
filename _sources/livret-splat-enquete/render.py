@@ -7,7 +7,7 @@ monde depuis le lot E5 (23/09/2026).
 
     python3 render.py                    (les QUATRE livrets, élève et corrections)
     python3 render.py additif            (un seul livret : additif | multiplicatif
-                                          | additif_defi | multiplicatif_defi)
+                                          | additif_defi | multiplicatif_defi | rebondit)
     python3 render.py --qr               (en refabriquant d'abord les QR codes)
     python3 render.py --eleve            (seulement les livrets de l'élève)
     python3 render.py --correction       (seulement les livrets de correction)
@@ -23,6 +23,8 @@ et ses deux livrets corrigés (pour la classe comme pour la maison), mêmes 8 pa
 Et, depuis le 23/09/2026, les deux livrets « Le défi » (mêmes fiches, mêmes titres, totaux de
 50 à 100) : outils/livret_splat_enquete_additif_defi.pdf, …_multiplicatif_defi.pdf, et leurs
 corrigés, sur le même modèle.
+Et, depuis le 25/09/2026, le 3e livret du monde 3, « SPLAT! L'enquête rebondit » (fiches 20 à 24 :
+taches répétées, puis sans total) : outils/livret_splat_enquete_rebondit.pdf et ses deux corrigés.
 
 LES PAGES. Couverture, un exemple résolu, les cinq fiches du livret (4 cartes par page),
 le dos. Une fiche = une étape de la carte des mondes = une étoile (fiches 10 à 19) ; le QR
@@ -92,6 +94,26 @@ FICHES_MUL = [
     fiche(17, "Les quatre opérations", F17, "Plus, moins, fois, divisé."),
     fiche(18, "Trois taches, 4 opérations", F18, "Trois taches en chaîne."),
     fiche(19, "Le grand défi", F19, "Trois taches, jetons visibles, tout mélangé."),
+]
+
+# Le 3e livret du monde 3, « SPLAT! L'enquête rebondit » (25/09/2026) : les fiches 20 à 24 du lot
+# « fiches 20-34 » (24/09/2026, graines validées sur planches), EXACTEMENT les adresses de
+# splat-enquete-fiches-20-24-adresses.md — des taches de même couleur (20, 21), des enquêtes sans
+# total (22, 23 : un rapport et un écart sur la même paire de taches), puis les deux mélangés
+# (24 : « Sans total » et « Taches répétées » cochées ensemble, lot E-melange). La fiche 23 porte
+# la consigne « Reformule » (note=). Préfixe R (et non F) : les fiches 10 à 19 restent seules
+# épinglées sur la carte des mondes (ENQ_FICHES) ; 20 à 24 y entrent au lot « six mondes ».
+R20 = "mode=C&splats=2&repeat=3&clues=SENTENCE&mul=0&div=0&add=1&sub=1&deltaMax=10&visibleMin=0&visibleMax=0&totalMin=20&totalMax=60&seed=172"
+R21 = "mode=C&splats=2&repeat=3&clues=SENTENCE&mul=1&div=1&add=0&sub=0&deltaMax=10&visibleMin=0&visibleMax=0&totalMin=20&totalMax=60&seed=34"
+R22 = "mode=C&splats=2&noTotal=1&clues=SENTENCE&mul=1&div=0&add=1&sub=0&deltaMax=30&visibleMin=0&visibleMax=0&totalMin=15&totalMax=60&seed=3"
+R23 = "mode=C&splats=2&noTotal=1&clues=SENTENCE&mul=0&div=1&add=0&sub=1&deltaMax=30&visibleMin=0&visibleMax=0&totalMin=15&totalMax=60&seed=9"
+R24 = "mode=C&splats=3&structure=MIX&repeat=3&clues=SENTENCE&mul=1&div=1&add=1&sub=1&deltaMax=30&visibleMin=1&visibleMax=3&totalMin=20&totalMax=60&noTotal=1&seed=2187"
+FICHES_REB = [
+    fiche(20, "Des taches répétées", R20, "Même couleur, même nombre."),
+    fiche(21, "Répétées, fois plus ou moins", R21, "L'indice multiplie ou partage."),
+    fiche(22, "Sans total", R22, "Deux indices, et pas de total."),
+    fiche(23, "Sans total, à retourner", R23, "Deux indices à retourner.", note=True),
+    fiche(24, "Le défi qui rebondit", R24, "Tout mélangé, et des jetons visibles."),
 ]
 
 # ---------------------------------------------------------------------------
@@ -172,6 +194,11 @@ SERIES = {
     10: "mode=C&splats=2&clues=SENTENCE&mul=1&div=1&add=0&sub=0&deltaMax=10&visibleMin=0&visibleMax=0&totalMin=50&totalMax=100",
     11: "mode=C&splats=2&clues=SENTENCE&mul=1&div=1&add=1&sub=1&deltaMax=30&visibleMin=0&visibleMax=0&totalMin=50&totalMax=100",
     12: "mode=C&splats=3&structure=MIX&clues=SENTENCE&mul=1&div=1&add=1&sub=1&deltaMax=25&visibleMin=2&visibleMax=3&totalMin=50&totalMax=100",
+    # « L'enquête rebondit » (25/09/2026) : les réglages de ses fiches, sans graine, les quatre
+    # opérations. La page courte les servira au lot « six mondes » (?s=13 à 15).
+    13: "mode=C&splats=2&repeat=3&clues=SENTENCE&mul=1&div=1&add=1&sub=1&deltaMax=10&visibleMin=0&visibleMax=0&totalMin=20&totalMax=60",
+    14: "mode=C&splats=2&noTotal=1&clues=SENTENCE&mul=1&div=1&add=1&sub=1&deltaMax=30&visibleMin=0&visibleMax=0&totalMin=15&totalMax=60",
+    15: "mode=C&splats=3&structure=MIX&repeat=3&clues=SENTENCE&mul=1&div=1&add=1&sub=1&deltaMax=30&visibleMin=1&visibleMax=3&totalMin=20&totalMax=60&noTotal=1",
 }
 SERIE_CARTES = 8
 
@@ -206,6 +233,14 @@ EX_MUL = "mode=C&splats=3&structure=CHAIN&clues=SENTENCE&mul=1&div=0&add=1&sub=0
 #     total 73 ; 7 + 14 = 21, 73 − 21 = 52, 52 ÷ 4 = 13.
 EXD_ADD = "mode=C&splats=3&structure=CHAIN&clues=SENTENCE&mul=0&div=0&add=1&sub=0&deltaMax=25&visibleMin=0&visibleMax=0&totalMin=50&totalMax=100&cards=1&unknown=question&seed=49641"
 EXD_MUL = "mode=C&splats=3&structure=CHAIN&clues=SENTENCE&mul=1&div=0&add=1&sub=0&deltaMax=25&visibleMin=0&visibleMax=0&totalMin=50&totalMax=100&cards=1&unknown=question&seed=211206"
+
+# L'exemple de « L'enquête rebondit » (25/09/2026) : une carte à TROIS taches dont une couleur
+# répétée, hors des fiches 20 à 24 — la noire en référence (une tache), deux bleues « 7 jetons
+# de plus » (graine 82 : 8, 15, 15, total 38). La couleur répétée est la PLUS GRANDE : son écart
+# revient deux fois, le schéma regroupé ? ? 7 ? 7 se range en ? ? ? 7 7 et l'étape 4 apprend
+# quelque chose (avec la noire répétée, regroupé et ordonné seraient identiques, la remarque de
+# Claire du 23/09 sur les exemples à deux taches) ; textes_exemple refuse ce cas.
+EX_REB = "mode=C&splats=2&repeat=2&clues=SENTENCE&mul=0&div=0&add=1&sub=0&deltaMax=10&visibleMin=0&visibleMax=0&totalMin=15&totalMax=45&cards=1&unknown=question&seed=82"
 
 # La page « exemple résolu » : 2e page du livret (lue avant la fiche 10).
 PLACE_EXEMPLE = 2
@@ -262,6 +297,24 @@ LIVRETS["multiplicatif_defi"] = _defi(
     [("Fois plus, fois moins", "Deux taches, comme les fiches&nbsp;15 et&nbsp;16.", 10),
      ("Les quatre opérations", "Deux taches, comme la fiche&nbsp;17.", 11),
      ("Le grand défi", "Trois taches et des paquets visibles, comme la fiche&nbsp;19.", 12)])
+# Le 3e livret du monde 3 (25/09/2026), même fabrication que les deux premiers : couverture,
+# exemple résolu, fiches 20 à 24, dos. Le monde 3 est en trois parties depuis le 24/09 (lot « six
+# mondes ») : « Partie 3 » au sur-titre. Au dos, la suite est le monde 4, SPLAT! Système.
+LIVRETS["rebondit"] = dict(
+    sortie="livret_splat_enquete_rebondit",
+    fiches=FICHES_REB,
+    exemple=dict(query=EX_REB, op="REPET"),
+    couv=dict(sur="Mon livret · Monde 3 · Partie 3", titre="L'enquête rebondit",
+              accroche="Des taches de même couleur…<br>puis des enquêtes sans total&nbsp;!"),
+    dos=dict(
+        series=[("Taches répétées", "Même couleur, même nombre, comme les fiches&nbsp;20 et&nbsp;21.", 13),
+                ("Sans total", "Deux indices, pas de total, comme les fiches&nbsp;22 et&nbsp;23.", 14),
+                ("Le défi qui rebondit", "Tout mélangé, comme la fiche&nbsp;24.", 15)],
+        suite="Continue avec le monde&nbsp;4, <b>SPLAT! Système</b>&nbsp;: plusieurs plateaux, un total pour chacun… compare-les&nbsp;!",
+        mini=["?", "?", "?"], ecart=None,
+        taches="Chaque tache a sa couleur, écrite dessus. Les taches de <b>même couleur</b> cachent <b>le même nombre de jetons</b>&nbsp;; deux couleurs, jamais le même&nbsp;: c'est l'<b>indice</b> qui les relie.",
+        reformule="<b>Sans total</b>, deux indices parlent des mêmes taches&nbsp;: <q>la bleue a 3 fois plus de jetons que la noire</q> et <q>la bleue a 18 jetons de plus que la noire</q>. Les deux barres de la bleue sont égales&nbsp;: les deux «&nbsp;?&nbsp;» en plus valent 18, chaque «&nbsp;?&nbsp;» vaut 9."),
+)
 
 def lien_fiche(n):
     """Le QR d'une fiche : la page courte ?f=N, qui ouvre EXACTEMENT le lien « Le jeu
@@ -481,6 +534,11 @@ JS_DOS = """(d) => {
   const u = document.querySelector('.suite img'); if (u) u.setAttribute('src', d.univers);
   const s = document.querySelector('.suite p.t'); if (!s) return 'pas de texte « suite »'; s.innerHTML = d.suite;
   const r = document.querySelector('.lex .pr'); if (!r) return 'pas de ligne « référence »'; r.innerHTML = d.reformule;
+  // « L'enquête rebondit » (25/09/2026) : la ligne des deux taches parle des taches de même couleur
+  if (d.taches) {
+    const t = document.querySelectorAll('.lex li')[1]; const sp = t && t.querySelectorAll(':scope > span')[1];
+    if (!sp) return 'pas de ligne « taches »'; sp.innerHTML = d.taches;
+  }
   const m = document.querySelectorAll('.mini-sch .r')[1]; if (!m) return 'pas de mini-schéma';
   m.innerHTML = '<em>bleue</em>' + d.mini.map(t => '<span class="q">' + t + '</span>').join('') + (d.ecart ? '<span class="v">' + d.ecart + '</span>' : '');
   // le mini-schéma est un vrai schéma en barres : chaque « ? » a exactement la largeur de la
@@ -510,6 +568,8 @@ def textes_exemple(ex, op):
     vient de dessiner : ils ne peuvent pas mentir sur les nombres de l'exemple.
     L'exemple est une CHAÎNE de trois taches partant de la tache de référence (23/09/2026) :
     chaque tache s'écrit « a × ? + b » par rapport à la référence, comme la barre de l'outil."""
+    if op == "REPET":
+        return textes_exemple_repet(ex)
     n = len(ex["valeurs"])
     if ex["visibles"] or n != 3 or len(ex["relations"]) != 2:
         raise SystemExit("l'exemple doit être une carte à trois taches, sans jeton visible")
@@ -573,6 +633,47 @@ def textes_exemple(ex, op):
              "enquête pas à pas, jusqu'à la réponse.</span>")
     enquete = (f"<p><b>Le total</b>&nbsp;: {T} jetons, tous cachés sous trois taches.</p>"
                f"<p><b>Les indices</b>&nbsp;: {indices}</p>"
+               "<p class=\"but\">Mon enquête&nbsp;: trouver ce que cache chaque tache.</p>")
+    return dict(intro=intro, enquete=enquete, legendes=[vide, rempli, regroupe, ordonne, resous], fin=fin)
+
+
+def textes_exemple_repet(ex):
+    """« L'enquête rebondit » (25/09/2026) : trois taches, deux couleurs, la tache de référence
+    seule et l'autre couleur deux fois, un indice « de plus ». Écrits à partir de la carte rendue.
+    La couleur répétée est la plus grande : sinon le schéma regroupé serait déjà rangé et
+    l'étape 4 n'apprendrait rien (remarque de Claire du 23/09 sur les exemples à deux taches)."""
+    v, mots, ref, T = ex["valeurs"], ex["mots"], ex["ref"], ex["total"]
+    if ex["visibles"] or len(v) != 3 or len(ex["relations"]) != 1:
+        raise SystemExit("l'exemple de « L'enquête rebondit » : trois taches, un indice, sans jeton visible")
+    r = ex["relations"][0]
+    autres = [i for i in range(3) if i != ref]
+    if r["op"] != "ADD" or r["source"] != ref or mots[autres[0]] != mots[autres[1]] or mots[ref] == mots[autres[0]]:
+        raise SystemExit("l'exemple de « L'enquête rebondit » : la référence seule, l'autre couleur deux fois, « de plus »")
+    x, k, o = v[ref], r["k"], mots[autres[0]]
+    assert all(v[i] == x + k for i in autres) and T == 3 * x + 2 * k
+    q = "«&nbsp;?&nbsp;»"
+    rr, oo = mots[ref], o
+    oos = oo if oo == "orange" else oo + "s"            # « orange » est invariable
+    vide = f"Une barre par tache&nbsp;: trois barres. En haut, la <b>tache de référence</b>&nbsp;: la plus petite, ici la tache {rr}."
+    rempli = (f"La barre de la tache {rr}&nbsp;: un {q}. Chaque tache {oo}&nbsp;: un {q} et {k} de plus — "
+              f"les deux {oos} cachent le même nombre. En tout&nbsp;: {T}.")
+    regroupe = f"Toutes les parties sur une seule barre&nbsp;: trois {q}, {k} et {k} font {T}."
+    ordonne = f"Je range les {q} d'un côté et les nombres connus de l'autre&nbsp;: on peut écrire l'équation."
+    resous = (f"{k}&nbsp;+&nbsp;{k}&nbsp;=&nbsp;{2 * k}, puis {T}&nbsp;−&nbsp;{2 * k}&nbsp;=&nbsp;{T - 2 * k} et "
+              f"{T - 2 * k}&nbsp;÷&nbsp;3&nbsp;=&nbsp;{x}. Chaque {q} vaut {x}.")
+    fin = (f"La tache {rr} cache <b>{x}</b> jetons, chaque tache {oo} {x} + {k} = <b>{x + k}</b>. "
+           f"Je vérifie&nbsp;: {x} + {x + k} + {x + k} = {T}.")
+    indices = "<br>".join(f"<q>{i}</q>" for i in ex["indices"])
+    intro = (f"Sur cette carte, il y a {T} jetons au total, tous cachés sous trois taches&nbsp;: "
+             f"une tache {rr} et deux taches {oos}. Les taches de même couleur cachent le même nombre de jetons&nbsp;; "
+             "un indice relie les deux couleurs."
+             "\n      <span>Pour mener l'enquête, on commence par un <b>schéma en barres</b>&nbsp;: une "
+             f"barre par tache, et en haut la <b>tache de référence</b>, la plus petite — ici la tache {rr}. Ce "
+             "que cache chaque tache, on l'écrira «&nbsp;<b>?</b>&nbsp;». La page&nbsp;2 mène cette "
+             "enquête pas à pas, jusqu'à la réponse.</span>")
+    enquete = (f"<p><b>Le total</b>&nbsp;: {T} jetons, tous cachés sous trois taches.</p>"
+               "<p><b>La règle</b>&nbsp;: les taches de même couleur cachent le même nombre de jetons.</p>"
+               f"<p><b>L'indice</b>&nbsp;: {indices}</p>"
                "<p class=\"but\">Mon enquête&nbsp;: trouver ce que cache chaque tache.</p>")
     return dict(intro=intro, enquete=enquete, legendes=[vide, rempli, regroupe, ordonne, resous], fin=fin)
 
@@ -699,7 +800,7 @@ async def rendre(niv, tmp, corr=None):
         d = niv["dos"]
         dos = dict(niveaux=[[nom, desc, f"{qrweb}/serie-{s}.png"] for nom, desc, s in d["series"]],
                    univers=f"{qrweb}/univers.png", suite=d["suite"], reformule=d["reformule"],
-                   mini=d["mini"], ecart=d["ecart"],
+                   mini=d["mini"], ecart=d["ecart"], taches=d.get("taches"),
                    fiches=[[f["n"], f["t"]] for f in niv["fiches"]])
         await pdf_html(f"{base}{BASE_WEB}/dos.html", tmp / "dos.pdf", JS_DOS, dos)
         await nav.close()
@@ -756,6 +857,7 @@ def compresse(chemin):
         tmp.replace(chemin)
 
 CARTES_JSON = ICI / "cartes.json"
+FAMILLE_10_19 = ("additif", "multiplicatif", "additif_defi", "multiplicatif_defi")
 
 def ecrire_cartes(nom, cle_ex, reference):
     """cartes.json : pour chaque livret, l'exemple et les 20 cartes des fiches, en « total +
@@ -791,6 +893,12 @@ def controle_global():
             for k in cartes:
                 ou.setdefault(cle(k), []).append((nom, titre))
     for k, lieux in ou.items():
+        # (25/09/2026) la règle vaut entre les livrets des fiches 10 à 19 et leurs défis : les fiches
+        # 20 à 24 de « L'enquête rebondit » ont leurs graines figées depuis le 24/09, et leurs cartes
+        # sans total tirent dans 36 paires de valeurs — la fiche 22 a les nombres 13 et 39 d'une
+        # carte « fois moins » du défi de la fiche 16 (total 52) : même paire, autre problème
+        # (pas de total, deux indices), on la laisse.
+        lieux = [(nom, t) for nom, t in lieux if nom in FAMILLE_10_19]
         if len(lieux) > 1 and any(nom.endswith("_defi") for nom, _ in lieux):
             raise SystemExit(f"une carte du défi revient : {k} dans {lieux}")
     for nom, c in tout.items():

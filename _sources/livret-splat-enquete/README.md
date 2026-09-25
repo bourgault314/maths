@@ -14,6 +14,7 @@ au milieu → 8 pages A4.
 | + leurs 2 livrets de correction chacun | les mêmes | `…_correction.pdf` (inconnue « ? »), `…_correction_lettre.pdf` (inconnue en lettre), et chacun son `…_a_plier.pdf` |
 | `additif_defi` — monde 3, **Le défi** | les fiches 10 à 14, totaux de 50 à 100 | `outils/livret_splat_enquete_additif_defi.pdf` · `…_a_plier.pdf` (+ ses 2 corrigés) |
 | `multiplicatif_defi` — monde 4, **Le défi** | les fiches 15 à 19, totaux de 50 à 100 | `outils/livret_splat_enquete_multiplicatif_defi.pdf` · `…_a_plier.pdf` (+ ses 2 corrigés) |
+| `rebondit` — monde 3, partie 3, **SPLAT! L'enquête rebondit** (25/09/2026) | 20 Des taches répétées · 21 Répétées, fois plus ou moins · 22 Sans total · 23 Sans total, à retourner · 24 Le défi qui rebondit | `outils/livret_splat_enquete_rebondit.pdf` · `…_a_plier.pdf` (+ ses 2 corrigés) |
 
 Deux formats pour chacun :
 
@@ -225,3 +226,26 @@ tous les PDF actuels du site, puis se comparent à `main` page par page.
   « tache de référence », « indice », « ? », « schéma en barres » — jamais d'autre nom pour
   la représentation, jamais de nom de forme pour un jeton.
 - L'imposition A3 passe par **pikepdf** et `add_overlay` (avec pypdf, les dégradés ne suivent pas).
+
+## « L'enquête rebondit » (25/09/2026)
+
+Le 3e livret du monde 3 (décision du 24/09/2026 : l'Enquête est un monde en trois parties) : les
+fiches 20 à 24 du lot « fiches 20-34 », **exactement** les adresses figées de
+`splat-enquete-fiches-20-24-adresses.md` (`R20` … `R24`, graines 172, 34, 3, 9, 2187 ; la fiche 23
+porte « Reformule »). Préfixe R : les fiches 10 à 19 (`F10` … `F19`) restent seules épinglées sur la
+carte des mondes, 20 à 24 y entrent au lot « six mondes ».
+
+- **L'exemple** (graine 82) : trois taches, deux couleurs — la noire (référence, une tache) et
+  deux bleues « 7 jetons de plus » → 8, 15, 15, total 38. La couleur répétée est la plus grande :
+  regroupé ? ? 7 ? 7, ordonné ? ? ? 7 7 (sinon l'étape 4 n'apprendrait rien) ; `textes_exemple_repet`
+  refuse les autres cas. La page 2 ajoute la règle : « les taches de même couleur cachent le même
+  nombre de jetons ».
+- **Le dos** : séries `?s=13` (taches répétées), `?s=14` (sans total), `?s=15` (mélangé, comme la
+  fiche 24) — les réglages des fiches, sans graine, les quatre opérations ; « Pour se souvenir » parle
+  des taches de même couleur et des enquêtes sans total ; la suite est le monde 4, SPLAT! Système.
+- **Les QR** : `?f=20` … `?f=24` et `?s=13` … `?s=15` sur la page courte de l'Enquête, **étendue par
+  le lot « six mondes »** (étoiles `enq-20` … `enq-24`) ; si ce lot retient d'autres adresses, seuls
+  les QR sont à refaire.
+- **La règle « une carte du défi ne revient nulle part »** vaut entre les livrets des fiches 10 à 19
+  (`FAMILLE_10_19`) : la fiche 22, sans total, a les nombres 13 et 39 d'une carte « fois moins » du
+  défi de la fiche 16 (total 52) — même paire, autre problème, graines figées.
