@@ -10,8 +10,7 @@ from reportlab.pdfgen import canvas
 
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[1]
-IREM_LOGO = ROOT / "assets/img/logos/irem/logo-print.png"
-MATHSGO_LOGO = ROOT / "assets/img/logos/mathsgo/logo-print.png"
+MATHSGO_LOGO = ROOT / "assets/img/logos/mathsgo/m-print.png"
 
 NAVY = HexColor("#063F86")
 INK = HexColor("#10294A")
@@ -75,34 +74,9 @@ def dotted_line(c, x1, y, x2):
 
 
 def footer(c):
-    mathsgo = ImageReader(str(MATHSGO_LOGO))
-    mathsgo_px_width, mathsgo_px_height = mathsgo.getSize()
-    mathsgo_height = 47
-    mathsgo_width = mathsgo_height * mathsgo_px_width / mathsgo_px_height
-
-    irem = ImageReader(str(IREM_LOGO))
-    irem_px_width, irem_px_height = irem.getSize()
-    irem_height = mathsgo_height * 1.2
-    irem_width = irem_height * irem_px_width / irem_px_height
-
-    center_y = 13 + mathsgo_height / 2
-    c.drawImage(
-        irem,
-        28,
-        center_y - irem_height / 2,
-        width=irem_width,
-        height=irem_height,
-        mask="auto",
-    )
-    c.drawImage(
-        mathsgo,
-        28 + irem_width + 8.5,
-        13,
-        width=mathsgo_width,
-        height=mathsgo_height,
-        mask="auto",
-    )
-    text(c, "mathsgo.re · CC BY-NC-SA 4.0", A4[0] / 2, 24, 7.2, MUTED, "GoSans-Bold", "center")
+    c.drawImage(str(MATHSGO_LOGO), 15.6, 11.41, width=15.59, height=15.59, mask="auto")
+    text(c, "mathsgo.re", 36.19, 17, 7, NAVY, "GoSans-Bold")
+    text(c, "CC BY-NC-SA 4.0", A4[0] / 2, 12.5, 7, NAVY, "GoSans-Bold", "center")
     text(c, "Gabarit plastifiable", A4[0] - 28, 24, 6.8, MUTED, "GoSans", "right")
 
 
