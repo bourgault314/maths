@@ -374,6 +374,16 @@
         font-weight: 700;
         color: #334155;
     }
+    /* QR « je rejoue en ligne » (Petit Splat classique, 26/09/2026) : même boîte, même taille
+       et même texte que le QR des livrets (_sources/livret-petit-splat/render.py, CSS_QR).
+       À l'écran, la boîte est aussi un lien : sur ordinateur, on clique au lieu de scanner. */
+    .activity-instruction.avec-qr { display: flex; align-items: center; gap: 5mm; }
+    .activity-instruction.avec-qr > .txt { flex: 1 1 auto; min-width: 0; }
+    .qr-fiche { margin-left: auto; display: flex; align-items: center; gap: 3mm; flex: 0 0 auto; color: inherit; text-decoration: none; border-radius: 4px; }
+    .qr-fiche:hover .lib em, .qr-fiche:focus-visible .lib em { text-decoration: underline; }
+    .qr-fiche svg { width: 20mm; height: 20mm; display: block; }
+    .qr-fiche .lib { text-align: right; font-size: 11.5px; font-weight: 900; color: #0f172a; line-height: 1.25; white-space: nowrap; }
+    .qr-fiche .lib em { display: block; font-style: normal; font-weight: 400; font-size: 10.5px; color: #475569; margin-top: 0.6mm; }
     .activity-print-page .grid { width: 100%; }
     .activity-print-page .diagram-container { flex-basis: 64px; }
     /* Option « Espace sous le schéma » (lot 4, 26/09/2026) : 7,5 mm vides sous chaque schéma,
@@ -569,6 +579,9 @@
 <script defer src="../assets/js/mathsgo-pave-chiffres.js?v=20260918-1"></script>
 <!-- Le texte du bouton « Étape suivante ▶ » de l'écran de fin (lot A). -->
 <script src="../assets/js/splat-etapes.js?v=20260925-1"></script>
+<!-- Le QR « je rejoue en ligne » des fiches classiques (26/09/2026) : le générateur de QR
+     déjà présent dans le dépôt (exerciseur, fiche du Moulin), chargé avant window.onload. -->
+<script defer src="../auto/scripts/vendor/qrcode-generator.js"></script>
 </head>
 <body>
 
@@ -1005,6 +1018,60 @@ function buildShareUrl() {
     url.search = params.toString();
     url.hash = '';
     return url.toString();
+}
+
+/* ===== QR « je rejoue en ligne » sur chaque fiche classique (26/09/2026, demande de Gwenaël) =====
+   Chaque fiche imprimée de Petit Splat classique porte, dans son cadre de consigne, le QR de
+   SES cartes en version élève : même graine, donc mêmes cartes (prouvé au lot 4), comme les
+   QR des livrets. Toujours présent, sans réglage. L'adresse du QR est toujours celle du site
+   (une feuille imprimée ne connaît pas le serveur local) ; à l'écran, la boîte est aussi un
+   lien, vers la même adresse sur le serveur qui sert la page.
+   Les livrets posent déjà leur propre QR au même endroit : render.py demande qr=0. */
+const QR_SITE = 'https://mathsgo.re';
+const QR_FICHE_ACTIF = new URLSearchParams(window.location.search).get('qr') !== '0';
+
+function adresseEleveFiche(origine) {
+    const url = new URL('/splat/petit/', origine);
+    const params = new URLSearchParams();
+    params.set('support', 'eleve');
+    params.set('problem', 'classic');
+    params.set('target', document.getElementById('targetVal').value);
+    params.set('splats', document.getElementById('splatMode').value);
+    params.set('exercise', document.getElementById('gameMode').value);
+    params.set('seed', activeSeed);
+    /* 8 ou 9 cases : l'élève rejoue le même nombre de cartes que sur sa feuille */
+    const grille = document.getElementById('gridSize').value;
+    if (grille !== '3x4') params.set('grid', grille);
+    if (document.getElementById('espaceSchema').checked) params.set('espace', '1');
+    if (parcoursId) params.set('parcours', parcoursId);
+    url.search = params.toString();
+    return url.toString();
+}
+
+function ajouterQrFiche(instruction) {
+    if (!QR_FICHE_ACTIF || isTBI || isEleve || getProblemType() !== 'classic') return;
+    if (typeof window.qrcode !== 'function') return;   /* générateur absent : la fiche reste sans QR */
+    let svg = '';
+    try {
+        const qr = window.qrcode(0, 'M');
+        qr.addData(adresseEleveFiche(QR_SITE), 'Byte');
+        qr.make();
+        svg = qr.createSvgTag({ cellSize: 1, margin: 2, scalable: true });
+    } catch (e) {
+        return;
+    }
+    const txt = document.createElement('div');
+    txt.className = 'txt';
+    while (instruction.firstChild) txt.appendChild(instruction.firstChild);
+    const lien = document.createElement('a');
+    lien.className = 'qr-fiche';
+    lien.href = adresseEleveFiche(window.location.origin);
+    lien.target = '_blank';
+    lien.rel = 'noopener';
+    lien.title = 'Rejouer ces cartes en ligne (version élève)';
+    lien.innerHTML = `<div class="lib">J'ai terminé<br>ma fiche,<em>je rejoue en ligne</em></div>` + svg;
+    instruction.classList.add('avec-qr');
+    instruction.append(txt, lien);
 }
 
 function fallbackCopyText(text) {
@@ -2313,6 +2380,7 @@ function createPageElement(chunk, isCorrectionPage, mirror) {
             const instruction = document.createElement('div');
             instruction.className = 'activity-instruction';
             instruction.innerHTML = getInstructionHtml();
+            ajouterQrFiche(instruction);
             inner.appendChild(instruction);
         }
     }

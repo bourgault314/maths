@@ -477,6 +477,9 @@ async def pages(niv, tmp, correction=False):
                    f"&target={niv['target']}&splats={f['splats']}&exercise={f['ex']}"
                    f"&seed={niv['graines'][f['n']]}"
                    + ("&espace=1" if f.get("espace") else "")
+                   # qr=0 : l'outil pose désormais son propre QR sur chaque fiche classique
+                   # (26/09/2026) ; le livret garde le sien (JS_QR), un seul QR par page.
+                   + "&qr=0"
                    + "&title=" + quote(f"Fiche {f['n']} — {f['t']}")
                    + ("&correction=1&rv=0" if correction else ""))
             # la fiche N est la page N+1 du livret (la couverture est la page 1)
