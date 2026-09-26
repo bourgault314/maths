@@ -168,8 +168,16 @@ pypdf pour l'imposition.
 
 ## Conventions
 
-- Logos IREMI + maths&go dans le bandeau des pages 1 et 8 ; rien dans le pied,
-  hormis la signature `mathsgo.re/splat · CC BY-NC-SA 4.0` sur les 8 pages.
+- Logos (relecture du monde 1, lots 2 et 3, 25-26/09/2026) : IREMI + maths&go **une
+  seule fois**, en bas du dos (page 8), à droite du crédit. En dessous, le pictogramme et le nom de
+  l'Unité apprenante Michel Debré (`/assets/img/logos/ua-debre/icone.svg`, demandé par Claire le
+  26/09/2026). Aucun logo sur la couverture,
+  ni en haut du dos, ni sur les six pages-fiches : `render.py` retire au rendu le bloc
+  `.activity-logos` que l'outil imprime (l'outil, lui, garde ses logos). La signature
+  `mathsgo.re/splat · CC BY-NC-SA 4.0` reste au pied des 8 pages.
+- Numéros de pages : « page N » en gras, au coin extérieur du bas des pages 2 à 7 (à droite
+  si N est impair, à gauche s'il est pair), posé par `render.py`. Ni la couverture ni le
+  dos. C'est le numéro dans le livret, pas celui de la feuille A3.
   **Attention** : l'outil écrit `mathsgo.re/splat/petit` au pied des fiches — c'est la
   bonne adresse pour une fiche imprimée depuis le générateur, mais pas pour un livret,
   qui est lu par des adultes cherchant l'ensemble des ressources. `render.py` repointe

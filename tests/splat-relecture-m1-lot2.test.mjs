@@ -27,7 +27,10 @@ test("A. couverture : aucun logo, et le splat remonté au milieu du titre", () =
 test("A. dos : aucun logo, plus de « Mes fiches », QR de 30 mm, « Pour se souvenir » agrandi, crédit IREMI gardé", () => {
   for (const f of FAMILLES) {
     const d = lire(`_sources/${f}/dos.html`);
-    assert.doesNotMatch(d, /logo-print\.png|class="logos"|\.logos\{/, `${f} : aucun logo au dos`);
+    // lot 3 (26/09/2026) : au monde 1, IREMI et maths&go reviennent UNE fois, dans le crédit en
+    // bas du dos (tests/splat-relecture-m1-lot3.test.mjs) ; le haut du dos reste sans logo
+    const horsCredit = d.replace(/<div class="droite">[\s\S]*?<div class="ua">[\s\S]*?<\/div>\s*<\/div>/, "");
+    assert.doesNotMatch(horsCredit, /logo-print\.png|class="logos"|\.logos\{/, `${f} : aucun logo au dos`);
     assert.doesNotMatch(d.replace(/\/\*[\s\S]*?\*\//g, ""), /class="prog"|\.prog |je colorie l'étoile/, `${f} : plus de « Mes fiches »`);
     assert.match(d, /\n\.niv img\{width:30mm;height:30mm;/, `${f} : QR « Encore des cartes » de 30 mm`);
     assert.match(d, /\n\.suite img\{width:30mm;height:30mm;/, `${f} : QR « La suite du voyage » de 30 mm`);

@@ -1,0 +1,30 @@
+<!-- Unité apprenante Michel Debré (académie de La Réunion) : pictogramme redessiné en vectoriel
+     pour l'impression des livrets SPLAT!, d'après le logo transmis le 26/09/2026 (sarcelle #0d7477,
+     sur fond blanc, sans le fond dégradé ni l'adresse). -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-62 -62 124 124">
+<title>Unité apprenante Michel Debré</title>
+<polygon points="0.0,-49.0 42.4,-24.5 42.4,24.5 0.0,49.0 -42.4,24.5 -42.4,-24.5" fill="none" stroke="#0d7477" stroke-width="3.8" stroke-linejoin="round"/>
+<g fill="#0d7477">
+<circle cx="0.0" cy="-21.7" r="2.4"/>
+<circle cx="0.0" cy="-30.7" r="2.4"/>
+<circle cx="18.8" cy="-10.8" r="2.4"/>
+<circle cx="26.6" cy="-15.3" r="2.4"/>
+<circle cx="18.8" cy="10.8" r="2.4"/>
+<circle cx="26.6" cy="15.3" r="2.4"/>
+<circle cx="0.0" cy="21.7" r="2.4"/>
+<circle cx="0.0" cy="30.7" r="2.4"/>
+<circle cx="-18.8" cy="10.8" r="2.4"/>
+<circle cx="-26.6" cy="15.3" r="2.4"/>
+<circle cx="-18.8" cy="-10.9" r="2.4"/>
+<circle cx="-26.6" cy="-15.4" r="2.4"/>
+</g>
+<g fill="#fff" stroke="#0d7477" stroke-width="3.8">
+<circle cx="0.0" cy="-49.0" r="9"/>
+<circle cx="42.4" cy="-24.5" r="9"/>
+<circle cx="42.4" cy="24.5" r="9"/>
+<circle cx="0.0" cy="49.0" r="9"/>
+<circle cx="-42.4" cy="24.5" r="9"/>
+<circle cx="-42.4" cy="-24.5" r="9"/>
+<circle cx="0" cy="0" r="11"/>
+</g>
+</svg>

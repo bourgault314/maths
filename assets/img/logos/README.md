@@ -25,6 +25,7 @@ chemins canoniques ci-dessous.
 | CPS | cœur, dialogue et loupe | `/assets/img/logos/cps/logo.svg` | `/assets/img/icons/cps.svg` |
 | Dopamine | cerveau coloré | `/assets/img/logos/dopamine/cerveau.png` | `/assets/img/logos/cerveau-dopamine.png` |
 | Dopamine | cerveau et molécule | `/assets/img/logos/dopamine/logo.jpg` | `/assets/img/logos/logo-dopamine.jpg` |
+| Unité apprenante Michel Debré | pictogramme (hexagone), redessiné pour l’impression, au dos des livrets SPLAT! | `/assets/img/logos/ua-debre/icone.svg` | — |
 
 Les copies canoniques et historiques d’un même fichier réutilisent exactement le
 même contenu binaire dans le dépôt.
