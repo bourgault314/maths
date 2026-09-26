@@ -52,7 +52,7 @@
     .control-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
     .seed-section { padding-bottom: 4px; }
 
-    .seed-row { display: grid; grid-template-columns: 1fr 38px; gap: 6px; align-items: center; }
+    .seed-row { display: grid; grid-template-columns: 1fr 38px 38px; gap: 6px; align-items: center; }
     .seed-btn { height: 32px; border: 1px solid #e2e8f0; border-radius: 8px; background: #f1f5f9; cursor: pointer; font-size: 16px; font-weight: 800; }
     .seed-btn:hover { background: #e2e8f0; }
     #seedInput.seed-auto { color: #94a3b8; font-style: italic; border-color: #e2e8f0; }
@@ -61,11 +61,9 @@
     .seed-status.manual { color: #1e40af; }
     .seed-meta { margin-top: 3px; min-height: 18px; }
     .seed-meta .seed-status { margin-top: 0; }
-    .share-actions { display: flex; align-items: center; justify-content: flex-start; gap: 7px; margin-top: 5px; min-height: 24px; }
-    .share-btn { padding: 3px 7px; border: 1px solid #cbd5e1; border-radius: 6px; background: #fff; color: #475569; cursor: pointer; font-size: 10.5px; font-weight: 700; white-space: nowrap; }
-    .share-btn:hover { background: #f8fafc; border-color: #94a3b8; }
-    .share-feedback { color: #059669; font-size: 10.5px; font-weight: 700; white-space: nowrap; }
-    .share-feedback.error { color: #b91c1c; }
+    /* « Lien copié ! » prend deux secondes la place de « graine automatique ». */
+    .seed-status.copied { color: #059669; }
+    .seed-status.error { color: #b91c1c; }
     
     .flags { display: flex; gap: 10px; margin-bottom: 10px; }
     .flag-btn { font-size: 12px; font-weight: 800; cursor: pointer; opacity: 0.5; padding: 4px 10px; border-radius: 6px; background:#f1f5f9; border: 1px solid #e2e8f0; }
@@ -135,11 +133,13 @@
     .grid-3x4 .cell:nth-child(3n),
     .grid-3x3 .cell:nth-child(3n),
     .grid-2x4 .cell:nth-child(2n),
-    .grid-2x3 .cell:nth-child(2n) { border-right: none; }
+    .grid-2x3 .cell:nth-child(2n),
+    .grid-2x2 .cell:nth-child(2n) { border-right: none; }
     .grid-3x4 .cell:nth-child(n+10),
     .grid-3x3 .cell:nth-child(n+7),
     .grid-2x4 .cell:nth-child(n+7),
-    .grid-2x3 .cell:nth-child(n+5) { border-bottom: none; }
+    .grid-2x3 .cell:nth-child(n+5),
+    .grid-2x2 .cell:nth-child(n+3) { border-bottom: none; }
     
     /* ANIMATIONS TBI MODE */
     .tbi-mode { cursor: pointer; transition: transform 0.2s ease, box-shadow 0.2s ease; }
@@ -288,6 +288,8 @@
     .relation-label-c { color: #dc2626; }
     .relation-given-part .relation-part-value { font-weight: 950; }
     .relation-clue-3 { font-size: 10.4px; line-height: 1.05; padding: 3px 5px; }
+    /* Deux indices de deux lignes chacun : un petit blanc pour voir où finit le premier. */
+    .relation-clue > div + div { margin-top: 3px; }
     .relation3-cell { padding: 5px; }
     .relation3-cell .part-splat { flex: 1.55 1 0; margin-bottom: 5px; }
     .relation3-cell .relation-clue { width: 94%; font-size: 11.5px; line-height: 1.08; padding: 5px 7px; margin-bottom: 6px; }
@@ -303,6 +305,15 @@
       font-weight: 900;
       text-align: center;
     }
+    /* 4 cases par page (Enquête et Système, essai du 26/09/2026) : plateau, indices et
+       schéma gardent EXACTEMENT la taille qu'ils ont en 6 par page (plateau de 28 mm de
+       haut, mêmes polices) ; toute la hauteur gagnée reste blanche sous l'indice, pour
+       que l'élève y dessine son schéma (« Schéma à tracer »). */
+    .grid-2x2 .relation-cell .part-splat { flex: 0 0 28mm; }
+    /* Cases « + − » et « × ÷ » : le signe en gros, les mots dessous. */
+    #relationControls .check-control { display: flex; margin-bottom: 0; }
+    .check-sym { display: block; font-size: 15px; font-weight: 900; color: #1e293b; line-height: 1.1; }
+    .check-sub { display: block; font-size: 10px; font-weight: 600; color: #64748b; }
     .relation-controls { margin-top: 3px; }
     .option-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; }
     .option-pair .check-control { min-height: 32px; padding: 6px 7px; }
@@ -598,43 +609,69 @@
       </div>
     </div>
 
-    <div class="section">
+    <!-- Mise en page (26/09/2026) : chaque type de problème ne montre que les
+         mises en page qu'il sait remplir (les autres ne sont plus grisées, elles
+         disparaissent) ; la liste est reconstruite par updateProblemTypeUI(), et la
+         rubrique se cache s'il ne reste qu'un seul choix. -->
+    <div class="section" id="layoutSection">
       <div class="sec-title" data-i18n="layout">Mise en page</div>
       <select id="gridSize" onchange="startGen()">
           <option value="3x4" selected data-i18n="grid_12">12 cases (3x4)</option>
           <option value="3x3" data-i18n="grid_9">9 cases (3x3)</option>
           <option value="2x4" data-i18n="grid_8">8 cases (Grosses)</option>
-          <option value="2x3" data-i18n="grid_6">6 cases (Enquête)</option>
       </select>
     </div>
 
     <div class="section">
       <div class="sec-title" data-i18n="content">Contenu</div>
       <div class="control">
-        <label for="problemType">Type de problème</label>
-        <select id="problemType" onchange="updateProblemTypeUI(); startGen()">
-          <option value="classic" selected>Petit Splat classique</option>
-          <option value="relation2">Relation entre 2 taches</option>
-          <option value="relation3">Enquête avec 3 taches</option>
-          <option value="sums3">Défi : sommes de taches</option>
+        <label for="problemType" data-i18n="problem_type">Type de problème</label>
+        <select id="problemType" onchange="onContenuChange()">
+          <option value="classic" selected data-i18n="module_classic">Petit Splat classique</option>
+          <option value="relation2" data-i18n="module_relation2">Enquête à 2 taches</option>
+          <option value="relation3" data-i18n="module_relation3">Enquête à 3 taches</option>
+          <option value="sums3" data-i18n="module_sums3">Système : sommes de taches</option>
         </select>
       </div>
+      <!-- Enquête à 2 et à 3 taches (26/09/2026) : les réglages de SPLAT! mode C
+           remplacent l'ancien « Niveau ». On ne peut pas décocher les deux familles. -->
+      <div id="relationControls" class="control" style="display:none;">
+        <label data-i18n="clues">Indices</label>
+        <div class="option-pair">
+          <label class="check-control" title="de plus / de moins">
+            <input type="checkbox" id="relOpAdd" checked onchange="onRelationOpChange(this)">
+            <span class="check-text"><span class="check-sym">+ &minus;</span> <span class="check-sub">de plus / moins</span></span>
+          </label>
+          <label class="check-control" title="fois plus / fois moins">
+            <input type="checkbox" id="relOpMult" checked onchange="onRelationOpChange(this)">
+            <span class="check-text"><span class="check-sym">&times; &divide;</span> <span class="check-sub">fois plus / moins</span></span>
+          </label>
+        </div>
+      </div>
       <div class="control-grid">
-        <div id="relationControls" class="control" style="display:none;">
-          <label>Niveau</label>
-          <select id="relationLevel" onchange="startGen()">
-            <option value="simple" selected>Simple</option>
-            <option value="advanced">Avancé</option>
-            <option value="expert">Expert</option>
+        <div id="structureControl" class="control" style="display:none;">
+          <label for="relStructure" data-i18n="structure">Structure</label>
+          <select id="relStructure" onchange="onContenuChange()" title="Pivot : les deux indices partent de la même tache · Chaîne : le second indice part de la tache trouvée avec le premier">
+            <option value="pivot" selected>Pivot</option>
+            <option value="chain">Chaîne</option>
+            <option value="mix">Au hasard</option>
           </select>
         </div>
         <div class="control" id="targetControl">
             <label data-i18n="target">Cible max</label>
-            <select id="targetVal" onchange="startGen()">
+            <select id="targetVal" onchange="onContenuChange()">
               <option value="20" selected>20 (Standard)</option>
               <option value="50">50 (Avancé)</option>
               <option value="100">100 (Expert)</option>
             </select>
+        </div>
+        <div class="control" id="kmaxControl" style="display:none;">
+          <label for="relKmax" data-i18n="kmax">Rapport max</label>
+          <select id="relKmax" onchange="onContenuChange()">
+            <option value="2" selected>&times;2</option>
+            <option value="3">jusqu'à &times;3</option>
+            <option value="4">jusqu'à &times;4</option>
+          </select>
         </div>
         <div class="control" id="splatCountControl">
             <label data-i18n="splat_count">Taches</label>
@@ -645,6 +682,14 @@
               <option value="mix">Mélange Expert (2 à 6)</option>
             </select>
         </div>
+      </div>
+      <div class="control" id="vocabControl" style="display:none;">
+        <label for="relVocab" data-i18n="vocab">Vocabulaire</label>
+        <select id="relVocab" onchange="onContenuChange()">
+          <option value="fois" selected>fois plus / fois moins</option>
+          <option value="mots">le double, la moitié, le triple, le tiers…</option>
+          <option value="mix">Mélange des deux</option>
+        </select>
       </div>
       <div class="control" id="exerciseControl">
         <label data-i18n="exercise">Exercice</label>
@@ -658,22 +703,28 @@
 
     <div class="section seed-section">
       <div class="sec-title" data-i18n="seed_section">Graine</div>
+      <!-- 🔗 à côté du dé (26/09/2026) : « Lien copié ! » s'affiche deux secondes à la
+           place de « graine automatique », la ligne « Copier le lien » a disparu. -->
       <div class="seed-row">
         <input type="text" id="seedInput" class="seed-auto" inputmode="text" autocomplete="off" oninput="onSeedInput()" onfocus="this.select()" onkeydown="if(event.key==='Enter') startGen()">
         <button type="button" class="seed-btn" onclick="newAutoSeed()" title="Nouvelle graine" aria-label="Nouvelle graine">🎲</button>
+        <button type="button" class="seed-btn" id="shareBtn" onclick="copyShareLink()" title="Copier le lien de cette fiche" aria-label="Copier le lien de cette fiche">🔗</button>
       </div>
       <div class="seed-meta">
-        <div id="seedStatus" class="seed-status" data-i18n="seed_status_auto">graine automatique</div>
-      </div>
-      <div class="share-actions">
-        <button type="button" class="share-btn" onclick="copyShareLink()" data-i18n="share_link">🔗 Copier le lien</button>
-        <span id="shareFeedback" class="share-feedback" role="status" aria-live="polite"></span>
+        <div id="seedStatus" class="seed-status" role="status" aria-live="polite" data-i18n="seed_status_auto">graine automatique</div>
       </div>
     </div>
 
     <div class="section print-title-control">
       <label for="activityLabel">Titre imprimé</label>
       <input id="activityLabel" type="text" placeholder="ex. Activité 1" oninput="renderPages()">
+    </div>
+
+    <!-- La mention « Sans cookie ni traceur » est écrite ici, tout en bas de la partie
+         qui défile (26/09/2026) : la présence de [data-mathsgo-confidentialite] suffit
+         à retirer celle que mention-confidentialite.js pose sinon en bas à droite. -->
+    <div class="menuConsent">
+      <a data-mathsgo-confidentialite href="../confidentialite.html">Sans cookie ni traceur · Confidentialité</a>
     </div>
 
   </div>
@@ -686,13 +737,6 @@
     <button class="btn btn-print" id="printBtn" onclick="window.print()" data-i18n="btn_print">IMPRIMER</button>
   </div>
 
-  <!-- La mention « Sans cookie ni traceur » est écrite ici : la présence de
-       [data-mathsgo-confidentialite] suffit à retirer celle que
-       mention-confidentialite.js pose sinon en bas à droite de l'écran. -->
-  <div class="menuConsent">
-    <a data-mathsgo-confidentialite href="../confidentialite.html">Sans cookie ni traceur · Confidentialité</a>
-  </div>
-
 </aside>
 
 <main id="mainArea"></main>
@@ -702,21 +746,23 @@ const i18n = {
     fr: {
         title: "Petit Splat!", lang: "Langue", options: "Options", opt_corr: "Correction + Énoncé", opt_hide_diag: "Schéma à tracer",
         opt_non_prop: "Non proportionnel",
-        layout: "Mise en page", grid_12: "12 cases (3x4)", grid_9: "9 cases (3x3)", grid_8: "8 cases (Grosses)", grid_6: "6 cases (Enquête)",
+        layout: "Mise en page", grid_12: "12 cases (3x4)", grid_9: "9 cases (3x3)", grid_8: "8 cases (Grosses)", grid_6: "6 cases (2x3)", grid_4: "4 cases (2x2)",
         content: "Contenu", target: "Cible max", splat_count: "Taches",
-        problem_type: "Type de problème", module_classic: "Petit Splat classique", module_relation2: "Relation entre 2 taches", module_relation3: "Enquête avec 3 taches", module_sums3: "Défi : sommes de taches",
+        problem_type: "Type de problème", module_classic: "Petit Splat classique", module_relation2: "Enquête à 2 taches", module_relation3: "Enquête à 3 taches", module_sums3: "Système : sommes de taches",
+        clues: "Indices", kmax: "Rapport max", vocab: "Vocabulaire", structure: "Structure",
         exercise: "Exercice", mode_hidden: "Compléter le schéma en barres", mode_draw: "Dessiner les jetons", mode_mix: "Mélange",
-        seed_section: "Graine", seed_label: "Graine", seed_status_auto: "graine automatique", seed_status_manual: "graine fixée", share_link: "🔗 Copier le lien",
+        seed_section: "Graine", seed_label: "Graine", seed_status_auto: "graine automatique", seed_status_manual: "graine fixée", link_copied: "Lien copié\u00a0!", link_error: "Copie impossible",
         btn_mix: "GÉNÉRER", btn_print: "IMPRIMER"
     },
     en: {
         title: "Petit Splat!", lang: "Language", options: "Options", opt_corr: "Key + Problem", opt_hide_diag: "Draw Diagram",
         opt_non_prop: "Non-proportional diagrams",
-        layout: "Layout", grid_12: "12 boxes (3x4)", grid_9: "9 boxes (3x3)", grid_8: "8 boxes (Large)", grid_6: "6 boxes (Investigation)",
+        layout: "Layout", grid_12: "12 boxes (3x4)", grid_9: "9 boxes (3x3)", grid_8: "8 boxes (Large)", grid_6: "6 boxes (2x3)", grid_4: "4 boxes (2x2)",
         content: "Content", target: "Max target", splat_count: "Splats",
-        problem_type: "Problem type", module_classic: "Classic Petit Splat", module_relation2: "Relation between 2 splats", module_relation3: "Investigation with 3 splats", module_sums3: "Challenge: sum clues",
+        problem_type: "Problem type", module_classic: "Classic Petit Splat", module_relation2: "Investigation with 2 splats", module_relation3: "Investigation with 3 splats", module_sums3: "System: sum clues",
+        clues: "Clues", kmax: "Max ratio", vocab: "Wording", structure: "Structure",
         exercise: "Exercise", mode_hidden: "Complete the bar model", mode_draw: "Draw Tokens", mode_mix: "Mix",
-        seed_section: "Seed", seed_label: "Seed", seed_status_auto: "automatic seed", seed_status_manual: "fixed seed", share_link: "🔗 Copy link",
+        seed_section: "Seed", seed_label: "Seed", seed_status_auto: "automatic seed", seed_status_manual: "fixed seed", link_copied: "Link copied!", link_error: "Copy failed",
         btn_mix: "GENERATE", btn_print: "PRINT"
     }
 };
@@ -784,6 +830,7 @@ function updateSeedUI() {
     input.classList.toggle('seed-auto', seedMode === 'auto');
     input.classList.toggle('seed-manual', seedMode === 'manual');
     status.classList.toggle('manual', seedMode === 'manual');
+    if (shareFeedbackTimer) return; /* « Lien copié ! » reste ses deux secondes */
     status.innerText = seedMode === 'manual' ? dict.seed_status_manual : dict.seed_status_auto;
 }
 
@@ -842,7 +889,7 @@ function readBooleanParam(params, name, fallback) {
 
 function loadSharedConfiguration() {
     const params = new URLSearchParams(window.location.search);
-    const sharedNames = ['seed', 'support', 'grid', 'problem', 'target', 'splats', 'exercise', 'level', 'given', 'correction', 'rv', 'diagram', 'scale', 'title', 'parcours'];
+    const sharedNames = ['seed', 'support', 'grid', 'problem', 'target', 'splats', 'exercise', 'level', 'ops', 'kmax', 'vocab', 'structure', 'given', 'correction', 'rv', 'diagram', 'scale', 'title', 'parcours'];
     if (!sharedNames.some(name => params.has(name))) return false;
 
     const seed = params.get('seed');
@@ -866,7 +913,7 @@ function loadSharedConfiguration() {
         setSelectValue('splatMode', params.get('splats'));
         setSelectValue('gameMode', params.get('exercise'));
     } else {
-        setSelectValue('relationLevel', params.get('level'));
+        readRelationParams(params);
         const giveOnePart = document.getElementById('giveOnePart');
         if (giveOnePart) giveOnePart.checked = readBooleanParam(params, 'given', giveOnePart.checked);
     }
@@ -911,7 +958,7 @@ function buildShareUrl() {
         params.set('splats', document.getElementById('splatMode').value);
         params.set('exercise', document.getElementById('gameMode').value);
     } else {
-        params.set('level', document.getElementById('relationLevel').value);
+        writeRelationParams(params, problemType);
         params.set('given', document.getElementById('giveOnePart').checked ? '1' : '0');
     }
 
@@ -944,16 +991,20 @@ function fallbackCopyText(text) {
     return copied;
 }
 
+/* « Lien copié ! » s'écrit deux secondes à la place de « graine automatique »
+   (ou « graine fixée »), puis la ligne revient d'elle-même. */
 function showShareFeedback(message, isError) {
-    const feedback = document.getElementById('shareFeedback');
-    if (!feedback) return;
-    feedback.innerText = message;
-    feedback.classList.toggle('error', !!isError);
+    const status = document.getElementById('seedStatus');
+    if (!status) return;
+    status.innerText = message;
+    status.classList.toggle('copied', !isError);
+    status.classList.toggle('error', !!isError);
     if (shareFeedbackTimer) clearTimeout(shareFeedbackTimer);
     shareFeedbackTimer = setTimeout(() => {
-        feedback.innerText = '';
-        feedback.classList.remove('error');
-    }, 2200);
+        shareFeedbackTimer = null;
+        status.classList.remove('copied', 'error');
+        updateSeedUI();
+    }, 2000);
 }
 
 async function copyShareLink() {
@@ -966,10 +1017,8 @@ async function copyShareLink() {
         }
     } catch (e) { copied = false; }
     if (!copied) copied = fallbackCopyText(link);
-    const dict = currentLang === 'en'
-        ? { success: 'Link copied!', error: 'Copy failed' }
-        : { success: 'Lien copié !', error: 'Copie impossible' };
-    showShareFeedback(copied ? dict.success : dict.error, !copied);
+    const dict = i18n[currentLang] || i18n.fr;
+    showShareFeedback(copied ? dict.link_copied : dict.link_error, !copied);
 }
 
 function setLang(l, el) { 
@@ -995,52 +1044,125 @@ function getProblemType() {
     return el ? el.value : 'classic';
 }
 
+/* Mises en page proposées par type de problème (26/09/2026). Le classique garde
+   exactement ses trois choix ; 4 cases (2x2) laisse à l'élève la place de tracer son
+   schéma (essai demandé par Gwenaël, pour de futurs livrets sans corrigé). */
+const GRID_CHOICES = {
+    classic:   ['3x4', '3x3', '2x4'],
+    relation2: ['3x3', '2x2'],
+    relation3: ['2x3', '2x2'],
+    sums3:     ['2x3', '2x2']
+};
+const GRID_LABEL_KEYS = { '3x4': 'grid_12', '3x3': 'grid_9', '2x4': 'grid_8', '2x3': 'grid_6', '2x2': 'grid_4' };
+
+function updateGridChoices(problemType) {
+    const gridSelect = document.getElementById('gridSize');
+    if (!gridSelect) return;
+    const choices = GRID_CHOICES[problemType] || GRID_CHOICES.classic;
+    const current = gridSelect.value;
+    const shown = Array.from(gridSelect.options).map(o => o.value).join(',');
+    if (shown !== choices.join(',')) {
+        const dict = i18n[currentLang] || i18n.fr;
+        gridSelect.innerHTML = choices.map(v => {
+            const key = GRID_LABEL_KEYS[v];
+            return `<option value="${v}" data-i18n="${key}">${dict[key] || v}</option>`;
+        }).join('');
+    }
+    /* Le premier choix de la liste est la mise en page habituelle du type. */
+    gridSelect.value = choices.includes(current) ? current : choices[0];
+    const section = document.getElementById('layoutSection');
+    if (section) section.style.display = choices.length > 1 ? '' : 'none';
+}
+
+/* Anciennes adresses « level=simple|advanced|expert » (avant le 26/09/2026) : on
+   les traduit vers les nouveaux réglages, et le générateur rejoue EXACTEMENT
+   l'ancien niveau (mêmes tirages, donc mêmes nombres) tant qu'on ne touche pas au
+   contenu. Seules les phrases ont changé. */
+const RELATION_LEVELS = {
+    simple:   { kmax: '2', structure: 'pivot', pivotNoire: true,  deltaLimit: 6,  baseDivisor: 5, sums: 'simple' },
+    advanced: { kmax: '3', structure: 'pivot', pivotNoire: false, deltaLimit: 10, baseDivisor: 6, sums: 'advanced' },
+    expert:   { kmax: '4', structure: 'mix',   pivotNoire: false, deltaLimit: 12, baseDivisor: 7, sums: 'expert' }
+};
+let relationLegacyLevel = null;
+
+function onContenuChange() {
+    relationLegacyLevel = null;
+    updateProblemTypeUI();
+    startGen();
+}
+
+/* On ne peut pas tout décocher : la case qu'on vient de décocher se recoche. */
+function onRelationOpChange(box) {
+    const add = document.getElementById('relOpAdd');
+    const mult = document.getElementById('relOpMult');
+    if (add && mult && !add.checked && !mult.checked) box.checked = true;
+    onContenuChange();
+}
+
+function readRelationParams(params) {
+    const ops = params.get('ops');
+    const isNew = ['ops', 'kmax', 'vocab', 'structure'].some(name => params.has(name));
+    const level = params.get('level');
+    if (!isNew && RELATION_LEVELS[level]) {
+        const old = RELATION_LEVELS[level];
+        relationLegacyLevel = level;
+        document.getElementById('relOpAdd').checked = true;
+        document.getElementById('relOpMult').checked = true;
+        setSelectValue('relKmax', old.kmax);
+        setSelectValue('relVocab', 'mix');
+        setSelectValue('relStructure', old.structure);
+    } else {
+        if (ops) {
+            const list = ops.split(',');
+            const add = list.includes('add'), mult = list.includes('mult');
+            if (add || mult) {
+                document.getElementById('relOpAdd').checked = add;
+                document.getElementById('relOpMult').checked = mult;
+            }
+        }
+        setSelectValue('relKmax', params.get('kmax'));
+        setSelectValue('relVocab', params.get('vocab'));
+        setSelectValue('relStructure', params.get('structure'));
+    }
+    updateProblemTypeUI();
+}
+
+function writeRelationParams(params, problemType) {
+    if (relationLegacyLevel) {
+        params.set('level', relationLegacyLevel);
+        return;
+    }
+    if (problemType === 'sums3') return; /* le Système ne se règle que par la cible */
+    const ops = [];
+    if (document.getElementById('relOpAdd').checked) ops.push('add');
+    if (document.getElementById('relOpMult').checked) ops.push('mult');
+    params.set('ops', ops.join(','));
+    if (ops.includes('mult')) {
+        params.set('kmax', document.getElementById('relKmax').value);
+        params.set('vocab', document.getElementById('relVocab').value);
+    }
+    if (problemType === 'relation3') params.set('structure', document.getElementById('relStructure').value);
+}
+
 function updateProblemTypeUI() {
     const problemType = getProblemType();
     const isClassic = problemType === 'classic';
-    const isRelation2 = problemType === 'relation2';
-    const isRelation3 = problemType === 'relation3';
-    const isSums3 = problemType === 'sums3';
-    const splatCountControl = document.getElementById('splatCountControl');
-    const exerciseControl = document.getElementById('exerciseControl');
-    const relationControls = document.getElementById('relationControls');
-    const relationHintOption = document.getElementById('relationHintOption');
-    const gridSelect = document.getElementById('gridSize');
-    const opt3x4 = gridSelect ? gridSelect.querySelector('option[value="3x4"]') : null;
-    const opt3x3 = gridSelect ? gridSelect.querySelector('option[value="3x3"]') : null;
-    const opt2x4 = gridSelect ? gridSelect.querySelector('option[value="2x4"]') : null;
-    const opt2x3 = gridSelect ? gridSelect.querySelector('option[value="2x3"]') : null;
+    const isEnquete = problemType === 'relation2' || problemType === 'relation3';
+    const show = (id, visible, how = '') => {
+        const el = document.getElementById(id);
+        if (el) el.style.display = visible ? how : 'none';
+    };
+    const multEl = document.getElementById('relOpMult');
 
-    if (splatCountControl) splatCountControl.style.display = isClassic ? '' : 'none';
-    if (exerciseControl) exerciseControl.style.display = isClassic ? '' : 'none';
-    if (relationControls) relationControls.style.display = isClassic ? 'none' : '';
-    if (relationHintOption) relationHintOption.style.display = isClassic ? 'none' : 'flex';
+    show('splatCountControl', isClassic);
+    show('exerciseControl', isClassic);
+    show('relationControls', isEnquete);
+    show('kmaxControl', isEnquete && !!(multEl && multEl.checked));
+    show('vocabControl', isEnquete && !!(multEl && multEl.checked));
+    show('structureControl', problemType === 'relation3');
+    show('relationHintOption', !isClassic, 'flex');
 
-    // Chaque module garde sa mise en page lisible :
-    // - classique : choix habituel 12 / 9 / 8 ;
-    // - relation 2 : 9 cases ;
-    // - enquête 3 et sommes : 6 cases (2 colonnes × 3 lignes), sans modifier le classique.
-    if (gridSelect) {
-        if (isClassic) {
-            if (opt3x4) opt3x4.disabled = false;
-            if (opt3x3) opt3x3.disabled = false;
-            if (opt2x4) opt2x4.disabled = false;
-            if (opt2x3) opt2x3.disabled = true;
-            if (gridSelect.value === '2x3') gridSelect.value = '3x4';
-        } else if (isRelation2) {
-            if (opt3x4) opt3x4.disabled = true;
-            if (opt3x3) opt3x3.disabled = false;
-            if (opt2x4) opt2x4.disabled = true;
-            if (opt2x3) opt2x3.disabled = true;
-            if (gridSelect.value !== '3x3') gridSelect.value = '3x3';
-        } else if (isRelation3 || isSums3) {
-            if (opt3x4) opt3x4.disabled = true;
-            if (opt3x3) opt3x3.disabled = true;
-            if (opt2x4) opt2x4.disabled = true;
-            if (opt2x3) opt2x3.disabled = false;
-            if (gridSelect.value !== '2x3') gridSelect.value = '2x3';
-        }
-    }
+    updateGridChoices(problemType);
 }
 
 function toggleMode() {
@@ -1180,12 +1302,46 @@ function generateHiddenDotsBySplat(splats, counts, splatShape, maxTarget) {
     return allHiddenDots;
 }
 
-function getRelation2Settings() {
-    const levelEl = document.getElementById('relationLevel');
+/* Réglages des Enquêtes et du Système (26/09/2026), qui remplacent « Niveau » :
+   - Indices « + − » et « × ÷ » (au moins un des deux) ;
+   - Rapport max ×2 / ×3 / ×4, et Vocabulaire, quand « × ÷ » est coché ;
+   - Structure (3 taches) : pivot, chaîne ou au hasard ;
+   - la Cible max règle la taille des écarts (« de plus ») et, pour le Système,
+     la plage des nombres cachés (20 : petits, 50 : moyens, 100 : grands).
+   Une ancienne adresse « level= » rejoue l'ancien niveau à l'identique. */
+const RELATION_DELTA_BY_TARGET = { 20: 6, 50: 10, 100: 12 };
+const SUMS_LEVEL_BY_TARGET = { 20: 'simple', 50: 'advanced', 100: 'expert' };
+const RELATION_BASE_DIVISOR = { 2: 5, 3: 6, 4: 7 };
+
+function getRelationSettings(maxTarget) {
+    const legacy = RELATION_LEVELS[relationLegacyLevel];
+    if (legacy) {
+        const kmax = Number(legacy.kmax);
+        return {
+            add: true, mult: true,
+            factors: [2, 3, 4].filter(k => k <= kmax),
+            deltaLimit: legacy.deltaLimit,
+            baseDivisor: legacy.baseDivisor,
+            structure: legacy.structure, chainRate: 0.38, pivotNoire: legacy.pivotNoire,
+            vocab: 'mix',
+            sumsLevel: legacy.sums
+        };
+    }
+    const value = (id, fallback) => { const el = document.getElementById(id); return el ? el.value : fallback; };
+    const addEl = document.getElementById('relOpAdd');
+    const multEl = document.getElementById('relOpMult');
+    let add = addEl ? addEl.checked : true;
+    let mult = multEl ? multEl.checked : true;
+    if (!add && !mult) { add = true; mult = true; }
+    const kmax = mult ? (Number(value('relKmax', '2')) || 2) : 2;
     return {
-        // Le menu reste simple : le générateur mélange en interne les écarts et les relations multiplicatives.
-        kind: 'mix',
-        level: levelEl ? levelEl.value : 'simple'
+        add, mult,
+        factors: [2, 3, 4].filter(k => k <= kmax),
+        deltaLimit: RELATION_DELTA_BY_TARGET[maxTarget] || 6,
+        baseDivisor: RELATION_BASE_DIVISOR[kmax] || 5,
+        structure: value('relStructure', 'pivot'), chainRate: 0.5, pivotNoire: false,
+        vocab: mult ? value('relVocab', 'fois') : 'fois',
+        sumsLevel: SUMS_LEVEL_BY_TARGET[maxTarget] || 'simple'
     };
 }
 
@@ -1210,30 +1366,55 @@ function fractionWord(factor) {
     return `1/${factor}`;
 }
 
-
-function getRelationFactors(level) {
-    if (level === 'expert') return [2, 3, 4];
-    if (level === 'advanced') return [2, 3];
-    return [2];
+function multipleWord(factor) {
+    if (factor === 2) return 'le double';
+    if (factor === 3) return 'le triple';
+    if (factor === 4) return 'le quadruple';
+    return `${factor} fois`;
 }
 
-function getRelationFamilies(level) {
-    // Simple contient déjà le double / la moitié ; avancé ajoute le triple ; expert ajoute le quadruple.
-    return ['add', 'mult'];
+/* Les phrases des indices sont celles de SPLAT! mode C (26/09/2026) :
+   « Sous la tache orange, il y a 3 fois plus de jetons que sous la tache noire. »
+   Menu « Vocabulaire » : « fois plus / fois moins », « le double, la moitié… »
+   (« Sous la tache orange, il y a le triple des jetons de la tache noire. »,
+   « Sous la tache noire, il y a le tiers des jetons de la tache orange. »), ou les deux.
+   Un seul tirage choisit la phrase, quel que soit le vocabulaire : les nombres
+   d'une graine ne dépendent pas de ce menu. */
+function multStyles(vocab) {
+    if (vocab === 'mots') return ['grand-mot', 'petit-mot'];
+    if (vocab === 'mix') return ['grand-fois', 'petit-fois', 'grand-mot', 'petit-mot'];
+    return ['grand-fois', 'petit-fois'];
 }
 
-function chooseRelationFamily(level, forcedFamily = null) {
-    if (forcedFamily) return forcedFamily;
-    const families = getRelationFamilies(level);
-    return families[Math.floor(rand() * families.length)];
+function multPhrase(style, bigger, smaller, factor) {
+    if (style === 'petit-fois') return `Sous la tache ${smaller}, il y a ${factor} fois moins de jetons que sous la tache ${bigger}.`;
+    if (style === 'grand-mot') return `Sous la tache ${bigger}, il y a ${multipleWord(factor)} des jetons de la tache ${smaller}.`;
+    if (style === 'petit-mot') return `Sous la tache ${smaller}, il y a ${fractionWord(factor)} des jetons de la tache ${bigger}.`;
+    return `Sous la tache ${bigger}, il y a ${factor} fois plus de jetons que sous la tache ${smaller}.`;
 }
 
-function makeRelationToReference(baseValue, otherLabel, refLabel, level, maxTarget, forcedFamily = null) {
-    const family = chooseRelationFamily(level, forcedFamily);
+function addPhrase(style, bigger, smaller, delta) {
+    const jetons = `${delta} ${pluralJetons(delta)}`;
+    if (style === 'moins') return `Sous la tache ${smaller}, il y a ${jetons} de moins que sous la tache ${bigger}.`;
+    return `Sous la tache ${bigger}, il y a ${jetons} de plus que sous la tache ${smaller}.`;
+}
+
+function pickStyle(styles) {
+    return styles[Math.floor(rand() * styles.length)];
+}
+
+/* Un tirage « + − » ou « × ÷ » seulement si les deux sont cochés. */
+function chooseRelationFamily(settings) {
+    if (settings.add && settings.mult) return ['add', 'mult'][Math.floor(rand() * 2)];
+    return settings.add ? 'add' : 'mult';
+}
+
+function makeRelationToReference(baseValue, otherLabel, refLabel, settings, maxTarget) {
+    const family = chooseRelationFamily(settings);
     const cap = Math.max(12, maxTarget);
 
     if (family === 'mult') {
-        const factors = getRelationFactors(level);
+        const factors = settings.factors;
         const factor = factors[Math.floor(rand() * factors.length)];
         let otherValue;
         let otherIsBig = rand() > 0.35;
@@ -1249,14 +1430,9 @@ function makeRelationToReference(baseValue, otherLabel, refLabel, level, maxTarg
 
         const bigger = otherValue > baseValue ? otherLabel : refLabel;
         const smaller = otherValue > baseValue ? refLabel : otherLabel;
-        const styles = [
-            `La tache ${bigger} cache ${factor} fois plus de jetons que la tache ${smaller}.`,
-            `La tache ${smaller} cache ${factor} fois moins de jetons que la tache ${bigger}.`,
-            `La tache ${smaller} cache ${fractionWord(factor)} de ce que cache la tache ${bigger}.`
-        ];
         return {
             value: otherValue,
-            text: styles[Math.floor(rand() * styles.length)],
+            text: multPhrase(pickStyle(multStyles(settings.vocab)), bigger, smaller, factor),
             family: 'mult',
             factor,
             from: otherLabel,
@@ -1264,8 +1440,7 @@ function makeRelationToReference(baseValue, otherLabel, refLabel, level, maxTarg
         };
     }
 
-    const deltaLimit = level === 'expert' ? 12 : (level === 'advanced' ? 10 : 6);
-    const deltaMax = Math.max(1, Math.min(deltaLimit, cap - 3));
+    const deltaMax = Math.max(1, Math.min(settings.deltaLimit, cap - 3));
     let delta = Math.floor(rand() * deltaMax) + 1;
     let otherIsBig = rand() > 0.45;
 
@@ -1273,13 +1448,9 @@ function makeRelationToReference(baseValue, otherLabel, refLabel, level, maxTarg
     const otherValue = otherIsBig ? baseValue + delta : baseValue - delta;
     const bigger = otherValue > baseValue ? otherLabel : refLabel;
     const smaller = otherValue > baseValue ? refLabel : otherLabel;
-    const styles = [
-        `La tache ${bigger} cache ${delta} ${pluralJetons(delta)} de plus que la tache ${smaller}.`,
-        `La tache ${smaller} cache ${delta} ${pluralJetons(delta)} de moins que la tache ${bigger}.`
-    ];
     return {
         value: otherValue,
-        text: styles[Math.floor(rand() * styles.length)],
+        text: addPhrase(pickStyle(['plus', 'moins']), bigger, smaller, delta),
         family: 'add',
         delta,
         from: otherLabel,
@@ -1291,8 +1462,8 @@ function relationSignature(rel) {
     return rel.family === 'mult' ? `${rel.family}:${rel.factor}` : `${rel.family}:${rel.delta}`;
 }
 
-function chooseBaseValueForRelation3(level, cap) {
-    const divisor = level === 'expert' ? 7 : (level === 'advanced' ? 6 : 5);
+function chooseBaseValueForRelation3(settings, cap) {
+    const divisor = settings.baseDivisor;
     const baseMax = Math.max(3, Math.floor(cap / divisor) + 2);
     return Math.floor(rand() * baseMax) + 2;
 }
@@ -1300,9 +1471,8 @@ function chooseBaseValueForRelation3(level, cap) {
 function createRelation2Item(maxTarget) {
     // Génération pensée pour le primaire : on choisit d'abord les valeurs cachées,
     // puis on calcule le total. Ainsi le problème est toujours soluble proprement.
-    const settings = getRelation2Settings();
-    const families = settings.kind === 'mix' ? ['add', 'mult'] : [settings.kind];
-    const family = families[Math.floor(rand() * families.length)];
+    const settings = getRelationSettings(maxTarget);
+    const family = chooseRelationFamily(settings);
     const cap = Math.max(12, maxTarget);
 
     const shapeA = Math.floor(rand() * SPLAT_SHAPES.length);
@@ -1317,7 +1487,7 @@ function createRelation2Item(maxTarget) {
     const labels = { A: 'noire', B: 'orange' };
 
     if (family === 'mult') {
-        const factors = settings.level === 'expert' ? [2, 3, 4] : (settings.level === 'advanced' ? [2, 3] : [2]);
+        const factors = settings.factors;
         const factor = factors[Math.floor(rand() * factors.length)];
         const smallMax = Math.max(1, Math.floor((cap - 1) / (factor + 1)));
         const small = Math.floor(rand() * smallMax) + 1;
@@ -1332,16 +1502,10 @@ function createRelation2Item(maxTarget) {
 
         const bigger = a > b ? labels.A : labels.B;
         const smaller = a > b ? labels.B : labels.A;
-        const styles = [
-            `La tache ${bigger} cache ${factor} fois plus de jetons que la tache ${smaller}.`,
-            `La tache ${smaller} cache ${factor} fois moins de jetons que la tache ${bigger}.`,
-            `La tache ${smaller} cache ${fractionWord(factor)} de ce que cache la tache ${bigger}.`
-        ];
-        relationText = styles[Math.floor(rand() * styles.length)];
+        relationText = multPhrase(pickStyle(multStyles(settings.vocab)), bigger, smaller, factor);
         relationMeta = { family: 'mult', factor };
     } else {
-        const deltaLimit = settings.level === 'expert' ? 12 : (settings.level === 'advanced' ? 10 : 6);
-        const deltaMax = Math.max(1, Math.min(deltaLimit, cap - 3));
+        const deltaMax = Math.max(1, Math.min(settings.deltaLimit, cap - 3));
         const delta = Math.floor(rand() * deltaMax) + 1;
         const smallMax = Math.max(1, Math.floor((cap - delta - 1) / 2));
         const small = Math.floor(rand() * smallMax) + 1;
@@ -1356,11 +1520,7 @@ function createRelation2Item(maxTarget) {
 
         const bigger = a > b ? labels.A : labels.B;
         const smaller = a > b ? labels.B : labels.A;
-        const styles = [
-            `La tache ${bigger} cache ${delta} ${pluralJetons(delta)} de plus que la tache ${smaller}.`,
-            `La tache ${smaller} cache ${delta} ${pluralJetons(delta)} de moins que la tache ${bigger}.`
-        ];
-        relationText = styles[Math.floor(rand() * styles.length)];
+        relationText = addPhrase(pickStyle(['plus', 'moins']), bigger, smaller, delta);
         relationMeta = { family: 'add', delta };
     }
 
@@ -1399,13 +1559,15 @@ function createRelation2Item(maxTarget) {
 
 
 function createRelation3Item(maxTarget) {
-    // Enquête avec 3 taches.
-    // Simple : pivot commun = noire.
-    // Avancé : pivot commun variable.
-    // Expert : pivot commun variable ou chaîne.
-    const settings = getRelation2Settings();
-    const level = settings.level || 'simple';
+    // Enquête à 3 taches : menu « Structure ».
+    // Pivot : les deux indices partent de la même tache (tirée au hasard ;
+    //         toujours la noire pour une ancienne adresse « level=simple »).
+    // Chaîne : le second indice part de la tache trouvée avec le premier.
+    // Au hasard : pivot ou chaîne.
+    const settings = getRelationSettings(maxTarget);
     const cap = Math.max(18, maxTarget);
+    /* Avec « × ÷ » seul et ×2 seulement, les deux indices ont forcément la même forme. */
+    const canVary = settings.add || settings.factors.length > 1;
     const labels = { A: 'noire', B: 'orange', C: 'rouge' };
     const ids = ['A', 'B', 'C'];
 
@@ -1421,7 +1583,8 @@ function createRelation3Item(maxTarget) {
         let candidateStructure = 'pivot-fixed';
         let candidatePivot = 'A';
 
-        const useChain = level === 'expert' && rand() < 0.38;
+        const useChain = settings.structure === 'chain' ||
+            (settings.structure === 'mix' && rand() < settings.chainRate);
 
         if (useChain) {
             candidateStructure = 'chain';
@@ -1433,9 +1596,9 @@ function createRelation3Item(maxTarget) {
             }
 
             const first = order[0], second = order[1], third = order[2];
-            const firstValue = chooseBaseValueForRelation3(level, cap);
-            const relSecond = makeRelationToReference(firstValue, labels[second], labels[first], level, maxTarget);
-            const relThird = makeRelationToReference(relSecond.value, labels[third], labels[second], level, maxTarget);
+            const firstValue = chooseBaseValueForRelation3(settings, cap);
+            const relSecond = makeRelationToReference(firstValue, labels[second], labels[first], settings, maxTarget);
+            const relThird = makeRelationToReference(relSecond.value, labels[third], labels[second], settings, maxTarget);
 
             candidateValues[first] = firstValue;
             candidateValues[second] = relSecond.value;
@@ -1443,12 +1606,12 @@ function createRelation3Item(maxTarget) {
             candidateClues.push(relSecond.text, relThird.text);
             candidatePivot = first;
         } else {
-            candidateStructure = level === 'simple' ? 'pivot-fixed' : 'pivot-variable';
-            candidatePivot = level === 'simple' ? 'A' : ids[Math.floor(rand() * ids.length)];
+            candidateStructure = settings.pivotNoire ? 'pivot-fixed' : 'pivot-variable';
+            candidatePivot = settings.pivotNoire ? 'A' : ids[Math.floor(rand() * ids.length)];
             const others = ids.filter(id => id !== candidatePivot);
-            const pivotValue = chooseBaseValueForRelation3(level, cap);
-            const rel1 = makeRelationToReference(pivotValue, labels[others[0]], labels[candidatePivot], level, maxTarget);
-            const rel2 = makeRelationToReference(pivotValue, labels[others[1]], labels[candidatePivot], level, maxTarget);
+            const pivotValue = chooseBaseValueForRelation3(settings, cap);
+            const rel1 = makeRelationToReference(pivotValue, labels[others[0]], labels[candidatePivot], settings, maxTarget);
+            const rel2 = makeRelationToReference(pivotValue, labels[others[1]], labels[candidatePivot], settings, maxTarget);
 
             candidateValues[candidatePivot] = pivotValue;
             candidateValues[others[0]] = rel1.value;
@@ -1456,7 +1619,7 @@ function createRelation3Item(maxTarget) {
             candidateClues.push(rel1.text, rel2.text);
 
             // On évite deux indices exactement du même type numérique sur la même carte.
-            if (relationSignature(rel1) === relationSignature(rel2)) continue;
+            if (canVary && relationSignature(rel1) === relationSignature(rel2)) continue;
         }
 
         const valueList = ids.map(id => candidateValues[id]);
@@ -1483,8 +1646,8 @@ function createRelation3Item(maxTarget) {
         values = { A: 4, B: 8, C: 6 };
         visible = 2; total = 20;
         clues = [
-            'La tache orange cache 2 fois plus de jetons que la tache noire.',
-            'La tache rouge cache 2 jetons de plus que la tache noire.'
+            'Sous la tache orange, il y a 2\u00a0fois plus de jetons que sous la tache noire.',
+            'Sous la tache rouge, il y a 2\u00a0jetons de plus que sous la tache noire.'
         ];
         structure = 'pivot-fixed';
         pivotId = 'A';
@@ -1547,8 +1710,7 @@ function chooseValueRangeForSums(level, cap) {
 function createSums3Item(maxTarget) {
     // Défi : trois taches, indices donnés sous forme de sommes de deux taches.
     // Exemple : N + O = 15 ; O + R = 17 ; N + R = 14.
-    const settings = getRelation2Settings();
-    const level = settings.level || 'simple';
+    const settings = getRelationSettings(maxTarget);
     const cap = Math.max(20, maxTarget);
     const labels = { A: 'noire', B: 'orange', C: 'rouge' };
     const shorts = { A: 'N', B: 'O', C: 'R' };
@@ -1557,7 +1719,7 @@ function createSums3Item(maxTarget) {
     let visible = 2;
     let total = 20;
 
-    const range = chooseValueRangeForSums(level, cap);
+    const range = chooseValueRangeForSums(settings.sumsLevel, cap);
 
     for (let attempt = 0; attempt < 900; attempt++) {
         const a = range.min + Math.floor(rand() * (range.max - range.min + 1));
@@ -1910,9 +2072,12 @@ function renderRelationCell(cell, item, isCorrectionPage, hideDiagram, isNonProp
 
     // Sur la fiche élève, le total du schéma est à compléter :
     // il est déjà donné sur le plateau, dans le badge. On ne le remplit qu'en correction.
-    const displayTotal = isCorrectionPage ? item.total : '';
-    const displayVis = isCorrectionPage ? item.visible : '';
-    const revealParts = false;
+    /* Interactif (26/09/2026) : le schéma se remplit au clic sur la carte, comme dans le
+       classique ; avant, les réponses y étaient écrites dès l'affichage. La tache donnée
+       (« Une tache donnée ») reste visible. */
+    const revealParts = isTBI && !isCorrectionPage;
+    const displayTotal = isCorrectionPage ? item.total : (revealParts ? getRelationValueDisplay(item.total, true) : '');
+    const displayVis = isCorrectionPage ? item.visible : (revealParts ? getRelationValueDisplay(item.visible, true) : '');
 
     const minCol = item.parts.length >= 3 ? 27 : 34;
     const flexVis = isNonProp ? 1 : Math.max(item.visible, item.total * 0.05, 1);
@@ -1923,7 +2088,7 @@ function renderRelationCell(cell, item, isCorrectionPage, hideDiagram, isNonProp
         const isGivenPart = item.givenPartId === p.id;
         const display = isCorrectionPage ? p.value : (isGivenPart ? p.value : (isTBI ? p.value : ''));
         const givenClass = isGivenPart && !isCorrectionPage ? ' relation-given-part' : '';
-        return `<div class="relation-part-box relation-${p.id.toLowerCase()}${givenClass}"><div class="relation-part-value">${getRelationValueDisplay(display, revealParts)}</div></div>`;
+        return `<div class="relation-part-box relation-${p.id.toLowerCase()}${givenClass}"><div class="relation-part-value">${getRelationValueDisplay(display, revealParts && !isGivenPart)}</div></div>`;
     }).join('');
 
     const partLabels = item.parts.map(p => {

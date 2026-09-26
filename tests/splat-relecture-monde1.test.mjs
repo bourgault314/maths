@@ -35,7 +35,8 @@ test("Petit SPLAT! : GÉNÉRER et IMPRIMER sont hors de la partie qui défile", 
   const debut = petit.indexOf('<div class="sb-scroll">');
   const actions = petit.indexOf('<div class="actions">');
   const consent = petit.indexOf('<div class="menuConsent">');
-  assert.ok(debut > 0 && actions > debut && consent > actions);
+  /* depuis le 26/09/2026, la mention de confidentialité est au bas de la partie qui défile */
+  assert.ok(debut > 0 && consent > debut && actions > consent);
   /* la partie qui défile se ferme avant les boutons : pas de <div class="section"> entre les deux */
   const entre = petit.slice(actions - 400, actions);
   assert.match(entre, /<\/div>\s*<!-- GÉNÉRER et IMPRIMER hors de la partie qui défile/);
