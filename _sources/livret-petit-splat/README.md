@@ -183,6 +183,14 @@ pypdf pour l'imposition.
   qui est lu par des adultes cherchant l'ensemble des ressources. `render.py` repointe
   donc le pied des six fiches vers `/splat` (la collection SPLAT du catalogue) au
   moment du rendu, comme il injecte les QR (décision du 18/09/2026).
+- Fiches 4 et 5 (plusieurs taches), relecture du monde 1, lot 4 (26/09/2026) : `render.py`
+  coche l'option « Espace sous le schéma » de l'outil (`espace=1`) sur l'énoncé comme sur le
+  corrigé. Une bande vide de 7,5 mm sous chaque schéma, pour un calcul intermédiaire, sans
+  accolade imprimée. L'outil redessine alors chaque carte sur toute la largeur de la case
+  (sa « table de dessin », sans aucun tirage) : les nombres des cartes ne changent pas, les
+  graines restent valables, et le jeu en ligne (QR) n'est pas touché.
+- Couverture : dans les cases Prénom et Classe, le mot est en haut de la case (2,2 mm de
+  marge) pour laisser la place d'écrire ; la case garde sa taille (lot 4, 26/09/2026).
 - Tout reste lisible imprimé en **noir et blanc** : aucun texte en couleur claire,
   aucune page en aplat teinté.
 - Vocabulaire : « jetons » (jamais « billes », réservées aux mondes 5 et 6, Équations et relatifs).

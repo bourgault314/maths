@@ -35,7 +35,9 @@
 .sch .pieds .a{flex:11}.sch .pieds .b{flex:8}
 /* ---------- identité ---------- */
 .ident{display:flex;gap:6mm}
-.ident .champ{flex:1;border:1.4px solid #5b6574;border-radius:6px;padding:4mm 4mm 11mm}
+/* le mot remonte (3,8 mm du haut de la case au lieu de 5,6) : plus de place pour écrire,
+   la case garde sa taille (relecture du monde 1, lot 4, 26/09/2026) */
+.ident .champ{flex:1;border:1.4px solid #5b6574;border-radius:6px;padding:2.2mm 4mm 12.8mm}
 .ident .champ span{font-size:12.5px;font-weight:700;color:#334155}
 .ident .champ.classe{flex:0 0 52mm}
 /* ---------- sommaire ---------- */

@@ -209,6 +209,7 @@
       text-align: center;
     }
     .relation-diagram { flex: 0 0 92px; width: 94%; }
+    .schema-a-tracer > * { visibility: hidden; }
     .relation-diagram .diagram-inner {
       border-width: 2px;
       flex: 0 0 72px;
@@ -375,6 +376,10 @@
     }
     .activity-print-page .grid { width: 100%; }
     .activity-print-page .diagram-container { flex-basis: 64px; }
+    /* Option « Espace sous le schéma » (lot 4, 26/09/2026) : 7,5 mm vides sous chaque schéma,
+       pris sur la zone du dessin ; le dessin est refait par la table de dessin (voir
+       tableDeDessinBande), sans aucun tirage : les cartes ne changent pas. */
+    .activity-print-page .grid.avec-bande .diagram-container { margin-bottom: calc(5px + 7.5mm); }
     /* Pied : gris moyen et 10 px, lisible en photocopie (décision du 19/09/2026, même
        pied pour les deux familles de livrets). Il reste à 3,5 mm du bord du papier,
        comme avant : plus bas, beaucoup d'imprimantes ne l'impriment plus. */
@@ -605,10 +610,20 @@
                 <span class="check-text" data-i18n="opt_non_prop">Non proportionnel</span>
             </label>
         </div>
+        <div class="corr-group" id="espaceSchemaOption">
+            <label class="check-control">
+                <input type="checkbox" id="espaceSchema" onchange="renderPages()">
+                <span class="check-text" data-i18n="opt_espace">Espace sous le schéma</span>
+            </label>
+        </div>
         <div class="corr-group" id="relationHintOption" style="display:none;">
             <label class="check-control">
                 <input type="checkbox" id="giveOnePart" onchange="startGen()">
                 <span class="check-text">Une tache donnée</span>
+            </label>
+            <label class="check-control">
+                <input type="checkbox" id="jetonsAutour" checked onchange="startGen()">
+                <span class="check-text">Jetons autour</span>
             </label>
         </div>
       </div>
@@ -750,7 +765,7 @@
 const i18n = {
     fr: {
         title: "Petit Splat!", lang: "Langue", options: "Options", opt_corr: "Correction + Énoncé", opt_hide_diag: "Schéma à tracer",
-        opt_non_prop: "Non proportionnel",
+        opt_non_prop: "Non proportionnel", opt_espace: "Espace sous le schéma",
         layout: "Mise en page", grid_12: "12 cases (3x4)", grid_9: "9 cases (3x3)", grid_8: "8 cases (Grosses)", grid_6: "6 cases (2x3)", grid_4: "4 cases (2x2)",
         content: "Contenu", target: "Cible max", splat_count: "Taches",
         problem_type: "Type de problème", module_classic: "Petit Splat classique", module_relation2: "Enquête à 2 taches", module_relation3: "Enquête à 3 taches", module_sums3: "Système : sommes de taches",
@@ -761,7 +776,7 @@ const i18n = {
     },
     en: {
         title: "Petit Splat!", lang: "Language", options: "Options", opt_corr: "Key + Problem", opt_hide_diag: "Draw Diagram",
-        opt_non_prop: "Non-proportional diagrams",
+        opt_non_prop: "Non-proportional diagrams", opt_espace: "Space under the diagram",
         layout: "Layout", grid_12: "12 boxes (3x4)", grid_9: "9 boxes (3x3)", grid_8: "8 boxes (Large)", grid_6: "6 boxes (2x3)", grid_4: "4 boxes (2x2)",
         content: "Content", target: "Max target", splat_count: "Splats",
         problem_type: "Problem type", module_classic: "Classic Petit Splat", module_relation2: "Investigation with 2 splats", module_relation3: "Investigation with 3 splats", module_sums3: "System: sum clues",
@@ -894,7 +909,7 @@ function readBooleanParam(params, name, fallback) {
 
 function loadSharedConfiguration() {
     const params = new URLSearchParams(window.location.search);
-    const sharedNames = ['seed', 'support', 'grid', 'problem', 'target', 'splats', 'exercise', 'level', 'ops', 'kmax', 'vocab', 'structure', 'given', 'correction', 'rv', 'diagram', 'scale', 'title', 'parcours'];
+    const sharedNames = ['seed', 'support', 'grid', 'problem', 'target', 'splats', 'exercise', 'level', 'ops', 'kmax', 'vocab', 'structure', 'given', 'correction', 'rv', 'diagram', 'scale', 'espace', 'jetons', 'title', 'parcours'];
     if (!sharedNames.some(name => params.has(name))) return false;
 
     const seed = params.get('seed');
@@ -921,7 +936,14 @@ function loadSharedConfiguration() {
         readRelationParams(params);
         const giveOnePart = document.getElementById('giveOnePart');
         if (giveOnePart) giveOnePart.checked = readBooleanParam(params, 'given', giveOnePart.checked);
+        const jetonsAutour = document.getElementById('jetonsAutour');
+        if (jetonsAutour) jetonsAutour.checked = readBooleanParam(params, 'jetons', true);
     }
+
+    /* « Espace sous le schéma » : lu pour tous les supports, le parcours élève s'en sert aussi
+       (QR des fiches 4 et 5 du livret) */
+    const espaceSchema = document.getElementById('espaceSchema');
+    if (espaceSchema) espaceSchema.checked = readBooleanParam(params, 'espace', false);
 
     if (document.getElementById('supportMode').value === 'print') {
         const showCorr = document.getElementById('showCorr');
@@ -965,7 +987,10 @@ function buildShareUrl() {
     } else {
         writeRelationParams(params, problemType);
         params.set('given', document.getElementById('giveOnePart').checked ? '1' : '0');
+        if (!jetonsAutourCoche()) params.set('jetons', '0');   /* écrit seulement décochée : les anciens liens ne bougent pas */
     }
+
+    if (problemType === 'classic' && document.getElementById('espaceSchema').checked) params.set('espace', '1');
 
     if (supportMode === 'print') {
         const showCorr = document.getElementById('showCorr').checked;
@@ -1166,6 +1191,7 @@ function updateProblemTypeUI() {
     show('vocabControl', isEnquete && !!(multEl && multEl.checked));
     show('structureControl', problemType === 'relation3');
     show('relationHintOption', !isClassic, 'flex');
+    show('espaceSchemaOption', isClassic, 'flex');
 
     updateGridChoices(problemType);
 }
@@ -1227,13 +1253,14 @@ function startGen() {
   eleveResultats = [];
   const totalItems = cols * rows;
 
+  const sansJetons = problemType !== 'classic' && !jetonsAutourCoche();
   for(let i=0; i<totalItems; i++) {
       if (problemType === 'relation2') {
-          state.push(createRelation2Item(targetMax));
+          state.push(retirerJetonsSiBesoin(createRelation2Item(targetMax), sansJetons));
       } else if (problemType === 'relation3') {
-          state.push(createRelation3Item(targetMax));
+          state.push(retirerJetonsSiBesoin(createRelation3Item(targetMax), sansJetons));
       } else if (problemType === 'sums3') {
-          state.push(createSums3Item(targetMax));
+          state.push(retirerJetonsSiBesoin(createSums3Item(targetMax), sansJetons));
       } else {
           state.push(createItem(gameMode, targetMax, splatMode));
       }
@@ -1242,6 +1269,23 @@ function startGen() {
   renderPages();
 }
 
+
+/* « Jetons autour » (Enquêtes et Système, 26/09/2026, demande de Gwenaël) : cochée par défaut,
+   comme avant. Décochée, la carte n'a plus de jetons visibles : elle est TIRÉE exactement
+   comme avant (même hasard consommé, donc mêmes taches, mêmes indices, mêmes cartes
+   suivantes), puis on retire ses jetons visibles et le total devient la somme des taches.
+   Dans SPLAT! Enquête, les jetons autour ont été jugés peu utiles (22/09/2026). */
+function jetonsAutourCoche() {
+    const c = document.getElementById('jetonsAutour');
+    return !c || c.checked;
+}
+function retirerJetonsSiBesoin(item, sansJetons) {
+    if (!sansJetons || !item.visible) return item;
+    item.total -= item.visible;
+    item.visible = 0;
+    item.dots = { arr: [], r: item.dots ? item.dots.r : 8 };
+    return item;
+}
 
 function generateHiddenDotsBySplat(splats, counts, splatShape, maxTarget) {
     const W = 300, H = 200;
@@ -2069,11 +2113,12 @@ function renderRelationCell(cell, item, isCorrectionPage, hideDiagram, isNonProp
     const diag = document.createElement('div');
     diag.className = 'diagram-container relation-diagram';
 
-    if (hideDiagram && !isCorrectionPage && !isTBI) {
-        diag.innerHTML = ``;
-        cell.appendChild(diag);
-        return;
-    }
+    /* « Schéma à tracer » (26/09/2026, Gwenaël) : le schéma est construit puis rendu
+       INVISIBLE, au lieu d'être retiré. Retiré, sa case retombait à 64 px et le dessin
+       grossissait d'environ 7 mm, alors que le but est justement de laisser toute la
+       place pour tracer : le dessin garde exactement la même taille, coché ou non. */
+    const aTracer = hideDiagram && !isCorrectionPage && !isTBI;
+    if (aTracer) diag.classList.add('schema-a-tracer');
 
     // Sur la fiche élève, le total du schéma est à compléter :
     // il est déjà donné sur le plateau, dans le badge. On ne le remplit qu'en correction.
@@ -2127,6 +2172,8 @@ function createPageElement(chunk, isCorrectionPage, mirror) {
     grid.classList.add(`grid-${renderCols}x${renderRows}`);
     const hideDiagram = document.getElementById('hideDiagram').checked;
     const isNonProp = document.getElementById('nonPropDiagram').checked; 
+    const avecBande = bandeActive();
+    if (avecBande) grid.classList.add('avec-bande');
 
     chunk.forEach(item => {
         const cell = document.createElement('div'); 
@@ -2202,7 +2249,7 @@ function createPageElement(chunk, isCorrectionPage, mirror) {
 
         const splatPart = document.createElement('div'); splatPart.className = 'part-splat';
 
-        let htmlContent = getSplatSvg(item, showVisualDots, hideVisualDotsUntilReveal);
+        let htmlContent = avecBande ? getSplatSvgBande(item, showVisualDots) : getSplatSvg(item, showVisualDots, hideVisualDotsUntilReveal);
 
         let displayBadge = showVisualTotal ? item.total : "";
         htmlContent += `<div class="total-badge">${displayBadge}</div>`;
@@ -2342,6 +2389,241 @@ function getSplatSvg(item, drawDots, hideVisibleDotsUntilReveal = false, forceHi
     return svg;
 }
 
+/* ===== Espace sous le schéma : la « table de dessin » (relecture du monde 1, lot 4, 26/09/2026) =====
+   Option « Espace sous le schéma » (fiche imprimée, Petit Splat classique) : une bande vide
+   de 7,5 mm sous chaque schéma, pour écrire un calcul intermédiaire (« … à diviser en deux »).
+   Gwenaël : « surtout pas imposer l'accolade… j'ai juste besoin d'un peu d'espace en dessous ».
+   La bande est prise sur la zone du dessin, qui devient plus basse et beaucoup plus large que
+   le dessin 300 x 200. Plutôt que de réduire l'image (essai refusé au lot 2 : les jetons se
+   tassaient à gauche), on REDESSINE la carte dans une vue 450 x 200 :
+   - le TIRAGE ne change pas : createItem consomme le hasard exactement comme avant, les
+     nombres (total, visibles, cachés) de chaque carte restent ceux du jeu en ligne et du QR ;
+   - la table de dessin ci-dessous place ensuite taches et jetons SANS AUCUN TIRAGE : elle part
+     de la place tirée de chaque jeton, étalée sur toute la largeur, ne le pousse (spirale
+     déterministe) que s'il touche une tache, un autre jeton, le bord ou le cadre du total,
+     puis aère pas à pas les jetons trop serrés ;
+   - taches et jetons gardent leur taille imprimée d'avant la bande : c'est l'espace vide
+     entre eux qui diminue, pas les objets. Même dessin à l'écran quand l'adresse porte
+     espace=1 (QR des fiches 4 et 5 du livret, voir eleveDessinBande).
+   Même principe que le Splat classique (leçon du 19/09/2026 : les places consomment le même
+   hasard que les valeurs, toute retouche d'apparence passe par une table de dessin). */
+const BANDE_VUE_L = { '3x4': 450, '2x4': 690 };  /* largeur de la vue selon la grille (hauteur 200) ; 3x3 : dessin d'origine */
+const BANDE_ECHELLE_JETON = 1.30;              /* 8 → 10,4 unités : le jeton garde sa taille imprimée */
+const BANDE_ECHELLE_TACHE = 1.30;              /* la tache aussi garde sa taille imprimée */
+const BANDE_CADRE = 84;                        /* cadre du total : x > L − 84 et y < 84 (unités de la vue) */
+
+function bandeActive() {
+    const c = document.getElementById('espaceSchema');
+    return !!(c && c.checked) && !isTBI && !isEleve && getProblemType() === 'classic';
+}
+
+/* Contours des taches en polygones (M, Q, C, Z), pour mesurer sans canvas ni hasard. */
+let bandePolygonesCache = null;
+function bandePolygones() {
+    if (bandePolygonesCache) return bandePolygonesCache;
+    bandePolygonesCache = SPLAT_SHAPES.map(d => {
+        const t = d.match(/[MQCZ]|-?\d+(?:\.\d+)?/g);
+        const pts = [];
+        let i = 0, cmd = '', x = 0, y = 0;
+        const n = () => Number(t[i++]);
+        while (i < t.length) {
+            if (/[MQCZ]/.test(t[i])) cmd = t[i++];
+            if (cmd === 'M') { x = n(); y = n(); pts.push([x, y]); }
+            else if (cmd === 'Q') {
+                const [ax, ay, bx, by] = [n(), n(), n(), n()];
+                for (let k = 1; k <= 16; k++) { const u = k / 16, v = 1 - u; pts.push([v*v*x + 2*v*u*ax + u*u*bx, v*v*y + 2*v*u*ay + u*u*by]); }
+                x = bx; y = by;
+            } else if (cmd === 'C') {
+                const [ax, ay, bx, by, cx, cy] = [n(), n(), n(), n(), n(), n()];
+                for (let k = 1; k <= 20; k++) { const u = k / 20, v = 1 - u; pts.push([v*v*v*x + 3*v*v*u*ax + 3*v*u*u*bx + u*u*u*cx, v*v*v*y + 3*v*v*u*ay + 3*v*u*u*by + u*u*u*cy]); }
+                x = cx; y = cy;
+            } else if (cmd === 'Z') { /* fermé */ }
+            else i++;
+        }
+        return pts;
+    });
+    return bandePolygonesCache;
+}
+
+/* Rayon du cercle qui contient chaque forme (unités locales, autour de 150,100) : un point
+   plus loin que ce cercle ne peut pas être plus près de la tache que (distance − rayon). */
+function bandeRayonForme(shape) {
+    const poly = bandePolygones()[shape % SPLAT_SHAPES.length];
+    if (!poly.rayon) poly.rayon = Math.max(...poly.map(([x, y]) => Math.hypot(x - 150, y - 100)));
+    return poly.rayon;
+}
+
+/* Distance (unités de la vue) du point au bord d'une tache ; négative à l'intérieur. */
+function bandeDistanceTache(s, shape, px, py) {
+    const poly = bandePolygones()[shape % SPLAT_SHAPES.length];
+    const rad = -s.rot * Math.PI / 180;
+    const dx = (px - s.cx) / s.scale, dy = (py - s.cy) / s.scale;
+    const lx = dx * Math.cos(rad) - dy * Math.sin(rad) + 150;
+    const ly = dx * Math.sin(rad) + dy * Math.cos(rad) + 100;
+    let dedans = false, d2 = Infinity;
+    for (let a = 0, b = poly.length - 1; a < poly.length; b = a++) {
+        const [xa, ya] = poly[a], [xb, yb] = poly[b];
+        if ((ya > ly) !== (yb > ly) && lx < (xb - xa) * (ly - ya) / (yb - ya) + xa) dedans = !dedans;
+        const ex = xb - xa, ey = yb - ya, l2 = ex * ex + ey * ey;
+        const u = l2 ? Math.max(0, Math.min(1, ((lx - xa) * ex + (ly - ya) * ey) / l2)) : 0;
+        const qx = xa + u * ex - lx, qy = ya + u * ey - ly;
+        d2 = Math.min(d2, qx * qx + qy * qy);
+    }
+    const d = Math.sqrt(d2) * s.scale;
+    return dedans ? -d : d;
+}
+
+/* Les taches, un peu plus grandes, doivent rester dans la hauteur (200) et bien séparées.
+   On mesure leur hauteur réelle (forme et rotation comprises). Sur deux rangées (4 à 6
+   taches), les rangées se répartissent la hauteur : autant de blanc au-dessus, entre elles
+   et au-dessous. Si deux taches restaient à moins de 12 unités
+   (1,6 mm), toutes rapetissent un peu (3 % à la fois, 12 fois au plus). */
+function bandeCadrerTaches(splats, shapeOf) {
+    const MARGE = 5, ECART = 12;
+    const contour = s => {
+        const rad = s.rot * Math.PI / 180, c = Math.cos(rad), si = Math.sin(rad);
+        return bandePolygones()[shapeOf(s) % SPLAT_SHAPES.length].filter((_, i) => i % 2 === 0).map(([px, py]) => {
+            const x = (px - 150) * s.scale, y = (py - 100) * s.scale;
+            return [s.cx + x * c - y * si, s.cy + x * si + y * c];
+        });
+    };
+    const ecartMin = () => {
+        let m = Infinity;
+        for (let i = 0; i < splats.length; i++) for (let j = i + 1; j < splats.length; j++)
+            for (const [x, y] of contour(splats[i])) m = Math.min(m, bandeDistanceTache(splats[j], shapeOf(splats[j]), x, y));
+        return m;
+    };
+    const lignes = [...new Set(splats.map(s => s.cy))].sort((u, v) => u - v);
+    const y0 = lignes[0], y1 = lignes[lignes.length - 1];
+    for (let essai = 0; essai <= 12; essai++) {
+        const demi = s => { const ys = contour(s).map(p => p[1] - s.cy); return [Math.min(...ys), Math.max(...ys)]; };
+        if (lignes.length > 1) {
+            const h = Math.max(...splats.map(s => Math.max(-demi(s)[0], demi(s)[1])));
+            const d = Math.max(0, h + (200 - 4 * h) / 6);   /* marge haute = écart entre rangées = marge basse */
+            splats.forEach(s => { s.cy = 100 - d + (s.ly - y0) * 2 * d / (y1 - y0); });
+        }
+        let dy = 0;
+        const bas = Math.max(...splats.map(s => s.cy + demi(s)[1])), haut = Math.min(...splats.map(s => s.cy + demi(s)[0]));
+        if (bas > 200 - MARGE) dy = 200 - MARGE - bas;
+        if (haut + dy < MARGE) dy = MARGE - haut;
+        splats.forEach(s => { s.cy += dy; });
+        if (bas - haut <= 200 - 2 * MARGE && (splats.length < 2 || ecartMin() >= ECART)) break;
+        splats.forEach(s => { s.scale *= 0.97; });
+    }
+}
+
+/* Étalement horizontal : la zone tirée 15…285 de l'ancien dessin couvre 15…L−15. */
+function bandeEtaleX(x, L) { return 15 + (x - 15) * (L - 30) / 270; }
+
+function tableDeDessinBande(item, L) {
+    const kT = BANDE_ECHELLE_JETON, kS = BANDE_ECHELLE_TACHE;
+    const splats = item.splats.map(s => ({ ...s, cx: bandeEtaleX(s.cx, L), ly: s.cy, scale: s.scale * kS }));
+    const shapeOf = s => (s.pathIndex !== undefined ? s.pathIndex : item.splatShape);
+    bandeCadrerTaches(splats, shapeOf);
+    const r = (item.dots && item.dots.r ? item.dots.r : ((item.maxTargetContext > 50) ? 5 : 8)) * kT;
+
+    /* jetons cachés (dessinés seulement quand on les montre) : ils suivent leur tache */
+    const hiddenDots = (item.hiddenDots || []).map((p, i) => {
+        const k = Math.min(item.splats.length - 1, Math.floor(i / Math.max(1, item.hiddenPerSplat || 1)));
+        const a = item.splats[k], b = splats[k];
+        return { ...p, x: b.cx + (p.x - a.cx) * kS, y: b.cy + (p.y - a.cy) * kS, r: p.r * kS };
+    });
+
+    /* exigences, en rayons de jeton, du plus confortable au strict minimum */
+    const PALIERS = [
+        { jeton: 1.0, tache: 0.8, bord: 0.4, cadre: 0.8 },
+        { jeton: 0.6, tache: 0.5, bord: 0.3, cadre: 0.5 },
+        { jeton: 0.3, tache: 0.3, bord: 0.2, cadre: 0.3 },
+        { jeton: 0.1, tache: 0.1, bord: 0.1, cadre: 0.1 }
+    ];
+    const placed = [];
+    const libre = (x, y, e) => {
+        if (x < r * (1 + e.bord) || x > L - r * (1 + e.bord) || y < r * (1 + e.bord) || y > 200 - r * (1 + e.bord)) return false;
+        if (x > L - BANDE_CADRE - r * (1 + e.cadre) && y < BANDE_CADRE + r * (1 + e.cadre)) return false;
+        for (const p of placed) if (Math.hypot(x - p.x, y - p.y) < r * (2 + e.jeton)) return false;
+        for (const s of splats) {
+            if (Math.hypot(x - s.cx, y - s.cy) - bandeRayonForme(shapeOf(s)) * s.scale >= r * (1 + e.tache)) continue;
+            if (bandeDistanceTache(s, shapeOf(s), x, y) < r * (1 + e.tache)) return false;
+        }
+        return true;
+    };
+    const arr = [];
+    for (const p of (item.dots && item.dots.arr) || []) {
+        const x0 = bandeEtaleX(p.x, L), y0 = p.y;
+        let pos = null;
+        for (const e of PALIERS) {
+            if (libre(x0, y0, e)) { pos = { x: x0, y: y0 }; break; }
+            for (let rayon = 2; rayon <= 260 && !pos; rayon += 2) {
+                const n = Math.max(12, Math.round(rayon * 1.2));
+                for (let k = 0; k < n; k++) {
+                    const t = 2 * Math.PI * k / n;
+                    const x = x0 + rayon * Math.cos(t), y = y0 + rayon * Math.sin(t);
+                    if (libre(x, y, e)) { pos = { x, y }; break; }
+                }
+            }
+            if (pos) break;
+        }
+        if (!pos) pos = { x: x0, y: y0 };      /* jamais atteint sur les tirages mesurés */
+        placed.push(pos); arr.push(pos);
+    }
+
+    /* Puis on AÈRE : un jeton à l'étroit (moins de 2 rayons de blanc autour de lui) glisse pas
+       à pas vers plus de place, tant que ça l'éloigne de ce qui le serre. Toujours sans hasard.
+       Le blanc est compté en rayons : jeton 1, tache 0,8, cadre du total 0,8, bord 0,4 (le
+       bord gêne moins qu'un voisin). Le plus petit blanc de la carte ne peut que grandir. */
+    const blanc = (i, x, y) => {
+        let b = Math.min((x - r) / (0.4 * r), (L - x - r) / (0.4 * r), (y - r) / (0.4 * r), (200 - y - r) / (0.4 * r));
+        const cx = Math.max(0, (L - BANDE_CADRE) - x), cy = Math.max(0, y - BANDE_CADRE);
+        b = Math.min(b, (Math.hypot(cx, cy) - r) / (0.8 * r));
+        arr.forEach((p, j) => { if (j !== i) b = Math.min(b, (Math.hypot(x - p.x, y - p.y) - 2 * r) / r); });
+        for (const s of splats) {
+            /* tache trop loin pour faire baisser le blanc : on ne la mesure pas en détail */
+            if ((Math.hypot(x - s.cx, y - s.cy) - bandeRayonForme(shapeOf(s)) * s.scale - r) / (0.8 * r) >= b) continue;
+            b = Math.min(b, (bandeDistanceTache(s, shapeOf(s), x, y) - r) / (0.8 * r));
+        }
+        return b;
+    };
+    const DIRECTIONS = Array.from({ length: 12 }, (_, k) => [Math.cos(k * Math.PI / 6), Math.sin(k * Math.PI / 6)]);
+    for (let tour = 0; tour < 25; tour++) {
+        let bouge = false;
+        arr.forEach((p, i) => {
+            let b = blanc(i, p.x, p.y);
+            if (b >= 2) return;
+            for (const pas of [8, 4, 2]) {
+                let meilleur = null;
+                for (const [ux, uy] of DIRECTIONS) {
+                    const v = blanc(i, p.x + pas * ux, p.y + pas * uy);
+                    if (v > b + 0.02) { b = v; meilleur = [p.x + pas * ux, p.y + pas * uy]; }
+                }
+                if (meilleur) { p.x = meilleur[0]; p.y = meilleur[1]; bouge = true; break; }
+            }
+        });
+        if (!bouge) break;
+    }
+    arr.forEach(p => { p.x = Math.round(p.x * 10) / 10; p.y = Math.round(p.y * 10) / 10; });
+    return { L, splats, dots: { arr, r }, hiddenDots };
+}
+
+function getSplatSvgBande(item, drawDots, forceHiddenDots = false, largeur = null) {
+    const L = largeur || BANDE_VUE_L[document.getElementById('gridSize').value];
+    if (!L) return getSplatSvg(item, drawDots);   /* 9 cases : la case reste assez haute, dessin d'origine */
+    if (!item.dessinBande || item.dessinBande.L !== L) item.dessinBande = tableDeDessinBande(item, L);
+    const d = item.dessinBande;
+    const vue = { ...item, splats: d.splats, dots: d.dots, hiddenDots: d.hiddenDots };
+    return getSplatSvg(vue, drawDots, false, forceHiddenDots)
+        .replace('viewBox="0 0 300 200"', `viewBox="0 0 ${L} 200" data-vbw="${L}"`)
+        .replace('class="splat-svg"', 'class="splat-svg splat-svg-bande"');
+}
+
+/* Le QR des fiches 4 et 5 du livret porte espace=1 (lot 4, 26/09/2026, décision de Gwenaël :
+   « même image par le QR ») : l'élève qui rejoue ses cartes en ligne retrouve EXACTEMENT le
+   dessin de sa feuille (mêmes taches, jetons aux mêmes endroits). Seulement pour les cartes
+   « complète le schéma » : sur une carte « dessine », l'élève pose lui-même ses jetons dans
+   l'ancien dessin. Sans espace=1 (carte des mondes, générateur), l'écran ne change pas. */
+function eleveDessinBande(item) {
+    const c = document.getElementById('espaceSchema');
+    return !!(c && c.checked) && getProblemType() === 'classic' && item.mode === 'find_hidden';
+}
 
 /* ===== Parcours élève : l'élève remplit le schéma, la page valide =====
    Réservé au « Petit Splat classique » pour l'instant. La réussite d'une série
@@ -2724,7 +3006,8 @@ function renderEleve(main) {
           `<input class="eleve-input" type="text" inputmode="numeric" maxlength="3" autocomplete="off"></div>`
         : `<div class="total-badge">${item.total}</div>`;
     const splatPart = `<div class="part-splat">` +
-        getSplatSvg(item, !estConstruct, false, true) + badge + `</div>`; /* jetons cachés dessinés sous la tache, dévoilés à la correction */
+        (eleveDessinBande(item) ? getSplatSvgBande(item, true, true, BANDE_VUE_L['3x4']) : getSplatSvg(item, !estConstruct, false, true)) +
+        badge + `</div>`; /* jetons cachés dessinés sous la tache, dévoilés à la correction */
     html += splatPart;
 
     const flexVis = Math.max(item.visible, item.total * 0.05, 1);
