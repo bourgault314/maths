@@ -178,7 +178,7 @@ test("L : les deux anciennes adresses renvoient vers le bon onglet, et sortent d
 });
 
 test("la miniature du livret existe en PNG et en WebP, au format du catalogue", () => {
-  assert.match(page, /assets\/img\/thumbnails\/splat\/livret-splat-classique\.png\?v=3/); // refaite le 23/09 (paquets de la couverture, lot E3)
+  assert.match(page, /assets\/img\/thumbnails\/splat\/livret-splat-classique\.png\?v=4/); // refaite le 25/09 (couverture sans logo, relecture du monde 1, lot 2)
   assert.ok(existe("assets/img/thumbnails/splat/livret-splat-classique.png"));
   assert.ok(existe("assets/img/thumbnails/splat/livret-splat-classique.webp"));
   assert.ok(taille("assets/img/thumbnails/splat/livret-splat-classique.webp") < taille("assets/img/thumbnails/splat/livret-splat-classique.png"));
@@ -201,12 +201,16 @@ test("le catalogue déclare UNE carte « Les livrets SPLAT! » dans la collectio
   assert.match(lire("assets/js/catalogue-refonte.js"), /path === "outils\/livrets_splat\.html"\) return 5;/);
 });
 
-test("vue prof du monde 2 : les deux pastilles du livret, à côté des étapes 7, 8 et 9", () => {
+test("vue prof du monde 2 : un seul lien vers les livrets du monde 2, à côté des étapes 7, 8 et 9", () => {
   const bloc = univers.match(/\(mi===1&&PROF\?'<p class="intro">'[\s\S]*?<\/p>':''\)\+/);
-  assert.ok(bloc, "bloc des pastilles du monde 2 introuvable");
-  assert.match(bloc[0], /href="\/outils\/livret_splat_classique\.pdf"/);
-  assert.match(bloc[0], /href="\/outils\/livret_splat_classique_a_plier\.pdf"/);
-  assert.match(bloc[0], /href="\/outils\/livrets_splat\.html#monde-2"/);
+  assert.ok(bloc, "bloc du lien du monde 2 introuvable");
+  // relecture du monde 1, lot 2 (25/09/2026) : comme au monde 1, un seul lien vers la page des
+  // livrets ; plus aucun bouton de PDF dans la carte des mondes
+  assert.match(bloc[0], /href="\/outils\/livrets_splat\.html#monde-2">\\ud83d\\udcda Les livrets du monde 2<\/a>/);
+  assert.equal((bloc[0].match(/class="introLien/g) || []).length, 1, "un seul lien");
+  assert.doesNotMatch(bloc[0], /\.pdf"/, "plus de bouton de PDF");
+  assert.doesNotMatch(bloc[0], /bord court|recto-verso|à plier|\\u00e0 plier/, "la note ne parle plus d'impression");
+  assert.match(bloc[0], /sous chaque carte, la place pour dessiner le sch\\u00e9ma en barres/, "la phrase utile à la classe reste");
   // la couleur du monde 2 pour ces pastilles
   assert.match(univers, /\.monde\.m2 \.introLien\.livret\{color:#0b4f8a;background:#e6f1fb;border-color:#a9cdeb\}/);
   // les pastilles du monde 1 n'ont pas bougé
@@ -263,13 +267,13 @@ test("les titres des fiches 8 et 9 sont les mêmes partout (livret, page courte,
   assert.match(render, new RegExp(`dict\\(n=9, t="${T9}"`), "render.py");
   assert.ok(couv2.includes(`<span>${T8}<em>`), "sommaire de la couverture, fiche 8");
   assert.ok(couv2.includes(`<span>${T9}<em>`), "sommaire de la couverture, fiche 9");
-  assert.ok(dos2.includes(`<span class="ti">${T8}</span>`), "« Mes fiches » du dos, fiche 8");
-  assert.ok(dos2.includes(`<span class="ti">${T9}</span>`), "« Mes fiches » du dos, fiche 9");
+  // « Mes fiches » a quitté le dos (relecture du monde 1, lot 2, 25/09/2026)
+  assert.doesNotMatch(dos2.replace(/\/\*[\s\S]*?\*\//g, ""), /class="prog"|je colorie l'étoile/, "plus de « Mes fiches » au dos");
   assert.ok(courte.includes(`Fiche 8 — ${T8}`), "page courte des QR, fiche 8");
   assert.ok(courte.includes(`Fiche 9 — ${T9}`), "page courte des QR, fiche 9");
   assert.ok(univers.includes(`{t:"${T8}",fo:"x + a = b"`), "étape 8 de la carte des mondes");
   assert.ok(univers.includes(`{t:"${T9}",fo:"a × x + c = b"`), "étape 9 de la carte des mondes");
-  // les « bis » ne sont pas listés : le sommaire et « Mes fiches » ne parlent que de 7, 8, 9
+  // les « bis » ne sont pas listés : le sommaire ne parle que de 7, 8, 9
   assert.doesNotMatch(couv2, /bis/);
   assert.doesNotMatch(dos2, /\bbis\b/);
 });
@@ -389,10 +393,10 @@ test("« tableau » a disparu des quatre sources de livrets et des deux pages de
 
 test("l'institut s'écrit IREMI dans les textes lus ; les chemins des logos ne bougent pas", () => {
   const lus = {
-    "_sources/livret-splat-classique/couverture.html": [/alt="IREMI La Réunion"/],
-    "_sources/livret-splat-classique/dos.html": [/alt="IREMI La Réunion"/, /avec l'IREMI de La Réunion\./],
-    "_sources/livret-petit-splat/couverture.html": [/alt="IREMI La Réunion"/],
-    "_sources/livret-petit-splat/dos.html": [/alt="IREMI La Réunion"/, /avec l'IREMI de La Réunion\./],
+    // couverture et dos n'ont plus de logo (relecture du monde 1, lot 2, 25/09/2026) ; le crédit
+    // du pied du dos garde l'IREMI
+    "_sources/livret-splat-classique/dos.html": [/avec l'IREMI de La Réunion\./],
+    "_sources/livret-petit-splat/dos.html": [/avec l'IREMI de La Réunion\./],
     "outils/splat.html": [/iremLogo\.alt = "IREMI de La Réunion";/],
     "outils/splat_equations.html": [/iremLogo\.alt = "IREMI de La Réunion";/],
     "outils/splat_tache_barre.html": [/alt="IREMI La Réunion"/],
@@ -404,7 +408,7 @@ test("l'institut s'écrit IREMI dans les textes lus ; les chemins des logos ne b
     assert.doesNotMatch(t, /IREM(?!I)[ ’']*(?:de )?La Réunion/, `${f} : plus aucun « IREM La Réunion »`);
   }
   // les chemins et la constante ne changent pas (le fichier du logo s'appelle toujours irem)
-  for (const f of ["_sources/livret-splat-classique/couverture.html", "outils/splat.html"])
+  for (const f of ["outils/splat_tache_barre.html", "outils/splat.html"])
     assert.match(lire(f), /assets\/img\/logos\/irem\/logo-print\.png|IREM_PRINT_LOGO_URL/, f);
 });
 
@@ -873,7 +877,7 @@ test("cartes des mondes : numéro, nom et fiches, dans l'ordre, toujours des ong
 test("corrigés pour tous, sur la page : plus de « prof » ni de « professeur » dans les boutons et les titres", () => {
   assert.doesNotMatch(page, /🧑‍🏫|\(prof\)|professeur/);
   assert.match(page, /<strong>✅ Les corrigés<\/strong>&nbsp;: le même livret, aux mêmes pages, avec les réponses/);
-  assert.match(catalogue, /"cardDescription": "Tous les livrets de l’univers SPLAT! à plier, monde par monde\u00a0: [^"]*l’Enquête \(monde 3\) en trois livrets et ses défis, le Système \(monde 4\) en deux livrets, et leurs corrigés ; SPLAT! Équations \(monde 5\) en trois livrets : schéma en barres, équation, et « Le défi »\."/);
+  assert.match(catalogue, /"cardDescription": "Tous les livrets de l’univers SPLAT! à plier, monde par monde\u00a0: [^"]*l’Enquête \(monde 3\) en trois livrets et ses défis, le Système \(monde 4\) en deux livrets, et leurs corrigés ; SPLAT! Équations \(monde 5\) en trois livrets : schéma en barres, équation, et «\u00a0Le défi\u00a0»\."/);
 });
 
 /* ===================================================================== lot D (21/09/2026)
@@ -942,8 +946,9 @@ test("D : les QR du livret « Le défi » — trois fiches, l'univers, deux sér
   // la plus large d'abord, la plus dure ensuite — comme les quatre autres dos de livrets
   assert.match(render, /serie_defi\(2, 6, 20, 100\), "serie-1\.png"/);
   assert.match(render, /serie_defi\(2, 6, 50, 100\), "serie-2\.png"/);
-  // et le QR passe de 21 à 32 mm : l'adresse est longue, il faut des modules lisibles
-  assert.match(render, /CSS_DOS_DEFI = """[\s\S]*?\.niv img\{width:32mm;height:32mm\}/);
+  // et le QR est plus grand qu'à quatre séries : l'adresse est longue, il faut des modules
+  // lisibles (32 mm contre 21 ; 36 contre 30 depuis le lot 2 de la relecture du monde 1)
+  assert.match(render, /CSS_DOS_DEFI = """[\s\S]*?\.niv img\{width:36mm;height:36mm\}/);
 });
 
 test("D : les dix PDF du livret « Le défi » — 8 pages A4, 4 feuilles A3 imposées", () => {
@@ -1015,15 +1020,19 @@ test("D : la page des livrets donne deux livrets dans l'onglet du monde 2", () =
   assert.equal((panneau(1).match(/<article class="liv">/g) || []).length, 3);
 });
 
-test("D : la miniature du livret « Le défi », et les pastilles de la vue prof", () => {
-  assert.match(page, /assets\/img\/thumbnails\/splat\/livret-splat-classique-defi\.png\?v=2/); // refaite le 23/09
+test("D : la miniature du livret « Le défi », et le lien de la vue prof", () => {
+  assert.match(page, /assets\/img\/thumbnails\/splat\/livret-splat-classique-defi\.png\?v=3/); // refaite le 25/09 (couverture sans logo)
   assert.ok(existe("assets/img/thumbnails/splat/livret-splat-classique-defi.png"));
   assert.ok(existe("assets/img/thumbnails/splat/livret-splat-classique-defi.webp"));
   assert.ok(taille("assets/img/thumbnails/splat/livret-splat-classique-defi.webp")
     < taille("assets/img/thumbnails/splat/livret-splat-classique-defi.png"));
+  // la vue prof ne liste plus les PDF (relecture du monde 1, lot 2) : « Le défi » est sur la page
+  // des livrets, et la note de la carte des mondes le présente
   const bloc = univers.match(/\(mi===1&&PROF\?'<p class="intro">'[\s\S]*?<\/p>':''\)\+/)[0];
-  assert.match(bloc, /href="\/outils\/livret_splat_classique_defi\.pdf"/);
-  assert.match(bloc, /href="\/outils\/livret_splat_classique_defi_a_plier\.pdf"/);
+  assert.match(bloc, /href="\/outils\/livrets_splat\.html#monde-2"/);
+  assert.match(bloc, /Le livret <b>Le d\\u00e9fi<\/b> reprend les trois fiches/);
+  assert.match(page, /href="\/outils\/livret_splat_classique_defi\.pdf"/);
+  assert.match(page, /href="\/outils\/livret_splat_classique_defi_a_plier\.pdf"/);
 });
 
 test("D : l'exemple de couverture du défi n'est aucune carte du livret", () => {

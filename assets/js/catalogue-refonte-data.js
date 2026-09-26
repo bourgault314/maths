@@ -754,7 +754,7 @@ window.MATHSGO_CATALOGUE = {
       "cardTitle": "L\u2019univers SPLAT!",
       "collections": ["splat"],
       "tags": ["splat", "cycle-3", "parcours", "jeu", "schema-barres"],
-      "thumbnail": "assets/img/thumbnails/splat/univers-splat.svg?v=1",
+      "thumbnail": "assets/img/thumbnails/splat/univers-splat.svg?v=2",
       "cardDescription": "Le parcours des \u00e9l\u00e8ves : six mondes \u00e0 jouer en ligne, du cycle 3 (progression SPLAT!) au cycle 4 (relatifs), une \u00e9toile par s\u00e9rie r\u00e9ussie."
     },
     "outils/splat.html": {
@@ -791,7 +791,7 @@ window.MATHSGO_CATALOGUE = {
       "collections": ["splat"],
       "tags": ["splat", "livret", "schema-barres", "equation", "inconnue", "imprimer"],
       "thumbnail": "assets/img/thumbnails/splat/livrets-splat.png?v=2",
-      "cardDescription": "Tous les livrets de l’univers SPLAT! à plier, monde par monde : le monde 1 en trois niveaux, le monde 2, l’Enquête (monde 3) en trois livrets et ses défis, le Système (monde 4) en deux livrets, et leurs corrigés ; SPLAT! Équations (monde 5) en trois livrets : schéma en barres, équation, et « Le défi »."
+      "cardDescription": "Tous les livrets de l’univers SPLAT! à plier, monde par monde : le monde 1 en trois niveaux, le monde 2, l’Enquête (monde 3) en trois livrets et ses défis, le Système (monde 4) en deux livrets, et leurs corrigés ; SPLAT! Équations (monde 5) en trois livrets : schéma en barres, équation, et « Le défi »."
     },
     "outils/tuiles_algebriques/generateur_exercices_calcul_litteral.html": {
       "primaryNotion": "calcul-litteral",
@@ -6382,7 +6382,7 @@ window.MATHSGO_CATALOGUE = {
         "digipad"
       ],
       "kind": "document",
-      "status": "published",
+      "status": "hidden",
       "featured": false,
       "recent": false
     },
@@ -6528,7 +6528,7 @@ window.MATHSGO_CATALOGUE = {
     {
       "id": "outils-livrets-splat",
       "title": "Les livrets SPLAT! — les fiches de chaque monde à plier",
-      "description": "Tous les livrets de l’univers SPLAT! sur une seule page, monde par monde : les six fiches du monde 1 (Petit SPLAT!) en trois niveaux — jusqu’à 20 jetons, de 21 à 50, de 51 à 100 —, les trois fiches du monde 2 (SPLAT! Classique) en deux niveaux, puis les fiches 10 à 24 du monde 3 (SPLAT! Enquête) en trois livrets — les deux premiers aussi en « Le défi » —, les fiches 25 à 34 du monde 4 (SPLAT! Système) en deux livrets, et les fiches 35 à 37 du monde 5 (SPLAT! Équations) en deux livrets — l’élève y dessine le schéma en barres ou écrit l’équation —, plus un livret « Le défi », des totaux de 50 à 100. Pour chaque livret : le PDF de 8 pages, le livret à plier, et le livret corrigé, à donner aux élèves ou à garder pour soi. Chaque fiche porte un QR code vers le jeu en ligne avec les mêmes cartes. À imprimer en recto-verso sur A3, ou sur A4 pour un plus petit livret, à plier et agrafer.",
+      "description": "Tous les livrets de l’univers SPLAT! sur une seule page, monde par monde : les six fiches du monde 1 (Petit SPLAT!) en trois niveaux — jusqu’à 20 jetons, de 21 à 50, de 51 à 100 —, les trois fiches du monde 2 (SPLAT! Classique) en deux niveaux, puis les fiches 10 à 24 du monde 3 (SPLAT! Enquête) en trois livrets — les deux premiers aussi en « Le défi » —, les fiches 25 à 34 du monde 4 (SPLAT! Système) en deux livrets, et les fiches 35 à 37 du monde 5 (SPLAT! Équations) en deux livrets — l’élève y dessine le schéma en barres ou écrit l’équation —, plus un livret « Le défi », des totaux de 50 à 100. Pour chaque livret : le PDF de 8 pages, le livret à plier, et le livret corrigé, à donner aux élèves ou à garder pour soi. Chaque fiche porte un QR code vers le jeu en ligne avec les mêmes cartes. À imprimer en recto-verso sur A3, ou sur A4 pour un plus petit livret, à plier et agrafer.",
       "path": "outils/livrets_splat.html",
       "domains": [
         "algebre"

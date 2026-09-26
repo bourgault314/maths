@@ -332,12 +332,8 @@ JS_DOS = """(d) => {
      '</span><span class="d">' + n[1] + '</span></div>').join('');
   const u = document.querySelector('.suite img'); if (u) u.setAttribute('src', d.univers);
   const s = document.querySelector('.suite p.t'); if (!s) return 'pas de texte « suite »'; s.innerHTML = d.suite;
-  const c = document.querySelectorAll('.prog .g .c');
-  if (c.length !== d.fiches.length) return 'Mes fiches : ' + c.length + ' cases';
-  d.fiches.forEach((t, i) => {
-    c[i].querySelector('.badge b').textContent = t[0];
-    c[i].querySelector('.ti').innerHTML = t[1];
-  });
+  // (« Mes fiches — je colorie l'étoile » a quitté le dos : relecture du monde 1, lot 2, 25/09/2026)
+  // d.fiches sert encore : les lignes du tableau des systèmes de CE livret, en gras
   // 25/09/2026 : l'élève a « Pour se souvenir » ; le tableau des systèmes du collège (pour les
   // profs) n'est qu'au dos des corrigés
   const lex = document.querySelector('.lex'), syst = document.querySelector('.syst');
@@ -357,8 +353,11 @@ JS_DOS = """(d) => {
     const qs = [...m.querySelectorAll('.q')].map(e => e.getBoundingClientRect());
     if (qs.some(b => Math.abs(b.width - qs[0].width) > 0.3)) return 'mini-schéma : des cases « ? » de largeurs différentes';
     if (rows.some(r => Math.abs(r[0].left - rows[0][0].left) > 0.3)) return 'mini-schéma : les barres ne partent pas du même bord';
+    // le bloc « Pour se souvenir » est agrandi d'un coup (zoom, lot 2 de la relecture du monde 1) :
+    // les mesures sont faites dans l'espace agrandi, le chevauchement de 1,3 px des bordures aussi
+    const Z = parseFloat(getComputedStyle(document.querySelector('.lex ul')).zoom) || 1;
     for (const r of rows) for (let i = 1; i < r.length; i++)
-      if (Math.abs(r[i].left - (r[i - 1].right - 1.3)) > 0.3) return 'mini-schéma : des cases ne se touchent pas';
+      if (Math.abs(r[i].left - (r[i - 1].right - 1.3 * Z)) > 0.3 * Z) return 'mini-schéma : des cases ne se touchent pas';
     if (Math.abs(rows[1][rows[1].length - 1].right - rows[0][rows[0].length - 1].right) > 0.4) return 'mini-schéma : « reste » ne finit pas avec le plateau';
   }
   // les lignes du tableau de CE livret en gras (fiches 25-29 ou 30-34)

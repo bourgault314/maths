@@ -131,12 +131,13 @@ CSS_DEFI = """
 """
 
 # Le dos du livret « Le défi » : deux séries au lieu de quatre, donc deux cases plus larges
-# et des QR de 32 mm (21 mm à quatre). La rangée grandit de 11 mm : mesuré le 21/09/2026, le
-# dos avait la place. Injecté pour ce seul niveau — le dos du livret normal ne bouge pas.
+# et des QR de 36 mm (30 mm à quatre ; 32 et 21 mm avant le lot 2 de la relecture du monde 1,
+# 25/09/2026, qui a retiré « Mes fiches » du dos pour agrandir les QR). Injecté pour ce seul
+# niveau — le dos du livret normal ne bouge pas.
 CSS_DOS_DEFI = """
 .niveaux{gap:6mm}
 .niv{padding:3.5mm 4mm 3mm;gap:2mm}
-.niv img{width:32mm;height:32mm}
+.niv img{width:36mm;height:36mm}
 """
 
 def serie_defi(t1, t2, tmin=50, tmax=100):
@@ -388,14 +389,7 @@ JS_DOS = """(d) => {
      '</span><span class="d">' + n[1] + '</span></div>').join('');
   const u = document.querySelector('.suite img');
   if (u) u.setAttribute('src', d.univers);
-  if (d.fiches){
-    const c = document.querySelectorAll('.prog .g .c');
-    if (c.length !== d.fiches.length) return 'Mes fiches : ' + c.length + ' cases';
-    d.fiches.forEach((t, i) => {
-      c[i].querySelector('.badge b').textContent = t[0];
-      c[i].querySelector('.ti').textContent = t[1];
-    });
-  }
+  // (« Mes fiches — je colorie l'étoile » a quitté le dos : relecture du monde 1, lot 2, 25/09/2026)
   return 'ok';
 }"""
 
@@ -548,7 +542,6 @@ async def pages(niv, tmp, corr=None):
             await pdf_fiche(f, tmp / f"fiche{f['n']}.pdf")
         dos = dict(niveaux=[[nom, desc, f"{qrweb}/{img}"] for nom, desc, _, img in niv["dos"]],
                    univers=f"{qrweb}/univers.png",
-                   fiches=[[f["n"], f["t"]] for f in niv["fiches"]] if niv.get("couv") else None,
                    css=niv.get("css_dos"))
         await pdf_html(f"{base}{BASE_WEB}/dos.html", tmp / "p8.pdf", dos=dos)
         await nav.close()

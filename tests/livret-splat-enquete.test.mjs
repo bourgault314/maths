@@ -313,12 +313,17 @@ test("E4 : dans les PDF de correction — un livret corrigé pour tous (plus de 
 });
 
 // ------------------------------------------------ les règles des documents du collège
-test("E4 : un seul logo maths&go par page, signature et licence au pied, lisible en noir et blanc", () => {
+test("E4 : couverture et dos sans logo, un seul logo maths&go sur l'exemple, signature et licence au pied, lisible en noir et blanc", () => {
+  // relecture du monde 1, lot 2 (25/09/2026) : plus aucun logo sur la couverture ni sur le dos ;
+  // les pages-fiches (et l'exemple de la page 2) gardent IREMI + maths&go dans leur en-tête
   for (const [nom, t] of [["couverture", couv], ["exemple", exemple], ["dos", dos]]) {
-    assert.equal((t.match(/logos\/mathsgo\/logo-print\.png/g) || []).length, 1, `${nom} : un seul logo maths&go`);
+    const logos = nom === "exemple" ? 1 : 0;
+    assert.equal((t.match(/logos\/mathsgo\/logo-print\.png/g) || []).length, logos, `${nom} : ${logos} logo maths&go`);
+    assert.equal((t.match(/logos\/irem\/logo-print\.png/g) || []).length, logos, `${nom} : ${logos} logo IREMI`);
     assert.match(t, /<footer class="pied">mathsgo\.re\/splat · CC BY-NC-SA 4\.0<\/footer>/, nom);
-    assert.match(t, /alt="IREMI La Réunion"/, nom);
   }
+  assert.match(exemple, /alt="IREMI La Réunion"/);
+  assert.match(dos, /avec l'IREMI de La Réunion/, "le crédit du pied du dos garde l'IREMI");
   const css = lire(SRC + "commun.css");
   assert.match(css, /\.pied\{[^}]*font-size:10px;[^}]*color:#64748b;/);
   // aucun texte framboise sur le blanc : le framboise ne sert qu'aux fonds, le texte coloré est
@@ -475,7 +480,7 @@ test("page des livrets : la couverture des livrets de l'Enquête, en PNG et en W
     assert.ok(taille(webp) < taille(png), `${nom} : la WebP est plus légère`);
     const b = readFileSync(new URL(`../${png}`, import.meta.url));
     assert.deepEqual([b.readUInt32BE(16), b.readUInt32BE(20)], [993, 1404], `${nom} : page 1 rendue à 120 dpi`);
-    assert.ok(pageLivrets.includes(`src="/assets/img/thumbnails/splat/${nom}.png?v=1"`), `${nom} : sur la page`);
+    assert.ok(pageLivrets.includes(`src="/assets/img/thumbnails/splat/${nom}.png?v=2"`), `${nom} : sur la page`);
   }
 });
 
@@ -629,7 +634,7 @@ test("page des livrets : « Le défi » à côté du livret de la classe, dans l
     assert.ok(taille(webp) < taille(png), `${nom} : la WebP est plus légère`);
     const b = readFileSync(new URL(`../${png}`, import.meta.url));
     assert.deepEqual([b.readUInt32BE(16), b.readUInt32BE(20)], [993, 1404], `${nom} : page 1 rendue à 120 dpi`);
-    assert.ok(d.includes(`src="/assets/img/thumbnails/splat/${nom}.png?v=1"`), `${nom} : sur la page`);
+    assert.ok(d.includes(`src="/assets/img/thumbnails/splat/${nom}.png?v=2"`), `${nom} : sur la page`);
   });
   assert.equal((p.match(/la classe, puis «&nbsp;Le défi&nbsp;» \(totaux de 50 à 100\)/g) || []).length, 2, "les parties 1 et 2 le disent");
 });

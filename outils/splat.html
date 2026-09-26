@@ -954,7 +954,7 @@
         <li><strong>B± — Paquets relatifs</strong> : la même chose avec des valeurs positives et négatives.</li>
         <li><strong>C — Enquête</strong> : deux ou trois taches de couleurs reliées par des indices ; le schéma se construit étape par étape (vide, rempli, regroupé, ordonné) jusqu'à la résolution.</li>
         <li><strong>C direct — Substitution</strong> : la même enquête, en remplaçant d'abord chaque tache par ce qu'elle vaut.</li>
-        <li><strong>D — Système</strong> : chaque indice est un autre plateau, avec son propre total ; le menu « Geste » choisit la façon de les comparer (retirer une partie, deux pesées, doubler, miroir, trois sommes sans total). Les taches d'une même couleur cachent le même nombre de jetons.</li>
+        <li><strong>D — Système</strong> : chaque indice est un autre plateau, avec son propre total ; le menu «&nbsp;Geste&nbsp;» choisit la façon de les comparer (retirer une partie, deux pesées, doubler, miroir, trois sommes sans total). Les taches d'une même couleur cachent le même nombre de jetons.</li>
         <li><strong>F / G — Opérations en 9 et en 8</strong> : un des jetons visibles vaut 9, 19, 29… (ou 8, 18, 28…) ; on cherche ce qui manque par une différence, ou le total par une somme.</li>
         <li><strong>𝑥</strong> / <strong>?</strong> : dans les modes A, A±, B, C et D, l'inconnue s'écrit avec une lettre ou avec un point d'interrogation.</li>
       </ul>
@@ -967,7 +967,7 @@
         <li><strong>Résoudre</strong> (en vert, près du schéma) : ouvre la même situation dans ÉquaBarre pour la manipuler.</li>
       </ul>
 
-      <p><strong>Impression.</strong> Une seule liste, « Ce que j'imprime », dit ce qui partira à l'imprimante : <strong>Énoncé seul</strong>, <strong>Énoncé + schéma à remplir</strong>, <strong>Correction</strong>, ou l'un des deux recto-verso — <strong>Énoncé, schéma au dos</strong> et <strong>Énoncé, correction au dos</strong>. Ces deux-là impriment l'énoncé au recto et le reste au verso, dans le même ordre : les élèves cherchent d'un côté, retournent la feuille et vérifient de l'autre. La phrase sous la liste redit en clair ce que vous allez obtenir.</p>
+      <p><strong>Impression.</strong> Une seule liste, «&nbsp;Ce que j'imprime&nbsp;», dit ce qui partira à l'imprimante : <strong>Énoncé seul</strong>, <strong>Énoncé + schéma à remplir</strong>, <strong>Correction</strong>, ou l'un des deux recto-verso — <strong>Énoncé, schéma au dos</strong> et <strong>Énoncé, correction au dos</strong>. Ces deux-là impriment l'énoncé au recto et le reste au verso, dans le même ordre : les élèves cherchent d'un côté, retournent la feuille et vérifient de l'autre. La phrase sous la liste redit en clair ce que vous allez obtenir.</p>
 
       <p><strong>Raccourcis clavier.</strong></p>
       <ul>
@@ -976,7 +976,7 @@
         <li><strong>F</strong> : plein écran — <strong>Échap</strong> pour en sortir</li>
       </ul>
 
-      <p><strong>Graine.</strong> Vide : une série nouvelle à chaque clic sur Générer. Remplie : toujours la même série — « Copier le lien » la partage avec tous les réglages.</p>
+      <p><strong>Graine.</strong> Vide : une série nouvelle à chaque clic sur Générer. Remplie : toujours la même série — «&nbsp;Copier le lien&nbsp;» la partage avec tous les réglages.</p>
     </div>
   </div>
 </div>
@@ -1255,8 +1255,8 @@
         <label class="checkInline" title="Soustraction (Ex: 5 de moins)"><input type="checkbox" id="invOpSub" checked> <span>−k</span></label>
       </div>
       <div class="c-ops" id="invNoTotalRow">
-        <label class="checkInline large" title="Pas de total : deux indices sur les deux mêmes taches, un « fois plus / fois moins » et un « de plus / de moins ». Toujours 2 taches, sans jetons visibles. Cochée avec « Taches répétées » : les deux sortes de cartes se mélangent."><input type="checkbox" id="invNoTotal"> <span>Sans total</span></label>
-        <label class="checkInline large" title="Une même couleur peut être plusieurs fois sur le plateau (au moins une l'est, 6 taches au plus) ; les indices parlent d'« une tache rouge ». Cochée avec « Sans total » : les deux sortes de cartes se mélangent."><input type="checkbox" id="invRepeatOn"> <span>Taches répétées</span></label>
+        <label class="checkInline large" title="Pas de total : deux indices sur les deux mêmes taches, un «&nbsp;fois plus / fois moins&nbsp;» et un «&nbsp;de plus / de moins&nbsp;». Toujours 2 taches, sans jetons visibles. Cochée avec «&nbsp;Taches répétées&nbsp;» : les deux sortes de cartes se mélangent."><input type="checkbox" id="invNoTotal"> <span>Sans total</span></label>
+        <label class="checkInline large" title="Une même couleur peut être plusieurs fois sur le plateau (au moins une l'est, 6 taches au plus) ; les indices parlent d'«&nbsp;une tache rouge&nbsp;». Cochée avec «&nbsp;Sans total&nbsp;» : les deux sortes de cartes se mélangent."><input type="checkbox" id="invRepeatOn"> <span>Taches répétées</span></label>
       </div>
       <div class="row" id="invRepeatRow" style="align-items:flex-end; display:none">
         <div style="flex:1.25 1 0">
@@ -2034,7 +2034,7 @@ function syncPrintSummary(){
     /* 6/page + « Correction » en modes A et B : la correction complète part en 4/page, et
        on montre les deux corrections qui, elles, tiennent en 6/page */
     out.textContent = "La correction complète ne tient qu’en 4 par page : elle partira en 4/page. "
-      + "En 6/page, choisissez « Correction : l’équation » ou « Correction : le schéma ».";
+      + "En 6/page, choisissez «\u00a0Correction : l’équation\u00a0» ou «\u00a0Correction : le schéma\u00a0».";
     return;
   }
   out.textContent = msg + " " + perPage + " carte" + (perPage === "1" ? "" : "s") + " par page."
@@ -4333,7 +4333,7 @@ function sysPlan(sit){
     const paire = { [A]: 1, [B]: 1 };
     const paires = m === 1 ? "une paire" : (m === 2 ? "deux paires" : `${m} paires`);
     return [
-      etape("miroir", "Les deux situations « en miroir »",
+      etape("miroir", "Les deux situations «\u00a0en miroir\u00a0»",
         [barre(`TOTAL ${T}`, cases(P.counts).concat(vis(visP))), barre(S, cases(O.counts))],
         M => [`${expr(M, P.counts, V)} = ${T}`, `${expr(M, O.counts)} = ${S}`]),
       etape("somme", "On les additionne, puis on partage",

@@ -503,7 +503,7 @@ test("le plan des cartes-types de la conception : titres et calculs des maquette
 
   const g4a = sys.plan(situation("MIROIR", [n, vi], { black: 5, purple: 7 }, [
     { counts: { black: 2, purple: 3 }, total: 31, visible: [] }, { counts: { black: 3, purple: 2 }, total: 29 }]));
-  assert.deepEqual(g4a.map((e) => e.titre), ["Les deux situations « en miroir »", "On les additionne, puis on partage", "Dans le plateau : deux paires et une tache violette de plus", "Vérification"]);
+  assert.deepEqual(g4a.map((e) => e.titre), ["Les deux situations «\u00a0en miroir\u00a0»", "On les additionne, puis on partage", "Dans le plateau : deux paires et une tache violette de plus", "Vérification"]);
   assert.deepEqual(g4a.map((e) => e.calculs), [
     ["2 noires + 3 violettes = 31", "3 noires + 2 violettes = 29"], ["5 noires + 5 violettes = 60", "on partage en 5 :", "1 noire + 1 violette = 12"],
     ["12 + 12 + violette = 31", "violette = 31 − 24 = 7", "noire = 12 − 7 = 5"], ["2 × 5 + 3 × 7 = 10 + 21 = 31 ✓", "3 × 5 + 2 × 7 = 15 + 14 = 29 ✓"]]);

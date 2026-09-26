@@ -263,9 +263,12 @@ test("Système : dans les PDF — la couverture, l'exemple en page 2, les fiches
 });
 
 // ------------------------------------------------------------ les règles des documents du collège
-test("Système : un seul logo maths&go par page, signature au pied, lisible en noir et blanc, crédits", () => {
+test("Système : couverture et dos sans logo, un seul logo maths&go sur l'exemple, signature au pied, lisible en noir et blanc, crédits", () => {
+  // relecture du monde 1, lot 2 (25/09/2026) : plus aucun logo sur la couverture ni sur le dos ;
+  // les pages-fiches (et l'exemple de la page 2) gardent IREMI + maths&go dans leur en-tête
   for (const [nom, t] of [["couverture", couv], ["exemple", exemple], ["dos", dos]]) {
-    assert.equal((t.match(/logos\/mathsgo\/logo-print\.png/g) || []).length, 1, `${nom} : un seul logo maths&go`);
+    const logos = nom === "exemple" ? 1 : 0;
+    assert.equal((t.match(/logos\/mathsgo\/logo-print\.png/g) || []).length, logos, `${nom} : ${logos} logo maths&go`);
     assert.match(t, /<footer class="pied">mathsgo\.re\/splat · CC BY-NC-SA 4\.0<\/footer>/, nom);
   }
   const css = lire(SRC + "commun.css");
@@ -327,7 +330,7 @@ test("page des livrets : l'onglet du monde 4 — les deux livrets du Système, l
     assert.ok(taille(webp) < taille(png), `${nom} : la WebP est plus légère`);
     const b = readFileSync(new URL(`../${png}`, import.meta.url));
     assert.deepEqual([b.readUInt32BE(16), b.readUInt32BE(20)], [993, 1404], `${nom} : page 1 rendue à 120 dpi`);
-    assert.ok(d.includes(`src="/assets/img/thumbnails/splat/${nom}.png?v=1"`), `${nom} : sur la page`);
+    assert.ok(d.includes(`src="/assets/img/thumbnails/splat/${nom}.png?v=2"`), `${nom} : sur la page`);
   });
   assert.match(page, /\[data-m="4"\]\{--c:#92400e;/);
 });
