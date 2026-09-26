@@ -189,6 +189,9 @@ pypdf pour l'imposition.
   accolade imprimée. L'outil redessine alors chaque carte sur toute la largeur de la case
   (sa « table de dessin », sans aucun tirage) : les nombres des cartes ne changent pas, les
   graines restent valables, et le jeu en ligne (QR) n'est pas touché.
+- QR des fiches : depuis le 26/09/2026, l'outil pose lui-même un QR « je rejoue en ligne »
+  sur chaque fiche classique qu'il imprime. `render.py` demande `qr=0` : le livret garde son
+  propre QR (`JS_QR`), un seul QR par page, et les PDF ne changent pas.
 - Couverture : dans les cases Prénom et Classe, le mot est en haut de la case (2,2 mm de
   marge) pour laisser la place d'écrire ; la case garde sa taille (lot 4, 26/09/2026).
 - Tout reste lisible imprimé en **noir et blanc** : aucun texte en couleur claire,
