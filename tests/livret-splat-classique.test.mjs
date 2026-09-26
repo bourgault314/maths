@@ -613,6 +613,26 @@ test("K1 : dans les PDF de correction, les pages 2 à 7 sont des corrections, la
   }
 });
 
+// Relecture du monde 1, lot 3 (26/09/2026) : les pages 2 à 7 des six livrets Petit SPLAT!
+// (élève et corrigé) portent « page N » juste après leur pied ; la couverture et le dos, non.
+// Sur les feuilles A3, chaque demi-feuille garde le numéro de SA page du livret (8|1 · 2|7 ·
+// 6|3 · 4|5). Les sources sont vérifiées dans splat-relecture-m1-lot3.test.mjs.
+test("lot 3 du monde 1 : « page N » imprimé sur les pages 2 à 7 des six livrets, ni sur la couverture ni au dos", () => {
+  for (const s of SORTIES_M1) for (const v of ["", "_correction"]) {
+    const pages = texteExact(`outils/${s}${v}.pdf`);
+    assert.equal(pages.length, 8, `${s}${v} : huit pages de texte`);
+    for (let p = 2; p <= 7; p++) {
+      const t = pages[p - 1];
+      assert.ok(t.includes(`CC BY-NC-SA 4.0${v ? " · correction" : ""}page ${p}`), `${s}${v} p.${p} : « page ${p} » après le pied`);
+      assert.equal((t.match(/page \d/g) || []).length, 1, `${s}${v} p.${p} : un seul numéro`);
+    }
+    for (const p of [1, 8]) assert.doesNotMatch(pages[p - 1], /page \d/, `${s}${v} p.${p} : pas de numéro`);
+    const a3 = texteExact(`outils/${s}${v}_a_plier.pdf`).map((t) => (t.match(/page (\d)/g) || []).join(","));
+    assert.deepEqual(a3, ["", "page 2,page 7", "page 6,page 3", "page 4,page 5"],
+      `${s}${v} : les numéros suivent leurs pages sur les feuilles A3 (lu : ${a3.join(" | ")})`);
+  }
+});
+
 test("K1 : render.py fabrique la correction depuis l'outil (correction=1&rv=0), cadre de consigne remis, même QR", () => {
   // l'outil rend l'énoncé puis sa correction : on remet le cadre de consigne sur la
   // correction (les cartes restent à la même place) et on retire l'énoncé

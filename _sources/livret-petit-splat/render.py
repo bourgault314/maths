@@ -23,7 +23,9 @@ et, pour chacun, son livret corrigé (lot K1, 20/09/2026 ; « pour tous » depui
 
 Les 6 fiches ne sont PAS redessinées ici : elles sont rendues par l'outil du site
 (outils/splat_tache_barre.html, mode support=print) avec des graines fixes. Le QR
-code est injecté dans le bandeau de consigne juste avant l'impression. Couverture
+code est injecté dans le bandeau de consigne juste avant l'impression ; les logos de
+l'outil sont retirés et le numéro de page est posé au même moment (lot 3 de la relecture du
+monde 1, 26/09/2026 — voir JS_SANS_LOGO et JS_NUMERO). Couverture
 et dos sont les deux HTML de ce dossier ; pour les niveaux Avancé et Expert, leurs
 textes variables et l'exemple de couverture sont injectés au rendu (voir NIVEAUX).
 
@@ -232,6 +234,44 @@ JS_PIED = """(texte) => {
   return 'ok';
 }"""
 
+# ---------------------------------------------------------------------------
+# RELECTURE DU MONDE 1, LOT 3 (26/09/2026) — décisions de Gwenaël, par questions à choix.
+# 1. Plus AUCUN logo sur les pages-fiches du livret (ni IREMI ni maths&go) : on retire le
+#    bloc .activity-logos AU RENDU, jamais dans l'outil (une fiche imprimée depuis le
+#    générateur garde ses deux logos). Le QR reste où il était, dans le cadre de consigne
+#    (réponse A) : 20 mm, et les cartes ne bougent pas d'un millimètre — le bandeau garde
+#    ses 16 mm, seul son côté droit se vide.
+# 2. Les pages 2 à 7 portent leur numéro : « page N », en gras noir, au coin EXTÉRIEUR du
+#    bas (à droite sur les pages impaires, à gauche sur les paires), sur la ligne du pied
+#    (réponse D3). Le mot « page » évite la confusion avec « Fiche N-1 » écrit dans le
+#    bandeau. C'est le numéro de la page DANS LE LIVRET : l'imposition A3 (8|1 · 2|7 · 6|3 ·
+#    4|5) pose chaque page A4 telle quelle, le numéro suit donc sa page, et le coin
+#    extérieur de chaque demi-feuille est bien celui du livret plié. Ni la couverture ni le
+#    dos ne sont numérotés. Le bas de l'encre tombe à 3,6 mm du bord du papier, comme le pied
+#    (3,8 mm) : pas plus bas, beaucoup d'imprimantes n'impriment rien dans les 4 derniers mm.
+JS_SANS_LOGO = """() => {
+  const l = document.querySelectorAll('.activity-logos');
+  if (l.length !== 1) return l.length + ' bloc(s) de logos, attendu : 1';
+  l[0].remove();
+  return 'ok';
+}"""
+
+CSS_NUMERO = """
+.num-page{position:absolute;bottom:-4.6mm;font-size:12.5px;font-weight:900;color:#0f172a;line-height:1;white-space:nowrap}
+.num-page.impaire{right:1mm}
+.num-page.paire{left:1mm}
+"""
+
+JS_NUMERO = """(n) => {
+  const i = document.querySelectorAll('.page-inner');
+  if (i.length !== 1) return i.length + ' page(s), attendu : 1';
+  const d = document.createElement('div');
+  d.className = 'num-page ' + (n % 2 ? 'impaire' : 'paire');
+  d.textContent = 'page ' + n;
+  i[0].appendChild(d);
+  return 'ok';
+}"""
+
 JS_EXEMPLE = """([target, splatMode, visMin, visMax, hpMin, hpMax, totMin]) => {
   for (let essai = 0; essai < 8000; essai++) {
     currentRand = mulberry32(hashSeed('exemple-' + target + '-' + essai));
@@ -376,7 +416,7 @@ async def pages(niv, tmp, correction=False):
             print(f"   exemple de couverture : {exemple['total']} = {exemple['visible']}"
                   f" + {exemple['n']} x {exemple['hp']}")
 
-        async def pdf(url, sortie, injecter=None, couv=None, dos=None):
+        async def pdf(url, sortie, injecter=None, couv=None, dos=None, numero=None):
             pg = await nav.new_page(viewport={"width": 794, "height": 1123})
             await pg.goto(url, wait_until="networkidle")
             await pg.wait_for_timeout(1200)
@@ -392,6 +432,14 @@ async def pages(niv, tmp, correction=False):
                 r = await pg.evaluate(JS_PIED, PIED_CORRECTION if correction else PIED_LIVRET)
                 if r != "ok":
                     raise SystemExit(f"pied de page : {r}")
+                r = await pg.evaluate(JS_SANS_LOGO)
+                if r != "ok":
+                    raise SystemExit(f"logos de {url} : {r}")
+                if numero:
+                    await pg.add_style_tag(content=CSS_NUMERO)
+                    r = await pg.evaluate(JS_NUMERO, numero)
+                    if r != "ok":
+                        raise SystemExit(f"numéro de page : {r}")
                 await pg.wait_for_timeout(400)
             if couv is not None:
                 if couv.get("prof"):
@@ -418,7 +466,9 @@ async def pages(niv, tmp, correction=False):
                    f"&seed={niv['graines'][f['n']]}"
                    f"&title=" + quote(f"Fiche {f['n']} — {f['t']}")
                    + ("&correction=1&rv=0" if correction else ""))
-            await pdf(url, tmp / f"p{f['n']+1}.pdf", injecter=f"{qrweb}/fiche{f['n']}.png")
+            # la fiche N est la page N+1 du livret (la couverture est la page 1)
+            await pdf(url, tmp / f"p{f['n']+1}.pdf", injecter=f"{qrweb}/fiche{f['n']}.png",
+                      numero=f['n'] + 1)
         dos = dict(niveaux=[[nom, desc, f"{qrweb}/{img}"] for nom, desc, _, img in niv["dos"]],
                    univers=f"{qrweb}/univers.png")
         await pdf(f"{base}{BASE_WEB}/dos.html", tmp / "p8.pdf", dos=dos)
