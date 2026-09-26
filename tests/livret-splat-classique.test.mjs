@@ -653,8 +653,10 @@ test("K1 : render.py fabrique la correction depuis l'outil (correction=1&rv=0), 
 });
 
 test("K1 : la page des livrets du monde 1 mène aux six PDF de correction, sous les liens de chaque livret", () => {
-  const cartes = panneau(1).split('<article class="liv">').slice(1);
-  assert.equal(cartes.length, 3, "trois cartes");
+  /* 26/09/2026 : six cartes, les trois livrets d'origine puis les trois « Je dessine le
+     schéma » (même carte, mêmes corrigés : tests/livrets-petit-splat-dessin.test.mjs). */
+  const cartes = panneau(1).split('<article class="liv">').slice(1, 4);
+  assert.equal(panneau(1).split('<article class="liv">').length - 1, 6, "six cartes");
   cartes.forEach((c, i) => {
     const s = SORTIES_M1[i];
     assert.ok(c.includes(`href="/outils/${s}.pdf"`), `${s} : le PDF de l'élève est bien sur cette carte`);
@@ -816,9 +818,10 @@ test("L : un onglet et un panneau par monde, le prof replié partout, la note un
   assert.equal((page.match(/role="tab"/g) || []).length, 5, "cinq onglets (mondes 1 à 5, lot Q3)");
   assert.equal((page.match(/role="tabpanel"/g) || []).length, 5, "cinq panneaux");
   assert.equal((page.match(/<section class="note"/g) || []).length, 1, "une seule note « Pour imprimer »");
-  // quinze cartes : 3 (monde 1) + 2 (monde 2) + 5 (monde 3 : deux livrets et leurs défis, puis la partie 3)
+  // dix-huit cartes : 6 (monde 1, dont les trois « Je dessine le schéma » du 26/09/2026) + 2 (monde 2)
+  // + 5 (monde 3 : deux livrets et leurs défis, puis la partie 3)
   // + 2 (monde 4, le Système, 25/09/2026) + 3 (monde 5 : corrigés du lot Q4, et le défi du lot Q5)
-  assert.equal((page.match(/<details class="prof">/g) || []).length, 15, "les quinze cartes replient leurs corrigés");
+  assert.equal((page.match(/<details class="prof">/g) || []).length, 18, "les dix-huit cartes replient leurs corrigés");
   assert.match(page, /sur A3 \(meilleur rendu\)/, "le conseil de Claire sur le A3");
   /* Sans JavaScript, aucun monde n'est caché. Le panneau porte l'attribut « hidden »,
      que le navigateur masque d'office : il FAUT donc les deux règles, dans cet ordre —
@@ -1040,8 +1043,8 @@ test("D : la page des livrets donne deux livrets dans l'onglet du monde 2", () =
     assert.ok(m2.includes(`href="/outils/${s}_a_plier.pdf"`), `${s}_a_plier.pdf`);
   }
   assert.match(m2, /<h3>Le défi<\/h3><span class="plage">totaux de 50 à 100<\/span>/);
-  // le monde 1 n'a pas bougé
-  assert.equal((panneau(1).match(/<article class="liv">/g) || []).length, 3);
+  // le monde 1 : ses trois livrets, puis les trois « Je dessine le schéma » (26/09/2026)
+  assert.equal((panneau(1).match(/<article class="liv">/g) || []).length, 6);
 });
 
 test("D : la miniature du livret « Le défi », et le lien de la vue prof", () => {

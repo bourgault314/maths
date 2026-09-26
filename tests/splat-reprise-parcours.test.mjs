@@ -35,11 +35,13 @@ function stockage(contenu) {
 }
 
 // L'empreinte que la page calcule pour les réglages lus dans son adresse.
-function empreinte({ seed, target, splats, exercise, grid = "3x4" }) {
+// jetons=0 et sansjetons=N (livrets « Je fais le schéma en barres », 26/09/2026) changent les cartes :
+// ils entrent dans l'empreinte, seulement quand ils sont posés.
+function empreinte({ seed, target, splats, exercise, grid = "3x4", jetons = true, sansjetons = 0 }) {
   const valeurs = { targetVal: target, splatMode: splats, gameMode: exercise, gridSize: grid };
   const document = { getElementById: (id) => (id in valeurs ? { value: valeurs[id] } : null) };
-  return new Function("document", "activeSeed", "getProblemType",
-    `${source("eleveSignatureSerie")}\nreturn eleveSignatureSerie();`)(document, seed, () => "classic");
+  return new Function("document", "activeSeed", "getProblemType", "jetonsAutourCoche", "sansJetonsNombre",
+    `${source("eleveSignatureSerie")}\nreturn eleveSignatureSerie();`)(document, seed, () => "classic", () => jetons, sansjetons);
 }
 
 // Fiche 1 « Complète le schéma » de chaque livret (graines de _sources/livret-petit-splat/render.py).
@@ -66,12 +68,15 @@ function ouvrir(store, serieAffichee) {
 test("les trois livrets, même étape m1e1, portent trois empreintes différentes", () => {
   assert.equal(new Set([monde1(), avance(), expert()]).size, 3);
   assert.equal(monde1(), fiche1("441132", "20"), "même adresse, même empreinte");
+  // sans jetons=0 ni sansjetons=N, l'empreinte n'a pas changé (les sauvegardes d'avant restent valables)
+  assert.equal(monde1(), "441132|classic|20|1|find_hidden|3x4");
 });
 
 test("l'empreinte change avec chaque réglage qui change les cartes", () => {
   const base = { seed: "441132", target: "20", splats: "1", exercise: "find_hidden", grid: "3x4" };
   const ref = empreinte(base);
-  for (const [cle, autre] of [["seed", "510115"], ["target", "50"], ["splats", "2"], ["exercise", "construct"], ["grid", "3x3"]]) {
+  for (const [cle, autre] of [["seed", "510115"], ["target", "50"], ["splats", "2"], ["exercise", "construct"], ["grid", "3x3"],
+                              ["jetons", false], ["sansjetons", 4]]) {
     assert.notEqual(empreinte({ ...base, [cle]: autre }), ref, `${cle} change les cartes, donc l'empreinte`);
   }
 });

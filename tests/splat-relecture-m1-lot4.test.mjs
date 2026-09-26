@@ -136,7 +136,7 @@ test("les taches et les jetons gardent leur taille imprimée", () => {
 test("l'option « Espace sous le schéma » : décochée par défaut, retenue par le lien, bande de 7,5 mm", () => {
   assert.match(petit, /<input type="checkbox" id="espaceSchema" onchange="renderPages\(\)">\s*<span class="check-text" data-i18n="opt_espace">Espace sous le schéma<\/span>/);
   assert.doesNotMatch(petit, /id="espaceSchema"[^>]*checked/, "décochée par défaut");
-  assert.match(petit, /'diagram', 'scale', 'espace', 'jetons', 'title', 'parcours'\]/);
+  assert.match(petit, /'diagram', 'scale', 'espace', 'jetons', 'sansjetons', 'exemple', 'donne', 'reponse', 'title', 'parcours'\]/);
   assert.match(petit, /espaceSchema\.checked = readBooleanParam\(params, 'espace', false\);/);
   assert.match(petit, /if \(problemType === 'classic' && document\.getElementById\('espaceSchema'\)\.checked\) params\.set\('espace', '1'\);/);
   assert.match(petit, /show\('espaceSchemaOption', isClassic, 'flex'\);/, "seulement pour le Petit Splat classique");
@@ -144,7 +144,7 @@ test("l'option « Espace sous le schéma » : décochée par défaut, retenue pa
   assert.match(petit, /return !!\(c && c\.checked\) && !isTBI && !isEleve && getProblemType\(\) === 'classic';/);
   assert.match(petit, /\.activity-print-page \.grid\.avec-bande \.diagram-container \{ margin-bottom: calc\(5px \+ 7\.5mm\); \}/);
   // énoncé ET correction : createPageElement sert aux deux pages
-  assert.match(petit, /const avecBande = bandeActive\(\);\s*if \(avecBande\) grid\.classList\.add\('avec-bande'\);/);
+  assert.match(petit, /const avecBande = bandeActive\(\);\s*if \(avecBande\) grid\.classList\.add\('avec-bande', 'grille-' \+ document\.getElementById\('gridSize'\)\.value\);/);
   assert.match(petit, /let htmlContent = avecBande \? getSplatSvgBande\(item, showVisualDots\) : getSplatSvg\(item, showVisualDots, hideVisualDotsUntilReveal\);/);
   // 12 et 8 cases redessinées ; 9 cases : la case reste haute, dessin d'origine
   assert.match(petit, /const BANDE_VUE_L = \{ '3x4': 450, '2x4': 690 \};/);
@@ -164,8 +164,12 @@ test("à l'écran, seul espace=1 (QR des fiches 4 et 5) montre le dessin de la f
 test("render.py : l'espace sur les fiches 4 et 5 seulement, et leur QR le porte", () => {
   assert.match(render, /dict\(n=4, t="Deux taches",\s+splats="2",\s+ex="find_hidden", espace=True\),/);
   assert.match(render, /dict\(n=5, t="Plein de taches !",\s+splats="mix", ex="find_hidden", espace=True\),/);
-  assert.equal((render.match(/espace=True/g) || []).length, 2);
-  assert.equal((render.match(/\+ \("&espace=1" if f\.get\("espace"\) else ""\)/g) || []).length, 2, "fiche imprimée et QR");
+  /* livrets d'origine : fiches 4 et 5 seulement (les 6 fiches « je dessine le schéma » du
+     26/09/2026 ont toutes la bande : tests/livrets-petit-splat-dessin.test.mjs) */
+  const fichesOrigine = render.slice(render.indexOf("FICHES = ["), render.indexOf("_F = dict("));
+  assert.equal((fichesOrigine.match(/espace=True/g) || []).length, 2);
+  assert.equal((render.match(/\("&espace=1" if f\.get\("espace"\) else ""\)/g) || []).length, 1, "une seule règle, pour la fiche imprimée et le QR");
+  assert.equal((render.match(/\+ reglages\(f\)/g) || []).length, 2, "fiche imprimée et QR");
 });
 
 test("« Schéma à tracer » : le schéma est caché, pas retiré (le dessin ne grossit plus)", () => {
@@ -182,11 +186,12 @@ test("couverture : Prénom et Classe en haut de leur case, la case garde sa tail
 });
 
 test("« Jetons autour » (Enquêtes, Système) : cochée par défaut ; décochée, mêmes cartes sans jetons visibles", () => {
-  assert.match(petit, /<input type="checkbox" id="jetonsAutour" checked onchange="startGen\(\)">\s*<span class="check-text">Jetons autour<\/span>/);
+  assert.match(petit, /<input type="checkbox" id="jetonsAutour" checked onchange="majJetonsAutour\(\)">\s*<span class="check-text">Jetons autour<\/span>/);
   assert.match(petit, /jetonsAutour\.checked = readBooleanParam\(params, 'jetons', true\);/);
   assert.match(petit, /if \(!jetonsAutourCoche\(\)\) params\.set\('jetons', '0'\);/, "écrit seulement décochée");
-  assert.match(petit, /'espace', 'jetons', 'title', 'parcours'\]/);
-  assert.match(petit, /const sansJetons = problemType !== 'classic' && !jetonsAutourCoche\(\);/);
+  assert.match(petit, /'espace', 'jetons', 'sansjetons', 'exemple', 'donne', 'reponse', 'title', 'parcours'\]/);
+  // 26/09/2026 : la case vaut aussi en Petit Splat classique (livrets « je dessine le schéma »)
+  assert.match(petit, /const sansJetons = !jetonsAutourCoche\(\);/);
   for (const f of ["createRelation2Item", "createRelation3Item", "createSums3Item"])
     assert.match(petit, new RegExp(`state\\.push\\(retirerJetonsSiBesoin\\(${f}\\(targetMax\\), sansJetons\\)\\);`));
   // la carte est tirée d'abord (même hasard), puis on retire les jetons visibles
