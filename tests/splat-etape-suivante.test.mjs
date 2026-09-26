@@ -39,12 +39,14 @@ const ctxU = vm.createContext({ encodeURIComponent });
 vm.runInContext(blocUnivers("const PS=", "const PROF =") + ";globalThis.X=MONDES;", ctxU);
 const MONDES = ctxU.X; // les tableaux viennent d'un autre contexte : on compare leurs valeurs
 // la numérotation de la carte (rendu : compteur, « premier » réserve des numéros)
+// (dernier élément : le numéro du monde sur la carte, qui sert à la liste des mondes
+// en préparation, 26/09/2026)
 function etapesDeLaCarte() {
   let c = 0; const out = [];
-  for (const m of MONDES) {
+  MONDES.forEach((m, mi) => {
     if (m.premier) c = Math.max(c, m.premier - 1);
-    for (const e of m.etapes) { c++; if (m.actif) out.push([e.p, c, e.t, m.nom]); }
-  }
+    for (const e of m.etapes) { c++; if (m.actif) out.push([e.p, c, e.t, m.nom, mi + 1]); }
+  });
   return out;
 }
 // l'enchaînement que fait ?apres= sur la carte
@@ -58,10 +60,10 @@ function chargerModule() {
 }
 const ETAPES_JS = chargerModule();
 
-test("splat-etapes.js est la copie exacte de la carte des mondes (parcours, numéro, titre, monde)", () => {
+test("splat-etapes.js est la copie exacte de la carte des mondes (parcours, numéro, titre, monde, numéro du monde)", () => {
   const attendu = JSON.parse(JSON.stringify(etapesDeLaCarte()));
   assert.deepEqual(ETAPES_JS.ETAPES, attendu,
-    "la carte a changé : recopier dans assets/js/splat-etapes.js la liste suivante, puis bumper son ?v= dans les trois outils :\n" +
+    "la carte a changé : recopier dans assets/js/splat-etapes.js la liste suivante, puis bumper son ?v= partout où il est chargé :\n" +
     attendu.map((e) => "    " + JSON.stringify(e)).join(",\n"));
   // et dans le même ordre que l'enchaînement ?apres= de la carte
   assert.deepEqual(ETAPES_JS.ETAPES.map((e) => e[0]), JSON.parse(JSON.stringify(SUITE.map((e) => e.p))));
@@ -69,20 +71,22 @@ test("splat-etapes.js est la copie exacte de la carte des mondes (parcours, num�
   SUITE.slice(1).forEach((e) => assert.ok(e.j, `${e.p} : pas de jeu, ?apres= afficherait la carte`));
 });
 
-test("le bouton dit où il mène : même monde, nouveau monde, dernière étape, parcours inconnu", () => {
-  const b = (p) => ETAPES_JS.bouton(p, URL_CARTE);
+// Ce test-ci est joué AVEC la clé de Gwenaël (troisième argument true) : l'univers entier,
+// comme avant les mondes en préparation. Sans la clé : tests/splat-mondes-en-preparation.test.mjs.
+test("le bouton dit où il mène : même monde, nouveau monde, dernière étape, parcours inconnu (avec la clé)", () => {
+  const b = (p) => ETAPES_JS.bouton(p, URL_CARTE, true);
   assert.deepEqual(b("sys27"), {
     html: "\u00c9tape suivante \u25b6<span class=\"finSuiteOu\">\u00c9tape\u00a028\u00a0\u00b7 Deux pes\u00e9es</span>",
     href: "/outils/splat_univers.html?apres=sys27", versCarte: false });
-  assert.equal(ETAPES_JS.sousTitre("m1e1"), "\u00c9tape\u00a02\u00a0\u00b7 Dessine les jetons");
+  assert.equal(ETAPES_JS.sousTitre("m1e1", true), "\u00c9tape\u00a02\u00a0\u00b7 Dessine les jetons");
   // changement de monde : le nom du monde, sans coupure au milieu
-  assert.equal(ETAPES_JS.sousTitre("m1e6"), "\ud83c\udf0d Nouveau monde\u00a0: SPLAT!\u00a0Classique");
-  assert.equal(ETAPES_JS.sousTitre("m2e5"), "\ud83c\udf0d Nouveau monde\u00a0: SPLAT!\u00a0Enqu\u00eate");
-  assert.equal(ETAPES_JS.sousTitre("enq24"), "\ud83c\udf0d Nouveau monde\u00a0: SPLAT!\u00a0Syst\u00e8me");
-  assert.equal(ETAPES_JS.sousTitre("sys34"), "\ud83c\udf0d Nouveau monde\u00a0: SPLAT!\u00a0\u00c9quations");
-  assert.equal(ETAPES_JS.sousTitre("m3e4"), "\ud83c\udf0d Nouveau monde\u00a0: SPLAT!\u00a0Relatifs");
+  assert.equal(ETAPES_JS.sousTitre("m1e6", true), "\ud83c\udf0d Nouveau monde\u00a0: SPLAT!\u00a0Classique");
+  assert.equal(ETAPES_JS.sousTitre("m2e5", true), "\ud83c\udf0d Nouveau monde\u00a0: SPLAT!\u00a0Enqu\u00eate");
+  assert.equal(ETAPES_JS.sousTitre("enq24", true), "\ud83c\udf0d Nouveau monde\u00a0: SPLAT!\u00a0Syst\u00e8me");
+  assert.equal(ETAPES_JS.sousTitre("sys34", true), "\ud83c\udf0d Nouveau monde\u00a0: SPLAT!\u00a0\u00c9quations");
+  assert.equal(ETAPES_JS.sousTitre("m3e4", true), "\ud83c\udf0d Nouveau monde\u00a0: SPLAT!\u00a0Relatifs");
   // un changement de monde à chaque frontière, et nulle part ailleurs
-  const frontieres = ETAPES_JS.ETAPES.slice(0, -1).filter((e) => ETAPES_JS.suivante(e[0]).nouveauMonde).map((e) => e[0]);
+  const frontieres = ETAPES_JS.ETAPES.slice(0, -1).filter((e) => ETAPES_JS.suivante(e[0], true).nouveauMonde).map((e) => e[0]);
   assert.deepEqual(frontieres, ["m1e6", "m2e5", "enq24", "sys34", "m3e4"]);
   // dernière étape de l'univers : retour à la carte, sans ?apres=
   const dernier = ETAPES_JS.ETAPES[ETAPES_JS.ETAPES.length - 1][0];
@@ -237,10 +241,12 @@ for (const [nom, fin, parcours, , mot] of OUTILS) {
 }
 
 test("les trois outils chargent splat-etapes.js (sans defer, même version)", () => {
+  // (la carte des mondes et la page des livrets le chargent aussi, à la même version :
+  // tests/splat-mondes-en-preparation.test.mjs)
   for (const [page, nom] of [[splat, "splat.html"], [petit, "splat_tache_barre.html"], [equa, "equasplat.html"]]) {
     const m = page.match(/<script src="\.\.\/assets\/js\/splat-etapes\.js\?v=([\w-]+)"><\/script>/);
     assert.ok(m, `${nom} ne charge pas splat-etapes.js`);
-    assert.equal(m[1], "20260925-1", `${nom} : ?v= de splat-etapes.js`);
+    assert.equal(m[1], "20260926-1", `${nom} : ?v= de splat-etapes.js`);
     // dans <head>, avant tout script de la page
     assert.ok(page.indexOf(m[0]) < page.indexOf("</head>"), `${nom} : le script doit être dans <head>`);
     // la petite ligne a son style

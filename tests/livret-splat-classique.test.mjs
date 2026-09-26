@@ -886,10 +886,14 @@ test("cartes des mondes : numéro, nom et fiches, dans l'ordre, toujours des ong
   // 5 ou 6 mondes : deux lignes de 3, sans pointe ; téléphone : deux par ligne, sans pointe
   assert.match(page, /\.onglets\[data-n="5"\],\.onglets\[data-n="6"\]\{grid-template-columns:repeat\(3,minmax\(0,1fr\)\)\}/);
   assert.match(page, /\.onglets\[data-n="5"\] a::after,\.onglets\[data-n="6"\] a::after\{content:none!important\}/);
-  assert.match(page, /@media \(max-width:820px\)\{\n  \.onglets,\.onglets\[data-n="5"\],\.onglets\[data-n="6"\]\{grid-template-columns:repeat\(2,minmax\(0,1fr\)\)/);
+  /* trois cartes (26/09/2026, mondes 3 et 4 en préparation) : une ligne de 3 sur ordinateur,
+     deux par ligne sur téléphone comme les autres */
+  assert.match(page, /\.onglets\[data-n="3"\],\.onglets\[data-n="5"\],\.onglets\[data-n="6"\]\{grid-template-columns:repeat\(3,minmax\(0,1fr\)\)\}/);
+  assert.match(page, /@media \(max-width:820px\)\{\n  \.onglets,\.onglets\[data-n="3"\],\.onglets\[data-n="5"\],\.onglets\[data-n="6"\]\{grid-template-columns:repeat\(2,minmax\(0,1fr\)\)/);
   assert.match(page, /\.onglets a\[aria-selected="true"\]::after\{content:none\}/);
   // le script des onglets n'a pas changé : clic, flèches du clavier, adresse #monde-N
-  assert.match(page, /querySelectorAll\("#onglets a"\)/);
+  // (26/09/2026) sans les onglets des mondes en préparation : tests/splat-mondes-en-preparation.test.mjs
+  assert.match(page, /querySelectorAll\("#onglets a:not\(\[data-prepa\]\)"\)/);
   assert.match(page, /e\.key === "ArrowRight" \? 1 : e\.key === "ArrowLeft" \? -1 : 0/);
   assert.match(page, /history\.replaceState\(null, "", "#monde-" \+ m\)/);
 });
