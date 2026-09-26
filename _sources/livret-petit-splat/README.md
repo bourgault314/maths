@@ -23,6 +23,64 @@ Pour chaque niveau, deux PDF :
   (8|1 · 2|7 · 6|3 · 4|5) : impression recto-verso, retournement sur le bord court,
   on plie, on agrafe.
 
+## Les livrets « Je fais le schéma en barres » (26/09/2026)
+
+Trois livrets de plus, mêmes tranches de nombres, **nouvelles séries** : l'élève fait
+lui-même le schéma en barres, puis écrit « ? = … » (idée de Gwenaël ; décisions par questions
+à choix, sur planches). « Je fais » et pas « je dessine » : dans les autres livrets, l'élève
+dessinait des jetons.
+
+| Niveau | Cartes | PDF produits (et leurs corrigés `…_correction…`) |
+|---|---|---|
+| `dessin` — Monde 1 | jusqu'à 20 jetons | `outils/livret_petit_splat_dessin.pdf` · `…_a_plier.pdf` |
+| `dessin_avance` — Avancé | **21 à 50** jetons | `outils/livret_petit_splat_dessin_avance.pdf` · `…_a_plier.pdf` |
+| `dessin_expert` — Expert | **51 à 100** jetons | `outils/livret_petit_splat_dessin_expert.pdf` · `…_a_plier.pdf` |
+
+- Les 6 fiches (`FICHES_DESSIN`) : **9 cartes** (`grid=3x3`) « complète le schéma », schéma
+  **non imprimé** (`diagram=draw` : la consigne dit alors « dessine le schéma en barres,
+  puis… »), la bande sous le schéma (`espace=1`) et « ? = …… » sous chaque carte à faire
+  (`reponse=1`). En 9 cases avec « Schéma à tracer », le dessin est resserré (125 px) et toute
+  la place gagnée va à la zone vide où l'élève fait son schéma ; un schéma imprimé (exemple,
+  schéma donné, corrigé) garde sa taille habituelle. Essayé et écarté : 8 cartes (trop
+  larges, pas plus haut) et 12 (moins de place pour écrire).
+- L'ordre (« contraste tôt ») : 1 une tache · 2 deux taches, **3 cartes sur 9 sans jetons
+  posés** (`sansjetons=3` : n × ? = total à côté de a + n × ? = total ; 4 jusqu'au 26/09 au
+  soir, « c'est un petit peu trop ») · 3 de 2 à 4 taches (`splats=mix4`), 3 sans jetons · 4 mélange de 2 à 4 taches, 2 sans jetons · 5 et 6 mélange
+  de 2 à 6 taches, 2 sans jetons (`sansjetons=2`). Aucune phrase en plus dans les consignes.
+- Fiches 1 et 2 : **un guidage qui s'efface** (`exemple=1&donne=2`, papier seulement) — la
+  1re carte est un exemple résolu (étiquette « Exemple »), les 2 suivantes ont leur schéma
+  imprimé et l'élève trouve « ? = … », puis 6 cartes à faire en entier. À la fiche 2,
+  l'exemple est une carte sans jeton posé, et des deux schémas donnés, l'un a des jetons,
+  l'autre pas.
+- Corrigé : le schéma avec un « ? » dans chaque case de tache (le nombre cherché), et « ? = 6 »
+  écrit dessous, à gauche. « ? » et pas « tache = 6 » : c'est l'inconnue des mondes suivants.
+- Avec « Schéma à tracer », les pointillés sous le dessin sont plus foncés (`schema-a-faire`).
+- `sansjetons=N` choisit ses N cartes par un hasard À PART (graine + « |sansjetons ») : les
+  cartes tirées sont les mêmes qu'avec les jetons. Depuis le 26/09 au soir, il a aussi sa liste
+  dans le panneau, « Sans jetons » (0 à 6, ou « toutes »), à côté de « Jetons autour »
+  (`jetons=0`), qui vaut aussi en Petit Splat classique : décochée — ou « toutes » dans la
+  liste —, aucune carte « complète le schéma » n'a de jetons (une fiche entière sans jetons).
+  `reponse=1` a sa case, « Ligne ? = … », visible avec « Schéma à tracer ». `exemple=N` et
+  `donne=N` restent des réglages d'adresse, pour le papier.
+- « ? = …… » à compléter : 19 px (15 avant), tenu par le bas ; sur une carte au schéma donné
+  (9 cases), il descend en bas de la case, au même niveau que sur les cartes à faire (choix C
+  de Gwenaël, 26/09 au soir).
+- Couverture : « Je fais le schéma en barres » en 2e ligne du haut ; « Comment ça marche ? »
+  remplacé par deux petits exemples dessinés par l'outil, avec et sans jetons posés, chacun
+  avec son schéma (« ? » dans les cases) et « ? = … » à gauche (`COUV_DESSIN`,
+  `JS_DEUX_EXEMPLES`), puis la règle « Tu n'as aucun jeton à dessiner… » ; « Dans ce livret »
+  donne les titres de ces fiches (`som`, injecté).
+  Le dos garde les mêmes QR ; ses descriptions ne renvoient plus aux numéros de fiches.
+- QR : `qr/dessin/`, `qr/dessin-avance/`, `qr/dessin-expert/`. Chaque fiche valide l'étoile
+  de l'étape du monde 1 qui lui ressemble le plus (m1e1, m1e4, puis m1e5).
+- Graines (26/09/2026) : mêmes règles que plus bas, plus : jetons posés sur les 9 cartes de la
+  fiche 1 (l'exemple : au moins 2 posés et 3 cachés) ; exactement 4 cartes sans jetons aux
+  fiches 2 et 3, exactement 2 aux fiches 4 à 6 ; les 3 cartes guidées cachent au moins 2
+  jetons par tache ; 2, 3 et 4 taches aux fiches 3 et 4 ; au moins 4 nombres de taches aux
+  fiches 5 et 6 ; aucun 69 ; plancher 4 jetons au niveau Monde 1.
+- Régénérer : `python _sources/livret-petit-splat/render.py dessin dessin_avance dessin_expert --qr`
+  puis les miniatures (page 1 à 120 dpi, `assets/img/thumbnails/splat/livret-petit-splat-dessin*.png/.webp`).
+
 ## Les livrets corrigés (lot K1, 20/09/2026)
 
 Chaque livret a son **livret corrigé** : mêmes 8 pages, même

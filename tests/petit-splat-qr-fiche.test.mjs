@@ -33,6 +33,9 @@ function adresse(reglages, origine = "https://mathsgo.re") {
     document: { getElementById: (id) => champs[id] },
     activeSeed: reglages.seed,
     parcoursId: reglages.parcours || "",
+    // 26/09/2026 : jetons=0 et sansjetons=N (livrets « je dessine le schéma ») suivent dans le QR
+    jetonsAutourCoche: () => reglages.jetons !== "0",
+    sansJetonsNombre: reglages.sansjetons || 0,
   });
   vm.runInContext(morceau("const QR_SITE", "function ajouterQrFiche(") +
     "globalThis.__r = { url: adresseEleveFiche(" + JSON.stringify(origine) + "), actif: QR_FICHE_ACTIF };", ctx);
@@ -82,5 +85,14 @@ test("seulement la fiche imprimée du Petit Splat classique, dans le cadre de co
 test("les livrets gardent leur propre QR : render.py demande qr=0", () => {
   assert.equal(adresse({ target: "20", splats: "1", exercise: "mix", seed: "7", qr: "0" }).actif, false);
   const url = render.slice(render.indexOf('url = (f"{base}/outils/splat_tache_barre.html?support=print'));
-  assert.match(url.slice(0, 700), /\+ "&qr=0"/);
+  assert.match(url.slice(0, 1200), /\+ "&qr=0"/);   // 1200 : la fiche porte aussi les réglages des livrets « Je fais le schéma »
+});
+
+test("jetons=0 et sansjetons=N suivent dans le QR (livrets « Je fais le schéma en barres », 26/09/2026)", () => {
+  const f2 = adresse({ target: "20", splats: "mix", exercise: "find_hidden", seed: "1310010", espace: true, jetons: "0", parcours: "m1e5" });
+  assert.equal(f2.url, "https://mathsgo.re/splat/petit/?support=eleve&problem=classic&target=20&splats=mix&exercise=find_hidden&seed=1310010&espace=1&jetons=0&parcours=m1e5");
+  const f4 = adresse({ target: "20", splats: "mix4", exercise: "find_hidden", seed: "24310055", grid: "3x3", espace: true, sansjetons: 2, parcours: "m1e5" });
+  assert.equal(f4.url, "https://mathsgo.re/splat/petit/?support=eleve&problem=classic&target=20&splats=mix4&exercise=find_hidden&seed=24310055&grid=3x3&espace=1&sansjetons=2&parcours=m1e5");
+  // sans ces réglages, l'adresse ne change pas
+  assert.doesNotMatch(adresse({ target: "20", splats: "1", exercise: "find_hidden", seed: "441132" }).url, /jetons/);
 });

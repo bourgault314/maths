@@ -153,6 +153,13 @@
     .tbi-mode.revealed .solution-dot { opacity: 1; }
 
     .part-splat { flex: 1; position: relative; border-bottom: 1px dashed #cbd5e1; margin-bottom: 5px; overflow: hidden; min-height: 0; }
+    .grid.schema-a-faire .part-splat { border-bottom: 1.3px dashed #64748b; }
+    /* 9 cases, « Schéma à tracer » (26/09/2026, Gwenaël : « il faut resserrer le haut pour
+       laisser plus de place en bas pour dessiner ») : le dessin est resserré, et toute la place
+       gagnée va à la zone VIDE où l'élève fait son schéma. Un schéma imprimé (exemple, schéma
+       donné, corrigé) garde exactement sa taille habituelle. */
+    .activity-print-page .grid.schema-a-faire.grille-3x3 .part-splat { flex: 0 0 125px; }
+    .activity-print-page .grid.schema-a-faire.grille-3x3 .diagram-container.zone-vide { flex: 1 1 auto; }
     .splat-svg { width: 100%; height: 100%; display: block; }
 
     .total-badge {
@@ -390,6 +397,30 @@
        pris sur la zone du dessin ; le dessin est refait par la table de dessin (voir
        tableDeDessinBande), sans aucun tirage : les cartes ne changent pas. */
     .activity-print-page .grid.avec-bande .diagram-container { margin-bottom: calc(5px + 7.5mm); }
+    .activity-print-page .grid.avec-ligne .diagram-container { margin-bottom: calc(5px + 7.5mm); }
+    /* 8 cases (2 x 4) avec la bande : le schéma garde la largeur qu'il a en 12 cases, centré
+       (26/09/2026, Gwenaël : « ils ne sont pas jolis aussi larges ») */
+    .activity-print-page .grid.avec-bande.grille-2x4 .diagram-container { width: 56mm; max-width: 100%; margin-left: auto; margin-right: auto; box-sizing: border-box; }
+    /* « ? = 6 » sous le schéma, dans le corrigé d'une fiche « Schéma à tracer » */
+    .diagram-container.avec-reponse { position: relative; }
+    .diagram-container .reponse-corr { position: absolute; left: 0; right: 0; top: calc(100% + 2.6mm); text-align: left; font-size: 19px; font-weight: 700; color: #0f172a; line-height: 1; }
+    /* « ? = …… » à compléter : tenu par le BAS (26/09/2026, choix C de Gwenaël, planche 13 : « plus
+       gros », 19 px au lieu de 15) — la ligne grossit vers le haut, son bas reste là où il était,
+       à la même distance du bord de la case. */
+    .diagram-container .reponse-corr.reponse-a-faire,
+    .diagram-container .reponse-corr.reponse-bas { top: auto; bottom: calc(-2.6mm - 15px); }
+    /* Carte au schéma donné (?donne=N), 9 cases : le schéma reste en haut, à sa taille, et
+       « ? = …… » descend en bas de la case, au même niveau que sur les cartes à faire (choix C,
+       26/09/2026) : l'élève voit que c'est à remplir. */
+    .activity-print-page .grid.schema-a-faire.grille-3x3 .diagram-container.schema-donne { flex: 1 1 auto; }
+    .diagram-container.schema-donne > .diagram-inner { flex: 0 0 64px; }
+    /* la carte exemple (?exemple=N) : une étiquette à droite, sur la ligne de « ? = 7 » (en haut, elle
+       pouvait cacher un jeton), lisible en noir et blanc */
+    .cell.carte-exemple { position: relative; }
+    /* carte exemple (26/09/2026 au soir, Gwenaël : « ça fait différent des autres cases ») : « ? = 7 »
+       et l'étiquette descendent en bas de la case, sur la même ligne que les cartes à faire */
+    .diagram-container .etiquette-exemple.etiquette-bas { top: auto; bottom: calc(-2.6mm - 15px + 1px); }
+    .diagram-container .etiquette-exemple { position: absolute; top: calc(100% + 1.8mm); right: 0; z-index: 2; padding: 0.4mm 2mm; border: 1.3px solid #0f172a; border-radius: 999px; background: #fff; font-size: 11px; font-weight: 800; color: #0f172a; letter-spacing: 0.5px; text-transform: uppercase; }
     /* Pied : gris moyen et 10 px, lisible en photocopie (décision du 19/09/2026, même
        pied pour les deux familles de livrets). Il reste à 3,5 mm du bord du papier,
        comme avant : plus bas, beaucoup d'imprimantes ne l'impriment plus. */
@@ -615,7 +646,7 @@
         </div>
         <div class="option-pair">
             <label class="check-control">
-                <input type="checkbox" id="hideDiagram" onchange="renderPages()">
+                <input type="checkbox" id="hideDiagram" onchange="majSchemaATracer()">
                 <span class="check-text" data-i18n="opt_hide_diag">Schéma à tracer</span>
             </label>
             <label class="check-control">
@@ -628,15 +659,32 @@
                 <input type="checkbox" id="espaceSchema" onchange="renderPages()">
                 <span class="check-text" data-i18n="opt_espace">Espace sous le schéma</span>
             </label>
+            <!-- « Ligne ? = … » (26/09/2026, Gwenaël, planche 14) : le réglage ?reponse=1 des livrets
+                 « Je fais le schéma en barres », en case ; visible avec « Schéma à tracer » -->
+            <label class="check-control" id="ligneReponseLabel" style="display:none;">
+                <input type="checkbox" id="ligneReponseCase" onchange="majLigneReponse()">
+                <span class="check-text">Ligne ? = …</span>
+            </label>
         </div>
         <div class="corr-group" id="relationHintOption" style="display:none;">
-            <label class="check-control">
+            <label class="check-control" id="giveOnePartLabel">
                 <input type="checkbox" id="giveOnePart" onchange="startGen()">
                 <span class="check-text">Une tache donnée</span>
             </label>
             <label class="check-control">
-                <input type="checkbox" id="jetonsAutour" checked onchange="startGen()">
+                <input type="checkbox" id="jetonsAutour" checked onchange="majJetonsAutour()">
                 <span class="check-text">Jetons autour</span>
+            </label>
+            <!-- « Cartes sans jetons » (26/09/2026, Gwenaël, planche 14) : le réglage ?sansjetons=N en
+                 liste, Petit Splat classique seulement ; « toutes » = « Jetons autour » décochée,
+                 « il faudrait pouvoir faire une fiche entière sans jetons » -->
+            <label class="check-control" id="sansJetonsLabel" style="display:none;">
+                <span class="check-text">Sans jetons</span>
+                <select id="sansJetonsChoix" onchange="majSansJetons()" style="width:auto;margin-left:auto;padding:2px 4px;font-size:12px;font-weight:700;">
+                    <option value="0" selected>0</option><option value="1">1</option><option value="2">2</option>
+                    <option value="3">3</option><option value="4">4</option><option value="5">5</option>
+                    <option value="6">6</option><option value="toutes">toutes</option>
+                </select>
             </label>
         </div>
       </div>
@@ -712,6 +760,7 @@
               <option value="1" selected>1 tache</option>
               <option value="2">2 taches</option>
               <option value="3">3 taches</option>
+              <option value="mix4">Mélange (2 à 4)</option>
               <option value="mix">Mélange Expert (2 à 6)</option>
             </select>
         </div>
@@ -824,6 +873,14 @@ const ELEVE_ECHECS_MAX = 3, ELEVE_URL_MONDES = '/outils/splat_univers.html';
 let eleveJetonsPoses = [], eleveItemCourant = null, eleveRepriseFaite = false;
 let seedMode = 'auto';
 let activeSeed = '';
+/* ?sansjetons=N (Petit Splat classique, 26/09/2026, livrets « je dessine le schéma ») : N
+   cartes « complète le schéma » de la série perdent leurs jetons posés. Elles sont choisies
+   par un hasard À PART (graine + « |sansjetons ») : le tirage des cartes ne change pas.
+   Réglage d'adresse seulement (livret, QR, lien 🔗), sans case dans le panneau. */
+let sansJetonsNombre = 0;
+let carteExemple = 0;      /* ?exemple=N : les N premières cartes résolues, voir createPageElement */
+let ligneReponse = false;  /* ?reponse=1 : « ? = …… » imprimé sous chaque carte à faire */
+let carteSchemaDonne = 0;  /* ?donne=N : après les exemples, N cartes ont leur schéma imprimé (« ? » dans les cases), la réponse reste à trouver */
 let currentRand = Math.random;
 let shareFeedbackTimer = null;
 
@@ -922,7 +979,7 @@ function readBooleanParam(params, name, fallback) {
 
 function loadSharedConfiguration() {
     const params = new URLSearchParams(window.location.search);
-    const sharedNames = ['seed', 'support', 'grid', 'problem', 'target', 'splats', 'exercise', 'level', 'ops', 'kmax', 'vocab', 'structure', 'given', 'correction', 'rv', 'diagram', 'scale', 'espace', 'jetons', 'title', 'parcours'];
+    const sharedNames = ['seed', 'support', 'grid', 'problem', 'target', 'splats', 'exercise', 'level', 'ops', 'kmax', 'vocab', 'structure', 'given', 'correction', 'rv', 'diagram', 'scale', 'espace', 'jetons', 'sansjetons', 'exemple', 'donne', 'reponse', 'title', 'parcours'];
     if (!sharedNames.some(name => params.has(name))) return false;
 
     const seed = params.get('seed');
@@ -949,9 +1006,18 @@ function loadSharedConfiguration() {
         readRelationParams(params);
         const giveOnePart = document.getElementById('giveOnePart');
         if (giveOnePart) giveOnePart.checked = readBooleanParam(params, 'given', giveOnePart.checked);
-        const jetonsAutour = document.getElementById('jetonsAutour');
-        if (jetonsAutour) jetonsAutour.checked = readBooleanParam(params, 'jetons', true);
     }
+    /* « Jetons autour » : Enquête, Système, et depuis le 26/09/2026 Petit Splat classique
+       (livrets « je dessine le schéma », fiche 2 : des taches, aucun jeton posé). */
+    const jetonsAutour = document.getElementById('jetonsAutour');
+    if (jetonsAutour) jetonsAutour.checked = readBooleanParam(params, 'jetons', true);
+    const sj = parseInt(params.get('sansjetons') || '0', 10);
+    sansJetonsNombre = problemType === 'classic' && sj > 0 ? Math.min(sj, 12) : 0;
+    const ex = parseInt(params.get('exemple') || '0', 10);
+    carteExemple = problemType === 'classic' && ex > 0 ? Math.min(ex, 12) : 0;
+    ligneReponse = problemType === 'classic' && params.get('reponse') === '1';
+    const dn = parseInt(params.get('donne') || '0', 10);
+    carteSchemaDonne = problemType === 'classic' && dn > 0 ? Math.min(dn, 12) : 0;
 
     /* « Espace sous le schéma » : lu pour tous les supports, le parcours élève s'en sert aussi
        (QR des fiches 4 et 5 du livret) */
@@ -1000,8 +1066,12 @@ function buildShareUrl() {
     } else {
         writeRelationParams(params, problemType);
         params.set('given', document.getElementById('giveOnePart').checked ? '1' : '0');
-        if (!jetonsAutourCoche()) params.set('jetons', '0');   /* écrit seulement décochée : les anciens liens ne bougent pas */
     }
+    if (!jetonsAutourCoche()) params.set('jetons', '0');   /* écrit seulement décochée : les anciens liens ne bougent pas */
+    else if (problemType === 'classic' && sansJetonsNombre > 0) params.set('sansjetons', String(sansJetonsNombre));
+    if (problemType === 'classic' && carteExemple) params.set('exemple', String(carteExemple));
+    if (problemType === 'classic' && carteSchemaDonne) params.set('donne', String(carteSchemaDonne));
+    if (problemType === 'classic' && ligneReponse) params.set('reponse', '1');
 
     if (problemType === 'classic' && document.getElementById('espaceSchema').checked) params.set('espace', '1');
 
@@ -1043,6 +1113,8 @@ function adresseEleveFiche(origine) {
     const grille = document.getElementById('gridSize').value;
     if (grille !== '3x4') params.set('grid', grille);
     if (document.getElementById('espaceSchema').checked) params.set('espace', '1');
+    if (!jetonsAutourCoche()) params.set('jetons', '0');
+    else if (sansJetonsNombre > 0) params.set('sansjetons', String(sansJetonsNombre));
     if (parcoursId) params.set('parcours', parcoursId);
     url.search = params.toString();
     return url.toString();
@@ -1257,8 +1329,13 @@ function updateProblemTypeUI() {
     show('kmaxControl', isEnquete && !!(multEl && multEl.checked));
     show('vocabControl', isEnquete && !!(multEl && multEl.checked));
     show('structureControl', problemType === 'relation3');
-    show('relationHintOption', !isClassic, 'flex');
+    show('relationHintOption', true, 'flex');
+    show('giveOnePartLabel', !isClassic, '');
+    show('sansJetonsLabel', isClassic, 'flex');
     show('espaceSchemaOption', isClassic, 'flex');
+    const hdCase = document.getElementById('hideDiagram');
+    show('ligneReponseLabel', isClassic && !!(hdCase && hdCase.checked), 'flex');
+    majChoixSansJetons();
 
     updateGridChoices(problemType);
 }
@@ -1320,7 +1397,7 @@ function startGen() {
   eleveResultats = [];
   const totalItems = cols * rows;
 
-  const sansJetons = problemType !== 'classic' && !jetonsAutourCoche();
+  const sansJetons = !jetonsAutourCoche();
   for(let i=0; i<totalItems; i++) {
       if (problemType === 'relation2') {
           state.push(retirerJetonsSiBesoin(createRelation2Item(targetMax), sansJetons));
@@ -1329,7 +1406,20 @@ function startGen() {
       } else if (problemType === 'sums3') {
           state.push(retirerJetonsSiBesoin(createSums3Item(targetMax), sansJetons));
       } else {
-          state.push(createItem(gameMode, targetMax, splatMode));
+          /* Classique : seules les cartes « complète le schéma » perdent leurs jetons posés
+             (une carte « dessine » sans jeton n'aurait plus rien à dessiner). Le tirage est
+             le même, coché ou non : mêmes taches, mêmes cartes suivantes. */
+          const c = createItem(gameMode, targetMax, splatMode);
+          state.push(c.mode === 'find_hidden' ? retirerJetonsSiBesoin(c, sansJetons) : c);
+      }
+  }
+  if (problemType === 'classic' && !sansJetons && sansJetonsNombre > 0) {
+      const r2 = mulberry32(hashSeed(activeSeed + '|sansjetons'));
+      const choix = state.map((c, i) => i).filter(i => state[i].mode === 'find_hidden' && state[i].visible > 0);
+      for (let k = 0; k < sansJetonsNombre && choix.length; k++) {
+          const j = Math.floor(r2() * choix.length);
+          retirerJetonsSiBesoin(state[choix[j]], true);
+          choix.splice(j, 1);
       }
   }
   
@@ -1342,6 +1432,33 @@ function startGen() {
    comme avant (même hasard consommé, donc mêmes taches, mêmes indices, mêmes cartes
    suivantes), puis on retire ses jetons visibles et le total devient la somme des taches.
    Dans SPLAT! Enquête, les jetons autour ont été jugés peu utiles (22/09/2026). */
+/* Les cases du panneau qui reprennent les réglages d'adresse des livrets « Je fais le schéma
+   en barres » (26/09/2026, planche 14) : « Ligne ? = … » (reponse=1) et « Sans jetons »
+   (sansjetons=N ; « toutes » = « Jetons autour » décochée). Mêmes variables que l'adresse. */
+function majSchemaATracer() { updateProblemTypeUI(); renderPages(); }
+function majLigneReponse() {
+    const c = document.getElementById('ligneReponseCase');
+    ligneReponse = !!(c && c.checked);
+    renderPages();
+}
+function majChoixSansJetons() {
+    const sel = document.getElementById('sansJetonsChoix');
+    if (!sel) return;
+    const v = !jetonsAutourCoche() ? 'toutes' : String(sansJetonsNombre);
+    if (![...sel.options].some(o => o.value === v)) sel.insertAdjacentHTML('beforeend', `<option value="${v}">${v}</option>`);
+    sel.value = v;
+    const lr = document.getElementById('ligneReponseCase');
+    if (lr) lr.checked = ligneReponse;
+}
+function majSansJetons() {
+    const sel = document.getElementById('sansJetonsChoix');
+    const ja = document.getElementById('jetonsAutour');
+    if (sel.value === 'toutes') { if (ja) ja.checked = false; sansJetonsNombre = 0; }
+    else { if (ja) ja.checked = true; sansJetonsNombre = parseInt(sel.value, 10) || 0; }
+    startGen();
+}
+function majJetonsAutour() { majChoixSansJetons(); startGen(); }
+
 function jetonsAutourCoche() {
     const c = document.getElementById('jetonsAutour');
     return !c || c.checked;
@@ -1913,6 +2030,10 @@ function createItem(mode, maxTarget, splatMode) {
     let numSplats = 1;
     if (splatMode === 'mix') {
         numSplats = Math.floor(rand() * 5) + 2; 
+    } else if (splatMode === 'mix4') {
+        /* « Mélange (2 à 4) » (26/09/2026, livrets « je dessine le schéma », fiche 4) :
+           le même nombre de tirages que « 2 à 6 », pour monter doucement vers le mélange. */
+        numSplats = Math.floor(rand() * 3) + 2;
     } else {
         numSplats = parseInt(splatMode);
     }
@@ -2125,8 +2246,12 @@ function getInstructionHtml() {
                 <div class="activity-instruction-line">- observe les informations données,</div>
                 <div class="activity-instruction-line">- complète ce qui manque dans le dessin ou le schéma en barres.</div>`;
     } else {
+        /* « Schéma à tracer » (26/09/2026, livrets « je dessine le schéma ») : le schéma n'est
+           pas imprimé, la consigne dit donc de le dessiner. */
+        const hd = document.getElementById('hideDiagram');
+        const verbe = hd && hd.checked ? 'dessine le schéma en barres, puis' : 'complète le schéma en barres,';
         html = `<div class="activity-instruction-title">Pour chaque carte :</div>
-                <div class="activity-instruction-line">- complète le schéma en barres,</div>
+                <div class="activity-instruction-line">- ${verbe}</div>
                 <div class="activity-instruction-line">- trouve le nombre de jetons cachés derrière chaque tache.</div>`;
     }
 
@@ -2240,7 +2365,14 @@ function createPageElement(chunk, isCorrectionPage, mirror) {
     const hideDiagram = document.getElementById('hideDiagram').checked;
     const isNonProp = document.getElementById('nonPropDiagram').checked; 
     const avecBande = bandeActive();
-    if (avecBande) grid.classList.add('avec-bande');
+    if (avecBande) grid.classList.add('avec-bande', 'grille-' + document.getElementById('gridSize').value);
+    /* « Schéma à tracer » : la limite de la zone du dessin, plus visible (26/09/2026, Gwenaël :
+       « je vois mal les pointillés ») — c'est sous elle que l'élève fait son schéma */
+    if (hideDiagram && !isTBI) grid.classList.add('schema-a-faire');
+    /* « Schéma à tracer » SANS la bande (générateur, 26/09/2026 au soir) : « ? = …… » et le « ? = 6 »
+       du corrigé s'écrivent sous le schéma ; sans place en dessous, la case les coupait. On leur
+       garde la même hauteur que la bande. */
+    if (hideDiagram && !isTBI && !avecBande && getProblemType() === 'classic') grid.classList.add('avec-ligne');
 
     chunk.forEach(item => {
         const cell = document.createElement('div'); 
@@ -2262,14 +2394,28 @@ function createPageElement(chunk, isCorrectionPage, mirror) {
         let textTotal = "", textVis = "", textHid = "";
         let revealTotal = false, revealVis = false, revealHid = false;
 
+        /* ?exemple=1 (26/09/2026, livrets « Je fais le schéma en barres ») : sur une fiche
+           « Schéma à tracer », la 1re carte de la série est un EXEMPLE résolu — schéma rempli et
+           « ? = 7 » dessous, comme au corrigé. Réglage d'adresse, sans case dans le panneau. */
+        const estExemple = carteExemple && hideDiagram && !isCorrectionPage && !isTBI
+                           && item.mode === 'find_hidden' && state.indexOf(item) < carteExemple;
+        if (estExemple) cell.className += ' carte-exemple';
+        /* schéma donné (?donne=N) : les N cartes qui suivent les exemples */
+        const rangCarte = state.indexOf(item);
+        const estDonne = !estExemple && carteSchemaDonne && hideDiagram && !isCorrectionPage && !isTBI
+                         && item.mode === 'find_hidden' && rangCarte >= carteExemple && rangCarte < carteExemple + carteSchemaDonne;
+
         if (item.mode === 'find_hidden') {
             showVisualTotal = true;
             showVisualDots = true;
 
-            if (isCorrectionPage) {
+            if (isCorrectionPage || estExemple || estDonne) {
                 textTotal = item.total;
                 textVis = item.visible;
-                textHid = item.hiddenPerSplat;
+                /* « Schéma à tracer » (26/09/2026, décision du livret « Je fais le schéma en
+                   barres ») : le schéma porte un « ? » par tache — c'est le nombre cherché —, et la
+                   réponse s'écrit dessous, « ? = 7 ». Comme l'exemple de la couverture. */
+                textHid = hideDiagram && !isTBI ? '?' : item.hiddenPerSplat;
             } else if (isTBI) {
                 textTotal = item.total;
                 textVis = item.visible;
@@ -2326,8 +2472,14 @@ function createPageElement(chunk, isCorrectionPage, mirror) {
 
         const diag = document.createElement('div'); diag.className = 'diagram-container';
         
-        if (hideDiagram && !isCorrectionPage && !isTBI) {
+        if (hideDiagram && !isCorrectionPage && !isTBI && !estExemple && !estDonne) {
             diag.innerHTML = ``;
+            diag.classList.add('zone-vide');
+            /* ?reponse=1 : la ligne de réponse à compléter, là où le corrigé écrit « ? = 7 » */
+            if (ligneReponse && item.mode === 'find_hidden') {
+                diag.classList.add('avec-reponse');
+                diag.insertAdjacentHTML('beforeend', '<div class="reponse-corr reponse-a-faire">? = ……</div>');
+            }
         } else {
             let flexVis = isNonProp ? 1 : Math.max(item.visible, item.total * 0.05, 1);
             let flexHid = isNonProp ? 1 : Math.max(item.hiddenPerSplat, item.total * 0.05, 1);
@@ -2355,6 +2507,19 @@ function createPageElement(chunk, isCorrectionPage, mirror) {
                     <div class="row-top" style="font-size: ${fSize};">${displayTotal}</div>
                     ${bottomRowHTML}
                 </div>`;
+            /* Corrigé d'une fiche « Schéma à tracer » (26/09/2026, livrets « Je fais le schéma en
+               barres ») : sous le schéma, la réponse telle que l'élève l'écrit, « ? = 6 ». */
+            if ((isCorrectionPage || estExemple) && hideDiagram && !isTBI && item.mode === 'find_hidden') {
+                diag.classList.add('avec-reponse');
+                diag.insertAdjacentHTML('beforeend', `<div class="reponse-corr${estExemple ? ' reponse-bas' : ''}">? = ${item.hiddenPerSplat}</div>`);
+            }
+            if (estExemple) diag.insertAdjacentHTML('beforeend', '<div class="etiquette-exemple etiquette-bas">Exemple</div>');
+            /* schéma donné et exemple : le schéma en haut, la ligne « ? = … » en bas de la case */
+            if (estDonne || estExemple) diag.classList.add('schema-donne');
+            if (estDonne && ligneReponse) {
+                diag.classList.add('avec-reponse');
+                diag.insertAdjacentHTML('beforeend', '<div class="reponse-corr reponse-a-faire">? = ……</div>');
+            }
         }
         
         cell.appendChild(diag); 
@@ -3254,8 +3419,12 @@ function eleveLienMondesHtml(classe, libelle) {
    cette empreinte, la reprise de l'une s'appliquait à l'autre et sautait des cartes. */
 function eleveSignatureSerie() {
     const val = id => { const e = document.getElementById(id); return e ? e.value : ''; };
+    /* jetons=0 et sansjetons=N changent les cartes : ils entrent dans l'empreinte, seulement
+       quand ils sont posés (les empreintes déjà enregistrées ne changent pas). */
     return [activeSeed, getProblemType(), val('targetVal'), val('splatMode'),
-            val('gameMode'), val('gridSize')].join('|');
+            val('gameMode'), val('gridSize')].join('|')
+           + (jetonsAutourCoche() ? '' : '|jetons0')
+           + (jetonsAutourCoche() && sansJetonsNombre > 0 && getProblemType() === 'classic' ? '|sansjetons' + sansJetonsNombre : '');
 }
 
 /* Sauvegarde « en cours » : l'indice de la prochaine carte + le détail des pastilles. */

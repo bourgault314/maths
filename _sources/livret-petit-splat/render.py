@@ -82,6 +82,62 @@ FICHES = [
     dict(n=6, t="Dessine en expert",   splats="mix", ex="construct"),
 ]
 
+# LIVRETS « JE FAIS LE SCHÉMA EN BARRES » (26/09/2026, idée de Gwenaël, décisions par
+# questions à choix). Trois livrets de plus pour le monde 1 (jusqu'à 20, 50 et 100 jetons), de
+# nouvelles séries où l'élève fait lui-même le schéma en barres, puis écrit « ? = … » :
+# « Schéma à tracer » (diagram=draw) et la bande sous le schéma (espace=1) sur les 6 fiches,
+# toutes « complète le schéma » (une carte « dessine les jetons » n'aurait plus rien à montrer
+# sans son schéma). 9 cartes par fiche (grid=3x3), le dessin RESSERRÉ : toute la place gagnée
+# va à la zone vide où l'élève fait son schéma (presque deux fois la hauteur des 12 cartes) ;
+# un schéma imprimé (exemple, schéma donné, corrigé) garde sa taille habituelle. Choix de
+# Gwenaël sur planches, 26/09/2026 (8 cartes : trop larges ; 12 : trop peu de place).
+# Sous chaque carte à faire, « ? = …… » est imprimé (reponse=1).
+# L'ordre (« contraste tôt ») : une tache ; deux taches, dont 3 cartes sur 9 SANS jetons posés
+# (n × ? = total à côté de a + n × ? = total, sur la même page : « quand rien n'est dessiné,
+# c'est qu'il n'y en a pas ») ; de 2 à 4 taches, 3 sans jetons ; puis trois fiches de mélange
+# avec 2 cartes sur 9 sans jetons, la première de 2 à 4 taches (splats=mix4), les deux
+# dernières de 2 à 6. Aucune phrase en plus dans les consignes : la règle du livret est écrite
+# une fois, sur la couverture (COUV_DESSIN).
+# 26/09/2026 au soir (Gwenaël : 4 sur 9, « c'est un petit peu trop ») : 3 cartes sur 9 sans jetons
+# aux fiches 2 et 3 — à la fiche 2, l'exemple et un des deux schémas donnés en font partie —, et de
+# nouvelles graines pour ces deux fiches, dans les 3 niveaux (mêmes règles de tri).
+# Fiches 1 et 2 : un guidage qui s'efface (idée de Gwenaël) — la 1re carte est un EXEMPLE
+# résolu (exemple=1 : schéma avec « ? » dans les cases et « ? = 7 »), les 2 suivantes ont leur
+# schéma DONNÉ, l'élève trouve seulement « ? = … » (donne=2), puis 6 cartes à faire en entier.
+# À la fiche 2, l'exemple est une carte SANS jeton posé (la nouveauté), et des deux schémas
+# donnés, l'un a des jetons, l'autre pas (graines choisies pour cela).
+# parcours : chaque fiche valide l'étoile de l'étape du monde 1 qui lui ressemble le plus.
+_F = dict(ex="find_hidden", espace=True, dessin=True, grid="3x3")
+FICHES_DESSIN = [
+    dict(n=1, t="Une tache",         splats="1",    **_F, guide=True, parcours="m1e1"),
+    dict(n=2, t="Deux taches",       splats="2",    **_F, sansjetons=3, guide=True, parcours="m1e4"),
+    dict(n=3, t="De 2 à 4 taches",   splats="mix4", **_F, sansjetons=3, parcours="m1e5"),
+    dict(n=4, t="Mélange !",         splats="mix4", **_F, sansjetons=2, parcours="m1e5"),
+    dict(n=5, t="Encore du mélange", splats="mix",  **_F, sansjetons=2, parcours="m1e5"),
+    dict(n=6, t="Le grand mélange",  splats="mix",  **_F, sansjetons=2, parcours="m1e5"),
+]
+
+# La couverture : « Comment ça marche ? » montre ce que l'élève fait sous chaque carte (idée de
+# Gwenaël, 26/09/2026). « Je fais le schéma en barres » et pas « je dessine » : dans les autres
+# livrets, l'élève dessinait des JETONS (fiches « Dessine les jetons »).
+REGLE_DESSIN = ("✏️ Tu n'as <b>aucun jeton à dessiner</b>. Quand aucun jeton n'est posé autour "
+                "des taches, ils sont tous cachés dessous.")
+COUV_DESSIN = dict(
+    intro="Sous chaque carte, <b>fais le schéma en barres</b>, puis écris ta réponse&nbsp;: <b>?&nbsp;=&nbsp;…</b>",
+    titres=["Avec des jetons posés", "Sans jeton posé"],
+    regle=REGLE_DESSIN)
+
+def fiches_de(niv):
+    return niv.get("fiches", FICHES)
+
+def reglages(f):
+    """Les réglages de la fiche qui changent les cartes ou leur dessin, communs à la fiche
+    imprimée et à son QR (sauf diagram=draw, qui ne concerne que le papier)."""
+    return ((f"&grid={f['grid']}" if f.get("grid") else "")
+            + ("&espace=1" if f.get("espace") else "")
+            + (f"&jetons={f['jetons']}" if f.get("jetons") else "")
+            + (f"&sansjetons={f['sansjetons']}" if f.get("sansjetons") else ""))
+
 def niveau_url(target, splats, exercise="mix"):
     return f"{SITE}/splat/petit/?support=eleve&problem=classic&target={target}&splats={splats}&exercise={exercise}"
 
@@ -135,6 +191,46 @@ NIVEAUX = {
     ),
 }
 
+# Les trois livrets « je dessine le schéma » : mêmes niveaux, mêmes dos (les QR « Encore des
+# cartes » et « La suite du voyage » ne changent pas), nouvelles séries. Les graines ont été
+# choisies le 26/09/2026 parmi des milliers de tirages (voir CHOIX DES GRAINES plus haut),
+# avec, en plus : la fiche 1 a des jetons posés sur les 9 cartes (sa 1re, l'exemple : au moins
+# 2 posés et 3 cachés) ; les fiches 2 et 3 ont exactement 3 cartes sans jetons (à la fiche 2 :
+# l'exemple en est une, et des deux schémas donnés, l'un a des jetons, l'autre pas ; les 3
+# cartes guidées cachent au moins 2 jetons par tache), les fiches 4 à 6 exactement 2 ; les
+# fiches 3 et 4 ont des
+# cartes à 2, 3 et 4 taches ; les fiches 5 et 6 au moins 4 nombres de taches différents ;
+# aucun 69 (total, jetons posés ou cachés) ; plancher 4 pour le livret de base.
+_DESSIN = dict(fiches=FICHES_DESSIN)
+NIVEAUX["dessin"] = dict(NIVEAUX["normal"], **_DESSIN,
+    sortie="livret_petit_splat_dessin", qr="qr/dessin",
+    graines={1:"21310007", 2:"22310199", 3:"23310011", 4:"24310055", 5:"25310063", 6:"26310088"},
+    sur="Mon livret · Monde 1<br>Je fais le schéma en barres",
+    dessin=dict(COUV_DESSIN, profils=[dict(splats="1", vis=[9, 12], hp=[6, 9], tot=[15, 20]), dict(splats="3", vis=0, hp=[5, 5], tot=[15, 15])]),
+    dos=[("Facile", "Une seule tache, jusqu'à 20 jetons.",   niveau_url(20, "1"),   "niveau-facile.png"),
+         ("Normal", "De 2 à 6 taches, jusqu'à 20 jetons.",   niveau_url(20, "mix"), "niveau-normal.png"),
+         ("Avancé", "De 2 à 6 taches, jusqu'à 50 jetons.",   niveau_url(50, "mix"), "niveau-avance.png"),
+         ("Expert", "De 2 à 6 taches, jusqu'à 100 jetons&nbsp;!", niveau_url(100,"mix"), "niveau-expert.png")],
+    accroche="Le tout, les parties…<br>et jusqu'à 20 jetons&nbsp;!")
+NIVEAUX["dessin_avance"] = dict(NIVEAUX["avance"], **_DESSIN,
+    sortie="livret_petit_splat_dessin_avance", qr="qr/dessin-avance",
+    graines={1:"21420011", 2:"22421099", 3:"23420234", 4:"24420016", 5:"25420031", 6:"26420001"},
+    sur="Mon livret · Monde 1 · Avancé<br>Je fais le schéma en barres",
+    dessin=dict(COUV_DESSIN, profils=[dict(splats="2", vis=[15, 20], hp=[8, 12], tot=[36, 44]), dict(splats="3", vis=0, hp=[12, 14], tot=[36, 42])]),
+    dos=[("Une tache",        "Une seule tache, jusqu'à 50 jetons.",   niveau_url(50, "1"),   "niveau-1.png"),
+         ("Plein de taches",  "De 2 à 6 taches, jusqu'à 50 jetons.",   niveau_url(50, "mix"), "niveau-2.png"),
+         ("Expert · 1 tache", "Une seule tache, jusqu'à 100 jetons.",  niveau_url(100,"1"),   "niveau-3.png"),
+         ("Expert · 2 à 6 taches", "De 2 à 6 taches, jusqu'à 100 jetons&nbsp;!", niveau_url(100,"mix"), "niveau-4.png")],)
+NIVEAUX["dessin_expert"] = dict(NIVEAUX["expert"], **_DESSIN,
+    sortie="livret_petit_splat_dessin_expert", qr="qr/dessin-expert",
+    graines={1:"21531069", 2:"22533940", 3:"23530352", 4:"24531050", 5:"25530062", 6:"26530194"},
+    sur="Mon livret · Monde 1 · Expert<br>Je fais le schéma en barres",
+    dessin=dict(COUV_DESSIN, profils=[dict(splats="2", vis=[12, 20], hp=[20, 30], tot=[55, 80]), dict(splats="4", vis=0, hp=[15, 20], tot=[60, 80])]),
+    dos=[("Une tache",         "Une seule tache, jusqu'à 100 jetons.",  niveau_url(100,"1"),   "niveau-1.png"),
+         ("Plein de taches",   "De 2 à 6 taches, jusqu'à 100 jetons.",  niveau_url(100,"mix"), "niveau-2.png"),
+         ("Réviser · 1 tache", "Une seule tache, jusqu'à 50 jetons.",   niveau_url(50, "1"),   "niveau-3.png"),
+         ("Réviser · 2 à 6 taches", "De 2 à 6 taches, jusqu'à 50 jetons.", niveau_url(50, "mix"), "niveau-4.png")],)
+
 def lien_jeu(niv, f):
     """Le QR d'une fiche ouvre EXACTEMENT les mêmes 12 cartes en ligne.
     parcours=m1eN est gardé pour les trois livrets : valider une fiche plus dure
@@ -144,8 +240,8 @@ def lien_jeu(niv, f):
     # 26/09/2026, « même image par le QR ») ; les nombres, eux, sont ceux de la graine.
     return (f"{SITE}/splat/petit/?support=eleve&problem=classic&target={niv['target']}"
             f"&splats={f['splats']}&exercise={f['ex']}&seed={n}"
-            + ("&espace=1" if f.get("espace") else "")
-            + f"&parcours=m1e{f['n']}")
+            + reglages(f)
+            + f"&parcours={f.get('parcours', 'm1e' + str(f['n']))}")
 
 LIEN_UNIVERS = f"{SITE}/outils/splat_univers.html"
 
@@ -297,6 +393,75 @@ JS_EXEMPLE = """([target, splatMode, visMin, visMax, hpMin, hpMax, totMin]) => {
   return null;
 }"""
 
+# La règle des livrets « je dessine le schéma », sur la couverture, sous l'exemple : un
+# trait pointillé, puis le texte en bleu foncé (lisible en noir et blanc).
+CSS_REGLE = """
+.expl .regle{margin:5mm 0 0;padding-top:3.5mm;border-top:1.4px dashed #94a3b8;font-size:13.5px;line-height:1.4;color:#1e3a5f}
+.expl .regle b{font-weight:700}
+"""
+
+# COUVERTURE DES LIVRETS « JE FAIS LE SCHÉMA EN BARRES » (26/09/2026, idée de Gwenaël) :
+# « Comment ça marche ? » montre ce que l'élève fait sous chaque carte — il fait le schéma et
+# écrit sa réponse « ? = … ». Deux exemples côte à côte, dessinés par l'outil lui-même :
+# une carte avec jetons (plus petite : les élèves la connaissent), et une carte SANS jeton
+# posé (« tu n'as aucun jeton à dessiner »). Puis la règle du livret.
+JS_DEUX_EXEMPLES = """([target, profils]) => profils.map((p, k) => {
+  for (let essai = 0; essai < 20000; essai++) {
+    currentRand = mulberry32(hashSeed('exemple-dessin-' + k + '-' + target + '-' + essai));
+    const c = createItem('find_hidden', target, p.splats);
+    if (p.vis === 0) { c.total -= c.visible; c.visible = 0; c.dots = { arr: [], r: c.dots ? c.dots.r : 8 }; }
+    else if (c.visible < p.vis[0] || c.visible > p.vis[1]) continue;
+    if (c.hiddenPerSplat < p.hp[0] || c.hiddenPerSplat > p.hp[1]) continue;
+    if (c.total < p.tot[0] || c.total > p.tot[1]) continue;
+    if ([c.total, c.visible, c.hiddenPerSplat].includes(69)) continue;
+    /* sur la couverture, le cadre du total est plus gros que sur une fiche : aucun jeton
+       dans le coin haut-droit, sinon il touche le cadre */
+    if ((c.dots && c.dots.arr || []).some(q => q.x > 190 && q.y < 85)) continue;
+    return {svg: getSplatSvg(c, true, false, false), total: c.total, visible: c.visible,
+            n: c.numSplats, hp: c.hiddenPerSplat};
+  }
+  return null;
+})"""
+
+CSS_DEUX_EXEMPLES = """
+.expl .intro.dessin{margin:3mm 0 3.5mm}
+.duo{display:grid;grid-template-columns:1fr 1fr;gap:6mm}
+.duo .ex .t{font-size:13px;font-weight:700;color:#334155;margin-bottom:1.8mm}
+.duo .rang{display:flex;align-items:center;gap:2.5mm}
+.duo .cp{position:relative;flex:0 0 40mm;border:1.4px solid #0f172a;border-radius:4px;padding:1.4mm;background:#fff}
+.duo .cp .tot{position:absolute;top:1.6mm;right:1.6mm;border:1.5px solid #0f172a;border-radius:3px;padding:0.2mm 1.6mm;font-size:15px;font-weight:700;background:#fff}
+.duo .cp svg{width:100%;height:auto;display:block}
+.duo .fl{font-size:15px;color:#c2410c}
+.duo .sp{flex:1;min-width:0}
+.duo .sp .h{border:1.4px solid #0f172a;height:10mm;display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:700}
+.duo .sp .b{display:flex}
+.duo .sp .b div{border:1.4px solid #0f172a;border-top:none;height:10mm;display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:700;min-width:0}
+.duo .sp .b div + div{border-left:none}
+.duo .sp .b .v{color:#2563eb}
+.duo .sp .b .c{background:#e2e8f0;color:#111827}
+.duo .sp .rep{margin-top:3mm;text-align:left;font-size:18px;font-weight:700;color:#0f172a}
+.duo .sp .rep span{border-bottom:1.4px dashed #64748b;padding:0 2mm}
+"""
+
+JS_COUV_DESSIN = """(d) => {
+  const expl = document.querySelector('.expl');
+  if (!expl) return 'pas de bloc « Comment ça marche ? »';
+  const ex = (e, titre) => {
+    const flexV = Math.max(e.visible, e.total * 0.05, 1), flexH = Math.max(e.hp, e.total * 0.05, 1);
+    let bas = e.visible > 0 ? '<div class="v" style="flex:' + flexV + '">' + e.visible + '</div>' : '';
+    for (let i = 0; i < e.n; i++) bas += '<div class="c" style="flex:' + flexH + '">?</div>';
+    return '<div class="ex"><div class="t">' + titre + '</div><div class="rang">' +
+      '<div class="cp"><span class="tot">' + e.total + '</span>' + e.svg + '</div><div class="fl">➜</div>' +
+      '<div class="sp"><div class="h">' + e.total + '</div><div class="b">' + bas + '</div>' +
+      '<div class="rep"><span>?&nbsp;=&nbsp;' + e.hp + '</span></div></div></div></div>';
+  };
+  expl.innerHTML = '<span class="chip">Comment ça marche&nbsp;?</span>' +
+    '<div class="intro dessin">' + d.intro + '</div>' +
+    '<div class="duo">' + ex(d.ex[0], d.titres[0]) + ex(d.ex[1], d.titres[1]) + '</div>' +
+    '<p class="regle">' + d.regle + '</p>';
+  return 'ok';
+}"""
+
 JS_COUV = """(d) => {
   const set = (sel, html) => { const e = document.querySelector(sel); if (e) e.innerHTML = html; };
   if (d.prof) {
@@ -306,6 +471,18 @@ JS_COUV = """(d) => {
     id.innerHTML = '<div class="champ prof"><span>' + d.prof.ligne + '</span></div>';
   }
   if (d.sur) set('.tete .sur', d.sur);
+  /* « Dans ce livret » : les titres des fiches du livret (livrets « je dessine le schéma »),
+     chacun à côté de son numéro (la liste est rangée en deux colonnes : 1 4 / 2 5 / 3 6). */
+  if (d.som) {
+    const lis = document.querySelectorAll('.som li');
+    if (lis.length !== d.som.length) return 'sommaire : ' + lis.length + ' lignes';
+    lis.forEach(li => {
+      const n = parseInt(li.querySelector('b').textContent, 10);
+      const badge = li.querySelector('.badge');
+      li.innerHTML = ''; li.appendChild(badge);
+      li.insertAdjacentHTML('beforeend', d.som[n - 1]);
+    });
+  }
   if (d.accroche) set('.tete .accroche', d.accroche);
   if (!d.ex) return 'ok';
   const e = d.ex;
@@ -390,7 +567,7 @@ def fabrique_qr(niv):
         q = qrcode.QRCode(error_correction=ERROR_CORRECT_M, box_size=12, border=2)
         q.add_data(url); q.make(fit=True)
         q.make_image(fill_color="black", back_color="white").save(dossier / nom)
-    for f in FICHES:
+    for f in fiches_de(niv):
         ecrire(lien_jeu(niv, f), f"fiche{f['n']}.png")
     ecrire(LIEN_UNIVERS, "univers.png")
     for _, _, url, nom in niv["dos"]:
@@ -428,6 +605,18 @@ async def pages(niv, tmp, correction=False):
             print(f"   exemple de couverture : {exemple['total']} = {exemple['visible']}"
                   f" + {exemple['n']} x {exemple['hp']}")
 
+        deux = None
+        if niv.get("dessin"):
+            pg = await nav.new_page(viewport={"width": 794, "height": 1123})
+            await pg.goto(f"{base}/outils/splat_tache_barre.html?support=print", wait_until="networkidle")
+            await pg.wait_for_timeout(800)
+            deux = await pg.evaluate(JS_DEUX_EXEMPLES, [niv["target"], niv["dessin"]["profils"]])
+            await pg.close()
+            if not deux or None in deux:
+                raise SystemExit("exemples de couverture introuvables")
+            for e in deux:
+                print(f"   exemple : {e['total']} = {e['visible']} + {e['n']} x {e['hp']}")
+
         async def pdf(url, sortie, injecter=None, couv=None, dos=None, numero=None):
             pg = await nav.new_page(viewport={"width": 794, "height": 1123})
             await pg.goto(url, wait_until="networkidle")
@@ -459,6 +648,11 @@ async def pages(niv, tmp, correction=False):
                 r = await pg.evaluate(JS_COUV, couv)
                 if r != "ok":
                     raise SystemExit(f"couverture : {r}")
+                if niv.get("dessin"):
+                    await pg.add_style_tag(content=CSS_REGLE + CSS_DEUX_EXEMPLES)
+                    r = await pg.evaluate(JS_COUV_DESSIN, dict(niv["dessin"], ex=deux))
+                    if r != "ok":
+                        raise SystemExit(f"couverture « je fais le schéma » : {r}")
                 await pg.wait_for_timeout(400)
             if dos is not None:
                 r = await pg.evaluate(JS_DOS, dos)
@@ -469,14 +663,19 @@ async def pages(niv, tmp, correction=False):
                          margin={"top": "0", "bottom": "0", "left": "0", "right": "0"})
             await pg.close()
 
-        couv = dict(sur=niv["sur"], accroche=niv["accroche"], ex=exemple,
-                    prof=PROF if correction else None)
+        couv = dict(sur=niv["sur"], accroche=niv["accroche"], ex=None if niv.get("dessin") else exemple,
+                    prof=PROF if correction else None,
+                    som=[f["t"].replace(" !", "&nbsp;!") for f in niv["fiches"]] if "fiches" in niv else None)
         await pdf(f"{base}{BASE_WEB}/couverture.html", tmp / "p1.pdf", couv=couv)
-        for f in FICHES:
+        for f in fiches_de(niv):
             url = (f"{base}/outils/splat_tache_barre.html?support=print&problem=classic"
                    f"&target={niv['target']}&splats={f['splats']}&exercise={f['ex']}"
                    f"&seed={niv['graines'][f['n']]}"
-                   + ("&espace=1" if f.get("espace") else "")
+                   + reglages(f)
+                   # le papier seulement : schéma à faire, « ? = …… » sous chaque carte, et
+                   # aux fiches 1 et 2 le guidage (1 exemple résolu, 2 schémas donnés)
+                   + ("&diagram=draw&reponse=1" if f.get("dessin") else "")
+                   + ("&exemple=1&donne=2" if f.get("guide") else "")
                    # qr=0 : l'outil pose désormais son propre QR sur chaque fiche classique
                    # (26/09/2026) ; le livret garde le sien (JS_QR), un seul QR par page.
                    + "&qr=0"

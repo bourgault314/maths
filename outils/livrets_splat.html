@@ -153,6 +153,15 @@ html.js .panneau[hidden]{display:none}
    rangée de livrets. */
 .partie{margin:18px 0 0;font-size:16.5px;line-height:1.25;color:var(--c-fonce)}
 .partie span{display:block;margin-top:2px;font-size:13px;font-weight:600;color:var(--muted)}
+/* Monde 1 : deux séries de livrets, un bouton par série (26/09/2026 au soir, choix B) */
+.series-choix{display:none}
+html.js .series-choix{display:flex;flex-wrap:wrap;gap:10px;margin:18px 0 0}
+.series-choix button{padding:9px 18px;border-radius:999px;border:2px solid var(--c-plein);background:var(--paper);
+  color:var(--c-fonce);font:inherit;font-size:15px;font-weight:800;cursor:pointer}
+.series-choix button[aria-pressed="true"]{background:var(--c-plein);color:#fff}
+.series-choix button:focus-visible{outline:3px solid var(--c-bord);outline-offset:2px}
+html.js .serie > .partie{display:none}
+html.js .serie[hidden]{display:none}
 .aparte{margin-top:12px;font-size:13.5px;line-height:1.5;color:var(--muted)}
 .note{margin-top:18px;background:var(--paper);border:1px solid var(--line);border-radius:14px;
   padding:12px 16px;box-shadow:var(--shadow)}
@@ -249,7 +258,16 @@ footer a{font-weight:700}
   <!-- ===================================================== Monde 1 · Petit SPLAT! -->
   <section class="panneau" data-m="1" id="monde-1" role="tabpanel" aria-labelledby="onglet-1">
     <h2 class="monde-nom">Monde 1 · Petit SPLAT!</h2>
-    <p class="chapo">Les six fiches du monde 1 en un livret de 8 pages, en trois niveaux&nbsp;: même progression, des nombres plus grands.</p>
+    <p class="chapo">Les six fiches du monde 1 en un livret de 8 pages, en trois niveaux&nbsp;: même progression, des nombres plus grands. Puis trois livrets où l’élève fait lui-même le schéma en barres.</p>
+    <!-- Deux séries de livrets au monde 1 (26/09/2026 au soir, choix B de Gwenaël, planche 20) :
+         deux boutons au-dessus d'une seule rangée, la page reste courte. Sans JavaScript, les deux
+         rangées restent affichées l'une sous l'autre, avec leurs intertitres. -->
+    <div class="series-choix" role="group" aria-label="Choisir la série de livrets">
+      <button type="button" data-serie="complete" aria-pressed="true">Je complète le schéma</button>
+      <button type="button" data-serie="schema" aria-pressed="false">Je fais le schéma en barres</button>
+    </div>
+    <div class="serie" data-serie="complete">
+    <h3 class="partie">Je complète le schéma <span>les fiches 1 à 6</span></h3>
     <div class="grille">
 
       <article class="liv">
@@ -316,7 +334,77 @@ footer a{font-weight:700}
       </article>
 
     </div>
-    <p class="aparte">Chaque fiche porte un QR code qui rejoue les mêmes cartes en ligne, avec la vérification.</p>
+    </div>
+    <div class="serie" data-serie="schema">
+    <h3 class="partie">Je fais le schéma en barres <span>une tache, deux taches, puis le mélange, avec ou sans jetons posés</span></h3>
+    <div class="grille">
+
+      <article class="liv">
+        <a class="couv-lien" href="/outils/livret_petit_splat_dessin.pdf" target="_blank" rel="noopener" title="Voir le livret Je fais le schéma en barres, Monde 1 (PDF, 8 pages)">
+          <img class="couv" src="/assets/img/thumbnails/splat/livret-petit-splat-dessin.png?v=1" alt="Couverture du livret Petit SPLAT! « Je fais le schéma en barres » du monde 1" loading="lazy">
+        </a>
+        <div class="corps">
+          <div class="titre"><h3>Monde 1</h3><span class="plage">jusqu'à 20 jetons</span></div>
+          <div class="liens">
+            <a class="lien" href="/outils/livret_petit_splat_dessin.pdf" target="_blank" rel="noopener">📕 PDF · 8 pages</a>
+            <a class="lien a3" href="/outils/livret_petit_splat_dessin_a_plier.pdf" target="_blank" rel="noopener">🖨️ Livret à plier</a>
+            <details class="prof">
+              <summary>✅ Le corrigé</summary>
+              <div class="prof-corps">
+                <div class="prof-ligne"><span class="nom">Le livret corrigé</span>
+                  <a class="lien-prof" href="/outils/livret_petit_splat_dessin_correction.pdf" target="_blank" rel="noopener" title="Livret corrigé Je fais le schéma en barres, Monde 1 (PDF, 8 pages)">PDF</a>
+                  <a class="lien-prof" href="/outils/livret_petit_splat_dessin_correction_a_plier.pdf" target="_blank" rel="noopener" title="Livret corrigé Je fais le schéma en barres, Monde 1, à plier">à plier</a></div>
+              </div>
+            </details>
+          </div>
+        </div>
+      </article>
+
+      <article class="liv">
+        <a class="couv-lien" href="/outils/livret_petit_splat_dessin_avance.pdf" target="_blank" rel="noopener" title="Voir le livret Je fais le schéma en barres, Avancé (PDF, 8 pages)">
+          <img class="couv" src="/assets/img/thumbnails/splat/livret-petit-splat-dessin-avance.png?v=1" alt="Couverture du livret Petit SPLAT! « Je fais le schéma en barres », niveau Avancé" loading="lazy">
+        </a>
+        <div class="corps">
+          <div class="titre"><h3>Avancé</h3><span class="plage">de 21 à 50 jetons</span></div>
+          <div class="liens">
+            <a class="lien" href="/outils/livret_petit_splat_dessin_avance.pdf" target="_blank" rel="noopener">📗 PDF · 8 pages</a>
+            <a class="lien a3" href="/outils/livret_petit_splat_dessin_avance_a_plier.pdf" target="_blank" rel="noopener">🖨️ Livret à plier</a>
+            <details class="prof">
+              <summary>✅ Le corrigé</summary>
+              <div class="prof-corps">
+                <div class="prof-ligne"><span class="nom">Le livret corrigé</span>
+                  <a class="lien-prof" href="/outils/livret_petit_splat_dessin_avance_correction.pdf" target="_blank" rel="noopener" title="Livret corrigé Je fais le schéma en barres, Avancé (PDF, 8 pages)">PDF</a>
+                  <a class="lien-prof" href="/outils/livret_petit_splat_dessin_avance_correction_a_plier.pdf" target="_blank" rel="noopener" title="Livret corrigé Je fais le schéma en barres, Avancé, à plier">à plier</a></div>
+              </div>
+            </details>
+          </div>
+        </div>
+      </article>
+
+      <article class="liv">
+        <a class="couv-lien" href="/outils/livret_petit_splat_dessin_expert.pdf" target="_blank" rel="noopener" title="Voir le livret Je fais le schéma en barres, Expert (PDF, 8 pages)">
+          <img class="couv" src="/assets/img/thumbnails/splat/livret-petit-splat-dessin-expert.png?v=1" alt="Couverture du livret Petit SPLAT! « Je fais le schéma en barres », niveau Expert" loading="lazy">
+        </a>
+        <div class="corps">
+          <div class="titre"><h3>Expert</h3><span class="plage">de 51 à 100 jetons</span></div>
+          <div class="liens">
+            <a class="lien" href="/outils/livret_petit_splat_dessin_expert.pdf" target="_blank" rel="noopener">📘 PDF · 8 pages</a>
+            <a class="lien a3" href="/outils/livret_petit_splat_dessin_expert_a_plier.pdf" target="_blank" rel="noopener">🖨️ Livret à plier</a>
+            <details class="prof">
+              <summary>✅ Le corrigé</summary>
+              <div class="prof-corps">
+                <div class="prof-ligne"><span class="nom">Le livret corrigé</span>
+                  <a class="lien-prof" href="/outils/livret_petit_splat_dessin_expert_correction.pdf" target="_blank" rel="noopener" title="Livret corrigé Je fais le schéma en barres, Expert (PDF, 8 pages)">PDF</a>
+                  <a class="lien-prof" href="/outils/livret_petit_splat_dessin_expert_correction_a_plier.pdf" target="_blank" rel="noopener" title="Livret corrigé Je fais le schéma en barres, Expert, à plier">à plier</a></div>
+              </div>
+            </details>
+          </div>
+        </div>
+      </article>
+
+    </div>
+    </div>
+    <p class="aparte">Chaque fiche porte un QR code qui rejoue les mêmes cartes en ligne, avec la vérification. Dans les livrets «&nbsp;Je fais le schéma en barres&nbsp;», le schéma n’est pas imprimé&nbsp;: l’élève le trace dans la place laissée sous le dessin et écrit sa réponse, «&nbsp;?&nbsp;=&nbsp;…&nbsp;»&nbsp;; le corrigé montre le modèle.</p>
   </section>
 
   <!-- ================================================== Monde 2 · SPLAT! Classique -->
@@ -685,6 +773,26 @@ footer a{font-weight:700}
   <a href="/licence.html">mathsgo.re · CC BY-NC-SA 4.0</a> — libre d'être imprimé, partagé et adapté, sans usage commercial.
 </footer>
 
+<script>
+/* Monde 1 : les deux boutons montrent une série de livrets à la fois (choix B, 26/09/2026 au soir) */
+(function(){
+  Array.prototype.forEach.call(document.querySelectorAll(".series-choix"), function(groupe){
+    var panneau = groupe.parentNode;
+    var series = panneau.querySelectorAll(".serie[data-serie]");
+    function montre(nom){
+      Array.prototype.forEach.call(series, function(s){ s.hidden = s.dataset.serie !== nom; });
+      Array.prototype.forEach.call(groupe.querySelectorAll("button"), function(b){
+        b.setAttribute("aria-pressed", b.dataset.serie === nom ? "true" : "false");
+      });
+    }
+    groupe.addEventListener("click", function(e){
+      var b = e.target.closest("button[data-serie]");
+      if(b) montre(b.dataset.serie);
+    });
+    montre("complete");
+  });
+})();
+</script>
 <script>
 (function(){
   /* Mondes « en préparation » (26/09/2026) : d'après la liste de assets/js/splat-etapes.js
