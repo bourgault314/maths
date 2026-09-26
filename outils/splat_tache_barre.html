@@ -306,10 +306,15 @@
       text-align: center;
     }
     /* 4 cases par page (Enquête et Système, essai du 26/09/2026) : plateau, indices et
-       schéma gardent EXACTEMENT la taille qu'ils ont en 6 par page (plateau de 28 mm de
-       haut, mêmes polices) ; toute la hauteur gagnée reste blanche sous l'indice, pour
-       que l'élève y dessine son schéma (« Schéma à tracer »). */
-    .grid-2x2 .relation-cell .part-splat { flex: 0 0 28mm; }
+       schéma gardent EXACTEMENT la taille qu'ils ont en 6 par page ; toute la hauteur
+       gagnée reste blanche sous l'indice, pour que l'élève y dessine son schéma
+       (« Schéma à tracer »). Le plateau des 6 cases n'a pas de hauteur fixe : il prend
+       la place que lui laissent les indices, qui dépend de la police et de la phrase.
+       Une cale blanche d'un tiers de la case (la hauteur gagnée : 1/2 - 1/3 de la
+       grille) laisse donc au-dessus exactement une case de 6 par page, où tout se
+       place comme en 6. Le + 2 × padding + 1 px compense le rembourrage et le trait. */
+    .grid-2x2 .relation-cell::after { content: ''; flex: 0 0 calc((100% + 11px) / 3); }
+    .grid-2x2 .relation2-cell::after { flex-basis: calc((100% + 9px) / 3); }
     /* Cases « + − » et « × ÷ » : le signe en gros, les mots dessous. */
     #relationControls .check-control { display: flex; margin-bottom: 0; }
     .check-sym { display: block; font-size: 15px; font-weight: 900; color: #1e293b; line-height: 1.1; }
