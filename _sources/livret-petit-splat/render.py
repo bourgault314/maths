@@ -62,6 +62,14 @@ BASE_WEB = "/_sources/livret-petit-splat"
 PORT = 8123
 SITE = "https://mathsgo.re"
 
+# Fiches 4 et 5 (plusieurs taches) : l'option « Espace sous le schéma » de l'outil (espace=1).
+# Relecture du monde 1, lot 4 (26/09/2026). Ses mots : « surtout pas imposer l'accolade…
+# j'ai juste besoin d'un peu d'espace en dessous ». Une bande vide de 7,5 mm sous chaque
+# schéma, pour écrire un calcul intermédiaire ; le dessin est refait par la table de dessin
+# de l'outil sur toute la largeur de la case, taches et jetons à leur taille imprimée. Les
+# cartes (les nombres) restent celles des graines : le tirage ne change pas. Même option sur
+# le livret corrigé : les cartes restent à la même place que sur la fiche de l'élève.
+
 # Les 6 étapes du monde 1, telles que définies dans outils/splat_univers.html (MONDES[0]).
 # splats / exercise ne changent jamais d'un niveau à l'autre : c'est la MÊME progression,
 # seule la cible (et donc la graine) change.
@@ -69,8 +77,8 @@ FICHES = [
     dict(n=1, t="Complète le schéma",  splats="1",   ex="find_hidden"),
     dict(n=2, t="Dessine les jetons",  splats="1",   ex="construct"),
     dict(n=3, t="Mélange !",           splats="1",   ex="mix"),
-    dict(n=4, t="Deux taches",         splats="2",   ex="find_hidden"),
-    dict(n=5, t="Plein de taches !",   splats="mix", ex="find_hidden"),
+    dict(n=4, t="Deux taches",         splats="2",   ex="find_hidden", espace=True),
+    dict(n=5, t="Plein de taches !",   splats="mix", ex="find_hidden", espace=True),
     dict(n=6, t="Dessine en expert",   splats="mix", ex="construct"),
 ]
 
@@ -132,8 +140,12 @@ def lien_jeu(niv, f):
     parcours=m1eN est gardé pour les trois livrets : valider une fiche plus dure
     gagne l'étoile du monde 1 (décision du 17/09/2026)."""
     n = niv["graines"][f["n"]]
+    # Fiches 4 et 5 : espace=1, l'élève retrouve à l'écran le dessin de sa feuille (lot 4,
+    # 26/09/2026, « même image par le QR ») ; les nombres, eux, sont ceux de la graine.
     return (f"{SITE}/splat/petit/?support=eleve&problem=classic&target={niv['target']}"
-            f"&splats={f['splats']}&exercise={f['ex']}&seed={n}&parcours=m1e{f['n']}")
+            f"&splats={f['splats']}&exercise={f['ex']}&seed={n}"
+            + ("&espace=1" if f.get("espace") else "")
+            + f"&parcours=m1e{f['n']}")
 
 LIEN_UNIVERS = f"{SITE}/outils/splat_univers.html"
 
@@ -464,7 +476,8 @@ async def pages(niv, tmp, correction=False):
             url = (f"{base}/outils/splat_tache_barre.html?support=print&problem=classic"
                    f"&target={niv['target']}&splats={f['splats']}&exercise={f['ex']}"
                    f"&seed={niv['graines'][f['n']]}"
-                   f"&title=" + quote(f"Fiche {f['n']} — {f['t']}")
+                   + ("&espace=1" if f.get("espace") else "")
+                   + "&title=" + quote(f"Fiche {f['n']} — {f['t']}")
                    + ("&correction=1&rv=0" if correction else ""))
             # la fiche N est la page N+1 du livret (la couverture est la page 1)
             await pdf(url, tmp / f"p{f['n']+1}.pdf", injecter=f"{qrweb}/fiche{f['n']}.png",
