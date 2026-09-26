@@ -233,11 +233,12 @@ test("Q2 (demande de Claire) : en vue prof, chaque équation des mondes 5 et 6 o
     assert.equal((html.match(/<a class="eqSeule" href="\/outils\/equasplat\.html#data=/g) || []).length, e.eqs.length);
     assert.match(html, /Clique sur une \\u00e9quation|Clique sur une équation/);
   }));
-  /* les mondes des autres outils gardent leur liste en texte */
+  /* les mondes des autres outils n'ouvrent pas ÉquaSplat (depuis le 26/09, les mondes 1
+     et 2 ouvrent ÉquaBarre : tests/splat-univers-equabarre-liste.test.mjs) */
   MONDES.slice(0, 4).forEach((m, mi) => m.etapes.forEach((e, ei) => {
     if (!e.eqs) return;
     assert.equal(ctx.eqSeuleLiens(brut(mi, ei)), null, `${m.nom} : pas de lien ÉquaSplat`);
-    assert.ok(!ctx.eqListeHtml(brut(mi, ei)).includes("<a "), `${m.nom}, ${e.t}`);
+    assert.ok(!ctx.eqListeHtml(brut(mi, ei), ctx.X.MONDES[mi]).includes("equasplat"), `${m.nom}, ${e.t}`);
   }));
   /* une série qui ne compte pas ses équations ne donne aucun lien (plutôt que des liens décalés) */
   const faux = { ...EQUATIONS.etapes[1], eqs: EQUATIONS.etapes[1].eqs.slice(1) };
