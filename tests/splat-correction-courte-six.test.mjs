@@ -45,7 +45,7 @@ const moteur = Function(`
   ${html.match(/^const SIX_CORRECTION_DX = [^\n]*;/m)[0]}
   ${constante("SIX_CORRECTION_VIEWBOX")}
   ${html.match(/^const SIX_CORRECTION_LEFT = [^\n]*;/m)[0]}
-  ${constante("SIX_CORRECTION_PLAIN_LETTER")}
+  ${constante("SIX_CORRECTION_LETTERS")}
   ${constante("SIX_CORRECTION_LETTER_INK")}
   ${AIDES.map(extraire).join("\n")}
   return { sixCorrectionPart, sixCorrectionData, drawSixCorrectionEquation, drawSixCorrectionSchema,
@@ -159,17 +159,19 @@ test("l'équation : les lignes et les flèches de la correction du mode B, 25 % 
   assert.deepEqual(a.lignes, ["15 + 5 × ? = 20", "5 × ? = 5", "? = 1"]);
   assert.deepEqual(lire(cartes.a1tache, "?").lignes, ["7 + ? = 13", "? = 6"]);
   assert.deepEqual(lire(cartes.a0visible, "?").lignes, ["4 × ? = 20", "? = 5"]);
-  // en lettre : la lettre de la carte, écrite simplement (la police est déjà en italique)
-  assert.deepEqual(lire(cartes.b3taches, "𝑛").lignes, ["27 + 3n = 36", "3n = 9", "n = 3"]);
+  // en lettre : la lettre de la carte, la lettre mathématique elle-même (𝑛), dessinée par
+  // SplatLettres depuis le 26/09/2026 (avant : « n » simple en Times italique)
+  assert.deepEqual(lire(cartes.b3taches, "𝑛").lignes, ["27 + 3𝑛 = 36", "3𝑛 = 9", "𝑛 = 3"]);
   // 25 % plus grande que la correction de l'outil (100 au lieu de 80), l'écart du « = » suit
   assert.equal(Number(b.textes[0].a["font-size"]), 100, "taille de l'équation");
   assert.deepEqual([b.textes[0].a.x, b.textes[2].a.x], [800 - 63, 800 + 63], "écart du signe égal");
   // lot P : l'équation est centrée sur la CASE (milieu du repère 2000), plus sur le plateau
   assert.equal(b.textes[1].a.x + moteur.SIX_CORRECTION_DX, VW / 2, "le « = » au milieu de la case");
-  // les membres en Times italique POUR DE VRAI (style en ligne : la règle « * » de la page ne l'emporte pas)
+  // les membres en Times italique POUR DE VRAI (style en ligne : la règle « * » de la page ne l'emporte pas),
+  // SplatLettres en tête pour les lettres de l'inconnue (26/09/2026)
   const membre = b.textes[0].a;
   assert.equal(membre["font-style"], "italic");
-  assert.match(membre.style, /font-family:'Times New Roman', Times, serif/);
+  assert.match(membre.style, /font-family:SplatLettres, 'Times New Roman', Times, serif/);
   // 4 mm sous le plateau (1 unité = 0,0427 mm) : haut des chiffres ≈ ligne de base − 0,72 × police
   const bas = 210 + 60 + 660 + 4;
   const haut = b.textes[0].a.y - 0.72 * Number(b.textes[0].a["font-size"]);
@@ -222,30 +224,33 @@ test("le schéma : les trois étapes de l'outil jusqu'au « ? » seul, compactes
   const lignes = (k) => cadres[k];
   assert.ok(Math.abs((lignes(0).a.x + lignes(0).a.width) - (lignes(1).a.x + lignes(1).a.width)) < 1e-6, "bords droits alignés");
   assert.ok(Math.abs(lignes(1).a.x - lignes(2).a.x) < 1e-6, "la tache seule sous la première case cachée");
-  /* En lettre (lot X, 21/09/2026) : les cases cachées portent la lettre de la carte écrite
-     comme celle de l'équation — la lettre SIMPLE (𝑛 → n) et le Times italique donné en
-     STYLE EN LIGNE. L'attribut font-family seul est battu par la règle « * » de la page :
-     les lettres mathématiques U+1D400… repartaient alors sur la police de secours de la
-     machine, et sous Linux « 𝑥 » n'y tombait pas sur la même que « 𝑎 » — d'où la lettre
-     droite au milieu des lettres rondes dans le PDF du livret. */
-  /* Les hauteurs d'encre de chaque lettre en Times italique, telles qu'elles ont été mesurées
+  /* En lettre : les cases cachées portent la lettre de la carte, écrite comme celle de
+     l'équation, avec la police donnée en STYLE EN LIGNE (l'attribut font-family seul est battu
+     par la règle « * » de la page). Lot X (21/09/2026) : lettre simple (𝑛 → n) en Times
+     italique, pour ne plus dépendre de la police de secours de la machine. Depuis le 26/09/2026
+     (relecture du monde 2) : la lettre mathématique elle-même (𝑛), dessinée par SplatLettres,
+     la police des lettres rangée dans le site (la lettre ronde des livrets de l'Enquête). */
+  /* Les hauteurs d'encre de chaque lettre en SplatLettres, telles qu'elles ont été mesurées
      dans Chromium (dominant-baseline="middle", dy=0) : [au-dessus, au-dessous] du centre, en em.
      Épinglées ici pour qu'on ne les change pas dans la page sans refaire la mesure. */
-  const ENCRE = {x:[0.210,0.250], a:[0.220,0.260], b:[0.445,0.260], c:[0.2225,0.260],
-                 m:[0.2225,0.250], n:[0.2225,0.250], t:[0.315,0.260]};
+  const ENCRE = {"𝑥":[0.2125,0.240], "𝑎":[0.2125,0.240], "𝑏":[0.465,0.240], "𝑐":[0.2125,0.240],
+                 "𝑚":[0.2125,0.240], "𝑛":[0.2125,0.240], "𝑡":[0.395,0.240]};
+  /* largeur d'encre de chaque lettre en SplatLettres, en em (lue dans la police) : le 𝑚 est
+     la plus large */
+  const LARGEUR = {"𝑥":0.487, "𝑎":0.473, "𝑏":0.382, "𝑐":0.395, "𝑚":0.836, "𝑛":0.559, "𝑡":0.31};
   const tableSource = JSON.parse(constante("SIX_CORRECTION_LETTER_INK").replace(/^const [^=]+= /, "").replace(/;$/, ""));
   for(const [l, v] of Object.entries(ENCRE)) assert.deepEqual(tableSource[l], v, `encre du « ${l} »`);
-  assert.deepEqual(tableSource[""], ENCRE.b, "repli : une lettre inconnue est traitée comme la plus haute");
-  for(const [lettre, simple, nom] of [["𝑥", "x", "a1tache"], ["𝑏", "b", "a1tache"], ["𝑡", "t", "a0visible"],
-                                      ["𝑛", "n", "b3taches"], ["𝑚", "m", "a5taches"]]){
+  assert.deepEqual(tableSource[""], ENCRE["𝑏"], "repli : une lettre inconnue est traitée comme la plus haute");
+  for(const [lettre, nom] of [["𝑥", "a1tache"], ["𝑏", "a1tache"], ["𝑡", "a0visible"],
+                              ["𝑛", "b3taches"], ["𝑚", "a5taches"]]){
+    const simple = lettre;
     const { grises, noeuds } = dessiner(cartes[nom], lettre);
-    const lettres = noeuds.filter(e => e.t === simple);
+    const lettres = noeuds.filter(e => e.t === lettre);
     assert.ok(lettres.length >= grises.length, `${simple} : toutes les cases cachées portent la lettre`);
-    assert.equal(noeuds.filter(e => e.t === lettre).length, 0, `${simple} : plus aucune lettre mathématique`);
     const tailles = new Set();
     for(const e of lettres){
-      assert.match(String(e.a.style || ""), /font-family:'Times New Roman', Times, serif/,
-        `${simple} : Times demandé en style en ligne`);
+      assert.match(String(e.a.style || ""), /font-family:SplatLettres, 'Times New Roman', Times, serif/,
+        `${simple} : SplatLettres demandé en style en ligne`);
       assert.equal(e.a["font-style"], "italic", `${simple} : italique`);
       assert.equal(e.a["font-weight"], "normal", `${simple} : même graisse que l'équation`);
       tailles.add(String(e.a["font-size"]));
@@ -253,9 +258,9 @@ test("le schéma : les trois étapes de l'outil jusqu'au « ? » seul, compactes
     assert.equal(tailles.size, 1, `${simple} : une seule taille de lettre dans la carte`);
     const taille = Number([...tailles][0]);
     assert.ok(taille >= 80 && taille <= 96, `${simple} : taille ${taille} (des nombres à 1,2 ×)`);
-    // aucune lettre contre le trait, SUR LES CÔTÉS : le « m » italique (0,72 em, la plus
-    // large) dans la case grise la plus étroite, au moins 0,3 mm de blanc (1 u = 0,0427 mm)
-    const blanc = (Math.min(...grises.map(r => r.a.width)) - taille * 0.72) / 2 * 0.0427;
+    // aucune lettre contre le trait, SUR LES CÔTÉS : la lettre dans la case grise la plus
+    // étroite, au moins 0,3 mm de blanc (1 u = 0,0427 mm)
+    const blanc = (Math.min(...grises.map(r => r.a.width)) - taille * LARGEUR[lettre]) / 2 * 0.0427;
     assert.ok(blanc >= 0.3, `${simple} : ${blanc.toFixed(2)} mm entre la lettre et le trait`);
     /* … et AU-DESSUS comme AU-DESSOUS. C'est ce contrôle-là qui manquait : « dominant-baseline
        middle » centre la hauteur d'un « x », pas le dessin, et le « b » agrandi traversait le

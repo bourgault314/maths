@@ -68,13 +68,23 @@ SC = "/splat/classique/"                        # la même adresse courte que la
 M2A1 = "mode=U&equation=X_PLUS_A_EQ_B&tasksMin=1&tasksMax=1&visibleMax=15&hiddenMax=10&totalMin=1&totalMax=25&cards=4&seed=974&unknown=question"
 M2A2 = "mode=U&equation=AX_EQ_B&tasksMin=2&tasksMax=5&hiddenMax=10&totalMin=5&totalMax=25&cards=4&seed=477&unknown=question"
 M2A3 = "mode=U&equation=AX_PLUS_C_EQ_B&tasksMin=2&tasksMax=5&visibleMax=15&hiddenMax=10&totalMin=5&totalMax=25&cards=4&seed=478&unknown=question"
-E8   = "mode=N&equation=X_PLUS_A_EQ_B&cards=12&seed=347&unknown=question"
-E9   = "mode=N&equation=AX_PLUS_C_EQ_B&tasksMax=5&cards=12&seed=18&unknown=question"
+# Fiches 8 et 9 : depuis la relecture du monde 2 (26/09/2026), deux séries de 6 cartes chacune,
+# une par page — les constantes M2E4A/B et M2E5A/B de la carte des mondes :
+#   fiche 8     une tache et des paquets (on soustrait ; les 6 premières cartes d'avant, graine 347)
+#   fiche 8 bis SEULEMENT des taches (on divise ; graine 260)
+#   fiche 9     des taches et UN paquet (soustraire, diviser ; graine 1673)
+#   fiche 9 bis des taches et DEUX paquets (additionner, soustraire, diviser ; graine 5974)
+# (Avant : fiche 8 = 12 cartes de la graine 347, deux pages pareilles ; fiche 9 = 12 cartes de la
+# graine 18, où les cartes à deux paquets venaient avant celles à un paquet.)
+E8A = "mode=N&equation=X_PLUS_A_EQ_B&cards=6&seed=347&unknown=question"
+E8B = "mode=N&equation=AX_EQ_B&tasksMin=2&tasksMax=5&cards=6&seed=260&unknown=question"
+E9A = "mode=N&equation=AX_PLUS_C_EQ_B&tasksMin=2&tasksMax=5&visibleMin=1&visibleMax=1&cards=6&seed=1673&unknown=question"
+E9B = "mode=N&equation=AX_PLUS_C_EQ_B&tasksMin=2&tasksMax=5&visibleMin=2&visibleMax=2&cards=6&seed=5974&unknown=question"
 
 FICHES = [
     dict(n=7, t="Le même jeu, un nouveau plateau", parties=[M2A1, M2A2, M2A3], parcours="m2e1", pages=2),
-    dict(n=8, t="Avec des paquets de jetons",      parties=[E8],               parcours="m2e4", pages=2),
-    dict(n=9, t="Le défi",                         parties=[E9],               parcours="m2e5", pages=2),
+    dict(n=8, t="Avec des paquets de jetons",      parties=[E8A, E8B],         parcours="m2e4", pages=2),
+    dict(n=9, t="Le défi",                         parties=[E9A, E9B],         parcours="m2e5", pages=2),
 ]
 
 # --------------------------------------------------------------------- LOT D (21/09/2026)
@@ -122,8 +132,6 @@ CSS_DEFI = """
 .expl{padding:5mm 6mm 4.5mm}
 .expl .intro{font-size:14.5px;margin:3mm 0 3mm}
 .expl .intro span{font-size:12px}
-.expl .atoi{margin:3.5mm 0 0;font-size:12.5px}
-.carte.corr{flex:0 0 70mm}
 .ident .champ{padding:3.5mm 4mm 9mm}
 .som ol{margin-top:2.5mm;gap:3mm 6mm}
 .som li{font-size:12.5px}
@@ -136,9 +144,12 @@ CSS_DEFI = """
 # niveau — le dos du livret normal ne bouge pas.
 CSS_DOS_DEFI = """
 .niveaux{gap:6mm}
-.niv{padding:3.5mm 4mm 3mm;gap:2mm}
-.niv img{width:36mm;height:36mm}
+.niv{padding:3mm 4mm 2.5mm;gap:1.6mm}
+.niv img{width:34mm;height:34mm}
+.lex ul{gap:1.8mm}
 """
+# 26/09/2026 (relecture du monde 2) : QR de 36 à 34 mm et écarts de « Pour se souvenir » resserrés,
+# pour la place de la tache plus grosse, de « TOTAL » et du bloc des logos en bas du dos.
 
 def serie_defi(t1, t2, tmin=50, tmax=100):
     """Une série sans graine, aux réglages du livret « Le défi » : l'élève s'entraîne."""
@@ -152,9 +163,19 @@ NIVEAUX = {
         sortie="livret_splat_classique",
         qr="qr",
         fiches=FICHES,
-        # l'exemple de couverture : une carte à paquets qui n'est pas dans le livret
-        # (mode N, une tache, deux paquets visibles) — choisie le 19/09/2026
-        exemple=dict(query="mode=N&equation=X_PLUS_A_EQ_B&cards=1&seed=5264&unknown=question"),
+        # l'exemple de couverture : une carte à paquets qui n'est pas dans le livret. Jusqu'au
+        # 26/09/2026 : une tache (graine 5264, 16 + ? = 37), une soustraction seulement. Relecture
+        # du monde 2 (Gwenaël) : l'élève doit voir une résolution COMPLÈTE, comme aux fiches 8 et 9
+        # → DEUX taches, les mêmes paquets 10 et 6 (ceux de l'image du bandeau) : 10 + 6 = 16,
+        # 38 − 16 = 22, 22 ÷ 2 = 11 (graine 746 ; aucune carte du livret ne fait 38 à deux taches).
+        exemple=dict(query="mode=N&equation=AX_PLUS_C_EQ_B&tasksMin=2&tasksMax=2"
+                           "&visibleMin=2&visibleMax=2&totalMin=20&totalMax=50"
+                           "&cards=1&seed=746&unknown=question"),
+        # le texte de l'exemple est écrit à partir de la carte (texte_exemple), comme au défi ;
+        # la couverture garde son sur-titre, son accroche et son sommaire
+        couv=dict(sur="Mon livret · Monde 2",
+                  accroche="Le même jeu, un nouveau plateau…<br>et des paquets de jetons&nbsp;!",
+                  css=CSS_DEFI),
         # « Une tache » : total minimum 10 > visibles maximum 9, pour que la tache cache
         # toujours au moins un jeton — en mode élève l'outil écarte les cartes où la tache ne
         # cache rien (8 % des tirages avec les réglages de l'activité 1), et la série n'avait
@@ -179,8 +200,7 @@ NIVEAUX = {
         # du lot K1-bis (« valeur cachée petite ») ne vaut qu'au monde 1.
         exemple=dict(query="mode=N&equation=AX_PLUS_C_EQ_B&tasksMin=3&tasksMax=3"
                            "&visibleMin=2&visibleMax=2&totalMin=50&totalMax=90"
-                           "&cards=1&seed=168&unknown=question",
-                     vb_carte="100 10 1400 940", vb_corr="140 1010 1180 1145"),
+                           "&cards=1&seed=168&unknown=question"),
         couv=dict(sur="Mon livret · Monde 2 · Le défi",
                   accroche="Des paquets, des taches…<br>et des totaux jusqu'à 100&nbsp;!",
                   css=CSS_DEFI),
@@ -301,6 +321,29 @@ JS_BIS = """(titre) => {
 }"""
 
 # ---------------------------------------------------------------------------
+# RELECTURE DU MONDE 2 (26/09/2026) — la check-list du livret du monde 1 (lot 3 de sa relecture) :
+# 1. plus AUCUN logo sur les pages-fiches (ni IREMI ni maths&go) : on retire les blocs
+#    .print-page-logos AU RENDU, jamais dans l'outil (une fiche imprimée depuis le générateur
+#    garde ses deux logos) ; la boîte du QR, posée juste avant eux, passe tout à droite ;
+# (Pas de « page N » : décidé puis retiré le 26/09/2026 au soir — le numéro de fiche du bandeau suffit,
+#  « Fiche 7 » / « Fiche 7 bis ».)
+JS_SANS_LOGO = """() => {
+  const l = document.querySelectorAll('.printArea .print-page-logos');
+  if (!l.length) return 'pas de logos dans le bandeau';
+  l.forEach(e => e.remove());
+  return 'ok';
+}"""
+
+# ---------------------------------------------------------------------------
+# RELECTURE DU MONDE 2 (26/09/2026) — DEUX LIVRETS DE L'ÉLÈVE par niveau, comme les corrigés :
+# inconnue « ? » (le livret d'avant, même nom de fichier) et inconnue en LETTRE (…_lettre.pdf).
+# Même cartes, mêmes QR ; en lettre, chaque carte a sa lettre (celle de son corrigé en lettre,
+# JS_LETTRES pour les cartes à jetons de la fiche 7), écrite dans la case réponse « 𝑡 = …… ».
+ELEVES = [
+    dict(suffixe="",        imprime=None, lettre=False),
+    dict(suffixe="_lettre", imprime=None, lettre=True),
+]
+
 # LES QUATRE LIVRETS DE CORRECTION (lot K2) : { équation, schéma } × { « ? », lettre }.
 CORRECTIONS = [
     dict(suffixe="_correction_equation",        imprime="correction-equation", lettre=False,
@@ -342,25 +385,53 @@ CSS_PROF = """
 .ident .champ.prof small::before{content:"— "}
 """
 
-# L'exemple de couverture : la correction (carte + schéma en barres + équation) de la carte 1 de
-# l'adresse NIVEAUX[…]["exemple"], dessinée par renderCardIntoSvg, en deux fenêtres.
-JS_EXEMPLE = """() => {
-  const sv = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-  sv.setAttribute('viewBox', '0 0 1600 2200');
-  renderCardIntoSvg(sv, cards[0], 'correction');
-  const fond = sv.querySelector('rect');
-  if (fond && fond.getAttribute('width') === '1600') fond.remove();
+# L'exemple de couverture (relecture du monde 2, 26/09/2026) : la carte 1 de l'adresse
+# NIVEAUX[…]["exemple"], dessinée comme sur les fiches — plateau, TOTAL et case réponse
+# « ? = 21 » — puis ses deux corrections courtes 6/page (lot K2) : le schéma en barres et
+# l'équation. Trois images : la carte (même cadrage que sur une fiche), le schéma, l'équation.
+# En lettre, la carte prend 𝑥 (celle du « on l'a appelée 𝑥 » de la couverture).
+JS_EXEMPLE = """(lettre) => {
   const c = cards[0];
-  return {svg: sv.innerHTML, total: c.total, visibles: c.visible, cachees: c.hidden,
-          taches: c._num.tasks, parTache: c._num.H};
+  if (lettre) c.varChar = xChar;
+  const NS = 'http://www.w3.org/2000/svg';
+  const dessin = (part) => {
+    const sv = document.createElementNS(NS, 'svg');
+    sv.setAttribute('width', '2000'); sv.setAttribute('height', '2000');
+    sv.style.position = 'absolute'; sv.style.left = '-5000px';
+    document.body.appendChild(sv);
+    renderSixCorrectionIntoSvg(sv, c, part);
+    const g = sv.querySelector('#sixCorrection');
+    const b = g.getBBox();
+    const m = 24;
+    const vb = [b.x + SIX_CORRECTION_DX - m, b.y + SIX_CORRECTION_DY - m, b.width + 2*m, b.height + 2*m].map(v => Math.round(v)).join(' ');
+    const html = sv.innerHTML;
+    sv.remove();
+    return {html, vb};
+  };
+  const eq = dessin('equation'), sch = dessin('schema');
+  return {eq: eq.html, vbEq: eq.vb, sch: sch.html, vbSch: sch.vb,
+          total: c.total, visibles: c.visible, cachees: c.hidden,
+          taches: c._num.tasks, parTache: c._num.H, lettre: lettre ? xChar : '?'};
 }"""
 
 JS_COUV = """(d) => {
-  const a = document.querySelector('svg.ex-carte'), b = document.querySelector('svg.ex-corr');
-  if (!a || !b) return 'pas de place pour l\\'exemple';
-  a.innerHTML = d.svg; b.innerHTML = d.svg;
-  if (d.vbCarte) a.setAttribute('viewBox', d.vbCarte);
-  if (d.vbCorr) b.setAttribute('viewBox', d.vbCorr);
+  const h = document.querySelector('svg.ex-haut'), sc = document.querySelector('svg.ex-sch'), eq = document.querySelector('svg.ex-eq');
+  if (!h || !sc || !eq) return 'pas de place pour l\\'exemple';
+  h.innerHTML = d.eq; eq.innerHTML = d.eq; sc.innerHTML = d.sch;
+  eq.setAttribute('viewBox', d.vbEq); sc.setAttribute('viewBox', d.vbSch);
+  // la carte seule : on retire la correction courte de sa copie
+  h.querySelectorAll('#sixCorrection').forEach(e => e.remove());
+  if (d.lettre !== '?') {
+    const hero = document.querySelector('.hero-inc');
+    if (!hero) return 'pas de « ? » dans la grande tache';
+    hero.textContent = d.lettre;
+    hero.setAttribute('style', "font-family:SplatLettres,'Times New Roman',serif;font-style:italic;font-weight:400");
+    hero.setAttribute('font-size', '58'); hero.setAttribute('y', '72');
+    const i = document.querySelector('.expl .intro span');
+    if (!i || i.innerHTML.indexOf('on l\\'a symbolisé par un') < 0) return 'phrase du « ? » introuvable';
+    i.innerHTML = i.innerHTML.replace(/on l'a symbolisé par un «(&nbsp;|\\u00a0)<b>\\?<\\/b>(&nbsp;|\\u00a0)»/, "on l'a appelé <b class='lt'>" + d.lettre + "</b>");
+    if (i.innerHTML.indexOf('symbolisé') >= 0) return 'phrase du « ? » non remplacée';
+  }
   if (d.sur){ const e = document.querySelector('.tete .sur'); if(!e) return 'pas de sur-titre'; e.textContent = d.sur; }
   if (d.accroche){ const e = document.querySelector('.tete .accroche'); if(!e) return 'pas d\\'accroche'; e.innerHTML = d.accroche; }
   if (d.intro){ const e = document.querySelector('.expl .intro'); if(!e) return 'pas de texte d\\'exemple'; e.innerHTML = d.intro; }
@@ -389,6 +460,14 @@ JS_DOS = """(d) => {
      '</span><span class="d">' + n[1] + '</span></div>').join('');
   const u = document.querySelector('.suite img');
   if (u) u.setAttribute('src', d.univers);
+  if (d.lettre) {
+    // livret en lettre : la tache est l'inconnue, qu'on nomme avec une lettre (26/09/2026)
+    const t = document.querySelector('.t-inc'), m = document.querySelector('.mini-sch .inc');
+    if (!t || !m) return 'textes du « ? » introuvables au dos';
+    t.innerHTML = "La tache cache un certain nombre de jetons&nbsp;: c'est notre <b>inconnue</b>. On la nomme avec une <b>lettre</b> (<span class='lt'>𝑥</span>, <span class='lt'>𝑎</span>, <span class='lt'>𝑡</span>…)&nbsp;: c'est <b>ce qu'il faut trouver</b>&nbsp;! Lorsque plusieurs taches apparaissent, elles cachent le même nombre de jetons.";
+    m.textContent = '𝑥';
+    m.style.fontWeight = '400'; m.style.fontSize = '15px';
+  }
   // (« Mes fiches — je colorie l'étoile » a quitté le dos : relecture du monde 1, lot 2, 25/09/2026)
   return 'ok';
 }"""
@@ -409,11 +488,12 @@ def texte_exemple(ex):
             f"visibles, qui contiennent {paquets} jetons&nbsp;; {taches}."
             "\n      <span>On a représenté la situation de deux manières&nbsp;: avec un "
             "<b>schéma en barres</b>, et avec une <b>équation</b>. Il faut trouver le nombre de "
-            "jetons derrière une tache, on l'a symbolisé par un «&nbsp;<b>?</b>&nbsp;». Ici, les "
+            "jetons derrière une tache, " + ("on l'a symbolisé par un «&nbsp;<b>?</b>&nbsp;»" if ex["lettre"] == "?"
+                                              else f"on l'a appelé <b class='lt'>{ex['lettre']}</b>") + ". Ici, les "
             f"taches sont transparentes&nbsp;: on voit les {x} jetons que chacune cache. "
-            f"Trois gestes&nbsp;: on <b>additionne</b> les paquets ({somme} = {c}), on "
-            f"<b>soustrait</b> ({t} − {c} = {t - c}), puis on <b>divise</b> "
-            f"({t - c} ÷ {n} = {x}).</span>")
+            f"Trois gestes&nbsp;: on <b>additionne</b> les paquets ({somme.replace(' ', '&nbsp;')}&nbsp;=&nbsp;{c}), on "
+            f"<b>soustrait</b> ({t}&nbsp;−&nbsp;{c}&nbsp;=&nbsp;{t - c}), puis on <b>divise</b> "
+            f"({t - c}&nbsp;÷&nbsp;{n}&nbsp;=&nbsp;{x}).</span>")
 
 
 def fabrique_qr(niv):
@@ -441,8 +521,10 @@ def serveur():
     threading.Thread(target=srv.serve_forever, daemon=True).start()
     return srv
 
-async def pages(niv, tmp, corr=None):
-    """corr : None pour le livret de l'élève, sinon un élément de CORRECTIONS."""
+async def pages(niv, tmp, version):
+    """version : un élément de ELEVES (livret de l'élève, « ? » ou lettre) ou de CORRECTIONS."""
+    corr = version if version.get("imprime") else None
+    lettre = version["lettre"]
     from playwright.async_api import async_playwright
     base = f"http://127.0.0.1:{PORT}"
     qrweb = f"{BASE_WEB}/{niv['qr']}"
@@ -459,8 +541,9 @@ async def pages(niv, tmp, corr=None):
             return pg
 
         # --- l'exemple de la couverture, dessiné par l'outil
-        pg = await page_outil(niv["exemple"]["query"])
-        exemple = await pg.evaluate(JS_EXEMPLE)
+        q_ex = niv["exemple"]["query"]
+        pg = await page_outil(q_ex.replace("unknown=question", "unknown=letter") if lettre else q_ex)
+        exemple = await pg.evaluate(JS_EXEMPLE, lettre)
         await pg.close()
         print(f"   exemple de couverture : total {exemple['total']}, visibles {exemple['visibles']},"
               f" cachés {exemple['cachees']}")
@@ -493,12 +576,12 @@ async def pages(niv, tmp, corr=None):
             # livret de correction : l'outil imprime lui-même sa correction courte 6/page ;
             # en lettre, les mêmes graines avec unknown=letter (les nombres ne changent pas)
             parties = f["parties"]
-            if corr and corr["lettre"]:
+            if lettre:
                 parties = [q.replace("unknown=question", "unknown=letter") for q in parties]
             imprime = corr["imprime"] if corr else "statement"
             pg = await page_outil(f"{parties[0]}&print={imprime}&layout=6&title={titre}")
             etat = await pg.evaluate(JS_FICHE, parties[1:])
-            if corr and corr["lettre"]:
+            if lettre:
                 await pg.evaluate(JS_LETTRES)
             if f["pages"] > 1:
                 r = await pg.evaluate(JS_BIS, f"Fiche {f['n']} bis — {f['t']}")
@@ -517,6 +600,9 @@ async def pages(niv, tmp, corr=None):
             r = await pg.evaluate(JS_PIED, PIED_CORRECTION if corr else PIED_LIVRET)
             if r != "ok":
                 raise SystemExit(f"fiche {f['n']}, pied : {r}")
+            r = await pg.evaluate(JS_SANS_LOGO)
+            if r != "ok":
+                raise SystemExit(f"fiche {f['n']}, logos : {r}")
             await pg.wait_for_timeout(600)
             # marges : celles de la feuille de l'outil (@page 8 mm), comme un professeur
             # qui clique sur Imprimer
@@ -524,8 +610,7 @@ async def pages(niv, tmp, corr=None):
             await pg.close()
             print(f"   fiche {f['n']} : {etat['cartes']} cartes sur {etat['feuilles']} pages")
 
-        couv = dict(exemple, prof=dict(PROF, dit=corr["dit"]) if corr else None,
-                    vbCarte=niv["exemple"].get("vb_carte"), vbCorr=niv["exemple"].get("vb_corr"))
+        couv = dict(exemple, prof=dict(PROF, dit=corr["dit"]) if corr else None)
         if niv.get("couv"):
             # Les textes qui parlent de l'exemple sont ÉCRITS À PARTIR DE LA CARTE rendue :
             # ils ne peuvent pas se décaler si la graine de l'exemple change un jour.
@@ -534,7 +619,8 @@ async def pages(niv, tmp, corr=None):
                 sur=niv["couv"]["sur"],
                 accroche=niv["couv"]["accroche"],
                 intro=texte_exemple(exemple),
-                sommaire=[[f["n"], f["t"], f["resume"]] for f in niv["fiches"]],
+                sommaire=([[f["n"], f["t"], f["resume"]] for f in niv["fiches"]]
+                          if all("resume" in f for f in niv["fiches"]) else None),
                 css=niv["couv"].get("css"),
             )
         await pdf_html(f"{base}{BASE_WEB}/couverture.html", tmp / "p1.pdf", couv=couv)
@@ -542,7 +628,7 @@ async def pages(niv, tmp, corr=None):
             await pdf_fiche(f, tmp / f"fiche{f['n']}.pdf")
         dos = dict(niveaux=[[nom, desc, f"{qrweb}/{img}"] for nom, desc, _, img in niv["dos"]],
                    univers=f"{qrweb}/univers.png",
-                   css=niv.get("css_dos"))
+                   css=niv.get("css_dos"), lettre=lettre)
         await pdf_html(f"{base}{BASE_WEB}/dos.html", tmp / "p8.pdf", dos=dos)
         await nav.close()
 
@@ -609,9 +695,9 @@ def main():
     # restent ainsi toujours rendus avec les mêmes graines et la même version de l'outil.
     if "--eleve" in sys.argv and "--correction" in sys.argv:
         raise SystemExit("--eleve et --correction s'excluent (sans option : tous)")
-    versions = [None] + CORRECTIONS
+    versions = ELEVES + CORRECTIONS
     if "--eleve" in sys.argv:
-        versions = [None]
+        versions = ELEVES
     if "--correction" in sys.argv:
         versions = CORRECTIONS
     srv = serveur()
@@ -622,7 +708,7 @@ def main():
             if "--qr" in sys.argv:
                 fabrique_qr(niv); print("   QR codes régénérés.")
             for corr in versions:
-                cible = dict(niv, sortie=niv["sortie"] + corr["suffixe"]) if corr else niv
+                cible = dict(niv, sortie=niv["sortie"] + corr["suffixe"])
                 with tempfile.TemporaryDirectory() as d:
                     tmp = Path(d)
                     asyncio.run(pages(niv, tmp, corr))

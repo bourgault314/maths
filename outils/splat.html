@@ -13,6 +13,15 @@
 <link rel="icon" type="image/png" sizes="192x192" href="/assets/img/favicon-192.png">
 <link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png">
 <style>
+  /* Les lettres de l'inconnue (𝑥, 𝑎, 𝑏…, lettres mathématiques d'Unicode) : une police à elles,
+     rangée dans le site (26/09/2026, _sources/polices/splat-lettres/). Avant, chaque appareil
+     les prenait dans une police de secours : x rond sur l'un, x droit sur l'autre. Grâce à
+     unicode-range, elle ne sert QUE pour ces lettres — tout le reste du texte garde sa police.
+     Elle est donc placée EN TÊTE de chaque liste de polices de la page. Ses lettres sont déjà
+     penchées et d'une seule graisse : les deux déclarations (droite, italique) et la graisse
+     « 100 900 » empêchent le navigateur de les pencher ou de les grossir une seconde fois. */
+  @font-face{font-family:SplatLettres;src:url('/assets/fonts/SplatLettres-Italic.woff2') format('woff2');font-style:normal;font-weight:100 900;font-display:block;unicode-range:U+1D434-1D467,U+210E}
+  @font-face{font-family:SplatLettres;src:url('/assets/fonts/SplatLettres-Italic.woff2') format('woff2');font-style:italic;font-weight:100 900;font-display:block;unicode-range:U+1D434-1D467,U+210E}
   :root{
     /* THEME (light default) */
     --bg:#f3f4f6;
@@ -63,7 +72,7 @@
     --accent:#6aa7ff;
   }
 
-  *{box-sizing:border-box;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;}
+  *{box-sizing:border-box;font-family:SplatLettres,system-ui,-apple-system,Segoe UI,Roboto,Arial;}
   body{margin:0;background:var(--bg);color:var(--ink);}
 
   header{
@@ -330,7 +339,7 @@
     font-size:21px;
     font-weight:950;
     line-height:1;
-    font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;
+    font-family:SplatLettres,system-ui,-apple-system,Segoe UI,Roboto,Arial;
     transform:translateY(-1px);
     transition:background .12s ease, color .12s ease, box-shadow .12s ease, transform .08s ease;
   }
@@ -5822,7 +5831,7 @@ function drawBarCell(g, x, y, w, h, part, filled, opts={}){
     /* Taches répétées (lot E-repet) : une case « 3 × ? » étroite (six taches dans la barre) —
        la police se réduit jusqu'à ce que le texte tienne dans la case. */
     if(opts.ajuster){
-      const largeur = fs => measureTextWidth(part.label, `950 ${fs}px system-ui, -apple-system, "Segoe UI", Roboto, Arial`);
+      const largeur = fs => measureTextWidth(part.label, `950 ${fs}px SplatLettres, system-ui, -apple-system, "Segoe UI", Roboto, Arial`);
       while(fontSize > 14 && Number.isFinite(largeur(fontSize)) && largeur(fontSize) > w - 10) fontSize -= 1;
     }
     g.appendChild(text(x+w/2, y+h/2+1, part.label, {
@@ -5961,7 +5970,7 @@ function drawRelationOwnerBrace(g, x1, x2, y, label, opts = {}){
   const ownerWord = opts.ownerLabels && ownerSplatColor ? String(opts.ownerWord || label || "").toLowerCase() : "";
   const ownerInitial = opts.ownerLabels && ownerSplatColor ? String(opts.ownerInitial || "") : "";
   const wordFont = f(19);
-  const wordW = ownerWord ? measureTextWidth(ownerWord, `900 ${wordFont}px system-ui, -apple-system, "Segoe UI", Roboto, Arial`) : 0;
+  const wordW = ownerWord ? measureTextWidth(ownerWord, `900 ${wordFont}px SplatLettres, system-ui, -apple-system, "Segoe UI", Roboto, Arial`) : 0;
   // Place disponible : les cases du groupe, plus ce qui est libre à côté (la colonne des
   // noms à gauche pour le premier groupe, le bord du cadre à droite pour le dernier) —
   // la tache de référence, en tête, n'a souvent qu'une case « ? » de 56 px.
@@ -6005,7 +6014,7 @@ function drawRelationOwnerBrace(g, x1, x2, y, label, opts = {}){
        nom de l'accolade d'avant (« 2 rouges ») ; il commence alors au début de sa case. */
     let lx = mid, ancre = "middle";
     if(Number.isFinite(opts.labelDebutMin)){
-      const lw = measureTextWidth(label, `950 ${f(17)}px system-ui, -apple-system, "Segoe UI", Roboto, Arial`);
+      const lw = measureTextWidth(label, `950 ${f(17)}px SplatLettres, system-ui, -apple-system, "Segoe UI", Roboto, Arial`);
       if(Number.isFinite(lw) && mid - lw / 2 < opts.labelDebutMin){ lx = opts.labelDebutMin; ancre = "start"; }
     }
     g.appendChild(text(lx, y+v(33), label, {
@@ -6429,7 +6438,7 @@ function drawRelationAnswerLine(g, card, barX, barW, y, m){
   // taches répétées (lot E-repet) : une fois par couleur (« violette = 7 », pas trois fois)
   const couleurDe = rel.repetees && Array.isArray(rel.repetees.couleurDe) ? rel.repetees.couleurDe : null;
   if(couleurDe) order = order.filter((i, n) => order.findIndex(j => couleurDe[j] === couleurDe[i]) === n);
-  const uiFont = 'system-ui, -apple-system, "Segoe UI", Roboto, Arial';
+  const uiFont = 'SplatLettres, system-ui, -apple-system, "Segoe UI", Roboto, Arial';
   const entries = order.map(i => ({ i, txt:`${investigateColorWord(investigateColorInfo(card, i))} = ${formatRelationNumber(values[i])}` }));
   let fs = f(24);
   const minFs = f(16);
@@ -6626,7 +6635,7 @@ function drawEnqueteDeuxEcritures(targetGroup, card, opts = {}){
   g.appendChild(el("rect",{ x:barX, y:yTop, width:barLen, height:topH, fill:ENQUETE_ECRITURE_FOND, stroke:"#000", "stroke-width":3 }));
   const nomFs = f(26);
   const dotR = f(11);
-  const nomW = measureTextWidth(word, `950 ${nomFs}px system-ui, -apple-system, "Segoe UI", Roboto, Arial`);
+  const nomW = measureTextWidth(word, `950 ${nomFs}px SplatLettres, system-ui, -apple-system, "Segoe UI", Roboto, Arial`);
   const blocW = dotR * 2 + 8 + (Number.isFinite(nomW) && nomW > 0 ? nomW : word.length * nomFs * 0.6);
   const blocX = barX + (barLen - blocW) / 2;
   g.appendChild(el("path",{ d:blobPath(blocX + dotR, yTop + topH/2, dotR), fill:taskSplatColor(m.grande, card), stroke:"rgba(0,0,0,.20)", "stroke-width":1.5, "aria-hidden":"true" }));
@@ -7083,7 +7092,7 @@ function drawBarModelPartsInGroup(g, cx, topY, total, parts, api){
       const xTargetFs = baseFs * 1.2;
       const xMaxFs = Math.max(18, segW * 0.72);
       const fs = String(isX ? Math.min(xTargetFs, xMaxFs) : baseFs);
-      const ff = isX ? "'Times New Roman', Times, serif" : "inherit";
+      const ff = isX ? "SplatLettres, 'Times New Roman', Times, serif" : "inherit";
       const fSt = isX ? "italic" : "normal";
       const fW = isX ? "normal" : "900";
 
@@ -7129,7 +7138,7 @@ function drawBarModelPartsInGroup(g, cx, topY, total, parts, api){
    Renvoie { lines, fontSize }. */
 function layoutClueSentence(txt, fontSize, maxW, wrap){
   const str = String(txt == null ? "" : txt);
-  const font = (fs) => `700 ${fs}px system-ui, -apple-system, "Segoe UI", Roboto, Arial`;
+  const font = (fs) => `700 ${fs}px SplatLettres, system-ui, -apple-system, "Segoe UI", Roboto, Arial`;
   const width = (t, fs) => {
     const w = measureTextWidth(t, font(fs));
     return (Number.isFinite(w) && w > 0) ? w : t.length * fs * 0.56;
@@ -7152,7 +7161,7 @@ function layoutClueSentence(txt, fontSize, maxW, wrap){
 /* Coupe un texte en lignes qui tiennent dans maxW (par mots, mesure dans la police
    dessinée ; secours 0,56 × police par caractère). */
 function wrapTextToWidth(str, fontSize, maxW, weight = 700){
-  const font = `${weight} ${fontSize}px system-ui, -apple-system, "Segoe UI", Roboto, Arial`;
+  const font = `${weight} ${fontSize}px SplatLettres, system-ui, -apple-system, "Segoe UI", Roboto, Arial`;
   const width = (t) => { const w = measureTextWidth(t, font); return (Number.isFinite(w) && w > 0) ? w : t.length * fontSize * 0.56; };
   const words = String(str == null ? "" : str).split(/\s+/).filter(Boolean);
   const lines = [];
@@ -7197,7 +7206,7 @@ function renderMixedClue(targetGroup, cx, cy, seq, mkEl, mkText, isPrint, reveal
   const wordFontOf = (fs) => Math.round(fs * 0.86);
   const wordWidth = (id, fs) => {
     const word = investigateColorWord(investigateColorInfo(card, id));
-    const w = measureTextWidth(word, `700 ${wordFontOf(fs)}px system-ui, -apple-system, "Segoe UI", Roboto, Arial`);
+    const w = measureTextWidth(word, `700 ${wordFontOf(fs)}px SplatLettres, system-ui, -apple-system, "Segoe UI", Roboto, Arial`);
     return Number.isFinite(w) && w > 0 ? w : word.length * wordFontOf(fs) * 0.58;
   };
   const measureAll = (k) => {
@@ -7209,7 +7218,7 @@ function renderMixedClue(targetGroup, cx, cy, seq, mkEl, mkText, isPrint, reveal
       for(let i=0;i<item.val.length;i++) w += (item.val[i]===' ' ? sW : cW);
       if(garderEspaces){
         // largeur mesurée dans la police dessinée : le texte remplit sa case, espaces compris
-        const mesure = measureTextWidth(item.val.replace(/ /g, "\u00a0"), `700 ${Math.round(fs)}px system-ui, -apple-system, "Segoe UI", Roboto, Arial`);
+        const mesure = measureTextWidth(item.val.replace(/ /g, "\u00a0"), `700 ${Math.round(fs)}px SplatLettres, system-ui, -apple-system, "Segoe UI", Roboto, Arial`);
         if(Number.isFinite(mesure) && mesure > 0) w = mesure;
       }
       return { ...item, w };
@@ -7642,12 +7651,12 @@ function sysCorrEtiquette(c, lettres){
 
 /* Largeur d'une ligne de calcul, dans la police où elle est dessinée (italique, graisse 800). */
 function sysCorrLargeurCalcul(t, fs){
-  const w = measureTextWidth(t, `italic 800 ${fs}px system-ui, -apple-system, "Segoe UI", Roboto, Arial`);
+  const w = measureTextWidth(t, `italic 800 ${fs}px SplatLettres, system-ui, -apple-system, "Segoe UI", Roboto, Arial`);
   return Number.isFinite(w) && w > 0 ? w : String(t).length * fs * 0.6;
 }
 /* Le plus grand corps (≤ fs) auquel le texte tient dans la largeur. */
 function sysCorrAjuster(t, fs, largeur, poids, min){
-  const police = f => `${poids || 900} ${f}px system-ui, -apple-system, "Segoe UI", Roboto, Arial`;
+  const police = f => `${poids || 900} ${f}px SplatLettres, system-ui, -apple-system, "Segoe UI", Roboto, Arial`;
   const mesure = f => { const w = measureTextWidth(t, police(f)); return Number.isFinite(w) && w > 0 ? w : String(t).length * f * 0.6; };
   let f = fs;
   while(f > (min || 12) && mesure(f) > largeur) f -= 1;
@@ -7693,7 +7702,7 @@ function drawSysCase(g, x, y, w, h, c, ctx){
   const y1 = avecMot ? y + h * 0.36 : y + h / 2;
   const rT = Math.max(8, Math.min(13 * e, w * 0.13));
   const fs1 = sysCorrAjuster(etiquette, Math.round(32 * e), w - 2 * rT - 18, 900, 16);
-  const larg = (() => { const m = measureTextWidth(etiquette, `900 ${fs1}px system-ui, -apple-system, "Segoe UI", Roboto, Arial`); return Number.isFinite(m) && m > 0 ? m : etiquette.length * fs1 * 0.6; })();
+  const larg = (() => { const m = measureTextWidth(etiquette, `900 ${fs1}px SplatLettres, system-ui, -apple-system, "Segoe UI", Roboto, Arial`); return Number.isFinite(m) && m > 0 ? m : etiquette.length * fs1 * 0.6; })();
   const bloc = 2 * rT + 6 + larg;
   const x0 = x + (w - bloc) / 2;
   g.appendChild(mkEl("path", { d:blobPath(x0 + rT, y1, rT), fill:isPrint ? info.print : info.screen, stroke:"rgba(0,0,0,.25)", "stroke-width":1.5, "aria-hidden":"true" }));
@@ -8794,7 +8803,7 @@ function drawProjectionEquationLine(targetGroup, centerX, cy, lhs, rhs, opts = {
   const fontSize = Number(opts.fontSize) || 46;
   const equalFontSize = Number(opts.equalFontSize) || 42;
   const eqGap = Number(opts.eqGap) || 22;
-  const mathFont = opts.mathFont || "'Times New Roman', Times, serif";
+  const mathFont = opts.mathFont || "SplatLettres, 'Times New Roman', Times, serif";
 
   targetGroup.appendChild(mkText(centerX - eqGap, cy, lhs, {
     "text-anchor":"end",
@@ -8874,7 +8883,7 @@ function measureTextWidth(str, font){
     return _textMeasureContext.measureText(String(str == null ? "" : str)).width;
   }catch(_e){ return NaN; }
 }
-const EQUATION_MATH_FONT = "'Times New Roman', Times, serif";
+const EQUATION_MATH_FONT = "SplatLettres, 'Times New Roman', Times, serif";
 function measureEquationTextWidth(str, fontSize){
   const w = measureTextWidth(str, `italic ${fontSize}px ${EQUATION_MATH_FONT}`);
   return (Number.isFinite(w) && w > 0) ? w : estimatePrintMathTextWidth(str, fontSize);
@@ -8884,13 +8893,13 @@ function measureEquationTextWidth(str, fontSize){
    l'emporte : elles s'affichent et s'impriment dans la police de l'interface, plus
    large d'environ 20 %. Leur place se mesure donc dans cette police-là — sinon, sur la
    correction imprimée, « ? + 3 + ? + 15 + ? = 60 » commençait sur la dernière case. */
-const RELATION_EQUATION_DRAWN_FONT = 'system-ui, -apple-system, "Segoe UI", Roboto, Arial';
+const RELATION_EQUATION_DRAWN_FONT = 'SplatLettres, system-ui, -apple-system, "Segoe UI", Roboto, Arial';
 function measureRelationEquationTextWidth(str, fontSize){
   const w = measureTextWidth(str, `italic ${fontSize}px ${RELATION_EQUATION_DRAWN_FONT}`);
   return (Number.isFinite(w) && w > 0) ? w : Math.round(estimatePrintMathTextWidth(str, fontSize) * 1.2);
 }
 function measureArrowLabelWidth(str, fontSize){
-  const w = measureTextWidth(str, `800 ${fontSize}px system-ui, -apple-system, "Segoe UI", Roboto, Arial`);
+  const w = measureTextWidth(str, `800 ${fontSize}px SplatLettres, system-ui, -apple-system, "Segoe UI", Roboto, Arial`);
   return (Number.isFinite(w) && w > 0) ? w + 2 : estimateArrowLabelWidth(str, fontSize);
 }
 /* Largeurs de cases d'un tableau en barres : proportionnelles aux poids, jamais sous
@@ -9296,7 +9305,7 @@ function drawPrintEquationLinesLikeProjection(targetGroup, lines, opts = {}){
         "font-size":String(fontSize),
         "fill": opts.fill || "#000",
         "font-weight":"normal",
-        "font-family":"'Times New Roman', Times, serif",
+        "font-family":"SplatLettres, 'Times New Roman', Times, serif",
         "font-style":"italic",
         "dominant-baseline":"middle"
       }));
@@ -9343,7 +9352,7 @@ function drawNumberedSignedEquationAid(targetGroup, card, revealState, opts = {}
         "font-size":String(fontSize),
         "fill":"var(--ink)",
         "font-weight":"normal",
-        "font-family":"'Times New Roman', Times, serif",
+        "font-family":"SplatLettres, 'Times New Roman', Times, serif",
         "font-style":"italic",
         "dominant-baseline":"middle"
       }));
@@ -9425,7 +9434,7 @@ function drawUnitSignedEquationAid(targetGroup, card, revealState, opts = {}){
         "font-size":String(fontSize),
         "fill":"var(--ink)",
         "font-weight":"normal",
-        "font-family":"'Times New Roman', Times, serif",
+        "font-family":"SplatLettres, 'Times New Roman', Times, serif",
         "font-style":"italic",
         "dominant-baseline":"middle"
       }));
@@ -9605,8 +9614,8 @@ function renderCardIntoSvg(targetSvg, card, printMode, opts = {}){
     fill:boxFill, stroke:boxStroke, "stroke-width":"4"
   }), g);
 
-  // lot P : en bas de la colonne, la case réponse « tache = ……… » (la valeur en correction)
-  if(opts.sixColonne) drawSixReponseCase(racine, revealAnswers ? sixCorrectionData(card).h : null, tEl, tText);
+  // lot P : en bas de la colonne, la case réponse « ? = ……… » (la valeur en correction)
+  if(opts.sixColonne) drawSixReponseCase(racine, revealAnswers ? sixCorrectionData(card).h : null, tEl, tText, sixReponseInconnue(card));
 
   // L'Enquête imprimée : l'énoncé montre les indices, la correction montre la
   // résolution (dernière étape) — quelle que soit l'étape affichée à l'écran.
@@ -10091,7 +10100,7 @@ function renderCardIntoSvg(targetSvg, card, printMode, opts = {}){
         const printEqFont = fitPrintEquationFontForArrows(plannedLines, printEqOps, 80, { eqGap: 50, margin: 62 });
         const printEqGap = Math.round(printEqFont * 1.4);
         const addEq = (l, r) => {
-            const mathFont = "'Times New Roman', Times, serif";
+            const mathFont = "SplatLettres, 'Times New Roman', Times, serif";
             gBM.appendChild(tText(800 - 50, currentY, l, {"text-anchor":"end", "font-size":String(printEqFont), "fill":"#000", "font-weight":"normal", "font-family":mathFont, "font-style":"italic"}));
             gBM.appendChild(tText(800, currentY, "=", {"text-anchor":"middle", "font-size":String(printEqFont), "fill":"#000", "font-weight":"700"}));
             gBM.appendChild(tText(800 + 50, currentY, r, {"text-anchor":"start", "font-size":String(printEqFont), "fill":"#000", "font-weight":"normal", "font-family":mathFont, "font-style":"italic"}));
@@ -10310,19 +10319,30 @@ function sixColonneFamille(card){
   return !!card && ["U", "UPM", "N", "NPM"].includes(card.family);
 }
 
-/* La case réponse, sur UNE ligne : la petite tache noire du mode élève (ELEVE_TACHE_MINI), « = »,
-   puis des pointillés (8 mm) où l'élève écrit le nombre caché ; en correction, la valeur à leur
-   place (« tache = 3 »). Pas de mot, pas de « ? ». */
-function drawSixReponseCase(hote, valeur, mkEl, mkText){
+/* La case réponse, sur UNE ligne : l'inconnue de la carte, « = », puis des pointillés (8 mm) où
+   l'élève écrit le nombre caché ; en correction, la valeur à leur place (« ? = 3 », « 𝑡 = 3 »).
+   Jusqu'au 26/09/2026 elle commençait par la petite tache noire du mode élève (« tache = 3 ») ;
+   Gwenaël a choisi l'inconnue elle-même, celle que l'élève écrit dans son schéma ou son équation :
+   « ? » avec le réglage « ? », la lettre de la carte avec le réglage 𝑥 (la même que dans la
+   correction de cette carte ; 𝑥 si la carte n'en a pas). */
+function sixReponseInconnue(card){
+  const v = getNumberedDisplayVarChar(card);
+  return (typeof v === "string" && v.trim()) ? v : xChar;
+}
+function drawSixReponseCase(hote, valeur, mkEl, mkText, inconnue = "?"){
   const C = SIX_COLONNE;
   const x = C.colonneX, y = C.plateauY + C.plateauH - C.reponseH, milieu = y + C.reponseH/2;
   const g = mkEl("g",{id:"reponseGroupPrint"});
   g.appendChild(mkEl("rect",{x, y, width:C.colonneW, height:C.reponseH, rx:22, fill:"#fff", stroke:"rgba(0,0,0,0.22)", "stroke-width":"4"}));
   const x0 = x + 30;
-  // la mini-tache fait 96 de large autour de (56, 59) : ramenée à un rayon de 42 autour de (x0 + 42, milieu)
-  const r = 42, k = 2*r/96;
-  const d = (ELEVE_TACHE_MINI.match(/ d="([^"]+)"/) || [])[1] || "";
-  g.appendChild(mkEl("path",{d, fill:"#000", transform:`translate(${x0 + r - 56*k} ${milieu - 59*k}) scale(${k})`}));
+  // l'inconnue, centrée sur x0 + 42 (la place de l'ancienne petite tache) : « ? » en gras comme
+  // les « ? » du schéma, la lettre en SplatLettres (style en ligne : la règle « * » de la page
+  // l'emporte sur l'attribut font-family)
+  const lettre = inconnue !== "?";
+  const police = lettre ? "SplatLettres, 'Times New Roman', Times, serif" : null;
+  g.appendChild(mkText(x0 + 42, milieu + (lettre ? 22 : 30), inconnue, lettre
+    ? {"text-anchor":"middle","font-size":"104","font-weight":"normal","font-style":"italic","fill":"#000","font-family":police,"style":`font-family:${police}`}
+    : {"text-anchor":"middle","font-size":"86","font-weight":"900","fill":"#000"}));
   g.appendChild(mkText(x0 + 122, milieu + 24, "=", {"text-anchor":"middle","font-size":"68","font-weight":"900","fill":"#000"}));
   if(valeur != null){
     g.appendChild(mkText(x0 + 166, milieu + 30, String(valeur), {"text-anchor":"start","font-size":"88","font-weight":"900","fill":"#000"}));
@@ -10463,15 +10483,19 @@ function waitForPrintAssets(root){
 const SIX_CORRECTION_DX = 200, SIX_CORRECTION_DY = SIX_COLONNE.plateauY - 270;
 const SIX_CORRECTION_VIEWBOX = `0 0 ${SIX_COLONNE.largeur} ${1600 + SIX_CORRECTION_DY}`;
 const SIX_CORRECTION_LEFT = -120, SIX_CORRECTION_RIGHT = 1720;
-/* L'équation est écrite en Times italique : la lettre y est une lettre simple (𝑎 → a). */
-const SIX_CORRECTION_PLAIN_LETTER = {"𝑥":"x","𝑎":"a","𝑏":"b","𝑐":"c","𝑚":"m","𝑛":"n","𝑡":"t"};
-/* Encre réelle de chaque lettre en Times italique — [au-dessus, au-dessous] du centre, en em —
-   mesurée dans le Chromium qui fabrique les PDF, avec dominant-baseline="middle" et dy=0.
-   « middle » centre la hauteur d'un « x », pas le dessin de la lettre : la hampe du « b » monte
-   à 0,445 em quand le « x » monte à 0,21. Sans ces mesures, un « b » agrandi traverse le trait
+/* Les lettres de l'inconnue restent les lettres mathématiques de l'outil (𝑥, 𝑎…) : depuis le
+   26/09/2026 elles ont leur police, SplatLettres (en tête de mathFont), la lettre ronde des
+   livrets de l'Enquête. Avant, elles étaient changées en lettres simples (𝑎 → a) en Times
+   italique, pour ne pas dépendre de la police de secours de la machine (lot du 21/09/2026). */
+const SIX_CORRECTION_LETTERS = new Set(["𝑥","𝑎","𝑏","𝑐","𝑚","𝑛","𝑡"]);
+/* Encre réelle de chaque lettre en SplatLettres — [au-dessus, au-dessous] du centre, en em —
+   mesurée dans le Chromium qui fabrique les PDF, avec dominant-baseline="middle" et dy=0
+   (26/09/2026 ; les valeurs d'avant étaient celles du Times italique).
+   « middle » centre la hauteur d'un « x », pas le dessin de la lettre : la hampe du « 𝑏 » monte
+   à 0,465 em quand le « 𝑥 » monte à 0,2125. Sans ces mesures, un « b » agrandi traverse le trait
    du haut de sa case (défaut trouvé par Claude Code le 21/09/2026). La clé "" est le repli :
    une lettre inconnue est traitée comme la plus haute. */
-const SIX_CORRECTION_LETTER_INK = {"x":[0.210,0.250],"a":[0.220,0.260],"b":[0.445,0.260],"c":[0.2225,0.260],"m":[0.2225,0.250],"n":[0.2225,0.250],"t":[0.315,0.260],"":[0.445,0.260]};
+const SIX_CORRECTION_LETTER_INK = {"𝑥":[0.2125,0.240],"𝑎":[0.2125,0.240],"𝑏":[0.465,0.240],"𝑐":[0.2125,0.240],"𝑚":[0.2125,0.240],"𝑛":[0.2125,0.240],"𝑡":[0.395,0.240],"":[0.465,0.240]};
 
 function sixCorrectionPart(printMode){
   if(printMode === "correction-equation") return "equation";
@@ -10515,7 +10539,7 @@ function sixCorrectionData(card){
 
 function drawSixCorrectionEquation(g, card, varChar, mk){
   const d = sixCorrectionData(card);
-  const unknown = SIX_CORRECTION_PLAIN_LETTER[varChar] || varChar;
+  const unknown = varChar;
   const unknownTerm = formatCoeffUnknownTerm(d.tasks, unknown);
   const eqLeft1 = d.vis > 0 ? `${d.vis} + ${unknownTerm}` : unknownTerm;
   const planned = [[eqLeft1, String(d.total)]];
@@ -10532,7 +10556,7 @@ function drawSixCorrectionEquation(g, card, varChar, mk){
   // Times italique pour de vrai : la règle générale « * { font-family } » de la page
   // l'emporte sur l'attribut font-family, pas sur le style en ligne. Les flèches sont
   // placées d'après la largeur du texte en Times (measureEquationTextWidth).
-  const mathFont = "'Times New Roman', Times, serif";
+  const mathFont = "SplatLettres, 'Times New Roman', Times, serif";
   const member = {"font-size":String(font), "fill":"#000", "font-weight":"normal", "font-family":mathFont, "font-style":"italic", "style":`font-family:${mathFont}`};
   const startY = d.trayBottom + 94 + Math.round(font * 0.7);   // 94 = 4 mm sous le plateau
   planned.forEach(([l, r], i) => {
@@ -10571,10 +10595,11 @@ function drawSixCorrectionSchema(g, card, varChar, mk){
      Une seule police pour toutes les lettres, donc, et la taille que drawBarModelPartsInGroup
      réserve au « x » — 1,2 × celle des nombres — bornée par la case la plus étroite du dessin
      ET par la hauteur libre (voir plus bas) : la hampe du « b » demande un peu moins.
-     Avec « ? » (inconnue du cycle 3), « plain » vaut undefined et rien ne change. */
-  const plain = SIX_CORRECTION_PLAIN_LETTER[varChar];
-  const unknown = plain || varChar;
-  const mathFont = "'Times New Roman', Times, serif";
+     Avec « ? » (inconnue du cycle 3), « lettre » est faux et rien ne change.
+     Depuis le 26/09/2026 la lettre reste la lettre mathématique (𝑚), dans SplatLettres. */
+  const lettre = SIX_CORRECTION_LETTERS.has(varChar);
+  const unknown = varChar;
+  const mathFont = "SplatLettres, 'Times New Roman', Times, serif";
   /* La lettre est recentrée sur SON encre (on la redescend de la moitié de son débord vers le
      haut), et sa taille est bornée par la hauteur libre autant que par la largeur de la case :
      même exigence de 0,3 mm de blanc dans les quatre directions. */
@@ -10586,7 +10611,7 @@ function drawSixCorrectionSchema(g, card, varChar, mk){
   const MIN_BLANC = 9.3;
   let letterFont = Math.min(FONT * 1.2, (HALF_IN - MIN_BLANC) / ((ink[0] + ink[1]) / 2));
   function cellText(x, y, t, a = {}){
-    if(!plain || t !== unknown) return mk.text(x, y, t, a);
+    if(!lettre || t !== unknown) return mk.text(x, y, t, a);
     return mk.text(x, y, t, { ...a, "font-size": String(letterFont), "font-family": mathFont,
       "font-style": "italic", "font-weight": "normal", "dy": letterDy.toFixed(4) + "em",
       "style": `font-family:${mathFont}` });
@@ -10636,7 +10661,7 @@ function drawSixCorrectionSchema(g, card, varChar, mk){
     top += SH + GAP;
   });
   const colX = Math.max(...steps.map(([, , x, w]) => x + w)) + 70;
-  const labelFont = (fs) => `700 ${fs}px system-ui, -apple-system, "Segoe UI", Roboto, Arial`;
+  const labelFont = (fs) => `700 ${fs}px SplatLettres, system-ui, -apple-system, "Segoe UI", Roboto, Arial`;
   const longest = calcs.reduce((a, b) => measureTextWidth(b, labelFont(72)) > measureTextWidth(a, labelFont(72)) ? b : a, "");
   let F = 72;
   while(F > 56 && colX + measureTextWidth(longest, labelFont(F)) > SIX_CORRECTION_RIGHT) F -= 2;
@@ -11943,7 +11968,14 @@ if(!loadSharedConfiguration()){
 }
 if(eleveActif && eleveSuite.length) genererSerieComposee();
 else generate();
-if(impressionAuto) printSheet();
+/* La police des lettres (SplatLettres, 26/09/2026) n'est téléchargée qu'au premier « 𝑥 » dessiné :
+   le premier dessin a donc pu mesurer les lettres (flèches, largeur des cases) avec une police de
+   secours. Une fois qu'elle est là, on redessine la carte ; l'impression automatique l'attend. */
+const lettresPretes = (document.fonts && document.fonts.load)
+  ? document.fonts.load("1em SplatLettres", "\u{1D465}").catch(() => [])
+  : Promise.resolve([]);
+lettresPretes.then(() => { if(!eleveActif && cards.length) updateUI(); });
+if(impressionAuto) lettresPretes.then(() => printSheet());
 
 </script>
 </body>

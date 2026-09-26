@@ -24,6 +24,12 @@
     var M2A1 = "mode=U&equation=X_PLUS_A_EQ_B&tasksMin=1&tasksMax=1&visibleMax=15&hiddenMax=10&totalMin=1&totalMax=25&cards=4&seed=974&unknown=question";
     var M2A2 = "mode=U&equation=AX_EQ_B&tasksMin=2&tasksMax=5&hiddenMax=10&totalMin=5&totalMax=25&cards=4&seed=477&unknown=question";
     var M2A3 = "mode=U&equation=AX_PLUS_C_EQ_B&tasksMin=2&tasksMax=5&visibleMax=15&hiddenMax=10&totalMin=5&totalMax=25&cards=4&seed=478&unknown=question";
+    /* Fiches 8 et 9 (relecture du monde 2, 26/09/2026) : deux séries de 6 cartes chacune, comme
+       les étapes 8 et 9 de la carte des mondes (M2E4A/B, M2E5A/B). */
+    var M2E4A = "mode=N&equation=X_PLUS_A_EQ_B&cards=6&seed=347&unknown=question";
+    var M2E4B = "mode=N&equation=AX_EQ_B&tasksMin=2&tasksMax=5&cards=6&seed=260&unknown=question";
+    var M2E5A = "mode=N&equation=AX_PLUS_C_EQ_B&tasksMin=2&tasksMax=5&visibleMin=1&visibleMax=1&cards=6&seed=1673&unknown=question";
+    var M2E5B = "mode=N&equation=AX_PLUS_C_EQ_B&tasksMin=2&tasksMax=5&visibleMin=2&visibleMax=2&cards=6&seed=5974&unknown=question";
 
     /* Lot D (21/09/2026) — le livret « Le défi » : ?f=7d, 8d, 9d. Chaque fiche dure est bâtie
        comme la fiche 7, trois séries de 4 cartes mises bout à bout (paramètre « suite ») :
@@ -45,8 +51,8 @@
     var D9 = [D(2, 6,  51887), D(2, 6, 142961), D(2, 6, 227216)];
     var FICHES = {
       "7": "/splat/classique/?" + M2A1 + "&eleve=1&parcours=m2e1&suite=" + encodeURIComponent(M2A2) + ";" + encodeURIComponent(M2A3),
-      "8": "/splat/classique/?mode=N&equation=X_PLUS_A_EQ_B&cards=12&seed=347&unknown=question&eleve=1&parcours=m2e4",
-      "9": "/splat/classique/?mode=N&equation=AX_PLUS_C_EQ_B&tasksMax=5&cards=12&seed=18&unknown=question&eleve=1&parcours=m2e5",
+      "8": "/splat/classique/?" + M2E4A + "&eleve=1&parcours=m2e4&suite=" + encodeURIComponent(M2E4B),
+      "9": "/splat/classique/?" + M2E5A + "&eleve=1&parcours=m2e5&suite=" + encodeURIComponent(M2E5B),
       "7d": DEFI("m2e1", D7),
       "8d": DEFI("m2e4", D8),
       "9d": DEFI("m2e5", D9)
@@ -60,8 +66,8 @@
   <p>Livret SPLAT! Classique — la série en ligne de chaque fiche&nbsp;:</p>
   <ul>
     <li><a href="/splat/classique/?mode=U&amp;equation=X_PLUS_A_EQ_B&amp;tasksMin=1&amp;tasksMax=1&amp;visibleMax=15&amp;hiddenMax=10&amp;totalMin=1&amp;totalMax=25&amp;cards=4&amp;seed=974&amp;unknown=question&amp;eleve=1&amp;parcours=m2e1&amp;suite=mode%3DU%26equation%3DAX_EQ_B%26tasksMin%3D2%26tasksMax%3D5%26hiddenMax%3D10%26totalMin%3D5%26totalMax%3D25%26cards%3D4%26seed%3D477%26unknown%3Dquestion;mode%3DU%26equation%3DAX_PLUS_C_EQ_B%26tasksMin%3D2%26tasksMax%3D5%26visibleMax%3D15%26hiddenMax%3D10%26totalMin%3D5%26totalMax%3D25%26cards%3D4%26seed%3D478%26unknown%3Dquestion">Fiche 7 — Le même jeu, un nouveau plateau</a></li>
-    <li><a href="/splat/classique/?mode=N&amp;equation=X_PLUS_A_EQ_B&amp;cards=12&amp;seed=347&amp;unknown=question&amp;eleve=1&amp;parcours=m2e4">Fiche 8 — Avec des paquets de jetons</a></li>
-    <li><a href="/splat/classique/?mode=N&amp;equation=AX_PLUS_C_EQ_B&amp;tasksMax=5&amp;cards=12&amp;seed=18&amp;unknown=question&amp;eleve=1&amp;parcours=m2e5">Fiche 9 — Le défi</a></li>
+    <li><a href="/splat/classique/?mode=N&amp;equation=X_PLUS_A_EQ_B&amp;cards=6&amp;seed=347&amp;unknown=question&amp;eleve=1&amp;parcours=m2e4&amp;suite=mode%3DN%26equation%3DAX_EQ_B%26tasksMin%3D2%26tasksMax%3D5%26cards%3D6%26seed%3D260%26unknown%3Dquestion">Fiche 8 — Avec des paquets de jetons</a></li>
+    <li><a href="/splat/classique/?mode=N&amp;equation=AX_PLUS_C_EQ_B&amp;tasksMin=2&amp;tasksMax=5&amp;visibleMin=1&amp;visibleMax=1&amp;cards=6&amp;seed=1673&amp;unknown=question&amp;eleve=1&amp;parcours=m2e5&amp;suite=mode%3DN%26equation%3DAX_PLUS_C_EQ_B%26tasksMin%3D2%26tasksMax%3D5%26visibleMin%3D2%26visibleMax%3D2%26cards%3D6%26seed%3D5974%26unknown%3Dquestion">Fiche 9 — Le défi</a></li>
     <li><a href="/splat/classique/?mode=N&amp;equation=AX_PLUS_C_EQ_B&amp;tasksMin=2&amp;tasksMax=2&amp;visibleMin=2&amp;visibleMax=3&amp;totalMin=50&amp;totalMax=100&amp;cards=4&amp;seed=211017&amp;unknown=question&amp;eleve=1&amp;parcours=m2e1&amp;suite=mode%3DN%26equation%3DAX_PLUS_C_EQ_B%26tasksMin%3D3%26tasksMax%3D3%26visibleMin%3D2%26visibleMax%3D3%26totalMin%3D50%26totalMax%3D100%26cards%3D4%26seed%3D116475%26unknown%3Dquestion;mode%3DN%26equation%3DAX_PLUS_C_EQ_B%26tasksMin%3D4%26tasksMax%3D4%26visibleMin%3D2%26visibleMax%3D3%26totalMin%3D50%26totalMax%3D100%26cards%3D4%26seed%3D231266%26unknown%3Dquestion">Fiche 7 — Des paquets, et plusieurs taches <em>(livret Le défi)</em></a></li>
     <li><a href="/splat/classique/?mode=N&amp;equation=AX_PLUS_C_EQ_B&amp;tasksMin=4&amp;tasksMax=4&amp;visibleMin=2&amp;visibleMax=3&amp;totalMin=50&amp;totalMax=100&amp;cards=4&amp;seed=204080&amp;unknown=question&amp;eleve=1&amp;parcours=m2e4&amp;suite=mode%3DN%26equation%3DAX_PLUS_C_EQ_B%26tasksMin%3D5%26tasksMax%3D5%26visibleMin%3D2%26visibleMax%3D3%26totalMin%3D50%26totalMax%3D100%26cards%3D4%26seed%3D241600%26unknown%3Dquestion;mode%3DN%26equation%3DAX_PLUS_C_EQ_B%26tasksMin%3D6%26tasksMax%3D6%26visibleMin%3D2%26visibleMax%3D3%26totalMin%3D50%26totalMax%3D100%26cards%3D4%26seed%3D87925%26unknown%3Dquestion">Fiche 8 — Encore plus de taches <em>(livret Le défi)</em></a></li>
     <li><a href="/splat/classique/?mode=N&amp;equation=AX_PLUS_C_EQ_B&amp;tasksMin=2&amp;tasksMax=6&amp;visibleMin=2&amp;visibleMax=3&amp;totalMin=50&amp;totalMax=100&amp;cards=4&amp;seed=51887&amp;unknown=question&amp;eleve=1&amp;parcours=m2e5&amp;suite=mode%3DN%26equation%3DAX_PLUS_C_EQ_B%26tasksMin%3D2%26tasksMax%3D6%26visibleMin%3D2%26visibleMax%3D3%26totalMin%3D50%26totalMax%3D100%26cards%3D4%26seed%3D142961%26unknown%3Dquestion;mode%3DN%26equation%3DAX_PLUS_C_EQ_B%26tasksMin%3D2%26tasksMax%3D6%26visibleMin%3D2%26visibleMax%3D3%26totalMin%3D50%26totalMax%3D100%26cards%3D4%26seed%3D227216%26unknown%3Dquestion">Fiche 9 — Le grand défi <em>(livret Le défi)</em></a></li>

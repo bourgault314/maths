@@ -61,14 +61,12 @@ test("C. au dos, IREMI puis maths&go une seule fois, à droite du crédit, l'Uni
   assert.match(dos, /<footer class="pied">mathsgo\.re\/splat · CC BY-NC-SA 4\.0<\/footer>/);
 });
 
-test("D. « page N » au coin extérieur des pages 2 à 7, sur la ligne du pied", () => {
-  assert.match(render, /\.num-page\{position:absolute;bottom:-4\.6mm;font-size:12\.5px;font-weight:900;color:#0f172a;/);
-  assert.match(render, /\.num-page\.impaire\{right:1mm\}/);
-  assert.match(render, /\.num-page\.paire\{left:1mm\}/);
-  assert.match(render, /d\.className = 'num-page ' \+ \(n % 2 \? 'impaire' : 'paire'\);/);
-  assert.match(render, /d\.textContent = 'page ' \+ n;/);
-  // la fiche N est la page N+1 ; la couverture (p. 1) et le dos (p. 8) ne sont pas numérotés
-  assert.match(render, /injecter=f"\{qrweb\}\/fiche\{f\['n'\]\}\.png",\s*numero=f\['n'\] \+ 1\)/);
-  assert.doesNotMatch(render, /couverture\.html", tmp \/ "p1\.pdf"[^\n]*numero/);
-  assert.doesNotMatch(render, /dos\.html", tmp \/ "p8\.pdf"[^\n]*numero/);
+test("D. plus de « page N » : retiré le 26/09/2026 au soir (doublon du numéro de fiche du bandeau)", () => {
+  /* Le lot 3 avait posé « page N » au coin extérieur des pages 2 à 7 (réponse D3). À la relecture
+     du monde 2, Gwenaël l'a fait retirer : le numéro de fiche du bandeau suffit, et au monde 1,
+     où une fiche tient sur une page, « page 3 » tombait sur la fiche 2. */
+  assert.doesNotMatch(render, /num-page|JS_NUMERO|CSS_NUMERO|numero=/);
+  assert.match(render, /await pdf\(url, tmp \/ f"p\{f\['n'\]\+1\}\.pdf", injecter=f"\{qrweb\}\/fiche\{f\['n'\]\}\.png"\)/);
+  const r2 = readFileSync(new URL("../_sources/livret-splat-classique/render.py", import.meta.url), "utf8");
+  assert.doesNotMatch(r2, /num-page|JS_NUMERO|CSS_NUMERO/);
 });

@@ -159,38 +159,56 @@ test("lot P : en 6/page (A, A±, B, B±), TOTAL et case réponse dans une colonn
   assert.match(rend, /targetSvg = tEl\("g",\{id:"plateauSixPrint", transform:`translate\(\$\{SIX_COLONNE\.plateauX - printTray\.x\} \$\{SIX_COLONNE\.plateauY - trayY\}\)`\}\);/);
   assert.match(rend, /if\(opts\.sixColonne\)\{ tx = SIX_COLONNE\.colonneX \+ SIX_COLONNE\.colonneW\/2; ty = SIX_COLONNE\.plateauY \+ 70; \}/);
   assert.match(rend, /let boxW = opts\.sixColonne \? SIX_COLONNE\.colonneW : 280;/);
-  assert.match(rend, /if\(opts\.sixColonne\) drawSixReponseCase\(racine, revealAnswers \? sixCorrectionData\(card\)\.h : null, tEl, tText\);/);
+  assert.match(rend, /if\(opts\.sixColonne\) drawSixReponseCase\(racine, revealAnswers \? sixCorrectionData\(card\)\.h : null, tEl, tText, sixReponseInconnue\(card\)\);/);
 
-  // la case réponse, exécutée : « tache = ……… » sur une ligne, en bas de la colonne
-  const mini = html.match(/^const ELEVE_TACHE_MINI = [^\n]*;/m)[0];
-  const dessiner = Function("valeur", `${mini}
+  /* la case réponse, exécutée : « ? = ……… » ou « 𝑛 = ……… » sur une ligne, en bas de la colonne.
+     Relecture du monde 2 (26/09/2026) : l'inconnue elle-même remplace la petite tache du lot P —
+     « ? » avec le réglage « ? », la lettre de la carte avec le réglage 𝑥, en SplatLettres. */
+  const dessiner = Function("valeur", "inconnue", `
     const SIX_COLONNE = ${JSON.stringify(C)};
     ${functionSource("drawSixReponseCase", "printSheet")}
     const el = (nom, a = {}) => ({ nom, a, enfants: [], t: "", appendChild(e){ this.enfants.push(e); return e; } });
     const text = (x, y, t, a = {}) => { const e = el("text", { x, y, ...a }); e.t = t; return e; };
     const hote = el("svg");
-    drawSixReponseCase(hote, valeur, el, text);
-    return { g: hote.enfants[0], d: (ELEVE_TACHE_MINI.match(/ d="([^"]+)"/) || [])[1] };`);
-  const vide = dessiner(null);
+    drawSixReponseCase(hote, valeur, el, text, inconnue);
+    return { g: hote.enfants[0] };`);
+  const vide = dessiner(null, "?");
   assert.equal(vide.g.a.id, "reponseGroupPrint");
-  const [cadre, tache, egal, pointilles] = vide.g.enfants;
+  const [cadre, inc, egal, pointilles] = vide.g.enfants;
   assert.deepEqual([cadre.a.x, cadre.a.y + cadre.a.height, cadre.a.width], [C.colonneX, C.plateauY + C.plateauH, 400], "calée sur le bas du plateau");
-  assert.equal(tache.nom, "path");
-  assert.ok(vide.d.length > 100 && tache.a.d === vide.d, "la mini-tache du mode élève");
-  assert.equal(tache.a.fill, "#000");
+  assert.deepEqual([inc.nom, inc.t], ["text", "?"], "l'inconnue « ? » en tête de la case");
+  assert.equal(inc.a["font-weight"], "900");
+  assert.equal(inc.a.fill, "#000");
   assert.deepEqual([egal.nom, egal.t], ["text", "="]);
+  assert.ok(inc.a.x < egal.a.x, "l'inconnue avant le signe égal");
   assert.equal(pointilles.nom, "line");
   assert.equal(pointilles.a["stroke-dasharray"], "0.1 18");
   // 8 mm de pointillés environ (case de 88 mm pour 2000 unités), sur la ligne du « = »
   const mm = (pointilles.a.x2 - pointilles.a.x1) * 88 / 2000;
   assert.ok(mm >= 7 && mm <= 9, `${mm.toFixed(1)} mm de pointillés`);
   assert.ok(pointilles.a.x2 <= C.colonneX + 400 - 30);
-  assert.equal(vide.g.enfants.filter(e => e.nom === "text").length, 1, "pas de mot, pas de « ? »");
+  assert.equal(vide.g.enfants.filter(e => e.nom === "text").length, 2, "l'inconnue et le signe égal, pas de mot");
+  // en lettre : la lettre de la carte, en SplatLettres donnée en style en ligne
+  const lettre = dessiner(null, "𝑛").g.enfants[1];
+  assert.equal(lettre.t, "𝑛");
+  assert.match(lettre.a.style, /font-family:SplatLettres, 'Times New Roman', Times, serif/);
+  assert.equal(lettre.a["font-style"], "italic");
   // en correction courte (lot K2) : la valeur à la place des pointillés
-  const corr = dessiner(3);
-  assert.deepEqual(corr.g.enfants.map(e => e.nom), ["rect", "path", "text", "text"]);
+  const corr = dessiner(3, "?");
+  assert.deepEqual(corr.g.enfants.map(e => e.nom), ["rect", "text", "text", "text"]);
   assert.equal(corr.g.enfants[3].t, "3");
   assert.ok(corr.g.enfants[3].a.x > egal.a.x, "le nombre à côté du signe égal");
+
+  // l'inconnue de la case : celle de la correction de la carte (getNumberedDisplayVarChar)
+  const inconnueDe = Function("mode", `
+    const xChar = "𝑥"; const numberedQuestionMarkMode = mode;
+    ${functionSource("getCardVarChar", "isVariableLabel")}
+    ${functionSource("getNumberedDisplayVarChar", "formatCoeffUnknownTerm")}
+    ${functionSource("sixReponseInconnue", "drawSixReponseCase")}
+    return sixReponseInconnue;`);
+  assert.equal(inconnueDe(true)({ family:"N", varChar:"𝑛" }), "?");
+  assert.equal(inconnueDe(false)({ family:"N", varChar:"𝑛" }), "𝑛");
+  assert.equal(inconnueDe(false)({ family:"U" }), "𝑥", "une carte sans lettre prend 𝑥");
 });
 
 test("à l'impression, les cadres sont gris foncé sur fond blanc (cases et plateau)", () => {
@@ -241,15 +259,16 @@ test("le pied de page imprimé est lisible en photocopie et décollé des cartes
   assert.match(html, /\.printArea\.print-2up \.sheet\{height:calc\(210mm - 16mm\);padding:3mm 4mm 0\.5mm\}/);
 });
 
-test("les 5 liens 📄 Fiche du monde 2 impriment l'énoncé seul à 6 par page", () => {
+test("les 7 liens 📄 Fiche du monde 2 impriment l'énoncé seul à 6 par page", () => {
   assert.match(univers, /const FICHE="&print=statement&layout=6&imprimer=1&title=";/);
-  assert.match(univers, /seed=347&unknown=question&print=statement&layout=6&imprimer=1"/);
-  assert.match(univers, /seed=18&unknown=question&print=statement&layout=6&imprimer=1"/);
   // plus aucun tableau fourni sur les fiches du monde 2 ; le monde 5 (Équations) garde les siens
   const m2 = univers.slice(univers.indexOf('cls:"m2"'), univers.indexOf('cls:"m3"'));
   assert.doesNotMatch(m2, /print=worksheet/);
-  assert.equal((m2.match(/layout=6/g) || []).length, 2 + 0); // étapes 8 et 9 ; l'étape 7 passe par FICHE
-  assert.equal((m2.match(/\+FICHE\+/g) || []).length, 3);
+  // tous les liens passent par FICHE : les trois activités de l'étape 7, puis, depuis la relecture du
+  // monde 2 (26/09/2026), les deux séries de 6 cartes des étapes 8 et 9
+  assert.equal((m2.match(/layout=6/g) || []).length, 0);
+  assert.equal((m2.match(/\+FICHE\+/g) || []).length, 7);
+  for (const c of ["M2E4A", "M2E4B", "M2E5A", "M2E5B"]) assert.match(m2, new RegExp(`f:SC\\+"\\?"\\+${c}\\+FICHE\\+`), c);
   // les liens élève (j) et de projection (jp) ne portent aucun réglage d'impression
   for(const m of m2.matchAll(/\b(j|jp):SC\+"([^"]*)"/g)){
     assert.doesNotMatch(m[2], /print=|layout=|imprimer=/);
