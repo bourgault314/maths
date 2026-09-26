@@ -74,10 +74,14 @@ dessinait des jetons.
 - QR : `qr/dessin/`, `qr/dessin-avance/`, `qr/dessin-expert/`. Chaque fiche valide l'étoile
   de l'étape du monde 1 qui lui ressemble le plus (m1e1, m1e4, puis m1e5).
 - Graines (26/09/2026) : mêmes règles que plus bas, plus : jetons posés sur les 9 cartes de la
-  fiche 1 (l'exemple : au moins 2 posés et 3 cachés) ; exactement 4 cartes sans jetons aux
+  fiche 1 (l'exemple : au moins 2 posés et 3 cachés) ; exactement 3 cartes sans jetons aux
   fiches 2 et 3, exactement 2 aux fiches 4 à 6 ; les 3 cartes guidées cachent au moins 2
   jetons par tache ; 2, 3 et 4 taches aux fiches 3 et 4 ; au moins 4 nombres de taches aux
   fiches 5 et 6 ; aucun 69 ; plancher 4 jetons au niveau Monde 1.
+- Couverture (26/09/2026 au soir) : les deux exemples « Avec des jetons posés » / « Sans jeton
+  posé » chacun dans son cadre, puis « ATTENTION ! » (dans un cadre noir, pas de crayon) « Dans ce
+  livret, tu ne dessines jamais de jetons. Quand aucun jeton n'est posé autour des taches, ils sont
+  tous cachés dessous. »
 - Régénérer : `python _sources/livret-petit-splat/render.py dessin dessin_avance dessin_expert --qr`
   puis les miniatures (page 1 à 120 dpi, `assets/img/thumbnails/splat/livret-petit-splat-dessin*.png/.webp`).
 

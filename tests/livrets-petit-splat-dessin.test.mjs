@@ -121,7 +121,11 @@ test("render.py : les 6 fiches « je fais le schéma en barres », dans l'ordre 
   assert.match(render, /f"&sansjetons=\{f\['sansjetons'\]\}" if f\.get\("sansjetons"\)/);
   assert.match(render, /\+ "&qr=0"/, "un seul QR par page : celui du livret");
   // la couverture (idées de Gwenaël) : deux exemples « ? = … », avec et sans jetons posés, puis la règle
-  assert.match(render, /Tu n'as <b>aucun jeton à dessiner<\/b>\. Quand aucun jeton n'est posé autour "\s*"des taches, ils sont tous cachés dessous\."/);
+  assert.match(render, /'<b class="attention">ATTENTION&nbsp;!<\/b> Dans ce livret, tu ne dessines '\s*"<b>jamais de jetons<\/b>\. Quand aucun jeton n'est posé autour "\s*"des taches, ils sont tous cachés dessous\."/);
+  assert.ok(!/REGLE_DESSIN = \(\s*["']✏/.test(render), "pas de crayon devant une phrase qui dit de ne pas dessiner");
+  /* les deux exemples chacun dans son cadre, « ATTENTION ! » dans un cadre noir (noir et blanc) */
+  assert.match(render, /\.duo \.ex\{border:1\.4px solid #94a3b8;border-radius:6px;padding:2\.5mm 3mm 3mm\}/);
+  assert.match(render, /\.expl \.regle \.attention\{display:inline-block;border:1\.4px solid #0f172a;/);
   assert.match(render, /intro="Sous chaque carte, <b>fais le schéma en barres<\/b>, puis écris ta réponse&nbsp;: <b>\?&nbsp;=&nbsp;…<\/b>"/);
   assert.match(render, /titres=\["Avec des jetons posés", "Sans jeton posé"\]/);
   assert.match(render, /'<div class="rep"><span>\?&nbsp;=&nbsp;' \+ e\.hp \+ '<\/span><\/div>/);

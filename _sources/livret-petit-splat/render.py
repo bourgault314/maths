@@ -120,7 +120,11 @@ FICHES_DESSIN = [
 # La couverture : « Comment ça marche ? » montre ce que l'élève fait sous chaque carte (idée de
 # Gwenaël, 26/09/2026). « Je fais le schéma en barres » et pas « je dessine » : dans les autres
 # livrets, l'élève dessinait des JETONS (fiches « Dessine les jetons »).
-REGLE_DESSIN = ("✏️ Tu n'as <b>aucun jeton à dessiner</b>. Quand aucun jeton n'est posé autour "
+# Retour de Gwenaël (26/09 au soir) : « Dans ce livret, tu ne dessines jamais de jetons » (valable
+# pour tout le livret, pas pour une carte), et pas de crayon devant une phrase qui dit de ne PAS
+# dessiner : « ATTENTION ! » dans un cadre noir, lisible imprimé en noir et blanc (choix B).
+REGLE_DESSIN = ('<b class="attention">ATTENTION&nbsp;!</b> Dans ce livret, tu ne dessines '
+                "<b>jamais de jetons</b>. Quand aucun jeton n'est posé autour "
                 "des taches, ils sont tous cachés dessous.")
 COUV_DESSIN = dict(
     intro="Sous chaque carte, <b>fais le schéma en barres</b>, puis écris ta réponse&nbsp;: <b>?&nbsp;=&nbsp;…</b>",
@@ -398,6 +402,7 @@ JS_EXEMPLE = """([target, splatMode, visMin, visMax, hpMin, hpMax, totMin]) => {
 CSS_REGLE = """
 .expl .regle{margin:5mm 0 0;padding-top:3.5mm;border-top:1.4px dashed #94a3b8;font-size:13.5px;line-height:1.4;color:#1e3a5f}
 .expl .regle b{font-weight:700}
+.expl .regle .attention{display:inline-block;border:1.4px solid #0f172a;border-radius:4px;padding:0 1.6mm;margin-right:1.2mm;font-size:12.5px;letter-spacing:0.3px;color:#0f172a}
 """
 
 # COUVERTURE DES LIVRETS « JE FAIS LE SCHÉMA EN BARRES » (26/09/2026, idée de Gwenaël) :
@@ -425,10 +430,12 @@ JS_DEUX_EXEMPLES = """([target, profils]) => profils.map((p, k) => {
 
 CSS_DEUX_EXEMPLES = """
 .expl .intro.dessin{margin:3mm 0 3.5mm}
-.duo{display:grid;grid-template-columns:1fr 1fr;gap:6mm}
+/* les deux exemples chacun dans son cadre (choix 2 de Gwenaël, 26/09 au soir : « sépare mieux ») */
+.duo{display:grid;grid-template-columns:1fr 1fr;gap:5mm}
+.duo .ex{border:1.4px solid #94a3b8;border-radius:6px;padding:2.5mm 3mm 3mm}
 .duo .ex .t{font-size:13px;font-weight:700;color:#334155;margin-bottom:1.8mm}
 .duo .rang{display:flex;align-items:center;gap:2.5mm}
-.duo .cp{position:relative;flex:0 0 40mm;border:1.4px solid #0f172a;border-radius:4px;padding:1.4mm;background:#fff}
+.duo .cp{position:relative;flex:0 0 35mm;border:1.4px solid #0f172a;border-radius:4px;padding:1.4mm;background:#fff}
 .duo .cp .tot{position:absolute;top:1.6mm;right:1.6mm;border:1.5px solid #0f172a;border-radius:3px;padding:0.2mm 1.6mm;font-size:15px;font-weight:700;background:#fff}
 .duo .cp svg{width:100%;height:auto;display:block}
 .duo .fl{font-size:15px;color:#c2410c}
