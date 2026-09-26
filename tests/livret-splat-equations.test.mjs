@@ -289,12 +289,14 @@ test("Q3 : dans les PDF — la couverture de chaque livret, les fiches 35 à 37 
 });
 
 // ------------------------------------------------ les règles des documents du collège
-test("Q3 : un seul logo maths&go par page, signature et licence au pied, lisible en noir et blanc", () => {
+test("Q3 : couverture et dos sans logo, signature et licence au pied, lisible en noir et blanc", () => {
+  // relecture du monde 1, lot 2 (25/09/2026) : plus aucun logo sur la couverture ni sur le dos ;
+  // les pages-fiches (et l'exemple de la page 2) gardent IREMI + maths&go dans leur en-tête
   for (const [nom, t] of [["couverture", couv], ["dos", dos]]) {
-    assert.equal((t.match(/logos\/mathsgo\/logo-print\.png/g) || []).length, 1, `${nom} : un seul logo maths&go`);
+    assert.doesNotMatch(t, /logos\/(?:mathsgo|irem)\/logo-print\.png/, `${nom} : aucun logo`);
     assert.match(t, /<footer class="pied">mathsgo\.re\/splat · CC BY-NC-SA 4\.0<\/footer>/, nom);
-    assert.match(t, /alt="IREMI La Réunion"/, nom);
   }
+  assert.match(dos, /avec l'IREMI de La Réunion/, "le crédit du pied du dos garde l'IREMI");
   const css = lire(SRC + "commun.css");
   assert.match(css, /\.pied\{[^}]*font-size:10px;[^}]*color:#64748b;/);
   // le teal ne sert qu'aux fonds : aucun texte teal clair sur du blanc (#115e59 pour le texte)
@@ -372,18 +374,20 @@ test("page des livrets : l'onglet du monde 5, ses deux livrets, leurs couverture
     assert.ok(taille(webp) < taille(png), `${nom} : la WebP est plus légère`);
     const b = readFileSync(new URL(`../${png}`, import.meta.url));
     assert.deepEqual([b.readUInt32BE(16), b.readUInt32BE(20)], [993, 1404], `${nom} : page 1 rendue à 120 dpi`);
-    assert.ok(p.includes(`src="/assets/img/thumbnails/splat/${nom}.png?v=1"`), `${nom} : sur la page`);
+    assert.ok(p.includes(`src="/assets/img/thumbnails/splat/${nom}.png?v=2"`), `${nom} : sur la page`);
   }
 });
 
-test("carte des mondes, vue prof : les deux livrets sous le monde 5, et le lien vers leur onglet", () => {
+test("carte des mondes, vue prof : un seul lien sous le monde 5, vers l'onglet de ses livrets", () => {
   const b = univers.match(/\(m===MONDE_EQUATIONS&&PROF\?'<p class="intro">'[\s\S]*?<\/p>':''\)\+/);
-  assert.ok(b, "bloc des pastilles du monde 5 introuvable");
-  for (const s of SORTIES) {
-    assert.ok(b[0].includes(`href="/outils/${s}.pdf"`), s);
-    assert.ok(b[0].includes(`href="/outils/${s}_a_plier.pdf"`), s + "_a_plier");
-  }
-  assert.ok(b[0].includes('<a href="/outils/livrets_splat.html#monde-5">Voir la page des livrets</a>'));
+  assert.ok(b, "bloc du lien du monde 5 introuvable");
+  // relecture du monde 1, lot 2 (25/09/2026) : comme au monde 1, un seul lien ; les PDF sont sur la
+  // page des livrets
+  assert.ok(b[0].includes('<a class="introLien livret" href="/outils/livrets_splat.html#monde-5">\\ud83d\\udcda Les livrets du monde 5</a>'));
+  assert.equal((b[0].match(/class="introLien/g) || []).length, 1, "un seul lien");
+  for (const s of SORTIES) assert.ok(!b[0].includes(`href="/outils/${s}.pdf"`), `${s} : plus de bouton de PDF`);
+  assert.doesNotMatch(b[0], /bord court|recto-verso/, "la note ne parle plus d'impression");
+  for (const s of SORTIES) assert.ok(pageLivrets.includes(`href="/outils/${s}.pdf"`), `${s} : sur la page des livrets`);
   assert.match(univers, /\.monde\.m3 \.introLien\.livret\{color:#115e59;background:#e6f7f6;border-color:#9fdcd9\}/);
 });
 
@@ -485,7 +489,7 @@ test("Q4 : page des livrets — les corrigés du monde 5 repliés sous chaque li
   assert.match(catalogue, /le livret à plier, et le livret corrigé, à donner aux élèves/);
   assert.doesNotMatch(pageLivrets, /pour les mondes 1 à 4/);
   assert.doesNotMatch(lire("outils/toutes-les-ressources.html"), /pour les mondes 1 à 4, les livrets corrigés/);
-  assert.match(lire("outils/index.html"), /catalogue-refonte-data\.js\?v=splat-livrets-systeme-20260925-3/, "le cache-buster du catalogue suit");
+  assert.match(lire("outils/index.html"), /catalogue-refonte-data\.js\?v=splat-relecture-m1-lot2-20260925-1/, "le cache-buster du catalogue suit");
 });
 
 /* ------------------------------------------------------------------ lot Q5 (25/09/2026)
@@ -590,7 +594,7 @@ const SERIES_DEFI = {
   d1: OUTIL + "mode=EQSTEP&form=ONE_SIDE&tasksMax=6&visibleMin=2&visibleMax=3&totalMin=50&totalMax=100&cards=6&unknown=letter&jouer=1",
   d2: OUTIL + "mode=EQSTEP&form=BOTH&tasksMax=6&visibleMin=2&visibleMax=3&totalMin=50&totalMax=100&cards=6&unknown=letter&jouer=1",
 };
-test("Q5 : le dos du défi — deux QR de 32 mm (?s=d1, d2), six équations au hasard aux réglages du défi, sans étoile", () => {
+test("Q5 : le dos du défi — deux QR de 36 mm (?s=d1, d2), six équations au hasard aux réglages du défi, sans étoile", () => {
   for (const [s, attendue] of Object.entries(SERIES_DEFI)) {
     assert.equal(cibleCourte(`?s=${s}`), attendue, `?s=${s}`);
     assert.ok(existe(`${SRC}qr/serie-${s}.png`), `qr/serie-${s}.png`);
@@ -599,7 +603,7 @@ test("Q5 : le dos du défi — deux QR de 32 mm (?s=d1, d2), six équations au h
   assert.ok(render.includes('"d1": [sans_graine(defi("ONE_SIDE", 6, 0), SERIE_CARTES)],'));
   assert.ok(render.includes('"d2": [sans_graine(defi("BOTH", 6, 0), SERIE_CARTES)],'));
   assert.match(render, /DOS_DEFI = \[\("D'un seul côté", [^\n]+"d1"\),\n\s+\("Des deux côtés", [^\n]+"d2"\)\]/);
-  assert.match(render, /CSS_DOS_DEFI = """\n\.niveaux\{gap:6mm\}\n\.niv\{padding:3\.5mm 4mm 3mm;gap:2mm\}\n\.niv img\{width:32mm;height:32mm\}\n"""/);
+  assert.match(render, /CSS_DOS_DEFI = """\n\.niveaux\{gap:6mm\}\n\.niv\{padding:3\.5mm 4mm 3mm;gap:2mm\}\n\.niv img\{width:36mm;height:36mm\}\n"""/);
   assert.ok(render.includes('await pdf_html("dos.html", tmp / "p8.pdf", JS_DOS, dos, v.get("css_dos"))'));
   // les liens de repli des fiches du défi
   for (const qr of Object.keys(DEFI)) assert.ok(courte.includes(`href="${cibleCourte(`?f=${qr}`).replace(/&/g, "&amp;")}"`), `lien de repli ${qr}`);
@@ -667,17 +671,17 @@ test("Q5 : la page des livrets et la carte des mondes — « Le défi » au mond
   assert.ok(existe(png) && existe(webp) && taille(webp) < taille(png));
   const im = readFileSync(new URL(`../${png}`, import.meta.url));
   assert.deepEqual([im.readUInt32BE(16), im.readUInt32BE(20)], [993, 1404], "page 1 rendue à 120 dpi");
-  assert.ok(carte.includes(`src="/${png}?v=1"`));
+  assert.ok(carte.includes(`src="/${png}?v=2"`)); // refaite au lot 2 de la relecture du monde 1 (couverture sans logo)
   assert.match(p, /Et un troisième, «&nbsp;Le défi&nbsp;»/);
-  // carte des mondes, vue prof : les pastilles du défi sous le monde 5, comme au monde 2
+  // carte des mondes, vue prof : la note du monde 5 présente « Le défi » (le lien mène à la page
+  // des livrets, relecture du monde 1, lot 2)
   const bloc5 = univers.match(/\(m===MONDE_EQUATIONS&&PROF\?'<p class="intro">'[\s\S]*?<\/p>':''\)\+/)[0];
-  assert.ok(bloc5.includes(`href="/outils/${DEFI_SORTIE}.pdf"`) && bloc5.includes(`href="/outils/${DEFI_SORTIE}_a_plier.pdf"`));
-  assert.ok(bloc5.includes("Livret Le d\\u00e9fi, 50 \\u00e0 100 (PDF)"));
+  assert.ok(bloc5.includes("Le livret <b>Le d\\u00e9fi</b> reprend les trois fiches avec l\\u2019\\u00e9quation"));
   // le catalogue le dit, et son cache-buster suit
   const catalogue = lire("assets/js/catalogue-refonte-data.js");
-  assert.match(catalogue, /SPLAT! Équations \(monde 5\) en trois livrets : schéma en barres, équation, et « Le défi »\."/);
-  assert.match(catalogue, /plus un livret « Le défi », des totaux de 50 à 100\./);
-  assert.match(lire("outils/index.html"), /catalogue-refonte-data\.js\?v=splat-livrets-systeme-20260925-3/);
+  assert.match(catalogue, /SPLAT! Équations \(monde 5\) en trois livrets : schéma en barres, équation, et «\u00a0Le défi\u00a0»\."/);
+  assert.match(catalogue, /plus un livret «\u00a0Le défi\u00a0», des totaux de 50 à 100\./);
+  assert.match(lire("outils/index.html"), /catalogue-refonte-data\.js\?v=splat-relecture-m1-lot2-20260925-1/);
 });
 
 test("Q5 : ÉquaSplat ne reprend une série interrompue que si c'est la même (empreinte)", () => {

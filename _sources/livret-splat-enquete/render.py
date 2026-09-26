@@ -548,16 +548,14 @@ JS_DOS = """(d) => {
   if (qs.some(b => Math.abs(b.width - qs[0].width) > 0.3)) return 'mini-schéma : les cases « ? » n’ont pas toutes la même largeur';
   if (Math.abs(qs[1].left - qs[0].left) > 0.3) return 'mini-schéma : les deux barres ne partent pas du même bord';
   const cases = [...m.querySelectorAll('span')].map(e => e.getBoundingClientRect());
+  // le bloc « Pour se souvenir » est agrandi d'un coup (zoom, lot 2 de la relecture du monde 1) :
+  // les mesures sont faites dans l'espace agrandi, le chevauchement de 1,3 px des bordures aussi
+  const Z = parseFloat(getComputedStyle(document.querySelector('.lex ul')).zoom) || 1;
   for (let i = 1; i < cases.length; i++)
-    if (Math.abs(cases[i].left - (cases[i - 1].right - 1.3)) > 0.3) return 'mini-schéma : des cases de la barre ne se touchent pas';
+    if (Math.abs(cases[i].left - (cases[i - 1].right - 1.3 * Z)) > 0.3 * Z) return 'mini-schéma : des cases de la barre ne se touchent pas';
   const ic = m.closest('.ic').getBoundingClientRect();
   if (cases[cases.length - 1].right > ic.right + 0.3) return 'mini-schéma : il déborde de sa colonne';
-  const c = document.querySelectorAll('.prog .g .c');
-  if (c.length !== d.fiches.length) return 'Mes fiches : ' + c.length + ' cases';
-  d.fiches.forEach((t, i) => {
-    c[i].querySelector('.badge b').textContent = t[0];
-    c[i].querySelector('.ti').textContent = t[1];
-  });
+  // (« Mes fiches — je colorie l'étoile » a quitté le dos : relecture du monde 1, lot 2, 25/09/2026)
   return 'ok';
 }"""
 
@@ -800,8 +798,7 @@ async def rendre(niv, tmp, corr=None):
         d = niv["dos"]
         dos = dict(niveaux=[[nom, desc, f"{qrweb}/serie-{s}.png"] for nom, desc, s in d["series"]],
                    univers=f"{qrweb}/univers.png", suite=d["suite"], reformule=d["reformule"],
-                   mini=d["mini"], ecart=d["ecart"], taches=d.get("taches"),
-                   fiches=[[f["n"], f["t"]] for f in niv["fiches"]])
+                   mini=d["mini"], ecart=d["ecart"], taches=d.get("taches"))
         await pdf_html(f"{base}{BASE_WEB}/dos.html", tmp / "dos.pdf", JS_DOS, dos)
         await nav.close()
     return ex["cle"], cles

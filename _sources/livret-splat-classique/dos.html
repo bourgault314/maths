@@ -4,9 +4,6 @@
 <style>
 .tete{position:relative;height:52mm;flex:0 0 auto}
 .tete .fond{position:absolute;inset:0;width:210mm;height:52mm;display:block}
-.tete .logos{position:absolute;top:5mm;right:11mm;display:flex;align-items:center;gap:5mm}
-.tete .logos img.irem{height:14mm}
-.tete .logos img.mg{height:12mm}
 .tete .bloc{position:absolute;left:14mm;top:9mm}
 .tete .sur{font-size:12.5px;font-weight:700;color:#dbeafe;text-transform:uppercase;letter-spacing:2.6px}
 .tete h1{margin:1.5mm 0 0;font-size:44px;line-height:1;font-weight:700;color:#fff;letter-spacing:-1.5px}
@@ -14,15 +11,19 @@
 .encore{margin-top:1mm}
 .encore .intro{font-size:12.5px;color:#334155;margin:3mm 0 3.5mm}
 .niveaux{display:flex;gap:4mm}
+/* 4e de couverture, relecture du monde 1, lot 2 (25/09/2026) : plus de logo en haut, plus de
+   « Mes fiches — je colorie l'étoile » (« aucun élève qui le fait »). La place libérée sert à
+   aérer, sans rien ajouter : QR plus grands, « Pour se souvenir » plus gros. Mêmes réglages
+   dans les cinq familles de livrets. */
 .niv{flex:1;border:1.4px solid #5b6574;border-radius:8px;padding:3mm 2mm 2.5mm;display:flex;flex-direction:column;align-items:center;text-align:center;gap:1.6mm}
-.niv img{width:21mm;height:21mm;display:block}
+.niv img{width:30mm;height:30mm;display:block}
 .niv .n{font-size:12.5px;font-weight:700;color:#063b7a}
 .niv .d{font-size:9.8px;color:#475569;line-height:1.25}
 .suite{display:flex;align-items:center;gap:4.5mm;border:1.4px solid #5b6574;border-radius:8px;padding:3.5mm 5mm}
-.suite img{width:22mm;height:22mm;flex:0 0 auto;display:block}
+.suite img{width:30mm;height:30mm;flex:0 0 auto;display:block}
 .suite h3{margin:0 0 1.2mm;font-size:15px;font-weight:700;color:#063b7a}
 .suite p{margin:0;font-size:12px;line-height:1.35;color:#334155}
-.lex ul{list-style:none;margin:3.5mm 0 0;padding:0;display:flex;flex-direction:column;gap:3.6mm}
+.lex ul{list-style:none;margin:3.5mm 0 0;padding:0;display:flex;flex-direction:column;gap:3.6mm;zoom:1.25}
 .lex li{display:flex;align-items:center;gap:5mm;font-size:13px;color:#0f172a;line-height:1.3}
 .lex .ic{flex:0 0 30mm;display:flex;justify-content:center;align-items:center}
 .lex b{color:#063b7a}
@@ -37,18 +38,6 @@
 .mini-sch .b div{border:1.4px solid #0f172a;border-top:none;height:6mm;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700}
 .mini-sch .b .v{flex:7;color:#2563eb;background:#fff}
 .mini-sch .b .c{flex:6;border-left:none;background:#e2e8f0}
-.prog .g{display:grid;grid-template-columns:repeat(3,1fr);gap:4mm;margin-top:3.5mm}
-.prog .c{border:1.4px solid #5b6574;border-radius:8px;padding:2.5mm 3mm;display:grid;grid-template-columns:auto 1fr auto;grid-template-rows:auto auto;align-items:center;column-gap:3mm;row-gap:1.5mm}
-.prog .badge{position:relative;width:9.5mm;height:9.5mm;flex:0 0 auto}
-.prog .badge svg{position:absolute;inset:0;width:9.5mm;height:9.5mm}
-.prog .badge b{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#fff;font-size:12.5px}
-.prog .ti{grid-column:2/4;font-size:11.5px;font-weight:700;color:#0f172a;line-height:1.2}
-.prog .badge{grid-row:1/3}
-.prog .etoile{grid-column:2;justify-self:start}
-.prog .da{grid-column:3}
-.prog .etoile{width:8mm;height:8mm;flex:0 0 auto}
-.prog .da{font-size:10px;color:#475569;display:flex;align-items:flex-end;gap:1.2mm;flex:0 0 auto}
-.prog .da i{display:inline-block;font-style:normal;border-bottom:1px solid #94a3b8;width:6mm;height:5mm}
 .credits{text-align:center;font-size:10.5px;line-height:1.55;color:#475569;border-top:1px solid #e2e8f0;padding-top:3.5mm;padding-bottom:3mm}
 .credits b{color:#0f172a}
 .credits .steve{color:#0b4f8a;font-weight:700}
@@ -67,10 +56,6 @@
       C77,38 73,47 64,46 C55,45 52,36 43,37
       C34,38 30,47 21,46 C13,45 7,40 0,35 Z"/>
   </svg>
-  <div class="logos">
-    <img class="irem" src="/assets/img/logos/irem/logo-print.png" alt="IREMI La Réunion">
-    <img class="mg" src="/assets/img/logos/mathsgo/logo-print.png" alt="maths&amp;go">
-  </div>
   <div class="bloc">
     <div class="sur">Le livret est fini&nbsp;?</div>
     <h1>Et après&nbsp;?</h1>
@@ -104,15 +89,6 @@
       <li><span class="ic"><svg width="30" height="30" viewBox="2 5 106 105" aria-hidden="true"><use href="#tacheBadge" fill="#000"/></svg></span><span>La tache cache un certain nombre de jetons&nbsp;: c'est notre <b>inconnue</b>, le <b>?</b>, <b>ce qu'il faut trouver</b>&nbsp;! Lorsque plusieurs taches apparaissent, elles cachent le même nombre de jetons.</span></li>
       <li class="atoi"><span class="ic"><span class="mini-sch"><span class="h">37</span><span class="b"><div class="v">16</div><div class="c">?</div></span></span></span><span><b>Sous chaque carte, c'est à toi</b>&nbsp;: dessine le schéma en barres ou écris l'équation, puis trouve ce que cache la tache — comme l'exemple de la couverture.</span></li>
     </ul>
-  </div>
-
-  <div class="prog">
-    <span class="chip">Mes fiches — je colorie l'étoile quand c'est fini</span>
-    <div class="g">
-      <div class="c"><span class="badge"><svg viewBox="2 5 106 105" fill="#063b7a"><use href="#tacheBadge"/></svg><b>7</b></span><span class="ti">Le même jeu, un nouveau plateau</span><svg class="etoile" viewBox="0 0 24 24"><path d="M12 2.6l2.9 5.9 6.5.9-4.7 4.6 1.1 6.5L12 17.4 6.2 20.5l1.1-6.5L2.6 9.4l6.5-.9z" fill="none" stroke="#063b7a" stroke-width="1.4" stroke-linejoin="round"/></svg><span class="da">le <i></i> / <i></i></span></div>
-      <div class="c"><span class="badge"><svg viewBox="2 5 106 105" fill="#063b7a"><use href="#tacheBadge"/></svg><b>8</b></span><span class="ti">Avec des paquets de jetons</span><svg class="etoile" viewBox="0 0 24 24"><path d="M12 2.6l2.9 5.9 6.5.9-4.7 4.6 1.1 6.5L12 17.4 6.2 20.5l1.1-6.5L2.6 9.4l6.5-.9z" fill="none" stroke="#063b7a" stroke-width="1.4" stroke-linejoin="round"/></svg><span class="da">le <i></i> / <i></i></span></div>
-      <div class="c"><span class="badge"><svg viewBox="2 5 106 105" fill="#063b7a"><use href="#tacheBadge"/></svg><b>9</b></span><span class="ti">Le défi</span><svg class="etoile" viewBox="0 0 24 24"><path d="M12 2.6l2.9 5.9 6.5.9-4.7 4.6 1.1 6.5L12 17.4 6.2 20.5l1.1-6.5L2.6 9.4l6.5-.9z" fill="none" stroke="#063b7a" stroke-width="1.4" stroke-linejoin="round"/></svg><span class="da">le <i></i> / <i></i></span></div>
-    </div>
   </div>
 
   <div class="credits">

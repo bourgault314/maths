@@ -154,12 +154,14 @@ DOS = [("Un par un",      "Les jetons un par un, comme la fiche&nbsp;35.",  "1")
        ("Des deux côtés", "Des taches des deux côtés, comme la fiche&nbsp;37.", "3")]
 DOS_DEFI = [("D'un seul côté", "Des paquets et jusqu'à six taches, des totaux de 50 à 100, comme les fiches&nbsp;35 et&nbsp;36.", "d1"),
             ("Des deux côtés", "Des taches des deux côtés, des totaux de 50 à 100, comme la fiche&nbsp;37.", "d2")]
-# Le dos du défi : deux séries au lieu de trois, donc deux cases plus larges et des QR de 32 mm
-# (26 mm à trois). Injecté pour ce seul livret : le dos des deux livrets de base ne bouge pas.
+# Le dos du défi : deux séries au lieu de trois, donc deux cases plus larges et des QR de 36 mm
+# (30 mm à trois ; 32 et 26 mm avant le lot 2 de la relecture du monde 1, 25/09/2026, qui a
+# retiré « Mes fiches » du dos pour agrandir les QR). Injecté pour ce seul livret : le dos des
+# deux livrets de base ne bouge pas.
 CSS_DOS_DEFI = """
 .niveaux{gap:6mm}
 .niv{padding:3.5mm 4mm 3mm;gap:2mm}
-.niv img{width:32mm;height:32mm}
+.niv img{width:36mm;height:36mm}
 """
 
 def cible_serie(s):
@@ -519,9 +521,7 @@ JS_DOS = """(d) => {
     li[i + 1].querySelector('.ic').innerHTML = ic;
     li[i + 1].querySelectorAll(':scope > span')[1].innerHTML = txt;
   });
-  const f = document.querySelectorAll('.prog .g .c');
-  if (f.length !== d.fiches.length) return 'Mes fiches : ' + f.length + ' cases';
-  d.fiches.forEach((t, i) => { f[i].querySelector('.badge b').textContent = t[0]; f[i].querySelector('.ti').textContent = t[1]; });
+  // (« Mes fiches — je colorie l'étoile » a quitté le dos : relecture du monde 1, lot 2, 25/09/2026)
   return 'ok';
 }"""
 
@@ -751,8 +751,7 @@ async def pages(v, tmp, jeu, corr=None):
             raise SystemExit("l'exemple a changé : refaire les petits dessins du dos (MINI_SCH…, « 3𝑥 + 12 = 27 », v[\"dessins\"])")
         souvenir = [(ic.replace("𝑥", ex["variable"]), txt) for ic, txt in v["souvenir"]]
         dos = dict(niveaux=[[nom, desc, f"{qrweb}/serie-{s}.png"] for nom, desc, s in v["dos"]],
-                   univers=f"{qrweb}/univers.png", souvenir=souvenir,
-                   fiches=[[f["n"], f["t"]] for f in v["fiches"]])
+                   univers=f"{qrweb}/univers.png", souvenir=souvenir)
         await pdf_html("dos.html", tmp / "p8.pdf", JS_DOS, dos, v.get("css_dos"))
         await nav.close()
     return ex, cartes_livret

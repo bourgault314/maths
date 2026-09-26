@@ -2494,7 +2494,7 @@ function renderEleve(main) {
     main.innerHTML = '';
     elevePaveSynchroniser(); /* plus de carte à l'écran : le pavé s'efface, puis revient avec elle */
     if (getProblemType() !== 'classic') {
-        main.innerHTML = '<div class="eleve-scene"><p class="eleve-consigne">Le parcours élève n\u2019existe pas encore pour les enquêtes et relations.<br>Choisis « Petit Splat classique » pour y jouer dès maintenant.</p></div>';
+        main.innerHTML = '<div class="eleve-scene"><p class="eleve-consigne">Le parcours élève n\u2019existe pas encore pour les enquêtes et relations.<br>Choisis «\u00a0Petit Splat classique\u00a0» pour y jouer dès maintenant.</p></div>';
         return;
     }
     if (eleveIdx === 0 && eleveSerie.length === 0) {

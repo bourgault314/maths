@@ -217,8 +217,8 @@ test("adresse : noTotal=1&repeat=3 se lit et se réécrit ; une seule case : les
 test("panneau : aucune case en plus ; les deux cases ne se grisent plus l'une l'autre ; les réglages des cartes répétées restent actifs", () => {
   assert.doesNotMatch(html, /id="invMelange/, "pas de case en plus");
   assert.doesNotMatch(html, /id="invNoTotal" checked|id="invRepeatOn" checked/, "éteintes par défaut");
-  assert.match(html, /Cochée avec « Taches répétées » : les deux sortes de cartes se mélangent\."><input type="checkbox" id="invNoTotal">/);
-  assert.match(html, /Cochée avec « Sans total » : les deux sortes de cartes se mélangent\."><input type="checkbox" id="invRepeatOn">/);
+  assert.match(html, /Cochée avec «&nbsp;Taches répétées&nbsp;» : les deux sortes de cartes se mélangent\."><input type="checkbox" id="invNoTotal">/);
+  assert.match(html, /Cochée avec «&nbsp;Sans total&nbsp;» : les deux sortes de cartes se mélangent\."><input type="checkbox" id="invRepeatOn">/);
   const sync = fn("syncSettingsUI");
   assert.doesNotMatch(sync, /invRepeatOnEl\.disabled|invNoTotalEl\.disabled/);
   assert.match(sync, /\[invTaskCountEl, invStructure3El, invVisibleMinEl, invVisibleMaxEl\]\.forEach\(c => \{ if\(c\) c\.disabled = sansTotal && !repetees; \}\);/);

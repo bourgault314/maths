@@ -116,7 +116,7 @@ test("modes A et B seulement ; « Pages » passe à 6/page et se grise, puis rev
   // 4/page et montre les deux corrections qui tiennent en 6/page
   assert.match(resume, /if\(sixRefuse && kind === "table" && plan\.recto === "correction" && !plan\.verso\)\{/);
   assert.ok(resume.includes("La correction complète ne tient qu’en 4 par page : elle partira en 4/page. "));
-  assert.ok(resume.includes("En 6/page, choisissez « Correction : l’équation » ou « Correction : le schéma »."));
+  assert.ok(resume.includes("En 6/page, choisissez «\\u00a0Correction : l’équation\\u00a0» ou «\\u00a0Correction : le schéma\\u00a0»."));
 });
 
 test("la feuille : bandeau « — Correction », cadre de consigne de l'énoncé gardé, plateau à la même place", () => {
