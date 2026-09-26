@@ -15,6 +15,8 @@
 <link rel="icon" type="image/png" sizes="32x32" href="/assets/img/favicon-32.png">
 <link rel="icon" type="image/png" sizes="192x192" href="/assets/img/favicon-192.png">
 <link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png">
+<!-- La liste des mondes « en préparation » et la clé de Gwenaël (?essai=1) : en tête de assets/js/splat-etapes.js -->
+<script src="../assets/js/splat-etapes.js?v=20260926-1"></script>
 <style>
 :root{
   --page:#f6f8fb; --paper:#ffffff; --ink:#10294a; --muted:#5c6c82; --line:#d9e2ec;
@@ -233,6 +235,10 @@ main{max-width:980px;margin:0 auto;padding:10px 14px 60px}
 .monde.enprepa .head{filter:saturate(.35);opacity:.85}
 .monde.enprepa .etapes,.monde.enprepa .desc{opacity:.5}
 .monde.enprepa .badge{cursor:default}
+/* Monde en préparation (26/09/2026, liste dans assets/js/splat-etapes.js) : le bandeau
+   grisé, qui ne s'ouvre pas, et une phrase — ni étape, ni lien. */
+.monde.cache>.head{cursor:default}
+.monde .prepa{margin:0;padding:8px 18px 16px;font-size:14px;font-weight:750;color:var(--muted)}
 .actions .partie{display:inline-flex;align-items:center;gap:6px;flex-wrap:wrap;font-size:13px;font-weight:750;color:var(--muted);
   background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:4px 10px 4px 12px}
 .actions .partie a{min-height:36px;padding:6px 11px}
@@ -272,6 +278,7 @@ footer a{color:var(--blue)}
   .monde .head h2{font-size:29px}
   .monde .head .stars{font-size:17px}
   .monde .desc{font-size:16.5px}
+  .monde .prepa{font-size:16.5px}
   .etape h3{font-size:20.5px}
   .etape .forme{font-size:14.5px}
   .etape .obj{font-size:16px}
@@ -708,6 +715,17 @@ function idEtape(m,e,ei){return e.id||(m.idp+"-"+ei);}
 /* ============ mémorisation locale (best-effort) ============ */
 const PROF = new URLSearchParams(window.location.search).get("prof") === "1";
 if (PROF) document.body.classList.add("prof");
+/* Mondes « en préparation » (26/09/2026) : la liste et la clé de Gwenaël sont en tête de
+   assets/js/splat-etapes.js (LA ligne à changer pour remettre un monde en public). Un monde
+   caché garde sa place et son numéro sur la carte, mais n'a plus ni étape ni lien, en vue
+   élève comme en vue prof ; il ne compte pas dans les étoiles, et « Continuer » et ?apres=
+   le sautent. Avec la clé (?essai=1), rien ne change. Si le fichier ne se charge pas,
+   rien n'est caché. */
+const SPLAT_ETAPES=window.MathsGoSplatEtapes||null;
+MONDES.forEach((m,mi)=>{ m.cache=!!(SPLAT_ETAPES&&SPLAT_ETAPES.mondeCache(mi+1)); });
+function jouable(m){return m.actif&&!m.cache;}
+const PREPA_BANDEAU="\ud83d\udea7 en pr\u00e9paration";
+const PREPA_PHRASE="Ce monde est en pr\u00e9paration\u00a0: il arrive bient\u00f4t\u00a0!";
 const KEY="mathsgo-splat-univers";
 const KEY_PARCOURS="mathsgo-splat-parcours"; /* écrite par les outils en mode « Parcours élève » */
 function lireFaits(){try{return JSON.parse(localStorage.getItem(KEY))||{}}catch(_e){return{}}}
@@ -799,6 +817,19 @@ MONDES.forEach((m,mi)=>{
   const sec=document.createElement("section");
   sec.className="monde "+m.cls+((m.actif||PROF)?"":" enprepa");
   sec.id="monde-"+(mi+1);
+  if(m.cache){ /* en préparation : le bandeau (qui ne s'ouvre pas) et une phrase — aucun lien */
+    compteur+=m.etapes.length;
+    sec.className="monde "+m.cls+" enprepa cache";
+    sec.innerHTML=
+     '<div class="head">'+
+       '<svg class="blob" viewBox="0 0 110 110"><use href="#tacheEtoile" width="110" height="110" fill="rgba(255,255,255,.92)"/></svg>'+
+       '<div class="t"><div class="num">Monde '+(mi+1)+'</div><h2>'+m.nom+'</h2></div>'+
+       '<div class="stars">'+PREPA_BANDEAU+'</div>'+
+     '</div>'+
+     '<p class="prepa">'+PREPA_PHRASE+'</p>';
+    main.append(sec);
+    return;
+  }
   const ids=m.etapes.map((e,ei)=>idEtape(m,e,ei));
   sec.innerHTML=
    '<div class="head" role="button" tabindex="0" aria-expanded="true" aria-controls="corps'+mi+'">'+
@@ -885,7 +916,7 @@ function majAffichage(){
   let total=0,fait=0,prochaine=null;
   const parcours=lireParcours();
   MONDES.forEach((m,mi)=>{
-    if(!m.actif) return;
+    if(!jouable(m)) return;
     let f=0;
     m.etapes.forEach((e,ei)=>{
       total++;
@@ -943,7 +974,7 @@ function ouvrirMonde(mi){
   document.querySelectorAll("main>.monde").forEach((sec,i)=>{
     const ouvert=i===mi;
     sec.classList.toggle("replie",!ouvert);
-    sec.querySelector(".head").setAttribute("aria-expanded",ouvert?"true":"false");
+    if(!sec.classList.contains("cache")) sec.querySelector(".head").setAttribute("aria-expanded",ouvert?"true":"false");
   });
 }
 function mondeEnCours(prochaine){
@@ -953,12 +984,14 @@ function mondeEnCours(prochaine){
     if(sec) return [...document.querySelectorAll("main>.monde")].indexOf(sec);
   }
   const retenu=mondeRetenu();
-  if(retenu>=0) return retenu;
+  if(retenu>=0&&!MONDES[retenu].cache) return retenu; /* un monde passé en préparation ne se rouvre pas seul */
   if(PROF) return 0; /* vue prof : le monde 1, sauf adresse précise ou monde retenu */
-  return prochaine?prochaine.mi:MONDES.length-1;
+  if(prochaine) return prochaine.mi;
+  const jouables=MONDES.map((m,mi)=>jouable(m)?mi:-1).filter(mi=>mi>=0);
+  return jouables.length?jouables[jouables.length-1]:MONDES.length-1;
 }
 document.addEventListener("click",ev=>{
-  const head=ev.target.closest("main>.monde>.head");
+  const head=ev.target.closest("main>.monde:not(.cache)>.head");
   if(!head) return;
   const sec=head.parentElement, mondes=[...document.querySelectorAll("main>.monde")];
   const mi=sec.classList.contains("replie")?mondes.indexOf(sec):-1;
@@ -1003,7 +1036,11 @@ if (PROF) {
 (function(){
   const apres=new URLSearchParams(window.location.search).get("apres");
   if(!apres||PROF) return;
-  const suite=MONDES.flatMap(m=>m.actif?m.etapes:[]);
+  /* Mondes en préparation (26/09/2026), comme le bouton de assets/js/splat-etapes.js :
+     sans la clé, on les saute ; un élève venu d'un QR déjà imprimé dans un monde en
+     préparation continue dans CE monde, jusqu'à sa dernière étape. */
+  const ici=MONDES.find(m=>m.actif&&m.etapes.some(e=>e.p===apres));
+  const suite=ici&&ici.cache?ici.etapes:MONDES.flatMap(m=>jouable(m)?m.etapes:[]);
   const k=suite.findIndex(e=>e.p===apres);
   if(k>=0&&k+1<suite.length&&suite[k+1].j){
     /* au retour sur la carte, c'est le monde de l'étape suivante qui s'ouvrira */

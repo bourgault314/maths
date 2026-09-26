@@ -13,6 +13,8 @@
 <link rel="icon" type="image/png" sizes="192x192" href="/assets/img/favicon-192.png">
 <link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png">
 <script>document.documentElement.className += " js";</script>
+<!-- La liste des mondes « en préparation » et la clé de Gwenaël (?essai=1) : en tête de assets/js/splat-etapes.js -->
+<script src="../assets/js/splat-etapes.js?v=20260926-1"></script>
 <style>
 :root{
   --page:#f6f8fb; --paper:#ffffff; --ink:#10294a; --muted:#5c6c82; --line:#d9e2ec;
@@ -53,7 +55,7 @@ main{max-width:980px;margin:0 auto;padding:18px 14px 40px}
    fiches sur 1). Rangement : jusqu'à 4 mondes sur une ligne ; à 5 ou 6 (data-n sur la barre), deux
    lignes de 3. Sur téléphone : deux cartes par ligne. */
 .onglets{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));grid-auto-rows:1fr;gap:12px;margin:16px 0 0;padding:0}
-.onglets[data-n="5"],.onglets[data-n="6"]{grid-template-columns:repeat(3,minmax(0,1fr))}
+.onglets[data-n="3"],.onglets[data-n="5"],.onglets[data-n="6"]{grid-template-columns:repeat(3,minmax(0,1fr))}
 .onglets[data-n="5"] a::after,.onglets[data-n="6"] a::after{content:none!important} /* deux lignes : pas de pointe */
 .onglets a{position:relative;display:flex;align-items:center;gap:12px;min-height:44px;padding:12px 14px 12px 12px;
   border-radius:14px;text-decoration:none;background:var(--paper);color:var(--ink);
@@ -96,6 +98,13 @@ main{max-width:980px;margin:0 auto;padding:18px 14px 40px}
    la seconde le rétablit dès que le script d'en-tête a posé la classe « js ». */
 .panneau[hidden]{display:block}
 html.js .panneau[hidden]{display:none}
+/* Mondes « en préparation » (26/09/2026) : leur carte et leurs livrets sont cachés, avec ou
+   sans JavaScript. La liste qui compte est celle de assets/js/splat-etapes.js : le script du
+   bas pose ou retire « data-prepa » d'après elle (et la clé ?essai=1 les montre tous) ; les
+   « data-prepa » écrits dans la page ne servent qu'aux navigateurs sans JavaScript
+   (tests/splat-mondes-en-preparation.test.mjs vérifie qu'ils suivent la liste). */
+.panneau[data-prepa],#onglets a[data-prepa]{display:none}
+.prepaPhrase{margin:12px 0 0;font-size:14px;font-weight:700;color:var(--muted)}
 .monde-nom{margin:20px 0 0;font-size:21px;line-height:1.2;color:var(--c-fonce)}
 .chapo{margin:6px 0 0;font-size:15px;line-height:1.45;color:var(--ink);font-weight:600;
   border-left:4px solid var(--c);padding-left:12px}
@@ -183,7 +192,7 @@ footer a{font-weight:700}
   .note{margin-top:12px}
 }
 @media (max-width:820px){
-  .onglets,.onglets[data-n="5"],.onglets[data-n="6"]{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+  .onglets,.onglets[data-n="3"],.onglets[data-n="5"],.onglets[data-n="6"]{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
   /* deux lignes de cartes : la pointe tomberait entre les deux, sur l'autre monde */
   .onglets a[aria-selected="true"]::after{content:none}
 }
@@ -231,10 +240,11 @@ footer a{font-weight:700}
   <nav class="onglets" id="onglets" data-n="5" role="tablist" aria-label="Les mondes de l’univers SPLAT!">
     <a href="#monde-1" data-m="1" id="onglet-1" role="tab" aria-controls="monde-1" aria-selected="true"><span class="num" aria-hidden="true"><svg viewBox="2 5 106 105"><use href="#forme-tache"/></svg><b>1</b></span><span class="txt"><span class="sr">Monde 1 · </span><span class="etiq">Petit SPLAT!</span><span class="fiches">fiches 1 à 6</span></span></a>
     <a href="#monde-2" data-m="2" id="onglet-2" role="tab" aria-controls="monde-2" aria-selected="false"><span class="num" aria-hidden="true"><svg viewBox="2 5 106 105"><use href="#forme-tache"/></svg><b>2</b></span><span class="txt"><span class="sr">Monde 2 · </span><span class="etiq">SPLAT! Classique</span><span class="fiches">fiches 7 à 9</span></span></a>
-    <a href="#monde-3" data-m="3" id="onglet-3" role="tab" aria-controls="monde-3" aria-selected="false"><span class="num" aria-hidden="true"><svg viewBox="2 5 106 105"><use href="#forme-tache"/></svg><b>3</b></span><span class="txt"><span class="sr">Monde 3 · </span><span class="etiq">SPLAT! Enquête</span><span class="fiches">fiches 10 à 24</span></span></a>
-    <a href="#monde-4" data-m="4" id="onglet-4" role="tab" aria-controls="monde-4" aria-selected="false"><span class="num" aria-hidden="true"><svg viewBox="2 5 106 105"><use href="#forme-tache"/></svg><b>4</b></span><span class="txt"><span class="sr">Monde 4 · </span><span class="etiq">SPLAT! Système</span><span class="fiches">fiches 25 à 34</span></span></a>
+    <a href="#monde-3" data-m="3" id="onglet-3" role="tab" aria-controls="monde-3" aria-selected="false" data-prepa><span class="num" aria-hidden="true"><svg viewBox="2 5 106 105"><use href="#forme-tache"/></svg><b>3</b></span><span class="txt"><span class="sr">Monde 3 · </span><span class="etiq">SPLAT! Enquête</span><span class="fiches">fiches 10 à 24</span></span></a>
+    <a href="#monde-4" data-m="4" id="onglet-4" role="tab" aria-controls="monde-4" aria-selected="false" data-prepa><span class="num" aria-hidden="true"><svg viewBox="2 5 106 105"><use href="#forme-tache"/></svg><b>4</b></span><span class="txt"><span class="sr">Monde 4 · </span><span class="etiq">SPLAT! Système</span><span class="fiches">fiches 25 à 34</span></span></a>
     <a href="#monde-5" data-m="5" id="onglet-5" role="tab" aria-controls="monde-5" aria-selected="false"><span class="num" aria-hidden="true"><svg viewBox="2 5 106 105"><use href="#forme-tache"/></svg><b>5</b></span><span class="txt"><span class="sr">Monde 5 · </span><span class="etiq">SPLAT! Équations</span><span class="fiches">fiches 35 à 37</span></span></a>
   </nav>
+  <p class="prepaPhrase" id="prepaPhrase" hidden></p>
 
   <!-- ===================================================== Monde 1 · Petit SPLAT! -->
   <section class="panneau" data-m="1" id="monde-1" role="tabpanel" aria-labelledby="onglet-1">
@@ -383,7 +393,7 @@ footer a{font-weight:700}
        Depuis le 25/09/2026, le monde 3 en trois parties (décision du 24/09) : les deux livrets
        des fiches 10 à 19 (qui avaient chacun leur monde du 23 au 24/09) et « L'enquête
        rebondit », fiches 20 à 24. -->
-  <section class="panneau" data-m="3" id="monde-3" role="tabpanel" aria-labelledby="onglet-3" hidden>
+  <section class="panneau" data-m="3" id="monde-3" data-prepa role="tabpanel" aria-labelledby="onglet-3" hidden>
     <h2 class="monde-nom">Monde 3 · SPLAT! Enquête</h2>
     <p class="chapo">Les fiches 10 à 24 en trois livrets de 8 pages&nbsp;: un indice relie les taches entre elles — de plus, de moins, puis fois plus, fois moins, puis des taches de même couleur et des enquêtes sans total. En page 2 de chaque livret, un exemple résolu pas à pas.</p>
     <h3 class="partie">Partie 1 · de plus, de moins <span>la classe, puis «&nbsp;Le défi&nbsp;» (totaux de 50 à 100)</span></h3>
@@ -524,7 +534,7 @@ footer a{font-weight:700}
   <!-- ===================================================== Monde 4 · SPLAT! Système
        Le Système (25/09/2026) : plusieurs plateaux, un total pour chacun. Deux livrets, et
        leurs corrigés en 4 par page (livret) ou en 2 par page (une feuille par fiche). -->
-  <section class="panneau" data-m="4" id="monde-4" role="tabpanel" aria-labelledby="onglet-4" hidden>
+  <section class="panneau" data-m="4" id="monde-4" data-prepa role="tabpanel" aria-labelledby="onglet-4" hidden>
     <h2 class="monde-nom">Monde 4 · SPLAT! Système</h2>
     <p class="chapo">Les fiches 25 à 34 en deux livrets de 8 pages&nbsp;: plusieurs plateaux, un total pour chacun, et les mêmes couleurs partout. On retire un plateau de l’autre, puis on additionne ou on double avant de comparer. En page 2, un exemple résolu pas à pas&nbsp;; au dos, «&nbsp;Pour se souvenir&nbsp;»&nbsp;; les corrigés rappellent tous les systèmes du collège et où les trouver.</p>
     <div class="grille n2">
@@ -677,8 +687,33 @@ footer a{font-weight:700}
 
 <script>
 (function(){
-  var onglets = Array.prototype.slice.call(document.querySelectorAll("#onglets a"));
+  /* Mondes « en préparation » (26/09/2026) : d'après la liste de assets/js/splat-etapes.js
+     (et la clé ?essai=1), on pose ou on retire « data-prepa » sur la carte et les livrets de
+     chaque monde, puis une phrase dit quels livrets arrivent. Sans le fichier, on garde ce
+     que la page a écrit. */
+  var etapes = window.MathsGoSplatEtapes;
+  if(etapes){
+    var caches = [];
+    Array.prototype.forEach.call(document.querySelectorAll("#onglets a[data-m], .panneau[data-m]"), function(el){
+      var n = parseInt(el.dataset.m, 10);
+      if(etapes.mondeCache(n)){
+        el.setAttribute("data-prepa", "");
+        if(el.classList.contains("panneau") && caches.indexOf(n) < 0) caches.push(n);
+      } else el.removeAttribute("data-prepa");
+    });
+    var phrase = document.getElementById("prepaPhrase");
+    if(phrase && caches.length){
+      caches.sort(function(a, b){ return a - b; });
+      phrase.textContent = caches.length === 1
+        ? "\ud83d\udea7 Les livrets du monde " + caches[0] + " sont en pr\u00e9paration."
+        : "\ud83d\udea7 Les livrets des mondes " + caches.slice(0, -1).join(", ") + " et " + caches[caches.length - 1] + " sont en pr\u00e9paration.";
+      phrase.hidden = false;
+    }
+  }
+  var onglets = Array.prototype.slice.call(document.querySelectorAll("#onglets a:not([data-prepa])"));
   var panneaux = Array.prototype.slice.call(document.querySelectorAll(".panneau"));
+  var barre = document.getElementById("onglets");
+  if(barre) barre.setAttribute("data-n", String(onglets.length));
   function montrer(m, pousser){
     if(!onglets.some(function(a){ return a.dataset.m === m; })) return;
     onglets.forEach(function(a){ a.setAttribute("aria-selected", String(a.dataset.m === m)); });

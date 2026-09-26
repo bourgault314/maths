@@ -123,13 +123,15 @@ test("accordéon : un monde ouvert à la fois, le monde en cours à l'arrivée, 
      (une clé élève, une clé prof) et rouvert au retour, avant le monde en cours */
   assert.match(univers, /const CLE_MONDE_OUVERT="mathsgo-splat-monde-ouvert"\+\(PROF\?"-prof":""\);/);
   assert.match(univers, /try\{ localStorage\.setItem\(CLE_MONDE_OUVERT,String\(mi\)\); \}catch\(e\)\{\}/);
-  assert.match(univers, /const retenu=mondeRetenu\(\);\s*if\(retenu>=0\) return retenu;\s*if\(PROF\) return 0;/);
+  /* (26/09/2026) un monde passé « en préparation » ne se rouvre pas tout seul */
+  assert.match(univers, /const retenu=mondeRetenu\(\);\s*if\(retenu>=0&&!MONDES\[retenu\]\.cache\) return retenu;[^\n]*\s*if\(PROF\) return 0;/);
   assert.match(univers, /const sec=a\.closest\("main>\.monde"\);\s*if\(sec\) retenirMonde\(/);
   /* le monde en cours : celui de l'adresse (#monde-N ou un identifiant d'étape), sinon celui
-     de la prochaine étoile, sinon le dernier ; en vue prof, le monde 1 */
+     de la prochaine étoile, sinon le dernier monde jouable (26/09/2026 : pas un monde en
+     préparation) ; en vue prof, le monde 1 */
   assert.match(univers, /const el=document\.getElementById\(cible\), sec=el&&el\.closest\("main>\.monde"\);/);
   assert.match(univers, /if\(PROF\) return 0;/);
-  assert.match(univers, /return prochaine\?prochaine\.mi:MONDES\.length-1;/);
+  assert.match(univers, /if\(prochaine\) return prochaine\.mi;\s*const jouables=MONDES\.map\(\(m,mi\)=>jouable\(m\)\?mi:-1\)\.filter\(mi=>mi>=0\);\s*return jouables\.length\?jouables\[jouables\.length-1\]:MONDES\.length-1;/);
   assert.match(univers, /ouvrirMonde\(mondeEnCours\(majAffichage\(\)\)\);/);
   /* clavier : Entrée ou Espace sur le bandeau */
   assert.match(univers, /if\(\(ev\.key==="Enter"\|\|ev\.key===" "\)&&ev\.target\.matches\("main>\.monde>\.head"\)\)/);
@@ -151,8 +153,11 @@ test("Continuer : la première étoile à gagner, dans l'ordre de l'univers, abs
 test("?apres=<parcours> : la carte renvoie au jeu de l'étape suivante, sans rien afficher", () => {
   /* le lien que les outils mettront sur leur écran de fin (« Étape suivante ▶ ») */
   assert.match(univers, /const apres=new URLSearchParams\(window\.location\.search\)\.get\("apres"\);\s*if\(!apres\|\|PROF\) return;/);
-  assert.match(univers, /const suite=MONDES\.flatMap\(m=>m\.actif\?m\.etapes:\[\]\);\s*const k=suite\.findIndex\(e=>e\.p===apres\);\s*if\(k>=0&&k\+1<suite\.length&&suite\[k\+1\]\.j\)\{[\s\S]{0,160}retenirMonde\(MONDES\.findIndex\(m=>m\.actif&&m\.etapes\.includes\(suite\[k\+1\]\)\)\);\s*window\.location\.replace\(suite\[k\+1\]\.j\);/);
-  /* on refait le calcul : après la dernière fiche de l'Enquête vient la première du Système */
+  /* (26/09/2026) sans la clé, les mondes en préparation sont sautés ; venu d'un QR dans l'un
+     d'eux, on continue dans ce monde (tests/splat-mondes-en-preparation.test.mjs) */
+  assert.match(univers, /const suite=ici&&ici\.cache\?ici\.etapes:MONDES\.flatMap\(m=>jouable\(m\)\?m\.etapes:\[\]\);\s*const k=suite\.findIndex\(e=>e\.p===apres\);\s*if\(k>=0&&k\+1<suite\.length&&suite\[k\+1\]\.j\)\{[\s\S]{0,160}retenirMonde\(MONDES\.findIndex\(m=>m\.actif&&m\.etapes\.includes\(suite\[k\+1\]\)\)\);\s*window\.location\.replace\(suite\[k\+1\]\.j\);/);
+  /* on refait le calcul (avec la clé : tous les mondes) : après la dernière fiche de l'Enquête
+     vient la première du Système */
   const suite = MONDES.flatMap((m) => (m.actif ? m.etapes : []));
   const k = suite.findIndex((e) => e.p === "enq24");
   assert.equal(suite[k + 1].p, "sys25");
