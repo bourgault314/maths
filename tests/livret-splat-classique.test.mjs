@@ -855,14 +855,14 @@ test("K1-bis : la phrase est sur la couverture des six PDF du monde 1 (élève e
    (20/09/2026) : un onglet par monde, les corrections du professeur repliées partout,
    la note « Pour imprimer » une seule fois en bas. */
 test("L : un onglet et un panneau par monde, le prof replié partout, la note une seule fois", () => {
-  assert.equal((page.match(/role="tab"/g) || []).length, 5, "cinq onglets (mondes 1 à 5, lot Q3)");
-  assert.equal((page.match(/role="tabpanel"/g) || []).length, 5, "cinq panneaux");
+  assert.equal((page.match(/role="tab"/g) || []).length, 6, "six onglets (mondes 1 à 6 ; le 6, lot R2)");
+  assert.equal((page.match(/role="tabpanel"/g) || []).length, 6, "six panneaux");
   assert.equal((page.match(/<section class="note"/g) || []).length, 1, "une seule note « Pour imprimer »");
-  // vingt cartes : 6 (monde 1, dont les trois « Je dessine le schéma » du 26/09/2026) + 4 (monde 2 :
+  // vingt-deux cartes : 6 (monde 1, dont les trois « Je dessine le schéma » du 26/09/2026) + 4 (monde 2 :
   // Monde 2 et Le défi, avec « ? » et avec une lettre, 26/09/2026) + 5 (monde 3 : deux livrets et
   // leurs défis, puis la partie 3) + 2 (monde 4, le Système, 25/09/2026) + 3 (monde 5 : corrigés du
-  // lot Q4, et le défi du lot Q5)
-  assert.equal((page.match(/<details class="prof">/g) || []).length, 20, "les vingt cartes replient leurs corrigés");
+  // lot Q4, et le défi du lot Q5) + 2 (monde 6, les Relatifs, lot R2)
+  assert.equal((page.match(/<details class="prof">/g) || []).length, 22, "les vingt-deux cartes replient leurs corrigés");
   // la note d'impression, réécrite par Gwenaël le 27/09/2026 : pas de « meilleur rendu », le A3 n'est pas un conseil
   assert.match(page, /Livret à plier<\/strong>&nbsp;: en A3 pour un grand livret, ou en A4 pour un petit livret\. Recto-verso, <strong>bord court<\/strong>\.<\/p>/);
   assert.doesNotMatch(page, /meilleur rendu/);
@@ -875,7 +875,7 @@ test("L : un onglet et un panneau par monde, le prof replié partout, la note un
   assert.ok(page.indexOf('document.documentElement.className += " js"') < page.indexOf("<style>"),
     "le script qui pose la classe js doit précéder le <style>");
   // les onglets mènent aux ancres, et les panneaux les portent
-  for (const n of [1, 2, 3, 4, 5]) {
+  for (const n of [1, 2, 3, 4, 5, 6]) {
     assert.ok(page.includes(`href="#monde-${n}"`), `onglet du monde ${n}`);
     assert.ok(page.includes(`id="monde-${n}"`), `panneau du monde ${n}`);
   }
@@ -897,6 +897,7 @@ const CARTES_MONDES = [
   [3, "SPLAT! Enquête", "fiches 10 à 24", 3, "Monde 3 · "],     // 25/09/2026 : le monde 3 en trois parties
   [4, "SPLAT! Système", "fiches 25 à 34", 4, "Monde 4 · "],     // 25/09/2026 : le Système, monde 4
   [5, "SPLAT! Équations", "fiches 35 à 37", 5, "Monde 5 · "],     // lot Q3 (24/09/2026) : la carte saute de 19 à 35
+  [6, "SPLAT! Relatifs", "fiches 38 à 43", 6, "Monde 6 · "],      // lot R2 (26/09/2026)
 ];
 test("cartes des mondes : numéro, nom et fiches, dans l'ordre, toujours des onglets, sans couverture", () => {
   const nav = page.slice(page.indexOf('<nav class="onglets"'), page.indexOf("</nav>"));

@@ -215,7 +215,7 @@ for (const [nom, fin, parcours, , mot] of OUTILS) {
   });
 
   test(`${nom} : après la dernière étape de l'univers, « Voir la carte des mondes ▶ » et plus de lien en double`, () => {
-    const { html, d, w } = fin({ parcours: "m4e7", resultats: TOUT_VERT });
+    const { html, d, w } = fin({ parcours: "m4e6", resultats: TOUT_VERT });
     assert.match(html, /id="eleveEtapeSuivante"[^>]*>Voir la carte des mondes \u25b6<\/button>/);
     assert.doesNotMatch(html, /Retour \u00e0 la carte des mondes/);
     d.elements.eleveEtapeSuivante.onclick();
@@ -246,7 +246,7 @@ test("les trois outils chargent splat-etapes.js (sans defer, même version)", ()
   for (const [page, nom] of [[splat, "splat.html"], [petit, "splat_tache_barre.html"], [equa, "equasplat.html"]]) {
     const m = page.match(/<script src="\.\.\/assets\/js\/splat-etapes\.js\?v=([\w-]+)"><\/script>/);
     assert.ok(m, `${nom} ne charge pas splat-etapes.js`);
-    assert.equal(m[1], "20260926-1", `${nom} : ?v= de splat-etapes.js`);
+    assert.equal(m[1], "20260926-2", `${nom} : ?v= de splat-etapes.js`);
     // dans <head>, avant tout script de la page
     assert.ok(page.indexOf(m[0]) < page.indexOf("</head>"), `${nom} : le script doit être dans <head>`);
     // la petite ligne a son style

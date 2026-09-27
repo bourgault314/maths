@@ -209,7 +209,7 @@ test("Q2 : la carte saute de la fiche 19 à la fiche 35 ; le trou se referme tou
      le compteur atteint 34 de lui-même et « premier » ne fait plus rien, comme prévu */
   assert.deepEqual(n[3].slice(-1), [34]);
   assert.deepEqual(n[4], [35, 36, 37]);
-  assert.deepEqual(n[5], [38, 39, 40, 41, 42, 43, 44]);
+  assert.deepEqual(n[5], [38, 39, 40, 41, 42, 43]);   // lot R2 : six fiches
   EQUATIONS.etapes.forEach((e, k) => assert.equal(e.n, n[4][k], "le badge et la fiche disent le même numéro"));
   const sans = MONDES.map((m) => (m === EQUATIONS ? { ...m, premier: undefined } : m));
   assert.deepEqual(numeros(sans)[4], [35, 36, 37], "sans « premier », mêmes numéros : le trou est refermé");
