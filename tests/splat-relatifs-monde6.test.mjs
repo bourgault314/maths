@@ -118,7 +118,7 @@ test("R2 : les liens de la vue prof — Projeter, Fiche (6/page) et Correction (
   // un seul lien vers la page des livrets, comme au monde 5 (lot « vue prof », 27/09/2026 : il est
   // dans le cadre « Pour la classe », rendu par ressourcesHtml() depuis LIVRET_TEXTE)
   const texte6 = univers.match(/const LIVRET_TEXTE=\[\n(?:[^\n]*\n){5}([^\n]*)\n/)[1];
-  assert.match(texte6, /Les fiches 38 à 43 en deux livrets, un par partie, et leurs corrigés\./);
+  assert.match(texte6, /^  "Un livret par partie, et leurs corrigés\."\];$/);
   assert.ok(univers.includes("'<li><a href=\"/outils/livrets_splat.html#monde-'+(mi+1)+'\">'"));
 });
 

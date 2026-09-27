@@ -245,7 +245,7 @@ test("Q2 (demande de Claire) : en vue prof, chaque équation des mondes 5 et 6 o
     });
     const html = ctx.cartesHtml(brut(mi, ei), ctx.X.MONDES[mi], "c");
     assert.deepEqual([...html.matchAll(/<li><a href="([^"]*)"/g)].map((x) => x[1]), JSON.parse(JSON.stringify(liens)), "chaque carte de la grille, son lien");
-    assert.match(html, /Un clic sur une carte l(’|\\u2019)ouvre seule dans ÉquaSplat, sans étoile/);
+    assert.match(html, /Un clic sur une carte l(’|\\u2019)ouvre seule dans ÉquaSplat\./);
   }));
   /* les mondes des autres outils n'ouvrent pas ÉquaSplat (depuis le 26/09, les mondes 1
      et 2 ouvrent ÉquaBarre : tests/splat-univers-equabarre-liste.test.mjs) */

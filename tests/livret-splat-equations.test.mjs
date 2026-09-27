@@ -409,7 +409,7 @@ test("carte des mondes, vue prof : un seul lien sous le monde 5, vers l'onglet d
      ligne sur ce que contient la page (LIVRET_TEXTE, rang 4) ; le rendu complet (un seul lien de
      livrets par monde, aucun PDF) est vérifié dans tests/splat-univers-vue-prof.test.mjs */
   const m5 = univers.match(/const LIVRET_TEXTE=\[\n(?:[^\n]*\n){4}([^\n]*)\n/)[1];
-  assert.match(m5, /Les fiches 35 à 37 en deux versions \(tableau \/ équation\)/);
+  assert.match(m5, /Schéma ou équation, chacun avec son livret Le défi/);
   assert.doesNotMatch(m5, /\.pdf|bord court|recto-verso/, "la ligne ne parle pas d'impression");
   assert.match(univers, /if\(LIVRET_TEXTE\[mi\]\) li\.push\('<li><a href="\/outils\/livrets_splat\.html#monde-'\+\(mi\+1\)\+'">'/);
   for (const s of SORTIES) assert.ok(!univers.includes(`"/outils/${s}.pdf"`), `${s} : plus de bouton de PDF`);
@@ -706,7 +706,7 @@ test("Q5 : la page des livrets et la carte des mondes — « Le défi » au mond
   // des livrets, relecture du monde 1, lot 2)
   // (lot « vue prof », 27/09/2026 : la ligne « Pour la classe » du monde 5 présente les deux « Le défi »)
   const m5 = univers.match(/const LIVRET_TEXTE=\[\n(?:[^\n]*\n){4}([^\n]*)\n/)[1];
-  assert.match(m5, /deux versions \(tableau \/ équation\), chacune avec son livret Le défi, et leurs corrigés\./);
+  assert.match(m5, /Schéma ou équation, chacun avec son livret Le défi, et leurs corrigés\./);
   // le catalogue le dit, et son cache-buster suit
   const catalogue = lire("assets/js/catalogue-refonte-data.js");
   assert.match(catalogue, /SPLAT! Équations \(monde 5\) en quatre livrets : le schéma en barres et l’équation, chacun avec son «\u00a0Le défi\u00a0»\. SPLAT! Relatifs \(monde 6\) en deux livrets\."/);

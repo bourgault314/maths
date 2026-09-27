@@ -228,9 +228,8 @@ test("vue prof du monde 2 : un seul lien vers les livrets du monde 2, à côté 
   const texte = univers.match(/const LIVRET_TEXTE=\[\n([^\n]*)\n([^\n]*)\n/);
   assert.ok(texte, "LIVRET_TEXTE introuvable");
   const m2 = texte[2];
-  assert.match(m2, /Les fiches 7, 8 et 9 en un livret, avec la place pour le schéma ou l(’|\\u2019)équation/, "la phrase utile à la classe reste");
-  assert.match(m2, /Le défi \(totaux de 50 à 100\)/);
-  assert.match(m2, /chacun en «\\u00a0\?\\u00a0» ou en lettre, et leurs corrigés\./, "les deux versions du 26/09 (« ? » ou lettre)");
+  /* textes courts (27/09/2026, « efficace, pas de blabla ») : la page des livrets donne le détail */
+  assert.match(m2, /^  "Les fiches 7 à 9 et Le défi, en «\\u00a0\?\\u00a0» ou en lettre, et leurs corrigés\.",$/, "les deux versions du 26/09 (« ? » ou lettre)");
   assert.doesNotMatch(m2, /\.pdf|bord court|recto-verso|à plier/, "la ligne ne parle pas d'impression");
   assert.match(univers, /if\(LIVRET_TEXTE\[mi\]\) li\.push\('<li><a href="\/outils\/livrets_splat\.html#monde-'\+\(mi\+1\)\+'">'/);
   // plus aucun bouton de PDF du monde 2 dans la carte des mondes
@@ -1111,7 +1110,7 @@ test("D : la miniature du livret « Le défi », et le lien de la vue prof", () 
   // des livrets, et la note de la carte des mondes le présente
   // (lot « vue prof », 27/09/2026 : la ligne « Pour la classe » du monde 2 le présente)
   const m2 = univers.match(/const LIVRET_TEXTE=\[\n[^\n]*\n([^\n]*)\n/)[1];
-  assert.match(m2, /et Le défi \(totaux de 50 à 100\)/);
+  assert.match(m2, /Les fiches 7 à 9 et Le défi/);
   assert.match(page, /href="\/outils\/livret_splat_classique_defi\.pdf"/);
   assert.match(page, /href="\/outils\/livret_splat_classique_defi_a_plier\.pdf"/);
 });

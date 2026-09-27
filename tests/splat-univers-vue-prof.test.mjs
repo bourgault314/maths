@@ -131,7 +131,7 @@ test("« Pour la classe » : le diaporama au monde 1, la page des livrets aux mo
     assert.doesNotMatch(r[mi], /\.pdf"|bord court|recto-verso/, "ni PDF ni consigne d'impression : elles sont sur la page des livrets");
   }
   assert.ok(r[5].includes('href="/outils/livrets_splat.html#monde-6"'));
-  assert.ok(r[5].includes("Les fiches 38 à 43 en deux livrets, un par partie, et leurs corrigés."));
+  assert.ok(r[5].includes("Un livret par partie, et leurs corrigés."));
 });
 
 test("les parties des mondes 3, 4 et 6 : un intertitre, sans ligne de PDF (comme aux autres mondes)", () => {
@@ -168,13 +168,15 @@ test("« Pour la classe » dit ce que la page des livrets propose, monde par mon
     assert.equal(/Le défi/.test(t), defi, `monde ${n} : « Le défi » ${defi ? "est" : "n'est pas"} sur la page des livrets`);
     assert.ok(/corrigés/.test(t), `monde ${n} : les corrigés`);
   }
-  assert.match(T[0], /deux séries de trois niveaux/);
+  assert.match(T[0], /séries de trois niveaux/i);
   assert.ok(onglet(1).includes("livret_petit_splat_dessin.pdf") && onglet(1).includes("livret_petit_splat_expert.pdf"));
   assert.match(T[1], /«\\u00a0\?\\u00a0» ou en lettre|« \? » ou en lettre|«\u00a0\?\u00a0» ou en lettre/);
   assert.ok(onglet(2).includes("livret_splat_classique_lettre.pdf"));
-  assert.match(T[4], /deux versions \(tableau \/ équation\), chacune avec son livret Le défi/);
+  assert.match(T[4], /Schéma ou équation, chacun avec son livret Le défi/);
   assert.equal((onglet(5).match(/<h3>Le défi<\/h3>/g) || []).length, 2);
-  assert.match(T[5], /Les fiches 38 à 43 en deux livrets, un par partie/);
+  assert.match(T[5], /Un livret par partie/);
+  /* courts : une ligne chacun */
+  T.forEach((t, i) => assert.ok(t.length <= 80, `monde ${i + 1} : ${t.length} caractères`));
 });
 
 test("les 12 cartes : repliées, en grille numérotée, chacune un lien, « dessin » pour les cartes à dessiner", () => {
@@ -234,11 +236,13 @@ test("CSS : un monde replié ne montre que son bandeau ; les deux retouches tél
   /* .pIntro (display:grid) est plus précis que « .monde.replie>.intro » : sans cette règle,
      l'intention restait affichée sous le bandeau d'un monde replié */
   assert.match(univers, /body\.prof \.monde\.replie>\.pIntro\{display:none\}/);
-  assert.ok(univers.indexOf("body.prof .monde.replie>.pIntro{display:none}") > univers.indexOf("body.prof .monde .pIntro{display:grid;"));
+  assert.ok(univers.indexOf("body.prof .monde.replie>.pIntro{display:none}") > univers.indexOf("body.prof .monde .pIntro{display:block;"));
   const tel = univers.slice(univers.indexOf("/* VUE ÉLÈVE — deux retouches téléphone"), univers.indexOf("</style>"));
   assert.match(tel, /@media\(max-width:520px\)\{/);
   assert.match(tel, /body:not\(\.prof\) \.heroBlob\.b1,body:not\(\.prof\) \.heroBlob\.b3,body:not\(\.prof\) \.heroBlob\.b4,body:not\(\.prof\) \.heroBlob\.b6\{display:none\}/);
   assert.match(tel, /body:not\(\.prof\) \.monde>\.head\{gap:10px;padding:14px 14px\}/);
+  /* 27/09/2026 : un monde qu'on ouvre remonte en haut de l'écran (le monde du dessus se replie) */
+  assert.match(univers, /if\(mi>=0\)\{ const r=head\.getBoundingClientRect\(\); if\(r\.top<0\|\|r\.top>innerHeight\*0\.6\) window\.scrollTo\(\{top:scrollY\+r\.top-8,behavior:"smooth"\}\); \}/);
   /* les anciens encadrés de la vue prof sont partis du CSS */
   assert.doesNotMatch(univers, /\.noteProf\{|\.eqListeProf\{|\.descProf|\.introLien\.livret|\.introNote\{/);
 });

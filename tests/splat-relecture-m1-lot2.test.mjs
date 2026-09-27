@@ -118,7 +118,7 @@ test("D. guillemets français : une espace insécable après « et avant » dans
   }
   // l'exemple relevé par Gwenaël était « Sans total » dans la note de « L'enquête rebondit » (retirée
   // de la carte au lot « vue prof », 27/09/2026) ; les notes du prof gardent la même écriture
-  assert.match(lire("outils/splat_univers.html"), /Deux taches, indice additif direct \(«\\u00a0de plus que\\u00a0»\)/);
+  assert.match(lire("outils/splat_univers.html"), /"Indice «\\u00a0de plus que\\u00a0»\."/);
   // et la description des livrets au catalogue
   assert.match(lire("assets/js/catalogue-refonte-data.js"), /le schéma en barres et l’équation, chacun avec son «\u00a0Le défi\u00a0»\./);
 });

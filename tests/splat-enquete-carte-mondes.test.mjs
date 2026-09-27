@@ -157,8 +157,9 @@ test("les notes du professeur restent parallèles aux mondes et à leurs étapes
   assert.equal(NOTES_PROF.length, MONDES.length);
   MONDES.forEach((m, mi) => {
     assert.equal(NOTES_PROF[mi].length, m.etapes.length, `notes du monde ${mi + 1}`);
-    assert.ok(NOTES_MONDE[mi].length > 40, `note du monde ${mi + 1} trop courte`);
-    NOTES_PROF[mi].forEach((n, ei) => assert.ok(n.length > 30, `note ${mi + 1}.${ei + 1}`));
+    assert.ok(NOTES_MONDE[mi].length > 30, `note du monde ${mi + 1} trop courte`);
+    /* une phrase courte par fiche (27/09/2026, demande de Gwenaël : « efficace, pas de blabla ») */
+    NOTES_PROF[mi].forEach((n, ei) => assert.ok(n.length >= 10 && n.length <= 90, `note ${mi + 1}.${ei + 1} : ${n.length} caractères`));
   });
 });
 
@@ -311,8 +312,8 @@ test("les textes qui comptent les mondes suivent l'ajout", () => {
   assert.doesNotMatch(univers, /quatre mondes|cinq mondes/i);
   assert.match(univers, /content="Six mondes à jouer en ligne/);
   // les notes du professeur qui citent un numéro de monde suivent aussi
-  assert.ok(NOTES_MONDE[5].endsWith("À réserver aux élèves qui ont terminé le monde 5."));
-  assert.ok(NOTES_PROF[5][3].includes("le geste du monde 5, transposé aux relatifs"));
+  assert.ok(NOTES_MONDE[5].endsWith("Après le monde 5."));
+  assert.equal(NOTES_PROF[5].length, 6);
   // le catalogue et la page de toutes les ressources (lot E5)
   const catalogue = lire("assets/js/catalogue-refonte-data.js");
   assert.equal((catalogue.match(/[Ss]ix mondes \\u00e0 jouer en ligne/g) || []).length, 2);
