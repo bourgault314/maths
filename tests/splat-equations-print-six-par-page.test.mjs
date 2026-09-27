@@ -59,7 +59,7 @@ test("le sélecteur « Pages » propose 6/page, 2/page reste le réglage par dé
   assert.match(html, /<option value="6">6\/page<\/option>\s*<option value="4">4\/page<\/option>\s*<option value="2" selected>2\/page<\/option>/);
   assert.match(html, /setSelectFromShare\(params, "layout", printCardsPerPageEl\)/);
   assert.match(html, /addShareControl\(params, "layout", printCardsPerPageEl\)/);
-  assert.match(html, /const sharedNames = \[[^\]]*"layout"[^\]]*"suite", "jouer"\]/);
+  assert.match(html, /const sharedNames = \[[^\]]*"layout"[^\]]*"suite", "jouer", "zero"\]/);
 });
 
 test("6/page vaut pour l'énoncé seul ; schéma ou correction, recto ou verso, retombent sur 4", () => {
@@ -191,14 +191,17 @@ test("jetons numérotés imprimés : fond blanc, anneau opaque de la couleur du 
   assert.equal(t.eqPrintOpaqueRing("hsla(142, 80%, 40%, 0.7)"), "hsla(142, 80%, 40%, 1)");
   assert.equal(t.eqPrintBeadFontSize(7, 61), 61);
   assert.equal(t.eqPrintBeadFontSize(38, 61), 61);
-  assert.equal(t.eqPrintBeadFontSize(-12, 61), Math.round(61 * 0.8));   // « -12 » : trois signes
+  // un négatif (lot R1, monde 6) : le vrai signe moins, la taille se règle sur les chiffres
+  assert.equal(t.eqPrintBeadFontSize(-7, 61), 61);
+  assert.equal(t.eqPrintBeadFontSize(-12, 61), Math.round(61 * 0.84));
+  assert.equal(t.eqPrintBeadFontSize(-100, 61), Math.round(61 * 0.66));
   assert.equal(t.eqPrintBeadFontSize(100, 61), Math.round(61 * 0.8));
   const draw = functionSource("drawEqPrintNumberedBead", "eqUnitCounts");
   assert.match(draw, /fill = "#fff"; stroke = eqPrintOpaqueRing\(beadColorForValue\(it\.val\)\.stroke\); sw = "7";/);
   // jeton caché dévoilé sans l'option vert/rouge : gris, comme au monde 2
   assert.match(draw, /if\(it\.hidden && !useTokens\)\{[\s\S]*?fill = "rgba\(0,0,0,0\.055\)"; stroke = "rgba\(0,0,0,0\.24\)";/);
   // nombre centré : ligne de base à 0,35 em sous le centre (chiffres de 0,7 em)
-  assert.match(draw, /mkText\(p\.cx, p\.cy \+ Math\.round\(fontSize \* 0\.35\), String\(it\.val\)/);
+  assert.match(draw, /mkText\(p\.cx, p\.cy \+ Math\.round\(fontSize \* 0\.35\), eqPrintBeadLabel\(it\.val\)/);
 });
 
 test("rayon dessiné : ×1,8 quand il y a la place, sinon le plus grand qui tient, jamais moins qu'avant", () => {

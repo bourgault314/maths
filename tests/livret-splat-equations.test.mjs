@@ -146,7 +146,7 @@ test("Q3 : les séries du dos (?s=1, 2, 3) — six équations sans graine, joué
 
 // ------------------------------------------------ l'outil : « jouer=1 »
 test("Q3 : l'outil — « jouer=1 » tire la série et l'ouvre dans le jeu d'ÉquaSplat, sans parcours", () => {
-  assert.match(outil, /const sharedNames = \[[^\]]*"suite", "jouer"\]/);
+  assert.match(outil, /const sharedNames = \[[^\]]*"suite", "jouer", "zero"\]/);
   assert.match(outil, /jeuAuto = params\.get\("jouer"\) === "1";/);
   assert.match(outil, /if\(impressionAuto\) printSheet\(\);\nif\(jeuAuto\) ouvrirSerieDansEquaSplat\(\);\n/);
   assert.match(outil, /const EQUASPLAT_JEU_URL = "\/outils\/equasplat\.html\?eleve=1";/);
@@ -367,7 +367,7 @@ test("page des livrets : l'onglet du monde 5, ses deux livrets, leurs couverture
   }
   assert.match(p, /<h3>Le schéma en barres<\/h3>[\s\S]*<h3>L’équation<\/h3>/);
   assert.match(pageLivrets, /\[data-m="5"\]\{--c:#08aaa5;--c-plein:#0f766e;/);
-  assert.match(pageLivrets, /<nav class="onglets" id="onglets" data-n="5" role="tablist"/);
+  assert.match(pageLivrets, /<nav class="onglets" id="onglets" data-n="6" role="tablist"/);
   for (const nom of ["livret-splat-equations-schema", "livret-splat-equations-equation"]) {
     const png = `assets/img/thumbnails/splat/${nom}.png`, webp = `assets/img/thumbnails/splat/${nom}.webp`;
     assert.ok(existe(png) && existe(webp), nom);

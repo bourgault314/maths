@@ -21,7 +21,7 @@ const moduleEtapes = lire("assets/js/splat-etapes.js");
 const univers = lire("outils/splat_univers.html");
 const livrets = lire("outils/livrets_splat.html");
 const URL_CARTE = "/outils/splat_univers.html";
-const VERSION = "20260926-1";
+const VERSION = "20260926-2";
 
 // ---------- le module, exécuté avec une fausse fenêtre ----------
 function stockage(initial = {}) {
@@ -93,8 +93,8 @@ test("sans la clé : le bouton saute les mondes 3 et 4 (9 → 35) et s'arrête a
   assert.equal(suivant(E, "enq24", false), "carte");
   assert.equal(suivant(E, "sys27", false), "sys28");
   assert.equal(suivant(E, "sys34", false), "carte");
-  assert.equal(suivant(E, "m4e6", false), "m4e7");
-  assert.equal(suivant(E, "m4e7", false), "carte");
+  assert.equal(suivant(E, "m4e5", false), "m4e6");
+  assert.equal(suivant(E, "m4e6", false), "carte");
   // aucun changement de monde ne mène à un monde caché
   for (const e of ETAPES) {
     const s = E.suivante(e[0], false);
@@ -102,7 +102,7 @@ test("sans la clé : le bouton saute les mondes 3 et 4 (9 → 35) et s'arrête a
   }
 });
 
-test("avec la clé, ou la liste vide : tout l'univers s'enchaîne comme avant (étapes 1 à 44)", () => {
+test("avec la clé, ou la liste vide : tout l'univers s'enchaîne comme avant (étapes 1 à 43)", () => {
   const vide = avecListe([]);
   for (const e of ETAPES) {
     assert.equal(suivant(E, e[0], true), chaineComplete(e[0]), `avec la clé, après ${e[0]}`);

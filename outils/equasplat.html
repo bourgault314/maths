@@ -4453,7 +4453,7 @@
 </style>
 <script defer src="../assets/js/mention-confidentialite.js"></script>
 <!-- Le texte du bouton « Étape suivante ▶ » de l'écran de fin (lot A). -->
-<script src="../assets/js/splat-etapes.js?v=20260926-1"></script>
+<script src="../assets/js/splat-etapes.js?v=20260926-2"></script>
 </head>
 <body>
 <main id="appMain" class="startMode">
@@ -6207,10 +6207,21 @@
     if(isImportedUnitMode() && !(state && state.conclusionDone)) return null;
     const left = activePieces("left").filter(p => !(p.type === "token" && Number(p.value) === 0));
     const right = activePieces("right").filter(p => !(p.type === "token" && Number(p.value) === 0));
-    if(left.length === 0 || right.length === 0) return null;
     const isAllTokens = arr => arr.every(p => p.type === "token");
     const isAllX = arr => arr.every(p => p.type === "x");
     const allSameXSign = arr => isAllX(arr) && arr.length > 0 && arr.every(p => xSign(p) === xSign(arr[0]));
+    /* Solution nulle (monde 6, lot R1, 26/09/2026) : des taches seules d'un côté, rien
+       de l'autre (4𝑥 = 0). Chaque tache vaut 0 : on peut conclure. Avant, un côté vide
+       fermait toute conclusion et l'élève restait bloqué ; aucune équation à solution non
+       nulle n'arrive jamais ici (il resterait des jetons d'un côté). Même règle que plus
+       bas pour les taches opposées : −𝑥 = 0 passe d'abord par « Prendre l'opposé ». */
+    if(right.length === 0 && allSameXSign(left) && xSign(left[0]) > 0){
+      return {value:0, count:left.length, xSide:"left", tokenSide:"right"};
+    }
+    if(left.length === 0 && allSameXSign(right) && xSign(right[0]) > 0){
+      return {value:0, count:right.length, xSide:"right", tokenSide:"left"};
+    }
+    if(left.length === 0 || right.length === 0) return null;
     const allSameToken = arr => isAllTokens(arr) && arr.every(p => p.value === arr[0].value);
 
     // Avec les taches opposées, on évite le raccourci magique −x = n → x = −n.
