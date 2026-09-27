@@ -13,6 +13,21 @@
 <link rel="icon" type="image/png" sizes="192x192" href="/assets/img/favicon-192.png">
 <link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png">
 <style>
+  /* Les lettres de l'inconnue (𝑥, 𝑎, 𝑏…, lettres mathématiques d'Unicode) : la police du site,
+     SplatLettres (_sources/polices/splat-lettres/, lettre ronde de l'Enquête), comme les outils
+     SPLAT! (27/09/2026). Avant, chaque appareil les prenait dans une police de secours : x droit
+     sur Windows. Grâce à unicode-range, elle ne sert QUE pour ces lettres — chiffres et texte
+     gardent leur police. Elle est donc placée EN TÊTE de chaque liste de polices qui peut
+     afficher une lettre. Ses lettres sont déjà penchées : les déclarations droite ET italique
+     empêchent le navigateur de les pencher une seconde fois. Deux dessins, le même rond :
+     fin (KaTeX_Math-Italic) jusqu'à la graisse 599, gras (KaTeX_Math-BoldItalic) au-delà —
+     l'écriture d'ÉquaSplat est très grasse, la lettre fine y paraissait « toute petite à côté
+     des chiffres » (Gwenaël, 27/09/2026). size-adjust:120 % : la lettre prend la taille qu'elle
+     a dans les livrets du monde 5 (FreeSerif à 120 %, même hauteur d'œil à 1 % près). */
+  @font-face{font-family:SplatLettres;src:url('/assets/fonts/SplatLettres-Italic.woff2') format('woff2');font-style:normal;font-weight:100 599;font-display:block;size-adjust:120%;unicode-range:U+1D434-1D467,U+210E}
+  @font-face{font-family:SplatLettres;src:url('/assets/fonts/SplatLettres-BoldItalic.woff2') format('woff2');font-style:normal;font-weight:600 900;font-display:block;size-adjust:120%;unicode-range:U+1D434-1D467,U+210E}
+  @font-face{font-family:SplatLettres;src:url('/assets/fonts/SplatLettres-Italic.woff2') format('woff2');font-style:italic;font-weight:100 599;font-display:block;size-adjust:120%;unicode-range:U+1D434-1D467,U+210E}
+  @font-face{font-family:SplatLettres;src:url('/assets/fonts/SplatLettres-BoldItalic.woff2') format('woff2');font-style:italic;font-weight:600 900;font-display:block;size-adjust:120%;unicode-range:U+1D434-1D467,U+210E}
   :root{
     --bg:#f5f7fb;
     --panel:#ffffff;
@@ -40,7 +55,7 @@
       radial-gradient(circle at bottom right, rgba(22,163,74,.10), transparent 34rem),
       var(--bg);
     color:var(--ink);
-    font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+    font-family:SplatLettres,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
   }
 
   main{
@@ -436,10 +451,12 @@
   .splatText{
     fill:#ffffff;
     /* La lettre suit la tache : --splatEchelle vaut 1 tant que la tache garde sa taille,
-       et descend avec elle à partir de 7 taches (PATCH TACHES 2026-09-21). */
+       et descend avec elle à partir de 7 taches (PATCH TACHES 2026-09-21).
+       Depuis le 27/09/2026, la taille réelle est posée au dessin par drawSplatLetter
+       (0,8 × le rayon de la tache, style en ligne) : ces deux règles ne sont plus qu'un repli. */
     font-size:calc(38px * var(--splatEchelle, 1));
     font-weight:950;
-    font-family:Georgia,'Times New Roman',serif;
+    font-family:SplatLettres,Georgia,'Times New Roman',serif;
     font-style:italic;
     text-anchor:middle;
     dominant-baseline:middle;
@@ -902,7 +919,7 @@
   }
 
   .miniSplatSvg text{
-    font-family:Georgia,'Times New Roman',serif;
+    font-family:SplatLettres,Georgia,'Times New Roman',serif;
     font-style:italic;
     font-size:24px;
     font-weight:950;
@@ -2311,7 +2328,7 @@
   }
 
   .opLabel{
-    font-family:Arial, Helvetica, sans-serif;
+    font-family:SplatLettres, Arial, Helvetica, sans-serif;
     font-variant-numeric:tabular-nums;
     letter-spacing:-.02em;
   }
@@ -4190,7 +4207,7 @@
   }
 
   .unknownToggleBtn{
-    font-family:Georgia, "Times New Roman", serif;
+    font-family:SplatLettres, Georgia, "Times New Roman", serif;
     font-style:italic;
     font-weight:700;
     font-size:22px;
@@ -4284,7 +4301,7 @@
     }
 
     .opArrowLabel{
-      font-family:Arial, Helvetica, sans-serif;
+      font-family:SplatLettres, Arial, Helvetica, sans-serif;
       font-weight:950;
       fill:currentColor;
       font-variant-numeric:tabular-nums;
@@ -6486,7 +6503,7 @@
     if(!opArrowMeasureCanvas) opArrowMeasureCanvas = document.createElement("canvas");
     const ctx = opArrowMeasureCanvas.getContext("2d");
     if(!ctx) return String(label).length * fontPx * 0.62;
-    ctx.font = `950 ${fontPx}px Arial, Helvetica, sans-serif`;
+    ctx.font = `950 ${fontPx}px SplatLettres, Arial, Helvetica, sans-serif`;
     return ctx.measureText(String(label)).width;
   }
 
@@ -6622,6 +6639,14 @@
     new ResizeObserver(scheduleOperationArrowsRedraw).observe(equationHistory);
   }
   if(document.fonts && document.fonts.ready) document.fonts.ready.then(scheduleOperationArrowsRedraw);
+  /* La police des lettres (SplatLettres, 27/09/2026) n'est téléchargée qu'au premier « 𝑥 »
+     affiché, parfois après « fonts.ready » : les étiquettes des flèches (« − 2𝑡 ») ont pu être
+     mesurées avec une police de secours. Une fois qu'elle est là, on redessine les flèches. */
+  if(document.fonts && document.fonts.load) document.fonts.load("1em SplatLettres", "\u{1D465}").then(() => {
+    scheduleOperationArrowsRedraw();
+    // la lettre des taches est centrée sur son encre : on la remesure dans la bonne police
+    if(document.fonts.load) document.fonts.load("italic 950 1em SplatLettres", "\u{1D465}").then(() => { splatLettreEncre.clear(); if(state) renderSvg(); }, () => {});
+  }, () => {});
 
   // MODE RÉCEPTION — au départ, l'équation reçue s'annonce par l'égalité des
   // deux quantités ; la consigne s'efface au premier geste de l'élève.
@@ -7467,6 +7492,43 @@
     return el;
   }
 
+  /* La lettre (ou le « ? ») d'une tache — 27/09/2026. Sa taille suit le rayon de la tache
+     (SPLAT_LETTRE_K × r) : la même proportion à l'ordinateur, au téléphone (où la tache est
+     plus grande dans le dessin) et dans les mini-plateaux du partage. Avant, la lettre avait
+     une taille fixe (38 px) : « toute petite » dans la tache, surtout au téléphone.
+     Elle est centrée sur son ENCRE, mesurée dans la police réellement dessinée : un « 𝑡 » a
+     une hampe, un « 𝑥 » non — un centrage sur la ligne d'écriture les faisait monter. */
+  const SPLAT_LETTRE_K = 0.8;
+  const splatLettreEncre = new Map();
+  let splatLettreCtx = null;
+  function splatLettreDecalage(label){
+    // [dx, dy] en em : ce qu'il faut déplacer le texte (ancré au milieu, sur sa ligne de base)
+    // pour que le milieu de son encre tombe sur le centre de la tache
+    if(splatLettreEncre.has(label)) return splatLettreEncre.get(label);
+    let decalage = [0, 0.33];
+    try{
+      if(!splatLettreCtx) splatLettreCtx = document.createElement("canvas").getContext("2d");
+      splatLettreCtx.font = "italic 950 100px SplatLettres, Georgia, 'Times New Roman', serif";
+      const m = splatLettreCtx.measureText(String(label));
+      if(Number.isFinite(m.actualBoundingBoxAscent) && m.actualBoundingBoxAscent > 0){
+        decalage = [(m.width - (m.actualBoundingBoxRight - m.actualBoundingBoxLeft)) / 200,
+                    (m.actualBoundingBoxAscent - m.actualBoundingBoxDescent) / 200];
+        // gardé en mémoire seulement une fois la police des lettres arrivée
+        if(!document.fonts || document.fonts.check("italic 950 100px SplatLettres", "\u{1D465}")) splatLettreEncre.set(label, decalage);
+      }
+    }catch(e){}
+    return decalage;
+  }
+  function drawSplatLetter(g, cx, cy, r, label){
+    const t = drawText(cx, cy, label, "splatText", g);
+    const [dx, dy] = splatLettreDecalage(label);
+    t.style.fontSize = `${(r * SPLAT_LETTRE_K).toFixed(1)}px`;
+    t.style.dominantBaseline = "alphabetic";
+    t.setAttribute("dx", `${dx.toFixed(3)}em`);
+    t.setAttribute("dy", `${dy.toFixed(3)}em`);
+    return t;
+  }
+
   function drawTray(tray, title){
     const rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
     rect.setAttribute("x", tray.x);
@@ -7724,7 +7786,7 @@
       // La lettre rétrécit avec sa tache, jamais toute seule.
       if(pos.rRef) g.style.setProperty("--splatEchelle", (pos.r / pos.rRef).toFixed(3));
       g.appendChild(path);
-      drawText(pos.cx, pos.cy + 5, xPieceLabel(item), "splatText", g);
+      drawSplatLetter(g, pos.cx, pos.cy, pos.r, xPieceLabel(item));
       if(item.removed){
         const overlay = document.createElementNS("http://www.w3.org/2000/svg", "path");
         overlay.setAttribute("d", blobPath(pos.cx, pos.cy, pos.r));
@@ -8010,8 +8072,7 @@
       splat.setAttribute("d", blobPath(splatX, centerY, splatR));
       splat.setAttribute("class", "splatShape");
       g.appendChild(splat);
-      const splatLabel = drawText(splatX - splatR*.03, centerY + splatR*.06, displayedUnknown(), "splatText", g);
-      splatLabel.style.fontSize = `${Math.round(splatR*.6)}px`;
+      drawSplatLetter(g, splatX, centerY, splatR, displayedUnknown());
 
       const divider = document.createElementNS("http://www.w3.org/2000/svg", "line");
       divider.setAttribute("x1", dividerX);

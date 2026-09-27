@@ -446,7 +446,7 @@ test("« suite » : une fiche = plusieurs séries bout à bout, chacune comme ou
                   "lastSignedModeSettings", "lastNumberedTotalBounds"]) assert.ok(photo.includes(v), `photo : ${v}`);
   assert.match(photo, /document\.querySelectorAll\("input, select"\)/);
   assert.match(load, /appliquerConfiguration\(params\);\s*return true;/);
-  assert.match(html, /if\(serieSuite\.length\) genererSerieComposee\(\);\s*else generate\(\);\s*if\(impressionAuto\) printSheet\(\);/);
+  assert.match(html, /if\(serieSuite\.length\) genererSerieComposee\(\);\s*else generate\(\);\s*(?:\/\*[\s\S]*?\*\/\s*)?const lettresPretes = [\s\S]*?;\s*if\(!jeuAuto\) lettresPretes\.then\(\(\) => \{ if\(cards\.length\) updateUI\(\); \}\);\s*if\(impressionAuto\) lettresPretes\.then\(\(\) => printSheet\(\)\);/);
   assert.match(functionSource("generate", "genererSerieComposee"), /^function generate\(\)\{\s*serieComposee = false;/);
   assert.match(functionSource("buildShareUrl", "fallbackCopyText"), /if\(serieComposee && serieSuite\.length\) params\.set\("suite", serieSuite\.join\(";"\)\);/);
 

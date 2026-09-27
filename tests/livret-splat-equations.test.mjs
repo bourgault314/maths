@@ -166,7 +166,9 @@ test("Q3 : les séries du dos (?s=1, 2, 3) — six équations sans graine, joué
 test("Q3 : l'outil — « jouer=1 » tire la série et l'ouvre dans le jeu d'ÉquaSplat, sans parcours", () => {
   assert.match(outil, /const sharedNames = \[[^\]]*"suite", "jouer", "zero", "taches"\]/);
   assert.match(outil, /jeuAuto = params\.get\("jouer"\) === "1";/);
-  assert.match(outil, /if\(impressionAuto\) printSheet\(\);\nif\(jeuAuto\) ouvrirSerieDansEquaSplat\(\);\n/);
+  assert.match(outil, /if\(impressionAuto\) lettresPretes\.then\(\(\) => printSheet\(\)\);\nif\(jeuAuto\) ouvrirSerieDansEquaSplat\(\);\n/);
+  // « jouer=1 » ne dessine rien ici : la page ne redessine pas quand la police des lettres arrive
+  assert.match(outil, /if\(!jeuAuto\) lettresPretes\.then\(\(\) => \{ if\(cards\.length\) updateUI\(\); \}\);/);
   assert.match(outil, /const EQUASPLAT_JEU_URL = "\/outils\/equasplat\.html\?eleve=1";/);
   assert.doesNotMatch(outil, /EQUASPLAT_JEU_URL = "[^"]*parcours/, "aucune étoile");
   assert.match(outil, /const payload = \{ source:"univers_splat", serie \};\n\s+window\.location\.replace\(`\$\{EQUASPLAT_JEU_URL\}#data=\$\{encodeEquabarPayload\(payload\)\}`\);/);
@@ -232,45 +234,105 @@ test("Q3 : les quatre PDF — 8 pages A4 dans l'ordre, 4 feuilles A3 imposées, 
   assert.match(render, /for g, d in \[\(8, 1\), \(2, 7\), \(6, 3\), \(4, 5\)\]:/);
 });
 
-function texteDesPages(p) {
-  const fl = flux(p);
-  const tables = [];
-  for (const f of fl) {
-    if (!f.includes("begincmap")) continue;
-    const t = new Map();
-    for (const b of f.match(/beginbfchar([\s\S]*?)endbfchar/g) || [])
-      for (const m of b.matchAll(/<([0-9a-fA-F]+)>\s*<([0-9a-fA-F]+)>/g))
-        t.set(m[1].toLowerCase(), String.fromCodePoint(...(m[2].match(/.{4}/g) || []).map((h) => parseInt(h, 16))));
-    for (const b of f.match(/beginbfrange([\s\S]*?)endbfrange/g) || [])
-      for (const m of b.matchAll(/<([0-9a-fA-F]+)>\s*<([0-9a-fA-F]+)>\s*<([0-9a-fA-F]+)>/g)) {
-        // la destination peut être une paire de substituts (lettres mathématiques 𝑥, 𝑏… : <d835><dc65>)
-        const a = parseInt(m[1], 16), z = parseInt(m[2], 16), c = (m[3].match(/.{4}/g) || []).map((h) => parseInt(h, 16));
-        for (let k = a; k <= z && k - a < 1024; k++) {
-          const u = c.slice(); u[u.length - 1] += k - a;
-          t.set(k.toString(16).padStart(4, "0"), String.fromCodePoint(...u));
-        }
-      }
-    if (t.size) tables.push(t);
-  }
-  const pages = [];
-  for (const s of fl) {
-    if (!s.includes(" Tj")) continue;
-    const bornes = [...s.matchAll(/\/F\d+\s+[\d.]+\s+Tf/g)].map((m) => m.index);
-    bornes.push(s.length);
-    let texte = "";
-    for (let k = 0; k < bornes.length - 1; k++) {
-      const codes = [...s.slice(bornes[k], bornes[k + 1]).matchAll(/<([0-9a-fA-F]{4})>\s*Tj/g)].map((m) => m[1].toLowerCase());
-      if (!codes.length) continue;
-      let meilleure = null, score = 0;
-      for (const t of tables) {
-        const n = codes.filter((c) => t.has(c)).length;
-        if (n > score) { score = n; meilleure = t; }
-      }
-      if (meilleure) texte += codes.map((c) => meilleure.get(c) ?? "").join("");
+/* Le texte de chaque page, dans l'ordre des pages. Chaque morceau de texte est décodé avec la
+   table ToUnicode de SA police : le nom « /F23 » d'une page est relu dans les ressources de cette
+   page (les noms se répètent d'une page à l'autre, pour d'autres polices). Depuis le 27/09/2026,
+   les lettres des corrigés sont dans SplatLettres, une police de 52 lettres dont les codes (1, 2,
+   3…) existent aussi dans les autres polices : deviner la table au nombre de codes connus ne
+   suffisait plus (𝑏 lu comme un chiffre). */
+function objetsDuPdf(p) {
+  const b = readFileSync(new URL(`../${p}`, import.meta.url));
+  const txt = b.toString("latin1");
+  const objets = new Map();
+  const re = /(\d+) 0 obj/g;
+  let m;
+  while ((m = re.exec(txt))) {
+    const debut = m.index + m[0].length;
+    const fin = txt.indexOf("endobj", debut);
+    let dict = txt.slice(debut, fin), contenu = null;
+    const s = dict.indexOf("stream");
+    if (s >= 0) {
+      let a = debut + s + 6;
+      if (b[a] === 13) a++;
+      if (b[a] === 10) a++;
+      try { contenu = inflateSync(b.subarray(a, txt.indexOf("endstream", a))).toString("latin1"); } catch { contenu = null; }
+      dict = dict.slice(0, s);
     }
-    pages.push(texte);
+    objets.set(+m[1], { dict, contenu });
   }
-  return pages;
+  // les objets rangés dans des flux d'objets (qpdf --object-streams=generate)
+  for (const o of [...objets.values()]) {
+    if (!/\/Type\s*\/ObjStm/.test(o.dict) || !o.contenu) continue;
+    const N = +o.dict.match(/\/N\s+(\d+)/)[1], F = +o.dict.match(/\/First\s+(\d+)/)[1];
+    const e = o.contenu.slice(0, F).trim().split(/\s+/).map(Number);
+    for (let k = 0; k < N; k++)
+      objets.set(e[2 * k], { dict: o.contenu.slice(F + e[2 * k + 1], k + 1 < N ? F + e[2 * k + 3] : o.contenu.length), contenu: null });
+  }
+  return objets;
+}
+function tableToUnicode(f) {
+  const t = new Map();
+  for (const b of f.match(/beginbfchar([\s\S]*?)endbfchar/g) || [])
+    for (const m of b.matchAll(/<([0-9a-fA-F]+)>\s*<([0-9a-fA-F]+)>/g))
+      t.set(m[1].toLowerCase(), String.fromCodePoint(...(m[2].match(/.{4}/g) || []).map((h) => parseInt(h, 16))));
+  for (const b of f.match(/beginbfrange([\s\S]*?)endbfrange/g) || [])
+    for (const m of b.matchAll(/<([0-9a-fA-F]+)>\s*<([0-9a-fA-F]+)>\s*<([0-9a-fA-F]+)>/g)) {
+      // la destination peut être une paire de substituts (lettres mathématiques 𝑥, 𝑏… : <d835><dc65>)
+      const a = parseInt(m[1], 16), z = parseInt(m[2], 16), c = (m[3].match(/.{4}/g) || []).map((h) => parseInt(h, 16));
+      for (let k = a; k <= z && k - a < 1024; k++) {
+        const u = c.slice(); u[u.length - 1] += k - a;
+        t.set(k.toString(16).padStart(4, "0"), String.fromCodePoint(...u));
+      }
+    }
+  return t;
+}
+function texteDesPages(p) {
+  const objets = objetsDuPdf(p);
+  const dict = (n) => (objets.get(n) || { dict: "" }).dict;
+  const ref = (d, cle) => { const m = d.match(new RegExp(`/${cle}\\s+(\\d+)\\s+0\\s+R`)); return m ? +m[1] : null; };
+  // un dictionnaire de ressources (/Font, /XObject) : écrit dans l'objet, ou renvoyé ailleurs
+  const carte = (d, cle) => {
+    const res = ref(d, "Resources") != null ? dict(ref(d, "Resources")) : d;
+    const bloc = ref(res, cle) != null ? dict(ref(res, cle)) : ((res.match(new RegExp(`/${cle}\\s*<<([\\s\\S]*?)>>`)) || ["", ""])[1]);
+    return new Map([...bloc.matchAll(/\/([^\s/<>\[\]]+)\s+(\d+)\s+0\s+R/g)].map((m) => [m[1], +m[2]]));
+  };
+  const tables = new Map();
+  const table = (fonte) => {
+    if (!tables.has(fonte)) {
+      const tu = ref(dict(fonte), "ToUnicode");
+      tables.set(fonte, tu != null && objets.get(tu) && objets.get(tu).contenu ? tableToUnicode(objets.get(tu).contenu) : new Map());
+    }
+    return tables.get(fonte);
+  };
+  // lit un flux de contenu dans l'ordre : changements de police (Tf), textes (Tj), et les
+  // formulaires (Do) — l'assemblage des pages range chaque page dans un formulaire
+  function lire(contenu, d, profondeur = 0) {
+    const fontes = carte(d, "Font"), formes = carte(d, "XObject");
+    let t = new Map(), texte = "";
+    for (const m of contenu.matchAll(/\/([^\s/<>\[\]]+)\s+[\d.]+\s+Tf|<([0-9a-fA-F]{4})>\s*Tj|\/([^\s/<>\[\]]+)\s+Do\b/g)) {
+      if (m[1] !== undefined) t = fontes.has(m[1]) ? table(fontes.get(m[1])) : new Map();
+      else if (m[2] !== undefined) texte += t.get(m[2].toLowerCase()) ?? "";
+      else if (profondeur < 8 && formes.has(m[3])) {
+        const o = objets.get(formes.get(m[3]));
+        if (o && o.contenu && /\/Subtype\s*\/Form/.test(o.dict)) texte += lire(o.contenu, o.dict, profondeur + 1);
+      }
+    }
+    return texte;
+  }
+  // les pages dans l'ordre de l'arbre des pages
+  const racine = [...objets.keys()].find((n) => /\/Type\s*\/Pages\b/.test(dict(n)) && !/\/Parent\s/.test(dict(n)));
+  const ordre = [];
+  (function descendre(n) {
+    const d = dict(n);
+    if (/\/Type\s*\/Page\b/.test(d)) { ordre.push(n); return; }
+    const kids = (d.match(/\/Kids\s*\[([^\]]*)\]/) || ["", ""])[1];
+    for (const k of kids.matchAll(/(\d+)\s+0\s+R/g)) descendre(+k[1]);
+  })(racine);
+  return ordre.map((page) => {
+    const d = dict(page);
+    const liste = (d.match(/\/Contents\s*\[([^\]]*)\]/) || [])[1] || (d.match(/\/Contents\s+(\d+\s+0\s+R)/) || ["", ""])[1];
+    return [...liste.matchAll(/(\d+)\s+0\s+R/g)].map((c) => lire((objets.get(+c[1]) || {}).contenu || "", d)).join("");
+  });
 }
 // Chromium écrit « fi » en ligature (U+FB01)
 const norm = (t) => t.replace(/\s+/g, " ").replace(/ /g, " ").replace(/ﬁ/g, "fi").replace(/ﬂ/g, "fl");

@@ -4946,7 +4946,7 @@
     if(!opArrowMeasureCanvas) opArrowMeasureCanvas = document.createElement("canvas");
     const ctx = opArrowMeasureCanvas.getContext("2d");
     if(!ctx) return String(label).length * fontPx * 0.62;
-    ctx.font = `950 ${fontPx}px Arial, Helvetica, sans-serif`;
+    ctx.font = `950 ${fontPx}px SplatLettres, Arial, Helvetica, sans-serif`;
     return ctx.measureText(String(label)).width;
   }
 

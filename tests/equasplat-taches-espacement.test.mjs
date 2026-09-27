@@ -194,12 +194,17 @@ test("après « enlever des taches des deux côtés », les taches qui restent n
   }
 });
 
-test("la lettre suit la tache : l'échelle est posée au dessin, et la feuille de style l'applique", () => {
-  // Comportement, pas décor : le groupe reçoit le rapport taille réelle / taille d'avant,
-  // et les deux tailles de lettre (vue normale et plein écran) le multiplient.
+test("la lettre suit la tache : sa taille est posée au dessin, proportionnelle au rayon réel de la tache", () => {
+  // Comportement, pas décor. Depuis le 27/09/2026 (lettre ronde), la lettre fait 0,8 × le rayon
+  // RÉEL de la tache (pos.r, déjà rétréci à partir de 7 taches), en style en ligne : elle rétrécit
+  // donc avec sa tache, jamais toute seule, et garde la même proportion au téléphone.
+  assert.match(html, /drawSplatLetter\(g, pos\.cx, pos\.cy, pos\.r, xPieceLabel\(item\)\);/);
+  assert.match(html, /const SPLAT_LETTRE_K = 0\.8;/);
+  assert.match(html, /t\.style\.fontSize = `\$\{\(r \* SPLAT_LETTRE_K\)\.toFixed\(1\)\}px`;/);
+  // les mini-plateaux du partage : la même fonction, avec le rayon de leur tache
+  assert.match(html, /drawSplatLetter\(g, splatX, centerY, splatR, displayedUnknown\(\)\);/);
+  assert.doesNotMatch(html, /splatLabel\.style\.fontSize/);
+  // l'échelle reste posée (repli de la feuille de style), et rRef est bien la taille d'avant
   assert.match(html, /if\(pos\.rRef\) g\.style\.setProperty\("--splatEchelle", \(pos\.r \/ pos\.rRef\)\.toFixed\(3\)\);/);
-  assert.match(html, /\.splatText\{[\s\S]*?font-size:calc\(38px \* var\(--splatEchelle, 1\)\);/);
-  assert.match(html, /main\.activeMode \.splatText\{\s*font-size:calc\(48px \* var\(--splatEchelle, 1\)\);/);
-  // rRef est bien la taille d'avant, celle que la lettre prend pour référence.
   assert.match(html, /out\.set\(xs\[k\]\.id, \{cx,cy,r:radius,rRef:rmax\}\);/);
 });
