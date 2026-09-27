@@ -164,7 +164,7 @@ function flux(p) {
   return out;
 }
 const nombreDePages = (p) => (flux(p).join("").match(/\/Type\s*\/Page\b/g) || []).length;
-test("R2 : les huit PDF — 8 pages A4, 4 feuilles A3 imposées, légers ; la page des livrets les propose (monde caché)", () => {
+test("R2 : les huit PDF — 8 pages A4, 4 feuilles A3 imposées, légers ; la page des livrets les propose (monde public)", () => {
   for (const n of [1, 2]) for (const c of ["", "_correction"]) {
     const s = `livret_splat_relatifs_${n}${c}`;
     assert.equal(nombreDePages(`outils/${s}.pdf`), 8, `${s}.pdf`);
@@ -172,9 +172,10 @@ test("R2 : les huit PDF — 8 pages A4, 4 feuilles A3 imposées, légers ; la pa
     assert.ok(taille(`outils/${s}.pdf`) < 3_000_000, `${s}.pdf reste léger`);
     assert.ok(pageLivrets.includes(`href="/outils/${s}.pdf"`), `page des livrets : ${s}.pdf`);
   }
-  assert.match(pageLivrets, /<section class="panneau" data-m="6" id="monde-6" data-prepa role="tabpanel"/);
-  assert.match(pageLivrets, /<a href="#monde-6" data-m="6" id="onglet-6" role="tab" aria-controls="monde-6" aria-selected="false" data-prepa>/);
-  assert.match(etapes, /const MONDES_EN_PREPARATION = \[3, 4, 6\];/, "le monde 6 reste caché tant que Gwenaël ne l'a pas validé");
+  // le monde 6 est public depuis le 27/09/2026 (Gwenaël : « on peut le mettre en ligne directement »)
+  assert.match(pageLivrets, /<section class="panneau" data-m="6" id="monde-6" role="tabpanel"/);
+  assert.match(pageLivrets, /<a href="#monde-6" data-m="6" id="onglet-6" role="tab" aria-controls="monde-6" aria-selected="false">/);
+  assert.match(etapes, /const MONDES_EN_PREPARATION = \[3, 4\];/, "le monde 6 n'est plus en préparation");
   // au dos, le seul logo maths&go, sans IREMI, sans Unité apprenante, sans crédit à Claire
   const dos = lire(SRC + "dos.html");
   assert.match(dos, /<img class="mg" src="\/assets\/img\/logos\/mathsgo\/logo-print\.png"/);
