@@ -200,7 +200,7 @@ function fonction(nom, texte = outil) {
 }
 
 test("R1 : « zero=1 » — une solution nulle en relatifs, sans changer le hasard des autres séries", () => {
-  assert.match(outil, /const sharedNames = \[[^\]]*"jouer", "zero"\]/);
+  assert.match(outil, /const sharedNames = \[[^\]]*"jouer", "zero", "taches"\]/);
   assert.match(outil, /solutionNulle = isSignedEquationModeValue\(activityEl\.value\) && params\.get\("zero"\) === "1";/);
   assert.match(outil, /const x = solutionNulle \? \(rng\(\), 0\) : \(\(rng\(\) < 0\.5\) \? -1 : 1\) \* absX;/);
   assert.match(outil, /\}else if\(vCountL === 0 && vCountR === 0 && !solutionNulle\)\{/);
@@ -254,7 +254,9 @@ test("R1 : à l'impression, le vrai signe moins, le mot « opposé » lisible, p
   assert.equal(c.f(-12), "−12");
   assert.equal(c.f(7), "7");
   assert.match(outil, /return clamp\(Math\.round\(\(Number\(r\) \|\| 74\) \* \(revealed \? 0\.34 : 0\.38\)\), 16, 44\);/);
-  assert.equal((outil.match(/const fs = eqPrintOpposeFontSize\(/g) || []).length, 3, "les trois scènes imprimées");
+  // (lot R3) les trois scènes imprimées passent par une seule fonction, qui pose « opposé »
+  assert.equal((outil.match(/drawEqPrintTacheMark\((?:targetGroup, text|targetSvg, tText), s, card, /g) || []).length, 3, "les trois scènes imprimées");
+  assert.match(fonction("drawEqPrintTacheMark"), /: eqPrintOpposeFontSize\(r, revealed\);/);
   // (relecture du monde 5, 27/09/2026) plus aucun logo IREMI dans l'outil, relatifs comme entiers naturels
   assert.doesNotMatch(fonction("createEquationPrintHeader"), /iremLogo|IREM_PRINT_LOGO_URL/);
   assert.match(fonction("getEquationPrintInstruction"), /sauf les taches «\\u00a0opposé\\u00a0»\\u00a0: elles cachent l’opposé de cette valeur\./);
@@ -265,4 +267,73 @@ test("R1 : ÉquaSplat conclut une solution nulle (4𝑥 = 0), jamais −𝑥 = 0
   assert.match(g, /if\(right\.length === 0 && allSameXSign\(left\) && xSign\(left\[0\]\) > 0\)\{\s*return \{value:0, count:left\.length, xSide:"left", tokenSide:"right"\};/);
   assert.match(g, /if\(left\.length === 0 && allSameXSign\(right\) && xSign\(right\[0\]\) > 0\)\{\s*return \{value:0, count:right\.length, xSide:"right", tokenSide:"left"\};/);
   assert.ok(g.indexOf("value:0") < g.indexOf("if(left.length === 0 || right.length === 0) return null;"));
+});
+
+/* R3 (27/09/2026, décision de Gwenaël) : au livret 2, la lettre sur chaque tache imprimée —
+   « 𝑡 », « −𝑡 » — et, dans le corrigé, la valeur de −𝑡 sous une tache « −𝑡 ». Le livret 1 garde
+   « opposé ». Et à l'écran, la tache est opaque (on devinait le nombre en projection). */
+function marques(lettre, carte = { family: "EQPM" }) {
+  const poses = [];
+  const c = vm.createContext({ tachesLettre: lettre, clamp: (v, a, b) => Math.max(a, Math.min(b, v)),
+    isSignedEquationFamily: (k) => k.family === "EQPM", getCardVarChar: () => "𝑡",
+    eqPrintOpposeFontSize: () => 20 });
+  vm.runInContext(fonction("drawEqPrintTacheMark") + fonction("eqPrintHiddenValue")
+    + ";globalThis.m=drawEqPrintTacheMark;globalThis.v=eqPrintHiddenValue;", c);
+  const g = { appendChild: (t) => poses.push(t) };
+  const texte = (x, y, label, attrs) => ({ label, attrs });
+  const s = { cx: 0, cy: 0, r: 74 };
+  return {
+    poser: (opposee, devoilee) => { poses.length = 0; const r = c.m(g, texte, s, carte, opposee, devoilee); return { r, poses: poses.map((p) => p.label) }; },
+    valeur: (val, opposee) => c.v(carte, val, opposee)
+  };
+}
+
+test("R3 : « taches=lettre » — 𝑡 et −𝑡 sur les taches imprimées, la valeur de −𝑡 dessous ; sans lui, rien ne change", () => {
+  const sans = marques(false);
+  assert.deepEqual(sans.poser(false, false), { r: false, poses: [] });
+  assert.deepEqual(sans.poser(true, false), { r: false, poses: ["opposé"] });
+  assert.deepEqual(sans.poser(true, true), { r: true, poses: ["opposé"] });
+  assert.equal(sans.valeur(3, true), 3, "livret 1 : sous « opposé », la valeur de 𝑡");
+  const avec = marques(true);
+  assert.deepEqual(avec.poser(false, false), { r: false, poses: ["𝑡"] });
+  assert.deepEqual(avec.poser(true, false), { r: false, poses: ["−𝑡"] });
+  assert.deepEqual(avec.poser(false, true), { r: true, poses: ["𝑡"] });
+  assert.deepEqual(avec.poser(true, true), { r: true, poses: ["−𝑡"] });
+  assert.equal(avec.valeur(3, true), -3, "sous « −𝑡 », la valeur de −𝑡");
+  assert.equal(avec.valeur(-4, true), 4);
+  assert.equal(avec.valeur(0, true), 0);
+  assert.equal(avec.valeur(3, false), 3);
+  // hors relatifs (monde 5), le réglage ne fait rien
+  const m5 = marques(true, { family: "EQ" });
+  assert.deepEqual(m5.poser(false, false), { r: false, poses: [] });
+  assert.equal(m5.valeur(3, true), 3);
+  // l'adresse : lue une fois pour la page, redonnée par le lien partagé
+  assert.match(outil, /tachesLettre = params\.get\("taches"\) === "lettre";/);
+  assert.match(outil, /if\(tachesLettre && isSignedEquationModeValue\(act\)\) params\.set\("taches", "lettre"\);/);
+  // les jetons cachés dévoilés passent par eqPrintHiddenValue dans les trois scènes
+  assert.equal((outil.match(/(?<!function )eqPrintHiddenValue\(card, /g) || []).length, 3);
+  // la consigne le dit
+  assert.match(fonction("getEquationPrintInstruction"), /if\(hasOpposed && tachesLettre\) note = "Les taches cachent toutes la même valeur, sauf celles qui ont un «\\u00a0−\\u00a0» devant la lettre\\u00a0: elles cachent l’opposé de cette valeur\.";/);
+});
+
+test("R3 : le livret 2 imprime la lettre (fiches, corrigé, exemple, couverture, dos) ; le livret 1 garde « opposé »", () => {
+  const v1 = render.slice(render.indexOf('"livret1": dict('), render.indexOf('"livret2": dict('));
+  const v2 = render.slice(render.indexOf('"livret2": dict('), render.indexOf("# ------------------------------------------------------------------ les livrets corrigés"));
+  assert.doesNotMatch(v1, /lettre=True/);
+  assert.match(v2, /lettre=True,/);
+  assert.match(render, /\+ \("&taches=lettre" if lettre else ""\)\)/, "les fiches et les corrigés");
+  assert.match(render, /\+ \("&taches=lettre" if v\.get\("lettre"\) else ""\)\)/, "l'exemple de couverture");
+  assert.match(render, /adresse_fiche\(f, corr\["imprime"\] if corr else "statement", v\.get\("lettre", False\)\)/);
+  assert.match(render, /if donnees\.get\("lettre"\):\s+r = await pg\.evaluate\(JS_LETTRE, page\)/);
+});
+
+test("R3 : à l'écran, la tache est opaque (le papier ne change pas)", () => {
+  assert.match(fonction("renderCardEquation"), /const cover = "#000";/);
+  assert.match(fonction("renderCardEquationPrint"), /const cover = "rgba\(0,0,0,0\.95\)";/);
+});
+
+test("R3 : la tache de la couverture des livrets du monde 6 porte « −𝑥 »", () => {
+  const couv = lire(SRC + "couverture.html");
+  assert.match(couv, /<text class="lettre"[^>]*>−𝑥<\/text>/);
+  assert.doesNotMatch(couv, /<text class="lettre"[^>]*>𝑥<\/text>/);
 });

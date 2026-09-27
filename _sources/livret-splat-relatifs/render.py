@@ -162,6 +162,9 @@ VUES = {
         sur="Mon livret · Monde 6 · Livret 2",
         accroche="L'inconnue à gauche et à droite,<br>des taches normales et opposées&nbsp;!",
         fiches=[PAR_N[41], PAR_N[42], PAR_N[43]], exemple=EXEMPLE_2,
+        # lot R3 (27/09/2026, décision de Gwenaël) : au livret 2, la lettre sur chaque tache —
+        # « 𝑡 », « −𝑡 » — au lieu du mot « opposé » (le livret 1 garde « opposé » pour découvrir)
+        lettre=True,
         dos=[("Des deux côtés", "Des taches à gauche et à droite, comme la fiche&nbsp;41.", "4"),
              ("Une tache opposée", "Des taches opposées, comme la fiche&nbsp;42.", "5"),
              ("Le grand mélange", "Tout mélangé, comme la fiche&nbsp;43.", "6")],
@@ -358,6 +361,39 @@ JS_DOS = """(d) => {
   return 'ok';
 }"""
 
+# Livret 2 (lot R3, 27/09/2026) : la lettre est écrite sur les taches des fiches ; la nouveauté
+# de la couverture et les deux premiers rappels du dos le disent avec la même tache « −𝑥 ».
+JS_LETTRE = """(page) => {
+  const X = '<span class="x">𝑥</span>';
+  const badge = (svg) => {
+    const t = svg && svg.querySelector('text');
+    if (!t) return false;
+    t.setAttribute('font-family', 'x-arrondi, serif');
+    t.removeAttribute('font-weight');
+    t.setAttribute('font-size', '40');
+    t.setAttribute('y', '67');
+    t.setAttribute('x', '55');
+    t.textContent = '\u2212𝑥';
+    return true;
+  };
+  if (page === 'couverture.html') {
+    const it = document.querySelector('.neuf-oppose');
+    if (!it) return 'nouveauté « opposé » introuvable';
+    if (!badge(it.parentElement.querySelector('svg'))) return 'tache de la nouveauté introuvable';
+    it.innerHTML = "Dans ce livret, la <b>lettre</b> est sur les taches&nbsp;: une tache –" + X +
+      " cache l'<b>opposé</b> de ce que cache une tache " + X + ".";
+    return 'ok';
+  }
+  const li = document.querySelectorAll('.lex li');
+  if (li.length < 2) return 'Pour se souvenir : lignes introuvables';
+  const t0 = li[0].querySelectorAll('span')[1], t1 = li[1].querySelectorAll('span')[1];
+  if (!t0 || !t1 || !/sans mot/.test(t0.innerHTML)) return 'Pour se souvenir : texte des taches introuvable';
+  t0.innerHTML = t0.innerHTML.replace('Toutes les taches sans mot cachent', 'Toutes les taches ' + X + ' cachent');
+  if (!badge(li[1].querySelector('svg'))) return 'tache « opposé » du dos introuvable';
+  t1.innerHTML = "Une tache <b>–" + X + "</b> cache l'<b>opposé</b> de ce nombre.";
+  return 'ok';
+}"""
+
 X_SOURCES = 'local("FreeSerif"), local("LatinModernMath-Regular")'
 CSS_X = (
     '@font-face{font-family:"x-arrondi";src:' + X_SOURCES + ';unicode-range:U+1D400-1D7FF;size-adjust:120%}\n'
@@ -372,14 +408,17 @@ NB = "&nbsp;"
 def signe(n):
     return f"{TIRET}{abs(n)}" if n < 0 else str(n)
 
-def decrit(cote):
-    """« deux taches, un jeton 3 et un jeton –9 »"""
+def decrit(cote, lettre=None):
+    """« deux taches, un jeton 3 et un jeton –9 » ; avec la lettre sur les taches (livret 2) :
+    « deux taches 𝑏, une tache –𝑏 et un jeton 6 »"""
     m = []
     t, o = cote["taches"], cote["opposees"]
+    nt = f"{NB}{lettre}" if lettre else ""
+    no = f"{NB}{TIRET}{lettre}" if lettre else f"{NB}«{NB}opposé{NB}»"
     if t - o:
-        m.append("une tache" if t - o == 1 else f"{MOTS[t - o]} taches")
+        m.append(f"une tache{nt}" if t - o == 1 else f"{MOTS[t - o]} taches{nt}")
     if o:
-        m.append("une tache «" + NB + "opposé" + NB + "»" if o == 1 else f"{MOTS[o]} taches «{NB}opposé{NB}»")
+        m.append(f"une tache{no}" if o == 1 else f"{MOTS[o]} taches{no}")
     for j in cote["jetons"]:
         m.append(f"un jeton{NB}{signe(j)}")
     return ", ".join(m[:-1]) + " et " + m[-1] if len(m) > 1 else m[0]
@@ -400,7 +439,7 @@ def ecrit(ligne):
     out = ligne.replace("−", TIRET).replace(" ", NB)
     return re.sub(r"([\U0001D400-\U0001D7FF])", r'<span class="x">\1</span>', out)
 
-def textes_exemple(ex):
+def textes_exemple(ex, lettre=False):
     """Le texte « Comment ça marche ? », écrit à partir de la carte que l'outil vient de dessiner
     et de sa résolution : il ne peut pas mentir sur ses nombres."""
     g, d, x, v = ex["gauche"], ex["droite"], ex["x"], ex["variable"]
@@ -418,12 +457,22 @@ def textes_exemple(ex):
         gestes.append(g_)
     phrase_gestes = ", ".join(gestes[:-1]) + ", puis " + gestes[-1] if len(gestes) > 1 else gestes[0]
     opp = (g["opposees"] + d["opposees"]) > 0
-    cache = (f"Ici, elles sont transparentes&nbsp;: une tache cache {signe(x)}"
-             + (f"&nbsp;; sous la tache «{NB}opposé{NB}», on lit «{NB}opposé{NB}» et {signe(x)}&nbsp;: elle cache {signe(-x)}" if opp else "") + ". ")
-    return (f"Sur cette carte, il y a la même quantité à gauche et à droite. À gauche, {decrit(g)}&nbsp;; "
-            f"à droite, {decrit(d)}."
+    if lettre:
+        # livret 2 (lot R3) : la lettre est sur les taches, et sous une tache « –𝑏 » dévoilée
+        # l'outil montre la valeur de –𝑏
+        nom_opp = f"{TIRET}{let}"
+        cache = (f"Ici, elles sont transparentes&nbsp;: sous une tache {let}, on lit {signe(x)}"
+                 + (f"&nbsp;; sous la tache {nom_opp}, on lit {signe(-x)}" if opp else "") + ". ")
+    else:
+        nom_opp = f"«{NB}opposé{NB}»"
+        cache = (f"Ici, elles sont transparentes&nbsp;: une tache cache {signe(x)}"
+                 + (f"&nbsp;; sous la tache «{NB}opposé{NB}», on lit «{NB}opposé{NB}» et {signe(x)}&nbsp;: elle cache {signe(-x)}" if opp else "") + ". ")
+    # dans la première phrase, la lettre ne doit pas être un <span> (ils y font un paragraphe)
+    d_let = f'<i class="x">{v}</i>' if lettre else None
+    return (f"Sur cette carte, il y a la même quantité à gauche et à droite. À gauche, {decrit(g, d_let)}&nbsp;; "
+            f"à droite, {decrit(d, d_let)}."
             "\n      <span>Les taches cachent toutes le même nombre&nbsp;: c'est l'<b>inconnue</b>, la lettre "
-            f"{let}" + (f" — sauf la tache «{NB}opposé{NB}», qui cache son opposé" if opp else "") + ". "
+            f"{let}" + (f" — sauf la tache {nom_opp}, qui cache son opposé" if opp else "") + ". "
             + cache
             + f"L'<b>équation</b> s'écrit {ecrit(lignes[0])}&nbsp;: " + phrase_gestes
             + f" — {let}{NB}={NB}{signe(x)}.</span>")
@@ -490,13 +539,15 @@ def serveur():
     threading.Thread(target=srv.serve_forever, daemon=True).start()
     return srv
 
-def adresse_fiche(f, imprime="statement"):
-    """L'adresse du lien « Fiche » (ou « Correction ») de la carte des mondes, sans « imprimer »."""
+def adresse_fiche(f, imprime="statement", lettre=False):
+    """L'adresse du lien « Fiche » (ou « Correction ») de la carte des mondes, sans « imprimer » ;
+    « taches=lettre » (lot R3) pour le livret 2 : la lettre sur les taches imprimées."""
     v = "&view=equation"
     p = f["parties"]
     suite = ("&suite=" + ";".join(quote(x + v, safe="") for x in p[1:])) if len(p) > 1 else ""
     return (f"/outils/splat_equations.html?{p[0]}{v}{suite}&print={imprime}&layout=6"
-            f"&title={quote('Fiche ' + str(f['n']) + ' — ' + f['t'], safe='')}")
+            f"&title={quote('Fiche ' + str(f['n']) + ' — ' + f['t'], safe='')}"
+            + ("&taches=lettre" if lettre else ""))
 
 async def pages(v, tmp, jeu, corr=None):
     from playwright.async_api import async_playwright
@@ -514,7 +565,8 @@ async def pages(v, tmp, jeu, corr=None):
             return pg
 
         # --- l'exemple de couverture, dessiné par l'outil
-        pg = await page_outil(f"/outils/splat_equations.html?{v['exemple']}&view=equation")
+        pg = await page_outil(f"/outils/splat_equations.html?{v['exemple']}&view=equation"
+                              + ("&taches=lettre" if v.get("lettre") else ""))
         ex = await pg.evaluate(JS_EXEMPLE)
         await pg.close()
         if ex.get("erreur"):
@@ -523,7 +575,8 @@ async def pages(v, tmp, jeu, corr=None):
         # --- les trois fiches
         for i, f in enumerate(v["fiches"]):
             titre = f"Fiche {f['n']} — {f['t']}"
-            pg = await page_outil(adresse_fiche(f, corr["imprime"] if corr else "statement") + "&imprimer=1")
+            pg = await page_outil(adresse_fiche(f, corr["imprime"] if corr else "statement", v.get("lettre", False))
+                                  + "&imprimer=1")
             etat = await pg.evaluate(JS_FICHE)
             if etat["parPage"] != 6 or etat["feuilles"] != 2 or etat["vides"] != 0 or len(etat["cartes"]) != 12:
                 raise SystemExit(f"{titre} : {etat['parPage']}/page, {etat['feuilles']} feuilles, "
@@ -569,6 +622,10 @@ async def pages(v, tmp, jeu, corr=None):
             r = await pg.evaluate(js, donnees)
             if r != "ok":
                 raise SystemExit(f"{page} : {r}")
+            if donnees.get("lettre"):
+                r = await pg.evaluate(JS_LETTRE, page)
+                if r != "ok":
+                    raise SystemExit(f"{page}, la lettre sur les taches : {r}")
             await pg.wait_for_timeout(500)
             debord = await pg.evaluate("() => document.body.scrollHeight > document.body.clientHeight + 1")
             if debord:
@@ -582,14 +639,15 @@ async def pages(v, tmp, jeu, corr=None):
         # Poppins dessine ce signe trop court, on écrit le tiret « – » (même règle qu'au monde 5).
         svg2 = ex["svg2"].replace(">− ", ">– ")
         couv = dict(svg1=ex["svg1"], vb1=ex["vb1"], svg2=svg2, vb2=ex["vb2"],
-                    sur=v["sur"], accroche=v["accroche"], intro=textes_exemple(ex),
+                    sur=v["sur"], accroche=v["accroche"], intro=textes_exemple(ex, v.get("lettre", False)),
                     sommaire=[[f["n"], f["t"], f["resume"]] for f in v["fiches"]],
-                    prof=dict(PROF, dit=CORRECTION["dit"]) if corr else None)
+                    prof=dict(PROF, dit=CORRECTION["dit"]) if corr else None,
+                    lettre=v.get("lettre", False))
         await pdf_html("couverture.html", tmp / "p1.pdf", JS_COUV, couv)
         fleches, equation = dessins_dos(ex)
         dos = dict(niveaux=[[nom, desc, f"{qrweb}/serie-{s}.png"] for nom, desc, s in v["dos"]],
                    univers=f"{qrweb}/univers.png", suite=list(v["suite"]),
-                   fleches=fleches, equation=equation)
+                   fleches=fleches, equation=equation, lettre=v.get("lettre", False))
         await pdf_html("dos.html", tmp / "p8.pdf", JS_DOS, dos)
         await nav.close()
     return ex, cartes_livret

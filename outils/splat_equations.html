@@ -1497,6 +1497,12 @@ let serieComposee = false;
    seulement, pour une partie d'une fiche composée ; sans lui, rien ne change (le tirage
    consomme le hasard exactement comme avant). */
 let solutionNulle = false;
+/* « taches=lettre » (monde 6, lot R3, 27/09/2026) : sur le PAPIER seulement (fiche et
+   correction), chaque tache porte la lettre — « 𝑡 » sur une tache, « −𝑡 » sur une tache
+   opposée — au lieu du mot « opposé » ; dans la correction, sous une tache « −𝑡 » dévoilée,
+   on lit la valeur de −𝑡 (−3 si 𝑡 = 3). Réglage d'adresse pour toute la page (le livret 2
+   du monde 6) ; sans lui, rien ne change. L'écran n'est pas touché. */
+let tachesLettre = false;
 /* Les réglages de la page à son ouverture, avant toute adresse : chaque partie d'une
    fiche composée repart de là, exactement comme si on ouvrait son adresse seule (sans
    ça, une partie hériterait des bornes, du mode ou du « ? » de la précédente). */
@@ -1624,6 +1630,7 @@ function loadSharedConfiguration(){
      « Équation 1 / N » que la carte des mondes, mais sans parcours : aucune étoile, rien
      d'enregistré. On masque la page pendant ce court passage. */
   jeuAuto = params.get("jouer") === "1";
+  tachesLettre = params.get("taches") === "lettre";
   if(jeuAuto) document.documentElement.style.visibility = "hidden";
   /* Fiche composée : « suite » porte les réglages des séries SUIVANTES, mises bout à
      bout après celle de l'adresse (la fiche 35 du livret : trois graines de 4 cartes).
@@ -1635,7 +1642,7 @@ function loadSharedConfiguration(){
       .split(";").map(part => part.trim()).filter(Boolean).slice(0, 5);
     reglagesOuverture = photographierReglages();
   }
-  const sharedNames = ["mode", "seed", "cards", "form", "tasksMax", "visibleMin", "visibleMax", "totalMin", "totalMax", "beadMax", "opposites", "colors", "writing", "unknown", "view", "print", "duplex", "layout", "title", "imprimer", "suite", "jouer", "zero"];
+  const sharedNames = ["mode", "seed", "cards", "form", "tasksMax", "visibleMin", "visibleMax", "totalMin", "totalMax", "beadMax", "opposites", "colors", "writing", "unknown", "view", "print", "duplex", "layout", "title", "imprimer", "suite", "jouer", "zero", "taches"];
   if(!sharedNames.some(name => params.has(name))) return false;
   appliquerConfiguration(params);
   return true;
@@ -1699,6 +1706,7 @@ function buildShareUrl(){
     params.set("view", getEquationStepView());
   }
   if(solutionNulle && isSignedEquationModeValue(act)) params.set("zero", "1");
+  if(tachesLettre && isSignedEquationModeValue(act)) params.set("taches", "lettre");
   addShareControl(params, "print", printModeSelectEl);
   addShareControl(params, "layout", printCardsPerPageEl);
   const printTitle = printActivityTitleEl ? printActivityTitleEl.value.trim() : "";
@@ -6598,7 +6606,9 @@ function renderCardEquation(card, revealState, useTokens){
   if(!eq || !trays || !pos) return;
   const layer = svg;
 
-  const cover = "rgba(0,0,0,0.95)";
+  /* tache opaque à l'écran (lot R3, 27/09/2026) : à 95 %, le nombre caché dessous se
+     devinait en projection. Le papier n'est pas touché ici. */
+  const cover = "#000";
   const revealCol = "rgba(220,220,220,0.35)";
   const isSimpleEquationSchemaView = (card.family === "EQ" && getEquationStepView() === "schema");
   const hasAidTable = (isSimpleEquationSchemaView && revealState > 0);
@@ -7613,6 +7623,44 @@ function eqPrintOpposeFontSize(r, revealed){
   return clamp(Math.round((Number(r) || 74) * (revealed ? 0.34 : 0.38)), 16, 44);
 }
 
+/* La marque d'une tache IMPRIMÉE en relatifs : le mot « opposé » sur une tache opposée
+   (livret 1 du monde 6, le générateur), ou, avec « taches=lettre » (livret 2, lot R3), la
+   lettre sur CHAQUE tache — « 𝑡 », « −𝑡 ». Blanche au milieu d'une tache noire ; noire,
+   au-dessus du jeton, sur une tache dévoilée. Rend true si le mot est posé au-dessus d'un
+   jeton dévoilé (la carte garde alors le rayon de base de ses jetons). */
+function drawEqPrintTacheMark(group, textFn, s, card, opposed, revealed){
+  const lettre = tachesLettre && isSignedEquationFamily(card);
+  if(!opposed && !lettre) return false;
+  const r = Number(s && s.r) || 74;
+  const label = lettre ? ((opposed ? "\u2212" : "") + getCardVarChar(card)) : "opposé";
+  const fs = lettre
+    ? clamp(Math.round(r * (revealed ? 0.46 : (opposed ? 0.66 : 0.78))), 20, 64)
+    : eqPrintOpposeFontSize(r, revealed);
+  const attrs = {
+    "text-anchor":"middle",
+    "dominant-baseline":"middle",
+    "font-size": String(fs),
+    "font-weight": lettre ? "700" : "900",
+    "fill": revealed ? "rgba(0,0,0,0.92)" : "rgba(255,255,255,0.95)",
+    "stroke": revealed ? "rgba(255,255,255,0.78)" : "rgba(0,0,0,0)",
+    "stroke-width": revealed ? "5" : "0",
+    "paint-order":"stroke fill"
+  };
+  if(lettre){
+    attrs["font-family"] = '"Times New Roman", Times, serif';
+    attrs["font-style"] = "italic";
+  }
+  group.appendChild(textFn(s.cx, revealed ? (s.cy - r*0.65) : s.cy, label, attrs));
+  return revealed;
+}
+
+/* La valeur lue sous une tache dévoilée : celle de la lettre, sauf sous une tache « −𝑡 »
+   (taches=lettre) où c'est celle de −𝑡. */
+function eqPrintHiddenValue(card, val, opposed){
+  const v = Number(val) || 0;
+  return (opposed && tachesLettre && isSignedEquationFamily(card)) ? (v === 0 ? 0 : -v) : v;
+}
+
 function drawEqPrintNumberedBead(it, R, mk, mkText, useTokens){
   const p = it.p;
   let fill, stroke, sw, fontSize;
@@ -8469,7 +8517,7 @@ function renderCardEquationSignedStepPrintScene(targetGroup, card, revealState, 
         const isRemoved = !!part.removed;
         const useWhiteHatch = !!part.whiteHatch;
         const dPath = blobPath(s.cx, s.cy, s.r);
-        if(isRevealed) drawHiddenRevealedBead(pHidden, part.value, beadR, s);
+        if(isRevealed) drawHiddenRevealedBead(pHidden, eqPrintHiddenValue(card, part.value, !!part.opposed), beadR, s);
         beadTable.splat(s);
         targetGroup.appendChild(el("path",{
           d: dPath,
@@ -8478,22 +8526,9 @@ function renderCardEquationSignedStepPrintScene(targetGroup, card, revealState, 
           "stroke-width":"5"
         }));
         if(isRemoved) (useWhiteHatch ? addWhiteHatchPath(targetGroup, dPath) : addHatchPath(targetGroup, dPath));
-        if(part.opposed){
-          // le mot est posé au-dessus du jeton dévoilé : la carte garde le rayon de base
-          if(isRevealed) beadTable.cap(beadR);
-          const fs = eqPrintOpposeFontSize(s.r, isRevealed);
-          const yy = isRevealed ? (s.cy - s.r*0.65) : s.cy;
-          targetGroup.appendChild(text(s.cx, yy, "opposé", {
-            "text-anchor":"middle",
-            "dominant-baseline":"middle",
-            "font-size": String(fs),
-            "font-weight":"900",
-            "fill": isRevealed ? "rgba(0,0,0,0.92)" : "rgba(255,255,255,0.95)",
-            "stroke": isRevealed ? "rgba(255,255,255,0.78)" : "rgba(0,0,0,0)",
-            "stroke-width": isRevealed ? "5" : "0",
-            "paint-order":"stroke fill"
-          }));
-        }
+        // « opposé », ou la lettre (taches=lettre) ; posé au-dessus du jeton dévoilé, la
+        // carte garde le rayon de base
+        if(drawEqPrintTacheMark(targetGroup, text, s, card, !!part.opposed, isRevealed)) beadTable.cap(beadR);
       });
 
       visibleParts.forEach((part, idx)=>{
@@ -8515,7 +8550,7 @@ function renderCardEquationSignedStepPrintScene(targetGroup, card, revealState, 
       for(const val of taskArr){
         const p = side.posH?.[hIndex] || {cx:820, cy:610};
         if(revealAnswers){
-          drawHiddenRevealedBead(p, val, beadR, side.splats?.[hIndex] || null);
+          drawHiddenRevealedBead(p, eqPrintHiddenValue(card, val, !!(metaSide.opposeFlags || [])[hIndex]), beadR, side.splats?.[hIndex] || null);
         }
         hIndex++;
       }
@@ -8531,21 +8566,7 @@ function renderCardEquationSignedStepPrintScene(targetGroup, card, revealState, 
         "stroke-width":"5"
       }));
 
-      if(oppFlags && oppFlags[idx]){
-        if(revealAnswers) beadTable.cap(beadR);
-        const fs = eqPrintOpposeFontSize(s.r, revealAnswers);
-        const yy = revealAnswers ? (s.cy - s.r*0.65) : s.cy;
-        targetGroup.appendChild(text(s.cx, yy, "opposé", {
-          "text-anchor":"middle",
-          "dominant-baseline":"middle",
-          "font-size": String(fs),
-          "font-weight":"900",
-          "fill": revealAnswers ? "rgba(0,0,0,0.92)" : "rgba(255,255,255,0.95)",
-          "stroke": revealAnswers ? "rgba(255,255,255,0.78)" : "rgba(0,0,0,0)",
-          "stroke-width": revealAnswers ? "5" : "0",
-          "paint-order":"stroke fill"
-        }));
-      }
+      if(drawEqPrintTacheMark(targetGroup, text, s, card, !!(oppFlags && oppFlags[idx]), revealAnswers)) beadTable.cap(beadR);
     });
 
     (metaSide.visible || []).forEach((val, i)=>{
@@ -8902,7 +8923,7 @@ function renderCardEquationPrint(targetSvg, card, printMode, tEl, tText, useToke
     for(const taskArr of metaSide.hiddenByTask){
       for(const val of taskArr){
         const p = side.posH?.[hIndex] || {cx:820, cy:610};
-        beadTable.bead(p, val, {baseR:beadR, hidden:true, splat:side.splats?.[hIndex] || null});
+        beadTable.bead(p, eqPrintHiddenValue(card, val, !!(metaSide.opposeFlags || [])[hIndex]), {baseR:beadR, hidden:true, splat:side.splats?.[hIndex] || null});
         hIndex++;
       }
     }
@@ -8911,22 +8932,8 @@ function renderCardEquationPrint(targetSvg, card, printMode, tEl, tText, useToke
     (side.splats || []).forEach((s, idx)=>{
       beadTable.splat(s);
       targetSvg.appendChild(tEl("path",{d: blobPath(s.cx, s.cy, s.r), fill: revealAnswers ? revealCol : cover, stroke:"rgba(0,0,0,0.18)","stroke-width":"5"}));
-      if(oppFlags && oppFlags[idx]){
-        // mot posé au-dessus du jeton dévoilé : la carte garde le rayon de base
-        if(revealAnswers) beadTable.cap(beadR);
-        const fs = eqPrintOpposeFontSize(s.r, revealAnswers);
-        const yy = revealAnswers ? (s.cy - s.r*0.65) : (s.cy);
-        targetSvg.appendChild(tText(s.cx, yy, "opposé", {
-          "text-anchor":"middle",
-          "dominant-baseline":"middle",
-          "font-size": String(fs),
-          "font-weight":"900",
-          "fill": (revealAnswers ? "rgba(0,0,0,0.92)" : "rgba(255,255,255,0.95)"),
-          "stroke": (revealAnswers ? "rgba(255,255,255,0.78)" : "rgba(0,0,0,0)"),
-          "stroke-width": (revealAnswers ? "5" : "0"),
-          "paint-order":"stroke fill"
-        }));
-      }
+      // mot (ou lettre) posé au-dessus du jeton dévoilé : la carte garde le rayon de base
+      if(drawEqPrintTacheMark(targetSvg, tText, s, card, !!(oppFlags && oppFlags[idx]), revealAnswers)) beadTable.cap(beadR);
     });
 
     for(let i=0;i<metaSide.visible.length;i++){
@@ -9646,6 +9653,8 @@ function getEquationPrintInstruction(slotCards){
   const hasOpposed = isSigned && slotCards.some(card => card && card._eq &&
     [card._eq.left, card._eq.right].some(side => (side && side.opposeFlags || []).some(Boolean)));
   if(hasOpposed) note = "Les taches cachent toutes la même valeur, sauf les taches «\u00a0opposé\u00a0»\u00a0: elles cachent l’opposé de cette valeur.";
+  /* taches=lettre (lot R3) : la lettre est écrite sur chaque tache */
+  if(hasOpposed && tachesLettre) note = "Les taches cachent toutes la même valeur, sauf celles qui ont un «\u00a0−\u00a0» devant la lettre\u00a0: elles cachent l’opposé de cette valeur.";
   return {main, note};
 }
 

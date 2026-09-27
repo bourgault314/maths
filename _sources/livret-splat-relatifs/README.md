@@ -10,6 +10,12 @@ mondes (lot R2, 26/09/2026) :
 
 Et leurs corrigés, par l'équation : `…_correction.pdf` · `…_correction_a_plier.pdf`.
 
+**La tache opposée sur le papier (lot R3, 27/09/2026, décision de Gwenaël)** : le livret 1 garde
+le mot « opposé » pour la découvrir ; le livret 2 écrit la **lettre sur chaque tache** — « 𝑡 »,
+« −𝑡 » — grâce au réglage d'adresse `taches=lettre` de l'outil (`lettre=True` dans `VUES`), et
+son corrigé montre sous une tache « −𝑡 » la valeur de −𝑡. La nouveauté de la couverture et les
+deux premiers rappels du dos du livret 2 le disent avec la même tache « −𝑥 » (`JS_LETTRE`).
+
 Une seule famille, celle de l'équation : les plateaux côte à côte (vue Équation de l'outil,
 plateau à 80 % de la case), la place dessous pour écrire. En relatifs, l'outil ne dessine pas de
 schéma en barres (une barre négative ne se dessine pas). L'inconnue en lettre seulement.
