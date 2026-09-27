@@ -515,7 +515,7 @@ test("Q4 : page des livrets — les corrigés du monde 5 repliés sous chaque li
   assert.match(catalogue, /le livret à plier, et le livret corrigé, à donner aux élèves/);
   assert.doesNotMatch(pageLivrets, /pour les mondes 1 à 4/);
   assert.doesNotMatch(lire("outils/toutes-les-ressources.html"), /pour les mondes 1 à 4, les livrets corrigés/);
-  assert.match(lire("outils/index.html"), /catalogue-refonte-data\.js\?v=splat-relecture-m5-20260927-1/, "le cache-buster du catalogue suit");
+  assert.match(lire("outils/index.html"), /catalogue-refonte-data\.js\?v=splat-relatifs-public-20260927-1/, "le cache-buster du catalogue suit");
 });
 
 /* ------------------------------------------------------------------ lot Q5 (25/09/2026)
@@ -709,9 +709,9 @@ test("Q5 : la page des livrets et la carte des mondes — « Le défi » au mond
   assert.ok(bloc5.includes("Chaque version a son livret <b>Le d\\u00e9fi</b>"));
   // le catalogue le dit, et son cache-buster suit
   const catalogue = lire("assets/js/catalogue-refonte-data.js");
-  assert.match(catalogue, /SPLAT! Équations \(monde 5\) en quatre livrets : le schéma en barres et l’équation, chacun avec son «\u00a0Le défi\u00a0»\."/);
+  assert.match(catalogue, /SPLAT! Équations \(monde 5\) en quatre livrets : le schéma en barres et l’équation, chacun avec son «\u00a0Le défi\u00a0»\. SPLAT! Relatifs \(monde 6\) en deux livrets\."/);
   assert.match(catalogue, /chacun avec son livret «\u00a0Le défi\u00a0», des totaux de 50 à 100\./);
-  assert.match(lire("outils/index.html"), /catalogue-refonte-data\.js\?v=splat-relecture-m5-20260927-1/);
+  assert.match(lire("outils/index.html"), /catalogue-refonte-data\.js\?v=splat-relatifs-public-20260927-1/);
 });
 
 test("Q5 : ÉquaSplat ne reprend une série interrompue que si c'est la même (empreinte)", () => {

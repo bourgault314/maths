@@ -4,8 +4,8 @@ import test from "node:test";
 import vm from "node:vm";
 
 /* Les mondes « en préparation » (26/09/2026, demande de Gwenaël pendant sa relecture
-   monde par monde) : pour le public, les mondes 3, 4 et 6 (Enquête, Système, Relatifs)
-   s'affichent « 🚧 en préparation » sur la carte des mondes, sans aucun lien (vue
+   monde par monde) : pour le public, les mondes 3 et 4 (Enquête, Système ; le 6, Relatifs,
+   l'était aussi jusqu'à sa mise en ligne du 27/09/2026) s'affichent « 🚧 en préparation » sur la carte des mondes, sans aucun lien (vue
    élève et vue prof), leurs livrets disparaissent de la page des livrets, et le
    bouton « Étape suivante » des outils les saute. Le monde 5 reste public.
    La clé de Gwenaël (?essai=1, retenue par le navigateur ; ?essai=0 l'efface)
@@ -21,7 +21,7 @@ const moduleEtapes = lire("assets/js/splat-etapes.js");
 const univers = lire("outils/splat_univers.html");
 const livrets = lire("outils/livrets_splat.html");
 const URL_CARTE = "/outils/splat_univers.html";
-const VERSION = "20260926-2";
+const VERSION = "20260927-1";
 
 // ---------- le module, exécuté avec une fausse fenêtre ----------
 function stockage(initial = {}) {
@@ -48,11 +48,11 @@ function chaineComplete(p) {
 }
 const suivant = (mod, p, cle) => { const s = mod.suivante(p, cle); return s.derniere ? "carte" : s.parcours; };
 
-test("une seule ligne, en tête du fichier, avec les mondes 3, 4 et 6", () => {
+test("une seule ligne, en tête du fichier, avec les mondes 3 et 4 (le 6 est public depuis le 27/09/2026)", () => {
   const lignes = moduleEtapes.match(LIGNE) || [];
   assert.equal(lignes.length, 1, "MONDES_EN_PREPARATION doit être écrit une seule fois");
   assert.ok(moduleEtapes.indexOf(lignes[0]) < moduleEtapes.indexOf("const ETAPES"), "la ligne doit être en tête, avant la liste des étapes");
-  assert.deepEqual([...E.MONDES_EN_PREPARATION], [3, 4, 6]);
+  assert.deepEqual([...E.MONDES_EN_PREPARATION], [3, 4]);
   // chaque numéro est bien un monde de la carte
   for (const n of E.MONDES_EN_PREPARATION) assert.ok(tousLesMondes.includes(n), `monde ${n} inconnu de la carte`);
   // et c'est bien le numéro AFFICHÉ sur la carte : Enquête 3, Système 4, Équations 5, Relatifs 6
@@ -79,26 +79,27 @@ test("la clé : ?essai=1 l'enregistre, elle survit au rechargement, ?essai=0 l'e
   assert.equal(nue.MathsGoSplatEtapes.cle, false);
 });
 
-test("sans la clé : le bouton saute les mondes 3 et 4 (9 → 35) et s'arrête après l'étape 37", () => {
+test("sans la clé : le bouton saute les mondes 3 et 4 (9 → 35), puis le monde 6 suit le monde 5 (37 → 38)", () => {
   const b = (p) => E.bouton(p, URL_CARTE, false);
   assert.equal(E.sousTitre("m2e5", false), "🌍 Nouveau monde : SPLAT! Équations");
   assert.deepEqual(E.suivante("m2e5", false), { derniere: false, parcours: "m3e1", numero: 35, titre: "Premières équations", monde: "SPLAT! Équations", nouveauMonde: true });
   assert.equal(b("m2e5").href, `${URL_CARTE}?apres=m2e5`);
-  assert.deepEqual(b("m3e4"), { html: "Voir la carte des mondes ▶", href: URL_CARTE, versCarte: true });
-  // les mondes 1, 2 et 5 : rien ne change
-  for (const p of ["m1e1", "m1e6", "m2e1", "m2e4", "m3e1", "m3e2"]) assert.equal(suivant(E, p, false), chaineComplete(p), p);
+  // le monde 6 est public depuis le 27/09/2026 : après l'étape 37, le nouveau monde, puis la carte après la 43
+  assert.equal(E.sousTitre("m3e4", false), "🌍 Nouveau monde : SPLAT! Relatifs");
+  assert.equal(b("m3e4").href, `${URL_CARTE}?apres=m3e4`);
+  assert.deepEqual(b("m4e6"), { html: "Voir la carte des mondes ▶", href: URL_CARTE, versCarte: true });
+  // les mondes 1, 2, 5 et 6 : rien ne change
+  for (const p of ["m1e1", "m1e6", "m2e1", "m2e4", "m3e1", "m3e2", "m3e4", "m4e1", "m4e5"]) assert.equal(suivant(E, p, false), chaineComplete(p), p);
   // un QR déjà imprimé dans un monde en préparation : on continue dans CE monde, puis la carte
   assert.equal(E.sousTitre("enq10", false), "Étape 11 · De moins que");
   assert.equal(suivant(E, "enq23", false), "enq24");
   assert.equal(suivant(E, "enq24", false), "carte");
   assert.equal(suivant(E, "sys27", false), "sys28");
   assert.equal(suivant(E, "sys34", false), "carte");
-  assert.equal(suivant(E, "m4e5", false), "m4e6");
-  assert.equal(suivant(E, "m4e6", false), "carte");
   // aucun changement de monde ne mène à un monde caché
   for (const e of ETAPES) {
     const s = E.suivante(e[0], false);
-    if (!s.derniere && s.nouveauMonde) assert.ok(![3, 4, 6].includes(ETAPES.find((x) => x[0] === s.parcours)[4]), `${e[0]} mène à ${s.parcours}`);
+    if (!s.derniere && s.nouveauMonde) assert.ok(![3, 4].includes(ETAPES.find((x) => x[0] === s.parcours)[4]), `${e[0]} mène à ${s.parcours}`);
   }
 });
 
