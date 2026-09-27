@@ -227,3 +227,13 @@ Décisions de Gwenaël (questions à choix) et ce qui a changé :
 - **Dos, « Pour se souvenir »** : la tache plus grosse ; les petits schémas en barres tracés à
   l'échelle en SVG (`mini_sch`) — le bloc 𝑥 𝑥 𝑥 a la largeur du 15, la tache seule la largeur
   d'une tache du dessus (remarque de Gwenaël).
+
+## La lettre ronde dans les pages-fiches (27/09/2026)
+
+Les pages-fiches sont imprimées par l'outil lui-même (`outils/splat_equations.html`) : depuis que
+l'outil déclare **SplatLettres** (la lettre ronde du site, `assets/fonts/`), les lettres des
+**corrigés** (𝑥, 𝑏, 𝑚… dans les équations, les flèches et les cases des schémas) sont rondes,
+comme sur la couverture et le dos — avant, ces pages prenaient la lettre de secours de la machine
+de rendu (FreeSans, sans empattement). Les huit PDF corrigés ont été refaits ; les livrets de
+l'élève n'ont pas bougé (leurs fiches n'ont pas de lettre). Couverture et dos gardent FreeSerif
+(`CSS_X`), le même dessin rond.

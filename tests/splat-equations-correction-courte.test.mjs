@@ -123,7 +123,9 @@ test("l'équation : les lignes et les flèches de la correction de l'outil, tail
   assert.match(eq, /margin = Math\.max\(20, Math\.round\(reel - estime \+ font \* 0\.55\)\);/);
   assert.match(eq, /if\(800 - place >= EQ_SIX_CORR_EQ_LEFT && 800 \+ place <= EQ_SIX_CORR_EQ_RIGHT && bas <= EQ_SIX_CORR_EQ_BOTTOM\) break;/);
   assert.match(eq, /drawEqSixCorrectionLines\(g, card, lines, ops, tEl, tText\);/);
-  assert.match(eq, /drawEquationLines\(g, lines, 800, startY, \{[\s\S]*alignEquals: true, eqGap, fontFamily: "'Times New Roman', Times, serif", fontStyle: "italic"/);
+  assert.match(eq, /drawEquationLines\(g, lines, 800, startY, \{[\s\S]*alignEquals: true, eqGap, fontFamily: "SplatLettres, 'Times New Roman', Times, serif", fontStyle: "italic"/);
+  // les lettres sont dessinées (règle « * ») et mesurées dans SplatLettres, le reste dans la police de l'interface
+  assert.match(html, /^const EQ_SIX_CORR_DRAWN_FONT = 'SplatLettres, system-ui, -apple-system, "Segoe UI", Roboto, Arial';/m);
   assert.match(eq, /drawOperationArrowsForLines\(g, api, lines, ops, \{centerX: 800, startY, gap, fontSize: font, eqGap, margin\}\);/);
   // la mesure : un canvas, et l'estimation de l'outil (× 1,2) en repli
   const mesure = extraire("eqSixTextWidth");

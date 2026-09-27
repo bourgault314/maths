@@ -78,4 +78,13 @@ Dépendances : `pip install playwright pikepdf "qrcode[pil]"`, le **vrai Chromiu
 miniatures de la page des livrets (page 1 à 120 dpi → 993 × 1404, PNG et WebP plus légère) :
 `assets/img/thumbnails/splat/livret-splat-relatifs-1.png/.webp` et `-2`.
 
+## La lettre ronde dans les pages-fiches (27/09/2026)
+
+Les pages-fiches sont imprimées par l'outil (`outils/splat_equations.html`), qui déclare
+désormais **SplatLettres**, la lettre ronde du site : les lettres des **corrigés** sont rondes,
+comme sur la couverture et le dos (avant : la lettre de secours de la machine de rendu, sans
+empattement). Les quatre PDF corrigés ont été refaits. Les livrets de l'élève n'ont pas été
+redéposés : refaits, ils ne diffèrent que d'une fraction de millimètre sur la première ligne de
+l'exemple de couverture (mesure des lettres), invisible à l'impression.
+
 *mathsgo.re · CC BY-NC-SA 4.0*

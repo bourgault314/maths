@@ -13,6 +13,21 @@
 <link rel="icon" type="image/png" sizes="192x192" href="/assets/img/favicon-192.png">
 <link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png">
 <style>
+  /* Les lettres de l'inconnue (𝑥, 𝑎, 𝑏…, lettres mathématiques d'Unicode) : la police du site,
+     SplatLettres (_sources/polices/splat-lettres/, lettre ronde de l'Enquête), comme l'outil
+     du monde 2 (splat.html) depuis le 26/09/2026 — ici depuis le 27/09/2026. Avant, chaque
+     appareil les prenait dans une police de secours : x droit sur Windows. Grâce à
+     unicode-range, elle ne sert QUE pour ces lettres — chiffres et texte gardent leur police.
+     Elle est donc placée EN TÊTE de chaque liste de polices de la page. Ses lettres sont déjà
+     penchées : les déclarations droite ET italique empêchent le navigateur de les pencher une
+     seconde fois. Deux dessins, le même rond : fin (KaTeX_Math-Italic) jusqu'à la graisse 599 —
+     l'équation et les schémas, écrits en graisse normale —, gras (KaTeX_Math-BoldItalic) au-delà
+     (le bouton 𝑥, les textes en gras), comme ÉquaSplat. Ici, pas d'agrandissement : la lettre
+     garde sa taille (décision de Gwenaël, 27/09/2026 ; ÉquaSplat l'agrandit de 20 %). */
+  @font-face{font-family:SplatLettres;src:url('/assets/fonts/SplatLettres-Italic.woff2') format('woff2');font-style:normal;font-weight:100 599;font-display:block;unicode-range:U+1D434-1D467,U+210E}
+  @font-face{font-family:SplatLettres;src:url('/assets/fonts/SplatLettres-BoldItalic.woff2') format('woff2');font-style:normal;font-weight:600 900;font-display:block;unicode-range:U+1D434-1D467,U+210E}
+  @font-face{font-family:SplatLettres;src:url('/assets/fonts/SplatLettres-Italic.woff2') format('woff2');font-style:italic;font-weight:100 599;font-display:block;unicode-range:U+1D434-1D467,U+210E}
+  @font-face{font-family:SplatLettres;src:url('/assets/fonts/SplatLettres-BoldItalic.woff2') format('woff2');font-style:italic;font-weight:600 900;font-display:block;unicode-range:U+1D434-1D467,U+210E}
   :root{
     /* THEME (light default) */
     --bg:#f3f4f6;
@@ -63,7 +78,7 @@
     --accent:#6aa7ff;
   }
 
-  *{box-sizing:border-box;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;}
+  *{box-sizing:border-box;font-family:SplatLettres,system-ui,-apple-system,Segoe UI,Roboto,Arial;}
   body{margin:0;background:var(--bg);color:var(--ink);}
 
   header{
@@ -244,7 +259,7 @@
     font-size:21px;
     font-weight:950;
     line-height:1;
-    font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;
+    font-family:SplatLettres,system-ui,-apple-system,Segoe UI,Roboto,Arial;
     transform:translateY(-1px);
     transition:background .12s ease, color .12s ease, box-shadow .12s ease, transform .08s ease;
   }
@@ -3692,7 +3707,7 @@ function drawEquationSingaporeTable(targetGroup, opts){
   const compactEquation = !!opts.compactEquation;
   const variableFontSizeOpt = Number(opts.variableFontSize);
   const hasVariableFontSize = Number.isFinite(variableFontSizeOpt) && variableFontSizeOpt > 0;
-  const variableFontFamily = opts.variableFontFamily || "'Times New Roman', Times, serif";
+  const variableFontFamily = opts.variableFontFamily || "SplatLettres, 'Times New Roman', Times, serif";
   const fitLabelToCell = !!opts.fitLabelToCell;
   const numberTextDy = (opts.numberTextDy != null) ? opts.numberTextDy : "0.08em";
   const variableTextDy = (opts.variableTextDy != null) ? opts.variableTextDy : "0";
@@ -4016,7 +4031,7 @@ function drawEquationLines(targetGroup, lines, x, y, api){
   const fontSize = Number(api.fontSize) || 54;
   const gap = Number(api.gap) || 72;
   const anchor = api.anchor || "start";
-  const fontFamily = api.fontFamily || "'Times New Roman', Times, serif";
+  const fontFamily = api.fontFamily || "SplatLettres, 'Times New Roman', Times, serif";
   const fontStyle = api.fontStyle || "italic";
   const alignEquals = !!api.alignEquals;
   const eqGap = Number(api.eqGap) || 18;
@@ -4075,7 +4090,7 @@ function drawProjectionEquationLine(targetGroup, centerX, cy, lhs, rhs, opts = {
   const fontSize = Number(opts.fontSize) || 46;
   const equalFontSize = Number(opts.equalFontSize) || 42;
   const eqGap = Number(opts.eqGap) || 22;
-  const mathFont = opts.mathFont || "'Times New Roman', Times, serif";
+  const mathFont = opts.mathFont || "SplatLettres, 'Times New Roman', Times, serif";
 
   targetGroup.appendChild(mkText(centerX - eqGap, cy, lhs, {
     "text-anchor":"end",
@@ -5032,7 +5047,7 @@ function drawPrintEquationLinesLikeProjection(targetGroup, lines, opts = {}){
         "font-size":String(fontSize),
         "fill": opts.fill || "#000",
         "font-weight":"normal",
-        "font-family":"'Times New Roman', Times, serif",
+        "font-family":"SplatLettres, 'Times New Roman', Times, serif",
         "font-style":"italic",
         "dominant-baseline":"middle"
       }));
@@ -6014,7 +6029,7 @@ function drawEquationStepEquation(targetGroup, card, revealState){
     anchor:"start",
     alignEquals: true,
     eqGap: 30,
-    fontFamily:"'Times New Roman', Times, serif",
+    fontFamily:"SplatLettres, 'Times New Roman', Times, serif",
     fontStyle:"italic"
   });
 
@@ -7257,7 +7272,7 @@ function renderCardEquation(card, revealState, useTokens){
       anchor:"start",
       alignEquals:true,
       eqGap:30,
-      fontFamily:"'Times New Roman', Times, serif",
+      fontFamily:"SplatLettres, 'Times New Roman', Times, serif",
       fontStyle:"italic"
     });
     drawEquationStepOperationArrows(layer, eq, mapped, getCardVarChar(card), lines, EQ_VIEW_LINE_TOP, EQ_VIEW_LINE_GAP, EQ_VIEW_LINE_FONT);
@@ -7307,7 +7322,7 @@ function renderCardEquation(card, revealState, useTokens){
       anchor:"start",
       alignEquals: true,
       eqGap: 22,
-      fontFamily:"'Times New Roman', Times, serif",
+      fontFamily:"SplatLettres, 'Times New Roman', Times, serif",
       fontStyle:"italic"
     });
 
@@ -7361,7 +7376,7 @@ function renderCardEquation(card, revealState, useTokens){
       anchor:"start",
       alignEquals: true,
       eqGap: 22,
-      fontFamily:"'Times New Roman', Times, serif",
+      fontFamily:"SplatLettres, 'Times New Roman', Times, serif",
       fontStyle:"italic"
     });
   }
@@ -9358,7 +9373,7 @@ function drawEquationPrintCorrectionColumn(gEq, eq, card, tEl, tText, G){
       anchor:"start",
       alignEquals: true,
       eqGap: G.eqEqGap,
-      fontFamily: "'Times New Roman', Times, serif",
+      fontFamily: "SplatLettres, 'Times New Roman', Times, serif",
       fontStyle: "italic"
     });
     // Flèches d'opération dans les marges de la colonne (− b, − 2, ÷ 3), comme à
@@ -9436,8 +9451,10 @@ const EQ_SIX_CORR_GEOM_SCHEMA = {
    « * { font-family } » de la page l'emporte : elles s'impriment dans la police de
    l'interface, en italique — comme la correction 4/page. Leur largeur se MESURE dans
    cette police-là (canvas) : l'estimation de l'outil, calibrée pour une autre police,
-   posait les flèches sur le premier terme (vu sur les maquettes du 24/09). */
-const EQ_SIX_CORR_DRAWN_FONT = 'system-ui, -apple-system, "Segoe UI", Roboto, Arial';
+   posait les flèches sur le premier terme (vu sur les maquettes du 24/09).
+   Depuis le 27/09/2026, SplatLettres est en tête de la règle « * » : les lettres (𝑥, 𝑛…) sont
+   dessinées, donc mesurées, dans la lettre ronde du site ; chiffres et signes, comme avant. */
+const EQ_SIX_CORR_DRAWN_FONT = 'SplatLettres, system-ui, -apple-system, "Segoe UI", Roboto, Arial';
 let eqSixMeasureCtx = null;
 function eqSixTextWidth(str, cssFont, fallbackFontSize){
   try{
@@ -9558,7 +9575,7 @@ function drawEqSixCorrectionLines(g, card, lines, ops, tEl, tText){
   const startY = trayBottom + 94 + Math.round(font * 0.7);   // 94 = 4 mm sous le plateau
   drawEquationLines(g, lines, 800, startY, {
     text:(x,y,t,a)=>tText(x,y,t,a), fill:"#000", fontSize: font, gap, anchor:"start",
-    alignEquals: true, eqGap, fontFamily: "'Times New Roman', Times, serif", fontStyle: "italic"
+    alignEquals: true, eqGap, fontFamily: "SplatLettres, 'Times New Roman', Times, serif", fontStyle: "italic"
   });
   drawOperationArrowsForLines(g, api, lines, ops, {centerX: 800, startY, gap, fontSize: font, eqGap, margin});
 }
@@ -10130,7 +10147,15 @@ syncEqSixCorrectionUI();
 syncPrintSummary();
 if(serieSuite.length) genererSerieComposee();
 else generate();
-if(impressionAuto) printSheet();
+/* La police des lettres (SplatLettres, 27/09/2026) n'est téléchargée qu'au premier « 𝑥 » dessiné :
+   le premier dessin a donc pu mesurer les lettres (flèches de la correction courte) avec une
+   police de secours. Une fois qu'elle est là (ses deux dessins, fin et gras), on redessine la
+   carte ; l'impression automatique l'attend. (« jouer=1 » ne dessine rien ici : la série part aussitôt dans ÉquaSplat.) */
+const lettresPretes = (document.fonts && document.fonts.load)
+  ? Promise.all(["1em", "bold 1em"].map(f => document.fonts.load(f + " SplatLettres", "\u{1D465}").catch(() => [])))
+  : Promise.resolve([]);
+if(!jeuAuto) lettresPretes.then(() => { if(cards.length) updateUI(); });
+if(impressionAuto) lettresPretes.then(() => printSheet());
 if(jeuAuto) ouvrirSerieDansEquaSplat();
 
 </script>
