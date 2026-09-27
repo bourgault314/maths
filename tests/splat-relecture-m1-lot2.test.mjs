@@ -98,7 +98,7 @@ test("C. catalogue : la carte de la progression masquée, la vignette de l'unive
     assert.ok(Math.abs(+n[2] - (+taches[i][2] + 0.36 * +n[3])) < 0.1, `numéro ${i + 1} centré en y`);
   });
   // le cache-buster du catalogue suit
-  assert.match(lire("outils/index.html"), /catalogue-refonte-data\.js\?v=splat-relatifs-public-20260927-1/);
+  assert.match(lire("outils/index.html"), /catalogue-refonte-data\.js\?v=splat-univers-coherence-20260927-1/);
 });
 
 // D. le texte lu, sans les commentaires (HTML, CSS, JS) : plus un seul « ou » sans insécable
@@ -116,19 +116,23 @@ test("D. guillemets français : une espace insécable après « et avant » dans
     const mauvais = [...textesLus(lire(p)).matchAll(/.{0,30}(?:«(?!&nbsp;|\\u00a0| )|(?<!&nbsp;|\\u00a0| )»).{0,20}/g)].map((m) => m[0]);
     assert.deepEqual(mauvais, [], p);
   }
-  // l'exemple relevé par Gwenaël : « Sans total » dans la note de « L'enquête rebondit »
-  assert.match(lire("outils/splat_univers.html"), /les cases «\\u00a0Taches répétées\\u00a0» et «\\u00a0Sans total\\u00a0» de l’outil/);
+  // l'exemple relevé par Gwenaël était « Sans total » dans la note de « L'enquête rebondit » (retirée
+  // de la carte au lot « vue prof », 27/09/2026) ; les notes du prof gardent la même écriture
+  assert.match(lire("outils/splat_univers.html"), /Deux taches, indice additif direct \(«\\u00a0de plus que\\u00a0»\)/);
   // et la description des livrets au catalogue
   assert.match(lire("assets/js/catalogue-refonte-data.js"), /le schéma en barres et l’équation, chacun avec son «\u00a0Le défi\u00a0»\./);
 });
 
 test("E. vue professeur, mondes 2 et 5 : un seul lien vers la page des livrets, la note sans l'impression", () => {
+  /* lot « vue prof » (27/09/2026) : le lien est dans le cadre « Pour la classe » de chaque monde,
+     avec une ligne sur ce que contient la page (LIVRET_TEXTE) ; le rendu complet (un seul lien de
+     livrets par monde, aucun PDF) est vérifié dans tests/splat-univers-vue-prof.test.mjs */
   const u = lire("outils/splat_univers.html");
-  for (const [cond, m] of [["mi===1", 2], ["m===MONDE_EQUATIONS", 5]]) {
-    const bloc = u.match(new RegExp(`\\(${cond}&&PROF\\?'<p class="intro">'[\\s\\S]*?<\\/p>':''\\)\\+`))[0];
-    assert.match(bloc, new RegExp(`<a class="introLien livret" href="/outils/livrets_splat\\.html#monde-${m}">\\\\ud83d\\\\udcda Les livrets du monde ${m}</a>`));
-    assert.equal((bloc.match(/<a /g) || []).length, 1, `monde ${m} : un seul lien`);
-    assert.doesNotMatch(bloc, /\.pdf|bord court|recto-verso|\\u00e0 plier/, `monde ${m} : ni PDF ni impression`);
+  const lignes = u.match(/const LIVRET_TEXTE=\[\n([\s\S]*?)\];/)[1].trim().split("\n");
+  assert.equal(lignes.length, 6);
+  assert.match(u, /if\(LIVRET_TEXTE\[mi\]\) li\.push\('<li><a href="\/outils\/livrets_splat\.html#monde-'\+\(mi\+1\)\+'">'/);
+  for (const m of [2, 5]) {
+    assert.doesNotMatch(lignes[m - 1], /\.pdf|bord court|recto-verso|à plier|\\u00e0 plier/, `monde ${m} : ni PDF ni impression`);
     assert.match(lire("outils/livrets_splat.html"), new RegExp(`id="monde-${m}"`), `l'ancre #monde-${m} existe`);
   }
 });

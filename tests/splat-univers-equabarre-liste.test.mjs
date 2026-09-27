@@ -8,7 +8,8 @@ import vm from "node:vm";
    seule dans ÉquaBarre, comme les équations des mondes 5 et 6 dans ÉquaSplat. Choix de
    Gwenaël : « ? » dans les cases au monde 1 (comme sur les livrets), la lettre au monde 2
    (comme son bouton « Résoudre »). On EXÉCUTE les données de outils/splat_univers.html,
-   comme tests/splat-equations-monde5-progression.test.mjs. */
+   comme tests/splat-equations-monde5-progression.test.mjs. Depuis le lot « vue prof »
+   (27/09/2026), la liste 📋 est une grille repliée « Les 12 cartes » (cartesHtml). */
 
 const lire = (p) => readFileSync(new URL("../" + p, import.meta.url), "utf8");
 const univers = lire("outils/splat_univers.html");
@@ -23,7 +24,7 @@ const ctx = vm.createContext({ encodeURIComponent, decodeURIComponent, escape, u
 vm.runInContext(
   bloc("const PS=", "const PROF =") +
   bloc("const NOTES_MONDE", "const main=document") +
-  ";globalThis.MONDES=MONDES;globalThis.eqBarreLiens=eqBarreLiens;globalThis.eqListeHtml=eqListeHtml;",
+  ";globalThis.MONDES=MONDES;globalThis.eqBarreLiens=eqBarreLiens;globalThis.cartesHtml=cartesHtml;",
   ctx, { filename: "splat_univers.html" }
 );
 const MONDES = ctx.MONDES;
@@ -41,7 +42,7 @@ function lireCarte(q) {
 
 test("mondes 1 et 2 : chaque carte de la liste 📋 ouvre CETTE carte seule dans ÉquaBarre", () => {
   let vues = 0;
-  [[0, "question", "carte"], [1, "letter", "équation"]].forEach(([mi, affichage, nom]) => {
+  [[0, "question"], [1, "letter"]].forEach(([mi, affichage]) => {
     const m = MONDES[mi];
     m.etapes.forEach((e) => {
       assert.ok(Array.isArray(e.eqs) && e.eqs.length, `${m.nom}, ${e.t} : pas de liste`);
@@ -64,13 +65,13 @@ test("mondes 1 et 2 : chaque carte de la liste 📋 ouvre CETTE carte seule dans
         assert.ok(!l.includes("parcours") && !l.includes("eleve"), "ni parcours ni mode élève");
         vues++;
       });
-      const html = ctx.eqListeHtml(e, m);
-      assert.equal((html.match(/<a class="eqSeule" href="\/outils\/equabarre\.html#data=/g) || []).length, e.eqs.length);
+      const html = ctx.cartesHtml(e, m, "c");
+      assert.deepEqual([...html.matchAll(/<li><a href="([^"]*)"/g)].map((x) => x[1]), JSON.parse(JSON.stringify(liens)), "chaque carte de la grille, son lien");
       assert.ok(!html.includes("equasplat"));
-      assert.ok(html.includes("Clique sur une " + (nom === "carte" ? "carte" : "\\u00e9quation") + " pour l\\u2019ouvrir seule dans \\u00c9quaBarre.") ||
-                html.includes("Clique sur une " + nom + " pour l’ouvrir seule dans ÉquaBarre."), `${e.t} : la phrase d'aide`);
-      /* la légende des cartes à dessiner reste là */
-      if (e.eqs.some((q) => q.includes("✏"))) assert.ok(html.includes("carte \\u00e0 dessiner") || html.includes("carte à dessiner"));
+      assert.ok(html.includes("Un clic sur une carte l’ouvre seule dans ÉquaBarre, pour la résoudre avec la classe."), `${e.t} : la phrase d'aide`);
+      /* les cartes à dessiner sont marquées (étiquette « dessin », au lieu de ✏️) */
+      const dessins = e.dessin ? e.eqs.length : e.eqs.filter((q) => q.includes("✏")).length;
+      assert.equal((html.match(/<span class="dess" title="carte à dessiner">dessin<\/span>/g) || []).length, dessins, `${e.t} : cartes à dessiner`);
     });
   });
   assert.equal(vues, 12 * 9, "6 fiches du monde 1 et 3 étapes du monde 2, 12 cartes chacune");
@@ -79,19 +80,21 @@ test("mondes 1 et 2 : chaque carte de la liste 📋 ouvre CETTE carte seule dans
 test("ÉquaBarre : les autres mondes n'y renvoient pas, et une liste illisible ne donne AUCUN lien", () => {
   MONDES.slice(2).forEach((m) => m.etapes.forEach((e) => {
     assert.equal(ctx.eqBarreLiens(m, e), null, m.nom);
-    if (e.eqs) assert.ok(!ctx.eqListeHtml(e, m).includes("equabarre"), `${m.nom}, ${e.t}`);
+    if (e.eqs) assert.ok(!ctx.cartesHtml(e, m, "c").includes("equabarre"), `${m.nom}, ${e.t}`);
   }));
   const m1 = MONDES[0], e = m1.etapes[4];
   /* une seule carte illisible (deux inconnues, reste qui ne se partage pas) : plutôt aucun lien que des liens décalés */
   assert.equal(ctx.eqBarreLiens(m1, { ...e, eqs: [...e.eqs.slice(1), "2𝑥 + 1 = 3𝑥"] }), null);
   assert.equal(ctx.eqBarreLiens(m1, { ...e, eqs: ["2𝑥 + 1 = 4"] }), null);
   assert.equal(ctx.eqBarreLiens(m1, { ...e, eqs: ["𝑥 + 5 = 5"] }), null, "une tache ne cache jamais 0");
-  /* sans le monde (ancien appel), la liste reste du texte */
-  assert.ok(!ctx.eqListeHtml(e).includes("<a "));
+  /* sans le monde, la grille reste du texte */
+  assert.ok(!ctx.cartesHtml(e, undefined, "c").includes("<a "));
 });
 
-test("la carte des mondes passe bien le monde à la liste, en vue prof seulement", () => {
-  assert.match(univers, /\(PROF&&e\.eqs\?'<p class="eqListeProf">[^\n]*' : '\+eqListeHtml\(e,m\)\+'<\/p>':''\)/);
+test("la carte des mondes passe bien le monde à la grille des cartes, en vue prof seulement", () => {
+  assert.match(univers, /actionsHtml\(e,m,cid\)\+cartesHtml\(e,m,cid\)/);
+  const eleve = univers.slice(univers.indexOf("else MONDES.forEach((m,mi)=>{"), univers.indexOf("  main.appendChild(sec);\n});"));
+  assert.ok(eleve.length > 500 && !eleve.includes("cartesHtml") && !eleve.includes("eqBarreLiens"), "pas de cartes en vue élève");
 });
 
 test("ÉquaBarre lit toujours ce format (?data= / #data=, top / bottom, « question »)", () => {

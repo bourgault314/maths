@@ -136,16 +136,25 @@ test("la carte des mondes charge splat-etapes.js (même version que les outils) 
   assert.ok(univers.indexOf(m[0]) < univers.indexOf("</head>"), "dans <head>");
   // chaque monde reçoit « cache » d'après son numéro affiché (rang + 1)
   assert.match(univers, /MONDES\.forEach\(\(m,mi\)=>\{ m\.cache=!!\(SPLAT_ETAPES&&SPLAT_ETAPES\.mondeCache\(mi\+1\)\); \}\);/);
-  // un monde caché : le bandeau et une phrase, et on sort avant de fabriquer étapes et liens
-  const debut = univers.indexOf("  if(m.cache){"), fin = univers.indexOf("    return;\n  }", debut);
+  // un monde caché, vue élève : le bandeau et une phrase, et on sort avant de fabriquer étapes et liens
+  // (la vue prof a son propre rendu depuis le lot « vue prof » du 27/09/2026 : mondeProfHtml, plus bas)
+  const boucle = univers.indexOf("else MONDES.forEach((m,mi)=>{");
+  const debut = univers.indexOf("\n  if(m.cache){", boucle), fin = univers.indexOf("    return;\n  }", debut);
+  assert.ok(boucle > 0, "boucle de la vue élève introuvable");
   assert.ok(debut > 0 && fin > debut, "branche « monde caché » du rendu introuvable");
   const branche = univers.slice(debut, fin);
   assert.doesNotMatch(branche, /href="(?!#tacheEtoile)|<a |m\.etapes\.map|NOTES_/, "aucun lien, aucune étape, aucune note prof");
   assert.match(branche, /PREPA_BANDEAU/);
   assert.match(branche, /PREPA_PHRASE/);
   assert.match(branche, /compteur\+=m\.etapes\.length/, "les numéros des mondes suivants ne bougent pas");
-  // cette branche passe AVANT la vue prof (qui mettait « Projeter l'outil » sur les mondes non actifs)
-  assert.ok(debut < univers.indexOf("(PROF?'<div class=\"stars\">'"), "le monde caché doit sortir avant le rendu élève/prof");
+  // cette branche passe AVANT le rendu des étapes et des liens
+  assert.ok(debut < univers.indexOf("'<ol class=\"etapes\">'", boucle), "le monde caché doit sortir avant le rendu des étapes");
+  // vue prof : même règle — le bandeau, qui ne s'ouvre pas, et la phrase ; ni note, ni lien
+  const prof = univers.slice(univers.indexOf("function mondeProfHtml(m,mi,plage){"), univers.indexOf("function sommaireProfHtml("));
+  assert.match(prof, /\n  if\(m\.cache\) return teteProfHtml\(m,mi,plage,''\)\+'<p class="prepa">'\+PREPA_PHRASE\+'<\/p>';\n/);
+  assert.match(univers, /'<span class="fichesTete">'\+\(m\.cache\?'en préparation':/);
+  assert.match(univers, /'<span class="sf">'\+\(m\.cache\?'en préparation':/);
+  assert.match(univers, /const mi=\+a\.dataset\.mi; if\(MONDES\[mi\]\.cache\) return;/, "le sommaire n'ouvre pas un monde caché");
   // les étoiles, « Continuer » et ?apres= ne comptent que les mondes jouables
   assert.match(univers, /if\(!jouable\(m\)\) return;\n    let f=0;/);
   assert.match(univers, /const suite=ici&&ici\.cache\?ici\.etapes:MONDES\.flatMap\(m=>jouable\(m\)\?m\.etapes:\[\]\);/);

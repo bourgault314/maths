@@ -4,9 +4,6 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="index, follow, max-image-preview:large">
-<!-- MAQUETTE : la ligne <base> fait pointer les boutons vers le site en ligne.
-     À SUPPRIMER quand la page entrera dans le dépôt (liens relatifs). -->
-
 <title>L’univers SPLAT! — le parcours des élèves | maths&amp;go</title>
   <meta name="description" content="Six mondes à jouer en ligne, du cycle 3 (progression SPLAT!) au cycle 4 (relatifs), avec validation en ligne et étoiles au mérite.">
   <link rel="canonical" href="https://mathsgo.re/outils/splat_univers.html">
@@ -102,34 +99,6 @@ main{max-width:980px;margin:0 auto;padding:10px 14px 60px}
 .monde .intro{padding:10px 18px 0;margin:0;display:flex;flex-wrap:wrap;gap:10px}
 .monde .introLien{display:inline-block;font-weight:800;color:#0f5c5c;background:#d9f2f0;border:1px solid #9ad9d3;border-radius:999px;padding:7px 14px;text-decoration:none}
 .monde .introLien:hover{background:#c3ebe7}
-.monde .introLien.livret{color:#7a4a00;background:#fff3d6;border-color:#f0c97a}
-.monde .introLien.livret:hover{background:#ffe9b8}
-.monde .introLien.livret.a3{background:#fff;font-weight:700;padding:7px 12px}
-.monde .introLien.livret.a3:hover{background:#fff8ea}
-/* pastilles du livret du monde 2 : la couleur du monde (bleu) */
-.monde.m2 .introLien.livret{color:#0b4f8a;background:#e6f1fb;border-color:#a9cdeb}
-.monde.m2 .introLien.livret:hover{background:#d3e6f8}
-.monde.m2 .introLien.livret.a3{background:#fff}
-.monde.m2 .introLien.livret.a3:hover{background:#f1f7fd}
-/* pastilles des livrets du monde 3 : la couleur du monde (framboise), texte foncé */
-.monde.menq .introLien.livret{color:#831843;background:#fce7f3;border-color:#f0abc9}
-.monde.menq .introLien.livret:hover{background:#fbd5e8}
-.monde.menq .introLien.livret.a3{background:#fff}
-.monde.menq .introLien.livret.a3:hover{background:#fdf2f8}
-/* monde 4 (SPLAT! Système) : au cannelle du monde, texte foncé */
-.monde.msys .introLien.livret{color:#7c2d12;background:#fdf0e6;border-color:#f0c4a0}
-.monde.msys .introLien.livret:hover{background:#fbe3d0}
-.monde.msys .introLien.livret.a3{background:#fff}
-.monde.msys .introLien.livret.a3:hover{background:#fef7f0}
-/* monde 5 (SPLAT! Équations) : ses deux livrets (lot Q3), au teal du monde, texte foncé */
-.monde.m3 .introLien.livret{color:#115e59;background:#e6f7f6;border-color:#9fdcd9}
-.monde.m3 .introLien.livret:hover{background:#cdeeed}
-.monde.m3 .introLien.livret.a3{background:#fff}
-.monde.m3 .introLien.livret.a3:hover{background:#f0fbfa}
-/* monde 6 (lot R2) : le violet des Relatifs, texte violet foncé (lisible en noir et blanc) */
-.monde.m4 .introLien.livret{color:#4c1d95;background:#f3ebfa;border-color:#d6bfee}
-.monde.m4 .introLien.livret:hover{background:#e9dcf6}
-.monde .introNote{flex:1 0 100%;margin:0;font-size:13px;line-height:1.4;color:var(--muted)}
 
 /* ---------- étapes ---------- */
 .etapes{list-style:none;margin:0;padding:10px 14px 20px;position:relative}
@@ -180,7 +149,6 @@ main{max-width:980px;margin:0 auto;padding:10px 14px 60px}
 .volet p{margin:2px 0 0;font-size:13.5px;line-height:1.35;color:var(--muted)}
 .volet .stars{flex:0 0 auto;font-size:14px;font-weight:800;white-space:nowrap;
   background:#fff;border:1px solid var(--line);border-radius:12px;padding:5px 9px}
-.volet .intro{flex:1 0 100%;padding:6px 0 0}
 .menq .volet{background:#fdf2f7;border-color:#f3c6da}
 .menq .volet .rang{background:var(--framboise)}
 .msys .volet{background:#fbf3ec;border-color:#ebcbb3}
@@ -196,7 +164,6 @@ main{max-width:980px;margin:0 auto;padding:10px 14px 60px}
   .volet .stars{order:2;margin-left:auto;font-size:13px;padding:4px 8px}
   .volet .t{order:3;flex:1 0 100%}
   .volet .fiches{margin-left:6px}
-  .volet .intro{order:4}
 }
 
 /* badge : la vraie tache Splat, aux couleurs du monde —
@@ -220,11 +187,6 @@ main{max-width:980px;margin:0 auto;padding:10px 14px 60px}
 .etape:nth-child(3n+1) .badge svg.tache{transform:rotate(-9deg)}
 .etape:nth-child(3n+2) .badge svg.tache{transform:rotate(14deg)}
 .etape:nth-child(3n) .badge svg.tache{transform:rotate(4deg)}
-/* la table du professeur du monde 4 (tous les systèmes du collège, S0 § 0) */
-.descProf table{border-collapse:collapse;margin:8px 0 2px;font-size:12.5px;line-height:1.3;width:100%;background:#fff}
-.descProf th,.descProf td{border:1px solid #bcd0e6;padding:4px 7px;text-align:left;vertical-align:top}
-.descProf th{background:#dbe7f5;font-weight:800}
-.descProf td b{color:var(--ink)}
 /* chiffre : blanc sur pleine couleur, encre sur teinte claire.
    Remontée de 1,3 px pour tomber sur le centre VISUEL de la tache, qui n'est pas
    le centre de sa boîte : la forme a sa masse en haut (centre de gravité 2,6
@@ -245,20 +207,7 @@ main{max-width:980px;margin:0 auto;padding:10px 14px 60px}
    grisé, qui ne s'ouvre pas, et une phrase — ni étape, ni lien. */
 .monde.cache>.head{cursor:default}
 .monde .prepa{margin:0;padding:8px 18px 16px;font-size:14px;font-weight:750;color:var(--muted)}
-.actions .partie{display:inline-flex;align-items:center;gap:6px;flex-wrap:wrap;font-size:13px;font-weight:750;color:var(--muted);
-  background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:4px 10px 4px 12px}
-.actions .partie a{min-height:36px;padding:6px 11px}
 .actions .bientot{font-size:13px;font-weight:750;color:var(--muted);font-style:italic}
-.noteProf{margin:2px 0 8px;font-size:13.5px;line-height:1.45;color:#365a83;background:#eef4fb;border-left:3px solid var(--blue);border-radius:0 8px 8px 0;padding:7px 10px}
-.desc.descProf{color:#365a83;background:#eef4fb;border-left:3px solid var(--blue);border-radius:0 8px 8px 0;padding:8px 12px;margin:10px 18px 0}
-.eqListeProf{font-size:13.5px;line-height:1.7;color:#365a83;background:#f4f0fb;border-left:3px solid var(--violet);border-radius:0 8px 8px 0;padding:7px 10px;margin:8px 0 0;font-variant-numeric:tabular-nums}
-.m1 .eqListeProf{background:#fff3e8;border-color:var(--orange)}
-.m2 .eqListeProf{background:#eef4fb;border-color:var(--blue)}
-.m3 .eqListeProf{background:#e9f7f6;border-color:var(--teal)}
-.msys .eqListeProf{background:#fbf3ec;border-color:var(--cannelle)}
-.eqListeProf small{display:block;font-size:12px;color:#5b7a9d;margin-top:2px}
-.eqListeProf a.eqSeule{color:inherit;text-decoration:underline dotted;text-underline-offset:3px;white-space:nowrap}
-.eqListeProf a.eqSeule:hover{color:var(--ink);text-decoration-style:solid}
 footer{max-width:980px;margin:0 auto;padding:0 16px 40px;text-align:center;color:var(--muted);font-size:13px}
 footer a{color:var(--blue)}
 
@@ -291,14 +240,150 @@ footer a{color:var(--blue)}
   .actions a{font-size:15.5px}
   .actions .bientot{font-size:14.5px}
   .faitBtn{font-size:14.5px}
-  .noteProf,.eqListeProf{font-size:15.5px}
   .volet h4{font-size:18.5px}
   .volet p{font-size:15px}
   .volet .fiches{font-size:14px}
   .volet .stars{font-size:15.5px}
-  .descProf table{font-size:14px}
-  .eqListeProf small{font-size:13.5px}
   footer{font-size:14px}
+}
+
+/* ================= VUE PROFESSEUR (lot « vue prof », 27/09/2026) =================
+   Maquette validée par Gwenaël : une page de travail sobre. Ni encadré pastel à
+   liseré, ni émoticône ; un seul bouton plein par fiche (« Projeter », à la couleur
+   du monde) ; les mêmes mots partout (Projeter · Jeu de l'élève · Fiche · Corrigé).
+   La phrase écrite pour l'élève (desc du monde, « o » des étapes) n'y paraît plus.
+   Rendu par renderProf() ; la vue élève garde sa boucle et ses styles. */
+body.prof{background:#f4f6f9}
+body.prof .heroBlob{display:none}
+body.prof .hero{text-align:left;padding:30px 16px 6px}
+body.prof .hero h1{font-size:clamp(26px,5vw,34px);letter-spacing:0}
+body.prof .hero h1 small{display:block;font-size:13px;font-weight:700;letter-spacing:1.4px;
+  text-transform:uppercase;color:var(--muted);margin-bottom:4px}
+body.prof .hero p.sub{margin:8px 0 0;max-width:720px;font-size:15.5px;color:#46586f}
+
+/* sommaire : les six mondes d'un coup d'œil */
+.sommaire{max-width:1080px;margin:18px auto 0;padding:0 16px;display:grid;
+  grid-template-columns:repeat(6,1fr);gap:10px}
+.sommaire a{display:block;text-decoration:none;background:#fff;border:1px solid var(--line);
+  border-top:4px solid var(--c);border-radius:10px;padding:10px 12px 11px;min-width:0}
+.sommaire a:hover{border-color:var(--c)}
+.sommaire .sn{font-size:11.5px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted)}
+.sommaire .st{display:block;font-weight:700;font-size:15px;line-height:1.25;margin:2px 0 3px;color:var(--ink)}
+.sommaire .sf{font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
+.sommaire a.cache{opacity:.55}
+@media(max-width:900px){.sommaire{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:520px){.sommaire{grid-template-columns:repeat(2,1fr);gap:8px}
+  .sommaire a{padding:8px 10px}.sommaire .st{font-size:14px}}
+
+/* bandeau du monde : le numéro de fiches à droite, plus de « jouable en classe » */
+body.prof .monde{border-radius:14px;box-shadow:0 2px 8px rgba(22,47,82,.06)}
+body.prof .monde>.head{padding:13px 18px}
+body.prof .monde .head svg.blob{width:36px;height:36px}
+body.prof .monde .head .fichesTete{font-size:14px;font-weight:600;white-space:nowrap;opacity:.95;
+  font-variant-numeric:tabular-nums}
+@media(max-width:520px){body.prof .monde .head .fichesTete{font-size:12.5px}}
+
+/* intention + ressources */
+body.prof .monde .pIntro{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:18px 28px;padding:18px 22px 6px}
+.pIntro .lab{font-size:11.5px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:var(--muted);margin:0 0 6px}
+.pIntro .txt{margin:0;font-size:15.5px;line-height:1.55;color:#2b3f58;max-width:68ch}
+.pIntro .txt b{color:var(--ink)}
+.pIntro details{margin-top:10px;font-size:14.5px}
+.pIntro summary{cursor:pointer;font-weight:600;color:var(--ink)}
+.pIntro details table{border-collapse:collapse;margin:10px 0 2px;font-size:13.5px;line-height:1.35;width:100%}
+.pIntro details th,.pIntro details td{border-bottom:1px solid var(--line);padding:6px 8px 6px 0;text-align:left;vertical-align:top}
+.pIntro details th{font-weight:700;color:var(--muted);font-size:12.5px;text-transform:uppercase;letter-spacing:.6px}
+.ress{border:1px solid var(--line);border-radius:12px;padding:12px 14px;align-self:start;background:#fbfcfd}
+.ress ul{list-style:none;margin:0;padding:0}
+.ress li+li{border-top:1px solid var(--line)}
+.ress a{display:flex;gap:10px;align-items:flex-start;text-decoration:none;padding:9px 0}
+.ress a:hover .rt{text-decoration:underline}
+.ress .rt{font-weight:600;font-size:15px;color:var(--ink)}
+.ress .rd{display:block;font-size:13px;line-height:1.4;color:var(--muted);margin-top:2px}
+.ress svg{flex:0 0 auto;margin-top:2px}
+@media(max-width:760px){body.prof .monde .pIntro{grid-template-columns:1fr;padding:14px 14px 4px}}
+/* un monde replié ne montre que son bandeau : .pIntro (display:grid, plus précis) gagnait
+   sur « .monde.replie>.intro{display:none} » et restait affiché sous le bandeau fermé */
+body.prof .monde.replie>.pIntro{display:none}
+
+/* icônes au trait, une seule famille */
+.ic{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round;flex:0 0 auto}
+
+/* les fiches */
+body.prof .etapes{padding:6px 22px 18px}
+body.prof .etape{padding:16px 2px 16px 0;gap:14px}
+body.prof .etape+.etape{border-top:1px solid #e7ecf2}
+body.prof .badge{width:48px;height:48px;cursor:default}
+body.prof .badge .n{font-size:19px}
+body.prof .etape h3{font-size:18px;font-weight:700;margin:3px 0 0;display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 12px}
+body.prof .etape h3 .fo{font-size:14.5px;font-weight:500;color:var(--muted);font-style:italic}
+.pNote{margin:6px 0 10px;font-size:15px;line-height:1.5;color:#3a4d64;max-width:78ch}
+.pAct{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.pAct a,.pAct button,.seg{white-space:nowrap;font:inherit;font-size:14px;font-weight:600;min-height:38px;border-radius:8px;
+  display:inline-flex;align-items:center;gap:7px;text-decoration:none;cursor:pointer}
+.pAct a.plein{color:#fff;background:var(--c);padding:0 14px;border:1px solid var(--c)}
+.pAct a.plein:hover{filter:brightness(1.08)}
+.pAct a.trait,.pAct button.trait{color:var(--ink);background:#fff;border:1px solid #cdd7e3;padding:0 12px}
+.pAct a.trait:hover,.pAct button.trait:hover{border-color:var(--c);color:var(--c)}
+/* segment : « Fiche | tableau | équation » */
+.seg{border:1px solid #cdd7e3;background:#fff;padding:0;overflow:hidden;cursor:default}
+.seg>span{display:inline-flex;align-items:center;gap:7px;padding:0 10px 0 12px;color:var(--ink);align-self:stretch}
+.seg>a{padding:0 11px;border-left:1px solid #cdd7e3;color:var(--ink);align-self:stretch;display:inline-flex;align-items:center;font-weight:500}
+.seg>a:hover{background:#f3f6fa;color:var(--c)}
+.pAct .cartesBtn{margin-left:auto;color:var(--muted);background:none;border:1px solid transparent;padding:0 8px}
+.pAct .cartesBtn:hover{color:var(--ink)}
+.pAct .cartesBtn svg{transition:transform .2s}
+.pAct .cartesBtn[aria-expanded="true"] svg{transform:rotate(180deg)}
+/* les cartes de la série : une grille, pas un paragraphe */
+.cartes{display:none;margin:10px 0 0;padding:12px;border:1px solid #e3e9f0;border-radius:10px;background:#fbfcfd}
+.cartes.ouvert{display:block}
+.cartes ol{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(185px,1fr));gap:6px}
+.cartes li a,.cartes li span{display:flex;align-items:center;gap:8px;padding:6px 9px;border-radius:7px;
+  background:#fff;border:1px solid #e3e9f0;text-decoration:none;color:var(--ink);font-size:15px;
+  font-variant-numeric:tabular-nums;white-space:nowrap}
+.cartes li a:hover{border-color:var(--c)}
+.cartes li i{font-style:normal;font-size:11.5px;color:var(--muted);min-width:1.4em}
+.cartes li .dess{margin-left:auto;font-size:11px;font-weight:700;color:var(--muted);border:1px solid #cdd7e3;border-radius:4px;padding:0 4px}
+.cartes p{margin:9px 0 0;font-size:13px;color:var(--muted)}
+/* monde 2, étape 7 : les trois activités imprimables à part */
+.acts{margin:10px 0 0;display:grid;grid-template-columns:auto 1fr;gap:6px 14px;align-items:center;font-size:14px}
+.acts .an{font-weight:600;color:var(--muted)}
+.acts .pAct a{min-height:34px}
+
+/* les parties d'un monde : un intertitre, pas une boîte */
+body.prof .volet{background:none;border:none;border-top:2px solid var(--c);border-radius:0;
+  margin:18px 0 0;padding:12px 0 6px;display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 14px}
+body.prof .volet .rang{background:none;color:var(--c);padding:0;font-size:12px}
+body.prof .volet h4{font-size:18px}
+body.prof .volet .fiches{font-weight:500}
+body.prof .volet p{font-size:14.5px}
+
+@media(max-width:520px){
+  body.prof .etapes{padding:4px 12px 14px}
+  body.prof .etape{gap:10px}
+  body.prof .badge{width:40px;height:40px}
+  body.prof .badge .n{font-size:16px}
+  .pAct .cartesBtn{margin-left:0}
+  .pAct a.plein,.pAct a.trait{flex:1 1 auto;justify-content:center}
+  .seg{flex:1 1 100%}
+  .seg{font-size:13.5px}
+  .seg>span{flex:0 0 auto;padding:0 8px}
+  .seg>a{flex:1 1 0;justify-content:center;padding:0 6px}
+  body.prof .volet .rang{order:0}
+}
+/* couleur de chaque monde, pour les boutons et les intertitres */
+.m1{--c:#d9690c}.m2{--c:var(--blue)}.menq{--c:var(--framboise)}.msys{--c:var(--cannelle)}.m3{--c:#08857f}.m4{--c:var(--violet)}
+
+/* VUE ÉLÈVE — deux retouches téléphone (27/09/2026, planche 5 du lot « vue prof ») :
+   une seule petite tache décorative en haut à droite (les cinq chevauchaient la phrase
+   d'accroche), et un bandeau de monde un peu plus serré pour que « Petit SPLAT! »
+   tienne sur une ligne à côté de ses étoiles. */
+@media(max-width:520px){
+  body:not(.prof) .heroBlob.b1,body:not(.prof) .heroBlob.b3,body:not(.prof) .heroBlob.b4,body:not(.prof) .heroBlob.b6{display:none}
+  body:not(.prof) .heroBlob.b2{top:8px;right:3%;width:32px;height:32px}
+  body:not(.prof) .monde>.head{gap:10px;padding:14px 14px}
+  body:not(.prof) .monde .head svg.blob{width:38px;height:38px}
+  body:not(.prof) .monde .head .stars{font-size:13px;padding:4px 8px}
 }
 </style>
 </head>
@@ -480,40 +565,14 @@ const ENQ_FICHES=[
    (tests/splat-enquete-carte-mondes.test.mjs compare avant/après).
    Une partie = un intertitre dans la liste des étapes (« volets » : « de » = rang
    de sa première étape, exclu « a »), avec ses étoiles à elle, sa phrase, et en
-   vue prof ses livrets. */
+   vue prof la page des livrets (cadre « Pour la classe » du monde). */
 function enqEtapes(de,a){return ENQ_FICHES.slice(de,a).map((f,k)=>({t:f.t,o:f.o,fi:de+k,id:"enq-"+(de+k)}));}
-const LIVRETS_ENQ_1=[
-  ["📕 Livret L’enquête (PDF)","/outils/livret_splat_enquete_additif.pdf"],
-  ["🖨️ à plier","/outils/livret_splat_enquete_additif_a_plier.pdf","a3"],
-  ["📙 Le défi, 50 à 100 (PDF)","/outils/livret_splat_enquete_additif_defi.pdf"],
-  ["🖨️ Le défi à plier","/outils/livret_splat_enquete_additif_defi_a_plier.pdf","a3"]];
-const LIVRETS_ENQ_2=[
-  ["📗 Livret La grande enquête (PDF)","/outils/livret_splat_enquete_multiplicatif.pdf"],
-  ["🖨️ à plier","/outils/livret_splat_enquete_multiplicatif_a_plier.pdf","a3"],
-  ["📙 Le défi, 50 à 100 (PDF)","/outils/livret_splat_enquete_multiplicatif_defi.pdf"],
-  ["🖨️ Le défi à plier","/outils/livret_splat_enquete_multiplicatif_defi_a_plier.pdf","a3"]];
-const LIVRETS_ENQ_3=[
-  ["📕 Livret L’enquête rebondit (PDF)","/outils/livret_splat_enquete_rebondit.pdf"],
-  ["🖨️ à plier","/outils/livret_splat_enquete_rebondit_a_plier.pdf","a3"]];
-/* Les deux livrets du Système (25/09/2026) : un par partie. */
-const LIVRETS_SYS_1=[
-  ["📕 Livret SPLAT! Système (PDF)","/outils/livret_splat_systeme.pdf"],
-  ["🖨️ à plier","/outils/livret_splat_systeme_a_plier.pdf","a3"]];
-const LIVRETS_SYS_2=[
-  ["📗 Livret SPLAT! Système, la suite (PDF)","/outils/livret_splat_systeme_suite.pdf"],
-  ["🖨️ à plier","/outils/livret_splat_systeme_suite_a_plier.pdf","a3"]];
 const MONDE_ENQUETE={cls:"menq",idp:"enq",actif:true,nom:"SPLAT! Enquête",
   desc:"Cette fois, les taches ne parlent plus toutes seules : un indice les relie. À toi de mener l’enquête pour trouver ce que chacune cache.",
   volets:[
-   {de:0,a:5,nom:"L’enquête",o:"Deux ou trois taches, et des indices «\u00a0de plus que\u00a0», «\u00a0de moins que\u00a0».",
-    livrets:LIVRETS_ENQ_1,
-    note:"Les fiches 10 à 14 en un livret de 8 pages à plier (A3 ou A4, recto-verso, retournement sur le <b>bord court</b>) ; en page 2, un exemple résolu pas à pas, et sous chaque carte la place pour dessiner le schéma en barres. Le livret <b>Le défi</b> reprend les cinq fiches avec des totaux de 50 à 100 (même étoile). <a href=\"/outils/livrets_splat.html#monde-3\">Voir la page des livrets</a>"},
-   {de:5,a:10,nom:"La grande enquête",o:"Les indices multiplient et partagent — fois plus, fois moins —, puis les quatre opérations se mélangent.",
-    livrets:LIVRETS_ENQ_2,
-    note:"Les fiches 15 à 19 en un livret de 8 pages à plier, sur le même modèle : l’exemple résolu de la page 2 mêle «\u00a0de plus\u00a0» et «\u00a0fois plus\u00a0». Le livret <b>Le défi</b> reprend les cinq fiches avec des totaux de 50 à 100 (même étoile). <a href=\"/outils/livrets_splat.html#monde-3\">Voir la page des livrets</a>"},
-   {de:10,a:15,nom:"L’enquête rebondit",o:"Des taches de la même couleur… puis des enquêtes sans total : les indices suffisent.",
-    livrets:LIVRETS_ENQ_3,
-    note:"Les fiches 20 à 24 en un livret de 8 pages à plier, sur le même modèle : les cases «\u00a0Taches répétées\u00a0» et «\u00a0Sans total\u00a0» de l’outil (la fiche 24 mélange les deux sortes de cartes). Son <b>Le défi</b> est en préparation. <a href=\"/outils/livrets_splat.html#monde-3\">Voir la page des livrets</a>"}],
+   {de:0,a:5,nom:"L’enquête",o:"Deux ou trois taches, et des indices «\u00a0de plus que\u00a0», «\u00a0de moins que\u00a0»."},
+   {de:5,a:10,nom:"La grande enquête",o:"Les indices multiplient et partagent — fois plus, fois moins —, puis les quatre opérations se mélangent."},
+   {de:10,a:15,nom:"L’enquête rebondit",o:"Des taches de la même couleur… puis des enquêtes sans total : les indices suffisent."}],
   etapes:enqEtapes(0,15)};
 /* ---- SPLAT! Système, monde 4 (lot « six mondes », 24/09/2026) : les fiches 25 à 34 ----
    Le mode D de l'outil (générateur S1, énoncé S2, correction S3, mode élève) :
@@ -559,12 +618,8 @@ const SYS_FICHES=[
 const MONDE_SYSTEME={cls:"msys",idp:"sys",actif:true,nom:"SPLAT! Système",
   desc:"Plusieurs plateaux, un total pour chacun, et les mêmes couleurs partout : compare les plateaux pour trouver ce que cache chaque couleur.",
   volets:[
-   {de:0,a:5,nom:"On retire",o:"Un plateau est une partie de l’autre : retire-le, ce qui reste te dit tout.",
-    livrets:LIVRETS_SYS_1,
-    note:"Les fiches 25 à 29 en un livret de 8 pages à plier : le deuxième plateau est contenu dans le premier, on le retire (au cycle 3, la famille d’Inconnues en barres). Son <b>Le défi</b> est en préparation. Les fiches et les corrections s’impriment aussi ci-dessous — la correction existe en 2 par page, en plus gros. <a href=\"/outils/livrets_splat.html#monde-4\">Voir la page des livrets</a>"},
-   {de:5,a:10,nom:"On additionne, on double",o:"Cette fois, il faut d’abord doubler un plateau, ou additionner les plateaux, avant de comparer.",
-    livrets:LIVRETS_SYS_2,
-    note:"Les fiches 30 à 34 en un livret de 8 pages à plier : avant de comparer, on double un plateau ou on additionne les plateaux (vers le cycle 4). Son <b>Le défi</b> est en préparation. <a href=\"/outils/livrets_splat.html#monde-4\">Voir la page des livrets</a>"}],
+   {de:0,a:5,nom:"On retire",o:"Un plateau est une partie de l’autre : retire-le, ce qui reste te dit tout."},
+   {de:5,a:10,nom:"On additionne, on double",o:"Cette fois, il faut d’abord doubler un plateau, ou additionner les plateaux, avant de comparer."}],
   etapes:SYS_FICHES.map((f,k)=>({t:f.t,o:f.o,fi:k,id:"sys-"+k}))};
 /* Les liens des étapes de l'Enquête et du Système : le jeu de l'élève (mêmes réglages
    que la fiche, sans rien d'impression, plus eleve=1&parcours=), la fiche et la
@@ -687,10 +742,8 @@ const MONDES=[
     parcours m4e1 … m4e6. Les liens Projeter / Fiche / Correction sont construits après MONDES. */
  {cls:"m4",idp:"e3",actif:true,nom:"SPLAT! Relatifs",desc:"Les mêmes plateaux, avec les nombres relatifs : des jetons rouges, des taches «\u00a0opposé\u00a0», des solutions négatives… et l'inconnue des deux côtés.",
   volets:[
-   {de:0,a:3,nom:"L’inconnue d’un seul côté",o:"Les jetons rouges, puis la tache opposée : les taches restent d’un seul côté.",
-    note:"Les fiches 38 à 40 en un livret de 8 pages à plier (A3 ou A4, recto-verso, retournement sur le <b>bord court</b>) : les plateaux côte à côte et, sous chaque carte, la place pour écrire l’équation. La couverture présente le jeton rouge et la tache «\u00a0opposé\u00a0»."},
-   {de:3,a:6,nom:"L’inconnue des deux côtés",o:"Des taches à gauche et à droite, normales ou opposées : enlève-les d’abord, puis résous.",
-    note:"Les fiches 41 à 43 en un livret de 8 pages à plier, sur le même modèle."}],
+   {de:0,a:3,nom:"L’inconnue d’un seul côté",o:"Les jetons rouges, puis la tache opposée : les taches restent d’un seul côté."},
+   {de:3,a:6,nom:"L’inconnue des deux côtés",o:"Des taches à gauche et à droite, normales ou opposées : enlève-les d’abord, puis résous."}],
   etapes:[
    {t:"Les jetons rouges arrivent",fo:"x + b = c · a × x = c · a × x + b = c",
     o:"Des jetons rouges, et une tache qui peut cacher un nombre négatif.",
@@ -829,7 +882,7 @@ const NOTES_MONDE = [
  "<tr><td>trois sommes de paires, sans total</td><td>Système, fiche 30</td><td>cycle 3 défi / cycle 4</td></tr>"+
  "<tr><td>l'inconnue des deux côtés (2x + 4 = 3x + 3)</td><td>mondes 5 et 6</td><td>4e-3e</td></tr>"+
  "<tr><td>systèmes quelconques (3N + 2V ; 2N + 3V)</td><td><b>volontairement hors SPLAT!</b></td><td>lycée</td></tr></table>",
- "Deux plateaux, même quantité en haut et en bas. Présentation verticale : chaque plateau correspond à une barre du schéma ; horizontale : chaque plateau correspond à un membre de l'équation. La progression d'origine recommande le «\u00a0?\u00a0» au cycle 3 ; ici, en ligne comme sur les fiches, l'inconnue est une lettre.",
+ "Deux plateaux, même quantité en haut et en bas. Présentation verticale : chaque plateau correspond à une barre du schéma ; horizontale : chaque plateau correspond à un membre de l'équation. La progression d'origine recommande le «\u00a0?\u00a0» au cycle 3 ; ici, en ligne comme sur les fiches, l'inconnue est une lettre. Huit marches, une seule nouveauté à la fois ; dans chaque marche, la tache est tantôt à gauche, tantôt à droite (3𝑥 = 12 et 12 = 3𝑥).",
  "Prolongement maths&go vers le cycle 4 (4e-3e) : les nombres relatifs dans les mêmes plateaux. Un jeton vert vaut un nombre positif, un jeton rouge un nombre négatif ; une tache «\u00a0opposé\u00a0» cache l'opposé de l'inconnue (elle s'écrit −𝑥). Deux parties, un livret chacune : l'inconnue d'un seul côté (fiches 38 à 40), puis des deux côtés (41 à 43). Plateaux côte à côte, l'élève écrit l'équation — pas de schéma en barres (une barre négative ne se dessine pas). Quelques solutions nulles (4𝑏 − 4 = −4, −2𝑡 = 3𝑡). À réserver aux élèves qui ont terminé le monde 5."
 ];
 const NOTES_PROF = [
@@ -839,9 +892,9 @@ const NOTES_PROF = [
   "Deux taches cachant le même nombre : premier raisonnement déductif (partager également ce qui n'est pas visible).",
   "Jusqu'à six taches : analyse systématique des relations entre total, jetons visibles et parts cachées.",
   "Plusieurs taches et c'est l'élève qui dessine : le sens du travail cognitif s'inverse à nouveau."],
- ["Séquence 2 de Claire, ses trois fiches de 4 cartes enchaînées (12 cartes) : x + a = b, puis a × x = b (2 ≤ a ≤ 5), puis a × x + c = b. C'est le Petit Splat retrouvé sur le grand plateau — l'élève trace lui-même son schéma en barres. Les trois fiches restent imprimables séparément ci-dessous.",
-  "Retour à x + a = b, mais en paquets de jetons : des nombres plus grands sans surcharge visuelle.",
-  "a × x + c = b avec les paquets : la représentation compacte permet de complexifier sans brouiller."],
+ ["Séquence 2 de la progression d’origine : trois séries de 4 cartes enchaînées (12 cartes) : x + a = b, puis a × x = b (2 ≤ a ≤ 5), puis a × x + c = b. C'est le Petit Splat retrouvé sur le grand plateau — l'élève trace lui-même son schéma en barres. Les trois fiches restent imprimables séparément ci-dessous.",
+  "Fiche 8 : deux marches de 6 cartes — x + a = b avec des paquets de jetons, puis seulement des taches (a × x = b : on partage). Des nombres plus grands sans surcharge visuelle.",
+  "Fiche 9 : a × x + c = b avec les paquets, en deux marches de 6 cartes — un paquet, puis deux paquets. La représentation compacte permet de complexifier sans brouiller."],
  ["Deux taches, indice additif direct («\u00a0de plus que\u00a0») : entrée dans la situation, le schéma se dessine sans reformulation.",
   "Même structure, indice inversé («\u00a0de moins que\u00a0») : la reformulation est l’obstacle — d’où la consigne en gras dans l’énoncé.",
   "Les deux formulations mélangées carte par carte : il faut relire l’indice à chaque fois, pas appliquer une recette.",
@@ -868,8 +921,8 @@ const NOTES_PROF = [
   "Les deux gestes qui se ressemblent le plus, mélangés : à chaque carte, l’élève choisit entre doubler et additionner.",
   "Tous les gestes du monde, avec des jetons visibles («\u00a0Trois paires\u00a0» reste sans jeton visible) : le bilan du Système."],
  ["Fiche 35 : les jetons un par un, trois séries de 4 cartes — x + b = c, puis a × x = c, puis a × x + b = c (coefficient 2 ou 3). Présentation verticale : chaque plateau correspond à une barre du schéma. Deux fiches : «\u00a0tableau\u00a0» (plateaux haut/bas, l'élève dessine le schéma en barres) et «\u00a0équation\u00a0» (plateaux côte à côte, il écrit l'équation).",
-  "Fiche 36 : a × x + b = c avec les paquets de jetons, pour gérer les grandes quantités sans surcharge visuelle.",
-  "Fiche 37 : l'inconnue des deux côtés (a × x + b = c × x + d) — on retranche l'inconnue d'un côté pour réduire pas à pas vers la solution. Les plateaux côte à côte explicitent le lien avec les deux membres de l'équation."],
+  "Fiche 36 : a × x + b = c avec les paquets de jetons, en deux marches de 6 cartes — 2 ou 3 taches, puis 4 à 6 taches — pour gérer les grandes quantités sans surcharge visuelle.",
+  "Fiche 37 : l'inconnue des deux côtés, en trois marches de 4 cartes — des jetons d'un seul côté, puis des deux côtés, puis le grand mélange de tout le monde 5. On retranche l'inconnue d'un côté pour réduire pas à pas vers la solution. Les plateaux côte à côte explicitent le lien avec les deux membres de l'équation."],
  ["Fiche 38 : trois séries de 4 cartes — x + b = c, puis a × x = c, puis a × x + b = c —, taches normales, jetons de −15 à 20 : la seule nouveauté, ce sont les jetons rouges et les solutions négatives. La tache est tantôt à gauche, tantôt à droite (c = a × x + b aussi).",
   "Fiche 39 : a × x + b = c avec deux ou trois jetons par côté, verts et rouges mélangés, à regrouper avant de résoudre ; totaux jusqu'à ±50. Deux cartes ont une solution nulle (la 6e et la 12e).",
   "Fiche 40 : la tache opposée — −x + b = c (4 cartes), −a × x = c (2), −a × x + b = c (3), puis des taches normales et opposées sur le même plateau (3) : on regroupe 𝑚 − 3𝑚 = −2𝑚. On divise par un nombre négatif.",
@@ -877,7 +930,7 @@ const NOTES_PROF = [
   "Fiche 42 : des taches opposées d'un côté, des taches normales de l'autre : pour les faire disparaître, on AJOUTE des taches des deux côtés (l'outil écrit «\u00a0J'ajoute … de chaque côté\u00a0»).",
   "Fiche 43 : tout mélangé — taches normales et opposées sur un même plateau, taches opposées des deux côtés, et −2𝑡 = 3𝑡 (solution 0). Le bilan de l'univers."]
 ];
-/* La liste 📋 de la vue professeur ; dans les mondes ÉquaSplat, chaque équation est un lien (lot Q2). */
+/* Les cartes de la série, en vue professeur : dans les mondes ÉquaSplat, chaque équation est un lien (lot Q2). */
 /* Relecture du monde 1 (26/09/2026, idée de Gwenaël) : en vue professeur, chaque carte
    de la liste 📋 des mondes 1 (Petit SPLAT!) et 2 (SPLAT! Classique) ouvre CETTE carte
    seule dans ÉquaBarre, comme les équations des mondes 5 et 6 dans ÉquaSplat. Toutes
@@ -903,24 +956,169 @@ function eqBarreLiens(m,e){
   });
   return liens.every(Boolean)?liens:null;
 }
-function eqListeHtml(e,m){
-  const seules=eqSeuleLiens(e), barre=seules?null:eqBarreLiens(m,e);
-  const carte=!!(m&&m.idp==="e0");
-  const items=seules?e.eqs.map((q,i)=>'<a class="eqSeule" href="'+seules[i]+'" title="Ouvrir cette \u00e9quation seule dans \u00c9quaSplat">'+q+'</a>')
-    :barre?e.eqs.map((q,i)=>'<a class="eqSeule" href="'+barre[i]+'" title="Ouvrir cette '+(carte?'carte':'\u00e9quation')+' seule dans \u00c9quaBarre">'+q+'</a>')
-    :e.eqs;
-  return items.join('\u2003\u00b7\u2003')+
-    (e.eqs.some(q=>q.includes('\u270f'))?'<br><small>\u270f\ufe0f = carte \u00e0 dessiner</small>':'')+
-    (seules?'<br><small>Clique sur une \u00e9quation pour l\u2019ouvrir seule dans \u00c9quaSplat (sans \u00e9toile).</small>':'')+
-    (barre?'<br><small>Clique sur une '+(carte?'carte':'\u00e9quation')+' pour l\u2019ouvrir seule dans \u00c9quaBarre.</small>':'');
+/* ============ vue professeur (lot « vue prof », 27/09/2026) ============
+   Maquette validée par Gwenaël (splat-relecture\vue-prof\) : en haut, un sommaire des
+   six mondes ; dans chaque monde, « L'intention » (NOTES_MONDE) et un cadre « Pour la
+   classe » (diaporama, page des livrets) ; pour chaque fiche, la note du prof
+   (NOTES_PROF), une rangée de boutons aux mêmes mots partout — « Projeter » seul bouton
+   plein, puis Jeu de l'élève, Fiche, Corrigé — et les 12 cartes repliées. La phrase
+   écrite pour l'élève (m.desc, e.o) n'y paraît plus. Aucun lien ne change : ce sont
+   les mêmes e.jp, e.j, e.f, e.fe, e.c, e.c2, et les mêmes liens ÉquaBarre / ÉquaSplat
+   pour chaque carte. Les ids des étapes et l'élément .n restent (majAffichage). */
+const IC={ /* petits pictogrammes au trait, une seule famille (plus d'émoticônes) */
+  projeter:'<svg class="ic" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M12 16v4M8 20h8"/></svg>',
+  jeu:'<svg class="ic" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M10 8.5v7l6-3.5z"/></svg>',
+  fiche:'<svg class="ic" viewBox="0 0 24 24"><path d="M14 3H6.5A1.5 1.5 0 0 0 5 4.5v15A1.5 1.5 0 0 0 6.5 21h11a1.5 1.5 0 0 0 1.5-1.5V8z"/><path d="M14 3v5h5M8.5 13h7M8.5 17h5"/></svg>',
+  corrige:'<svg class="ic" viewBox="0 0 24 24"><path d="M14 3H6.5A1.5 1.5 0 0 0 5 4.5v15A1.5 1.5 0 0 0 6.5 21h11a1.5 1.5 0 0 0 1.5-1.5V8z"/><path d="M14 3v5h5M8.5 14.5l2.5 2.5 4.5-5"/></svg>',
+  livret:'<svg class="ic" viewBox="0 0 24 24"><path d="M12 6.5C10 5 7 4.5 4 5v13c3-.5 6 0 8 1.5 2-1.5 5-2 8-1.5V5c-3-.5-6 0-8 1.5zM12 6.5v13"/></svg>',
+  diapo:'<svg class="ic" viewBox="0 0 24 24"><path d="M3 4h18M5 4v10h14V4M12 14v3M8.5 20.5 12 17l3.5 3.5"/></svg>',
+  chev:'<svg class="ic" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>'
+};
+function btnPlein(href,ic,txt){return '<a class="plein" href="'+href+'">'+IC[ic]+txt+'</a>';}
+function btnTrait(href,ic,txt,title){return '<a class="trait" href="'+href+'"'+(title?' title="'+title+'"':'')+'>'+IC[ic]+txt+'</a>';}
+/* un bouton à variantes : « Fiche | tableau | équation », « Corrigé | 4 par page | 2 par page » */
+function btnSeg(ic,txt,liens){return '<span class="seg"><span>'+IC[ic]+txt+'</span>'+liens.map(l=>'<a href="'+l[1]+'">'+l[0]+'</a>').join('')+'</span>';}
+/* L'intention du monde ; la table du monde 4 passe dans un « Repère » qu'on déplie. */
+function intentionHtml(mi){
+  const t=NOTES_MONDE[mi]||"", k=t.indexOf("<table");
+  if(k<0) return '<p class="txt">'+t+'</p>';
+  const avant=t.slice(0,k).replace(/Tous les systèmes du collège, et où ils sont[\s ]*:\s*$/,"").trim();
+  return '<p class="txt">'+avant+'</p><details><summary>Repère : tous les systèmes du collège, et où ils sont dans SPLAT!</summary>'+t.slice(k)+'</details>';
 }
+/* « Pour la classe » : ce que contient la page des livrets de chaque monde (rang = monde − 1) ;
+   une chaîne vide = pas de lien. */
+const LIVRET_TEXTE=[
+  "Je complète le schéma, puis je fais le schéma en barres : deux séries de trois niveaux, et leurs corrigés.",
+  "Les fiches 7, 8 et 9 en un livret, avec la place pour le schéma ou l’équation, et Le défi (totaux de 50 à 100) ; chacun en «\u00a0?\u00a0» ou en lettre, et leurs corrigés.",
+  "Un livret par partie, Le défi pour les deux premières, et leurs corrigés.",
+  "Un livret par partie, et leurs corrigés (aussi en 2 par page).",
+  "Les fiches 35 à 37 en deux versions (tableau / équation), chacune avec son livret Le défi, et leurs corrigés.",
+  "Les fiches 38 à 43 en deux livrets, un par partie, et leurs corrigés."];
+function ressourcesHtml(m,mi){
+  const li=[];
+  if(mi===0) li.push('<li><a href="/outils/splat_intro.html?suite='+encodeURIComponent('/outils/splat_univers.html?prof=1')+'">'+IC.diapo+
+    '<span><span class="rt">Présenter le principe</span><span class="rd">Le diaporama à projeter avant la première fiche.</span></span></a></li>');
+  if(LIVRET_TEXTE[mi]) li.push('<li><a href="/outils/livrets_splat.html#monde-'+(mi+1)+'">'+IC.livret+
+    '<span><span class="rt">Les livrets du monde '+(mi+1)+'</span><span class="rd">'+LIVRET_TEXTE[mi]+'</span></span></a></li>');
+  if(!li.length) return '';
+  return '<aside class="ress"><p class="lab">Pour la classe</p><ul>'+li.join('')+'</ul></aside>';
+}
+/* Les cartes de la série, repliées derrière « Les 12 cartes », en grille numérotée.
+   Chaque carte ouvre CETTE carte seule : ÉquaSplat (mondes 5 et 6, eqSeuleLiens) ou
+   ÉquaBarre (mondes 1 et 2, eqBarreLiens) ; sinon elle reste du texte. Une carte à
+   dessiner (✏️ dans « eqs », ou toute la fiche si e.dessin) porte l'étiquette « dessin ». */
+function cartesHtml(e,m,cid){
+  if(!e.eqs) return '';
+  const seules=eqSeuleLiens(e), barre=seules?null:eqBarreLiens(m,e);
+  const liens=seules||barre, outil=seules?'ÉquaSplat':'ÉquaBarre';
+  const items=e.eqs.map((q,i)=>{
+    const dess=q.includes('✏'), txt=q.replace(/\s*✏️?/,'');
+    const inner='<i>'+(i+1)+'</i>'+txt+(dess||e.dessin?'<span class="dess" title="carte à dessiner">dessin</span>':'');
+    return '<li>'+(liens?'<a href="'+liens[i]+'" title="Ouvrir cette carte seule dans '+outil+'">'+inner+'</a>':'<span>'+inner+'</span>')+'</li>';
+  }).join('');
+  return '<div class="cartes" id="'+cid+'"><ol>'+items+'</ol>'+
+    (liens?'<p>Un clic sur une carte l’ouvre seule dans '+outil+(seules?', sans étoile':'')+', pour la résoudre avec la classe.</p>':'')+'</div>';
+}
+function actionsHtml(e,m,cid){
+  const a=[], nb=e.eqs?e.eqs.length:0;
+  const btnCartes=e.eqs?'<button class="cartesBtn" type="button" aria-expanded="false" aria-controls="'+cid+'">Les '+nb+' cartes '+IC.chev+'</button>':'';
+  if(e.parties){ /* monde 2, fiche 7 : le jeu enchaîne les trois activités, chacune se projette et s'imprime à part */
+    if(m.actif) a.push(btnPlein(e.j,'jeu','Jeu de l’élève (les '+nb+' cartes)'));
+    return '<div class="pAct">'+a.join('')+btnCartes+'</div>'+
+      '<div class="acts">'+e.parties.map(pa=>'<span class="an">'+pa.nom+'</span><div class="pAct">'+btnTrait(pa.jp,'projeter','Projeter')+btnTrait(pa.f,'fiche','Fiche','Ouvre l’outil prêt à imprimer la fiche')+'</div>').join('')+'</div>';
+  }
+  if(e.jp){ a.push(btnPlein(e.jp,'projeter','Projeter')); if(m.actif) a.push(btnTrait(e.j,'jeu','Jeu de l’élève')); }
+  else if(m.actif) a.push(btnPlein(e.j,'jeu','Jeu de l’élève'));
+  if(e.f&&e.fe) a.push(btnSeg('fiche','Fiche',[['tableau',e.f],['équation',e.fe]]));
+  else if(e.f) a.push(btnTrait(e.f,'fiche','Fiche','Ouvre l’outil prêt à imprimer la fiche'));
+  if(e.c&&e.c2) a.push(btnSeg('corrige','Corrigé',[['4 par page',e.c],['2 par page',e.c2]]));
+  else if(e.c) a.push(btnTrait(e.c,'corrige','Corrigé','Ouvre l’outil prêt à imprimer la correction'));
+  return '<div class="pAct">'+a.join('')+btnCartes+'</div>';
+}
+/* les numéros de fiches de chaque monde : [première, dernière] (« premier » : lot Q2) */
+function plagesFiches(){
+  let n=0;
+  return MONDES.map(m=>{ if(m.premier) n=Math.max(n,m.premier-1); const r=[n+1,n+m.etapes.length]; n+=m.etapes.length; return r; });
+}
+/* Une partie (mondes 3, 4 et 6) : un intertitre, rien d'autre — les livrets sont sur la page des
+   livrets, comme aux autres mondes (décision du 27/09/2026) ; n = sa première fiche. */
+function voletProfHtml(m,v,vi,n){
+  return '<li class="volet" id="'+m.idp+'-partie-'+(vi+1)+'">'+
+    '<span class="rang">Partie '+(vi+1)+'</span>'+
+    '<h4>'+v.nom+'<span class="fiches">fiches '+n+' à '+(n+v.a-v.de-1)+'</span></h4>'+
+    '<p>'+v.o+'</p>'+
+    '</li>';
+}
+/* Le bandeau d'un monde : le numéro des fiches à droite (plus de « jouable en classe »). */
+function teteProfHtml(m,mi,plage,attrs){
+  return '<div class="head"'+attrs+'>'+
+    '<svg class="blob" viewBox="0 0 110 110"><use href="#tacheEtoile" width="110" height="110" fill="rgba(255,255,255,.92)"/></svg>'+
+    '<div class="t"><div class="num">Monde '+(mi+1)+'</div><h2>'+m.nom+'</h2></div>'+
+    '<span class="fichesTete">'+(m.cache?'en préparation':'fiches '+plage[0]+'–'+plage[1])+'</span>'+
+    (m.cache?'':'<span class="chev" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></span>')+'</div>';
+}
+/* Tout un monde en vue prof (le contenu de sa <section>). Un monde en préparation : le
+   bandeau, qui ne s'ouvre pas, et la phrase — ni note, ni lien. */
+function mondeProfHtml(m,mi,plage){
+  if(m.cache) return teteProfHtml(m,mi,plage,'')+'<p class="prepa">'+PREPA_PHRASE+'</p>';
+  let n=plage[0]-1;
+  return teteProfHtml(m,mi,plage,' role="button" tabindex="0" aria-expanded="true"')+
+    '<div class="intro pIntro"><div><p class="lab">L’intention</p>'+intentionHtml(mi)+'</div>'+ressourcesHtml(m,mi)+'</div>'+
+    '<ol class="etapes">'+m.etapes.map((e,ei)=>{
+      n++;
+      const v=(m.volets||[]).find(x=>x.de===ei), vi=(m.volets||[]).indexOf(v);
+      const id=idEtape(m,e,ei), cid='cartes-'+id;
+      return (v?voletProfHtml(m,v,vi,n):'')+'<li class="etape" id="'+id+'">'+
+        '<button class="badge" type="button" disabled>'+
+          '<svg class="tache" viewBox="0 0 110 110"><use class="fond" href="#tacheEtoile" width="110" height="110"/></svg>'+
+          '<span class="n">'+n+'</span></button>'+
+        '<div class="corps">'+
+          '<h3>'+e.t+(e.fo?'<span class="fo">'+e.fo+'</span>':'')+'</h3>'+
+          '<p class="pNote">'+NOTES_PROF[mi][ei]+'</p>'+
+          actionsHtml(e,m,cid)+cartesHtml(e,m,cid)+
+        '</div></li>';
+    }).join('')+'</ol>';
+}
+function sommaireProfHtml(plages){
+  return MONDES.map((m,mi)=>'<a href="#monde-'+(mi+1)+'" class="'+m.cls+(m.cache?' cache':'')+'" data-mi="'+mi+'">'+
+    '<span class="sn">Monde '+(mi+1)+'</span><span class="st">'+m.nom+'</span>'+
+    '<span class="sf">'+(m.cache?'en préparation':'fiches '+plages[mi][0]+' à '+plages[mi][1])+'</span></a>').join('');
+}
+function renderProf(main){
+  const plages=plagesFiches();
+  /* en-tête : le guide du professeur, puis le sommaire des six mondes */
+  const hero=document.querySelector(".hero");
+  hero.querySelector("h1").innerHTML='<small>Guide du professeur</small>L’univers <span class="splat">SPLAT!</span>';
+  hero.querySelector("p.sub").textContent="Six mondes, du tout et des parties aux équations en relatifs. Chaque fiche se projette, se joue sur tablette et s’imprime — avec la même série de cartes partout.";
+  const som=document.createElement("nav"); som.className="sommaire"; som.setAttribute("aria-label","Les six mondes");
+  som.innerHTML=sommaireProfHtml(plages);
+  hero.after(som);
+  som.addEventListener("click",ev=>{ const a=ev.target.closest("a[data-mi]"); if(!a) return;
+    const mi=+a.dataset.mi; if(MONDES[mi].cache) return; ouvrirMonde(mi); retenirMonde(mi); });
+  MONDES.forEach((m,mi)=>{
+    const sec=document.createElement("section");
+    sec.id="monde-"+(mi+1);
+    sec.className="monde "+m.cls+(m.cache?" enprepa cache":"");
+    sec.innerHTML=mondeProfHtml(m,mi,plages[mi]);
+    main.appendChild(sec);
+  });
+  /* « Les 12 cartes » : déplier / replier la grille de la fiche */
+  document.addEventListener("click",ev=>{
+    const b=ev.target.closest(".cartesBtn"); if(!b) return;
+    const box=document.getElementById(b.getAttribute("aria-controls"));
+    const o=!box.classList.contains("ouvert"); box.classList.toggle("ouvert",o); b.setAttribute("aria-expanded",o?"true":"false");
+  });
+}
+
 const main=document.getElementById("univers");
 let compteur=0;
-MONDES.forEach((m,mi)=>{
+/* vue élève : la boucle d'origine ; la vue prof a son propre rendu (renderProf, plus haut) */
+if(PROF) renderProf(main);
+else MONDES.forEach((m,mi)=>{
   /* numéros réservés (lot Q2) : le monde commence à « premier » s'il est plus loin */
   if(m.premier) compteur=Math.max(compteur,m.premier-1);
   const sec=document.createElement("section");
-  sec.className="monde "+m.cls+((m.actif||PROF)?"":" enprepa");
+  sec.className="monde "+m.cls+(m.actif?"":" enprepa");
   sec.id="monde-"+(mi+1);
   if(m.cache){ /* en préparation : le bandeau (qui ne s'ouvre pas) et une phrase — aucun lien */
     compteur+=m.etapes.length;
@@ -940,46 +1138,20 @@ MONDES.forEach((m,mi)=>{
    '<div class="head" role="button" tabindex="0" aria-expanded="true" aria-controls="corps'+mi+'">'+
      '<svg class="blob" viewBox="0 0 110 110"><use href="#tacheEtoile" width="110" height="110" fill="rgba(255,255,255,.92)"/></svg>'+
      '<div class="t"><div class="num">Monde '+(mi+1)+'</div><h2>'+m.nom+'</h2></div>'+
-     (PROF?'<div class="stars">'+(m.actif?'jouable en classe':'\ud83d\udea7 jeu \u00e9l\u00e8ve \u00e0 venir')+'</div>':(m.actif?'<div class="stars" id="stars'+mi+'"></div>':'<div class="stars">\ud83d\udea7 en pr\u00e9paration</div>'))+
+     (m.actif?'<div class="stars" id="stars'+mi+'"></div>':'<div class="stars">\ud83d\udea7 en pr\u00e9paration</div>')+
      '<span class="chev" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></span>'+
    '</div>'+
-   '<p class="desc">'+m.desc+'</p>'+(PROF?'<div class="desc descProf">\ud83d\udcdd '+NOTES_MONDE[mi]+'</div>':'')+
-   (mi===0?'<p class="intro">'+(PROF
-      ?'<a class="introLien" href="/outils/splat_intro.html?suite='+encodeURIComponent('/outils/splat_univers.html?prof=1')+'">\ud83d\udcfd\ufe0f Pr\u00e9senter le principe (diaporama \u00e0 projeter)</a>'
-       /* relecture du monde 1 (25/09/2026) : un seul lien vers la page des livrets,
-          qui montre les trois niveaux, leurs corrigés et comment les imprimer */
-       +'<a class="introLien livret" href="/outils/livrets_splat.html#monde-1">\ud83d\udcda Les livrets du monde 1</a>'
-      :'<a class="introLien" href="/outils/splat_intro.html?suite='+encodeURIComponent(m.etapes[0].j)+'">\ud83c\udfac Comment on joue ?</a>')+'</p>':'')+
-   /* monde 2, vue prof : un seul lien vers la page des livrets (qui montre les livrets, leurs
-      corrigés et comment les imprimer), comme au monde 1 — relecture du monde 1, lot 2, 25/09/2026.
-      La note garde ce qui sert à la classe, sans la partie sur l'impression. */
-   (mi===1&&PROF?'<p class="intro">'
-       +'<a class="introLien livret" href="/outils/livrets_splat.html#monde-2">\ud83d\udcda Les livrets du monde 2</a>'
-       +'<span class="introNote">Les fiches 7, 8 et 9 r\u00e9unies en un livret\u00a0; sous chaque carte, la place pour dessiner le sch\u00e9ma en barres ou \u00e9crire l\u2019\u00e9quation. Le livret <b>Le d\u00e9fi</b> reprend les trois fiches avec des totaux de 50 \u00e0 100 et jusqu\u2019\u00e0 six taches.</span>'
-     +'</p>':'')+
-   /* monde 5, vue prof : même chose (les deux livrets SPLAT! Équations, lot Q3, et leurs « Le défi »,
-      lot Q5 et relecture du 27/09/2026) — un seul lien vers l'onglet du monde 5 de la page des livrets */
-   (m===MONDE_EQUATIONS&&PROF?'<p class="intro">'
-       +'<a class="introLien livret" href="/outils/livrets_splat.html#monde-5">\ud83d\udcda Les livrets du monde 5</a>'
-       +'<span class="introNote">Les fiches 35, 36 et 37 en deux versions aux m\u00eames 36 cartes\u00a0: plateaux l\u2019un sur l\u2019autre et la place \u00e0 droite pour dessiner le sch\u00e9ma en barres, ou plateaux c\u00f4te \u00e0 c\u00f4te et la place dessous pour \u00e9crire l\u2019\u00e9quation. Le QR code de chaque fiche rejoue la s\u00e9rie de l\u2019\u00e9toile dans \u00c9quaSplat. Chaque version a son livret <b>Le d\u00e9fi</b>\u00a0: les trois fiches avec des paquets partout, des totaux de 50 \u00e0 100 et jusqu\u2019\u00e0 six taches (m\u00eame \u00e9toile).</span>'
-     +'</p>':'')+
-   /* monde 6, vue prof (lot R2) : comme le monde 5, un seul lien vers l'onglet des livrets */
-   (m===MONDE_RELATIFS&&PROF?'<p class="intro">'
-       +'<a class="introLien livret" href="/outils/livrets_splat.html#monde-6">\ud83d\udcda Les livrets du monde 6</a>'
-       +'<span class="introNote">Les fiches 38 \u00e0 43 en deux livrets de 8 pages, un par partie, et leurs corrig\u00e9s par l\u2019\u00e9quation. Le QR code de chaque fiche rejoue les m\u00eames \u00e9quations en ligne, dans \u00c9quaSplat.</span>'
-     +'</p>':'')+
+   '<p class="desc">'+m.desc+'</p>'+
+   (mi===0?'<p class="intro"><a class="introLien" href="/outils/splat_intro.html?suite='+encodeURIComponent(m.etapes[0].j)+'">\ud83c\udfac Comment on joue ?</a></p>':'')+
    '<ol class="etapes">'+m.etapes.map((e,ei)=>{
      compteur++;
      /* la partie qui commence à cette étape (lot « six mondes ») : un intertitre
-        dans la liste, avec ses étoiles, sa phrase et, en vue prof, ses livrets */
+        dans la liste, avec ses étoiles et sa phrase (ses livrets : en vue prof) */
      const v=(m.volets||[]).find(x=>x.de===ei), vi=(m.volets||[]).indexOf(v);
      const volet=!v?'':'<li class="volet" id="'+m.idp+'-partie-'+(vi+1)+'">'+
        '<span class="rang">Partie '+(vi+1)+'</span>'+
        '<div class="t"><h4>'+v.nom+'<span class="fiches">fiches '+compteur+' à '+(compteur+v.a-v.de-1)+'</span></h4><p>'+v.o+'</p></div>'+
-       (PROF?'':'<span class="stars" id="stars'+mi+'-'+vi+'"></span>')+
-       (PROF&&(v.livrets||v.note)?'<p class="intro">'+
-         (v.livrets||[]).map(l=>'<a class="introLien livret'+(l[2]?' '+l[2]:'')+'" href="'+l[1]+'" target="_blank" rel="noopener">'+l[0]+'</a>').join('')+
-         (v.note?'<span class="introNote">'+v.note+'</span>':'')+'</p>':'')+
+       '<span class="stars" id="stars'+mi+'-'+vi+'"></span>'+
        '</li>';
      const badgeAttrs = (m.actif && !e.p) ? ' title="Marquer comme réussie" data-id="'+ids[ei]+'"' : ' disabled';
      return volet+'<li class="etape" id="'+ids[ei]+'">'+
@@ -990,21 +1162,8 @@ MONDES.forEach((m,mi)=>{
        '</button>'+
        '<div class="corps">'+
          '<h3>'+e.t+'</h3>'+(e.fo?'<div class="forme">'+e.fo+'</div>':'')+
-         '<p class="obj">'+e.o+'</p>'+(PROF?'<p class="noteProf">\ud83d\udcdd '+NOTES_PROF[mi][ei]+'</p>':'')+(PROF&&e.eqs?'<p class="eqListeProf">\ud83d\udccb Les '+e.eqs.length+(mi===0?' cartes':' \u00e9quations')+' de la s\u00e9rie'+(e.dessin?' \u2014 <strong>\u270f\ufe0f toutes \u00e0 dessiner</strong>':'')+' : '+eqListeHtml(e,m)+'</p>':'')+
-         (PROF
-           ? '<div class="actions">'+
-             (e.parties
-               ? (m.actif?'<a class="jouer" href="'+e.j+'">\ud83c\udfae Le jeu de l\u2019\u00e9l\u00e8ve (les '+e.eqs.length+' cartes)</a>':'')+
-                 e.parties.map(pa=>'<span class="partie">'+pa.nom+'\u00a0: '+
-                   '<a class="jouer" href="'+pa.jp+'">\ud83d\udcbb Projeter</a>'+
-                   '<a class="fiche" href="'+pa.f+'" title="Ouvre l\u2019outil pr\u00eat \u00e0 imprimer la fiche">\ud83d\udcc4 Fiche</a></span>').join("")
-               : (e.jp||!m.actif?'<a class="jouer" href="'+(e.jp||e.j)+'">\ud83d\udcbb Projeter l\u2019outil</a>':'')+(m.actif?'<a class="jouer" href="'+e.j+'">\ud83c\udfae Le jeu de l\u2019\u00e9l\u00e8ve</a>':'')+
-                 (e.f?'<a class="fiche" href="'+e.f+'" title="Ouvre l\u2019outil pr\u00eat \u00e0 imprimer la fiche">\ud83d\udcc4 Fiche'+(e.fe?' tableau':'')+'</a>':'')+
-                 (e.fe?'<a class="fiche" href="'+e.fe+'" title="Ouvre l\u2019outil pr\u00eat \u00e0 imprimer la fiche, plateaux c\u00f4te \u00e0 c\u00f4te">\ud83d\udcc4 Fiche \u00e9quation</a>':'')+
-                 (e.c?'<a class="fiche" href="'+e.c+'" title="Ouvre l\u2019outil pr\u00eat \u00e0 imprimer la correction">\u2705 Correction</a>':'')+
-                 (e.c2?'<a class="fiche" href="'+e.c2+'" title="La m\u00eame correction, deux cartes par page, calculs plus gros">\u2705 Correction 2 par page</a>':''))+
-             '</div>'
-           : m.actif
+         '<p class="obj">'+e.o+'</p>'+
+         (m.actif
            ? '<div class="actions">'+
              '<a class="jouer" href="'+e.j+'">🎮 Je joue</a>'+
              (e.p ? '' : '<button class="faitBtn" type="button" data-id="'+ids[ei]+'">⭐ J\'ai réussi !</button>')+
@@ -1132,7 +1291,7 @@ if (PROF) {
   const oe=document.getElementById('optEleve'); if(oe){ oe.classList.remove('actif'); oe.href=window.location.pathname; }
   const op=document.getElementById('optProf'); if(op){ op.classList.add('actif'); op.removeAttribute('href'); }
   const tb=document.getElementById('totalBar'); if(tb) tb.style.display='none';
-  const fp=document.querySelector('footer span.credits'); if(fp) fp.innerHTML='Jeu <strong>SPLAT!</strong> cr\u00e9\u00e9 par Steve Wyborney \u00b7 outils <strong>SPLAT!</strong> de maths&amp;go, avec l\u2019IREMI de La R\u00e9union.<br>Vue professeur — mondes 1, 2, 3 et 5 d\u2019apr\u00e8s la progression \u00ab\u00a0SPLAT! cycle 3\u00a0\u00bb de Claire (mondes 4 et 6 : prolongements maths&go — le Syst\u00e8me, puis les relatifs au cycle 4) : '+
+  const fp=document.querySelector('footer span.credits'); if(fp) fp.innerHTML='Jeu <strong>SPLAT!</strong> cr\u00e9\u00e9 par Steve Wyborney \u00b7 outils <strong>SPLAT!</strong> de maths&amp;go, avec l\u2019IREMI de La R\u00e9union.<br>Vue professeur — mondes 1, 2 et 3 d\u2019apr\u00e8s la progression \u00ab\u00a0SPLAT! cycle 3\u00a0\u00bb de Claire (mondes 4, 5 et 6 : prolongements maths&go — le Syst\u00e8me, les \u00e9quations, puis les relatifs au cycle 4) : '+
     '<a href="https://digipad.app/p/1754235/397f3f517445b" target="_blank" rel="noopener">sa progression d\u2019origine (Digipad)</a> \u00b7 '+
     '<a href="'+window.location.pathname+'">revenir \u00e0 la vue \u00e9l\u00e8ve</a>.';
 }
