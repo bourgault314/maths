@@ -405,16 +405,15 @@ test("page des livrets : l'onglet du monde 5, ses deux livrets, leurs couverture
 });
 
 test("carte des mondes, vue prof : un seul lien sous le monde 5, vers l'onglet de ses livrets", () => {
-  const b = univers.match(/\(m===MONDE_EQUATIONS&&PROF\?'<p class="intro">'[\s\S]*?<\/p>':''\)\+/);
-  assert.ok(b, "bloc du lien du monde 5 introuvable");
-  // relecture du monde 1, lot 2 (25/09/2026) : comme au monde 1, un seul lien ; les PDF sont sur la
-  // page des livrets
-  assert.ok(b[0].includes('<a class="introLien livret" href="/outils/livrets_splat.html#monde-5">\\ud83d\\udcda Les livrets du monde 5</a>'));
-  assert.equal((b[0].match(/class="introLien/g) || []).length, 1, "un seul lien");
-  for (const s of SORTIES) assert.ok(!b[0].includes(`href="/outils/${s}.pdf"`), `${s} : plus de bouton de PDF`);
-  assert.doesNotMatch(b[0], /bord court|recto-verso/, "la note ne parle plus d'impression");
+  /* lot « vue prof » (27/09/2026) : le lien est dans le cadre « Pour la classe » du monde, avec une
+     ligne sur ce que contient la page (LIVRET_TEXTE, rang 4) ; le rendu complet (un seul lien de
+     livrets par monde, aucun PDF) est vérifié dans tests/splat-univers-vue-prof.test.mjs */
+  const m5 = univers.match(/const LIVRET_TEXTE=\[\n(?:[^\n]*\n){4}([^\n]*)\n/)[1];
+  assert.match(m5, /Les fiches 35 à 37 en deux versions \(tableau \/ équation\)/);
+  assert.doesNotMatch(m5, /\.pdf|bord court|recto-verso/, "la ligne ne parle pas d'impression");
+  assert.match(univers, /if\(LIVRET_TEXTE\[mi\]\) li\.push\('<li><a href="\/outils\/livrets_splat\.html#monde-'\+\(mi\+1\)\+'">'/);
+  for (const s of SORTIES) assert.ok(!univers.includes(`"/outils/${s}.pdf"`), `${s} : plus de bouton de PDF`);
   for (const s of SORTIES) assert.ok(pageLivrets.includes(`href="/outils/${s}.pdf"`), `${s} : sur la page des livrets`);
-  assert.match(univers, /\.monde\.m3 \.introLien\.livret\{color:#115e59;background:#e6f7f6;border-color:#9fdcd9\}/);
 });
 
 /* ------------------------------------------------------------------ lot Q4 (24/09/2026)
@@ -515,7 +514,7 @@ test("Q4 : page des livrets — les corrigés du monde 5 repliés sous chaque li
   assert.match(catalogue, /le livret à plier, et le livret corrigé, à donner aux élèves/);
   assert.doesNotMatch(pageLivrets, /pour les mondes 1 à 4/);
   assert.doesNotMatch(lire("outils/toutes-les-ressources.html"), /pour les mondes 1 à 4, les livrets corrigés/);
-  assert.match(lire("outils/index.html"), /catalogue-refonte-data\.js\?v=splat-relatifs-public-20260927-1/, "le cache-buster du catalogue suit");
+  assert.match(lire("outils/index.html"), /catalogue-refonte-data\.js\?v=splat-univers-coherence-20260927-1/, "le cache-buster du catalogue suit");
 });
 
 /* ------------------------------------------------------------------ lot Q5 (25/09/2026)
@@ -705,13 +704,14 @@ test("Q5 : la page des livrets et la carte des mondes — « Le défi » au mond
   assert.match(p, /chaque famille a son livret «&nbsp;Le défi&nbsp;»/);
   // carte des mondes, vue prof : la note du monde 5 présente « Le défi » (le lien mène à la page
   // des livrets, relecture du monde 1, lot 2)
-  const bloc5 = univers.match(/\(m===MONDE_EQUATIONS&&PROF\?'<p class="intro">'[\s\S]*?<\/p>':''\)\+/)[0];
-  assert.ok(bloc5.includes("Chaque version a son livret <b>Le d\\u00e9fi</b>"));
+  // (lot « vue prof », 27/09/2026 : la ligne « Pour la classe » du monde 5 présente les deux « Le défi »)
+  const m5 = univers.match(/const LIVRET_TEXTE=\[\n(?:[^\n]*\n){4}([^\n]*)\n/)[1];
+  assert.match(m5, /deux versions \(tableau \/ équation\), chacune avec son livret Le défi, et leurs corrigés\./);
   // le catalogue le dit, et son cache-buster suit
   const catalogue = lire("assets/js/catalogue-refonte-data.js");
   assert.match(catalogue, /SPLAT! Équations \(monde 5\) en quatre livrets : le schéma en barres et l’équation, chacun avec son «\u00a0Le défi\u00a0»\. SPLAT! Relatifs \(monde 6\) en deux livrets\."/);
   assert.match(catalogue, /chacun avec son livret «\u00a0Le défi\u00a0», des totaux de 50 à 100\./);
-  assert.match(lire("outils/index.html"), /catalogue-refonte-data\.js\?v=splat-relatifs-public-20260927-1/);
+  assert.match(lire("outils/index.html"), /catalogue-refonte-data\.js\?v=splat-univers-coherence-20260927-1/);
 });
 
 test("Q5 : ÉquaSplat ne reprend une série interrompue que si c'est la même (empreinte)", () => {

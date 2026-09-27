@@ -6,8 +6,9 @@ import vm from "node:vm";
 /* Lot Q2 (24/09/2026) — la progression du monde 5 « SPLAT! Équations » sur la carte
    des mondes : trois étapes = trois fiches de 12 cartes (35, 36, 37), « Écris
    l'équation » (m3e3) retirée, liens Projeter / Fiche tableau / Fiche équation en
-   6 par page, et la liste 📋 de la vue professeur qui ouvre chaque équation seule
-   dans ÉquaSplat (demande de Claire, mondes 5 et 6). On EXÉCUTE les données de
+   6 par page, et les cartes de la vue professeur qui ouvrent chaque équation seule
+   dans ÉquaSplat (demande de Claire, mondes 5 et 6 ; en grille repliée depuis le lot
+   « vue prof » du 27/09/2026). On EXÉCUTE les données de
    outils/splat_univers.html, comme tests/splat-enquete-carte-mondes.test.mjs. */
 
 const lire = (p) => readFileSync(new URL("../" + p, import.meta.url), "utf8");
@@ -24,7 +25,7 @@ vm.runInContext(
   bloc("const PS=", "const PROF =") +
   bloc("const NOTES_MONDE", "const main=document") +
   ";globalThis.X={MONDES,NOTES_PROF,EQ5_PREMIERE_FICHE};" +
-  "globalThis.eqSeuleLiens=eqSeuleLiens;globalThis.eqListeHtml=eqListeHtml;",
+  "globalThis.eqSeuleLiens=eqSeuleLiens;globalThis.cartesHtml=cartesHtml;globalThis.actionsHtml=actionsHtml;",
   ctx, { filename: "splat_univers.html" }
 );
 const { MONDES, NOTES_PROF, EQ5_PREMIERE_FICHE } = JSON.parse(JSON.stringify(ctx.X));
@@ -242,16 +243,16 @@ test("Q2 (demande de Claire) : en vue prof, chaque équation des mondes 5 et 6 o
       assert.equal(d.serie, undefined, "une équation seule, pas une série (écran sans bandeau)");
       assert.equal(d.parcours, undefined);
     });
-    const html = ctx.eqListeHtml(brut(mi, ei));
-    assert.equal((html.match(/<a class="eqSeule" href="\/outils\/equasplat\.html#data=/g) || []).length, e.eqs.length);
-    assert.match(html, /Clique sur une \\u00e9quation|Clique sur une équation/);
+    const html = ctx.cartesHtml(brut(mi, ei), ctx.X.MONDES[mi], "c");
+    assert.deepEqual([...html.matchAll(/<li><a href="([^"]*)"/g)].map((x) => x[1]), JSON.parse(JSON.stringify(liens)), "chaque carte de la grille, son lien");
+    assert.match(html, /Un clic sur une carte l(’|\\u2019)ouvre seule dans ÉquaSplat, sans étoile/);
   }));
   /* les mondes des autres outils n'ouvrent pas ÉquaSplat (depuis le 26/09, les mondes 1
      et 2 ouvrent ÉquaBarre : tests/splat-univers-equabarre-liste.test.mjs) */
   MONDES.slice(0, 4).forEach((m, mi) => m.etapes.forEach((e, ei) => {
     if (!e.eqs) return;
     assert.equal(ctx.eqSeuleLiens(brut(mi, ei)), null, `${m.nom} : pas de lien ÉquaSplat`);
-    assert.ok(!ctx.eqListeHtml(brut(mi, ei), ctx.X.MONDES[mi]).includes("equasplat"), `${m.nom}, ${e.t}`);
+    assert.ok(!ctx.cartesHtml(brut(mi, ei), ctx.X.MONDES[mi], "c").includes("equasplat"), `${m.nom}, ${e.t}`);
   }));
   /* une série qui ne compte pas ses équations ne donne aucun lien (plutôt que des liens décalés) */
   const faux = { ...EQUATIONS.etapes[1], eqs: EQUATIONS.etapes[1].eqs.slice(1) };
@@ -260,11 +261,15 @@ test("Q2 (demande de Claire) : en vue prof, chaque équation des mondes 5 et 6 o
 });
 
 test("Q2 : la vue prof a deux liens Fiche pour le monde 5, et la vue élève n'en a aucun", () => {
-  const gabarit = univers.slice(univers.indexOf("'<ol class=\"etapes\">'"), univers.indexOf("main.appendChild(sec);"));
-  assert.match(gabarit, /\(e\.fe\?'<a class="fiche" href="'\+e\.fe\+'"[^>]*>\\ud83d\\udcc4 Fiche \\u00e9quation<\/a>':''\)/);
-  assert.match(gabarit, /\\ud83d\\udcc4 Fiche'\+\(e\.fe\?' tableau':''\)\+'<\/a>'/);
-  const eleve = gabarit.slice(gabarit.indexOf(": m.actif"));
-  assert.ok(!eleve.includes("e.fe") && !eleve.includes("e.f+"), "aucune fiche en vue élève");
-  /* les mondes 1 à 4 n'ont pas de « fe » : leur bouton garde son nom « 📄 Fiche » */
+  /* lot « vue prof » (27/09/2026) : un seul bouton « Fiche | tableau | équation » */
+  EQUATIONS.etapes.forEach((e, ei) => {
+    const a = ctx.actionsHtml(brut(4, ei), ctx.X.MONDES[4], "c");
+    const seg = a.match(/<span class="seg"><span>[\s\S]*?<\/svg>Fiche<\/span><a href="([^"]*)">tableau<\/a><a href="([^"]*)">équation<\/a><\/span>/);
+    assert.ok(seg, `fiche ${e.n} : le bouton Fiche à deux variantes`);
+    assert.deepEqual([seg[1], seg[2]], [e.f, e.fe]);
+  });
+  const eleve = univers.slice(univers.indexOf("else MONDES.forEach((m,mi)=>{"), univers.indexOf("  main.appendChild(sec);\n});"));
+  assert.ok(eleve.length > 500 && !eleve.includes("e.fe") && !eleve.includes("e.f+"), "aucune fiche en vue élève");
+  /* les mondes 1 à 4 n'ont pas de « fe » : leur bouton reste « Fiche », sans variantes */
   MONDES.slice(0, 4).forEach((m) => m.etapes.forEach((e) => assert.equal(e.fe, undefined, m.nom)));
 });

@@ -30,9 +30,9 @@ function bloc(debut, fin) {
   return univers.slice(a, b);
 }
 const ctx = vm.createContext({ encodeURIComponent });
-vm.runInContext(bloc("const PS=", "const PROF =") + ";globalThis.X={MONDES,ENQ_FICHES,MONDE_ENQUETE,LIVRETS_ENQ_1,LIVRETS_ENQ_2};",
+vm.runInContext(bloc("const PS=", "const PROF =") + ";globalThis.X={MONDES,ENQ_FICHES,MONDE_ENQUETE};",
   ctx, { filename: "splat_univers.html" });
-const { MONDES, ENQ_FICHES: ENQ_TOUTES, MONDE_ENQUETE, LIVRETS_ENQ_1, LIVRETS_ENQ_2 } = JSON.parse(JSON.stringify(ctx.X));
+const { MONDES, ENQ_FICHES: ENQ_TOUTES, MONDE_ENQUETE } = JSON.parse(JSON.stringify(ctx.X));
 /* Lot « six mondes » (24/09/2026) : l'Enquête est UN monde 3 en trois parties ; ces deux
    livrets sont les parties 1 et 2 (fiches 10 à 19), la 3e (20 à 24) aura son livret plus tard. */
 const ENQ_FICHES = ENQ_TOUTES.slice(0, 10);
@@ -347,27 +347,22 @@ test("E4 : le vocabulaire des livrets — jeton, tache, schéma en barres ; jama
   assert.ok(dos.includes("les taches <b>ne cachent pas le même nombre de jetons</b>"));
 });
 
-test("six mondes : vue prof de la carte — le livret additif sous la partie 1, le multiplicatif sous la partie 2", () => {
+test("vue prof de la carte : les livrets de l'Enquête sont sur la page des livrets, pas sous les parties", () => {
+  /* Décision du 27/09/2026 (cohérence des six mondes) : sous chaque partie, plus de ligne de PDF ;
+     le cadre « Pour la classe » du monde mène à l'onglet 3 de la page des livrets, qui montre le
+     livret additif avec la partie 1 et le multiplicatif avec la partie 2 (onglet vérifié plus bas). */
+  assert.equal(VOLET_ADD.livrets, undefined);
+  assert.equal(VOLET_MUL.livrets, undefined);
+  assert.equal(VOLET_ADD.note, undefined);
+  assert.equal(VOLET_MUL.note, undefined);
+  assert.doesNotMatch(univers, /livL|\.pdf"/, "aucun PDF en lien direct sur la carte des mondes");
+  assert.match(univers, /if\(LIVRET_TEXTE\[mi\]\) li\.push\('<li><a href="\/outils\/livrets_splat\.html#monde-'\+\(mi\+1\)\+'">'/);
+  const page = lire("outils/livrets_splat.html"), onglet3 = page.slice(page.indexOf('id="monde-3"'), page.indexOf('id="monde-4"'));
   const [add, mul] = SORTIES;
-  for (const [liv, oui, non, n] of [[LIVRETS_ENQ_1, add, mul, 1], [LIVRETS_ENQ_2, mul, add, 2]]) {
-    const hrefs = liv.map((l) => l[1]).join(" ");
-    assert.ok(hrefs.includes(`/outils/${oui}.pdf`), oui);
-    assert.ok(hrefs.includes(`/outils/${oui}_a_plier.pdf`), oui + "_a_plier");
-    assert.ok(!hrefs.includes(non), `la partie ${n} ne montre que son livret`);
-    assert.ok(liv[0][0].includes("Livret ") && liv[0][0].includes("(PDF)") && liv[1][0].includes("plier"), `pastilles de la partie ${n}`);
-    assert.equal(liv[1][2], "a3");
+  for (const n of [add, mul]) {
+    assert.ok(onglet3.includes(`href="/outils/${n}.pdf"`) && onglet3.includes(`href="/outils/${n}_a_plier.pdf"`), n);
   }
-  assert.deepEqual(VOLET_ADD.livrets, LIVRETS_ENQ_1);
-  assert.deepEqual(VOLET_MUL.livrets, LIVRETS_ENQ_2);
-  assert.ok(VOLET_ADD.note.includes('<a href="/outils/livrets_splat.html#monde-3">Voir la page des livrets</a>'));
-  assert.ok(VOLET_MUL.note.includes('<a href="/outils/livrets_splat.html#monde-3">Voir la page des livrets</a>'), "25/09/2026 : les trois parties de l'Enquête sont dans l'onglet du monde 3");
-  /* le gabarit écrit les pastilles d'une partie dans son intertitre, en vue prof seulement */
-  assert.match(univers, /\(PROF&&\(v\.livrets\|\|v\.note\)\?'<p class="intro">'\+/);
-  assert.match(univers, /'<a class="introLien livret'\+\(l\[2\]\?' '\+l\[2\]:''\)\+'" href="'\+l\[1\]\+'" target="_blank" rel="noopener">'\+l\[0\]\+'<\/a>'/);
-  assert.match(univers, /\.monde\.menq \.introLien\.livret\{color:#831843;background:#fce7f3;border-color:#f0abc9\}/);
-  // les pastilles des mondes 1 et 2 n'ont pas bougé
-  assert.match(univers, /\(mi===1&&PROF\?'<p class="intro">'/);
-  assert.match(univers, /\(mi===0\?'<p class="intro">'\+\(PROF/);
+  assert.ok(onglet3.indexOf(`/outils/${add}.pdf`) < onglet3.indexOf(`/outils/${mul}.pdf`), "partie 1 puis partie 2");
 });
 
 test("E5 : chaque livret porte son monde — « Monde 3 », « Monde 4 · Grande enquête », et la suite du voyage", () => {
@@ -639,14 +634,13 @@ test("page des livrets : « Le défi » à côté du livret de la classe, dans l
   assert.equal((p.match(/la classe, puis «&nbsp;Le défi&nbsp;» \(totaux de 50 à 100\)/g) || []).length, 2, "les parties 1 et 2 le disent");
 });
 
-test("Le défi : vue prof de la carte des mondes — les pastilles du défi sous chaque partie de l'Enquête", () => {
-  for (const [liv, oui, non] of [[LIVRETS_ENQ_1, SORTIES_DEFI[0], SORTIES_DEFI[1]], [LIVRETS_ENQ_2, SORTIES_DEFI[1], SORTIES_DEFI[0]]]) {
-    const hrefs = liv.map((l) => l[1]);
-    assert.ok(hrefs.includes(`/outils/${oui}.pdf`) && hrefs.includes(`/outils/${oui}_a_plier.pdf`), oui);
-    assert.ok(!hrefs.join(" ").includes(non), `pas le défi de l'autre partie`);
-    assert.ok(hrefs.indexOf(`/outils/${oui}.pdf`) > hrefs.indexOf(`/outils/${SORTIES[SORTIES_DEFI.indexOf(oui)]}_a_plier.pdf`), "après le livret de la classe");
-    assert.ok(liv[2][0].includes("Le défi, 50 à 100 (PDF)") && liv[3][0].includes("Le défi à plier"), "mêmes libellés qu'au monde 2");
-  }
+test("Le défi : il est sur la page des livrets, onglet 3, après le livret de sa partie", () => {
+  /* depuis le 27/09/2026, la vue prof n'a plus de PDF sous les parties (voir plus haut) */
+  const page = lire("outils/livrets_splat.html"), onglet3 = page.slice(page.indexOf('id="monde-3"'), page.indexOf('id="monde-4"'));
+  SORTIES_DEFI.forEach((d, i) => {
+    assert.ok(onglet3.includes(`href="/outils/${d}.pdf"`) && onglet3.includes(`href="/outils/${d}_a_plier.pdf"`), d);
+    assert.ok(onglet3.indexOf(`/outils/${d}.pdf`) > onglet3.indexOf(`/outils/${SORTIES[i]}_a_plier.pdf`), "après le livret de la classe");
+  });
 });
 
 /* ----------------------------------------------------- « L'enquête rebondit » (25/09/2026)

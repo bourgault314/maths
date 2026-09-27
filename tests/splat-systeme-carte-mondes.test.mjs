@@ -85,9 +85,10 @@ test("Système : la note du professeur porte le tableau de tous les systèmes du
   assert.match(note, /<table><tr><th>Ce que dit l'énoncé<\/th><th>Où dans SPLAT!<\/th><th>Programme<\/th><\/tr>/);
   assert.equal((note.match(/<tr>/g) || []).length, 11, "l'en-tête et les dix lignes du tableau");
   assert.match(note, /volontairement hors SPLAT!/);
-  /* le tableau vit dans un <div>, pas un <p> (un <table> ferme un <p> et sort de la note) */
-  assert.match(univers, /'<div class="desc descProf">\\ud83d\\udcdd '\+NOTES_MONDE\[mi\]\+'<\/div>'/);
-  assert.match(univers, /\.descProf table\{border-collapse:collapse;/);
+  /* lot « vue prof » (27/09/2026) : le tableau passe dans un « Repère » replié (<details>), hors
+     du <p> de l'intention (un <table> ferme un <p> et sortirait du texte) */
+  assert.match(univers, /return '<p class="txt">'\+avant\+'<\/p><details><summary>Repère : tous les systèmes du collège, et où ils sont dans SPLAT!<\/summary>'\+t\.slice\(k\)\+'<\/details>';/);
+  assert.match(univers, /\.pIntro details table\{border-collapse:collapse;/);
   assert.equal(NOTES_PROF[3].length, 10);
   assert.equal(NOTES_PROF[2].length, 15);
   assert.match(NOTES_MONDE[2], /Un monde en trois parties/);

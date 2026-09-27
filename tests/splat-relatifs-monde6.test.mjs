@@ -115,8 +115,11 @@ test("R2 : les liens de la vue prof — Projeter, Fiche (6/page) et Correction (
     assert.match(e.c, /&print=correction-equation&layout=6&imprimer=1&title=/);
     if (e.suite) assert.ok(e.f.includes("&suite=" + e.suite.map((x) => encodeURIComponent(x + "&view=equation")).join(";")));
   });
-  // un seul lien vers la page des livrets, comme au monde 5
-  assert.match(univers, /m===MONDE_RELATIFS&&PROF\?'<p class="intro">'\s*\+'<a class="introLien livret" href="\/outils\/livrets_splat\.html#monde-6">/);
+  // un seul lien vers la page des livrets, comme au monde 5 (lot « vue prof », 27/09/2026 : il est
+  // dans le cadre « Pour la classe », rendu par ressourcesHtml() depuis LIVRET_TEXTE)
+  const texte6 = univers.match(/const LIVRET_TEXTE=\[\n(?:[^\n]*\n){5}([^\n]*)\n/)[1];
+  assert.match(texte6, /Les fiches 38 à 43 en deux livrets, un par partie, et leurs corrigés\./);
+  assert.ok(univers.includes("'<li><a href=\"/outils/livrets_splat.html#monde-'+(mi+1)+'\">'"));
 });
 
 // ------------------------------------------------ la page courte des QR, exécutée

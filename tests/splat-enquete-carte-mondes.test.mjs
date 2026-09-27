@@ -21,12 +21,12 @@ const ctx = vm.createContext({ encodeURIComponent });
 vm.runInContext(
   bloc("const PS=", "const PROF =") +
   bloc("const NOTES_MONDE", "const main=document") +
-  ";globalThis.X={MONDES,NOTES_MONDE,NOTES_PROF,ENQ_FICHES,SYS_FICHES,LIVRETS_ENQ_1,LIVRETS_ENQ_2};",
+  ";globalThis.X={MONDES,NOTES_MONDE,NOTES_PROF,ENQ_FICHES,SYS_FICHES};",
   ctx, { filename: "splat_univers.html" }
 );
 /* Les objets nés dans le bac à sable de vm n'ont pas les mêmes prototypes que
    ceux d'ici : on les recopie pour que deepEqual compare les valeurs. */
-const { MONDES, NOTES_MONDE, NOTES_PROF, ENQ_FICHES, SYS_FICHES, LIVRETS_ENQ_1, LIVRETS_ENQ_2 } = JSON.parse(JSON.stringify(ctx.X));
+const { MONDES, NOTES_MONDE, NOTES_PROF, ENQ_FICHES, SYS_FICHES } = JSON.parse(JSON.stringify(ctx.X));
 /* Lot E5 (23/09/2026) : l'Enquête avait été coupée en deux mondes, un par livret.
    Lot « six mondes » (24/09/2026) : elle redevient UN monde 3 en trois parties (10-14,
    15-19, 20-24), le Système prend la place de monde 4. Les dix premières étapes sont
@@ -260,42 +260,40 @@ test("six mondes : les parties sont des intertitres dans la liste, un par livret
   assert.match(univers, /<span class="fiches">fiches '\+compteur\+' à '\+\(compteur\+v\.a-v\.de-1\)\+'<\/span>/);
   assert.match(univers, /return volet\+'<li class="etape" id="'\+ids\[ei\]\+'">'/);
   /* les étoiles de la partie : comptées sur ses étapes (de ≤ ei < a), dans majAffichage */
-  assert.match(univers, /\(PROF\?'':'<span class="stars" id="stars'\+mi\+'-'\+vi\+'"><\/span>'\)/);
+  assert.match(univers, /'<span class="stars" id="stars'\+mi\+'-'\+vi\+'"><\/span>'\+/);
   assert.match(univers, /for\(let ei=v\.de;ei<v\.a;ei\+\+\)\{ if\(document\.getElementById\(idEtape\(m,m\.etapes\[ei\],ei\)\)\.classList\.contains\("done"\)\) fv\+\+; \}/);
   assert.match(univers, /sv\.textContent="\u2b50 "\+fv\+" \/ "\+\(v\.a-v\.de\);/);
   /* le monde ne compte que des parties de 5 fiches : un livret chacune */
   for (const m of [ENQUETE, SYSTEME]) m.volets.forEach((v) => assert.equal(v.a - v.de, 5, `${m.nom} · ${v.nom}`));
-  /* vue prof : les livrets de l'Enquête sous leurs parties, pas sous le monde (la partie 3
-     depuis ses livrets du 25/09/2026 ; son « Le défi » viendra) */
-  assert.deepEqual(ENQUETE.volets.map((v) => (v.livrets || []).length), [4, 4, 2]);
-  assert.deepEqual(LIVRETS_ENQ_1.map((l) => l[1]), ["/outils/livret_splat_enquete_additif.pdf", "/outils/livret_splat_enquete_additif_a_plier.pdf",
-    "/outils/livret_splat_enquete_additif_defi.pdf", "/outils/livret_splat_enquete_additif_defi_a_plier.pdf"]);
-  assert.deepEqual(LIVRETS_ENQ_2.map((l) => l[1]), ["/outils/livret_splat_enquete_multiplicatif.pdf", "/outils/livret_splat_enquete_multiplicatif_a_plier.pdf",
-    "/outils/livret_splat_enquete_multiplicatif_defi.pdf", "/outils/livret_splat_enquete_multiplicatif_defi_a_plier.pdf"]);
+  /* vue prof (décision du 27/09/2026, comme aux mondes 1, 2, 5 et 6) : plus de PDF sous les
+     parties de l'Enquête et du Système — un seul lien, vers la page des livrets, dans le cadre
+     « Pour la classe » ; ces livrets y sont, onglets 3 et 4 */
+  for (const m of [ENQUETE, SYSTEME]) m.volets.forEach((v) => assert.equal(v.livrets, undefined, `${m.nom} · ${v.nom}`));
+  assert.doesNotMatch(univers, /LIVRETS_ENQ|LIVRETS_SYS|\.pdf"/);
+  const page = readFileSync(new URL("../outils/livrets_splat.html", import.meta.url), "utf8");
+  const onglet = (n) => page.slice(page.indexOf(`id="monde-${n}"`), page.indexOf(`id="monde-${n + 1}"`));
+  for (const nom of ["enquete_additif", "enquete_additif_defi", "enquete_multiplicatif", "enquete_multiplicatif_defi", "enquete_rebondit"])
+    for (const suf of ["", "_a_plier"]) assert.ok(onglet(3).includes(`href="/outils/livret_splat_${nom}${suf}.pdf"`), nom + suf);
+  for (const nom of ["systeme", "systeme_suite"])
+    for (const suf of ["", "_a_plier"]) assert.ok(onglet(4).includes(`href="/outils/livret_splat_${nom}${suf}.pdf"`), nom + suf);
   assert.doesNotMatch(univers, /m===MONDE_ENQUETE&&PROF|m===MONDE_GRANDE_ENQUETE&&PROF/);
-  /* le Système : un livret par partie (25/09/2026), leurs « Le défi » en préparation */
-  assert.deepEqual(SYSTEME.volets.map((v) => v.livrets.map((l) => l[1])), [
-    ["/outils/livret_splat_systeme.pdf", "/outils/livret_splat_systeme_a_plier.pdf"],
-    ["/outils/livret_splat_systeme_suite.pdf", "/outils/livret_splat_systeme_suite_a_plier.pdf"]]);
-  SYSTEME.volets.forEach((v) => { assert.match(v.note, /Le défi<\/b> est en préparation/); assert.match(v.note, /livrets_splat\.html#monde-4/); });
+  /* lot « vue prof » (27/09/2026) : plus de note sous les parties ; la page des livrets (onglet du
+     monde 4) est dans le cadre « Pour la classe » du monde */
+  SYSTEME.volets.forEach((v) => assert.equal(v.note, undefined));
 });
 
 test("la correction n'est offerte qu'en vue professeur", () => {
-  /* e.c n'apparaît que dans la branche PROF du gabarit : l'élève ne voit
-     que « Je joue ». La branche élève commence au bloc d'actions qui porte
-     « Je joue » ; on vérifie qu'on l'a trouvée avant de la lire (le gabarit
-     écrit l'emoji en clair : le chercher sous sa forme échappée ne trouvait
-     rien, et la vérification ne portait plus que sur le dernier caractère). */
-  const gabarit = univers.slice(univers.indexOf("'<ol class=\"etapes\">'"), univers.indexOf("main.appendChild(sec)"));
-  const jeJoue = gabarit.indexOf(" Je joue</a>");
-  assert.ok(jeJoue > 0, "le lien « Je joue » de la vue élève est introuvable dans le gabarit");
-  const eleve = gabarit.slice(gabarit.lastIndexOf("'<div class=\"actions\">'", jeJoue));
-  assert.ok(eleve.includes("faitBtn"), "la branche élève du gabarit n'a pas été isolée");
-  assert.ok(gabarit.includes("e.c?'<a class=\"fiche\""), "le lien Correction manque en vue prof");
-  assert.ok(!eleve.includes("e.c"), "la correction ne doit pas être offerte à l'élève");
+  /* Depuis le lot « vue prof » (27/09/2026), la vue prof a son propre rendu (actionsHtml) et la
+     boucle de la vue élève n'a plus aucune branche prof : on isole cette boucle, on vérifie qu'on
+     l'a bien trouvée (« Je joue », « J'ai réussi »), puis qu'elle n'offre ni correction ni fiche. */
+  const eleve = univers.slice(univers.indexOf("else MONDES.forEach((m,mi)=>{"), univers.indexOf("  main.appendChild(sec);\n});"));
+  assert.ok(eleve.includes(" Je joue</a>") && eleve.includes("faitBtn"), "la boucle de la vue élève n'a pas été isolée");
+  assert.ok(!/e\.c\b|e\.c2/.test(eleve), "la correction ne doit pas être offerte à l'élève");
+  const prof = univers.slice(univers.indexOf("function actionsHtml(e,m,cid){"), univers.indexOf("function plagesFiches("));
+  assert.ok(prof.includes("if(e.c&&e.c2) a.push(btnSeg('corrige','Corrigé',[['4 par page',e.c],['2 par page',e.c2]]));"), "Corrigé 4 / 2 par page en vue prof");
+  assert.ok(prof.includes("else if(e.c) a.push(btnTrait(e.c,'corrige','Corrigé'"), "Corrigé en vue prof");
   [...ENQUETE.etapes, ...SYSTEME.etapes].forEach((e) => assert.ok(e.c, `correction de la fiche ${e.n}`));
   SYSTEME.etapes.forEach((e) => assert.ok(e.c2, `correction 2 par page de la fiche ${e.n}`));
-  assert.ok(!eleve.includes("e.c2"), "la correction 2 par page ne doit pas être offerte à l'élève");
 });
 
 test("les textes qui comptent les mondes suivent l'ajout", () => {
@@ -307,8 +305,9 @@ test("les textes qui comptent les mondes suivent l'ajout", () => {
      livrets, plus la liste des mondes ni le lien « vue professeur » en double */
   assert.doesNotMatch(univers, /progression cycle 3 en quatre séquences/);
   assert.match(univers, /<span class="credits">Jeu <strong>SPLAT!<\/strong> créé par Steve Wyborney/);
-  assert.match(univers, /mondes 1, 2, 3 et 5 d\\u2019apr\\u00e8s la progression/);
-  assert.match(univers, /\(mondes 4 et 6 : prolongements maths&go/);
+  /* cohérence du 27/09/2026 (décision de Gwenaël) : le monde 5, refait en huit marches, rejoint les prolongements */
+  assert.match(univers, /mondes 1, 2 et 3 d\\u2019apr\\u00e8s la progression/);
+  assert.match(univers, /\(mondes 4, 5 et 6 : prolongements maths&go/);
   assert.doesNotMatch(univers, /quatre mondes|cinq mondes/i);
   assert.match(univers, /content="Six mondes à jouer en ligne/);
   // les notes du professeur qui citent un numéro de monde suivent aussi
