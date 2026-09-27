@@ -59,7 +59,7 @@ test("le sélecteur « Pages » propose 6/page, 2/page reste le réglage par dé
   assert.match(html, /<option value="6">6\/page<\/option>\s*<option value="4">4\/page<\/option>\s*<option value="2" selected>2\/page<\/option>/);
   assert.match(html, /setSelectFromShare\(params, "layout", printCardsPerPageEl\)/);
   assert.match(html, /addShareControl\(params, "layout", printCardsPerPageEl\)/);
-  assert.match(html, /const sharedNames = \[[^\]]*"layout"[^\]]*"suite", "jouer", "zero"\]/);
+  assert.match(html, /const sharedNames = \[[^\]]*"layout"[^\]]*"suite", "jouer", "zero", "taches"\]/);
 });
 
 test("6/page vaut pour l'énoncé seul ; schéma ou correction, recto ou verso, retombent sur 4", () => {
@@ -326,9 +326,10 @@ test("les trois dessins imprimés passent leurs jetons numérotés par la table 
     assert.doesNotMatch(src, /r:beadR, fill:col\.fill, stroke:col\.stroke/, `${nom} : plus de jeton pâle imprimé`);
   }
   assert.match(step, /scale: trays\.vertical \? EQ_PRINT_BEAD_SCALE_HAUT_BAS : EQ_PRINT_BEAD_SCALE/);
-  // une tache « opposé » dévoilée garde le rayon de base (le mot est posé sur le jeton)
-  assert.match(signed, /if\(isRevealed\) beadTable\.cap\(beadR\);/);
-  assert.match(eq, /if\(revealAnswers\) beadTable\.cap\(beadR\);/);
+  // une tache « opposé » dévoilée garde le rayon de base (le mot est posé sur le jeton) ;
+  // depuis le lot R3, drawEqPrintTacheMark le dit (vrai sur une tache dévoilée qui porte un mot)
+  assert.match(signed, /if\(drawEqPrintTacheMark\(targetGroup, text, s, card, !!part\.opposed, isRevealed\)\) beadTable\.cap\(beadR\);/);
+  assert.match(eq, /if\(drawEqPrintTacheMark\(targetSvg, tText, s, card, !!\(oppFlags && oppFlags\[idx\]\), revealAnswers\)\) beadTable\.cap\(beadR\);/);
 });
 
 test("jetons unité imprimés : bleu franc, ×2 si ça tient, loin des bords ; l'écran garde sa disposition", () => {
