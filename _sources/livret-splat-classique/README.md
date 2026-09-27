@@ -36,6 +36,17 @@ Il en existe **deux**, mêmes trois étapes, deux calibres de cartes :
   « Classe » en haut de leur case ; « La suite du voyage » : Enquête (monde 3) puis Système
   (monde 4). **Pas de numéro de page** (retiré aussi au monde 1 : doublon du numéro de fiche).
 
+## Corrigés plus gros (27/09/2026)
+
+- **Équation** : la plus grande taille qui tient dans la case (160 à 170 au lieu de 100), l'équation
+  entière centrée (flèches comprises) ; le dessin descend jusqu'en bas de la case
+  (`SIX_CORRECTION_ALLONGE`, 130).
+- **Schéma** : chiffres de 92 (au lieu de 80), cases de 95, et plus d'espace **entre** les schémas
+  (66 au lieu de 40). Avec 5 ou 6 petites cases, le 1er schéma se resserre et les chiffres peuvent
+  redescendre à 86 ou 80, pour que les calculs restent gros.
+- Sur la couverture, le schéma de l'exemple a 27,5 mm de haut au plus (au lieu de 24) : il garde sa
+  taille d'avant.
+
 Les deux gardent `parcours=m2eN` : valider une fiche plus dure gagne l'étoile du monde 2
 (même décision qu'au monde 1 le 17/09/2026).
 
