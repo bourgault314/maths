@@ -82,17 +82,26 @@ COURTE = "/splat/equations/livret/"             # la page courte des QR
 # splat/equations/livret/index.html, puis relancer. Un test épingle les trois fichiers.
 EQ5_S1 = "mode=EQUNITSTEP&form=X_PLUS_B_EQ_C&cards=4&seed=355&unknown=letter"
 EQ5_S2 = "mode=EQUNITSTEP&form=AX_EQ_C&tasksMax=3&cards=4&seed=814&unknown=letter"
-EQ5_S3 = "mode=EQUNITSTEP&form=ONE_SIDE&tasksMax=3&cards=4&seed=19&unknown=letter"
-EQ5_PAQUETS = "mode=EQSTEP&form=ONE_SIDE&cards=12&seed=89&unknown=letter"
-EQ5_DEUX_COTES = "mode=EQSTEP&form=BOTH&cards=12&seed=25&unknown=letter"
+EQ5_S3 = "mode=EQUNITSTEP&form=ONE_SIDE&tasksMax=3&cards=4&seed=793&unknown=letter"
+# Relecture du monde 5 (27/09/2026) : huit marches, une seule nouveauté à la fois, tout mélangé
+# à la fin ; dans chaque marche, la tache finit à gauche sur la moitié des cartes, à droite sur
+# l'autre moitié. Fiche 36 : 2 ou 3 taches (3 + 3 cartes), puis 4 à 6 taches (3 + 3). Fiche 37 :
+# jetons d'un seul côté (4), jetons des deux côtés (4), le grand mélange (4).
+EQ5_PAQUETS = "mode=EQSTEP&form=ONE_SIDE&tasksMax=3&visibleMin=1&visibleMax=3&cards=3&seed=304&unknown=letter"
+EQ5_PAQUETS_SUITE = ["mode=EQSTEP&form=ONE_SIDE&tasksMax=3&visibleMin=1&visibleMax=3&cards=3&seed=4471&unknown=letter",
+                     "mode=EQSTEP&form=ONE_SIDE&tasksMax=6&visibleMin=1&visibleMax=3&cards=3&seed=3795&unknown=letter",
+                     "mode=EQSTEP&form=ONE_SIDE&tasksMax=6&visibleMin=1&visibleMax=3&cards=3&seed=79133&unknown=letter"]
+EQ5_DEUX_COTES = "mode=EQSTEP&form=BOTH&tasksMax=5&visibleMin=0&visibleMax=2&cards=4&seed=2117&unknown=letter"
+EQ5_DEUX_COTES_SUITE = ["mode=EQSTEP&form=BOTH&tasksMax=5&visibleMin=1&visibleMax=2&cards=4&seed=295&unknown=letter",
+                        "mode=EQSTEP&form=MIX&tasksMax=6&visibleMin=1&visibleMax=2&cards=4&seed=29197&unknown=letter"]
 
 FICHES = [
     dict(n=35, t="Premières équations",       parties=[EQ5_S1, EQ5_S2, EQ5_S3], parcours="m3e1",
          resume="Les jetons un par un."),
-    dict(n=36, t="Des paquets de jetons",     parties=[EQ5_PAQUETS],            parcours="m3e2",
+    dict(n=36, t="Des paquets de jetons",     parties=[EQ5_PAQUETS, *EQ5_PAQUETS_SUITE], parcours="m3e2",
          resume="Les jetons arrivent en paquets."),
-    dict(n=37, t="Des taches des deux côtés", parties=[EQ5_DEUX_COTES],         parcours="m3e4",
-         resume="L'inconnue des deux côtés."),
+    dict(n=37, t="Des taches des deux côtés", parties=[EQ5_DEUX_COTES, *EQ5_DEUX_COTES_SUITE], parcours="m3e4",
+         resume="Des deux côtés, puis tout mélangé."),
 ]
 
 # ------------------------------------------------------------------ le livret « Le défi » (lot Q5)
@@ -141,8 +150,10 @@ def sans_graine(q, cartes):
 
 SERIES = {
     "1": [sans_graine(EQ5_S1, 2), sans_graine(EQ5_S2, 2), sans_graine(EQ5_S3, 2)],
-    "2": [sans_graine(EQ5_PAQUETS, SERIE_CARTES)],
-    "3": [sans_graine(EQ5_DEUX_COTES, SERIE_CARTES)],
+    # (27/09/2026) comme les fiches : 3 cartes à 2-3 taches + 3 à 4-6 taches ; puis 2 + 2 + 2
+    # pour les deux côtés (jetons d'un côté, des deux côtés, le mélange)
+    "2": [sans_graine(EQ5_PAQUETS, 3), sans_graine(EQ5_PAQUETS_SUITE[1], 3)],
+    "3": [sans_graine(EQ5_DEUX_COTES, 2)] + [sans_graine(q, 2) for q in EQ5_DEUX_COTES_SUITE],
     # le dos du livret « Le défi » (décision du 25/09/2026) : deux séries seulement, et des QR de
     # 32 mm comme le défi du monde 2 — six équations au hasard aux réglages du défi, d'un seul côté
     # (jusqu'à 6 taches), puis des deux côtés
@@ -151,7 +162,7 @@ SERIES = {
 }
 DOS = [("Un par un",      "Les jetons un par un, comme la fiche&nbsp;35.",  "1"),
        ("Des paquets",    "Les jetons en paquets, comme la fiche&nbsp;36.", "2"),
-       ("Des deux côtés", "Des taches des deux côtés, comme la fiche&nbsp;37.", "3")]
+       ("Des deux côtés", "Des taches des deux côtés, puis tout mélangé, comme la fiche&nbsp;37.", "3")]
 DOS_DEFI = [("D'un seul côté", "Des paquets et jusqu'à six taches, des totaux de 50 à 100, comme les fiches&nbsp;35 et&nbsp;36.", "d1"),
             ("Des deux côtés", "Des taches des deux côtés, des totaux de 50 à 100, comme la fiche&nbsp;37.", "d2")]
 # Le dos du défi : deux séries au lieu de trois, donc deux cases plus larges et des QR de 36 mm
@@ -204,16 +215,48 @@ FLECHES = ('<svg width="116" height="46" viewBox="0 0 116 46" aria-hidden="true"
            '<text x="31" y="28" text-anchor="end">– 12</text><text x="85" y="28">– 12</text></g>'
            '<text x="58" y="28" text-anchor="middle" font-family="Poppins, sans-serif" font-weight="700" '
            'font-size="15" fill="#0f172a">=</text></svg>')
-# Le schéma en barres de l'exemple (3𝑥 + 12 = 27) : barre du haut 𝑥 𝑥 𝑥 | 12, barre du bas 27 ;
-# la même part (12) enlevée des deux barres ; puis la tache seule sur sa valeur.
-MINI_SCH = ('<span class="mini-sch"><span class="b"><div class="t">𝑥</div><div class="t">𝑥</div>'
-            '<div class="t">𝑥</div><div style="flex:2.4">12</div></span>'
-            '<span class="b"><div style="flex:5.4">27</div></span></span>')
-MINI_SCH_ENLEVE = ('<span class="mini-sch"><span class="b"><div class="t">𝑥</div><div class="t">𝑥</div>'
-                   '<div class="t">𝑥</div><div class="h" style="flex:2.4">12</div></span>'
-                   '<span class="b"><div style="flex:3">15</div><div class="h" style="flex:2.4">12</div></span></span>')
-MINI_SCH_FIN = ('<span class="mini-sch" style="width:9mm"><span class="b"><div class="t">𝑥</div></span>'
-                '<span class="b"><div style="flex:1">5</div></span></span>')
+# Les petits schémas en barres du dos, DESSINÉS À L'ÉCHELLE (relecture du 27/09/2026 : « la case
+# des 𝑛 doit avoir la même largeur que la case du 15, et le 𝑛 tout seul la même largeur qu'un 𝑛 du
+# dessus ») : une seule échelle pour les trois dessins (le total c occupe toute la largeur), chaque
+# case a la largeur de sa valeur — 𝑥 𝑥 𝑥 font exactement « 15 », et la tache seule du dernier
+# dessin fait la largeur d'une tache du premier. Les trois dessins sont calés à gauche, au même
+# endroit, comme les étapes d'un même schéma. Tracés en SVG (coordonnées exactes, pas de bordures
+# CSS qui décalent d'un pixel).
+MINI_L, MINI_H = 104.0, 22.0                       # 27,5 mm × 5,8 mm par ligne, avant le zoom de la liste
+def mini_sch(lignes, total, cle):
+    """lignes : [[(texte, largeur en unités, genre)]] ; genre : "t" tache, "n" nombre, "h" enlevé."""
+    k = (MINI_L - 2) / total
+    hs = f"h{cle}"
+    out = [f'<svg class="mini-sch" width="{MINI_L:.0f}" height="{len(lignes) * MINI_H + 2:.0f}" '
+           f'viewBox="0 0 {MINI_L:.0f} {len(lignes) * MINI_H + 2:.0f}" aria-hidden="true">'
+           f'<defs><pattern id="{hs}" patternUnits="userSpaceOnUse" width="3.2" height="3.2" patternTransform="rotate(45)">'
+           '<line x1="0" y1="0" x2="0" y2="3.2" stroke="#94a3b8" stroke-width="1.3"/></pattern></defs>']
+    for i, cases in enumerate(lignes):
+        x, y = 1.0, 1.0 + i * MINI_H
+        for texte, u, genre in cases:
+            w = u * k
+            fond = {"t": "#e2e8f0", "n": "#fff", "h": f"url(#{hs})"}[genre]
+            out.append(f'<rect x="{x:.2f}" y="{y:.2f}" width="{w:.2f}" height="{MINI_H:.2f}" fill="{fond}" '
+                       'stroke="#0f172a" stroke-width="1.4"/>')
+            police = ('font-family="x-arrondi, Times New Roman, serif" font-size="12"' if genre == "t"
+                      else 'font-family="Poppins, sans-serif" font-weight="700" font-size="12"')
+            couleur = "#475569" if genre == "h" else "#0f172a"
+            out.append(f'<text x="{x + w / 2:.2f}" y="{y + MINI_H / 2:.2f}" text-anchor="middle" dominant-baseline="central" '
+                       f'{police} fill="{couleur}">{texte}</text>')
+            x += w
+    out.append("</svg>")
+    return "".join(out)
+
+def mini_schemas(a, b, c, x):
+    """Les trois dessins de « Pour se souvenir » pour a·𝑥 + b = c (𝑥 = x) : on enlève b des deux
+    barres ; la tache seule ; le schéma de départ (dernière ligne, « à toi »)."""
+    taches = [("𝑥", x, "t")] * a
+    enleve = mini_sch([taches + [(str(b), b, "h")], [(str(c - b), c - b, "n"), (str(b), b, "h")]], c, "e")
+    fin = mini_sch([[("𝑥", x, "t")], [(str(x), x, "n")]], c, "f")
+    depart = mini_sch([taches + [(str(b), b, "n")], [(str(c), c, "n")]], c, "d")
+    return enleve, fin, depart
+
+MINI_SCH_ENLEVE, MINI_SCH_FIN, MINI_SCH = mini_schemas(3, 12, 27, 5)
 
 # ------------------------------------------------------------------ les deux livrets
 VUES = {
@@ -258,7 +301,8 @@ VUES = {
             ('<span class="mini-eq">3𝑥 + 12 = 27</span>', "<b>Sous chaque carte, c'est à toi</b>&nbsp;: écris "
                                                           "l'équation, puis résous-la — comme l'exemple de la couverture."),
         ],
-        css_couv=".carte.corr{flex:0 0 66mm}",
+        # (27/09/2026) l'équation plus grande : sa fenêtre passe de 66 à 76 mm
+        css_couv=".carte.corr{flex:0 0 76mm}",
         fiches=FICHES, exemple=EXEMPLE, dessins=(3, 12, 27, 5), dos=DOS,
     ),
 }
@@ -270,9 +314,21 @@ def _dessins(txt, a, b, c, x):
                .replace("3𝑥 + 12 = 27", f"{a}𝑥 + {b} = {c}"))
 VUES["defi"] = dict(VUES["equation"],
     sortie="livret_splat_equations_equation_defi",
-    sur="Mon livret · Monde 5 · Le défi",
+    sur="Mon livret · Monde 5 · Le défi · L'équation",
     accroche="Des paquets, des taches…<br>et des totaux jusqu'à 100&nbsp;!",
     souvenir=[(_dessins(ic, 4, 38, 86, 12), txt) for ic, txt in VUES["equation"]["souvenir"]],
+    fiches=FICHES_DEFI, exemple=EXEMPLE_DEFI, dessins=(4, 38, 86, 12), dos=DOS_DEFI,
+    css_dos=CSS_DOS_DEFI,
+)
+# « Le défi » en schéma en barres (relecture du 27/09/2026 : « chacun possède un défi ») : les mêmes
+# 36 cartes que le défi « équation », dans la vue du livret schéma ; les petits schémas du dos sont
+# redessinés à l'échelle avec les nombres de l'exemple du défi (4𝑥 + 38 = 86, 𝑥 = 12).
+_ENL_D, _FIN_D, _DEP_D = mini_schemas(4, 38, 86, 12)
+VUES["defi_schema"] = dict(VUES["schema"],
+    sortie="livret_splat_equations_schema_defi",
+    sur="Mon livret · Monde 5 · Le défi · Le schéma",
+    accroche="Des paquets, des taches…<br>et des totaux jusqu'à 100&nbsp;!",
+    souvenir=[(ic, txt) for ic, (_, txt) in zip((_ENL_D, _FIN_D, _DEP_D), VUES["schema"]["souvenir"])],
     fiches=FICHES_DEFI, exemple=EXEMPLE_DEFI, dessins=(4, 38, 86, 12), dos=DOS_DEFI,
     css_dos=CSS_DOS_DEFI,
 )
@@ -286,6 +342,7 @@ CORRECTIONS = {
     "schema":   dict(suffixe="_correction", imprime="correction-schema",   dit="par le schéma en barres"),
     "equation": dict(suffixe="_correction", imprime="correction-equation", dit="par l'équation"),
     "defi":     dict(suffixe="_correction", imprime="correction-equation", dit="par l'équation"),
+    "defi_schema": dict(suffixe="_correction", imprime="correction-schema", dit="par le schéma en barres"),
 }
 # La couverture du livret corrigé : le bandeau rouge sombre « Correction » et « Livret
 # corrigé — … » à la place de Nom, prénom / Classe (mêmes textes et mêmes mesures que les
@@ -303,12 +360,13 @@ CSS_PROF = """
 
 # ------------------------------------------------------------------ la page de l'outil
 # Le QR prend place dans le bandeau de chaque fiche, dans une boîte blanche, pour ne rien
-# prendre à la place réservée à l'élève (comme les livrets des mondes 2 à 4).
+# prendre à la place réservée à l'élève, TOUT À DROITE : les logos sont retirés au rendu
+# (relecture du 27/09/2026, comme les mondes 2 et 6).
 CSS_QR = """
 .printArea .print-page-header{flex-basis:21mm !important}
 .printArea .print-page-title-block{flex:1 1 auto;min-width:0;align-items:center}
 .printArea .print-page-subtitle{white-space:normal;overflow:visible;text-overflow:clip;line-height:1.12}
-.qr-livret{display:flex;align-items:center;gap:2.5mm;background:#fff;border-radius:2mm;padding:1mm 1.5mm 1mm 2.5mm;margin-left:auto;margin-right:2mm;flex:0 0 auto}
+.qr-livret{display:flex;align-items:center;gap:2.5mm;background:#fff;border-radius:2mm;padding:1mm 1.5mm 1mm 2.5mm;margin-left:auto;margin-right:0;flex:0 0 auto}
 .qr-livret img{width:17mm;height:17mm;display:block}
 .qr-livret .lib{text-align:right;font-size:11px;font-weight:900;color:#0f172a;line-height:1.2;white-space:nowrap}
 .qr-livret .lib em{display:block;font-style:normal;font-weight:400;font-size:10px;color:#475569;margin-top:0.5mm}
@@ -338,9 +396,17 @@ JS_QR = """([qr, lib, gabarit]) => {
     const box = document.createElement('div'); box.className = 'qr-livret';
     box.innerHTML = '<div class="lib">' + lib + '</div><img src="' + qr + '" alt="">';
     if (gabarit) box.querySelector('.lib').style.minWidth = w + 'px';
-    const logos = h.querySelector('.print-page-logos');
-    h.insertBefore(box, logos || null);
+    h.appendChild(box);
   });
+  return 'ok';
+}"""
+
+# Plus aucun logo sur les pages-fiches du livret (checklist de la relecture du monde 1, reprise au
+# monde 5 le 27/09/2026) : retiré AU RENDU ; l'outil garde le sien quand on imprime depuis le site.
+JS_SANS_LOGO = """() => {
+  const l = document.querySelectorAll('.printArea .print-page-logos');
+  if (l.length !== 2) return l.length + ' bloc(s) de logos, attendu : 2';
+  l.forEach(e => e.remove());
   return 'ok';
 }"""
 
@@ -453,6 +519,32 @@ JS_EXEMPLE = """(vue) => {
   const g = tEl('g');
   renderCardEquationStepPrintScene(g, c, etats.length, {layoutMode: vue, showIntroText: false, showAid: false, useTokens: false});
   s1.appendChild(g);
+  /* (relecture du 27/09/2026) les taches transparentes de l'exemple, plus grosses : seule la tache
+     grossit, autour du centre du jeton qu'elle cache (×1,35 en vue « équation », ×1,3 en vue
+     « schéma », où les plateaux sont plus serrés) ; le jeton caché garde la taille des jetons
+     visibles. Les taches ne se touchent pas (vérifié ci-dessous). */
+  const kVoulu = vue === 'schema' ? 1.3 : 1.35;
+  const caches = Array.from(g.querySelectorAll('circle')).filter(ci => /rgba\\(0,\\s*0,\\s*0,\\s*0?\\.055\\)/.test(ci.getAttribute('fill') || ''));
+  const chemins = Array.from(g.querySelectorAll('path'));
+  const taches = [];
+  caches.forEach(ci => {
+    const cx = +ci.getAttribute('cx'), cy = +ci.getAttribute('cy');
+    const p = chemins.find(pa => { const b = pa.getBBox(); return cx > b.x && cx < b.x + b.width && cy > b.y && cy < b.y + b.height && b.width < 260; });
+    if (p) { const b = p.getBBox(); taches.push({p, cx, cy, r: Math.max(b.width, b.height) / 2}); }
+  });
+  if (taches.length !== caches.length || !taches.length) return {erreur: 'taches de l\\'exemple : ' + taches.length + ' trouvées sur ' + caches.length};
+  // le plus gros agrandissement qui laisse un petit jour entre deux taches (jamais au-delà de kVoulu)
+  let k = kVoulu;
+  for (let i = 0; i < taches.length; i++) for (let j = i + 1; j < taches.length; j++) {
+    const a = taches[i], b = taches[j];
+    k = Math.min(k, 0.96 * Math.hypot(a.cx - b.cx, a.cy - b.cy) / (a.r + b.r));
+  }
+  k = Math.max(1, k);
+  taches.forEach(({p, cx, cy}) => {
+    const enveloppe = tEl('g', {transform: `translate(${cx} ${cy}) scale(${k}) translate(${-cx} ${-cy})`});
+    p.parentNode.insertBefore(enveloppe, p);
+    enveloppe.appendChild(p);
+  });
   const vb1 = vb(union([g]), 16);
   // 2. la correction du mode Équation, sur la même carte
   const s2 = tEl('svg', {viewBox: '0 0 1600 2200'}); document.body.appendChild(s2);
@@ -466,7 +558,23 @@ JS_EXEMPLE = """(vue) => {
   const equation = tous.filter(e => e.getBBox().y >= bas - 2);
   if (!schemas.length || !equation.length) return {erreur: 'schémas ou équation introuvables'};
   const garde = vue === 'schema' ? schemas : equation;
-  const vb2 = vb(union(garde), vue === 'schema' ? 18 : 22);
+  let boite = union(garde);
+  /* (relecture du 27/09/2026) « les schémas sont trop collés » : on écarte les trois schémas de
+     l'exemple (un blanc de 110 unités entre deux schémas au lieu de 32), sans toucher à leurs
+     largeurs, qui restent à l'échelle (celles de l'outil). */
+  if (vue === 'schema') {
+    const bb = e => e.getBBox();
+    const ordonnes = garde.slice().sort((a, b) => bb(a).y - bb(b).y);
+    const groupes = [];
+    let bas = -Infinity;
+    ordonnes.forEach(e => { const b = bb(e); if (b.y > bas + 4) groupes.push([]); groupes[groupes.length - 1].push(e); bas = Math.max(bas, b.y + b.height); });
+    if (groupes.length !== 3) return {erreur: 'exemple : ' + groupes.length + ' schémas au lieu de 3'};
+    const ECART = 78;
+    groupes.forEach((gr, i) => { if (!i) return; const w = tEl('g', {transform: `translate(0 ${ECART * i})`});
+      gr[0].parentNode.insertBefore(w, gr[0]); gr.forEach(e => w.appendChild(e)); });
+    boite = [boite[0], boite[1], boite[2], boite[3] + ECART * (groupes.length - 1)];
+  }
+  const vb2 = vb(boite, vue === 'schema' ? 18 : 22);
   // la fenêtre n'a pas les proportions du morceau gardé : on retire le reste du dessin, sinon il
   // apparaîtrait au-dessus ou au-dessous (plateau, autres schémas, équation)
   tous.filter(e => !garde.includes(e)).forEach(e => e.remove());
@@ -691,6 +799,9 @@ async def pages(v, tmp, jeu, corr=None):
             r = await pg.evaluate(JS_QR, [f"{qrweb}/fiche{f.get('qr', f['n'])}.png"] + ([QR_PROF, QR_ELEVE] if corr else [QR_ELEVE, None]))
             if r != "ok":
                 raise SystemExit(f"{titre}, QR : {r}")
+            r = await pg.evaluate(JS_SANS_LOGO)
+            if r != "ok":
+                raise SystemExit(f"{titre}, logos : {r}")
             # la mesure du titre se fait à la largeur imprimée (A4 moins les 2 × 8 mm de l'outil)
             await pg.set_viewport_size({"width": 733, "height": 1062})
             await pg.emulate_media(media="print")
@@ -829,7 +940,7 @@ def main():
                     assemble(sortie, tmp, v["fiches"])
                 for suffixe in ("", "_a_plier"):
                     compresse(RACINE / "outils" / f"{sortie}{suffixe}.pdf")
-                groupe = "defi" if nom == "defi" else "base"
+                groupe = "defi" if nom.startswith("defi") else "base"
                 rendus.setdefault(groupe, {})[sortie] = dict(exemple=ex["carte"], fiches={str(n): c for n, c in cartes.items()})
                 print(f"   Fait : outils/{sortie}.pdf et outils/{sortie}_a_plier.pdf")
     finally:

@@ -31,18 +31,18 @@
 /* le geste, écrit comme dans la correction de l'outil : même brun (#b45309), même signe */
 /* l'équation écrite comme dans la correction de l'outil : Times italique, la lettre arrondie */
 .mini-eq{font-family:"x-arrondi",'Times New Roman',Times,serif;font-style:italic;font-size:17px;color:#0f172a;white-space:nowrap}
-/* mini schéma en barres (livret « schéma ») : deux barres de même longueur */
-.mini-sch{display:flex;flex-direction:column;width:28mm}
-.mini-sch .b{display:flex}
-.mini-sch .b div{border:1.4px solid #0f172a;height:6mm;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;background:#fff}
-.mini-sch .b + .b div{border-top:none}
-.mini-sch .b div + div{border-left:none}
-.mini-sch .t{flex:1;background:#e2e8f0 !important;font-family:"x-arrondi",'Times New Roman',serif}
-/* la part enlevée des deux barres : hachurée, comme la correction imprimée de l'outil */
-.mini-sch .h{color:#475569;background:repeating-linear-gradient(135deg,#fff 0 2px,#94a3b8 2px 3px) !important}
+/* les petits schémas en barres (livret « schéma ») : des SVG à l'échelle, tracés par render.py
+   (mini_sch) — la part enlevée hachurée, comme la correction imprimée de l'outil */
+svg.mini-sch{display:block;overflow:visible}
 .credits{text-align:center;font-size:10.5px;line-height:1.55;color:#475569;border-top:1px solid #e2e8f0;padding-top:3.5mm;padding-bottom:3mm}
 .credits b{color:#0f172a}
 .credits .steve{color:#115e59;font-weight:700}
+/* Crédits (relecture du monde 5, 27/09/2026) : comme les relatifs — le texte à gauche, une ligne
+   par phrase ; à droite le seul logo maths&go. SPLAT! Équations est le travail de maths&go seul :
+   ni IREMI, ni Unité apprenante, ni autre crédit (décision de Gwenaël). */
+.credits{display:flex;align-items:center;gap:5mm;text-align:left}
+.credits .txt{flex:1;font-size:10px;white-space:nowrap}
+.credits img.mg{height:9.5mm;display:block;flex:0 0 auto}
 </style></head>
 <body>
 
@@ -87,7 +87,7 @@
     <span class="chip">Pour se souvenir</span>
     <!-- les rappels 2 et 3 et la dernière ligne sont ceux du livret : render.py les écrit (SOUVENIR) -->
     <ul>
-      <li><span class="ic"><svg class="tache-x" width="36" height="36" viewBox="2 5 106 105" aria-hidden="true"><use href="#tacheBadge" fill="#000"/><text x="55" y="69.7" text-anchor="middle" fill="#fff" font-family="x-arrondi, serif" font-size="58">𝑥</text></svg></span><span>La tache cache un nombre de jetons&nbsp;: c'est l'<b>inconnue</b>, écrite avec une <b>lettre</b>. Plusieurs taches cachent toutes le <b>même nombre</b>.</span></li>
+      <li><span class="ic"><svg class="tache-x" width="46" height="42" viewBox="2 5 106 105" aria-hidden="true"><use href="#tacheBadge" fill="#000"/><text x="55" y="69.7" text-anchor="middle" fill="#fff" font-family="x-arrondi, serif" font-size="58">𝑥</text></svg></span><span>La tache cache un nombre de jetons&nbsp;: c'est l'<b>inconnue</b>, écrite avec une <b>lettre</b>. Plusieurs taches cachent toutes le <b>même nombre</b>.</span></li>
       <li class="r2"><span class="ic"></span><span>On peut faire <b>la même opération des deux côtés</b>, ajouter, enlever ou partager&nbsp;: il reste toujours la même quantité à gauche et à droite.</span></li>
       <li class="r3"><span class="ic"></span><span><b>Le but</b>&nbsp;: garder une seule tache d'un côté. L'autre côté dit ce qu'elle cache.</span></li>
       <li class="atoi"><span class="ic"></span><span><b>Sous chaque carte, c'est à toi</b>&nbsp;: écris l'équation, puis résous-la — comme l'exemple de la couverture.</span></li>
@@ -95,9 +95,12 @@
   </div>
 
   <div class="credits">
+    <div class="txt">
     Jeu <b>SPLAT!</b> créé par <span class="steve">Steve Wyborney</span> (stevewyborney.com) — merci Steve&nbsp;!<br>
-    Progression «&nbsp;SPLAT! cycle 3&nbsp;» de Claire · outils <b>SPLAT! Équations</b> et <b>ÉquaSplat</b> de maths&amp;go, avec l'IREMI de La Réunion.<br>
+    Livret et outils <b>SPLAT! Équations</b> et <b>ÉquaSplat</b> de maths&amp;go.<br>
     Libre d'être imprimé, partagé et adapté — sans usage commercial, et sous la même licence.
+    </div>
+    <img class="mg" src="/assets/img/logos/mathsgo/logo-print.png" alt="maths&amp;go">
   </div>
 </div>
 

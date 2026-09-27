@@ -50,12 +50,28 @@ const js = (nom) => {
   return m[1];
 };
 const REGLAGES = ["EQ5_S1", "EQ5_S2", "EQ5_S3", "EQ5_PAQUETS", "EQ5_DEUX_COTES"];
+/* (relecture du monde 5, 27/09/2026) les fiches 36 et 37 sont des séries enchaînées : la suite est
+   une liste, dans render.py comme dans la carte des mondes */
+const pyListe = (nom) => {
+  const m = render.match(new RegExp(`^${nom}\\s*=\\s*\\[([^\\]]+)\\]`, "m"));
+  assert.ok(m, `${nom} introuvable dans render.py`);
+  return [...m[1].matchAll(/"([^"]+)"/g)].map((x) => x[1]);
+};
+const jsListe = (nom) => {
+  const m = univers.match(new RegExp(`const ${nom}=\\[([^\\]]+)\\];`));
+  assert.ok(m, `${nom} introuvable dans splat_univers.html`);
+  return [...m[1].matchAll(/"([^"]+)"/g)].map((x) => x[1]);
+};
+const SUITES = ["EQ5_PAQUETS_SUITE", "EQ5_DEUX_COTES_SUITE"];
 const FICHES_PY = [...render.matchAll(/dict\(n=(\d+), t="([^"]+)",\s+parties=\[([^\]]+)\],\s+parcours="(m3e\d)"/g)]
   .map((m) => ({ n: Number(m[1]), t: m[2], parties: m[3].split(",").map((s) => s.trim()), parcours: m[4] }));
 
 test("Q3 : les réglages et les graines des fiches sont ceux de la carte des mondes", () => {
   for (const nom of REGLAGES) assert.equal(py(nom), js(nom), nom);
-  assert.deepEqual(FICHES_PY.map((f) => f.parties), [["EQ5_S1", "EQ5_S2", "EQ5_S3"], ["EQ5_PAQUETS"], ["EQ5_DEUX_COTES"]]);
+  for (const nom of SUITES) assert.deepEqual(pyListe(nom), jsListe(nom), nom);
+  assert.equal(jsListe("EQ5_PAQUETS_SUITE").length, 3);
+  assert.equal(jsListe("EQ5_DEUX_COTES_SUITE").length, 2);
+  assert.deepEqual(FICHES_PY.map((f) => f.parties), [["EQ5_S1", "EQ5_S2", "EQ5_S3"], ["EQ5_PAQUETS", "*EQ5_PAQUETS_SUITE"], ["EQ5_DEUX_COTES", "*EQ5_DEUX_COTES_SUITE"]]);
 });
 
 test("Q3 : une fiche = une étape = une étoile — fiches 35, 36, 37, titres de la carte", () => {
@@ -119,8 +135,10 @@ const OUTIL = "/outils/splat_equations.html?";
 const SERIES_ATTENDUES = {
   1: OUTIL + sansGraine(js("EQ5_S1"), 2) + "&jouer=1&suite=" +
      [sansGraine(js("EQ5_S2"), 2), sansGraine(js("EQ5_S3"), 2)].map(encodeURIComponent).join(";"),
-  2: OUTIL + sansGraine(js("EQ5_PAQUETS"), 6) + "&jouer=1",
-  3: OUTIL + sansGraine(js("EQ5_DEUX_COTES"), 6) + "&jouer=1",
+  // (27/09/2026) comme les fiches : 3 cartes à 2-3 taches + 3 à 4-6 taches ; 2 + 2 + 2 des deux côtés
+  2: OUTIL + sansGraine(js("EQ5_PAQUETS"), 3) + "&jouer=1&suite=" + encodeURIComponent(sansGraine(jsListe("EQ5_PAQUETS_SUITE")[1], 3)),
+  3: OUTIL + sansGraine(js("EQ5_DEUX_COTES"), 2) + "&jouer=1&suite=" +
+     jsListe("EQ5_DEUX_COTES_SUITE").map((q) => encodeURIComponent(sansGraine(q, 2))).join(";"),
 };
 
 test("Q3 : les séries du dos (?s=1, 2, 3) — six équations sans graine, jouées sans étoile", () => {
@@ -290,21 +308,24 @@ test("Q3 : dans les PDF — la couverture de chaque livret, les fiches 35 à 37 
 
 // ------------------------------------------------ les règles des documents du collège
 test("Q3 : couverture et dos sans logo, signature et licence au pied, lisible en noir et blanc", () => {
-  // relecture du monde 1, lot 2 (25/09/2026) : plus aucun logo sur la couverture ni sur le dos ;
-  // les pages-fiches (et l'exemple de la page 2) gardent IREMI + maths&go dans leur en-tête
-  for (const [nom, t] of [["couverture", couv], ["dos", dos]]) {
-    assert.doesNotMatch(t, /logos\/(?:mathsgo|irem)\/logo-print\.png/, `${nom} : aucun logo`);
+  // relecture du monde 1, lot 2 (25/09/2026) : plus aucun logo sur la couverture ; relecture du
+  // monde 5 (27/09/2026) : au dos, le seul logo maths&go à côté du crédit, comme les relatifs —
+  // ni IREMI, ni Unité apprenante (« c'est que moi tout seul »)
+  for (const [nom, t] of [["couverture", couv], ["dos", dos]])
     assert.match(t, /<footer class="pied">mathsgo\.re\/splat · CC BY-NC-SA 4\.0<\/footer>/, nom);
-  }
-  assert.match(dos, /avec l'IREMI de La Réunion/, "le crédit du pied du dos garde l'IREMI");
+  assert.doesNotMatch(couv, /logos\/(?:mathsgo|irem)\/logo-print\.png/, "couverture : aucun logo");
+  assert.equal((dos.match(/logos\/mathsgo\/logo-print\.png/g) || []).length, 1, "dos : le logo maths&go, une fois");
+  assert.doesNotMatch(dos.replace(/\/\*[\s\S]*?\*\//g, ""), /irem|IREMI|ua-debre|Unité apprenante/i, "dos : ni IREMI ni Unité apprenante");
+  assert.match(dos, /Livret et outils <b>SPLAT! Équations<\/b> et <b>ÉquaSplat<\/b> de maths&amp;go\./);
+  assert.match(render, /JS_SANS_LOGO = """\(\) => \{/, "les logos des pages-fiches retirés au rendu");
   const css = lire(SRC + "commun.css");
   assert.match(css, /\.pied\{[^}]*font-size:10px;[^}]*color:#64748b;/);
   // le teal ne sert qu'aux fonds : aucun texte teal clair sur du blanc (#115e59 pour le texte)
   for (const [nom, t] of [["commun.css", css], ["couverture", couv], ["dos", dos]])
     assert.doesNotMatch(t.replace(/\/\*[\s\S]*?\*\//g, ""), /(?:^|[;{])color:#(?:08aaa5|4cc7c3|9fdcd9)/i, `${nom} : pas de texte teal clair`);
   assert.match(render, /PIED_LIVRET = "mathsgo\.re\/splat · CC BY-NC-SA 4\.0"/);
-  // les crédits : Claire pour la progression, une fois ; le clin d'œil à Steve Wyborney
-  assert.equal((dos.match(/Claire/g) || []).length, 1);
+  // les crédits : le clin d'œil à Steve Wyborney ; plus de crédit de progression (27/09/2026)
+  assert.equal((dos.match(/Claire/g) || []).length, 0);
   assert.match(dos, /Steve Wyborney/);
   assert.equal((couv.match(/Claire/g) || []).length, 0);
 });
@@ -356,9 +377,14 @@ test("page des livrets : l'onglet du monde 5, ses deux livrets, leurs couverture
   const p = pageLivrets.slice(debut, pageLivrets.indexOf("</section>", debut));
   assert.ok(p.includes('role="tabpanel" aria-labelledby="onglet-5" hidden>'));
   assert.ok(p.includes('<h2 class="monde-nom">Monde 5 · SPLAT! Équations</h2>'));
-  // trois cartes depuis le lot Q5 : les deux livrets, puis « Le défi » (grille de trois, comme le monde 1)
-  assert.match(p, /<div class="grille">/);
-  assert.equal((p.match(/<article class="liv">/g) || []).length, 3);
+  // (relecture du 27/09/2026) deux familles derrière deux boutons, chacune son livret et SON défi
+  assert.match(p, /<button type="button" data-serie="schema" aria-pressed="true">Le schéma en barres<\/button>\s*<button type="button" data-serie="equation" aria-pressed="false">L’équation<\/button>/);
+  assert.equal((p.match(/<div class="grille n2">/g) || []).length, 2);
+  assert.equal((p.match(/<article class="liv">/g) || []).length, 4);
+  const iS = p.indexOf('<div class="serie" data-serie="schema">'), iE = p.indexOf('<div class="serie" data-serie="equation">');
+  assert.ok(iS > 0 && iE > iS);
+  for (const s of ["livret_splat_equations_schema", "livret_splat_equations_schema_defi"]) { const k = p.indexOf(`href="/outils/${s}.pdf"`); assert.ok(k > iS && k < iE, s); }
+  for (const s of ["livret_splat_equations_equation", "livret_splat_equations_equation_defi"]) assert.ok(p.indexOf(`href="/outils/${s}.pdf"`) > iE, s);
   let avant = -1;
   for (const s of SORTIES) {
     const a = p.indexOf(`href="/outils/${s}.pdf"`), b = p.indexOf(`href="/outils/${s}_a_plier.pdf"`);
@@ -368,13 +394,13 @@ test("page des livrets : l'onglet du monde 5, ses deux livrets, leurs couverture
   assert.match(p, /<h3>Le schéma en barres<\/h3>[\s\S]*<h3>L’équation<\/h3>/);
   assert.match(pageLivrets, /\[data-m="5"\]\{--c:#08aaa5;--c-plein:#0f766e;/);
   assert.match(pageLivrets, /<nav class="onglets" id="onglets" data-n="6" role="tablist"/);
-  for (const nom of ["livret-splat-equations-schema", "livret-splat-equations-equation"]) {
+  for (const nom of ["livret-splat-equations-schema", "livret-splat-equations-equation", "livret-splat-equations-schema-defi", "livret-splat-equations-equation-defi"]) {
     const png = `assets/img/thumbnails/splat/${nom}.png`, webp = `assets/img/thumbnails/splat/${nom}.webp`;
     assert.ok(existe(png) && existe(webp), nom);
     assert.ok(taille(webp) < taille(png), `${nom} : la WebP est plus légère`);
     const b = readFileSync(new URL(`../${png}`, import.meta.url));
     assert.deepEqual([b.readUInt32BE(16), b.readUInt32BE(20)], [993, 1404], `${nom} : page 1 rendue à 120 dpi`);
-    assert.ok(p.includes(`src="/assets/img/thumbnails/splat/${nom}.png?v=2"`), `${nom} : sur la page`);
+    assert.ok(p.includes(`src="/assets/img/thumbnails/splat/${nom}.png?v=3"`), `${nom} : sur la page`);
   }
 });
 
@@ -454,17 +480,17 @@ test("Q4 : dans les PDF corrigés — la couverture dit « Correction » et quel
       assert.match(pages[1 + k], l === 0 ? /Même quantité en haut et en bas/ : /Même quantité à gauche qu'à droite/);
     });
     // le corrigé par l'équation écrit les lignes résolues : on relit une équation de chaque fiche
-    // (fiche 35 : 𝑏 + 4 = 9 ; fiche 36 : 4𝑥 + 2 = 38 ; fiche 37 : 4𝑡 + 11 = 5𝑡 + 8) — les lettres
+    // (fiche 35 : 𝑏 + 4 = 9 ; fiche 36 : 44 = 2𝑚 + 14 ; fiche 37 : 2𝑡 + 24 = 5𝑡) — les lettres
     // mathématiques sortent de l'extracteur telles quelles
     const sans = (t) => t.replace(/ /g, "");
     if (l === 1) {
       assert.ok(sans(pages[1]).includes("𝑏+4=9") && sans(pages[1]).includes("𝑏=5"), "fiche 35 : 𝑏 + 4 = 9, 𝑏 = 5");
-      assert.ok(sans(pages[3]).includes("4𝑥+2=38") && sans(pages[3]).includes("𝑥=9"), "fiche 36 : 4𝑥 + 2 = 38, 𝑥 = 9");
-      assert.ok(sans(pages[5]).includes("4𝑡+11=5𝑡+8") && sans(pages[5]).includes("3=𝑡"), "fiche 37 : 4𝑡 + 11 = 5𝑡 + 8, 3 = 𝑡");
+      assert.ok(sans(pages[3]).includes("44=2𝑚+14") && sans(pages[3]).includes("15=𝑚"), "fiche 36 : 44 = 2𝑚 + 14, 15 = 𝑚");
+      assert.ok(sans(pages[5]).includes("2𝑡+24=5𝑡") && sans(pages[5]).includes("8=𝑡"), "fiche 37 : 2𝑡 + 24 = 5𝑡, 8 = 𝑡");
     } else {
       // le corrigé par le schéma : les nombres des schémas, pas de ligne d'équation
-      assert.ok(sans(pages[3]).includes("38") && sans(pages[3]).includes("36"), "fiche 36 : les schémas 38 puis 36");
-      assert.ok(!sans(pages[3]).includes("4𝑥+2=38"), "fiche 36 : pas d'équation dans le corrigé par le schéma");
+      assert.ok(sans(pages[3]).includes("44") && sans(pages[3]).includes("30"), "fiche 36 : les schémas 44 puis 30");
+      assert.ok(!sans(pages[3]).includes("44=2𝑚+14"), "fiche 36 : pas d'équation dans le corrigé par le schéma");
     }
     assert.match(pages[7], /Et après/);
   });
@@ -473,8 +499,8 @@ test("Q4 : dans les PDF corrigés — la couverture dit « Correction » et quel
 test("Q4 : page des livrets — les corrigés du monde 5 repliés sous chaque livret, comme les autres mondes ; le catalogue ne dit plus « mondes 1 à 4 »", () => {
   const debut = pageLivrets.indexOf('<section class="panneau" data-m="5" id="monde-5"');
   const p = pageLivrets.slice(debut, pageLivrets.indexOf("</section>", debut));
-  assert.equal((p.match(/<details class="prof">/g) || []).length, 3, "un bouton replié par livret (le défi compris, lot Q5)");
-  assert.equal((p.match(/<summary>✅ Le corrigé<\/summary>/g) || []).length, 3);
+  assert.equal((p.match(/<details class="prof">/g) || []).length, 4, "un bouton replié par livret (les deux défis compris)");
+  assert.equal((p.match(/<summary>✅ Le corrigé<\/summary>/g) || []).length, 4);
   for (const s of CORRIGES) {
     const a = p.indexOf(`href="/outils/${s}.pdf"`), b = p.indexOf(`href="/outils/${s}_a_plier.pdf"`);
     assert.ok(a > 0 && b > a, `${s} : PDF puis « à plier »`);
@@ -489,7 +515,7 @@ test("Q4 : page des livrets — les corrigés du monde 5 repliés sous chaque li
   assert.match(catalogue, /le livret à plier, et le livret corrigé, à donner aux élèves/);
   assert.doesNotMatch(pageLivrets, /pour les mondes 1 à 4/);
   assert.doesNotMatch(lire("outils/toutes-les-ressources.html"), /pour les mondes 1 à 4, les livrets corrigés/);
-  assert.match(lire("outils/index.html"), /catalogue-refonte-data\.js\?v=splat-relecture-m1-lot2-20260925-1/, "le cache-buster du catalogue suit");
+  assert.match(lire("outils/index.html"), /catalogue-refonte-data\.js\?v=splat-relecture-m5-20260927-1/, "le cache-buster du catalogue suit");
 });
 
 /* ------------------------------------------------------------------ lot Q5 (25/09/2026)
@@ -523,7 +549,10 @@ test("Q5 : render.py — les trois fiches du défi, leurs graines, la même éto
   // les réglages communs du défi : paquets numérotés, 2 ou 3 par côté, totaux de 50 à 100, la lettre
   assert.ok(render.includes('return (f"mode=EQSTEP&form={form}&tasksMax={taches_max}&visibleMin=2&visibleMax=3"\n            f"&totalMin=50&totalMax=100&cards=4&seed={graine}&unknown=letter")'));
   // le livret : famille équation seulement, son corrigé par l'équation
-  assert.match(render, /VUES\["defi"\] = dict\(VUES\["equation"\],\n\s+sortie="livret_splat_equations_equation_defi",\n\s+sur="Mon livret · Monde 5 · Le défi",/);
+  assert.match(render, /VUES\["defi"\] = dict\(VUES\["equation"\],\n\s+sortie="livret_splat_equations_equation_defi",\n\s+sur="Mon livret · Monde 5 · Le défi · L'équation",/);
+  // (relecture du 27/09/2026) le même défi en schéma en barres, avec son corrigé par le schéma
+  assert.match(render, /VUES\["defi_schema"\] = dict\(VUES\["schema"\],\n\s+sortie="livret_splat_equations_schema_defi",\n\s+sur="Mon livret · Monde 5 · Le défi · Le schéma",/);
+  assert.match(render, /"defi_schema": dict\(suffixe="_correction", imprime="correction-schema", dit="par le schéma en barres"\)/);
   assert.match(render, /"defi":\s+dict\(suffixe="_correction", imprime="correction-equation", dit="par l'équation"\)/);
   assert.ok(existe(`${SRC}qr/fiche35d.png`) && existe(`${SRC}qr/fiche36d.png`) && existe(`${SRC}qr/fiche37d.png`));
 });
@@ -659,8 +688,9 @@ test("Q5 : dans les PDF du défi — couverture, fiches 35 à 37 et leur « bis 
 test("Q5 : la page des livrets et la carte des mondes — « Le défi » au monde 5, son corrigé replié, sa couverture", () => {
   const debut = pageLivrets.indexOf('<section class="panneau" data-m="5" id="monde-5"');
   const p = pageLivrets.slice(debut, pageLivrets.indexOf("</section>", debut));
-  const carte = p.split('<article class="liv">')[3];
-  assert.ok(carte, "la troisième carte du monde 5");
+  // (27/09/2026) « Le défi » en équation : la quatrième carte, dans la famille « L'équation »
+  const carte = p.split('<article class="liv">')[4];
+  assert.ok(carte, "la quatrième carte du monde 5");
   assert.match(carte, /<h3>Le défi<\/h3><span class="plage">totaux de 50 à 100<\/span>/);
   const a = carte.indexOf(`href="/outils/${DEFI_SORTIE}.pdf"`), b = carte.indexOf(`href="/outils/${DEFI_SORTIE}_a_plier.pdf"`);
   const c = carte.indexOf(`href="/outils/${DEFI_SORTIE}_correction.pdf"`), d = carte.indexOf(`href="/outils/${DEFI_SORTIE}_correction_a_plier.pdf"`);
@@ -671,17 +701,17 @@ test("Q5 : la page des livrets et la carte des mondes — « Le défi » au mond
   assert.ok(existe(png) && existe(webp) && taille(webp) < taille(png));
   const im = readFileSync(new URL(`../${png}`, import.meta.url));
   assert.deepEqual([im.readUInt32BE(16), im.readUInt32BE(20)], [993, 1404], "page 1 rendue à 120 dpi");
-  assert.ok(carte.includes(`src="/${png}?v=2"`)); // refaite au lot 2 de la relecture du monde 1 (couverture sans logo)
-  assert.match(p, /Et un troisième, «&nbsp;Le défi&nbsp;»/);
+  assert.ok(carte.includes(`src="/${png}?v=3"`)); // refaite à la relecture du monde 5 (27/09/2026)
+  assert.match(p, /chaque famille a son livret «&nbsp;Le défi&nbsp;»/);
   // carte des mondes, vue prof : la note du monde 5 présente « Le défi » (le lien mène à la page
   // des livrets, relecture du monde 1, lot 2)
   const bloc5 = univers.match(/\(m===MONDE_EQUATIONS&&PROF\?'<p class="intro">'[\s\S]*?<\/p>':''\)\+/)[0];
-  assert.ok(bloc5.includes("Le livret <b>Le d\\u00e9fi</b> reprend les trois fiches avec l\\u2019\\u00e9quation"));
+  assert.ok(bloc5.includes("Chaque version a son livret <b>Le d\\u00e9fi</b>"));
   // le catalogue le dit, et son cache-buster suit
   const catalogue = lire("assets/js/catalogue-refonte-data.js");
-  assert.match(catalogue, /SPLAT! Équations \(monde 5\) en trois livrets : schéma en barres, équation, et «\u00a0Le défi\u00a0»\."/);
-  assert.match(catalogue, /plus un livret «\u00a0Le défi\u00a0», des totaux de 50 à 100\./);
-  assert.match(lire("outils/index.html"), /catalogue-refonte-data\.js\?v=splat-relecture-m1-lot2-20260925-1/);
+  assert.match(catalogue, /SPLAT! Équations \(monde 5\) en quatre livrets : le schéma en barres et l’équation, chacun avec son «\u00a0Le défi\u00a0»\."/);
+  assert.match(catalogue, /chacun avec son livret «\u00a0Le défi\u00a0», des totaux de 50 à 100\./);
+  assert.match(lire("outils/index.html"), /catalogue-refonte-data\.js\?v=splat-relecture-m5-20260927-1/);
 });
 
 test("Q5 : ÉquaSplat ne reprend une série interrompue que si c'est la même (empreinte)", () => {
@@ -712,4 +742,27 @@ test("Q5 : « jouer=1 » — une série tirée au hasard sans aucun nombre à so
   assert.equal(essai({ x: 9, left: ["x", 60], right: [69] }, [[30, 30], [69]]), false, "69 sur un paquet");
   assert.equal(essai({ x: 11, left: ["x", "x", "x", "x", "x", "x", "x", "x", 12], right: [100] }, [[5, 7], [50, 50]]), false, "8𝑥 = 88 dans les calculs");
   assert.equal(essai({ x: 14, left: ["x", 55], right: [69] }, [[25, 30], [34, 35]]), false, "total 69");
+});
+
+/* ------------------------------------------------------------------ relecture du monde 5 (27/09/2026)
+   « Chacun possède un défi » : le livret « Le défi » existe aussi en schéma en barres, avec son
+   corrigé par le schéma ; ses fiches sont les mêmes 36 cartes que le défi équation (render.py
+   s'arrête sinon : même groupe « defi »). */
+test("relecture du monde 5 : « Le défi » en schéma en barres — 8 pages, à plier, corrigé par le schéma", () => {
+  const s = "livret_splat_equations_schema_defi";
+  for (const f of [s, s + "_correction"]) {
+    assert.equal(nombreDePages(`outils/${f}.pdf`), 8, `${f}.pdf`);
+    assert.equal(nombreDePages(`outils/${f}_a_plier.pdf`), 4, `${f}_a_plier.pdf`);
+    assert.ok(taille(`outils/${f}.pdf`) < 3_000_000, `${f}.pdf reste léger (qpdf)`);
+  }
+  assert.match(render, /groupe = "defi" if nom\.startswith\("defi"\) else "base"/, "les deux défis ont les mêmes cartes");
+  const pages = texteDesPages(`outils/${s}.pdf`).map(norm);
+  assert.match(pages[0], /LE DÉFI · LE SCHÉMA/);
+  ["Fiche 35 —", "Fiche 35 bis —", "Fiche 36 —", "Fiche 36 bis —", "Fiche 37 —", "Fiche 37 bis —"].forEach((t, k) => {
+    assert.ok(pages[1 + k].includes(t), `page ${2 + k} : « ${t} »`);
+    assert.match(pages[1 + k], /Même quantité en haut et en bas/);
+  });
+  // les petits schémas du dos, à l'échelle : une seule fonction, les nombres de l'exemple du défi
+  assert.match(render, /_ENL_D, _FIN_D, _DEP_D = mini_schemas\(4, 38, 86, 12\)/);
+  assert.match(render, /^MINI_SCH_ENLEVE, MINI_SCH_FIN, MINI_SCH = mini_schemas\(3, 12, 27, 5\)$/m);
 });

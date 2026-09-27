@@ -29,7 +29,9 @@ test("A. dos : aucun logo, plus de « Mes fiches », QR de 30 mm, « Pour se sou
     const d = lire(`_sources/${f}/dos.html`);
     // lot 3 (26/09/2026) : au monde 1, IREMI et maths&go reviennent UNE fois, dans le crédit en
     // bas du dos (tests/splat-relecture-m1-lot3.test.mjs) ; le haut du dos reste sans logo
-    const horsCredit = d.replace(/<div class="droite">[\s\S]*?<div class="ua">[\s\S]*?<\/div>\s*<\/div>/, "");
+    // (relecture du monde 5, 27/09/2026) SPLAT! Équations : le seul logo maths&go à droite du crédit
+    const horsCredit = d.replace(/<div class="droite">[\s\S]*?<div class="ua">[\s\S]*?<\/div>\s*<\/div>/, "")
+      .replace(/<img class="mg" src="\/assets\/img\/logos\/mathsgo\/logo-print\.png" alt="maths&amp;go">/, "");
     assert.doesNotMatch(horsCredit, /logo-print\.png|class="logos"|\.logos\{/, `${f} : aucun logo au dos`);
     assert.doesNotMatch(d.replace(/\/\*[\s\S]*?\*\//g, ""), /class="prog"|\.prog |je colorie l'étoile/, `${f} : plus de « Mes fiches »`);
     assert.match(d, /\n\.niv img\{width:30mm;height:30mm;/, `${f} : QR « Encore des cartes » de 30 mm`);
@@ -38,7 +40,8 @@ test("A. dos : aucun logo, plus de « Mes fiches », QR de 30 mm, « Pour se sou
     assert.match(d, /<span class="chip">Encore des cartes&nbsp;!<\/span>/, `${f} : rien de retiré d'autre`);
     assert.match(d, /class="suite"/, f);
     assert.match(d, /Steve Wyborney/, f);
-    assert.match(d, /avec l'IREMI de La Réunion/, `${f} : le crédit du pied garde l'IREMI (décision du 25/09)`);
+    if (f === "livret-splat-equations") assert.doesNotMatch(d, /avec l'IREMI/, `${f} : maths&go seul (27/09/2026)`);
+    else assert.match(d, /avec l'IREMI de La Réunion/, `${f} : le crédit du pied garde l'IREMI (décision du 25/09)`);
     assert.match(d, /<footer class="pied">mathsgo\.re\/splat · CC BY-NC-SA 4\.0<\/footer>/, f);
   }
   // les scripts ne remplissent plus « Mes fiches » (sinon le rendu s'arrêterait sur « 0 cases »)
@@ -95,7 +98,7 @@ test("C. catalogue : la carte de la progression masquée, la vignette de l'unive
     assert.ok(Math.abs(+n[2] - (+taches[i][2] + 0.36 * +n[3])) < 0.1, `numéro ${i + 1} centré en y`);
   });
   // le cache-buster du catalogue suit
-  assert.match(lire("outils/index.html"), /catalogue-refonte-data\.js\?v=splat-relecture-m1-lot2-20260925-1/);
+  assert.match(lire("outils/index.html"), /catalogue-refonte-data\.js\?v=splat-relecture-m5-20260927-1/);
 });
 
 // D. le texte lu, sans les commentaires (HTML, CSS, JS) : plus un seul « ou » sans insécable
@@ -116,7 +119,7 @@ test("D. guillemets français : une espace insécable après « et avant » dans
   // l'exemple relevé par Gwenaël : « Sans total » dans la note de « L'enquête rebondit »
   assert.match(lire("outils/splat_univers.html"), /les cases «\\u00a0Taches répétées\\u00a0» et «\\u00a0Sans total\\u00a0» de l’outil/);
   // et la description des livrets au catalogue
-  assert.match(lire("assets/js/catalogue-refonte-data.js"), /schéma en barres, équation, et « Le défi »\./);
+  assert.match(lire("assets/js/catalogue-refonte-data.js"), /le schéma en barres et l’équation, chacun avec son «\u00a0Le défi\u00a0»\./);
 });
 
 test("E. vue professeur, mondes 2 et 5 : un seul lien vers la page des livrets, la note sans l'impression", () => {

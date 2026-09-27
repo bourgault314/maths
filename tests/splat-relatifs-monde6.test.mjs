@@ -254,7 +254,8 @@ test("R1 : à l'impression, le vrai signe moins, le mot « opposé » lisible, p
   assert.equal(c.f(7), "7");
   assert.match(outil, /return clamp\(Math\.round\(\(Number\(r\) \|\| 74\) \* \(revealed \? 0\.34 : 0\.38\)\), 16, 44\);/);
   assert.equal((outil.match(/const fs = eqPrintOpposeFontSize\(/g) || []).length, 3, "les trois scènes imprimées");
-  assert.match(fonction("createEquationPrintHeader"), /if\(!\(activityEl && isSignedEquationModeValue\(activityEl\.value\)\)\)\{\s*const iremLogo/);
+  // (relecture du monde 5, 27/09/2026) plus aucun logo IREMI dans l'outil, relatifs comme entiers naturels
+  assert.doesNotMatch(fonction("createEquationPrintHeader"), /iremLogo|IREM_PRINT_LOGO_URL/);
   assert.match(fonction("getEquationPrintInstruction"), /sauf les taches «\\u00a0opposé\\u00a0»\\u00a0: elles cachent l’opposé de cette valeur\./);
 });
 

@@ -194,3 +194,36 @@ souvenir » sont ceux du livret équation, écrits avec les nombres de cet exemp
 
 `cartes.json` porte les deux groupes : les 36 cartes de base (`fiches`, `exemple`) et celles du
 défi (`defi`). Un rendu d'un seul groupe garde l'autre tel quel.
+
+## Relecture du monde 5 (27/09/2026)
+
+Décisions de Gwenaël (questions à choix) et ce qui a changé :
+
+- **La progression, en huit marches** — une seule nouveauté à la fois, tout mélangé à la fin ;
+  dans chaque marche, la tache finit à gauche sur la moitié des cartes, à droite sur l'autre
+  (« 3𝑥 = 12 et 12 = 3𝑥 : c'est le but de l'égalité ») :
+  - fiche 35 : 𝑥 + 𝑏 = 𝑐 (4), 𝑎𝑥 = 𝑐 (4), 𝑎𝑥 + 𝑏 = 𝑐 (4, nouvelle graine 793 : deux cartes de
+    chaque côté, plus de 𝑥 = 1) ;
+  - fiche 36 : des paquets, 2 ou 3 taches (graines 304 + 4471, 3 + 3 cartes), puis 4 à 6 taches
+    (3795 + 79133) — `EQ5_PAQUETS` + `EQ5_PAQUETS_SUITE` ;
+  - fiche 37 : des taches des deux côtés et des jetons d'un seul côté (2117), des jetons des deux
+    côtés (295), puis le grand mélange, une carte de chaque forme dans le désordre (29197,
+    `form=MIX`) — `EQ5_DEUX_COTES` + `EQ5_DEUX_COTES_SUITE`.
+  Les graines ont été triées dans l'outil lui-même (pas de 69 ni de 88, pas de paquet de 1 ou 2,
+  pas deux cartes pareilles, jamais deux fois la même lettre de suite). Aucun élève n'avait
+  commencé l'univers : les séries du jeu changent avec les fiches.
+- **Un livret par famille, chacun avec son défi** : `defi_schema` rend le livret « Le défi » en
+  schéma en barres (`livret_splat_equations_schema_defi*.pdf`, mêmes 36 cartes que le défi
+  équation, corrigé par le schéma). Sur la page des livrets, deux boutons « Le schéma en barres » /
+  « L'équation ».
+- **Comme les relatifs** : pages-fiches sans logo (retirés au rendu, `JS_SANS_LOGO`), le QR tout à
+  droite du bandeau ; au dos, le crédit « Livret et outils SPLAT! Équations et ÉquaSplat de
+  maths&go » et le seul logo maths&go — ni IREMI, ni Unité apprenante, ni Claire (« c'est que moi
+  tout seul »). L'outil n'imprime plus le logo IREMI non plus.
+- **Couverture** : les taches transparentes de l'exemple plus grosses (seule la tache grossit,
+  autour du jeton qu'elle cache, sans toucher sa voisine) ; l'équation dans une fenêtre de 76 mm
+  (66 avant) ; au livret schéma, les trois schémas séparés (un blanc de 110 unités au lieu de 32),
+  toujours à l'échelle. « Nom, prénom » et « Classe » en haut de leur case.
+- **Dos, « Pour se souvenir »** : la tache plus grosse ; les petits schémas en barres tracés à
+  l'échelle en SVG (`mini_sch`) — le bloc 𝑥 𝑥 𝑥 a la largeur du 15, la tache seule la largeur
+  d'une tache du dessus (remarque de Gwenaël).

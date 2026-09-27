@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="index, follow, max-image-preview:large">
 <title>Les livrets SPLAT! — les fiches de chaque monde à plier | maths&amp;go</title>
-<meta name="description" content="Tous les livrets de l’univers SPLAT! sur une seule page, monde par monde : les six fiches du monde 1 (Petit SPLAT!) en trois niveaux — jusqu’à 20 jetons, de 21 à 50, de 51 à 100 —, les trois fiches du monde 2 (SPLAT! Classique) en deux niveaux, puis les fiches 10 à 24 du monde 3 (SPLAT! Enquête) en trois livrets — les deux premiers aussi en « Le défi » —, les fiches 25 à 34 du monde 4 (SPLAT! Système) en deux livrets, et les fiches 35 à 37 du monde 5 (SPLAT! Équations) en deux livrets — l’élève y dessine le schéma en barres ou écrit l’équation —, plus un livret « Le défi », des totaux de 50 à 100. Pour chaque livret : le PDF de 8 pages, le livret à plier, et le livret corrigé, à donner aux élèves ou à garder pour soi. Chaque fiche porte un QR code vers le jeu en ligne avec les mêmes cartes. À imprimer en recto-verso sur A3, ou sur A4 pour un plus petit livret, à plier et agrafer.">
+<meta name="description" content="Tous les livrets de l’univers SPLAT! sur une seule page, monde par monde : les six fiches du monde 1 (Petit SPLAT!) en trois niveaux — jusqu’à 20 jetons, de 21 à 50, de 51 à 100 —, les trois fiches du monde 2 (SPLAT! Classique) en deux niveaux, puis les fiches 10 à 24 du monde 3 (SPLAT! Enquête) en trois livrets — les deux premiers aussi en « Le défi » —, les fiches 25 à 34 du monde 4 (SPLAT! Système) en deux livrets, et les fiches 35 à 37 du monde 5 (SPLAT! Équations) en deux livrets — l’élève y dessine le schéma en barres ou écrit l’équation —, chacun avec son livret « Le défi », des totaux de 50 à 100. Pour chaque livret : le PDF de 8 pages, le livret à plier, et le livret corrigé, à donner aux élèves ou à garder pour soi. Chaque fiche porte un QR code vers le jeu en ligne avec les mêmes cartes. À imprimer en recto-verso sur A3, ou sur A4 pour un plus petit livret, à plier et agrafer.">
 <link rel="canonical" href="https://mathsgo.re/outils/livrets_splat.html">
 <link rel="icon" href="/favicon.ico" sizes="48x48">
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
@@ -745,12 +745,22 @@ footer a{font-weight:700}
   <!-- ===================================================== Monde 5 · SPLAT! Équations -->
   <section class="panneau" data-m="5" id="monde-5" role="tabpanel" aria-labelledby="onglet-5" hidden>
     <h2 class="monde-nom">Monde 5 · SPLAT! Équations</h2>
-    <p class="chapo">Les fiches 35, 36 et 37 en un livret de 8 pages&nbsp;: deux plateaux, la même quantité, et la tache à trouver. Les mêmes 36 cartes en deux livrets&nbsp;: l’élève dessine le schéma en barres, ou il écrit l’équation. Et un troisième, «&nbsp;Le défi&nbsp;»&nbsp;: des paquets partout, des totaux de 50 à 100 et jusqu’à six taches, pour écrire l’équation.</p>
-    <div class="grille">
+    <p class="chapo">Les fiches 35, 36 et 37 en un livret de 8 pages&nbsp;: deux plateaux, la même quantité, et la tache à trouver — une seule nouveauté à la fois, puis tout se mélange à la fin. L’élève dessine le schéma en barres, ou il écrit l’équation&nbsp;; chaque famille a son livret «&nbsp;Le défi&nbsp;», des totaux de 50 à 100.</p>
+    <!-- Deux familles de livrets au monde 5 (relecture du monde 5, 27/09/2026), comme aux mondes 1
+         et 2 : « Le schéma en barres » et « L'équation », chacune avec son livret, SON défi et leurs
+         corrigés. Mêmes cartes, mêmes QR ; seule la façon de résoudre change. Sans JavaScript, les
+         deux rangées restent affichées l'une sous l'autre, avec leurs intertitres. -->
+    <div class="series-choix" role="group" aria-label="Choisir la famille de livrets">
+      <button type="button" data-serie="schema" aria-pressed="true">Le schéma en barres</button>
+      <button type="button" data-serie="equation" aria-pressed="false">L’équation</button>
+    </div>
+    <div class="serie" data-serie="schema">
+    <h3 class="partie">Le schéma en barres <span>les plateaux l’un sur l’autre, la place à droite pour dessiner</span></h3>
+    <div class="grille n2">
 
       <article class="liv">
         <a class="couv-lien" href="/outils/livret_splat_equations_schema.pdf" target="_blank" rel="noopener" title="Voir le livret Le schéma en barres (PDF, 8 pages)">
-          <img class="couv" src="/assets/img/thumbnails/splat/livret-splat-equations-schema.png?v=2" alt="Couverture du livret SPLAT! Équations, le schéma en barres" loading="lazy">
+          <img class="couv" src="/assets/img/thumbnails/splat/livret-splat-equations-schema.png?v=3" alt="Couverture du livret SPLAT! Équations, le schéma en barres" loading="lazy">
         </a>
         <div class="corps">
           <div class="titre"><h3>Le schéma en barres</h3><span class="plage">fiches 35, 36 et 37</span></div>
@@ -770,8 +780,35 @@ footer a{font-weight:700}
       </article>
 
       <article class="liv">
+        <a class="couv-lien" href="/outils/livret_splat_equations_schema_defi.pdf" target="_blank" rel="noopener" title="Voir le livret Le défi du monde 5, le schéma en barres (PDF, 8 pages)">
+          <img class="couv" src="/assets/img/thumbnails/splat/livret-splat-equations-schema-defi.png?v=3" alt="Couverture du livret SPLAT! Équations, Le défi, le schéma en barres" loading="lazy">
+        </a>
+        <div class="corps">
+          <div class="titre"><h3>Le défi</h3><span class="plage">totaux de 50 à 100</span></div>
+          <div class="liens">
+            <a class="lien" href="/outils/livret_splat_equations_schema_defi.pdf" target="_blank" rel="noopener">📙 PDF · 8 pages</a>
+            <a class="lien a3" href="/outils/livret_splat_equations_schema_defi_a_plier.pdf" target="_blank" rel="noopener">🖨️ Livret à plier</a>
+            <details class="prof">
+              <summary>✅ Le corrigé</summary>
+              <div class="prof-corps">
+                <div class="prof-ligne"><span class="nom">Le livret corrigé <small>par le schéma en barres</small></span>
+                  <a class="lien-prof" href="/outils/livret_splat_equations_schema_defi_correction.pdf" target="_blank" rel="noopener" title="Livret corrigé Le défi du monde 5, le schéma en barres (PDF, 8 pages)">PDF</a>
+                  <a class="lien-prof" href="/outils/livret_splat_equations_schema_defi_correction_a_plier.pdf" target="_blank" rel="noopener" title="Livret corrigé Le défi du monde 5, le schéma en barres, à plier">à plier</a></div>
+              </div>
+            </details>
+          </div>
+        </div>
+      </article>
+
+    </div>
+    </div>
+    <div class="serie" data-serie="equation">
+    <h3 class="partie">L’équation <span>les plateaux côte à côte, la place dessous pour écrire</span></h3>
+    <div class="grille n2">
+
+      <article class="liv">
         <a class="couv-lien" href="/outils/livret_splat_equations_equation.pdf" target="_blank" rel="noopener" title="Voir le livret L'équation (PDF, 8 pages)">
-          <img class="couv" src="/assets/img/thumbnails/splat/livret-splat-equations-equation.png?v=2" alt="Couverture du livret SPLAT! Équations, l'équation" loading="lazy">
+          <img class="couv" src="/assets/img/thumbnails/splat/livret-splat-equations-equation.png?v=3" alt="Couverture du livret SPLAT! Équations, l'équation" loading="lazy">
         </a>
         <div class="corps">
           <div class="titre"><h3>L’équation</h3><span class="plage">fiches 35, 36 et 37</span></div>
@@ -791,8 +828,8 @@ footer a{font-weight:700}
       </article>
 
       <article class="liv">
-        <a class="couv-lien" href="/outils/livret_splat_equations_equation_defi.pdf" target="_blank" rel="noopener" title="Voir le livret Le défi du monde 5 (PDF, 8 pages)">
-          <img class="couv" src="/assets/img/thumbnails/splat/livret-splat-equations-equation-defi.png?v=2" alt="Couverture du livret SPLAT! Équations, niveau Le défi" loading="lazy">
+        <a class="couv-lien" href="/outils/livret_splat_equations_equation_defi.pdf" target="_blank" rel="noopener" title="Voir le livret Le défi du monde 5, l'équation (PDF, 8 pages)">
+          <img class="couv" src="/assets/img/thumbnails/splat/livret-splat-equations-equation-defi.png?v=3" alt="Couverture du livret SPLAT! Équations, Le défi, l'équation" loading="lazy">
         </a>
         <div class="corps">
           <div class="titre"><h3>Le défi</h3><span class="plage">totaux de 50 à 100</span></div>
@@ -812,7 +849,8 @@ footer a{font-weight:700}
       </article>
 
     </div>
-    <p class="aparte">Livret «&nbsp;schéma en barres&nbsp;»&nbsp;: les plateaux l’un sur l’autre, la place à droite pour dessiner. Livret «&nbsp;équation&nbsp;»&nbsp;: les plateaux côte à côte, la place dessous pour écrire. Le QR code de chaque fiche rejoue les mêmes équations en ligne, dans ÉquaSplat. Chaque livret a son corrigé, aux mêmes pages&nbsp;: par le schéma en barres, ou par l’équation. Le livret «&nbsp;Le défi&nbsp;» reprend les fiches 35, 36 et 37 avec l’équation&nbsp;; son QR code donne la même étoile.</p>
+    </div>
+    <p class="aparte">Le QR code de chaque fiche rejoue les mêmes équations en ligne, dans ÉquaSplat. Chaque livret a son corrigé, aux mêmes pages&nbsp;: par le schéma en barres, ou par l’équation. Les livrets «&nbsp;Le défi&nbsp;» reprennent les fiches 35, 36 et 37 avec des nombres plus grands&nbsp;; leur QR code donne la même étoile.</p>
   </section>
 
   <!-- ===================================================== Monde 6 · SPLAT! Relatifs (lot R2, 26/09/2026) -->
@@ -898,7 +936,8 @@ footer a{font-weight:700}
       var b = e.target.closest("button[data-serie]");
       if(b) montre(b.dataset.serie);
     });
-    // la série du premier bouton (monde 1 : « Je complète le schéma » ; monde 2 : « Avec ? »)
+    // la série du premier bouton (monde 1 : « Je complète le schéma » ; monde 2 : « Avec ? » ;
+    // monde 5 : « Le schéma en barres »)
     montre(groupe.querySelector("button[data-serie]").dataset.serie);
   });
 })();
