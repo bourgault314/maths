@@ -13,7 +13,9 @@ const pages = {
 test("les trois impressions Splat utilisent la version actuelle du logo canonique", () => {
   for(const [name, html] of Object.entries(pages)){
     assert.ok(html.includes(canonicalLogo), `${name} doit utiliser ${canonicalLogo}`);
-    assert.ok(html.includes(canonicalIremLogo), `${name} doit utiliser ${canonicalIremLogo}`);
+    // SPLAT! Équations (mondes 5 et 6) : maths&go seul, plus de logo IREMI (relecture du monde 5, 27/09/2026)
+    if(name === "equations") assert.ok(!html.includes(canonicalIremLogo), "splat_equations n'appelle plus le logo IREMI");
+    else assert.ok(html.includes(canonicalIremLogo), `${name} doit utiliser ${canonicalIremLogo}`);
   }
 });
 
@@ -23,9 +25,9 @@ test("Splat classique n'embarque plus l'ancien logo", () => {
   assert.doesNotMatch(pages.classique, /MATHSGO_LOGO_DATA_URI/);
 });
 
-test("Splat equations utilise les deux logos du bandeau et attend leur chargement", () => {
+test("Splat equations : le seul logo maths&go dans le bandeau, et l'impression attend son chargement", () => {
   assert.match(pages.equations, /mathsLogo\.src = MATHSGO_PRINT_LOGO_URL/);
-  assert.match(pages.equations, /iremLogo\.src = IREM_PRINT_LOGO_URL/);
+  assert.doesNotMatch(pages.equations, /iremLogo|IREM_PRINT_LOGO_URL/);
   assert.match(pages.equations, /waitForPrintAssets\(printArea\)\.then/);
   assert.doesNotMatch(pages.equations, /print-brand-(?:m|copy|name|tagline|logo)/);
 });

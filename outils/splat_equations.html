@@ -1412,7 +1412,8 @@ function getPrintPlan(){
 
 /* Corrections courtes en 6 par page (lot Q4, 24/09/2026) : « Correction : l’équation »
    et « Correction : le schéma en barres », pour les trois familles à jetons comptés
-   (EQ, EQSTEP, EQUNITSTEP) ; en entiers relatifs, les deux lignes se grisent. */
+   (EQ, EQSTEP, EQUNITSTEP) ; en entiers relatifs, « l'équation » seulement (lot R1,
+   monde 6, 26/09/2026), la ligne du schéma se grise. */
 function eqSixCorrectionPart(printMode){
   if(printMode === "correction-equation") return "equation";
   if(printMode === "correction-schema") return "schema";
@@ -1422,8 +1423,11 @@ function syncEqSixCorrectionUI(){
   const sel = printModeSelectEl || document.getElementById("printMode");
   if(!sel) return;
   const signe = !!(activityEl && isSignedEquationModeValue(activityEl.value));
-  sel.querySelectorAll('option[value="correction-equation"], option[value="correction-schema"]').forEach(opt => { opt.disabled = signe; });
-  if(signe && eqSixCorrectionPart(sel.value)) sel.value = "correction";
+  /* entiers relatifs : « l'équation » existe depuis le lot R1 (monde 6, 26/09/2026) ;
+     pas de schéma en barres (on ne dessine pas une barre négative) */
+  sel.querySelectorAll('option[value="correction-schema"]').forEach(opt => { opt.disabled = signe; });
+  sel.querySelectorAll('option[value="correction-equation"]').forEach(opt => { opt.disabled = false; });
+  if(signe && sel.value === "correction-schema") sel.value = "correction";
   /* avec une correction courte, « Pages » passe à 6/page et se grise ; il retrouve sa
      valeur d'avant quand on revient à un autre choix */
   const pp = printCardsPerPageEl || document.getElementById("printCardsPerPage");
@@ -1488,6 +1492,11 @@ let jeuAuto = false;
    est encore la série composée (une nouvelle génération la remplace). */
 let serieSuite = [];
 let serieComposee = false;
+/* « zero=1 » (monde 6, lot R1, 26/09/2026) : en entiers relatifs, la série tire des
+   équations dont la solution est 0 (3𝑥 − 8 = −8, 2𝑥 = −3𝑥). Réglage d'adresse
+   seulement, pour une partie d'une fiche composée ; sans lui, rien ne change (le tirage
+   consomme le hasard exactement comme avant). */
+let solutionNulle = false;
 /* Les réglages de la page à son ouverture, avant toute adresse : chaque partie d'une
    fiche composée repart de là, exactement comme si on ouvrait son adresse seule (sans
    ça, une partie hériterait des bornes, du mode ou du « ? » de la précédente). */
@@ -1626,7 +1635,7 @@ function loadSharedConfiguration(){
       .split(";").map(part => part.trim()).filter(Boolean).slice(0, 5);
     reglagesOuverture = photographierReglages();
   }
-  const sharedNames = ["mode", "seed", "cards", "form", "tasksMax", "visibleMin", "visibleMax", "totalMin", "totalMax", "beadMax", "opposites", "colors", "writing", "unknown", "view", "print", "duplex", "layout", "title", "imprimer", "suite", "jouer"];
+  const sharedNames = ["mode", "seed", "cards", "form", "tasksMax", "visibleMin", "visibleMax", "totalMin", "totalMax", "beadMax", "opposites", "colors", "writing", "unknown", "view", "print", "duplex", "layout", "title", "imprimer", "suite", "jouer", "zero"];
   if(!sharedNames.some(name => params.has(name))) return false;
   appliquerConfiguration(params);
   return true;
@@ -1643,6 +1652,7 @@ function appliquerConfiguration(params){
 
   getEquationShareControls(activityEl.value).forEach(([name, el]) => applyShareControl(params, name, el));
   setNumberFromShare(params, "cards", countEl);
+  solutionNulle = isSignedEquationModeValue(activityEl.value) && params.get("zero") === "1";
   setSelectFromShare(params, "print", printModeSelectEl);
   // Les liens d'avant portaient « print=correction&duplex=1 » : on les relit encore.
   if(printModeSelectEl && params.get("duplex") === "1"){
@@ -1688,6 +1698,7 @@ function buildShareUrl(){
     params.set("unknown", shouldDisplayUnknownAsQuestion() ? "question" : "letter");
     params.set("view", getEquationStepView());
   }
+  if(solutionNulle && isSignedEquationModeValue(act)) params.set("zero", "1");
   addShareControl(params, "print", printModeSelectEl);
   addShareControl(params, "layout", printCardsPerPageEl);
   const printTitle = printActivityTitleEl ? printActivityTitleEl.value.trim() : "";
@@ -1948,10 +1959,21 @@ function openEquationInEquaSplat(card, revealState = 0){
 function carteDuJeuEquaSplat(card){
   const p = buildEquationEquaSplatPayload(card, 0);
   if(!p) return null;
+  /* une tache opposée garde son signe : « -x », comme les séries écrites à la main du
+     monde 6 (ÉquaSplat la lit ainsi) ; en entiers naturels, aucune tache n'a de signe :
+     les séries des fiches 35 à 37 ne changent pas d'un octet */
   const cote = row => {
-    const r = row.filter(t => t.type === "x").map(() => "x");
+    // les taches normales d'abord, puis les opposées, comme l'équation que l'outil écrit (𝑛 − 2𝑛)
+    const r = row.filter(t => t.type === "x" && t.sign !== -1).map(() => "x")
+      .concat(row.filter(t => t.type === "x" && t.sign === -1).map(() => "-x"));
     const n = row.filter(t => t.type === "number");
-    if(n.length) r.push(n.reduce((s, t) => s + t.value, 0));
+    /* entiers relatifs : chaque jeton garde sa place, comme sur la fiche (l'élève
+       regroupe lui-même les verts et les rouges) ; un côté sans aucun jeton n'en reçoit
+       pas (2𝑥 = −3𝑥). Entiers naturels : la somme des paquets, comme avant. */
+    if(p.universe === "relative"){
+      n.forEach(t => { if(t.value !== 0) r.push(t.value); });
+      if(!r.length) r.push(0);
+    }else if(n.length) r.push(n.reduce((s, t) => s + t.value, 0));
     return r;
   };
   return { source:p.source, variable:p.variable, unknownDisplay:p.unknownDisplay, universe:p.universe,
@@ -3238,7 +3260,7 @@ function genEquationSigned(rng){
     }else if(modeUnk === "X_PLUS_B_EQ_C" || modeUnk === "ONE_SIDE"){
       vCountL = pickVisibleCountAtLeastOne(rng, vMin, vMax);
       vCountR = pickVisibleCountAtLeastOne(rng, vMin, vMax);
-    }else if(vCountL === 0 && vCountR === 0){
+    }else if(vCountL === 0 && vCountR === 0 && !solutionNulle){
       if(rng() < 0.5) vCountL = 1;
       else vCountR = 1;
     }
@@ -3251,7 +3273,7 @@ function genEquationSigned(rng){
     let xAbsMax = Math.floor((maxTotalAbs + Math.max(vCountL, vCountR) * maxAbs) / maxCoeff);
     xAbsMax = clamp(xAbsMax, 1, maxAbs);
     const absX = rInt(rng, 1, xAbsMax);
-    const x = ((rng() < 0.5) ? -1 : 1) * absX;
+    const x = solutionNulle ? (rng(), 0) : ((rng() < 0.5) ? -1 : 1) * absX;
 
     let tLow = userMin;
     let tHigh = userMax;
@@ -7365,9 +7387,19 @@ function eqPrintOpaqueRing(stroke){
 
 /* Taille du nombre : 100 % du rayon jusqu'à 2 caractères ; au-delà, plus petit pour ne
    pas toucher l'anneau (« 100 », « -12 »). */
+/* Le nombre écrit sur un jeton imprimé. Un négatif prend le vrai signe moins (U+2212,
+   la largeur d'un chiffre) et non le petit tiret du clavier, qui disparaissait à la
+   photocopie (monde 6, lot R1, 26/09/2026) ; les positifs s'écrivent comme avant. */
+function eqPrintBeadLabel(val){
+  const n = Number(val);
+  return (Number.isFinite(n) && n < 0) ? "\u2212" + String(Math.abs(n)) : String(val);
+}
+
 function eqPrintBeadFontSize(val, beadR){
-  const n = String(val).length;
-  const k = n <= 2 ? 1 : (n === 3 ? 0.8 : 0.62);
+  // un négatif : « −7 » aussi gros que « 7 », « −29 » à 0,84 (au lieu de 0,8 avec le tiret)
+  const neg = Number.isFinite(Number(val)) && Number(val) < 0;
+  const n = neg ? String(Math.abs(Number(val))).length : String(val).length;
+  const k = neg ? (n <= 1 ? 1 : (n === 2 ? 0.84 : 0.66)) : (n <= 2 ? 1 : (n === 3 ? 0.8 : 0.62));
   return Math.max(18, Math.round(beadR * k));
 }
 
@@ -7573,6 +7605,14 @@ function createEqPrintBeadTable(targetGroup, mk, mkText, opts = {}){
   };
 }
 
+/* Le mot « opposé » sur une tache opposée IMPRIMÉE (monde 6, lot R1, 26/09/2026) : à 0,28
+   × le rayon, il faisait 0,8 mm sur une fiche 6/page. Il prend maintenant presque toute la
+   largeur de la tache (0,38 × le rayon, ≈ 1,4 mm, sans déborder de la tache) ; sur une tache
+   dévoilée, où il se pose au-dessus du jeton, un peu moins (0,34). L'écran n'est pas touché. */
+function eqPrintOpposeFontSize(r, revealed){
+  return clamp(Math.round((Number(r) || 74) * (revealed ? 0.34 : 0.38)), 16, 44);
+}
+
 function drawEqPrintNumberedBead(it, R, mk, mkText, useTokens){
   const p = it.p;
   let fill, stroke, sw, fontSize;
@@ -7587,7 +7627,7 @@ function drawEqPrintNumberedBead(it, R, mk, mkText, useTokens){
   it.g.appendChild(mk("circle", {cx:p.cx, cy:p.cy, r:R, fill, stroke, "stroke-width":sw}));
   if(it.removed && it.hatch) it.hatch(it.g, p.cx, p.cy, R);
   // chiffres de hauteur ≈ 0,7 em : ligne de base à 0,35 em sous le centre = nombre centré
-  it.g.appendChild(mkText(p.cx, p.cy + Math.round(fontSize * 0.35), String(it.val), {
+  it.g.appendChild(mkText(p.cx, p.cy + Math.round(fontSize * 0.35), eqPrintBeadLabel(it.val), {
     "text-anchor":"middle", "font-size":String(fontSize),
     "fill": it.removed ? "rgba(0,0,0,0.45)" : "#000", "font-weight":"900"
   }));
@@ -8441,7 +8481,7 @@ function renderCardEquationSignedStepPrintScene(targetGroup, card, revealState, 
         if(part.opposed){
           // le mot est posé au-dessus du jeton dévoilé : la carte garde le rayon de base
           if(isRevealed) beadTable.cap(beadR);
-          const fs = clamp(Math.round(s.r*0.28), 16, 44);
+          const fs = eqPrintOpposeFontSize(s.r, isRevealed);
           const yy = isRevealed ? (s.cy - s.r*0.65) : s.cy;
           targetGroup.appendChild(text(s.cx, yy, "opposé", {
             "text-anchor":"middle",
@@ -8493,7 +8533,7 @@ function renderCardEquationSignedStepPrintScene(targetGroup, card, revealState, 
 
       if(oppFlags && oppFlags[idx]){
         if(revealAnswers) beadTable.cap(beadR);
-        const fs = clamp(Math.round(s.r*0.28), 16, 44);
+        const fs = eqPrintOpposeFontSize(s.r, revealAnswers);
         const yy = revealAnswers ? (s.cy - s.r*0.65) : s.cy;
         targetGroup.appendChild(text(s.cx, yy, "opposé", {
           "text-anchor":"middle",
@@ -8874,7 +8914,7 @@ function renderCardEquationPrint(targetSvg, card, printMode, tEl, tText, useToke
       if(oppFlags && oppFlags[idx]){
         // mot posé au-dessus du jeton dévoilé : la carte garde le rayon de base
         if(revealAnswers) beadTable.cap(beadR);
-        const fs = clamp(Math.round(s.r*0.28), 16, 44);
+        const fs = eqPrintOpposeFontSize(s.r, revealAnswers);
         const yy = revealAnswers ? (s.cy - s.r*0.65) : (s.cy);
         targetSvg.appendChild(tText(s.cx, yy, "opposé", {
           "text-anchor":"middle",
@@ -9372,6 +9412,7 @@ function renderCardIntoSvg(targetSvg, card, printMode, printOpts = {}){
    la case (.pCard, overflow hidden) borne le dessin. */
 const EQ_SIX_CORR_EQ_FONT = 100;          // 4,3 mm sur la feuille (80 % de la case)
 const EQ_SIX_CORR_EQ_LEFT = -140, EQ_SIX_CORR_EQ_RIGHT = 1740;   // la case, moins son bord
+const EQ_SIX_CORR_EQ_BOTTOM = 1760;   // le bas de la case, moins son bord (mesuré, voir le lot R1)
 /* La colonne des schémas en barres, à droite du plateau haut/bas (x 60 → 780, y 132 → 980) :
    x 820 → 1540 (2 mm après le plateau, 5 mm avant le bord de la case, comme à gauche),
    largeurs à 0,58 (720 pour 1240), hauteurs et lettres à 0,84 — quatre schémas (la carte
@@ -9403,9 +9444,84 @@ function eqSixTextWidth(str, cssFont, fallbackFontSize){
 
 function drawEqSixCorrectionEquation(g, card, varChar, tEl, tText){
   const eq = card._eq;
-  const trays = card._eqTrays;
   const lines = buildEquationSolveLines(eq, varChar);
   const ops = getEquationSolveLineOperations(eq, lines, varChar);
+  drawEqSixCorrectionLines(g, card, lines, ops, tEl, tText);
+}
+
+/* Entiers relatifs (monde 6, lot R1, 26/09/2026) : les lignes de la résolution pas à pas
+   de l'outil (celles de l'écran et de la correction 4/page), sans les étapes de passage :
+   j'écris ce que je vois, je simplifie chaque plateau, puis une ligne par opération —
+   les lettres, puis les nombres, puis le partage. La flèche de chaque ligne se lit dans
+   les deux lignes elles-mêmes : ce qu'on a ajouté (ou enlevé) des deux côtés, ou le
+   nombre par lequel on a divisé. Pas de flèche entre la première ligne et la deuxième :
+   on n'y fait que regrouper. */
+function eqSignedLineCoeffs(line, varChar){
+  const k = String(line).indexOf("=");
+  if(k < 0) return null;
+  const side = str => {
+    let c = 0, n = 0;
+    const termes = String(str).trim().replace(/\s+\u2212\s+/g, " + \u2212").split(/\s+\+\s+/);
+    for(const t0 of termes){
+      const t = t0.trim();
+      if(!t) continue;
+      const neg = t.startsWith("\u2212");
+      const corps = neg ? t.slice(1) : t;
+      if(corps.endsWith(varChar)){
+        const a = corps.slice(0, corps.length - varChar.length);
+        const v = a === "" ? 1 : Number(a);
+        if(!Number.isFinite(v)) return null;
+        c += neg ? -v : v;
+      }else{
+        const v = Number(corps);
+        if(!Number.isFinite(v)) return null;
+        n += neg ? -v : v;
+      }
+    }
+    return {c, n};
+  };
+  const g = side(String(line).slice(0, k)), d = side(String(line).slice(k + 1));
+  return (g && d) ? [g.c, g.n, d.c, d.n] : null;
+}
+
+function eqSignedSixCorrectionLinesOps(eq, varChar){
+  const garde = new Set(["initial", "combined", "afterLetters", "afterConstants", "final"]);
+  const lines = [];
+  getEquationSignedStepStates(eq, varChar).forEach(st => {
+    if(!st || !garde.has(st.kind) || !st.equation) return;
+    if(!lines.length || lines[lines.length - 1] !== st.equation) lines.push(st.equation);
+  });
+  const moins = "\u2212";
+  const ops = [];
+  for(let i = 0; i < lines.length - 1; i++){
+    const a = eqSignedLineCoeffs(lines[i], varChar), b = eqSignedLineCoeffs(lines[i + 1], varChar);
+    let op = null;
+    if(a && b){
+      const dc = b[0] - a[0], dn = b[1] - a[1];
+      if(dc === b[2] - a[2] && dn === b[3] - a[3]){
+        if(dc !== 0 && dn === 0) op = (dc > 0 ? "+ " : moins + " ") + formatVarCoeffAbs(dc, varChar);
+        else if(dn !== 0 && dc === 0) op = (dn > 0 ? "+ " : moins + " ") + Math.abs(dn);
+      }else{
+        const ref = b[0] !== 0 ? [a[0], b[0]] : [a[2], b[2]];
+        const d = ref[1] !== 0 ? ref[0] / ref[1] : NaN;
+        if(Number.isInteger(d) && d !== 0 && d !== 1 && a.every((v, j) => Math.abs(v - b[j] * d) < 1e-9)){
+          op = d < 0 ? "÷ (" + moins + Math.abs(d) + ")" : "÷ " + d;
+        }
+      }
+    }
+    ops.push(op);
+  }
+  return {lines, ops};
+}
+
+function drawEqSixCorrectionSignedEquation(g, card, varChar, tEl, tText){
+  const {lines, ops} = eqSignedSixCorrectionLinesOps(card._eq, varChar);
+  drawEqSixCorrectionLines(g, card, lines, ops, tEl, tText);
+}
+
+/* La colonne dessinée sous le plateau : les lignes (le « = » aligné), les flèches. */
+function drawEqSixCorrectionLines(g, card, lines, ops, tEl, tText){
+  const trays = card._eqTrays;
   const api = {el:(name, attrs)=>tEl(name, attrs), text:(x,y,t,a)=>tText(x,y,t,a)};
   const trayBottom = trays.left.y + trays.left.h + 4;
   const membres = lines.map(line => { const k = line.indexOf("="); return [line.slice(0, k).trim(), line.slice(k + 1).trim()]; });
@@ -9425,7 +9541,10 @@ function drawEqSixCorrectionEquation(g, card, varChar, tEl, tText){
     margin = Math.max(20, Math.round(reel - estime + font * 0.55));
     const labelW = Math.max(0, ...ops.filter(Boolean).map(op => eqSixTextWidth(op, `800 ${labelFs}px ${EQ_SIX_CORR_DRAWN_FONT}`, labelFs)));
     const place = eqGap + estime + margin + Math.round(labelFs * 0.9) + 6 + labelW;
-    if(800 - place >= EQ_SIX_CORR_EQ_LEFT && 800 + place <= EQ_SIX_CORR_EQ_RIGHT) break;
+    // (monde 6) cinq lignes doivent aussi tenir en hauteur, avant le bas de la case ;
+    // jusqu'à quatre lignes (monde 5), cette borne n'est jamais atteinte
+    const bas = trayBottom + 94 + Math.round(font * 0.7) + (lines.length - 1) * Math.round(font * 1.4) + Math.round(font * 0.3);
+    if(800 - place >= EQ_SIX_CORR_EQ_LEFT && 800 + place <= EQ_SIX_CORR_EQ_RIGHT && bas <= EQ_SIX_CORR_EQ_BOTTOM) break;
   }
   font = Math.max(56, font);
   const gap = Math.round(font * 1.4);
@@ -9460,6 +9579,24 @@ function renderEqSixCorrectionIntoSvg(targetSvg, card, part){
   try{
     targetSvg.appendChild(tEl("rect",{x:0,y:0,width:1600,height:2200,rx:26,fill:"#fff"}));
     ensureHatchDefs(targetSvg);
+    if(isSignedEquationFamily(card)){
+      /* entiers relatifs (monde 6, lot R1) : « l'équation » seulement. La carte de l'énoncé,
+         taches dévoilées (le dernier état du pas à pas, « je vérifie », sans son texte),
+         puis la résolution de l'outil sous le plateau, avec ses flèches. */
+      const varCharPm = getCardVarChar(card);
+      const g = tEl("g", {id:"eqSixCorrectionCarte"});
+      g.appendChild(tText(800, EQ_PRINT_6UP_PHRASE_Y, "Même quantité à gauche qu'à droite",
+        {"text-anchor":"middle", "font-size":"44", "fill":"rgba(0,0,0,0.92)", "font-weight":"900"}));
+      const colorModeEl = document.getElementById("numColorMode");
+      renderCardEquationSignedStepPrintScene(g, card, buildEquationSignedStepLines(eq, varCharPm).length, {
+        showIntroText:false, showAid:false, useTokens: !!(colorModeEl && colorModeEl.checked)
+      });
+      targetSvg.appendChild(g);
+      const gc = tEl("g", {id:"eqSixCorrection"});
+      drawEqSixCorrectionSignedEquation(gc, card, varCharPm, tEl, tText);
+      targetSvg.appendChild(gc);
+      return;
+    }
     const varChar = hautBas ? getTableVarChar(card) : getCardVarChar(card);
     const etats = getEquationStepStates(eq, varChar, {includeVerify:true});
     const g = tEl("g", {id:"eqSixCorrectionCarte"});
@@ -9486,7 +9623,6 @@ function renderEqSixCorrectionIntoSvg(targetSvg, card, part){
 }
 
 const MATHSGO_PRINT_LOGO_URL = "/assets/img/logos/mathsgo/logo-print.png?v=20260820-1";
-const IREM_PRINT_LOGO_URL = "/assets/img/logos/irem/logo-print.png?v=20260820-1";
 
 function equationPrintTaskCount(card){
   const eq = card && card._eq;
@@ -9501,11 +9637,15 @@ function getEquationPrintInstruction(slotCards){
   const main = isSigned
     ? "Trouve la valeur cachée sous chaque tache en modélisant la situation par une équation, puis en la résolvant."
     : "Trouve le nombre de jetons cachés sous chaque tache. Tu peux t’aider d’un schéma en barres ou d’une équation.";
-  const note = hasSeveralTasks
+  let note = hasSeveralTasks
     ? (isSigned
       ? "Lorsque plusieurs taches apparaissent, elles cachent la même valeur."
       : "Lorsque plusieurs taches apparaissent, elles cachent le même nombre de jetons.")
     : "";
+  /* une tache « opposé » sur la page (monde 6, lot R1, 26/09/2026) : on dit ce qu'elle cache */
+  const hasOpposed = isSigned && slotCards.some(card => card && card._eq &&
+    [card._eq.left, card._eq.right].some(side => (side && side.opposeFlags || []).some(Boolean)));
+  if(hasOpposed) note = "Les taches cachent toutes la même valeur, sauf les taches «\u00a0opposé\u00a0»\u00a0: elles cachent l’opposé de cette valeur.";
   return {main, note};
 }
 
@@ -9534,11 +9674,9 @@ function createEquationPrintHeader(mode){
 
   const logos = document.createElement("div");
   logos.className = "print-page-logos";
-  const iremLogo = document.createElement("img");
-  iremLogo.className = "print-page-logo-irem";
-  iremLogo.alt = "IREMI de La Réunion";
-  iremLogo.src = IREM_PRINT_LOGO_URL;
-  logos.appendChild(iremLogo);
+  /* SPLAT! Équations et SPLAT! Relatifs (mondes 5 et 6) sont le travail de maths&go seul : pas de
+     logo IREMI, dans aucun mode (relatifs : décision du 26/09/2026 ; Équations : relecture du monde 5,
+     27/09/2026, « on enlève l'IREM… c'est que moi tout seul »). */
   const mathsLogo = document.createElement("img");
   mathsLogo.className = "print-page-logo-maths";
   mathsLogo.alt = "Maths&Go";

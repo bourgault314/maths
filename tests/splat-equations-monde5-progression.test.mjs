@@ -51,27 +51,18 @@ const ecrire = (q) => cote(q.left, q.variable) + " = " + cote(q.right, q.variabl
    rendues par l'outil. Une graine ou un réglage qui bouge, ce sont la fiche, les deux
    livrets et la série du jeu à refaire. */
 const LISTE_Q2 = {
-  m3e1: ["𝑏 + 4 = 9", "5 = 𝑐 + 1", "6 = 𝑡 + 4", "𝑛 + 1 = 7",
-         "2𝑥 = 6", "10 = 2𝑎", "8 = 2𝑡", "3𝑚 = 6",
-         "2𝑛 + 2 = 8", "7 = 2𝑏 + 3", "2𝑥 + 1 = 9", "3𝑎 + 3 = 6"],
-  m3e2: ["23 = 6𝑎 + 11", "4𝑥 + 2 = 38", "6𝑏 + 10 = 40", "33 = 5𝑎 + 13", "2𝑎 + 19 = 49", "6𝑛 + 38 = 44",
-         "49 = 6𝑛 + 37", "6𝑏 + 13 = 31", "27 = 3𝑡 + 6", "45 = 3𝑥 + 18", "3𝑡 + 20 = 50", "50 = 3𝑚 + 8"],
-  m3e4: ["4𝑡 + 11 = 5𝑡 + 8", "3𝑛 + 36 = 4𝑛 + 32", "3𝑐 + 16 = 𝑐 + 32", "𝑡 + 38 = 4𝑡 + 17", "6𝑥 + 15 = 2𝑥 + 27",
-         "𝑎 + 21 = 2𝑎 + 10", "4𝑛 + 2 = 𝑛 + 38", "𝑛 + 33 = 5𝑛 + 17", "4𝑥 + 16 = 6𝑥 + 6", "5𝑎 + 30 = 𝑎 + 38",
-         "5𝑎 + 19 = 𝑎 + 31", "𝑡 + 26 = 5𝑡 + 2"]
+  /* Relecture du monde 5 (27/09/2026) : la progression en huit marches validée par Gwenaël —
+     35 : on enlève (4), on partage (4), les deux (4) ; 36 : paquets, 2-3 taches (6), puis 4-6
+     taches (6) ; 37 : jetons d'un seul côté (4), jetons des deux côtés (4), le grand mélange (4).
+     Une graine qui bouge, ce sont la fiche, les livrets et la série du jeu à refaire. */
+  m3e1: ["𝑏 + 4 = 9", "5 = 𝑐 + 1", "6 = 𝑡 + 4", "𝑛 + 1 = 7", "2𝑥 = 6", "10 = 2𝑎", "8 = 2𝑡", "3𝑚 = 6", "5 = 2𝑏 + 1", "3𝑚 + 3 = 9", "2𝑐 + 1 = 9", "8 = 2𝑛 + 2"],
+  m3e2: ["44 = 2𝑚 + 14", "3𝑎 + 38 = 47", "24 = 3𝑐 + 9", "3𝑛 + 37 = 43", "2𝑡 + 20 = 42", "42 = 2𝑐 + 16", "32 = 4𝑏 + 4", "5𝑎 + 6 = 46", "42 = 6𝑥 + 24", "32 = 4𝑡 + 12", "6𝑛 + 11 = 23", "5𝑏 + 3 = 48"],
+  m3e4: ["2𝑡 + 24 = 5𝑡", "𝑥 + 17 = 2𝑥", "4𝑛 = 𝑛 + 30", "3𝑐 = 2𝑐 + 15", "5𝑛 + 28 = 4𝑛 + 32", "5𝑥 + 11 = 𝑥 + 39", "𝑡 + 28 = 4𝑡 + 13", "3𝑎 + 40 = 5𝑎 + 34", "36 = 6𝑚", "5𝑏 + 10 = 4𝑏 + 17", "𝑐 + 6 = 40", "35 = 2𝑏 + 15"]
 };
-/* AVANT le lot (main 36f2432) : les 10 cartes des étapes « Résous pas à pas » (m3e2) et
-   « Des taches des deux côtés » (m3e4). Une reprise en cours ne retient que la place de
-   l'élève dans la série : ces 10 cartes doivent rester les mêmes, dans le même ordre. */
-const AVANT_Q2 = {
-  m3e2: ["23 = 6𝑎 + 11", "4𝑥 + 2 = 38", "6𝑏 + 10 = 40", "33 = 5𝑎 + 13", "2𝑎 + 19 = 49", "6𝑛 + 38 = 44", "49 = 6𝑛 + 37", "6𝑏 + 13 = 31", "27 = 3𝑡 + 6", "45 = 3𝑥 + 18"],
-  m3e4: ["4𝑡 + 11 = 5𝑡 + 8", "3𝑛 + 36 = 4𝑛 + 32", "3𝑐 + 16 = 𝑐 + 32", "𝑡 + 38 = 4𝑡 + 17", "6𝑥 + 15 = 2𝑥 + 27", "𝑎 + 21 = 2𝑎 + 10", "4𝑛 + 2 = 𝑛 + 38", "𝑛 + 33 = 5𝑛 + 17", "4𝑥 + 16 = 6𝑥 + 6", "5𝑎 + 30 = 𝑎 + 38"]
-};
-/* Le début des séries d'avant, octet pour octet (JSON des 10 cartes décodées, main 36f2432). */
-const EMPREINTE_10_AVANT = {
-  m3e2: "0457f53cddb4eeb18d30a8e11b3ea2efbb85c2239024bd18ace44bece6b7cd31",
-  m3e4: "10170bc9db4f91684a18a681821dc93b36ed149a95984b879bc5d5cc6b8d2df1"
-};
+/* Les huit marches : dans chacune, la tache finit à gauche sur la moitié des cartes et à droite
+   sur l'autre (« 3𝑥 = 12 et 12 = 3𝑥 : c'est le but de l'égalité »). [étape, début, longueur] */
+const MARCHES = [["m3e1", 0, 4], ["m3e1", 4, 4], ["m3e1", 8, 4], ["m3e2", 0, 6], ["m3e2", 6, 6],
+                 ["m3e4", 0, 4], ["m3e4", 4, 4], ["m3e4", 8, 4]];
 
 test("Q2 : le monde 5 a trois étapes, 12 équations chacune, et garde ses étoiles m3e1, m3e2, m3e4", () => {
   assert.equal(EQUATIONS.nom, "SPLAT! Équations");
@@ -91,7 +82,7 @@ test("Q2 : le monde 5 a trois étapes, 12 équations chacune, et garde ses étoi
   assert.deepEqual(EQUATIONS.etapes.map((e) => e.o), [
     "Les jetons sont là un par un : enlève, partage, et trouve ce que cache la tache.",
     "Les jetons portent un nombre : fusionne, enlève, partage.",
-    "L'inconnue est partout ! Enlève les taches en trop, puis résous."]);
+    "L'inconnue est partout ! Enlève les taches en trop, puis résous. À la fin, tout se mélange."]);
   assert.equal(NOTES_PROF[4].length, 3);
 });
 
@@ -113,15 +104,34 @@ test("Q2 : chaque série du jeu, décodée, est exactement la liste 📋 (mêmes
   });
 });
 
-test("Q2 : fiches 36 et 37 — les 10 premières cartes sont celles d'avant, à l'identique (les reprises continuent)", async () => {
-  const { createHash } = await import("node:crypto");
-  ["m3e2", "m3e4"].forEach((p) => {
-    const e = EQUATIONS.etapes.find((x) => x.p === p);
-    const serie = donnees(e.j).serie;
-    assert.deepEqual(serie.slice(0, 10).map(ecrire), AVANT_Q2[p]);
-    const empreinte = createHash("sha256").update(JSON.stringify(serie.slice(0, 10))).digest("hex");
-    assert.equal(empreinte, EMPREINTE_10_AVANT[p], `${p} : les 10 premières cartes décodées ont bougé`);
+test("relecture du 27/09 : huit marches, la tache finit à gauche sur la moitié des cartes, à droite sur l'autre", () => {
+  const taches = (r) => r.filter((x) => x === "x").length, jetons = (r) => r.some((x) => x !== "x");
+  const forme = (q) => {
+    const [g, d] = [taches(q.left), taches(q.right)];
+    if (g && d) return "deux côtés";
+    const k = g || d, autre = g ? q.left : q.right;
+    return k === 1 ? "x + b = c" : jetons(autre) ? "ax + b = c" : "ax = c";
+  };
+  const finit = (q) => {
+    const [g, d] = [taches(q.left), taches(q.right)];
+    return (g && d) ? (g > d ? "gauche" : "droite") : (g ? "gauche" : "droite");
+  };
+  MARCHES.forEach(([p, i, n]) => {
+    const cartes = donnees(EQUATIONS.etapes.find((e) => e.p === p).j).serie.slice(i, i + n);
+    assert.equal(cartes.filter((q) => finit(q) === "gauche").length, n / 2, `${p}, cartes ${i + 1} à ${i + n}`);
   });
+  const s = Object.fromEntries(EQUATIONS.etapes.map((e) => [e.p, donnees(e.j).serie]));
+  // fiche 35 : x + b = c, puis ax = c, puis ax + b = c
+  assert.deepEqual(s.m3e1.map(forme), [...Array(4).fill("x + b = c"), ...Array(4).fill("ax = c"), ...Array(4).fill("ax + b = c")]);
+  // fiche 36 : toujours ax + b = c ; 2 ou 3 taches, puis 4 à 6
+  assert.ok(s.m3e2.every((q) => forme(q) === "ax + b = c"));
+  assert.deepEqual(s.m3e2.map((q) => Math.max(taches(q.left), taches(q.right)) >= 4), [...Array(6).fill(false), ...Array(6).fill(true)]);
+  // fiche 37 : des jetons d'un seul côté (4), des deux côtés (4), puis le grand mélange (4 formes, dans le désordre)
+  s.m3e4.slice(0, 4).forEach((q) => { assert.equal(forme(q), "deux côtés"); assert.notEqual(jetons(q.left), jetons(q.right), "jetons d'un seul côté"); });
+  s.m3e4.slice(4, 8).forEach((q) => { assert.equal(forme(q), "deux côtés"); assert.ok(jetons(q.left) && jetons(q.right), "jetons des deux côtés"); });
+  const melange = s.m3e4.slice(8).map(forme);
+  assert.deepEqual([...melange].sort(), ["ax + b = c", "ax = c", "deux côtés", "x + b = c"]);
+  assert.notDeepEqual(melange, ["x + b = c", "ax = c", "ax + b = c", "deux côtés"], "pas dans l'ordre des marches");
 });
 
 test("Q2 : fiche 35 — jetons un par un, coefficient 2 ou 3, aucun nombre au-delà de 10, 7 lettres jamais deux fois de suite", () => {
@@ -169,16 +179,19 @@ test("Q2 : liens Projeter, Fiche tableau et Fiche équation — mêmes réglages
     }
   });
   const [p35, p36, p37] = EQUATIONS.etapes.map((e) => params(e.f));
-  assert.deepEqual(p35.get("suite").split(";").map((s) => new URLSearchParams(s).get("seed")), ["814", "19"]);
+  assert.deepEqual(p35.get("suite").split(";").map((s) => new URLSearchParams(s).get("seed")), ["814", "793"]);
   assert.equal(p35.get("seed"), "355");
   assert.equal(p35.get("form"), "X_PLUS_B_EQ_C");
   assert.deepEqual(p35.get("suite").split(";").map((s) => new URLSearchParams(s).get("form")), ["AX_EQ_C", "ONE_SIDE"]);
   assert.deepEqual(p35.get("suite").split(";").map((s) => new URLSearchParams(s).get("tasksMax")), ["3", "3"]);
   assert.equal(p35.get("mode"), "EQUNITSTEP");
-  assert.deepEqual([p36.get("mode"), p36.get("form"), p36.get("seed")], ["EQSTEP", "ONE_SIDE", "89"]);
-  assert.deepEqual([p37.get("mode"), p37.get("form"), p37.get("seed")], ["EQSTEP", "BOTH", "25"]);
-  assert.equal(p36.get("suite"), null);
-  assert.equal(p37.get("suite"), null);
+  // relecture du 27/09/2026 : 36 = quatre séries de 3 cartes, 37 = trois séries de 4
+  const graines = (p) => [p.get("seed"), ...p.get("suite").split(";").map((s) => new URLSearchParams(s).get("seed"))];
+  const formes = (p) => [p.get("form"), ...p.get("suite").split(";").map((s) => new URLSearchParams(s).get("form"))];
+  assert.deepEqual([p36.get("mode"), graines(p36)], ["EQSTEP", ["304", "4471", "3795", "79133"]]);
+  assert.deepEqual(formes(p36), ["ONE_SIDE", "ONE_SIDE", "ONE_SIDE", "ONE_SIDE"]);
+  assert.deepEqual([p37.get("mode"), graines(p37)], ["EQSTEP", ["2117", "295", "29197"]]);
+  assert.deepEqual(formes(p37), ["BOTH", "BOTH", "MIX"]);
 });
 
 test("Q2 : une fiche = 2 feuilles de 6 dans l'outil (6/page pour l'énoncé seul, « suite » lue jusqu'à 5 parties)", () => {
@@ -209,7 +222,7 @@ test("Q2 : la carte saute de la fiche 19 à la fiche 35 ; le trou se referme tou
      le compteur atteint 34 de lui-même et « premier » ne fait plus rien, comme prévu */
   assert.deepEqual(n[3].slice(-1), [34]);
   assert.deepEqual(n[4], [35, 36, 37]);
-  assert.deepEqual(n[5], [38, 39, 40, 41, 42, 43, 44]);
+  assert.deepEqual(n[5], [38, 39, 40, 41, 42, 43]);   // lot R2 : six fiches
   EQUATIONS.etapes.forEach((e, k) => assert.equal(e.n, n[4][k], "le badge et la fiche disent le même numéro"));
   const sans = MONDES.map((m) => (m === EQUATIONS ? { ...m, premier: undefined } : m));
   assert.deepEqual(numeros(sans)[4], [35, 36, 37], "sans « premier », mêmes numéros : le trou est refermé");

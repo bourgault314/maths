@@ -162,5 +162,5 @@ test("?apres=<parcours> : la carte renvoie au jeu de l'étape suivante, sans rie
   const k = suite.findIndex((e) => e.p === "enq24");
   assert.equal(suite[k + 1].p, "sys25");
   assert.equal(suite[suite.findIndex((e) => e.p === "m1e6") + 1].p, "m2e1");
-  assert.equal(suite.findIndex((e) => e.p === "m4e7"), suite.length - 1, "la dernière étape n'a pas de suivante");
+  assert.equal(suite.findIndex((e) => e.p === "m4e6"), suite.length - 1, "la dernière étape n'a pas de suivante");
 });

@@ -49,11 +49,13 @@ const PARCOURS_ENQ_AVANT_E5 = ["enq10", "enq11", "enq12", "enq13", "enq14", "enq
 const IDS_SIX_MONDES = ["e0-0", "e0-1", "e0-2", "e0-3", "e0-4", "e0-5", "e1-0", "e1-1", "e1-2",
   "enq-0", "enq-1", "enq-2", "enq-3", "enq-4", "enq-5", "enq-6", "enq-7", "enq-8", "enq-9", "enq-10", "enq-11", "enq-12", "enq-13", "enq-14",
   "sys-0", "sys-1", "sys-2", "sys-3", "sys-4", "sys-5", "sys-6", "sys-7", "sys-8", "sys-9",
-  "e2-0", "e2-1", "e2-3", "e3-0", "e3-1", "e3-2", "e3-3", "e3-4", "e3-5", "e3-6"];
+  "e2-0", "e2-1", "e2-3", "e3-0", "e3-1", "e3-2", "e3-3", "e3-4", "e3-5"];
+/* lot R2 (26/09/2026) : le monde 6 passe de 7 étapes à 6 fiches (38 à 43) — e3-6 et m4e7
+   disparaissent ; ce monde n'avait aucun élève (caché au public depuis le 26/09). */
 const PARCOURS_SIX_MONDES = ["m1e1", "m1e2", "m1e3", "m1e4", "m1e5", "m1e6", "m2e1", "m2e4", "m2e5",
   "enq10", "enq11", "enq12", "enq13", "enq14", "enq15", "enq16", "enq17", "enq18", "enq19", "enq20", "enq21", "enq22", "enq23", "enq24",
   "sys25", "sys26", "sys27", "sys28", "sys29", "sys30", "sys31", "sys32", "sys33", "sys34",
-  "m3e1", "m3e2", "m3e4", "m4e1", "m4e2", "m4e3", "m4e4", "m4e5", "m4e6", "m4e7"];
+  "m3e1", "m3e2", "m3e4", "m4e1", "m4e2", "m4e3", "m4e4", "m4e5", "m4e6"];
 /* le gabarit calcule l'identifiant ainsi (idEtape) : on refait le même calcul */
 const idEtape = (m, e, ei) => e.id || (m.idp + "-" + ei);
 
@@ -124,7 +126,7 @@ test("E5 : aucune étoile déjà gagnée ne bouge — mêmes identifiants, même
   /* lot « six mondes » : les anciens identifiants sont tous là, dans le même ordre relatif,
      et les nouveaux (enq-10 … enq-14, sys-0 … sys-9) s'intercalent sans en déplacer aucun */
   assert.deepEqual(tous, IDS_SIX_MONDES);
-  assert.deepEqual(tous.filter((id) => IDS_AVANT_E5.includes(id)), IDS_AVANT_E5.filter((id) => id !== "e2-2"));
+  assert.deepEqual(tous.filter((id) => IDS_AVANT_E5.includes(id)), IDS_AVANT_E5.filter((id) => id !== "e2-2" && id !== "e3-6"));   // e3-6 : lot R2 (monde 6 à six fiches)
   assert.deepEqual(LES_DEUX.map((e) => e.p), PARCOURS_ENQ_AVANT_E5);
   const parcours = MONDES.flatMap((m) => m.etapes.map((e) => e.p).filter(Boolean));
   assert.deepEqual(parcours, PARCOURS_SIX_MONDES);
@@ -181,7 +183,7 @@ test("le numéro affiché d'une étape est continu dans tout l'univers", () => {
     assert.equal(decodeURIComponent(new URLSearchParams(e.c.split("?")[1]).get("title")),
       `Fiche ${n} \u2014 ${e.t}`);
   });
-  assert.equal(compteur, 44);
+  assert.equal(compteur, 43);   // lot R2 : le monde 6 a six fiches (38 à 43)
 });
 
 test("les vingt adresses des fiches sont exactement celles du lot E0", () => {
@@ -298,7 +300,7 @@ test("la correction n'est offerte qu'en vue professeur", () => {
 
 test("les textes qui comptent les mondes suivent l'ajout", () => {
   const total = MONDES.reduce((n, m) => n + m.etapes.length, 0);
-  assert.equal(total, 44); // lot « six mondes » : 29 + 5 (3e partie de l'Enquête) + 10 (Système)
+  assert.equal(total, 43); // lot R2 : monde 6 à six fiches ; lot « six mondes » : 29 + 5 (3e partie de l'Enquête) + 10 (Système)
   assert.match(univers, new RegExp(`id="totalTxt">0 / ${total} étoiles<`));
   assert.match(univers, /Traverse les six mondes/);
   /* le pied de la carte (relecture du monde 1, 25/09/2026) : les crédits de la page des

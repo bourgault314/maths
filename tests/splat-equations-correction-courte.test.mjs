@@ -68,10 +68,11 @@ test("le plan d'impression : recto seul, toujours 6 par page, quel que soit le r
   assert.deepEqual(plan("duplex-correction").plan, { recto: "statement", verso: "correction" });
 });
 
-test("« Pages » se cale sur 6/page et se grise, puis revient à sa valeur ; en relatifs, les deux lignes se grisent", () => {
+test("« Pages » se cale sur 6/page et se grise, puis revient à sa valeur ; en relatifs, seule la ligne du schéma se grise (lot R1)", () => {
   const sync = extraire("syncEqSixCorrectionUI");
-  assert.match(sync, /opt\.disabled = signe;/);
-  assert.match(sync, /if\(signe && eqSixCorrectionPart\(sel\.value\)\) sel\.value = "correction";/);
+  assert.match(sync, /option\[value="correction-schema"\]'\)\.forEach\(opt => \{ opt\.disabled = signe; \}\);/);
+  assert.match(sync, /option\[value="correction-equation"\]'\)\.forEach\(opt => \{ opt\.disabled = false; \}\);/);
+  assert.match(sync, /if\(signe && sel\.value === "correction-schema"\) sel\.value = "correction";/);
   assert.match(sync, /if\(!pp\.disabled\) pagesAvantCorrectionCourte = pp\.value;\s*pp\.value = "6";\s*pp\.disabled = true;/);
   assert.match(sync, /if\(pagesAvantCorrectionCourte != null\) pp\.value = pagesAvantCorrectionCourte;/);
   // appelée au changement de mode, au changement du menu, et à l'ouverture
@@ -110,7 +111,7 @@ test("la carte : celle de l'énoncé 6/page (même boîte, même largeur), tache
 });
 
 test("l'équation : les lignes et les flèches de la correction de l'outil, taille 100, 4 mm sous le plateau, flèches posées d'après la largeur MESURÉE", () => {
-  const eq = extraire("drawEqSixCorrectionEquation");
+  const eq = extraire("drawEqSixCorrectionEquation") + extraire("drawEqSixCorrectionLines");
   assert.match(constante("EQ_SIX_CORR_EQ_FONT"), /= 100;/);
   assert.match(html, /^const EQ_SIX_CORR_EQ_LEFT = -140, EQ_SIX_CORR_EQ_RIGHT = 1740;/m);
   assert.match(eq, /const lines = buildEquationSolveLines\(eq, varChar\);\s*const ops = getEquationSolveLineOperations\(eq, lines, varChar\);/);
@@ -120,7 +121,8 @@ test("l'équation : les lignes et les flèches de la correction de l'outil, tail
   // largeur mesurée dans la police réellement dessinée (canvas), écart reporté dans la marge
   assert.match(eq, /eqSixTextWidth\(l, `italic \$\{font\}px \$\{EQ_SIX_CORR_DRAWN_FONT\}`, font\)/);
   assert.match(eq, /margin = Math\.max\(20, Math\.round\(reel - estime \+ font \* 0\.55\)\);/);
-  assert.match(eq, /if\(800 - place >= EQ_SIX_CORR_EQ_LEFT && 800 \+ place <= EQ_SIX_CORR_EQ_RIGHT\) break;/);
+  assert.match(eq, /if\(800 - place >= EQ_SIX_CORR_EQ_LEFT && 800 \+ place <= EQ_SIX_CORR_EQ_RIGHT && bas <= EQ_SIX_CORR_EQ_BOTTOM\) break;/);
+  assert.match(eq, /drawEqSixCorrectionLines\(g, card, lines, ops, tEl, tText\);/);
   assert.match(eq, /drawEquationLines\(g, lines, 800, startY, \{[\s\S]*alignEquals: true, eqGap, fontFamily: "'Times New Roman', Times, serif", fontStyle: "italic"/);
   assert.match(eq, /drawOperationArrowsForLines\(g, api, lines, ops, \{centerX: 800, startY, gap, fontSize: font, eqGap, margin\}\);/);
   // la mesure : un canvas, et l'estimation de l'outil (× 1,2) en repli
