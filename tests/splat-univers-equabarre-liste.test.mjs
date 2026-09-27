@@ -68,7 +68,7 @@ test("mondes 1 et 2 : chaque carte de la liste 📋 ouvre CETTE carte seule dans
       const html = ctx.cartesHtml(e, m, "c");
       assert.deepEqual([...html.matchAll(/<li><a href="([^"]*)"/g)].map((x) => x[1]), JSON.parse(JSON.stringify(liens)), "chaque carte de la grille, son lien");
       assert.ok(!html.includes("equasplat"));
-      assert.ok(html.includes("Un clic sur une carte l’ouvre seule dans ÉquaBarre, pour la résoudre avec la classe."), `${e.t} : la phrase d'aide`);
+      assert.ok(html.includes("Un clic sur une carte l’ouvre seule dans ÉquaBarre."), `${e.t} : la phrase d'aide`);
       /* les cartes à dessiner sont marquées (étiquette « dessin », au lieu de ✏️) */
       const dessins = e.dessin ? e.eqs.length : e.eqs.filter((q) => q.includes("✏")).length;
       assert.equal((html.match(/<span class="dess" title="carte à dessiner">dessin<\/span>/g) || []).length, dessins, `${e.t} : cartes à dessiner`);

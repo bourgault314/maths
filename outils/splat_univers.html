@@ -284,7 +284,9 @@ body.prof .monde .head .fichesTete{font-size:14px;font-weight:600;white-space:no
 @media(max-width:520px){body.prof .monde .head .fichesTete{font-size:12.5px}}
 
 /* intention + ressources */
-body.prof .monde .pIntro{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:18px 28px;padding:18px 22px 6px}
+/* l'intention sur toute la largeur, puis « Pour la classe » en une ligne de boutons dessous
+   (27/09/2026 : la colonne de droite laissait un grand blanc sous une intention courte) */
+body.prof .monde .pIntro{display:block;padding:16px 22px 4px}
 .pIntro .lab{font-size:11.5px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:var(--muted);margin:0 0 6px}
 .pIntro .txt{margin:0;font-size:15.5px;line-height:1.55;color:#2b3f58;max-width:68ch}
 .pIntro .txt b{color:var(--ink)}
@@ -293,15 +295,17 @@ body.prof .monde .pIntro{display:grid;grid-template-columns:minmax(0,1fr) 300px;
 .pIntro details table{border-collapse:collapse;margin:10px 0 2px;font-size:13.5px;line-height:1.35;width:100%}
 .pIntro details th,.pIntro details td{border-bottom:1px solid var(--line);padding:6px 8px 6px 0;text-align:left;vertical-align:top}
 .pIntro details th{font-weight:700;color:var(--muted);font-size:12.5px;text-transform:uppercase;letter-spacing:.6px}
-.ress{border:1px solid var(--line);border-radius:12px;padding:12px 14px;align-self:start;background:#fbfcfd}
-.ress ul{list-style:none;margin:0;padding:0}
-.ress li+li{border-top:1px solid var(--line)}
-.ress a{display:flex;gap:10px;align-items:flex-start;text-decoration:none;padding:9px 0}
+.ress{margin:12px 0 0;display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px}
+.ress .lab{margin:0}
+.ress ul{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:8px}
+.ress a{display:flex;gap:9px;align-items:flex-start;text-decoration:none;padding:8px 13px;border:1px solid var(--line);
+  border-radius:10px;background:#fbfcfd;max-width:420px}
+.ress a:hover{border-color:var(--c)}
 .ress a:hover .rt{text-decoration:underline}
-.ress .rt{font-weight:600;font-size:15px;color:var(--ink)}
-.ress .rd{display:block;font-size:13px;line-height:1.4;color:var(--muted);margin-top:2px}
+.ress .rt{font-weight:600;font-size:14.5px;color:var(--ink)}
+.ress .rd{display:block;font-size:13px;line-height:1.35;color:var(--muted);margin-top:1px}
 .ress svg{flex:0 0 auto;margin-top:2px}
-@media(max-width:760px){body.prof .monde .pIntro{grid-template-columns:1fr;padding:14px 14px 4px}}
+@media(max-width:760px){body.prof .monde .pIntro{padding:14px 14px 4px}.ress,.ress ul,.ress li,.ress a{width:100%;max-width:none}}
 /* un monde replié ne montre que son bandeau : .pIntro (display:grid, plus précis) gagnait
    sur « .monde.replie>.intro{display:none} » et restait affiché sous le bandeau fermé */
 body.prof .monde.replie>.pIntro{display:none}
@@ -864,13 +868,13 @@ function lireParcours(){try{return JSON.parse(localStorage.getItem(KEY_PARCOURS)
 let faits=lireFaits();
 
 /* ============ rendu ============ */
-/* Vue professeur : ce que la progression de Claire prévoit pour chaque activité
-   (reformulé d'après son document « SPLAT! cycle 3 »). */
+/* Vue professeur : l'intention de chaque monde et une phrase par fiche — courtes, à lire
+   d'un coup d'œil (demande de Gwenaël, 27/09/2026 : « efficace, pas de blabla »). */
 const NOTES_MONDE = [
- "Découverte de la situation SPLAT : modéliser un problème simple par un schéma en barres (un tout, des parties). Chaque fiche a sa graine : la série est la même sur le papier et à l'écran, et le QR du livret ouvre exactement celle de la fiche.",
- "Le schéma en barres devient équation. À savoir : le mode lecture montre les étapes de résolution, le bouton «\u00a0Résoudre\u00a0» ouvre la situation dans ÉquaBarre pour la manipuler, et les «\u00a0paquets de jetons\u00a0» permettent de grandes quantités.",
- "Le total est donné, mais aucune tache ne dit ce qu'elle cache : c'est un indice qui les relie entre elles. L'élève trace lui-même son schéma en barres, puis déduit. Un monde en trois parties, un livret chacune : les indices additifs (fiches 10 à 14 ; la fiche 11 porte une consigne en gras — reformuler l'indice avant de dessiner —, parce que l'obstacle est là), puis les indices multiplicatifs et les quatre opérations mélangées (15 à 19, consigne en gras à la fiche 16 pour «\u00a0fois moins\u00a0»), puis l'enquête qui rebondit (20 à 24) : plusieurs taches de la même couleur, et des cartes sans total, où deux indices sur la même paire suffisent (consigne en gras à la fiche 23). À savoir : chaque fiche a sa graine, la série est donc la même sur le papier et à l'écran, et le QR du livret ouvre exactement celle de la fiche.",
- "Plusieurs plateaux, un total pour chacun, les mêmes couleurs partout : chaque indice est un plateau de plus, et l'élève compare les plateaux au lieu de remplacer dans une équation. Le critère, pour se repérer entre les mondes 3 et 4 : <b>l'Enquête, c'est un indice qui compare deux taches</b> («\u00a06 de plus que\u00a0», «\u00a03 fois plus que\u00a0») — un seul plateau ; <b>le Système, c'est un indice qui donne un total partiel</b> — un deuxième plateau. Deux parties, un livret chacune : <b>on retire</b> (fiches 25 à 29 : un plateau contenu dans l'autre, une partie connue, deux pesées) puis <b>on additionne, on double</b> (30 à 34 : trois paires, doubler avant de comparer, plateaux en miroir). La correction à l'écran se déroule un cadre par clic («\u00a0Projeter\u00a0») ; sur papier, elle existe en 4 par page et en 2 par page, plus grosse. Tous les systèmes du collège, et où ils sont :"+
+ "Le tout et les parties : lire, compléter, puis dessiner un schéma en barres.",
+ "Le schéma en barres devient une équation.",
+ "Un indice relie les taches : l'élève trace son schéma, puis déduit. Un monde en trois parties : «\u00a0de plus, de moins\u00a0», puis «\u00a0fois plus, fois moins\u00a0», puis l'enquête qui rebondit.",
+ "Plusieurs plateaux, les mêmes couleurs : on compare les plateaux. Pour s'y retrouver : l'Enquête, c'est un indice qui compare deux taches ; le Système, c'est un indice qui donne un total partiel. Deux parties : on retire, puis on additionne ou on double. "+
  "<table><tr><th>Ce que dit l'énoncé</th><th>Où dans SPLAT!</th><th>Programme</th></tr>"+
  "<tr><td>A = B + d ou A = k × B, avec un total (partage inégal à 2 ou 3 taches)</td><td>Enquête, fiches 10 à 19</td><td>CM1-6e</td></tr>"+
  "<tr><td>pareil, plusieurs taches de chaque couleur</td><td>Enquête, fiches 20 et 21</td><td>6e</td></tr>"+
@@ -882,53 +886,53 @@ const NOTES_MONDE = [
  "<tr><td>trois sommes de paires, sans total</td><td>Système, fiche 30</td><td>cycle 3 défi / cycle 4</td></tr>"+
  "<tr><td>l'inconnue des deux côtés (2x + 4 = 3x + 3)</td><td>mondes 5 et 6</td><td>4e-3e</td></tr>"+
  "<tr><td>systèmes quelconques (3N + 2V ; 2N + 3V)</td><td><b>volontairement hors SPLAT!</b></td><td>lycée</td></tr></table>",
- "Deux plateaux, même quantité en haut et en bas. Présentation verticale : chaque plateau correspond à une barre du schéma ; horizontale : chaque plateau correspond à un membre de l'équation. La progression d'origine recommande le «\u00a0?\u00a0» au cycle 3 ; ici, en ligne comme sur les fiches, l'inconnue est une lettre. Huit marches, une seule nouveauté à la fois ; dans chaque marche, la tache est tantôt à gauche, tantôt à droite (3𝑥 = 12 et 12 = 3𝑥).",
- "Prolongement maths&go vers le cycle 4 (4e-3e) : les nombres relatifs dans les mêmes plateaux. Un jeton vert vaut un nombre positif, un jeton rouge un nombre négatif ; une tache «\u00a0opposé\u00a0» cache l'opposé de l'inconnue (elle s'écrit −𝑥). Deux parties, un livret chacune : l'inconnue d'un seul côté (fiches 38 à 40), puis des deux côtés (41 à 43). Plateaux côte à côte, l'élève écrit l'équation — pas de schéma en barres (une barre négative ne se dessine pas). Quelques solutions nulles (4𝑏 − 4 = −4, −2𝑡 = 3𝑡). À réserver aux élèves qui ont terminé le monde 5."
+ "Deux plateaux, la même quantité : l'élève dessine le schéma ou écrit l'équation. Une nouveauté à la fois, tout mélangé à la fin.",
+ "Les relatifs : le jeton rouge est négatif, la tache «\u00a0opposé\u00a0» cache −𝑥. L'élève écrit l'équation. Après le monde 5."
 ];
 const NOTES_PROF = [
- ["Lire et compléter un schéma en barres tout/parties déjà tracé : on consolide la lecture de cette représentation fondamentale.",
-  "Chemin inverse : le schéma est donné, l'élève dessine les jetons correspondants pour relier la représentation aux quantités.",
-  "Alternance des deux gestes — compléter, puis dessiner — pour travailler la flexibilité.",
-  "Deux taches cachant le même nombre : premier raisonnement déductif (partager également ce qui n'est pas visible).",
-  "Jusqu'à six taches : analyse systématique des relations entre total, jetons visibles et parts cachées.",
-  "Plusieurs taches et c'est l'élève qui dessine : le sens du travail cognitif s'inverse à nouveau."],
- ["Séquence 2 de la progression d’origine : trois séries de 4 cartes enchaînées (12 cartes) : x + a = b, puis a × x = b (2 ≤ a ≤ 5), puis a × x + c = b. C'est le Petit Splat retrouvé sur le grand plateau — l'élève trace lui-même son schéma en barres. Les trois fiches restent imprimables séparément ci-dessous.",
-  "Fiche 8 : deux marches de 6 cartes — x + a = b avec des paquets de jetons, puis seulement des taches (a × x = b : on partage). Des nombres plus grands sans surcharge visuelle.",
-  "Fiche 9 : a × x + c = b avec les paquets, en deux marches de 6 cartes — un paquet, puis deux paquets. La représentation compacte permet de complexifier sans brouiller."],
- ["Deux taches, indice additif direct («\u00a0de plus que\u00a0») : entrée dans la situation, le schéma se dessine sans reformulation.",
-  "Même structure, indice inversé («\u00a0de moins que\u00a0») : la reformulation est l’obstacle — d’où la consigne en gras dans l’énoncé.",
-  "Les deux formulations mélangées carte par carte : il faut relire l’indice à chaque fois, pas appliquer une recette.",
-  "Trois taches en chaîne : deux indices à composer, la première tache ne se trouve qu’en remontant la chaîne.",
-  "Trois taches ET des jetons visibles : le total ne se partage plus tout seul, il faut d’abord retirer le visible.",
-  "Passage au multiplicatif («\u00a0fois plus\u00a0») : la barre de référence se répète au lieu de s’allonger d’un écart.",
-  "Division («\u00a0fois moins\u00a0») : reformulation à nouveau nécessaire — consigne en gras dans l’énoncé.",
-  "Les quatre opérations mélangées sur deux taches : identifier le type d’indice devient le premier geste.",
-  "Trois taches en chaîne avec les quatre opérations : composer des indices de natures différentes.",
-  "Tout à la fois — trois taches, jetons visibles, structure tirée au sort : la fiche bilan des deux premières parties.",
-  "Plusieurs taches de la même couleur (jusqu’à trois) cachent le même nombre, et l’indice parle d’UNE tache : dans le schéma, une ligne par tache, une accolade par couleur.",
-  "Les taches répétées avec «\u00a0fois plus\u00a0» et «\u00a0fois moins\u00a0» : la barre de référence se répète, et il y a plusieurs barres de chaque couleur.",
-  "Plus de total : deux indices sur la même paire (un rapport et un écart). La même tache est écrite deux fois dans le schéma, et c’est ce qui dépasse qui donne la valeur de référence.",
-  "Sans total, avec les deux indices à retourner («\u00a0de moins\u00a0», «\u00a0fois moins\u00a0») : la reformulation est l’obstacle — consigne en gras dans l’énoncé.",
-  "Le bilan de la troisième partie : chaque carte est tantôt à taches répétées (trois couleurs, jetons visibles), tantôt sans total — l’élève reconnaît d’abord la sorte de carte."],
- ["Un plateau contenu dans l’autre : on retire le petit du grand, il ne reste qu’une couleur, dont on trouve la valeur en partageant. Le premier geste du Système, sans jeton visible.",
-  "Le même geste avec 1 à 3 jetons visibles sur le grand plateau : la seule nouveauté est de les retirer aussi.",
-  "L’indice donne le total d’une seule couleur (2 ou 3 taches) : on le retire du tout, puis on partage ce qui reste entre les taches de l’autre couleur. C’est la «\u00a0donnée partielle\u00a0» d’Inconnues en barres.",
-  "Deux pesées presque pareilles : une seule couleur change de nombre de taches. On retire l’une de l’autre, l’écart donne cette couleur, puis on remplace.",
-  "Les trois gestes du livret mélangés, avec des jetons visibles : reconnaître le geste avant de le faire.",
-  "Trois plateaux à deux taches, sans total : la somme des trois plateaux vaut deux fois le tout, d’où le tout, puis chaque couleur en retirant un plateau.",
-  "Il faut d’abord doubler un plateau pour retrouver une couleur de l’autre, puis comparer : c’est le premier pas vers la méthode par combinaison du cycle 4 (correction en lettres : «\u00a02 × Vi\u00a0»).",
-  "Deux plateaux en miroir (2N + 1V et 1N + 2V) : on les additionne, on partage, puis on compare à l’un des deux.",
-  "Les deux gestes qui se ressemblent le plus, mélangés : à chaque carte, l’élève choisit entre doubler et additionner.",
-  "Tous les gestes du monde, avec des jetons visibles («\u00a0Trois paires\u00a0» reste sans jeton visible) : le bilan du Système."],
- ["Fiche 35 : les jetons un par un, trois séries de 4 cartes — x + b = c, puis a × x = c, puis a × x + b = c (coefficient 2 ou 3). Présentation verticale : chaque plateau correspond à une barre du schéma. Deux fiches : «\u00a0tableau\u00a0» (plateaux haut/bas, l'élève dessine le schéma en barres) et «\u00a0équation\u00a0» (plateaux côte à côte, il écrit l'équation).",
-  "Fiche 36 : a × x + b = c avec les paquets de jetons, en deux marches de 6 cartes — 2 ou 3 taches, puis 4 à 6 taches — pour gérer les grandes quantités sans surcharge visuelle.",
-  "Fiche 37 : l'inconnue des deux côtés, en trois marches de 4 cartes — des jetons d'un seul côté, puis des deux côtés, puis le grand mélange de tout le monde 5. On retranche l'inconnue d'un côté pour réduire pas à pas vers la solution. Les plateaux côte à côte explicitent le lien avec les deux membres de l'équation."],
- ["Fiche 38 : trois séries de 4 cartes — x + b = c, puis a × x = c, puis a × x + b = c —, taches normales, jetons de −15 à 20 : la seule nouveauté, ce sont les jetons rouges et les solutions négatives. La tache est tantôt à gauche, tantôt à droite (c = a × x + b aussi).",
-  "Fiche 39 : a × x + b = c avec deux ou trois jetons par côté, verts et rouges mélangés, à regrouper avant de résoudre ; totaux jusqu'à ±50. Deux cartes ont une solution nulle (la 6e et la 12e).",
-  "Fiche 40 : la tache opposée — −x + b = c (4 cartes), −a × x = c (2), −a × x + b = c (3), puis des taches normales et opposées sur le même plateau (3) : on regroupe 𝑚 − 3𝑚 = −2𝑚. On divise par un nombre négatif.",
-  "Fiche 41 : l'inconnue des deux côtés, taches normales, constantes relatives : le geste du monde 5, transposé aux relatifs — on enlève d'abord les taches du côté qui en a le moins, puis les nombres. Une carte à solution nulle (la 7e).",
-  "Fiche 42 : des taches opposées d'un côté, des taches normales de l'autre : pour les faire disparaître, on AJOUTE des taches des deux côtés (l'outil écrit «\u00a0J'ajoute … de chaque côté\u00a0»).",
-  "Fiche 43 : tout mélangé — taches normales et opposées sur un même plateau, taches opposées des deux côtés, et −2𝑡 = 3𝑡 (solution 0). Le bilan de l'univers."]
+ ["Compléter un schéma déjà tracé.",
+  "Le schéma est donné : dessiner les jetons.",
+  "Les deux gestes mélangés : compléter ou dessiner.",
+  "Deux taches cachent le même nombre : on partage.",
+  "Jusqu'à six taches.",
+  "Plusieurs taches, et c'est l'élève qui dessine."],
+ ["Trois activités de 4 cartes : x + a = b, a × x = b, a × x + c = b.",
+  "Des paquets de jetons, puis seulement des taches : on partage.",
+  "a × x + c = b avec un paquet, puis deux."],
+ ["Indice «\u00a0de plus que\u00a0».",
+  "Indice «\u00a0de moins que\u00a0» : le reformuler avant de dessiner.",
+  "«\u00a0De plus\u00a0» et «\u00a0de moins\u00a0» mélangés.",
+  "Trois taches en chaîne.",
+  "Trois taches et des jetons visibles.",
+  "Indice «\u00a0fois plus\u00a0».",
+  "Indice «\u00a0fois moins\u00a0» : le reformuler avant de dessiner.",
+  "Les quatre opérations mélangées.",
+  "Trois taches en chaîne, quatre opérations.",
+  "Bilan des parties 1 et 2.",
+  "Plusieurs taches de la même couleur.",
+  "Taches répétées, «\u00a0fois plus\u00a0» et «\u00a0fois moins\u00a0».",
+  "Sans total : deux indices sur la même paire.",
+  "Sans total, indices à retourner.",
+  "Bilan de la partie 3."],
+ ["Un plateau dans l'autre : on retire, puis on partage.",
+  "Le même geste, avec des jetons visibles.",
+  "Le total d'une couleur est donné : on le retire du tout.",
+  "Deux pesées presque pareilles : l'écart donne une couleur.",
+  "Les trois gestes mélangés.",
+  "Trois paires sans total : la somme vaut deux fois le tout.",
+  "Doubler un plateau, puis comparer.",
+  "Deux plateaux en miroir : on additionne, puis on partage.",
+  "Doubler ou additionner : l'élève choisit.",
+  "Bilan du Système."],
+ ["x + b = c, puis a × x = c, puis a × x + b = c.",
+  "a × x + b = c avec des paquets : 2 ou 3 taches, puis 4 à 6.",
+  "Des taches des deux côtés, puis tout mélangé."],
+ ["Les jetons rouges : x + b = c, a × x = c, a × x + b = c.",
+  "Jetons verts et rouges à regrouper ; deux solutions nulles.",
+  "La tache opposée : on divise par un nombre négatif.",
+  "Des taches des deux côtés.",
+  "Une tache opposée d'un côté : on ajoute des taches.",
+  "Tout mélangé : le bilan de l'univers."]
 ];
 /* Les cartes de la série, en vue professeur : dans les mondes ÉquaSplat, chaque équation est un lien (lot Q2). */
 /* Relecture du monde 1 (26/09/2026, idée de Gwenaël) : en vue professeur, chaque carte
@@ -988,16 +992,16 @@ function intentionHtml(mi){
 /* « Pour la classe » : ce que contient la page des livrets de chaque monde (rang = monde − 1) ;
    une chaîne vide = pas de lien. */
 const LIVRET_TEXTE=[
-  "Je complète le schéma, puis je fais le schéma en barres : deux séries de trois niveaux, et leurs corrigés.",
-  "Les fiches 7, 8 et 9 en un livret, avec la place pour le schéma ou l’équation, et Le défi (totaux de 50 à 100) ; chacun en «\u00a0?\u00a0» ou en lettre, et leurs corrigés.",
+  "Deux séries de trois niveaux, et leurs corrigés.",
+  "Les fiches 7 à 9 et Le défi, en «\u00a0?\u00a0» ou en lettre, et leurs corrigés.",
   "Un livret par partie, Le défi pour les deux premières, et leurs corrigés.",
-  "Un livret par partie, et leurs corrigés (aussi en 2 par page).",
-  "Les fiches 35 à 37 en deux versions (tableau / équation), chacune avec son livret Le défi, et leurs corrigés.",
-  "Les fiches 38 à 43 en deux livrets, un par partie, et leurs corrigés."];
+  "Un livret par partie, et leurs corrigés.",
+  "Schéma ou équation, chacun avec son livret Le défi, et leurs corrigés.",
+  "Un livret par partie, et leurs corrigés."];
 function ressourcesHtml(m,mi){
   const li=[];
   if(mi===0) li.push('<li><a href="/outils/splat_intro.html?suite='+encodeURIComponent('/outils/splat_univers.html?prof=1')+'">'+IC.diapo+
-    '<span><span class="rt">Présenter le principe</span><span class="rd">Le diaporama à projeter avant la première fiche.</span></span></a></li>');
+    '<span><span class="rt">Présenter le principe</span><span class="rd">Le diaporama, avant la première fiche.</span></span></a></li>');
   if(LIVRET_TEXTE[mi]) li.push('<li><a href="/outils/livrets_splat.html#monde-'+(mi+1)+'">'+IC.livret+
     '<span><span class="rt">Les livrets du monde '+(mi+1)+'</span><span class="rd">'+LIVRET_TEXTE[mi]+'</span></span></a></li>');
   if(!li.length) return '';
@@ -1017,7 +1021,7 @@ function cartesHtml(e,m,cid){
     return '<li>'+(liens?'<a href="'+liens[i]+'" title="Ouvrir cette carte seule dans '+outil+'">'+inner+'</a>':'<span>'+inner+'</span>')+'</li>';
   }).join('');
   return '<div class="cartes" id="'+cid+'"><ol>'+items+'</ol>'+
-    (liens?'<p>Un clic sur une carte l’ouvre seule dans '+outil+(seules?', sans étoile':'')+', pour la résoudre avec la classe.</p>':'')+'</div>';
+    (liens?'<p>Un clic sur une carte l’ouvre seule dans '+outil+'.</p>':'')+'</div>';
 }
 function actionsHtml(e,m,cid){
   const a=[], nb=e.eqs?e.eqs.length:0;
@@ -1089,7 +1093,7 @@ function renderProf(main){
   /* en-tête : le guide du professeur, puis le sommaire des six mondes */
   const hero=document.querySelector(".hero");
   hero.querySelector("h1").innerHTML='<small>Guide du professeur</small>L’univers <span class="splat">SPLAT!</span>';
-  hero.querySelector("p.sub").textContent="Six mondes, du tout et des parties aux équations en relatifs. Chaque fiche se projette, se joue sur tablette et s’imprime — avec la même série de cartes partout.";
+  hero.querySelector("p.sub").textContent="Chaque fiche se projette, se joue et s’imprime, avec les mêmes cartes.";
   const som=document.createElement("nav"); som.className="sommaire"; som.setAttribute("aria-label","Les six mondes");
   som.innerHTML=sommaireProfHtml(plages);
   hero.after(som);
@@ -1266,6 +1270,10 @@ document.addEventListener("click",ev=>{
   const mi=sec.classList.contains("replie")?mondes.indexOf(sec):-1;
   ouvrirMonde(mi);
   retenirMonde(mi);
+  /* 27/09/2026 (retour de Gwenaël) : le monde du dessus se replie, la page remonte, et on
+     se retrouvait en bas du monde qu'on vient d'ouvrir. On ramène son bandeau en haut de
+     l'écran, seulement s'il n'y est plus. */
+  if(mi>=0){ const r=head.getBoundingClientRect(); if(r.top<0||r.top>innerHeight*0.6) window.scrollTo({top:scrollY+r.top-8,behavior:"smooth"}); }
 });
 /* une étape (ou un lien) lancée depuis un monde, ou « Continuer » : on retient ce monde */
 document.addEventListener("click",ev=>{

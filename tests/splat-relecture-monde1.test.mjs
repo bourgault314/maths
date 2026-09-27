@@ -27,9 +27,9 @@ test("vue professeur, monde 1 : un seul lien vers la page des livrets, et une no
   /* lot « vue prof » (27/09/2026) : dans le cadre « Pour la classe », à côté du diaporama */
   assert.match(univers, /if\(LIVRET_TEXTE\[mi\]\) li\.push\('<li><a href="\/outils\/livrets_splat\.html#monde-'\+\(mi\+1\)\+'">'\+IC\.livret\+\n\s*'<span><span class="rt">Les livrets du monde '\+\(mi\+1\)\+'<\/span>/);
   /* cohérence du 27/09/2026 : la page des livrets du monde 1 a deux séries (#848) */
-  assert.match(univers, /const LIVRET_TEXTE=\[\n  "Je complète le schéma, puis je fais le schéma en barres : deux séries de trois niveaux, et leurs corrigés\.",/);
+  assert.match(univers, /const LIVRET_TEXTE=\[\n  "Deux séries de trois niveaux, et leurs corrigés\.",/);
   assert.doesNotMatch(univers, /href="\/outils\/livret_petit_splat[a-z_]*\.pdf"/, "plus de boutons PDF du monde 1 sur la carte");
-  assert.match(univers, /"Découverte de la situation SPLAT : [^"]*Chaque fiche a sa graine : la série est la même sur le papier et à l'écran, et le QR du livret ouvre exactement celle de la fiche\."/);
+  assert.match(univers, /"Le tout et les parties : lire, compléter, puis dessiner un schéma en barres\."/); // intention courte (27/09/2026)
   assert.doesNotMatch(univers, /« Générer » en note une nouvelle/);
   assert.match(lire("outils/livrets_splat.html"), /<section class="panneau" data-m="1" id="monde-1"/);
 });
