@@ -468,7 +468,7 @@ test("la page ne laisse rien se dessiner par-dessus le pavé, ni lui changer sa 
   // la mention « Sans cookie ni traceur » se pose sous la page avec un z-index maximal
   assert.match(page, /body\.eleve-pave \.mg-mention-slot\{display:none\}/);
   // la règle « * » de la page donnait la police système à la grille du pavé
-  assert.match(page, /\*\{box-sizing:border-box;font-family:system-ui/);
+  assert.match(page, /\*\{box-sizing:border-box;font-family:SplatLettres,system-ui/);   // SplatLettres en tête depuis le 26/09/2026 (lettres de l'inconnue seulement)
   assert.match(page, /body\.eleve-pave \.mg-pave__grille\{font-family:inherit\}/);
 });
 

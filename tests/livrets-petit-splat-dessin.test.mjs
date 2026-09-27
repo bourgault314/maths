@@ -255,9 +255,10 @@ test("page des livrets : deux boutons choisissent la série du monde 1 (choix B)
   assert.match(page, /\.series-choix\{display:none\}\s*html\.js \.series-choix\{display:flex;/, "sans JavaScript, pas de boutons");
   assert.match(page, /html\.js \.serie > \.partie\{display:none\}/);
   assert.match(page, /s\.hidden = s\.dataset\.serie !== nom;/);
-  assert.match(page, /montre\("complete"\);/, "« Je complète le schéma » d'abord");
-  // un seul groupe de boutons : les autres onglets ne changent pas
-  assert.equal((page.match(/class="series-choix"/g) || []).length, 1);
+  // la série du premier bouton d'abord : « Je complète le schéma » au monde 1
+  assert.match(page, /montre\(groupe\.querySelector\("button\[data-serie\]"\)\.dataset\.serie\);/, "« Je complète le schéma » d'abord");
+  // deux groupes de boutons : le monde 1, et le monde 2 (« Avec ? » / « Avec une lettre », 26/09/2026)
+  assert.equal((page.match(/class="series-choix"/g) || []).length, 2);
 });
 
 test("outil : la carte exemple a « ? = 7 » et EXEMPLE en bas de la case, comme les autres", () => {

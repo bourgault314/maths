@@ -10,9 +10,31 @@ Il en existe **deux**, mêmes trois étapes, deux calibres de cartes :
 
 | Livret | Fiches | PDF produits |
 |---|---|---|
-| `normal` — Monde 2 | 7 (12 cartes de Claire), 8 et 9 (12 cartes à paquets chacune) | `outils/livret_splat_classique.pdf` · `…_a_plier.pdf` |
-| `defi` — Le défi | 7, 8, 9 — 12 cartes à paquets chacune, **totaux 50 à 100, 2 à 6 taches** | `outils/livret_splat_classique_defi.pdf` · `…_defi_a_plier.pdf` |
+| `normal` — Monde 2 | 7 (12 cartes de Claire), 8 et 9 (deux séries de 6 cartes à paquets chacune) | `outils/livret_splat_classique.pdf` · `…_a_plier.pdf`, et en lettre `…_lettre.pdf` · `…_lettre_a_plier.pdf` |
+| `defi` — Le défi | 7, 8, 9 — 12 cartes à paquets chacune, **totaux 50 à 100, 2 à 6 taches** | `outils/livret_splat_classique_defi.pdf` · `…_defi_a_plier.pdf`, et en lettre `…_defi_lettre.pdf` · `…_defi_lettre_a_plier.pdf` |
 | + leurs 4 livrets de correction chacun (lots K2 et D) | les mêmes | `…_correction_equation.pdf`, `…_equation_lettre`, `…_schema`, `…_schema_lettre` (et chacun son `…_a_plier.pdf`) |
+
+## Relecture du monde 2 (26/09/2026)
+
+- **Deux livrets de l'élève par niveau** : avec « ? » (le fichier d'avant) et **en lettre**
+  (`…_lettre.pdf`). Mêmes cartes, mêmes QR ; en lettre, chaque carte a sa lettre (celle de son
+  corrigé en lettre). Sur la page des livrets, deux boutons « Avec ? » / « Avec une lettre »,
+  chacun avec ses deux corrigés.
+- **La lettre ronde** : les lettres de l'inconnue (𝑥, 𝑎…) sont dessinées par **SplatLettres**
+  (`assets/fonts/`, fabriquée par `_sources/polices/splat-lettres/fabrique.py`), déclarée dans
+  `commun.css` et dans l'outil — la même lettre ronde que les livrets de l'Enquête, partout.
+- **La case réponse** de chaque carte commence par l'inconnue : « ? = …… » ou « 𝑡 = …… » (avant :
+  la petite tache).
+- **L'exemple de la couverture** est dessiné comme une carte des fiches (TOTAL à droite, case
+  réponse remplie), avec dessous le schéma en barres « ou » l'équation — les deux corrections
+  courtes 6/page de l'outil. Au livret Monde 2, une carte à **deux taches** (graine 746 :
+  6 + 10 = 16, 38 − 16 = 22, 22 ÷ 2 = 11), pour une résolution complète.
+- **Fiches 8 et 9 en quatre marches de 6 cartes** (voir « Les graines »).
+- **Check-list du monde 1** : plus de logo sur les pages-fiches (retirés au rendu, le QR passe
+  tout à droite du bandeau) ; au dos, crédit à gauche, IREMI + maths&go + Unité apprenante à
+  droite ; tache de « Pour se souvenir » à 52 px ; « TOTAL » au-dessus du 37 ; « Nom, prénom » et
+  « Classe » en haut de leur case ; « La suite du voyage » : Enquête (monde 3) puis Système
+  (monde 4). **Pas de numéro de page** (retiré aussi au monde 1 : doublon du numéro de fiche).
 
 Les deux gardent `parcours=m2eN` : valider une fiche plus dure gagne l'étoile du monde 2
 (même décision qu'au monde 1 le 17/09/2026).
@@ -55,10 +77,14 @@ Rien n'est trié ici : les cartes sont **exactement** celles que l'élève joue 
 - fiche 7 = les trois activités de Claire (`M2A1`, `M2A2`, `M2A3` : graines 974, 477,
   478, 4 cartes chacune) mises bout à bout, comme la série en ligne les enchaîne avec le
   paramètre `suite` ;
-- fiche 8 = étape « Avec des paquets de jetons » (graine 347), fiche 9 = « Le défi »
-  (graine 18). Ces deux étapes sont passées de 10 à **12 cartes** le 19/09/2026 (les 10
+- fiche 8 = étape « Avec des paquets de jetons », fiche 9 = « Le défi ». Depuis le 26/09/2026,
+  deux séries de 6 cartes chacune, une par page (constantes M2E4A/B et M2E5A/B de la carte des
+  mondes, enchaînées par `suite`) : fiche 8 = une tache et des paquets (graine 347, les 6
+  premières cartes d'avant), puis seulement des taches (graine 260, on divise) ; fiche 9 = des
+  taches et un paquet (graine 1673), puis des taches et deux paquets (graine 5974).
+  (Historique : ces deux étapes étaient passées de 10 à **12 cartes** le 19/09/2026 (les 10
   premières cartes n'ont pas changé, deux se sont ajoutées à la fin) pour remplir les
-  deux pages de chaque fiche (6 + 6) au lieu de laisser deux cases vides.
+  deux pages de chaque fiche (6 + 6) au lieu de laisser deux cases vides.)
 
 `tests/livret-splat-classique.test.mjs` épingle les constantes de `render.py` et les
 cibles de la page courte des QR sur celles de la carte des mondes : **si une graine

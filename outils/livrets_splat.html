@@ -153,7 +153,7 @@ html.js .panneau[hidden]{display:none}
    rangée de livrets. */
 .partie{margin:18px 0 0;font-size:16.5px;line-height:1.25;color:var(--c-fonce)}
 .partie span{display:block;margin-top:2px;font-size:13px;font-weight:600;color:var(--muted)}
-/* Monde 1 : deux séries de livrets, un bouton par série (26/09/2026 au soir, choix B) */
+/* Mondes 1 et 2 : deux séries de livrets, un bouton par série (26/09/2026 au soir, choix B) */
 .series-choix{display:none}
 html.js .series-choix{display:flex;flex-wrap:wrap;gap:10px;margin:18px 0 0}
 .series-choix button{padding:9px 18px;border-radius:999px;border:2px solid var(--c-plein);background:var(--paper);
@@ -410,12 +410,22 @@ footer a{font-weight:700}
   <!-- ================================================== Monde 2 · SPLAT! Classique -->
   <section class="panneau" data-m="2" id="monde-2" role="tabpanel" aria-labelledby="onglet-2" hidden>
     <h2 class="monde-nom">Monde 2 · SPLAT! Classique</h2>
-    <p class="chapo">Les trois fiches du monde 2 en un livret de 8 pages&nbsp;: le schéma en barres, l’équation, et les paquets de jetons. En deux niveaux&nbsp;: la progression de la classe, puis «&nbsp;Le défi&nbsp;», des totaux de 50 à 100 et jusqu’à six taches.</p>
+    <p class="chapo">Les trois fiches du monde 2 en un livret de 8 pages&nbsp;: le schéma en barres, l’équation, et les paquets de jetons. En deux niveaux&nbsp;: la progression de la classe, puis «&nbsp;Le défi&nbsp;», des totaux de 50 à 100 et jusqu’à six taches. Chacun existe avec «&nbsp;?&nbsp;» ou avec une lettre.</p>
+    <!-- Deux séries de livrets au monde 2 (relecture du monde 2, 26/09/2026), comme au monde 1 :
+         « Avec ? » et « Avec une lettre », chacune avec SES corrigés (équation et schéma). Mêmes
+         cartes, mêmes QR ; seule l'écriture de l'inconnue change. Sans JavaScript, les deux
+         rangées restent affichées l'une sous l'autre, avec leurs intertitres. -->
+    <div class="series-choix" role="group" aria-label="Choisir la série de livrets">
+      <button type="button" data-serie="question" aria-pressed="true">Avec ?</button>
+      <button type="button" data-serie="lettre" aria-pressed="false">Avec une lettre</button>
+    </div>
+    <div class="serie" data-serie="question">
+    <h3 class="partie">Avec ? <span>le «&nbsp;?&nbsp;» du cycle 3</span></h3>
     <div class="grille n2">
 
       <article class="liv">
         <a class="couv-lien" href="/outils/livret_splat_classique.pdf" target="_blank" rel="noopener" title="Voir le livret Monde 2 (PDF, 8 pages)">
-          <img class="couv" src="/assets/img/thumbnails/splat/livret-splat-classique.png?v=4" alt="Couverture du livret SPLAT! Classique du monde 2" loading="lazy">
+          <img class="couv" src="/assets/img/thumbnails/splat/livret-splat-classique.png?v=5" alt="Couverture du livret SPLAT! Classique" loading="lazy">
         </a>
         <div class="corps">
           <div class="titre"><h3>Monde 2</h3><span class="plage">fiches 7, 8 et 9</span></div>
@@ -423,18 +433,66 @@ footer a{font-weight:700}
             <a class="lien" href="/outils/livret_splat_classique.pdf" target="_blank" rel="noopener">📘 PDF · 8 pages</a>
             <a class="lien a3" href="/outils/livret_splat_classique_a_plier.pdf" target="_blank" rel="noopener">🖨️ Livret à plier</a>
             <details class="prof">
-              <summary>✅ Les corrigés · 4 livrets</summary>
+              <summary>✅ Les corrigés · 2 livrets</summary>
               <div class="prof-corps">
-                <div class="prof-ligne"><span class="nom">Équation <small>avec «&nbsp;?&nbsp;»</small></span>
+                <div class="prof-ligne"><span class="nom">Équation</span>
                   <a class="lien-prof" href="/outils/livret_splat_classique_correction_equation.pdf" target="_blank" rel="noopener" title="Livret corrigé du monde 2, l'équation, inconnue «&nbsp;?&nbsp;» (PDF, 8 pages)">PDF</a>
                   <a class="lien-prof" href="/outils/livret_splat_classique_correction_equation_a_plier.pdf" target="_blank" rel="noopener" title="Livret corrigé du monde 2, l'équation, inconnue «&nbsp;?&nbsp;», à plier">à plier</a></div>
-                <div class="prof-ligne"><span class="nom">Équation <small>avec une lettre</small></span>
-                  <a class="lien-prof" href="/outils/livret_splat_classique_correction_equation_lettre.pdf" target="_blank" rel="noopener" title="Livret corrigé du monde 2, l'équation, inconnue en lettre (PDF, 8 pages)">PDF</a>
-                  <a class="lien-prof" href="/outils/livret_splat_classique_correction_equation_lettre_a_plier.pdf" target="_blank" rel="noopener" title="Livret corrigé du monde 2, l'équation, inconnue en lettre, à plier">à plier</a></div>
-                <div class="prof-ligne"><span class="nom">Schéma en barres <small>avec «&nbsp;?&nbsp;»</small></span>
+                <div class="prof-ligne"><span class="nom">Schéma en barres</span>
                   <a class="lien-prof" href="/outils/livret_splat_classique_correction_schema.pdf" target="_blank" rel="noopener" title="Livret corrigé du monde 2, le schéma en barres, inconnue «&nbsp;?&nbsp;» (PDF, 8 pages)">PDF</a>
                   <a class="lien-prof" href="/outils/livret_splat_classique_correction_schema_a_plier.pdf" target="_blank" rel="noopener" title="Livret corrigé du monde 2, le schéma en barres, inconnue «&nbsp;?&nbsp;», à plier">à plier</a></div>
-                <div class="prof-ligne"><span class="nom">Schéma en barres <small>avec une lettre</small></span>
+              </div>
+            </details>
+          </div>
+        </div>
+      </article>
+
+      <article class="liv">
+        <a class="couv-lien" href="/outils/livret_splat_classique_defi.pdf" target="_blank" rel="noopener" title="Voir le livret Le défi (PDF, 8 pages)">
+          <img class="couv" src="/assets/img/thumbnails/splat/livret-splat-classique-defi.png?v=4" alt="Couverture du livret SPLAT! Classique, niveau Le défi" loading="lazy">
+        </a>
+        <div class="corps">
+          <div class="titre"><h3>Le défi</h3><span class="plage">totaux de 50 à 100</span></div>
+          <div class="liens">
+            <a class="lien" href="/outils/livret_splat_classique_defi.pdf" target="_blank" rel="noopener">📙 PDF · 8 pages</a>
+            <a class="lien a3" href="/outils/livret_splat_classique_defi_a_plier.pdf" target="_blank" rel="noopener">🖨️ Livret à plier</a>
+            <details class="prof">
+              <summary>✅ Les corrigés · 2 livrets</summary>
+              <div class="prof-corps">
+                <div class="prof-ligne"><span class="nom">Équation</span>
+                  <a class="lien-prof" href="/outils/livret_splat_classique_defi_correction_equation.pdf" target="_blank" rel="noopener" title="Livret corrigé Le défi, l'équation, inconnue «&nbsp;?&nbsp;» (PDF, 8 pages)">PDF</a>
+                  <a class="lien-prof" href="/outils/livret_splat_classique_defi_correction_equation_a_plier.pdf" target="_blank" rel="noopener" title="Livret corrigé Le défi, l'équation, inconnue «&nbsp;?&nbsp;», à plier">à plier</a></div>
+                <div class="prof-ligne"><span class="nom">Schéma en barres</span>
+                  <a class="lien-prof" href="/outils/livret_splat_classique_defi_correction_schema.pdf" target="_blank" rel="noopener" title="Livret corrigé Le défi, le schéma en barres, inconnue «&nbsp;?&nbsp;» (PDF, 8 pages)">PDF</a>
+                  <a class="lien-prof" href="/outils/livret_splat_classique_defi_correction_schema_a_plier.pdf" target="_blank" rel="noopener" title="Livret corrigé Le défi, le schéma en barres, inconnue «&nbsp;?&nbsp;», à plier">à plier</a></div>
+              </div>
+            </details>
+          </div>
+        </div>
+      </article>
+
+    </div>
+    </div>
+    <div class="serie" data-serie="lettre">
+    <h3 class="partie">Avec une lettre <span>une lettre par carte</span></h3>
+    <div class="grille n2">
+
+      <article class="liv">
+        <a class="couv-lien" href="/outils/livret_splat_classique_lettre.pdf" target="_blank" rel="noopener" title="Voir le livret Monde 2, avec une lettre (PDF, 8 pages)">
+          <img class="couv" src="/assets/img/thumbnails/splat/livret-splat-classique-lettre.png?v=1" alt="Couverture du livret SPLAT! Classique, avec une lettre" loading="lazy">
+        </a>
+        <div class="corps">
+          <div class="titre"><h3>Monde 2</h3><span class="plage">fiches 7, 8 et 9</span></div>
+          <div class="liens">
+            <a class="lien" href="/outils/livret_splat_classique_lettre.pdf" target="_blank" rel="noopener">📘 PDF · 8 pages</a>
+            <a class="lien a3" href="/outils/livret_splat_classique_lettre_a_plier.pdf" target="_blank" rel="noopener">🖨️ Livret à plier</a>
+            <details class="prof">
+              <summary>✅ Les corrigés · 2 livrets</summary>
+              <div class="prof-corps">
+                <div class="prof-ligne"><span class="nom">Équation</span>
+                  <a class="lien-prof" href="/outils/livret_splat_classique_correction_equation_lettre.pdf" target="_blank" rel="noopener" title="Livret corrigé du monde 2, l'équation, inconnue en lettre (PDF, 8 pages)">PDF</a>
+                  <a class="lien-prof" href="/outils/livret_splat_classique_correction_equation_lettre_a_plier.pdf" target="_blank" rel="noopener" title="Livret corrigé du monde 2, l'équation, inconnue en lettre, à plier">à plier</a></div>
+                <div class="prof-ligne"><span class="nom">Schéma en barres</span>
                   <a class="lien-prof" href="/outils/livret_splat_classique_correction_schema_lettre.pdf" target="_blank" rel="noopener" title="Livret corrigé du monde 2, le schéma en barres, inconnue en lettre (PDF, 8 pages)">PDF</a>
                   <a class="lien-prof" href="/outils/livret_splat_classique_correction_schema_lettre_a_plier.pdf" target="_blank" rel="noopener" title="Livret corrigé du monde 2, le schéma en barres, inconnue en lettre, à plier">à plier</a></div>
               </div>
@@ -444,27 +502,21 @@ footer a{font-weight:700}
       </article>
 
       <article class="liv">
-        <a class="couv-lien" href="/outils/livret_splat_classique_defi.pdf" target="_blank" rel="noopener" title="Voir le livret Le défi (PDF, 8 pages)">
-          <img class="couv" src="/assets/img/thumbnails/splat/livret-splat-classique-defi.png?v=3" alt="Couverture du livret SPLAT! Classique, niveau Le défi" loading="lazy">
+        <a class="couv-lien" href="/outils/livret_splat_classique_defi_lettre.pdf" target="_blank" rel="noopener" title="Voir le livret Le défi, avec une lettre (PDF, 8 pages)">
+          <img class="couv" src="/assets/img/thumbnails/splat/livret-splat-classique-defi-lettre.png?v=1" alt="Couverture du livret SPLAT! Classique, niveau Le défi, avec une lettre" loading="lazy">
         </a>
         <div class="corps">
           <div class="titre"><h3>Le défi</h3><span class="plage">totaux de 50 à 100</span></div>
           <div class="liens">
-            <a class="lien" href="/outils/livret_splat_classique_defi.pdf" target="_blank" rel="noopener">📙 PDF · 8 pages</a>
-            <a class="lien a3" href="/outils/livret_splat_classique_defi_a_plier.pdf" target="_blank" rel="noopener">🖨️ Livret à plier</a>
+            <a class="lien" href="/outils/livret_splat_classique_defi_lettre.pdf" target="_blank" rel="noopener">📙 PDF · 8 pages</a>
+            <a class="lien a3" href="/outils/livret_splat_classique_defi_lettre_a_plier.pdf" target="_blank" rel="noopener">🖨️ Livret à plier</a>
             <details class="prof">
-              <summary>✅ Les corrigés · 4 livrets</summary>
+              <summary>✅ Les corrigés · 2 livrets</summary>
               <div class="prof-corps">
-                <div class="prof-ligne"><span class="nom">Équation <small>avec «&nbsp;?&nbsp;»</small></span>
-                  <a class="lien-prof" href="/outils/livret_splat_classique_defi_correction_equation.pdf" target="_blank" rel="noopener" title="Livret corrigé Le défi, l'équation, inconnue «&nbsp;?&nbsp;» (PDF, 8 pages)">PDF</a>
-                  <a class="lien-prof" href="/outils/livret_splat_classique_defi_correction_equation_a_plier.pdf" target="_blank" rel="noopener" title="Livret corrigé Le défi, l'équation, inconnue «&nbsp;?&nbsp;», à plier">à plier</a></div>
-                <div class="prof-ligne"><span class="nom">Équation <small>avec une lettre</small></span>
+                <div class="prof-ligne"><span class="nom">Équation</span>
                   <a class="lien-prof" href="/outils/livret_splat_classique_defi_correction_equation_lettre.pdf" target="_blank" rel="noopener" title="Livret corrigé Le défi, l'équation, inconnue en lettre (PDF, 8 pages)">PDF</a>
                   <a class="lien-prof" href="/outils/livret_splat_classique_defi_correction_equation_lettre_a_plier.pdf" target="_blank" rel="noopener" title="Livret corrigé Le défi, l'équation, inconnue en lettre, à plier">à plier</a></div>
-                <div class="prof-ligne"><span class="nom">Schéma en barres <small>avec «&nbsp;?&nbsp;»</small></span>
-                  <a class="lien-prof" href="/outils/livret_splat_classique_defi_correction_schema.pdf" target="_blank" rel="noopener" title="Livret corrigé Le défi, le schéma en barres, inconnue «&nbsp;?&nbsp;» (PDF, 8 pages)">PDF</a>
-                  <a class="lien-prof" href="/outils/livret_splat_classique_defi_correction_schema_a_plier.pdf" target="_blank" rel="noopener" title="Livret corrigé Le défi, le schéma en barres, inconnue «&nbsp;?&nbsp;», à plier">à plier</a></div>
-                <div class="prof-ligne"><span class="nom">Schéma en barres <small>avec une lettre</small></span>
+                <div class="prof-ligne"><span class="nom">Schéma en barres</span>
                   <a class="lien-prof" href="/outils/livret_splat_classique_defi_correction_schema_lettre.pdf" target="_blank" rel="noopener" title="Livret corrigé Le défi, le schéma en barres, inconnue en lettre (PDF, 8 pages)">PDF</a>
                   <a class="lien-prof" href="/outils/livret_splat_classique_defi_correction_schema_lettre_a_plier.pdf" target="_blank" rel="noopener" title="Livret corrigé Le défi, le schéma en barres, inconnue en lettre, à plier">à plier</a></div>
               </div>
@@ -473,6 +525,7 @@ footer a{font-weight:700}
         </div>
       </article>
 
+    </div>
     </div>
     <p class="aparte">Sous chaque carte, de la place pour que l’élève dessine le schéma en barres ou écrive l’équation lui-même. Le QR code de chaque fiche rejoue les mêmes cartes en ligne.</p>
   </section>
@@ -760,7 +813,7 @@ footer a{font-weight:700}
   </section>
 
   <section class="note" aria-label="Pour imprimer">
-    <p><strong>🖨️ Livret à plier</strong>&nbsp;: sur A3 (meilleur rendu), ou sur A4 pour un petit livret, en recto-verso, retournement sur le <strong>bord court</strong>. Plier les deux feuilles, les emboîter, agrafer au milieu.</p>
+    <p><strong>🖨️ Livret à plier</strong>&nbsp;: en A3 pour un grand livret, ou en A4 pour un petit livret. Recto-verso, <strong>bord court</strong>.</p>
     <p><strong>📕 PDF · 8 pages</strong>&nbsp;: les pages dans l'ordre, pour l'écran ou pour le mode «&nbsp;Livret&nbsp;» d'un photocopieur.</p>
     <p><strong>✅ Les corrigés</strong>&nbsp;: le même livret, aux mêmes pages, avec les réponses — à donner aux élèves pour qu'ils se corrigent seuls, ou à garder pour soi.</p>
   </section>
@@ -774,7 +827,8 @@ footer a{font-weight:700}
 </footer>
 
 <script>
-/* Monde 1 : les deux boutons montrent une série de livrets à la fois (choix B, 26/09/2026 au soir) */
+/* Mondes 1 et 2 : les deux boutons montrent une série de livrets à la fois (choix B, 26/09/2026 au soir ;
+   monde 2, « Avec ? » / « Avec une lettre », relecture du monde 2, 26/09/2026) */
 (function(){
   Array.prototype.forEach.call(document.querySelectorAll(".series-choix"), function(groupe){
     var panneau = groupe.parentNode;
@@ -789,7 +843,8 @@ footer a{font-weight:700}
       var b = e.target.closest("button[data-serie]");
       if(b) montre(b.dataset.serie);
     });
-    montre("complete");
+    // la série du premier bouton (monde 1 : « Je complète le schéma » ; monde 2 : « Avec ? »)
+    montre(groupe.querySelector("button[data-serie]").dataset.serie);
   });
 })();
 </script>

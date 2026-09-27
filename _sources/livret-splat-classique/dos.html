@@ -23,11 +23,14 @@
 .suite img{width:30mm;height:30mm;flex:0 0 auto;display:block}
 .suite h3{margin:0 0 1.2mm;font-size:15px;font-weight:700;color:#063b7a}
 .suite p{margin:0;font-size:12px;line-height:1.35;color:#334155}
-.lex ul{list-style:none;margin:3.5mm 0 0;padding:0;display:flex;flex-direction:column;gap:3.6mm;zoom:1.25}
+/* écarts resserrés (3,6 → 2,2 mm) : la place de la tache plus grosse, de « TOTAL » et du bloc des logos (26/09/2026) */
+.lex ul{list-style:none;margin:2.5mm 0 0;padding:0;display:flex;flex-direction:column;gap:2.2mm;zoom:1.25}
 .lex li{display:flex;align-items:center;gap:5mm;font-size:13px;color:#0f172a;line-height:1.3}
 .lex .ic{flex:0 0 30mm;display:flex;justify-content:center;align-items:center}
 .lex b{color:#063b7a}
-.boite{border:2px solid #0f172a;border-radius:3px;padding:1mm 3mm;font-size:17px;font-weight:700}
+/* la case du total, comme sur les cartes : « TOTAL » en petit au-dessus du nombre (26/09/2026) */
+.boite{display:inline-flex;flex-direction:column;align-items:center;border:2px solid #0f172a;border-radius:3px;padding:0.6mm 3mm 0.8mm;font-size:17px;font-weight:700;line-height:1.05}
+.boite small{font-size:7.5px;font-weight:700;letter-spacing:0.6px;text-transform:uppercase;color:#0f172a}
 .x{font-family:'Times New Roman','DejaVu Serif',Georgia,serif;font-style:italic;font-weight:700;font-size:1.12em;padding:0 0.06em}
 .lex .atoi{background:#e6f1fb;border:1px solid #a9cdeb;border-radius:6px;padding:2mm 3mm 2mm 0}
 .lex .atoi b{color:#0b4f8a}
@@ -39,6 +42,17 @@
 .mini-sch .b .v{flex:7;color:#2563eb;background:#fff}
 .mini-sch .b .c{flex:6;border-left:none;background:#e2e8f0}
 .credits{text-align:center;font-size:10.5px;line-height:1.55;color:#475569;border-top:1px solid #e2e8f0;padding-top:3.5mm;padding-bottom:3mm}
+/* Crédit à gauche en 10 px, une ligne par phrase ; à droite IREMI puis maths&go, et dessous
+   l'Unité apprenante Michel Debré — la disposition du dos du monde 1 (lot 3 de sa relecture,
+   26/09/2026), reprise ici à la relecture du monde 2. */
+.credits{display:flex;align-items:center;gap:5mm;text-align:left}
+.credits .txt{flex:1;font-size:10px;white-space:nowrap}
+.credits .droite{display:flex;flex-direction:column;align-items:center;gap:2.2mm;flex:0 0 auto}
+.credits .logos-bas{display:flex;align-items:center;gap:3mm}
+.credits .logos-bas img.irem{height:11mm;display:block}
+.credits .logos-bas img.mg{height:9.5mm;display:block}
+.credits .ua{display:flex;align-items:center;gap:1.8mm;color:#0d7477;font-weight:700;font-size:10.5px;line-height:1.1}
+.credits .ua img{width:8mm;height:8mm;display:block}
 .credits b{color:#0f172a}
 .credits .steve{color:#0b4f8a;font-weight:700}
 </style></head>
@@ -78,23 +92,33 @@
 
   <div class="suite">
     <img src="qr/univers.png" alt="">
-    <div><h3>La suite du voyage</h3><p>Va voir les mondes&nbsp;3 et&nbsp;4, <b>SPLAT! Enquête</b> et <b>Grande enquête</b>, où un indice relie les taches entre elles, puis le monde&nbsp;5, <b>SPLAT! Équations</b>, pour résoudre sans schéma en barres&nbsp;!</p></div>
+    <div><h3>La suite du voyage</h3><p>Va voir le monde&nbsp;3, <b>SPLAT! Enquête</b>, où un indice relie les taches entre elles, puis le monde&nbsp;4, <b>SPLAT! Système</b>, où l'on compare plusieurs plateaux pour tout trouver&nbsp;!</p></div>
   </div>
 
   <div class="lex">
     <span class="chip">Pour se souvenir</span>
     <ul>
-      <li><span class="ic"><span class="boite">37</span></span><span>Le nombre encadré, c'est le <b>total</b>&nbsp;: tous les jetons, ceux qu'on voit et ceux qui sont cachés.</span></li>
+      <li><span class="ic"><span class="boite"><small>Total</small>37</span></span><span>Le nombre encadré, c'est le <b>total</b>&nbsp;: tous les jetons, ceux qu'on voit et ceux qui sont cachés.</span></li>
       <li><span class="ic"><svg width="74" height="26" viewBox="0 0 74 26"><circle cx="13" cy="13" r="9" fill="#2563eb" stroke="#1e40af" stroke-width="0.6"/><circle cx="36" cy="13" r="9" fill="#2563eb" stroke="#1e40af" stroke-width="0.6"/><circle cx="61" cy="13" r="11" fill="#fff" stroke="#2563eb" stroke-width="2.4"/><text x="61" y="17.5" text-anchor="middle" font-family="Poppins, sans-serif" font-size="12.5" font-weight="700" fill="#0f172a">6</text></svg></span><span>Un point bleu, c'est <b>un jeton</b>. Un jeton <b>avec un nombre</b>, c'est un <b>paquet de jetons</b>&nbsp;: il vaut ce nombre de jetons.</span></li>
-      <li><span class="ic"><svg width="30" height="30" viewBox="2 5 106 105" aria-hidden="true"><use href="#tacheBadge" fill="#000"/></svg></span><span>La tache cache un certain nombre de jetons&nbsp;: c'est notre <b>inconnue</b>, le <b>?</b>, <b>ce qu'il faut trouver</b>&nbsp;! Lorsque plusieurs taches apparaissent, elles cachent le même nombre de jetons.</span></li>
-      <li class="atoi"><span class="ic"><span class="mini-sch"><span class="h">37</span><span class="b"><div class="v">16</div><div class="c">?</div></span></span></span><span><b>Sous chaque carte, c'est à toi</b>&nbsp;: dessine le schéma en barres ou écris l'équation, puis trouve ce que cache la tache — comme l'exemple de la couverture.</span></li>
+      <li><span class="ic"><!-- la tache plus grosse, 52 px de haut au lieu de 30, comme au monde 1 (26/09/2026) --><svg width="53" height="52" viewBox="2 5 106 105" aria-hidden="true"><use href="#tacheBadge" fill="#000"/></svg></span><span class="t-inc">La tache cache un certain nombre de jetons&nbsp;: c'est notre <b>inconnue</b>, le <b>?</b>, <b>ce qu'il faut trouver</b>&nbsp;! Lorsque plusieurs taches apparaissent, elles cachent le même nombre de jetons.</span></li>
+      <li class="atoi"><span class="ic"><span class="mini-sch"><span class="h">37</span><span class="b"><div class="v">16</div><div class="c inc">?</div></span></span></span><span><b>Sous chaque carte, c'est à toi</b>&nbsp;: dessine le schéma en barres ou écris l'équation, puis trouve ce que cache la tache — comme l'exemple de la couverture.</span></li>
     </ul>
   </div>
 
   <div class="credits">
+    <div class="txt">
     Jeu <b>SPLAT!</b> créé par <span class="steve">Steve Wyborney</span> (stevewyborney.com) — merci Steve&nbsp;!<br>
-    Progression «&nbsp;SPLAT! cycle 3&nbsp;» de Claire · outil <b>SPLAT! classique</b> de maths&amp;go, avec l'IREMI de La Réunion.<br>
+    Livret et outil <b>SPLAT! classique</b> de maths&amp;go, avec l'IREMI de La Réunion.<br>
+    Merci à Claire pour la progression «&nbsp;SPLAT! cycle 3&nbsp;», ses idées et sa relecture.<br>
     Libre d'être imprimé, partagé et adapté — sans usage commercial, et sous la même licence.
+    </div>
+    <div class="droite">
+      <div class="logos-bas">
+        <img class="irem" src="/assets/img/logos/irem/logo-print.png" alt="IREMI La Réunion">
+        <img class="mg" src="/assets/img/logos/mathsgo/logo-print.png" alt="maths&amp;go">
+      </div>
+      <div class="ua"><img src="/assets/img/logos/ua-debre/icone.svg" alt=""><span>Unité apprenante<br>Michel Debré</span></div>
+    </div>
   </div>
 </div>
 

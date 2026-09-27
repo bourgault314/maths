@@ -44,8 +44,9 @@ test("A. dos : aucun logo, plus de « Mes fiches », QR de 30 mm, « Pour se sou
   // les scripts ne remplissent plus « Mes fiches » (sinon le rendu s'arrêterait sur « 0 cases »)
   for (const f of FAMILLES) assert.doesNotMatch(lire(`_sources/${f}/render.py`), /\.prog \.g \.c/, f);
   // le dos des deux livrets « Le défi » à deux séries : des QR encore plus grands
-  for (const f of ["livret-splat-classique", "livret-splat-equations"])
-    assert.match(lire(`_sources/${f}/render.py`), /CSS_DOS_DEFI = """[\s\S]*?\.niv img\{width:36mm;height:36mm\}/, f);
+  // (34 mm au monde 2 depuis sa relecture, 26/09/2026 : la place de la tache plus grosse et des logos)
+  for (const [f, mm] of [["livret-splat-classique", 34], ["livret-splat-equations", 36]])
+    assert.match(lire(`_sources/${f}/render.py`), new RegExp(`CSS_DOS_DEFI = """[\\s\\S]*?\\.niv img\\{width:${mm}mm;height:${mm}mm\\}`), f);
   // l'agrandissement par zoom : les mesures des mini-schémas en tiennent compte
   for (const f of ["livret-splat-enquete", "livret-splat-systeme"])
     assert.match(lire(`_sources/${f}/render.py`), /const Z = parseFloat\(getComputedStyle\(document\.querySelector\('\.lex ul'\)\)\.zoom\) \|\| 1;/, f);

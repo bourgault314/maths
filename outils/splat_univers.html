@@ -361,6 +361,18 @@ const M2A3="mode=U&equation=AX_PLUS_C_EQ_B&tasksMin=2&tasksMax=5&visibleMax=15&h
 /* Fiches du monde 2 : énoncé seul, 6 cartes par page (le plateau et, dessous, de la
    place pour dessiner le schéma en barres et écrire l'opération). */
 const FICHE="&print=statement&layout=6&imprimer=1&title=";
+/* Étapes 8 et 9 du monde 2 (fiches 8 et 9 des livrets), relecture du monde 2 (26/09/2026) : une
+   progression en quatre marches de 6 cartes. Avant, les deux pages de la fiche 8 étaient pareilles
+   (une tache et des paquets) et on ne divisait jamais avec des paquets. Désormais :
+   – fiche 8 : une tache et des paquets (on soustrait ; les 6 premières cartes d'avant, graine 347),
+     puis SEULEMENT des taches (on divise ; graine 260) ;
+   – fiche 9 : des taches et UN paquet (soustraire, diviser ; graine 1673), puis des taches et
+     DEUX paquets (additionner, soustraire, diviser ; graine 5974).
+   Graines triées : pas de 69, pas deux cartes pareilles, pas de paquet de 1 ou 2, de 2 à 5 taches. */
+const M2E4A="mode=N&equation=X_PLUS_A_EQ_B&cards=6&seed=347&unknown=question";
+const M2E4B="mode=N&equation=AX_EQ_B&tasksMin=2&tasksMax=5&cards=6&seed=260&unknown=question";
+const M2E5A="mode=N&equation=AX_PLUS_C_EQ_B&tasksMin=2&tasksMax=5&visibleMin=1&visibleMax=1&cards=6&seed=1673&unknown=question";
+const M2E5B="mode=N&equation=AX_PLUS_C_EQ_B&tasksMin=2&tasksMax=5&visibleMin=2&visibleMax=2&cards=6&seed=5974&unknown=question";
 /* ---- SPLAT! Équations, monde 5 (lot Q2, 24/09/2026) : les fiches 35, 36, 37 ----
    Le numéro de la première fiche est écrit ICI SEULEMENT : la carte des mondes saute
    jusqu'à lui (« premier » du monde, voir le rendu) et les titres « Fiche N — … »
@@ -601,18 +613,24 @@ const MONDES=[
       {nom:"Activité 2",jp:SC+"?"+M2A2,f:SC+"?"+M2A2+FICHE+encodeURIComponent("Activité 2")},
       {nom:"Activité 3",jp:SC+"?"+M2A3,f:SC+"?"+M2A3+FICHE+encodeURIComponent("Activité 3")}
     ]},
-   {t:"Avec des paquets de jetons",fo:"x + a = b",o:"Les jetons arrivent en paquets : on compte plus vite.",
+   {t:"Avec des paquets de jetons",fo:"x + a = b · a × x = b",o:"Les jetons arrivent en paquets : on compte plus vite.",
     p:"m2e4",
-    eqs:["𝑥 + 15 = 33", "𝑥 + 6 = 49", "𝑥 + 9 = 44", "𝑥 + 24 = 48", "𝑥 + 13 = 33", "𝑥 + 11 = 37", "𝑥 + 38 = 40", "𝑥 + 30 = 43", "𝑥 + 13 = 40", "𝑥 + 10 = 33", "𝑥 + 31 = 46", "𝑥 + 29 = 44"],
-    j:SC+"?mode=N&equation=X_PLUS_A_EQ_B&cards=12&seed=347&unknown=question&eleve=1&parcours=m2e4",
-    jp:SC+"?mode=N&equation=X_PLUS_A_EQ_B&cards=12&seed=347&unknown=question",
-    f:SC+"?mode=N&equation=X_PLUS_A_EQ_B&cards=12&seed=347&unknown=question&print=statement&layout=6&imprimer=1"},
+    eqs:["𝑥 + 15 = 33", "𝑥 + 6 = 49", "𝑥 + 9 = 44", "𝑥 + 24 = 48", "𝑥 + 13 = 33", "𝑥 + 11 = 37",
+         "5𝑥 = 40", "2𝑥 = 28", "4𝑥 = 36", "2𝑥 = 22", "3𝑥 = 45", "5𝑥 = 25"],
+    j:SC+"?"+M2E4A+"&eleve=1&parcours=m2e4&suite="+encodeURIComponent(M2E4B),
+    parties:[
+      {nom:"Une tache et des paquets",jp:SC+"?"+M2E4A,f:SC+"?"+M2E4A+FICHE+encodeURIComponent("Une tache et des paquets")},
+      {nom:"Seulement des taches",jp:SC+"?"+M2E4B,f:SC+"?"+M2E4B+FICHE+encodeURIComponent("Seulement des taches")}
+    ]},
    {t:"Le défi",fo:"a × x + c = b",o:"Paquets, taches et jetons : le grand mélange du monde 2.",
     p:"m2e5",
-    eqs:["3𝑥 + 27 = 36", "5𝑥 + 28 = 38", "5𝑥 + 22 = 32", "2𝑥 + 14 = 42", "3𝑥 + 15 = 27", "4𝑥 + 4 = 36", "3𝑥 + 9 = 21", "4𝑥 + 17 = 41", "3𝑥 + 31 = 43", "3𝑥 + 37 = 40", "4𝑥 + 6 = 30", "5𝑥 + 20 = 30"],
-    j:SC+"?mode=N&equation=AX_PLUS_C_EQ_B&tasksMax=5&cards=12&seed=18&unknown=question&eleve=1&parcours=m2e5",
-    jp:SC+"?mode=N&equation=AX_PLUS_C_EQ_B&tasksMax=5&cards=12&seed=18&unknown=question",
-    f:SC+"?mode=N&equation=AX_PLUS_C_EQ_B&tasksMax=5&cards=12&seed=18&unknown=question&print=statement&layout=6&imprimer=1"}]},
+    eqs:["5𝑥 + 28 = 43", "4𝑥 + 11 = 47", "2𝑥 + 8 = 30", "3𝑥 + 9 = 33", "2𝑥 + 3 = 29", "4𝑥 + 7 = 23",
+         "3𝑥 + 28 = 49", "5𝑥 + 9 = 34", "5𝑥 + 17 = 32", "4𝑥 + 11 = 31", "3𝑥 + 15 = 33", "2𝑥 + 14 = 20"],
+    j:SC+"?"+M2E5A+"&eleve=1&parcours=m2e5&suite="+encodeURIComponent(M2E5B),
+    parties:[
+      {nom:"Un paquet",jp:SC+"?"+M2E5A,f:SC+"?"+M2E5A+FICHE+encodeURIComponent("Un paquet")},
+      {nom:"Deux paquets",jp:SC+"?"+M2E5B,f:SC+"?"+M2E5B+FICHE+encodeURIComponent("Deux paquets")}
+    ]}]},
  MONDE_ENQUETE,
  MONDE_SYSTEME,
  /* Monde 5, SPLAT! Équations (lot Q2, 24/09/2026) : trois étapes = trois fiches de 12

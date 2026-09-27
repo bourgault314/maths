@@ -41,31 +41,41 @@ function constante(nom) {
   return m[1];
 }
 const M2A1 = constante("M2A1"), M2A2 = constante("M2A2"), M2A3 = constante("M2A3");
+// étapes 8 et 9 (relecture du monde 2, 26/09/2026) : deux séries de 6 cartes chacune
+const M2E4A = constante("M2E4A"), M2E4B = constante("M2E4B"), M2E5A = constante("M2E5A"), M2E5B = constante("M2E5B");
 const SC = "/splat/classique/";
-// les liens « j » des étapes 8 et 9, tels qu'écrits dans MONDES[1]
-function lienEtape(p) {
-  const m = univers.match(new RegExp(`j:SC\\+"\\?([^"]+&parcours=${p})"`));
-  assert.ok(m, `lien élève de ${p} introuvable`);
-  return SC + "?" + m[1];
-}
 const attendus = {
   7: SC + "?" + M2A1 + "&eleve=1&parcours=m2e1&suite=" + encodeURIComponent(M2A2) + ";" + encodeURIComponent(M2A3),
-  8: lienEtape("m2e4"),
-  9: lienEtape("m2e5"),
+  8: SC + "?" + M2E4A + "&eleve=1&parcours=m2e4&suite=" + encodeURIComponent(M2E4B),
+  9: SC + "?" + M2E5A + "&eleve=1&parcours=m2e5&suite=" + encodeURIComponent(M2E5B),
 };
 
 test("la carte des mondes enchaîne bien les trois activités de Claire dans l'étape 7", () => {
   assert.match(univers, /j:SC\+"\?"\+M2A1\+"&eleve=1&parcours=m2e1&suite="\+encodeURIComponent\(M2A2\)\+";"\+encodeURIComponent\(M2A3\)/);
 });
 
-test("étapes 8 et 9 : 12 cartes en ligne (6 + 6 sur les fiches), et la liste prof en compte 12", () => {
-  for (const p of ["m2e4", "m2e5"]) {
-    assert.equal(new URLSearchParams(attendus[p === "m2e4" ? 8 : 9].split("?")[1]).get("cards"), "12", p);
+test("étapes 8 et 9 : deux séries de 6 cartes (une par page de fiche), 12 cartes en ligne, 12 équations dans la liste prof", () => {
+  /* Relecture du monde 2 (26/09/2026, Gwenaël) : les deux pages de la fiche 8 étaient pareilles et on
+     ne divisait jamais avec des paquets → quatre marches de 6 cartes. */
+  const q = (u) => new URLSearchParams(u);
+  // fiche 8 : une tache et des paquets (les 6 premières cartes d'avant), puis seulement des taches
+  assert.equal(M2E4A, "mode=N&equation=X_PLUS_A_EQ_B&cards=6&seed=347&unknown=question");
+  assert.equal(q(M2E4B).get("equation"), "AX_EQ_B");
+  // fiche 9 : un paquet, puis deux paquets
+  for (const [c, n] of [[M2E5A, "1"], [M2E5B, "2"]]) {
+    assert.equal(q(c).get("equation"), "AX_PLUS_C_EQ_B");
+    assert.deepEqual([q(c).get("visibleMin"), q(c).get("visibleMax")], [n, n]);
+  }
+  for (const c of [M2E4A, M2E4B, M2E5A, M2E5B]) assert.equal(q(c).get("cards"), "6", c);
+  for (const [p, a, b] of [["m2e4", "M2E4A", "M2E4B"], ["m2e5", "M2E5A", "M2E5B"]]) {
+    assert.match(univers, new RegExp(`j:SC\\+"\\?"\\+${a}\\+"&eleve=1&parcours=${p}&suite="\\+encodeURIComponent\\(${b}\\)`));
     const etape = univers.match(new RegExp(`\\{t:"[^"]+",fo:"[^"]+",o:"[^"]+",\\s*p:"${p}",\\s*eqs:\\[([^\\]]+)\\]`));
     assert.ok(etape, `étape ${p} introuvable`);
     assert.equal(etape[1].split(",").length, 12, `12 équations listées pour ${p}`);
-    // les liens Projeter et Fiche portent la même série
-    assert.match(univers, new RegExp(`jp:SC\\+"\\?[^"]*cards=12[^"]*"[^}]*f:SC\\+"\\?[^"]*cards=12[^"]*print=statement&layout=6&imprimer=1"\\}`));
+    // Projeter et Fiche, pour chaque série
+    for (const c of [a, b]) {
+      assert.match(univers, new RegExp(`jp:SC\\+"\\?"\\+${c},f:SC\\+"\\?"\\+${c}\\+FICHE\\+`));
+    }
   }
 });
 
@@ -102,27 +112,34 @@ test("render.py rend les fiches avec les graines de la carte des mondes", () => 
   assert.equal(py("M2A1"), M2A1);
   assert.equal(py("M2A2"), M2A2);
   assert.equal(py("M2A3"), M2A3);
-  assert.equal(SC + "?" + py("E8") + "&eleve=1&parcours=m2e4", attendus[8]);
-  assert.equal(SC + "?" + py("E9") + "&eleve=1&parcours=m2e5", attendus[9]);
+  assert.equal(py("E8A"), M2E4A);
+  assert.equal(py("E8B"), M2E4B);
+  assert.equal(py("E9A"), M2E5A);
+  assert.equal(py("E9B"), M2E5B);
   // les trois fiches, dans l'ordre, sur deux pages chacune
   assert.match(render, /dict\(n=7, [^\n]*parties=\[M2A1, M2A2, M2A3\], parcours="m2e1", pages=2\)/);
-  assert.match(render, /dict\(n=8, [^\n]*parties=\[E8\],[^\n]*parcours="m2e4", pages=2\)/);
-  assert.match(render, /dict\(n=9, [^\n]*parties=\[E9\],[^\n]*parcours="m2e5", pages=2\)/);
+  assert.match(render, /dict\(n=8, [^\n]*parties=\[E8A, E8B\],[^\n]*parcours="m2e4", pages=2\)/);
+  assert.match(render, /dict\(n=9, [^\n]*parties=\[E9A, E9B\],[^\n]*parcours="m2e5", pages=2\)/);
   // le QR passe par la page courte, et le pied des 8 pages mène à la collection SPLAT
   assert.match(render, /return f"\{SITE\}\{SC\}livret\/\?f=\{f\.get\('qr', f\['n'\]\)\}"/);
   assert.match(render, /PIED_LIVRET = "mathsgo\.re\/splat · CC BY-NC-SA 4\.0"/);
 });
 
 test("l'exemple de couverture n'est pas une carte du livret", () => {
-  const m = render.match(/exemple=dict\(query="([^"]+)"\)/);
+  // relecture du monde 2 (26/09/2026) : une carte à DEUX taches (résolution complète), graine 746
+  const m = render.match(/exemple=dict\(query="([^"]+)"\s*"([^"]+)"\s*"([^"]+)"\),/);
   assert.ok(m, "exemple de couverture introuvable");
-  const graine = new URLSearchParams(m[1]).get("seed");
-  assert.ok(graine, "l'exemple a une graine fixe");
-  for (const q of [M2A1, M2A2, M2A3, attendus[8], attendus[9]]) {
-    assert.notEqual(new URLSearchParams(q.replace(/^.*\?/, "")).get("seed"), graine);
+  const ex = new URLSearchParams(m[1] + m[2] + m[3]);
+  assert.equal(ex.get("seed"), "746", "l'exemple a une graine fixe");
+  assert.deepEqual([ex.get("tasksMin"), ex.get("tasksMax")], ["2", "2"], "deux taches");
+  for (const q of [M2A1, M2A2, M2A3, M2E4A, M2E4B, M2E5A, M2E5B]) {
+    assert.notEqual(new URLSearchParams(q).get("seed"), "746");
   }
-  // en mode correction : carte, tableau ET équation, dessinés par l'outil
-  assert.match(render, /renderCardIntoSvg\(sv, cards\[0\], 'correction'\)/);
+  // relecture du monde 2 (26/09/2026) : la carte telle qu'elle est imprimée sur les fiches, puis
+  // ses deux corrections courtes 6/page (schéma, équation), dessinées par l'outil ; en lettre, 𝑥
+  assert.match(render, /renderSixCorrectionIntoSvg\(sv, c, part\)/);
+  assert.match(render, /const eq = dessin\('equation'\), sch = dessin\('schema'\);/);
+  assert.match(render, /if \(lettre\) c\.varChar = xChar;/);
 });
 
 test("les QR du livret existent : trois fiches, l'univers, quatre séries", () => {
@@ -178,10 +195,13 @@ test("L : les deux anciennes adresses renvoient vers le bon onglet, et sortent d
 });
 
 test("la miniature du livret existe en PNG et en WebP, au format du catalogue", () => {
-  assert.match(page, /assets\/img\/thumbnails\/splat\/livret-splat-classique\.png\?v=4/); // refaite le 25/09 (couverture sans logo, relecture du monde 1, lot 2)
-  assert.ok(existe("assets/img/thumbnails/splat/livret-splat-classique.png"));
-  assert.ok(existe("assets/img/thumbnails/splat/livret-splat-classique.webp"));
-  assert.ok(taille("assets/img/thumbnails/splat/livret-splat-classique.webp") < taille("assets/img/thumbnails/splat/livret-splat-classique.png"));
+  assert.match(page, /assets\/img\/thumbnails\/splat\/livret-splat-classique\.png\?v=5/); // refaite le 26/09 (relecture du monde 2 : l'exemple comme une carte de fiche)
+  assert.match(page, /assets\/img\/thumbnails\/splat\/livret-splat-classique-lettre\.png\?v=1/); // le livret en lettre (26/09/2026)
+  for (const n of ["livret-splat-classique", "livret-splat-classique-lettre"]) {
+    assert.ok(existe(`assets/img/thumbnails/splat/${n}.png`), n);
+    assert.ok(existe(`assets/img/thumbnails/splat/${n}.webp`), n);
+    assert.ok(taille(`assets/img/thumbnails/splat/${n}.webp`) < taille(`assets/img/thumbnails/splat/${n}.png`), n);
+  }
   // la miniature de la carte du catalogue : les couvertures des quatre mondes en éventail (23/09/2026)
   assert.ok(existe("assets/img/thumbnails/splat/livrets-splat.png"));
   assert.ok(existe("assets/img/thumbnails/splat/livrets-splat.webp"));
@@ -271,7 +291,7 @@ test("les titres des fiches 8 et 9 sont les mêmes partout (livret, page courte,
   assert.doesNotMatch(dos2.replace(/\/\*[\s\S]*?\*\//g, ""), /class="prog"|je colorie l'étoile/, "plus de « Mes fiches » au dos");
   assert.ok(courte.includes(`Fiche 8 — ${T8}`), "page courte des QR, fiche 8");
   assert.ok(courte.includes(`Fiche 9 — ${T9}`), "page courte des QR, fiche 9");
-  assert.ok(univers.includes(`{t:"${T8}",fo:"x + a = b"`), "étape 8 de la carte des mondes");
+  assert.ok(univers.includes(`{t:"${T8}",fo:"x + a = b · a × x = b"`), "étape 8 de la carte des mondes");
   assert.ok(univers.includes(`{t:"${T9}",fo:"a × x + c = b"`), "étape 9 de la carte des mondes");
   // les « bis » ne sont pas listés : le sommaire ne parle que de 7, 8, 9
   assert.doesNotMatch(couv2, /bis/);
@@ -320,8 +340,11 @@ function texteDesPages(p) {
         t.set(m[1].toLowerCase(), String.fromCodePoint(...(m[2].match(/.{4}/g) || []).map((h) => parseInt(h, 16))));
     for (const bloc of f.match(/beginbfrange([\s\S]*?)endbfrange/g) || [])
       for (const m of bloc.matchAll(/<([0-9a-fA-F]+)>\s*<([0-9a-fA-F]+)>\s*<([0-9a-fA-F]+)>/g)) {
-        const a = parseInt(m[1], 16), z = parseInt(m[2], 16), c = parseInt(m[3], 16);
-        for (let k = a; k <= z && k - a < 1024; k++) t.set(k.toString(16).padStart(4, "0"), String.fromCodePoint(c + (k - a)));
+        // destination en UTF-16 : une lettre hors du plan de base (𝑥, 𝑎… en SplatLettres, 26/09/2026)
+        // s'écrit en deux unités ; seule la dernière avance dans la plage
+        const a = parseInt(m[1], 16), z = parseInt(m[2], 16);
+        const u = (m[3].match(/.{4}/g) || []).map((h) => parseInt(h, 16));
+        for (let k = a; k <= z && k - a < 1024; k++) t.set(k.toString(16).padStart(4, "0"), String.fromCharCode(...u.slice(0, -1), u[u.length - 1] + (k - a)));
       }
     if (t.size) tables.push(t);
   }
@@ -363,15 +386,20 @@ test("dans le PDF publié : la 2e page de chaque fiche porte « Fiche N bis — 
   // les titres de Claire, tels qu'ils s'impriment
   assert.match(pages[3], /Fiche 8 — Avec des\s*paquets de jetons/);
   assert.match(pages[5], /Fiche 9 — Le dé/);
-  // lot P : chaque carte a sa case réponse « tache = ……… » à droite du plateau — un « = » par
-  // carte, rien d'écrit après (les pointillés sont un trait), et c'est le seul « = » de la fiche
+  // lot P : chaque carte a sa case réponse à droite du plateau — un « = » par carte, rien d'écrit
+  // après (les pointillés sont un trait), et c'est le seul « = » de la fiche ; depuis le 26/09/2026
+  // (relecture du monde 2) elle commence par l'inconnue : « ? = ……… »
   for (let p = 1; p <= 6; p++) {
-    assert.equal((pages[p].match(/TOTAL\d+=/g) || []).length, 6, `page ${p + 1} : six cases réponse, juste après le TOTAL`);
+    assert.equal((pages[p].match(/TOTAL\d+\?=/g) || []).length, 6, `page ${p + 1} : six cases réponse « ? = », juste après le TOTAL`);
     assert.equal((pages[p].match(/=/g) || []).length, 6, `page ${p + 1} : aucun nombre écrit dans les cases réponse`);
   }
-  // la couverture : le texte de Claire et « Nom, prénom »
-  assert.match(pages[0], /Sur cette carte, il y a 37 jetons au total/);
-  assert.match(pages[0], /Le schéma en barres et l'équation/);
+  // la couverture : le texte de Claire, l'exemple comme une carte de fiche, et « Nom, prénom »
+  assert.match(pages[0], /Sur cette carte, il y a 38 jetons au total/);
+  assert.match(pages[0], /les deux taches cachent chacune le même nombre de jetons/);
+  assert.match(pages[0], /on l'a symbolisé par un «\s\?\s»/);
+  assert.match(pages[0], /TOTAL38\?=11/, "la carte exemple : TOTAL, puis la case réponse remplie");
+  assert.match(pages[0], /Le schéma en barres/);
+  assert.match(pages[0], /L'équation/);
   assert.match(pages[0], /Nom, prénom/);
   assert.doesNotMatch(pages[0], /Prénom(?!.*Nom)/);
 });
@@ -613,23 +641,19 @@ test("K1 : dans les PDF de correction, les pages 2 à 7 sont des corrections, la
   }
 });
 
-// Relecture du monde 1, lot 3 (26/09/2026) : les pages 2 à 7 des six livrets Petit SPLAT!
-// (élève et corrigé) portent « page N » juste après leur pied ; la couverture et le dos, non.
-// Sur les feuilles A3, chaque demi-feuille garde le numéro de SA page du livret (8|1 · 2|7 ·
-// 6|3 · 4|5). Les sources sont vérifiées dans splat-relecture-m1-lot3.test.mjs.
-test("lot 3 du monde 1 : « page N » imprimé sur les pages 2 à 7 des six livrets, ni sur la couverture ni au dos", () => {
-  for (const s of SORTIES_M1) for (const v of ["", "_correction"]) {
-    const pages = texteExact(`outils/${s}${v}.pdf`);
-    assert.equal(pages.length, 8, `${s}${v} : huit pages de texte`);
-    for (let p = 2; p <= 7; p++) {
-      const t = pages[p - 1];
-      assert.ok(t.includes(`CC BY-NC-SA 4.0${v ? " · correction" : ""}page ${p}`), `${s}${v} p.${p} : « page ${p} » après le pied`);
-      assert.equal((t.match(/page \d/g) || []).length, 1, `${s}${v} p.${p} : un seul numéro`);
-    }
-    for (const p of [1, 8]) assert.doesNotMatch(pages[p - 1], /page \d/, `${s}${v} p.${p} : pas de numéro`);
-    const a3 = texteExact(`outils/${s}${v}_a_plier.pdf`).map((t) => (t.match(/page (\d)/g) || []).join(","));
-    assert.deepEqual(a3, ["", "page 2,page 7", "page 6,page 3", "page 4,page 5"],
-      `${s}${v} : les numéros suivent leurs pages sur les feuilles A3 (lu : ${a3.join(" | ")})`);
+// Relecture du monde 1, lot 3 (26/09/2026) : les pages 2 à 7 des livrets Petit SPLAT! ont porté
+// « page N ». Retiré le 26/09/2026 au soir (relecture du monde 2) : doublon du numéro de fiche,
+// et source d'erreur au monde 1 (« page 3 » = fiche 2). Plus aucun numéro de page, ni au monde 1
+// ni au monde 2.
+test("plus de « page N » dans les livrets des mondes 1 et 2 (retiré le 26/09/2026 au soir)", () => {
+  const livrets = [];
+  for (const s of SORTIES_M1) for (const v of ["", "_correction"]) livrets.push(`outils/${s}${v}.pdf`);
+  for (const b of ["livret_splat_classique", "livret_splat_classique_defi"])
+    for (const v of ["", "_lettre", "_correction_equation", "_correction_schema_lettre"]) livrets.push(`outils/${b}${v}.pdf`);
+  for (const f of livrets) {
+    const pages = texteExact(f);
+    assert.equal(pages.length, 8, `${f} : huit pages de texte`);
+    pages.forEach((t, i) => assert.doesNotMatch(t, /page \d/, `${f} p.${i + 1} : pas de numéro de page`));
   }
 });
 
@@ -682,9 +706,12 @@ const CORRECTIONS_M2 = [
   ["livret_splat_classique_correction_schema", "par le schéma en barres · inconnue «\u00a0?\u00a0»"],
   ["livret_splat_classique_correction_schema_lettre", "par le schéma en barres · inconnue en lettre"],
 ];
-const TITRES_M2 = ["Fiche 7 — Le même jeu,un nouveau plateau —Correction", "Fiche 7 bis — Le mêmejeu, un nouveau plateau— Correction",
-                   "Fiche 8 — Avec despaquets de jetons —Correction", "Fiche 8 bis — Avec despaquets de jetons —Correction",
-                   "Fiche 9 — Le déﬁ —Correction", "Fiche 9 bis — Le déﬁ —Correction"];
+// (26/09/2026 : sans les logos, le titre a plus de place dans le bandeau — il se coupe autrement)
+const TITRES_M2 = ["Fiche 7 — Le même jeu, un nouveau plateau— Correction", "Fiche 7 bis — Le même jeu, un nouveauplateau — Correction",
+                   "Fiche 8 — Avec des paquets de jetons —Correction", "Fiche 8 bis — Avec des paquets de jetons —Correction",
+                   "Fiche 9 — Le déﬁ — Correction", "Fiche 9 bis — Le déﬁ — Correction"];
+// le livret de l'élève qui va avec chaque corrigé : « ? » ou en lettre (relecture du monde 2, 26/09/2026)
+const ELEVE_DE = (s) => /_lettre$/.test(s) ? "livret_splat_classique_lettre" : "livret_splat_classique";
 
 test("K2 : les quatre livrets de correction du monde 2 existent — 8 pages A4, 4 feuilles A3 imposées", () => {
   for (const [s] of CORRECTIONS_M2) {
@@ -697,9 +724,9 @@ test("K2 : les quatre livrets de correction du monde 2 existent — 8 pages A4, 
 });
 
 test("K2 : pages 2 à 7 = la correction des fiches, même consigne que l'élève ; couverture « Livret corrigé » ; dos inchangé", () => {
-  const eleve = texteExact("outils/livret_splat_classique.pdf");
   const consigne = (x) => x.slice(x.indexOf("Pour chaque carte"), x.indexOf("TOTAL"));
   for (const [s, dit] of CORRECTIONS_M2) {
+    const eleve = texteExact(`outils/${ELEVE_DE(s)}.pdf`);
     const corr = texteExact(`outils/${s}.pdf`);
     assert.equal(corr.length, 8, `${s} : huit pages`);
     for (let p = 1; p <= 6; p++) {
@@ -730,21 +757,22 @@ test("K2 : l'équation ou le schéma, en « ? » ou en lettre — une lettre par
   const sc = texteExact("outils/livret_splat_classique_correction_schema.pdf");
   const scL = texteExact("outils/livret_splat_classique_correction_schema_lettre.pdf");
   // équation : fiche 7, carte 1 (7 jetons visibles, total 13) — l'équation que l'outil n'écrivait pas en mode A ;
-  // depuis le lot P, la case réponse de la colonne suit le TOTAL : « tache = 6 » (la tache est dessinée, « =6 » est écrit)
-  assert.ok(eq[1].includes("TOTAL13=67 + ?=13?=6− 7− 7"), eq[1].slice(0, 400));
-  assert.ok(eqL[1].includes("TOTAL13=67 + x=13x=6− 7− 7"), eqL[1].slice(0, 400));
-  assert.ok(sc[5].includes("TOTAL36=336"), sc[5].slice(0, 400));
-  // fiche 9, carte 1 : 27 + 3 × ? = 36 → 3 × ? = 9 → ? = 3, flèches − 27 et ÷ 3
-  assert.ok(eq[5].includes("27 + 3 × ?=363 × ?=9?=3− 27− 27÷ 3÷ 3"), eq[5].slice(0, 400));
-  // en lettre : la même carte avec sa lettre ; la fiche 7 a une lettre par carte (x, a, b, c…)
-  assert.ok(eqL[5].includes("27 + 3n=363n=9n=3"), eqL[5].slice(0, 400));
-  const lettres7 = [...eqL[1].matchAll(/\+ ([a-z])=/g)].map((m) => m[1]);
-  assert.deepEqual(lettres7, ["x", "a", "b", "c"], "fiche 7 : une lettre par carte, dans l'ordre de l'outil");
+  // la case réponse de la colonne suit le TOTAL (lot P) et commence, depuis le 26/09/2026, par l'inconnue :
+  // « ? = 6 » ou « 𝑥 = 6 » (la lettre de la carte, en lettre mathématique dessinée par SplatLettres)
+  assert.ok(eq[1].includes("TOTAL13?=67 + ?=13?=6− 7− 7"), eq[1].slice(0, 400));
+  assert.ok(eqL[1].includes("TOTAL13𝑥=67 + 𝑥=13𝑥=6− 7− 7"), eqL[1].slice(0, 400));
+  assert.ok(sc[5].includes("TOTAL43?=3"), sc[5].slice(0, 400));
+  // fiche 9, carte 1 (depuis le 26/09/2026 : 5 taches et un paquet) : 28 + 5 × ? = 43 → 5 × ? = 15 → ? = 3
+  assert.ok(eq[5].includes("28 + 5 × ?=435 × ?=15?=3− 28− 28÷ 5÷ 5"), eq[5].slice(0, 400));
+  // en lettre : la même carte avec sa lettre ; la fiche 7 a une lettre par carte (𝑥, 𝑎, 𝑏, 𝑐…)
+  assert.ok(eqL[5].includes("28 + 5𝑏=435𝑏=15𝑏=3"), eqL[5].slice(0, 400));
+  const lettres7 = [...eqL[1].matchAll(/\+ ([\u{1D434}-\u{1D467}])=/gu)].map((m) => m[1]);
+  assert.deepEqual(lettres7, ["𝑥", "𝑎", "𝑏", "𝑐"], "fiche 7 : une lettre par carte, dans l'ordre de l'outil");
   assert.doesNotMatch(eqL[1] + eqL[2], /\?/, "plus de « ? » sur la fiche 7 en lettre");
   // schéma : les calculs, pas d'équation
-  assert.ok(sc[5].includes("36 − 27 = 9") && sc[5].includes("9 ÷ 3 = 3"), sc[5].slice(0, 400));
-  assert.doesNotMatch(sc[5], /3 × \?/, "le livret « schéma » n'écrit pas l'équation");
-  assert.doesNotMatch(eq[5], /36 − 27 = 9/, "le livret « équation » n'écrit pas les calculs du schéma");
+  assert.ok(sc[5].includes("43 − 28 = 15") && sc[5].includes("15 ÷ 5 = 3"), sc[5].slice(0, 400));
+  assert.doesNotMatch(sc[5], /5 × \?/, "le livret « schéma » n'écrit pas l'équation");
+  assert.doesNotMatch(eq[5], /43 − 28 = 15/, "le livret « équation » n'écrit pas les calculs du schéma");
   assert.ok(scL[1].includes("13 − 7 = 6"), scL[1].slice(0, 300));
   assert.doesNotMatch(scL[1] + scL[2], /\?/, "schéma en lettre : plus de « ? » sur la fiche 7");
 });
@@ -764,23 +792,35 @@ test("K2 : render.py fabrique les quatre corrections avec l'outil (print=correct
   assert.ok(render.includes(`pg.evaluate(JS_QR, [f"{qrweb}/fiche{f.get('qr', f['n'])}.png"] + ([QR_PROF, QR_ELEVE] if corr else [QR_ELEVE, None]))`), "la boîte du corrigé a la largeur de celle de l'élève");
   assert.match(render, /PIED_CORRECTION = PIED_LIVRET \+ " · correction"/);
   assert.match(render, /\.bandeau-prof\{[^}]*\n?[^}]*background:#b91c1c;color:#fff;/);
-  assert.match(render, /versions = \[None\] \+ CORRECTIONS/);
+  assert.match(render, /versions = ELEVES \+ CORRECTIONS/);
   assert.ok(!existe("_sources/livret-splat-classique/couverture-correction.html"), "pas de couverture dupliquée");
 });
 
 test("K2 : la page des livrets du monde 2 mène aux huit PDF de correction, repliés sous les liens de l'élève", () => {
-  const carte = panneau(2).split('<article class="liv">')[1];
-  const plierEleve = carte.indexOf('href="/outils/livret_splat_classique_a_plier.pdf"');
-  const bloc = carte.slice(carte.indexOf('<details class="prof">'), carte.indexOf("</details>"));
-  assert.ok(carte.indexOf('<details class="prof">') > plierEleve, "sous les deux liens de l'élève");
-  assert.match(bloc, /<summary>✅ Les corrigés · 4 livrets<\/summary>/);
-  let avant = -1;
-  for (const [s] of CORRECTIONS_M2) {
-    const pdf = bloc.indexOf(`href="/outils/${s}.pdf"`), plier = bloc.indexOf(`href="/outils/${s}_a_plier.pdf"`);
-    assert.ok(pdf > avant && plier > pdf, `${s} : PDF puis « à plier », dans l'ordre`);
-    avant = plier;
-  }
-  assert.equal((bloc.match(/class="lien-prof"/g) || []).length, 8, "huit liens");
+  /* Relecture du monde 2 (26/09/2026) : deux séries, « Avec ? » et « Avec une lettre », chacune
+     avec SES deux corrigés (équation, schéma) sous le livret de l'élève qui leur correspond. */
+  const cartes = panneau(2).split('<article class="liv">').slice(1);
+  assert.equal(cartes.length, 4, "Monde 2 et Le défi, avec « ? » puis avec une lettre");
+  let liens = 0;
+  cartes.forEach((carte, k) => {
+    const defi = k % 2 === 1, lettre = k >= 2;
+    const base = "livret_splat_classique" + (defi ? "_defi" : "");
+    const eleve = base + (lettre ? "_lettre" : "");
+    const plierEleve = carte.indexOf(`href="/outils/${eleve}_a_plier.pdf"`);
+    assert.ok(plierEleve > 0, `${eleve} : le livret à plier`);
+    const bloc = carte.slice(carte.indexOf('<details class="prof">'), carte.indexOf("</details>"));
+    assert.ok(carte.indexOf('<details class="prof">') > plierEleve, `${eleve} : sous les deux liens de l'élève`);
+    assert.match(bloc, /<summary>✅ Les corrigés · 2 livrets<\/summary>/);
+    let avant = -1;
+    for (const c of ["_correction_equation", "_correction_schema"]) {
+      const s = base + c + (lettre ? "_lettre" : "");
+      const pdf = bloc.indexOf(`href="/outils/${s}.pdf"`), plier = bloc.indexOf(`href="/outils/${s}_a_plier.pdf"`);
+      assert.ok(pdf > avant && plier > pdf, `${s} : PDF puis « à plier », dans l'ordre`);
+      avant = plier;
+    }
+    liens += (bloc.match(/class="lien-prof"/g) || []).length;
+  });
+  assert.equal(liens, 16, "les huit corrigés des deux niveaux, PDF et à plier");
   assert.match(page, /\.liv \.lien-prof\{[^}]*min-height:44px/, "boutons de 44 px de haut");
 });
 
@@ -818,11 +858,14 @@ test("L : un onglet et un panneau par monde, le prof replié partout, la note un
   assert.equal((page.match(/role="tab"/g) || []).length, 5, "cinq onglets (mondes 1 à 5, lot Q3)");
   assert.equal((page.match(/role="tabpanel"/g) || []).length, 5, "cinq panneaux");
   assert.equal((page.match(/<section class="note"/g) || []).length, 1, "une seule note « Pour imprimer »");
-  // dix-huit cartes : 6 (monde 1, dont les trois « Je dessine le schéma » du 26/09/2026) + 2 (monde 2)
-  // + 5 (monde 3 : deux livrets et leurs défis, puis la partie 3)
-  // + 2 (monde 4, le Système, 25/09/2026) + 3 (monde 5 : corrigés du lot Q4, et le défi du lot Q5)
-  assert.equal((page.match(/<details class="prof">/g) || []).length, 18, "les dix-huit cartes replient leurs corrigés");
-  assert.match(page, /sur A3 \(meilleur rendu\)/, "le conseil de Claire sur le A3");
+  // vingt cartes : 6 (monde 1, dont les trois « Je dessine le schéma » du 26/09/2026) + 4 (monde 2 :
+  // Monde 2 et Le défi, avec « ? » et avec une lettre, 26/09/2026) + 5 (monde 3 : deux livrets et
+  // leurs défis, puis la partie 3) + 2 (monde 4, le Système, 25/09/2026) + 3 (monde 5 : corrigés du
+  // lot Q4, et le défi du lot Q5)
+  assert.equal((page.match(/<details class="prof">/g) || []).length, 20, "les vingt cartes replient leurs corrigés");
+  // la note d'impression, réécrite par Gwenaël le 27/09/2026 : pas de « meilleur rendu », le A3 n'est pas un conseil
+  assert.match(page, /Livret à plier<\/strong>&nbsp;: en A3 pour un grand livret, ou en A4 pour un petit livret\. Recto-verso, <strong>bord court<\/strong>\.<\/p>/);
+  assert.doesNotMatch(page, /meilleur rendu/);
   /* Sans JavaScript, aucun monde n'est caché. Le panneau porte l'attribut « hidden »,
      que le navigateur masque d'office : il FAUT donc les deux règles, dans cet ordre —
      celle qui annule le masquage, puis celle qui le rétablit sous html.js. Une seule
@@ -974,8 +1017,9 @@ test("D : les QR du livret « Le défi » — trois fiches, l'univers, deux sér
   assert.match(render, /serie_defi\(2, 6, 20, 100\), "serie-1\.png"/);
   assert.match(render, /serie_defi\(2, 6, 50, 100\), "serie-2\.png"/);
   // et le QR est plus grand qu'à quatre séries : l'adresse est longue, il faut des modules
-  // lisibles (32 mm contre 21 ; 36 contre 30 depuis le lot 2 de la relecture du monde 1)
-  assert.match(render, /CSS_DOS_DEFI = """[\s\S]*?\.niv img\{width:36mm;height:36mm\}/);
+  // lisibles (32 mm contre 21 ; 36 contre 30 depuis le lot 2 de la relecture du monde 1 ; 34 depuis la
+  // relecture du monde 2, 26/09/2026 : la place de la tache plus grosse, de « TOTAL » et des logos au dos)
+  assert.match(render, /CSS_DOS_DEFI = """[\s\S]*?\.niv img\{width:34mm;height:34mm\}/);
 });
 
 test("D : les dix PDF du livret « Le défi » — 8 pages A4, 4 feuilles A3 imposées", () => {
@@ -992,7 +1036,8 @@ test("D : dans le PDF publié — la couverture du défi, et « Fiche N bis » s
   // la couverture : l'accroche, l'exemple écrit à partir de la carte rendue, le sommaire
   assert.match(pages[0], /et des totaux jusqu'à 100/);
   assert.match(pages[0], /Sur cette carte, il y a 77 jetons au total/);
-  assert.match(pages[0], /on additionne les paquets \(17 \+ 18 =\s*35\), on soustrait \(77 − 35 = 42\), puis on divise \(42 ÷ 3 = 14\)/);
+  // (espaces insécables autour des signes depuis le 26/09/2026 : un calcul ne se coupe plus en fin de ligne)
+  assert.match(pages[0], /on additionne les paquets\s?\(17\s\+\s18\s=\s*35\), on soustrait \(77\s−\s35\s=\s42\), puis on divise \(42\s÷\s3\s=\s14\)/);
   assert.match(pages[0], /Nom, prénom/);
   // Chromium écrit un glyphe à la fois : un retour à la ligne y perd son espace.
   const sansBlancs = (t) => t.replace(/\s+/g, "");
@@ -1034,10 +1079,12 @@ test("D : les 36 cartes du livret sont 36 équations différentes (mesuré sur l
   }
 });
 
-test("D : la page des livrets donne deux livrets dans l'onglet du monde 2", () => {
+test("D : la page des livrets donne deux livrets dans l'onglet du monde 2 (avec « ? » et avec une lettre)", () => {
   const m2 = panneau(2);
   assert.match(m2, /<div class="grille n2">/, "deux cartes côte à côte");
-  assert.equal((m2.match(/<article class="liv">/g) || []).length, 2, "deux livrets au monde 2");
+  // deux séries depuis le 26/09/2026 : « Avec ? » et « Avec une lettre », deux livrets chacune
+  assert.equal((m2.match(/<article class="liv">/g) || []).length, 4, "deux livrets par série au monde 2");
+  assert.equal((m2.match(/<div class="grille n2">/g) || []).length, 2, "une rangée par série");
   for (const s of PDF_DEFI) {
     assert.ok(m2.includes(`href="/outils/${s}.pdf"`), `${s}.pdf`);
     assert.ok(m2.includes(`href="/outils/${s}_a_plier.pdf"`), `${s}_a_plier.pdf`);
@@ -1048,7 +1095,12 @@ test("D : la page des livrets donne deux livrets dans l'onglet du monde 2", () =
 });
 
 test("D : la miniature du livret « Le défi », et le lien de la vue prof", () => {
-  assert.match(page, /assets\/img\/thumbnails\/splat\/livret-splat-classique-defi\.png\?v=3/); // refaite le 25/09 (couverture sans logo)
+  assert.match(page, /assets\/img\/thumbnails\/splat\/livret-splat-classique-defi\.png\?v=4/); // refaite le 26/09 (relecture du monde 2)
+  assert.match(page, /assets\/img\/thumbnails\/splat\/livret-splat-classique-defi-lettre\.png\?v=1/);
+  for (const n of ["livret-splat-classique-defi-lettre"]) {
+    assert.ok(existe(`assets/img/thumbnails/splat/${n}.png`) && existe(`assets/img/thumbnails/splat/${n}.webp`), n);
+    assert.ok(taille(`assets/img/thumbnails/splat/${n}.webp`) < taille(`assets/img/thumbnails/splat/${n}.png`), n);
+  }
   assert.ok(existe("assets/img/thumbnails/splat/livret-splat-classique-defi.png"));
   assert.ok(existe("assets/img/thumbnails/splat/livret-splat-classique-defi.webp"));
   assert.ok(taille("assets/img/thumbnails/splat/livret-splat-classique-defi.webp")
@@ -1103,16 +1155,19 @@ test("corrigés pour tous : la boîte du QR du corrigé garde la largeur de cell
 
 test("le dos des livrets des mondes 1 et 2 donne les bons numéros de mondes (six mondes)", () => {
   assert.ok(dos1.includes("va voir les mondes 2 à 6 de l'univers SPLAT!"), "dos du monde 1");
-  assert.ok(dos2.includes("Va voir les mondes&nbsp;3 et&nbsp;4, <b>SPLAT! Enquête</b> et <b>Grande enquête</b>, où un indice relie les taches entre elles, puis le monde&nbsp;5, <b>SPLAT! Équations</b>, pour résoudre sans schéma en barres&nbsp;!"), "dos du monde 2");
+  // relecture du monde 2 (26/09/2026) : la « Grande enquête » n'est plus un monde ; la suite, c'est
+  // l'Enquête (monde 3) puis le Système (monde 4)
+  assert.ok(dos2.includes("Va voir le monde&nbsp;3, <b>SPLAT! Enquête</b>, où un indice relie les taches entre elles, puis le monde&nbsp;4, <b>SPLAT! Système</b>, où l'on compare plusieurs plateaux pour tout trouver&nbsp;!"), "dos du monde 2");
+  assert.doesNotMatch(dos2, /Grande enquête/);
   assert.doesNotMatch(dos1, /mondes 2, 3, 4 et 5/);
   assert.doesNotMatch(dos2, /monde&nbsp;4, <b>SPLAT! Équations/);
   // dans les PDF publiés : la page 8 des 5 livrets de l'élève et des 11 corrigés
   for (const s of SORTIES_M1) for (const v of ["", "_correction"])
     assert.ok(texteExact(`outils/${s}${v}.pdf`)[7].includes("mondes 2 à 6"), `${s}${v} : dos`);
   for (const b of ["livret_splat_classique", "livret_splat_classique_defi"])
-    for (const v of ["", "_correction_equation", "_correction_equation_lettre", "_correction_schema", "_correction_schema_lettre"]) {
-      const d = texteExact(`outils/${b}${v}.pdf`)[7];
-      assert.ok(d.includes("Grande enquête") && d.includes("SPLAT! Équations"), `${b}${v} : dos`);
-      assert.doesNotMatch(d, /monde\s4, SPLAT! Équations/, `${b}${v} : l'ancien numéro`);
+    for (const v of ["", "_lettre", "_correction_equation", "_correction_equation_lettre", "_correction_schema", "_correction_schema_lettre"]) {
+      const d = texteExact(`outils/${b}${v}.pdf`)[7].replace(/\s+/g, " ");
+      assert.ok(d.includes("monde 3, SPLAT! Enquête") && d.includes("monde 4, SPLAT! Système"), `${b}${v} : dos`);
+      assert.doesNotMatch(d, /Grande enquête/, `${b}${v} : l'ancien nom`);
     }
 });
