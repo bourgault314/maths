@@ -863,7 +863,9 @@ test("L : un onglet et un panneau par monde, le prof replié partout, la note un
   // leurs défis, puis la partie 3) + 2 (monde 4, le Système, 25/09/2026) + 3 (monde 5 : corrigés du
   // lot Q4, et le défi du lot Q5)
   assert.equal((page.match(/<details class="prof">/g) || []).length, 20, "les vingt cartes replient leurs corrigés");
-  assert.match(page, /sur A3 \(meilleur rendu\)/, "le conseil de Claire sur le A3");
+  // la note d'impression, réécrite par Gwenaël le 27/09/2026 : pas de « meilleur rendu », le A3 n'est pas un conseil
+  assert.match(page, /Livret à plier<\/strong>&nbsp;: en A3 pour un grand livret, ou en A4 pour un petit livret\. Recto-verso, <strong>bord court<\/strong>\.<\/p>/);
+  assert.doesNotMatch(page, /meilleur rendu/);
   /* Sans JavaScript, aucun monde n'est caché. Le panneau porte l'attribut « hidden »,
      que le navigateur masque d'office : il FAUT donc les deux règles, dans cet ordre —
      celle qui annule le masquage, puis celle qui le rétablit sous html.js. Une seule
