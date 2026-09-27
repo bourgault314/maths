@@ -95,7 +95,7 @@ test("C. catalogue : la carte de la progression masquée, la vignette de l'unive
     assert.ok(Math.abs(+n[2] - (+taches[i][2] + 0.36 * +n[3])) < 0.1, `numéro ${i + 1} centré en y`);
   });
   // le cache-buster du catalogue suit
-  assert.match(lire("outils/index.html"), /catalogue-refonte-data\.js\?v=splat-relecture-m1-lot2-20260925-1/);
+  assert.match(lire("outils/index.html"), /catalogue-refonte-data\.js\?v=splat-relatifs-monde6-20260927-1/);
 });
 
 // D. le texte lu, sans les commentaires (HTML, CSS, JS) : plus un seul « ou » sans insécable
@@ -116,7 +116,7 @@ test("D. guillemets français : une espace insécable après « et avant » dans
   // l'exemple relevé par Gwenaël : « Sans total » dans la note de « L'enquête rebondit »
   assert.match(lire("outils/splat_univers.html"), /les cases «\\u00a0Taches répétées\\u00a0» et «\\u00a0Sans total\\u00a0» de l’outil/);
   // et la description des livrets au catalogue
-  assert.match(lire("assets/js/catalogue-refonte-data.js"), /schéma en barres, équation, et « Le défi »\./);
+  assert.match(lire("assets/js/catalogue-refonte-data.js"), /schéma en barres, équation, et « Le défi » ; SPLAT! Relatifs \(monde 6\) en deux livrets\./);
 });
 
 test("E. vue professeur, mondes 2 et 5 : un seul lien vers la page des livrets, la note sans l'impression", () => {
