@@ -279,7 +279,10 @@ function marques(lettre, carte = { family: "EQPM" }) {
   const poses = [];
   const c = vm.createContext({ tachesLettre: lettre, clamp: (v, a, b) => Math.max(a, Math.min(b, v)),
     isSignedEquationFamily: (k) => k.family === "EQPM", getCardVarChar: () => "𝑡",
-    eqPrintOpposeFontSize: () => 20 });
+    eqPrintOpposeFontSize: () => 20,
+    // la lettre ronde (lot monde5-lettre-ronde, 27/09/2026) : sa police, son agrandissement, son centrage
+    EQ_PRINT_LETTRE_FONT: 'SplatLettres, "Times New Roman", Times, serif', EQ_PRINT_LETTRE_ECHELLE: 1.2,
+    eqPrintLettreDecalage: () => [0.01, 0.29] });
   vm.runInContext(fonction("drawEqPrintTacheMark") + fonction("eqPrintHiddenValue")
     + ";globalThis.m=drawEqPrintTacheMark;globalThis.v=eqPrintHiddenValue;", c);
   const g = { appendChild: (t) => poses.push(t) };
@@ -287,7 +290,8 @@ function marques(lettre, carte = { family: "EQPM" }) {
   const s = { cx: 0, cy: 0, r: 74 };
   return {
     poser: (opposee, devoilee) => { poses.length = 0; const r = c.m(g, texte, s, carte, opposee, devoilee); return { r, poses: poses.map((p) => p.label) }; },
-    valeur: (val, opposee) => c.v(carte, val, opposee)
+    valeur: (val, opposee) => c.v(carte, val, opposee),
+    dernier: (opposee, devoilee) => { poses.length = 0; c.m(g, texte, s, carte, opposee, devoilee); return poses[poses.length - 1]; }
   };
 }
 
@@ -302,6 +306,12 @@ test("R3 : « taches=lettre » — 𝑡 et −𝑡 sur les taches imprimées, la
   assert.deepEqual(avec.poser(true, false), { r: false, poses: ["−𝑡"] });
   assert.deepEqual(avec.poser(false, true), { r: true, poses: ["𝑡"] });
   assert.deepEqual(avec.poser(true, true), { r: true, poses: ["−𝑡"] });
+  // la lettre posée : ronde (SplatLettres), centrée sur son encre, 1,2 × la taille du lot R3
+  const lettrePosee = avec.dernier(false, false);
+  assert.equal(lettrePosee.attrs["font-family"], 'SplatLettres, "Times New Roman", Times, serif');
+  assert.equal(lettrePosee.attrs["dominant-baseline"], "alphabetic");
+  assert.deepEqual([lettrePosee.attrs.dx, lettrePosee.attrs.dy], ["0.010em", "0.290em"]);
+  assert.equal(lettrePosee.attrs["font-size"], String(Math.round(58 * 1.2)), "0,78 × 74 = 58, puis × 1,2");
   assert.equal(avec.valeur(3, true), -3, "sous « −𝑡 », la valeur de −𝑡");
   assert.equal(avec.valeur(-4, true), 4);
   assert.equal(avec.valeur(0, true), 0);

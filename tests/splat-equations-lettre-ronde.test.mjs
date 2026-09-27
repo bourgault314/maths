@@ -52,9 +52,18 @@ test("les deux pages déclarent quatre @font-face : fin jusqu'à 599, gras au-de
 test("l'outil des Équations : SplatLettres en tête de chaque police qui peut dessiner une lettre", () => {
   assert.match(outil, /\*\{box-sizing:border-box;font-family:SplatLettres,system-ui,-apple-system,Segoe UI,Roboto,Arial;\}/);
   assert.match(outil, /line-height:1;\n    font-family:SplatLettres,system-ui,-apple-system,Segoe UI,Roboto,Arial;/, "le bouton 𝑥 / ?");
-  // plus aucune liste Times sans SplatLettres devant (lignes d'équation, schémas, flèches)
-  assert.doesNotMatch(outil, /"'Times New Roman', Times, serif"/);
+  // plus aucune liste Times sans SplatLettres devant (lignes d'équation, schémas, flèches, lettre
+  // des taches du livret 2 des relatifs), quelles que soient les guillemets
+  const listesTimes = [...outil.matchAll(/["']?Times New Roman["']?, Times, serif/g)].map(m => outil.slice(Math.max(0, m.index - 14), m.index));
+  assert.ok(listesTimes.length >= 11, `${listesTimes.length} listes Times`);
+  for (const avant of listesTimes) assert.match(avant, /SplatLettres, $/, `liste Times sans SplatLettres : « …${avant} »`);
   assert.equal((outil.match(/"SplatLettres, 'Times New Roman', Times, serif"/g) || []).length, 10);
+  // la lettre des taches imprimées (livret 2 des relatifs) : SplatLettres, centrée sur son encre
+  assert.match(outil, /^const EQ_PRINT_LETTRE_FONT = 'SplatLettres, "Times New Roman", Times, serif';/m);
+  // 1,2 × : la lettre ronde garde sur la tache la hauteur du lot R3 (son œil est plus bas)
+  assert.match(outil, /^const EQ_PRINT_LETTRE_ECHELLE = 1\.2;/m);
+  assert.match(outil, /Math\.round\(clamp\(Math\.round\(r \* \(revealed \? 0\.46 : \(opposed \? 0\.66 : 0\.78\)\)\), 20, 64\) \* EQ_PRINT_LETTRE_ECHELLE\)/);
+  assert.match(outil, /attrs\["font-family"\] = EQ_PRINT_LETTRE_FONT;[\s\S]{0,80}const \[dx, dy\] = eqPrintLettreDecalage\(label\);\s*attrs\["dominant-baseline"\] = "alphabetic";/);
   assert.doesNotMatch(outil, /font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial/);
   // la mesure des flèches de la correction courte : dans la police dessinée
   assert.match(outil, /^const EQ_SIX_CORR_DRAWN_FONT = 'SplatLettres, system-ui, -apple-system, "Segoe UI", Roboto, Arial';/m);

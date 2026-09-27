@@ -7643,13 +7643,39 @@ function eqPrintOpposeFontSize(r, revealed){
    lettre sur CHAQUE tache — « 𝑡 », « −𝑡 ». Blanche au milieu d'une tache noire ; noire,
    au-dessus du jeton, sur une tache dévoilée. Rend true si le mot est posé au-dessus d'un
    jeton dévoilé (la carte garde alors le rayon de base de ses jetons). */
+/* La lettre d'une tache imprimée est centrée sur son ENCRE (27/09/2026, lettre ronde SplatLettres) :
+   un « 𝑏 » a une hampe, un « 𝑥 » non — « dominant-baseline: middle » faisait monter les lettres à
+   hampe. On mesure le texte au canvas, dans la police dessinée ; [dx, dy] en em, à poser sur un
+   texte ancré au milieu, sur sa ligne de base. */
+const EQ_PRINT_LETTRE_FONT = 'SplatLettres, "Times New Roman", Times, serif';
+/* × 1,2 : l'œil de la lettre ronde est plus bas que celui de l'ancienne lettre de secours ; à
+   ce facteur, la lettre garde sur la tache la hauteur qu'elle avait au lot R3 (mesuré au PDF). */
+const EQ_PRINT_LETTRE_ECHELLE = 1.2;
+const eqPrintLettreEncre = new Map();
+let eqPrintLettreCtx = null;
+function eqPrintLettreDecalage(label){
+  if(eqPrintLettreEncre.has(label)) return eqPrintLettreEncre.get(label);
+  let d = [0, 0.33];
+  try{
+    if(!eqPrintLettreCtx) eqPrintLettreCtx = document.createElement("canvas").getContext("2d");
+    eqPrintLettreCtx.font = `italic 700 100px ${EQ_PRINT_LETTRE_FONT}`;
+    const m = eqPrintLettreCtx.measureText(String(label));
+    if(Number.isFinite(m.actualBoundingBoxAscent) && m.actualBoundingBoxAscent > 0){
+      d = [(m.width - (m.actualBoundingBoxRight - m.actualBoundingBoxLeft)) / 200,
+           (m.actualBoundingBoxAscent - m.actualBoundingBoxDescent) / 200];
+      if(!document.fonts || document.fonts.check("italic 700 100px SplatLettres", "\u{1D465}")) eqPrintLettreEncre.set(label, d);
+    }
+  }catch(e){}
+  return d;
+}
+
 function drawEqPrintTacheMark(group, textFn, s, card, opposed, revealed){
   const lettre = tachesLettre && isSignedEquationFamily(card);
   if(!opposed && !lettre) return false;
   const r = Number(s && s.r) || 74;
   const label = lettre ? ((opposed ? "\u2212" : "") + getCardVarChar(card)) : "opposé";
   const fs = lettre
-    ? clamp(Math.round(r * (revealed ? 0.46 : (opposed ? 0.66 : 0.78))), 20, 64)
+    ? Math.round(clamp(Math.round(r * (revealed ? 0.46 : (opposed ? 0.66 : 0.78))), 20, 64) * EQ_PRINT_LETTRE_ECHELLE)
     : eqPrintOpposeFontSize(r, revealed);
   const attrs = {
     "text-anchor":"middle",
@@ -7662,8 +7688,12 @@ function drawEqPrintTacheMark(group, textFn, s, card, opposed, revealed){
     "paint-order":"stroke fill"
   };
   if(lettre){
-    attrs["font-family"] = '"Times New Roman", Times, serif';
+    attrs["font-family"] = EQ_PRINT_LETTRE_FONT;
     attrs["font-style"] = "italic";
+    const [dx, dy] = eqPrintLettreDecalage(label);
+    attrs["dominant-baseline"] = "alphabetic";
+    attrs["dx"] = dx.toFixed(3) + "em";
+    attrs["dy"] = dy.toFixed(3) + "em";
   }
   group.appendChild(textFn(s.cx, revealed ? (s.cy - r*0.65) : s.cy, label, attrs));
   return revealed;

@@ -83,8 +83,9 @@ miniatures de la page des livrets (page 1 à 120 dpi → 993 × 1404, PNG et Web
 Les pages-fiches sont imprimées par l'outil (`outils/splat_equations.html`), qui déclare
 désormais **SplatLettres**, la lettre ronde du site : les lettres des **corrigés** sont rondes,
 comme sur la couverture et le dos (avant : la lettre de secours de la machine de rendu, sans
-empattement). Les quatre PDF corrigés ont été refaits. Les livrets de l'élève n'ont pas été
-redéposés : refaits, ils ne diffèrent que d'une fraction de millimètre sur la première ligne de
-l'exemple de couverture (mesure des lettres), invisible à l'impression.
+empattement). La lettre posée sur les taches du livret 2 (lot R3) est centrée sur son dessin et
+agrandie de 20 % pour garder sa hauteur. Refaits : les quatre corrigés et le livret 2 de l'élève.
+Le livret 1 de l'élève n'a pas été redéposé : refait, il ne diffère que d'une fraction de
+millimètre sur la première ligne de l'exemple de couverture, invisible à l'impression.
 
 *mathsgo.re · CC BY-NC-SA 4.0*
