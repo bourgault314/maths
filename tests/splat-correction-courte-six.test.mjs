@@ -43,13 +43,17 @@ const moteur = Function(`
   ${constante("EQ_OP_ARROW_COLOR")}
   ${constante("SIX_COLONNE")}
   ${html.match(/^const SIX_CORRECTION_DX = [^\n]*;/m)[0]}
+  ${constante("SIX_CORRECTION_ALLONGE")}
   ${constante("SIX_CORRECTION_VIEWBOX")}
+  ${constante("SIX_CORRECTION_BAS")}
+  ${constante("SIX_EQ_MAX")}
   ${html.match(/^const SIX_CORRECTION_LEFT = [^\n]*;/m)[0]}
   ${constante("SIX_CORRECTION_LETTERS")}
   ${constante("SIX_CORRECTION_LETTER_INK")}
   ${AIDES.map(extraire).join("\n")}
   return { sixCorrectionPart, sixCorrectionData, drawSixCorrectionEquation, drawSixCorrectionSchema,
-           SIX_CORRECTION_VIEWBOX, SIX_CORRECTION_LEFT, SIX_CORRECTION_RIGHT, SIX_CORRECTION_DX, SIX_CORRECTION_DY };
+           SIX_CORRECTION_VIEWBOX, SIX_CORRECTION_LEFT, SIX_CORRECTION_RIGHT, SIX_CORRECTION_DX, SIX_CORRECTION_DY,
+           SIX_CORRECTION_BAS, SIX_CORRECTION_ALLONGE, SIX_EQ_MAX };
 `)();
 
 function faux(){
@@ -66,6 +70,8 @@ const cartes = {
   b3taches: { family:"N", total:36, visible:[21, 6], hidden:[3, 3, 3], _splats:Array(3).fill({}), _num:{ tasks:3, hiddenByTask:[[3],[3],[3]] } },
   a1tache:  { family:"U", total:13, visible:Array(7).fill(1), hidden:Array(6).fill(1), _splats:[{}], _unit:{ tasks:1, hiddenByTask:[6] } },
   a0visible:{ family:"U", total:20, visible:[], hidden:Array(20).fill(1), _splats:Array(4).fill({}), _unit:{ tasks:4, hiddenByTask:[5,5,5,5] } },
+  // Le défi, fiche 9 bis, carte 5 : six taches
+  b6taches: { family:"N", total:72, visible:[15, 33], hidden:Array(6).fill(4), _splats:Array(6).fill({}), _num:{ tasks:6, hiddenByTask:Array(6).fill([4]) } },
 };
 const [VX, , VW, VH_SVG] = moteur.SIX_CORRECTION_VIEWBOX.split(" ").map(Number);
 // lot P : le SVG fait toute la case (repère 2000) et la correction se dessine dans le repère
@@ -134,14 +140,17 @@ test("la feuille : bandeau « — Correction », cadre de consigne de l'énoncé
   assert.equal(VX, 0); assert.equal(VW, 2000);
   // la correction monte de 230 avec le plateau (y 270 → 40) ; le bas de la carte, dans son repère, ne bouge pas
   assert.deepEqual([moteur.SIX_CORRECTION_DX, moteur.SIX_CORRECTION_DY], [200, -230]);
-  assert.equal(VH_SVG, 1370);
-  assert.equal(VH, 1600);
+  // 27/09/2026 : le SVG descend de 130 de plus, jusqu'en bas de la case (8 mm y restaient vides)
+  assert.equal(moteur.SIX_CORRECTION_ALLONGE, 130);
+  assert.equal(VH_SVG, 1500);
+  assert.equal(VH, 1730);
+  assert.equal(moteur.SIX_CORRECTION_BAS, 1690, "40 de blanc sous la dernière ligne utile");
   assert.deepEqual([CASE_G, CASE_D], [-200, 1800]);
   // la place d'avant dans la largeur de la case : de −120 à 1720, soit 80 à 1920 dans le repère 2000
   assert.deepEqual([moteur.SIX_CORRECTION_LEFT + moteur.SIX_CORRECTION_DX, moteur.SIX_CORRECTION_RIGHT + moteur.SIX_CORRECTION_DX], [80, 1920]);
 });
 
-test("l'équation : les lignes et les flèches de la correction du mode B, 25 % plus grandes, 4 mm sous le plateau, aussi en mode A", () => {
+test("l'équation : les lignes et les flèches de la correction du mode B, le plus gros possible, 4 mm sous le plateau, aussi en mode A", () => {
   const lire = (carte, lettre) => {
     const { g, mk } = faux();
     moteur.drawSixCorrectionEquation(g, carte, lettre, mk);
@@ -162,11 +171,27 @@ test("l'équation : les lignes et les flèches de la correction du mode B, 25 % 
   // en lettre : la lettre de la carte, la lettre mathématique elle-même (𝑛), dessinée par
   // SplatLettres depuis le 26/09/2026 (avant : « n » simple en Times italique)
   assert.deepEqual(lire(cartes.b3taches, "𝑛").lignes, ["27 + 3𝑛 = 36", "3𝑛 = 9", "𝑛 = 3"]);
-  // 25 % plus grande que la correction de l'outil (100 au lieu de 80), l'écart du « = » suit
-  assert.equal(Number(b.textes[0].a["font-size"]), 100, "taille de l'équation");
-  assert.deepEqual([b.textes[0].a.x, b.textes[2].a.x], [800 - 63, 800 + 63], "écart du signe égal");
-  // lot P : l'équation est centrée sur la CASE (milieu du repère 2000), plus sur le plateau
-  assert.equal(b.textes[1].a.x + moteur.SIX_CORRECTION_DX, VW / 2, "le « = » au milieu de la case");
+  /* 27/09/2026 (choix D de Gwenaël) : la plus grande taille, jusqu'à SIX_EQ_MAX, qui tient en
+     largeur ET en hauteur (avant : 100). L'écart du « = » suit la taille ; c'est l'équation
+     ENTIÈRE, flèches comprises, qui est centrée dans la case, plus seulement son « = ». */
+  for(const [nom, lettre] of [["b3taches", "?"], ["a5taches", "?"], ["a1tache", "?"], ["a0visible", "?"], ["b3taches", "𝑛"]]){
+    const { textes } = lire(cartes[nom], lettre);
+    const f = Number(textes[0].a["font-size"]);
+    assert.ok(f > 100 && f <= moteur.SIX_EQ_MAX, `${nom} : taille ${f}, plus grande qu'avant`);
+    const cx = textes[1].a.x, ecart = Math.round(f * 0.625);
+    assert.deepEqual([textes[0].a.x, textes[2].a.x], [cx - ecart, cx + ecart], `${nom} : écart du signe égal`);
+    assert.ok(cx > CASE_G + 300 && cx < CASE_D - 300, `${nom} : « = » vers le milieu de la case (${cx})`);
+    // la dernière ligne, jambages compris, au-dessus du bas utile de la case
+    const derniere = Math.max(...textes.map(e => e.a.y));
+    assert.ok(derniere + 0.3 * f <= moteur.SIX_CORRECTION_BAS, `${nom} : dernière ligne dans la case`);
+    // toutes les flèches (x des tracés) dans la case
+    const { g, mk } = faux();
+    moteur.drawSixCorrectionEquation(g, cartes[nom], lettre, mk);
+    for(const e of g.enfants.filter(e => e.nom === "path")){
+      const xs = String(e.a.d).match(/-?\d+(\.\d+)?/g).map(Number).filter((_, k) => k % 2 === 0);
+      assert.ok(Math.min(...xs) >= CASE_G && Math.max(...xs) <= CASE_D, `${nom} : flèche dans la case`);
+    }
+  }
   // les membres en Times italique POUR DE VRAI (style en ligne : la règle « * » de la page ne l'emporte pas),
   // SplatLettres en tête pour les lettres de l'inconnue (26/09/2026)
   const membre = b.textes[0].a;
@@ -176,8 +201,6 @@ test("l'équation : les lignes et les flèches de la correction du mode B, 25 % 
   const bas = 210 + 60 + 660 + 4;
   const haut = b.textes[0].a.y - 0.72 * Number(b.textes[0].a["font-size"]);
   assert.ok((haut - bas) * 0.0427 >= 3.8 && (haut - bas) * 0.0427 <= 4.6, `écart ${((haut - bas) * 0.0427).toFixed(1)} mm`);
-  const derniere = b.textes[8].a.y;
-  assert.ok(derniere < VH - 150, "trois lignes tiennent largement");
 });
 
 test("le schéma : les trois étapes de l'outil jusqu'au « ? » seul, compactes à gauche, calculs à droite, dans la carte", () => {
@@ -214,10 +237,30 @@ test("le schéma : les trois étapes de l'outil jusqu'au « ? » seul, compactes
       const largeur = c.t.length * Number(c.a["font-size"]) * 0.6;
       assert.ok(c.a.x + largeur <= CASE_D, `${nom} : calcul ${i + 1} dans la case`);
     });
-    // tout tient dans la carte : 1600 de haut, 2 mm de blanc au moins sous le dernier schéma
+    // tout tient dans la carte : le dernier schéma au-dessus du bas utile de la case
     const bas = Math.max(...cadres.map(c => c.a.y + c.a.height));
-    assert.ok((VH - bas) * 0.0427 >= 1.4, `${nom} : ${((VH - bas) * 0.0427).toFixed(1)} mm sous le dernier schéma`);
+    assert.ok(bas <= moteur.SIX_CORRECTION_BAS, `${nom} : ${((VH - bas) * 0.0427).toFixed(1)} mm sous le dernier schéma`);
+    // 27/09/2026 (Gwenaël : « ils sont collés ») : 66 de blanc au moins entre deux schémas (2,8 mm)
+    for(let k = 1; k < cadres.length; k++){
+      const blanc = cadres[k].a.y - (cadres[k - 1].a.y + cadres[k - 1].a.height);
+      assert.ok(blanc >= 66, `${nom} : ${blanc} entre les schémas ${k} et ${k + 1}`);
+    }
+    // plus gros qu'avant : cases de 95 et chiffres de 92 (avant : 85 et 80)
+    assert.ok(cadres.every(c => c.a.height === 190), `${nom} : schémas de 2 × 95`);
     assert.ok(gauche >= CASE_G + 60, `${nom} : pas collé au bord gauche de la case`);
+  }
+  /* 27/09/2026 : six petites cases élargissent le 1er schéma ; plutôt que des calculs minuscules
+     (56), les chiffres des cases redescendent (80, la taille d'avant) et les calculs restent gros */
+  {
+    const { cadres, calculs, noeuds } = dessiner(cartes.b6taches, "?");
+    assert.deepEqual(calculs.map(c => c.t), ["72 − 48 = 24", "24 ÷ 6 = 4"]);
+    const fc = Number(calculs[0].a["font-size"]), fn = Number(noeuds[0].a["font-size"]);
+    assert.ok(fc >= 72, `six taches : calculs en ${fc}`);
+    assert.ok(fn >= 80, `six taches : chiffres en ${fn}`);
+    const droite = Math.max(...cadres.map(c => c.a.x + c.a.width));
+    calculs.forEach(c => assert.ok(c.a.x > droite && c.a.x + c.t.length * fc * 0.6 <= CASE_D, "calcul dans la case"));
+    // une carte ordinaire garde les chiffres de 92
+    assert.equal(Number(dessiner(cartes.b3taches, "?").noeuds[0].a["font-size"]), 92);
   }
   // le second schéma tombe exactement sous la partie cachée du premier
   const { cadres } = dessiner(cartes.b3taches, "?");
@@ -257,7 +300,7 @@ test("le schéma : les trois étapes de l'outil jusqu'au « ? » seul, compactes
     }
     assert.equal(tailles.size, 1, `${simple} : une seule taille de lettre dans la carte`);
     const taille = Number([...tailles][0]);
-    assert.ok(taille >= 80 && taille <= 96, `${simple} : taille ${taille} (des nombres à 1,2 ×)`);
+    assert.ok(taille >= 80 && taille <= 111, `${simple} : taille ${taille} (des nombres à 1,2 ×)`);
     // aucune lettre contre le trait, SUR LES CÔTÉS : la lettre dans la case grise la plus
     // étroite, au moins 0,3 mm de blanc (1 u = 0,0427 mm)
     const blanc = (Math.min(...grises.map(r => r.a.width)) - taille * LARGEUR[lettre]) / 2 * 0.0427;
@@ -265,14 +308,14 @@ test("le schéma : les trois étapes de l'outil jusqu'au « ? » seul, compactes
     /* … et AU-DESSUS comme AU-DESSOUS. C'est ce contrôle-là qui manquait : « dominant-baseline
        middle » centre la hauteur d'un « x », pas le dessin, et le « b » agrandi traversait le
        trait du haut. La lettre est donc redescendue de la moitié de son débord (dy) et sa
-       taille est bornée par la hauteur libre : 40 unités du centre au bord intérieur du trait
-       (case de 85, trait de 5). */
+       taille est bornée par la hauteur libre : 45 unités du centre au bord intérieur du trait
+       (case de 95, trait de 5 ; 40 avec les cases de 85 d'avant le 27/09/2026). */
     const dyEm = Number(String(lettres[0].a.dy).replace("em", ""));
     const [encreHaut, encreBas] = ENCRE[simple];
     // 5e-4 : le dy est écrit avec 4 décimales dans l'attribut
     assert.ok(Math.abs(dyEm - (encreHaut - encreBas) / 2) < 5e-4, `${simple} : lettre centrée sur son encre`);
-    const hautMm = (40 - (encreHaut - dyEm) * taille) * 0.0427;
-    const basMm = (40 - (encreBas + dyEm) * taille) * 0.0427;
+    const hautMm = (45 - (encreHaut - dyEm) * taille) * 0.0427;
+    const basMm = (45 - (encreBas + dyEm) * taille) * 0.0427;
     // 0,39 dans le calcul = 0,30 mm mesuré et plus sur le PDF (le rendu en rogne environ 0,07)
     assert.ok(hautMm >= 0.39, `${simple} : ${hautMm.toFixed(2)} mm au-dessus de la lettre`);
     assert.ok(basMm >= 0.39, `${simple} : ${basMm.toFixed(2)} mm au-dessous de la lettre`);

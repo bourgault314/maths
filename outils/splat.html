@@ -10481,7 +10481,14 @@ function waitForPrintAssets(root){
    case et non plus sous le plateau, qui n'y est plus — et monte de 230 avec le plateau.
    1 370 de haut (1 600 − 230) : la carte la plus haute des livrets (3 schémas) tient. */
 const SIX_CORRECTION_DX = 200, SIX_CORRECTION_DY = SIX_COLONNE.plateauY - 270;
-const SIX_CORRECTION_VIEWBOX = `0 0 ${SIX_COLONNE.largeur} ${1600 + SIX_CORRECTION_DY}`;
+/* 27/09/2026 (relecture du monde 2, Gwenaël : « il reste beaucoup de place, écrire plus gros ») : le
+   dessin descend de 130 de plus, jusqu'en bas de la case (8 mm restaient vides sous le SVG). Le
+   SVG garde toute la largeur de la case et reste calé en haut : plateau, TOTAL et case réponse ne
+   bougent pas d'un pixel. SIX_CORRECTION_BAS : la dernière ligne utile, dans le repère de la
+   correction (1600 + 130, moins 40 de blanc). */
+const SIX_CORRECTION_ALLONGE = 130;
+const SIX_CORRECTION_VIEWBOX = `0 0 ${SIX_COLONNE.largeur} ${1600 + SIX_CORRECTION_DY + SIX_CORRECTION_ALLONGE}`;
+const SIX_CORRECTION_BAS = 1600 + SIX_CORRECTION_ALLONGE - 40;
 const SIX_CORRECTION_LEFT = -120, SIX_CORRECTION_RIGHT = 1720;
 /* Les lettres de l'inconnue restent les lettres mathématiques de l'outil (𝑥, 𝑎…) : depuis le
    26/09/2026 elles ont leur police, SplatLettres (en tête de mathFont), la lettre ronde des
@@ -10537,6 +10544,7 @@ function sixCorrectionData(card){
   return { family: card.family, total, vis, totalHid, tasks, h: hiddenSums[0], trayBottom: tray.y + tray.h + 4 };
 }
 
+const SIX_EQ_MAX = 170;
 function drawSixCorrectionEquation(g, card, varChar, mk){
   const d = sixCorrectionData(card);
   const unknown = varChar;
@@ -10547,10 +10555,29 @@ function drawSixCorrectionEquation(g, card, varChar, mk){
   if(d.tasks > 1 || (d.tasks === 1 && d.vis > 0)) planned.push([unknown, String(d.h)]);
   const lines = planned.map(([l, r]) => `${l} = ${r}`);
   const ops = lines.length > 1 ? numberedResolutionOps(d.vis, d.tasks) : [];
-  // Taille 100 (80 dans la correction de l'outil), réduite seulement si la ligne la plus
-  // longue et ses flèches ne tiennent pas dans la largeur de la case (de −200 à 1800).
-  const eqGapFor = (fs) => Math.round(fs * 0.625);   // l'écart du « = » suit la taille (50 à 80)
-  const font = fitPrintEquationFontForArrows(lines, ops, 100, { eqGap: eqGapFor(100), margin: 62, centerX: 1000, width: 2000 });
+  /* La taille (27/09/2026, choix D de Gwenaël) : la plus grande, jusqu'à SIX_EQ_MAX, qui tient
+     à la fois en largeur et en hauteur. On centre l'équation ENTIÈRE — flèches de gauche,
+     membres, flèches de droite — et plus seulement son « = » : le membre de gauche (« 28 + 3 × ? »)
+     est bien plus long que celui de droite (« 49 »), et c'était lui qui bloquait la taille.
+     Avant : 100, « = » au milieu de la case. */
+  const eqGapFor = (fs) => Math.round(fs * 0.625);   // l'écart du « = » suit la taille
+  const arrowRoom = (fs) => {
+    if(!ops.some(Boolean)) return 0;
+    const lf = Math.round(fs * 0.62);
+    return 62 + Math.round(lf * 0.9) + 6 + Math.max(0, ...ops.filter(Boolean).map(op => measureArrowLabelWidth(op, lf))) + 4;
+  };
+  const halves = (fs) => lines.reduce(([l, r], line) => {
+    const k = line.indexOf("=");
+    return [Math.max(l, measureEquationTextWidth(line.slice(0, k).trim(), fs)), Math.max(r, measureEquationTextWidth(line.slice(k + 1).trim(), fs))];
+  }, [0, 0]);
+  const largeurUtile = (1776 - (-176)) - 48;     // de minX à maxX des flèches, moins 24 de chaque côté
+  let font = 44, cx = 800;                       // 800 : le milieu de la case dans ce repère
+  for(let fs = SIX_EQ_MAX; fs >= 44; fs -= 2){
+    const [l, r] = halves(fs), g2 = eqGapFor(fs), room = arrowRoom(fs);
+    const gauche = room + l + g2, droite = g2 + r + room;
+    const bas = d.trayBottom + 94 + Math.round(fs * 0.7) + (lines.length - 1) * Math.round(fs * 1.4) + Math.round(fs * 0.3);
+    if(gauche + droite <= largeurUtile && bas <= SIX_CORRECTION_BAS){ font = fs; cx = 800 + (gauche - droite) / 2; break; }
+  }
   const eqGap = eqGapFor(font);
   const gap = Math.round(font * 1.4);
   // Times italique pour de vrai : la règle générale « * { font-family } » de la page
@@ -10561,13 +10588,13 @@ function drawSixCorrectionEquation(g, card, varChar, mk){
   const startY = d.trayBottom + 94 + Math.round(font * 0.7);   // 94 = 4 mm sous le plateau
   planned.forEach(([l, r], i) => {
     const y = startY + i * gap;
-    g.appendChild(mk.text(800 - eqGap, y, l, {"text-anchor":"end", ...member}));
-    g.appendChild(mk.text(800, y, "=", {"text-anchor":"middle", "font-size":String(font), "fill":"#000", "font-weight":"700"}));
-    g.appendChild(mk.text(800 + eqGap, y, r, {"text-anchor":"start", ...member}));
+    g.appendChild(mk.text(cx - eqGap, y, l, {"text-anchor":"end", ...member}));
+    g.appendChild(mk.text(cx, y, "=", {"text-anchor":"middle", "font-size":String(font), "fill":"#000", "font-weight":"700"}));
+    g.appendChild(mk.text(cx + eqGap, y, r, {"text-anchor":"start", ...member}));
   });
   if(lines.length > 1){
     drawOperationArrowsForLines(g, {el: mk.el, text: mk.text}, lines, ops, {
-      centerX: 800, startY, gap, fontSize: font, eqGap, middleBaseline: false, margin: 62, hug: true, minX: -176, maxX: 1776
+      centerX: cx, startY, gap, fontSize: font, eqGap, middleBaseline: false, margin: 62, hug: true, minX: -176, maxX: 1776
     });
   }
 }
@@ -10584,9 +10611,19 @@ function sixCorrectionCells(values, baseW, font, pad){
 function drawSixCorrectionSchema(g, card, varChar, mk){
   const d = sixCorrectionData(card);
   const isU = d.family === "U";
-  // Schémas compacts (85 + 85 de haut, chiffres de 80) ; cases un peu plus larges que dans
-  // l'outil pour que « ? » et les lettres ne touchent pas le trait.
-  const FONT = 80, HT = 85, HB = 85, SH = HT + HB, GAP = 40, PAD = 44, W1 = 1150;
+  // Schémas compacts ; cases un peu plus larges que dans l'outil pour que « ? » et les lettres ne
+  // touchent pas le trait. 27/09/2026 (Gwenaël : plus gros, et plus d'espace ENTRE les schémas,
+  // « ils sont collés, on a du mal à les différencier ») : chiffres 80 → 92, cases 85 → 95 de haut,
+  // calculs jusqu'à 92, écart entre deux schémas 40 → 66 (GAP), 40 sous le plateau (GAP_HAUT) ;
+  // la largeur du premier schéma ne change pas (1150). Trois schémas tiennent jusqu'à
+  // SIX_CORRECTION_BAS (934 + 40 + 3 × 190 + 2 × 66 = 1676).
+  // Beaucoup de petites cases (5 ou 6 taches) élargissent le 1er schéma et poussent les calculs
+  // hors de la case : on essaie alors un 1er schéma moins large (1 000, 850), puis des chiffres de
+  // 86 et de 80 (la taille d'avant), et l'on garde le premier réglage où chiffres et calculs sont
+  // les plus gros (le plus petit des deux). Une carte ordinaire garde 92 et 1 150.
+  const REGLAGES = [];
+  for(const [f, p] of [[92, 46], [86, 45], [80, 44]]) for(const w of [1150, 1000, 850]) REGLAGES.push([f, p, w]);
+  const HT = 95, HB = 95, SH = HT + HB, GAP = 66, GAP_HAUT = 40;
   /* La lettre des cases cachées s'écrit comme celle de l'équation (drawSixCorrectionEquation) :
      lettre simple (𝑚 → m) et Times italique donné en STYLE EN LIGNE, car l'attribut
      font-family seul est battu par la règle « * » de la page. Sans cela les lettres
@@ -10605,53 +10642,68 @@ function drawSixCorrectionSchema(g, card, varChar, mk){
      même exigence de 0,3 mm de blanc dans les quatre directions. */
   const ink = SIX_CORRECTION_LETTER_INK[unknown] || SIX_CORRECTION_LETTER_INK[""];
   const letterDy = (ink[0] - ink[1]) / 2;            // em, positif = vers le bas
-  const HALF_IN = (HB - 5) / 2;                      // 40 : du centre au bord intérieur du trait
+  const HALF_IN = (HB - 5) / 2;                      // 45 : du centre au bord intérieur du trait
   /* 9,3 unités = 0,40 mm dans le calcul, pour que la MESURE sur le PDF donne 0,30 mm : le
      rendu et la mesure de l'encre en rognent environ 0,10 (vérifié sur les 179 lettres). */
   const MIN_BLANC = 9.3;
-  let letterFont = Math.min(FONT * 1.2, (HALF_IN - MIN_BLANC) / ((ink[0] + ink[1]) / 2));
   function cellText(x, y, t, a = {}){
     if(!lettre || t !== unknown) return mk.text(x, y, t, a);
     return mk.text(x, y, t, { ...a, "font-size": String(letterFont), "font-family": mathFont,
       "font-style": "italic", "font-weight": "normal", "dy": letterDy.toFixed(4) + "em",
       "style": `font-family:${mathFont}` });
   }
+  let FONT = 92, PAD = 46, W1 = 1150, letterFont = 0;      // fixés plus bas, par le réglage choisi
   const bm = (w) => ({ rect: mk.rect, line: mk.line, text: cellText, w, hTop: HT, hBottom: HB,
     stroke: "#000", strokeWidth: 5, greyFill: "rgba(0,0,0,0.10)", ink: "#000",
     visibleTextColor: isU ? "#2563eb" : "#000", hiddenTextColor: "#000", totalTextColor: "#000",
     fontTop: FONT, fontBottom: FONT, minCellPad: PAD });
-  const values = [];
-  if(d.vis > 0) values.push(d.vis);
-  for(let i = 0; i < d.tasks; i++) values.push(d.h);
-  const cells = sixCorrectionCells(values, W1, FONT, PAD);
-  const x0 = SIX_CORRECTION_LEFT;
-  const visW = d.vis > 0 ? cells.widths[0] : 0;
-  const hidW = cells.w - visW;
-  const hid = (n) => Array.from({length: n}, () => ({ value: d.h, hidden: true, text: unknown }));
-  const parts1 = [];
-  if(d.vis > 0) parts1.push({ value: d.vis, hidden: false });
-  parts1.push(...hid(d.tasks));
-  // [total, cases, bord gauche, largeur] de chaque schéma, et le calcul écrit à sa droite
-  const steps = [[d.total, parts1, x0, cells.w]];
-  const calcs = [];
-  if(d.vis > 0 && d.tasks > 1){
-    calcs.push(`${d.total} − ${d.vis} = ${d.totalHid}`);
-    steps.push([d.totalHid, hid(d.tasks), x0 + visW, hidW]);
-  }
-  if(d.tasks > 1){
-    calcs.push(`${d.totalHid} ÷ ${d.tasks} = ${d.h}`);
-    steps.push([d.h, hid(1), x0 + visW, hidW / d.tasks]);
-  }else if(d.vis > 0){
-    calcs.push(`${d.total} − ${d.vis} = ${d.totalHid}`);
-    steps.push([d.h, hid(1), x0 + visW, hidW]);
-  }
-  // La case à lettre la plus étroite de tous les schémas borne la taille des lettres.
-  // sixCorrectionCells applique la même règle de largeur que drawBarModelPartsInGroup.
-  const letterWidths = steps.reduce((acc, [, parts, , w], i) => acc.concat(
-    sixCorrectionCells(parts.map(p => p.value), i === 0 ? W1 : w, FONT, PAD)
-      .widths.filter((_, k) => parts[k].hidden)), []);
+  const labelFont = (fs) => `700 ${fs}px SplatLettres, system-ui, -apple-system, "Segoe UI", Roboto, Arial`;
+  // largeur mesurée ; sans mesure possible, une estimation large (0,6 em par caractère)
+  const calcWidth = (s, fs) => { const w = measureTextWidth(s, labelFont(fs)); return (Number.isFinite(w) && w > 0) ? w : s.length * fs * 0.6; };
+  const plan = (FONT, PAD, W1) => {
+    const values = [];
+    if(d.vis > 0) values.push(d.vis);
+    for(let i = 0; i < d.tasks; i++) values.push(d.h);
+    const cells = sixCorrectionCells(values, W1, FONT, PAD);
+    const x0 = SIX_CORRECTION_LEFT;
+    const visW = d.vis > 0 ? cells.widths[0] : 0;
+    const hidW = cells.w - visW;
+    const hid = (n) => Array.from({length: n}, () => ({ value: d.h, hidden: true, text: unknown }));
+    const parts1 = [];
+    if(d.vis > 0) parts1.push({ value: d.vis, hidden: false });
+    parts1.push(...hid(d.tasks));
+    // [total, cases, bord gauche, largeur] de chaque schéma, et le calcul écrit à sa droite
+    const steps = [[d.total, parts1, x0, cells.w]];
+    const calcs = [];
+    if(d.vis > 0 && d.tasks > 1){
+      calcs.push(`${d.total} − ${d.vis} = ${d.totalHid}`);
+      steps.push([d.totalHid, hid(d.tasks), x0 + visW, hidW]);
+    }
+    if(d.tasks > 1){
+      calcs.push(`${d.totalHid} ÷ ${d.tasks} = ${d.h}`);
+      steps.push([d.h, hid(1), x0 + visW, hidW / d.tasks]);
+    }else if(d.vis > 0){
+      calcs.push(`${d.total} − ${d.vis} = ${d.totalHid}`);
+      steps.push([d.h, hid(1), x0 + visW, hidW]);
+    }
+    // La case à lettre la plus étroite de tous les schémas borne la taille des lettres.
+    // sixCorrectionCells applique la même règle de largeur que drawBarModelPartsInGroup.
+    const letterWidths = steps.reduce((acc, [, parts, , w], i) => acc.concat(
+      sixCorrectionCells(parts.map(p => p.value), i === 0 ? W1 : w, FONT, PAD)
+        .widths.filter((_, k) => parts[k].hidden)), []);
+    const colX = Math.max(...steps.map(([, , x, w]) => x + w)) + 70;
+    const longest = calcs.reduce((a, b) => calcWidth(b, FONT) > calcWidth(a, FONT) ? b : a, "");
+    let F = FONT;
+    while(F > 56 && colX + calcWidth(longest, F) > SIX_CORRECTION_RIGHT) F -= 2;
+    return { FONT, PAD, W1, steps, calcs, letterWidths, colX, F };
+  };
+  const choix = REGLAGES.map(([f, p, w]) => plan(f, p, w))
+    .reduce((a, b) => Math.min(b.FONT, b.F) > Math.min(a.FONT, a.F) ? b : a);
+  ({ FONT, PAD, W1 } = choix);
+  const { steps, calcs, letterWidths, colX, F } = choix;
+  letterFont = Math.min(FONT * 1.2, (HALF_IN - MIN_BLANC) / ((ink[0] + ink[1]) / 2));
   if(letterWidths.length) letterFont = Math.min(letterFont, Math.max(FONT, Math.min(...letterWidths) * 0.72));
-  let top = d.trayBottom + GAP;
+  let top = d.trayBottom + GAP_HAUT;
   const tops = [];
   steps.forEach(([tot, parts, x, w], i) => {
     // le 1er schéma se dessine sur sa largeur de base : ses petites cases l'élargissent
@@ -10660,11 +10712,6 @@ function drawSixCorrectionSchema(g, card, varChar, mk){
     tops.push(top);
     top += SH + GAP;
   });
-  const colX = Math.max(...steps.map(([, , x, w]) => x + w)) + 70;
-  const labelFont = (fs) => `700 ${fs}px SplatLettres, system-ui, -apple-system, "Segoe UI", Roboto, Arial`;
-  const longest = calcs.reduce((a, b) => measureTextWidth(b, labelFont(72)) > measureTextWidth(a, labelFont(72)) ? b : a, "");
-  let F = 72;
-  while(F > 56 && colX + measureTextWidth(longest, labelFont(F)) > SIX_CORRECTION_RIGHT) F -= 2;
   calcs.forEach((c, i) => {
     const y = tops[i] + SH / 2 + Math.round(F * 0.36);
     g.appendChild(mk.text(colX, y, c, {"text-anchor":"start", "font-size":String(F), "fill":"#000", "font-weight":"700"}));
