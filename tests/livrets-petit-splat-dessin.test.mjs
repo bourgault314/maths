@@ -160,8 +160,9 @@ test("les 12 PDF existent, la page des livrets les montre dans une 2e rangée du
   const i2 = m1.indexOf('<h3 class="partie">Je fais le schéma en barres');
   assert.ok(i1 > 0 && i2 > i1, "deux rangées : je complète, puis je dessine");
   assert.equal((m1.slice(i2).match(/<article class="liv">/g) || []).length, 3);
-  for (const img of ["livret-petit-splat-dessin", "livret-petit-splat-dessin-avance", "livret-petit-splat-dessin-expert"]) {
-    assert.ok(m1.includes(`/assets/img/thumbnails/splat/${img}.png?v=1`), img);
+  // v=2 pour le Monde 1 : sa couverture dit « jusqu'à 30 jetons » depuis le 28/09/2026
+  for (const [img, v] of [["livret-petit-splat-dessin", 2], ["livret-petit-splat-dessin-avance", 1], ["livret-petit-splat-dessin-expert", 1]]) {
+    assert.ok(m1.includes(`/assets/img/thumbnails/splat/${img}.png?v=${v}`), img);
     for (const e of ["png", "webp"]) assert.ok(existe(`assets/img/thumbnails/splat/${img}.${e}`), `${img}.${e}`);
   }
   // les autres onglets ne changent pas : un seul nouvel intitulé de rangée
@@ -237,10 +238,22 @@ test("outil : les cases « Ligne ? = … » et « Sans jetons » du panneau", ()
   assert.match(petit, /if \(problemType === 'classic' && carteSchemaDonne\) params\.set\('donne', String\(carteSchemaDonne\)\);/);
 });
 
-test("render.py : nouvelles graines des fiches 2 et 3 (3 sans jetons), le dos à la tache plus grosse", () => {
-  assert.match(render, /graines=\{1:"21310007", 2:"22310199", 3:"23310011", 4:"24310055", 5:"25310063", 6:"26310088"\}/);
-  assert.match(render, /graines=\{1:"21420011", 2:"22421099", 3:"23420234", 4:"24420016", 5:"25420031", 6:"26420001"\}/);
-  assert.match(render, /graines=\{1:"21531069", 2:"22533940", 3:"23530352", 4:"24531050", 5:"25530062", 6:"26530194"\}/);
+test("render.py : graines triées sur le livret entier (28/09/2026), le dos à la tache plus grosse", () => {
+  /* Nouveau tri : aucune carte identique dans le livret, une même division au plus 2 fois et
+     jamais deux fois sur une fiche ; Monde 1 jusqu'à 30 jetons, au plus 12 posés. La preuve se
+     rejoue dans Chromium : python3 _sources/livret-petit-splat/tri_graines_dessin.py */
+  assert.match(render, /graines=\{1:"213000743", 2:"223033740", 3:"233013499", 4:"243014277", 5:"253010552", 6:"263002433"\}/);
+  assert.match(render, /graines=\{1:"21420011", 2:"224914618", 3:"234910865", 4:"244914806", 5:"25420031", 6:"264913653"\}/);
+  assert.match(render, /graines=\{1:"21531069", 2:"22533940", 3:"23530352", 4:"245911407", 5:"255904263", 6:"26530194"\}/);
+  assert.ok(existe("_sources/livret-petit-splat/tri_graines_dessin.py"), "le script de tri est dans le dépôt");
+  // Monde 1 à 30 : l'outil lit target=30 depuis l'adresse (option cachée), la couverture le dit,
+  // ses deux exemples restent tirés comme à 20
+  assert.match(render, /NIVEAUX\["dessin"\] = dict\(NIVEAUX\["normal"\], \*\*_DESSIN, target=30,/);
+  assert.match(render, /dessin=dict\(COUV_DESSIN, target=20, profils=/);
+  assert.match(render, /JS_DEUX_EXEMPLES, \[niv\["dessin"\]\.get\("target", niv\["target"\]\)/);
+  assert.match(render, /accroche="Le tout, les parties…<br>et jusqu'à 30 jetons&nbsp;!"\)/);
+  assert.match(petit, /<option value="20" selected>20 \(Standard\)<\/option>[\s\S]{0,300}<option value="30" hidden>30<\/option>\s*<option value="50">50 \(Avancé\)<\/option>/);
+  assert.match(page, /<h3>Monde 1<\/h3><span class="plage">jusqu'à 30 jetons<\/span>/);
   const dos = lire("_sources/livret-petit-splat/dos.html");
   assert.match(dos, /<svg width="58" height="52" viewBox="60 10 190 170">/);
 });

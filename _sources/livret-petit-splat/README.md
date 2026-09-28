@@ -32,7 +32,7 @@ dessinait des jetons.
 
 | Niveau | Cartes | PDF produits (et leurs corrigés `…_correction…`) |
 |---|---|---|
-| `dessin` — Monde 1 | jusqu'à 20 jetons | `outils/livret_petit_splat_dessin.pdf` · `…_a_plier.pdf` |
+| `dessin` — Monde 1 | jusqu'à **30** jetons, au plus 12 posés (28/09/2026) | `outils/livret_petit_splat_dessin.pdf` · `…_a_plier.pdf` |
 | `dessin_avance` — Avancé | **21 à 50** jetons | `outils/livret_petit_splat_dessin_avance.pdf` · `…_a_plier.pdf` |
 | `dessin_expert` — Expert | **51 à 100** jetons | `outils/livret_petit_splat_dessin_expert.pdf` · `…_a_plier.pdf` |
 
@@ -78,6 +78,18 @@ dessinait des jetons.
   fiches 2 et 3, exactement 2 aux fiches 4 à 6 ; les 3 cartes guidées cachent au moins 2
   jetons par tache ; 2, 3 et 4 taches aux fiches 3 et 4 ; au moins 4 nombres de taches aux
   fiches 5 et 6 ; aucun 69 ; plancher 4 jetons au niveau Monde 1.
+- **Nouveau tri (28/09/2026)** : à l'impression, Gwenaël a trouvé des cartes en double (8 et
+  4 taches aux fiches 4 et 5) et des divisions répétées (4 ÷ 2 six fois dans le livret Monde 1) :
+  le tri du 26/09 regardait chaque fiche seule. Ses règles, sur le **livret entier** : aucune
+  carte identique ; une même division (jetons cachés ÷ taches) **au plus 2 fois**, jamais deux
+  fois sur la même fiche. Jusqu'à 20, c'est intenable (9 divisions à deux taches, et la fiche 2
+  les prend toutes) : son idée, le livret Monde 1 monte **jusqu'à 30 jetons, au plus 12 jetons
+  posés** par carte. L'outil lit `target=30` depuis l'adresse (option cachée du menu, rien de
+  neuf dans le panneau) ; les exemples de couverture restent tirés comme à 20
+  (`dessin.target`). Graines changées : les 6 du Monde 1, les fiches 2, 3, 4 et 6 de l'Avancé,
+  4 et 5 de l'Expert. Le tri a rejoué environ 400 000 séries dans Chromium ; la preuve se
+  rejoue avec `python3 tri_graines_dessin.py` (chaque fiche, puis le livret : « ok » ou la
+  règle cassée).
 - Couverture (26/09/2026 au soir) : les deux exemples « Avec des jetons posés » / « Sans jeton
   posé » chacun dans son cadre, puis « ATTENTION ! » (dans un cadre noir, pas de crayon) « Dans ce
   livret, tu ne dessines jamais de jetons. Quand aucun jeton n'est posé autour des taches, ils sont
@@ -194,7 +206,8 @@ sort des cartes à 4 ou 10 jetons ; sans le plafond de dessin, des cartes à 20
 jetons à tracer. Le tri complet a dû passer sur 3 000 tirages par fiche pour
 Avancé et 30 000 pour Expert — **ne pas changer une graine sans refaire le tri**. Le
 script de tri n'est pas dans le dépôt : il lance l'outil dans un chromium sans affichage,
-rejoue `createItem()` avec des dizaines de milliers de graines et garde celles qui passent.
+rejoue `createItem()` avec des dizaines de milliers de graines et garde celles qui passent. (Pour les livrets « Je fais le schéma en barres », `tri_graines_dessin.py` rejoue et
+contrôle les graines retenues.)
 Le refaire depuis ces règles prend une vingtaine de minutes.
 
 ## Régénérer
