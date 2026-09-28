@@ -1038,8 +1038,10 @@ test("D : dans le PDF publié — la couverture du défi, et « Fiche N bis » s
   assert.match(pages[0], /et des totaux jusqu'à 100/);
   assert.match(pages[0], /Sur cette carte, il y a 77 jetons au total/);
   // (espaces insécables autour des signes depuis le 26/09/2026 : un calcul ne se coupe plus en fin de ligne)
-  assert.match(pages[0], /on additionne les paquets\s?\(17\s\+\s18\s=\s*35\), on soustrait \(77\s−\s35\s=\s42\), puis on divise \(42\s÷\s3\s=\s14\)/);
+  assert.match(pages[0], /on additionne\s?les paquets\s?\(17\s\+\s18\s=\s*35\), on soustrait \(77\s−\s35\s=\s42\), puis on divise \(42\s÷\s3\s=\s14\)/);
   assert.match(pages[0], /Nom, prénom/);
+  // (28/09/2026) l'exemple a des taches noires, comme sur les fiches : plus de « taches transparentes »
+  assert.doesNotMatch(pages[0], /transparent/);
   // Chromium écrit un glyphe à la fois : un retour à la ligne y perd son espace.
   const sansBlancs = (t) => t.replace(/\s+/g, "");
   for (const t of ["Des paquets, et plusieurs taches", "Encore plus de taches", "Le grand défi"]) {
