@@ -226,10 +226,10 @@ test("R1 : le jeu de l'élève garde le signe des taches opposées et chaque jet
   const z = essai({ ...base, x: 0, universe: "relative", left: [{ type: "x", sign: 1 }, { type: "x", sign: 1 }],
     right: [{ type: "x", sign: -1 }, { type: "x", sign: -1 }, { type: "x", sign: -1 }] });
   assert.deepEqual([z.left, z.right], [["x", "x"], ["-x", "-x", "-x"]]);
-  // entiers naturels : inchangé (la somme des paquets)
+  // entiers naturels (28/09/2026) : chaque paquet aussi, comme sur la fiche
   const p = essai({ ...base, x: 10, universe: "positive", left: [{ type: "x" }, { type: "number", value: 7 }, { type: "x" }, { type: "number", value: 5 }],
     right: [{ type: "number", value: 27 }, { type: "number", value: 5 }] });
-  assert.deepEqual([p.left, p.right], [["x", "x", 12], [32]]);
+  assert.deepEqual([p.left, p.right], [["x", "x", 7, 5], [27, 5]]);
 });
 
 test("R1 : la correction courte « l'équation » existe en relatifs — lignes du pas à pas, flèches lues dans les lignes", () => {

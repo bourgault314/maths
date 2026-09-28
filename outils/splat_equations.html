@@ -1983,8 +1983,7 @@ function carteDuJeuEquaSplat(card){
   const p = buildEquationEquaSplatPayload(card, 0);
   if(!p) return null;
   /* une tache opposée garde son signe : « -x », comme les séries écrites à la main du
-     monde 6 (ÉquaSplat la lit ainsi) ; en entiers naturels, aucune tache n'a de signe :
-     les séries des fiches 35 à 37 ne changent pas d'un octet */
+     monde 6 (ÉquaSplat la lit ainsi) ; en entiers naturels, aucune tache n'a de signe */
   const cote = row => {
     // les taches normales d'abord, puis les opposées, comme l'équation que l'outil écrit (𝑛 − 2𝑛)
     const r = row.filter(t => t.type === "x" && t.sign !== -1).map(() => "x")
@@ -1992,11 +1991,15 @@ function carteDuJeuEquaSplat(card){
     const n = row.filter(t => t.type === "number");
     /* entiers relatifs : chaque jeton garde sa place, comme sur la fiche (l'élève
        regroupe lui-même les verts et les rouges) ; un côté sans aucun jeton n'en reçoit
-       pas (2𝑥 = −3𝑥). Entiers naturels : la somme des paquets, comme avant. */
+       pas (2𝑥 = −3𝑥). Entiers naturels (28/09/2026, décision de Gwenaël) : chaque paquet
+       aussi, comme sur la fiche — « 26 + 16 = 𝑥 + 34 », l'élève les regroupe dans ÉquaSplat
+       (bouton « Regrouper ») ; seuls les jetons un par un (numberMode « unit ») arrivent
+       en un seul nombre, qu'ÉquaSplat redécoupe en jetons de 1. */
     if(p.universe === "relative"){
       n.forEach(t => { if(t.value !== 0) r.push(t.value); });
       if(!r.length) r.push(0);
-    }else if(n.length) r.push(n.reduce((s, t) => s + t.value, 0));
+    }else if(p.numberMode === "unit"){ if(n.length) r.push(n.reduce((s, t) => s + t.value, 0)); }
+    else n.forEach(t => r.push(t.value));
     return r;
   };
   return { source:p.source, variable:p.variable, unknownDisplay:p.unknownDisplay, universe:p.universe,
