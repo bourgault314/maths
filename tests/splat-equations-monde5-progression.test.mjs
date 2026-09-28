@@ -67,7 +67,7 @@ const MARCHES = [["m3e1", 0, 4], ["m3e1", 4, 4], ["m3e1", 8, 4], ["m3e2", 0, 6],
 
 test("Q2 : le monde 5 a trois étapes, 12 équations chacune, et garde ses étoiles m3e1, m3e2, m3e4", () => {
   assert.equal(EQUATIONS.nom, "SPLAT! Équations");
-  assert.deepEqual(EQUATIONS.etapes.map((e) => e.t), ["Premières équations", "Des paquets de jetons", "Des taches des deux côtés"]);
+  assert.deepEqual(EQUATIONS.etapes.map((e) => e.t), ["Premières équations", "Des paquets de jetons", "Des taches sur les deux plateaux"]);
   assert.deepEqual(EQUATIONS.etapes.map((e) => e.p), ["m3e1", "m3e2", "m3e4"]);
   /* l'identifiant de ligne (étoile cochée à la main) reste celui de la place d'avant */
   assert.deepEqual(EQUATIONS.etapes.map((e) => e.id), ["e2-0", "e2-1", "e2-3"]);

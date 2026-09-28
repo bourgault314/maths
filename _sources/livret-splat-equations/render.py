@@ -100,8 +100,8 @@ FICHES = [
          resume="Les jetons un par un."),
     dict(n=36, t="Des paquets de jetons",     parties=[EQ5_PAQUETS, *EQ5_PAQUETS_SUITE], parcours="m3e2",
          resume="Les jetons arrivent en paquets."),
-    dict(n=37, t="Des taches des deux côtés", parties=[EQ5_DEUX_COTES, *EQ5_DEUX_COTES_SUITE], parcours="m3e4",
-         resume="Des deux côtés, puis tout mélangé."),
+    dict(n=37, t="Des taches sur les deux plateaux", parties=[EQ5_DEUX_COTES, *EQ5_DEUX_COTES_SUITE], parcours="m3e4",
+         resume="Sur les deux plateaux, puis tout mélangé."),
 ]
 
 # ------------------------------------------------------------------ le livret « Le défi » (lot Q5)
@@ -130,8 +130,8 @@ FICHES_DEFI = [
     dict(n=36, t="Jusqu'à six taches", qr="36d", parcours="m3e2",
          resume="De quatre à six taches.",
          parties=[defi("ONE_SIDE", 6, 52841384), defi("ONE_SIDE", 6, 7120342), defi("ONE_SIDE", 6, 13521466)]),
-    dict(n=37, t="Le grand défi : des deux côtés", qr="37d", parcours="m3e4",
-         resume="Des taches des deux côtés.",
+    dict(n=37, t="Le grand défi : les deux plateaux", qr="37d", parcours="m3e4",
+         resume="Des taches sur les deux plateaux.",
          parties=[defi("BOTH", 4, 13183993), defi("BOTH", 6, 907210), defi("BOTH", 6, 32560684)]),
 ]
 
@@ -162,9 +162,9 @@ SERIES = {
 }
 DOS = [("Un par un",      "Les jetons un par un, comme la fiche&nbsp;35.",  "1"),
        ("Des paquets",    "Les jetons en paquets, comme la fiche&nbsp;36.", "2"),
-       ("Des deux côtés", "Des taches des deux côtés, puis tout mélangé, comme la fiche&nbsp;37.", "3")]
-DOS_DEFI = [("D'un seul côté", "Des paquets et jusqu'à six taches, des totaux de 50 à 100, comme les fiches&nbsp;35 et&nbsp;36.", "d1"),
-            ("Des deux côtés", "Des taches des deux côtés, des totaux de 50 à 100, comme la fiche&nbsp;37.", "d2")]
+       ("Les deux plateaux", "Des taches sur les deux plateaux, puis tout mélangé, comme la fiche&nbsp;37.", "3")]
+DOS_DEFI = [("Un seul plateau", "Des paquets et jusqu'à six taches, des totaux de 50 à 100, comme les fiches&nbsp;35 et&nbsp;36.", "d1"),
+            ("Les deux plateaux", "Des taches sur les deux plateaux, des totaux de 50 à 100, comme la fiche&nbsp;37.", "d2")]
 # Le dos du défi : deux séries au lieu de trois, donc deux cases plus larges et des QR de 36 mm
 # (30 mm à trois ; 32 et 26 mm avant le lot 2 de la relecture du monde 1, 25/09/2026, qui a
 # retiré « Mes fiches » du dos pour agrandir les QR). Injecté pour ce seul livret : le dos des
@@ -274,7 +274,8 @@ VUES = {
         # ici le schéma en barres (la part enlevée hachurée, pas de flèche).
         souvenir=[
             (MINI_SCH_ENLEVE, "On peut faire <b>la même opération sur les deux plateaux</b>, ajouter, enlever "
-                              "ou partager&nbsp;: il reste toujours la même quantité en haut et en bas."),
+                              "ou partager&nbsp;: il reste toujours la même quantité en haut et en bas. "
+                              "En maths, on dit&nbsp;: dans les deux <b>membres</b> de l'égalité."),
             (MINI_SCH_FIN, "<b>Le but</b>&nbsp;: garder une seule tache sur un plateau. L'autre plateau dit ce "
                            "qu'elle cache."),
             (MINI_SCH, "<b>À droite de chaque carte, c'est à toi</b>&nbsp;: dessine le schéma en barres, puis "
@@ -294,10 +295,11 @@ VUES = {
         atoi_couv="Sur les fiches, la place sous chaque carte est pour toi&nbsp;: <b>écris l'équation</b>, "
                   "puis résous-la pour trouver ce que cache la tache.",
         souvenir=[
-            (FLECHES, "On peut faire <b>la même opération des deux côtés</b>, ajouter, enlever ou "
-                      "partager&nbsp;: il reste toujours la même quantité à gauche et à droite."),
-            ('<span class="mini-eq">𝑥 = 5</span>', "<b>Le but</b>&nbsp;: garder une seule tache d'un côté. "
-                                                   "L'autre côté dit ce qu'elle cache."),
+            (FLECHES, "On peut faire <b>la même opération sur les deux plateaux</b>, ajouter, enlever ou "
+                      "partager&nbsp;: il reste toujours la même quantité à gauche et à droite. "
+                      "En maths, on dit&nbsp;: dans les deux <b>membres</b> de l'équation."),
+            ('<span class="mini-eq">𝑥 = 5</span>', "<b>Le but</b>&nbsp;: garder une seule tache sur un plateau. "
+                                                   "L'autre plateau dit ce qu'elle cache."),
             ('<span class="mini-eq">3𝑥 + 12 = 27</span>', "<b>Sous chaque carte, c'est à toi</b>&nbsp;: écris "
                                                           "l'équation, puis résous-la — comme l'exemple de la couverture."),
         ],
@@ -672,7 +674,7 @@ def textes_exemple(ex, v):
     nb = "&nbsp;"        # un calcul ne se coupe pas en fin de ligne
     regroupe = [f"{(nb + '+' + nb).join(map(str, c['paquets']))}{nb}={nb}{sum(c['paquets'])}" for c in (g, d) if len(c["paquets"]) > 1]
     gestes = ((f"on <b>regroupe</b> les paquets ({', '.join(regroupe)}), " if regroupe else "")
-              + f"on <b>enlève</b> {sg} des deux {'plateaux' if v['vue'] == 'schema' else 'côtés'} "
+              + f"on <b>enlève</b> {sg} des deux plateaux "
               + f"({sd}{nb}–{nb}{sg}{nb}={nb}{sd - sg}), "
               + f"puis on <b>partage</b> en {n} ({sd - sg}{nb}÷{nb}{n}{nb}={nb}{x}).")
     if v["vue"] == "schema":

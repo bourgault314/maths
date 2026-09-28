@@ -7589,6 +7589,105 @@ function eqPrintHiddenBeadRadius(R, baseR, splat){
   return Math.min(R, Math.max(baseR, creux));
 }
 
+/* ===== Grandes taches, en 6 par page (plateaux gauche/droite), 27/09/2026 =====
+   Relecture des mondes 5 et 6 : « les jetons sont vraiment petits alors qu'il y a beaucoup de
+   place », « des jetons qui sortent des taches » dans le corrigé. Sur les fiches 6/page (énoncé
+   ET correction « l'équation »), les taches passent de 74 à 84 (deux rangées) ou jusqu'à 100
+   (une rangée), la MÊME taille sur les deux plateaux de la carte ; les jetons suivent
+   (visé : 2 × le rayon de base, jamais plus que 0,64 × la tache, comme avant : la tache
+   grossit, le jeton grossit d'autant, la tache peut toujours le cacher) ;
+   un jeton dévoilé par la correction se pose bien à l'intérieur de sa tache (0,56 × la
+   tache, 0,40 sous un mot « opposé » ou une lettre). Rien ne change à l'écran, en 4/page
+   ni dans la vue haut/bas (schéma en barres). Aucune position n'est tirée au sort ici : les
+   taches gardent leur rangée et leur ordre, elles s'écartent seulement autant qu'il faut.
+   Si une carte ne peut pas grossir (plus de trois taches sur une rangée), elle reste telle
+   quelle. */
+const EQ_PRINT_GRAND_BEAD_SCALE = 2;
+// 0,64 comme avant : la proportion jeton / tache ne change pas, la tache peut toujours le cacher
+// (27/09 : essayé 0,70, écarté — « s'il n'est plus caché par la tache, ça n'a plus aucun intérêt »)
+const EQ_PRINT_GRAND_UNDER_SPLAT = 0.64;
+const EQ_PRINT_GRAND_HIDDEN = 0.56;
+const EQ_PRINT_GRAND_HIDDEN_SOUS_MOT = 0.40;
+const EQ_PRINT_GRAND_SPLAT_MAX = 100;    // une rangée
+const EQ_PRINT_GRAND_EDGE = 24;          // haut du plateau → haut de la tache (le lobe, 1,1 × r)
+const EQ_PRINT_GRAND_BOTTOM = 412;       // bas des taches, depuis le haut du plateau (les jetons sont dessous)
+const EQ_PRINT_GRAND_GAP = 16;           // entre deux taches, lobes compris
+
+function eqPrintGrandHiddenBeadRadius(R, splat, sousMot){
+  const r = Number(splat && splat.r) || 74;
+  return Math.min(R, Math.floor(r * (sousMot ? EQ_PRINT_GRAND_HIDDEN_SOUS_MOT : EQ_PRINT_GRAND_HIDDEN)));
+}
+
+/* rend un nouveau « pos » (posH et splats refaits), ou celui reçu s'il ne peut pas grossir */
+function eqPrintGrandesTaches(trays, pos){
+  if(!trays || !pos || trays.vertical || !trays.left || !trays.right) return pos;
+  const cotes = ["left", "right"];
+  const rangees = {};
+  for(const c of cotes){
+    const sp = (pos[c] && pos[c].splats) || [];
+    const parY = new Map();
+    sp.forEach((s, i) => {
+      const k = Math.round(Number(s.cy) || 0);
+      if(!parY.has(k)) parY.set(k, []);
+      parY.get(k).push(i);
+    });
+    const rs = [...parY.entries()].sort((a, b) => a[0] - b[0]).map(e => e[1].sort((i, j) => sp[i].cx - sp[j].cx));
+    if(rs.length > 2) return pos;
+    rangees[c] = rs;
+  }
+  function places(c, R){
+    const tray = trays[c];
+    const sp = pos[c].splats || [];
+    const rs = rangees[c];
+    const out = sp.map(s => ({...s, r:R}));
+    if(!rs.length) return out;
+    const pas = 2.2 * R + EQ_PRINT_GRAND_GAP;
+    const marge = 1.1 * R + 30;
+    let ys;
+    if(rs.length === 1){
+      const cy = Number(sp[rs[0][0]].cy);
+      if(cy - 1.1 * R < tray.y + EQ_PRINT_GRAND_EDGE || cy + 1.1 * R > tray.y + EQ_PRINT_GRAND_BOTTOM) return null;
+      ys = [cy];
+    }else{
+      const haut = tray.y + EQ_PRINT_GRAND_EDGE + 1.1 * R;
+      if(haut + pas + 1.1 * R > tray.y + EQ_PRINT_GRAND_BOTTOM) return null;
+      ys = [haut, haut + pas];
+    }
+    for(let k=0;k<rs.length;k++){
+      const idx = rs[k];
+      const xs = idx.map(i => Number(sp[i].cx));
+      const ecart = xs.length > 1 ? Math.min(...xs.slice(1).map((x, j) => x - xs[j])) : Infinity;
+      let nx = xs;
+      if(ecart < pas){
+        const milieu = (xs[0] + xs[xs.length - 1]) / 2;
+        nx = xs.map((_, j) => milieu + (j - (xs.length - 1) / 2) * pas);
+      }
+      if(nx[0] < tray.x + marge - 0.5 || nx[nx.length - 1] > tray.x + tray.w - marge + 0.5) return null;
+      idx.forEach((i, j) => { out[i].cx = Math.round(nx[j]); out[i].cy = Math.round(ys[k]); });
+    }
+    return out;
+  }
+  for(let R = EQ_PRINT_GRAND_SPLAT_MAX; R > 74; R--){
+    const nouv = {};
+    let ok = true;
+    for(const c of cotes){
+      const p = places(c, R);
+      if(!p){ ok = false; break; }
+      nouv[c] = p;
+    }
+    if(!ok) continue;
+    const res = {};
+    for(const c of cotes){
+      res[c] = Object.assign({}, pos[c], {
+        splats: nouv[c],
+        posH: nouv[c].map(s => ({cx:s.cx, cy:s.cy}))
+      });
+    }
+    return res;
+  }
+  return pos;
+}
+
 /* Table de dessin d'une scène imprimée : chaque jeton numéroté réserve sa place dans
    l'ordre du dessin (un groupe vide, pour garder qui passe devant qui) ; une fois les
    deux plateaux dessinés, finish() calcule le rayon de la carte et remplit les groupes.
@@ -7598,13 +7697,24 @@ function createEqPrintBeadTable(targetGroup, mk, mkText, opts = {}){
   const splats = [];
   let cap = Infinity;
   const useTokens = !!opts.useTokens;
-  const scale = Number(opts.scale) > 0 ? Number(opts.scale) : EQ_PRINT_BEAD_SCALE;
+  const grand = !!opts.grandesTaches;
+  const scale = grand ? EQ_PRINT_GRAND_BEAD_SCALE
+    : (Number(opts.scale) > 0 ? Number(opts.scale) : EQ_PRINT_BEAD_SCALE);
+  const sousTache = grand ? EQ_PRINT_GRAND_UNDER_SPLAT : EQ_PRINT_BEAD_UNDER_SPLAT;
   return {
     splat(s){
       if(s) splats.push({cx:Number(s.cx) || 0, cy:Number(s.cy) || 0, r:Number(s.r) || 74});
     },
-    /* un mot posé sur un jeton dévoilé (« opposé ») : la carte garde le rayon de base */
-    cap(r){ cap = Math.min(cap, Number(r) || 0); },
+    /* un mot posé sur un jeton dévoilé (« opposé ») : la carte garde le rayon de base ;
+       en grandes taches, seul CE jeton dévoilé rapetisse (il se loge sous le mot) */
+    cap(r){
+      if(grand){
+        const it = items[items.length - 1];
+        if(it && it.hidden) it.sousMot = true;
+        return;
+      }
+      cap = Math.min(cap, Number(r) || 0);
+    },
     bead(p, val, o = {}){
       const g = mk("g", {});
       targetGroup.appendChild(g);
@@ -7621,10 +7731,12 @@ function createEqPrintBeadTable(targetGroup, mk, mkText, opts = {}){
       const baseR = Math.min(...items.map(it => it.baseR));
       const visibles = items.filter(it => !it.hidden);
       // pas plus gros que ce que la plus petite tache de la carte peut cacher
-      const creux = splats.length ? Math.floor(Math.min(...splats.map(s => s.r)) * EQ_PRINT_BEAD_UNDER_SPLAT) : Infinity;
+      const creux = splats.length ? Math.floor(Math.min(...splats.map(s => s.r)) * sousTache) : Infinity;
       const {R, pts} = eqPrintBeadLayout(visibles, splats, baseR, Math.min(cap, creux), scale);
       visibles.forEach((it, i) => { it.p = pts[i]; });
-      items.forEach(it => drawEqPrintNumberedBead(it, it.hidden ? eqPrintHiddenBeadRadius(R, it.baseR, it.splat) : R, mk, mkText, useTokens));
+      items.forEach(it => drawEqPrintNumberedBead(it, it.hidden
+        ? (grand ? eqPrintGrandHiddenBeadRadius(R, it.splat, it.sousMot) : eqPrintHiddenBeadRadius(R, it.baseR, it.splat))
+        : R, mk, mkText, useTokens));
       return R;
     }
   };
@@ -7802,6 +7914,14 @@ function eqUnitPrintScale(card, trays, pos){
       const side = pos[sideName], metaSide = eq[sideName], tray = trays[sideName];
       if(!side || !metaSide || !tray) return false;
       const layout = getEqUnitBeadLayout(card, sideName, side, metaSide, tray, eqUnitPrintOpts(scale));
+      // (27/09/2026) un jeton visible n'est jamais plus gros que les x jetons qu'une tache cache,
+      // rangés dans son creux (eqPrintUnitBeadsInSplat) : au corrigé, tous les jetons ont la même taille
+      const taches = side.splats || [];
+      if(taches.length){
+        const plusPetite = taches.reduce((a, t) => ((Number(t.r) || 74) < (Number(a.r) || 74) ? t : a), taches[0]);
+        const tient = eqPrintUnitBeadsInSplat(plusPetite, Math.round(Number(eq.x) || 0), 999).r;
+        if(layout.beadR > tient) return false;
+      }
       return eqUnitPrintLayoutOk(layout, tray, side.splats || [], metaSide);
     });
     if(ok) return scale;
@@ -7812,6 +7932,34 @@ function eqUnitPrintScale(card, trays, pos){
 function getEqUnitBeadLayoutPrint(card, sideName, side, metaSide, tray, scale){
   if(!scale) return getEqUnitBeadLayout(card, sideName, side, metaSide, tray);
   return getEqUnitBeadLayout(card, sideName, side, metaSide, tray, eqUnitPrintOpts(scale));
+}
+
+/* Jetons un par un DÉVOILÉS sous une tache, à l'impression (27/09/2026). Gwenaël : « sur le
+   corrigé, il y a des jetons qui sortent des taches ». La disposition de l'écran pose les jetons
+   cachés au rayon des jetons visibles, agrandis à l'impression (×2) : quatre ou cinq jetons
+   débordaient d'une tache de 74. Ici, les k jetons d'une tache sont rangés en petites rangées
+   (3 au plus par rangée : 1, 2, 3, 2+2, 3+2, 3+3, 3+3+1…), centrés sur la tache, et leur rayon
+   est le plus grand qui tient dans le creux de la tache (0,68 × son rayon) sans dépasser celui
+   des jetons visibles. Rien n'est tiré au sort. */
+function eqPrintUnitBeadsInSplat(s, k, maxR){
+  k = Math.max(0, Math.round(Number(k) || 0));
+  if(!s || !k) return {r: maxR, pts: []};
+  const R = (Number(s.r) || 74) * 0.68, gap = 3;
+  const rangs = [];
+  for(let reste = k; reste > 0; ){ const n = Math.min(3, reste); rangs.push(n); reste -= n; }
+  if(rangs.length > 1 && rangs[rangs.length - 1] === 1 && rangs[rangs.length - 2] === 3){ rangs[rangs.length - 2] = 2; rangs[rangs.length - 1] = 2; }
+  const place = r => {
+    const pas = 2 * r + gap, h = (rangs.length - 1) * pas;
+    const pts = [];
+    rangs.forEach((n, i) => { for(let j = 0; j < n; j++) pts.push({cx: s.cx + (j - (n - 1) / 2) * pas, cy: s.cy - h / 2 + i * pas}); });
+    return pts;
+  };
+  let r = Math.max(4, Math.floor(Number(maxR) || 12));
+  for(; r > 4; r--){
+    const pts = place(r);
+    if(pts.every(p => Math.hypot(p.cx - s.cx, p.cy - s.cy) + r <= R)) return {r, pts};
+  }
+  return {r, pts: place(r)};
 }
 
 function renderCardEquationStepPrintScene(targetGroup, card, revealState, opts = {}){
@@ -7839,9 +7987,14 @@ function renderCardEquationStepPrintScene(targetGroup, card, revealState, opts =
     trays = shifted.trays;
     pos = shifted.pos;
   }
+  // 6 par page, plateaux gauche/droite : les grandes taches (voir eqPrintGrandesTaches)
+  const grandesTaches = !!opts.grandesTaches && layoutMode === "equation" && !trays.vertical;
+  if(grandesTaches) pos = eqPrintGrandesTaches(trays, pos);
 
   const cover = "rgba(0,0,0,0.95)";
   const revealCol = "rgba(220,220,220,0.35)";
+  // grandes taches (6/page) : le contour d'une tache dévoilée se voit, le jeton est dedans
+  const revealStroke = grandesTaches ? "rgba(0,0,0,0.34)" : "rgba(0,0,0,0.14)";
 
 
   function addManualCircleHatch(cx, cy, r, fine=false, parent=targetGroup){
@@ -7965,7 +8118,7 @@ function renderCardEquationStepPrintScene(targetGroup, card, revealState, opts =
   // Jetons numérotés : chacun réserve sa place ; le rayon de la carte est calculé une
   // fois les deux plateaux dessinés (table de dessin, voir createEqPrintBeadTable).
   const beadTable = createEqPrintBeadTable(targetGroup, el, text, {
-    useTokens, scale: trays.vertical ? EQ_PRINT_BEAD_SCALE_HAUT_BAS : EQ_PRINT_BEAD_SCALE
+    useTokens, scale: trays.vertical ? EQ_PRINT_BEAD_SCALE_HAUT_BAS : EQ_PRINT_BEAD_SCALE, grandesTaches
   });
   const hatchInto = (parent, cx, cy, r) => addManualCircleHatch(cx, cy, r, false, parent);
   let beadTray = null;
@@ -7990,13 +8143,16 @@ function renderCardEquationStepPrintScene(targetGroup, card, revealState, opts =
     const unitLayout = useUnitBeads ? getEqUnitBeadLayoutPrint(card, sideName, side, metaSide, sideName === "left" ? trays.left : trays.right, unitPrintScale) : null;
     const unitBeadR = unitLayout ? unitLayout.beadR : 12;
 
-    function drawUnitHiddenForPart(part, shift){
+    function drawUnitHiddenForPart(part, shift, tache){
       if(!unitLayout || !part) return;
       const rawPosIndex = Number(part && part.posIndex);
       const posIndex = Number.isFinite(rawPosIndex) ? Math.max(0, Math.round(rawPosIndex)) : 0;
-      let pts = unitLayout.hiddenByTaskPositions[posIndex] || [];
-      if(shift) pts = pts.map(p => ({cx: p.cx + shift.dx, cy: p.cy + shift.dy}));
-      drawEqUnitBeadListPrint(pts, unitBeadR, false);
+      // la tache telle qu'elle est dessinée (déjà déplacée dans sa case s'il y a lieu)
+      const sTache = tache || (side.splats || [])[posIndex];
+      const dansTache = sTache ? eqPrintUnitBeadsInSplat(sTache, Math.round(Number(eq.x) || 0), unitBeadR) : null;
+      let pts = dansTache ? dansTache.pts : (unitLayout.hiddenByTaskPositions[posIndex] || []);
+      if(shift && !dansTache) pts = pts.map(p => ({cx: p.cx + shift.dx, cy: p.cy + shift.dy}));
+      drawEqUnitBeadListPrint(pts, dansTache ? dansTache.r : unitBeadR, false);
     }
 
     function drawUnitVisibleParts(parts, opts = {}){
@@ -8125,7 +8281,8 @@ function renderCardEquationStepPrintScene(targetGroup, card, revealState, opts =
         (side.splats || []).forEach((s, idx)=>{
           const pHidden = side.posH?.[idx] || {cx:s.cx, cy:s.cy};
           if(useUnitBeads){
-            drawEqUnitBeadListPrint((unitLayout && unitLayout.hiddenByTaskPositions[idx]) || [], unitBeadR, false);
+            const dansTache = eqPrintUnitBeadsInSplat(s, Math.round(Number(eq.x) || 0), unitBeadR);
+            drawEqUnitBeadListPrint(dansTache.pts, dansTache.r, false);
           }else{
             drawHiddenRevealedBead(pHidden, xVal, beadR, s);
           }
@@ -8133,7 +8290,7 @@ function renderCardEquationStepPrintScene(targetGroup, card, revealState, opts =
           targetGroup.appendChild(el("path",{
             d: blobPath(s.cx, s.cy, s.r),
             fill: revealCol,
-            stroke:"rgba(0,0,0,0.14)",
+            stroke:revealStroke,
             "stroke-width":"5"
           }));
         });
@@ -8162,7 +8319,7 @@ function renderCardEquationStepPrintScene(targetGroup, card, revealState, opts =
         const isFinalReveal = (currentKind === "final" && !isRemoved);
 
         if(isFinalReveal){
-          if(useUnitBeads) drawUnitHiddenForPart(part, unitShift);
+          if(useUnitBeads) drawUnitHiddenForPart(part, unitShift, s);
           else drawHiddenRevealedBead(pHidden, part.value, beadR, s);
         }
         beadTable.splat(s);
@@ -8170,7 +8327,7 @@ function renderCardEquationStepPrintScene(targetGroup, card, revealState, opts =
         targetGroup.appendChild(el("path",{
           d,
           fill:(isRemoved || isFinalReveal) ? revealCol : cover,
-          stroke:(isRemoved || isFinalReveal) ? "rgba(0,0,0,0.14)" : "rgba(0,0,0,0.18)",
+          stroke:(isRemoved || isFinalReveal) ? revealStroke : "rgba(0,0,0,0.18)",
           "stroke-width":"5"
         }));
         if(isRemoved) addManualBlobHatch(s.cx, s.cy, s.r);
@@ -8306,6 +8463,9 @@ function renderCardEquationSignedStepPrintScene(targetGroup, card, revealState, 
     trays = shifted.trays;
     pos = shifted.pos;
   }
+  // 6 par page : les grandes taches (voir eqPrintGrandesTaches)
+  const grandesTaches = !!opts.grandesTaches;
+  if(grandesTaches) pos = eqPrintGrandesTaches(trays, pos);
   const useTokens = !!opts.useTokens;
   const varChar = getCardVarChar(card);
   const maxReveal = buildEquationSignedStepLines(eq, varChar).length;
@@ -8313,6 +8473,7 @@ function renderCardEquationSignedStepPrintScene(targetGroup, card, revealState, 
   const revealAnswers = revealState >= maxReveal;
   const cover = "rgba(0,0,0,0.95)";
   const revealCol = "rgba(220,220,220,0.35)";
+  const revealStroke = grandesTaches ? "rgba(0,0,0,0.34)" : "rgba(0,0,0,0.14)";
 
 
   function addManualCircleHatch(cx, cy, r, parent=targetGroup){
@@ -8389,7 +8550,7 @@ function renderCardEquationSignedStepPrintScene(targetGroup, card, revealState, 
   }
 
   // Jetons numérotés : table de dessin (voir createEqPrintBeadTable), comme les autres modes.
-  const beadTable = createEqPrintBeadTable(targetGroup, el, text, {useTokens});
+  const beadTable = createEqPrintBeadTable(targetGroup, el, text, {useTokens, grandesTaches});
   const hatchInto = (parent, cx, cy, r) => addManualCircleHatch(cx, cy, r, parent);
   let beadTray = null;
 
@@ -8567,7 +8728,7 @@ function renderCardEquationSignedStepPrintScene(targetGroup, card, revealState, 
         targetGroup.appendChild(el("path",{
           d: dPath,
           fill:(isRemoved && useWhiteHatch) ? cover : ((isRevealed || isRemoved) ? revealCol : cover),
-          stroke:(isRemoved && useWhiteHatch) ? "rgba(0,0,0,0.18)" : ((isRevealed || isRemoved) ? "rgba(0,0,0,0.14)" : "rgba(0,0,0,0.18)"),
+          stroke:(isRemoved && useWhiteHatch) ? "rgba(0,0,0,0.18)" : ((isRevealed || isRemoved) ? revealStroke : "rgba(0,0,0,0.18)"),
           "stroke-width":"5"
         }));
         if(isRemoved) (useWhiteHatch ? addWhiteHatchPath(targetGroup, dPath) : addHatchPath(targetGroup, dPath));
@@ -8751,6 +8912,7 @@ function renderCardEquationSignedStepPrint(targetSvg, card, printMode, tEl, tTex
       showTaskRule:false,
       showAid:false,
       introY: printOpts.sixParPage ? EQ_PRINT_6UP_PHRASE_Y : 78,
+      grandesTaches: !!printOpts.sixParPage,
       useTokens
     });
     targetSvg.appendChild(g);
@@ -8866,6 +9028,7 @@ function renderCardEquationStepPrint(targetSvg, card, printMode, tEl, tText, use
         showTaskRule:false,
         showAid:false,
         introY: printOpts.sixParPage ? EQ_PRINT_6UP_PHRASE_Y : 78,
+        grandesTaches: !!printOpts.sixParPage,
         useTokens
       });
     }
@@ -9462,7 +9625,9 @@ function renderCardIntoSvg(targetSvg, card, printMode, printOpts = {}){
      colonne de 720 (EQ_SIX_CORR_GEOM_SCHEMA), de la hauteur du plateau ; sans l'équation.
    Le SVG garde la taille et la place de celui de l'énoncé 6/page (overflow visible) ;
    la case (.pCard, overflow hidden) borne le dessin. */
-const EQ_SIX_CORR_EQ_FONT = 100;          // 4,3 mm sur la feuille (80 % de la case)
+// 136 : 5,8 mm sur la feuille (27/09/2026, « il y a beaucoup de place, on peut écrire plus gros » ;
+// avant : 100, 4,3 mm) ; réduite de 4 en 4 seulement si la case ne la contient pas
+const EQ_SIX_CORR_EQ_FONT = 136;
 const EQ_SIX_CORR_EQ_LEFT = -140, EQ_SIX_CORR_EQ_RIGHT = 1740;   // la case, moins son bord
 const EQ_SIX_CORR_EQ_BOTTOM = 1760;   // le bas de la case, moins son bord (mesuré, voir le lot R1)
 /* La colonne des schémas en barres, à droite du plateau haut/bas (x 60 → 780, y 132 → 980) :
@@ -9470,10 +9635,14 @@ const EQ_SIX_CORR_EQ_BOTTOM = 1760;   // le bas de la case, moins son bord (mesu
    largeurs à 0,58 (720 pour 1240), hauteurs et lettres à 0,84 — quatre schémas (la carte
    la plus longue : 3 × 224 + 168 = 840) tiennent dans les 848 du plateau, avec 56 (3 mm)
    entre deux schémas (demande de Gwenaël du 25/09 : « ils sont tous collés » à 29). */
+/* 27/09/2026 (« donner un peu plus de hauteur à chaque ligne ») : lignes de 84 → 108 (4,6 mm),
+   chiffres 74 → 90, lettres 54 → 76, 60 de blanc entre deux schémas (stride 276). La colonne
+   descend plus bas que le plateau quand il y a quatre schémas (3 × 276 + 216 = 1044 : jusqu'à
+   1176, la case s'arrête vers 1360) ; sa largeur ne change pas. */
 const EQ_SIX_CORR_GEOM_SCHEMA = {
   top: 132, centerX: 1180, fullW: 720, maxTableW: 720,
-  minHiddenW: 55, minVisibleW: 67, minHiddenWValue1: 73, minVisibleWValue1: 83,
-  rowH: 84, fontSize: 74, pad: 30, variableFontSize: 54, stride: 224,
+  minHiddenW: 70, minVisibleW: 84, minHiddenWValue1: 92, minVisibleWValue1: 104,
+  rowH: 108, fontSize: 90, pad: 36, variableFontSize: 76, stride: 276,
   eqTopGap: 0, eqFontSize: 0, eqFontSize4: 0, eqGap: 0, eqGap4: 0, eqEqGap: 0, arrows: false, sansEquation: true
 };
 
@@ -9643,7 +9812,7 @@ function renderEqSixCorrectionIntoSvg(targetSvg, card, part){
         {"text-anchor":"middle", "font-size":"44", "fill":"rgba(0,0,0,0.92)", "font-weight":"900"}));
       const colorModeEl = document.getElementById("numColorMode");
       renderCardEquationSignedStepPrintScene(g, card, buildEquationSignedStepLines(eq, varCharPm).length, {
-        showIntroText:false, showAid:false, useTokens: !!(colorModeEl && colorModeEl.checked)
+        showIntroText:false, showAid:false, grandesTaches:true, useTokens: !!(colorModeEl && colorModeEl.checked)
       });
       targetSvg.appendChild(g);
       const gc = tEl("g", {id:"eqSixCorrection"});
@@ -9663,6 +9832,7 @@ function renderEqSixCorrectionIntoSvg(targetSvg, card, part){
       layoutMode: hautBas ? "schema" : "equation",
       showIntroText:false,
       showAid:false,
+      grandesTaches: !hautBas,
       useTokens:false
     });
     g.appendChild(gScene);

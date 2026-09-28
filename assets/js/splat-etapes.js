@@ -91,12 +91,12 @@
     ["sys34", 34, "Le grand défi du Système", "SPLAT! Système", 4],
     ["m3e1", 35, "Premières équations", "SPLAT! Équations", 5],
     ["m3e2", 36, "Des paquets de jetons", "SPLAT! Équations", 5],
-    ["m3e4", 37, "Des taches des deux côtés", "SPLAT! Équations", 5],
+    ["m3e4", 37, "Des taches sur les deux plateaux", "SPLAT! Équations", 5],
     ["m4e1", 38, "Les jetons rouges arrivent", "SPLAT! Relatifs", 6],
     ["m4e2", 39, "Des négatifs partout", "SPLAT! Relatifs", 6],
     ["m4e3", 40, "La tache opposée", "SPLAT! Relatifs", 6],
-    ["m4e4", 41, "Des taches des deux côtés", "SPLAT! Relatifs", 6],
-    ["m4e5", 42, "Une tache opposée d’un côté", "SPLAT! Relatifs", 6],
+    ["m4e4", 41, "Des taches sur les deux plateaux", "SPLAT! Relatifs", 6],
+    ["m4e5", 42, "Une tache opposée sur un plateau", "SPLAT! Relatifs", 6],
     ["m4e6", 43, "Le grand mélange", "SPLAT! Relatifs", 6]
   ];
 
