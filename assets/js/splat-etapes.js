@@ -96,7 +96,7 @@
     ["m4e2", 39, "Des négatifs partout", "SPLAT! Relatifs", 6],
     ["m4e3", 40, "La tache opposée", "SPLAT! Relatifs", 6],
     ["m4e4", 41, "Des taches sur les deux plateaux", "SPLAT! Relatifs", 6],
-    ["m4e5", 42, "Une tache opposée sur un plateau", "SPLAT! Relatifs", 6],
+    ["m4e5", 42, "Des taches opposées sur un plateau", "SPLAT! Relatifs", 6],
     ["m4e6", 43, "Le grand mélange", "SPLAT! Relatifs", 6]
   ];
 

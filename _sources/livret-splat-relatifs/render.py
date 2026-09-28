@@ -67,32 +67,32 @@ COURTE = "/splat/relatifs/livret/"              # la page courte des QR
 E = "mode=EQPMSTEP&form="
 FICHES = [
     dict(n=38, t="Les jetons rouges arrivent", parcours="m4e1", resume="x + b = c, a·x = c, a·x + b = c.",
-         parties=[E + "X_PLUS_B_EQ_C&opposites=off&visibleMin=1&visibleMax=2&beadMax=15&totalMin=-15&totalMax=15&cards=4&seed=152679&unknown=letter",
-                  E + "AX_EQ_C&opposites=off&tasksMax=4&visibleMin=1&visibleMax=2&beadMax=20&totalMin=-24&totalMax=24&cards=4&seed=199462&unknown=letter",
-                  E + "ONE_SIDE&opposites=off&tasksMax=3&visibleMin=1&visibleMax=2&beadMax=20&totalMin=-30&totalMax=30&cards=4&seed=11697&unknown=letter"]),
+         parties=[E + "X_PLUS_B_EQ_C&opposites=off&visibleMin=1&visibleMax=2&beadMax=15&totalMin=-15&totalMax=15&cards=4&seed=2921&unknown=letter",
+                  E + "AX_EQ_C&opposites=off&tasksMax=4&visibleMin=1&visibleMax=2&beadMax=20&totalMin=-24&totalMax=24&cards=4&seed=18363&unknown=letter",
+                  E + "ONE_SIDE&opposites=off&tasksMax=3&visibleMin=1&visibleMax=2&beadMax=20&totalMin=-30&totalMax=30&cards=4&seed=1017&unknown=letter"]),
     dict(n=39, t="Des négatifs partout", parcours="m4e2", resume="Des jetons verts et rouges à regrouper.",
-         parties=[E + "ONE_SIDE&opposites=off&tasksMax=5&visibleMin=2&visibleMax=3&beadMax=30&totalMin=-50&totalMax=50&cards=5&seed=24396&unknown=letter",
+         parties=[E + "ONE_SIDE&opposites=off&tasksMax=5&visibleMin=2&visibleMax=3&beadMax=30&totalMin=-50&totalMax=50&cards=5&seed=2151&unknown=letter",
                   E + "ONE_SIDE&opposites=off&tasksMax=4&visibleMin=1&visibleMax=2&beadMax=25&totalMin=-30&totalMax=30&zero=1&cards=1&seed=348&unknown=letter",
-                  E + "ONE_SIDE&opposites=off&tasksMax=5&visibleMin=2&visibleMax=3&beadMax=30&totalMin=-50&totalMax=50&cards=5&seed=189524&unknown=letter",
+                  E + "ONE_SIDE&opposites=off&tasksMax=5&visibleMin=2&visibleMax=3&beadMax=30&totalMin=-50&totalMax=50&cards=5&seed=13711&unknown=letter",
                   E + "ONE_SIDE&opposites=off&tasksMax=4&visibleMin=1&visibleMax=2&beadMax=25&totalMin=-30&totalMax=30&zero=1&cards=1&seed=175&unknown=letter"]),
     dict(n=40, t="La tache opposée", parcours="m4e3", resume="La tache « opposé » arrive.",
-         parties=[E + "X_PLUS_B_EQ_C&opposites=all&visibleMin=1&visibleMax=2&beadMax=20&totalMin=-20&totalMax=20&cards=4&seed=58761&unknown=letter",
-                  E + "AX_EQ_C&opposites=all&tasksMax=3&visibleMin=1&visibleMax=2&beadMax=20&totalMin=-30&totalMax=30&cards=2&seed=536&unknown=letter",
-                  E + "ONE_SIDE&opposites=all&tasksMax=3&visibleMin=1&visibleMax=2&beadMax=20&totalMin=-30&totalMax=30&cards=3&seed=6140&unknown=letter",
-                  E + "ONE_SIDE&opposites=mix&tasksMax=5&visibleMin=1&visibleMax=2&beadMax=25&totalMin=-40&totalMax=40&cards=3&seed=1542&unknown=letter"]),
+         parties=[E + "X_PLUS_B_EQ_C&opposites=all&visibleMin=1&visibleMax=2&beadMax=20&totalMin=-20&totalMax=20&cards=4&seed=6803&unknown=letter",
+                  E + "AX_EQ_C&opposites=all&tasksMax=3&visibleMin=1&visibleMax=2&beadMax=20&totalMin=-30&totalMax=30&cards=2&seed=787&unknown=letter",
+                  E + "ONE_SIDE&opposites=all&tasksMax=3&visibleMin=1&visibleMax=2&beadMax=20&totalMin=-30&totalMax=30&cards=3&seed=8465&unknown=letter",
+                  E + "ONE_SIDE&opposites=mix&tasksMax=5&visibleMin=1&visibleMax=2&beadMax=25&totalMin=-40&totalMax=40&cards=3&seed=8596&unknown=letter"]),
     dict(n=41, t="Des taches sur les deux plateaux", parcours="m4e4", resume="L'inconnue à gauche et à droite.",
-         parties=[E + "BOTH&opposites=off&tasksMax=4&visibleMin=1&visibleMax=2&beadMax=25&totalMin=-40&totalMax=40&cards=6&seed=104805&unknown=letter",
+         parties=[E + "BOTH&opposites=off&tasksMax=4&visibleMin=1&visibleMax=2&beadMax=25&totalMin=-40&totalMax=40&cards=6&seed=962&unknown=letter",
                   E + "BOTH&opposites=off&tasksMax=4&visibleMin=1&visibleMax=2&beadMax=25&totalMin=-30&totalMax=30&zero=1&cards=1&seed=204&unknown=letter",
-                  E + "BOTH&opposites=off&tasksMax=4&visibleMin=1&visibleMax=2&beadMax=25&totalMin=-40&totalMax=40&cards=5&seed=157694&unknown=letter"]),
-    dict(n=42, t="Une tache opposée sur un plateau", parcours="m4e5", resume="Opposées sur un plateau, normales sur l'autre.",
-         parties=[E + "BOTH&opposites=auto&tasksMax=4&visibleMin=1&visibleMax=2&beadMax=25&totalMin=-40&totalMax=40&cards=4&seed=35324&unknown=letter",
-                  E + "BOTH&opposites=auto&tasksMax=4&visibleMin=1&visibleMax=2&beadMax=25&totalMin=-40&totalMax=40&cards=4&seed=44162&unknown=letter",
-                  E + "BOTH&opposites=auto&tasksMax=4&visibleMin=1&visibleMax=2&beadMax=25&totalMin=-40&totalMax=40&cards=4&seed=57267&unknown=letter"]),
+                  E + "BOTH&opposites=off&tasksMax=4&visibleMin=1&visibleMax=2&beadMax=25&totalMin=-40&totalMax=40&cards=5&seed=11148&unknown=letter"]),
+    dict(n=42, t="Des taches opposées sur un plateau", parcours="m4e5", resume="Opposées sur un plateau, normales sur l'autre.",
+         parties=[E + "BOTH&opposites=auto&tasksMax=4&visibleMin=1&visibleMax=2&beadMax=25&totalMin=-40&totalMax=40&cards=4&seed=8176&unknown=letter",
+                  E + "BOTH&opposites=auto&tasksMax=4&visibleMin=1&visibleMax=2&beadMax=25&totalMin=-40&totalMax=40&cards=4&seed=9730&unknown=letter",
+                  E + "BOTH&opposites=auto&tasksMax=4&visibleMin=1&visibleMax=2&beadMax=25&totalMin=-40&totalMax=40&cards=4&seed=9816&unknown=letter"]),
     dict(n=43, t="Le grand mélange", parcours="m4e6", resume="Tout mélangé, sur les deux plateaux.",
-         parties=[E + "BOTH&opposites=mix&tasksMax=5&visibleMin=1&visibleMax=2&beadMax=25&totalMin=-40&totalMax=40&cards=4&seed=53990&unknown=letter",
-                  E + "BOTH&opposites=all&tasksMax=4&visibleMin=1&visibleMax=2&beadMax=25&totalMin=-40&totalMax=40&cards=3&seed=2450&unknown=letter",
+         parties=[E + "BOTH&opposites=mix&tasksMax=5&visibleMin=1&visibleMax=2&beadMax=25&totalMin=-40&totalMax=40&cards=4&seed=7794&unknown=letter",
+                  E + "BOTH&opposites=all&tasksMax=4&visibleMin=1&visibleMax=2&beadMax=25&totalMin=-40&totalMax=40&cards=3&seed=4520&unknown=letter",
                   E + "BOTH&opposites=auto&tasksMax=3&visibleMin=0&visibleMax=0&totalMin=-20&totalMax=20&beadMax=20&zero=1&cards=1&seed=142&unknown=letter",
-                  E + "BOTH&opposites=mix&tasksMax=5&visibleMin=1&visibleMax=3&beadMax=30&totalMin=-50&totalMax=50&cards=4&seed=61803&unknown=letter"]),
+                  E + "BOTH&opposites=mix&tasksMax=5&visibleMin=1&visibleMax=3&beadMax=30&totalMin=-50&totalMax=50&cards=4&seed=176&unknown=letter"]),
 ]
 PAR_N = {f["n"]: f for f in FICHES}
 
@@ -162,11 +162,12 @@ VUES = {
         sur="Mon livret · Monde 6 · Livret 2",
         accroche="L'inconnue à gauche et à droite,<br>des taches normales et opposées&nbsp;!",
         fiches=[PAR_N[41], PAR_N[42], PAR_N[43]], exemple=EXEMPLE_2,
-        # lot R3 (27/09/2026, décision de Gwenaël) : au livret 2, la lettre sur chaque tache —
-        # « 𝑡 », « −𝑡 » — au lieu du mot « opposé » (le livret 1 garde « opposé » pour découvrir)
-        lettre=True,
+        # 28/09/2026, décision de Gwenaël : le livret 2 fait comme le livret 1 — rien sur la tache,
+        # « opposé » sur la tache opposée (la lettre « 𝑏 », « −𝑏 » rendait mal dans le corrigé).
+        # La lettre sur les taches (lot R3 : « taches=lettre », JS_LETTRE) reste prête pour le
+        # futur livret « défi » (réglage « lettre » à vrai dans son dict).
         dos=[("Les deux plateaux", "Des taches à gauche et à droite, comme la fiche&nbsp;41.", "4"),
-             ("Une tache opposée", "Des taches opposées, comme la fiche&nbsp;42.", "5"),
+             ("Des taches opposées", "Opposées sur un plateau, comme la fiche&nbsp;42.", "5"),
              ("Le grand mélange", "Tout mélangé, comme la fiche&nbsp;43.", "6")],
         suite=("Bravo, voyageur&nbsp;!", "Tu as traversé les six mondes de l'univers <b>SPLAT!</b> Retrouve toutes tes étoiles sur la carte des mondes."),
     ),
@@ -361,10 +362,11 @@ JS_DOS = """(d) => {
   return 'ok';
 }"""
 
-# Livret 2 (lot R3, 27/09/2026) : la lettre est écrite sur les taches des fiches ; la nouveauté
-# de la couverture et les deux premiers rappels du dos le disent avec la même tache « −𝑥 ».
-# Livret 1 (28/09/2026, demande de Gwenaël) : sur la grande tache du bandeau, « opposé » comme
-# sur les taches des fiches de ce livret, et non « −𝑥 » (qui n'arrive qu'au livret 2). Le mot est
+# Livret AVEC lettre (lot R3, 27/09/2026 ; plus utilisé depuis le 28/09, gardé pour le futur
+# livret « défi ») : la lettre est écrite sur les taches des fiches ; la nouveauté de la
+# couverture et les deux premiers rappels du dos le disent avec la même tache « −𝑥 ».
+# Livrets 1 et 2 (28/09/2026, demande de Gwenaël) : sur la grande tache du bandeau, « opposé » comme
+# sur les taches des fiches de ces livrets, et non « −𝑥 » (gardé pour le livret « défi »). Le mot est
 # blanc, en Poppins gras, centré sur la tache (mesuré au PDF).
 JS_TACHE_OPPOSE = """() => {
   const t = document.querySelector('header svg text.lettre');

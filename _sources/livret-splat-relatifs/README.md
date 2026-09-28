@@ -5,8 +5,8 @@ mondes (lot R2, 26/09/2026) :
 
 | Livret | Fiches | PDF produits |
 |---|---|---|
-| `livret1` — l'inconnue d'un seul côté | 38 Les jetons rouges arrivent · 39 Des négatifs partout · 40 La tache opposée | `outils/livret_splat_relatifs_1.pdf` · `…_a_plier.pdf` |
-| `livret2` — l'inconnue des deux côtés | 41 Des taches des deux côtés · 42 Une tache opposée d'un côté · 43 Le grand mélange | `outils/livret_splat_relatifs_2.pdf` · `…_a_plier.pdf` |
+| `livret1` — les taches sur un seul plateau | 38 Les jetons rouges arrivent · 39 Des négatifs partout · 40 La tache opposée | `outils/livret_splat_relatifs_1.pdf` · `…_a_plier.pdf` |
+| `livret2` — les taches sur les deux plateaux | 41 Des taches sur les deux plateaux · 42 Des taches opposées sur un plateau · 43 Le grand mélange | `outils/livret_splat_relatifs_2.pdf` · `…_a_plier.pdf` |
 
 Et leurs corrigés, par l'équation : `…_correction.pdf` · `…_correction_a_plier.pdf`.
 
@@ -15,6 +15,11 @@ le mot « opposé » pour la découvrir ; le livret 2 écrit la **lettre sur cha
 « −𝑡 » — grâce au réglage d'adresse `taches=lettre` de l'outil (`lettre=True` dans `VUES`), et
 son corrigé montre sous une tache « −𝑡 » la valeur de −𝑡. La nouveauté de la couverture et les
 deux premiers rappels du dos du livret 2 le disent avec la même tache « −𝑥 » (`JS_LETTRE`).
+
+**Depuis le 28/09/2026 (décision de Gwenaël)**, le livret 2 fait **comme le livret 1** : rien
+sur la tache, « opposé » sur la tache opposée, et « opposé » sur la grande tache de la couverture
+(`JS_TACHE_OPPOSE`). La lettre sur les taches rendait mal dans le corrigé. `taches=lettre` et
+`JS_LETTRE` restent prêts pour le futur livret « défi ».
 
 Une seule famille, celle de l'équation : les plateaux côte à côte (vue Équation de l'outil,
 plateau à 80 % de la case), la place dessous pour écrire. En relatifs, l'outil ne dessine pas de
@@ -45,6 +50,15 @@ diffèrent, si l'exemple de couverture est une carte du monde, ou si une page d�
 QR et `cartes.json` les uns sur les autres : **si une graine change**, la reporter dans la carte
 des mondes (et sa série « j »), dans `splat/relatifs/livret/index.html`, puis relancer
 `python3 render.py`.
+
+## Les nouvelles graines (28/09/2026, validées par Gwenaël)
+
+Les 72 cartes ont été choisies une à une (17 graines changées, les réglages ne bougent pas) :
+dans chaque page, des solutions toutes différentes et au plus deux fois la même lettre (sur toute
+la fiche 43), jamais deux jetons égaux sur un même plateau, au plus un « 25 » par plateau,
+|𝑥| ≤ 15, des jetons rouges sur chaque carte des fiches 38 et 39. La fiche 42 s'appelle
+« Des taches opposées sur un plateau » : chaque carte a des taches opposées sur un plateau et des
+taches normales sur l'autre. Les quatre solutions nulles sont gardées (fiches 39 ×2, 41, 43).
 
 ## Les QR codes passent par une page courte
 
