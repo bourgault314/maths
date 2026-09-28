@@ -47,6 +47,16 @@ Il en existe **deux**, mêmes trois étapes, deux calibres de cartes :
 - Sur la couverture, le schéma de l'exemple a 27,5 mm de haut au plus (au lieu de 24) : il garde sa
   taille d'avant.
 
+## Couverture retouchée (28/09/2026)
+
+- **L'exemple a des taches noires**, comme sur les fiches : la carte est rendue par l'outil en mode
+  « énoncé », et seule la case réponse (« ? = 11 ») vient de la correction. Avant : taches
+  transparentes avec le paquet caché écrit dedans ; l'élève voyait la réponse avant de la chercher.
+  La phrase « Ici, les taches sont transparentes… » est retirée du texte.
+- **« Nom, prénom » en haut de sa case** : le style injecté aux deux niveaux (`CSS_DEFI`, qui sert aussi
+  au livret normal) remettait 3,5 mm en haut de la case ; il passe à 2,2 mm, comme Petit SPLAT!, même
+  hauteur de case.
+
 Les deux gardent `parcours=m2eN` : valider une fiche plus dure gagne l'étoile du monde 2
 (même décision qu'au monde 1 le 17/09/2026).
 

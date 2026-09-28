@@ -132,7 +132,7 @@ CSS_DEFI = """
 .expl{padding:5mm 6mm 4.5mm}
 .expl .intro{font-size:14.5px;margin:3mm 0 3mm}
 .expl .intro span{font-size:12px}
-.ident .champ{padding:3.5mm 4mm 9mm}
+.ident .champ{padding:2.2mm 4mm 10.3mm}   /* le mot en haut de sa case, comme Petit SPLAT! ; même hauteur de case (28/09/2026) */
 .som ol{margin-top:2.5mm;gap:3mm 6mm}
 .som li{font-size:12.5px}
 .som li em{font-size:10.5px}
@@ -409,7 +409,24 @@ JS_EXEMPLE = """(lettre) => {
     return {html, vb};
   };
   const eq = dessin('equation'), sch = dessin('schema');
-  return {eq: eq.html, vbEq: eq.vb, sch: sch.html, vbSch: sch.vb,
+  /* (relecture du monde 2, 28/09/2026) la carte de l'exemple telle que l'élève la voit sur ses
+     fiches : taches NOIRES (rendu « énoncé » de l'outil), et seulement la case réponse remplie,
+     reprise de la correction. Avant : taches transparentes avec le paquet caché écrit dedans —
+     « je ne sais pas si l'élève va comprendre que c'est le 11 qu'il cherche » (Gwenaël). */
+  const sv = document.createElementNS(NS, 'svg');
+  sv.setAttribute('width', '2000'); sv.setAttribute('height', '2000');
+  sv.style.position = 'absolute'; sv.style.left = '-5000px';
+  document.body.appendChild(sv);
+  renderCardIntoSvg(sv, c, 'statement', { sixColonne:true });
+  const vide = sv.querySelector('#reponseGroupPrint');
+  const tmp = document.createElementNS(NS, 'svg');
+  tmp.innerHTML = eq.html;
+  const pleine = tmp.querySelector('#reponseGroupPrint');
+  if (!vide || !pleine) { sv.remove(); return {erreur: 'case réponse introuvable (exemple)'}; }
+  vide.replaceWith(pleine);
+  const carte = sv.innerHTML;
+  sv.remove();
+  return {carte, eq: eq.html, vbEq: eq.vb, sch: sch.html, vbSch: sch.vb,
           total: c.total, visibles: c.visible, cachees: c.hidden,
           taches: c._num.tasks, parTache: c._num.H, lettre: lettre ? xChar : '?'};
 }"""
@@ -417,9 +434,9 @@ JS_EXEMPLE = """(lettre) => {
 JS_COUV = """(d) => {
   const h = document.querySelector('svg.ex-haut'), sc = document.querySelector('svg.ex-sch'), eq = document.querySelector('svg.ex-eq');
   if (!h || !sc || !eq) return 'pas de place pour l\\'exemple';
-  h.innerHTML = d.eq; eq.innerHTML = d.eq; sc.innerHTML = d.sch;
+  h.innerHTML = d.carte; eq.innerHTML = d.eq; sc.innerHTML = d.sch;
   eq.setAttribute('viewBox', d.vbEq); sc.setAttribute('viewBox', d.vbSch);
-  // la carte seule : on retire la correction courte de sa copie
+  // la carte seule, taches noires comme sur les fiches (28/09/2026)
   h.querySelectorAll('#sixCorrection').forEach(e => e.remove());
   if (d.lettre !== '?') {
     const hero = document.querySelector('.hero-inc');
@@ -489,8 +506,7 @@ def texte_exemple(ex):
             "\n      <span>On a représenté la situation de deux manières&nbsp;: avec un "
             "<b>schéma en barres</b>, et avec une <b>équation</b>. Il faut trouver le nombre de "
             "jetons derrière une tache, " + ("on l'a symbolisé par un «&nbsp;<b>?</b>&nbsp;»" if ex["lettre"] == "?"
-                                              else f"on l'a appelé <b class='lt'>{ex['lettre']}</b>") + ". Ici, les "
-            f"taches sont transparentes&nbsp;: on voit les {x} jetons que chacune cache. "
+                                              else f"on l'a appelé <b class='lt'>{ex['lettre']}</b>") + ". "
             f"Trois gestes&nbsp;: on <b>additionne</b> les paquets ({somme.replace(' ', '&nbsp;')}&nbsp;=&nbsp;{c}), on "
             f"<b>soustrait</b> ({t}&nbsp;−&nbsp;{c}&nbsp;=&nbsp;{t - c}), puis on <b>divise</b> "
             f"({t - c}&nbsp;÷&nbsp;{n}&nbsp;=&nbsp;{x}).</span>")
@@ -545,6 +561,8 @@ async def pages(niv, tmp, version):
         pg = await page_outil(q_ex.replace("unknown=question", "unknown=letter") if lettre else q_ex)
         exemple = await pg.evaluate(JS_EXEMPLE, lettre)
         await pg.close()
+        if exemple.get("erreur"):
+            raise SystemExit("exemple : " + exemple["erreur"])
         print(f"   exemple de couverture : total {exemple['total']}, visibles {exemple['visibles']},"
               f" cachés {exemple['cachees']}")
 
