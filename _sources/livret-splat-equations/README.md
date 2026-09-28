@@ -245,3 +245,16 @@ et l'élève les regroupe dans ÉquaSplat (bouton « Regrouper », il calcule la
 recevait la somme (« 42 = 𝑥 + 34 ») et regrouper n'existait que sur le papier. Seuls les jetons
 un par un (fiche 35, `numberMode` « unit ») arrivent en un seul nombre. Les PDF ne changent pas ;
 changent les séries « j » (fiches 35 à 37 et défi), la page courte des QR et `cartes.json`.
+
+## Couverture retouchée (28/09/2026)
+
+- « La carte » de l'exemple a des taches **noires**, comme sur les fiches (l'état de départ de la
+  résolution pas à pas). Avant : taches transparentes, agrandies, avec le nombre caché écrit dedans.
+  Même décision qu'à la couverture de SPLAT! classique. La phrase « Ici, les taches sont
+  transparentes… » est retirée du texte.
+- Livrets « équation » (base et défi, élève et corrigé) : l'**équation** de l'exemple est écrite plus
+  grosse (remarque de Gwenaël : « il y a beaucoup de place et elle est toute petite »). Seul le texte
+  de l'équation grandit (×1,5 dans le dessin de l'outil, ≈ 13 → 17,5 pt imprimé) ; les accolades
+  gardent leur largeur et s'étirent avec l'interligne, les « − 12 / ÷ 3 » un peu plus grands
+  (×1,25) pour ne pas rapetisser quand l'ensemble est réduit à la largeur de la fenêtre ; les
+  accolades de droite se collent au texte (l'outil y laisse la place d'une équation plus longue).
