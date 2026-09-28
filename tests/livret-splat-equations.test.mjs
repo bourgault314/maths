@@ -49,7 +49,6 @@ const js = (nom) => {
   assert.ok(m, `${nom} introuvable dans splat_univers.html`);
   return m[1];
 };
-const REGLAGES = ["EQ5_S1", "EQ5_S2", "EQ5_S3", "EQ5_PAQUETS", "EQ5_DEUX_COTES"];
 /* (relecture du monde 5, 27/09/2026) les fiches 36 et 37 sont des séries enchaînées : la suite est
    une liste, dans render.py comme dans la carte des mondes */
 const pyListe = (nom) => {
@@ -62,16 +61,18 @@ const jsListe = (nom) => {
   assert.ok(m, `${nom} introuvable dans splat_univers.html`);
   return [...m[1].matchAll(/"([^"]+)"/g)].map((x) => x[1]);
 };
-const SUITES = ["EQ5_PAQUETS_SUITE", "EQ5_DEUX_COTES_SUITE"];
-const FICHES_PY = [...render.matchAll(/dict\(n=(\d+), t="([^"]+)",\s+parties=\[([^\]]+)\],\s+parcours="(m3e\d)"/g)]
-  .map((m) => ({ n: Number(m[1]), t: m[2], parties: m[3].split(",").map((s) => s.trim()), parcours: m[4] }));
+/* (nuit du 27/09/2026) chaque fiche = une liste de six séries de 2 cartes, ici comme là-bas */
+const FICHES_JS = ["EQ5_F35", "EQ5_F36", "EQ5_F37"];
+const FICHES_PY = [...render.matchAll(/dict\(n=(\d+), t="([^"]+)",\s+parties=(EQ5_F\d+), parcours="(m3e\d)"/g)]
+  .map((m) => ({ n: Number(m[1]), t: m[2], parties: m[3], parcours: m[4] }));
 
 test("Q3 : les réglages et les graines des fiches sont ceux de la carte des mondes", () => {
-  for (const nom of REGLAGES) assert.equal(py(nom), js(nom), nom);
-  for (const nom of SUITES) assert.deepEqual(pyListe(nom), jsListe(nom), nom);
-  assert.equal(jsListe("EQ5_PAQUETS_SUITE").length, 3);
-  assert.equal(jsListe("EQ5_DEUX_COTES_SUITE").length, 2);
-  assert.deepEqual(FICHES_PY.map((f) => f.parties), [["EQ5_S1", "EQ5_S2", "EQ5_S3"], ["EQ5_PAQUETS", "*EQ5_PAQUETS_SUITE"], ["EQ5_DEUX_COTES", "*EQ5_DEUX_COTES_SUITE"]]);
+  for (const nom of FICHES_JS) {
+    assert.deepEqual(pyListe(nom), jsListe(nom), nom);
+    assert.equal(jsListe(nom).length, 6, `${nom} : six séries`);
+    jsListe(nom).forEach((q) => assert.match(q, /&cards=2&seed=\d+&unknown=letter$/, q));
+  }
+  assert.deepEqual(FICHES_PY.map((f) => f.parties), FICHES_JS);
 });
 
 test("Q3 : une fiche = une étape = une étoile — fiches 35, 36, 37, titres de la carte", () => {
@@ -132,14 +133,10 @@ test("Q3 : le QR d'une fiche ouvre sa série et son étoile (?f=35, 36, 37) — 
    réglages de la carte des mondes. */
 const sansGraine = (q, n) => q.replace(/&seed=\d+/, "").replace(/cards=\d+/, `cards=${n}`);
 const OUTIL = "/outils/splat_equations.html?";
-const SERIES_ATTENDUES = {
-  1: OUTIL + sansGraine(js("EQ5_S1"), 2) + "&jouer=1&suite=" +
-     [sansGraine(js("EQ5_S2"), 2), sansGraine(js("EQ5_S3"), 2)].map(encodeURIComponent).join(";"),
-  // (27/09/2026) comme les fiches : 3 cartes à 2-3 taches + 3 à 4-6 taches ; 2 + 2 + 2 des deux côtés
-  2: OUTIL + sansGraine(js("EQ5_PAQUETS"), 3) + "&jouer=1&suite=" + encodeURIComponent(sansGraine(jsListe("EQ5_PAQUETS_SUITE")[1], 3)),
-  3: OUTIL + sansGraine(js("EQ5_DEUX_COTES"), 2) + "&jouer=1&suite=" +
-     jsListe("EQ5_DEUX_COTES_SUITE").map((q) => encodeURIComponent(sansGraine(q, 2))).join(";"),
-};
+/* (nuit du 27/09/2026) les six marches de la fiche, une carte chacune */
+const serieDe = (nom) => { const l = jsListe(nom).map((q) => sansGraine(q, 1));
+  return OUTIL + l[0] + "&jouer=1&suite=" + l.slice(1).map(encodeURIComponent).join(";"); };
+const SERIES_ATTENDUES = { 1: serieDe("EQ5_F35"), 2: serieDe("EQ5_F36"), 3: serieDe("EQ5_F37") };
 
 test("Q3 : les séries du dos (?s=1, 2, 3) — six équations sans graine, jouées sans étoile", () => {
   assert.match(render, /^SERIE_CARTES = 6$/m);
@@ -156,10 +153,10 @@ test("Q3 : les séries du dos (?s=1, 2, 3) — six équations sans graine, joué
     assert.ok(existe(`${SRC}qr/serie-${s}.png`), `qr/serie-${s}.png`);
     assert.ok(courte.includes(`href="${cible.replace(/&/g, "&amp;")}"`), `lien de repli de la série ${s}`);
   }
-  // « Un par un » : les trois formes de la fiche 35, 2 + 2 + 2
+  // la série 1 : les deux gestes de la fiche 35, un par un puis en paquets
   assert.deepEqual(new URLSearchParams(cibleCourte("?s=1").split("?")[1]).get("suite").split(";")
-    .map((p) => new URLSearchParams(p).get("form")), ["AX_EQ_C", "ONE_SIDE"]);
-  assert.ok(render.includes('"1": [sans_graine(EQ5_S1, 2), sans_graine(EQ5_S2, 2), sans_graine(EQ5_S3, 2)]'));
+    .map((p) => new URLSearchParams(p).get("form")), ["X_PLUS_B_EQ_C", "X_PLUS_B_EQ_C", "AX_EQ_C", "AX_EQ_C", "AX_EQ_C"]);
+  assert.ok(render.includes('"1": [sans_graine(q, 1) for q in EQ5_F35]'));
 });
 
 // ------------------------------------------------ l'outil : « jouer=1 »
@@ -466,7 +463,9 @@ test("page des livrets : l'onglet du monde 5, ses deux livrets, leurs couverture
     assert.ok(taille(webp) < taille(png), `${nom} : la WebP est plus légère`);
     const b = readFileSync(new URL(`../${png}`, import.meta.url));
     assert.deepEqual([b.readUInt32BE(16), b.readUInt32BE(20)], [993, 1404], `${nom} : page 1 rendue à 120 dpi`);
-    assert.ok(p.includes(`src="/assets/img/thumbnails/splat/${nom}.png?v=3"`), `${nom} : sur la page`);
+    // (nuit du 27/09/2026) les deux livrets de base changent de sommaire : ?v=4 ; les défis restent à ?v=3
+    const v = nom.endsWith("-defi") ? 3 : 4;
+    assert.ok(p.includes(`src="/assets/img/thumbnails/splat/${nom}.png?v=${v}"`), `${nom} : sur la page`);
   }
 });
 
@@ -545,17 +544,17 @@ test("Q4 : dans les PDF corrigés — la couverture dit « Correction » et quel
       assert.match(pages[1 + k], l === 0 ? /Même quantité en haut et en bas/ : /Même quantité à gauche qu'à droite/);
     });
     // le corrigé par l'équation écrit les lignes résolues : on relit une équation de chaque fiche
-    // (fiche 35 : 𝑏 + 4 = 9 ; fiche 36 : 44 = 2𝑚 + 14 ; fiche 37 : 2𝑡 + 24 = 5𝑡) — les lettres
+    // (fiche 35 : 𝑚 + 2 = 8 ; fiche 36 : 39 = 3𝑥 + 15 ; fiche 37 : 2𝑛 + 5 = 3𝑛) — les lettres
     // mathématiques sortent de l'extracteur telles quelles
     const sans = (t) => t.replace(/ /g, "");
     if (l === 1) {
-      assert.ok(sans(pages[1]).includes("𝑏+4=9") && sans(pages[1]).includes("𝑏=5"), "fiche 35 : 𝑏 + 4 = 9, 𝑏 = 5");
-      assert.ok(sans(pages[3]).includes("44=2𝑚+14") && sans(pages[3]).includes("15=𝑚"), "fiche 36 : 44 = 2𝑚 + 14, 15 = 𝑚");
-      assert.ok(sans(pages[5]).includes("2𝑡+24=5𝑡") && sans(pages[5]).includes("8=𝑡"), "fiche 37 : 2𝑡 + 24 = 5𝑡, 8 = 𝑡");
+      assert.ok(sans(pages[1]).includes("𝑚+2=8") && sans(pages[1]).includes("𝑚=6"), "fiche 35 : 𝑚 + 2 = 8, 𝑚 = 6");
+      assert.ok(sans(pages[3]).includes("39=3𝑥+15") && sans(pages[3]).includes("24=3𝑥"), "fiche 36 : 39 = 3𝑥 + 15, 24 = 3𝑥");
+      assert.ok(sans(pages[5]).includes("2𝑛+5=3𝑛") && sans(pages[5]).includes("5=𝑛"), "fiche 37 : 2𝑛 + 5 = 3𝑛, 5 = 𝑛");
     } else {
       // le corrigé par le schéma : les nombres des schémas, pas de ligne d'équation
-      assert.ok(sans(pages[3]).includes("44") && sans(pages[3]).includes("30"), "fiche 36 : les schémas 44 puis 30");
-      assert.ok(!sans(pages[3]).includes("44=2𝑚+14"), "fiche 36 : pas d'équation dans le corrigé par le schéma");
+      assert.ok(sans(pages[3]).includes("39") && sans(pages[3]).includes("24"), "fiche 36 : les schémas 39 puis 24");
+      assert.ok(!sans(pages[3]).includes("39=3𝑥+15"), "fiche 36 : pas d'équation dans le corrigé par le schéma");
     }
     assert.match(pages[7], /Et après/);
   });

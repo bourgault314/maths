@@ -77,31 +77,39 @@ PORT = 8124
 SITE = "https://mathsgo.re"
 COURTE = "/splat/equations/livret/"             # la page courte des QR
 
-# Les réglages des trois fiches, tels que définis dans outils/splat_univers.html (EQ5_S1…S3,
-# EQ5_PAQUETS, EQ5_DEUX_COTES, lot Q2). Si une graine change là-bas, la reporter ici ET dans
-# splat/equations/livret/index.html, puis relancer. Un test épingle les trois fichiers.
-EQ5_S1 = "mode=EQUNITSTEP&form=X_PLUS_B_EQ_C&cards=4&seed=355&unknown=letter"
-EQ5_S2 = "mode=EQUNITSTEP&form=AX_EQ_C&tasksMax=3&cards=4&seed=814&unknown=letter"
-EQ5_S3 = "mode=EQUNITSTEP&form=ONE_SIDE&tasksMax=3&cards=4&seed=793&unknown=letter"
-# Relecture du monde 5 (27/09/2026) : huit marches, une seule nouveauté à la fois, tout mélangé
-# à la fin ; dans chaque marche, la tache finit à gauche sur la moitié des cartes, à droite sur
-# l'autre moitié. Fiche 36 : 2 ou 3 taches (3 + 3 cartes), puis 4 à 6 taches (3 + 3). Fiche 37 :
-# jetons d'un seul côté (4), jetons des deux côtés (4), le grand mélange (4).
-EQ5_PAQUETS = "mode=EQSTEP&form=ONE_SIDE&tasksMax=3&visibleMin=1&visibleMax=3&cards=3&seed=304&unknown=letter"
-EQ5_PAQUETS_SUITE = ["mode=EQSTEP&form=ONE_SIDE&tasksMax=3&visibleMin=1&visibleMax=3&cards=3&seed=4471&unknown=letter",
-                     "mode=EQSTEP&form=ONE_SIDE&tasksMax=6&visibleMin=1&visibleMax=3&cards=3&seed=3795&unknown=letter",
-                     "mode=EQSTEP&form=ONE_SIDE&tasksMax=6&visibleMin=1&visibleMax=3&cards=3&seed=79133&unknown=letter"]
-EQ5_DEUX_COTES = "mode=EQSTEP&form=BOTH&tasksMax=5&visibleMin=0&visibleMax=2&cards=4&seed=2117&unknown=letter"
-EQ5_DEUX_COTES_SUITE = ["mode=EQSTEP&form=BOTH&tasksMax=5&visibleMin=1&visibleMax=2&cards=4&seed=295&unknown=letter",
-                        "mode=EQSTEP&form=MIX&tasksMax=6&visibleMin=1&visibleMax=2&cards=4&seed=29197&unknown=letter"]
+# Les réglages des trois fiches, tels que définis dans outils/splat_univers.html (EQ5_F35, EQ5_F36,
+# EQ5_F37). Si une graine change là-bas, la reporter ici ET dans splat/equations/livret/index.html,
+# puis relancer. Un test épingle les trois fichiers.
+# Nouvelle progression (nuit du 27 au 28/09/2026, à valider) : six marches de 6 cartes, une par page,
+# chaque fiche en six séries de 2 cartes (une tache finit à gauche, l'autre à droite). 35 : x + b = c
+# puis a·x = c, chaque geste d'abord un par un, puis en paquets ; 36 : a·x + b = c (2-3 taches, puis
+# 4 à 6) ; 37 : des taches sur les deux plateaux sur toutes les cartes, le grand mélange en 37 bis.
+EQ5_F35 = ["mode=EQUNITSTEP&form=X_PLUS_B_EQ_C&tasksMax=1&visibleMax=10&cards=2&seed=169&unknown=letter",
+           "mode=EQSTEP&form=X_PLUS_B_EQ_C&tasksMax=1&visibleMin=1&visibleMax=1&totalMin=14&totalMax=30&cards=2&seed=265&unknown=letter",
+           "mode=EQSTEP&form=X_PLUS_B_EQ_C&tasksMax=1&visibleMin=1&visibleMax=2&totalMin=22&totalMax=45&cards=2&seed=824&unknown=letter",
+           "mode=EQUNITSTEP&form=AX_EQ_C&tasksMax=3&visibleMax=10&cards=2&seed=629&unknown=letter",
+           "mode=EQSTEP&form=AX_EQ_C&tasksMax=4&visibleMin=1&visibleMax=1&totalMin=12&totalMax=40&cards=2&seed=670&unknown=letter",
+           "mode=EQSTEP&form=AX_EQ_C&tasksMax=5&visibleMin=2&visibleMax=2&totalMin=20&totalMax=48&cards=2&seed=1097&unknown=letter"]
+EQ5_F36 = ["mode=EQUNITSTEP&form=ONE_SIDE&tasksMax=3&visibleMax=10&cards=2&seed=4942&unknown=letter",
+           "mode=EQSTEP&form=ONE_SIDE&tasksMax=3&visibleMin=1&visibleMax=1&totalMin=15&totalMax=40&cards=2&seed=1247&unknown=letter",
+           "mode=EQSTEP&form=ONE_SIDE&tasksMax=3&visibleMin=1&visibleMax=2&totalMin=22&totalMax=45&cards=2&seed=5242&unknown=letter",
+           "mode=EQSTEP&form=ONE_SIDE&tasksMax=4&visibleMin=1&visibleMax=2&totalMin=20&totalMax=50&cards=2&seed=5869&unknown=letter",
+           "mode=EQSTEP&form=ONE_SIDE&tasksMax=5&visibleMin=1&visibleMax=2&totalMin=20&totalMax=50&cards=2&seed=3933&unknown=letter",
+           "mode=EQSTEP&form=ONE_SIDE&tasksMax=6&visibleMin=1&visibleMax=3&totalMin=24&totalMax=50&cards=2&seed=2440&unknown=letter"]
+EQ5_F37 = ["mode=EQUNITSTEP&form=BOTH&tasksMax=3&visibleMax=10&cards=2&seed=6348&unknown=letter",
+           "mode=EQSTEP&form=BOTH&tasksMax=4&visibleMin=0&visibleMax=1&totalMin=12&totalMax=45&cards=2&seed=2809&unknown=letter",
+           "mode=EQSTEP&form=BOTH&tasksMax=4&visibleMin=1&visibleMax=1&totalMin=18&totalMax=50&cards=2&seed=178&unknown=letter",
+           "mode=EQSTEP&form=BOTH&tasksMax=5&visibleMin=1&visibleMax=2&totalMin=22&totalMax=50&cards=2&seed=3943&unknown=letter",
+           "mode=EQSTEP&form=BOTH&tasksMax=5&visibleMin=0&visibleMax=2&totalMin=22&totalMax=50&cards=2&seed=3599&unknown=letter",
+           "mode=EQSTEP&form=BOTH&tasksMax=6&visibleMin=1&visibleMax=2&totalMin=24&totalMax=50&cards=2&seed=6408&unknown=letter"]
 
 FICHES = [
-    dict(n=35, t="Premières équations",       parties=[EQ5_S1, EQ5_S2, EQ5_S3], parcours="m3e1",
-         resume="Les jetons un par un."),
-    dict(n=36, t="Des paquets de jetons",     parties=[EQ5_PAQUETS, *EQ5_PAQUETS_SUITE], parcours="m3e2",
-         resume="Les jetons arrivent en paquets."),
-    dict(n=37, t="Des taches sur les deux plateaux", parties=[EQ5_DEUX_COTES, *EQ5_DEUX_COTES_SUITE], parcours="m3e4",
-         resume="Sur les deux plateaux, puis tout mélangé."),
+    dict(n=35, t="Premières équations",              parties=EQ5_F35, parcours="m3e1",
+         resume="Enlever, ou partager."),
+    dict(n=36, t="Enlever, puis partager",           parties=EQ5_F36, parcours="m3e2",
+         resume="2 ou 3 taches, puis jusqu'à 6."),
+    dict(n=37, t="Des taches sur les deux plateaux", parties=EQ5_F37, parcours="m3e4",
+         resume="Enlève d'abord les taches en trop."),
 ]
 
 # ------------------------------------------------------------------ le livret « Le défi » (lot Q5)
@@ -149,20 +157,19 @@ def sans_graine(q, cartes):
     return re.sub(r"cards=\d+", f"cards={cartes}", q)
 
 SERIES = {
-    "1": [sans_graine(EQ5_S1, 2), sans_graine(EQ5_S2, 2), sans_graine(EQ5_S3, 2)],
-    # (27/09/2026) comme les fiches : 3 cartes à 2-3 taches + 3 à 4-6 taches ; puis 2 + 2 + 2
-    # pour les deux côtés (jetons d'un côté, des deux côtés, le mélange)
-    "2": [sans_graine(EQ5_PAQUETS, 3), sans_graine(EQ5_PAQUETS_SUITE[1], 3)],
-    "3": [sans_graine(EQ5_DEUX_COTES, 2)] + [sans_graine(q, 2) for q in EQ5_DEUX_COTES_SUITE],
+    # (nuit du 27/09/2026) les six marches de la fiche, une carte chacune (1 + 1 + 1 + 1 + 1 + 1)
+    "1": [sans_graine(q, 1) for q in EQ5_F35],
+    "2": [sans_graine(q, 1) for q in EQ5_F36],
+    "3": [sans_graine(q, 1) for q in EQ5_F37],
     # le dos du livret « Le défi » (décision du 25/09/2026) : deux séries seulement, et des QR de
     # 32 mm comme le défi du monde 2 — six équations au hasard aux réglages du défi, d'un seul côté
     # (jusqu'à 6 taches), puis des deux côtés
     "d1": [sans_graine(defi("ONE_SIDE", 6, 0), SERIE_CARTES)],
     "d2": [sans_graine(defi("BOTH", 6, 0), SERIE_CARTES)],
 }
-DOS = [("Un par un",      "Les jetons un par un, comme la fiche&nbsp;35.",  "1"),
-       ("Des paquets",    "Les jetons en paquets, comme la fiche&nbsp;36.", "2"),
-       ("Les deux plateaux", "Des taches sur les deux plateaux, puis tout mélangé, comme la fiche&nbsp;37.", "3")]
+DOS = [("Premières équations",   "Enlever, ou partager, comme la fiche&nbsp;35.",  "1"),
+       ("Enlever, puis partager", "Des taches et des jetons, comme la fiche&nbsp;36.", "2"),
+       ("Les deux plateaux",   "Des taches sur les deux plateaux, comme la fiche&nbsp;37.", "3")]
 DOS_DEFI = [("Un seul plateau", "Des paquets et jusqu'à six taches, des totaux de 50 à 100, comme les fiches&nbsp;35 et&nbsp;36.", "d1"),
             ("Les deux plateaux", "Des taches sur les deux plateaux, des totaux de 50 à 100, comme la fiche&nbsp;37.", "d2")]
 # Le dos du défi : deux séries au lieu de trois, donc deux cases plus larges et des QR de 36 mm
