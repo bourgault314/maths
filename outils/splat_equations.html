@@ -4327,18 +4327,6 @@ function buildEquationSignedStructuredEquation(eq, varChar = xChar){
   return `${buildEquationSignedStructuredExpressionSide(eq.left, varChar)} = ${buildEquationSignedStructuredExpressionSide(eq.right, varChar)}`;
 }
 
-function buildEquationSignedPrintCorrectionLines(eq, varChar = xChar){
-  const structuredLine = buildEquationSignedStructuredEquation(eq, varChar);
-  const simplifiedLines = buildEquationSignedSolveLines(eq, varChar);
-  const lines = [];
-  function pushUnique(line){
-    if(line && (!lines.length || lines[lines.length - 1] !== line)) lines.push(line);
-  }
-  pushUnique(structuredLine);
-  simplifiedLines.forEach(pushUnique);
-  return lines;
-}
-
 
 function makeEquationSignedHiddenParts(count, xVal, opts = {}){
   const n = Math.max(0, Math.round(Number(count) || 0));
@@ -5065,6 +5053,8 @@ function drawPrintEquationLinesLikeProjection(targetGroup, lines, opts = {}){
       }));
     }
   });
+  // (lot B, 28/09/2026) la géométrie réellement dessinée, pour y poser des flèches
+  return {fontSize, eqGap, startY, gap};
 }
 
 
@@ -5163,6 +5153,19 @@ function eqStepSeenSide(coeff, packets, varChar = xChar){
   if(c > 0) terms.push(coeffXLabel(c, varChar));
   (packets || []).forEach(v => terms.push(String(v)));
   return terms.length ? terms.join(" + ") : "0";
+}
+/* Corrigés imprimés (lot B, 28/09/2026) : la résolution commence, comme à l'écran, par
+   l'équation telle qu'on la lit sur la carte (« 3𝑛 + 7 + 5 = 10 + 17 »), puis la ligne
+   réduite (« 3𝑛 + 12 = 27 »), sans flèche entre les deux : on n'a fait que regrouper.
+   Un seul paquet par plateau : les deux lignes sont les mêmes, on n'en écrit qu'une. */
+function buildEquationSolveLinesAsSeen(eq, varChar = xChar){
+  const lines = buildEquationSolveLines(eq, varChar);
+  const packetsOf = side => (Array.isArray(side && side.visible) ? side.visible : [])
+    .map(Number).filter(v => Number.isFinite(v) && v > 0);
+  const seen = eqStepSeenSide(Math.max(0, Number(eq?.left?.tasks) || 0), packetsOf(eq?.left), varChar)
+    + " = " + eqStepSeenSide(Math.max(0, Number(eq?.right?.tasks) || 0), packetsOf(eq?.right), varChar);
+  if(lines.length && lines[0] !== seen) lines.unshift(seen);
+  return lines;
 }
 function getEquationStepStates(eq, varChar = xChar, opts = {}){
   if(!eq) return [];
@@ -6146,10 +6149,17 @@ function drawOperationArrowsForLines(targetGroup, api, lines, ops, geom = {}){
   const fontSize = Number(geom.fontSize) || 46;
   const eqGap = Number(geom.eqGap) || 30;
   const margin = Number(geom.margin) || 62;
+  // (lot B, 28/09/2026) une marge par côté possible : la largeur réelle d'un membre se mesure
+  // de son côté (voir le corrigé 6/page)
+  const marginL = Number(geom.marginL) || margin;
+  const marginR = Number(geom.marginR) || margin;
   const centerDy = geom.middleBaseline ? 0 : -fontSize * 0.34;
   const labelFs = Math.round(Number(geom.labelFontSize) || fontSize * 0.62);
   const estimate = (str) => estimatePrintMathTextWidth(String(str == null ? "" : str), fontSize);
-  let halfW = 0;
+  /* (lot B, 28/09/2026, demande de Gwenaël : « comme sur la couverture ») chaque flèche se cale
+     sur le membre le plus long DE SON CÔTÉ, et non plus en miroir autour du « = » : du côté
+     court, elle ne reste plus loin du nombre qu'elle transforme. */
+  let halfL = 0, halfR = 0;
   (lines || []).forEach((line, i) => {
     // (écran, 28/09/2026) une ligne qu'aucune flèche ne touche — la ligne « telle
     // qu'on la voit », suivie d'un simple regroupement — n'écarte pas les flèches.
@@ -6158,10 +6168,11 @@ function drawOperationArrowsForLines(targetGroup, api, lines, ops, geom = {}){
     const k = raw.indexOf("=");
     const lhs = k >= 0 ? raw.slice(0, k).trim() : raw;
     const rhs = k >= 0 ? raw.slice(k + 1).trim() : "";
-    halfW = Math.max(halfW, estimate(lhs) + eqGap, estimate(rhs) + eqGap);
+    halfL = Math.max(halfL, estimate(lhs) + eqGap);
+    halfR = Math.max(halfR, estimate(rhs) + eqGap);
   });
-  const xL = centerX - halfW - margin;
-  const xR = centerX + halfW + margin;
+  const xL = centerX - halfL - marginL;
+  const xR = centerX + halfR + marginR;
   ops.forEach((op, i)=>{
     if(!op) return;
     // du centre optique de la ligne i à celui de la ligne i + 1
@@ -9249,9 +9260,13 @@ function renderCardEquationPrint(targetSvg, card, printMode, tEl, tText, useToke
   if(isSignedEquationFamily(card) && (printMode === "worksheet" || printMode === "correction")){
     const gEqPm = tEl("g", {id:"eqSignedPrintSteps"});
     const simplifiedLines = buildEquationSignedSolveLines(eq, varChar);
+    /* (lot B, 28/09/2026) la correction 4/page écrit les lignes du corrigé 6/page et de
+       l'écran, avec leurs flèches : la ligne telle qu'on la lit, la ligne réduite, puis une
+       ligne par opération faite des deux côtés (plus de ligne inversée « 2c + 31 = 47 »). */
+    const corr = (printMode === "worksheet") ? {lines: [], ops: []} : eqSignedSixCorrectionLinesOps(eq, varChar);
     const lines = (printMode === "worksheet")
       ? (simplifiedLines.length ? [simplifiedLines[0]] : [])
-      : buildEquationSignedPrintCorrectionLines(eq, varChar);
+      : corr.lines;
 
     if(lines.length){
       const longest = lines.reduce((m, line)=>Math.max(m, String(line).length), 0);
@@ -9265,7 +9280,7 @@ function renderCardEquationPrint(targetSvg, card, printMode, tEl, tText, useToke
       const gap = isHelpOnly ? 0 : (fontSize + 20);
       const centerY = isHelpOnly ? 1225 : 1280;
 
-      drawPrintEquationLinesLikeProjection(gEqPm, lines, {
+      const dessin = drawPrintEquationLinesLikeProjection(gEqPm, lines, {
         text:(x,y,t,a)=>tText(x,y,t,a),
         centerX:800,
         centerY,
@@ -9275,6 +9290,31 @@ function renderCardEquationPrint(targetSvg, card, printMode, tEl, tText, useToke
         eqGap:isHelpOnly ? 40 : 36,
         fill:"#000"
       });
+      if(!isHelpOnly && dessin && corr.ops.some(Boolean)){
+        // Les flèches partent de la largeur ESTIMÉE des lignes ; les lignes s'impriment dans la
+        // police de l'interface (règle « * »), plus large : on mesure, comme au corrigé 6/page,
+        // et on laisse 0,55 × la taille de blanc avant la flèche. Seules comptent les lignes que
+        // touche une flèche (la première, telle qu'on la lit, n'en a pas).
+        const fs = dessin.fontSize, ops = corr.ops;
+        const reel = [0, 0], estime = [0, 0];   // [gauche, droite]
+        lines.forEach((line, i) => {
+          if(!ops[i] && !(i > 0 && ops[i - 1])) return;
+          const k = String(line).indexOf("=");
+          [String(line).slice(0, k).trim(), String(line).slice(k + 1).trim()].forEach((m, c) => {
+            reel[c] = Math.max(reel[c], eqSixTextWidth(m, `italic ${fs}px ${EQ_SIX_CORR_DRAWN_FONT}`, fs));
+            estime[c] = Math.max(estime[c], estimatePrintMathTextWidth(m, fs));
+          });
+        });
+        const marge = c => Math.max(20, Math.round(reel[c] - estime[c] + fs * 0.55));
+        drawOperationArrowsForLines(
+          gEqPm,
+          {el:(name, attrs)=>tEl(name, attrs), text:(x,y,t,a)=>tText(x,y,t,a)},
+          lines,
+          ops,
+          {centerX: 800, startY: dessin.startY, gap: dessin.gap, fontSize: fs, eqGap: dessin.eqGap,
+           marginL: marge(0), marginR: marge(1), middleBaseline: true, skipBareLines: true}
+        );
+      }
       targetSvg.appendChild(gEqPm);
     }
     return;
@@ -9330,7 +9370,7 @@ const EQ_PRINT_CORR_GEOM = {
   minHiddenW: 92, minVisibleW: 112, minHiddenWValue1: 122, minVisibleWValue1: 138,
   rowH: EQ_PRINT_CORR_ROW_H, fontSize: EQ_PRINT_CORR_FONT_SIZE, pad: EQ_PRINT_CORR_PAD,
   variableFontSize: EQ_PRINT_CORR_VAR_FONT_SIZE, stride: EQ_PRINT_CORR_STRIDE,
-  eqTopGap: 40, eqFontSize: 68, eqFontSize4: 58, eqGap: 88, eqGap4: 74, eqEqGap: 36, arrows: true
+  eqTopGap: 40, eqFontSize: 68, eqFontSize4: 58, eqGap: 88, eqGap4: 74, eqGap5: 68, eqEqGap: 36, arrows: true
 };
 
 function drawEquationPrintCorrectionColumn(gEq, eq, card, tEl, tText, G){
@@ -9647,9 +9687,15 @@ function drawEquationPrintCorrectionColumn(gEq, eq, card, tEl, tText, G){
 
     if(G.sansEquation) return;   // correction courte « schéma en barres » : les schémas seuls
     currentY += G.eqTopGap;
-    const lines = buildEquationSolveLines(eq, varChar);
-    const eqFontSize = (lines.length >= 4) ? G.eqFontSize4 : G.eqFontSize;
-    const eqGap = (lines.length >= 4) ? G.eqGap4 : G.eqGap;
+    /* (lot B, 28/09/2026) d'abord l'équation telle qu'on la lit sur la carte, puis la réduite.
+       Cette première ligne ne change pas la taille des autres (choisie sur les lignes à
+       flèches, comme avant) ; à cinq lignes, l'interligne se resserre pour que la dernière
+       reste à 2,5 mm du bas de la carte (2 154 sur 2 200, au lieu de 2 178). */
+    const lines = buildEquationSolveLinesAsSeen(eq, varChar);
+    const nonReduite = lines.length > buildEquationSolveLines(eq, varChar).length;
+    const aFleches = lines.length - (nonReduite ? 1 : 0);
+    const eqFontSize = (aFleches >= 4) ? G.eqFontSize4 : G.eqFontSize;
+    const eqGap = (lines.length >= 5 && G.eqGap5) ? G.eqGap5 : ((aFleches >= 4) ? G.eqGap4 : G.eqGap);
     drawEquationLines(gEq, lines, G.centerX, currentY, {
       text:(x,y,t,a)=>tText(x,y,t,a),
       fill:"#000",
@@ -9668,7 +9714,7 @@ function drawEquationPrintCorrectionColumn(gEq, eq, card, tEl, tText, G){
       {el:(name, attrs)=>tEl(name, attrs), text:(x,y,t,a)=>tText(x,y,t,a)},
       lines,
       getEquationSolveLineOperations(eq, lines, varChar),
-      {centerX: G.centerX, startY: currentY, gap: eqGap, fontSize: eqFontSize, eqGap: G.eqEqGap}
+      {centerX: G.centerX, startY: currentY, gap: eqGap, fontSize: eqFontSize, eqGap: G.eqEqGap, skipBareLines: true}
     );
   }
 }
@@ -9759,7 +9805,7 @@ function eqSixTextWidth(str, cssFont, fallbackFontSize){
 
 function drawEqSixCorrectionEquation(g, card, varChar, tEl, tText){
   const eq = card._eq;
-  const lines = buildEquationSolveLines(eq, varChar);
+  const lines = buildEquationSolveLinesAsSeen(eq, varChar);
   const ops = getEquationSolveLineOperations(eq, lines, varChar);
   drawEqSixCorrectionLines(g, card, lines, ops, tEl, tText);
 }
@@ -9862,24 +9908,37 @@ function drawEqSixCorrectionLines(g, card, lines, ops, tEl, tText){
   const membres = lines.map(line => { const k = line.indexOf("="); return [line.slice(0, k).trim(), line.slice(k + 1).trim()]; });
   // Taille 100, réduite de 4 en 4 tant que la ligne la plus longue et ses flèches (avec
   // leurs étiquettes) ne tiennent pas dans la largeur de la case.
-  let font = EQ_SIX_CORR_EQ_FONT, eqGap = 50, margin = 55;
+  /* (lot B, 28/09/2026, « 1re ligne élargie ») une ligne qu'aucune flèche ne touche — la ligne
+     telle qu'on la lit sur la carte, suivie d'un simple regroupement — n'écarte pas les
+     flèches : elle peut prendre leur place, jusqu'au bord de la case. Les flèches se calent
+     sur les autres lignes (même règle qu'à l'écran, skipBareLines). */
+  const avecFleches = ops.some(Boolean);
+  const nue = i => avecFleches && !ops[i] && !(i > 0 && ops[i - 1]);
+  let font = EQ_SIX_CORR_EQ_FONT, eqGap = 50, marginL = 55, marginR = 55;
   for(; font >= 56; font -= 4){
     eqGap = Math.round(font * 0.5);
     const labelFs = Math.round(font * 0.62);
-    let reel = 0, estime = 0;
-    membres.forEach(([l, r]) => {
-      reel = Math.max(reel, eqSixTextWidth(l, `italic ${font}px ${EQ_SIX_CORR_DRAWN_FONT}`, font), eqSixTextWidth(r, `italic ${font}px ${EQ_SIX_CORR_DRAWN_FONT}`, font));
-      estime = Math.max(estime, estimatePrintMathTextWidth(l, font), estimatePrintMathTextWidth(r, font));
+    // (lot B) les deux côtés se mesurent à part : chaque flèche se cale sur son côté
+    let reelG = 0, estimeG = 0, reelD = 0, estimeD = 0, reelNue = 0;
+    membres.forEach(([l, r], i) => {
+      const wl = eqSixTextWidth(l, `italic ${font}px ${EQ_SIX_CORR_DRAWN_FONT}`, font);
+      const wr = eqSixTextWidth(r, `italic ${font}px ${EQ_SIX_CORR_DRAWN_FONT}`, font);
+      if(nue(i)){ reelNue = Math.max(reelNue, wl, wr); return; }
+      reelG = Math.max(reelG, wl); estimeG = Math.max(estimeG, estimatePrintMathTextWidth(l, font));
+      reelD = Math.max(reelD, wr); estimeD = Math.max(estimeD, estimatePrintMathTextWidth(r, font));
     });
-    // drawOperationArrowsForLines part de l'estimation : on lui donne en marge la
-    // différence mesurée, plus 0,55 × la taille (≈ 2,4 mm) de blanc avant la flèche.
-    margin = Math.max(20, Math.round(reel - estime + font * 0.55));
+    const placeNue = reelNue ? eqGap + reelNue : 0;
+    // drawOperationArrowsForLines part de l'estimation : on lui donne en marge, de chaque côté,
+    // la différence mesurée, plus 0,55 × la taille (≈ 2,4 mm) de blanc avant la flèche.
+    marginL = Math.max(20, Math.round(reelG - estimeG + font * 0.55));
+    marginR = Math.max(20, Math.round(reelD - estimeD + font * 0.55));
     const labelW = Math.max(0, ...ops.filter(Boolean).map(op => eqSixTextWidth(op, `800 ${labelFs}px ${EQ_SIX_CORR_DRAWN_FONT}`, labelFs)));
-    const place = eqGap + estime + margin + Math.round(labelFs * 0.9) + 6 + labelW;
+    const fleche = Math.round(labelFs * 0.9) + 6 + labelW;
+    const placeG = eqGap + estimeG + marginL + fleche, placeD = eqGap + estimeD + marginR + fleche;
     // (monde 6) cinq lignes doivent aussi tenir en hauteur, avant le bas de la case ;
     // jusqu'à quatre lignes (monde 5), cette borne n'est jamais atteinte
     const bas = trayBottom + 94 + Math.round(font * 0.7) + (lines.length - 1) * Math.round(font * 1.4) + Math.round(font * 0.3);
-    if(800 - place >= EQ_SIX_CORR_EQ_LEFT && 800 + place <= EQ_SIX_CORR_EQ_RIGHT && bas <= EQ_SIX_CORR_EQ_BOTTOM) break;
+    if(800 - Math.max(placeG, placeNue) >= EQ_SIX_CORR_EQ_LEFT && 800 + Math.max(placeD, placeNue) <= EQ_SIX_CORR_EQ_RIGHT && bas <= EQ_SIX_CORR_EQ_BOTTOM) break;
   }
   font = Math.max(56, font);
   const gap = Math.round(font * 1.4);
@@ -9888,7 +9947,7 @@ function drawEqSixCorrectionLines(g, card, lines, ops, tEl, tText){
     text:(x,y,t,a)=>tText(x,y,t,a), fill:"#000", fontSize: font, gap, anchor:"start",
     alignEquals: true, eqGap, fontFamily: "SplatLettres, 'Times New Roman', Times, serif", fontStyle: "italic"
   });
-  drawOperationArrowsForLines(g, api, lines, ops, {centerX: 800, startY, gap, fontSize: font, eqGap, margin});
+  drawOperationArrowsForLines(g, api, lines, ops, {centerX: 800, startY, gap, fontSize: font, eqGap, marginL, marginR, skipBareLines: true});
 }
 
 /* Une carte de correction courte : la carte de l'énoncé 6/page, taches dévoilées, puis

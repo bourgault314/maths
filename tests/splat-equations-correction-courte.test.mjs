@@ -116,19 +116,23 @@ test("l'équation : les lignes et les flèches de la correction de l'outil, tail
   // 136 (5,8 mm) depuis le 27/09/2026 : « il y a beaucoup de place, on peut écrire plus gros »
   assert.match(constante("EQ_SIX_CORR_EQ_FONT"), /= 136;/);
   assert.match(html, /^const EQ_SIX_CORR_EQ_LEFT = -140, EQ_SIX_CORR_EQ_RIGHT = 1740;/m);
-  assert.match(eq, /const lines = buildEquationSolveLines\(eq, varChar\);\s*const ops = getEquationSolveLineOperations\(eq, lines, varChar\);/);
+  // (lot B, 28/09/2026) la résolution commence par l'équation telle qu'on la lit sur la carte
+  assert.match(eq, /const lines = buildEquationSolveLinesAsSeen\(eq, varChar\);\s*const ops = getEquationSolveLineOperations\(eq, lines, varChar\);/);
   assert.match(eq, /const trayBottom = trays\.left\.y \+ trays\.left\.h \+ 4;/);
   assert.match(eq, /const startY = trayBottom \+ 94 \+ Math\.round\(font \* 0\.7\);/);
   assert.match(eq, /for\(; font >= 56; font -= 4\)\{/);
   // largeur mesurée dans la police réellement dessinée (canvas), écart reporté dans la marge
   assert.match(eq, /eqSixTextWidth\(l, `italic \$\{font\}px \$\{EQ_SIX_CORR_DRAWN_FONT\}`, font\)/);
-  assert.match(eq, /margin = Math\.max\(20, Math\.round\(reel - estime \+ font \* 0\.55\)\);/);
-  assert.match(eq, /if\(800 - place >= EQ_SIX_CORR_EQ_LEFT && 800 \+ place <= EQ_SIX_CORR_EQ_RIGHT && bas <= EQ_SIX_CORR_EQ_BOTTOM\) break;/);
+  // (lot B) une marge par côté : chaque flèche se cale sur son côté
+  assert.match(eq, /marginL = Math\.max\(20, Math\.round\(reelG - estimeG \+ font \* 0\.55\)\);/);
+  assert.match(eq, /marginR = Math\.max\(20, Math\.round\(reelD - estimeD \+ font \* 0\.55\)\);/);
+  // (lot B) « 1re ligne élargie » : une ligne sans flèche prend la place des flèches
+  assert.match(eq, /if\(800 - Math\.max\(placeG, placeNue\) >= EQ_SIX_CORR_EQ_LEFT && 800 \+ Math\.max\(placeD, placeNue\) <= EQ_SIX_CORR_EQ_RIGHT && bas <= EQ_SIX_CORR_EQ_BOTTOM\) break;/);
   assert.match(eq, /drawEqSixCorrectionLines\(g, card, lines, ops, tEl, tText\);/);
   assert.match(eq, /drawEquationLines\(g, lines, 800, startY, \{[\s\S]*alignEquals: true, eqGap, fontFamily: "SplatLettres, 'Times New Roman', Times, serif", fontStyle: "italic"/);
   // les lettres sont dessinées (règle « * ») et mesurées dans SplatLettres, le reste dans la police de l'interface
   assert.match(html, /^const EQ_SIX_CORR_DRAWN_FONT = 'SplatLettres, system-ui, -apple-system, "Segoe UI", Roboto, Arial';/m);
-  assert.match(eq, /drawOperationArrowsForLines\(g, api, lines, ops, \{centerX: 800, startY, gap, fontSize: font, eqGap, margin\}\);/);
+  assert.match(eq, /drawOperationArrowsForLines\(g, api, lines, ops, \{centerX: 800, startY, gap, fontSize: font, eqGap, marginL, marginR, skipBareLines: true\}\);/);
   // la mesure : un canvas, et l'estimation de l'outil (× 1,2) en repli
   const mesure = extraire("eqSixTextWidth");
   assert.match(mesure, /document\.createElement\("canvas"\)\.getContext\("2d"\)/);
@@ -159,7 +163,8 @@ test("la correction 4/2/1 par page ne change pas : EQ_PRINT_CORR_GEOM reprend se
   assert.match(geom, /minHiddenW: 92, minVisibleW: 112, minHiddenWValue1: 122, minVisibleWValue1: 138,/);
   assert.match(geom, /rowH: EQ_PRINT_CORR_ROW_H, fontSize: EQ_PRINT_CORR_FONT_SIZE, pad: EQ_PRINT_CORR_PAD,/);
   assert.match(geom, /variableFontSize: EQ_PRINT_CORR_VAR_FONT_SIZE, stride: EQ_PRINT_CORR_STRIDE,/);
-  assert.match(geom, /eqTopGap: 40, eqFontSize: 68, eqFontSize4: 58, eqGap: 88, eqGap4: 74, eqEqGap: 36, arrows: true/);
+  // (lot B, 28/09/2026) eqGap5 : l'interligne à cinq lignes (l'équation telle qu'on la lit, puis quatre lignes à flèches)
+  assert.match(geom, /eqTopGap: 40, eqFontSize: 68, eqFontSize4: 58, eqGap: 88, eqGap4: 74, eqGap5: 68, eqEqGap: 36, arrows: true/);
   assert.match(constante("EQ_PRINT_TABLE_TOP_Y"), /= 900;/);
   assert.match(constante("EQ_PRINT_CORR_ROW_H"), /= 100;/);
   assert.match(constante("EQ_PRINT_CORR_FONT_SIZE"), /= 88;/);

@@ -598,17 +598,25 @@ JS_EXEMPLE = """(vue) => {
     const lignes = garde.filter(e => e.tagName === 'text' && +e.getAttribute('font-size') === grand);
     const reste = garde.filter(e => !lignes.includes(e));
     if (lignes.length < 6 || !reste.length) return {erreur: 'équation de l\\'exemple : ' + lignes.length + ' morceaux'};
-    const X0 = Math.min(...lignes.map(e => e.getBBox().x)), X1 = Math.max(...lignes.map(e => { const b = e.getBBox(); return b.x + b.width; }));
     const xEg = +lignes.find(e => e.textContent.trim() === '=').getAttribute('x');
     const y0 = Math.min(...lignes.map(e => +e.getAttribute('y')));
+    /* (lot B, 28/09/2026) la résolution commence par l'équation telle qu'on la lit sur la carte,
+       sans flèche (on ne fait que regrouper) : elle peut être plus large que les autres lignes.
+       Les flèches se calent sur les lignes qu'elles relient — celles qui descendent jusqu'au haut
+       des flèches —, pas sur cette première ligne. */
+    const flAvant = reste.filter(e => e.tagName === 'path');
+    const hautFl = Math.min(...flAvant.map(e => e.getBBox().y));
+    const aFleche = lignes.filter(e => +e.getAttribute('y') >= hautFl - 0.5 * grand);
+    const X0 = Math.min(...aFleche.map(e => e.getBBox().x)), X1 = Math.max(...aFleche.map(e => { const b = e.getBBox(); return b.x + b.width; }));
     lignes.forEach(e => {
       e.setAttribute('x', xEg + (+e.getAttribute('x') - xEg) * EQ_K);
       e.setAttribute('y', y0 + (+e.getAttribute('y') - y0) * EQ_K);
       e.setAttribute('font-size', grand * EQ_K);
     });
-    const x0 = Math.min(...lignes.map(e => e.getBBox().x)), x1 = Math.max(...lignes.map(e => { const b = e.getBBox(); return b.x + b.width; }));
-    const fl = reste.filter(e => e.tagName === 'path');
+    const x0 = Math.min(...aFleche.map(e => e.getBBox().x)), x1 = Math.max(...aFleche.map(e => { const b = e.getBBox(); return b.x + b.width; }));
+    const fl = flAvant;
     const gFl = fl.filter(e => e.getBBox().x < X0), dFl = fl.filter(e => e.getBBox().x > X1);
+    if (!gFl.length || !dFl.length) return {erreur: 'équation de l\\'exemple : flèches introuvables'};
     // un petit jour entre l'accolade et le texte, qui grandit avec l'écriture (l'outil les colle)
     const jour = X0 - Math.max(...gFl.map(e => { const b = e.getBBox(); return b.x + b.width; })) + 0.25 * grand;
     const dxG = x0 - X0 - 0.25 * grand, dxD = x1 + jour - Math.min(...dFl.map(e => e.getBBox().x));
@@ -745,7 +753,10 @@ def textes_exemple(ex, v):
     if v["vue"] == "schema":
         outil = "Le <b>schéma en barres</b> met les deux plateaux l'un sous l'autre&nbsp;: "
     else:
-        outil = (f"L'<b>équation</b> s'écrit " + calc(f"{n}{let}{nb}+{nb}{sg}{nb}={nb}{sd}") + "&nbsp;: ")
+        # (lot B, 28/09/2026) l'équation s'écrit comme on lit la carte, paquets séparés — la première
+        # ligne de la case « L'équation » ; la ligne réduite vient avec « on regroupe »
+        membre = lambda debut, c: (nb + '+' + nb).join(([debut] if debut else []) + [str(v) for v in c["paquets"]])
+        outil = (f"L'<b>équation</b> s'écrit " + calc(membre(f"{n}{let}", g) + f"{nb}={nb}" + membre("", d)) + "&nbsp;: ")
     return (f"Sur cette carte, il y a la même quantité de jetons {v['cotes']}. {haut}, {decrit(g)}&nbsp;; "
             f"{bas}, {decrit(d)}."
             "\n      <span>Chaque tache cache le même nombre de jetons&nbsp;: c'est l'<b>inconnue</b>, la lettre "
