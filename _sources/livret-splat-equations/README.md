@@ -237,3 +237,11 @@ comme sur la couverture et le dos — avant, ces pages prenaient la lettre de se
 de rendu (FreeSans, sans empattement). Les huit PDF corrigés ont été refaits ; les livrets de
 l'élève n'ont pas bougé (leurs fiches n'ont pas de lettre). Couverture et dos gardent FreeSerif
 (`CSS_X`), le même dessin rond.
+
+## Les paquets arrivent séparés dans le jeu (28/09/2026, décision de Gwenaël)
+
+`carteDuJeuEquaSplat` envoie chaque paquet de la carte, comme sur la fiche : « 26 + 16 = 𝑥 + 34 »,
+et l'élève les regroupe dans ÉquaSplat (bouton « Regrouper », il calcule la somme). Avant, le jeu
+recevait la somme (« 42 = 𝑥 + 34 ») et regrouper n'existait que sur le papier. Seuls les jetons
+un par un (fiche 35, `numberMode` « unit ») arrivent en un seul nombre. Les PDF ne changent pas ;
+changent les séries « j » (fiches 35 à 37 et défi), la page courte des QR et `cartes.json`.

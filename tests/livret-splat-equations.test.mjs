@@ -169,8 +169,9 @@ test("Q3 : l'outil — « jouer=1 » tire la série et l'ouvre dans le jeu d'Éq
   assert.match(outil, /const EQUASPLAT_JEU_URL = "\/outils\/equasplat\.html\?eleve=1";/);
   assert.doesNotMatch(outil, /EQUASPLAT_JEU_URL = "[^"]*parcours/, "aucune étoile");
   assert.match(outil, /const payload = \{ source:"univers_splat", serie \};\n\s+window\.location\.replace\(`\$\{EQUASPLAT_JEU_URL\}#data=\$\{encodeEquabarPayload\(payload\)\}`\);/);
-  // la conversion d'une carte : les taches en « x », puis la somme des jetons, par côté —
-  // exécutée ici sur une carte d'essai (2 taches et deux paquets 7 et 5 contre un paquet de 27)
+  // la conversion d'une carte : les taches en « x », puis chaque paquet (28/09/2026 : l'élève
+  // les regroupe dans ÉquaSplat, comme sur la fiche) — sur une carte d'essai (2 taches et deux
+  // paquets 7 et 5 contre deux paquets 27 et 5) ; les jetons un par un, eux, arrivent additionnés
   const src = outil.slice(outil.indexOf("function carteDuJeuEquaSplat(card){"), outil.indexOf("/* « jouer=1 » : la série tirée"));
   const bac = vm.createContext({
     buildEquationEquaSplatPayload: () => ({ source: "splat_equations", variable: "𝑛", unknownDisplay: "letter",
@@ -180,7 +181,14 @@ test("Q3 : l'outil — « jouer=1 » tire la série et l'ouvre dans le jeu d'Éq
   });
   vm.runInContext(src + ";globalThis.c=carteDuJeuEquaSplat({});", bac);
   assert.deepEqual(JSON.parse(JSON.stringify(bac.c)), { source: "splat_equations", variable: "𝑛", unknownDisplay: "letter",
-    universe: "positive", numberMode: "grouped", signedWritingMode: "simplified", x: 10, left: ["x", "x", 12], right: [32] });
+    universe: "positive", numberMode: "grouped", signedWritingMode: "simplified", x: 10, left: ["x", "x", 7, 5], right: [27, 5] });
+  const unite = vm.createContext({
+    buildEquationEquaSplatPayload: () => ({ source: "splat_equations", variable: "𝑚", unknownDisplay: "letter",
+      universe: "positive", numberMode: "unit", signedWritingMode: "simplified", x: 6,
+      left: [{ type: "x" }, { type: "number", value: 1 }, { type: "number", value: 1 }], right: [{ type: "number", value: 8 }] }),
+  });
+  vm.runInContext(src + ";globalThis.c=carteDuJeuEquaSplat({});", unite);
+  assert.deepEqual([unite.c.left, unite.c.right].map((r) => [...r]), [["x", 2], [8]]);
 });
 
 // ------------------------------------------------ l'exemple de couverture
@@ -189,7 +197,8 @@ test("Q3 : l'exemple de la couverture — 3𝑛 + 12 = 27, dessiné par l'outil,
   assert.equal(q.get("seed"), "79");
   assert.equal(q.get("cards"), "1");
   assert.equal(q.get("unknown"), "letter");
-  assert.deepEqual([cartes.exemple.left, cartes.exemple.right, cartes.exemple.x], [["x", "x", "x", 12], [27], 5]);
+  // (28/09/2026) le jeu reçoit les paquets séparés : 7 + 5 et 10 + 17, soit 3𝑛 + 12 = 27
+  assert.deepEqual([cartes.exemple.left, cartes.exemple.right, cartes.exemple.x], [["x", "x", "x", 7, 5], [10, 17], 5]);
   const cle = (c) => [c.left, c.right].map((r) => `${r.filter((t) => t === "x").length}x+${r.filter((t) => t !== "x").reduce((a, b) => a + b, 0)}`).sort().join("=");
   const toutes = new Set(Object.values(cartes.fiches).flat().map(cle));
   assert.equal(toutes.size, 36, "36 équations différentes");
@@ -626,6 +635,10 @@ const ecrireEq = (q) => [q.left, q.right].map((r) => {
   const t = r.filter((x) => x === "x").length, n = r.filter((x) => x !== "x");
   return [t ? (t > 1 ? t : "") + q.variable : null, ...n].filter((x) => x !== null).join(" + ");
 }).join(" = ");
+// l'équation une fois les paquets regroupés (le corrigé l'écrit ainsi : « 2𝑥 + 60 = 76 ») — depuis le
+// 28/09/2026, le jeu reçoit les paquets séparés, comme sur la fiche (« 2𝑥 + 7 + 53 = 55 + 5 + 16 »)
+const ecrireEqRegroupee = (q) => ecrireEq({ ...q, left: regroupe(q.left), right: regroupe(q.right) });
+const regroupe = (r) => { const n = r.filter((x) => x !== "x"); return r.filter((x) => x === "x").concat(n.length ? [n.reduce((a, b) => a + b, 0)] : []); };
 
 test("Q5 : les 36 cartes du défi — celles du jeu en ligne, 36 équations différentes, au calibre du défi", () => {
   const defi = cartes.defi;
@@ -675,7 +688,8 @@ test("Q5 : les 36 cartes du défi — celles du jeu en ligne, 36 équations diff
 test("Q5 : l'exemple de couverture du défi — 4𝑎 + 38 = 86, dessiné par l'outil, aucune carte des livrets", () => {
   const q = new URLSearchParams(py("EXEMPLE_DEFI"));
   assert.deepEqual([q.get("mode"), q.get("form"), q.get("seed"), q.get("cards"), q.get("unknown")], ["EQSTEP", "ONE_SIDE", "250", "1", "letter"]);
-  assert.deepEqual([cartes.defi.exemple.left, cartes.defi.exemple.right, cartes.defi.exemple.x], [["x", "x", "x", "x", 38], [86], 12]);
+  // (28/09/2026) paquets séparés, comme sur la couverture : 11 + 27 et 71 + 15, soit 4𝑎 + 38 = 86
+  assert.deepEqual([cartes.defi.exemple.left, cartes.defi.exemple.right, cartes.defi.exemple.x], [["x", "x", "x", "x", 11, 27], [71, 15], 12]);
   assert.match(render, /fiches=FICHES_DEFI, exemple=EXEMPLE_DEFI, dessins=\(4, 38, 86, 12\), dos=DOS_DEFI,/);
   const cleEq = (c) => [c.left, c.right].map((r) => `${r.filter((t) => t === "x").length}x+${r.filter((t) => t !== "x").reduce((a, b) => a + b, 0)}`).sort().join("=");
   const toutes = new Set([...Object.values(cartes.fiches).flat(), ...Object.values(cartes.defi.fiches).flat()].map(cleEq));
@@ -743,7 +757,7 @@ test("Q5 : dans les PDF du défi — couverture, fiches 35 à 37 et leur « bis 
     assert.match(corr[1 + k], /· correction/);
   });
   // une équation de chaque fiche, relue dans le corrigé : la première de chaque fiche
-  const premiere = (qr) => sans(ecrireEq(cartes.defi.fiches[qr][0]));
+  const premiere = (qr) => sans(ecrireEqRegroupee(cartes.defi.fiches[qr][0]));
   assert.ok(sans(corr[1]).includes(premiere("35d")), "fiche 35 : " + premiere("35d"));
   assert.ok(sans(corr[3]).includes(premiere("36d")), "fiche 36 : " + premiere("36d"));
   assert.ok(sans(corr[5]).includes(premiere("37d")), "fiche 37 : " + premiere("37d"));

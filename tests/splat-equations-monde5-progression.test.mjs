@@ -54,10 +54,11 @@ const ecrire = (q) => cote(q.left, q.variable) + " = " + cote(q.right, q.variabl
 const LISTE_Q2 = {
   /* Nouvelle progression (nuit du 27 au 28/09/2026, à valider par Gwenaël) : six marches de 6
      cartes, une par page du livret, chaque fiche en six séries de 2 cartes. Une graine qui bouge,
-     ce sont la fiche, les livrets et la série du jeu à refaire. */
-  m3e1: ["𝑚 + 2 = 8", "7 = 𝑥 + 4", "28 = 𝑛 + 12", "𝑏 + 6 = 25", "42 = 𝑥 + 34", "𝑎 + 16 = 37", "8 = 2𝑏", "3𝑥 = 6", "24 = 2𝑛", "4𝑚 = 28", "25 = 5𝑥", "3𝑐 = 24"],
-  m3e2: ["7 = 3𝑏 + 1", "2𝑚 + 2 = 8", "39 = 3𝑥 + 15", "2𝑐 + 4 = 34", "2𝑛 + 5 = 33", "41 = 2𝑎 + 17", "4𝑛 + 14 = 38", "41 = 4𝑚 + 5", "5𝑐 + 30 = 45", "43 = 5𝑡 + 18", "25 = 6𝑥 + 13", "5𝑡 + 9 = 44"],
-  m3e4: ["2𝑛 + 5 = 3𝑛", "3𝑏 = 𝑏 + 4", "𝑚 + 18 = 4𝑚", "4𝑐 = 3𝑐 + 9", "4𝑥 + 5 = 2𝑥 + 19", "𝑏 + 21 = 2𝑏 + 7", "3𝑥 + 7 = 2𝑥 + 19", "4𝑐 + 19 = 5𝑐 + 14", "5𝑎 = 𝑎 + 28", "2𝑏 + 39 = 4𝑏 + 33", "6𝑚 + 18 = 4𝑚 + 26", "3𝑥 + 13 = 4𝑥 + 5"],
+     ce sont la fiche, les livrets et la série du jeu à refaire. Depuis le 28/09/2026, les paquets
+     arrivent séparés dans le jeu, comme sur la fiche (« 26 + 16 = 𝑥 + 34 ») : l'élève les regroupe. */
+  m3e1: ["𝑚 + 2 = 8", "7 = 𝑥 + 4", "28 = 𝑛 + 12", "𝑏 + 6 = 25", "26 + 16 = 𝑥 + 34", "𝑎 + 16 = 31 + 6", "8 = 2𝑏", "3𝑥 = 6", "24 = 2𝑛", "4𝑚 = 28", "14 + 11 = 5𝑥", "3𝑐 = 7 + 17"],
+  m3e2: ["7 = 3𝑏 + 1", "2𝑚 + 2 = 8", "39 = 3𝑥 + 15", "2𝑐 + 4 = 34", "2𝑛 + 5 = 24 + 9", "41 = 2𝑎 + 3 + 14", "4𝑛 + 14 = 38", "37 + 4 = 4𝑚 + 5", "5𝑐 + 11 + 19 = 45", "29 + 14 = 5𝑡 + 18", "19 + 6 = 6𝑥 + 9 + 4", "5𝑡 + 3 + 6 = 9 + 35"],
+  m3e4: ["2𝑛 + 5 = 3𝑛", "3𝑏 = 𝑏 + 4", "𝑚 + 18 = 4𝑚", "4𝑐 = 3𝑐 + 9", "4𝑥 + 5 = 2𝑥 + 19", "𝑏 + 21 = 2𝑏 + 7", "3𝑥 + 3 + 4 = 2𝑥 + 19", "4𝑐 + 7 + 12 = 5𝑐 + 14", "5𝑎 = 𝑎 + 28", "2𝑏 + 4 + 35 = 4𝑏 + 33", "6𝑚 + 12 + 6 = 4𝑚 + 26", "3𝑥 + 13 = 4𝑥 + 5"],
 };
 /* Les huit marches : dans chacune, la tache finit à gauche sur la moitié des cartes et à droite
    sur l'autre (« 3𝑥 = 12 et 12 = 3𝑥 : c'est le but de l'égalité »). [étape, début, longueur] */
