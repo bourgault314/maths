@@ -206,20 +206,30 @@ NIVEAUX = {
 # fiches 3 et 4 ont des
 # cartes à 2, 3 et 4 taches ; les fiches 5 et 6 au moins 4 nombres de taches différents ;
 # aucun 69 (total, jetons posés ou cachés) ; plancher 4 pour le livret de base.
+# NOUVEAU TRI (28/09/2026) — à l'impression, Gwenaël a trouvé des cartes en double (8 et 4
+# taches aux fiches 4 et 5) et des divisions qui revenaient sans arrêt (4 ÷ 2 six fois dans le
+# livret Monde 1). Ses choix, par questions à choix : sur le LIVRET ENTIER, aucune carte
+# identique, et une même division (jetons cachés ÷ taches) au plus 2 fois, jamais deux fois sur
+# la même fiche. Jusqu'à 20, c'était intenable (9 divisions à deux taches, la fiche 2 les prend
+# toutes) : son idée, le livret Monde 1 monte à 30 jetons, mais au plus 12 jetons POSÉS par
+# carte (ceux que l'élève compte). L'outil accepte target=30 depuis l'adresse (option cachée du
+# menu). Les exemples de couverture restent tirés comme à 20 (dessin.target). Graines changées :
+# les 6 du Monde 1, les fiches 2, 3, 4, 6 de l'Avancé, 4 et 5 de l'Expert. Vérification :
+# python3 tri_graines_dessin.py (rejoue chaque fiche dans Chromium et contrôle toutes les règles).
 _DESSIN = dict(fiches=FICHES_DESSIN)
-NIVEAUX["dessin"] = dict(NIVEAUX["normal"], **_DESSIN,
+NIVEAUX["dessin"] = dict(NIVEAUX["normal"], **_DESSIN, target=30,
     sortie="livret_petit_splat_dessin", qr="qr/dessin",
-    graines={1:"21310007", 2:"22310199", 3:"23310011", 4:"24310055", 5:"25310063", 6:"26310088"},
+    graines={1:"213000743", 2:"223033740", 3:"233013499", 4:"243014277", 5:"253010552", 6:"263002433"},
     sur="Mon livret · Monde 1<br>Je fais le schéma en barres",
-    dessin=dict(COUV_DESSIN, profils=[dict(splats="1", vis=[9, 12], hp=[6, 9], tot=[15, 20]), dict(splats="3", vis=0, hp=[5, 5], tot=[15, 15])]),
+    dessin=dict(COUV_DESSIN, target=20, profils=[dict(splats="1", vis=[9, 12], hp=[6, 9], tot=[15, 20]), dict(splats="3", vis=0, hp=[5, 5], tot=[15, 15])]),
     dos=[("Facile", "Une seule tache, jusqu'à 20 jetons.",   niveau_url(20, "1"),   "niveau-facile.png"),
          ("Normal", "De 2 à 6 taches, jusqu'à 20 jetons.",   niveau_url(20, "mix"), "niveau-normal.png"),
          ("Avancé", "De 2 à 6 taches, jusqu'à 50 jetons.",   niveau_url(50, "mix"), "niveau-avance.png"),
          ("Expert", "De 2 à 6 taches, jusqu'à 100 jetons&nbsp;!", niveau_url(100,"mix"), "niveau-expert.png")],
-    accroche="Le tout, les parties…<br>et jusqu'à 20 jetons&nbsp;!")
+    accroche="Le tout, les parties…<br>et jusqu'à 30 jetons&nbsp;!")
 NIVEAUX["dessin_avance"] = dict(NIVEAUX["avance"], **_DESSIN,
     sortie="livret_petit_splat_dessin_avance", qr="qr/dessin-avance",
-    graines={1:"21420011", 2:"22421099", 3:"23420234", 4:"24420016", 5:"25420031", 6:"26420001"},
+    graines={1:"21420011", 2:"224914618", 3:"234910865", 4:"244914806", 5:"25420031", 6:"264913653"},
     sur="Mon livret · Monde 1 · Avancé<br>Je fais le schéma en barres",
     dessin=dict(COUV_DESSIN, profils=[dict(splats="2", vis=[15, 20], hp=[8, 12], tot=[36, 44]), dict(splats="3", vis=0, hp=[12, 14], tot=[36, 42])]),
     dos=[("Une tache",        "Une seule tache, jusqu'à 50 jetons.",   niveau_url(50, "1"),   "niveau-1.png"),
@@ -228,7 +238,7 @@ NIVEAUX["dessin_avance"] = dict(NIVEAUX["avance"], **_DESSIN,
          ("Expert · 2 à 6 taches", "De 2 à 6 taches, jusqu'à 100 jetons&nbsp;!", niveau_url(100,"mix"), "niveau-4.png")],)
 NIVEAUX["dessin_expert"] = dict(NIVEAUX["expert"], **_DESSIN,
     sortie="livret_petit_splat_dessin_expert", qr="qr/dessin-expert",
-    graines={1:"21531069", 2:"22533940", 3:"23530352", 4:"24531050", 5:"25530062", 6:"26530194"},
+    graines={1:"21531069", 2:"22533940", 3:"23530352", 4:"245911407", 5:"255904263", 6:"26530194"},
     sur="Mon livret · Monde 1 · Expert<br>Je fais le schéma en barres",
     dessin=dict(COUV_DESSIN, profils=[dict(splats="2", vis=[12, 20], hp=[20, 30], tot=[55, 80]), dict(splats="4", vis=0, hp=[15, 20], tot=[60, 80])]),
     dos=[("Une tache",         "Une seule tache, jusqu'à 100 jetons.",  niveau_url(100,"1"),   "niveau-1.png"),
@@ -597,7 +607,7 @@ async def pages(niv, tmp, correction=False):
             pg = await nav.new_page(viewport={"width": 794, "height": 1123})
             await pg.goto(f"{base}/outils/splat_tache_barre.html?support=print", wait_until="networkidle")
             await pg.wait_for_timeout(800)
-            deux = await pg.evaluate(JS_DEUX_EXEMPLES, [niv["target"], niv["dessin"]["profils"]])
+            deux = await pg.evaluate(JS_DEUX_EXEMPLES, [niv["dessin"].get("target", niv["target"]), niv["dessin"]["profils"]])
             await pg.close()
             if not deux or None in deux:
                 raise SystemExit("exemples de couverture introuvables")

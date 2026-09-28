@@ -742,6 +742,9 @@
             <label data-i18n="target">Cible max</label>
             <select id="targetVal" onchange="onContenuChange()">
               <option value="20" selected>20 (Standard)</option>
+              <!-- 30 : pour le livret « Je fais le schéma en barres » du monde 1 (28/09/2026) ;
+                   lu seulement depuis l'adresse (QR du livret), pas proposé dans le menu. -->
+              <option value="30" hidden>30</option>
               <option value="50">50 (Avancé)</option>
               <option value="100">100 (Expert)</option>
             </select>
