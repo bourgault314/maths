@@ -2040,8 +2040,12 @@ function drawEquationEquaSplatSolveButton(targetGroup, card, x, y, revealState =
     x:0, y:0, width:126, height:44, rx:16,
     fill:"rgba(22,163,74,0.13)", stroke:"#16a34a", "stroke-width":3
   }));
-  btn.appendChild(text(63, 22, "Résoudre", {
-    "text-anchor":"middle", "dominant-baseline":"middle", "alignment-baseline":"middle",
+  // « middle » centre la hauteur des minuscules : les majuscules et le « d » montaient
+  // de 2 à 3 px au-dessus du milieu du bouton (vu en classe le 28/09). On pose la ligne
+  // de base, mesurée au navigateur : à y = 30, l'encre du mot (sans jambage) est centrée
+  // sur 22, le milieu du bouton.
+  btn.appendChild(text(63, 30, "Résoudre", {
+    "text-anchor":"middle", "dominant-baseline":"alphabetic",
     "font-size":20, "font-weight":950, fill:"#166534"
   }));
   btn.addEventListener("click", ev => {
@@ -3493,9 +3497,9 @@ function buildEquationSolveLines(eq, varChar = xChar){
 
 
 
-/* Lignes d'équation portées par un état du pas à pas. La plupart n'en portent
-   qu'une (`equation`) ; l'état hatchV en porte deux (`equationLines`) : la
-   décomposition (7 + 4 = m + 7) puis le résultat du retrait (4 = m). */
+/* Lignes d'équation portées par un état du pas à pas : une seule (`equation`), ou
+   plusieurs si un état porte `equationLines`. Depuis le 28/09, plus aucun état n'écrit
+   de ligne de décomposition (7 + 4 = m + 7) : la décomposition se voit sur le plateau. */
 function eqStepStateLines(st){
   if(!st) return [];
   if(Array.isArray(st.equationLines) && st.equationLines.length) return st.equationLines.filter(Boolean);
@@ -3503,8 +3507,7 @@ function eqStepStateLines(st){
 }
 
 /* Suite des lignes affichées jusqu'à l'état `max` (toutes si omis), chacune avec
-   l'opération qui l'a produite (− 4m, − 7, ÷ 3) ou null (première ligne, ligne de
-   décomposition). La ligne réduite apparaît à l'étape où l'on hachure (hatchX,
+   l'opération qui l'a produite (− 4m, − 7, ÷ 3) ou null (première ligne). La ligne réduite apparaît à l'étape où l'on hachure (hatchX,
    hatchV) ou divise (final) : c'est là que la consigne annonce l'opération ; l'étape
    « Je garde ce qui reste » n'ajoute donc plus de ligne. */
 function getEquationStepLineEntries(eq, varChar = xChar, max = null){
@@ -3514,16 +3517,15 @@ function getEquationStepLineEntries(eq, varChar = xChar, max = null){
   for(let i=0;i<n;i++){
     const st = states[i];
     const lines = eqStepStateLines(st);
-    lines.forEach((line, j)=>{
+    lines.forEach(line=>{
       if(!line || (entries.length && entries[entries.length - 1].line === line)) return;
-      const decomp = st.kind === "hatchV" && j < lines.length - 1;
       let op = null;
-      if(!decomp && entries.length){
+      if(entries.length){
         if(st.kind === "hatchX") op = "− " + coeffXLabel(st.commonX || 1, varChar);
         else if(st.kind === "hatchV") op = "− " + (st.commonV || 0);
         else if(st.kind === "final" && (Number(st.remainingCoeff) || 1) > 1) op = "÷ " + st.remainingCoeff;
       }
-      entries.push({line, op, decomp, stateIndex: i});
+      entries.push({line, op, stateIndex: i});
     });
   }
   return entries;
@@ -5146,15 +5148,6 @@ function makeEqStepGroupedParts(coeff, vis, xVal, varChar = xChar, opts = {}){
   return out;
 }
 
-function formatEqStepDecomposedSide(coeff, splitParts, varChar = xChar){
-  const terms=[];
-  const c=Math.max(0, Number(coeff)||0);
-  // Passe par coeffXLabel : avec l'inconnue affichée « ? », on veut « 3 × ? »
-  // comme sur les autres lignes, et non « 3? ».
-  if(c>0) terms.push(coeffXLabel(c, varChar));
-  (splitParts||[]).forEach(p=>{ const v=Math.max(0, Number(p && p.value)||0); if(v>0) terms.push(String(v)); });
-  return terms.length ? terms.join(" + ") : "0";
-}
 function getEquationStepStates(eq, varChar = xChar, opts = {}){
   if(!eq) return [];
   const xVal = Math.max(1, Number(eq.x) || 1);
@@ -5213,16 +5206,17 @@ function getEquationStepStates(eq, varChar = xChar, opts = {}){
     if(vl2 > 0) leftSplit.push({value: vl2, removed: false, posIndex: 1});
     if(commonV > 0) rightSplit.push({value: commonV, removed: true, posIndex: 0});
     if(vr2 > 0) rightSplit.push({value: vr2, removed: false, posIndex: 1});
-    const decomposedLine = formatEqStepDecomposedSide(a2, leftSplit, varChar) + " = " + formatEqStepDecomposedSide(b2, rightSplit, varChar);
     const reducedAfterV = formatEqSideFromCoeffVis(a2, vl2, varChar) + " = " + formatEqSideFromCoeffVis(b2, vr2, varChar);
-    // Deux lignes à cette étape : la décomposition (ce que montre le plateau) puis
-    // le résultat du retrait, relié par la flèche « − n ».
+    // Le plateau montre la décomposition (le jeton cassé, la part commune hachurée
+    // des deux côtés) ; l'équation, elle, n'écrit que le résultat du retrait, relié
+    // par la flèche « − n ». Plus de ligne « 12 + 16 = n + 12 » : elle embrouillait
+    // les élèves et n'était pas sur le corrigé du livret (retour de Gwenaël, 28/09).
     push(
       "hatchV",
       makeEqStepGroupedParts(a2, vl, xVal, varChar, {hiddenStartIndex: commonX, visibleSplit: leftSplit}),
       makeEqStepGroupedParts(b2, vr, xVal, varChar, {hiddenStartIndex: commonX, visibleSplit: rightSplit}),
       reducedAfterV,
-      { commonV, equationLines: [decomposedLine, reducedAfterV] }
+      { commonV }
     );
     push(
       "afterV",
@@ -6140,7 +6134,6 @@ function getEquationSolveLineOperations(eq, lines, varChar = xChar){
   const transitions = [];
   let lastLine = null;
   getEquationStepLineEntries(eq, varChar).forEach(entry => {
-    if(entry.decomp) return; // la colonne du mode Équation n'a pas de ligne de décomposition
     if(lastLine !== null && entry.op) transitions.push({from:lastLine, to:entry.line, op:entry.op});
     lastLine = entry.line;
   });
