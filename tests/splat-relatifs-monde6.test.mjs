@@ -48,7 +48,7 @@ test("R2 : le monde 6 a six étapes, deux parties, fiches 38 à 43, parcours m4e
   assert.equal(RELATIFS.nom, "SPLAT! Relatifs");
   assert.deepEqual(RELATIFS.etapes.map((e) => e.p), ["m4e1", "m4e2", "m4e3", "m4e4", "m4e5", "m4e6"]);
   assert.deepEqual(RELATIFS.etapes.map((e) => e.t), ["Les jetons rouges arrivent", "Des négatifs partout", "La tache opposée",
-    "Des taches sur les deux plateaux", "Une tache opposée sur un plateau", "Le grand mélange"]);
+    "Des taches sur les deux plateaux", "Des taches opposées sur un plateau", "Le grand mélange"]);
   assert.deepEqual(RELATIFS.volets.map((v) => [v.de, v.a]), [[0, 3], [3, 6]]);
   assert.deepEqual(RELATIFS.volets.map((v) => v.nom), ["Les taches sur un seul plateau", "Les taches sur les deux plateaux"]);
   // aucun identifiant en toutes lettres : e3-0 … e3-5
@@ -329,11 +329,12 @@ test("R3 : « taches=lettre » — 𝑡 et −𝑡 sur les taches imprimées, la
   assert.match(fonction("getEquationPrintInstruction"), /if\(hasOpposed && tachesLettre\) note = "Les taches cachent toutes la même valeur, sauf celles qui ont un «\\u00a0−\\u00a0» devant la lettre\\u00a0: elles cachent l’opposé de cette valeur\.";/);
 });
 
-test("R3 : le livret 2 imprime la lettre (fiches, corrigé, exemple, couverture, dos) ; le livret 1 garde « opposé »", () => {
+test("R3 puis 28/09/2026 : les deux livrets gardent « opposé » (la lettre sur les taches reste prête pour le livret « défi »)", () => {
   const v1 = render.slice(render.indexOf('"livret1": dict('), render.indexOf('"livret2": dict('));
   const v2 = render.slice(render.indexOf('"livret2": dict('), render.indexOf("# ------------------------------------------------------------------ les livrets corrigés"));
   assert.doesNotMatch(v1, /lettre=True/);
-  assert.match(v2, /lettre=True,/);
+  // (28/09/2026, Gwenaël) « 𝑏 », « −𝑏 » sur les taches rendaient mal au corrigé : livret 2 comme livret 1
+  assert.doesNotMatch(v2, /lettre=True/);
   assert.match(render, /\+ \("&taches=lettre" if lettre else ""\)\)/, "les fiches et les corrigés");
   assert.match(render, /\+ \("&taches=lettre" if v\.get\("lettre"\) else ""\)\)/, "l'exemple de couverture");
   assert.match(render, /adresse_fiche\(f, corr\["imprime"\] if corr else "statement", v\.get\("lettre", False\)\)/);
@@ -351,9 +352,9 @@ test("R3 : la tache de la couverture des livrets du monde 6 porte « −𝑥 »"
   assert.doesNotMatch(couv, /<text class="lettre"[^>]*>𝑥<\/text>/);
 });
 
-test("livret 1 (28/09/2026) : la grande tache de la couverture dit « opposé », comme les fiches du livret ; « −𝑥 » au livret 2", () => {
+test("livrets 1 et 2 (28/09/2026) : la grande tache de la couverture dit « opposé », comme les fiches des livrets", () => {
   assert.match(render, /JS_TACHE_OPPOSE = """\(\) => \{\n  const t = document\.querySelector\('header svg text\.lettre'\);/);
   assert.match(render, /t\.textContent = 'opposé';/);
-  // appelé pour la couverture du livret SANS lettre (livret 1) ; le livret 2 garde JS_LETTRE (« −𝑥 »)
+  // appelé pour la couverture de tout livret SANS lettre (les deux, depuis le 28/09) ; JS_LETTRE (« −𝑥 ») reste pour le défi
   assert.match(render, /if donnees\.get\("lettre"\):\n\s+r = await pg\.evaluate\(JS_LETTRE, page\)[\s\S]*?elif page == "couverture\.html":\n\s+r = await pg\.evaluate\(JS_TACHE_OPPOSE\)/);
 });
