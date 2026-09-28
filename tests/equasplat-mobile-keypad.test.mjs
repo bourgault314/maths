@@ -71,17 +71,20 @@ test("toutes les saisies d’action passent par le dialogue stable", () => {
 });
 
 test("chaque réécriture visible conserve l’équation précédente", () => {
+  // Depuis le 28/09/2026 (une ligne = une opération des deux côtés) : décomposer n'écrit
+  // plus de ligne, et regrouper / fusionner passent par recordSimplifyStep, qui garde
+  // toujours la ligne de départ et n'écrase que la ligne en cours (voir
+  // equasplat-lignes-sans-fleche.test.mjs).
   const split = functionSource("applyTokenSplit");
   const group = functionSource("applyGroup");
   const fusion = functionSource("applyFusion");
   const transientZero = functionSource("removeTransientZero");
+  const simplify = functionSource("recordSimplifyStep");
 
-  assert.match(split, /historyMode="record"/);
-  assert.match(split, /if\(historyMode === "record"\) recordEquationStep\(operation\)/);
-  assert.match(group, /recordEquationStep\(\);/);
-  assert.doesNotMatch(group, /updateCurrentEquationStep\(\)/);
-  assert.match(fusion, /recordEquationStep\(\);/);
-  assert.doesNotMatch(fusion, /updateCurrentEquationStep\(\)/);
+  assert.doesNotMatch(split, /recordEquationStep|updateCurrentEquationStep/);
+  assert.match(group, /recordSimplifyStep\(\);/);
+  assert.match(fusion, /recordSimplifyStep\(\);/);
+  assert.match(simplify, /state\.steps\.length <= 1\) recordEquationStep\(\);/);
   assert.match(transientZero, /updateCurrentEquationStep\(\);/);
 });
 

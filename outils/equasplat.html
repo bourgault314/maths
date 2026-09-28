@@ -6341,6 +6341,19 @@
     render();
   }
 
+  /* « JE SIMPLIFIE » (28/09/2026). Regrouper, fusionner ou annuler une paire 𝑥 et −𝑥
+     réécrit un membre sans rien faire des deux côtés. Juste après la ligne de départ (telle
+     qu'on la lit), le premier de ces gestes ouvre la ligne réduite ; les suivants la
+     complètent au lieu d'empiler une ligne chacun. Après une flèche, ils complètent la
+     ligne de la flèche : « 𝑥 − 13 = −6 », +13, « 𝑥 = 7 », comme le corrigé imprimé (avant :
+     « 𝑥 − 13 + 13 = −6 + 13 », puis « 𝑥 = −6 + 13 », puis « 𝑥 = 7 »). L'outil ne calcule
+     rien : la ligne change à chaque regroupement que fait l'élève. */
+  function recordSimplifyStep(){
+    if(!state) return;
+    if(!state.steps || state.steps.length <= 1) recordEquationStep();
+    else updateCurrentEquationStep();
+  }
+
   function recordEquationStep(operation=null){
     if(!state) return;
     const eq = currentEquationString();
@@ -6704,7 +6717,7 @@
       if(ids.has(p.id)) p.removed = true;
     }
     deleteSelection = [];
-    recordEquationStep();
+    recordSimplifyStep();
     render();
   }
 
@@ -6859,7 +6872,7 @@
     groupSelection = [];
     deleteSelection = [];
     selectedPieceRef = null;
-    recordEquationStep();
+    recordSimplifyStep();
     render();
     setInstruction("Paire nulle : <strong>x + (−x) = 0</strong>, puis le 0 disparaît.");
     setTimeout(() => removeTransientZero(info.side, zero.id), 950);
@@ -6911,7 +6924,7 @@
     groupSelection = [];
     deleteSelection = [];
     selectedPieceRef = null;
-    recordEquationStep();
+    recordSimplifyStep();
     groupDialog.close();
     render();
     setInstruction(`Jetons regroupés : <strong>${formatSignedNumber(info.sum)}</strong>.`);
@@ -6970,7 +6983,13 @@
     return values.every(value => Number(value) === Number(opportunity.result));
   }
 
-  function applyTokenSplit(side, id, values, historyMode="record", operation=null){
+  /* UNE LIGNE = UNE OPÉRATION DES DEUX CÔTÉS (28/09/2026, même règle que Splat Équations).
+     Casser un jeton (Décomposer, ou Partager dans un autre nombre de parts que de taches)
+     ne change pas l'équation : le geste se voit sur le plateau, et la ligne suivante arrive
+     avec sa flèche (« 28 = 𝑥 + 12 », −12, « 16 = 𝑥 »). Avant, on écrivait
+     « 16 + 12 = 𝑥 + 12 » ou « 3𝑥 = 2 × 12 », des lignes sans flèche que le corrigé
+     imprimé n'a pas. */
+  function applyTokenSplit(side, id, values){
     const arr = state[side];
     const idx = arr.findIndex(p => p.id === id);
     if(idx < 0) return;
@@ -6981,8 +7000,6 @@
       beginPendingShareConclusion(opportunity, Number(opportunity.result));
     }else{
       arr.splice(idx, 1, ...values.map(makeToken));
-      if(historyMode === "record") recordEquationStep(operation);
-      else updateCurrentEquationStep();
     }
     selectedPieceRef = null;
     deleteSelection = [];
@@ -7007,11 +7024,10 @@
     if(isFinalShare){
       beginPendingShareConclusion(opportunity, each);
     }else{
-      // Les parts d'un même partage s'écrivent en produit dans l'équation
-      // (« 3 × 4 »), comme la conclusion écrit déjà « 3x = 3 × 5 ».
+      // Les parts d'un même partage restent liées (« 3 × 4 » si une ligne s'écrit plus tard),
+      // mais le partage lui-même n'écrit plus de ligne (voir applyTokenSplit).
       const shareBatch = uid();
       arr.splice(idx, 1, ...Array.from({length:count}, () => makeToken(each, {shareBatch})));
-      recordEquationStep();
     }
     selectedPieceRef = null;
     deleteSelection = [];
@@ -7702,7 +7718,7 @@
 
     pendingFusion = null;
     fusionDialog.close();
-    recordEquationStep();
+    recordSimplifyStep();
     render();
     if(expected === 0){
       setInstruction("Paire nulle : <strong>0</strong> apparaît, puis disparaît.");
@@ -8756,7 +8772,11 @@
     [toolDecompose, toolGroup, toolShare, toolShareUnits, toolDelete, toolAddBoth, toolOppositeBoth].forEach(button => {
       if(button) button.disabled = sharePending;
     });
-    if(getSolvedValue() !== null) updateCurrentEquationStep();
+    // Seule la dernière ligne « 𝑥 = … » se réécrit ici. Plus de « 3𝑥 = 3 × 8 » posé sur
+    // « 3𝑥 = 24 » quand des décompositions laissent trois jetons de 8 (28/09/2026) :
+    // « Conclure » écrit ÷ 3 depuis « 3𝑥 = 24 ».
+    const conclusion = getConclusionInfo();
+    if(conclusion && (conclusion.count === 1 || state.conclusionDone)) updateCurrentEquationStep();
     renderEquationHistory();
     syncUnknownToggleButton();
     renderSvg();
