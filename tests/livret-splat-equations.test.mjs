@@ -204,9 +204,9 @@ test("Q3 : l'exemple de la couverture — 3𝑛 + 12 = 27, dessiné par l'outil,
   assert.equal(toutes.size, 36, "36 équations différentes");
   assert.ok(!toutes.has(cle(cartes.exemple)), "l'exemple n'est aucune carte du livret");
   assert.ok(render.includes("l'exemple de couverture est une carte du livret"));
-  // les deux dessins sont ceux de l'outil : la résolution pas à pas (taches transparentes) et la
-  // correction imprimée du mode Équation, dont on ne garde que les schémas ou l'équation
-  assert.match(render, /renderCardEquationStepPrintScene\(g, c, etats\.length, \{layoutMode: vue, showIntroText: false, showAid: false/);
+  // les deux dessins sont ceux de l'outil : la carte au départ de la résolution pas à pas (taches
+  // noires, 28/09/2026) et la correction imprimée du mode Équation, dont on ne garde que les schémas ou l'équation
+  assert.match(render, /renderCardEquationStepPrintScene\(g, c, 0, \{layoutMode: vue, showIntroText: false, showAid: false/);
   assert.match(render, /renderCardIntoSvg\(s2, Object\.assign\(\{\}, c, \{family: 'EQ'\}\), 'correction'\);/);
   // les textes sur l'exemple sont écrits à partir de la carte rendue
   assert.match(render, /intro=textes_exemple\(ex, v\)/);
@@ -353,7 +353,8 @@ test("Q3 : dans les PDF — la couverture de chaque livret, les fiches 35 à 37 
     assert.match(pages[0], /Sur cette carte, il y a la même quantité de jetons/);
     assert.match(pages[0], l === 0 ? /en haut et en bas/ : /à gauche et à droite/);
     assert.match(pages[0], /deux paquets de 7 et 5 jetons/);
-    assert.match(pages[0], /on voit les 5 jetons que chacune cache/);
+    // (28/09/2026) taches noires sur l'exemple, comme sur les fiches : plus de « taches transparentes »
+    assert.doesNotMatch(pages[0], /transparent|on voit les \d+ jetons/);
     const titres = ["Fiche 35 —", "Fiche 35 bis —", "Fiche 36 —", "Fiche 36 bis —", "Fiche 37 —", "Fiche 37 bis —"];
     titres.forEach((t, k) => assert.ok(pages[1 + k].includes(t), `${s}, page ${2 + k} : « ${t} »`));
     // (la boîte du QR, « J'ai terminé ma fiche », est posée par render.py, qui s'arrête sinon ;
@@ -362,7 +363,7 @@ test("Q3 : dans les PDF — la couverture de chaque livret, les fiches 35 à 37 
       assert.match(pages[k], l === 0 ? /Même quantité en haut et en bas/ : /Même quantité à gauche qu'à droite/);
     }
     // (27/09/2026) « des deux plateaux » dans les deux livrets : « côté » n'était pas le mot juste
-    assert.match(pages[0], /on enlève 12 des deux plateaux/, `${s} : le geste dit dans les mots du livret`);
+    assert.match(pages[0], /on enlève 12\s?des deux plateaux/, `${s} : le geste dit dans les mots du livret`);
     assert.match(sansBlanc0(pages[7]), l === 0 ? /deuxmembresdel'égalité/ : /deuxmembresdel'équation/, `${s} : le mot des maths, « membres »`);
     // (l'extracteur de ce test perd certaines lettres des mots en gras : on cherche des morceaux sûrs)
     const sansBlanc = (t) => t.replace(/ /g, "");
@@ -734,7 +735,7 @@ test("Q5 : dans les PDF du défi — couverture, fiches 35 à 37 et leur « bis 
   // (les fins de ligne du PDF ne laissent pas de blanc : on compare sans les blancs)
   assert.ok(sans(eleve[0]).includes(sans("quatre taches et deux paquets de 11 et 27 jetons")));
   assert.ok(sans(eleve[0]).includes(sans("deux paquets de 71 et 15 jetons")));
-  assert.match(eleve[0], /on voit les 12 jetons/, "(l'extracteur perd des lettres en fin de phrase)");
+  assert.doesNotMatch(eleve[0], /on voit les \d+ jetons/, "(28/09/2026) taches noires sur l'exemple");
   assert.ok(eleve[0].includes("86 – 38 = 48") && eleve[0].includes("48 ÷ 4 = 12"), "les gestes de l'exemple");
   titres.forEach((t, k) => {
     assert.ok(eleve[1 + k].includes(t), `page ${2 + k} : « ${t} »`);

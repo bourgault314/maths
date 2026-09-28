@@ -549,39 +549,15 @@ JS_EXEMPLE = """(vue) => {
     return [x0, y0, x1, y1];
   };
   const vb = ([x0, y0, x1, y1], m) => [x0 - m, y0 - m, x1 - x0 + 2 * m, y1 - y0 + 2 * m].map(v => Math.round(v)).join(' ');
-  // 1. la carte, taches transparentes
+  // 1. la carte telle que l'élève la voit sur ses fiches : taches NOIRES, l'état de départ de la
+  //    résolution pas à pas (relecture du monde 2, 28/09/2026 : les taches transparentes, avec le
+  //    nombre caché écrit dedans, donnaient la réponse avant qu'on l'ait cherchée ; même décision
+  //    pour la couverture de SPLAT! classique)
   const s1 = tEl('svg', {viewBox: '0 0 1600 1200'}); document.body.appendChild(s1);
   ensureHatchDefs(s1);
-  const etats = getEquationStepStates(c._eq, getCardVarChar(c), {includeVerify: true});
   const g = tEl('g');
-  renderCardEquationStepPrintScene(g, c, etats.length, {layoutMode: vue, showIntroText: false, showAid: false, useTokens: false});
+  renderCardEquationStepPrintScene(g, c, 0, {layoutMode: vue, showIntroText: false, showAid: false, useTokens: false});
   s1.appendChild(g);
-  /* (relecture du 27/09/2026) les taches transparentes de l'exemple, plus grosses : seule la tache
-     grossit, autour du centre du jeton qu'elle cache (×1,35 en vue « équation », ×1,3 en vue
-     « schéma », où les plateaux sont plus serrés) ; le jeton caché garde la taille des jetons
-     visibles. Les taches ne se touchent pas (vérifié ci-dessous). */
-  const kVoulu = vue === 'schema' ? 1.3 : 1.35;
-  const caches = Array.from(g.querySelectorAll('circle')).filter(ci => /rgba\\(0,\\s*0,\\s*0,\\s*0?\\.055\\)/.test(ci.getAttribute('fill') || ''));
-  const chemins = Array.from(g.querySelectorAll('path'));
-  const taches = [];
-  caches.forEach(ci => {
-    const cx = +ci.getAttribute('cx'), cy = +ci.getAttribute('cy');
-    const p = chemins.find(pa => { const b = pa.getBBox(); return cx > b.x && cx < b.x + b.width && cy > b.y && cy < b.y + b.height && b.width < 260; });
-    if (p) { const b = p.getBBox(); taches.push({p, cx, cy, r: Math.max(b.width, b.height) / 2}); }
-  });
-  if (taches.length !== caches.length || !taches.length) return {erreur: 'taches de l\\'exemple : ' + taches.length + ' trouvées sur ' + caches.length};
-  // le plus gros agrandissement qui laisse un petit jour entre deux taches (jamais au-delà de kVoulu)
-  let k = kVoulu;
-  for (let i = 0; i < taches.length; i++) for (let j = i + 1; j < taches.length; j++) {
-    const a = taches[i], b = taches[j];
-    k = Math.min(k, 0.96 * Math.hypot(a.cx - b.cx, a.cy - b.cy) / (a.r + b.r));
-  }
-  k = Math.max(1, k);
-  taches.forEach(({p, cx, cy}) => {
-    const enveloppe = tEl('g', {transform: `translate(${cx} ${cy}) scale(${k}) translate(${-cx} ${-cy})`});
-    p.parentNode.insertBefore(enveloppe, p);
-    enveloppe.appendChild(p);
-  });
   const vb1 = vb(union([g]), 16);
   // 2. la correction du mode Équation, sur la même carte
   const s2 = tEl('svg', {viewBox: '0 0 1600 2200'}); document.body.appendChild(s2);
@@ -610,6 +586,56 @@ JS_EXEMPLE = """(vue) => {
     groupes.forEach((gr, i) => { if (!i) return; const w = tEl('g', {transform: `translate(0 ${ECART * i})`});
       gr[0].parentNode.insertBefore(w, gr[0]); gr.forEach(e => w.appendChild(e)); });
     boite = [boite[0], boite[1], boite[2], boite[3] + ECART * (groupes.length - 1)];
+  } else {
+    /* (relecture du 28/09/2026) « l'équation, il y a beaucoup de place et elle est toute petite » :
+       seule l'écriture de l'équation grossit (×EQ_K autour du « = » de la première ligne) ; les
+       flèches gardent leur largeur et leurs « − 12 / ÷ 3 » leur taille. Elles s'étirent en hauteur
+       avec l'interligne et se collent au texte des deux côtés (l'outil laisse à droite la place
+       d'une équation plus longue, perdue ici). */
+    const EQ_K = 1.5;
+    const tailles = garde.filter(e => e.tagName === 'text').map(e => +e.getAttribute('font-size'));
+    const grand = Math.max(...tailles);
+    const lignes = garde.filter(e => e.tagName === 'text' && +e.getAttribute('font-size') === grand);
+    const reste = garde.filter(e => !lignes.includes(e));
+    if (lignes.length < 6 || !reste.length) return {erreur: 'équation de l\\'exemple : ' + lignes.length + ' morceaux'};
+    const X0 = Math.min(...lignes.map(e => e.getBBox().x)), X1 = Math.max(...lignes.map(e => { const b = e.getBBox(); return b.x + b.width; }));
+    const xEg = +lignes.find(e => e.textContent.trim() === '=').getAttribute('x');
+    const y0 = Math.min(...lignes.map(e => +e.getAttribute('y')));
+    lignes.forEach(e => {
+      e.setAttribute('x', xEg + (+e.getAttribute('x') - xEg) * EQ_K);
+      e.setAttribute('y', y0 + (+e.getAttribute('y') - y0) * EQ_K);
+      e.setAttribute('font-size', grand * EQ_K);
+    });
+    const x0 = Math.min(...lignes.map(e => e.getBBox().x)), x1 = Math.max(...lignes.map(e => { const b = e.getBBox(); return b.x + b.width; }));
+    const fl = reste.filter(e => e.tagName === 'path');
+    const gFl = fl.filter(e => e.getBBox().x < X0), dFl = fl.filter(e => e.getBBox().x > X1);
+    // un petit jour entre l'accolade et le texte, qui grandit avec l'écriture (l'outil les colle)
+    const jour = X0 - Math.max(...gFl.map(e => { const b = e.getBBox(); return b.x + b.width; })) + 0.25 * grand;
+    const dxG = x0 - X0 - 0.25 * grand, dxD = x1 + jour - Math.min(...dFl.map(e => e.getBBox().x));
+    const pose = (e, dx, dy) => e.setAttribute('transform', `translate(${dx} ${dy}) ` + (e.getAttribute('transform') || ''));
+    reste.forEach(e => {
+      const b = e.getBBox(), dx = b.x < xEg ? dxG : dxD;
+      if (e.tagName === 'path' && b.height > b.width * 2) {
+        // l'accolade : étirée en hauteur autour de y0 (presque verticale, son trait ne s'épaissit pas)
+        e.setAttribute('transform', `translate(${dx} ${y0}) scale(1 ${EQ_K}) translate(0 ${-y0}) ` + (e.getAttribute('transform') || ''));
+      } else if (e.tagName === 'path') {
+        pose(e, dx, (b.y + b.height - y0) * (EQ_K - 1));   // la pointe suit le bas de l'accolade
+      } else {
+        // l'étiquette reste au milieu de son accolade ; un peu plus grande (×1,25), sinon, l'ensemble
+        // étant réduit pour tenir dans la fenêtre, elle s'imprimerait plus petite qu'avant
+        const milieu = y0 + (b.y + b.height / 2 - y0) * EQ_K;
+        e.setAttribute('font-size', +e.getAttribute('font-size') * 1.25);
+        const n = e.getBBox();
+        pose(e, dx, milieu - (n.y + n.height / 2));
+      }
+    });
+    // la boîte, transformations comprises
+    const ref = gEq.getScreenCTM().inverse();
+    boite = [Infinity, Infinity, -Infinity, -Infinity];
+    garde.forEach(e => { const b = e.getBBox(), m = ref.multiply(e.getScreenCTM());
+      [[b.x, b.y], [b.x + b.width, b.y + b.height], [b.x, b.y + b.height], [b.x + b.width, b.y]].forEach(([x, y]) => {
+        const p = new DOMPoint(x, y).matrixTransform(m);
+        boite = [Math.min(boite[0], p.x), Math.min(boite[1], p.y), Math.max(boite[2], p.x), Math.max(boite[3], p.y)]; }); });
   }
   const vb2 = vb(boite, vue === 'schema' ? 18 : 22);
   // la fenêtre n'a pas les proportions du morceau gardé : on retire le reste du dessin, sinon il
@@ -707,19 +733,23 @@ def textes_exemple(ex, v):
         raise SystemExit("l'exemple ne tombe pas juste")
     let = f'<span class="x">{ex["variable"]}</span>'          # le caractère de l'appli (𝑛), arrondi
     nb = "&nbsp;"        # un calcul ne se coupe pas en fin de ligne
+    # (28/09/2026) … même après un tiret « – » : le navigateur peut couper après lui malgré les
+    # espaces insécables (vu par Code sur la couverture « équation » : « (27 – » / « 12 = 15) ») ;
+    # chaque calcul, parenthèses comprises, tient donc dans un bloc qui ne se coupe pas
+    calc = lambda t: f'<span style="white-space:nowrap">{t}</span>'
     regroupe = [f"{(nb + '+' + nb).join(map(str, c['paquets']))}{nb}={nb}{sum(c['paquets'])}" for c in (g, d) if len(c["paquets"]) > 1]
-    gestes = ((f"on <b>regroupe</b> les paquets ({', '.join(regroupe)}), " if regroupe else "")
+    gestes = ((f"on <b>regroupe</b> les paquets {', '.join(calc(('(' if i == 0 else '') + r + (')' if i == len(regroupe) - 1 else '')) for i, r in enumerate(regroupe))}, " if regroupe else "")
               + f"on <b>enlève</b> {sg} des deux plateaux "
-              + f"({sd}{nb}–{nb}{sg}{nb}={nb}{sd - sg}), "
-              + f"puis on <b>partage</b> en {n} ({sd - sg}{nb}÷{nb}{n}{nb}={nb}{x}).")
+              + calc(f"({sd}{nb}–{nb}{sg}{nb}={nb}{sd - sg})") + ", "
+              + f"puis on <b>partage</b> en {n} " + calc(f"({sd - sg}{nb}÷{nb}{n}{nb}={nb}{x})") + ".")
     if v["vue"] == "schema":
         outil = "Le <b>schéma en barres</b> met les deux plateaux l'un sous l'autre&nbsp;: "
     else:
-        outil = (f"L'<b>équation</b> s'écrit {n}{let}{nb}+{nb}{sg}{nb}={nb}{sd}&nbsp;: ")
+        outil = (f"L'<b>équation</b> s'écrit " + calc(f"{n}{let}{nb}+{nb}{sg}{nb}={nb}{sd}") + "&nbsp;: ")
     return (f"Sur cette carte, il y a la même quantité de jetons {v['cotes']}. {haut}, {decrit(g)}&nbsp;; "
             f"{bas}, {decrit(d)}."
             "\n      <span>Chaque tache cache le même nombre de jetons&nbsp;: c'est l'<b>inconnue</b>, la lettre "
-            f"{let}. Ici, les taches sont transparentes&nbsp;: on voit les {x} jetons que chacune cache. "
+            f"{let}. "
             + outil + gestes + "</span>")
 
 # ------------------------------------------------------------------ le jeu en ligne, relu
