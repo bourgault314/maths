@@ -102,7 +102,8 @@ test("la carte : celle de l'énoncé 6/page (même boîte, même largeur), tache
   assert.match(rendu, /tText\(hautBas \? 420 : 800, hautBas \? 82 : EQ_PRINT_6UP_PHRASE_Y,\s*hautBas \? "Même quantité en haut et en bas" : "Même quantité à gauche qu'à droite"/);
   assert.match(rendu, /translate\(0 " \+ \(hautBas \? EQ_PRINT_6UP_SCHEMA_DY : 0\) \+ "\)/);
   assert.match(rendu, /const etats = getEquationStepStates\(eq, varChar, \{includeVerify:true\}\);/);
-  assert.match(rendu, /renderCardEquationStepPrintScene\(gScene, card, etats\.length, \{\s*layoutMode: hautBas \? "schema" : "equation",\s*showIntroText:false,\s*showAid:false,\s*useTokens:false\s*\}\);/);
+  // grandes taches (27/09/2026) : la vue gauche/droite seulement, comme l'énoncé 6/page
+  assert.match(rendu, /renderCardEquationStepPrintScene\(gScene, card, etats\.length, \{\s*layoutMode: hautBas \? "schema" : "equation",\s*showIntroText:false,\s*showAid:false,\s*grandesTaches: !hautBas,\s*useTokens:false\s*\}\);/);
   // la lettre : celle de la vue (comme l'énoncé 6/page)
   assert.match(rendu, /const varChar = hautBas \? getTableVarChar\(card\) : getCardVarChar\(card\);/);
   assert.match(rendu, /if\(part === "equation"\) drawEqSixCorrectionEquation\(gc, card, varChar, tEl, tText\);\s*else drawEquationPrintCorrectionColumn\(gc, eq, card, tEl, tText, EQ_SIX_CORR_GEOM_SCHEMA\);/);
@@ -110,9 +111,10 @@ test("la carte : celle de l'énoncé 6/page (même boîte, même largeur), tache
   assert.match(rendu, /__activePrintHatchSvgRoot = targetSvg;[\s\S]*__activePrintHatchSvgRoot = prevPrintHatchRoot;/);
 });
 
-test("l'équation : les lignes et les flèches de la correction de l'outil, taille 100, 4 mm sous le plateau, flèches posées d'après la largeur MESURÉE", () => {
+test("l'équation : les lignes et les flèches de la correction de l'outil, taille 136 (27/09), 4 mm sous le plateau, flèches posées d'après la largeur MESURÉE", () => {
   const eq = extraire("drawEqSixCorrectionEquation") + extraire("drawEqSixCorrectionLines");
-  assert.match(constante("EQ_SIX_CORR_EQ_FONT"), /= 100;/);
+  // 136 (5,8 mm) depuis le 27/09/2026 : « il y a beaucoup de place, on peut écrire plus gros »
+  assert.match(constante("EQ_SIX_CORR_EQ_FONT"), /= 136;/);
   assert.match(html, /^const EQ_SIX_CORR_EQ_LEFT = -140, EQ_SIX_CORR_EQ_RIGHT = 1740;/m);
   assert.match(eq, /const lines = buildEquationSolveLines\(eq, varChar\);\s*const ops = getEquationSolveLineOperations\(eq, lines, varChar\);/);
   assert.match(eq, /const trayBottom = trays\.left\.y \+ trays\.left\.h \+ 4;/);
@@ -136,17 +138,19 @@ test("l'équation : les lignes et les flèches de la correction de l'outil, tail
 test("le schéma : la colonne de la correction du mode Équation, à droite du plateau haut/bas, sans l'équation", () => {
   const geom = bloc("EQ_SIX_CORR_GEOM_SCHEMA");
   assert.match(geom, /top: 132, centerX: 1180, fullW: 720, maxTableW: 720,/);
-  assert.match(geom, /rowH: 84, fontSize: 74, pad: 30, variableFontSize: 54, stride: 224,/);
+  // lignes plus hautes (27/09/2026) : 108, chiffres 90, lettres 76, 60 de blanc entre deux schémas
+  assert.match(geom, /minHiddenW: 70, minVisibleW: 84, minHiddenWValue1: 92, minVisibleWValue1: 104,/);
+  assert.match(geom, /rowH: 108, fontSize: 90, pad: 36, variableFontSize: 76, stride: 276,/);
   assert.match(geom, /arrows: false, sansEquation: true/);
   // la colonne : la même fonction que la correction 4/page, dans un repère
   const col = extraire("drawEquationPrintCorrectionColumn");
   assert.match(col, /if\(G\.sansEquation\) return;/);
   assert.match(col, /const startX = G\.centerX - fullW \/ 2;/);
   assert.match(col, /if\(G\.arrows\) drawOperationArrowsForLines\(/);
-  // quatre schémas (3 × 224 + 168) tiennent dans la hauteur du plateau haut/bas (132 → 980),
-  // avec 56 (3 mm) entre deux schémas (25/09)
-  assert.ok(3 * 224 + 2 * 84 <= 980 - 132);
-  assert.equal(224 - 2 * 84, 56);
+  // quatre schémas (3 × 276 + 216 = 1044) descendent sous le plateau (132 → 1176) : la case,
+  // elle, va jusque vers 1360 (mesuré au PDF, 27/09) ; 60 de blanc entre deux schémas
+  assert.ok(132 + 3 * 276 + 2 * 108 <= 1300);
+  assert.equal(276 - 2 * 108, 60);
 });
 
 test("la correction 4/2/1 par page ne change pas : EQ_PRINT_CORR_GEOM reprend ses constantes d'avant, mot pour mot", () => {

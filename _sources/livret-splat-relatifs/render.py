@@ -80,15 +80,15 @@ FICHES = [
                   E + "AX_EQ_C&opposites=all&tasksMax=3&visibleMin=1&visibleMax=2&beadMax=20&totalMin=-30&totalMax=30&cards=2&seed=536&unknown=letter",
                   E + "ONE_SIDE&opposites=all&tasksMax=3&visibleMin=1&visibleMax=2&beadMax=20&totalMin=-30&totalMax=30&cards=3&seed=6140&unknown=letter",
                   E + "ONE_SIDE&opposites=mix&tasksMax=5&visibleMin=1&visibleMax=2&beadMax=25&totalMin=-40&totalMax=40&cards=3&seed=1542&unknown=letter"]),
-    dict(n=41, t="Des taches des deux côtés", parcours="m4e4", resume="L'inconnue à gauche et à droite.",
+    dict(n=41, t="Des taches sur les deux plateaux", parcours="m4e4", resume="L'inconnue à gauche et à droite.",
          parties=[E + "BOTH&opposites=off&tasksMax=4&visibleMin=1&visibleMax=2&beadMax=25&totalMin=-40&totalMax=40&cards=6&seed=104805&unknown=letter",
                   E + "BOTH&opposites=off&tasksMax=4&visibleMin=1&visibleMax=2&beadMax=25&totalMin=-30&totalMax=30&zero=1&cards=1&seed=204&unknown=letter",
                   E + "BOTH&opposites=off&tasksMax=4&visibleMin=1&visibleMax=2&beadMax=25&totalMin=-40&totalMax=40&cards=5&seed=157694&unknown=letter"]),
-    dict(n=42, t="Une tache opposée d’un côté", parcours="m4e5", resume="Opposées d'un côté, normales de l'autre.",
+    dict(n=42, t="Une tache opposée sur un plateau", parcours="m4e5", resume="Opposées sur un plateau, normales sur l'autre.",
          parties=[E + "BOTH&opposites=auto&tasksMax=4&visibleMin=1&visibleMax=2&beadMax=25&totalMin=-40&totalMax=40&cards=4&seed=35324&unknown=letter",
                   E + "BOTH&opposites=auto&tasksMax=4&visibleMin=1&visibleMax=2&beadMax=25&totalMin=-40&totalMax=40&cards=4&seed=44162&unknown=letter",
                   E + "BOTH&opposites=auto&tasksMax=4&visibleMin=1&visibleMax=2&beadMax=25&totalMin=-40&totalMax=40&cards=4&seed=57267&unknown=letter"]),
-    dict(n=43, t="Le grand mélange", parcours="m4e6", resume="Tout mélangé, des deux côtés.",
+    dict(n=43, t="Le grand mélange", parcours="m4e6", resume="Tout mélangé, sur les deux plateaux.",
          parties=[E + "BOTH&opposites=mix&tasksMax=5&visibleMin=1&visibleMax=2&beadMax=25&totalMin=-40&totalMax=40&cards=4&seed=53990&unknown=letter",
                   E + "BOTH&opposites=all&tasksMax=4&visibleMin=1&visibleMax=2&beadMax=25&totalMin=-40&totalMax=40&cards=3&seed=2450&unknown=letter",
                   E + "BOTH&opposites=auto&tasksMax=3&visibleMin=0&visibleMax=0&totalMin=-20&totalMax=20&beadMax=20&zero=1&cards=1&seed=142&unknown=letter",
@@ -150,12 +150,12 @@ VUES = {
     "livret1": dict(
         sortie="livret_splat_relatifs_1",
         sur="Mon livret · Monde 6 · Livret 1",
-        accroche="Des jetons rouges, une tache «&nbsp;opposé&nbsp;»…<br>et l'inconnue d'un seul côté&nbsp;!",
+        accroche="Des jetons rouges, une tache «&nbsp;opposé&nbsp;»…<br>et les taches sur un seul plateau&nbsp;!",
         fiches=[PAR_N[38], PAR_N[39], PAR_N[40]], exemple=EXEMPLE_1,
         dos=[("Les jetons rouges", "Des nombres négatifs, comme la fiche&nbsp;38.", "1"),
              ("Des négatifs partout", "Des jetons à regrouper, comme la fiche&nbsp;39.", "2"),
              ("La tache opposée", "La tache «&nbsp;opposé&nbsp;», comme la fiche&nbsp;40.", "3")],
-        suite=("La suite du voyage", "Continue avec le <b>livret&nbsp;2</b> du monde&nbsp;6&nbsp;: l'inconnue des deux côtés&nbsp;!"),
+        suite=("La suite du voyage", "Continue avec le <b>livret&nbsp;2</b> du monde&nbsp;6&nbsp;: des taches sur les deux plateaux&nbsp;!"),
     ),
     "livret2": dict(
         sortie="livret_splat_relatifs_2",
@@ -165,7 +165,7 @@ VUES = {
         # lot R3 (27/09/2026, décision de Gwenaël) : au livret 2, la lettre sur chaque tache —
         # « 𝑡 », « −𝑡 » — au lieu du mot « opposé » (le livret 1 garde « opposé » pour découvrir)
         lettre=True,
-        dos=[("Des deux côtés", "Des taches à gauche et à droite, comme la fiche&nbsp;41.", "4"),
+        dos=[("Les deux plateaux", "Des taches à gauche et à droite, comme la fiche&nbsp;41.", "4"),
              ("Une tache opposée", "Des taches opposées, comme la fiche&nbsp;42.", "5"),
              ("Le grand mélange", "Tout mélangé, comme la fiche&nbsp;43.", "6")],
         suite=("Bravo, voyageur&nbsp;!", "Tu as traversé les six mondes de l'univers <b>SPLAT!</b> Retrouve toutes tes étoiles sur la carte des mondes."),
@@ -363,8 +363,24 @@ JS_DOS = """(d) => {
 
 # Livret 2 (lot R3, 27/09/2026) : la lettre est écrite sur les taches des fiches ; la nouveauté
 # de la couverture et les deux premiers rappels du dos le disent avec la même tache « −𝑥 ».
+# Livret 1 (28/09/2026, demande de Gwenaël) : sur la grande tache du bandeau, « opposé » comme
+# sur les taches des fiches de ce livret, et non « −𝑥 » (qui n'arrive qu'au livret 2). Le mot est
+# blanc, en Poppins gras, centré sur la tache (mesuré au PDF).
+JS_TACHE_OPPOSE = """() => {
+  const t = document.querySelector('header svg text.lettre');
+  if (!t) return 'grande tache introuvable';
+  t.textContent = 'opposé';
+  t.setAttribute('font-family', "Poppins, 'Segoe UI', sans-serif");
+  t.setAttribute('font-weight', '700');
+  t.setAttribute('font-size', String(TACHE_OPPOSE.taille));
+  t.setAttribute('y', String(TACHE_OPPOSE.y));
+  t.setAttribute('dominant-baseline', 'alphabetic');
+  return 'ok';
+}""".replace("TACHE_OPPOSE.taille", "15").replace("TACHE_OPPOSE.y", "64")
+
 JS_LETTRE = """(page) => {
   const X = '<span class="x">𝑥</span>';
+  const LETTRE_DOS = {taille: 48, yX: 70, yMoins: 70};
   const badge = (svg) => {
     const t = svg && svg.querySelector('text');
     if (!t) return false;
@@ -390,6 +406,12 @@ JS_LETTRE = """(page) => {
   if (!t0 || !t1 || !/sans mot/.test(t0.innerHTML)) return 'Pour se souvenir : texte des taches introuvable';
   t0.innerHTML = t0.innerHTML.replace('Toutes les taches sans mot cachent', 'Toutes les taches ' + X + ' cachent');
   if (!badge(li[1].querySelector('svg'))) return 'tache « opposé » du dos introuvable';
+  // (27/09/2026) le 𝑥 de la première tache à la MÊME taille que le −𝑥 de la deuxième
+  // (« sinon, c'est pas juste ») : les deux à 48, chacun centré sur son encre (mesuré au PDF)
+  const tx = li[0].querySelector('svg text'), tm = li[1].querySelector('svg text');
+  if (!tx || !tm) return 'lettres des taches du dos introuvables';
+  tx.setAttribute('font-size', String(LETTRE_DOS.taille)); tx.setAttribute('y', String(LETTRE_DOS.yX));
+  tm.setAttribute('font-size', String(LETTRE_DOS.taille)); tm.setAttribute('y', String(LETTRE_DOS.yMoins));
   t1.innerHTML = "Une tache <b>–" + X + "</b> cache l'<b>opposé</b> de ce nombre.";
   return 'ok';
 }"""
@@ -424,7 +446,7 @@ def decrit(cote, lettre=None):
     return ", ".join(m[:-1]) + " et " + m[-1] if len(m) > 1 else m[0]
 
 def geste(op, lettre, premier_ajout=True):
-    """« + 6 » → « on ajoute 6 des deux côtés » (« puis 6 » pour un second ajout),
+    """« + 6 » → « on ajoute 6 sur les deux plateaux » (« puis 6 » pour un second ajout),
     « ÷ 2 » → « on partage en 2 », « ÷ (−3) » → « on divise par –3 »."""
     op = op.replace("−", "-")
     if op.startswith("÷"):
@@ -432,7 +454,7 @@ def geste(op, lettre, premier_ajout=True):
         return f"on <b>divise</b> par {TIRET}{d[1:]}" if d.startswith("-") else f"on <b>partage</b> en {d}"
     verbe = "ajoute" if op.startswith("+") else "enlève"
     reste = op[1:].strip().replace(lettre, f'<span class="x">{lettre}</span>')
-    return f"on <b>{verbe}</b> {reste} des deux côtés"
+    return f"on <b>{verbe}</b> {reste} sur les deux plateaux"
 
 def ecrit(ligne):
     """une ligne de l'outil, pour le texte : le tiret de Poppins, la lettre arrondie, insécable"""
@@ -447,12 +469,12 @@ def textes_exemple(ex, lettre=False):
     lignes, ops = ex["lignes"], ex["ops"]
     gestes = []
     if len(lignes) > 1 and ops and ops[0] is None:
-        gestes.append("on <b>regroupe</b> chaque côté (" + ecrit(lignes[1]) + ")")
+        gestes.append("on <b>regroupe</b> chaque plateau (" + ecrit(lignes[1]) + ")")
     for o in (o for o in ops if o):
         g_ = geste(o, v)
-        # deux ajouts de suite : « on ajoute 𝑏 des deux côtés, puis 9 »
-        if gestes and "des deux côtés" in gestes[-1] and "des deux côtés" in g_ and g_.split("</b>")[0] == gestes[-1].split("</b>")[0]:
-            gestes[-1] += ", puis " + g_.split("</b> ", 1)[1].replace(" des deux côtés", "")
+        # deux ajouts de suite : « on ajoute 𝑏 sur les deux plateaux, puis 9 »
+        if gestes and "sur les deux plateaux" in gestes[-1] and "sur les deux plateaux" in g_ and g_.split("</b>")[0] == gestes[-1].split("</b>")[0]:
+            gestes[-1] += ", puis " + g_.split("</b> ", 1)[1].replace(" sur les deux plateaux", "")
             continue
         gestes.append(g_)
     phrase_gestes = ", ".join(gestes[:-1]) + ", puis " + gestes[-1] if len(gestes) > 1 else gestes[0]
@@ -626,6 +648,10 @@ async def pages(v, tmp, jeu, corr=None):
                 r = await pg.evaluate(JS_LETTRE, page)
                 if r != "ok":
                     raise SystemExit(f"{page}, la lettre sur les taches : {r}")
+            elif page == "couverture.html":
+                r = await pg.evaluate(JS_TACHE_OPPOSE)
+                if r != "ok":
+                    raise SystemExit(f"{page}, la grande tache : {r}")
             await pg.wait_for_timeout(500)
             debord = await pg.evaluate("() => document.body.scrollHeight > document.body.clientHeight + 1")
             if debord:

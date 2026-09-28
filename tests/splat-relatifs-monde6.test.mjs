@@ -48,9 +48,9 @@ test("R2 : le monde 6 a six étapes, deux parties, fiches 38 à 43, parcours m4e
   assert.equal(RELATIFS.nom, "SPLAT! Relatifs");
   assert.deepEqual(RELATIFS.etapes.map((e) => e.p), ["m4e1", "m4e2", "m4e3", "m4e4", "m4e5", "m4e6"]);
   assert.deepEqual(RELATIFS.etapes.map((e) => e.t), ["Les jetons rouges arrivent", "Des négatifs partout", "La tache opposée",
-    "Des taches des deux côtés", "Une tache opposée d’un côté", "Le grand mélange"]);
+    "Des taches sur les deux plateaux", "Une tache opposée sur un plateau", "Le grand mélange"]);
   assert.deepEqual(RELATIFS.volets.map((v) => [v.de, v.a]), [[0, 3], [3, 6]]);
-  assert.deepEqual(RELATIFS.volets.map((v) => v.nom), ["L’inconnue d’un seul côté", "L’inconnue des deux côtés"]);
+  assert.deepEqual(RELATIFS.volets.map((v) => v.nom), ["Les taches sur un seul plateau", "Les taches sur les deux plateaux"]);
   // aucun identifiant en toutes lettres : e3-0 … e3-5
   RELATIFS.etapes.forEach((e) => assert.equal(e.id, undefined));
   // la liste de assets/js/splat-etapes.js suit la carte (le test de l'étape suivante le vérifie aussi)
@@ -349,4 +349,11 @@ test("R3 : la tache de la couverture des livrets du monde 6 porte « −𝑥 »"
   const couv = lire(SRC + "couverture.html");
   assert.match(couv, /<text class="lettre"[^>]*>−𝑥<\/text>/);
   assert.doesNotMatch(couv, /<text class="lettre"[^>]*>𝑥<\/text>/);
+});
+
+test("livret 1 (28/09/2026) : la grande tache de la couverture dit « opposé », comme les fiches du livret ; « −𝑥 » au livret 2", () => {
+  assert.match(render, /JS_TACHE_OPPOSE = """\(\) => \{\n  const t = document\.querySelector\('header svg text\.lettre'\);/);
+  assert.match(render, /t\.textContent = 'opposé';/);
+  // appelé pour la couverture du livret SANS lettre (livret 1) ; le livret 2 garde JS_LETTRE (« −𝑥 »)
+  assert.match(render, /if donnees\.get\("lettre"\):\n\s+r = await pg\.evaluate\(JS_LETTRE, page\)[\s\S]*?elif page == "couverture\.html":\n\s+r = await pg\.evaluate\(JS_TACHE_OPPOSE\)/);
 });

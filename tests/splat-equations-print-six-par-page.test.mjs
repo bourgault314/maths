@@ -312,8 +312,53 @@ test("un jeton n'est jamais plus gros que ce qu'une tache de la carte peut cache
   assert.deepEqual(r.dessins, [47, 47]);
   // une petite tache (correction « groupes ») : jamais moins que le rayon d'avant
   assert.equal(rayons([{cx:300, cy:350, r:30}]).R, 34);
-  assert.match(functionSource("createEqPrintBeadTable", "drawEqPrintNumberedBead"),
-    /const creux = splats\.length \? Math\.floor\(Math\.min\(\.\.\.splats\.map\(s => s\.r\)\) \* EQ_PRINT_BEAD_UNDER_SPLAT\) : Infinity;/);
+  const table = functionSource("createEqPrintBeadTable", "drawEqPrintNumberedBead");
+  assert.match(table, /const sousTache = grand \? EQ_PRINT_GRAND_UNDER_SPLAT : EQ_PRINT_BEAD_UNDER_SPLAT;/);
+  assert.match(table, /const creux = splats\.length \? Math\.floor\(Math\.min\(\.\.\.splats\.map\(s => s\.r\)\) \* sousTache\) : Infinity;/);
+  // grandes taches (27/09/2026) : la MÊME proportion jeton / tache qu'avant — la tache grossit,
+  // le jeton grossit d'autant, la tache peut toujours le cacher (0,70 essayé puis écarté)
+  assert.match(html, /^const EQ_PRINT_GRAND_UNDER_SPLAT = 0\.64;/m);
+  assert.match(html, /^const EQ_PRINT_BEAD_UNDER_SPLAT = 0\.64;/m);
+});
+
+test("grandes taches en 6/page (27/09/2026) : la tache grossit, la même sur les deux plateaux, rangées et ordre gardés", () => {
+  const src = functionSource("eqPrintGrandHiddenBeadRadius", "createEqPrintBeadTable");
+  const grand = Function(`
+    const EQ_PRINT_GRAND_SPLAT_MAX = 100, EQ_PRINT_GRAND_EDGE = 24, EQ_PRINT_GRAND_BOTTOM = 412, EQ_PRINT_GRAND_GAP = 16;
+    const EQ_PRINT_GRAND_HIDDEN = 0.56, EQ_PRINT_GRAND_HIDDEN_SOUS_MOT = 0.40;
+    ${src}
+    return { eqPrintGrandesTaches, eqPrintGrandHiddenBeadRadius };`)();
+  const trays = { left:{ x:120, y:190, w:680, h:650 }, right:{ x:800, y:190, w:680, h:650 }, midX:800 };
+  // les places de assignPositionsEquation : une rangée à y 430, deux rangées à 347,5 / 512,5
+  const cote = (xs, ys) => {
+    const splats = xs.map((cx, i) => ({ cx, cy: ys[i], r: 74 }));
+    return { beadR: 34, posV: [{ cx: 400, cy: 720 }], splats, posH: splats.map(s => ({ cx: s.cx, cy: s.cy })) };
+  };
+  // une tache de chaque côté : 100
+  let p = grand.eqPrintGrandesTaches(trays, { left: cote([460], [430]), right: cote([1140], [430]) });
+  assert.deepEqual([p.left.splats[0].r, p.right.splats[0].r], [100, 100]);
+  assert.deepEqual(p.left.posH[0], { cx: 460, cy: 430 });
+  // quatre taches (deux rangées) d'un côté : 84 des DEUX côtés (une seule taille par carte)
+  p = grand.eqPrintGrandesTaches(trays, { left: cote([460], [430]), right: cote([1005, 1275, 1005, 1275], [347.5, 347.5, 512.5, 512.5]) });
+  assert.ok(p.right.splats.every(s => s.r === 84) && p.left.splats[0].r === 84);
+  const ys = [...new Set(p.right.splats.map(s => s.cy))].sort((a, b) => a - b);
+  assert.equal(ys.length, 2);
+  assert.ok(ys[1] + 1.1 * 84 <= 190 + 412, "les taches restent au-dessus des jetons");
+  assert.ok(ys[1] - ys[0] >= 2.2 * 84 + 16, "deux rangées ne se touchent pas");
+  // trois taches sur une rangée : elles s'écartent, symétriques, dans le plateau
+  p = grand.eqPrintGrandesTaches(trays, { left: cote([280, 460, 640], [430, 430, 430]), right: cote([], []) });
+  const xs = p.left.splats.map(s => s.cx);
+  assert.ok(xs[1] - xs[0] >= 2.2 * p.left.splats[0].r + 16 - 1 && xs[0] - 1.1 * p.left.splats[0].r >= 120 + 29);
+  // huit taches sur une rangée (défi des relatifs) : la carte reste telle quelle
+  const huit = cote([150, 220, 290, 360, 430, 500, 570, 640, 700].slice(0, 8), Array(8).fill(430));
+  const pos8 = { left: huit, right: cote([], []) };
+  assert.equal(grand.eqPrintGrandesTaches(trays, pos8), pos8);
+  // un jeton dévoilé se pose DANS sa tache : 0,56 × la tache, 0,40 sous un mot
+  assert.equal(grand.eqPrintGrandHiddenBeadRadius(64, { r: 100 }, false), 56);
+  assert.equal(grand.eqPrintGrandHiddenBeadRadius(64, { r: 100 }, true), 40);
+  // où : l'énoncé 6/page (les deux dessins) et la correction « l'équation » 6/page, pas le schéma
+  assert.match(html, /showAid:false,\s*introY: printOpts\.sixParPage \? EQ_PRINT_6UP_PHRASE_Y : 78,\s*grandesTaches: !!printOpts\.sixParPage,/);
+  assert.match(html, /const grandesTaches = !!opts\.grandesTaches && layoutMode === "equation" && !trays\.vertical;/);
 });
 
 test("les trois dessins imprimés passent leurs jetons numérotés par la table de dessin", () => {
@@ -477,4 +522,19 @@ test("« suite » : une fiche = plusieurs séries bout à bout, chacune comme ou
   // chaque partie repart des réglages d'ouverture, puis on remet ceux de la première série
   assert.deepEqual(journal, ["série 56", "ouverture", "réglages 77", "série 77", "ouverture", "réglages 88", "série 88",
                              "ouverture", "réglages 56", "affiche"]);
+});
+
+test("jetons un par un dévoilés (27/09/2026) : rangés DANS leur tache, tous de la même taille que les jetons visibles", () => {
+  const src = functionSource("eqPrintUnitBeadsInSplat", "renderCardEquationStepPrintScene");
+  const f = Function(`${src}; return eqPrintUnitBeadsInSplat;`)();
+  for (const r of [74, 84, 100]) for (let k = 1; k <= 10; k++) {
+    const { r: rr, pts } = f({ cx: 500, cy: 300, r }, k, 28);
+    assert.equal(pts.length, k);
+    assert.ok(rr <= 28, "jamais plus gros que les jetons visibles");
+    pts.forEach((p) => assert.ok(Math.hypot(p.cx - 500, p.cy - 300) + rr <= 0.68 * r + 1e-9, `tache ${r}, ${k} jetons : dans le creux`));
+    pts.forEach((p, i) => pts.slice(i + 1).forEach((q) => assert.ok(Math.hypot(p.cx - q.cx, p.cy - q.cy) >= 2 * rr, "sans se chevaucher")));
+  }
+  // l'agrandissement des jetons visibles s'arrête à la taille que la tache peut contenir
+  assert.match(functionSource("eqUnitPrintScale", "getEqUnitBeadLayoutPrint"),
+    /const tient = eqPrintUnitBeadsInSplat\(plusPetite, Math\.round\(Number\(eq\.x\) \|\| 0\), 999\)\.r;\s*if\(layout\.beadR > tient\) return false;/);
 });

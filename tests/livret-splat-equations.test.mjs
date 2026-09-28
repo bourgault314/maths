@@ -355,7 +355,9 @@ test("Q3 : dans les PDF — la couverture de chaque livret, les fiches 35 à 37 
     for (let k = 1; k < 7; k++) {
       assert.match(pages[k], l === 0 ? /Même quantité en haut et en bas/ : /Même quantité à gauche qu'à droite/);
     }
-    assert.match(pages[0], l === 0 ? /on enlève 12 des deux plateaux/ : /on enlève 12 des deux côtés/, `${s} : le geste dit dans les mots du livret`);
+    // (27/09/2026) « des deux plateaux » dans les deux livrets : « côté » n'était pas le mot juste
+    assert.match(pages[0], /on enlève 12 des deux plateaux/, `${s} : le geste dit dans les mots du livret`);
+    assert.match(sansBlanc0(pages[7]), l === 0 ? /deuxmembresdel'égalité/ : /deuxmembresdel'équation/, `${s} : le mot des maths, « membres »`);
     // (l'extracteur de ce test perd certaines lettres des mots en gras : on cherche des morceaux sûrs)
     const sansBlanc = (t) => t.replace(/ /g, "");
     assert.ok(sansBlanc(pages[7]).includes(sansBlanc(l === 0
@@ -367,6 +369,8 @@ test("Q3 : dans les PDF — la couverture de chaque livret, les fiches 35 à 37 
     assert.match(pages[7], /monde 6, SPLAT! relatifs/);
   });
 });
+
+const sansBlanc0 = (t) => t.replace(/\s/g, "");
 
 // ------------------------------------------------ les règles des documents du collège
 test("Q3 : couverture et dos sans logo, signature et licence au pied, lisible en noir et blanc", () => {
@@ -606,7 +610,7 @@ test("Q5 : render.py — les trois fiches du défi, leurs graines, la même éto
     assert.equal(f.parcours, d.parcours, `${f.qr} : la même étoile que la fiche ${d.n}`);
     assert.equal(f.parcours, EQUATIONS.etapes.find((e) => e.n === d.n).p);
   });
-  assert.deepEqual(FICHES_DEFI_PY.map((f) => f.t), ["De deux à quatre taches", "Jusqu'à six taches", "Le grand défi : des deux côtés"]);
+  assert.deepEqual(FICHES_DEFI_PY.map((f) => f.t), ["De deux à quatre taches", "Jusqu'à six taches", "Le grand défi : les deux plateaux"]);
   // les réglages communs du défi : paquets numérotés, 2 ou 3 par côté, totaux de 50 à 100, la lettre
   assert.ok(render.includes('return (f"mode=EQSTEP&form={form}&tasksMax={taches_max}&visibleMin=2&visibleMax=3"\n            f"&totalMin=50&totalMax=100&cards=4&seed={graine}&unknown=letter")'));
   // le livret : famille équation seulement, son corrigé par l'équation
@@ -692,7 +696,7 @@ test("Q5 : le dos du défi — deux QR de 36 mm (?s=d1, d2), six équations au h
   }
   assert.ok(render.includes('"d1": [sans_graine(defi("ONE_SIDE", 6, 0), SERIE_CARTES)],'));
   assert.ok(render.includes('"d2": [sans_graine(defi("BOTH", 6, 0), SERIE_CARTES)],'));
-  assert.match(render, /DOS_DEFI = \[\("D'un seul côté", [^\n]+"d1"\),\n\s+\("Des deux côtés", [^\n]+"d2"\)\]/);
+  assert.match(render, /DOS_DEFI = \[\("Un seul plateau", [^\n]+"d1"\),\n\s+\("Les deux plateaux", [^\n]+"d2"\)\]/);
   assert.match(render, /CSS_DOS_DEFI = """\n\.niveaux\{gap:6mm\}\n\.niv\{padding:3\.5mm 4mm 3mm;gap:2mm\}\n\.niv img\{width:36mm;height:36mm\}\n"""/);
   assert.ok(render.includes('await pdf_html("dos.html", tmp / "p8.pdf", JS_DOS, dos, v.get("css_dos"))'));
   // les liens de repli des fiches du défi
@@ -727,7 +731,7 @@ test("Q5 : dans les PDF du défi — couverture, fiches 35 à 37 et leur « bis 
   assert.match(eleve[7], /Et après/);
   // (l'extracteur perd des lettres des titres en gras : on relit les descriptions des deux séries)
   assert.ok(sans(eleve[7]).includes(sans("Des paquets et jusqu'à six taches, des totaux de 50 à 100")) &&
-            sans(eleve[7]).includes(sans("Des taches des deux côtés, des totaux de 50 à 100")), "les deux séries du dos");
+            sans(eleve[7]).includes(sans("Des taches sur les deux plateaux, des totaux de 50 à 100")), "les deux séries du dos");
   assert.ok(sans(eleve[7]).includes("–38"), "les flèches du dos écrivent le geste de l'exemple (– 38)");
   const corr = texteDesPages(`outils/${DEFI_SORTIE}_correction.pdf`).map(norm);
   assert.equal(corr.length, 8);
