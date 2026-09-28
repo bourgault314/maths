@@ -30,6 +30,8 @@ function pasAPas(eq){
     const xChar = "x";
     const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
     const makeEqStepGroupedParts = (coeff, vis, xVal, varChar, opts = {}) => ({coeff, vis, opts});
+    const getEquationStepView = () => "equation";
+    ${extraire("eqStepSeenSide")}
     ${extraire("sumArray")}
     ${extraire("eqVisibleSum")}
     ${extraire("coeffXLabel")}

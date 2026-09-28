@@ -55,9 +55,10 @@ test("l'outil des Équations : SplatLettres en tête de chaque police qui peut d
   // plus aucune liste Times sans SplatLettres devant (lignes d'équation, schémas, flèches, lettre
   // des taches du livret 2 des relatifs), quelles que soient les guillemets
   const listesTimes = [...outil.matchAll(/["']?Times New Roman["']?, Times, serif/g)].map(m => outil.slice(Math.max(0, m.index - 14), m.index));
-  assert.ok(listesTimes.length >= 11, `${listesTimes.length} listes Times`);
+  // (28/09/2026) 10 : les deux blocs d'équation des relatifs n'en font plus qu'un
+  assert.ok(listesTimes.length >= 10, `${listesTimes.length} listes Times`);
   for (const avant of listesTimes) assert.match(avant, /SplatLettres, $/, `liste Times sans SplatLettres : « …${avant} »`);
-  assert.equal((outil.match(/"SplatLettres, 'Times New Roman', Times, serif"/g) || []).length, 10);
+  assert.equal((outil.match(/"SplatLettres, 'Times New Roman', Times, serif"/g) || []).length, 9);
   // la lettre des taches imprimées (livret 2 des relatifs) : SplatLettres, centrée sur son encre
   assert.match(outil, /^const EQ_PRINT_LETTRE_FONT = 'SplatLettres, "Times New Roman", Times, serif';/m);
   // 1,2 × : la lettre ronde garde sur la tache la hauteur du lot R3 (son œil est plus bas)
