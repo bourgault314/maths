@@ -733,15 +733,19 @@ def textes_exemple(ex, v):
         raise SystemExit("l'exemple ne tombe pas juste")
     let = f'<span class="x">{ex["variable"]}</span>'          # le caractère de l'appli (𝑛), arrondi
     nb = "&nbsp;"        # un calcul ne se coupe pas en fin de ligne
+    # (28/09/2026) … même après un tiret « – » : le navigateur peut couper après lui malgré les
+    # espaces insécables (vu par Code sur la couverture « équation » : « (27 – » / « 12 = 15) ») ;
+    # chaque calcul, parenthèses comprises, tient donc dans un bloc qui ne se coupe pas
+    calc = lambda t: f'<span style="white-space:nowrap">{t}</span>'
     regroupe = [f"{(nb + '+' + nb).join(map(str, c['paquets']))}{nb}={nb}{sum(c['paquets'])}" for c in (g, d) if len(c["paquets"]) > 1]
-    gestes = ((f"on <b>regroupe</b> les paquets ({', '.join(regroupe)}), " if regroupe else "")
+    gestes = ((f"on <b>regroupe</b> les paquets {', '.join(calc(('(' if i == 0 else '') + r + (')' if i == len(regroupe) - 1 else '')) for i, r in enumerate(regroupe))}, " if regroupe else "")
               + f"on <b>enlève</b> {sg} des deux plateaux "
-              + f"({sd}{nb}–{nb}{sg}{nb}={nb}{sd - sg}), "
-              + f"puis on <b>partage</b> en {n} ({sd - sg}{nb}÷{nb}{n}{nb}={nb}{x}).")
+              + calc(f"({sd}{nb}–{nb}{sg}{nb}={nb}{sd - sg})") + ", "
+              + f"puis on <b>partage</b> en {n} " + calc(f"({sd - sg}{nb}÷{nb}{n}{nb}={nb}{x})") + ".")
     if v["vue"] == "schema":
         outil = "Le <b>schéma en barres</b> met les deux plateaux l'un sous l'autre&nbsp;: "
     else:
-        outil = (f"L'<b>équation</b> s'écrit {n}{let}{nb}+{nb}{sg}{nb}={nb}{sd}&nbsp;: ")
+        outil = (f"L'<b>équation</b> s'écrit " + calc(f"{n}{let}{nb}+{nb}{sg}{nb}={nb}{sd}") + "&nbsp;: ")
     return (f"Sur cette carte, il y a la même quantité de jetons {v['cotes']}. {haut}, {decrit(g)}&nbsp;; "
             f"{bas}, {decrit(d)}."
             "\n      <span>Chaque tache cache le même nombre de jetons&nbsp;: c'est l'<b>inconnue</b>, la lettre "

@@ -258,3 +258,7 @@ changent les séries « j » (fiches 35 à 37 et défi), la page courte des QR e
   gardent leur largeur et s'étirent avec l'interligne, les « − 12 / ÷ 3 » un peu plus grands
   (×1,25) pour ne pas rapetisser quand l'ensemble est réduit à la largeur de la fenêtre ; les
   accolades de droite se collent au texte (l'outil y laisse la place d'une équation plus longue).
+- Les calculs du texte « Comment ça marche ? » ne se coupent plus en fin de ligne : les espaces
+  insécables ne suffisaient pas, le navigateur coupait après le tiret « – » (vu par Code sur la
+  couverture « équation » : « (27 – » puis « 12 = 15) » à la ligne). Chaque calcul, parenthèses
+  comprises, est dans un `<span style="white-space:nowrap">`.
