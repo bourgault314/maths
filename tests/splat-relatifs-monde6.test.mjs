@@ -238,7 +238,7 @@ test("R1 : la correction courte « l'équation » existe en relatifs — lignes 
   assert.match(fonction("renderEqSixCorrectionIntoSvg"), /if\(isSignedEquationFamily\(card\)\)\{[\s\S]*drawEqSixCorrectionSignedEquation\(gc, card, varCharPm, tEl, tText\);/);
   // les flèches, calculées sur des lignes de l'outil
   const c = vm.createContext({ getEquationSignedStepStates: null, formatVarCoeffAbs: (c, v) => (Math.abs(c) === 1 ? v : Math.abs(c) + v) });
-  vm.runInContext(fonction("eqSignedLineCoeffs") + fonction("eqSignedSixCorrectionLinesOps") + ";globalThis.f=eqSignedSixCorrectionLinesOps;", c);
+  vm.runInContext(fonction("eqSignedLineCoeffs") + fonction("eqSignedLineOperation") + fonction("eqSignedSixCorrectionLinesOps") + ";globalThis.f=eqSignedSixCorrectionLinesOps;", c);
   const lignes = (l) => { c.getEquationSignedStepStates = () => l.map(([kind, equation]) => ({ kind, equation })); return c.f({}, "𝑏"); };
   let r = lignes([["initial", "−𝑏 + 6 = 2𝑏 − 9"], ["hatchOppositeX", "…"], ["afterLetters", "6 = 3𝑏 − 9"], ["hatchV", "…"],
     ["afterConstants", "15 = 3𝑏"], ["final", "5 = 𝑏"], ["verify", "5 = 𝑏"]]);

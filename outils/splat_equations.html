@@ -1810,7 +1810,7 @@ function buildEquationStepEquabarPayload(card){
   const canExportToEquabar = !!card && (isEquationStepFamily(card) || card.family === "EQ");
   if(!eq || !canExportToEquabar) return null;
   const varLabel = getTableVarChar(card);
-  const state = getEquationStepState(eq, 1, varLabel, {includeVerify:false});
+  const state = getEquationStepState(eq, 1, varLabel, {includeVerify:false, withInitial:false});
   if(!state || state.kind !== "combined") return null;
   return {
     source:"splat_equations",
@@ -1914,7 +1914,7 @@ function buildEquationEquaSplatPayload(card, revealState = 0){
       const k = clamp(reveal, 1, states.length) - 1;
       let state = states[k];
       if(state && (state.kind === "hatchX" || state.kind === "hatchV")) state = states[k + 1] || state;
-      const exportableKinds = new Set(["combined", "afterX", "afterV"]);
+      const exportableKinds = new Set(["initial", "combined", "afterX", "afterV"]);
       if(!state || !exportableKinds.has(state.kind)) return null;
       leftRow = eqVisiblePartsToEquaSplatRow(state.leftParts, opts);
       rightRow = eqVisiblePartsToEquaSplatRow(state.rightParts, opts);
@@ -1938,7 +1938,9 @@ function buildEquationEquaSplatPayload(card, revealState = 0){
     //   graphique, lui, n'a pas encore changé ;
     // - après, le bouton disparaît pour ne pas mélanger deux démarches.
     if(reveal > 1) return null;
-    if(reveal <= 0){
+    // (28/09/2026) en vue Équation, la première ligne est maintenant l'équation telle
+    // qu'on la lit sur la carte (paquets séparés) : on envoie donc la carte telle quelle.
+    if(reveal <= 0 || getEquationStepView() !== "schema"){
       leftRow = eqSideToEquaSplatRow(eq.left, opts);
       rightRow = eqSideToEquaSplatRow(eq.right, opts);
     }else{
@@ -2631,8 +2633,38 @@ function buildEquationStepEquationViewGeometry(card){
   });
   return {
     trays: Object.assign({}, trays, { left: mapTray(trays.left), right: mapTray(trays.right) }),
-    pos: { left: mapSide(pos.left), right: mapSide(pos.right) }
+    pos: { left: eqViewKeepClear(mapSide(pos.left)), right: eqViewKeepClear(mapSide(pos.right)) }
   };
+}
+
+/* (28/09/2026, vu par Gwenaël sur la planche A3) le plateau de la vue Équation est moins
+   haut que celui de la carte : les taches, calées en haut, pouvaient descendre sur les
+   jetons, calés en bas (relatifs : le −26 ajouté collé à la tache « opposé »). On garde
+   un jour d'au moins 16 entre une tache et un jeton placé dessous : on remonte les taches
+   autant que le haut du plateau le permet, puis on descend les jetons. */
+function eqViewKeepClear(side){
+  const splats = side.splats || [], posV = side.posV || [];
+  if(!splats.length || !posV.length) return side;
+  // la tache dessinée déborde son rayon (lobes : 1,07 × r mesuré) ; jour mesuré entre
+  // l'encre de la tache et le bord du jeton
+  const beadR = Number(side.beadR) || 26, jour = 24, lobe = 1.08;
+  let besoin = 0;
+  splats.forEach(t => posV.forEach(b => {
+    const r = (Number(t.r) || 74) * lobe;
+    if(Math.abs(t.cx - b.cx) < r + beadR && b.cy > t.cy){
+      besoin = Math.max(besoin, (t.cy + r + jour) - (b.cy - beadR));
+    }
+  }));
+  if(besoin <= 0) return side;
+  const hautTaches = Math.min(...splats.map(t => t.cy - (Number(t.r) || 74) * lobe));
+  const monte = Math.max(0, Math.min(besoin, hautTaches - (EQ_VIEW_TRAY_TOP + 14)));
+  const basJetons = Math.max(...posV.map(b => b.cy + beadR));
+  const descend = Math.max(0, Math.min(besoin - monte, (EQ_VIEW_TRAY_BOTTOM - 14) - basJetons));
+  return Object.assign({}, side, {
+    splats: splats.map(t => Object.assign({}, t, { cy: t.cy - monte })),
+    posH: (side.posH || []).map(p => Object.assign({}, p, { cy: p.cy - monte })),
+    posV: posV.map(b => Object.assign({}, b, { cy: b.cy + descend }))
+  });
 }
 
 function buildEquationStepSchemaColumnGeometry(card){
@@ -4373,53 +4405,6 @@ function makeEquationSignedConstantParts(values, removedFlags = []){
   return out;
 }
 
-function formatSignedExpressionFromParts(coeff, constants, varChar = xChar, opts = {}){
-  let c = Number(coeff);
-  if(!Number.isFinite(c)) c = 0;
-  if(Math.abs(c - Math.round(c)) < 1e-9) c = Math.round(c);
-  if(Object.is(c, -0)) c = 0;
-
-  const terms = [];
-  if(c !== 0){
-    const abs = Math.abs(c);
-    terms.push({ sign:c < 0 ? -1 : 1, text:abs === 1 ? varChar : `${abs}${varChar}` });
-  }
-  (Array.isArray(constants) ? constants : []).forEach(v=>{
-    let n = Number(v);
-    if(!Number.isFinite(n) || n === 0) return;
-    if(Math.abs(n - Math.round(n)) < 1e-9) n = Math.round(n);
-    if(Object.is(n, -0)) n = 0;
-    if(n !== 0) terms.push({ sign:n < 0 ? -1 : 1, text:String(Math.abs(n)) });
-  });
-
-  return joinSignedTerms(terms, opts);
-}
-
-function formatSignedExpressionWithAddedCoeff(baseCoeff, addedCoeff, constants, varChar = xChar, opts = {}){
-  function cleanInt(v){
-    let n = Number(v);
-    if(!Number.isFinite(n)) n = 0;
-    if(Math.abs(n - Math.round(n)) < 1e-9) n = Math.round(n);
-    if(Object.is(n, -0)) n = 0;
-    return n;
-  }
-  const terms = [];
-  function pushCoeff(c){
-    c = cleanInt(c);
-    if(c === 0) return;
-    const abs = Math.abs(c);
-    terms.push({ sign:c < 0 ? -1 : 1, text:abs === 1 ? varChar : `${abs}${varChar}` });
-  }
-  pushCoeff(baseCoeff);
-  pushCoeff(addedCoeff);
-  (Array.isArray(constants) ? constants : []).forEach(v=>{
-    const n = cleanInt(v);
-    if(n !== 0) terms.push({ sign:n < 0 ? -1 : 1, text:String(Math.abs(n)) });
-  });
-  return joinSignedTerms(terms, opts);
-}
-
-
 function makeEquationSignedAddOppositeVariableSideParts(coeff, constant, xVal, opts = {}){
   const opp = -Number(constant || 0);
   const out = makeEquationSignedCombinedSideParts(coeff, 0, xVal, {
@@ -4668,7 +4653,9 @@ function getEquationSignedStepStates(eq, varChar = xChar){
         "hatchX",
         makeEquationSignedCombinedSideParts(a, vl, xVal, {removeX:commonX}),
         makeEquationSignedCombinedSideParts(b, vr, xVal, {removeX:commonX}),
-        combinedEq,
+        // (28/09/2026) la ligne écrite à cette étape est celle qu'on OBTIENT, reliée à la
+        // précédente par la flèche de l'opération — comme au monde 5 et au corrigé.
+        equationFromCoeffs(a - sign * commonX, vl, b - sign * commonX, vr),
         {commonX, sameSign:true}
       );
 
@@ -4683,7 +4670,9 @@ function getEquationSignedStepStates(eq, varChar = xChar){
   }else if(a > 0 && b < 0){
     // Signes opposés : on ajoute une tache normale des deux côtés pour neutraliser les taches opposées de droite.
     const addX = -b;
-    const addOppositeXEq = `${formatSignedExpressionWithAddedCoeff(a, addX, [vl], varChar)} = ${formatSignedExpressionWithAddedCoeff(b, addX, [vr], varChar)}`;
+    // Plus de ligne « −4𝑡 + 4𝑡 − 11 = 2𝑡 + 4𝑡 + 7 » (28/09/2026) : les taches ajoutées se
+    // voient sur le plateau ; l'équation écrit le résultat, avec la flèche « + 4𝑡 ».
+    const addOppositeXEq = equationFromCoeffs(a + addX, vl, 0, vr);
     push(
       "hatchOppositeX",
       makeEquationSignedSideWithAddedVariables(a, vl, xVal, {addCount:addX, neutralize:true}),
@@ -4699,7 +4688,7 @@ function getEquationSignedStepStates(eq, varChar = xChar){
   }else if(a < 0 && b > 0){
     // Signes opposés : on ajoute une tache normale des deux côtés pour neutraliser les taches opposées de gauche.
     const addX = -a;
-    const addOppositeXEq = `${formatSignedExpressionWithAddedCoeff(a, addX, [vl], varChar)} = ${formatSignedExpressionWithAddedCoeff(b, addX, [vr], varChar)}`;
+    const addOppositeXEq = equationFromCoeffs(0, vl, b + addX, vr);
     push(
       "hatchOppositeX",
       makeEquationSignedSideWithAddedVariables(a, vl, xVal, {addCount:addX, neutralize:true}),
@@ -4738,7 +4727,9 @@ function getEquationSignedStepStates(eq, varChar = xChar){
 
     if(vl !== 0){
       const addedOpposite = -vl;
-      const addOppositeEq = `${formatSignedExpressionFromParts(c, [vl, addedOpposite], varChar)} = ${formatSignedExpressionFromParts(0, [vr, addedOpposite], varChar)}`;
+      // Plus de ligne « 47 − 31 = 2𝑐 + 31 − 31 » (28/09/2026) : le jeton ajouté de chaque
+      // côté se voit sur le plateau ; l'équation écrit le résultat, flèche « − 31 ».
+      const addOppositeEq = `${formatSignedCoeffLabel(c, varChar)} = ${formatSignedIntegerLabel(isolated)}`;
       push(
         "hatchV",
         makeEquationSignedPartsWithConstantsFromHidden(afterLeftParts, [vl, addedOpposite], [true, true]),
@@ -4756,6 +4747,19 @@ function getEquationSignedStepStates(eq, varChar = xChar){
     }
 
     const finalEquation = `${varChar} = ${formatSignedIntegerLabel(actualX)}`;
+    // Partage (28/09/2026), comme au monde 5 : |c| groupes égaux de chaque côté, le
+    // signe restant porté par la forme de la tache opposée ; la division (« ÷ (−2) »)
+    // se lit à l'étape suivante, où l'on garde un groupe.
+    if(d > 1){
+      const shareLeftHidden = (Array.isArray(afterLeftParts) ? afterLeftParts : []).filter(p => p && p.hidden && !p.removed);
+      push(
+        "share",
+        shareLeftHidden.length ? shareLeftHidden : signedHiddenFallback(c, actualX, leftStartIndex).map(p => ({...p, revealed:false})),
+        makeEquationSignedRepeatedValues(d, contribution),
+        `${formatSignedCoeffLabel(c, varChar)} = ${formatSignedIntegerLabel(isolated)}`,
+        {remainingCoeff:c, isolated, share:true, groupCount:d, variableSide:"left"}
+      );
+    }
     // Sur une tache opposée, l'opposition est déjà portée par la forme de la tache.
     // On affiche donc la valeur de la lettre, pas la contribution signée de la tache.
     const finalLeftHidden = revealHiddenPartsWithContribution(afterLeftParts, actualX);
@@ -4764,7 +4768,7 @@ function getEquationSignedStepStates(eq, varChar = xChar){
       finalLeftHidden.length ? finalLeftHidden : signedHiddenFallback(c, actualX, leftStartIndex),
       makeEquationSignedRepeatedValues(d, contribution),
       finalEquation,
-      {remainingCoeff:c, isolated, final:true, variableSide:"left"}
+      {remainingCoeff:c, isolated, final:true, groupCount:d, variableSide:"left"}
     );
 
     push(
@@ -4783,7 +4787,7 @@ function getEquationSignedStepStates(eq, varChar = xChar){
 
     if(vr !== 0){
       const addedOpposite = -vr;
-      const addOppositeEq = `${formatSignedExpressionFromParts(0, [vl, addedOpposite], varChar)} = ${formatSignedExpressionFromParts(c, [vr, addedOpposite], varChar)}`;
+      const addOppositeEq = `${formatSignedIntegerLabel(isolated)} = ${formatSignedCoeffLabel(c, varChar)}`;
       push(
         "hatchV",
         makeEquationSignedAddOppositeNumberSideParts(vl, addedOpposite),
@@ -4801,6 +4805,16 @@ function getEquationSignedStepStates(eq, varChar = xChar){
     }
 
     const finalEquation = `${formatSignedIntegerLabel(actualX)} = ${varChar}`;
+    if(d > 1){
+      const shareRightHidden = (Array.isArray(afterRightParts) ? afterRightParts : []).filter(p => p && p.hidden && !p.removed);
+      push(
+        "share",
+        makeEquationSignedRepeatedValues(d, contribution),
+        shareRightHidden.length ? shareRightHidden : signedHiddenFallback(c, actualX, rightStartIndex).map(p => ({...p, revealed:false})),
+        `${formatSignedIntegerLabel(isolated)} = ${formatSignedCoeffLabel(c, varChar)}`,
+        {remainingCoeff:c, isolated, share:true, groupCount:d, variableSide:"right"}
+      );
+    }
     // Sur une tache opposée, l'opposition est déjà portée par la forme de la tache.
     // On affiche donc la valeur de la lettre, pas la contribution signée de la tache.
     const finalRightHidden = revealHiddenPartsWithContribution(afterRightParts, actualX);
@@ -4809,7 +4823,7 @@ function getEquationSignedStepStates(eq, varChar = xChar){
       makeEquationSignedRepeatedValues(d, contribution),
       finalRightHidden.length ? finalRightHidden : signedHiddenFallback(c, actualX, rightStartIndex),
       finalEquation,
-      {remainingCoeff:c, isolated, final:true, variableSide:"right"}
+      {remainingCoeff:c, isolated, final:true, groupCount:d, variableSide:"right"}
     );
 
     push(
@@ -4836,14 +4850,7 @@ function buildEquationSignedStepLines(eq, varChar = xChar){
 }
 
 function getEquationSignedStepVisibleLines(eq, revealState, varChar = xChar){
-  const states = getEquationSignedStepStates(eq, varChar);
-  const max = clamp(Math.round(Number(revealState) || 0), 0, states.length);
-  const out = [];
-  for(let i=0;i<max;i++){
-    const line = states[i] && states[i].equation;
-    if(line && (!out.length || out[out.length - 1] !== line)) out.push(line);
-  }
-  return out;
+  return getEquationSignedStepLineEntries(eq, varChar, Math.max(0, Math.round(Number(revealState) || 0))).map(e => e.line);
 }
 
 
@@ -5148,6 +5155,15 @@ function makeEqStepGroupedParts(coeff, vis, xVal, varChar = xChar, opts = {}){
   return out;
 }
 
+/* Un plateau tel qu'on le lit sur la carte : les taches regroupées (3𝑥), puis
+   chaque paquet de jetons séparé (« 3𝑥 + 7 + 5 »). */
+function eqStepSeenSide(coeff, packets, varChar = xChar){
+  const terms = [];
+  const c = Math.max(0, Number(coeff) || 0);
+  if(c > 0) terms.push(coeffXLabel(c, varChar));
+  (packets || []).forEach(v => terms.push(String(v)));
+  return terms.length ? terms.join(" + ") : "0";
+}
 function getEquationStepStates(eq, varChar = xChar, opts = {}){
   if(!eq) return [];
   const xVal = Math.max(1, Number(eq.x) || 1);
@@ -5156,19 +5172,45 @@ function getEquationStepStates(eq, varChar = xChar, opts = {}){
   const vl = Math.max(0, eqVisibleSum(eq.left));
   const vr = Math.max(0, eqVisibleSum(eq.right));
   const includeVerify = !!(opts && opts.includeVerify);
+  // « J'écris ce que je vois » (28/09/2026) : en vue Équation, la première ligne est
+  // l'équation telle qu'on la lit sur la carte (paquets séparés), comme aux relatifs.
+  // La vue Schéma garde son premier tableau (paquets additionnés) : withInitial la
+  // désactive, et les appelants qui veulent l'écriture combinée en état 1 le disent.
+  const withInitial = (opts && opts.withInitial !== undefined)
+    ? !!opts.withInitial
+    : getEquationStepView() !== "schema";
   const states=[];
 
   function push(kind,leftParts,rightParts,equation,extra={}){
     states.push({kind,leftParts,rightParts,equation,...extra});
   }
 
-  // 1) Premier clic : on affiche déjà l'écriture combinée.
-  push(
-    "combined",
-    makeEqStepGroupedParts(a, vl, xVal, varChar),
-    makeEqStepGroupedParts(b, vr, xVal, varChar),
-    formatEqSideFromCoeffVis(a, vl, varChar) + " = " + formatEqSideFromCoeffVis(b, vr, varChar)
-  );
+  const combinedLine = formatEqSideFromCoeffVis(a, vl, varChar) + " = " + formatEqSideFromCoeffVis(b, vr, varChar);
+  const packetsOf = side => (Array.isArray(side && side.visible) ? side.visible : [])
+    .map(Number).filter(v => Number.isFinite(v) && v > 0);
+  const packetsL = packetsOf(eq.left), packetsR = packetsOf(eq.right);
+  // (jetons de 1, EQUNITSTEP : un seul paquet par plateau, donc une seule ligne ; la
+  //  consigne de cette étape reste « Je compte les jetons sur chaque plateau »)
+  if(withInitial){
+    const initialLine = eqStepSeenSide(a, packetsL, varChar) + " = " + eqStepSeenSide(b, packetsR, varChar);
+    push(
+      "initial",
+      makeEqStepGroupedParts(a, vl, xVal, varChar, packetsL.length > 1 ? {visibleSplit: packetsL.map((v, i) => ({value:v, removed:false, posIndex:i}))} : {}),
+      makeEqStepGroupedParts(b, vr, xVal, varChar, packetsR.length > 1 ? {visibleSplit: packetsR.map((v, i) => ({value:v, removed:false, posIndex:i}))} : {}),
+      initialLine
+    );
+  }
+
+  // 1) « Je simplifie chaque plateau » : les paquets d'un même plateau additionnés.
+  //    Sans paquet à additionner, la ligne serait la même : on n'ajoute pas l'étape.
+  if(!states.length || states[0].equation !== combinedLine){
+    push(
+      "combined",
+      makeEqStepGroupedParts(a, vl, xVal, varChar),
+      makeEqStepGroupedParts(b, vr, xVal, varChar),
+      combinedLine
+    );
+  }
 
   // 2) On hachure uniquement les lettres communes.
   const commonX = Math.min(a, b);
@@ -5502,7 +5544,7 @@ function getHiddenWidthsFromSchemaRow(parts, widths, metrics){
 }
 
 function buildEquationStepInitialSchemaLayout(eq, varChar, metrics){
-  const initialState = getEquationStepState(eq, 1, varChar);
+  const initialState = getEquationStepState(eq, 1, varChar, {withInitial:false});
   const initialParts = getEquationStepSchemaParts(eq, initialState, varChar);
   const y = getEquationStepSchemaMidY() - metrics.rowH;
   const dummy = el("g", {id:"eqStepSingaporeTableMeasure"});
@@ -5738,6 +5780,8 @@ function eqStepActionText(card, revealState, opts = {}){
   }
 
   switch(state.kind){
+    case "initial":
+      return useUnitBeads ? "Je compte les jetons sur chaque plateau." : "J’écris ce que je vois.";
     case "combined":
       return useUnitBeads ? "Je compte les jetons sur chaque plateau." : "Je simplifie chaque plateau.";
     case "hatchX":
@@ -5815,9 +5859,13 @@ function eqSignedStepActionText(card, revealState, opts = {}){
       return "J’enlève " + Math.abs(Math.round(Number(state.removedConstant) || 0)) + " de chaque côté.";
     case "afterConstants":
       return "Je garde ce qui reste.";
+    case "share":{
+      const n = Math.max(2, Math.abs(Math.round(Number(state.groupCount) || 2)));
+      return "Je partage en " + n + " groupes égaux de chaque côté.";
+    }
     case "final":{
       const coeff = Math.round(Number(state.remainingCoeff) || 1);
-      if(Math.abs(coeff) > 1) return "Je divise par " + formatSignedIntegerLabel(coeff) + ".";
+      if(Math.abs(coeff) > 1) return "Je divise par " + formatSignedIntegerLabel(coeff) + " : je garde un groupe.";
       if(coeff === -1) return "Je divise par −1.";
       return "Je lis la réponse.";
     }
@@ -6102,7 +6150,10 @@ function drawOperationArrowsForLines(targetGroup, api, lines, ops, geom = {}){
   const labelFs = Math.round(Number(geom.labelFontSize) || fontSize * 0.62);
   const estimate = (str) => estimatePrintMathTextWidth(String(str == null ? "" : str), fontSize);
   let halfW = 0;
-  (lines || []).forEach(line => {
+  (lines || []).forEach((line, i) => {
+    // (écran, 28/09/2026) une ligne qu'aucune flèche ne touche — la ligne « telle
+    // qu'on la voit », suivie d'un simple regroupement — n'écarte pas les flèches.
+    if(geom.skipBareLines && !ops[i] && !(i > 0 && ops[i - 1])) return;
     const raw = String(line == null ? "" : line);
     const k = raw.indexOf("=");
     const lhs = k >= 0 ? raw.slice(0, k).trim() : raw;
@@ -6123,7 +6174,7 @@ function drawOperationArrowsForLines(targetGroup, api, lines, ops, geom = {}){
 
 function drawEquationStepOperationArrows(targetGroup, eq, revealState, varChar, lines, startY, gap, fontSize){
   const ops = getEquationStepLineOperations(eq, revealState, varChar);
-  drawOperationArrowsForLines(targetGroup, {el, text}, lines, ops, {centerX: 800, startY, gap, fontSize, eqGap: 30});
+  drawOperationArrowsForLines(targetGroup, {el, text}, lines, ops, {centerX: 800, startY, gap, fontSize, eqGap: 30, skipBareLines: true});
 }
 
 /* Correction imprimée du mode Équation : opérations entre les lignes de la colonne
@@ -6166,6 +6217,33 @@ function getEquationStepPrintArrowLines(eq, revealState, varChar = xChar){
    chaque jeton ou paquet de jetons occupe le centre de sa case, et les cases de même
    rang se font face d'un plateau à l'autre. C'est le geste de la classe : on range,
    puis on divise le plateau en n parts et on en garde une. */
+/* Place d'un morceau de jeton qui n'existait pas sur la carte (question a, 28/09/2026).
+   Quand un plateau n'a qu'un jeton (28) et qu'on le casse en 12 + 16, la carte ne
+   prévoit qu'une place : le 12 la garde, et le 16 recevait une position de secours
+   calculée sans voir le 12 — il le cachait à moitié. On le pose désormais À CÔTÉ du
+   dernier jeton de la carte, sans toucher ni un autre jeton ni une tache ; la place
+   ne dépend que de la carte, donc le 16 ne bouge plus d'une étape à l'autre. */
+function eqStepBesidePosition(posV, splats, tray, posIndex, beadR){
+  const places = Array.isArray(posV) ? posV.filter(Boolean) : [];
+  if(!places.length || !tray) return null;
+  const r = Math.max(8, Number(beadR) || 26);
+  const base = places[places.length - 1];
+  const k = Math.max(1, Math.round(Number(posIndex) || 0) - (places.length - 1));
+  const step = 2 * r + 26;
+  const xMin = tray.x + r + 14, xMax = tray.x + tray.w - r - 14;
+  const yMin = tray.y + r + 14, yMax = tray.y + tray.h - r - 14;
+  const versCentre = (tray.x + tray.w / 2) >= base.cx ? 1 : -1;
+  const candidats = [];
+  [versCentre, -versCentre].forEach(dir => candidats.push({cx: base.cx + dir * k * step, cy: base.cy}));
+  [versCentre, -versCentre].forEach(dir => candidats.push({cx: base.cx + dir * k * step, cy: base.cy - step}));
+  candidats.push({cx: base.cx, cy: base.cy - k * step});
+  const libre = c => c.cx >= xMin && c.cx <= xMax && c.cy >= yMin && c.cy <= yMax
+    && places.every(p => Math.hypot(p.cx - c.cx, p.cy - c.cy) >= 2 * r + 12)
+    && (Array.isArray(splats) ? splats : []).every(t => !t || Math.hypot(t.cx - c.cx, t.cy - c.cy) >= (Number(t.r) || 60) + r + 6);
+  const choix = candidats.find(libre) || candidats[0];
+  return {cx: clamp(choix.cx, xMin, xMax), cy: clamp(choix.cy, yMin, yMax)};
+}
+
 function getEqStepGroupCells(tray, n){
   const count = Math.max(1, Math.round(Number(n) || 1));
   // Les parts doivent être ÉGALES : jusqu'à 5, une seule rangée de colonnes égales
@@ -6630,7 +6708,10 @@ function renderCardEquation(card, revealState, useTokens){
   const useEqStepSchemaLayout = ((isEquationStepFamily(card) || isSimpleEquationSchemaView) && getEquationStepView() === "schema");
   // Le mode « Équation » tout court partage la géométrie de la vue Équation du pas à
   // pas : plateaux descendus, bloc d'équation en haut avec ses flèches d'opération.
-  const useEqStepEquationViewLayout = ((isEquationStepFamily(card) || card.family === "EQ") && getEquationStepView() !== "schema");
+  // (28/09/2026) les relatifs prennent la même géométrie : plateaux descendus sous le
+  // bloc d'équation, qui ne rétrécit plus et ne sort plus de l'écran par le haut.
+  const useEqStepEquationViewLayout = ((isEquationStepFamily(card) || card.family === "EQ") && getEquationStepView() !== "schema")
+    || isSignedEquationFamily(card);
   const schemaGeometry = useEqStepSchemaLayout
     ? buildEquationStepSchemaColumnGeometry(card)
     : (useEqStepEquationViewLayout ? buildEquationStepEquationViewGeometry(card) : null);
@@ -6779,11 +6860,18 @@ function renderCardEquation(card, revealState, useTokens){
 
     function resolveStepVisiblePosition(part, idx, count){
       const alignRaw = Number(part && part.alignWithHiddenIndex);
-      if(Number.isFinite(alignRaw)){
+      // Un seul jeton après la division (« Je lis la réponse ») : il reste là où il
+      // était à l'étape d'avant, au lieu de sauter au milieu du plateau.
+      if(Number.isFinite(alignRaw) && (count > 1 || isEqSignedStep)){
         return splitVisiblePositionOnCurrentTray(idx, count);
       }
       const rawPosIndex = Number(part && part.posIndex);
       const posIndex = Number.isFinite(rawPosIndex) ? Math.max(0, Math.round(rawPosIndex)) : idx;
+      if(!isEqSignedStep && !side.posV?.[posIndex]){
+        const tray = sideName === "left" ? activeTrays.left : activeTrays.right;
+        const p = eqStepBesidePosition(side.posV, side.splats, tray, posIndex, beadR);
+        if(p) return p;
+      }
       return side.posV?.[posIndex] || side.posV?.[idx] || fallbackVisiblePosition(idx, count);
     }
 
@@ -6871,9 +6959,12 @@ function renderCardEquation(card, revealState, useTokens){
         return best;
       }
 
-      function choosePositions(r){
-        const padObstacles = 24;
-        const padAdded = 26;
+      function choosePositions(r, serre = false){
+        // (28/09/2026) « serre » : un plateau chargé (4 taches ajoutées à côté de 4 taches)
+        // passait directement au dernier recours, où les taches ajoutées touchaient les
+        // jetons ; on essaie d'abord avec un jour plus petit, mais qui reste un jour.
+        const padObstacles = serre ? 12 : 24;
+        const padAdded = serre ? 12 : 26;
         const candidates = buildCandidates(r)
           .filter(c => clearance(c, obstacles, padObstacles) >= 0)
           .sort((a,b)=>{
@@ -6898,9 +6989,11 @@ function renderCardEquation(card, revealState, useTokens){
       // On essaie d'abord avec la taille normale. Si le plateau est trop chargé,
       // on réduit légèrement les taches ajoutées plutôt que de les faire se toucher.
       const radii = [baseR0, Math.max(62, baseR0 - 8), Math.max(54, baseR0 - 16), Math.max(48, baseR0 - 24)];
-      for(const r of radii){
-        const picked = choosePositions(r);
-        if(picked.length >= addedCount) return picked[addedIndex];
+      for(const serre of [false, true]){
+        for(const r of radii){
+          const picked = choosePositions(r, serre);
+          if(picked.length >= addedCount) return picked[addedIndex];
+        }
       }
 
       // Dernier recours : on garde les positions les moins mauvaises, mais on évite toujours
@@ -6916,12 +7009,14 @@ function renderCardEquation(card, revealState, useTokens){
       }
       return selected[addedIndex % Math.max(1, selected.length)] || fallbackHiddenSplat(idx, count);
     }
-    function drawSignedHiddenPart(part, idx, count){
+    function drawSignedHiddenPart(part, idx, count, cell = null){
       const isAdded = !!(part && part.added);
       const rawPosIndex = Number(part && part.posIndex);
       const posIndex = Number.isFinite(rawPosIndex) ? Math.max(0, Math.round(rawPosIndex)) : idx;
-      const s = isAdded ? addedHiddenSplat(part, idx, count) : (side.splats?.[posIndex] || fallbackHiddenSplat(idx, count));
-      const pHidden = isAdded ? {cx:s.cx, cy:s.cy} : (side.posH?.[posIndex] || {cx:s.cx, cy:s.cy});
+      const s0 = isAdded ? addedHiddenSplat(part, idx, count) : (side.splats?.[posIndex] || fallbackHiddenSplat(idx, count));
+      // étape « groupes » : la tache va au centre de sa case, comme au monde 5
+      const s = cell ? fitSplatInGroupCell(s0, cell) : s0;
+      const pHidden = cell ? {cx:s.cx, cy:s.cy} : (isAdded ? {cx:s.cx, cy:s.cy} : (side.posH?.[posIndex] || {cx:s.cx, cy:s.cy}));
       const d = blobPath(s.cx, s.cy, s.r);
       const isRevealed = !!(part && part.revealed);
       const isRemoved = !!(part && part.removed);
@@ -7027,10 +7122,22 @@ function renderCardEquation(card, revealState, useTokens){
     if(isEqSignedStep && Array.isArray(signedStepParts)){
       const hiddenParts = signedStepParts.filter(p => p && p.hidden);
       const visibleParts = signedStepParts.filter(p => p && !p.hidden && p.kind !== "empty");
-      hiddenParts.forEach((part, idx)=>drawSignedHiddenPart(part, idx, hiddenParts.length));
+      // Partage en |c| groupes (28/09/2026) : même découpe en cases qu'au monde 5 ; à la
+      // division, on garde le premier groupe et on hachure les autres.
+      const kind = signedStepState ? signedStepState.kind : "";
+      const groupCount = Math.abs(Math.round(Number(signedStepState && signedStepState.groupCount) || 0));
+      const groupTray = sideName === "left" ? activeTrays.left : activeTrays.right;
+      const groupCells = (groupCount > 1 && (kind === "share" || kind === "final") && groupTray) ? getEqStepGroupCells(groupTray, groupCount) : null;
+      if(groupCells) drawEqStepGroupZones(layer, {el}, groupTray, groupCount);
+      const keepOnlyOne = !!groupCells && kind === "final";
+      hiddenParts.forEach((part, idx)=>{
+        const hatched = keepOnlyOne && idx > 0;
+        drawSignedHiddenPart(hatched ? {...part, revealed:false, removed:true} : part, idx, hiddenParts.length, groupCells ? groupCells.centers[idx] : null);
+      });
       visibleParts.forEach((part, idx)=>{
-        const p = resolveStepVisiblePosition(part, idx, visibleParts.length);
-        drawVisibleBead(p, part.value, !!(part && part.removed));
+        const cell = groupCells ? groupCells.centers[idx] : null;
+        const p = cell ? {cx: cell.cx, cy: cell.cy} : resolveStepVisiblePosition(part, idx, visibleParts.length);
+        drawVisibleBead(p, part.value, !!(part && part.removed) || (keepOnlyOne && idx > 0));
       });
       return;
     }
@@ -7288,93 +7395,51 @@ function renderCardEquation(card, revealState, useTokens){
     }
   }
 
-  if(hasEquationSignedStepAid){
-    const lines = getEquationSignedStepVisibleLines(eq, revealState, varChar);
-    const n = Math.max(1, lines.length);
-    // On garde une police plus lisible et on gagne surtout de la place en montant le bloc,
-    // au lieu de réduire trop vite la taille des équations.
-    let eqFontSize = (n >= 7) ? 34 : (n >= 6 ? 38 : (n >= 5 ? 42 : (n >= 4 ? 46 : 52)));
-    let eqGap = (n >= 7) ? 28 : (n >= 6 ? 32 : (n >= 5 ? 38 : (n >= 4 ? 42 : 50)));
-
-    const topLimit = 18;
-    const bottomLimit = Math.max(topLimit, activeTrays.left.y - 28);
-    const available = Math.max(0, bottomLimit - topLimit);
-    const wantedHeight = (n - 1) * eqGap;
-    if(wantedHeight > available && n > 1){
-      eqGap = Math.max(24, Math.floor(available / (n - 1)));
-      eqFontSize = Math.min(eqFontSize, Math.max(32, eqGap + 8));
-    }
-
-    const blockHeight = (n - 1) * eqGap;
-    const startY = (n >= 4)
-      ? Math.round(topLimit + 10)
-      : Math.round(topLimit + Math.max(0, (available - blockHeight) / 2));
-
-    drawEquationLines(layer, lines, activeTrays.midX, startY, {
+  /* Relatifs (28/09/2026) : le même bloc que le monde 5 — calé en haut, pas fixe, police
+     46, « = » espacé comme au monde 5 — avec les flèches d'opération du corrigé imprimé.
+     Une ligne = une opération faite des deux côtés ; le geste (jetons ou taches ajoutés)
+     se voit sur le plateau. Cinq lignes au plus (écrite, simplifiée, lettres, nombres,
+     solution) : 70 → 326, au-dessus des plateaux descendus à 360. */
+  function drawSignedEquationBlock(lines, ops){
+    if(!lines.length) return;
+    const cx = activeTrays.midX || 800;
+    drawEquationLines(layer, lines, cx, EQ_VIEW_LINE_TOP, {
       text:(x,y,t,a)=>text(x,y,t,a),
       fill:"#000",
-      fontSize: eqFontSize,
-      gap: eqGap,
+      fontSize: EQ_VIEW_LINE_FONT,
+      gap: EQ_VIEW_LINE_GAP,
       anchor:"start",
       alignEquals: true,
-      eqGap: 22,
+      eqGap: 30,
       fontFamily:"SplatLettres, 'Times New Roman', Times, serif",
       fontStyle:"italic"
     });
+    drawOperationArrowsForLines(layer, {el, text}, lines, ops, {
+      centerX: cx, startY: EQ_VIEW_LINE_TOP, gap: EQ_VIEW_LINE_GAP, fontSize: EQ_VIEW_LINE_FONT, eqGap: 30, skipBareLines: true
+    });
+  }
+
+  if(hasEquationSignedStepAid){
+    const entries = getEquationSignedStepLineEntries(eq, varChar, revealState);
+    drawSignedEquationBlock(entries.map(e => e.line), entries.slice(1).map(e => e.op));
 
     if(card.family === "EQPMSTEP" && revealState > 0){
       drawEqStepActionText(
         layer,
         eqSignedStepActionText(card, revealState, {useTableLabels:false}),
         activeTrays.midX || 800,
-        activeTrays.left.y + activeTrays.left.h + 74,
+        activeTrays.left.y + activeTrays.left.h + 52,
         {fontSize:36, fill:"rgba(0,0,0,0.78)", weight:"900"}
       );
     }
   }
 
   if(hasEquationSignedAid){
-    const allLines = buildEquationSignedSolveLines(eq, varChar);
-    const lines = (revealState === 1) ? allLines.slice(0, 1) : allLines;
-
-    let eqFontSize, eqGap, startY;
-    if(revealState === 1){
-      // Aide seule : on garde une grande equation, lisible et centrée au-dessus de la balance.
-      eqFontSize = 54;
-      eqGap = 62;
-      startY = 96;
-    }else{
-      // Correction complète : police un peu plus compacte et lignes rapprochées
-      // pour que la première ligne ne parte jamais hors de l'écran.
-      const n = Math.max(1, lines.length);
-      eqFontSize = (n >= 5) ? 38 : (n >= 4 ? 42 : 46);
-      eqGap = (n >= 5) ? 34 : (n >= 4 ? 38 : 44);
-
-      const topLimit = 48;
-      const bottomLimit = Math.max(topLimit, activeTrays.left.y - 26);
-      const available = Math.max(0, bottomLimit - topLimit);
-      const wantedHeight = (n - 1) * eqGap;
-
-      if(wantedHeight > available && n > 1){
-        eqGap = Math.max(30, Math.floor(available / (n - 1)));
-        eqFontSize = Math.min(eqFontSize, Math.max(34, eqGap + 4));
-      }
-
-      const blockHeight = (n - 1) * eqGap;
-      startY = Math.round(topLimit + Math.max(0, (available - blockHeight) / 2));
-    }
-
-    drawEquationLines(layer, lines, activeTrays.midX, startY, {
-      text:(x,y,t,a)=>text(x,y,t,a),
-      fill:"#000",
-      fontSize: eqFontSize,
-      gap: eqGap,
-      anchor:"start",
-      alignEquals: true,
-      eqGap: 22,
-      fontFamily:"SplatLettres, 'Times New Roman', Times, serif",
-      fontStyle:"italic"
-    });
+    // « Équation » tout court : d'abord l'équation telle qu'on la lit sur la carte, puis
+    // toute la résolution — les lignes et les flèches du corrigé imprimé.
+    const {lines, ops} = eqSignedSixCorrectionLinesOps(eq, varChar);
+    if(revealState === 1) drawSignedEquationBlock(lines.slice(0, 1), []);
+    else drawSignedEquationBlock(lines, ops);
   }
 
 
@@ -7387,8 +7452,34 @@ function renderCardEquation(card, revealState, useTokens){
     // Sur la première diapo, la phrase « Même quantité à gauche qu'à droite » est
     // centrée et large (x ≈ 350 → 1250) : à x = 260 le bouton la chevauchait.
     const solveBtnX = isIntroBalanceText ? 70 : 260;
-    drawEquationEquaSplatSolveButton(layer, card, solveBtnX, solveBtnY, revealState);
+    const place = placeEquationSolveButton(layer, solveBtnX, solveBtnY);
+    drawEquationEquaSplatSolveButton(layer, card, place.x, place.y, revealState);
   }
+}
+
+/* « Résoudre » (28/09/2026) : sa place fixe (x = 260) chevauchait l'équation quand le
+   membre de gauche est long (« 3𝑏 + 30 + 30 + 30 = 30 », « 𝑏 − 3𝑏 + 14 + 12 = … »).
+   On mesure ce qui est déjà dessiné dans la bande du bouton (textes et flèches) et on
+   prend la place libre la plus proche : d'abord vers la gauche, puis à droite de
+   l'équation ; en dernier recours, tout en haut à gauche, au-dessus des lignes. */
+const EQ_SOLVE_BTN_W = 126, EQ_SOLVE_BTN_H = 44;
+function placeEquationSolveButton(layer, x, y){
+  const W = EQ_SOLVE_BTN_W, H = EQ_SOLVE_BTN_H, jour = 20, bord = 16;
+  const obstacles = [];
+  Array.from(layer.children || []).forEach(n => {
+    const tag = String(n.tagName || "").toLowerCase();
+    if(tag !== "text" && tag !== "path") return;
+    let b = null;
+    try{ b = n.getBBox(); }catch(_e){ return; }
+    if(!b || (!b.width && !b.height)) return;
+    if(b.y > y + H + 6 || b.y + b.height < y - 6) return;
+    obstacles.push([b.x - jour, b.x + b.width + jour]);
+  });
+  const libre = x0 => obstacles.every(([a, b]) => x0 + W <= a || x0 >= b);
+  if(libre(x)) return {x, y};
+  for(let x0 = x; x0 >= bord; x0 -= 2) if(libre(x0)) return {x:x0, y};
+  for(let x0 = x; x0 <= 1600 - bord - W; x0 += 2) if(libre(x0)) return {x:x0, y};
+  return {x:bord, y:6};
 }
 
 
@@ -8264,11 +8355,16 @@ function renderCardEquationStepPrintScene(targetGroup, card, revealState, opts =
 
       function resolvePrintStepVisiblePosition(part, idx, count){
         const alignRaw = Number(part && part.alignWithHiddenIndex);
-        if(Number.isFinite(alignRaw)){
+        if(Number.isFinite(alignRaw) && count > 1){
           return splitPrintVisiblePositionOnCurrentTray(idx, count);
         }
         const rawPosIndex = Number(part && part.posIndex);
         const posIndex = Number.isFinite(rawPosIndex) ? Math.max(0, Math.round(rawPosIndex)) : idx;
+        if(!side.posV?.[posIndex]){
+          // même règle qu'à l'écran : le morceau neuf se pose à côté, sans rien cacher
+          const p = eqStepBesidePosition(side.posV, side.splats, sideName === "left" ? trays.left : trays.right, posIndex, beadR);
+          if(p) return p;
+        }
         return side.posV?.[posIndex] || side.posV?.[idx] || fallbackPrintVisiblePosition(idx, count);
       }
 
@@ -9680,7 +9776,8 @@ function eqSignedLineCoeffs(line, varChar){
   if(k < 0) return null;
   const side = str => {
     let c = 0, n = 0;
-    const termes = String(str).trim().replace(/\s+\u2212\s+/g, " + \u2212").split(/\s+\+\s+/);
+    // « + (−7) » (écriture avec parenthèses) se lit comme « − 7 »
+    const termes = String(str).trim().replace(/[()]/g, "").replace(/\s+\u2212\s+/g, " + \u2212").split(/\s+\+\s+/);
     for(const t0 of termes){
       const t = t0.trim();
       if(!t) continue;
@@ -9710,27 +9807,46 @@ function eqSignedSixCorrectionLinesOps(eq, varChar){
     if(!st || !garde.has(st.kind) || !st.equation) return;
     if(!lines.length || lines[lines.length - 1] !== st.equation) lines.push(st.equation);
   });
-  const moins = "\u2212";
   const ops = [];
-  for(let i = 0; i < lines.length - 1; i++){
-    const a = eqSignedLineCoeffs(lines[i], varChar), b = eqSignedLineCoeffs(lines[i + 1], varChar);
-    let op = null;
-    if(a && b){
-      const dc = b[0] - a[0], dn = b[1] - a[1];
-      if(dc === b[2] - a[2] && dn === b[3] - a[3]){
-        if(dc !== 0 && dn === 0) op = (dc > 0 ? "+ " : moins + " ") + formatVarCoeffAbs(dc, varChar);
-        else if(dn !== 0 && dc === 0) op = (dn > 0 ? "+ " : moins + " ") + Math.abs(dn);
-      }else{
-        const ref = b[0] !== 0 ? [a[0], b[0]] : [a[2], b[2]];
-        const d = ref[1] !== 0 ? ref[0] / ref[1] : NaN;
-        if(Number.isInteger(d) && d !== 0 && d !== 1 && a.every((v, j) => Math.abs(v - b[j] * d) < 1e-9)){
-          op = d < 0 ? "÷ (" + moins + Math.abs(d) + ")" : "÷ " + d;
-        }
-      }
-    }
-    ops.push(op);
-  }
+  for(let i = 0; i < lines.length - 1; i++) ops.push(eqSignedLineOperation(lines[i], lines[i + 1], varChar));
   return {lines, ops};
+}
+
+/* L'opération faite des deux côtés pour passer d'une ligne à la suivante, lue dans les
+   deux lignes elles-mêmes : « + 4𝑡 », « − 31 » (ajouter −31, c'est enlever 31), « ÷ (−2) ».
+   null quand on n'a fait que regrouper (la ligne telle qu'on la voit → la ligne réduite).
+   Sert au corrigé imprimé ET, depuis le 28/09/2026, aux flèches de l'écran. */
+function eqSignedLineOperation(lineA, lineB, varChar){
+  const moins = "\u2212";
+  const a = eqSignedLineCoeffs(lineA, varChar), b = eqSignedLineCoeffs(lineB, varChar);
+  if(!a || !b) return null;
+  const dc = b[0] - a[0], dn = b[1] - a[1];
+  if(dc === b[2] - a[2] && dn === b[3] - a[3]){
+    if(dc !== 0 && dn === 0) return (dc > 0 ? "+ " : moins + " ") + formatVarCoeffAbs(dc, varChar);
+    if(dn !== 0 && dc === 0) return (dn > 0 ? "+ " : moins + " ") + Math.abs(dn);
+    return null;
+  }
+  const ref = b[0] !== 0 ? [a[0], b[0]] : [a[2], b[2]];
+  const d = ref[1] !== 0 ? ref[0] / ref[1] : NaN;
+  if(Number.isInteger(d) && d !== 0 && d !== 1 && a.every((v, j) => Math.abs(v - b[j] * d) < 1e-9)){
+    return d < 0 ? "÷ (" + moins + Math.abs(d) + ")" : "÷ " + d;
+  }
+  return null;
+}
+
+/* Lignes de la résolution pas à pas des relatifs jusqu'à l'état `max`, chacune avec
+   l'opération qui l'a produite (même principe que getEquationStepLineEntries au monde 5). */
+function getEquationSignedStepLineEntries(eq, varChar = xChar, max = null){
+  const states = getEquationSignedStepStates(eq, varChar);
+  const n = (max == null) ? states.length : clamp(Math.round(Number(max) || 0), 0, states.length);
+  const entries = [];
+  for(let i = 0; i < n; i++){
+    const line = states[i] && states[i].equation;
+    if(!line || (entries.length && entries[entries.length - 1].line === line)) continue;
+    const op = entries.length ? eqSignedLineOperation(entries[entries.length - 1].line, line, varChar) : null;
+    entries.push({line, op, stateIndex: i});
+  }
+  return entries;
 }
 
 function drawEqSixCorrectionSignedEquation(g, card, varChar, tEl, tText){
@@ -10286,8 +10402,18 @@ document.addEventListener("fullscreenchange", ()=>{
 window.addEventListener("keydown",(e)=>{
   const _ae = document.activeElement;
   const _tag = _ae && _ae.tagName ? String(_ae.tagName).toLowerCase() : "";
-  const _isTyping = _tag === "input" || _tag === "textarea" || _tag === "select" || (_ae && _ae.isContentEditable);
-  if(_isTyping) return;
+  /* Bug « suivant » (28/09/2026) : une liste (la forme d'équation…) gardait la main quand
+     on l'ouvrait sans changer de choix ; sous Windows, ← et → changeaient alors la forme
+     au lieu de faire avancer le plateau. Sur une liste fermée, ← et → servent donc
+     toujours au plateau ; ↑ et ↓ gardent leur rôle de choix dans la liste. */
+  if(_tag === "select" && (e.key === "ArrowLeft" || e.key === "ArrowRight") && !e.altKey){
+    try{ _ae.blur(); }catch(_e){}
+    const _ms = document.getElementById("mainSvg");
+    if(_ms && typeof _ms.focus === "function") _ms.focus();
+  }else{
+    const _isTyping = _tag === "input" || _tag === "textarea" || _tag === "select" || (_ae && _ae.isContentEditable);
+    if(_isTyping) return;
+  }
   if(e.key==="ArrowLeft"){
     e.preventDefault();
     goPreviousStepOrCard();
