@@ -226,6 +226,34 @@ JS_QR = """([qr, lib, gabarit]) => {
   return 'ok';
 }"""
 
+# Avant chaque pg.pdf : attendre que TOUTES les images de la page soient chargées et décodées
+# (28/09/2026 : au monde 5, un rendu a imprimé une fiche sans son QR, l'image n'était pas encore
+# arrivée). Une image qui ne se charge pas arrête le rendu. Même code qu'au monde 5.
+JS_IMAGES = """async () => {
+  const imgs = [...document.images];
+  const charge = i => i.complete ? null : new Promise(r => {
+    i.addEventListener('load', r, {once: true}); i.addEventListener('error', r, {once: true}); });
+  const delai = new Promise(r => setTimeout(r, 20000));
+  await Promise.race([Promise.all(imgs.map(charge)), delai]);
+  await Promise.race([Promise.all(imgs.map(i => i.decode ? i.decode().catch(() => null) : null)), delai]);
+  const ko = imgs.filter(i => !(i.complete && i.naturalWidth > 0)).map(i => i.getAttribute('src'));
+  return ko.length ? 'image non chargée : ' + ko.join(', ') : 'ok';
+}"""
+
+# Juste avant d'imprimer une fiche : chaque bandeau porte UN QR, chargé, avec la bonne adresse.
+JS_QR_PRESENT = """(qr) => {
+  const heads = [...document.querySelectorAll('.printArea .print-page-header')];
+  if (!heads.length) return 'pas de bandeau imprimé';
+  for (const [i, h] of heads.entries()) {
+    const imgs = h.querySelectorAll('.qr-livret img');
+    if (imgs.length !== 1) return 'bandeau ' + (i + 1) + ' : ' + imgs.length + ' QR, attendu : 1';
+    const img = imgs[0];
+    if (img.getAttribute('src') !== qr) return 'bandeau ' + (i + 1) + ' : QR ' + img.getAttribute('src') + ', attendu : ' + qr;
+    if (!(img.complete && img.naturalWidth > 0)) return 'bandeau ' + (i + 1) + ' : le QR ne s\\'est pas chargé';
+  }
+  return 'ok';
+}"""
+
 # Plus aucun logo sur les pages-fiches du livret (checklist de la relecture du monde 1) : retiré
 # AU RENDU, l'outil garde le sien quand un professeur imprime depuis le générateur.
 JS_SANS_LOGO = """() => {
@@ -612,8 +640,9 @@ async def pages(v, tmp, jeu, corr=None):
             if r != "ok":
                 raise SystemExit(f"{titre}, page « bis » : {r}")
             await pg.add_style_tag(content=CSS_QR + CSS_TITRE_OUTIL + (CSS_TITRE_CORR if corr else ""))
+            qr = f"{qrweb}/fiche{f['n']}.png"
             for js, arg, quoi in ((JS_TITRE_OUTIL, TITRE_BANDEAU, "bandeau"),
-                                  (JS_QR, [f"{qrweb}/fiche{f['n']}.png"] + ([QR_PROF, QR_ELEVE] if corr else [QR_ELEVE, None]), "QR"),
+                                  (JS_QR, [qr] + ([QR_PROF, QR_ELEVE] if corr else [QR_ELEVE, None]), "QR"),
                                   (JS_SANS_LOGO, None, "logos")):
                 r = await (pg.evaluate(js, arg) if arg is not None else pg.evaluate(js))
                 if r != "ok":
@@ -627,6 +656,10 @@ async def pages(v, tmp, jeu, corr=None):
             if r != "ok":
                 raise SystemExit(f"{titre}, pied : {r}")
             await pg.wait_for_timeout(600)
+            for js, arg, quoi in ((JS_IMAGES, None, "images"), (JS_QR_PRESENT, qr, "QR")):
+                r = await (pg.evaluate(js, arg) if arg is not None else pg.evaluate(js))
+                if r != "ok":
+                    raise SystemExit(f"{titre}, {quoi} : {r}")
             await pg.pdf(path=str(tmp / f"fiche{f['n']}.pdf"), format="A4", print_background=True,
                          prefer_css_page_size=True)
             await pg.close()
@@ -659,6 +692,9 @@ async def pages(v, tmp, jeu, corr=None):
             if debord:
                 await pg.screenshot(path=str(ICI / "debord.png"), full_page=True)
                 raise SystemExit(f"{page} : le contenu dépasse la page (capture : debord.png)")
+            r = await pg.evaluate(JS_IMAGES)
+            if r != "ok":
+                raise SystemExit(f"{page} : {r}")
             await pg.pdf(path=str(sortie), width="210mm", height="297mm", print_background=True,
                          margin={"top": "0", "bottom": "0", "left": "0", "right": "0"})
             await pg.close()

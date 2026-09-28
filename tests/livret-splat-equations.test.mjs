@@ -831,3 +831,23 @@ test("relecture du monde 5 : « Le défi » en schéma en barres — 8 pages, à
   assert.match(render, /_ENL_D, _FIN_D, _DEP_D = mini_schemas\(4, 38, 86, 12\)/);
   assert.match(render, /^MINI_SCH_ENLEVE, MINI_SCH_FIN, MINI_SCH = mini_schemas\(3, 12, 27, 5\)$/m);
 });
+
+/* 28/09/2026 : un rendu a imprimé une fiche sans son QR (l'image n'était pas encore chargée au
+   moment de pg.pdf). Avant CHAQUE pg.pdf, render.py attend que toutes les images soient chargées
+   (JS_IMAGES, qui arrête le rendu sinon) ; avant celui d'une fiche, il vérifie aussi que chaque
+   bandeau porte un QR chargé, à la bonne adresse (JS_QR_PRESENT). */
+test("render.py : attente des images avant chaque PDF, et arrêt si le QR d'une fiche manque", () => {
+  assert.ok(render.includes('JS_IMAGES = """async () => {'), "JS_IMAGES défini");
+  assert.ok(render.includes("i.naturalWidth > 0") && render.includes("i.decode"), "JS_IMAGES vérifie les images décodées");
+  assert.ok(render.includes('JS_QR_PRESENT = """(qr) => {'), "JS_QR_PRESENT défini");
+  assert.ok(render.includes("img.naturalWidth > 0") && render.includes("attendu : 1"), "JS_QR_PRESENT : un QR chargé par bandeau");
+  const appels = render.split("await pg.pdf(").slice(0, -1);
+  assert.ok(appels.length >= 2, "au moins deux pg.pdf (fiches, couverture et dos)");
+  appels.forEach((avant, i) => {
+    const bloc = avant.slice(avant.lastIndexOf("await pg.close()") + 1);
+    assert.ok(bloc.includes("JS_IMAGES"), `pg.pdf n° ${i + 1} : JS_IMAGES juste avant`);
+  });
+  const fiche = appels.find((a) => a.slice(a.lastIndexOf("await pg.close()") + 1).includes("JS_QR_PRESENT"));
+  assert.ok(fiche, "le pg.pdf des fiches est précédé de JS_QR_PRESENT");
+  assert.ok(render.includes("raise SystemExit(f\"{titre}, {quoi} : {r}\")"), "un QR manquant arrête le rendu");
+});
