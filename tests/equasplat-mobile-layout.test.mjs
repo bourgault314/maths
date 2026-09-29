@@ -117,6 +117,8 @@ test("retirer une tache de chaque membre affiche bien moins x", () => {
 
 test("la sélection orange est assez épaisse pour rester visible au doigt", () => {
   assert.match(html, /\.selectedOutline\{\s*fill:none;\s*stroke:#f97316;\s*stroke-width:14;\s*opacity:1;/);
+  // 29/09/2026 : l'anneau fin (.fineRing) est réservé à l'ordinateur et à la tablette.
+  assert.match(html, /function selectionRingIsFine\(\)\{ return !isPhoneLayout\(\) && !isMobileImportLayout\(\); \}/);
 });
 
 test("les réponses passent par le pavé tactile d’ÉquaSplat, commun à tout écran tactile", () => {

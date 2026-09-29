@@ -505,6 +505,16 @@
     pointer-events:none;
   }
 
+  /* Sélection sur ordinateur et tablette (29/09/2026) : l'anneau épais du téléphone (#230,
+     « visible au doigt ») y faisait une bague de 11 px avec son halo, qui touchait les
+     voisins. Il est plus fin et plus près de la pièce ; le téléphone garde le sien. */
+  .selectedOutline.fineRing,
+  .groupSelectedOutline.fineRing{
+    stroke-width:7;
+  }
+  .selectedOutline.fineRing{filter:drop-shadow(0 0 3px rgba(249,115,22,.5))}
+  .groupSelectedOutline.fineRing{filter:drop-shadow(0 0 3px rgba(22,163,74,.45))}
+
   .pendingShareGroup{
     cursor:pointer;
     outline:none;
@@ -733,6 +743,7 @@
   }
 
   .chip:hover{background:#e2e8f0}
+  #shareDialogTitle:focus{outline:none}
 
   /* Partager (29/09/2026) : le bouton choisi reste marqué pendant que l'élève tape la part. */
   .chip.selected{
@@ -2452,6 +2463,16 @@
     background:rgba(241,245,249,.96);
     box-shadow:0 8px 20px rgba(15,23,42,.10);
   }
+  /* Vue « À côté » réservée aux écrans d'au moins 1051 px (29/09/2026, choix de Gwenaël).
+     Entre 761 et 1050 px (iPad en paysage), une vieille règle empilait l'équation au-dessus
+     du plateau : avec une équation reçue, le plateau tombait à 0 px et les boutons
+     disparaissaient ; depuis le menu, « À côté » s'ouvrait par défaut, l'équation cachée
+     par ce sélecteur et les boutons sous l'écran. Il n'y a plus que « Au-dessus » :
+     le sélecteur ne sert plus, il est caché (voir sideViewAvailable dans le script). */
+  @media (max-width:1050px){
+    #viewModeSwitch{display:none !important}
+  }
+
 
   .viewModeOption{
     min-width:0;
@@ -4085,11 +4106,16 @@
       line-height:1.08;
     }
 
+    /* Le plateau ne bouge plus quand on touche une pièce (29/09/2026). Il prend la
+       hauteur qui reste : une consigne qui passait d'une ligne à deux, ou un bouton qui
+       apparaissait sous les outils, le faisaient remonter de 10 px et changer de taille.
+       La consigne garde toujours la place de deux lignes (2 × 1,3 em), la zone des
+       boutons celle d'un bouton (46 px). */
     main.activeMode.viewClassic .stage:not(:fullscreen) .instructionZone,
     body.importMode main.viewClassic .stage:not(:fullscreen) .instructionZone{
       flex:0 0 auto !important;
       height:auto !important;
-      min-height:34px !important;
+      min-height:2.6em !important;
       margin:2px auto 8px !important;
       font-size:17px !important;
       line-height:1.3;
@@ -4126,7 +4152,7 @@
     main.activeMode.viewClassic .stage:not(:fullscreen) .actionZone,
     body.importMode main.viewClassic .stage:not(:fullscreen) .actionZone{
       flex:0 0 auto !important;
-      min-height:44px !important;
+      min-height:46px !important;
       margin-top:4px !important;
     }
 
@@ -4724,7 +4750,7 @@
 
 <dialog id="shareDialog">
   <div class="dialogInner">
-    <h2 class="dialogTitle">Partager équitablement</h2>
+    <h2 class="dialogTitle" id="shareDialogTitle" tabindex="-1">Partager équitablement</h2>
     <div class="dialogText" id="shareDialogText"></div>
     <div class="presetChips open" id="shareChoices"></div>
     <div class="sharePartStep" id="sharePartStep" hidden>
@@ -5078,6 +5104,9 @@
   // téléphone est celle de l'ancienne page import : le mode téléphone de
   // l'usage libre ne s'active alors jamais, les deux ne se mélangent pas.
   function isImportLayout(){ return appLayoutMode === "import"; }
+  // Vue « À côté » seulement à partir de 1051 px de large (voir #viewModeSwitch dans le style).
+  const narrowViewMedia = window.matchMedia("(max-width:1050px)");
+  function sideViewAvailable(){ return !narrowViewMedia.matches; }
   function isPhoneLayout(){ return !isImportLayout() && phoneLayoutMedia.matches; }
 
   // MODE RÉCEPTION — jetons groupés classiques + petites billes unitaires
@@ -5189,7 +5218,7 @@
   function setViewMode(mode, options={}){
     const requested = mode === "redaction" ? "redaction" : "classic";
     if(options.remember !== false && !isPhoneLayout()) desktopViewMode = requested;
-    viewMode = isPhoneLayout() ? "classic" : requested;
+    viewMode = (isPhoneLayout() || !sideViewAvailable()) ? "classic" : requested;
 
     if(appMain){
       appMain.classList.toggle("phoneLayout", isPhoneLayout());
@@ -6794,10 +6823,15 @@
   // MODE RÉCEPTION — au départ, l'équation reçue s'annonce par l'égalité des
   // deux quantités ; la consigne s'efface au premier geste de l'élève.
   const INITIAL_EQUALITY_INSTRUCTION = "<strong>Il y a la même quantité à gauche qu’à droite.</strong>";
+  /* La zone de consigne est une boîte flex (pour centrer). Posés directement dedans, le
+     texte et chaque <strong> devenaient des boîtes séparées et l'espace entre deux
+     disparaissait (« Jetons regroupés :0. »). Toute la consigne va maintenant dans une
+     seule boîte, où les espaces comptent normalement (29/09/2026). */
   function setInstruction(html){
-    instructionZone.innerHTML = initialEqualityInstructionVisible
+    const content = initialEqualityInstructionVisible
       ? INITIAL_EQUALITY_INSTRUCTION
       : (html || "");
+    instructionZone.innerHTML = content ? `<span class="instructionText">${content}</span>` : "";
   }
   function dismissInitialEqualityInstruction(){
     initialEqualityInstructionVisible = false;
@@ -7002,6 +7036,14 @@
   function zeroXPairInstruction(){
     const v = displayedUnknown();
     return `Paire nulle : <strong>${escapeHtml(v)} + (−${escapeHtml(v)}) = 0</strong>, puis le 0 disparaît.`;
+  }
+
+  /* Les consignes des taches opposées écrivent la lettre de l'équation (ou « ? »), comme
+     les taches elles-mêmes : « 𝑐 + (−𝑐) = 0 », plus « x + (−x) » (29/09/2026). */
+  function unknownHtml(){ return escapeHtml(displayedUnknown()); }
+  function zeroXPairSelectedInstruction(){
+    const v = unknownHtml();
+    return `Paire nulle sélectionnée : <strong>${v} + (−${v}) = 0</strong>.`;
   }
 
   // Remplace des pièces d'un membre par un jeton 0 qui s'efface (removeTransientZero).
@@ -7268,6 +7310,11 @@
       });
     }
     openAppDialog(shareDialog);
+    /* À l'ouverture, le navigateur donne la main au premier bouton : après une touche du
+       clavier (Échap…), « 2 parts » s'affichait entouré, comme une réponse suggérée. Le
+       titre prend la main à sa place ; Tab mène toujours aux boutons (29/09/2026). */
+    const shareTitle = document.getElementById("shareDialogTitle");
+    if(shareTitle) shareTitle.focus({preventScroll:true});
   }
 
   function sharePartKeypadOptions(){
@@ -8155,6 +8202,11 @@
     }
   }
 
+  // Anneau de sélection : épais au téléphone (#230), fin sur ordinateur et tablette.
+  function selectionRingIsFine(){ return !isPhoneLayout() && !isMobileImportLayout(); }
+  function selectionRingGap(){ return selectionRingIsFine() ? 6 : 12; }
+  function selectionRingClass(base){ return selectionRingIsFine() ? `${base} fineRing` : base; }
+
   function drawItem(side, item, pos, selectedIds, groupSelectedIds){
     const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
     if(item.type === "token") g.classList.add("tokenDragGroup");
@@ -8181,14 +8233,14 @@
       }
       if(selectedIds.has(item.id)){
         const outline = document.createElementNS("http://www.w3.org/2000/svg", "path");
-        outline.setAttribute("d", blobPath(pos.cx, pos.cy, pos.r+12));
-        outline.setAttribute("class", "selectedOutline");
+        outline.setAttribute("d", blobPath(pos.cx, pos.cy, pos.r+selectionRingGap()));
+        outline.setAttribute("class", selectionRingClass("selectedOutline"));
         g.appendChild(outline);
       }
       if(groupSelectedIds && groupSelectedIds.has(item.id)){
         const outline = document.createElementNS("http://www.w3.org/2000/svg", "path");
-        outline.setAttribute("d", blobPath(pos.cx, pos.cy, pos.r+12));
-        outline.setAttribute("class", "groupSelectedOutline");
+        outline.setAttribute("d", blobPath(pos.cx, pos.cy, pos.r+selectionRingGap()));
+        outline.setAttribute("class", selectionRingClass("groupSelectedOutline"));
         g.appendChild(outline);
       }
     }else{
@@ -8236,16 +8288,16 @@
         const outline = document.createElementNS("http://www.w3.org/2000/svg", "circle");
         outline.setAttribute("cx", pos.cx);
         outline.setAttribute("cy", pos.cy);
-        outline.setAttribute("r", pos.r+12);
-        outline.setAttribute("class", "selectedOutline");
+        outline.setAttribute("r", pos.r+selectionRingGap());
+        outline.setAttribute("class", selectionRingClass("selectedOutline"));
         g.appendChild(outline);
       }
       if(groupSelectedIds && groupSelectedIds.has(item.id)){
         const outline = document.createElementNS("http://www.w3.org/2000/svg", "circle");
         outline.setAttribute("cx", pos.cx);
         outline.setAttribute("cy", pos.cy);
-        outline.setAttribute("r", pos.r+12);
-        outline.setAttribute("class", "groupSelectedOutline");
+        outline.setAttribute("r", pos.r+selectionRingGap());
+        outline.setAttribute("class", selectionRingClass("groupSelectedOutline"));
         g.appendChild(outline);
       }
     }
@@ -8877,14 +8929,14 @@
         if(info.reason === "differentSides") message = "Regroupe seulement des éléments du même membre.";
         else if(info.reason === "mixedTypes") message = "Ne mélange pas jetons numériques et taches.";
         else if(info.reason === "notZeroX") message = "Pour regrouper des taches, sélectionne autant de taches positives que de taches opposées.";
-        else if(info.reason === "oppositeDisabled") message = "Les taches opposées doivent être activées pour regrouper x et −x.";
+        else if(info.reason === "oppositeDisabled") message = `Les taches opposées doivent être activées pour regrouper ${unknownHtml()} et −${unknownHtml()}.`;
         setInstruction(message);
         actionZone.appendChild(clear);
         return;
       }
 
       if(info.kind === "zeroX"){
-        setInstruction("Paire nulle sélectionnée : <strong>x + (−x) = 0</strong>.");
+        setInstruction(zeroXPairSelectedInstruction());
         actionZone.appendChild(btn);
         actionZone.appendChild(clear);
         return;
@@ -8912,12 +8964,12 @@
       const {left, right} = selectedDeletePiecesBySide();
       if(left.length === 0 && right.length === 0){
         setInstruction(oppositeXEnabled()
-          ? "Sélectionne la même quantité dans les deux membres, ou une paire x / −x dans un même membre."
+          ? `Sélectionne la même quantité dans les deux membres, ou une paire ${unknownHtml()} / −${unknownHtml()} dans un même membre.`
           : "Sélectionne la même quantité dans les deux membres.");
         return;
       }
       if(zeroInfo.ok){
-        setInstruction("Paire nulle sélectionnée : <strong>x + (−x) = 0</strong>.");
+        setInstruction(zeroXPairSelectedInstruction());
         const btn = document.createElement("button");
         btn.className = "green";
         btn.textContent = "Annuler la paire";
@@ -8936,7 +8988,7 @@
           const selected = left.length ? left : right;
           if(selected.every(p => p.type === "x")){
             const coef = selected.reduce((sum,p)=>sum + xSign(p), 0);
-            if(coef !== 0) message = "Pour annuler dans un même membre, sélectionne autant de taches x que de taches −x.";
+            if(coef !== 0) message = `Pour annuler dans un même membre, sélectionne autant de taches ${unknownHtml()} que de taches −${unknownHtml()}.`;
           }
         }
         setInstruction(message);
@@ -8963,7 +9015,7 @@
         let reason = "Les deux quantités sélectionnées ne sont pas identiques.";
         if(info.reason === "differentCounts") reason = "Il faut le même nombre de taches de chaque côté.";
         else if(info.reason === "differentXCoef") reason = "Les taches sélectionnées ne représentent pas la même quantité d’inconnues.";
-        else if(info.reason === "zeroXSelection") reason = "Pour annuler une paire nulle, sélectionne les taches x et −x dans un seul même membre.";
+        else if(info.reason === "zeroXSelection") reason = `Pour annuler une paire nulle, sélectionne les taches ${unknownHtml()} et −${unknownHtml()} dans un seul même membre.`;
         else if(info.reason === "differentSums") reason = "Les jetons sélectionnés ne font pas la même somme.";
         else if(info.reason === "mixedTypes") reason = "Ne mélange pas taches et jetons numériques.";
         setInstruction(reason);
@@ -9221,6 +9273,9 @@
   if(btnViewRedaction) btnViewRedaction.addEventListener("click", () => chooseView("redaction"));
   if(phoneLayoutMedia.addEventListener) phoneLayoutMedia.addEventListener("change", syncPhoneLayout);
   else if(phoneLayoutMedia.addListener) phoneLayoutMedia.addListener(syncPhoneLayout);
+  // L'iPad qu'on tourne : en portrait ou sous 1051 px, « Au-dessus » ; de retour en grand, la vue choisie.
+  if(narrowViewMedia.addEventListener) narrowViewMedia.addEventListener("change", syncPhoneLayout);
+  else if(narrowViewMedia.addListener) narrowViewMedia.addListener(syncPhoneLayout);
   // « Recommencer » : en réception, resetCurrentExercise ramène l'équation
   // reçue (restartImportedEquation) ; en usage libre, l'équation construite.
   if(btnStageReset) btnStageReset.addEventListener("click", resetCurrentExercise);
