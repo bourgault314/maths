@@ -432,6 +432,15 @@
     cursor:grabbing;
   }
 
+  /* Glisser au doigt (29/09/2026). Chrome ignore touch-action sur les éléments internes
+     d'un SVG : celui des jetons et des taches ne comptait pas. Seul le plateau du téléphone
+     lancé depuis le menu était protégé (.activeMode … .board, #218) ; avec une équation
+     reçue (?data=) et sur tablette, le navigateur reprenait le geste (pointercancel) et la
+     pièce s'arrêtait en route. Le doigt posé sur le plateau ne fait plus défiler la page. */
+  #splatSvg{
+    touch-action:none;
+  }
+
   .tokenDragGroup.transientZero{
     animation: zeroPulseFade .95s ease-in-out forwards;
   }
