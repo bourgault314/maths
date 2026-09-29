@@ -107,7 +107,9 @@ test("les deux membres utilisent toujours la même taille de tache", () => {
 test("la sélection des objets est nettement renforcée", () => {
   assert.match(html, /\.selectedOutline\{[^}]*stroke-width:14;[^}]*opacity:1;[^}]*drop-shadow/s);
   assert.match(html, /\.groupSelectedOutline\{[^}]*stroke-width:14;[^}]*opacity:1;[^}]*drop-shadow/s);
-  assert.ok((html.match(/pos\.r\+12/g) || []).length >= 4);
+  // 29/09/2026 : 12 d'écart au téléphone, 6 sur ordinateur et tablette (selectionRingGap).
+  assert.match(html, /function selectionRingGap\(\)\{ return selectionRingIsFine\(\) \? 6 : 12; \}/);
+  assert.ok((html.match(/pos\.r\+selectionRingGap\(\)/g) || []).length >= 4);
 });
 
 test("les opérations encadrent les équations dans le bon ordre", () => {
