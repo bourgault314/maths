@@ -417,6 +417,21 @@
     cursor:grabbing;
   }
 
+  /* Taches déplaçables (29/09/2026). Glisser ne sélectionne pas les lettres ni les nombres. */
+  #splatSvg text{
+    -webkit-user-select:none;
+    user-select:none;
+  }
+
+  .splatDragGroup{
+    cursor:grab;
+    touch-action:none;
+  }
+
+  .splatDragGroup.dragging{
+    cursor:grabbing;
+  }
+
   .tokenDragGroup.transientZero{
     animation: zeroPulseFade .95s ease-in-out forwards;
   }
@@ -710,17 +725,40 @@
 
   .chip:hover{background:#e2e8f0}
 
-  .helpMiniBtn{
-    width:48px;
-    height:48px;
-    border-radius:999px;
-    padding:0;
-    display:inline-grid;
-    place-items:center;
-    margin:14px auto 2px;
-    font-size:25px;
-    background:#eef2f7;
-    border:1px solid rgba(15,23,42,.10);
+  /* Partager (29/09/2026) : le bouton choisi reste marqué pendant que l'élève tape la part. */
+  .chip.selected{
+    background:#dbeafe;
+    border-color:#2563eb;
+    color:#1e3a8a;
+    box-shadow:0 0 0 2px rgba(37,99,235,.28);
+  }
+
+  .sharePartStep[hidden]{display:none}
+
+  #shareDialog label{
+    font-size:16px;
+    font-weight:900;
+    color:#64748b;
+    letter-spacing:.04em;
+    text-transform:uppercase;
+    margin-bottom:8px;
+  }
+
+  #sharePartInput{
+    text-align:center;
+    font-size:clamp(34px,4.6vw,54px);
+    font-weight:950;
+    padding:18px 16px;
+    border-radius:18px;
+    min-height:76px;
+  }
+
+  #shareDialog .fusionFeedback{
+    min-height:30px;
+    margin-top:10px;
+    font-size:18px;
+    font-weight:900;
+    color:#9a3412;
   }
 
 
@@ -1282,6 +1320,25 @@
   .equationRow .rhs{
     text-align:left;
     min-width:0;
+  }
+
+  /* UNE LIGNE TROP LONGUE (29/09/2026, choix de Gwenaël) : elle rapetisse d'abord
+     (fitEquationText, mesurée sur une seule ligne) ; si elle ne tient toujours pas au plus
+     petit, elle passe à la ligne, mais seulement AVANT un signe : chaque terme (« + 14 »,
+     « − 𝑐 », « 3 × 4 ») reste d'un seul tenant. Avant, en vue « À côté », elle se coupait
+     n'importe où (« 2𝑐 − 𝑐 + » / « 14 + 22 »), et au téléphone elle sortait du cadre. */
+  .equationRow .lhs,
+  .equationRow .rhs{
+    white-space:normal;
+  }
+
+  .equationRow .terme{
+    white-space:nowrap;
+  }
+
+  .equationList.mesureSurUneLigne .lhs,
+  .equationList.mesureSurUneLigne .rhs{
+    white-space:nowrap !important;
   }
 
   .equationRow.historyStep{color:#64748b;opacity:.86}
@@ -4153,7 +4210,6 @@
 
     main:is(.activeMode,.receptionLayout).viewRedaction .equationRow .lhs,
     main:is(.activeMode,.receptionLayout).viewRedaction .equationRow .rhs{
-      overflow-wrap:anywhere;
       text-wrap:balance;
     }
 
@@ -4650,8 +4706,6 @@
     <div class="dialogText" id="dialogText"></div>
     <label>Écris une somme</label>
     <input id="decomposeInput" type="text" autocomplete="off" />
-    <button class="helpMiniBtn" id="btnShowSuggestions" type="button" title="Afficher des propositions" aria-label="Afficher des propositions">?</button>
-    <div class="presetChips" id="presetChips"></div>
     <div class="btnrow">
       <button class="primary" id="btnApplyDecompose" type="button">Décomposer</button>
       <button class="ghost" id="btnCancelDialog" type="button">Annuler</button>
@@ -4664,7 +4718,13 @@
     <h2 class="dialogTitle">Partager équitablement</h2>
     <div class="dialogText" id="shareDialogText"></div>
     <div class="presetChips open" id="shareChoices"></div>
+    <div class="sharePartStep" id="sharePartStep" hidden>
+      <label for="sharePartInput">Chaque part vaut</label>
+      <input id="sharePartInput" type="number" inputmode="numeric" autocomplete="off" />
+      <div class="fusionFeedback" id="shareFeedback"></div>
+    </div>
     <div class="btnrow" style="justify-content:center">
+      <button class="primary" id="btnApplyShare" type="button" hidden>Partager</button>
       <button class="ghost" id="btnCancelShareDialog" type="button">Annuler</button>
     </div>
   </div>
@@ -4780,11 +4840,13 @@
   const decomposeDialog = document.getElementById("decomposeDialog");
   const dialogText = document.getElementById("dialogText");
   const decomposeInput = document.getElementById("decomposeInput");
-  const presetChips = document.getElementById("presetChips");
-  const btnShowSuggestions = document.getElementById("btnShowSuggestions");
   const shareDialog = document.getElementById("shareDialog");
   const shareDialogText = document.getElementById("shareDialogText");
   const shareChoices = document.getElementById("shareChoices");
+  const sharePartStep = document.getElementById("sharePartStep");
+  const sharePartInput = document.getElementById("sharePartInput");
+  const shareFeedback = document.getElementById("shareFeedback");
+  const btnApplyShare = document.getElementById("btnApplyShare");
   const groupDialog = document.getElementById("groupDialog");
   const groupDialogText = document.getElementById("groupDialogText");
   const groupInput = document.getElementById("groupInput");
@@ -4977,6 +5039,7 @@
     submitLabel:"Décomposer",
     onSubmit:applyDecomposeInput
   }));
+  bindTouchKeypadInput(sharePartInput, shareDialog, () => sharePartKeypadOptions());
   bindTouchKeypadInput(groupInput, groupDialog, () => ({
     allowMinus:isRelativeUniverse(),
     submitLabel:"Regrouper",
@@ -6431,6 +6494,17 @@
       .replace(/"/g, "&quot;");
   }
 
+  // Un membre écrit terme par terme (« 2𝑐 », « − 𝑐 », « + 14 ») : la ligne ne peut se couper
+  // qu'avant un signe. Le texte lu reste exactement le même (espaces entre les termes).
+  function memberHtml(text){
+    const terms = [];
+    String(text == null ? "" : text).split(" ").filter(Boolean).forEach((word, i) => {
+      if(i === 0 || word === "+" || word === "−" || word === "-") terms.push(word);
+      else terms[terms.length - 1] += ` ${word}`;
+    });
+    return terms.map(term => `<span class="terme">${escapeHtml(term)}</span>`).join(" ");
+  }
+
   function renderOperationRow(operation){
     if(!operation || operation.type !== "bothSides" || !operation.label) return "";
     const label = escapeHtml(operation.label);
@@ -6451,14 +6525,61 @@
       const isCurrent = i === steps.length - 1;
       const solved = isSolvedEquationString(eq);
       const cls = `${isCurrent ? "currentStep" : "historyStep"}${solved ? " solvedStep" : ""}`;
-      rows.push(`<div class="equationRow ${cls}"><span class="lhs">${escapeHtml(lhs)}</span><span class="eq">=</span><span class="rhs">${escapeHtml(rhs)}</span></div>`);
+      rows.push(`<div class="equationRow ${cls}"><span class="lhs">${memberHtml(lhs)}</span><span class="eq">=</span><span class="rhs">${memberHtml(rhs)}</span></div>`);
     });
     equationHistory.innerHTML = `<div class="equationList" aria-label="Étapes de résolution">${rows.join("")}</div>`;
     drawOperationArrowsOverlay();
     // Les flèches réservent d'abord leurs marges ; on règle l'écriture ensuite,
     // et on redessine si elle a bougé pour que les flèches suivent.
+    // La longueur d'une ligne se mesure sur une seule ligne (finishEquationFit).
+    const equationList = equationHistory.querySelector(".equationList");
+    if(equationList) equationList.classList.add("mesureSurUneLigne");
     if(fitEquationText(equationHistory.querySelector(".equationList"))) drawOperationArrowsOverlay();
+    if(finishEquationFit(equationList)) drawOperationArrowsOverlay();
     equationHistory.scrollTop = equationHistory.scrollHeight;
+  }
+
+  /* UNE LIGNE TROP LONGUE (29/09/2026, choix de Gwenaël). fitEquationText (partagé avec
+     ÉquaBarre) rapetisse l'écriture jusqu'aux deux tiers, la ligne mesurée sur une seule ligne.
+     Ici on finit : il compte en pixels entiers, et un reste d'un demi-pixel faisait passer la
+     ligne à la ligne pour rien ; et si même au plus petit une ligne ne tient pas, rapetisser ne
+     sert à rien — on garde la taille normale et elle passe à la ligne AVANT un signe
+     (memberHtml, .equationRow .terme), plutôt que petite ET coupée. Avant, en vue « À côté »,
+     elle se coupait n'importe où (« 2𝑐 − 𝑐 + » / « 14 + 22 »), et au téléphone elle sortait
+     du cadre ou chevauchait le signe =. Renvoie vrai si la mise en page a pu changer. */
+  function equationTextShortfall(list){
+    let ratio = 1;
+    for(const el of list.querySelectorAll(".lhs, .rhs")){
+      const large = el.getBoundingClientRect().width;
+      const range = document.createRange();
+      range.selectNodeContents(el);
+      const texte = range.getBoundingClientRect().width;
+      if(large > 0 && texte > large) ratio = Math.min(ratio, large / texte);
+    }
+    return ratio;
+  }
+
+  function finishEquationFit(list){
+    if(!list) return false;
+    try{
+      const avant = list.style.getPropertyValue("font-size");
+      list.style.removeProperty("font-size");
+      const base = parseFloat(getComputedStyle(list).fontSize) || 0;
+      if(avant) list.style.setProperty("font-size", avant, "important");
+      if(!base) return false;
+      const plancher = base * 0.66;
+      let taille = parseFloat(getComputedStyle(list).fontSize) || base;
+      let ratio = equationTextShortfall(list);
+      if(ratio < 1 && taille > plancher + 0.01){
+        taille = Math.max(plancher, taille * ratio * 0.98);
+        list.style.setProperty("font-size", `${taille}px`, "important");
+        ratio = equationTextShortfall(list);
+      }
+      if(ratio < 1) list.style.removeProperty("font-size");
+      return ratio < 1 || list.style.getPropertyValue("font-size") !== avant;
+    }finally{
+      list.classList.remove("mesureSurUneLigne");
+    }
   }
 
   /* L'ÉCRITURE DE L'ÉQUATION SE RÈGLE POUR TENIR (2026-08-23).
@@ -6848,34 +6969,46 @@
   function applyZeroXGroup(info){
     if(!info || !info.ok || info.kind !== "zeroX") return;
     pushHistory();
-    const arr = state[info.side];
-    const ids = new Set(info.selected.map(x => x.ref.id));
-    const indexes = info.selected.map(x => arr.findIndex(p => p.id === x.ref.id)).filter(i => i >= 0);
-    const firstIndex = Math.min(...indexes);
-
     // Même logique visuelle que 1 + (−1) : on remplace la paire par un
-    // jeton 0 temporaire, puis il disparaît progressivement.
-    const zero = makeToken(0);
-    zero.transientZero = true;
-    const positions = info.selected
-      .map(x => x.piece)
-      .filter(p => Number.isFinite(p.x) && Number.isFinite(p.y));
-    if(positions.length){
-      zero.x = positions.reduce((sum,p)=>sum + p.x, 0) / positions.length;
-      zero.y = positions.reduce((sum,p)=>sum + p.y, 0) / positions.length;
-    }
-
-    const filtered = arr.filter(p => !ids.has(p.id));
-    filtered.splice(firstIndex, 0, zero);
-    state[info.side] = filtered;
+    // jeton 0 temporaire, puis il disparaît progressivement. Il apparaît là où
+    // était la paire (29/09/2026 : les taches n'avaient pas de place à elles,
+    // le 0 tombait n'importe où sur le plateau).
+    const ids = new Set(info.selected.map(x => x.ref.id));
+    const positions = currentSplatPositions(getTrayForSide(info.side), state[info.side]);
+    const places = info.selected.map(x => positions.get(x.ref.id)).filter(Boolean);
+    const at = places.length
+      ? {cx:places.reduce((sum,p)=>sum + p.cx, 0) / places.length, cy:places.reduce((sum,p)=>sum + p.cy, 0) / places.length}
+      : null;
+    const zero = replaceWithTransientZero(info.side, ids, at);
 
     groupSelection = [];
     deleteSelection = [];
     selectedPieceRef = null;
     recordSimplifyStep();
     render();
-    setInstruction("Paire nulle : <strong>x + (−x) = 0</strong>, puis le 0 disparaît.");
+    setInstruction(zeroXPairInstruction());
     setTimeout(() => removeTransientZero(info.side, zero.id), 950);
+  }
+
+  function zeroXPairInstruction(){
+    const v = displayedUnknown();
+    return `Paire nulle : <strong>${escapeHtml(v)} + (−${escapeHtml(v)}) = 0</strong>, puis le 0 disparaît.`;
+  }
+
+  // Remplace des pièces d'un membre par un jeton 0 qui s'efface (removeTransientZero).
+  function replaceWithTransientZero(side, ids, at){
+    const arr = state[side];
+    const indexes = arr.map((p, i) => ids.has(p.id) ? i : -1).filter(i => i >= 0);
+    const zero = makeToken(0);
+    zero.transientZero = true;
+    if(at){
+      zero.x = at.cx;
+      zero.y = at.cy;
+    }
+    const filtered = arr.filter(p => !ids.has(p.id));
+    filtered.splice(indexes.length ? Math.min(Math.min(...indexes), filtered.length) : filtered.length, 0, zero);
+    state[side] = filtered;
+    return zero;
   }
 
   function applyGroup(){
@@ -6892,8 +7025,10 @@
 
     if(info.kind !== "tokens") return;
 
-    const answer = Number(String(groupInput.value || "").replace(/−/g, "-"));
-    if(!Number.isFinite(answer) || Math.round(answer) !== answer){
+    const rawAnswer = String(groupInput.value || "").trim().replace(/−/g, "-");
+    const answer = Number(rawAnswer);
+    // Une case vide valait 0 (Number("") = 0) : elle passait pour juste devant 13 et −13.
+    if(!rawAnswer || !Number.isFinite(answer) || Math.round(answer) !== answer){
       groupFeedback.textContent = "Écris un nombre entier.";
       groupInput.select();
       return;
@@ -6919,6 +7054,10 @@
       merged.y = coords.reduce((sum,p)=>sum + p.y, 0) / coords.length;
     }
 
+    // Somme nulle (13 et −13) : le 0 apparaît puis disparaît, comme quand on glisse un jeton
+    // sur l'autre (applyFusion). Avant (relevé le 28/09/2026), il restait sur le plateau.
+    if(info.sum === 0) merged.transientZero = true;
+
     state[info.side] = arr.filter(p => !ids.has(p.id));
     state[info.side].splice(firstIndex, 0, merged);
     groupSelection = [];
@@ -6927,7 +7066,12 @@
     recordSimplifyStep();
     groupDialog.close();
     render();
-    setInstruction(`Jetons regroupés : <strong>${formatSignedNumber(info.sum)}</strong>.`);
+    if(info.sum === 0){
+      setInstruction("Paire nulle : <strong>0</strong> apparaît, puis disparaît.");
+      setTimeout(() => removeTransientZero(info.side, merged.id), 950);
+    }else{
+      setInstruction(`Jetons regroupés : <strong>${formatSignedNumber(info.sum)}</strong>.`);
+    }
   }
 
   function getShareOpportunity(){
@@ -7050,8 +7194,6 @@
     selectedPieceRef = {side,id};
     dialogText.innerHTML = `Décomposer le jeton <strong>${formatSignedNumber(piece.value)}</strong> en une somme.`;
     decomposeInput.value = "";
-    presetChips.classList.remove("open");
-    presetChips.innerHTML = "";
     openAppDialog(decomposeDialog, decomposeInput, {
       expression:true,
       allowMinus:isRelativeUniverse(),
@@ -7060,64 +7202,11 @@
     });
   }
 
-  // AIDE DE LA DÉCOMPOSITION (revue le 23/08/2026 avec Gwenaël).
-  // Deux règles :
-  // 1. Décomposer, c'est écrire une SOMME : on ne propose que des décompositions
-  //    en DEUX termes. Partager en parts égales (« 5 + 5 + 5 + 5 + 5 + 5 ») est le
-  //    travail de « Partager équitablement », qui écrit la division ; le proposer
-  //    ici court-circuitait cet outil.
-  // 2. La proposition utile — celle qui fait apparaître la quantité d'en face pour
-  //    pouvoir l'enlever des deux côtés — n'est plus mise EN TÊTE. Tout est rangé
-  //    par premier terme croissant : la place d'une proposition ne dit plus rien,
-  //    et l'élève doit lire les nombres au lieu de cliquer la première case.
-  function getSmartDecompositionSuggestions(side, piece){
-    const value = Number(piece.value);
-    if(!Number.isInteger(value) || value < 2) return [];
-    const otherSide = side === "left" ? "right" : "left";
-
-    const vus = new Set();      // clé = plus petit des deux termes, pour ne pas
-    const premiers = [];        // proposer 14 + 16 ET 16 + 14
-    const ajouter = (v) => {
-      if(!Number.isInteger(v) || v <= 0 || v >= value) return;
-      const cle = Math.min(v, value - v);
-      if(vus.has(cle)) return;
-      vus.add(cle);
-      premiers.push(v);
-    };
-
-    // Les quantités présentes dans l'autre membre : les faire apparaître permet
-    // de les enlever ensuite de chaque côté. Exemple : 14 en face de 30 → 14 + 16.
-    const otherTokens = activePieces(otherSide).filter(p => p.type === "token");
-    for(const t of otherTokens) ajouter(Number(t.value));
-    ajouter(otherTokens.reduce((sum,p)=>sum + Number(p.value || 0), 0));
-
-    // De quoi garnir la liste, pour que la proposition utile ne s'y détache pas :
-    // la moitié, puis quelques appuis simples.
-    if(value % 2 === 0) ajouter(value / 2);
-    for(const v of [1, 2, 5, 10, 20]){
-      if(premiers.length >= 7) break;
-      ajouter(v);
-    }
-
-    return premiers.sort((a,b) => a - b).map(v => [v, value - v]);
-  }
-
-  function showDecomposeSuggestions(){
-    if(!selectedPieceRef) return;
-    const piece = getPieceBySideAndId(selectedPieceRef);
-    if(!piece) return;
-    const suggestions = getSmartDecompositionSuggestions(selectedPieceRef.side, piece);
-    presetChips.innerHTML = suggestions.map(s => `<button class="chip" type="button" data-values="${s.join(",")}">${s.join(" + ")}</button>`).join("");
-    presetChips.querySelectorAll(".chip").forEach(btn => {
-      btn.addEventListener("click", () => {
-        const values = btn.dataset.values.split(",").map(Number);
-        applyTokenSplit(selectedPieceRef.side, selectedPieceRef.id, values);
-        decomposeDialog.close();
-      });
-    });
-    presetChips.classList.add("open");
-  }
-
+  /* PLUS DE PROPOSITIONS DANS DÉCOMPOSER (29/09/2026, choix de Gwenaël). Le bouton « ? »
+     listait des sommes de deux termes, dont celle qui fait apparaître la quantité d'en face
+     (12 + 16 pour 28 face à 𝑥 + 12) : l'élève n'avait plus qu'à la reconnaître, alors que tout
+     le travail de Décomposer est de trouver quoi faire apparaître. Regrouper n'en a jamais eu.
+     Restent le contrôle de la somme et l'exemple d'écriture (applyDecomposeInput). */
   function applyDecomposeInput(){
     if(!selectedPieceRef) return;
     const piece = getPieceBySideAndId(selectedPieceRef);
@@ -7140,33 +7229,75 @@
     decomposeDialog.close();
   }
 
+  /* PARTAGER (29/09/2026, choix de Gwenaël). Les boutons disaient « 3 parts de 8 » : face à
+     3 taches, la solution était écrite sur le bouton avant tout calcul. Ils disent maintenant
+     « 3 parts » (c'est l'élève qui choisit le nombre de parts, parmi les partages entiers), puis
+     il tape ce que vaut une part, comme il tape la somme dans Regrouper et Fusionner. */
+  let pendingShare = null;
+
   function openShareDialog(side, id){
     const piece = state[side].find(p => p.id === id);
     if(!piece || piece.type !== "token" || piece.removed) return;
     selectedPieceRef = {side,id};
     const value = Number(piece.value);
-    shareDialogText.innerHTML = `Partager le jeton <strong>${value}</strong> en parts égales.`;
-    const choices = [];
+    pendingShare = {side, id, value, count:null};
+    shareDialogText.innerHTML = `Partager le jeton <strong>${formatSignedNumber(value)}</strong> en parts égales.`;
+    sharePartStep.hidden = true;
+    btnApplyShare.hidden = true;
+    sharePartInput.value = "";
+    shareFeedback.textContent = "";
+    const counts = [];
     for(let n=2;n<=8;n++){
-      if(value % n === 0) choices.push({n, part:value/n});
+      if(value % n === 0) counts.push(n);
     }
-    if(!choices.length){
+    if(!counts.length){
       shareChoices.innerHTML = `<div class="dialogText">Aucun partage entier simple proposé.</div>`;
     }else{
-      shareChoices.innerHTML = choices.map(c => `<button class="chip" type="button" data-n="${c.n}" data-part="${c.part}">${c.n} parts de ${c.part}</button>`).join("");
+      shareChoices.innerHTML = counts.map(n => `<button class="chip" type="button" data-n="${n}">${n} parts</button>`).join("");
       shareChoices.querySelectorAll(".chip").forEach(btn => {
-        btn.addEventListener("click", () => {
-          const n = Number(btn.dataset.n);
-          const part = Number(btn.dataset.part);
-          // Partager équitablement est une action sur le plateau :
-          // on fait apparaître le produit (ex. 2 × 12), mais on ne note pas encore :2.
-          // La division des deux membres est affichée au moment de "Conclure".
-          applySharedTokenSplit(side, id, n, part);
-          shareDialog.close();
-        });
+        btn.addEventListener("click", () => chooseShareCount(Number(btn.dataset.n)));
       });
     }
     openAppDialog(shareDialog);
+  }
+
+  function sharePartKeypadOptions(){
+    return {allowMinus:isRelativeUniverse(), submitLabel:"Partager", onSubmit:applyShareInput};
+  }
+
+  function chooseShareCount(count){
+    if(!pendingShare) return;
+    pendingShare.count = count;
+    shareChoices.querySelectorAll(".chip").forEach(btn => btn.classList.toggle("selected", Number(btn.dataset.n) === count));
+    shareDialogText.innerHTML = `Partager le jeton <strong>${formatSignedNumber(pendingShare.value)}</strong> en <strong>${count} parts</strong> égales.`;
+    sharePartStep.hidden = false;
+    btnApplyShare.hidden = false;
+    sharePartInput.value = "";
+    shareFeedback.textContent = "";
+    if(!activateTouchKeypad(sharePartInput, sharePartKeypadOptions())){
+      setTimeout(() => sharePartInput.focus({preventScroll:true}), 40);
+    }
+  }
+
+  function applyShareInput(){
+    if(!pendingShare || !pendingShare.count) return;
+    const raw = String(sharePartInput.value || "").trim().replace(/−/g, "-");
+    const answer = Number(raw);
+    if(!raw || !Number.isFinite(answer)){
+      shareFeedback.textContent = "Écris un nombre.";
+      return;
+    }
+    if(answer !== pendingShare.value / pendingShare.count){
+      shareFeedback.textContent = "Ce n’est pas encore la bonne part.";
+      if(typeof sharePartInput.select === "function") sharePartInput.select();
+      return;
+    }
+    const {side, id, count} = pendingShare;
+    pendingShare = null;
+    // Partager est une action sur le plateau : le « ÷ n » ne s'écrit que si le nombre de parts
+    // est celui des taches (applySharedTokenSplit), sinon rien ne s'écrit.
+    applySharedTokenSplit(side, id, count, answer);
+    shareDialog.close();
   }
 
   function blobPath(cx, cy, r){
@@ -7299,7 +7430,7 @@
     // Si le jeton est relâché sur une tache, on le repousse doucement
     // vers le bord libre le plus proche, plutôt que de le bloquer dans la zone basse.
     let p = {cx, cy};
-    const splats = Array.from(splatPositionsForItems(tray, items).values());
+    const splats = Array.from(currentSplatPositions(tray, items).values());
 
     for(let pass=0; pass<5; pass++){
       let changed = false;
@@ -7355,7 +7486,7 @@
 
   function randomTokenPositionInTray(tray, sideName, visible, placed, token){
     const area = tokenPlacementAreaForTray(tray);
-    const splats = Array.from(splatPositionsForItems(tray, visible).values());
+    const splats = Array.from(currentSplatPositions(tray, visible).values());
     const r = tokenRadius(token);
     // Réception : billes et jetons mêlés, la distance suit les rayons réels.
     const minTokenDist = isImportLayout() ? undefined : r * 2.12;
@@ -7451,6 +7582,169 @@
     }
   }
 
+  /* TACHES DÉPLAÇABLES (29/09/2026, choix de Gwenaël). Tant que l'élève n'a déplacé aucune
+     tache d'un membre, la grille range les taches comme avant (et les réarrange quand leur
+     nombre change). Dès qu'il en a déplacé une, toutes les taches de ce membre gardent leur
+     place (x, y), comme les jetons : la page ne range plus derrière lui, sinon « Ajouter 𝑥 »
+     déferait son rangement. Une tache qui arrive ensuite se pose à la place libre la plus proche
+     de sa case de grille. Rien ne se pose sur rien : une tache lâchée sur un jeton ou sur une
+     tache de même signe glisse à la place libre la plus proche, et rien d'autre ne bouge. */
+  function splatHasOwnPlace(piece){
+    return !!piece && piece.type === "x" && Number.isFinite(piece.x) && Number.isFinite(piece.y);
+  }
+
+  function clampSplatCenter(tray, cx, cy, r){
+    const area = tokenAreaForTray(tray);
+    return {
+      cx: clamp(cx, area.x + r, Math.max(area.x + r, area.x + area.w - r)),
+      cy: clamp(cy, area.y + r, Math.max(area.y + r, area.y + area.h - r))
+    };
+  }
+
+  // Deux taches se chevauchent sous l'écart de la grille (SPLAT_ESPACE rayons de centre à
+  // centre) ; une tache et un jeton, sous ce que les jetons demandent (avoidSplatsOnDrop : + 16).
+  // Une tache qu'on pose cherche d'abord une place un peu plus large (« aise »), pour ne pas
+  // sembler collée à ses voisins, et ne se contente de la place juste qu'à défaut.
+  const SPLAT_AISE = 2.5;
+  function splatSpotIsFree(cx, cy, r, splats, tokens, aise=false){
+    const ecart = aise ? SPLAT_AISE : SPLAT_ESPACE;
+    for(const s of splats){
+      if(Math.hypot(cx - s.cx, cy - s.cy) < (r + s.r) * ecart / 2) return false;
+    }
+    for(const t of tokens){
+      if(Math.hypot(cx - t.cx, cy - t.cy) < r * (aise ? 1.08 : 1) + t.r + (aise ? 24 : 18)) return false;
+    }
+    return true;
+  }
+
+  function freeSplatSpot(tray, cx, cy, r, splats, tokens){
+    const start = clampSplatCenter(tray, cx, cy, r);
+    const area = tokenAreaForTray(tray);
+    const step = Math.max(6, r * 0.2);
+    for(const aise of [true, false]){
+      if(splatSpotIsFree(start.cx, start.cy, r, splats, tokens, aise)) return start;
+      let best = null;
+      let bestDist = Infinity;
+      for(let y = area.y + r; y <= area.y + area.h - r + 0.01; y += step){
+        for(let x = area.x + r; x <= area.x + area.w - r + 0.01; x += step){
+          const d = Math.hypot(x - start.cx, y - start.cy);
+          if(d >= bestDist || !splatSpotIsFree(x, y, r, splats, tokens, aise)) continue;
+          best = {cx:x, cy:y};
+          bestDist = d;
+        }
+      }
+      if(best) return best;
+    }
+    return null;
+  }
+
+  function tokenObstaclesFor(pieces){
+    return pieces
+      .filter(p => p.type === "token" && (!p.removed || shouldKeepRemovedPieces()) && Number.isFinite(p.x) && Number.isFinite(p.y))
+      .map(p => ({cx:p.x, cy:p.y, r:tokenRadius(p)}));
+  }
+
+  // Les taches là où elles sont : la grille tant qu'aucune tache du membre n'a de place à elle ;
+  // sinon leur place, bornée au plateau, sans jamais en poser deux l'une sur l'autre (plateau
+  // redimensionné, taches regrossies). Une tache sans place dans un membre rangé à la main en
+  // reçoit une ici, à l'écart des taches et des jetons.
+  function placeSplats(tray, pieces, grid){
+    const xs = pieces.filter(p => p.type === "x");
+    if(!xs.some(splatHasOwnPlace)) return grid;
+    const out = new Map();
+    const splats = [];
+    const tokens = tokenObstaclesFor(pieces);
+    const drawn = xs.filter(p => !p.removed || shouldKeepRemovedPieces());
+    for(const alreadyPlaced of [true, false]){
+      for(const p of drawn){
+        if(splatHasOwnPlace(p) !== alreadyPlaced || out.has(p.id)) continue;
+        const g = grid.get(p.id);
+        if(!g) continue;
+        const avoidTokens = alreadyPlaced ? [] : tokens;
+        let spot = clampSplatCenter(tray, alreadyPlaced ? p.x : g.cx, alreadyPlaced ? p.y : g.cy, g.r);
+        if(!splatSpotIsFree(spot.cx, spot.cy, g.r, splats, avoidTokens)){
+          spot = freeSplatSpot(tray, spot.cx, spot.cy, g.r, splats, avoidTokens) || spot;
+        }
+        p.x = spot.cx;
+        p.y = spot.cy;
+        const pos = {cx:spot.cx, cy:spot.cy, r:g.r, rRef:g.rRef};
+        out.set(p.id, pos);
+        splats.push(pos);
+      }
+    }
+    return out;
+  }
+
+  function currentSplatPositions(tray, pieces){
+    return placeSplats(tray, pieces, splatPositionsForItems(tray, pieces));
+  }
+
+  // Au premier déplacement d'une tache, toutes celles du membre prennent la place où on les voit.
+  function pinSplatsOfSide(side){
+    const positions = currentSplatPositions(getTrayForSide(side), state[side]);
+    for(const p of state[side]){
+      if(p.type !== "x" || splatHasOwnPlace(p)) continue;
+      const pos = positions.get(p.id);
+      if(pos){
+        p.x = pos.cx;
+        p.y = pos.cy;
+      }
+    }
+  }
+
+  function findSplatFusionCandidate(side, draggedId, cx, cy){
+    if(!state || !state[side] || !oppositeXEnabled()) return null;
+    const dragged = state[side].find(p => p.id === draggedId);
+    if(!dragged || dragged.removed || dragged.type !== "x") return null;
+    const positions = currentSplatPositions(getTrayForSide(side), state[side]);
+    let best = null;
+    let bestDist = Infinity;
+    for(const other of activePieces(side)){
+      if(other.id === draggedId || other.type !== "x" || xSign(other) === xSign(dragged)) continue;
+      const pos = positions.get(other.id);
+      if(!pos) continue;
+      // Il faut la poser franchement dessus : moins d'un rayon entre les deux centres.
+      const dist = Math.hypot(cx - pos.cx, cy - pos.cy);
+      if(dist < pos.r * 1.05 && dist < bestDist){
+        best = other;
+        bestDist = dist;
+      }
+    }
+    return best;
+  }
+
+  /* Après un glisser, le « clic » qui suit le lâcher ne doit pas sélectionner la pièce. Mais le
+     dessin est refait au lâcher : ce clic n'arrive souvent jamais, et la pièce restait marquée,
+     si bien que le PREMIER vrai toucher sur elle était ignoré (29/09/2026). La marque ne vit
+     donc que le temps de ce clic. */
+  function suppressClickAfterDrag(id){
+    suppressNextClickFor = id;
+    setTimeout(() => { if(suppressNextClickFor === id) suppressNextClickFor = null; }, 0);
+  }
+
+  function endSplatDrag(ds, piece){
+    const tray = getTrayForSide(ds.side);
+    const target = findSplatFusionCandidate(ds.side, ds.id, ds.cx, ds.cy);
+    pinSplatsOfSide(ds.side);
+    suppressClickAfterDrag(ds.id);
+    if(target){
+      // Posée sur la tache opposée : elle reste à sa place le temps de la petite fenêtre
+      // (si l'élève annule, rien n'a bougé).
+      render();
+      setTimeout(() => openFusionDialog(ds.side, ds.id, target.id), 40);
+      return;
+    }
+    const others = Array.from(currentSplatPositions(tray, state[ds.side]).entries())
+      .filter(([id]) => id !== ds.id)
+      .map(([, pos]) => pos);
+    const spot = freeSplatSpot(tray, ds.cx, ds.cy, ds.r, others, tokenObstaclesFor(state[ds.side]));
+    if(spot){
+      piece.x = spot.cx;
+      piece.y = spot.cy;
+    }
+    render();
+  }
+
   function layoutItems(tray, items, splatLayoutItems=items){
     const visible = items;
     const tokens = visible.filter(p => p.type === "token");
@@ -7458,7 +7752,7 @@
 
     // Une tache supprimée n'est plus dessinée, mais sa case reste réservée :
     // les taches encore visibles ne changent pas de place après la suppression.
-    const splatPositions = splatPositionsForItems(tray, splatLayoutItems);
+    const splatPositions = placeSplats(tray, splatLayoutItems, splatPositionsForItems(tray, splatLayoutItems));
     for(const [id, pos] of splatPositions.entries()) out.set(id, pos);
 
     const sideName = tray.x < 800 ? "left" : "right";
@@ -7654,6 +7948,26 @@
     const source = state && state[side] ? state[side].find(p => p.id === sourceId) : null;
     const target = state && state[side] ? state[side].find(p => p.id === targetId) : null;
     if(!source || !target || source.removed || target.removed) return;
+    const title = fusionDialog.querySelector(".dialogTitle");
+
+    if(source.type === "x" && target.type === "x"){
+      /* 𝑥 POSÉ SUR −𝑥 (29/09/2026, choix de Gwenaël) : même petite fenêtre que pour deux
+         jetons ; l'élève écrit 0, et la paire disparaît comme avec Regrouper. */
+      if(!oppositeXEnabled() || xSign(source) === xSign(target)) return;
+      const positive = xSign(source) > 0 ? source : target;
+      const negative = positive === source ? target : source;
+      pendingFusion = {side, sourceId, targetId, kind:"x", expected:0};
+      if(title) title.textContent = "Fusionner deux taches";
+      fusionDialogText.innerHTML = `${escapeHtml(xPieceLabel(positive))} + (${escapeHtml(xPieceLabel(negative))}) = ?`;
+      fusionInput.value = "";
+      fusionFeedback.textContent = "";
+      openAppDialog(fusionDialog, fusionInput, {
+        allowMinus:isRelativeUniverse(),
+        submitLabel:"Fusionner",
+        onSubmit:applyFusion
+      });
+      return;
+    }
     if(source.type !== "token" || target.type !== "token") return;
 
     const a = Number(target.value);
@@ -7661,6 +7975,7 @@
     if(!isRelativeUniverse() && (a < 0 || b < 0)) return;
     const expected = a + b;
     pendingFusion = {side, sourceId, targetId, a, b, expected};
+    if(title) title.textContent = "Fusionner deux jetons";
     fusionDialogText.innerHTML = `${formatFusionTerm(a)} + ${formatFusionTerm(b)} = ?`;
     fusionInput.value = "";
     fusionFeedback.textContent = "";
@@ -7683,14 +7998,20 @@
 
   function applyFusion(){
     if(!pendingFusion) return;
-    const answer = Number(fusionInput.value);
-    if(!Number.isFinite(answer)){
+    const rawAnswer = String(fusionInput.value || "").trim().replace(/−/g, "-");
+    const answer = Number(rawAnswer);
+    // Une case vide valait 0 (Number("") = 0) : elle passait pour juste devant une paire nulle.
+    if(!rawAnswer || !Number.isFinite(answer)){
       fusionFeedback.textContent = "Écris un nombre.";
       return;
     }
     if(answer !== pendingFusion.expected){
       fusionFeedback.textContent = "Ce n’est pas encore le bon résultat.";
       fusionInput.select();
+      return;
+    }
+    if(pendingFusion.kind === "x"){
+      applySplatFusion();
       return;
     }
 
@@ -7728,13 +8049,36 @@
     }
   }
 
+  function applySplatFusion(){
+    const {side, sourceId, targetId} = pendingFusion;
+    const arr = state && state[side] ? state[side] : null;
+    const source = arr ? arr.find(p => p.id === sourceId) : null;
+    const target = arr ? arr.find(p => p.id === targetId) : null;
+    pendingFusion = null;
+    fusionDialog.close();
+    if(!source || !target || source.removed || target.removed) return;
+    pushHistory();
+    // Le 0 apparaît sur la tache visée, là où l'élève a posé l'autre.
+    const at = currentSplatPositions(getTrayForSide(side), arr).get(targetId) || null;
+    const zero = replaceWithTransientZero(side, new Set([sourceId, targetId]), at);
+    groupSelection = [];
+    deleteSelection = [];
+    selectedPieceRef = null;
+    recordSimplifyStep();
+    render();
+    setInstruction(zeroXPairInstruction());
+    setTimeout(() => removeTransientZero(side, zero.id), 950);
+  }
+
   function beginTokenDrag(e, side, item, pos, group){
-    if(item.removed || item.type !== "token") return;
+    if(item.removed || (item.type !== "token" && item.type !== "x")) return;
     if(e.button !== undefined && e.button !== 0) return;
     const p = svgPointFromEvent(e);
     dragState = {
       side,
       id:item.id,
+      type:item.type,
+      r:pos.r,
       group,
       startSvg:p,
       startCx:pos.cx,
@@ -7751,10 +8095,22 @@
     const p = svgPointFromEvent(e);
     const tray = getTrayForSide(dragState.side);
     const draggedPiece = state && state[dragState.side] ? state[dragState.side].find(piece => piece.id === dragState.id) : null;
-    const next = clampTokenPosition(tray, dragState.startCx + (p.x - dragState.startSvg.x), dragState.startCy + (p.y - dragState.startSvg.y), tokenRadius(draggedPiece), false);
+    const wantedX = dragState.startCx + (p.x - dragState.startSvg.x);
+    const wantedY = dragState.startCy + (p.y - dragState.startSvg.y);
+    const next = dragState.type === "x"
+      ? clampSplatCenter(tray, wantedX, wantedY, dragState.r)
+      : clampTokenPosition(tray, wantedX, wantedY, tokenRadius(draggedPiece), false);
     const dx = next.cx - dragState.startCx;
     const dy = next.cy - dragState.startCy;
-    if(Math.hypot(dx, dy) > 3) dragState.moved = true;
+    if(Math.hypot(dx, dy) > 3 && !dragState.moved){
+      dragState.moved = true;
+      // Ce qu'on glisse passe au-dessus du reste (29/09/2026 : une tache glissait sous les jetons).
+      const g = dragState.group;
+      if(g.parentNode && g !== g.parentNode.lastChild){
+        g.parentNode.appendChild(g);
+        try{ g.setPointerCapture(e.pointerId); }catch(_e){}
+      }
+    }
     dragState.cx = next.cx;
     dragState.cy = next.cy;
     dragState.group.classList.toggle("dragging", dragState.moved);
@@ -7771,6 +8127,10 @@
     ds.group.removeAttribute("transform");
     if(ds.moved){
       const piece = state && state[ds.side] ? state[ds.side].find(p => p.id === ds.id) : null;
+      if(piece && piece.type === "x"){
+        endSplatDrag(ds, piece);
+        return;
+      }
       let fusionTarget = null;
       if(piece){
         const safe = clampTokenPosition(getTrayForSide(ds.side), ds.cx, ds.cy, tokenRadius(piece), true, ds.side);
@@ -7778,7 +8138,7 @@
         piece.y = safe.cy;
         fusionTarget = findFusionCandidate(ds.side, ds.id, safe.cx, safe.cy);
       }
-      suppressNextClickFor = ds.id;
+      suppressClickAfterDrag(ds.id);
       render();
       if(fusionTarget){
         setTimeout(()=>openFusionDialog(ds.side, ds.id, fusionTarget.id), 40);
@@ -7789,6 +8149,7 @@
   function drawItem(side, item, pos, selectedIds, groupSelectedIds){
     const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
     if(item.type === "token") g.classList.add("tokenDragGroup");
+    if(item.type === "x" && !item.removed) g.classList.add("splatDragGroup");
     if(item.type === "token" && item.transientZero) g.classList.add("transientZero");
     if(item.removed) g.classList.add("removedGroup");
     g.dataset.side = side;
@@ -7880,7 +8241,7 @@
       }
     }
 
-    if(item.type === "token"){
+    if(item.type === "token" || item.type === "x"){
       g.addEventListener("pointerdown", (e) => beginTokenDrag(e, side, item, pos, g));
       g.addEventListener("pointermove", moveTokenDrag);
       g.addEventListener("pointerup", endTokenDrag);
@@ -8864,10 +9225,14 @@
   if(toolOppositeBoth) toolOppositeBoth.addEventListener("click", takeOppositeOfBothMembers);
   toolUndo.addEventListener("click", undo);
   if(btnStageUndo) btnStageUndo.addEventListener("click", undo);
-  btnShowSuggestions.addEventListener("click", showDecomposeSuggestions);
   document.getElementById("btnApplyDecompose").addEventListener("click", applyDecomposeInput);
   document.getElementById("btnCancelDialog").addEventListener("click", () => decomposeDialog.close());
   document.getElementById("btnCancelShareDialog").addEventListener("click", () => shareDialog.close());
+  btnApplyShare.addEventListener("click", applyShareInput);
+  sharePartInput.addEventListener("keydown", (e) => {
+    if(e.key === "Enter"){ e.preventDefault(); applyShareInput(); }
+  });
+  shareDialog.addEventListener("close", () => { pendingShare = null; });
   document.getElementById("btnApplyGroup").addEventListener("click", applyGroup);
   document.getElementById("btnCancelGroup").addEventListener("click", () => groupDialog.close());
   groupInput.addEventListener("keydown", (e) => {

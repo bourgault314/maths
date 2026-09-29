@@ -212,10 +212,13 @@ test("les flèches courbes ne s'affichent pas en vue Rédaction", () => {
   );
 });
 
-test("l'aide de la décomposition ne propose que des sommes de deux termes, sans ordre parlant", () => {
-  // Partager en parts égales est le travail de « Partager équitablement », qui
-  // écrit la division ; et la proposition utile ne doit plus arriver en tête.
-  assert.match(html, /return premiers\.sort\(\(a,b\) => a - b\)\.map\(v => \[v, value - v\]\);/);
+test("Décomposer ne propose plus de sommes toutes faites", () => {
+  // 29/09/2026 (choix de Gwenaël) : le bouton « ? » listait des sommes, dont celle qui fait
+  // apparaître la quantité d'en face ; l'élève n'avait plus qu'à la reconnaître. Il écrit
+  // maintenant sa somme lui-même, comme il écrit la somme dans Regrouper.
+  assert.doesNotMatch(html, /btnShowSuggestions|getSmartDecompositionSuggestions|showDecomposeSuggestions|id="presetChips"/);
+  assert.doesNotMatch(html, /Afficher des propositions/);
+  assert.match(html, /<input id="decomposeInput" type="text" autocomplete="off" \/>/);
   assert.doesNotMatch(html, /Array\.from\(\{length:usefulShareCount\}/);
   assert.doesNotMatch(html, /suggestions\.push\(Array\.from\(\{length:n\},\(\)=>part\)\)/);
 });

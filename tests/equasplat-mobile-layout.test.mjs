@@ -224,7 +224,8 @@ test("un partage qui ne conclut pas reste écrit comme un produit", () => {
   assert.match(html, /makeToken\(each, \{shareBatch\}\)/);
   assert.match(html, /`−\$\{batch\.length\} × \$\{Math\.abs\(value\)\}`/);
   assert.match(html, /`\$\{batch\.length\} × \$\{formatSignedNumber\(value\)\}`/);
-  assert.match(html, /applySharedTokenSplit\(side, id, n, part\)/);
+  // Depuis le 29/09/2026, la valeur d'une part est tapée par l'élève (applyShareInput).
+  assert.match(html, /applySharedTokenSplit\(side, id, count, answer\)/);
 });
 
 test("les billes unitaires s’écrivent comme un seul nombre et se partagent en paquets", () => {
