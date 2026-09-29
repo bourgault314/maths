@@ -5734,7 +5734,7 @@ window.MATHSGO_CATALOGUE = {
     {
       "id": "outils-pourcentages-recherche-pdf",
       "title": "Pourcentages — missions et enquêtes",
-      "description": "Six pages de missions et d’enquêtes progressives sur les pourcentages, avec schémas en barres et situations concrètes.",
+      "description": "Quatre pages de missions et d’enquêtes progressives sur les pourcentages : schémas en barres, problèmes, promotions, taux de réduction et prix initial.",
       "path": "outils/pourcentages_recherche.pdf",
       "domains": [
         "proportionnalite-mesures"
