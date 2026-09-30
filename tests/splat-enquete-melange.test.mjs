@@ -185,6 +185,7 @@ test("adresse : noTotal=1&repeat=3 se lit et se réécrit ; une seule case : les
     const invNoTotalEl = etat.noTotal, invRepeatOnEl = etat.repeatOn, invRepeatEl = etat.repeat;
     /* lot G2 : les réglages du générateur (absents ici : une page d'avant, rien n'est écrit) */
     const invOrdreEl = null, invVocabEl = null, invComposeEl = null, invReuniesEl = null, invTaskCountEl = { value:"2" };
+    const enqueteSchemaVide = false; // lot 1 : « modele=1 » absent de l'adresse, rien d'écrit
     ${fn("setSelectFromShare")}
     const INVESTIGATE_REPEAT_MAX = 3;
     ${ligne("function clamp(")}

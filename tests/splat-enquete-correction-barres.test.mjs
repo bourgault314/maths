@@ -302,7 +302,7 @@ test("l'impression : le plateau de la correction à 22 mm, la correction sous lu
   assert.match(impression, /const trayHDessine = enqueteCompacte \? ENQ_PLATEAU_CORRECTION_H : trayH;/);
 });
 
-test("l'écran : trois étapes (les barres, tout sur une ligne, je calcule), les taches dévoilées à la dernière ; la page 2 suit", () => {
+test("l'écran : trois étapes (les barres, schéma regroupé, je calcule), les taches dévoilées à la dernière ; la page 2 suit", () => {
   assert.equal(ligne("const ELEVE_SCHEMA_ETAPES = ").match(/\d+/)[0], "3");
   const ecran = html.slice(html.indexOf("\nfunction renderCard("), html.indexOf("\nfunction renderCardIntoSvg("));
   assert.match(ecran, /if\(revealState === 1\) drawEnqueteBarres\(relCible, card, oE\);\s*if\(revealState === 2\) \(sansLigne \? drawEnqueteCalculs : drawEnqueteLigne\)\(relCible, card, oE\);\s*if\(revealState === 3 && !sansLigne\) drawEnqueteCalculs\(relCible, card, oE\);/);
@@ -493,7 +493,8 @@ test("G2 — l'ordre des phrases : dans l'ordre du dessin, la première phrase p
 test("G2 — le dessin : plus de pastille, colonne des noms mesurée, même échelle en ① et ②, contour fin, blanc réparti", () => {
   const barres = fn("drawEnqueteBarres"), ligne2 = fn("drawEnqueteLigne"), calcs = fn("drawEnqueteCalculs"), page = fn("enqueteMiseEnPage");
   assert.doesNotMatch(barres + calcs, /blobPath|dotR/, "plus de tache devant les noms ni sur la ligne réponse");
-  assert.match(page, /const labelW = Math\.min\(P\.labelMax, Math\.max\(\.\.\.modele\.rows\.map\(r => enqueteTexteLargeur\(r\.label, P\.labelFont, 800\)\)\) \+ P\.labelGap\);/);
+  /* lot 1 (schéma vide) : mesurée sur les noms du corrigé (labelMesure ; absent ailleurs) */
+  assert.match(page, /const labelW = Math\.min\(P\.labelMax, Math\.max\(\.\.\.modele\.rows\.map\(r => enqueteTexteLargeur\(r\.labelMesure \|\| r\.label, P\.labelFont, 800\)\)\) \+ P\.labelGap\);/);
   assert.match(page, /s:commune \? Math\.min\(sBarres, sLigne\) : sBarres/, "l'échelle commune (sauf l'unité commune : la ligne ② vaut le double)");
   assert.match(barres, /const M = enqueteMiseEnPage\(modele, P\);/);
   assert.match(ligne2, /const M = enqueteMiseEnPage\(modele, P\);/);
