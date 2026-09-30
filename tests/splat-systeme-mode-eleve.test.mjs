@@ -73,6 +73,8 @@ const sys = new Function(`
   ${CONSTANTES}
   ${ligne("const ELEVE_TACHE_MINI = ")}
   ${ligne("const ELEVE_SCHEMA_ETAPES = ")}
+  /* l'Enquête (lot G1) : quatre étapes pour une carte avec total — le vrai calcul lit le modèle en barres */
+  function enqueteDerniereEtape(card){ return 4; }
   ${GENERATEUR}
   ${DESSIN}
   ${ELEVE}
@@ -206,9 +208,9 @@ test("le dévoilement : sysDevoileEleve lit le drapeau, les plateaux se dessinen
 });
 
 // --- « Voir le schéma » ------------------------------------------------------------------
-test("le nombre d'étapes du schéma : un cadre par étape du plan ; l'Enquête garde ses cinq", () => {
+test("le nombre d'étapes du schéma : un cadre par étape du plan ; l'Enquête a les siennes (quatre, lot G1)", () => {
   for(const c of CARTES) assert.equal(sys.etapes(c), c._sys.plan.length);
-  assert.equal(sys.etapes({ family: "C", _rel: {} }), 5);
+  assert.equal(sys.etapes({ family: "C", _rel: {} }), 4);
   assert.ok(CARTES.some((c) => c._sys.plan.length === 4) && CARTES.some((c) => c._sys.plan.length === 5), "des plans de 4 (Trois paires) et de 5");
 });
 

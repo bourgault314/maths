@@ -5,7 +5,9 @@
      plateau, avec la mini-tache à sa couleur et le nom de la couleur ;
    - le total et les jetons visibles sont donnés (pas de champ), la validation les ignore ;
    - la consigne et le message de réussite de l'Enquête ;
-   - « Voir le schéma » : cinq étapes, une par appui, puis le bouton s'efface ;
+   - « Voir le schéma » : trois étapes (la correction en barres des lots G1-G2, 29/09/2026 : les
+     barres, tout sur une ligne, je calcule ; deux sans total), une par appui, puis le
+     bouton s'efface ;
    - le nom de la couleur sur la tache dévoilée se pose juste au-dessus du jeton (écran
      et impression passent par la même fonction) ;
    - le dévoilement de l'Enquête redessine la carte (les taches ont leur propre couleur) ;
@@ -172,6 +174,8 @@ function harnaisSchema(){
     function eleveInfosEnquete(card){ return card && card.family === "C" ? {} : null; }
     function sysAPlan(){ return false; }
     function eleveInfosSysteme(){ return null; }
+    /* la carte du banc d'essai a une correction en barres avec total : trois étapes */
+    function enqueteDerniereEtape(card){ return 3; }
     ${fn("eleveInfosTableau")}
     ${fn("eleveSchemaEtapes")}
     function eleveDessinerSchema(card){ dessins.push(eleveSchemaEtape); }
@@ -200,23 +204,26 @@ test("après validation : un bouton jaune « Voir le schéma », une seule fois,
   assert.match(fn("eleveMontrerReponse"), /if\(voir\) voir\.remove\(\);\n  eleveProposerSchema\(bouton\);/);
 });
 
-test("cinq étapes, une par appui ; à la dernière le bouton s'efface et « Carte suivante » reprend le focus", () => {
+test("trois étapes, une par appui ; à la dernière le bouton s'efface et « Carte suivante » reprend le focus", () => {
   const h = harnaisSchema();
   h.ctx.proposer(h.valider);
   const bouton = h.boutons[0];
   bouton.onclick();
   assert.deepEqual(h.ctx.dessins, [1]);
   assert.equal(bouton.textContent, "Étape suivante ▶");
-  bouton.onclick(); bouton.onclick(); bouton.onclick();
-  assert.deepEqual(h.ctx.dessins, [1, 2, 3, 4]);
+  bouton.onclick();
+  assert.deepEqual(h.ctx.dessins, [1, 2]);
   assert.equal(h.boutons.length, 1, "toujours là avant la dernière étape");
   bouton.onclick();
-  assert.deepEqual(h.ctx.dessins, [1, 2, 3, 4, 5]);
-  assert.equal(h.boutons.length, 0, "effacé à la résolution");
+  assert.deepEqual(h.ctx.dessins, [1, 2, 3]);
+  assert.equal(h.boutons.length, 0, "effacé aux calculs");
   assert.equal(h.suivant.focalise, 1, "Entrée enchaîne sur la carte suivante");
   h.ctx.voir();
-  assert.equal(h.ctx.etape(), 5, "un appui de plus ne dépasse pas la résolution");
-  assert.deepEqual(h.ctx.dessins, [1, 2, 3, 4, 5]);
+  assert.equal(h.ctx.etape(), 3, "un appui de plus ne dépasse pas les calculs");
+  assert.deepEqual(h.ctx.dessins, [1, 2, 3]);
+  // le nombre d'étapes vient de la correction en barres : 3 avec un total, 2 sans (enqueteNbEtapes)
+  assert.match(fn("eleveSchemaEtapes"), /card\.family === "C"\) \? enqueteDerniereEtape\(card\)/);
+  assert.match(fn("enqueteNbEtapes"), /return card\._rel\.sansTotal \? 2 : 3;/);
 });
 
 test("les étapes sont celles de la projection, et la nouvelle carte repart du plateau couvert", () => {
@@ -256,10 +263,10 @@ test("les étapes sont celles de la projection, et la nouvelle carte repart du p
 });
 
 // --- téléphone : le schéma en portrait (23/09/2026) ------------------------------------------
-/* Un faux téléphone de 359 px de plateau : la carte a cinq cadres de hauteurs différentes ;
+/* Un faux téléphone de 359 px de plateau : la carte a trois cadres de hauteurs différentes ;
    « haut des boutons » = ce qu'il y a au-dessus du plateau + le plateau + la ligne des
    réponses + la marge des boutons (avant le schéma : 448 px, comme sur l'iPhone). */
-function harnaisTelephone({ hauteurs = { 1: 300, 2: 300, 3: 470, 4: 420, 5: 660 }, avant = 448, sansCadre = false } = {}){
+function harnaisTelephone({ hauteurs = { 1: 300, 2: 470, 3: 660 }, avant = 448, sansCadre = false } = {}){
   const classes = () => { const s = new Set(); return { add: (k) => s.add(k), remove: (k) => s.delete(k), contains: (k) => s.has(k), liste: s }; };
   const plateau = { classList: classes(), style: {}, getBoundingClientRect: () => ({ width: 359, height: 208 }) };
   const panneau = { classList: classes() };
@@ -274,7 +281,7 @@ function harnaisTelephone({ hauteurs = { 1: 300, 2: 300, 3: 470, 4: 420, 5: 660 
     getBBox: () => ({ x: 60, y: 620, width: 960, height: hauteurs[ctx.etapeDessinee()] })
   };
   const document = {
-    getElementById: (id) => ({ svgWrap: plateau, elevePanel: panneau, eleveRappel: bandeau, relationSituationSchema: sansCadre ? null : cadre })[id] || null,
+    getElementById: (id) => ({ svgWrap: plateau, elevePanel: panneau, eleveRappel: bandeau, enqueteBarres: sansCadre ? null : cadre })[id] || null,
     querySelector: (sel) => (sel === "#elevePanel .eleveActions" ? actions : null),
     createElement: () => ({ remove(){ bandeau = null; } })
   };
@@ -291,6 +298,7 @@ function harnaisTelephone({ hauteurs = { 1: 300, 2: 300, 3: 470, 4: 420, 5: 660 
     let cadrages = 0;
     function eleveCadrerScene(){ if(!${sansCadre}) throw new Error("le téléphone ne recadre pas la scène entière"); cadrages++; }
     function sysAPlan(){ return false; }
+    function enqueteDerniereEtape(card){ return 3; }
     ${constLine("const ELEVE_SCHEMA_ETAPES = ").replace("const ELEVE_SCHEMA_ETAPES", "const _dup")}
     ${fn("eleveSchemaEtapes")}
     ${fn("eleveSchemaTelephone")}
@@ -316,32 +324,32 @@ function harnaisTelephone({ hauteurs = { 1: 300, 2: 300, 3: 470, 4: 420, 5: 660 
 test("téléphone : chaque étape se dessine en portrait, entière, à la largeur du plateau", () => {
   const t = harnaisTelephone();
   t.ctx.etape(1);
-  // la première étape mesure les cinq cadres, puis redessine la sienne — toujours en portrait
-  assert.deepEqual(t.ctx.rendus, [[1, true], [2, true], [3, true], [4, true], [5, true], [1, true]]);
+  // la première étape mesure les trois cadres, puis redessine la sienne — toujours en portrait
+  assert.deepEqual(t.ctx.rendus, [[1, true], [2, true], [3, true], [1, true]]);
   assert.equal(t.ctx.tel(), false, "le drapeau portrait ne vaut que pendant le dessin");
   assert.equal(t.ctx.svg.vb, "54 614 972 312", "cadré sur le cadre, 6 unités de marge : rien de coupé");
   assert.equal(t.ctx.svg.style.width, "359px", "la largeur du plateau, pas 1,5 fois");
   assert.equal(t.plateau.style.height, t.px(300) + "px");
-  assert.equal(t.ctx.reserve().h, t.px(660), "la place réservée : la plus haute des cinq étapes");
+  assert.equal(t.ctx.reserve().h, t.px(660), "la place réservée : la plus haute des trois étapes");
   assert.ok(t.plateau.classList.contains("eleveSchemaTel"));
   assert.ok(t.panneau.classList.contains("schemaTel"), "le panneau passe en « ligne des réponses »");
   assert.match(t.bandeau().innerHTML, /<span>TOTAL<\/span><b>27<\/b>/);
   assert.match(t.bandeau().innerHTML, /<p>Sous la tache rouge, il y a 9 jetons de moins que sous la tache bleue\.<\/p>/);
   // les étapes suivantes : un seul dessin chacune
   t.ctx.etape(2); t.ctx.etape(3);
-  assert.deepEqual(t.ctx.rendus.slice(6), [[2, true], [3, true]]);
-  assert.equal(t.plateau.style.height, t.px(470) + "px", "le plateau prend la hauteur du cadre de l'étape");
+  assert.deepEqual(t.ctx.rendus.slice(4), [[2, true], [3, true]]);
+  assert.equal(t.plateau.style.height, t.px(660) + "px", "le plateau prend la hauteur du cadre de l'étape");
 });
 
 test("téléphone : les boutons ne bougent pas d'une étape à l'autre, et restent là où était « Voir le schéma » quand la carte le permet", () => {
   const t = harnaisTelephone();
-  const hauts = [1, 2, 3, 4, 5].map((e) => { t.ctx.etape(e); return t.hautBoutons(); });
-  assert.deepEqual(hauts, [448, 448, 448, 448, 448], "carte courte : exactement la place d'avant le schéma");
+  const hauts = [1, 2, 3].map((e) => { t.ctx.etape(e); return t.hautBoutons(); });
+  assert.deepEqual(hauts, [448, 448, 448], "carte courte : exactement la place d'avant le schéma");
   assert.equal(t.actions.style.marginTop, (14 + t.px(660) - t.px(660) + t.ctx.reserve().plus) + "px");
   // carte haute (trois taches) : ils descendent une fois, puis ne bougent plus
-  const g = harnaisTelephone({ hauteurs: { 1: 420, 2: 420, 3: 560, 4: 520, 5: 900 } });
-  const hautsG = [1, 2, 3, 4, 5].map((e) => { g.ctx.etape(e); return g.hautBoutons(); });
-  assert.equal(new Set(hautsG).size, 1, "même place aux cinq étapes");
+  const g = harnaisTelephone({ hauteurs: { 1: 420, 2: 560, 3: 900 } });
+  const hautsG = [1, 2, 3].map((e) => { g.ctx.etape(e); return g.hautBoutons(); });
+  assert.equal(new Set(hautsG).size, 1, "même place aux trois étapes");
   assert.ok(hautsG[0] > 448, "plus bas qu'avant le schéma, jamais plus haut");
   assert.equal(g.ctx.reserve().plus, 0);
 });
@@ -356,9 +364,9 @@ test("téléphone : nouvelle carte ou appareil tourné, tout revient comme avant
   assert.equal(t.actions.style.marginTop, "");
   assert.equal(t.ctx.reserve(), null);
   assert.equal(t.ctx.svg.style.width, "");
-  // la carte suivante remesure ses cinq cadres
+  // la carte suivante remesure ses trois cadres
   t.ctx.carteSuivante(); const n = t.ctx.rendus.length; t.ctx.etape(1);
-  assert.equal(t.ctx.rendus.length - n, 6);
+  assert.equal(t.ctx.rendus.length - n, 4);
   // nouvelle carte : les boutons du schéma quittent la ligne commune, l'écran de fin reprend
   // le cadrage de la carte (le schéma resté affiché lui laissait son cadre, TOTAL coupé)
   assert.match(fn("renderEleveSplat"), /  eleveSchemaReinitialiser\(\);[^\n]*\n  panneau\.classList\.remove\("avecSchema"\);/);
@@ -510,7 +518,7 @@ test("Enquête : le dévoilement redessine la carte (chaque tache a sa couleur),
   const rendu = fn("renderCard");
   assert.match(rendu, /const eleveDevoileC = \(card\.family === "C"\) && typeof eleveEnqueteDevoile !== "undefined" && !!eleveEnqueteDevoile;/);
   // taches dévoilées au 5e clic ; au 4e pour une carte « sans total » (lot E-sans-total : le 5e y est la vérification)
-  assert.match(rendu, /const visualRevealState = \(card\.family === "C"\) \? \(\(revealState >= \(card\._rel && card\._rel\.sansTotal \? 4 : 5\) \|\| eleveDevoileC\) \? 2 : 0\)/);
+  assert.match(rendu, /const visualRevealState = \(card\.family === "C"\) \? \(\(revealState >= enqueteDerniereEtape\(card\) \|\| eleveDevoileC\) \? 2 : 0\)/);
   assert.match(rendu, /const fonduCouverture = !\(eleveDevoileC && revealState > 0\);/, "le fondu de la couverture ne rejoue pas à chaque étape du schéma");
   assert.match(rendu, /if\(visualRevealState === 2 && fonduCouverture\)\{/);
 });

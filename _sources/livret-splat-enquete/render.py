@@ -34,8 +34,9 @@ LES FICHES ne sont PAS redessinées ici : elles sont rendues par l'outil du site
 (outils/splat.html, réglage « 4 par page » du monde 3) avec les graines de la carte des
 mondes (outils/splat_univers.html, ENQ_FICHES), et le QR est ajouté dans le bandeau juste
 avant l'impression. L'EXEMPLE RÉSOLU non plus : la carte et ses cinq schémas sont ceux du
-bouton « Voir le schéma » de l'outil (schéma vide, rempli, regroupé, ordonné, résolution),
-au profil d'impression de la correction, sur une carte qui n'est PAS dans le livret ; les
+bouton « Voir le schéma » de l'outil (la correction en barres du lot G1, 29/09/2026 : ① les
+barres vides puis remplies, ② tout sur une ligne, ③ je calcule), au profil d'impression de la
+correction, sur une carte qui n'est PAS dans le livret ; les
 légendes sont écrites À PARTIR DE LA CARTE rendue (elles ne peuvent pas mentir sur ses
 nombres).
 
@@ -257,8 +258,8 @@ LIVRETS = {
                     ("Trois taches", "En chaîne, comme la fiche&nbsp;13.", 2),
                     ("Le défi additif", "Avec des jetons visibles, comme la fiche&nbsp;14.", 3)],
             suite="Continue avec le monde&nbsp;4, <b>SPLAT! Grande enquête</b>&nbsp;: fois plus, fois moins, et les quatre opérations&nbsp;!",
-            mini=["?"], ecart="4",
-            reformule="En haut du schéma, la <b>tache de référence</b>&nbsp;: la plus petite. Quand l'indice dit <q>de moins que</q>, retourne-le&nbsp;: <q>la noire a 4 jetons de moins que la bleue</q>, c'est <q>la bleue a 4 jetons de plus que la noire</q>."),
+            mini=["noire"], ecart="4",
+            reformule="Une barre par tache, le <b>mot</b> dans chaque case&nbsp;: tout s'écrit avec la plus petite. Quand l'indice dit <q>de moins que</q>, retourne-le&nbsp;: <q>la noire a 4 jetons de moins que la bleue</q>, c'est <q>la bleue a 4 jetons de plus que la noire</q>."),
     ),
     "multiplicatif": dict(
         sortie="livret_splat_enquete_multiplicatif",
@@ -271,8 +272,8 @@ LIVRETS = {
                     ("Les quatre opérations", "Deux taches, comme la fiche&nbsp;17.", 5),
                     ("Le grand défi", "Trois taches et des jetons visibles, comme la fiche&nbsp;19.", 6)],
             suite="Va voir le monde&nbsp;5, <b>SPLAT! Équations</b>, pour résoudre sans schéma en barres&nbsp;!",
-            mini=["?", "?", "?"], ecart=None,
-            reformule="En haut du schéma, la <b>tache de référence</b>&nbsp;: la plus petite. Quand l'indice dit <q>fois moins</q>, retourne-le&nbsp;: <q>la noire a 3 fois moins de jetons que la bleue</q>, c'est <q>la bleue a 3 fois plus de jetons que la noire</q>."),
+            mini=["noire", "noire", "noire"], ecart=None,
+            reformule="Une barre par tache, le <b>mot</b> dans chaque case&nbsp;: tout s'écrit avec la plus petite. Quand l'indice dit <q>fois moins</q>, retourne-le&nbsp;: <q>la noire a 3 fois moins de jetons que la bleue</q>, c'est <q>la bleue a 3 fois plus de jetons que la noire</q>."),
     ),
 }
 # Les livrets « Le défi » (23/09/2026) : les MÊMES pages que le livret de la classe du même monde
@@ -311,9 +312,9 @@ LIVRETS["rebondit"] = dict(
                 ("Sans total", "Deux indices, pas de total, comme les fiches&nbsp;22 et&nbsp;23.", 14),
                 ("Le défi qui rebondit", "Tout mélangé, comme la fiche&nbsp;24.", 15)],
         suite="Continue avec le monde&nbsp;4, <b>SPLAT! Système</b>&nbsp;: plusieurs plateaux, un total pour chacun… compare-les&nbsp;!",
-        mini=["?", "?", "?"], ecart=None,
+        mini=["noire", "noire", "noire"], ecart=None,
         taches="Chaque tache a sa couleur, écrite dessus. Les taches de <b>même couleur</b> cachent <b>le même nombre de jetons</b>&nbsp;; deux couleurs, jamais le même&nbsp;: c'est l'<b>indice</b> qui les relie.",
-        reformule="<b>Sans total</b>, deux indices parlent des mêmes taches&nbsp;: <q>la bleue a 3 fois plus de jetons que la noire</q> et <q>la bleue a 18 jetons de plus que la noire</q>. Les deux barres de la bleue sont égales&nbsp;: les deux «&nbsp;?&nbsp;» en plus valent 18, chaque «&nbsp;?&nbsp;» vaut 9."),
+        reformule="<b>Sans total</b>, deux indices parlent des mêmes taches&nbsp;: <q>la bleue a 3 fois plus de jetons que la noire</q> et <q>la bleue a 18 jetons de plus que la noire</q>. La bleue, c'est trois noires&nbsp;: ce qui dépasse la noire, deux noires, vaut 18&nbsp;; une noire vaut 9."),
 )
 
 def lien_fiche(n):
@@ -455,13 +456,15 @@ JS_EXEMPLE = r"""() => {
   const sc = mk(); renderCardIntoSvg(sc, card, 'statement');
   const fond = sc.querySelector('rect'); if (fond && fond.getAttribute('width') === '1600') fond.remove();
   const carte = sc.innerHTML; sc.remove();
-  const prof = getRelationCorrectionPrintProfile(card);
-  const q = getNumberedDisplayVarChar(card) === '?';
-  const dessins = [g => drawRelationSituationSchema(g, card, {filled:false, ...prof}),
-                   g => drawRelationSituationSchema(g, card, {filled:true, ...prof}),
-                   g => drawRelationGroupedSchema(g, card, {...prof, hideGroupedEquation:q}),
-                   g => drawRelationOrderedSchema(g, card, {solved:false, ...prof}),
-                   g => drawRelationOrderedSchema(g, card, {solved:true, ...prof})];
+  // la correction en barres (lots G1-G2, 29/09/2026) : ① les barres, ② tout sur une ligne,
+  // ③ je calcule (sans la ligne réponse : la 4e étape de la page, « J'écris la réponse et je
+  // vérifie », la remplace)
+  const modele = enqueteBarresModele(card);
+  if (!modele) return {erreur: "la carte de l'exemple n'a pas de correction en barres"};
+  const prof = {isPrint:true, modele, sansTitre:true}; // la page a ses propres titres
+  const dessins = [g => drawEnqueteBarres(g, card, prof),
+                   g => drawEnqueteLigne(g, card, prof),
+                   g => drawEnqueteCalculs(g, card, {...prof, reponse:false})];
   const etapes = dessins.map(d => {
     const sv = mk(); const g = document.createElementNS(NS, 'g'); sv.appendChild(g); d(g);
     const b = g.querySelector('#btnEquabarSolve'); if (b) b.remove();
@@ -478,16 +481,23 @@ JS_EXEMPLE = r"""() => {
   const carteRes = resout(carte);
   if (inconnues.size) return {erreur: 'variables de couleur inconnues : ' + [...inconnues].join(', ')};
   const rel = card._rel, mot = i => investigateColorWord(investigateColorInfo(card, i));
-  return {carte: carteRes, etapes, total: card.total, visibles: card.visible, valeurs: rel.hiddenValues, ref: rel.refIndex,
-          mots: rel.hiddenValues.map((_, i) => mot(i)), indices: card._inv.indices,
-          relations: rel.relations, eq: rel.equation, structure: rel.structure,
+  // le modèle de la correction, en données, pour écrire les légendes
+  const cellule = c => c.kind === 'tache' ? {tache: mot(c.de)} : {nombre: c.v, ajout: c.kind === 'ajout'};
+  const barres = {mode: modele.mode, unite: mot(modele.unit), titre1: modele.titre1, reformulation: modele.reformulation,
+    preLignes: modele.preLignes, accolade: modele.accolade,
+    rows: modele.rows.map(r => ({tache: mot(r.i), label: r.label, cells: r.cells.map(cellule), sous: r.sous.map(x => x.label)})),
+    ligne: modele.ligne ? {total: modele.ligne.total, groupes: modele.ligne.groupes.map(gr => gr.label)} : null,
+    calculs: modele.calculs.map(l => l ? l.g + ' = ' + l.d : null), verification: modele.verification};
+  return {carte: carteRes, etapes, total: card.total, visibles: card.visible, valeurs: rel.hiddenValues, ref: modele.unit,
+          mots: rel.hiddenValues.map((_, i) => mot(i)), indices: card._inv.indices, barres,
+          relations: rel.relations, eq: rel.equation, structure: rel.structure, verification: modele.verification,
           cle: [card.total, JSON.stringify(rel.hiddenValues.slice().sort((a, b) => a - b))]};
 }"""
 
 JS_COUV = """(d) => {
   const set = (sel, svg, vb) => { const e = document.querySelector(sel); if (!e) return false; e.innerHTML = svg; if (vb) e.setAttribute('viewBox', vb); return true; };
   if (!set('svg.ex-carte', d.carte)) return 'pas de place pour la carte';
-  if (!set('svg.ex-vide', d.vide, d.vbVide)) return 'pas de place pour le schéma vide';
+  if (document.querySelector('svg.ex-vide')) return 'la couverture montre encore un schéma vide (retiré le 29/09/2026)';
   const txt = (sel, html) => { const e = document.querySelector(sel); if (!e) return false; e.innerHTML = html; return true; };
   if (!txt('.tete .sur', d.sur) || !txt('.tete h1 span', d.titre) || !txt('.tete .accroche', d.accroche) || !txt('.expl .intro', d.intro)) return 'textes de couverture';
   // le titre du monde (« Grande enquête », monde 4) tient sur UNE ligne, à gauche du dessin
@@ -514,14 +524,17 @@ JS_PAGE_EXEMPLE = """(d) => {
   const c = document.querySelector('svg.ex-carte'); if (!c) return 'pas de place pour la carte';
   c.innerHTML = d.carte;
   const e = document.querySelector('.enquete'); if (!e) return 'pas de bloc enquête'; e.innerHTML = d.enquete;
+  // quatre étapes : trois dessins (① ② ③) puis « J'écris la réponse et je vérifie », en texte
   const et = document.querySelectorAll('.etapes .et');
-  if (et.length !== 5) return et.length + ' étapes au lieu de 5';
+  if (et.length !== 4) return et.length + ' étapes au lieu de 4';
+  if (d.etapes.length !== 3) return d.etapes.length + ' dessins au lieu de 3';
   et.forEach((li, i) => {
-    const s = li.querySelector('svg.dessin'); s.innerHTML = d.etapes[i].svg;
-    s.setAttribute('viewBox', '50 612 1500 ' + d.etapes[i].h);
+    const s = li.querySelector('svg.dessin');
+    if (i < 3) { s.innerHTML = d.etapes[i].svg; s.setAttribute('viewBox', '50 612 1500 ' + d.etapes[i].h); }
+    else if (s) return;
     li.querySelector('.leg').innerHTML = d.legendes[i];
   });
-  const f = document.querySelector('.fin'); if (!f) return 'pas de conclusion'; f.innerHTML = d.fin;
+  if (document.querySelector('.fin')) return 'la conclusion est devenue la 4e étape (29/09/2026)';
   return 'ok';
 }"""
 
@@ -561,85 +574,91 @@ JS_DOS = """(d) => {
 
 MOTS = {1: "une", 2: "deux", 3: "trois", 4: "quatre", 5: "cinq", 6: "six"}
 
+def _art(mot):
+    return ("l'" if mot[0] in "aeiouy" else "la ") + mot
+
+def _cases(cells, unite):
+    """« une noire et 4 », « deux noires », « une noire, 4 et 3 » — les cases d'une barre, en mots."""
+    n = sum(1 for c in cells if "tache" in c)
+    nombres = [str(c["nombre"]) for c in cells if "nombre" in c]
+    pl = unite if unite == "orange" else unite + "s"
+    tete = (f"une {unite}" if n == 1 else f"{MOTS.get(n, n)} {pl}") if n else ""
+    parts = ([tete] if tete else []) + nombres
+    if len(parts) == 1:
+        return parts[0]
+    return ", ".join(parts[:-1]) + " et " + parts[-1]
+
 def textes_exemple(ex, op):
     """Les textes de la couverture et de la page 2, écrits à partir de la carte que l'outil
-    vient de dessiner : ils ne peuvent pas mentir sur les nombres de l'exemple.
-    L'exemple est une CHAÎNE de trois taches partant de la tache de référence (23/09/2026) :
-    chaque tache s'écrit « a × ? + b » par rapport à la référence, comme la barre de l'outil."""
+    vient de dessiner et de SON modèle de correction (ex["barres"], lot G1) : ils ne peuvent
+    pas mentir sur les nombres de l'exemple. Les légendes suivent les trois étapes de « Voir le
+    schéma » (① les barres, ② tout sur une ligne, ③ je calcule), puis la 4e étape de la page,
+    « J'écris la réponse et je vérifie » (lot G2, 29/09/2026)."""
     if op == "REPET":
         return textes_exemple_repet(ex)
     n = len(ex["valeurs"])
     if ex["visibles"] or n != 3 or len(ex["relations"]) != 2:
         raise SystemExit("l'exemple doit être une carte à trois taches, sans jeton visible")
     T, v, mots, ref = ex["total"], ex["valeurs"], ex["mots"], ex["ref"]
-    # l'ordre de la chaîne : référence → t1 → t2
-    ordre, rels = [ref], []
-    while len(ordre) < n:
-        r = [r for r in ex["relations"] if r["source"] == ordre[-1] and r["target"] not in ordre]
-        if len(r) != 1:
-            raise SystemExit("l'exemple doit être une chaîne qui part de la tache de référence")
-        rels.append(r[0]); ordre.append(r[0]["target"])
-    ops = [r["op"] for r in rels]
+    B = ex["barres"]
+    if B["mode"] != "chaine":
+        raise SystemExit(f"l'exemple doit être une chaîne (la tache commune au milieu), pas « {B['mode']} »")
+    ops = [r["op"] for r in ex["relations"]]
     if op == "ADD" and ops != ["ADD", "ADD"]:
         raise SystemExit(f"livret additif : deux indices « de plus », pas {ops}")
     if op == "MUL" and ops != ["ADD", "MUL"]:
         raise SystemExit(f"livret multiplicatif : « de plus » puis « fois plus », pas {ops}")
-    # chaque tache = a × ? + b
-    ab = {ref: (1, 0)}
-    for r in rels:
-        a0, b0 = ab[r["source"]]
-        ab[r["target"]] = (a0, b0 + r["k"]) if r["op"] == "ADD" else (r["k"] * a0, r["k"] * b0)
-    x = v[ref]
-    for i, (a_, b_) in ab.items():
-        assert v[i] == a_ * x + b_, (i, v[i], a_, b_, x)
-    assert T == sum(v)
-    A = sum(a_ for a_, _ in ab.values())
-    nombres = [ab[i][1] for i in ordre if ab[i][1]]          # dans l'ordre des barres
-    B = sum(nombres)
-    t = {i: f"la tache {mots[i]}" for i in ordre}
-    court = {i: (f"l'{mots[i]}" if mots[i][0] in "aeiouo" else f"la {mots[i]}") for i in ordre}
-    q = "«&nbsp;?&nbsp;»"
-    def nq(k): return f"{MOTS.get(k, k)} {q}" if k > 1 else f"un {q}"
-    r0, t1, t2 = ordre
-    (k1, k2) = rels[0]["k"], rels[1]["k"]
-    phrase_t1 = f"{court[t1].capitalize()}&nbsp;: un {q} et {k1} de plus."
-    if rels[1]["op"] == "ADD":
-        phrase_t2 = (f"{court[t2].capitalize()}&nbsp;: {k2} de plus que {court[t1]}, donc un {q} et "
-                     f"{k1}&nbsp;+&nbsp;{k2}&nbsp;=&nbsp;{ab[t2][1]}.")
-        calc_t2 = f"{v[t1]} + {k2} = <b>{v[t2]}</b>"
-    else:
-        phrase_t2 = (f"{court[t2].capitalize()}&nbsp;: {MOTS.get(k2, k2)} fois {court[t1]}, donc "
-                     f"{nq(ab[t2][0])} et {k2}&nbsp;×&nbsp;{k1}&nbsp;=&nbsp;{ab[t2][1]}.")
-        calc_t2 = f"{k2} × {v[t1]} = <b>{v[t2]}</b>"
-    somme = " et ".join([", ".join(str(b_) for b_ in nombres[:-1]), str(nombres[-1])]) if len(nombres) > 1 else str(nombres[0])
-    plus = "&nbsp;+&nbsp;".join(str(b_) for b_ in nombres)
-    vide = f"Une barre par tache. En haut, la <b>tache de référence</b>&nbsp;: la plus petite, ici {t[r0]}."
-    rempli = f"La barre de {t[r0]}&nbsp;: un {q}. {phrase_t1} {phrase_t2} En tout&nbsp;: {T}."
-    regroupe = f"Toutes les parties sur une seule barre&nbsp;: {nq(A)}, {somme} font {T}."
-    ordonne = f"Je range les {q} d'un côté et les nombres connus de l'autre&nbsp;: on peut écrire l'équation."
-    # une opération ne se coupe jamais en fin de ligne (« 28 / ÷ 4 » le 23/09)
-    resous = (f"{plus}&nbsp;=&nbsp;{B}, puis {T}&nbsp;−&nbsp;{B}&nbsp;=&nbsp;{T - B} et "
-              f"{T - B}&nbsp;÷&nbsp;{A}&nbsp;=&nbsp;{x}. Chaque {q} vaut {x}.")
-    fin = (f"{t[r0].capitalize()} cache <b>{x}</b> jetons, {court[t1]} {x} + {k1} = <b>{v[t1]}</b>, "
-           f"{court[t2]} {calc_t2}. Je vérifie&nbsp;: {v[r0]} + {v[t1]} + {v[t2]} = {T}.")
+    u = B["unite"]
+    assert u == mots[ref] and T == sum(v)
+    t = {m: f"la tache {m}" for m in mots}
+    rows = B["rows"]                      # unité, milieu, haut
+    r0, r1, r2 = rows
+    rel1 = _cases(r1["cells"], u)
+    # la tache du haut, écrite d'abord avec la tache du milieu (« une bleue et 3 » / « trois bleues »),
+    # puis dans l'unité : c'est le remplacement
+    haut = [r for r in ex["relations"] if r["target"] == mots.index(r2["tache"])][0]
+    milieu_i = mots.index(r1["tache"])
+    if haut["source"] != milieu_i:
+        raise SystemExit("l'exemple doit être une chaîne : le 2e indice part de la tache du milieu")
+    k = haut["k"]
+    pl_m = r1["tache"] if r1["tache"] == "orange" else r1["tache"] + "s"
+    avec_milieu = (f"une {r1['tache']} et {k}" if haut["op"] == "ADD" else f"{MOTS.get(k, k)} {pl_m}")
+    barres = (f"Une barre par tache, alignées à gauche, et dans chaque case le mot de la tache. Tout s'écrit avec la plus petite, {t[u]}&nbsp;: "
+              f"c'est l'unité. {_art(r1['tache']).capitalize()}&nbsp;: {rel1}. "
+              f"{_art(r2['tache']).capitalize()}&nbsp;: {avec_milieu}, et {_art(r1['tache'])} s'écrit «&nbsp;{rel1}&nbsp;» — je la remplace&nbsp;: {_cases(r2['cells'], u)}. "
+              f"À droite, le total&nbsp;: {T}.")
+    tous = [c for r in rows for c in r["cells"]]
+    ligne = f"Les barres bout à bout sous le total&nbsp;: {_cases(tous, u)} font {T}."
+    # le texte ne recopie plus les calculs (29/09/2026) : le dessin les montre
+    resous = f"D'abord {t[u]}, l'unité&nbsp;; puis les autres taches à partir d'elle."
+    # « J'écris la réponse et je vérifie » : la réponse en gras, le total, puis chaque indice
+    # retourné (« 5 + 10 = 15 ✓ »)
+    verifs = [ex["verification"]]
+    for r in ex["relations"]:
+        s_, t_ = v[r["source"]], v[r["target"]]
+        if r["op"] == "ADD": verifs.append(f"{s_} + {r['k']} = {t_}")
+        elif r["op"] == "SUB": verifs.append(f"{t_} + {r['k']} = {s_}")
+        elif r["op"] == "MUL": verifs.append(f"{r['k']} × {s_} = {t_}")
+        elif r["op"] == "DIV": verifs.append(f"{r['k']} × {t_} = {s_}")
+    fin = (f"{t[u].capitalize()} cache <b>{v[ref]}</b> jetons, {_art(r1['tache'])} <b>{v[milieu_i]}</b>, "
+           f"{_art(r2['tache'])} <b>{v[mots.index(r2['tache'])]}</b>. Je vérifie&nbsp;: " + "&nbsp;✓&nbsp;; ".join(verifs) + "&nbsp;✓")
     indices = "<br>".join(f"<q>{i}</q>" for i in ex["indices"])
+    autres = [m for m in mots if m != u]
     intro = (f"Sur cette carte, il y a {T} jetons au total, tous cachés sous trois taches&nbsp;: "
-             f"{t[r0]}, {t[t1]} et {t[t2]}. Deux indices les relient."
-             "\n      <span>Pour mener l'enquête, on commence par un <b>schéma en barres</b>&nbsp;: une "
-             f"barre par tache, et en haut la <b>tache de référence</b>, la plus petite — ici {t[r0]}. Ce "
-             "que cache chaque tache, on l'écrira «&nbsp;<b>?</b>&nbsp;». La page&nbsp;2 mène cette "
-             "enquête pas à pas, jusqu'à la réponse.</span>")
+             f"{t[u]}, {t[autres[0]]} et {t[autres[1]]}. Deux indices les relient."
+             "\n      <span>Pour mener l'enquête, on dessine un <b>schéma en barres</b>&nbsp;: une "
+             f"barre par tache, et dans chaque case le <b>mot</b> de la tache — ici, tout s'écrit avec {t[u]}, "
+             "la plus petite. La page&nbsp;2 mène cette enquête pas à pas, jusqu'à la réponse.</span>")
     enquete = (f"<p><b>Le total</b>&nbsp;: {T} jetons, tous cachés sous trois taches.</p>"
                f"<p><b>Les indices</b>&nbsp;: {indices}</p>"
                "<p class=\"but\">Mon enquête&nbsp;: trouver ce que cache chaque tache.</p>")
-    return dict(intro=intro, enquete=enquete, legendes=[vide, rempli, regroupe, ordonne, resous], fin=fin)
+    return dict(intro=intro, enquete=enquete, legendes=[barres, ligne, resous, fin])
 
 
 def textes_exemple_repet(ex):
     """« L'enquête rebondit » (25/09/2026) : trois taches, deux couleurs, la tache de référence
-    seule et l'autre couleur deux fois, un indice « de plus ». Écrits à partir de la carte rendue.
-    La couleur répétée est la plus grande : sinon le schéma regroupé serait déjà rangé et
-    l'étape 4 n'apprendrait rien (remarque de Claire du 23/09 sur les exemples à deux taches)."""
+    seule et l'autre couleur deux fois, un indice « de plus ». Écrits à partir de la carte rendue
+    et de son modèle de correction (lot G1)."""
     v, mots, ref, T = ex["valeurs"], ex["mots"], ex["ref"], ex["total"]
     if ex["visibles"] or len(v) != 3 or len(ex["relations"]) != 1:
         raise SystemExit("l'exemple de « L'enquête rebondit » : trois taches, un indice, sans jeton visible")
@@ -649,31 +668,27 @@ def textes_exemple_repet(ex):
         raise SystemExit("l'exemple de « L'enquête rebondit » : la référence seule, l'autre couleur deux fois, « de plus »")
     x, k, o = v[ref], r["k"], mots[autres[0]]
     assert all(v[i] == x + k for i in autres) and T == 3 * x + 2 * k
-    q = "«&nbsp;?&nbsp;»"
+    B = ex["barres"]
     rr, oo = mots[ref], o
     oos = oo if oo == "orange" else oo + "s"            # « orange » est invariable
-    vide = f"Une barre par tache&nbsp;: trois barres. En haut, la <b>tache de référence</b>&nbsp;: la plus petite, ici la tache {rr}."
-    rempli = (f"La barre de la tache {rr}&nbsp;: un {q}. Chaque tache {oo}&nbsp;: un {q} et {k} de plus — "
-              f"les deux {oos} cachent le même nombre. En tout&nbsp;: {T}.")
-    regroupe = f"Toutes les parties sur une seule barre&nbsp;: trois {q}, {k} et {k} font {T}."
-    ordonne = f"Je range les {q} d'un côté et les nombres connus de l'autre&nbsp;: on peut écrire l'équation."
-    resous = (f"{k}&nbsp;+&nbsp;{k}&nbsp;=&nbsp;{2 * k}, puis {T}&nbsp;−&nbsp;{2 * k}&nbsp;=&nbsp;{T - 2 * k} et "
-              f"{T - 2 * k}&nbsp;÷&nbsp;3&nbsp;=&nbsp;{x}. Chaque {q} vaut {x}.")
-    fin = (f"La tache {rr} cache <b>{x}</b> jetons, chaque tache {oo} {x} + {k} = <b>{x + k}</b>. "
-           f"Je vérifie&nbsp;: {x} + {x + k} + {x + k} = {T}.")
+    barres = (f"Une barre par tache&nbsp;: trois barres, alignées à gauche, et dans chaque case le mot de la tache. Tout s'écrit avec la plus petite, la tache {rr}&nbsp;: c'est l'unité. "
+              f"Chaque tache {oo}&nbsp;: une {rr} et {k} — les deux {oos} cachent le même nombre. À droite, le total&nbsp;: {T}.")
+    ligne = f"Les barres bout à bout sous le total&nbsp;: trois {rr}s, {k} et {k} font {T}."
+    resous = f"D'abord la tache {rr}, l'unité&nbsp;; puis les taches {oos} à partir d'elle."
+    fin = (f"La tache {rr} cache <b>{x}</b> jetons, chaque tache {oo} <b>{x + k}</b>. "
+           f"Je vérifie&nbsp;: {ex['verification']}&nbsp;✓&nbsp;; {x} + {k} = {x + k}&nbsp;✓")
     indices = "<br>".join(f"<q>{i}</q>" for i in ex["indices"])
     intro = (f"Sur cette carte, il y a {T} jetons au total, tous cachés sous trois taches&nbsp;: "
              f"une tache {rr} et deux taches {oos}. Les taches de même couleur cachent le même nombre de jetons&nbsp;; "
              "un indice relie les deux couleurs."
-             "\n      <span>Pour mener l'enquête, on commence par un <b>schéma en barres</b>&nbsp;: une "
-             f"barre par tache, et en haut la <b>tache de référence</b>, la plus petite — ici la tache {rr}. Ce "
-             "que cache chaque tache, on l'écrira «&nbsp;<b>?</b>&nbsp;». La page&nbsp;2 mène cette "
-             "enquête pas à pas, jusqu'à la réponse.</span>")
+             "\n      <span>Pour mener l'enquête, on dessine un <b>schéma en barres</b>&nbsp;: une "
+             f"barre par tache, et dans chaque case le <b>mot</b> de la tache — ici, tout s'écrit avec la tache {rr}, "
+             "la plus petite. La page&nbsp;2 mène cette enquête pas à pas, jusqu'à la réponse.</span>")
     enquete = (f"<p><b>Le total</b>&nbsp;: {T} jetons, tous cachés sous trois taches.</p>"
                "<p><b>La règle</b>&nbsp;: les taches de même couleur cachent le même nombre de jetons.</p>"
                f"<p><b>L'indice</b>&nbsp;: {indices}</p>"
                "<p class=\"but\">Mon enquête&nbsp;: trouver ce que cache chaque tache.</p>")
-    return dict(intro=intro, enquete=enquete, legendes=[vide, rempli, regroupe, ordonne, resous], fin=fin)
+    return dict(intro=intro, enquete=enquete, legendes=[barres, ligne, resous, fin])
 
 
 def fabrique_qr():
@@ -784,15 +799,14 @@ async def rendre(niv, tmp, corr=None):
             print(f"   {titre}")
 
         et = ex["etapes"]
-        couv = dict(carte=ex["carte"], vide=et[0]["svg"], vbVide=f"50 612 1500 {et[0]['h']}",
-                    sur=niv["couv"]["sur"], titre=niv["couv"]["titre"], accroche=niv["couv"]["accroche"], intro=textes["intro"],
+        couv = dict(carte=ex["carte"], sur=niv["couv"]["sur"], titre=niv["couv"]["titre"], accroche=niv["couv"]["accroche"], intro=textes["intro"],
                     sommaire=[[f["n"], f["t"], f["resume"]] for f in niv["fiches"]],
                     prof=dict(PROF, dit=corr["dit"]) if corr else None)
         await pdf_html(f"{base}{BASE_WEB}/couverture.html", tmp / "couverture.pdf", JS_COUV, couv,
                        css=[CSS_PROF if corr else None])
         await pdf_html(f"{base}{BASE_WEB}/exemple.html", tmp / "exemple.pdf", JS_PAGE_EXEMPLE,
                        dict(carte=ex["carte"], etapes=et, enquete=textes["enquete"],
-                            legendes=textes["legendes"], fin=textes["fin"]))
+                            legendes=textes["legendes"]))
         for i, f in enumerate(niv["fiches"]):
             await pdf_fiche(f, tmp / f"fiche{i}.pdf")
         d = niv["dos"]

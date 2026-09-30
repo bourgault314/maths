@@ -12,7 +12,7 @@
 .tete .sur{font-size:12px;font-weight:700;color:#fce7f3;text-transform:uppercase;letter-spacing:2.6px}
 .tete h1{margin:1mm 0 0;font-size:30px;line-height:1;font-weight:700;color:#fff;letter-spacing:-1px}
 /* ---------- la carte ---------- */
-.corps{padding:0 14mm 3mm;justify-content:flex-start;gap:5mm}
+.corps{padding:0 14mm 3mm;justify-content:flex-start;gap:6mm}
 .haut{display:flex;gap:5mm;align-items:stretch;margin-top:1mm}
 .carte{flex:0 0 96mm;border:1.6px solid #0f172a;border-radius:4px;padding:1.5mm 2mm;background:#fff;display:flex;flex-direction:column}
 .carte svg{width:100%;height:auto;display:block;margin:auto 0}
@@ -22,9 +22,12 @@
 .enquete b{color:#4a0d2b}
 .enquete q{quotes:"«\00a0" "\00a0»";font-weight:700;color:#0f172a}
 .enquete .but{background:#fce7f3;border:1px solid #f0abc9;border-radius:6px;padding:2mm 3mm;font-weight:700;color:#0f172a}
-/* ---------- les cinq étapes, celles de « Voir le schéma » ---------- */
-.etapes{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:2.2mm}
+/* ---------- les trois étapes de « Voir le schéma » (correction en barres, lots G1-G2), puis
+     « J'écris la réponse et je vérifie » ---------- */
+.etapes{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:4mm}
 .et{display:grid;grid-template-columns:9.5mm 47mm 1fr;align-items:center;column-gap:3mm}
+.et.texte{grid-template-columns:9.5mm 1fr;background:#fce7f3;border:1px solid #f0abc9;border-radius:6px;padding:1.6mm 3mm 1.6mm 1.6mm}
+.et.texte .leg{font-size:12px;margin-top:0.6mm}
 .et .badge{position:relative;width:9.5mm;height:9.5mm}
 .et .badge svg{position:absolute;inset:0;width:9.5mm;height:9.5mm}
 .et .badge b{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px}
@@ -32,7 +35,6 @@
 .et .leg{margin:0.8mm 0 0;font-size:11px;line-height:1.3;color:#334155}
 .et .leg b{color:#0f172a}
 .et .dessin{width:100%;height:auto;display:block}
-.fin{margin:0;font-size:12.5px;font-weight:700;color:#0f172a;background:#fce7f3;border:1px solid #f0abc9;border-radius:6px;padding:2mm 3.5mm;text-align:center}
 .atoi{margin:0;font-size:13px;font-weight:700;color:#0f172a;line-height:1.35;background:#fff;border:1.4px solid #be185d;border-radius:6px;padding:2.4mm 3.5mm;display:flex;align-items:center;gap:3mm}
 .atoi svg{flex:0 0 auto;width:7mm;height:7mm}
 .atoi b{color:#831843}
@@ -58,9 +60,11 @@
 </header>
 
 <div class="corps">
-  <!-- La carte et les cinq dessins sont ceux de l'outil (outils/splat.html) : les cinq
-       étapes du bouton « Voir le schéma », au profil d'impression de la correction.
-       render.py les redemande à l'outil et écrit les légendes À PARTIR DE LA CARTE. -->
+  <!-- La carte et les trois dessins sont ceux de l'outil (outils/splat.html) : les trois
+       étapes du bouton « Voir le schéma » (① les barres, ② tout sur une ligne, ③ je calcule —
+       la correction en barres des lots G1-G2, 29/09/2026), au profil d'impression de la
+       correction ; puis la 4e étape, « J'écris la réponse et je vérifie », en texte. render.py
+       les redemande à l'outil et écrit les légendes À PARTIR DE LA CARTE. -->
   <section class="haut">
     <div class="carte">
       <div class="lg">La carte et son indice</div>
@@ -71,22 +75,17 @@
 
   <ol class="etapes">
     <li class="et"><span class="badge"><svg viewBox="2 5 106 105" fill="#831843"><use href="#tacheBadge"/></svg><b>1</b></span>
-      <div class="txt"><h3>Je trace le schéma vide</h3><p class="leg"></p></div>
-      <svg class="dessin" viewBox="50 612 1500 345" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Je trace le schéma vide"></svg></li>
+      <div class="txt"><h3>Je trace les barres, avec les mots</h3><p class="leg"></p></div>
+      <svg class="dessin" viewBox="50 612 1500 345" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Je trace les barres, avec les mots"></svg></li>
     <li class="et"><span class="badge"><svg viewBox="2 5 106 105" fill="#831843"><use href="#tacheBadge"/></svg><b>2</b></span>
-      <div class="txt"><h3>Je le remplis avec l'indice</h3><p class="leg"></p></div>
-      <svg class="dessin" viewBox="50 612 1500 345" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Je le remplis avec l'indice"></svg></li>
+      <div class="txt"><h3>Tout sur une ligne</h3><p class="leg"></p></div>
+      <svg class="dessin" viewBox="50 612 1500 345" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Tout sur une ligne"></svg></li>
     <li class="et"><span class="badge"><svg viewBox="2 5 106 105" fill="#831843"><use href="#tacheBadge"/></svg><b>3</b></span>
-      <div class="txt"><h3>Je regroupe</h3><p class="leg"></p></div>
-      <svg class="dessin" viewBox="50 612 1500 345" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Je regroupe"></svg></li>
-    <li class="et"><span class="badge"><svg viewBox="2 5 106 105" fill="#831843"><use href="#tacheBadge"/></svg><b>4</b></span>
-      <div class="txt"><h3>J'ordonne</h3><p class="leg"></p></div>
-      <svg class="dessin" viewBox="50 612 1500 345" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="J'ordonne"></svg></li>
-    <li class="et"><span class="badge"><svg viewBox="2 5 106 105" fill="#831843"><use href="#tacheBadge"/></svg><b>5</b></span>
-      <div class="txt"><h3>Je résous</h3><p class="leg"></p></div>
-      <svg class="dessin" viewBox="50 612 1500 345" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Je résous"></svg></li>
+      <div class="txt"><h3>Je calcule</h3><p class="leg"></p></div>
+      <svg class="dessin" viewBox="50 612 1500 345" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Je calcule"></svg></li>
+    <li class="et texte"><span class="badge"><svg viewBox="2 5 106 105" fill="#831843"><use href="#tacheBadge"/></svg><b>4</b></span>
+      <div class="txt"><h3>J'écris la réponse et je vérifie</h3><p class="leg"></p></div></li>
   </ol>
-  <p class="fin"></p>
   <!-- La consigne des fiches, ici ET sur la couverture (23/09/2026) : en page 2, elle est en
        face de la fiche 10 (ou 15) quand le livret est ouvert, juste après l'exemple. -->
   <p class="atoi"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 21l3.5-.8L19 7.7 16.3 5 3.8 17.5 3 21z" fill="#be185d"/><path d="M14.8 6.5l2.7 2.7" stroke="#fff" stroke-width="1.4"/></svg><span><b>À toi&nbsp;!</b> Sur les fiches, sous chaque carte, <b>dessine le schéma en barres</b> pour t'aider, comme dans cet exemple, puis trouve ce que cache chaque tache.</span></p>

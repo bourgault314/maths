@@ -130,11 +130,18 @@ test("E4 : l'exemple (couverture et page 2) n'est aucune carte du livret, et sa 
   assert.match(render, /l'exemple du livret « \{nom\} » est une carte du livret/);
   assert.match(render, /if any\(cle_ex == c\[:2\] for v in reference\.values\(\) for c in v\):/);
   assert.match(render, /hiddenValues\.slice\(\)\.sort\(\(a, b\) => a - b\)/);
-  // les cinq dessins sont ceux de l'outil (« Voir le schéma »), au profil d'impression
-  for (const f of ["drawRelationSituationSchema(g, card, {filled:false", "drawRelationSituationSchema(g, card, {filled:true",
-                   "drawRelationGroupedSchema(g, card", "drawRelationOrderedSchema(g, card, {solved:false", "drawRelationOrderedSchema(g, card, {solved:true"])
+  // les trois dessins sont ceux de l'outil (« Voir le schéma », la correction en barres des
+  // lots G1-G2) : ① les barres, ② tout sur une ligne, ③ je calcule — sans leurs titres (la page
+  // a les siens), sans la ligne réponse (la 4e étape de la page, « J'écris la réponse et je
+  // vérifie », la remplace)
+  for (const f of ["drawEnqueteBarres(g, card, prof)", "drawEnqueteLigne(g, card, prof)", "drawEnqueteCalculs(g, card, {...prof, reponse:false})"])
     assert.ok(render.includes(f), f);
-  assert.match(render, /getRelationCorrectionPrintProfile\(card\)/);
+  assert.ok(!render.includes("vide:true"), "plus d'étape « barres vides » (29/09/2026)");
+  assert.match(render, /if \(d\.etapes\.length !== 3\) return/);
+  assert.match(render, /const prof = \{isPrint:true, modele, sansTitre:true\}/);
+  assert.match(render, /enqueteBarresModele\(card\)/);
+  // les légendes sont écrites à partir du modèle de la correction rendu (ex["barres"])
+  assert.match(render, /B\["mode"\] != "chaine"/, "l'exemple est une chaîne : la tache commune au milieu");
   // les couleurs des pastilles sont résolues (var(--splat-orange) → #f97316) : sinon noires
   assert.ok(render.includes("variables de couleur inconnues"), "résolution des var(--…) de l'outil");
 });
@@ -244,20 +251,25 @@ test("E4 : dans les PDF de l'élève — la couverture, l'exemple en page 2, les
     const pages = texteDesPages(`outils/${s}.pdf`).map(norm);
     assert.equal(pages.length, 8, `${s} : huit pages de texte`);
     assert.match(pages[0], /Nom, prénom/);
-    assert.match(pages[0], /Sur cette carte, il y a (26|33) jetons au total, tous ?cachés sous trois taches/);
-    // couverture (23/09) : le schéma VIDE pour commencer, la consigne, et renvoi à la page 2
-    assert.match(pages[0], /Pour commencer/);
-    assert.match(pages[0], /Schéma vide de la situation/);
-    assert.doesNotMatch(pages[0], /Schéma rempli/);
+    assert.match(pages[0], /Sur cette carte, il y a (26|33) jetons au ?total, tous ?cachés sous ?trois ?taches/);
+    // couverture (29/09, remarque 1 du monde 3) : plus de schéma « Pour commencer » — la
+    // consigne, le mot dans chaque case, et renvoi à la page 2
+    assert.doesNotMatch(pages[0], /Pour commencer/);
+    assert.doesNotMatch(pages[0], /Schéma (vide|rempli)/);
+    assert.match(pages[0], /dans ?chaque ?case ?le ?mot ?de ?la ?tache/);
     assert.match(pages[0], /pour toi : dessine le schéma en barres/);
     assert.match(pages[0], /comme l'exemple de la page 2\./);
     assert.match(pages[1], /L'enquête pas à pas/);
-    assert.match(pages[1], /Je trace le schéma vide/);
-    assert.match(pages[1], /Je vérifie : \d+ \+ \d+ \+ \d+ = (26|33)\./);
-    assert.match(pages[1], /nombres connus de l'autre/, "étape 4, la phrase de Claire");
-    // « À toi ! » après la conclusion (l'extracteur de ce test perd certains « t » en gras :
+    // page 2 (lots G1-G2) : les trois étapes de la correction en barres, puis « J'écris la
+    // réponse et je vérifie » (le total ✓, puis chaque indice ✓)
+    for (const t of ["Je trace les barres, avec les mots", "Tout sur une ligne", "Je calcule", "J'écris la réponse et je vérifie"]) assert.match(pages[1], new RegExp(t.replace(/ /g, " ?")), t);
+    assert.doesNotMatch(pages[1], /Je regroupe|J'ordonne|Schéma vide|tache de référence|Je les remplis/);
+    assert.match(pages[1], /Je vérifie : \d+ \+ \d+ \+ \d+ = (26|33) ?✓ ?; \d+ [+×] \d+ = ?\d+ ?✓ ?; \d+ [+×] \d+ = ?\d+ ?✓/);
+    // (l'extracteur colle les fins de ligne : « l'unité ;puis », « à partird'elle »)
+    assert.match(pages[1], /D'abord la tache \w+, l'unité ?; ?puis les autres taches à partir ?d'elle\./);
+    // « À toi ! » après la 4e étape (l'extracteur de ce test perd certains « t » en gras :
     // on ne cherche que des morceaux sûrs ; pdftotext lit la phrase entière)
-    assert.match(pages[1], /Je vérifie : \d+ \+ \d+ \+ \d+ = (26|33)\.À .{0,4}! Sur les fiches, sous chaque/);
+    assert.match(pages[1], /= ?\d+ ?✓À .{0,4}! Sur les fiches, sous chaque/);
     assert.match(pages[1], /dessine le schéma en barres pour/);
     for (let k = 0; k < 5; k++) {
       const [num, t] = TITRES[5 * l + k];
@@ -287,15 +299,22 @@ function policesDuPdf(p) {
   return new Set([...texte.matchAll(/\/BaseFont\s*\/(?:[A-Z]{6}\+)?([A-Za-z0-9-]+)/g)].map((m) => m[1]));
 }
 
-test("E4 : en lettre, le 𝑥 est le 𝑥 arrondi de l'appli (police mathématique), jamais un x droit", () => {
+test("E4 : en lettre, les initiales des couleurs (R, N, Vi…) dans les calculs, jamais un x droit", () => {
   // 23/09 : « sur l'appli, des x arrondis ; dans tes PDF, des x droits » — la machine de rendu
-  // dessinait 𝑥 (U+1D465) avec une police sans empattement (FreeSans)
+  // dessinait 𝑥 (U+1D465) avec une police sans empattement (FreeSans). Depuis le lot G1
+  // (29/09), la correction de l'Enquête n'écrit plus de 𝑥 : en lettre, ce sont les initiales
+  // des couleurs (« 2R + 7 = 23 », « R = 16 ÷ 2 = 8 ») ; la police du 𝑥 reste posée pour les
+  // autres livrets.
   assert.match(render, /unicode-range:U\+1D465/);
   assert.match(render, /if corr and corr\["lettre"\]:\n\s+await pg\.add_style_tag\(content=CSS_X\)/);
   for (const s of SORTIES) for (const v of ["_correction_lettre", "_correction_lettre_a_plier"]) {
     const polices = policesDuPdf(`outils/${s}${v}.pdf`);
-    assert.ok([...polices].some((f) => /^(FreeSerif|LatinModernMath|CambriaMath|STIXTwoMath)/.test(f)), `${s}${v} : ${[...polices].join(", ")}`);
     assert.ok(!polices.has("FreeSans"), `${s}${v} : le x droit (FreeSans) est encore là`);
+  }
+  for (const s of SORTIES) {
+    const pages = texteDesPages(`outils/${s}_correction_lettre.pdf`).map(norm);
+    for (let k = 2; k < 7; k++) assert.match(pages[k], /(?<![A-Za-z])(N|Vi|O|B|Ve|R) ?= ?\d+ ÷ \d+ = \d+/, `${s} en lettre, page ${k + 1} : « R = 16 ÷ 2 = 8 »`);
+    for (let k = 2; k < 7; k++) assert.doesNotMatch(pages[k], /\u{1D465}|\?/u, `${s} en lettre, page ${k + 1} : ni 𝑥 ni « ? »`);
   }
 });
 
@@ -410,7 +429,7 @@ test("E5 : l'exemple de la page 2 n'est aucune carte des fiches — relu dans ca
     assert.ok(!toutes.has(cle(c.exemple)), `l'exemple du livret « ${nom} » est une carte des fiches : ${cle(c.exemple)}`);
     // c'est bien l'exemple imprimé en page 2
     const p2 = norm(texteDesPages(`outils/livret_splat_enquete_${nom}.pdf`)[1]);
-    const m = p2.match(/Je vérifie : (\d+) \+ (\d+) \+ (\d+) = (\d+)\./);
+    const m = p2.match(/Je vérifie : (\d+) \+ (\d+) \+ (\d+) = (\d+) ?✓/);
     assert.ok(m, `${nom} : vérification de la page 2 introuvable`);
     assert.equal(cle([Number(m[4]), [m[1], m[2], m[3]].map(Number)]), cle(c.exemple), `${nom} : cartes.json et le PDF disent le même exemple`);
   }
@@ -584,8 +603,8 @@ test("Le défi : les douze PDF — couverture « Le défi », l'exemple en page 
       assert.match(pages[0], /Le défi/i, `${s}${v} : « Le défi » en couverture`);
       assert.match(pages[0], l === 0 ? /MONDE 3/i : /MONDE 4/i);
       assert.match(pages[0], /totaux jusqu'à 100/);
-      assert.match(pages[0], new RegExp(`Sur cette carte, il y a ${ex[l][0]} jetons au total`));
-      assert.ok(pages[1].includes(`Je vérifie : ${ex[l][1]}.`), `${s}${v} : l'exemple de la page 2`);
+      assert.match(pages[0], new RegExp(`Sur cette carte, il y a ${ex[l][0]} jetons au ?total`));
+      assert.ok(new RegExp(`Je vérifie : ${ex[l][1].replace(/[+]/g, "\\+")} ?✓`).test(pages[1]), `${s}${v} : l'exemple de la page 2`);
       for (let k = 0; k < 5; k++) {
         const [num, t] = TITRES[5 * l + k];
         const p = pages[2 + k].replace(/ /g, " ");
@@ -601,10 +620,9 @@ test("Le défi : les douze PDF — couverture « Le défi », l'exemple en page 
         for (let k = 2; k < 7; k++) assert.match(pages[k], /Correction/, `${s}${v}, page ${k + 1}`);
       } else assert.match(pages[0], /Nom, prénom/);
     }
-    for (const v of ["_correction_lettre", "_correction_lettre_a_plier"]) {
-      const polices = policesDuPdf(`outils/${s}${v}.pdf`);
-      assert.ok([...polices].some((f) => /^(FreeSerif|LatinModernMath|CambriaMath|STIXTwoMath)/.test(f)), `${s}${v} : le 𝑥 arrondi`);
-    }
+    // en lettre (lot G1) : les initiales des couleurs dans les calculs, plus de 𝑥
+    const lettre = texteDesPages(`outils/${s}_correction_lettre.pdf`).map(norm);
+    for (let k = 2; k < 7; k++) assert.match(lettre[k], /(?<![A-Za-z])(N|Vi|O|B|Ve|R) ?= ?\d+ ÷ \d+ = \d+/, `${s} en lettre, page ${k + 1}`);
   });
 });
 
@@ -704,7 +722,7 @@ test("L'enquête rebondit : les six PDF — 8 pages, 4 feuilles A3, l'exemple à
     // (l'extracteur colle les mots d'une fin de ligne : une espace peut manquer)
     const souple = (t) => new RegExp(t.replace(/[.*+?^${}()|[\]\\]/g, "\\$&").replace(/ /g, " ?"));
     assert.match(pages[0], souple("Sur cette carte, il y a 38 jetons au total, tous cachés sous trois taches : une tache noire et deux taches bleues"));
-    assert.match(pages[1], souple("Je vérifie : 8 + 15 + 15 = 38."));
+    assert.match(pages[1], souple("Je vérifie : 8 + 15 + 15 = 38 ✓ ; 8 + 7 = 15 ✓"));
     assert.match(pages[1], souple("La règle : les taches de même couleur cachent le même nombre de jetons."));
     FICHES_REB.forEach((f, k) => {
       const p = pages[2 + k].replace(/ /g, " ");
@@ -721,7 +739,7 @@ test("L'enquête rebondit : les six PDF — 8 pages, 4 feuilles A3, l'exemple à
       assert.match(pages[0], /Nom, prénom/);
     }
   }
-  // en lettre, le 𝑥 arrondi
-  const polices = policesDuPdf(`outils/${SORTIE_REB}_correction_lettre.pdf`);
-  assert.ok([...polices].some((f) => /^(FreeSerif|LatinModernMath|CambriaMath|STIXTwoMath)/.test(f)), [...polices].join(", "));
+  // en lettre (lot G1) : les initiales des couleurs dans les calculs
+  const lettre = texteDesPages(`outils/${SORTIE_REB}_correction_lettre.pdf`).map(norm);
+  for (let k = 2; k < 7; k++) assert.match(lettre[k], /(?<![A-Za-z])(N|Vi|O|B|Ve|R) ?= ?\d+ ÷ \d+ = \d+|(?<![A-Za-z])(N|Vi|O|B|Ve|R) ?= ?\d+/, `rebondit en lettre, page ${k + 1}`);
 });
