@@ -324,12 +324,14 @@
     .etape .num { width: 32px; height: 32px; display: grid; place-items: center; border-radius: 50%; background: #e3ecf2; color: #2c4a63; font-weight: 950; }
     .etape strong { display: block; font-size: 1.05rem; line-height: 1.15; }
     .etape small { display: block; color: #5b7286; font-size: .78rem; font-weight: 800; line-height: 1.25; margin-top: 2px; }
+    /* Audit 1 : « d’abord : dans le désordre » tient sur une ligne à 320 px. */
+    @media (max-width: 339px) { .etape small { font-size: .66rem; } }
     .etape .dots { display: flex; gap: 4px; }
     .etape .dots i { width: 12px; height: 12px; border-radius: 50%; border: 2px solid var(--teal); background: #fff; }
     .etape .dots i.is-started { background: linear-gradient(90deg, var(--teal) 50%, #fff 50%); }
     .etape .dots i.on { background: var(--teal); }
     .etape .dots i.is-check { width: auto; height: auto; border: 0; border-radius: 0; background: none; color: var(--green); font-style: normal; font-weight: 950; font-size: 1.15rem; line-height: 1; }
-    .etape .dots i.is-check.off { color: #9db4c4; }
+    .etape .dots i.is-check.off { color: #698197; }
     /* Lot « dosage + validation » (19/09/2026) : la pastille « N fois » de
        J'apprends — un nombre qui ne fait que monter, à la place des cinq ronds
        qui se lisaient comme un niveau terminé. Rien tant que c'est 0. */
@@ -378,7 +380,7 @@
     .choix-activite strong { display: block; font-size: .95rem; font-weight: 900; line-height: 1.15; }
     .choix-activite small { display: block; margin-top: 2px; color: #5b7286; font-size: .74rem; font-weight: 800; }
     .choix-activite .etat { color: var(--green); font-style: normal; font-weight: 950; font-size: 1.05rem; line-height: 1; text-align: center; }
-    .choix-activite .etat.off { color: #9db4c4; }
+    .choix-activite .etat.off { color: #698197; }
     .choix-activite .etat.neutre { color: #5b7286; font-size: .95rem; }
     .choix-activite .tag { padding: 3px 9px; border-radius: 999px; background: #e7f0fb; color: var(--blue); font-size: .75rem; font-weight: 950; white-space: nowrap; }
     .choix-activite.is-next { border-color: var(--blue); box-shadow: 0 0 0 2px rgba(7, 85, 184, .16); }
@@ -716,6 +718,10 @@
        du bouton principal, « Ma table » reste à côté (Gwenaël, 11/09). */
     .result.is-rate .result-actions > #retry { order: -1; color: #fff; border: 0; background: var(--blue); box-shadow: 0 5px 0 #043f8c; }
     .result.is-rate .result-actions > #result-accueil { color: var(--blue); border: 1px solid #c5d9e6; background: #fff; box-shadow: none; }
+    /* Validation ratée (audit 1, 30/09/2026) : « Je m’entraîne : … » devient
+       le bouton bleu, en tête ; « Ma table » et « Rejouer » passent dessous,
+       en secondaires, dans cet ordre. */
+    .result.avec-entraine .result-actions > #retry { order: 0; color: var(--blue); border: 1px solid #c5d9e6; background: #fff; box-shadow: none; }
     @keyframes fete-pop { 0% { transform: scale(.85); opacity: 0; } 60% { transform: scale(1.04); } 100% { transform: scale(1); opacity: 1; } }
     .result-parcours-actions { display: flex; flex-wrap: wrap; gap: 8px; }
     .result-parcours-actions .secondary { min-height: 44px; margin-top: 10px; padding: 8px 14px; }
@@ -1381,6 +1387,10 @@
       .result-actions > .primary,
       .result.is-rate .result-actions > #retry { grid-column: 1 / -1; }
       .result.is-rate .result-actions > #result-accueil { grid-column: auto; }
+      /* Validation ratée : le bleu sur toute la ligne, « Ma table » et
+         « Rejouer » côte à côte, puis « Voir mon parcours » sur sa ligne. */
+      .result.avec-entraine .result-actions > #retry { grid-column: auto; }
+      .result.avec-entraine .result-actions > #result-open-parcours { grid-column: 1 / -1; }
       /* La révision n'a pas de « Rejouer » : le troisième bouton prend la ligne. */
       .result-actions > #retry[hidden] + #result-open-parcours { grid-column: 1 / -1; }
       /* R4 bis : les boutons de la fin de révision, dans le cadre — le
@@ -1837,7 +1847,7 @@
       <div id="suivi-garde" class="suivi-garde" role="dialog" aria-modal="true" aria-labelledby="suivi-garde-titre" hidden>
         <div class="suivi-garde-carte">
           <p id="suivi-garde-titre" class="suivi-garde-titre">C’est toujours toi ?</p>
-          <p class="suivi-garde-note">Personne n’a touché à cet écran depuis un moment. Si c’est toi, retape ton code (il est sur ta bandelette). Sinon, clique «&nbsp;Non&nbsp;» : ton camarade retrouvera son parcours avec son code.</p>
+          <p class="suivi-garde-note">Personne n’a touché à cet écran depuis un moment. Si c’est toi, retape ton code (il est sur ta bandelette). Sinon, appuie sur «&nbsp;Non&nbsp;» : ton camarade retrouvera son parcours avec son code.</p>
           <form id="suivi-garde-form" class="suivi-garde-form" autocomplete="off">
             <label class="suivi-garde-label" for="suivi-garde-code">Ton code</label>
             <input id="suivi-garde-code" class="suivi-garde-code" type="text" inputmode="latin" autocapitalize="characters" autocomplete="off" autocorrect="off" spellcheck="false" maxlength="6" size="6" aria-describedby="suivi-garde-erreur">
@@ -1892,7 +1902,7 @@
             <button id="acc-reviser" class="reviser etape" type="button" hidden><span class="num" aria-hidden="true"><svg class="neurones" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M4 5 12 12M20 4 12 12M12 12 7 21M12 12l8 7"/><circle cx="4" cy="5" r="1.9" fill="currentColor"/><circle cx="20" cy="4" r="1.9" fill="currentColor"/><circle cx="7" cy="21" r="1.8" fill="currentColor"/><circle cx="20" cy="19" r="1.8" fill="currentColor"/><circle cx="12" cy="12" r="2.2" fill="currentColor"/></svg></span><span><strong id="acc-reviser-titre">Mes calculs du jour</strong><small id="acc-reviser-note"></small></span><span class="go">Réviser&nbsp;→</span></button>
             <div id="acc-jours" class="jours" hidden></div>
             <div class="acc-liens">
-              <button id="open-parcours" class="acc-lien" type="button" aria-controls="parcours"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6.5 9 4l6 2.5 6-2.5v13l-6 2.5-6-2.5-6 2.5z" fill="#e7f8f5" stroke="#087a71" stroke-width="1.8" stroke-linejoin="round"/><path d="M9 4v13M15 6.5v13" stroke="#087a71" stroke-width="1.8"/><circle cx="12" cy="10" r="1.8" fill="#e0771a"/></svg><span>Mon parcours<small>toutes mes tables, le mélange, je deviens expert</small></span></button>
+              <button id="open-parcours" class="acc-lien" type="button" aria-controls="parcours"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6.5 9 4l6 2.5 6-2.5v13l-6 2.5-6-2.5-6 2.5z" fill="#e7f8f5" stroke="#087a71" stroke-width="1.8" stroke-linejoin="round"/><path d="M9 4v13M15 6.5v13" stroke="#087a71" stroke-width="1.8"/><circle cx="12" cy="10" r="1.8" fill="#e0771a"/></svg><span>Mon parcours<small>tables, mélange, étoiles</small></span></button>
               <button id="open-calculs" class="acc-lien" type="button" aria-controls="calculs"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="3" fill="#fff" stroke="#0755b8" stroke-width="1.8"/><path d="M3 9h18M3 15h18M9 3v18M15 3v18" stroke="#0755b8" stroke-width="1.5"/><rect x="9.8" y="9.8" width="4.4" height="4.4" fill="#147447"/><rect x="15.8" y="3.8" width="4.4" height="4.4" fill="#a93030"/><rect x="3.8" y="15.8" width="4.4" height="4.4" fill="#0755b8"/></svg><span>Mes calculs<small>la grille des 36 calculs</small></span></button>
             </div>
             <div class="acc-bas">
@@ -2105,6 +2115,9 @@
         </div>
         <div id="result-parcours" class="result-parcours" hidden></div>
         <div class="result-actions">
+          <!-- Audit 1 (30/09/2026) : après une validation ratée seulement,
+               l'entraînement que l'accueil conseille, en bouton bleu. -->
+          <button id="result-entraine" class="primary" type="button" hidden></button>
           <button id="result-accueil" class="primary" type="button">Ma table</button>
           <button id="retry" class="secondary" type="button">Rejouer</button>
           <button id="result-open-parcours" class="secondary" type="button">Voir mon parcours</button>
@@ -2180,7 +2193,7 @@
     <p class="fiche-subtitle" id="fiche-subtitle">Colorie les ronds au fur et à mesure, comme dans l’application.</p>
     <table class="fiche-table">
       <thead>
-        <tr><th></th><th colspan="5">J’apprends<small>perles · bande · à trous · ordre · désordre</small></th><th colspan="3">Je m’entraîne<small>produits · trous · les deux</small></th><th>Acquise</th></tr>
+        <tr><th></th><th colspan="5">J’apprends<small>perles · bande · à trous · ordre · désordre</small></th><th colspan="3">Je m’entraîne<small>désordre · nombres manquants · les deux</small></th><th>Acquise</th></tr>
       </thead>
       <tbody id="fiche-rows"></tbody>
     </table>
@@ -2197,7 +2210,7 @@
     <div class="fiche-rules">
       <strong>Les règles</strong>
       <p><b>J’apprends</b> : un rond par activité terminée. On découvre la table, il n’y a rien à réussir.</p>
-      <p><b>Je m’entraîne</b> : 10 questions sans chronomètre, 1 erreur au maximum. Trois entraînements différents.</p>
+      <p><b>Je m’entraîne</b> : 10 questions sans chrono, 1 erreur au maximum. Trois entraînements différents.</p>
       <p><b>Acquise ✓</b> : 20 questions (produits et nombres manquants) en 1 min 30, 2 erreurs au maximum.</p>
       <p><b>Mon mélange</b> : même règle, sur mes tables acquises — à réussir avant de valider une nouvelle table. <b>Mon rang</b> : Bronze dès ma première table, puis Argent, Or, Platine, Diamant, Légende. On ne redescend jamais.</p>
     </div>
@@ -2210,7 +2223,7 @@
       <div class="fiche-rules">
         <strong>Comment lire la grille</strong>
         <p><b>7 × 8 = 8 × 7</b> : c’est le même calcul à mémoriser, il n’occupe qu’une case du tableau. C’est pourquoi une moitié est grisée.</p>
-        <p><b>Un calcul monte quand on le réussit le jour où il revient</b> : le lendemain, puis 3 jours, 7 jours et 14 jours après — pas trois fois dans la même minute. Une erreur le fait redescendre d’une boîte, sans limite, et il revient tout de suite.</p>
+        <p><b>Un calcul monte quand on le réussit le jour où il revient</b> : le lendemain, puis 3 jours, 7 jours et 14 jours après — pas trois fois dans la même minute. Une erreur le fait redescendre d’une boîte, sans limite, et il revient demain.</p>
         <p><b>Les tables de 1 et de 10 n’y sont pas</b> : elles se retrouvent sans les apprendre par cœur.</p>
         <p>La grille se remplit dans les entraînements, les validations et les révisions — jamais dans J’apprends, ni dans Réglages, ni dans l’évaluation CM1.</p>
       </div>
@@ -2224,12 +2237,12 @@
        rang s'ajoutent ici — « un test, c'est 20 questions en 1 min 30 » vaut
        pour les validations et les mélanges, pas pour les étoiles. -->
   <template id="notice-regles">
-    <p><b>Une table.</b> Je l’apprends si je veux, je m’entraîne 3 fois — dans le désordre, avec des trous, puis les deux — et je la valide : 20 questions en 1 min 30, 2 erreurs au maximum.</p>
-    <p><b>Mon mélange.</b> Dès que j’ai 2 tables, je dois réussir le mélange de mes tables avant d’en valider une nouvelle. Même règle : 20 questions en 1 min 30, 2 erreurs au maximum. Chaque nouvelle table le remet à faire.</p>
-    <p><b>Mes calculs.</b> Chaque calcul a 5 boîtes. Un calcul monte d’une boîte quand je le réussis le jour où il revient : le lendemain, puis 3 jours, 7 jours, 14 jours après. Il est su à partir de la boîte 4. Une erreur le fait redescendre d’une boîte : il repasse à la fin de la série, et il revient demain.</p>
-    <p><b>Mes calculs du jour.</b> Les calculs qui reviennent aujourd’hui, sans chrono — même ceux que je sais déjà, pour ne pas les oublier. L’appli en prend un peu dans chaque boîte, à tour de rôle : du facile et du difficile mêlés, 10 à la fois. Jamais un calcul que je n’ai pas encore rencontré. Quand plus rien ne revient, « Encore 10 calculs » propose les suivants : rien ne monte, c’est pour s’entraîner.</p>
-    <p><b>Les étoiles.</b> Quand mes 9 tables sont acquises et le dernier mélange réussi, je deviens expert : 25 questions avec des divisions, toutes les tables, de plus en plus vite — ★ 2 min, ★★ 1 min 45, ★★★ 1 min 30, ★★★★ 1 min 15. À 1 minute, je suis une Légende des tables 👑.</p>
-    <p><b>Mon rang.</b> Bronze dès ma première table, puis Argent (3 tables), Or (6), Platine (9 tables et le mélange), Diamant (★★★★), Légende (👑). On ne redescend jamais.</p>
+    <p><b>Ma table.</b> J’apprends si je veux, je m’entraîne 3 fois, je valide&nbsp;: 20 questions en 1 min 30, 2 erreurs au maximum.</p>
+    <p><b>Mon mélange.</b> Dès 2 tables acquises, je réussis le mélange avant de valider une nouvelle table.</p>
+    <p><b>Mes calculs.</b> Chaque calcul a 5 boîtes. Réussi le jour où il revient, il monte d’une boîte&nbsp;; raté, il descend et revient demain.</p>
+    <p><b>Mes calculs du jour.</b> Les calculs qui reviennent aujourd’hui, 10 à la fois, sans chrono.</p>
+    <p><b>Les étoiles.</b> Mes 9 tables acquises et le mélange réussi, je tente toutes les tables de plus en plus vite&nbsp;: ★ 2 min … 👑 1 min.</p>
+    <p><b>Mon rang.</b> Bronze, Argent, Or, Platine, Diamant, Légende. On ne redescend jamais.</p>
   </template>
   <footer class="site-footer">
     <span>Gwenaël Bourgault</span><span aria-hidden="true">·</span>
@@ -2240,7 +2253,7 @@
     <span data-mathsgo-confidentialite>Sans cookie ni traceur</span>
   </footer>
 
-  <script src="./defi_tables_core.js?v=20260914-1"></script>
+  <script src="./defi_tables_core.js?v=20260930-1"></script>
   <script src="./defi_tables_mon_parcours.js?v=20260919-1"></script>
   <script>
     (() => {
@@ -3227,6 +3240,7 @@
         configuration: null,
         tenSecondAlert: false,
         waitingForContinue: false,
+        correctionAfficheeA: 0,
         mastered: new Set(),
         erreursBande: new Map(),
         casesDonnees: new Set(),
@@ -4314,7 +4328,7 @@
         const stickActivity = ["beads", "construct", "gaps"].includes(state.configuration.learnActivity);
         const completed = stickActivity ? state.revealedLearnResults.size : state.mastered.size;
         const total = stickActivity ? CASES_BANDE : TOTAL;
-        const label = stickActivity ? "cases complétées" : "calculs maîtrisés";
+        const label = stickActivity ? "cases complétées" : "calculs sus";
         $("question-count").textContent = `${completed} / ${total} ${label}`;
         $("progress").style.width = `${completed / total * 100}%`;
       }
@@ -4359,20 +4373,27 @@
         renderInlineAnswer();
       }
 
+      // Audit 1 (30/09/2026) : après une erreur, « Valider » devient aussitôt
+      // « Suivant » — deux appuis rapides sautaient la correction. Pendant
+      // ce délai, un appui sur Suivant (ou Entrée) est ignoré, sans rien
+      // changer à l'écran.
+      const DELAI_LECTURE_CORRECTION_MS = 700;
+
       function showAnswerFeedback(question, correct, given, willRetry = false, assisted = false, donnee = false) {
         state.waitingForContinue = true;
+        state.correctionAfficheeA = correct ? 0 : Date.now();
         const feedback = $("answer-feedback");
         feedback.className = `answer-feedback ${correct ? "is-correct" : "is-wrong"}`;
         if (correct) {
           renderInlineAnswer("is-correct");
-          feedback.textContent = assisted ? "Bravo ! On le reverra sans la bande." : "Bravo !";
+          feedback.textContent = assisted ? "Bravo\u00a0! On le reverra sans la bande." : "Bravo\u00a0!";
         } else {
           state.answer = String(question.answer);
           renderInlineAnswer("is-corrected");
           const suite = willRetry ? " Le calcul reviendra." : donnee ? " Je l’écris dans la bande." : "";
           feedback.textContent = given === null
-            ? `Pas de réponse. Bonne réponse : ${question.answer}.${suite}`
-            : `Ta réponse : ${given}. Bonne réponse : ${question.answer}.${suite}`;
+            ? `Pas de réponse. Bonne réponse\u00a0: ${question.answer}.${suite}`
+            : `Ta réponse\u00a0: ${given}. Bonne réponse\u00a0: ${question.answer}.${suite}`;
         }
         setAnswerControlsEnabled(false);
         $("validate").focus?.({preventScroll: true});
@@ -4390,7 +4411,7 @@
       function showAnswerError() {
         $("inline-answer")?.classList.add("is-invalid");
         $("answer-feedback").className = "answer-feedback is-wrong";
-        $("answer-feedback").textContent = "Écris une réponse ou choisis « Passer ».";
+        $("answer-feedback").textContent = "Tape une réponse ou appuie sur «\u00a0Passer\u00a0».";
         $("expression").focus?.({preventScroll: true});
       }
 
@@ -4539,6 +4560,8 @@
         if (!state.running) return;
         state.running = false;
         stopTimer();
+        $("result-entraine").hidden = true;
+        $("result").classList.remove("avec-entraine");
         if (state.configuration.mode === "revision") {
           finishRevision();
           return;
@@ -4555,13 +4578,44 @@
         sauverParcours();
         renderVerdict(suivi, elapsed);
         renderResultParcours(suivi);
+        renderEntraineConseille(suivi);
         $("result-message").textContent = scoreMessage(state.correct, state.configuration);
         $("result-message").hidden = Boolean(suivi.classement);
         $("result-previous").hidden = state.configuration.mode === "learn" || previousScore === undefined;
-        $("result-previous").textContent = previousScore === undefined ? "" : `Série précédente : ${previousScore} / ${TOTAL}.`;
+        $("result-previous").textContent = previousScore === undefined ? "" : `Série précédente\u00a0: ${previousScore} sur ${TOTAL}.`;
         renderCorrections();
         $("result-reglages").hidden = state.origin !== "reglages";
         show("result");
+      }
+
+      // Audit 1 (30/09/2026) : après une validation ratée, l'entraînement
+      // que l'accueil conseille pour cette table — le premier qui n'est pas
+      // réussi (la même lecture que la tuile « Je m'entraîne ») ; les trois
+      // réussis, « Comme la validation, en 2 min » — devient le bouton bleu.
+      // « Ma table » et « Rejouer » passent en secondaires. Les autres bilans
+      // ne changent pas.
+      let resultEntraineConfig = null;
+
+      function entrainementConseille(table) {
+        const ligne = PARCOURS.etatAffichage(parcours).lignes.find(item => item.table === table);
+        if (!ligne) return null;
+        const prochain = ligne.entraine.find(item => item.etat !== 2);
+        return prochain
+          ? {nom: NOMS_ENTRAINEMENTS[prochain.entrainement], config: PARCOURS.configEntraine(table, prochain.entrainement)}
+          : {nom: "comme la validation, en 2 min", config: PARCOURS.configValidation(table, 120)};
+      }
+
+      function renderEntraineConseille(suivi) {
+        const bouton = $("result-entraine");
+        const validation = suivi.evenements.find(evenement => evenement.type === "validation");
+        const conseil = validation && !validation.reussi ? entrainementConseille(validation.table) : null;
+        resultEntraineConfig = conseil ? conseil.config : null;
+        bouton.hidden = !conseil;
+        $("result").classList.toggle("avec-entraine", Boolean(conseil));
+        if (!conseil) return;
+        bouton.textContent = `Je m’entraîne\u00a0: ${conseil.nom}`;
+        $("result-accueil").classList.remove("primary");
+        $("result-accueil").classList.add("secondary");
       }
 
       // Lot R2 : le verdict, ce que l'élève lit en premier. Un seul cadre en
@@ -4587,6 +4641,11 @@
         return ratees.size;
       }
 
+      // Les calculs passés (« Passer ») de la série : ni justes, ni faux.
+      function calculsPasses() {
+        return state.responses.filter(reponse => reponse && reponse.skipped).length;
+      }
+
       function verdictSerie(suivi, elapsed) {
         const config = state.configuration;
         const remaining = TOTAL - state.index;
@@ -4596,7 +4655,12 @@
         const verdict = {icone: "✓", titre: "", score: "", config: configurationLabel(config), detail: "", classe: "", champion: false, rang: null};
         const sur = (score, total) => `${score} sur ${total}`;
         if (config.mode === "learn") {
-          verdict.titre = `Table de ${config.tables[0]} terminée !`;
+          // Audit 1 (30/09/2026) : le titre dit l'activité qui vient de finir,
+          // la ligne du dessous dit la table (plus de « N activités sur 5 »).
+          verdict.titre = activitePerles(config) ? "Perles terminées !"
+            : config.learnActivity === "construct" ? "Bande terminée !"
+            : config.learnActivity === "gaps" ? "Bande complétée !"
+            : "Série terminée !";
           // Lot R4 : quand la bande a coûté des erreurs, l'écran le dit —
           // « ✓ Les 11 cases complétées » au-dessus d'une erreur barrée se
           // contredisait. Sans erreur, la phrase ne change pas.
@@ -4609,8 +4673,7 @@
               : config.learnActivity === "construct"
                 ? (ratees ? `${casesBande - ratees} cases sur ${casesBande} trouvées du premier coup` : "Les 11 cases de la bande complétées")
                 : "Les 11 produits retrouvés";
-          const apprends = suivi.evenements.find(evenement => evenement.type === "apprends");
-          if (apprends) verdict.config = `J’apprends · ${apprends.termines} activité${apprends.termines > 1 ? "s" : ""} sur ${PARCOURS.ACTIVITES_APPRENDS.length} faite${apprends.termines > 1 ? "s" : ""}`;
+          verdict.config = `J’apprends · Table de ${config.tables[0]}`;
           return verdict;
         }
         if (fete.principal) {
@@ -4650,22 +4713,40 @@
           verdict.config = melange && !validation && !etoile ? `Tables ${listeTables(melange.tables)}` : "";
           return verdict;
         }
+        // Audit 1 (30/09/2026, Gwenaël) : sur un écran raté, la ligne de
+        // rappel ne répète plus « 20 questions · 1 min 30 » (le score le dit
+        // déjà) — seulement le nom de l'épreuve, et les tables pour un mélange.
+        const rappelCourt = () => {
+          const parts = configurationLabel(config).split(" · ");
+          const melange = config.mode === "validation" && config.tables.length > 1;
+          return parts.slice(0, melange ? 2 : 1).join(" · ");
+        };
         if (principal && !principal.reussi && tempsEcoule) {
           verdict.classe = "is-temps";
           verdict.icone = "⏱";
           verdict.titre = "Temps écoulé";
-          verdict.score = `${pluriel(state.answered, "réponse")} sur ${TOTAL} en ${CORE.durationLabel(config.duration)} — il en faut ${seuilDe(principal)}`;
+          verdict.config = rappelCourt();
+          // Audit 1 (30/09/2026) : le seuil compte des réponses JUSTES — le
+          // score aussi (avant : « 15 réponses sur 20 … il en faut 18 », avec
+          // les réponses données). Le détail compte aussi les calculs passés.
+          verdict.score = `${pluriel(state.correct, "juste")} sur ${TOTAL} en ${CORE.durationLabel(config.duration)} — il en faut ${seuilDe(principal)}`;
           const fausses = state.answered - state.correct;
+          const passees = calculsPasses();
           verdict.detail = [
-            fausses ? `${state.correct} juste${state.correct > 1 ? "s" : ""}, ${pluriel(fausses, "erreur")}` : `${state.correct > 1 ? "Tes " + state.correct + " réponses étaient justes" : state.correct === 1 ? "Ta réponse était juste" : "Aucune réponse"}`,
+            [
+              state.correct ? pluriel(state.correct, "juste") : "",
+              fausses ? pluriel(fausses, "erreur") : "",
+              passees ? pluriel(passees, "passée") : ""
+            ].filter(Boolean).join(", "),
             `${pluriel(remaining, "calcul")} non vu${remaining > 1 ? "s" : ""}`
-          ].join(" · ");
+          ].filter(Boolean).join(" · ");
           return verdict;
         }
         if (principal && !principal.reussi) {
           verdict.classe = "is-rate";
           verdict.icone = "✗";
           verdict.titre = "Pas encore";
+          verdict.config = rappelCourt();
           verdict.score = `${sur(principal.score, principal.total)} — il en faut ${seuilDe(principal)}`;
           return verdict;
         }
@@ -4699,14 +4780,18 @@
       // 30 » et « 17 sur 20 » restent entiers (audit, A14). « il en faut 18 »
       // aussi : sans l'avant-dernière ligne, le téléphone de 390 px coupait
       // « il en / faut 18 » sous « Temps écoulé » (relecture du lot R2).
+      // Audit 1 (30/09/2026) : « 12 justes », « 2 passées » aussi, et une
+      // espace insécable avant « ! ? : » — « Bravo ! » ne laisse jamais son
+      // point d'exclamation seul en début de ligne.
       function soude(texte) {
         return String(texte)
-          .replace(/(\d) (min|s|minute|minutes|sur|questions?|calculs?|réponses?|erreurs?)\b/g, "$1\u00a0$2")
+          .replace(/(\d) (min|s|minute|minutes|sur|questions?|calculs?|réponses?|erreurs?|justes?|passées?)\b/g, "$1\u00a0$2")
           .replace(/\bmin (\d)/g, "min\u00a0$1")
           .replace(/\bsur (\d)/g, "sur\u00a0$1")
           .replace(/\bfaut (\d)/g, "faut\u00a0$1")
           .replace(/\bil en faut\b/g, "il\u00a0en\u00a0faut")
-          .replace(/\bde (\d)/g, "de\u00a0$1");
+          .replace(/\bde (\d)/g, "de\u00a0$1")
+          .replace(/ ([!?:])/g, "\u00a0$1");
       }
 
       function renderVerdict(suivi, elapsed) {
@@ -4759,8 +4844,11 @@
           return `${tables} · ${activityLabels[config.learnActivity]} · de ×0 à ×10`;
         }
         if (config.mode === "train") {
-          const typeLabels = {direct: "produits", missing: "trous"};
-          return `${tables} · ${config.questionTypes.map(type => typeLabels[type]).join(" et ")} · ${config.total} questions · sans chronomètre`;
+          // Les trois entraînements portent le même nom partout (audit 1).
+          const entrainement = Object.keys(TRAIN_TYPES).find(key => TRAIN_TYPES[key].join("+") === config.questionTypes.join("+"));
+          const typeLabels = {direct: "produits", missing: "nombres manquants"};
+          const nom = entrainement ? NOMS_ENTRAINEMENTS[entrainement] : config.questionTypes.map(type => typeLabels[type]).join(" et ");
+          return `${tables} · ${nom} · ${config.total} questions · sans chrono`;
         }
         if (config.mode === "validation" && config.tables.length > 1) {
           const lesquelles = config.tables.length === PARCOURS_TABLES.length ? "mes 9 tables" : `tables ${listeTables(config.tables)}`;
@@ -4781,7 +4869,7 @@
         $("time").textContent = DURATION === null ? "À ton rythme" : formatTime(DURATION);
         $("time").classList.toggle("no-timer", DURATION === null);
         $("time").classList.remove("urgent");
-        $("time").setAttribute("aria-label", DURATION === null ? "Sans chronomètre" : "Temps restant");
+        $("time").setAttribute("aria-label", DURATION === null ? "Sans chrono" : "Temps restant");
         $("timer-alert").textContent = "";
         majSortieJeu();
         show("play");
@@ -4931,6 +5019,7 @@
       function next(skip) {
         if (!state.running) return;
         if (state.waitingForContinue) {
+          if (state.correctionAfficheeA && Date.now() - state.correctionAfficheeA < DELAI_LECTURE_CORRECTION_MS) return;
           advanceAfterResponse();
           return;
         }
@@ -5190,7 +5279,7 @@
         // revient.
         let note = "";
         const aujourdhui = jourDuJour();
-        if (fait && fait.erreur === aujourdhui) note = "Raté aujourd’hui : il revient tout de suite, et tu pourras le faire monter demain.";
+        if (fait && fait.erreur === aujourdhui) note = "Raté aujourd’hui : il revient demain.";
         else if (fait && PARCOURS.faitDu(fait, aujourdhui)) note = boite >= 5
           ? "À faire aujourd’hui : réussis-le pour le garder 14 jours de plus."
           : "À faire aujourd’hui : réussis-le pour monter d’une boîte.";
@@ -5221,7 +5310,7 @@
           const nom = document.createElement("small");
           nom.textContent = `boîte ${boite}`;
           bouton.append(compte, nom);
-          bouton.setAttribute("aria-label", `Boîte ${boite}, ${LIBELLES_ETATS_CALCULS[etat]} : ${pluriel(nombre, "calcul")}, revient ${libelleDans(PARCOURS.SEUILS.revision.delais[index])}. Voir la liste.`);
+          bouton.setAttribute("aria-label", `Boîte ${boite}, ${LIBELLES_ETATS_CALCULS[etat]} : ${pluriel(nombre, "calcul")}, ${boite === 1 ? "reviennent demain" : `revient ${libelleDans(PARCOURS.SEUILS.revision.delais[index])}`}. Voir la liste.`);
           bouton.setAttribute("aria-pressed", String(choisie));
           bouton.addEventListener("click", () => {
             calculsSelection = choisie ? null : {boite};
@@ -5374,7 +5463,7 @@
         // sous « Révision terminée », disparaît (relecture du lot R2).
         $("result-score").textContent = soude(`${score} sur ${total} au premier essai · ${formatElapsed(elapsed)}`);
         const libre = Boolean(state.configuration.revisionLibre);
-        $("result-config").textContent = `${libre ? "Encore des calculs" : "Mes calculs du jour"}${table ? ` · table de ${table}` : ""} · ${total} question${total > 1 ? "s" : ""} · sans chronomètre`;
+        $("result-config").textContent = `${libre ? "Encore des calculs" : "Mes calculs du jour"}${table ? ` · table de ${table}` : ""} · ${total} question${total > 1 ? "s" : ""} · sans chrono`;
         // La règle (retour unique, montée le jour du retour) n'est plus écrite ici :
         // elle vit dans « Comment ça marche ? » et dans le détail d'une case.
         $("result-detail").textContent = "";
@@ -5403,7 +5492,7 @@
         const suite = document.createElement("p");
         if (restants) {
           const etiquette = document.createElement("b");
-          etiquette.textContent = "Et maintenant :";
+          etiquette.textContent = "Et maintenant\u00a0:";
           suite.append(etiquette, document.createTextNode(` ${soude(`encore ${pluriel(restants, "calcul")} du jour.`)}`));
         } else {
           suite.append(document.createTextNode(soude(phraseProchainRetour(agenda))));
@@ -5529,7 +5618,10 @@
         return ligne.conseil;
       }
 
-      const NOMS_ENTRAINEMENTS = Object.freeze({desordre: "le désordre", trous: "les trous", mixte: "les deux"});
+      // Les trois entraînements, le même nom partout où l'élève les voit
+      // (audit 1, 30/09/2026) : tuile, panneau, bilan, aria, fiche, notice.
+      // Les identifiants du moteur (desordre, trous, mixte) ne changent pas.
+      const NOMS_ENTRAINEMENTS = Object.freeze({desordre: "dans le désordre", trous: "nombres manquants", mixte: "les deux à la fois"});
 
       function listeTables(tables) {
         if (tables.length <= 1) return tables.join("");
@@ -5720,7 +5812,7 @@
       }
 
       // Le bloc « Je deviens expert » : l'escalier des étoiles (gagnées dorées,
-      // la suivante cerclée, les autres grises) et un seul bouton — « Tenter ★★ »
+      // la suivante cerclée, les autres grises) et un seul bouton — « Tente ★★ »
       // quand l'escalier est ouvert, « Mon mélange » tant que le mélange des
       // 9 tables n'est pas réussi. Visible seulement quand les 9 tables sont
       // acquises.
@@ -5772,13 +5864,13 @@
         action.append(ligneEtape({
           classe: "expert-tenter",
           num: suivante.etoile === PARCOURS.ETOILES_MAX ? "👑" : "★",
-          titre: `Tenter ${suivante.symbole}`,
+          titre: `Tente ${suivante.symbole}`,
           sousTitre: `25\u00a0questions · produits, trous, divisions · ${suivante.libelleDuree.replace(/ /g, "\u00a0")}`,
           points: [],
           // Un seul rond bleu à l'écran : quand des calculs sont dus, c'est
           // « Mes calculs du jour » qui l'a, pas la marche (lot mémoire).
           conseille: conseil === "expert",
-          aria: `Tenter ${suivante.symbole} : 25 questions, produits, trous et divisions, toutes les tables, en ${suivante.libelleDuree}.`,
+          aria: `Tente ${suivante.symbole} : 25 questions, produits, trous et divisions, toutes les tables, en ${suivante.libelleDuree}.`,
           action: () => launchFromParcours(suivante.config, "menu")
         }));
       }
@@ -5904,7 +5996,7 @@
           const entraineOuvert = state.etapeOuverte === "entraine";
           // Les trois ronds restent (chacun dit « cet entraînement est réussi »,
           // et il y en a trois différents) ; le sous-titre ne répète plus ce
-          // qu'ils montrent : « prochain : les trous », puis, les trois
+          // qu'ils montrent : « puis : nombres manquants », puis, les trois
           // réussis, « réussi ✓ · fait N fois » — le compte de ce lot, qui dit
           // qu'on peut continuer. Une ligne à 402 px comme à 320 px.
           const foisEntraine = ligne.entraine.reduce((somme, item) => somme + item.fois, 0);
@@ -5915,7 +6007,7 @@
             sousTitre: reussis === 3
               ? `réussi ✓ · fait ${foisEntraine}\u00a0fois`
               : reussis
-                ? `prochain : ${NOMS_ENTRAINEMENTS[prochainEntrainement.entrainement]}`
+                ? `puis : ${NOMS_ENTRAINEMENTS[prochainEntrainement.entrainement]}`
                 : `d’abord : ${NOMS_ENTRAINEMENTS[prochainEntrainement.entrainement]}`,
             points: ligne.entraine.map(item => etoile(item.etat)),
             conseille: conseilCarte === "entraine",
@@ -5926,7 +6018,7 @@
           }));
           if (entraineOuvert) {
             const choixEntraine = ligne.entraine.map(item => ({
-              libelle: majuscule(PARCOURS.LIBELLES_ENTRAINEMENTS[item.entrainement]),
+              libelle: majuscule(NOMS_ENTRAINEMENTS[item.entrainement]),
               detail: "10 questions, sans chrono",
               fait: item.etat === 2,
               commence: item.etat === 1,
@@ -5945,7 +6037,7 @@
             {
               choixEntraine.push({
                 libelle: "Comme la validation, en 2 min",
-                detail: "20 questions — pour s’entraîner avant de valider",
+                detail: "20 questions · 2 min · avant de valider",
                 marqueur: "⏱",
                 extraClasse: "is-plus",
                 lancer: () => launchFromParcours(PARCOURS.configValidation(table, 120), "menu")
@@ -5987,17 +6079,17 @@
             coche.className = `is-check${ligne.acquise ? "" : " off"}`;
             coche.textContent = ligne.acquise ? "✓" : "○";
             // Une table acquise le dit en titre (« Ma table est acquise ·
-            // validée le 13 septembre ») ; toucher la ligne rejoue la
+            // acquise le 13 septembre ») ; toucher la ligne rejoue la
             // validation, comme avant.
             etapes.append(ligneEtape({
               classe: "valide",
               num: "3",
               titre: ligne.acquise ? "Ma table est acquise" : "Je valide ma table",
-              sousTitre: ligne.acquise ? `validée le ${dateEnLettres(ligne.acquise)}` : "20 questions · 1 min 30",
+              sousTitre: ligne.acquise ? `acquise le ${dateEnLettres(ligne.acquise)}` : "20 questions · 1 min 30",
               points: [coche],
               conseille: conseilCarte === "valide",
               aria: ligne.acquise
-                ? `Ma table de ${table} est acquise, validée le ${dateEnLettres(ligne.acquise)}. Toucher pour la revalider (20 questions en 1 min 30).`
+                ? `Ma table de ${table} est acquise depuis le ${dateEnLettres(ligne.acquise)}. Toucher pour la revalider (20 questions en 1 min 30).`
                 : `Je valide la table de ${table}, 20 questions en 1 min 30 : pas encore.`,
               action: () => launchFromParcours(PARCOURS.configValidation(table), "menu")
             }));
@@ -6068,7 +6160,7 @@
           const attente = document.createElement("span");
           // « calcul » se comprend sans avoir ouvert la grille (Gwenaël, R3) ;
           // le nombre vient des échéances : ce qui sera dû demain.
-          attente.textContent = `${pluriel(jours.demain, "calcul")} demain`;
+          attente.textContent = `${pluriel(jours.demain, "calcul")} ${jours.demain > 1 ? "reviennent" : "revient"} demain`;
           zone.append(attente);
         }
       }
@@ -6199,7 +6291,7 @@
           name.textContent = `Table de ${ligne.table}`;
           const badge = document.createElement("span");
           badge.className = `parcours-badge${ligne.acquise ? "" : " is-pending"}`;
-          badge.textContent = ligne.acquise ? "Acquise ✓" : ligne.dernierEntrainement ? `dernier essai : ${ligne.dernierEntrainement.score} / ${ligne.dernierEntrainement.total}` : "";
+          badge.textContent = ligne.acquise ? "Acquise ✓" : ligne.dernierEntrainement ? `dernier essai : ${ligne.dernierEntrainement.score} sur ${ligne.dernierEntrainement.total}` : "";
           const etatGroupe = document.createElement("span");
           etatGroupe.className = "parcours-head-etat";
           if (ligne.aRevoir) {
@@ -6227,7 +6319,7 @@
           ligne.entraine.forEach(entrainement => cells.append(makeCell({
             kind: "dot",
             etat: entrainement.etat,
-            label: `Table de ${ligne.table}, entraînement ${entrainement.libelle}`,
+            label: `Table de ${ligne.table}, entraînement ${NOMS_ENTRAINEMENTS[entrainement.entrainement]}`,
             config: PARCOURS.configEntraine(ligne.table, entrainement.entrainement)
           })));
           cells.append(document.createElement("span"));
@@ -6361,7 +6453,20 @@
           if (!entraine.validation || entraine.validation.prete) return "Tes trois entraînements sont réussis : tu peux valider ta table !";
           return `Tes trois entraînements sont réussis ! ${phraseRendezVous(entraine.validation, entraine.table)}`;
         }
+        // Audit 1 (30/09/2026) : une validation ou un mélange ratés disent
+        // aussi la suite — les erreurs (et les calculs passés) reviennent
+        // demain dans Mes calculs ; sans erreur, c'est le temps qui a manqué.
+        const melange = trouve("melange");
+        if ((validation && !validation.reussi) || (melange && !melange.reussi)) return phraseErreursDemain();
         return "";
+      }
+
+      function phraseErreursDemain() {
+        const erreurs = state.answered - state.correct + calculsPasses();
+        if (erreurs > 1) return `Tes ${erreurs} erreurs reviennent demain dans Mes calculs. D’ici là, entraîne‑toi.`;
+        if (erreurs === 1) return "Ton erreur revient demain dans Mes calculs. D’ici là, entraîne‑toi.";
+        const tempsEcoule = state.configuration.duration !== null && TOTAL - state.index > 0;
+        return tempsEcoule ? "Tu manques de temps : entraîne-toi, puis réessaie." : "";
       }
 
       function renderResultParcours(suivi) {
@@ -6373,7 +6478,7 @@
         if (!texte) return;
         const line = document.createElement("p");
         const etiquette = document.createElement("b");
-        etiquette.textContent = "Et maintenant :";
+        etiquette.textContent = "Et maintenant\u00a0:";
         line.append(etiquette, document.createTextNode(` ${soude(texte)}`));
         zone.append(line);
         zone.hidden = false;
@@ -6604,6 +6709,7 @@
       $("open-parcours").addEventListener("click", openParcours);
       $("result-open-parcours").addEventListener("click", openParcours);
       $("result-accueil").addEventListener("click", backToModes);
+      $("result-entraine").addEventListener("click", () => launchFromParcours(resultEntraineConfig, state.origin));
       // Le même chemin que la flèche « Modifier » en cours de série : l'écran
       // des réglages garde le mode posé, donc « intro » y revient tel quel.
       $("result-reglages").addEventListener("click", () => {
@@ -6781,6 +6887,12 @@
       poserNotices();
       document.addEventListener("keydown", event => {
         if (!state.running) return;
+        // Audit 1 (30/09/2026) : la question « C'est toujours toi ? » est
+        // posée — les touches vont à SON champ de code, jamais à la série
+        // (avant, « 7K3M9P » donnait « KMP » dans le champ et 739 à la série).
+        if (gardeVisible) return;
+        const cible = event.target;
+        if (cible && typeof cible.closest === "function" && cible.closest("#suivi-garde")) return;
         // « Je pousse les perles » se joue au doigt : aucune touche ne répond,
         // et surtout pas Entrée, qui validerait une question sans réponse.
         if (activitePerles(state.configuration)) return;
@@ -6794,7 +6906,10 @@
           renderInlineAnswer();
           clearAnswerError();
         }
-        else if (event.key === "Enter") next(false);
+        else if (event.key === "Enter") {
+          // Entrée gardée enfoncée ne fait pas défiler les corrections.
+          if (!event.repeat) next(false);
+        }
         else return;
         event.preventDefault();
       });
@@ -6803,6 +6918,10 @@
       window.addEventListener("pagehide", envoyerAvantDeFermer);
       document.addEventListener("visibilitychange", () => {
         if (document.visibilityState === "hidden") envoyerAvantDeFermer();
+        // Audit 1 (30/09/2026) : l'onglet resté ouvert depuis la veille —
+        // au retour, l'accueil affiché se redessine, pour que « Mes calculs
+        // du jour » compte les calculs d'aujourd'hui.
+        else if (document.visibilityState === "visible" && !$("intro").hidden && !$("mode-screen").hidden) renderAccueil();
       });
       window.addEventListener("pageshow", () => {
         if (!state.running) return;

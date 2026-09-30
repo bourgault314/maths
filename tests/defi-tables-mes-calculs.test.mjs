@@ -413,7 +413,7 @@ test("le détail d’une case écrit le calcul dans les deux sens et empile ses 
   assert.match(html, /ligneDetail\("mc-detail-etat", /);
   assert.match(html, /majuscule\(LIBELLES_ETATS_CALCULS\[etat\]\)/);
   assert.match(html, /À faire aujourd’hui : réussis-le pour monter d’une boîte\./, "la note dit ce que l’élève a sous les yeux : dû, raté aujourd’hui, ou le jour du retour");
-  assert.match(html, /Raté aujourd’hui : il revient tout de suite, et tu pourras le faire monter demain\./);
+  assert.match(html, /Raté aujourd’hui : il revient demain\./);
   assert.match(html, /`Revient \$\{libelleDans\(PARCOURS\.ecartJours\(aujourdhui, fait\.echeance\)\)\}\.`/);
   assert.match(html, /boîte \$\{boite\} sur \$\{PARCOURS\.SEUILS\.revision\.boites\}/, "« En route — boîte 3 sur 5 »");
   assert.match(html, /function jourDuJour\(\) \{\s*return PARCOURS\.jourLocal\(\);/, "même convention de date que le moteur : le jour local (lot 3)");

@@ -399,7 +399,7 @@ test("le rond bleu : J’apprends tant que les cinq ne sont pas terminées et qu
 
 test("le moteur épinglé a changé : nouveau numéro, copie serveur identique, serveur qui accepte « beads »", async () => {
   assert.match(html, /defi_tables_mon_parcours\.js\?v=20260919-1/, "le moteur a changé : son numéro monte (et un dépôt FTP suit)");
-  assert.match(html, /defi_tables_core\.js\?v=20260914-1/, "le noyau aussi (« la bande » dans ses libellés)");
+  assert.match(html, /defi_tables_core\.js\?v=20260930-1/, "le noyau aussi (« la bande » dans ses libellés)");
   const moteur = await readFile(new URL("../outils/calcul_mental/defi_tables_mon_parcours.js", import.meta.url));
   const copie = await readFile(new URL("../_serveur/public/prof/defi_tables_mon_parcours.js", import.meta.url));
   assert.ok(moteur.equals(copie), "_serveur/public/prof/defi_tables_mon_parcours.js : la copie octet pour octet");
@@ -416,7 +416,7 @@ test("la bande s’appelle la bande, partout où l’élève lit", async () => {
   assert.match(html, /"Voir la bande \(vide\)"/);
   assert.match(html, /"La bande est complète\. Choisis une autre activité quand tu es prêt\."/);
   assert.match(html, /"Les 11 cases de la bande complétées"/);
-  assert.match(html, /"Bravo ! On le reverra sans la bande\."/);
+  assert.match(html, /"Bravo\\u00a0! On le reverra sans la bande\."/);
   const coreSource = await readFile(new URL("../outils/calcul_mental/defi_tables_core.js", import.meta.url), "utf8");
   assert.match(coreSource, /construct: "je construis la bande"/);
   const moteurSource = await readFile(new URL("../outils/calcul_mental/defi_tables_mon_parcours.js", import.meta.url), "utf8");

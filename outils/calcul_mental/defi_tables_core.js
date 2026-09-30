@@ -244,7 +244,7 @@
   }
 
   function durationLabel(duration) {
-    if (duration === null) return "sans chronomètre";
+    if (duration === null) return "sans chrono";
     if (duration === 60) return "1 minute";
     if (duration % 60) return `${Math.floor(duration / 60)} min ${String(duration % 60).padStart(2, "0")}`;
     return `${duration / 60} minutes`;
@@ -278,9 +278,13 @@
       const labels = {direct: "produits", missing: "trous", division: "divisions"};
       details.push(normalized.questionTypes.map(type => labels[type]).join(", "));
     }
-    if (normalized.mode === "train" && normalized.questionTypes.join() !== "direct") {
+    // Les trois entraînements du parcours portent le même nom partout
+    // (audit 1, 30/09/2026) : « dans le désordre », « nombres manquants »,
+    // « les deux à la fois ».
+    if (normalized.mode === "train") {
+      const noms = {direct: "dans le désordre", missing: "nombres manquants", "direct+missing": "les deux à la fois"};
       const labels = {direct: "produits", missing: "nombres manquants", division: "divisions"};
-      details.push(normalized.questionTypes.map(type => labels[type]).join(" + "));
+      details.push(noms[normalized.questionTypes.join("+")] || normalized.questionTypes.map(type => labels[type]).join(" + "));
     }
     if (normalized.mode === "custom") {
       const labels = {direct: "produits", missing: "nombres manquants", division: "divisions"};
