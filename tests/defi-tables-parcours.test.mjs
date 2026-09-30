@@ -228,15 +228,16 @@ test("J’apprends garde la bande pour construire et la propose en aide temporai
   // Lot R4 (P4, décision Q5) : construire la bande suit la même règle que
   // « dans l'ordre » et « désordre » — une mauvaise réponse renvoie le calcul
   // en fin de série. Le détail est dans defi-tables-bande-et-calculs.test.mjs.
-  assert.match(html, /const shouldRetry = !correct \|\| assisted;/);
+  assert.match(html, /const shouldRetry = \(!correct && !donnee\) \|\| assisted;/);
   assert.match(html, /if \(correct && !assisted\) state\.mastered\.add\(question\.factKey\)/);
-  assert.match(html, /showAnswerFeedback\(question, correct, skip \? null : value, shouldRetry, assisted\)/);
+  assert.match(html, /showAnswerFeedback\(question, correct, skip \? null : value, shouldRetry, assisted, donnee\)/);
   assert.match(html, /assisted \? "Bravo ! On le reverra sans la bande\." : "Bravo !"/);
   assert.match(html, /const label = stickActivity \? "cases complétées" : "calculs maîtrisés"/);
   assert.match(html, /question\?\.multiplier === 0 \? "Commence à 0\."\s*: suitUnePleine \? `Ajoute \$\{table\}\.` : "Complète la case bleue\.";/);
-  assert.match(html, /if \(correct\) \{[\s\S]*\$\("validate"\)\.style\.visibility = "hidden";[\s\S]*scheduleAutoAdvance\(\);/);
+  assert.match(html, /if \(correct\) \{[\s\S]*\$\("validate"\)\.style\.visibility = "hidden";[\s\S]*scheduleAutoAdvance\(stickActivity \? DELAI_SUIVANT_BANDE : DELAI_SUIVANT\);/);
   assert.match(html, /\$\("validate"\)\.style\.visibility = "";[\s\S]*setAnswerControlsEnabled\(true\)/);
-  assert.match(html, /\}, 800\);/);
+  assert.match(html, /\}, delai\);/);
+  assert.match(html, /const DELAI_SUIVANT = 800;/);
   assert.match(html, /\.question\.stick-trace \.learn-sequence \{[\s\S]*display: grid;[\s\S]*justify-items: center;[\s\S]*margin: 0 0 8px;/);
   // Lot R1 (audit du 11/09, A8) : les étiquettes de la bande à 11 px au moins,
   // dans l'activité (9,4 px avant) comme dans l'aide « Voir la bande » (7,7 px).

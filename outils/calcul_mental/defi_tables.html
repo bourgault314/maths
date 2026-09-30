@@ -1151,6 +1151,21 @@
     .number-stick-cell.is-new { z-index: 2; }
     .number-stick-cell.is-new .number-stick-value { animation: stick-pop .35s ease-out; color: #fff; background: var(--teal); box-shadow: inset 0 0 0 2px #075b55; }
     .number-stick-cell.has-draft .number-stick-value { color: var(--blue); background: #eef6ff; }
+    /* Lot « sauts » (30/09) : la case écrite par l'appli à la 3e erreur —
+       ambre, jamais verte : on voit qu'elle a été donnée, pas trouvée. */
+    .number-stick-cell.is-given .number-stick-value,
+    .number-stick-cell.is-new.is-given .number-stick-value { color: #8a4b00; background: #fff1d6; box-shadow: inset 0 0 0 2px #e0a34a; }
+    /* Les sauts « + 7 » sous la bande (idée de Claire) : gris-bleu pour les
+       sauts faits, bleu pour le saut à faire vers la case bleue. */
+    .bande-sauts { margin: 0 auto; }
+    .bande-sauts svg { display: block; overflow: visible; }
+    .bande-sauts .saut { color: #52708f; }
+    .bande-sauts .saut.est-suivant { color: var(--blue); }
+    .bande-sauts .saut path { fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; }
+    .bande-sauts .saut.est-suivant path { stroke-width: 2.6; }
+    .bande-sauts .saut path.pointe { fill: currentColor; stroke: none; }
+    .bande-sauts .saut text { fill: currentColor; font-weight: 800; }
+    .bande-sauts .saut.est-suivant text { font-weight: 950; }
     .number-stick-cell.is-empty .number-stick-value::after { content: ""; width: 42%; height: 2px; border-radius: 99px; background: #c7d7e0; }
     .number-stick-cell.has-draft .number-stick-value::after { display: none; }
     .expression.is-stick-activity { font-size: clamp(1.8rem, 6vw, 2.8rem); }
@@ -3179,6 +3194,7 @@
         bloc.style.setProperty("--fiche-zoom", String(Math.round(facteur * 1000) / 1000));
       }
       window.addEventListener("resize", ajusterFiche);
+      window.addEventListener("resize", retracerSauts);
       let TOTAL = 20;
       let DURATION = null;
       const ALL_TABLES = [...CORE.ALL_TABLES];
@@ -3212,6 +3228,8 @@
         tenSecondAlert: false,
         waitingForContinue: false,
         mastered: new Set(),
+        erreursBande: new Map(),
+        casesDonnees: new Set(),
         revealedLearnResults: new Set(),
         lastRevealedLearnMultiplier: null,
         learnStickHelpVisible: false,
@@ -3516,7 +3534,7 @@
         renderInlineAnswer();
       }
 
-      function createNumberStick(table, revealedMultipliers, {activeMultiplier = null, newMultiplier = null, draftMultiplier = null, draftValue = ""} = {}) {
+      function createNumberStick(table, revealedMultipliers, {activeMultiplier = null, newMultiplier = null, draftMultiplier = null, draftValue = "", givenMultipliers = null} = {}) {
         const stick = document.createElement("div");
         stick.className = "number-stick";
         stick.setAttribute("role", "list");
@@ -3547,12 +3565,15 @@
           cell.classList.toggle("is-current", multiplier === activeMultiplier);
           cell.classList.toggle("is-new", filled && multiplier === newMultiplier);
           cell.classList.toggle("has-draft", hasDraft);
+          // Lot « sauts » : une case remplie par l'appli à la 3e erreur.
+          const donnee = filled && Boolean(givenMultipliers?.has(multiplier));
+          cell.classList.toggle("is-given", donnee);
           cell.setAttribute("role", "listitem");
           cell.dataset.multiplier = String(multiplier);
           if (filled) {
             const result = table * multiplier;
             value.textContent = String(result);
-            cell.setAttribute("aria-label", `${multiplier} fois ${table}, ${result}`);
+            cell.setAttribute("aria-label", `${multiplier} fois ${table}, ${result}${donnee ? ", réponse donnée" : ""}`);
           } else if (hasDraft) {
             value.textContent = draftValue;
             cell.setAttribute("aria-label", `${multiplier} fois ${table}, réponse saisie ${draftValue}`);
@@ -3594,7 +3615,8 @@
           activeMultiplier: question?.multiplier,
           newMultiplier: state.lastRevealedLearnMultiplier,
           draftMultiplier: stickOnly ? question?.multiplier : null,
-          draftValue: stickOnly ? state.answer : ""
+          draftValue: stickOnly ? state.answer : "",
+          givenMultipliers: stickOnly ? state.casesDonnees : null
         });
         if (!stickOnly) {
           const helpButton = document.createElement("button");
@@ -3619,7 +3641,115 @@
           ? "Complète la case bleue."
           : question?.multiplier === 0 ? "Commence à 0."
             : suitUnePleine ? `Ajoute ${table}.` : "Complète la case bleue.";
-        zone.replaceChildren(instruction, stick);
+        // Lot « sauts » (idée de Claire, décisions du 30/09) : sous la bande,
+        // un arc « + 7 » d'une case à la suivante.
+        const dessin = document.createElement("div");
+        dessin.className = "bande-sauts";
+        dessin.setAttribute("aria-hidden", "true");
+        zone.replaceChildren(instruction, stick, dessin);
+        tracerSauts(stick, dessin, table, sautsDeLaBande(state.configuration.learnActivity, state.revealedLearnResults, question?.multiplier));
+      }
+
+      // Les sauts à dessiner sous la bande. Un saut relie deux cases voisines
+      // déjà remplies. Dans « Je construis la bande », on montre en plus le
+      // saut À FAIRE, de la dernière case vers la case bleue : c'est ce que
+      // l'activité enseigne. Dans la bande à trous, rien avant la réponse —
+      // sinon on additionne au lieu de se souvenir.
+      function sautsDeLaBande(activite, remplies, multiplicateur) {
+        const faits = [];
+        for (let k = 0; k < CASES_BANDE - 1; k += 1) {
+          if (remplies.has(k) && remplies.has(k + 1)) faits.push(k);
+        }
+        const suivant = activite === "construct" && multiplicateur > 0
+          && remplies.has(multiplicateur - 1) && !remplies.has(multiplicateur)
+          ? multiplicateur - 1 : null;
+        return {faits, suivant};
+      }
+
+      // Le dessin : un arc sous la bande, du milieu d'une case au milieu de
+      // la suivante, qui descend puis remonte vers la case d'arrivée (pointe
+      // de flèche), « + 7 » en dessous. La place est réservée même sans arc :
+      // le pavé ne saute pas quand le premier apparaît.
+      function tracerSauts(stick, dessin, table, {faits, suivant}) {
+        const cadre = stick.getBoundingClientRect();
+        if (!cadre.width) {
+          // Écran pas encore affiché : on mesure à l'image suivante.
+          window.requestAnimationFrame(() => { if (stick.isConnected) tracerSauts(stick, dessin, table, {faits, suivant}); });
+          return;
+        }
+        dessin.dataset.table = String(table);
+        dessin.dataset.sauts = JSON.stringify({faits, suivant});
+        const cases = stick.querySelectorAll(".number-stick-cell");
+        // Petits arcs sur un téléphone, et sur un écran bas (vidéoprojecteur
+        // en 1280 × 590) où la place manque en hauteur.
+        const petit = cases[0].getBoundingClientRect().width < 40 || window.innerHeight < 700;
+        const creux = petit ? 13 : 20;
+        const police = petit ? 12 : 17;
+        const hauteur = creux + police + 10;
+        const pointe = petit ? 6 : 9;
+        const demi = petit ? 3.6 : 5.5;
+        const NS = "http://www.w3.org/2000/svg";
+        const svg = document.createElementNS(NS, "svg");
+        svg.setAttribute("width", String(Math.round(cadre.width)));
+        svg.setAttribute("height", String(hauteur));
+        svg.setAttribute("viewBox", `0 0 ${Math.round(cadre.width)} ${hauteur}`);
+        const centre = k => {
+          const r = cases[k].getBoundingClientRect();
+          return r.left + r.width / 2 - cadre.left;
+        };
+        const arrondi = n => Math.round(n * 10) / 10;
+        const tous = faits.map(k => [k, false]).concat(suivant === null ? [] : [[suivant, true]]);
+        for (const [k, estSuivant] of tous) {
+          const x1 = centre(k) + 3;
+          const x2 = centre(k + 1) - 3;
+          const xm = (x1 + x2) / 2;
+          const haut = 1;
+          const arrivee = haut + 2;
+          const groupe = document.createElementNS(NS, "g");
+          groupe.setAttribute("class", estSuivant ? "saut est-suivant" : "saut");
+          groupe.dataset.de = String(k);
+          const arc = document.createElementNS(NS, "path");
+          arc.setAttribute("d", `M${arrondi(x1)},${haut} Q${arrondi(xm)},${haut + 2 * creux} ${arrondi(x2)},${arrivee}`);
+          // La pointe suit la tangente à l'arrivée, qui remonte vers la case.
+          const tx = x2 - xm;
+          const ty = arrivee - (haut + 2 * creux);
+          const n = Math.hypot(tx, ty);
+          const ux = tx / n;
+          const uy = ty / n;
+          const bx = x2 - ux * pointe;
+          const by = arrivee - uy * pointe;
+          const fleche = document.createElementNS(NS, "path");
+          fleche.setAttribute("class", "pointe");
+          fleche.setAttribute("d", `M${arrondi(x2)},${arrivee} L${arrondi(bx - uy * demi)},${arrondi(by + ux * demi)} L${arrondi(bx + uy * demi)},${arrondi(by - ux * demi)}Z`);
+          const texte = document.createElementNS(NS, "text");
+          texte.setAttribute("x", String(arrondi(xm)));
+          texte.setAttribute("y", String(haut + creux + police + 3));
+          texte.setAttribute("text-anchor", "middle");
+          texte.setAttribute("font-size", String(police));
+          texte.textContent = `+\u202f${table}`;
+          groupe.append(arc, fleche, texte);
+          svg.append(groupe);
+        }
+        dessin.style.width = `${Math.round(cadre.width)}px`;
+        dessin.style.height = `${hauteur}px`;
+        dessin.replaceChildren(svg);
+      }
+
+      // Une bande redimensionnée (téléphone tourné, fenêtre élargie) : les
+      // cases ont bougé, on retrace les mêmes sauts.
+      function retracerSauts() {
+        const dessin = document.querySelector("#learn-sequence .bande-sauts");
+        const stick = dessin?.previousElementSibling;
+        if (!dessin || !stick || !dessin.dataset.sauts) return;
+        tracerSauts(stick, dessin, Number(dessin.dataset.table), JSON.parse(dessin.dataset.sauts));
+      }
+
+      // Compte une erreur de plus sur ce calcul ; vrai à la 3e : la réponse
+      // sera écrite dans la case.
+      function reponseDonnee(erreurs, cle) {
+        const nombre = (erreurs.get(cle) || 0) + 1;
+        erreurs.set(cle, nombre);
+        return nombre >= ERREURS_AVANT_REPONSE;
       }
 
       function clearLearnStickHelpTimer() {
@@ -3711,6 +3841,16 @@
       const BANDE_BORDURES = 12;
       // Les onze cases de la bande : 0 × table jusqu'à 10 × table.
       const CASES_BANDE = 11;
+      // Lot « sauts » (décision du 30/09/2026) : dans la bande, à la 3e erreur
+      // sur le même calcul, la réponse est écrite dans la case (en ambre, pas
+      // en vert) et le calcul ne revient plus. La réponse est déjà donnée à
+      // chaque erreur ; au-delà de deux retours, l'élève tourne en rond.
+      const ERREURS_AVANT_REPONSE = 3;
+      // Le temps entre une bonne réponse et la question suivante. Dans la
+      // bande, l'élève n'a rien à lire : juste le petit effet de la case qui
+      // se remplit (0,35 s) — « le passage est un peu lent », 30/09.
+      const DELAI_SUIVANT = 800;
+      const DELAI_SUIVANT_BANDE = 450;
       // L'air qu'on laisse au-dessus du cadre du détail quand on le ramène
       // dans l'écran : de quoi voir qu'il n'est pas collé sous la barre.
       const MARGE_DETAIL = 8;
@@ -4219,7 +4359,7 @@
         renderInlineAnswer();
       }
 
-      function showAnswerFeedback(question, correct, given, willRetry = false, assisted = false) {
+      function showAnswerFeedback(question, correct, given, willRetry = false, assisted = false, donnee = false) {
         state.waitingForContinue = true;
         const feedback = $("answer-feedback");
         feedback.className = `answer-feedback ${correct ? "is-correct" : "is-wrong"}`;
@@ -4229,9 +4369,10 @@
         } else {
           state.answer = String(question.answer);
           renderInlineAnswer("is-corrected");
+          const suite = willRetry ? " Le calcul reviendra." : donnee ? " Je l’écris dans la bande." : "";
           feedback.textContent = given === null
-            ? `Pas de réponse. Bonne réponse : ${question.answer}.${willRetry ? " Le calcul reviendra." : ""}`
-            : `Ta réponse : ${given}. Bonne réponse : ${question.answer}.${willRetry ? " Le calcul reviendra." : ""}`;
+            ? `Pas de réponse. Bonne réponse : ${question.answer}.${suite}`
+            : `Ta réponse : ${given}. Bonne réponse : ${question.answer}.${suite}`;
         }
         setAnswerControlsEnabled(false);
         $("validate").focus?.({preventScroll: true});
@@ -4265,12 +4406,12 @@
         state.autoAdvanceTimer = null;
       }
 
-      function scheduleAutoAdvance() {
+      function scheduleAutoAdvance(delai = DELAI_SUIVANT) {
         clearAutoAdvance();
         state.autoAdvanceTimer = window.setTimeout(() => {
           state.autoAdvanceTimer = null;
           if (state.running && state.waitingForContinue) advanceAfterResponse();
-        }, 800);
+        }, delai);
       }
 
       function corrections() {
@@ -4674,6 +4815,8 @@
         state.tenSecondAlert = false;
         state.waitingForContinue = false;
         state.mastered = new Set();
+        state.erreursBande = new Map();
+        state.casesDonnees = new Set();
         state.revealedLearnResults = new Set(config.mode === "learn"
           ? config.learnActivity === "gaps" ? [0, 5, 10] : config.learnActivity === "beads" ? [0] : []
           : []);
@@ -4842,23 +4985,28 @@
           // revenait pas, et le résultat ne signalait rien. La case reste
           // maintenant VIDE et le calcul revient en fin de bande jusqu'à être
           // trouvé, comme dans « dans l'ordre » et « désordre ».
-          const shouldRetry = !correct || assisted;
+          // Lot « sauts » (30/09) : à la 3e erreur sur le même calcul, la
+          // réponse s'écrit dans la case et le calcul ne revient plus. Dans la
+          // bande seulement : dans l'ordre et le désordre, rien ne change.
+          const donnee = stickActivity && !correct && reponseDonnee(state.erreursBande, question.factKey);
+          const shouldRetry = (!correct && !donnee) || assisted;
           if (correct && !assisted) state.mastered.add(question.factKey);
           if (shouldRetry) {
             const alreadyWaiting = state.questions.slice(state.index + 1).some(candidate => candidate.factKey === question.factKey);
             if (!alreadyWaiting) state.questions.push({...question, retry: true});
           }
-          if (!stickActivity || correct) state.revealedLearnResults.add(question.multiplier);
+          if (donnee) state.casesDonnees.add(question.multiplier);
+          if (!stickActivity || correct || donnee) state.revealedLearnResults.add(question.multiplier);
           // Rien ne s'allume en vert sur une case qui vient d'être ratée — et
           // dans l'ordre / le désordre, où la bande n'est qu'une aide cachée,
-          // la règle ne change pas.
-          state.lastRevealedLearnMultiplier = !stickActivity || correct ? question.multiplier : null;
+          // la règle ne change pas. Une case donnée s'allume, en ambre.
+          state.lastRevealedLearnMultiplier = !stickActivity || correct || donnee ? question.multiplier : null;
           renderLearnProgress();
           renderLearnSequence();
-          showAnswerFeedback(question, correct, skip ? null : value, shouldRetry, assisted);
+          showAnswerFeedback(question, correct, skip ? null : value, shouldRetry, assisted, donnee);
           if (correct) {
             $("validate").style.visibility = "hidden";
-            scheduleAutoAdvance();
+            scheduleAutoAdvance(stickActivity ? DELAI_SUIVANT_BANDE : DELAI_SUIVANT);
           }
           return;
         }
@@ -5194,6 +5342,8 @@
         state.tenSecondAlert = false;
         state.waitingForContinue = false;
         state.mastered = new Set();
+        state.erreursBande = new Map();
+        state.casesDonnees = new Set();
         state.revealedLearnResults = new Set();
         state.lastRevealedLearnMultiplier = null;
         state.learnStickHelpVisible = false;

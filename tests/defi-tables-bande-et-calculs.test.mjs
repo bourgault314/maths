@@ -101,11 +101,14 @@ test("toucher une case ou une boîte de Mes calculs ramène le détail dans l’
 // ----------------------------------- 2. la bande ne se corrige plus seule
 
 test("une mauvaise réponse laisse la case vide et renvoie le calcul en fin de bande", () => {
-  assert.match(html, /const shouldRetry = !correct \|\| assisted;/,
+  // Lot « sauts » (30/09) : la règle garde sa forme, avec UNE exception —
+  // à la 3e erreur sur le même calcul, la réponse est donnée (détail dans
+  // defi-tables-sauts-bande.test.mjs).
+  assert.match(html, /const shouldRetry = \(!correct && !donnee\) \|\| assisted;/,
     "plus de « !stickActivity && » : construire la bande suit la même règle que dans l’ordre et le désordre");
-  assert.match(html, /if \(!stickActivity \|\| correct\) state\.revealedLearnResults\.add\(question\.multiplier\);/,
-    "la case ne se remplit que sur une bonne réponse");
-  assert.match(html, /state\.lastRevealedLearnMultiplier = !stickActivity \|\| correct \? question\.multiplier : null;/,
+  assert.match(html, /if \(!stickActivity \|\| correct \|\| donnee\) state\.revealedLearnResults\.add\(question\.multiplier\);/,
+    "la case ne se remplit que sur une bonne réponse — ou quand l’appli la donne");
+  assert.match(html, /state\.lastRevealedLearnMultiplier = !stickActivity \|\| correct \|\| donnee \? question\.multiplier : null;/,
     "pas de case qui s’allume en vert quand elle vient d’être ratée — et rien ne change dans l’ordre et le désordre");
   // Le calcul ne revient qu'une fois à la fois dans la file, mais autant de
   // fois qu'il le faut : c'est la case remplie qui termine la série.
@@ -118,8 +121,9 @@ test("une mauvaise réponse laisse la case vide et renvoie le calcul en fin de b
 });
 
 test("la correction dit que le calcul reviendra, comme partout ailleurs", () => {
-  assert.match(html, /showAnswerFeedback\(question, correct, skip \? null : value, shouldRetry, assisted\)/);
-  assert.match(html, /Bonne réponse : \$\{question\.answer\}\.\$\{willRetry \? " Le calcul reviendra\." : ""\}/);
+  assert.match(html, /showAnswerFeedback\(question, correct, skip \? null : value, shouldRetry, assisted, donnee\)/);
+  assert.match(html, /const suite = willRetry \? " Le calcul reviendra\." : donnee \? " Je l’écris dans la bande\." : "";/);
+  assert.match(html, /Bonne réponse : \$\{question\.answer\}\.\$\{suite\}/);
 });
 
 test("« Ajoute 4 » laisse la place à « Complète la case bleue » quand la case d’avant est vide", () => {
