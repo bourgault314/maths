@@ -6,7 +6,7 @@
    - le total et les jetons visibles sont donnés (pas de champ), la validation les ignore ;
    - la consigne et le message de réussite de l'Enquête ;
    - « Voir le schéma » : trois étapes (la correction en barres des lots G1-G2, 29/09/2026 : les
-     barres, tout sur une ligne, je calcule ; deux sans total), une par appui, puis le
+     barres, schéma regroupé, je calcule ; deux sans total), une par appui, puis le
      bouton s'efface ;
    - le nom de la couleur sur la tache dévoilée se pose juste au-dessus du jeton (écran
      et impression passent par la même fonction) ;

@@ -971,7 +971,7 @@
         <li><strong>A± — Jetons relatifs</strong> : des jetons +1 et −1 ; l'équation s'écrit, puis se résout ligne par ligne.</li>
         <li><strong>B — Paquets de jetons</strong> : des jetons qui valent plusieurs unités ; schéma en barres vide, schéma rempli avec l'équation, puis la résolution ligne par ligne.</li>
         <li><strong>B± — Paquets relatifs</strong> : la même chose avec des valeurs positives et négatives.</li>
-        <li><strong>C — Enquête</strong> : deux ou trois taches de couleurs reliées par des indices ; la correction en barres se construit en trois étapes (les barres avec les mots, tout sur une ligne, je calcule) ; le générateur sait faire tous les types de la classification (une référence, chaîne, je complète, unité commune, indices composés, deux taches réunies).</li>
+        <li><strong>C — Enquête</strong> : deux ou trois taches de couleurs reliées par des indices ; la correction en barres se construit en trois étapes (les barres avec les mots, le schéma regroupé, je calcule) ; le générateur sait faire tous les types de la classification (une référence, chaîne, je complète, unité commune, indices composés, deux taches réunies).</li>
         <li><strong>C direct — Substitution</strong> : la même enquête, en remplaçant d'abord chaque tache par ce qu'elle vaut.</li>
         <li><strong>D — Système</strong> : chaque indice est un autre plateau, avec son propre total ; le menu «&nbsp;Geste&nbsp;» choisit la façon de les comparer (retirer une partie, deux pesées, doubler, miroir, trois sommes sans total). Les taches d'une même couleur cachent le même nombre de jetons.</li>
         <li><strong>F / G — Opérations en 9 et en 8</strong> : un des jetons visibles vaut 9, 19, 29… (ou 8, 18, 28…) ; on cherche ce qui manque par une différence, ou le total par une somme.</li>
@@ -2228,6 +2228,7 @@ function loadSharedConfiguration(){
      on lance l'impression dès que les cartes sont générées, au lieu de
      laisser le professeur chercher le bouton Imprimer. */
   impressionAuto = params.get("imprimer") === "1";
+  enqueteSchemaVide = params.get("modele") === "1";
   /* Étape composée : « suite » porte les réglages des activités SUIVANTES, mis
      bout à bout dans UNE seule série élève (le monde 2 rejoue les trois fiches
      de Claire d'affilée). Chaque partie est une adresse encodée, séparée par « ; ».
@@ -2357,6 +2358,8 @@ function buildShareUrl(){
     if(invVocabEl && invVocabEl.checked) params.set("vocab", "1");
     if(invComposeEl && invComposeEl.checked) params.set("compose", "1");
     if(invReuniesEl && invReuniesEl.checked && invTaskCountEl.value === "3") params.set("reunies", "1");
+    /* lot 1 : le schéma vide sous la carte 1, gardé seulement s'il était dans l'adresse */
+    if(enqueteSchemaVide) params.set("modele", "1");
   }
 
   url.search = params.toString();
@@ -7251,7 +7254,7 @@ function drawRelationGroupedSchema(targetGroup, card, opts = {}){
      « Je retourne : … »  un « de moins » / « fois moins » réécrit en une ligne (règle de Gwenaël) ;
      ① Les barres         une barre par tache, alignées à gauche, proportionnelles, le MOT de la
                           couleur dans chaque case (l'initiale en lettre), l'accolade du total à droite ;
-     ② Tout sur une ligne la barre du total, les barres bout à bout, une accolade par tache dessous ;
+     ② Schéma regroupé (« Tout sur une ligne » avant le 30/09) : la barre du total, les barres bout à bout, une accolade par tache dessous ;
      ③ Je calcule         des phrases avec les mots, « = » alignés en colonne, le calcul écrit à droite
                           (« 2 rouges = 23 − 7 = 16 »), sans équation (elle reste au monde 5).
    Le dessin se choisit d'après la tache que les deux indices ont EN COMMUN, une fois retournés :
@@ -7284,6 +7287,9 @@ const ENQ_PROFIL_IMPRIME = {
   hachPas:24
 };
 const ENQ_PROFIL_ECRAN = { ...ENQ_PROFIL_IMPRIME, cadre:true, marge:26 };
+/* Lot 1 : entre le bas du plateau de l'énoncé et le schéma vide (qui est le ① du corrigé,
+   même profil, même échelle — celle où les barres mises bout à bout tiennent en ②). */
+const ENQ_SCHEMA_VIDE_ECART = 70;
 const ENQ_PROFIL_TEL = { ...ENQ_PROFIL_IMPRIME, boxW:960, cadre:true, marge:20, labelMax:330, braceW:40, braceGap:14 };
 /* Le plateau de la carte imprimée en correction : 22 mm au lieu de 28 (décidé le 29/09) pour que
    la correction, avec sa ligne ②, tienne dans la carte. Les taches et les jetons sont réduits
@@ -7295,7 +7301,7 @@ const ENQ_PLATEAU_CORRECTION_H = 420;
 const ENQ_CALCULS_A_GAUCHE = true;
 /* Le blanc ajouté au plus entre deux blocs (①②③) d'une correction imprimée qui a de la place. */
 const ENQ_ECART_MAX = 100;
-/* Les étapes de « Voir le schéma » et de la projection : ① les barres, ② tout sur une ligne,
+/* Les étapes de « Voir le schéma » et de la projection : ① les barres, ② schéma regroupé,
    ③ je calcule (3, décidé le 29/09 : « je trace » et « je remplis » fusionnés) ; sans total :
    pas de ligne ② (2). */
 function enqueteNbEtapes(card){
@@ -7630,6 +7636,31 @@ function enqueteBarresModele(card){
   return { mode, lettres, unit:u, commun:c, reformulation, preLignes, titre1, rows, accolade, ligne, calculs, reponse, verification, texteCellule };
 }
 
+/* Le schéma vide sous la carte 1 (lot 1, 30/09/2026) : ① tel que la correction le dessine —
+   mêmes lignes, mêmes cases, mêmes couleurs, même échelle (celle de ②), le nom de chaque tache
+   devant sa barre (retour de Gwenaël : « le même que le corrigé, mais vide ») — sans un seul
+   nombre ni nom dans les cases : bout de l'écart blanc, bout hachuré avec sa case blanche
+   vide, accolade du total avec une case vide, « orange + » quand on complète. Pas de
+   « Je retourne », pas de ligne « 48 − 5 = 43 ». Il montre le dessin, pas la réponse.
+   Dessiné par drawEnqueteBarres (opts.modele) : il resservira tel quel à l'écran (G3). */
+function enqueteModeleVide(modele){
+  if(!modele || !Array.isArray(modele.rows)) return null;
+  /* « 18 de plus que l'orange » → « …… de plus que l'orange » : la phrase reste, le nombre est à écrire */
+  const sansNombre = t => String(t || "").replace(/\d[\d\s\u202f\u00a0]*/g, "…… ");
+  return { ...modele, vide:true, reformulation:null, preLignes:[],
+    rows:modele.rows.map(r => ({ ...r,
+      /* « orange + 11 » → « orange + » : le nombre s'écrit dans la case blanche du bout hachuré ;
+         la colonne des noms se mesure sur le nom du corrigé (labelMesure) : mêmes places */
+      label:r.complete ? String(r.label).replace(/\s*\+.*$/, " +") : r.label,
+      labelMesure:r.label,
+      sous:(r.sous || []).map(sa => ({ ...sa, label:sansNombre(sa.label) })) })) };
+}
+/* Une case blanche à remplir (schéma vide) : la place du nombre du corrigé, au moins la largeur
+   de deux chiffres ; jamais plus large que maxW. */
+function enqueteLargeurCaseVide(t, fs, P, maxW){
+  return Math.round(Math.min(maxW, Math.max(enqueteTexteLargeur(String(t), fs, 900), enqueteTexteLargeur("00", fs, 900)) + 2 * P.cellPad));
+}
+
 /* ---- dessin ---- */
 /* Le texte d'une case : le mot à wordFont, réduit jusqu'à wordMin s'il ne tient pas, puis
    l'initiale ; rien si même l'initiale ne tient pas (la longueur de la case ne bouge jamais). */
@@ -7670,9 +7701,15 @@ function enqueteHachures(g, P){
 function enqueteDessinerCase(g, card, cell, x, y, w, h, P, modele, vide){
   const isPrint = !!P.isPrint;
   if(cell.kind === "tache"){
-    g.appendChild(el("rect", { x, y, width:w, height:h, fill:vide ? "#fff" : taskSplatRevealColor(cell.de, card, isPrint), stroke:vide ? "#111827" : taskSplatColor(cell.de, card, isPrint), "stroke-width":3.5 }));
+    /* schéma vide (lot 1) : la case garde ses couleurs, seul le nom disparaît */
+    g.appendChild(el("rect", { x, y, width:w, height:h, fill:taskSplatRevealColor(cell.de, card, isPrint), stroke:taskSplatColor(cell.de, card, isPrint), "stroke-width":3.5 }));
   }else if(cell.kind === "ajout"){
-    g.appendChild(el("rect", { x, y, width:w, height:h, fill:vide ? "#fff" : "url(#enqHachures)", stroke:"#111827", "stroke-width":3.5 }));
+    g.appendChild(el("rect", { x, y, width:w, height:h, fill:"url(#enqHachures)", stroke:"#111827", "stroke-width":3.5 }));
+    if(vide){
+      /* schéma vide : la case blanche où le corrigé écrit le nombre, vide */
+      const cw = enqueteLargeurCaseVide(formatRelationNumber(cell.v), P.numFont, P, w - 12), ch = Math.round(h * 0.7);
+      g.appendChild(el("rect", { x:x + w / 2 - cw / 2, y:y + h / 2 - ch / 2, width:cw, height:ch, rx:6, fill:"#fff", stroke:"#111827", "stroke-width":2.5 }));
+    }
   }else{
     g.appendChild(el("rect", { x, y, width:w, height:h, fill:"#fff", stroke:"#111827", "stroke-width":3.5 }));
   }
@@ -7688,11 +7725,17 @@ function enqueteDessinerCase(g, card, cell, x, y, w, h, P, modele, vide){
   }));
 }
 /* L'accolade du total, à droite des barres (pointe vers la droite). */
-function enqueteAccolade(g, x, y1, y2, P, label){
+function enqueteAccolade(g, x, y1, y2, P, label, vide){
   const w = P.braceW, m = (y1 + y2) / 2, r = Math.min(w / 2, (y2 - y1) / 4);
   const xm = x + w / 2;
   g.appendChild(el("path", { d:`M ${x} ${y1} Q ${xm} ${y1} ${xm} ${y1 + r} L ${xm} ${m - r} Q ${xm} ${m} ${x + w} ${m} Q ${xm} ${m} ${xm} ${m + r} L ${xm} ${y2 - r} Q ${xm} ${y2} ${x} ${y2}`,
     fill:"none", stroke:"#111827", "stroke-width":5, "stroke-linecap":"round", "stroke-linejoin":"round" }));
+  if(vide){
+    /* schéma vide : une case blanche à la place du total (la place que le corrigé lui donne) */
+    const cw = enqueteLargeurCaseVide(label, P.totalFont, P, 1e9), ch = Math.round(P.rowH * 0.72);
+    g.appendChild(el("rect", { x:x + w + P.braceGap, y:m - ch / 2, width:cw, height:ch, rx:6, fill:"#fff", stroke:"#111827", "stroke-width":2.5 }));
+    return;
+  }
   g.appendChild(text(x + w + P.braceGap, m + 1, label, { "text-anchor":"start", "dominant-baseline":"middle", "font-size":P.totalFont, "font-weight":900, fill:"#111827" }));
 }
 /* Une petite accolade sous des cases (« violette », « une rouge », « 18 de plus que l'orange »). */
@@ -7737,7 +7780,8 @@ function enqueteCadre(g, P, boxY, h, id){
    on voit qu'on les pose bout à bout. Cases minimales identiques (même profil). */
 function enqueteMiseEnPage(modele, P){
   const x0 = P.boxX + P.marge, largeur = P.boxW - 2 * P.marge;
-  const labelW = Math.min(P.labelMax, Math.max(...modele.rows.map(r => enqueteTexteLargeur(r.label, P.labelFont, 800))) + P.labelGap);
+  /* schéma vide : mesuré sur les noms du corrigé (labelMesure) — le dessin tombe aux mêmes places */
+  const labelW = Math.min(P.labelMax, Math.max(...modele.rows.map(r => enqueteTexteLargeur(r.labelMesure || r.label, P.labelFont, 800))) + P.labelGap);
   const totalTxt = modele.accolade == null ? "" : formatRelationNumber(modele.accolade);
   const droite = modele.accolade == null ? 0 : P.braceGap + P.braceW + P.braceGap + enqueteTexteLargeur(totalTxt, P.totalFont, 900) + 6;
   const barX = x0 + labelW, barW = largeur - labelW - droite;
@@ -7773,18 +7817,18 @@ function drawEnqueteBarres(targetGroup, card, opts = {}){
     if(r > 0) yr += P.rowH + P.rowGap + (modele.rows[r - 1].sous.length ? P.sousH + P.sousPas - 4 : 0);
     /* le nom de la ligne, collé à sa barre (« orange + 11 » quand on complète) */
     let lfs = P.labelFont;
-    while(lfs > P.labelFont * 0.7 && enqueteTexteLargeur(row.label, lfs, 800) > M.labelW - P.labelGap + 2) lfs -= 2;
+    while(lfs > P.labelFont * 0.7 && enqueteTexteLargeur(row.labelMesure || row.label, lfs, 800) > M.labelW - P.labelGap + 2) lfs -= 2;
     g.appendChild(text(x0, yr + P.rowH / 2 + pastilleTextDy(lfs), row.label, { "text-anchor":"start", "dominant-baseline":"middle", "font-size":lfs, "font-weight":800, fill:"#111827" }));
     const ws = enqueteLargeursCases(row.cells, s, P);
     let x = barX;
     const xs = [];
-    row.cells.forEach((cell, j) => { xs.push(x); enqueteDessinerCase(g, card, cell, x, yr, ws[j], P.rowH, P, modele, false); x += ws[j]; });
+    row.cells.forEach((cell, j) => { xs.push(x); enqueteDessinerCase(g, card, cell, x, yr, ws[j], P.rowH, P, modele, !!modele.vide); x += ws[j]; });
     xMax = Math.max(xMax, x);
     row.sous.forEach(sa => enqueteSousAccolade(g, xs[sa.de], xs[sa.a] + ws[sa.a], yr + P.rowH + 4, sa.label, P));
   });
   const derniere = modele.rows[modele.rows.length - 1];
   const rowsBottom = yr + P.rowH;
-  if(modele.accolade != null) enqueteAccolade(g, xMax + P.braceGap, rowsTop, rowsBottom, P, M.totalTxt);
+  if(modele.accolade != null) enqueteAccolade(g, xMax + P.braceGap, rowsTop, rowsBottom, P, M.totalTxt, !!modele.vide);
   y = rowsBottom + (derniere && derniere.sous.length ? P.sousH + P.sousPas + 6 : 0) + (P.cadre ? P.marge : 10);
   const h = Math.round(y - boxY);
   enqueteCadre(g, P, boxY, h, g.id);
@@ -7792,7 +7836,7 @@ function drawEnqueteBarres(targetGroup, card, opts = {}){
   return h;
 }
 
-/* ② Tout sur une ligne : la barre du total, les barres bout à bout (même échelle qu'en ①),
+/* ② Schéma regroupé : la barre du total, les barres bout à bout (même échelle qu'en ①),
    une accolade par tache ; contour en trait fin, comme les cases (retour du 29/09). Unité
    commune : d'abord « Je double tout : 2 × 34 = 68 » (modele.ligne.avant). */
 function drawEnqueteLigne(targetGroup, card, opts = {}){
@@ -7805,7 +7849,8 @@ function drawEnqueteLigne(targetGroup, card, opts = {}){
   const M = enqueteMiseEnPage(modele, P);
   const { x0, largeur } = M, s = M.sLigne;
   let y = boxY + (P.cadre ? P.marge * 0.6 : 0);
-  if(!opts.sansTitre) y += enqueteTitreEtape(g, x0, y, 2, "Tout sur une ligne", P, largeur);
+  /* le titre : « Schéma regroupé » (décision de Gwenaël, 30/09/2026 ; avant : « Tout sur une ligne ») */
+  if(!opts.sansTitre) y += enqueteTitreEtape(g, x0, y, 2, "Schéma regroupé", P, largeur);
   (modele.ligne.avant || []).forEach(t => { y += enqueteLigneTexte(g, x0, y, t, P.apartFont, P.apartPas, largeur, 800, "#111827"); });
   const cells = modele.ligne.groupes.flatMap(gr => gr.cells);
   const bord = P.ligneBord;
@@ -9597,7 +9642,7 @@ function renderCard(card, revealState, opts = {}){
       drawRelationOrderedSchema(svg, card, { solved:true, direct:true });
     }
   }else if(card.family === "C" && card._rel && enqueteBarresModele(card)){
-    /* La correction en barres (lots G1-G2, 29/09/2026) : ① les barres, ② tout sur une ligne,
+    /* La correction en barres (lots G1-G2, 29/09/2026) : ① les barres, ② schéma regroupé,
        ③ je calcule — trois appuis ; sans total : pas de ligne ②, deux. Même forme qu'à
        l'impression (drawEnqueteCorrectionImprimee), un cadre par étape. */
     const oE = { ...relTel, modele: enqueteBarresModele(card) };
@@ -10765,6 +10810,19 @@ function renderCardIntoSvg(targetSvg, card, printMode, opts = {}){
     drawRelationGraphicClues(targetSvg, card, { mkEl:tEl, mkText:tText, isPrint:true });
   }
 
+  /* Lot 1 (30/09/2026) : le schéma vide sous la PREMIÈRE carte de l'énoncé (« modele=1 ») —
+     ① sans nombre, sous le plateau ; le reste de la carte reste blanc pour chercher. */
+  if(opts.schemaVide && card.family === "C" && card._rel && !revealAnswers){
+    const vide = enqueteModeleVide(enqueteBarresModele(card));
+    if(vide){
+      const layer = tEl("g", { id:"enqueteSchemaVide" });
+      svgCarte.appendChild(layer);
+      const h = drawEnqueteBarres(layer, card, { isPrint:true, modele:vide });
+      layer.setAttribute("transform", `translate(0 ${Math.round(trayY + trayH + ENQ_SCHEMA_VIDE_ECART - 620)})`);
+      layer.setAttribute("data-hauteur", String(h));
+    }
+  }
+
   // Correction imprimée de l'Enquête : les étapes empilées sous le plateau, pour que
   // l'on voie d'où vient le tableau — schéma rempli de la situation, schéma regroupé,
   // résolution ; C direct : substitution, puis résolution. (L'énoncé n'imprime que les
@@ -11494,7 +11552,8 @@ function printSheet(){
         }else{
           sv.setAttribute("viewBox", cardViewBox);
           sv.style.width = perSheet === 6 ? "80%" : "100%";
-          renderCardIntoSvg(sv, card, mode);
+          /* lot 1 : le schéma vide sous la carte 1 de l'énoncé (« modele=1 »), 1, 2 ou 4 par page */
+          renderCardIntoSvg(sv, card, mode, { schemaVide:enqueteSchemaVide && mode === "statement" && perSheet !== 6 && card === cards[0] });
         }
         holder.appendChild(sv);
       } else {
@@ -11861,6 +11920,9 @@ let idx = 0;
 let revealState = 0; // États selon le mode (A/B: 0→3, B±: 0→2, autres: 0/2)
 /* Parcours élève : aucun réglage visible, activé uniquement par ?eleve=1 dans l'adresse. */
 let eleveActif = false, parcoursId = "", impressionAuto = false;
+/* « modele=1 » (lot 1 de l'Enquête, 30/09/2026) : à l'impression de l'énoncé, le schéma vide
+   sous la PREMIÈRE carte (enqueteModeleVide). Rien à l'écran, rien en mode élève. */
+let enqueteSchemaVide = false;
 /* Enquête (mode C) en parcours élève : taches dévoilées après validation (renderCard
    le lit), et étape du schéma en cours (0 = plateau et indice, 1 à 5 = les étapes
    de la projection : schéma vide, rempli, regroupé, ordonné, résolution). */
@@ -11881,7 +11943,7 @@ let eleveDefileErreur = 0;
    sur ces écrans : le dessin n'est plus réduit pour faire tenir des phrases de 1 550
    unités) ; la réserve sous la carte et l'écart TOTAL / plateau, voir elevePaveCalerCarte */
 const ELEVE_PLATEAU_MIN_ENQ = 100, ELEVE_RESERVE_ENQ_TEL = 22, ELEVE_TOTAL_TEL_ECART = 10;
-const ELEVE_SCHEMA_ETAPES = 3; /* lots G1-G2 : les barres, tout sur une ligne, je calcule (2 sans total) */
+const ELEVE_SCHEMA_ETAPES = 3; /* lots G1-G2 : les barres, le schéma regroupé, je calcule (2 sans total) */
 let eleveIdx = 0, eleveEtoiles = 0, eleveSerie = [], eleveResultats = [], eleveCarteFautee = false, eleveRepriseFaite = false;
 /* parties supplémentaires d'une étape composée (voir « suite » dans l'adresse) */
 let eleveSuite = [];
