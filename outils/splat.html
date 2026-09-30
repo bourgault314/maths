@@ -249,6 +249,16 @@
   .c-ops{display:grid;grid-template-columns:repeat(4, minmax(0, 1fr));gap:6px;margin-top:2px}
   .c-ops .checkInline{justify-content:center;height:38px;padding:0 6px;border-radius:10px;gap:6px;min-width:0;white-space:nowrap;margin:0}
   .c-ops .checkInline span{font-size:13px;font-weight:700}
+  /* Enquête : la forme (quatre menus, deux par rangée) et les variantes (cases alignées à
+     gauche, deux par rangée) — lot « projection », 30/09/2026 */
+  .c-forme{display:grid;grid-template-columns:repeat(2, minmax(0, 1fr));gap:8px;margin-bottom:8px}
+  .c-forme > div{min-width:0}
+  .c-forme select{width:100%}
+  .c-ops.c-variantes{grid-template-columns:repeat(2, minmax(0, 1fr));margin-bottom:8px}
+  .c-ops.c-variantes .checkInline{justify-content:flex-start;padding:0 10px;overflow:hidden}
+  .c-ops.c-variantes .checkInline span{overflow:hidden;text-overflow:ellipsis}
+  .c-ops.c-variantes .c-repeat{justify-content:space-between}
+  .c-ops.c-variantes .c-repeat input{width:64px;height:30px;padding:0 6px;text-align:center}
   /* Enquête « Sans total » : une case sur deux colonnes ; les réglages qu'elle remplace sont grisés */
   .c-ops .checkInline.large{grid-column:span 2}
   #investigateSettings select:disabled, #investigateSettings input:disabled{opacity:.45;cursor:not-allowed}
@@ -1231,23 +1241,26 @@
 
     <!-- C — Enquête et C direct -->
     <div id="investigateSettings" style="display:none">
-      <div class="row" style="align-items:flex-end">
-        <div style="flex:1 1 0">
-          <label>Taches</label>
+      <!-- La forme de la carte : quatre menus en deux rangées régulières (lot « projection »,
+           30/09/2026). « Schéma » et « Phrases » ne servent qu'à 3 taches : à 2 taches ils
+           restent à leur place, grisés. Aucune valeur, aucune adresse ne change. -->
+      <div class="c-forme">
+        <div>
+          <label for="invTaskCount">Taches</label>
           <select id="invTaskCount">
             <option value="2" selected>2 Taches</option>
             <option value="3">3 Taches</option>
           </select>
         </div>
-        <div style="flex:1 1 0">
-          <label>Format Indices</label>
+        <div>
+          <label for="invClueType">Indices</label>
           <select id="invClueType">
             <option value="SENTENCE" selected>Phrases</option>
             <option value="SYMBOL">Symboles (=)</option>
           </select>
         </div>
-        <div id="invStructureRow" style="flex:1.25 1 0; flex-direction:column">
-          <label>Type de schéma (3 taches)</label>
+        <div id="invStructureRow">
+          <label for="invStructure3">Schéma</label>
           <!-- lot G2 : le type se lit après retournement des indices (la tache commune aux deux
                indices : la plus petite, celle du milieu, la plus grande). Les anciennes valeurs
                CHAIN / PIVOT / MIX (ordre des phrases) restent lues pour les anciennes adresses,
@@ -1263,17 +1276,14 @@
             <option value="MIX" hidden>Réglage d'avant : aléatoire</option>
           </select>
         </div>
-      </div>
-      <div class="row" id="invOrdreRow" style="align-items:flex-end; display:none">
-        <div style="flex:1.25 1 0">
-          <label>Ordre des phrases (3 taches)</label>
+        <div id="invOrdreRow">
+          <label for="invOrdre">Phrases</label>
           <select id="invOrdre" title="Dans l'ordre du dessin : la première phrase est celle par où l'on commence. Dans le désordre : l'inverse. Au hasard : l'un ou l'autre à chaque carte.">
             <option value="HASARD" selected>Au hasard</option>
-            <option value="DESSIN">Dans l'ordre du dessin</option>
+            <option value="DESSIN">Dans l'ordre</option>
             <option value="DESORDRE">Dans le désordre</option>
           </select>
         </div>
-        <div style="flex:2 1 0"></div>
       </div>
 
       <label>Opérations autorisées</label>
@@ -1283,21 +1293,14 @@
         <label class="checkInline" title="Addition (Ex: 5 de plus)"><input type="checkbox" id="invOpAdd" checked> <span>+k</span></label>
         <label class="checkInline" title="Soustraction (Ex: 5 de moins)"><input type="checkbox" id="invOpSub" checked> <span>−k</span></label>
       </div>
-      <div class="c-ops" id="invNouveauxRow">
-        <label class="checkInline large" title="Les rapports se disent aussi avec les mots du primaire : «&nbsp;le double des jetons de la tache noire&nbsp;», «&nbsp;la moitié&nbsp;», à la place de «&nbsp;2 fois plus&nbsp;» (une fois sur deux)."><input type="checkbox" id="invVocab"> <span>Le double, la moitié…</span></label>
-        <label class="checkInline large" title="Un indice en deux temps : «&nbsp;3 jetons de plus que le double des jetons de la tache noire&nbsp;» (avec «&nbsp;Une référence&nbsp;» ou «&nbsp;Chaîne&nbsp;», et à 2 taches)."><input type="checkbox" id="invCompose"> <span>Indices composés</span></label>
-        <label class="checkInline large" title="À 3 taches : «&nbsp;Sous la tache rouge, il y a autant de jetons que sous la tache noire et la tache bleue réunies&nbsp;», plus un indice entre les deux autres."><input type="checkbox" id="invReunies"> <span>Deux taches réunies</span></label>
-      </div>
-      <div class="c-ops" id="invNoTotalRow">
-        <label class="checkInline large" title="Pas de total : deux indices sur les deux mêmes taches, un «&nbsp;fois plus / fois moins&nbsp;» et un «&nbsp;de plus / de moins&nbsp;». Toujours 2 taches, sans jetons visibles. Cochée avec «&nbsp;Taches répétées&nbsp;» : les deux sortes de cartes se mélangent."><input type="checkbox" id="invNoTotal"> <span>Sans total</span></label>
-        <label class="checkInline large" title="Une même couleur peut être plusieurs fois sur le plateau (au moins une l'est, 6 taches au plus) ; les indices parlent d'«&nbsp;une tache rouge&nbsp;». Cochée avec «&nbsp;Sans total&nbsp;» : les deux sortes de cartes se mélangent."><input type="checkbox" id="invRepeatOn"> <span>Taches répétées</span></label>
-      </div>
-      <div class="row" id="invRepeatRow" style="align-items:flex-end; display:none">
-        <div style="flex:1.25 1 0">
-          <label>Même couleur : fois max</label>
-          <input id="invRepeat" type="number" min="2" max="3" value="3" />
-        </div>
-        <div style="flex:2 1 0"></div>
+      <label>Variantes</label>
+      <div class="c-ops c-variantes" id="invNouveauxRow">
+        <label class="checkInline" title="Les rapports se disent aussi avec les mots du primaire : «&nbsp;le double des jetons de la tache noire&nbsp;», «&nbsp;la moitié&nbsp;», à la place de «&nbsp;2 fois plus&nbsp;» (une fois sur deux)."><input type="checkbox" id="invVocab"> <span>Double, moitié…</span></label>
+        <label class="checkInline" title="Un indice en deux temps : «&nbsp;3 jetons de plus que le double des jetons de la tache noire&nbsp;» (avec «&nbsp;Une référence&nbsp;» ou «&nbsp;Chaîne&nbsp;», et à 2 taches)."><input type="checkbox" id="invCompose"> <span>Indices composés</span></label>
+        <label class="checkInline" title="Pas de total : deux indices sur les deux mêmes taches, un «&nbsp;fois plus / fois moins&nbsp;» et un «&nbsp;de plus / de moins&nbsp;». Toujours 2 taches, sans jetons visibles. Cochée avec «&nbsp;Taches répétées&nbsp;» : les deux sortes de cartes se mélangent."><input type="checkbox" id="invNoTotal"> <span>Sans total</span></label>
+        <label class="checkInline" title="Une même couleur peut être plusieurs fois sur le plateau (au moins une l'est, 6 taches au plus) ; les indices parlent d'«&nbsp;une tache rouge&nbsp;». Cochée avec «&nbsp;Sans total&nbsp;» : les deux sortes de cartes se mélangent."><input type="checkbox" id="invRepeatOn"> <span>Taches répétées</span></label>
+        <label class="checkInline" title="À 3 taches : «&nbsp;Sous la tache rouge, il y a autant de jetons que sous la tache noire et la tache bleue réunies&nbsp;», plus un indice entre les deux autres."><input type="checkbox" id="invReunies"> <span>Taches réunies</span></label>
+        <label class="checkInline c-repeat" id="invRepeatRow" style="display:none" title="Taches répétées : une même couleur est au plus 2 ou 3 fois sur le plateau."><span>Fois max</span> <input id="invRepeat" type="number" min="2" max="3" value="3" /></label>
       </div>
 
       <div class="row" style="align-items:flex-end">
@@ -2720,7 +2723,6 @@ function syncSettingsUI(){
   if(act === "NPM") sanitizeBeadAbsMaxForBPM();
 
   if(isInvestigate){
-    if(invTaskCountEl.value === "3"){ invStructureRow.style.display = "flex"; } else { invStructureRow.style.display = "none"; }
     /* Sans total : toujours 2 taches et aucun jeton visible — ces réglages sont grisés
        (ils gardent leur valeur, qui revient dès qu'on décoche). Avec « Taches répétées »
        aussi, les deux sortes de cartes se mélangent (lot E-melange, 24/09/2026) : ces
@@ -2736,10 +2738,11 @@ function syncSettingsUI(){
     const trois = invTaskCountEl.value === "3";
     const typeSchema = invStructure3El ? invStructure3El.value : "";
     const reuniesOn = trois && !!(invReuniesEl && invReuniesEl.checked);
-    if(invOrdreRowEl) invOrdreRowEl.style.display = trois && !sansTotal ? "flex" : "none";
+    /* « Schéma » et « Phrases » restent à leur place : grisés quand ils ne servent pas */
+    if(invOrdreEl) invOrdreEl.disabled = !(trois && !sansTotal);
     if(invReuniesEl){ invReuniesEl.disabled = !trois || (sansTotal && !repetees); }
     if(invComposeEl){ invComposeEl.disabled = (sansTotal && !repetees) || reuniesOn || (trois && (typeSchema === "COMPLETE" || typeSchema === "UNITE")); }
-    if(invStructure3El && trois && !(sansTotal && !repetees)) invStructure3El.disabled = reuniesOn;
+    if(invStructure3El) invStructure3El.disabled = !trois || (sansTotal && !repetees) || reuniesOn;
     if(invVocabEl) invVocabEl.disabled = false;
   }
 
@@ -3363,7 +3366,7 @@ function genInvestigate(rng){
   const clueType = invClueTypeEl.value;
   const structureMode = invStructure3El.value;
   /* ===== Le générateur sait tout faire (lot G2, 29/09/2026) =====
-     « Type de schéma » (3 taches) : REF une référence (la tache commune aux deux indices est la
+     « Schéma » (3 taches, ex-« Type de schéma ») : REF une référence (la tache commune aux deux indices est la
      plus petite) · CHAINE (au milieu) · COMPLETE je complète (la plus grande) · UNITE unité
      commune (deux rapports vers la plus grande, problème B) · HASARD (les trois premiers). Le
      type se lit APRÈS retournement des indices : le dessin de la correction est décidé, puis
@@ -3371,7 +3374,7 @@ function genInvestigate(rng){
      Les anciennes valeurs CHAIN / PIVOT / MIX (l'ordre des phrases) gardent l'ancien tirage :
      mêmes cartes pour toutes les adresses existantes. Cases : « le double, la moitié… »
      (vocab), indices composés (« 3 de plus que le double de la noire »), deux taches réunies ;
-     menu « Ordre des phrases » (dessin / désordre / hasard). Tout ÉTEINT par défaut : sans ces
+     menu « Phrases » (ex-« Ordre des phrases ») (dessin / désordre / hasard). Tout ÉTEINT par défaut : sans ces
      réglages, aucun tirage de plus n'est consommé. */
   const TYPES_ANCIENS = ["CHAIN", "PIVOT", "MIX"];
   const typeAncien = TYPES_ANCIENS.includes(structureMode);
@@ -7942,6 +7945,106 @@ function drawEnqueteCorrectionImprimee(targetSvg, card, haut, bas, opts = {}){
   return { hauteur, facteur, ecart };
 }
 
+/* La correction en projection (lot « projection », 30/09/2026) : la scène est figée à
+   1600 × 1000 et les dessins ①②③, qui partent de y = 620, descendaient jusqu'à 1600 — tout
+   ce qui dépassait 1000 était coupé. Ici rien n'est coupé : quand le dessin ne tient pas
+   sous le plateau, le plateau (TOTAL, indices, taches) et le dessin rétrécissent ensemble,
+   du même facteur (retour de Gwenaël, 30/09 : pas le plateau seul) ; le plateau ne descend
+   pas sous ENQ_PROJ_PLATEAU_MIN, le dessin prend alors ce qui reste (data-facteur,
+   comme à l'impression). Le plateau est mesuré sur la PLUS HAUTE des étapes de la carte : il
+   ne bouge pas d'un appui à l'autre. Une étape plus courte (② souvent) prend toute la place
+   qui reste, jusqu'à sa taille d'origine — pas de blanc perdu sous le dessin. Une
+   carte dont toutes les étapes tiennent déjà n'est pas touchée ; un dessin qui tient rien
+   qu'en remontant contre le plateau remonte, sans rien réduire. Le mode élève a son propre
+   cadrage (eleveCadrerScene, eleveSchemaTelRendre) et ne passe pas par ici. */
+const ENQ_PROJ_IDS = ["enqueteBarres", "enqueteLigne", "enqueteCalculs"];
+const ENQ_PROJ_SCENE_BAS = 1000, ENQ_PROJ_MARGE = 10, ENQ_PROJ_JEU = 18, ENQ_PROJ_PLATEAU_MIN = 0.55;
+function enqueteProjectionFacteurs(basPlateau, hautDessin, basDessin, basEtape = basDessin){
+  const H = basDessin - hautDessin;
+  const place = ENQ_PROJ_SCENE_BAS - ENQ_PROJ_MARGE;
+  if(!(H > 0) || basDessin <= place) return { plateau:1, dessin:1, y:hautDessin, tient:true };
+  /* remonter contre le plateau suffit : aucun facteur */
+  if(basPlateau + ENQ_PROJ_JEU + H <= place) return { plateau:1, dessin:1, y:Math.round(basPlateau + ENQ_PROJ_JEU), tient:false };
+  /* sinon le plateau et le dessin rétrécissent ENSEMBLE, du même facteur ; le plateau ne
+     descend pas sous ENQ_PROJ_PLATEAU_MIN, le dessin prend alors ce qui reste */
+  const commun = Math.floor(1000 * (place - ENQ_PROJ_JEU) / (basPlateau + H)) / 1000;
+  const plateau = Math.max(ENQ_PROJ_PLATEAU_MIN, commun);
+  const y = Math.round(plateau * basPlateau + ENQ_PROJ_JEU);
+  /* l'étape affichée prend toute la place qui reste sous le plateau, sans dépasser sa taille d'origine */
+  const dessin = Math.min(1, Math.floor(1000 * (place - y) / Math.max(1, basEtape - hautDessin)) / 1000);
+  return { plateau, dessin, y, tient:false };
+}
+/* Le plateau À CÔTÉ du dessin (décidé le 30/09 pour l'étape ① des taches répétées, « encore
+   tout petit ») : quand le dessin empilé sous le plateau tomberait sous ENQ_PROJ_COTE_SEUIL,
+   et que le cadre a un coin libre à droite (les barres sont à gauche), le dessin prend toute
+   la hauteur de la scène et le plateau se loge dans ce coin, le plus grand possible. Renvoie
+   null quand aucun coin libre ne convient (ligne ②, pleine largeur) : on reste empilé. */
+const ENQ_PROJ_COTE_SEUIL = 0.8, ENQ_PROJ_COTE_PLATEAU_MIN = 0.5, ENQ_PROJ_COTE_JEU = 18;
+function enqueteProjectionACote(dessin, bp, empile){
+  if(empile.tient || empile.dessin >= ENQ_PROJ_COTE_SEUIL || typeof dessin.querySelectorAll !== "function") return null;
+  const bd = dessin.getBBox();
+  const haut = ENQ_PROJ_MARGE, place = ENQ_PROJ_SCENE_BAS - ENQ_PROJ_MARGE - haut;
+  const fd = Math.min(1, Math.floor(1000 * place / bd.height) / 1000);
+  if(fd < empile.dessin + 0.1) return null;
+  const cadre = dessin.querySelector("rect");
+  if(!cadre) return null;
+  const pleins = Array.from(dessin.querySelectorAll("rect, path, text, line, circle, polygon, polyline"))
+    .filter(n => n !== cadre).map(n => n.getBBox()).filter(b => b.width > 0 || b.height > 0);
+  const droite = bd.x + bd.width - ENQ_PROJ_COTE_JEU, bas = bd.y + bd.height - ENQ_PROJ_COTE_JEU, j = ENQ_PROJ_COTE_JEU;
+  for(let k = 0.9; k >= ENQ_PROJ_COTE_PLATEAU_MIN - 1e-9; k -= 0.025){
+    const w = k * bp.width / fd, h = k * bp.height / fd, x = droite - w;
+    for(let y = bd.y + j; y + h <= bas; y += 10){
+      if(pleins.some(b => b.x < x + w + j && b.x + b.width > x - j && b.y < y + h + j && b.y + b.height > y - j)) continue;
+      return { plateau: Math.round(1000 * k) / 1000, dessin: fd, y: haut,
+        px: 800 + fd * (x - 800), py: haut + fd * (y - bd.y) };
+    }
+  }
+  return null;
+}
+function enqueteProjectionCadrer(card){
+  try{
+    const dessin = ENQ_PROJ_IDS.map(id => document.getElementById(id)).find(Boolean);
+    const modele = dessin && dessin.parentNode === svg ? enqueteBarresModele(card) : null;
+    if(!modele) return null;
+    /* la plus haute des étapes de la carte, mesurée dans un calque invisible */
+    const mesure = el("g", { visibility:"hidden" });
+    svg.appendChild(mesure);
+    let haut = Infinity, bas = -Infinity;
+    [drawEnqueteBarres, modele.ligne ? drawEnqueteLigne : null, drawEnqueteCalculs].forEach(dessine => {
+      if(!dessine) return;
+      const calque = el("g");
+      mesure.appendChild(calque);
+      dessine(calque, card, { modele });
+      const b = calque.getBBox();
+      haut = Math.min(haut, b.y); bas = Math.max(bas, b.y + b.height);
+      mesure.removeChild(calque);
+    });
+    svg.removeChild(mesure);
+    /* le plateau : tout ce que la scène porte d'autre */
+    const plateau = el("g", { id:"enqueteProjectionPlateau" });
+    Array.from(svg.childNodes).forEach(n => { if(n !== dessin) plateau.appendChild(n); });
+    svg.insertBefore(plateau, dessin);
+    const bp = plateau.getBBox();
+    const bd = dessin.getBBox();
+    const f = enqueteProjectionFacteurs(bp.y + bp.height, haut, bas, bd.y + bd.height);
+    const cote = enqueteProjectionACote(dessin, bp, f);
+    if(cote){
+      plateau.setAttribute("data-facteur", String(cote.plateau));
+      plateau.setAttribute("data-place", "cote");
+      svg.appendChild(plateau); /* par-dessus le fond blanc du cadre */
+      dessin.setAttribute("data-facteur", String(cote.dessin));
+      plateau.setAttribute("transform", `translate(${Math.round(cote.px - cote.plateau * bp.x)} ${Math.round(cote.py - cote.plateau * bp.y)}) scale(${cote.plateau})`);
+      dessin.setAttribute("transform", `translate(800 ${cote.y}) scale(${cote.dessin}) translate(-800 ${-bd.y})`);
+      return cote;
+    }
+    plateau.setAttribute("data-facteur", String(f.plateau));
+    dessin.setAttribute("data-facteur", String(f.dessin));
+    if(f.plateau < 1) plateau.setAttribute("transform", `translate(800 0) scale(${f.plateau}) translate(-800 0)`);
+    if(!f.tient) dessin.setAttribute("transform", `translate(800 ${f.y}) scale(${f.dessin}) translate(-800 ${-haut})`);
+    return f;
+  }catch(_e){ return null; /* sans mesure possible : la scène d'origine */ }
+}
+
 function drawBarModelPartsInGroup(g, cx, topY, total, parts, api){
   const baseW = (api && api.w) ? api.w : 300;
   const hTop = (api && api.hTop) ? api.hTop : 56;
@@ -11814,7 +11917,7 @@ function updateUI(){
   if(btnQuestionPrevEl) btnQuestionPrevEl.disabled = cards.length===0 || idx<=0;
   if(btnQuestionNextEl) btnQuestionNextEl.disabled = cards.length===0 || idx>=cards.length-1;
   if(cards.length===0){ renderEmpty(); }
-  else { renderCard(cards[idx], revealState); }
+  else { renderCard(cards[idx], revealState); enqueteProjectionCadrer(cards[idx]); }
 }
 function renderEmpty(){
   clearSvg();
