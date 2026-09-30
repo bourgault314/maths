@@ -1,8 +1,8 @@
 /* SPLAT! Enquête — lots G1 « la correction en barres » et G2 « le générateur sait tout faire »
    (29/09/2026, remarques 23 à 28 du monde 3).
    Ces tests exécutent les fonctions de outils/splat.html telles quelles (extraites du fichier).
-   1. RÈGLE ABSOLUE : aucune carte existante ne change. Les 25 adresses des livrets (fiches 10 à
-      19, 20 à 24, Le défi 10 à 19, dans _sources/livret-splat-enquete/render.py) sont rejouées
+   1. RÈGLE ABSOLUE : aucune carte existante ne change. Les 30 adresses des livrets (fiches 10 à
+      24 et 10d à 24d depuis le lot 2 du 30/09/2026, dans _sources/livret-splat-enquete/render.py) sont rejouées
       comme la page le fait (genInvestigate puis assignPositions, quatre cartes d'affilée) et
       comparées aux cartes IMPRIMÉES dans les livrets en ligne (cartes.json, relu par le test des
       livrets) ; le nombre de tirages au hasard est épinglé lui aussi — avec les nouveaux réglages
@@ -105,29 +105,31 @@ const moteur = new Function(`
 const empreinte = (x) => createHash("sha256").update(JSON.stringify(x)).digest("hex").slice(0, 16);
 
 // --- 1. aucune carte existante ne change ------------------------------------------------------
-/* Les 25 adresses de render.py : F10-F19 (fiches de la classe), R20-R24 (L'enquête rebondit),
-   D10-D19 (Le défi) — chacune, ses quatre cartes imprimées dans les livrets (cartes.json). */
+/* Les 30 adresses de render.py (lot 2 du 30/09/2026, les six livrets) : E10-E24 (les trois livrets
+   de base) et E10D-E24D (les trois livrets « Deuxième tour ») — chacune, ses quatre cartes
+   imprimées dans les livrets (cartes.json). Avant le lot 2 : F10-F19, R20-R24, D10-D19, dont les
+   graines ont été retriées (la progression en six livrets). */
+const LIVRET_DE = (n, d) => (n <= 14 ? "additif" : n <= 19 ? "multiplicatif" : "rebondit") + (d ? "_tour2" : "");
 const ADRESSES = [
-  ...[10, 11, 12, 13, 14, 15, 16, 17, 18, 19].map((n) => [`F${n}`, "additif", "multiplicatif"]),
-  ...[20, 21, 22, 23, 24].map((n) => [`R${n}`, "rebondit", "rebondit"]),
-  ...[10, 11, 12, 13, 14, 15, 16, 17, 18, 19].map((n) => [`D${n}`, "additif_defi", "multiplicatif_defi"])
+  ...Array.from({ length: 15 }, (_, i) => [`E${10 + i}`, LIVRET_DE(10 + i, false)]),
+  ...Array.from({ length: 15 }, (_, i) => [`E${10 + i}D`, LIVRET_DE(10 + i, true)])
 ];
 function fichesDe(livret){ return cartesJson[livret].fiches; }
 function carteImprimee(nom){
-  const n = Number(nom.slice(1));
-  const livret = n >= 20 ? "rebondit" : (nom[0] === "D" ? (n <= 14 ? "additif_defi" : "multiplicatif_defi") : (n <= 14 ? "additif" : "multiplicatif"));
-  const cle = Object.keys(fichesDe(livret)).find((t) => t.startsWith(`Fiche ${n} —`));
-  assert.ok(cle, `${nom} : fiche ${n} dans cartes.json (${livret})`);
+  const d = nom.endsWith("D"), n = Number(nom.slice(1, d ? -1 : undefined));
+  const livret = LIVRET_DE(n, d), code = n + (d ? "d" : "");
+  const cle = Object.keys(fichesDe(livret)).find((t) => t.startsWith(`Fiche ${code} —`));
+  assert.ok(cle, `${nom} : fiche ${code} dans cartes.json (${livret})`);
   return fichesDe(livret)[cle];
 }
-/* Le nombre de tirages au hasard de chaque adresse (quatre cartes), relevé sur main f815fb2
-   avant le lot G1 : la correction ne tire rien. */
-const TIRAGES = { F10: 71, F11: 109, F12: 93, F13: 115, F14: 216, F15: 116, F16: 86, F17: 134, F18: 243, F19: 275,
-  R20: 97, R21: 111, R22: 66, R23: 66, R24: 737, D10: 66, D11: 141, D12: 125, D13: 170, D14: 197, D15: 66,
-  D16: 83, D17: 108, D18: 135, D19: 246 };
-const EMPREINTE = "115e43b00f7aac8d";
+/* Le nombre de tirages au hasard de chaque adresse (quatre cartes), relevé au lot 2 : la
+   correction ne tire rien. */
+const TIRAGES = { E10: 106, E11: 96, E12: 71, E13: 104, E14: 169, E15: 96, E16: 68, E17: 157, E18: 203, E19: 165, E20: 97, E21: 163,
+  E22: 66, E23: 66, E24: 136, E10D: 194, E11D: 80, E12D: 116, E13D: 106, E14D: 188, E15D: 154, E16D: 104, E17D: 136,
+  E18D: 60, E19D: 336, E20D: 172, E21D: 268, E22D: 222, E23D: 218, E24D: 124 };
+const EMPREINTE = "dd7fdd03fc91fed1";
 
-test("règle absolue : les 25 adresses des livrets tirent exactement les cartes imprimées (cartes.json), même hasard consommé", () => {
+test("règle absolue : les 30 adresses des livrets tirent exactement les cartes imprimées (cartes.json), même hasard consommé", () => {
   const tout = {};
   for(const [nom] of ADRESSES){
     const adresse = py(nom);
@@ -320,7 +322,7 @@ test("l'écran : trois étapes (les barres, schéma regroupé, je calcule), les 
   assert.equal((exemple.match(/<li class="et/g) || []).length, 4, "quatre étapes sur la page 2");
   assert.equal((exemple.match(/<svg class="dessin"/g) || []).length, 3, "trois dessins");
   assert.match(exemple, /J'écris la réponse et je vérifie/);
-  assert.match(exemple, /Je trace les barres, avec les mots/);
+  assert.match(exemple, /Je fais le schéma de la situation/);
   assert.doesNotMatch(exemple, /class="fin"|Je les remplis avec les mots/);
 });
 

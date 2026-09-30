@@ -5,9 +5,6 @@
 /* ---------- bandeau ---------- */
 .tete{position:relative;height:34mm;flex:0 0 auto}
 .tete .fond{position:absolute;inset:0;width:210mm;height:34mm;display:block}
-.tete .logos{position:absolute;top:5mm;right:11mm;display:flex;align-items:center;gap:5mm}
-.tete .logos img.irem{height:12mm}
-.tete .logos img.mg{height:10.5mm}
 .tete .bloc{position:absolute;left:14mm;top:6.5mm}
 .tete .sur{font-size:12px;font-weight:700;color:#fce7f3;text-transform:uppercase;letter-spacing:2.6px}
 .tete h1{margin:1mm 0 0;font-size:30px;line-height:1;font-weight:700;color:#fff;letter-spacing:-1px}
@@ -49,10 +46,6 @@
     </linearGradient></defs>
     <path fill="url(#deg3)" d="M0,0 H210 V25 C203,31 199,33 191,32 C183,31 180,26 172,27 C163,28 159,33 150,32 C141,31 138,26 129,27 C120,28 116,33 107,32 C98,31 95,26 86,27 C77,28 73,33 64,32 C55,31 52,26 43,27 C34,28 30,33 21,32 C13,31 7,29 0,27 Z"/>
   </svg>
-  <div class="logos">
-    <img class="irem" src="/assets/img/logos/irem/logo-print.png" alt="IREMI La Réunion">
-    <img class="mg" src="/assets/img/logos/mathsgo/logo-print.png" alt="maths&amp;go">
-  </div>
   <div class="bloc">
     <div class="sur">Un exemple résolu</div>
     <h1>L'enquête pas à pas</h1>
@@ -61,7 +54,7 @@
 
 <div class="corps">
   <!-- La carte et les trois dessins sont ceux de l'outil (outils/splat.html) : les trois
-       étapes du bouton « Voir le schéma » (① les barres, ② tout sur une ligne, ③ je calcule —
+       étapes du bouton « Voir le schéma » (① les barres, ② schéma regroupé, ③ je calcule —
        la correction en barres des lots G1-G2, 29/09/2026), au profil d'impression de la
        correction ; puis la 4e étape, « J'écris la réponse et je vérifie », en texte. render.py
        les redemande à l'outil et écrit les légendes À PARTIR DE LA CARTE. -->
@@ -75,11 +68,11 @@
 
   <ol class="etapes">
     <li class="et"><span class="badge"><svg viewBox="2 5 106 105" fill="#831843"><use href="#tacheBadge"/></svg><b>1</b></span>
-      <div class="txt"><h3>Je trace les barres, avec les mots</h3><p class="leg"></p></div>
-      <svg class="dessin" viewBox="50 612 1500 345" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Je trace les barres, avec les mots"></svg></li>
+      <div class="txt"><h3>Je fais le schéma de la situation</h3><p class="leg"></p></div>
+      <svg class="dessin" viewBox="50 612 1500 345" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Je fais le schéma de la situation"></svg></li>
     <li class="et"><span class="badge"><svg viewBox="2 5 106 105" fill="#831843"><use href="#tacheBadge"/></svg><b>2</b></span>
-      <div class="txt"><h3>Tout sur une ligne</h3><p class="leg"></p></div>
-      <svg class="dessin" viewBox="50 612 1500 345" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Tout sur une ligne"></svg></li>
+      <div class="txt"><h3>Schéma regroupé</h3><p class="leg"></p></div>
+      <svg class="dessin" viewBox="50 612 1500 345" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Schéma regroupé"></svg></li>
     <li class="et"><span class="badge"><svg viewBox="2 5 106 105" fill="#831843"><use href="#tacheBadge"/></svg><b>3</b></span>
       <div class="txt"><h3>Je calcule</h3><p class="leg"></p></div>
       <svg class="dessin" viewBox="50 612 1500 345" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Je calcule"></svg></li>

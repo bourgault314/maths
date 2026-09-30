@@ -42,7 +42,29 @@
 .mini-sch .r span + span{margin-left:-1.3px}
 .mini-sch .r .q{width:9mm;background:#e2e8f0;font-size:9px}
 .mini-sch .r .v{width:4.5mm;background:#fff}
+/* Deuxième tour 3 (lot 2, 30/09/2026) : l'unité commune résolue à la place de « Pour se
+   souvenir » — la carte à gauche avec la réponse, les trois dessins de l'outil à droite. */
+.lex.unite .u-corps{display:grid;grid-template-columns:1fr 1fr;column-gap:5mm;row-gap:2.5mm;margin-top:2.5mm;align-items:start}
+.lex.unite .u-carte{display:flex;flex-direction:column;gap:1.5mm}
+.lex.unite .u-carte svg{width:88%;height:auto;display:block;border:1.4px solid #0f172a;border-radius:4px;background:#fff}
+.lex.unite .u-fin{margin:0;font-size:10.5px;line-height:1.3;color:#334155}
+.lex.unite .u-fin b{color:#0f172a}
+.lex.unite .u-et{display:block}
+.lex.unite .u-et h3{margin:0 0 0.5mm;font-size:11.5px;font-weight:700;color:#831843}
+.lex.unite .u-et svg{width:100%;height:auto;display:block}
 .credits{text-align:center;font-size:10.5px;line-height:1.55;color:#475569;border-top:1px solid #e2e8f0;padding-top:3mm;padding-bottom:3mm}
+/* Crédit à gauche en 10 px, une ligne par phrase ; à droite IREMI puis maths&go, et dessous
+   l'Unité apprenante Michel Debré — la disposition du dos des mondes 1 et 2 (lot 3 de la
+   relecture du monde 1, 26/09/2026), reprise ici au lot 2 de l'Enquête (30/09/2026) : les seuls
+   logos du livret. */
+.credits{display:flex;align-items:center;gap:5mm;text-align:left}
+.credits .txt{flex:1;font-size:10px;white-space:nowrap}
+.credits .droite{display:flex;flex-direction:column;align-items:center;gap:2.2mm;flex:0 0 auto}
+.credits .logos-bas{display:flex;align-items:center;gap:3mm}
+.credits .logos-bas img.irem{height:11mm;display:block}
+.credits .logos-bas img.mg{height:9.5mm;display:block}
+.credits .ua{display:flex;align-items:center;gap:1.8mm;color:#0d7477;font-weight:700;font-size:10.5px;line-height:1.1}
+.credits .ua img{width:8mm;height:8mm;display:block}
 .credits b{color:#0f172a}
 .credits .steve{color:#831843;font-weight:700}
 </style></head>
@@ -98,9 +120,19 @@
   </div>
 
   <div class="credits">
+    <div class="txt">
     Jeu <b>SPLAT!</b> créé par <span class="steve">Steve Wyborney</span> (stevewyborney.com) — merci Steve&nbsp;!<br>
-    Progression «&nbsp;SPLAT! cycle 3&nbsp;» de Claire · outil <b>SPLAT! classique</b> de maths&amp;go, avec l'IREMI de La Réunion.<br>
+    Livret et outil <b>SPLAT! classique</b> de maths&amp;go, avec l'IREMI de La Réunion.<br>
+    Merci à Claire pour la progression «&nbsp;SPLAT! cycle 3&nbsp;», ses idées et sa relecture.<br>
     Libre d'être imprimé, partagé et adapté — sans usage commercial, et sous la même licence.
+    </div>
+    <div class="droite">
+      <div class="logos-bas">
+        <img class="irem" src="/assets/img/logos/irem/logo-print.png" alt="IREMI La Réunion">
+        <img class="mg" src="/assets/img/logos/mathsgo/logo-print.png" alt="maths&amp;go">
+      </div>
+      <div class="ua"><img src="/assets/img/logos/ua-debre/icone.svg" alt=""><span>Unité apprenante<br>Michel Debré</span></div>
+    </div>
   </div>
 </div>
 
