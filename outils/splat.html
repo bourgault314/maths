@@ -7744,12 +7744,12 @@ function enqueteAccolade(g, x, y1, y2, P, label, vide){
   g.appendChild(text(x + w + P.braceGap, m + 1, label, { "text-anchor":"start", "dominant-baseline":"middle", "font-size":P.totalFont, "font-weight":900, fill:"#111827" }));
 }
 /* Une petite accolade sous des cases (« violette », « une rouge », « 18 de plus que l'orange »). */
-function enqueteSousAccolade(g, x1, x2, y, label, P, largeurLibre){
+function enqueteSousAccolade(g, x1, x2, y, label, P, largeurLibre, dy = 0){
   g.appendChild(el("path", { d:`M ${x1 + 4} ${y} V ${y + P.sousH} H ${x2 - 4} V ${y}`, fill:"none", stroke:"#374151", "stroke-width":4, "stroke-linejoin":"round" }));
   const libre = Math.max(x2 - x1, largeurLibre || 0);
   let fs = P.sousFont, t = label;
   while(fs > P.sousFont * 0.7 && enqueteTexteLargeur(t, fs, 700) > libre - 6) fs -= 2;
-  g.appendChild(text((x1 + x2) / 2, y + P.sousH + P.sousPas * 0.55, t, { "text-anchor":"middle", "dominant-baseline":"middle", "font-size":fs, "font-weight":700, fill:"#374151" }));
+  g.appendChild(text((x1 + x2) / 2, y + P.sousH + P.sousPas * 0.55 + dy, t, { "text-anchor":"middle", "dominant-baseline":"middle", "font-size":fs, "font-weight":700, fill:"#374151" }));
 }
 /* « ① Les barres » : le numéro dans un cercle, puis le titre ; renvoie la hauteur prise. */
 function enqueteTitreEtape(g, x, y, numero, titre, P, largeur){
@@ -7950,6 +7950,25 @@ function drawEnqueteCalculs(targetGroup, card, opts = {}){
       x += enqueteTexteLargeur(e.texte, rf, 900) + Math.round(rf * 1.2);
     });
     y += rf * 1.3;
+    /* le corrigé imprimé vérifie aussi les indices, comme le dernier appui de la projection
+       (décidé par Gwenaël le 30/09/2026 ; lot « pages 2 des livrets ») : « verte = rouge + 2 :
+       5 = 3 + 2 ✓ », dans l'écriture de la vérification du total. Le total d'abord, s'il n'a pas
+       tenu sur la ligne de la réponse ; tout sur une ligne si ça tient, sinon une ligne chacun. */
+    if(opts.isPrint){
+      const verifs = (modele.verification && !entries.some(e => e.verif) ? [`${modele.verification} ✓`] : []).concat(enqueteG3VerifIndices(card, modele.lettres));
+      if(verifs.length){
+        const ecartV = Math.round(rf * 1.2);
+        const surUne = verifs.reduce((a, t) => a + enqueteTexteLargeur(t, rf, 900), 0) + (verifs.length - 1) * ecartV <= largeur;
+        let vf = rf;
+        if(!surUne) while(vf > P.repFont * 0.6 && verifs.some(t => enqueteTexteLargeur(t, vf, 900) > largeur)) vf -= 2;
+        let xv = x0;
+        verifs.forEach(t => {
+          g.appendChild(text(xv, y + vf * 0.7 + pastilleTextDy(vf), t, { "text-anchor":"start", "dominant-baseline":"middle", "font-size":vf, "font-weight":700, fill:"#374151", "data-verif":"indice" }));
+          if(surUne) xv += enqueteTexteLargeur(t, vf, 900) + ecartV; else y += vf * 1.3;
+        });
+        if(surUne) y += vf * 1.3;
+      }
+    }
   }
   y += (P.cadre ? P.marge : 4);
   const h = Math.round(y - boxY);
@@ -8245,7 +8264,11 @@ function enqueteG3Etapes(card){
 }
 
 /* Une case du pas à pas : couleurs de la tache, texte = mot, valeur ou nombre ; « retire » = la
-   case retirée, hachurée en gris et estompée comme « Garder hachuré » dans ÉquaBarre (pas barrée). */
+   case retirée, hachurée en gris et estompée comme « Garder hachuré » dans ÉquaBarre (pas barrée).
+   P.isPrint (lot « pages 2 des livrets ») : les couleurs de l'impression, la case retirée moins
+   estompée (teintes fixes, sans transparence). */
+const ENQ_G3_SOUS_PAPIER = 10;
+const ENQ_G3_RETIRE_PAPIER = "#4d575d"; /* le trait et le nombre de la case retirée, sur le papier */
 function enqueteG3Case(g, card, cell, x, y, w, h, P, modele, texteForce){
   const retire = !!cell.retire;
   if(!retire && texteForce == null && cell.valeur == null){ enqueteDessinerCase(g, card, cell, x, y, w, h, P, modele, false); return; }
@@ -8257,15 +8280,31 @@ function enqueteG3Case(g, card, cell, x, y, w, h, P, modele, texteForce){
       pat.appendChild(el("rect", { width:10, height:20, fill:"rgba(15,23,42,0.30)" }));
       defs.appendChild(pat); g.appendChild(defs);
     }
+    const tr = texteForce != null ? texteForce : formatRelationNumber(cell.v);
+    /* sur le papier (pages 2 des livrets, 30/09/2026) : le MÊME dessin qu'en projection — mêmes
+       hachures, le nombre posé dessus, sans pastille (retour de Gwenaël : « il faut que ce soit
+       homogène ») — seulement moins estompé (75 % au lieu de 40 %), sinon le nombre s'efface à
+       l'impression. Les teintes sont déjà mélangées au blanc : pas de transparence dans le PDF. */
+    if(P.isPrint){
+      if(!g.querySelector("#enqG3RetireP")){
+        const defs = el("defs");
+        const pat = el("pattern", { id:"enqG3RetireP", patternUnits:"userSpaceOnUse", width:20, height:20, patternTransform:"rotate(135)" });
+        pat.appendChild(el("rect", { width:20, height:20, fill:"#ecedf0" }));
+        pat.appendChild(el("rect", { width:10, height:20, fill:"#bbbec5" }));
+        defs.appendChild(pat); g.appendChild(defs);
+      }
+      g.appendChild(el("rect", { x, y, width:w, height:h, fill:"url(#enqG3RetireP)", stroke:ENQ_G3_RETIRE_PAPIER, "stroke-width":3.5 }));
+      g.appendChild(text(x + w / 2, y + h / 2 + 1, tr, { "text-anchor":"middle", "dominant-baseline":"middle", "font-size":P.numFont, "font-weight":800, fill:ENQ_G3_RETIRE_PAPIER }));
+      return;
+    }
     const gr = el("g", { opacity:0.4 });
     gr.appendChild(el("rect", { x, y, width:w, height:h, fill:"url(#enqG3Retire)", stroke:"#111827", "stroke-width":3.5 }));
-    const tr = texteForce != null ? texteForce : formatRelationNumber(cell.v);
     gr.appendChild(text(x + w / 2, y + h / 2 + 1, tr, { "text-anchor":"middle", "dominant-baseline":"middle", "font-size":P.numFont, "font-weight":800, fill:"#111827" }));
     g.appendChild(gr);
     return;
   }
   if(cell.kind === "tache"){
-    g.appendChild(el("rect", { x, y, width:w, height:h, fill:taskSplatRevealColor(cell.de, card, false), stroke:taskSplatColor(cell.de, card, false), "stroke-width":3.5 }));
+    g.appendChild(el("rect", { x, y, width:w, height:h, fill:taskSplatRevealColor(cell.de, card, !!P.isPrint), stroke:taskSplatColor(cell.de, card, !!P.isPrint), "stroke-width":3.5 }));
   }else{
     g.appendChild(el("rect", { x, y, width:w, height:h, fill:"#fff", stroke:"#111827", "stroke-width":3.5 }));
   }
@@ -8283,6 +8322,7 @@ function enqueteG3Lignes(g, x0, y, lignes, courante, P, noirDes){
   const noir = noirDes == null ? courante : noirDes;
   lignes.slice(0, courante + 1).forEach((l, k) => {
     if(k < Math.min(noir, courante - 1)) return;
+    if(P.isPrint && k < noir) return; /* papier : pas de ligne grise, seulement le calcul de l'étape */
     const cur = k >= noir;
     g.appendChild(text(x0, yy + P.calcPas / 2 + 1, l, { "text-anchor":"start", "dominant-baseline":"middle", "font-size":P.calcFont, "font-weight":cur ? 800 : 700, fill:cur ? "#111827" : "#9ca3af" }));
     yy += P.calcPas;
@@ -8292,15 +8332,15 @@ function enqueteG3Lignes(g, x0, y, lignes, courante, P, noirDes){
 
 /* ② et ses suites : la barre du haut (le total, ou des parts), les cases du bas, une accolade par
    groupe, les lignes de calcul. Même échelle qu'en ② (enqueteMiseEnPage). */
-function enqueteG3DessinerLigne(target, card, et, modele){
-  const P = enqueteProfil({});
+function enqueteG3DessinerLigne(target, card, et, modele, opts = {}){
+  const P = enqueteProfil(opts);
   const boxY = 620;
   const g = el("g", { id:"enqueteLigne" });
   enqueteHachures(g, P);
   const M = enqueteMiseEnPage(modele, P);
   const { x0, largeur } = M, s = M.sLigne;
   let y = boxY + P.marge * 0.6;
-  y += enqueteTitreEtape(g, x0, y, et.titre === "Schéma regroupé" ? 2 : 3, et.titre, P, largeur);
+  if(!opts.sansTitre) y += enqueteTitreEtape(g, x0, y, et.titre === "Schéma regroupé" ? 2 : 3, et.titre, P, largeur);
   (et.avant || []).forEach(t => { y += enqueteLigneTexte(g, x0, y, t, P.apartFont, P.apartPas, largeur, 800, "#111827"); });
   const bord = P.ligneBord, lineX = x0 + bord / 2;
   const ws = enqueteLargeursCases(et.cells, s, P);
@@ -8314,8 +8354,9 @@ function enqueteG3DessinerLigne(target, card, et, modele){
   const yBas = yTop + P.rowH;
   et.cells.forEach((c, k) => enqueteG3Case(g, card, c, xs[k], yBas, ws[k], P.rowH, P, modele));
   const ySous = yBas + P.rowH + bord / 2 + 6;
-  et.groupes.forEach(sp => enqueteSousAccolade(g, xs[sp.de], xs[sp.a] + ws[sp.a], ySous, sp.label, P));
-  y = ySous + P.sousH + P.sousPas + 18;
+  /* sur le papier, le nom descend un peu sous l'accolade (retour de Gwenaël, 30/09 : « trop collé ») */
+  et.groupes.forEach(sp => enqueteSousAccolade(g, xs[sp.de], xs[sp.a] + ws[sp.a], ySous, sp.label, P, 0, P.isPrint ? ENQ_G3_SOUS_PAPIER : 0));
+  y = ySous + P.sousH + P.sousPas + 18 + (P.isPrint ? ENQ_G3_SOUS_PAPIER : 0);
   y += enqueteG3Lignes(g, x0, y, et.lignes, et.courante, P, et.noirDes);
   y += P.marge;
   enqueteCadre(g, P, boxY, Math.round(y - boxY), g.id);
@@ -8325,8 +8366,8 @@ function enqueteG3DessinerLigne(target, card, et, modele){
 /* Retour aux barres ① avec les nombres : les valeurs trouvées dans les cases, « = 9 » en gris
    (déjà trouvée) et « = 17 » en noir (celle de l'appui) au bout de la barre — rien au bout d'une
    tache complétée ni sans total (la valeur est dans la case). */
-function enqueteG3DessinerBarresValeurs(target, card, et, modele){
-  const P = enqueteProfil({});
+function enqueteG3DessinerBarresValeurs(target, card, et, modele, opts = {}){
+  const P = enqueteProfil(opts);
   const boxY = 620;
   const g = el("g", { id:"enqueteCalculs" });
   enqueteHachures(g, P);
@@ -8334,7 +8375,7 @@ function enqueteG3DessinerBarresValeurs(target, card, et, modele){
   const { x0, largeur, barX, s } = M;
   const vals = card._rel.hiddenValues.map(Number);
   let y = boxY + P.marge * 0.6;
-  y += enqueteTitreEtape(g, x0, y, modele.ligne ? 3 : 2, et.titre || "Je calcule", P, largeur);
+  if(!opts.sansTitre) y += enqueteTitreEtape(g, x0, y, modele.ligne ? 3 : 2, et.titre || "Je calcule", P, largeur);
   let yr = y;
   modele.rows.forEach((row, r) => {
     if(r > 0) yr += P.rowH + P.rowGap + (modele.rows[r - 1].sous.length ? P.sousH + P.sousPas - 4 : 0);
@@ -8349,34 +8390,39 @@ function enqueteG3DessinerBarresValeurs(target, card, et, modele){
     });
     row.sous.forEach(sa => enqueteSousAccolade(g, xs[sa.de], xs[sa.a] + ws[sa.a], yr + P.rowH + 4, sa.label, P));
     if(et.egal !== false && et.connues.has(row.rp ?? row.i) && !row.complete){
-      const cur = (row.rp ?? row.i) === et.courante;
+      const cur = et.noirDes != null || (row.rp ?? row.i) === et.courante; /* noirDes : le dessin unique des livrets, tout en noir */
       g.appendChild(text(x + 22, yr + P.rowH / 2 + 1, `= ${formatRelationNumber(vals[row.i])}`, { "text-anchor":"start", "dominant-baseline":"middle", "font-size":P.totalFont, "font-weight":900, fill:cur ? "#111827" : "#6b7280" }));
     }
   });
   const der = modele.rows[modele.rows.length - 1];
   y = yr + P.rowH + (der.sous.length ? P.sousH + P.sousPas + 6 : 0) + 18;
-  y += enqueteG3Lignes(g, x0, y, et.lignes, et.idx, P);
+  y += enqueteG3Lignes(g, x0, y, et.lignes, et.idx, P, et.noirDes);
   y += P.marge;
   enqueteCadre(g, P, boxY, Math.round(y - boxY), g.id);
   target.appendChild(g);
 }
 
-/* Dessine l'étape et (du vide au dernier calcul) dans target, en haut à 620 comme ①②③. */
-function enqueteG3Dessiner(target, card, et, modele){
-  if(et.type === "vide") return drawEnqueteBarres(target, card, { modele:enqueteModeleVide(modele) });
-  if(et.type === "barres") return drawEnqueteBarres(target, card, { modele });
-  if(et.type === "ligne") return enqueteG3DessinerLigne(target, card, et, modele);
-  if(et.type === "barresValeurs") return enqueteG3DessinerBarresValeurs(target, card, et, modele);
+/* Dessine l'étape et (du vide au dernier calcul) dans target, en haut à 620 comme ①②③.
+   opts (lot « pages 2 des livrets », 30/09/2026) : { isPrint, sansTitre } — le profil
+   d'impression, pour la page 2 des livrets et le dos du Deuxième tour 3 ; sans opts, la
+   projection, inchangée. Sur le papier, seule la ligne de calcul de l'étape est écrite (pas de
+   ligne grise), sauf et.noirDes (« Je trouve les autres taches » : tous les calculs). */
+function enqueteG3Dessiner(target, card, et, modele, opts = {}){
+  if(et.type === "vide") return drawEnqueteBarres(target, card, { ...opts, modele:enqueteModeleVide(modele) });
+  if(et.type === "barres") return drawEnqueteBarres(target, card, { ...opts, modele });
+  if(et.type === "ligne") return enqueteG3DessinerLigne(target, card, et, modele, opts);
+  if(et.type === "barresValeurs") return enqueteG3DessinerBarresValeurs(target, card, et, modele, opts);
   if(et.type === "fin") return enqueteG3DessinerFin(target, card, et.calculs ? { ...modele, calculs:et.calculs } : modele);
 }
 
 /* La vérification des indices, au dernier appui : « verte = rouge + 2 : 5 = 3 + 2 ✓ » — la phrase de
    l'indice en mots, puis les valeurs trouvées. Une ligne qui ne se vérifierait pas n'est pas
    écrite (le test des 30 fiches exige qu'elles se vérifient toutes). */
-function enqueteG3VerifIndices(card){
+function enqueteG3VerifIndices(card, lettres){
   const rels = card && card._rel && Array.isArray(card._rel.relations) ? card._rel.relations : [];
   const vals = card._rel.hiddenValues.map(Number);
-  const w = i => enqueteMotCouleur(card, i), v = i => formatRelationNumber(vals[i]), N = formatRelationNumber;
+  /* lettres : le corrigé imprimé « en lettre » écrit les initiales, comme ses calculs */
+  const w = i => lettres ? enqueteInitiale(card, i) : enqueteMotCouleur(card, i), v = i => formatRelationNumber(vals[i]), N = formatRelationNumber;
   const out = [];
   rels.forEach(r => {
     const t = r.target, s = r.source, k = Number(r.k);

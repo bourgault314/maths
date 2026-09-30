@@ -169,18 +169,32 @@ test("les exemples : la page 2 montre le dessin de la première fiche du livret,
   assert.ok(!toutes.has(cle([55, [10, 15, 30]])), "l'unité commune du dos est une carte");
   // les textes sont écrits à partir de la carte rendue ; les dessins sont ceux de l'outil
   for (const f of ["def textes_exemple_deux(ex):", "def textes_exemple_reunies(ex):", "def textes_exemple_repet(ex):"]) assert.ok(render.includes(f), f);
-  for (const f of ["drawEnqueteBarres(g, card, prof)", "drawEnqueteLigne(g, card, prof)", "drawEnqueteCalculs(g, card, {...prof, reponse:false})"])
+  // (lot « pages 2 », 30/09/2026) les schémas successifs du pas à pas de la projection (G3), au
+  // profil d'impression ; ni le schéma vide ni le dernier appui ; les autres taches en un dessin
+  for (const f of ["plan = enqueteG3Etapes(card);", "enqueteG3Dessiner(g, card, et, plan.modele, prof);",
+                   "const prof = {isPrint:true, modele, sansTitre:true};", "e.type !== 'vide' && e.type !== 'fin'",
+                   "titre = 'Je trouve les autres taches';", "'Je fais le schéma de la situation'"])
     assert.ok(render.includes(f), f);
-  assert.match(render, /if \(d\.etapes\.length !== 3\) return/);
+  assert.match(render, /if \(n < 4 \|\| n > 7\) return/);
   assert.ok(render.includes("variables de couleur inconnues"), "résolution des var(--…) de l'outil");
   assert.match(render, /raise SystemExit\(f"un exemple est une carte : /);
 });
 
 test("page 2 : l'étape ② s'appelle « Schéma regroupé » (30/09/2026)", () => {
-  assert.match(exemple, /<h3>Schéma regroupé<\/h3>/);
-  assert.match(exemple, /aria-label="Schéma regroupé"/);
+  // (lot « pages 2 ») les titres viennent de l'outil (le pas à pas G3) ; render.py pose les étapes
+  assert.match(exemple, /<ol class="etapes"><\/ol>/);
   for (const t of [exemple, render]) assert.doesNotMatch(t, /[Tt]out sur une ligne/);
-  assert.equal((exemple.match(/<li class="et/g) || []).length, 4, "quatre étapes sur la page 2");
+  assert.match(texteDesPages("outils/livret_splat_enquete_additif.pdf").map(norm)[1], souple("Schéma regroupé"));
+});
+
+test("page 2 : les schémas du pas à pas — une colonne jusqu'à cinq dessins, deux colonnes lues de haut en bas au-delà", () => {
+  const regle = (sel) => (exemple.match(new RegExp(sel.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "\\{([^}]*)\\}")) || [])[1] || "";
+  assert.match(regle(".etapes.deux"), /column-count:2;column-gap:8mm;column-rule:1px solid #cbd5e1/);
+  assert.match(regle(".etapes.deux .et"), /break-inside:avoid/);
+  assert.match(regle(".etapes.deux .et.saut"), /break-before:column/);
+  assert.match(render, /const deux = n > 5;/);
+  assert.match(render, /et\[moitie\]\.classList\.add\('saut'\)/);
+  for (const m of ["les étapes ne sont pas rangées en deux colonnes", "la page 2 déborde sur le pied"]) assert.ok(render.includes(m), m);
 });
 
 test("au dos, le mini-schéma est un vrai schéma en barres — chaque « ? » a la largeur de la case de référence", () => {
@@ -189,7 +203,7 @@ test("au dos, le mini-schéma est un vrai schéma en barres — chaque « ? » a
   assert.match(regle(".mini-sch .r span + span"), /margin-left:-1\.3px/, "les cases d'une barre se touchent");
   assert.match(dos, /<svg class="boite-total"[^>]*><rect x="0" y="0" width="280" height="210" rx="22"[^>]*\/><text[^>]*font-size="42"[^>]*>TOTAL<\/text><text[^>]*font-size="96"[^>]*>\d+<\/text><\/svg>/);
   for (const m of ["les cases « ? » n’ont pas toutes la même largeur", "des cases de la barre ne se touchent pas",
-                   "les deux barres ne partent pas du même bord", "l’unité commune déborde sur les crédits"])
+                   "les deux barres ne partent pas du même bord", "l’unité commune déborde"])
     assert.ok(render.includes(m), m);
 });
 
@@ -274,8 +288,13 @@ test("dans les PDF — couverture, exemple en page 2, les cinq fiches dans l'ord
       else assert.doesNotMatch(pages[0], /Deuxième tour/i);
       assert.match(pages[0], /Sur cette carte, il y a \d+ jetons au ?total/);
       assert.match(pages[1], /L'enquête pas à pas/);
-      for (const t of ["Je fais le schéma de la situation", "Schéma regroupé", "Je calcule", "J'écris la réponse et je vérifie"])
-        assert.match(pages[1], souple(t), `${s}, page 2 : ${t}`);
+      // (lot « pages 2 ») les étapes du pas à pas : le retrait sauf « fois plus » seul (28 = 4 × 7),
+      // « je range » et « je regroupe » dès qu'il y a plusieurs écarts (partie 3 et Deuxième tour)
+      const etapes = ["Je fais le schéma de la situation", "Schéma regroupé", "Je partage", "J'écris la réponse et je vérifie"]
+        .concat(nom === "multiplicatif" ? [] : ["Je retire"], l >= 2 ? ["Je range", "Je regroupe"] : [],
+                l >= 3 ? ["Je trouve les autres taches"] : []);
+      for (const t of etapes) assert.match(pages[1], souple(t), `${s}, page 2 : ${t}`);
+      assert.doesNotMatch(pages[1], souple("Je calcule"), `${s}, page 2 : plus de « Je calcule » en bloc`);
       assert.match(pages[1], souple(`Je vérifie : ${EXEMPLES_P2[nom]} ✓`), `${s} : l'exemple de la page 2`);
       TITRES[nom].forEach((f, k) => {
         const p = pages[2 + k];
@@ -285,7 +304,12 @@ test("dans les PDF — couverture, exemple en page 2, les cinq fiches dans l'ord
       });
       assert.match(pages[7], /Et après/);
       assert.match(pages[7], /huit nouvelles/);
-      if (nom === "rebondit_tour2") assert.match(pages[7], new RegExp(souple("Un exemple résolu : je double tout").source, "i"));
+      if (nom === "rebondit_tour2") {
+        assert.match(pages[7], new RegExp(souple("Un exemple résolu : je double tout").source, "i"));
+        for (const t of ["Je fais le schéma de la situation", "Je double tout", "Je remplace", "Je partage", "Je trouve les autres taches", "Je vérifie"])
+          assert.match(pages[7], souple(t), `${s}, dos : ${t}`);
+        assert.doesNotMatch(pages[7], souple("Les barres"), `${s}, dos : le titre de ① est celui de la page 2`);
+      }
       else assert.match(pages[7], /Pour se souvenir/i);
       if (v) {
         assert.match(pages[0], /Livret corrigé/);
@@ -295,6 +319,14 @@ test("dans les PDF — couverture, exemple en page 2, les cinq fiches dans l'ord
       } else assert.match(pages[0], /Nom, prénom/);
     }
   });
+});
+
+test("les corrigés vérifient aussi les indices, comme le dernier appui de la projection (30/09/2026)", () => {
+  const p = (s, k) => norm(texteDesPages(`outils/${s}.pdf`)[k]);
+  assert.match(p("livret_splat_enquete_additif_correction", 2), souple("bleue = orange + 6 : 13 = 7 + 6 ✓"));
+  assert.match(p("livret_splat_enquete_additif_correction_lettre", 2), souple("B = O + 6 : 13 = 7 + 6 ✓"));
+  // l'énoncé de l'élève n'en porte aucune
+  assert.doesNotMatch(p("livret_splat_enquete_additif", 2), /✓/);
 });
 
 test("la suite du voyage : partie 1 → 2 → 3 → monde 4, et le deuxième tour de même", () => {

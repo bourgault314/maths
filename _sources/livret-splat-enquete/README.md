@@ -27,16 +27,22 @@ Les livrets « Le défi » d'avant (totaux de 50 à 100) ont disparu au lot 2.
    Deuxième tour »), « Comment ça marche ? » avec la carte de l'exemple, « Nom, prénom » + Classe,
    le sommaire des cinq fiches (badges 10 … 24, 10d … 24d).
 2. **Un exemple résolu — « L'enquête pas à pas »** : le dessin de la première fiche du livret, sur
-   une carte qui n'est dans aucun livret. Les trois étapes du bouton « Voir le schéma » de l'outil
-   (① Je fais le schéma de la situation · ② Schéma regroupé · ③ Je calcule), puis ④ « J'écris la
-   réponse et je vérifie », et « À toi ! ». Un exemple court (deux taches) répartit le blanc entre
-   les étapes.
+   une carte qui n'est dans aucun livret. Les **schémas successifs du pas à pas de la projection**
+   (lot G3 ; lot « pages 2 », 30/09/2026) : ① Je fais le schéma de la situation · ② Schéma
+   regroupé, puis un dessin par opération — Je range · Je regroupe · Je retire (26 − 8 → 18) ·
+   Je partage (18 ÷ 2 ; 28 en 4 × 7) — et les barres avec les nombres (« Je trouve la verte », ou
+   « Je trouve les autres taches » en un seul dessin) ; enfin « J'écris la réponse et je
+   vérifie », en texte, et « À toi ! ». Jusqu'à cinq dessins (parties 1 et 2) : une colonne ;
+   au-delà : **deux colonnes lues de haut en bas**, un filet entre les deux. La case retirée est
+   hachurée **comme en projection**, seulement moins estompée (teintes fixes, sans transparence), pour
+   rester lisible en noir et blanc.
 3. à 7. **Les cinq fiches**, 4 cartes par page, telles que l'outil les imprime, le QR de la fiche
    dans le bandeau, sans logo. Les fiches 13, 18, 22, 11d, 17d et 18d portent le **schéma vide
    sous la carte 1** (`modele=1`, lot 1) : ce sont celles qui apportent un nouveau dessin.
 4. **Dos** — « Encore des cartes ! » (trois séries infinies, quatre au Deuxième tour 2 avec les
    indices composés ; huit cartes à chaque ouverture), « La suite du voyage », « Pour se souvenir »
-   (au Deuxième tour 3 : **l'unité commune résolue**, « je double tout », dessinée par l'outil),
+   (au Deuxième tour 3 : **l'unité commune résolue**, « je double tout », pas à pas comme en
+   projection — je double tout, je remplace, je remplace, je partage —, les QR un peu plus petits),
    les crédits avec, seuls logos du livret, IREMI + maths&go et l'Unité apprenante Michel Debré.
 
 ## Les graines : triées, une fiche = une étape = une étoile
@@ -54,7 +60,8 @@ ont été **triées** (script hors dépôt qui rejoue `genInvestigate` de l'outi
 - aucun nombre à sous-entendu (le 69 accepté dans les cartes, jamais dans un exemple) ; jamais
   deux taches égales ; écarts de 2 au moins ; plus petite tache ≥ 5 sur 10-12 et 15-17, ≥ 8 sur
   14d, 19d, 23d, ≥ le sixième de la plus grande ; aucun mot réduit à son initiale dans les cases
-  (sauf 24d, impossible) ; correction réduite de 15 % au plus (21d, 24d et la graine gardée 172 : jusqu'à 22 %) ;
+  (sauf 24d, impossible) ; correction réduite de 19 % au plus (21d, 24d : jusqu'à 24 %) depuis
+  que le corrigé vérifie aussi les indices (lot « pages 2 ») ;
 - totaux différents dans une fiche, couleurs variées, **aucune carte en double** sur les 30 fiches
   ni égale à un exemple (`controle_global` le revérifie au rendu, sur `cartes.json`).
 
@@ -83,7 +90,8 @@ des anciens livrets, restent servies pour un livret déjà imprimé.
 ## Les exemples
 
 Les textes de la couverture et de la page 2 sont écrits **à partir de la carte rendue** et de son
-modèle de correction (`textes_exemple`, `textes_exemple_deux`, `textes_exemple_repet`,
+modèle de correction, les dessins viennent du pas à pas de l'outil (`enqueteG3Etapes`,
+`enqueteG3Dessiner` au profil d'impression) (`textes_exemple`, `textes_exemple_deux`, `textes_exemple_repet`,
 `textes_exemple_reunies`) : ils ne peuvent pas mentir sur ses nombres ; chaque fonction refuse une
 carte qui n'a pas le dessin attendu. Les dessins sont ceux de l'outil (`drawEnqueteBarres`,
 `drawEnqueteLigne`, `drawEnqueteCalculs`) au profil d'impression de la correction ; les couleurs
@@ -94,7 +102,9 @@ carte qui n'a pas le dessin attendu. Les dessins sont ceux de l'outil (`drawEnqu
 Mêmes 8 pages, même pliage, **mêmes cartes à la même place** (`render.py` s'arrête si une carte
 diffère entre l'élève, la correction et la lettre). Fiches : la correction imprimée de l'outil
 (`print=correction`) ; en lettre, `unknown=letter` (initiales des couleurs dans les calculs, la
-police du 𝑥 arrondi reste posée : `CSS_X`). Couverture : bandeau « Correction », « Livret corrigé »
+police du 𝑥 arrondi reste posée : `CSS_X`). Sous la réponse, le corrigé **vérifie les indices**
+(« verte = rouge + 2 : 5 = 3 + 2 ✓ », en lettre « V = R + 2 : 5 = 3 + 2 ✓ »), comme le dernier
+appui de la projection. Couverture : bandeau « Correction », « Livret corrigé »
 — jamais « professeur » (le corrigé peut être donné aux élèves).
 
 ## Régénérer

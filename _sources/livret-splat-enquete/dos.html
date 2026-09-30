@@ -44,14 +44,20 @@
 .mini-sch .r .v{width:4.5mm;background:#fff}
 /* Deuxième tour 3 (lot 2, 30/09/2026) : l'unité commune résolue à la place de « Pour se
    souvenir » — la carte à gauche avec la réponse, les trois dessins de l'outil à droite. */
-.lex.unite .u-corps{display:grid;grid-template-columns:1fr 1fr;column-gap:5mm;row-gap:2.5mm;margin-top:2.5mm;align-items:start}
-.lex.unite .u-carte{display:flex;flex-direction:column;gap:1.5mm}
-.lex.unite .u-carte svg{width:88%;height:auto;display:block;border:1.4px solid #0f172a;border-radius:4px;background:#fff}
-.lex.unite .u-fin{margin:0;font-size:10.5px;line-height:1.3;color:#334155}
+.lex.unite .u-corps{column-count:2;column-gap:7mm;column-rule:1px solid #cbd5e1;margin-top:2.5mm}
+body.dos-unite .niv img,body.dos-unite .suite img{width:23mm;height:23mm}
+body.dos-unite .niv{padding:2mm 2.5mm 1.8mm;gap:1mm}
+body.dos-unite .suite{padding:2mm 5mm}
+body.dos-unite .encore .intro{margin:2mm 0 2mm}
+.lex.unite .u-carte{break-inside:avoid;margin-bottom:2mm;display:flex;align-items:center;gap:3mm}
+.lex.unite .u-carte p{margin:0;font-size:10px;line-height:1.3;color:#334155}
+.lex.unite .u-carte p b{color:#0f172a}
+.lex.unite .u-carte svg{flex:0 0 50%;width:50%;height:auto;display:block;border:1.4px solid #0f172a;border-radius:4px;background:#fff}
+.lex.unite .u-fin{margin:0;font-size:10.5px;line-height:1.3;color:#334155;break-inside:avoid}
 .lex.unite .u-fin b{color:#0f172a}
-.lex.unite .u-et{display:block}
+.lex.unite .u-et{display:block;break-inside:avoid;margin-bottom:1.5mm}
 .lex.unite .u-et h3{margin:0 0 0.5mm;font-size:11.5px;font-weight:700;color:#831843}
-.lex.unite .u-et svg{width:100%;height:auto;display:block}
+.lex.unite .u-et svg{width:87%;height:auto;display:block}
 .credits{text-align:center;font-size:10.5px;line-height:1.55;color:#475569;border-top:1px solid #e2e8f0;padding-top:3mm;padding-bottom:3mm}
 /* Crédit à gauche en 10 px, une ligne par phrase ; à droite IREMI puis maths&go, et dessous
    l'Unité apprenante Michel Debré — la disposition du dos des mondes 1 et 2 (lot 3 de la

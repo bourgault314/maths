@@ -442,13 +442,26 @@ JS_EXEMPLE = r"""() => {
   const modele = enqueteBarresModele(card);
   if (!modele) return {erreur: "la carte de l'exemple n'a pas de correction en barres"};
   const prof = {isPrint:true, modele, sansTitre:true}; // la page a ses propres titres
-  const dessins = [g => drawEnqueteBarres(g, card, prof),
-                   g => drawEnqueteLigne(g, card, prof),
-                   g => drawEnqueteCalculs(g, card, {...prof, reponse:false})];
-  const etapes = dessins.map(d => {
-    const sv = mk(); const g = document.createElementNS(NS, 'g'); sv.appendChild(g); d(g);
+  // Les schémas successifs du pas à pas de la projection (lot G3), au profil d'impression : les
+  // barres, le schéma regroupé, puis un dessin par opération (je range, je regroupe, je retire,
+  // je partage, je remplace) et les barres avec les nombres. Ni le schéma vide ni le dernier
+  // appui (la dernière étape de la page, « J'écris la réponse et je vérifie », est en texte).
+  // Les autres taches tiennent en UN dessin, le dernier (toutes les valeurs, tous les calculs).
+  let plan = null;
+  try { plan = enqueteG3Etapes(card); } catch (_e) { plan = null; }
+  if (!plan || !plan.etapes.length || plan.etapes[plan.etapes.length - 1].type !== 'fin') return {erreur: "la carte de l'exemple n'a pas de pas à pas (G3)"};
+  const pas = plan.etapes.filter(e => e.type !== 'vide' && e.type !== 'fin');
+  const trouve = pas.filter(e => e.type === 'barresValeurs' && e.egal !== false);
+  const liste = pas.filter(e => !trouve.includes(e) || e === trouve[trouve.length - 1]);
+  const etapes = liste.map(e => {
+    let et = e, titre = e.type === 'barres' ? 'Je fais le schéma de la situation' : e.titre;
+    if (e.type === 'barresValeurs' && trouve.length > 1) { et = {...e, noirDes: 0}; titre = 'Je trouve les autres taches'; }
+    // unité commune : le schéma regroupé vaut le double du total, son titre le dit
+    if (e.type === 'ligne' && e.titre === 'Schéma regroupé' && modele.mode === 'unite') titre = 'Je double tout';
+    const sv = mk(); const g = document.createElementNS(NS, 'g'); sv.appendChild(g);
+    enqueteG3Dessiner(g, card, et, plan.modele, prof);
     const b = g.querySelector('#btnEquabarSolve'); if (b) b.remove();
-    const bb = g.getBBox(); const r = {svg: sv.innerHTML, h: Math.ceil(bb.y + bb.height - 612) + 8}; sv.remove(); return r;
+    const bb = g.getBBox(); const r = {svg: sv.innerHTML, h: Math.ceil(bb.y + bb.height - 612) + 8, titre, type: e.type}; sv.remove(); return r;
   });
   // Les pastilles des schémas sont peintes avec les variables de couleur de l'outil
   // (var(--splat-orange)…), inconnues des pages du livret : sans cette résolution, la pastille
@@ -504,26 +517,44 @@ JS_PAGE_EXEMPLE = """(d) => {
   const c = document.querySelector('svg.ex-carte'); if (!c) return 'pas de place pour la carte';
   c.innerHTML = d.carte;
   const e = document.querySelector('.enquete'); if (!e) return 'pas de bloc enquête'; e.innerHTML = d.enquete;
-  // quatre étapes : trois dessins (① ② ③) puis « J'écris la réponse et je vérifie », en texte
-  const et = document.querySelectorAll('.etapes .et');
-  if (et.length !== 4) return et.length + ' étapes au lieu de 4';
-  if (d.etapes.length !== 3) return d.etapes.length + ' dessins au lieu de 3';
-  et.forEach((li, i) => {
-    const s = li.querySelector('svg.dessin');
-    if (i < 3) { s.innerHTML = d.etapes[i].svg; s.setAttribute('viewBox', '50 612 1500 ' + d.etapes[i].h); }
-    else if (s) return;
-    li.querySelector('.leg').innerHTML = d.legendes[i];
-  });
-  if (document.querySelector('.fin')) return 'la conclusion est devenue la 4e étape (29/09/2026)';
-  // (lot 2, 30/09/2026) un exemple à deux taches est court : le blanc qui reste sous « À toi ! »
-  // est réparti entre les étapes (jusqu'à 12 mm entre deux), au lieu de rester en bas de page
-  const bas = document.querySelector('.pied').getBoundingClientRect().top, fin = document.querySelector('.atoi').getBoundingClientRect().bottom;
-  const libre = bas - fin - 20;
+  // les dessins du pas à pas (de 4 à 7), puis « J'écris la réponse et je vérifie », en texte ;
+  // jusqu'à cinq dessins : une colonne ; au-delà : deux colonnes, lues de haut en bas (la
+  // moitié des étapes à gauche, le reste à droite)
+  const ol = document.querySelector('.etapes'); if (!ol) return 'pas de liste des étapes';
+  const n = d.etapes.length;
+  if (n < 4 || n > 7) return n + ' dessins (de 4 à 7 attendus)';
+  const deux = n > 5;
+  if (deux) ol.classList.add('deux');
+  const badge = i => '<span class="badge"><svg viewBox="2 5 106 105" fill="#831843"><use href="#tacheBadge"/></svg><b>' + i + '</b></span>';
+  ol.innerHTML = d.etapes.map((e, i) =>
+    '<li class="et">' + badge(i + 1) + '<div class="txt"><h3>' + e.titre + '</h3><p class="leg">' + (e.legende || '') + '</p></div>' +
+    '<svg class="dessin" viewBox="50 612 1500 ' + e.h + '" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="' + e.titre + '">' + e.svg + '</svg></li>').join('') +
+    '<li class="et texte">' + badge(n + 1) + '<div class="txt"><h3>' + "J'écris la réponse et je vérifie" + '</h3><p class="leg">' + d.fin + '</p></div></li>';
+  const et = [...ol.children], moitie = Math.ceil((n + 1) / 2);
+  if (deux) { et[moitie].classList.add('saut'); et[moitie - 1].classList.add('avant-saut'); }
+  if (document.querySelector('.fin')) return 'la conclusion est devenue la dernière étape (29/09/2026)';
+  const bas = () => document.querySelector('.pied').getBoundingClientRect().top;
+  const fin = () => document.querySelector('.atoi').getBoundingClientRect().bottom;
+  // une colonne : si la page déborde, les dessins rétrécissent ensemble (de 4 % en 4 %, 76 % au moins)
+  for (let p = 96; !deux && fin() > bas() - 12 && p >= 76; p -= 4) ol.querySelectorAll('.dessin').forEach(s => { s.style.width = p + '%'; });
+  // le blanc qui reste sous « À toi ! » est réparti entre les étapes (lot 2, 30/09/2026), au
+  // lieu de rester en bas de page : jusqu'à 12 mm de plus entre deux (6 mm en deux colonnes)
+  const libre = bas() - fin() - 20;
   if (libre > 20) {
-    const ol = document.querySelector('.etapes'), g = parseFloat(getComputedStyle(ol).rowGap) || 15;
-    ol.style.rowGap = Math.min(90, g + libre / 4) + 'px';
+    if (deux) {
+      const plus = Math.min(24, libre / (moitie - 1));
+      et.forEach((li, i) => { if (i !== moitie - 1 && i !== n) li.style.marginBottom = 'calc(3.5mm + ' + plus + 'px)'; });
+    } else {
+      const g = parseFloat(getComputedStyle(ol).rowGap) || 15;
+      ol.style.rowGap = Math.min(90, g + libre / n) + 'px';
+    }
   }
-  if (document.querySelector('.atoi').getBoundingClientRect().bottom > bas) return 'la page 2 déborde sur le pied';
+  if (deux) {
+    // les deux colonnes : chaque étape entière dans sa colonne, la moitié à gauche
+    const x = et.map(li => Math.round(li.getBoundingClientRect().left));
+    if (!x.every((v, i) => v === (i < moitie ? x[0] : x[moitie])) || x[moitie] <= x[0]) return 'les étapes ne sont pas rangées en deux colonnes';
+  }
+  if (fin() > bas() - 8) return 'la page 2 déborde sur le pied';
   return 'ok';
 }"""
 
@@ -565,13 +596,20 @@ JS_DOS = """(d) => {
     const lex = document.querySelector('.lex');
     const u = d.unite;
     lex.className = 'lex unite';
-    const et = i => '<div class="u-et"><h3>' + '①②③'[i] + ' ' + u.titres[i] + '</h3><svg viewBox="50 612 1500 ' + u.etapes[i].h + '" xmlns="http://www.w3.org/2000/svg">' + u.etapes[i].svg + '</svg></div>';
+    document.body.classList.add('dos-unite'); // les QR un peu plus petits : la place va à l'exemple
+    // (lot « pages 2 », 30/09/2026) les schémas successifs du pas à pas de la projection (G3) :
+    // les barres, je double tout, je remplace (deux fois), je partage, les autres taches — en
+    // deux colonnes lues de haut en bas, la carte en tête, la réponse à la fin
+    const N = '①②③④⑤⑥⑦⑧';
+    const et = (e, i) => '<div class="u-et"><h3>' + N[i] + ' ' + e.titre + '</h3><svg viewBox="50 612 1500 ' + e.h + '" xmlns="http://www.w3.org/2000/svg">' + e.svg + '</svg></div>';
     lex.innerHTML = '<span class="chip">Un exemple résolu&nbsp;: je double tout</span>' +
-      '<div class="u-corps"><div class="u-carte"><svg viewBox="100 10 1460 830" xmlns="http://www.w3.org/2000/svg">' + u.carte + '</svg>' +
-      '<p class="u-fin">' + u.fin + '</p></div>' + et(0) + et(1) + et(2) + '</div>';
+      '<div class="u-corps"><div class="u-carte"><svg viewBox="100 10 1460 830" xmlns="http://www.w3.org/2000/svg">' + u.carte + '</svg><p>' + u.indices + '</p></div>' +
+      u.etapes.map(et).join('') + '<p class="u-fin"><b>' + N[u.etapes.length] + ' Je vérifie.</b> ' + u.fin + '</p></div>';
     lex.style.flexShrink = '0';
     const b = lex.querySelector('.u-corps').getBoundingClientRect(), c = document.querySelector('.credits').getBoundingClientRect();
-    if (b.bottom > c.top - 4) return 'l’unité commune déborde sur les crédits de ' + Math.round(b.bottom - c.top) + ' px';
+    // les crédits sont poussés par l'exemple : la vraie limite est le bas de la page
+    const pied = document.querySelector('.pied').getBoundingClientRect().bottom, page = document.documentElement.clientHeight;
+    if (b.bottom > c.top - 4 || pied > page + 0.5) return 'l’unité commune déborde : ' + Math.round(Math.max(b.bottom - c.top + 4, pied - page)) + ' px de trop';
   }
   return 'ok';
 }"""
@@ -778,6 +816,13 @@ def textes_exemple_repet(ex):
     return dict(intro=intro, enquete=enquete, legendes=[barres, ligne, resous, fin])
 
 
+def donnees_page2(ex, textes):
+    """Ce que la page 2 reçoit : la carte, l'enquête, les dessins du pas à pas (avec une légende
+    pour les deux premiers : les barres, le schéma regroupé) et la dernière étape, en texte."""
+    leg = textes["legendes"]
+    etapes = [dict(e, legende=leg[i] if i < 2 else "") for i, e in enumerate(ex["etapes"])]
+    return dict(carte=ex["carte"], etapes=etapes, enquete=textes["enquete"], fin=leg[-1])
+
 def fabrique_qr():
     """(Re)fabrique tous les QR codes. À relancer si une graine ou une série change."""
     import qrcode
@@ -888,15 +933,13 @@ async def rendre(niv, tmp, corr=None):
             await pg.close()
             print(f"   {titre}")
 
-        et = ex["etapes"]
         couv = dict(carte=ex["carte"], sur=niv["couv"]["sur"], titre=niv["couv"]["titre"], accroche=niv["couv"]["accroche"], intro=textes["intro"],
                     sommaire=[[f["code"], f["t"], f["resume"]] for f in niv["fiches"]],
                     prof=dict(PROF, dit=corr["dit"]) if corr else None)
         await pdf_html(f"{base}{BASE_WEB}/couverture.html", tmp / "couverture.pdf", JS_COUV, couv,
                        css=[CSS_PROF if corr else None])
         await pdf_html(f"{base}{BASE_WEB}/exemple.html", tmp / "exemple.pdf", JS_PAGE_EXEMPLE,
-                       dict(carte=ex["carte"], etapes=et, enquete=textes["enquete"],
-                            legendes=textes["legendes"]))
+                       donnees_page2(ex, textes))
         for i, f in enumerate(niv["fiches"]):
             await pdf_fiche(f, tmp / f"fiche{i}.pdf")
         d = niv["dos"]
@@ -911,9 +954,9 @@ async def rendre(niv, tmp, corr=None):
             v, mots = ux["valeurs"], ux["mots"]
             ordre = sorted(range(3), key=lambda i: v[i])
             unite = dict(carte=ux["carte"], etapes=ux["etapes"], cle=ux["cle"],
-                         titres=["Les barres", "Je double tout", "Je calcule"],
+                         indices=f"<b>Total&nbsp;: {ux['total']} jetons.</b><br>" + "<br>".join(f"<q>{i}</q>" for i in ux["indices"]),
                          fin="L" + ", ".join(f"la tache {mots[i]} cache <b>{v[i]}</b> jetons" for i in ordre)[1:]
-                             + f". Je vérifie&nbsp;: {ux['verification']}&nbsp;✓")
+                             + ".<br>" + "&nbsp;✓&nbsp;; ".join(_verifs(ux)) + "&nbsp;✓")
             AUTRES_EXEMPLES["unite commune"] = ux["cle"]
         dos = dict(niveaux=[[nom, desc, f"{qrweb}/serie-{s}.png"] for nom, desc, s in d["series"]], unite=unite,
                    univers=f"{qrweb}/univers.png", suite=d["suite"], reformule=d["reformule"],
