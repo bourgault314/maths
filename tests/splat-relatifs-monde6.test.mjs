@@ -341,7 +341,9 @@ test("R3 puis 28/09/2026 : les deux livrets gardent « opposé » (la lettre sur
   // (28/09/2026, Gwenaël) « 𝑏 », « −𝑏 » sur les taches rendaient mal au corrigé : livret 2 comme livret 1
   assert.doesNotMatch(v2, /lettre=True/);
   assert.match(render, /\+ \("&taches=lettre" if lettre else ""\)\)/, "les fiches et les corrigés");
-  assert.match(render, /\+ \("&taches=lettre" if v\.get\("lettre"\) else ""\)\)/, "l'exemple de couverture");
+  // l'exemple de couverture : taches dévoilées, donc jamais la lettre dessus, même au défi (30/09/2026)
+  assert.match(render, /pg = await page_outil\(f"\/outils\/splat_equations\.html\?\{v\['exemple'\]\}&view=equation"\)\n/, "l'exemple de couverture, sans taches=lettre");
+  assert.match(render, /intro=textes_exemple\(ex, court=v\.get\("lettre", False\)\),/, "le texte de l'exemple parle de la tache « opposé »");
   assert.match(render, /adresse_fiche\(f, corr\["imprime"\] if corr else "statement", v\.get\("lettre", False\) and not corr\)/, "la lettre sur les taches des fiches de l'élève, pas des corrigés (30/09)");
   assert.match(render, /if donnees\.get\("lettre"\):\s+r = await pg\.evaluate\(JS_LETTRE, page\)/);
 });
