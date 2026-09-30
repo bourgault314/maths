@@ -25,14 +25,15 @@
 
   /* ══════ LA LIGNE À CHANGER POUR REMETTRE UN MONDE EN PUBLIC (26/09/2026) ══════
      Les mondes « en préparation », par leur numéro sur la carte des mondes :
-     3 = SPLAT! Enquête, 4 = SPLAT! Système (6 = SPLAT! Relatifs, public depuis le 27/09/2026).
+     4 = SPLAT! Système (3 = SPLAT! Enquête, public depuis le 30/09/2026 ; 6 = SPLAT! Relatifs,
+     depuis le 27/09/2026).
      Pour le public, un monde de cette liste s'affiche « 🚧 en préparation » sur la
      carte, sans aucun lien (vue élève et vue prof), ses livrets disparaissent de la
      page des livrets, et le bouton « Étape suivante » des outils le saute.
      Pour rendre un monde au public : retirer son numéro, puis bumper le ?v= de ce
      fichier partout où il est chargé (npm run verifier dit où).
      Les outils eux-mêmes et les QR déjà imprimés continuent de marcher. */
-  const MONDES_EN_PREPARATION = [3, 4];
+  const MONDES_EN_PREPARATION = [4];
 
   /* La clé de Gwenaël : /outils/splat_univers.html?essai=1 (ou la page des livrets,
      ou n'importe quel outil SPLAT!), ouverte une fois par appareil, est retenue dans
