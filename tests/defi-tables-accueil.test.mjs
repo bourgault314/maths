@@ -34,7 +34,7 @@ test("l’accueil : Ma table et ses trois étapes, Réviser, Mon parcours, Mes c
   assert.match(html, /id="acc-reviser" class="reviser etape" type="button" hidden>[\s\S]*Réviser&nbsp;→/, "lot mémoire : le bloc du jour est une ligne d’étape, cachée tant que rien n’est dû");
   // Lot R3 (12/09) : « Expert » avec sa majuscule se lisait comme un nom propre ;
   // le sous-titre reprend le titre du panneau, « je deviens expert ».
-  assert.match(html, /id="open-parcours" class="acc-lien"[\s\S]*<svg class="ico"[\s\S]*Mon parcours<small>toutes mes tables, le mélange, je deviens expert<\/small>/);
+  assert.match(html, /id="open-parcours" class="acc-lien"[\s\S]*<svg class="ico"[\s\S]*Mon parcours<small>tables, mélange, étoiles<\/small>/);
   assert.match(html, /id="open-calculs" class="acc-lien"[\s\S]*<svg class="ico"[\s\S]*Mes calculs<small>la grille des 36 calculs<\/small>/);
   // R5 (13/09, Q7) : « Voir ma fiche » ouvre l'écran de la fiche — le seul chemin.
   assert.match(html, /id="acc-fiche"[^>]*aria-controls="fiche">Voir ma fiche</);
@@ -48,7 +48,7 @@ test("l’accueil : Ma table et ses trois étapes, Réviser, Mon parcours, Mes c
   assert.match(html, /num: "3",\s*titre: ligne\.acquise \? "Ma table est acquise" : "Je valide ma table"/, "lot dosage + validation : une table acquise le dit en titre");
   assert.match(html, /num: "★",\s*titre: "Mon mélange"/, "lot 3 : la ligne ★ s’appelle « Mon mélange »");
   assert.match(html, /if \(etat\.melange\.visible && !toutes\) \{/, "la ligne ★ suit la règle du moteur : dès 2 tables acquises ; avec les 9, elle vit dans le bloc Je deviens expert");
-  assert.match(html, /sousTitre: ligne\.acquise \? `validée le \$\{dateEnLettres\(ligne\.acquise\)\}` : "20 questions · 1 min 30"/, "la seule règle écrite sur l’accueil");
+  assert.match(html, /sousTitre: ligne\.acquise \? `acquise le \$\{dateEnLettres\(ligne\.acquise\)\}` : "20 questions · 1 min 30"/, "la seule règle écrite sur l’accueil");
 });
 
 test("l’appli ne choisit rien : les trois étapes restent des boutons, elle surligne seulement la conseillée", () => {
@@ -104,7 +104,7 @@ test("les trois mots d’état : à revoir (rouge) · en route (bleu) · su (ver
 
 test("le détail d’une case dit la règle du jour, et seulement là", () => {
   // Lot mémoire : raté aujourd'hui, dû, ou le jour du retour — rien d'autre.
-  assert.match(html, /if \(fait && fait\.erreur === aujourdhui\) note = "Raté aujourd’hui : il revient tout de suite, et tu pourras le faire monter demain\.";/);
+  assert.match(html, /if \(fait && fait\.erreur === aujourdhui\) note = "Raté aujourd’hui : il revient demain\.";/);
   assert.match(html, /else if \(fait && PARCOURS\.faitDu\(fait, aujourdhui\)\) note = boite >= 5\s*\? "À faire aujourd’hui : réussis-le pour le garder 14 jours de plus\."\s*: "À faire aujourd’hui : réussis-le pour monter d’une boîte\.";/);
   assert.match(html, /else if \(fait && fait\.echeance\) note = `Revient \$\{libelleDans\(PARCOURS\.ecartJours\(aujourdhui, fait\.echeance\)\)\}\.`;/);
   assert.doesNotMatch(html, /function formaterJour/, "« Vu il y a 3 jours » n’est plus écrit : la date qui compte est celle du retour");
@@ -139,13 +139,15 @@ test("la notice « Comment ça marche ? » : les règles, écrites une fois, clo
   assert.ok(notice, "le gabarit de la notice existe");
   const texte = notice[1];
   assert.equal((texte.match(/<p>/g) || []).length, 6, "six phrases (lot 3 : le mélange, les étoiles, mon rang)");
-  assert.match(texte, /<b>Une table\.<\/b> Je l’apprends si je veux, je m’entraîne 3 fois — dans le désordre, avec des trous, puis les deux — et je la valide : 20 questions en 1 min 30, 2 erreurs au maximum\./);
-  assert.match(texte, /<b>Mon mélange\.<\/b> Dès que j’ai 2 tables, je dois réussir le mélange de mes tables avant d’en valider une nouvelle\. Même règle : 20 questions en 1 min 30, 2 erreurs au maximum\. Chaque nouvelle table le remet à faire\./);
-  assert.match(texte, /<b>Mes calculs\.<\/b> Chaque calcul a 5 boîtes\. Un calcul monte d’une boîte quand je le réussis le jour où il revient : le lendemain, puis 3 jours, 7 jours, 14 jours après\. Il est su à partir de la boîte 4\. Une erreur le fait redescendre d’une boîte : il repasse à la fin de la série, et il revient demain\./);
-  assert.match(texte, /<b>Mes calculs du jour\.<\/b> Les calculs qui reviennent aujourd’hui, sans chrono — même ceux que je sais déjà, pour ne pas les oublier\. L’appli en prend un peu dans chaque boîte, à tour de rôle : du facile et du difficile mêlés, 10 à la fois\. Jamais un calcul que je n’ai pas encore rencontré\. Quand plus rien ne revient, « Encore 10 calculs » propose les suivants : rien ne monte, c’est pour s’entraîner\./);
-
-  assert.match(texte, /<b>Les étoiles\.<\/b> Quand mes 9 tables sont acquises et le dernier mélange réussi, je deviens expert : 25 questions avec des divisions, toutes les tables, de plus en plus vite — ★ 2 min, ★★ 1 min 45, ★★★ 1 min 30, ★★★★ 1 min 15\. À 1 minute, je suis une Légende des tables 👑\./);
-  assert.match(texte, /<b>Mon rang\.<\/b> Bronze dès ma première table, puis Argent \(3 tables\), Or \(6\), Platine \(9 tables et le mélange\), Diamant \(★★★★\), Légende \(👑\)\. On ne redescend jamais\./);
+  // Audit 1 (30/09/2026) : six lignes courtes, une par sujet, mêmes mots en gras.
+  assert.match(texte, /<p><b>Ma table\.<\/b> J’apprends si je veux, je m’entraîne 3 fois, je valide&nbsp;: 20 questions en 1 min 30, 2 erreurs au maximum\.<\/p>/);
+  assert.match(texte, /<p><b>Mon mélange\.<\/b> Dès 2 tables acquises, je réussis le mélange avant de valider une nouvelle table\.<\/p>/);
+  assert.match(texte, /<p><b>Mes calculs\.<\/b> Chaque calcul a 5 boîtes\. Réussi le jour où il revient, il monte d’une boîte&nbsp;; raté, il descend et revient demain\.<\/p>/);
+  assert.match(texte, /<p><b>Mes calculs du jour\.<\/b> Les calculs qui reviennent aujourd’hui, 10 à la fois, sans chrono\.<\/p>/);
+  assert.match(texte, /<p><b>Les étoiles\.<\/b> Mes 9 tables acquises et le mélange réussi, je tente toutes les tables de plus en plus vite&nbsp;: ★ 2 min … 👑 1 min\.<\/p>/);
+  assert.match(texte, /<p><b>Mon rang\.<\/b> Bronze, Argent, Or, Platine, Diamant, Légende\. On ne redescend jamais\.<\/p>/);
+  // Une ligne par sujet : pas de phrase longue qui revient.
+  assert.doesNotMatch(texte, /<b>Une table\.<\/b>|avec des trous|Chaque nouvelle table le remet à faire/);
   // Plus rien de l'ancien système : ni mélange à 25 en 2 min, ni Champion.
   assert.doesNotMatch(texte, /25 produits|Champion|★ produits/);
   assert.equal((html.match(/data-notice hidden/g) || []).length, 2, "accueil + parcours");

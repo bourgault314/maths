@@ -197,7 +197,7 @@ test("l’accueil : la pastille « N fois » remplace les ronds de J’apprends,
   assert.match(html, /\.etape \.fois \{ display: inline-flex;[^}]*background: var\(--teal\); color: #fff;/);
   assert.doesNotMatch(html, /activité\$\{terminees > 1 \? "s" : ""\} sur \$\{ligne\.apprends\.length\}`/, "plus de « 5 activités sur 5 »");
   assert.match(html, /const foisEntraine = ligne\.entraine\.reduce\(\(somme, item\) => somme \+ item\.fois, 0\);/);
-  assert.match(html, /\? `réussi ✓ · fait \$\{foisEntraine\}\\u00a0fois`\s*: reussis\s*\? `prochain : \$\{NOMS_ENTRAINEMENTS\[prochainEntrainement\.entrainement\]\}`\s*: `d’abord : \$\{NOMS_ENTRAINEMENTS\[prochainEntrainement\.entrainement\]\}`/, "trois sous-titres courts, une ligne à 320 px");
+  assert.match(html, /\? `réussi ✓ · fait \$\{foisEntraine\}\\u00a0fois`\s*: reussis\s*\? `puis : \$\{NOMS_ENTRAINEMENTS\[prochainEntrainement\.entrainement\]\}`\s*: `d’abord : \$\{NOMS_ENTRAINEMENTS\[prochainEntrainement\.entrainement\]\}`/, "trois sous-titres courts, une ligne à 320 px");
   assert.match(html, /points: ligne\.entraine\.map\(item => etoile\(item\.etat\)\),/, "les trois ronds de Je m’entraîne restent");
   // Les panneaux : « fait N fois » sous chaque activité et chaque entraînement.
   assert.match(html, /fois: item\.fois,\s*conseillee: Boolean\(prochaineActivite\)/);
@@ -260,7 +260,7 @@ test("le point de Jackie : une table acquise choisie depuis « Changer de table 
   assert.match(html, /conseille: conseilCarte === "apprends",/);
   assert.match(html, /conseille: conseilCarte === "entraine",/);
   assert.match(html, /conseille: conseilCarte === "valide",/);
-  assert.match(html, /titre: ligne\.acquise \? "Ma table est acquise" : "Je valide ma table",\s*sousTitre: ligne\.acquise \? `validée le \$\{dateEnLettres\(ligne\.acquise\)\}` : "20 questions · 1 min 30",/);
+  assert.match(html, /titre: ligne\.acquise \? "Ma table est acquise" : "Je valide ma table",\s*sousTitre: ligne\.acquise \? `acquise le \$\{dateEnLettres\(ligne\.acquise\)\}` : "20 questions · 1 min 30",/);
 });
 
 test("« Comme la validation, en 2 min » reste proposée sur une table acquise", () => {

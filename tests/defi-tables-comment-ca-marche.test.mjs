@@ -22,8 +22,10 @@ test("la notice garde six phrases et prend le nom que l'appli donne au mélange"
   assert.match(html, /<strong>Mon mélange : mes tables acquises<\/strong>/);
 });
 
-test("la notice explique d'où viennent les 10 calculs : les boîtes à tour de rôle", () => {
-  assert.match(notice, /L’appli en prend un peu dans chaque boîte, à tour de rôle : du facile et du difficile mêlés, 10 à la fois\./);
+test("la notice dit « 10 à la fois », et le moteur les prend dans chaque boîte, à tour de rôle", () => {
+  // Audit 1 (30/09/2026) : la notice tient en six lignes courtes ; le « à
+  // tour de rôle » n'y est plus écrit, mais le moteur tire toujours ainsi.
+  assert.match(notice, /<b>Mes calculs du jour\.<\/b> Les calculs qui reviennent aujourd’hui, 10 à la fois, sans chrono\./);
   // Et le moteur tire bien ainsi : sur 30 calculs dus répartis dans les cinq
   // boîtes, la première série de 10 en prend dans chacune — pas dix rouges.
   const aujourdhui = PARCOURS.jourLocal();
@@ -42,8 +44,13 @@ test("la notice explique d'où viennent les 10 calculs : les boîtes à tour de 
 });
 
 test("la notice dit ce que fait une erreur, et le moteur le confirme : une boîte de moins, et demain", () => {
-  assert.match(notice, /Une erreur le fait redescendre d’une boîte : il repasse à la fin de la série, et il revient demain\./);
+  assert.match(notice, /Réussi le jour où il revient, il monte d’une boîte&nbsp;; raté, il descend et revient demain\./);
   assert.doesNotMatch(notice, /il revient tout de suite/);
+  // La même phrase partout où l'élève lit la règle (audit 1) : le détail
+  // d'une case et la fiche imprimée disent « demain », plus « tout de suite ».
+  assert.doesNotMatch(html, /il revient tout de suite/);
+  assert.match(html, /note = "Raté aujourd’hui : il revient demain\.";/);
+  assert.match(html, /Une erreur le fait redescendre d’une boîte, sans limite, et il revient demain\.<\/p>/);
 
   const aujourdhui = PARCOURS.jourLocal();
   const demain = PARCOURS.ajouterJours(aujourdhui, 1);
@@ -62,23 +69,26 @@ test("la notice dit ce que fait une erreur, et le moteur le confirme : une boît
   assert.equal(PARCOURS.faitDu(fait, demain), true, "il revient demain");
 });
 
-test("la notice dit « Encore 10 calculs », et c'est bien le libellé du bouton", () => {
-  assert.match(notice, /Quand plus rien ne revient, « Encore 10 calculs » propose les suivants : rien ne monte, c’est pour s’entraîner\./);
+test("« Encore 10 calculs » est bien le libellé du bouton", () => {
+  // Audit 1 : la notice courte ne le détaille plus ; le bouton, lui, reste.
   assert.match(html, /return `Encore \$\{pluriel\(nombre, "calcul"\)\}`;/);
   assert.match(html, /const nombre = Math\.min\(PARCOURS\.SEUILS\.revision\.total, PARCOURS\.calculsAVenir\(parcours, \{table\}\)\.length\);/);
 });
 
-test("les nombres de la notice sont ceux du moteur : 5 boîtes, 10 à la fois, su à la boîte 4, 1 · 3 · 7 · 14 jours", () => {
+test("les nombres écrits pour l'élève sont ceux du moteur : 5 boîtes, 10 à la fois, su à la boîte 4, 1 · 3 · 7 · 14 jours", () => {
   assert.equal(PARCOURS.SEUILS.revision.boites, 5);
   assert.match(notice, /Chaque calcul a 5 boîtes\./);
   assert.equal(PARCOURS.SEUILS.revision.total, 10);
+  assert.match(notice, /10 à la fois/);
   assert.deepEqual(PARCOURS.SEUILS.revision.delais, [0, 1, 3, 7, 14]);
-  assert.match(notice, /le lendemain, puis 3 jours, 7 jours, 14 jours après/);
+  // Audit 1 : les délais et la boîte 4 ne sont plus dans la notice courte ;
+  // la page 2 de la fiche imprimée les écrit toujours.
+  assert.match(html, /le lendemain, puis 3 jours, 7 jours et 14 jours après/);
   // « su » commence à la boîte 4 : c'est ce que dit etatFait.
   const fait = boite => ({boite, vu: "2026-01-01", erreur: "", gagne: "", echeance: "2026-01-01", cases: 0});
   assert.equal(PARCOURS.etatFait(fait(3)), "en-cours");
   assert.equal(PARCOURS.etatFait(fait(4)), "su");
-  assert.match(notice, /Il est su à partir de la boîte 4\./);
+  assert.match(html, /À partir de la boîte 4, le calcul est su\./);
 });
 
 test("le prénom demandé à l'impression : un formulaire caché dans l'écran de la fiche, le bouton lui laisse la place", () => {

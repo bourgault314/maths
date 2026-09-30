@@ -844,8 +844,11 @@ test("dans Je deviens expert, « Toutes les tables » coche 2 à 10", () => {
   assert.match(html, /return mode === "test" \? PARCOURS_TABLES : ALL_TABLES;/);
   assert.match(html, /"Toutes les tables \(2 à 10\)"/);
   assert.equal(core.configurationLabel(normaliser({mode: "test", tables: [2, 3, 4, 5, 6, 7, 8, 9, 10], testLevel: 3})), "Je deviens expert · Tables de 2 à 10 · produits, trous, divisions · 25 questions · 2 minutes");
-  assert.equal(core.configurationLabel(normaliser(parcours.configEntraine(7, "trous"))), "Je m’entraîne · Table de 7 · nombres manquants · 10 questions · sans chronomètre");
-  assert.equal(core.configurationLabel(normaliser({mode: "train", tables: [6, 7]})), "Je m’entraîne · Tables de 6 et 7 · 10 questions · sans chronomètre");
+  assert.equal(core.configurationLabel(normaliser(parcours.configEntraine(7, "trous"))), "Je m’entraîne · Table de 7 · nombres manquants · 10 questions · sans chrono");
+  assert.equal(core.configurationLabel(normaliser({mode: "train", tables: [6, 7]})), "Je m’entraîne · Tables de 6 et 7 · dans le désordre · 10 questions · sans chrono");
+  // Audit 1 (30/09/2026) : les trois entraînements, le même nom partout.
+  assert.equal(core.configurationLabel(normaliser(parcours.configEntraine(7, "desordre"))), "Je m’entraîne · Table de 7 · dans le désordre · 10 questions · sans chrono");
+  assert.equal(core.configurationLabel(normaliser(parcours.configEntraine(7, "mixte"))), "Je m’entraîne · Table de 7 · les deux à la fois · 10 questions · sans chrono");
 });
 
 test("la page Confidentialité décrit la sauvegarde locale de Mon parcours", () => {

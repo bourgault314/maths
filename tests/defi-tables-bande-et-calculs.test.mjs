@@ -123,7 +123,7 @@ test("une mauvaise réponse laisse la case vide et renvoie le calcul en fin de b
 test("la correction dit que le calcul reviendra, comme partout ailleurs", () => {
   assert.match(html, /showAnswerFeedback\(question, correct, skip \? null : value, shouldRetry, assisted, donnee\)/);
   assert.match(html, /const suite = willRetry \? " Le calcul reviendra\." : donnee \? " Je l’écris dans la bande\." : "";/);
-  assert.match(html, /Bonne réponse : \$\{question\.answer\}\.\$\{suite\}/);
+  assert.match(html, /Bonne réponse\\u00a0: \$\{question\.answer\}\.\$\{suite\}/);
 });
 
 test("« Ajoute 4 » laisse la place à « Complète la case bleue » quand la case d’avant est vide", () => {

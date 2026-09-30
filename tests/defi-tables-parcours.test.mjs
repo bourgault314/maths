@@ -231,8 +231,8 @@ test("J’apprends garde la bande pour construire et la propose en aide temporai
   assert.match(html, /const shouldRetry = \(!correct && !donnee\) \|\| assisted;/);
   assert.match(html, /if \(correct && !assisted\) state\.mastered\.add\(question\.factKey\)/);
   assert.match(html, /showAnswerFeedback\(question, correct, skip \? null : value, shouldRetry, assisted, donnee\)/);
-  assert.match(html, /assisted \? "Bravo ! On le reverra sans la bande\." : "Bravo !"/);
-  assert.match(html, /const label = stickActivity \? "cases complétées" : "calculs maîtrisés"/);
+  assert.match(html, /assisted \? "Bravo\\u00a0! On le reverra sans la bande\." : "Bravo\\u00a0!"/);
+  assert.match(html, /const label = stickActivity \? "cases complétées" : "calculs sus"/);
   assert.match(html, /question\?\.multiplier === 0 \? "Commence à 0\."\s*: suitUnePleine \? `Ajoute \$\{table\}\.` : "Complète la case bleue\.";/);
   assert.match(html, /if \(correct\) \{[\s\S]*\$\("validate"\)\.style\.visibility = "hidden";[\s\S]*scheduleAutoAdvance\(stickActivity \? DELAI_SUIVANT_BANDE : DELAI_SUIVANT\);/);
   assert.match(html, /\$\("validate"\)\.style\.visibility = "";[\s\S]*setAnswerControlsEnabled\(true\)/);
@@ -253,7 +253,7 @@ test("J’apprends garde la bande pour construire et la propose en aide temporai
   assert.match(html, /textContent = enabled \? "Valider" : "Suivant"/);
   assert.match(html, /completeReview = state\.configuration\.mode === "test"/);
   assert.match(html, /Mes \$\{wrongEntries\.length\} erreurs/, "lot R2 : les erreurs d’abord, sous leur titre");
-  assert.match(html, /defi_tables_core\.js\?v=20260914-1/);
+  assert.match(html, /defi_tables_core\.js\?v=20260930-1/);
   // Le moteur était le seul des deux scripts sans épingle, et le lot A2 est
   // passé au travers : il ajoutait chargerSync / sauverSync / casesDetachees au
   // moteur sans monter son numéro. Un navigateur qui avait déjà l'ancien moteur

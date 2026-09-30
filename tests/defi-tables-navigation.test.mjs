@@ -108,7 +108,7 @@ test("l’écran de résultat ne dit pas deux fois la même chose", () => {
   assert.match(html, /function suiteApresSerie\(evenements, fete\) \{/);
   assert.match(html, /if \(trouve\("melange-a-refaire"\)\) return `Refais ton mélange avec la table de \$\{fete\.validation\.table\}\$\{puis\}\.`;/);
   assert.match(html, /const texte = suiteApresSerie\(suivi\.evenements, feteDuResultat\(suivi\.evenements\)\);/);
-  assert.match(html, /etiquette\.textContent = "Et maintenant :";/);
+  assert.match(html, /etiquette\.textContent = "Et maintenant\\u00a0:";/);
   assert.doesNotMatch(html, /function evenementMessage\(/, "les anciens messages par événement n’ont plus d’appelant");
 });
 

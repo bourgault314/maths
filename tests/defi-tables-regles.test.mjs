@@ -396,7 +396,7 @@ test("l’accueil : « Mon mélange » surligné, le cadenas sur Je valide, l’
   assert.match(html, /\.etape\.melange\.is-next \{ border-color: #e0a800/, "le mélange dû est surligné en jaune");
   assert.match(html, /<section id="acc-expert" class="expert"[^>]*hidden>[\s\S]*<div id="acc-escalier" class="escalier"/);
   assert.match(html, /"Toutes les tables, de plus en plus vite" : "Réussis le mélange de tes 9 tables"/);
-  assert.match(html, /titre: `Tenter \$\{suivante\.symbole\}`/, "un seul bouton « Tenter ★★★ »");
+  assert.match(html, /titre: `Tente \$\{suivante\.symbole\}`/, "un seul bouton « Tente ★★★ »");
   assert.match(html, /"M’entraîner sur une table"/);
   assert.match(html, /"9 sur 9 acquises "/);
   assert.match(html, /<span id="acc-rang" class="rang"><\/span>/, "le badge de rang, sous « N tables acquises sur 9 »");
@@ -406,7 +406,7 @@ test("l’accueil : « Mon mélange » surligné, le cadenas sur Je valide, l’
   assert.match(html, /cette semaine`/);
   // Lot R3 (12/09) : « case » parlait d'une grille que l'élève n'a pas forcément
   // ouverte. Lot mémoire : « N calculs demain », d'après les échéances.
-  assert.match(html, /\$\{pluriel\(jours\.demain, "calcul"\)\} demain/);
+  assert.match(html, /\$\{pluriel\(jours\.demain, "calcul"\)\} \$\{jours\.demain > 1 \? "reviennent" : "revient"\} demain/, "audit 1 : « 8 calculs reviennent demain »");
   assert.doesNotMatch(html, /à regagner demain/);
   assert.doesNotMatch(html.replace(/\/\/[^\n]*/g, ""), /jours de suite|d’affilée/, "pas de compteur d’affilée (décision du 08/09 : version b)");
   // Ce qui a disparu.
@@ -454,7 +454,7 @@ test("le lancement : le mélange se joue en 1 min 30, comme la validation d’un
 });
 
 test("les scripts modifiés ont un nouveau numéro de cache, et la copie serveur du moteur est identique", async () => {
-  assert.match(html, /defi_tables_core\.js\?v=20260914-1/);
+  assert.match(html, /defi_tables_core\.js\?v=20260930-1/);
   assert.match(html, /defi_tables_mon_parcours\.js\?v=20260919-1/);
   const moteur = await readFile(new URL("../outils/calcul_mental/defi_tables_mon_parcours.js", import.meta.url));
   const copie = await readFile(new URL("../_serveur/public/prof/defi_tables_mon_parcours.js", import.meta.url));
