@@ -859,10 +859,10 @@ test("L : un onglet et un panneau par monde, le prof replié partout, la note un
   assert.equal((page.match(/<section class="note"/g) || []).length, 1, "une seule note « Pour imprimer »");
   // vingt-deux cartes : 6 (monde 1, dont les trois « Je dessine le schéma » du 26/09/2026) + 4 (monde 2 :
   // Monde 2 et Le défi, avec « ? » et avec une lettre, 26/09/2026) + 5 (monde 3 : deux livrets et
-  // leurs défis, puis la partie 3) + 2 (monde 4, le Système, 25/09/2026) + 3 (monde 5 : corrigés du
+  // leurs défis, puis la partie 3 ; six depuis le lot 2 du 30/09/2026 : trois parties et leur deuxième tour) + 2 (monde 4, le Système, 25/09/2026) + 3 (monde 5 : corrigés du
   // lot Q4, et le défi du lot Q5) + 2 (monde 6, les Relatifs, lot R2) ; + 1 : le défi du monde 5 en
   // schéma en barres (relecture du monde 5, 27/09/2026) ; + 2 : les deux défis du monde 6 (28/09/2026)
-  assert.equal((page.match(/<details class="prof">/g) || []).length, 25, "les vingt-cinq cartes replient leurs corrigés");
+  assert.equal((page.match(/<details class="prof">/g) || []).length, 26, "les vingt-six cartes replient leurs corrigés");
   // la note d'impression, réécrite par Gwenaël le 27/09/2026 : pas de « meilleur rendu », le A3 n'est pas un conseil
   assert.match(page, /Livret à plier<\/strong>&nbsp;: en A3 pour un grand livret, ou en A4 pour un petit livret\. Recto-verso, <strong>bord court<\/strong>\.<\/p>/);
   assert.doesNotMatch(page, /meilleur rendu/);

@@ -59,29 +59,40 @@ const PARCOURS_SIX_MONDES = ["m1e1", "m1e2", "m1e3", "m1e4", "m1e5", "m1e6", "m2
 /* le gabarit calcule l'identifiant ainsi (idEtape) : on refait le même calcul */
 const idEtape = (m, e, ei) => e.id || (m.idp + "-" + ei);
 
-/* Les 20 adresses figées au lot E0. Une graine ou un réglage qui bouge ici,
-   ce sont les fiches et les deux livrets à refaire. */
-const ADRESSES_E0 = [
-  /* fiche 10 */ "/splat/classique/?mode=C&splats=2&clues=SENTENCE&mul=0&div=0&add=1&sub=0&deltaMax=10&visibleMin=0&visibleMax=0&totalMin=10&totalMax=30&seed=339&cards=4&unknown=question&layout=4&title=Fiche%2010%20%E2%80%94%20De%20plus%20que&print=statement",
-                 "/splat/classique/?mode=C&splats=2&clues=SENTENCE&mul=0&div=0&add=1&sub=0&deltaMax=10&visibleMin=0&visibleMax=0&totalMin=10&totalMax=30&seed=339&cards=4&unknown=question&layout=4&title=Fiche%2010%20%E2%80%94%20De%20plus%20que&print=correction",
-  /* fiche 11 */ "/splat/classique/?mode=C&splats=2&clues=SENTENCE&mul=0&div=0&add=0&sub=1&deltaMax=10&visibleMin=0&visibleMax=0&totalMin=10&totalMax=30&seed=1071&cards=4&unknown=question&layout=4&note=Reformule%20l%E2%80%99indice%20avant%20de%20dessiner%20ton%20sch%C3%A9ma.&title=Fiche%2011%20%E2%80%94%20De%20moins%20que&print=statement",
-                 "/splat/classique/?mode=C&splats=2&clues=SENTENCE&mul=0&div=0&add=0&sub=1&deltaMax=10&visibleMin=0&visibleMax=0&totalMin=10&totalMax=30&seed=1071&cards=4&unknown=question&layout=4&note=Reformule%20l%E2%80%99indice%20avant%20de%20dessiner%20ton%20sch%C3%A9ma.&title=Fiche%2011%20%E2%80%94%20De%20moins%20que&print=correction",
-  /* fiche 12 */ "/splat/classique/?mode=C&splats=2&clues=SENTENCE&mul=0&div=0&add=1&sub=1&deltaMax=15&visibleMin=0&visibleMax=0&totalMin=15&totalMax=50&seed=918&cards=4&unknown=question&layout=4&title=Fiche%2012%20%E2%80%94%20Plus%20ou%20moins&print=statement",
-                 "/splat/classique/?mode=C&splats=2&clues=SENTENCE&mul=0&div=0&add=1&sub=1&deltaMax=15&visibleMin=0&visibleMax=0&totalMin=15&totalMax=50&seed=918&cards=4&unknown=question&layout=4&title=Fiche%2012%20%E2%80%94%20Plus%20ou%20moins&print=correction",
-  /* fiche 13 */ "/splat/classique/?mode=C&splats=3&structure=CHAIN&clues=SENTENCE&mul=0&div=0&add=1&sub=1&deltaMax=15&visibleMin=0&visibleMax=0&totalMin=20&totalMax=60&seed=290&cards=4&unknown=question&layout=4&title=Fiche%2013%20%E2%80%94%20Trois%20taches%20en%20cha%C3%AEne&print=statement",
-                 "/splat/classique/?mode=C&splats=3&structure=CHAIN&clues=SENTENCE&mul=0&div=0&add=1&sub=1&deltaMax=15&visibleMin=0&visibleMax=0&totalMin=20&totalMax=60&seed=290&cards=4&unknown=question&layout=4&title=Fiche%2013%20%E2%80%94%20Trois%20taches%20en%20cha%C3%AEne&print=correction",
-  /* fiche 14 */ "/splat/classique/?mode=C&splats=3&structure=MIX&clues=SENTENCE&mul=0&div=0&add=1&sub=1&deltaMax=15&visibleMin=1&visibleMax=3&totalMin=20&totalMax=60&seed=950&cards=4&unknown=question&layout=4&title=Fiche%2014%20%E2%80%94%20Le%20d%C3%A9fi%20additif&print=statement",
-                 "/splat/classique/?mode=C&splats=3&structure=MIX&clues=SENTENCE&mul=0&div=0&add=1&sub=1&deltaMax=15&visibleMin=1&visibleMax=3&totalMin=20&totalMax=60&seed=950&cards=4&unknown=question&layout=4&title=Fiche%2014%20%E2%80%94%20Le%20d%C3%A9fi%20additif&print=correction",
-  /* fiche 15 */ "/splat/classique/?mode=C&splats=2&clues=SENTENCE&mul=1&div=0&add=0&sub=0&deltaMax=10&visibleMin=0&visibleMax=0&totalMin=10&totalMax=40&seed=1372&cards=4&unknown=question&layout=4&title=Fiche%2015%20%E2%80%94%20Fois%20plus&print=statement",
-                 "/splat/classique/?mode=C&splats=2&clues=SENTENCE&mul=1&div=0&add=0&sub=0&deltaMax=10&visibleMin=0&visibleMax=0&totalMin=10&totalMax=40&seed=1372&cards=4&unknown=question&layout=4&title=Fiche%2015%20%E2%80%94%20Fois%20plus&print=correction",
-  /* fiche 16 */ "/splat/classique/?mode=C&splats=2&clues=SENTENCE&mul=0&div=1&add=0&sub=0&deltaMax=10&visibleMin=0&visibleMax=0&totalMin=10&totalMax=40&seed=1343&cards=4&unknown=question&layout=4&note=Reformule%20l%E2%80%99indice%20avant%20de%20dessiner%20ton%20sch%C3%A9ma.&title=Fiche%2016%20%E2%80%94%20Fois%20moins&print=statement",
-                 "/splat/classique/?mode=C&splats=2&clues=SENTENCE&mul=0&div=1&add=0&sub=0&deltaMax=10&visibleMin=0&visibleMax=0&totalMin=10&totalMax=40&seed=1343&cards=4&unknown=question&layout=4&note=Reformule%20l%E2%80%99indice%20avant%20de%20dessiner%20ton%20sch%C3%A9ma.&title=Fiche%2016%20%E2%80%94%20Fois%20moins&print=correction",
-  /* fiche 17 */ "/splat/classique/?mode=C&splats=2&clues=SENTENCE&mul=1&div=1&add=1&sub=1&deltaMax=15&visibleMin=0&visibleMax=0&totalMin=15&totalMax=50&seed=405&cards=4&unknown=question&layout=4&title=Fiche%2017%20%E2%80%94%20Les%20quatre%20op%C3%A9rations&print=statement",
-                 "/splat/classique/?mode=C&splats=2&clues=SENTENCE&mul=1&div=1&add=1&sub=1&deltaMax=15&visibleMin=0&visibleMax=0&totalMin=15&totalMax=50&seed=405&cards=4&unknown=question&layout=4&title=Fiche%2017%20%E2%80%94%20Les%20quatre%20op%C3%A9rations&print=correction",
-  /* fiche 18 */ "/splat/classique/?mode=C&splats=3&structure=CHAIN&clues=SENTENCE&mul=1&div=1&add=1&sub=1&deltaMax=15&visibleMin=0&visibleMax=0&totalMin=20&totalMax=60&seed=1313&cards=4&unknown=question&layout=4&title=Fiche%2018%20%E2%80%94%20Trois%20taches%2C%204%20op%C3%A9rations&print=statement",
-                 "/splat/classique/?mode=C&splats=3&structure=CHAIN&clues=SENTENCE&mul=1&div=1&add=1&sub=1&deltaMax=15&visibleMin=0&visibleMax=0&totalMin=20&totalMax=60&seed=1313&cards=4&unknown=question&layout=4&title=Fiche%2018%20%E2%80%94%20Trois%20taches%2C%204%20op%C3%A9rations&print=correction",
-  /* fiche 19 */ "/splat/classique/?mode=C&splats=3&structure=MIX&clues=SENTENCE&mul=1&div=1&add=1&sub=1&deltaMax=15&visibleMin=1&visibleMax=3&totalMin=20&totalMax=60&seed=537&cards=4&unknown=question&layout=4&title=Fiche%2019%20%E2%80%94%20Le%20grand%20d%C3%A9fi&print=statement",
-                 "/splat/classique/?mode=C&splats=3&structure=MIX&clues=SENTENCE&mul=1&div=1&add=1&sub=1&deltaMax=15&visibleMin=1&visibleMax=3&totalMin=20&totalMax=60&seed=537&cards=4&unknown=question&layout=4&title=Fiche%2019%20%E2%80%94%20Le%20grand%20d%C3%A9fi&print=correction"
+/* Les 30 adresses (énoncé / correction) des fiches 10 à 24, figées au lot 2 de l'Enquête
+   (30/09/2026, la progression en six livrets : graines triées, « modele=1 » sur 13, 18, 22).
+   Une graine ou un réglage qui bouge ici, ce sont les fiches et les livrets à refaire. */
+const ADRESSES_LOT2 = [
+  /* fiche 10 */ "/splat/classique/?mode=C&clues=SENTENCE&splats=2&mul=0&div=0&add=1&sub=0&deltaMax=15&visibleMin=0&visibleMax=0&totalMin=20&totalMax=50&seed=51&cards=4&unknown=question&layout=4&title=Fiche%2010%20%E2%80%94%20De%20plus%20que&print=statement",
+                 "/splat/classique/?mode=C&clues=SENTENCE&splats=2&mul=0&div=0&add=1&sub=0&deltaMax=15&visibleMin=0&visibleMax=0&totalMin=20&totalMax=50&seed=51&cards=4&unknown=question&layout=4&title=Fiche%2010%20%E2%80%94%20De%20plus%20que&print=correction",
+  /* fiche 11 */ "/splat/classique/?mode=C&clues=SENTENCE&splats=2&mul=0&div=0&add=0&sub=1&deltaMax=15&visibleMin=0&visibleMax=0&totalMin=20&totalMax=50&seed=74&cards=4&unknown=question&layout=4&note=Reformule%20l%E2%80%99indice%20avant%20de%20dessiner%20ton%20sch%C3%A9ma.&title=Fiche%2011%20%E2%80%94%20De%20moins%20que&print=statement",
+                 "/splat/classique/?mode=C&clues=SENTENCE&splats=2&mul=0&div=0&add=0&sub=1&deltaMax=15&visibleMin=0&visibleMax=0&totalMin=20&totalMax=50&seed=74&cards=4&unknown=question&layout=4&note=Reformule%20l%E2%80%99indice%20avant%20de%20dessiner%20ton%20sch%C3%A9ma.&title=Fiche%2011%20%E2%80%94%20De%20moins%20que&print=correction",
+  /* fiche 12 */ "/splat/classique/?mode=C&clues=SENTENCE&splats=2&mul=0&div=0&add=1&sub=1&deltaMax=15&visibleMin=0&visibleMax=0&totalMin=20&totalMax=50&seed=1195&cards=4&unknown=question&layout=4&title=Fiche%2012%20%E2%80%94%20Plus%20ou%20moins&print=statement",
+                 "/splat/classique/?mode=C&clues=SENTENCE&splats=2&mul=0&div=0&add=1&sub=1&deltaMax=15&visibleMin=0&visibleMax=0&totalMin=20&totalMax=50&seed=1195&cards=4&unknown=question&layout=4&title=Fiche%2012%20%E2%80%94%20Plus%20ou%20moins&print=correction",
+  /* fiche 13 */ "/splat/classique/?mode=C&clues=SENTENCE&splats=3&structure=REF&ordre=DESSIN&mul=0&div=0&add=1&sub=1&deltaMax=12&visibleMin=0&visibleMax=0&totalMin=20&totalMax=50&modele=1&seed=1184&cards=4&unknown=question&layout=4&title=Fiche%2013%20%E2%80%94%20Trois%20taches%2C%20une%20r%C3%A9f%C3%A9rence&print=statement",
+                 "/splat/classique/?mode=C&clues=SENTENCE&splats=3&structure=REF&ordre=DESSIN&mul=0&div=0&add=1&sub=1&deltaMax=12&visibleMin=0&visibleMax=0&totalMin=20&totalMax=50&modele=1&seed=1184&cards=4&unknown=question&layout=4&title=Fiche%2013%20%E2%80%94%20Trois%20taches%2C%20une%20r%C3%A9f%C3%A9rence&print=correction",
+  /* fiche 14 */ "/splat/classique/?mode=C&clues=SENTENCE&splats=3&structure=REF&ordre=DESSIN&mul=0&div=0&add=1&sub=1&deltaMax=15&visibleMin=1&visibleMax=3&totalMin=30&totalMax=60&seed=19446&cards=4&unknown=question&layout=4&title=Fiche%2014%20%E2%80%94%20Le%20d%C3%A9fi%20%3A%20une%20r%C3%A9f%C3%A9rence%2C%20jetons%20visibles&print=statement",
+                 "/splat/classique/?mode=C&clues=SENTENCE&splats=3&structure=REF&ordre=DESSIN&mul=0&div=0&add=1&sub=1&deltaMax=15&visibleMin=1&visibleMax=3&totalMin=30&totalMax=60&seed=19446&cards=4&unknown=question&layout=4&title=Fiche%2014%20%E2%80%94%20Le%20d%C3%A9fi%20%3A%20une%20r%C3%A9f%C3%A9rence%2C%20jetons%20visibles&print=correction",
+  /* fiche 15 */ "/splat/classique/?mode=C&clues=SENTENCE&splats=2&mul=1&div=0&add=0&sub=0&deltaMax=10&visibleMin=0&visibleMax=0&totalMin=20&totalMax=60&seed=45&cards=4&unknown=question&layout=4&title=Fiche%2015%20%E2%80%94%20Fois%20plus&print=statement",
+                 "/splat/classique/?mode=C&clues=SENTENCE&splats=2&mul=1&div=0&add=0&sub=0&deltaMax=10&visibleMin=0&visibleMax=0&totalMin=20&totalMax=60&seed=45&cards=4&unknown=question&layout=4&title=Fiche%2015%20%E2%80%94%20Fois%20plus&print=correction",
+  /* fiche 16 */ "/splat/classique/?mode=C&clues=SENTENCE&splats=2&mul=0&div=1&add=0&sub=0&deltaMax=10&visibleMin=0&visibleMax=0&totalMin=20&totalMax=60&seed=76&cards=4&unknown=question&layout=4&note=Reformule%20l%E2%80%99indice%20avant%20de%20dessiner%20ton%20sch%C3%A9ma.&title=Fiche%2016%20%E2%80%94%20Fois%20moins&print=statement",
+                 "/splat/classique/?mode=C&clues=SENTENCE&splats=2&mul=0&div=1&add=0&sub=0&deltaMax=10&visibleMin=0&visibleMax=0&totalMin=20&totalMax=60&seed=76&cards=4&unknown=question&layout=4&note=Reformule%20l%E2%80%99indice%20avant%20de%20dessiner%20ton%20sch%C3%A9ma.&title=Fiche%2016%20%E2%80%94%20Fois%20moins&print=correction",
+  /* fiche 17 */ "/splat/classique/?mode=C&clues=SENTENCE&splats=2&mul=1&div=1&add=0&sub=0&deltaMax=10&visibleMin=0&visibleMax=0&totalMin=20&totalMax=60&vocab=1&seed=76172&cards=4&unknown=question&layout=4&title=Fiche%2017%20%E2%80%94%20Fois%20plus%20ou%20fois%20moins%20%3A%20le%20double%2C%20la%20moiti%C3%A9&print=statement",
+                 "/splat/classique/?mode=C&clues=SENTENCE&splats=2&mul=1&div=1&add=0&sub=0&deltaMax=10&visibleMin=0&visibleMax=0&totalMin=20&totalMax=60&vocab=1&seed=76172&cards=4&unknown=question&layout=4&title=Fiche%2017%20%E2%80%94%20Fois%20plus%20ou%20fois%20moins%20%3A%20le%20double%2C%20la%20moiti%C3%A9&print=correction",
+  /* fiche 18 */ "/splat/classique/?mode=C&clues=SENTENCE&splats=3&structure=REF&ordre=DESSIN&mul=1&div=1&add=1&sub=1&deltaMax=12&visibleMin=0&visibleMax=0&totalMin=20&totalMax=60&modele=1&seed=105403&cards=4&unknown=question&layout=4&title=Fiche%2018%20%E2%80%94%20Trois%20taches%20%3A%20deux%20rapports%2C%20puis%20un%20%C3%A9cart%20et%20un%20rapport&print=statement",
+                 "/splat/classique/?mode=C&clues=SENTENCE&splats=3&structure=REF&ordre=DESSIN&mul=1&div=1&add=1&sub=1&deltaMax=12&visibleMin=0&visibleMax=0&totalMin=20&totalMax=60&modele=1&seed=105403&cards=4&unknown=question&layout=4&title=Fiche%2018%20%E2%80%94%20Trois%20taches%20%3A%20deux%20rapports%2C%20puis%20un%20%C3%A9cart%20et%20un%20rapport&print=correction",
+  /* fiche 19 */ "/splat/classique/?mode=C&clues=SENTENCE&splats=3&structure=REF&ordre=DESSIN&mul=1&div=1&add=1&sub=1&deltaMax=15&visibleMin=1&visibleMax=3&totalMin=30&totalMax=70&seed=94050&cards=4&unknown=question&layout=4&title=Fiche%2019%20%E2%80%94%20Le%20d%C3%A9fi%20%3A%20toutes%20op%C3%A9rations%2C%20jetons%20visibles&print=statement",
+                 "/splat/classique/?mode=C&clues=SENTENCE&splats=3&structure=REF&ordre=DESSIN&mul=1&div=1&add=1&sub=1&deltaMax=15&visibleMin=1&visibleMax=3&totalMin=30&totalMax=70&seed=94050&cards=4&unknown=question&layout=4&title=Fiche%2019%20%E2%80%94%20Le%20d%C3%A9fi%20%3A%20toutes%20op%C3%A9rations%2C%20jetons%20visibles&print=correction",
+  /* fiche 20 */ "/splat/classique/?mode=C&clues=SENTENCE&splats=2&repeat=3&mul=0&div=0&add=1&sub=1&deltaMax=10&visibleMin=0&visibleMax=0&totalMin=20&totalMax=60&seed=172&cards=4&unknown=question&layout=4&title=Fiche%2020%20%E2%80%94%20Des%20taches%20r%C3%A9p%C3%A9t%C3%A9es&print=statement",
+                 "/splat/classique/?mode=C&clues=SENTENCE&splats=2&repeat=3&mul=0&div=0&add=1&sub=1&deltaMax=10&visibleMin=0&visibleMax=0&totalMin=20&totalMax=60&seed=172&cards=4&unknown=question&layout=4&title=Fiche%2020%20%E2%80%94%20Des%20taches%20r%C3%A9p%C3%A9t%C3%A9es&print=correction",
+  /* fiche 21 */ "/splat/classique/?mode=C&clues=SENTENCE&splats=2&repeat=3&mul=1&div=1&add=0&sub=0&deltaMax=10&visibleMin=0&visibleMax=0&totalMin=20&totalMax=60&vocab=1&seed=26174&cards=4&unknown=question&layout=4&title=Fiche%2021%20%E2%80%94%20R%C3%A9p%C3%A9t%C3%A9es%2C%20fois%20plus%20ou%20moins&print=statement",
+                 "/splat/classique/?mode=C&clues=SENTENCE&splats=2&repeat=3&mul=1&div=1&add=0&sub=0&deltaMax=10&visibleMin=0&visibleMax=0&totalMin=20&totalMax=60&vocab=1&seed=26174&cards=4&unknown=question&layout=4&title=Fiche%2021%20%E2%80%94%20R%C3%A9p%C3%A9t%C3%A9es%2C%20fois%20plus%20ou%20moins&print=correction",
+  /* fiche 22 */ "/splat/classique/?mode=C&clues=SENTENCE&splats=2&noTotal=1&mul=1&div=0&add=1&sub=0&deltaMax=30&visibleMin=0&visibleMax=0&totalMin=15&totalMax=60&modele=1&seed=3&cards=4&unknown=question&layout=4&title=Fiche%2022%20%E2%80%94%20Sans%20total&print=statement",
+                 "/splat/classique/?mode=C&clues=SENTENCE&splats=2&noTotal=1&mul=1&div=0&add=1&sub=0&deltaMax=30&visibleMin=0&visibleMax=0&totalMin=15&totalMax=60&modele=1&seed=3&cards=4&unknown=question&layout=4&title=Fiche%2022%20%E2%80%94%20Sans%20total&print=correction",
+  /* fiche 23 */ "/splat/classique/?mode=C&clues=SENTENCE&splats=2&noTotal=1&mul=0&div=1&add=0&sub=1&deltaMax=30&visibleMin=0&visibleMax=0&totalMin=15&totalMax=60&seed=9&cards=4&unknown=question&layout=4&note=Reformule%20l%E2%80%99indice%20avant%20de%20dessiner%20ton%20sch%C3%A9ma.&title=Fiche%2023%20%E2%80%94%20Sans%20total%2C%20%C3%A0%20retourner&print=statement",
+                 "/splat/classique/?mode=C&clues=SENTENCE&splats=2&noTotal=1&mul=0&div=1&add=0&sub=1&deltaMax=30&visibleMin=0&visibleMax=0&totalMin=15&totalMax=60&seed=9&cards=4&unknown=question&layout=4&note=Reformule%20l%E2%80%99indice%20avant%20de%20dessiner%20ton%20sch%C3%A9ma.&title=Fiche%2023%20%E2%80%94%20Sans%20total%2C%20%C3%A0%20retourner&print=correction",
+  /* fiche 24 */ "/splat/classique/?mode=C&clues=SENTENCE&splats=2&repeat=3&noTotal=1&mul=1&div=1&add=1&sub=1&deltaMax=20&visibleMin=1&visibleMax=3&totalMin=30&totalMax=70&seed=16220&cards=4&unknown=question&layout=4&title=Fiche%2024%20%E2%80%94%20Le%20d%C3%A9fi%20qui%20rebondit&print=statement",
+                 "/splat/classique/?mode=C&clues=SENTENCE&splats=2&repeat=3&noTotal=1&mul=1&div=1&add=1&sub=1&deltaMax=20&visibleMin=1&visibleMax=3&totalMin=30&totalMax=70&seed=16220&cards=4&unknown=question&layout=4&title=Fiche%2024%20%E2%80%94%20Le%20d%C3%A9fi%20qui%20rebondit&print=correction"
 ];
 
 test("six mondes : l'Enquête est UN monde 3 en trois parties, le Système le monde 4 en deux parties", () => {
@@ -136,16 +147,17 @@ test("E5 : aucune étoile déjà gagnée ne bouge — mêmes identifiants, même
   SYSTEME.etapes.forEach((e, i) => assert.equal(e.id, "sys-" + i));
 });
 
-test("E5 : l'empreinte de reprise des séries de l'Enquête ne bouge pas", () => {
+test("l'empreinte de reprise des séries de l'Enquête est celle des fiches du lot 2", () => {
   /* outils/splat.html reprend une série en cours seulement si l'empreinte de son adresse
      (les réglages qui fixent les cartes, clés triées — eleveSignatureSerie) est la même :
-     elle doit rester celle des fiches figées au lot E0. */
+     elle doit être celle des fiches figées au lot 2 (30/09/2026 ; les graines du lot E0 ont
+     été retriées — aucun élève n'était encore passé par le monde 3). */
   const outil = lire("outils/splat.html");
   const hors = JSON.parse(outil.match(/const ELEVE_HORS_EMPREINTE = (\[[^\]]+\]);/)[1]);
   const empreinte = (url) => [...new URLSearchParams(url.split("?")[1])]
     .filter(([k]) => !hors.includes(k)).map(([k, v]) => k + "=" + v).sort().join("|");
-  LES_DEUX.forEach((e, i) => {
-    assert.equal(empreinte(e.j), empreinte(ADRESSES_E0[2 * i]), `fiche ${10 + i}`);
+  ENQUETE.etapes.forEach((e, i) => {
+    assert.equal(empreinte(e.j), empreinte(ADRESSES_LOT2[2 * i]), `fiche ${10 + i}`);
     assert.match(empreinte(e.j), new RegExp("seed=" + ENQ_FICHES[i].q.match(/seed=(\d+)/)[1] + "\\|"));
   });
 });
@@ -187,11 +199,13 @@ test("le numéro affiché d'une étape est continu dans tout l'univers", () => {
   assert.equal(compteur, 43);   // lot R2 : le monde 6 a six fiches (38 à 43)
 });
 
-test("les vingt adresses des fiches sont exactement celles du lot E0", () => {
-  const rendues = LES_DEUX.flatMap((e) => [e.f, e.c]);
-  assert.deepEqual(rendues, ADRESSES_E0);
+test("les trente adresses des fiches sont exactement celles du lot 2 (six livrets, 30/09/2026)", () => {
+  const rendues = ENQUETE.etapes.flatMap((e) => [e.f, e.c]);
+  assert.deepEqual(rendues, ADRESSES_LOT2);
   assert.deepEqual(ENQ_FICHES.map((f) => f.q.match(/seed=(\d+)/)[1]),
-    ["339", "1071", "918", "290", "950", "1372", "1343", "405", "1313", "537", "172", "34", "3", "9", "2187"]);
+    ["51", "74", "1195", "1184", "19446", "45", "76", "76172", "105403", "94050", "172", "26174", "3", "9", "16220"]);
+  /* le schéma vide sous la carte 1 (lot 1) : les fiches qui apportent un dessin, 13, 18 et 22 */
+  assert.deepEqual(ENQ_FICHES.map((f, i) => (/(^|&)modele=1(&|$)/.test(f.q) ? 10 + i : 0)).filter(Boolean), [13, 18, 22]);
   /* la consigne en gras ne concerne que les fiches 11, 16 et 23 (rangs 2, 7 et 14) */
   assert.deepEqual(ENQ_FICHES.map((f, i) => (f.note ? i + 1 : 0)).filter(Boolean), [2, 7, 14]);
 });
@@ -273,7 +287,8 @@ test("six mondes : les parties sont des intertitres dans la liste, un par livret
   assert.doesNotMatch(univers, /LIVRETS_ENQ|LIVRETS_SYS|\.pdf"/);
   const page = readFileSync(new URL("../outils/livrets_splat.html", import.meta.url), "utf8");
   const onglet = (n) => page.slice(page.indexOf(`id="monde-${n}"`), page.indexOf(`id="monde-${n + 1}"`));
-  for (const nom of ["enquete_additif", "enquete_additif_defi", "enquete_multiplicatif", "enquete_multiplicatif_defi", "enquete_rebondit"])
+  // lot 2 (30/09/2026) : six livrets — les trois de base, puis les trois « Deuxième tour »
+  for (const nom of ["enquete_additif", "enquete_multiplicatif", "enquete_rebondit", "enquete_additif_tour2", "enquete_multiplicatif_tour2", "enquete_rebondit_tour2"])
     for (const suf of ["", "_a_plier"]) assert.ok(onglet(3).includes(`href="/outils/livret_splat_${nom}${suf}.pdf"`), nom + suf);
   for (const nom of ["systeme", "systeme_suite"])
     for (const suf of ["", "_a_plier"]) assert.ok(onglet(4).includes(`href="/outils/livret_splat_${nom}${suf}.pdf"`), nom + suf);

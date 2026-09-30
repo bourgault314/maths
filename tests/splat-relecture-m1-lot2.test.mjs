@@ -56,7 +56,9 @@ test("A. dos : aucun logo, plus de « Mes fiches », QR de 30 mm, « Pour se sou
 });
 
 test("A. l'en-tête des pages-fiches ne change pas : IREMI + maths&go", () => {
-  for (const f of ["livret-splat-enquete", "livret-splat-systeme"]) {
+  // (lot 2 de l'Enquête, 30/09/2026 : la page 2 de l'Enquête passe à la règle des livrets du
+  // 25/09 — aucun logo, ils sont au dos ; tests/livret-splat-enquete.test.mjs)
+  for (const f of ["livret-splat-systeme"]) {
     const e = lire(`_sources/${f}/exemple.html`);
     assert.match(e, /alt="IREMI La Réunion"/, f);
     assert.equal((e.match(/logos\/mathsgo\/logo-print\.png/g) || []).length, 1, f);
@@ -118,7 +120,7 @@ test("D. guillemets français : une espace insécable après « et avant » dans
   }
   // l'exemple relevé par Gwenaël était « Sans total » dans la note de « L'enquête rebondit » (retirée
   // de la carte au lot « vue prof », 27/09/2026) ; les notes du prof gardent la même écriture
-  assert.match(lire("outils/splat_univers.html"), /"Indice «\\u00a0de plus que\\u00a0»\."/);
+  assert.match(lire("outils/splat_univers.html"), /"Indice «\\u00a0de plus que\\u00a0» : l'écart\."/);
   // et la description des livrets au catalogue
   assert.match(lire("assets/js/catalogue-refonte-data.js"), /le schéma en barres et l’équation, chacun avec son «\u00a0Le défi\u00a0»\./);
 });

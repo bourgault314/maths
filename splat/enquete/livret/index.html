@@ -17,7 +17,7 @@
        « SPLAT! Grande enquête » (15 à 19) et « SPLAT! L'enquête rebondit » (20 à 24) :
        /splat/enquete/livret/?f=12  →  la série en ligne de la fiche 12, etc. ;
        /splat/enquete/livret/?s=2   →  la série n° 2 du dos des livrets (lot E4) ;
-       /splat/enquete/livret/?f=12d →  la fiche 12 du livret « Le défi » (23/09/2026).
+       /splat/enquete/livret/?f=12d →  la fiche 12d d'un livret « Deuxième tour » (30/09/2026).
        Les fiches de l'Enquête sont les étapes 10 à 24 de l'univers : dans SPLAT!,
        le numéro de fiche EST le numéro d'étape (« Fiche 7 » du livret classique).
        Chaque cible est EXACTEMENT le lien « Le jeu de l'élève » de la carte des
@@ -28,45 +28,49 @@
        ici aussi et régénérer les QR des livrets (lot E4). */
     var ENQ_DEPART = 10;
     var ENQ = [
-      "mode=C&splats=2&clues=SENTENCE&mul=0&div=0&add=1&sub=0&deltaMax=10&visibleMin=0&visibleMax=0&totalMin=10&totalMax=30&seed=339",
-      "mode=C&splats=2&clues=SENTENCE&mul=0&div=0&add=0&sub=1&deltaMax=10&visibleMin=0&visibleMax=0&totalMin=10&totalMax=30&seed=1071",
-      "mode=C&splats=2&clues=SENTENCE&mul=0&div=0&add=1&sub=1&deltaMax=15&visibleMin=0&visibleMax=0&totalMin=15&totalMax=50&seed=918",
-      "mode=C&splats=3&structure=CHAIN&clues=SENTENCE&mul=0&div=0&add=1&sub=1&deltaMax=15&visibleMin=0&visibleMax=0&totalMin=20&totalMax=60&seed=290",
-      "mode=C&splats=3&structure=MIX&clues=SENTENCE&mul=0&div=0&add=1&sub=1&deltaMax=15&visibleMin=1&visibleMax=3&totalMin=20&totalMax=60&seed=950",
-      "mode=C&splats=2&clues=SENTENCE&mul=1&div=0&add=0&sub=0&deltaMax=10&visibleMin=0&visibleMax=0&totalMin=10&totalMax=40&seed=1372",
-      "mode=C&splats=2&clues=SENTENCE&mul=0&div=1&add=0&sub=0&deltaMax=10&visibleMin=0&visibleMax=0&totalMin=10&totalMax=40&seed=1343",
-      "mode=C&splats=2&clues=SENTENCE&mul=1&div=1&add=1&sub=1&deltaMax=15&visibleMin=0&visibleMax=0&totalMin=15&totalMax=50&seed=405",
-      "mode=C&splats=3&structure=CHAIN&clues=SENTENCE&mul=1&div=1&add=1&sub=1&deltaMax=15&visibleMin=0&visibleMax=0&totalMin=20&totalMax=60&seed=1313",
-      "mode=C&splats=3&structure=MIX&clues=SENTENCE&mul=1&div=1&add=1&sub=1&deltaMax=15&visibleMin=1&visibleMax=3&totalMin=20&totalMax=60&seed=537",
-      /* 3e partie, « L'enquête rebondit » (fiches 20 à 24, lot « fiches 20-34 ») */
-      "mode=C&splats=2&repeat=3&clues=SENTENCE&mul=0&div=0&add=1&sub=1&deltaMax=10&visibleMin=0&visibleMax=0&totalMin=20&totalMax=60&seed=172",
-      "mode=C&splats=2&repeat=3&clues=SENTENCE&mul=1&div=1&add=0&sub=0&deltaMax=10&visibleMin=0&visibleMax=0&totalMin=20&totalMax=60&seed=34",
-      "mode=C&splats=2&noTotal=1&clues=SENTENCE&mul=1&div=0&add=1&sub=0&deltaMax=30&visibleMin=0&visibleMax=0&totalMin=15&totalMax=60&seed=3",
-      "mode=C&splats=2&noTotal=1&clues=SENTENCE&mul=0&div=1&add=0&sub=1&deltaMax=30&visibleMin=0&visibleMax=0&totalMin=15&totalMax=60&seed=9",
-      "mode=C&splats=3&structure=MIX&repeat=3&clues=SENTENCE&mul=1&div=1&add=1&sub=1&deltaMax=30&visibleMin=1&visibleMax=3&totalMin=20&totalMax=60&noTotal=1&seed=2187"
+      "mode=C&clues=SENTENCE&splats=2&mul=0&div=0&add=1&sub=0&deltaMax=15&visibleMin=0&visibleMax=0&totalMin=20&totalMax=50&seed=51",
+      "mode=C&clues=SENTENCE&splats=2&mul=0&div=0&add=0&sub=1&deltaMax=15&visibleMin=0&visibleMax=0&totalMin=20&totalMax=50&seed=74",
+      "mode=C&clues=SENTENCE&splats=2&mul=0&div=0&add=1&sub=1&deltaMax=15&visibleMin=0&visibleMax=0&totalMin=20&totalMax=50&seed=1195",
+      "mode=C&clues=SENTENCE&splats=3&structure=REF&ordre=DESSIN&mul=0&div=0&add=1&sub=1&deltaMax=12&visibleMin=0&visibleMax=0&totalMin=20&totalMax=50&modele=1&seed=1184",
+      "mode=C&clues=SENTENCE&splats=3&structure=REF&ordre=DESSIN&mul=0&div=0&add=1&sub=1&deltaMax=15&visibleMin=1&visibleMax=3&totalMin=30&totalMax=60&seed=19446",
+      "mode=C&clues=SENTENCE&splats=2&mul=1&div=0&add=0&sub=0&deltaMax=10&visibleMin=0&visibleMax=0&totalMin=20&totalMax=60&seed=45",
+      "mode=C&clues=SENTENCE&splats=2&mul=0&div=1&add=0&sub=0&deltaMax=10&visibleMin=0&visibleMax=0&totalMin=20&totalMax=60&seed=76",
+      "mode=C&clues=SENTENCE&splats=2&mul=1&div=1&add=0&sub=0&deltaMax=10&visibleMin=0&visibleMax=0&totalMin=20&totalMax=60&vocab=1&seed=76172",
+      "mode=C&clues=SENTENCE&splats=3&structure=REF&ordre=DESSIN&mul=1&div=1&add=1&sub=1&deltaMax=12&visibleMin=0&visibleMax=0&totalMin=20&totalMax=60&modele=1&seed=105403",
+      "mode=C&clues=SENTENCE&splats=3&structure=REF&ordre=DESSIN&mul=1&div=1&add=1&sub=1&deltaMax=15&visibleMin=1&visibleMax=3&totalMin=30&totalMax=70&seed=94050",
+      "mode=C&clues=SENTENCE&splats=2&repeat=3&mul=0&div=0&add=1&sub=1&deltaMax=10&visibleMin=0&visibleMax=0&totalMin=20&totalMax=60&seed=172",
+      "mode=C&clues=SENTENCE&splats=2&repeat=3&mul=1&div=1&add=0&sub=0&deltaMax=10&visibleMin=0&visibleMax=0&totalMin=20&totalMax=60&vocab=1&seed=26174",
+      "mode=C&clues=SENTENCE&splats=2&noTotal=1&mul=1&div=0&add=1&sub=0&deltaMax=30&visibleMin=0&visibleMax=0&totalMin=15&totalMax=60&modele=1&seed=3",
+      "mode=C&clues=SENTENCE&splats=2&noTotal=1&mul=0&div=1&add=0&sub=1&deltaMax=30&visibleMin=0&visibleMax=0&totalMin=15&totalMax=60&seed=9",
+      "mode=C&clues=SENTENCE&splats=2&repeat=3&noTotal=1&mul=1&div=1&add=1&sub=1&deltaMax=20&visibleMin=1&visibleMax=3&totalMin=30&totalMax=70&seed=16220"
     ];
-    /* Les livrets « Le défi » (23/09/2026) : ?f=10d … ?f=19d ouvre la série en ligne de la
-       fiche du défi — mêmes réglages que la fiche de la classe, totaux de 50 à 100, graine
-       choisie (D10 … D19 de _sources/livret-splat-enquete/render.py ; un test épingle les
-       deux listes l'une sur l'autre). Le parcours reste enqN : réussir la série du défi
-       allume la MÊME étoile (comme « Le défi » du monde 2 et les niveaux du monde 1). */
-    var ENQ_DEFI = [
-      "mode=C&splats=2&clues=SENTENCE&mul=0&div=0&add=1&sub=0&deltaMax=30&visibleMin=0&visibleMax=0&totalMin=50&totalMax=100&seed=21941",
-      "mode=C&splats=2&clues=SENTENCE&mul=0&div=0&add=0&sub=1&deltaMax=30&visibleMin=0&visibleMax=0&totalMin=50&totalMax=100&seed=80891",
-      "mode=C&splats=2&clues=SENTENCE&mul=0&div=0&add=1&sub=1&deltaMax=30&visibleMin=0&visibleMax=0&totalMin=50&totalMax=100&seed=83103",
-      "mode=C&splats=3&structure=CHAIN&clues=SENTENCE&mul=0&div=0&add=1&sub=1&deltaMax=25&visibleMin=0&visibleMax=0&totalMin=50&totalMax=100&seed=41720",
-      "mode=C&splats=3&structure=MIX&clues=SENTENCE&mul=0&div=0&add=1&sub=1&deltaMax=25&visibleMin=2&visibleMax=3&totalMin=50&totalMax=100&seed=743151",
-      "mode=C&splats=2&clues=SENTENCE&mul=1&div=0&add=0&sub=0&deltaMax=10&visibleMin=0&visibleMax=0&totalMin=50&totalMax=100&seed=36483",
-      "mode=C&splats=2&clues=SENTENCE&mul=0&div=1&add=0&sub=0&deltaMax=10&visibleMin=0&visibleMax=0&totalMin=50&totalMax=100&seed=98074",
-      "mode=C&splats=2&clues=SENTENCE&mul=1&div=1&add=1&sub=1&deltaMax=30&visibleMin=0&visibleMax=0&totalMin=50&totalMax=100&seed=44420",
-      "mode=C&splats=3&structure=CHAIN&clues=SENTENCE&mul=1&div=1&add=1&sub=1&deltaMax=25&visibleMin=0&visibleMax=0&totalMin=50&totalMax=100&seed=59204",
-      "mode=C&splats=3&structure=MIX&clues=SENTENCE&mul=1&div=1&add=1&sub=1&deltaMax=25&visibleMin=2&visibleMax=3&totalMin=50&totalMax=100&seed=429473"
+    /* Les livrets « Deuxième tour » (lot 2, 30/09/2026) : ?f=10d … ?f=24d ouvre la série en
+       ligne de la fiche 10d … 24d (E10D … E24D de _sources/livret-splat-enquete/render.py ;
+       un test épingle les deux listes l'une sur l'autre). Le parcours reste enqN : réussir
+       la fiche 12d allume la MÊME étoile que la fiche 12. (Jusqu'au 30/09, ?f=Nd ouvrait les
+       fiches des livrets « Le défi », qui n'existent plus.) */
+    var ENQ_TOUR2 = [
+      "mode=C&clues=SENTENCE&splats=3&structure=CHAINE&ordre=DESSIN&mul=0&div=0&add=1&sub=1&deltaMax=12&visibleMin=0&visibleMax=0&totalMin=20&totalMax=50&seed=1184",
+      "mode=C&clues=SENTENCE&splats=3&structure=COMPLETE&ordre=DESSIN&mul=0&div=0&add=1&sub=1&deltaMax=12&visibleMin=0&visibleMax=0&totalMin=20&totalMax=50&modele=1&seed=361",
+      "mode=C&clues=SENTENCE&splats=3&structure=HASARD&ordre=DESSIN&mul=0&div=0&add=1&sub=1&deltaMax=15&visibleMin=0&visibleMax=0&totalMin=20&totalMax=60&seed=2888",
+      "mode=C&clues=SENTENCE&splats=3&structure=HASARD&ordre=DESORDRE&mul=0&div=0&add=1&sub=1&deltaMax=15&visibleMin=0&visibleMax=0&totalMin=20&totalMax=60&seed=2621",
+      "mode=C&clues=SENTENCE&splats=3&structure=HASARD&ordre=DESORDRE&mul=0&div=0&add=1&sub=1&deltaMax=25&visibleMin=1&visibleMax=3&totalMin=60&totalMax=120&seed=5294",
+      "mode=C&clues=SENTENCE&splats=3&structure=CHAINE&ordre=DESSIN&mul=1&div=1&add=0&sub=0&deltaMax=12&visibleMin=0&visibleMax=0&totalMin=20&totalMax=60&seed=24224",
+      "mode=C&clues=SENTENCE&splats=3&structure=CHAINE&ordre=DESSIN&mul=1&div=1&add=1&sub=1&deltaMax=12&visibleMin=0&visibleMax=0&totalMin=20&totalMax=60&seed=9236",
+      "mode=C&clues=SENTENCE&splats=3&structure=COMPLETE&ordre=DESSIN&mul=1&div=1&add=1&sub=1&deltaMax=12&visibleMin=0&visibleMax=0&totalMin=20&totalMax=60&modele=1&seed=7680",
+      "mode=C&clues=SENTENCE&splats=2&compose=1&mul=1&div=1&add=1&sub=1&deltaMax=12&visibleMin=0&visibleMax=0&totalMin=20&totalMax=60&modele=1&seed=151",
+      "mode=C&clues=SENTENCE&splats=3&structure=HASARD&ordre=DESORDRE&mul=1&div=1&add=1&sub=1&deltaMax=25&visibleMin=1&visibleMax=3&totalMin=60&totalMax=120&seed=1558913",
+      "mode=C&clues=SENTENCE&splats=3&structure=HASARD&reunies=1&mul=1&div=1&add=1&sub=1&deltaMax=15&visibleMin=0&visibleMax=0&totalMin=30&totalMax=80&seed=68",
+      "mode=C&clues=SENTENCE&splats=3&structure=HASARD&repeat=3&mul=1&div=1&add=1&sub=1&deltaMax=15&visibleMin=0&visibleMax=0&totalMin=30&totalMax=80&seed=10273",
+      "mode=C&clues=SYMBOL&splats=3&structure=HASARD&mul=1&div=1&add=1&sub=1&deltaMax=15&visibleMin=0&visibleMax=0&totalMin=20&totalMax=60&seed=132600",
+      "mode=C&clues=SENTENCE&splats=3&structure=HASARD&ordre=DESORDRE&mul=1&div=1&add=1&sub=1&deltaMax=40&visibleMin=0&visibleMax=0&totalMin=100&totalMax=200&seed=31987",
+      "mode=C&clues=SENTENCE&splats=3&structure=UNITE&mul=1&div=1&add=1&sub=1&deltaMax=15&visibleMin=0&visibleMax=0&totalMin=30&totalMax=90&seed=1168"
     ];
-    /* Les séries infinies du dos des livrets (?s=1…6, lot E4 ; ?s=7…12, les livrets
-       « Le défi » ; ?s=13…15, « L'enquête rebondit », 25/09/2026) : les réglages des fiches, sans graine — huit cartes nouvelles à chaque
+    /* Les séries infinies du dos des livrets (?s=16…34 depuis le lot 2 du 30/09/2026, les six
+       livrets ; ?s=1…15 : celles des anciens livrets, gardées pour un livret déjà imprimé) : les réglages des fiches, sans graine — huit cartes nouvelles à chaque
        ouverture, en mode élève sans étape (rien n'est enregistré). Le QR ne porte que
        « ?s=N » : il reste lisible photocopié, et une série peut être retouchée ici sans
-       réimprimer un livret. Les mêmes quinze réglages sont dans
+       réimprimer un livret. Les séries 16 à 34 sont celles de
        _sources/livret-splat-enquete/render.py (SERIES) ; un test les épingle. */
     var ENQ_SERIES = {
       "1": "mode=C&splats=2&clues=SENTENCE&mul=0&div=0&add=1&sub=1&deltaMax=10&visibleMin=0&visibleMax=0&totalMin=10&totalMax=30",
@@ -83,7 +87,26 @@
       "12": "mode=C&splats=3&structure=MIX&clues=SENTENCE&mul=1&div=1&add=1&sub=1&deltaMax=25&visibleMin=2&visibleMax=3&totalMin=50&totalMax=100",
       "13": "mode=C&splats=2&repeat=3&clues=SENTENCE&mul=1&div=1&add=1&sub=1&deltaMax=10&visibleMin=0&visibleMax=0&totalMin=20&totalMax=60",
       "14": "mode=C&splats=2&noTotal=1&clues=SENTENCE&mul=1&div=1&add=1&sub=1&deltaMax=30&visibleMin=0&visibleMax=0&totalMin=15&totalMax=60",
-      "15": "mode=C&splats=3&structure=MIX&repeat=3&clues=SENTENCE&mul=1&div=1&add=1&sub=1&deltaMax=30&visibleMin=1&visibleMax=3&totalMin=20&totalMax=60&noTotal=1"
+      "15": "mode=C&splats=3&structure=MIX&repeat=3&clues=SENTENCE&mul=1&div=1&add=1&sub=1&deltaMax=30&visibleMin=1&visibleMax=3&totalMin=20&totalMax=60&noTotal=1",
+      "16": "mode=C&clues=SENTENCE&splats=2&mul=0&div=0&add=1&sub=1&deltaMax=15&visibleMin=0&visibleMax=0&totalMin=20&totalMax=50",
+      "17": "mode=C&clues=SENTENCE&splats=3&structure=REF&ordre=DESSIN&mul=0&div=0&add=1&sub=1&deltaMax=12&visibleMin=0&visibleMax=0&totalMin=20&totalMax=50",
+      "18": "mode=C&clues=SENTENCE&splats=3&structure=REF&ordre=DESSIN&mul=0&div=0&add=1&sub=1&deltaMax=15&visibleMin=1&visibleMax=3&totalMin=30&totalMax=60",
+      "19": "mode=C&clues=SENTENCE&splats=2&mul=1&div=1&add=0&sub=0&deltaMax=10&visibleMin=0&visibleMax=0&totalMin=20&totalMax=60&vocab=1",
+      "20": "mode=C&clues=SENTENCE&splats=3&structure=REF&ordre=DESSIN&mul=1&div=1&add=1&sub=1&deltaMax=12&visibleMin=0&visibleMax=0&totalMin=20&totalMax=60",
+      "21": "mode=C&clues=SENTENCE&splats=3&structure=REF&ordre=DESSIN&mul=1&div=1&add=1&sub=1&deltaMax=15&visibleMin=1&visibleMax=3&totalMin=30&totalMax=70",
+      "22": "mode=C&clues=SENTENCE&splats=2&repeat=3&mul=1&div=1&add=1&sub=1&deltaMax=10&visibleMin=0&visibleMax=0&totalMin=20&totalMax=60",
+      "23": "mode=C&clues=SENTENCE&splats=2&noTotal=1&mul=1&div=1&add=1&sub=1&deltaMax=30&visibleMin=0&visibleMax=0&totalMin=15&totalMax=60",
+      "24": "mode=C&clues=SENTENCE&splats=2&repeat=3&noTotal=1&mul=1&div=1&add=1&sub=1&deltaMax=20&visibleMin=1&visibleMax=3&totalMin=30&totalMax=70",
+      "25": "mode=C&clues=SENTENCE&splats=3&structure=HASARD&ordre=DESSIN&mul=0&div=0&add=1&sub=1&deltaMax=15&visibleMin=0&visibleMax=0&totalMin=20&totalMax=60",
+      "26": "mode=C&clues=SENTENCE&splats=3&structure=HASARD&ordre=DESORDRE&mul=0&div=0&add=1&sub=1&deltaMax=15&visibleMin=0&visibleMax=0&totalMin=20&totalMax=60",
+      "27": "mode=C&clues=SENTENCE&splats=3&structure=HASARD&ordre=DESORDRE&mul=0&div=0&add=1&sub=1&deltaMax=25&visibleMin=1&visibleMax=3&totalMin=60&totalMax=120",
+      "28": "mode=C&clues=SENTENCE&splats=3&structure=CHAINE&ordre=DESSIN&mul=1&div=1&add=1&sub=1&deltaMax=12&visibleMin=0&visibleMax=0&totalMin=20&totalMax=60",
+      "29": "mode=C&clues=SENTENCE&splats=3&structure=COMPLETE&ordre=DESSIN&mul=1&div=1&add=1&sub=1&deltaMax=12&visibleMin=0&visibleMax=0&totalMin=20&totalMax=60",
+      "30": "mode=C&clues=SENTENCE&splats=2&compose=1&mul=1&div=1&add=1&sub=1&deltaMax=12&visibleMin=0&visibleMax=0&totalMin=20&totalMax=60",
+      "31": "mode=C&clues=SENTENCE&splats=3&structure=HASARD&ordre=DESORDRE&mul=1&div=1&add=1&sub=1&deltaMax=25&visibleMin=1&visibleMax=3&totalMin=60&totalMax=120",
+      "32": "mode=C&clues=SENTENCE&splats=3&structure=HASARD&reunies=1&mul=1&div=1&add=1&sub=1&deltaMax=15&visibleMin=0&visibleMax=0&totalMin=30&totalMax=80",
+      "33": "mode=C&clues=SYMBOL&splats=3&structure=HASARD&mul=1&div=1&add=1&sub=1&deltaMax=15&visibleMin=0&visibleMax=0&totalMin=20&totalMax=60",
+      "34": "mode=C&clues=SENTENCE&splats=3&structure=UNITE&mul=1&div=1&add=1&sub=1&deltaMax=15&visibleMin=0&visibleMax=0&totalMin=30&totalMax=90"
     };
     var ENQ_SERIE_CARTES = 8;
     var f = new URLSearchParams(window.location.search).get("f");
@@ -95,8 +118,8 @@
     var jd = fd ? parseInt(fd[1], 10) - ENQ_DEPART : -1;
     var cible = (String(n) === String(f) && i >= 0 && i < ENQ.length)
       ? "/splat/classique/?" + ENQ[i] + "&cards=4&unknown=question&eleve=1&parcours=enq" + n
-      : (fd && jd >= 0 && jd < ENQ_DEFI.length)
-      ? "/splat/classique/?" + ENQ_DEFI[jd] + "&cards=4&unknown=question&eleve=1&parcours=enq" + fd[1]
+      : (fd && jd >= 0 && jd < ENQ_TOUR2.length)
+      ? "/splat/classique/?" + ENQ_TOUR2[jd] + "&cards=4&unknown=question&eleve=1&parcours=enq" + fd[1]
       : serie
       ? "/splat/classique/?" + serie + "&cards=" + ENQ_SERIE_CARTES + "&unknown=question&eleve=1"
       : "/outils/splat_univers.html";
@@ -104,55 +127,79 @@
   </script>
 </head>
 <body>
-  <p>Livret SPLAT! Enquête — la série en ligne de chaque fiche&nbsp;:</p>
+  <p>Livrets SPLAT! Enquête — la série en ligne de chaque fiche&nbsp;:</p>
   <ul>
-    <li><a href="/splat/classique/?mode=C&amp;splats=2&amp;clues=SENTENCE&amp;mul=0&amp;div=0&amp;add=1&amp;sub=0&amp;deltaMax=10&amp;visibleMin=0&amp;visibleMax=0&amp;totalMin=10&amp;totalMax=30&amp;seed=339&amp;cards=4&amp;unknown=question&amp;eleve=1&amp;parcours=enq10">Fiche 10 — De plus que</a></li>
-    <li><a href="/splat/classique/?mode=C&amp;splats=2&amp;clues=SENTENCE&amp;mul=0&amp;div=0&amp;add=0&amp;sub=1&amp;deltaMax=10&amp;visibleMin=0&amp;visibleMax=0&amp;totalMin=10&amp;totalMax=30&amp;seed=1071&amp;cards=4&amp;unknown=question&amp;eleve=1&amp;parcours=enq11">Fiche 11 — De moins que</a></li>
-    <li><a href="/splat/classique/?mode=C&amp;splats=2&amp;clues=SENTENCE&amp;mul=0&amp;div=0&amp;add=1&amp;sub=1&amp;deltaMax=15&amp;visibleMin=0&amp;visibleMax=0&amp;totalMin=15&amp;totalMax=50&amp;seed=918&amp;cards=4&amp;unknown=question&amp;eleve=1&amp;parcours=enq12">Fiche 12 — Plus ou moins</a></li>
-    <li><a href="/splat/classique/?mode=C&amp;splats=3&amp;structure=CHAIN&amp;clues=SENTENCE&amp;mul=0&amp;div=0&amp;add=1&amp;sub=1&amp;deltaMax=15&amp;visibleMin=0&amp;visibleMax=0&amp;totalMin=20&amp;totalMax=60&amp;seed=290&amp;cards=4&amp;unknown=question&amp;eleve=1&amp;parcours=enq13">Fiche 13 — Trois taches en chaîne</a></li>
-    <li><a href="/splat/classique/?mode=C&amp;splats=3&amp;structure=MIX&amp;clues=SENTENCE&amp;mul=0&amp;div=0&amp;add=1&amp;sub=1&amp;deltaMax=15&amp;visibleMin=1&amp;visibleMax=3&amp;totalMin=20&amp;totalMax=60&amp;seed=950&amp;cards=4&amp;unknown=question&amp;eleve=1&amp;parcours=enq14">Fiche 14 — Le défi additif</a></li>
-    <li><a href="/splat/classique/?mode=C&amp;splats=2&amp;clues=SENTENCE&amp;mul=1&amp;div=0&amp;add=0&amp;sub=0&amp;deltaMax=10&amp;visibleMin=0&amp;visibleMax=0&amp;totalMin=10&amp;totalMax=40&amp;seed=1372&amp;cards=4&amp;unknown=question&amp;eleve=1&amp;parcours=enq15">Fiche 15 — Fois plus</a></li>
-    <li><a href="/splat/classique/?mode=C&amp;splats=2&amp;clues=SENTENCE&amp;mul=0&amp;div=1&amp;add=0&amp;sub=0&amp;deltaMax=10&amp;visibleMin=0&amp;visibleMax=0&amp;totalMin=10&amp;totalMax=40&amp;seed=1343&amp;cards=4&amp;unknown=question&amp;eleve=1&amp;parcours=enq16">Fiche 16 — Fois moins</a></li>
-    <li><a href="/splat/classique/?mode=C&amp;splats=2&amp;clues=SENTENCE&amp;mul=1&amp;div=1&amp;add=1&amp;sub=1&amp;deltaMax=15&amp;visibleMin=0&amp;visibleMax=0&amp;totalMin=15&amp;totalMax=50&amp;seed=405&amp;cards=4&amp;unknown=question&amp;eleve=1&amp;parcours=enq17">Fiche 17 — Les quatre opérations</a></li>
-    <li><a href="/splat/classique/?mode=C&amp;splats=3&amp;structure=CHAIN&amp;clues=SENTENCE&amp;mul=1&amp;div=1&amp;add=1&amp;sub=1&amp;deltaMax=15&amp;visibleMin=0&amp;visibleMax=0&amp;totalMin=20&amp;totalMax=60&amp;seed=1313&amp;cards=4&amp;unknown=question&amp;eleve=1&amp;parcours=enq18">Fiche 18 — Trois taches, 4 opérations</a></li>
-    <li><a href="/splat/classique/?mode=C&amp;splats=3&amp;structure=MIX&amp;clues=SENTENCE&amp;mul=1&amp;div=1&amp;add=1&amp;sub=1&amp;deltaMax=15&amp;visibleMin=1&amp;visibleMax=3&amp;totalMin=20&amp;totalMax=60&amp;seed=537&amp;cards=4&amp;unknown=question&amp;eleve=1&amp;parcours=enq19">Fiche 19 — Le grand défi</a></li>
-    <li><a href="/splat/classique/?mode=C&amp;splats=2&amp;repeat=3&amp;clues=SENTENCE&amp;mul=0&amp;div=0&amp;add=1&amp;sub=1&amp;deltaMax=10&amp;visibleMin=0&amp;visibleMax=0&amp;totalMin=20&amp;totalMax=60&amp;seed=172&amp;cards=4&amp;unknown=question&amp;eleve=1&amp;parcours=enq20">Fiche 20 — Des taches répétées</a></li>
-    <li><a href="/splat/classique/?mode=C&amp;splats=2&amp;repeat=3&amp;clues=SENTENCE&amp;mul=1&amp;div=1&amp;add=0&amp;sub=0&amp;deltaMax=10&amp;visibleMin=0&amp;visibleMax=0&amp;totalMin=20&amp;totalMax=60&amp;seed=34&amp;cards=4&amp;unknown=question&amp;eleve=1&amp;parcours=enq21">Fiche 21 — Répétées, fois plus ou moins</a></li>
-    <li><a href="/splat/classique/?mode=C&amp;splats=2&amp;noTotal=1&amp;clues=SENTENCE&amp;mul=1&amp;div=0&amp;add=1&amp;sub=0&amp;deltaMax=30&amp;visibleMin=0&amp;visibleMax=0&amp;totalMin=15&amp;totalMax=60&amp;seed=3&amp;cards=4&amp;unknown=question&amp;eleve=1&amp;parcours=enq22">Fiche 22 — Sans total</a></li>
-    <li><a href="/splat/classique/?mode=C&amp;splats=2&amp;noTotal=1&amp;clues=SENTENCE&amp;mul=0&amp;div=1&amp;add=0&amp;sub=1&amp;deltaMax=30&amp;visibleMin=0&amp;visibleMax=0&amp;totalMin=15&amp;totalMax=60&amp;seed=9&amp;cards=4&amp;unknown=question&amp;eleve=1&amp;parcours=enq23">Fiche 23 — Sans total, à retourner</a></li>
-    <li><a href="/splat/classique/?mode=C&amp;splats=3&amp;structure=MIX&amp;repeat=3&amp;clues=SENTENCE&amp;mul=1&amp;div=1&amp;add=1&amp;sub=1&amp;deltaMax=30&amp;visibleMin=1&amp;visibleMax=3&amp;totalMin=20&amp;totalMax=60&amp;noTotal=1&amp;seed=2187&amp;cards=4&amp;unknown=question&amp;eleve=1&amp;parcours=enq24">Fiche 24 — Le défi qui rebondit</a></li>
+    <li><a href="/splat/classique/?mode=C&amp;clues=SENTENCE&amp;splats=2&amp;mul=0&amp;div=0&amp;add=1&amp;sub=0&amp;deltaMax=15&amp;visibleMin=0&amp;visibleMax=0&amp;totalMin=20&amp;totalMax=50&amp;seed=51&amp;cards=4&amp;unknown=question&amp;eleve=1&amp;parcours=enq10">Fiche 10 — De plus que</a></li>
+    <li><a href="/splat/classique/?mode=C&amp;clues=SENTENCE&amp;splats=2&amp;mul=0&amp;div=0&amp;add=0&amp;sub=1&amp;deltaMax=15&amp;visibleMin=0&amp;visibleMax=0&amp;totalMin=20&amp;totalMax=50&amp;seed=74&amp;cards=4&amp;unknown=question&amp;eleve=1&amp;parcours=enq11">Fiche 11 — De moins que</a></li>
+    <li><a href="/splat/classique/?mode=C&amp;clues=SENTENCE&amp;splats=2&amp;mul=0&amp;div=0&amp;add=1&amp;sub=1&amp;deltaMax=15&amp;visibleMin=0&amp;visibleMax=0&amp;totalMin=20&amp;totalMax=50&amp;seed=1195&amp;cards=4&amp;unknown=question&amp;eleve=1&amp;parcours=enq12">Fiche 12 — Plus ou moins</a></li>
+    <li><a href="/splat/classique/?mode=C&amp;clues=SENTENCE&amp;splats=3&amp;structure=REF&amp;ordre=DESSIN&amp;mul=0&amp;div=0&amp;add=1&amp;sub=1&amp;deltaMax=12&amp;visibleMin=0&amp;visibleMax=0&amp;totalMin=20&amp;totalMax=50&amp;modele=1&amp;seed=1184&amp;cards=4&amp;unknown=question&amp;eleve=1&amp;parcours=enq13">Fiche 13 — Trois taches, une référence</a></li>
+    <li><a href="/splat/classique/?mode=C&amp;clues=SENTENCE&amp;splats=3&amp;structure=REF&amp;ordre=DESSIN&amp;mul=0&amp;div=0&amp;add=1&amp;sub=1&amp;deltaMax=15&amp;visibleMin=1&amp;visibleMax=3&amp;totalMin=30&amp;totalMax=60&amp;seed=19446&amp;cards=4&amp;unknown=question&amp;eleve=1&amp;parcours=enq14">Fiche 14 — Le défi : une référence, jetons visibles</a></li>
+    <li><a href="/splat/classique/?mode=C&amp;clues=SENTENCE&amp;splats=2&amp;mul=1&amp;div=0&amp;add=0&amp;sub=0&amp;deltaMax=10&amp;visibleMin=0&amp;visibleMax=0&amp;totalMin=20&amp;totalMax=60&amp;seed=45&amp;cards=4&amp;unknown=question&amp;eleve=1&amp;parcours=enq15">Fiche 15 — Fois plus</a></li>
+    <li><a href="/splat/classique/?mode=C&amp;clues=SENTENCE&amp;splats=2&amp;mul=0&amp;div=1&amp;add=0&amp;sub=0&amp;deltaMax=10&amp;visibleMin=0&amp;visibleMax=0&amp;totalMin=20&amp;totalMax=60&amp;seed=76&amp;cards=4&amp;unknown=question&amp;eleve=1&amp;parcours=enq16">Fiche 16 — Fois moins</a></li>
+    <li><a href="/splat/classique/?mode=C&amp;clues=SENTENCE&amp;splats=2&amp;mul=1&amp;div=1&amp;add=0&amp;sub=0&amp;deltaMax=10&amp;visibleMin=0&amp;visibleMax=0&amp;totalMin=20&amp;totalMax=60&amp;vocab=1&amp;seed=76172&amp;cards=4&amp;unknown=question&amp;eleve=1&amp;parcours=enq17">Fiche 17 — Fois plus ou fois moins : le double, la moitié</a></li>
+    <li><a href="/splat/classique/?mode=C&amp;clues=SENTENCE&amp;splats=3&amp;structure=REF&amp;ordre=DESSIN&amp;mul=1&amp;div=1&amp;add=1&amp;sub=1&amp;deltaMax=12&amp;visibleMin=0&amp;visibleMax=0&amp;totalMin=20&amp;totalMax=60&amp;modele=1&amp;seed=105403&amp;cards=4&amp;unknown=question&amp;eleve=1&amp;parcours=enq18">Fiche 18 — Trois taches : deux rapports, puis un écart et un rapport</a></li>
+    <li><a href="/splat/classique/?mode=C&amp;clues=SENTENCE&amp;splats=3&amp;structure=REF&amp;ordre=DESSIN&amp;mul=1&amp;div=1&amp;add=1&amp;sub=1&amp;deltaMax=15&amp;visibleMin=1&amp;visibleMax=3&amp;totalMin=30&amp;totalMax=70&amp;seed=94050&amp;cards=4&amp;unknown=question&amp;eleve=1&amp;parcours=enq19">Fiche 19 — Le défi : toutes opérations, jetons visibles</a></li>
+    <li><a href="/splat/classique/?mode=C&amp;clues=SENTENCE&amp;splats=2&amp;repeat=3&amp;mul=0&amp;div=0&amp;add=1&amp;sub=1&amp;deltaMax=10&amp;visibleMin=0&amp;visibleMax=0&amp;totalMin=20&amp;totalMax=60&amp;seed=172&amp;cards=4&amp;unknown=question&amp;eleve=1&amp;parcours=enq20">Fiche 20 — Des taches répétées</a></li>
+    <li><a href="/splat/classique/?mode=C&amp;clues=SENTENCE&amp;splats=2&amp;repeat=3&amp;mul=1&amp;div=1&amp;add=0&amp;sub=0&amp;deltaMax=10&amp;visibleMin=0&amp;visibleMax=0&amp;totalMin=20&amp;totalMax=60&amp;vocab=1&amp;seed=26174&amp;cards=4&amp;unknown=question&amp;eleve=1&amp;parcours=enq21">Fiche 21 — Répétées, fois plus ou moins</a></li>
+    <li><a href="/splat/classique/?mode=C&amp;clues=SENTENCE&amp;splats=2&amp;noTotal=1&amp;mul=1&amp;div=0&amp;add=1&amp;sub=0&amp;deltaMax=30&amp;visibleMin=0&amp;visibleMax=0&amp;totalMin=15&amp;totalMax=60&amp;modele=1&amp;seed=3&amp;cards=4&amp;unknown=question&amp;eleve=1&amp;parcours=enq22">Fiche 22 — Sans total</a></li>
+    <li><a href="/splat/classique/?mode=C&amp;clues=SENTENCE&amp;splats=2&amp;noTotal=1&amp;mul=0&amp;div=1&amp;add=0&amp;sub=1&amp;deltaMax=30&amp;visibleMin=0&amp;visibleMax=0&amp;totalMin=15&amp;totalMax=60&amp;seed=9&amp;cards=4&amp;unknown=question&amp;eleve=1&amp;parcours=enq23">Fiche 23 — Sans total, à retourner</a></li>
+    <li><a href="/splat/classique/?mode=C&amp;clues=SENTENCE&amp;splats=2&amp;repeat=3&amp;noTotal=1&amp;mul=1&amp;div=1&amp;add=1&amp;sub=1&amp;deltaMax=20&amp;visibleMin=1&amp;visibleMax=3&amp;totalMin=30&amp;totalMax=70&amp;seed=16220&amp;cards=4&amp;unknown=question&amp;eleve=1&amp;parcours=enq24">Fiche 24 — Le défi qui rebondit</a></li>
     <li><a href="/outils/splat_univers.html">La carte des mondes</a></li>
   </ul>
-  <p>Livrets «&nbsp;Le défi&nbsp;» — totaux de 50 à 100&nbsp;:</p>
+  <p>Livrets «&nbsp;Deuxième tour&nbsp;»&nbsp;:</p>
   <ul>
-    <li><a href="/splat/classique/?mode=C&amp;splats=2&amp;clues=SENTENCE&amp;mul=0&amp;div=0&amp;add=1&amp;sub=0&amp;deltaMax=30&amp;visibleMin=0&amp;visibleMax=0&amp;totalMin=50&amp;totalMax=100&amp;seed=21941&amp;cards=4&amp;unknown=question&amp;eleve=1&amp;parcours=enq10">Fiche 10 — De plus que (Le défi)</a></li>
-    <li><a href="/splat/classique/?mode=C&amp;splats=2&amp;clues=SENTENCE&amp;mul=0&amp;div=0&amp;add=0&amp;sub=1&amp;deltaMax=30&amp;visibleMin=0&amp;visibleMax=0&amp;totalMin=50&amp;totalMax=100&amp;seed=80891&amp;cards=4&amp;unknown=question&amp;eleve=1&amp;parcours=enq11">Fiche 11 — De moins que (Le défi)</a></li>
-    <li><a href="/splat/classique/?mode=C&amp;splats=2&amp;clues=SENTENCE&amp;mul=0&amp;div=0&amp;add=1&amp;sub=1&amp;deltaMax=30&amp;visibleMin=0&amp;visibleMax=0&amp;totalMin=50&amp;totalMax=100&amp;seed=83103&amp;cards=4&amp;unknown=question&amp;eleve=1&amp;parcours=enq12">Fiche 12 — Plus ou moins (Le défi)</a></li>
-    <li><a href="/splat/classique/?mode=C&amp;splats=3&amp;structure=CHAIN&amp;clues=SENTENCE&amp;mul=0&amp;div=0&amp;add=1&amp;sub=1&amp;deltaMax=25&amp;visibleMin=0&amp;visibleMax=0&amp;totalMin=50&amp;totalMax=100&amp;seed=41720&amp;cards=4&amp;unknown=question&amp;eleve=1&amp;parcours=enq13">Fiche 13 — Trois taches en chaîne (Le défi)</a></li>
-    <li><a href="/splat/classique/?mode=C&amp;splats=3&amp;structure=MIX&amp;clues=SENTENCE&amp;mul=0&amp;div=0&amp;add=1&amp;sub=1&amp;deltaMax=25&amp;visibleMin=2&amp;visibleMax=3&amp;totalMin=50&amp;totalMax=100&amp;seed=743151&amp;cards=4&amp;unknown=question&amp;eleve=1&amp;parcours=enq14">Fiche 14 — Le défi additif (Le défi)</a></li>
-    <li><a href="/splat/classique/?mode=C&amp;splats=2&amp;clues=SENTENCE&amp;mul=1&amp;div=0&amp;add=0&amp;sub=0&amp;deltaMax=10&amp;visibleMin=0&amp;visibleMax=0&amp;totalMin=50&amp;totalMax=100&amp;seed=36483&amp;cards=4&amp;unknown=question&amp;eleve=1&amp;parcours=enq15">Fiche 15 — Fois plus (Le défi)</a></li>
-    <li><a href="/splat/classique/?mode=C&amp;splats=2&amp;clues=SENTENCE&amp;mul=0&amp;div=1&amp;add=0&amp;sub=0&amp;deltaMax=10&amp;visibleMin=0&amp;visibleMax=0&amp;totalMin=50&amp;totalMax=100&amp;seed=98074&amp;cards=4&amp;unknown=question&amp;eleve=1&amp;parcours=enq16">Fiche 16 — Fois moins (Le défi)</a></li>
-    <li><a href="/splat/classique/?mode=C&amp;splats=2&amp;clues=SENTENCE&amp;mul=1&amp;div=1&amp;add=1&amp;sub=1&amp;deltaMax=30&amp;visibleMin=0&amp;visibleMax=0&amp;totalMin=50&amp;totalMax=100&amp;seed=44420&amp;cards=4&amp;unknown=question&amp;eleve=1&amp;parcours=enq17">Fiche 17 — Les quatre opérations (Le défi)</a></li>
-    <li><a href="/splat/classique/?mode=C&amp;splats=3&amp;structure=CHAIN&amp;clues=SENTENCE&amp;mul=1&amp;div=1&amp;add=1&amp;sub=1&amp;deltaMax=25&amp;visibleMin=0&amp;visibleMax=0&amp;totalMin=50&amp;totalMax=100&amp;seed=59204&amp;cards=4&amp;unknown=question&amp;eleve=1&amp;parcours=enq18">Fiche 18 — Trois taches, 4 opérations (Le défi)</a></li>
-    <li><a href="/splat/classique/?mode=C&amp;splats=3&amp;structure=MIX&amp;clues=SENTENCE&amp;mul=1&amp;div=1&amp;add=1&amp;sub=1&amp;deltaMax=25&amp;visibleMin=2&amp;visibleMax=3&amp;totalMin=50&amp;totalMax=100&amp;seed=429473&amp;cards=4&amp;unknown=question&amp;eleve=1&amp;parcours=enq19">Fiche 19 — Le grand défi (Le défi)</a></li>
+    <li><a href="/splat/classique/?mode=C&amp;clues=SENTENCE&amp;splats=3&amp;structure=CHAINE&amp;ordre=DESSIN&amp;mul=0&amp;div=0&amp;add=1&amp;sub=1&amp;deltaMax=12&amp;visibleMin=0&amp;visibleMax=0&amp;totalMin=20&amp;totalMax=50&amp;seed=1184&amp;cards=4&amp;unknown=question&amp;eleve=1&amp;parcours=enq10">Fiche 10d — Trois taches en chaîne</a></li>
+    <li><a href="/splat/classique/?mode=C&amp;clues=SENTENCE&amp;splats=3&amp;structure=COMPLETE&amp;ordre=DESSIN&amp;mul=0&amp;div=0&amp;add=1&amp;sub=1&amp;deltaMax=12&amp;visibleMin=0&amp;visibleMax=0&amp;totalMin=20&amp;totalMax=50&amp;modele=1&amp;seed=361&amp;cards=4&amp;unknown=question&amp;eleve=1&amp;parcours=enq11">Fiche 11d — Je complète</a></li>
+    <li><a href="/splat/classique/?mode=C&amp;clues=SENTENCE&amp;splats=3&amp;structure=HASARD&amp;ordre=DESSIN&amp;mul=0&amp;div=0&amp;add=1&amp;sub=1&amp;deltaMax=15&amp;visibleMin=0&amp;visibleMax=0&amp;totalMin=20&amp;totalMax=60&amp;seed=2888&amp;cards=4&amp;unknown=question&amp;eleve=1&amp;parcours=enq12">Fiche 12d — Référence, chaîne ou je complète ?</a></li>
+    <li><a href="/splat/classique/?mode=C&amp;clues=SENTENCE&amp;splats=3&amp;structure=HASARD&amp;ordre=DESORDRE&amp;mul=0&amp;div=0&amp;add=1&amp;sub=1&amp;deltaMax=15&amp;visibleMin=0&amp;visibleMax=0&amp;totalMin=20&amp;totalMax=60&amp;seed=2621&amp;cards=4&amp;unknown=question&amp;eleve=1&amp;parcours=enq13">Fiche 13d — Tout dans le désordre</a></li>
+    <li><a href="/splat/classique/?mode=C&amp;clues=SENTENCE&amp;splats=3&amp;structure=HASARD&amp;ordre=DESORDRE&amp;mul=0&amp;div=0&amp;add=1&amp;sub=1&amp;deltaMax=25&amp;visibleMin=1&amp;visibleMax=3&amp;totalMin=60&amp;totalMax=120&amp;seed=5294&amp;cards=4&amp;unknown=question&amp;eleve=1&amp;parcours=enq14">Fiche 14d — Le grand défi additif</a></li>
+    <li><a href="/splat/classique/?mode=C&amp;clues=SENTENCE&amp;splats=3&amp;structure=CHAINE&amp;ordre=DESSIN&amp;mul=1&amp;div=1&amp;add=0&amp;sub=0&amp;deltaMax=12&amp;visibleMin=0&amp;visibleMax=0&amp;totalMin=20&amp;totalMax=60&amp;seed=24224&amp;cards=4&amp;unknown=question&amp;eleve=1&amp;parcours=enq15">Fiche 15d — Chaîne, deux rapports</a></li>
+    <li><a href="/splat/classique/?mode=C&amp;clues=SENTENCE&amp;splats=3&amp;structure=CHAINE&amp;ordre=DESSIN&amp;mul=1&amp;div=1&amp;add=1&amp;sub=1&amp;deltaMax=12&amp;visibleMin=0&amp;visibleMax=0&amp;totalMin=20&amp;totalMax=60&amp;seed=9236&amp;cards=4&amp;unknown=question&amp;eleve=1&amp;parcours=enq16">Fiche 16d — Chaîne, un écart et un rapport</a></li>
+    <li><a href="/splat/classique/?mode=C&amp;clues=SENTENCE&amp;splats=3&amp;structure=COMPLETE&amp;ordre=DESSIN&amp;mul=1&amp;div=1&amp;add=1&amp;sub=1&amp;deltaMax=12&amp;visibleMin=0&amp;visibleMax=0&amp;totalMin=20&amp;totalMax=60&amp;modele=1&amp;seed=7680&amp;cards=4&amp;unknown=question&amp;eleve=1&amp;parcours=enq17">Fiche 17d — Je complète, avec un rapport</a></li>
+    <li><a href="/splat/classique/?mode=C&amp;clues=SENTENCE&amp;splats=2&amp;compose=1&amp;mul=1&amp;div=1&amp;add=1&amp;sub=1&amp;deltaMax=12&amp;visibleMin=0&amp;visibleMax=0&amp;totalMin=20&amp;totalMax=60&amp;modele=1&amp;seed=151&amp;cards=4&amp;unknown=question&amp;eleve=1&amp;parcours=enq18">Fiche 18d — Indices composés</a></li>
+    <li><a href="/splat/classique/?mode=C&amp;clues=SENTENCE&amp;splats=3&amp;structure=HASARD&amp;ordre=DESORDRE&amp;mul=1&amp;div=1&amp;add=1&amp;sub=1&amp;deltaMax=25&amp;visibleMin=1&amp;visibleMax=3&amp;totalMin=60&amp;totalMax=120&amp;seed=1558913&amp;cards=4&amp;unknown=question&amp;eleve=1&amp;parcours=enq19">Fiche 19d — Le grand défi</a></li>
+    <li><a href="/splat/classique/?mode=C&amp;clues=SENTENCE&amp;splats=3&amp;structure=HASARD&amp;reunies=1&amp;mul=1&amp;div=1&amp;add=1&amp;sub=1&amp;deltaMax=15&amp;visibleMin=0&amp;visibleMax=0&amp;totalMin=30&amp;totalMax=80&amp;seed=68&amp;cards=4&amp;unknown=question&amp;eleve=1&amp;parcours=enq20">Fiche 20d — Deux taches réunies</a></li>
+    <li><a href="/splat/classique/?mode=C&amp;clues=SENTENCE&amp;splats=3&amp;structure=HASARD&amp;repeat=3&amp;mul=1&amp;div=1&amp;add=1&amp;sub=1&amp;deltaMax=15&amp;visibleMin=0&amp;visibleMax=0&amp;totalMin=30&amp;totalMax=80&amp;seed=10273&amp;cards=4&amp;unknown=question&amp;eleve=1&amp;parcours=enq21">Fiche 21d — Répétées à trois couleurs</a></li>
+    <li><a href="/splat/classique/?mode=C&amp;clues=SYMBOL&amp;splats=3&amp;structure=HASARD&amp;mul=1&amp;div=1&amp;add=1&amp;sub=1&amp;deltaMax=15&amp;visibleMin=0&amp;visibleMax=0&amp;totalMin=20&amp;totalMax=60&amp;seed=132600&amp;cards=4&amp;unknown=question&amp;eleve=1&amp;parcours=enq22">Fiche 22d — Les indices en symboles</a></li>
+    <li><a href="/splat/classique/?mode=C&amp;clues=SENTENCE&amp;splats=3&amp;structure=HASARD&amp;ordre=DESORDRE&amp;mul=1&amp;div=1&amp;add=1&amp;sub=1&amp;deltaMax=40&amp;visibleMin=0&amp;visibleMax=0&amp;totalMin=100&amp;totalMax=200&amp;seed=31987&amp;cards=4&amp;unknown=question&amp;eleve=1&amp;parcours=enq23">Fiche 23d — Très grands nombres</a></li>
+    <li><a href="/splat/classique/?mode=C&amp;clues=SENTENCE&amp;splats=3&amp;structure=UNITE&amp;mul=1&amp;div=1&amp;add=1&amp;sub=1&amp;deltaMax=15&amp;visibleMin=0&amp;visibleMax=0&amp;totalMin=30&amp;totalMax=90&amp;seed=1168&amp;cards=4&amp;unknown=question&amp;eleve=1&amp;parcours=enq24">Fiche 24d — Unité commune : je double tout</a></li>
   </ul>
   <p>Encore des cartes — les séries du dos des livrets&nbsp;:</p>
   <ul>
-    <li><a href="/splat/classique/?mode=C&amp;splats=2&amp;clues=SENTENCE&amp;mul=0&amp;div=0&amp;add=1&amp;sub=1&amp;deltaMax=10&amp;visibleMin=0&amp;visibleMax=0&amp;totalMin=10&amp;totalMax=30&amp;cards=8&amp;unknown=question&amp;eleve=1">Série 1 — Deux taches (livret 1)</a></li>
-    <li><a href="/splat/classique/?mode=C&amp;splats=3&amp;structure=CHAIN&amp;clues=SENTENCE&amp;mul=0&amp;div=0&amp;add=1&amp;sub=1&amp;deltaMax=15&amp;visibleMin=0&amp;visibleMax=0&amp;totalMin=20&amp;totalMax=60&amp;cards=8&amp;unknown=question&amp;eleve=1">Série 2 — Trois taches (livret 1)</a></li>
-    <li><a href="/splat/classique/?mode=C&amp;splats=3&amp;structure=MIX&amp;clues=SENTENCE&amp;mul=0&amp;div=0&amp;add=1&amp;sub=1&amp;deltaMax=15&amp;visibleMin=1&amp;visibleMax=3&amp;totalMin=20&amp;totalMax=60&amp;cards=8&amp;unknown=question&amp;eleve=1">Série 3 — Le défi additif (livret 1)</a></li>
-    <li><a href="/splat/classique/?mode=C&amp;splats=2&amp;clues=SENTENCE&amp;mul=1&amp;div=1&amp;add=0&amp;sub=0&amp;deltaMax=10&amp;visibleMin=0&amp;visibleMax=0&amp;totalMin=10&amp;totalMax=40&amp;cards=8&amp;unknown=question&amp;eleve=1">Série 4 — Fois plus, fois moins (livret 2)</a></li>
-    <li><a href="/splat/classique/?mode=C&amp;splats=2&amp;clues=SENTENCE&amp;mul=1&amp;div=1&amp;add=1&amp;sub=1&amp;deltaMax=15&amp;visibleMin=0&amp;visibleMax=0&amp;totalMin=15&amp;totalMax=50&amp;cards=8&amp;unknown=question&amp;eleve=1">Série 5 — Les quatre opérations (livret 2)</a></li>
-    <li><a href="/splat/classique/?mode=C&amp;splats=3&amp;structure=MIX&amp;clues=SENTENCE&amp;mul=1&amp;div=1&amp;add=1&amp;sub=1&amp;deltaMax=15&amp;visibleMin=1&amp;visibleMax=3&amp;totalMin=20&amp;totalMax=60&amp;cards=8&amp;unknown=question&amp;eleve=1">Série 6 — Le grand défi (livret 2)</a></li>
-    <li><a href="/splat/classique/?mode=C&amp;splats=2&amp;clues=SENTENCE&amp;mul=0&amp;div=0&amp;add=1&amp;sub=1&amp;deltaMax=30&amp;visibleMin=0&amp;visibleMax=0&amp;totalMin=50&amp;totalMax=100&amp;cards=8&amp;unknown=question&amp;eleve=1">Série 7 — Deux taches (Le défi, monde 3)</a></li>
-    <li><a href="/splat/classique/?mode=C&amp;splats=3&amp;structure=CHAIN&amp;clues=SENTENCE&amp;mul=0&amp;div=0&amp;add=1&amp;sub=1&amp;deltaMax=25&amp;visibleMin=0&amp;visibleMax=0&amp;totalMin=50&amp;totalMax=100&amp;cards=8&amp;unknown=question&amp;eleve=1">Série 8 — Trois taches (Le défi, monde 3)</a></li>
-    <li><a href="/splat/classique/?mode=C&amp;splats=3&amp;structure=MIX&amp;clues=SENTENCE&amp;mul=0&amp;div=0&amp;add=1&amp;sub=1&amp;deltaMax=25&amp;visibleMin=2&amp;visibleMax=3&amp;totalMin=50&amp;totalMax=100&amp;cards=8&amp;unknown=question&amp;eleve=1">Série 9 — Le défi additif (Le défi, monde 3)</a></li>
-    <li><a href="/splat/classique/?mode=C&amp;splats=2&amp;clues=SENTENCE&amp;mul=1&amp;div=1&amp;add=0&amp;sub=0&amp;deltaMax=10&amp;visibleMin=0&amp;visibleMax=0&amp;totalMin=50&amp;totalMax=100&amp;cards=8&amp;unknown=question&amp;eleve=1">Série 10 — Fois plus, fois moins (Le défi, monde 4)</a></li>
-    <li><a href="/splat/classique/?mode=C&amp;splats=2&amp;clues=SENTENCE&amp;mul=1&amp;div=1&amp;add=1&amp;sub=1&amp;deltaMax=30&amp;visibleMin=0&amp;visibleMax=0&amp;totalMin=50&amp;totalMax=100&amp;cards=8&amp;unknown=question&amp;eleve=1">Série 11 — Les quatre opérations (Le défi, monde 4)</a></li>
-    <li><a href="/splat/classique/?mode=C&amp;splats=3&amp;structure=MIX&amp;clues=SENTENCE&amp;mul=1&amp;div=1&amp;add=1&amp;sub=1&amp;deltaMax=25&amp;visibleMin=2&amp;visibleMax=3&amp;totalMin=50&amp;totalMax=100&amp;cards=8&amp;unknown=question&amp;eleve=1">Série 12 — Le grand défi (Le défi, monde 4)</a></li>
-    <li><a href="/splat/classique/?mode=C&amp;splats=2&amp;repeat=3&amp;clues=SENTENCE&amp;mul=1&amp;div=1&amp;add=1&amp;sub=1&amp;deltaMax=10&amp;visibleMin=0&amp;visibleMax=0&amp;totalMin=20&amp;totalMax=60&amp;cards=8&amp;unknown=question&amp;eleve=1">Série 13 — Taches répétées (L’enquête rebondit)</a></li>
-    <li><a href="/splat/classique/?mode=C&amp;splats=2&amp;noTotal=1&amp;clues=SENTENCE&amp;mul=1&amp;div=1&amp;add=1&amp;sub=1&amp;deltaMax=30&amp;visibleMin=0&amp;visibleMax=0&amp;totalMin=15&amp;totalMax=60&amp;cards=8&amp;unknown=question&amp;eleve=1">Série 14 — Sans total (L’enquête rebondit)</a></li>
-    <li><a href="/splat/classique/?mode=C&amp;splats=3&amp;structure=MIX&amp;repeat=3&amp;clues=SENTENCE&amp;mul=1&amp;div=1&amp;add=1&amp;sub=1&amp;deltaMax=30&amp;visibleMin=1&amp;visibleMax=3&amp;totalMin=20&amp;totalMax=60&amp;noTotal=1&amp;cards=8&amp;unknown=question&amp;eleve=1">Série 15 — Le défi qui rebondit (L’enquête rebondit)</a></li>
+    <li><a href="/splat/classique/?mode=C&amp;splats=2&amp;clues=SENTENCE&amp;mul=0&amp;div=0&amp;add=1&amp;sub=1&amp;deltaMax=10&amp;visibleMin=0&amp;visibleMax=0&amp;totalMin=10&amp;totalMax=30&amp;cards=8&amp;unknown=question&amp;eleve=1">Série 1</a></li>
+    <li><a href="/splat/classique/?mode=C&amp;splats=3&amp;structure=CHAIN&amp;clues=SENTENCE&amp;mul=0&amp;div=0&amp;add=1&amp;sub=1&amp;deltaMax=15&amp;visibleMin=0&amp;visibleMax=0&amp;totalMin=20&amp;totalMax=60&amp;cards=8&amp;unknown=question&amp;eleve=1">Série 2</a></li>
+    <li><a href="/splat/classique/?mode=C&amp;splats=3&amp;structure=MIX&amp;clues=SENTENCE&amp;mul=0&amp;div=0&amp;add=1&amp;sub=1&amp;deltaMax=15&amp;visibleMin=1&amp;visibleMax=3&amp;totalMin=20&amp;totalMax=60&amp;cards=8&amp;unknown=question&amp;eleve=1">Série 3</a></li>
+    <li><a href="/splat/classique/?mode=C&amp;splats=2&amp;clues=SENTENCE&amp;mul=1&amp;div=1&amp;add=0&amp;sub=0&amp;deltaMax=10&amp;visibleMin=0&amp;visibleMax=0&amp;totalMin=10&amp;totalMax=40&amp;cards=8&amp;unknown=question&amp;eleve=1">Série 4</a></li>
+    <li><a href="/splat/classique/?mode=C&amp;splats=2&amp;clues=SENTENCE&amp;mul=1&amp;div=1&amp;add=1&amp;sub=1&amp;deltaMax=15&amp;visibleMin=0&amp;visibleMax=0&amp;totalMin=15&amp;totalMax=50&amp;cards=8&amp;unknown=question&amp;eleve=1">Série 5</a></li>
+    <li><a href="/splat/classique/?mode=C&amp;splats=3&amp;structure=MIX&amp;clues=SENTENCE&amp;mul=1&amp;div=1&amp;add=1&amp;sub=1&amp;deltaMax=15&amp;visibleMin=1&amp;visibleMax=3&amp;totalMin=20&amp;totalMax=60&amp;cards=8&amp;unknown=question&amp;eleve=1">Série 6</a></li>
+    <li><a href="/splat/classique/?mode=C&amp;splats=2&amp;clues=SENTENCE&amp;mul=0&amp;div=0&amp;add=1&amp;sub=1&amp;deltaMax=30&amp;visibleMin=0&amp;visibleMax=0&amp;totalMin=50&amp;totalMax=100&amp;cards=8&amp;unknown=question&amp;eleve=1">Série 7</a></li>
+    <li><a href="/splat/classique/?mode=C&amp;splats=3&amp;structure=CHAIN&amp;clues=SENTENCE&amp;mul=0&amp;div=0&amp;add=1&amp;sub=1&amp;deltaMax=25&amp;visibleMin=0&amp;visibleMax=0&amp;totalMin=50&amp;totalMax=100&amp;cards=8&amp;unknown=question&amp;eleve=1">Série 8</a></li>
+    <li><a href="/splat/classique/?mode=C&amp;splats=3&amp;structure=MIX&amp;clues=SENTENCE&amp;mul=0&amp;div=0&amp;add=1&amp;sub=1&amp;deltaMax=25&amp;visibleMin=2&amp;visibleMax=3&amp;totalMin=50&amp;totalMax=100&amp;cards=8&amp;unknown=question&amp;eleve=1">Série 9</a></li>
+    <li><a href="/splat/classique/?mode=C&amp;splats=2&amp;clues=SENTENCE&amp;mul=1&amp;div=1&amp;add=0&amp;sub=0&amp;deltaMax=10&amp;visibleMin=0&amp;visibleMax=0&amp;totalMin=50&amp;totalMax=100&amp;cards=8&amp;unknown=question&amp;eleve=1">Série 10</a></li>
+    <li><a href="/splat/classique/?mode=C&amp;splats=2&amp;clues=SENTENCE&amp;mul=1&amp;div=1&amp;add=1&amp;sub=1&amp;deltaMax=30&amp;visibleMin=0&amp;visibleMax=0&amp;totalMin=50&amp;totalMax=100&amp;cards=8&amp;unknown=question&amp;eleve=1">Série 11</a></li>
+    <li><a href="/splat/classique/?mode=C&amp;splats=3&amp;structure=MIX&amp;clues=SENTENCE&amp;mul=1&amp;div=1&amp;add=1&amp;sub=1&amp;deltaMax=25&amp;visibleMin=2&amp;visibleMax=3&amp;totalMin=50&amp;totalMax=100&amp;cards=8&amp;unknown=question&amp;eleve=1">Série 12</a></li>
+    <li><a href="/splat/classique/?mode=C&amp;splats=2&amp;repeat=3&amp;clues=SENTENCE&amp;mul=1&amp;div=1&amp;add=1&amp;sub=1&amp;deltaMax=10&amp;visibleMin=0&amp;visibleMax=0&amp;totalMin=20&amp;totalMax=60&amp;cards=8&amp;unknown=question&amp;eleve=1">Série 13</a></li>
+    <li><a href="/splat/classique/?mode=C&amp;splats=2&amp;noTotal=1&amp;clues=SENTENCE&amp;mul=1&amp;div=1&amp;add=1&amp;sub=1&amp;deltaMax=30&amp;visibleMin=0&amp;visibleMax=0&amp;totalMin=15&amp;totalMax=60&amp;cards=8&amp;unknown=question&amp;eleve=1">Série 14</a></li>
+    <li><a href="/splat/classique/?mode=C&amp;splats=3&amp;structure=MIX&amp;repeat=3&amp;clues=SENTENCE&amp;mul=1&amp;div=1&amp;add=1&amp;sub=1&amp;deltaMax=30&amp;visibleMin=1&amp;visibleMax=3&amp;totalMin=20&amp;totalMax=60&amp;noTotal=1&amp;cards=8&amp;unknown=question&amp;eleve=1">Série 15</a></li>
+    <li><a href="/splat/classique/?mode=C&amp;clues=SENTENCE&amp;splats=2&amp;mul=0&amp;div=0&amp;add=1&amp;sub=1&amp;deltaMax=15&amp;visibleMin=0&amp;visibleMax=0&amp;totalMin=20&amp;totalMax=50&amp;cards=8&amp;unknown=question&amp;eleve=1">Série 16</a></li>
+    <li><a href="/splat/classique/?mode=C&amp;clues=SENTENCE&amp;splats=3&amp;structure=REF&amp;ordre=DESSIN&amp;mul=0&amp;div=0&amp;add=1&amp;sub=1&amp;deltaMax=12&amp;visibleMin=0&amp;visibleMax=0&amp;totalMin=20&amp;totalMax=50&amp;cards=8&amp;unknown=question&amp;eleve=1">Série 17</a></li>
+    <li><a href="/splat/classique/?mode=C&amp;clues=SENTENCE&amp;splats=3&amp;structure=REF&amp;ordre=DESSIN&amp;mul=0&amp;div=0&amp;add=1&amp;sub=1&amp;deltaMax=15&amp;visibleMin=1&amp;visibleMax=3&amp;totalMin=30&amp;totalMax=60&amp;cards=8&amp;unknown=question&amp;eleve=1">Série 18</a></li>
+    <li><a href="/splat/classique/?mode=C&amp;clues=SENTENCE&amp;splats=2&amp;mul=1&amp;div=1&amp;add=0&amp;sub=0&amp;deltaMax=10&amp;visibleMin=0&amp;visibleMax=0&amp;totalMin=20&amp;totalMax=60&amp;vocab=1&amp;cards=8&amp;unknown=question&amp;eleve=1">Série 19</a></li>
+    <li><a href="/splat/classique/?mode=C&amp;clues=SENTENCE&amp;splats=3&amp;structure=REF&amp;ordre=DESSIN&amp;mul=1&amp;div=1&amp;add=1&amp;sub=1&amp;deltaMax=12&amp;visibleMin=0&amp;visibleMax=0&amp;totalMin=20&amp;totalMax=60&amp;cards=8&amp;unknown=question&amp;eleve=1">Série 20</a></li>
+    <li><a href="/splat/classique/?mode=C&amp;clues=SENTENCE&amp;splats=3&amp;structure=REF&amp;ordre=DESSIN&amp;mul=1&amp;div=1&amp;add=1&amp;sub=1&amp;deltaMax=15&amp;visibleMin=1&amp;visibleMax=3&amp;totalMin=30&amp;totalMax=70&amp;cards=8&amp;unknown=question&amp;eleve=1">Série 21</a></li>
+    <li><a href="/splat/classique/?mode=C&amp;clues=SENTENCE&amp;splats=2&amp;repeat=3&amp;mul=1&amp;div=1&amp;add=1&amp;sub=1&amp;deltaMax=10&amp;visibleMin=0&amp;visibleMax=0&amp;totalMin=20&amp;totalMax=60&amp;cards=8&amp;unknown=question&amp;eleve=1">Série 22</a></li>
+    <li><a href="/splat/classique/?mode=C&amp;clues=SENTENCE&amp;splats=2&amp;noTotal=1&amp;mul=1&amp;div=1&amp;add=1&amp;sub=1&amp;deltaMax=30&amp;visibleMin=0&amp;visibleMax=0&amp;totalMin=15&amp;totalMax=60&amp;cards=8&amp;unknown=question&amp;eleve=1">Série 23</a></li>
+    <li><a href="/splat/classique/?mode=C&amp;clues=SENTENCE&amp;splats=2&amp;repeat=3&amp;noTotal=1&amp;mul=1&amp;div=1&amp;add=1&amp;sub=1&amp;deltaMax=20&amp;visibleMin=1&amp;visibleMax=3&amp;totalMin=30&amp;totalMax=70&amp;cards=8&amp;unknown=question&amp;eleve=1">Série 24</a></li>
+    <li><a href="/splat/classique/?mode=C&amp;clues=SENTENCE&amp;splats=3&amp;structure=HASARD&amp;ordre=DESSIN&amp;mul=0&amp;div=0&amp;add=1&amp;sub=1&amp;deltaMax=15&amp;visibleMin=0&amp;visibleMax=0&amp;totalMin=20&amp;totalMax=60&amp;cards=8&amp;unknown=question&amp;eleve=1">Série 25</a></li>
+    <li><a href="/splat/classique/?mode=C&amp;clues=SENTENCE&amp;splats=3&amp;structure=HASARD&amp;ordre=DESORDRE&amp;mul=0&amp;div=0&amp;add=1&amp;sub=1&amp;deltaMax=15&amp;visibleMin=0&amp;visibleMax=0&amp;totalMin=20&amp;totalMax=60&amp;cards=8&amp;unknown=question&amp;eleve=1">Série 26</a></li>
+    <li><a href="/splat/classique/?mode=C&amp;clues=SENTENCE&amp;splats=3&amp;structure=HASARD&amp;ordre=DESORDRE&amp;mul=0&amp;div=0&amp;add=1&amp;sub=1&amp;deltaMax=25&amp;visibleMin=1&amp;visibleMax=3&amp;totalMin=60&amp;totalMax=120&amp;cards=8&amp;unknown=question&amp;eleve=1">Série 27</a></li>
+    <li><a href="/splat/classique/?mode=C&amp;clues=SENTENCE&amp;splats=3&amp;structure=CHAINE&amp;ordre=DESSIN&amp;mul=1&amp;div=1&amp;add=1&amp;sub=1&amp;deltaMax=12&amp;visibleMin=0&amp;visibleMax=0&amp;totalMin=20&amp;totalMax=60&amp;cards=8&amp;unknown=question&amp;eleve=1">Série 28</a></li>
+    <li><a href="/splat/classique/?mode=C&amp;clues=SENTENCE&amp;splats=3&amp;structure=COMPLETE&amp;ordre=DESSIN&amp;mul=1&amp;div=1&amp;add=1&amp;sub=1&amp;deltaMax=12&amp;visibleMin=0&amp;visibleMax=0&amp;totalMin=20&amp;totalMax=60&amp;cards=8&amp;unknown=question&amp;eleve=1">Série 29</a></li>
+    <li><a href="/splat/classique/?mode=C&amp;clues=SENTENCE&amp;splats=2&amp;compose=1&amp;mul=1&amp;div=1&amp;add=1&amp;sub=1&amp;deltaMax=12&amp;visibleMin=0&amp;visibleMax=0&amp;totalMin=20&amp;totalMax=60&amp;cards=8&amp;unknown=question&amp;eleve=1">Série 30</a></li>
+    <li><a href="/splat/classique/?mode=C&amp;clues=SENTENCE&amp;splats=3&amp;structure=HASARD&amp;ordre=DESORDRE&amp;mul=1&amp;div=1&amp;add=1&amp;sub=1&amp;deltaMax=25&amp;visibleMin=1&amp;visibleMax=3&amp;totalMin=60&amp;totalMax=120&amp;cards=8&amp;unknown=question&amp;eleve=1">Série 31</a></li>
+    <li><a href="/splat/classique/?mode=C&amp;clues=SENTENCE&amp;splats=3&amp;structure=HASARD&amp;reunies=1&amp;mul=1&amp;div=1&amp;add=1&amp;sub=1&amp;deltaMax=15&amp;visibleMin=0&amp;visibleMax=0&amp;totalMin=30&amp;totalMax=80&amp;cards=8&amp;unknown=question&amp;eleve=1">Série 32</a></li>
+    <li><a href="/splat/classique/?mode=C&amp;clues=SYMBOL&amp;splats=3&amp;structure=HASARD&amp;mul=1&amp;div=1&amp;add=1&amp;sub=1&amp;deltaMax=15&amp;visibleMin=0&amp;visibleMax=0&amp;totalMin=20&amp;totalMax=60&amp;cards=8&amp;unknown=question&amp;eleve=1">Série 33</a></li>
+    <li><a href="/splat/classique/?mode=C&amp;clues=SENTENCE&amp;splats=3&amp;structure=UNITE&amp;mul=1&amp;div=1&amp;add=1&amp;sub=1&amp;deltaMax=15&amp;visibleMin=0&amp;visibleMax=0&amp;totalMin=30&amp;totalMax=90&amp;cards=8&amp;unknown=question&amp;eleve=1">Série 34</a></li>
   </ul>
 </body>
 </html>

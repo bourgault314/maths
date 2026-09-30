@@ -14,7 +14,7 @@
 <link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png">
 <script>document.documentElement.className += " js";</script>
 <!-- La liste des mondes « en préparation » et la clé de Gwenaël (?essai=1) : en tête de assets/js/splat-etapes.js -->
-<script src="../assets/js/splat-etapes.js?v=20260928-2"></script>
+<script src="../assets/js/splat-etapes.js?v=20260930-1"></script>
 <style>
 :root{
   --page:#f6f8fb; --paper:#ffffff; --ink:#10294a; --muted:#5c6c82; --line:#d9e2ec;
@@ -164,6 +164,7 @@ html.js .series-choix{display:flex;flex-wrap:wrap;gap:10px;margin:18px 0 0}
 .series-choix button:focus-visible{outline:3px solid var(--c-bord);outline-offset:2px}
 html.js .serie > .partie{display:none}
 html.js .serie[hidden]{display:none}
+.ordre{margin:12px 0 0;padding:8px 12px;border-left:4px solid var(--c-plein);background:var(--c-clair);border-radius:0 8px 8px 0;font-size:14.5px;line-height:1.4;font-weight:700;color:var(--c-fonce)}
 .aparte{margin-top:12px;font-size:13.5px;line-height:1.5;color:var(--muted)}
 .note{margin-top:18px;background:var(--paper);border:1px solid var(--line);border-radius:14px;
   padding:12px 16px;box-shadow:var(--shadow)}
@@ -539,13 +540,16 @@ footer a{font-weight:700}
        rebondit », fiches 20 à 24. -->
   <section class="panneau" data-m="3" id="monde-3" data-prepa role="tabpanel" aria-labelledby="onglet-3" hidden>
     <h2 class="monde-nom">Monde 3 · SPLAT! Enquête</h2>
-    <p class="chapo">Les fiches 10 à 24 en trois livrets de 8 pages&nbsp;: un indice relie les taches entre elles — de plus, de moins, puis fois plus, fois moins, puis des taches de même couleur et des enquêtes sans total. En page 2 de chaque livret, un exemple résolu pas à pas.</p>
-    <h3 class="partie">Partie 1 · de plus, de moins <span>la classe, puis «&nbsp;Le défi&nbsp;» (totaux de 50 à 100)</span></h3>
-    <div class="grille n2">
+    <p class="chapo">Six livrets de 8 pages&nbsp;: un indice relie les taches entre elles. En page 2 de chaque livret, un exemple résolu pas à pas.</p>
+    <!-- lot 2 de l'Enquête (30/09/2026) : la progression en six livrets, et l'ordre écrit en clair
+         (demande de Gwenaël : « pour que les gens ne se mélangent pas ») -->
+    <p class="ordre">L'ordre&nbsp;: parties 1, 2, 3 pour tous, puis le deuxième tour 1, 2, 3 pour voir tous les types de problèmes.</p>
+    <h3 class="partie">Pour tous <span>de plus, de moins · fois plus, fois moins · taches de même couleur, sans total</span></h3>
+    <div class="grille">
 
       <article class="liv">
-        <a class="couv-lien" href="/outils/livret_splat_enquete_additif.pdf" target="_blank" rel="noopener" title="Voir le livret SPLAT! Enquête, partie 1 (PDF, 8 pages)">
-          <img class="couv" src="/assets/img/thumbnails/splat/livret-splat-enquete-additif.png?v=2" alt="Couverture du livret SPLAT! Enquête du monde 3" loading="lazy">
+        <a class="couv-lien" href="/outils/livret_splat_enquete_additif.pdf" target="_blank" rel="noopener" title="Voir le livret du monde 3, partie 1 (PDF, 8 pages)">
+          <img class="couv" src="/assets/img/thumbnails/splat/livret-splat-enquete-additif.png?v=3" alt="Couverture du livret SPLAT! Enquête, partie 1 du monde 3" loading="lazy">
         </a>
         <div class="corps">
           <div class="titre"><h3>Partie 1</h3><span class="plage">fiches 10 à 14</span></div>
@@ -556,11 +560,11 @@ footer a{font-weight:700}
               <summary>✅ Les corrigés · 2 livrets</summary>
               <div class="prof-corps">
                 <div class="prof-ligne"><span class="nom">Inconnue <small>«&nbsp;?&nbsp;»</small></span>
-                  <a class="lien-prof" href="/outils/livret_splat_enquete_additif_correction.pdf" target="_blank" rel="noopener" title="Livret corrigé du monde 3, inconnue «&nbsp;?&nbsp;» (PDF, 8 pages)">PDF</a>
-                  <a class="lien-prof" href="/outils/livret_splat_enquete_additif_correction_a_plier.pdf" target="_blank" rel="noopener" title="Livret corrigé du monde 3, inconnue «&nbsp;?&nbsp;», à plier">à plier</a></div>
+                  <a class="lien-prof" href="/outils/livret_splat_enquete_additif_correction.pdf" target="_blank" rel="noopener" title="Livret corrigé du monde 3, partie 1, inconnue «&nbsp;?&nbsp;» (PDF, 8 pages)">PDF</a>
+                  <a class="lien-prof" href="/outils/livret_splat_enquete_additif_correction_a_plier.pdf" target="_blank" rel="noopener" title="Livret corrigé du monde 3, partie 1, inconnue «&nbsp;?&nbsp;», à plier">à plier</a></div>
                 <div class="prof-ligne"><span class="nom">Inconnue <small>en lettre</small></span>
-                  <a class="lien-prof" href="/outils/livret_splat_enquete_additif_correction_lettre.pdf" target="_blank" rel="noopener" title="Livret corrigé du monde 3, inconnue en lettre (PDF, 8 pages)">PDF</a>
-                  <a class="lien-prof" href="/outils/livret_splat_enquete_additif_correction_lettre_a_plier.pdf" target="_blank" rel="noopener" title="Livret corrigé du monde 3, inconnue en lettre, à plier">à plier</a></div>
+                  <a class="lien-prof" href="/outils/livret_splat_enquete_additif_correction_lettre.pdf" target="_blank" rel="noopener" title="Livret corrigé du monde 3, partie 1, inconnue en lettre (PDF, 8 pages)">PDF</a>
+                  <a class="lien-prof" href="/outils/livret_splat_enquete_additif_correction_lettre_a_plier.pdf" target="_blank" rel="noopener" title="Livret corrigé du monde 3, partie 1, inconnue en lettre, à plier">à plier</a></div>
               </div>
             </details>
           </div>
@@ -568,36 +572,8 @@ footer a{font-weight:700}
       </article>
 
       <article class="liv">
-        <a class="couv-lien" href="/outils/livret_splat_enquete_additif_defi.pdf" target="_blank" rel="noopener" title="Voir le livret Le défi du monde 3 (PDF, 8 pages)">
-          <img class="couv" src="/assets/img/thumbnails/splat/livret-splat-enquete-additif-defi.png?v=2" alt="Couverture du livret SPLAT! Enquête, niveau Le défi" loading="lazy">
-        </a>
-        <div class="corps">
-          <div class="titre"><h3>Le défi</h3><span class="plage">totaux de 50 à 100</span></div>
-          <div class="liens">
-            <a class="lien" href="/outils/livret_splat_enquete_additif_defi.pdf" target="_blank" rel="noopener">📙 PDF · 8 pages</a>
-            <a class="lien a3" href="/outils/livret_splat_enquete_additif_defi_a_plier.pdf" target="_blank" rel="noopener">🖨️ Livret à plier</a>
-            <details class="prof">
-              <summary>✅ Les corrigés · 2 livrets</summary>
-              <div class="prof-corps">
-                <div class="prof-ligne"><span class="nom">Inconnue <small>«&nbsp;?&nbsp;»</small></span>
-                  <a class="lien-prof" href="/outils/livret_splat_enquete_additif_defi_correction.pdf" target="_blank" rel="noopener" title="Livret corrigé Le défi du monde 3, inconnue «&nbsp;?&nbsp;» (PDF, 8 pages)">PDF</a>
-                  <a class="lien-prof" href="/outils/livret_splat_enquete_additif_defi_correction_a_plier.pdf" target="_blank" rel="noopener" title="Livret corrigé Le défi du monde 3, inconnue «&nbsp;?&nbsp;», à plier">à plier</a></div>
-                <div class="prof-ligne"><span class="nom">Inconnue <small>en lettre</small></span>
-                  <a class="lien-prof" href="/outils/livret_splat_enquete_additif_defi_correction_lettre.pdf" target="_blank" rel="noopener" title="Livret corrigé Le défi du monde 3, inconnue en lettre (PDF, 8 pages)">PDF</a>
-                  <a class="lien-prof" href="/outils/livret_splat_enquete_additif_defi_correction_lettre_a_plier.pdf" target="_blank" rel="noopener" title="Livret corrigé Le défi du monde 3, inconnue en lettre, à plier">à plier</a></div>
-              </div>
-            </details>
-          </div>
-        </div>
-      </article>
-
-    </div>
-    <h3 class="partie">Partie 2 · fois plus, fois moins <span>la classe, puis «&nbsp;Le défi&nbsp;» (totaux de 50 à 100)</span></h3>
-    <div class="grille n2">
-
-      <article class="liv">
-        <a class="couv-lien" href="/outils/livret_splat_enquete_multiplicatif.pdf" target="_blank" rel="noopener" title="Voir le livret SPLAT! Grande enquête, partie 2 (PDF, 8 pages)">
-          <img class="couv" src="/assets/img/thumbnails/splat/livret-splat-enquete-multiplicatif.png?v=2" alt="Couverture du livret SPLAT! Grande enquête, partie 2 du monde 3" loading="lazy">
+        <a class="couv-lien" href="/outils/livret_splat_enquete_multiplicatif.pdf" target="_blank" rel="noopener" title="Voir le livret du monde 3, partie 2 (PDF, 8 pages)">
+          <img class="couv" src="/assets/img/thumbnails/splat/livret-splat-enquete-multiplicatif.png?v=3" alt="Couverture du livret SPLAT! Grande enquête, partie 2 du monde 3" loading="lazy">
         </a>
         <div class="corps">
           <div class="titre"><h3>Partie 2</h3><span class="plage">fiches 15 à 19</span></div>
@@ -620,36 +596,8 @@ footer a{font-weight:700}
       </article>
 
       <article class="liv">
-        <a class="couv-lien" href="/outils/livret_splat_enquete_multiplicatif_defi.pdf" target="_blank" rel="noopener" title="Voir le livret Le défi du monde 3, partie 2 (PDF, 8 pages)">
-          <img class="couv" src="/assets/img/thumbnails/splat/livret-splat-enquete-multiplicatif-defi.png?v=2" alt="Couverture du livret SPLAT! Grande enquête, niveau Le défi" loading="lazy">
-        </a>
-        <div class="corps">
-          <div class="titre"><h3>Le défi</h3><span class="plage">totaux de 50 à 100</span></div>
-          <div class="liens">
-            <a class="lien" href="/outils/livret_splat_enquete_multiplicatif_defi.pdf" target="_blank" rel="noopener">📙 PDF · 8 pages</a>
-            <a class="lien a3" href="/outils/livret_splat_enquete_multiplicatif_defi_a_plier.pdf" target="_blank" rel="noopener">🖨️ Livret à plier</a>
-            <details class="prof">
-              <summary>✅ Les corrigés · 2 livrets</summary>
-              <div class="prof-corps">
-                <div class="prof-ligne"><span class="nom">Inconnue <small>«&nbsp;?&nbsp;»</small></span>
-                  <a class="lien-prof" href="/outils/livret_splat_enquete_multiplicatif_defi_correction.pdf" target="_blank" rel="noopener" title="Livret corrigé Le défi du monde 3, partie 2, inconnue «&nbsp;?&nbsp;» (PDF, 8 pages)">PDF</a>
-                  <a class="lien-prof" href="/outils/livret_splat_enquete_multiplicatif_defi_correction_a_plier.pdf" target="_blank" rel="noopener" title="Livret corrigé Le défi du monde 3, partie 2, inconnue «&nbsp;?&nbsp;», à plier">à plier</a></div>
-                <div class="prof-ligne"><span class="nom">Inconnue <small>en lettre</small></span>
-                  <a class="lien-prof" href="/outils/livret_splat_enquete_multiplicatif_defi_correction_lettre.pdf" target="_blank" rel="noopener" title="Livret corrigé Le défi du monde 3, partie 2, inconnue en lettre (PDF, 8 pages)">PDF</a>
-                  <a class="lien-prof" href="/outils/livret_splat_enquete_multiplicatif_defi_correction_lettre_a_plier.pdf" target="_blank" rel="noopener" title="Livret corrigé Le défi du monde 3, partie 2, inconnue en lettre, à plier">à plier</a></div>
-              </div>
-            </details>
-          </div>
-        </div>
-      </article>
-
-    </div>
-    <h3 class="partie">Partie 3 · L'enquête rebondit <span>taches de même couleur, puis sans total</span></h3>
-    <div class="grille n2">
-
-      <article class="liv">
-        <a class="couv-lien" href="/outils/livret_splat_enquete_rebondit.pdf" target="_blank" rel="noopener" title="Voir le livret SPLAT! L'enquête rebondit, partie 3 (PDF, 8 pages)">
-          <img class="couv" src="/assets/img/thumbnails/splat/livret-splat-enquete-rebondit.png?v=2" alt="Couverture du livret SPLAT! L'enquête rebondit, partie 3 du monde 3" loading="lazy">
+        <a class="couv-lien" href="/outils/livret_splat_enquete_rebondit.pdf" target="_blank" rel="noopener" title="Voir le livret du monde 3, partie 3 (PDF, 8 pages)">
+          <img class="couv" src="/assets/img/thumbnails/splat/livret-splat-enquete-rebondit.png?v=3" alt="Couverture du livret SPLAT! L'enquête rebondit, partie 3 du monde 3" loading="lazy">
         </a>
         <div class="corps">
           <div class="titre"><h3>Partie 3</h3><span class="plage">fiches 20 à 24</span></div>
@@ -660,11 +608,87 @@ footer a{font-weight:700}
               <summary>✅ Les corrigés · 2 livrets</summary>
               <div class="prof-corps">
                 <div class="prof-ligne"><span class="nom">Inconnue <small>«&nbsp;?&nbsp;»</small></span>
-                  <a class="lien-prof" href="/outils/livret_splat_enquete_rebondit_correction.pdf" target="_blank" rel="noopener" title="Livret corrigé de L'enquête rebondit, inconnue «&nbsp;?&nbsp;» (PDF, 8 pages)">PDF</a>
-                  <a class="lien-prof" href="/outils/livret_splat_enquete_rebondit_correction_a_plier.pdf" target="_blank" rel="noopener" title="Livret corrigé de L'enquête rebondit, inconnue «&nbsp;?&nbsp;», à plier">à plier</a></div>
+                  <a class="lien-prof" href="/outils/livret_splat_enquete_rebondit_correction.pdf" target="_blank" rel="noopener" title="Livret corrigé du monde 3, partie 3, inconnue «&nbsp;?&nbsp;» (PDF, 8 pages)">PDF</a>
+                  <a class="lien-prof" href="/outils/livret_splat_enquete_rebondit_correction_a_plier.pdf" target="_blank" rel="noopener" title="Livret corrigé du monde 3, partie 3, inconnue «&nbsp;?&nbsp;», à plier">à plier</a></div>
                 <div class="prof-ligne"><span class="nom">Inconnue <small>en lettre</small></span>
-                  <a class="lien-prof" href="/outils/livret_splat_enquete_rebondit_correction_lettre.pdf" target="_blank" rel="noopener" title="Livret corrigé de L'enquête rebondit, inconnue en lettre (PDF, 8 pages)">PDF</a>
-                  <a class="lien-prof" href="/outils/livret_splat_enquete_rebondit_correction_lettre_a_plier.pdf" target="_blank" rel="noopener" title="Livret corrigé de L'enquête rebondit, inconnue en lettre, à plier">à plier</a></div>
+                  <a class="lien-prof" href="/outils/livret_splat_enquete_rebondit_correction_lettre.pdf" target="_blank" rel="noopener" title="Livret corrigé du monde 3, partie 3, inconnue en lettre (PDF, 8 pages)">PDF</a>
+                  <a class="lien-prof" href="/outils/livret_splat_enquete_rebondit_correction_lettre_a_plier.pdf" target="_blank" rel="noopener" title="Livret corrigé du monde 3, partie 3, inconnue en lettre, à plier">à plier</a></div>
+              </div>
+            </details>
+          </div>
+        </div>
+      </article>
+
+    </div>
+    <h3 class="partie">Deuxième tour <span>plus dur, les mêmes étoiles&nbsp;: chaînes, je complète, désordre, indices composés, taches réunies, symboles, unité commune</span></h3>
+    <div class="grille">
+
+      <article class="liv">
+        <a class="couv-lien" href="/outils/livret_splat_enquete_additif_tour2.pdf" target="_blank" rel="noopener" title="Voir le livret du monde 3, partie 1, deuxième tour (PDF, 8 pages)">
+          <img class="couv" src="/assets/img/thumbnails/splat/livret-splat-enquete-additif-tour2.png?v=3" alt="Couverture du livret SPLAT! Enquête, partie 1, deuxième tour" loading="lazy">
+        </a>
+        <div class="corps">
+          <div class="titre"><h3>Partie 1 · 2<sup>e</sup> tour</h3><span class="plage">fiches 10d à 14d</span></div>
+          <div class="liens">
+            <a class="lien" href="/outils/livret_splat_enquete_additif_tour2.pdf" target="_blank" rel="noopener">📙 PDF · 8 pages</a>
+            <a class="lien a3" href="/outils/livret_splat_enquete_additif_tour2_a_plier.pdf" target="_blank" rel="noopener">🖨️ Livret à plier</a>
+            <details class="prof">
+              <summary>✅ Les corrigés · 2 livrets</summary>
+              <div class="prof-corps">
+                <div class="prof-ligne"><span class="nom">Inconnue <small>«&nbsp;?&nbsp;»</small></span>
+                  <a class="lien-prof" href="/outils/livret_splat_enquete_additif_tour2_correction.pdf" target="_blank" rel="noopener" title="Livret corrigé du monde 3, partie 1, deuxième tour, inconnue «&nbsp;?&nbsp;» (PDF, 8 pages)">PDF</a>
+                  <a class="lien-prof" href="/outils/livret_splat_enquete_additif_tour2_correction_a_plier.pdf" target="_blank" rel="noopener" title="Livret corrigé du monde 3, partie 1, deuxième tour, inconnue «&nbsp;?&nbsp;», à plier">à plier</a></div>
+                <div class="prof-ligne"><span class="nom">Inconnue <small>en lettre</small></span>
+                  <a class="lien-prof" href="/outils/livret_splat_enquete_additif_tour2_correction_lettre.pdf" target="_blank" rel="noopener" title="Livret corrigé du monde 3, partie 1, deuxième tour, inconnue en lettre (PDF, 8 pages)">PDF</a>
+                  <a class="lien-prof" href="/outils/livret_splat_enquete_additif_tour2_correction_lettre_a_plier.pdf" target="_blank" rel="noopener" title="Livret corrigé du monde 3, partie 1, deuxième tour, inconnue en lettre, à plier">à plier</a></div>
+              </div>
+            </details>
+          </div>
+        </div>
+      </article>
+
+      <article class="liv">
+        <a class="couv-lien" href="/outils/livret_splat_enquete_multiplicatif_tour2.pdf" target="_blank" rel="noopener" title="Voir le livret du monde 3, partie 2, deuxième tour (PDF, 8 pages)">
+          <img class="couv" src="/assets/img/thumbnails/splat/livret-splat-enquete-multiplicatif-tour2.png?v=3" alt="Couverture du livret SPLAT! Grande enquête, partie 2, deuxième tour" loading="lazy">
+        </a>
+        <div class="corps">
+          <div class="titre"><h3>Partie 2 · 2<sup>e</sup> tour</h3><span class="plage">fiches 15d à 19d</span></div>
+          <div class="liens">
+            <a class="lien" href="/outils/livret_splat_enquete_multiplicatif_tour2.pdf" target="_blank" rel="noopener">📙 PDF · 8 pages</a>
+            <a class="lien a3" href="/outils/livret_splat_enquete_multiplicatif_tour2_a_plier.pdf" target="_blank" rel="noopener">🖨️ Livret à plier</a>
+            <details class="prof">
+              <summary>✅ Les corrigés · 2 livrets</summary>
+              <div class="prof-corps">
+                <div class="prof-ligne"><span class="nom">Inconnue <small>«&nbsp;?&nbsp;»</small></span>
+                  <a class="lien-prof" href="/outils/livret_splat_enquete_multiplicatif_tour2_correction.pdf" target="_blank" rel="noopener" title="Livret corrigé du monde 3, partie 2, deuxième tour, inconnue «&nbsp;?&nbsp;» (PDF, 8 pages)">PDF</a>
+                  <a class="lien-prof" href="/outils/livret_splat_enquete_multiplicatif_tour2_correction_a_plier.pdf" target="_blank" rel="noopener" title="Livret corrigé du monde 3, partie 2, deuxième tour, inconnue «&nbsp;?&nbsp;», à plier">à plier</a></div>
+                <div class="prof-ligne"><span class="nom">Inconnue <small>en lettre</small></span>
+                  <a class="lien-prof" href="/outils/livret_splat_enquete_multiplicatif_tour2_correction_lettre.pdf" target="_blank" rel="noopener" title="Livret corrigé du monde 3, partie 2, deuxième tour, inconnue en lettre (PDF, 8 pages)">PDF</a>
+                  <a class="lien-prof" href="/outils/livret_splat_enquete_multiplicatif_tour2_correction_lettre_a_plier.pdf" target="_blank" rel="noopener" title="Livret corrigé du monde 3, partie 2, deuxième tour, inconnue en lettre, à plier">à plier</a></div>
+              </div>
+            </details>
+          </div>
+        </div>
+      </article>
+
+      <article class="liv">
+        <a class="couv-lien" href="/outils/livret_splat_enquete_rebondit_tour2.pdf" target="_blank" rel="noopener" title="Voir le livret du monde 3, partie 3, deuxième tour (PDF, 8 pages)">
+          <img class="couv" src="/assets/img/thumbnails/splat/livret-splat-enquete-rebondit-tour2.png?v=3" alt="Couverture du livret SPLAT! L'enquête rebondit, partie 3, deuxième tour" loading="lazy">
+        </a>
+        <div class="corps">
+          <div class="titre"><h3>Partie 3 · 2<sup>e</sup> tour</h3><span class="plage">fiches 20d à 24d</span></div>
+          <div class="liens">
+            <a class="lien" href="/outils/livret_splat_enquete_rebondit_tour2.pdf" target="_blank" rel="noopener">📙 PDF · 8 pages</a>
+            <a class="lien a3" href="/outils/livret_splat_enquete_rebondit_tour2_a_plier.pdf" target="_blank" rel="noopener">🖨️ Livret à plier</a>
+            <details class="prof">
+              <summary>✅ Les corrigés · 2 livrets</summary>
+              <div class="prof-corps">
+                <div class="prof-ligne"><span class="nom">Inconnue <small>«&nbsp;?&nbsp;»</small></span>
+                  <a class="lien-prof" href="/outils/livret_splat_enquete_rebondit_tour2_correction.pdf" target="_blank" rel="noopener" title="Livret corrigé du monde 3, partie 3, deuxième tour, inconnue «&nbsp;?&nbsp;» (PDF, 8 pages)">PDF</a>
+                  <a class="lien-prof" href="/outils/livret_splat_enquete_rebondit_tour2_correction_a_plier.pdf" target="_blank" rel="noopener" title="Livret corrigé du monde 3, partie 3, deuxième tour, inconnue «&nbsp;?&nbsp;», à plier">à plier</a></div>
+                <div class="prof-ligne"><span class="nom">Inconnue <small>en lettre</small></span>
+                  <a class="lien-prof" href="/outils/livret_splat_enquete_rebondit_tour2_correction_lettre.pdf" target="_blank" rel="noopener" title="Livret corrigé du monde 3, partie 3, deuxième tour, inconnue en lettre (PDF, 8 pages)">PDF</a>
+                  <a class="lien-prof" href="/outils/livret_splat_enquete_rebondit_tour2_correction_lettre_a_plier.pdf" target="_blank" rel="noopener" title="Livret corrigé du monde 3, partie 3, deuxième tour, inconnue en lettre, à plier">à plier</a></div>
               </div>
             </details>
           </div>
