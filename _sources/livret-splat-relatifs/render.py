@@ -597,10 +597,11 @@ def geste(op, lettre, premier_ajout=True):
 
 def ecrit(ligne):
     """une ligne de l'outil, pour le texte : le tiret de Poppins, la lettre arrondie, insécable"""
-    out = ligne.replace("−", TIRET).replace(" ", NB)
+    # le tiret d'un nombre négatif reste collé à son nombre (sinon « (– » en bout de ligne, 30/09/2026)
+    out = ligne.replace("−", TIRET + "\u2060").replace(" ", NB)
     return re.sub(r"([\U0001D400-\U0001D7FF])", r'<span class="x">\1</span>', out)
 
-def textes_exemple(ex, lettre=False):
+def textes_exemple(ex, lettre=False, court=False):
     """Le texte « Comment ça marche ? », écrit à partir de la carte que l'outil vient de dessiner
     et de sa résolution : il ne peut pas mentir sur ses nombres."""
     g, d, x, v = ex["gauche"], ex["droite"], ex["x"], ex["variable"]
@@ -633,6 +634,12 @@ def textes_exemple(ex, lettre=False):
         nom_opp = f'<span class="nw">{TIRET}{let}</span>'
         cache = (f"Ici, elles sont transparentes&nbsp;: sous une tache {let}, on lit {signe(x)}"
                  + (f"&nbsp;; sous une tache {nom_opp}, on lit {signe(-x)}" if opp else "") + ". ")
+    elif court and opp:
+        # livrets « défi » (30/09/2026) : l'exemple a ses taches dévoilées sans lettre ; la phrase
+        # courte, pour que la couverture du défi 2 (deux taches « opposé ») tienne sur la page
+        nom_opp = f"«{NB}opposé{NB}»"
+        cache = (f"Ici, elles sont transparentes&nbsp;: on lit {signe(x)} sous chaque tache, et une tache "
+                 f"«{NB}opposé{NB}» cache donc {signe(-x)}. ")
     else:
         nom_opp = f"«{NB}opposé{NB}»"
         cache = (f"Ici, elles sont transparentes&nbsp;: une tache cache {signe(x)}"
@@ -749,9 +756,11 @@ async def pages(v, tmp, jeu, corr=None):
             await pg.wait_for_timeout(800)
             return pg
 
-        # --- l'exemple de couverture, dessiné par l'outil
-        pg = await page_outil(f"/outils/splat_equations.html?{v['exemple']}&view=equation"
-                              + ("&taches=lettre" if v.get("lettre") else ""))
+        # --- l'exemple de couverture, dessiné par l'outil. Ses taches sont DÉVOILÉES, comme dans un
+        # corrigé : jamais la lettre dessus, même dans un livret « défi » (30/09/2026, décision de
+        # Gwenaël : « −𝑏 » au-dessus d'une tache dévoilée se voit mal) — rien sur la tache,
+        # « opposé » sur la tache opposée, comme les corrigés et les livrets de base.
+        pg = await page_outil(f"/outils/splat_equations.html?{v['exemple']}&view=equation")
         ex = await pg.evaluate(JS_EXEMPLE)
         await pg.close()
         if ex.get("erreur"):
@@ -836,7 +845,7 @@ async def pages(v, tmp, jeu, corr=None):
         # Poppins dessine ce signe trop court, on écrit le tiret « – » (même règle qu'au monde 5).
         svg2 = ex["svg2"].replace(">− ", ">– ")
         couv = dict(svg1=ex["svg1"], vb1=ex["vb1"], svg2=svg2, vb2=ex["vb2"],
-                    sur=v["sur"], accroche=v["accroche"], intro=textes_exemple(ex, v.get("lettre", False)),
+                    sur=v["sur"], accroche=v["accroche"], intro=textes_exemple(ex, court=v.get("lettre", False)),
                     sommaire=[[f["n"], f["t"], f["resume"]] for f in v["fiches"]],
                     prof=dict(PROF, dit=CORRECTION["dit"]) if corr else None,
                     lettre=v.get("lettre", False))
