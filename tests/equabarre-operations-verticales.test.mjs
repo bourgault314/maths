@@ -9,8 +9,10 @@ const equasplat = await readFile(new URL("../outils/equasplat.html", import.meta
 // côté du signe égal. ÉquaBarre les compose comme ÉquaSplat : flèche droite,
 // poussée vers le bord extérieur, visible dans les deux vues.
 
-test("la flèche des opérations est droite, jamais un SVG courbé", () => {
-  assert.match(equabarre, /const arrow = `<span class="operationArrow" aria-hidden="true">↓<\/span>`;/);
+// 30/09/2026 (choix de Gwenaël) : au téléphone, « ↓ » devient une petite flèche courbe tenue dans
+// la ligne d'opération (operationCurveSvg), dans les deux outils ; la vue Rédaction garde « ↓ ».
+test("la flèche des opérations : « ↓ » et la petite courbe du téléphone, pas l'ancienne flèche SVG", () => {
+  assert.match(equabarre, /const arrow = dir => `<span class="operationArrow" aria-hidden="true">↓<\/span>\$\{operationCurveSvg\(dir\)\}`;/);
   assert.ok(!/opArrowSvg/.test(equabarre), "plus aucune trace de l'ancienne flèche SVG");
   assert.ok(!/operationArrowSvg/.test(equabarre), "la fabrique de flèche courbée est retirée");
 });

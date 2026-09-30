@@ -117,8 +117,8 @@ test("les opérations encadrent les équations dans le bon ordre", () => {
   const beginPending = functionSource("beginPendingShareConclusion");
 
   assert.doesNotMatch(operationRow, /viewMode !== "redaction"/);
-  assert.match(operationRow, /opLeft[\s\S]*opLabel[\s\S]*\$\{arrow\}/);
-  assert.match(operationRow, /opRight[\s\S]*\$\{arrow\}[\s\S]*opLabel/);
+  assert.match(operationRow, /opLeft[\s\S]*opLabel[\s\S]*\$\{arrow\(-1\)\}/);
+  assert.match(operationRow, /opRight[\s\S]*\$\{arrow\(1\)\}[\s\S]*opLabel/);
   assert.match(html, /\.operationWrap\{[^}]*gap:5px;[^}]*white-space:nowrap;/s);
   assert.doesNotMatch(html, /\.operationWrap\{[^}]*justify-content:space-between;/s);
   assert.match(beginPending, /makeBothSidesOperation\(`÷ \$\{pending\.count\}`\)/);

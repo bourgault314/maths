@@ -93,7 +93,7 @@ test("les opérations faites aux deux membres apparaissent entre les équations"
   assert.match(html, /<span class="operationArrow" aria-hidden="true">↓<\/span>/);
   assert.match(html, /\.operationCell\.opLeft\{\s*justify-content:flex-start;\s*padding-left:3px;/);
   assert.match(html, /\.operationCell\.opRight\{\s*justify-content:flex-end;\s*padding-right:3px;/);
-  assert.match(html, /Même opération dans les deux membres/);
+  assert.match(html, /Même opération des deux côtés/);
   assert.match(html, /recordEquationStep\(makeBothSidesOperation\(opLabel\)\)/);
   assert.match(html, /recordEquationStep\(makeBothSidesOperation\("×\(−1\)"\)\)/);
   assert.match(html, /state\.stepOps\.push\(makeBothSidesOperation\(`÷ \$\{pending\.count\}`\)\)/);
