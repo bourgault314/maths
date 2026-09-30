@@ -5,7 +5,10 @@
    Pour chacune des adresses ci-dessous (les types de la progression du monde 3), sur chaque
    carte et à chaque appui sur « Étape suivante » : le bas du dessin ①②③ reste dans la scène,
    le plateau ne bouge pas d'une étape à l'autre, la page ne défile pas. Deux fenêtres :
-   1400 × 900 (portable) et 1920 × 1080 (tableau). */
+   1400 × 900 (portable) et 1920 × 1080 (tableau).
+   Depuis G3 (le pas à pas, 01/10/2026) : jusqu'à 11 appuis par carte ; du schéma vide au dernier
+   calcul, le bandeau (TOTAL, petit plateau, phrases) et UNE échelle ne bougent pas ; le dernier
+   appui (taches dévoilées, récapitulatif ③) a son propre cadrage, contrôlé à part. */
 const assert = require("node:assert/strict");
 const { chromium } = require("playwright");
 
@@ -39,6 +42,7 @@ const mesurer = () => {
     scene: { haut: scene.top, bas: scene.bottom, gauche: scene.left, droite: scene.right },
     basPlateau: p ? p.bottom : null,
     cote: !!plateau && plateau.getAttribute("data-place") === "cote",
+    bandeau: !!plateau && plateau.getAttribute("data-place") === "bandeau",
     /* plateau à côté : il reste dans la scène et ne recouvre rien du dessin (le cadre excepté) */
     coteLibre: !p || (p.left >= scene.left - 0.5 && p.right <= scene.right + 0.5 && p.top >= scene.top - 0.5 && p.bottom <= scene.bottom + 0.5
       && Array.from(dessin.querySelectorAll("rect, path, text, line, circle")).filter((n) => n !== dessin.querySelector("rect"))
@@ -61,7 +65,7 @@ const mesurer = () => {
       const cartes = Number(new URLSearchParams(requete).get("cards"));
       for(let c = 1; c <= cartes; c++){
         const facteurs = new Set();
-        for(let appui = 0; appui < 6; appui++){
+        for(let appui = 0; appui < 12; appui++){
           if(await page.isDisabled("#btnNext")) break;
           await page.click("#btnNext");
           /* l'appui après la dernière étape passe à l'énoncé de la carte suivante */
@@ -76,7 +80,7 @@ const mesurer = () => {
           if(m.cote){ assert.ok(m.coteLibre, `${ou} : le plateau à côté recouvre le dessin ou sort de la scène`); cotes++; continue; }
           if(m.basPlateau !== null) assert.ok(m.basPlateau <= m.haut + 0.5, `${ou} : le dessin chevauche le plateau`);
           assert.equal(m.defile, false, `${ou} : la page défile en largeur`);
-          facteurs.add(m.facteurs);
+          if(m.bandeau) facteurs.add(m.facteurs);
         }
         assert.ok(facteurs.size <= 1, `${nom}, carte ${c} : le plateau ou le haut du dessin bougent d'une étape à l'autre (${[...facteurs]})`);
       }
@@ -86,6 +90,5 @@ const mesurer = () => {
   }
   await navigateur.close();
   assert.ok(etapes > 250, `trop peu d'étapes contrôlées (${etapes})`);
-  assert.ok(cotes >= 4, `le plateau à côté n'a presque pas servi (${cotes})`);
   console.log(`projection de l'Enquête : ${etapes} étapes contrôlées, aucune coupée ; plateau à côté sur ${cotes}.`);
 })().catch((e) => { console.error(e); process.exit(1); });

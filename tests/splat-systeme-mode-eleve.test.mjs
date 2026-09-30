@@ -234,6 +234,9 @@ test("eleveVoirSchema : un appui par cadre, le bouton s'efface au dernier cadre 
     ${fn("eleveInfosTableau")}
     ${fn("eleveSchemaEtapes")}
     function eleveDessinerSchema(card){ dessins.push(eleveSchemaEtape); }
+    /* la place du schéma sur ordinateur (lot G3) se mesure au navigateur : pas ici */
+    const reserves = [];
+    function eleveSchemaReserverOrdinateur(card){ reserves.push(card); }
     ${fn("eleveProposerSchema")}
     ${fn("eleveVoirSchema")}
     return { proposer: eleveProposerSchema, voir: eleveVoirSchema, dessins, etape: () => eleveSchemaEtape };
