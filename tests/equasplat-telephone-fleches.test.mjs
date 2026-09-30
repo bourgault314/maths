@@ -77,3 +77,37 @@ test("ÉquaBarre, l'outil jumeau, reçoit les mêmes changements (choix de Gwena
     .match(/"[^"\n]*membre[^"\n]*"|`[^`\n]*membre[^`\n]*`|>[^<\n]*membre[^<\n]*</g) || [];
   assert.deepEqual(affiches, []);
 });
+
+/* Retours de Gwenaël du 30/09 au soir (sur son téléphone) :
+   - la petite courbe de droite touchait le dernier nombre de la ligne du dessus (« 41 » après +6𝑛) :
+     elle ne monte plus du tout dans cette ligne (aucune marge négative en haut), dans les deux outils ;
+   - ÉquaBarre : « Enlever des deux côtés » choisi prenait le fond pêche du survol (collé après le
+     toucher) avec l'écriture blanche de l'outil choisi, illisible. Mesuré au navigateur avant/après
+     (Chromium 390 et 1440) ; ce test garde l'ordre des règles, que le navigateur applique. */
+function regleCourbe(page){
+  const i = page.indexOf(".equationOpRow .operationCurve{");
+  assert.notEqual(i, -1);
+  return page.slice(i, page.indexOf("}", i));
+}
+
+test("la petite courbe ne monte plus dans la ligne du dessus (ÉquaSplat et ÉquaBarre)", async () => {
+  const barre = await readFile(new URL("../outils/equabarre.html", import.meta.url), "utf8");
+  for(const page of [html, barre]){
+    const regle = regleCourbe(page);
+    const marge = regle.match(/margin:(-?\d+)(?:px)? /);
+    assert.ok(marge, "la courbe garde une marge écrite");
+    assert.ok(Number(marge[1]) >= 0, "pas de marge négative en haut");
+    assert.match(regle, /height:26px;/);
+  }
+});
+
+test("ÉquaBarre : « Enlever des deux côtés » choisi reste bleu sous le doigt", async () => {
+  const barre = await readFile(new URL("../outils/equabarre.html", import.meta.url), "utf8");
+  const survol = barre.indexOf(".globalToolBtn:hover{");
+  const choisi = barre.indexOf(".globalToolBtn.active,\n  .globalToolBtn.active:hover{");
+  assert.notEqual(survol, -1);
+  assert.ok(choisi > survol, "la règle de l'outil choisi vient après le survol pêche");
+  const regle = barre.slice(choisi, barre.indexOf("}", choisi));
+  assert.match(regle, /background:linear-gradient\(180deg,#60a5fa,#3b82f6\);/);
+  assert.match(regle, /color:#fff;/);
+});

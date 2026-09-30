@@ -2425,11 +2425,15 @@
       display:none;
     }
 
-    /* La courbe déborde un peu vers la ligne d'au-dessus, jamais sur celle d'en dessous. */
+    /* La courbe ne monte plus dans la ligne d'au-dessus (retour de Gwenaël, 30/09 : à droite,
+       elle touchait le dernier nombre, « 41 » après +6𝑛) ; un peu plus courte, elle descend
+       juste vers la ligne d'en dessous. */
     .equationOpRow .operationCurve{
       display:block;
       flex:none;
-      margin:-9px 0 -3px;
+      width:14px;
+      height:26px;
+      margin:0 0 -3px;
     }
 
     .equationHistory.defile{
