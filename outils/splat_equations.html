@@ -5869,7 +5869,7 @@ function eqSignedStepActionText(card, revealState, opts = {}){
     case "final":{
       const coeff = Math.round(Number(state.remainingCoeff) || 1);
       if(Math.abs(coeff) > 1) return "Je divise par " + formatSignedIntegerLabel(coeff) + " : je garde un groupe.";
-      if(coeff === -1) return "Je divise par −1.";
+      if(coeff === -1) return "Je prends l’opposé : je multiplie par −1.";
       return "Je lis la réponse.";
     }
     case "verify":
@@ -9859,7 +9859,8 @@ function eqSignedSixCorrectionLinesOps(eq, varChar){
 }
 
 /* L'opération faite des deux côtés pour passer d'une ligne à la suivante, lue dans les
-   deux lignes elles-mêmes : « + 4𝑡 », « − 31 » (ajouter −31, c'est enlever 31), « ÷ (−2) ».
+   deux lignes elles-mêmes : « + 4𝑡 », « − 31 » (ajouter −31, c'est enlever 31), « ÷ (−2) »,
+   « × (−1) » pour passer de −𝑥 à 𝑥.
    null quand on n'a fait que regrouper (la ligne telle qu'on la voit → la ligne réduite).
    Sert au corrigé imprimé ET, depuis le 28/09/2026, aux flèches de l'écran. */
 function eqSignedLineOperation(lineA, lineB, varChar){
@@ -9875,6 +9876,9 @@ function eqSignedLineOperation(lineA, lineB, varChar){
   const ref = b[0] !== 0 ? [a[0], b[0]] : [a[2], b[2]];
   const d = ref[1] !== 0 ? ref[0] / ref[1] : NaN;
   if(Number.isInteger(d) && d !== 0 && d !== 1 && a.every((v, j) => Math.abs(v - b[j] * d) < 1e-9)){
+    // 30/09/2026, décision de Gwenaël : passer de −𝑥 à 𝑥, c'est prendre l'opposé, « × (−1) »
+    // (comme le bouton « Prendre l'opposé » d'ÉquaSplat), plus « ÷ (−1) ».
+    if(d === -1) return "× (" + moins + "1)";
     return d < 0 ? "÷ (" + moins + Math.abs(d) + ")" : "÷ " + d;
   }
   return null;

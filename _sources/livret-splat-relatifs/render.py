@@ -4,7 +4,7 @@
 Régénère les deux livrets « SPLAT! Relatifs » (monde 6, 8 pages chacun) et leurs corrigés.
 
     python3 render.py                 (les DEUX livrets, élève et corrigé : 8 PDF)
-    python3 render.py livret1         (un seul : livret1 | livret2)
+    python3 render.py livret1         (un seul : livret1 | livret2 | defi1 | defi2)
     python3 render.py --eleve         (seulement les livrets de l'élève)
     python3 render.py --correction    (seulement les livrets corrigés)
     python3 render.py --qr            (en refabriquant d'abord les QR codes)
@@ -15,6 +15,14 @@ Produit, à la racine du dépôt :
     outils/livret_splat_relatifs_1_correction.pdf        le corrigé, par l'équation
     outils/livret_splat_relatifs_1_correction_a_plier.pdf
     outils/livret_splat_relatifs_2… (idem pour le livret 2)
+    outils/livret_splat_relatifs_defi_1…  les deux livrets « Le défi » et leurs corrigés
+    outils/livret_splat_relatifs_defi_2…  (python3 render.py defi1 defi2)
+
+LES DEUX LIVRETS « LE DÉFI » (28/09/2026) — un par livret, les mêmes fiches 38 à 43, la même
+étoile (page courte ?f=38d … 43d) : des jetons partout (2 ou 3 par plateau, vert + vert, rouge +
+rouge, vert + rouge), un partage à chaque carte (jusqu'à 11), et la LETTRE sur les taches —
+« 𝑥 » sur une tache, « −𝑥 » sur une tache opposée (réglage « taches=lettre » de l'outil, décision
+de Gwenaël du 28/09). Chaque fiche = six séries de 2 cartes (voir FICHES_DEFI).
 
 LE MONDE 6 (lot R2, 26/09/2026) — deux parties, un livret chacune, trois fiches de 12 cartes :
   - livret 1, « l'inconnue d'un seul côté » : 38 Les jetons rouges arrivent, 39 Des négatifs
@@ -96,6 +104,49 @@ FICHES = [
 ]
 PAR_N = {f["n"]: f for f in FICHES}
 
+# ------------------------------------------------------------------ les deux livrets « Le défi »
+# Décisions de Gwenaël (27 et 28/09/2026) : deux défis, un par livret ; les mêmes numéros de fiche
+# et la même étoile que la fiche de base ; plusieurs jetons par plateau, avec les trois cas
+# (vert + vert, rouge + rouge, vert + rouge) « pour qu'il y ait du calcul » ; de grands partages,
+# en mettant beaucoup de taches d'un côté et des taches opposées de l'autre (11 au plus : l'outil
+# ne met jamais autant de taches des deux côtés) ; « −𝑥 » sur les taches opposées.
+# Les 72 cartes ont été choisies une à une (LISTE-annotee-defi-monde6-72-equations.md, hors dépôt) :
+# 2 ou 3 jetons sur chaque plateau qui en a (2 à 60, jamais rond, jamais deux égaux sur un
+# plateau, jamais 4 et −4 ensemble, jamais le même jeton des deux côtés) ; chaque cas de jetons au
+# moins 3 fois par fiche ; solution de 6 à 19 en valeur absolue, jamais multiple de 5, 5 à 7
+# négatives par fiche, jamais deux fois la même sur une page ; un partage à chaque carte ; des
+# jetons rouges sur chaque carte des fiches 38 et 39 ; aucun 69 ni 88, calculs compris ; 72
+# équations différentes, aucune dans les livrets de base ; jamais la même lettre deux fois de
+# suite, au plus deux fois par fiche. Défi 1 retrié le 30/09 (choix de Gwenaël) : au plus UNE carte
+# par page dont un plateau fait 99 ou −99, et jamais deux fois les mêmes jetons sur un plateau dans
+# le livret. Fiche 42 retriée le 30/09 (« adoucir la 42 ») : partages jusqu'à 11 gardés, aucun
+# nombre écrit au-dessus de 130. Un test les épingle contre la page courte : NE PAS changer
+# une graine sans refaire le tri, la page courte et les PDF.
+def defi(form, opposes, taches_max, graine):
+    return (f"mode=EQPMSTEP&form={form}&opposites={opposes}&tasksMax={taches_max}&visibleMin=2&visibleMax=3"
+            f"&beadMax=60&totalMin=-99&totalMax=99&cards=2&seed={graine}&unknown=letter")
+
+FICHES_DEFI = [
+    dict(n=38, t="Les jetons rouges arrivent", qr="38d", parcours="m4e1", resume="De deux à quatre taches, des jetons partout.",
+         parties=[defi("ONE_SIDE", "off", 2, 44030), defi("ONE_SIDE", "off", 2, 8660), defi("ONE_SIDE", "off", 3, 82272),
+                  defi("ONE_SIDE", "off", 3, 221984), defi("ONE_SIDE", "off", 4, 818278), defi("ONE_SIDE", "off", 4, 795165)]),
+    dict(n=39, t="Des négatifs partout", qr="39d", parcours="m4e2", resume="De quatre à six taches.",
+         parties=[defi("ONE_SIDE", "off", 4, 860755), defi("ONE_SIDE", "off", 5, 1069517), defi("ONE_SIDE", "off", 5, 336376),
+                  defi("ONE_SIDE", "off", 6, 22735), defi("ONE_SIDE", "off", 6, 188521), defi("ONE_SIDE", "off", 6, 658265)]),
+    dict(n=40, t="La tache opposée", qr="40d", parcours="m4e3", resume="Des taches opposées, puis mélangées.",
+         parties=[defi("ONE_SIDE", "all", 3, 2143), defi("ONE_SIDE", "all", 6, 203376), defi("ONE_SIDE", "all", 6, 95302),
+                  defi("ONE_SIDE", "mix", 6, 78126), defi("ONE_SIDE", "mix", 6, 47553), defi("ONE_SIDE", "mix", 6, 42934)]),
+    dict(n=41, t="Des taches sur les deux plateaux", qr="41d", parcours="m4e4", resume="On partage en 2 ou 3, puis en 4 ou 5.",
+         parties=[defi("BOTH", "off", 6, 683733), defi("BOTH", "off", 6, 737002), defi("BOTH", "off", 6, 727902),
+                  defi("BOTH", "off", 6, 140599), defi("BOTH", "off", 6, 2020572), defi("BOTH", "off", 6, 1442085)]),
+    dict(n=42, t="Des taches opposées sur un plateau", qr="42d", parcours="m4e5", resume="On partage jusqu'en 11.",
+         parties=[defi("BOTH", "auto", 6, 1612397), defi("BOTH", "auto", 6, 1117425), defi("BOTH", "auto", 6, 152444),
+                  defi("BOTH", "auto", 6, 84834), defi("BOTH", "auto", 6, 1551361), defi("BOTH", "auto", 6, 304888)]),
+    dict(n=43, t="Le grand mélange", qr="43d", parcours="m4e6", resume="Tout mélangé, de grands partages.",
+         parties=[defi("BOTH", "mix", 6, 47650), defi("BOTH", "all", 6, 215905), defi("BOTH", "mix", 6, 437190),
+                  defi("BOTH", "auto", 6, 475954), defi("BOTH", "all", 6, 242294), defi("BOTH", "mix", 6, 1752214)]),
+]
+
 # ------------------------------------------------------------------ le dos : « Encore des cartes ! »
 # Comme au monde 5 : trois séries par livret, de SIX équations tirées au hasard aux réglages
 # d'une fiche (sans graine, sans solution nulle) et jouées aussitôt dans le jeu de l'élève
@@ -116,6 +167,14 @@ SERIES = {
     "4": [sans_graine(P(41, 0), SERIE_CARTES)],
     "5": [sans_graine(P(42, 0), SERIE_CARTES)],
     "6": [sans_graine(P(43, 0), 2), sans_graine(P(43, 1), 2), sans_graine(P(43, 3), 2)],
+    # le dos des livrets « Le défi » : deux séries chacun (comme le défi du monde 5), aux réglages
+    # du défi — défi 1 : d1 un seul plateau, d2 la tache opposée ; défi 2 : d3 les deux plateaux,
+    # d4 le grand mélange
+    "d1": [sans_graine(defi("ONE_SIDE", "off", 6, 0), SERIE_CARTES)],
+    "d2": [sans_graine(defi("ONE_SIDE", "all", 6, 0), 3), sans_graine(defi("ONE_SIDE", "mix", 6, 0), 3)],
+    "d3": [sans_graine(defi("BOTH", "off", 6, 0), SERIE_CARTES)],
+    "d4": [sans_graine(defi("BOTH", "mix", 6, 0), 2), sans_graine(defi("BOTH", "all", 6, 0), 2),
+           sans_graine(defi("BOTH", "auto", 6, 0), 2)],
 }
 
 def cible_serie(s):
@@ -188,6 +247,52 @@ CSS_PROF = """
 .ident .champ.prof small{font-size:12.5px;font-weight:700;color:#475569;margin-left:2.5mm}
 .ident .champ.prof small::before{content:"— "}
 """
+
+# ------------------------------------------------------------------ les deux livrets « Le défi »
+# La lettre sur les taches (« lettre=True » : « taches=lettre » pour les fiches de l'élève,
+# JS_LETTRE pour la couverture et le dos, la grande tache du bandeau garde « −𝑥 »). PAS pour les
+# fiches des corrigés (30/09/2026, décision de Gwenaël : « −𝑐 » au-dessus d'une tache dévoilée se
+# voit mal) : elles font comme les corrigés des livrets de base, rien sur la tache, « opposé » sur
+# la tache opposée. Exemples de
+# couverture, sur des cartes qui ne sont dans aucune fiche (render.py le vérifie) :
+#  - défi 1 : 18 − 21 = 3𝑏 − 𝑏 − 9 − 8, 𝑏 = 7 — trois taches 𝑏 et une tache −𝑏 sur le même
+#    plateau, deux jetons de chaque côté, un partage en 2 (graine 275618) ;
+#  - défi 2 : −2𝑛 − 9 + 2 = 𝑛 − 3 + 17, 𝑛 = −7 — deux taches −𝑛 d'un côté, une tache 𝑛 de
+#    l'autre, un partage en 3 (graine 284089).
+# (Choisies parmi les plus courtes à écrire : l'équation de la couverture reste grande.)
+EXEMPLE_D1 = ("mode=EQPMSTEP&form=ONE_SIDE&opposites=mix&tasksMax=6&visibleMin=2&visibleMax=3&beadMax=60"
+              "&totalMin=-99&totalMax=99&cards=1&seed=275618&unknown=letter")
+EXEMPLE_D2 = ("mode=EQPMSTEP&form=BOTH&opposites=auto&tasksMax=6&visibleMin=2&visibleMax=3&beadMax=60"
+              "&totalMin=-99&totalMax=99&cards=1&seed=284089&unknown=letter")
+DEFI_PAR_N = {f["n"]: f for f in FICHES_DEFI}
+# Le dos d'un défi : deux séries au lieu de trois, donc deux cases plus larges ; des QR de 32 mm
+# (36 mm au défi du monde 5, mais le dos des relatifs a un rappel de plus : à 36 mm, il déborde).
+CSS_DOS_DEFI = """
+.niveaux{gap:6mm}
+.niv img{width:32mm;height:32mm}
+"""
+X_HTML = '<span class="x">𝑥</span>'
+# Les équations du défi sont plus longues : la fenêtre de l'équation s'élargit (70 → 84 mm) pour
+# qu'elle reste aussi grande que sur les livrets de base ; la carte a de la place à perdre.
+CSS_COUV_DEFI = ".carte.corr{flex:0 0 84mm}"
+VUES["defi1"] = dict(VUES["livret1"],
+    sortie="livret_splat_relatifs_defi_1",
+    sur="Mon livret · Monde 6 · Livret 1 · Le défi",
+    accroche="Des jetons partout, de grands partages…<br>et la lettre sur les taches&nbsp;!",
+    fiches=[DEFI_PAR_N[38], DEFI_PAR_N[39], DEFI_PAR_N[40]], exemple=EXEMPLE_D1, lettre=True,
+    dos=[("Un seul plateau", "Des jetons partout et jusqu'à six taches, comme les fiches&nbsp;38 et&nbsp;39.", "d1"),
+         ("La tache –" + X_HTML, "Des taches opposées, seules puis mélangées, comme la fiche&nbsp;40.", "d2")],
+    css_dos=CSS_DOS_DEFI, css_couv=CSS_COUV_DEFI,
+)
+VUES["defi2"] = dict(VUES["livret2"],
+    sortie="livret_splat_relatifs_defi_2",
+    sur="Mon livret · Monde 6 · Livret 2 · Le défi",
+    accroche="Les deux plateaux, de grands partages…<br>et la lettre sur les taches&nbsp;!",
+    fiches=[DEFI_PAR_N[41], DEFI_PAR_N[42], DEFI_PAR_N[43]], exemple=EXEMPLE_D2, lettre=True,
+    dos=[("Les deux plateaux", "Des taches à gauche et à droite, comme les fiches&nbsp;41 et&nbsp;42.", "d3"),
+         ("Le grand mélange", "Tout mélangé, de grands partages, comme la fiche&nbsp;43.", "d4")],
+    css_dos=CSS_DOS_DEFI, css_couv=CSS_COUV_DEFI,
+)
 
 # ------------------------------------------------------------------ la page de l'outil
 # Le QR prend place dans le bandeau de chaque fiche, tout à droite (les logos sont retirés au rendu).
@@ -451,6 +556,7 @@ CSS_X = (
     '@font-face{font-family:"x-arrondi";src:' + X_SOURCES + ';unicode-range:U+1D400-1D7FF;size-adjust:120%}\n'
     '@font-face{font-family:"x-arrondi";font-style:italic;src:' + X_SOURCES + ';unicode-range:U+1D400-1D7FF;size-adjust:120%}\n'
     'svg text[font-family*="Times"]{font-family:"x-arrondi","Times New Roman",Times,serif !important}\n'
+    '.nw{white-space:nowrap;font-style:normal}\n'
 )
 
 MOTS = {1: "une", 2: "deux", 3: "trois", 4: "quatre", 5: "cinq", 6: "six"}
@@ -466,7 +572,8 @@ def decrit(cote, lettre=None):
     m = []
     t, o = cote["taches"], cote["opposees"]
     nt = f"{NB}{lettre}" if lettre else ""
-    no = f"{NB}{TIRET}{lettre}" if lettre else f"{NB}«{NB}opposé{NB}»"
+    # (pas de <span> dans la première phrase : ils y font un paragraphe ; « –𝑥 » ne se coupe pas)
+    no = f'{NB}<i class="nw">{TIRET}{lettre}</i>' if lettre else f"{NB}«{NB}opposé{NB}»"
     if t - o:
         m.append(f"une tache{nt}" if t - o == 1 else f"{MOTS[t - o]} taches{nt}")
     if o:
@@ -477,8 +584,10 @@ def decrit(cote, lettre=None):
 
 def geste(op, lettre, premier_ajout=True):
     """« + 6 » → « on ajoute 6 sur les deux plateaux » (« puis 6 » pour un second ajout),
-    « ÷ 2 » → « on partage en 2 », « ÷ (−3) » → « on divise par –3 »."""
+    « ÷ 2 » → « on partage en 2 », « ÷ (−3) » → « on divise par –3 », « × (−1) » → « on prend l'opposé »."""
     op = op.replace("−", "-")
+    if op.startswith("×"):                      # « × (−1) » (30/09/2026) : −𝑥 → 𝑥
+        return "on prend l'<b>opposé</b>"
     if op.startswith("÷"):
         d = op[1:].strip().strip("()")
         return f"on <b>divise</b> par {TIRET}{d[1:]}" if d.startswith("-") else f"on <b>partage</b> en {d}"
@@ -507,14 +616,23 @@ def textes_exemple(ex, lettre=False):
             gestes[-1] += ", puis " + g_.split("</b> ", 1)[1].replace(" sur les deux plateaux", "")
             continue
         gestes.append(g_)
+    # « sur les deux plateaux » une seule fois, au premier geste qui le dit (défi 2 : « on ajoute
+    # 2𝑛 sur les deux plateaux, on enlève 14, puis on partage en 3 »)
+    vu = False
+    for k, g_ in enumerate(gestes):
+        if " sur les deux plateaux" in g_:
+            if vu:
+                gestes[k] = g_.replace(" sur les deux plateaux", "")
+            vu = True
     phrase_gestes = ", ".join(gestes[:-1]) + ", puis " + gestes[-1] if len(gestes) > 1 else gestes[0]
-    opp = (g["opposees"] + d["opposees"]) > 0
+    n_opp = g["opposees"] + d["opposees"]
+    opp = n_opp > 0
     if lettre:
         # livret 2 (lot R3) : la lettre est sur les taches, et sous une tache « –𝑏 » dévoilée
         # l'outil montre la valeur de –𝑏
-        nom_opp = f"{TIRET}{let}"
+        nom_opp = f'<span class="nw">{TIRET}{let}</span>'
         cache = (f"Ici, elles sont transparentes&nbsp;: sous une tache {let}, on lit {signe(x)}"
-                 + (f"&nbsp;; sous la tache {nom_opp}, on lit {signe(-x)}" if opp else "") + ". ")
+                 + (f"&nbsp;; sous une tache {nom_opp}, on lit {signe(-x)}" if opp else "") + ". ")
     else:
         nom_opp = f"«{NB}opposé{NB}»"
         cache = (f"Ici, elles sont transparentes&nbsp;: une tache cache {signe(x)}"
@@ -524,7 +642,8 @@ def textes_exemple(ex, lettre=False):
     return (f"Sur cette carte, il y a la même quantité à gauche et à droite. À gauche, {decrit(g, d_let)}&nbsp;; "
             f"à droite, {decrit(d, d_let)}."
             "\n      <span>Les taches cachent toutes le même nombre&nbsp;: c'est l'<b>inconnue</b>, la lettre "
-            f"{let}" + (f" — sauf la tache {nom_opp}, qui cache son opposé" if opp else "") + ". "
+            f"{let}" + ((f" — sauf les taches {nom_opp}, qui cachent son opposé" if n_opp > 1 else
+                         f" — sauf la tache {nom_opp}, qui cache son opposé") if opp else "") + ". "
             + cache
             + f"L'<b>équation</b> s'écrit {ecrit(lignes[0])}&nbsp;: " + phrase_gestes
             + f" — {let}{NB}={NB}{signe(x)}.</span>")
@@ -560,6 +679,19 @@ def series_du_jeu():
         out[m.group(1)] = d["serie"]
     return out
 
+def series_du_defi():
+    """Les séries des livrets « Le défi », relues dans la page courte des QR (?f=38d … 43d) :
+    { "38d" : [cartes] }. Elles ne sont pas sur la carte des mondes."""
+    courte = (RACINE / "splat" / "relatifs" / "livret" / "index.html").read_text(encoding="utf-8")
+    out = {}
+    for m in re.finditer(r'"(\d+d)": "(/outils/equasplat\.html\?eleve=1&parcours=(m4e\d)#data=([^"]+))"', courte):
+        b64 = m.group(4) + "=" * (-len(m.group(4)) % 4)
+        d = json.loads(base64.urlsafe_b64decode(b64).decode("utf-8"))
+        if d.get("parcours") != m.group(3):
+            raise SystemExit(f"page courte, ?f={m.group(1)} : l'étoile de l'adresse et celle de la série diffèrent")
+        out[m.group(1)] = d["serie"]
+    return out
+
 def cle(carte):
     """Une équation, sans tenir compte du côté ni de l'ordre des jetons."""
     cote = lambda r: (sum(1 for t in r if t == "x"), sum(1 for t in r if t == "-x"),
@@ -576,8 +708,9 @@ def fabrique_qr():
         q = qrcode.QRCode(error_correction=ERROR_CORRECT_M, box_size=12, border=2)
         q.add_data(url); q.make(fit=True)
         q.make_image(fill_color="black", back_color="white").save(dossier / nom)
-    for f in FICHES:
-        ecrire(lien_fiche(f["n"]), f"fiche{f['n']}.png")
+    for f in FICHES + FICHES_DEFI:
+        q = f.get("qr", f["n"])
+        ecrire(lien_fiche(q), f"fiche{q}.png")
     for s in SERIES:
         ecrire(lien_serie(s), f"serie-{s}.png")
     ecrire(LIEN_UNIVERS, "univers.png")
@@ -627,20 +760,20 @@ async def pages(v, tmp, jeu, corr=None):
         # --- les trois fiches
         for i, f in enumerate(v["fiches"]):
             titre = f"Fiche {f['n']} — {f['t']}"
-            pg = await page_outil(adresse_fiche(f, corr["imprime"] if corr else "statement", v.get("lettre", False))
+            pg = await page_outil(adresse_fiche(f, corr["imprime"] if corr else "statement", v.get("lettre", False) and not corr)
                                   + "&imprimer=1")
             etat = await pg.evaluate(JS_FICHE)
             if etat["parPage"] != 6 or etat["feuilles"] != 2 or etat["vides"] != 0 or len(etat["cartes"]) != 12:
                 raise SystemExit(f"{titre} : {etat['parPage']}/page, {etat['feuilles']} feuilles, "
                                  f"{len(etat['cartes'])} cartes, {etat['vides']} cases vides")
-            if etat["cartes"] != jeu[f["parcours"]]:
+            if etat["cartes"] != jeu[f.get("qr", f["parcours"])]:
                 raise SystemExit(f"{titre} : les cartes ne sont pas celles du jeu en ligne ({f['parcours']})")
-            cartes_livret[str(f["n"])] = etat["cartes"]
+            cartes_livret[f.get("qr", str(f["n"]))] = etat["cartes"]
             r = await pg.evaluate(JS_BIS, f"Fiche {f['n']} bis — {f['t']}" + (" — Correction" if corr else ""))
             if r != "ok":
                 raise SystemExit(f"{titre}, page « bis » : {r}")
             await pg.add_style_tag(content=CSS_QR + CSS_TITRE_OUTIL + (CSS_TITRE_CORR if corr else ""))
-            qr = f"{qrweb}/fiche{f['n']}.png"
+            qr = f"{qrweb}/fiche{f.get('qr', f['n'])}.png"
             for js, arg, quoi in ((JS_TITRE_OUTIL, TITRE_BANDEAU, "bandeau"),
                                   (JS_QR, [qr] + ([QR_PROF, QR_ELEVE] if corr else [QR_ELEVE, None]), "QR"),
                                   (JS_SANS_LOGO, None, "logos")):
@@ -707,12 +840,12 @@ async def pages(v, tmp, jeu, corr=None):
                     sommaire=[[f["n"], f["t"], f["resume"]] for f in v["fiches"]],
                     prof=dict(PROF, dit=CORRECTION["dit"]) if corr else None,
                     lettre=v.get("lettre", False))
-        await pdf_html("couverture.html", tmp / "p1.pdf", JS_COUV, couv)
+        await pdf_html("couverture.html", tmp / "p1.pdf", JS_COUV, couv, v.get("css_couv"))
         fleches, equation = dessins_dos(ex)
         dos = dict(niveaux=[[nom, desc, f"{qrweb}/serie-{s}.png"] for nom, desc, s in v["dos"]],
                    univers=f"{qrweb}/univers.png", suite=list(v["suite"]),
                    fleches=fleches, equation=equation, lettre=v.get("lettre", False))
-        await pdf_html("dos.html", tmp / "p8.pdf", JS_DOS, dos)
+        await pdf_html("dos.html", tmp / "p8.pdf", JS_DOS, dos, v.get("css_dos"))
         await nav.close()
     return ex, cartes_livret
 
@@ -766,6 +899,10 @@ def main():
     jeu = series_du_jeu()
     if sorted(jeu) != sorted(f["parcours"] for f in FICHES):
         raise SystemExit(f"séries du jeu relues dans la carte des mondes : {sorted(jeu)}")
+    defi_en_ligne = series_du_defi()
+    if sorted(defi_en_ligne) != sorted(f["qr"] for f in FICHES_DEFI):
+        raise SystemExit(f"séries du défi relues dans la page courte : {sorted(defi_en_ligne)}")
+    jeu.update(defi_en_ligne)
     srv = serveur()
     rendus = {}
     try:
