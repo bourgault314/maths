@@ -2416,6 +2416,28 @@
     line-height:.8;
   }
 
+  .operationCurve{
+    display:none;
+  }
+
+  @media (max-width:760px){
+    .equationOpRow .operationArrow{
+      display:none;
+    }
+
+    /* La courbe déborde un peu vers la ligne d'au-dessus, jamais sur celle d'en dessous. */
+    .equationOpRow .operationCurve{
+      display:block;
+      flex:none;
+      margin:-9px 0 -3px;
+    }
+
+    .equationHistory.defile{
+      -webkit-mask-image:linear-gradient(to bottom, transparent 0, #000 34px);
+      mask-image:linear-gradient(to bottom, transparent 0, #000 34px);
+    }
+  }
+
   @media (max-width:1050px){
     main:is(.activeMode,.receptionLayout).viewRedaction .stage:not(:fullscreen){
       height:auto;
@@ -4717,9 +4739,9 @@
         </div>
 
         <div class="toolRow toolRowEquation" aria-label="Actions sur l’équation">
-          <button class="toolBtn" id="toolDelete" type="button"><span class="desktopLabel">Enlever dans chaque membre</span><span class="mobileLabel">Enlever des deux côtés</span></button>
-          <button class="toolBtn addBothToolBtn" id="toolAddBoth" type="button" title="Ajouter le même jeton dans les deux membres"><span class="desktopLabel">Ajouter aux deux membres</span><span class="mobileLabel">Ajouter des deux côtés</span></button>
-          <button class="toolBtn oppositeBothToolBtn" id="toolOppositeBoth" type="button" title="Prendre l’opposé de chaque membre">Prendre l’opposé</button>
+          <button class="toolBtn" id="toolDelete" type="button"><span class="desktopLabel">Enlever des deux côtés</span><span class="mobileLabel">Enlever des deux côtés</span></button>
+          <button class="toolBtn addBothToolBtn" id="toolAddBoth" type="button" title="Ajouter le même jeton des deux côtés"><span class="desktopLabel">Ajouter des deux côtés</span><span class="mobileLabel">Ajouter des deux côtés</span></button>
+          <button class="toolBtn oppositeBothToolBtn" id="toolOppositeBoth" type="button" title="Prendre l’opposé de chaque côté">Prendre l’opposé</button>
           <button class="toolBtn undoToolBtn" id="toolUndo" type="button" title="Annuler la dernière action"><span class="desktopUndoLabel">Annuler</span><span class="mobileUndoLabel"><svg class="undoIcon" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 14 4 9l5-5"></path><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"></path></svg><span>Annuler</span></span></button>
           <button class="toolBtn restartToolBtn" id="btnStageReset" type="button" title="Recommencer la même équation">Recommencer</button>
         </div>
@@ -4782,8 +4804,8 @@
 
 <dialog id="addBothDialog">
   <div class="dialogInner">
-    <h2 class="dialogTitle">Ajouter aux deux membres</h2>
-    <div class="dialogText" id="addBothDialogText">Ajoute le même jeton numérique dans chaque membre.</div>
+    <h2 class="dialogTitle">Ajouter des deux côtés</h2>
+    <div class="dialogText" id="addBothDialogText">Ajoute le même jeton numérique de chaque côté.</div>
     <label>Valeur du jeton</label>
     <input id="addBothInput" type="number" min="-99" max="99" inputmode="numeric" autocomplete="off" />
     <div class="fusionFeedback" id="addBothFeedback"></div>
@@ -5619,7 +5641,7 @@
       .replace(/\s+/g, "");
 
     if(!compact){
-      throw new Error(`Le membre ${sideName} est vide.`);
+      throw new Error(`Le côté ${sideName} est vide.`);
     }
     if(/[(),;]/.test(compact) || /[\/]/.test(compact)){
       throw new Error("Utilise seulement des sommes simples : par exemple 2x + 4 = 18.");
@@ -5634,7 +5656,7 @@
 
     const matches = [...compact.matchAll(/([+-])([^+-]+)/g)];
     if(!matches.length || matches.map(m => m[0]).join("") !== compact){
-      throw new Error(`Expression non reconnue dans le membre ${sideName}.`);
+      throw new Error(`Expression non reconnue du côté ${sideName}.`);
     }
 
     let coef = 0;
@@ -5645,7 +5667,7 @@
       const sign = m[1] === "-" ? -1 : 1;
       let term = m[2];
       if(!term){
-        throw new Error(`Il manque un terme dans le membre ${sideName}.`);
+        throw new Error(`Il manque un terme du côté ${sideName}.`);
       }
       const letters = term.match(/[a-zA-Z]/g) || [];
       if(letters.length > 1){
@@ -5662,18 +5684,18 @@
         rawCoef = rawCoef.replace(/\*/g, "");
         const n = rawCoef === "" ? 1 : Number(rawCoef);
         if(!Number.isInteger(n)){
-          throw new Error(`Coefficient non reconnu dans le membre ${sideName}.`);
+          throw new Error(`Coefficient non reconnu du côté ${sideName}.`);
         }
         const signedCoef = sign * n;
         coef += signedCoef;
         if(signedCoef !== 0) pieces.push({type:"x", coef:signedCoef});
       }else{
         if(term.includes("*")){
-          throw new Error(`Produit numérique inutile dans le membre ${sideName}. Écris directement le résultat.`);
+          throw new Error(`Produit numérique inutile du côté ${sideName}. Écris directement le résultat.`);
         }
         const n = Number(term);
         if(!Number.isInteger(n)){
-          throw new Error(`Nombre non reconnu dans le membre ${sideName}.`);
+          throw new Error(`Nombre non reconnu du côté ${sideName}.`);
         }
         const signed = sign * n;
         constant += signed;
@@ -6059,7 +6081,7 @@
       numerator = rightValue - b;
       denominator = a - rightA;
       if(denominator === 0){
-        return {ok:false, message:"Équation refusée : les coefficients des deux membres sont identiques, donc on n’a pas une solution unique utilisable ici."};
+        return {ok:false, message:"Équation refusée : les coefficients des deux côtés sont identiques, donc on n’a pas une solution unique utilisable ici."};
       }
     }else{
       numerator = rightValue - b;
@@ -6558,11 +6580,26 @@
     return terms.map(term => `<span class="terme">${escapeHtml(term)}</span>`).join(" ");
   }
 
+  /* PETITE FLÈCHE COURBE (téléphone, 30/09/2026, choix de Gwenaël). Les grandes flèches de
+     l'ordinateur vivent dans les marges de l'équation : au téléphone, ces marges faisaient
+     passer l'équation à un terme par ligne. On garde donc la ligne « −54 » entre deux
+     équations, et on y remplace « ↓ » par une petite courbe qui s'ouvre vers l'extérieur,
+     pointe vers le bas : à gauche elle bombe à gauche, à droite elle bombe à droite. */
+  function operationCurveSvg(dir){
+    const trait = dir < 0 ? "M 13 2 Q 1 15 13 28" : "M 3 2 Q 15 15 3 28";
+    const pointe = dir < 0 ? "M 6.8 25.6 L 13 28 L 12.6 21.4" : "M 9.2 25.6 L 3 28 L 3.4 21.4";
+    return `<svg class="operationCurve" viewBox="0 0 16 30" width="16" height="30" aria-hidden="true" focusable="false">`
+      + `<path d="${trait}" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>`
+      + `<path d="${pointe}" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+  }
+
   function renderOperationRow(operation){
     if(!operation || operation.type !== "bothSides" || !operation.label) return "";
     const label = escapeHtml(operation.label);
-    const arrow = `<span class="operationArrow" aria-hidden="true">↓</span>`;
-    return `<div class="equationOpRow" aria-label="Même opération dans les deux membres : ${label}"><span class="operationCell opLeft"><span class="operationWrap"><span class="opLabel">${label}</span>${arrow}</span></span><span class="eq"></span><span class="operationCell opRight"><span class="operationWrap">${arrow}<span class="opLabel">${label}</span></span></span></div>`;
+    // « ↓ » en vue Rédaction (choix du 23/08) ; au téléphone, une petite flèche courbe (30/09),
+    // de la même forme que les flèches de l'ordinateur et des corrigés. Le style choisit.
+    const arrow = dir => `<span class="operationArrow" aria-hidden="true">↓</span>${operationCurveSvg(dir)}`;
+    return `<div class="equationOpRow" aria-label="Même opération des deux côtés : ${label}"><span class="operationCell opLeft"><span class="operationWrap"><span class="opLabel">${label}</span>${arrow(-1)}</span></span><span class="eq"></span><span class="operationCell opRight"><span class="operationWrap">${arrow(1)}<span class="opLabel">${label}</span></span></span></div>`;
   }
 
   function renderEquationHistory(){
@@ -6590,7 +6627,18 @@
     if(fitEquationText(equationHistory.querySelector(".equationList"))) drawOperationArrowsOverlay();
     if(finishEquationFit(equationList)) drawOperationArrowsOverlay();
     equationHistory.scrollTop = equationHistory.scrollHeight;
+    markEquationHistoryScrolled();
   }
+
+  /* LA LIGNE D'AVANT S'ESTOMPE (téléphone, 30/09/2026, choix de Gwenaël). Le cadre de
+     l'équation montre la dernière ligne ; celle d'avant, qui ne tient qu'à moitié, était
+     tranchée net au milieu des chiffres. Quand le cadre a défilé, son haut s'estompe
+     (.equationHistory.defile, style au téléphone seulement) ; revenu tout en haut, rien ne
+     s'estompe, pour ne pas pâlir la première ligne. */
+  function markEquationHistoryScrolled(){
+    equationHistory.classList.toggle("defile", equationHistory.scrollTop > 2);
+  }
+  equationHistory.addEventListener("scroll", markEquationHistoryScrolled, {passive:true});
 
   /* UNE LIGNE TROP LONGUE (29/09/2026, choix de Gwenaël). fitEquationText (partagé avec
      ÉquaBarre) rapetisse l'écriture jusqu'aux deux tiers, la ligne mesurée sur une seule ligne.
@@ -7080,7 +7128,7 @@
   function applyGroup(){
     const info = groupSelectionInfo();
     if(!info.ok){
-      if(groupFeedback) groupFeedback.textContent = "Sélectionne au moins deux jetons du même membre.";
+      if(groupFeedback) groupFeedback.textContent = "Sélectionne au moins deux jetons du même côté.";
       return;
     }
 
@@ -8295,6 +8343,18 @@
   function selectionRingGap(){ return selectionRingIsFine() ? 6 : 12; }
   function selectionRingClass(base){ return selectionRingIsFine() ? `${base} fineRing` : base; }
 
+  /* UN NOMBRE TIENT DANS SON JETON (30/09/2026). « −54 » (trois signes) débordait du cercle,
+     surtout depuis que les jetons rapetissent avec beaucoup de taches. Le nombre garde sa
+     taille normale, et ne rapetisse que s'il dépasse 1,6 fois le rayon du jeton. */
+  function fitTokenLabel(label, r){
+    if(!label || typeof label.getComputedTextLength !== "function") return;
+    const largeur = label.getComputedTextLength();
+    const max = r * 1.6;
+    if(!(largeur > max)) return;
+    const taille = parseFloat(getComputedStyle(label).fontSize);
+    if(Number.isFinite(taille)) label.style.fontSize = `${(taille * max / largeur).toFixed(1)}px`;
+  }
+
   function drawItem(side, item, pos, selectedIds, groupSelectedIds){
     const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
     if(item.type === "token") g.classList.add("tokenDragGroup");
@@ -8364,7 +8424,7 @@
         circle.style.fill = "rgba(27,102,255,0.18)";
         circle.style.stroke = "rgba(27,102,255,0.58)";
       }else{
-        drawText(pos.cx, pos.cy + 2, formatSignedNumber(item.value), "tokenText", g);
+        fitTokenLabel(drawText(pos.cx, pos.cy + 2, formatSignedNumber(item.value), "tokenText", g), pos.r);
       }
       if(item.removed){
         const overlay = document.createElementNS("http://www.w3.org/2000/svg", "circle");
@@ -8709,11 +8769,11 @@
     const v = currentVar();
     if(isRelativeUniverse()){
       addBothDialogText.textContent = canAddX
-        ? "Ajoute le même jeton numérique, ou la même tache, dans chaque membre."
-        : "Ajoute le même jeton dans chaque membre. Tu peux écrire une valeur positive ou négative.";
+        ? "Ajoute le même jeton numérique, ou la même tache, de chaque côté."
+        : "Ajoute le même jeton de chaque côté. Tu peux écrire une valeur positive ou négative.";
       addBothInput.min = "-99";
     }else{
-      addBothDialogText.textContent = "Ajoute le même jeton positif dans chaque membre.";
+      addBothDialogText.textContent = "Ajoute le même jeton positif de chaque côté.";
       addBothInput.min = "1";
     }
     addBothInput.max = "99";
@@ -8948,7 +9008,7 @@
         const selection = selectedDeletePiecesBySide();
         if(actionMode === "delete" && !selection.left.length && !selection.right.length) return;
       }else if(actionMode !== "delete"){
-        setInstruction("Avec les petites billes, utilise surtout&nbsp;<strong>Enlever dans chaque membre</strong>, puis&nbsp;<strong>Faire des paquets</strong>&nbsp;quand il ne reste que des taches d’un côté.");
+        setInstruction("Avec les petites billes, utilise surtout&nbsp;<strong>Enlever des deux côtés</strong>, puis&nbsp;<strong>Faire des paquets</strong>&nbsp;quand il ne reste que des taches d’un côté.");
       }
     }
 
@@ -8997,8 +9057,8 @@
       const selected = selectedGroupPieces();
       if(selected.length === 0){
         setInstruction(oppositeXEnabled()
-          ? "Sélectionne plusieurs jetons numériques d’un même membre, ou une paire de taches opposées."
-          : "Sélectionne plusieurs jetons numériques d’un même membre.");
+          ? "Sélectionne plusieurs jetons numériques d’un même côté, ou une paire de taches opposées."
+          : "Sélectionne plusieurs jetons numériques d’un même côté.");
         return;
       }
 
@@ -9018,7 +9078,7 @@
 
       if(!info.ok){
         let message = "Sélectionne au moins deux éléments compatibles.";
-        if(info.reason === "differentSides") message = "Regroupe seulement des éléments du même membre.";
+        if(info.reason === "differentSides") message = "Regroupe seulement des éléments du même côté.";
         else if(info.reason === "mixedTypes") message = "Ne mélange pas jetons numériques et taches.";
         else if(info.reason === "notZeroX") message = "Pour regrouper des taches, sélectionne autant de taches positives que de taches opposées.";
         else if(info.reason === "oppositeDisabled") message = `Les taches opposées doivent être activées pour regrouper ${unknownHtml()} et −${unknownHtml()}.`;
@@ -9056,8 +9116,8 @@
       const {left, right} = selectedDeletePiecesBySide();
       if(left.length === 0 && right.length === 0){
         setInstruction(oppositeXEnabled()
-          ? `Sélectionne la même quantité dans les deux membres, ou une paire ${unknownHtml()} / −${unknownHtml()} dans un même membre.`
-          : "Sélectionne la même quantité dans les deux membres.");
+          ? `Sélectionne la même quantité des deux côtés, ou une paire ${unknownHtml()} / −${unknownHtml()} d’un même côté.`
+          : "Sélectionne la même quantité des deux côtés.");
         return;
       }
       if(zeroInfo.ok){
@@ -9075,12 +9135,12 @@
         return;
       }
       if(left.length === 0 || right.length === 0){
-        let message = "Sélectionne maintenant l’autre membre.";
+        let message = "Sélectionne maintenant l’autre côté.";
         if(oppositeXEnabled() && (left.length || right.length)){
           const selected = left.length ? left : right;
           if(selected.every(p => p.type === "x")){
             const coef = selected.reduce((sum,p)=>sum + xSign(p), 0);
-            if(coef !== 0) message = `Pour annuler dans un même membre, sélectionne autant de taches ${unknownHtml()} que de taches −${unknownHtml()}.`;
+            if(coef !== 0) message = `Pour annuler d’un même côté, sélectionne autant de taches ${unknownHtml()} que de taches −${unknownHtml()}.`;
           }
         }
         setInstruction(message);
@@ -9107,7 +9167,7 @@
         let reason = "Les deux quantités sélectionnées ne sont pas identiques.";
         if(info.reason === "differentCounts") reason = "Il faut le même nombre de taches de chaque côté.";
         else if(info.reason === "differentXCoef") reason = "Les taches sélectionnées ne représentent pas la même quantité d’inconnues.";
-        else if(info.reason === "zeroXSelection") reason = `Pour annuler une paire nulle, sélectionne les taches ${unknownHtml()} et −${unknownHtml()} dans un seul même membre.`;
+        else if(info.reason === "zeroXSelection") reason = `Pour annuler une paire nulle, sélectionne les taches ${unknownHtml()} et −${unknownHtml()} d’un seul côté.`;
         else if(info.reason === "differentSums") reason = "Les jetons sélectionnés ne font pas la même somme.";
         else if(info.reason === "mixedTypes") reason = "Ne mélange pas taches et jetons numériques.";
         setInstruction(reason);
@@ -9331,7 +9391,7 @@
     if(equationWritingModeEl) equationWritingModeEl.disabled = !relative;
 
     if(toolAddBoth){
-      toolAddBoth.title = relative ? "Ajouter un jeton positif ou négatif aux deux membres" : "Ajouter un jeton positif aux deux membres";
+      toolAddBoth.title = relative ? "Ajouter un jeton positif ou négatif des deux côtés" : "Ajouter un jeton positif des deux côtés";
     }
     if(toolOppositeBoth){
       toolOppositeBoth.style.display = allowOppositeX ? "" : "none";

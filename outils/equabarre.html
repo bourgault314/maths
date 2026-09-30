@@ -2834,6 +2834,28 @@
     line-height:.8;
   }
 
+  .operationCurve{
+    display:none;
+  }
+
+  @media (max-width:760px){
+    .equationOpRow .operationArrow{
+      display:none;
+    }
+
+    /* La courbe déborde un peu vers la ligne d'au-dessus, jamais sur celle d'en dessous. */
+    .equationOpRow .operationCurve{
+      display:block;
+      flex:none;
+      margin:-9px 0 -3px;
+    }
+
+    .equationHistory.defile{
+      -webkit-mask-image:linear-gradient(to bottom, transparent 0, #000 34px);
+      mask-image:linear-gradient(to bottom, transparent 0, #000 34px);
+    }
+  }
+
   .stage.detailedView:fullscreen:not(.emptyState){
     display:grid !important;
     grid-template-columns:minmax(520px,1fr) minmax(420px,560px);
@@ -3750,7 +3772,7 @@
         <button class="toolBtn" id="toolMove" type="button">Déplacer</button>
       </div>
       <div class="toolBarRow toolBarRowGlobal">
-        <button class="toolBtn globalToolBtn" id="toolDelete" type="button"><span class="desktopLabel">Enlever dans chaque membre</span><span class="mobileLabel">Enlever des deux côtés</span></button>
+        <button class="toolBtn globalToolBtn" id="toolDelete" type="button"><span class="desktopLabel">Enlever des deux côtés</span><span class="mobileLabel">Enlever des deux côtés</span></button>
         <button class="toolBtn undoToolBtn" id="toolUndo" type="button" title="Annuler la dernière action"><span class="desktopLabel">↺ Annuler</span><span class="mobileLabel">Annuler</span></button>
         <button class="toolBtn restartToolBtn" id="toolRestart" type="button" title="Revenir au schéma de départ"><span class="desktopLabel">↺ Recommencer</span><span class="mobileLabel">Recommencer</span></button>
       </div>
@@ -4340,7 +4362,7 @@
     }
 
     if(moveSelection.side !== side){
-      setStatus("On déplace seulement à l’intérieur d’un même membre.");
+      setStatus("On déplace seulement à l’intérieur d’un même côté.");
       render();
       return;
     }
@@ -4709,7 +4731,7 @@
       }
 
       let reason = "Sélectionne au moins deux nombres du même côté.";
-      if(info.reason === "oneSide") reason = "Pour regrouper, les nombres doivent être dans le même membre.";
+      if(info.reason === "oneSide") reason = "Pour regrouper, les nombres doivent être du même côté.";
       if(info.reason === "numbersOnly") reason = "On regroupe seulement des nombres connus.";
       setInstruction(reason);
       const clear = document.createElement("button");
@@ -4736,7 +4758,7 @@
 
     if(actionMode === "move"){
       if(!moveSelection){
-        setInstruction("Clique une case, puis une autre case du même membre pour les échanger.");
+        setInstruction("Clique une case, puis une autre case du même côté pour les échanger.");
         actionZone.innerHTML = "";
         return;
       }
@@ -4840,11 +4862,26 @@
       .replace(/"/g, "&quot;");
   }
 
+  /* PETITE FLÈCHE COURBE (téléphone, 30/09/2026, choix de Gwenaël). Les grandes flèches de
+     l'ordinateur vivent dans les marges de l'équation : au téléphone, ces marges faisaient
+     passer l'équation à un terme par ligne. On garde donc la ligne « −54 » entre deux
+     équations, et on y remplace « ↓ » par une petite courbe qui s'ouvre vers l'extérieur,
+     pointe vers le bas : à gauche elle bombe à gauche, à droite elle bombe à droite. */
+  function operationCurveSvg(dir){
+    const trait = dir < 0 ? "M 13 2 Q 1 15 13 28" : "M 3 2 Q 15 15 3 28";
+    const pointe = dir < 0 ? "M 6.8 25.6 L 13 28 L 12.6 21.4" : "M 9.2 25.6 L 3 28 L 3.4 21.4";
+    return `<svg class="operationCurve" viewBox="0 0 16 30" width="16" height="30" aria-hidden="true" focusable="false">`
+      + `<path d="${trait}" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>`
+      + `<path d="${pointe}" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+  }
+
   function renderOperationRow(operation){
     if(!operation || operation.type !== "bothSides" || !operation.label) return "";
     const label = escapeHtml(operation.label);
-    const arrow = `<span class="operationArrow" aria-hidden="true">↓</span>`;
-    return `<div class="equationOpRow" aria-label="Même opération dans les deux membres : ${label}"><span class="operationCell opLeft"><span class="operationWrap"><span class="opLabel">${label}</span>${arrow}</span></span><span class="eq"></span><span class="operationCell opRight"><span class="operationWrap">${arrow}<span class="opLabel">${label}</span></span></span></div>`;
+    // « ↓ » en vue Rédaction (choix du 23/08) ; au téléphone, une petite flèche courbe (30/09),
+    // de la même forme que les flèches de l'ordinateur et des corrigés. Le style choisit.
+    const arrow = dir => `<span class="operationArrow" aria-hidden="true">↓</span>${operationCurveSvg(dir)}`;
+    return `<div class="equationOpRow" aria-label="Même opération des deux côtés : ${label}"><span class="operationCell opLeft"><span class="operationWrap"><span class="opLabel">${label}</span>${arrow(-1)}</span></span><span class="eq"></span><span class="operationCell opRight"><span class="operationWrap">${arrow(1)}<span class="opLabel">${label}</span></span></span></div>`;
   }
 
   function renderEquationHistory(){
@@ -4881,8 +4918,19 @@
     // et on redessine si elle a bougé pour que les flèches suivent.
     if(fitEquationText(equationHistory.querySelector(".equationList"))) drawOperationArrowsOverlay();
     equationHistory.scrollTop = equationHistory.scrollHeight;
+    markEquationHistoryScrolled();
     syncEquationToggleButton();
   }
+
+  /* LA LIGNE D'AVANT S'ESTOMPE (téléphone, 30/09/2026, choix de Gwenaël). Le cadre de
+     l'équation montre la dernière ligne ; celle d'avant, qui ne tient qu'à moitié, était
+     tranchée net au milieu des chiffres. Quand le cadre a défilé, son haut s'estompe
+     (.equationHistory.defile, style au téléphone seulement) ; revenu tout en haut, rien ne
+     s'estompe, pour ne pas pâlir la première ligne. */
+  function markEquationHistoryScrolled(){
+    equationHistory.classList.toggle("defile", equationHistory.scrollTop > 2);
+  }
+  equationHistory.addEventListener("scroll", markEquationHistoryScrolled, {passive:true});
 
   function syncFullscreenSizeMode(){
     if(!stageEl) return;
@@ -5731,7 +5779,7 @@
       .replace(/[·×]/g, "*");
 
     if(!compact){
-      throw new Error(`Le membre ${sideName} est vide.`);
+      throw new Error(`Le côté ${sideName} est vide.`);
     }
 
     const tokens = [];
@@ -5759,7 +5807,7 @@
         i++;
         continue;
       }
-      throw new Error(`Caractère non reconnu dans le membre ${sideName} : « ${ch} ».`);
+      throw new Error(`Caractère non reconnu du côté ${sideName} : « ${ch} ».`);
     }
     return tokens;
   }
@@ -5788,7 +5836,7 @@
     function parseFactor(){
       const token = peek();
       if(!token){
-        throw new Error(`Il manque un terme dans le membre ${sideName}.`);
+        throw new Error(`Il manque un terme du côté ${sideName}.`);
       }
       if(token.type === "number"){
         pos++;
@@ -5802,14 +5850,14 @@
         pos++;
         const expr = parseExpression();
         if(!consume(")")){
-          throw new Error(`Il manque une parenthèse fermante dans le membre ${sideName}.`);
+          throw new Error(`Il manque une parenthèse fermante du côté ${sideName}.`);
         }
         return expr;
       }
       if(token.type === ")"){
-        throw new Error(`Parenthèse fermante inattendue dans le membre ${sideName}.`);
+        throw new Error(`Parenthèse fermante inattendue du côté ${sideName}.`);
       }
-      throw new Error(`Il manque un terme dans le membre ${sideName}.`);
+      throw new Error(`Il manque un terme du côté ${sideName}.`);
     }
 
     function parseTerm(){
@@ -5837,7 +5885,7 @@
       while(consume("+")){
         const next = peek();
         if(!startsFactor(next)){
-          throw new Error(`Il manque un terme après un + dans le membre ${sideName}.`);
+          throw new Error(`Il manque un terme après un + du côté ${sideName}.`);
         }
         result = combineAdd(result, parseTerm());
       }
@@ -5847,7 +5895,7 @@
     const parsed = parseExpression();
     if(pos !== tokens.length){
       const token = tokens[pos];
-      throw new Error(`Expression non reconnue près de « ${token.value} » dans le membre ${sideName}.`);
+      throw new Error(`Expression non reconnue près de « ${token.value} » du côté ${sideName}.`);
     }
     return parsed;
   }
@@ -5855,7 +5903,7 @@
   function parseEquationSide(rawSide, sideName, ctx){
     const parsed = parsePositiveExpression(rawSide, sideName, ctx);
     if(!parsed.pieces.length){
-      throw new Error(`Le membre ${sideName} est vide.`);
+      throw new Error(`Le côté ${sideName} est vide.`);
     }
     return parsed;
   }
