@@ -51,6 +51,9 @@ test("A. « C’est toujours toi ? » : les touches vont au champ du code, jamai
     const appels = jouerClavier({gardeVisible: true, dansLaGarde: true, key});
     assert.deepEqual(appels, {chiffres: [], suivant: 0, empeche: 0}, `« ${key} » reste au champ du code`);
   }
+  // La question affichée suffit, même si la touche vient d'ailleurs que du
+  // champ (l'élève a touché le voile) : chacune des deux gardes a son cas.
+  assert.deepEqual(jouerClavier({gardeVisible: true, key: "7"}), {chiffres: [], suivant: 0, empeche: 0});
   // La cible dans la garde suffit, même si l'état n'est pas encore à jour.
   assert.deepEqual(jouerClavier({dansLaGarde: true, key: "7"}), {chiffres: [], suivant: 0, empeche: 0});
   // Sans la question, la série reçoit toujours ses chiffres.
