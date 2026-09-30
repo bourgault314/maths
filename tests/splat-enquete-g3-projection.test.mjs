@@ -117,7 +117,8 @@ const g3 = new Function(`
   ${fn("enqueteBarresModele")}
   ${fn("enqueteProjectionPasAPas")}
   ${fn("enqueteG3Etapes")}
-  return { modele: enqueteBarresModele, plan: enqueteProjectionPasAPas, derniere: enqueteDerniereEtape, nb: enqueteNbEtapes,
+  ${fn("enqueteG3VerifIndices")}
+  return { modele: enqueteBarresModele, plan: enqueteProjectionPasAPas, derniere: enqueteDerniereEtape, nb: enqueteNbEtapes, verifIndices: enqueteG3VerifIndices,
     eleve: (v) => { eleveActif = v; } };
 `)();
 
@@ -125,7 +126,7 @@ const g3 = new Function(`
 function resume(e){
   if(e.type === "vide" || e.type === "barres" || e.type === "fin") return e.type;
   if(e.type === "ligne") return `${e.titre} : ${e.lignes[e.courante]}`;
-  return `barres : ${e.lignes[e.idx]}`;
+  return `${e.titre} : ${e.lignes[e.idx]}`;
 }
 const EXEMPLES = [
   ["EX_ADD2", 0], ["EX_MUL2", 0], ["EX_REB", 0], ["EX_UNITE", 0], ["EX_ADD", 0], ["EX_MUL", 0],
@@ -139,11 +140,11 @@ function carteDe(nom, k){
 // --- 1. les 11 exemples de la maquette ---------------------------------------------------------
 /* La suite des appuis, relevée sur la maquette validée (G3-maquette-1 à 11) */
 const SUITES = {
-  EX_ADD2: ["vide", "barres", "Schéma regroupé : 2 noires + 8 = 26", "Je calcule : 2 noires = 26 − 8 = 18", "Je calcule : 1 noire = 18 ÷ 2 = 9", "barres : verte = 9 + 8 = 17", "fin"],
+  EX_ADD2: ["vide", "barres", "Schéma regroupé : 2 noires + 8 = 26", "Je retire : 2 noires = 26 − 8 = 18", "Je partage : 1 noire = 18 ÷ 2 = 9", "Je trouve la verte : verte = 9 + 8 = 17", "fin"],
   EX_REB: ["vide", "barres", "Schéma regroupé : 3 noires + 7 + 7 = 38", "Je range : 3 noires + 7 + 7 = 38", "Je regroupe : 3 noires + 14 = 38",
-    "Je calcule : 3 noires = 38 − 14 = 24", "Je calcule : 1 noire = 24 ÷ 3 = 8", "barres : bleue = 8 + 7 = 15", "fin"],
-  EX_UNITE: ["vide", "barres", "Schéma regroupé : 2 vertes + 2 rouges + 2 noires = 110", "Je calcule : 3 vertes + 2 noires = 110",
-    "Je calcule : 11 noires = 110", "Je calcule : 1 noire = 110 ÷ 11 = 10", "barres : verte = 3 × 10 = 30", "barres : rouge = 30 ÷ 2 = 15", "fin"],
+    "Je retire : 3 noires = 38 − 14 = 24", "Je partage : 1 noire = 24 ÷ 3 = 8", "Je trouve une bleue : bleue = 8 + 7 = 15", "fin"],
+  EX_UNITE: ["vide", "barres", "Schéma regroupé : 2 vertes + 2 rouges + 2 noires = 110", "Je remplace : 3 vertes + 2 noires = 110",
+    "Je remplace : 11 noires = 110", "Je partage : 1 noire = 110 ÷ 11 = 10", "Je trouve la verte : verte = 3 × 10 = 30", "Je trouve la rouge : rouge = 30 ÷ 2 = 15", "fin"],
 };
 const APPUIS = { EX_ADD2: 7, EX_MUL2: 6, EX_REB: 9, EX_UNITE: 9, EX_ADD: 10, EX_MUL: 10, E11D: 7, E14: 10, E22: 6, EX_REU: 10, E18D: 6 };
 
@@ -252,6 +253,17 @@ test("les 30 fiches des six livrets : chaque carte a son pas à pas, et il ne to
     assert.equal(moteur(`${py(nom)}&cards=4&unknown=question`, 4).appels, appels, `${nom} : tirages`);
   }
   assert.equal(cartes, 120);
+  /* la vérification des indices (dernier appui) : une ligne juste par indice, sur chaque carte */
+  let indices = 0;
+  for(const nom of FICHES){
+    moteur(`${py(nom)}&cards=4&unknown=question`, 4).cartes.forEach((c, k) => {
+      const lignes = g3.verifIndices(c);
+      assert.equal(lignes.length, c._rel.relations.length, `${nom}, carte ${k + 1} : ${lignes.join(" / ")}`);
+      lignes.forEach((l) => assert.match(l, /^[a-z ]+ = .+ : \d+ = .+ ✓$/, `${nom}, carte ${k + 1} : ${l}`));
+      indices += lignes.length;
+    });
+  }
+  assert.ok(indices >= 200, `${indices} indices vérifiés`);
   /* de 5 à 11 appuis ; relevé au lot G3 */
   assert.deepEqual([...appuis.entries()].sort((a, b) => a[0] - b[0]), [[5, 3], [6, 27], [7, 45], [8, 7], [9, 11], [10, 27]]);
 });
@@ -280,9 +292,35 @@ test("le bandeau : une ligne par phrase, coupée à la virgule seulement sous le
   /* une seule échelle pour tous ces appuis : mesurée sur toutes les étapes sauf la dernière */
   assert.match(fn("enqueteProjectionCadrer"), /\(bandeau \? g3\.etapes\.filter\(e => e\.type !== "fin"\) : \[g3Etape\]\)/);
   assert.match(fn("enqueteProjectionCadrer"), /enqueteProjectionFacteurs\(bp\.y \+ bp\.height, haut, bas, bandeau \? bas : bd\.y \+ bd\.height\)/);
+  /* au dernier appui, le plateau dévoilé reste au-dessus : jamais « à côté » pendant le pas à pas */
+  assert.match(fn("enqueteProjectionCadrer"), /const cote = g3Etape \? null : enqueteProjectionACote\(dessin, bp, f\);/);
   /* le TOTAL (et sa boîte, le rect juste avant #totalGroup) à gauche, le plateau en petit, un espace entre */
   assert.match(fn("enqueteG3Bandeau"), /tg\.previousElementSibling && tg\.previousElementSibling\.tagName === "rect"/);
   assert.match(html, /const ENQ_G3_BANDEAU_H = 190, ENQ_G3_BANDEAU_HAUT = 18, ENQ_G3_BANDEAU_ECART = 60;/);
+});
+
+test("le dernier appui : les calculs déjà vus en gris, la réponse encadrée en noir, « Je vérifie »", () => {
+  const f = fn("enqueteG3DessinerFin");
+  assert.match(fn("enqueteG3Dessiner"), /if\(et\.type === "fin"\) return enqueteG3DessinerFin\(target, card, et\.calculs \? \{ \.\.\.modele, calculs:et\.calculs \} : modele\);/);
+  assert.match(f, /"Je vérifie", P, largeur\)/);
+  assert.match(f, /fill:ENQ_G3_RESUME_GRIS/);
+  assert.match(f, /"font-size":rf, "font-weight":900, fill:"#111827"/);
+  assert.match(f, /g\.appendChild\(el\("rect", \{ x:xCadre, y:haut, width:largeurCadre, height:Math\.round\(y - haut\), rx:14, fill:"none", stroke:"#111827", "stroke-width":4 \}\)\);/);
+  assert.match(html, /const ENQ_G3_REPONSE_FONT = 66, ENQ_G3_VERIF_FONT = 56, ENQ_G3_RESUME_GRIS = "#9ca3af", ENQ_G3_REPONSE_JEU = 20;/);
+  /* la vérification : le total, puis chaque indice, dans le cadre de la réponse */
+  assert.match(f, /const verifs = \(modele\.verification \? \[`\$\{modele\.verification\} ✓`\] : \[\]\)\.concat\(enqueteG3VerifIndices\(card\)\);/);
+  const c = carteDe("EX_ADD2", 0);
+  assert.deepEqual(g3.verifIndices(c), ["verte = noire + 8 : 17 = 9 + 8 ✓"]);
+  /* l'impression garde drawEnqueteCalculs (tout en noir, la réponse en petit) */
+  assert.ok(!/enqueteG3DessinerFin/.test(fn("drawEnqueteCorrectionImprimee")));
+  /* les titres : un verbe par opération (décidé le 30/09) */
+  g3.eleve(false);
+  const titres = (nom, k) => g3.plan(carteDe(nom, k)).etapes.map((e) => e.titre || e.type);
+  assert.deepEqual(titres("EX_ADD2", 0), ["vide", "barres", "Schéma regroupé", "Je retire", "Je partage", "Je trouve la verte", "fin"]);
+  assert.deepEqual(titres("EX_UNITE", 0), ["vide", "barres", "Schéma regroupé", "Je remplace", "Je remplace", "Je partage", "Je trouve la verte", "Je trouve la rouge", "fin"]);
+  assert.ok(titres("EX_REB", 0).includes("Je trouve une bleue"), "taches répétées : « une bleue », comme l'indice");
+  const st = titres("E22", 1);
+  assert.ok(st.includes("Je partage") && st.some((t) => t.startsWith("Je trouve ")), st.join(" / "));
 });
 
 test("mode élève, ordinateur : la place du schéma est prise dès « Voir le schéma » (les boutons ne descendent plus)", () => {

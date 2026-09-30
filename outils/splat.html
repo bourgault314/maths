@@ -8088,7 +8088,9 @@ function enqueteProjectionCadrer(card, etape){
     const bd = dessin.getBBox();
     /* pas à pas : l'échelle de la plus haute étape vaut pour toutes (pas de « place qui reste ») */
     const f = enqueteProjectionFacteurs(bp.y + bp.height, haut, bas, bandeau ? bas : bd.y + bd.height);
-    const cote = bandeau ? null : enqueteProjectionACote(dessin, bp, f);
+    /* pas à pas, dernier appui (taches dévoilées) : le plateau reste au-dessus, jamais « à côté »
+       — en petit dans un coin, on ne voyait plus le dévoilement (décidé par Gwenaël, 30/09) */
+    const cote = g3Etape ? null : enqueteProjectionACote(dessin, bp, f);
     if(cote){
       plateau.setAttribute("data-facteur", String(cote.plateau));
       plateau.setAttribute("data-place", "cote");
@@ -8114,7 +8116,9 @@ function enqueteProjectionCadrer(card, etape){
    retrait (hachuré gris estompé de « Garder hachuré » d'ÉquaBarre) → le partage (les noms en
    bas, la valeur de chaque part en haut) → les autres taches une par une, sur les barres ① →
    dernier appui : taches dévoilées et récapitulatif ③ avec les calculs de la projection. Sous
-   le tableau, la ligne d'avant en gris, la nouvelle en noir. Sans total : pas de ②, tout se
+   le tableau, la ligne d'avant en gris, la nouvelle en noir. Titres (décidés le 30/09) : « Je range »,
+   « Je regroupe », « Je retire », « Je partage », « Je remplace », « Je trouve la bleue », « Je vérifie ».
+   Sans total : pas de ②, tout se
    fait sur ① (« ② Je calcule »). Unité commune : « je double tout » en couleurs, puis « deux
    rouges font une verte », « une verte fait trois noires », le partage.
    Le plan d'une carte est calculé une fois (il ne dépend que de la carte). Dessin seulement :
@@ -8163,16 +8167,16 @@ function enqueteG3Etapes(card){
     etapes.push({ type:"ligne", titre:"Schéma regroupé", avant:[avant[0]], total, cells:cellsA, groupes:grA, lignes:lignes1, courante:0 });
     const cellsB = [big(c), big(c), { kind:"tache", v:vals[c], de:c }, big(u), big(u)];
     const grB = [{ de:0, a:0, label:enqueteMotCouleur(card, c) }, { de:1, a:1, label:enqueteMotCouleur(card, c) }, { de:2, a:2, label:groupesLigne[2].label }, { de:3, a:3, label:enqueteMotCouleur(card, u) }, { de:4, a:4, label:enqueteMotCouleur(card, u) }];
-    etapes.push({ type:"ligne", titre:"Je calcule", avant:[phrases2[0].replace(/^./, s => s.toUpperCase()) + "."], total, cells:cellsB, groupes:grB, lignes:lignes1, courante:1 });
-    etapes.push({ type:"ligne", titre:"Je calcule", avant:[phrases2[1].replace(/\.$/, "").replace(/^./, s => s.toUpperCase()) + "."], total, cells:cellsLigne, groupes:groupesLigne, lignes:lignes1, courante:2 });
-    etapes.push({ type:"ligne", titre:"Je calcule", avant:[], total, top:cellsLigne.map((x, q) => ({ de:q, a:q, t:N(vals[u]) })), cells:cellsLigne, groupes:groupesLigne, lignes:lignes1, courante:3 });
+    etapes.push({ type:"ligne", titre:"Je remplace", avant:[phrases2[0].replace(/^./, s => s.toUpperCase()) + "."], total, cells:cellsB, groupes:grB, lignes:lignes1, courante:1 });
+    etapes.push({ type:"ligne", titre:"Je remplace", avant:[phrases2[1].replace(/\.$/, "").replace(/^./, s => s.toUpperCase()) + "."], total, cells:cellsLigne, groupes:groupesLigne, lignes:lignes1, courante:2 });
+    etapes.push({ type:"ligne", titre:"Je partage", avant:[], total, top:cellsLigne.map((x, q) => ({ de:q, a:q, t:N(vals[u]) })), cells:cellsLigne, groupes:groupesLigne, lignes:lignes1, courante:3 });
   }else if(!modele.ligne){
     /* sans total : pas de ligne ②, tout se fait sur les barres ① (ce qui dépasse, puis le partage) */
     const toutes = calc.filter(Boolean).map(l => `${l.g} = ${l.d}`);
     const connues = new Set();
     let q = 0;
-    part1.forEach(l => { if(/^1 /.test(l.g)) connues.add(u); etapes.push({ type:"barresValeurs", connues:new Set(connues), courante:u, lignes:toutes, idx:q++, egal:false }); });
-    part2.forEach(l => { const i = modele.reponse.map(r => r.i).find(t => t !== u && enqueteMotCouleur(card, t) === l.g); connues.add(i); etapes.push({ type:"barresValeurs", connues:new Set(connues), courante:i, lignes:toutes, idx:q++, egal:false }); });
+    part1.forEach(l => { const partage = /^1 /.test(l.g); if(partage) connues.add(u); etapes.push({ type:"barresValeurs", titre:partage ? "Je partage" : "Je calcule", connues:new Set(connues), courante:u, lignes:toutes, idx:q++, egal:false }); });
+    part2.forEach(l => { const i = modele.reponse.map(r => r.i).find(t => t !== u && enqueteMotCouleur(card, t) === l.g); connues.add(i); etapes.push({ type:"barresValeurs", titre:`Je trouve ${enqueteArticle(enqueteMotCouleur(card, i), !!card._rel.repetees)}`, connues:new Set(connues), courante:i, lignes:toutes, idx:q++, egal:false }); });
     etapes.push({ type:"fin" });
     return plan;
   }else{
@@ -8216,7 +8220,7 @@ function enqueteG3Etapes(card){
       k++;
     }
     if(nombres.length){
-      etapes.push({ type:"ligne", titre:"Je calcule", total, top:[{ de:0, a:nb - 1, t:N(reste) }, ...topR],
+      etapes.push({ type:"ligne", titre:"Je retire", total, top:[{ de:0, a:nb - 1, t:N(reste) }, ...topR],
         cells:cellsR.map(x => ({ ...x, retire:x.kind === "nombre" })), groupes:grRange, lignes:L, courante:k });
       k++;
     }
@@ -8224,7 +8228,7 @@ function enqueteG3Etapes(card){
       /* partage (retour de Gwenaël, 30/09) : les noms restent en bas, la valeur de chaque part en haut */
       const topParts = []; let d = 0;
       blocs.forEach(bl => { topParts.push({ de:d, a:d + bl.cells.length - 1, parts:bl.unites, t:N(vals[u]) }); d += bl.cells.length; });
-      etapes.push({ type:"ligne", titre:"Je calcule", total, top:[...topParts, ...topR],
+      etapes.push({ type:"ligne", titre:"Je partage", total, top:[...topParts, ...topR],
         cells:cellsR.map(x => ({ ...x, retire:x.kind === "nombre" })), groupes:grRange, lignes:L, courante:k });
     }
   }
@@ -8234,7 +8238,7 @@ function enqueteG3Etapes(card){
   part2.forEach((l, q) => {
     const i = ordre.find(t => enqueteMotCouleur(card, t) === l.g) ?? ordre[q];
     connues.add(i);
-    etapes.push({ type:"barresValeurs", connues:new Set(connues), courante:i, lignes:part2.map(x => `${x.g} = ${x.d}`), idx:q, egal:true });
+    etapes.push({ type:"barresValeurs", titre:`Je trouve ${enqueteArticle(enqueteMotCouleur(card, i), !!card._rel.repetees)}`, connues:new Set(connues), courante:i, lignes:part2.map(x => `${x.g} = ${x.d}`), idx:q, egal:true });
   });
   etapes.push({ type:"fin", calculs:plan.calculs });
   return plan;
@@ -8330,7 +8334,7 @@ function enqueteG3DessinerBarresValeurs(target, card, et, modele){
   const { x0, largeur, barX, s } = M;
   const vals = card._rel.hiddenValues.map(Number);
   let y = boxY + P.marge * 0.6;
-  y += enqueteTitreEtape(g, x0, y, modele.ligne ? 3 : 2, "Je calcule", P, largeur);
+  y += enqueteTitreEtape(g, x0, y, modele.ligne ? 3 : 2, et.titre || "Je calcule", P, largeur);
   let yr = y;
   modele.rows.forEach((row, r) => {
     if(r > 0) yr += P.rowH + P.rowGap + (modele.rows[r - 1].sous.length ? P.sousH + P.sousPas - 4 : 0);
@@ -8363,7 +8367,100 @@ function enqueteG3Dessiner(target, card, et, modele){
   if(et.type === "barres") return drawEnqueteBarres(target, card, { modele });
   if(et.type === "ligne") return enqueteG3DessinerLigne(target, card, et, modele);
   if(et.type === "barresValeurs") return enqueteG3DessinerBarresValeurs(target, card, et, modele);
-  if(et.type === "fin") return drawEnqueteCalculs(target, card, { modele:et.calculs ? { ...modele, calculs:et.calculs } : modele });
+  if(et.type === "fin") return enqueteG3DessinerFin(target, card, et.calculs ? { ...modele, calculs:et.calculs } : modele);
+}
+
+/* La vérification des indices, au dernier appui : « verte = rouge + 2 : 5 = 3 + 2 ✓ » — la phrase de
+   l'indice en mots, puis les valeurs trouvées. Une ligne qui ne se vérifierait pas n'est pas
+   écrite (le test des 30 fiches exige qu'elles se vérifient toutes). */
+function enqueteG3VerifIndices(card){
+  const rels = card && card._rel && Array.isArray(card._rel.relations) ? card._rel.relations : [];
+  const vals = card._rel.hiddenValues.map(Number);
+  const w = i => enqueteMotCouleur(card, i), v = i => formatRelationNumber(vals[i]), N = formatRelationNumber;
+  const out = [];
+  rels.forEach(r => {
+    const t = r.target, s = r.source, k = Number(r.k);
+    let mots = null, nombres = null, ok = false;
+    if(r.op === "ADD"){ mots = `${w(t)} = ${w(s)} + ${N(k)}`; nombres = `${v(t)} = ${v(s)} + ${N(k)}`; ok = vals[t] === vals[s] + k; }
+    else if(r.op === "SUB"){ mots = `${w(t)} = ${w(s)} − ${N(k)}`; nombres = `${v(t)} = ${v(s)} − ${N(k)}`; ok = vals[t] === vals[s] - k; }
+    else if(r.op === "MUL"){ mots = `${w(t)} = ${N(k)} × ${w(s)}`; nombres = `${v(t)} = ${N(k)} × ${v(s)}`; ok = vals[t] === k * vals[s]; }
+    else if(r.op === "DIV"){ mots = `${w(t)} = ${w(s)} ÷ ${N(k)}`; nombres = `${v(t)} = ${v(s)} ÷ ${N(k)}`; ok = vals[t] * k === vals[s]; }
+    else if(r.op === "COMPOSE"){
+      const d = Number(r.d) || 0, sd = `${d < 0 ? "−" : "+"} ${N(Math.abs(d))}`;
+      mots = `${w(t)} = ${N(k)} × ${w(s)} ${sd}`; nombres = `${v(t)} = ${N(k)} × ${v(s)} ${sd}`; ok = vals[t] === k * vals[s] + d;
+    }else if(r.op === "SUM"){
+      const s2 = r.source2;
+      mots = `${w(t)} = ${w(s)} + ${w(s2)}`; nombres = `${v(t)} = ${v(s)} + ${v(s2)}`; ok = vals[t] === vals[s] + vals[s2];
+    }
+    if(mots && ok) out.push(`${mots} : ${nombres} ✓`);
+  });
+  return out;
+}
+/* Le dernier appui (décidé par Gwenaël le 30/09) : les calculs du pas à pas, déjà vus un par un,
+   restent en résumé mais en GRIS (la règle du pas à pas : ce qui est déjà vu est gris) ; ce qui
+   est nouveau est en noir, dans un cadre — la réponse, plus grande (la valeur de chaque tache),
+   puis la vérification : le total, et chaque indice (enqueteG3VerifIndices). Projection seulement : le corrigé imprimé garde
+   drawEnqueteCalculs. */
+const ENQ_G3_REPONSE_FONT = 66, ENQ_G3_VERIF_FONT = 56, ENQ_G3_RESUME_GRIS = "#9ca3af", ENQ_G3_REPONSE_JEU = 20;
+function enqueteG3DessinerFin(target, card, modele){
+  const P = enqueteProfil({});
+  const boxY = 620;
+  const g = el("g", { id:"enqueteCalculs" });
+  const x0 = P.boxX + P.marge, largeur = P.boxW - 2 * P.marge;
+  let y = boxY + P.marge * 0.6;
+  y += enqueteTitreEtape(g, x0, y, modele.ligne ? 3 : 2, "Je vérifie", P, largeur);
+  /* le résumé, en gris : chaque ligne commence à gauche, la police descend si la plus longue déborde */
+  const lignes = modele.calculs;
+  let fs = P.calcFont;
+  const plusLongue = f => Math.max(...lignes.filter(Boolean).map(l => enqueteTexteLargeur(`${l.g} = ${l.d}`, f, 700)));
+  while(fs > P.calcFont * 0.6 && plusLongue(fs) > largeur) fs -= 2;
+  const pas = Math.round(P.calcPas * fs / P.calcFont);
+  lignes.forEach(l => {
+    if(!l){ y += P.calcBlanc; return; }
+    g.appendChild(text(x0, y + pas / 2 + 1, `${l.g} = ${l.d}`, { "text-anchor":"start", "dominant-baseline":"middle", "font-size":fs, "font-weight":700, fill:ENQ_G3_RESUME_GRIS }));
+    y += pas;
+  });
+  /* la réponse, en noir et en grand : une valeur par tache */
+  const reponses = (modele.reponse || []).map(e => e.texte);
+  if(reponses.length){
+    y += P.calcBlanc;
+    /* la réponse et la vérification dans un cadre (retour de Gwenaël, 30/09 : « la réponse
+       encadrée ») : un trait noir de 4, le texte décalé de ENQ_G3_REPONSE_JEU à l'intérieur */
+    const J = ENQ_G3_REPONSE_JEU, haut = y;
+    const xCadre = x0, largeurCadre = largeur;
+    const x0r = x0 + J, largeurR = largeur - 2 * J;
+    y += J;
+    let rf = ENQ_G3_REPONSE_FONT;
+    const ecart = f => Math.round(f * 1.2);
+    const largeurRep = f => reponses.reduce((a, t) => a + enqueteTexteLargeur(t, f, 900), 0) + (reponses.length - 1) * ecart(f);
+    while(rf > P.calcFont * 0.6 && largeurRep(rf) > largeurR) rf -= 2;
+    let x = x0r;
+    const cy = y + rf * 0.7;
+    reponses.forEach(t => {
+      g.appendChild(text(x, cy + pastilleTextDy(rf), t, { "text-anchor":"start", "dominant-baseline":"middle", "font-size":rf, "font-weight":900, fill:"#111827" }));
+      x += enqueteTexteLargeur(t, rf, 900) + ecart(rf);
+    });
+    y += Math.round(rf * 1.4);
+    /* la vérification, une ligne chacune : le total (pas de total : rien), puis chaque indice
+       (retour de Gwenaël, 30/09 : « il faut vérifier aussi que les indices fonctionnent ») ;
+       une même police pour toutes, la plus grande qui tient */
+    const verifs = (modele.verification ? [`${modele.verification} ✓`] : []).concat(enqueteG3VerifIndices(card));
+    if(verifs.length){
+      let vf = ENQ_G3_VERIF_FONT;
+      while(vf > P.calcFont * 0.6 && verifs.some(v => enqueteTexteLargeur(v, vf, 800) > largeurR)) vf -= 2;
+      verifs.forEach(v => {
+        g.appendChild(text(x0r, y + vf * 0.7 + pastilleTextDy(vf), v, { "text-anchor":"start", "dominant-baseline":"middle", "font-size":vf, "font-weight":800, fill:"#111827" }));
+        y += Math.round(vf * 1.25);
+      });
+      y += Math.round(vf * 0.15);
+    }
+    y += J;
+    g.appendChild(el("rect", { x:xCadre, y:haut, width:largeurCadre, height:Math.round(y - haut), rx:14, fill:"none", stroke:"#111827", "stroke-width":4 }));
+    y += 14;
+  }
+  y += P.marge;
+  enqueteCadre(g, P, boxY, Math.round(y - boxY), g.id);
+  target.appendChild(g);
 }
 
 /* Le haut de l'écran pendant le pas à pas (validé le 30/09) : le TOTAL à gauche et le plateau en

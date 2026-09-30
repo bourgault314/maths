@@ -90,5 +90,7 @@ const mesurer = () => {
   }
   await navigateur.close();
   assert.ok(etapes > 250, `trop peu d'étapes contrôlées (${etapes})`);
-  console.log(`projection de l'Enquête : ${etapes} étapes contrôlées, aucune coupée ; plateau à côté sur ${cotes}.`);
+  /* pas à pas G3 : le plateau reste au-dessus à tous les appuis, dernier compris (30/09/2026) */
+  assert.equal(cotes, 0, `plateau à côté pendant le pas à pas (${cotes})`);
+  console.log(`projection de l'Enquête : ${etapes} étapes contrôlées, aucune coupée ; plateau toujours au-dessus.`);
 })().catch((e) => { console.error(e); process.exit(1); });
