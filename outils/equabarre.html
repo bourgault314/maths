@@ -1368,6 +1368,17 @@
     background:#ffedd5;
   }
 
+  /* « Enlever des deux côtés » choisi : bleu comme les autres outils choisis, même quand le
+     doigt ou la souris est dessus. Le survol pêche, déclaré après, repeignait le fond et
+     laissait l'écriture blanche sur pêche, illisible (retour de Gwenaël, 30/09 : au téléphone,
+     le survol reste collé après le toucher, en fin de problème). */
+  .globalToolBtn.active,
+  .globalToolBtn.active:hover{
+    background:linear-gradient(180deg,#60a5fa,#3b82f6);
+    border-color:rgba(37,99,235,.30);
+    color:#fff;
+  }
+
   .restartToolBtn{
     background:#eef2ff;
     border-color:rgba(99,102,241,.22);
@@ -2843,11 +2854,15 @@
       display:none;
     }
 
-    /* La courbe déborde un peu vers la ligne d'au-dessus, jamais sur celle d'en dessous. */
+    /* La courbe ne monte plus dans la ligne d'au-dessus (retour de Gwenaël, 30/09 : à droite,
+       elle touchait le dernier nombre, « 41 » après +6𝑛) ; un peu plus courte, elle descend
+       juste vers la ligne d'en dessous. */
     .equationOpRow .operationCurve{
       display:block;
       flex:none;
-      margin:-9px 0 -3px;
+      width:14px;
+      height:26px;
+      margin:0 0 -3px;
     }
 
     .equationHistory.defile{
