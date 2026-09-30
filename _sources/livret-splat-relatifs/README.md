@@ -78,12 +78,38 @@ le texte « Comment ça marche ? » est écrit à partir de la carte et de sa r�
 - livret 1 : **2𝑛 + 3 – 9 = –12**, 𝑛 = –3 (graine 1838) ;
 - livret 2 : **–𝑏 + 6 = 2𝑏 – 9**, 𝑏 = 5 (graine 211).
 
+## Les deux livrets « Le défi » (28/09/2026)
+
+Un défi par livret, aux mêmes fiches (38 à 40, puis 41 à 43) et sous **la même étoile** :
+
+| Livret | PDF produits |
+|---|---|
+| `defi1` — les taches sur un seul plateau | `outils/livret_splat_relatifs_defi_1.pdf` · `…_a_plier.pdf` · `…_correction.pdf` · `…_correction_a_plier.pdf` |
+| `defi2` — les taches sur les deux plateaux | `outils/livret_splat_relatifs_defi_2…` (idem) |
+
+- **La lettre sur les taches** (décision de Gwenaël du 28/09) : « 𝑥 » sur une tache, « −𝑥 » sur
+  une tache opposée (`lettre=True` : `taches=lettre` de l'outil, `JS_LETTRE` pour la couverture
+  et le dos) ; la grande tache du bandeau garde « −𝑥 ».
+- **Les cartes** : `FICHES_DEFI`, six séries de 2 cartes par fiche (`defi(forme, opposées,
+  taches max, graine)`), choisies une à une : 2 ou 3 jetons par plateau (vert + vert, rouge +
+  rouge, vert + rouge), un partage à chaque carte (jusqu'à 11), solutions de 6 à 19 en valeur
+  absolue, jamais deux fois la même sur une page, des jetons rouges sur chaque carte des fiches 38
+  et 39, aucune carte des livrets de base, aucun 69 ni 88. Défi 1 retrié le 30/09 : au plus une
+  carte par page avec un plateau à 99 ou −99, jamais deux fois les mêmes jetons sur un plateau.
+- **Les QR** : `?f=38d` … `?f=43d` de la page courte ouvrent ÉquaSplat sur les 12 cartes exactes
+  (fabriquées par l'outil, relues par `series_du_defi()` : `render.py` s'arrête si les fiches
+  imprimées diffèrent). ÉquaSplat distingue la série de base et celle du défi par leur empreinte.
+  Au dos, deux séries au hasard aux réglages du défi : `?s=d1`, `d2` (défi 1), `d3`, `d4` (défi 2).
+- **Les exemples de couverture** : 18 − 21 = 3𝑏 − 𝑏 − 9 − 8 (graine 275618) et
+  −2𝑛 − 9 + 2 = 𝑛 − 3 + 17 (graine 284089), des équations courtes pour qu'elles restent grandes.
+- Miniatures : `assets/img/thumbnails/splat/livret-splat-relatifs-defi-1.png/.webp` et `-2`.
+
 ## Régénérer
 
 ```bash
 cd _sources/livret-splat-relatifs
 python3 render.py            # les DEUX livrets et leurs corrigés
-python3 render.py livret1    # un seul (livret1 | livret2)
+python3 render.py livret1    # un seul (livret1 | livret2 | defi1 | defi2)
 python3 render.py --qr       # en refabriquant d'abord les QR codes
 ```
 

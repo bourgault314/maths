@@ -131,7 +131,7 @@ test("« Pour la classe » : le diaporama au monde 1, la page des livrets aux mo
     assert.doesNotMatch(r[mi], /\.pdf"|bord court|recto-verso/, "ni PDF ni consigne d'impression : elles sont sur la page des livrets");
   }
   assert.ok(r[5].includes('href="/outils/livrets_splat.html#monde-6"'));
-  assert.ok(r[5].includes("Un livret par partie, et leurs corrigés."));
+  assert.ok(r[5].includes("Un livret par partie, chacun avec son livret Le défi, et leurs corrigés."));
 });
 
 test("les parties des mondes 3, 4 et 6 : un intertitre, sans ligne de PDF (comme aux autres mondes)", () => {
