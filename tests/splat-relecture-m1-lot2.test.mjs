@@ -70,7 +70,7 @@ test("B. fiches 4 et 5 du monde 1 : pas de bande dans ce lot (elle viendra avec 
   // dans l'outil Petit SPLAT!. Ici, les fiches 4 et 5 des livrets restent celles d'avant.
   const r = lire("_sources/livret-petit-splat/render.py");
   assert.doesNotMatch(r, /bande=True|CSS_BANDE|JS_JETONS/);
-  assert.match(r, /graines=\{1:"441132", 2:"929356", 3:"302672", 4:"514457", 5:"727304", 6:"514457"\}/);
+  assert.match(r, /graines=\{1:"201490", 2:"203592", 3:"211295", 4:"347458", 5:"305618", 6:"458563"\}/);
 });
 
 function catalogue() {

@@ -39,17 +39,37 @@ couverture reçoit un bandeau rouge sombre « Correction » et « Livret corrig�
 de Prénom / Classe ; le dos ne change pas. Le corrigé peut être donné aux élèves (Claire,
 23/09/2026, comme les livrets de l'Enquête) : il ne dit « professeur » nulle part.
 
-CHOIX DES GRAINES (17/09/2026) — ne pas en changer sans refaire le tri.
-Les graines de Monde 1 sont celles de la progression de Claire. Celles des niveaux
-Avancé et Expert ont été retenues automatiquement parmi des dizaines de milliers de
-tirages, en gardant seulement les fiches qui respectent TOUTES ces règles :
-  · aucune carte sous le plancher du niveau (21 pour Avancé, 51 pour Expert) —
-    chaque livret ouvre une tranche neuve, on ne refait jamais le niveau d'en dessous ;
-  · sur une carte « dessine », entre 1 et 15 jetons à dessiner (jamais 0, jamais 20) ;
-  · au plus 2 cartes sans aucun jeton visible ;
-  · pas deux cartes identiques (même total, mêmes visibles, même nombre de taches) ;
-  · au plus une carte où chaque tache ne cache qu'un seul jeton ;
-  · sur les fiches 5 et 6, au moins 4 tailles de groupes différentes (de 2 à 6 taches).
+CHOIX DES GRAINES (28-29/09/2026) — ne pas en changer sans refaire le tri.
+Les graines des trois livrets (Monde 1, Avancé, Expert) ont été retriées sur le LIVRET
+ENTIER, parmi environ 640 000 tirages rejoués dans l'outil, avec les règles fixées par
+Gwenaël le 28/09 (1 à 8) et le 29/09 (9). Une carte = total, jetons posés, taches, jetons
+par tache ; « complète » ou « dessine ».
+  1. aucune carte identique dans le livret (une carte à compléter et une carte à dessiner
+     avec les mêmes nombres ne sont pas un doublon), pas de carte « à l'envers » sur une
+     fiche (12 = 2 × 6 et 12 = 6 × 2 ; 12 = 4 + 8 et 12 = 8 + 4) ;
+  2. une même division (jetons cachés ÷ taches) jamais deux fois sur une fiche, au plus
+     2 fois dans le livret — seule exception, la fiche 4 du Monde 1 : 12 cartes à deux
+     taches pour 10 divisions possibles jusqu'à 20, deux répétitions sont inévitables ;
+  3. fiches « dessine » (2, 3, 6) : 1 ou 2 cartes « rien à dessiner » (tout est sous
+     les taches) ;
+  4. fiches « complète » (1, 3, 4, 5) : 1 ou 2 cartes « tout est caché » (aucun jeton
+     sur le plateau), dont une à plusieurs taches aux fiches 4 et 5 ;
+  5. au plus une réponse 1 par fiche (une tache qui ne cache qu'un jeton : intéressante
+     en soi, on ne l'évite pas), jamais de total 1 ; le 69 est permis ;
+  6. Avancé et Expert : aucune carte à 20 ou moins ; Expert : au moins 9 cartes sur 12
+     au-dessus de 50 sur chaque fiche ;
+  7. au plus 15 jetons à dessiner sur une carte ;
+  8. une seule réponse possible d'après la FICHE IMPRIMÉE, lue comme un élève (et celle du
+     corrigé), jetons qui ne se chevauchent pas, ni mordus par une tache ou la pastille ;
+  9. une même réponse au plus 3 fois sur une fiche, jamais sur 3 cartes de suite.
+Contrôle, à relancer après toute évolution de l'outil ou de ces graines :
+    python3 verifier_graines.py            (rejoue les 18 fiches dans Chromium, règles 1 à 9,
+                                           liste des cartes de l'univers, QR à jour)
+Les graines du Monde 1 sont AUSSI celles des étapes m1e1 à m1e6 de outils/splat_univers.html
+(adresses j: et f:, et la liste eqs des 12 cartes) : changer l'une, c'est changer l'autre.
+Graines d'avant le 30/09/2026 (celles des livrets déjà imprimés, que leurs QR rejouent) :
+    Monde 1 441132 929356 302672 514457 727304 514457 · Avancé 510115 715819 716087 109324
+    868655 849499 · Expert 892863 662792 520986 948274 830408 354581.
 
 Dépendances : playwright (chromium), pikepdf, qrcode[pil]. qpdf si disponible.
 """
@@ -152,7 +172,7 @@ NIVEAUX = {
         target=20,
         sortie="livret_petit_splat",
         qr="qr",
-        graines={1:"441132", 2:"929356", 3:"302672", 4:"514457", 5:"727304", 6:"514457"},
+        graines={1:"201490", 2:"203592", 3:"211295", 4:"347458", 5:"305618", 6:"458563"},
         sur=None, accroche=None, exemple=None,      # couverture d'origine, on n'y touche pas
         dos=[("Facile", "Une seule tache, comme les fiches 1 à 3.",   niveau_url(20, "1"),   "niveau-facile.png"),
              ("Normal", "De 2 à 6 taches, comme les fiches 4 à 6.",   niveau_url(20, "mix"), "niveau-normal.png"),
@@ -164,7 +184,7 @@ NIVEAUX = {
         target=50,
         sortie="livret_petit_splat_avance",
         qr="qr/avance",
-        graines={1:"510115", 2:"715819", 3:"716087", 4:"109324", 5:"868655", 6:"849499"},
+        graines={1:"204001", 2:"210929", 3:"206748", 4:"308189", 5:"201637", 6:"308504"},
         sur="Mon livret · Monde 1 · Avancé",
         accroche="Le tout, les parties…<br>et jusqu'à 50 jetons&nbsp;!",
         # lot K1-bis (20/09/2026) : 40 = 20 + 2 x 10 — on compte les jetons cachés
@@ -181,7 +201,7 @@ NIVEAUX = {
         target=100,
         sortie="livret_petit_splat_expert",
         qr="qr/expert",
-        graines={1:"892863", 2:"662792", 3:"520986", 4:"948274", 5:"830408", 6:"354581"},
+        graines={1:"892863", 2:"205335", 3:"205217", 4:"201852", 5:"830408", 6:"204313"},
         sur="Mon livret · Monde 1 · Expert",
         accroche="Le tout, les parties…<br>et jusqu'à 100 jetons&nbsp;!",
         # lot K1-bis (20/09/2026) : 60 = 20 + 4 x 10 — on compte les jetons cachés (10 par
@@ -198,8 +218,9 @@ NIVEAUX = {
 
 # Les trois livrets « je dessine le schéma » : mêmes niveaux, mêmes dos (les QR « Encore des
 # cartes » et « La suite du voyage » ne changent pas), nouvelles séries. Les graines ont été
-# choisies le 26/09/2026 parmi des milliers de tirages (voir CHOIX DES GRAINES plus haut),
-# avec, en plus : la fiche 1 a des jetons posés sur les 9 cartes (sa 1re, l'exemple : au moins
+# choisies le 26/09/2026 parmi des milliers de tirages (règles du tri du 17/09 des livrets
+# d'origine : plancher du niveau, pas deux cartes identiques, au plus une carte à 1 jeton par
+# tache), avec, en plus : la fiche 1 a des jetons posés sur les 9 cartes (sa 1re, l'exemple : au moins
 # 2 posés et 3 cachés) ; les fiches 2 et 3 ont exactement 3 cartes sans jetons (à la fiche 2 :
 # l'exemple en est une, et des deux schémas donnés, l'un a des jetons, l'autre pas ; les 3
 # cartes guidées cachent au moins 2 jetons par tache), les fiches 4 à 6 exactement 2 ; les

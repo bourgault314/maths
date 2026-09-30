@@ -51,12 +51,12 @@ test("le générateur de QR du dépôt est chargé avant l'ouverture de la page"
 });
 
 test("le QR ouvre les cartes de la fiche en version élève, sur le site", () => {
-  const r = adresse({ target: "20", splats: "1", exercise: "find_hidden", seed: "441132" });
-  assert.equal(r.url, "https://mathsgo.re/splat/petit/?support=eleve&problem=classic&target=20&splats=1&exercise=find_hidden&seed=441132");
+  const r = adresse({ target: "20", splats: "1", exercise: "find_hidden", seed: "201490" });
+  assert.equal(r.url, "https://mathsgo.re/splat/petit/?support=eleve&problem=classic&target=20&splats=1&exercise=find_hidden&seed=201490");
   assert.equal(r.actif, true, "toujours là, sans réglage");
   // l'adresse d'un QR de livret (fiche 4 du monde 1) : la même que celle que l'outil fabrique
-  const livret = adresse({ target: "20", splats: "2", exercise: "find_hidden", seed: "514457", espace: true, parcours: "m1e4" });
-  assert.equal(livret.url, "https://mathsgo.re/splat/petit/?support=eleve&problem=classic&target=20&splats=2&exercise=find_hidden&seed=514457&espace=1&parcours=m1e4");
+  const livret = adresse({ target: "20", splats: "2", exercise: "find_hidden", seed: "347458", espace: true, parcours: "m1e4" });
+  assert.equal(livret.url, "https://mathsgo.re/splat/petit/?support=eleve&problem=classic&target=20&splats=2&exercise=find_hidden&seed=347458&espace=1&parcours=m1e4");
 });
 
 test("8 ou 9 cases : l'élève rejoue autant de cartes que sur sa feuille", () => {
@@ -94,5 +94,5 @@ test("jetons=0 et sansjetons=N suivent dans le QR (livrets « Je fais le schéma
   const f4 = adresse({ target: "20", splats: "mix4", exercise: "find_hidden", seed: "24310055", grid: "3x3", espace: true, sansjetons: 2, parcours: "m1e5" });
   assert.equal(f4.url, "https://mathsgo.re/splat/petit/?support=eleve&problem=classic&target=20&splats=mix4&exercise=find_hidden&seed=24310055&grid=3x3&espace=1&sansjetons=2&parcours=m1e5");
   // sans ces réglages, l'adresse ne change pas
-  assert.doesNotMatch(adresse({ target: "20", splats: "1", exercise: "find_hidden", seed: "441132" }).url, /jetons/);
+  assert.doesNotMatch(adresse({ target: "20", splats: "1", exercise: "find_hidden", seed: "201490" }).url, /jetons/);
 });

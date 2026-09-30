@@ -147,7 +147,7 @@ test("render.py : trois niveaux, de nouvelles graines, les livrets d'origine inc
   // les 6 fiches d'origine n'ont pas bougé
   assert.match(render, /dict\(n=1, t="Complète le schéma",  splats="1",   ex="find_hidden"\),/);
   assert.match(render, /dict\(n=6, t="Dessine en expert",   splats="mix", ex="construct"\),/);
-  assert.match(render, /graines=\{1:"441132", 2:"929356", 3:"302672", 4:"514457", 5:"727304", 6:"514457"\}/);
+  assert.match(render, /graines=\{1:"201490", 2:"203592", 3:"211295", 4:"347458", 5:"305618", 6:"458563"\}/);
 });
 
 test("les 12 PDF existent, la page des livrets les montre dans une 2e rangée du monde 1", () => {
