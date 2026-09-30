@@ -98,8 +98,9 @@ test("les trois mots d’état : à revoir (rouge) · en route (bleu) · su (ver
   // Plus aucun « à travailler » ni « en cours » (au sens de la grille) sur les écrans de l'élève.
   assert.doesNotMatch(visible, /à travailler|à retravailler/, "le mot « à travailler » ne s’affiche plus");
   assert.doesNotMatch(visible, /\ben cours\b(?! de route)/, "le mot « en cours » ne s’affiche plus");
-  // Le bouton « à revoir » d'une table acquise existait déjà : même mot, même sens.
-  assert.match(html, /revoir\.textContent = "à revoir";/);
+  // Le bouton « à revoir » d'une table acquise existait déjà : même mot, même
+  // sens — depuis l'audit 2, avec le nombre de calculs (« 2 calculs à revoir »).
+  assert.match(html, /revoir\.textContent = `Réviser \$\{pluriel\(nombre, "calcul"\)\}\\u00a0→`;/);
 });
 
 test("le détail d’une case dit la règle du jour, et seulement là", () => {

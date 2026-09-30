@@ -198,13 +198,17 @@ test("la réponse est donnée à la 3e erreur sur le même calcul, pas avant", (
 // Le vrai morceau de la page qui traite une réponse de J'apprends, joué sur
 // une bande entière : on garde la file de questions, les cases remplies, les
 // cases données, et ce que dit la correction.
-const DEBUT_BLOC = "          const donnee = stickActivity && !correct && reponseDonnee(state.erreursBande, question.factKey);";
+// Le début est la ligne D'AVANT la règle (audit 2, remarque de Code sur le
+// sabotage 2 de #884) : un repère pris dans la règle elle-même faisait échouer
+// la découpe au lieu du comportement quand on touchait à la règle.
+const DEBUT_BLOC = "          const assisted = !stickActivity && state.learnStickHelpUsed;\n";
 const FIN_BLOC = "          showAnswerFeedback(question, correct, skip ? null : value, shouldRetry, assisted, donnee);";
 const bloc = (() => {
   const a = html.indexOf(DEBUT_BLOC);
   const b = html.indexOf(FIN_BLOC, a);
   assert.ok(a > 0 && b > a, "le traitement d’une réponse de J’apprends doit exister");
-  return html.slice(a, b);
+  assert.equal(html.indexOf(DEBUT_BLOC, a + 1), -1, "un seul traitement");
+  return html.slice(a + DEBUT_BLOC.length, b);
 })();
 const traiter = new Function("state", "question", "correct", "stickActivity", "assisted", `
   const ERREURS_AVANT_REPONSE = ${ERREURS_AVANT_REPONSE};

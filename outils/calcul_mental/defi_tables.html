@@ -12,6 +12,9 @@
   <link rel="icon" type="image/png" sizes="32x32" href="/assets/img/favicon-32.png">
   <link rel="icon" type="image/png" sizes="192x192" href="/assets/img/favicon-192.png">
   <link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png">
+  <!-- Audit 2 (30/09/2026) : Nunito, servie par le site, pour les ordinateurs
+       et Android — l'iPhone garde sa police arrondie (ui-rounded). -->
+  <link rel="stylesheet" href="../../assets/vendor/polices/polices.css">
   <script>
     // Lu en tout premier, avant l'appli, en JavaScript ancien (pas de const,
     // pas de ?., pas d'URLSearchParams) : quoi qu'il arrive au reste — moteur
@@ -91,6 +94,18 @@
       font-family: Inter, ui-rounded, "Arial Rounded MT Bold", "Segoe UI", sans-serif;
     }
 
+    /* Audit 2 (30/09/2026) : « Inter » n'a jamais été servie par le site ;
+       sans police d'Apple (ui-rounded), un ordinateur prenait « Arial Rounded
+       MT Bold » (installée avec Office), qui n'a qu'un seul gras : Chrome la
+       regraissait lui-même aux poids 850-950 de l'appli — lettres empâtées au
+       tableau et en salle informatique. Sur un écran d'ordinateur, Nunito
+       (200 à 1000, servie par le site) passe avant elle. Les téléphones
+       gardent leur police : Nunito est plus large, « La table de 10 » passait
+       sur deux lignes à 360 px. */
+    @media (min-width: 1024px) {
+      :root { font-family: Inter, ui-rounded, Nunito, "Arial Rounded MT Bold", "Segoe UI", sans-serif; }
+    }
+
     * { box-sizing: border-box; }
     [hidden] { display: none !important; }
     .sr-only {
@@ -131,6 +146,17 @@
     h1[tabindex="-1"]:focus { outline: none; }
 
     .shell { width: min(850px, calc(100% - 28px)); margin: auto; padding-bottom: 30px; }
+    /* Audit 2 (T1, 30/09/2026) : au tableau, tout s'agrandit d'un bloc —
+       l'échelle est posée par ajusterEchelle() selon la taille de l'écran
+       (1 sur un téléphone, une tablette ou un portable). Jamais à
+       l'impression : la fiche a sa propre mise à l'échelle. */
+    @media screen {
+      .shell { zoom: var(--echelle, 1); }
+      body.challenge-playing .shell { zoom: var(--echelle-jeu, 1); }
+      /* Les perles remplissent déjà toute la hauteur d'un écran de 1 080 px :
+         elles gardent leur taille. */
+      body.challenge-playing:has(.question.perles-main) .shell { zoom: 1; }
+    }
     .topbar {
       min-height: 70px;
       display: flex;
@@ -586,6 +612,9 @@
       text-align: left;
     }
     .parcours-row.is-acquise { border-color: #b8dfc8; background: #f7fcf9; }
+    .parcours-row.is-ma-table { border-color: var(--blue); box-shadow: 0 0 0 1px var(--blue); }
+    .parcours-ma-table { padding: 3px 9px; border-radius: 999px; color: #fff; background: var(--blue); font-size: .78rem; font-weight: 950; white-space: nowrap; }
+    @media (max-width: 429px) { #question-count .compteur-suite { display: none; } }
     .parcours-row-head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; margin-bottom: 7px; }
     .parcours-row-head strong { color: var(--ink); font-size: 1.05rem; }
     .parcours-badge { padding: 3px 9px; border-radius: 999px; color: var(--green); background: var(--green-soft); font-size: .78rem; font-weight: 950; }
@@ -736,13 +765,16 @@
     /* ---- Mes calculs ---- */
     .parcours-head-etat { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 4px 6px; }
     .parcours-revoir {
+      display: block;
+      width: 100%;
       min-height: 44px;
+      margin-top: 8px;
       padding: 4px 12px;
       border: 1px solid #f2c59a;
-      border-radius: 999px;
+      border-radius: 12px;
       color: #9a4207;
       background: #fff1e4;
-      font-size: .78rem;
+      font-size: .85rem;
       font-weight: 950;
       cursor: pointer;
     }
@@ -826,7 +858,10 @@
        vu » = carré large, « su » = carré étroit, mot collé à gauche). Quatre
        carrés de 44 px, le mot centré dessous. */
     .calculs-legende > span { display: inline-flex; flex-direction: column; align-items: center; gap: 4px; }
-    .calculs-legende .mc-cell { width: 44px; min-height: 22px; min-width: 0; pointer-events: none; }
+    /* Lot audit 2 : dès 480 px, les petites cases passent à 7 px (43 px en
+       tout) dans un carré de 44 px dont il ne reste que 36 px dedans — la
+       dernière dépassait du cadre de 5 px. Le carré suit ses petites cases. */
+    .calculs-legende .mc-cell { width: auto; min-width: 44px; min-height: 22px; padding: 2px 5px; pointer-events: none; }
     .calculs-action { margin: 14px 0 0; text-align: center; }
     .calculs-action .primary, .calculs-action .secondary { width: min(100%, 340px); }
     .calculs-hint { margin: 8px 0 0; color: var(--muted); font-size: .85rem; text-align: center; }
@@ -1331,8 +1366,9 @@
     body.fullscreen-active .fullscreen-toggle {
       position: fixed;
       z-index: 60;
-      top: max(7px, env(safe-area-inset-top));
-      right: max(8px, env(safe-area-inset-right));
+      /* Audit 2 : 7 px du coin, et le vidéoprojecteur rognait le bouton. */
+      top: max(24px, env(safe-area-inset-top));
+      right: max(28px, env(safe-area-inset-right));
       border-color: #7899ae;
       background: #fff;
       box-shadow: 0 5px 18px rgba(21, 52, 81, .2);
@@ -1443,6 +1479,19 @@
       /* Sur téléphone le pavé se cale en bas de la carte, là où le pouce est
          à l'aise ; le calcul et la correction restent en haut. */
       .challenge-playing .keypad { margin: auto auto 0; }
+      /* Lot audit 2 (choix de Gwenaël, 30/09/2026) : dans une série sans bande
+         (entraînement, validation, révision, mélange, escalier), le calcul
+         descend juste au-dessus du pavé — l'œil ne fait plus l'aller-retour, et
+         la correction tombe entre les deux. La place libre passe en haut. Le
+         calcul garde la même place du début à la fin de la série : la ligne de
+         correction a sa hauteur réservée (min-height). */
+      .challenge-playing .question:not(.show-learn-sequence) .expression { margin-top: auto; }
+      .challenge-playing .question:not(.show-learn-sequence) .keypad { margin: 6px auto 0; }
+      /* … et pour qu'il ne remonte pas quand la correction prend deux lignes
+         (« Ta réponse : 11. Bonne réponse : 10. Le calcul reviendra. » en
+         révision, ou n'importe quelle correction à 320 px), la ligne de
+         correction garde la hauteur de deux lignes, texte centré. */
+      .challenge-playing .question:not(.show-learn-sequence) .answer-feedback { min-height: 56px; }
       .challenge-playing .actions { margin-bottom: 0; }
       .challenge-playing .question.stick-trace .expression { min-height: 68px; }
       .challenge-playing .stick-help-button { min-height: 36px; padding: 5px 12px; }
@@ -3206,6 +3255,24 @@
         const facteur = Math.max(0.45, placeDisponible / largeurFiche);
         bloc.style.setProperty("--fiche-zoom", String(Math.round(facteur * 1000) / 1000));
       }
+      // Audit 2 (T1, 30/09/2026) : au tableau, l'appli gardait sa taille de
+      // téléphone (850 px de large au plus, textes de 16 px) au milieu d'un
+      // écran de 2 000 px. Au-delà de 1 280 × 680, tout s'agrandit d'un bloc,
+      // sans rien réorganiser : la même composition, en plus grand, jusqu'à
+      // ×1,6. Le jeu (le pavé) est plus haut : il s'agrandit pour tenir dans
+      // 960 px. Sous ×1,1, rien ne bouge (un portable reste à sa taille).
+      const ECRAN_DE_BASE = Object.freeze({largeur: 1280, hauteur: 680, hauteurJeu: 960, max: 1.6});
+      function echelleEcran(largeur, hauteur, hauteurBase) {
+        const z = Math.min(largeur / ECRAN_DE_BASE.largeur, hauteur / hauteurBase);
+        return z >= 1.1 ? Math.min(z, ECRAN_DE_BASE.max) : 1;
+      }
+      function ajusterEchelle() {
+        const racine = document.documentElement.style;
+        racine.setProperty("--echelle", echelleEcran(window.innerWidth, window.innerHeight, ECRAN_DE_BASE.hauteur).toFixed(3));
+        racine.setProperty("--echelle-jeu", echelleEcran(window.innerWidth, window.innerHeight, ECRAN_DE_BASE.hauteurJeu).toFixed(3));
+      }
+      ajusterEchelle();
+      window.addEventListener("resize", ajusterEchelle);
       window.addEventListener("resize", ajusterFiche);
       window.addEventListener("resize", retracerSauts);
       let TOTAL = 20;
@@ -3351,6 +3418,65 @@
         return rest ? `${minutes} min ${rest} s` : `${minutes} min`;
       }
 
+      // [retour-navigateur:debut]
+      // Lot audit 2 (bug D de l'audit du 30/09/2026) : le bouton Retour du
+      // navigateur (Android, tablette, geste du bord de l'iPad) quittait
+      // Défi tables depuis n'importe quel écran. Chaque écran interne pose
+      // UNE entrée dans l'historique — jamais plus : deux étages, l'accueil et
+      // « ailleurs » — et Retour y fait ce que fait le bouton de retour de
+      // l'écran : une série s'arrête tout de suite, conservée comme avec
+      // « Ma table ». Revenir à l'accueil par un bouton de l'appli retire
+      // l'entrée, pour qu'un Retour depuis l'accueil quitte l'appli du premier
+      // coup. L'adresse ne change jamais (pas de #, rien à recharger).
+      const MARQUE_HISTORIQUE = "defiTablesEcran";
+      let ecranCourant = "intro";
+      let retourHistoriqueAttendu = false;
+
+      function surEntreeInterne() {
+        try { return Boolean(window.history.state && window.history.state[MARQUE_HISTORIQUE]); } catch (_) { return false; }
+      }
+
+      // L'accueil est la base ; ses réglages (les deux portes professeur) et
+      // tous les autres écrans sont « ailleurs ».
+      function ecranEstInterne(name) {
+        return name !== "intro" || Boolean(configuration.mode);
+      }
+
+      function suivreHistorique(name) {
+        ecranCourant = name;
+        try {
+          if (ecranEstInterne(name)) {
+            if (!surEntreeInterne()) window.history.pushState({[MARQUE_HISTORIQUE]: true}, "");
+          } else if (surEntreeInterne()) {
+            retourHistoriqueAttendu = true;
+            window.history.back();
+          }
+        } catch (_) {}
+      }
+
+      function retourNavigateur() {
+        if (retourHistoriqueAttendu) {
+          retourHistoriqueAttendu = false;
+          // L'élève a déjà rouvert un écran pendant que l'entrée se retirait.
+          if (ecranEstInterne(ecranCourant)) suivreHistorique(ecranCourant);
+          return;
+        }
+        if (surEntreeInterne() || !ecranEstInterne(ecranCourant)) return;
+        // « C'est toujours toi ? » ouvert : on y reste, rien ne part.
+        if (gardeVisible) { suivreHistorique(ecranCourant); return; }
+        if (["launch", "play", "result"].includes(ecranCourant)) quitterSerie();
+        else backToModes();
+      }
+
+      // Une page rechargée sur l'entrée posée rouvre l'accueil : on retire
+      // l'entrée, comme au retour par un bouton de l'appli.
+      if (surEntreeInterne()) {
+        retourHistoriqueAttendu = true;
+        try { window.history.back(); } catch (_) { retourHistoriqueAttendu = false; }
+      }
+      window.addEventListener("popstate", retourNavigateur);
+      // [retour-navigateur:fin]
+
       function show(name) {
         ["intro", "launch", "play", "result", "parcours", "calculs", "lire", "fiche"].forEach(id => { $(id).hidden = id !== name; });
         if (name === "intro") renderAccueil();
@@ -3378,6 +3504,7 @@
         if (name === "calculs") $("calculs-title").focus?.({preventScroll: true});
         if (name === "fiche") $("fiche-title").focus?.({preventScroll: true});
         if (name === "lire") $("lire-title").focus?.({preventScroll: true});
+        suivreHistorique(name);
       }
 
       const MODE_COPY = Object.freeze({
@@ -3420,6 +3547,7 @@
         configuration.duration = preset.duration;
         configuration.testLevel = preset.testLevel || 1;
         syncControls();
+        suivreHistorique("intro");
         window.scrollTo({top: 0, behavior: "auto"});
         $("settings-title").focus?.({preventScroll: true});
       }
@@ -4329,7 +4457,16 @@
         const completed = stickActivity ? state.revealedLearnResults.size : state.mastered.size;
         const total = stickActivity ? CASES_BANDE : TOTAL;
         const label = stickActivity ? "cases complétées" : "calculs sus";
-        $("question-count").textContent = `${completed} / ${total} ${label}`;
+        if (stickActivity) {
+          // Audit 2 (30/09/2026) : « complétées » s'efface sous 430 px —
+          // « 11 / 11 cases complétées » passait sur deux lignes à 402 px.
+          const suite = document.createElement("span");
+          suite.className = "compteur-suite";
+          suite.textContent = " complétées";
+          $("question-count").replaceChildren(`${completed} / ${total} cases`, suite);
+        } else {
+          $("question-count").textContent = `${completed} / ${total} ${label}`;
+        }
         $("progress").style.width = `${completed / total * 100}%`;
       }
 
@@ -6282,27 +6419,54 @@
         // carte complète, où l'élève fait ce qu'il veut dans l'ordre qu'il veut.
         const list = $("parcours-list");
         list.replaceChildren();
+        // Audit 2 (30/09/2026, version B choisie par Gwenaël) : la table que
+        // l'accueil appelle « Ma table » — la suivante dans l'ordre 2, 10, 5,
+        // 3…, ou celle que l'élève a choisie — porte le même mot ici, et un
+        // cadre bleu pour la trouver en faisant défiler.
+        const maTable = tableEnCours(etat);
         etat.lignes.forEach(ligne => {
           const item = document.createElement("li");
-          item.className = `parcours-row${ligne.acquise ? " is-acquise" : ""}`;
+          item.className = `parcours-row${ligne.acquise ? " is-acquise" : ""}${ligne.table === maTable ? " is-ma-table" : ""}`;
           const head = document.createElement("div");
           head.className = "parcours-row-head";
           const name = document.createElement("strong");
           name.textContent = `Table de ${ligne.table}`;
           const badge = document.createElement("span");
           badge.className = `parcours-badge${ligne.acquise ? "" : " is-pending"}`;
-          badge.textContent = ligne.acquise ? "Acquise ✓" : ligne.dernierEntrainement ? `dernier essai : ${ligne.dernierEntrainement.score} sur ${ligne.dernierEntrainement.total}` : "";
+          // Audit 2 : plus de pastille « Acquise ✓ » — la case verte ✓ de la
+          // colonne « Acquise » le dit déjà (doublon relevé par Gwenaël).
+          badge.textContent = ligne.acquise ? "" : ligne.dernierEntrainement ? `dernier essai : ${ligne.dernierEntrainement.score} sur ${ligne.dernierEntrainement.total}` : "";
           const etatGroupe = document.createElement("span");
           etatGroupe.className = "parcours-head-etat";
-          if (ligne.aRevoir) {
-            const revoir = document.createElement("button");
+          // Audit 2 (30/09/2026, piste 1 choisie par Gwenaël) : « à revoir »
+          // ne se pose plus à côté de « Acquise ✓ » — posés côte à côte, les
+          // deux se lisaient comme l'état de la table et se contredisaient
+          // (une validation réussie avec 2 erreurs allumait les deux). La
+          // table reste acquise ; ce sont des CALCULS qui sont à revoir : ils
+          // ont leur barre sous la ligne, avec leur nombre.
+          // Seulement quand ces calculs sont à réviser : un calcul raté ne
+          // revient que le lendemain, et le bouton affiché le jour même ne
+          // lançait rien (startRevision n'avait aucun calcul dû). La barre
+          // n'apparaît donc jamais le jour d'une validation réussie.
+          let revoir = null;
+          const rouges = ligne.aRevoir ? new Set(PARCOURS.calculsATravailler(parcours, ligne.table)) : new Set();
+          const nombre = PARCOURS.calculsDus(parcours, {table: ligne.table}).filter(cle => rouges.has(cle)).length;
+          if (nombre) {
+            revoir = document.createElement("button");
             revoir.type = "button";
             revoir.className = "parcours-revoir";
-            revoir.textContent = "à revoir";
-            revoir.setAttribute("aria-label", `Table de ${ligne.table} : des calculs sont retombés à zéro. Lancer une révision de 10 questions sur cette table.`);
-            revoir.title = `Des calculs de la table de ${ligne.table} sont à revoir`;
+            // Une action, pas un état : « Réviser 2 calculs » (le mot du
+            // bouton de Mes calculs) ; « à revoir » sonnait comme un jugement
+            // sur une table pourtant acquise.
+            revoir.textContent = `Réviser ${pluriel(nombre, "calcul")}\u00a0→`;
+            revoir.setAttribute("aria-label", `Table de ${ligne.table} : réviser ${pluriel(nombre, "calcul")}. Lance une révision sur cette table.`);
             revoir.addEventListener("click", () => startRevision(ligne.table, "parcours"));
-            etatGroupe.append(revoir);
+          }
+          if (ligne.table === maTable) {
+            const repere = document.createElement("span");
+            repere.className = "parcours-ma-table";
+            repere.textContent = "ma table";
+            etatGroupe.append(repere);
           }
           etatGroupe.append(badge);
           head.append(name, etatGroupe);
@@ -6342,6 +6506,7 @@
             }));
           }
           item.append(head, cells);
+          if (revoir) item.append(revoir);
           list.append(item);
         });
 

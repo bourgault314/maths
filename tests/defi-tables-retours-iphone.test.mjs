@@ -145,7 +145,9 @@ test("le bouton de Mes calculs : « Réviser 10 calculs » + « 36 à faire aujo
 
 test("la légende : quatre carrés de même largeur, le mot centré dessous", () => {
   assert.match(html, /\.calculs-legende > span \{ display: inline-flex; flex-direction: column; align-items: center; gap: 4px; \}/);
-  assert.match(html, /\.calculs-legende \.mc-cell \{ width: 44px; min-height: 22px; min-width: 0; pointer-events: none; \}/);
+  // Audit 2 (30/09/2026) : 44 px au moins, et le carré suit ses petites cases
+  // (43 px dès 480 px) — la dernière sortait du cadre.
+  assert.match(html, /\.calculs-legende \.mc-cell \{ width: auto; min-width: 44px; min-height: 22px; padding: 2px 5px; pointer-events: none; \}/);
 });
 
 test("la barre collée de Mes calculs : 8 px au-dessus du rond, 10 en dessous, l’ancre de la grille suit", () => {
@@ -167,7 +169,7 @@ test("« ← Calcul mental » seulement sur l’accueil : body.ecran-interne par
   const {document, $} = fauxDocument(["intro", "launch", "play", "result", "parcours", "calculs", "lire", "fiche", "settings-title", "acc-table-titre", "launch-summary", "result-title", "parcours-title", "calculs-title"]);
   const avant = `const document = ARG.document; const $ = ARG.$; const window = {scrollTo: () => {}};
     const renderAccueil = () => {}; const renderParcours = () => {}; const renderCalculs = () => {}; const syncControls = () => {};
-    const configuration = {mode: null};`;
+    const configuration = {mode: null}; const suivreHistorique = () => {};`;
   const show = new Function("ARG", `${avant}\n${source("show")}\nreturn show;`)({document, $});
   const vus = {};
   ["calculs", "parcours", "play", "result", "intro"].forEach(nom => { show(nom); vus[nom] = document.body.classes.has("ecran-interne"); });

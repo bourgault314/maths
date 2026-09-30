@@ -121,7 +121,12 @@ test("les retours explicites pointent vers le parent réel du catalogue", () => 
 
   for (const [path, parent] of expectedParents) {
     assert.match(returnPages[path], new RegExp(`href="${parent.replace(/[?]/g, "\\?")}"`), path);
-    assert.doesNotMatch(returnPages[path], /history\.back\s*\(/, path);
+    // Défi tables (audit 2, 30/09/2026) : le bloc « retour navigateur » retire
+    // l'entrée d'historique QUE LA PAGE A ELLE-MÊME POSÉE (marquée) quand
+    // l'élève revient à l'accueil par un bouton de l'appli. Ce n'est pas un
+    // retour aveugle : les liens de retour restent ceux du catalogue.
+    const horsBlocRetour = returnPages[path].replace(/\/\/ \[retour-navigateur:debut\][\s\S]*?\/\/ \[retour-navigateur:fin\]/, "");
+    assert.doesNotMatch(horsBlocRetour, /history\.back\s*\(/, path);
   }
 });
 
