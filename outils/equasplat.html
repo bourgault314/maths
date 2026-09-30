@@ -453,7 +453,8 @@
 
   .tokenText{
     fill:#0f172a;
-    font-size:50px;
+    /* --jetonEchelle : le chiffre rapetisse avec son jeton quand il y a beaucoup de taches. */
+    font-size:calc(50px * var(--jetonEchelle, 1));
     font-weight:950;
     text-anchor:middle;
     dominant-baseline:middle;
@@ -2775,7 +2776,7 @@
     }
 
     main.activeMode .tokenText{
-      font-size:60px;
+      font-size:calc(60px * var(--jetonEchelle, 1));
     }
 
     main.activeMode .splatText{
@@ -5125,9 +5126,23 @@
   const TOKEN_R_PHONE = 72;
   const TOKEN_HIT_EXTRA_DESKTOP = 32;
   const TOKEN_HIT_EXTRA_PHONE = 50;
-  function tokenRadius(piece){
+  function tokenRadiusBase(piece){
     const radius = piece && piece.unit ? TOKEN_UNIT_R : (isPhoneLayout() ? TOKEN_R_PHONE : TOKEN_R_DESKTOP);
     return isMobileImportLayout() ? Math.round(radius * 1.36) : radius;
+  }
+  /* BEAUCOUP DE TACHES, JETONS PLUS PETITS (30/09/2026, choix de Gwenaël le 29/09).
+     Les taches rapetissent quand il y en a beaucoup (splatLayoutFor) ; les jetons, eux,
+     gardaient leur taille : avec 11 taches d'un côté et 12 de l'autre, un jeton devenait
+     plus gros qu'une tache et finissait caché dessous. Règle : un jeton ne dépasse jamais
+     JETON_SOUS_TACHE fois le rayon des taches du moment (taille commune aux deux membres).
+     Avec peu de taches rien ne change : la tache est bien plus grande que le jeton. Le chiffre
+     suit le jeton (--jetonEchelle). Les billes unitaires de la réception gardent leur taille. */
+  const JETON_SOUS_TACHE = 0.8;
+  function tokenRadius(piece){
+    const base = tokenRadiusBase(piece);
+    if((piece && piece.unit) || !state) return base;
+    const tacheR = commonSplatLayoutRadius(splatAreaFor(getTrayForSide("left")));
+    return Math.min(base, Math.round(JETON_SOUS_TACHE * tacheR));
   }
   function tokenHitExtra(piece){
     if(piece && piece.unit) return isMobileImportLayout() ? 22 : 14;
@@ -7801,6 +7816,78 @@
     render();
   }
 
+  /* AUCUN JETON CACHÉ (30/09/2026). Les poussées d'avoidSplatsOnDrop et de
+     separateTokenPositions travaillent tache par tache et jeton par jeton : quand les taches
+     remplissent le plateau, un jeton repoussé d'une tache retombait sur une autre, ou pile
+     sur un autre jeton (carte 5𝑛 + 49 + 5 = −6𝑛 + 55 + 57 + 41 : 55 caché sous 57 dès le
+     départ, puis 49, 55 et 57 cachés après « +6𝑛 »). Dernière passe : un jeton qui touche
+     encore une tache ou un jeton déjà posé va à la place libre la plus proche — d'abord une
+     place à l'aise (les écarts du placement normal), sinon une place juste (il ne touche plus
+     rien). Si le plateau est trop plein pour ça, il se pose là où il mord le moins sur une
+     tache, mais jamais sur un autre jeton ; et les jetons se dessinent par-dessus les taches
+     (renderSvg), donc un bord de tache ne cache jamais un nombre. Un jeton bien posé ne
+     bouge pas. */
+  function tokenSplatBite(cx, cy, r, splats, marge){
+    let pire = -Infinity;
+    for(const s of splats){
+      pire = Math.max(pire, s.r * 1.08 + r + marge - Math.hypot(cx - s.cx, cy - s.cy));
+    }
+    return pire;
+  }
+
+  function tokenClearOfTokens(cx, cy, r, placed, aise){
+    for(const t of placed){
+      if(Math.hypot(cx - t.cx, cy - t.cy) < (aise ? r * 2.10 : r + t.r + 4)) return false;
+    }
+    return true;
+  }
+
+  function unhideTokens(tray, tokens, splats){
+    const area = tokenAreaForTray(tray);
+    const placed = [];
+    for(const token of tokens){
+      const r = tokenRadius(token);
+      const bien = tokenSplatBite(token.x, token.y, r, splats, 4) <= 0
+        && tokenClearOfTokens(token.x, token.y, r, placed, false);
+      if(!token.unit && !bien){
+        const step = Math.max(6, r * 0.25);
+        const points = [];
+        for(let y = area.y + r; y <= area.y + area.h - r + 0.01; y += step){
+          for(let x = area.x + r; x <= area.x + area.w - r + 0.01; x += step){
+            points.push({cx:x, cy:y, d:Math.hypot(x - token.x, y - token.y)});
+          }
+        }
+        let best = null;
+        for(const aise of [true, false]){
+          for(const pt of points){
+            if(best && pt.d >= best.d) continue;
+            if(tokenSplatBite(pt.cx, pt.cy, r, splats, aise ? 18 : 4) > 0) continue;
+            if(!tokenClearOfTokens(pt.cx, pt.cy, r, placed, aise)) continue;
+            best = pt;
+          }
+          if(best) break;
+        }
+        if(!best){
+          // Plateau plein : on mord le moins possible sur une tache, jamais sur un jeton.
+          let bestBite = Infinity;
+          for(const pt of points){
+            if(!tokenClearOfTokens(pt.cx, pt.cy, r, placed, false)) continue;
+            const bite = Math.round(tokenSplatBite(pt.cx, pt.cy, r, splats, 4));
+            if(bite < bestBite || (bite === bestBite && pt.d < best.d)){
+              best = pt;
+              bestBite = bite;
+            }
+          }
+        }
+        if(best){
+          token.x = best.cx;
+          token.y = best.cy;
+        }
+      }
+      placed.push({cx:token.x, cy:token.y, r});
+    }
+  }
+
   function layoutItems(tray, items, splatLayoutItems=items){
     const visible = items;
     const tokens = visible.filter(p => p.type === "token");
@@ -7830,6 +7917,7 @@
     }
 
     separateTokenPositions(tray, visible, tokens, sideName);
+    unhideTokens(tray, tokens, Array.from(splatPositions.values()));
     for(const token of tokens){
       out.set(token.id, {cx:token.x, cy:token.y, r:tokenRadius(token)});
     }
@@ -8256,6 +8344,8 @@
       circle.setAttribute("cx", pos.cx);
       circle.setAttribute("cy", pos.cy);
       circle.setAttribute("r", pos.r);
+      const jetonEchelle = pos.r / tokenRadiusBase(item);
+      if(jetonEchelle < 0.999) g.style.setProperty("--jetonEchelle", jetonEchelle.toFixed(3));
       const tokenClass = Number(item.value) < 0
         ? "tokenCircle negative"
         : (Number(item.value) === 0 ? "tokenCircle zero" : (isRelativeUniverse() ? "tokenCircle positive relativePositive" : "tokenCircle positive"));
@@ -8596,8 +8686,10 @@
     drawUnitPacketBoxes(packetLayout);
     const selectedIds = selectedDeleteIds();
     const groupSelectedIds = selectedGroupIds();
-    leftItems.forEach(item => drawItem("left", item, leftPos.get(item.id), selectedIds, groupSelectedIds));
-    rightItems.forEach(item => drawItem("right", item, rightPos.get(item.id), selectedIds, groupSelectedIds));
+    // Les taches d'abord, les jetons ensuite : un jeton n'est jamais caché sous une tache.
+    const splatsFirst = items => items.filter(p => p.type !== "token").concat(items.filter(p => p.type === "token"));
+    splatsFirst(leftItems).forEach(item => drawItem("left", item, leftPos.get(item.id), selectedIds, groupSelectedIds));
+    splatsFirst(rightItems).forEach(item => drawItem("right", item, rightPos.get(item.id), selectedIds, groupSelectedIds));
   }
 
 
