@@ -49,15 +49,15 @@ test("projection : pour chaque type, le bas du dessin reste dans la scène", () 
     if(!f.tient) assert.ok(f.y >= f.plateau * BAS_PLATEAU + 10, `${nom} : le dessin chevauche le plateau`);
     /* chaque étape, avec les facteurs de la carte, finit avant le bas de la scène */
     hs.forEach((h, i) => { const e = facteurs(BAS_PLATEAU, HAUT, HAUT + H, HAUT + h); assert.equal(e.plateau, f.plateau); assert.equal(e.y, f.y);
-      assert.ok(e.y + e.dessin * h <= SCENE - 10 + 1e-6, `${nom}, étape ${i + 1} : bas ${e.y + e.dessin * h}`); });
+      assert.ok(e.y + e.dessin * h <= SCENE - 30 + 1e-6, `${nom}, étape ${i + 1} : bas ${e.y + e.dessin * h}`); });
   }
 });
 
 test("projection : le plateau et le dessin rétrécissent ensemble, du même facteur", () => {
   /* tout tient déjà : rien ne bouge */
-  assert.deepEqual(facteurs(548, 620, 980), { plateau:1, dessin:1, y:620, tient:true });
+  assert.deepEqual(facteurs(548, 620, 960), { plateau:1, dessin:1, y:620, tient:true });
   /* remonter contre le plateau suffit : aucun facteur */
-  const a = facteurs(548, 620, 1032);
+  const a = facteurs(548, 620, 1012);
   assert.equal(a.plateau, 1); assert.equal(a.dessin, 1); assert.equal(a.tient, false); assert.ok(a.y < 620);
   /* sinon : le même facteur pour les deux (au millième près, le bas du dessin est arrondi) */
   for(const H of [507, 573, 643, 697, 981]){
@@ -65,14 +65,14 @@ test("projection : le plateau et le dessin rétrécissent ensemble, du même fac
     assert.ok(f.plateau < 1 && f.plateau >= 0.55, `plateau ${f.plateau}`);
     assert.ok(Math.abs(f.plateau - f.dessin) <= 0.003, `dessin ${H} : ${f.plateau} / ${f.dessin}`);
   }
-  assert.equal(facteurs(548, 620, 620 + 643).plateau, 0.816);
+  assert.equal(facteurs(548, 620, 620 + 643).plateau, 0.799);
   /* plancher du plateau : au-delà, seul le dessin continue de rétrécir */
   const c = facteurs(548, 620, 620 + 1400);
   assert.equal(c.plateau, 0.55); assert.ok(c.dessin < 0.55);
   /* quelle que soit la hauteur, jamais coupé */
   for(let basP = 480; basP <= 620; basP += 10) for(let H = 200; H <= 1400; H += 7){
     const f = facteurs(basP, 620, 620 + H);
-    assert.ok(f.y + f.dessin * H <= 990 + 1e-6, `plateau ${basP}, dessin ${H}`);
+    assert.ok(f.y + f.dessin * H <= 970 + 1e-6, `plateau ${basP}, dessin ${H}`);
   }
 });
 
@@ -102,15 +102,17 @@ function scene(hauteurs, etape){
   dessiner(etape - 1)(svg);
   const courant = svg.enfants[svg.enfants.length - 1];
   const document = { getElementById: (id) => { const c = (n) => n.attrs.id === id ? n : n.enfants.map(c).find(Boolean); return c(svg) || null; } };
-  const cadrer = new Function("svg", "document", "el", "enqueteBarresModele", "drawEnqueteBarres", "drawEnqueteLigne", "drawEnqueteCalculs", `
+  /* sans pas à pas G3 (enqueteProjectionPasAPas → null) : le cadrage des trois étapes, qui reste
+     le repli d'une carte que G3 ne saurait pas lire ; le pas à pas : tests/splat-enquete-g3-projection.test.mjs */
+  const cadrer = new Function("svg", "document", "el", "enqueteBarresModele", "drawEnqueteBarres", "drawEnqueteLigne", "drawEnqueteCalculs", "enqueteProjectionPasAPas", `
     ${CONSTANTES}
     ${fn("enqueteProjectionFacteurs")}
     ${fn("enqueteProjectionACote")}
     ${fn("enqueteProjectionCadrer")}
     return enqueteProjectionCadrer;`)(
     svg, document, noeud, () => ({ ligne: hauteurs.length === 3 ? {} : null }),
-    dessiner(0), hauteurs.length === 3 ? dessiner(1) : null, dessiner(hauteurs.length - 1));
-  return { svg, courant, total, plateau, f: cadrer({}) };
+    dessiner(0), hauteurs.length === 3 ? dessiner(1) : null, dessiner(hauteurs.length - 1), () => null);
+  return { svg, courant, total, plateau, f: cadrer({}, etape) };
 }
 function basALEcran(dessin, h){
   const m = /^translate\(800 ([\d.]+)\) scale\(([\d.]+)\) translate\(-800 -620\)$/.exec(dessin.attrs.transform || "");
@@ -127,7 +129,7 @@ test("projection : le plateau ne bouge pas d'un appui à l'autre, chaque étape 
       assert.deepEqual(s.svg.enfants.map(n => n.attrs.id), ["enqueteProjectionPlateau", s.courant.attrs.id], nom);
       assert.deepEqual(s.svg.enfants[0].enfants, [s.total, s.plateau], `${nom} : le plateau a perdu un élément`);
       assert.equal(s.courant.attrs["data-facteur"], String(s.f.dessin));
-      assert.ok(basALEcran(s.courant, h) <= 990 + 1e-6, `${nom}, étape ${i + 1} : coupé (${basALEcran(s.courant, h)})`);
+      assert.ok(basALEcran(s.courant, h) <= 970 + 1e-6, `${nom}, étape ${i + 1} : coupé (${basALEcran(s.courant, h)})`);
       vus.push(`${s.f.plateau}/${s.f.y}`);
       /* une étape plus courte que la plus haute reprend de la place : jamais plus petite qu'elle */
       const ref = new Function(`${CONSTANTES}\n${fn("enqueteProjectionFacteurs")}\nreturn enqueteProjectionFacteurs;`)()(548, 620, 620 + Math.max(...hs));
@@ -137,7 +139,7 @@ test("projection : le plateau ne bouge pas d'un appui à l'autre, chaque étape 
     assert.equal(new Set(vus).size, 1, `${nom} : le plateau bouge d'une étape à l'autre (${vus})`);
   }
   /* une carte qui tient : aucune transformation */
-  const s = scene([300, 340, 360], 3);
+  const s = scene([300, 320, 340], 3);
   assert.equal(s.courant.attrs.transform, undefined);
   assert.equal(s.svg.enfants[0].attrs.transform, undefined);
 });
@@ -154,11 +156,11 @@ test("projection : le plateau à côté du dessin quand l'étape est trop haute 
   const barres = [{ x:80, y:640, width:1440, height:150 }, { x:80, y:800, width:700, height:780 }];
   const c = aCote(dessin(barres), bp, { plateau:0.636, dessin:0.636, y:367, tient:false });
   assert.ok(c, "pas de place trouvée");
-  assert.ok(c.dessin > 0.98 && c.plateau >= 0.5 && c.plateau <= 0.9, JSON.stringify(c));
+  assert.ok(c.dessin > 0.97 && c.plateau >= 0.5 && c.plateau <= 0.9, JSON.stringify(c));
   /* le plateau posé ne recouvre aucun élément et reste dans le cadre */
   const w = c.plateau * bp.width, h = c.plateau * bp.height;
   assert.ok(c.px >= 800 + c.dessin * (780 - 800) && c.px + w <= 800 + c.dessin * (1540 - 800), JSON.stringify(c));
-  assert.ok(c.py >= 10 + c.dessin * 150 && c.py + h <= 990, JSON.stringify(c));
+  assert.ok(c.py >= 10 + c.dessin * 150 && c.py + h <= 970, JSON.stringify(c));
   /* une ligne pleine largeur (②) : aucun coin libre, on reste empilé */
   assert.equal(aCote(dessin([{ x:80, y:640, width:1440, height:900 }]), bp, { plateau:0.636, dessin:0.636, y:367, tient:false }), null);
   /* un dessin qui est déjà assez grand sous le plateau ne bouge pas */
@@ -171,7 +173,7 @@ test("projection : le plateau à côté du dessin quand l'étape est trop haute 
 test("projection : seul l'écran du professeur est cadré ; le mode élève et l'impression gardent les leurs", () => {
   const appels = html.split("enqueteProjectionCadrer(").length - 1;
   assert.equal(appels, 2, "une définition, un appel");
-  assert.match(fn("updateUI"), /if\(eleveActif\)\{ renderEleveSplat\(\); return; \}[\s\S]*else \{ renderCard\(cards\[idx\], revealState\); enqueteProjectionCadrer\(cards\[idx\]\); \}\n\}/);
+  assert.match(fn("updateUI"), /if\(eleveActif\)\{ renderEleveSplat\(\); return; \}[\s\S]*else \{ renderCard\(cards\[idx\], revealState\); enqueteProjectionCadrer\(cards\[idx\], revealState\); \}\n\}/);
   /* un dessin qui n'est pas posé directement sur la scène (mode élève : calque décalé) n'est pas touché */
   assert.match(fn("enqueteProjectionCadrer"), /dessin && dessin\.parentNode === svg \? enqueteBarresModele\(card\) : null/);
   assert.match(html, /<svg id="mainSvg" tabindex="0" viewBox="0 0 1600 1000"/);

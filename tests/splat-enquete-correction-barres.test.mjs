@@ -160,6 +160,9 @@ const modele = new Function("numberedQuestionMarkMode", `
   function getCardVarChar(){ return "𝑥"; }
   ${fn("getNumberedDisplayVarChar")}
   ${fn("enqueteNbEtapes")}
+  /* le pas à pas G3 n'existe qu'en projection (tests/splat-enquete-g3-projection.test.mjs) :
+     ici, les étapes du mode élève et de la page 2 */
+  function enqueteProjectionPasAPas(){ return null; }
   ${fn("enqueteDerniereEtape")}
   ${fn("enqueteMotCouleur")}
   ${fn("enqueteInitiale")}
