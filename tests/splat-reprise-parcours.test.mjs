@@ -46,8 +46,8 @@ function empreinte({ seed, target, splats, exercise, grid = "3x4", jetons = true
 
 // Fiche 1 « Complète le schéma » de chaque livret (graines de _sources/livret-petit-splat/render.py).
 const fiche1 = (seed, target) => empreinte({ seed, target, splats: "1", exercise: "find_hidden" });
-const monde1 = () => fiche1("441132", "20");
-const avance = () => fiche1("510115", "50");
+const monde1 = () => fiche1("201490", "20");
+const avance = () => fiche1("204001", "50");
 const expert = () => fiche1("892863", "100");
 
 // Le bloc de reprise de renderEleve, exécuté tel quel à l'ouverture d'une série de 12 cartes.
@@ -67,15 +67,15 @@ function ouvrir(store, serieAffichee) {
 
 test("les trois livrets, même étape m1e1, portent trois empreintes différentes", () => {
   assert.equal(new Set([monde1(), avance(), expert()]).size, 3);
-  assert.equal(monde1(), fiche1("441132", "20"), "même adresse, même empreinte");
+  assert.equal(monde1(), fiche1("201490", "20"), "même adresse, même empreinte");
   // sans jetons=0 ni sansjetons=N, l'empreinte n'a pas changé (les sauvegardes d'avant restent valables)
-  assert.equal(monde1(), "441132|classic|20|1|find_hidden|3x4");
+  assert.equal(monde1(), "201490|classic|20|1|find_hidden|3x4");
 });
 
 test("l'empreinte change avec chaque réglage qui change les cartes", () => {
-  const base = { seed: "441132", target: "20", splats: "1", exercise: "find_hidden", grid: "3x4" };
+  const base = { seed: "201490", target: "20", splats: "1", exercise: "find_hidden", grid: "3x4" };
   const ref = empreinte(base);
-  for (const [cle, autre] of [["seed", "510115"], ["target", "50"], ["splats", "2"], ["exercise", "construct"], ["grid", "3x3"],
+  for (const [cle, autre] of [["seed", "204001"], ["target", "50"], ["splats", "2"], ["exercise", "construct"], ["grid", "3x3"],
                               ["jetons", false], ["sansjetons", 4]]) {
     assert.notEqual(empreinte({ ...base, [cle]: autre }), ref, `${cle} change les cartes, donc l'empreinte`);
   }

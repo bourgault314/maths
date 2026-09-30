@@ -73,7 +73,8 @@ dessinait des jetons.
   Le dos garde les mêmes QR ; ses descriptions ne renvoient plus aux numéros de fiches.
 - QR : `qr/dessin/`, `qr/dessin-avance/`, `qr/dessin-expert/`. Chaque fiche valide l'étoile
   de l'étape du monde 1 qui lui ressemble le plus (m1e1, m1e4, puis m1e5).
-- Graines (26/09/2026) : mêmes règles que plus bas, plus : jetons posés sur les 9 cartes de la
+- Graines (26/09/2026) : règles du tri du 17/09 des livrets d'origine (plancher du niveau, pas
+  deux cartes identiques, au plus une carte à 1 jeton par tache), plus : jetons posés sur les 9 cartes de la
   fiche 1 (l'exemple : au moins 2 posés et 3 cachés) ; exactement 3 cartes sans jetons aux
   fiches 2 et 3, exactement 2 aux fiches 4 à 6 ; les 3 cartes guidées cachent au moins 2
   jetons par tache ; 2, 3 et 4 taches aux fiches 3 et 4 ; au moins 4 nombres de taches aux
@@ -176,39 +177,34 @@ les jetons pour qu'ils restent comptables. L'exemple ressemble donc exactement a
 cartes des fiches du livret — **plusieurs taches comprises**, ce qui est justement
 ce que ces deux niveaux apportent : *chaque tache cache le même nombre*.
 
-## Le choix des graines (17/09/2026)
+## Le choix des graines (28-29/09/2026)
 
-Les graines du Monde 1 sont celles de la progression de Claire, reprises telles
-quelles de `outils/splat_univers.html`. Celles d'Avancé et d'Expert ont été
-retenues **automatiquement**, parmi des dizaines de milliers de tirages, en ne
-gardant que les fiches qui respectent **toutes** ces règles :
+Les graines des trois livrets (Monde 1, Avancé, Expert) ont été **retriées sur le livret
+entier** fin septembre, parmi environ 640 000 tirages rejoués dans l'outil, avec les règles
+fixées par Gwenaël :
 
-1. aucune carte sous le plancher du niveau (**21** pour Avancé, **51** pour Expert) :
-   chaque livret ouvre une tranche neuve, on ne refait jamais le niveau d'en dessous.
-   Une seule exception, décidée avec Gwenaël le 17/09 : sur l'Expert, jusqu'à deux cartes
-   peuvent descendre entre 21 et 50 si aucune graine ne tient le plancher plein — c'est le
-   cas de la **fiche 6**, dont une carte fait 45 (les onze autres vont de 52 à 100) ;
-2. sur une carte « dessine », **entre 1 et 15 jetons** à dessiner — jamais 0
-   (« dessine rien » n'est pas un exercice), jamais 20 (ça décourage) ;
-3. au plus **2 cartes sans aucun jeton visible** (elles font de bonnes cartes de
-   division pure, mais pas une fiche entière) ;
-4. **pas deux cartes identiques** (même total, mêmes visibles, même nombre de taches) ;
-5. au plus **une carte** où chaque tache ne cache qu'un seul jeton ;
-6. sur les fiches 5 et 6, **au moins 4 tailles de groupes différentes** (de 2 à 6 taches).
+1. aucune carte identique dans le livret (une carte à compléter et une carte à dessiner avec
+   les mêmes nombres ne sont pas un doublon), pas de carte « à l'envers » sur une fiche ;
+2. une même division (jetons cachés ÷ taches) jamais deux fois sur une fiche, au plus deux fois
+   dans le livret — sauf la fiche 4 du Monde 1 : 12 cartes à deux taches pour 10 divisions
+   possibles jusqu'à 20, deux répétitions sont inévitables ;
+3. fiches « dessine » (2, 3, 6) : 1 ou 2 cartes **« rien à dessiner »** (tout est sous les taches) ;
+4. fiches « complète » (1, 3, 4, 5) : 1 ou 2 cartes **« tout est caché »** (aucun jeton posé),
+   dont une à plusieurs taches aux fiches 4 et 5 — un cas qui revient dans les mondes suivants ;
+5. au plus **une réponse 1** par fiche, jamais de total 1 ; le 69 est permis ;
+6. Avancé et Expert : aucune carte à 20 ou moins ; Expert : au moins 9 cartes sur 12 au-dessus de 50 ;
+7. au plus **15 jetons à dessiner** sur une carte ;
+8. une **seule réponse possible d'après la fiche imprimée**, lue comme un élève, et c'est celle
+   du corrigé ; jetons lisibles (ni chevauchés, ni mordus par une tache ou la pastille) ;
+9. (29/09) une même réponse au plus 3 fois sur une fiche, jamais sur 3 cartes de suite.
 
-À qualité égale, on a préféré les fiches qui varient le plus (totaux étalés,
-tailles de groupes variées), qui équilibrent les deux indices possibles (visibles
-donnés / cachés donnés) et dont le volume de dessin reste proche de 100 jetons
-pour douze cartes.
+**Contrôle** : `python3 verifier_graines.py` (ou `… avance`) rejoue les 18 fiches dans
+Chromium, lit chaque fiche imprimée (énoncé et corrigé) et vérifie les règles 1 à 9, la liste
+des 12 cartes des étapes du monde 1 dans `outils/splat_univers.html` et les QR des fiches.
+À relancer après toute évolution de l'outil : **ne pas changer une graine sans refaire le tri**.
 
-Ces règles ne sont pas décoratives : sans le plancher, une fiche « jusqu'à 50 »
-sort des cartes à 4 ou 10 jetons ; sans le plafond de dessin, des cartes à 20
-jetons à tracer. Le tri complet a dû passer sur 3 000 tirages par fiche pour
-Avancé et 30 000 pour Expert — **ne pas changer une graine sans refaire le tri**. Le
-script de tri n'est pas dans le dépôt : il lance l'outil dans un chromium sans affichage,
-rejoue `createItem()` avec des dizaines de milliers de graines et garde celles qui passent. (Pour les livrets « Je fais le schéma en barres », `tri_graines_dessin.py` rejoue et
-contrôle les graines retenues.)
-Le refaire depuis ces règles prend une vingtaine de minutes.
+Les livrets imprimés avant le 30/09/2026 gardent leurs cartes : leur QR contient l'ancienne
+graine, et le jeu en ligne la rejoue toujours. Les anciennes graines sont notées dans `render.py`.
 
 ## Régénérer
 
@@ -227,10 +223,11 @@ ils restent ainsi rendus avec les mêmes graines et la même version de l'outil.
 Dépendances : `playwright` (+ chromium), `pikepdf`, `qrcode[pil]`. `qpdf`, s'il est
 présent, divise le poids des PDF par deux.
 
-**Si une graine du monde 1 change** dans `outils/splat_univers.html` (tableau
-`MONDES[0].etapes`), reporter la nouvelle graine dans `NIVEAUX["normal"]["graines"]`,
-puis relancer avec `--qr` : les QR pointent vers le jeu de l'élève avec les mêmes
-cartes que la fiche imprimée.
+**Les graines du Monde 1 sont aussi celles des étapes du monde 1** de
+`outils/splat_univers.html` (tableau `MONDES[0].etapes` : adresses `j:` et `f:`, et la liste
+`eqs` des 12 cartes). Si l'une change, changer l'autre, relancer `render.py --qr normal`
+(les QR pointent vers le jeu de l'élève avec les mêmes cartes que la fiche imprimée), puis
+`verifier_graines.py`.
 
 ## Un piège déjà payé
 
