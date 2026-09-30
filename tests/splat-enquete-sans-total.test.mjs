@@ -325,23 +325,28 @@ test("le cadre de la tache de référence dit qu'il n'y a pas de total ; les aut
   assert.deepEqual(reformulation(ordinaire), ["Tache de référence : la noire, la plus petite."]);
 });
 
-test("écran : cinq clics (vide, rempli, deux écritures, calculs, vérification), taches dévoilées au 4e ; impression : quatre cadres", () => {
+test("écran : deux clics sans total (les barres, calculs), taches dévoilées au 2e ; impression : la correction en barres (lots G1-G2)", () => {
   const ecran = html.slice(html.indexOf("\nfunction renderCard("), html.indexOf("\nfunction renderCardIntoSvg("));
-  assert.match(ecran, /\}else if\(card\.family === "C" && card\._rel && card\._rel\.sansTotal\)\{\s*\/\/[^\n]*\n[^\n]*\n\s*if\(revealState === 1 \|\| revealState === 2\) drawEnqueteSansTotalSituation\(relCible, card, \{ filled: revealState === 2, \.\.\.relTel \}\);\s*if\(revealState === 3 \|\| revealState === 4\) drawEnqueteDeuxEcritures\(relCible, card, \{ solved: revealState === 4, \.\.\.relTel \}\);\s*if\(revealState === 5\) drawEnqueteVerification\(relCible, card, \{ \.\.\.relTel \}\);/);
-  // (lot E6, correction au téléphone : relCible porte les phrases d'indice de l'élève sur
-  // ordinateur, relTel le dessin portrait au téléphone — comme les autres cartes de l'Enquête)
-  assert.match(ecran, /revealState >= \(card\._rel && card\._rel\.sansTotal \? 4 : 5\)/);
+  // la correction en barres passe avant l'ancien dessin « sans total », qui reste pour une carte
+  // sans modèle ; sans ligne ②, le 2e clic est « je calcule »
+  assert.match(ecran, /\}else if\(card\.family === "C" && card\._rel && enqueteBarresModele\(card\)\)\{/);
+  assert.match(ecran, /if\(revealState === 2\) \(sansLigne \? drawEnqueteCalculs : drawEnqueteLigne\)\(relCible, card, oE\);/);
+  assert.match(ecran, /\}else if\(card\.family === "C" && card\._rel && card\._rel\.sansTotal\)\{\s*\/\/[^\n]*\n[^\n]*\n\s*if\(revealState === 1 \|\| revealState === 2\) drawEnqueteSansTotalSituation\(relCible, card, \{ filled: revealState === 2, \.\.\.relTel \}\);/);
+  assert.match(ecran, /revealState >= enqueteDerniereEtape\(card\)/);
+  assert.match(fn("enqueteNbEtapes"), /return card\._rel\.sansTotal \? 2 : 3;/);
   // « TOTAL ? » en gris ardoise, à l'écran comme à l'impression
   assert.match(ecran, /sansTotalAffiche \? "\?" : String\(card\.total\)/);
   const impression = html.slice(html.indexOf("\nfunction renderCardIntoSvg("), html.indexOf("\nfunction printSheet("));
   assert.match(impression, /sansTotalImprime \? "\?" : String\(card\.total\)/);
+  assert.match(impression, /if\(enqueteCompacte && printRevealState > 0\)\{[^}]*drawEnqueteCorrectionImprimee\(targetSvg, card, trayY \+ trayHDessine \+ 50, 2160\);/);
+  // l'ancien dessin (référence, situation, deux écritures, vérification) reste derrière, pour une carte sans modèle
   const bloc = impression.slice(impression.indexOf("}else if(card._rel.sansTotal){"), impression.indexOf("}else{", impression.indexOf("}else if(card._rel.sansTotal){")));
   const ordre = ["drawRelationReformulationBox", "drawEnqueteSansTotalSituation", "drawEnqueteDeuxEcritures", "drawEnqueteVerification"].map(f => bloc.indexOf(f));
   assert.ok(ordre.every(i => i > 0) && ordre.every((i, j) => j === 0 || i > ordre[j - 1]), "référence, situation, deux écritures, vérification");
-  assert.match(bloc, /drawEnqueteDeuxEcritures\(layer, card, \{ solved:true, \.\.\.printProfile \}\)/);
   // le cadrage téléphone du mode élève retrouve les nouveaux cadres
   const cadres = JSON.parse(ligne("const ELEVE_SCHEMA_CADRES = ").replace(/^.*= /, "").replace(/;$/, ""));
-  ["enqueteDeuxEcritures", "enqueteDeuxEcrituresSolved", "enqueteVerification"].forEach(id => assert.ok(cadres.includes(id), id));
+  ["enqueteBarres", "enqueteLigne", "enqueteCalculs", "enqueteDeuxEcritures", "enqueteDeuxEcrituresSolved", "enqueteVerification"].forEach(id => assert.ok(cadres.includes(id), id));
+  assert.ok(!cadres.includes("enqueteBarresVide"), "plus d'étape « barres vides » (29/09/2026)");
 });
 
 test("mode élève : la case du haut reste, « TOTAL ? » donné, rien à saisir ; les autres cartes gardent leur total", () => {

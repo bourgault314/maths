@@ -183,6 +183,9 @@ test("adresse : noTotal=1&repeat=3 se lit et se réécrit ; une seule case : les
   const page = new Function("etat", `
     const activityEl = { value:"C" };
     const invNoTotalEl = etat.noTotal, invRepeatOnEl = etat.repeatOn, invRepeatEl = etat.repeat;
+    /* lot G2 : les réglages du générateur (absents ici : une page d'avant, rien n'est écrit) */
+    const invOrdreEl = null, invVocabEl = null, invComposeEl = null, invReuniesEl = null, invTaskCountEl = { value:"2" };
+    ${fn("setSelectFromShare")}
     const INVESTIGATE_REPEAT_MAX = 3;
     ${ligne("function clamp(")}
     ${fn("readBooleanFromShare")}

@@ -214,7 +214,10 @@ test("lot P : en 6/page (A, A±, B, B±), TOTAL et case réponse dans une colonn
 test("à l'impression, les cadres sont gris foncé sur fond blanc (cases et plateau)", () => {
   assert.match(html, /\.pCard\{border:1\.5px solid #334155;/);
   const printRenderer = functionSource("renderCardIntoSvg", "printSheet");
-  assert.match(printRenderer, /x:printTray\.x, y:trayY, width:printTray\.w, height:trayH,\s*rx:30, fill:"#fff", stroke:"#334155", "stroke-width":"8"/);
+  // (lot G1 : la correction de l'Enquête dessine ce plateau moins haut — trayHDessine —, même
+  // contour, même fond)
+  assert.match(printRenderer, /x:printTray\.x, y:trayY, width:printTray\.w, height:trayHDessine,\s*rx:30, fill:"#fff", stroke:"#334155", "stroke-width":"8"/);
+  assert.match(printRenderer, /const trayHDessine = enqueteCompacte \? ENQ_PLATEAU_CORRECTION_H : trayH;/);
   assert.doesNotMatch(printRenderer, /stroke:"rgba\(0,0,0,0\.15\)"/);
 });
 
