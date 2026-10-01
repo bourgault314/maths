@@ -73,7 +73,7 @@ test("lot 2 : les quinze fiches du deuxième tour — codes 10d à 24d, aucune c
   assert.deepEqual(FT.map((f) => f.t), ["Trois taches en chaîne", "Je complète", "Référence, chaîne ou je complète ?",
     "Tout dans le désordre", "Le grand défi additif", "Chaîne, deux rapports", "Chaîne, un écart et un rapport",
     "Je complète, avec un rapport", "Indices composés", "Le grand défi", "Deux taches réunies", "Répétées à trois couleurs",
-    "Les indices en symboles", "Très grands nombres", "Unité commune : je double tout"]);
+    "Les indices en symboles", "Très grands nombres", "Unité commune : les petites parts"]);
   // chaque livret : ses cinq fiches, dans l'ordre
   const bloc = (nom) => render.slice(render.indexOf(`"${nom}": dict(`), render.indexOf("),\n", render.indexOf(`"${nom}": dict(`)));
   const ref = { additif: "FICHES_ADD", multiplicatif: "FICHES_MUL", rebondit: "FICHES_REB",
@@ -173,9 +173,14 @@ test("les exemples : la page 2 montre le dessin de la première fiche du livret,
   // profil d'impression ; ni le schéma vide ni le dernier appui ; les autres taches en un dessin
   for (const f of ["plan = enqueteG3Etapes(card);", "enqueteG3Dessiner(g, card, et, plan.modele, prof);",
                    "const prof = {isPrint:true, modele, sansTitre:true};", "e.type !== 'vide' && e.type !== 'fin'",
-                   "titre = 'Je trouve les autres taches';", "'Je fais le schéma de la situation'"])
+                   "'Je trouve les autres taches'", "'Je fais le schéma de la situation'"])
     assert.ok(render.includes(f), f);
   assert.match(render, /if \(n < 4 \|\| n > 7\) return/);
+  // (01/10/2026, question à choix) les étapes de la page 2 sont numérotées dans une pastille
+  // blanche bordée, comme les ① ② des corrigés : la tache numérotée reste aux fiches
+  assert.ok(render.includes(`const badge = i => '<span class="num">' + i + '</span>';`), "page 2 : numéros en pastille blanche");
+  assert.doesNotMatch(exemple, /tacheBadge/, "page 2 : pas de tache numérotée");
+  assert.match(exemple, /\.et \.num\{[^}]*border:0\.6mm solid #831843[^}]*background:#fff/);
   assert.ok(render.includes("variables de couleur inconnues"), "résolution des var(--…) de l'outil");
   assert.match(render, /raise SystemExit\(f"un exemple est une carte : /);
 });
@@ -305,9 +310,12 @@ test("dans les PDF — couverture, exemple en page 2, les cinq fiches dans l'ord
       assert.match(pages[7], /Et après/);
       assert.match(pages[7], /huit nouvelles/);
       if (nom === "rebondit_tour2") {
-        assert.match(pages[7], new RegExp(souple("Un exemple résolu : je double tout").source, "i"));
-        for (const t of ["Je fais le schéma de la situation", "Je double tout", "Je remplace", "Je partage", "Je trouve les autres taches", "Je vérifie"])
+        // (lot « petite part », 01/10/2026) l'unité commune par les petites parts, plus « je double tout »
+        assert.match(pages[7], new RegExp(souple("Un exemple résolu : les petites parts").source, "i"));
+        for (const t of ["Je fais le schéma de la situation", "Je coupe en petites parts", "Je coupe la verte en 6 petites parts (2 × 3).",
+                         "Schéma regroupé", "11 parts = 55", "Je partage", "1 part = 55 ÷ 11 = 5", "Je trouve les taches", "Je vérifie"])
           assert.match(pages[7], souple(t), `${s}, dos : ${t}`);
+        for (const t of ["Je double tout", "Je remplace", "110"]) assert.doesNotMatch(pages[7], souple(t), `${s}, dos : plus de « ${t} »`);
         assert.doesNotMatch(pages[7], souple("Les barres"), `${s}, dos : le titre de ① est celui de la page 2`);
       }
       else assert.match(pages[7], /Pour se souvenir/i);

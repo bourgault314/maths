@@ -125,6 +125,7 @@ const g3 = new Function(`
 /* Une étape en une ligne lisible : son type, son titre, la ligne de calcul en noir. */
 function resume(e){
   if(e.type === "vide" || e.type === "barres" || e.type === "fin") return e.type;
+  if(e.type === "barresParts") return e.titre;
   if(e.type === "ligne") return `${e.titre} : ${e.lignes[e.courante]}`;
   return `${e.titre} : ${e.lignes[e.idx]}`;
 }
@@ -143,8 +144,9 @@ const SUITES = {
   EX_ADD2: ["vide", "barres", "Schéma regroupé : 2 noires + 8 = 26", "Je retire : 2 noires = 26 − 8 = 18", "Je partage : 1 noire = 18 ÷ 2 = 9", "Je trouve la verte : verte = 9 + 8 = 17", "fin"],
   EX_REB: ["vide", "barres", "Schéma regroupé : 3 noires + 7 + 7 = 38", "Je range : 3 noires + 7 + 7 = 38", "Je regroupe : 3 noires + 14 = 38",
     "Je retire : 3 noires = 38 − 14 = 24", "Je partage : 1 noire = 24 ÷ 3 = 8", "Je trouve une bleue : bleue = 8 + 7 = 15", "fin"],
-  EX_UNITE: ["vide", "barres", "Schéma regroupé : 2 vertes + 2 rouges + 2 noires = 110", "Je remplace : 3 vertes + 2 noires = 110",
-    "Je remplace : 11 noires = 110", "Je partage : 1 noire = 110 ÷ 11 = 10", "Je trouve la verte : verte = 3 × 10 = 30", "Je trouve la rouge : rouge = 30 ÷ 2 = 15", "fin"],
+  /* (lot « petite part », 01/10/2026) la situation, je coupe, le schéma regroupé, je partage, chaque tache */
+  EX_UNITE: ["vide", "barres", "Je coupe en petites parts", "Schéma regroupé : 11 parts = 55", "Je partage : 1 part = 55 ÷ 11 = 5",
+    "Je trouve la noire : noire = 2 × 5 = 10", "Je trouve la verte : verte = 6 × 5 = 30", "Je trouve la rouge : rouge = 3 × 5 = 15", "fin"],
 };
 const APPUIS = { EX_ADD2: 7, EX_MUL2: 6, EX_REB: 9, EX_UNITE: 9, EX_ADD: 10, EX_MUL: 10, E11D: 7, E14: 10, E22: 6, EX_REU: 10, E18D: 6 };
 
@@ -218,7 +220,7 @@ test("seulement en projection : le mode élève garde ses 3 étapes (2 sans tota
 
 // --- 3. les 30 fiches -----------------------------------------------------------------------------
 const FICHES = [...Array.from({ length: 15 }, (_, i) => `E${10 + i}`), ...Array.from({ length: 15 }, (_, i) => `E${10 + i}D`)];
-const TYPES = new Set(["vide", "barres", "ligne", "barresValeurs", "fin"]);
+const TYPES = new Set(["vide", "barres", "barresParts", "ligne", "barresValeurs", "fin"]);
 
 test("les 30 fiches des six livrets : chaque carte a son pas à pas, et il ne touche pas à la carte", () => {
   g3.eleve(false);
@@ -318,7 +320,12 @@ test("le dernier appui : les calculs déjà vus en gris, la réponse encadrée e
   g3.eleve(false);
   const titres = (nom, k) => g3.plan(carteDe(nom, k)).etapes.map((e) => e.titre || e.type);
   assert.deepEqual(titres("EX_ADD2", 0), ["vide", "barres", "Schéma regroupé", "Je retire", "Je partage", "Je trouve la verte", "fin"]);
-  assert.deepEqual(titres("EX_UNITE", 0), ["vide", "barres", "Schéma regroupé", "Je remplace", "Je remplace", "Je partage", "Je trouve la verte", "Je trouve la rouge", "fin"]);
+  assert.deepEqual(titres("EX_UNITE", 0), ["vide", "barres", "Je coupe en petites parts", "Schéma regroupé", "Je partage", "Je trouve la noire", "Je trouve la verte", "Je trouve la rouge", "fin"]);
+  /* l'unité commune : ① la situation (sans les parts), puis les parts ; le partage met la part au-dessus de chacune */
+  const pu = g3.plan(carteDe("EX_UNITE", 0)).etapes;
+  assert.equal(pu[1].situation, true);
+  assert.deepEqual(pu[4].top.map((t) => [t.de, t.a, t.parts, t.t]), [[0, 10, 11, "5"]]);
+  assert.ok(pu.slice(5, 8).every((e) => e.type === "barresValeurs" && e.parts === true && e.egal === true));
   assert.ok(titres("EX_REB", 0).includes("Je trouve une bleue"), "taches répétées : « une bleue », comme l'indice");
   const st = titres("E22", 1);
   assert.ok(st.includes("Je partage") && st.some((t) => t.startsWith("Je trouve ")), st.join(" / "));

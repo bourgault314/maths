@@ -100,7 +100,7 @@ test("C. catalogue : la carte de la progression masquée, la vignette de l'unive
     assert.ok(Math.abs(+n[2] - (+taches[i][2] + 0.36 * +n[3])) < 0.1, `numéro ${i + 1} centré en y`);
   });
   // le cache-buster du catalogue suit
-  assert.match(lire("outils/index.html"), /catalogue-refonte-data\.js\?v=splat-enquete-six-livrets-20260930-1/);
+  assert.match(lire("outils/index.html"), /catalogue-refonte-data\.js\?v=livrets-splat-miniature-20261001-1/);
 });
 
 // D. le texte lu, sans les commentaires (HTML, CSS, JS) : plus un seul « ou » sans insécable
@@ -121,8 +121,7 @@ test("D. guillemets français : une espace insécable après « et avant » dans
   // l'exemple relevé par Gwenaël était « Sans total » dans la note de « L'enquête rebondit » (retirée
   // de la carte au lot « vue prof », 27/09/2026) ; les notes du prof gardent la même écriture
   assert.match(lire("outils/splat_univers.html"), /"Indice «\\u00a0de plus que\\u00a0» : l'écart\."/);
-  // et la description des livrets au catalogue
-  assert.match(lire("assets/js/catalogue-refonte-data.js"), /le schéma en barres et l’équation, chacun avec son «\u00a0Le défi\u00a0»\./);
+  // (la description des livrets au catalogue n'a plus de guillemets depuis le 01/10/2026 : raccourcie)
 });
 
 test("E. vue professeur, mondes 2 et 5 : un seul lien vers la page des livrets, la note sans l'impression", () => {
