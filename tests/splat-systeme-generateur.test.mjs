@@ -23,9 +23,9 @@ function ligne(prefix){
 }
 
 const PALETTE = html.slice(html.indexOf("const INVESTIGATE_COLOR_PALETTE = ["), html.indexOf("];", html.indexOf("const INVESTIGATE_COLOR_PALETTE = [")) + 2);
-const CONSTANTES_SYS = ["SYS_GESTES", "SYS_GESTES_MIX_DEFAUT", "SYS_MAX_TACHES", "SYS_ESSAIS", "SYS_NOMBRES_SOUS_ENTENDUS", "SYS_COULEURS_PLURIEL", "SYS_PLAGES"]
+const CONSTANTES_SYS = ["SYS_GESTES", "SYS_GESTES_MIX_DEFAUT", "SYS_MAX_TACHES", "SYS_MAX_TACHES_AVANT", "SYS_ESSAIS", "SYS_NOMBRES_SOUS_ENTENDUS", "SYS_COULEURS_PLURIEL", "SYS_PLAGES"]
   .map((nom) => ligne(`const ${nom} = `)).join("\n");
-const FONCTIONS_SYS = ["sysNormaliserReglages", "genSystemCarte", "sysFormes", "sysSomme", "sysNombreTaches", "sysPlateau",
+const FONCTIONS_SYS = ["sysNormaliserReglages", "genSystemCarte", "sysMelangerPlateaux", "sysFormes", "sysFormesDouble", "sysSomme", "sysNombreTaches", "sysPlateau",
   "sysTirerSituation", "sysSituationValide", "sysNombreSousEntendu", "sysTexteASousEntendu", "sysSituationSure",
   "sysAssemblerCarte", "sysUneTacheParCouleur", "sysIndice", "sysPhraseIndice", "sysPlan", "sysLireGestes"].map(fn).join("\n");
 
@@ -344,7 +344,8 @@ test("MIX : seulement les gestes cochés ; par défaut les quatre du cycle 3", (
 });
 
 test("réglages : coefficient max, visibles, totaux, indices, valeurs par défaut", () => {
-  assert.deepEqual(sys.normaliser({}), { geste: "EMBOITE1", gestes: ["EMBOITE1", "PARTIELLE", "COEF", "TROIS"], clues: "BOARD", coefMax: 3, visMin: 0, visMax: 3, totalMin: 20, totalMax: 60 });
+  assert.deepEqual(sys.normaliser({}), { geste: "EMBOITE1", gestes: ["EMBOITE1", "PARTIELLE", "COEF", "TROIS"], clues: "BOARD", coefMax: 3, visMin: 0, visMax: 3, totalMin: 20, totalMax: 60,
+    ecart: "", fois: 2, indice: "11", sens: "PLATEAU", ordre: "" }); // lot M4-1 : les réglages nouveaux, éteints
   assert.equal(sys.normaliser({ clues: "SENTENCE" }).clues, "SENTENCE");
   assert.equal(sys.normaliser({ clues: "n'importe quoi" }).clues, "BOARD");
   assert.equal(sys.normaliser({ coefMax: 9 }).coefMax, 4);
@@ -565,7 +566,10 @@ test("adresses : aller-retour buildShareUrl → appliquerConfiguration pour le m
   const page = () => {
     const els = {
       activityEl: liste("D", ["U", "UPM", "N", "NPM", "C", "D", "C9", "C8"]),
-      sysGesteEl: liste("EMBOITE1", ["EMBOITE1", "PARTIELLE", "COEF", "DOUBLE", "MIROIR", "TROIS", "MIX"]),
+      sysGesteEl: liste("EMBOITE1", ["EMBOITE1", "PARTIELLE", "COEF", "DOUBLE", "MIROIR", "TROIS", "ESCALIER", "MIX"]),
+      // lot M4-1
+      sysEcartEl: liste("", ["", "1", "2"]), sysFoisEl: liste("2", ["2", "3"]), sysIndiceEl: liste("11", ["11", "12"]),
+      sysSensEl: liste("PLATEAU", ["PLATEAU", "INDICE"]), sysOrdreEl: liste("", ["", "MELANGE"]),
       sysCoefMaxEl: champ(3, { min: "1", max: "4" }),
       sysClueTypeEl: liste("BOARD", ["BOARD", "SENTENCE", "SYMBOL"]),
       sysVisibleMinEl: champ(0, { min: "0", max: "10" }), sysVisibleMaxEl: champ(3, { min: "0", max: "10" }),
@@ -604,6 +608,9 @@ test("adresses : aller-retour buildShareUrl → appliquerConfiguration pour le m
     ${fn("sysLireGestes")}
     ${fn("sysLireGestesMix")}
     ${fn("sysAppliquerGestesMix")}
+    ${fn("sysGestesLus")}
+    ${fn("sysLireReglagesM4")}
+    ${fn("sysEcrireReglagesM4")}
     return { buildShareUrl, appliquerConfiguration,
       etat: () => ({ palette: investigatePaletteKeys, question: numberedQuestionMarkMode }),
       poserPalette: (p) => { investigatePaletteKeys = parseInvestigatePalette(p); },
