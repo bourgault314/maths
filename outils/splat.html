@@ -11210,7 +11210,7 @@ function renderCardIntoSvg(targetSvg, card, printMode, opts = {}){
      n'y a rien à écrire sous le plateau. */
   const enqueteAvecModele = (card.family === "C" && !!card._rel && !card._directSubstitution && !!enqueteBarresModele(card));
   const enqueteCompacte = enqueteAvecModele && revealAnswers;
-  const enqueteEnoncePetit = enqueteAvecModele && !revealAnswers && !opts.sixColonne && !opts.plateauEntier;
+  const enqueteEnoncePetit = enqueteAvecModele && !revealAnswers && !opts.sixColonne && !opts.sixParPage && !opts.plateauEntier;
   const trayHDessine = (enqueteCompacte || enqueteEnoncePetit) ? ENQ_PLATEAU_CORRECTION_H : trayH;
   const enqPlateauGroupe = (enqueteCompacte || enqueteEnoncePetit) ? tEl("g", { id:"plateauCorrectionEnquete",
     transform:`translate(800 ${trayY}) scale(${Math.round(1000 * trayHDessine / trayH) / 1000}) translate(-800 ${-trayY})` }) : null;
@@ -11234,7 +11234,7 @@ function renderCardIntoSvg(targetSvg, card, printMode, opts = {}){
   // indices tombaient en tout petit sous le plateau, sans le nom des couleurs — illisibles
   // imprimés en noir et blanc ; ici chaque tache a son nom (labels), comme sur le corrigé.
   // Le 6 par page garde sa mise en page (indices sous le plateau).
-  const sysSymbolBand = (((card.family === "D" && !!card._sys) || (card.family === "C" && !!card._rel && !opts.sixColonne)) && !revealAnswers && card._inv && Array.isArray(card._inv.indices)
+  const sysSymbolBand = (((card.family === "D" && !!card._sys) || (card.family === "C" && !!card._rel && !opts.sixColonne && !opts.sixParPage)) && !revealAnswers && card._inv && Array.isArray(card._inv.indices)
     && card._inv.indices.length > 0 && card._inv.indices.every(t => Array.isArray(t)));
   let tx = 800, ty = 92;
   if(enqueteClueBand || sysSymbolBand) tx = 260;
@@ -12076,8 +12076,11 @@ function printSheet(){
         }else{
           sv.setAttribute("viewBox", cardViewBox);
           sv.style.width = perSheet === 6 ? "80%" : "100%";
-          /* lot 1 : le schéma vide sous la carte 1 de l'énoncé (« modele=1 »), 1, 2 ou 4 par page */
-          renderCardIntoSvg(sv, card, mode, { schemaVide:enqueteSchemaVide && mode === "statement" && perSheet !== 6 && card === cards[0] });
+          /* lot 1 : le schéma vide sous la carte 1 de l'énoncé (« modele=1 »), 1, 2 ou 4 par page.
+             sixParPage (01/10/2026) : l'Enquête en 6/page passe ici, pas par sixColonne (réservé
+             aux modes A et B) — il lui faut son propre drapeau pour garder sa mise en page. */
+          renderCardIntoSvg(sv, card, mode, { schemaVide:enqueteSchemaVide && mode === "statement" && perSheet !== 6 && card === cards[0],
+            sixParPage:perSheet === 6 });
         }
         holder.appendChild(sv);
       } else {

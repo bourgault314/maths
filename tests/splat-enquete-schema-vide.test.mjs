@@ -105,7 +105,7 @@ test("le câblage : « modele=1 » lu dans l'adresse, la carte 1 de l'énoncé s
   assert.match(html, /\n  enqueteSchemaVide = params\.get\("modele"\) === "1";\n/);
   assert.match(html, /\nlet enqueteSchemaVide = false;\n/, "éteint par défaut");
   const ps = fn("printSheet");
-  assert.match(ps, /renderCardIntoSvg\(sv, card, mode, \{ schemaVide:enqueteSchemaVide && mode === "statement" && perSheet !== 6 && card === cards\[0\] \}\);/);
+  assert.match(ps, /renderCardIntoSvg\(sv, card, mode, \{ schemaVide:enqueteSchemaVide && mode === "statement" && perSheet !== 6 && card === cards\[0\],\s*sixParPage:perSheet === 6 \}\);/);
   const rend = html.slice(html.indexOf("\nfunction renderCardIntoSvg("), html.indexOf("\nfunction printSheet("));
   assert.match(rend, /if\(opts\.schemaVide && card\.family === "C" && card\._rel && !revealAnswers\)\{/, "jamais sur la correction");
   assert.match(rend, /const layer = tEl\("g", \{ id:"enqueteSchemaVide" \}\);\s*svgCarte\.appendChild\(layer\);/);
