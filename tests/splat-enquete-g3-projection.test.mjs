@@ -205,7 +205,8 @@ test("seulement en projection : le mode élève garde ses 3 étapes (2 sans tota
   assert.match(fn("enqueteProjectionPasAPas"), /if\(typeof eleveActif !== "undefined" && eleveActif\) return null;/);
   /* l'impression (renderCardIntoSvg, la correction imprimée) ne connaît pas le pas à pas */
   for(const f of ["renderCardIntoSvg", "drawEnqueteCorrectionImprimee", "drawEnqueteBarres", "drawEnqueteLigne", "drawEnqueteCalculs"]){
-    assert.ok(!/enqueteG3|PasAPas/.test(fn(f)), `${f} passe par le pas à pas`);
+    /* (lot « pages 2 ») seule exception : le corrigé imprimé vérifie les indices avec enqueteG3VerifIndices */
+    assert.ok(!/enqueteG3|PasAPas/.test(fn(f).replace(/enqueteG3VerifIndices/g, "")), `${f} passe par le pas à pas`);
   }
   /* la projection : renderCard dessine l'étape revealState, updateUI la cadre avec son numéro */
   assert.match(html, /const g3 = enqueteProjectionPasAPas\(card\);\n\s+if\(g3\)\{\n\s+const et = g3\.etapes\[revealState - 1\];\n\s+if\(et\) enqueteG3Dessiner\(relCible, card, et, g3\.modele\);/);
@@ -336,4 +337,31 @@ test("mode élève, ordinateur : la place du schéma est prise dès « Voir le s
   const plafond = "const plafond = hauteurFenetre > 0 ? Math.round(hauteurFenetre - autres - 16) : voulu;";
   assert.ok(r.includes(plafond) && fn("eleveDessinerSchema").includes(plafond));
   assert.ok(r.includes("const cible = Math.max(ELEVE_PLATEAU_MIN, Math.min(voulu, plafond));"));
+});
+
+/* --- lot « pages 2 des livrets » (30/09/2026) : le pas à pas au profil d'impression ----------- */
+test("pages 2 : les dessins G3 prennent le profil d'impression ; sans option, la projection ne change pas", () => {
+  assert.match(fn("enqueteG3Dessiner"), /^function enqueteG3Dessiner\(target, card, et, modele, opts = \{\}\)\{/);
+  assert.match(fn("enqueteG3DessinerLigne"), /const P = enqueteProfil\(opts\);[\s\S]*if\(!opts\.sansTitre\) y \+= enqueteTitreEtape\(/);
+  assert.match(fn("enqueteG3DessinerBarresValeurs"), /const P = enqueteProfil\(opts\);[\s\S]*if\(!opts\.sansTitre\) y \+= enqueteTitreEtape\(/);
+  /* la projection appelle toujours sans option */
+  assert.match(html, /if\(et\) enqueteG3Dessiner\(relCible, card, et, g3\.modele\);/);
+  /* la case retirée : le même dessin qu'en projection (mêmes hachures, pas de pastille), moins estompé sur le papier */
+  const c = fn("enqueteG3Case");
+  assert.match(c, /if\(P\.isPrint\)\{[\s\S]*id:"enqG3RetireP"[\s\S]*fill:"#ecedf0"[\s\S]*fill:"#bbbec5"[\s\S]*return;\s*\}\s*const gr = el\("g", \{ opacity:0\.4 \}\);/);
+  /* pas de transparence sur le papier (un groupe estompé devient un flux à part dans le PDF) ; pas de pastille blanche */
+  const papier = c.slice(c.indexOf("if(P.isPrint){"), c.indexOf("const gr = el("));
+  assert.doesNotMatch(papier, /opacity|fill:"#fff"/);
+  assert.match(c, /taskSplatRevealColor\(cell\.de, card, !!P\.isPrint\)/);
+  /* sur le papier, le nom sous l'accolade descend de 10 (« trop collé ») ; en projection, rien ne bouge */
+  assert.match(fn("enqueteG3DessinerLigne"), /enqueteSousAccolade\(g, xs\[sp\.de\], xs\[sp\.a\] \+ ws\[sp\.a\], ySous, sp\.label, P, 0, P\.isPrint \? ENQ_G3_SOUS_PAPIER : 0\)/);
+  assert.match(fn("enqueteSousAccolade"), /^function enqueteSousAccolade\(g, x1, x2, y, label, P, largeurLibre, dy = 0\)\{/);
+  /* sur le papier, seulement le calcul de l'étape (pas de ligne grise) */
+  assert.match(fn("enqueteG3Lignes"), /if\(P\.isPrint && k < noir\) return;/);
+});
+
+test("corrigé imprimé : la vérification des indices sous la réponse, seulement à l'impression", () => {
+  const f = fn("drawEnqueteCalculs");
+  assert.match(f, /if\(opts\.isPrint\)\{\s*const verifs = \(modele\.verification && !entries\.some\(e => e\.verif\) \? \[`\$\{modele\.verification\} ✓`\] : \[\]\)\.concat\(enqueteG3VerifIndices\(card, modele\.lettres\)\);/);
+  assert.match(fn("enqueteG3VerifIndices"), /const w = i => lettres \? enqueteInitiale\(card, i\) : enqueteMotCouleur\(card, i\)/);
 });

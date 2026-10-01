@@ -317,15 +317,15 @@ test("l'écran : trois étapes (les barres, schéma regroupé, je calcule), les 
   const cadres = JSON.parse(ligne("const ELEVE_SCHEMA_CADRES = ").replace(/^.*= /, "").replace(/;$/, ""));
   assert.deepEqual(cadres.slice(0, 3), ["enqueteBarres", "enqueteLigne", "enqueteCalculs"]);
   assert.match(ligne("const ENQ_PROFIL_TEL = "), /boxW:960, cadre:true/);
-  // la page 2 des livrets : trois dessins, puis « J'écris la réponse et je vérifie » en texte
-  assert.match(render, /drawEnqueteLigne\(g, card, prof\)/);
+  // la page 2 des livrets (lot « pages 2 », 30/09/2026) : les schémas du pas à pas G3, posés par
+  // render.py, puis « J'écris la réponse et je vérifie » en texte
+  assert.match(render, /enqueteG3Dessiner\(g, card, et, plan\.modele, prof\);/);
   assert.doesNotMatch(render, /vide:true|drawRelationGroupedSchema|drawRelationOrderedSchema/);
-  assert.match(render, /if \(d\.etapes\.length !== 3\) return/);
+  assert.match(render, /if \(n < 4 \|\| n > 7\) return/);
   const exemple = exempleHtml;
-  assert.equal((exemple.match(/<li class="et/g) || []).length, 4, "quatre étapes sur la page 2");
-  assert.equal((exemple.match(/<svg class="dessin"/g) || []).length, 3, "trois dessins");
-  assert.match(exemple, /J'écris la réponse et je vérifie/);
-  assert.match(exemple, /Je fais le schéma de la situation/);
+  assert.match(exemple, /<ol class="etapes"><\/ol>/);
+  assert.match(render, /J'écris la réponse et je vérifie/);
+  assert.match(render, /Je fais le schéma de la situation/);
   assert.doesNotMatch(exemple, /class="fin"|Je les remplis avec les mots/);
 });
 
