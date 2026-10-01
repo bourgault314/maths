@@ -126,8 +126,11 @@ function carteImprimee(nom){
    correction ne tire rien. */
 const TIRAGES = { E10: 106, E11: 96, E12: 71, E13: 104, E14: 169, E15: 96, E16: 68, E17: 157, E18: 203, E19: 165, E20: 97, E21: 163,
   E22: 66, E23: 66, E24: 136, E10D: 194, E11D: 80, E12D: 116, E13D: 106, E14D: 188, E15D: 154, E16D: 104, E17D: 136,
-  E18D: 60, E19D: 336, E20D: 172, E21D: 268, E22D: 222, E23D: 218, E24D: 124 };
-const EMPREINTE = "dd7fdd03fc91fed1";
+  E18D: 60, E19D: 336, E20D: 172, E21D: 268, E22D: 222, E23D: 218, E24D: 172 };
+/* (lot « petite part », 01/10/2026) la fiche 24d change de graine (1168 → 3572 : trois cartes
+   « 2 et 3 » ou « 2 et 5 », puis « 3 et 4 », 19 parts, en dernier) ; les 29 autres fiches tirent
+   les mêmes cartes, au même hasard (empreinte sans la 24d identique à main : 1b81db09362575df). */
+const EMPREINTE = "696ba2c94ddcfc68";
 
 test("règle absolue : les 30 adresses des livrets tirent exactement les cartes imprimées (cartes.json), même hasard consommé", () => {
   const tout = {};
@@ -296,15 +299,20 @@ test("l'impression : le plateau de la correction à 22 mm, la correction sous lu
   const h = Number(ligne("const ENQ_PLATEAU_CORRECTION_H = ").match(/\d+/)[0]);
   assert.ok(Math.abs(h / mm - 22) < 0.5, `plateau de ${(h / mm).toFixed(1)} mm`);
   const impression = html.slice(html.indexOf("\nfunction renderCardIntoSvg("), html.indexOf("\nfunction printSheet("));
-  assert.match(impression, /const enqueteCompacte = \(card\.family === "C" && revealAnswers && !!card\._rel && !card\._directSubstitution && !!enqueteBarresModele\(card\)\);/);
+  assert.match(impression, /const enqueteAvecModele = \(card\.family === "C" && !!card\._rel && !card\._directSubstitution && !!enqueteBarresModele\(card\)\);/);
+  assert.match(impression, /const enqueteCompacte = enqueteAvecModele && revealAnswers;/);
   assert.match(impression, /height:trayHDessine,/, "le plateau dessiné à la hauteur réduite");
   assert.match(impression, /const targetSvg = enqPlateauGroupe \|\| svgCarte;/, "les taches et les jetons dans le groupe réduit");
   assert.match(impression, /drawEnqueteCorrectionImprimee\(targetSvg, card, trayY \+ trayHDessine \+ 50, 2160\)/);
   const corr = fn("drawEnqueteCorrectionImprimee");
   assert.match(corr, /if\(hauteur > bas - haut\)\{\s*facteur = Math\.round\(1000 \* \(bas - haut\) \/ hauteur\) \/ 1000;/);
   assert.match(corr, /couche\.setAttribute\("data-facteur", String\(facteur\)\);/);
-  // l'énoncé ne change pas : sans revealAnswers, le plateau garde sa hauteur
-  assert.match(impression, /const trayHDessine = enqueteCompacte \? ENQ_PLATEAU_CORRECTION_H : trayH;/);
+  // (lot « petite part », 01/10/2026) l'énoncé aussi à 22 mm, pour laisser la place d'écrire —
+  // sauf en 6/page et pour la carte d'exemple seule des livrets (plateauEntier)
+  assert.match(impression, /const enqueteEnoncePetit = enqueteAvecModele && !revealAnswers && !opts\.sixColonne && !opts\.plateauEntier;/);
+  assert.match(impression, /const trayHDessine = \(enqueteCompacte \|\| enqueteEnoncePetit\) \? ENQ_PLATEAU_CORRECTION_H : trayH;/);
+  assert.match(impression, /const startY = trayY \+ trayHDessine \+ 80;/, "les indices en symboles remontent avec le plateau");
+  assert.match(impression, /translate\(0 \$\{Math\.round\(trayY \+ trayHDessine \+ ENQ_SCHEMA_VIDE_ECART - 620\)\}\)/, "le schéma vide remonte avec le plateau");
 });
 
 test("l'écran : trois étapes (les barres, schéma regroupé, je calcule), les taches dévoilées à la dernière ; la page 2 suit", () => {
@@ -346,18 +354,31 @@ test("G2 — je complète avec un rapport (n° 12, 12 bis) : l'unité est la pet
   assert.deepEqual(b.calculs, ["noire + 12 = rouge = 2 orange", "5 orange = 45", "1 orange = 45 ÷ 5 = 9", "—", "rouge = 2 × 9 = 18", "noire = 18 − 12 = 6"]);
 });
 
-test("G2 — l'unité commune (n° 13, problème B) : je double tout", () => {
+test("l'unité commune (n° 13, problème B) : les petites parts (01/10/2026, à la place de « je double tout »)", () => {
   // rouge = 2 × noire ; rouge = 5 × orange — orange 4, noire 10, rouge 20 (planche 4-tous-les-cas, ta façon)
   const c = carte({ couleurs: ["orange", "black", "red"], valeurs: [4, 10, 20], relations: [[2, "MUL", 1, 2], [2, "MUL", 0, 5]] });
   const m = texte(enQuestion.modele(c));
   assert.equal(m.mode, "unite");
   assert.equal(m.accolade, 34);
   assert.deepEqual(m.rows, [["orange", "orange", []], ["rouge", "orange | orange | orange | orange | orange", ["cinq orange"]], ["noire", "noire", ["la moitié de la rouge"]]]);
-  const L = enQuestion.modele(c).ligne;
-  assert.deepEqual(L.avant, ["Je double tout : 2 × 34 = 68.", "Deux noires font une rouge ; une rouge fait cinq orange."]);
-  assert.deepEqual([L.total, L.groupes.map((g) => g.label)], [68, ["rouge", "rouge", "2 noires", "orange", "orange"]]);
-  assert.deepEqual(m.calculs, ["2 rouges + 2 noires + 2 orange = 68", "3 rouges + 2 orange = 68", "17 orange = 68", "1 orange = 68 ÷ 17 = 4", "—", "rouge = 5 × 4 = 20", "noire = 20 ÷ 2 = 10"]);
-  assert.deepEqual(texte(enLettre.modele(c)).calculs, ["2R + 2N + 2O = 68", "3R + 2O = 68", "17O = 68", "O = 68 ÷ 17 = 4", "—", "R = 5 × 4 = 20", "N = 20 ÷ 2 = 10"]);
+  // la grande tache (rouge) se coupe en 2 × 5 = 10 petites parts ; la noire en vaut 5, l'orange 2
+  const M = enQuestion.modele(c), P = M.parts;
+  assert.equal(P.titre, "Les barres — je coupe en petites parts");
+  assert.equal(P.phrase, "Je coupe la rouge en 10 petites parts (2\u00a0×\u00a05).");
+  assert.deepEqual([P.part, P.nTot], [2, 17]);
+  assert.deepEqual(P.rows.map((r) => [r.label, r.nParts, r.cells.every((x) => x.kind === "part" && x.v === 2 && x.de === r.i)]),
+    [["orange", 2, true], ["rouge", 10, true], ["noire", 5, true]]);
+  // sous la rouge : « orange | orange | … » (une accolade par orange), repli sur « cinq orange »
+  assert.deepEqual(P.rows[1].sous.map((x) => [x.de, x.a, x.label]), [[0, 1, "orange"], [2, 3, "orange"], [4, 5, "orange"], [6, 7, "orange"], [8, 9, "orange"]]);
+  assert.deepEqual(P.rows[1].sousRepli.map((x) => x.label), ["cinq orange"]);
+  // ② le schéma regroupé : les parts bout à bout, sous le total (34, plus le double), même échelle
+  const L = M.ligne;
+  assert.deepEqual(L.avant, []);
+  assert.deepEqual([L.total, L.groupes.map((g) => [g.label, g.cells.length])], [34, [["orange", 2], ["rouge", 10], ["noire", 5]]]);
+  assert.deepEqual(m.calculs, ["17 parts = 34", "1 part = 34 ÷ 17 = 2", "—", "orange = 2 × 2 = 4", "rouge = 10 × 2 = 20", "noire = 5 × 2 = 10"]);
+  assert.deepEqual(texte(enLettre.modele(c)).calculs, ["17 parts = 34", "1 part = 34 ÷ 17 = 2", "—", "O = 2 × 2 = 4", "R = 10 × 2 = 20", "N = 5 × 2 = 10"]);
+  // plus rien de « je double tout »
+  assert.doesNotMatch(html, /Je double tout|je double tout\)|enqueteUniteAvecLigne/);
   // deux rapports dont l'un divise l'autre (rouge = 2 noires = 4 orange) : une chaîne, comme au lot G1
   assert.equal(texte(enQuestion.modele(carte({ couleurs: ["orange", "black", "red"], valeurs: [4, 8, 16], relations: [[2, "MUL", 1, 2], [2, "MUL", 0, 4]] }))).mode, "chaine");
 });

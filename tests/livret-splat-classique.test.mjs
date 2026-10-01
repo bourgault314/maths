@@ -202,7 +202,7 @@ test("la miniature du livret existe en PNG et en WebP, au format du catalogue", 
     assert.ok(existe(`assets/img/thumbnails/splat/${n}.webp`), n);
     assert.ok(taille(`assets/img/thumbnails/splat/${n}.webp`) < taille(`assets/img/thumbnails/splat/${n}.png`), n);
   }
-  // la miniature de la carte du catalogue : les couvertures des quatre mondes en éventail (23/09/2026)
+  // la miniature de la carte du catalogue : les couvertures des mondes en éventail (23/09/2026 ; les six mondes depuis le 01/10/2026)
   assert.ok(existe("assets/img/thumbnails/splat/livrets-splat.png"));
   assert.ok(existe("assets/img/thumbnails/splat/livrets-splat.webp"));
   assert.ok(taille("assets/img/thumbnails/splat/livrets-splat.webp") < taille("assets/img/thumbnails/splat/livrets-splat.png"));
@@ -214,7 +214,7 @@ test("le catalogue déclare UNE carte « Les livrets SPLAT! » dans la collectio
   assert.match(m[0], /"collections": \["splat"\]/);
   assert.match(m[0], /"primaryGroup": "imprimer"/);
   assert.match(m[0], /"cardTitle": "Les livrets SPLAT!"/);
-  assert.match(m[0], /livrets-splat\.png\?v=2/);
+  assert.match(m[0], /livrets-splat\.png\?v=3/); // les couvertures des six mondes (01/10/2026)
   // les deux anciennes cartes ont disparu du catalogue
   assert.ok(!catalogue.includes('"outils/livrets_petit_splat.html"'), "plus de carte monde 1");
   assert.ok(!catalogue.includes('"outils/livrets_splat_classique.html"'), "plus de carte monde 2");
@@ -948,7 +948,8 @@ test("cartes des mondes : numéro, nom et fiches, dans l'ordre, toujours des ong
 test("corrigés pour tous, sur la page : plus de « prof » ni de « professeur » dans les boutons et les titres", () => {
   assert.doesNotMatch(page, /🧑‍🏫|\(prof\)|professeur/);
   assert.match(page, /<strong>✅ Les corrigés<\/strong>&nbsp;: le même livret, aux mêmes pages, avec les réponses/);
-  assert.match(catalogue, /"cardDescription": "Tous les livrets de l’univers SPLAT! à plier, monde par monde\u00a0: [^"]*l’Enquête \(monde 3\) en trois livrets et leur deuxième tour, le Système \(monde 4\) en deux livrets, et leurs corrigés ; SPLAT! Équations \(monde 5\) en quatre livrets : le schéma en barres et l’équation, chacun avec son «\u00a0Le défi\u00a0»\. SPLAT! Relatifs \(monde 6\) en deux livrets, chacun avec son «\u00a0Le défi\u00a0»\."/);
+  // (01/10/2026, demande de Gwenaël : « le texte un peu trop long ») la carte dit l'essentiel
+  assert.match(catalogue, /"cardDescription": "Tous les livrets SPLAT! à plier, du monde 1 au monde 6, avec leurs corrigés\."/);
 });
 
 /* ===================================================================== lot D (21/09/2026)

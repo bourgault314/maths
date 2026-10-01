@@ -104,7 +104,7 @@ E20D = "mode=C&clues=SENTENCE&splats=3&structure=HASARD&reunies=1&mul=1&div=1&ad
 E21D = "mode=C&clues=SENTENCE&splats=3&structure=HASARD&repeat=3&mul=1&div=1&add=1&sub=1&deltaMax=15&visibleMin=0&visibleMax=0&totalMin=30&totalMax=80&seed=10273"
 E22D = "mode=C&clues=SYMBOL&splats=3&structure=HASARD&mul=1&div=1&add=1&sub=1&deltaMax=15&visibleMin=0&visibleMax=0&totalMin=20&totalMax=60&seed=132600"
 E23D = "mode=C&clues=SENTENCE&splats=3&structure=HASARD&ordre=DESORDRE&mul=1&div=1&add=1&sub=1&deltaMax=40&visibleMin=0&visibleMax=0&totalMin=100&totalMax=200&seed=31987"
-E24D = "mode=C&clues=SENTENCE&splats=3&structure=UNITE&mul=1&div=1&add=1&sub=1&deltaMax=15&visibleMin=0&visibleMax=0&totalMin=30&totalMax=90&seed=1168"
+E24D = "mode=C&clues=SENTENCE&splats=3&structure=UNITE&mul=1&div=1&add=1&sub=1&deltaMax=15&visibleMin=0&visibleMax=0&totalMin=30&totalMax=90&seed=3572"
 
 def fiche(n, t, q, resume, note=False, code=None):
     """code : ce que porte le QR de la fiche (« 12 », ou « 12d » pour un livret Deuxième tour)."""
@@ -152,7 +152,7 @@ FICHES_REB_T2 = [
     fiche(21, "Répétées à trois couleurs", E21D, "Trois couleurs, des taches répétées.", code="21d"),
     fiche(22, "Les indices en symboles", E22D, "L'indice s'écrit en symboles.", code="22d"),
     fiche(23, "Très grands nombres", E23D, "Des totaux jusqu'à 200.", code="23d"),
-    fiche(24, "Unité commune : je double tout", E24D, "Je double tout, puis je remplace.", code="24d"),
+    fiche(24, "Unité commune : les petites parts", E24D, "Je coupe en petites parts.", code="24d"),
 ]
 
 # Les séries infinies du dos : pas de graine, huit cartes nouvelles à chaque ouverture, en mode
@@ -203,7 +203,7 @@ EX_MUL = "mode=C&splats=3&structure=CHAIN&clues=SENTENCE&mul=1&div=0&add=1&sub=0
 EX_REU = "mode=C&clues=SENTENCE&splats=3&structure=HASARD&reunies=1&mul=1&div=0&add=1&sub=0&deltaMax=15&visibleMin=0&visibleMax=0&totalMin=30&totalMax=80&cards=1&unknown=question&seed=43"
 # L'unité commune résolue, au dos du livret Deuxième tour 3 (à la place de « Pour se souvenir ») :
 # « la rouge a 2 fois plus que la verte, 3 fois plus que la noire » — noire 10, verte 15, rouge 30,
-# total 55 ; je double tout. Une carte de réglages 24d qui n'est pas dans la fiche.
+# total 55 ; les petites parts : 11 parts = 55, 1 part = 5. Une carte de réglages 24d qui n'est pas dans la fiche.
 EX_UNITE = "mode=C&clues=SENTENCE&splats=3&structure=UNITE&mul=1&div=0&add=0&sub=0&deltaMax=15&visibleMin=0&visibleMax=0&totalMin=30&totalMax=60&cards=1&unknown=question&seed=59"
 
 # La page « exemple résolu » : 2e page du livret (lue avant la première fiche).
@@ -281,7 +281,7 @@ LIVRETS = {
         dos=dict(DOS_BASE2, unite=EX_UNITE,
             series=[("Taches réunies", "Comme la fiche&nbsp;20d.", 32),
                     ("En symboles", "Comme la fiche&nbsp;22d.", 33),
-                    ("Unité commune", "Je double tout, comme la fiche&nbsp;24d.", 34)],
+                    ("Unité commune", "Les petites parts, comme la fiche&nbsp;24d.", 34)],
             suite="Continue avec le monde&nbsp;4, <b>SPLAT! Système</b>&nbsp;: plusieurs plateaux, un total pour chacun&nbsp;!")),
 }
 
@@ -433,7 +433,9 @@ JS_EXEMPLE = r"""() => {
   const NS = 'http://www.w3.org/2000/svg', card = cards[0];
   const mk = () => { const sv = document.createElementNS(NS, 'svg'); sv.setAttribute('viewBox', '0 0 1600 2200');
     sv.setAttribute('width', '1600'); sv.setAttribute('height', '2200'); document.body.appendChild(sv); return sv; };
-  const sc = mk(); renderCardIntoSvg(sc, card, 'statement');
+  // plateauEntier (01/10/2026) : la carte seule garde son plateau de 28 mm — les énoncés des
+  // fiches passent à 22 mm pour laisser la place d'écrire, ici il n'y a rien à écrire dessous
+  const sc = mk(); renderCardIntoSvg(sc, card, 'statement', {plateauEntier: true});
   const fond = sc.querySelector('rect'); if (fond && fond.getAttribute('width') === '1600') fond.remove();
   const carte = sc.innerHTML; sc.remove();
   // la correction en barres (lots G1-G2, 29/09/2026) : ① les barres, ② schéma regroupé,
@@ -455,9 +457,7 @@ JS_EXEMPLE = r"""() => {
   const liste = pas.filter(e => !trouve.includes(e) || e === trouve[trouve.length - 1]);
   const etapes = liste.map(e => {
     let et = e, titre = e.type === 'barres' ? 'Je fais le schéma de la situation' : e.titre;
-    if (e.type === 'barresValeurs' && trouve.length > 1) { et = {...e, noirDes: 0}; titre = 'Je trouve les autres taches'; }
-    // unité commune : le schéma regroupé vaut le double du total, son titre le dit
-    if (e.type === 'ligne' && e.titre === 'Schéma regroupé' && modele.mode === 'unite') titre = 'Je double tout';
+    if (trouve.includes(e) && trouve.length > 1) { et = {...e, noirDes: 0}; titre = modele.mode === 'unite' ? 'Je trouve les taches' : 'Je trouve les autres taches'; }
     const sv = mk(); const g = document.createElementNS(NS, 'g'); sv.appendChild(g);
     enqueteG3Dessiner(g, card, et, plan.modele, prof);
     const b = g.querySelector('#btnEquabarSolve'); if (b) b.remove();
@@ -525,7 +525,10 @@ JS_PAGE_EXEMPLE = """(d) => {
   if (n < 4 || n > 7) return n + ' dessins (de 4 à 7 attendus)';
   const deux = n > 5;
   if (deux) ol.classList.add('deux');
-  const badge = i => '<span class="badge"><svg viewBox="2 5 106 105" fill="#831843"><use href="#tacheBadge"/></svg><b>' + i + '</b></span>';
+  // le numéro de l'étape dans une pastille blanche bordée (01/10/2026, question à choix de
+  // Gwenaël) : la tache numérotée reste réservée aux fiches (10, 11… sur la couverture) —
+  // « 5 Je retire » ne doit pas se lire « fiche 5 » ; c'est le ① ② des corrigés et de la projection
+  const badge = i => '<span class="num">' + i + '</span>';
   ol.innerHTML = d.etapes.map((e, i) =>
     '<li class="et">' + badge(i + 1) + '<div class="txt"><h3>' + e.titre + '</h3><p class="leg">' + (e.legende || '') + '</p></div>' +
     '<svg class="dessin" viewBox="50 612 1500 ' + e.h + '" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="' + e.titre + '">' + e.svg + '</svg></li>').join('') +
@@ -598,11 +601,11 @@ JS_DOS = """(d) => {
     lex.className = 'lex unite';
     document.body.classList.add('dos-unite'); // les QR un peu plus petits : la place va à l'exemple
     // (lot « pages 2 », 30/09/2026) les schémas successifs du pas à pas de la projection (G3) :
-    // les barres, je double tout, je remplace (deux fois), je partage, les autres taches — en
+    // la situation, je coupe en petites parts, le schéma regroupé, je partage, les taches — en
     // deux colonnes lues de haut en bas, la carte en tête, la réponse à la fin
     const N = '①②③④⑤⑥⑦⑧';
     const et = (e, i) => '<div class="u-et"><h3>' + N[i] + ' ' + e.titre + '</h3><svg viewBox="50 612 1500 ' + e.h + '" xmlns="http://www.w3.org/2000/svg">' + e.svg + '</svg></div>';
-    lex.innerHTML = '<span class="chip">Un exemple résolu&nbsp;: je double tout</span>' +
+    lex.innerHTML = '<span class="chip">Un exemple résolu&nbsp;: les petites parts</span>' +
       '<div class="u-corps"><div class="u-carte"><svg viewBox="100 10 1460 830" xmlns="http://www.w3.org/2000/svg">' + u.carte + '</svg><p>' + u.indices + '</p></div>' +
       u.etapes.map(et).join('') + '<p class="u-fin"><b>' + N[u.etapes.length] + ' Je vérifie.</b> ' + u.fin + '</p></div>';
     lex.style.flexShrink = '0';

@@ -71,8 +71,18 @@ test("le dessin vide : couleurs gardées, aucun texte dans les cases, cases blan
   const caseFn = fn("enqueteDessinerCase");
   assert.match(caseFn, /fill:taskSplatRevealColor\(cell\.de, card, isPrint\), stroke:taskSplatColor\(cell\.de, card, isPrint\)/, "la case garde ses couleurs");
   assert.match(caseFn, /if\(vide\) return;/, "rien d'écrit dans une case vide");
-  assert.match(caseFn, /fill:"url\(#enqHachures\)"/, "le bout hachuré reste hachuré");
-  assert.match(caseFn, /if\(vide\)\{\s*\/\*[^*]*\*\/\s*const cw = enqueteLargeurCaseVide\(formatRelationNumber\(cell\.v\), P\.numFont, P, w - 12\)/, "sa case blanche, vide");
+  /* (lot « petite part », 01/10/2026, décision de Gwenaël) la case AJOUTÉE : blanche, sans
+     rayures, contour en pointillés, le nombre seul dedans (ni « + » ni pastille blanche) ; vide
+     dans le schéma vide. Dans le schéma regroupé, son bord du haut est le trait plein du total. */
+  assert.match(caseFn, /\}else if\(cell\.kind === "ajout"\)\{[\s\S]*?enqueteCaseAjoutee\(g, x, y, w, h, !!cell\.sousTotal\);\s*\}else\{/);
+  assert.doesNotMatch(caseFn, /enqHachures|rx:6, fill:"#fff"/, "plus de rayures ni de pastille blanche");
+  const aj = fn("enqueteCaseAjoutee");
+  assert.match(html, /const ENQ_AJOUT_POINTILLES = "14 10", ENQ_AJOUT_TRAIT = 4, ENQ_AJOUT_RENTRE = 3;/);
+  assert.match(aj, /fill:"#fff", stroke:"none"/);
+  assert.match(aj, /"stroke-dasharray":ENQ_AJOUT_POINTILLES/);
+  assert.match(aj, /if\(sansHaut\) g\.appendChild\(el\("path", \{ d:`M \$\{x1\} \$\{y\} V \$\{y2\} H \$\{x2\} V \$\{y\}`, \.\.\.trait \}\)\);/, "trois côtés sous le total");
+  assert.match(fn("drawEnqueteLigne"), /enqueteDessinerCase\(g, card, \{ \.\.\.cell, sousTotal:true \}, x, yBas/);
+  assert.match(fn("enqueteG3DessinerLigne"), /enqueteG3Case\(g, card, \{ \.\.\.c, sousTotal:true \}, xs\[k\], yBas/);
   const barres = fn("drawEnqueteBarres");
   assert.match(barres, /enqueteDessinerCase\(g, card, cell, x, yr, ws\[j\], P\.rowH, P, modele, !!modele\.vide\)/);
   assert.match(barres, /enqueteTexteLargeur\(row\.labelMesure \|\| row\.label, lfs, 800\)/, "le nom garde la taille du corrigé");
@@ -100,7 +110,7 @@ test("le câblage : « modele=1 » lu dans l'adresse, la carte 1 de l'énoncé s
   assert.match(rend, /if\(opts\.schemaVide && card\.family === "C" && card\._rel && !revealAnswers\)\{/, "jamais sur la correction");
   assert.match(rend, /const layer = tEl\("g", \{ id:"enqueteSchemaVide" \}\);\s*svgCarte\.appendChild\(layer\);/);
   assert.match(rend, /drawEnqueteBarres\(layer, card, \{ isPrint:true, modele:vide \}\)/, "le profil d'impression du corrigé");
-  assert.match(rend, /translate\(0 \$\{Math\.round\(trayY \+ trayH \+ ENQ_SCHEMA_VIDE_ECART - 620\)\}\)/, "sous le plateau de l'énoncé");
+  assert.match(rend, /translate\(0 \$\{Math\.round\(trayY \+ trayHDessine \+ ENQ_SCHEMA_VIDE_ECART - 620\)\}\)/, "sous le plateau de l'énoncé (22 mm depuis le 01/10/2026)");
   // l'écran et le mode élève ne le lisent pas
   const ecran = fn("renderCard");
   assert.doesNotMatch(ecran, /schemaVide|enqueteModeleVide/);

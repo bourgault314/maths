@@ -83,7 +83,9 @@ const CORRIGE = () => {
   const NS = "http://www.w3.org/2000/svg", sv = document.createElementNS(NS, "svg");
   sv.setAttribute("viewBox", "0 0 1600 2200"); document.body.appendChild(sv);
   const g = document.createElementNS(NS, "g"); sv.appendChild(g);
-  drawEnqueteBarres(g, cards[0], { isPrint:true });
+  /* l'unité commune (lot « petite part », 01/10/2026) : le ① du corrigé est coupé en petites
+     parts ; le schéma vide, lui, est la situation (comme le premier dessin du pas à pas) */
+  drawEnqueteBarres(g, cards[0], { isPrint:true, situation:true });
   const cases = [...g.querySelectorAll("rect")].filter((r) => r.getAttribute("stroke-width") === "3.5" && !r.closest("pattern"))
     .map((r) => ["x", "y", "width", "height", "fill", "stroke"].map((a) => r.getAttribute(a)).join(" "));
   sv.remove();

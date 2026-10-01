@@ -217,7 +217,9 @@ test("à l'impression, les cadres sont gris foncé sur fond blanc (cases et plat
   // (lot G1 : la correction de l'Enquête dessine ce plateau moins haut — trayHDessine —, même
   // contour, même fond)
   assert.match(printRenderer, /x:printTray\.x, y:trayY, width:printTray\.w, height:trayHDessine,\s*rx:30, fill:"#fff", stroke:"#334155", "stroke-width":"8"/);
-  assert.match(printRenderer, /const trayHDessine = enqueteCompacte \? ENQ_PLATEAU_CORRECTION_H : trayH;/);
+  // (01/10/2026) l'énoncé de l'Enquête aussi, sauf en 6/page (sixColonne garde son plateau)
+  assert.match(printRenderer, /const trayHDessine = \(enqueteCompacte \|\| enqueteEnoncePetit\) \? ENQ_PLATEAU_CORRECTION_H : trayH;/);
+  assert.match(printRenderer, /const enqueteEnoncePetit = [^;]*!opts\.sixColonne/);
   assert.doesNotMatch(printRenderer, /stroke:"rgba\(0,0,0,0\.15\)"/);
 });
 

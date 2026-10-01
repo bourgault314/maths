@@ -548,6 +548,6 @@ test("défi : les huit PDF, les QR, les miniatures, la page des livrets et le ca
   assert.ok(ordre.every((v, i) => v > 0 && (i === 0 || v > ordre[i - 1])), "livret 1, défi 1, livret 2, défi 2");
   assert.equal((m6.match(/<div class="grille n2">/g) || []).length, 2);
   const catalogue = lire("assets/js/catalogue-refonte-data.js");
-  assert.match(catalogue, /SPLAT! Relatifs \(monde 6\) en deux livrets, chacun avec son «\u00a0Le défi\u00a0»\."/);
-  assert.match(catalogue, /chacun avec son livret «\u00a0Le défi\u00a0», où la lettre est écrite sur les taches\./);
+  // (01/10/2026) les textes du catalogue raccourcis : « du monde 1 au monde 6 »
+  assert.match(catalogue, /"description": "Les livrets de l’univers SPLAT!, du monde 1 au monde 6, sur une seule page\./);
 });

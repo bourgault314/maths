@@ -13,7 +13,7 @@ agrafées au milieu → 8 pages A4.
 | `rebondit` — partie 3, *L'enquête rebondit* | 20 Des taches répétées · 21 Répétées, fois plus ou moins · 22 Sans total · 23 Sans total, à retourner · 24 Le défi qui rebondit | taches répétées (graine 82) |
 | `additif_tour2` — partie 1, deuxième tour | 10d Trois taches en chaîne · 11d Je complète · 12d Référence, chaîne ou je complète ? · 13d Tout dans le désordre · 14d Le grand défi additif | chaîne, deux « de plus » (graine 4642) |
 | `multiplicatif_tour2` — partie 2, deuxième tour | 15d Chaîne, deux rapports · 16d Chaîne, un écart et un rapport · 17d Je complète, avec un rapport · 18d Indices composés · 19d Le grand défi | chaîne, « de plus » puis « 3 fois plus » (graine 128029) |
-| `rebondit_tour2` — partie 3, deuxième tour | 20d Deux taches réunies · 21d Répétées à trois couleurs · 22d Les indices en symboles · 23d Très grands nombres · 24d Unité commune : je double tout | deux taches réunies (graine 43) |
+| `rebondit_tour2` — partie 3, deuxième tour | 20d Deux taches réunies · 21d Répétées à trois couleurs · 22d Les indices en symboles · 23d Très grands nombres · 24d Unité commune : les petites parts | deux taches réunies (graine 43) |
 
 Chaque livret : `outils/livret_splat_enquete_<nom>.pdf` (8 pages A4, ordre de lecture) et
 `…_a_plier.pdf` (4 pages A3 paysage **déjà imposées** 8|1 · 2|7 · 6|3 · 4|5 : recto-verso,
@@ -35,14 +35,20 @@ Les livrets « Le défi » d'avant (totaux de 50 à 100) ont disparu au lot 2.
    vérifie », en texte, et « À toi ! ». Jusqu'à cinq dessins (parties 1 et 2) : une colonne ;
    au-delà : **deux colonnes lues de haut en bas**, un filet entre les deux. La case retirée est
    hachurée **comme en projection**, seulement moins estompée (teintes fixes, sans transparence), pour
-   rester lisible en noir et blanc.
+   rester lisible en noir et blanc ; la case **ajoutée** (« Je complète ») est blanche, en
+   **pointillés**, le nombre seul dedans (01/10/2026), pour ne plus la confondre avec la retirée.
+   Les étapes sont numérotées dans une **pastille blanche bordée** (comme les ① ② des corrigés) :
+   la tache numérotée reste réservée aux fiches (01/10/2026).
 3. à 7. **Les cinq fiches**, 4 cartes par page, telles que l'outil les imprime, le QR de la fiche
    dans le bandeau, sans logo. Les fiches 13, 18, 22, 11d, 17d et 18d portent le **schéma vide
    sous la carte 1** (`modele=1`, lot 1) : ce sont celles qui apportent un nouveau dessin.
+   Depuis le 01/10/2026, le plateau des énoncés fait **22 mm** (comme la correction) pour laisser
+   plus de place pour écrire ; la carte d'exemple seule (couverture, page 2, dos) garde ses 28 mm
+   (`plateauEntier`).
 4. **Dos** — « Encore des cartes ! » (trois séries infinies, quatre au Deuxième tour 2 avec les
    indices composés ; huit cartes à chaque ouverture), « La suite du voyage », « Pour se souvenir »
-   (au Deuxième tour 3 : **l'unité commune résolue**, « je double tout », pas à pas comme en
-   projection — je double tout, je remplace, je remplace, je partage —, les QR un peu plus petits),
+   (au Deuxième tour 3 : **l'unité commune résolue**, « les petites parts », pas à pas comme en
+   projection — je coupe en petites parts, le schéma regroupé, je partage, les taches —, les QR un peu plus petits),
    les crédits avec, seuls logos du livret, IREMI + maths&go et l'Unité apprenante Michel Debré.
 
 ## Les graines : triées, une fiche = une étape = une étoile
