@@ -608,6 +608,7 @@ test("adresses : aller-retour buildShareUrl → appliquerConfiguration pour le m
     ${fn("sysLireGestes")}
     ${fn("sysLireGestesMix")}
     ${fn("sysAppliquerGestesMix")}
+    ${fn("sysGestesLus")}
     ${fn("sysLireReglagesM4")}
     ${fn("sysEcrireReglagesM4")}
     return { buildShareUrl, appliquerConfiguration,

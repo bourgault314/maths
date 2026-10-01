@@ -2385,7 +2385,7 @@ function appliquerConfiguration(params){
 /* lot M4-1 : « ecart », « fois », « indice », « sens », « ordre » (Système). Lus : absents =
    éteints, y compris pour chaque partie d'une étape composée (« ecart=2+ » = « 2 »,
    majuscules ou minuscules). Écrits seulement quand ils sont allumés, et quand le geste les
-   lit : les adresses d'avant ne changent pas. */
+   lit (en Mélange : quand il est coché) : les adresses d'avant ne changent pas. */
 function sysLireReglagesM4(params){
   const lire = (el, name, defaut) => {
     if(!el) return;
@@ -2403,10 +2403,15 @@ function sysLireReglagesM4(params){
   lire(sysOrdreEl, "ordre", "");
 }
 
-function sysEcrireReglagesM4(params){
+/* Les gestes que la page peut tirer : le geste choisi, ou les gestes cochés du mélange. */
+function sysGestesLus(){
   const geste = sysGesteEl ? sysGesteEl.value : "";
-  const coef = geste === "COEF" || geste === "MIX";
-  const double = geste === "DOUBLE" || geste === "MIX";
+  const gestes = geste === "MIX" ? sysLireGestesMix() : [geste];
+  return { coef: gestes.includes("COEF"), double: gestes.includes("DOUBLE") };
+}
+
+function sysEcrireReglagesM4(params){
+  const { coef, double } = sysGestesLus();
   if(coef && sysEcartEl && sysEcartEl.value) params.set("ecart", sysEcartEl.value);
   if(double && sysFoisEl && sysFoisEl.value === "3") params.set("fois", "3");
   if(double && sysIndiceEl && sysIndiceEl.value === "12") params.set("indice", "12");
@@ -2972,15 +2977,17 @@ if(invRepeatOnEl) invRepeatOnEl.addEventListener("change", ()=>{ syncSettingsUI(
 if(sysGesteEl) sysGesteEl.addEventListener("change", ()=>{ syncSettingsUI(); });
 
 /* lot M4-1 : « Écart » avec les deux pesées, « Recopier », « Petit plateau » et « Qui
-   dépasse » avec Doubler (et avec le mélange, qui peut tirer ces gestes). */
+   dépasse » avec Doubler — en Mélange, seulement si le geste est coché. */
 function sysAfficherReglagesM4(){
-  const geste = sysGesteEl ? sysGesteEl.value : "";
-  const coef = geste === "COEF" || geste === "MIX";
-  const double = geste === "DOUBLE" || geste === "MIX";
+  const { coef, double } = sysGestesLus();
   const montrer = (id, oui) => { const el = document.getElementById(id); if(el) el.style.display = oui ? "flex" : "none"; };
   montrer("sysEcartRow", coef);
   ["sysFoisRow", "sysIndiceRow", "sysSensRow"].forEach(id => montrer(id, double));
 }
+SYS_GESTES.forEach(g => {
+  const box = document.getElementById("sysMix" + g);
+  if(box) box.addEventListener("change", sysAfficherReglagesM4);
+});
 [unitEquationTypeEl, numberedEquationTypeEl].forEach(el=>{
   if(!el) return;
   el.addEventListener("change", ()=>refocusMainSvgFromControl(el));

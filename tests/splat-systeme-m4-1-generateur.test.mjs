@@ -458,20 +458,24 @@ test("le panneau : Escalier, Écart, Recopier, Petit plateau, Qui dépasse, Plat
 
 test("adresses : les réglages nouveaux, écrits seulement quand ils sont allumés, relus à l'identique", () => {
   const liste = (value, options) => ({ value, tagName: "SELECT", options: options.map((v) => ({ value: v, disabled: false })) });
-  const page = (geste) => ({
+  const page = (geste, coches = ["EMBOITE1", "PARTIELLE", "COEF", "TROIS"]) => ({
     sysGesteEl: liste(geste, ["EMBOITE1", "PARTIELLE", "COEF", "DOUBLE", "MIROIR", "TROIS", "ESCALIER", "MIX"]),
     sysEcartEl: liste("", ["", "1", "2"]), sysFoisEl: liste("2", ["2", "3"]), sysIndiceEl: liste("11", ["11", "12"]),
-    sysSensEl: liste("PLATEAU", ["PLATEAU", "INDICE"]), sysOrdreEl: liste("", ["", "MELANGE"])
+    sysSensEl: liste("PLATEAU", ["PLATEAU", "INDICE"]), sysOrdreEl: liste("", ["", "MELANGE"]),
+    document: { getElementById: (id) => (id.startsWith("sysMix") ? { checked: coches.includes(id.slice(6)) } : null) }
   });
   const monter = (els) => new Function(...Object.keys(els), `
+    ${CONSTANTES_SYS}
+    ${fn("sysLireGestesMix")}
+    ${fn("sysGestesLus")}
     ${fn("sysLireReglagesM4")}
     ${fn("sysEcrireReglagesM4")}
-    return { lire: sysLireReglagesM4, ecrire: sysEcrireReglagesM4 };`)(...Object.values(els));
+    return { lire: sysLireReglagesM4, ecrire: sysEcrireReglagesM4, lus: sysGestesLus };`)(...Object.values(els));
   const ecrire = (els) => { const p = new URLSearchParams(); monter(els).ecrire(p); return p.toString(); };
   // éteints : rien n'est écrit (les adresses d'avant ne changent pas)
   for(const g of ["EMBOITE1", "COEF", "DOUBLE", "MIX", "ESCALIER"]) assert.equal(ecrire(page(g)), "");
-  // allumés : écrits quand le geste les lit ; « ordre » toujours
-  const a = page("MIX");
+  // allumés : écrits quand le geste les lit (Mélange : quand il est coché) ; « ordre » toujours
+  const a = page("MIX", ["COEF", "DOUBLE"]);
   a.sysEcartEl.value = "2"; a.sysFoisEl.value = "3"; a.sysIndiceEl.value = "12"; a.sysSensEl.value = "INDICE"; a.sysOrdreEl.value = "MELANGE";
   assert.equal(ecrire(a), "ecart=2&fois=3&indice=12&sens=INDICE&ordre=MELANGE");
   const e = page("ESCALIER");
@@ -480,8 +484,17 @@ test("adresses : les réglages nouveaux, écrits seulement quand ils sont allum�
   const c = page("COEF");
   c.sysEcartEl.value = "1"; c.sysFoisEl.value = "3";
   assert.equal(ecrire(c), "ecart=1");
+  // Mélange sans Doubler coché (le mélange par défaut) : ni fois, ni indice, ni sens ; et
+  // les menus de Doubler restent cachés (sysGestesLus)
+  const m = page("MIX");
+  m.sysEcartEl.value = "1"; m.sysFoisEl.value = "3"; m.sysIndiceEl.value = "12"; m.sysSensEl.value = "INDICE";
+  assert.equal(ecrire(m), "ecart=1");
+  assert.deepEqual(monter(m).lus(), { coef: true, double: false });
+  assert.deepEqual(monter(page("MIX", ["EMBOITE1", "TROIS"])).lus(), { coef: false, double: false });
+  assert.deepEqual(monter(page("DOUBLE")).lus(), { coef: false, double: true });
+  assert.match(fn("sysAfficherReglagesM4"), /const \{ coef, double \} = sysGestesLus\(\);/);
   // relecture : une page neuve retrouve les mêmes réglages ; absents = remis à zéro
-  const b = page("MIX");
+  const b = page("MIX", ["COEF", "DOUBLE"]);
   b.sysEcartEl.value = "1"; b.sysOrdreEl.value = "MELANGE";
   monter(b).lire(new URLSearchParams("ecart=2%2B&fois=3&indice=12&sens=indice&ordre=melange"));
   assert.deepEqual([b.sysEcartEl.value, b.sysFoisEl.value, b.sysIndiceEl.value, b.sysSensEl.value, b.sysOrdreEl.value], ["2", "3", "12", "INDICE", "MELANGE"]);
