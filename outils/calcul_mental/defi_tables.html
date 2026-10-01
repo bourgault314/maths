@@ -3307,12 +3307,23 @@
           if (!fige && corps.offsetHeight > limite) return false;
           return !(enJeu && carte && carte.scrollHeight > carte.clientHeight + 1);
         };
+        // L'accueil sans choix déplié est un écran, pas une page longue : sur
+        // un petit portable, quand « Mes calculs du jour » arrive, il garde la
+        // plus petite échelle au lieu de remonter à ×1 (195 px de plus à faire
+        // défiler en 1 366 × 650).
+        const accueil = !document.getElementById("intro").hidden && !document.getElementById("mode-screen").hidden && !state.etapeOuverte;
+        const avant = racine.style.getPropertyValue("--echelle");
+        // La mesure raccourcit la page un instant : le navigateur ramènerait
+        // Mon parcours, défilé jusqu'en bas, vers le haut. On rend la position.
+        const defilement = window.scrollY;
         corps.classList.add("mesure-cadre");
         // Une série qui ne tient à aucune échelle garde la plus petite : moins
         // il reste à faire défiler, mieux c'est.
-        const z = chercherEchelle(enJeu ? {...bornes, longue: bornes.min} : bornes, tient);
+        const z = chercherEchelle(enJeu || accueil ? {...bornes, longue: bornes.min} : bornes, tient);
         corps.classList.remove("mesure-cadre");
         racine.style.setProperty("--echelle", z.toFixed(3));
+        if (window.scrollY !== defilement) window.scrollTo(0, defilement);
+        if (z.toFixed(3) !== avant) retracerSauts();
       }
       window.addEventListener("resize", ajusterEchelle);
       window.addEventListener("resize", ajusterFiche);
@@ -3874,14 +3885,20 @@
         const hauteur = creux + police + 10;
         const pointe = petit ? 6 : 9;
         const demi = petit ? 3.6 : 5.5;
+        // Audit 3 : getBoundingClientRect rend des pixels d'écran, mais le
+        // dessin vit DANS la colonne mise à l'échelle (--echelle). On ramène
+        // les mesures en pixels de la colonne, sinon l'échelle s'applique deux
+        // fois et les sauts glissent hors de leurs cases.
+        const echelle = stick.offsetWidth ? cadre.width / stick.offsetWidth : 1;
+        const largeur = Math.round(cadre.width / echelle);
         const NS = "http://www.w3.org/2000/svg";
         const svg = document.createElementNS(NS, "svg");
-        svg.setAttribute("width", String(Math.round(cadre.width)));
+        svg.setAttribute("width", String(largeur));
         svg.setAttribute("height", String(hauteur));
-        svg.setAttribute("viewBox", `0 0 ${Math.round(cadre.width)} ${hauteur}`);
+        svg.setAttribute("viewBox", `0 0 ${largeur} ${hauteur}`);
         const centre = k => {
           const r = cases[k].getBoundingClientRect();
-          return r.left + r.width / 2 - cadre.left;
+          return (r.left + r.width / 2 - cadre.left) / echelle;
         };
         const arrondi = n => Math.round(n * 10) / 10;
         const tous = faits.map(k => [k, false]).concat(suivant === null ? [] : [[suivant, true]]);
@@ -3916,7 +3933,7 @@
           groupe.append(arc, fleche, texte);
           svg.append(groupe);
         }
-        dessin.style.width = `${Math.round(cadre.width)}px`;
+        dessin.style.width = `${largeur}px`;
         dessin.style.height = `${hauteur}px`;
         dessin.replaceChildren(svg);
       }

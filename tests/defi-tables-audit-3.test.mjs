@@ -55,7 +55,7 @@ test("la mesure : sans le pied de page, le repère compris ; la carte du jeu ne 
   assert.match(ajuster, /const pleinEcran = corps\.classList\.contains\("fullscreen-active"\);\s*const bornes = bornesEchelle\(window\.innerWidth, pleinEcran\);/);
   assert.match(ajuster, /if \(!fige && corps\.offsetHeight > limite\) return false;\s*return !\(enJeu && carte && carte\.scrollHeight > carte\.clientHeight \+ 1\);/);
   assert.match(ajuster, /corps\.classList\.add\("mesure-cadre"\);[\s\S]*corps\.classList\.remove\("mesure-cadre"\);/);
-  assert.match(ajuster, /chercherEchelle\(enJeu \? \{\.\.\.bornes, longue: bornes\.min\} : bornes, tient\)/, "une série trop haute garde la plus petite échelle");
+  assert.match(ajuster, /chercherEchelle\(enJeu \|\| accueil \? \{\.\.\.bornes, longue: bornes\.min\} : bornes, tient\)/, "une série ou l’accueil trop hauts gardent la plus petite échelle");
   assert.match(ajuster, /classList\.contains\("mode-fiche"\) \|\| corps\.classList\.contains\("voir-fiche"\)/, "la fiche a sa propre échelle");
   assert.match(html, /body\.mesure-cadre \{ min-height: 0 !important; \}\s*body\.mesure-cadre \.site-footer \{ display: none !important; \}/);
 });
@@ -75,6 +75,30 @@ test("le CSS : une seule échelle, jamais à l’impression ; la hauteur du jeu 
   assert.match(html, /body\.fullscreen-active \.shell \{ min-height: calc\(\(100dvh - var\(--bas-cadre, 0px\)\) \/ var\(--echelle, 1\)\); padding-bottom: 0; \}/);
   const telephone = html.slice(html.indexOf("@media (max-width: 620px) {\n      .shell { width: 100%; }"), html.indexOf("@media (min-width: 621px) and (max-height: 900px) {"));
   assert.match(telephone, /\.challenge-playing \.shell \{ height: 100dvh;/, "le téléphone n’est pas touché");
+});
+
+// Relecture de Code (01/10/2026) : trois défauts vus au navigateur.
+test("l’accueil sans choix déplié n’est pas une page longue : il garde la plus petite échelle", () => {
+  // 1 366 × 650, élève suivi : quand « Mes calculs du jour » arrivait,
+  // l’accueil ne tenait plus à ×0,8 et remontait à ×1 (195 px sous l’écran).
+  assert.match(ajuster, /const accueil = !document\.getElementById\("intro"\)\.hidden && !document\.getElementById\("mode-screen"\)\.hidden && !state\.etapeOuverte;/);
+});
+
+test("la mesure rend la position de défilement (Mon parcours défilé jusqu’en bas)", () => {
+  assert.match(ajuster, /const defilement = window\.scrollY;\s*(\/\/[^\n]*\s*)*corps\.classList\.add\("mesure-cadre"\);/);
+  assert.match(ajuster, /if \(window\.scrollY !== defilement\) window\.scrollTo\(0, defilement\);/);
+});
+
+test("les sauts sous la bande restent sous leurs cases quand l’échelle n’est pas 1", () => {
+  const tracer = html.slice(html.indexOf("      function tracerSauts("), html.indexOf("      function retracerSauts() {"));
+  // getBoundingClientRect rend des pixels d’écran ; le dessin vit dans la colonne mise à l’échelle.
+  assert.match(tracer, /const echelle = stick\.offsetWidth \? cadre\.width \/ stick\.offsetWidth : 1;/);
+  assert.match(tracer, /return \(r\.left \+ r\.width \/ 2 - cadre\.left\) \/ echelle;/);
+  assert.match(tracer, /svg\.setAttribute\("width", String\(largeur\)\);/);
+  assert.match(tracer, /dessin\.style\.width = `\$\{largeur\}px`;/);
+  assert.doesNotMatch(tracer, /Math\.round\(cadre\.width\)/);
+  // La première question est dessinée avant la mesure : on retrace si l’échelle a changé.
+  assert.match(ajuster, /if \(z\.toFixed\(3\) !== avant\) retracerSauts\(\);/);
 });
 
 test("« Quitter le plein écran » reste dans la barre du haut", () => {
