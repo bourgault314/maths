@@ -25,9 +25,9 @@ function ligne(prefix){
 }
 
 const PALETTE = html.slice(html.indexOf("const INVESTIGATE_COLOR_PALETTE = ["), html.indexOf("];", html.indexOf("const INVESTIGATE_COLOR_PALETTE = [")) + 2);
-const CONSTANTES = ["SYS_GESTES", "SYS_GESTES_MIX_DEFAUT", "SYS_MAX_TACHES", "SYS_ESSAIS", "SYS_NOMBRES_SOUS_ENTENDUS", "SYS_COULEURS_PLURIEL", "SYS_PLAGES",
+const CONSTANTES = ["SYS_GESTES", "SYS_GESTES_MIX_DEFAUT", "SYS_MAX_TACHES", "SYS_MAX_TACHES_AVANT", "SYS_ESSAIS", "SYS_NOMBRES_SOUS_ENTENDUS", "SYS_COULEURS_PLURIEL", "SYS_PLAGES",
   "SYS_ZONE_ECRAN", "SYS_ZONE_IMPRIME", "SYS_ZONE_IMPRIME_6", "SYS_TACHE"].map((nom) => ligne(`const ${nom} = `)).join("\n");
-const GENERATEUR = ["sysNormaliserReglages", "genSystemCarte", "sysFormes", "sysSomme", "sysNombreTaches", "sysPlateau",
+const GENERATEUR = ["sysNormaliserReglages", "genSystemCarte", "sysMelangerPlateaux", "sysFormes", "sysFormesDouble", "sysSomme", "sysNombreTaches", "sysPlateau",
   "sysTirerSituation", "sysSituationValide", "sysNombreSousEntendu", "sysTexteASousEntendu", "sysSituationSure",
   "sysAssemblerCarte", "sysUneTacheParCouleur", "sysIndice", "sysPhraseIndice", "sysPlan"].map(fn).join("\n");
 const DISPOSITION = ["sysEnPlateaux", "sysTotalCache", "sysRayonJeton", "sysGrille", "sysColonnesVisibles",
@@ -128,13 +128,15 @@ test("la grille : une tache a la même place sur tous les plateaux où elle appa
 });
 
 test("tout tient : taches dans leur plateau sans se toucher, visibles à part, TOTAL au-dessus avec un espace, même rayon partout", () => {
-  let rMin = Infinity;
-  for(const { c, defaut } of CARTES){
+  let rMin = Infinity, rEscalier = Infinity;
+  for(const { c, geste, defaut } of CARTES){
     for(const [nom, Z] of Object.entries(sys.ZONES)){
       const d = sys.disposition(c, Z);
       const bas = nom === "ecran" ? 1000 : (nom === "six" ? 1000 : 2200);
       assert.equal(d.plateaux.length, c._sys.boards.length);
-      if(defaut) rMin = Math.min(rMin, d.r);
+      // lot M4-1 : l'escalier (trois rangées de taches, plateaux sur une rangée) à part
+      if(defaut && geste !== "ESCALIER") rMin = Math.min(rMin, d.r);
+      if(geste === "ESCALIER") rEscalier = Math.min(rEscalier, d.r);
       d.plateaux.forEach((P, i) => {
         // plateau dans la scène, sous sa boîte TOTAL (au moins 14 unités de blanc entre les deux)
         assert.ok(P.x >= Z.x - 0.5 && P.x + P.w <= Z.x + Z.w + 0.5 && P.y + P.h <= bas, `${nom} : plateau hors de la carte`);
@@ -168,6 +170,8 @@ test("tout tient : taches dans leur plateau sans se toucher, visibles à part, T
   }
   // aux réglages par défaut, les taches restent assez grandes pour que « violette » tienne dessus
   assert.ok(rMin >= 66, `rayon minimal ${rMin}`);
+  // l'escalier : 61 en 4 et 6 par page, 67 à l'écran (sur deux rangées de plateaux : 31 et 34)
+  assert.ok(rEscalier >= 55, `escalier : rayon minimal ${rEscalier}`);
 });
 
 test("deux taches voisines ne se touchent pas (0,25 r de blanc sur une rangée, 0,36 r d'une rangée à l'autre)", () => {
