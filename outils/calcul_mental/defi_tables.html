@@ -146,17 +146,19 @@
     h1[tabindex="-1"]:focus { outline: none; }
 
     .shell { width: min(850px, calc(100% - 28px)); margin: auto; padding-bottom: 30px; }
-    /* Audit 2 (T1, 30/09/2026) : au tableau, tout s'agrandit d'un bloc —
-       l'échelle est posée par ajusterEchelle() selon la taille de l'écran
-       (1 sur un téléphone, une tablette ou un portable). Jamais à
-       l'impression : la fiche a sa propre mise à l'échelle. */
+    /* Audit 3 (01/10/2026) : sur ordinateur, le cadre blanc tient toujours
+       entier dans l'écran. ajusterEchelle() mesure la place et pose
+       l'échelle : jamais plus grand que nature dans une fenêtre, un peu plus
+       petit quand ça ne rentre pas ; en plein écran, agrandi jusqu'à remplir
+       la hauteur. 1 sur un téléphone ou une tablette. Jamais à l'impression :
+       la fiche a sa propre mise à l'échelle. */
     @media screen {
       .shell { zoom: var(--echelle, 1); }
-      body.challenge-playing .shell { zoom: var(--echelle-jeu, 1); }
-      /* Les perles remplissent déjà toute la hauteur d'un écran de 1 080 px :
-         elles gardent leur taille. */
-      body.challenge-playing:has(.question.perles-main) .shell { zoom: 1; }
     }
+    /* Le temps d'une mesure : sans le pied de page ni la hauteur minimale du
+       corps, la hauteur de la page est celle du cadre. */
+    body.mesure-cadre { min-height: 0 !important; }
+    body.mesure-cadre .site-footer { display: none !important; }
     .topbar {
       min-height: 70px;
       display: flex;
@@ -1363,18 +1365,12 @@
     body.settings-open .site-footer,
     body.challenge-playing .site-footer,
     body.fullscreen-active .site-footer { display: none; }
-    body.fullscreen-active .fullscreen-toggle {
-      position: fixed;
-      z-index: 60;
-      /* Audit 2 : 7 px du coin, et le vidéoprojecteur rognait le bouton. */
-      top: max(24px, env(safe-area-inset-top));
-      right: max(28px, env(safe-area-inset-right));
-      border-color: #7899ae;
-      background: #fff;
-      box-shadow: 0 5px 18px rgba(21, 52, 81, .2);
-    }
+    /* Audit 3 : « Quitter le plein écran » reste à la place du bouton
+       « Plein écran », dans la barre du haut, aligné avec le logo. Fixé dans
+       le coin de l'écran, il flottait hors de la colonne. */
+    body.fullscreen-active .fullscreen-toggle { border-color: #7899ae; background: #fff; }
 
-    body.fullscreen-active .shell { min-height: 100dvh; padding-bottom: 0; }
+    body.fullscreen-active .shell { min-height: calc((100dvh - var(--bas-cadre, 0px)) / var(--echelle, 1)); padding-bottom: 0; }
 
     @media (max-width: 620px) {
       .shell { width: 100%; }
@@ -1510,7 +1506,10 @@
 
     @media (min-width: 621px) and (max-height: 900px) {
       .challenge-playing { height: 100dvh; overflow: hidden; }
-      .challenge-playing .shell { height: 100dvh; display: grid; grid-template-rows: auto minmax(0, 1fr); padding: 0; }
+      /* Audit 3 : la colonne est agrandie ou réduite par --echelle ; sa
+         hauteur est donc celle de la fenêtre divisée par l'échelle, moins le
+         liseré qui laisse voir le bas du cadre blanc sur ordinateur. */
+      .challenge-playing .shell { height: calc((100dvh - var(--bas-cadre, 0px)) / var(--echelle, 1)); display: grid; grid-template-rows: auto minmax(0, 1fr); padding: 0; }
       .challenge-playing .topbar { min-height: 50px; }
       .challenge-playing .panel { min-height: 0; height: auto; padding: 12px 36px; overflow: hidden; }
       .challenge-playing #play { height: 100%; display: flex; flex-direction: column; }
@@ -3255,23 +3254,84 @@
         const facteur = Math.max(0.45, placeDisponible / largeurFiche);
         bloc.style.setProperty("--fiche-zoom", String(Math.round(facteur * 1000) / 1000));
       }
-      // Audit 2 (T1, 30/09/2026) : au tableau, l'appli gardait sa taille de
-      // téléphone (850 px de large au plus, textes de 16 px) au milieu d'un
-      // écran de 2 000 px. Au-delà de 1 280 × 680, tout s'agrandit d'un bloc,
-      // sans rien réorganiser : la même composition, en plus grand, jusqu'à
-      // ×1,6. Le jeu (le pavé) est plus haut : il s'agrandit pour tenir dans
-      // 960 px. Sous ×1,1, rien ne bouge (un portable reste à sa taille).
-      const ECRAN_DE_BASE = Object.freeze({largeur: 1280, hauteur: 680, hauteurJeu: 960, max: 1.6});
-      function echelleEcran(largeur, hauteur, hauteurBase) {
-        const z = Math.min(largeur / ECRAN_DE_BASE.largeur, hauteur / hauteurBase);
-        return z >= 1.1 ? Math.min(z, ECRAN_DE_BASE.max) : 1;
+      // Audit 3 (01/10/2026) : sur ordinateur, le cadre blanc tient toujours
+      // entier dans l'écran. L'audit 2 agrandissait d'après la seule taille
+      // de la fenêtre : l'accueil débordait sur un portable de 1 440 px, et
+      // les écrans de jeu d'un élève suivi (le repère prend une ligne de plus)
+      // n'avaient jamais tenu. Ici on MESURE : la plus grande échelle pour
+      // laquelle ni la page ni le cadre du jeu ne défilent.
+      //  - fenêtre normale : jamais plus de ×1 ; réduit jusqu'à ×0,8 au besoin ;
+      //  - plein écran : agrandi jusqu'à ×1,6, tant que tout tient ;
+      //  - une page longue (Mon parcours, la notice, un choix déplié) ne tient
+      //    à aucune échelle lisible : ×1 en fenêtre, la largeur en plein écran ;
+      //  - téléphone et tablette (moins de 1 024 px de large) : ×1, toujours.
+      const ECHELLE = Object.freeze({largeurMin: 1024, min: 0.8, max: 1.6, largeurColonne: 850, largeurBase: 1280, basCadre: 12});
+      function bornesEchelle(largeur, pleinEcran) {
+        if (largeur < ECHELLE.largeurMin) return {min: 1, max: 1, longue: 1};
+        const parLargeur = Math.max(1, Math.min(ECHELLE.max, (largeur - 32) / ECHELLE.largeurColonne));
+        if (!pleinEcran) return {min: ECHELLE.min, max: 1, longue: 1};
+        return {min: ECHELLE.min, max: parLargeur, longue: Math.max(1, Math.min(parLargeur, largeur / ECHELLE.largeurBase))};
+      }
+      // La plus grande échelle qui tient entre les bornes, au 1/200 près ;
+      // « longue » si même la plus petite ne tient pas.
+      function chercherEchelle(bornes, tient) {
+        if (bornes.max <= bornes.min) return bornes.max;
+        if (tient(bornes.max)) return bornes.max;
+        if (!tient(bornes.min)) return bornes.longue;
+        let bas = bornes.min, haut = bornes.max;
+        while (haut - bas > 0.005) {
+          const milieu = (bas + haut) / 2;
+          if (tient(milieu)) bas = milieu; else haut = milieu;
+        }
+        return Math.floor(bas * 200) / 200;
       }
       function ajusterEchelle() {
-        const racine = document.documentElement.style;
-        racine.setProperty("--echelle", echelleEcran(window.innerWidth, window.innerHeight, ECRAN_DE_BASE.hauteur).toFixed(3));
-        racine.setProperty("--echelle-jeu", echelleEcran(window.innerWidth, window.innerHeight, ECRAN_DE_BASE.hauteurJeu).toFixed(3));
+        const racine = document.documentElement;
+        const corps = document.body;
+        const pleinEcran = corps.classList.contains("fullscreen-active");
+        const bornes = bornesEchelle(window.innerWidth, pleinEcran);
+        racine.style.setProperty("--bas-cadre", bornes.max === bornes.min ? "0px" : `${ECHELLE.basCadre}px`);
+        if (bornes.max === bornes.min || corps.classList.contains("mode-fiche") || corps.classList.contains("voir-fiche")) {
+          racine.style.setProperty("--echelle", "1");
+          return;
+        }
+        // Mes calculs, Mon parcours et Lire la table sont des pages longues :
+        // jamais réduites en fenêtre (×1, elles défilent comme avant), agrandies
+        // d'après la largeur en plein écran. Aucune mesure.
+        if (["calculs", "parcours", "lire"].some(id => !document.getElementById(id).hidden)) {
+          racine.style.setProperty("--echelle", bornes.longue.toFixed(3));
+          return;
+        }
+        const carte = document.getElementById("question-card");
+        const enJeu = corps.classList.contains("challenge-playing");
+        // En jeu sur un écran de moins de 900 px de haut, la colonne a déjà la
+        // hauteur de la fenêtre : seul le cadre du jeu peut déborder. Ailleurs,
+        // c'est la hauteur du corps (sans le pied de page) qui compte.
+        const fige = enJeu && window.matchMedia("(min-width: 621px) and (max-height: 900px)").matches;
+        const limite = window.innerHeight - (pleinEcran ? ECHELLE.basCadre : 0);
+        const tient = z => {
+          racine.style.setProperty("--echelle", z.toFixed(3));
+          if (!fige && corps.offsetHeight > limite) return false;
+          return !(enJeu && carte && carte.scrollHeight > carte.clientHeight + 1);
+        };
+        // L'accueil sans choix déplié est un écran, pas une page longue : sur
+        // un petit portable, quand « Mes calculs du jour » arrive, il garde la
+        // plus petite échelle au lieu de remonter à ×1 (195 px de plus à faire
+        // défiler en 1 366 × 650).
+        const accueil = !document.getElementById("intro").hidden && !document.getElementById("mode-screen").hidden && !state.etapeOuverte;
+        const avant = racine.style.getPropertyValue("--echelle");
+        // La mesure raccourcit la page un instant : le navigateur ramènerait
+        // Mon parcours, défilé jusqu'en bas, vers le haut. On rend la position.
+        const defilement = window.scrollY;
+        corps.classList.add("mesure-cadre");
+        // Une série qui ne tient à aucune échelle garde la plus petite : moins
+        // il reste à faire défiler, mieux c'est.
+        const z = chercherEchelle(enJeu || accueil ? {...bornes, longue: bornes.min} : bornes, tient);
+        corps.classList.remove("mesure-cadre");
+        racine.style.setProperty("--echelle", z.toFixed(3));
+        if (window.scrollY !== defilement) window.scrollTo(0, defilement);
+        if (z.toFixed(3) !== avant) retracerSauts();
       }
-      ajusterEchelle();
       window.addEventListener("resize", ajusterEchelle);
       window.addEventListener("resize", ajusterFiche);
       window.addEventListener("resize", retracerSauts);
@@ -3340,6 +3400,7 @@
           button.setAttribute("aria-pressed", String(active));
           button.setAttribute("aria-label", active ? "Quitter le plein écran" : "Passer en plein écran");
           label.textContent = active ? "Quitter le plein écran" : "Plein écran";
+          ajusterEchelle();
         };
 
         const leaveFullscreen = async () => {
@@ -3505,6 +3566,7 @@
         if (name === "fiche") $("fiche-title").focus?.({preventScroll: true});
         if (name === "lire") $("lire-title").focus?.({preventScroll: true});
         suivreHistorique(name);
+        ajusterEchelle();
       }
 
       const MODE_COPY = Object.freeze({
@@ -3830,14 +3892,20 @@
         const hauteur = creux + police + 10;
         const pointe = petit ? 6 : 9;
         const demi = petit ? 3.6 : 5.5;
+        // Audit 3 : getBoundingClientRect rend des pixels d'écran, mais le
+        // dessin vit DANS la colonne mise à l'échelle (--echelle). On ramène
+        // les mesures en pixels de la colonne, sinon l'échelle s'applique deux
+        // fois et les sauts glissent hors de leurs cases.
+        const echelle = stick.offsetWidth ? cadre.width / stick.offsetWidth : 1;
+        const largeur = Math.round(cadre.width / echelle);
         const NS = "http://www.w3.org/2000/svg";
         const svg = document.createElementNS(NS, "svg");
-        svg.setAttribute("width", String(Math.round(cadre.width)));
+        svg.setAttribute("width", String(largeur));
         svg.setAttribute("height", String(hauteur));
-        svg.setAttribute("viewBox", `0 0 ${Math.round(cadre.width)} ${hauteur}`);
+        svg.setAttribute("viewBox", `0 0 ${largeur} ${hauteur}`);
         const centre = k => {
           const r = cases[k].getBoundingClientRect();
-          return r.left + r.width / 2 - cadre.left;
+          return (r.left + r.width / 2 - cadre.left) / echelle;
         };
         const arrondi = n => Math.round(n * 10) / 10;
         const tous = faits.map(k => [k, false]).concat(suivant === null ? [] : [[suivant, true]]);
@@ -3872,7 +3940,7 @@
           groupe.append(arc, fleche, texte);
           svg.append(groupe);
         }
-        dessin.style.width = `${Math.round(cadre.width)}px`;
+        dessin.style.width = `${largeur}px`;
         dessin.style.height = `${hauteur}px`;
         dessin.replaceChildren(svg);
       }
@@ -5011,6 +5079,9 @@
         majSortieJeu();
         show("play");
         renderQuestion();
+        // La première question est à l'écran : c'est elle qu'on mesure, une
+        // fois pour toute la série (rien ne change de taille en cours de jeu).
+        ajusterEchelle();
         if (DURATION !== null) state.timer = window.setInterval(updateTimer, 200);
       }
 
@@ -6280,6 +6351,9 @@
         // sinon le bloc du jour dit déjà quoi faire. Rien tant qu'il n'y a
         // rien à dire.
         renderJours({...etat.jours, demain: agenda.dus ? 0 : etat.jours.demain});
+        // Le bloc du jour ou le rang peuvent arriver après coup (parcours
+        // revenu du serveur). Un choix déplié ne fait pas rétrécir la page.
+        if (!state.etapeOuverte && !$("intro").hidden) ajusterEchelle();
       }
 
       function renderJours(jours) {

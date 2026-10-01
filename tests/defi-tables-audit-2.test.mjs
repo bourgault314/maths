@@ -137,13 +137,13 @@ test("D. depuis l’accueil, Retour n’est pas intercepté ; une page rechargé
   assert.deepEqual(m.appels, []);
   const r = monde({etatInitial: {defiTablesEcran: true}});
   assert.deepEqual(r.appels, ["back"]);
-  assert.match(html, /suivreHistorique\(name\);\n      \}\n/, "show() suit l’historique");
+  assert.match(html, /suivreHistorique\(name\);\n        ajusterEchelle\(\);\n      \}\n/, "show() suit l’historique (puis remesure l’échelle, audit 3)");
   assert.match(html, /syncControls\(\);\s*suivreHistorique\("intro"\);/, "applyMode aussi (les réglages)");
   assert.doesNotMatch(entre("// [retour-navigateur:debut]", "// [retour-navigateur:fin]"), /location\.hash|pushState\([^)]*,\s*"",\s*[^)]/,
     "l’adresse ne change jamais");
 });
 
-test("3. Mon parcours : « N calculs à revoir » sous la ligne, plus à côté de « Acquise ✓ »", () => {
+test("3. Mon parcours : « Réviser N calculs → » sous la ligne, plus à côté de « Acquise ✓ »", () => {
   const rendu = html.slice(html.indexOf("      function renderParcours() {"), html.indexOf("const melange = $(\"parcours-melange\");"));
   // Seulement les calculs rouges DUS : raté aujourd'hui, il revient demain,
   // et le bouton affiché le jour même ne lançait rien.
@@ -170,7 +170,7 @@ test("3. la barre n’apparaît que quand la révision peut partir : jamais le j
   assert.ok(PARCOURS.etatAffichage(parcours, "2026-09-30").lignes.find(l => l.table === 2).aRevoir, "le moteur marque la table");
   assert.equal(compter("2026-09-30"), 0, "le jour même : pas de barre…");
   assert.equal(PARCOURS.planRevision(parcours, {table: 2, aujourdhui: "2026-09-30"}).length, 0, "…car la révision n’aurait rien lancé");
-  assert.equal(compter("2026-10-01"), 2, "le lendemain : « 2 calculs à revoir »");
+  assert.equal(compter("2026-10-01"), 2, "le lendemain : « Réviser 2 calculs → »");
   assert.equal(PARCOURS.planRevision(parcours, {table: 2, aujourdhui: "2026-10-01"}).length, 2, "et la révision part");
 });
 
@@ -185,29 +185,14 @@ test("3. Mon parcours : « ma table » (pastille et cadre bleus) sur la table de
 
 // ------------------------------------------------------------- 5. au tableau
 
-test("5. au tableau : l’appli s’agrandit d’un bloc selon l’écran, jamais sur un portable ni un téléphone", () => {
-  const bloc = html.slice(html.indexOf("      const ECRAN_DE_BASE = "), html.indexOf("      function ajusterEchelle() {"));
-  const echelleEcran = new Function(`${bloc}; return echelleEcran;`)();
-  const base = {accueil: 680, jeu: 960};
-  const z = (l, h, quoi) => Math.round(echelleEcran(l, h, base[quoi]) * 100) / 100;
-  assert.equal(z(390, 844, "accueil"), 1, "téléphone");
-  assert.equal(z(1024, 768, "accueil"), 1, "tablette");
-  assert.equal(z(1366, 768, "accueil"), 1, "portable : sous ×1,1, rien ne bouge");
-  assert.equal(z(1920, 1080, "accueil"), 1.5, "tableau en plein écran");
-  assert.equal(z(1920, 1080, "jeu"), 1.13, "le jeu, plus haut, s’agrandit moins");
-  assert.equal(z(2560, 1440, "accueil"), 1.6, "jamais plus de ×1,6");
-  assert.match(html, /const ECRAN_DE_BASE = Object\.freeze\(\{largeur: 1280, hauteur: 680, hauteurJeu: 960, max: 1\.6\}\);/);
-  assert.match(html, /ajusterEchelle\(\);\s*window\.addEventListener\("resize", ajusterEchelle\);/);
-  assert.match(html, /@media screen \{\s*\.shell \{ zoom: var\(--echelle, 1\); \}\s*body\.challenge-playing \.shell \{ zoom: var\(--echelle-jeu, 1\); \}/, "jamais à l’impression");
-  assert.match(html, /body\.challenge-playing:has\(\.question\.perles-main\) \.shell \{ zoom: 1; \}/, "les perles gardent leur taille");
-});
+// « 5. au tableau » : l'agrandissement d'après la seule taille de l'écran a été
+// remplacé par une mesure (audit 3) — voir tests/defi-tables-audit-3.test.mjs.
 
-test("5. la police : Nunito servie par le site, sur un écran d’ordinateur seulement ; le bouton plein écran décollé du coin", () => {
+test("5. la police : Nunito servie par le site, sur un écran d’ordinateur seulement", () => {
   assert.match(html, /<link rel="stylesheet" href="\.\.\/\.\.\/assets\/vendor\/polices\/polices\.css">/);
   assert.match(html, /@media \(min-width: 1024px\) \{\s*:root \{ font-family: Inter, ui-rounded, Nunito, "Arial Rounded MT Bold", "Segoe UI", sans-serif; \}/,
     "après la police d’Apple, avant Arial Rounded (un seul gras, regraissé par Chrome)");
   assert.match(html, /\n      font-family: Inter, ui-rounded, "Arial Rounded MT Bold", "Segoe UI", sans-serif;/, "les téléphones gardent leur police");
-  assert.match(html, /body\.fullscreen-active \.fullscreen-toggle \{[^}]*top: max\(24px, env\(safe-area-inset-top\)\);\s*right: max\(28px, env\(safe-area-inset-right\)\);/);
 });
 
 test("6. dans la bande, « complétées » s’efface sous 430 px (« 11 / 11 cases » sur une ligne)", () => {

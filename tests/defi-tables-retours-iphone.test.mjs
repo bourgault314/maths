@@ -169,7 +169,7 @@ test("« ← Calcul mental » seulement sur l’accueil : body.ecran-interne par
   const {document, $} = fauxDocument(["intro", "launch", "play", "result", "parcours", "calculs", "lire", "fiche", "settings-title", "acc-table-titre", "launch-summary", "result-title", "parcours-title", "calculs-title"]);
   const avant = `const document = ARG.document; const $ = ARG.$; const window = {scrollTo: () => {}};
     const renderAccueil = () => {}; const renderParcours = () => {}; const renderCalculs = () => {}; const syncControls = () => {};
-    const configuration = {mode: null}; const suivreHistorique = () => {};`;
+    const configuration = {mode: null}; const suivreHistorique = () => {}; const ajusterEchelle = () => {};`;
   const show = new Function("ARG", `${avant}\n${source("show")}\nreturn show;`)({document, $});
   const vus = {};
   ["calculs", "parcours", "play", "result", "intro"].forEach(nom => { show(nom); vus[nom] = document.body.classes.has("ecran-interne"); });
