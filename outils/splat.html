@@ -3850,6 +3850,22 @@ function genInvestigate(rng){
     })();
     return meilleur;
   }
+  /* L'unité commune (deux rapports vers la plus grande, aucun ne divise l'autre) dont la petite
+     part vaudrait 1 jeton (« 37 parts = 37 ») : juste, mais rien à partager — la carte est
+     retirée. Même lecture que la correction (enqueteBarresModele : part = grande ÷ (ka × kb)).
+     Vérifié au moment de rendre la carte, après tous les autres filtres : les cartes déjà
+     tirées ne bougent pas. Après 4 000 essais (total maximum sous 22 : aucune autre carte
+     possible), elle est gardée plutôt qu'une carte « Erreur » (lot « accolade et petites
+     parts », 01/10/2026). */
+  function unePartUnJeton(vals, relations){
+    if(relations.length !== 2) return false;
+    const rs = relations.map(r => r.op === 'MUL' ? { small:r.source, large:r.target, k:Number(r.k) }
+      : (r.op === 'DIV' ? { small:r.target, large:r.source, k:Number(r.k) } : null));
+    if(rs.some(r => !r) || rs[0].large !== rs[1].large) return false;
+    const [a, b] = vals[rs[0].small] <= vals[rs[1].small] ? rs : [rs[1], rs[0]];
+    if(vals[b.small] % vals[a.small] === 0) return false; // une chaîne, pas l'unité commune
+    return vals[a.large] === a.k * b.k;
+  }
   function tirerCarteRepetee(){
     for(let tries=0; tries<5000; tries++){
       const nombre = colorMap.map(() => rInt(rng, 1, repeatMax));
@@ -3918,6 +3934,7 @@ function genInvestigate(rng){
       const vus = [...vals, total, hiddenSum, visSum, ...visBeads, ...relations.map(r => r.k), ...ramenes.map(it => it.diff),
         sommeEcarts, sommeEcarts + visSum, total - sommeEcarts - visSum, total - visSum];
       if(vus.some(sysNombreSousEntendu)) continue;
+      if(tries < 4000 && unePartUnJeton(vals, relations)) continue;
       return {
         family: "C",
         total,
@@ -4157,6 +4174,7 @@ function genInvestigate(rng){
          la case est cochée, indices composés et taches réunies pour les nouveaux types) */
       poserVocabulaire(relations);
       const phrases = (nouveau || vocab) ? relations.map(r => relationTextParts(r.op, r.k, r.target, r.source, null, r)) : indices;
+      if(tries < 4000 && unePartUnJeton(hiddenVals, relations)) continue;
       return {
         family: "C",
         total,
@@ -7509,6 +7527,9 @@ const ENQ_PROFIL_IMPRIME = {
   titreFont:46, titreR:32, titreNumFont:36, titreAvant:14, titreApres:8,
   apartFont:53, apartPas:62, refoFont:44, refoPas:54,
   ligneBord:4, sousH:22, sousFont:38, sousPas:40,
+  /* le nom descend sous la petite accolade (« trop collé », Gwenaël 30/09 puis 01/10) : le même
+     écart sur le papier, à l'écran et au téléphone (avant : la page 2 seulement) */
+  sousEcart:10,
   calcFont:56, calcPas:68, calcBlanc:24, repFont:46,
   hachPas:24
 };
@@ -7990,7 +8011,7 @@ function enqueteSousAccolade(g, x1, x2, y, label, P, largeurLibre, dy = 0){
   const libre = Math.max(x2 - x1, largeurLibre || 0);
   let fs = P.sousFont, t = label;
   while(fs > P.sousFont * 0.7 && enqueteTexteLargeur(t, fs, 700) > libre - 6) fs -= 2;
-  g.appendChild(text((x1 + x2) / 2, y + P.sousH + P.sousPas * 0.55 + dy, t, { "text-anchor":"middle", "dominant-baseline":"middle", "font-size":fs, "font-weight":700, fill:"#374151" }));
+  g.appendChild(text((x1 + x2) / 2, y + P.sousH + P.sousEcart + P.sousPas * 0.55 + dy, t, { "text-anchor":"middle", "dominant-baseline":"middle", "font-size":fs, "font-weight":700, fill:"#374151" }));
 }
 /* « ① Les barres » : le numéro dans un cercle, puis le titre ; renvoie la hauteur prise. */
 function enqueteTitreEtape(g, x, y, numero, titre, P, largeur){
@@ -8070,7 +8091,7 @@ function drawEnqueteBarres(targetGroup, card, opts = {}){
   lesRows.forEach((row, r) => {
     /* une ligne qui porte une petite accolade (« violette », « cinq orange ») laisse sa place
        avant la ligne suivante (lot G2 : l'unité commune en a au milieu, pas seulement en bas) */
-    if(r > 0) yr += P.rowH + P.rowGap + (lesRows[r - 1].sous.length ? P.sousH + P.sousPas - 4 : 0);
+    if(r > 0) yr += P.rowH + P.rowGap + (lesRows[r - 1].sous.length ? P.sousH + P.sousEcart + P.sousPas - 4 : 0);
     /* le nom de la ligne, collé à sa barre (« orange + 11 » quand on complète) */
     let lfs = P.labelFont;
     while(lfs > P.labelFont * 0.7 && enqueteTexteLargeur(row.labelMesure || row.label, lfs, 800) > M.labelW - P.labelGap + 2) lfs -= 2;
@@ -8089,7 +8110,7 @@ function drawEnqueteBarres(targetGroup, card, opts = {}){
   const derniere = lesRows[lesRows.length - 1];
   const rowsBottom = yr + P.rowH;
   if(modele.accolade != null) enqueteAccolade(g, xMax + P.braceGap, rowsTop, rowsBottom, P, M.totalTxt, !!modele.vide);
-  y = rowsBottom + (derniere && derniere.sous.length ? P.sousH + P.sousPas + 6 : 0) + (P.cadre ? P.marge : 10);
+  y = rowsBottom + (derniere && derniere.sous.length ? P.sousH + P.sousEcart + P.sousPas + 6 : 0) + (P.cadre ? P.marge : 10);
   const h = Math.round(y - boxY);
   enqueteCadre(g, P, boxY, h, g.id);
   targetGroup.appendChild(g);
@@ -8141,7 +8162,7 @@ function drawEnqueteLigne(targetGroup, card, opts = {}){
     }
     enqueteSousAccolade(g, sp.x1, sp.x2, ySous, label, P);
   });
-  y = ySous + P.sousH + P.sousPas + (P.cadre ? P.marge : 8);
+  y = ySous + P.sousH + P.sousEcart + P.sousPas + (P.cadre ? P.marge : 8);
   const h = Math.round(y - boxY);
   enqueteCadre(g, P, boxY, h, g.id);
   targetGroup.appendChild(g);
@@ -8521,7 +8542,6 @@ function enqueteG3Etapes(card){
    case retirée, hachurée en gris et estompée comme « Garder hachuré » dans ÉquaBarre (pas barrée).
    P.isPrint (lot « pages 2 des livrets ») : les couleurs de l'impression, la case retirée moins
    estompée (teintes fixes, sans transparence). */
-const ENQ_G3_SOUS_PAPIER = 10;
 const ENQ_G3_RETIRE_PAPIER = "#4d575d"; /* le trait et le nombre de la case retirée, sur le papier */
 function enqueteG3Case(g, card, cell, x, y, w, h, P, modele, texteForce){
   const retire = !!cell.retire;
@@ -8609,9 +8629,9 @@ function enqueteG3DessinerLigne(target, card, et, modele, opts = {}){
   const yBas = yTop + P.rowH;
   et.cells.forEach((c, k) => enqueteG3Case(g, card, { ...c, sousTotal:true }, xs[k], yBas, ws[k], P.rowH, P, modele));
   const ySous = yBas + P.rowH + bord / 2 + 6;
-  /* sur le papier, le nom descend un peu sous l'accolade (retour de Gwenaël, 30/09 : « trop collé ») */
-  et.groupes.forEach(sp => enqueteSousAccolade(g, xs[sp.de], xs[sp.a] + ws[sp.a], ySous, sp.label, P, 0, P.isPrint ? ENQ_G3_SOUS_PAPIER : 0));
-  y = ySous + P.sousH + P.sousPas + 18 + (P.isPrint ? ENQ_G3_SOUS_PAPIER : 0);
+  /* le nom descend sous l'accolade de P.sousEcart, partout (papier, écran, téléphone) */
+  et.groupes.forEach(sp => enqueteSousAccolade(g, xs[sp.de], xs[sp.a] + ws[sp.a], ySous, sp.label, P));
+  y = ySous + P.sousH + P.sousEcart + P.sousPas + 18;
   y += enqueteG3Lignes(g, x0, y, et.lignes, et.courante, P, et.noirDes);
   y += P.marge;
   enqueteCadre(g, P, boxY, Math.round(y - boxY), g.id);
@@ -8634,7 +8654,7 @@ function enqueteG3DessinerBarresValeurs(target, card, et, modele, opts = {}){
   let yr = y;
   const lesRows = et.parts && modele.parts ? modele.parts.rows : modele.rows;
   lesRows.forEach((row, r) => {
-    if(r > 0) yr += P.rowH + P.rowGap + (lesRows[r - 1].sous.length ? P.sousH + P.sousPas - 4 : 0);
+    if(r > 0) yr += P.rowH + P.rowGap + (lesRows[r - 1].sous.length ? P.sousH + P.sousEcart + P.sousPas - 4 : 0);
     g.appendChild(text(x0, yr + P.rowH / 2 + pastilleTextDy(P.labelFont), row.label, { "text-anchor":"start", "dominant-baseline":"middle", "font-size":P.labelFont, "font-weight":800, fill:"#111827" }));
     const ws = enqueteLargeursCases(row.cells, s, P);
     let x = barX; const xs = [];
@@ -8653,7 +8673,7 @@ function enqueteG3DessinerBarresValeurs(target, card, et, modele, opts = {}){
     }
   });
   const der = lesRows[lesRows.length - 1];
-  y = yr + P.rowH + (der.sous.length ? P.sousH + P.sousPas + 6 : 0) + 18;
+  y = yr + P.rowH + (der.sous.length ? P.sousH + P.sousEcart + P.sousPas + 6 : 0) + 18;
   y += enqueteG3Lignes(g, x0, y, et.lignes, et.idx, P, et.noirDes);
   y += P.marge;
   enqueteCadre(g, P, boxY, Math.round(y - boxY), g.id);

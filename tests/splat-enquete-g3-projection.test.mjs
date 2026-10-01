@@ -360,8 +360,11 @@ test("pages 2 : les dessins G3 prennent le profil d'impression ; sans option, la
   const papier = c.slice(c.indexOf("if(P.isPrint){"), c.indexOf("const gr = el("));
   assert.doesNotMatch(papier, /opacity|fill:"#fff"/);
   assert.match(c, /taskSplatRevealColor\(cell\.de, card, !!P\.isPrint\)/);
-  /* sur le papier, le nom sous l'accolade descend de 10 (« trop collé ») ; en projection, rien ne bouge */
-  assert.match(fn("enqueteG3DessinerLigne"), /enqueteSousAccolade\(g, xs\[sp\.de\], xs\[sp\.a\] \+ ws\[sp\.a\], ySous, sp\.label, P, 0, P\.isPrint \? ENQ_G3_SOUS_PAPIER : 0\)/);
+  /* le nom sous l'accolade descend de P.sousEcart (« trop collé ») : partout, papier, écran, téléphone (01/10) */
+  assert.match(fn("enqueteG3DessinerLigne"), /enqueteSousAccolade\(g, xs\[sp\.de\], xs\[sp\.a\] \+ ws\[sp\.a\], ySous, sp\.label, P\)/);
+  assert.match(fn("enqueteSousAccolade"), /y \+ P\.sousH \+ P\.sousEcart \+ P\.sousPas \* 0\.55 \+ dy/);
+  assert.match(html, /sousEcart:10,/);
+  assert.doesNotMatch(html, /ENQ_G3_SOUS_PAPIER/);
   assert.match(fn("enqueteSousAccolade"), /^function enqueteSousAccolade\(g, x1, x2, y, label, P, largeurLibre, dy = 0\)\{/);
   /* sur le papier, seulement le calcul de l'étape (pas de ligne grise) */
   assert.match(fn("enqueteG3Lignes"), /if\(P\.isPrint && k < noir\) return;/);

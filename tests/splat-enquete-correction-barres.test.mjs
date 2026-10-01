@@ -476,6 +476,23 @@ test("G2 — le type de schéma demandé est obtenu, après retournement des ind
   unite.forEach((c) => { const ks = c._rel.relations.map((r) => r.k); assert.ok(ks[0] !== ks[1] && ks[0] % ks[1] && ks[1] % ks[0], `k premiers entre eux : ${ks}`); });
 });
 
+test("unité commune : jamais une petite part à 1 jeton (« 37 parts = 37 »), taches répétées comprises ; jamais de carte « Erreur »", () => {
+  const unJeton = (c) => enQuestion.modele(c).parts.part === 1;
+  for(const q of [`${BASE3}&structure=UNITE`, `${BASE3.replace("totalMax=60", "totalMax=100")}&structure=UNITE&repeat=3`,
+                  `${BASE3.replace("totalMax=60", "totalMax=30")}&structure=UNITE&repeat=3`]){
+    const cartes = tirerTout(q, 60);
+    cartes.forEach((c) => assert.equal(enQuestion.modele(c).mode, "unite", q));
+    assert.equal(cartes.filter(unJeton).length, 0, q);
+  }
+  // total maximum sous 22 : seule la part à 1 jeton est possible — elle est gardée, pas de carte « Erreur »
+  const serrees = tirerTout(`${BASE3.replace("totalMin=20&totalMax=60", "totalMin=5&totalMax=20")}&structure=UNITE`, 5);
+  serrees.forEach((c) => { assert.notEqual(c._inv.indices[0], "Erreur"); assert.ok(unJeton(c)); });
+  // le filtre est dans le générateur, au moment de rendre la carte (après tous les autres)
+  const g = fn("genInvestigate");
+  assert.match(g, /if\(tries < 4000 && unePartUnJeton\(vals, relations\)\) continue;\n      return \{/);
+  assert.match(g, /if\(tries < 4000 && unePartUnJeton\(hiddenVals, relations\)\) continue;\n      return \{/);
+});
+
 test("G2 — indices composés, deux taches réunies, « le double / la moitié », à deux et trois taches", () => {
   const compose3 = tirerTout(`${BASE3}&structure=HASARD&compose=1`); verifieContraintes(compose3);
   compose3.forEach((c) => {
