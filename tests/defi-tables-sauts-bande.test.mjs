@@ -164,7 +164,8 @@ test("écran pas encore affiché : on ne dessine rien et on remesure à l’imag
 });
 
 test("la page dessine les sauts sous la bande des deux activités, et les retrace quand l’écran change", () => {
-  assert.match(html, /zone\.replaceChildren\(instruction, stick, dessin\);\s*tracerSauts\(stick, dessin, table, sautsDeLaBande\(state\.configuration\.learnActivity, state\.revealedLearnResults, question\?\.multiplier\)\);/);
+  // Audit 4 : les sauts suivent les cases écrites (complétées + réponses montrées en ambre).
+  assert.match(html, /zone\.replaceChildren\(instruction, stick, dessin\);\s*tracerSauts\(stick, dessin, table, sautsDeLaBande\(state\.configuration\.learnActivity, visibles, question\?\.multiplier\)\);/);
   assert.match(html, /dessin\.className = "bande-sauts";\s*dessin\.setAttribute\("aria-hidden", "true"\);/,
     "les arcs sont un dessin : les lecteurs d’écran lisent déjà les cases");
   assert.match(html, /window\.addEventListener\("resize", retracerSauts\);/);
@@ -229,6 +230,9 @@ function jouerBande(activite, reponse) {
     mastered: new Set(),
     erreursBande: new Map(),
     casesDonnees: new Set(),
+    casesMontrees: new Set(),
+    correctionBande: null,
+    configuration: {learnActivity: activite},
     revealedLearnResults: new Set(activite === "gaps" ? [0, 5, 10] : []),
     lastRevealedLearnMultiplier: null
   };
@@ -285,7 +289,7 @@ test("dans l’ordre et le désordre, rien ne change : le calcul revient jusqu�
 
 test("la correction dit « Je l’écris dans la bande. » à la 3e erreur", () => {
   assert.match(html, /function showAnswerFeedback\(question, correct, given, willRetry = false, assisted = false, donnee = false\)/);
-  assert.match(html, /const suite = willRetry \? " Le calcul reviendra\." : donnee \? " Je l’écris dans la bande\." : "";/);
+  assert.match(html, /const suite = willRetry\s*\? \(montree \? " Je l’écris dans la bande, le calcul reviendra\." : " Le calcul reviendra\."\)\s*: donnee \? " Je l’écris dans la bande\." : "";/);
   assert.match(html, /: `Ta réponse\\u00a0: \$\{given\}\. Bonne réponse\\u00a0: \$\{question\.answer\}\.\$\{suite\}`;/);
   assert.match(html, /\? `Pas de réponse\. Bonne réponse\\u00a0: \$\{question\.answer\}\.\$\{suite\}`/);
 });
@@ -293,7 +297,8 @@ test("la correction dit « Je l’écris dans la bande. » à la 3e erreur", () 
 test("la case donnée est ambre, jamais verte, et le lecteur d’écran le dit", () => {
   assert.match(html, /const donnee = filled && Boolean\(givenMultipliers\?\.has\(multiplier\)\);\s*cell\.classList\.toggle\("is-given", donnee\);/);
   assert.match(html, /cell\.setAttribute\("aria-label", `\$\{multiplier\} fois \$\{table\}, \$\{result\}\$\{donnee \? ", réponse donnée" : ""\}`\);/);
-  assert.match(html, /givenMultipliers: stickOnly \? state\.casesDonnees : null/);
+  // Audit 4 : les réponses montrées après une erreur sont ambre aussi.
+  assert.match(html, /givenMultipliers: stickOnly \? new Set\(\[\.\.\.state\.casesDonnees, \.\.\.state\.casesMontrees, /);
   // Le vert du « is-new » (la case qui vient de se remplir) ne doit pas
   // l'emporter : la règle ambre vient APRÈS lui et le vise aussi.
   const regleNeuve = html.indexOf(".number-stick-cell.is-new .number-stick-value {");

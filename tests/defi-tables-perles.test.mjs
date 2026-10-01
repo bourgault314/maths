@@ -238,7 +238,8 @@ test("un morceau à cheval sur une case se coupe au bon endroit", () => {
 test("la phrase se fige quand la case se remplit, et se défait quand l’élève revient en arrière", () => {
   assert.match(html, /if \(valide\) boulier\.figee = !boulier\.morceaux\.length;/,
     "figée seulement si le geste s’arrête pile sur la case : sinon on continue d’écrire");
-  assert.match(html, /dom\.addition\.textContent = boulier\.figee\s*\? boulier\.phrase/);
+  // Audit 4 : la phrase passe par ecrireAddition (les « + 2 » en bleu), même texte.
+  assert.match(html, /ecrireAddition\(dom\.addition, boulier\.figee\s*\? boulier\.phrase/);
   assert.match(html, /state\.revealedLearnResults\.delete\(boulier\.etape\);\s*boulier\.etape -= 1;/,
     "des perles ramenées à droite dépeuplent la bande");
   assert.match(html, /boulier\.morceaux = \(boulier\.pile\.pop\(\) \|\| \[\]\)\.concat\(boulier\.morceaux\);/,

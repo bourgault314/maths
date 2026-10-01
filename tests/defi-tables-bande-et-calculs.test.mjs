@@ -122,7 +122,8 @@ test("une mauvaise réponse laisse la case vide et renvoie le calcul en fin de b
 
 test("la correction dit que le calcul reviendra, comme partout ailleurs", () => {
   assert.match(html, /showAnswerFeedback\(question, correct, skip \? null : value, shouldRetry, assisted, donnee\)/);
-  assert.match(html, /const suite = willRetry \? " Le calcul reviendra\." : donnee \? " Je l’écris dans la bande\." : "";/);
+  // Audit 4 : dans « Je construis la bande », la réponse reste écrite — la phrase le dit.
+  assert.match(html, /const suite = willRetry\s*\? \(montree \? " Je l’écris dans la bande, le calcul reviendra\." : " Le calcul reviendra\."\)\s*: donnee \? " Je l’écris dans la bande\." : "";/);
   assert.match(html, /Bonne réponse\\u00a0: \$\{question\.answer\}\.\$\{suite\}/);
 });
 
@@ -148,7 +149,8 @@ test("« Ajoute 4 » laisse la place à « Complète la case bleue » quand la c
     "le calcul raté revient à la fin, et là 3 × 4 est sous ses yeux : « Ajoute 4 » redevient vrai");
   assert.equal(consigne("gaps", 7, [0, 5, 10]), "Complète la case bleue.");
   // Et c'est bien ce que la page écrit.
-  assert.match(html, /const suitUnePleine = question\?\.multiplier > 0 && state\.revealedLearnResults\.has\(question\.multiplier - 1\);/);
+  // Audit 4 : « pleine » = écrite dans la bande, y compris une réponse montrée (ambre) après une erreur.
+  assert.match(html, /const suitUnePleine = question\?\.multiplier > 0 && visibles\.has\(question\.multiplier - 1\);/);
   assert.match(html, /: suitUnePleine \? `Ajoute \$\{table\}\.` : "Complète la case bleue.";/);
 });
 

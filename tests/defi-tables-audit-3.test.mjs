@@ -65,7 +65,8 @@ test("l’échelle est remesurée à chaque écran, à la première question, au
   assert.match(html, /show\("play"\);\s*renderQuestion\(\);[\s\S]{0,260}ajusterEchelle\(\);/, "la première question");
   assert.match(html, /label\.textContent = active \? "Quitter le plein écran" : "Plein écran";\s*ajusterEchelle\(\);/);
   assert.match(html, /window\.addEventListener\("resize", ajusterEchelle\);/);
-  assert.match(html, /if \(!state\.etapeOuverte && !\$\("intro"\)\.hidden\) ajusterEchelle\(\);/, "l’accueil, sauf quand un choix est déplié");
+  // Audit 4 : l’accueil se remesure aussi choix déplié (mesuré replié, voir defi-tables-audit-4).
+  assert.match(html, /if \(!\$\("intro"\)\.hidden\) ajusterEchelle\(\);/, "l’accueil, choix déplié compris");
 });
 
 test("le CSS : une seule échelle, jamais à l’impression ; la hauteur du jeu suit l’échelle", () => {
@@ -90,7 +91,8 @@ test("Mes calculs, Mon parcours et Lire la table : pages longues, jamais réduit
 test("l’accueil sans choix déplié n’est pas une page longue : il garde la plus petite échelle", () => {
   // 1 366 × 650, élève suivi : quand « Mes calculs du jour » arrivait,
   // l’accueil ne tenait plus à ×0,8 et remontait à ×1 (195 px sous l’écran).
-  assert.match(ajuster, /const accueil = !document\.getElementById\("intro"\)\.hidden && !document\.getElementById\("mode-screen"\)\.hidden && !state\.etapeOuverte;/);
+  // Audit 4 : choix déplié compris (il est mesuré replié).
+  assert.match(ajuster, /const accueil = !document\.getElementById\("intro"\)\.hidden && !document\.getElementById\("mode-screen"\)\.hidden;/);
 });
 
 test("la mesure rend la position de défilement (Mon parcours défilé jusqu’en bas)", () => {

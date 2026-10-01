@@ -511,6 +511,24 @@
       .escalier { gap: 8px; }
       .marche:nth-child(1) .bloc { height: 48px; } .marche:nth-child(2) .bloc { height: 62px; } .marche:nth-child(3) .bloc { height: 76px; } .marche:nth-child(4) .bloc { height: 90px; } .marche:nth-child(5) .bloc { height: 104px; }
     }
+    /* Audit 4 (01/10/2026) : sur ordinateur, un choix déplié (J'apprends,
+       Je m'entraîne) prend la place des autres étapes et des liens du bas,
+       qui ne servent pas pendant qu'on choisit. Le cadre blanc garde ainsi
+       la hauteur de l'accueil fermé : la taille ne change ni au clic ni au
+       retour d'une activité (avant, l'accueil restait grand au clic et
+       débordait, puis rapetissait au retour). Un « ✕ » sur la ligne ouverte
+       dit comment revenir. « mesure-replie » : le temps d'une mesure
+       (ajusterEchelle), l'accueil est remis tel qu'il est fermé. Téléphone et
+       tablette : rien ne change. */
+    .etape .fermer-choix { display: none; }
+    @media (min-width: 1024px) {
+      .acc.etape-seule:not(.mesure-replie) > :not(.matable),
+      .acc.etape-seule:not(.mesure-replie) #acc-etapes > :not([aria-expanded="true"]):not(.etape-choix),
+      .acc.etape-seule:not(.mesure-replie) #acc-lire { display: none !important; }
+      .acc.mesure-replie .etape-choix { display: none !important; }
+      .etape[aria-expanded="true"] .dots { align-items: center; }
+      .etape[aria-expanded="true"] .fermer-choix { width: 30px; height: 30px; display: grid; place-items: center; border: 0; border-radius: 50%; background: #e3ecf2; color: #2c4a63; font-size: .95rem; font-style: normal; font-weight: 950; line-height: 1; }
+    }
 
     /* ---- Mon parcours ---- */
     .parcours-screen { max-width: 720px; margin: 0 auto; }
@@ -1767,6 +1785,7 @@
       font-variant-numeric: tabular-nums;
     }
     .perles-addition.est-figee { color: var(--green); }
+    .perles-addition .ajout { color: var(--blue); }
     .perles-table { display: none; }
     .perles-terminer { display: none; }
     /* À la fin, le boulier ne disparaît pas : il rétrécit et laisse la place aux
@@ -3314,19 +3333,30 @@
           if (!fige && corps.offsetHeight > limite) return false;
           return !(enJeu && carte && carte.scrollHeight > carte.clientHeight + 1);
         };
-        // L'accueil sans choix déplié est un écran, pas une page longue : sur
-        // un petit portable, quand « Mes calculs du jour » arrive, il garde la
-        // plus petite échelle au lieu de remonter à ×1 (195 px de plus à faire
-        // défiler en 1 366 × 650).
-        const accueil = !document.getElementById("intro").hidden && !document.getElementById("mode-screen").hidden && !state.etapeOuverte;
+        // L'accueil est un écran, pas une page longue : sur un petit portable,
+        // quand « Mes calculs du jour » arrive, il garde la plus petite échelle
+        // au lieu de remonter à ×1 (195 px de plus à faire défiler en
+        // 1 366 × 650). Audit 4 : avec un choix déplié aussi — on le mesure
+        // replié (classe « mesure-replie »), pour que la taille ne dépende pas
+        // du chemin (arrivée directe ou retour d'une activité).
+        const accueil = !document.getElementById("intro").hidden && !document.getElementById("mode-screen").hidden;
+        const acc = document.querySelector(".acc");
+        const ouvert = accueil && Boolean(acc?.classList.contains("etape-seule"));
         const avant = racine.style.getPropertyValue("--echelle");
         // La mesure raccourcit la page un instant : le navigateur ramènerait
         // Mon parcours, défilé jusqu'en bas, vers le haut. On rend la position.
         const defilement = window.scrollY;
         corps.classList.add("mesure-cadre");
+        if (ouvert) acc.classList.add("mesure-replie");
         // Une série qui ne tient à aucune échelle garde la plus petite : moins
         // il reste à faire défiler, mieux c'est.
-        const z = chercherEchelle(enJeu || accueil ? {...bornes, longue: bornes.min} : bornes, tient);
+        let z = chercherEchelle(enJeu || accueil ? {...bornes, longue: bornes.min} : bornes, tient);
+        if (ouvert) {
+          acc.classList.remove("mesure-replie");
+          // Le choix ouvert tient d'habitude à la même taille (il remplace les
+          // étapes et les liens) ; sinon, la plus grande taille en dessous.
+          if (!tient(z)) z = chercherEchelle({...bornes, max: z, longue: bornes.min}, tient);
+        }
         corps.classList.remove("mesure-cadre");
         racine.style.setProperty("--echelle", z.toFixed(3));
         if (window.scrollY !== defilement) window.scrollTo(0, defilement);
@@ -3371,6 +3401,8 @@
         mastered: new Set(),
         erreursBande: new Map(),
         casesDonnees: new Set(),
+        casesMontrees: new Set(),
+        correctionBande: null,
         revealedLearnResults: new Set(),
         lastRevealedLearnMultiplier: null,
         learnStickHelpVisible: false,
@@ -3815,12 +3847,17 @@
         else $("expression").before(zone);
         // Dans l’ordre et dans le désordre, la bande d’aide ne montre que les cases déjà répondues :
         // il sert à raisonner (« j’ajoute 7 »), pas à lire la réponse.
-        const stick = createNumberStick(table, state.revealedLearnResults, {
+        // Audit 4 : dans la bande, les cases visibles sont les complétées, plus
+        // les réponses montrées après une erreur (en ambre). La case
+        // demandée reste vide tant qu'on n'y a pas répondu — même quand
+        // c'est un calcul raté qui revient.
+        const visibles = stickOnly ? casesVisibles(state, question) : state.revealedLearnResults;
+        const stick = createNumberStick(table, visibles, {
           activeMultiplier: question?.multiplier,
           newMultiplier: state.lastRevealedLearnMultiplier,
           draftMultiplier: stickOnly ? question?.multiplier : null,
           draftValue: stickOnly ? state.answer : "",
-          givenMultipliers: stickOnly ? state.casesDonnees : null
+          givenMultipliers: stickOnly ? new Set([...state.casesDonnees, ...state.casesMontrees, ...(state.correctionBande === null ? [] : [state.correctionBande])]) : null
         });
         if (!stickOnly) {
           const helpButton = document.createElement("button");
@@ -3840,7 +3877,7 @@
         // restée vide (un calcul raté qui revient, ou la case juste après) :
         // on demande alors de compléter la case bleue, comme dans la bande à
         // trous.
-        const suitUnePleine = question?.multiplier > 0 && state.revealedLearnResults.has(question.multiplier - 1);
+        const suitUnePleine = question?.multiplier > 0 && visibles.has(question.multiplier - 1);
         instruction.textContent = state.configuration.learnActivity === "gaps"
           ? "Complète la case bleue."
           : question?.multiplier === 0 ? "Commence à 0."
@@ -3851,7 +3888,18 @@
         dessin.className = "bande-sauts";
         dessin.setAttribute("aria-hidden", "true");
         zone.replaceChildren(instruction, stick, dessin);
-        tracerSauts(stick, dessin, table, sautsDeLaBande(state.configuration.learnActivity, state.revealedLearnResults, question?.multiplier));
+        tracerSauts(stick, dessin, table, sautsDeLaBande(state.configuration.learnActivity, visibles, question?.multiplier));
+      }
+
+      // Audit 4 : les cases écrites dans la bande — complétées, montrées après
+      // une erreur, et la correction en cours — sauf la case demandée tant
+      // qu'on n'y a pas répondu.
+      function casesVisibles(etat, question) {
+        const visibles = new Set([...etat.revealedLearnResults, ...etat.casesMontrees]);
+        if (etat.correctionBande !== null) visibles.add(etat.correctionBande);
+        const demandee = question?.multiplier;
+        if (demandee !== undefined && !etat.revealedLearnResults.has(demandee) && demandee !== etat.correctionBande) visibles.delete(demandee);
+        return visibles;
       }
 
       // Les sauts à dessiner sous la bande. Un saut relie deux cases voisines
@@ -4429,6 +4477,22 @@
         return `${base ? `${base} + ` : ""}${morceaux.join(" + ")} = ${total}`;
       }
 
+      // Audit 4 (01/10/2026) : dans l'addition des perles, chaque « + 2 » est
+      // écrit en bleu, la couleur du saut « + 2 » de « Je construis la
+      // bande » — la même bande, le même geste. Pas de flèches sous la bande
+      // des perles : l'addition les remplace (et dit « 9 + 1 + 2 » quand on
+      // change de rangée, ce qu'une flèche ne dit pas), et la place manque.
+      function ecrireAddition(zone, phrase) {
+        const morceaux = phrase.split(/(\+\s\d+)/).filter(Boolean).map(bout => {
+          if (!/^\+\s\d+$/.test(bout)) return document.createTextNode(bout);
+          const ajout = document.createElement("span");
+          ajout.className = "ajout";
+          ajout.textContent = bout;
+          return ajout;
+        });
+        zone.replaceChildren(...morceaux);
+      }
+
       function enregistrerGeste(ecart) {
         boulier.figee = false;
         if (ecart > 0) boulier.morceaux.push(ecart);
@@ -4506,9 +4570,9 @@
         // refus, où c'est leverRefus qui la remettra.
         const consigne = dom.bloc.querySelector(".perles-consigne");
         if (consigne && !consigne.classList.contains("est-refus")) consigne.textContent = consigneDeBase();
-        dom.addition.textContent = boulier.figee
+        ecrireAddition(dom.addition, boulier.figee
           ? boulier.phrase
-          : phraseAddition(boulier.etape * boulier.table, boulier.morceaux);
+          : phraseAddition(boulier.etape * boulier.table, boulier.morceaux));
         dom.addition.classList.toggle("est-figee", boulier.figee);
         const bande = createNumberStick(boulier.table, state.revealedLearnResults, {
           activeMultiplier: boulier.finie ? null : boulier.etape + 1,
@@ -4571,6 +4635,7 @@
 
       function clearAnswerFeedback() {
         state.waitingForContinue = false;
+        state.correctionBande = null;
         $("answer-feedback").textContent = "";
         $("answer-feedback").className = "answer-feedback";
         $("validate").style.visibility = "";
@@ -4595,7 +4660,13 @@
         } else {
           state.answer = String(question.answer);
           renderInlineAnswer("is-corrected");
-          const suite = willRetry ? " Le calcul reviendra." : donnee ? " Je l’écris dans la bande." : "";
+          // Audit 4 : dans « Je construis la bande », la réponse reste écrite
+          // (en ambre) pour que l'élève continue d'ajouter ; le calcul revient
+          // quand même une fois en fin de bande.
+          const montree = !correct && state.casesMontrees.has(question.multiplier) && state.configuration?.learnActivity === "construct";
+          const suite = willRetry
+            ? (montree ? " Je l’écris dans la bande, le calcul reviendra." : " Le calcul reviendra.")
+            : donnee ? " Je l’écris dans la bande." : "";
           feedback.textContent = given === null
             ? `Pas de réponse. Bonne réponse\u00a0: ${question.answer}.${suite}`
             : `Ta réponse\u00a0: ${given}. Bonne réponse\u00a0: ${question.answer}.${suite}`;
@@ -5113,6 +5184,8 @@
         state.mastered = new Set();
         state.erreursBande = new Map();
         state.casesDonnees = new Set();
+        state.casesMontrees = new Set();
+        state.correctionBande = null;
         state.revealedLearnResults = new Set(config.mode === "learn"
           ? config.learnActivity === "gaps" ? [0, 5, 10] : config.learnActivity === "beads" ? [0] : []
           : []);
@@ -5294,6 +5367,21 @@
           }
           if (donnee) state.casesDonnees.add(question.multiplier);
           if (!stickActivity || correct || donnee) state.revealedLearnResults.add(question.multiplier);
+          // Audit 4 (01/10/2026, décision de Gwenaël) : après une erreur dans
+          // la bande, la bonne réponse s'écrit dans la case en AMBRE (plus en
+          // bleu, la couleur de ce que l'élève tape). Dans « Je construis la
+          // bande », elle y RESTE : la case suivante se construit à partir
+          // d'elle (« Ajoute 7 », le saut) au lieu d'une case vide ; elle ne
+          // compte pas comme complétée, et le calcul revient en fin de bande.
+          // Dans la bande à trous, elle ne se voit que le temps de la
+          // correction, comme avant.
+          if (stickActivity) {
+            state.casesMontrees.delete(question.multiplier);
+            if (!correct && !donnee) {
+              state.correctionBande = question.multiplier;
+              if (state.configuration.learnActivity === "construct") state.casesMontrees.add(question.multiplier);
+            }
+          }
           // Rien ne s'allume en vert sur une case qui vient d'être ratée — et
           // dans l'ordre / le désordre, où la bande n'est qu'une aide cachée,
           // la règle ne change pas. Une case donnée s'allume, en ambre.
@@ -5641,6 +5729,8 @@
         state.mastered = new Set();
         state.erreursBande = new Map();
         state.casesDonnees = new Set();
+        state.casesMontrees = new Set();
+        state.correctionBande = null;
         state.revealedLearnResults = new Set();
         state.lastRevealedLearnMultiplier = null;
         state.learnStickHelpVisible = false;
@@ -5891,6 +5981,14 @@
         dots.className = "dots";
         dots.setAttribute("aria-hidden", "true");
         points.forEach(point => dots.append(point));
+        // Audit 4 : la ligne ouverte porte un « ✕ » (sur ordinateur, où le
+        // choix prend la place des autres étapes) — toucher la ligne referme.
+        if (deplie) {
+          const fermer = document.createElement("i");
+          fermer.className = "fermer-choix";
+          fermer.textContent = "✕";
+          dots.append(fermer);
+        }
         bouton.append(numero, texte, dots);
         bouton.setAttribute("aria-label", `${aria}${conseille ? " Étape conseillée." : ""} ${deplie === null ? "Lancer." : deplie ? "Fermer le choix." : "Choisir l’activité."}`);
         if (controle) {
@@ -6351,9 +6449,15 @@
         // sinon le bloc du jour dit déjà quoi faire. Rien tant qu'il n'y a
         // rien à dire.
         renderJours({...etat.jours, demain: agenda.dus ? 0 : etat.jours.demain});
+        // Audit 4 : un choix déplié prend la place des autres étapes (CSS,
+        // ordinateur seulement) — seulement s'il est vraiment affiché (les 9
+        // tables acquises replient le bloc : pas d'étapes, rien à cacher).
+        document.querySelector(".acc").classList.toggle("etape-seule", Boolean(etapes.querySelector(".etape-choix")));
         // Le bloc du jour ou le rang peuvent arriver après coup (parcours
-        // revenu du serveur). Un choix déplié ne fait pas rétrécir la page.
-        if (!state.etapeOuverte && !$("intro").hidden) ajusterEchelle();
+        // revenu du serveur). L'échelle se mesure sur l'accueil FERMÉ, choix
+        // déplié ou non : elle ne change pas quand on ouvre un choix, et elle
+        // est la même à l'arrivée et au retour d'une activité.
+        if (!$("intro").hidden) ajusterEchelle();
       }
 
       function renderJours(jours) {
