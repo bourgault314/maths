@@ -11229,8 +11229,12 @@ function renderCardIntoSvg(targetSvg, card, printMode, opts = {}){
   const enqueteClueBand = ((card.family === "C" || (card.family === "D" && !!card._sys)) && !revealAnswers && card._inv && Array.isArray(card._inv.indices)
     && card._inv.indices.length > 0 && card._inv.indices.every(t => typeof t === "string"));
   // Le Système en symboles (lot S2, décidé le 23/09) : même place que les phrases, en haut à
-  // droite du TOTAL, pour que tout le bas de la carte reste libre pour rédiger.
-  const sysSymbolBand = (card.family === "D" && !!card._sys && !revealAnswers && card._inv && Array.isArray(card._inv.indices)
+  // droite du TOTAL, pour que tout le bas de la carte reste libre pour rédiger. L'Enquête en
+  // symboles aussi depuis le 01/10/2026 (fiche 22d, question à choix de Gwenaël) : avant, les
+  // indices tombaient en tout petit sous le plateau, sans le nom des couleurs — illisibles
+  // imprimés en noir et blanc ; ici chaque tache a son nom (labels), comme sur le corrigé.
+  // Le 6 par page garde sa mise en page (indices sous le plateau).
+  const sysSymbolBand = (((card.family === "D" && !!card._sys) || (card.family === "C" && !!card._rel && !opts.sixColonne)) && !revealAnswers && card._inv && Array.isArray(card._inv.indices)
     && card._inv.indices.length > 0 && card._inv.indices.every(t => Array.isArray(t)));
   let tx = 800, ty = 92;
   if(enqueteClueBand || sysSymbolBand) tx = 260;

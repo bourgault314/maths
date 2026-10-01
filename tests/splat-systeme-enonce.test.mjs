@@ -257,7 +257,8 @@ test("Phrases et Symboles (plateau unique) : le nom sur chaque tache, et en haut
   assert.match(imp, /const enqueteClueBand = \(\(card\.family === "C" \|\| \(card\.family === "D" && !!card\._sys\)\) && !revealAnswers/);
   assert.match(imp, /if\(enqueteClueBand && \(printRevealState === 0 \|\| card\.family === "D"\)\)\{/);
   // symboles : même bandeau, une ligne par indice, le nom de la couleur à côté de chaque pastille
-  assert.match(imp, /const sysSymbolBand = \(card\.family === "D" && !!card\._sys && !revealAnswers/);
+  // (01/10/2026) l'Enquête en symboles prend la même place (fiche 22d), sauf en 6/page
+  assert.match(imp, /const sysSymbolBand = \(\(\(card\.family === "D" && !!card\._sys\) \|\| \(card\.family === "C" && !!card\._rel && !opts\.sixColonne\)\) && !revealAnswers/);
   assert.match(imp, /if\(enqueteClueBand \|\| sysSymbolBand\) tx = 260;/);
   assert.match(imp, /\}else if\(sysSymbolBand\)\{[\s\S]{0,400}renderMixedClue\(targetSvg, band\.x, [\s\S]{0,120}\{ labels:true, maxW:band\.right - band\.x, left:band\.x \}\);/);
   assert.match(fn("renderMixedClue"), /const labels = !!opts\.labels && !!card && \(card\.family === "C" \|\| \(card\.family === "D" && !!card\._sys\)\);/);

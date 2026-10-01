@@ -312,6 +312,10 @@ test("l'impression : le plateau de la correction à 22 mm, la correction sous lu
   assert.match(impression, /const enqueteEnoncePetit = enqueteAvecModele && !revealAnswers && !opts\.sixColonne && !opts\.plateauEntier;/);
   assert.match(impression, /const trayHDessine = \(enqueteCompacte \|\| enqueteEnoncePetit\) \? ENQ_PLATEAU_CORRECTION_H : trayH;/);
   assert.match(impression, /const startY = trayY \+ trayHDessine \+ 80;/, "les indices en symboles remontent avec le plateau");
+  // (01/10/2026, fiche 22d) l'Enquête en symboles : les indices à droite du TOTAL, avec le nom
+  // des couleurs (lisibles en noir et blanc), comme le Système et le corrigé — sauf en 6/page
+  assert.match(impression, /const sysSymbolBand = \(\(\(card\.family === "D" && !!card\._sys\) \|\| \(card\.family === "C" && !!card\._rel && !opts\.sixColonne\)\) && !revealAnswers/);
+  assert.match(impression, /renderMixedClue\(targetSvg, band\.x, [^\n]*\n\s*\{ labels:true, maxW:band\.right - band\.x, left:band\.x \}\);/);
   assert.match(impression, /translate\(0 \$\{Math\.round\(trayY \+ trayHDessine \+ ENQ_SCHEMA_VIDE_ECART - 620\)\}\)/, "le schéma vide remonte avec le plateau");
 });
 
