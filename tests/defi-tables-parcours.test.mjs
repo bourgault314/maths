@@ -214,7 +214,8 @@ test("J’apprends garde la bande pour construire et la propose en aide temporai
   assert.match(html, /state\.revealedLearnResults\.add\(question\.multiplier\)/);
   assert.match(html, /config\.learnActivity === "gaps" \? \[0, 5, 10\] : config\.learnActivity === "beads" \? \[0\] : \[\]/,
     "« à trous » commence avec ×0, ×5 et ×10 remplis ; « je pousse les perles » avec la seule case 0 (0 × table = 0, sans geste)");
-  assert.match(html, /const stick = createNumberStick\(table, state\.revealedLearnResults, \{/, "la bande d’aide ne montre que les cases déjà répondues");
+  // Audit 4 : dans l’ordre et le désordre, « visibles » est exactement revealedLearnResults.
+  assert.match(html, /const visibles = stickOnly \? casesVisibles\(state, question\) : state\.revealedLearnResults;\s*const stick = createNumberStick\(table, visibles, \{/, "la bande d’aide ne montre que les cases déjà répondues");
   assert.doesNotMatch(html, /ALL_MULTIPLIERS/);
   assert.match(html, /draftMultiplier: stickOnly \? question\?\.multiplier : null/);
   assert.match(html, /activeMultiplier: question\?\.multiplier/);
