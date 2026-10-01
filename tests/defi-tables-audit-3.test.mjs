@@ -77,6 +77,15 @@ test("le CSS : une seule échelle, jamais à l’impression ; la hauteur du jeu 
   assert.match(telephone, /\.challenge-playing \.shell \{ height: 100dvh;/, "le téléphone n’est pas touché");
 });
 
+test("Mes calculs, Mon parcours et Lire la table : pages longues, jamais réduites en fenêtre", () => {
+  // Retouche de Cowork (01/10/2026) : ×1 en fenêtre, comme sur main ; en plein
+  // écran, agrandies d’après la largeur. Sans passer par la mesure.
+  assert.match(ajuster, /if \(\["calculs", "parcours", "lire"\]\.some\(id => !document\.getElementById\(id\)\.hidden\)\) \{\s*racine\.style\.setProperty\("--echelle", bornes\.longue\.toFixed\(3\)\);\s*return;\s*\}/);
+  assert.ok(ajuster.indexOf('["calculs", "parcours", "lire"]') < ajuster.indexOf('corps.classList.add("mesure-cadre")'), "avant toute mesure");
+  assert.equal(bornesEchelle(1366, false).longue, 1, "fenêtre : ×1");
+  assert.equal(bornesEchelle(1920, true).longue, 1.5, "plein écran : d’après la largeur");
+});
+
 // Relecture de Code (01/10/2026) : trois défauts vus au navigateur.
 test("l’accueil sans choix déplié n’est pas une page longue : il garde la plus petite échelle", () => {
   // 1 366 × 650, élève suivi : quand « Mes calculs du jour » arrivait,

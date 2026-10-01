@@ -3295,6 +3295,13 @@
           racine.style.setProperty("--echelle", "1");
           return;
         }
+        // Mes calculs, Mon parcours et Lire la table sont des pages longues :
+        // jamais réduites en fenêtre (×1, elles défilent comme avant), agrandies
+        // d'après la largeur en plein écran. Aucune mesure.
+        if (["calculs", "parcours", "lire"].some(id => !document.getElementById(id).hidden)) {
+          racine.style.setProperty("--echelle", bornes.longue.toFixed(3));
+          return;
+        }
         const carte = document.getElementById("question-card");
         const enJeu = corps.classList.contains("challenge-playing");
         // En jeu sur un écran de moins de 900 px de haut, la colonne a déjà la
