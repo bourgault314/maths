@@ -815,7 +815,7 @@ test("prénom local, remise à zéro confirmée dans la page, résultat relié a
   assert.match(html, /id="parcours-reset"[\s\S]*Recommencer à zéro/);
   assert.match(html, /id="parcours-confirm-yes"[\s\S]*Effacer/);
   assert.doesNotMatch(html, /window\.confirm\(/);
-  assert.match(html, /PARCOURS\.appliquerSerie\(parcours, state\.configuration, \{correct: state\.correct, total: TOTAL\}\)/);
+  assert.match(html, /PARCOURS\.appliquerSerie\(parcours, state\.configuration, \{correct: state\.correct, total: TOTAL, decouverte: state\.origin === "decouverte"\}\)/);
   assert.match(html, /PARCOURS\.demarrerSerie\(parcours, config\)/);
   assert.match(html, /id="result-parcours"/);
   assert.match(html, /id="result-accueil" class="primary"[^>]*>Ma table<\/button>/, "le bouton principal du résultat ramène à l’accueil");

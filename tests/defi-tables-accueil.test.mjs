@@ -159,15 +159,15 @@ test("la notice « Comment ça marche ? » : les règles, écrites une fois, clo
 
 // Les fonctions de l'accueil qui décident sans le DOM, telles qu'elles sont
 // écrites dans la page : table en cours, étape conseillée, phrases de Réviser.
-function chargerLogiqueAccueil(codeSuivi, session = fauxStockage()) {
+function chargerLogiqueAccueil(codeSuivi, session = fauxStockage(), seance = false) {
   const debut = html.indexOf("const CLE_TABLE_CHOISIE");
   const fin = "const NOMS_ENTRAINEMENTS";
   const source = html.slice(debut, html.indexOf(fin));
   const util = html.slice(html.indexOf("function pluriel(nombre, mot)"), html.indexOf("const LIBELLES_ETATS_CALCULS"))
     + html.slice(html.indexOf("function phraseReviser(agenda, resume)"), html.indexOf("function renderCalculsDetail()"));
-  return new Function("PARCOURS", "PARCOURS_TABLES", "codeSuivi", "stockageSession", `${util}\n${source}
+  return new Function("PARCOURS", "PARCOURS_TABLES", "codeSuivi", "stockageSession", "SEANCE", `${util}\n${source}
     return {lireTableChoisie, ecrireTableChoisie, tableEnCours, etapeConseillee, phraseReviser, questionsRevision, libelleDans};`)(
-    PARCOURS, [...PARCOURS.TABLES], codeSuivi, () => session
+    PARCOURS, [...PARCOURS.TABLES], codeSuivi, () => session, seance
   );
 }
 
@@ -210,6 +210,18 @@ test("Ma table = la prochaine de l’ordre conseillé qui n’est pas acquise, s
   const tout = PARCOURS.creerParcours();
   PARCOURS.TABLES.forEach(t => { tout.tables[t].acquise = "2026-09-01"; });
   assert.equal(logique.tableEnCours(PARCOURS.etatAffichage(PARCOURS.normaliserParcours(tout))), 9);
+
+  // Avec la séance (lot 2a, décision du 03/10) : sans choix dans l'onglet, la
+  // table de la dernière séance — sans la clé, rien ne change.
+  const joue = lea();
+  joue.tables[7].seance = {depart: 3, n: 2, dernier: "2026-10-05"};
+  const etatJoue = PARCOURS.etatAffichage(PARCOURS.normaliserParcours(joue));
+  assert.equal(etatJoue.tableSeance, 7);
+  assert.equal(chargerLogiqueAccueil("", fauxStockage(), true).tableEnCours(etatJoue), 7, "la 7 de la dernière séance");
+  assert.equal(chargerLogiqueAccueil("", fauxStockage(), false).tableEnCours(etatJoue), 5, "sans la clé : l'ordre conseillé");
+  const avecChoix = chargerLogiqueAccueil("", fauxStockage(), true);
+  avecChoix.ecrireTableChoisie(4);
+  assert.equal(avecChoix.tableEnCours(etatJoue), 4, "le choix de l'onglet passe devant");
 });
 
 test("l’étape conseillée d’une table suit la même lecture que le moteur", () => {

@@ -30,7 +30,7 @@ export function parcoursComplet() {
     // Lot « Ma séance du jour » : les bouts de la rangée, le départ de
     // l'échelle, les deux « sans faute » du raccourci.
     ligne.bouts = PARCOURS.multiplicateursBouts(table);
-    ligne.seance = {depart: 1 + (index % 6), n: index + 3};
+    ligne.seance = {depart: 1 + (index % 6), n: index + 3, dernier: `2026-09-${String(10 + index).padStart(2, "0")}`};
     ligne.sansFaute = {desordre: 1, trous: index % 2};
   });
   p.seances = ["2026-09-21", "2026-09-22", "2026-09-22", "2026-09-23"];

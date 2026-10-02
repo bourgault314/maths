@@ -303,7 +303,8 @@
        bouton Réviser, deux portes (Mon parcours, Mes calculs). L'appli ne
        choisit rien à la place de l'élève : les trois étapes restent toujours
        disponibles, elle SURLIGNE seulement celle qu'elle conseille. */
-    .acc { display: grid; gap: 12px; max-width: 560px; margin: 0 auto; text-align: left; }
+    /* minmax(0, 1fr) (lot 2a) : la colonne ne s’élargit plus au contenu le plus large — l’accueil des 9 tables débordait de 35 px à 360 px. */
+    .acc { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; max-width: 560px; margin: 0 auto; text-align: left; }
     .matable { padding: 14px 14px 12px; border: 2px solid #cfe2ed; border-radius: 22px; background: #fff; }
     .matable-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; margin-bottom: 10px; }
     .matable-droite { display: grid; justify-items: end; gap: 0; padding-top: 4px; text-align: right; }
@@ -440,7 +441,19 @@
     .expert { padding: 14px 14px 14px; border: 2px solid #f0dc8c; border-radius: 22px; background: linear-gradient(180deg, #fffdf3, #fff); }
     .expert .eyebrow { margin: 0; color: #7a5a00; font-size: .74rem; letter-spacing: .06em; }
     .expert h2 { margin: 2px 0 12px; font-size: 1.35rem; line-height: 1.15; color: var(--ink); }
-    .escalier { display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px; align-items: end; margin: 0 0 12px; }
+    .escalier { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 5px; align-items: end; margin: 0 0 12px; }
+    /* Lot 2a : à 360 px et moins, les cinq marches (★★★★, « 1 min 45 »)
+       poussaient le bloc hors de l'écran (395 px de large pour 360) — défaut
+       d'avant la séance, relevé en contrôlant l'accueil des 9 tables. */
+    @media (max-width: 380px) {
+      .marche .bloc { font-size: .8rem; }
+      .marche:nth-child(3) .bloc { font-size: .72rem; }
+      .marche:nth-child(4) .bloc { font-size: .6rem; }
+      .marche:nth-child(5) .bloc { font-size: 1.05rem; }
+      .marche small { font-size: .64rem; }
+      .matable.is-toutes .matable-head { flex-wrap: wrap; row-gap: 2px; }
+      .matable.is-toutes .matable-droite { margin-left: auto; }
+    }
     .marche { display: grid; justify-items: center; gap: 4px; }
     .marche .bloc { width: 100%; border-radius: 10px 10px 4px 4px; display: grid; place-items: end center; padding-bottom: 6px; font-size: 1.05rem; letter-spacing: -.06em; border: 2px solid #dfe6ec; background: #f1f4f7; color: #b0bcc7; line-height: 1; }
     .marche:nth-child(1) .bloc { height: 40px; } .marche:nth-child(2) .bloc { height: 52px; } .marche:nth-child(3) .bloc { height: 64px; } .marche:nth-child(4) .bloc { height: 76px; } .marche:nth-child(5) .bloc { height: 88px; font-size: 1.3rem; letter-spacing: 0; }
@@ -787,6 +800,13 @@
        séance, ses liens, « Cette semaine », le fil de la séance au-dessus de
        la barre, l'écran entre deux étapes et le bilan. Sans la clé, rien de
        tout cela n'est posé dans la page. */
+    /* Lot 2 (décision du 03/10/2026, celle du 11/09 étendue) : « Changer de
+       table » ouvert, l'écran ne montre QUE les tables — ni la rangée, ni la
+       carte de la séance, ni les liens —, sur téléphone comme sur ordinateur. */
+    body.avec-seance .acc.choix-ouvert > :not(.matable),
+    body.avec-seance .acc.choix-ouvert #acc-etapes,
+    body.avec-seance .acc.choix-ouvert #acc-lire { display: none; }
+    body.avec-seance .acc.choix-ouvert .matable-choix { margin-bottom: 0; }
     body.avec-seance .matable:not(.is-toutes) #acc-acquises,
     body.avec-seance .matable:not(.is-toutes) #acc-rang { display: none; }
     .rangee { display: flex; justify-content: center; gap: 5px; margin: 4px 0 14px; }
@@ -837,6 +857,34 @@
     .seance-bilan li span:last-child { color: var(--teal); font-weight: 900; white-space: nowrap; }
     .seance-bilan li.rate i { background: #fff; border: 2px solid #8a9bab; color: #5b7286; box-sizing: border-box; }
     .seance-bilan li.rate span:last-child { color: #5b7286; }
+    /* « Tu connais déjà des tables ? » (lot 2) : le premier écran. */
+    /* Le bas de l'accueil reste : « Comment ça marche ? », et, sans code,
+       les deux portes des professeurs (Réglages libres, Évaluation CM1). */
+    .acc.en-decouverte #acc-changer, .acc.en-decouverte #acc-lire, .acc.en-decouverte #acc-fiche,
+    .acc.en-decouverte > :not(.matable):not(.acc-bas):not(#acc-notice) { display: none; }
+    .decouverte-texte { margin: 2px 0 12px; color: var(--muted); font-size: .95rem; font-weight: 800; }
+    .decouverte-choix button { min-height: 52px; font-size: 1.12rem; }
+    .decouverte-choix button.is-acquise { cursor: default; }
+    .decouverte-go { display: block; margin: 16px auto 4px; min-height: 48px; padding: 12px 20px 9px; }
+    .seance-row { align-self: start; }
+    /* Mon parcours avec la séance (lot 2) : la rangée de chaque table, et
+       l'échelle de ma table. */
+    .legende-rangee b { display: inline-grid; place-items: center; width: 22px; height: 22px; margin-right: 3px; border: 2px solid #9fb6c6; border-radius: 6px; background: #fff; color: transparent; font-size: .72rem; font-weight: 900; vertical-align: middle; box-sizing: border-box; }
+    .legende-rangee b.pleine { border-color: var(--teal); background: var(--teal); color: #fff; }
+    .legende-rangee b.entouree { border-color: var(--teal); border-width: 3px; color: var(--teal); }
+    .seance-row .rangee { margin: 2px 0 0; justify-content: flex-start; }
+    .seance-row .rangee b { max-width: 36px; height: 31px; font-size: 14px; }
+    /* « 100 » (la table de 10) tient dans sa case jusqu'à 320 px. */
+    @media (max-width: 380px) {
+      .rangee { gap: 2px; }
+      .rangee b, .seance-row .rangee b { border-radius: 7px; font-size: 11px; letter-spacing: -.04em; }
+    }
+    .echelle { margin-top: 10px; padding-top: 9px; border-top: 1px dashed #c9dbe6; }
+    .echelle ol { display: flex; gap: 4px; margin: 0; padding: 0; list-style: none; }
+    .echelle li { display: inline-grid; place-items: center; flex: 1 1 0; max-width: 36px; height: 24px; border: 2px solid #b9cbd8; border-radius: 7px; background: #fff; color: #6b8192; font-size: .78rem; font-weight: 950; box-sizing: border-box; }
+    .echelle li.faite { border-color: #9ad1c8; background: #e7f8f5; color: var(--teal); }
+    .echelle li.ici { border-color: var(--blue); background: var(--blue); color: #fff; }
+    .echelle p { margin: 6px 0 0; color: var(--muted); font-size: .84rem; font-weight: 800; }
     @media (max-width: 520px) {
       .rangee { gap: 3px; }
       .rangee b { height: 31px; border-radius: 8px; font-size: 13px; }
@@ -2174,6 +2222,11 @@
           <span><span class="cell is-started"><span class="dot"></span></span> commencé</span>
           <span><span class="cell is-done"><span class="dot"></span></span> réussi</span>
         </div>
+        <div id="parcours-legende" class="parcours-legend legende-rangee" aria-hidden="true" hidden>
+          <span><b></b> pas encore</span>
+          <span><b class="entouree">7</b> réussi une fois</span>
+          <span><b class="pleine">7</b> prêt</span>
+        </div>
         <ol id="parcours-list" class="parcours-list"></ol>
         <div id="parcours-melange" class="parcours-row parcours-extra" hidden></div>
         <div id="parcours-expert" class="parcours-row parcours-extra"></div>
@@ -2387,6 +2440,16 @@
     <p><b>Les étoiles.</b> Mes 9 tables acquises et le mélange réussi, je tente toutes les tables de plus en plus vite&nbsp;: ★ 2 min … 👑 1 min.</p>
     <p><b>Mon rang.</b> Bronze, Argent, Or, Platine, Diamant, Légende. On ne redescend jamais.</p>
   </template>
+  <!-- Ma séance du jour (lot 2, 03/10/2026) : la notice de la séance, six
+       lignes, posée à la place de la précédente avec la clé ?seance=1. -->
+  <template id="notice-seance">
+    <p><b>Ma séance du jour.</b> 3 ou 4 étapes, environ 8 min. Réussi&nbsp;: j’avance. Raté&nbsp;: je reprends un peu plus bas.</p>
+    <p><b>Ma table.</b> De marche en marche&nbsp;: les perles, la bande, dans l’ordre, dans le désordre, les nombres manquants… jusqu’à «&nbsp;Je valide ma table&nbsp;»&nbsp;: 20 questions en 1 min 30, 2 erreurs au plus.</p>
+    <p><b>Ma rangée.</b> Une case entourée&nbsp;: réussi une fois. Une case pleine&nbsp;: prêt. Toutes pleines&nbsp;: je peux valider.</p>
+    <p><b>Mes calculs du jour.</b> Un calcul réussi revient plus tard. Raté, il revient demain.</p>
+    <p><b>Mon mélange.</b> Dès 2 tables acquises, je réussis le mélange avant de valider une nouvelle table.</p>
+    <p><b>Les étoiles et mon rang.</b> Mes 9 tables acquises&nbsp;: toutes les tables, de plus en plus vite. Bronze… Légende&nbsp;: on ne redescend jamais.</p>
+  </template>
   <footer class="site-footer">
     <span>Gwenaël Bourgault</span><span aria-hidden="true">·</span>
     <a href="mailto:gwenael@mathsgo.re?subject=Contact%20depuis%20mathsgo.re">Me contacter</a><span aria-hidden="true">·</span>
@@ -2397,7 +2460,7 @@
   </footer>
 
   <script src="./defi_tables_core.js?v=20260930-1"></script>
-  <script src="./defi_tables_mon_parcours.js?v=20261002-1"></script>
+  <script src="./defi_tables_mon_parcours.js?v=20261003-1"></script>
   <script>
     (() => {
       "use strict";
@@ -4961,7 +5024,7 @@
         const scoreKey = configurationKey(state.configuration);
         const previousScore = sessionScores.get(scoreKey);
         if (state.configuration.mode !== "learn") sessionScores.set(scoreKey, state.correct);
-        const suivi = PARCOURS.appliquerSerie(parcours, state.configuration, {correct: state.correct, total: TOTAL});
+        const suivi = PARCOURS.appliquerSerie(parcours, state.configuration, {correct: state.correct, total: TOTAL, decouverte: state.origin === "decouverte"});
         parcours = suivi.parcours;
         sauverParcours();
         renderVerdict(suivi, elapsed);
@@ -4974,6 +5037,7 @@
         renderCorrections();
         $("result-reglages").hidden = state.origin !== "reglages";
         if (enSeance()) noterEtapeDeSeance(suivi);
+        if (SEANCE && state.origin === "decouverte") renderSuiteDecouverte(suivi);
         show("result");
       }
 
@@ -6020,6 +6084,9 @@
         // ALORS QU'ELLE ÉTAIT DÉJÀ acquise (le point de Jackie, 19/09/2026 :
         // toucher sa table cochée affichait la table de 2 sans un mot).
         if (choisie && (!etat.acquises.includes(choisie) || choix.acquise || etat.acquises.length === PARCOURS_TABLES.length)) return choisie;
+        // Avec la séance (lot 2) : la table de la dernière séance, gardée dans
+        // le parcours — le choix de l'onglet ne survit pas au lendemain.
+        if (SEANCE && etat.tableSeance) return etat.tableSeance;
         const ordre = PARCOURS.ORDRE_CONSEIL;
         return ordre.find(table => !etat.acquises.includes(table)) || ordre[ordre.length - 1];
       }
@@ -6268,6 +6335,12 @@
         });
         const action = $("acc-expert-action");
         action.replaceChildren();
+        // Ma séance du jour (lot 2) : les 9 tables acquises ont aussi leur
+        // séance — Mes calculs du jour, le mélange s'il est dû, l'étoile suivante.
+        if (SEANCE && PARCOURS.programmeDeSeance(parcours, PARCOURS.ouvrirSeance(parcours)).etapes.length) {
+          action.append(carteDeSeance(null));
+          return;
+        }
         if (!expert.ouvert) {
           const melange = etat.melange;
           action.append(ligneEtape({
@@ -6381,8 +6454,13 @@
         // carte de la séance et deux liens prennent la place des trois étapes ;
         // « Choisir une activité » rouvre le menu d'avant, tel quel.
         const avecSeance = SEANCE && !replie;
+        // « Tu connais déjà des tables ? » (lot 2) : le tout premier écran d'un
+        // élève qui n'a encore rien fait.
+        const decouverte = avecSeance && enDecouverte();
+        document.querySelector(".acc").classList.toggle("en-decouverte", decouverte);
         const carteSeance = avecSeance && !state.choisirActivite;
-        if (avecSeance) renderSeanceAccueil(etapes, etat, table, ligne);
+        if (decouverte) renderDecouverte(etapes, etat);
+        else if (avecSeance) renderSeanceAccueil(etapes, etat, table, ligne);
         if (!replie && !carteSeance) {
           // Une table acquise n'a plus d'étape conseillée : ses trois étapes
           // sont cochées, l'élève y revient pour refaire ce qu'il veut.
@@ -6567,7 +6645,7 @@
         // Avec la séance, « Mes calculs du jour » est sa première étape : le
         // bloc quitte l'accueil (il reste dans Mes calculs).
         reviser.hidden = !agenda.dus;
-        if (avecSeance) reviser.hidden = true;
+        if (SEANCE) reviser.hidden = true;
         reviser.classList.toggle("is-next", conseil === "reviser");
         const serie = questionsRevision(agenda);
         $("acc-reviser-note").textContent = agenda.dus > serie
@@ -6616,7 +6694,7 @@
       // « Comment ça marche ? » : la notice est écrite une fois (template
       // notice-regles) et clonée là où on la déplie — accueil et parcours.
       function poserNotices() {
-        const modele = $("notice-regles");
+        const modele = $(SEANCE ? "notice-seance" : "notice-regles");
         if (!modele || !modele.content) return;
         document.querySelectorAll("[data-notice]").forEach(zone => zone.append(modele.content.cloneNode(true)));
       }
@@ -6680,7 +6758,7 @@
 
       function noterEtapeDeSeance(suivi) {
         const fete = suivi ? feteDuResultat(suivi.evenements) : {principal: null};
-        const chronometree = etapeEnCours.type === "validation" || etapeEnCours.type === "melange";
+        const chronometree = ["validation", "melange", "etoile"].includes(etapeEnCours.type);
         const note = PARCOURS.noterEtape(parcours, seance, etapeEnCours, resultatDeLEtape(suivi));
         parcours = note.parcours;
         seance = note.seance;
@@ -6863,33 +6941,13 @@
       // au moteur de choisir). undefined : les 9 tables sont acquises et
       // aucune n'est choisie — l'accueil des 9 tables n'a pas de séance (lot 2).
       function tableDeLaSeance() {
-        if (PARCOURS.toutesAcquises(parcours) && !lireTableChoisie()) return undefined;
+        if (PARCOURS.toutesAcquises(parcours) && !lireTableChoisie()) return null;
         return tableEnCours(PARCOURS.etatAffichage(parcours));
       }
 
-      // L'accueil avec la clé : la rangée, puis la carte de la séance et ses
-      // liens — ou, « Choisir une activité » ouvert, le menu d'avant.
-      function renderSeanceAccueil(etapes, etat, table, ligne) {
-        etapes.append(rangeeDeTable(table));
-        const liens = document.createElement("div");
-        liens.className = "seance-liens";
-        const lien = (texte, action) => {
-          const bouton = document.createElement("button");
-          bouton.type = "button";
-          bouton.textContent = texte;
-          bouton.addEventListener("click", action);
-          liens.append(bouton);
-          return bouton;
-        };
-        if (state.choisirActivite) {
-          lien("Revenir à ma séance", () => {
-            state.choisirActivite = false;
-            state.etapeOuverte = null;
-            renderAccueil();
-          });
-          etapes.append(liens);
-          return;
-        }
+      // La carte « Ma séance du jour » : la liste numérotée des étapes du jour
+      // et « Commencer → ». table = null : la séance des 9 tables acquises.
+      function carteDeSeance(table) {
         const programme = PARCOURS.programmeDeSeance(parcours, PARCOURS.ouvrirSeance(parcours, {table}));
         const nombre = programme.etapes.length;
         const faite = PARCOURS.bilanSeances(parcours).aujourdhui > 0;
@@ -6921,6 +6979,7 @@
           const nom = document.createElement("span");
           nom.textContent = etape.nom;
           const detail = etape.type === "revision" ? pluriel(etape.calculs, "calcul")
+            : etape.type === "etoile" ? etape.detail
             : etape.conditionnelle ? "si mes calculs sont prêts" : "";
           if (detail) {
             const petit = document.createElement("small");
@@ -6933,7 +6992,33 @@
         carte.append(tete, liste);
         carte.setAttribute("aria-label", `${titre.textContent} : ${duree.textContent}. ${programme.etapes.map((etape, index) => `${index + 1}, ${etape.nom}`).join(" ; ")}. Commencer.`);
         carte.addEventListener("click", () => commencerSeance(table));
-        etapes.append(carte);
+        return carte;
+      }
+
+      // L'accueil avec la clé : la rangée, puis la carte de la séance et ses
+      // liens — ou, « Choisir une activité » ouvert, le menu d'avant.
+      function renderSeanceAccueil(etapes, etat, table, ligne) {
+        etapes.append(rangeeDeTable(table));
+        const liens = document.createElement("div");
+        liens.className = "seance-liens";
+        const lien = (texte, action) => {
+          const bouton = document.createElement("button");
+          bouton.type = "button";
+          bouton.textContent = texte;
+          bouton.addEventListener("click", action);
+          liens.append(bouton);
+          return bouton;
+        };
+        if (state.choisirActivite) {
+          lien("Revenir à ma séance", () => {
+            state.choisirActivite = false;
+            state.etapeOuverte = null;
+            renderAccueil();
+          });
+          etapes.append(liens);
+          return;
+        }
+        etapes.append(carteDeSeance(table));
         if (!ligne.acquise) {
           lien("Je valide ma table", () => {
             // Le seul verrou : le mélange dû. On ouvre le menu sur sa ligne.
@@ -6983,6 +7068,169 @@
         const nombre = etat.acquises.length;
         const sousTitre = $("open-parcours").querySelector("small");
         if (sousTitre) sousTitre.textContent = `${pluriel(nombre, "table")} sur ${PARCOURS_TABLES.length}${etat.rang && etat.rang.niveau ? ` · ${etat.rang.nom}` : ""}`;
+      }
+      // « Tu connais déjà des tables ? » (lot 2). L'écran n'apparaît qu'à un
+      // élève qui n'a encore rien fait (parcours vide), et reste ouvert tant
+      // qu'il valide des tables ; « Non… » ou « C'est tout » le ferment pour
+      // de bon dans l'onglet. Une table réussie est acquise, comme toujours ;
+      // une table ratée devient sa table, et sa séance commence aux
+      // entraînements (moteur : commencerApresDecouverte).
+      // Relecture de Code (03/10/2026) : rien n'est figé au premier dessin.
+      // Avec un code, l'accueil est dessiné AVANT que le serveur rende le
+      // parcours ; sur un appareil neuf, la case est vide à cet instant, et
+      // l'écran restait affiché à un élève qui avait déjà trois tables (sans
+      // Mon parcours). L'écran suit donc le parcours, sauf quand l'élève y a
+      // déjà tenté une table : il reste alors ouvert jusqu'à « C'est tout ».
+      const CLE_DECOUVERTE = "mathsgo-defi-tables-decouverte";
+      let decouverteFermee = false;
+      let decouverteEngagee = false;
+
+      function enDecouverte() {
+        let fermee = decouverteFermee;
+        try { fermee = fermee || stockageSession()?.getItem(CLE_DECOUVERTE) === (codeSuivi || "-"); } catch (_) {}
+        return !fermee && (decouverteEngagee || PARCOURS.estVide(parcours));
+      }
+
+      function fermerDecouverte() {
+        decouverteFermee = true;
+        try { stockageSession()?.setItem(CLE_DECOUVERTE, codeSuivi || "-"); } catch (_) {}
+      }
+
+      function renderDecouverte(etapes, etat) {
+        $("acc-table-eyebrow").textContent = "Bienvenue";
+        $("acc-table-titre").textContent = "Tu connais déjà des tables ?";
+        const texte = document.createElement("p");
+        texte.className = "decouverte-texte";
+        texte.textContent = "Valide celles que tu connais : 20 questions en 1 min 30.";
+        const choix = document.createElement("div");
+        choix.className = "matable-choix decouverte-choix";
+        PARCOURS_TABLES.forEach(candidate => {
+          const bouton = document.createElement("button");
+          bouton.type = "button";
+          const acquise = etat.acquises.includes(candidate);
+          bouton.className = acquise ? "is-acquise" : "";
+          bouton.textContent = acquise ? `${candidate} ✓` : String(candidate);
+          bouton.setAttribute("aria-label", acquise ? `Table de ${candidate}, acquise` : `Valider la table de ${candidate}`);
+          if (acquise) bouton.setAttribute("aria-disabled", "true");
+          else bouton.addEventListener("click", () => {
+            decouverteEngagee = true;
+            launchFromParcours(PARCOURS.configValidation(candidate), "decouverte");
+          });
+          choix.append(bouton);
+        });
+        const suivante = PARCOURS.tableDeSeance(parcours);
+        const commencer = document.createElement("button");
+        commencer.type = "button";
+        commencer.className = "primary decouverte-go";
+        commencer.textContent = etat.acquises.length
+          ? (suivante === null ? "C’est tout" : `C’est tout, je commence la table de ${suivante}`)
+          : `Non, je commence par la table de ${suivante}`;
+        commencer.addEventListener("click", () => {
+          fermerDecouverte();
+          renderAccueil();
+        });
+        etapes.append(texte, choix, commencer);
+      }
+
+      // Le résultat d'une validation lancée depuis la découverte : le verdict
+      // reste, et deux boutons disent la suite.
+      function renderSuiteDecouverte(suivi) {
+        const validation = suivi.evenements.find(evenement => evenement.type === "validation");
+        if (!validation) return;
+        const table = validation.table;
+        const zone = $("seance-suite");
+        $("result").classList.add("en-seance");
+        zone.replaceChildren();
+        zone.hidden = false;
+        const bouton = (texte, classe, action) => {
+          const element = document.createElement("button");
+          element.type = "button";
+          element.className = classe;
+          element.textContent = texte;
+          element.addEventListener("click", action);
+          return element;
+        };
+        const autre = () => backToModes();
+        const boutons = document.createElement("div");
+        boutons.className = "boutons";
+        if (validation.reussi) {
+          boutons.append(
+            bouton("Une autre table", "primary", autre),
+            bouton("C’est tout", "secondary", () => { fermerDecouverte(); backToModes(); })
+          );
+        } else {
+          boutons.append(
+            bouton(`Je commence la table de ${table} →`, "primary", () => {
+              parcours = PARCOURS.commencerApresDecouverte(parcours, table);
+              sauverParcours();
+              ecrireTableChoisie(table);
+              fermerDecouverte();
+              backToModes();
+            }),
+            bouton("Une autre table", "secondary", autre)
+          );
+        }
+        zone.append(boutons);
+      }
+
+      // Mon parcours avec la séance (lot 2) : une carte par table, sa rangée,
+      // et pour ma table l'échelle des 8 marches — les marches passées
+      // pleines, celles de la prochaine séance en bleu.
+      function echelleDeTable(table) {
+        const ligne = parcours.tables[table];
+        const depart = ligne.seance.depart;
+        const prochaines = PARCOURS.programmeDeSeance(parcours, PARCOURS.ouvrirSeance(parcours, {table}))
+          .etapes.filter(etape => etape.marche).map(etape => etape.prevue.marche);
+        const zone = document.createElement("div");
+        zone.className = "echelle";
+        const liste = document.createElement("ol");
+        PARCOURS.MARCHES.forEach(item => {
+          const point = document.createElement("li");
+          point.title = item.nom;
+          if (item.marche < depart) point.className = "faite";
+          if (prochaines.includes(item.marche)) point.className = "ici";
+          point.textContent = item.marche === PARCOURS.MARCHES.length ? "✓" : String(item.marche);
+          liste.append(point);
+        });
+        const texte = document.createElement("p");
+        const noms = PARCOURS.MARCHES.filter(item => prochaines.includes(item.marche)).map(item => item.nom);
+        texte.textContent = noms.length ? `Prochaine séance : ${noms.join(", ")}` : "";
+        zone.append(liste, texte);
+        zone.setAttribute("aria-label", `L’échelle de la table de ${table} : ${texte.textContent}`);
+        return zone;
+      }
+
+      function renderParcoursSeance(list, etat, maTable) {
+        etat.lignes.forEach(ligne => {
+          const table = ligne.table;
+          const item = document.createElement("li");
+          item.className = `parcours-row seance-row${ligne.acquise ? " is-acquise" : ""}${table === maTable ? " is-ma-table" : ""}`;
+          const head = document.createElement("div");
+          head.className = "parcours-row-head";
+          const nom = document.createElement("strong");
+          nom.textContent = `Table de ${table}`;
+          const droite = document.createElement("span");
+          droite.className = "parcours-head-etat";
+          if (table === maTable) {
+            const repere = document.createElement("span");
+            repere.className = "parcours-ma-table";
+            repere.textContent = "ma table";
+            droite.append(repere);
+          }
+          if (ligne.acquise) {
+            const badge = document.createElement("span");
+            badge.className = "parcours-badge";
+            badge.textContent = `acquise le ${dateEnLettres(ligne.acquise)} ✓`;
+            droite.append(badge);
+          }
+          head.append(nom, droite);
+          item.append(head);
+          item.append(rangeeDeTable(table));
+          if (table === maTable && !ligne.acquise) item.append(echelleDeTable(table));
+          const revoir = boutonReviser(ligne);
+          if (revoir) item.append(revoir);
+          list.append(item);
+        });
       }
       // [seance:fin]
 
@@ -7057,6 +7305,24 @@
         return label;
       }
 
+      // La barre « Réviser N calculs → » d'une table acquise (audit 2) : ses
+      // calculs rouges dus aujourd'hui, ou rien.
+      function boutonReviser(ligne) {
+        const rouges = ligne.aRevoir ? new Set(PARCOURS.calculsATravailler(parcours, ligne.table)) : new Set();
+        const nombre = PARCOURS.calculsDus(parcours, {table: ligne.table}).filter(cle => rouges.has(cle)).length;
+        if (!nombre) return null;
+        const revoir = document.createElement("button");
+        revoir.type = "button";
+        revoir.className = "parcours-revoir";
+        // Une action, pas un état : « Réviser 2 calculs » (le mot du
+        // bouton de Mes calculs) ; « à revoir » sonnait comme un jugement
+        // sur une table pourtant acquise.
+        revoir.textContent = `Réviser ${pluriel(nombre, "calcul")}\u00a0→`;
+        revoir.setAttribute("aria-label", `Table de ${ligne.table} : réviser ${pluriel(nombre, "calcul")}. Lance une révision sur cette table.`);
+        revoir.addEventListener("click", () => startRevision(ligne.table, "parcours"));
+        return revoir;
+      }
+
       function renderParcours() {
         majLienRetour();
         // L'accueil lit le même parcours : il se redessine avec la carte, pour
@@ -7091,7 +7357,13 @@
         // 3…, ou celle que l'élève a choisie — porte le même mot ici, et un
         // cadre bleu pour la trouver en faisant défiler.
         const maTable = tableEnCours(etat);
-        etat.lignes.forEach(ligne => {
+        // Ma séance du jour (lot 2) : chaque table montre sa rangée — la même
+        // que sur l'accueil — et ma table, son échelle (où en est la séance).
+        $("parcours-legende").hidden = !SEANCE;
+        document.querySelector(".parcours-legend:not(#parcours-legende)").hidden = SEANCE;
+        if (SEANCE) {
+          renderParcoursSeance(list, etat, maTable);
+        } else etat.lignes.forEach(ligne => {
           const item = document.createElement("li");
           item.className = `parcours-row${ligne.acquise ? " is-acquise" : ""}${ligne.table === maTable ? " is-ma-table" : ""}`;
           const head = document.createElement("div");
@@ -7115,20 +7387,7 @@
           // revient que le lendemain, et le bouton affiché le jour même ne
           // lançait rien (startRevision n'avait aucun calcul dû). La barre
           // n'apparaît donc jamais le jour d'une validation réussie.
-          let revoir = null;
-          const rouges = ligne.aRevoir ? new Set(PARCOURS.calculsATravailler(parcours, ligne.table)) : new Set();
-          const nombre = PARCOURS.calculsDus(parcours, {table: ligne.table}).filter(cle => rouges.has(cle)).length;
-          if (nombre) {
-            revoir = document.createElement("button");
-            revoir.type = "button";
-            revoir.className = "parcours-revoir";
-            // Une action, pas un état : « Réviser 2 calculs » (le mot du
-            // bouton de Mes calculs) ; « à revoir » sonnait comme un jugement
-            // sur une table pourtant acquise.
-            revoir.textContent = `Réviser ${pluriel(nombre, "calcul")}\u00a0→`;
-            revoir.setAttribute("aria-label", `Table de ${ligne.table} : réviser ${pluriel(nombre, "calcul")}. Lance une révision sur cette table.`);
-            revoir.addEventListener("click", () => startRevision(ligne.table, "parcours"));
-          }
+          const revoir = boutonReviser(ligne);
           if (ligne.table === maTable) {
             const repere = document.createElement("span");
             repere.className = "parcours-ma-table";

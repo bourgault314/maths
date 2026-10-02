@@ -144,16 +144,19 @@ test("D. depuis l’accueil, Retour n’est pas intercepté ; une page rechargé
 });
 
 test("3. Mon parcours : « Réviser N calculs → » sous la ligne, plus à côté de « Acquise ✓ »", () => {
-  const rendu = html.slice(html.indexOf("      function renderParcours() {"), html.indexOf("const melange = $(\"parcours-melange\");"));
+  // Lot 2a : la barre est une fonction (boutonReviser), partagée avec Mon parcours de la séance.
+  const rendu = html.slice(html.indexOf("      function boutonReviser(ligne) {"), html.indexOf("const melange = $(\"parcours-melange\");"));
   // Seulement les calculs rouges DUS : raté aujourd'hui, il revient demain,
   // et le bouton affiché le jour même ne lançait rien.
-  assert.match(rendu, /const rouges = ligne\.aRevoir \? new Set\(PARCOURS\.calculsATravailler\(parcours, ligne\.table\)\) : new Set\(\);\s*const nombre = PARCOURS\.calculsDus\(parcours, \{table: ligne\.table\}\)\.filter\(cle => rouges\.has\(cle\)\)\.length;\s*if \(nombre\) \{/);
+  assert.match(rendu, /const rouges = ligne\.aRevoir \? new Set\(PARCOURS\.calculsATravailler\(parcours, ligne\.table\)\) : new Set\(\);\s*const nombre = PARCOURS\.calculsDus\(parcours, \{table: ligne\.table\}\)\.filter\(cle => rouges\.has\(cle\)\)\.length;\s*if \(!nombre\) return null;/);
+  assert.match(rendu, /const revoir = boutonReviser\(ligne\);/);
   assert.match(rendu, /revoir\.textContent = `Réviser \$\{pluriel\(nombre, "calcul"\)\}\\u00a0→`;/);
   assert.match(rendu, /revoir\.addEventListener\("click", \(\) => startRevision\(ligne\.table, "parcours"\)\);/, "il lance toujours la révision de la table");
   assert.match(rendu, /etatGroupe\.append\(badge\);/);
   assert.match(rendu, /badge\.textContent = ligne\.acquise \? "" : ligne\.dernierEntrainement \?/, "plus de pastille « Acquise ✓ » : la case verte le dit");
   assert.doesNotMatch(rendu, /etatGroupe\.append\(revoir\)/, "plus dans l’en-tête, à côté de « Acquise ✓ »");
   assert.match(rendu, /item\.append\(head, cells\);\s*if \(revoir\) item\.append\(revoir\);/, "sous les ronds");
+  assert.match(html, /const revoir = boutonReviser\(ligne\);\s*if \(revoir\) item\.append\(revoir\);\s*list\.append\(item\);/, "et sous la rangée, avec la séance");
   assert.match(html, /\.parcours-revoir \{\s*display: block;\s*width: 100%;\s*min-height: 44px;/);
 });
 
