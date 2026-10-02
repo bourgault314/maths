@@ -35,8 +35,16 @@ const CATALOGUE_APPLIS = [
         // nombre de fois où chaque activité de J'apprends et chaque
         // entraînement ont été faits (ses sous-clés sont les noms déjà
         // déclarés : beads … random, desordre, trous, mixte).
+        // Lot « Ma séance du jour » (lot 1, 02/10/2026) : par table, « bouts »
+        // (les multiplicateurs hors grille déjà réussis : une liste d'entiers),
+        // « seance » (« depart », la marche où commence la prochaine séance, et
+        // « n », le nombre de séances qui l'ont déplacée) et « sansFaute » (ses
+        // sous-clés « desordre » et « trous » sont déjà déclarées) ; au niveau
+        // du parcours, « seances » (une liste de dates : le jour de chaque
+        // séance finie).
         'cles' => ['version', 'epoque', 'tables', 'apprends', 'beads', 'construct', 'gaps', 'ordered', 'random',
             'entraine', 'desordre', 'trous', 'mixte', 'dernier', 'entrainement', 'score', 'total', 'fois',
+            'bouts', 'seance', 'depart', 'n', 'sansFaute', 'seances',
             'acquise', 'melange', 'aJour', 'aRefaireAvec', 'expert', 'niveau', 'champion',
             'etoiles', 'couronne', 'rang', 'jours',
             'calculs', 'boite', 'cases', 'vu', 'erreur', 'gagne', 'echeance'],

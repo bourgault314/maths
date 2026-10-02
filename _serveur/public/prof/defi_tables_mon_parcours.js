@@ -85,6 +85,32 @@
   //    1/2/3/4 (rien de vert ne redevient bleu), échéance recalculée depuis la
   //    dernière date connue du calcul — dû aujourd'hui si elle manque.
 
+  // Lot « Ma séance du jour » (lot 1, 02/10/2026 — conception de Gwenaël) :
+  //  - la RANGÉE d'une table : dix cases, les résultats (3, 6, 9… 30). Les
+  //    huit calculs de la grille suivent leurs boîtes (vide · entourée = boîte
+  //    2 · pleine = boîte 3 ou plus) ; les deux bouts (× 1 et × 10) ne sont ni
+  //    dans les boîtes ni dans la grille des 36 : ils se remplissent à la
+  //    première réussite (« bouts », par table). La table de 10 n'a que des
+  //    bouts. « Prête » = les dix cases pleines ;
+  //  - l'ÉCHELLE À DÉCALAGE : huit marches par table (perles, je construis la
+  //    bande, bande à trous, dans l'ordre, dans le désordre, nombres
+  //    manquants, résultats et nombres manquants, je valide ma table). Une
+  //    séance propose trois marches qui se suivent, à partir du « départ » de
+  //    la table (« seance.depart », 1 à 6). Séance finie : le départ avance
+  //    d'une marche, de deux si les marches du jour sont toutes sans faute.
+  //    Une marche ratée (plus de 3 erreurs sur 10) : la marche d'en dessous,
+  //    puis la marche ratée refaite, puis la suite ; ratée une seconde fois,
+  //    la séance s'arrête et le départ redescend un cran sous la marche ratée ;
+  //  - la marche 8 ne devient la validation que si la table est prête — ou
+  //    par le RACCOURCI : 10 sur 10 à « Dans le désordre » ET 10 sur 10 à
+  //    « Nombres manquants » (« sansFaute », par table) ; sinon un
+  //    entraînement la remplace. Tant que le mélange est dû, pas de validation ;
+  //  - une séance = Mes calculs du jour (10 au plus) s'il y en a, le mélange
+  //    s'il est dû, puis les marches de la table ; « seances » garde le jour
+  //    de chaque séance finie (« Cette semaine ●○○○ »).
+  // Rien de tout cela ne change la version du parcours : des clés en plus,
+  // et une clé absente vaut son départ (rien, 1, 0).
+
   // Version du parcours enregistré. 1 = jusqu'au lot 2 de Défi tables v2 ;
   // 2 = lot 3 (mélange obligatoire, escalier des étoiles, rang, jours) ;
   // 3 = lot mémoire (cinq boîtes et une échéance par calcul). Un parcours
@@ -129,7 +155,12 @@
     // porte le repère « à revoir ».
     revision: Object.freeze({total: 10, boites: 5, delais: Object.freeze([0, 1, 3, 7, 14]), aRevoirMin: 2}),
     // Les jours travaillés gardés dans le parcours (dates, sans heure).
-    jours: Object.freeze({garder: 14})
+    jours: Object.freeze({garder: 14}),
+    // Ma séance du jour : trois marches par séance, un départ entre 1 et 6
+    // (la séance 6-7-8 est la dernière), +2 quand tout est sans faute ;
+    // « raté » = plus de 3 erreurs sur 10 (moins de 7 sur 10) ; l'objectif de
+    // la semaine (4 jours, pas une limite) ; les séances gardées.
+    seance: Object.freeze({marches: 3, departMax: 6, sansFaute: 2, erreursRate: 0.3, objectifSemaine: 4, garder: 60})
   });
   const ETOILES_MAX = SEUILS.etoile.durees.length;
 
@@ -194,6 +225,9 @@
   // Les clés du compteur « fois » : les cinq activités de J'apprends et les
   // trois entraînements (noms distincts, un seul objet plat par table).
   const CLES_FOIS = Object.freeze([...ACTIVITES_APPRENDS, ...ENTRAINEMENTS]);
+  // Les deux entraînements du raccourci vers la validation (la validation
+  // pose 14 calculs directs et 6 nombres manquants : il faut les deux formes).
+  const CLES_SANS_FAUTE = Object.freeze(["desordre", "trous"]);
 
   function foisVides() {
     return Object.fromEntries(CLES_FOIS.map(cle => [cle, 0]));
@@ -210,6 +244,14 @@
       // l'accueil montre, pour qu'un élève ne lise jamais « terminé » et
       // refasse le rekenrek autant qu'il veut. Une clé absente vaut 0.
       fois: foisVides(),
+      // Ma séance du jour (lot 1) : les bouts de la rangée déjà réussis
+      // (× 1 et × 10 ; pour la table de 10, de × 1 à × 10), le départ de la
+      // prochaine séance sur l'échelle et le nombre de séances qui l'ont
+      // déplacé (« n » : à la fusion, le plus récent gagne), et les deux
+      // entraînements déjà réussis sans faute (le raccourci vers la validation).
+      bouts: [],
+      seance: {depart: 1, n: 0},
+      sansFaute: {desordre: 0, trous: 0},
       acquise: null
     };
   }
@@ -232,6 +274,8 @@
       rang: 0,
       // Les jours travaillés (jour local, « AAAA-MM-JJ »), les 14 derniers.
       jours: [],
+      // Le jour de chaque séance finie (un jour peut y être plusieurs fois).
+      seances: [],
       calculs: {}
     };
   }
@@ -271,6 +315,24 @@
       if (jour) jours.add(jour);
     });
     return [...jours].sort().slice(-SEUILS.jours.garder);
+  }
+
+  // Les jours des séances finies : des dates, répétées quand il y a eu
+  // plusieurs séances le même jour, les plus récentes gardées.
+  function normaliserSeances(liste) {
+    return (Array.isArray(liste) ? liste : []).map(dateOuNull).filter(Boolean).sort().slice(-SEUILS.seance.garder);
+  }
+
+  // Les multiplicateurs HORS GRILLE d'une table : × 1 et × 10 ; pour la table
+  // de 10, tous (aucun de ses calculs n'est dans la grille des 36).
+  function multiplicateursBouts(table) {
+    return Number(table) === 10 ? [1, 2, 3, 4, 5, 6, 7, 8, 9, 10] : [1, 10];
+  }
+
+  function normaliserBouts(table, liste) {
+    const permis = multiplicateursBouts(table);
+    const lus = new Set((Array.isArray(liste) ? liste : []).map(Number));
+    return permis.filter(multiplicateur => lus.has(multiplicateur));
   }
 
   // « AAAA-MM-JJ » + n jours, en jours locaux (midi, pour ignorer les
@@ -340,6 +402,14 @@
         // se perd pas parce qu'il est grand).
         cible.fois[cle] = Math.min(FOIS_MAX, entier(source.fois && source.fois[cle], 0, Number.MAX_SAFE_INTEGER));
       });
+      cible.bouts = normaliserBouts(table, source.bouts);
+      if (source.seance && typeof source.seance === "object") {
+        cible.seance.depart = entier(source.seance.depart, 1, SEUILS.seance.departMax, 1);
+        cible.seance.n = entier(source.seance.n, 0, FOIS_MAX);
+      }
+      CLES_SANS_FAUTE.forEach(cle => {
+        cible.sansFaute[cle] = entier(source.sansFaute && source.sansFaute[cle], 0, 1);
+      });
       cible.acquise = dateOuNull(source.acquise);
     });
     if (brut.melange && typeof brut.melange === "object") {
@@ -363,6 +433,7 @@
       parcours.rang = entier(brut.rang, 0, RANGS.length - 1);
       parcours.jours = normaliserJours(brut.jours);
     }
+    parcours.seances = normaliserSeances(brut.seances);
     if (brut.calculs && typeof brut.calculs === "object") {
       FAITS.forEach(cle => {
         const source = brut.calculs[cle];
@@ -633,6 +704,8 @@
       // fois où l'élève s'est entraîné, pas le nombre de réussites (les
       // ronds disent déjà « réussi »).
       ligne.fois[classement.entrainement] = Math.min(FOIS_MAX, ligne.fois[classement.entrainement] + 1);
+      // 10 sur 10 : retenu pour le raccourci vers la validation (lot séance).
+      if (!erreurs && CLES_SANS_FAUTE.includes(classement.entrainement)) ligne.sansFaute[classement.entrainement] = 1;
       const reussites = ENTRAINEMENTS.filter(entrainement => ligne.entraine[entrainement] === 2).length;
       evenements.push({
         type: "entraine",
@@ -806,7 +879,18 @@
   // correction prouve peu, une erreur prouve beaucoup.
   function appliquerReponse(parcours, cleBrute, reponse = {}) {
     const cle = cleFait(cleBrute);
-    if (!cle) return {parcours, fait: null};
+    if (!cle) {
+      // Hors grille : un bout de rangée (× 1, × 10, la table de 10). Il se
+      // remplit à la première réussite et ne se vide plus ; rien d'autre ne
+      // bouge (ni boîte, ni jour travaillé).
+      const bouts = reponse.correcte ? boutsDuCalcul(cleBrute).filter(([table, multiplicateur]) => !parcours.tables[table].bouts.includes(multiplicateur)) : [];
+      if (!bouts.length) return {parcours, fait: null, bouts: []};
+      const copie = cloner(parcours);
+      bouts.forEach(([table, multiplicateur]) => {
+        copie.tables[table].bouts = normaliserBouts(table, [...copie.tables[table].bouts, multiplicateur]);
+      });
+      return {parcours: copie, fait: null, bouts};
+    }
     const copie = cloner(parcours);
     const date = dateDuJour(reponse.date);
     // Un jour compte dès qu'une série de la grille est jouée (Je m'entraîne,
@@ -844,6 +928,16 @@
     fait.cases = casesDeBoite(fait.boite);
     copie.calculs[cle] = fait;
     return {parcours: copie, fait: {cle, boite: fait.boite, etat: etatFait(fait), du, monte, descend, echeance: fait.echeance}};
+  }
+
+  // Les bouts qu'un calcul hors grille remplit : [table, multiplicateur].
+  // « 3-10 » est le × 10 de la table de 3 ET le × 3 de la table de 10.
+  function boutsDuCalcul(cleBrute) {
+    const partie = String(cleBrute ?? "").split("-").map(Number);
+    if (partie.length !== 2 || partie.some(nombre => !Number.isInteger(nombre))) return [];
+    const [premier, second] = partie;
+    const paires = premier === second ? [[premier, second]] : [[premier, second], [second, premier]];
+    return paires.filter(([table, multiplicateur]) => TABLES.includes(table) && multiplicateursBouts(table).includes(multiplicateur));
   }
 
   // Le résumé de la grille : par couleur, par boîte, et le nombre de calculs
@@ -1225,6 +1319,284 @@
       // L'agenda des calculs : dus aujourd'hui, demain, et le prochain retour.
       agenda: agendaCalculs(parcours, aujourdhui),
       prochaine: prochaineEtape(parcours, aujourdhui)
+    };
+  }
+
+  // ------------------------------------------------------ Ma séance du jour
+  //
+  // Lot 1 (02/10/2026). Tout est ici, sans DOM : la rangée d'une table, la
+  // composition d'une séance, ce qu'une étape finie change à la suite. La page
+  // ne fait qu'enchaîner des séries qui existent déjà et montrer ce que ces
+  // fonctions rendent ; la simulation et les tests lisent le même code.
+
+  // Les huit marches de l'échelle d'une table.
+  const MARCHES = Object.freeze([
+    Object.freeze({marche: 1, type: "apprends", cle: "beads", nom: "Les perles"}),
+    Object.freeze({marche: 2, type: "apprends", cle: "construct", nom: "Je construis la bande"}),
+    Object.freeze({marche: 3, type: "apprends", cle: "gaps", nom: "La bande à trous"}),
+    Object.freeze({marche: 4, type: "apprends", cle: "ordered", nom: "Dans l’ordre"}),
+    Object.freeze({marche: 5, type: "entraine", cle: "desordre", nom: "Dans le désordre"}),
+    Object.freeze({marche: 6, type: "entraine", cle: "trous", nom: "Nombres manquants"}),
+    Object.freeze({marche: 7, type: "entraine", cle: "mixte", nom: "Résultats et nombres manquants"}),
+    Object.freeze({marche: 8, type: "validation", cle: null, nom: "Je valide ma table"})
+  ]);
+  const MARCHE_VALIDATION = MARCHES.length;
+  // L'entraînement qui prend la place de la validation quand la table n'est
+  // pas prête : « Dans le désordre ».
+  const MARCHE_DE_REMPLACEMENT = 5;
+  // Ce que dure une étape, en minutes (pour « environ 8 min ») : mesuré en
+  // jouant les trois élèves types au navigateur.
+  const MINUTES_ETAPE = Object.freeze({revision: 2, melange: 2, validation: 2, beads: 3, construct: 2, gaps: 2, ordered: 2, desordre: 2, trous: 2, mixte: 2});
+
+  function marche(numero) {
+    return MARCHES[entier(numero, 1, MARCHES.length, 1) - 1];
+  }
+
+  // La rangée d'une table : dix cases, les résultats de × 1 à × 10. Les huit
+  // calculs de la grille suivent leur boîte ; les bouts sont pleins dès leur
+  // première réussite. Trois états, une couleur.
+  function rangeeTable(parcours, table) {
+    const ligne = parcours.tables[table];
+    const cases = Array.from({length: 10}, (_, index) => {
+      const multiplicateur = index + 1;
+      const cle = cleFait(`${table}-${multiplicateur}`);
+      let etat = "vide";
+      if (cle) {
+        const fait = parcours.calculs[cle];
+        if (fait && fait.boite >= SEUILS.validation.boiteMin) etat = "pleine";
+        else if (fait && fait.boite === SEUILS.validation.boiteMin - 1) etat = "entouree";
+      } else if (ligne.bouts.includes(multiplicateur)) etat = "pleine";
+      return {multiplicateur, produit: table * multiplicateur, etat, bout: !cle};
+    });
+    const pleines = cases.filter(item => item.etat === "pleine").length;
+    return {table, cases, pleines, total: cases.length, prete: pleines === cases.length};
+  }
+
+  // Le raccourci vers la validation : 10 sur 10 aux deux formes.
+  function raccourciValidation(parcours, table) {
+    const ligne = parcours.tables[table];
+    return CLES_SANS_FAUTE.every(cle => ligne.sansFaute[cle] === 1);
+  }
+
+  // La séance peut-elle proposer « Je valide ma table » ? Pas sur une table
+  // acquise, pas tant que le mélange est dû (le seul verrou du parcours), et
+  // seulement si la rangée est prête ou le raccourci gagné.
+  // « seance » : une table vue prête PENDANT la séance le reste jusqu'à sa
+  // fin — une erreur dans l'entraînement qui précède la validation fait
+  // redescendre un calcul d'une boîte, pas la validation promise ce matin
+  // (sans cela, l'élève à 9 sur 10 chaque jour ne validait jamais).
+  function validationDeSeance(parcours, table, seance = null) {
+    const ligne = parcours.tables[table];
+    if (!ligne || ligne.acquise || melangeDu(parcours)) return false;
+    return Boolean(seance && seance.prete) || tablePrete(parcours, table);
+  }
+
+  function tablePrete(parcours, table) {
+    return rangeeTable(parcours, table).prete || raccourciValidation(parcours, table);
+  }
+
+  // La table de la séance quand l'élève n'en a pas choisi : la première de
+  // l'ordre conseillé qui n'est pas acquise (aucune quand les 9 le sont).
+  function tableDeSeance(parcours) {
+    const table = ORDRE_CONSEIL.find(candidate => !parcours.tables[candidate].acquise);
+    return table === undefined ? null : table;
+  }
+
+  function bornerDepart(depart) {
+    return Math.max(1, Math.min(SEUILS.seance.departMax, depart));
+  }
+
+  // Ouvre une séance : la file de ses étapes. Mes calculs du jour s'il y en a
+  // (une série, 10 au plus), le mélange s'il est dû, puis trois marches de la
+  // table à partir de son départ. Une table déjà acquise (choisie exprès) se
+  // retravaille par ses trois entraînements, sans rien déplacer.
+  function ouvrirSeance(parcours, {table = null, aujourdhui = jourLocal()} = {}) {
+    const file = [];
+    const dus = calculsDus(parcours, {aujourdhui}).length;
+    if (dus) file.push({type: "revision"});
+    if (melangeDu(parcours)) file.push({type: "melange"});
+    const choisie = TABLES.includes(Number(table)) ? Number(table) : tableDeSeance(parcours);
+    let depart = null;
+    let echelle = false;
+    if (choisie !== null) {
+      const ligne = parcours.tables[choisie];
+      echelle = !ligne.acquise;
+      depart = echelle ? bornerDepart(ligne.seance.depart) : MARCHE_DE_REMPLACEMENT;
+      const derniere = echelle ? MARCHE_VALIDATION : MARCHE_VALIDATION - 1;
+      for (let numero = depart; numero < depart + SEUILS.seance.marches && numero <= derniere; numero += 1) {
+        file.push({type: "marche", marche: numero, table: choisie});
+      }
+    }
+    return {jour: aujourdhui, table: choisie, depart, echelle, file, faites: [], rate: null, sansFaute: true, remplacee: false, reparee: false, finie: false, avance: 0,
+      prete: echelle && tablePrete(parcours, choisie)};
+  }
+
+  // L'étape à jouer maintenant, prête à lancer : son nom, sa série, sa durée.
+  // C'est ICI que la marche 8 se décide — la validation si la table est prête
+  // (ou le raccourci gagné), sinon un entraînement à sa place — et qu'une
+  // étape devenue sans objet s'efface (plus rien de dû, mélange déjà réussi).
+  function etapeDeSeance(parcours, seance, aujourdhui = jourLocal()) {
+    for (const prevue of seance.file) {
+      if (prevue.type === "revision") {
+        const dus = calculsDus(parcours, {aujourdhui}).length;
+        if (!dus) continue;
+        const calculs = Math.min(dus, SEUILS.revision.total);
+        return {type: "revision", nom: "Mes calculs du jour", calculs, config: configRevision(), minutes: MINUTES_ETAPE.revision, prevue};
+      }
+      if (prevue.type === "melange") {
+        if (!melangeDu(parcours)) continue;
+        return {type: "melange", nom: "Mon mélange", config: configMelange(parcours), minutes: MINUTES_ETAPE.melange, prevue};
+      }
+      const table = prevue.table;
+      let numero = prevue.marche;
+      let condition = false;
+      if (numero === MARCHE_VALIDATION) {
+        if (validationDeSeance(parcours, table, seance)) {
+          return {type: "validation", marche: numero, table, nom: marche(numero).nom, config: configValidation(table), minutes: MINUTES_ETAPE.validation, prevue};
+        }
+        // Pas prête : un entraînement à la place — sauf si la table vient
+        // d'être acquise (validation libre depuis l'accueil).
+        if (parcours.tables[table].acquise) continue;
+        numero = MARCHE_DE_REMPLACEMENT;
+        condition = true;
+      }
+      const definition = marche(numero);
+      return {
+        type: definition.type,
+        marche: numero,
+        table,
+        cle: definition.cle,
+        nom: definition.nom,
+        // « Je valide ma table · si mes calculs sont prêts » : la marche 8
+        // prévue, jouée en entraînement tant que la table n'est pas prête.
+        aLaPlaceDeLaValidation: condition,
+        config: definition.type === "apprends" ? configApprends(table, definition.cle) : configEntraine(table, definition.cle),
+        minutes: MINUTES_ETAPE[definition.cle],
+        prevue
+      };
+    }
+    return null;
+  }
+
+  // Le programme d'une séance, pour l'annoncer : ses étapes telles qu'elles
+  // se présentent maintenant (la marche 8 dite « si mes calculs sont prêts »
+  // quand elle n'est pas encore sûre), et la durée.
+  function programmeDeSeance(parcours, seance, aujourdhui = jourLocal()) {
+    const etapes = [];
+    let reste = {...seance, file: seance.file.slice()};
+    for (let garde = 0; garde < 12; garde += 1) {
+      const etape = etapeDeSeance(parcours, reste, aujourdhui);
+      if (!etape) break;
+      // Une validation qui dépend d'une étape encore à jouer (les calculs du
+      // jour font monter les boîtes) est annoncée « si mes calculs sont prêts ».
+      const prevueValidation = etape.prevue.type === "marche" && etape.prevue.marche === MARCHE_VALIDATION;
+      etapes.push(prevueValidation && etape.type !== "validation"
+        ? {...etape, nom: marche(MARCHE_VALIDATION).nom, conditionnelle: true}
+        : etape);
+      reste = {...reste, file: reste.file.slice(reste.file.indexOf(etape.prevue) + 1)};
+    }
+    return {etapes, minutes: etapes.reduce((somme, etape) => somme + etape.minutes, 0)};
+  }
+
+  // Une marche est-elle ratée ? Plus de 3 erreurs sur 10 (moins de 7 sur 10) ;
+  // sur les 11 cases d'une bande, 4 erreurs ; sur les 8 trous, 3.
+  function marcheRatee(juste, total) {
+    return total > 0 && (total - juste) > total * SEUILS.seance.erreursRate;
+  }
+
+  // Note une étape FINIE (la série a déjà été appliquée au parcours par
+  // appliquerSerie / appliquerReponse) et rend la séance et le parcours à
+  // jour. resultat = {juste, total, reussi} — « reussi » pour une validation
+  // ou un mélange.
+  //  - marche ratée : la marche d'en dessous, la marche ratée refaite, puis la
+  //    suite prévue (une seule fois par séance) ; le départ de la table
+  //    redescend TOUT DE SUITE un cran sous la marche ratée, et ne remonte que
+  //    si la reprise est réussie et la séance finie ;
+  //  - les deux « 10 sur 10 » du raccourci réunis : la suite devient la
+  //    validation ;
+  //  - validation réussie : le mélange suit s'il est dû ; ratée : retour à la
+  //    marche 7 ;
+  //  - plus d'étape : la séance est finie — le départ avance (d'une marche,
+  //    de deux si tout était sans faute) et le jour est compté.
+  function noterEtape(parcours, seance, etape, resultat = {}, aujourdhui = jourLocal()) {
+    const copie = cloner(parcours);
+    const suite = cloner(seance);
+    const juste = entier(resultat.juste, 0, 100);
+    const total = entier(resultat.total, 1, 100, 1);
+    const position = seance.file.indexOf(etape.prevue);
+    suite.file = suite.file.slice(position < 0 ? 1 : position + 1);
+    const faite = {type: etape.type, nom: etape.nom, marche: etape.marche || null, juste, total, rate: false, reussi: null};
+    const table = suite.table;
+    const ligne = table === null ? null : copie.tables[table];
+    const descendre = (numero, reprendre = true) => {
+      // Un raté réparé ne compte plus : c'est le nouveau raté qui dit où repartir.
+      suite.rate = suite.rate === null || suite.reparee ? numero : Math.min(suite.rate, numero);
+      suite.sansFaute = false;
+      // Le premier raté d'une séance (décision de Gwenaël, 02/10 au soir) : la
+      // marche d'en dessous, puis la marche ratée REFAITE, puis la suite prévue
+      // — la séance ne s'arrête pas sur un échec. Un deuxième raté (la marche
+      // d'en dessous, la reprise, ou plus loin) : la séance s'arrête là.
+      const reste = suite.file.filter(prevue => prevue.type === "marche");
+      suite.file = suite.remplacee || numero <= 1 ? []
+        : [{type: "marche", marche: numero - 1, table, remplacement: true},
+          ...(reprendre ? [{type: "marche", marche: numero, table, reprise: true}, ...reste] : [])];
+      suite.remplacee = true;
+      suite.reparee = false;
+      if (suite.echelle) {
+        ligne.seance.depart = bornerDepart(suite.rate - 1);
+        ligne.seance.n = Math.min(FOIS_MAX, ligne.seance.n + 1);
+      }
+    };
+    if (etape.type === "apprends" || etape.type === "entraine") {
+      faite.rate = marcheRatee(juste, total);
+      if (juste < total) suite.sansFaute = false;
+      if (faite.rate) descendre(etape.marche);
+      // La marche ratée, refaite et réussie : le raté est réparé.
+      else if (etape.prevue.reprise) suite.reparee = true;
+      if (!faite.rate && suite.echelle && !suite.file.some(prevue => prevue.marche === MARCHE_VALIDATION) && !suite.faites.some(passee => passee.type === "validation")
+        && raccourciValidation(copie, table) && validationDeSeance(copie, table, suite)) {
+        // Le raccourci : la validation tout de suite, à la place de la suite.
+        suite.file = [{type: "marche", marche: MARCHE_VALIDATION, table, raccourci: true}];
+      }
+    } else if (etape.type === "validation") {
+      faite.reussi = Boolean(resultat.reussi);
+      if (faite.reussi) suite.file = melangeDu(copie) ? [{type: "melange"}] : [];
+      // Une validation ratée ne se retente pas dans la séance : la marche 7, puis fin.
+      else { faite.rate = true; descendre(MARCHE_VALIDATION, false); }
+    } else if (etape.type === "melange") {
+      faite.reussi = Boolean(resultat.reussi);
+    }
+    suite.faites.push(faite);
+    // Prête maintenant (les calculs du jour viennent de monter) : elle le
+    // reste pour la marche 8 de cette séance.
+    if (suite.echelle && tablePrete(copie, table)) suite.prete = true;
+    if (!etapeDeSeance(copie, suite, aujourdhui)) {
+      suite.file = [];
+      suite.finie = true;
+      // Sans raté — ou avec un raté réparé dans la séance — le départ avance.
+      if (suite.echelle && !ligne.acquise && (suite.rate === null || suite.reparee)) {
+        const avant = suite.depart;
+        // Le raccourci gagné mène droit à la séance 6-7-8.
+        ligne.seance.depart = raccourciValidation(copie, table)
+          ? SEUILS.seance.departMax
+          : bornerDepart(suite.depart + (suite.sansFaute ? SEUILS.seance.sansFaute : 1));
+        ligne.seance.n = Math.min(FOIS_MAX, ligne.seance.n + 1);
+        suite.avance = ligne.seance.depart - avant;
+      }
+      copie.seances = normaliserSeances([...copie.seances, suite.jour]);
+    }
+    return {parcours: copie, seance: suite, faite};
+  }
+
+  // « Cette semaine ●○○○ » : les jours avec une séance finie depuis lundi,
+  // l'objectif (4, pas une limite), et le nombre de séances d'aujourd'hui.
+  function bilanSeances(parcours, aujourdhui = jourLocal()) {
+    const lundi = lundiDe(aujourdhui);
+    const jours = new Set(parcours.seances.filter(jour => jour >= lundi && jour <= aujourdhui));
+    return {
+      semaine: jours.size,
+      objectif: SEUILS.seance.objectifSemaine,
+      aujourdhui: parcours.seances.filter(jour => jour === aujourdhui).length
     };
   }
 
@@ -1751,6 +2123,18 @@
       CLES_FOIS.forEach(cle => {
         cible.fois[cle] = Math.max(ligneA.fois[cle], ligneB.fois[cle]);
       });
+      // Ma séance du jour : un bout réussi d'un côté l'est (union) ; le départ
+      // de l'échelle peut redescendre, donc c'est le plus RÉCENT qui gagne —
+      // celui qui a vu le plus de séances (à égalité, le plus avancé) ; un
+      // « sans faute » gagné le reste.
+      cible.bouts = normaliserBouts(table, [...ligneA.bouts, ...ligneB.bouts]);
+      const recente = ligneA.seance.n !== ligneB.seance.n
+        ? (ligneA.seance.n > ligneB.seance.n ? ligneA : ligneB)
+        : (ligneA.seance.depart >= ligneB.seance.depart ? ligneA : ligneB);
+      cible.seance = {depart: recente.seance.depart, n: recente.seance.n};
+      CLES_SANS_FAUTE.forEach(cle => {
+        cible.sansFaute[cle] = Math.max(ligneA.sansFaute[cle], ligneB.sansFaute[cle]);
+      });
       // Une table acquise le reste, à la date de la première validation.
       cible.acquise = dateLaPlusAncienne(ligneA.acquise, ligneB.acquise);
     });
@@ -1778,6 +2162,13 @@
     fusion.expert.couronne = dateLaPlusAncienne(a.expert.couronne, b.expert.couronne);
     fusion.rang = Math.max(a.rang, b.rang);
     fusion.jours = normaliserJours([...a.jours, ...b.jours]);
+    // Les séances : par jour, le plus grand des deux comptes (deux appareils
+    // portent le même parcours, pas deux moitiés à additionner).
+    const compter = liste => liste.reduce((compte, jour) => compte.set(jour, (compte.get(jour) || 0) + 1), new Map());
+    const seancesA = compter(a.seances);
+    const seancesB = compter(b.seances);
+    fusion.seances = normaliserSeances([...new Set([...seancesA.keys(), ...seancesB.keys()])]
+      .flatMap(jour => new Array(Math.max(seancesA.get(jour) || 0, seancesB.get(jour) || 0)).fill(jour)));
 
     FAITS.forEach(cle => {
       const faitA = a.calculs[cle];
@@ -1851,7 +2242,8 @@
       const ligne = parcours.tables[table];
       return !ligne.acquise
         && ACTIVITES_APPRENDS.every(activite => ligne.apprends[activite] === 0)
-        && ENTRAINEMENTS.every(entrainement => ligne.entraine[entrainement] === 0);
+        && ENTRAINEMENTS.every(entrainement => ligne.entraine[entrainement] === 0)
+        && !ligne.bouts.length;
     });
   }
 
@@ -1925,6 +2317,19 @@
     prochaineEtape,
     etapeTable,
     etatAffichage,
+    MARCHES,
+    CLES_SANS_FAUTE,
+    multiplicateursBouts,
+    rangeeTable,
+    raccourciValidation,
+    validationDeSeance,
+    tableDeSeance,
+    ouvrirSeance,
+    etapeDeSeance,
+    programmeDeSeance,
+    marcheRatee,
+    noterEtape,
+    bilanSeances,
     CLE_SEL,
     ITERATIONS_EMPREINTE,
     LONGUEUR_EMPREINTE,

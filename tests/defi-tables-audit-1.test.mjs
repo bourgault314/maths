@@ -118,7 +118,7 @@ test("1. validation ratée : « Je m’entraîne : … » en bouton bleu, l’en
   assert.match(html, /\$\("result-entraine"\)\.hidden = true;\s*\$\("result"\)\.classList\.remove\("avec-entraine"\);\s*if \(state\.configuration\.mode === "revision"\)/, "chaque fin de série repart sans le bouton");
 
   const noms = html.match(/const NOMS_ENTRAINEMENTS = Object\.freeze\(\{[^}]*\}\);/)[0];
-  const conseille = (parcours, table) => new Function("PARCOURS", "parcours", `${noms}\n${fonction("entrainementConseille")}; return entrainementConseille(${table});`)(PARCOURS, parcours);
+  const conseille = (parcours, table) => new Function("PARCOURS", "parcours", `const SEANCE = false;\n${noms}\n${fonction("entrainementConseille")}; return entrainementConseille(${table});`)(PARCOURS, parcours);
   let parcours = PARCOURS.creerParcours();
   let conseil = conseille(parcours, 7);
   assert.equal(conseil.nom, "dans le désordre");
@@ -133,7 +133,7 @@ test("1. validation ratée : « Je m’entraîne : … » en bouton bleu, l’en
 });
 
 test("2. le même vocabulaire partout : les trois entraînements, « sans chrono », « acquise », « Tente », « sur »", () => {
-  assert.match(html, /const NOMS_ENTRAINEMENTS = Object\.freeze\(\{desordre: "dans le désordre", trous: "nombres manquants", mixte: "les deux à la fois"\}\);/);
+  assert.match(html, /const NOMS_ENTRAINEMENTS = Object\.freeze\(\{desordre: "dans le désordre", trous: "nombres manquants", mixte: SEANCE \? "résultats et nombres manquants" : "les deux à la fois"\}\);/);
   assert.match(html, /libelle: majuscule\(NOMS_ENTRAINEMENTS\[item\.entrainement\]\),/, "le panneau : « Dans le désordre », « Nombres manquants », « Les deux à la fois »");
   assert.doesNotMatch(html, /LIBELLES_ENTRAINEMENTS/, "plus aucun libellé d’entraînement pris au moteur");
   assert.match(html, /<th colspan="3">Je m’entraîne<small>désordre · nombres manquants · les deux<\/small><\/th>/);
