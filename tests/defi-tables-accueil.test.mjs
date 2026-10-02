@@ -47,7 +47,7 @@ test("l’accueil : Ma table et ses trois étapes, Réviser, Mon parcours, Mes c
   assert.match(html, /num: "2",\s*titre: "Je m’entraîne"/);
   assert.match(html, /num: "3",\s*titre: ligne\.acquise \? "Ma table est acquise" : "Je valide ma table"/, "lot dosage + validation : une table acquise le dit en titre");
   assert.match(html, /num: "★",\s*titre: "Mon mélange"/, "lot 3 : la ligne ★ s’appelle « Mon mélange »");
-  assert.match(html, /if \(etat\.melange\.visible && !toutes\) \{/, "la ligne ★ suit la règle du moteur : dès 2 tables acquises ; avec les 9, elle vit dans le bloc Je deviens expert");
+  assert.match(html, /if \(etat\.melange\.visible && !toutes && !carteSeance\) \{/, "la ligne ★ suit la règle du moteur : dès 2 tables acquises ; avec les 9, elle vit dans le bloc Je deviens expert");
   assert.match(html, /sousTitre: ligne\.acquise \? `acquise le \$\{dateEnLettres\(ligne\.acquise\)\}` : "20 questions · 1 min 30"/, "la seule règle écrite sur l’accueil");
 });
 

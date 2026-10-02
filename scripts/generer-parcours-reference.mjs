@@ -27,7 +27,13 @@ export function parcoursComplet() {
     PARCOURS.ENTRAINEMENTS.forEach(entrainement => { ligne.entraine[entrainement] = 2; });
     ligne.entraine.dernier = {entrainement: PARCOURS.ENTRAINEMENTS[index % PARCOURS.ENTRAINEMENTS.length], score: 9, total: 10};
     ligne.acquise = `2026-09-${String(index + 1).padStart(2, "0")}`;
+    // Lot « Ma séance du jour » : les bouts de la rangée, le départ de
+    // l'échelle, les deux « sans faute » du raccourci.
+    ligne.bouts = PARCOURS.multiplicateursBouts(table);
+    ligne.seance = {depart: 1 + (index % 6), n: index + 3};
+    ligne.sansFaute = {desordre: 1, trous: index % 2};
   });
+  p.seances = ["2026-09-21", "2026-09-22", "2026-09-22", "2026-09-23"];
   p.melange = {tables: [...PARCOURS.TABLES], aJour: true, aRefaireAvec: null, dernier: "2026-09-20"};
   // Lot 3 : l'escalier, le rang, les jours travaillés. (L'avis de migration
   // du lot 3 a été retiré au lot 4b ; « beads » s'est ajouté aux activités.)

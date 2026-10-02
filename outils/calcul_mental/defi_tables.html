@@ -782,6 +782,72 @@
     .result.is-revision .result-parcours-actions { justify-content: center; }
     .result.is-revision .result-actions { display: none; }
 
+    /* ---- Ma séance du jour (lot 1, 02/10/2026) — derrière ?seance=1 ----
+       La rangée de dix cases (les résultats de la table), la carte de la
+       séance, ses liens, « Cette semaine », le fil de la séance au-dessus de
+       la barre, l'écran entre deux étapes et le bilan. Sans la clé, rien de
+       tout cela n'est posé dans la page. */
+    body.avec-seance .matable:not(.is-toutes) #acc-acquises,
+    body.avec-seance .matable:not(.is-toutes) #acc-rang { display: none; }
+    .rangee { display: flex; justify-content: center; gap: 5px; margin: 4px 0 14px; }
+    .rangee b { display: inline-grid; place-items: center; flex: 1 1 0; min-width: 0; max-width: 40px; height: 34px; padding: 0; border: 2px solid #9fb6c6; border-radius: 9px; background: #fff; color: #4d6578; font-size: 15px; font-weight: 900; line-height: 1; box-sizing: border-box; }
+    .rangee b.pleine { border-color: var(--teal); background: var(--teal); color: #fff; }
+    .rangee b.entouree { border-color: var(--teal); border-width: 3px; color: var(--teal); }
+    .carte-seance { display: block; width: 100%; padding: 16px; border: 2px solid var(--blue); border-radius: 18px; background: #fff; box-shadow: 0 0 0 3px rgba(7, 85, 184, .16), 0 3px 0 #b7cfe8; color: var(--ink); font: inherit; text-align: left; cursor: pointer; }
+    .carte-seance .tete { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+    .carte-seance .tete strong { display: block; color: var(--blue); font-size: 1.3rem; font-weight: 950; line-height: 1.15; }
+    .carte-seance .duree { display: block; margin-top: 1px; color: var(--muted); font-size: .82rem; font-weight: 800; }
+    .carte-seance .go { padding: 11px 18px 9px; border-radius: 999px; background: var(--blue); color: #fff; font-size: 1.02rem; font-weight: 950; white-space: nowrap; }
+    .carte-seance .programme { display: grid; gap: 6px; margin-top: 10px; }
+    .carte-seance .programme > span { display: grid; grid-template-columns: 24px minmax(0, 1fr); align-items: center; gap: 9px; font-size: .95rem; font-weight: 850; line-height: 1.25; }
+    .carte-seance .programme i { display: inline-grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; background: #e4edf5; color: var(--ink); font-size: .8rem; font-style: normal; font-weight: 950; line-height: 1; }
+    .carte-seance .programme small { color: var(--muted); font-size: .84rem; font-weight: 750; }
+    .seance-liens { display: flex; flex-wrap: wrap; justify-content: center; gap: 0 18px; margin: 8px 0 -6px; }
+    .seance-liens button { min-height: 44px; padding: 0 2px; border: 0; background: none; color: var(--blue); font: inherit; font-size: .9rem; font-weight: 850; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+    .semaine { display: flex; align-items: center; justify-content: center; gap: 8px; margin: -2px 0; color: var(--muted); font-size: .86rem; font-weight: 800; }
+    .semaine i { width: 13px; height: 13px; border: 2px solid var(--teal); border-radius: 50%; box-sizing: border-box; }
+    .semaine i.ok { background: var(--teal); }
+    .seance-fil { display: flex; align-items: center; gap: 10px; margin: 0 0 8px; color: var(--muted); font-size: .9rem; font-weight: 850; }
+    .seance-fil ol { display: flex; align-items: center; gap: 0; margin: 0; padding: 0; list-style: none; }
+    .seance-fil li { display: inline-grid; place-items: center; width: 24px; height: 24px; border: 2px solid #b9cbd8; border-radius: 50%; background: #fff; color: #6b8192; font-size: .78rem; font-weight: 950; line-height: 1; box-sizing: border-box; }
+    .seance-fil li + li { position: relative; margin-left: 18px; }
+    .seance-fil li + li::before { content: ""; position: absolute; top: 50%; right: 100%; width: 18px; height: 2px; margin-right: 2px; background: #b9cbd8; }
+    .seance-fil li.ok { border-color: var(--teal); background: var(--teal); color: #fff; }
+    .seance-fil li.ok + li::before { background: var(--teal); }
+    .seance-fil li.ici { border-color: var(--blue); background: var(--blue); color: #fff; box-shadow: 0 0 0 3px rgba(7, 85, 184, .18); }
+    .seance-fil b { color: var(--ink); font-weight: 900; }
+    .seance-fil.centre { justify-content: center; margin: 0 0 12px; }
+    .result.en-seance .result-actions,
+    .result.en-seance #result-parcours,
+    .result.en-seance #result-message,
+    .result.en-seance #result-previous,
+    .result.en-seance .result-config { display: none !important; }
+    .seance-suite { display: grid; justify-items: center; gap: 10px; margin: 14px 0 0; }
+    .seance-suite .primary { min-height: 48px; padding: 12px 18px 8px; }
+    .seance-suite .arreter { min-height: 44px; margin-top: -8px; padding: 0 4px; border: 0; background: none; color: var(--blue); font: inherit; font-size: .88rem; font-weight: 850; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+    .seance-suite .cadre { width: 100%; padding: 11px 13px; border: 1px solid #cfe0f2; border-radius: 13px; background: #eef6ff; color: var(--ink); font-weight: 800; box-sizing: border-box; }
+    .seance-suite .cadre .rangee { margin: 2px auto 8px; max-width: 440px; }
+    .seance-suite .cadre p { margin: 0; line-height: 1.4; }
+    .seance-suite .cadre p b { color: var(--blue); }
+    .seance-suite .boutons { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; width: 100%; }
+    .seance-suite .boutons .secondary { min-height: 48px; padding: 10px 18px; }
+    .seance-bilan { display: grid; gap: 6px; max-width: 400px; margin: 12px auto 0; padding: 0; list-style: none; text-align: left; }
+    .seance-bilan li { display: grid; grid-template-columns: 24px minmax(0, 1fr) auto; align-items: center; gap: 9px; color: var(--ink); font-size: .95rem; font-weight: 850; }
+    .seance-bilan li i { display: inline-grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; background: var(--teal); color: #fff; font-size: .75rem; font-style: normal; font-weight: 950; line-height: 1; }
+    .seance-bilan li span:last-child { color: var(--teal); font-weight: 900; white-space: nowrap; }
+    .seance-bilan li.rate i { background: #fff; border: 2px solid #8a9bab; color: #5b7286; box-sizing: border-box; }
+    .seance-bilan li.rate span:last-child { color: #5b7286; }
+    @media (max-width: 520px) {
+      .rangee { gap: 3px; }
+      .rangee b { height: 31px; border-radius: 8px; font-size: 13px; }
+      .carte-seance { padding: 13px; }
+      .carte-seance .tete strong { font-size: 1.12rem; }
+      .carte-seance .go { padding: 9px 12px 7px; font-size: .92rem; }
+      .seance-fil { gap: 8px; font-size: .84rem; }
+      .seance-suite .boutons > button,
+      .seance-suite > .primary { width: 100%; }
+    }
+
     /* ---- Mes calculs ---- */
     .parcours-head-etat { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 4px 6px; }
     .parcours-revoir {
@@ -1968,6 +2034,9 @@
                  Plus rien de dû : il s'efface, et la table reprend le rond. -->
             <button id="acc-reviser" class="reviser etape" type="button" hidden><span class="num" aria-hidden="true"><svg class="neurones" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M4 5 12 12M20 4 12 12M12 12 7 21M12 12l8 7"/><circle cx="4" cy="5" r="1.9" fill="currentColor"/><circle cx="20" cy="4" r="1.9" fill="currentColor"/><circle cx="7" cy="21" r="1.8" fill="currentColor"/><circle cx="20" cy="19" r="1.8" fill="currentColor"/><circle cx="12" cy="12" r="2.2" fill="currentColor"/></svg></span><span><strong id="acc-reviser-titre">Mes calculs du jour</strong><small id="acc-reviser-note"></small></span><span class="go">Réviser&nbsp;→</span></button>
             <div id="acc-jours" class="jours" hidden></div>
+            <!-- Ma séance du jour (lot 1) : « Cette semaine ●○○○ », les jours
+                 avec une séance finie — posé seulement avec la clé ?seance=1. -->
+            <div id="acc-semaine" class="semaine" hidden></div>
             <div class="acc-liens">
               <button id="open-parcours" class="acc-lien" type="button" aria-controls="parcours"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6.5 9 4l6 2.5 6-2.5v13l-6 2.5-6-2.5-6 2.5z" fill="#e7f8f5" stroke="#087a71" stroke-width="1.8" stroke-linejoin="round"/><path d="M9 4v13M15 6.5v13" stroke="#087a71" stroke-width="1.8"/><circle cx="12" cy="10" r="1.8" fill="#e0771a"/></svg><span>Mon parcours<small>tables, mélange, étoiles</small></span></button>
               <button id="open-calculs" class="acc-lien" type="button" aria-controls="calculs"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="3" fill="#fff" stroke="#0755b8" stroke-width="1.8"/><path d="M3 9h18M3 15h18M9 3v18M15 3v18" stroke="#0755b8" stroke-width="1.5"/><rect x="9.8" y="9.8" width="4.4" height="4.4" fill="#147447"/><rect x="15.8" y="3.8" width="4.4" height="4.4" fill="#a93030"/><rect x="3.8" y="15.8" width="4.4" height="4.4" fill="#0755b8"/></svg><span>Mes calculs<small>la grille des 36 calculs</small></span></button>
@@ -2142,6 +2211,8 @@
       </div>
 
       <div id="play" hidden>
+        <!-- Ma séance du jour (lot 1) : où j'en suis, au-dessus de la barre. -->
+        <div id="seance-fil" class="seance-fil" hidden></div>
         <div class="status">
           <div class="status-left">
             <button id="game-menu" class="game-menu" type="button" aria-label="Arrêter la série et revenir à Ma table"><span class="back-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="20" height="20"><path d="M19 12H5M11 6l-6 6 6 6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="game-menu-label">Ma table</span></button>
@@ -2172,6 +2243,7 @@
         <!-- Lot R2 : le verdict d'abord (un seul cadre, qui devient la fête ou
              passe au rouge), puis la suite en une phrase, puis les boutons — et
              les corrections en dernier. -->
+        <div id="seance-fil-resultat" class="seance-fil centre" hidden></div>
         <div id="result-verdict" class="result-verdict">
           <span id="result-icon" class="hero-icon" aria-hidden="true">✓</span>
           <h1 id="result-title" tabindex="-1">Résultat</h1>
@@ -2179,6 +2251,7 @@
           <p id="result-config" class="result-config"></p>
           <p id="result-detail"></p>
           <p id="result-rang" class="result-fete-rang" hidden></p>
+          <ul id="seance-bilan" class="seance-bilan" hidden></ul>
         </div>
         <div id="result-parcours" class="result-parcours" hidden></div>
         <div class="result-actions">
@@ -2193,6 +2266,9 @@
                élève sous un code ne voit jamais ce bouton. -->
           <button id="result-reglages" class="secondary" type="button" hidden>Réglages</button>
         </div>
+        <!-- Ma séance du jour (lot 1) : entre deux étapes, UN bouton et
+             « Arrêter la séance » ; à la fin, la rangée, demain, deux boutons. -->
+        <div id="seance-suite" class="seance-suite" hidden></div>
         <p id="result-message" class="result-message"></p>
         <p id="result-previous" class="previous-score" hidden></p>
         <section id="corrections" class="corrections" aria-live="polite"></section>
@@ -2321,7 +2397,7 @@
   </footer>
 
   <script src="./defi_tables_core.js?v=20260930-1"></script>
-  <script src="./defi_tables_mon_parcours.js?v=20260919-1"></script>
+  <script src="./defi_tables_mon_parcours.js?v=20261002-1"></script>
   <script>
     (() => {
       "use strict";
@@ -2331,6 +2407,27 @@
       const PARCOURS = window.MATHSGO_DEFI_TABLES_MON_PARCOURS;
       if (!PARCOURS) throw new Error("Le moteur de Mon parcours est indisponible.");
       const PARCOURS_TABLES = [...PARCOURS.TABLES];
+      // [seance-cle:debut]
+      // « Ma séance du jour », lot 1 (02/10/2026) : cachée derrière ?seance=1,
+      // comme ?essai=1 pour les mondes SPLAT! en préparation. La clé est
+      // retenue sur l'appareil (l'espace élève rouvre l'appli sans elle) ;
+      // ?seance=0 la retire. Sans la clé, l'accueil, les séries et les bilans
+      // sont ceux d'avant, au pixel près. Le lot 2 retirera la clé.
+      const CLE_SEANCE = "mathsgo-defi-tables-seance";
+      function lireCleSeance() {
+        try {
+          const demande = new URLSearchParams(window.location.search).get("seance");
+          const durable = window.localStorage;
+          if (demande === "0") durable.removeItem(CLE_SEANCE);
+          else if (demande !== null) durable.setItem(CLE_SEANCE, "1");
+          return durable.getItem(CLE_SEANCE) === "1";
+        } catch (_) {
+          return false;
+        }
+      }
+      const SEANCE = lireCleSeance();
+      document.body.classList.toggle("avec-seance", SEANCE);
+      // [seance-cle:fin]
       // Deux stockages, deux durées de vie. Les parcours (une case par code,
       // plus la case « sans code ») restent sur l'appareil : hors-ligne et
       // fusion en dépendent. L'identité — QUEL code est actif — ne vit que le
@@ -3492,7 +3589,9 @@
       }
 
       function configurationLabel(config) {
-        return CORE.configurationLabel(config);
+        const libelle = CORE.configurationLabel(config);
+        // Avec la clé : « résultats et nombres manquants » partout (lot 1).
+        return SEANCE ? libelle.replace("les deux à la fois", "résultats et nombres manquants") : libelle;
       }
 
       function configurationKey(config) {
@@ -3647,6 +3746,7 @@
       }
 
       function backToModes() {
+        quitterSeance();
         configuration.mode = null;
         configuration.tables = new Set();
         state.origin = "menu";
@@ -4319,7 +4419,12 @@
         const rect = boulier.dom.interieur.getBoundingClientRect();
         const hauteurRangee = rect.height / PERLES.rangees;
         const rangee = Math.min(PERLES.rangees - 1, Math.max(0, Math.floor((event.clientY - rect.top) / hauteurRangee)));
-        const x = event.clientX - rect.left;
+        // L'échelle de la page (zoom du cadre, lot audit 3) : le doigt est en
+        // pixels d'écran, les perles en pixels du boulier. Sans cette
+        // conversion, à ×0,97 la perle attrapée était la voisine (« Pas assez
+        // de perles ! » sur le bon geste) — trouvé en jouant la séance.
+        const zoom = rect.width / boulier.dom.interieur.offsetWidth || 1;
+        const x = (event.clientX - rect.left) / zoom;
         // La perle la plus proche du doigt, poussées et au repos confondues :
         // on attrape la rangée, pas une cible de 44 px.
         let index = 0;
@@ -4329,7 +4434,7 @@
           const distance = Math.abs(centre - x);
           if (distance < meilleure) { meilleure = distance; index = i; }
         }
-        boulier.drag = {rangee, index, depart: event.clientX, position: positionPerle(index, index < boulier.etats[rangee])};
+        boulier.drag = {rangee, index, zoom, depart: event.clientX, position: positionPerle(index, index < boulier.etats[rangee])};
         boulier.dom.interieur.setPointerCapture?.(event.pointerId);
         event.preventDefault();
       }
@@ -4341,7 +4446,7 @@
         const pousse = drag.index >= etat;
         const premiere = pousse ? etat : drag.index;
         const derniere = pousse ? drag.index : etat - 1;
-        const ecart = event.clientX - drag.depart;
+        const ecart = (event.clientX - drag.depart) / drag.zoom;
         const rangee = boulier.dom.rangees[drag.rangee];
         for (let i = premiere; i <= derniere; i += 1) {
           const depart = positionPerle(i, !pousse);
@@ -4836,10 +4941,17 @@
         if (!state.running) return;
         state.running = false;
         stopTimer();
+        effacerSuiteSeance();
         $("result-entraine").hidden = true;
         $("result").classList.remove("avec-entraine");
         if (state.configuration.mode === "revision") {
           finishRevision();
+          // Dans une séance, la fin de « Mes calculs du jour » mène à l'étape
+          // suivante (lot « Ma séance du jour »).
+          if (enSeance()) {
+            noterEtapeDeSeance(null);
+            ajusterEchelle();
+          }
           return;
         }
         $("retry").hidden = false;
@@ -4861,6 +4973,7 @@
         $("result-previous").textContent = previousScore === undefined ? "" : `Série précédente\u00a0: ${previousScore} sur ${TOTAL}.`;
         renderCorrections();
         $("result-reglages").hidden = state.origin !== "reglages";
+        if (enSeance()) noterEtapeDeSeance(suivi);
         show("result");
       }
 
@@ -5147,6 +5260,7 @@
         $("time").classList.remove("urgent");
         $("time").setAttribute("aria-label", DURATION === null ? "Sans chrono" : "Temps restant");
         $("timer-alert").textContent = "";
+        renderFilSeance($("seance-fil"));
         majSortieJeu();
         show("play");
         renderQuestion();
@@ -5420,6 +5534,12 @@
         if (!question || !question.factKey) return;
         if (!PARCOURS.serieAlimenteGrille(state.configuration)) return;
         const resultat = PARCOURS.appliquerReponse(parcours, question.factKey, {correcte});
+        // Hors grille (× 1, × 10, la table de 10) : un bout de rangée réussi
+        // pour la première fois est gardé (lot « Ma séance du jour »).
+        if (!resultat.fait && resultat.bouts && resultat.bouts.length) {
+          parcours = resultat.parcours;
+          sauverParcours();
+        }
         if (!resultat.fait) return;
         parcours = resultat.parcours;
         // Pour le bilan de la révision : ce qui monte, ce qui redescend.
@@ -5919,7 +6039,10 @@
       // Les trois entraînements, le même nom partout où l'élève les voit
       // (audit 1, 30/09/2026) : tuile, panneau, bilan, aria, fiche, notice.
       // Les identifiants du moteur (desordre, trous, mixte) ne changent pas.
-      const NOMS_ENTRAINEMENTS = Object.freeze({desordre: "dans le désordre", trous: "nombres manquants", mixte: "les deux à la fois"});
+      // Lot « Ma séance du jour » : le troisième s'appelle « résultats et
+      // nombres manquants » (« les deux à la fois » n'était pas clair) — avec
+      // la clé seulement, tant que le lot 2 ne l'a pas retirée.
+      const NOMS_ENTRAINEMENTS = Object.freeze({desordre: "dans le désordre", trous: "nombres manquants", mixte: SEANCE ? "résultats et nombres manquants" : "les deux à la fois"});
 
       function listeTables(tables) {
         if (tables.length <= 1) return tables.join("");
@@ -6254,7 +6377,13 @@
 
         const etapes = $("acc-etapes");
         etapes.replaceChildren();
-        if (!replie) {
+        // Ma séance du jour (lot 1, avec la clé) : la rangée de la table, la
+        // carte de la séance et deux liens prennent la place des trois étapes ;
+        // « Choisir une activité » rouvre le menu d'avant, tel quel.
+        const avecSeance = SEANCE && !replie;
+        const carteSeance = avecSeance && !state.choisirActivite;
+        if (avecSeance) renderSeanceAccueil(etapes, etat, table, ligne);
+        if (!replie && !carteSeance) {
           // Une table acquise n'a plus d'étape conseillée : ses trois étapes
           // sont cochées, l'élève y revient pour refaire ce qu'il veut.
           const conseilCarte = ligne.acquise ? null : conseil;
@@ -6416,7 +6545,7 @@
         // Dès 2 tables acquises, la 4e ligne ★ « Mon mélange » : le mélange de
         // mes tables acquises, surligné quand il est dû. Avec les 9 tables, il
         // vit dans le bloc « Je deviens expert » (renderExpert), pas ici.
-        if (etat.melange.visible && !toutes) {
+        if (etat.melange.visible && !toutes && !carteSeance) {
           const melange = etat.melange;
           etapes.append(ligneEtape({
             classe: "melange",
@@ -6435,7 +6564,10 @@
         // — le moteur met la révision devant tout dès qu'un calcul est dû.
         const agenda = etat.agenda;
         const reviser = $("acc-reviser");
+        // Avec la séance, « Mes calculs du jour » est sa première étape : le
+        // bloc quitte l'accueil (il reste dans Mes calculs).
         reviser.hidden = !agenda.dus;
+        if (avecSeance) reviser.hidden = true;
         reviser.classList.toggle("is-next", conseil === "reviser");
         const serie = questionsRevision(agenda);
         $("acc-reviser-note").textContent = agenda.dus > serie
@@ -6449,6 +6581,7 @@
         // sinon le bloc du jour dit déjà quoi faire. Rien tant qu'il n'y a
         // rien à dire.
         renderJours({...etat.jours, demain: agenda.dus ? 0 : etat.jours.demain});
+        if (SEANCE) renderSemaine(etat);
         // Audit 4 : un choix déplié prend la place des autres étapes (CSS,
         // ordinateur seulement) — seulement s'il est vraiment affiché (les 9
         // tables acquises replient le bloc : pas d'étapes, rien à cacher).
@@ -6496,6 +6629,355 @@
         bouton.setAttribute("aria-expanded", String(visible));
         if (visible) zone.scrollIntoView?.({block: "nearest", behavior: "smooth"});
       }
+
+      /* ---------- Ma séance du jour (lot 1, 02/10/2026) ---------- */
+      // [seance:debut]
+      // La séance enchaîne des séries qui existent déjà : Mes calculs du jour,
+      // le mélange, puis trois marches de l'échelle de la table. Tout ce qui
+      // décide (quelles étapes, ce qu'une marche ratée change, quand la
+      // validation se propose) est dans le moteur — ouvrirSeance,
+      // etapeDeSeance, noterEtape ; ici on lance, on note, on affiche.
+      let seance = null;
+      let etapeEnCours = null;
+
+      function enSeance() {
+        return SEANCE && Boolean(seance) && state.origin === "seance";
+      }
+
+      function quitterSeance() {
+        seance = null;
+        etapeEnCours = null;
+      }
+
+      function commencerSeance(table) {
+        seance = PARCOURS.ouvrirSeance(parcours, {table});
+        lancerEtapeDeSeance();
+      }
+
+      function lancerEtapeDeSeance() {
+        const etape = seance ? PARCOURS.etapeDeSeance(parcours, seance) : null;
+        if (!etape) {
+          backToModes();
+          return;
+        }
+        etapeEnCours = etape;
+        launchFromParcours(etape.config, "seance");
+      }
+
+      // Le score d'une étape, comme le moteur l'attend : les réponses justes
+      // du premier coup. Les perles ne se ratent pas.
+      function resultatDeLEtape(suivi) {
+        const config = state.configuration;
+        if (config.mode === "revision") return {juste: state.revisionPremierScore, total: Math.max(1, state.revisionPremierTotal)};
+        if (config.mode === "learn") {
+          if (activitePerles(config)) return {juste: CASES_BANDE, total: CASES_BANDE};
+          const total = config.learnActivity === "gaps" ? TOTAL : CASES_BANDE;
+          return {juste: total - casesRatees(), total};
+        }
+        const principal = suivi ? suivi.evenements.find(evenement => typeof evenement.reussi === "boolean") : null;
+        return {juste: state.correct, total: TOTAL, reussi: Boolean(principal && principal.reussi)};
+      }
+
+      function noterEtapeDeSeance(suivi) {
+        const fete = suivi ? feteDuResultat(suivi.evenements) : {principal: null};
+        const chronometree = etapeEnCours.type === "validation" || etapeEnCours.type === "melange";
+        const note = PARCOURS.noterEtape(parcours, seance, etapeEnCours, resultatDeLEtape(suivi));
+        parcours = note.parcours;
+        seance = note.seance;
+        etapeEnCours = null;
+        sauverParcours();
+        // Une validation ou un mélange (et toute nouvelle à fêter) gardent
+        // leur écran : le bilan vient après, par « Mon bilan → ».
+        renderSuiteSeance({bilan: seance.finie && !chronometree && !fete.principal});
+      }
+
+      // « Ma séance ✓ — 2 — 3  Nombres manquants » : les étapes faites, celle
+      // où l'on est, celles qui restent.
+      function renderFilSeance(zone, {fini = false} = {}) {
+        zone.replaceChildren();
+        zone.hidden = !enSeance();
+        if (zone.hidden) return;
+        const faites = seance.faites.length;
+        const aVenir = PARCOURS.programmeDeSeance(parcours, seance).etapes;
+        // Pendant une série, l'étape jouée est encore en tête de la file.
+        const total = faites + aVenir.length;
+        const titre = document.createElement("span");
+        titre.textContent = "Ma séance";
+        const liste = document.createElement("ol");
+        for (let index = 0; index < total; index += 1) {
+          const point = document.createElement("li");
+          if (index < faites) { point.className = "ok"; point.textContent = "✓"; }
+          else { point.textContent = String(index + 1); if (index === faites && !fini) point.className = "ici"; }
+          liste.append(point);
+        }
+        zone.append(titre, liste);
+        // Le nom de l'étape telle qu'elle se joue (la marche 8 pas encore
+        // prête se joue en entraînement : c'est lui qu'on nomme).
+        const courante = fini ? null : PARCOURS.etapeDeSeance(parcours, seance);
+        if (courante) {
+          const nom = document.createElement("b");
+          nom.textContent = courante.nom;
+          zone.append(nom);
+        }
+        zone.setAttribute("aria-label", `Ma séance : étape ${Math.min(faites + 1, total)} sur ${total}${courante ? `, ${courante.nom}` : ""}`);
+      }
+
+      function effacerSuiteSeance() {
+        $("result").classList.remove("en-seance");
+        $("seance-fil-resultat").hidden = true;
+        $("seance-suite").hidden = true;
+        $("seance-suite").replaceChildren();
+        $("seance-bilan").hidden = true;
+        $("result-score").hidden = false;
+      }
+
+      function rangeeDeTable(table) {
+        const rangee = PARCOURS.rangeeTable(parcours, table);
+        const zone = document.createElement("div");
+        zone.className = "rangee";
+        rangee.cases.forEach(item => {
+          const cellule = document.createElement("b");
+          // Une case vide reste SANS nombre (idée de Gwenaël, 02/10) : le
+          // résultat ne s'écrit que quand le calcul est entré dans une boîte,
+          // sinon la rangée donnerait les réponses avant les entraînements.
+          if (item.etat !== "vide") {
+            cellule.className = item.etat;
+            cellule.textContent = String(item.produit);
+          }
+          zone.append(cellule);
+        });
+        zone.setAttribute("role", "img");
+        zone.setAttribute("aria-label", `Table de ${table} : ${pluriel(rangee.pleines, "calcul")} prêt${rangee.pleines > 1 ? "s" : ""} sur ${rangee.total}`);
+        return zone;
+      }
+
+      // L'écran entre deux étapes (le verdict de la série reste, avec UN
+      // bouton bleu vers l'étape suivante) ou, à la fin, le bilan.
+      function renderSuiteSeance({bilan}) {
+        const zone = $("seance-suite");
+        $("result").classList.add("en-seance");
+        zone.replaceChildren();
+        zone.hidden = false;
+        renderFilSeance($("seance-fil-resultat"), {fini: seance.finie});
+        if (bilan) {
+          renderBilanSeance(zone);
+          return;
+        }
+        const suite = document.createElement("button");
+        suite.type = "button";
+        suite.className = "primary";
+        if (seance.finie) {
+          suite.textContent = "Mon bilan →";
+          suite.addEventListener("click", () => {
+            $("corrections").replaceChildren();
+            renderSuiteSeance({bilan: true});
+            window.scrollTo({top: 0, behavior: "auto"});
+            $("result-title").focus?.({preventScroll: true});
+            ajusterEchelle();
+          });
+          zone.append(suite);
+          return;
+        }
+        const prochaine = PARCOURS.etapeDeSeance(parcours, seance);
+        // Entre deux étapes, le score seul (« 9 sur 10 ») : le compte des
+        // entraînements réussis n'a pas sa place dans la séance.
+        if (seance.faites[seance.faites.length - 1].type === "entraine") $("result-score").textContent = $("result-score").textContent.split(" · ")[0];
+        suite.textContent = `Étape ${seance.faites.length + 1}\u00a0: ${prochaine.nom} →`;
+        suite.addEventListener("click", lancerEtapeDeSeance);
+        const arreter = document.createElement("button");
+        arreter.type = "button";
+        arreter.className = "arreter";
+        arreter.textContent = "Arrêter la séance";
+        arreter.addEventListener("click", backToModes);
+        zone.append(suite, arreter);
+      }
+
+      function renderBilanSeance(zone) {
+        const result = $("result");
+        result.classList.remove("is-fete", "is-rate", "is-temps", "is-neutre", "is-revision");
+        $("result-verdict").classList.remove("is-champion");
+        $("result-icon").textContent = "✓";
+        $("result-title").textContent = "Séance du jour faite";
+        $("result-score").hidden = true;
+        $("result-detail").textContent = "";
+        $("result-rang").hidden = true;
+        const liste = $("seance-bilan");
+        liste.replaceChildren();
+        liste.hidden = false;
+        seance.faites.forEach(faite => {
+          const ligne = document.createElement("li");
+          const rate = faite.rate || faite.reussi === false;
+          if (rate) ligne.className = "rate";
+          const marque = document.createElement("i");
+          marque.setAttribute("aria-hidden", "true");
+          marque.textContent = rate ? "–" : "✓";
+          const nom = document.createElement("span");
+          nom.textContent = faite.nom;
+          const score = document.createElement("span");
+          score.textContent = soude(`${faite.juste} sur ${faite.total}`);
+          ligne.append(marque, nom, score);
+          liste.append(ligne);
+        });
+        const table = seance.table;
+        if (table !== null) {
+          const cadre = document.createElement("div");
+          cadre.className = "cadre";
+          cadre.append(rangeeDeTable(table));
+          const demain = PARCOURS.agendaCalculs(parcours).demain;
+          if (demain) {
+            const phrase = document.createElement("p");
+            const nombre = document.createElement("b");
+            nombre.textContent = soude(pluriel(demain, "calcul"));
+            phrase.append(document.createTextNode("Demain\u00a0: "), nombre, document.createTextNode(` t’attend${demain > 1 ? "ent" : ""}.`));
+            cadre.append(phrase);
+          }
+          zone.append(cadre);
+        }
+        const boutons = document.createElement("div");
+        boutons.className = "boutons";
+        const maTable = document.createElement("button");
+        maTable.type = "button";
+        maTable.className = "primary";
+        maTable.textContent = "Ma table";
+        maTable.addEventListener("click", backToModes);
+        boutons.append(maTable);
+        // « Encore une séance » : la séance du jour suivant, tout de suite.
+        // Les boîtes, elles, ne montent toujours qu'une fois par jour.
+        const prochaineTable = tableDeLaSeance();
+        if (prochaineTable !== undefined) {
+          const encore = document.createElement("button");
+          encore.type = "button";
+          encore.className = "secondary";
+          encore.textContent = "Encore une séance";
+          encore.addEventListener("click", () => commencerSeance(prochaineTable));
+          boutons.append(encore);
+        }
+        zone.append(boutons);
+      }
+
+      // La table de la prochaine séance : celle que l'accueil affiche (null =
+      // au moteur de choisir). undefined : les 9 tables sont acquises et
+      // aucune n'est choisie — l'accueil des 9 tables n'a pas de séance (lot 2).
+      function tableDeLaSeance() {
+        if (PARCOURS.toutesAcquises(parcours) && !lireTableChoisie()) return undefined;
+        return tableEnCours(PARCOURS.etatAffichage(parcours));
+      }
+
+      // L'accueil avec la clé : la rangée, puis la carte de la séance et ses
+      // liens — ou, « Choisir une activité » ouvert, le menu d'avant.
+      function renderSeanceAccueil(etapes, etat, table, ligne) {
+        etapes.append(rangeeDeTable(table));
+        const liens = document.createElement("div");
+        liens.className = "seance-liens";
+        const lien = (texte, action) => {
+          const bouton = document.createElement("button");
+          bouton.type = "button";
+          bouton.textContent = texte;
+          bouton.addEventListener("click", action);
+          liens.append(bouton);
+          return bouton;
+        };
+        if (state.choisirActivite) {
+          lien("Revenir à ma séance", () => {
+            state.choisirActivite = false;
+            state.etapeOuverte = null;
+            renderAccueil();
+          });
+          etapes.append(liens);
+          return;
+        }
+        const programme = PARCOURS.programmeDeSeance(parcours, PARCOURS.ouvrirSeance(parcours, {table}));
+        const nombre = programme.etapes.length;
+        const faite = PARCOURS.bilanSeances(parcours).aujourdhui > 0;
+        const carte = document.createElement("button");
+        carte.type = "button";
+        carte.className = "carte-seance";
+        carte.id = "acc-seance";
+        const tete = document.createElement("span");
+        tete.className = "tete";
+        const texte = document.createElement("span");
+        const titre = document.createElement("strong");
+        titre.textContent = faite ? "Encore une séance" : "Ma séance du jour";
+        const duree = document.createElement("span");
+        duree.className = "duree";
+        duree.textContent = soude(`${pluriel(nombre, "étape")} · environ ${programme.minutes} min`);
+        texte.append(titre, duree);
+        const go = document.createElement("span");
+        go.className = "go";
+        go.textContent = "Commencer\u00a0→";
+        tete.append(texte, go);
+        // La liste des étapes du jour, numérotées (choix de Gwenaël, 02/10) :
+        // l'élève voit ce qu'il va faire avant de commencer.
+        const liste = document.createElement("span");
+        liste.className = "programme";
+        programme.etapes.forEach((etape, index) => {
+          const item = document.createElement("span");
+          const numero = document.createElement("i");
+          numero.textContent = String(index + 1);
+          const nom = document.createElement("span");
+          nom.textContent = etape.nom;
+          const detail = etape.type === "revision" ? pluriel(etape.calculs, "calcul")
+            : etape.conditionnelle ? "si mes calculs sont prêts" : "";
+          if (detail) {
+            const petit = document.createElement("small");
+            petit.textContent = ` · ${detail}`;
+            nom.append(petit);
+          }
+          item.append(numero, nom);
+          liste.append(item);
+        });
+        carte.append(tete, liste);
+        carte.setAttribute("aria-label", `${titre.textContent} : ${duree.textContent}. ${programme.etapes.map((etape, index) => `${index + 1}, ${etape.nom}`).join(" ; ")}. Commencer.`);
+        carte.addEventListener("click", () => commencerSeance(table));
+        etapes.append(carte);
+        if (!ligne.acquise) {
+          lien("Je valide ma table", () => {
+            // Le seul verrou : le mélange dû. On ouvre le menu sur sa ligne.
+            if (etat.verrou) {
+              state.choisirActivite = true;
+              renderAccueil();
+              montrerMelange();
+              return;
+            }
+            launchFromParcours(PARCOURS.configValidation(table), "menu");
+          });
+        }
+        lien("Choisir une activité", () => {
+          state.choisirActivite = true;
+          renderAccueil();
+          document.querySelector("#acc-etapes .etape")?.focus?.({preventScroll: true});
+        });
+        etapes.append(liens);
+      }
+
+      // « Cette semaine ●○○○ » : les jours avec une séance finie, objectif 4
+      // (pas une limite : au-delà, « 5 jours cette semaine ✓ »). Et la tuile
+      // Mon parcours reprend « 3 tables sur 9 · Or ».
+      function renderSemaine(etat) {
+        const zone = $("acc-semaine");
+        const bilan = PARCOURS.bilanSeances(parcours);
+        zone.replaceChildren();
+        zone.hidden = false;
+        if (bilan.semaine > bilan.objectif) {
+          zone.textContent = `${bilan.semaine} jours cette semaine ✓`;
+        } else {
+          const titre = document.createElement("span");
+          titre.textContent = "Cette semaine";
+          zone.append(titre);
+          for (let index = 0; index < bilan.objectif; index += 1) {
+            const rond = document.createElement("i");
+            if (index < bilan.semaine) rond.className = "ok";
+            rond.setAttribute("aria-hidden", "true");
+            zone.append(rond);
+          }
+          zone.setAttribute("aria-label", `Cette semaine : ${pluriel(bilan.semaine, "jour")} avec une séance sur ${bilan.objectif}`);
+        }
+        $("acc-jours").hidden = true;
+        const nombre = etat.acquises.length;
+        const sousTitre = $("open-parcours").querySelector("small");
+        if (sousTitre) sousTitre.textContent = `${pluriel(nombre, "table")} sur ${PARCOURS_TABLES.length}${etat.rang && etat.rang.niveau ? ` · ${etat.rang.nom}` : ""}`;
+      }
+      // [seance:fin]
 
       /* ---------- Mon parcours ---------- */
       function parcoursTitle() {
