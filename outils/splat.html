@@ -762,6 +762,9 @@
   .eleveCase{position:relative;display:flex;align-items:center;justify-content:center;min-height:52px;font-size:22px;font-weight:900;color:#111;border-right:3px solid #000;overflow:hidden}
   .eleveCase:last-child{border-right:none}
   .eleveCase.grise{background:#d4deea}
+  #elevePanel.reponseCachee .eleveCase.grise{background:#d4deea !important} /* pas à pas : le tableau comme au départ */
+  #elevePanel.tableauCache .eleveConsigne, #elevePanel.tableauCache .eleveDiag, #elevePanel.tableauCache .eleveMsg{display:none} /* ordinateur, pas à pas : la place va au dessin */
+  #elevePanel.tableauCacheTel .eleveDiag{visibility:hidden} /* téléphone, pas à pas : plus de « ? », les boutons ne bougent pas */
   .eleveCase.blanche{background:#fff;color:#2563eb}
   .eleveCase.haut{width:100%;border-right:none}
   input.eleveChamp{width:100%;height:100%;padding:0;border:none;border-radius:0;outline:none;text-align:center;font:inherit;color:#111;background:transparent;min-width:0}
@@ -1302,6 +1305,10 @@
         <label class="checkInline" title="À 3 taches : «&nbsp;Sous la tache rouge, il y a autant de jetons que sous la tache noire et la tache bleue réunies&nbsp;», plus un indice entre les deux autres."><input type="checkbox" id="invReunies"> <span>Taches réunies</span></label>
         <label class="checkInline c-repeat" id="invRepeatRow" style="display:none" title="Taches répétées : une même couleur est au plus 2 ou 3 fois sur le plateau."><span>Fois max</span> <input id="invRepeat" type="number" min="2" max="3" value="3" /></label>
       </div>
+      <label>Correction au tableau</label>
+      <div class="c-ops c-variantes" id="invCorrectionRow">
+        <label class="checkInline" title="Coché : un calcul par appui. Décoché : la correction directe, comme le corrigé imprimé (les barres, le schéma regroupé, tous les calculs). Le mode élève garde toujours le pas à pas."><input type="checkbox" id="invPasAPas" checked> <span>Pas à pas</span></label>
+      </div>
 
       <div class="row" style="align-items:flex-end">
         <div style="flex:1.25 1 0">
@@ -1788,6 +1795,7 @@ const invOrdreRowEl = document.getElementById("invOrdreRow");
 const invVocabEl = document.getElementById("invVocab");
 const invComposeEl = document.getElementById("invCompose");
 const invReuniesEl = document.getElementById("invReunies");
+const invPasAPasEl = document.getElementById("invPasAPas");
 /* « Taches répétées » (lot E-repet) : décochée par défaut, l'Enquête ne change pas ;
    cochée, une même couleur revient jusqu'à invRepeatEl fois (2 ou 3). */
 const invRepeatOnEl = document.getElementById("invRepeatOn");
@@ -2279,7 +2287,7 @@ function lireRepetitionAdresse(raw){
 
 /* Les réglages qu'une adresse partagée peut porter. Liste commune : elle sert
    aussi à l'empreinte de la série élève (eleveSignatureSerie). */
-const sharedNames = ["mode", "seed", "cards", "equation", "tasksMin", "tasksMax", "visibleMin", "visibleMax", "hidden", "hiddenMax", "totalMin", "totalMax", "splats", "clues", "structure", "geste", "gestes", "coefMax", "ecart", "fois", "indice", "sens", "noTotal", "repeat", "ordre", "vocab", "compose", "reunies", "mul", "div", "add", "sub", "deltaMax", "operation", "beadMax", "opposites", "colors", "palette", "unknown", "print", "duplex", "layout", "title", "note", "eleve", "parcours", "imprimer", "suite"];
+const sharedNames = ["mode", "seed", "cards", "equation", "tasksMin", "tasksMax", "visibleMin", "visibleMax", "hidden", "hiddenMax", "totalMin", "totalMax", "splats", "clues", "structure", "geste", "gestes", "coefMax", "ecart", "fois", "indice", "sens", "noTotal", "repeat", "ordre", "vocab", "compose", "reunies", "pasapas", "mul", "div", "add", "sub", "deltaMax", "operation", "beadMax", "opposites", "colors", "palette", "unknown", "print", "duplex", "layout", "title", "note", "eleve", "parcours", "imprimer", "suite"];
 
 function loadSharedConfiguration(){
   const params = new URLSearchParams(window.location.search);
@@ -2365,6 +2373,8 @@ function appliquerConfiguration(params){
     if(invVocabEl) invVocabEl.checked = readBooleanFromShare(params, "vocab") === true;
     if(invComposeEl) invComposeEl.checked = readBooleanFromShare(params, "compose") === true;
     if(invReuniesEl) invReuniesEl.checked = readBooleanFromShare(params, "reunies") === true;
+    /* 02/10/2026 : « pasapas=0 » = la correction directe au tableau ; absent = le pas à pas */
+    if(invPasAPasEl) invPasAPasEl.checked = params.get("pasapas") !== "0";
   }
 
   const seedRaw = params.get("seed");
@@ -2459,6 +2469,7 @@ function buildShareUrl(){
     if(invVocabEl && invVocabEl.checked) params.set("vocab", "1");
     if(invComposeEl && invComposeEl.checked) params.set("compose", "1");
     if(invReuniesEl && invReuniesEl.checked && invTaskCountEl.value === "3") params.set("reunies", "1");
+    if(invPasAPasEl && !invPasAPasEl.checked) params.set("pasapas", "0");
     /* lot 1 : le schéma vide sous la carte 1, gardé seulement s'il était dans l'adresse */
     if(enqueteSchemaVide) params.set("modele", "1");
   }
@@ -3000,7 +3011,7 @@ SYS_GESTES.forEach(g => {
   numberedEquationTypeEl, numTasksMinEl, numTasksEl, numVisibleMinEl, numVisibleMaxEl, numHiddenCountEl, numTotalMinEl, numTotalMaxEl, numBeadAbsMaxEl, numOpposeModeEl, numColorModeEl, seedNEl,
   nineOpEl, nineTasksEl, nineVisibleMaxEl, nineTotalMinEl, nineTotalMaxEl, seedCEl,
   eightOpEl, eightTasksEl, eightVisibleMaxEl, eightTotalMinEl, eightTotalMaxEl, seedDEl,
-  invTaskCountEl, invClueTypeEl, invStructure3El, invOpMulEl, invOpDivEl, invOpAddEl, invOpSubEl, invMaxAddEl, invVisibleMinEl, invVisibleMaxEl, invTotalMinEl, invTotalMaxEl, invNoTotalEl, invRepeatOnEl, invRepeatEl, invOrdreEl, invVocabEl, invComposeEl, invReuniesEl, seedEEl,
+  invTaskCountEl, invClueTypeEl, invStructure3El, invOpMulEl, invOpDivEl, invOpAddEl, invOpSubEl, invMaxAddEl, invVisibleMinEl, invVisibleMaxEl, invTotalMinEl, invTotalMaxEl, invNoTotalEl, invRepeatOnEl, invRepeatEl, invOrdreEl, invVocabEl, invComposeEl, invReuniesEl, invPasAPasEl, seedEEl,
   sysGesteEl, sysCoefMaxEl, sysClueTypeEl, sysVisibleMinEl, sysVisibleMaxEl, sysTotalMinEl, sysTotalMaxEl, seedSysEl,
   sysEcartEl, sysFoisEl, sysIndiceEl, sysSensEl, sysOrdreEl,
   ...SYS_GESTES.map(g => document.getElementById("sysMix" + g))
@@ -7561,7 +7572,8 @@ function enqueteNbEtapes(card){
    cinq d'avant (quatre sans total). */
 function enqueteDerniereEtape(card){
   if(card && card.family === "C" && card._rel && !card._directSubstitution && enqueteBarresModele(card)){
-    /* G3 : en projection, un appui par opération (enqueteProjectionPasAPas) ; le mode élève garde ses 3 étapes */
+    /* G3 : un appui par opération (enqueteProjectionPasAPas), en projection et, depuis le 01/10/2026,
+       dans « Voir le schéma » du mode élève */
     const g3 = enqueteProjectionPasAPas(card);
     return g3 ? g3.etapes.length : enqueteNbEtapes(card);
   }
@@ -8019,7 +8031,10 @@ function enqueteTitreEtape(g, x, y, numero, titre, P, largeur){
   g.appendChild(el("circle", { cx:x + P.titreR, cy, r:P.titreR, fill:"#fff", stroke:"#374151", "stroke-width":4 }));
   g.appendChild(text(x + P.titreR, cy + 1, String(numero), { "text-anchor":"middle", "dominant-baseline":"middle", "font-size":P.titreNumFont, "font-weight":800, fill:"#374151" }));
   let fs = P.titreFont;
-  while(fs > P.titreFont * 0.7 && enqueteTexteLargeur(titre, fs, 800) > largeur - 2 * P.titreR - 16) fs -= 2;
+  /* téléphone (portrait) : le titre long « pas de total : je regarde ce qui dépasse » sortait du
+     cadre à 70 % (vu le 01/10/2026) — il peut descendre jusqu'à 50 % ; papier et écran : inchangés */
+  const plancher = P.portrait ? 0.5 : 0.7;
+  while(fs > P.titreFont * plancher && enqueteTexteLargeur(titre, fs, 800) > largeur - 2 * P.titreR - 16) fs -= 2;
   g.appendChild(text(x + 2 * P.titreR + 16, cy + pastilleTextDy(fs), titre, { "text-anchor":"start", "dominant-baseline":"middle", "font-size":fs, "font-weight":800, fill:"#374151" }));
   return P.titreAvant + 2 * P.titreR + P.titreApres;
 }
@@ -8039,7 +8054,7 @@ function enqueteLigneTexte(g, x, y, texte, fs, pas, largeur, poids, couleur){
 /* Le profil de dessin : impression, écran, ou téléphone (portrait). */
 function enqueteProfil(opts){
   const base = opts && opts.portrait ? ENQ_PROFIL_TEL : (opts && opts.isPrint ? ENQ_PROFIL_IMPRIME : ENQ_PROFIL_ECRAN);
-  return { ...base, isPrint:!!(opts && opts.isPrint) };
+  return { ...base, isPrint:!!(opts && opts.isPrint), portrait:!!(opts && opts.portrait) };
 }
 /* Le cadre d'une étape à l'écran (blanc, comme les cadres d'avant) — rien à l'impression. */
 function enqueteCadre(g, P, boxY, h, id){
@@ -8358,9 +8373,12 @@ function enqueteProjectionCadrer(card, etape){
        au dernier appui (taches dévoilées, récapitulatif ③), le plateau entier, cadré comme avant */
     const g3 = enqueteProjectionPasAPas(card);
     const g3Etape = g3 ? g3.etapes[etape - 1] : null;
-    const bandeau = !!g3Etape && g3Etape.type !== "fin" && enqueteG3Bandeau(card);
+    /* mode élève (01/10/2026) : le bandeau reste aussi au dernier appui — le plateau entier au-dessus
+       rapetissait « Je vérifie » à 9 px sur un écran de 1366 × 768 ; une seule échelle, « Je vérifie » compris */
+    const eleveG3 = typeof eleveActif !== "undefined" && !!eleveActif;
+    const bandeau = !!g3Etape && (g3Etape.type !== "fin" || eleveG3) && enqueteG3Bandeau(card);
     const dessins = g3Etape
-      ? (bandeau ? g3.etapes.filter(e => e.type !== "fin") : [g3Etape]).map(e => cible => enqueteG3Dessiner(cible, card, e, g3.modele))
+      ? (bandeau ? g3.etapes.filter(e => e.type !== "fin" || eleveG3) : [g3Etape]).map(e => cible => enqueteG3Dessiner(cible, card, e, g3.modele))
       : [drawEnqueteBarres, modele.ligne ? drawEnqueteLigne : null, drawEnqueteCalculs].filter(Boolean).map(d => cible => d(cible, card, { modele }));
     /* la plus haute des étapes de la carte, mesurée dans un calque invisible */
     const mesure = el("g", { visibility:"hidden" });
@@ -8404,8 +8422,8 @@ function enqueteProjectionCadrer(card, etape){
   }catch(_e){ return null; /* sans mesure possible : la scène d'origine */ }
 }
 /* ===== G3 — le pas à pas de l'Enquête en projection (maquette validée par Gwenaël le 30/09/2026) =====
-   Seulement sur l'écran du professeur : ni le mode élève (« Voir le schéma » garde ses 3 étapes),
-   ni le corrigé imprimé (il garde ses calculs, « 38 − 7 − 7 = 24 »). Un appui par opération :
+   Sur l'écran du professeur et, depuis le 01/10/2026, dans « Voir le schéma » du mode élève (même
+   pas à pas que ce que l'élève a vu au tableau ; au téléphone, en portrait) — pas sur le corrigé imprimé (il garde ses calculs, « 38 − 7 − 7 = 24 »). Un appui par opération :
    ① les barres vides → ① complétées → ② schéma regroupé (+ sa ligne de calcul) → « Je range »
    (écarts intercalés) → « Je regroupe » (au moins deux écarts : 4 + 4 + 3 = une case 11) → le
    retrait (hachuré gris estompé de « Garder hachuré » d'ÉquaBarre) → le partage (les noms en
@@ -8419,13 +8437,32 @@ function enqueteProjectionCadrer(card, etape){
    Le plan d'une carte est calculé une fois (il ne dépend que de la carte). Dessin seulement :
    aucun tirage, aucune carte ne change. */
 const ENQ_G3_PLANS = new WeakMap();
+/* Le choix du professeur (02/10/2026) : « Pas à pas » coché (par défaut) ou la correction directe en
+   trois écrans, comme le corrigé imprimé. Seulement au tableau : le mode élève a toujours le pas à pas. */
+function enqueteCorrectionPasAPas(){
+  if(typeof eleveActif !== "undefined" && eleveActif) return true;
+  try{ const c = document.getElementById("invPasAPas"); return !c || c.checked; }catch(_e){ return true; }
+}
+/* 02/10/2026 (Gwenaël) : une fois la plus petite barre trouvée, les autres taches viennent en UN
+   appui, « Je trouve les autres taches » (« Je trouve les taches » pour l'unité commune), tout en
+   noir — le dessin de la page 2 des livrets. À l'écran seulement : les pages 2 (render.py) lisent
+   enqueteG3Etapes, qui ne change pas. */
+function enqueteG3Regrouper(plan){
+  if(!plan || !Array.isArray(plan.etapes)) return plan;
+  const trouve = plan.etapes.filter(e => e.type === "barresValeurs" && e.egal !== false);
+  if(trouve.length < 2) return plan;
+  const der = trouve[trouve.length - 1];
+  const titre = plan.modele && plan.modele.mode === "unite" ? "Je trouve les taches" : "Je trouve les autres taches";
+  const fusion = { ...der, noirDes:0, titre };
+  return { ...plan, etapes:plan.etapes.filter(e => !trouve.includes(e) || e === der).map(e => (e === der ? fusion : e)) };
+}
 function enqueteProjectionPasAPas(card){
-  if(typeof eleveActif !== "undefined" && eleveActif) return null;
+  if(!enqueteCorrectionPasAPas()) return null;
   if(!card || card.family !== "C" || !card._rel || card._directSubstitution) return null;
   if(ENQ_G3_PLANS.has(card)) return ENQ_G3_PLANS.get(card);
   let plan = null;
   /* une carte que le pas à pas ne sait pas lire garde la correction en trois étapes */
-  try{ plan = enqueteG3Etapes(card); }catch(_e){ plan = null; }
+  try{ plan = enqueteG3Regrouper(enqueteG3Etapes(card)); }catch(_e){ plan = null; }
   if(plan && !(Array.isArray(plan.etapes) && plan.etapes.length >= 2 && plan.etapes[plan.etapes.length - 1].type === "fin")) plan = null;
   ENQ_G3_PLANS.set(card, plan);
   return plan;
@@ -8469,7 +8506,7 @@ function enqueteG3Etapes(card){
     const toutes = calc.filter(Boolean).map(l => `${l.g} = ${l.d}`);
     const connues = new Set();
     let q = 0;
-    part1.forEach(l => { const partage = /^1 /.test(l.g); if(partage) connues.add(u); etapes.push({ type:"barresValeurs", titre:partage ? "Je partage" : "Je calcule", connues:new Set(connues), courante:u, lignes:toutes, idx:q++, egal:false }); });
+    part1.forEach(l => { const partage = /^1 /.test(l.g) || / ÷ /.test(l.d); if(partage) connues.add(u); etapes.push({ type:"barresValeurs", titre:partage ? "Je partage" : "Je calcule", connues:new Set(connues), courante:u, lignes:toutes, idx:q++, egal:false }); });
     part2.forEach(l => { const i = modele.reponse.map(r => r.i).find(t => t !== u && enqueteMotCouleur(card, t) === l.g); connues.add(i); etapes.push({ type:"barresValeurs", titre:`Je trouve ${enqueteArticle(enqueteMotCouleur(card, i), !!card._rel.repetees)}`, connues:new Set(connues), courante:i, lignes:toutes, idx:q++, egal:false }); });
     etapes.push({ type:"fin" });
     return plan;
@@ -8498,7 +8535,9 @@ function enqueteG3Etapes(card){
     const calculsP = part1.slice(0, k0 + 1).map(l => ({ ...l }));
     if(regroupe){
       calculsP.push({ g:`${nomU} + ${N(S)}`, d:N(total) }, { g:nomU, d:`${N(total)} − ${N(S)} = ${N(reste)}` });
-      part1.slice(k0 + 1).filter(l => /^1 /.test(l.g)).forEach(l => calculsP.push({ ...l }));
+      /* la ligne du partage : « 1 bleue = 36 ÷ 3 = 12 », en lettre « B = 36 ÷ 3 = 12 » (02/10/2026 : en
+         lettre, elle manquait à l'écran « Je partage » de la projection) */
+      part1.slice(k0 + 1).filter(l => /^1 /.test(l.g) || / ÷ /.test(l.d)).forEach(l => calculsP.push({ ...l }));
     }else{
       part1.slice(k0 + 1).forEach(l => calculsP.push({ ...l }));
     }
@@ -8592,7 +8631,14 @@ function enqueteG3Case(g, card, cell, x, y, w, h, P, modele, texteForce){
 /* Les lignes de calcul sous le tableau : la ligne d'avant estompée (gris), la courante en noir,
    les suivantes absentes ; noirDes : à partir de quelle ligne tout est en noir (② : les lignes
    « orange + 10 = 3 violettes » et la somme s'écrivent ensemble). */
-function enqueteG3Lignes(g, x0, y, lignes, courante, P, noirDes){
+function enqueteG3Lignes(g, x0, y, lignes, courante, P, noirDes, largeur){
+  /* téléphone (mode élève, portrait) : la police descend jusqu'à ce que la plus longue ligne de la
+     liste tienne — la même pour toutes les étapes de la carte ; projection et papier : inchangés */
+  if(P.portrait && largeur > 0 && lignes.length){
+    let fs = P.calcFont;
+    while(fs > P.calcFont * 0.6 && Math.max(...lignes.map(l => enqueteTexteLargeur(l, fs, 800))) > largeur) fs -= 2;
+    if(fs < P.calcFont) P = { ...P, calcFont:fs, calcPas:Math.round(P.calcPas * fs / P.calcFont) };
+  }
   let yy = y;
   const noir = noirDes == null ? courante : noirDes;
   lignes.slice(0, courante + 1).forEach((l, k) => {
@@ -8632,7 +8678,7 @@ function enqueteG3DessinerLigne(target, card, et, modele, opts = {}){
   /* le nom descend sous l'accolade de P.sousEcart, partout (papier, écran, téléphone) */
   et.groupes.forEach(sp => enqueteSousAccolade(g, xs[sp.de], xs[sp.a] + ws[sp.a], ySous, sp.label, P));
   y = ySous + P.sousH + P.sousEcart + P.sousPas + 18;
-  y += enqueteG3Lignes(g, x0, y, et.lignes, et.courante, P, et.noirDes);
+  y += enqueteG3Lignes(g, x0, y, et.lignes, et.courante, P, et.noirDes, largeur);
   y += P.marge;
   enqueteCadre(g, P, boxY, Math.round(y - boxY), g.id);
   target.appendChild(g);
@@ -8674,7 +8720,7 @@ function enqueteG3DessinerBarresValeurs(target, card, et, modele, opts = {}){
   });
   const der = lesRows[lesRows.length - 1];
   y = yr + P.rowH + (der.sous.length ? P.sousH + P.sousEcart + P.sousPas + 6 : 0) + 18;
-  y += enqueteG3Lignes(g, x0, y, et.lignes, et.idx, P, et.noirDes);
+  y += enqueteG3Lignes(g, x0, y, et.lignes, et.idx, P, et.noirDes, largeur);
   y += P.marge;
   enqueteCadre(g, P, boxY, Math.round(y - boxY), g.id);
   target.appendChild(g);
@@ -8691,7 +8737,7 @@ function enqueteG3Dessiner(target, card, et, modele, opts = {}){
   if(et.type === "barresParts") return drawEnqueteBarres(target, card, { ...opts, modele });
   if(et.type === "ligne") return enqueteG3DessinerLigne(target, card, et, modele, opts);
   if(et.type === "barresValeurs") return enqueteG3DessinerBarresValeurs(target, card, et, modele, opts);
-  if(et.type === "fin") return enqueteG3DessinerFin(target, card, et.calculs ? { ...modele, calculs:et.calculs } : modele);
+  if(et.type === "fin") return enqueteG3DessinerFin(target, card, et.calculs ? { ...modele, calculs:et.calculs } : modele, opts);
 }
 
 /* La vérification des indices, au dernier appui : « verte = rouge + 2 : 5 = 3 + 2 ✓ » — la phrase de
@@ -8727,17 +8773,29 @@ function enqueteG3VerifIndices(card, lettres){
    puis la vérification : le total, et chaque indice (enqueteG3VerifIndices). Projection seulement : le corrigé imprimé garde
    drawEnqueteCalculs. */
 const ENQ_G3_REPONSE_FONT = 66, ENQ_G3_VERIF_FONT = 56, ENQ_G3_RESUME_GRIS = "#9ca3af", ENQ_G3_REPONSE_JEU = 20;
-function enqueteG3DessinerFin(target, card, modele){
-  const P = enqueteProfil({});
+/* « Je vérifie » : sans le rappel en gris des calculs du pas à pas, seulement la réponse et la
+   vérification — décidé par Gwenaël le 01/10/2026 (au lieu du rappel du 30/09), en projection ET côté
+   élève : chaque calcul a déjà eu son écran. Écran seulement : le corrigé imprimé garde tous ses calculs. */
+const ENQ_G3_RAPPEL = false;
+/* la vérification sous le cadre de la réponse : son écart, sa couleur (gris foncé, celle du corrigé imprimé) */
+const ENQ_G3_VERIF_ECART = 18, ENQ_G3_VERIF_GRIS = "#374151";
+/* Un sous-titre sans numéro, à la taille des titres d'étape (« Je vérifie » sous la réponse). */
+function enqueteTitreEtapeSimple(g, x, y, titre, P){
+  const fs = P.titreFont, h = Math.round(fs * 1.3);
+  g.appendChild(text(x, y + h / 2 + pastilleTextDy(fs), titre, { "text-anchor":"start", "dominant-baseline":"middle", "font-size":fs, "font-weight":800, fill:"#374151" }));
+  return h + 4;
+}
+function enqueteG3DessinerFin(target, card, modele, opts = {}){
+  const P = enqueteProfil(opts); /* le profil téléphone en mode élève portrait, l'écran sinon */
   const boxY = 620;
   const g = el("g", { id:"enqueteCalculs" });
   const x0 = P.boxX + P.marge, largeur = P.boxW - 2 * P.marge;
   let y = boxY + P.marge * 0.6;
-  y += enqueteTitreEtape(g, x0, y, modele.ligne ? 3 : 2, "Je vérifie", P, largeur);
+  y += enqueteTitreEtape(g, x0, y, modele.ligne ? 3 : 2, "Je réponds", P, largeur);
   /* le résumé, en gris : chaque ligne commence à gauche, la police descend si la plus longue déborde */
-  const lignes = modele.calculs;
+  const lignes = ENQ_G3_RAPPEL ? modele.calculs : [];
   let fs = P.calcFont;
-  const plusLongue = f => Math.max(...lignes.filter(Boolean).map(l => enqueteTexteLargeur(`${l.g} = ${l.d}`, f, 700)));
+  const plusLongue = f => Math.max(0, ...lignes.filter(Boolean).map(l => enqueteTexteLargeur(`${l.g} = ${l.d}`, f, 700)));
   while(fs > P.calcFont * 0.6 && plusLongue(fs) > largeur) fs -= 2;
   const pas = Math.round(P.calcPas * fs / P.calcFont);
   lignes.forEach(l => {
@@ -8748,7 +8806,7 @@ function enqueteG3DessinerFin(target, card, modele){
   /* la réponse, en noir et en grand : une valeur par tache */
   const reponses = (modele.reponse || []).map(e => e.texte);
   if(reponses.length){
-    y += P.calcBlanc;
+    if(lignes.length) y += P.calcBlanc;
     /* la réponse et la vérification dans un cadre (retour de Gwenaël, 30/09 : « la réponse
        encadrée ») : un trait noir de 4, le texte décalé de ENQ_G3_REPONSE_JEU à l'intérieur */
     const J = ENQ_G3_REPONSE_JEU, haut = y;
@@ -8765,22 +8823,27 @@ function enqueteG3DessinerFin(target, card, modele){
       g.appendChild(text(x, cy + pastilleTextDy(rf), t, { "text-anchor":"start", "dominant-baseline":"middle", "font-size":rf, "font-weight":900, fill:"#111827" }));
       x += enqueteTexteLargeur(t, rf, 900) + ecart(rf);
     });
-    y += Math.round(rf * 1.4);
+    y += Math.round(rf * 1.4) + J;
+    /* 02/10/2026 (Gwenaël) : le cadre entoure la RÉPONSE seule, à sa largeur ; la vérification passe
+       dessous, hors du cadre, plus légère et en gris foncé — la hiérarchie du corrigé imprimé
+       (réponse en gras, vérification dessous), lisible en noir et blanc. */
+    g.insertBefore(el("rect", { x:xCadre, y:haut, width:Math.min(largeurCadre, Math.round(largeurRep(rf) + 2 * J)), height:Math.round(y - haut), rx:14, fill:"none", stroke:"#111827", "stroke-width":4 }), g.firstChild);
     /* la vérification, une ligne chacune : le total (pas de total : rien), puis chaque indice
        (retour de Gwenaël, 30/09 : « il faut vérifier aussi que les indices fonctionnent ») ;
        une même police pour toutes, la plus grande qui tient */
     const verifs = (modele.verification ? [`${modele.verification} ✓`] : []).concat(enqueteG3VerifIndices(card));
     if(verifs.length){
-      let vf = ENQ_G3_VERIF_FONT;
-      while(vf > P.calcFont * 0.6 && verifs.some(v => enqueteTexteLargeur(v, vf, 800) > largeurR)) vf -= 2;
+      y += ENQ_G3_VERIF_ECART;
+      /* deux endroits sur le même écran (Gwenaël, 02/10) : « Je réponds » (le cadre), puis « Je vérifie » */
+      y += enqueteTitreEtapeSimple(g, x0, y, "Je vérifie", P);
+      /* jamais plus grande que la réponse (au téléphone, la réponse rapetisse pour tenir dans son cadre) */
+      let vf = Math.min(ENQ_G3_VERIF_FONT, Math.round(rf * 0.85));
+      while(vf > P.calcFont * 0.5 && verifs.some(v => enqueteTexteLargeur(v, vf, 700) > largeur)) vf -= 2;
       verifs.forEach(v => {
-        g.appendChild(text(x0r, y + vf * 0.7 + pastilleTextDy(vf), v, { "text-anchor":"start", "dominant-baseline":"middle", "font-size":vf, "font-weight":800, fill:"#111827" }));
+        g.appendChild(text(x0, y + vf * 0.7 + pastilleTextDy(vf), v, { "text-anchor":"start", "dominant-baseline":"middle", "font-size":vf, "font-weight":700, fill:ENQ_G3_VERIF_GRIS }));
         y += Math.round(vf * 1.25);
       });
-      y += Math.round(vf * 0.15);
     }
-    y += J;
-    g.appendChild(el("rect", { x:xCadre, y:haut, width:largeurCadre, height:Math.round(y - haut), rx:14, fill:"none", stroke:"#111827", "stroke-width":4 }));
     y += 14;
   }
   y += P.marge;
@@ -10373,7 +10436,10 @@ function renderCard(card, revealState, opts = {}){
   // (la projection, elle, ne garde que l'indice en symboles près du TOTAL) ; les cadres
   // descendent d'autant.
   let relCible = svg;
-  const phrasesEleve = (typeof eleveActif !== "undefined" && eleveActif && !telEleve && isCRelationLayout && !card._directSubstitution && card._inv && Array.isArray(card._inv.indices))
+  /* pas à pas G3 (01/10/2026) : pendant le schéma, l'écran de l'élève est celui du tableau — le
+     bandeau TOTAL + petit plateau + phrases d'enqueteProjectionCadrer (eleveRendreEtape) */
+  const g3Eleve = revealState > 0 && card.family === "C" && !!enqueteProjectionPasAPas(card);
+  const phrasesEleve = (typeof eleveActif !== "undefined" && eleveActif && !telEleve && !g3Eleve && isCRelationLayout && !card._directSubstitution && card._inv && Array.isArray(card._inv.indices))
     ? card._inv.indices.filter(t => typeof t === "string") : [];
   if(phrasesEleve.length){
     const basPlateau = relTrayY + relTrayK * (trayCfg.y + trayCfg.h);
@@ -10410,7 +10476,7 @@ function renderCard(card, revealState, opts = {}){
     const g3 = enqueteProjectionPasAPas(card);
     if(g3){
       const et = g3.etapes[revealState - 1];
-      if(et) enqueteG3Dessiner(relCible, card, et, g3.modele);
+      if(et) enqueteG3Dessiner(relCible, card, et, g3.modele, relTel); /* relTel : téléphone, mode élève */
     }else{
       if(revealState === 1) drawEnqueteBarres(relCible, card, oE);
       if(revealState === 2) (sansLigne ? drawEnqueteCalculs : drawEnqueteLigne)(relCible, card, oE);
@@ -10478,11 +10544,15 @@ function renderCard(card, revealState, opts = {}){
      dévoilées à toutes les étapes du schéma (le drapeau est posé par
      eleveDevoilerTache ; les bancs d'essai des tests dessinent sans lui). */
   const eleveDevoileC = (card.family === "C") && typeof eleveEnqueteDevoile !== "undefined" && !!eleveEnqueteDevoile;
+  /* Pas à pas G3 du mode élève (01/10/2026, décidé par Gwenaël) : du premier appui sur « Voir le
+     schéma » jusqu'à l'avant-dernier, les taches sont de nouveau couvertes (et le tableau vidé,
+     eleveReponseCacher) ; elles se dévoilent au dernier appui, « Je vérifie », comme au tableau. */
+  const eleveCacheG3 = eleveDevoileC && revealState > 0 && revealState < enqueteDerniereEtape(card) && !!enqueteProjectionPasAPas(card);
   // taches dévoilées à la résolution : 5e clic, 4e sans total (le 5e y est la vérification) ;
   // le Système en phrases ou en symboles (plateau unique) : dévoilé aussi en mode élève validé
-  const visualRevealState = (card.family === "C") ? ((revealState >= enqueteDerniereEtape(card) || eleveDevoileC) ? 2 : 0) : (isABProjectionLayout ? abRevealPhase : (sysDevoileEleve(card) ? 2 : revealState));
+  const visualRevealState = (card.family === "C") ? ((revealState >= enqueteDerniereEtape(card) || (eleveDevoileC && !eleveCacheG3)) ? 2 : 0) : (isABProjectionLayout ? abRevealPhase : (sysDevoileEleve(card) ? 2 : revealState));
   /* le fondu de la couverture ne se joue qu'au moment du dévoilement, pas à chaque étape du schéma */
-  const fonduCouverture = !(eleveDevoileC && revealState > 0);
+  const fonduCouverture = !(eleveDevoileC && revealState > 0) || (eleveDevoileC && revealState >= enqueteDerniereEtape(card) && !!enqueteProjectionPasAPas(card));
 
   if(card.family === "U" || card.family === "UPM"){
     const beadR = card._beadR ?? (card.family === "UPM" ? 34 : 32);
@@ -13292,7 +13362,9 @@ function renderEleveSplat(){
   }
   elevePaveRendrePlateau(); /* chaque dessin sur le plateau d'origine ; le pavé le réduit ensuite */
   eleveSchemaReinitialiser(); /* Enquête : le schéma de la carte d'avant a pu élargir le dessin */
-  panneau.classList.remove("avecSchema"); /* ses deux boutons sur une ligne : pas ceux de l'écran de fin */
+  panneau.classList.remove("avecSchema", "tableauCache", "tableauCacheTel"); /* pas à pas G3 : ordinateur, téléphone */
+  const plateauG = document.getElementById("svgWrap");
+  if(plateauG) plateauG.removeAttribute("data-gain"); /* ses deux boutons sur une ligne : pas ceux de l'écran de fin */
   if(!cards.length){ tete.style.display = "none"; panneau.innerHTML = ""; renderEmpty(); elevePaveSynchroniser(); return; }
   if(eleveSerie.length === 0){
     /* La « tache vide » (elle cache 0) est un bon cas sur fiche, mais dans le
@@ -13536,7 +13608,7 @@ function eleveSchemaReserverOrdinateur(card){
     let voulu = 0;
     for(let e = 1; e <= eleveSchemaEtapes(card); e++){
       renderCard(card, e);
-      if(sysAPlan(card)) eleveCadrerSchemaSys(card); else eleveCadrerScene();
+      if(eleveSchemaCadreUnique(card)) eleveCadrerSchemaSys(card); else eleveCadrerScene();
       const vb = svg.viewBox.baseVal;
       if(vb && vb.width > 0) voulu = Math.max(voulu, Math.round(largeur * vb.height / vb.width));
     }
@@ -13575,10 +13647,54 @@ function eleveEnqueteLargeursVraies(){
     if(Number.isFinite(v) && v > 0) c.style.flexGrow = String(v);
   });
 }
+/* Pas à pas G3 (01/10/2026) : pendant les étapes, le tableau revient comme au départ — cases
+   grises, « ? » — et la réponse revient au dernier appui, avec les taches dévoilées. La valeur
+   tapée est mise de côté dans data-reponse, rien n'est revalidé ni réenregistré. */
+function eleveReponseCacher(cacher){
+  const panneau = document.getElementById("elevePanel");
+  if(!panneau) return;
+  panneau.classList.toggle("reponseCachee", !!cacher);
+  panneau.querySelectorAll(".eleveCase[data-attendu] .eleveChamp").forEach(inp => {
+    if(cacher && !inp.hasAttribute("data-reponse")){ inp.setAttribute("data-reponse", inp.value); inp.value = ""; }
+    if(!cacher && inp.hasAttribute("data-reponse")){ inp.value = inp.getAttribute("data-reponse"); inp.removeAttribute("data-reponse"); }
+  });
+}
+/* Ordinateur, pas à pas G3 (01/10/2026, idée de Gwenaël) : pendant les étapes, la question, le tableau
+   (qui ne montre que des « ? ») et le message s'effacent ; leur hauteur passe au dessin, qui grandit
+   d'autant — les boutons restent à leur place. Au dernier appui, tout revient avec la réponse et le
+   dessin rend la hauteur prise. */
+function eleveTableauCacher(cacher){
+  const panneau = document.getElementById("elevePanel");
+  const plateau = document.getElementById("svgWrap");
+  const actions = document.querySelector("#elevePanel .eleveActions");
+  if(!panneau || !plateau || !actions) return;
+  const deja = panneau.classList.contains("tableauCache");
+  if(cacher && !deja){
+    const avant = actions.getBoundingClientRect().top;
+    panneau.classList.add("tableauCache");
+    const gain = Math.max(0, Math.round(avant - actions.getBoundingClientRect().top));
+    const h = Math.round(plateau.getBoundingClientRect().height) + gain;
+    plateau.style.height = h + "px"; plateau.style.minHeight = h + "px";
+    plateau.setAttribute("data-gain", String(gain));
+  }else if(!cacher && deja){
+    const gain = parseInt(plateau.getAttribute("data-gain") || "0", 10) || 0;
+    panneau.classList.remove("tableauCache");
+    const h = Math.round(plateau.getBoundingClientRect().height) - gain;
+    plateau.style.height = h + "px"; plateau.style.minHeight = h + "px";
+    plateau.removeAttribute("data-gain");
+  }
+}
 function eleveVoirSchema(){
   const card = eleveSerie[eleveIdx];
   if(!card || eleveSchemaEtape >= eleveSchemaEtapes(card)) return;
   eleveSchemaEtape++;
+  if(card.family === "C" && enqueteProjectionPasAPas(card)){
+    const pendant = eleveSchemaEtape < eleveSchemaEtapes(card);
+    eleveReponseCacher(pendant);
+    /* ordinateur : le tableau reste caché jusqu'au bout, « Je réponds » garde toute la place (02/10) */
+    if(!eleveSchemaTelephone()) eleveTableauCacher(true);
+    else{ const pt = document.getElementById("elevePanel"); if(pt) pt.classList.toggle("tableauCacheTel", pendant); }
+  }
   eleveDessinerSchema(card);
   const voir = document.getElementById("eleveSchema");
   if(!voir) return;
@@ -13670,8 +13786,8 @@ function eleveDessinerSchema(card){
   }
   /* téléphone tourné pendant le schéma : on quitte la disposition portrait */
   if(plateau && plateau.classList.contains("eleveSchemaTel")) eleveSchemaReinitialiser();
-  renderCard(card, eleveSchemaEtape);
-  if(sysAPlan(card)) eleveCadrerSchemaSys(card); else eleveCadrerScene();
+  eleveRendreEtape(card, eleveSchemaEtape);
+  if(eleveSchemaCadreUnique(card)) eleveCadrerSchemaSys(card); else eleveCadrerScene();
   if(!plateau) return;
   try{
     const r = plateau.getBoundingClientRect();
@@ -13692,12 +13808,50 @@ function eleveDessinerSchema(card){
    l'Enquête, dont les cinq cadres ont la même taille), la scène changeait d'échelle à
    chaque appui : plateaux et tableau grandissaient ou rapetissaient sous les yeux. */
 let eleveSchemaSysCadre = null;
+/* Le Système, et le pas à pas G3 de l'Enquête (01/10/2026 : jusqu'à dix appuis, le plateau et les
+   écritures ne doivent pas changer de taille à chaque appui) : un seul cadrage pour toutes les étapes. */
+function eleveSchemaCadreUnique(card){
+  return sysAPlan(card) || (!!card && card.family === "C" && !!enqueteProjectionPasAPas(card));
+}
+/* Une étape du schéma, à l'ordinateur : l'Enquête en pas à pas G3 reprend la mise en page de la
+   projection (bandeau TOTAL + petit plateau + phrases, une seule échelle ; plateau entier au dernier
+   appui) — l'élève revoit l'écran du tableau. */
+function eleveRendreEtape(card, e){
+  renderCard(card, e);
+  if(e > 0 && card && card.family === "C" && enqueteProjectionPasAPas(card)){
+    enqueteProjectionCadrer(card, e);
+    eleveG3Zone();
+  }
+}
+/* Ordinateur, pas à pas du mode élève (01/10/2026, remarque de Gwenaël : « c'est les schémas que j'ai
+   besoin que ce soit gros », le vide entre le schéma et le tableau) : le bandeau du haut garde une
+   taille fixe ; dessous, une ZONE de taille fixe, la même à tous les appuis, et chaque cadre y prend
+   la plus grande taille qui tient (en hauteur ZONE_H, en largeur ZONE_L, plus large que la scène de
+   la projection : l'écran d'ordinateur est plus large que haut). Le cadrage unique de la carte
+   (eleveCadrerSchemaSys) mesure donc toujours bandeau + zone : plus de vide sous un cadre court. */
+const ELEVE_G3_BANDEAU = 0.8, ELEVE_G3_ZONE_H = 560, ELEVE_G3_ZONE_L = 2400, ELEVE_G3_ZONE_ECART = 24;
+function eleveG3Zone(){
+  try{
+    const plateau = document.getElementById("enqueteProjectionPlateau");
+    const dessin = ENQ_PROJ_IDS.map(id => document.getElementById(id)).find(Boolean);
+    if(!plateau || !dessin || dessin.parentNode !== svg) return false;
+    const k = ELEVE_G3_BANDEAU;
+    plateau.setAttribute("transform", `translate(800 0) scale(${k}) translate(-800 0)`);
+    const bp = plateau.getBBox();
+    const haut = Math.round((bp.y + bp.height) * k) + ELEVE_G3_ZONE_ECART;
+    dessin.removeAttribute("transform");
+    const bd = dessin.getBBox();
+    const f = Math.min(ELEVE_G3_ZONE_H / bd.height, ELEVE_G3_ZONE_L / bd.width);
+    dessin.setAttribute("transform", `translate(800 ${haut}) scale(${Math.round(1000 * f) / 1000}) translate(${Math.round(-(bd.x + bd.width / 2))} ${Math.round(-bd.y)})`);
+    return true;
+  }catch(_e){ return false; }
+}
 function eleveCadrerSchemaSys(card){
   if(!eleveSchemaSysCadre || eleveSchemaSysCadre.idx !== eleveIdx){
     let u = null;
     try{
       for(let e = 1; e <= eleveSchemaEtapes(card); e++){
-        renderCard(card, e);
+        eleveRendreEtape(card, e);
         const bb = svg.getBBox();
         if(!bb || !(bb.width > 0)) continue;
         u = u ? { x:Math.min(u.x, bb.x), y:Math.min(u.y, bb.y), d:Math.max(u.d, bb.x + bb.width), b:Math.max(u.b, bb.y + bb.height) }
@@ -13705,7 +13859,7 @@ function eleveCadrerSchemaSys(card){
       }
     }catch(_e){ u = null; }
     eleveSchemaSysCadre = { idx:eleveIdx, vb:u ? `${u.x - 24} ${u.y - 24} ${u.d - u.x + 48} ${u.b - u.y + 48}` : null };
-    renderCard(card, eleveSchemaEtape);
+    eleveRendreEtape(card, eleveSchemaEtape);
   }
   if(eleveSchemaSysCadre.vb) svg.setAttribute("viewBox", eleveSchemaSysCadre.vb);
   else eleveCadrerScene();

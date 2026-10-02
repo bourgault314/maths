@@ -263,6 +263,7 @@ test("ordinateur : le cadrage est FIXE d'un cadre à l'autre (l'union des cadrag
     ${fn("eleveSchemaEtapes")}
     ${ligne("const ELEVE_SCHEMA_ETAPES = ")}
     ${ligne("let eleveSchemaSysCadre = ")}
+    ${fn("eleveRendreEtape")}
     ${fn("eleveCadrerSchemaSys")}
     const carte = { family: "D", _sys: { plan: [{}, {}, {}] } };
     return { cadrer(e){ eleveSchemaEtape = e; eleveCadrerSchemaSys(carte); }, rendus, cadre: () => eleveSchemaSysCadre, suivante(){ eleveIdx++; } };
@@ -275,7 +276,8 @@ test("ordinateur : le cadrage est FIXE d'un cadre à l'autre (l'union des cadrag
   assert.ok(svg.vb.slice(-3).every((v) => v === "16 -24 1548 958"), "le même cadrage aux trois étapes");
   ctx.suivante(); ctx.cadrer(1);
   assert.deepEqual(ctx.rendus, [1, 2, 3, 1, 1, 2, 3, 1], "carte suivante : remesuré");
-  assert.match(fn("eleveDessinerSchema"), /renderCard\(card, eleveSchemaEtape\);\n  if\(sysAPlan\(card\)\) eleveCadrerSchemaSys\(card\); else eleveCadrerScene\(\);/);
+  assert.match(fn("eleveDessinerSchema"), /eleveRendreEtape\(card, eleveSchemaEtape\);\n  if\(eleveSchemaCadreUnique\(card\)\) eleveCadrerSchemaSys\(card\); else eleveCadrerScene\(\);/);
+  assert.match(fn("eleveSchemaCadreUnique"), /return sysAPlan\(card\) \|\|/);
   assert.match(fn("eleveSchemaReinitialiser"), /eleveSchemaTelReserve = null; eleveSchemaSysCadre = null;/);
 });
 

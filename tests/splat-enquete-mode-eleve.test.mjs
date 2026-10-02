@@ -179,12 +179,20 @@ function harnaisSchema(){
     ${fn("eleveInfosTableau")}
     ${fn("eleveSchemaEtapes")}
     function eleveDessinerSchema(card){ dessins.push(eleveSchemaEtape); }
+    /* le pas à pas G3 (01/10/2026) : sans plan, le tableau n'est jamais vidé */
+    let planG3 = null; const caches = [];
+    function enqueteProjectionPasAPas(){ return planG3; }
+    function eleveReponseCacher(c){ caches.push(c); }
+    /* ordinateur : la question, le tableau et le message s'effacent pendant les étapes */
+    const tableaux = [];
+    function eleveSchemaTelephone(){ return false; }
+    function eleveTableauCacher(c){ tableaux.push(c); }
     /* la place du schéma sur ordinateur (lot G3) se mesure au navigateur : pas ici */
     const reserves = [];
     function eleveSchemaReserverOrdinateur(card){ reserves.push(card); }
     ${fn("eleveProposerSchema")}
     ${fn("eleveVoirSchema")}
-    return { proposer: eleveProposerSchema, voir: eleveVoirSchema, dessins, etape: () => eleveSchemaEtape, monde2: () => { eleveSerie[0] = { family: "N" }; } };
+    return { proposer: eleveProposerSchema, voir: eleveVoirSchema, dessins, caches, tableaux, avecPlan: () => { planG3 = { etapes: [] }; }, etape: () => eleveSchemaEtape, monde2: () => { eleveSerie[0] = { family: "N" }; } };
   `)(document);
   return { ctx, boutons, valider, suivant };
 }
@@ -221,6 +229,7 @@ test("trois étapes, une par appui ; à la dernière le bouton s'efface et « Ca
   assert.deepEqual(h.ctx.dessins, [1, 2, 3]);
   assert.equal(h.boutons.length, 0, "effacé aux calculs");
   assert.equal(h.suivant.focalise, 1, "Entrée enchaîne sur la carte suivante");
+  assert.deepEqual(h.ctx.caches, [], "sans pas à pas, le tableau garde la réponse");
   h.ctx.voir();
   assert.equal(h.ctx.etape(), 3, "un appui de plus ne dépasse pas les calculs");
   assert.deepEqual(h.ctx.dessins, [1, 2, 3]);
@@ -229,8 +238,59 @@ test("trois étapes, une par appui ; à la dernière le bouton s'efface et « Ca
   assert.match(fn("enqueteNbEtapes"), /return card\._rel\.sansTotal \? 2 : 3;/);
 });
 
+test("pas à pas G3 (01/10/2026) : le tableau est vidé jusqu'à l'avant-dernier appui, la réponse revient au dernier", () => {
+  const h = harnaisSchema();
+  h.ctx.avecPlan();
+  h.ctx.proposer(h.valider);
+  const bouton = h.boutons[0];
+  bouton.onclick(); bouton.onclick(); bouton.onclick();
+  assert.deepEqual(h.ctx.caches, [true, true, false]);
+  assert.deepEqual(h.ctx.tableaux, [true, true, true], "ordinateur : le tableau reste effacé jusqu'au bout, « Je réponds » garde la place (02/10)");
+  assert.match(feuille, /#elevePanel\.tableauCacheTel \.eleveDiag\{visibility:hidden\}/, "téléphone : plus de « ? » pendant les étapes");
+  /* la valeur tapée est mise de côté, puis remise ; les cases redeviennent grises */
+  const cases = [{ value: "12", attrs: {} }, { value: "7", attrs: {} }].map((inp) => Object.assign(inp, {
+    hasAttribute: (k) => k in inp.attrs, getAttribute: (k) => inp.attrs[k], setAttribute: (k, v) => { inp.attrs[k] = String(v); }, removeAttribute: (k) => { delete inp.attrs[k]; } }));
+  const classes = new Set();
+  const panneau = { classList: { toggle: (k, v) => (v ? classes.add(k) : classes.delete(k)) }, querySelectorAll: (sel) => (sel === ".eleveCase[data-attendu] .eleveChamp" ? cases : []) };
+  const cacher = new Function("document", `${fn("eleveReponseCacher")} return eleveReponseCacher;`)({ getElementById: (id) => (id === "elevePanel" ? panneau : null) });
+  cacher(true); cacher(true);
+  assert.deepEqual(cases.map((c) => c.value), ["", ""], "le « ? » revient");
+  assert.ok(classes.has("reponseCachee"));
+  cacher(false);
+  assert.deepEqual(cases.map((c) => c.value), ["12", "7"], "deux appuis cachés de suite ne perdent pas la réponse");
+  assert.ok(!classes.has("reponseCachee"));
+  assert.match(feuille, /#elevePanel\.reponseCachee \.eleveCase\.grise\{background:#d4deea !important\}/);
+  assert.match(feuille, /#elevePanel\.tableauCache \.eleveConsigne, #elevePanel\.tableauCache \.eleveDiag, #elevePanel\.tableauCache \.eleveMsg\{display:none\}/);
+  /* la hauteur rendue par le tableau passe au dessin, et lui est reprise au dernier appui : les boutons ne bougent pas */
+  const plateau = { attrs: {}, h: 410, style: {}, getBoundingClientRect(){ return { height: this.h }; },
+    setAttribute(k, v){ this.attrs[k] = String(v); }, getAttribute(k){ return this.attrs[k] ?? null; }, removeAttribute(k){ delete this.attrs[k]; } };
+  const cls = new Set(); let haut = 685;
+  const pan = { classList: { contains: (k) => cls.has(k), add: (k) => { cls.add(k); haut = 485; }, remove: (k) => { cls.delete(k); haut = 685; } } };
+  const actions = { getBoundingClientRect: () => ({ top: haut }) };
+  const tab = new Function("document", `${fn("eleveTableauCacher")} return eleveTableauCacher;`)({
+    getElementById: (id) => ({ elevePanel: pan, svgWrap: plateau })[id] || null, querySelector: (sel) => (sel === "#elevePanel .eleveActions" ? actions : null) });
+  tab(true);
+  assert.equal(plateau.style.height, "610px", "410 + les 200 px rendus par le tableau");
+  plateau.h = 610; tab(true);
+  assert.equal(plateau.style.height, "610px", "deux fois de suite : pas deux fois le gain");
+  tab(false);
+  assert.equal(plateau.style.height, "410px");
+  assert.ok(!cls.has("tableauCache"));
+  /* « Je vérifie » : la réponse et la vérification, sans le rappel en gris (01/10/2026), partout à l'écran */
+  assert.match(html, /const ENQ_G3_RAPPEL = false;/);
+  assert.match(html, /const lignes = ENQ_G3_RAPPEL \? modele\.calculs : \[\];/);
+  /* ordinateur : une zone fixe sous le bandeau, chaque cadre y prend la plus grande taille qui tient */
+  assert.match(fn("eleveG3Zone"), /const f = Math\.min\(ELEVE_G3_ZONE_H \/ bd\.height, ELEVE_G3_ZONE_L \/ bd\.width\);/);
+  /* les taches : couvertes pendant le pas à pas, dévoilées au dernier appui (renderCard) */
+  assert.match(html, /const eleveCacheG3 = eleveDevoileC && revealState > 0 && revealState < enqueteDerniereEtape\(card\) && !!enqueteProjectionPasAPas\(card\);/);
+  assert.match(html, /\(\(revealState >= enqueteDerniereEtape\(card\) \|\| \(eleveDevoileC && !eleveCacheG3\)\) \? 2 : 0\)/);
+});
+
 test("les étapes sont celles de la projection, et la nouvelle carte repart du plateau couvert", () => {
-  assert.match(fn("eleveDessinerSchema"), /renderCard\(card, eleveSchemaEtape\);\n  if\(sysAPlan\(card\)\) eleveCadrerSchemaSys\(card\); else eleveCadrerScene\(\);/);
+  assert.match(fn("eleveDessinerSchema"), /eleveRendreEtape\(card, eleveSchemaEtape\);\n  if\(eleveSchemaCadreUnique\(card\)\) eleveCadrerSchemaSys\(card\); else eleveCadrerScene\(\);/);
+  /* ordinateur, pas à pas G3 : la mise en page de la projection (bandeau), un seul cadrage pour la carte */
+  assert.match(fn("eleveRendreEtape"), /renderCard\(card, e\);\n  if\(e > 0 && card && card\.family === "C" && enqueteProjectionPasAPas\(card\)\)\{\n    enqueteProjectionCadrer\(card, e\);\n    eleveG3Zone\(\);/);
+  assert.match(fn("eleveSchemaCadreUnique"), /return sysAPlan\(card\) \|\| \(!!card && card\.family === "C" && !!enqueteProjectionPasAPas\(card\)\);/);
   assert.match(fn("renderEleveSplat"), /eleveEnqueteDevoile = false; eleveSchemaEtape = 0;[^\n]*\n  eleveIndicesTel = [^\n]*\n  renderCard\(card, 0\);/);
   assert.match(fn("renderEleveSplat"), /elevePaveRendrePlateau\(\);[^\n]*\n  eleveSchemaReinitialiser\(\);/);
   assert.match(fn("renderEleveFinSplat"), /eleveEnqueteDevoile = false; eleveSchemaEtape = 0;[^\n]*\n  eleveIndicesTel = false;[^\n]*\n  renderCard\(eleveSerie\[total - 1\], 0\);/);
@@ -243,6 +303,8 @@ test("les étapes sont celles de la projection, et la nouvelle carte repart du p
     const plateau = { getBoundingClientRect: () => ({ width: 1498, height: plateauH }), classList: { contains: () => false }, style: {} };
     new Function("document", "window", `
       function renderCard(){}
+      function eleveRendreEtape(){}
+      function eleveSchemaCadreUnique(){ return false; }
       function eleveCadrerScene(){}
       function sysAPlan(){ return false; }
       function eleveSchemaReinitialiser(){ throw new Error("pas de nettoyage hors téléphone"); }
@@ -301,6 +363,8 @@ function harnaisTelephone({ hauteurs = { 1: 300, 2: 470, 3: 660 }, avant = 448, 
     let cadrages = 0;
     function eleveCadrerScene(){ if(!${sansCadre}) throw new Error("le téléphone ne recadre pas la scène entière"); cadrages++; }
     function sysAPlan(){ return false; }
+    function eleveSchemaCadreUnique(){ return false; }
+    function eleveRendreEtape(card, e){ renderCard(card, e); }
     function enqueteDerniereEtape(card){ return 3; }
     ${constLine("const ELEVE_SCHEMA_ETAPES = ").replace("const ELEVE_SCHEMA_ETAPES", "const _dup")}
     ${fn("eleveSchemaEtapes")}
@@ -372,10 +436,10 @@ test("téléphone : nouvelle carte ou appareil tourné, tout revient comme avant
   assert.equal(t.ctx.rendus.length - n, 4);
   // nouvelle carte : les boutons du schéma quittent la ligne commune, l'écran de fin reprend
   // le cadrage de la carte (le schéma resté affiché lui laissait son cadre, TOTAL coupé)
-  assert.match(fn("renderEleveSplat"), /  eleveSchemaReinitialiser\(\);[^\n]*\n  panneau\.classList\.remove\("avecSchema"\);/);
+  assert.match(fn("renderEleveSplat"), /  eleveSchemaReinitialiser\(\);[^\n]*\n  panneau\.classList\.remove\("avecSchema", "tableauCache", "tableauCacheTel"\);/);
   assert.match(fn("renderEleveFinSplat"), /renderCard\(eleveSerie\[total - 1\], 0\);\n  eleveCadrerScene\(\);/);
   // l'appareil tourné (plus de 600 px) : l'étape suivante quitte le portrait
-  assert.match(fn("eleveDessinerSchema"), /if\(plateau && plateau\.classList\.contains\("eleveSchemaTel"\)\) eleveSchemaReinitialiser\(\);\n  renderCard\(card, eleveSchemaEtape\);/);
+  assert.match(fn("eleveDessinerSchema"), /if\(plateau && plateau\.classList\.contains\("eleveSchemaTel"\)\) eleveSchemaReinitialiser\(\);\n  eleveRendreEtape\(card, eleveSchemaEtape\);/);
 });
 
 test("le bandeau : la case TOTAL puis la ou les phrases d'indice, texte échappé", () => {
@@ -415,7 +479,7 @@ test("téléphone : pendant le schéma, la ligne des réponses reste, les bouton
   assert.match(feuille, /@media \(max-width:599px\)\{\n    #elevePanel\.enquete\.avecSchema \.eleveActions button\{flex:1 1 0;max-width:240px;padding:12px 4px;white-space:nowrap\}/);
   assert.match(decl("body.eleve-mode #svgWrap.eleveSchemaTel"), /overflow:hidden/, "plus de défilement de côté");
   assert.match(fn("eleveProposerSchema"), /panneauS\.classList\.add\("avecSchema"\)/);
-  assert.match(fn("renderEleveSplat"), /panneau\.classList\.remove\("avecSchema"\);/);
+  assert.match(fn("renderEleveSplat"), /panneau\.classList\.remove\("avecSchema", "tableauCache", "tableauCacheTel"\);/);
 });
 
 // --- le dessin portrait des schémas ------------------------------------------------------------
@@ -468,8 +532,9 @@ test("renderCard : portrait au téléphone, et sur ordinateur la phrase d'indice
     "drawRelationOrderedSchema(relCible, card, { ...relTel });",
     "drawRelationOrderedSchema(relCible, card, { solved:true, ...relTel });"
   ]) assert.ok(r.includes(appel), appel);
-  assert.match(r, /const phrasesEleve = \(typeof eleveActif !== "undefined" && eleveActif && !telEleve && isCRelationLayout/,
-    "la projection ne change pas ; le téléphone a son bandeau");
+  assert.match(r, /const phrasesEleve = \(typeof eleveActif !== "undefined" && eleveActif && !telEleve && !g3Eleve && isCRelationLayout/,
+    "la projection ne change pas ; le téléphone a son bandeau ; le pas à pas G3 a celui de la projection");
+  assert.match(r, /const g3Eleve = revealState > 0 && card\.family === "C" && !!enqueteProjectionPasAPas\(card\);/);
   assert.match(r, /const basPlateau = relTrayY \+ relTrayK \* \(trayCfg\.y \+ trayCfg\.h\);/);
   assert.match(r, /const dy = Math\.max\(0, Math\.round\(derniere \+ 36 - 620\)\);/, "le cadre descend d'autant que les phrases le demandent");
 });
@@ -521,8 +586,9 @@ test("Enquête : le dévoilement redessine la carte (chaque tache a sa couleur),
   const rendu = fn("renderCard");
   assert.match(rendu, /const eleveDevoileC = \(card\.family === "C"\) && typeof eleveEnqueteDevoile !== "undefined" && !!eleveEnqueteDevoile;/);
   // taches dévoilées au 5e clic ; au 4e pour une carte « sans total » (lot E-sans-total : le 5e y est la vérification)
-  assert.match(rendu, /const visualRevealState = \(card\.family === "C"\) \? \(\(revealState >= enqueteDerniereEtape\(card\) \|\| eleveDevoileC\) \? 2 : 0\)/);
-  assert.match(rendu, /const fonduCouverture = !\(eleveDevoileC && revealState > 0\);/, "le fondu de la couverture ne rejoue pas à chaque étape du schéma");
+  /* pas à pas G3 (01/10/2026) : couvertes du premier à l'avant-dernier appui, dévoilées (avec le fondu) au dernier */
+  assert.match(rendu, /const visualRevealState = \(card\.family === "C"\) \? \(\(revealState >= enqueteDerniereEtape\(card\) \|\| \(eleveDevoileC && !eleveCacheG3\)\) \? 2 : 0\)/);
+  assert.match(rendu, /const fonduCouverture = !\(eleveDevoileC && revealState > 0\) \|\| \(eleveDevoileC && revealState >= enqueteDerniereEtape\(card\) && !!enqueteProjectionPasAPas\(card\)\);/, "le fondu de la couverture ne rejoue pas à chaque étape du schéma, sauf au dévoilement du pas à pas");
   assert.match(rendu, /if\(visualRevealState === 2 && fonduCouverture\)\{/);
 });
 

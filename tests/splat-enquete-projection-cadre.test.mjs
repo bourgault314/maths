@@ -172,7 +172,8 @@ test("projection : le plateau à côté du dessin quand l'étape est trop haute 
 
 test("projection : seul l'écran du professeur est cadré ; le mode élève et l'impression gardent les leurs", () => {
   const appels = html.split("enqueteProjectionCadrer(").length - 1;
-  assert.equal(appels, 2, "une définition, un appel");
+  assert.equal(appels, 3, "une définition, l'appel de la projection, celui du pas à pas en mode élève (01/10/2026)");
+  assert.match(fn("eleveRendreEtape"), /if\(e > 0 && card && card\.family === "C" && enqueteProjectionPasAPas\(card\)\)\{\n    enqueteProjectionCadrer\(card, e\);/);
   assert.match(fn("updateUI"), /if\(eleveActif\)\{ renderEleveSplat\(\); return; \}[\s\S]*else \{ renderCard\(cards\[idx\], revealState\); enqueteProjectionCadrer\(cards\[idx\], revealState\); \}\n\}/);
   /* un dessin qui n'est pas posé directement sur la scène (mode élève : calque décalé) n'est pas touché */
   assert.match(fn("enqueteProjectionCadrer"), /dessin && dessin\.parentNode === svg \? enqueteBarresModele\(card\) : null/);
@@ -195,7 +196,10 @@ test("menu de l'Enquête : mêmes réglages et mêmes valeurs, rangés en blocs 
   assert.deepEqual(valeurs("invStructure3"), ["HASARD", "REF", "CHAINE", "COMPLETE", "UNITE", "CHAIN", "PIVOT", "MIX"]);
   assert.deepEqual(valeurs("invOrdre"), ["HASARD", "DESSIN", "DESORDRE"]);
   /* les variantes : une grille à deux colonnes, « Sans total » et « Taches répétées » côte à côte */
-  const variantes = menu.slice(menu.indexOf('class="c-ops c-variantes"'), menu.indexOf('id="invMaxAdd"'));
+  const variantes = menu.slice(menu.indexOf('class="c-ops c-variantes"'), menu.indexOf('Correction au tableau'));
+  /* 02/10/2026 : la case « Pas à pas » a son bloc, « Correction au tableau », sous les variantes */
+  const correction = menu.slice(menu.indexOf('Correction au tableau'), menu.indexOf('id="invMaxAdd"'));
+  assert.deepEqual([...correction.matchAll(/<input type="checkbox" id="(\w+)"/g)].map(m => m[1]), ["invPasAPas"]);
   assert.deepEqual([...variantes.matchAll(/<input type="checkbox" id="(\w+)"/g)].map(m => m[1]),
     ["invVocab", "invCompose", "invNoTotal", "invRepeatOn", "invReunies"]);
   assert.match(variantes, /id="invRepeatRow"[^>]*>[\s\S]*<input id="invRepeat" type="number" min="2" max="3" value="3" \/>/);
