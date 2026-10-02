@@ -236,8 +236,8 @@ test("le point de Jackie : une table acquise choisie depuis « Changer de table 
   const debut = html.indexOf("const CLE_TABLE_CHOISIE");
   const source = html.slice(debut, html.indexOf("const NOMS_ENTRAINEMENTS"));
   const session = fauxStockage();
-  const logique = new Function("PARCOURS", "PARCOURS_TABLES", "codeSuivi", "stockageSession", `${source}
-    return {lireTableChoisie, lireChoixTable, ecrireTableChoisie, tableEnCours};`)(P, [...P.TABLES], "", () => session);
+  const logique = new Function("PARCOURS", "PARCOURS_TABLES", "codeSuivi", "stockageSession", "SEANCE", `${source}
+    return {lireTableChoisie, lireChoixTable, ecrireTableChoisie, tableEnCours};`)(P, [...P.TABLES], "", () => session, false);
   let p = P.creerParcours();
   p = jouerSerie(p, P.configValidation(7), [...P.faitsDeLaTable(7), ...P.faitsDeLaTable(7), ...P.faitsDeLaTable(7).slice(0, 4)], {date: J1});
   const etat = P.etatAffichage(p, J1);
@@ -271,7 +271,7 @@ test("« Comme la validation, en 2 min » reste proposée sur une table acquise"
 });
 
 test("le moteur a changé : nouveau numéro de cache, copie serveur identique, parcours de référence à jour", async () => {
-  assert.match(html, /defi_tables_mon_parcours\.js\?v=20261002-1/);
+  assert.match(html, /defi_tables_mon_parcours\.js\?v=20261003-1/);
   const moteur = await readFile(new URL("../outils/calcul_mental/defi_tables_mon_parcours.js", import.meta.url));
   const copie = await readFile(new URL("../_serveur/public/prof/defi_tables_mon_parcours.js", import.meta.url));
   assert.ok(moteur.equals(copie), "_serveur/public/prof/defi_tables_mon_parcours.js : la copie octet pour octet (dépôt FTP)");

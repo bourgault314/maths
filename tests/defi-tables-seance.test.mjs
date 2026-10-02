@@ -12,6 +12,8 @@ const html = readFileSync(new URL("../outils/calcul_mental/defi_tables.html", im
 const applis = readFileSync(new URL("../_serveur/public/lib/applis.php", import.meta.url), "utf8");
 
 const J1 = "2026-10-05"; // un lundi
+// Le départ et le compte d'une table (lot 2 : « seance » porte aussi « dernier », testé à part).
+const departN = seance => ({depart: seance.depart, n: seance.n});
 const jour = n => P.ajouterJours(J1, n - 1);
 
 // Joue une étape comme la page : la série est appliquée au parcours (réponses
@@ -115,7 +117,7 @@ test("le parcours : des clés en plus, sans changer de version ; une clé absent
   assert.equal(P.VERSION, 3, "pas de migration : la version ne change pas");
   const neuf = P.creerParcours();
   assert.deepEqual(neuf.tables[7].bouts, []);
-  assert.deepEqual(neuf.tables[7].seance, {depart: 1, n: 0});
+  assert.deepEqual(departN(neuf.tables[7].seance), {depart: 1, n: 0});
   assert.deepEqual(neuf.tables[7].sansFaute, {desordre: 0, trous: 0});
   assert.deepEqual(neuf.seances, []);
   const ancien = JSON.parse(JSON.stringify(neuf));
@@ -129,7 +131,7 @@ test("le parcours : des clés en plus, sans changer de version ; une clé absent
   forge.seances = ["2026-10-06", "pas une date", "2026-10-05", "2026-10-06", 12];
   const propre = P.normaliserParcours(forge);
   assert.deepEqual(propre.tables[7].bouts, [1, 10]);
-  assert.deepEqual(propre.tables[7].seance, {depart: 1, n: 0});
+  assert.deepEqual(departN(propre.tables[7].seance), {depart: 1, n: 0});
   assert.deepEqual(propre.tables[7].sansFaute, {desordre: 0, trous: 1});
   assert.deepEqual(propre.seances, ["2026-10-05", "2026-10-06", "2026-10-06"]);
   assert.equal(P.estVide(P.appliquerReponse(neuf, "1-3", {correcte: true}).parcours), false, "un bout réussi est déjà du travail");
@@ -155,7 +157,7 @@ test("la séance : Mes calculs du jour s'il y en a, le mélange s'il est dû, pu
   // Une table acquise, choisie exprès : ses trois entraînements, rien ne bouge.
   assert.deepEqual(nomsDe(p, jour(2), 2).slice(2), ["Dans le désordre", "Nombres manquants", "Résultats et nombres manquants"]);
   const acquise = jouerSeance(p, jour(2), () => 0, 2);
-  assert.deepEqual(acquise.parcours.tables[2].seance, {depart: 3, n: 2}, "le départ d'une table acquise ne bouge pas");
+  assert.deepEqual(departN(acquise.parcours.tables[2].seance), {depart: 3, n: 2}, "le départ d'une table acquise ne bouge pas");
   // Les 9 tables acquises : plus de marches.
   P.TABLES.forEach(table => { p.tables[table].acquise = jour(1); });
   p = P.normaliserParcours(p);
@@ -169,11 +171,11 @@ test("l’échelle à décalage : +1 par séance finie, +2 quand les trois march
   let s = jouerSeance(p, jour(1), etape => (etape.cle === "construct" ? 1 : 0));
   assert.deepEqual(s.noms, [1, 2, 3]);
   assert.equal(s.seance.finie, true);
-  assert.deepEqual(s.parcours.tables[2].seance, {depart: 2, n: 1}, "jour 2 : marches 2, 3, 4");
+  assert.deepEqual(departN(s.parcours.tables[2].seance), {depart: 2, n: 1}, "jour 2 : marches 2, 3, 4");
   assert.equal(s.seance.avance, 1);
   s = jouerSeance(s.parcours, jour(2));
   assert.deepEqual(s.noms, [2, 3, 4]);
-  assert.deepEqual(s.parcours.tables[2].seance, {depart: 4, n: 2}, "tout sans faute : deux marches d'un coup");
+  assert.deepEqual(departN(s.parcours.tables[2].seance), {depart: 4, n: 2}, "tout sans faute : deux marches d'un coup");
   assert.equal(s.seance.avance, 2);
   // Les perles ne se ratent pas : elles comptent sans faute.
   s = jouerSeance(P.creerParcours(), jour(1));
@@ -205,7 +207,7 @@ test("une marche ratée : moins de 7 sur 10 ; la marche d'en dessous, la marche 
   const note = jouerEtape(p, seance, P.etapeDeSeance(p, seance, jour(1)), jour(1), 4);
   assert.equal(note.faite.rate, true);
   assert.deepEqual(note.seance.file.map(prevue => prevue.marche), [1, 2, 3], "les perles, la bande refaite, puis la suite prévue");
-  assert.deepEqual(note.parcours.tables[2].seance, {depart: 1, n: 1}, "le départ est descendu TOUT DE SUITE (onglet fermé ou non)");
+  assert.deepEqual(departN(note.parcours.tables[2].seance), {depart: 1, n: 1}, "le départ est descendu TOUT DE SUITE (onglet fermé ou non)");
   assert.deepEqual(note.parcours.seances, [], "la séance n'est pas finie");
   // La reprise réussie : la séance continue, elle avance d'UNE marche (jamais de deux).
   let rang = 0;
@@ -350,7 +352,7 @@ test("« Cette semaine » : les jours avec une séance finie, depuis lundi ; une
   ({parcours: p, seance} = jouerEtape(p, seance, P.etapeDeSeance(p, seance, jour(1)), jour(1)));
   assert.equal(seance.finie, false);
   assert.deepEqual(p.seances, []);
-  assert.deepEqual(p.tables[2].seance, {depart: 1, n: 0});
+  assert.deepEqual(departN(p.tables[2].seance), {depart: 1, n: 0});
   p = jouerSeance(p, jour(1), () => 1).parcours;
   p = jouerSeance(p, jour(1), () => 1).parcours;
   p = jouerSeance(p, jour(3), () => 1).parcours;
@@ -369,8 +371,8 @@ test("la fusion : les bouts s'ajoutent, le départ le plus récent gagne (il peu
   a.seances = [jour(1), jour(1), jour(2)]; b.seances = [jour(1), jour(3)];
   for (const fusion of [P.fusionner(a, b), P.fusionner(b, a)]) {
     assert.deepEqual(fusion.tables[3].bouts, [1, 10]);
-    assert.deepEqual(fusion.tables[3].seance, {depart: 3, n: 5}, "le départ redescendu par la séance la plus récente n'est pas remonté par l'autre appareil");
-    assert.deepEqual(fusion.tables[4].seance, {depart: 4, n: 2}, "à égalité, le plus avancé");
+    assert.deepEqual(departN(fusion.tables[3].seance), {depart: 3, n: 5}, "le départ redescendu par la séance la plus récente n'est pas remonté par l'autre appareil");
+    assert.deepEqual(departN(fusion.tables[4].seance), {depart: 4, n: 2}, "à égalité, le plus avancé");
     assert.deepEqual(fusion.tables[3].sansFaute, {desordre: 1, trous: 1});
     assert.deepEqual(fusion.seances, [jour(1), jour(1), jour(2), jour(3)]);
   }
@@ -419,10 +421,10 @@ test("la page : tout est derrière la clé ?seance=1 ; sans elle, l'accueil et l
   assert.match(html, /if \(demande === "0"\) durable\.removeItem\(CLE_SEANCE\);\s*else if \(demande !== null\) durable\.setItem\(CLE_SEANCE, "1"\);\s*return durable\.getItem\(CLE_SEANCE\) === "1";/, "?seance=1 pose la clé sur l'appareil, ?seance=0 la retire");
   assert.match(html, /const SEANCE = lireCleSeance\(\);\s*document\.body\.classList\.toggle\("avec-seance", SEANCE\);/);
   assert.match(html, /const avecSeance = SEANCE && !replie;/, "l'accueil de la séance ne se pose qu'avec la clé");
-  assert.match(html, /if \(avecSeance\) renderSeanceAccueil\(etapes, etat, table, ligne\);\s*if \(!replie && !carteSeance\) \{/);
+  assert.match(html, /if \(decouverte\) renderDecouverte\(etapes, etat\);\s*else if \(avecSeance\) renderSeanceAccueil\(etapes, etat, table, ligne\);\s*if \(!replie && !carteSeance\) \{/);
   assert.match(html, /if \(SEANCE\) renderSemaine\(etat\);/);
   assert.match(html, /function enSeance\(\) \{\s*return SEANCE && Boolean\(seance\) && state\.origin === "seance";/, "une série hors séance garde son bilan d'avant");
-  assert.match(html, /if \(enSeance\(\)\) noterEtapeDeSeance\(suivi\);\s*show\("result"\);/);
+  assert.match(html, /if \(enSeance\(\)\) noterEtapeDeSeance\(suivi\);\s*if \(SEANCE && state\.origin === "decouverte"\) renderSuiteDecouverte\(suivi\);\s*show\("result"\);/);
   assert.match(html, /function backToModes\(\) \{\s*quitterSeance\(\);/, "revenir à Ma table quitte la séance");
   assert.match(html, /mixte: SEANCE \? "résultats et nombres manquants" : "les deux à la fois"/);
   assert.match(html, /return SEANCE \? libelle\.replace\("les deux à la fois", "résultats et nombres manquants"\) : libelle;/);
@@ -445,7 +447,7 @@ test("la page : tout est derrière la clé ?seance=1 ; sans elle, l'accueil et l
   assert.match(html, /const zoom = rect\.width \/ boulier\.dom\.interieur\.offsetWidth \|\| 1;\s*const x = \(event\.clientX - rect\.left\) \/ zoom;/);
   assert.match(html, /const ecart = \(event\.clientX - drag\.depart\) \/ drag\.zoom;/);
   // Le bloc « Mes calculs du jour » quitte l'accueil de la séance, pas Mes calculs.
-  assert.match(html, /if \(avecSeance\) reviser\.hidden = true;/);
+  assert.match(html, /if \(SEANCE\) reviser\.hidden = true;/, "avec la clé, Mes calculs du jour est dans la séance (les 9 tables aussi)");
   assert.match(html, /<button id="calculs-reviser" class="primary" type="button">/);
 });
 
@@ -546,7 +548,7 @@ test("« Cette semaine » : à la 5e séance, page ouverte, l'étiquette des ron
 });
 
 test("le moteur a changé : nouveau numéro de cache, copie serveur identique, serveur qui accepte les nouvelles clés", () => {
-  assert.match(html, /defi_tables_mon_parcours\.js\?v=20261002-1/);
+  assert.match(html, /defi_tables_mon_parcours\.js\?v=20261003-1/);
   const moteur = readFileSync(new URL("../outils/calcul_mental/defi_tables_mon_parcours.js", import.meta.url));
   const copie = readFileSync(new URL("../_serveur/public/prof/defi_tables_mon_parcours.js", import.meta.url));
   assert.ok(moteur.equals(copie), "cp outils/calcul_mental/defi_tables_mon_parcours.js _serveur/public/prof/");
@@ -557,4 +559,131 @@ test("le moteur a changé : nouveau numéro de cache, copie serveur identique, s
   assert.deepEqual(reference.tables[10].bouts, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10], "le parcours de référence porte les bouts (node scripts/generer-parcours-reference.mjs)");
   assert.equal(typeof reference.tables[7].seance.depart, "number");
   assert.equal(reference.seances.length, 4);
+  assert.equal(reference.tables[7].seance.dernier, "2026-09-15", "lot 2 : le jour de la dernière séance (clé « dernier », déjà acceptée par le serveur)");
+  assert.match(applis, /'dernier'/);
+});
+
+// ------------------------------------------------------------------ lot 2a
+// Lot 2a (03/10/2026, décisions de Gwenaël) : la table de la dernière séance,
+// le premier écran « Tu connais déjà des tables ? », la séance des 9 tables,
+// Mon parcours, la notice, « Changer de table » qui ne montre que les tables.
+
+test("lot 2a : la table de la séance est celle de la dernière séance jouée (pas acquise), sinon l'ordre conseillé", () => {
+  let p = P.creerParcours();
+  assert.equal(P.tableDeSeance(p), 2, "rien joué : l'ordre conseillé");
+  // Une séance sur la table de 7, choisie : le lendemain, c'est elle.
+  const s = jouerSeance(p, jour(1), () => 0, 7);
+  p = s.parcours;
+  assert.equal(p.tables[7].seance.dernier, jour(1));
+  assert.equal(P.tableDeSeance(p), 7, "l'élève qui a choisi la 7 la retrouve");
+  assert.equal(P.ouvrirSeance(p, {aujourdhui: jour(2)}).table, 7);
+  // Puis une séance sur la 4, plus récente : la 4 l'emporte.
+  p = jouerSeance(p, jour(2), () => 0, 4).parcours;
+  assert.equal(P.tableDeSeance(p), 4);
+  // Une table acquise n'est plus « ma table ».
+  p.tables[4].acquise = jour(2);
+  assert.equal(P.tableDeSeance(P.normaliserParcours(p)), 7);
+  // Le jour est relu, fusionné (le plus récent) et nettoyé.
+  const relu = P.normaliserParcours(JSON.parse(JSON.stringify(p)));
+  assert.equal(relu.tables[7].seance.dernier, jour(1));
+  assert.equal(P.normaliserParcours({tables: {7: {seance: {depart: 3, n: 1, dernier: "pas une date"}}}}).tables[7].seance.dernier, null);
+  const a = P.creerParcours(); a.tables[7].seance = {depart: 3, n: 2, dernier: "2026-10-05"};
+  const b = P.creerParcours(); b.tables[7].seance = {depart: 2, n: 1, dernier: "2026-10-07"};
+  assert.equal(P.fusionner(a, b).tables[7].seance.dernier, "2026-10-07");
+  assert.equal(P.fusionner(b, a).tables[7].seance.dernier, "2026-10-07");
+});
+
+test("lot 2a : « Tu connais déjà des tables ? » — validations d'affilée sans le verrou du mélange, table ratée qui démarre à la marche 5", () => {
+  const valider = (parcours, table, erreurs, decouverte) => {
+    let p = parcours;
+    const config = P.configValidation(table);
+    for (let index = 0; index < 20; index += 1) {
+      p = P.appliquerReponse(p, `${table}-${1 + (index % 10)}`, {correcte: index >= erreurs, date: J1}).parcours;
+    }
+    return P.appliquerSerie(p, config, {correct: 20 - erreurs, total: 20, date: J1, decouverte}).parcours;
+  };
+  let p = valider(P.creerParcours(), 2, 0, true);
+  p = valider(p, 10, 0, true);
+  assert.ok(P.melangeDu(p), "deux tables acquises : le mélange est dû");
+  const sansDecouverte = valider(p, 5, 0, false);
+  assert.equal(sansDecouverte.tables[5].acquise, null, "hors du premier écran, le verrou tient");
+  p = valider(p, 5, 0, true);
+  assert.equal(p.tables[5].acquise, J1, "sur le premier écran, il valide d'affilée ce qu'il sait");
+  // La première séance commence par le mélange dû.
+  assert.equal(P.ouvrirSeance(p, {aujourdhui: jour(2)}).file.find(prevue => prevue.type !== "revision").type, "melange");
+  // Table de 3 ratée : sa séance part de « Dans le désordre ».
+  p = valider(p, 3, 5, true);
+  assert.equal(p.tables[3].acquise, null);
+  const parti = P.commencerApresDecouverte(p, 3, {aujourdhui: J1});
+  assert.equal(P.MARCHE_APRES_DECOUVERTE, 5);
+  assert.equal(parti.tables[3].seance.depart, 5);
+  assert.equal(parti.tables[3].seance.dernier, J1);
+  assert.equal(P.tableDeSeance(parti), 3, "et c'est elle, ma table, les jours suivants");
+  const marches = P.ouvrirSeance(parti, {aujourdhui: jour(2)}).file.filter(prevue => prevue.type === "marche").map(prevue => prevue.marche);
+  assert.deepEqual(marches, [5, 6, 7]);
+  assert.equal(P.commencerApresDecouverte(parti, 2), parti, "une table acquise ne bouge pas");
+  assert.equal(p.tables[3].seance.depart, 1, "le parcours d'origine n'est pas modifié");
+});
+
+test("lot 2a : les 9 tables acquises ont leur séance — Mes calculs du jour, le mélange s'il est dû, puis l'étoile suivante", () => {
+  let p = P.creerParcours();
+  P.TABLES.forEach(table => { p.tables[table].acquise = "2026-10-01"; });
+  p = P.normaliserParcours(p);
+  // Mélange des 9 pas encore réussi : l'escalier est fermé, pas d'étoile.
+  let seance = P.ouvrirSeance(p, {aujourdhui: J1});
+  assert.equal(seance.table, null);
+  let programme = P.programmeDeSeance(p, seance, J1).etapes.map(etape => etape.type);
+  assert.deepEqual(programme, ["melange"]);
+  // Mélange réussi : l'étoile ★, puis la suivante ; la couronne se rejoue.
+  p.melange.aJour = true;
+  seance = P.ouvrirSeance(p, {aujourdhui: J1});
+  let etape = P.etapeDeSeance(p, seance, J1);
+  assert.equal(etape.type, "etoile");
+  assert.equal(etape.etoile, 1);
+  assert.equal(etape.nom, "Tente ★");
+  assert.equal(etape.detail, "2 min");
+  assert.equal(etape.config.duration, 120);
+  p.expert.etoiles = 2;
+  etape = P.etapeDeSeance(p, P.ouvrirSeance(p, {aujourdhui: J1}), J1);
+  assert.equal(etape.nom, "Tente ★★★");
+  p.expert.etoiles = P.ETOILES_MAX;
+  etape = P.etapeDeSeance(p, P.ouvrirSeance(p, {aujourdhui: J1}), J1);
+  assert.equal(etape.etoile, P.ETOILES_MAX, "la couronne gagnée se rejoue");
+  // La séance se note et compte dans « Cette semaine ».
+  const note = P.noterEtape(p, P.ouvrirSeance(p, {aujourdhui: J1}), etape, {juste: 25, total: 25, reussi: true}, J1);
+  assert.ok(note.seance.finie);
+  assert.equal(note.faite.reussi, true);
+  assert.deepEqual(note.parcours.seances, [J1]);
+  // Des calculs dus : ils passent devant.
+  p = P.appliquerReponse(p, "3-7", {correcte: false, date: J1}).parcours;
+  programme = P.programmeDeSeance(p, P.ouvrirSeance(p, {aujourdhui: jour(2)}), jour(2)).etapes.map(item => item.type);
+  assert.deepEqual(programme, ["revision", "etoile"]);
+  // Une table choisie exprès garde ses trois entraînements, sans étoile.
+  assert.deepEqual(P.ouvrirSeance(p, {aujourdhui: jour(2), table: 7}).file.map(prevue => prevue.type).filter(type => type !== "revision"), ["marche", "marche", "marche"]);
+});
+
+test("lot 2a : la page — premier écran, Mon parcours, notice, séance des 9 tables, « Changer de table » seul", () => {
+  // « Changer de table » ouvert : seules les tables, à toutes les largeurs.
+  assert.match(html, /body\.avec-seance \.acc\.choix-ouvert > :not\(\.matable\),\s*body\.avec-seance \.acc\.choix-ouvert #acc-etapes,\s*body\.avec-seance \.acc\.choix-ouvert #acc-lire \{ display: none; \}/);
+  // Le premier écran : seulement pour un parcours vide, fermé pour l'onglet.
+  assert.match(html, /decouverteOuverte = !fermee && PARCOURS\.estVide\(parcours\);/);
+  assert.match(html, /const decouverte = avecSeance && enDecouverte\(\);/, "avec la clé seulement");
+  assert.match(html, /launchFromParcours\(PARCOURS\.configValidation\(candidate\), "decouverte"\)/);
+  assert.match(html, /\{correct: state\.correct, total: TOTAL, decouverte: state\.origin === "decouverte"\}/);
+  assert.match(html, /`Non, je commence par la table de \$\{suivante\}`/);
+  assert.match(html, /parcours = PARCOURS\.commencerApresDecouverte\(parcours, table\);\s*sauverParcours\(\);\s*ecrireTableChoisie\(table\);\s*fermerDecouverte\(\);/);
+  // Mon parcours : une rangée par table, l'échelle pour ma table.
+  assert.match(html, /if \(SEANCE\) \{\s*renderParcoursSeance\(list, etat, maTable\);\s*\} else etat\.lignes\.forEach/);
+  assert.match(html, /item\.append\(rangeeDeTable\(table\)\);\s*if \(table === maTable && !ligne\.acquise\) item\.append\(echelleDeTable\(table\)\);/);
+  // La table de la dernière séance, avec la clé.
+  assert.match(html, /if \(SEANCE && etat\.tableSeance\) return etat\.tableSeance;/);
+  // Les 9 tables : la carte de la séance dans « Je deviens expert ».
+  assert.match(html, /if \(SEANCE && PARCOURS\.programmeDeSeance\(parcours, PARCOURS\.ouvrirSeance\(parcours\)\)\.etapes\.length\) \{\s*action\.append\(carteDeSeance\(null\)\);/);
+  // La notice de la séance : six lignes, posée avec la clé.
+  const debut = html.indexOf('<template id="notice-seance">');
+  const notice = html.slice(debut, html.indexOf("</template>", debut));
+  assert.equal((notice.match(/<p>/g) || []).length, 6, "six lignes");
+  assert.doesNotMatch(notice, /les deux à la fois|je m’entraîne 3 fois/i);
+  assert.match(html, /const modele = \$\(SEANCE \? "notice-seance" : "notice-regles"\);/);
+  assert.match(html, /<template id="notice-regles">\s*<p><b>Ma table\.<\/b> J’apprends si je veux, je m’entraîne 3 fois/, "sans la clé, la notice d'avant");
 });

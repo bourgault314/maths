@@ -249,8 +249,10 @@
       // prochaine séance sur l'échelle et le nombre de séances qui l'ont
       // déplacé (« n » : à la fusion, le plus récent gagne), et les deux
       // entraînements déjà réussis sans faute (le raccourci vers la validation).
+      // « dernier » (lot 2) : le jour de la dernière séance jouée sur cette
+      // table — c'est elle que l'accueil rouvre le lendemain.
       bouts: [],
-      seance: {depart: 1, n: 0},
+      seance: {depart: 1, n: 0, dernier: null},
       sansFaute: {desordre: 0, trous: 0},
       acquise: null
     };
@@ -406,6 +408,7 @@
       if (source.seance && typeof source.seance === "object") {
         cible.seance.depart = entier(source.seance.depart, 1, SEUILS.seance.departMax, 1);
         cible.seance.n = entier(source.seance.n, 0, FOIS_MAX);
+        cible.seance.dernier = dateOuNull(source.seance.dernier);
       }
       CLES_SANS_FAUTE.forEach(cle => {
         cible.sansFaute[cle] = entier(source.sansFaute && source.sansFaute[cle], 0, 1);
@@ -728,7 +731,10 @@
       // Le verrou : tant que le mélange est dû, une NOUVELLE table ne se valide
       // pas — la série est jouée, comptée dans la grille, mais la table reste à
       // valider après le mélange. Une table déjà acquise se rejoue librement.
-      const verrouillee = !dejaAcquise && melangeDu(copie);
+      // Sauf sur le premier écran (« Tu connais déjà des tables ? », lot 2) :
+      // l'élève y valide d'affilée les tables qu'il sait déjà ; le mélange
+      // dû ouvrira sa première séance.
+      const verrouillee = !dejaAcquise && melangeDu(copie) && !(resultat && resultat.decouverte);
       const evenement = {type: "validation", table: classement.table, reussi, score: correct, total, dejaAcquise, nouvelle: false, verrouillee};
       evenements.push(evenement);
       if (reussi && !verrouillee) evenement.nouvelle = acquerir(copie, classement.table, date, evenements);
@@ -1318,7 +1324,10 @@
       calculs: resumeCalculs(parcours, aujourdhui),
       // L'agenda des calculs : dus aujourd'hui, demain, et le prochain retour.
       agenda: agendaCalculs(parcours, aujourdhui),
-      prochaine: prochaineEtape(parcours, aujourdhui)
+      prochaine: prochaineEtape(parcours, aujourdhui),
+      // La table de la séance (lot 2) : celle de la dernière séance, sinon
+      // la première de l'ordre conseillé non acquise ; null : les 9 le sont.
+      tableSeance: tableDeSeance(parcours)
     };
   }
 
@@ -1346,7 +1355,7 @@
   const MARCHE_DE_REMPLACEMENT = 5;
   // Ce que dure une étape, en minutes (pour « environ 8 min ») : mesuré en
   // jouant les trois élèves types au navigateur.
-  const MINUTES_ETAPE = Object.freeze({revision: 2, melange: 2, validation: 2, beads: 3, construct: 2, gaps: 2, ordered: 2, desordre: 2, trous: 2, mixte: 2});
+  const MINUTES_ETAPE = Object.freeze({revision: 2, melange: 2, etoile: 3, validation: 2, beads: 3, construct: 2, gaps: 2, ordered: 2, desordre: 2, trous: 2, mixte: 2});
 
   function marche(numero) {
     return MARCHES[entier(numero, 1, MARCHES.length, 1) - 1];
@@ -1395,9 +1404,19 @@
     return rangeeTable(parcours, table).prete || raccourciValidation(parcours, table);
   }
 
-  // La table de la séance quand l'élève n'en a pas choisi : la première de
-  // l'ordre conseillé qui n'est pas acquise (aucune quand les 9 le sont).
+  // La table de la séance quand l'élève n'en a pas choisi dans l'onglet :
+  // celle de sa dernière séance, si elle n'est pas acquise (lot 2, décision
+  // de Gwenaël du 03/10 : l'élève qui a choisi la 7 la retrouve le
+  // lendemain, sur tous ses appareils) ; sinon la première de l'ordre
+  // conseillé qui n'est pas acquise (aucune quand les 9 le sont).
   function tableDeSeance(parcours) {
+    let recente = null;
+    ORDRE_CONSEIL.forEach(candidate => {
+      const ligne = parcours.tables[candidate];
+      if (ligne.acquise || !ligne.seance.dernier) return;
+      if (recente === null || ligne.seance.dernier > parcours.tables[recente].seance.dernier) recente = candidate;
+    });
+    if (recente !== null) return recente;
     const table = ORDRE_CONSEIL.find(candidate => !parcours.tables[candidate].acquise);
     return table === undefined ? null : table;
   }
@@ -1418,6 +1437,9 @@
     const choisie = TABLES.includes(Number(table)) ? Number(table) : tableDeSeance(parcours);
     let depart = null;
     let echelle = false;
+    // Les 9 tables acquises et aucune choisie (lot 2) : après Mes calculs du
+    // jour et le mélange, la marche suivante de l'escalier des étoiles.
+    if (choisie === null && toutesAcquises(parcours)) file.push({type: "etoile"});
     if (choisie !== null) {
       const ligne = parcours.tables[choisie];
       echelle = !ligne.acquise;
@@ -1446,6 +1468,13 @@
       if (prevue.type === "melange") {
         if (!melangeDu(parcours)) continue;
         return {type: "melange", nom: "Mon mélange", config: configMelange(parcours), minutes: MINUTES_ETAPE.melange, prevue};
+      }
+      if (prevue.type === "etoile") {
+        // Pas avant que le mélange des 9 ait ouvert l'escalier ; la couronne
+        // gagnée, c'est elle qui se rejoue (l'entretien).
+        if (!escalierOuvert(parcours)) continue;
+        const etoile = Math.min(ETOILES_MAX, parcours.expert.etoiles + 1);
+        return {type: "etoile", etoile, nom: `Tente ${symboleEtoile(etoile)}`, detail: libelleDuree(dureeEtoile(etoile)), config: configEtoile(etoile), minutes: MINUTES_ETAPE.etoile, prevue};
       }
       const table = prevue.table;
       let numero = prevue.marche;
@@ -1528,6 +1557,7 @@
     const faite = {type: etape.type, nom: etape.nom, marche: etape.marche || null, juste, total, rate: false, reussi: null};
     const table = suite.table;
     const ligne = table === null ? null : copie.tables[table];
+    if (ligne && suite.echelle) ligne.seance.dernier = dateOuNull(suite.jour) || jourLocal();
     const descendre = (numero, reprendre = true) => {
       // Un raté réparé ne compte plus : c'est le nouveau raté qui dit où repartir.
       suite.rate = suite.rate === null || suite.reparee ? numero : Math.min(suite.rate, numero);
@@ -1563,7 +1593,7 @@
       if (faite.reussi) suite.file = melangeDu(copie) ? [{type: "melange"}] : [];
       // Une validation ratée ne se retente pas dans la séance : la marche 7, puis fin.
       else { faite.rate = true; descendre(MARCHE_VALIDATION, false); }
-    } else if (etape.type === "melange") {
+    } else if (etape.type === "melange" || etape.type === "etoile") {
       faite.reussi = Boolean(resultat.reussi);
     }
     suite.faites.push(faite);
@@ -1586,6 +1616,20 @@
       copie.seances = normaliserSeances([...copie.seances, suite.jour]);
     }
     return {parcours: copie, seance: suite, faite};
+  }
+
+  // Une table ratée sur le premier écran (« Tu connais déjà des tables ? ») :
+  // l'élève la connaît en partie — sa séance commence aux entraînements
+  // (« Dans le désordre »), pas aux perles.
+  const MARCHE_APRES_DECOUVERTE = 5;
+  function commencerApresDecouverte(parcours, table, {depart = MARCHE_APRES_DECOUVERTE, aujourdhui = jourLocal()} = {}) {
+    const copie = cloner(parcours);
+    const ligne = copie.tables[table];
+    if (!ligne || ligne.acquise) return parcours;
+    ligne.seance.depart = bornerDepart(depart);
+    ligne.seance.n = Math.min(FOIS_MAX, ligne.seance.n + 1);
+    ligne.seance.dernier = aujourdhui;
+    return copie;
   }
 
   // « Cette semaine ●○○○ » : les jours avec une séance finie depuis lundi,
@@ -2131,7 +2175,8 @@
       const recente = ligneA.seance.n !== ligneB.seance.n
         ? (ligneA.seance.n > ligneB.seance.n ? ligneA : ligneB)
         : (ligneA.seance.depart >= ligneB.seance.depart ? ligneA : ligneB);
-      cible.seance = {depart: recente.seance.depart, n: recente.seance.n};
+      const derniers = [ligneA.seance.dernier, ligneB.seance.dernier].filter(Boolean).sort();
+      cible.seance = {depart: recente.seance.depart, n: recente.seance.n, dernier: derniers.length ? derniers[derniers.length - 1] : null};
       CLES_SANS_FAUTE.forEach(cle => {
         cible.sansFaute[cle] = Math.max(ligneA.sansFaute[cle], ligneB.sansFaute[cle]);
       });
@@ -2330,6 +2375,8 @@
     marcheRatee,
     noterEtape,
     bilanSeances,
+    commencerApresDecouverte,
+    MARCHE_APRES_DECOUVERTE,
     CLE_SEL,
     ITERATIONS_EMPREINTE,
     LONGUEUR_EMPREINTE,
