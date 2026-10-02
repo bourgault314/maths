@@ -86,7 +86,7 @@ test("le dessin vide : couleurs gardées, aucun texte dans les cases, cases blan
   const barres = fn("drawEnqueteBarres");
   assert.match(barres, /enqueteDessinerCase\(g, card, cell, x, yr, ws\[j\], P\.rowH, P, modele, !!modele\.vide\)/);
   assert.match(barres, /enqueteTexteLargeur\(row\.labelMesure \|\| row\.label, lfs, 800\)/, "le nom garde la taille du corrigé");
-  assert.match(barres, /enqueteAccolade\(g, xMax \+ P\.braceGap, rowsTop, rowsBottom, P, M\.totalTxt, !!modele\.vide\)/);
+  assert.match(barres, /enqueteAccolade\(g, xMax \+ P\.braceGap, rowsTop, rowsBottom, P, M\.totalTxt, !!modele\.vide, P\.portrait \? x0 \+ largeur : undefined\)/);
   assert.match(fn("enqueteAccolade"), /if\(vide\)\{[\s\S]*?return;\s*\}/, "l'accolade : une case vide à la place du total");
   assert.match(fn("enqueteMiseEnPage"), /const totalTxt = modele\.accolade == null \? "" : formatRelationNumber\(modele\.accolade\);/, "même place que le corrigé : mesurée sur le vrai total");
   const largeur = new Function(`${fn("enqueteLargeurCaseVide")}\nreturn enqueteLargeurCaseVide;`.replace("enqueteTexteLargeur", "((t) => String(t).length * 30)").replace("enqueteTexteLargeur", "((t) => String(t).length * 30)"))();

@@ -827,7 +827,7 @@
   #elevePanel.enquete .eleveCase.ko{background:#fee2e2}
   #elevePanel.enquete .eleveCase.ko input.eleveChamp{background:transparent}
   .eleveCase.haut.donnee{color:#111}
-  .eleveCase.blanche.donnee .eleveTacheNom{color:#1d4ed8} /* « visibles » en bleu, comme leur nombre */
+  .eleveCase.blanche.donnee .eleveTacheNom, .ligneBas .eleveCase.blanche .eleveTacheNom{color:#1d4ed8} /* « visibles » en bleu, comme leur nombre */
   .eleveCase.haut.donnee .eleveTacheNom{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#475569}
   #elevePanel.enquete .eleveActions{flex-wrap:wrap}
   /* Téléphone, schéma agrandi : le plateau se fait glisser de gauche à droite. */
@@ -8010,14 +8010,17 @@ function enqueteDessinerCase(g, card, cell, x, y, w, h, P, modele, vide){
   }));
 }
 /* L'accolade du total, à droite des barres (pointe vers la droite). */
-function enqueteAccolade(g, x, y1, y2, P, label, vide){
+function enqueteAccolade(g, x, y1, y2, P, label, vide, droiteMax){
   const w = P.braceW, m = (y1 + y2) / 2, r = Math.min(w / 2, (y2 - y1) / 4);
   const xm = x + w / 2;
   g.appendChild(el("path", { d:`M ${x} ${y1} Q ${xm} ${y1} ${xm} ${y1 + r} L ${xm} ${m - r} Q ${xm} ${m} ${x + w} ${m} Q ${xm} ${m} ${xm} ${m + r} L ${xm} ${y2 - r} Q ${xm} ${y2} ${x} ${y2}`,
     fill:"none", stroke:"#111827", "stroke-width":5, "stroke-linecap":"round", "stroke-linejoin":"round" }));
   if(vide){
     /* schéma vide : une case blanche à la place du total (la place que le corrigé lui donne) */
-    const cw = enqueteLargeurCaseVide(label, P.totalFont, P, 1e9), ch = Math.round(P.rowH * 0.72);
+    /* téléphone (02/10/2026, vu par Gwenaël sur son iPhone : la case mordait sur le cadre quand les
+       barres prennent toute la largeur) : la case ne dépasse jamais la place réservée au total */
+    const place = Number.isFinite(droiteMax) ? Math.max(0, droiteMax - (x + w + P.braceGap)) : 1e9;
+    const cw = enqueteLargeurCaseVide(label, P.totalFont, P, place), ch = Math.round(P.rowH * 0.72);
     g.appendChild(el("rect", { x:x + w + P.braceGap, y:m - ch / 2, width:cw, height:ch, rx:6, fill:"#fff", stroke:"#111827", "stroke-width":2.5 }));
     return;
   }
@@ -8130,7 +8133,7 @@ function drawEnqueteBarres(targetGroup, card, opts = {}){
   });
   const derniere = lesRows[lesRows.length - 1];
   const rowsBottom = yr + P.rowH;
-  if(modele.accolade != null) enqueteAccolade(g, xMax + P.braceGap, rowsTop, rowsBottom, P, M.totalTxt, !!modele.vide);
+  if(modele.accolade != null) enqueteAccolade(g, xMax + P.braceGap, rowsTop, rowsBottom, P, M.totalTxt, !!modele.vide, P.portrait ? x0 + largeur : undefined);
   y = rowsBottom + (derniere && derniere.sous.length ? P.sousH + P.sousEcart + P.sousPas + 6 : 0) + (P.cadre ? P.marge : 10);
   const h = Math.round(y - boxY);
   enqueteCadre(g, P, boxY, h, g.id);
@@ -13139,15 +13142,17 @@ function eleveTacheCouleurHtml(info){
     ELEVE_TACHE_MINI.replace('class="eleveMiniTache"', 'class="eleveTacheCouleur"').replace('fill="#111827"', `fill="${info.screen}"`) +
     `<span>${investigateColorWord(info)}</span></span>`;
 }
-/* Case donnée, pas à remplir (le total, les jetons visibles) : la question de
-   l'Enquête porte sur les taches seulement. Sans champ : la validation l'ignore. */
+/* Case donnée, pas à remplir (le total ; les jetons visibles jusqu'au 02/10/2026).
+   Sans champ : la validation l'ignore. */
 function eleveCaseDonneeHtml(classe, libelle, valeur){
   return `<div class="eleveCase ${classe} donnee" style="flex:1 1 0">` +
     `<span class="eleveTacheNom"><span>${libelle}</span></span><span class="eleveDonneeVal">${valeur}</span></div>`;
 }
 function eleveCasesEnqueteHtml(card, enquete){
   let bas = "";
-  if(enquete.visibleSum > 0) bas += eleveCaseDonneeHtml("blanche", "visibles", enquete.visibleSum);
+  /* 02/10/2026 (Gwenaël) : les jetons visibles se REMPLISSENT, comme aux mondes 1 et 2 — les
+     additionner fait partie du travail ; case vide, sans « ? » (règle du 19/09). Le TOTAL reste donné. */
+  if(enquete.visibleSum > 0) bas += eleveCaseHtml("blanche", enquete.visibleSum, 1, false, `<span class="eleveTacheNom"><span>visibles</span></span>`);
   /* cases de largeur égale : des largeurs proportionnelles donneraient la réponse */
   enquete.ordre.forEach(i => { bas += eleveCaseHtml("grise", enquete.valeurs[i], 1, true, eleveTacheCouleurHtml(investigateColorInfo(card, i))); });
   return bas;
@@ -13167,7 +13172,7 @@ function eleveEnregistrerReussite(sansFaute, total){
    l'inconnue, ce que cache la tache (décision du 19/09/2026). */
 function eleveCaseHtml(classe, attendu, largeur, avecTache, tacheHtml){
   return `<div class="eleveCase ${classe}" style="flex:${largeur} 1 0" data-attendu="${attendu}">` +
-    (avecTache ? (tacheHtml || ELEVE_TACHE_MINI) : "") + /* Enquête : la mini-tache colorée et son nom */
+    (avecTache ? (tacheHtml || ELEVE_TACHE_MINI) : (tacheHtml || "")) + /* Enquête : la mini-tache colorée et son nom ; « visibles » : l'étiquette seule */
     `<input class="eleveChamp" type="text" inputmode="numeric" maxlength="3" autocomplete="off"${avecTache ? ' placeholder="?"' : ""}></div>`;
 }
 
@@ -13594,7 +13599,7 @@ function eleveProposerSchema(bouton){
   if(panneauS) panneauS.classList.add("avecSchema");
   const voir = document.createElement("button");
   voir.type = "button"; voir.id = "eleveSchema"; voir.className = "secondaire";
-  voir.textContent = "Voir le schéma";
+  voir.textContent = "Voir la correction"; /* 02/10/2026 (Gwenaël) : le bouton ouvre toute la correction pas à pas, plus un seul schéma ; avant : « Voir le schéma » */
   voir.onclick = eleveVoirSchema;
   bouton.parentNode.appendChild(voir);
   eleveSchemaReserverOrdinateur(card);
