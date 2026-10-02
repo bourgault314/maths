@@ -6960,6 +6960,9 @@
         zone.hidden = false;
         if (bilan.semaine > bilan.objectif) {
           zone.textContent = `${bilan.semaine} jours cette semaine ✓`;
+          // Le texte se lit seul : l'étiquette des ronds (« 4 jours … sur 4 »)
+          // ne doit pas lui survivre quand la 5e séance arrive page ouverte.
+          zone.removeAttribute("aria-label");
         } else {
           const titre = document.createElement("span");
           titre.textContent = "Cette semaine";

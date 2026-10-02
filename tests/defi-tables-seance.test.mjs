@@ -449,6 +449,47 @@ test("la page : tout est derrière la clé ?seance=1 ; sans elle, l'accueil et l
   assert.match(html, /<button id="calculs-reviser" class="primary" type="button">/);
 });
 
+// Relecture de Code (02/10/2026) : la fonction de la page est EXÉCUTÉE avec un
+// faux DOM — un test sur le texte ne dirait rien de l'étiquette restée en place.
+test("« Cette semaine » : à la 5e séance, page ouverte, l'étiquette des ronds ne survit pas au texte", () => {
+  const debut = html.indexOf("function renderSemaine(etat) {");
+  const fin = html.indexOf("// [seance:fin]", debut);
+  assert.ok(debut > 0 && fin > debut, "renderSemaine introuvable dans la page");
+  const element = () => ({
+    attributs: {}, enfants: [], className: "", hidden: true, texte: "",
+    setAttribute(nom, valeur) { this.attributs[nom] = String(valeur); },
+    removeAttribute(nom) { delete this.attributs[nom]; },
+    getAttribute(nom) { return nom in this.attributs ? this.attributs[nom] : null; },
+    append(...enfants) { this.enfants.push(...enfants); },
+    replaceChildren() { this.enfants = []; this.texte = ""; },
+    set textContent(valeur) { this.enfants = []; this.texte = valeur; },
+    get textContent() { return this.texte + this.enfants.map(enfant => enfant.textContent).join(""); },
+    querySelector() { return null; }
+  });
+  const zones = {"acc-semaine": element(), "acc-jours": element(), "open-parcours": element()};
+  let semaine = 4;
+  const fabrique = new Function("$", "PARCOURS", "document", "pluriel", "PARCOURS_TABLES", "parcours",
+    `${html.slice(debut, fin)}\nreturn renderSemaine;`);
+  const renderSemaine = fabrique(
+    id => zones[id],
+    {bilanSeances: () => ({semaine, objectif: 4, aujourdhui: 1})},
+    {createElement: () => element()},
+    (nombre, mot) => `${nombre} ${mot}${nombre > 1 ? "s" : ""}`,
+    [2, 3, 4, 5, 6, 7, 8, 9, 10],
+    P.creerParcours()
+  );
+  const zone = zones["acc-semaine"];
+  renderSemaine({acquises: []});
+  assert.equal(zone.getAttribute("aria-label"), "Cette semaine : 4 jours avec une séance sur 4");
+  semaine = 5;
+  renderSemaine({acquises: []});
+  assert.equal(zone.textContent, "5 jours cette semaine ✓");
+  assert.equal(zone.getAttribute("aria-label"), null, "l'étiquette « 4 sur 4 » contredirait le texte lu");
+  semaine = 1; // lundi suivant : les ronds et leur étiquette reviennent
+  renderSemaine({acquises: []});
+  assert.equal(zone.getAttribute("aria-label"), "Cette semaine : 1 jour avec une séance sur 4");
+});
+
 test("le moteur a changé : nouveau numéro de cache, copie serveur identique, serveur qui accepte les nouvelles clés", () => {
   assert.match(html, /defi_tables_mon_parcours\.js\?v=20261002-1/);
   const moteur = readFileSync(new URL("../outils/calcul_mental/defi_tables_mon_parcours.js", import.meta.url));
