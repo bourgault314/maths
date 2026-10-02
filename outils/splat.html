@@ -844,6 +844,12 @@
   #eleveRappel .eleveRappelIndices{flex:1 1 auto;min-width:0}
   #eleveRappel .eleveRappelIndices p{margin:0;font-size:13.5px;font-weight:700;line-height:1.28;color:var(--ink)}
   #eleveRappel .eleveRappelIndices p+p{margin-top:4px}
+  /* Petit plateau pendant les étapes (02/10/2026) : le même ordre que la question — les phrases
+     en haut, puis le plateau et le TOTAL à sa droite, jamais collés (12 px) */
+  #eleveRappel.avecPlateau{flex-wrap:wrap;justify-content:center;row-gap:6px}
+  #eleveRappel.avecPlateau .eleveRappelIndices{order:-1;flex:1 1 100%}
+  #eleveRappelPlateau{order:0;flex:0 1 auto;display:block;height:78px;min-width:0;max-width:calc(100% - 96px)}
+  #eleveRappel.avecPlateau .eleveRappelTotal{order:1}
   /* Téléphone, question de l'Enquête (lot E7) : les phrases d'indice en HTML, en haut, sur
      toute la largeur ; le TOTAL à droite du plateau (2e colonne de #svgWrap), à 10 px */
   #eleveIndices{margin:4px 6px 8px}
@@ -13771,6 +13777,7 @@ function eleveDessinerSchema(card){
       }
       const res = eleveSchemaTelReserve;
       const h = eleveSchemaTelRendre(card, eleveSchemaEtape, largeur);
+      eleveRappelPlateau();
       svg.style.width = largeur + "px"; svg.style.height = h + "px";
       plateau.style.height = h + "px"; plateau.style.minHeight = h + "px";
       /* Le tableau suit le schéma ; la place qui manque aux étapes courtes passe
@@ -13889,6 +13896,42 @@ function eleveRappelAfficher(card){
   const phrasesHaut = document.getElementById("eleveIndices");
   if(phrasesHaut) phrasesHaut.remove();
   bandeau.innerHTML = eleveRappelHtml(card);
+}
+/* Téléphone, pendant les étapes (02/10/2026, remarque de Gwenaël : on ne voyait plus le plateau,
+   gênant avec des taches répétées de plusieurs couleurs) : le plateau de l'étape — hors champ, la
+   scène étant cadrée sur le schéma — est recopié en petit dans le bandeau, à gauche du TOTAL.
+   Copie du dessin seulement : les taches y sont couvertes ou dévoilées comme dans la scène. Sans
+   plateau à recopier (Système, carte sans plateau), le bandeau garde sa disposition d'avant. */
+const ELEVE_RAPPEL_PLATEAU_MARGE = 4;
+function eleveRappelPlateau(){
+  const bandeau = document.getElementById("eleveRappel");
+  if(!bandeau) return false;
+  try{
+    const vieux = document.getElementById("eleveRappelPlateau");
+    if(vieux) vieux.remove();
+    bandeau.classList.remove("avecPlateau");
+    const tray = document.getElementById("relationTrayScale");
+    if(!tray || !tray.parentNode) return false;
+    /* la boîte du plateau dans les unités de la scène (sa propre transformation comprise) */
+    const enveloppe = el("g");
+    tray.parentNode.insertBefore(enveloppe, tray);
+    enveloppe.appendChild(tray);
+    const bb = enveloppe.getBBox();
+    enveloppe.parentNode.insertBefore(tray, enveloppe);
+    enveloppe.remove();
+    if(!(bb.width > 0 && bb.height > 0)) return false;
+    const m = ELEVE_RAPPEL_PLATEAU_MARGE;
+    const petit = el("svg", { id:"eleveRappelPlateau", viewBox:`${bb.x - m} ${bb.y - m} ${bb.width + 2 * m} ${bb.height + 2 * m}`, "aria-hidden":"true" });
+    const copie = tray.cloneNode(true);
+    /* pas d'identifiant en double dans la page : la scène garde les siens */
+    copie.removeAttribute("id");
+    copie.querySelectorAll("[id]").forEach(n => n.removeAttribute("id"));
+    petit.appendChild(copie);
+    petit.style.width = Math.round(78 * (bb.width + 2 * m) / (bb.height + 2 * m)) + "px";
+    bandeau.insertBefore(petit, bandeau.firstChild);
+    bandeau.classList.add("avecPlateau");
+    return true;
+  }catch(_e){ return false; }
 }
 /* ===== Téléphone, question de l'Enquête : phrases lisibles, plateau remonté (lot E7) =====
    Le plateau dessiné pour l'écran fait ~1 590 unités de large parce que les phrases

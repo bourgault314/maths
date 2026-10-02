@@ -373,6 +373,8 @@ function harnaisTelephone({ hauteurs = { 1: 300, 2: 470, 3: 660 }, avant = 448, 
     ${fn("eleveDessinerSchema")}
     ${fn("eleveRappelHtml")}
     ${fn("eleveRappelAfficher")}
+    ${constLine("const ELEVE_RAPPEL_PLATEAU_MARGE = ")}
+    ${fn("eleveRappelPlateau")}
     ${fn("eleveSchemaReinitialiser")}
     const carte = { total: 27, _inv: { indices: ["Sous la tache rouge, il y a 9 jetons de moins que sous la tache bleue."] } };
     return {
@@ -655,4 +657,16 @@ test("centrage sûr : l'étiquette d'une case de tache réserve la place de la p
   // TOTAL et « visibles » n'ont pas de pastille : ni réserve ni marges automatiques
   assert.equal(decl("#elevePanel.enquete .eleveTacheNom"), "position:relative;margin:0;left:0;top:0");
   assert.doesNotMatch(fn("eleveCaseDonneeHtml"), /grise/, "les cases données ne sont jamais .grise");
+});
+
+test("téléphone, pendant les étapes : le petit plateau du bandeau (02/10/2026)", () => {
+  const dessiner = fn("eleveDessinerSchema");
+  assert.match(dessiner, /const h = eleveSchemaTelRendre\(card, eleveSchemaEtape, largeur\);\s*eleveRappelPlateau\(\);/, "le petit plateau est recopié après le rendu de l'étape, avant la mesure des boutons");
+  const f = fn("eleveRappelPlateau");
+  assert.match(f, /getElementById\("relationTrayScale"\)/);
+  assert.match(f, /cloneNode\(true\)/);
+  assert.match(f, /querySelectorAll\("\[id\]"\)\.forEach\(n => n\.removeAttribute\("id"\)\)/, "pas d'identifiant en double");
+  assert.match(html, /#eleveRappel\.avecPlateau \.eleveRappelIndices\{order:-1;flex:1 1 100%\}/, "les phrases en haut, comme sur la question");
+  assert.match(html, /#eleveRappel\.avecPlateau\{flex-wrap:wrap;justify-content:center;row-gap:6px\}/);
+  assert.match(html, /#eleveRappel\{display:flex;align-items:center;gap:12px/, "12 px entre le plateau et le TOTAL");
 });

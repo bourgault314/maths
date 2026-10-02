@@ -7,7 +7,9 @@
    - du premier à l'avant-dernier appui, le tableau est vidé (« ? ») et, sur ordinateur, aucune
      tache n'est dévoilée ; au dernier appui, la réponse revient et les taches se dévoilent ;
    - les boutons ne bougent pas d'un appui à l'autre, la page ne défile pas de côté ;
-   - rien du schéma ne sort à droite du plateau (téléphone : les lignes de calcul tiennent). */
+   - rien du schéma ne sort à droite du plateau (téléphone : les lignes de calcul tiennent) ;
+   - téléphone (02/10/2026) : à chaque appui, le petit plateau est dans le bandeau, sous les phrases,
+     à gauche du TOTAL sans le toucher, avec toutes les taches de la carte ; rien sur ordinateur. */
 const assert = require("node:assert/strict");
 const { chromium } = require("playwright");
 
@@ -37,7 +39,15 @@ const etat = () => {
     const r = t.getBoundingClientRect();
     if(r.width > 0) deborde = Math.max(deborde, Math.round(r.right - plateau.right));
   });
+  /* le petit plateau du bandeau (téléphone) */
+  const petit = document.getElementById("eleveRappelPlateau");
+  const boite = (n) => { const r = n.getBoundingClientRect(); return { g: r.left, d: r.right, h: r.top, b: r.bottom, l: r.width }; };
+  const total = document.querySelector("#eleveRappel .eleveRappelTotal");
+  const phrases = document.querySelector("#eleveRappel .eleveRappelIndices");
   return {
+    petit: petit ? { ...boite(petit), taches: petit.querySelectorAll("path").length, ids: petit.querySelectorAll("[id]").length } : null,
+    total: total ? boite(total) : null, phrasesBas: phrases ? phrases.getBoundingClientRect().bottom : null,
+    tachesCarte: (() => { const c = eleveSerie[eleveIdx]; return c && Array.isArray(c.hidden) ? c.hidden.length : 0; })(),
     haut: Math.round(actions.getBoundingClientRect().top + scrollY),
     valeurs: champs.map((c) => c.value),
     cache: document.getElementById("elevePanel").classList.contains("reponseCachee"),
@@ -85,6 +95,16 @@ const etat = () => {
         }else{
           assert.ok(!e.cache, `${ici} : le tableau reste vidé au dernier appui`);
           assert.deepEqual(e.valeurs, attendues, `${ici} : la réponse ne revient pas`);
+        }
+        if(f.isMobile){
+          assert.ok(e.petit, `${ici}, appui ${n} : pas de petit plateau dans le bandeau`);
+          assert.ok(e.petit.l >= 60 && e.petit.g >= 0 && e.total.d <= e.largeur, `${ici}, appui ${n} : le petit plateau ou le TOTAL sort de l'écran`);
+          assert.ok(e.total.g - e.petit.d >= 8, `${ici}, appui ${n} : le TOTAL est collé au plateau (${Math.round(e.total.g - e.petit.d)} px)`);
+          assert.ok(e.petit.h >= e.phrasesBas - 1, `${ici}, appui ${n} : le petit plateau n'est pas sous les phrases`);
+          assert.ok(e.petit.taches >= e.tachesCarte, `${ici}, appui ${n} : ${e.petit.taches} tache(s) dans le petit plateau pour ${e.tachesCarte}`);
+          assert.equal(e.petit.ids, 0, `${ici} : le petit plateau porte des identifiants en double`);
+        }else{
+          assert.equal(e.petit, null, `${ici} : un petit plateau sur ordinateur`);
         }
         controles++;
       }
