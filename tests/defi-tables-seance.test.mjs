@@ -449,6 +449,61 @@ test("la page : tout est derrière la clé ?seance=1 ; sans elle, l'accueil et l
   assert.match(html, /<button id="calculs-reviser" class="primary" type="button">/);
 });
 
+// Décision de Gwenaël (03/10/2026) : au bilan, une rangée entièrement vide n'est
+// pas montrée (les premiers jours, J'apprends ne remplit aucune case) ; elle
+// revient dès qu'une case est entourée. renderBilanSeance et rangeeDeTable,
+// extraites de la page, sont EXÉCUTÉES avec un faux DOM et le vrai moteur.
+test("le bilan de séance : pas de rangée tant qu'elle est entièrement vide, la rangée dès qu'une case est entourée", () => {
+  const extraire = (debut, fin) => {
+    const a = html.indexOf(debut);
+    const b = html.indexOf(fin, a);
+    assert.ok(a > 0 && b > a, `${debut} introuvable dans la page`);
+    return html.slice(a, b);
+  };
+  const code = extraire("function rangeeDeTable(table) {", "// L'écran entre deux étapes")
+    + extraire("function renderBilanSeance(zone) {", "// La table de la prochaine séance");
+  const element = (balise = "div") => ({
+    balise, attributs: {}, childNodes: [], className: "", hidden: true, texte: "",
+    classList: {remove() {}, add() {}},
+    setAttribute(nom, valeur) { this.attributs[nom] = String(valeur); },
+    removeAttribute(nom) { delete this.attributs[nom]; },
+    addEventListener() {},
+    append(...enfants) { this.childNodes.push(...enfants); },
+    replaceChildren() { this.childNodes = []; this.texte = ""; },
+    set textContent(valeur) { this.childNodes = []; this.texte = valeur; },
+    get textContent() { return this.texte + this.childNodes.map(enfant => enfant.textContent).join(""); }
+  });
+  const classes = noeud => [noeud.className, ...noeud.childNodes.flatMap(enfant => (enfant.childNodes ? classes(enfant) : []))];
+  const bilan = parcours => {
+    const ids = {};
+    const $ = id => (ids[id] ||= element());
+    const fabrique = new Function("$", "PARCOURS", "parcours", "seance", "document", "pluriel", "soude", "backToModes", "tableDeLaSeance", "commencerSeance",
+      `${code}\nreturn renderBilanSeance;`);
+    const renderBilanSeance = fabrique(
+      $, P, parcours,
+      {table: 2, faites: [{nom: "Les perles", juste: 11, total: 11, rate: false, reussi: null}]},
+      {createElement: balise => element(balise), createTextNode: texte => ({textContent: texte})},
+      (nombre, mot) => `${nombre} ${mot}${nombre > 1 ? "s" : ""}`,
+      texte => texte, () => {}, () => undefined, () => {}
+    );
+    const zone = element();
+    renderBilanSeance(zone);
+    return {zone, titre: $("result-title").textContent};
+  };
+  // Parcours vide : ni rangée, ni cadre ; les boutons viennent juste sous les étapes.
+  const vide = bilan(P.creerParcours());
+  assert.equal(vide.titre, "Séance du jour faite");
+  assert.ok(!classes(vide.zone).includes("rangee"), "une rangée entièrement vide n'est pas montrée au bilan");
+  assert.ok(!classes(vide.zone).includes("cadre"), "ni rangée ni phrase : pas de cadre vide");
+  assert.equal(vide.zone.childNodes[0].className, "boutons");
+  // Une case entourée (boîte 2) : la rangée est là.
+  const entouree = P.appliquerReponse(P.creerParcours(), "2-3", {correcte: true, date: "2026-10-05"}).parcours;
+  assert.equal(P.rangeeTable(entouree, 2).cases[2].etat, "entouree");
+  const avec = bilan(entouree);
+  assert.ok(classes(avec.zone).includes("cadre"));
+  assert.ok(classes(avec.zone).includes("rangee"), "dès qu'une case est entourée, la rangée revient au bilan");
+});
+
 // Relecture de Code (02/10/2026) : la fonction de la page est EXÉCUTÉE avec un
 // faux DOM — un test sur le texte ne dirait rien de l'étiquette restée en place.
 test("« Cette semaine » : à la 5e séance, page ouverte, l'étiquette des ronds ne survit pas au texte", () => {

@@ -6822,7 +6822,10 @@
         if (table !== null) {
           const cadre = document.createElement("div");
           cadre.className = "cadre";
-          cadre.append(rangeeDeTable(table));
+          // Une rangée entièrement vide n'est pas montrée au bilan (décision de Gwenaël, 03/10/2026) :
+          // les premiers jours d'une table, J'apprends ne remplit aucune case, et dix cases vides
+          // après une séance réussie tombaient à plat. Sur l'accueil, elle reste.
+          if (PARCOURS.rangeeTable(parcours, table).cases.some(item => item.etat !== "vide")) cadre.append(rangeeDeTable(table));
           const demain = PARCOURS.agendaCalculs(parcours).demain;
           if (demain) {
             const phrase = document.createElement("p");
@@ -6831,7 +6834,8 @@
             phrase.append(document.createTextNode("Demain\u00a0: "), nombre, document.createTextNode(` t’attend${demain > 1 ? "ent" : ""}.`));
             cadre.append(phrase);
           }
-          zone.append(cadre);
+          // Ni rangée ni phrase : pas de cadre vide.
+          if (cadre.childNodes.length) zone.append(cadre);
         }
         const boutons = document.createElement("div");
         boutons.className = "boutons";
