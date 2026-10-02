@@ -138,7 +138,7 @@ test("hors Système : rien (Enquête, monde 2, carte D sans plan, valeur nulle)"
   assert.deepEqual(sys.tableau(enq), { tasks: 2, valeurs: [10, 5], visibleSum: 0, ordre: [0, 1] });
 });
 
-test("les cases : largeur égale, mini-tache à la couleur + nom, « ? » ; les jetons visibles donnés ; TOTAL « ? » pour Trois paires", () => {
+test("les cases : largeur égale, mini-tache à la couleur + nom, « ? » ; les jetons visibles à remplir ; TOTAL « ? » pour Trois paires", () => {
   const coef = CARTES.find((c) => c._sys.geste === "COEF" && c.hidden.length === 4 && c.visible.length === 0);
   const i = sys.infos(coef);
   const cases = casesDe(sys.bas(coef, i));
@@ -152,8 +152,9 @@ test("les cases : largeur égale, mini-tache à la couleur + nom, « ? » ; les 
   });
   const vis = CARTES.find((c) => c.visible.length >= 2);
   const cv = casesDe(sys.bas(vis, sys.infos(vis)));
-  assert.equal(cv[0].classes, "blanche donnee", "les jetons visibles : case donnée, avant les couleurs");
-  assert.match(cv[0].contenu, new RegExp(`>${vis.visible.reduce((s, v) => s + v, 0)}<`));
+  assert.equal(cv[0].classes, "blanche", "les jetons visibles : case à remplir (02/10/2026), avant les couleurs");
+  assert.equal(cv[0].attendu, String(vis.visible.reduce((s, v) => s + v, 0)));
+  assert.match(cv[0].contenu, /<span>visibles<\/span><\/span><input class="eleveChamp"/);
   assert.equal(cv.length, 1 + vis._sys.colors.length);
   // Trois paires : total du plateau principal caché
   const trois = CARTES.find((c) => c._sys.geste === "TROIS");

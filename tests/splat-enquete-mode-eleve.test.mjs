@@ -92,16 +92,17 @@ test("dans chaque case : la mini-tache À SA COULEUR et le nom de la couleur", (
   assert.match(cases.mini, /fill="#111827"/, "la mini-tache du monde 2 reste noire");
 });
 
-test("le total et les jetons visibles sont donnés : pas de champ, la validation les ignore", () => {
+test("le total est donné (pas de champ) ; les jetons visibles se remplissent, case vide sans « ? » (02/10/2026)", () => {
   const carte = carteC({ hidden: [9, 5, 17], colors: ["purple", "blue", "black"], visible: [3, 4], cx: [400, 800, 1200] });
   const infos = cases.infos(carte);
   assert.equal(infos.visibleSum, 7);
   const c = casesDe(cases.bas(carte, infos));
   assert.equal(c.length, 4);
-  assert.equal(c[0].classes, "blanche donnee");
-  assert.equal(c[0].attendu, undefined, "rien à vérifier");
-  assert.doesNotMatch(c[0].contenu, /eleveChamp/);
-  assert.match(c[0].contenu, /<span class="eleveTacheNom"><span>visibles<\/span><\/span><span class="eleveDonneeVal">7<\/span>/);
+  assert.equal(c[0].classes, "blanche", "plus une case donnée");
+  assert.equal(c[0].attendu, "7", "la somme des jetons visibles est vérifiée");
+  assert.equal(c[0].style, "flex:1 1 0");
+  assert.match(c[0].contenu, /<span class="eleveTacheNom"><span>visibles<\/span><\/span><input class="eleveChamp"/);
+  assert.doesNotMatch(c[0].contenu, /placeholder|eleveDonneeVal|>7</, "case vide : ni « ? » ni la réponse");
   const total = casesDe(cases.donnee("haut blanche", "Total", 38))[0];
   assert.equal(total.classes, "haut blanche donnee");
   assert.doesNotMatch(total.contenu, /eleveChamp/);
@@ -197,14 +198,14 @@ function harnaisSchema(){
   return { ctx, boutons, valider, suivant };
 }
 
-test("après validation : un bouton jaune « Voir le schéma », une seule fois, pour l'Enquête seulement", () => {
+test("après validation : un bouton jaune « Voir la correction » (ex-« Voir le schéma »), une seule fois, pour l'Enquête seulement", () => {
   const h = harnaisSchema();
   h.ctx.proposer(h.valider);
   h.ctx.proposer(h.valider);
   assert.equal(h.boutons.length, 1, "un seul bouton même si on le propose deux fois (réussite puis réponse montrée)");
   assert.equal(h.boutons[0].id, "eleveSchema");
   assert.equal(h.boutons[0].className, "secondaire", "le jaune de « Voir la réponse »");
-  assert.equal(h.boutons[0].textContent, "Voir le schéma");
+  assert.equal(h.boutons[0].textContent, "Voir la correction");
   assert.equal(h.boutons[0].type, "button");
   assert.equal(h.valider.hidden, true, "le Valider éteint s'efface");
   const m = harnaisSchema(); m.ctx.monde2(); m.ctx.proposer(m.valider);
@@ -632,7 +633,7 @@ test("le Valider éteint s'efface pour laisser « Voir le schéma » et « Carte
   assert.match(decl("#elevePanel.enquete input.eleveChamp"), /^height:auto;flex:0 0 auto;/, "le champ ne prend plus toute la hauteur de la case");
   assert.equal(decl("#elevePanel.enquete .eleveCase.ko"), "background:#fee2e2", "case fausse : toute la case rougit, pas seulement le champ");
   assert.equal(decl(".eleveCase.haut.donnee"), "color:#111", "le total en noir, comme sur les fiches");
-  assert.match(decl(".eleveCase.blanche.donnee .eleveTacheNom"), /#1d4ed8/, "« visibles » en bleu");
+  assert.match(decl(".eleveCase.blanche.donnee .eleveTacheNom, .ligneBas .eleveCase.blanche .eleveTacheNom"), /#1d4ed8/, "« visibles » en bleu");
   assert.deepEqual(r.filter((x) => /eleveTacheNom|eleveTacheCouleur|donnee/.test(x.sel) && /padding-(top|left)|text-indent/.test(x.decl)), [], "rien ne décale les chiffres");
 });
 
@@ -669,4 +670,12 @@ test("téléphone, pendant les étapes : le petit plateau du bandeau (02/10/2026
   assert.match(html, /#eleveRappel\.avecPlateau \.eleveRappelIndices\{order:-1;flex:1 1 100%\}/, "les phrases en haut, comme sur la question");
   assert.match(html, /#eleveRappel\.avecPlateau\{flex-wrap:wrap;justify-content:center;row-gap:6px\}/);
   assert.match(html, /#eleveRappel\{display:flex;align-items:center;gap:12px/, "12 px entre le plateau et le TOTAL");
+});
+
+test("téléphone : la case vide du total reste dans le cadre (02/10/2026)", () => {
+  const acc = fn("enqueteAccolade");
+  assert.match(acc, /function enqueteAccolade\(g, x, y1, y2, P, label, vide, droiteMax\)/);
+  assert.match(acc, /const place = Number\.isFinite\(droiteMax\) \? Math\.max\(0, droiteMax - \(x \+ w \+ P\.braceGap\)\) : 1e9;/);
+  assert.match(acc, /enqueteLargeurCaseVide\(label, P\.totalFont, P, place\)/);
+  assert.match(fn("drawEnqueteBarres"), /enqueteAccolade\(g, xMax \+ P\.braceGap, rowsTop, rowsBottom, P, M\.totalTxt, !!modele\.vide, P\.portrait \? x0 \+ largeur : undefined\)/, "au téléphone seulement : papier, projection et ordinateur ne bougent pas");
 });

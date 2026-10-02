@@ -9,12 +9,15 @@
    - les boutons ne bougent pas d'un appui à l'autre, la page ne défile pas de côté ;
    - rien du schéma ne sort à droite du plateau (téléphone : les lignes de calcul tiennent) ;
    - téléphone (02/10/2026) : à chaque appui, le petit plateau est dans le bandeau, sous les phrases,
+     aucun trait du schéma ne touche le cadre de l'étape,
      à gauche du TOTAL sans le toucher, avec toutes les taches de la carte ; rien sur ordinateur. */
 const assert = require("node:assert/strict");
 const { chromium } = require("playwright");
 
 const BASE = (process.env.MATHSGO_URL ?? "http://127.0.0.1:4173").replace(/\/$/, "");
 const ADRESSES = {
+  /* 31 = 20 + 11 : les barres prennent toute la largeur, la case vide du total mordait sur le cadre au téléphone */
+  "10 barres pleine largeur": "mode=C&clues=SENTENCE&splats=2&mul=0&div=0&add=1&sub=0&deltaMax=15&visibleMin=0&visibleMax=0&totalMin=20&totalMax=50&seed=17",
   "10 de plus que": "mode=C&clues=SENTENCE&splats=2&mul=0&div=0&add=1&sub=0&deltaMax=15&visibleMin=0&visibleMax=0&totalMin=20&totalMax=50&seed=51",
   "13 une référence": "mode=C&clues=SENTENCE&splats=3&structure=REF&ordre=DESSIN&mul=0&div=0&add=1&sub=1&deltaMax=12&visibleMin=0&visibleMax=0&totalMin=20&totalMax=50&seed=1184",
   "21d répétées trois couleurs": "mode=C&clues=SENTENCE&splats=3&structure=HASARD&repeat=3&mul=1&div=1&add=1&sub=1&deltaMax=15&visibleMin=0&visibleMax=0&totalMin=30&totalMax=80&seed=10273",
@@ -47,6 +50,16 @@ const etat = () => {
   return {
     petit: petit ? { ...boite(petit), taches: petit.querySelectorAll("path").length, ids: petit.querySelectorAll("[id]").length } : null,
     total: total ? boite(total) : null, phrasesBas: phrases ? phrases.getBoundingClientRect().bottom : null,
+    /* de combien un trait du schéma sort du cadre de l'étape, à droite (la case vide du total) */
+    horsCadre: (() => {
+      const cadre = document.querySelector("#enqueteBarres, #enqueteLigne, #enqueteCalculs");
+      const bord = cadre && cadre.querySelector("rect");
+      if(!bord) return 0;
+      const limite = bord.getBoundingClientRect().right;
+      let d = -1e9;
+      cadre.querySelectorAll("rect, path, text").forEach((n) => { if(n !== bord){ const r = n.getBoundingClientRect(); if(r.width > 0) d = Math.max(d, r.right - limite); } });
+      return Math.round(d);
+    })(),
     tachesCarte: (() => { const c = eleveSerie[eleveIdx]; return c && Array.isArray(c.hidden) ? c.hidden.length : 0; })(),
     haut: Math.round(actions.getBoundingClientRect().top + scrollY),
     valeurs: champs.map((c) => c.value),
@@ -102,6 +115,7 @@ const etat = () => {
           assert.ok(e.total.g - e.petit.d >= 8, `${ici}, appui ${n} : le TOTAL est collé au plateau (${Math.round(e.total.g - e.petit.d)} px)`);
           assert.ok(e.petit.h >= e.phrasesBas - 1, `${ici}, appui ${n} : le petit plateau n'est pas sous les phrases`);
           assert.ok(e.petit.taches >= e.tachesCarte, `${ici}, appui ${n} : ${e.petit.taches} tache(s) dans le petit plateau pour ${e.tachesCarte}`);
+          assert.ok(e.horsCadre < 0, `${ici}, appui ${n} : un trait du schéma touche ou dépasse le cadre (${e.horsCadre} px)`);
           assert.equal(e.petit.ids, 0, `${ici} : le petit plateau porte des identifiants en double`);
         }else{
           assert.equal(e.petit, null, `${ici} : un petit plateau sur ordinateur`);
