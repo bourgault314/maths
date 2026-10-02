@@ -9861,10 +9861,22 @@
   }
 
   function eleveSauverEnCours(){
-    if(eleveRejeu) return;
     const suivante = eleveIdx + 1;
-    if(suivante < eleveEqs.length){
-      eleveEcrireEntree({ enCours:{ sig:eleveSignatureSerie(), idx:suivante, resolues:eleveResolues, res:eleveRes.slice(0, suivante) } });
+    /* dernière équation jouée, ou équation rouge rejouée : la série est finie */
+    if(eleveRejeu || suivante >= eleveEqs.length){ eleveSauverFinDeSerie(); return; }
+    eleveEcrireEntree({ enCours:{ sig:eleveSignatureSerie(), idx:suivante, resolues:eleveResolues, res:eleveRes.slice(0, suivante) } });
+  }
+  /* Série finie, enregistrée tout de suite (02/10/2026) : l'élève qui quitte là ne
+     repart pas de l'équation 1. Tout vert : l'étoile s'allume. Des rouges : il revient
+     sur « Encore N équations ! », avec ses pastilles (celles déjà rejouées comptent). */
+  function eleveSauverFinDeSerie(){
+    const total = eleveEqs.length;
+    const res = Array.from({ length: total }, (_, i) => eleveRes[i] === true ? true : (eleveRes[i] === "ko" ? "ko" : null));
+    const vertes = res.filter(r => r === true).length;
+    if(vertes === total){
+      eleveEcrireEntree({ fait:true, etoiles:vertes, cartes:total, date:new Date().toISOString().slice(0,10) });
+    }else{
+      eleveEcrireEntree({ enCours:{ sig:eleveSignatureSerie(), idx:total, resolues:eleveResolues, res:res } });
     }
   }
 
@@ -9884,6 +9896,22 @@
     document.body.classList.add("eleveMode");
     const entree = eleveLireEntree();
     let reprise = "";
+    /* idx = nombre d'équations : série finie avec des rouges, retour sur
+       « Encore N équations ! » (02/10/2026) */
+    const finAvecRouges = !!(entree && entree.enCours && entree.enCours.sig === eleveSignatureSerie() &&
+       entree.enCours.idx === eleveEqs.length && Array.isArray(entree.enCours.res) &&
+       entree.enCours.res.length === eleveEqs.length && entree.enCours.res.some(r => r !== true));
+    if(finAvecRouges){
+      eleveRes = entree.enCours.res.map(r => r === true ? true : (r === "ko" ? "ko" : undefined));
+      eleveResolues = Number(entree.enCours.resolues) || 0;
+      eleveIdx = eleveEqs.length - 1; /* la dernière équation reste dessous, comme en fin de série */
+      const okFin = eleveChargerEquation();
+      eleveCompteeCourante = true; /* rien à surveiller ni à passer sous l'écran de fin */
+      if(elevePasserTimer) window.clearTimeout(elevePasserTimer);
+      window.setInterval(eleveSurveillerResolution, 400);
+      eleveFinDeSerie();
+      return okFin;
+    }
     if(entree && entree.enCours && entree.enCours.sig === eleveSignatureSerie() &&
        Number.isInteger(entree.enCours.idx) && entree.enCours.idx > 0 && entree.enCours.idx < eleveEqs.length){
       eleveIdx = entree.enCours.idx;
@@ -9958,7 +9986,7 @@
     const voile = document.createElement("div");
     voile.className = "eleveVoile";
     if(rouges.length){
-      eleveEcrireEntree({}); /* le suivi « en cours » s'efface, l'étoile attend */
+      eleveSauverFinDeSerie(); /* au retour, l'élève revient sur cet écran */
       const nbR = rouges.length, plR = nbR > 1 ? "s" : "";
       voile.innerHTML = `<div class="eleveCarton">` +
         (eleveParcours ? `<div class="finEtoile">\u2b50</div>` : ``) +

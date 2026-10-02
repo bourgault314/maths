@@ -13394,9 +13394,12 @@ function renderEleveSplat(){
         /* la reprise ne vaut que pour la série qui l'a écrite : même adresse
            ?parcours=, mais des cartes différentes d'un livret à l'autre ; une
            sauvegarde d'avant l'empreinte n'est pas reprise (l'étoile, elle, reste) */
+        /* idx = nombre de cartes : série finie avec des cartes rouges, retour sur
+           « Encore N cartes ! » (02/10/2026) */
         if(entree && entree.enCours && entree.enCours.sig === eleveSignatureSerie() &&
            Number.isInteger(entree.enCours.idx) &&
-           entree.enCours.idx > 0 && entree.enCours.idx < eleveSerie.length){
+           entree.enCours.idx > 0 && (entree.enCours.idx < eleveSerie.length ||
+             (entree.enCours.idx === eleveSerie.length && Array.isArray(entree.enCours.res) && entree.enCours.res.includes("ko")))){
           eleveIdx = entree.enCours.idx;
           eleveEtoiles = Number(entree.enCours.etoiles) || 0;
           /* reprise : le détail par carte est mémorisé, sinon pastilles grises */
@@ -14059,11 +14062,29 @@ function eleveSignatureSerie(){
 /* Sauvegarde « en cours » : l'empreinte de la série, l'indice de la prochaine
    carte + le détail des pastilles. */
 function eleveSauverEnCours(){
-  if(!parcoursId || eleveRejeu) return;
-  if(eleveIdx + 1 >= eleveSerie.length) return; /* la fin de série gère l'enregistrement */
+  if(!parcoursId) return;
+  /* dernière carte jouée, ou carte rouge rejouée : la série est finie */
+  if(eleveRejeu || eleveIdx + 1 >= eleveSerie.length){ eleveSauverFinDeSerie(); return; }
   try{
     const tout = JSON.parse(localStorage.getItem(ELEVE_STORE_KEY) || "{}");
     tout[parcoursId] = Object.assign({}, tout[parcoursId] || {}, { enCours: { sig: eleveSignatureSerie(), idx: eleveIdx + 1, etoiles: eleveEtoiles, res: eleveResultats.slice(0, eleveIdx + 1) } });
+    localStorage.setItem(ELEVE_STORE_KEY, JSON.stringify(tout));
+  }catch(_e){ /* stockage indisponible */ }
+}
+
+/* Série finie (dernière carte jouée, ou carte rouge rejouée), enregistrée tout de
+   suite, sans attendre « Carte suivante » (02/10/2026) : l'élève qui quitte là ne
+   repart pas de la carte 1. Tout vert : l'étoile s'allume. Des cartes rouges : il
+   revient sur « Encore N cartes ! », avec ses pastilles (celles déjà rejouées comptent). */
+function eleveSauverFinDeSerie(){
+  if(!parcoursId) return;
+  const total = eleveSerie.length;
+  const res = Array.from({ length: total }, (_, i) => eleveResultats[i] === undefined ? null : eleveResultats[i]);
+  const vertes = res.filter(r => r === true).length;
+  if(!res.includes("ko")){ eleveEnregistrerReussite(vertes, total); return; }
+  try{
+    const tout = JSON.parse(localStorage.getItem(ELEVE_STORE_KEY) || "{}");
+    tout[parcoursId] = Object.assign({}, tout[parcoursId] || {}, { enCours: { sig: eleveSignatureSerie(), idx: total, etoiles: vertes, res: res } });
     localStorage.setItem(ELEVE_STORE_KEY, JSON.stringify(tout));
   }catch(_e){ /* stockage indisponible */ }
 }
@@ -14148,10 +14169,7 @@ function renderEleveFinSplat(panneau){
   eleveCadrerScene(); /* le cadrage de la carte, pas celui du schéma resté affiché (Enquête) */
   if(rouges.length){
     /* des cartes rouges : pas d'étoile, on propose de les rejouer */
-    try{
-      const tout = JSON.parse(localStorage.getItem(ELEVE_STORE_KEY) || "{}");
-      if(parcoursId && tout[parcoursId] && tout[parcoursId].enCours){ delete tout[parcoursId].enCours; localStorage.setItem(ELEVE_STORE_KEY, JSON.stringify(tout)); }
-    }catch(_e){ /* stockage indisponible */ }
+    eleveSauverFinDeSerie(); /* au retour, l'élève revient sur cet écran */
     const nbR = rouges.length, plR = nbR > 1 ? "s" : "";
     panneau.innerHTML = `<div class="eleveFin">` +
       (parcoursId ? `<div class="finEtoile">\u2b50</div>` : ``) +
