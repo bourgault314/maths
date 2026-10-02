@@ -14089,6 +14089,17 @@ function eleveSauverFinDeSerie(){
   }catch(_e){ /* stockage indisponible */ }
 }
 
+/* « Rejouer toute la série » : l'élève repart de zéro, la sauvegarde « en cours »
+   s'efface (l'étoile, elle, reste) ; s'il ferme avant de répondre à la carte 1, il
+   revient sur la carte 1, comme dans ÉquaSplat (décision de Gwenaël, 03/10/2026). */
+function eleveEffacerEnCours(){
+  if(!parcoursId) return;
+  try{
+    const tout = JSON.parse(localStorage.getItem(ELEVE_STORE_KEY) || "{}");
+    if(tout[parcoursId] && tout[parcoursId].enCours){ delete tout[parcoursId].enCours; localStorage.setItem(ELEVE_STORE_KEY, JSON.stringify(tout)); }
+  }catch(_e){ /* stockage indisponible */ }
+}
+
 /* Carte suivante : dans l'ordre, ou la prochaine carte rouge quand on les rejoue. */
 function eleveCarteSuivante(){
   if(eleveRejeu){
@@ -14200,7 +14211,7 @@ function renderEleveFinSplat(panneau){
     const suivante = document.getElementById("eleveEtapeSuivante");
     if(suivante) suivante.onclick = () => { window.location.href = suite.href; };
   }
-  document.getElementById("eleveRejouer").onclick = () => { eleveIdx = 0; eleveEtoiles = 0; eleveSerie = []; eleveResultats = []; eleveRejeu = null; renderEleveSplat(); };
+  document.getElementById("eleveRejouer").onclick = () => { eleveEffacerEnCours(); eleveIdx = 0; eleveEtoiles = 0; eleveSerie = []; eleveResultats = []; eleveRejeu = null; renderEleveSplat(); };
 }
 
 if(!loadSharedConfiguration()){

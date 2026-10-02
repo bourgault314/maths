@@ -118,3 +118,21 @@ test("equasplat.html : la dernière rouge résolue au rejeu → l'étoile", () =
 test("equasplat.html : au milieu de la série, rien ne change", () => {
   assert.deepEqual(sauverEqua({ idx: 0, res: [true] }).enCours, { sig: "SIG", idx: 1, resolues: 0, res: [true] });
 });
+
+/* ---------- « Rejouer toute la série » : retour sur la carte 1 partout (03/10/2026) ---------- */
+for (const [nom, fichier, fin] of [["splat.html", "outils/splat.html", "renderEleveFinSplat"], ["splat_tache_barre.html", "outils/splat_tache_barre.html", "renderEleveFin"]]) {
+  const page = lire(fichier);
+  test(`${nom} : « Rejouer toute la série » efface la sauvegarde « en cours », l'étoile reste`, () => {
+    const store = stockage({ p: { fait: true, etoiles: 4, cartes: 4, enCours: { sig: "SIG", idx: 4, etoiles: 2, res: [true, "ko", true, "ko"] } } });
+    new Function("localStorage", `
+      const ELEVE_STORE_KEY = "${CLE}", parcoursId = "p";
+      ${source(page, "eleveEffacerEnCours")}
+      eleveEffacerEnCours();`)(store);
+    assert.deepEqual(store.lire().p, { fait: true, etoiles: 4, cartes: 4 });
+    assert.match(source(page, fin), /getElementById\(["']eleveRejouer["']\)\.onclick = \(\) => \{ eleveEffacerEnCours\(\);/);
+  });
+}
+test("equasplat.html : « Rejouer toute la série » efface déjà la sauvegarde (référence des deux autres)", () => {
+  const f = source(equa, "eleveFinDeSerie", "  ");
+  assert.match(f, /#eleveRejouer"\)\.addEventListener\("click", \(\) => \{[\s\S]*?eleveEcrireEntree\(\{\}\);/);
+});
