@@ -139,17 +139,19 @@ test("les cartes : un PDF de 2 pages par table de 2 à 10, un PDF de 18 pages po
   const png = await stat(new URL(vignette, racine));
   const webp = await stat(new URL(vignette.replace(/\.png$/, ".webp"), racine));
   assert.ok(webp.size < png.size, "la webp est plus légère que la png");
-  assert.match(cataloguePage, /catalogue-refonte-data\.js\?v=livrets-splat-miniature-20261001-1/, "le cache-buster du catalogue suit");
+  assert.match(cataloguePage, /catalogue-refonte-data\.js\?v=fiche-tables-20261001-1/, "le cache-buster du catalogue suit");
 });
 
 test("la feuille des tables (PDF) décrit le parcours réel et la révision du jour (A21)", async () => {
-  const source = await readFile(new URL("_sources/defi-tables/generer_pdf.py", racine), "utf8");
+  // Lot 5 de l'audit (01/10/2026) : la fiche est dessinée par
+  // generer_fiche_tables.py ; generer_pdf.py (lancé par la publication) l'appelle.
+  const source = await readFile(new URL("_sources/defi-tables/generer_fiche_tables.py", racine), "utf8");
   assert.match(source, /GUIDE_TEXT = "Suis le parcours : J’apprends  →  Je m’entraîne  →  Je valide ma table\."/);
   assert.match(source, /GUIDE_TEXT_2 = "Puis, chaque jour, fais Mes calculs du jour : les calculs qui reviennent\."/);
   assert.doesNotMatch(source, /Je deviens expert/);
-  assert.match(source, /page\.drawString\(37\.0, 721\.0, GUIDE_TEXT\)\s*\n\s*page\.drawString\(37\.0, 709\.5, GUIDE_TEXT_2\)/);
-  const docxSource = await readFile(new URL("_sources/defi-tables/generer_fiche_tables.py", racine), "utf8");
-  assert.doesNotMatch(docxSource, /Je deviens expert/);
+  assert.match(source, /pdf\.drawString\(margin \+ 4 \* mm, guide_y \+ guide_h - 10 \* mm, GUIDE_TEXT\)\s*\n\s*pdf\.drawString\(margin \+ 4 \* mm, guide_y \+ guide_h - 14\.2 \* mm, GUIDE_TEXT_2\)/);
+  const publication = await readFile(new URL("_sources/defi-tables/generer_pdf.py", racine), "utf8");
+  assert.match(publication, /from generer_fiche_tables import OUTPUT_PDF, build_pdf/);
   // Le PDF publié a bien été régénéré après ce texte (sa date de production).
   const pdf = await readFile(new URL("outils/calcul_mental/fiche_tables_multiplication.pdf", racine));
   assert.equal(pdf.subarray(0, 5).toString(), "%PDF-");
