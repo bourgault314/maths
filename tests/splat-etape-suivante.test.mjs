@@ -139,7 +139,8 @@ function finSplat({ parcours, resultats, avecModule = true }) {
     let parcoursId = ${JSON.stringify(parcours)}, eleveSerie = resultats.map(() => ({})), eleveResultats = resultats,
         eleveEtoiles = 0, eleveEnqueteDevoile = true, eleveSchemaEtape = 1, eleveIndicesTel = true, eleveRejeu = null, eleveIdx = 0;
     const renderCard = () => {}, eleveCadrerScene = () => {}, eleveIndicesAfficher = () => {}, elevePastillesHtml = () => "",
-          eleveEnregistrerReussite = () => {}, renderEleveSplat = () => {}, eleveCarteSuivante = () => {};
+          eleveEnregistrerReussite = () => {}, renderEleveSplat = () => {}, eleveCarteSuivante = () => {},
+          eleveSauverFinDeSerie = () => {};
     ${source(splat, "eleveEtapeSuivante")}
     ${source(splat, "eleveLienMondesHtml")}
     ${source(splat, "renderEleveFinSplat")}
@@ -156,7 +157,8 @@ function finPetit({ parcours, resultats, avecModule = true }) {
     const ELEVE_URL_MONDES = "${URL_CARTE}", ELEVE_STORE_KEY = "mathsgo-splat-parcours";
     let parcoursId = ${JSON.stringify(parcours)}, eleveSerie = resultats.map(() => ({})), eleveResultats = resultats,
         eleveEtoiles = 0, eleveRejeu = null, eleveIdx = 0;
-    const elevePastillesHtml = () => "", eleveEnregistrerReussite = () => {}, renderEleve = () => {}, eleveCarteSuivante = () => {};
+    const elevePastillesHtml = () => "", eleveEnregistrerReussite = () => {}, renderEleve = () => {}, eleveCarteSuivante = () => {},
+          eleveSauverFinDeSerie = () => {};
     ${source(petit, "eleveEtapeSuivante")}
     ${source(petit, "eleveLienMondesHtml")}
     ${source(petit, "renderEleveFin")}
@@ -173,7 +175,8 @@ function finEqua({ parcours, resultats, avecModule = true }) {
     const ELEVE_URL_MONDES = "${URL_CARTE}";
     let eleveParcours = ${JSON.stringify(parcours)}, eleveEqs = resultats.map(() => ({})), eleveRes = resultats,
         eleveRejeu = null, eleveIdx = 0, eleveAttenteSuivante = false, eleveResolues = 0;
-    const eleveEcrireEntree = () => {}, eleveMajBarre = () => {}, eleveEquationSuivante = () => {}, eleveChargerEquation = () => {};
+    const eleveEcrireEntree = () => {}, eleveMajBarre = () => {}, eleveEquationSuivante = () => {}, eleveChargerEquation = () => {},
+          eleveSauverFinDeSerie = () => {};
     ${source(equa, "eleveEtapeSuivante", "  ")}
     ${source(equa, "eleveLienMondesHtml", "  ")}
     ${source(equa, "eleveFinDeSerie", "  ")}
