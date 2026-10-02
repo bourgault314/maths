@@ -666,9 +666,9 @@ test("lot 2a : la page — premier écran, Mon parcours, notice, séance des 9 t
   // « Changer de table » ouvert : seules les tables, à toutes les largeurs.
   assert.match(html, /body\.avec-seance \.acc\.choix-ouvert > :not\(\.matable\),\s*body\.avec-seance \.acc\.choix-ouvert #acc-etapes,\s*body\.avec-seance \.acc\.choix-ouvert #acc-lire \{ display: none; \}/);
   // Le premier écran : seulement pour un parcours vide, fermé pour l'onglet.
-  assert.match(html, /decouverteOuverte = !fermee && PARCOURS\.estVide\(parcours\);/);
+  assert.match(html, /return !fermee && \(decouverteEngagee \|\| PARCOURS\.estVide\(parcours\)\);/);
   assert.match(html, /const decouverte = avecSeance && enDecouverte\(\);/, "avec la clé seulement");
-  assert.match(html, /launchFromParcours\(PARCOURS\.configValidation\(candidate\), "decouverte"\)/);
+  assert.match(html, /decouverteEngagee = true;\s*launchFromParcours\(PARCOURS\.configValidation\(candidate\), "decouverte"\)/);
   assert.match(html, /\{correct: state\.correct, total: TOTAL, decouverte: state\.origin === "decouverte"\}/);
   assert.match(html, /`Non, je commence par la table de \$\{suivante\}`/);
   assert.match(html, /parcours = PARCOURS\.commencerApresDecouverte\(parcours, table\);\s*sauverParcours\(\);\s*ecrireTableChoisie\(table\);\s*fermerDecouverte\(\);/);
@@ -686,4 +686,49 @@ test("lot 2a : la page — premier écran, Mon parcours, notice, séance des 9 t
   assert.doesNotMatch(notice, /les deux à la fois|je m’entraîne 3 fois/i);
   assert.match(html, /const modele = \$\(SEANCE \? "notice-seance" : "notice-regles"\);/);
   assert.match(html, /<template id="notice-regles">\s*<p><b>Ma table\.<\/b> J’apprends si je veux, je m’entraîne 3 fois/, "sans la clé, la notice d'avant");
+});
+
+// Relecture de Code (03/10/2026), vue au navigateur : avec un code, l'accueil
+// est dessiné AVANT que le serveur rende le parcours. Sur un appareil neuf, la
+// case est vide à cet instant ; le lot livré figeait alors « premier écran » et
+// Léa (3 tables acquises) restait sur « Tu connais déjà des tables ? », sans
+// Mon parcours. La fonction de la page est EXÉCUTÉE, pas lue.
+test("lot 2a : le premier écran suit le parcours rendu par le serveur — il ne reste ouvert que si l'élève y a tenté une table", () => {
+  const debut = html.indexOf('const CLE_DECOUVERTE = "mathsgo-defi-tables-decouverte";');
+  const fin = html.indexOf("function renderDecouverte(etapes, etat) {", debut);
+  assert.ok(debut > 0 && fin > debut, "enDecouverte introuvable dans la page");
+  const onglet = new Map();
+  const stockageSession = () => ({getItem: cle => (onglet.has(cle) ? onglet.get(cle) : null), setItem: (cle, valeur) => onglet.set(cle, valeur)});
+  const fabrique = new Function("PARCOURS", "stockageSession", "etat",
+    `let parcours = etat.parcours; let codeSuivi = etat.code;
+     ${html.slice(debut, fin)}
+     return {
+       enDecouverte() { parcours = etat.parcours; codeSuivi = etat.code; return enDecouverte(); },
+       fermerDecouverte,
+       tenter() { decouverteEngagee = true; }
+     };`);
+  const vide = P.creerParcours();
+  let lea = P.creerParcours();
+  [2, 5, 10].forEach(table => { lea.tables[table].acquise = "2026-10-02"; });
+  lea = P.normaliserParcours(lea);
+
+  // Appareil neuf : vide au premier dessin, puis le serveur rend le parcours de Léa.
+  const etat = {parcours: vide, code: "ABCDEF"};
+  const page = fabrique(P, stockageSession, etat);
+  assert.equal(page.enDecouverte(), true, "case vide au premier dessin : l'écran s'affiche");
+  etat.parcours = P.fusionner(vide, lea);
+  assert.equal(page.enDecouverte(), false, "le serveur a rendu ses 3 tables : l'accueil de sa table, plus le premier écran");
+
+  // Élève vraiment neuf qui valide la 2 sur l'écran : il reste ouvert…
+  const neuf = {parcours: vide, code: "GHIJKL"};
+  const autre = fabrique(P, stockageSession, neuf);
+  assert.equal(autre.enDecouverte(), true);
+  autre.tenter();
+  neuf.parcours = lea;
+  assert.equal(autre.enDecouverte(), true, "une table tentée sur l'écran : il reste ouvert pour la suivante");
+  // … jusqu'à « C'est tout », pour l'onglet.
+  autre.fermerDecouverte();
+  assert.equal(autre.enDecouverte(), false);
+  neuf.parcours = vide;
+  assert.equal(fabrique(P, stockageSession, neuf).enDecouverte(), false, "fermé pour de bon dans l'onglet");
 });

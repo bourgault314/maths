@@ -7075,20 +7075,24 @@
       // de bon dans l'onglet. Une table réussie est acquise, comme toujours ;
       // une table ratée devient sa table, et sa séance commence aux
       // entraînements (moteur : commencerApresDecouverte).
+      // Relecture de Code (03/10/2026) : rien n'est figé au premier dessin.
+      // Avec un code, l'accueil est dessiné AVANT que le serveur rende le
+      // parcours ; sur un appareil neuf, la case est vide à cet instant, et
+      // l'écran restait affiché à un élève qui avait déjà trois tables (sans
+      // Mon parcours). L'écran suit donc le parcours, sauf quand l'élève y a
+      // déjà tenté une table : il reste alors ouvert jusqu'à « C'est tout ».
       const CLE_DECOUVERTE = "mathsgo-defi-tables-decouverte";
-      let decouverteOuverte = null;
+      let decouverteFermee = false;
+      let decouverteEngagee = false;
 
       function enDecouverte() {
-        if (decouverteOuverte === null) {
-          let fermee = false;
-          try { fermee = stockageSession()?.getItem(CLE_DECOUVERTE) === (codeSuivi || "-"); } catch (_) {}
-          decouverteOuverte = !fermee && PARCOURS.estVide(parcours);
-        }
-        return decouverteOuverte;
+        let fermee = decouverteFermee;
+        try { fermee = fermee || stockageSession()?.getItem(CLE_DECOUVERTE) === (codeSuivi || "-"); } catch (_) {}
+        return !fermee && (decouverteEngagee || PARCOURS.estVide(parcours));
       }
 
       function fermerDecouverte() {
-        decouverteOuverte = false;
+        decouverteFermee = true;
         try { stockageSession()?.setItem(CLE_DECOUVERTE, codeSuivi || "-"); } catch (_) {}
       }
 
@@ -7108,7 +7112,10 @@
           bouton.textContent = acquise ? `${candidate} ✓` : String(candidate);
           bouton.setAttribute("aria-label", acquise ? `Table de ${candidate}, acquise` : `Valider la table de ${candidate}`);
           if (acquise) bouton.setAttribute("aria-disabled", "true");
-          else bouton.addEventListener("click", () => launchFromParcours(PARCOURS.configValidation(candidate), "decouverte"));
+          else bouton.addEventListener("click", () => {
+            decouverteEngagee = true;
+            launchFromParcours(PARCOURS.configValidation(candidate), "decouverte");
+          });
           choix.append(bouton);
         });
         const suivante = PARCOURS.tableDeSeance(parcours);
