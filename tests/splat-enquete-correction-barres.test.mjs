@@ -1,8 +1,8 @@
 /* SPLAT! Enquête — lots G1 « la correction en barres » et G2 « le générateur sait tout faire »
    (29/09/2026, remarques 23 à 28 du monde 3).
    Ces tests exécutent les fonctions de outils/splat.html telles quelles (extraites du fichier).
-   1. RÈGLE ABSOLUE : aucune carte existante ne change. Les 30 adresses des livrets (fiches 10 à
-      24 et 10d à 24d depuis le lot 2 du 30/09/2026, dans _sources/livret-splat-enquete/render.py) sont rejouées
+   1. RÈGLE ABSOLUE : aucune carte existante ne change. Les 25 adresses des livrets (fiches 10 à
+      24 et les dix « d » du deuxième tour depuis le 03/10/2026, dans _sources/livret-splat-enquete/render.py) sont rejouées
       comme la page le fait (genInvestigate puis assignPositions, quatre cartes d'affilée) et
       comparées aux cartes IMPRIMÉES dans les livrets en ligne (cartes.json, relu par le test des
       livrets) ; le nombre de tirages au hasard est épinglé lui aussi — avec les nouveaux réglages
@@ -107,14 +107,16 @@ const moteur = new Function(`
 const empreinte = (x) => createHash("sha256").update(JSON.stringify(x)).digest("hex").slice(0, 16);
 
 // --- 1. aucune carte existante ne change ------------------------------------------------------
-/* Les 30 adresses de render.py (lot 2 du 30/09/2026, les six livrets) : E10-E24 (les trois livrets
-   de base) et E10D-E24D (les trois livrets « Deuxième tour ») — chacune, ses quatre cartes
-   imprimées dans les livrets (cartes.json). Avant le lot 2 : F10-F19, R20-R24, D10-D19, dont les
-   graines ont été retriées (la progression en six livrets). */
-const LIVRET_DE = (n, d) => (n <= 14 ? "additif" : n <= 19 ? "multiplicatif" : "rebondit") + (d ? "_tour2" : "");
+/* Les 25 adresses de render.py (03/10/2026, les cinq livrets) : E10-E24 (les trois livrets de
+   base) et les dix fiches du deuxième tour, E11D … E24D — chacune, ses quatre cartes imprimées dans
+   les livrets (cartes.json). Avant : les six livrets du 30/09 (lot 2), dont les graines ont été
+   retriées (progression v3) et dont 10d, 14d, 15d, 21d et 23d ont disparu. */
+const TOUR2_DESSINS = [11, 12, 13, 16, 17], TOUR2_SYSTEME = [18, 20, 22, 19, 24];
+const LIVRET_DE = (n, d) => !d ? (n <= 14 ? "additif" : n <= 19 ? "multiplicatif" : "rebondit")
+  : (TOUR2_DESSINS.includes(n) ? "tour2_dessins" : "tour2_systeme");
 const ADRESSES = [
   ...Array.from({ length: 15 }, (_, i) => [`E${10 + i}`, LIVRET_DE(10 + i, false)]),
-  ...Array.from({ length: 15 }, (_, i) => [`E${10 + i}D`, LIVRET_DE(10 + i, true)])
+  ...[...TOUR2_DESSINS, ...TOUR2_SYSTEME].map((n) => [`E${n}D`, LIVRET_DE(n, true)])
 ];
 function fichesDe(livret){ return cartesJson[livret].fiches; }
 function carteImprimee(nom){
@@ -124,23 +126,18 @@ function carteImprimee(nom){
   assert.ok(cle, `${nom} : fiche ${code} dans cartes.json (${livret})`);
   return fichesDe(livret)[cle];
 }
-/* Le nombre de tirages au hasard de chaque adresse (quatre cartes), relevé au lot 2 : la
-   correction ne tire rien. */
-const TIRAGES = { E10: 106, E11: 96, E12: 71, E13: 104, E14: 169, E15: 96, E16: 68, E17: 157, E18: 203, E19: 165, E20: 97, E21: 163,
-  E22: 66, E23: 66, E24: 136, E10D: 194, E11D: 80, E12D: 116, E13D: 106, E14D: 188, E15D: 154, E16D: 104, E17D: 136,
-  E18D: 60, E19D: 336, E20D: 172, E21D: 268, E22D: 222, E23D: 218, E24D: 172 };
-/* (lot « petite part », 01/10/2026) la fiche 24d change de graine (1168 → 3572 : trois cartes
-   « 2 et 3 » ou « 2 et 5 », puis « 3 et 4 », 19 parts, en dernier) ; les 29 autres fiches tirent
-   les mêmes cartes, au même hasard (empreinte sans la 24d identique à main : 1b81db09362575df). */
-/* (lot « plateau en ligne », 03/10/2026) les PLACES des taches et des jetons changent (trois,
-   quatre et cinq taches en ligne, jetons visibles aux places fixes) : l'empreinte avec les places
-   devient 47827997a7c2f6ee (a7846d641ef6f494 avec les trois taches seules) ; SANS les places
-   (valeurs, indices, modèle, couleurs), elle est la même qu'avant le lot : 169f3e7e042e825e —
-   relevée sur main fa6e86f9 avec le même script. */
-const EMPREINTE = "47827997a7c2f6ee";
-const EMPREINTE_VALEURS = "169f3e7e042e825e";
+/* Le nombre de tirages au hasard de chaque adresse (quatre cartes), relevé au lot « fabrication des
+   cinq livrets » (03/10/2026) : la correction ne tire rien. */
+const TIRAGES = { E10: 106, E11: 96, E12: 94, E13: 94, E14: 151, E15: 150, E16: 160, E17: 259, E18: 314, E19: 148, E20: 89, E21: 140,
+  E22: 78, E23: 66, E24: 142, E11D: 80, E12D: 181, E13D: 106, E16D: 134, E17D: 210, E18D: 60, E20D: 100, E22D: 222,
+  E19D: 336, E24D: 180 };
+/* (03/10/2026, progression v3) nouvelles graines, relevées sur main c72d23d2 (après le lot « plateau
+   en ligne ») avec le même script : l'empreinte avec les places des taches et des jetons, puis
+   sans les places (valeurs, indices, modèle, couleurs). */
+const EMPREINTE = "d8aa7b239835af93";
+const EMPREINTE_VALEURS = "067cb042050f30af";
 
-test("règle absolue : les 30 adresses des livrets tirent exactement les cartes imprimées (cartes.json), même hasard consommé", () => {
+test("règle absolue : les 25 adresses des livrets tirent exactement les cartes imprimées (cartes.json), même hasard consommé", () => {
   const tout = {};
   for(const [nom] of ADRESSES){
     const adresse = py(nom);
@@ -153,7 +150,7 @@ test("règle absolue : les 30 adresses des livrets tirent exactement les cartes 
   }
   assert.equal(empreinte(tout), EMPREINTE, "valeurs, indices, modèle, couleurs, places des jetons : rien ne bouge");
   const valeurs = Object.fromEntries(Object.entries(tout).map(([n, cs]) => [n, cs.map(({ posH, posV, ...c }) => c)]));
-  assert.equal(empreinte(valeurs), EMPREINTE_VALEURS, "sans les places : la même empreinte qu'avant le lot « plateau en ligne »");
+  assert.equal(empreinte(valeurs), EMPREINTE_VALEURS, "sans les places : valeurs, indices, modèle, couleurs");
 });
 
 // --- 2. le modèle de la correction ------------------------------------------------------------

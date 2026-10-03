@@ -13,7 +13,7 @@
 <link rel="icon" type="image/png" sizes="192x192" href="/assets/img/favicon-192.png">
 <link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png">
 <!-- La liste des mondes « en préparation » et la clé de Gwenaël (?essai=1) : en tête de assets/js/splat-etapes.js -->
-<script src="../assets/js/splat-etapes.js?v=20260930-2"></script>
+<script src="../assets/js/splat-etapes.js?v=20261003-1"></script>
 <style>
 :root{
   --page:#f6f8fb; --paper:#ffffff; --ink:#10294a; --muted:#5c6c82; --line:#d9e2ec;
@@ -319,6 +319,7 @@ body.prof .etape{padding:16px 2px 16px 0;gap:14px}
 body.prof .etape+.etape{border-top:1px solid #e7ecf2}
 body.prof .badge{width:48px;height:48px;cursor:default}
 body.prof .badge .n{font-size:19px}
+body.prof .etape.t2 .badge .n{font-size:14px} /* « 11d » : trois signes dans la tache (03/10/2026) */
 body.prof .etape h3{font-size:18px;font-weight:700;margin:3px 0 0;display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 12px}
 body.prof .etape h3 .fo{font-size:14.5px;font-weight:500;color:var(--muted);font-style:italic}
 .pNote{margin:6px 0 10px;font-size:15px;line-height:1.5;color:#3a4d64;max-width:78ch}
@@ -492,66 +493,93 @@ const EQ5_PREMIERE_FICHE=35;
 const EQ5_F35=["mode=EQUNITSTEP&form=X_PLUS_B_EQ_C&tasksMax=1&visibleMax=10&cards=2&seed=169&unknown=letter","mode=EQSTEP&form=X_PLUS_B_EQ_C&tasksMax=1&visibleMin=1&visibleMax=1&totalMin=14&totalMax=30&cards=2&seed=265&unknown=letter","mode=EQSTEP&form=X_PLUS_B_EQ_C&tasksMax=1&visibleMin=1&visibleMax=2&totalMin=22&totalMax=45&cards=2&seed=824&unknown=letter","mode=EQUNITSTEP&form=AX_EQ_C&tasksMax=3&visibleMax=10&cards=2&seed=629&unknown=letter","mode=EQSTEP&form=AX_EQ_C&tasksMax=4&visibleMin=1&visibleMax=1&totalMin=12&totalMax=40&cards=2&seed=670&unknown=letter","mode=EQSTEP&form=AX_EQ_C&tasksMax=5&visibleMin=2&visibleMax=2&totalMin=20&totalMax=48&cards=2&seed=1097&unknown=letter"];
 const EQ5_F36=["mode=EQUNITSTEP&form=ONE_SIDE&tasksMax=3&visibleMax=10&cards=2&seed=4942&unknown=letter","mode=EQSTEP&form=ONE_SIDE&tasksMax=3&visibleMin=1&visibleMax=1&totalMin=15&totalMax=40&cards=2&seed=1247&unknown=letter","mode=EQSTEP&form=ONE_SIDE&tasksMax=3&visibleMin=1&visibleMax=2&totalMin=22&totalMax=45&cards=2&seed=5242&unknown=letter","mode=EQSTEP&form=ONE_SIDE&tasksMax=4&visibleMin=1&visibleMax=2&totalMin=20&totalMax=50&cards=2&seed=5869&unknown=letter","mode=EQSTEP&form=ONE_SIDE&tasksMax=5&visibleMin=1&visibleMax=2&totalMin=20&totalMax=50&cards=2&seed=3933&unknown=letter","mode=EQSTEP&form=ONE_SIDE&tasksMax=6&visibleMin=1&visibleMax=3&totalMin=24&totalMax=50&cards=2&seed=2440&unknown=letter"];
 const EQ5_F37=["mode=EQUNITSTEP&form=BOTH&tasksMax=3&visibleMax=10&cards=2&seed=6348&unknown=letter","mode=EQSTEP&form=BOTH&tasksMax=4&visibleMin=0&visibleMax=1&totalMin=12&totalMax=45&cards=2&seed=2809&unknown=letter","mode=EQSTEP&form=BOTH&tasksMax=4&visibleMin=1&visibleMax=1&totalMin=18&totalMax=50&cards=2&seed=178&unknown=letter","mode=EQSTEP&form=BOTH&tasksMax=5&visibleMin=1&visibleMax=2&totalMin=22&totalMax=50&cards=2&seed=3943&unknown=letter","mode=EQSTEP&form=BOTH&tasksMax=5&visibleMin=0&visibleMax=2&totalMin=22&totalMax=50&cards=2&seed=3599&unknown=letter","mode=EQSTEP&form=BOTH&tasksMax=6&visibleMin=1&visibleMax=2&totalMin=24&totalMax=50&cards=2&seed=6408&unknown=letter"];
-/* ---- SPLAT! Enquête : les 15 fiches du monde 3 (lot E0 du 22/09/2026 ; refaites au lot 2
-   du 30/09/2026, la progression en six livrets : ce sont les fiches des trois livrets de
-   base, graines triées, « modele=1 » pour le schéma vide sous la carte 1 des fiches 13, 18
-   et 22). Les fiches 10d à 24d des livrets « Deuxième tour » allument les mêmes étoiles :
-   elles sont servies par la page courte des QR (splat/enquete/livret/, ENQ_TOUR2). Le jeu de l'élève
-   reprend les MÊMES réglages sans layout/note/title, plus &eleve=1&parcours=enqN.
+/* ---- SPLAT! Enquête : les 15 fiches du monde 3 (lot E0 du 22/09/2026 ; refaites au lot
+   « fabrication des cinq livrets » du 03/10/2026, la progression v3 : ce sont les fiches des trois
+   livrets de base, graines triées, « modele=1 » pour le schéma vide sous la carte 1 des fiches
+   12, 13, 17, 18 et 22). Les fiches du deuxième tour (ENQ_TOUR2, plus bas) allument les mêmes
+   étoiles : elles sont servies par la page courte des QR (splat/enquete/livret/). Le jeu de
+   l'élève reprend les MÊMES réglages sans layout/note/title, plus &eleve=1&parcours=enqN.
    Ne jamais changer une graine sans refaire les PDF des livrets : la graine fige
    la série carte par carte (tests/splat-enquete-carte-mondes.test.mjs les épingle). */
 const EQ="/splat/classique/?";
 const ENQ_COMMUN="&cards=4&unknown=question";
-const ENQ_NOTE="Reformule l\u2019indice avant de dessiner ton schéma.";
+const ENQ_NOTE="Reformule l’indice avant de dessiner ton schéma.";
 const ENQ_FICHES=[
  {t:"De plus que",
-  o:"Deux taches, et un indice : l\u2019une en cache quelques-uns de plus que l\u2019autre.",
+  o:"Deux taches, et un indice : l’une en cache quelques-uns de plus que l’autre.",
   q:"mode=C&clues=SENTENCE&splats=2&mul=0&div=0&add=1&sub=0&deltaMax=15&visibleMin=0&visibleMax=0&totalMin=20&totalMax=50&seed=51"},
  {t:"De moins que",note:true,
-  o:"Le même jeu à l\u2019envers : l\u2019indice dit «\u00a0de moins que\u00a0». Relis-le avant de dessiner.",
+  o:"Le même jeu à l’envers : l’indice dit « de moins que ». Relis-le avant de dessiner.",
   q:"mode=C&clues=SENTENCE&splats=2&mul=0&div=0&add=0&sub=1&deltaMax=15&visibleMin=0&visibleMax=0&totalMin=20&totalMax=50&seed=74"},
- {t:"Plus ou moins",
-  o:"Tantôt «\u00a0de plus\u00a0», tantôt «\u00a0de moins\u00a0» : lis bien l\u2019indice à chaque carte.",
-  q:"mode=C&clues=SENTENCE&splats=2&mul=0&div=0&add=1&sub=1&deltaMax=15&visibleMin=0&visibleMax=0&totalMin=20&totalMax=50&seed=1195"},
  {t:"Trois taches, une référence",
   o:"Trois taches, deux indices qui partent tous les deux de la plus petite.",
-  q:"mode=C&clues=SENTENCE&splats=3&structure=REF&ordre=DESSIN&mul=0&div=0&add=1&sub=1&deltaMax=12&visibleMin=0&visibleMax=0&totalMin=20&totalMax=50&modele=1&seed=1184"},
- {t:"Le défi : une référence, jetons visibles",
-  o:"Le même dessin, et des jetons visibles à retirer du total.",
-  q:"mode=C&clues=SENTENCE&splats=3&structure=REF&ordre=DESSIN&mul=0&div=0&add=1&sub=1&deltaMax=15&visibleMin=1&visibleMax=3&totalMin=30&totalMax=60&seed=19446"},
+  q:"mode=C&clues=SENTENCE&splats=3&structure=REF&ordre=DESSIN&mul=0&div=0&add=1&sub=1&deltaMax=12&visibleMin=0&visibleMax=0&totalMin=20&totalMax=50&modele=1&seed=12287"},
+ {t:"Trois taches en chaîne",
+  o:"Trois taches : la tache commune est au milieu.",
+  q:"mode=C&clues=SENTENCE&splats=3&structure=CHAINE&ordre=DESSIN&mul=0&div=0&add=1&sub=1&deltaMax=12&visibleMin=0&visibleMax=0&totalMin=20&totalMax=50&modele=1&seed=30140"},
+ {t:"Référence ou chaîne ?",
+  o:"Une référence ou une chaîne : à toi de reconnaître le dessin.",
+  q:"mode=C&clues=SENTENCE&splats=3&structure=HASARD&ordre=DESSIN&mul=0&div=0&add=1&sub=1&deltaMax=12&visibleMin=0&visibleMax=3&totalMin=20&totalMax=50&seed=6176290"},
  {t:"Fois plus",
-  o:"L\u2019indice multiplie : une tache en cache deux fois plus, ou trois fois plus.",
-  q:"mode=C&clues=SENTENCE&splats=2&mul=1&div=0&add=0&sub=0&deltaMax=10&visibleMin=0&visibleMax=0&totalMin=20&totalMax=60&seed=45"},
+  o:"L’indice multiplie : deux fois plus, le triple…",
+  q:"mode=C&clues=SENTENCE&splats=2&mul=1&div=0&add=0&sub=0&deltaMax=10&visibleMin=0&visibleMax=0&totalMin=20&totalMax=60&vocab=1&seed=1800"},
  {t:"Fois moins",note:true,
-  o:"L\u2019indice partage : «\u00a0deux fois moins\u00a0». Reformule-le avant de dessiner.",
-  q:"mode=C&clues=SENTENCE&splats=2&mul=0&div=1&add=0&sub=0&deltaMax=10&visibleMin=0&visibleMax=0&totalMin=20&totalMax=60&seed=76"},
- {t:"Fois plus ou fois moins : le double, la moitié",
-  o:"Fois plus, fois moins… et les mots : le double, le triple, la moitié.",
-  q:"mode=C&clues=SENTENCE&splats=2&mul=1&div=1&add=0&sub=0&deltaMax=10&visibleMin=0&visibleMax=0&totalMin=20&totalMax=60&vocab=1&seed=76172"},
- {t:"Trois taches : deux rapports, puis un écart et un rapport",
-  o:"Trois taches : deux «\u00a0fois plus\u00a0», puis un «\u00a0de plus\u00a0» et un «\u00a0fois plus\u00a0» dans le même schéma.",
-  q:"mode=C&clues=SENTENCE&splats=3&structure=REF&ordre=DESSIN&mul=1&div=1&add=1&sub=1&deltaMax=12&visibleMin=0&visibleMax=0&totalMin=20&totalMax=60&modele=1&seed=105403"},
- {t:"Le défi : toutes opérations, jetons visibles",
-  o:"Toutes les opérations, et des jetons visibles.",
-  q:"mode=C&clues=SENTENCE&splats=3&structure=REF&ordre=DESSIN&mul=1&div=1&add=1&sub=1&deltaMax=15&visibleMin=1&visibleMax=3&totalMin=30&totalMax=70&seed=94050"},
+  o:"L’indice partage : « deux fois moins », la moitié… Reformule-le avant de dessiner.",
+  q:"mode=C&clues=SENTENCE&splats=2&mul=0&div=1&add=0&sub=0&deltaMax=10&visibleMin=0&visibleMax=0&totalMin=20&totalMax=60&vocab=1&seed=871"},
+ {t:"Une référence, deux rapports",
+  o:"Trois taches, deux « fois plus » qui partent de la plus petite.",
+  q:"mode=C&clues=SENTENCE&splats=3&structure=REF&ordre=DESSIN&mul=1&div=1&add=0&sub=0&deltaMax=12&visibleMin=0&visibleMax=0&totalMin=20&totalMax=60&modele=1&seed=3485"},
+ {t:"Chaîne, deux rapports",
+  o:"Fois plus, puis encore fois plus : une chaîne.",
+  q:"mode=C&clues=SENTENCE&splats=3&structure=CHAINE&ordre=DESSIN&mul=1&div=1&add=0&sub=0&deltaMax=12&visibleMin=0&visibleMax=0&totalMin=20&totalMax=60&modele=1&seed=962412"},
+ {t:"Une référence, un écart et un rapport",
+  o:"Un « de plus » et un « fois plus » dans le même schéma.",
+  q:"mode=C&clues=SENTENCE&splats=3&structure=REF&ordre=DESSIN&mul=1&div=1&add=1&sub=1&deltaMax=12&visibleMin=0&visibleMax=3&totalMin=20&totalMax=60&seed=8562429"},
  /* ---- 3e partie, « SPLAT! L'enquête rebondit » (fiches 20 à 24) : les cases « Taches répétées »
     (repeat=3) et « Sans total » (noTotal=1) de l'outil ; la fiche 24 coche les deux, chaque carte
     tire sa sorte. Étoiles enq-10 … enq-14, parcours enq20 … enq24 (enqEtapes). */
  {t:"Des taches répétées",
   o:"Plusieurs taches de la même couleur cachent le même nombre : l’indice parle d’une seule tache.",
-  q:"mode=C&clues=SENTENCE&splats=2&repeat=3&mul=0&div=0&add=1&sub=1&deltaMax=10&visibleMin=0&visibleMax=0&totalMin=20&totalMax=60&seed=172"},
+  q:"mode=C&clues=SENTENCE&splats=2&repeat=3&mul=0&div=0&add=1&sub=1&deltaMax=10&visibleMin=0&visibleMax=0&totalMin=20&totalMax=60&seed=14"},
  {t:"Répétées, fois plus ou moins",
-  o:"Les taches répétées, avec «\u00a0fois plus\u00a0», «\u00a0fois moins\u00a0», «\u00a0le double\u00a0»…",
-  q:"mode=C&clues=SENTENCE&splats=2&repeat=3&mul=1&div=1&add=0&sub=0&deltaMax=10&visibleMin=0&visibleMax=0&totalMin=20&totalMax=60&vocab=1&seed=26174"},
+  o:"Les taches répétées, avec « fois plus », « fois moins », « le double »…",
+  q:"mode=C&clues=SENTENCE&splats=2&repeat=3&mul=1&div=1&add=0&sub=0&deltaMax=10&visibleMin=0&visibleMax=3&totalMin=20&totalMax=60&vocab=1&seed=21800"},
  {t:"Sans total",
   o:"Plus de total ! Deux indices sur la même paire de taches : ce qui dépasse te guide.",
-  q:"mode=C&clues=SENTENCE&splats=2&noTotal=1&mul=1&div=0&add=1&sub=0&deltaMax=30&visibleMin=0&visibleMax=0&totalMin=15&totalMax=60&modele=1&seed=3"},
+  q:"mode=C&clues=SENTENCE&splats=2&noTotal=1&mul=1&div=0&add=1&sub=0&deltaMax=30&visibleMin=0&visibleMax=0&totalMin=15&totalMax=60&modele=1&seed=159"},
  {t:"Sans total, à retourner",note:true,
-  o:"Sans total, avec des indices «\u00a0de moins\u00a0» et «\u00a0fois moins\u00a0» : reformule-les avant de dessiner.",
+  o:"Sans total, avec des indices « de moins » et « fois moins » : reformule-les avant de dessiner.",
   q:"mode=C&clues=SENTENCE&splats=2&noTotal=1&mul=0&div=1&add=0&sub=1&deltaMax=30&visibleMin=0&visibleMax=0&totalMin=15&totalMax=60&seed=9"},
  {t:"Le défi qui rebondit",
   o:"Taches répétées ou sans total, jetons visibles : chaque carte est une surprise.",
-  q:"mode=C&clues=SENTENCE&splats=2&repeat=3&noTotal=1&mul=1&div=1&add=1&sub=1&deltaMax=20&visibleMin=1&visibleMax=3&totalMin=30&totalMax=70&seed=16220"}
+  q:"mode=C&clues=SENTENCE&splats=2&repeat=3&noTotal=1&mul=1&div=1&add=1&sub=1&deltaMax=20&visibleMin=1&visibleMax=3&totalMin=30&totalMax=70&seed=30091"}
+];
+/* Le deuxième tour (03/10/2026 : deux livrets, dix fiches) : « Deuxième tour 1 — les trois
+   dessins » puis « Deuxième tour 2 — vers le Système ». Pas d'étape à lui sur la carte des
+   mondes : chaque fiche allume l'étoile de sa fiche de base (code « 11d » → parcours enq11).
+   Mêmes adresses que la page courte des QR (ENQ_TOUR2) et que les livrets (render.py). La vue
+   prof en fait une liste à part, sous le monde 3 (« n » : la note du prof). */
+const ENQ_TOUR2=[
+ {code:"11d",t:"Je complète",n:"La tache commune est la plus grande : je complète.",
+  q:"mode=C&clues=SENTENCE&splats=3&structure=COMPLETE&ordre=DESSIN&mul=0&div=0&add=1&sub=1&deltaMax=12&visibleMin=0&visibleMax=0&totalMin=20&totalMax=50&modele=1&seed=361"},
+ {code:"12d",t:"Référence, chaîne ou je complète ?",n:"Reconnaître le dessin sans qu'on le dise.",
+  q:"mode=C&clues=SENTENCE&splats=3&structure=HASARD&ordre=DESSIN&mul=0&div=0&add=1&sub=1&deltaMax=15&visibleMin=0&visibleMax=0&totalMin=20&totalMax=60&seed=646916"},
+ {code:"13d",t:"Tout dans le désordre",n:"Les indices dans le désordre : par où commencer.",
+  q:"mode=C&clues=SENTENCE&splats=3&structure=HASARD&ordre=DESORDRE&mul=0&div=0&add=1&sub=1&deltaMax=15&visibleMin=0&visibleMax=0&totalMin=20&totalMax=60&seed=2621"},
+ {code:"16d",t:"Chaîne, un écart et un rapport",n:"Remplacer une barre faite d'un bout et de copies.",
+  q:"mode=C&clues=SENTENCE&splats=3&structure=CHAINE&ordre=DESSIN&mul=1&div=1&add=1&sub=1&deltaMax=12&visibleMin=0&visibleMax=0&totalMin=20&totalMax=60&seed=8707765"},
+ {code:"17d",t:"Je complète, avec un rapport",n:"Compléter, puis remplacer.",
+  q:"mode=C&clues=SENTENCE&splats=3&structure=COMPLETE&ordre=DESSIN&mul=1&div=1&add=1&sub=1&deltaMax=12&visibleMin=0&visibleMax=0&totalMin=20&totalMax=60&modele=1&seed=69705"},
+ {code:"18d",t:"Indices composés",n:"Deux gestes dans une phrase : « 3 de plus que le double ».",
+  q:"mode=C&clues=SENTENCE&splats=2&compose=1&mul=1&div=1&add=1&sub=1&deltaMax=12&visibleMin=0&visibleMax=0&totalMin=20&totalMax=60&modele=1&seed=151"},
+ {code:"20d",t:"Deux taches réunies",n:"« Autant que … et … réunies ».",
+  q:"mode=C&clues=SENTENCE&splats=3&structure=HASARD&reunies=1&mul=1&div=1&add=1&sub=1&deltaMax=15&visibleMin=0&visibleMax=0&totalMin=30&totalMax=80&seed=1169"},
+ {code:"22d",t:"Les indices en symboles",n:"Lire « rouge = 2 × noire + 3 » au lieu de la phrase.",
+  q:"mode=C&clues=SYMBOL&splats=3&structure=HASARD&mul=1&div=1&add=1&sub=1&deltaMax=15&visibleMin=0&visibleMax=0&totalMin=20&totalMax=60&seed=132600"},
+ {code:"19d",t:"Le grand défi",n:"Grands nombres, désordre, jetons visibles, toutes opérations.",
+  q:"mode=C&clues=SENTENCE&splats=3&structure=HASARD&ordre=DESORDRE&mul=1&div=1&add=1&sub=1&deltaMax=25&visibleMin=1&visibleMax=3&totalMin=60&totalMax=120&seed=1558913"},
+ {code:"24d",t:"Unité commune : les petites parts",n:"Deux rapports vers la plus grande : couper en petites parts.",
+  q:"mode=C&clues=SENTENCE&splats=3&structure=UNITE&mul=1&div=1&add=1&sub=1&deltaMax=15&visibleMin=0&visibleMax=0&totalMin=30&totalMax=90&seed=17782"}
 ];
 /* L'Enquête : UN monde 3 en TROIS parties, une par livret (lot « six mondes »,
    24/09/2026) — « L'enquête » (fiches 10 à 14), « La grande enquête » (15 à 19)
@@ -570,7 +598,7 @@ const MONDE_ENQUETE={cls:"menq",idp:"enq",actif:true,nom:"SPLAT! Enquête",
   desc:"Cette fois, les taches ne parlent plus toutes seules : un indice les relie. À toi de mener l’enquête pour trouver ce que chacune cache.",
   volets:[
    {de:0,a:5,nom:"L’enquête",o:"Deux ou trois taches, et des indices «\u00a0de plus que\u00a0», «\u00a0de moins que\u00a0»."},
-   {de:5,a:10,nom:"La grande enquête",o:"Les indices multiplient et partagent — fois plus, fois moins —, puis les quatre opérations se mélangent."},
+   {de:5,a:10,nom:"La grande enquête",o:"Les indices multiplient et partagent — fois plus, fois moins —, puis écarts et rapports se mélangent."},
    {de:10,a:15,nom:"L’enquête rebondit",o:"Des taches de la même couleur… puis des enquêtes sans total : les indices suffisent."}],
   etapes:enqEtapes(0,15)};
 /* ---- SPLAT! Système, monde 4 (lot « six mondes », 24/09/2026) : les fiches 25 à 34 ----
@@ -795,7 +823,18 @@ MONDES_A_FICHES.forEach(([m,fiches,idp])=>{
     e.n=n; e.p=idp+n; e.j=ficheJeu(f.q,idp,n);
     e.f=ficheImprimer(f,n,"statement"); e.c=ficheImprimer(f,n,"correction");
     if(m===MONDE_SYSTEME){ e.jp=EQ+f.q+ENQ_COMMUN; e.c2=ficheImprimer(f,n,"correction",2); }
+    /* monde 3 (03/10/2026, Gwenaël : « le prof va vouloir projeter ce qu'il veut ») : toutes les
+       fiches se projettent — l'outil, réglage de la fiche, ses 4 cartes, pas à pas coché (c'est
+       son réglage par défaut) */
+    if(m===MONDE_ENQUETE) e.jp=EQ+f.q+ENQ_COMMUN;
   });
+});
+/* Le deuxième tour du monde 3 (03/10/2026) : les mêmes liens que les étapes, sous le code de la
+   fiche (« Fiche 11d — … ») ; le jeu allume l'étoile de la fiche de base (parcours=enq11). */
+ENQ_TOUR2.forEach(f=>{
+  const base=parseInt(f.code,10);
+  f.j=ficheJeu(f.q,"enq",base); f.f=ficheImprimer(f,f.code,"statement"); f.c=ficheImprimer(f,f.code,"correction");
+  f.jp=EQ+f.q+ENQ_COMMUN;
 });
 /* Monde 5 : numéro de fiche et liens de chaque étape (lot Q2). « Projeter » ouvre la
    série dans l'outil (vue de l'étape) ; « Fiche » l'imprime en 6 par page, énoncé seul,
@@ -868,7 +907,7 @@ let faits=lireFaits();
 const NOTES_MONDE = [
  "Le tout et les parties : lire, compléter, puis dessiner un schéma en barres.",
  "Le schéma en barres devient une équation.",
- "Un indice relie les taches : l'élève trace son schéma, puis déduit. Un monde en trois parties : «\u00a0de plus, de moins\u00a0», puis «\u00a0fois plus, fois moins\u00a0», puis l'enquête qui rebondit. Un deuxième tour (fiches 10d à 24d, trois livrets, mêmes étoiles) donne tous les types de problèmes.",
+ "Un indice relie les taches : l'élève trace son schéma, puis déduit. Un monde en trois parties : «\u00a0de plus, de moins\u00a0», puis «\u00a0fois plus, fois moins\u00a0», puis l'enquête qui rebondit. Un deuxième tour (dix fiches « d », deux livrets, mêmes étoiles) donne tous les types de problèmes.",
  "Plusieurs plateaux, les mêmes couleurs : on compare les plateaux. Pour s'y retrouver : l'Enquête, c'est un indice qui compare deux taches ; le Système, c'est un indice qui donne un total partiel. Deux parties : on retire, puis on additionne ou on double. "+
  "<table><tr><th>Ce que dit l'énoncé</th><th>Où dans SPLAT!</th><th>Programme</th></tr>"+
  "<tr><td>A = B + d ou A = k × B, avec un total (partage inégal à 2 ou 3 taches)</td><td>Enquête, fiches 10 à 19</td><td>CM1-6e</td></tr>"+
@@ -896,16 +935,16 @@ const NOTES_PROF = [
   "a × x + c = b avec un paquet, puis deux."],
  ["Indice «\u00a0de plus que\u00a0» : l'écart.",
   "Indice «\u00a0de moins que\u00a0» : le reformuler avant de dessiner.",
-  "«\u00a0De plus\u00a0» puis «\u00a0de moins\u00a0» : lire l'indice avant de dessiner.",
-  "Trois taches, une référence : la 3e barre, depuis la plus petite.",
-  "Jetons visibles : retirer la partie connue du total.",
-  "Indice «\u00a0fois plus\u00a0» : le rapport.",
-  "Indice «\u00a0fois moins\u00a0» : le reformuler avant de dessiner.",
-  "Fois plus, fois moins ; les mots : le double, la moitié.",
-  "Deux rapports, puis un écart et un rapport dans le même schéma.",
-  "Bilan des parties 1 et 2 : toutes opérations, jetons visibles.",
-  "Plusieurs taches de la même couleur.",
-  "Taches répétées, «\u00a0fois plus\u00a0», «\u00a0fois moins\u00a0», «\u00a0le double\u00a0».",
+  "La 3e barre, depuis la plus petite.",
+  "La tache commune est au milieu : double remplacement.",
+  "Reconnaître le dessin.",
+  "Indice «\u00a0fois plus\u00a0» : le rapport ; le double, le triple.",
+  "Indice «\u00a0fois moins\u00a0» : le reformuler ; la moitié, le quart.",
+  "Deux rapports depuis la plus petite.",
+  "Une chaîne de rapports.",
+  "Un écart et un rapport dans le même schéma.",
+  "Plusieurs taches de la même couleur : une barre chacune.",
+  "Taches répétées, «\u00a0fois plus\u00a0», «\u00a0fois moins\u00a0».",
   "Sans total : deux indices sur la même paire.",
   "Sans total, indices à retourner.",
   "Bilan de la partie 3."],
@@ -1076,7 +1115,21 @@ function mondeProfHtml(m,mi,plage){
           '<p class="pNote">'+NOTES_PROF[mi][ei]+'</p>'+
           actionsHtml(e,m,cid)+cartesHtml(e,m,cid)+
         '</div></li>';
-    }).join('')+'</ol>';
+    }).join('')+(m===MONDE_ENQUETE?tour2ProfHtml(m):'')+'</ol>';
+}
+/* Le deuxième tour du monde 3 (03/10/2026), sous la partie 3 : un intertitre, puis une ligne par
+   fiche, comme les étapes (la note, Projeter, le jeu, la fiche, le corrigé). */
+function tour2ProfHtml(m){
+  const li=(f)=>'<li class="etape t2" id="enq-t2-'+f.code+'">'+
+    '<button class="badge" type="button" disabled>'+
+      '<svg class="tache" viewBox="0 0 110 110"><use class="fond" href="#tacheEtoile" width="110" height="110"/></svg>'+
+      '<span class="n">'+f.code+'</span></button>'+
+    '<div class="corps"><h3>'+f.t+'</h3><p class="pNote">'+f.n+'</p>'+actionsHtml(f,m,'')+'</div></li>';
+  const tete=(rang,nom,de,a)=>'<li class="volet" id="enq-tour2-'+rang+'"><span class="rang">Deuxième tour '+rang+'</span>'+
+    '<h4>'+nom+'<span class="fiches">fiches '+de+' à '+a+'</span></h4>'+
+    '<p>Plus dur. Chaque fiche allume l\u2019étoile de sa fiche de base.</p></li>';
+  return tete(1,'Les trois dessins','11d','17d')+ENQ_TOUR2.slice(0,5).map(li).join('')+
+         tete(2,'Vers le Système','18d','24d')+ENQ_TOUR2.slice(5).map(li).join('');
 }
 function sommaireProfHtml(plages){
   return MONDES.map((m,mi)=>'<a href="#monde-'+(mi+1)+'" class="'+m.cls+(m.cache?' cache':'')+'" data-mi="'+mi+'">'+

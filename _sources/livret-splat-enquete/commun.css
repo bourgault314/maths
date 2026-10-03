@@ -13,3 +13,10 @@ body{width:210mm;height:297mm;overflow:hidden;font-family:Poppins,'Segoe UI',sys
 .cadre{border:1.4px solid #5b6574;border-radius:6px;background:#fff}
 .chip{display:inline-block;font-size:12px;font-weight:700;color:#831843;background:#fce7f3;border:1px solid #f0abc9;border-radius:999px;padding:1.4mm 4mm;text-transform:uppercase;letter-spacing:1.4px}
 .x{font-family:'Times New Roman','DejaVu Serif',Georgia,serif;font-style:italic;font-weight:700;font-size:1.12em;padding:0 0.06em}
+/* Les cartes dessinées par l'outil (exemple de la couverture et de la page 2, cartes du dos) gardent
+   la police de l'outil, comme sur les fiches (03/10/2026) : en Poppins, plus large, la ligne de
+   l'indice composé sortait de la carte (« le doub|le ») ; et les lettres de l'inconnue (𝑏, 𝑛…) en
+   SplatLettres, la lettre ronde de l'outil (les mêmes @font-face que outils/splat.html). */
+@font-face{font-family:SplatLettres;src:url('/assets/fonts/SplatLettres-Italic.woff2') format('woff2');font-style:normal;font-weight:100 900;font-display:block;unicode-range:U+1D434-1D467,U+210E}
+@font-face{font-family:SplatLettres;src:url('/assets/fonts/SplatLettres-Italic.woff2') format('woff2');font-style:italic;font-weight:100 900;font-display:block;unicode-range:U+1D434-1D467,U+210E}
+svg.ex-carte,.u-carte svg,.r-carte svg{font-family:SplatLettres,system-ui,-apple-system,"Segoe UI",Roboto,Arial}

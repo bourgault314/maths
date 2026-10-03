@@ -36,7 +36,8 @@ test("A. dos : aucun logo, plus de « Mes fiches », QR de 30 mm, « Pour se sou
     assert.doesNotMatch(d.replace(/\/\*[\s\S]*?\*\//g, ""), /class="prog"|\.prog |je colorie l'étoile/, `${f} : plus de « Mes fiches »`);
     assert.match(d, /\n\.niv img\{width:30mm;height:30mm;/, `${f} : QR « Encore des cartes » de 30 mm`);
     assert.match(d, /\n\.suite img\{width:30mm;height:30mm;/, `${f} : QR « La suite du voyage » de 30 mm`);
-    assert.match(d, /\n\.lex ul\{[^}\n]*;zoom:1\.25\}/, `${f} : « Pour se souvenir » plus gros`);
+    // (03/10/2026) l'Enquête n'a plus « Pour se souvenir » : deux cartes de rappel (tests/livret-splat-enquete.test.mjs)
+    if (f !== "livret-splat-enquete") assert.match(d, /\n\.lex ul\{[^}\n]*;zoom:1\.25\}/, `${f} : « Pour se souvenir » plus gros`);
     assert.match(d, /<span class="chip">Encore des cartes&nbsp;!<\/span>/, `${f} : rien de retiré d'autre`);
     assert.match(d, /class="suite"/, f);
     assert.match(d, /Steve Wyborney/, f);
@@ -51,7 +52,7 @@ test("A. dos : aucun logo, plus de « Mes fiches », QR de 30 mm, « Pour se sou
   for (const [f, mm] of [["livret-splat-classique", 34], ["livret-splat-equations", 36]])
     assert.match(lire(`_sources/${f}/render.py`), new RegExp(`CSS_DOS_DEFI = """[\\s\\S]*?\\.niv img\\{width:${mm}mm;height:${mm}mm\\}`), f);
   // l'agrandissement par zoom : les mesures des mini-schémas en tiennent compte
-  for (const f of ["livret-splat-enquete", "livret-splat-systeme"])
+  for (const f of ["livret-splat-systeme"])
     assert.match(lire(`_sources/${f}/render.py`), /const Z = parseFloat\(getComputedStyle\(document\.querySelector\('\.lex ul'\)\)\.zoom\) \|\| 1;/, f);
 });
 

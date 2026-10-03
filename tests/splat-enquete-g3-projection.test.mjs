@@ -4,7 +4,7 @@
       Deuxième tour 1, 2, 3, fiches 11d, 14, 22, 18d) ; les calculs de chaque appui.
    2. En projection ET, depuis le 01/10/2026 (décision de Gwenaël), dans « Voir le schéma » du
       mode élève : le même pas à pas ; le corrigé imprimé ne passe jamais par le pas à pas.
-   3. Les 30 fiches des six livrets (120 cartes) : chaque carte a son pas à pas, il finit par
+   3. Les 25 fiches des cinq livrets (100 cartes) : chaque carte a son pas à pas, il finit par
       les taches dévoilées, il ne touche pas à la carte (mêmes cartes, aucun tirage).
    4. Le bandeau du haut (une ligne par phrase) et la réserve du schéma en mode élève sur
       ordinateur (les boutons ne descendent plus au premier appui).
@@ -137,8 +137,18 @@ const EXEMPLES = [
   ["EX_ADD2", 0], ["EX_MUL2", 0], ["EX_REB", 0], ["EX_UNITE", 0], ["EX_ADD", 0], ["EX_MUL", 0],
   ["E11D", 0], ["E14", 0], ["E22", 1], ["EX_REU", 0], ["E18D", 2]
 ];
+/* (03/10/2026, cinq livrets) les exemples de la maquette restent ceux qu'elle a validés : les
+   adresses qui ont quitté render.py (les pages 2 des anciens deuxièmes tours, les fiches 14 et 22
+   d'avant la progression v3) sont gardées ici telles quelles. */
+const MAQUETTE = {
+  EX_ADD: "mode=C&splats=3&structure=CHAIN&clues=SENTENCE&mul=0&div=0&add=1&sub=0&deltaMax=10&visibleMin=0&visibleMax=0&totalMin=15&totalMax=40&cards=1&unknown=question&seed=4642",
+  EX_MUL: "mode=C&splats=3&structure=CHAIN&clues=SENTENCE&mul=1&div=0&add=1&sub=0&deltaMax=10&visibleMin=0&visibleMax=0&totalMin=15&totalMax=40&cards=1&unknown=question&seed=128029",
+  EX_REU: "mode=C&clues=SENTENCE&splats=3&structure=HASARD&reunies=1&mul=1&div=0&add=1&sub=0&deltaMax=15&visibleMin=0&visibleMax=0&totalMin=30&totalMax=80&cards=1&unknown=question&seed=43",
+  E14: "mode=C&clues=SENTENCE&splats=3&structure=REF&ordre=DESSIN&mul=0&div=0&add=1&sub=1&deltaMax=15&visibleMin=1&visibleMax=3&totalMin=30&totalMax=60&seed=19446",
+  E22: "mode=C&clues=SENTENCE&splats=2&noTotal=1&mul=1&div=0&add=1&sub=0&deltaMax=30&visibleMin=0&visibleMax=0&totalMin=15&totalMax=60&modele=1&seed=3"
+};
 function carteDe(nom, k){
-  const a = py(nom);
+  const a = MAQUETTE[nom] || py(nom);
   return moteur(a.includes("cards=") ? a : `${a}&cards=4&unknown=question`, k + 1).cartes[k];
 }
 
@@ -226,11 +236,11 @@ test("le même pas à pas en projection et en mode élève (01/10/2026), le corr
   assert.match(html, /revealState > 0 && revealState <= enqEtapesMax\)\{\n\s+drawRelationGraphicClues\(svg, card\);/);
 });
 
-// --- 3. les 30 fiches -----------------------------------------------------------------------------
-const FICHES = [...Array.from({ length: 15 }, (_, i) => `E${10 + i}`), ...Array.from({ length: 15 }, (_, i) => `E${10 + i}D`)];
+// --- 3. les 25 fiches (cinq livrets, 03/10/2026) ---------------------------------------------------
+const FICHES = [...Array.from({ length: 15 }, (_, i) => `E${10 + i}`), ...[11, 12, 13, 16, 17, 18, 20, 22, 19, 24].map((n) => `E${n}D`)];
 const TYPES = new Set(["vide", "barres", "barresParts", "ligne", "barresValeurs", "fin"]);
 
-test("les 30 fiches des six livrets : chaque carte a son pas à pas, et il ne touche pas à la carte", () => {
+test("les 25 fiches des cinq livrets : chaque carte a son pas à pas, et il ne touche pas à la carte", () => {
   g3.eleve(false);
   let cartes = 0;
   const appuis = new Map();
@@ -263,7 +273,7 @@ test("les 30 fiches des six livrets : chaque carte a son pas à pas, et il ne to
     assert.equal(createHash("sha256").update(JSON.stringify(cs)).digest("hex"), avant, `${nom} : une carte a changé`);
     assert.equal(moteur(`${py(nom)}&cards=4&unknown=question`, 4).appels, appels, `${nom} : tirages`);
   }
-  assert.equal(cartes, 120);
+  assert.equal(cartes, 100);
   /* la vérification des indices (dernier appui) : une ligne juste par indice, sur chaque carte */
   let indices = 0;
   for(const nom of FICHES){
@@ -274,9 +284,9 @@ test("les 30 fiches des six livrets : chaque carte a son pas à pas, et il ne to
       indices += lignes.length;
     });
   }
-  assert.ok(indices >= 200, `${indices} indices vérifiés`);
-  /* de 5 à 11 appuis ; relevé au lot G3 */
-  assert.deepEqual([...appuis.entries()].sort((a, b) => a[0] - b[0]), [[5, 3], [6, 27], [7, 45], [8, 7], [9, 11], [10, 27]]);
+  assert.ok(indices >= 160, `${indices} indices vérifiés`);
+  /* de 5 à 11 appuis ; relevé au lot « fabrication des cinq livrets » (03/10/2026, 100 cartes) */
+  assert.deepEqual([...appuis.entries()].sort((a, b) => a[0] - b[0]), [[5, 5], [6, 21], [7, 37], [8, 5], [9, 11], [10, 21]]);
 });
 
 // --- 4. le haut de l'écran, et la réserve du schéma en mode élève ---------------------------------
