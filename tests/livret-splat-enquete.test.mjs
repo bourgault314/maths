@@ -252,7 +252,10 @@ function texteDesPages(p) {
     bornes.push(s.length);
     let texte = "";
     for (let k = 0; k < bornes.length - 1; k++) {
-      const codes = [...s.slice(bornes[k], bornes[k + 1]).matchAll(/<([0-9a-fA-F]{4})>\s*Tj/g)].map((m) => m[1].toLowerCase());
+      // une chaîne peut porter plusieurs glyphes (<02D402D5> Tj) : le Chromium de Windows en
+      // écrit beaucoup (03/10/2026) ; on les découpe par 4, sinon leurs lettres disparaissent
+      const codes = [...s.slice(bornes[k], bornes[k + 1]).matchAll(/<((?:[0-9a-fA-F]{4})+)>\s*Tj/g)]
+        .flatMap((m) => m[1].toLowerCase().match(/.{4}/g));
       if (!codes.length) continue;
       let meilleure = null, score = 0;
       for (const t of tables) {
@@ -295,12 +298,15 @@ test("dans les PDF — couverture, exemple en page 2, les cinq fiches dans l'ord
       assert.match(pages[1], /L'enquête pas à pas/);
       // (lot « pages 2 ») les étapes du pas à pas : le retrait sauf « fois plus » seul (28 = 4 × 7),
       // « je range » et « je regroupe » dès qu'il y a plusieurs écarts (partie 3 et Deuxième tour)
-      const etapes = ["Je fais le schéma de la situation", "Schéma regroupé", "Je partage", "J'écris la réponse et je vérifie"]
+      const etapes = ["Je fais le schéma de la situation", "Schéma regroupé", "Je partage", "Je réponds", "Je vérifie"]
         .concat(nom === "multiplicatif" ? [] : ["Je retire"], l >= 2 ? ["Je range", "Je regroupe"] : [],
                 l >= 3 ? ["Je trouve les autres taches"] : []);
       for (const t of etapes) assert.match(pages[1], souple(t), `${s}, page 2 : ${t}`);
       assert.doesNotMatch(pages[1], souple("Je calcule"), `${s}, page 2 : plus de « Je calcule » en bloc`);
-      assert.match(pages[1], souple(`Je vérifie : ${EXEMPLES_P2[nom]} ✓`), `${s} : l'exemple de la page 2`);
+      // (03/10/2026) « Je réponds » (la phrase encadrée) et « Je vérifie » : deux endroits, comme à l'écran
+      assert.doesNotMatch(pages[1], souple("J'écris la réponse et je vérifie"), `${s}, page 2 : l'ancien titre unique`);
+      assert.doesNotMatch(pages[1], souple("Je vérifie :"), `${s}, page 2 : « Je vérifie » est un titre, plus un bout de phrase`);
+      assert.match(pages[1], souple(`${EXEMPLES_P2[nom]} ✓`), `${s} : l'exemple de la page 2`);
       TITRES[nom].forEach((f, k) => {
         const p = pages[2 + k];
         assert.ok(p.startsWith(`Fiche ${f.code} —`), `${s}, page ${3 + k} : fiche ${f.code} (lu : ${p.slice(0, 40)})`);
