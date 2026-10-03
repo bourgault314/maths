@@ -147,7 +147,8 @@ test("2. le même vocabulaire partout : les trois entraînements, « sans chrono
 
 test("8. les ronds gris lisibles, les sous-titres courts, « Tape » et « appuie »", () => {
   assert.match(html, /\.etape \.dots i\.is-check\.off \{ color: #698197; \}/);
-  assert.match(html, /\.choix-activite \.etat\.off \{ color: #698197; \}/);
+  // Lot E1 : plus de rond ✓ ○ dans les panneaux du menu (liste simple).
+  assert.doesNotMatch(html, /\.choix-activite \.etat/);
   assert.match(html, /detail: "20 questions · 2 min · avant de valider",/);
   assert.match(html, /Mon parcours<small>tables, mélange, étoiles<\/small>/);
   assert.match(html, /"Tape une réponse ou appuie sur «\\u00a0Passer\\u00a0»\."/);

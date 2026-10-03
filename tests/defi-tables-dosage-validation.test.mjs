@@ -190,25 +190,25 @@ test("l’événement « entraine » porte le point sur la validation : l’écr
 
 // ------------------------------------------------------------------- la page
 
-test("l’accueil : la pastille « N fois » remplace les ronds de J’apprends, Je m’entraîne garde ses ronds et compte dans le texte", () => {
-  assert.match(html, /const foisApprends = ligne\.apprends\.reduce\(\(somme, item\) => somme \+ item\.fois, 0\);/);
-  assert.match(html, /sousTitre: `facultatif · \$\{ligne\.apprends\.length\} activités`,\s*points: foisApprends \? \[pastilleFois\(foisApprends\)\] : \[\],/, "plus de ronds, une pastille, rien à 0");
-  assert.match(html, /function pastilleFois\(fois\) \{[\s\S]*?pastille\.className = "fois";[\s\S]*?pastille\.textContent = `\$\{fois\}\\u00a0fois`;/);
-  assert.match(html, /\.etape \.fois \{ display: inline-flex;[^}]*background: var\(--teal\); color: #fff;/);
-  assert.doesNotMatch(html, /activité\$\{terminees > 1 \? "s" : ""\} sur \$\{ligne\.apprends\.length\}`/, "plus de « 5 activités sur 5 »");
-  assert.match(html, /const foisEntraine = ligne\.entraine\.reduce\(\(somme, item\) => somme \+ item\.fois, 0\);/);
-  assert.match(html, /\? `réussi ✓ · fait \$\{foisEntraine\}\\u00a0fois`\s*: reussis\s*\? `puis : \$\{NOMS_ENTRAINEMENTS\[prochainEntrainement\.entrainement\]\}`\s*: `d’abord : \$\{NOMS_ENTRAINEMENTS\[prochainEntrainement\.entrainement\]\}`/, "trois sous-titres courts, une ligne à 320 px");
-  assert.match(html, /points: ligne\.entraine\.map\(item => etoile\(item\.etat\)\),/, "les trois ronds de Je m’entraîne restent");
-  // Les panneaux : « fait N fois » sous chaque activité et chaque entraînement.
-  assert.match(html, /fois: item\.fois,\s*conseillee: Boolean\(prochaineActivite\)/);
-  assert.match(html, /fois: item\.fois,\s*conseillee: Boolean\(prochainEntrainement\)/);
-  assert.match(html, /compte\.className = "fois-petit";\s*compte\.textContent = `\$\{detail \? " · " : ""\}fait \$\{fois\}\\u00a0fois`;/);
-  assert.match(html, /\.choix-activite \.fois-petit \{ color: var\(--teal\);/);
+test("l’accueil : le menu « Choisir une activité » ne compte plus (lot E1) — ni « N fois », ni ●○○, ni « puis : … »", () => {
+  // Décision 8 du 03/10/2026, et sa réponse « liste simple » : le compteur
+  // « fois » reste dans le parcours (page prof, fiche) mais l'élève ne le
+  // voit plus dans le menu.
+  assert.doesNotMatch(html, /pastilleFois|foisApprends|foisEntraine|fois-petit/);
+  assert.doesNotMatch(html, /\.etape \.fois \{/);
+  assert.doesNotMatch(html, /`puis : \$\{NOMS_ENTRAINEMENTS/);
+  assert.doesNotMatch(html, /`d’abord : \$\{NOMS_ENTRAINEMENTS/);
+  assert.doesNotMatch(html, /points: ligne\.entraine\.map\(item => etoile\(item\.etat\)\)/, "plus de ●○○");
+  assert.match(html, /sousTitre: `facultatif · \$\{ligne\.apprends\.length\} activités`,\s*points: \[\],/);
+  assert.match(html, /sousTitre: `\$\{ligne\.entraine\.length\} entraînements · sans chrono`,\s*points: \[\],/);
+  assert.equal((html.match(/conseille: false,/g) || []).length, 5, "aucune ligne du menu n'est conseillée (le cadenas non plus)");
 });
 
-test("l’accueil : l’encadré du rendez-vous, sous les étapes, seulement quand les trois sont réussis et la grille pas prête", () => {
-  assert.match(html, /if \(!ligne\.acquise && reussis === 3 && !ligne\.validation\.prete\) \{\s*const rdv = document\.createElement\("p"\);\s*rdv\.className = "rdv";\s*rdv\.id = "acc-rdv";\s*rdv\.textContent = soude\(phraseRendezVous\(ligne\.validation, table\)\);/);
-  assert.match(html, /\.matable \.rdv \{ margin: 10px 0 2px;/);
+test("la phrase du rendez-vous : sur l’écran de résultat (lot E1 : plus dans le menu)", () => {
+  // Lot E1 : le menu ne dit plus où en est l'élève, l'encadré « rdv » s'en va ;
+  // la phrase reste celle de l'écran de résultat.
+  assert.doesNotMatch(html, /rdv\.id = "acc-rdv";/);
+  assert.doesNotMatch(html, /\.matable \.rdv \{/);
   // Les phrases, une par cas, construites par le moteur du texte.
   const debut = html.indexOf("function phraseRendezVous(validation, table)");
   const source = html.slice(html.indexOf("function pluriel(nombre, mot)"), html.indexOf("// Même convention de date que le moteur"))
@@ -254,12 +254,10 @@ test("le point de Jackie : une table acquise choisie depuis « Changer de table 
   // Un ancien enregistrement sans le drapeau se lit « pas acquise » : rien ne casse.
   session.setItem("mathsgo-defi-tables-table", JSON.stringify({code: "", table: 7}));
   assert.equal(logique.tableEnCours(etat), 2);
-  // Le bouton du choix écrit le drapeau, et la carte acquise n'a aucune étape conseillée.
+  // Le bouton du choix écrit le drapeau. Lot E1 : plus aucune ligne du menu
+  // n'est conseillée, acquise ou non.
   assert.match(html, /ecrireTableChoisie\(candidate, \{acquise\}\);/);
-  assert.match(html, /const conseilCarte = ligne\.acquise \? null : conseil;/);
-  assert.match(html, /conseille: conseilCarte === "apprends",/);
-  assert.match(html, /conseille: conseilCarte === "entraine",/);
-  assert.match(html, /conseille: conseilCarte === "valide",/);
+  assert.doesNotMatch(html, /conseilCarte/);
   assert.match(html, /titre: ligne\.acquise \? "Ma table est acquise" : "Je valide ma table",\s*sousTitre: ligne\.acquise \? `acquise le \$\{dateEnLettres\(ligne\.acquise\)\}` : "20 questions · 1 min 30",/);
 });
 
@@ -267,7 +265,7 @@ test("« Comme la validation, en 2 min » reste proposée sur une table acquise"
   const debut = html.indexOf('libelle: "Comme la validation, en 2 min"');
   const avant = html.slice(debut - 400, debut);
   assert.doesNotMatch(avant, /if \(!ligne\.acquise\)/, "plus de condition « pas acquise » devant l’option");
-  assert.match(avant, /\{\s*choixEntraine\.push\(\{\s*$/);
+  assert.match(avant, /\n\s*choixEntraine\.push\(\{\s*$/);
 });
 
 test("le moteur a changé : nouveau numéro de cache, copie serveur identique, parcours de référence à jour", async () => {

@@ -116,8 +116,9 @@ test("une mauvaise réponse laisse la case vide et renvoie le calcul en fin de b
   assert.match(html, /const bandeFinie = state\.configuration\.mode === "learn"\s*&& \["construct", "gaps"\]\.includes\(state\.configuration\.learnActivity\)\s*&& state\.revealedLearnResults\.size >= CASES_BANDE;/);
   assert.match(html, /else if \(bandeFinie\) finish\(\);/);
   assert.match(html, /const CASES_BANDE = 11;/);
-  assert.match(html, /const total = stickActivity \? CASES_BANDE : TOTAL;/,
-    "le compteur « x / 11 cases complétées » compte les mêmes cases");
+  // Lot E1 (décision 13) : les perles comptent sur 10 (la case 0 × N est donnée).
+  assert.match(html, /const total = stickActivity \? CASES_BANDE - \(activitePerles\(state\.configuration\) \? 1 : 0\) : TOTAL;/,
+    "le compteur « x / 11 cases complétées » compte les mêmes cases (x / 10 aux perles)");
 });
 
 test("la correction dit que le calcul reviendra, comme partout ailleurs", () => {

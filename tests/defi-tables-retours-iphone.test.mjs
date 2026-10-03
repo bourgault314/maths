@@ -131,7 +131,9 @@ test("une boîte touchée s’allume dans la grille : is-filtre sur la grille, i
 test("le cadre d’une boîte : « Ils reviennent demain », « Ratés : ils reviennent demain » — et la liste des calculs reste", () => {
   assert.match(html, /\? "Ratés : ils reviennent demain"\s*: `Ils reviennent \$\{libelleDans\(PARCOURS\.SEUILS\.revision\.delais\[boite - 1\]\)\}`\)\);/);
   assert.doesNotMatch(html, /· revient \$\{boite === 1 \? "le lendemain"/, "plus de « En route · revient demain »");
-  assert.match(html, /ligneDetail\("mc-detail-liste", cles\.length \? cles\.map\(PARCOURS\.libelleFait\)\.join\(" · "\)/, "la liste, que Gwenaël a voulu garder");
+  // Lot E1 (décision 6) : la liste reste, une pastille par calcul (le « · » se lisait « fois »).
+  assert.match(html, /const liste = ligneDetail\("mc-detail-liste pastilles", ""\);\s*cles\.forEach\(cle => liste\.appendChild\(ligneDetail\("", PARCOURS\.libelleFait\(cle\)\)\)\);/, "la liste, que Gwenaël a voulu garder");
+  assert.doesNotMatch(html, /cles\.map\(PARCOURS\.libelleFait\)\.join\(" · "\)/);
 });
 
 test("le bouton de Mes calculs : « Réviser 10 calculs » + « 36 à faire aujourd’hui » au-delà d’une série ; inchangé jusqu’à 10", () => {
