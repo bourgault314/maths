@@ -1,8 +1,8 @@
 // Lot E2 de l'optimisation de Défi tables (03/10/2026) : des écrans seulement.
 // Décision 3 : « À retenir pour demain » (toutes les erreurs de la séance,
 // écrites justes) à la place de la liste de la dernière étape. Décision 5 :
-// l'échelle C1 (les noms des marches en pastilles), écran et fiche, sans la
-// phrase « Prochaine séance ». Décision 12 : le bilan après une table acquise.
+// l'échelle en barre (version A, huit segments) et « Prochaine séance : … »,
+// écran et fiche — C1 abandonné. Décision 12 : le bilan après une table acquise.
 // Et les réponses de Gwenaël aux questions E2 (audit GPT) : le format sur
 // l'écran de lancement avec un exemple (F), « à revoir » pour un calcul passé
 // (I), la démonstration du geste des perles (E), les textes secondaires en
@@ -128,7 +128,8 @@ test("E2 · 3 (audit GPT, E) : la démonstration du geste des perles — toute s
   assert.match(geste, /\[\[300, true\], \[1500, false\], \[2700, true\], \[3900, false\]\]/, "deux allers-retours : les perles reviennent toujours");
   assert.match(geste, /prefers-reduced-motion: reduce/);
   assert.match(corps("arreterDemo"), /if \(boulier\.dom\) dessinerBoulier\(false\);/, "arrêtée, chaque perle reprend sa vraie place");
-  assert.match(corps("perlesPointerDown"), /if \(!boulier\.dom \|\| boulier\.finie \|\| !state\.running\) return;\s*arreterDemo\(\);/, "toucher le boulier arrête la démonstration");
+  // Correction de Claude Code : la place des perles à l'écran est lue AVANT d'arrêter la démonstration (voir le test plus bas).
+  assert.match(corps("perlesPointerDown"), /if \(!boulier\.dom \|\| boulier\.finie \|\| !state\.running\) return;[\s\S]*const vues = demo \?[^\n]*\n\s*arreterDemo\(\);/, "toucher le boulier arrête la démonstration");
   assert.match(corps("perlesPointerUp"), /if \(!drag\.bouge && !ecart\) \{\s*montrerGeste\(\);\s*return;\s*\}/);
   assert.match(corps("perlesPointerMove"), /if \(Math\.abs\(ecart\) > 4\) drag\.bouge = true;/);
   assert.match(html, /Pousse \$\{perles\}\./, "la consigne ne change pas");
@@ -152,4 +153,83 @@ test("E2 · 4 : la police — les textes secondaires en 700, après leurs règle
 test("E2 · 5 : la fin des perles dit « Les 10 cases construites sur le boulier », comme le compteur", () => {
   assert.match(html, /\? "Les 10 cases construites sur le boulier"/);
   assert.doesNotMatch(html, /Les 11 produits construits/);
+});
+
+// Correction de Claude Code (03/10/2026), trouvée en jouant les perles au
+// navigateur : l'élève qui imite la démonstration attrape la perle EN TRAIN DE
+// GLISSER. Le toucher arrêtait la démonstration (perles remises au repos), puis
+// la perle prise était la plus proche de leur place de repos : la voisine.
+// Le bon geste répondait « Pas assez de perles ! ». On exécute les vraies
+// fonctions des perles sur un boulier simulé (table de 2, rien de poussé).
+function boulierSimule({demoEnCours, vues}) {
+  const TAILLE = 20;
+  const appels = {dessiner: [], montrer: 0, refus: []};
+  const perles = Array.from({length: 10}, (rien, i) => ({style: {}, getBoundingClientRect: () => ({left: vues[i]})}));
+  const boulier = {
+    table: 2, taille: TAILLE, ecart: 5, etape: 0, finie: false, drag: null,
+    etats: Array.from({length: 10}, () => 0),
+    dom: {
+      interieur: {offsetWidth: 300, getBoundingClientRect: () => ({left: 0, top: 0, width: 300, height: 300})},
+      rangees: [{perles}, ...Array.from({length: 9}, () => ({perles: []}))]
+    }
+  };
+  const demo = demoEnCours ? {minuteurs: [], fleche: {remove() {}}} : null;
+  const f = new Function("boulier", "state", "PERLES", "demoInitiale", "appels",
+    `let demo = demoInitiale;
+     const dessinerBoulier = animer => appels.dessiner.push(animer);
+     const montrerGeste = () => { appels.montrer += 1; };
+     const refuserGeste = refus => appels.refus.push(refus.motif);
+     const leverRefus = () => {}; const enregistrerGeste = () => {}; const majBoulier = () => {};
+     ${corps("positionPerle")}\n${corps("gesteAttendu")}\n${corps("verifierGeste")}\n${corps("arreterDemo")}
+     ${corps("perlesPointerDown")}\n${corps("perlesPointerMove")}\n${corps("perlesPointerUp")}
+     return {down: perlesPointerDown, move: perlesPointerMove, up: perlesPointerUp, demo: () => demo};`)(
+    boulier, {running: true}, {rangees: 10, parRangee: 10}, demo, appels);
+  const evenement = clientX => ({clientX, clientY: 5, pointerId: 1, preventDefault() {}});
+  return {boulier, appels, ...f, evenement};
+}
+// Au repos, la perle i est à (5 + i) × 20 px ; en pleine démonstration, les
+// perles 0 et 1 (le groupe de la table de 2) ont glissé de 50 px vers la gauche.
+const REPOS = Array.from({length: 10}, (rien, i) => (5 + i) * 20);
+const EN_GLISSEMENT = REPOS.map((x, i) => (i < 2 ? x - 50 : x));
+
+test("correction E2 · 3 : la perle attrapée en pleine démonstration est celle que l'élève voit, et le bon geste est accepté", () => {
+  const b = boulierSimule({demoEnCours: true, vues: EN_GLISSEMENT});
+  b.down(b.evenement(EN_GLISSEMENT[1] + 10));
+  assert.equal(b.demo(), null, "toucher le boulier arrête la démonstration");
+  assert.equal(b.boulier.drag.index, 1, "la perle sous le doigt (1), pas sa voisine au repos (0)");
+  assert.ok(b.appels.dessiner.includes(false), "le groupe repart de sa vraie place : c'est l'élève qui fait tout le geste");
+  assert.equal(b.boulier.dom.rangees[0].perles[1].style.left, undefined);
+  b.move(b.evenement(-60));
+  b.up(b.evenement(-60));
+  assert.deepEqual(b.appels.refus, [], "pas de « Pas assez de perles ! »");
+  assert.equal(b.boulier.etats[0], 2, "les 2 perles sont poussées");
+});
+
+test("correction E2 · 3 : un doigt posé sur une perle que la démonstration a amenée à gauche ne pousse rien — rien n'est fait à sa place", () => {
+  const AU_BOUT = REPOS.map((x, i) => (i < 2 ? i * 20 : x));
+  const b = boulierSimule({demoEnCours: true, vues: AU_BOUT});
+  b.down(b.evenement(AU_BOUT[1] + 10));
+  b.move(b.evenement(AU_BOUT[1] + 12));
+  b.up(b.evenement(AU_BOUT[1] + 12));
+  assert.equal(b.boulier.etats[0], 0, "rien n'est fait à la place de l'élève");
+  assert.equal(b.appels.montrer, 1, "c'est un clic : la démonstration se rejoue");
+  assert.ok(b.appels.dessiner.includes(false), "chaque perle reprend sa vraie place");
+});
+
+test("correction E2 · 3 : sans démonstration, le geste des perles ne change pas", () => {
+  const b = boulierSimule({demoEnCours: false, vues: REPOS});
+  b.down(b.evenement(REPOS[1] + 10));
+  assert.equal(b.boulier.drag.index, 1);
+  assert.equal(b.boulier.drag.depart, REPOS[1] + 10, "le geste part du doigt");
+  b.move(b.evenement(10));
+  b.up(b.evenement(10));
+  assert.equal(b.boulier.etats[0], 2);
+  const autre = boulierSimule({demoEnCours: false, vues: REPOS});
+  autre.down(autre.evenement(REPOS[1] + 10));
+  autre.up(autre.evenement(REPOS[1] + 10));
+  assert.equal(autre.appels.montrer, 1, "un clic sans glisser rejoue la démonstration");
+});
+
+test("correction E2 · 3 : quitter la série (menu, retour) arrête la démonstration et ses minuteurs", () => {
+  assert.match(corps("quitterSerie"), /stopTimer\(\);[\s\S]{0,200}arreterDemo\(\);/);
 });

@@ -4643,7 +4643,6 @@
 
       function perlesPointerDown(event) {
         if (!boulier.dom || boulier.finie || !state.running) return;
-        arreterDemo();
         const rect = boulier.dom.interieur.getBoundingClientRect();
         const hauteurRangee = rect.height / PERLES.rangees;
         const rangee = Math.min(PERLES.rangees - 1, Math.max(0, Math.floor((event.clientY - rect.top) / hauteurRangee)));
@@ -4653,12 +4652,21 @@
         // de perles ! » sur le bon geste) — trouvé en jouant la séance.
         const zoom = rect.width / boulier.dom.interieur.offsetWidth || 1;
         const x = (event.clientX - rect.left) / zoom;
+        // Lot E2, correction de Claude Code : l'élève qui imite la
+        // démonstration attrape la perle LÀ OÙ IL LA VOIT, en train de
+        // glisser. On lit donc la place des perles à l'écran avant d'arrêter
+        // la démonstration (qui les remet au repos) ; sans ça, la perle prise
+        // était sa voisine au repos, et le bon geste disait « Pas assez de
+        // perles ! ». Le groupe, lui, repart bien de sa vraie place : c'est
+        // l'élève qui fait tout le geste.
+        const vues = demo ? boulier.dom.rangees[rangee].perles.map(perle => (perle.getBoundingClientRect().left - rect.left) / zoom) : null;
+        arreterDemo();
         // La perle la plus proche du doigt, poussées et au repos confondues :
         // on attrape la rangée, pas une cible de 44 px.
         let index = 0;
         let meilleure = Infinity;
         for (let i = 0; i < PERLES.parRangee; i += 1) {
-          const centre = positionPerle(i, i < boulier.etats[rangee]) + boulier.taille / 2;
+          const centre = (vues ? vues[i] : positionPerle(i, i < boulier.etats[rangee])) + boulier.taille / 2;
           const distance = Math.abs(centre - x);
           if (distance < meilleure) { meilleure = distance; index = i; }
         }
@@ -5659,6 +5667,9 @@
         state.launchReady = false;
         state.running = false;
         stopTimer();
+        // Lot E2, correction de Claude Code : la démonstration des perles ne
+        // survit pas à la sortie (menu, retour) — ses minuteurs partent avec.
+        arreterDemo();
         if (state.origin === "reglages") {
           show("intro");
           return;
