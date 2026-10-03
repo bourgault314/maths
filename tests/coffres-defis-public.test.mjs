@@ -161,7 +161,7 @@ test("le catalogue publie les cinq cartes dans les groupes validés", () => {
   }
 });
 
-test("Calcul mental expose exactement les six ressources autonomes validées", () => {
+test("Calcul mental expose exactement les sept ressources autonomes validées", () => {
   const design = catalogueUi.match(/"calcul-mental":\s*\{([\s\S]*?)\n\s*\},\n\s*proportionnalite:/)?.[1] || "";
   const notion = catalogue.notions.find(item => item.id === "calcul-mental");
   const bouliers = catalogue.collections.find(collection => collection.id === "bouliers");
@@ -198,12 +198,25 @@ test("Calcul mental expose exactement les six ressources autonomes validées", (
   assert.deepEqual(Array.from(boulierResources.filter(resource => resource.notions.includes("calcul-mental")), resource => resource.path), []);
   assert.deepEqual(Array.from(boulierResources.filter(resource => catalogue.resourceClassifications[resource.path]?.primaryNotion !== "numeration"), resource => resource.path), []);
   assert.deepEqual(Array.from(visiblePaths), expectedPaths);
-  assert.match(catalogueUi, /hiddenFromNotions \|\| \[\]/);
-  assert.match(catalogueUi, /const branchIds = notionBranchIds\(notionId\)/);
-  assert.match(catalogueUi, /resourceDisplayCount\(resources\) \+ collectionIds\.size/);
+  // Vérifier la règle livrée au navigateur, sans imposer la forme interne
+  // du compteur (les collections sont désormais développées récursivement).
+  const membershipSource = catalogueUi.match(/  function resourceBelongsToNotion\([^]*?\n  \}/)?.[0];
+  assert.ok(membershipSource);
+  const membershipContext = vm.createContext({
+    resourceClassification: resource => catalogue.resourceClassifications[resource.path] || {}
+  });
+  vm.runInContext(membershipSource, membershipContext);
+  for (const path of expectedPaths) {
+    const resource = catalogue.resources.find(item => item.path === path);
+    assert.equal(membershipContext.resourceBelongsToNotion(resource, "calcul-mental"), true, path);
+  }
+  for (const resource of boulierResources) {
+    assert.equal(membershipContext.resourceBelongsToNotion(resource, "calcul-mental"), false, resource.path);
+  }
 
   const automatismes = catalogue.resources.find(resource => resource.path === "auto/index.html");
   assert.equal(automatismes?.status, "published");
+  assert.equal(membershipContext.resourceBelongsToNotion(automatismes, "calcul-mental"), false);
   assert.ok(catalogue.resourceClassifications[automatismes.path].hiddenFromNotions.includes("calcul-mental"));
 });
 
