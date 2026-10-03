@@ -1,0 +1,2367 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Défi calcul, par modules | maths&amp;go</title>
+  <meta name="description" content="Défi calcul par modules, en construction : le calcul mental, module par module.">
+  <!-- En construction (lot 1a, 03/10/2026) : la page n'est reliée à rien,
+       ni au catalogue ni au plan du site. À l'ouverture, elle prendra
+       l'adresse defi_calcul.html. -->
+  <meta name="robots" content="noindex">
+  <link rel="icon" href="/favicon.ico" sizes="48x48">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="icon" type="image/png" sizes="32x32" href="/assets/img/favicon-32.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="/assets/img/favicon-192.png">
+  <link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png">
+  <link rel="stylesheet" href="../../assets/vendor/polices/polices.css">
+  <script>
+    // Lu en tout premier, avant l'appli, en JavaScript ancien (pas de const,
+    // pas de ?., pas d'URLSearchParams) : quoi qu'il arrive au reste — moteur
+    // absent, navigateur vieux, erreur plus loin — le code de l'élève est
+    // sorti de la barre d'adresse. Le code ne doit apparaître dans AUCUNE adresse :
+    // une adresse reste dans l'historique et s'affiche quand la page est
+    // projetée au tableau.
+    //
+    // Lot 3 (03/09/2026) : l'espace élève et « Ma classe » n'envoient plus le
+    // code mais un BILLET (#b=…, 32 caractères, deux minutes, usage unique)
+    // que l'appli échange contre le code auprès du serveur. L'historique ne
+    // garde qu'un billet mort.
+    //
+    // Lot « appareil partagé » (06/09/2026) : les deux moitiés du système
+    // émettent des billets depuis le 3 septembre, alors #code= et #fiche= ne
+    // sont plus compris DU TOUT. Un vieux lien, ou une adresse fabriquée à la
+    // main, n'ouvre plus rien et n'identifie plus personne : le code y est
+    // seulement effacé de l'adresse, pour qu'il ne reste pas affiché.
+    (function (window) {
+      var entree = {billet: "", vue: "", ouvrir: ""};
+      var reste = [];
+      var aEffacer = false;
+      try {
+        var brut = String(window.location.hash || "").replace(/^#/, "");
+        if (brut === "parcours" || brut === "calculs") {
+          entree.ouvrir = brut;
+        } else if (brut) {
+          var morceaux = brut.split("&");
+          for (var i = 0; i < morceaux.length; i++) {
+            var egal = morceaux[i].indexOf("=");
+            var cle = egal < 0 ? morceaux[i] : morceaux[i].slice(0, egal);
+            var valeur = egal < 0 ? "" : morceaux[i].slice(egal + 1);
+            try { cle = decodeURIComponent(cle); valeur = decodeURIComponent(valeur); } catch (e) {}
+            if (cle === "code" || cle === "fiche") aEffacer = true;
+            else if (cle === "b") entree.billet = valeur;
+            else if (cle === "vue") { entree.vue = valeur; reste.push(morceaux[i]); }
+            else if (cle === "ouvrir") { entree.ouvrir = valeur; reste.push(morceaux[i]); }
+            else if (morceaux[i]) reste.push(morceaux[i]);
+          }
+        }
+      } catch (e) {}
+      window.MATHSGO_ENTREE = entree;
+      if (aEffacer || entree.billet) {
+        try {
+          window.history.replaceState(null, "", window.location.pathname
+            + window.location.search + (reste.length ? "#" + reste.join("&") : ""));
+        } catch (e) {}
+      }
+      // Un lien #b= posé sur une page DÉJÀ ouverte — adresse collée ou proposée
+      // par la barre du navigateur — n'est pas un nouveau document : ce script
+      // ne rejouerait pas, le billet resterait affiché dans la barre et le
+      // travail continuerait sous l'ancien code. On recharge : le document neuf
+      // repasse par ici, échange le billet et nettoie l'adresse. Un #code= ou un
+      // #fiche= qui arrive de la même façon recharge aussi : il n'ouvre rien,
+      // mais le document neuf le retire de la barre d'adresse.
+      try {
+        window.addEventListener("hashchange", function () {
+          var hash = String(window.location.hash || "");
+          if (/(^#|&)(code|fiche|b)=/.test(hash)) window.location.reload();
+        });
+      } catch (e) {}
+    })(window);
+  </script>
+  <script defer src="../../assets/js/mention-confidentialite.js"></script>
+  <link rel="stylesheet" href="./defi_calcul.css?v=20261003-2">
+</head>
+<body>
+  <main class="shell">
+    <header class="topbar">
+      <a class="brand" href="/" aria-label="Accueil maths&amp;go">
+        <img src="/assets/img/mathsgo-logo.png" alt="maths&amp;go" width="1338" height="622">
+      </a>
+      <div class="topbar-actions">
+        <button id="suivi-sortie" class="catalogue-link suivi-sortie" type="button" hidden>Se déconnecter</button>
+        <a id="lien-retour" class="catalogue-link" href="../index.html?domain=nombres-calculs&amp;notion=calcul-mental" aria-label="Retour au calcul mental"><span class="back-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="20" height="20"><path d="M19 12H5M11 6l-6 6 6 6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="catalogue-link-label">Calcul mental</span></a>
+        <button class="fullscreen-toggle" type="button" data-fullscreen-toggle aria-pressed="false" aria-label="Passer en plein écran"><span class="fullscreen-toggle-icon" data-fullscreen-icon aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><path class="fullscreen-expand" d="M8 3H3v5M16 3h5v5M8 21H3v-5M16 21h5v-5"/><path class="fullscreen-collapse" d="M3 8h5V3M21 8h-5V3M3 16h5v5M21 16h-5v5"/></svg></span><span data-fullscreen-label>Plein écran</span></button>
+      </div>
+      <!-- Suivi de classe : le repère vit dans la barre du haut, donc sur
+           TOUS les écrans. L'élève doit toujours savoir que son travail part
+           chez son professeur. -->
+      <p id="suivi-repere" class="suivi-repere" hidden></p>
+      <div id="suivi-garde" class="suivi-garde" role="dialog" aria-modal="true" aria-labelledby="suivi-garde-titre" hidden>
+        <div class="suivi-garde-carte">
+          <p id="suivi-garde-titre" class="suivi-garde-titre">C’est toujours toi ?</p>
+          <p class="suivi-garde-note">Personne n’a touché à cet écran depuis un moment. Si c’est toi, retape ton code (il est sur ta bandelette). Sinon, appuie sur «&nbsp;Non&nbsp;» : ton camarade retrouvera son parcours avec son code.</p>
+          <form id="suivi-garde-form" class="suivi-garde-form" autocomplete="off">
+            <label class="suivi-garde-label" for="suivi-garde-code">Ton code</label>
+            <input id="suivi-garde-code" class="suivi-garde-code" type="text" inputmode="latin" autocapitalize="characters" autocomplete="off" autocorrect="off" spellcheck="false" maxlength="6" size="6" aria-describedby="suivi-garde-erreur">
+            <p id="suivi-garde-erreur" class="suivi-garde-erreur" role="alert" hidden></p>
+            <div class="suivi-garde-boutons">
+              <button id="suivi-garde-oui" class="primary" type="button">C’est moi</button>
+              <button id="suivi-garde-non" class="secondary" type="button">Non, ce n’est pas moi</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </header>
+
+    <section class="panel">
+      <!-- L'accueil (variante A des maquettes) : Mon module et sa séance à
+           gauche, le parcours à droite, un seul palier ouvert à la fois.
+           Tout ce qui s'y lit est calculé par renderAccueil(). -->
+      <div id="intro" class="intro dc-large">
+        <div class="acc dc-a">
+          <div class="gauche">
+            <section class="matable" aria-labelledby="acc-module-titre">
+              <div class="matable-head">
+                <div><p class="eyebrow">Mon module</p><h1 id="acc-module-titre" tabindex="-1">Défi calcul</h1></div>
+              </div>
+              <div id="acc-niv" class="dc-niv"></div>
+              <div id="acc-seance"></div>
+              <div class="seance-liens">
+                <button id="acc-valide" type="button">Je valide</button>
+                <button id="acc-choisir" type="button">Choisir une activité</button>
+              </div>
+            </section>
+            <div id="acc-semaine" class="semaine"></div>
+            <div class="acc-bas">
+              <button id="acc-notice-bouton" type="button">Comment ça marche&nbsp;?</button>
+            </div>
+          </div>
+          <section id="acc-parcours" class="dc-parcours" aria-labelledby="parcours-eyebrow">
+            <div class="dc-ptete"><p id="parcours-eyebrow" class="eyebrow">Mon parcours</p><small id="parcours-compte"></small></div>
+            <div id="parcours-paliers" class="dc-paliers" role="group" aria-label="Les paliers"></div>
+            <p id="parcours-titre" class="dc-ptitre"></p>
+            <div id="parcours-modules" class="dc-mods"></div>
+          </section>
+        </div>
+      </div>
+
+      <!-- L'écran d'un module : les cases de niveau, les trois étapes. -->
+      <div id="module" class="dc-module" hidden>
+        <section class="matable" aria-labelledby="module-titre">
+          <div class="matable-head">
+            <div><p class="eyebrow">Mon module</p><h1 id="module-titre" tabindex="-1"></h1></div>
+            <div class="matable-droite"><button id="module-changer" class="matable-changer" type="button">Changer de module</button></div>
+          </div>
+          <p id="module-lab" class="dc-lab">Mon niveau</p>
+          <div id="module-niveaux" class="dc-niveaux" role="group" aria-labelledby="module-lab"></div>
+          <div id="module-etapes" class="dc-etapes"></div>
+        </section>
+      </div>
+
+      <div id="play" hidden>
+        <!-- « J'apprends » : où j'en suis des trois temps, au-dessus de la barre. -->
+        <div id="seance-fil" class="seance-fil" hidden></div>
+        <div class="status">
+          <div class="status-left">
+            <button id="game-menu" class="game-menu" type="button" aria-label="Arrêter et revenir à Mon module"><span class="back-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="20" height="20"><path d="M19 12H5M11 6l-6 6 6 6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="game-menu-label">Mon module</span></button>
+            <span id="question-count"></span>
+          </div>
+          <strong id="time" class="no-timer">À ton rythme</strong>
+        </div>
+        <div class="progress-track" aria-hidden="true"><b id="progress"></b></div>
+        <article id="question-card" class="question">
+          <div id="expression" class="expression" tabindex="-1" role="status" aria-live="polite" aria-atomic="true"></div>
+          <p id="answer-feedback" class="answer-feedback" role="status" aria-live="polite"></p>
+          <div id="aide" class="dc-aide" hidden></div>
+          <div id="touches" class="dc-touches"></div>
+          <div class="keypad" role="group" aria-label="Clavier numérique">
+            <button type="button" data-key="1">1</button><button type="button" data-key="2">2</button><button type="button" data-key="3">3</button>
+            <button type="button" data-key="4">4</button><button type="button" data-key="5">5</button><button type="button" data-key="6">6</button>
+            <button type="button" data-key="7">7</button><button type="button" data-key="8">8</button><button type="button" data-key="9">9</button>
+            <button type="button" data-key="clear">Effacer</button><button type="button" data-key="0">0</button><button type="button" data-key="backspace" aria-label="Effacer un chiffre">⌫</button>
+          </div>
+          <div class="actions">
+            <button id="validate" class="primary" type="button">Valider</button>
+            <button id="skip" class="secondary" type="button">Passer</button>
+          </div>
+        </article>
+      </div>
+
+      <div id="result" class="result" hidden>
+        <!-- Le verdict d'abord, puis la suite en une phrase et les boutons,
+             les erreurs en dernier. À la fin de « J'apprends », le verdict
+             laisse la place à la phrase-bilan. -->
+        <div id="result-verdict" class="result-verdict">
+          <span id="result-icon" class="hero-icon" aria-hidden="true">✓</span>
+          <h1 id="result-title" tabindex="-1"></h1>
+          <p id="result-score" class="result-score"></p>
+        </div>
+        <div id="result-retenir" class="dc-retenir" hidden>
+          <p class="eyebrow">À retenir</p>
+          <p id="retenir-phrase" class="phrase" tabindex="-1"></p>
+          <div id="retenir-image" class="dc-aide"></div>
+          <p class="cahier">Je recopie cette phrase dans mon cahier.</p>
+        </div>
+        <div id="result-suite" class="seance-suite"></div>
+        <section id="corrections" class="corrections" aria-live="polite"></section>
+      </div>
+
+      <!-- « Comment ça marche ? » : les règles en cinq phrases, écrites une
+           seule fois. Les lignes de la séance et du mélange viendront au
+           lot 2. -->
+      <div id="notice" class="notice-screen" hidden>
+        <div class="settings-toolbar">
+          <button id="notice-back" class="settings-back" type="button" aria-label="Retour à l’accueil"><span class="back-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="20" height="20"><path d="M19 12H5M11 6l-6 6 6 6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="settings-back-label">Accueil</span></button>
+          <h1 id="notice-title" class="settings-heading" tabindex="-1">Comment ça marche&nbsp;?</h1>
+        </div>
+        <div class="notice">
+          <p><b>Mon module.</b> Une façon de calculer, en plusieurs niveaux.</p>
+          <p><b>J’apprends.</b> Trois temps&nbsp;: je manipule, je représente, j’écris.</p>
+          <p><b>Je m’entraîne.</b> 10 calculs, sans chrono. 8 justes&nbsp;: je peux valider.</p>
+          <p><b>Je valide.</b> Un niveau à la fois&nbsp;: 8 justes sur 10. Pour ce qui se sait par cœur&nbsp;: 10 justes sur 12, sans traîner. Le dernier niveau valide le module.</p>
+          <p><b>Mon parcours.</b> 4 paliers. Un module s’ouvre quand ceux d’avant sont validés.</p>
+        </div>
+      </div>
+    </section>
+  </main>
+  <footer class="site-footer">
+    <span>Gwenaël Bourgault</span><span aria-hidden="true">·</span>
+    <a href="mailto:gwenael@mathsgo.re?subject=Contact%20depuis%20mathsgo.re">Me contacter</a><span aria-hidden="true">·</span>
+    <a href="../../mentions-legales.html">Mentions légales</a><span aria-hidden="true">·</span>
+    <a href="../../confidentialite.html">Confidentialité</a><span aria-hidden="true">·</span>
+    <a href="../../licence.html">Licence</a><span aria-hidden="true">·</span>
+    <span data-mathsgo-confidentialite>Sans cookie ni traceur</span>
+  </footer>
+
+  <script src="./defi_calcul_core.js?v=20261003-2"></script>
+  <script src="./defi_calcul_mon_parcours.js?v=20261003-2"></script>
+  <script src="./defi_calcul_aides.js?v=20261003-2"></script>
+  <script>
+    (() => {
+      "use strict";
+
+      const CORE = window.MATHSGO_DEFI_CALCUL_CORE;
+      if (!CORE) throw new Error("Les modules de Défi calcul sont indisponibles.");
+      const PARCOURS = window.MATHSGO_DEFI_CALCUL_MON_PARCOURS;
+      if (!PARCOURS) throw new Error("Le moteur de la progression est indisponible.");
+      const AIDES = window.MATHSGO_DEFI_CALCUL_AIDES;
+      if (!AIDES) throw new Error("Les aides de Défi calcul sont indisponibles.");
+      // L'ordre conseillé, les « avant », ce qui est construit : la carte que
+      // le moteur de la progression lit sans connaître les textes.
+      const CARTE = CORE.carte();
+      const $ = id => document.getElementById(id);
+
+      // Deux stockages, deux durées de vie. Les parcours (une case par code,
+      // plus la case « sans code ») restent sur l'appareil. L'identité — QUEL
+      // code est actif — ne vit que le temps de l'onglet.
+      function storage() {
+        try { return window.localStorage; } catch (_) { return null; }
+      }
+      function stockageSession() {
+        try { return window.sessionStorage; } catch (_) { return null; }
+      }
+
+      // L'état de l'écran. `running` : une activité est en cours (J'apprends
+      // ou une série) ; le suivi ne redessine jamais l'écran pendant ce temps.
+      const state = {
+        running: false,
+        serie: null,
+        origine: "intro",
+        answer: "",
+        effacerAuProchain: false,
+        waitingForContinue: false,
+        correctionAfficheeA: 0,
+        autoAdvanceTimer: null,
+        perles: null,
+        palier: null,
+        module: null,
+        titreResultat: "result-title"
+      };
+
+      // ------------------------------------------------- suivi de classe
+      //
+      // Copié de Défi tables (billet, bandeau, envoi, garde d'inactivité),
+      // avec appli « defi-calcul ». Tant que le serveur ne connaît pas cette
+      // appli (lot 2), il refuse la lecture et l'envoi : le bandeau le dit,
+      // et le travail reste sur l'appareil.
+      //
+      // Trois règles tenues par le code ci-dessous :
+      //  1. l'envoi est SILENCIEUX et jamais attendu — si le serveur ne répond
+      //     pas, l'appli se comporte exactement comme sans suivi ;
+      //  2. on garde toujours LE PLUS AVANCÉ des deux, jamais d'écrasement
+      //     (la fusion vit dans defi_calcul_mon_parcours.js, avec ses tests) ;
+      //  3. sur un appareil partagé, chaque code a SA case : un code différent
+      //     bascule sur sa case avant tout affichage. Ce qui est fait SANS
+      //     code reste sans code.
+      // [suivi:debut]
+      const SUIVI_URL = "https://suivi.mathsgo.re";
+
+      // Ce que porte l'adresse d'entrée, lu par le petit script du <head> avant
+      // tout le reste (voir en haut de la page). Repli si ce script n'a pas
+      // tourné : on lit l'adresse ici, de la même façon.
+      function lireEntree() {
+        const e = window.MATHSGO_ENTREE;
+        if (e && typeof e === "object") {
+          return {billet: String(e.billet || ""), vue: String(e.vue || ""), ouvrir: String(e.ouvrir || "")};
+        }
+        const adresse = window.location.hash || "";
+        if (adresse === "#parcours") return {billet: "", vue: "", ouvrir: adresse.slice(1)};
+        const parametres = new URLSearchParams(adresse.replace(/^#/, ""));
+        return {billet: parametres.get("b") || "", vue: parametres.get("vue") || "", ouvrir: parametres.get("ouvrir") || ""};
+      }
+      const ENTREE = lireEntree();
+
+      // Le code actif : celui de l'onglet, et rien d'autre. Décidé AVANT de
+      // charger le parcours : c'est ce qui fait qu'on ne montre jamais la case
+      // d'un autre. Une adresse n'identifie plus personne (lot « appareil
+      // partagé ») ; un billet (lot 3) est une entrée NEUVE : l'identité que
+      // l'onglet gardait ne compte plus, et le code n'arrive qu'après l'échange
+      // avec le serveur (entrerParBillet) — en attendant, personne n'est suivi.
+      function codeInitial(entree) {
+        if (entree.billet) return "";
+        return PARCOURS.chargerCode(stockageSession());
+      }
+      // Défi calcul ne demande pas de prénom : sans code, la case de
+      // l'appareil est lue telle quelle.
+      function caseSansCode() {
+        return PARCOURS.charger(storage(), "");
+      }
+
+      // Les cases que personne n'a ouvertes depuis 90 jours quittent
+      // l'appareil. La case du code qui arrive n'est jamais purgée.
+      if (ENTREE.billet) PARCOURS.effacerCode(stockageSession());
+      let codeSuivi = codeInitial(ENTREE);
+      PARCOURS.purger(storage(), {maintenant: Date.now(), garder: codeSuivi});
+      let parcours = codeSuivi ? PARCOURS.charger(storage(), codeSuivi) : caseSansCode();
+      // L'état de synchronisation de la case active : dernière révision connue
+      // du serveur, travail en attente d'envoi (dirty), code refusé (détaché).
+      // Il survit à la fermeture de la page : ce qui n'est pas parti partira.
+      let sync = PARCOURS.chargerSync(storage(), codeSuivi);
+      // Le prénom et la classe donnés par le serveur pour ce code : relus depuis
+      // l'onglet (même code seulement) en attendant que le serveur réponde.
+      let suiviIdentite = PARCOURS.chargerIdentiteOnglet(stockageSession(), codeSuivi);
+      let suiviHorsLigne = false;
+      let envoiEnAttente = null;
+      let envoiEnVol = false;
+      let renvoiDemande = false;
+      let relance = null;
+      let echecsSuccessifs = 0;
+      let fusionsSuccessives = 0;
+      let erreurDefinitive = false;
+      // Un billet refusé par le serveur : "expire" (inconnu, déjà utilisé ou
+      // périmé) ou "injoignable". Le repère l'affiche, avec le chemin du retour.
+      let entreeRefusee = null;
+
+      function sauverSync() {
+        // Une case datée, toujours : c'est sur « maj » que la purge compte.
+        if (!sync.maj) sync.maj = Date.now();
+        PARCOURS.sauverSync(storage(), codeSuivi, sync);
+      }
+
+      function suiviActif() { return Boolean(codeSuivi); }
+
+      // Le prénom qu'on affiche : sous un code, celui que le professeur a saisi
+      // (il vient du serveur, il ne vit que dans l'onglet) ; sans code, celui
+      // que l'élève a tapé, qui reste dans la case sans code de l'appareil.
+      function prenomAffiche() {
+        if (suiviActif()) return suiviIdentite && suiviIdentite.prenom ? suiviIdentite.prenom : "";
+        return parcours.prenom || "";
+      }
+
+      // Le lien du haut ramenait toujours au catalogue de mathsgo.re. Un élève
+      // suivi n'arrive pas de là : il vient de son espace, et c'est là qu'il
+      // doit pouvoir revenir. Sans code, rien ne change pour les autres.
+      const RETOUR_CATALOGUE = {
+        href: "../index.html?domain=nombres-calculs&notion=calcul-mental",
+        texte: "Calcul mental",
+        aria: "Retour au calcul mental",
+        logoHref: "/",
+        logoAria: "Accueil maths&go"
+      };
+      const RETOUR_ESPACE = {
+        href: SUIVI_URL + "/",
+        texte: "Mon espace",
+        aria: "Retour à mon espace",
+        logoHref: SUIVI_URL + "/",
+        logoAria: "Retour à mon espace"
+      };
+      // Le pied de page (08/09/2026). Celui du site propose « Me contacter »,
+      // « Mentions légales », « Confidentialité » et « Licence » : quatre
+      // portes de plus par lesquelles un élève sort de son espace, vers des
+      // pages écrites pour un visiteur du site. Pour lui — et pour lui seul —
+      // le pied devient deux liens qui restent chez lui. Rien ne change pour
+      // les autres visiteurs : sans code, cette fonction ne touche à rien.
+      //
+      // Le remplacement ne se défait pas : un élève arrivé de son espace en
+      // vient toujours, même si son billet a été refusé ou si son code a été
+      // détaché en cours de route — c'est justement là qu'il faut un chemin de
+      // retour. Et il ne se fait qu'une fois (majLienRetour est appelée à
+      // chaque redessin).
+      let piedRefait = false;
+      function majPiedDePage(versEspace) {
+        if (!versEspace || piedRefait) return;
+        const pied = document.querySelector("footer.site-footer");
+        if (!pied) return;
+        const lien = (adresse, texte) => {
+          const a = document.createElement("a");
+          a.href = adresse;
+          a.textContent = texte;
+          return a;
+        };
+        const separateur = document.createElement("span");
+        separateur.setAttribute("aria-hidden", "true");
+        separateur.textContent = "·";
+        const infos = lien(SUIVI_URL + "/infos.php", "Infos et confidentialité");
+        // PIÈGE, trouvé en relisant l'ordre d'exécution. mention-confidentialite.js
+        // (chargé en « defer », donc APRÈS ce script) pose de lui-même, en bas de
+        // page, « Sans cookie ni traceur · Confidentialité » — un lien de plus vers
+        // le site — SAUF si la page porte déjà un élément marqué
+        // « data-mathsgo-confidentialite ». Le pied d'origine en portait un ; en le
+        // remplaçant sans le remarquer, on rouvrait la porte qu'on venait de fermer.
+        // Le lien Infos reprend donc la marque : c'est bien lui, ici, la mention de
+        // confidentialité de la page.
+        infos.setAttribute("data-mathsgo-confidentialite", "");
+        pied.replaceChildren(lien(SUIVI_URL + "/", "Mon espace"), separateur, infos);
+        pied.classList.add("pied-espace");
+        piedRefait = true;
+      }
+
+      function majLienRetour() {
+        // Un élève dont le billet a été refusé vient quand même de son espace.
+        const vers = suiviActif() || entreeRefusee ? RETOUR_ESPACE : RETOUR_CATALOGUE;
+        majPiedDePage(vers === RETOUR_ESPACE);
+        // Le logo suit la même règle que le lien du haut. C'était la dernière
+        // porte qui faisait sortir un élève suivi de son espace : pour lui, le
+        // logo ramène à son espace, pas à l'accueil du site. Pour tous les
+        // autres visiteurs, rien ne change.
+        const logo = document.querySelector("a.brand");
+        if (logo) {
+          logo.href = vers.logoHref;
+          logo.setAttribute("aria-label", vers.logoAria);
+        }
+        const lien = document.getElementById("lien-retour");
+        if (!lien) return;
+        lien.href = vers.href;
+        lien.setAttribute("aria-label", vers.aria);
+        const etiquette = lien.querySelector(".catalogue-link-label");
+        if (etiquette) etiquette.textContent = vers.texte;
+      }
+
+      // Un seul point de contact avec le serveur : il n'échoue jamais, il
+      // renvoie simplement un statut 0 quand rien n'a répondu.
+      async function appelSuivi(chemin, options) {
+        try {
+          const controle = typeof AbortController === "function" ? new AbortController() : null;
+          const minuteur = controle ? window.setTimeout(() => controle.abort(), 8000) : null;
+          try {
+            const reponse = await fetch(SUIVI_URL + chemin, Object.assign(
+              {cache: "no-store"}, controle ? {signal: controle.signal} : {}, options || {}));
+            const donnees = await reponse.json().catch(() => null);
+            // « Retry-After » : quand le serveur dit dans combien de temps
+            // réessayer (429), on le respecte.
+            let reessai = null;
+            try {
+              const valeur = reponse.headers && reponse.headers.get ? reponse.headers.get("Retry-After") : null;
+              if (valeur && /^\d+$/.test(valeur)) reessai = parseInt(valeur, 10);
+            } catch (_) {}
+            return {statut: reponse.status, donnees, reessai};
+          } finally {
+            if (minuteur !== null) window.clearTimeout(minuteur);
+          }
+        } catch (_) {
+          return {statut: 0, donnees: null};
+        }
+      }
+
+      // Le code ne voyage JAMAIS dans l'adresse d'une requête : une adresse est
+      // écrite en clair dans les journaux d'accès de l'hébergeur, que nous ne
+      // maîtrisons pas. Il part donc dans le corps, comme l'enregistrement.
+      function lireParcoursDuServeur(code) {
+        return appelSuivi("/api/parcours.php", {
+          method: "POST",
+          headers: {"Content-Type": "text/plain;charset=UTF-8"},
+          body: JSON.stringify({code, appli: "defi-calcul", lire: true})
+        });
+      }
+
+      // Même règle pour « à qui appartient ce code ».
+      function lireIdentiteDuServeur(code) {
+        return appelSuivi("/api/eleve.php", {
+          method: "POST",
+          headers: {"Content-Type": "text/plain;charset=UTF-8"},
+          body: JSON.stringify({code})
+        });
+      }
+
+      // Le billet d'entrée (lot 3) : le serveur le consomme et rend le code —
+      // ou, pour un billet de fiche, la progression sans le code.
+      function echangerBillet(billet) {
+        return appelSuivi("/api/eleve.php", {
+          method: "POST",
+          headers: {"Content-Type": "text/plain;charset=UTF-8"},
+          body: JSON.stringify({billet, appli: "defi-calcul"})
+        });
+      }
+
+      // text/plain : le serveur lit le corps tel quel, et cela évite au
+      // navigateur une requête préparatoire avant CHAQUE enregistrement.
+      // Le prénom que l'élève tape lui-même ne sort PAS de son appareil : la
+      // phrase sous le champ le lui promet, et le professeur n'a rien demandé de
+      // tel — celui qu'il voit est le prénom qu'il a saisi lui-même dans « Ma
+      // classe ». On le retire donc du paquet envoyé. Sans cela, un élève qui
+      // écrit son nom complet, ou n'importe quoi d'autre, le verrait enregistré
+      // sur le serveur, hors de tout ce qui a été déclaré.
+      // base_revision : la révision que cet appareil a lue en dernier. Le serveur
+      // refuse (409) d'écrire par-dessus un état qu'on n'a pas vu, et renvoie
+      // cet état : on fusionne, on renvoie. Plus jamais « le dernier paquet
+      // arrivé écrase l'autre ».
+      function paquetParcours(code, source, baseRevision) {
+        const sansPrenom = Object.assign({}, source, {prenom: ""});
+        const paquet = {code, appli: "defi-calcul", parcours: sansPrenom};
+        if (Number.isInteger(baseRevision)) paquet.base_revision = baseRevision;
+        return JSON.stringify(paquet);
+      }
+
+      function envoiPossible() {
+        return suiviActif() && !sync.detache && !erreurDefinitive;
+      }
+
+      // Envoi groupé : les réponses d'une série arrivent toutes les secondes, on
+      // n'envoie qu'une fois par 700 ms, et jamais deux envois en même temps.
+      function envoyerParcours() {
+        if (!envoiPossible()) return;
+        if (envoiEnAttente !== null) window.clearTimeout(envoiEnAttente);
+        envoiEnAttente = window.setTimeout(() => {
+          envoiEnAttente = null;
+          envoyerMaintenant();
+        }, 700);
+      }
+
+      function envoyerMaintenant() {
+        if (!envoiPossible()) return;
+        if (envoiEnVol) { renvoiDemande = true; return; }
+        envoiEnVol = true;
+        renvoiDemande = false;
+        const code = codeSuivi;
+        const base = sync.revision;
+        appelSuivi("/api/parcours.php", {
+          method: "POST",
+          headers: {"Content-Type": "text/plain;charset=UTF-8"},
+          body: paquetParcours(code, parcours, base)
+        }).then(reponse => {
+          envoiEnVol = false;
+          // Réponse tardive d'un élève qui n'est plus là (« Ce n'est pas
+          // moi » entre-temps) : elle ne touche à rien, ni case, ni révision.
+          if (code !== codeSuivi) return;
+          traiterReponseEnvoi(reponse, base);
+        });
+      }
+
+      function planifierRelance(delai) {
+        if (relance !== null) window.clearTimeout(relance);
+        relance = window.setTimeout(() => {
+          relance = null;
+          if (sync.dirty) envoyerMaintenant();
+        }, delai);
+      }
+
+      // Chaque réponse du serveur a un sens précis, et un seul :
+      //  200  parti — on note la révision ; s'il y a eu du nouveau pendant le
+      //       vol, ça repart aussitôt ;
+      //  409  l'état a bougé ailleurs — on fusionne avec ce que le serveur
+      //       renvoie, on reprend sa révision, on renvoie ;
+      //  404  le code ne vaut plus rien (régénéré, élève supprimé) — on se
+      //       détache, on le dit, on garde tout ici ;
+      //  400/413  refusé pour de bon — pas de relance, le même contenu resterait
+      //       refusé (l'appli officielle ne peut pas le produire) ;
+      //  429  trop de demandes — on attend ce que le serveur demande ;
+      //  5xx/0  panne ou coupure — on garde tout ici, relances à 2 s, 10 s,
+      //       60 s, puis au retour du réseau et au prochain démarrage.
+      function traiterReponseEnvoi(reponse, base) {
+        const donnees = reponse.donnees;
+        if (reponse.statut === 200 && donnees && donnees.ok) {
+          sync.revision = Number.isInteger(donnees.revision) ? donnees.revision : base + 1;
+          sync.dirty = renvoiDemande;
+          echecsSuccessifs = 0;
+          fusionsSuccessives = 0;
+          suiviHorsLigne = false;
+          sauverSync();
+          renderRepere();
+          // Le prénom et la classe n'avaient pas pu être lus (réseau absent au
+          // démarrage) : maintenant que le serveur répond, on les demande.
+          if (suiviIdentite === null) chargerIdentite(codeSuivi);
+          if (renvoiDemande) envoyerMaintenant();
+          return;
+        }
+        if (reponse.statut === 409 && donnees && donnees.parcours !== undefined) {
+          parcours = PARCOURS.fusionner(parcours, PARCOURS.normaliserParcours(donnees.parcours));
+          sync.revision = Number.isInteger(donnees.revision) ? donnees.revision : base;
+          sync.dirty = true;
+          sauverCase();
+          sauverSync();
+          if (!state.running) renderParcours();
+          fusionsSuccessives++;
+          if (fusionsSuccessives <= 2) envoyerMaintenant();
+          else planifierRelance(10000);
+          return;
+        }
+        if (reponse.statut === 404) {
+          detacher();
+          return;
+        }
+        if (reponse.statut === 400 || reponse.statut === 413) {
+          erreurDefinitive = true;
+          suiviHorsLigne = true;
+          renderRepere();
+          try { console.warn("Défi calcul : envoi refusé par le serveur (" + reponse.statut + ")", donnees); } catch (_) {}
+          return;
+        }
+        suiviHorsLigne = true;
+        renderRepere();
+        if (reponse.statut === 429) {
+          planifierRelance((reponse.reessai || 60) * 1000);
+          return;
+        }
+        const paliers = [2000, 10000, 60000];
+        if (echecsSuccessifs < paliers.length) planifierRelance(paliers[echecsSuccessifs]);
+        echecsSuccessifs++;
+      }
+
+      // Au moment où la page se ferme, on n'a plus le temps d'attendre : le
+      // navigateur se charge de l'envoi tout seul. Sa réponse ne se lit pas :
+      // « dirty » reste levé, et le prochain démarrage confirmera (au pire par
+      // un 409 sans conséquence).
+      function envoyerAvantDeFermer() {
+        if (!envoiPossible() || !sync.dirty) return;
+        if (envoiEnAttente !== null) window.clearTimeout(envoiEnAttente);
+        envoiEnAttente = null;
+        const paquet = paquetParcours(codeSuivi, parcours, sync.revision);
+        try {
+          if (navigator.sendBeacon) {
+            navigator.sendBeacon(SUIVI_URL + "/api/parcours.php",
+              new Blob([paquet], {type: "text/plain;charset=UTF-8"}));
+            return;
+          }
+        } catch (_) {}
+        appelSuivi("/api/parcours.php", {
+          method: "POST", headers: {"Content-Type": "text/plain;charset=UTF-8"}, body: paquet
+        });
+      }
+
+      // Ranger la case active sur l'appareil. Sous un code, le moteur retire
+      // le prénom lui-même.
+      function sauverCase() {
+        PARCOURS.sauver(storage(), parcours, codeSuivi);
+      }
+
+      function sauverParcours() {
+        sauverCase();
+        if (suiviActif()) {
+          sync.dirty = true;
+          sync.maj = Date.now();
+          sauverSync();
+        }
+        envoyerParcours();
+      }
+
+      // Le code a été refusé pour de bon (régénéré, ou élève supprimé) : plus
+      // d'envoi, mais l'élève reste dans SA case — son travail continue de s'y
+      // ranger, sans jamais se mélanger à la case sans code. Quand son nouveau
+      // code arrivera, l'appli lui proposera ce travail-là.
+      function detacher() {
+        sync.detache = true;
+        sauverSync();
+        suiviIdentite = null;
+        suiviHorsLigne = false;
+        if (relance !== null) { window.clearTimeout(relance); relance = null; }
+        renderRepere();
+      }
+
+      // Au retour du réseau, ou quand la page revient du cache arrière-avant
+      // (pageshow avec « persisted ») : ce qui attendait part. Pas au premier
+      // affichage : à ce moment-là c'est demarrerSuivi qui décide, après avoir
+      // lu le serveur.
+      function reprendreLesEnvois() {
+        if (envoiPossible() && sync.dirty) envoyerMaintenant();
+      }
+      try {
+        window.addEventListener("online", reprendreLesEnvois);
+        window.addEventListener("pageshow", evenement => { if (evenement && evenement.persisted) reprendreLesEnvois(); });
+      } catch (_) {}
+
+      async function chargerIdentite(code) {
+        const reponse = await lireIdentiteDuServeur(code);
+        if (code !== codeSuivi) return;
+        if (reponse.statut === 200 && reponse.donnees && reponse.donnees.ok) {
+          suiviIdentite = {prenom: reponse.donnees.prenom || "", classe: reponse.donnees.classe || ""};
+          PARCOURS.sauverIdentiteOnglet(stockageSession(), code, suiviIdentite);
+        } else if (reponse.statut === 404) {
+          suiviIdentite = null;
+        }
+        // Serveur muet ou en panne : on garde ce que l'onglet savait déjà.
+        renderRepere();
+        if (!state.running) renderParcours();
+      }
+
+      // Le repère de suivi, dans la barre du haut : vert quand le serveur a
+      // répondu, orange quand rien n'est encore parti. Jamais un secret, et la
+      // porte de sortie est dessus.
+      function renderRepere() {
+        renderSortieBarre();
+        const repere = document.getElementById("suivi-repere");
+        if (!repere) return;
+        if (!suiviActif() && entreeRefusee) { renderEntreeRefusee(repere); return; }
+        repere.hidden = !suiviActif();
+        if (!suiviActif()) { repere.replaceChildren(); return; }
+        const qui = suiviIdentite && suiviIdentite.prenom ? ` · ${suiviIdentite.prenom}` : "";
+        const ou = suiviIdentite && suiviIdentite.classe ? ` · ${suiviIdentite.classe}` : "";
+        repere.replaceChildren();
+        const puce = document.createElement("span");
+        puce.className = "puce";
+        puce.setAttribute("aria-hidden", "true");
+        // Trois états, une seule vérité : vert = le serveur a répondu, orange =
+        // rien n'est encore parti (on ne promet pas « plus tard »), gris = le
+        // code ne vaut plus rien et l'élève doit en demander un nouveau.
+        repere.classList.toggle("detache", sync.detache);
+        repere.classList.toggle("hors-ligne", !sync.detache && suiviHorsLigne);
+        let texte;
+        if (sync.detache) texte = "Ton code ne marche plus · demande le nouveau à ton professeur";
+        else if (erreurDefinitive) texte = "Suivi par ton professeur · impossible d’envoyer ce travail";
+        else if (suiviHorsLigne) texte = "Suivi par ton professeur · travail gardé ici, pas encore envoyé";
+        else texte = `Suivi par ton professeur${qui}${ou}`;
+        repere.append(puce, document.createTextNode(texte));
+        // La porte de sortie est ICI, sur le repère, et pas dans un menu :
+        // sans elle, un appareil partagé reste celui du dernier élève, et
+        // même les liens de retour ramènent à son espace. Elle s'appelle
+        // « Se déconnecter » (choix de Gwenaël, 03/09/2026) : c'est le mot que
+        // l'élève qui a fini cherche ; le camarade suivant, lui, voit un prénom
+        // qui n'est pas le sien juste à côté — et c'est le garde-fou de temps
+        // qui lui parle avec « ce n'est pas moi ». Un seul clic, pas de
+        // sous-menu : l'option d'effacement de la case au moment de partir,
+        // prévue par l'audit, a été écartée (Gwenaël, 03/09/2026) — ce qui
+        // reste sur l'appareil n'a plus ni prénom ni code, et la purge à
+        // 90 jours s'en charge.
+        const sortie = document.createElement("button");
+        sortie.type = "button";
+        sortie.className = "sortie";
+        sortie.textContent = "Se déconnecter";
+        sortie.addEventListener("click", quitterSuivi);
+        // Le séparateur voyage AVEC le bouton : sur téléphone, le bandeau passe
+        // à la ligne, et un « · » resté seul en fin de ligne se lit « 405· ».
+        const bloc = document.createElement("span");
+        bloc.className = "sortie-bloc";
+        bloc.append(document.createTextNode("· "), sortie);
+        repere.append(bloc);
+      }
+
+      // La pilule « Se déconnecter » de l'en-tête compact (téléphone) : le même
+      // geste que la sortie du repère, visible seulement sous un code.
+      function renderSortieBarre() {
+        const pilule = document.getElementById("suivi-sortie");
+        if (pilule) pilule.hidden = !suiviActif();
+      }
+
+      // Le billet n'a rien ouvert : on le dit à la place du repère, avec le
+      // seul geste utile — repasser par l'espace, qui a encore le code dans
+      // son onglet. Rien d'autre ne change : l'appli reste utilisable sans
+      // code, et rien de ce qui s'y fait ne sera compté.
+      function renderEntreeRefusee(repere) {
+        repere.hidden = false;
+        repere.replaceChildren();
+        repere.classList.toggle("detache", true);
+        repere.classList.toggle("hors-ligne", false);
+        const puce = document.createElement("span");
+        puce.className = "puce";
+        puce.setAttribute("aria-hidden", "true");
+        const texte = entreeRefusee === "expire"
+          ? "Ce lien a expiré, repasse par ton espace"
+          : "Le serveur ne répond pas, repasse par ton espace";
+        const retour = document.createElement("a");
+        retour.href = SUIVI_URL + "/";
+        retour.textContent = "Mon espace";
+        const bloc = document.createElement("span");
+        bloc.append(document.createTextNode("· "), retour);
+        repere.append(puce, document.createTextNode(texte), bloc);
+      }
+
+      // Adopter un code en cours de route (après l'échange d'un billet) : la
+      // même bascule que quitterSuivi, dans l'autre sens — la case de ce code,
+      // son état d'envoi, et rien de l'état d'avant.
+      function adopterCode(code) {
+        codeSuivi = code;
+        noterDernierGeste(Date.now());
+        entreeRefusee = null;
+        suiviIdentite = null;
+        suiviHorsLigne = false;
+        erreurDefinitive = false;
+        echecsSuccessifs = 0;
+        fusionsSuccessives = 0;
+        parcours = PARCOURS.charger(storage(), codeSuivi);
+        sync = PARCOURS.chargerSync(storage(), codeSuivi);
+        majLienRetour();
+        renderRepere();
+        renderParcours();
+      }
+
+      // L'entrée par un billet (lot 3) : l'échange d'abord, puis tout se passe
+      // comme si le code était arrivé dans l'adresse — `ouvrir` ouvre l'écran
+      // demandé, demarrerSuivi lit le serveur. Un billet refusé (déjà utilisé,
+      // périmé, ou serveur muet) laisse l'appli sans code et le dit.
+      async function entrerParBillet(billet, ouvrir) {
+        // Lot 2b : pendant l'échange du billet, on ne sait pas encore qui
+        // entre — l'accueil attend (voir attendreSuivi).
+        attendreSuivi();
+        renderParcours();
+        const reponse = await echangerBillet(billet);
+        const donnees = reponse.statut === 200 && reponse.donnees && reponse.donnees.ok ? reponse.donnees : null;
+        const code = donnees && donnees.type === "entree" ? PARCOURS.normaliserCode(donnees.code || "") : "";
+        if (!PARCOURS.codeValide(code)) {
+          entreeRefusee = reponse.statut === 404 || donnees ? "expire" : "injoignable";
+          majLienRetour();
+          renderRepere();
+          finAttente();
+          return false;
+        }
+        adopterCode(code);
+        // Le serveur vient de dire qui c'est : le repère le montre tout de
+        // suite, demarrerSuivi le confirmera.
+        suiviIdentite = {prenom: donnees.prenom || "", classe: donnees.classe || ""};
+        PARCOURS.sauverIdentiteOnglet(stockageSession(), code, suiviIdentite);
+        if (typeof ouvrir === "function") ouvrir();
+        demarrerSuivi();
+        return true;
+      }
+
+      // « Se déconnecter » : on envoie ce qui restait à envoyer, on oublie le
+      // code, on revient à la case « sans code » — la case de l'élève reste sur
+      // l'appareil, on n'efface le travail de personne — puis on renvoie à
+      // l'espace élève avec ?oublier=1, pour que l'espace oublie lui aussi ce
+      // code dans cet onglet : un seul geste vide les deux domaines et laisse
+      // l'appareil prêt pour le camarade suivant.
+      function quitterSuivi() {
+        envoyerAvantDeFermer();
+        if (relance !== null) { window.clearTimeout(relance); relance = null; }
+        codeSuivi = "";
+        entreeRefusee = null;
+        suiviIdentite = null;
+        suiviHorsLigne = false;
+        erreurDefinitive = false;
+        echecsSuccessifs = 0;
+        fusionsSuccessives = 0;
+        gardeVisible = false;
+        gardeErreur = "";
+        gardeEssais = 0;
+        noterDernierGeste(Date.now());
+        PARCOURS.effacerCode(stockageSession());
+        parcours = caseSansCode();
+        sync = PARCOURS.chargerSync(storage(), "");
+        majLienRetour();
+        renderRepere();
+        renderGarde();
+        renderParcours();
+        try { window.location.assign(SUIVI_URL + "/?oublier=1"); } catch (_) {}
+      }
+
+      // Le garde-fou de temps (lot 8, C-9 ; resserré le 06/09/2026, lot
+      // « appareil partagé »). En salle informatique, personne ne clique
+      // « Se déconnecter » : la classe suivante arrive et l'onglet est encore
+      // celui de Léa. Après GARDE_INACTIVITE_MS sans un geste, ou quand la page
+      // redevient visible après une aussi longue absence, on redemande
+      // « C'est toujours toi ? ».
+      //
+      // Deux choses ont changé après l'audit du 05/09 (I-01 de GPT, constat 7) :
+      //  — dix minutes, pas quarante-cinq : entre deux cours il s'écoule cinq
+      //    minutes, et l'ancien délai laissait l'onglet ouvert pour la classe
+      //    suivante ;
+      //  — « Oui, c'est moi » ne suffit plus, il faut RETAPER le code de sa
+      //    bandelette. Un bouton ne prouve rien ; le code, si. La comparaison
+      //    est locale, aucun appel au serveur, et trois erreurs rendent l'onglet
+      //    au camarade suivant (quitterSuivi) plutôt que d'ouvrir un jeu de
+      //    devinettes.
+      // L'instant du dernier geste est rangé dans l'ONGLET : un F5 ne remet plus
+      // le compteur à zéro, et la question revient dès le chargement suivant.
+      const GARDE_INACTIVITE_MS = 10 * 60 * 1000;
+      const GARDE_ESSAIS_MAX = 3;
+      const CLE_DERNIER_GESTE = "mathsgo-suivi-dernier-geste";
+
+      function lireDernierGeste() {
+        try {
+          const onglet = stockageSession();
+          const brut = onglet ? onglet.getItem(CLE_DERNIER_GESTE) : null;
+          if (brut !== null && brut !== "") {
+            const lu = Number(brut);
+            // Une valeur venue du futur (horloge changée) ne doit pas rendre
+            // l'appli muette : on repart de maintenant.
+            if (Number.isFinite(lu) && lu >= 0 && lu <= Date.now()) return lu;
+          }
+        } catch (_) {}
+        return Date.now();
+      }
+
+      // Écrit à chaque geste retenu : ce sont des pointerdown, keydown et
+      // touchstart, pas des mouvements de souris — quelques écritures par
+      // minute, invisibles.
+      function noterDernierGeste(instant) {
+        derniereActivite = instant;
+        try {
+          const onglet = stockageSession();
+          if (onglet) onglet.setItem(CLE_DERNIER_GESTE, String(instant));
+        } catch (_) {}
+      }
+
+      let derniereActivite = lireDernierGeste();
+      let gardeVisible = false;
+      let gardeEssais = 0;
+      let gardeErreur = "";
+
+      function absenceTropLongue() {
+        return suiviActif() && Date.now() - derniereActivite > GARDE_INACTIVITE_MS;
+      }
+
+      function verifierGarde() {
+        if (gardeVisible || !absenceTropLongue()) return false;
+        gardeVisible = true;
+        gardeEssais = 0;
+        gardeErreur = "";
+        const champ = document.getElementById("suivi-garde-code");
+        if (champ) champ.value = "";
+        renderGarde();
+        return true;
+      }
+
+      function retenir(evenement) {
+        if (!evenement || typeof evenement.preventDefault !== "function") return;
+        evenement.preventDefault();
+        if (typeof evenement.stopPropagation === "function") evenement.stopPropagation();
+      }
+
+      function noterActivite(evenement) {
+        if (gardeVisible) {
+          // Tant que la question est posée, seuls ses deux boutons répondent.
+          const cible = evenement && evenement.target;
+          const dansLaGarde = cible && typeof cible.closest === "function" && cible.closest("#suivi-garde");
+          if (!dansLaGarde) retenir(evenement);
+          return;
+        }
+        if (absenceTropLongue()) {
+          retenir(evenement);
+          verifierGarde();
+          return;
+        }
+        noterDernierGeste(Date.now());
+      }
+
+      function renderGarde() {
+        const garde = document.getElementById("suivi-garde");
+        if (!garde) return;
+        garde.hidden = !gardeVisible;
+        const titre = document.getElementById("suivi-garde-titre");
+        if (titre) {
+          const qui = prenomAffiche();
+          titre.textContent = qui ? `C’est toujours toi, ${qui} ?` : "C’est toujours toi ?";
+        }
+        const erreur = document.getElementById("suivi-garde-erreur");
+        if (erreur) {
+          erreur.textContent = gardeErreur;
+          erreur.hidden = !gardeErreur;
+        }
+        const champ = document.getElementById("suivi-garde-code");
+        if (!gardeVisible) {
+          if (champ) champ.value = "";
+        } else if (champ && typeof champ.focus === "function") {
+          try { champ.focus({preventScroll: true}); } catch (_) {}
+        }
+      }
+
+      // Le même nettoyage que l'espace élève : majuscules, et seulement les
+      // caractères de l'alphabet des codes (ni O ni 0, ni I ni 1 — on ne les
+      // confond pas sur une bandelette photocopiée). Cet alphabet vit dans le
+      // moteur, pas ici : on lui demande, caractère par caractère, s'il
+      // l'accepterait.
+      function nettoyerCodeSaisi(brut) {
+        let propre = "";
+        for (const caractere of PARCOURS.normaliserCode(brut)) {
+          if (PARCOURS.codeValide(caractere.repeat(PARCOURS.LONGUEUR_CODE))) propre += caractere;
+        }
+        return propre;
+      }
+
+      // « C'est moi » n'est accepté que si le code tapé est celui de l'élève
+      // suivi — comparaison locale, aucun appel au serveur, donc rien à attendre
+      // et rien à apprendre pour qui essaie au hasard. Trois erreurs et l'onglet
+      // repart à la case sans code, comme « Non ».
+      function repondreGarde(cestMoi, codeTape) {
+        if (!cestMoi) {
+          gardeErreur = "";
+          gardeEssais = 0;
+          quitterSuivi();
+          return false;
+        }
+        if (nettoyerCodeSaisi(codeTape) === codeSuivi && suiviActif()) {
+          gardeVisible = false;
+          gardeErreur = "";
+          gardeEssais = 0;
+          noterDernierGeste(Date.now());
+          renderGarde();
+          return true;
+        }
+        gardeEssais += 1;
+        if (gardeEssais >= GARDE_ESSAIS_MAX) {
+          gardeErreur = "";
+          gardeEssais = 0;
+          quitterSuivi();
+          return false;
+        }
+        gardeErreur = "Ce n’est pas le bon code.";
+        renderGarde();
+        return false;
+      }
+
+      try {
+        const champ = document.getElementById("suivi-garde-code");
+        const form = document.getElementById("suivi-garde-form");
+        const oui = document.getElementById("suivi-garde-oui");
+        const non = document.getElementById("suivi-garde-non");
+        const valider = () => repondreGarde(true, champ ? champ.value : "");
+        if (champ) champ.addEventListener("input", () => {
+          const propre = nettoyerCodeSaisi(champ.value);
+          if (champ.value !== propre) champ.value = propre;
+        });
+        // Le formulaire, pour la touche Entrée ; le bouton, pour le doigt.
+        if (form) form.addEventListener("submit", evenement => {
+          if (evenement && typeof evenement.preventDefault === "function") evenement.preventDefault();
+          valider();
+        });
+        if (oui) oui.addEventListener("click", valider);
+        if (non) non.addEventListener("click", () => repondreGarde(false));
+        ["pointerdown", "keydown", "touchstart"].forEach(type => {
+          document.addEventListener(type, noterActivite, true);
+        });
+        document.addEventListener("visibilitychange", () => {
+          if (document.visibilityState === "visible") verifierGarde();
+        });
+        // Un contrôle par minute, pour que la question soit déjà à l'écran
+        // quand la classe suivante s'installe.
+        if (typeof window.setInterval === "function") window.setInterval(verifierGarde, 60000);
+        // Et un contrôle TOUT DE SUITE : si l'absence dure déjà depuis dix
+        // minutes au chargement (un F5 pendant que la question était posée), la
+        // question revient avant que l'appli ne montre quoi que ce soit.
+        verifierGarde();
+        renderGarde();
+      } catch (_) {}
+
+      // Le travail fait SANS code sur cet appareil — ou resté sous un ancien
+      // code refusé — n'est jamais proposé ni transféré. Il reste dans sa case,
+      // pour celui qui l'a fait, invisible sous un code ; il ne compte pas pour
+      // le suivi. Un code régénéré retrouve sa progression par le serveur (la
+      // progression suit l'élève, pas le code).
+
+      // Tant que le serveur n'a pas dit qui est l'élève (billet à échanger,
+      // parcours à lire), l'accueil d'une case vide ne montre rien — sinon un
+      // appareil neuf montrerait un instant le premier module à un élève qui
+      // en est au troisième. L'attente finit à la réponse, à l'échec, ou au
+      // bout de 2,5 s (réseau lent : l'écran arrive quand même, et suit le
+      // parcours dès qu'il est rendu).
+      let suiviAttendu = false;
+      let minuteurAttente = null;
+      let attenteFinie = false;
+      const ATTENTE_SUIVI_MS = 2500;
+
+      // Une seule attente par ouverture de la page : 2,5 s au plus en tout,
+      // billet compris, et une fois l'accueil montré il ne se cache plus.
+      function attendreSuivi() {
+        if (attenteFinie) return;
+        suiviAttendu = true;
+        if (minuteurAttente === null) minuteurAttente = window.setTimeout(finAttente, ATTENTE_SUIVI_MS);
+      }
+
+      function finAttente() {
+        if (minuteurAttente !== null) { window.clearTimeout(minuteurAttente); minuteurAttente = null; }
+        attenteFinie = true;
+        if (!suiviAttendu) return;
+        suiviAttendu = false;
+        if (!state.running) renderParcours();
+      }
+
+      function demarrerSuivi() {
+        if (!suiviActif()) { finAttente(); return; }
+        PARCOURS.sauverCode(stockageSession(), codeSuivi);
+        // Du travail dans la case et aucune révision confirmée : par définition,
+        // il est à envoyer (case remplie hors ligne, ou par une appli d'avant).
+        if (!sync.detache && sync.revision === 0 && !sync.dirty && !PARCOURS.estVide(parcours)) {
+          sync.dirty = true;
+          sauverSync();
+        }
+        renderRepere();
+        if (sync.detache) { finAttente(); return; }
+        chargerIdentite(codeSuivi);
+        const code = codeSuivi;
+        // Appareil neuf (case vide) : l'accueil attend la lecture du parcours.
+        if (PARCOURS.estVide(parcours)) {
+          attendreSuivi();
+          if (!state.running) renderParcours();
+        } else finAttente();
+        lireParcoursDuServeur(code).then(reponse => {
+          if (code !== codeSuivi) return;
+          // La réponse est là : l'écran qui suit (renderParcours, plus bas)
+          // se dessine sur le parcours fusionné.
+          suiviAttendu = false;
+          attenteFinie = true;
+          if (minuteurAttente !== null) { window.clearTimeout(minuteurAttente); minuteurAttente = null; }
+          if (reponse.statut === 404) {
+            detacher();
+            if (!state.running) renderParcours();
+            return;
+          }
+          suiviHorsLigne = reponse.statut !== 200 || !reponse.donnees || !reponse.donnees.ok;
+          if (!suiviHorsLigne && reponse.donnees.existe) {
+            const distant = PARCOURS.normaliserParcours(reponse.donnees.parcours);
+            const fusion = PARCOURS.fusionner(parcours, distant);
+            sync.revision = Number.isInteger(reponse.donnees.revision) ? reponse.donnees.revision : 0;
+            // On ne renvoie que si cet appareil apporte quelque chose : sinon
+            // chaque ouverture ferait monter la révision pour rien.
+            const apporte = sync.dirty || JSON.stringify(paquetParcours("", fusion)) !== JSON.stringify(paquetParcours("", distant));
+            parcours = fusion;
+            sauverCase();
+            sync.dirty = apporte;
+            sauverSync();
+            if (apporte) envoyerParcours();
+          } else if (!suiviHorsLigne) {
+            sync.revision = 0;
+            sauverSync();
+            // Rien encore sur le serveur mais du travail ici (fait hors ligne,
+            // par exemple) : il part maintenant, sans attendre un geste de plus.
+            if (!PARCOURS.estVide(parcours)) { sync.dirty = true; sauverSync(); envoyerParcours(); }
+          } else if (sync.dirty) {
+            planifierRelance(2000);
+          }
+          // Une série en cours n'est pas interrompue : on fusionne quand même,
+          // on redessinera l'écran quand elle sera finie.
+          renderRepere();
+          if (!state.running) renderParcours();
+        });
+      }
+      // [suivi:fin]
+
+      // Le suivi redessine l'écran visible (jamais une activité en cours).
+      function renderParcours() {
+        if (!$("intro").hidden) renderAccueil();
+        else if (!$("module").hidden) renderModule();
+        ajusterEchelle();
+      }
+
+      // ------------------------------------------------- l'échelle du cadre
+      //
+      // Copié de Défi tables (audit 3) : sur ordinateur, le cadre blanc tient
+      // toujours entier dans l'écran. On MESURE la plus grande échelle pour
+      // laquelle ni la page ni le cadre du jeu ne défilent.
+      //  - fenêtre normale : jamais plus de ×1 ; réduit jusqu'à ×0,8 au besoin ;
+      //  - plein écran : agrandi jusqu'à ×1,6, tant que tout tient ;
+      //  - une page longue (« Comment ça marche ? ») : ×1 en fenêtre, la
+      //    largeur en plein écran ;
+      //  - téléphone et tablette (moins de 1 024 px de large) : ×1, toujours.
+      const ECHELLE = Object.freeze({largeurMin: 1024, min: 0.8, max: 1.6, maxPerles: 1.2, largeurColonne: 850, largeurBase: 1280, basCadre: 12});
+      function bornesEchelle(largeur, pleinEcran) {
+        if (largeur < ECHELLE.largeurMin) return {min: 1, max: 1, longue: 1};
+        const parLargeur = Math.max(1, Math.min(ECHELLE.max, (largeur - 32) / ECHELLE.largeurColonne));
+        if (!pleinEcran) return {min: ECHELLE.min, max: 1, longue: 1};
+        return {min: ECHELLE.min, max: parLargeur, longue: Math.max(1, Math.min(parLargeur, largeur / ECHELLE.largeurBase))};
+      }
+      // La plus grande échelle qui tient entre les bornes, au 1/200 près ;
+      // « longue » si même la plus petite ne tient pas.
+      function chercherEchelle(bornes, tient) {
+        if (bornes.max <= bornes.min) return bornes.max;
+        if (tient(bornes.max)) return bornes.max;
+        if (!tient(bornes.min)) return bornes.longue;
+        let bas = bornes.min, haut = bornes.max;
+        while (haut - bas > 0.005) {
+          const milieu = (bas + haut) / 2;
+          if (tient(milieu)) bas = milieu; else haut = milieu;
+        }
+        return Math.floor(bas * 200) / 200;
+      }
+      function ajusterEchelle() {
+        const racine = document.documentElement;
+        const corps = document.body;
+        const pleinEcran = corps.classList.contains("fullscreen-active");
+        const bornes = bornesEchelle(window.innerWidth, pleinEcran);
+        racine.style.setProperty("--bas-cadre", bornes.max === bornes.min ? "0px" : `${ECHELLE.basCadre}px`);
+        if (bornes.max === bornes.min) {
+          racine.style.setProperty("--echelle", "1");
+          return;
+        }
+        if (!$("notice").hidden) {
+          racine.style.setProperty("--echelle", bornes.longue.toFixed(3));
+          return;
+        }
+        const carte = $("question-card");
+        const enJeu = corps.classList.contains("challenge-playing");
+        // En jeu sur un écran de moins de 900 px de haut, la colonne a déjà la
+        // hauteur de la fenêtre : seul le cadre du jeu peut déborder. Ailleurs,
+        // c'est la hauteur du corps (sans le pied de page) qui compte.
+        const fige = enJeu && window.matchMedia("(min-width: 621px) and (max-height: 900px)").matches;
+        const limite = window.innerHeight - (pleinEcran ? ECHELLE.basCadre : 0);
+        const tient = z => {
+          racine.style.setProperty("--echelle", z.toFixed(3));
+          // Le rekenrek se recalcule à la taille qu'on essaie : c'est lui
+          // qui fait déborder le cadre quand la place manque.
+          if (state.perles) {
+            state.perles.mesurer();
+            if (state.perles.deborde) return false;
+          }
+          if (!fige && corps.offsetHeight > limite) return false;
+          return !(enJeu && carte && carte.scrollHeight > carte.clientHeight + 1);
+        };
+        const defilement = window.scrollY;
+        corps.classList.add("mesure-cadre");
+        // Le rekenrek se manipule : en plein écran, la place va d'abord aux
+        // perles (plus le cadre grossit, plus elles rapetissent).
+        const maximum = state.perles ? Math.min(bornes.max, ECHELLE.maxPerles) : bornes.max;
+        // Un écran qui ne tient à aucune échelle garde la plus petite : moins
+        // il reste à faire défiler, mieux c'est.
+        const z = chercherEchelle({...bornes, max: maximum, longue: bornes.min}, tient);
+        corps.classList.remove("mesure-cadre");
+        racine.style.setProperty("--echelle", z.toFixed(3));
+        if (state.perles) state.perles.mesurer();
+        if (window.scrollY !== defilement) window.scrollTo(0, defilement);
+      }
+      window.addEventListener("resize", ajusterEchelle);
+
+      function setupFullscreen() {
+        const button = document.querySelector("[data-fullscreen-toggle]");
+        const root = document.documentElement;
+        const label = button?.querySelector("[data-fullscreen-label]");
+        const icon = button?.querySelector("[data-fullscreen-icon]");
+        if (!button || !label || !icon) return;
+
+        const nativeFullscreenElement = () => document.fullscreenElement || document.webkitFullscreenElement;
+        const syncFullscreenControl = () => {
+          const active = Boolean(nativeFullscreenElement()) || root.classList.contains("fullscreen-fallback");
+          document.body.classList.toggle("fullscreen-active", active);
+          button.setAttribute("aria-pressed", String(active));
+          button.setAttribute("aria-label", active ? "Quitter le plein écran" : "Passer en plein écran");
+          label.textContent = active ? "Quitter le plein écran" : "Plein écran";
+          ajusterEchelle();
+        };
+
+        const leaveFullscreen = async () => {
+          root.classList.remove("fullscreen-fallback");
+          const exit = document.exitFullscreen || document.webkitExitFullscreen;
+          if (nativeFullscreenElement() && exit) {
+            try { await exit.call(document); } catch (_) { /* Le repli CSS est déjà quitté. */ }
+          }
+          syncFullscreenControl();
+        };
+
+        const enterFullscreen = async () => {
+          const request = root.requestFullscreen || root.webkitRequestFullscreen;
+          if (request) {
+            try {
+              await request.call(root);
+              syncFullscreenControl();
+              return;
+            } catch (_) { /* iPhone et WebViews passent au repli CSS. */ }
+          }
+          root.classList.add("fullscreen-fallback");
+          window.scrollTo({ top: 0, behavior: "auto" });
+          syncFullscreenControl();
+        };
+
+        button.addEventListener("click", () => {
+          const active = Boolean(nativeFullscreenElement()) || root.classList.contains("fullscreen-fallback");
+          if (active) leaveFullscreen();
+          else enterFullscreen();
+        });
+        document.addEventListener("fullscreenchange", syncFullscreenControl);
+        document.addEventListener("webkitfullscreenchange", syncFullscreenControl);
+        document.addEventListener("keydown", event => {
+          if (event.key !== "Escape" || !root.classList.contains("fullscreen-fallback")) return;
+          event.preventDefault();
+          event.stopImmediatePropagation();
+          leaveFullscreen();
+        });
+        syncFullscreenControl();
+      }
+
+      // Une espace insécable là où une ligne ne doit pas se couper.
+      function soude(texte) {
+        return String(texte)
+          .replace(/(\d) (min|s|sur|calculs?|justes?|erreurs?|étapes?|modules?)\b/g, "$1 $2")
+          .replace(/\bsur (\d)/g, "sur $1")
+          .replace(/\bfaut (\d)/g, "faut $1")
+          .replace(/\bniveau (\d)/gi, m => m.replace(" ", " "))
+          .replace(/ ([!?:→])/g, " $1");
+      }
+
+      function pluriel(nombre, mot) {
+        return `${nombre} ${mot}${nombre > 1 ? "s" : ""}`;
+      }
+
+      // ------------------------------------------------- le retour du navigateur
+      //
+      // Copié de Défi tables : chaque écran interne pose UNE entrée dans
+      // l'historique — deux étages, l'accueil et « ailleurs » — et Retour y
+      // fait ce que fait le bouton de retour de l'écran. L'adresse ne change
+      // jamais.
+      // [retour-navigateur:debut]
+      const MARQUE_HISTORIQUE = "defiCalculEcran";
+      let ecranCourant = "intro";
+      let retourHistoriqueAttendu = false;
+
+      function surEntreeInterne() {
+        try { return Boolean(window.history.state && window.history.state[MARQUE_HISTORIQUE]); } catch (_) { return false; }
+      }
+
+      function suivreHistorique(name) {
+        ecranCourant = name;
+        try {
+          if (name !== "intro") {
+            if (!surEntreeInterne()) window.history.pushState({[MARQUE_HISTORIQUE]: true}, "");
+          } else if (surEntreeInterne()) {
+            retourHistoriqueAttendu = true;
+            window.history.back();
+          }
+        } catch (_) {}
+      }
+
+      function retourNavigateur() {
+        if (retourHistoriqueAttendu) {
+          retourHistoriqueAttendu = false;
+          // L'élève a déjà rouvert un écran pendant que l'entrée se retirait.
+          if (ecranCourant !== "intro") suivreHistorique(ecranCourant);
+          return;
+        }
+        if (surEntreeInterne() || ecranCourant === "intro") return;
+        // « C'est toujours toi ? » ouvert : on y reste, rien ne part.
+        if (gardeVisible) { suivreHistorique(ecranCourant); return; }
+        if (ecranCourant === "play" || ecranCourant === "result") quitterSerie();
+        else versAccueil();
+      }
+
+      // Une page rechargée sur l'entrée posée rouvre l'accueil : on retire
+      // l'entrée, comme au retour par un bouton de l'appli.
+      if (surEntreeInterne()) {
+        retourHistoriqueAttendu = true;
+        try { window.history.back(); } catch (_) { retourHistoriqueAttendu = false; }
+      }
+      window.addEventListener("popstate", retourNavigateur);
+      // [retour-navigateur:fin]
+
+      const ECRANS = Object.freeze(["intro", "module", "play", "result", "notice"]);
+      const TITRES = Object.freeze({intro: "acc-module-titre", module: "module-titre", notice: "notice-title"});
+
+      function show(name) {
+        ECRANS.forEach(id => { $(id).hidden = id !== name; });
+        if (name === "intro") renderAccueil();
+        if (name === "module") renderModule();
+        document.body.classList.toggle("challenge-playing", name === "play");
+        // Hors de l'accueil, le lien du site « ← Calcul mental » s'efface :
+        // la seule flèche à l'écran est celle de l'appli.
+        document.body.classList.toggle("ecran-interne", name !== "intro");
+        window.scrollTo({top: 0, behavior: "auto"});
+        if (TITRES[name]) $(TITRES[name]).focus?.({preventScroll: true});
+        if (name === "result") $(state.titreResultat)?.focus?.({preventScroll: true});
+        suivreHistorique(name);
+        ajusterEchelle();
+      }
+
+      function versAccueil() {
+        arreterActivite();
+        state.origine = "intro";
+        show("intro");
+      }
+
+      // ------------------------------------------------- l'accueil
+
+      function moduleCourant() {
+        return PARCOURS.moduleCourant(parcours, CARTE);
+      }
+
+      function ligneDe(id) {
+        return PARCOURS.normaliserParcours({modules: {[id]: parcours.modules[id]}}).modules[id];
+      }
+
+      // La ligne des niveaux : une case par niveau (pleine = validé, bleue =
+      // le niveau en cours), et à côté « Niveau 2 sur 4 » avec son contenu.
+      function ligneNiveaux(zone, id, {texte = true} = {}) {
+        zone.replaceChildren();
+        const fiche = id ? CORE.moduleDe(id) : null;
+        if (!fiche) return;
+        const ligne = ligneDe(id);
+        const cases = document.createElement("span");
+        cases.className = "cases";
+        fiche.niveaux.forEach(niveau => {
+          const b = document.createElement("b");
+          b.textContent = String(niveau.n);
+          if (ligne.v[niveau.n - 1]) b.className = "ok";
+          else if (niveau.n === ligne.nv) b.className = "ici";
+          cases.append(b);
+        });
+        zone.append(cases);
+        zone.setAttribute("aria-label", `Niveau ${ligne.nv} sur ${fiche.niveaux.length}`);
+        if (!texte) return;
+        const txt = document.createElement("span");
+        txt.className = "txt";
+        const petit = document.createElement("small");
+        petit.textContent = fiche.niveaux[ligne.nv - 1].titre || "";
+        txt.append(soude(`Niveau ${ligne.nv} sur ${fiche.niveaux.length}`), petit);
+        zone.append(txt);
+      }
+
+      const titreNiveau = (id, n) => CORE.niveauDe(`${id}-${n}`)?.niveau.titre || "";
+
+      // Le nom d'une étape de la séance, d'après les fiches.
+      function nomEtape(etape) {
+        if (etape.type === "melange") return "Mes calculs du jour";
+        if (etape.type === "valide") return `Je valide le niveau ${etape.niveau}`;
+        if (etape.type === "apprends") return `J’apprends : ${titreNiveau(etape.module, etape.niveau)}`;
+        return etape.encore ? "Je m’entraîne encore" : `Je m’entraîne : ${titreNiveau(etape.module, etape.niveau)}`;
+      }
+
+      // La carte « Ma séance du jour » : le programme calculé par le moteur.
+      // Lot 1a (décision du 03/10/2026) : « Commencer » lance l'étape de Mon
+      // module — J'apprends si ce n'est pas fait, sinon Je m'entraîne —
+      // comme une activité ordinaire. L'enchaînement des étapes, le fil et
+      // « Mes calculs du jour » arrivent au lot 2.
+      function carteDeSeance(id) {
+        // Lot 1a : la carte ne montre que les étapes jouables ; « Mes calculs
+        // du jour » y revient au lot 2, avec le mélange.
+        const file = PARCOURS.fileSeance(parcours, CARTE).filter(etape => etape.type !== "melange");
+        const premiere = file.find(etape => etape.module === id && (etape.type === "apprends" || etape.type === "entraine"));
+        if (!premiere) return null;
+        const carte = document.createElement("button");
+        carte.type = "button";
+        carte.className = "carte-seance";
+        carte.id = "acc-carte";
+        const tete = document.createElement("span");
+        tete.className = "tete";
+        const texte = document.createElement("span");
+        const titre = document.createElement("strong");
+        titre.textContent = "Ma séance du jour";
+        const duree = document.createElement("span");
+        duree.className = "duree";
+        duree.textContent = soude(`${pluriel(file.length, "étape")} · environ 10 min`);
+        texte.append(titre, duree);
+        const go = document.createElement("span");
+        go.className = "go";
+        go.textContent = "Commencer →";
+        tete.append(texte, go);
+        const liste = document.createElement("span");
+        liste.className = "programme";
+        file.forEach((etape, index) => {
+          const item = document.createElement("span");
+          const numero = document.createElement("i");
+          numero.textContent = String(index + 1);
+          const nom = document.createElement("span");
+          nom.textContent = soude(nomEtape(etape));
+          item.append(numero, nom);
+          liste.append(item);
+        });
+        carte.append(tete, liste);
+        carte.setAttribute("aria-label", `Ma séance du jour : ${duree.textContent}. ${file.map((etape, index) => `${index + 1}, ${nomEtape(etape)}`).join(" ; ")}. Commencer.`);
+        carte.addEventListener("click", () => {
+          if (premiere.type === "apprends") lancerApprends(premiere.module, premiere.niveau, "intro");
+          else lancerSerie(premiere.module, premiere.niveau, "entraine", "intro");
+        });
+        return carte;
+      }
+
+      // « Cette semaine ●○○○ » : les jours avec une séance finie.
+      function renderSemaine() {
+        const zone = $("acc-semaine");
+        const bilan = PARCOURS.bilanSeances(parcours);
+        zone.replaceChildren();
+        if (bilan.semaine > bilan.objectif) {
+          zone.textContent = `${bilan.semaine} jours cette semaine ✓`;
+          zone.removeAttribute("aria-label");
+          return;
+        }
+        const titre = document.createElement("span");
+        titre.textContent = "Cette semaine";
+        zone.append(titre);
+        for (let index = 0; index < bilan.objectif; index += 1) {
+          const rond = document.createElement("i");
+          if (index < bilan.semaine) rond.className = "ok";
+          rond.setAttribute("aria-hidden", "true");
+          zone.append(rond);
+        }
+        zone.setAttribute("aria-label", `Cette semaine : ${pluriel(bilan.semaine, "jour")} avec une séance sur ${bilan.objectif}`);
+      }
+
+      const CLASSES_ETAT = Object.freeze({valide: "valide", revoir: "revoir", encours: "encours", libre: "", ferme: "ferme", bientot: "bientot"});
+
+      // Une ligne du parcours : l'état (une forme, pas seulement une couleur),
+      // le nom, et à droite un calcul d'exemple ou une étiquette.
+      function ligneModule(fiche) {
+        const etat = PARCOURS.etatModule(parcours, fiche.id, CARTE);
+        const bouton = document.createElement("button");
+        bouton.type = "button";
+        bouton.className = `dc-mod ${CLASSES_ETAT[etat.etat]}`.trim();
+        bouton.dataset.module = fiche.id;
+        const st = document.createElement("i");
+        st.className = "st";
+        st.setAttribute("aria-hidden", "true");
+        st.textContent = etat.etat === "valide" ? "✓" : etat.etat === "revoir" ? "↻" : "";
+        const nom = document.createElement("span");
+        nom.className = "nom";
+        nom.textContent = fiche.nom;
+        const ferme = etat.etat === "ferme" || etat.etat === "bientot";
+        let dessous = "";
+        if (etat.etat === "bientot") dessous = "bientôt";
+        else if (etat.etat === "ferme") dessous = `après ${etat.apres.map(id => `« ${CORE.moduleDe(id).nom} »`).join(" et ")}`;
+        if (dessous) {
+          const petit = document.createElement("small");
+          petit.textContent = dessous;
+          nom.append(petit);
+        }
+        bouton.append(st, nom);
+        let lecture = "";
+        if (etat.etat === "revoir" || etat.etat === "encours") {
+          const tag = document.createElement("span");
+          tag.className = "tag";
+          tag.textContent = etat.etat === "revoir" ? "à revoir" : soude(`niveau ${etat.niveau} sur ${etat.niveaux}`);
+          lecture = tag.textContent;
+          bouton.append(tag);
+        } else if (!ferme) {
+          const ex = document.createElement("span");
+          ex.className = "ex";
+          ex.textContent = fiche.exemple;
+          bouton.append(ex);
+        }
+        const mots = {valide: "validé", revoir: "validé, à revoir", encours: "en cours", libre: "pas commencé", ferme: "pas encore ouvert", bientot: "bientôt"};
+        bouton.setAttribute("aria-label", [fiche.nom, mots[etat.etat], lecture && etat.etat === "encours" ? lecture : "", etat.etat === "ferme" ? dessous : ""].filter(Boolean).join(", "));
+        bouton.disabled = ferme;
+        if (!ferme) bouton.addEventListener("click", () => ouvrirModule(fiche.id));
+        return bouton;
+      }
+
+      function renderParcoursPaliers(id) {
+        const compte = PARCOURS.compter(parcours, CARTE);
+        $("parcours-compte").textContent = soude(`${compte.valides} module${compte.valides > 1 ? "s" : ""} validé${compte.valides > 1 ? "s" : ""} sur ${compte.total}`);
+        const fiche = id ? CORE.moduleDe(id) : null;
+        if (state.palier === null) state.palier = fiche && fiche.palier ? fiche.palier : 1;
+        const paliers = $("parcours-paliers");
+        paliers.replaceChildren(...compte.paliers.map(palier => {
+          const bouton = document.createElement("button");
+          bouton.type = "button";
+          const ici = palier.palier === state.palier;
+          bouton.className = [ici ? "ici" : "", palier.valides === palier.total ? "fini" : ""].filter(Boolean).join(" ");
+          const numero = document.createElement("b");
+          numero.textContent = String(palier.palier);
+          const petit = document.createElement("small");
+          petit.textContent = `${palier.valides}/${palier.total}`;
+          bouton.append(numero, petit);
+          const nom = CORE.PALIERS.find(p => p.n === palier.palier).nom;
+          bouton.setAttribute("aria-label", `Palier ${palier.palier}, ${nom} : ${palier.valides} sur ${palier.total}`);
+          bouton.setAttribute("aria-pressed", String(ici));
+          bouton.addEventListener("click", () => {
+            state.palier = palier.palier;
+            renderParcoursPaliers(moduleCourant());
+            ajusterEchelle();
+          });
+          return bouton;
+        }));
+        const palier = CORE.PALIERS.find(p => p.n === state.palier);
+        $("parcours-titre").textContent = `Palier ${palier.n} · ${palier.nom}`;
+        $("parcours-modules").replaceChildren(...CORE.MODULES.filter(f => f.palier === state.palier).map(ligneModule));
+      }
+
+      function renderAccueil() {
+        const acc = document.querySelector(".acc");
+        // Tant que le serveur n'a pas dit qui est l'élève, l'accueil attend :
+        // un appareil neuf ne montre pas un instant le premier module à un
+        // élève qui en est au troisième.
+        acc.classList.toggle("en-attente", suiviAttendu);
+        const id = moduleCourant();
+        const fiche = id ? CORE.moduleDe(id) : null;
+        $("acc-module-titre").textContent = fiche ? fiche.nom : "Défi calcul";
+        ligneNiveaux($("acc-niv"), id);
+        const carte = id ? carteDeSeance(id) : null;
+        $("acc-seance").replaceChildren(...(carte ? [carte] : []));
+        // « Je valide » : le niveau en cours, directement.
+        $("acc-valide").hidden = !fiche || PARCOURS.estValide(parcours, id);
+        $("acc-choisir").hidden = !fiche;
+        renderSemaine();
+        renderParcoursPaliers(id);
+      }
+
+      // ------------------------------------------------- l'écran du module
+
+      function ouvrirModule(id) {
+        arreterActivite();
+        state.module = id;
+        state.origine = "module";
+        show("module");
+      }
+
+      function renderModule() {
+        const id = state.module || moduleCourant();
+        const fiche = id ? CORE.moduleDe(id) : null;
+        if (!fiche || !fiche.construit) return;
+        state.module = id;
+        const ligne = ligneDe(id);
+        $("module-titre").textContent = fiche.nom;
+        const niveaux = $("module-niveaux");
+        niveaux.className = `dc-niveaux n${fiche.niveaux.length}`;
+        niveaux.replaceChildren(...fiche.niveaux.map(niveau => {
+          const bouton = document.createElement("button");
+          bouton.type = "button";
+          const valide = Boolean(ligne.v[niveau.n - 1]);
+          const ici = niveau.n === ligne.nv;
+          bouton.className = [valide ? "ok" : "", ici ? "ici" : ""].filter(Boolean).join(" ");
+          bouton.setAttribute("aria-pressed", String(ici));
+          const petit = document.createElement("small");
+          petit.textContent = soude(`Niveau ${niveau.n}${valide ? " ✓" : ""}`);
+          const fort = document.createElement("strong");
+          fort.textContent = niveau.titre;
+          bouton.append(petit, fort);
+          // Les « avant » d'un niveau ne sont qu'un conseil, pas un verrou.
+          const avant = (niveau.avant || []).map(cle => cle.split("-")).filter(([module, n]) => module === id && !ligne.v[Number(n) - 1]);
+          if (avant.length && !valide) {
+            const conseil = document.createElement("em");
+            conseil.textContent = soude(`après le niveau ${avant[0][1]}`);
+            bouton.append(conseil);
+          }
+          bouton.addEventListener("click", () => {
+            // Revoir un niveau d'un module déjà validé ne change pas « Mon module ».
+            const monModule = parcours.mod;
+            parcours = PARCOURS.choisirNiveau(parcours, id, niveau.n);
+            if (PARCOURS.estValide(parcours, id)) parcours.mod = monModule;
+            sauverParcours();
+            renderModule();
+            ajusterEchelle();
+          });
+          return bouton;
+        }));
+        const niveau = fiche.niveaux[ligne.nv - 1];
+        const fait = niveau.type === "F";
+        const etape = (numero, titre, detail, action) => {
+          const bouton = document.createElement("button");
+          bouton.type = "button";
+          bouton.className = "etape";
+          const num = document.createElement("span");
+          num.className = "num";
+          num.textContent = String(numero);
+          const texte = document.createElement("span");
+          const fort = document.createElement("strong");
+          fort.textContent = soude(titre);
+          const petit = document.createElement("small");
+          petit.textContent = soude(detail);
+          texte.append(fort, petit);
+          const fleche = document.createElement("span");
+          fleche.className = "fl";
+          fleche.setAttribute("aria-hidden", "true");
+          fleche.textContent = "→";
+          bouton.append(num, texte, fleche);
+          bouton.addEventListener("click", action);
+          return bouton;
+        };
+        $("module-etapes").replaceChildren(
+          etape(1, "J’apprends", niveau.apprends.manipule ? "avec les perles et la droite" : "avec la droite",
+            () => lancerApprends(id, niveau.n, "module")),
+          etape(2, "Je m’entraîne", "10 calculs, sans chrono", () => lancerSerie(id, niveau.n, "entraine", "module")),
+          etape(3, `Je valide le niveau ${niveau.n}`, fait ? "12 calculs · 10 justes, sans traîner" : "10 calculs · 8 justes",
+            () => lancerSerie(id, niveau.n, "valide", "module"))
+        );
+      }
+
+      // ------------------------------------------------- une activité
+
+      function clearAutoAdvance() {
+        if (state.autoAdvanceTimer !== null) window.clearTimeout(state.autoAdvanceTimer);
+        state.autoAdvanceTimer = null;
+      }
+
+      function retirerAide() {
+        if (state.perles) { state.perles.detruire(); state.perles = null; }
+        const aide = $("aide");
+        aide.replaceChildren();
+        aide.hidden = true;
+        $("question-card").classList.remove("aide-perles", "aide-image", "est-finie", "sans-retour", "ecrit");
+      }
+
+      function arreterActivite() {
+        state.running = false;
+        state.waitingForContinue = false;
+        clearAutoAdvance();
+        retirerAide();
+      }
+
+      // Quitter une activité : on revient là d'où elle est partie.
+      function quitterSerie() {
+        arreterActivite();
+        show(state.origine === "module" ? "module" : "intro");
+      }
+
+      // Travailler un module qui n'est pas validé en fait « Mon module ».
+      function travailler(id) {
+        if (PARCOURS.estValide(parcours, id) || parcours.mod === id) return;
+        parcours = PARCOURS.choisirModule(parcours, id);
+        sauverParcours();
+      }
+
+      const DELAI_SUIVANT = 800;
+      // Après une erreur, « Valider » devient aussitôt « Suivant » : pendant
+      // ce délai, un appui est ignoré — deux appuis rapides sautaient la
+      // correction.
+      const DELAI_LECTURE_CORRECTION_MS = 700;
+      const CHIFFRES_MAX = 6;
+
+      function renderInlineAnswer(status = "") {
+        const slot = $("inline-answer");
+        if (!slot) return;
+        slot.textContent = state.answer || " ";
+        slot.className = `inline-answer${status ? ` ${status}` : ""}`;
+        slot.setAttribute("aria-label", state.answer ? `Réponse ${state.answer}` : "Réponse à saisir");
+      }
+
+      const insecable = texte => String(texte).replace(/ /g, " ");
+
+      function caseReponse() {
+        const slot = document.createElement("span");
+        slot.id = "inline-answer";
+        slot.className = "inline-answer";
+        slot.setAttribute("role", "textbox");
+        slot.setAttribute("aria-readonly", "true");
+        return slot;
+      }
+
+      // Un texte avec sa case (« 47 + 19 = □ ») : la case devient l'endroit
+      // où s'écrit la réponse.
+      function avecCase(texte) {
+        const [avant, ...reste] = String(texte).split(CORE.CASE);
+        if (!reste.length) return [document.createTextNode(insecable(avant))];
+        return [document.createTextNode(insecable(avant)), caseReponse(), document.createTextNode(insecable(reste.join(CORE.CASE)))];
+      }
+
+      function renderExpression(texte, classe = "") {
+        const expression = $("expression");
+        // Sur un téléphone, un calcul long s'écrit plus petit pour tenir sur
+        // une ligne (« 1 000 − 470 = 530 »).
+        const longueur = String(texte).length;
+        const taille = longueur > 13 ? "dc-tres-long" : longueur > 9 ? "dc-long" : "";
+        expression.className = ["expression", classe, taille].filter(Boolean).join(" ");
+        expression.replaceChildren(...avecCase(texte));
+        renderInlineAnswer();
+      }
+
+      function setAnswerControlsEnabled(enabled) {
+        document.querySelectorAll("[data-key]").forEach(button => { button.disabled = !enabled; });
+        $("skip").disabled = !enabled;
+        $("skip").style.visibility = enabled ? "" : "hidden";
+        $("validate").textContent = enabled ? "Valider" : "Suivant";
+      }
+
+      function clearAnswerFeedback() {
+        state.waitingForContinue = false;
+        $("answer-feedback").textContent = "";
+        $("answer-feedback").className = "answer-feedback";
+        $("validate").style.visibility = "";
+        setAnswerControlsEnabled(true);
+        renderInlineAnswer();
+      }
+
+      function clearAnswerError() {
+        $("inline-answer")?.classList.remove("is-invalid");
+        if (!state.waitingForContinue) {
+          $("answer-feedback").textContent = "";
+          $("answer-feedback").className = "answer-feedback";
+        }
+      }
+
+      function showAnswerError() {
+        $("inline-answer")?.classList.add("is-invalid");
+        $("answer-feedback").className = "answer-feedback is-wrong";
+        $("answer-feedback").textContent = $("question-card").classList.contains("no-skip")
+          ? "Tape une réponse."
+          : "Tape une réponse ou appuie sur « Passer ».";
+        $("expression").focus?.({preventScroll: true});
+      }
+
+      function scheduleAutoAdvance(suite) {
+        clearAutoAdvance();
+        state.autoAdvanceTimer = window.setTimeout(() => {
+          state.autoAdvanceTimer = null;
+          if (state.running && state.waitingForContinue) suite();
+        }, DELAI_SUIVANT);
+      }
+
+      // L'image d'une aide (la droite à sauts), avec ou sans consigne.
+      function montrerImage(image, consigne = "") {
+        const aide = $("aide");
+        const morceaux = [];
+        if (consigne) {
+          const p = document.createElement("p");
+          p.className = "consigne";
+          p.textContent = consigne;
+          morceaux.push(p);
+        }
+        const dessin = document.createElement("div");
+        dessin.innerHTML = AIDES.droiteSauts(image);
+        morceaux.push(dessin.firstChild);
+        aide.replaceChildren(...morceaux);
+        aide.hidden = false;
+        $("question-card").classList.add("aide-image");
+      }
+
+      function majBarre({compte = "", pastille = "", avance = 0}) {
+        $("question-count").textContent = compte;
+        const temps = $("time");
+        temps.textContent = pastille;
+        temps.style.visibility = pastille ? "" : "hidden";
+        $("progress").style.width = `${Math.max(0, Math.min(100, avance))}%`;
+      }
+
+      // ------------------------------------------------- J'apprends, en trois temps
+
+      const NOMS_TEMPS = Object.freeze({manipule: "Je manipule", represente: "Je représente", ecris: "J’écris"});
+
+      function lancerApprends(id, n, origine) {
+        const trouve = CORE.niveauDe(`${id}-${n}`);
+        if (!trouve || !trouve.niveau.apprends) return;
+        arreterActivite();
+        travailler(id);
+        const apprends = trouve.niveau.apprends;
+        state.serie = {
+          genre: "apprends", module: id, niveau: n, apprends,
+          temps: [...(apprends.manipule ? ["manipule"] : []), "represente", "ecris"],
+          index: 0
+        };
+        state.origine = origine;
+        state.running = true;
+        show("play");
+        renderTemps();
+        ajusterEchelle();
+      }
+
+      // Le fil des temps : « J'apprends ①②③ Je manipule ».
+      function renderFilApprends() {
+        const serie = state.serie;
+        const fil = $("seance-fil");
+        fil.hidden = false;
+        const titre = document.createElement("span");
+        titre.textContent = "J’apprends";
+        const liste = document.createElement("ol");
+        serie.temps.forEach((nom, index) => {
+          const point = document.createElement("li");
+          if (index < serie.index) { point.className = "ok"; point.textContent = "✓"; }
+          else { point.textContent = String(index + 1); if (index === serie.index) point.className = "ici"; }
+          liste.append(point);
+        });
+        const nom = document.createElement("b");
+        nom.textContent = NOMS_TEMPS[serie.temps[serie.index]];
+        fil.replaceChildren(titre, liste, nom);
+        fil.setAttribute("aria-label", `J’apprends, temps ${serie.index + 1} sur ${serie.temps.length} : ${nom.textContent}`);
+      }
+
+      function renderTemps() {
+        const serie = state.serie;
+        const nom = serie.temps[serie.index];
+        const apprends = serie.apprends;
+        const carte = $("question-card");
+        retirerAide();
+        clearAutoAdvance();
+        state.answer = "";
+        state.effacerAuProchain = false;
+        renderFilApprends();
+        majBarre({avance: (serie.index + .45) / serie.temps.length * 100});
+        carte.classList.add("no-skip");
+        clearAnswerFeedback();
+        if (nom === "manipule") {
+          // Pas de pavé : on touche les perles, l'appli écrit les calculs.
+          renderExpression(apprends.exemple.texte, "dc-petit");
+          carte.classList.add("aide-perles");
+          $("aide").hidden = false;
+          $("validate").textContent = "Suivant";
+          state.perles = AIDES.perles100($("aide"), Object.assign({}, apprends.manipule, {
+            surFini() {
+              carte.classList.add("est-finie");
+              state.waitingForContinue = true;
+              $("validate").focus?.({preventScroll: true});
+            }
+          }));
+        } else if (nom === "represente") {
+          renderExpression(apprends.represente.texte);
+          montrerImage(apprends.represente.image, apprends.represente.consigne);
+          carte.classList.add("sans-retour");
+        } else {
+          const lignes = document.createElement("span");
+          lignes.className = `lg${apprends.ecris.suite ? " suite" : ""}`;
+          apprends.ecris.lignes.forEach(texte => {
+            const ligne = document.createElement("span");
+            ligne.append(...avecCase(texte));
+            lignes.append(ligne);
+          });
+          carte.classList.add("ecrit");
+          const expression = $("expression");
+          expression.className = "expression dc-lignes";
+          expression.replaceChildren(lignes);
+          renderInlineAnswer();
+        }
+        carte.scrollTop = 0;
+        $("expression").focus?.({preventScroll: true});
+      }
+
+      function avancerTemps() {
+        const serie = state.serie;
+        clearAutoAdvance();
+        serie.index += 1;
+        if (serie.index < serie.temps.length) {
+          renderTemps();
+          ajusterEchelle();
+          return;
+        }
+        // Les trois temps sont faits : la phrase-bilan, sur un écran à elle.
+        arreterActivite();
+        parcours = PARCOURS.appliquerSerie(parcours, {module: serie.module, niveau: serie.niveau, genre: "apprends"}, {carte: CARTE}).parcours;
+        sauverParcours();
+        renderRetenir(serie);
+        show("result");
+      }
+
+      // Une réponse dans « je représente » ou « j'écris ». Chaque temps se
+      // termine par une réponse juste ; une erreur ramène l'image avec la
+      // consigne, sans limite et sans donner la réponse.
+      function repondreTemps() {
+        const serie = state.serie;
+        const nom = serie.temps[serie.index];
+        if (nom === "manipule") {
+          if (state.perles && state.perles.fini) avancerTemps();
+          return;
+        }
+        if (state.waitingForContinue) { avancerTemps(); return; }
+        const valeur = CORE.lireReponse(state.answer);
+        if (valeur === null) { showAnswerError(); secouerConsigne(); return; }
+        const attendue = nom === "represente" ? serie.apprends.represente.reponse : serie.apprends.ecris.reponse;
+        if (CORE.memeNombre(valeur, attendue)) {
+          state.waitingForContinue = true;
+          renderInlineAnswer("is-correct");
+          $("answer-feedback").className = "answer-feedback is-correct";
+          $("answer-feedback").textContent = "Bravo !";
+          setAnswerControlsEnabled(false);
+          $("validate").style.visibility = "hidden";
+          scheduleAutoAdvance(avancerTemps);
+          return;
+        }
+        // Faux : la case passe au rouge, la réponse s'effacera à la prochaine
+        // touche ; l'image revient (ou sa consigne tremble si elle est déjà là).
+        renderInlineAnswer("is-invalid");
+        state.effacerAuProchain = true;
+        if (!$("question-card").classList.contains("aide-image")) {
+          montrerImage(serie.apprends.represente.image, serie.apprends.represente.consigne);
+          // L'image prend la place de la ligne de retour.
+          $("question-card").classList.add("sans-retour");
+          ajusterEchelle();
+        }
+        secouerConsigne();
+      }
+
+      function secouerConsigne() {
+        const consigne = $("aide").querySelector(".consigne");
+        if (!consigne) return;
+        consigne.classList.remove("est-refus");
+        void consigne.offsetWidth;
+        consigne.classList.add("est-refus");
+        // Le rouge ne reste pas : la consigne redevient elle-même.
+        window.setTimeout(() => consigne.classList.remove("est-refus"), 1800);
+      }
+
+      function boutonsDeSuite(...boutons) {
+        const rangee = document.createElement("div");
+        rangee.className = "boutons";
+        boutons.filter(Boolean).forEach(([texte, classe, action]) => {
+          const bouton = document.createElement("button");
+          bouton.type = "button";
+          bouton.className = classe;
+          bouton.textContent = soude(texte);
+          bouton.addEventListener("click", action);
+          rangee.append(bouton);
+        });
+        return rangee;
+      }
+
+      function renderRetenir(serie) {
+        const result = $("result");
+        result.classList.remove("is-fete", "is-rate");
+        $("result-verdict").hidden = true;
+        $("result-retenir").hidden = false;
+        $("retenir-phrase").textContent = serie.apprends.bilan;
+        $("retenir-image").innerHTML = AIDES.droiteSauts(serie.apprends.image);
+        $("result-suite").replaceChildren(boutonsDeSuite(
+          ["Je m’entraîne →", "primary", () => lancerSerie(serie.module, serie.niveau, "entraine", state.origine)],
+          ["Revoir l’exemple", "secondary", () => lancerApprends(serie.module, serie.niveau, state.origine)]
+        ));
+        $("corrections").replaceChildren();
+        state.titreResultat = "retenir-phrase";
+      }
+
+      // ------------------------------------------------- Je m'entraîne, Je valide
+
+      function nouvelleGraine() {
+        return (Date.now() ^ Math.floor(Math.random() * 4294967296)) >>> 0;
+      }
+
+      function lancerSerie(id, n, genre, origine) {
+        const trouve = CORE.niveauDe(`${id}-${n}`);
+        if (!trouve) return;
+        const calculs = CORE.genererSerie(`${id}-${n}`, {graine: nouvelleGraine(), genre});
+        if (!calculs.length) return;
+        arreterActivite();
+        travailler(id);
+        state.serie = {
+          genre, module: id, niveau: n, type: trouve.niveau.type, total: calculs.length,
+          questions: calculs.map(calcul => ({calcul, retour: false})),
+          index: 0, reponses: [], causes: {}, debut: 0
+        };
+        state.origine = origine;
+        state.running = true;
+        $("seance-fil").hidden = true;
+        show("play");
+        renderQuestion();
+        // La première question est à l'écran : c'est elle qu'on mesure.
+        ajusterEchelle();
+      }
+
+      function renderQuestion() {
+        const serie = state.serie;
+        const question = serie.questions[serie.index];
+        // L'image d'une correction s'en va : le cadre reprend sa taille.
+        const avecAide = !$("aide").hidden;
+        retirerAide();
+        const faits = Math.min(serie.reponses.length + 1, serie.total);
+        majBarre({
+          compte: `${faits} / ${serie.total}${question.retour ? " · il revient" : ""}`,
+          pastille: serie.genre === "valide" ? "Validation" : "À ton rythme",
+          avance: serie.reponses.length / serie.total * 100
+        });
+        $("question-card").classList.remove("no-skip");
+        state.answer = "";
+        state.effacerAuProchain = false;
+        renderExpression(question.calcul.texte);
+        clearAnswerFeedback();
+        $("question-card").scrollTop = 0;
+        $("expression").focus?.({preventScroll: true});
+        if (avecAide) ajusterEchelle();
+        // Le temps d'un calcul : de son affichage à « Valider ». Jamais montré.
+        serie.debut = performance.now();
+      }
+
+      function avancerSerie() {
+        const serie = state.serie;
+        clearAutoAdvance();
+        serie.index += 1;
+        if (serie.index >= serie.questions.length) finish();
+        else renderQuestion();
+      }
+
+      // Après une réponse d'entraînement : « Bravo ! », ou la correction —
+      // la phrase de la cause et l'image, le pas oublié en gras, quand
+      // l'erreur est connue ; sinon le retour de Défi tables.
+      function montrerRetour(question, juste, valeur, passe, cause) {
+        state.waitingForContinue = true;
+        state.correctionAfficheeA = juste ? 0 : Date.now();
+        const feedback = $("answer-feedback");
+        feedback.className = `answer-feedback ${juste ? "is-correct" : "is-wrong"}`;
+        const attendue = CORE.formaterNombre(question.calcul.reponse);
+        if (juste) {
+          renderInlineAnswer("is-correct");
+          feedback.textContent = "Bravo !";
+        } else {
+          state.answer = attendue;
+          renderInlineAnswer("is-corrected");
+          if (cause) {
+            feedback.textContent = cause.texte;
+            montrerImage(cause.image);
+          } else {
+            feedback.textContent = passe
+              ? `Pas de réponse. Bonne réponse : ${attendue}.`
+              : `Ta réponse : ${CORE.formaterNombre(valeur)}. Bonne réponse : ${attendue}.`;
+          }
+        }
+        setAnswerControlsEnabled(false);
+        $("validate").focus?.({preventScroll: true});
+      }
+
+      function repondreSerie(passe) {
+        const serie = state.serie;
+        if (state.waitingForContinue) {
+          if (state.correctionAfficheeA && Date.now() - state.correctionAfficheeA < DELAI_LECTURE_CORRECTION_MS) return;
+          avancerSerie();
+          return;
+        }
+        const valeur = passe ? null : CORE.lireReponse(state.answer);
+        if (!passe && valeur === null) { showAnswerError(); return; }
+        const question = serie.questions[serie.index];
+        const ms = Math.round(performance.now() - serie.debut);
+        const juste = !passe && CORE.memeNombre(valeur, question.calcul.reponse);
+        const cause = !juste && !passe ? CORE.diagnostiquer(question.calcul, valeur) : null;
+        // Seule la première réponse à un calcul compte, pour le score comme
+        // pour les causes d'erreur : celui qui revient vient d'être corrigé
+        // sous les yeux de l'élève.
+        if (cause && !question.retour) serie.causes[cause.c] = (serie.causes[cause.c] || 0) + 1;
+        if (!question.retour) serie.reponses.push({juste, ms, valeur, passe, calcul: question.calcul});
+        if (serie.genre === "valide") {
+          // Pas de retour après chaque calcul : les erreurs sont au bilan.
+          avancerSerie();
+          return;
+        }
+        // Le calcul raté revient une fois en fin de série, hors score.
+        if (!juste && !question.retour) serie.questions.push({calcul: question.calcul, retour: true});
+        montrerRetour(question, juste, valeur, passe, cause);
+        if (juste) {
+          $("validate").style.visibility = "hidden";
+          scheduleAutoAdvance(avancerSerie);
+        } else {
+          ajusterEchelle();
+        }
+      }
+
+      function next(passe) {
+        if (!state.running || !state.serie) return;
+        if (state.serie.genre === "apprends") { if (!passe) repondreTemps(); }
+        else repondreSerie(passe);
+      }
+
+      function enterDigit(digit) {
+        if (!state.running || state.waitingForContinue) return;
+        if (state.effacerAuProchain) { state.answer = ""; state.effacerAuProchain = false; }
+        if (state.answer.length >= CHIFFRES_MAX) return;
+        state.answer += digit;
+        renderInlineAnswer();
+        clearAnswerError();
+      }
+
+      function effacer(tout) {
+        if (!state.running || state.waitingForContinue) return;
+        state.answer = tout || state.effacerAuProchain ? "" : state.answer.slice(0, -1);
+        state.effacerAuProchain = false;
+        renderInlineAnswer();
+        clearAnswerError();
+      }
+
+      // ------------------------------------------------- le bilan d'une série
+
+      function finish() {
+        if (!state.running) return;
+        const serie = state.serie;
+        arreterActivite();
+        const suivi = PARCOURS.appliquerSerie(parcours, {
+          module: serie.module, niveau: serie.niveau, genre: serie.genre, type: serie.type,
+          reponses: serie.reponses.map(reponse => ({juste: reponse.juste, ms: reponse.ms})),
+          causes: serie.causes
+        }, {carte: CARTE});
+        parcours = suivi.parcours;
+        sauverParcours();
+        renderVerdict(serie, suivi);
+        renderCorrections(serie, suivi.verdict);
+        show("result");
+      }
+
+      function poserVerdict({classe = "", icone = "✓", titre, score}) {
+        const result = $("result");
+        result.classList.remove("is-fete", "is-rate");
+        if (classe) result.classList.add(classe);
+        $("result-verdict").hidden = false;
+        $("result-retenir").hidden = true;
+        $("result-icon").textContent = icone;
+        $("result-title").textContent = soude(titre);
+        $("result-score").textContent = soude(score);
+        state.titreResultat = "result-title";
+      }
+
+      function cadreDeSuite(id, contenu) {
+        const cadre = document.createElement("div");
+        cadre.className = "cadre";
+        const niveaux = document.createElement("div");
+        niveaux.className = "dc-niv centre";
+        ligneNiveaux(niveaux, id, {texte: false});
+        const phrase = document.createElement("p");
+        phrase.append(...contenu);
+        cadre.append(niveaux, phrase);
+        return cadre;
+      }
+
+      const gras = texte => {
+        const b = document.createElement("b");
+        b.textContent = soude(texte);
+        return b;
+      };
+
+      function renderVerdict(serie, suivi) {
+        const {module: id, niveau: n} = serie;
+        const verdict = suivi.verdict;
+        const sur = `${verdict.justes} sur ${verdict.total}`;
+        const accueil = classe => ["Accueil", classe, versAccueil];
+        const suite = $("result-suite");
+        if (serie.genre === "entraine") {
+          if (verdict.reussi) {
+            poserVerdict({titre: "Entraînement réussi !", score: sur});
+            suite.replaceChildren(boutonsDeSuite(
+              [`Je valide le niveau ${n} →`, "primary", () => lancerSerie(id, n, "valide", state.origine)], accueil("secondary")));
+          } else {
+            poserVerdict({classe: "is-rate", icone: "✗", titre: "Pas encore", score: `${sur} — il en faut ${PARCOURS.SEUILS.entraine.justes}`});
+            suite.replaceChildren(boutonsDeSuite(
+              ["Je m’entraîne encore", "primary", () => lancerSerie(id, n, "entraine", state.origine)], accueil("secondary")));
+          }
+          return;
+        }
+        if (!verdict.valide) {
+          const seuil = verdict.type === "F" ? PARCOURS.SEUILS.faits.justes : PARCOURS.SEUILS.procedures.justes;
+          poserVerdict({
+            classe: "is-rate", icone: "✗", titre: "Pas encore",
+            score: verdict.tropLent ? `${sur} ✓ mais trop lentement. Entraîne-toi encore.` : `${sur} — il en faut ${seuil}`
+          });
+          suite.replaceChildren(boutonsDeSuite(
+            ["Je m’entraîne", "primary", () => lancerSerie(id, n, "entraine", state.origine)], accueil("secondary")));
+          return;
+        }
+        poserVerdict({classe: "is-fete", icone: "🎉", titre: `Niveau ${n} validé !`, score: sur});
+        const fini = suivi.evenements.find(evenement => evenement.type === "module");
+        if (fini) {
+          const suivant = fini.suivant ? CORE.moduleDe(fini.suivant) : null;
+          suite.replaceChildren(
+            cadreDeSuite(id, suivant ? ["Module validé ! Ensuite : ", gras(suivant.nom), "."] : ["Module validé !"]),
+            boutonsDeSuite(accueil("primary")));
+          return;
+        }
+        // Un niveau rejoué dans un module déjà validé : rien ne vient ensuite.
+        if (PARCOURS.estValide(parcours, id)) {
+          suite.replaceChildren(boutonsDeSuite(accueil("primary")));
+          return;
+        }
+        const prochain = ligneDe(id).nv;
+        suite.replaceChildren(
+          cadreDeSuite(id, ["Ensuite : ", gras(`niveau ${prochain}`), `, ${titreNiveau(id, prochain)}.`]),
+          boutonsDeSuite([`Niveau ${prochain} →`, "primary", () => ouvrirModule(id)], accueil("secondary")));
+      }
+
+      // Les erreurs, en lignes courtes : le calcul avec sa bonne réponse, la
+      // réponse donnée barrée à droite. Puis, pour une procédure, les calculs
+      // « justes, mais trop longs » — sans temps affiché.
+      function renderCorrections(serie, verdict) {
+        const zone = $("corrections");
+        zone.replaceChildren();
+        const ligne = (reponse, avecDonnee) => {
+          const item = document.createElement("li");
+          const question = document.createElement("div");
+          question.className = "correction-question";
+          const expression = document.createElement("span");
+          expression.className = "correction-expression";
+          const [avant, apres] = reponse.calcul.texte.split(CORE.CASE);
+          const attendue = document.createElement("b");
+          attendue.className = "expected-answer";
+          attendue.textContent = CORE.formaterNombre(reponse.calcul.reponse);
+          expression.append(document.createTextNode(insecable(avant)), attendue, document.createTextNode(insecable(apres ?? "")));
+          question.append(expression);
+          item.append(question);
+          if (avecDonnee) {
+            const donnee = document.createElement("span");
+            donnee.className = "given-answer";
+            if (reponse.passe) {
+              donnee.classList.add("is-passe");
+              donnee.textContent = "Pas de réponse";
+            } else {
+              donnee.textContent = CORE.formaterNombre(reponse.valeur);
+              donnee.setAttribute("aria-label", `Ta réponse : ${donnee.textContent}`);
+            }
+            item.append(donnee);
+          }
+          return item;
+        };
+        const liste = (titre, reponses, classe, avecDonnee) => {
+          if (!reponses.length) return;
+          const h2 = document.createElement("h2");
+          h2.textContent = titre;
+          if (classe) h2.className = classe;
+          const ol = document.createElement("ol");
+          ol.className = `correction-list${classe ? ` ${classe}` : ""}`;
+          ol.append(...reponses.map(reponse => ligne(reponse, avecDonnee)));
+          zone.append(h2, ol);
+        };
+        const erreurs = serie.reponses.filter(reponse => !reponse.juste);
+        liste(erreurs.length > 1 ? `Mes ${erreurs.length} erreurs` : "Mon erreur", erreurs, "", true);
+        const lents = (verdict && verdict.lents ? verdict.lents : []).map(index => serie.reponses[index]);
+        liste("Juste, mais trop long", lents, "lent", false);
+      }
+
+      // ------------------------------------------------- les gestes
+
+      $("suivi-sortie").addEventListener("click", quitterSuivi);
+      $("acc-valide").addEventListener("click", () => {
+        const id = moduleCourant();
+        if (id) lancerSerie(id, ligneDe(id).nv, "valide", "intro");
+      });
+      $("acc-choisir").addEventListener("click", () => {
+        const id = moduleCourant();
+        if (id) ouvrirModule(id);
+      });
+      $("acc-notice-bouton").addEventListener("click", () => show("notice"));
+      $("notice-back").addEventListener("click", versAccueil);
+      // « Changer de module » : le parcours est sur l'accueil.
+      $("module-changer").addEventListener("click", () => {
+        versAccueil();
+        $("acc-parcours").scrollIntoView?.({block: "nearest"});
+      });
+      $("game-menu").addEventListener("click", quitterSerie);
+      document.querySelectorAll("[data-key]").forEach(button => button.addEventListener("click", () => {
+        const key = button.dataset.key;
+        if (key === "clear") effacer(true);
+        else if (key === "backspace") effacer(false);
+        else enterDigit(key);
+      }));
+      $("validate").addEventListener("click", () => next(false));
+      $("skip").addEventListener("click", () => next(true));
+      setupFullscreen();
+      document.addEventListener("keydown", event => {
+        if (!state.running) return;
+        // « C'est toujours toi ? » : les touches vont à SON champ de code.
+        if (gardeVisible) return;
+        const cible = event.target;
+        if (cible && typeof cible.closest === "function" && cible.closest("#suivi-garde")) return;
+        // Le rekenrek se joue au doigt : seule Entrée répond, une fois le
+        // geste fait (« Suivant »).
+        const perles = $("question-card").classList.contains("aide-perles");
+        if (/^\d$/.test(event.key) && !perles) enterDigit(event.key);
+        else if (event.key === "Backspace" && !perles) effacer(false);
+        else if ((event.key === "Delete" || event.key === "Escape") && !perles) effacer(true);
+        else if (event.key === "Enter") {
+          // Entrée gardée enfoncée ne fait pas défiler les corrections.
+          if (!event.repeat) next(false);
+        }
+        else return;
+        event.preventDefault();
+      });
+      window.addEventListener("pagehide", envoyerAvantDeFermer);
+      document.addEventListener("visibilitychange", () => {
+        if (document.visibilityState === "hidden") envoyerAvantDeFermer();
+        // L'onglet resté ouvert depuis la veille : au retour, l'accueil se
+        // redessine sur le jour d'aujourd'hui.
+        else if (document.visibilityState === "visible" && !$("intro").hidden) renderAccueil();
+      });
+      // Pour les contrôles au navigateur (?test) : le calcul à l'écran et la
+      // progression, en lecture seule.
+      if (new URLSearchParams(window.location.search).has("test")) {
+        Object.defineProperty(window, "__MATHSGO_DEFI_CALCUL_TEST__", {
+          configurable: true,
+          value: Object.freeze({
+            calcul: () => (state.running && state.serie && state.serie.questions ? state.serie.questions[state.serie.index].calcul : null),
+            parcours: () => JSON.parse(JSON.stringify(parcours)),
+            perles: () => (state.perles ? {etape: state.perles.etape, total: state.perles.total, fini: state.perles.fini} : null)
+          })
+        });
+      }
+      majLienRetour();
+      renderRepere();
+      renderAccueil();
+      ajusterEchelle();
+      // L'adresse a été lue et nettoyée par le script du <head>. L'espace
+      // élève construit « #b=<billet>&ouvrir=parcours » : le billet s'échange
+      // d'abord, puis l'accueil s'ouvre. Une adresse ne porte jamais de code.
+      // [aiguillage:debut]
+      if (ENTREE.billet && ENTREE.vue !== "fiche") entrerParBillet(ENTREE.billet, versAccueil);
+      else demarrerSuivi();
+      // [aiguillage:fin]
+    })();
+  </script>
+</body>
+</html>
